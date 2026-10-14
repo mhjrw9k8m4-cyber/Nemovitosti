@@ -60,17 +60,17 @@
 
   var FALLBACK_DATA = [
     { place:'Kolín',             okres:'Kolín',         type:'drazba',  parcel:'412/3', druh:'stavební',  area:1240, price:640000,  extra:'dražba za 12 dní', lat:50.0281, lng:15.2003 },
-    { place:'Kutná Hora',        okres:'Kutná Hora',    type:'exekuce', parcel:'88/1',  druh:'orná půda', area:890,  price:780000,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
+    { place:'Kutná Hora',        okres:'Kutná Hora',    type:'exekuce', parcel:'88/1',  druh:'orná půda', area:890,  price:780000,  extra:'v exekuci',        lat:49.9484, lng:15.2680 },
     { place:'Nymburk',           okres:'Nymburk',       type:'sale',    parcel:'305',   druh:'stavební',  area:2100, price:1890000, extra:'na prodej',        lat:50.1850, lng:15.0410 },
     { place:'Poděbrady',         okres:'Nymburk',       type:'obec',    parcel:'27/2',  druh:'zahrada',   area:650,  price:590000,  extra:'záměr obce',       lat:50.1425, lng:15.1190 },
     { place:'Čáslav',            okres:'Kutná Hora',    type:'drazba',  parcel:'560/4', druh:'louka',     area:3400, price:1200000, extra:'dražba za 5 dní',  lat:49.9110, lng:15.3910 },
     { place:'Kladno',            okres:'Kladno',        type:'sale',    parcel:'190',   druh:'stavební',  area:780,  price:1250000, extra:'na prodej',        lat:50.1470, lng:14.1030 },
-    { place:'Mělník',            okres:'Mělník',        type:'exekuce', parcel:'44/7',  druh:'orná půda', area:1500, price:1100000, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
+    { place:'Mělník',            okres:'Mělník',        type:'exekuce', parcel:'44/7',  druh:'orná půda', area:1500, price:1100000, extra:'v exekuci',        lat:50.3500, lng:14.4740 },
     { place:'Brandýs nad Labem', okres:'Praha-východ',  type:'obec',    parcel:'611',   druh:'louka',     area:4200, price:2900000, extra:'záměr obce',       lat:50.1860, lng:14.6610 },
     { place:'Benešov',           okres:'Benešov',       type:'sale',    parcel:'72/3',  druh:'stavební',  area:950,  price:1490000, extra:'na prodej',        lat:49.7830, lng:14.6860 },
     { place:'Příbram',           okres:'Příbram',       type:'drazba',  parcel:'238',   druh:'zahrada',   area:1120, price:720000,  extra:'dražba za 20 dní', lat:49.6890, lng:14.0100 },
     { place:'Beroun',            okres:'Beroun',        type:'sale',    parcel:'15/1',  druh:'stavební',  area:610,  price:980000,  extra:'na prodej',        lat:49.9640, lng:14.0720 },
-    { place:'Rakovník',          okres:'Rakovník',      type:'exekuce', parcel:'402',   druh:'orná půda', area:2750, price:1650000, extra:'v exekuci',        lat:50.1040, lng:13.7330 },
+    { place:'Rakovník',          okres:'Rakovník',      type:'exekuce', parcel:'402',   druh:'orná půda', area:2750, price:1650000, extra:'v exekuci',        lat:50.1040, lng:13.7330 },
     { place:'Mladá Boleslav',    okres:'Mladá Boleslav',type:'obec',    parcel:'318/2', druh:'stavební',  area:1800, price:2400000, extra:'záměr obce',       lat:50.4110, lng:14.9040 },
     { place:'Slaný',             okres:'Kladno',        type:'sale',    parcel:'96',    druh:'zahrada',   area:1340, price:1340000, extra:'na prodej',        lat:50.2300, lng:14.0860 }
   ];
@@ -84,9 +84,9 @@
   var TYPE = {
     sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
     drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
     obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
 
   var KRAJE = {
@@ -221,24 +221,24 @@
   var INFO = {
     soukromi: {
       t: 'Zásady soukromí',
-      h: '<p>Parcelka je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
+      h: '<p>Parcelka je ve veřejné bétě. Upřímně, jak zacházíme s daty:</p>' +
         '<ul>' +
-        '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
+        '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
 
-        '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
-        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, vaše inzeráty a zprávy ukládáme na server (Supabase). Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
-        '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
+        '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, vaše inzeráty a zprávy ukládáme na server (Supabase). Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
+        '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
 
-        '<li><b>Provoz:</b> web běží na GitHub Pages. Žádná reklama a žádné profilování návštěvníků. Nepoužíváme cookies třetích stran.</li>' +
-        '<li><b>Vaše práva (GDPR):</b> e-mail zpracováváme jen na základě vašeho souhlasu (upozornění nebo poptávka). Máte právo na přístup k údajům, jejich opravu i výmaz — napište nám a údaje bez zbytečného odkladu smažeme.</li>' +
+        '<li><b>Provoz:</b> web běží na GitHub Pages. Žádná reklama a žádné profilování návštěvníků. Nepoužíváme cookies třetích stran.</li>' +
+        '<li><b>Vaše práva (GDPR):</b> e-mail zpracováváme jen na základě vašeho souhlasu (upozornění nebo poptávka). Máte právo na přístup k údajům, jejich opravu i výmaz — napište nám a údaje bez zbytečného odkladu smažeme.</li>' +
         '</ul><p>Dotaz? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     },
     podminky: {
       t: 'Podmínky použití',
-      h: '<p>Parcelka je bezplatný nástroj ve veřejné bétě. Sbírá a zobrazuje příležitosti u pozemků z veřejných zdrojů.</p>' +
+      h: '<p>Parcelka je bezplatný nástroj ve veřejné bétě. Sbírá a zobrazuje příležitosti u pozemků z veřejných zdrojů.</p>' +
         '<ul>' +
-        '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Parcelka neručí za jejich úplnost ani aktuálnost.</li>' +
-        '<li>Parcelka <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
+        '<li>Data mají <b>informativní charakter</b>. Vždy si je ověřte v oficiálním katastru a u zdroje (dražba, úřad, prodejce). Parcelka neručí za jejich úplnost ani aktuálnost.</li>' +
+        '<li>Parcelka <b>není účastníkem</b> dražeb ani prodejů a neposkytuje právní ani investiční poradenství.</li>' +
         '<li><b>Inzeráty od uživatelů</b> se řídí <a href="pravidla-inzerce.html">Pravidly inzerce</a>. Za obsah inzerátu odpovídá ten, kdo ho vložil; závadný inzerát na nahlášení odstraníme.</li>' +
         '<li>Během bety se funkce mohou měnit. Prohlížení mapy zůstane zdarma.</li>' +
         '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
@@ -389,7 +389,7 @@
     var cas = '';
     if (typeof updatedAt === 'string' && updatedAt) {
       var t = new Date(updatedAt);
-      if (!isNaN(t)) cas = ' v ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
+      if (!isNaN(t)) cas = ' v ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
     }
     el.textContent = (m[0] === dnesStr ? 'Zdroje zkontrolovány dnes' + cas
       : 'Zdroje zkontrolovány ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1] + cas);
@@ -494,14 +494,14 @@
       mapEl.innerHTML =
         '<div class="mapa-nedojela" role="status">' +
           '<b>Mapu se nepodařilo načíst.</b>' +
-          '<span>Zkuste stránku obnovit. Pozemky si můžete projít i bez mapy —' +
-          ' v přehledu podle krajů a okresů.</span>' +
+          '<span>Zkuste stránku obnovit. Pozemky si můžete projít i bez mapy —' +
+          ' v přehledu podle krajů a okresů.</span>' +
           '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
         '</div>';
     }
     var seznamEl = document.getElementById('opp-list');
     if (seznamEl) {
-      seznamEl.innerHTML = '<li class="map-count">Výpis se načítá z mapy, a ta nedojela.' +
+      seznamEl.innerHTML = '<li class="map-count">Výpis se načítá z mapy, a ta nedojela.' +
         ' Zkuste obnovit stránku, nebo použijte <a href="pozemky-podle-okresu.html">přehled podle okresů</a>.</li>';
     }
     return;
@@ -904,7 +904,7 @@
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
 
-    favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
+    favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
 
     var por = document.getElementById('map-porovnat');
     if (!por) {
@@ -1905,10 +1905,10 @@
       }).then(function (vse) {
 
         if (!vse || !vse.length) {
-          vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
+          vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
         }
       }).catch(function () {
-        vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
+        vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
       });
     });
     map.on('zoomend', vrstvyViditelnost);
@@ -2107,7 +2107,7 @@
     }, 420);
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
-      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
+      ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
       : ('Do ' + km + ' km tu zatím nic není — zkuste větší okruh.'));
   }
 
@@ -2497,12 +2497,12 @@
             'Zkusit ' + vetsi + ' km — ' + (pn >= 2 && pn <= 4 ? 'jsou tam ' : 'je tam ') +
             pn + ' ' + plPozemek(pn) + '</button></span>';
         } else {
-          rada = '<span class="vm-rada">Tady není nic ani v nejširším okruhu — zkuste jiné místo.</span>';
+          rada = '<span class="vm-rada">Tady není nic ani v nejširším okruhu — zkuste jiné místo.</span>';
         }
       }
       pocetEl.innerHTML = '<span class="vm-hlavni"><b>' + n + ' ' + plPozemek(n) + '</b>' +
-        ' v okruhu ' + k + '\u00a0km' +
-        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' + rada +
+        ' v okruhu ' + k + '\u00a0km' +
+        (obec ? ' <span class="vm-obec">u obce ' + esc(obec) + '</span>' : '') + '</span>' + rada +
         (rozpad ? '<span class="vm-rozpad">' + rozpad + '</span>' : '');
     }
 
@@ -2650,7 +2650,7 @@
         if (retryBtn) { retryBtn.textContent = 'Použít mou polohu'; retryBtn.disabled = false; }
         if (errEl) {
           errEl.textContent = (er && er.code === 1)
-            ? 'Poloha je u tohoto webu vypnutá. Napište prosím obec výše 👆'
+            ? 'Poloha je u tohoto webu vypnutá. Napište prosím obec výše 👆'
             : 'Polohu se teď nepodařilo zjistit. Napište prosím obec výše 👆';
           errEl.hidden = false;
         }
@@ -2905,8 +2905,8 @@
       popis.textContent = tvar === 'gpx'
         ? (fmt(n) + ' ' + tvarPozemku(n) + ' jako body do navigace (Mapy.cz, Locus, Garmin). '
           + 'Bez souřadnic se bod uložit nedá, takže nabídky bez polohy vypadnou.')
-        : (fmt(n) + ' ' + tvarPozemku(n) + ' a ' + window.PKVyvoz.SLOUPCE.length
-          + ' sloupců — včetně souřadnic, dní do dražby a vaší poznámky. '
+        : (fmt(n) + ' ' + tvarPozemku(n) + ' a ' + window.PKVyvoz.SLOUPCE.length
+          + ' sloupců — včetně souřadnic, dní do dražby a vaší poznámky. '
           + 'Ceny jsou NABÍDKOVÉ, ne za kolik se prodalo.');
     }
     var ok = document.getElementById('vyv-ok');
@@ -3127,7 +3127,7 @@
       (function () { var a = maxPerM2, b = d.zaMetrDo, c = d.zaMetrOd;
         return function () { maxPerM2 = a; d.zaMetrDo = b; d.zaMetrOd = c; if (perm2El) perm2El.value = a ? String(a) : ''; }; }()),
       maxPerM2 ? 'do ' + fmt(maxPerM2) + ' Kč/m²' : '');
-    pol('vybavení z inzerátu', 'vybavení z inzerátu', !!(zadaneVybaveni.length || d.site.length || d.nejakeSite),
+    pol('vybavení z inzerátu', 'vybavení z inzerátu', !!(zadaneVybaveni.length || d.site.length || d.nejakeSite),
       function () { zadaneVybaveni = []; d.site = []; d.nejakeSite = false; },
       (function () { var a = zadaneVybaveni, b = d.site, c = d.nejakeSite;
         return function () { zadaneVybaveni = a; d.site = b; d.nejakeSite = c; }; }()),
@@ -3530,28 +3530,28 @@
       var _uredni = !!(MODEL && MODEL.spravniCena && MODEL.spravniCena(d));
       var varujemeOCene = !!(MODEL && MODEL.neduveryhodna(d) && !_odhadPochybny && !d.podil && !_uredni);
       if (_uredni) {
-        chips.push('<span class="opp-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</span>');
+        chips.push('<span class="opp-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</span>');
       }
       if (varujemeOCene) {
-        chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
+        chips.push('<span class="opp-overit" title="Cena za m² je hluboko pod obvyklou — bývá to spoluvlastnický podíl, pozemek bez přístupu nebo chyba v inzerátu">cena k ověření</span>');
       }
       var _od = (MODEL && !_uredni) ? MODEL.odhad(d) : null;
 
       if (_od && _od.podleVelikosti && _od.pochybna) {
         chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
-          ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
+          ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
           'ověřit cenu</span>');
       } else if (_od && _od.podleVelikosti && _od.nejisty && _od.podOdhadem >= 25 && !_od.podil) {
 
         chips.push('<span class="opp-overit" title="Cena vychází o ' + _od.podOdhadem +
-          ' % pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
-          'cena k ověření</span>');
+          ' % pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
+          'cena k ověření</span>');
       } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25 && !_od.podil) {
 
         srovnaniModel = { uroven: _od.uroven, kde: _od.kde };
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
-          ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
+          ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
       } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene && !_uredni) {
 
         var _di = dealInfo(d);
@@ -3564,13 +3564,13 @@
           ? ' ' + window.PK_CENY.skupinaText(d.type) : '';
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
           (_di && _di.cheaper >= 70
-            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
-            : 'Cena za m² patří k nejnižším u pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí')) + '">' +
-          (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
+            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
+            : 'Cena za m² patří k nejnižším u pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí')) + '">' +
+          (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
       }
 
       if (d.podil) {
-        chips.push('<span class="opp-podil" title="Podle popisu inzerátu se prodává spoluvlastnický podíl, ne celý pozemek — velikost podílu si ověřte v katastru">'
+        chips.push('<span class="opp-podil" title="Podle popisu inzerátu se prodává spoluvlastnický podíl, ne celý pozemek — velikost podílu si ověřte v katastru">'
           + (d.zlomek ? 'podíl ' + esc(d.zlomek) : 'podíl') + '</span>');
       }
       if (hot) chips.push('<span class="opp-hot">Doporučujeme</span>');
@@ -3580,7 +3580,7 @@
       if (window.PKPoznamky && window.PKPoznamky.text) {
         try {
           if (window.PKPoznamky.text(d)) {
-            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
+            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
           }
         } catch (e) {}
       }
@@ -3590,7 +3590,7 @@
       li.innerHTML =
         '<div class="opp-media">' +
           mapThumb(d) +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
         '</div>' +
 
@@ -3625,7 +3625,7 @@
         toggleFav(d);
         var on = isFav(d);
         favBtn.classList.toggle('on', on);
-        favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
+        favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
         if (favOnly) renderList();
       });
       var skrytBtn = li.querySelector('.opp-skryt');
@@ -3636,7 +3636,7 @@
         renderList();
 
         if (!bylSkryty) {
-          showToast('Pozemek skrytý z výpisu', { text: 'Vrátit', fn: function () {
+          showToast('Pozemek skrytý z výpisu', { text: 'Vrátit', fn: function () {
             if (odskryj(d)) renderList();
           } });
         }
@@ -3658,7 +3658,7 @@
     if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
       (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
 
-    if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
+    if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
 
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
 
@@ -3693,7 +3693,7 @@
     }
     if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-skryte" id="mc-podobne">' +
       (ukazPodobne ? 'Jen přesný název'
-                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
+                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
     if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout výběr ('
       + fmt(matched) + ')</button>';
@@ -3759,7 +3759,7 @@
       var opravaNav = (anyFilter && searchTerm && HL.mysleliJste) ? HL.mysleliJste(DATA, searchTerm) : null;
       var vinik = anyFilter ? nejvicOmezuje() : null;
       if (favOnly && !favCount()) {
-        emptyMsg = 'Zatím nemáte uložené žádné pozemky. U každé nabídky klepněte na záložku a najdete je tady pohromadě.';
+        emptyMsg = 'Zatím nemáte uložené žádné pozemky. U každé nabídky klepněte na záložku a najdete je tady pohromadě.';
       } else if (anyFilter) {
         emptyMsg = 'Nic neodpovídá vybraným filtrům. Zkuste je zmírnit — třeba zvýšit cenu, zvětšit rozsah výměry nebo vybrat „Vše".';
 
@@ -3974,7 +3974,7 @@
     var delka = PKRychly.delkaDavky(rvStav);
     var hotovych = delka - PKRychly.zbyva(rvStav);
     var zb = rvPrvek('rv-zbyva');
-    if (zb) zb.textContent = d ? ('Karta ' + PKRychly.poradi(rvStav) + ' z ' + delka)
+    if (zb) zb.textContent = d ? ('Karta ' + PKRychly.poradi(rvStav) + ' z ' + delka)
       : (delka ? 'Dávka hotová' : 'Není co třídit');
     var pr = rvPrvek('rv-pruh');
     if (pr) pr.style.width = (delka ? Math.round(hotovych / delka * 100) : 0) + '%';
@@ -4022,13 +4022,13 @@
         + '<span class="rv-razitko ano" aria-hidden="true">Uloženo</span>'
         + '<span class="rv-razitko ne" aria-hidden="true">Tenhle ne</span></div>'
       + '<div class="rv-telo">'
-        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
+        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
         + '<div class="rv-misto">' + esc(d.place || '') + '</div>'
         + (d.okres && d.okres !== d.place ? '<div class="rv-okres">okres ' + esc(d.okres) + '</div>' : '')
         + '<div class="rv-druh">' + esc(d.druh || '') + '</div>'
         + '<div class="rv-cisla">'
-          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
-          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
+          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
+          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
         + '</div>'
 
         + (window.PKPoznamky ? ('<div class="rv-pozn-box">'
@@ -4037,7 +4037,7 @@
             + '<textarea class="rv-pozn" id="rv-pozn" rows="2" maxlength="2000"'
               + (poznTed ? '' : ' hidden')
               + ' placeholder="Proč si ho nechávám…"'
-              + ' aria-label="Moje poznámka k pozemku">' + esc(poznTed) + '</textarea>'
+              + ' aria-label="Moje poznámka k pozemku">' + esc(poznTed) + '</textarea>'
             + '<span class="rv-pozn-stav" id="rv-pozn-stav" role="status"></span>'
           + '</div>') : '')
       + '</div></article></div>';
@@ -4080,9 +4080,9 @@
     var dal = PKRychly.zbyvaPoDavce(rvStav);
     var vety = [];
     if (souh.ulozeno) vety.push('<b>' + souh.ulozeno + '</b> ' + tvarPozemku(souh.ulozeno)
-      + ' máte mezi uloženými (v menu „Uložené").');
+      + ' máte mezi uloženými (v menu „Uložené").');
     if (souh.skryto) vety.push('<b>' + souh.skryto + '</b> ' + tvarPozemku(souh.skryto)
-      + ' se schovalo z výpisu; vrátí je tlačítko „Zobrazit skryté" nad seznamem.');
+      + ' se schovalo z výpisu; vrátí je tlačítko „Zobrazit skryté" nad seznamem.');
     if (!souh.celkem) vety.push('Nerozhodli jste nic — ve výpisu zůstalo všechno tak, jak bylo.');
     return '<div class="rv-konec"><h3>' + (souh.celkem ? 'Dávka hotová' : 'Není co třídit') + '</h3>'
       + '<p>' + vety.join(' ') + '</p>'
@@ -4134,7 +4134,7 @@
     if (!v) return;
     if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
     else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
-    rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
+    rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
       v.akce === 'uloz' ? 'uloz' : 'skryj');
     if (v.akce === 'uloz') {
       var ano = rvPrvek('rv-ano');
@@ -4436,7 +4436,7 @@
       var perM2 = zaMetr(d);
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
 
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % pozemků'
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % pozemků'
           + (window.PK_CENY && window.PK_CENY.skupinaText
             ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
           + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
@@ -4469,7 +4469,7 @@
 
       wrap.className = 'odl-wrap odl-empty reveal is-visible';
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
-        '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
+        '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
         '<a href="pridat.html" class="btn-primary odl-empty-btn">Přidat pozemek zdarma →</a>';
       if (cta) cta.style.display = 'none';
       return;
@@ -4873,7 +4873,7 @@
         '<div class="rz-telo">' +
           '<div class="rz-graf" role="group" aria-label="Rozsah podle počtu nabídek"></div>' +
           '<div class="rz-osa"><span></span><span></span></div>' +
-          '<p class="rz-napoveda">Klepněte na sloupec, nebo přes několik přejeďte prstem. Sloupce ukazují, kolik nabídek v kterém rozmezí je.</p>' +
+          '<p class="rz-napoveda">Klepněte na sloupec, nebo přes několik přejeďte prstem. Sloupce ukazují, kolik nabídek v kterém rozmezí je.</p>' +
         '</div>' +
         '<div class="rz-pata"><button type="button" class="rz-vymaz">Vymazat</button>' +
         '<button type="button" class="rz-hotovo">Hotovo</button></div>';
@@ -4902,7 +4902,7 @@
         sloupce.push(b);
       }
       osaEl.children[0].textContent = window.PKRozsah.popis(zar[1], jednotka) || '';
-      osaEl.children[1].textContent = (window.PKRozsah.popis(zar[zar.length - 2], jednotka) || '') + ' a výš';
+      osaEl.children[1].textContent = (window.PKRozsah.popis(zar[zar.length - 2], jednotka) || '') + ' a výš';
 
       var p = { klic: klic, jeCena: jeCena, zar: zar, jednotka: jednotka, nadpis: nadpis,
         ov: ov, tlac: tlac, sloupce: sloupce, poleOd: poleOd, poleDo: poleDo,
@@ -5257,7 +5257,7 @@
     if (akceZadne) akceZadne.hidden = true;
     if (akceMam) akceMam.hidden = false;
     if (n.nove > 0) {
-      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove >= 2 && n.nove <= 4 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
+      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove >= 2 && n.nove <= 4 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
       mistoPruh.classList.add('ma-novinky');
     } else {
       hl.textContent = 'Ve vašem okolí od minule nic nového';

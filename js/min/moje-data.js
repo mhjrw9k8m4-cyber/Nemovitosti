@@ -18,7 +18,7 @@
     var stav = U.stav();
     if (!stav.length) {
       host.innerHTML = '<div class="md-prazdno"><h2>Zatím tu nic není</h2>' +
-        '<p>Parcelka si o vás v tomhle prohlížeči nic nepamatuje. ' +
+        '<p>Parcelka si o vás v tomhle prohlížeči nic nepamatuje. ' +
         'Jakmile si uložíte pozemek nebo něco nastavíte, objeví se to tady.</p></div>';
       return;
     }
@@ -30,7 +30,7 @@
       html += '<section class="md-skup">' +
         '<div class="md-skup-h"><h2>' + esc(sk.nazev) + '</h2>' +
           (sk.id === 'ucet' ? '' :
-            '<button type="button" class="md-smaz-skup" data-skup="' + esc(sk.id) + '">Smazat vše z této části</button>') +
+            '<button type="button" class="md-smaz-skup" data-skup="' + esc(sk.id) + '">Smazat vše z této části</button>') +
         '</div>' +
         (sk.popis ? '<p class="md-skup-p">' + esc(sk.popis) + '</p>' : '');
       moje.forEach(function (x) {
@@ -53,7 +53,7 @@
       '<button type="button" class="md-smaz-vse" id="md-smaz-vse">Smazat úplně všechno</button>' +
 
       '<p class="md-pozn">Tohle maže jen to, co je ve vašem prohlížeči. Co je na vašem ' +
-        '<b>účtu</b> — uložená hledání, zprávy a vaše inzeráty — leží v databázi a maže se ' +
+        '<b>účtu</b> — uložená hledání, zprávy a vaše inzeráty — leží v databázi a maže se ' +
         'tam, kde se spravuje: <a href="hlidani.html">Hlídání</a>, ' +
         '<a href="zpravy.html">Zprávy</a>, <a href="muj-inzerat.html">Moje inzeráty</a>.</p>' +
     '</section>';
@@ -87,8 +87,8 @@
       vykresli();
       hlaska('Smazáno položek: ' + n);
     } else if (b.id === 'md-smaz-vse') {
-      if (!confirm('Smazat opravdu všechno, co si web v tomhle prohlížeči pamatuje? '
-        + 'Včetně uložených pozemků a poznámek. Zpátky to nejde.')) return;
+      if (!confirm('Smazat opravdu všechno, co si web v tomhle prohlížeči pamatuje? '
+        + 'Včetně uložených pozemků a poznámek. Zpátky to nejde.')) return;
       var celkem = 0;
       U.SKUPINY.forEach(function (s) { celkem += U.smazSkupinu(s.id); });
       vykresli();

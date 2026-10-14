@@ -104,12 +104,12 @@
     });
     if (spolecne && spolecne.length) {
       ven.site = spolecne;
-      ven.nazvy.push('sítě uvedené v inzerátu');
+      ven.nazvy.push('sítě uvedené v inzerátu');
     }
     return ven;
   }
 
-  var VLASTNICTVI = ' Vložit pozemek smí jen jeho majitel nebo ten, kdo k tomu má jeho souhlas — na mapě se objeví jako „Přímo od majitele".';
+  var VLASTNICTVI = ' Vložit pozemek smí jen jeho majitel nebo ten, kdo k tomu má jeho souhlas — na mapě se objeví jako „Přímo od majitele".';
 
   function hlaska(co) {
     if (!co) return '';
@@ -117,24 +117,24 @@
     var uvod = '';
     if (co.pocet > 1) {
       uvod = 'Tenhle odkaz vede na ' + (co.pocet === 1 ? '1 pozemek' : co.pocet >= 2 && co.pocet <= 4 ? co.pocet + ' pozemky' : co.pocet + ' pozemků') +
-        ' v jedné dražbě, takže doplňujeme jen to, co mají společné. ';
+        ' v jedné dražbě, takže doplňujeme jen to, co mají společné. ';
     }
     if (!co.nazvy.length) {
-      return uvod ? uvod + 'Údaje se u nich rozcházejí, vyplňte je prosím podle svého pozemku.' + VLASTNICTVI : '';
+      return uvod ? uvod + 'Údaje se u nich rozcházejí, vyplňte je prosím podle svého pozemku.' + VLASTNICTVI : '';
     }
     var n = co.nazvy.slice();
     var posledni = n.pop();
-    var veta = uvod + 'Doplnili jsme ' + (n.length ? n.join(', ') + ' a ' + posledni : posledni) + '.';
+    var veta = uvod + 'Doplnili jsme ' + (n.length ? n.join(', ') + ' a ' + posledni : posledni) + '.';
     if (co.rozdilne.length) {
       var r = co.rozdilne.slice();
       var rp = r.pop();
-      var vyjmenovane = (r.length ? r.join(', ') + ' a ' + rp : rp);
+      var vyjmenovane = (r.length ? r.join(', ') + ' a ' + rp : rp);
 
       veta += ' ' + vyjmenovane.charAt(0).toUpperCase() + vyjmenovane.slice(1) +
-        (r.length ? ' se u nich rozcházejí' : ' se u nich rozchází') +
+        (r.length ? ' se u nich rozcházejí' : ' se u nich rozchází') +
         ' — doplňte prosím podle svého pozemku.';
     }
-    return veta + ' Zkontrolujte to a připište popis — ten za vás vymýšlet nebudeme.' + VLASTNICTVI;
+    return veta + ' Zkontrolujte to a připište popis — ten za vás vymýšlet nebudeme.' + VLASTNICTVI;
   }
 
   global.PKPredvyplneni = {

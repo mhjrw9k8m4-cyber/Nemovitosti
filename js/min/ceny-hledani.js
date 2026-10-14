@@ -62,7 +62,7 @@
       return '<li class="cenh-radek"><span class="cenh-druh">' + esc(NAZEV[g] || g) + '</span>'
         + '<b class="cenh-cena">' + cislo(c.med) + ' Kč/m²</b>'
         + '<span class="cenh-detail">obvykle ' + cislo(c.lo) + '–' + cislo(c.hi) + '\u00a0Kč/m²'
-        + ' · z ' + cislo(c.n) + ' ' + tvar(c.n, ['nabídky', 'nabídek', 'nabídek']) + '</span></li>';
+        + ' · z ' + cislo(c.n) + ' ' + tvar(c.n, ['nabídky', 'nabídek', 'nabídek']) + '</span></li>';
     }).join('');
 
     var hlava, pozn = '';
@@ -71,12 +71,12 @@
       hlava = esc(volba.obec) + ' <span class="cenh-okres">okres ' + esc(volba.okres) + '</span>';
 
       pozn = 'Ceny jsou <b>za celý okres ' + esc(volba.okres) + '</b>. Pro samotnou obec '
-        + esc(volba.obec) + ' je v nabídce ' + (vObci ? '<b>' + cislo(vObci) + '</b> '
+        + esc(volba.obec) + ' je v nabídce ' + (vObci ? '<b>' + cislo(vObci) + '</b> '
           + tvar(vObci, ['pozemek', 'pozemky', 'pozemků']) : 'málo nabídek')
         + ' — na vlastní medián to nestačí.';
     } else {
       hlava = 'okres ' + esc(volba.okres);
-      pozn = 'Medián nabídkových cen v okrese. Z <b>' + cislo(ok.c) + '</b> '
+      pozn = 'Medián nabídkových cen v okrese. Z <b>' + cislo(ok.c) + '</b> '
         + tvar(ok.c, ['nabídky', 'nabídek', 'nabídek']) + ' celkem.';
     }
 
@@ -84,9 +84,9 @@
       + '<h3 class="cenh-hlava">' + hlava + '</h3>'
       + (radky
         ? '<ul class="cenh-radky">' + radky + '</ul>'
-        : '<p class="cenh-nic">V tomhle okrese zatím není dost nabídek na to, aby se dala spočítat cena za metr.</p>')
+        : '<p class="cenh-nic">V tomhle okrese zatím není dost nabídek na to, aby se dala spočítat cena za metr.</p>')
       + '<p class="cenh-pozn">' + pozn + '</p>'
-      + '<a class="cenh-odkaz" href="' + esc(ok.h) + '">Prohlédnout nabídky v okrese ' + esc(ok.n) + ' →</a>'
+      + '<a class="cenh-odkaz" href="' + esc(ok.h) + '">Prohlédnout nabídky v okrese ' + esc(ok.n) + ' →</a>'
       + '</div>';
   }
 
@@ -184,7 +184,7 @@
         if (!n.length && H.norm && H.norm(q).length >= 2) {
 
           vysledekEl.innerHTML = '<div class="cenh-karta"><p class="cenh-nic">'
-            + 'Pro „' + esc(q.trim()) + '" nemáme v nabídce žádný pozemek.'
+            + 'Pro „' + esc(q.trim()) + '" nemáme v nabídce žádný pozemek.'
             + ' Zkuste okres — třeba Benešov nebo Kolín.'
             + '</p></div>';
         } else if (n.length) {

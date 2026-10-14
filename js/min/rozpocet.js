@@ -84,7 +84,7 @@
       : '<span class="rz-okres">' + jmeno + '</span>';
     return '<li class="rz-radek">' + kde
       + '<b class="rz-pocet">' + x.pocet + '</b>'
-      + '<span class="rz-detail">od ' + fmt(x.nejlevnejsi) + ' Kč</span></li>';
+      + '<span class="rz-detail">od ' + fmt(x.nejlevnejsi) + ' Kč</span></li>';
   }
 
   function vykresli() {
@@ -93,7 +93,7 @@
     if (!data) { cil.innerHTML = '<p class="rz-pozn">Načítám nabídky…</p>'; return; }
     var z = zadani();
     if (z.rozpocet == null) {
-      cil.innerHTML = '<p class="rz-pozn">Napište rozpočet a hned uvidíte, kde se za něj dá koupit.</p>';
+      cil.innerHTML = '<p class="rz-pozn">Napište rozpočet a hned uvidíte, kde se za něj dá koupit.</p>';
       return;
     }
     if (z.odVymery != null && z.doVymery != null && z.odVymery > z.doVymery) {
@@ -107,7 +107,7 @@
     if (!del.do.length) {
 
       if (!vybrane.length) {
-        cil.innerHTML = '<p class="rz-nic">Takový pozemek teď v nabídce není — ani dráž.'
+        cil.innerHTML = '<p class="rz-nic">Takový pozemek teď v nabídce není — ani dráž.'
           + ' Zkuste povolit větší rozsah výměry nebo jiný druh.</p>';
         return;
       }
@@ -127,8 +127,8 @@
       + fmt(okresy.length) + ' ' + tvarOkres(okresy.length) + '.</p>'
       + '<ol class="rz-seznam">' + vypsat.map(function (x) { return radekOkresu(data, x); }).join('') + '</ol>';
     if (zbytek > 0) {
-      html += '<p class="rz-pozn">a dalších ' + fmt(zbytek) + ' '
-        + (zbytek === 1 ? 'okres' : tvarOkres(zbytek)) + ' s menším počtem.</p>';
+      html += '<p class="rz-pozn">a dalších ' + fmt(zbytek) + ' '
+        + (zbytek === 1 ? 'okres' : tvarOkres(zbytek)) + ' s menším počtem.</p>';
     }
     cil.innerHTML = html;
   }

@@ -18,8 +18,8 @@
     ['Louka / travní porost', 'travní porost', ['trvaly travni porost', 'travni porost', 'louka', 'louky', 'travni', 'pastvina', 'pastviny']],
 
     ['Stavební / zastavěná', 'stavební', ['stavebni pozemek', 'stavebni parcela',
-      'na stavbu domu', 'pod stavbu domu', 'k vystavbe domu', 'na stavbu rodinneho domu',
-      'na stavbu', 'pod stavbu', 'k vystavbe', 'pro stavbu', 'pod dum', 'na dum',
+      'na stavbu domu', 'pod stavbu domu', 'k vystavbe domu', 'na stavbu rodinneho domu',
+      'na stavbu', 'pod stavbu', 'k vystavbe', 'pro stavbu', 'pod dum', 'na dum',
       'stavebni', 'stavebak', 'zastavena', 'stavbu', 'vystavbe', 'vystavba']],
     ['Lesní pozemek', 'lesní', ['lesni pozemek', 'lesni', 'les', 'lesy', 'lesa']],
     ['Orná půda', 'orná', ['orna puda', 'orna', 'pole', 'poli']],
@@ -29,7 +29,7 @@
     ['Ostatní plocha', 'ostatní', ['ostatni plocha', 'ostatni']],
   ];
   var TYPY = [
-    ['drazba', 'Dražba', 'dražba', ['drazba', 'drazby', 'drazbu', 'v drazbe']],
+    ['drazba', 'Dražba', 'dražba', ['drazba', 'drazby', 'drazbu', 'v drazbe']],
     ['exekuce', 'Exekuce', 'exekuce', ['exekuce', 'exekucni', 'exekuci']],
     ['obec', 'Od obce', 'od obce', ['od obce', 'obecni', 'obec prodava']],
     ['majitel', 'Od majitele', 'od majitele', ['od majitele', 'primo od majitele', 'majitel', 'soukromnik']],
@@ -288,7 +288,7 @@
       }
 
       zaber(i, delka, { druh: kde, smer: smer, hodnota: hodnota,
-        popis: delka === 2 && !delkaJedZapsana ? usek(i, 2) + ' Kč' : usek(i, delka) });
+        popis: delka === 2 && !delkaJedZapsana ? usek(i, 2) + ' Kč' : usek(i, delka) });
     }
 
     for (var bi = 0; bi < slova.length; bi++) {

@@ -62,7 +62,7 @@
     if (podstatne.length) {
       var k = prvek('div', 'sml-karta sml-chyby');
       k.appendChild(prvek('h3', null, 'Ještě to nejde sestavit'));
-      k.appendChild(prvek('p', 'sml-lead', 'Podklad s prázdnými místy by vypadal hotově, a podle takového papíru se podepisuje. Chybí:'));
+      k.appendChild(prvek('p', 'sml-lead', 'Podklad s prázdnými místy by vypadal hotově, a podle takového papíru se podepisuje. Chybí:'));
       var ul = prvek('ul', 'sml-seznam');
       podstatne.forEach(function (c) { ul.appendChild(prvek('li', null, c.zprava)); });
       k.appendChild(ul);
@@ -179,7 +179,7 @@
         var pozn = document.createElement('small');
         pozn.id = 'sml-parcela-pozn';
         pozn.className = 'sml-pozn-overit';
-        pozn.textContent = 'Číslo jsme přečetli z textu inzerátu, ne z katastru — ověřte ho,'
+        pozn.textContent = 'Číslo jsme přečetli z textu inzerátu, ne z katastru — ověřte ho,'
           + ' než podklad použijete.';
         pole.parentNode.appendChild(pozn);
         pole.setAttribute('aria-describedby', 'sml-parcela-pozn');

@@ -81,7 +81,7 @@
     return '<span class="sn-popis" aria-hidden="true">' +
       '<b>' + esc(d.place) + '</b>' +
       (v ? '<i>' + v + '</i>' : '') +
-      (d.area > 0 ? '<u>přesný obrys pozemku najdete v katastru</u>' : '') +
+      (d.area > 0 ? '<u>přesný obrys pozemku najdete v katastru</u>' : '') +
       '</span>';
   }
 

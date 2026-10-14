@@ -208,7 +208,7 @@
         });
         function dokonci() {
         contentOk(img).then(function (ok) {
-          if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
+          if (!ok) { URL.revokeObjectURL(url); resolve({ reject: 'fotka vypadá nevhodně a nebyla přijata' }); return; }
 
           temaOk(img).then(function (tv) {
             if (!tv.ok) { URL.revokeObjectURL(url); resolve({ reject: tv.msg }); return; }
@@ -290,9 +290,9 @@
       if (!shoda) return '';
       duplPotvrzeno = true;
       var kolik = shoda.area ? (' ' + String(shoda.area).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²') : '';
-      return 'V „Moje inzeráty" už máte pozemek ' + shoda.place + kolik
+      return 'V „Moje inzeráty" už máte pozemek ' + shoda.place + kolik
         + '. Je to tentýž? Pak raději upravte ten stávající — dva stejné inzeráty '
-        + 'zájemce jen zmatou. Jestli jde opravdu o jiný pozemek, klepněte na Zveřejnit ještě jednou.';
+        + 'zájemce jen zmatou. Jestli jde opravdu o jiný pozemek, klepněte na Zveřejnit ještě jednou.';
     }).catch(function () { return ''; });
   }
 
@@ -342,7 +342,7 @@
           var m = (res && res.error && (res.error.message || res.error.msg)) || '';
 
           if ((res && res.status === 404) || /could not find the function|PGRST202/i.test(m)) {
-            if (window.console) console.error('create_listing: databáze má starší verzi funkce. Spusťte supabase/00-vse.sql v Supabase → SQL Editor.');
+            if (window.console) console.error('create_listing: databáze má starší verzi funkce. Spusťte supabase/00-vse.sql v Supabase → SQL Editor.');
             return 'db';
           }
           if (/nevhodn/i.test(m)) return 'bad';
@@ -419,7 +419,7 @@
       wrap.setAttribute('role', 'listitem');
 
       wrap.setAttribute('aria-label', (i === 0 ? 'Titulní fotka' : 'Fotka ' + (i + 1))
-        + ' z ' + vybraneFotky.length + ' — šipkami vlevo a vpravo ji přesunete');
+        + ' z ' + vybraneFotky.length + ' — šipkami vlevo a vpravo ji přesunete');
 
       var obr = document.createElement('div'); obr.className = 'pp-obr';
       var img = document.createElement('img');
@@ -543,8 +543,8 @@
         var pv = PKKontrola.fotkaPuvod(exif, file.type, img.naturalWidth, img.naturalHeight);
         if (!pv.ok) { hotovo('spatne', pv.msg); return; }
       }
-      var kde = (exif && typeof exif.lat === 'number') ? ' · s místem pořízení' : '';
-      if (!window.PKFotoTema || !window.PKTridy) { hotovo('dobre', 'v pořádku' + kde); return; }
+      var kde = (exif && typeof exif.lat === 'number') ? ' · s místem pořízení' : '';
+      if (!window.PKFotoTema || !window.PKTridy) { hotovo('dobre', 'v pořádku' + kde); return; }
       PKFotoTema.posud(img, window.PKTridy, window.PKSkupiny).then(function (r) {
         var d = r.detail || {};
         if (!r.ok) { hotovo('spatne', r.msg); return; }
@@ -552,7 +552,7 @@
         var co = (d.nej || []).filter(function (x) { return x.skupina === 'V' && x.cesky; })
           .map(function (x) { return x.cesky; }).slice(0, 2).join(', ');
         hotovo('dobre', (co ? co : 'vypadá dobře') + kde);
-      }, function () { hotovo('dobre', 'v pořádku' + kde); });
+      }, function () { hotovo('dobre', 'v pořádku' + kde); });
     });
   }
 
@@ -628,7 +628,7 @@
       if (val('p-obec') + '|' + val('p-okres') !== klic) return;
       if (!pos) { mpRekni('err', 'Obec „' + obec + '" jsme na mapě nenašli. Zkuste prosím nejbližší větší obec.'); return; }
       if (pos.pribl) {
-        mpRekni('err', 'Obec „' + obec + '" jsme nenašli — pozemek by skončil u okresního města, '
+        mpRekni('err', 'Obec „' + obec + '" jsme nenašli — pozemek by skončil u okresního města, '
           + 'ne na svém místě. Zkontrolujte prosím název obce.');
         return;
       }
@@ -658,7 +658,7 @@
     if (val('p-druh')) pct += 8; if (hasPristup) pct += 7; if (hasSite) pct += 8; if (hasPopis) pct += 7;
     var fill = document.getElementById('pcs-fill'), pctEl = document.getElementById('pcs-pct'), hint = document.getElementById('pcs-hint'), tierEl = document.getElementById('pcs-tier');
     if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('full', pct >= 100); }
-    if (pctEl) pctEl.textContent = pct + ' %';
+    if (pctEl) pctEl.textContent = pct + ' %';
 
     var lvl = pct >= 100 ? 5 : pct >= 75 ? 4 : pct >= 50 ? 3 : pct >= 25 ? 2 : 1;
     var tier = ['', 'Začínáme', 'Dobrý základ', 'Silný inzerát', 'Skvělý inzerát', 'Špičkový inzerát'][lvl];
@@ -666,10 +666,10 @@
     var sc = document.querySelector('.pc-strength'); if (sc) sc.setAttribute('data-lvl', String(lvl));
     if (hint) {
       var msg;
-      if (!hasObec || !hasV || !hasC) msg = 'Vyplňte <b>obec, výměru a cenu</b> — základ inzerátu.';
-      else if (!hasFotky) msg = 'Přidejte <b>fotky</b> — nabídky s fotkou přitáhnou nejvíc zájemců.';
-      else if (!hasPopis) msg = 'Napište pár vět do <b>popisu</b>, ať zájemci vědí, o co jde.';
-      else if (!hasSite || !hasPristup) msg = 'Doplňte <b>sítě a přístup</b> — kupující je řeší jako první.';
+      if (!hasObec || !hasV || !hasC) msg = 'Vyplňte <b>obec, výměru a cenu</b> — základ inzerátu.';
+      else if (!hasFotky) msg = 'Přidejte <b>fotky</b> — nabídky s fotkou přitáhnou nejvíc zájemců.';
+      else if (!hasPopis) msg = 'Napište pár vět do <b>popisu</b>, ať zájemci vědí, o co jde.';
+      else if (!hasSite || !hasPristup) msg = 'Doplňte <b>sítě a přístup</b> — kupující je řeší jako první.';
       else if (pct >= 100) msg = '<b>Špičkový inzerát!</b> Máte vyplněno vše důležité — směle odešlete.';
       else msg = '<b>Skvělé — inzerát je připravený.</b> Můžete odeslat, nebo doladit detaily.';
       hint.innerHTML = msg;
@@ -827,7 +827,7 @@
   function handle(formId, msgId, buildData, validate, okMsg, toastMsg, sender) {
     var form = document.getElementById(formId);
     if (!form) return;
-    okMsg = okMsg || 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
+    okMsg = okMsg || 'Děkujeme! Nabídku jsme přijali. Projdeme si ji a ozveme se, jakmile ji zveřejníme.';
     toastMsg = toastMsg || 'Nabídka odeslána ke zveřejnění.';
 
     function clearOne(e) {
@@ -870,24 +870,24 @@
           ms.textContent = 'Nepodařilo se najít obec na mapě. Zkontrolujte prosím název obce (např. „Kolín").';
           ms.classList.add('err');
         } else if (r === 'geoObec') {
-          ms.textContent = 'Obec „' + val('p-obec') + '" jsme na mapě nenašli — pozemek by se ukázal u okresního města, '
-            + 'ne na svém místě. Zkontrolujte prosím název obce; stačí i nejbližší větší obec.';
+          ms.textContent = 'Obec „' + val('p-obec') + '" jsme na mapě nenašli — pozemek by se ukázal u okresního města, '
+            + 'ne na svém místě. Zkontrolujte prosím název obce; stačí i nejbližší větší obec.';
           ms.classList.add('err');
         } else if (r === 'bad') {
-          ms.textContent = 'Text obsahuje nevhodná slova nebo vypadá jako spam. Upravte prosím inzerát a zkuste to znovu.';
+          ms.textContent = 'Text obsahuje nevhodná slova nebo vypadá jako spam. Upravte prosím inzerát a zkuste to znovu.';
           ms.classList.add('err');
         } else if (r === 'photos') {
           var names = (typeof photoRejects !== 'undefined' ? photoRejects : []).map(function (x) { return '„' + x.name + '" (' + x.reason + ')'; }).join(', ');
-          ms.innerHTML = 'Některé fotky jsme nepřijali: ' + escHtml(names) + '. Odeberte je prosím a přidejte fotky pozemku.';
+          ms.innerHTML = 'Některé fotky jsme nepřijali: ' + escHtml(names) + '. Odeberte je prosím a přidejte fotky pozemku.';
           ms.classList.add('err');
         } else if (r === 'auth') {
           ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';
           ms.classList.add('err');
         } else if (r === 'limit') {
-          ms.innerHTML = 'Dosáhli jste limitu inzerátů pro váš účet. Smažte starší v „Moje inzeráty", nebo si účet <a href="kontakt.html">rozšiřte až na 20 inzerátů</a>.';
+          ms.innerHTML = 'Dosáhli jste limitu inzerátů pro váš účet. Smažte starší v „Moje inzeráty", nebo si účet <a href="kontakt.html">rozšiřte až na 20 inzerátů</a>.';
           ms.classList.add('err');
         } else if (r === 'wait') {
-          ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
+          ms.textContent = 'Chvíli prosím počkejte (asi minutu) a zkuste přidat další inzerát znovu.';
           ms.classList.add('err');
         } else if (r === 'pravidlo') {
           ms.textContent = serverHlaska;
@@ -896,10 +896,10 @@
           ms.textContent = duplHlaska;
           ms.classList.add('err');
         } else if (r === 'poloha') {
-          ms.textContent = polohaHlaska || 'Obec a okres k sobě nesedí — zkontrolujte je prosím.';
+          ms.textContent = polohaHlaska || 'Obec a okres k sobě nesedí — zkontrolujte je prosím.';
           ms.classList.add('err');
         } else if (r === 'misto') {
-          ms.textContent = 'Fotka ' + (mistoHlaska || 'nesedí k zadané obci') + ' Zkontrolujte prosím obec, nebo nahrajte fotky pozemku.';
+          ms.textContent = 'Fotka ' + (mistoHlaska || 'nesedí k zadané obci') + ' Zkontrolujte prosím obec, nebo nahrajte fotky pozemku.';
           ms.classList.add('err');
         } else if (r === 'db') {
           ms.innerHTML = 'Inzeráty teď nejde přidávat — na naší straně neběží aktuální verze databáze. Píšeme na tom; zkuste to prosím později, nebo nám dejte vědět přes <a href="kontakt.html">kontakt</a>.';
@@ -926,11 +926,11 @@
         posledniVarovani = (v.varovani || []);
       } else {
         if (!val('p-obec')) return E('Vyplňte prosím obec / lokalitu.', 'p-obec');
-        if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
-        if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
+        if (!(parseInt(val('p-vymera'), 10) > 0)) return E('Zadejte prosím výměru v m².', 'p-vymera');
+        if (!(parseInt(val('p-cena'), 10) > 0)) return E('Zadejte prosím cenu v Kč.', 'p-cena');
         if (!validContact(val('p-kontakt'))) return E('Zadejte platné telefonní číslo (9 číslic), nebo pole nechte prázdné.', 'p-kontakt');
       }
-      if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
+      if (!checked('p-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'p-souhlas');
       return '';
     },
     'Zveřejněno! Přesměrováváme na váš inzerát…',
@@ -953,7 +953,7 @@
       if (!val('i-popis')) return E('Napište prosím krátký popis.', 'i-popis');
       if (!val('i-jmeno')) return E('Uveďte prosím své jméno.', 'i-jmeno');
       if (!validContact(val('i-kontakt'))) return E('Zadejte platné telefonní číslo (9 číslic).', 'i-kontakt');
-      if (!checked('i-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'i-souhlas');
+      if (!checked('i-souhlas')) return E('Potvrďte prosím souhlas s pravidly a zveřejněním.', 'i-souhlas');
       return '';
     }
   );
@@ -972,7 +972,7 @@
       if (!val('r-duvod')) return E('Vyberte prosím důvod nahlášení.', 'r-duvod');
       return '';
     },
-    'Děkujeme za nahlášení. Podíváme se na to a případně inzerát stáhneme.',
+    'Děkujeme za nahlášení. Podíváme se na to a případně inzerát stáhneme.',
     'Nahlášení odesláno.'
   );
 
@@ -1007,7 +1007,7 @@
         var row = Array.isArray(res.data) ? res.data[0] : res.data;
         if (!row) { q.textContent = ''; return; }
         var max = row.max || 1, left = Math.max(0, max - (row.used || 0));
-        var html = 'Inzeráty: <b>' + row.used + ' z ' + max + '</b>';
+        var html = 'Inzeráty: <b>' + row.used + ' z ' + max + '</b>';
         if (max <= 1) html += ' · <a href="kontakt.html">Rozšířit na 20</a>';
         else if (left > 0) html += ' (zbývá ' + left + ')';
         q.innerHTML = html + ' · ';
@@ -1040,7 +1040,7 @@
       if (tabLogin) tabLogin.setAttribute('aria-selected', String(mode === 'login'));
       if (tabSignup) tabSignup.setAttribute('aria-selected', String(mode === 'signup'));
       if (titleEl) titleEl.textContent = mode === 'signup' ? 'Vytvořte si účet' : 'Přihlaste se';
-      if (subEl) subEl.textContent = mode === 'signup' ? 'Nový účet zdarma — stačí e-mail a heslo.' : 'Máte už účet? Zadejte e-mail a heslo.';
+      if (subEl) subEl.textContent = mode === 'signup' ? 'Nový účet zdarma — stačí e-mail a heslo.' : 'Máte už účet? Zadejte e-mail a heslo.';
       if (submitBtn) submitBtn.textContent = mode === 'signup' ? 'Vytvořit účet zdarma' : 'Přihlásit se';
       if (passHint) passHint.textContent = mode === 'signup' ? '(aspoň 6 znaků)' : '';
       var pw = document.getElementById('au-pass'); if (pw) pw.setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
@@ -1058,13 +1058,13 @@
         say('Vytvářím účet…');
         PKAuth.signup(c.e, c.p).then(function (r) {
           if (r.ok && r.session) { refresh(); }
-          else if (r.ok) { say('Účet vytvořen. Pokud přijde potvrzovací e-mail, potvrďte ho a přihlaste se.'); setMode('login'); }
+          else if (r.ok) { say('Účet vytvořen. Pokud přijde potvrzovací e-mail, potvrďte ho a přihlaste se.'); setMode('login'); }
           else { say(errText(r.data) || 'Účet se nepovedlo vytvořit — možná už existuje. Zkuste se přihlásit.', true); }
         });
       } else {
         say('Přihlašuji…');
         PKAuth.login(c.e, c.p).then(function (r) {
-          if (r.ok) { refresh(); } else { say(errText(r.data) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo, nebo si dole resetujte heslo.', true); }
+          if (r.ok) { refresh(); } else { say(errText(r.data) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo, nebo si dole resetujte heslo.', true); }
         });
       }
     });
@@ -1072,9 +1072,9 @@
     var fg = document.getElementById('au-forgot');
     if (fg) fg.addEventListener('click', function () {
       var c = creds();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Napište nahoře svůj e-mail a pak klepněte na „Zapomněli jste heslo".', true); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Napište nahoře svůj e-mail a pak klepněte na „Zapomněli jste heslo".', true); return; }
       say('Posílám odkaz…');
-      PKAuth.recover(c.e).then(function () { say('Poslali jsme vám na e-mail odkaz pro nastavení nového hesla. Zkontrolujte i spam.'); });
+      PKAuth.recover(c.e).then(function () { say('Poslali jsme vám na e-mail odkaz pro nastavení nového hesla. Zkontrolujte i spam.'); });
     });
     var lo = document.getElementById('au-logout');
     if (lo) lo.addEventListener('click', function () { if (window.PKAuth) { PKAuth.logout(); refresh(); } });
@@ -1113,7 +1113,7 @@
       var P = window.PKPredvyplneni;
       if (!P) return;
       if (!url) { rekni('nic', 'Vložte odkaz na svůj inzerát.'); return; }
-      if (!P.normalizujOdkaz(url)) { rekni('nic', 'Tohle nevypadá jako odkaz. Zkuste ho zkopírovat z adresního řádku.'); return; }
+      if (!P.normalizujOdkaz(url)) { rekni('nic', 'Tohle nevypadá jako odkaz. Zkuste ho zkopírovat z adresního řádku.'); return; }
       tlac.disabled = true;
       rekni('', 'Hledám…');
       nactiData().then(function (data) {
@@ -1122,8 +1122,8 @@
         var n = P.najdiVsePodleOdkazu(url, data);
         if (!n.length) {
 
-          rekni('nic', 'Tenhle inzerát u sebe nemáme — vyplňte ho prosím ručně. ' +
-            'Umíme předvyplnit z portálů, které sami procházíme (Bezrealitky, Farmy.cz, státní půda, dražební portály).');
+          rekni('nic', 'Tenhle inzerát u sebe nemáme — vyplňte ho prosím ručně. ' +
+            'Umíme předvyplnit z portálů, které sami procházíme (Bezrealitky, Farmy.cz, státní půda, dražební portály).');
           return;
         }
         var co = P.coDoplnit(n);

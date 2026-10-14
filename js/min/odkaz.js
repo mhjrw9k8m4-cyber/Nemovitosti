@@ -31,18 +31,18 @@
 
   var NESDILENE = [
     { stav: 'mojeMisto',    proc: 'GPS souřadnice toho, kdo odkaz posílá' },
-    { stav: 'okoliAktivni', proc: 'odvozeno z mojeMisto' },
+    { stav: 'okoliAktivni', proc: 'odvozeno z mojeMisto' },
     { stav: 'kmOd',         proc: 'počítá vzdálenost od mojeMisto' },
     { stav: 'okruh',        proc: 'poloměr kolem mojeMisto' },
     { stav: 'okruhStred',   proc: 'střed okruhu je moje poloha' },
-    { stav: 'favOnly',      proc: 'uložené pozemky leží v localStorage, u příjemce je prázdno' },
+    { stav: 'favOnly',      proc: 'uložené pozemky leží v localStorage, u příjemce je prázdno' },
     { stav: 'ukazSkryte',   proc: 'skryté pozemky jsou místní volba, neukládá se ani mezi návštěvami' },
-    { stav: 'ukazProsle',   proc: 'místní volba, u příjemce by nic neznamenala' },
-    { stav: 'mistoFiltr',   proc: 'do adresy jde rozložené na obec a okres' },
-    { stav: 'searchToks',   proc: 'odvozeno z hledaného textu (q)' },
-    { stav: 'userPos',      proc: 'moje poloha — a s ní i řazení „nejblíž ke mně", které z ní vychází' },
+    { stav: 'ukazProsle',   proc: 'místní volba, u příjemce by nic neznamenala' },
+    { stav: 'mistoFiltr',   proc: 'do adresy jde rozložené na obec a okres' },
+    { stav: 'searchToks',   proc: 'odvozeno z hledaného textu (q)' },
+    { stav: 'userPos',      proc: 'moje poloha — a s ní i řazení „nejblíž ke mně", které z ní vychází' },
     { stav: 'kmFromUser',   proc: 'počítá vzdálenost od mojí polohy' },
-    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' },
+    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' },
 
     { stav: 'vyberTvar',    proc: 'nakreslený tvar je zúžení na místě; hlídání umí okruh, ne mnohoúhelník' }
   ];

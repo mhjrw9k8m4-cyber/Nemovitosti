@@ -74,6 +74,32 @@ for (const f of stranky) {
   if (o !== z) uvozNepar.push(`${f}: otevíracích ${o}, zavíracích ${z}`);
 }
 
+/* ---- čísla, datumy, § a zkratka čísla ----
+   Zlom uprostřed čísla nebo datumu je tatáž vada jako předložka na
+   konci řádku, jen hůř se o ní mluví: čtenář vidí „2" a o řádek níž
+   „000 Kč" a cenu si musí slepit sám. Změřeno 14. 10. v prohlížeči na
+   22 stránkách a dvou šířkách (8 042 řádků): jedenáct rozlomených
+   datumů na nove-pozemky.html při 390 px, jedna cena a jeden
+   „zákon č. / 480/2004". */
+let tisiceOk = 0, datumOk = 0, paragrafOk = 0;
+const tisiceSpatne = [], datumSpatne = [], paragrafSpatne = [], cisloSpatne = [];
+for (const f of stranky) {
+  /* Entita je totéž co znak; kdyby se někde objevila, nesmí se počítat
+     jako obyčejná mezera. */
+  const t = viditelny(readFileSync(path.join(ROOT, f), 'utf8')).replace(/&nbsp;/g, '\u00a0');
+  const kousek = (i) => `${f}: …${t.slice(Math.max(0, i - 28), i + 30).replace(/\0/g, '|').replace(/\s+/g, ' ').trim()}…`;
+  tisiceOk += (t.match(/\d\u00a0\d{3}/g) || []).length;
+  datumOk += (t.match(/\d{1,2}\.\u00a0\d{1,2}\./g) || []).length;
+  paragrafOk += (t.match(/§\u00a0\d/g) || []).length;
+  /* Před první skupinou nesmí stát číslice ani nezlomitelná mezera —
+     „2026 123" jsou dvě čísla, ne jedno rozlomené. */
+  for (const m of t.matchAll(/(?<![\d\u00a0])\d{1,3} \d{3}(?!\d)/g)) tisiceSpatne.push(kousek(m.index));
+  for (const m of t.matchAll(/\d{1,2}\. (?=\d{1,2}\.[ \u00a0]|\d{4}(?!\d))/g)) datumSpatne.push(kousek(m.index));
+  for (const m of t.matchAll(/§ \d/g)) paragrafSpatne.push(kousek(m.index));
+  /* Zkratka „Kč." je konec věty za cenou, ne zkratka čísla. */
+  for (const m of t.matchAll(/(?<![0-9A-Za-zÁ-Žá-ž])č\. \d/g)) cisloSpatne.push(kousek(m.index));
+}
+
 /* Předpoklady. Bez nich by „žádná obyčejná mezera" mohla být pravda
    o prázdnu — třeba kdyby se rozbilo čištění značek nebo seznam
    stránek. Obojí se mi už jednou povedlo. */
@@ -91,7 +117,19 @@ pravda('žádná česká uvozovka se nezavírá rovnou', uvozVadne.length === 0,
 pravda('a na žádné stránce nezůstala uvozovka nepárová', uvozNepar.length === 0,
   uvozNepar.slice(0, 6).join('\n      '));
 
-console.log('\nSazba — jednoznaková slova na konci řádku a uvozovky');
+pravda(`a čísel, datumů a paragrafů je z čeho brát (${tisiceOk} / ${datumOk} / ${paragrafOk})`,
+  tisiceOk >= 1000 && datumOk >= 200 && paragrafOk >= 200,
+  `čísel ${tisiceOk}, datumů ${datumOk}, paragrafů ${paragrafOk}`
+  + ' — na tolika stránkách to má být víc, hledání nebo čištění je rozbité');
+pravda('žádné číslo se neláme uprostřed tisíců', tisiceSpatne.length === 0,
+  tisiceSpatne.slice(0, 6).join('\n      ') + (tisiceSpatne.length > 6 ? `\n      … a dalších ${tisiceSpatne.length - 6}` : ''));
+pravda('žádné datum se neláme mezi dnem, měsícem a rokem', datumSpatne.length === 0,
+  datumSpatne.slice(0, 6).join('\n      ') + (datumSpatne.length > 6 ? `\n      … a dalších ${datumSpatne.length - 6}` : ''));
+pravda('a za § ani za zkratkou čísla nestojí obyčejná mezera',
+  paragrafSpatne.length === 0 && cisloSpatne.length === 0,
+  [...paragrafSpatne.slice(0, 3), ...cisloSpatne.slice(0, 3)].join('\n      '));
+
+console.log('\nSazba — zlom řádku na špatném místě a uvozovky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Sazba: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }

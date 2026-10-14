@@ -100,12 +100,12 @@
       if (typeof d.lat !== 'number' || typeof d.lng !== 'number') continue;
       var zaM2 = p.zaMetr ? p.zaMetr(d) : null;
       var jmeno = (d.place || 'Pozemek')
-        + (d.price > 0 ? ' · ' + Math.round(d.price).toLocaleString('cs-CZ') + ' Kč' : '');
+        + (d.price > 0 ? ' · ' + Math.round(d.price).toLocaleString('cs-CZ') + ' Kč' : '');
       var popis = [
         KATEGORIE[d.type] || d.type || '',
         d.druh || '',
-        d.area > 0 ? d.area + ' m²' : '',
-        (zaM2 != null && isFinite(zaM2)) ? Math.round(zaM2) + ' Kč/m²' : '',
+        d.area > 0 ? d.area + ' m²' : '',
+        (zaM2 != null && isFinite(zaM2)) ? Math.round(zaM2) + ' Kč/m²' : '',
         d.podil ? ('podíl ' + (d.zlomek || '')) : '',
         datum(d.extra) ? ('dražba ' + datum(d.extra)) : '',
         p.poznamka && p.poznamka(d) ? ('poznámka: ' + p.poznamka(d)) : '',

@@ -103,7 +103,7 @@
         '<div class="gc-plocha">' +
 
             '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" ' +
-            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + ' Kč za metr čtvereční') + '">' +
+            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + ' Kč za metr čtvereční') + '">' +
 
             '<path class="gc-cara" d="' + d + '"></path>' +
             '<line class="gc-kriz" x1="0" y1="' + P + '" x2="0" y2="' + (Hh - D) + '" hidden></line>' +
@@ -116,14 +116,14 @@
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
           maloVzorku(H, vyber.vzorek, vyber.uroven) +
-          'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
+          'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
 
           'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
-          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
-          'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
-        '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
+          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
+          'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
+        '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +
-          '<thead><tr><th>Den</th><th>Medián</th><th>Z kolika nabídek</th></tr></thead>' +
+          '<thead><tr><th>Den</th><th>Medián</th><th>Z kolika nabídek</th></tr></thead>' +
           '<tbody>' + radky + '</tbody></table></details>' +
       '</figure>';
 
@@ -135,7 +135,7 @@
       var b = body[i];
       if (!b) return;
       bub.innerHTML = '<b>' + cislo(b.cena) + ' Kč/m²</b><span>' + esc(denKratce(b.den)) +
-        ' · z ' + b.vzorek + ' nabídek</span>';
+        ' · z ' + b.vzorek + ' nabídek</span>';
       bub.hidden = false;
       kriz.setAttribute('x1', x(i)); kriz.setAttribute('x2', x(i)); kriz.hidden = false;
       var pom = x(i) / W;

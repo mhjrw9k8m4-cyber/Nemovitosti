@@ -15,7 +15,7 @@
   }
   function prazdno(zprava) {
     host.innerHTML = '<div class="por-prazdno"><h2>' + esc(zprava) + '</h2>'
-      + '<p>Pozemek si uložíte záložkou na jeho kartě v mapě nebo ve výpisu. '
+      + '<p>Pozemek si uložíte záložkou na jeho kartě v mapě nebo ve výpisu. '
       + 'Uložené pak uvidíte tady vedle sebe.</p>'
       + '<p><a class="btn-primary" href="index.html#mapa">Otevřít mapu</a></p></div>';
   }
@@ -82,7 +82,7 @@
 
         + '<td>' + esc(TYPY[d.type] || d.type || '—')
           + ((window.PK_CENY && window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d))
-            ? ' <b class="por-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</b>'
+            ? ' <b class="por-urad" title="Cenu stanovil úřad podle § 12 zákona o Státním pozemkovém úřadu, ne trh — za tuhle cenu prodává SPÚ oprávněné osobě. S cenami na trhu se neporovnává.">úřední cena (§ 12)</b>'
             : '') + '</td>'
         + '<td>' + (dni == null ? '—' : (dni < 0 ? 'proběhlo' : (dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : 'za ' + dni + (dni >= 2 && dni <= 4 ? ' dny' : ' dní')))) + '</td>'
         + '</tr>';
@@ -95,10 +95,10 @@
   function vykresli(nalezene, chybejicich) {
     host.innerHTML =
       tabulka(nalezene)
-      + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> z vašich uložených. '
-      + 'Který pozemek je nejlepší, z tabulky nevyplývá — přístup, sítě a územní plán čísla neukážou.</p>'
+      + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> z vašich uložených. '
+      + 'Který pozemek je nejlepší, z tabulky nevyplývá — přístup, sítě a územní plán čísla neukážou.</p>'
       + (chybejicich
-        ? '<p class="por-pozn">' + chybejicich + ' uložených pozemků už v nabídce není — zdroj je stáhl.</p>'
+        ? '<p class="por-pozn">' + chybejicich + ' uložených pozemků už v nabídce není — zdroj je stáhl.</p>'
         : '');
   }
 
@@ -139,10 +139,10 @@
       '<div class="por-ukazka"><h3>Takhle to vypadá</h3>'
       + '<p class="por-pozn">Tohle <b>nejsou</b> vaše uložené pozemky — jsou to tři '
       + 'skutečné nabídky ' + (tri[0].druh ? 'druhu ' + esc(tri[0].druh) + ' ' : '')
-      + 'z okresu ' + esc(tri[0].okres || '') + ', aby bylo vidět, co tabulka ukazuje.</p>'
+      + 'z okresu ' + esc(tri[0].okres || '') + ', aby bylo vidět, co tabulka ukazuje.</p>'
       + tabulka(tri)
       + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> '
-      + 'z porovnávaných. Svoje pozemky sem dostanete záložkou na jejich kartě.</p></div>');
+      + 'z porovnávaných. Svoje pozemky sem dostanete záložkou na jejich kartě.</p></div>');
   }
 
   var klice = ulozene();
@@ -160,7 +160,7 @@
       D.forEach(function (d) { podleKlice[window.PKKlic.klicPozemku(d)] = d; });
       var nalezene = [];
       klice.forEach(function (k) { if (podleKlice[k]) nalezene.push(podleKlice[k]); });
-      if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); sUkazkou(D); return; }
+      if (!nalezene.length) { prazdno('Uložené pozemky už v nabídce nejsou'); sUkazkou(D); return; }
       vykresli(nalezene, klice.length - nalezene.length);
     })
     .catch(function () {

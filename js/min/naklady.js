@@ -27,20 +27,20 @@
     polozky.push({ k: 'Vklad do katastru', v: 2000, pozn: 'správní poplatek za návrh' });
 
     if (zapnuto('nak-advokat')) {
-      polozky.push({ k: 'Smlouva od advokáta', v: cislo('nak-advokat-kc'), pozn: 'místo vzoru z internetu' });
+      polozky.push({ k: 'Smlouva od advokáta', v: cislo('nak-advokat-kc'), pozn: 'místo vzoru z internetu' });
     }
     if (zapnuto('nak-uschova')) {
       polozky.push({ k: 'Úschova peněz', v: cislo('nak-uschova-kc'), pozn: 'peníze dostane prodávající až po přepisu' });
     }
     if (zapnuto('nak-realitka')) {
       var pct = cislo('nak-provize-pct');
-      polozky.push({ k: 'Provize realitní kanceláři', v: cena * pct / 100, pozn: pct + ' % z kupní ceny' });
+      polozky.push({ k: 'Provize realitní kanceláři', v: cena * pct / 100, pozn: pct + ' % z kupní ceny' });
     }
     if (zapnuto('nak-geoplan')) {
       polozky.push({ k: 'Geometrický plán', v: cislo('nak-geoplan-kc'), pozn: 'když se pozemek dělí nebo zaměřuje' });
     }
     if (zapnuto('nak-posudek')) {
-      polozky.push({ k: 'Znalecký posudek', v: cislo('nak-posudek-kc'), pozn: 'často ho chce banka u hypotéky' });
+      polozky.push({ k: 'Znalecký posudek', v: cislo('nak-posudek-kc'), pozn: 'často ho chce banka u hypotéky' });
     }
 
     var navic = polozky.reduce(function (a, p) { return a + p.v; }, 0);
@@ -54,14 +54,14 @@
       '<table class="nak-tab"><tbody>' + radky
       + '<tr class="nak-mezi"><th scope="row">Náklady navíc</th><td>' + fmt(navic) + ' Kč</td></tr>'
       + (cena
-        ? '<tr class="nak-celkem"><th scope="row">Cena pozemku a náklady dohromady</th><td>'
+        ? '<tr class="nak-celkem"><th scope="row">Cena pozemku a náklady dohromady</th><td>'
           + fmt(cena + navic) + ' Kč</td></tr>'
         : '')
       + '</tbody></table>'
 
-      + '<p class="nak-pozn">Počítejte <b>zhruba</b> s touhle částkou. Pevně daný je jen '
+      + '<p class="nak-pozn">Počítejte <b>zhruba</b> s touhle částkou. Pevně daný je jen '
       + 'správní poplatek za vklad; zbytek jsou odhady, které si tady můžete přepsat. '
-      + 'Daň z nabytí se neplatí — byla zrušena.</p>';
+      + 'Daň z nabytí se neplatí — byla zrušena.</p>';
   }
 
   box.addEventListener('input', spocti);

@@ -37,24 +37,24 @@
 
   function text(z) {
     if (!z) return '';
-    if (z.podezrela) return 'Cena se změnila o ' + z.procent + ' % — ověřit';
+    if (z.podezrela) return 'Cena se změnila o ' + z.procent + ' % — ověřit';
 
-    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + ' %';
-    return (z.dolu ? 'Zlevněno o ' : 'Zdraženo o ') + z.procent + ' %';
+    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + ' %';
+    return (z.dolu ? 'Zlevněno o ' : 'Zdraženo o ') + z.procent + ' %';
   }
 
   function popis(z, fmt) {
     if (!z) return '';
     var f = fmt || function (n) { return String(n); };
-    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + ' Kč'
+    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + ' Kč'
       + (z.kdy ? ', změněno ' + lidsky(z.kdy) : '') + '.'
-      + (z.podezrela ? ' Takový skok u pozemku bývá chyba zdroje — ověřte cenu v inzerátu.' : '')
+      + (z.podezrela ? ' Takový skok u pozemku bývá chyba zdroje — ověřte cenu v inzerátu.' : '')
       + (!z.podezrela && jeDrazba(z) && z.dolu
         ? (z.typ === 'exekuce'
-          ? ' Není to sleva od prodávajícího: u exekuce tohle číslo uvádí exekutor a může ho'
-            + ' v dalším kole snížit, prodejní cena se tím neslibuje.'
-          : ' Není to sleva od prodávajícího: u dražby se v opakovaném kole vypisuje nižší'
-            + ' vyvolávací cena a od té se znovu přihazuje.') : '');
+          ? ' Není to sleva od prodávajícího: u exekuce tohle číslo uvádí exekutor a může ho'
+            + ' v dalším kole snížit, prodejní cena se tím neslibuje.'
+          : ' Není to sleva od prodávajícího: u dražby se v opakovaném kole vypisuje nižší'
+            + ' vyvolávací cena a od té se znovu přihazuje.') : '');
   }
 
   function lidsky(iso) {

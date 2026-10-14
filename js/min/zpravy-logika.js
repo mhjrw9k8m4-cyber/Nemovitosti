@@ -45,7 +45,7 @@
     [/zpráva je příliš dlouhá/i, 'Zpráva je moc dlouhá — vejde se ' + MAX_ZPRAVA + ' znaků.'],
     [/musíte být přihlášeni/i, 'Přihlášení vypršelo. Přihlaste se prosím znovu.'],
     [/inzerát neexistuje/i, 'Tenhle inzerát už na Parcelce není.'],
-    [/nemáte přístup k této konverzaci/i, 'K téhle konverzaci nemáte přístup.'],
+    [/nemáte přístup k této konverzaci/i, 'K téhle konverzaci nemáte přístup.'],
     [/žádná zpráva není|komu odpovídáte/i, 'Tomuhle zájemci zatím nejde odpovědět — nenapsal vám.']
   ];
   function hlaskaChyby(err) {

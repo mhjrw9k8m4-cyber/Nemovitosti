@@ -11,7 +11,7 @@
     'grocery store, grocery, food market, market': 'obchod', 'butcher shop, meat market': 'řeznictví',
     'web site, website, internet site, site': 'webová stránka', 'envelope': 'dokument nebo obálka',
     'screen, CRT screen': 'obrazovka', 'monitor': 'monitor', 'menu': 'jídelní lístek',
-    'military uniform': 'člověk v uniformě', 'suit, suit of clothes': 'člověk v obleku',
+    'military uniform': 'člověk v uniformě', 'suit, suit of clothes': 'člověk v obleku',
     'jersey, T-shirt, tee shirt': 'oblečení', 'desk': 'psací stůl', 'dining table, board': 'jídelní stůl',
     'toilet seat': 'záchod', 'bathtub, bathing tub, bath, tub': 'vana', 'cup': 'hrnek',
     'pizza, pizza pie': 'pizza', 'cheeseburger': 'hamburger', 'laptop, laptop computer': 'notebook',

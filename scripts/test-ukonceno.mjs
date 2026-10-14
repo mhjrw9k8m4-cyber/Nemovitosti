@@ -156,8 +156,15 @@ try {
     /<meta name="robots" content="noindex,follow">/.test(h),
     'dražba, která skončila, nemá hledajícímu co nabídnout');
   pravda('má pruh s vysvětlením', /class="pz-konec"/.test(h), 'pruh chybí');
+  /* MEZERA V DATU MŮŽE BÝT NEZLOMITELNÁ. Tahle kontrola hlídá, že
+     datum je psané lidsky („14. 10. 2026"), ne strojově
+     („2026-10-14") — a od 14. 10. sazba mezery v datu mění na
+     nezlomitelné, aby se datum nelámalo přes řádek. Zápis pro lidi
+     to zůstává; kdyby tu stála jen obyčejná mezera, zkouška by
+     hlásila chybu za typografickou opravu. */
   pravda('datum je psané pro lidi, ne pro stroje',
-    /\d{1,2}\. \d{1,2}\. \d{4}/.test(h) && !/Zmizela ze zdroje \d{4}-\d{2}-\d{2}/.test(h),
+    /\d{1,2}\.[ \u00a0]\d{1,2}\.[ \u00a0]\d{4}/.test(h)
+    && !/Zmizela ze zdroje \d{4}-\d{2}-\d{2}/.test(h),
     'na stránce stojí strojový zápis data');
 
   const pruh = (/<div class="pz-konec"[\s\S]*?(?=<article|<\/div>\s*<script)/.exec(h) || [''])[0];

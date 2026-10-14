@@ -30,7 +30,34 @@ const VZOR = new RegExp(
 /* Číslo a jeho jednotka taky patří k sobě: „76 220" na konci řádku
    a „Kč" na dalším je ta nejviditelnější podoba téhle chyby, protože
    cena je to nejčtenější, co na webu je. */
-const VZOR_JEDNOTKA = /(\d)[ \t]+(Kč|m²|ha|km|%|×)(?![\wÁ-Žá-ž])/g;
+const VZOR_JEDNOTKA = /(\d)[ \t]+(Kč|m²|m|ha|km|%|×)(?![\wÁ-Žá-ž])/g;
+
+/* ČÍSLO SE NESMÍ ROZLOMIT SAMO V SOBĚ. Tisíce se v češtině oddělují
+   mezerou, a když je obyčejná, prohlížeč v ní řádek klidně zlomí:
+   na kolik-stoji-koupe-pozemku.html stálo na konci řádku „2" a na
+   dalším „000 Kč". Generované ceny nezlomitelnou mezeru mají, ručně
+   psaná čísla v textu ne — bylo jich padesát.
+   Vzor bere číslo CELÉ, i o několika skupinách („1 378 000"), a nelepí
+   dvě různá čísla za sebou: před první skupinou nesmí stát číslice,
+   takže „2026 123" zůstane dvěma čísly. */
+const VZOR_TISICE = /(?<![\d\u00a0])\d{1,3}(?:[ \t]\d{3})+(?!\d)/g;
+
+/* DATUM SE V ČEŠTINĚ NELÁME VŮBEC. Na nove-pozemky.html se na telefonu
+   rozlomilo jedenáctkrát: „13." na konci řádku a „10." na dalším.
+   Spojuje se den s měsícem i měsíc s rokem, takže „14. 10. 2026" drží
+   pohromadě celé. */
+const VZOR_DATUM = /(\d{1,2}\.)[ \t]+(?=\d{1,2}\.[ \t]|\d{4}(?!\d))/g;
+
+/* PARAGRAF. Tohle NENÍ oprava nálezu: na 22 stránkách a dvou šířkách
+   se § na konci řádku neobjevil ani jednou. Je to pojistka stejného
+   druhu jako u jednotky — stojí jeden znak a 728 míst na webu tím
+   přestane na zlomu záležet. */
+const VZOR_PARAGRAF = /(§)[ \t]+(?=\d)/g;
+
+/* „zákon č. 480/2004" se na ochrana-udaju.html na telefonu rozlomil
+   za „č.". Záměrně se nebere „Kč." — to není zkratka čísla, ale konec
+   věty za cenou. */
+const VZOR_CISLO = /(^|[^0-9A-Za-zÁ-Žá-ž])(č\.)[ \t]+(?=\d)/g;
 
 const PRESKOCIT = /^(script|style|pre|code|textarea)$/i;
 
@@ -77,7 +104,57 @@ function sazUvozovky(text, stav) {
   return out;
 }
 
-export function osaz(html) {
+/* DATOVÉ OSTRŮVKY: stránka pozemku se celá nevykresluje na serveru.
+   Popis inzerátu a čtyři výpisy leží v <script type="application/json">
+   a do stránky je vkládá prohlížeč. Sazba obsah <script> přeskakuje —
+   a tak se stalo, že statické HTML mělo „v<NBSP>okrese" správně,
+   zatímco JS ten seznam přepsal kopií z JSON, kterou nikdo nevysázel.
+
+   Změřeno 14. 10. na 18 stránkách pozemků a dvou šířkách: 116 zlomů
+   na špatném místě ze 4 713 řádků, tedy 2,5 % — stejný řád jako celá
+   původní vada s předložkami. V 1 628 popisech inzerátů bylo
+   10 466 předložek s obyčejnou mezerou a NULA s nezlomitelnou.
+
+   CO SE SÁZÍ: jen řetězcové hodnoty, a jen vzory z sazTextem (mezery).
+   Uvozovky se tu NESÁZEJÍ: v JSON je rovná uvozovka řídicí znak, a
+   popis inzerátu je navíc cizí text — nezlomitelná mezera je
+   typografie, přepsaná uvozovka už zásah do znění.
+   CO SE NESÁZÍ: adresy a cesty (jsou v nich parametry, ne věty) a
+   řetězce bez mezery. Čísla, klíče a stavba dat se nedotknou.
+   Zápis se pak vrátí do téže podoby, jakou píšou generátory
+   (& < > jako \\u00XX) — ověřeno na 10 314 ostrůvcích: bez sazby je
+   přepis znak za znak totožný, takže se mění jen to, co se vysázelo. */
+const JSON_OSTRUVEK = /(<script\b[^>]*type="application\/json"[^>]*>)([\s\S]*?)(<\/script>)/gi;
+const ADRESA = /^(?:[a-z][a-z0-9+.-]*:|\/|\.{1,2}\/|[\w.-]+\.(?:html|json|xml|svg|png|jpe?g|webp|css|js)(?:[?#]|$))/i;
+
+function sazHodnotu(v) {
+  if (typeof v === 'string') {
+    if (v.indexOf(' ') === -1 || ADRESA.test(v)) return v;
+    return sazTextem(v);
+  }
+  if (Array.isArray(v)) return v.map(sazHodnotu);
+  if (v && typeof v === 'object') {
+    const o = {};
+    for (const k of Object.keys(v)) o[k] = sazHodnotu(v[k]);
+    return o;
+  }
+  return v;
+}
+
+function sazOstruvky(html) {
+  if (html.indexOf('application/json') === -1) return html;
+  return html.replace(JSON_OSTRUVEK, (cely, zac, telo, kon) => {
+    let data;
+    /* Co se nepřečte jako JSON, se nesází. Radši nic než rozbitá data. */
+    try { data = JSON.parse(telo); } catch { return cely; }
+    const novy = JSON.stringify(sazHodnotu(data))
+      .replace(/&/g, '\\u0026').replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    return zac + novy + kon;
+  });
+}
+
+export function osaz(vstup) {
+  const html = sazOstruvky(vstup);
   let vysledek = '';
   let i = 0;
   let preskakuj = null;          // název značky, jejíž obsah se nesází
@@ -122,12 +199,35 @@ export function osaz(html) {
   return vysledek;
 }
 
+/* OKRAJE KOLEM VLOŽENÉHO VÝRAZU V ŠABLONĚ. V `…${cena} Kč` není
+   číslo v textu, ale ve výrazu — pravidla výš nemají za co chytit,
+   protože vidí jen „ Kč" bez číslice před ním. Totéž naopak:
+   „Cena vychází o ${x} %" má předložku na samém konci úseku a za ní
+   nic. Obojí se musí ošetřit zvlášť, stejně jako u značek v HTML
+   (sazPredZnackou).
+   Úzké schválně: jen jednopísmenné slovo na konci a jen známá
+   jednotka na začátku. Nic jiného se o vloženém výrazu neví. */
+const PRED_VYRAZEM = new RegExp('(^|[\\s(\\[„"‘’‚“–—])([' + JEDNOPISMENNA + '])[ \\t]+$');
+const PO_VYRAZU = /^[ \t]+(Kč|m²|m|ha|km|%|×)(?![\wÁ-Žá-ž])/;
+
+export function sazPredVyrazem(t) { return t.replace(PRED_VYRAZEM, '$1$2\u00a0'); }
+export function sazPoVyrazu(t) { return t.replace(PO_VYRAZU, '\u00a0$1'); }
+
+/* Pravidla pro čistý text bez značek. Vyvedené proto, aby je mohla
+   použít i minifikace na texty, které se skládají až v prohlížeči
+   (js/min/*.js) — jedno pravidlo, jedno místo. */
+export function sazText(t) { return sazTextem(t); }
+
 function sazTextem(t) {
   if (!t || t.indexOf(' ') === -1) return t;
   /* Dvakrát za sebou: vzor spotřebuje znak vlevo, takže „a i v lese"
      by se jinak ošetřilo obden. */
   return t.replace(VZOR, '$1$2\u00a0').replace(VZOR, '$1$2\u00a0')
-    .replace(VZOR_JEDNOTKA, '$1\u00a0$2');
+    .replace(VZOR_TISICE, (c) => c.replace(/[ \t]/g, '\u00a0'))
+    .replace(VZOR_DATUM, '$1\u00a0')
+    .replace(VZOR_JEDNOTKA, '$1\u00a0$2')
+    .replace(VZOR_PARAGRAF, '$1\u00a0')
+    .replace(VZOR_CISLO, '$1$2\u00a0');
 }
 
 /* Předložka těsně PŘED řádkovou značkou — „…bydlení v <a>katastru</a>".

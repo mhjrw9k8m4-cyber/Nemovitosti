@@ -36,12 +36,12 @@
     if (z == null) return '';
 
     if (d.vymera_podilu) {
-      return 'Jde o spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
+      return 'Jde o spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
         '. Výměra je ta podílová, tedy ta, která vám připadne — '
         + 'celá parcela je větší.';
     }
     return 'Přepočteno na spoluvlastnický podíl' + (d.zlomek ? ' ' + d.zlomek : '') +
-      ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
+      ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }
 
   function spravniCena(d) {
@@ -78,33 +78,33 @@
   };
 
   var KRAJ_KDE = {
-    'Praha': 'v Praze',
+    'Praha': 'v Praze',
     'Středočeský': 've Středočeském kraji',
-    'Jihočeský': 'v Jihočeském kraji',
-    'Plzeňský': 'v Plzeňském kraji',
-    'Karlovarský': 'v Karlovarském kraji',
-    'Ústecký': 'v Ústeckém kraji',
-    'Liberecký': 'v Libereckém kraji',
-    'Královéhradecký': 'v Královéhradeckém kraji',
-    'Pardubický': 'v Pardubickém kraji',
+    'Jihočeský': 'v Jihočeském kraji',
+    'Plzeňský': 'v Plzeňském kraji',
+    'Karlovarský': 'v Karlovarském kraji',
+    'Ústecký': 'v Ústeckém kraji',
+    'Liberecký': 'v Libereckém kraji',
+    'Královéhradecký': 'v Královéhradeckém kraji',
+    'Pardubický': 'v Pardubickém kraji',
     'Vysočina': 'na Vysočině',
-    'Jihomoravský': 'v Jihomoravském kraji',
-    'Olomoucký': 'v Olomouckém kraji',
+    'Jihomoravský': 'v Jihomoravském kraji',
+    'Olomoucký': 'v Olomouckém kraji',
     'Zlínský': 've Zlínském kraji',
-    'Moravskoslezský': 'v Moravskoslezském kraji'
+    'Moravskoslezský': 'v Moravskoslezském kraji'
   };
 
   function kdeText(uroven, nazev) {
 
-    if (uroven === 'okoli') return 'v okolí do ' + nazev;
-    if (uroven === 'okres') return 'v okrese ' + nazev;
-    return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
+    if (uroven === 'okoli') return 'v okolí do ' + nazev;
+    if (uroven === 'okres') return 'v okrese ' + nazev;
+    return KRAJ_KDE[nazev] || ('v kraji ' + nazev);
   }
 
   function skupinaText(type) {
-    if (type === 'drazba') return 'v dražbě';
-    if (type === 'exekuce') return 'v nabídce';
-    return 'v prodeji';
+    if (type === 'drazba') return 'v dražbě';
+    if (type === 'exekuce') return 'v nabídce';
+    return 'v prodeji';
   }
 
   function median(serazene) {
@@ -369,7 +369,7 @@
       var kroky = [];
 
       var okoli = okoliCeny(d, g);
-      if (okoli) kroky.push({ arr: okoli, uroven: 'okoli', kde: OKOLI_R + ' km', podleVelikosti: true });
+      if (okoli) kroky.push({ arr: okoli, uroven: 'okoli', kde: OKOLI_R + ' km', podleVelikosti: true });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: d.area, uroven: z.uroven, kde: z.kde, podleVelikosti: true }); });
       zdroje.forEach(function (z) { kroky.push({ pole: z.pole, plocha: 0, uroven: z.uroven, kde: z.kde, podleVelikosti: false }); });
       for (var i = 0; i < kroky.length; i++) {
@@ -450,25 +450,25 @@
 
     if (o.podil) {
       return '<div class="md-odhad' + (volby.trida || '') + '">' +
-        '<div class="mo-rozdil mo-pochybna"><b>Srovnání s okolím tu neděláme</b> — v ceně je jen ' +
-        '<b>spoluvlastnický podíl</b>, kdežto výměra v inzerátu je celá parcela. ' +
+        '<div class="mo-rozdil mo-pochybna"><b>Srovnání s okolím tu neděláme</b> — v ceně je jen ' +
+        '<b>spoluvlastnický podíl</b>, kdežto výměra v inzerátu je celá parcela. ' +
         'Rozdíl proti obvyklé ceně by byl ten zlomek, ne sleva.</div>' +
         '<p class="mo-pozn">Kolik tu stojí <b>celé</b> pozemky: medián <b>' + fmt(Math.round(o.zaM2)) +
-        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
-        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
+        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
         (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
         '</p></div>';
     }
 
     if (model.spravniCena && model.spravniCena(d)) {
       return '<div class="md-odhad' + (volby.trida || '') + '">' +
-        '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
+        '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
         '<div class="mo-rozdil mo-pochybna"><b>Se trhem to nesrovnáváme</b> — tuhle cenu nestanovil trh, ' +
-        'ale úřad: Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. ' +
+        'ale úřad: Státní pozemkový úřad prodává podle <b>§ 12</b> oprávněné osobě. ' +
         'Rozdíl proti obvyklé ceně proto není sleva.</div>' +
         '<p class="mo-pozn">Kolik tu stojí pozemky <b>na trhu</b>: medián <b>' + fmt(Math.round(o.zaM2)) +
-        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
-        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
+        ' Kč/m²</b> — z <b>' + o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) +
+        ') a podobné výměry ' + kde + '. Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
         (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
         '</p></div>';
     }
@@ -478,12 +478,12 @@
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
       '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
 
-      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
+      '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
         (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
-                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>' +
-      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
-      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
+                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>' +
+      '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
+      o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
       'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
       (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
       '</p></div>';

@@ -52,7 +52,7 @@
 
   function vymera(v) {
     var n = cislo(v);
-    if (n == null || n <= 0) return chyba('Zadejte prosím výměru v m².');
+    if (n == null || n <= 0) return chyba('Zadejte prosím výměru v m².');
     if (n < MEZE.vymeraMin) return chyba('Výměra pod ' + MEZE.vymeraMin + '\u00a0m² nevypadá jako pozemek — zkontrolujte ji.');
     if (n > MEZE.vymeraMax) return chyba('Výměra nad ' + (MEZE.vymeraMax / 10000) + '\u00a0ha je nejspíš překlep.');
     return ok();
@@ -60,7 +60,7 @@
 
   function cena(v) {
     var n = cislo(v);
-    if (n == null || n <= 0) return chyba('Zadejte prosím cenu v Kč.');
+    if (n == null || n <= 0) return chyba('Zadejte prosím cenu v Kč.');
     if (n < MEZE.cenaMin) return chyba('Cena pod ' + MEZE.cenaMin + '\u00a0Kč vypadá jako překlep.');
     if (n > MEZE.cenaMax) return chyba('Cena nad 500 mil. Kč vypadá jako překlep.');
     return ok();
@@ -70,9 +70,9 @@
     var c = cislo(cenaV), v = cislo(vymeraV);
     if (!c || !v || c <= 0 || v <= 0) return ok();
     var perM2 = c / v;
-    if (perM2 < MEZE.perM2Min) return chyba('Vychází ' + perM2.toFixed(2) + '\u00a0Kč/m² — zkontrolujte cenu a výměru.');
-    if (perM2 > MEZE.perM2Max) return chyba('Vychází ' + Math.round(perM2) + '\u00a0Kč/m², což je pro pozemek nereálné — zkontrolujte cenu a výměru.');
-    if (perM2 > 20000) return ok('Vychází ' + Math.round(perM2) + '\u00a0Kč/m² — u pozemku hodně vysoká cena. Sedí to?');
+    if (perM2 < MEZE.perM2Min) return chyba('Vychází ' + perM2.toFixed(2) + '\u00a0Kč/m² — zkontrolujte cenu a výměru.');
+    if (perM2 > MEZE.perM2Max) return chyba('Vychází ' + Math.round(perM2) + '\u00a0Kč/m², což je pro pozemek nereálné — zkontrolujte cenu a výměru.');
+    if (perM2 > 20000) return ok('Vychází ' + Math.round(perM2) + '\u00a0Kč/m² — u pozemku hodně vysoká cena. Sedí to?');
     return ok();
   }
 
@@ -87,7 +87,7 @@
     if (podilVelkych(s) > 0.6) return chyba('Popis je psaný velkými písmeny — přepište ho prosím normálně.');
 
     if (URL_V_TEXTU.test(s)) return chyba('Odkazy do popisu nepatří — zájemci se ozvou přes Zprávy nebo na telefon.');
-    if (EMAIL.test(s)) return chyba('E-mail do popisu nepatří — zájemci vám napíšou přes Zprávy, adresu máme z vašeho účtu.');
+    if (EMAIL.test(s)) return chyba('E-mail do popisu nepatří — zájemci vám napíšou přes Zprávy, adresu máme z vašeho účtu.');
     if (TELEFON.test(s)) return chyba('Telefon nepatří do popisu — vložte ho do pole „Telefon".');
     return ok();
   }
@@ -112,11 +112,11 @@
 
     var host = parsed.hostname.toLowerCase();
     if (host.indexOf('.') === -1) return chyba('Odkaz nevypadá platně — chybí doména.');
-    if (!/^[a-z0-9.-]+$/.test(host)) return chyba('Odkaz obsahuje nepovolené znaky v doméně.');
+    if (!/^[a-z0-9.-]+$/.test(host)) return chyba('Odkaz obsahuje nepovolené znaky v doméně.');
     if (/\.\./.test(host) || host.charAt(0) === '.' || host.charAt(host.length - 1) === '.') return chyba('Odkaz nevypadá platně — zkontrolujte doménu.');
     if (!/\.[a-z]{2,}$/.test(host)) return chyba('Odkaz nevypadá platně — chybí koncovka domény.');
     if (/^(localhost|127\.|0\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host)) return chyba('Odkaz musí vést na veřejnou stránku, ne do vnitřní sítě.');
-    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return chyba('Vložte prosím adresu s doménou, ne s číselnou IP.');
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return chyba('Vložte prosím adresu s doménou, ne s číselnou IP.');
 
     if (parsed.username || parsed.password || /^https?:\/\/[^/@\s]*@/i.test(u)) {
       return chyba('Odkaz nesmí obsahovat přihlašovací údaje před adresou.');
@@ -126,7 +126,7 @@
       return chyba('Odkaz používá doménu se zvláštními znaky — vložte prosím běžnou adresu.');
     }
     if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
-      return chyba('Odkaz s vlastním portem nepřijímáme.');
+      return chyba('Odkaz s vlastním portem nepřijímáme.');
     }
     if (STAHOVANI.test(parsed.pathname || '')) return chyba('Odkaz vede na soubor ke stažení, ne na stránku.');
     if (ZKRACOVACE.test(host)) return chyba('Zkrácené odkazy nepřijímáme — vložte prosím přímou adresu inzerátu.');
@@ -173,17 +173,17 @@
     var cas = info.datum ? datumNaCas(info.datum) : null;
     if (cas) {
       var ted = Date.now();
-      if (cas.getTime() > ted + 36 * 3600 * 1000) return chyba('má čas pořízení v budoucnosti — zkontrolujte datum v telefonu');
+      if (cas.getTime() > ted + 36 * 3600 * 1000) return chyba('má čas pořízení v budoucnosti — zkontrolujte datum v telefonu');
       var roky = (ted - cas.getTime()) / (365.25 * 24 * 3600 * 1000);
-      if (roky > 10) return ok('je starší než deset let — je pozemek pořád v tomhle stavu?');
+      if (roky > 10) return ok('je starší než deset let — je pozemek pořád v tomhle stavu?');
     }
     return ok();
   }
 
   function fotkaMisto(vzdalenostKm) {
     if (vzdalenostKm == null) return ok();
-    if (vzdalenostKm > 100) return chyba('byla vyfocena ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — patří k tomuhle pozemku?');
-    if (vzdalenostKm > 25) return ok('jedna fotka vznikla ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — zkontrolujte, že patří k pozemku.');
+    if (vzdalenostKm > 100) return chyba('byla vyfocena ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — patří k tomuhle pozemku?');
+    if (vzdalenostKm > 25) return ok('jedna fotka vznikla ' + Math.round(vzdalenostKm) + '\u00a0km od zadané obce — zkontrolujte, že patří k pozemku.');
     return ok();
   }
 
@@ -198,7 +198,7 @@
     var s = text(v);
     if (!s) return ok();
     if (EMAIL.test(s) && s.indexOf('@') > 0) {
-      return chyba('Sem patří telefonní číslo. E-mail už máme z vašeho účtu a do inzerátu se nedává.');
+      return chyba('Sem patří telefonní číslo. E-mail už máme z vašeho účtu a do inzerátu se nedává.');
     }
     var cislice = s.replace(/\D/g, '');
     if (cislice.length < 9) return chyba('Telefonní číslo má devět číslic — zkontrolujte ho prosím.');
@@ -238,7 +238,7 @@
   function okres(v) {
     var s = text(v);
 
-    if (!s) return chyba('Vyberte prosím okres — podle něj pozemek zařadíme na mapu i do srovnání cen.');
+    if (!s) return chyba('Vyberte prosím okres — podle něj pozemek zařadíme na mapu i do srovnání cen.');
     var zn = znameOkresy();
 
     if (!zn.length) return ok();
@@ -336,7 +336,7 @@
     var kde = okresBodu(lat, lng, hrube);
     return chyba('Podle obce vychází místo ' + Math.round(km) + '\u00a0km mimo okres ' + jm +
       (kde ? ' — spíš to vypadá na okres ' + kde + '.' : '.') +
-      ' Zkontrolujte prosím obec a okres, jinak by se pozemek ukázal jinde.');
+      ' Zkontrolujte prosím obec a okres, jinak by se pozemek ukázal jinde.');
   }
 
   function jmeno(v) {
@@ -347,7 +347,7 @@
     if (/\d/.test(s)) return chyba('Do jména nepatří číslice.');
     if (URL_V_TEXTU.test(s) || EMAIL.test(s)) return chyba('Do jména nepatří odkaz ani e-mail.');
     if (jeSprosty(s) || jeSpam(s)) return chyba('Jméno vypadá nesmyslně.');
-    if (s.indexOf(' ') === -1) return ok('Uveďte prosím i příjmení — zájemci víc věří inzerátu s celým jménem.');
+    if (s.indexOf(' ') === -1) return ok('Uveďte prosím i příjmení — zájemci víc věří inzerátu s celým jménem.');
     return ok();
   }
 
@@ -361,7 +361,7 @@
 
   function fotkaRozmery(w, h) {
     if (!w || !h) return chyba('poškozený obrázek');
-    if (Math.max(w, h) < 500) return chyba('je moc malá (aspoň 500 px) — nahrajte fotku z mobilu');
+    if (Math.max(w, h) < 500) return chyba('je moc malá (aspoň 500 px) — nahrajte fotku z mobilu');
     var pomer = Math.max(w, h) / Math.min(w, h);
     if (pomer > 3.5) return chyba('má nezvykle protáhlý tvar — vypadá to na snímek obrazovky, ne na fotku pozemku');
     return ok();

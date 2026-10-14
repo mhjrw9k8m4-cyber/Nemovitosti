@@ -29,6 +29,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { sazText, sazPredVyrazem, sazPoVyrazu } from './sazba.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ZDROJ = path.join(KOREN, 'css', 'styles.css');
@@ -221,9 +222,128 @@ export function kusyJs(src) {
   return kusy;
 }
 
+/* ČESKÁ SAZBA I V TEXTU, KTERÝ SE SKLÁDÁ V PROHLÍŽEČI.
+   Krok sazba.mjs osadí nezlomitelné mezery do HTML. Jenže věty jako
+   „Obvyklá cena v okolí do 25 km" nebo „Cena vychází o 80 % pod
+   obvyklou" nevznikají na serveru — skládá je js/ceny.js a
+   js/pozemek.js z vlastních řetězců, a do HTML se nikdy nedostanou.
+   Změřeno 14. 10. na 18 stránkách pozemků: po osazení datových
+   ostrůvků zbylo 69 zlomů na špatném místě z 5 049 řádků, a všechny
+   byly z těchhle řetězců.
+
+   Sází se do KOPIE pro prohlížeč (js/min/*.js), ne do zdroje. Ne že
+   by ve zdroji nezlomitelná mezera nebyla — je jich tam devadesát,
+   napsaných rukou u cen a oddělovače tisíců. Právě proto: je to
+   neviditelný znak, u kterého se při čtení ani hledání nepozná, že
+   tam je, a devadesát ručních výskytů je zrovna ta míra, při které
+   se na jednadevadesátý zapomene. Kopii nikdo needituje, a jedno
+   pravidlo platí pro celý soubor.
+
+   Co se sází: obsah řetězců a literální části šablon. Nic jiného:
+   kód, vzory a komentáře rozebere kusyJs() zvlášť, a uvnitř `${…}`
+   se nesahá na nic — to je výraz, ne text.
+   Podmínka diakritiky je pojistka proti strukturnímu řetězci: název
+   třídy ani adresa ji nemá, česká věta ano. Ověřeno na všech
+   387 změnách: ani jedna nepadla do class, id, href, src ani data-*. */
+const DIAKRITIKA = /[áčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ]/;
+
+/* JAK SE POZNÁ VĚTA OD DAT. Zkoušel jsem to nejdřív jen na diakritiku
+   — bezpečné, ale vynechalo to i „v okrese", „v prodeji" nebo
+   „v exekuci". Zkoušel jsem taky pravidlo bez podmínky: změnilo by
+   navíc 24 úseků a tři z nich by ROZBILO — `viewBox="0 0 384 240"`,
+   dvě SVG cesty („M0 120H") a seznam výplňových slov našeptávače.
+   Platí tedy: diakritika, NEBO aspoň dvě slova a žádná číslice.
+   Číslice vyřadí všechnu kreslicí geometrii (viewBox i cesty ji mají
+   vždycky) a zbyla po tom jediná výjimka níž. */
+function jeVeta(t) {
+  if (t.indexOf(' ') === -1) return false;
+  if (DIAKRITIKA.test(t)) return true;
+  return !/\d/.test(t) && t.trim().split(/\s+/).length >= 2;
+}
+
+/* VÝJIMKA, KTEROU PRAVIDLO SAMO POZNAT NEMŮŽE. Seznam výplňových slov
+   našeptávače je česká věta bez číslic — jen se nečte, ale dělí:
+   `.split(' ')` na literální mezeru. Nezlomitelná mezera by z „v" a
+   „ve" udělala jedno slovo a našeptávač by je přestal zahazovat.
+   Že výjimka není mrtvá, hlídá test-minifikace. */
+export const BEZ_SAZBY = [
+  'a i s se v ve na do od ze z k ke u o po pro pri za nad pod mezi kolem okoli',
+];
+
+/* Na okrajích (u sčítání a kolem `${…}`) podmínka „věta" neplatí —
+   úsek „ v " žádná podmínka za větu neuzná. Zbývá tedy jediná
+   pojistka: ZÁPORNÁ. Jednopísmenné slovo na konci úseku se nespojí,
+   když v úseku stojí znak ze stavby kódu nebo selektoru. Dnes takový
+   řetězec v js/ není ani jeden (změřeno), ale `"[data-x] a " + y` by
+   se bez tohohle tiše rozbil, a ticho je u téhle vady to nejhorší.
+   Prózu to nestojí nic: HTML úseky nesou diakritiku nebo dvě slova,
+   takže je vezme hlavní pravidlo. */
+const STAVBA = /[[\]{}<>#~=]/;
+
+function sazCast(t) {
+  if (!jeVeta(t) || BEZ_SAZBY.indexOf(t) >= 0) return t;
+  return sazText(t);
+}
+
+/* Šablona: literální úseky ano, `${výraz}` ne. Hloubka závorek se
+   počítá stejně jako v kusyJs(), ať se obojí chová shodně. */
+function sazSablonu(telo) {
+  let out = '', i = 0, poVyrazu = false;
+  while (i < telo.length) {
+    const d = telo.indexOf('${', i);
+    const cast = telo.slice(i, d === -1 ? telo.length : d);
+    let hotovo = sazCast(cast);
+    /* Okraje: za vloženým výrazem může stát jednotka, před ním
+       jednopísmenná předložka. Jednotka se sází vždy — je to uzavřený
+       seznam znaků, ne dohad o tom, co je věta. */
+    if (poVyrazu) hotovo = sazPoVyrazu(hotovo);
+    if (d !== -1 && !STAVBA.test(cast)) hotovo = sazPredVyrazem(hotovo);
+    out += hotovo;
+    if (d === -1) break;
+    let j = d + 2, hloubka = 1;
+    while (j < telo.length && hloubka > 0) {
+      const z = telo[j];
+      if (z === '\\') { j += 2; continue; }
+      if (z === '{') hloubka++;
+      else if (z === '}') hloubka--;
+      j++;
+    }
+    out += telo.slice(d, j);
+    i = j;
+    poVyrazu = true;
+  }
+  return out;
+}
+
+function sazKus(k, predchozi, dalsi) {
+  /* Krajní znaky jsou uvozovky nebo zpětné apostrofy a musí z textu
+     pryč: vzor na předložku se chytá začátku úseku, a kdyby před „v"
+     stála uvozovka, nechytil by se. */
+  const q = k.text[0];
+  if (k.text.length < 3 || k.text[k.text.length - 1] !== q) return k.text;
+  let telo = k.text.slice(1, -1);
+  telo = k.druh === 'sablona' ? sazSablonu(telo) : sazCast(telo);
+  /* OKRAJE U SČÍTÁNÍ ŘETĚZCŮ. „'Obvyklá cena v okolí do ' + R + ' km'"
+     je totéž co šablona, jen psané plusy: jednotka stojí ve vlastním
+     řetězci a žádná číslice před ní není. Měřeno v prohlížeči: právě
+     tahle věta lámala „25 / km", a titulek grafu na cena-pozemku.html
+     lámal „v / celé ČR" — skládá se jako `… + ' v ' + kde`, a úsek
+     „ v " není věta ani podle nejvolnější podmínky.
+     Na okrajích proto podmínka „věta" NEPLATÍ: oba vzory jsou
+     uzavřené (jednotka ze seznamu, jednopísmenné slovo na konci).
+     Změřeno: u sčítání to přidá deset míst a všech deset je výstupní
+     věta („… z " + počet, „O " + výčet), v šablonách nula. Žádný
+     selektor, adresa ani kreslicí údaj mezi nimi není. */
+  if (/\+\s*$/.test(predchozi && predchozi.druh === 'kod' ? predchozi.text : '')) telo = sazPoVyrazu(telo);
+  if (/^\s*\+/.test(dalsi && dalsi.druh === 'kod' ? dalsi.text : '') && !STAVBA.test(telo)) telo = sazPredVyrazem(telo);
+  return q + telo + q;
+}
+
 export function ocistiJs(src) {
   let out = '';
-  for (const k of kusyJs(src)) {
+  const kusy = kusyJs(src);
+  for (let poradi = 0; poradi < kusy.length; poradi++) {
+    const k = kusy[poradi];
     if (k.druh === 'blok') {
       /* Blokový komentář uprostřed řádku nesmí slepit kód: `a/* x *\/b`.
          Na vlastním řádku se ale nahradit mezerou nemá — zůstal by
@@ -232,6 +352,8 @@ export function ocistiJs(src) {
     } else if (k.druh === 'radek') {
       /* Konec řádku se NEMAŽE: bez něj by se další řádek slepil
          s tímhle a ASI by dopsala středník jinam. */
+    } else if (k.druh === 'text' || k.druh === 'sablona') {
+      out += sazKus(k, kusy[poradi - 1], kusy[poradi + 1]);
     } else {
       out += k.text;
     }

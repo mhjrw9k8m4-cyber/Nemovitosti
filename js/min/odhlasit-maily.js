@@ -14,15 +14,15 @@
   } catch (e) { token = ''; }
 
   if (!token) {
-    rekni('V odkazu chybí část za „?t=", bez které nevíme, koho odhlásit. '
-      + 'Otevřete prosím odkaz z e-mailu celý, nebo posílání vypněte na stránce Hlídání.', 'om-chyba');
+    rekni('V odkazu chybí část za „?t=", bez které nevíme, koho odhlásit. '
+      + 'Otevřete prosím odkaz z e-mailu celý, nebo posílání vypněte na stránce Hlídání.', 'om-chyba');
     return;
   }
 
   var URL_ = window.PK_SUPABASE_URL || '';
   var KLIC = window.PK_SUPABASE_KEY || '';
   if (!URL_ || !KLIC) {
-    rekni('Nepovedlo se spojit s databází. Zkuste to prosím za chvíli znovu.', 'om-chyba');
+    rekni('Nepovedlo se spojit s databází. Zkuste to prosím za chvíli znovu.', 'om-chyba');
     return;
   }
 
@@ -36,10 +36,10 @@
   }).then(function (vysledek) {
 
     if (vysledek === true) {
-      rekni('Hotovo — e-maily s novými pozemky už vám posílat nebudeme.', 'om-hotovo');
+      rekni('Hotovo — e-maily s novými pozemky už vám posílat nebudeme.', 'om-hotovo');
     } else {
       rekni('Tenhle odkaz už neplatí. Nejspíš jste se odhlásili dřív; '
-        + 'v tom případě vám pošta nechodí a není co dělat.', 'om-hotovo');
+        + 'v tom případě vám pošta nechodí a není co dělat.', 'om-hotovo');
     }
   }).catch(function () {
     rekni('Odhlášení se teď nepovedlo. Zkuste to prosím za chvíli znovu, '

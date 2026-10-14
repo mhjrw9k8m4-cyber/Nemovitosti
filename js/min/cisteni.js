@@ -91,7 +91,7 @@
   }
 
   var OK_FEAT = { 'Elektřina': 1, 'Voda': 1, 'Kanalizace': 1, 'Plyn': 1,
-    'Oplocení': 1, 'Stavba k rekonstrukci': 1 };
+    'Oplocení': 1, 'Stavba k rekonstrukci': 1 };
   var G = (typeof self !== 'undefined' ? self : (typeof globalThis !== 'undefined' ? globalThis : {}));
   function majitel(u) {
 

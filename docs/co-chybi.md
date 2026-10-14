@@ -5409,6 +5409,136 @@ a leží" a nenašel ji, protože po sazbě je v ní nezlomitelná mezera.
 Málem jsem z toho usoudil, že je pojistka rozbitá; byla to moje
 záměna, ne její vada.)
 
+## 3ce. NALEZENO: text, který se skládá až v prohlížeči, českou sazbou nikdy neprošel — 116 zlomů ze 4 713 řádků — *opraveno 14. 10.*
+
+Oprava uvozovek (3cd) ještě doběhla a hned ukázala další díru. Doplnil
+jsem do sazby nezlomitelné mezery do čísla, datumu, za `§` a za „č."
+a změřil v prohlížeči, kolik řádků se opravdu láme na špatném místě.
+Na 22 rádcovských a právních stránkách ve dvou šířkách (8 042 řádků)
+to bylo **15 zlomů**: jedenáct rozlomených datumů na
+`nove-pozemky.html` při 390 px („13." na konci řádku, „10." na
+dalším), jedna cena „2 / 000 Kč" a jeden „zákon č. / 480/2004".
+`§` se při tom neobjevil na konci řádku ani jednou — tahle část je
+pojistka, ne nález, a je to tak i napsané.
+
+Pak jsem stejnou sondu pustil na stránky **pozemků**. A tam to bylo
+jiné číslo: **116 zlomů ze 4 713 řádků, tedy 2,5 %** — stejný řád jako
+celá původní vada s předložkami, kvůli které krok sazby vůbec vznikl.
+
+### Proč: stránka pozemku se celá nevykresluje na serveru
+
+Dvě různé příčiny, obě téhož druhu — sazba běží nad HTML, ale ten text
+v HTML není:
+
+1. **Datové ostrůvky.** Popis inzerátu a čtyři výpisy leží
+   v `<script type="application/json">` a do stránky je vkládá
+   prohlížeč. Krok sazby obsah `<script>` **záměrně přeskakuje**
+   (jsou tam skripty, ne věty) — takže se v 1 628 popisech našlo
+   **10 466 jednopísmenných předložek s obyčejnou mezerou a nula
+   s nezlomitelnou**, plus 4 718 čísel s jednotkou a 190 rozlomitelných
+   tisíců.
+2. **Věty skládané v JS.** „Obvyklá cena v okolí do 25 km", „Cena
+   vychází o 80 % pod obvyklou", „sítě a příjezd" nevznikají na serveru
+   vůbec — skládá je `js/ceny.js` a `js/pozemek.js` z vlastních
+   řetězců.
+
+Nejnázornější byl tenhle případ: ve statickém HTML stálo
+`všechny pozemky v<NBSP>okrese` **správně**, a hned pod tím v JSON
+ležela tatáž věta s obyčejnou mezerou — a JS tím správně vysázený
+seznam přepsal. **Sestavení odvedlo práci a prohlížeč ji zahodil.**
+
+### Oprava datových ostrůvků: chirurgicky, ne odhadem
+
+V `sazba.mjs` se ostrůvky přečtou jako JSON, sází se **jen řetězcové
+hodnoty**, a zapíšou se zpátky v téže podobě, jakou píšou generátory
+(`&`, `<`, `>` jako `\u00XX`). Že je přepis chirurgický, není dohad:
+**10 314 z 10 314 ostrůvků** se bez sazby vrátí **znak za znak
+totožné**, takže se mění právě a jen to, co se vysázelo. Adresy
+a cesty se vynechávají, čísla a stavba dat se nedotknou. Uvozovky se
+tu **nesázejí**: v JSON je rovná uvozovka řídicí znak, a popis inzerátu
+je navíc cizí text — nezlomitelná mezera je typografie, přepsaná
+uvozovka už zásah do znění.
+
+### Oprava vět z JS: do kopie pro prohlížeč, ne do zdroje
+
+Sází je očištění skriptů (`minifikace.mjs`), které už umí JavaScript
+rozebrat na kusy, takže řetězce od kódu, vzorů a komentářů rozliší
+samo. Uvnitř `${…}` se nesahá na nic — to je výraz, ne text.
+
+Sází se do `js/min/*.js`, které si stránky opravdu berou, **ne do
+zdroje**. Ne že by ve zdroji nezlomitelná mezera nebyla — je jich tam
+devadesát, napsaných rukou u cen a oddělovače tisíců. **Právě proto:**
+je to neviditelný znak, a devadesát ručních výskytů je zrovna ta míra,
+při které se na jednadevadesátý zapomene. Po opravě je v kopiích
+630 místo 90.
+
+### Jak se pozná věta od dat — a co to měření rozhodlo
+
+Tohle byla jediná opravdu nebezpečná část, tak jsem ji nenechal na
+dohadu a vypsal si **všechny** navržené změny:
+
+* **jen diakritika** — bezpečné, ale vynechalo by „v okrese",
+  „v prodeji", „v exekuci";
+* **bez podmínky** — změnilo by navíc 24 úseků a **tři by rozbilo**:
+  `viewBox="0 0 384 240"`, dvě SVG cesty („M0 120H") a seznam
+  výplňových slov našeptávače;
+* **platí tedy: diakritika, nebo aspoň dvě slova a žádná číslice.**
+  Číslice vyřadí všechnu kreslicí geometrii — `viewBox` ani cesta se
+  bez ní neobejde.
+
+Po tom zbyla jediná výjimka, kterou pravidlo poznat nemůže: seznam
+výplňových slov našeptávače je česká věta bez číslic, jen se nečte,
+ale **dělí** — `.split(' ')` na literální mezeru, takže nezlomitelná
+mezera by z „v" a „ve" udělala jedno slovo. Je zapsaná jmenovitě
+a `test-minifikace` hlásí, kdyby zmrtvěla.
+
+### Výsledek
+
+| měřeno v prohlížeči | zlomů na špatném místě |
+|---|---|
+| před opravou | 116 ze 4 713 řádků |
+| po osazení datových ostrůvků | 69 z 5 049 |
+| po osazení vět z JS | **0 ze 4 549** |
+
+A na 22 rádcovských a právních stránkách z 15 taky nula.
+
+### Pojistky — a jedna, kterou mi sabotáž rozmetala
+
+`test-sazba` dostala čtyři kontroly (rozlomené tisíce, rozlomené
+datum, `§` a „č.", a předpoklad „je z čeho brát" — 21 148 čísel,
+715 datumů, 728 paragrafů). Všechny čtyři jsem prokázal sabotáží
+a každá pojmenuje stránku i místo.
+
+`test-minifikace` dostala **čtyři pasti**, a ty tam jsou kvůli
+vlastnímu nálezu: napsal jsem nejdřív počítadlo „kolik nezlomitelných
+mezer v kopii přibylo" a při sabotáži, kdy jsem hlavní pravidlo vypnul
+úplně, **prošlo** — mezery přibyly z okrajů u sčítání řetězců
+(`'… do ' + R + ' km'`). Zkouška se tedy ptala na následek, ne na
+pravidlo. Pasti se ptají přímo: věta se osadit **musí**, kreslicí
+geometrie a seznam výplňových slov **nesmí**. Obě sabotáže (mrtvé
+pravidlo, zrušená podmínka číslice) teď padnou na pasti.
+
+Při té sabotáži vyšlo najevo ještě něco malého a protivného: hlášení
+pasti vypisovalo dva řádky, které vypadaly **úplně stejně** — rozdíl
+byl jeden neviditelný znak. Hlášení, které člověk nepřečte, je
+polovina hlášení, takže se nezlomitelná mezera ve výpisu ukazuje jako
+`·`.
+
+### Co se neopravilo
+
+* `test-ukonceno` hlídala, že datum je psané pro lidi, vzorem
+  s **literální** mezerou — a nezlomitelná mezera ji shodila. To je
+  tatáž past jako u otisku právních stránek: zkouška měla pravdu
+  o smyslu a mýlila se o zápisu. Vzor teď bere obě mezery; datum
+  zůstalo lidské.
+* Pět předložek v popisech inzerátů zůstává s obyčejnou mezerou —
+  stojí za čárkou **bez mezery** („pole,z 80 %"). Sazba vyžaduje
+  vlevo hranici slova, a tahle hranice v tom cizím textu chybí.
+  Pět míst z 10 466 a vada je v inzerátu, ne v sazbě.
+* „za 1 měs." se nespojuje: jednotka `měs.` v seznamu není. Zlom
+  se na ní v měření ani jednou neobjevil, tak jsem seznam nerozšiřoval
+  jen podle dohadu.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

@@ -13,7 +13,7 @@
       popis: 'Pozemky, které jste si uložili tlačítkem se záložkou.',
       pocet: poleDelka, jednotka: ['pozemek', 'pozemky', 'pozemků'] },
     { klic: 'pk_poznamky_v1', kde: 'local', skupina: 'vyber', nazev: 'Soukromé poznámky',
-      popis: 'Co jste si k pozemkům napsali. Nikam se neodesílají.',
+      popis: 'Co jste si k pozemkům napsali. Nikam se neodesílají.',
       pocet: klicuObjektu, jednotka: ['poznámka', 'poznámky', 'poznámek'] },
     { klic: 'pk_skryte_v1', kde: 'local', skupina: 'vyber', nazev: 'Skryté nabídky',
       popis: 'Pozemky, které jste odklepli jako „tenhle mě nezajímá".',
@@ -25,9 +25,9 @@
       popis: 'Krátký seznam pro rychlý návrat.', pocet: poleDelka, jednotka: ['položka', 'položky', 'položek'] },
 
     { klic: 'pk_filtr_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Nastavené filtry',
-      popis: 'Druh, cena a výměra, které jste si na mapě nastavili.', pocet: jeNeco },
-    { klic: 'pk_misto_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Moje místo a okruh',
-      popis: 'Bod a vzdálenost pro „Pozemky v okolí".', pocet: jeNeco },
+      popis: 'Druh, cena a výměra, které jste si na mapě nastavili.', pocet: jeNeco },
+    { klic: 'pk_misto_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Moje místo a okruh',
+      popis: 'Bod a vzdálenost pro „Pozemky v okolí".', pocet: jeNeco },
     { klic: 'pk_podklad_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Podklad mapy',
       popis: 'Jestli se mapa kreslí základní, nebo leteckým snímkem.', pocet: jeNeco },
     { klic: 'pk_vrstvy_v1', kde: 'local', skupina: 'nastaveni', nazev: 'Zapnuté vrstvy mapy',
@@ -43,19 +43,19 @@
       popis: 'Jen příznak, že už jste vysvětlení četli — podruhé se neukáže.',
       pocet: jeNeco },
     { klic: 'pk_device', kde: 'local', skupina: 'provoz', nazev: 'Označení zařízení',
-      popis: 'Náhodné číslo, aby šlo poznat tentýž prohlížeč. Není v něm nic o vás.',
+      popis: 'Náhodné číslo, aby šlo poznat tentýž prohlížeč. Není v něm nic o vás.',
       pocet: jeNeco },
 
     { klic: 'pk_auth', kde: 'local', skupina: 'ucet', nazev: 'Přihlášení',
-      popis: 'Klíč k vašemu účtu. Smazáním se odhlásíte.', pocet: jeNeco },
+      popis: 'Klíč k vašemu účtu. Smazáním se odhlásíte.', pocet: jeNeco },
 
     { klic: 'pk_open', kde: 'session', skupina: 'provoz', nazev: 'Rozbalené části stránky',
       popis: 'Co jste měli otevřené, než jste přešli jinam.', pocet: jeNeco },
     { klic: 'pk_map_return', kde: 'session', skupina: 'provoz', nazev: 'Návrat na mapu',
-      popis: 'Kam se mapa vrátí, až se vrátíte z detailu.', pocet: jeNeco },
+      popis: 'Kam se mapa vrátí, až se vrátíte z detailu.', pocet: jeNeco },
     { klic: 'pk_videno_v1', kde: 'session', skupina: 'provoz', nazev: 'Započítaná zhlédnutí',
       popis: 'Aby se zhlédnutí inzerátu nepočítalo dvakrát za návštěvu.', pocet: jeNeco },
-    { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
+    { klic: 'pk_poradi_seance', kde: 'session', skupina: 'provoz', nazev: 'Pořadí v této návštěvě',
       popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco },
 
     { klic: 'pk_mereni_relace', kde: 'session', skupina: 'provoz', nazev: 'Započítaná návštěva',
@@ -64,11 +64,11 @@
 
   var SKUPINY = [
     { id: 'vyber', nazev: 'Co jste si vybrali',
-      popis: 'Tohle je vaše práce — uložené pozemky, poznámky k nim a co jste odmítli.' },
+      popis: 'Tohle je vaše práce — uložené pozemky, poznámky k nim a co jste odmítli.' },
     { id: 'nastaveni', nazev: 'Jak to má vypadat',
       popis: 'Nastavení, aby se nemuselo klikat pokaždé znovu.' },
     { id: 'provoz', nazev: 'Drobnosti kvůli chodu webu',
-      popis: 'Pomocné údaje. Smazáním o nic nepřijdete, jen se pár věcí nastaví znovu.' },
+      popis: 'Pomocné údaje. Smazáním o nic nepřijdete, jen se pár věcí nastaví znovu.' },
     { id: 'ucet', nazev: 'Přihlášení', popis: '' }
   ];
 

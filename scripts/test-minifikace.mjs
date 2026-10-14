@@ -25,7 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
-import { ocisti, ocistiJs } from './minifikace.mjs';
+import { ocisti, ocistiJs, BEZ_SAZBY } from './minifikace.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -187,6 +187,29 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
      (komentář za nic, konec řádku za mezeru, vzor za dělení) všechny
      prolezly. */
   const PASTI = [
+    /* ČESKÁ SAZBA V ŘETĚZCÍCH. Tyhle čtyři pasti tu nejsou pro parádu:
+       počítadlo „kolik nezlomitelných mezer přibylo" jsem napsal
+       první a při sabotáži PROŠLO, i když jsem hlavní pravidlo
+       vypnul — mezery totiž přibyly z okrajů u sčítání řetězců.
+       Past se ptá na to pravidlo, ne na následek. */
+    ['věta v řetězci se osadí nezlomitelnými mezerami',
+      'var a = "Obvykl\u00e1 cena v okol\u00ed do 25 km"; a;',
+      'var a = "Obvykl\u00e1 cena v\u00a0okol\u00ed do 25\u00a0km"; a;'],
+    ['jednotka za vlo\u017een\u00fdm v\u00fdrazem taky (ve v\u00fdrazu p\u0159ed n\u00ed \u017e\u00e1dn\u00e1 \u010d\u00edslice nen\u00ed)',
+      'var b = (x) => `cena ${x} K\u010d za ${x} m\u00b2`; b;',
+      'var b = (x) => `cena ${x}\u00a0K\u010d za ${x}\u00a0m\u00b2`; b;'],
+    ['p\u0159edlo\u017eka na okraji s\u010d\u00edt\u00e1n\u00ed \u2014 \u00faseku \u201e v \u201c \u017e\u00e1dn\u00e1 podm\u00ednka za v\u011btu neuzn\u00e1',
+      'var t = (d, k) => "N\u00e1bidkov\u00e1 cena \u2014 " + d + " v " + k; t;',
+      'var t = (d, k) => "N\u00e1bidkov\u00e1 cena \u2014 " + d + " v\u00a0" + k; t;'],
+    ['ale selektor na okraji ne (znak ze stavby k\u00f3du to zastav\u00ed)',
+      'var u = (y) => "[data-x] a " + y; u;',
+      'var u = (y) => "[data-x] a " + y; u;'],
+    ['kreslic\u00ed geometrie se NESM\u00cd s\u00e1zet (\u010d\u00edslice ji vylou\u010d\u00ed)',
+      'var c = `<svg viewBox="0 0 384 240"><path d="M0 120H9"/></svg>`; c;',
+      'var c = `<svg viewBox="0 0 384 240"><path d="M0 120H9"/></svg>`; c;'],
+    ['ani seznam v\u00fdpln\u0148ov\u00fdch slov na\u0161ept\u00e1va\u010de (d\u011bl\u00ed se literální mezerou)',
+      "var d = 'a i s se v ve na do od ze z k ke u o po pro pri za nad pod mezi kolem okoli'.split(' '); d;",
+      "var d = 'a i s se v ve na do od ze z k ke u o po pro pri za nad pod mezi kolem okoli'.split(' '); d;"],
     ['komentář mezi dvěma jmény nesmí jména slepit',
       'var y = 1; var x = typeof/*c*/y; x;',
       'var y = 1; var x = typeof y; x;'],
@@ -214,12 +237,53 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
     const vyslo = ocistiJs(vstup);
     if (vyslo !== cekano) {
       spatnePasti++;
-      zpravy.push(`  ✕ past: ${popis}\n      čekáno ${JSON.stringify(cekano)}\n      vyšlo  ${JSON.stringify(vyslo)}`);
+      /* NEZLOMITELNÁ MEZERA MUSÍ BÝT V HLÁŠENÍ VIDĚT. Při sabotáži
+         sazby řetězců vypsala past dva řádky, které vypadaly úplně
+         stejně — rozdíl byl jeden neviditelný znak. Hlášení, které
+         člověk nepřečte, je polovina hlášení. */
+      const videt = (t) => JSON.stringify(t).replace(/\u00a0/g, '·');
+      zpravy.push(`  ✕ past: ${popis}\n      čekáno ${videt(cekano)}\n      vyšlo  ${videt(vyslo)}`
+        + '\n      (· je nezlomitelná mezera)');
       chyb++;
     }
   }
   pravda(`všech ${PASTI.length} pastí na očištění skriptů dopadlo, jak má`, spatnePasti === 0,
     `${spatnePasti} pastí selhalo (viz výš)`);
+
+  /* ČESKÁ SAZBA V KOPII PRO PROHLÍŽEČ. Texty, které se skládají až
+     v prohlížeči, osazuje nezlomitelnými mezerami očištění skriptů
+     (viz komentář u jeVeta v minifikace.mjs). Hlídá se obojí:
+     že se to opravdu děje, a že se to NEDĚJE ve zdroji — ve zdroji
+     by to byl neviditelný znak, který se při hledání nepozná. */
+  /* Nepočítá se „jsou tam", ale „PŘIBYLY". Ve zdrojích je jich
+     devadesát napsaných rukou (ceny, oddělovač tisíců) — kdyby se
+     měřil jen výskyt, zkouška by prošla, i kdyby sazba řetězců
+     nedělala vůbec nic. Tuhle past jsem si napoprvé postavil sám:
+     první podoba kontroly tvrdila, že ve zdrojích nezlomitelná
+     mezera být nemá, a zkouška mi rovnou ukázala patnáct souborů,
+     kde je, a správně. */
+  const pribylo = [];
+  let celkemPred = 0, celkemPo = 0;
+  for (const f of zdroje) {
+    const src = fs.readFileSync(path.join(JS, f), 'utf8');
+    const pred = (src.match(/\u00a0/g) || []).length;
+    const po = (ocistiJs(src).match(/\u00a0/g) || []).length;
+    celkemPred += pred; celkemPo += po;
+    if (po > pred) pribylo.push(`${f} (${pred}→${po})`);
+  }
+  pravda(`v kopii pro prohlížeč nezlomitelné mezery přibyly (${pribylo.length} souborů,`
+    + ` ${celkemPred}→${celkemPo})`,
+    pribylo.length >= 10 && celkemPo > celkemPred,
+    `přibyly jen v ${pribylo.length} souborech — sazba řetězců se nepoužívá`);
+
+  /* Výjimka, která by byla mrtvá, je horší než žádná: tvrdila by, že
+     se něco chrání, a přitom by to na webu dávno nebylo. */
+  const mrtve = BEZ_SAZBY.filter((v) => !zdroje.some((f) =>
+    fs.readFileSync(path.join(JS, f), 'utf8').includes(v)));
+  pravda(`žádná výjimka ze sazby řetězců není mrtvá (${BEZ_SAZBY.length})`,
+    BEZ_SAZBY.length > 0 && mrtve.length === 0,
+    mrtve.length ? `v js/ už není: ${mrtve.map((v) => JSON.stringify(v.slice(0, 40))).join(', ')}`
+      : 'seznam výjimek je prázdný — pak ho smaž, ať nelže');
 
   /* a) + c) + d) nad skutečnými soubory. */
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-min-'));

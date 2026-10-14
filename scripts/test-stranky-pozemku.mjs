@@ -511,7 +511,17 @@ console.log('\nStránky jednotlivých pozemků');
     if (!mc) { spatne.push(`${f}: z věty nejde vyčíst počet („${o.text}")`); continue; }
     const psano = mc[1] ? Number(mc[1].replace(/[\s\u00a0]/g, '')) : 1;
     if (psano !== ceka) spatne.push(`${f} ${obec}: psáno ${psano}, v datech ${ceka}`);
-    if (o.text.indexOf(obec) < 0) spatne.push(`${f}: ve větě není ${obec}`);
+    /* JMÉNO OBCE SE POROVNÁVÁ PŘES SJEDNOCENOU MEZERU. „Čistá u Horek"
+       nebo „Brodek u Konice" má v sobě jednopísmennou předložku, a od
+       14. 10. sází krok sazby i datové ostrůvky — ve větě tedy stojí
+       „Čistá u<NBSP>Horek", kdežto v datech je obyčejná mezera.
+       Je to tatáž obec; změnil se tvar mezery, ne jméno. Tahle past
+       mě dostala potřetí (po otisku právních stránek a po datu
+       u ukončených nabídek): zkouška měla pravdu o tom, co hlídá,
+       a mýlila se o zápisu. Text se jen zobrazuje (js/pozemek.js ho
+       prohání esc() do odkazu), nic se podle něj nehledá. */
+    const stejneMezery = (t) => t.replace(/[\s\u00a0]+/g, ' ');
+    if (stejneMezery(o.text).indexOf(stejneMezery(obec)) < 0) spatne.push(`${f}: ve větě není ${obec}`);
   }
   pravda('stránky s dalšími pozemky v obci se našly (jinak se nic nekontroluje)',
     sOstruvkem > 300, `${sOstruvkem} z ${vzorek.length} nabídek`);

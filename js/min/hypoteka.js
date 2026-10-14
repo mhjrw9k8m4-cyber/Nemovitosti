@@ -28,7 +28,7 @@
     var out = document.getElementById('hypo-vysledek');
 
     if (!cena) {
-      out.innerHTML = '<p class="hypo-prazdno">Zadejte cenu pozemku a dopočítá se zbytek.</p>';
+      out.innerHTML = '<p class="hypo-prazdno">Zadejte cenu pozemku a dopočítá se zbytek.</p>';
       return;
     }
     var pujcka = Math.max(0, cena - vlastni);
@@ -39,18 +39,18 @@
 
     var radky =
       '<tr><th scope="row">Vlastní peníze<span>akontace</span></th><td>' + fmt(vlastni) + ' Kč</td></tr>' +
-      '<tr><th scope="row">Půjčíte si<span>' + (ltv ? ltv.toFixed(0) + ' % z ceny (LTV)' : '') + '</span></th><td>' + fmt(pujcka) + ' Kč</td></tr>' +
+      '<tr><th scope="row">Půjčíte si<span>' + (ltv ? ltv.toFixed(0) + ' % z ceny (LTV)' : '') + '</span></th><td>' + fmt(pujcka) + ' Kč</td></tr>' +
       (pujcka && roky
-        ? '<tr class="hypo-mes"><th scope="row">Měsíční splátka<span>' + (urok ? urok + ' % p. a., ' + roky + ' let' : roky + ' let bez úroku') + '</span></th><td>' + fmt(mes) + ' Kč</td></tr>'
+        ? '<tr class="hypo-mes"><th scope="row">Měsíční splátka<span>' + (urok ? urok + ' % p. a., ' + roky + ' let' : roky + ' let bez úroku') + '</span></th><td>' + fmt(mes) + ' Kč</td></tr>'
           + '<tr><th scope="row">Zaplatíte navíc na úrocích<span>za celou dobu</span></th><td>' + fmt(preplatek) + ' Kč</td></tr>'
         : '');
 
     out.innerHTML = '<table class="nak-tab"><tbody>' + radky + '</tbody></table>'
 
-      + '<p class="nak-pozn">Tohle je výpočet z vašich čísel, ne nabídka. '
+      + '<p class="nak-pozn">Tohle je výpočet z vašich čísel, ne nabídka. '
       + '<b>Kolik vám banka opravdu půjčí</b>, závisí na druhu pozemku, územním plánu, '
-      + 'přístupové cestě a sítích — u pozemků bývá LTV nižší než u domů a zemědělskou '
-      + 'půdu banky financují nerady. Úrok i LTV si ověřte přímo u bank.</p>';
+      + 'přístupové cestě a sítích — u pozemků bývá LTV nižší než u domů a zemědělskou '
+      + 'půdu banky financují nerady. Úrok i LTV si ověřte přímo u bank.</p>';
   }
 
   box.addEventListener('input', spocti);
