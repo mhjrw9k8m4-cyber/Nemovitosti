@@ -61,13 +61,51 @@ odchylek a `test-nahledy-vypisu` hledala atribuci v balíku, který
 výpisy už nenačítají). Všechny tři si teď seznam berou z rozdělovače,
 takže další balík se do nich doplní sám.
 
+### A nakonec i úvodní stránka (totéž, jen opačný směr)
+
+Úvodní stránka si brala **plnou** očištěnou kopii, protože je jediná
+s mapou. Jenže „má mapu" neznamená „má všechno ostatní": pravidla pro
+formulář přidání, porovnávací tabulku, smlouvu nebo stránky rádce na ní
+zabrat nemůžou. Dostala proto `css/uvod.min.css` — **827 pravidel pryč,
+215 → 137 kB, 39,3 → 26,0 kB zabaleno**. Úvodní stránka tím stáhne
+o 78 kB méně (1 566 → 1 488 kB).
+
+`css/styles.min.css` zůstává jako úplná očištěná kopie, kterou si
+nebere žádná stránka — je to jediná poctivá míra, proti které
+`test-rozdeleni-stylu` porovnává vypočtené styly. Teď jimi prochází
+i úvodní stránka: **2 079 prvků × 523 vlastností, žádný rozdíl**.
+
 ## 2. Úvodní stránka: 1 566 kB a 40 požadavků
 
 `js/min/main.js` má 226 kB (62,3 gz) a Leaflet dalších 147 kB (42,6 gz).
 V jednom souboru je přitom i to, co se na první obrazovce nepoužije:
 kreslení výběru prstem, vrstvy úřadů, rychlý výběr, vývoz do tabulky.
-Otázka k změření: kolik z `main.js` se při prvním vykreslení opravdu
-spustí a co z toho jde natáhnout až na vyžádání.
+**Změřeno pokrytím (bez jediného klepnutí):** z `main.js` se spustí
+**41 %**, z Leafletu 47 %, z `hledani.js` 9 %, z `auth.js` 14 %,
+z `vyvoz.js` 17 %. Zbytek jsou obsluhy, které čekají na klepnutí —
+nejde je smazat, jde je natáhnout později.
+
+Skripty přitom NEJSOU brzdou vykreslování: všech 26 má `defer` (jediná
+výjimka, `cisteni.js`, je tak schválně). Jde tedy o objem a čas
+zpracování, ne o blokování.
+
+**Největší kus prvního načtení není kód, ale data:**
+`data/opportunities.json` má 631 kB (79 kB zabaleno) proti 221 kB
+(62 kB) u `main.js`.
+
+### Změřeno a ZAMÍTNUTO: zkrácené odkazy v datech
+Pole `url` stojí 26 % souboru (160 kB syrově, **19 kB zabaleno**).
+1 632 z 1 957 odkazů má tvar
+`https://www.bezrealitky.cz/nemovitosti-byty-domy/{id}-{slug}` a u 1 355
+z nich se `{slug}` dá složit z obce. Kdyby se ukládalo jen `b:{id}`,
+soubor by spadl ze 79,3 na **69,7 kB zabaleno**.
+
+Neudělal jsem to. `data/opportunities.json` je **veřejná data**, na
+která web sám odkazuje ze stránky `data.html` — a `"url": "b:975585"`
+je formát, který bez znalosti našeho rozbalovače nikdo nepřečte.
+Deset kilobajtů za to nestojí. (A kdyby se to jednou dělalo, musí
+u toho stát kontrola, která rozbalí všechny odkazy a porovná je
+bajt po bajtu s původními — jinak je to hádání.)
 
 ## 3. `js/main.js` je 433 kB v jednom souboru
 

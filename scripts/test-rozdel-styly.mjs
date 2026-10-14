@@ -31,7 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { castiSelektoru, muzeZabrat, tokenyStranky, sloucTokeny, rozparsuj, rozdel, PLNY_STYLOPIS } from './rozdel-styly.mjs';
+import { castiSelektoru, muzeZabrat, tokenyStranky, sloucTokeny, rozparsuj, rozdel, PLNY_STYLOPIS, BALIKY, balikPro } from './rozdel-styly.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { bezKomentaru } from './bez-komentaru.mjs';
 
@@ -151,31 +151,46 @@ try { vystup = execFileSync('node', [path.join(KOREN, 'scripts', 'rozdel-styly.m
 catch (e) { kontrolaOk = false; vystup = String(e.stdout || e.message); }
 pravda('a odpovídá css/styles.css i odkazům ve stránkách', kontrolaOk, vystup.trim().split('\n')[0]);
 
-if (fs.existsSync(ZAKLAD)) {
-  const z = fs.statSync(ZAKLAD).size;
-  const p = fs.statSync(path.join(KOREN, 'css', 'styles.min.css')).size;
-  pravda(`zkrácený je aspoň o třetinu menší (${(z / 1024).toFixed(0)} proti ${(p / 1024).toFixed(0)} kB)`,
-    z < p * 0.67, `${(100 - 100 * z / p).toFixed(1)} % — rozdělení přestalo mít smysl`);
-  pravda('a není prázdný ani omylem zkrácený na nic', z > 40 * 1024, `${z} B`);
+/* KAŽDÝ BALÍK MUSÍ BÝT MENŠÍ NEŽ ÚPLNÁ KOPIE. Balíků jsou od
+   14. 10. čtyři (úvod, pozemek, region, zbytek) a `css/styles.min.css`
+   už si nebere žádná stránka — je to úplná očištěná kopie, která
+   slouží jako míra. */
+const PLNA_B = fs.statSync(path.join(KOREN, 'css', 'styles.min.css')).size;
+for (const b of BALIKY) {
+  const c = path.join(KOREN, b.soubor);
+  if (!fs.existsSync(c)) { pravda(`${b.soubor} existuje`, false, 'soubor chybí'); continue; }
+  const z = fs.statSync(c).size;
+  pravda(`${b.soubor} je menší než úplná kopie (${(z / 1024).toFixed(0)} proti ${(PLNA_B / 1024).toFixed(0)} kB)`,
+    z < PLNA_B * 0.75, `${(100 - 100 * z / PLNA_B).toFixed(1)} % — rozdělení přestalo mít smysl`);
+  pravda(`${b.soubor} není prázdný ani omylem zkrácený na nic`, z > 40 * 1024, `${z} B`);
 }
 
 /* ---- 5) kdo si co bere ---------------------------------------- */
 const stranky = fs.readdirSync(KOREN).filter((f) => f.endsWith('.html'));
-const plny = [], zkraceny = [], zadny = [];
+const spatne = [], zadny = [];
+const pocty = new Map(BALIKY.map((b) => [b.soubor, 0]));
 for (const f of stranky) {
   const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-  if (/href="css\/styles\.min\.css/.test(s)) plny.push(f);
-  else if (/href="css\/zaklad\.min\.css/.test(s)) zkraceny.push(f);
-  else zadny.push(f);
+  const m = /href="(css\/[a-z]+\.min\.css)/.exec(s);
+  if (!m) { zadny.push(f); continue; }
+  const chce = balikPro(f).soubor;
+  if (m[1] !== chce) spatne.push(`${f}: ${m[1]} místo ${chce}`);
+  pocty.set(m[1], (pocty.get(m[1]) || 0) + 1);
 }
-pravda(`plný stylopis si bere jen ${[...PLNY_STYLOPIS].join(', ')}`,
-  plny.length === PLNY_STYLOPIS.size && plny.every((f) => PLNY_STYLOPIS.has(f)),
-  `${plny.length}: ` + plny.slice(0, 5).join(', '));
-pravda(`zkrácený si bere zbytek webu (${zkraceny.length})`,
-  zkraceny.length > 2000, `jen ${zkraceny.length}`);
+pravda('každá stránka si bere balík své rodiny', spatne.length === 0,
+  spatne.slice(0, 5).join(', '));
+/* ÚPLNÁ KOPIE SE NESERVÍRUJE. Kdyby na ni některá stránka odkazovala,
+   stáhla by si 215 kB místo svých 56 až 137 — a nikdo by si toho
+   nevšiml, protože by vypadala úplně stejně. */
+pravda('úplná očištěná kopie se neservíruje nikomu',
+  !stranky.some((f) => /href="css\/styles\.min\.css/.test(fs.readFileSync(path.join(KOREN, f), 'utf8'))),
+  'některá stránka odkazuje na css/styles.min.css');
+for (const [soubor, kolik] of pocty) {
+  pravda(`${soubor} si bere ${kolik} stránek`, kolik > 0, 'balík, který nikdo nenačítá');
+}
 pravda(`bez stylopisu jsou jen soběstačné stránky (${zadny.length})`,
   zadny.every((f) => /<style/.test(fs.readFileSync(path.join(KOREN, f), 'utf8'))),
-  'stránka bez stylopisu a bez vlastního <style>: ' + zadny.join(', '));
+  'stránka bez stylopisu a bez vlastního <style>: ' + zadny.slice(0, 5).join(', '));
 
 console.log('\nRozdělení stylopisu');
 console.log(zpravy.join('\n'));

@@ -86,7 +86,16 @@ export const PLNY_STYLOPIS = new Set(['index.html']);
    neskončí bez stylopisu — nejhůř dostane ten nejširší.
    ================================================================== */
 export const BALIKY = [
-  { soubor: 'css/styles.min.css', plny: true, patri: (f) => PLNY_STYLOPIS.has(f) },
+  /* I ÚVODNÍ STRÁNKA DOSTÁVÁ SVŮJ BALÍK, ne „celý stylopis".
+     Dlouho si brala plnou očištěnou kopii, protože je jediná s mapou —
+     jenže „má mapu" neznamená „má všechno ostatní": pravidla pro
+     formulář přidání, porovnávací tabulku, smlouvu nebo stránky rádce
+     na ní zabrat nemůžou. Naměřeno: 752 pravidel navíc, tedy 215 kB
+     místo 144 (39,3 proti 27,3 kB zabaleno).
+     css/styles.min.css zůstává jako ÚPLNÁ očištěná kopie — neservíruje
+     se nikomu, ale je to ta jediná poctivá míra, proti které
+     test-rozdeleni-stylu porovnává vypočtené styly. */
+  { soubor: 'css/uvod.min.css', patri: (f) => PLNY_STYLOPIS.has(f) },
   /* `pozemek.html` je ŠABLONA I STRÁNKA naráz — mapa na ni odkazuje
      s `?p=…`. Tečka v třídě vzoru je tedy nutnost, ne přepych. */
   { soubor: 'css/pozemek.min.css', patri: (f) => /^pozemek[-.]/.test(f) },
@@ -288,11 +297,10 @@ export function postav() {
     tokenyPro.set(f, t);
     dleBaliku.get(balikPro(f).soubor).push(f);
   }
-  if (!dleBaliku.get('css/styles.min.css').length) throw new Error('rozdel-styly: index.html nenalezen');
+  if (!dleBaliku.get('css/uvod.min.css').length) throw new Error('rozdel-styly: index.html nenalezen');
   const baliky = [];
   for (const b of BALIKY) {
     const moje = dleBaliku.get(b.soubor);
-    if (b.plny) { baliky.push({ ...b, stranky: moje, css: null, vyjmuto: 0 }); continue; }
     if (!moje.length) continue;                 // balík bez stránek se nestaví
     /* „Ostatní" jsou všechny stránky mimo tenhle balík. Pravidlo, které
        nezabere NIKDE (zbytek po smazaných oddílech), tak zůstává —
@@ -313,7 +321,6 @@ const { zdroj, baliky, stranky } = postav();
 const chyby = [];
 
 for (const b of baliky) {
-  if (b.plny) continue;
   const cesta = path.join(KOREN, b.soubor);
   const stare = fs.existsSync(cesta) ? fs.readFileSync(cesta, 'utf8') : null;
   if (stare === b.css) continue;
@@ -324,7 +331,10 @@ for (const b of baliky) {
 /* Odkazy ve stránkách: každá na svůj balík. Vzor bere všechna jména
    balíků naráz, takže přesun stránky z jedné rodiny do druhé se
    přepisuje sám. */
-const JMENA = BALIKY.map((b) => b.soubor.replace('css/', '').replace('.min.css', '')).join('|');
+/* `styles` je ve vzoru schválně, i když už do něj žádná stránka
+   nepatří: stránky na něj odkazovaly dřív a odkaz se musí dát
+   přepsat na nový balík. */
+const JMENA = ['styles'].concat(BALIKY.map((b) => b.soubor.replace('css/', '').replace('.min.css', ''))).join('|');
 const VZOR_BALIK = new RegExp('((?:href|src)=")css\\/(?:' + JMENA + ')\\.min\\.css((?:\\?v=[A-Za-z0-9]+)?")', 'g');
 let prepsano = 0;
 for (const f of stranky) {
@@ -349,7 +359,6 @@ if (kontrola) {
 
 const plna = Buffer.byteLength(ocisti(zdroj));
 for (const b of baliky) {
-  if (b.plny) { console.log(`${b.soubor} ${(plna / 1024).toFixed(1)} kB — ${b.stranky.length} stránek`); continue; }
   console.log(`${b.soubor} ${(Buffer.byteLength(b.css) / 1024).toFixed(1)} kB`
     + ` (vyjmuto ${b.vyjmuto} pravidel) — ${b.stranky.length} stránek`);
 }

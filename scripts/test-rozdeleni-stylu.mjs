@@ -47,6 +47,7 @@ function pravda(popis, vyslo, proc) {
 /* Zástupci všech rodin stránek bez mapy. Kdyby se rozdělení pokazilo,
    pokazí se nejspíš u té, která má nejvíc vlastního vzhledu. */
 const STRANKY = [
+  'index.html',                           /* mapa — od 14. 10. má taky svůj balík */
   'pozemek-benesov-benesov-rsg5bb.html',  /* detail pozemku (2 054 stránek) */
   'pozemky-okres-tabor.html',             /* okresní rozcestník (99 stránek) */
   'pozemky-jihocesky-kraj.html',          /* krajský rozcestník */
