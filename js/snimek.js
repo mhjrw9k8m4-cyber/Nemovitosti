@@ -118,5 +118,59 @@
       '</span>';
   }
 
-  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod, podklady: PODKLADY };
+  /* NÁHLED VE VÝPISU: JEDNA DLAŽDICE, NE SKLÁDANÝ SNÍMEK.
+   * Velký snímek nahoře skládá tolik dlaždic, kolik se jich do okna
+   * vejde. U čtvercového náhledu ve výpisu by to byly v průměru 2,6
+   * dlaždice na nabídku — při 24 nabídkách na stránce přes šedesát
+   * požadavků navíc, a to na stránkách, které si schválně nestahují
+   * ani mapový web.
+   * Náhled proto bere JEDNU dlaždici celou a špendlík se do ní posadí
+   * tam, kde pozemek v té dlaždici doopravdy leží (`ox`, `oy` jsou
+   * body uvnitř dlaždice, 0–256).
+   *
+   * PŘIBLÍŽENÍ SE VYBÍRÁ PODLE TOHO, KAM BOD PADNE. Dlaždice jsou pevná
+   * mříž, takže při jednom přiblížení může pozemek ležet těsně u kraje
+   * a kolem něj není vidět nic. Zkouší se proto po řadě a bere se první
+   * přiblížení, ve kterém bod padne do prostřední poloviny dlaždice;
+   * když žádné nesedí, platí první z řady — radši bod u kraje než
+   * žádný snímek.
+   *
+   * Je to TADY, a ne ve skriptu sestavení, schválně: adresa dlaždic
+   * i přepočet souřadnic na body stojí v tomhle souboru jednou a tahle
+   * funkce z nich vychází. Dvě kopie téhož výpočtu se rozejdou — kvůli
+   * tomu tenhle soubor vznikl (viz komentář nahoře). */
+  function nahled(d, zoomy) {
+    if (!d || !isFinite(d.lat) || !isFinite(d.lng)) return null;
+    /* Měřítko si určuje VÝMĚRA, ne pořadí v seznamu: pro desetihektarový
+       pozemek je dlaždice z přiblížení 19 výřez o padesáti metrech, tedy
+       kus jednoho rohu. Vybírá se proto nejdřív přiblížení podle výměry
+       (tentýž výpočet, jaký používá velký snímek) a teprve kolem něj se
+       zkouší sousední o stupeň výš a níž. Naměřeno na pozemku 10 442 m²
+       v Praze: bez tohohle pořadí vyšlo přiblížení 19 a na snímku nebyl
+       pozemek, ale jedna zahrada vedle něj. */
+    var zaklad = priblizeni(d, 256, 256);
+    var rada = zoomy || [zaklad, zaklad - 1, zaklad + 1, zaklad - 2]
+      /* STROP 18, NE 19. Když dlaždice chybí, nakreslí prohlížeč do rohu
+         ikonu rozbitého obrázku (zkoušeno a vyfoceno) — a letecké
+         podklady bývají nejřidší právě v nejbližším přiblížení nad poli
+         a lesy, tedy přesně tam, kde jsou pozemky. Stupeň 18 má
+         0,4 m na bod, což na náhled 128 px bohatě stačí. */
+      .filter(function (z) { return z >= 13 && z <= 18; });
+    var prvni = null;
+    for (var i = 0; i < rada.length; i++) {
+      var z = rada[i], n = Math.pow(2, z);
+      var WX = worldX(d.lng, n), WY = worldY(d.lat, n);
+      var tx = Math.floor(WX / 256), ty = Math.floor(WY / 256);
+      var kus = { z: z, x: tx, y: ty, ox: WX - tx * 256, oy: WY - ty * 256,
+        url: ZDROJ + z + '/' + ty + '/' + tx };
+      if (!prvni) prvni = kus;
+      /* Prostřední pětina stran ponechaná stranou: u bodu blíž ke kraji
+         než 48 bodů (z 256) je na jedné straně vidět sotva nic. */
+      if (kus.ox > 48 && kus.ox < 208 && kus.oy > 48 && kus.oy < 208) return kus;
+    }
+    return prvni;
+  }
+
+  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod,
+    nahled: nahled, podklady: PODKLADY };
 })(window);

@@ -6457,6 +6457,54 @@ u Brna", „Mníšek pod Brdy") je v datech 129 a žádná sem nepatří.
   1440 i 390 px: nic. Jediné, co vyskočilo, je rozdíl 2 px u `h1` —
   ten nic neořezává, je to zaokrouhlení řádku proti dotahům písmen.
 
+## 3cx. Výpis na stránkách z vyhledávačů dostal letecké náhledy — *14. 10.*
+
+Na 103 stránkách okresů, krajů, druhů a rozpočtů byl výpis **holý
+text**: podtržené jméno obce, věta s tečkami, vpravo cena. Jsou to
+přitom právě ty stránky, na které lidé chodí z vyhledávačů, a vypadaly
+jako rejstřík, ne jako nabídka pozemků. Velké realitní weby mají
+v seznamu obrázek, protože podle něj se rozhoduje dřív než podle čísel.
+
+Fotky k cizím inzerátům přebírat nesmíme (oddíl 2). Jediný poctivý
+obrázek u pozemku je **letecký snímek jeho okolí** — a ten už web
+umí, jen ho ukazoval až na stránce pozemku.
+
+### Jedna dlaždice na nabídku, ne skládaný snímek
+Velký snímek na stránce pozemku se skládá z tolika dlaždic, kolik se
+jich do okna vejde. U čtvercového náhledu by to vycházelo na 2,6
+dlaždice na nabídku — při šedesáti nabídkách na stránce **přes sto
+padesát požadavků**, a to na stránkách, které si schválně nestahují
+ani mapový web.
+
+Náhled proto bere **jednu dlaždici celou** a špendlík se do ní posadí
+tam, kde pozemek v té dlaždici doopravdy leží. Přiblížení se vybírá
+podle výměry (týž výpočet, jaký používá velký snímek) a pak se zkouší
+sousední stupně, aby bod nepadl těsně ke kraji: u 78 % nabídek se
+trefí do prostřední poloviny dlaždice, zbytek je u kraje, ale pořád na
+správném místě.
+
+| rozhodnutí | proč |
+|---|---|
+| `loading="lazy"` + pevné rozměry | stahuje se, až když se řádek blíží obrazovce, a stránka pod prstem neposkočí |
+| strop přiblížení 18, ne 19 | když dlaždice chybí, nakreslí prohlížeč ikonu rozbitého obrázku (vyzkoušeno a vyfoceno) a letecké podklady bývají nejřidší právě nad poli |
+| výpočet je v `js/snimek.js` | tentýž soubor kreslí velký snímek; druhá kopie přepočtu souřadnic na dlaždice by se rozešla, kvůli tomu ten soubor vznikl |
+| odznak dražby leží **na** snímku | uvolnil se tím sloupec, který se dosud musel držet na 78 px kvůli svislici názvů |
+
+### Zásady soukromí to musely říct
+Stály tam věty „podklad mapy" a **„dokud mapu neotevřete, nepředá se
+jim nic"** — a to by od téhle změny nebyla pravda: náhled sahá na Esri
+i na stránce, kde žádná mapa není. Je tam proto nový odstavec: co se
+stahuje, odkud, kdy (až při dorolování) a že se tím Esri dozví i to,
+jak daleko ve výpisu člověk došel.
+
+### Nová zkouška `test-nahledy-vypisu.mjs` (2 797 nabídek na 103 stránkách)
+
+| sabotáž | spadlo |
+|---|---|
+| `loading="lazy"` pryč | 1 |
+| špendlík posazený mimo snímek | 1 |
+| atribuce Esri vymazaná ze stylopisu | 1 (a jmenovala oba balíky stylů) |
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

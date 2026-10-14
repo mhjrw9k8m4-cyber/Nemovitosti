@@ -267,6 +267,9 @@ jobs:
       - name: Místo u pražských nabídek (ulice není obec)
         run: node scripts/test-misto-prahy.mjs
 
+      - name: Náhledy ve výpisu — jedna dlaždice, odloženě, s atribucí
+        run: node scripts/test-nahledy-vypisu.mjs
+
       - name: Vnitřní odkazy a kotvy vedou, kam slibují
         run: node scripts/test-vnitrni-odkazy.mjs
 

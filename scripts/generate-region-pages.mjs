@@ -49,6 +49,19 @@ const VYB = require_(path.join(ROOT, 'js', 'vybaveni.js'));
    ta pravidla v js/zlevneni.js stojí na jednom místě. */
 new Function(fs.readFileSync(path.join(ROOT, 'js', 'klic.js'), 'utf8'))();
 const PKKlic = globalThis.PKKlic;
+/* NÁHLEDY VE VÝPISU POČÍTÁ TÝŽ SOUBOR, KTERÝ KRESLÍ VELKÝ SNÍMEK.
+   js/snimek.js vznikl právě proto, že se snímek skládal na dvou místech
+   a výpočty se rozcházely; druhá kopie tady by byla třetí. Soubor je
+   psaný pro prohlížeč (končí `})(window)`), takže se mu `window`
+   nastaví na globální objekt a spustí se stejně jako js/klic.js o řádek
+   výš. */
+globalThis.window = globalThis;
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'snimek.js'), 'utf8'))();
+const SNIMEK = globalThis.PK_SNIMEK;
+if (!SNIMEK || typeof SNIMEK.nahled !== 'function') {
+  console.error('::error::js/snimek.js nedalo nahled() — výpisy by zůstaly bez náhledů');
+  process.exit(1);
+}
 const PKZ = require_(path.join(ROOT, 'js', 'zlevneni.js'));
 /* Razítko proti staré kopii v prohlížeči. Dřív to bylo ručně psané číslo
    (v=20260902f) — a při úpravě stylu se zapomnělo přepsat, takže lidem
@@ -810,8 +823,32 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
     ? `<a class="okr-place" href="${attr(strankaPozemku.soubor)}">${esc(o.place)}` +
       `<span class="visually-hidden"> — detail pozemku</span></a>`
     : `<span class="okr-place">${esc(o.place)}</span>`;
+  /* NÁHLED: JEDNA DLAŽDICE LETECKÉHO SNÍMKU, ODLOŽENĚ.
+     Dokud to byl holý řádek textu, vypadal výpis jako rejstřík —
+     a přitom je to ta stránka, na kterou lidé chodí z vyhledávačů
+     a kde se rozhodují, na co kliknou. Velké realitní weby mají
+     v seznamu obrázek, a u pozemku je jediný poctivý obrázek letecký
+     snímek jeho okolí.
+     `loading="lazy"` a pevné rozměry: stahuje se, až když se řádek
+     blíží obrazovce, a místo si drží dopředu, takže se stránka pod
+     prstem nepřeskládá. Špendlík sedí tam, kde pozemek v dlaždici
+     doopravdy je (viz PK_SNIMEK.nahled).
+     Není to odkaz: na celý řádek už jeden vede (`.okr-place::after`
+     přes celou plochu), a druhý odkaz na totéž místo by klávesnici
+     i odečítači přidal krok navíc. */
+  const n = SNIMEK.nahled(o);
+  /* ODZNAK LEŽÍ UVNITŘ SNÍMKU, ne vedle něj: je to týž odznak, jaký má
+     karta na mapě. Snímek proto NENÍ `aria-hidden` — odečítač by s ním
+     spolkl i slovo „Dražba", a to je údaj, ne ozdoba. Nečte se z něj
+     nic jiného: obrázek má prázdný `alt` a špendlík je skrytý. */
+  const foto = n
+    ? `<span class="okr-foto">`
+      + `<img src="${attr(n.url)}" width="256" height="256" loading="lazy" decoding="async" alt="">`
+      + `<i class="okr-pin" aria-hidden="true" style="left:${(n.ox / 256 * 100).toFixed(1)}%;top:${(n.oy / 256 * 100).toFixed(1)}%"></i>`
+      + `${badge}</span>`
+    : `<span class="okr-foto okr-foto-bez">${badge}</span>`;
   return `      <div class="okr-item">
-        ${badge}
+        ${foto}
         ${misto}
         ${cena}
         <span class="okr-meta">${bits.join(' · ')}</span>

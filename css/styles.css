@@ -4487,12 +4487,71 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    stejně a ceny stojí pod sebou v jednom sloupci.
        [odznak]  místo .............  CENA
                  podrobnosti ......  zdroj ↗                            */
-.okr-item{display:grid; grid-template-columns:auto minmax(0,1fr) auto;
-  grid-template-areas:"znak misto cena" "znak meta zdroj";
-  column-gap:12px; row-gap:4px; align-items:baseline;
+/* A OD 14. 10. MÁ KAŽDÁ NABÍDKA NÁHLED.
+   Výpis byl holý text: podtržené jméno obce, za ním věta s tečkami
+   a vpravo cena. Na stránkách, kam lidé chodí z vyhledávačů, to
+   vypadalo jako rejstřík, ne jako nabídka pozemků — a velké realitní
+   weby mají v seznamu obrázek, protože podle něj se rozhoduje dřív
+   než podle čísel. U pozemku je jediný poctivý obrázek letecký snímek
+   jeho okolí (fotky k cizím inzerátům přebírat nesmíme, viz oddíl 2
+   v docs/co-chybi.md).
+   Snímek je JEDNA dlaždice, odložená (`loading="lazy"`) a s pevnými
+   rozměry — stránky okresů si schválně nestahují mapový web a tohle
+   je nemá zdražit. */
+/* TŘETÍ, PRÁZDNÁ ŘÁDKA. Snímek je vyšší než dva řádky textu vedle něj
+   a protože je přes obě řádky natažený, roztáhne je na svou výšku —
+   jméno obce pak zůstane nahoře a podrobnosti spadnou až ke dnu
+   snímku, s dírou uprostřed. Naměřeno: mezi nimi bylo 72 px prázdna.
+   Zbytek výšky proto sbírá třetí řádka (`1fr`) a text se srovná nahoru. */
+.okr-item{display:grid; grid-template-columns:128px minmax(0,1fr) auto;
+  grid-template-rows:auto auto 1fr;
+  grid-template-areas:"foto misto cena" "foto meta zdroj" "foto . .";
+  /* `align-content:start`, protože snímek je vyšší než ty dva řádky
+     textu vedle něj: bez toho se řádky roztáhly přes celých 128 px
+     a mezi jménem obce a podrobnostmi zela mezera přes půl snímku. */
+  column-gap:14px; row-gap:4px; align-items:baseline; align-content:start;
   padding:12px 14px; background:var(--surface-2,#1b2b22);
   border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
-.okr-item .okr-badge{grid-area:znak; align-self:start; justify-self:start;}
+.okr-item .okr-foto{grid-area:foto; align-self:start; position:relative; display:block;
+  width:128px; aspect-ratio:1; overflow:hidden; border-radius:var(--r-sm);
+  background:#12241A; background-image:
+    linear-gradient(rgba(206,228,212,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(206,228,212,0.07) 1px, transparent 1px);
+  background-size:32px 32px, 32px 32px;}
+/* `color:transparent` kvůli DLAŽDICI, KTERÁ SE NENAČTE. Prohlížeč na
+   její místo nakreslí ikonu rozbitého obrázku — na tmavém čtverci je to
+   bílá šmouha v rohu u každé nabídky. S průhledným písmem zůstane čtverec
+   čistý a vidět je podkladová mříž a špendlík, tedy přesně to, co o tom
+   místě víme i bez snímku. */
+.okr-item .okr-foto img{width:100%; height:100%; object-fit:cover; display:block;
+  border:0; background:none; color:transparent;}
+/* Špendlík, ne tečka: je to tatáž značka, jakou má pozemek na mapě
+   i na velkém snímku, takže si ji člověk nemusí přebírat podruhé. */
+/* Posun přes `translate`, ne přes záporný okraj: půlka šířky špendlíku
+   je 7 px a to je číslo mimo stupnici odstupů (a taky by se muselo
+   přepočítat při každé změně velikosti). V procentech to drží samo. */
+.okr-item .okr-pin{position:absolute; width:14px; height:14px;
+  border-radius:50% 50% 50% 0; transform:translate(-50%,-100%) rotate(-45deg);
+  background:var(--plocha-znacka); border:2px solid #fff;
+  box-shadow:0 1px 3px rgba(8,20,14,0.5);}
+/* ODZNAK LEŽÍ NA SNÍMKU, ne ve vlastním sloupci. Dřív měl 78 px vedle
+   jména obce a kvůli němu se musela hlídat svislice názvů (viz níž);
+   na snímku je to týž odznak, jaký má karta na mapě, a sloupec se
+   uvolnil pro text. */
+.okr-item .okr-foto .okr-badge{position:absolute; left:6px; top:6px; z-index:2;
+  background:var(--panel); box-shadow:0 1px 4px rgba(8,20,14,0.35);}
+/* NA SNÍMKU JE ODZNAK MENŠÍ. Vedle textu měl 12 px a 78 px na šířku
+   („Exekuce", naměřeno); na telefonu je snímek široký 96 px a s osmi
+   pixely odsazení se z odznaku ztrácela poslední dvě písmena —
+   `overflow:hidden` ho ořízlo, protože ten samý `overflow` zaobluje
+   snímek. Uvnitř snímku se tedy píše o dva stupně níž. */
+.okr-item .okr-foto .okr-badge{font-size:10px; padding:2px 6px; letter-spacing:0.04em;}
+/* ATRIBUCE SNÍMKŮ. Esri ji vyžaduje všude, kde se jeho dlaždice
+   kreslí — na mapě ji nese Leaflet, tady musí stát pod výpisem.
+   Je psaná stylem, ne generátorem: seznamů se na stránkách otevírá
+   devět a do každého by se ta věta musela vepsat zvlášť. */
+.okr-list:has(.okr-foto img)::after{content:"Letecké snímky © Esri, Maxar, Earthstar Geographics";
+  display:block; margin-top:8px; font-size:11px; color:var(--text-ondark-mute); opacity:0.75;}
 /* =====================================================================
    NÁZVY OBCÍ V SEZNAMU STOJÍ NA JEDNÉ SVISLICI
    =====================================================================
@@ -4515,7 +4574,11 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
    Hlídá scripts/test-seznam-nabidek.mjs.
    ===================================================================== */
-.okr-list:has(.okr-badge) .okr-item{grid-template-columns:78px minmax(0,1fr) auto;}
+/* DOVĚTEK 14. 10.: tenhle sloupec už neexistuje. Odznak leží na náhledu
+   a první sloupec má pevných 128 px u KAŽDÉHO řádku, takže se názvy
+   srovnaly samy — svislice je teď vlastností stavby, ne pravidla, které
+   se musí trefit do šířky nejširšího odznaku. Zkouška v
+   scripts/test-seznam-nabidek.mjs měří dál totéž: jeden levý okraj. */
 /* JMÉNO OBCE SE NA ÚZKÉ OBRAZOVCE LÁMALO AŽ NA TŘI ŘÁDKY.
    Naměřeno při 320 px: 35 jmen přes dva řádky a „Blatnice pod Svatým
    Antonínkem" i „Žeravice u Kyjova a k.ú. Syrovín" přes tři. Zlomené
@@ -4637,13 +4700,20 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 /* Místo jako nadpis detailu — dává panelu tvář */
 /* Hero cena — hlavní číslo detailu */
 @media (max-width:760px){
-  /* Na úzkém displeji se tři sloupce nevejdou — cena ale zůstává vpravo
-     nahoře, v jednom sloupci pod sebou, jako na širokém. Kdyby se zařadila
-     do textu, byli bychom zpátky u věty, ze které se cena vylovit nedá. */
-  .okr-item{grid-template-columns:minmax(0,1fr) auto;
-    grid-template-areas:"znak zdroj" "misto cena" "meta meta";
-    column-gap:10px; row-gap:4px;}
-  .okr-item .okr-cena{align-self:baseline;}
+  /* NA TELEFONU SNÍMEK ZŮSTÁVÁ, JEN ZMENŠENÝ — a text se pod sebe.
+     Tři sloupce vedle sebe se na 390 px nevejdou a cena vedle jména by
+     z obojího udělala dva uříznuté sloupečky. Náhled drží levý kraj
+     přes celou výšku řádku, vpravo jde jméno, cena, podrobnosti
+     a zdroj pod sebou — tak to má v seznamu Sreality i ostatní.
+     (Dřív tu byla oblast „znak" pro odznak dražby; ten teď leží na
+     snímku, takže by zůstala prázdná řádka.) */
+  .okr-item{grid-template-columns:96px minmax(0,1fr);
+    grid-template-rows:auto auto auto auto 1fr;
+    grid-template-areas:"foto misto" "foto cena" "foto meta" "foto zdroj" "foto .";
+    column-gap:12px; row-gap:4px;}
+  .okr-item .okr-foto{width:96px;}
+  .okr-item .okr-cena{align-self:baseline; justify-self:start; text-align:left;}
+  .okr-item .okr-src{justify-self:start;}
 }
 /* NA NEJUŽŠÍ OBRAZOVCE DOSTANE JMÉNO OBCE CELÝ ŘÁDEK.
    Při 320 px sdílelo jméno řádek s cenou a zbylo na něj 138 px z 222 —
@@ -4652,9 +4722,23 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    Useknout je (nowrap a tři tečky) by bylo horší: podle poloviny jména
    obec nikdo nedohledá. Cena se proto posune pod jméno — pořád má
    vlastní řádek, takže se z ní dá číst stejně snadno. */
+/* NA NEJUŽŠÍ OBRAZOVCE JDE SNÍMEK NAD TEXT, ne vedle něj.
+   Vedle textu si bral 76 px z 218 a na jméno obce zbylo 132 px —
+   „Blatnice pod Svatým Antonínkem" se z toho rozpadlo na tři řádky
+   a zkouška v test-rozvrzeni to ohlásila (přesně na to je psaná).
+   Snímek přes celou šířku je zároveň to, co má na telefonu Sreality
+   i ostatní velké weby: obrázek, pod ním jméno, cena a podrobnosti.
+   Poměr 16:10 (ne čtverec) proto, aby se na obrazovku vešly aspoň dvě
+   nabídky naráz. Výřez nikomu neutne špendlík: přiblížení se vybírá
+   tak, aby bod ležel v prostřední polovině dlaždice, a to je přesně
+   ten pruh, který z ní 16:10 nechává vidět. */
 @media (max-width:420px){
-  .okr-item{grid-template-areas:"znak zdroj" "misto misto" "cena cena" "meta meta";}
-  .okr-item .okr-cena{justify-self:start; text-align:left;}
+  .okr-item{grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:"foto foto" "misto misto" "cena cena" "meta meta" "zdroj zdroj";
+    column-gap:10px; row-gap:6px;}
+  .okr-item .okr-foto{width:100%; aspect-ratio:16/10; margin-bottom:2px;}
+  .okr-item .okr-foto .okr-badge{font-size:12px; padding:2px 8px; left:8px; top:8px;}
 }
 
 /* =====================================================================

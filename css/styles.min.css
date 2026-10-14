@@ -1459,9 +1459,13 @@ to{opacity:1;transform:none}
 .okr-stat b{display:block;font-size:24px;line-height:1.1;color:var(--copper-bright,#8CC3A4)}
 .okr-stat span{font-size:12px;color:var(--muted,#9db0a4);text-transform:uppercase;letter-spacing:0.04em}
 .okr-list{display:flex;flex-direction:column;gap:10px;margin:14px 0 0}
-.okr-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"znak misto cena" "znak meta zdroj";column-gap:12px;row-gap:4px;align-items:baseline;padding:12px 14px;background:var(--surface-2,#1b2b22);border:1px solid var(--line,#2C3F35);border-radius:var(--r-md)}
-.okr-item .okr-badge{grid-area:znak;align-self:start;justify-self:start}
-.okr-list:has(.okr-badge) .okr-item{grid-template-columns:78px minmax(0,1fr) auto}
+.okr-item{display:grid;grid-template-columns:128px minmax(0,1fr) auto;grid-template-rows:auto auto 1fr;grid-template-areas:"foto misto cena" "foto meta zdroj" "foto . .";column-gap:14px;row-gap:4px;align-items:baseline;align-content:start;padding:12px 14px;background:var(--surface-2,#1b2b22);border:1px solid var(--line,#2C3F35);border-radius:var(--r-md)}
+.okr-item .okr-foto{grid-area:foto;align-self:start;position:relative;display:block;width:128px;aspect-ratio:1;overflow:hidden;border-radius:var(--r-sm);background:#12241A;background-image:linear-gradient(rgba(206,228,212,0.07) 1px,transparent 1px),linear-gradient(90deg,rgba(206,228,212,0.07) 1px,transparent 1px);background-size:32px 32px,32px 32px}
+.okr-item .okr-foto img{width:100%;height:100%;object-fit:cover;display:block;border:0;background:none;color:transparent}
+.okr-item .okr-pin{position:absolute;width:14px;height:14px;border-radius:50% 50% 50% 0;transform:translate(-50%,-100%) rotate(-45deg);background:var(--plocha-znacka);border:2px solid #fff;box-shadow:0 1px 3px rgba(8,20,14,0.5)}
+.okr-item .okr-foto .okr-badge{position:absolute;left:6px;top:6px;z-index:2;background:var(--panel);box-shadow:0 1px 4px rgba(8,20,14,0.35)}
+.okr-item .okr-foto .okr-badge{font-size:10px;padding:2px 6px;letter-spacing:0.04em}
+.okr-list:has(.okr-foto img)::after{content:"Letecké snímky © Esri,Maxar,Earthstar Geographics";display:block;margin-top:8px;font-size:11px;color:var(--text-ondark-mute);opacity:0.75}
 .okr-item .okr-place{grid-area:misto;text-wrap:balance}
 .okr-item .okr-cena{grid-area:cena;justify-self:end;text-align:right}
 .okr-item .okr-meta{grid-area:meta}
@@ -1512,11 +1516,14 @@ to{opacity:1;transform:none}
 .add-card .rules-note,.rules-sect .rules-note{color:var(--text-ondark-mute)}
 .rule-list li{color:var(--text-ondark);line-height:1.6}
 .add-hero .sub{color:var(--pas-text-mute)}
-@media (max-width:760px){.okr-item{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"znak zdroj" "misto cena" "meta meta";column-gap:10px;row-gap:4px}
-.okr-item .okr-cena{align-self:baseline}
+@media (max-width:760px){.okr-item{grid-template-columns:96px minmax(0,1fr);grid-template-rows:auto auto auto auto 1fr;grid-template-areas:"foto misto" "foto cena" "foto meta" "foto zdroj" "foto .";column-gap:12px;row-gap:4px}
+.okr-item .okr-foto{width:96px}
+.okr-item .okr-cena{align-self:baseline;justify-self:start;text-align:left}
+.okr-item .okr-src{justify-self:start}
 }
-@media (max-width:420px){.okr-item{grid-template-areas:"znak zdroj" "misto misto" "cena cena" "meta meta"}
-.okr-item .okr-cena{justify-self:start;text-align:left}
+@media (max-width:420px){.okr-item{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto auto auto;grid-template-areas:"foto foto" "misto misto" "cena cena" "meta meta" "zdroj zdroj";column-gap:10px;row-gap:6px}
+.okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:2px}
+.okr-item .okr-foto .okr-badge{font-size:12px;padding:2px 8px;left:8px;top:8px}
 }
 .s-rohy{position:relative}
 .s-rohy::before,.s-rohy::after{content:"";position:absolute;width:14px;height:14px;pointer-events:none;border-color:var(--line-strong);border-style:solid;opacity:0.9}

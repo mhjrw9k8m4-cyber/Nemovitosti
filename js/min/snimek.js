@@ -85,5 +85,27 @@
       '</span>';
   }
 
-  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod, podklady: PODKLADY };
+  function nahled(d, zoomy) {
+    if (!d || !isFinite(d.lat) || !isFinite(d.lng)) return null;
+
+    var zaklad = priblizeni(d, 256, 256);
+    var rada = zoomy || [zaklad, zaklad - 1, zaklad + 1, zaklad - 2]
+
+      .filter(function (z) { return z >= 13 && z <= 18; });
+    var prvni = null;
+    for (var i = 0; i < rada.length; i++) {
+      var z = rada[i], n = Math.pow(2, z);
+      var WX = worldX(d.lng, n), WY = worldY(d.lat, n);
+      var tx = Math.floor(WX / 256), ty = Math.floor(WY / 256);
+      var kus = { z: z, x: tx, y: ty, ox: WX - tx * 256, oy: WY - ty * 256,
+        url: ZDROJ + z + '/' + ty + '/' + tx };
+      if (!prvni) prvni = kus;
+
+      if (kus.ox > 48 && kus.ox < 208 && kus.oy > 48 && kus.oy < 208) return kus;
+    }
+    return prvni;
+  }
+
+  global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod,
+    nahled: nahled, podklady: PODKLADY };
 })(window);

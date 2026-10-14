@@ -34,7 +34,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=a6761c4e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=c6fea67a">
 </head>
 <body>
 
@@ -169,8 +169,12 @@
               (<code>tile.openstreetmap.org</code>) — <b>podklad mapy</b>. Mapa se skládá
               z dlaždic, které se stahují z jejich serverů, takže se jim předá vaše IP adresa
               a to, na kterou část mapy se právě koukáte. Letecký snímek je od Esri, základní
-              mapa od OpenStreetMap; přepínač je v mapě. Dokud mapu neotevřete, nepředá se
-              jim nic.</li>
+              mapa od OpenStreetMap; přepínač je v mapě.</li>
+            <li><b>Esri</b> — <b>náhled u nabídky ve výpisu</b>. Na stránkách okresů, krajů,
+              druhů a rozpočtů má každá nabídka čtvercový letecký náhled; je to jedna
+              dlaždice z téhož serveru. Stahuje se, až když se k té nabídce dorolujete,
+              takže se Esri dozví i to, jak daleko jste ve výpisu došli. Na stránkách
+              bez mapy i bez výpisu nabídek se jim nepředá nic.</li>
             <li><b>Mapové vrstvy od úřadů</b> — <b>hranice parcel, územní plán, záplavové
               území, bonita půdy a ochrana přírody</b> v mapě u pozemku. Jsou to veřejné
               služby českých úřadů: <code>services.cuzk.gov.cz</code> a
