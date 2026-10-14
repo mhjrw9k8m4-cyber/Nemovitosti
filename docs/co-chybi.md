@@ -5611,6 +5611,55 @@ což je změřené, ne odhadnuté. Ale je to pravidlo s předpokladem,
 a ten předpoklad je napsaný u `jeVeta` v `scripts/minifikace.mjs`,
 ať je po ruce tomu, kdo tam bude přidávat další.
 
+## 3cg. Hledání něčeho viditelného: pět měření, pět negativních nálezů — *14. 10.*
+
+Po sazbě jsem šel hledat něco, co bude na první pohled vidět. Zapisuju
+to sem celé, i když z toho **nevzešla ani jedna oprava**, protože
+příště to nemá nikdo měřit znovu — a protože tři z pěti „nálezů"
+nebyly vady webu, ale rozhodnutí, která tenhle web už jednou udělal
+a napsal si proč.
+
+**1. Obrys parcely na snímku (vedl jsem si ho jako otevřený bod).**
+Není to vada. `js/snimek.js` to má napsané: čtverec o skutečné výměře
+tam byl a je pryč, protože na leteckém snímku působil jako obrys
+parcely, a ten nemáme — je v katastru. Dřív se na mapě kreslil
+pětiúhelník, jehož tvar vycházel z `Math.sin(poradiVPoli…)` a plocha
+v mediánu na **58 % skutečné výměry**. Hlídá to `test-obrys.mjs`.
+Opravdový obrys je dostupný jen jako vrstva „Hranice parcel" z ČÚZK,
+a ta v detailní mapě je.
+
+**2. Vata na stránkách pozemků.** Změřeno na 1 928 živých stránkách:
+viditelného textu je 1 881 529 znaků a vět, které stojí na víc než
+polovině stránek, je z toho **9,9 %** — průměrně 97 znaků z 976 na
+stránku, a je to patička a jedna výzva. Stránky přeplácané nejsou.
+
+**3. Váha stránky.** Ze souborů na disku to vypadalo na 1,5 MB u úvodní
+stránky. Se skutečným přenosem (gzip, jak to servíruje GitHub Pages)
+je to **25 kB HTML + 40 kB stylů + ~90 kB skriptů + 92 kB dat**, tedy
+kolem čtvrt megabajtu na mapovou aplikaci s dvěma tisíci body. Dvě
+největší data v repozitáři (`okresy-hranice.json` 925 kB,
+`popisy.json` 827 kB) si prohlížeč **nestahuje vůbec** — jsou jen pro
+sestavení. Není co zeštíhlovat.
+
+**4. Vodorovný přetok na telefonu.** Dvanáct stránek na 390 px:
+dokument má všude přesně **390 px**, přetékajících prvků nula. (Čtyři
+„nálezy" na stránce pozemku jsou dlaždice leteckého snímku, které se
+schválně kreslí šíř a ořezávají.)
+
+**5. Prázdný pravý pás u detailu pozemku.** Změřeno: pás je 527 px
+široký, stránka 3 557 px vysoká a cena v něm zabírá 40 px, tedy
+**1,1 %**. Vypadalo to jako nevyužité místo — jenže je to záměr
+a v `css/styles.css` je u něj napsané proč: velké realitní weby tam
+drží jednu věc, cenu, která zůstane na očích i po odrolování. U téhož
+pravidla je i poučení, proč mřížka stojí na `#pz-detail` a ne na obalu
+(s obalem naměřila `test-stabilita` CLS 0,0556 proti dovoleným 0,05).
+
+**A jedna věc, kterou jsem si vymyslel ze zmenšeného snímku:** zdálo
+se mi, že popisek „Cena za m²" má „m²" jinou barvou. Změřeno
+v prohlížeči: všechny popisky mají `rgb(88, 95, 91)`, všechny hodnoty
+`rgb(16, 21, 19)`, pozadí bílé. Byl to artefakt zmenšeniny. Mezi
+„vidím to na obrázku" a „změřil jsem to" je pořád tentýž rozdíl.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
