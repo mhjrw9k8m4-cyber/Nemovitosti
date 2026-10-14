@@ -462,7 +462,14 @@
   --m-sloupec:720px;   /* sloupec článku i s kraji */
   --m-uzky:560px;      /* formuláře, boční panely */
   --m-karta:440px;     /* karty a okna */
-  --m-text:62ch;       /* čtecí sloupec — odstavce */
+  /* Čtecí sloupec. 62ch dávalo 80 znaků v mediánu a 89 v nejhorším
+     místě — pořád za hranicí 75, kde se text čte nejlépe, a na strop 90
+     ve zkoušce to nechávalo jediný znak rezervy. Jeden znak není
+     rezerva: stačí jiné písmo nebo jiné slovo a pojistka se překlopí.
+     56ch dává medián 72 a nejhorší 80. (`ch` je šířka nuly, ne střední
+     šířka znaku — nula je v Interu širší než průměrné písmeno, takže
+     56ch vyjde na ~72 opravdových znaků, ne na 56.) */
+  --m-text:56ch;       /* čtecí sloupec — odstavce */
   --m-popisek:42ch;    /* krátký popisek pod nadpisem */
   --m-nadpis:18ch;     /* velký nadpis, ať se láme, kde chceme */
   /* Boční sloupec s obsahem rádce a mezera k sazbě. Mezera musí být

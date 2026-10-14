@@ -53,6 +53,15 @@ for (const s of STRANKY) {
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  /* ČEKÁ SE NA PÍSMO, ne jen na čas. Inter je vlastní webfont
+     (fonts/inter-latin*.woff2). Dokud se nenačte, kreslí prohlížeč
+     v záložním Arialu — a ten je širší, takže se do téže šířky vejde
+     MÍŇ znaků… jenže canvas, kterým se měří střední šířka znaku, taky
+     ještě Inter nezná, a tak naměří Arial. Výsledek pak vychází o dva
+     až tři znaky výš a je jiný místně a jiný v CI: 13. 10. kvůli tomu
+     zkouška v CI nahlásila .okr-more s 91 znaky, zatímco místně vyšlo
+     89. Nebyla to vada sazby, byl to závod. */
+  await p.evaluate(() => document.fonts.ready).catch(() => {});
   await p.waitForTimeout(1400);
   const v = await p.evaluate(() => {
     const jm = (e) => (typeof e.className === 'string' && e.className.trim()

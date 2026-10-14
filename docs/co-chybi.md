@@ -5006,6 +5006,38 @@ Ověřeno sabotáží: celé pravidlo čtecího sloupce ze stylopisu pryč,
 přestavět — zkouška spadla a vypsala `187 znaků .rules-note (13px,
 1136px) · cena-pozemku.html` a dalších šest. Po vrácení zelená.
 
+### A hned nato ta zkouška našla vadu v sobě samé
+
+Commit s čtecím sloupcem shodil v CI `v-prohlizeci` — a shodila ho
+**ta nová zkouška**, kterou jsem právě napsal: `.okr-more` na
+`pozemky-do-500-tisic.html` mělo **91 znaků**, zatímco místně mi
+vyšlo 89. Dva různé výsledky na témže kódu.
+
+Příčina nebyla sazba, byl to **závod**. Inter je vlastní webfont
+(`fonts/inter-latin*.woff2`). Dokud se nenačte, kreslí prohlížeč
+v záložním Arialu — a canvas, kterým zkouška měří střední šířku znaku,
+taky ještě Inter nezná, takže naměří Arial. Ten je širší, takže
+vychází o dva až tři znaky víc, a kdy přesně se font načte, je jinak
+místně a jinak v CI. Zkouška teď čeká na `document.fonts.ready`, ne na
+čas.
+
+**A pak jsem šel dál, protože mě ten nález dovedl k něčemu
+podstatnějšímu.** I po opravě metody vycházelo nejhorší místo na 89
+znaků — tedy **jediný znak** pod stropem 90. Jeden znak není rezerva:
+stačí jiné slovo a pojistka se překlopí. A 89 znaků je i tak za
+hranicí 75, kde se text čte nejlépe. Token `--m-text` je proto
+**56ch místo 62ch** (`ch` je šířka nuly, ne střední šířka znaku —
+nula je v Interu širší než průměrné písmeno, takže 56ch vyjde na ~72
+opravdových znaků, ne na 56):
+
+| | 62ch | 56ch |
+|---|---|---|
+| medián | 80 | **73** |
+| nejhorší | 89 | **81** |
+| rezerva do stropu 90 | 1 znak | **9 znaků** |
+
+Mediány teď sedí v optimu 60–75, kam od začátku měly.
+
 ## 3bz. NALEZENO: 95 stránek mělo přeskočenou úroveň nadpisu — a jedna si nesla patičku, kterou nikdo jiný nemá — *opraveno 13. 10.*
 
 Poslední věc z kompozice, a jediná, která je **doslova** „logické
