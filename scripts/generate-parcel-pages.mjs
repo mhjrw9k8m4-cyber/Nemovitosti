@@ -237,6 +237,34 @@ function podilVelkym(d) {
    Data se NEMĚNÍ: `place` je v klíči pozemku i v názvu souboru
    (pozemek-praha-devonska-…), takže přepsat ho by znamenalo zahodit
    adresy, na které už vedou odkazy. Mění se jen to, co stránka říká. */
+/* A TOTÉŽ SE DĚJE I MIMO PRAHU. Pravidlo nahoře je psané s větou
+   „jinde je `place` opravdu obec" — změřeno 14. 10. a neplatí. Mimo
+   okres Praha je v datech sedm nabídek, jejichž místo začíná
+   předložkou, tedy je to ulice: „U Pískovny" (Jablonec nad Nisou),
+   „Ke Trati" (Kladno), „Ve Višňovce" (Beroun), „V Hlubokém"
+   a „K Rybníku" (Praha-západ), „Na Vrchách" a „V Dymáku"
+   (Praha-východ).
+   Obec u nich NEZNÁME — zdroj ji neposlal a dohledat ji ze sandboxu
+   nejde. Dá se ale zařídit aspoň to, aby stránka nikdy netvrdila míň,
+   než ví: u takového místa se okres z titulku NESMÍ vypustit. Dřív se
+   vypouštěl, jakmile se dlouhý tvar nevešel do 65 znaků, a dvě stránky
+   pak měly nadpis „Stavební pozemek 534 m² — V Hlubokém", což
+   neukazuje nikam. Teď ustoupí radši výměra.
+   Jméno „ulice" to tu nedostane: že to ulice JE, plyne z tvaru a ze
+   zdrojové adresy, ale jistota to není — mohla by to být i část obce.
+   Nepřidává se tedy slovo, jen se nezahazuje okres. */
+const PREDLOZKY = new Set(['na', 'v', 've', 'u', 'pod', 'nad', 'za', 'před', 'při', 'k', 'ke', 'do', 'od']);
+export function jeUlice(place) {
+  /* Dvě podmínky, obě nutné: první slovo je předložka a druhé začíná
+     velkým písmenem. Samotná předložka nestačí — „Ústí nad Orlicí"
+     i „Újezd u Brna" jsou obce a předložku mají uprostřed, ne na
+     začátku. (Takových je v datech 129, a žádná z nich sem nepatří.) */
+  const t = String(place || '').trim();
+  const m = /^(\S+)\s+(\S)/.exec(t);
+  if (!m || !PREDLOZKY.has(m[1].toLowerCase())) return false;
+  return m[2] !== m[2].toLowerCase() && m[2] === m[2].toUpperCase();
+}
+
 export function mistoFraze(place, okres) {
   if (okres === 'Praha' && place && place !== 'Praha') {
     const f = `Praha, ${place}`;
@@ -257,16 +285,26 @@ function slozTitulek(druh, vym, place, okres, podil) {
      jenom tou výměrou (1 026 vs 1 017 m² ve Strunkovicích). Kdyby
      ustoupila výměra, měly by obě tentýž titulek. */
   const pk = podil ? ', podíl' : '';
+  /* KRÁTKÝ TVAR (jen místo, bez okresu) U ULICE NE. „Stavební pozemek
+     534 m² — V Hlubokém" neukazuje nikam; okres je tam jediné, co
+     místo určuje, takže ustoupí radši výměra. Jinde krátký tvar
+     zůstává — obec sama o sobě dává smysl. */
+  const kratke = jeUlice(place) ? [] : [M.kratke];
   const varianty = [
     `${druh}${vym ? ' ' + vym : ''}${p} — ${M.dlouhe}`,
-    `${druh}${vym ? ' ' + vym : ''}${p} — ${M.kratke}`,
+    ...kratke.map((K) => `${druh}${vym ? ' ' + vym : ''}${p} — ${K}`),
     ...(vym && pk ? [`${druh} ${vym}${pk} — ${M.dlouhe}`,
-      `${druh} ${vym}${pk} — ${M.kratke}`] : []),
+      ...kratke.map((K) => `${druh} ${vym}${pk} — ${K}`)] : []),
     `${druh}${p} — ${M.dlouhe}`,
-    `${druh}${p} — ${M.kratke}`,
+    ...kratke.map((K) => `${druh}${p} — ${K}`),
     ...(podil ? [`${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${M.dlouhe}`,
-      `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${M.kratke}`] : []),
-    `${druh} — ${M.kratke}`,
+      ...kratke.map((K) => `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${K}`)] : []),
+    ...kratke.map((K) => `${druh} — ${K}`),
+    /* U ulice jde „místo, okres" PŘED „druh — okres": kdyby ustoupilo
+       jako poslední, zbyl by nadpis „Stavební pozemek — okres Jablonec
+       nad Nisou" a ulice by zmizela úplně. Přesně to se stalo
+       u U Pískovny, než tohle pořadí vzniklo. */
+    ...(jeUlice(place) ? [`${M.dlouhe}`] : []),
     `${druh} — okres ${okres}`,
     `${M.dlouhe}`,
   ];

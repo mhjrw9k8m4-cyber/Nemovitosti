@@ -13,9 +13,19 @@
  * „…/prodej-pozemku-ke-korunce-praha" — portál sám rozlišuje ulici
  * a město, jen do pole obce posílá ulici.
  *
- * Pravidlo platí právě a jen pro okres Praha, protože tam je obec vždy
- * Praha. Jinde je `place` opravdu obec a tvar „obec, okres okres"
- * zůstává — hlídá se tu obojí, aby se oprava nerozlila dál, než má.
+ * Pravidlo „Praha, ulice" platí právě a jen pro okres Praha, protože
+ * tam je obec vždy Praha. Tvar „obec, okres okres" jinde zůstává —
+ * hlídá se tu obojí, aby se oprava nerozlila dál, než má.
+ *
+ * DODATEK 14. 10.: věta „jinde je `place` opravdu obec", kterou tu
+ * dřív stála, NEPLATÍ. Změřeno: mimo okres Praha je v datech sedm
+ * nabídek, jejichž místo začíná předložkou, tedy je to ulice —
+ * „U Pískovny" (Jablonec nad Nisou), „Ke Trati" (Kladno),
+ * „Ve Višňovce" (Beroun), „V Hlubokém" a „K Rybníku" (Praha-západ),
+ * „Na Vrchách" a „V Dymáku" (Praha-východ). Obec u nich neznáme, takže
+ * se nepřepisuje nic; jen se z titulku NESMÍ vypustit okres, jako se
+ * to stalo u dvou z nich (nadpis „Stavební pozemek 534 m² —
+ * V Hlubokém" neukazuje nikam). Měří se to níž, oddíl 4.
  *
  * Data se nemění: `place` je v klíči pozemku i v názvu souboru
  * (pozemek-praha-devonska-…), takže přepsat ho by znamenalo zahodit
@@ -25,7 +35,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { mistoFraze } from './generate-parcel-pages.mjs';
+import { mistoFraze, jeUlice } from './generate-parcel-pages.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -101,6 +111,53 @@ pravda('a mimo Prahu nadpis jmenuje okres, kde se vejde',
 const prahaJinde = jinde.filter((x) => /okres Praha(?![-\wÀ-ž])/.test(nadpis(x)));
 pravda('a nikde mimo Prahu se neobjeví „okres Praha"',
   prahaJinde.length === 0, prahaJinde.slice(0, 3).map((x) => x.f).join(', '));
+
+/* Jméno souboru vzniká ze slugu místa; tady se slug skládá zvlášť,
+   aby zkouška nepoužívala tutéž funkci, kterou měří. */
+function slugProHledani(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/* ---- 4) ULICE MIMO PRAHU: okres se z nadpisu nesmí vypustit ----
+   Obec u těchhle nabídek neznáme a vymyslet se nedá. Jediné, co jde
+   zaručit, je že stránka neřekne míň, než ví: když se dlouhý tvar
+   nevejde do meze délky, ustoupit má výměra, ne okres. */
+pravda('jméno začínající předložkou se pozná jako ulice',
+  jeUlice('V Hlubokém') && jeUlice('U Pískovny') && jeUlice('Ke Korunce'),
+  'jeUlice nepoznalo ulici');
+/* A OBCE S PŘEDLOŽKOU UPROSTŘED SE NESMÍ CHYTIT. Je jich v datech 129
+   („Ústí nad Orlicí", „Újezd u Brna", „Mníšek pod Brdy") a kdyby je
+   pravidlo bralo taky, přepsalo by titulky stovkám stránek, které jsou
+   v pořádku. */
+pravda('a obec s předložkou uprostřed se za ulici nepovažuje',
+  !jeUlice('Ústí nad Orlicí') && !jeUlice('Újezd u Brna')
+    && !jeUlice('Mníšek pod Brdy') && !jeUlice('Benešov'),
+  'jeUlice označilo obec za ulici');
+
+const ulicni = (data.opportunities || []).filter((o) => o.okres !== 'Praha' && jeUlice(o.place));
+pravda('v datech jsou i mimo Prahu nabídky s ulicí místo obce', ulicni.length > 0,
+  'není na čem měřit — kontroly níž by prošly naprázdno');
+const bezOkresu = [];
+let ulicMereno = 0;
+for (const o of ulicni) {
+  const jm = new RegExp('<h1[^>]*>([^<]*)').source;
+  const soub = readdirSync(KOREN).filter((f) => f.startsWith('pozemek-') && f.endsWith('.html')
+    && f.indexOf(slugProHledani(o.place)) >= 0);
+  for (const f of soub) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    if (t.indexOf('PK_UKONCENO') >= 0) continue;
+    const h1 = (new RegExp(jm).exec(t) || [])[1] || '';
+    const titul = (/<title>([^<]*)/.exec(t) || [])[1] || '';
+    if (!h1) continue;
+    ulicMereno++;
+    for (const [kde, text] of [['h1', h1], ['title', titul]]) {
+      if (text.indexOf('okres ' + o.okres) < 0) bezOkresu.push(`${f} (${kde}): „${text.trim()}"`);
+    }
+  }
+}
+pravda(`u ulice mimo Prahu stojí v nadpisu i titulku okres (${ulicMereno} stránek)`,
+  ulicMereno > 0 && bezOkresu.length === 0, bezOkresu.slice(0, 6).join('\n      '));
 
 console.log('\nMísto u pražských nabídek');
 console.log(zpravy.join('\n'));

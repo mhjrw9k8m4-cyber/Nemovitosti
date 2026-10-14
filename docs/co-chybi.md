@@ -6415,6 +6415,48 @@ a žádný další uříznutý text na nich není. Jediné, co vyskočilo, je
 rozdíl 2 px u `h1` — ten ale nic neořezává, je to zaokrouhlení řádku
 proti dotahům písmen.
 
+## 3cw. NALEZENO: oprava pražských ulic měla v sobě chybný předpoklad — *14. 10.*
+
+Oddíl o pražských nabídkách (`place` je tam ulice, ne obec) končil
+větou **„jinde je `place` opravdu obec"**. Změřeno a neplatí.
+
+Mimo okres Praha je v datech **sedm** nabídek, jejichž místo začíná
+předložkou, tedy je to ulice:
+
+| místo | okres |
+|---|---|
+| U Pískovny | Jablonec nad Nisou |
+| Ke Trati | Kladno |
+| Ve Višňovce | Beroun |
+| V Hlubokém, K Rybníku | Praha-západ |
+| Na Vrchách, V Dymáku | Praha-východ |
+
+U **tří** z nich se do titulku nevešel dlouhý tvar, okres z něj tedy
+vypadl a zbyl nadpis *„Stavební pozemek 534 m² — V Hlubokém"* — který
+neukazuje nikam. Obec u těchhle nabídek neznáme (zdroj ji neposlal
+a dohledat ji ze sandboxu nejde), takže se nepřepisuje nic: jen když
+se musí něco vypustit, ustoupí **výměra, ne okres**. Kde se nevejde ani
+druh pozemku, zbude „U Pískovny, okres Jablonec nad Nisou" — pořád
+místo, ne nic.
+
+Pravidlo pozná ulici podle dvou podmínek naráz: první slovo je
+předložka **a** druhé začíná velkým písmenem. Samotná předložka
+nestačí — obcí s předložkou uprostřed („Ústí nad Orlicí", „Újezd
+u Brna", „Mníšek pod Brdy") je v datech 129 a žádná sem nepatří.
+
+| sabotáž | spadlo |
+|---|---|
+| krátký tvar (jen místo) se u ulice zase smí použít | 1, a vypsala všechny tři vadné stránky i s nadpisy |
+
+### Dvě měření, která nic nenašla
+* **Nesmyslně vysoké ceny.** Šest nabídek je nad 50 milionů, nejvyšší
+  379 320 000 Kč. Po přepočtu na metr ale sedí: 18 966 m² v Praze za
+  20 000 Kč/m². Dalších pět stejně (Horní Planá u Lipna 14 000 Kč/m²,
+  17 ha u Budyně za 1 057 Kč/m²). Chyba v datech to není.
+* **Uříznutý text jinde než na porovnání.** Dvanáct dalších stránek na
+  1440 i 390 px: nic. Jediné, co vyskočilo, je rozdíl 2 px u `h1` —
+  ten nic neořezává, je to zaokrouhlení řádku proti dotahům písmen.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
