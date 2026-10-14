@@ -6819,9 +6819,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
   letter-spacing:0.01em; color:var(--text-ondark-mute); vertical-align:middle;
   white-space:nowrap;}
 
-/* Poznámka v tabulce porovnání. Zkrácená na dva řádky — tabulka má
-   ukazovat, co se liší, ne být deníkem; celá je na stránce pozemku. */
-.por-pozn{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+/* MOJE poznámka v tabulce porovnání. Zkrácená na dva řádky — tabulka má
+   ukazovat, co se liší, ne být deníkem; celá je na stránce pozemku.
+   JMENUJE SE JINAK NEŽ .por-pozn, a to je celý ten nález: pod jedním
+   jménem jezdily DVĚ různé věci — tahle buňka a čtyři vysvětlující
+   odstavce na stránce porovnání. Zkrácení psané pro buňku tedy uřízlo
+   i odstavce: pod „Takhle to vypadá" končila věta slovem „co…". Vidět
+   na snímku, naměřeno 36 px místo potřebných 54, hlídá test-porovnani. */
+.por-moje-pozn{display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
   overflow:hidden; margin-top:4px; padding-left:8px;
   border-left:2px solid var(--copper); font-size:12px; line-height:1.5;
   font-weight:400; color:var(--text-ondark-mute); white-space:normal;}

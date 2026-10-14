@@ -101,7 +101,7 @@
            u kterého z nich byl rozbitý plot. */
         + '<th scope="row"><a href="' + odkaz + '">' + esc(d.place || 'Pozemek') + '</a>'
           + '<span>' + esc(d.okres || '') + '</span>'
-          + (poznamka(d) ? '<span class="por-pozn" title="Moje poznámka">' + esc(poznamka(d)) + '</span>' : '')
+          + (poznamka(d) ? '<span class="por-moje-pozn" title="Moje poznámka">' + esc(poznamka(d)) + '</span>' : '')
           + '</th>'
         + '<td>' + (d.price ? fmt(d.price) + ' Kč' : '—') + '</td>'
         + '<td' + (nejPlocha != null && d.area === nejPlocha ? ' class="por-nej"' : '') + '>'

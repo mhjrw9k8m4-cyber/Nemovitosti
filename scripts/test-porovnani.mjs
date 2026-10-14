@@ -344,6 +344,48 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
   }
 }
 
+/* --- ŽÁDNÁ VĚTA NESMÍ KONČIT V PŮLCE ---------------------------
+ *
+ * Nalezeno na snímku: pod nadpisem „Takhle to vypadá" končilo
+ * vysvětlení slovem „co…". Třída `.por-pozn` totiž sloužila DVĚMA
+ * různým věcem — čtyřem vysvětlujícím odstavcům na stránce a MOJÍ
+ * poznámce v buňce tabulky — a pravidlo psané pro tu buňku
+ * (`-webkit-line-clamp:2`) uřízlo i ty odstavce.
+ *
+ * Měří se oboí: odstavec musí být vidět celý, a poznámka v tabulce
+ * se dál zkracovat SMÍ. Bez té druhé poloviny by kontrola prošla i po
+ * zrušení zkracování úplně — tedy po záměně jedné vady za druhou.
+ */
+{
+  const pv = await prohlizec.newPage({ viewport: { width: 1440, height: 900 } });
+  await pv.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
+  await pv.evaluate(() => localStorage.removeItem('pk_fav_v1'));
+  await pv.reload({ waitUntil: 'domcontentloaded' });
+  await pv.waitForTimeout(1800);
+  const v = await pv.evaluate(() => {
+    /* Ořez pozná jedině porovnání skutečné a vykreslené výšky; samotný
+       `overflow:hidden` ještě nic neznamená, dokud se text vejde. */
+    const urizle = [...document.querySelectorAll('main p, main li')]
+      .filter((e) => e.getClientRects().length && e.scrollHeight > e.clientHeight + 1)
+      .map((e) => ({ t: (e.textContent || '').trim().slice(0, 48),
+        je: e.clientHeight, chce: e.scrollHeight, tridy: e.className }));
+    /* Poznámka v tabulce se ukazuje jen u uloženého pozemku s poznámkou,
+       takže se tu nekreslí — pravidlo pro ni se změří na zkušebním prvku. */
+    const zk = document.createElement('span');
+    zk.className = 'por-moje-pozn';
+    document.body.appendChild(zk);
+    const clamp = getComputedStyle(zk).webkitLineClamp;
+    zk.remove();
+    const odstavcu = document.querySelectorAll('main p').length;
+    return { urizle, clamp, odstavcu };
+  });
+  await pv.close();
+  pravda(`žádný odstavec na porovnání nekončí v půlce (${v.odstavcu} měřeno)`,
+    v.odstavcu >= 3 && v.urizle.length === 0, JSON.stringify(v.urizle));
+  pravda('a moje poznámka v tabulce se dál zkracuje na dva řádky',
+    v.clamp === '2', `-webkit-line-clamp je „${v.clamp}"`);
+}
+
 await prohlizec.close();
 console.log('\nPorovnání uložených pozemků');
 console.log(zpravy.join('\n'));

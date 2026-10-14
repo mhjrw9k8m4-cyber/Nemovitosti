@@ -6383,6 +6383,38 @@ a první nabídka spadla o 165 px níž. Vidět na snímku, opraveno
 omezením pravidla na šířky, kde je řada vodorovná.
 
 
+## 3cv. NALEZENO: na porovnání končila věta slovem „co…" — *14. 10.*
+
+Na snímku stránky `porovnani.html`: pod nadpisem „Takhle to vypadá"
+stálo *„Tohle **nejsou** vaše uložené pozemky — jsou to tři skutečné
+nabídky druhu stavební pozemek z okresu Praha-východ, aby bylo vidět,
+co…"* a tím to skončilo.
+
+**Příčina:** třída `.por-pozn` sloužila dvěma různým věcem — čtyřem
+vysvětlujícím odstavcům na stránce a MOJÍ poznámce v buňce tabulky.
+Pravidlo psané pro tu buňku (`-webkit-line-clamp:2`, „tabulka má
+ukazovat, co se liší, ne být deníkem") uřízlo i ty odstavce. Naměřeno:
+odstavec dostal 36 px, potřeboval 54. Buňka se jmenuje nově
+`.por-moje-pozn` a zkracuje se dál.
+
+**Kontrola** v `test-porovnani.mjs` měří obojí: že žádný odstavec na
+stránce nekončí v půlce (porovnává `scrollHeight` s `clientHeight` —
+samotný `overflow:hidden` ještě nic neznamená, dokud se text vejde)
+a že se poznámka v tabulce zkracovat nepřestala. Bez té druhé poloviny
+by kontrola prošla i po zrušení zkracování úplně, tedy po záměně jedné
+vady za druhou.
+
+| sabotáž | spadlo |
+|---|---|
+| zkracování míří zase i na `.por-pozn` | 1 (vypsalo větu, 36 proti 54 px) |
+| zkracování se zruší docela | 1 (`-webkit-line-clamp` je „none") |
+
+**A poctivý negativní nález k tomu:** prošel jsem stejným měřením
+dvanáct dalších stránek (účet, hledání, rádce, ceny) na 1440 i 390 px
+a žádný další uříznutý text na nich není. Jediné, co vyskočilo, je
+rozdíl 2 px u `h1` — ten ale nic neořezává, je to zaokrouhlení řádku
+proti dotahům písmen.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
