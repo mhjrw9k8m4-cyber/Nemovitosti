@@ -4563,7 +4563,7 @@ s prahem dlaždic a prahem okresů u cen.)
 
 ### Zkoušky
 
-**105 neprohlížečových** a **104 prohlížečových** kontrol zelených.
+**104 neprohlížečových** a **104 prohlížečových** kontrol zelených.
 Obě chyby, které předtím shodily CI (`testy` i `v-prohlizeci`), jsou
 opravené u kořene, ne obejité.
 
@@ -5285,6 +5285,41 @@ Při prvním spuštění ohlásila **šest chyb, které na webu nejsou**:
 Oba omyly jsou v komentáři zkoušky zapsané, protože jsou poučné: vzor
 na jméno souboru je tak dobrý, jak dobře zná výjimky, a kontrola, která
 nezná záměr, hlásí jako chybu právě ten záměr.
+
+## 3cc. NEGATIVNÍ NÁLEZ: 68 294 vnitřních odkazů a ani jeden rozbitý — a pojistka na to, ať to tak zůstane — *14. 10.*
+
+Pojistku na rozbité vnitřní odkazy web neměl, tak jsem ji chtěl
+napsat — a nejdřív změřil, co by našla:
+
+| | změřeno | rozbitých |
+|---|---|---|
+| vnitřní odkazy (`href`, `src`) | **68 294** | **0** |
+| odkazy na kotvu (`#oddil`) | **6 613** | **0** |
+
+Na 2 064 živých stránkách. **Nic k opravě.** Zapisuju to, protože
+negativní nález je taky nález: kdybych to neuvedl, vypadalo by to, že
+jsem pojistku psal zbytečně — a ona zbytečná není.
+
+### Proč tu ta pojistka přesto je
+
+Rozbitý odkaz je vada, která vzniká **ticho**: někdo přejmenuje
+stránku, generátor ji přestane vyrábět, zruší se oddíl s `id` — a odkaz
+na ni zůstane. Nic nespadne, nic se nerozsvítí; jen člověk, který na
+něj klikne, skončí na 404 nebo na stránce, která neodskočí tam, kam
+slíbila. Při 2 064 stránkách a 68 tisících odkazech to ručně neuhlídá
+nikdo, a přitom je to jedna z mála vad, kterou lze ověřit **úplně** —
+ne na vzorku, ale na všem. Trvá to 1,3 s.
+
+`scripts/test-vnitrni-odkazy.mjs` (nová, v CI). Co se vědomě neměří
+a proč, je v jejím komentáře: cizí adresy (síť do CI nepatří a na
+zdroje dat má web vlastního hlídače), obsah `<script>` a komentářů
+(tam bývají ukázky, ne odkazy ke kliknutí), archiv ukončených nabídek
+(záměrně se nepřegenerovává) a kotva na stránku, která sama neexistuje
+(hlásí to první kontrola, ať se jedna vada nepočítá dvakrát).
+
+Ověřeno sabotáží: `podminky.html` → `podminkyy.html` a `index.html#mapa`
+→ `index.html#mapaa` v jediném souboru → zkouška ohlásila
+`podminkyy.html ← kontakt.html` a `index.html#mapaa ← kontakt.html`.
 
 ## Co naopak nechybí
 
