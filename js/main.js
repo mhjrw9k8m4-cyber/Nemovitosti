@@ -1440,11 +1440,38 @@
        jsou. Číslo v nadpisu to řekne i bez posouvání. */
     var h = '<div class="rs-head">Naposledy prohlédnuté'
       + '<span class="rs-pocet">' + items.length + '</span></div><div class="rs-row">';
+    /* MALÉ KARTY S NÁHLEDEM, NE TEXTOVÉ PILULKY.
+       Pruh stál mezi dvěma kartami s velkým leteckým snímkem a sám byl
+       řádek holých pilulek „puntík — obec — cena". Vedle sousedů to
+       vypadalo jako kus z jiného webu, a hlavně to neodpovídalo na to,
+       proč si člověk ten pozemek prohlížel: ze jména obce se nepozná
+       nic. Teď mluví týmž jazykem jako zbytek výpisu — snímek, místo,
+       cena.
+
+       JEDNA DLAŽDICE NA POLOŽKU, ne skládaný snímek: PK_SNIMEK.nahled()
+       vybere dlaždici tak, aby pozemek padl do její prostřední části,
+       a špendlík se posadí tam, kde v ní doopravdy leží. Totéž už dělá
+       výpis na okresních stránkách (scripts/generate-region-pages.mjs),
+       takže se tu nevymýšlí nic nového.
+
+       loading="lazy" tu FUNGUJE — na rozdíl od <image> uvnitř SVG, kde
+       se neuplatní (viz js/snimek.js). Je to obyčejný HTML <img>. */
+    var S = window.PK_SNIMEK;
     items.forEach(function (d) {
+      var n = (S && S.nahled) ? S.nahled(d) : null;
+      var foto = n
+        ? '<span class="rs-foto">'
+          + '<img src="' + esc(n.url) + '" width="256" height="256" loading="lazy" decoding="async" alt="">'
+          + '<i class="rs-pin" aria-hidden="true" style="left:' + (n.ox / 256 * 100).toFixed(1)
+          + '%;top:' + (n.oy / 256 * 100).toFixed(1) + '%;background:' + TYPE[d.type].color + '"></i>'
+          + '</span>'
+        : '<span class="rs-foto rs-foto-bez"></span>';
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
-        '<span class="rs-place">' + esc(d.place || '') + '</span>' +
-        '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
+        foto +
+        '<span class="rs-misto">' +
+          '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
+          '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
+        '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
       '</button>';
     });
     h += '</div>';
@@ -5183,6 +5210,16 @@
     updateFilterBadge();
     vykresliOkruhNaMape();
     ulozFiltr();
+    /* VLOŽKY VEN, NEŽ SE SEZNAM VYSYPE.
+       #mc-akce a #recent-strip sedí na telefonu UVNITŘ výpisu (viz
+       zaradNastroje níž) — a `listEl.innerHTML = ''` je prvky, ne jen
+       text. Bez tohohle kroku by je první překreslení (tedy první
+       sáhnutí na filtr) smazalo nadobro: getElementById by pak vracel
+       null, nářadí i pruh by zmizely a už se nevrátily.
+       Našla to zkouška test-rozvrzeni („Cannot read properties of null
+       (reading 'hidden')"), ne já — ruční kontrola po PRVNÍM vykreslení
+       je v pořádku a vada se ukáže až napodruhé. */
+    vytahniVlozky();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {
@@ -5491,7 +5528,15 @@
         '<div class="opp-media">' +
           mapThumb(d) +
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
-          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
+          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
+          /* ZNAK JE VE <span>, A NENÍ TO OZDOBA. Kroužek pod ním kreslí
+             ::before jako absolutně umístěný prvek; pravidlo
+             „.opp-skryt > *{position:relative}" ho má přebít, jenže holý
+             textový uzel není prvek, takže na něj neplatilo — a kroužek
+             se kreslil PŘES křížek. Na kartě pak byl bílý puntík, a nic
+             v něm. (Záložka pro uložení tuhle vadu nemá: její obsah je
+             <svg>, tedy prvek.) */
+          '<span>' + (jeSkryty(d) ? '↩' : '✕') + '</span></button>' +
         '</div>' +
         /* ROZVRŽENÍ TEXTU POD FOTKOU — TŘI ŘÁDKY, NE PĚT.
            Karta měla pod velkým náhledem pět samostatných odstavců za
@@ -5845,12 +5890,81 @@
       more.textContent = '…nebo si celou nabídku projděte na mapě';
       listEl.appendChild(more);
     }
+    zaradNastroje();    // nářadí nad výpisem patří na telefonu ZA první nabídku
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     prekresliOvladani(); // políčka a přepínače podle toho, co opravdu platí
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
+  }
+
+  /* KDE STOJÍ NÁŘADÍ („Projít po jednom", „Stáhnout výběr")
+     ==================================================================
+     Na MONITORU nad výpisem, tam je místa dost.
+
+     Na TELEFONU hned ZA PRVNÍ NABÍDKOU, a je to kompromis mezi dvěma
+     chybami, které jsem udělal po sobě:
+
+       · Původně stálo nad výpisem a odsouvalo první nabídku o 106 px,
+         tedy to jediné, kvůli čemu sem člověk přišel, bylo až za
+         nářadím na práci s tím, co ještě neviděl.
+       · Přesunul jsem ho tedy na konec seznamu — a tím ho zahodil.
+         Naměřeno: začínalo na 9 625 px, tedy 8 781 px za okrajem
+         obrazovky, až za všemi dvaceti čtyřmi kartami. Majitel webu se
+         ozval, že funkce zmizely, a měl pravdu: „níž" a „pryč" je
+         v seznamu dlouhém sedmnáct tisíc pixelů totéž.
+
+     Za první kartou je vidět po jednom švihnutí a první nabídku
+     neodsouvá ani o pixel. Velké realitní weby vkládají mezi výsledky
+     pruhy úplně stejně.
+
+     DĚLÁ TO SKRIPT, PROTOŽE CSS NA TO NESTAČÍ: nářadí je sourozenec
+     seznamu, ne jeho položka, a pořadím ve flexu se mezi položky vsunout
+     nedá. Hlídá scripts/test-nastroje-v-dosahu.mjs. */
+  /* Naposledy prohlédnuté jdou za PRVNÍ kartu, nářadí až za druhou.
+     Obojí hned za sebou by po jedné nabídce udělalo dvěstěpadesátipixelovou
+     hráz; takhle je mezi nimi nabídka. Naposledy prohlédnuté jdou první,
+     protože pro vracejícího se člověka je to to užitečnější — tím
+     navazuje tam, kde přestal. */
+  /* Odloží vložky zpátky mezi sourozence seznamu, aby přežily jeho
+     vysypání. Zavolá se před každým překreslením; zaradNastroje() je
+     pak zase vrátí mezi karty. */
+  function vytahniVlozky() {
+    var domov = document.querySelector('.map-side');
+    if (!domov) return;
+    for (var i = 0; i < VLOZKY.length; i++) {
+      var a = document.getElementById(VLOZKY[i].id);
+      if (a && a.parentNode !== domov) domov.appendChild(a);
+    }
+  }
+  var VLOZKY = [
+    { id: 'recent-strip', poKarte: 1 },
+    { id: 'mc-akce', poKarte: 2 }
+  ];
+  function zaradNastroje() {
+    if (!listEl) return;
+    var uzke = false;
+    try { uzke = window.matchMedia('(max-width:1040px)').matches; } catch (e) {}
+    var domov = document.querySelector('.map-side');
+    var karty = listEl.querySelectorAll('.opp-item');
+    for (var i = 0; i < VLOZKY.length; i++) {
+      var v = VLOZKY[i];
+      var a = document.getElementById(v.id);
+      if (!a) continue;
+      if (!uzke || !karty.length) {
+        /* Na monitoru zpátky mezi sourozence seznamu; o pořadí se pak
+           postará `order` ve stylopisu. */
+        if (domov && a.parentNode !== domov) domov.appendChild(a);
+        a.classList.remove('mc-akce-vlozka');
+        continue;
+      }
+      var za = karty[Math.min(v.poKarte, karty.length) - 1];
+      a.classList.add('mc-akce-vlozka');
+      /* Vkládá se AŽ ZA kartu, ne před ni — před první kartou by to byl
+         zase pruh nad výpisem, jen o patro níž. */
+      if (za.nextSibling !== a) listEl.insertBefore(a, za.nextSibling);
+    }
   }
 
   function resetFilters() {

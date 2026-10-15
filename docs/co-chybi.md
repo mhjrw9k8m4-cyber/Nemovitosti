@@ -7034,3 +7034,53 @@ všechny tři kontroly.
 A zkouška si schválně zpomaluje procesor čtyřikrát — bez toho se start
 stihne dřív, než si `js/odkaz.js` stačí do adresy zapsat, a prošla by
 ze špatného důvodu.
+
+---
+
+## 3di. Výpis vypadal „suše a roboticky" — karta nebyla karta — *15. 10.*
+
+Majitel webu poslal snímek se slovy, že to vypadá strašně suše
+a roboticky a že to má vypadat jako realitní web. Jádro se našlo
+v jedné řádce stylopisu:
+
+```
+.opp-item{padding:0; border:0; background:none; box-shadow:none;}
+```
+
+Zaoblení a stín měla **jen fotka**; text ležel volně na pozadí stránky.
+Jedna nabídka tak přecházela do druhé bez hranice a mezi obrázkem
+a písmem nebyl žádný vztah. To není inzerát, to je výpis záznamů.
+
+**Co se změnilo:**
+
+| | dřív | teď |
+|---|---|---|
+| nabídka | text volně na stránce | vlastní bílá deska: vlasová linka, měkký stín, vzduch kolem textu |
+| fotka | vlastní zaoblení i stín | horní část desky (dva zaoblené tvary v sobě dělaly dvojitý rám) |
+| pozadí výpisu | bílé | tónované `--plocha-vypis` #F4F6F4 |
+| cena | 22 px | 26 px, těsnější prostrkání, odsazená od řádku nad sebou |
+| obec | holý text | se špendlíkem místa (maska v `--ikona-spendlik`) |
+| odznaky | obdélníky s plnou linkou | pilulky, menší písmo, tenčí linka |
+
+**Tónovaný podklad je ta věc s největším účinkem a nejmíň kódu.** Bílá
+karta na bílé stránce se nezvedne, i kdyby měla stín — je z ní plocha
+textu s linkami. Každý velký realitní web má pod kartami podklad.
+
+### Pruhování, které jsem si vyrobil sám
+Mezi hlavičkou a první nabídkou ležely **tři vlasové linky na 220 px**
+(pod hlavičkou, nad hledáním, pod hledáním) a mezi nimi se střídala
+bílá s tónovanou. Z dálky žebřík proužků, ne stránka. Panel s hledáním
+má teď týž podklad jako výpis a jedinou bílou plochou v něm je samo
+pole, kam se píše.
+
+K tomu jedna linka navíc: `.map-app` měla `border-top` na y=105, tedy
+přesně doprostřed prázdného pásma pod hlavičkou. Telefonní pravidlo ji
+rušilo, ale základní `.map-app{border:1px solid var(--line-strong)}` je
+zapsané později a přebíjelo ho.
+
+### A oprava mého vlastního dřívějšího zásahu
+Nadpis výpisu jsem předtím na telefonu schoval, abych ušetřil 28 px.
+Zbylo nad výpisem holé **„1 923 na mapě"** — řeč stroje, ne nabídky,
+a přesně ta „robotičnost". Nadpis je zpátky; vešel se na jeden řádek,
+takže první nabídka klesla jen z 289 na 292 px (mez ve zkoušce je 330).
+Osmadvacet pixelů za to nestálo.

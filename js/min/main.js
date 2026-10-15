@@ -931,11 +931,23 @@
 
     var h = '<div class="rs-head">Naposledy prohlédnuté'
       + '<span class="rs-pocet">' + items.length + '</span></div><div class="rs-row">';
+
+    var S = window.PK_SNIMEK;
     items.forEach(function (d) {
+      var n = (S && S.nahled) ? S.nahled(d) : null;
+      var foto = n
+        ? '<span class="rs-foto">'
+          + '<img src="' + esc(n.url) + '" width="256" height="256" loading="lazy" decoding="async" alt="">'
+          + '<i class="rs-pin" aria-hidden="true" style="left:' + (n.ox / 256 * 100).toFixed(1)
+          + '%;top:' + (n.oy / 256 * 100).toFixed(1) + '%;background:' + TYPE[d.type].color + '"></i>'
+          + '</span>'
+        : '<span class="rs-foto rs-foto-bez"></span>';
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
-        '<span class="rs-place">' + esc(d.place || '') + '</span>' +
-        '<span class="rs-price">' + fmt(d.price) + ' Kč</span>' +
+        foto +
+        '<span class="rs-misto">' +
+          '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
+          '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
+        '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
       '</button>';
     });
     h += '</div>';
@@ -3459,6 +3471,8 @@
     updateFilterBadge();
     vykresliOkruhNaMape();
     ulozFiltr();
+
+    vytahniVlozky();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {
@@ -3624,7 +3638,9 @@
         '<div class="opp-media">' +
           mapThumb(d) +
           '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
-          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' + (jeSkryty(d) ? '↩' : '✕') + '</button>' +
+          '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
+
+          '<span>' + (jeSkryty(d) ? '↩' : '✕') + '</span></button>' +
         '</div>' +
 
         '<div class="opp-body">' +
@@ -3851,12 +3867,48 @@
       more.textContent = '…nebo si celou nabídku projděte na mapě';
       listEl.appendChild(more);
     }
+    zaradNastroje();
     prepocitejCipy();
     prekresliPosuvniky();
     prekresliVybaveni();
     prekresliOvladani();
     prekresliChipy();
     prekresliAkceFiltru(matched);
+  }
+
+  function vytahniVlozky() {
+    var domov = document.querySelector('.map-side');
+    if (!domov) return;
+    for (var i = 0; i < VLOZKY.length; i++) {
+      var a = document.getElementById(VLOZKY[i].id);
+      if (a && a.parentNode !== domov) domov.appendChild(a);
+    }
+  }
+  var VLOZKY = [
+    { id: 'recent-strip', poKarte: 1 },
+    { id: 'mc-akce', poKarte: 2 }
+  ];
+  function zaradNastroje() {
+    if (!listEl) return;
+    var uzke = false;
+    try { uzke = window.matchMedia('(max-width:1040px)').matches; } catch (e) {}
+    var domov = document.querySelector('.map-side');
+    var karty = listEl.querySelectorAll('.opp-item');
+    for (var i = 0; i < VLOZKY.length; i++) {
+      var v = VLOZKY[i];
+      var a = document.getElementById(v.id);
+      if (!a) continue;
+      if (!uzke || !karty.length) {
+
+        if (domov && a.parentNode !== domov) domov.appendChild(a);
+        a.classList.remove('mc-akce-vlozka');
+        continue;
+      }
+      var za = karty[Math.min(v.poKarte, karty.length) - 1];
+      a.classList.add('mc-akce-vlozka');
+
+      if (za.nextSibling !== a) listEl.insertBefore(a, za.nextSibling);
+    }
   }
 
   function resetFilters() {

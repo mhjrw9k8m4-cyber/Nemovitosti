@@ -718,6 +718,12 @@ jobs:
       - name: Žádné překreslení výpisu navíc
         run: node scripts/test-jedno-vykresleni.mjs
 
+      - name: Křížek na skrytí je na kartě vidět
+        run: node scripts/test-skryt-videt.mjs
+
+      - name: Nářadí výpisu je na dosah
+        run: node scripts/test-nastroje-v-dosahu.mjs
+
 
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs

@@ -343,6 +343,9 @@
   --plocha-jemna: rgba(16,21,19,0.05);
   --plocha-jemna-vic: rgba(16,21,19,0.075);
   --line: rgba(16,21,19,0.14);
+  /* Špendlík místa u obce na kartě (.opp-place::before). Jako maska,
+     ne obrázek — barvu si bere z textu kolem. */
+  --ikona-spendlik: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22s7-7.1 7-12A7 7 0 0 0 5 10c0 4.9 7 12 7 12Z' fill='%23000'/%3E%3Ccircle cx='12' cy='10' r='2.6' fill='%23fff'/%3E%3C/svg%3E");
   --line-strong: rgba(16,21,19,0.28);
   /* Okraj ovládacího prvku. Políčko, seznam nebo tlačítko musí být od plochy
      pod sebou odlišené poměrem aspoň 3:1 (WCAG 2.1, pravidlo 1.4.11) — jinak
@@ -353,6 +356,13 @@
      2,96 : 1 a test okrajů spadl. Zesíleno na 0,54. */
   --line-ui: rgba(16,21,19,0.55);
   --panel:#fff;
+  /* PODKLAD POD VÝPISEM. Bílé karty na bílé stránce se nezvednou —
+     je z toho plocha textu s vlasovými linkami, tedy přesně ten
+     „suchý, robotický" dojem. Každý velký realitní web má pod kartami
+     jemně tónovaný podklad; karta pak je vidět jako karta, aniž by se
+     musela obtáhnout tlustou linkou. Odstín je z téže rodiny jako
+     zbytek webu (zelenošedá), ne neutrální šeď. */
+  --plocha-vypis:#F4F6F4;
   /* PLOVOUCÍ PANEL nad mapou a záhlaví. Psalo se to jako
      rgba(255,255,255,0.95) na deseti místech — a právě tahle bílá
      v tmavém režimu zůstala svítit uprostřed tmavé stránky, protože
@@ -1986,6 +1996,10 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    18 px proti 8 px nad ovládáním — tři různé odstupy na třech řádcích
    téže hlavičky. */
 .ms-vysledky > .mc-akce{flex:1 1 100%; margin-top:0;}
+/* Nářadí vložené mezi karty. Na telefonu ho tam přesouvá js/main.js
+   (zaradNastroje) — je to položka seznamu, ale ne nabídka, takže si
+   nesmí vzít ani odrážku, ani rámeček karty. */
+.mc-akce-vlozka{display:block; list-style:none; margin:4px 0 12px;}
 /* POŘADÍ VE ZNAČCE JE TELEFONNÍ, NA MONITORU SE SROVNÁ ZPÁTKY.
    „Projít po jednom", „Stáhnout výběr" a naposledy prohlédnuté stojí
    ve značce AŽ ZA seznamem, protože na telefonu odsouvaly první
@@ -2351,7 +2365,8 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 .rs-head .rs-pocet{display:inline-flex; align-items:center; justify-content:center; min-width:20px;
   height:20px; padding:0 6px; border-radius:var(--r-pill); background:var(--plocha-jemna-vic);
   border:1px solid var(--line-strong); font-size:12px; letter-spacing:0; color:var(--text-ondark-mute);}
-.recent-strip .rs-row{position:relative; display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;
+.recent-strip .rs-row{position:relative; display:flex; gap:10px; overflow-x:auto; padding-bottom:2px;
+  scroll-snap-type:x proximity;
   -webkit-overflow-scrolling:touch; scrollbar-width:none;}
 .recent-strip .rs-row::-webkit-scrollbar{display:none;}
 /* Stín za hranou říká „pokračuje to". Maska, ne překryv: překryv by
@@ -2362,12 +2377,42 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
   -webkit-mask-image:linear-gradient(to right, transparent, #000 24px, #000 calc(100% - 34px), transparent);}
 .recent-strip .rs-row.je-zpet:not(.je-dal){mask-image:linear-gradient(to right, transparent, #000 24px);
   -webkit-mask-image:linear-gradient(to right, transparent, #000 24px);}
-.rs-chip{flex:0 0 auto; display:inline-flex; align-items:center; gap:6px; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:var(--r-pill); padding:6px 12px; font:inherit; font-size:13px; color:var(--text-ondark); cursor:pointer; white-space:nowrap; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
+/* MALÁ KARTA S NÁHLEDEM MÍSTO TEXTOVÉ PILULKY.
+   Pruh leží mezi dvěma kartami s velkým leteckým snímkem; jako řádek
+   holých pilulek vedle nich vypadal jako kus z jiného webu. Teď má
+   tutéž stavbu jako karta výpisu, jen malou: snímek, místo, cena.
+
+   ŠÍŘKA 150 px NENÍ NÁHODNÁ. Při 390 px má pruh uvnitř 342 px, takže
+   se vejdou dvě karty (2 × 150 + 10 mezera = 310) a z třetí kouká
+   32 px. Ten kousek je to, co říká „pokračuje to dál" dřív a líp než
+   jakákoli šipka — a stín za hranou (.je-dal) zůstává k tomu.
+   Dřív se druhá pilulka ořízla uprostřed slova, což vypadalo jako
+   vada vykreslení, ne jako pozvánka k posunutí. */
+.rs-chip{flex:0 0 150px; display:flex; flex-direction:column; align-items:stretch; gap:6px;
+  scroll-snap-align:start;
+  background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:var(--r-sm);
+  padding:6px; font:inherit; font-size:13px; color:var(--text-ondark); cursor:pointer;
+  text-align:left; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
 .rs-chip:hover{border-color:var(--copper); background:var(--ink-soft2);}
 .rs-chip:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
+/* Snímek: jedna dlaždice, zarovnaná na střed a oříznutá na poměr 4:3.
+   Výřez je širší než vysoký schválně — v karté nad tím je taky. */
+.rs-foto{position:relative; display:block; aspect-ratio:4 / 3; overflow:hidden;
+  border-radius:var(--r-xs); background:var(--plocha-jemna-vic);}
+.rs-foto img{width:100%; height:100%; object-fit:cover; display:block;}
+.rs-foto-bez{background:var(--plocha-jemna-vic);}
+/* Špendlík sedí tam, kde pozemek v dlaždici doopravdy je (PK_SNIMEK.nahled
+   vrací ox/oy v bodech uvnitř dlaždice). Bílý obrys, ať je vidět i nad
+   lesem i nad polem. */
+/* 12 px, ne 10: odsazení na střed je půlka velikosti a pětka není na
+   stupnici odstupů (hlídá test-odstupy). Dvanáct dá šestku. */
+.rs-pin{position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px;
+  border-radius:50%; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,0.45);}
+.rs-misto{display:flex; align-items:center; gap:6px; min-width:0;}
 .rs-chip .rs-dot{width:8px; height:8px; border-radius:50%; flex:none;}
-.rs-chip .rs-place{font-weight:600;}
-.rs-chip .rs-price{color:var(--text-ondark-mute);}
+/* Jméno obce se ořízne výpustkou, ne uprostřed písmene. */
+.rs-chip .rs-place{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.rs-chip .rs-price{color:var(--text-ondark-mute); white-space:nowrap;}
 .mc-sub{font-weight:400; color:var(--text-ondark-mute); font-size:13px;}
 .opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -6px; padding:0 6px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
 /* Skeleton (načítání) — jako u Facebooku/YouTube: než dorazí data, svítí placeholder */
@@ -2393,7 +2438,23 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    na odznaku slovem.
    Zdvih pod myší zůstává (hlídá test-zdvih), jen se nehýbe rám, ale
    celá karta. */
-.opp-item{position:relative; display:block; padding:0; border:0; background:none; box-shadow:none; margin-bottom:20px; cursor:pointer; transition:transform var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
+/* KARTA JE KARTA, NE ODSTAVEC NA POZADÍ.
+   ------------------------------------------------------------------
+   Stálo tu `padding:0; border:0; background:none; box-shadow:none`:
+   zaoblení a stín měla JEN fotka a text ležel volně na pozadí stránky.
+   Výpis proto nepůsobil jako inzeráty, ale jako seznam záznamů —
+   jedna nabídka přecházela do druhé bez hranice a mezi fotkou
+   a písmem nebyl žádný vztah. Přesně to majitel webu popsal slovy
+   „vypadá to strašně suše a roboticky".
+   Teď má každá nabídka vlastní plochu: bílá deska, vlasová linka,
+   měkký stín a vzduch kolem textu. Fotka sedí v jejím horním rohu,
+   ne na vlastním ostrůvku. Tak to má každý velký realitní web. */
+.opp-item{position:relative; display:block; padding:0; overflow:hidden;
+  border:1px solid var(--line); border-radius:var(--r-obraz);
+  background:var(--panel); box-shadow:var(--e1);
+  margin-bottom:16px; cursor:pointer;
+  transition:transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
+.opp-item:hover{box-shadow:var(--e2);}
 /* OBTAŽENÍ PODLE DRUHU. Karta nesla barvu druhu jen v odznaku na rohu
    snímku; ve výpisu plném karet se tím druh poznal až po přečtení.
    Okraj ho řekne dřív, než člověk začne číst — a je to právě okraj,
@@ -2413,10 +2474,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zvednutí karty bylo dřív jen posunutí — stín zůstal stejný, takže se karta
    nezvedla, jen poskočila. Teď se zvedne i stínem. */
 .opp-item:hover, .opp-item.hl{transform:translateY(-2px);}
-.opp-item:hover .opp-media, .opp-item.hl .opp-media{box-shadow:var(--e3);}
+/* Zvednutí při najetí patří celé kartě (viz .opp-item:hover výš), ne
+   fotce v ní. */
+.opp-item.hl{box-shadow:var(--e3);}
 
 /* Náhled mapy jako fotka inzerátu */
-.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; border-radius:var(--r-plocha); background:var(--ink-soft2) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%); box-shadow:var(--e1); transition:box-shadow var(--cas-zakladni) var(--ease);}
+/* Fotka je horní část desky, ne samostatný obrázek: vlastní zaoblení
+   ani stín už nemá — ty drží karta kolem ní. Dva zaoblené tvary v sobě
+   (deska i fotka) dělaly dvojitý rám a právě ten „úřední" dojem. */
+.opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; border-radius:0; background:var(--ink-soft2) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
 /* Záložní plán parcely (prosvítá, když se nenačte satelit) */
 
@@ -2456,10 +2522,22 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* TEXT POD FOTKOU V POŘADÍ SREALITY: co to je → kde to je → za kolik.
    Odsazení je nulové, protože karta nemá plochu, do které by se dalo
    odsazovat — text stojí přesně pod levým krajem fotky. */
-.opp-body{padding:10px 0 0;}
+.opp-body{padding:12px 14px 14px;}
+/* Sloupec s výpisem i pruh pod hlavičkou dostaly týž podklad, ať na
+   sebe navazují a mezi hlavičkou a aplikací nevzniká bílý schod. */
+.map-side{background:var(--plocha-vypis);}
+/* RYTMUS, NE ČTYŘI STEJNÉ ŘÁDKY POD SEBOU.
+   Druh, místo, cena a odznaky měly skoro stejnou váhu i stejný odstup,
+   takže karta působila jako tabulka. Teď má tři patra: co to je
+   (tiše), kde to je (tiše, se špendlíkem), za kolik (hlasitě). */
 .opp-nadpis{display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px;}
-.opp-druh{font-family:var(--font-ui); font-size:16px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark);}
-.opp-price{font-family:var(--font-ui); font-weight:700; font-size:22px; line-height:1.2; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums; margin-top:6px;}
+.opp-druh{font-family:var(--font-ui); font-size:15px; font-weight:700; letter-spacing:-0.01em; color:var(--text-ondark);}
+/* Cena je to, podle čeho se rozhoduje — ať je to vidět. Odstup nahoře
+   ji odděluje od řádku s místem; bez něj splývala v jeden blok. */
+/* Prostrkání −0.02em a řádkování 1.1: obojí ze stupnice (hlídá
+   test-typografie). Napoprvé tu stálo −0.025em a 1.15, tedy dvě
+   hodnoty vymyšlené jen pro tenhle jeden řádek. */
+.opp-price{font-family:var(--font-ui); font-weight:700; font-size:26px; line-height:1.1; letter-spacing:-0.02em; color:var(--text-ondark); font-variant-numeric:tabular-nums; margin-top:10px;}
 
 .opp-more{list-style:none; text-align:center; padding:14px 6px 6px; font-size:13px; color:var(--copper-bright); font-weight:600;}
 /* „Zobrazit dalších 12" — nejdřív se dá seznam dočíst, až pak se odchází
@@ -2695,7 +2773,14 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    jiné písmo — dva řádky na dvě tři slova. Oddělovač kreslí stylopis,
    ne skript: když druh chybí (a chybí u pozemků bez uvedené kultury),
    nesmí řádek začínat tečkou. */
-.opp-meta{display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; margin:2px 0 0;}
+.opp-meta{display:flex; align-items:center; flex-wrap:wrap; gap:2px 8px; margin:6px 0 0;}
+/* ŠPENDLÍK U MÍSTA. Realitní inzerát se pozná i podle toho, že u obce
+   stojí značka místa — bez ní je to jen další řádek textu. Kreslí ho
+   ::before, ať se nemusí do každé z 1 900 karet psát <svg>. */
+.opp-place::before{content:""; display:inline-block; width:11px; height:11px;
+  margin-right:6px; vertical-align:-1px; background:var(--copper-bright);
+  -webkit-mask:var(--ikona-spendlik) center/contain no-repeat;
+  mask:var(--ikona-spendlik) center/contain no-repeat;}
 .opp-meta .opp-loc{margin:0; font-size:13px;}
 .opp-meta .opp-sub{margin:0; font-size:13px; -webkit-line-clamp:1; line-clamp:1;}
 /* Oddělovač kreslí stylopis, ne skript: když okres nebo parcela chybí,
@@ -2718,13 +2803,15 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 .opp-price + .opp-chips{margin-top:10px;}
-.opp-hot{display:inline-block; font-size:12px; font-weight:700; letter-spacing:0; color:var(--popisek); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:1px 8px;}
+/* Odznaky jsou poznámka pod inzerátem, ne řada tlačítek: pilulka
+   místo obdélníku, tenčí linka, menší písmo. */
+.opp-hot{display:inline-block; font-size:12px; font-weight:600; letter-spacing:0; color:var(--popisek); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-pill); padding:2px 10px;}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 /* Zvýrazněný inzerát pozná člověk podle odznaku .opp-feat, ne podle
    rámečku: rámeček karta po vzoru Sreality nemá. */
 /* Odpočet do termínu dražby (reálné datum) */
-.opp-cd{display:inline-block; font-size:12px; font-weight:700; padding:1px 8px; border-radius:var(--r-xs); background:var(--plocha-jemna); border:1px solid var(--line); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
+.opp-cd{display:inline-block; font-size:12px; font-weight:600; padding:2px 10px; border-radius:var(--r-pill); background:var(--plocha-jemna); border:1px solid var(--line); color:var(--text-ondark-mute); letter-spacing:0.01em; white-space:nowrap;}
 /* Odpočet do termínu. Světlé odstíny tu zbyly z doby, kdy byly karty tmavé —
    na bílé kartě z nich bylo 1,6 : 1, tedy nečitelné. Textové varianty (-ink)
    jsou na to v paletě přesně pro tenhle případ. */
@@ -3513,7 +3600,21 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Panel: překryv odspodu, ne shora. Zespoda proto, že palec je dole
      a že nad ním zůstane vidět kus výpisu — je pak poznat, do čeho
      se tím zasahuje. */
-  .map-controls-panel{order:0; border-right:0; border-bottom:1px solid var(--line);}
+  /* ŽÁDNÉ PRUHOVÁNÍ NAD VÝPISEM.
+     Mezi hlavičkou a první nabídkou ležely tři vlasové linky na 220 px:
+     pod hlavičkou, nad hledáním a pod hledáním — a mezi nimi se střídala
+     bílá s tónovanou. Z dálky to byl žebřík proužků, ne stránka.
+     Panel s hledáním má teď týž podklad jako výpis pod ním a jedinou
+     bílou plochou v něm zůstává samo pole, kam se píše. Hranici dělá
+     barva, ne linka. */
+  .map-controls-panel{order:0; border-right:0; border-bottom:0; background:var(--plocha-vypis);}
+  /* A horní linka desky taky pryč: kreslila se na y=105, tedy přesně
+     doprostřed toho prázdného pásma pod hlavičkou, a byla třetí
+     vlasovou linkou v řadě. Pravidlo o kus výš ji sice ruší, jenže
+     základní .map-app{border:1px solid var(--line-strong)} je zapsané
+     později a přebíjelo ho (naměřeno: border-top 1px rgba(16,21,19,.28)
+     na y=105). */
+  .map-app{border-top:0;}
 
   /* HLEDÁNÍ SE ROZBALÍ AŽ NA KLEPNUTÍ.
      ------------------------------------------------------------------
@@ -3598,7 +3699,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* 38 px: dotykové minimum je 36, a na velké fotce smí být terč větší. */
   .opp-media .opp-fav{width:38px; height:38px; top:10px; right:10px;}
   .opp-media .opp-fav svg{width:18px; height:18px; stroke-width:2.1;}
-  .opp-body{padding:12px 0 0;}
+  .opp-body{padding:12px 14px 14px;}
   .opp-chips{gap:4px;}
   .opp-chips > span{font-size:13px; padding:4px 8px;}
   .opp-figures{gap:6px 10px;}
@@ -5841,7 +5942,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      hranou hlavičky a klepnout na levou polovinu nešlo.
      Osm pixelů tedy ušetřeno, ne čtyřiatřicet — zbytek té úspory
      přinesl přepínač a nadpis. */
-  .hero-map .map-wide{margin-top:0; padding-top:40px; background:var(--panel);}
+  .hero-map .map-wide{margin-top:0; padding-top:40px; background:var(--plocha-vypis);}
 
   /* HLAVIČKA VÝSLEDKŮ NA JEDEN ŘÁDEK.
      Měla 88 px: nadpis „Doporučené příležitosti · 1 930 na mapě", pod
@@ -5858,11 +5959,15 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .ms-vysledky{flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 8px; margin-bottom:8px;}
   .ms-vysledky .msv-ovladani{flex:0 1 auto; justify-content:flex-end;}
   .ms-vysledky .map-count{font-size:14px; letter-spacing:0; margin-bottom:0; flex:0 1 auto; min-width:0;}
-  /* Schovává se POPIS, ne počet: zkoušky čtou počet z vykresleného
-     textu #map-count a hledají v něm „N na mapě". Odděluje se s ním
-     i tečka, která by jinak zbyla na začátku řádku. */
-  .mc-hl, .ms-vysledky .mc-sep{display:none;}
-  .ms-vysledky .map-count{font-weight:700;}
+  /* NADPIS SE VRACÍ I NA TELEFON.
+     Chvíli tu byl schovaný, aby se ušetřilo 28 px — jenže pak nad
+     výpisem stálo holé „1 923 na mapě", což je řeč stroje, ne nabídky.
+     Majitel webu to popsal jako „suché a robotické" a měl pravdu:
+     ušetřených osmadvacet pixelů za to nestojí. Nadpis se smí zalomit
+     na dva řádky; první nabídka tím klesne z 289 na ~311 px, pořád
+     hluboko pod mezí 330 v test-prvni-obrazovka. */
+  .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
+  .ms-vysledky .mc-sub{color:var(--text-ondark-mute); font-weight:600;}
   .msv-ulozene{min-height:34px; padding:6px 10px;}
   .msv-razeni .map-select{min-height:34px; max-width:150px; font-size:12px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
@@ -6429,8 +6534,20 @@ body > footer{flex:none;}
 
 /* Křížek „tenhle mě nezajímá" sedí pod záložkou pro uložení. Objeví se až
    při najetí nebo zaměření klávesnicí — na dotyku je vidět vždy, protože
-   tam se najet nedá. */
+   tam se najet nedá.
+
+   Z-INDEX JE TU TO HLAVNÍ, A CHYBĚL.
+   Uvnitř .opp-media má letecký náhled z-index 1 a záložka pro uložení 3.
+   Křížek neměl žádný, takže se kreslil POD snímkem — na kartě po něm
+   nebylo ani památky. A protože snímek má pointer-events:none, klepnutí
+   jím propadlo na tlačítko: neviditelná, ale funkční ničivá akce, do
+   které se dalo trefit poslepu. To je přesně ta stížnost, která je
+   citovaná o kus níž v pravidle pro dotyk — „klikám na pozemky
+   a skrývají se mi a nevím proč". Tehdy se opravilo UMÍSTĚNÍ, ale že
+   tlačítko není vidět, si nikdo nevšiml: vypadalo to jako záměr.
+   Hlídá scripts/test-skryt-videt.mjs. */
 .opp-skryt{position:absolute; top:44px; right:8px; width:28px; height:28px;
+  z-index:3;
   display:grid; place-items:center; border-radius:50%;
   background:var(--plocha-plovouci); border:1px solid var(--line-strong);
   color:var(--text-ondark-mute); font-size:13px; line-height:1; cursor:pointer;
