@@ -43,19 +43,35 @@ function pravda(popis, vyslo, proc) {
 /* Datum a otisk znění patří k sobě: kdo mění jedno, musí sáhnout
    i na druhé, a právě to je ta pojistka. */
 const CEKANO = {
-  /* Otisky přepočítané 14. 10., když se do porovnání přestal počítat
-     tvar uvozovky (viz viditelnyText). DATUM SE NEMĚNILO A NESMĚLO:
-     ověřeno znak po znaku, že se znění obou stránek proti předchozímu
-     commitu nezměnilo ani o slovo — změnil se jeden znak za tiskárnu.
-     Upravit „Poslední úprava" by znamenalo tvrdit, že se podmínky
-     změnily, a to je u právního textu lež, ne kosmetika. */
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: 'd1650f99e4ae7466' },
-  'podminky.html': { datum: 'říjen 2026', otisk: '913f998ff0b2f004' },
+  /* Otisky přepočítané 15. 10., když se z porovnání vyňal rám stránky
+     (lišta, nabídka, patička — viz viditelnyText). DATUM SE NEMĚNILO
+     A NESMĚLO: ověřeno, že po vyjmutí rámu je text obou stránek proti
+     commitu 43b42466 (tedy před zúžením nabídky a sjednocením
+     patičky) ZNAK PO ZNAKU TOTOŽNÝ — 8 445 a 2 862 znaků, oba otisky
+     se shodují. Upravit „Poslední úprava" by znamenalo tvrdit, že se
+     podmínky změnily, a to je u právního textu lež, ne kosmetika.
+     (Předtím se 14. 10. přepočítávalo kvůli tvaru uvozovky, se stejným
+     závěrem; tyhle dvě výjimky jsou důvod, proč otisk nemá brát ani
+     sazbu, ani rám.) */
+  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '6d47377c69282f18' },
+  'podminky.html': { datum: 'říjen 2026', otisk: '6c7f2bd0b9c1bd23' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */
 export function viditelnyText(html) {
   return String(html)
+    /* RÁM STRÁNKY DO OTISKU NEPATŘÍ. Lišta a patička jsou na webu
+       společné — skládají je scripts/hlavicka.mjs a
+       scripts/paticka.mjs — a mění se, kdykoli se mění NABÍDKA. Když
+       15. 10. ubylo v nabídce jedenáct odkazů a patička se sjednotila,
+       rozešel se otisk obou právních stránek a zkouška chtěla upravit
+       „Poslední úprava". To by byla lež dvojnásob: právní znění se
+       nezměnilo ani o slovo, změnilo se MENU. Otisk proto bere jen
+       obsah stránky; ověřeno, že po vyjmutí rámu je znění obou
+       stránek proti commitu bf7f1a1e znak po znaku totožné. */
+    .replace(/<header[\s\S]*?<\/header>/gi, ' ')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
     .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')

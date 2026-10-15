@@ -40,11 +40,7 @@ const TERMINY = (() => {
   return okno.PK_TERMINY;
 })();
 
-function esc(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+import { esc } from './text.mjs';
 const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 
 /* Datum ve tvaru, který žádá RSS 2.0 (RFC 822). Píše se ANGLICKY

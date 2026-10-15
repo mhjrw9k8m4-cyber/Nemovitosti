@@ -18,11 +18,10 @@ import { readFileSync } from 'node:fs';
 export const MAX_V_MAILU = 8;
 export const WEB = 'https://www.parcelaka.cz';
 
-export function esc(t) {
-  return String(t == null ? '' : t)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+/* Jedno místo pro celý web (scripts/text.mjs); re-export tu zůstává,
+   protože si `esc` odtud bere skládání e-mailů i jeho zkouška. */
+import { esc } from './text.mjs';
+export { esc };
 
 export function odhlasitOdkaz(token) {
   if (!token) throw new Error('odhlašovací token chybí — e-mail bez odkazu na odhlášení se neposílá');

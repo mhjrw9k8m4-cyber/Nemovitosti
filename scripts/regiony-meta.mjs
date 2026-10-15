@@ -88,12 +88,11 @@ export const ROZPOCTY = [
 ];
 
 /* Diakritiku dolů, zbytek na spojovníky — stejné pravidlo, jakým se
-   jmenují už vyrobené soubory na webu. */
-export function slug(s) {
-  const map = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
-  return String(s).toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, (c) => map[c] || c)
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
+   jmenují už vyrobené soubory na webu. Od 15. 10. stojí na jednom
+   místě (scripts/text.mjs); re-export tu zůstává, protože si ho
+   odtud bere generátor i tři zkoušky. */
+import { slug } from './text.mjs';
+export { slug };
 
 export function krajFile(kraj) { return `pozemky-${slug(kraj)}-kraj.html`; }
 export function okresFile(okres) { return `pozemky-okres-${slug(okres)}.html`; }

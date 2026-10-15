@@ -112,8 +112,9 @@ const KRAJ_ORDER = META.KRAJ_ORDER;
 const KRAJ_META = META.KRAJ_META;
 const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec:'Záměr obce', majitel:'Od majitele' };
 
-function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-const attr = esc;
+/* Únik do HTML drží jedno místo pro celý web (scripts/text.mjs).
+   `attr` je totéž pod jménem, které u atributů čte lépe. */
+import { esc, attr } from './text.mjs';
 function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('cs-CZ') : ''; }
 /* Čeština má u čísel tři tvary, ne dva: 1 okres, 2 okresy, 5 okresů.
    Štítky u čísel se psaly natvrdo v množném čísle, takže kraj Praha

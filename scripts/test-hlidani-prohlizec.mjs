@@ -52,7 +52,11 @@ const RUCNI_SEZNAM = (/var DRUHY = \[([^\]]*)\]/.exec(
   readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8')) || [, ''])[1];
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+/* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon stojí za
+   `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna.
+   (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+const ctx = await prohlizec.newContext({ viewport: { width: 420, height: 900 },
+  isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 let data = STARE;   // co server právě vydává; test to v průběhu přepne
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -414,7 +418,8 @@ if (smazat) {
    A Enter v heslu musí odeslat: bez <form> to byla na telefonu největší
    klávesa, po které se nedělo nic. */
 {
-  const ctxOdhlaseny = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  const ctxOdhlaseny = await prohlizec.newContext({ viewport: { width: 420, height: 900 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxOdhlaseny.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctxOdhlaseny.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,

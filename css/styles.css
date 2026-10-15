@@ -3772,7 +3772,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      oddíl zavřít). */
   .nav-sk > summary{display:flex; align-items:center; gap:14px; list-style:none;
     cursor:default; pointer-events:none; padding:20px 20px 8px;
-    font-family:var(--font-ui); font-size:11px; font-weight:700; letter-spacing:0.09em;
+    font-family:var(--font-ui); font-size:11px; font-weight:700;
+    letter-spacing:var(--popisek-proklad);
     text-transform:uppercase; color:var(--text-ondark-mute);}
   .nav-sk > summary::after{content:none;}
   .nav-sk > summary::-webkit-details-marker{display:none;}

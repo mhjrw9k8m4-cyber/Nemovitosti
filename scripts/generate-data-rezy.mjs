@@ -38,12 +38,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Jméno souboru se skládá TOUŽ funkcí jako jméno stránky okresu, ať
-   si člověk může řez odvodit z adresy stránky, na které stojí. */
-export function slug(s) {
-  return String(s == null ? '' : s)
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+   si člověk může řez odvodit z adresy stránky, na které stojí. Ta
+   funkce je od 15. 10. jedna pro celý web (scripts/text.mjs). */
+import { slug } from './text.mjs';
+export { slug };
 
 /* SESTAVENÍ JE VE FUNKCI, NE NA NEJVYŠŠÍ ÚROVNI.
    Zkouška scripts/test-data-rezy.mjs si odtud bere slug() — a dokud

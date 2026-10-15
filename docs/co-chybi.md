@@ -6656,6 +6656,77 @@ ve stylopisu **36 pravidel**, a žádné z nich ta zkouška nikdy
 nesrovnala. To je další položka v `docs/optimalizace.md`, ne věc na
 jeden řádek.
 
+## 3db. OTEVŘENÁ OTÁZKA: klepnutí prstem na značku kraje — *15. 10.*
+
+Při zapínání dotyku ve zkouškách (bod 3da) se `scripts/test-mapa.mjs`
+rozbila na šesti kontrolách naráz: po klepnutí do plátna se nevybral
+kraj. Vyzkoušel jsem v dotykovém kontextu **tři způsoby podstrčeného
+vstupu a všechny tři selhaly** — `mouse.click`, `touchscreen.tap`
+i `locator.click`. Přitom:
+
+* klepnutí, které si zkouška vyrobí DOM voláním `.click()`, projde
+  i s dotykem (jiný oddíl téže zkoušky, zelený),
+* značka kraje má v `js/main.js` obsluhu `mk.on('click', vyber)` —
+  a tu prohlížeč z opravdového prstu spustí, protože klepnutí na prvek
+  vyrobí `click` sám,
+* změřeno, že bod ve středu značky NENÍ ničím zakrytý
+  (`elementFromPoint` vrací tu značku) — to je od té doby v té zkoušce
+  pojistka, aby se z toho nestala kaskáda nesouvisejících chyb.
+
+**Nedokázal jsem oddělit, jestli je to omezení podstrčeného vstupu,
+nebo vada webu** — a tvrdit jedno nebo druhé bez měření nebudu. Zkouška
+proto zůstává v tom profilu, ve kterém byla zelená (bez dotyku), s tím
+napsaným u sebe. Co se o dotyku na úvodní mapě tvrdit DÁ, měří
+`scripts/test-dotyk.mjs` a `scripts/test-rozvrzeni.mjs` — obě s dotykem
+zapnutým a obě zelené: značka kraje má terč aspoň 44 px.
+
+**Jak se to dá dořešit:** na opravdovém telefonu (nebo přes CDP
+`Input.dispatchTouchEvent` s následnou kontrolou, jestli prohlížeč
+`click` dosyntetizoval) klepnout na značku kraje a podívat se, jestli
+se kraj vybere. Do té doby je to otázka, ne nález.
+
+## 3dc. NALEZENO: devět prohlížečových zkoušek je červených a nebylo to ode mě — *15. 10.*
+
+Pustil jsem celou prohlížečovou sadu (108 zkoušek) a **dvanáct jich
+padalo**. Místo hádání jsem si vyrobil **základ**: pracovní kopii
+stromu na commitu `8cee2d9b`, tedy před veškerou prací z 14.–15. 10.,
+a tytéž dvanáct zkoušek pustil tam. Výsledek rozdělil vinu na dvě
+hromádky:
+
+**Tři byly moje** (na základu zelené, u mě červené) — a všechny tři
+jsou následky přestavby nabídky:
+
+| zkouška | co padlo | proč |
+|---|---|---|
+| `test-sliby` | „12 otázek proti 9 napsaným" | hledala `<summary>` kdekoli na stránce; oddíly šuplíku jsou taky `<details><summary>` |
+| `test-vrstveni` | „žádný odkaz není bez ikony" | ikona teď patří ODDÍLU, ne každému řádku — čtrnáct ikon pod sebou dělalo z nabídky vánoční stromek |
+| `test-mapa` | šest kontrol klepání | zapnutý dotyk, viz bod 3db |
+
+Všechny tři jsou spravené a zelené.
+
+**Devět bylo červených už na základu** — tedy před touhle prací:
+`test-chat-prohlizec`, `test-hlidani-prohlizec`, `test-mapa-pozemku`,
+`test-odhlaseni`, `test-pamet`, `test-poznamky`,
+`test-prvni-obrazovka`, `test-rychly-prohlizec`, `test-vrstvy-mapa`.
+
+Co u nich padá (jen zaznamenáno, ne rozebráno):
+
+| zkouška | hlášení |
+|---|---|
+| `test-prvni-obrazovka` | cena „68 696 Kč" končí na 857 px, obrazovka má 844; pruh nástrojů 148 px proti stropu 110 |
+| `test-rychly-prohlizec` | na tlačítku stojí „Projít 1 930 pozemků po jednom ›" |
+| `test-vrstvy-mapa` | „podstrčená vrstva se nabídne" — přepínačů v panelu 0 |
+| `test-mapa-pozemku` | „bez mapové knihovny se ukáže nehybný snímek — náhrada false, snímek false" |
+| `test-odhlaseni` | stránka nepotvrdí, že pošta chodit nebude |
+| `test-pamet` | výjimka: `.toast-akce` je null (hláška „Vrátit" se neukázala) |
+| `test-poznamky` | poznámka u nabídky není vidět |
+| `test-chat-prohlizec` | po klepnutí do vlákna se neukáže psací pole |
+| `test-hlidani-prohlizec` | timeout |
+
+Dvě z nich jsem už v téhle sérii spravil jinde (`test-barvy`,
+`test-pridat`), takže se ta hromádka tenčí. **Je to seznam, ne
+výmluva** — jde se po jedné.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

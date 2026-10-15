@@ -323,7 +323,7 @@ body.nav-otevreno{overflow:hidden}
 .nav-sk{display:flex;flex-direction:column;min-width:0}
 .nav-sk-panel,.nav-sk:not([open])>.nav-sk-panel{display:flex;flex-direction:column;position:static;min-width:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
 .nav-sk::details-content{content-visibility:visible;block-size:auto}
-.nav-sk>summary{display:flex;align-items:center;gap:14px;list-style:none;cursor:default;pointer-events:none;padding:20px 20px 8px;font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--text-ondark-mute)}
+.nav-sk>summary{display:flex;align-items:center;gap:14px;list-style:none;cursor:default;pointer-events:none;padding:20px 20px 8px;font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:var(--popisek-proklad);text-transform:uppercase;color:var(--text-ondark-mute)}
 .nav-sk>summary::after{content:none}
 .nav-sk>summary::-webkit-details-marker{display:none}
 .nav-sk>summary::before{content:"";flex:none;width:22px;height:22px;background-repeat:no-repeat;background-position:center;background-size:22px 22px;opacity:0.8}

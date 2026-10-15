@@ -89,7 +89,12 @@ const prohlizec = await chromium.launch({
 try {
   /* Malé okno, ať je mapa opravdu pod okrajem. Na širokém monitoru by se
      dostala na dohled hned a měřilo by se něco jiného, než co se tvrdí. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 700 } });
+  /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon stojí za
+     `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna,
+     takže by se v úzkém okně bez emulace dotyku vykreslilo rozvržení
+     monitoru. (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 700 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   /* STYL SE ZPOMALÍ O PŮL VTEŘINY. Bez toho se závod, kvůli kterému

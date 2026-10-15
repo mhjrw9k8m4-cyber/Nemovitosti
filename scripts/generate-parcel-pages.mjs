@@ -111,13 +111,11 @@ const POPISY = (() => {
 })();
 const WEB = 'https://www.parcelaka.cz';
 
-const MAPA = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
-export function slug(s) {
-  return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, (c) => MAPA[c] || c)
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-const esc = (s) => String(s == null ? '' : s)
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+/* Adresy stránek i únik do HTML drží jedno místo pro celý web
+   (scripts/text.mjs). Re-export `slug` tu zůstává: bere si ho odtud
+   generátor kanálu novinek i zkoušky. */
+export { slug } from './text.mjs';
+import { slug, esc } from './text.mjs';
 const fmt = (n) => new Intl.NumberFormat('cs-CZ').format(Math.round(n));
 
 /** Týž klíč, jakým se pozemek hledá v datech na webu (js/main.js: pkey). */
@@ -1415,7 +1413,24 @@ export function generuj() {
   /* Srovnání potřebuje vidět všechny stránky naráz (hledá se podle
      vzdálenosti, ne podle okresu), takže taky dřív, než se začne psát. */
   pripravSrovnani(mapa);
+  /* DRAŽBA PO TERMÍNU UŽ NENÍ ŽIVÁ NABÍDKA.
+     Výpisy ji schválně vynechávají — okresní stránky i strojové řezy
+     (js/terminy.js, poTerminu) — ale do 15. 10. ji pořád nabízela
+     sitemap.xml. Vznikla tím adresa, kterou vyhledávač zná, na kterou
+     z webu nevede ANI JEDEN odkaz, a která nabízí termín v minulosti.
+     Naměřeno na jednom dni: pozemek-brno-mesto-brno-xz2874.html,
+     dražba ze 14. 10., den po termínu jediná osiřelá adresa z 1 931
+     (našla to scripts/test-vyhledavac.mjs).
+     Nepřepisuje se tedy jako živá, ale propadne o pár řádků níž do
+     větve UKONČENÝCH: dostane pruh s datem, odkazy na podobné pozemky
+     v okrese, `noindex,follow`, vypadne z mapy webu a po DNI_ARCHIV
+     dnech se smaže. Je to táž úvaha, jakou si ta větev o sobě píše
+     („dražba, která skončila, nemá hledajícímu co nabídnout"), jen
+     spuštěná termínem místo zmizení ze zdroje.
+     POZOR: rozlišení titulků a srovnání výš vidí i tyhle nabídky
+     schválně — jména souborů se tím nesmějí po dražbě měnit. */
   for (const { d, soubor } of mapa.values()) {
+    if (poTerminu(d)) continue;
     fs.writeFileSync(path.join(ROOT, soubor), stranka(sablona, d, soubor));
     hotove.push(soubor);
     datumy.set(soubor, naposledZmeneno(d));

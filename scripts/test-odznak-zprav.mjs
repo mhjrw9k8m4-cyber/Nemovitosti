@@ -38,7 +38,12 @@ const browser = await chromium.launch(PW ? { executablePath: PW } : {});
 
 /** Otevře stránku účtu s podstrčeným seznamem vláken. */
 async function ucet(stranka, vlakna) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block' });
+  /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon stojí za
+     `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna,
+     takže by se v úzkém okně bez emulace dotyku vykreslilo rozvržení
+     monitoru. (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
   const page = await ctx.newPage();
   await page.addInitScript(([u]) => {
     const t = 'tok-' + u;

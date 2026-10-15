@@ -22,14 +22,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { slug } from './text.mjs';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const VEN = path.join(ROOT, 'assets', 'og');
-
-function slug(s) {
-  const map = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
-  return String(s).toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, (c) => map[c] || c)
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
 
 const KRAJE = ['Praha','Středočeský','Jihočeský','Plzeňský','Karlovarský','Ústecký','Liberecký',
   'Královéhradecký','Pardubický','Vysočina','Jihomoravský','Olomoucký','Zlínský','Moravskoslezský'];

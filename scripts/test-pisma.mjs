@@ -31,6 +31,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* Jména balíků stylopisu se NEPÍŠOU nazpaměť. Balíky jsou od 14. 10.
+   čtyři a tahle kontrola se ptala jen na dva („styles" a „zaklad"),
+   takže se místo 2 249 stránek koukala na 23 — a přednačtení písma
+   nehlídala na 2 226 stránkách, včetně všech pozemků a přehledů.
+   Změřeno 15. 10. Seznam se proto bere z rozdělovače. */
+import { BALIKY } from './rozdel-styly.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -187,12 +193,16 @@ pravda('a rozsahy v @font-face neslibují znaky mimo podřezanou sadu',
 
 /* ---- 5) stránky písma přednačítají ---- */
 {
+  /* `styles` je úplná očištěná kopie — tu si dnes nebere nikdo, ale
+     kdyby se vrátila, patří do měření taky. */
+  const jmena = ['styles'].concat(BALIKY.map((b) => b.soubor.replace(/^css\/|\.min\.css$/g, '')));
+  const VZOR_BALIKU = new RegExp('<link[^>]+rel="stylesheet"[^>]+css\\/(?:' + jmena.join('|') + ')');
   const bez = [];
   let sPreload = 0;
   for (const f of fs.readdirSync(KOREN)) {
     if (!f.endsWith('.html')) continue;
     const s = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    if (!/<link[^>]+rel="stylesheet"[^>]+css\/(?:styles|zaklad)/.test(s)) continue;
+    if (!VZOR_BALIKU.test(s)) continue;
     sPreload++;
     /* OBA SOUBORY, NE JEDEN. Tahle kontrola tu byla a ptala se jen na
        to, jestli stránka přednačítá NĚJAKÉ písmo — a jedno stačilo.

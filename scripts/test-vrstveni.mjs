@@ -116,21 +116,28 @@ async function stranka(sirka, prihlasit) {
   je('nahoře na otevřeném panelu je opravdu panel', stav.nahoreVlevo, 'pás');
   je('a hlavička pod ním kryje obsah stránky', stav.pozadiKryje, true);
 
-  // Každý odkaz musí mít ikonu — prázdné místo vypadá jako chyba.
-  const bezIkony = await p.evaluate(() => {
-    const out = [];
-    document.querySelectorAll('#nav a').forEach((a) => {
-      if (!a.getClientRects().length) return;
-      /* Účet nese dva řádky (jméno a stav přihlášení) a „Přidat
-         pozemek" je tlačítko, ne položka seznamu — ani jedno ikonu
-         nemá a mít nemá. Totéž rozlišení dělá test-menu. */
-      const kam = a.getAttribute('href') || '';
-      if (/muj-inzerat|pridat/.test(kam)) return;
-      if (getComputedStyle(a, '::before').backgroundImage === 'none') out.push(kam);
+  /* IKONA PATŘÍ ODDÍLU, NE KAŽDÉMU ŘÁDKU.
+     Tahle kontrola hlídala „každý odkaz má ikonu" a byla správně, dokud
+     byl šuplík plochý seznam: prázdné místo před textem tam vypadalo
+     jako chyba. Od přestavby podle velkých realitních webů (14. 10.) má
+     šuplík ČTYŘI ODDÍLY (Pozemky, Příležitosti, Rádce, Můj profil)
+     a ikonu nese nadpis oddílu — čtrnáct ikon pod sebou dělalo z krátké
+     nabídky vánoční stromek a nedalo se v ní nic najít. Hlídá se proto
+     totéž, co ta kontrola chtěla (nabídka se pozná tvarem, ne jen
+     textem), jen na správné úrovni: každý oddíl má ikonu. */
+  const ikony = await p.evaluate(() => {
+    const bezIkony = [];
+    document.querySelectorAll('#nav .nav-sk > summary').forEach((h) => {
+      if (!h.getClientRects().length) return;
+      if (getComputedStyle(h, '::before').backgroundImage === 'none') {
+        bezIkony.push((h.textContent || '').trim());
+      }
     });
-    return out;
+    return { bezIkony, oddilu: document.querySelectorAll('#nav .nav-sk > summary').length };
   });
-  je('žádný odkaz není bez ikony', bezIkony, []);
+  je('žádný oddíl nabídky není bez ikony', ikony.bezIkony, []);
+  /* A ať se nestane, že oddíly zmizí a kontrola projde na prázdnu. */
+  je('oddíly nabídky se vůbec našly', ikony.oddilu >= 3, true);
   await ctx.close();
 }
 

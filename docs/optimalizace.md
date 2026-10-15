@@ -276,3 +276,76 @@ překryv ovladačů už dotyk má), `test-odznak-zprav`,
 `test-vzorek-verdiktu`. U každé se musí
 rozhodnout, jestli měří ROZVRŽENÍ (pak dotyk zapnout) nebo jen
 chování na úzkém okně (pak to u ní napsat, ať se to nezkouší znovu).
+
+## 8. Celá sada se po změnách nespustila — a bylo v ní pět nálezů *15. 10.*
+
+**Nález.** Měnil jsem nabídku, patičku a balíky stylopisu a spoléhal se
+na zkoušky, které se těch změn týkaly. Když jsem pustil **celou rychlou
+sadu (105 zkoušek)**, padalo jich **jedenáct** — a šest z nich byl
+následek těch úprav, ne jejich příčina. Lekce je jednoduchá a patří
+sem, protože stála nejvíc času: *po každé úpravě rámu stránky se pouští
+celá sada, ne jen „ta zkouška, která se toho týká".*
+
+| zkouška | co padlo | co to bylo |
+|---|---|---|
+| `test-pisma` | „stránky se stylopisem se našly (23)" | **díra v měření**: hledala `css/(styles\|zaklad)` a po rozdělení na čtyři balíky viděla 23 stránek z 2 250 — přednačtení písma tedy nehlídala na 2 226 stránkách |
+| `test-data` | „nahoře je účet a hned pod ním hledání" | pravidlo z doby před přestavbou nabídky |
+| `test-typografie` | „každé prostrkání je na stupnici" | `0.09em` v nadpisu oddílu šuplíku — mimo stupnici |
+| `test-pravni-stranky` | „znění se od zápisu data nezměnilo" (2×) | otisk bral i **rám stránky**, takže ho rozhodila nabídka |
+| `test-vyhledavac` | „na každou stránku ze sitemap vede odkaz" | **pravá vada webu**, viz níž |
+| `test-cisla-okresu`, `test-kam-dal`, `test-rozesilac` | `slug is not defined` / `esc is not defined` | moje chyba v položce 5 (viz tam) |
+
+**Pravá vada: dražba po termínu zůstávala v `sitemap.xml`.** Výpisy
+proběhlou dražbu schválně vynechávají (`js/terminy.js`, `poTerminu`) —
+okresní stránky i strojové řezy. Mapa webu ji ale dál nabízela, takže
+vznikla adresa, kterou vyhledávač zná, na kterou **z webu nevede ani
+jeden odkaz**, a která nabízí termín v minulosti. Naměřeno:
+`pozemek-brno-mesto-brno-xz2874.html` (dražba 14. 10.), den po termínu
+**jediná osiřelá adresa z 2 119**. Stránka zůstává dostupná (kdo přijde
+s uloženým odkazem, nemá dostat 404), ale dostane `noindex,follow`
+a z mapy webu vypadne — táž úvaha, jakou si o sobě napsala ukončená
+nabídka: *dražba, která skončila, nemá hledajícímu co nabídnout.*
+
+**Oprava otisku právních stránek je svou povahou totéž, co ta vada.**
+Otisk měl hlídat ZNĚNÍ, a bral i lištu a patičku — tedy věci, které se
+mění, kdykoli se mění menu. Zkouška pak chtěla upravit „Poslední
+úprava", což by u právního textu byla lež. Rám se proto z otisku
+vyjímá; doloženo, že po vyjmutí je text obou stránek proti commitu
+`43b42466` **znak po znaku totožný** (8 445 a 2 862 znaků).
+
+## 5. (dokončeno) Jeden `slug()` a `esc()` místo jedenácti kopií
+
+`slug()` byla v sedmi skriptech, `esc()` ve čtyřech. Nebyly to kopie
+téhož: `slug()` měla **dvě různá provedení** — seznam patnácti českých
+písmen, a rozklad NFD, který zvládne jakékoli písmeno s diakritikou.
+
+**Změřeno, než se sjednotilo** (jinak je to hádání, protože na téhle
+funkci drží adresy 2 119 stránek):
+
+| měření | výsledek |
+|---|---|
+| texty v `data/**` | 5 233 |
+| rozdílů mezi oběma podobami `slug()` na nich | **0** |
+| rozdílů na 20 000 náhodných řetězcích | 702, a vždy jen na písmenech, která čeština nemá (ä ñ ô ü ö ł) |
+| rozdílů mezi čtyřmi podobami `esc()` | **0** z 6 444 |
+
+Kánonem je proto rozklad NFD (`scripts/text.mjs`): na dnešních datech
+nepřejmenuje ani jednu stránku a u prvního cizího jména udělá to
+správné. **Dvě kopie zůstávají schválně:** `test-misto-prahy`
+a `test-graf-cen` si slug skládají samy, protože měřují jména souborů,
+která tou funkcí vznikla — se společnou funkcí by měřily funkci sama
+sebou.
+
+`fmt()` se nesjednotilo a je to **změřené rozhodnutí**, ne opomenutí:
+`String(n).replace(…)` dělá oddělovač obyčejnou mezerou, `Intl` tou
+nezlomitelnou, a u neceločíselné hodnoty dá první „1 234.6" (anglická
+tečka!), druhá „1 235" (zaokrouhlí) a `toLocaleString` „1 234,6". Tři
+různé výsledky, ne tři kopie. Obyčejná mezera je navíc schválně:
+`scripts/sazba.mjs` ji v číslech sám mění na nezlomitelnou (doloženo
+v `data.html`: „1 957").
+
+**Jedna past u toho:** `export { slug } from './text.mjs'` re-exportuje,
+ale **nedá** jméno do místního rozsahu — a `regiony-meta.mjs`,
+`generate-data-rezy.mjs` i `mail-sklad.mjs` si tu funkci používají samy.
+Tři zkoušky spadly na `slug is not defined`. Správně je
+`import { slug } from './text.mjs'; export { slug };`.

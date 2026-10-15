@@ -46,7 +46,26 @@ const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
+/* TAHLE ZKOUŠKA BĚŽÍ BEZ EMULACE DOTYKU, A JE TO ZMĚŘENÉ ROZHODNUTÍ.
+   Zapnout dotyk jsem 15. 10. zkoušel, protože pravidla pro telefon tu
+   stojí za `@media (pointer: coarse)`, ne za šířkou okna (bod 3da
+   v docs/co-chybi.md). U šestnácti dalších zkoušek to byla správná
+   oprava; tady se tím rozbilo klepání do plátna — šest kontrol naráz
+   („po prvním klepnutí je vybraný kraj", „mapa se ke kraji
+   přiblížila"…). Vyzkoušeny tři způsoby podstrčení, všechny tři
+   v dotykovém kontextu selhaly: `mouse.click`, `touchscreen.tap`
+   i `locator.click`. Přitom KLEPNUTÍ NA ZNAČKU, které si zkouška
+   vyrábí DOM voláním `.click()`, projde i s dotykem (oddíl výš) —
+   a značka kraje má obsluhu `mk.on('click')` v js/main.js, kterou
+   prohlížeč z opravdového prstu spustí.
+   Nedokázal jsem oddělit, jestli je to omezení podstrčeného vstupu,
+   nebo vada webu, a TVRDIT jedno nebo druhé bez měření nebudu. Zůstává
+   tedy stav, ve kterém je zkouška zelená a měří, co měřit umí; otevřená
+   otázka je zapsaná v docs/co-chybi.md (bod 3db), ať nezapadne. Dotyková
+   pravidla na úvodní mapě měří scripts/test-dotyk.mjs
+   a scripts/test-rozvrzeni.mjs, obě s dotykem zapnutým. */
 const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
+const klepni = (x, y) => p.mouse.click(Math.round(x), Math.round(y));
 // Test nesmí sahat ven z počítače: cizí obrázky (dlaždice mapy) nahradíme
 // prázdnými, ostatní cizí požadavky zahodíme. Pozor na pořadí — Playwright
 // bere poslední zaregistrovanou shodu, takže tohle musí být PRVNÍ.
@@ -268,8 +287,19 @@ const vyber = await p.evaluate(() => {
     .find((e) => (e.getAttribute('title') || '').indexOf(nej.k) === 0);
   if (zn) {
     const zb = zn.getBoundingClientRect();
-    return { x: Math.round(zb.left + zb.width / 2), y: Math.round(zb.top + zb.height / 2),
-      kraj: nej.k, n: nej.n, pres: 'značku kraje' };
+    const sx = Math.round(zb.left + zb.width / 2), sy = Math.round(zb.top + zb.height / 2);
+    /* A OPRAVDU TAM NA NI JDE KLEPNOUT? Bod ve středu značky ještě
+       neznamená, že je značka na vrchu: lepivá hlavička i pruh nástrojů
+       nad výpisem na telefonu přesahují do mapy, a klepnutí pak trefí
+       je. Bez téhle kontroly se to pozná až jako kaskáda šesti
+       nesouvisejících chyb („hlavička kraje je prázdná", „mapa se
+       nepřiblížila"…) a hledá se v mapě chyba, která je v měření. */
+    const vrch = document.elementFromPoint(sx, sy);
+    if (vrch && (vrch === zn || zn.contains(vrch) || (vrch.closest && vrch.closest('.pk-shluk-kraj') === zn))) {
+      return { x: sx, y: sy, kraj: nej.k, n: nej.n, pres: 'značku kraje' };
+    }
+    return { chyba: 'na značku kraje ' + nej.k + ' nejde klepnout — bod ['
+      + sx + ',' + sy + '] zakrývá ' + (vrch ? vrch.tagName + '.' + (vrch.getAttribute('class') || '') : 'nic') };
   }
   const q = document.elementFromPoint(Math.round(bb.left + bb.width / 2), Math.round(bb.top + bb.height / 2));
   return { chyba: 'na kraji ' + nej.k + ' nešlo trefit jeho plochu ani značku',
@@ -282,7 +312,7 @@ pravda('našel se kraj, ve kterém se dá zkoušet klepání'
 if (!vyber || vyber.x == null) { console.log(zpravy.join('\n')); await prohlizec.close(); process.exit(1); }
 
 const zoom0 = s.zoom;
-await p.mouse.click(vyber.x, vyber.y);
+await klepni(vyber.x, vyber.y);
 await p.waitForTimeout(1000);
 await priprav();   // výběr kraje stránkou pohne, mapa musí zůstat celá vidět
 s = await stav();
@@ -510,7 +540,7 @@ const vedle = await najdiBod(false);
 pravda('našel se bod těsně vedle tečky (mimo toleranci trefy)', !!vedle,
   've vybraném kraji nebyl bod mimo toleranci a přitom v okolí tečky');
 if (vedle) {
-  await p.mouse.click(vedle.x, vedle.y);
+  await klepni(vedle.x, vedle.y);
   await p.waitForTimeout(1100);
   const po = await stav();
   je('netrefené klepnutí neotevřelo cizí inzerát', new URL(p.url()).pathname, '/index.html');
@@ -521,7 +551,7 @@ if (vedle) {
 
 const daleko = await najdiBod(true);
 if (daleko) {
-  await p.mouse.click(daleko.x, daleko.y);
+  await klepni(daleko.x, daleko.y);
   await p.waitForTimeout(1100);
   const po = await stav();
   je('klepnutí daleko od všech pozemků mapou nehne', po.zoom, daleko.zoom);
@@ -562,7 +592,7 @@ if (daleko) {
   if (rozdeleni) {
     const samotnaVOkne = rozdeleni.samotne.filter((t) => vOkne({ x: t.x, y: t.y }));
     if (samotnaVOkne.length) {
-      await p.mouse.click(Math.round(samotnaVOkne[0].x), Math.round(samotnaVOkne[0].y));
+      await klepni(Math.round(samotnaVOkne[0].x), Math.round(samotnaVOkne[0].y));
       await p.waitForTimeout(1500);
       je('trefa do SAMOTNÉ tečky otevře stránku pozemku', new URL(p.url()).pathname, '/pozemek.html');
     } else {

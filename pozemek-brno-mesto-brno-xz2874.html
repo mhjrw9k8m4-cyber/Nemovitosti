@@ -15,7 +15,7 @@
        vzoru vznikají, a těm generátor `index,follow` vrací zpátky
        (scripts/generate-parcel-pages.mjs). `follow` zůstává: odkazy
        z téhle stránky ven se sledovat mají. -->
-  <meta name="robots" content="index,follow">
+  <meta name="robots" content="noindex,follow">
   <link rel="canonical" href="https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html">
   <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
   <meta property="og:type" content="article">
@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=454680e3">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=29b7cb42">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -328,7 +328,7 @@ body.pzm-cela-telo{overflow:hidden}
 <main id="obsah">
   <div class="pz-wrap">
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
-    <div id="pz-detail"><article class="pz-staticky"><h1>Ostatní plocha 165 m² — Brno, okres Brno-město</h1><p><b>1 633 000 Kč</b> (9 897 Kč/m²) · 165 m² · Dražba</p><dl><dt>Druh pozemku</dt><dd>Ostatní plocha</dd><dt>Výměra</dt><dd>165 m²</dd><dt>Obec</dt><dd>Brno</dd><dt>Okres</dt><dd><a href="pozemky-okres-brno-mesto.html">Brno-město</a></dd><dt>Parcela</dt><dd>č. 592</dd><dt>Stav / zdroj</dt><dd>dražba 14. 10. 2026</dd><dt>Vzdušnou čarou</dt><dd>Brno 0,8 km</dd></dl><p><a href="pozemek.html?p=Brno%7C592%7CBrno-m%C4%9Bsto%7C49.189%7C16.615&amp;ll=49.1892,16.61518&amp;v=165&amp;c=1633000">Otevřít na mapě</a></p><p><a href="index.html?obec=Brno&amp;okres=Brno-m%C4%9Bsto">V obci Brno je v nabídce ještě 15 pozemků</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-brno-mesto.html">Okres Brno-město</a> — všechny pozemky v okrese</li><li><a href="pozemky-jihomoravsky-kraj.html">Jihomoravský kraj</a> — přehled celého kraje</li></ul></article></div></div>
+    <div id="pz-detail"><div class="pz-konec" role="status"><b>Tato nabídka už není aktuální.</b> <span>Zmizela ze zdroje 15. 10. 2026. Stránku necháváme dostupnou, aby uložené odkazy vedly někam, ale pozemek už takhle koupit nejde.</span><p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p></div><article class="pz-staticky"><h1>Ostatní plocha 165 m² — Brno, okres Brno-město</h1><p><b>1 633 000 Kč</b> (9 897 Kč/m²) · 165 m² · Dražba</p><dl><dt>Druh pozemku</dt><dd>Ostatní plocha</dd><dt>Výměra</dt><dd>165 m²</dd><dt>Obec</dt><dd>Brno</dd><dt>Okres</dt><dd><a href="pozemky-okres-brno-mesto.html">Brno-město</a></dd><dt>Parcela</dt><dd>č. 592</dd><dt>Stav / zdroj</dt><dd>dražba 14. 10. 2026</dd><dt>Vzdušnou čarou</dt><dd>Brno 0,8 km</dd></dl><p><a href="pozemek.html?p=Brno%7C592%7CBrno-m%C4%9Bsto%7C49.189%7C16.615&amp;ll=49.1892,16.61518&amp;v=165&amp;c=1633000">Otevřít na mapě</a></p><p><a href="index.html?obec=Brno&amp;okres=Brno-m%C4%9Bsto">V obci Brno je v nabídce ještě 15 pozemků</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-brno-mesto.html">Okres Brno-město</a> — všechny pozemky v okrese</li><li><a href="pozemky-jihomoravsky-kraj.html">Jihomoravský kraj</a> — přehled celého kraje</li></ul></article></div></div>
   </div>
 </main>
 
@@ -345,6 +345,8 @@ body.pzm-cela-telo{overflow:hidden}
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script>window.PK_UKONCENO="2026-10-15";</script>
+<script>window.PK_POZEMEK={"k":"Brno|592|Brno-město|49.189|16.615","ll":[49.1892,16.61518],"v":165,"c":1633000,"r":"data/okres/brno-mesto.json"};</script>
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
 <script src="js/min/bpej.js?v=6050e644" defer></script>
@@ -352,13 +354,20 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/snimek.js?v=d4bb15d9"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/ceny.js?v=4934b598"></script>
-  <script src="js/min/zlevneni.js?v=6ff63d26" defer></script>
+<script src="js/min/zlevneni.js?v=6ff63d26" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9"></script>
 <script src="js/min/radce.js?v=565dda2c"></script>
 <script src="js/min/klic.js?v=4a04bc24"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
-<!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
+<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
+<script src="js/min/pozemek.js?v=90541aff"></script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/hlavicka.js?v=52634b3e" defer></script>
+<script src="js/min/offline.js?v=16a48df3" defer></script>
+<script src="js/min/mereni.js?v=b2023a39" defer></script>
+  <!-- Odstranění duplicit (PKHlidani.bezDuplicit) MUSÍ být k dispozici,
      než js/pozemek.js postaví cenový model: staví ho z téže hromádky
      jako mapa, tedy bez duplicit. Proto tu tenhle modul stojí jako
      obyčejný skript PŘED ním, a ne v odložené skupině níž — odložené
@@ -366,10 +375,7 @@ body.pzm-cela-telo{overflow:hidden}
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 165 m² — Brno, okres Brno-město","description":"Dražba · 1 633 000 Kč (9 897 Kč/m²) · 165 m² · Brno, okres Brno-město. Termín 14. 10. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html","address":{"@type":"PostalAddress","addressLocality":"Brno","addressRegion":"Brno-město","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.1892,"longitude":16.61518},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":165,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":1633000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html","itemOffered":{"@type":"Place","name":"Ostatní plocha 165 m² — Brno, okres Brno-město"},"validThrough":"2026-10-14","description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihomoravský kraj","item":"https://www.parcelaka.cz/pozemky-jihomoravsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Brno-město","item":"https://www.parcelaka.cz/pozemky-okres-brno-mesto.html"},{"@type":"ListItem","position":5,"name":"Ostatní plocha 165 m² — Brno, okres Brno-město","item":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html"}]}]</script>
-<script>window.PK_POZEMEK={"k":"Brno|592|Brno-město|49.189|16.615","ll":[49.1892,16.61518],"v":165,"c":1633000,"r":"data/okres/brno-mesto.json"};</script>
-<script src="js/min/pozemek.js?v=90541aff"></script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 165 m² — Brno, okres Brno-město","description":"Nabídka už není aktuální. Dražba · 1 633 000 Kč (9 897 Kč/m²) · 165 m² · Brno, okres Brno-město. Termín 14. 10. 2026. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html","address":{"@type":"PostalAddress","addressLocality":"Brno","addressRegion":"Brno-město","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.1892,"longitude":16.61518},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":165,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":1633000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html","itemOffered":{"@type":"Place","name":"Ostatní plocha 165 m² — Brno, okres Brno-město"},"validThrough":"2026-10-14","description":"Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím.","availability":"https://schema.org/OutOfStock","priceValidUntil":"2026-10-15"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihomoravský kraj","item":"https://www.parcelaka.cz/pozemky-jihomoravsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Brno-město","item":"https://www.parcelaka.cz/pozemky-okres-brno-mesto.html"},{"@type":"ListItem","position":5,"name":"Ostatní plocha 165 m² — Brno, okres Brno-město","item":"https://www.parcelaka.cz/pozemek-brno-mesto-brno-xz2874.html"}]}]</script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -377,11 +383,6 @@ body.pzm-cela-telo{overflow:hidden}
    říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
-<script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/hlavicka.js?v=52634b3e" defer></script>
-<script src="js/min/offline.js?v=16a48df3" defer></script>
-<script src="js/min/mereni.js?v=b2023a39" defer></script>
 <script type="application/json" id="pz-okoli-data">"Brno 0,8 km"</script>
 <script type="application/json" id="pz-obec-data">{"text":"V obci Brno je v nabídce ještě 15 pozemků","url":"index.html?obec=Brno\u0026okres=Brno-m%C4%9Bsto"}</script>
 <script type="application/json" id="pz-titul-data">"Ostatní plocha 165 m² — Brno, okres Brno-město"</script>

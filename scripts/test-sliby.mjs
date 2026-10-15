@@ -250,7 +250,15 @@ function chibiPrazdne(a) { return a.length === 0; }
    stránku. Když se rozejdou, Google ukazuje odpověď, která na webu není
    — a nikdo to nevidí, protože se na stránce nic nezmění. */
 {
-  const videt = [...idx.matchAll(/<summary>([^<]+)<\/summary>/g)].map((m) => m[1].trim());
+  /* JEN OTÁZKY, NE KAŽDÉ „summary" NA STRÁNCE. Hledalo se tu
+     `<summary>` kdekoli v index.html — a od přestavby nabídky
+     (14. 10.) má výsuvný šuplík oddíly, a ty jsou taky
+     `<details><summary>`. Zkouška pak za otázky vzala „Pozemky",
+     „Příležitosti" a „Rádce", ohlásila 12 otázek proti 9 napsaným
+     a tři „otázky, které chybí ve strukturovaných datech". Nic z toho
+     nebyla pravda. Otázky se poznají podle své vlastní třídy. */
+  const videt = [...idx.matchAll(/<details class="faq-item"[^>]*>\s*<summary>([^<]+)<\/summary>/g)]
+    .map((m) => m[1].trim());
   const proStroj = [...idx.matchAll(/"@type":"Question","name":"((?:[^"\\]|\\.)*)"/g)]
     .map((m) => m[1].replace(/\\"/g, '"').trim());
   const chybi = proStroj.filter((q) => !videt.includes(q));

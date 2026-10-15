@@ -403,18 +403,23 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
     if (!/id="nav-ucet"/.test(nav) || !/id="nav-stav"/.test(nav)) bezUctu.push(f);
     /* Odkaz (ne tlačítko přepínače) nesmí být pojmenovaný „Mapa". */
     if (/<a[^>]*>Mapa<\/a>/.test(nav)) starePojmenovani.push(f);
-    /* Pořadí: první odkaz v nabídce musí vést na hledání pozemků.
-       Jednou už se to pokazilo — účet se posunul nahoru a hlavní věc
-       spadla na páté místo, takže navigace vedla vším možným, jen ne tím,
-       proč na web lidé chodí. */
-    /* Pořadí: nejdřív KDO jsem, pak KAM jdu. První odkaz musí být účet,
-       druhý hledání pozemků. Obojí se už jednou pokazilo — účet byl
-       schovaný čtvrtý ve skupině „Moje", a když se nahoru posunula celá
-       ta skupina, spadlo hledání na páté místo. */
+    /* POŘADÍ: PRVNÍ ODKAZ JE HLEDÁNÍ POZEMKŮ, ÚČET JE V NABÍDCE TAKY.
+       Tahle kontrola si prošla obojím a je poučné, že obojí mělo důvod:
+         • nejdřív stála na „první odkaz vede na hledání" — pokazilo se
+           to, když se účet posunul nahoru a hledání spadlo na páté
+           místo,
+         • pak se přepsala na „první je účet, druhý hledání", protože
+           účet byl schovaný čtvrtý ve skupině „Moje".
+       Od přestavby nabídky podle velkých realitních webů (14. 10.) má
+       lišta oddíly a účet stojí vzadu u „Přidat pozemek", kam patří —
+       vepředu je to, proč na web lidé chodí. Je to ROZHODNUTÍ MAJITELE
+       o podobě nabídky, ne závěr z měření, takže kontrola hlídá jeho:
+       první odkaz je hledání na mapě a účet v nabídce nechybí. (Kánon
+       nabídky skládá scripts/hlavicka.mjs, hlídá ho test-menu.) */
     const odkazy = [...nav.matchAll(/<a\s[^>]*href="([^"]*)"[^>]*>/g)].map((x) => x[1]);
     if (odkazy.length >= 2) {
-      if (!/muj-inzerat\.html$/.test(odkazy[0]) || !/#mapa$/.test(odkazy[1])) {
-        prvniJine.push(`${f}: 1. ${odkazy[0]}, 2. ${odkazy[1]}`);
+      if (!/#mapa$/.test(odkazy[0]) || !odkazy.some((x) => /muj-inzerat\.html$/.test(x))) {
+        prvniJine.push(`${f}: 1. ${odkazy[0]}, účet ${odkazy.some((x) => /muj-inzerat\.html$/.test(x)) ? 'je' : 'CHYBÍ'}`);
       }
     }
     const ld = h.match(/"name":"([^"]+)","item":"https:\/\/www\.parcelaka\.cz\/"/);
@@ -428,7 +433,7 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   pravda('a odkaz na úvod se nejmenuje „Mapa" (hlavní pohled je seznam)',
     starePojmenovani.length === 0,
     `${starePojmenovani.length} stránek: ${starePojmenovani.slice(0, 4).join(', ')}`);
-  pravda('nahoře je účet a hned pod ním hledání pozemků',
+  pravda('nahoře je hledání pozemků a účet v nabídce nechybí',
     prvniJine.length === 0,
     `na ${prvniJine.length} stránkách je pořadí jiné: ${prvniJine.slice(0, 3).join('; ')}`);
   pravda('drobeček a strukturovaná data se shodují', rozchod.length === 0,
