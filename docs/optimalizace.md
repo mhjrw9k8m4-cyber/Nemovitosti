@@ -153,3 +153,63 @@ a tahle položka vznikla právě z toho. Přejmenován na
 `scripts/falesny-server-kontroly.mjs`; od té chvíle platí jednoduché
 pravidlo: **co se jmenuje `scripts/test-*.mjs`, to v CI běží.**
 Ověřeno: 217 z 217.
+
+## 7. Zkoušky měřily telefon bez dotyku — *rozdělaná, první kus HOTOV 15. 10.*
+
+**Nález.** Pravidla pro telefon tu nestojí za šířkou okna, ale za
+`@media (pointer: coarse)` a `(hover: none)`. Prohlížeč je v kontextu
+bez emulace dotyku **nevyhodnotí** — a okno 390 px bez dotyku je
+„telefon s myší", zařízení, které neexistuje. Naměřeno: **ze 45
+zkoušek, které si otvírají okno užší než 561 px, 17 dotyk nezapíná**,
+a za dotykovými a hover dotazy je ve stylopisu **36 pravidel**.
+
+Jak se to ukázalo: nová pojistka na překryv ovladačů mapy prošla i se
+sabotovaným CSS, které majitel vyfotil jako rozbité (bod 3da
+v `docs/co-chybi.md`). Tlačítko bylo bez dotyku vysoké 36 px, s dotykem
+44 — a právě těch osm pixelů byl celý překryv. Není to poprvé: týž
+příběh stojí ve `css/styles.css` u tokenu `--plocha-plovouci-plna`.
+
+**Hotovo 1/17 — a hned ta nejdůležitější:** `test-rozdeleni-stylu`,
+tedy zkouška, která dokazuje, že zkrácený balík stylopisu dává tytéž
+vypočtené styly jako plný. Měřila jedinou kombinaci (390 px bez
+dotyku), takže o žádném z těch 36 pravidel netvrdila nic. Teď projede
+**dva profily** — telefon s dotykem a monitor bez dotyku — tedy obě
+větve každého takového dotazu i dvě šířky:
+
+| | před | po |
+|---|---|---|
+| profily | 1 (390 px, bez dotyku) | **2** (390 s dotykem, 1280 bez) |
+| kontrol | 28 | **56** |
+| srovnaných hodnot na úvodní stránce | 2 200 752 | 2 × ~2 190 000 |
+
+**Sabotáž, která to dokazuje:** z `css/region.min.css` jsem vyjmul
+jedno pravidlo z bloku `@media (pointer:coarse)`
+(`.crumbs a{min-height:44px;display:inline-flex;align-items:center}`).
+Výsledek: profil **telefon padá** (`nav.crumbs: block-size =
+„38,8 px" zkrácený / „58 px" plný`, `a: align-items = „normal" /
+„center"`), profil **monitor prochází**. Přesně ta díra, o které je
+tahle položka — a staré měření by to nepoznalo ani jedním profilem.
+
+**U toho se našla druhá slepá skvrna, horší.** V profilu monitor
+zkouška napoprvé spadla na `img.leaflet-tile: opacity = „0,925"
+zkrácený / „0,94" plný` — Leaflet prolíná dlaždice tím, že jim po
+snímcích přepisuje `style.opacity`. Není to animace podle CSS, takže
+`getAnimations()` o ní neví a dosavadní vynechávání animovaných
+vlastností ji nezachytilo. Ale hlavně: **vlastnost, kterou prvku
+nastavuje skript do atributu `style`, o stylopisu nevypovídá nic** —
+v kaskádě ho přebíjí. Takové vlastnosti se teď vynechávají, ale jen
+tam, kde je žádné pravidlo s `!important` pasující na ten prvek
+nevynucuje (`opacity:1 !important` ve stylopisu je, ale jen na
+`header:focus-within`, takže na dlaždici mapy nic neznamená).
+Vynechaných hodnot je **1 602 z 2 180 910 (0,07 %)**, strop zkoušky je
+2 %.
+
+**Zbývá 16 zkoušek**, v pořadí podle toho, jak moc měří vzhled:
+`test-okraje` (obrysy ovládání proti WCAG 1.4.11), `test-afordance`,
+`test-stabilita`, `test-najeti`, `test-ceska-pismena`, `test-stranky`,
+`test-pridat`, `test-souradnice`, `test-mapa`, `test-leaflet`,
+`test-mapa-pozemku` (zbylé oddíly — překryv ovladačů už dotyk má),
+`test-odznak-zprav`, `test-hlidani-prohlizec`, `test-profil-vypadek`,
+`test-chat-prohlizec`, `test-vzorek-verdiktu`. U každé se musí
+rozhodnout, jestli měří ROZVRŽENÍ (pak dotyk zapnout) nebo jen
+chování na úzkém okně (pak to u ní napsat, ať se to nezkouší znovu).

@@ -25,6 +25,17 @@
    hlídání, :hover). Pravidla pro ně se v základu nechávají, protože
    do tokenů stránky se počítají i všechna slova z jejích skriptů —
    třída, kterou skript někde v textu zmiňuje, se nevyjímá.
+
+   MĚŘÍ SE VE DVOU PROFILECH, A TO JE DŮLEŽITĚJŠÍ, NEŽ VYPADÁ.
+   Do 15. 10. se měřilo jen v okně 390 × 844 bez dotyku — tedy
+   „telefon s myší", což je zařízení, které neexistuje. Pravidla za
+   `@media (pointer: coarse)` a `(hover: none)` se v takovém kontextu
+   NEVYHODNOTÍ, takže je tahle zkouška nikdy nesrovnala: naměřeno
+   36 pravidel ve stylopisu, o kterých nic netvrdila. (Našlo se to
+   jinde: pojistka na překryv ovladačů mapy prošla i se sabotovaným
+   CSS, viz bod 3da v docs/co-chybi.md.) Profily jsou proto dva —
+   telefon S DOTYKEM a monitor bez dotyku — a pokrývají obě větve
+   každého takového dotazu i dvě šířky okna.
    ================================================================== */
 import { chromium } from 'playwright-core';
 import fs from 'node:fs';
@@ -67,6 +78,25 @@ const PLNY = fs.readFileSync(path.join(KOREN, 'css', 'styles.min.css'), 'utf8');
 /* Posbírá u každého prvku celý vypočtený styl. Vrací cestu v DOM
    (ať je v hlášení vidět, o co jde) a hodnoty v pevném pořadí. */
 const SBER = () => {
+  /* Páry (selektor, vlastnost) s `!important` — ty jediné přebijí
+     atribut style, a čtou se z opravdových stylopisů té stránky,
+     ne z naší představy o nich. */
+  const DULEZ = [];
+  for (const ss of Array.from(document.styleSheets)) {
+    let korene; try { korene = ss.cssRules; } catch (e) { continue; }
+    const chod = (pravidla) => {
+      for (const pr of Array.from(pravidla)) {
+        if (pr.style && pr.selectorText) {
+          for (let i = 0; i < pr.style.length; i++) {
+            const j = pr.style[i];
+            if (pr.style.getPropertyPriority(j) === 'important') DULEZ.push([pr.selectorText, j]);
+          }
+        }
+        if (pr.cssRules) chod(pr.cssRules);
+      }
+    };
+    chod(korene);
+  }
   const prvky = Array.from(document.querySelectorAll('*'))
     .filter((e) => !/^(SCRIPT|STYLE|META|LINK|TITLE|HEAD)$/.test(e.tagName));
   const vzor = getComputedStyle(document.body);
@@ -93,6 +123,31 @@ const SBER = () => {
       }
     } catch (err) { /* getAnimations nemusí být – pak se porovná všechno */ }
     const preskoc = new Set(animovane);
+    /* VLASTNOST, KTEROU PRVKU NASTAVUJE SKRIPT DO ATRIBUTU style,
+       NEŘÍKÁ O STYLOPISU NIC: v kaskádě vyhrává nad ním bez ohledu
+       na to, co v něm stojí, takže vypočtená hodnota je stejná se
+       zkráceným i s plným stylopisem — a kdykoli ji skript zrovna
+       mění, rozejde se měření v čase, ne ve stylu.
+       Našlo se to na úvodní stránce: Leaflet prolíná dlaždice tím, že
+       jim po snímcích přepisuje `style.opacity` (0,675 · 0,925 · 0,93
+       · 0,94 · 1 v jednom měření). Není to animace podle CSS, takže
+       getAnimations() o ní neví.
+       VÝJIMKA, bez které by to byla díra: deklarace s `!important`
+       ve stylopisu atribut style PŘEBÍJÍ. Nestačí přitom hlídat jméno
+       vlastnosti — `opacity:1 !important` tu je, ale jen na
+       `header:focus-within`, takže na dlaždici mapy by to nic
+       neznamenalo. Rozhoduje se tedy podle TOHO PRVKU: přeskočí se
+       jen vlastnost, kterou žádné důležité pravidlo pasující na něj
+       nevynucuje. */
+    for (let i = 0; i < e.style.length; i++) {
+      const j = e.style[i];
+      let vynuceno = false;
+      for (const [sel, vl] of DULEZ) {
+        if (vl !== j) continue;
+        try { if (e.matches(sel)) { vynuceno = true; break; } } catch (err) { vynuceno = true; break; }
+      }
+      if (!vynuceno) preskoc.add(j);
+    }
     vynechano += preskoc.size;
     let cesta = e.tagName.toLowerCase();
     if (e.id) cesta += '#' + e.id;
@@ -129,10 +184,16 @@ const browser = await chromium.launch(PW ? { executablePath: PW } : {});
    podstrčení plného stylopisu přes route se k němu nedostane a
    kontrola je zeleně slepá. (Vyzkoušeno sabotáží: s pracovníkem
    prošlo i vyjmutí všech pravidel pro .wrap.) */
-const ctx = await browser.newContext({
-  viewport: { width: 390, height: 844 },
-  serviceWorkers: 'block',
-});
+/* Profily, ve kterých se celé měření projede. Dotyk se MUSÍ zapnout
+   výslovně: šířka okna o `pointer: coarse` nerozhoduje. */
+const PROFILY = [
+  { jmeno: 'telefon', viewport: { width: 390, height: 844 }, dotyk: true },
+  { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
+];
+async function kontext(profil) {
+  const ctx = await browser.newContext(Object.assign(
+    { viewport: profil.viewport, serviceWorkers: 'block' },
+    profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
 /* PÍSMA SE V OBOU NAČTENÍCH ZAHAZUJÍ — jinak tahle zkouška neměří
    stylopis, ale časování.
    Od přechodu na `font-display: optional` (viz bod 3v v docs/co-chybi.md)
@@ -146,8 +207,9 @@ const ctx = await browser.newContext({
    písmem. Rozdíl ve stylopisu to nezakryje: kdyby zkrácený stylopis
    přišel o @font-face nebo o font-family, vlastnost `font-family` se
    v porovnání rozejde jako kterákoli jiná. */
-await ctx.route('**/*.woff2', (r) => r.abort());
-const page = await ctx.newPage();
+  await ctx.route('**/*.woff2', (r) => r.abort());
+  return ctx;
+}
 
 /* Že se vůbec měří zkrácený stylopis, a ne omylem plný. */
 pravda(`zástupci rodin stránek se našli (${STRANKY.length})`, STRANKY.length >= 10, `jen ${STRANKY.length}`);
@@ -163,32 +225,36 @@ for (const jm of ['zaklad', 'pozemek', 'region']) {
       : 'soubor neexistuje');
 }
 
+for (const profil of PROFILY) {
+const ctx = await kontext(profil);
+const page = await ctx.newPage();
 for (const stranka of STRANKY) {
+  const kde = `${stranka} (${profil.jmeno})`;
   const balik = balikStranky(stranka);
   if (!balik || balik === 'css/styles.min.css') {
-    pravda(`${stranka} si bere zkrácený stylopis`, false, `odkazuje na ${balik || 'nic'}`);
+    pravda(`${kde} si bere zkrácený stylopis`, false, `odkazuje na ${balik || 'nic'}`);
     continue;
   }
   const a = await zmer(page, stranka, false, balik);   /* zkrácený */
   const b = await zmer(page, stranka, true, balik);    /* plný */
 
   if (a.prvky.length !== b.prvky.length) {
-    pravda(`${stranka}: stejný strom`, false,
+    pravda(`${kde}: stejný strom`, false,
       `zkrácený ${a.prvky.length} prvků, plný ${b.prvky.length} — stránka se staví nestejně, měření nemá smysl`);
     continue;
   }
   if (a.prvky.length < 20) {
-    pravda(`${stranka}: je co měřit`, false, `jen ${a.prvky.length} prvků`);
+    pravda(`${kde}: je co měřit`, false, `jen ${a.prvky.length} prvků`);
     continue;
   }
   if (a.jmena.length !== b.jmena.length || a.jmena.length < 100) {
-    pravda(`${stranka}: měří se celý styl`, false,
+    pravda(`${kde}: měří se celý styl`, false,
       `vlastností ${a.jmena.length} / ${b.jmena.length}`);
     continue;
   }
 
   const celkem = a.prvky.length * a.jmena.length;
-  pravda(`${stranka}: animace nespolkly měření`
+  pravda(`${kde}: animace nespolkly měření`
     + ` (vynecháno ${a.vynechano + b.vynechano} z ${2 * celkem} hodnot)`,
     a.vynechano + b.vynechano < celkem / 50,
     `vynecháno ${a.vynechano + b.vynechano} z ${2 * celkem} — to už není výjimka`);
@@ -204,8 +270,10 @@ for (const stranka of STRANKY) {
       break;
     }
   }
-  pravda(`${stranka}: ${a.prvky.length} prvků × ${a.jmena.length} vlastností stejně`,
+  pravda(`${kde}: ${a.prvky.length} prvků × ${a.jmena.length} vlastností stejně`,
     rozdily.length === 0, rozdily.join('\n      '));
+}
+await ctx.close();
 }
 
 await browser.close();
