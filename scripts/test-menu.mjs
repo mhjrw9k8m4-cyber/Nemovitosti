@@ -105,7 +105,7 @@ const prohlizec = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
@@ -224,7 +224,7 @@ try {
   await ctx.close();
 
   /* ---- 3) na počítači je z ní zase vodorovná navigace ---------- */
-  const ctxD = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctxD = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
   const pd = await ctxD.newPage();
   await pd.goto(`${BASE}/${detail}`, { waitUntil: 'domcontentloaded' });
   await pd.waitForTimeout(900);
@@ -248,7 +248,7 @@ try {
   await ctxD.close();
 
   /* ---- 4) lišta ví, na které stránce jsem --------------------- */
-  const ctxS = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const ctxS = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   await ctxS.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const ps = await ctxS.newPage();

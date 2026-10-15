@@ -53,7 +53,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext();
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block' });
   await ctx.route('**/config.js*', (r) => r.fulfill({
     status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';`,

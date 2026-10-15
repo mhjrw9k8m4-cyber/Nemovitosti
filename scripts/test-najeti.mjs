@@ -131,7 +131,7 @@ const PROFILY = [
   { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
 ];
 async function kontext(profil) {
-  const ctx = await prohlizec.newContext(Object.assign({ viewport: profil.viewport },
+  const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block', viewport: profil.viewport },
     profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
   await ctx.route('**/*', (r) => {

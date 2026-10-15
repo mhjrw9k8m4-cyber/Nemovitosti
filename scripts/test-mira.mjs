@@ -48,7 +48,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 const dlouhe = [];
 let zmereno = 0, stranek = 0;
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 } });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();

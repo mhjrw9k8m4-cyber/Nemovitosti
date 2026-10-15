@@ -42,7 +42,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 async function otevri(opt, init) {
-  const ctx = await prohlizec.newContext(opt);
+  const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block' }, opt));
   /* Init skript musí jít do kontextu PŘED prvním načtením stránky —
      potom už by se do běžícího main.js nedostal. */
   if (init) await ctx.addInitScript(init);

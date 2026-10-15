@@ -216,6 +216,9 @@ jobs:
       - name: Statická kontrola skriptů
         run: node scripts/test-staticka.mjs
 
+      - name: Nastavení zkoušek (měří to, co si myslí)
+        run: node scripts/test-zkousky-meri.mjs
+
       - name: Chybová hláška pro CI (jmenuje, co padlo)
         run: node scripts/test-chybova-hlaska.mjs
 

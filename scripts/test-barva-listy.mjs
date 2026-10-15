@@ -82,7 +82,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    rgb(245,250,247), tedy o čtyři jednotky vedle: nahoře byl vidět šev
    mezi lištou prohlížeče a hlavičkou. */
 async function zmer(popis, dotyk, odrolovat) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     hasTouch: dotyk, isMobile: dotyk });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());

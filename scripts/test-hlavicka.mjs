@@ -56,7 +56,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 async function otevri(opt, stranka) {
-  const ctx = await prohlizec.newContext(opt);
+  const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block' }, opt));
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

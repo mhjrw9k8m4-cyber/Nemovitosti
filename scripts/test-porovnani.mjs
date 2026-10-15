@@ -122,7 +122,7 @@ pravda('a je mezi nimi podíl, u kterého by surový výpočet doporučil nejdra
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -264,7 +264,7 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
  * nedalo poznat, čí číslo je čí. První sloupec proto zůstává na místě.
  */
 {
-  const mob = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const mob = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true });
   const pm = await mob.newPage();
   await pm.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });

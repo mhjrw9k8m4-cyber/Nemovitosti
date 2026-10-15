@@ -60,7 +60,7 @@ function hotovo() {
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
 
 async function otevri(sirka, dotyk) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 900 },
     hasTouch: !!dotyk, isMobile: !!dotyk });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
@@ -158,7 +158,7 @@ const stav = (p) => p.evaluate(() => {
    Je to rozhodnutí o cizím serveru, ne vkusovka, takže se hlídá: aby se
    nezaplo plošně nedopatřením ani nevyplo, až na to někdo sáhne. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

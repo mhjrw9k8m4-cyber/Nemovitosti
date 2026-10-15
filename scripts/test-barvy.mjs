@@ -56,7 +56,7 @@ const PRAZDNA = Buffer.from(
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -188,19 +188,22 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
     pravda(`filtr „${k}" na úvodu je`, !!btn, 'bez něj se ke kartě té kategorie nedostanu');
     if (!btn) continue;
     /* KATEGORIE BEZ NABÍDEK SVŮJ ČIP SCHVÁLNĚ NEUKAZUJE — a klepnout do
-       něj tedy nejde. Zkouška na to do 15. 10. nemyslela: klikala do
-       všech pěti a u prázdné kategorie čekala třicet sekund na prvek,
-       který se nikdy neobjeví, až celý běh skončil výjimkou. Naměřeno
-       v datech toho dne: sale 1 845, drazba 100, exekuce 12, obec 0,
-       majitel 0 — tedy dvě kategorie z pěti. Spadlo to i na čistém
-       stromu, takže to nebyla chyba webu, ale zkoušky.
-       Co se tu dá tvrdit u prázdné kategorie: právě to, že čip není
-       vidět. Barvu puntíku bez karty změřit nelze a vyrobit si kartu
-       by znamenalo měřit pravidlo, ne stránku. */
-    const kolik = (POCTY[k] || 0);
-    if (!kolik) {
-      pravda(`a „${k}" bez nabídek čip neukazuje`, !(await btn.isVisible()),
-        'čip je vidět, ale klepnutí nemá co ukázat');
+       něj tedy nejde (js/main.js: `if (tp && tp !== 'all' && !present[tp])
+       b.style.display = 'none'`). Zkouška na to do 15. 10. nemyslela:
+       klikala do všech pěti a u prázdné kategorie čekala třicet sekund
+       na prvek, který se nikdy neobjeví, až celý běh skončil výjimkou.
+       Spadlo to i na čistém stromu, takže to nebyla chyba webu.
+
+       PTÁ SE STRÁNKY, NE DATOVÉHO SOUBORU, a stálo to jeden omyl:
+       napoprvé jsem tu počítal nabídky z `data/opportunities.json`
+       a u nuly tvrdil, že čip není vidět. Jenže stránka počítá
+       i ŽIVÉ inzeráty od majitelů, které přicházejí z databáze —
+       takže čip může být vidět i u kategorie, která v souboru nemá
+       nic. Měří se proto to, co stránka ukazuje: čip, který není
+       vidět, se přeskočí; do viditelného se klepne a musí přijít
+       karta. */
+    if (!(await btn.isVisible())) {
+      pravda(`„${k}" se na úvodu nenabízí (v datech nic takového není)`, true);
       continue;
     }
     mereno++;
@@ -222,7 +225,7 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   /* Pojistka proti tichému vyprázdnění: kdyby data přišla o všechny
      kategorie, kontroly výš by prošly na prázdné množině. */
   pravda(`a změřily se aspoň tři kategorie (dnes ${mereno})`, mereno >= 3,
-    `měřitelných kategorií je jen ${mereno} — v datech: `
+    `nabízených kategorií je jen ${mereno} — v datovém souboru: `
     + KATEGORIE.map((k) => `${k} ${POCTY[k] || 0}`).join(', '));
   await p.close();
 }

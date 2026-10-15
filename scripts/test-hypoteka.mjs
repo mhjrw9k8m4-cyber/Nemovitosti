@@ -43,7 +43,7 @@ function zbytekPoSplaceni(jistina, rocniPct, roky, splatka) {
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();

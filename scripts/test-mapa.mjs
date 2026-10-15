@@ -64,7 +64,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    otázka je zapsaná v docs/co-chybi.md (bod 3db), ať nezapadne. Dotyková
    pravidla na úvodní mapě měří scripts/test-dotyk.mjs
    a scripts/test-rozvrzeni.mjs, obě s dotykem zapnutým. */
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 } });
 const klepni = (x, y) => p.mouse.click(Math.round(x), Math.round(y));
 // Test nesmí sahat ven z počítače: cizí obrázky (dlaždice mapy) nahradíme
 // prázdnými, ostatní cizí požadavky zahodíme. Pozor na pořadí — Playwright
@@ -629,7 +629,7 @@ if (daleko) {
    výpisu pustí sám. Měří se obojí: že se karty samy nezúžily, a že se
    tím tlačítkem zúžit DAJÍ — jinak by stačilo filtrování zrušit. */
 {
-  const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const ctx2 = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p2 = await ctx2.newPage();

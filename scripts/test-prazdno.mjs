@@ -58,7 +58,7 @@ const STRANKY = ['hlidani.html', 'muj-inzerat.html', 'zpravy.html',
 const MEZ = 170;
 
 async function otevri(sirka) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 844 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 844 } });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

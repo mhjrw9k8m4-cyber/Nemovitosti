@@ -171,7 +171,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 for (const s of VZOREK) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1200, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1200, height: 900 } });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   if (LEAFLET) {
@@ -266,7 +266,7 @@ for (const s of VZOREK) {
      `@media (pointer: coarse)`, ne za šířkou okna, takže by se
      v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
      (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-  const ctx = await prohlizec.newContext({ viewport: { width: 400, height: 860 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 400, height: 860 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   const padlo = [];

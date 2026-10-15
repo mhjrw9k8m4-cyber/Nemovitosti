@@ -63,7 +63,7 @@ await new Promise((res) => server.listen(PORT, '127.0.0.1', res));
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext();
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

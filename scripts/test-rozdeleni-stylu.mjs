@@ -42,6 +42,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { BALIKY } from './rozdel-styly.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -217,9 +218,13 @@ pravda(`zástupci rodin stránek se našli (${STRANKY.length})`, STRANKY.length 
    přestal dělit, soubory by tu dál byly — jen by v každém bylo
    všechno, a tahle zkouška by to jinak nepoznala. */
 const PLNY_B = fs.statSync(path.join(KOREN, 'css', 'styles.min.css')).size;
-for (const jm of ['zaklad', 'pozemek', 'region']) {
-  const c = path.join(KOREN, 'css', jm + '.min.css');
-  pravda(`${jm}.min.css je aspoň o pětinu menší než plný stylopis`,
+/* SEZNAM BALÍKŮ SE NEPÍŠE NAZPAMĚŤ. Stálo tu ['zaklad','pozemek','region']
+   — a `uvod` chybělo, takže jeho velikost (137 kB z 215) nikdo
+   nekontroloval; pátý balík by se do seznamu taky nedostal sám.
+   Jména se proto berou z rozdělovače. */
+for (const b of BALIKY) {
+  const c = path.join(KOREN, b.soubor);
+  pravda(`${b.soubor} je aspoň o pětinu menší než plný stylopis`,
     fs.existsSync(c) && fs.statSync(c).size * 1.2 < PLNY_B,
     fs.existsSync(c) ? `${(fs.statSync(c).size / 1024).toFixed(1)} kB proti ${(PLNY_B / 1024).toFixed(1)} kB`
       : 'soubor neexistuje');

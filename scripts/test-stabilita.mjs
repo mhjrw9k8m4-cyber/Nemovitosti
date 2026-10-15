@@ -152,7 +152,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    monitoru v úzkém okně, ne telefon. (Bod 3da v docs/co-chybi.md.) */
 for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 900, 'monitor', false]]) {
   for (const [stranka, coMusiByt] of STRANKY) {
-    const ctx = await prohlizec.newContext(Object.assign({ viewport: { width: sirka, height: vyska } },
+    const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: sirka, height: vyska } },
       dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     await ctx.route('**/*', (r) => {
       const u = new URL(r.request().url());
@@ -214,7 +214,7 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
     ['zpravy.html', '#zp-root *'],
     ['muj-inzerat.html', '#mi-panel'],
   ]) {
-    const ctx = await prohlizec.newContext(Object.assign({ viewport: { width: sirka, height: vyska } },
+    const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block', viewport: { width: sirka, height: vyska } },
       dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -263,7 +263,7 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
  * časovače a srovnání mapy do zorného pole. Oddělit to od sebe chováním
  * nejde, těch mechanismů je tam víc a všechny táhnou nahoru. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 } });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();

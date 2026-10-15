@@ -172,7 +172,7 @@ const PRAZDNA = Buffer.from(
 
 /** Stránka o dané šířce, bez cizích zdrojů. */
 async function otevri(soubor, sirka, vyska) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: vyska },
     isMobile: sirka < 700, hasTouch: sirka < 700, locale: 'cs-CZ', permissions: [] });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
@@ -902,7 +902,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '1/1', druh: 'orná půda',
       area: 1200, price: 400000, lat: 50.02, lng: 15.20, extra: 'inzerát', site: ['elektrina'] },
   ] };
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -1043,7 +1043,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 {
   /* Vlastní okno: hlidani.html ukáže bez přihlášení přihlašovací kartu,
      ne formulář — a kontrola by měřila ji. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -1275,7 +1275,7 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
     { place: 'Prodej', okres: 'Kolín', type: 'sale', parcel: '3/3', druh: 'orná půda',
       area: 2000, price: 300000, lat: 50.06, lng: 15.24, extra: 'inzerát' },
   ] };
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
@@ -1600,7 +1600,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       area: 1200 + i, price: 400000 + i * 1000, lat: 50.02 + i * 0.01, lng: 15.20 + i * 0.01,
       extra: 'inzerát', site: [] })) };
     for (const sirka of [1400, 1040, 320]) {
-      const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 },
+      const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 900 },
         locale: 'cs-CZ', permissions: [] });
       await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
         contentType: 'application/json', body: JSON.stringify(DATA_O) }));

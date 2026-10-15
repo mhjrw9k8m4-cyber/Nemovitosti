@@ -56,7 +56,7 @@ const PRAZDNA_DLAZDICE = Buffer.from(
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());

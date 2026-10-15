@@ -43,7 +43,7 @@ let vypisSePosouva = false;
 
 for (const [w, h] of SIRKY) {
   for (const s of STRANKY) {
-    const ctx = await prohlizec.newContext({ viewport: { width: w, height: h }, locale: 'cs-CZ' });
+    const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: w, height: h }, locale: 'cs-CZ' });
     await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     await ctx.addInitScript(() => {

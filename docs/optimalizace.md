@@ -400,9 +400,44 @@ telefonu, obě v pruhu nad výpisem:
    samotná druhá polovina 10 px (pruh 108, pod mezí 110). Deset pixelů
    za to je dobrý obchod; šestina obrazovky za celou větu byl špatný.
 
-**Pravidlo do CLAUDE.md** (už je tam): kdykoli se v jednom kontextu
-něco podstrkuje přes `ctx.route`, musí být pracovník vypnutý. Zbývá to
-dotáhnout plošně — **54 zkoušek** route podstrkuje a pracovníka
-nevypíná. Dnes jsou zelené, protože na podstrčeném souboru nestojí,
-ale je to mina: stačí do takové zkoušky přidat kontrolu, která na něm
-stojí, a padne na něčem, co s webem nemá nic společného.
+**A je to dotažené plošně.** Pravidlo stojí v `CLAUDE.md`
+a od 15. 10. ho hlídá **`scripts/test-zkousky-meri.mjs`** — statická
+zkouška (bez prohlížeče), která projde všechny `scripts/test-*.mjs`
+a tvrdí dvě věci:
+
+1. kdo podstrkuje přes `route`, vypíná servisního pracovníka,
+2. kdo měří okno do 560 px, zapíná dotyk,
+
+a **výjimka musí mít napsaný důvod** (dnes je jich osm: `test-offline`
+měří toho pracovníka, `test-mapa` má změřené rozhodnutí z bodu 3db
+a šest zkoušek si o dotyku rozhoduje podle profilu nebo zařízení,
+takže se staticky nepozná). Devátá kontrola hlídá, že výjimka
+neukazuje na soubor, který už neexistuje.
+
+Podle toho se pak doplnilo **69 kontextů v 54 zkouškách** —
+dnes zelených, ale byla to mina: stačilo do takové zkoušky přidat
+kontrolu, která na podstrčeném souboru stojí, a padla by na něčem, co
+s webem nemá nic společného. Změřeno po doplnění: **rychlá sada 105
+z 105, prohlížečová 108 z 108.**
+
+U toho se našla ještě jedna díra téhož druhu: `test-rozdeleni-stylu`
+kontrolovala velikost balíků podle ručně vypsaného seznamu
+`['zaklad','pozemek','region']` — **`uvod` v něm chybělo**, takže jeho
+137 kB nikdo neměřil. Jména se teď berou z rozdělovače.
+
+**A dvě zkoušky po doplnění spadly — obě poučně.** `test-hlavicka`
+a `test-naseptavac` si kontext staví z proměnné (`newContext(opt)`),
+takže hromadná úprava z nich tu proměnnou vyhodila: naměřeno
+`--vyska-hlavicky (NaN)` a terč „0×0 px". Opraveno na
+`Object.assign({ serviceWorkers: 'block' }, opt)`.
+
+`test-barvy` padla na kontrole, kterou jsem si do ní sám o pár hodin
+dřív přidal — a **procházela do té doby ze špatného důvodu**: tvrdila,
+že kategorie bez nabídek svůj čip neukazuje, a dokud obsluhoval soubory
+pracovník, neměla stránka nabídky ŽÁDNÉ, takže neukazovala ani jeden
+čip. S vypnutým pracovníkem se ukázalo, že čip „Obec" vidět JE, i když
+v `data/opportunities.json` ta kategorie nic nemá — stránka totiž počítá
+i živé inzeráty z databáze. Kontrola se proto ptá stránky, ne datového
+souboru: čip, který není vidět, se přeskočí; do viditelného se klepne
+a musí přijít karta. Je to přesně ten druh chyby, kterou tahle položka
+hledá: zelená zkouška, která neměří nic.

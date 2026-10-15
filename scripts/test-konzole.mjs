@@ -66,7 +66,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 async function projdi(sirka, popisSirky) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 900 } });
   // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());

@@ -34,7 +34,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 async function otevri(seance) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   /* Pořadí se mezi návštěvami liší podle čísla, které si seance vylosuje
      (js/poradi.js → prihozeniSeance, klíč pk_poradi_seance). Když se dá
      zadat, dá se ta vlastnost ověřit BEZ náhody — viz níž, proč na tom
