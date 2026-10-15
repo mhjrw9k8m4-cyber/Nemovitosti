@@ -699,7 +699,7 @@ h1,h2{text-wrap:balance;}
    hmatatelnou odezvu (jemné zmáčknutí) a zapne setrvačné rolování. */
 a, button, [role="button"], input, select, textarea, label, summary{ -webkit-tap-highlight-color:transparent; }
 button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="submit"]{ touch-action:manipulation; }
-.btn-primary, .lp-btn, .header-cta, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-reset, .okr-src{
+.btn-primary, .lp-btn, .header-cta, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-nastroj, .okr-src{
   transition:transform var(--cas-rychly) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);
 }/* Hmatatelné zmáčknutí při klepnutí */
 
@@ -714,7 +714,7 @@ button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="
    mobilu vada. Vypínáme ho proto všude, kde prvkem hýbe (ne jen u tlačítek,
    jak to bylo dřív — na kartách pozemků a živém náhledu to chybělo). */
 @media (hover:none){
-  .btn-primary:hover, .lp-btn:hover, .map-reset:hover, .to-top:hover, .pf-stat--jde:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .ul-card:hover{ transform:none; }
+  .btn-primary:hover, .lp-btn:hover, .map-nastroj:hover, .to-top:hover, .pf-stat--jde:hover, .okr-item:hover, .deal-card:hover, .opp-item:hover, .odl-card:hover, .status-card:hover, .gl-item:hover, .ul-card:hover{ transform:none; }
 }
 /* Upozornění u formuláře — něco vypadá podezřele, ale odeslat to jde.
    Odlišené od chyby: chyba je červená a zastaví, tohle jen zvedne obočí. */
@@ -2844,7 +2844,13 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Legenda mapy (vpravo nahoře) */
 /* Legenda patří dolů k okraji, ne doprostřed mapy. Nahoře ukrajovala třetinu
    plochy a překrývala přesně to, na co se má klikat. */
-.map-legend{position:absolute; left:12px; bottom:36px; z-index:500; display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 12px; max-width:calc(100% - 96px); background:var(--plocha-plovouci); border:1px solid rgba(31,81,56,0.16); border-radius:var(--r-md); padding:8px 12px; font-size:13px; font-weight:600; color:var(--text-ondark); box-shadow:var(--e2); pointer-events:none; backdrop-filter:blur(3px);}
+/* LEGENDA POD MAPOU, NE NA NÍ. Plovoucí zabírala 344×56 bodů, tedy
+   7 % plochy mapy (naměřeno na displeji 430 px) — a zrovna dolní
+   pruh mapy je místo, kam se při posouvání kouká. Pod mapou je na
+   očích stejně a nic nezakrývá. */
+.map-legend{display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 14px;
+  padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft);
+  font-size:13px; font-weight:600; color:var(--text-ondark);}
 .map-legend:empty{display:none;}
 .lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
 .lg-dot{width:11px; height:11px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(20,35,28,0.16); flex:none;}
@@ -2864,16 +2870,34 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    nepřidala. Naměřeno 15. 10. (scripts/test-okraje.mjs v profilu
    monitor — do té chvíle zkouška měřila jen okno 390 px, kde se tahle
    tlačítka neukazují). */
-.map-reset{display:inline-flex; align-items:center; gap:6px; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid var(--obrys-tlacitka); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
-.map-reset:hover{border-color:var(--copper-bright);}
-.map-reset:active{transform:translateY(1px);}
-.map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; flex:none;}
+/* OVLADAČ NAD MAPOU: IKONA A POD NÍ SLOVO.
+   Byly to pilulky s textem vedle ikony, 135 px široké, a čtyři pod
+   sebou — naměřeno 135×188 bodů, tedy 9 % plochy mapy na displeji
+   430 px. Teď je ikona nad popiskem: tlačítko je 56 px široké místo
+   135 a slovo zůstává. Samotná ikona by nestačila; na tomhle webu
+   platí, že ovládání, které se objevuje jen občas, se nemá kde
+   naučit (viz „Na pozemek" v detailu pozemku). */
+.map-nastroj{display:inline-flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  width:56px; min-height:52px; background:var(--plocha-plovouci); color:var(--copper-bright);
+  border:1px solid var(--obrys-tlacitka); border-radius:var(--r-md); padding:6px 4px;
+  font-family:inherit; font-size:10px; font-weight:700; line-height:1.2; text-align:center;
+  letter-spacing:0; cursor:pointer; box-shadow:var(--shadow);
+  transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease);
+  backdrop-filter:blur(4px);}
+.map-nastroj:hover{border-color:var(--copper-bright);}
+.map-nastroj:active{transform:translateY(1px);}
+.map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"]{background:var(--plocha-znacka); color:#fff; border-color:transparent;}
+/* Tah 1,5 px na obrazovce jako všechny ostatní ikony: 1,5 ÷ 19 × 24.
+   Hlídá scripts/test-tahy.mjs — po zvětšení ikony z 15 na 19 px tu
+   zůstala stará tloušťka a tah vyšel 1,74 px, tedy znatelně tučnější
+   než zbytek webu. */
+.map-nastroj .mr-ic{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 .map-lock{position:absolute; bottom:12px; right:12px; z-index:600; display:inline-flex; align-items:center; gap:6px; max-width:calc(100% - 24px); background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
 .map-lock[hidden]{display:none;}
 .map-lock:hover{border-color:var(--copper-bright);}
 .map-lock:active{transform:translateY(1px);}
 .map-lock .ml-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-@media (max-width:560px){ .map-reset{font-size:12px; padding:6px 10px; gap:6px;} .map-reset .mr-ic{width:14px; height:14px; stroke-width:2.57;} .map-lock{font-size:12px; padding:8px 12px;} .map-lock .ml-ic{width:14px; height:14px; stroke-width:2.57;} }
+@media (max-width:560px){ .map-lock{font-size:12px; padding:8px 12px;} .map-lock .ml-ic{width:14px; height:14px; stroke-width:2.57;} }
 /* Zoom +/− — moderní bílá tlačítka, VIDITELNÁ i na mobilu (snadné přiblížení bez gest). */
 .leaflet-control-zoom{display:block; margin:0 12px 80px 0 !important; border:none !important; box-shadow:var(--e2); border-radius:var(--r-md); overflow:hidden;}
 /* SPECIFIČNOST MUSÍ PŘEBÍT KNIHOVNU, JINAK JSOU TLAČÍTKA 30 px.
@@ -5097,7 +5121,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 
 /* Zbylé drobné ovládací prvky, které našel scripts/test-dotyk.mjs. */
 @media (max-width:880px){
-  .map-select, .map-reset{min-height:38px;}
+  .map-select, .map-nastroj{min-height:38px;}
   .auth-eye{width:40px; height:40px;}
   /* „Zapomněli jste heslo?" je tlačítko, ne odkaz ve větě — musí mít
      plochu, na kterou jde trefit palcem. */
@@ -7160,18 +7184,43 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    Barvy se nenastavují: dědí se z karty, takže mají zaručeně tentýž
    kontrast jako okolní ovládání (na tohle jsem u legendy cenové mapy
    už jednou narazil — --ink-soft je plocha, ne text). */
-.map-vrstvy-panel{display:flex; flex-direction:column; align-items:stretch; gap:4px;
-  margin-top:6px; padding:6px; max-width:240px;
-  background:var(--plocha-plovouci); border:1px solid var(--line);
-  border-radius:var(--r-md); box-shadow:var(--e2);
-  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);}
+/* Panel vrstev už není samostatné plovoucí okno — je to jedna řada
+   uvnitř panelu „Vrstvy" (.map-sheet), takže nemá vlastní plochu ani
+   stín. */
+.map-vrstvy-panel{display:flex; flex-direction:column; align-items:stretch; gap:4px;}
 .map-vrstvy-panel[hidden]{display:none;}
+
+/* ===================================================================
+   PANEL „CO JE VIDĚT NA MAPĚ". Jedno místo pro podklad, barvy teček
+   a vrstvy úřadů — tedy pro všechno, co odpovídá na otázku „co je na
+   mapě", ne „co na ní hledám". Otevírá ho tlačítko „Vrstvy"; dokud je
+   zavřený, nezabírá z mapy nic.
+   Je to táž úvaha, jakou mají velké mapové portály: nad mapou pár
+   drobných tlačítek, zbytek za jedním.
+   =================================================================== */
+/* Vrstvení je tu MÍSTNÍ věc: `.map-tools` má z-index 600 a tím si
+   otevírá vlastní kontext, takže uvnitř stačí pořadí v rámci
+   součástky (hlídá scripts/test-vrstvy.mjs — nad devítku se
+   nesmí bez zápisu do tabulky vrstev). */
+.map-sheet{position:absolute; top:0; right:64px; z-index:2;
+  display:flex; flex-direction:column; gap:10px;
+  width:min(260px, calc(100vw - 96px)); max-height:min(70vh, 420px); overflow:auto;
+  padding:12px; background:var(--plocha-plovouci-plna); border:1px solid var(--line);
+  border-radius:var(--r-md); box-shadow:var(--e3);}
+.map-sheet[hidden]{display:none;}
+.ms-rada{display:flex; flex-direction:column; gap:6px;}
+.ms-rada[hidden]{display:none;}
+.ms-popis{font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+  letter-spacing:var(--popisek-proklad); color:var(--popisek); font-weight:600;}
+.map-sheet .map-podklad{align-self:stretch;}
+.map-sheet .map-podklad button{flex:1 1 0; min-width:0;}
 .mv-v{appearance:none; border:1px solid var(--line); background:transparent;
   color:inherit; font-family:inherit; font-size:13px; font-weight:600;
   padding:8px 10px; border-radius:var(--r-sm); cursor:pointer; text-align:left;
   transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
 .mv-v.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
-#map-vrstvy.on,#map-vrstvy[aria-pressed="true"]{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
+/* Zapnutý stav má teď .map-nastroj[aria-expanded="true"] výš — tlačítko
+   „Vrstvy" panel OTEVÍRÁ, nic nezapíná, takže se hlásí aria-expanded. */
 
 /* ===================================================================
    NÁVRATNOST KOUPĚ POZEMKU (stránka pozemku)

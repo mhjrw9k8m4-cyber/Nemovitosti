@@ -33,9 +33,9 @@ h1,h2{text-wrap:balance}
 ::-webkit-scrollbar-track{background:transparent}
 a,button,[role="button"],input,select,textarea,label,summary{-webkit-tap-highlight-color:transparent}
 button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"]{touch-action:manipulation}
-.btn-primary,.lp-btn,.header-cta,.nav-add,.pf-add,.pf-logout,.auth-submit,.map-reset,.okr-src{transition:transform var(--cas-rychly) var(--ease),background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.btn-primary,.lp-btn,.header-cta,.nav-add,.pf-add,.pf-logout,.auth-submit,.map-nastroj,.okr-src{transition:transform var(--cas-rychly) var(--ease),background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
 .btn-primary:active,.lp-btn:active,.header-cta:active,.nav-add:active,.pf-add:active,.pf-logout:active,.auth-submit:active{transform:translateY(0) scale(.97)}
-@media (hover:none){.btn-primary:hover,.lp-btn:hover,.map-reset:hover,.to-top:hover,.pf-stat--jde:hover,.okr-item:hover,.deal-card:hover,.opp-item:hover,.odl-card:hover,.status-card:hover,.gl-item:hover,.ul-card:hover{transform:none}
+@media (hover:none){.btn-primary:hover,.lp-btn:hover,.map-nastroj:hover,.to-top:hover,.pf-stat--jde:hover,.okr-item:hover,.deal-card:hover,.opp-item:hover,.odl-card:hover,.status-card:hover,.gl-item:hover,.ul-card:hover{transform:none}
 }
 .link-btn{background:none;border:0;padding:0;margin:0;font:inherit;font-weight:600;color:var(--copper-bright);text-decoration:underline;cursor:pointer}
 .link-btn:hover{opacity:0.85}

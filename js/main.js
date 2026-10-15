@@ -1792,9 +1792,14 @@
     if (d.photos && d.photos.length) {
       var p0 = d.photos[0];
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
-      return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+      /* Fotka majitele čeká v data-href ze stejného důvodu jako dlaždice
+         leteckého snímku (js/snimek.js): je to obrázek pro kartu, na
+         kterou člověk většinou ani nedojede, a je VĚTŠÍ než dlaždice —
+         nahrává ho majitel z telefonu. Probudí ji tentýž hlídač, který
+         si všímá `data-sn="ceka"`. */
+      return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
         '<rect width="384" height="240" fill="#12241A"/>' +
-        '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
+        '<image data-href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
         odznakDruhu(d) + cnt;
@@ -2868,18 +2873,21 @@
    * není. */
   var vrstvyBtn = document.getElementById('map-vrstvy');
   var vrstvyPanel = document.getElementById('map-vrstvy-panel');
+  var mapSheet = document.getElementById('map-sheet');
+  var vrstvyRada = document.getElementById('map-vrstvy-rada');
   var vrstvyZive = {};
   var vrstvyNacteno = false;
   var VRSTVY_OD_ZOOMU = 10;
 
+  /* SCHOVÁVÁ SE ŘADA, NE TLAČÍTKO. Tlačítko „Vrstvy" otevírá celý panel
+     („co je na mapě vidět"), takže musí být po ruce vždycky — podklad
+     a barvy teček se dají přepnout i při pohledu na celou republiku.
+     Vrstvy úřadů ale při takovém oddálení nevykreslí ani jedna (nejnižší
+     začíná na zoomu 10), takže by to byl přepínač, po kterém se nic
+     nestane; mizí tedy jen ta jedna řada uvnitř panelu. */
   function vrstvyViditelnost() {
-    if (!vrstvyBtn) return;
-    var jde = map.getZoom() >= VRSTVY_OD_ZOOMU;
-    vrstvyBtn.hidden = !jde;
-    if (!jde && vrstvyPanel) {
-      vrstvyPanel.hidden = true;
-      vrstvyBtn.setAttribute('aria-pressed', 'false');
-    }
+    if (!vrstvyRada) return;
+    vrstvyRada.hidden = map.getZoom() < VRSTVY_OD_ZOOMU;
   }
 
   function vrstvyPrepinac(zapis) {
@@ -2923,12 +2931,42 @@
     if (vrstvyPanel) vrstvyPanel.appendChild(b);
   }
 
-  if (vrstvyBtn && vrstvyPanel) {
+  if (vrstvyBtn && vrstvyPanel && mapSheet) {
+    /* Panel se zavírá i klepnutím mimo něj — jinak by na malém displeji
+       zůstal viset přes mapu a člověk by hledal, čím ho zavřít. */
+    document.addEventListener('click', function (e) {
+      if (mapSheet.hidden) return;
+      if (mapSheet.contains(e.target) || vrstvyBtn.contains(e.target)) return;
+      mapSheet.hidden = true;
+      vrstvyBtn.setAttribute('aria-expanded', 'false');
+    });
     vrstvyBtn.addEventListener('click', function () {
-      var otevreno = vrstvyBtn.getAttribute('aria-pressed') === 'true';
-      vrstvyBtn.setAttribute('aria-pressed', otevreno ? 'false' : 'true');
-      vrstvyPanel.hidden = otevreno;
-      if (otevreno || vrstvyNacteno) return;
+      var otevreno = vrstvyBtn.getAttribute('aria-expanded') === 'true';
+      vrstvyBtn.setAttribute('aria-expanded', otevreno ? 'false' : 'true');
+      mapSheet.hidden = otevreno;
+      if (!otevreno) nabidniZkouskuVrstev();
+    });
+
+    /* NA SLUŽBY ÚŘADŮ SE NESAHÁ BEZ VYŽÁDÁNÍ — a otevření panelu
+       vyžádání NENÍ. Dokud byly vrstvy za vlastním tlačítkem, klepnutí
+       na ně znamenalo „chci vrstvy" a zkouška služeb se spustila rovnou.
+       Od chvíle, kdy je v jednom panelu i podklad a barvy teček, by to
+       znamenalo, že kdo si jen přepne na letecký snímek, pošle pět
+       dotazů na servery úřadů. To je proti tomu, co web o sobě píše
+       v zásadách soukromí (a hlídá scripts/test-vrstvy-mapa.mjs).
+       V řadě proto čeká tlačítko a teprve ono se ptá. */
+    function nabidniZkouskuVrstev() {
+      if (vrstvyNacteno || !vrstvyPanel || vrstvyPanel.firstChild) return;
+      var z = document.createElement('button');
+      z.type = 'button';
+      z.className = 'mv-v mv-zkusit';
+      z.textContent = 'Zkusit, které vrstvy jedou';
+      z.addEventListener('click', nactiVrstvy);
+      vrstvyPanel.appendChild(z);
+    }
+
+    function nactiVrstvy() {
+      if (vrstvyNacteno) return;
       vrstvyNacteno = true;
       if (!window.PK_VRSTVY) { vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.'; return; }
       vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
@@ -2947,7 +2985,7 @@
       }).catch(function () {
         vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
       });
-    });
+    }
     map.on('zoomend', vrstvyViditelnost);
     vrstvyViditelnost();
   }
@@ -4104,16 +4142,30 @@
 
   /* Přepínač obarvení. Stojí mezi nástroji mapy, protože je to otázka
      „co je na mapě vidět", ne „co se v ní hledá" — stejně jako podklad. */
+  /* BARVY TEČEK: DVĚ TLAČÍTKA, NE JEDEN PŘEPÍNAČ.
+     Dokud to byla jedna pilulka „Podle ceny" nad mapou, nedalo se
+     z ní poznat, co platí teď — zapnuto/vypnuto se pozná jen podle
+     barvy pozadí. V panelu stojí obě možnosti vedle sebe („Podle
+     druhu" / „Podle ceny") stejně jako podklad mapy, takže je vidět
+     nejen co se dá zapnout, ale i co je zapnuté. */
   var barvaBtn = document.getElementById('map-barva');
-  if (barvaBtn) {
-    barvaBtn.addEventListener('click', function () {
-      rezimBarvy = (rezimBarvy === 'cena') ? 'druh' : 'cena';
-      barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
-      barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
-      prekresliStupnici();
-      prekresliLegendu();
-    });
+  var barvaDruhBtn = document.getElementById('map-barva-druh');
+  function nastavBarvy(rezim) {
+    rezimBarvy = (rezim === 'cena') ? 'cena' : 'druh';
+    var jeCena = rezimBarvy === 'cena';
+    if (barvaBtn) {
+      barvaBtn.setAttribute('aria-pressed', jeCena ? 'true' : 'false');
+      barvaBtn.classList.toggle('on', jeCena);
+    }
+    if (barvaDruhBtn) {
+      barvaDruhBtn.setAttribute('aria-pressed', jeCena ? 'false' : 'true');
+      barvaDruhBtn.classList.toggle('on', !jeCena);
+    }
+    prekresliStupnici();
+    prekresliLegendu();
   }
+  if (barvaBtn) barvaBtn.addEventListener('click', function () { nastavBarvy('cena'); });
+  if (barvaDruhBtn) barvaDruhBtn.addEventListener('click', function () { nastavBarvy('druh'); });
   function prekresliStupnici() {
     prepocitejStupnici(lastVis && lastVis.length ? lastVis : DATA);
     resizeDots();
@@ -4125,14 +4177,7 @@
   try {
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
-      prepni: function (r) {
-        rezimBarvy = (r === 'cena') ? 'cena' : 'druh';
-        if (barvaBtn) {
-          barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
-          barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
-        }
-        prekresliStupnici(); prekresliLegendu();
-      },
+      prepni: function (r) { nastavBarvy(r); },
       barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
       /* Cena za metr i barva k téže tečce — aby šlo ověřit, že barva
          s cenou roste, a ne jen že je pestrá. */

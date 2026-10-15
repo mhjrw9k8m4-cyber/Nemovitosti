@@ -97,9 +97,16 @@ try {
   });
 
   const pred = await zakryti();
-  /* Bez tohohle by nula během tažení neznamenala nic. */
+  /* Bez tohohle by nula během tažení neznamenala nic.
+     MEZ BYLA 10 % a 15. 10. spadla na 6,4 — ne proto, že by se
+     schovávání pokazilo, ale proto, že nad mapou zbylo míň rozhraní:
+     legenda se přestěhovala POD mapu a čtyři pilulky vpravo se
+     scvrkly na tři tlačítka s ikonou (naměřeno 18,3 % → 5,7 % plochy
+     mapy). Mez je proto 4 %: pořád je co schovávat (lišta, nápověda
+     kraje a sloupec tlačítek), ale už se neodvozuje od rozhraní,
+     které tam schválně není. */
   pravda(`před tažením rozhraní mapu opravdu zakrývá (${pred.procent} %)`,
-    pred.procent >= 10, `jen ${pred.procent} % — pak nemá co mizet a test by procházel naprázdno`);
+    pred.procent >= 4, `jen ${pred.procent} % — pak nemá co mizet a test by procházel naprázdno`);
 
   await p.evaluate(() => { if (window.PK_MAPA) window.PK_MAPA.fire('movestart'); });
   await p.waitForTimeout(450);
@@ -116,7 +123,7 @@ try {
   await p.evaluate(() => { if (window.PK_MAPA) window.PK_MAPA.fire('moveend'); });
   await p.waitForTimeout(600);
   const po = await zakryti();
-  pravda(`po puštění je ovládání zpátky (${po.procent} %)`, po.procent >= 10,
+  pravda(`po puštění je ovládání zpátky (${po.procent} %)`, po.procent >= 4,
     `zůstalo zakryto jen ${po.procent} % — ovládání se nevrátilo`);
 
   /* POJISTKA: Leaflet při přerušeném gestu moveend poslat nemusí.
@@ -128,7 +135,7 @@ try {
     `${schovano.procent} %`);
   await p.waitForTimeout(2400);
   const samo = await zakryti();
-  pravda('bez moveend se ovládání vrátí samo do dvou vteřin', samo.procent >= 10,
+  pravda('bez moveend se ovládání vrátí samo do dvou vteřin', samo.procent >= 4,
     `po 2,8 s pořád schováno (${samo.procent} %) — kdo přeruší gesto, přijde o ovládání`);
 
   pravda('a nic z toho nespadlo do konzole', chybyKonzole.length === 0,

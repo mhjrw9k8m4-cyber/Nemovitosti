@@ -107,6 +107,37 @@ Deset kilobajtů za to nestojí. (A kdyby se to jednou dělalo, musí
 u toho stát kontrola, která rozbalí všechny odkazy a porovná je
 bajt po bajtu s původními — jinak je to hádání.)
 
+### Pokrytí přeměřeno 15. 10. — a čísla výš byla mírně optimistická
+Rozsahy, které V8 vrací, jsou **vnořené**: nejdřív celá funkce, pak
+uvnitř ní jemnější kusy, které ji přebíjejí. Kdo je jen sečte podle
+`count > 0`, dostane u všeho 100 % (zkoušeno, vyšlo přesně to).
+Značí-li se po bajtech v pořadí, jak je V8 dává, vyjde do okamžiku,
+kdy se ukáže první nabídka, tohle:
+
+| skript | gzip | spuštěno | nevyužito (gzip) |
+|---|---|---|---|
+| `js/min/main.js` | 62,9 kB | **37 %** | 39,6 kB |
+| `vendor/leaflet/leaflet.js` | 42,7 kB | 45 % | 23,5 kB |
+| `js/min/dotaz.js` | 5,5 kB | 33 % | 3,7 kB |
+| `js/min/hledani.js` | 2,6 kB | **9 %** | 2,3 kB |
+| `js/min/hlidani-logika.js` | 3,7 kB | 43 % | 2,1 kB |
+| `js/min/okruh.js` | 3,4 kB | 39 % | 2,1 kB |
+| `js/min/ceny.js` | 6,6 kB | 69 % | 2,0 kB |
+| `js/min/mapove-vrstvy.js` | 2,2 kB | **9 %** | 2,0 kB |
+| `js/min/vyvoz.js` | 2,1 kB | 17 % | 1,8 kB |
+| `js/min/auth.js` | 2,0 kB | 14 % | 1,7 kB |
+| ostatních 18 skriptů | 20,6 kB | — | 9,0 kB |
+
+**Dohromady leží na kritické cestě odhadem 90 kB zabaleného kódu,
+který se do první nabídky nespustí ani řádkou.** Smazat se nedá —
+jsou to obsluhy, které čekají na klepnutí. Natáhnout později ano.
+
+Pro rozvahu, co to vlastně znamená v čase: vlastních bajtů má úvodní
+stránka **339 kB zabaleno** a na slabé lince (1,6 Mb/s, 150 ms,
+procesor ×4) je první nabídka vidět za **4,3 s**. Pouhý přenos by
+zabral 1,8 s; zbytek je rozbalení, překlad a spuštění. Proto má smysl
+krájet kód, ne jen data.
+
 ## 3. `js/main.js` je 433 kB v jednom souboru
 
 Zdroj, ne očištěná kopie. Čte se špatně a každá změna v něm znamená
@@ -441,3 +472,84 @@ i živé inzeráty z databáze. Kontrola se proto ptá stránky, ne datového
 souboru: čip, který není vidět, se přeskočí; do viditelného se klepne
 a musí přijít karta. Je to přesně ten druh chyby, kterou tahle položka
 hledá: zelená zkouška, která neměří nic.
+
+---
+
+## 10. Letecké náhledy stahovaly 4,5 MB cizích obrázků pro nabídky, na které nikdo nedojel
+
+Tohle nenašlo měření, ale člověk: *„stránka je extrémně pomalá
+a dlouho se načítá"*. Hledání trvalo jedno měření.
+
+**Co se měřilo.** Úvodní stránka na displeji 390 px, prázdná
+mezipaměť, servisní pracovník zakázaný. Počítaly se požadavky podle
+hostitele:
+
+| hostitel | požadavků |
+|---|---|
+| `server.arcgisonline.com` | **115** |
+| `*.tile.openstreetmap.org` | 15 |
+| `tcinuzftgmkvjjgvadky.supabase.co` | 1 |
+
+Dlaždice podkladu hlavní mapy je těch patnáct OSM. Těch sto patnáct
+z Esri jsou **letecké náhledy na kartách nabídek** — každá karta má
+snímek poskládaný z dlaždic (`js/snimek.js`). A teď to podstatné:
+
+| | snímků | dlaždic |
+|---|---|---|
+| nad ohybem | **1** | **4** |
+| pod ohybem | 23 | 111 |
+
+Z dvaceti čtyř náhledů je na telefonu vidět **jeden**. Ostatních 111
+dlaždic si telefon stahoval pro karty, na které většina lidí ani
+nedojede — a soupeřily přitom o linku s `opportunities.json`
+a se skripty, bez kterých stránka nejde vůbec.
+
+Při měření přes škrcenou linku vyšlo požadavků ještě víc: **226**.
+Karty se totiž vykreslují dvakrát — nejdřív ze záložních dat v
+`js/main.js`, pak z `data/opportunities.json` — a každé vykreslení si
+dlaždice objednalo znovu.
+
+**Proč to nejde atributem.** `loading="lazy"` platí jen pro HTML
+`<img>`; uvnitř SVG se na `<image>` neuplatní (zkoušeno). Náhled je
+přitom SVG schválně: skládá dlaždice, špendlík a popisku do jednoho
+souřadného systému, který se sám zvětší na šířku karty.
+
+**Co se udělalo.** Adresa dlaždice čeká v `data-href` a doplní ji
+`PK_SNIMEK.probud()` ve chvíli, kdy se náhled přiblíží k oknu
+(`IntersectionObserver`, rozpětí 600 px). O nové karty se stará
+`MutationObserver` — karty se překreslují při každém filtrování, takže
+jeden průchod po načtení by nestačil. Bez `IntersectionObserver` se
+probudí všechno rovnou: radši pomalá stránka než stránka bez náhledů.
+Totéž dostala **fotka od majitele** (`js/main.js`), která je ještě
+větší — nahrává ji člověk z telefonu.
+
+**Naměřeno (displeji 390 px, procesor ×4, gzip jako na Vercelu,
+dlaždice 20 kB, medián ze tří měření):**
+
+| linka | | do první nabídky | cizích dlaždic | cizích bajtů |
+|---|---|---|---|---|
+| LTE (10 Mb/s, 40 ms) | dřív | 2 936 ms | 231 | 4,51 MB |
+| LTE | **nyní** | **2 646 ms** | **1** | **0,02 MB** |
+| slabý signál (1,6 Mb/s, 150 ms) | dřív | 4 645 ms | 227 | 4,43 MB |
+| slabý signál | **nyní** | **4 322 ms** | **1** | **0,02 MB** |
+
+Při pevném čekání dvanáct sekund (tedy včetně dlaždic, které si
+hlídač doobjedná pro karty u okna) to je **226 → 32 požadavků**.
+
+**Dvě poznámky proti vlastnímu nadšení.** Za prvé: *čas do první
+nabídky se zlepšil jen o 7 %*. Dlaždice stahování nebrzdily, běžely
+vedle — co se ušetřilo, jsou cizí bajty a cizí požadavky, ne čekání.
+Kdo platí za data nebo má slabý signál, pozná to hodně; kdo má LTE
+a dívá se na hodinky, málo. Zbývající 4,3 s je jiná položka (viz 2).
+
+Za druhé: **první měření bylo špatně.** Můj testovací server posílal
+soubory nezabalené, kdežto Vercel posílá gzip. Z toho vyšlo
+9 290 ms místo 4 645 ms — tedy dvojnásobek. Číslo bez zabalení neměří
+tenhle web, ale cizí server. Opraveno; v měřidle teď gzip je.
+
+**Hlídá to** `scripts/test-line-dlazdice.mjs` (v CI). Prověřeno
+sabotáží v obou směrech: s adresou zpátky ve značce padnou tři
+kontroly (*„objednáno 108 dlaždic z 24 náhledů"*), s vyřazeným
+probuzením padnou dvě jiné (*„s adresou 0 dlaždic — probuzení
+nefunguje vůbec"*). Druhý směr je důležitý: líné načítání, které
+nenačte nikdy, je horší vada než to, co se opravovalo.

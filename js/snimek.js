@@ -74,11 +74,23 @@
     var WX = worldX(d.lng, n), WY = worldY(d.lat, n);
     var ox = WX - Vw / 2, oy = WY - Vh / 2;
 
+    /* DLAŽDICE SE NEOBJEDNÁVAJÍ HNED — ADRESA ČEKÁ V data-href.
+       Naměřeno 15. 10. na displeji 390 px: úvodní stránka má 24 těchto
+       snímků a v nich 118 dlaždic ze serveru Esri. Nad ohybem je z nich
+       JEDEN snímek a 4 dlaždice; ostatních 114 si telefon stahoval pro
+       nabídky, na které nikdo ani nedojel. Přes slabou linku (1,6 Mb/s,
+       150 ms, procesor ×4) to bylo 2,23 MB a 9 290 ms, než se ukázala
+       první nabídka — a ty dlaždice přitom soupeřily o linku s daty
+       a skripty, bez kterých stránka nejde vůbec.
+       Líné načítání tu nejde udělat atributem: loading="lazy" umí jen
+       HTML <img>, uvnitř SVG se na <image> neuplatní (zkoušeno). Adresa
+       proto čeká v data-href a doplní ji `probud()` ve chvíli, kdy se
+       snímek přiblíží k oknu. */
     var dlazdice = '';
     for (var tx = Math.floor(ox / 256); tx <= Math.floor((ox + Vw) / 256); tx++) {
       for (var ty = Math.floor(oy / 256); ty <= Math.floor((oy + Vh) / 256); ty++) {
         var u = ZDROJ + z + '/' + ty + '/' + tx;
-        dlazdice += '<image href="' + u + '" xlink:href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) +
+        dlazdice += '<image data-href="' + u + '" x="' + (tx * 256 - ox).toFixed(1) +
           '" y="' + (ty * 256 - oy).toFixed(1) + '" width="256" height="256" preserveAspectRatio="none"/>';
       }
     }
@@ -89,7 +101,7 @@
       '" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>' +
       '<circle cx="0" cy="-25" r="4.6" fill="#fff"/></g>';
 
-    return '<svg class="opp-map" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" ' +
+    return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 ' + Vw + ' ' + Vh + '" preserveAspectRatio="xMidYMid slice" ' +
       'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
       '<defs><filter id="' + id + '" x="-40%" y="-40%" width="180%" height="180%">' +
       '<feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs>' +
@@ -171,6 +183,80 @@
     return prvni;
   }
 
+  /* ================================================================
+     LÍNÉ DLAŽDICE
+     ================================================================
+     `probud(el)` doplní do všech <image data-href> uvnitř `el` skutečnou
+     adresu; tím se dlaždice teprve objedná. Volá se sama — hlídač níž
+     sleduje, kdy se snímek přiblíží k oknu.
+
+     XLINK SE DOPLŇUJE TAKY. V značce už není (dvě adresy v jednom prvku
+     by znamenaly dva požadavky, kdyby si prohlížeč vybral oba), ale
+     starší prohlížeče rozumí jen jemu, a tenhle web se o ně stará —
+     proto se tu nastavuje obojí, href i xlink:href.
+
+     ROZPĚTÍ 600 px: dlaždice se objedná, ještě než na ni člověk dojede,
+     takže při obvyklém rolování nevidí prázdné místo. Naměřeno: první
+     snímek na displeji 390 px začíná 1 040 px od začátku stránky, takže
+     s tímhle rozpětím se stáhne hned — a to je dobře, ten se vidí. */
+  var XLINK = 'http://www.w3.org/1999/xlink';
+  function probud(el) {
+    if (!el || !el.querySelectorAll) return;
+    el.removeAttribute && el.removeAttribute('data-sn');
+    var o = el.querySelectorAll('image[data-href]');
+    for (var i = 0; i < o.length; i++) {
+      var u = o[i].getAttribute('data-href');
+      o[i].removeAttribute('data-href');
+      o[i].setAttribute('href', u);
+      try { o[i].setAttributeNS(XLINK, 'xlink:href', u); } catch (e) {}
+    }
+  }
+
+  var hlidac = null;
+  if (global.IntersectionObserver) {
+    hlidac = new global.IntersectionObserver(function (zapisy) {
+      for (var i = 0; i < zapisy.length; i++) {
+        if (!zapisy[i].isIntersecting) continue;
+        hlidac.unobserve(zapisy[i].target);
+        probud(zapisy[i].target);
+      }
+    }, { rootMargin: '600px 0px' });
+  }
+
+  function prihlas(korene) {
+    for (var k = 0; k < korene.length; k++) {
+      var r = korene[k];
+      if (!r || r.nodeType !== 1) continue;
+      var sez = r.matches && r.matches('[data-sn="ceka"]') ? [r] : [];
+      if (r.querySelectorAll) {
+        var dal = r.querySelectorAll('[data-sn="ceka"]');
+        for (var i = 0; i < dal.length; i++) sez.push(dal[i]);
+      }
+      for (var j = 0; j < sez.length; j++) {
+        /* BEZ IntersectionObserver SE PROBUDÍ ROVNOU. Lepší pomalá
+           stránka než stránka bez snímků; tohle není ozdoba, náhled
+           nabídky je to, podle čeho člověk vybírá. */
+        if (hlidac) hlidac.observe(sez[j]); else probud(sez[j]);
+      }
+    }
+  }
+
+  /* Karty se vykreslují až ze skriptu (a překreslují při každém
+     filtrování), takže se na nové snímky nedá čekat jedním průchodem
+     po načtení — hlídá se, co do stránky přibude. */
+  if (global.MutationObserver && global.document) {
+    new global.MutationObserver(function (zmeny) {
+      for (var i = 0; i < zmeny.length; i++) {
+        if (zmeny[i].addedNodes && zmeny[i].addedNodes.length) prihlas(zmeny[i].addedNodes);
+      }
+    }).observe(global.document.documentElement, { childList: true, subtree: true });
+  }
+  if (global.document) {
+    if (global.document.readyState === 'loading') {
+      global.document.addEventListener('DOMContentLoaded', function () { prihlas([global.document.body]); });
+    } else { prihlas([global.document.body]); }
+  }
+
   global.PK_SNIMEK = { html: html, popis: popis, priblizeni: priblizeni, metryNaBod: metryNaBod,
-    nahled: nahled, podklady: PODKLADY };
+    nahled: nahled, podklady: PODKLADY, probud: probud, prihlas: prihlas };
 })(window);

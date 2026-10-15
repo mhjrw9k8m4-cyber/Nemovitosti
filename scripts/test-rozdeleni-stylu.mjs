@@ -98,8 +98,18 @@ const SBER = () => {
     };
     chod(korene);
   }
+  /* DLAŽDICE MAPY SE NEPOČÍTAJÍ. Kolik jich v DOM je, rozhoduje mapová
+     knihovna podle toho, kam se zrovna stihla posunout a kolik jich
+     doběhlo — mezi dvěma načteními téže stránky se to liší (naměřeno
+     15. 10.: 2 072 proti 2 107 prvkům, tedy o 35 dlaždic jinak).
+     Kontrola „stejný strom" je přitom důležitá: bez ní by prošla
+     i prázdná stránka. Vyjímá se proto jen to, co kreslí knihovna,
+     ne celá mapa — vrstvy, panely i ovladače se porovnávají dál
+     a stylopisná pravidla pro samotnou dlaždici (filtr šedi) měří
+     scripts/test-podklad-mapy.mjs. */
   const prvky = Array.from(document.querySelectorAll('*'))
-    .filter((e) => !/^(SCRIPT|STYLE|META|LINK|TITLE|HEAD)$/.test(e.tagName));
+    .filter((e) => !/^(SCRIPT|STYLE|META|LINK|TITLE|HEAD)$/.test(e.tagName))
+    .filter((e) => !(e.classList && e.classList.contains('leaflet-tile')));
   const vzor = getComputedStyle(document.body);
   const jmena = [];
   for (let i = 0; i < vzor.length; i++) jmena.push(vzor[i]);
@@ -140,6 +150,21 @@ const SBER = () => {
        neznamenalo. Rozhoduje se tedy podle TOHO PRVKU: přeskočí se
        jen vlastnost, kterou žádné důležité pravidlo pasující na něj
        nevynucuje. */
+    /* TOTÉŽ PLATÍ O PREZENTAČNÍCH ATRIBUTECH. Mapová knihovna si
+       velikost svých vrstev nese v atributech `width`/`height` na
+       <svg> a <canvas> a tvar čar v atributu `d` na <path> — přepisuje
+       je po každém posunu a přiblížení. Vypočtené `block-size`,
+       `inline-size` ani `d` tím o stylopisu neříkají nic a mezi dvěma
+       načteními se liší podle toho, kde zrovna mapa stála (naměřeno
+       15. 10.: svg 791 proti 745 px, plátno 1318 proti 1242).
+       Rozměr stránky to neskryje: ten drží prvky, které atribut
+       nemají, a ty se porovnávají dál. */
+    const ZATRIBUTU = { width: ['width', 'inline-size'], height: ['height', 'block-size'], d: ['d'] };
+    for (const atr of Object.keys(ZATRIBUTU)) {
+      if (e.hasAttribute && e.hasAttribute(atr)) {
+        for (const j of ZATRIBUTU[atr]) preskoc.add(j);
+      }
+    }
     for (let i = 0; i < e.style.length; i++) {
       const j = e.style[i];
       let vynuceno = false;

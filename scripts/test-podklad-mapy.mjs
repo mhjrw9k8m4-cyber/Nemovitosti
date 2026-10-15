@@ -74,6 +74,22 @@ async function otevri(sirka, dotyk) {
   }
   return { ctx, p };
 }
+/* PŘEPÍNAČ PODKLADU JE OD 15. 10. V PANELU „VRSTVY", NE NAD MAPOU.
+   Nad mapou zbyla tři tlačítka s ikonou; podklad, barvy teček i vrstvy
+   úřadů jsou za tlačítkem „Vrstvy" (naměřeno: rozhraní nad mapou
+   18,3 % → 5,7 % její plochy). Zkouška proto panel nejdřív otevře —
+   a musí ho otevřít i po každém načtení stránky znovu. */
+const otevriPanel = async (p) => {
+  const otevreno = await p.evaluate(() => {
+    const b = document.getElementById('map-vrstvy'), s = document.getElementById('map-sheet');
+    if (!b || !s) return 'chybí';
+    if (!s.hidden) return true;
+    b.click();
+    return !s.hidden;
+  });
+  await p.waitForTimeout(300);
+  return otevreno;
+};
 const stav = (p) => p.evaluate(() => {
   const b = [...document.querySelectorAll('#map-podklad button')];
   const o = document.querySelector('#map-podklad');
@@ -107,6 +123,7 @@ const stav = (p) => p.evaluate(() => {
     /grayscale|saturate/.test(s0.filtr || ''), `filtr: ${s0.filtr}`);
   pravda('a bere se z OpenStreetMap', /openstreetmap/i.test(s0.dlazdice || ''), s0.dlazdice);
 
+  await otevriPanel(p);
   await p.click('#map-podklad button[data-podklad="letecka"]');
   await p.waitForTimeout(1800);
   const s1 = await stav(p);
@@ -124,6 +141,7 @@ const stav = (p) => p.evaluate(() => {
   pravda('volba vydrží i po načtení stránky znovu', s2.zapnuta === 'letecka',
     `po obnovení: ${s2.zapnuta}`);
 
+  await otevriPanel(p);
   await p.click('#map-podklad button[data-podklad="zakladni"]');
   await p.waitForTimeout(1500);
   const s3 = await stav(p);
@@ -136,6 +154,11 @@ const stav = (p) => p.evaluate(() => {
 /* ---- 3) na telefonu se dá trefit prstem ---- */
 {
   const { ctx, p } = await otevri(390, true);
+  /* Přepínač je od 15. 10. v panelu „Vrstvy" — na telefonu se tedy měří
+     s otevřeným panelem. Nad mapou by jinak musel stát pruh, který
+     z ní ukusuje (naměřeno: rozhraní nad mapou 18,3 % → 5,7 %). */
+  pravda('panel „co je na mapě vidět" se na telefonu otevře',
+    await otevriPanel(p) === true, 'tlačítko „Vrstvy" panel neotevřelo');
   const s = await stav(p);
   pravda('na telefonu je přepínač vidět', s.je && s.sirka > 60,
     `šířka ${s.sirka} px`);

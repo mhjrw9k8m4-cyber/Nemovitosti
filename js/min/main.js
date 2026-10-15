@@ -1155,9 +1155,10 @@
     if (d.photos && d.photos.length) {
       var p0 = d.photos[0];
       var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
-      return '<svg class="opp-map" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
+
+      return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
         '<rect width="384" height="240" fill="#12241A"/>' +
-        '<image href="' + p0 + '" xlink:href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
+        '<image data-href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +
         odznakDruhu(d) + cnt;
@@ -1845,18 +1846,15 @@
 
   var vrstvyBtn = document.getElementById('map-vrstvy');
   var vrstvyPanel = document.getElementById('map-vrstvy-panel');
+  var mapSheet = document.getElementById('map-sheet');
+  var vrstvyRada = document.getElementById('map-vrstvy-rada');
   var vrstvyZive = {};
   var vrstvyNacteno = false;
   var VRSTVY_OD_ZOOMU = 10;
 
   function vrstvyViditelnost() {
-    if (!vrstvyBtn) return;
-    var jde = map.getZoom() >= VRSTVY_OD_ZOOMU;
-    vrstvyBtn.hidden = !jde;
-    if (!jde && vrstvyPanel) {
-      vrstvyPanel.hidden = true;
-      vrstvyBtn.setAttribute('aria-pressed', 'false');
-    }
+    if (!vrstvyRada) return;
+    vrstvyRada.hidden = map.getZoom() < VRSTVY_OD_ZOOMU;
   }
 
   function vrstvyPrepinac(zapis) {
@@ -1888,12 +1886,33 @@
     if (vrstvyPanel) vrstvyPanel.appendChild(b);
   }
 
-  if (vrstvyBtn && vrstvyPanel) {
+  if (vrstvyBtn && vrstvyPanel && mapSheet) {
+
+    document.addEventListener('click', function (e) {
+      if (mapSheet.hidden) return;
+      if (mapSheet.contains(e.target) || vrstvyBtn.contains(e.target)) return;
+      mapSheet.hidden = true;
+      vrstvyBtn.setAttribute('aria-expanded', 'false');
+    });
     vrstvyBtn.addEventListener('click', function () {
-      var otevreno = vrstvyBtn.getAttribute('aria-pressed') === 'true';
-      vrstvyBtn.setAttribute('aria-pressed', otevreno ? 'false' : 'true');
-      vrstvyPanel.hidden = otevreno;
-      if (otevreno || vrstvyNacteno) return;
+      var otevreno = vrstvyBtn.getAttribute('aria-expanded') === 'true';
+      vrstvyBtn.setAttribute('aria-expanded', otevreno ? 'false' : 'true');
+      mapSheet.hidden = otevreno;
+      if (!otevreno) nabidniZkouskuVrstev();
+    });
+
+    function nabidniZkouskuVrstev() {
+      if (vrstvyNacteno || !vrstvyPanel || vrstvyPanel.firstChild) return;
+      var z = document.createElement('button');
+      z.type = 'button';
+      z.className = 'mv-v mv-zkusit';
+      z.textContent = 'Zkusit, které vrstvy jedou';
+      z.addEventListener('click', nactiVrstvy);
+      vrstvyPanel.appendChild(z);
+    }
+
+    function nactiVrstvy() {
+      if (vrstvyNacteno) return;
       vrstvyNacteno = true;
       if (!window.PK_VRSTVY) { vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.'; return; }
       vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
@@ -1910,7 +1929,7 @@
       }).catch(function () {
         vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
       });
-    });
+    }
     map.on('zoomend', vrstvyViditelnost);
     vrstvyViditelnost();
   }
@@ -2754,15 +2773,23 @@
   prekresliLegendu();
 
   var barvaBtn = document.getElementById('map-barva');
-  if (barvaBtn) {
-    barvaBtn.addEventListener('click', function () {
-      rezimBarvy = (rezimBarvy === 'cena') ? 'druh' : 'cena';
-      barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
-      barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
-      prekresliStupnici();
-      prekresliLegendu();
-    });
+  var barvaDruhBtn = document.getElementById('map-barva-druh');
+  function nastavBarvy(rezim) {
+    rezimBarvy = (rezim === 'cena') ? 'cena' : 'druh';
+    var jeCena = rezimBarvy === 'cena';
+    if (barvaBtn) {
+      barvaBtn.setAttribute('aria-pressed', jeCena ? 'true' : 'false');
+      barvaBtn.classList.toggle('on', jeCena);
+    }
+    if (barvaDruhBtn) {
+      barvaDruhBtn.setAttribute('aria-pressed', jeCena ? 'false' : 'true');
+      barvaDruhBtn.classList.toggle('on', !jeCena);
+    }
+    prekresliStupnici();
+    prekresliLegendu();
   }
+  if (barvaBtn) barvaBtn.addEventListener('click', function () { nastavBarvy('cena'); });
+  if (barvaDruhBtn) barvaDruhBtn.addEventListener('click', function () { nastavBarvy('druh'); });
   function prekresliStupnici() {
     prepocitejStupnici(lastVis && lastVis.length ? lastVis : DATA);
     resizeDots();
@@ -2772,14 +2799,7 @@
   try {
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
-      prepni: function (r) {
-        rezimBarvy = (r === 'cena') ? 'cena' : 'druh';
-        if (barvaBtn) {
-          barvaBtn.setAttribute('aria-pressed', rezimBarvy === 'cena' ? 'true' : 'false');
-          barvaBtn.classList.toggle('on', rezimBarvy === 'cena');
-        }
-        prekresliStupnici(); prekresliLegendu();
-      },
+      prepni: function (r) { nastavBarvy(r); },
       barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
 
       tecka: function (i) {

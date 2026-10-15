@@ -6688,6 +6688,83 @@ shodí novou kontrolu v obou profilech („leží přes mapu — patří do pruh
 pod ní"), s opraveným CSS je zelená. Celkem `test-mapa-pozemku` 147
 kontrol, 0 chyb.
 
+## 3de. Hlavní mapa: rozhraní z ní ubralo 18 %, teď 6 % — *15. 10.*
+
+Majitel poslal snímek úvodní mapy na telefonu se zadáním „předěláme to
+podle velké realitky". Z tohohle prostředí se na cizí weby nedostanu
+(odchozí spojení je zavřené; textové hledání vrátilo jen obecné
+články), takže jsem **nekopíroval jeden konkrétní portál** — to bych si
+musel vymýšlet. Udělal jsem to podle toho, co mají velké mapové
+portály společné a co se dá na našem webu ZMĚŘIT: nad mapou pár
+drobných tlačítek, všechno ostatní za jedním.
+
+**Změřeno před změnou** (displej 430 px, mapa 430×640):
+
+| co leželo přes mapu | rozměr | plocha |
+|---|---|---|
+| nápověda „Klepněte na kraj" | 144×39 | 2,0 % |
+| sloupec čtyř ovladačů | 135×188 | 9,2 % |
+| legenda | 344×56 | 7,0 % |
+| **dohromady** | | **18,3 %** |
+
+**Po změně: 5,7 %** (nápověda + sloupec tří tlačítek 56×156). Volné
+plochy mapy je o 12 258 bodů² víc, i když je mapa o 55 px nižší —
+legenda si je vzala pod sebou.
+
+Co se změnilo:
+
+1. **Tři tlačítka místo čtyř pilulek.** Ikona a pod ní slovo: 56 px
+   široké místo 135. Samotné ikony ne — na tomhle webu platí, že
+   ovládání, které se objevuje jen občas, se nemá kde naučit.
+2. **Panel „co je na mapě vidět"** za tlačítkem „Vrstvy": podklad,
+   barvy teček a vrstvy úřadů. Barvy teček jsou teď DVĚ tlačítka vedle
+   sebe („Podle druhu" / „Podle ceny"); z jedné pilulky „Podle ceny"
+   se nedalo poznat, co zrovna platí.
+3. **Legenda pod mapou.** Schovat ji za tlačítko nejde (vysvětluje
+   tvary značek), ale není důvod, aby brala 7 % mapy.
+
+### Vada, kterou by sloučení způsobilo — a nezpůsobilo
+
+Vrstvy úřadů se zkoušely ve chvíli, kdy se otevřel jejich panel; tehdy
+to znamenalo „chci vrstvy". Jakmile je v témž panelu i podklad, znamenalo
+by otevření, že **kdo si jen přepne na letecký snímek, pošle pět dotazů
+na servery úřadů** — proti tomu, co web píše v zásadách soukromí.
+V řadě proto čeká tlačítko „Zkusit, které vrstvy jedou" a ptá se teprve
+ono. Hlídá to `scripts/test-vrstvy-mapa.mjs`.
+
+### Co u toho spadlo a co to říká
+
+Šest zkoušek — a každá ukázala na něco, co se dalo spočítat předem:
+
+| zkouška | co padlo | co to bylo |
+|---|---|---|
+| `test-tahy` | „každá ikona kreslí tah 1,5 px" → 1,74 | ikona vyrostla z 15 na 19 px a zůstala jí stará tloušťka tahu |
+| `test-typografie` | řádkování 1,15 mimo stupnici | → 1,2 |
+| `test-vrstvy` | `z-index:620` mimo vypsaný pořádek | uvnitř `.map-tools` (z-index 600) stačí místní pořadí |
+| `test-mapa-tazeni` | „rozhraní mapu opravdu zakrývá (6,4 %)" | mez 10 % byla odvozená ze starého rozhraní; nová je 4 % |
+| `test-podklad-mapy` | přepínač podkladu není vidět | je v panelu — zkouška ho teď otevře |
+| `test-vrstvy-mapa` | tlačítko „Vrstvy" se neschovalo | schovává se ŘADA uvnitř, ne tlačítko |
+
+### A dvě slepé skvrny ve zkoušce rozdělení stylopisu
+
+`test-rozdeleni-stylu` porovnává vypočtený styl každého prvku při
+zkráceném a plném stylopisu. Po přesunu legendy začala hlásit rozdíly,
+které se stylopisem nemají co dělat:
+
+* `svg: block-size 791 proti 745 px` a `canvas 1318 proti 1242` —
+  mapová knihovna si velikost svých vrstev nese v ATRIBUTECH
+  `width`/`height` (a tvar čar v `d`) a přepisuje je po každém posunu.
+  Vlastnosti odvozené z prezentačního atributu se proto vynechávají —
+  táž úvaha jako u vlastností nastavených do `style` (bod v
+  `docs/optimalizace.md`, položka 7).
+* `zkrácený 2 072 prvků, plný 2 107` — o 35 dlaždic mapy jinak.
+  Kolik jich v DOM je, rozhoduje knihovna podle toho, kam se stihla
+  posunout. Dlaždice se proto do porovnání nepočítají; všechno ostatní
+  včetně panelů a ovladačů ano.
+
+**Doloženo sabotáží, že zkouška pořád kouše:** vyjmutí jediného
+pravidla `.map-legend` z `css/uvod.min.css` ji shodí v obou profilech.
+
 ## 3db. OTEVŘENÁ OTÁZKA: klepnutí prstem na značku kraje — *15. 10.*
 
 Při zapínání dotyku ve zkouškách (bod 3da) se `scripts/test-mapa.mjs`

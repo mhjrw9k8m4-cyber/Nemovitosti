@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=702a3c97">
+  <link rel="stylesheet" href="css/uvod.min.css?v=29d7e7e3">
 </head>
 <body>
 
@@ -477,40 +477,71 @@
             <div id="leaflet-map" role="application" aria-label="Interaktivní mapa příležitostí"></div>
             <div class="kraj-head" id="kraj-head" hidden></div>
             <div class="kraj-hint" id="kraj-hint"><span class="kh-pin" aria-hidden="true"></span>Klepněte na kraj</div>
-            <div class="map-legend" id="map-legend" aria-hidden="true"></div>
+            <!-- ===============================================================
+                 OVLÁDÁNÍ MAPY: JEDEN SLOUPEC, ZBYTEK ZA „VRSTVAMI".
+                 Změřeno 15. 10. na displeji 430 px (mapa 430×640): nad mapou
+                 leželo 18,3 % její plochy — nápověda 144×39, legenda 344×56
+                 a sloupec čtyř ovladačů 135×188. Mapa je přitom to, kvůli
+                 čemu sem lidé chodí; každý plovoucí pruh z ní ukusuje.
+                 Velké mapové portály to mají jinak a dělají to tak všechny:
+                 nad mapou je pár drobných tlačítek a všechno ostatní
+                 („co je na mapě vidět") je za jedním tlačítkem v panelu.
+                 Tady jsou proto nad mapou jen TŘI tlačítka a každé má
+                 popisek pod ikonou (samotná ikona by neřekla nic, to je
+                 na tomhle webu pravidlo). Podklad, barvy teček a vrstvy
+                 úřadů jsou v panelu za „Vrstvami"; legenda se přestěhovala
+                 POD mapu, kde nic nezakrývá.
+                 =============================================================== -->
             <div class="map-tools">
-              <button class="map-reset" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg>Celá ČR</button>
+              <button class="map-nastroj" id="map-reset" type="button" aria-label="Zobrazit celou mapu"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h6M3 3v6M3 3l7 7M21 21h-6M21 21v-6M21 21l-7-7"/></svg><span>Celá ČR</span></button>
               <!-- KRESLENÍ VÝBĚRU. Okruh kolem místa už web umí („do 30 km
                    od Brna"), jenže kruh sedí jen na dotaz „kolem čeho".
                    Na „podél téhle řeky" nebo „mezi dálnicí a lesem" kruh
                    není — a právě tak lidé pozemky hledají. -->
-              <button class="map-reset" id="map-kresli" type="button" aria-pressed="false"
-                aria-label="Nakreslit výběr na mapě"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20c2-6 6-10 12-13M4 20l4-1M4 20l1-4M14 5l5 5"/></svg>Kreslit výběr</button>
-              <!-- OBARVIT PODLE CENY. Barva podle druhu odpovídá na „co to
-                   je", ne na „kde je to levné" — zelená tečka za 8 Kč/m²
-                   a zelená za 2 400 Kč/m² vypadají stejně. -->
-              <button class="map-reset" id="map-barva" type="button" aria-pressed="false"
-                aria-label="Obarvit tečky podle ceny za metr"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 18h3v3H4zM10 13h3v8h-3zM16 7h3v14h-3z"/></svg>Podle ceny</button>
-              <!-- VRSTVY ÚŘADŮ. Hranice parcel, územní plán, záplavy, bonita
-                   půdy a ochrana přírody byly jen v mapě u jednotlivého
-                   pozemku — tedy až na konci cesty. Na hlavní mapě, kde si
-                   člověk vybírá, kam vůbec jet, nebyly vůbec.
-                   Tlačítko se ukáže AŽ PO PŘIBLÍŽENÍ: při pohledu na celou
-                   republiku se žádná z nich nevykreslí (nejnižší z nich
-                   začíná na zoomu 10), takže by to byl přepínač, po kterém
-                   se nic nestane. -->
-              <button class="map-reset" id="map-vrstvy" type="button" aria-pressed="false" hidden
-                aria-label="Vrstvy úřadů v mapě"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg>Vrstvy</button>
-              <div class="map-vrstvy-panel" id="map-vrstvy-panel" hidden role="group" aria-label="Vrstvy úřadů"></div>
-              <!-- Přepínač podkladu. Stojí vedle „Celá ČR", protože obojí
-                   je o tom, CO je na mapě vidět, ne o tom, co se v ní hledá. -->
-              <div class="map-podklad" id="map-podklad" role="group" aria-label="Podklad mapy">
-                <button type="button" data-podklad="zakladni" class="on" aria-pressed="true">Základní</button>
-                <button type="button" data-podklad="letecka" aria-pressed="false">Letecká</button>
+              <button class="map-nastroj" id="map-kresli" type="button" aria-pressed="false"
+                aria-label="Nakreslit výběr na mapě"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20c2-6 6-10 12-13M4 20l4-1M4 20l1-4M14 5l5 5"/></svg><span>Kreslit</span></button>
+              <!-- VRSTVY A PODKLAD. Tohle tlačítko nic nezapíná samo —
+                   otevírá panel s tím, CO je na mapě vidět. Je tu vždycky,
+                   i při pohledu na celou republiku: podklad a barvy teček
+                   se dají přepnout kdykoli. Vrstvy úřadů (hranice parcel,
+                   územní plán, záplavy, bonita, ochrana přírody) se uvnitř
+                   ukážou až po přiblížení — nejnižší z nich začíná na
+                   zoomu 10, takže dřív by to byl přepínač, po kterém se
+                   nic nestane. -->
+              <button class="map-nastroj" id="map-vrstvy" type="button" aria-expanded="false"
+                aria-controls="map-sheet" aria-label="Co je vidět na mapě: podklad, barvy, vrstvy úřadů"><svg class="mr-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5M3 17l9 5 9-5"/></svg><span>Vrstvy</span></button>
+              <div class="map-sheet" id="map-sheet" hidden role="group" aria-label="Co je vidět na mapě">
+                <div class="ms-rada">
+                  <span class="ms-popis">Podklad</span>
+                  <div class="map-podklad" id="map-podklad" role="group" aria-label="Podklad mapy">
+                    <button type="button" data-podklad="zakladni" class="on" aria-pressed="true">Základní</button>
+                    <button type="button" data-podklad="letecka" aria-pressed="false">Letecká</button>
+                  </div>
+                </div>
+                <!-- OBARVIT PODLE CENY. Barva podle druhu odpovídá na „co to
+                     je", ne na „kde je to levné" — zelená tečka za 8 Kč/m²
+                     a zelená za 2 400 Kč/m² vypadají stejně. -->
+                <div class="ms-rada">
+                  <span class="ms-popis">Barvy teček</span>
+                  <div class="map-podklad" role="group" aria-label="Podle čeho se barví tečky">
+                    <button type="button" id="map-barva-druh" class="on" aria-pressed="true">Podle druhu</button>
+                    <button type="button" id="map-barva" aria-pressed="false"
+                      aria-label="Obarvit tečky podle ceny za metr">Podle ceny</button>
+                  </div>
+                </div>
+                <div class="ms-rada" id="map-vrstvy-rada" hidden>
+                  <span class="ms-popis">Vrstvy úřadů</span>
+                  <div class="map-vrstvy-panel" id="map-vrstvy-panel" role="group" aria-label="Vrstvy úřadů"></div>
+                </div>
               </div>
             </div>
             <button class="map-lock" id="map-lock" type="button" hidden aria-label="Zamknout mapu"><svg class="ml-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Zamknout mapu</button>
           </div>
+          <!-- LEGENDA JE POD MAPOU, NE NA NÍ. Vysvětluje tvary značek,
+               takže ji nejde schovat za tlačítko — ale ani není důvod,
+               aby zabírala 344×56 bodů z mapy (naměřeno, 7 % plochy).
+               Pod mapou je pořád na očích a nic nezakrývá. -->
+          <div class="map-legend" id="map-legend" aria-hidden="true"></div>
         </div>
       </div>
 
@@ -781,7 +812,7 @@
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/dropdown.js?v=1746af15" defer></script>
-<script src="js/min/snimek.js?v=d4bb15d9" defer></script>
+<script src="js/min/snimek.js?v=0a176651" defer></script>
 <script src="js/min/terminy.js?v=cf102557" defer></script>
 <!-- STAŽENÍ VÝBĚRU. Dřív to bylo jedno klepnutí a hned soubor: tabulka
      toho, co je právě ve výpisu. Fungovalo to, ale nedalo se říct, co se
@@ -899,7 +930,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=62c114b3" defer></script>
+<script src="js/min/main.js?v=c9966191" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

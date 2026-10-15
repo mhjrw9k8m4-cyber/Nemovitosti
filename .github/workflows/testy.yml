@@ -709,6 +709,9 @@ jobs:
       - name: Podklad hlavní mapy
         run: node scripts/test-podklad-mapy.mjs
 
+      - name: Letecké náhledy se stahují až před očima
+        run: node scripts/test-line-dlazdice.mjs
+
 
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs

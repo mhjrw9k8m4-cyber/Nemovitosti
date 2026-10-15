@@ -65,8 +65,14 @@ try {
     await p.evaluate(() => !!(window.PK_VRSTVY && window.PK_VRSTVY.pripravene)),
     'window.PK_VRSTVY chybí — vrstvy by na hlavní mapě nebyly');
 
-  /* Při pohledu na celou ČR se žádná vrstva nevykreslí, takže se tlačítko
-     nemá nabízet. */
+  /* Při pohledu na celou ČR se žádná vrstva nevykreslí, takže se nemá
+     nabízet ani jedna.
+     OD 15. 10. SE SCHOVÁVÁ ŘADA, NE TLAČÍTKO. Tlačítko „Vrstvy" otevírá
+     panel „co je na mapě vidět" (podklad, barvy teček, vrstvy úřadů)
+     a podklad i barvy se dají přepnout i při pohledu na celou
+     republiku — tlačítko tedy musí být po ruce vždycky. Mizí jen ta
+     jedna řada uvnitř panelu (#map-vrstvy-rada), protože vrstvy úřadů
+     při takovém oddálení nevykreslí ani jedna. */
 /* Vidí to OKO, ne jen DOM. Dřív se tu ptalo na `.hidden === true`, tedy
    na ATRIBUT — a ten tam je vždycky, protože ho nastavuje právě ten kód,
    který se zkouší. Kontrola tím říkala jen „atribut jsme nastavili", ne
@@ -85,11 +91,28 @@ const vidu = (sel) => p.evaluate((s) => {
   return !(r.width === 0 && r.height === 0) && st.display !== 'none' && st.visibility !== 'hidden';
 }, sel);
 
+  /* Řada „Vrstvy úřadů" leží UVNITŘ panelu, takže se dá poctivě změřit
+     jedině s otevřeným panelem — se zavřeným nemá box nic uvnitř a
+     kontrola by platila i pro řadu, která je vidět. */
+  const otevriPanel = () => p.evaluate(() => {
+    const b = document.getElementById('map-vrstvy'), s = document.getElementById('map-sheet');
+    if (!b || !s) return false;
+    if (s.hidden) b.click();
+    return !s.hidden;
+  });
   const zoom0 = await p.evaluate(() => window.PK_MAPA.getZoom());
   pravda(`mapa startuje oddálená (zoom ${zoom0})`, zoom0 < 10, `${zoom0}`);
-  pravda('a tlačítko „Vrstvy" tam není vidět',
-    await vidu('#map-vrstvy') === false,
-    'tlačítko MÁ BOX, přitom by po něm nic nepřišlo');
+  pravda('tlačítko „Vrstvy" je po ruce i při pohledu na celou ČR',
+    await vidu('#map-vrstvy') === true,
+    'schovalo se — podklad a barvy teček se pak nedají přepnout');
+  pravda('panel „co je na mapě vidět" se otevře', await otevriPanel() === true,
+    'tlačítko „Vrstvy" panel neotevřelo');
+  await p.waitForTimeout(300);
+  pravda('a řada „Vrstvy úřadů" v něm při pohledu na celou ČR není vidět',
+    await vidu('#map-vrstvy-rada') === false,
+    'řada MÁ BOX, přitom by po ní nic nepřišlo');
+  pravda('podklad a barvy teček se v panelu přepnout DAJÍ',
+    await vidu('#map-podklad') === true, 'přepínač podkladu není vidět');
 
   /* TOHLE JE TA HLAVNÍ: bez vyžádání se na cizí servery nesmí sáhnout. */
   pravda('při otevření mapy neodešel ani jeden požadavek na službu úřadu',
@@ -97,20 +120,26 @@ const vidu = (sel) => p.evaluate((s) => {
 
   await p.evaluate(() => { window.PK_MAPA.setZoom(13); });
   await p.waitForTimeout(1500);
-  pravda('po přiblížení se tlačítko „Vrstvy" ukáže',
-    await vidu('#map-vrstvy') === true,
-    'zůstalo schované');
+  await otevriPanel();
+  await p.waitForTimeout(300);
+  pravda('po přiblížení se řada „Vrstvy úřadů" ukáže',
+    await vidu('#map-vrstvy-rada') === true,
+    'zůstala schovaná');
   pravda('ani po přiblížení se na službu úřadu nesáhlo (zkouška čeká na vyžádání)',
     cizi.length === 0, cizi.slice(0, 3).join(', '));
 
-  pravda('a panel s vrstvami je zavřený', await vidu('#map-vrstvy-panel') === false);
+  /* OTEVŘENÍ PANELU NENÍ VYŽÁDÁNÍ VRSTEV. V panelu je i podklad a barvy
+     teček, takže ho otevře i ten, kdo si jen chce přepnout na letecký
+     snímek — a tomu se nesmí poslat pět dotazů na servery úřadů. V řadě
+     proto čeká tlačítko a teprve ono se ptá. */
+  pravda('v řadě vrstev čeká tlačítko, které se teprve zeptá',
+    await vidu('.mv-zkusit') === true, 'tlačítko „Zkusit, které vrstvy jedou" chybí');
 
   /* Teprve klepnutí smí sáhnout ven. Služby úřadů jsou odsud nedostupné
      (proxy je blokuje), takže se neověřuje, že vrstvy naskočí — ověřuje
      se, že se o to web POKUSÍ až teď, a že to bez odpovědi řekne. */
-  await p.evaluate(() => document.getElementById('map-vrstvy').click());
+  await p.evaluate(() => { const b = document.querySelector('.mv-zkusit'); if (b) b.click(); });
   await p.waitForTimeout(1200);
-  pravda('po klepnutí se panel otevře', await vidu('#map-vrstvy-panel') === true);
   pravda('a TEPRVE TEĎ se zkouší služby úřadů', cizi.length > 0,
     'nesáhlo se nikam — zkouška vrstev se nespustila, takže by se žádná nenabídla');
   pravda('a míří to na služby vypsané v ochraně údajů',
@@ -168,14 +197,19 @@ const vidu = (sel) => p.evaluate((s) => {
     await p2.waitForTimeout(2500);
     await p2.evaluate(() => { window.PK_MAPA.setZoom(13); });
     await p2.waitForTimeout(1200);
+    /* Otevřít panel a teprve pak si vrstvy vyžádat — totéž, co udělá
+       člověk (a co hlídá oddíl výš). */
     await p2.evaluate(() => document.getElementById('map-vrstvy').click());
+    await p2.waitForTimeout(400);
+    await p2.evaluate(() => { const b = document.querySelector('.mv-zkusit'); if (b) b.click(); });
     await p2.waitForTimeout(2500);
-    const nabidka = await p2.evaluate(() => document.querySelectorAll('#map-vrstvy-panel .mv-v').length);
+    const nabidka = await p2.evaluate(() =>
+      document.querySelectorAll('#map-vrstvy-panel .mv-v:not(.mv-zkusit)').length);
     // PŘEDPOKLAD: bez nabídnuté vrstvy není co zapínat a kontroly níž by prošly naprázdno
     pravda('podstrčená vrstva se nabídne (jinak není co měřit)', nabidka === 1,
       `přepínačů v panelu: ${nabidka}`);
     if (nabidka === 1) {
-      await p2.evaluate(() => document.querySelector('#map-vrstvy-panel .mv-v').click());
+      await p2.evaluate(() => document.querySelector('#map-vrstvy-panel .mv-v:not(.mv-zkusit)').click());
       await p2.waitForTimeout(1500);
       const v = await p2.evaluate(() => {
         const pane = document.querySelector('.leaflet-tile-pane');

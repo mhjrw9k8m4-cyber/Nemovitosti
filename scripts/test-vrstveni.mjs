@@ -62,7 +62,7 @@ async function stranka(sirka, prihlasit) {
     const stred = (s) => { const r = document.querySelector(s).getBoundingClientRect();
       return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2), podHlavickou: r.top > dno }; };
     const cv = document.querySelector('.map-canvas').getBoundingClientRect();
-    return { hint: stred('#kraj-hint'), tool: stred('.map-reset'), mapa: { x: 195, y: Math.round(cv.top + 220) } };
+    return { hint: stred('#kraj-hint'), tool: stred('.map-nastroj'), mapa: { x: 195, y: Math.round(cv.top + 220) } };
   });
   je('měřené prvky mapy nejsou schované za lepivou hlavičkou',
     [body.hint.podHlavickou, body.tool.podHlavickou], [true, true]);
