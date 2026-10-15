@@ -144,10 +144,16 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 /* Telefon i monitor. Na telefonu je to horší (obsah se vejde méně, takže
-   se posune víc toho, co je zrovna vidět), ale rozbít se dá obojí. */
-for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor']]) {
+   se posune víc toho, co je zrovna vidět), ale rozbít se dá obojí.
+   DOTYK SE MUSÍ ŘÍCT. Profil „telefon" běžel do 15. 10. bez emulace
+   dotyku, takže se pravidla za `@media (pointer: coarse)` vůbec
+   nevyhodnotila — a právě ta mění výšky (terče 44 px, políčka 16 px),
+   tedy přesně to, z čeho posun rozvržení vzniká. Měřilo se rozvržení
+   monitoru v úzkém okně, ne telefon. (Bod 3da v docs/co-chybi.md.) */
+for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 900, 'monitor', false]]) {
   for (const [stranka, coMusiByt] of STRANKY) {
-    const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska } });
+    const ctx = await prohlizec.newContext(Object.assign({ viewport: { width: sirka, height: vyska } },
+      dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     await ctx.route('**/*', (r) => {
       const u = new URL(r.request().url());
       if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -202,13 +208,14 @@ for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor
  *
  * Token se podstrkuje do úložiště, ne přihlašováním formulářem: měří
  * se rozvržení, ne přihlašování (to má svou zkoušku). */
-for (const [sirka, vyska, jmeno] of [[390, 844, 'telefon'], [1280, 900, 'monitor']]) {
+for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 900, 'monitor', false]]) {
   for (const [stranka, coMusiByt] of [
     ['hlidani.html', '#hl-root *'],
     ['zpravy.html', '#zp-root *'],
     ['muj-inzerat.html', '#mi-panel'],
   ]) {
-    const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska } });
+    const ctx = await prohlizec.newContext(Object.assign({ viewport: { width: sirka, height: vyska } },
+      dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     const p = await ctx.newPage();

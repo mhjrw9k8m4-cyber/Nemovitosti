@@ -31,6 +31,14 @@ function pravda(popis, vyslo, proc) {
 }
 
 const KATEGORIE = ['sale', 'drazba', 'exekuce', 'obec', 'majitel'];
+/* Kolik nabídek každá kategorie v datech opravdu má. Rozhoduje to o tom,
+   co se u ní dá na stránce měřit — viz oddíl 5 níž. */
+const POCTY = (() => {
+  const d = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  const m = {};
+  for (const o of (d.opportunities || [])) m[o.type] = (m[o.type] || 0) + 1;
+  return m;
+})();
 
 // --- 1) V kódu nesmí zůstat opsaná barva -----------------------------
 for (const f of ['../js/main.js', '../js/pozemek.js']) {
@@ -174,10 +182,28 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(3800);
+  let mereno = 0;
   for (const k of KATEGORIE) {
     const btn = await p.$(`[data-type="${k}"]`);
     pravda(`filtr „${k}" na úvodu je`, !!btn, 'bez něj se ke kartě té kategorie nedostanu');
     if (!btn) continue;
+    /* KATEGORIE BEZ NABÍDEK SVŮJ ČIP SCHVÁLNĚ NEUKAZUJE — a klepnout do
+       něj tedy nejde. Zkouška na to do 15. 10. nemyslela: klikala do
+       všech pěti a u prázdné kategorie čekala třicet sekund na prvek,
+       který se nikdy neobjeví, až celý běh skončil výjimkou. Naměřeno
+       v datech toho dne: sale 1 845, drazba 100, exekuce 12, obec 0,
+       majitel 0 — tedy dvě kategorie z pěti. Spadlo to i na čistém
+       stromu, takže to nebyla chyba webu, ale zkoušky.
+       Co se tu dá tvrdit u prázdné kategorie: právě to, že čip není
+       vidět. Barvu puntíku bez karty změřit nelze a vyrobit si kartu
+       by znamenalo měřit pravidlo, ne stránku. */
+    const kolik = (POCTY[k] || 0);
+    if (!kolik) {
+      pravda(`a „${k}" bez nabídek čip neukazuje`, !(await btn.isVisible()),
+        'čip je vidět, ale klepnutí nemá co ukázat');
+      continue;
+    }
+    mereno++;
     await btn.click();
     await p.waitForTimeout(700);
     const o = await p.evaluate((kk) => {
@@ -193,6 +219,11 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
       `je ${o.punt}, má být ${naRgb(uvod.tok[k])} (--c-${k} = ${uvod.tok[k]})`);
   }
   pravda('a při přepínání filtrů nespadl skript', chyby.length === 0, chyby[0]);
+  /* Pojistka proti tichému vyprázdnění: kdyby data přišla o všechny
+     kategorie, kontroly výš by prošly na prázdné množině. */
+  pravda(`a změřily se aspoň tři kategorie (dnes ${mereno})`, mereno >= 3,
+    `měřitelných kategorií je jen ${mereno} — v datech: `
+    + KATEGORIE.map((k) => `${k} ${POCTY[k] || 0}`).join(', '));
   await p.close();
 }
 

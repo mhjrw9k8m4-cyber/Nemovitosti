@@ -169,7 +169,7 @@ v `docs/co-chybi.md`). Tlačítko bylo bez dotyku vysoké 36 px, s dotykem
 44 — a právě těch osm pixelů byl celý překryv. Není to poprvé: týž
 příběh stojí ve `css/styles.css` u tokenu `--plocha-plovouci-plna`.
 
-**Hotovo 1/17 — a hned ta nejdůležitější:** `test-rozdeleni-stylu`,
+**Hotovo jako první ta nejdůležitější:** `test-rozdeleni-stylu`,
 tedy zkouška, která dokazuje, že zkrácený balík stylopisu dává tytéž
 vypočtené styly jako plný. Měřila jedinou kombinaci (390 px bez
 dotyku), takže o žádném z těch 36 pravidel netvrdila nic. Teď projede
@@ -204,12 +204,40 @@ nevynucuje (`opacity:1 !important` ve stylopisu je, ale jen na
 Vynechaných hodnot je **1 602 z 2 180 910 (0,07 %)**, strop zkoušky je
 2 %.
 
-**Zbývá 16 zkoušek**, v pořadí podle toho, jak moc měří vzhled:
-`test-okraje` (obrysy ovládání proti WCAG 1.4.11), `test-afordance`,
-`test-stabilita`, `test-najeti`, `test-ceska-pismena`, `test-stranky`,
-`test-pridat`, `test-souradnice`, `test-mapa`, `test-leaflet`,
-`test-mapa-pozemku` (zbylé oddíly — překryv ovladačů už dotyk má),
-`test-odznak-zprav`, `test-hlidani-prohlizec`, `test-profil-vypadek`,
-`test-chat-prohlizec`, `test-vzorek-verdiktu`. U každé se musí
+### Hotovo 5/17 — a každá něco našla
+
+| zkouška | co se změnilo | co se tím našlo |
+|---|---|---|
+| `test-rozdeleni-stylu` | dva profily (28 → 56 kontrol) | nic rozbitého, ale dokázáno sabotáží; u toho slepá skvrna s `style.opacity` |
+| `test-okraje` | dva profily, **39 → 80 prvků** | **tři tlačítka nad mapou měla obrys 1,45 : 1** (WCAG žádá 3) |
+| `test-afordance` | dotyk zapnut | nic — a ta zkouška přitom STOJÍ na tom, že na telefonu není `:hover` |
+| `test-najeti` | dva profily, **65 → 129 prvků** | nic |
+| `test-stabilita` | dotyk v profilu telefon | nic, CLS zůstává 0 |
+
+**Nalezená vada: obrys tlačítek nad mapou.** `.map-reset` mělo
+`border:1px solid rgba(31,81,56,0.22)`, což je proti vlastní bílé
+výplni **1,45 : 1** — pod mezí 3 : 1, kterou WCAG 1.4.11 žádá u hranice
+ovládacího prvku. Týká se tří tlačítek na úvodní stránce (vrátit výběr,
+kreslit, barvy). Token `--obrys-tlacitka` (4,10 : 1) je přesně na tohle
+a čtyři ostatní vedlejší tlačítka ho už berou — tahle tři se k nim jen
+nikdy nepřidala. Proč to nikdo neviděl: stará zkouška měřila jen okno
+390 px, kde se ta tlačítka vůbec neukazují.
+
+**A u toho spadla jiná zkouška, která nemohla projít.** `test-barvy`
+klikala do všech pěti filtrů kategorií — jenže kategorie bez nabídek
+svůj čip schválně neukazuje a klepnout do něj nejde. Naměřeno v datech:
+`sale` 1 845, `drazba` 100, `exekuce` 12, `obec` **0**, `majitel` **0**.
+Zkouška čekala třicet sekund na prvek, který se nikdy neobjeví, a celý
+běh skončil výjimkou. Ověřeno `git stash`: padalo to **i na čistém
+stromu**, takže to nebyla chyba webu, ale zkoušky. Teď u prázdné
+kategorie tvrdí to, co tvrdit lze (čip není vidět), a hlídá, že se
+změřily aspoň tři.
+
+**Zbývá 12 zkoušek**, v pořadí podle toho, jak moc měří vzhled:
+`test-ceska-pismena`, `test-stranky`, `test-pridat`, `test-souradnice`,
+`test-mapa`, `test-leaflet`, `test-mapa-pozemku` (zbylé oddíly —
+překryv ovladačů už dotyk má), `test-odznak-zprav`,
+`test-hlidani-prohlizec`, `test-profil-vypadek`, `test-chat-prohlizec`,
+`test-vzorek-verdiktu`. U každé se musí
 rozhodnout, jestli měří ROZVRŽENÍ (pak dotyk zapnout) nebo jen
 chování na úzkém okně (pak to u ní napsat, ať se to nezkouší znovu).

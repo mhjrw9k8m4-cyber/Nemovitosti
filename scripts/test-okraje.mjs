@@ -34,17 +34,39 @@ function pomer(a, b) {
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
-await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
-await ctx.route('**/*', (r) => {
-  const u = new URL(r.request().url());
-  if (u.protocol === 'file:' || u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
-  return r.abort();
-});
+/* DVA PROFILY, A DOTYK SE MUSÍ ŘÍCT VÝSLOVNĚ.
+   Do 15. 10. se měřilo jen v okně 390 px BEZ emulace dotyku — tedy
+   „telefon s myší", zařízení, které neexistuje. Pravidla pro telefon
+   tu stojí za `@media (pointer: coarse)`, ne za šířkou okna, a právě
+   v tom bloku dostávají políčka `font-size:16px !important` a ovládání
+   terč 44 px, tedy přesně to, co tahle zkouška měří.
+   Samotné zapnutí dotyku ale nestačilo: změřeno 25 prvků s dotykem
+   proti 39 bez něj. Na telefonu se část ovládání schválně neukazuje,
+   takže by se zkouška o těch čtrnáct prvků připravila. Profily jsou
+   proto dva — telefon s dotykem a monitor bez dotyku — a měří se
+   SJEDNOCENÍ, ne jeden místo druhého.
+   (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+const PROFILY = [
+  { jmeno: 'telefon', viewport: { width: 390, height: 900 }, dotyk: true },
+  { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
+];
+async function kontext(profil) {
+  const ctx = await prohlizec.newContext(Object.assign({ viewport: profil.viewport },
+    profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.protocol === 'file:' || u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    return r.abort();
+  });
+  return ctx;
+}
 
 const nalezy = [];
 let zmereno = 0, preskoceno = 0;
 
+for (const profil of PROFILY) {
+const ctx = await kontext(profil);
 for (const s of STRANKY) {
   const p = await ctx.newPage();
   await p.goto('file://' + process.cwd() + '/' + s, { waitUntil: 'domcontentloaded' });
@@ -146,11 +168,13 @@ for (const s of STRANKY) {
     if (d.okraj && pomer(d.okraj, d.bg) >= MIN) continue;
     // Stín sám o sobě neměříme, ale uznáváme ho jako záměrné odlišení.
     if (d.stin && !d.okraj) continue;
-    nalezy.push({ stranka: s, prvek: d.popis,
+    nalezy.push({ stranka: `${s} (${profil.jmeno})`, prvek: d.popis,
       vypln: pomer(d.bg, d.podklad).toFixed(2),
       cara: d.okraj ? pomer(d.okraj, d.bg).toFixed(2) : 'žádná' });
   }
   await p.close();
+}
+await ctx.close();
 }
 
 /* --- Výběr ceny a výměry zvlášť: sloupce histogramu -------------------
@@ -170,6 +194,7 @@ for (const s of STRANKY) {
  * navíc, že vybraný sloupec má i rozlišení, které barva není. */
 const rozsahNalezy = [];
 {
+  const ctx = await kontext(PROFILY[0]);
   const p = await ctx.newPage();
   await p.goto('file://' + process.cwd() + '/index.html', { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2500);
@@ -221,6 +246,7 @@ const rozsahNalezy = [];
     zmereno += 2;
   }
   await p.close();
+  await ctx.close();
 }
 
 await prohlizec.close();

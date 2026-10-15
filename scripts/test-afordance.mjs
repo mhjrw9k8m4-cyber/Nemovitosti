@@ -42,7 +42,17 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 let nalezeno = 0;
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, locale: 'cs-CZ' });
+  /* DOTYK MUSÍ BÝT ZAPNUTÝ — tahle zkouška stojí celá na tom, že na
+     telefonu není :hover. Jenže do 15. 10. běžela v okně 390 px BEZ
+     emulace dotyku, a v takovém kontextu prohlížeč pravidla za
+     `@media (hover: none)` a `(pointer: coarse)` vůbec nevyhodnotí:
+     měřilo se rozvržení monitoru v úzkém okně, tedy přesně ten stav,
+     o kterém zkouška netvrdí nic. (Jak se to našlo: bod 3da
+     v docs/co-chybi.md.)
+     Druhý profil (monitor) tady nepotřebuje: tam :hover je a jeho
+     barvy měří scripts/test-najeti.mjs. */
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   /* NA ÚVODNÍ STRÁNCE JSOU ČIPY SCHOVANÉ, DOKUD SE NEKLEPNE DO HLEDÁNÍ.

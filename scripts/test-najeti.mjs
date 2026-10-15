@@ -119,17 +119,34 @@ if (!najeti.filter((x) => x.barva).length) {
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },
   kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 900 } });
-await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
-await ctx.route('**/*', (r) => {
-  const u = new URL(r.request().url());
-  if (u.protocol === 'file:' || u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
-  return r.abort();
-});
+/* DVA PROFILY — a dotyk se musí říct výslovně.
+   Do 15. 10. se měřilo jen v okně 390 px BEZ emulace dotyku, tedy
+   „telefon s myší". Pravidla za `@media (hover: none)` a
+   `(pointer: coarse)` se v takovém kontextu nevyhodnotí, takže se
+   neměřil ani jeden ze dvou stavů, o kterých tahle zkouška mluví:
+   na monitoru :hover bliká, na telefonu po klepnutí VISÍ. Profily
+   jsou proto dva. (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+const PROFILY = [
+  { jmeno: 'telefon', viewport: { width: 390, height: 900 }, dotyk: true },
+  { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
+];
+async function kontext(profil) {
+  const ctx = await prohlizec.newContext(Object.assign({ viewport: profil.viewport },
+    profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
+  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.protocol === 'file:' || u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    return r.abort();
+  });
+  return ctx;
+}
 
 const nalezy = [];
 let zmereno = 0;
 
+for (const profil of PROFILY) {
+const ctx = await kontext(profil);
 for (const s of STRANKY) {
   const p = await ctx.newPage();
   try {
@@ -283,9 +300,11 @@ for (const s of STRANKY) {
 
   for (const v of vysledek) {
     zmereno++;
-    if (v.pomer < v.prah) nalezy.push(Object.assign({ stranka: s }, v));
+    if (v.pomer < v.prah) nalezy.push(Object.assign({ stranka: `${s} (${profil.jmeno})` }, v));
   }
   await p.close();
+}
+await ctx.close();
 }
 await prohlizec.close();
 
@@ -294,7 +313,9 @@ console.log(`\nBarvy po najetí myší — ${najeti.length} pravidel :hover, zm�
    prvek z celé stránky a přitom hlásil „vše v pořádku" — podklad se
    vzdával u každého prvku s barevným přechodem, tedy u patičky i karet.
    Test, který nic nezměří, projde vždycky; proto se počet hlídá. */
-const DOST = 40;
+/* Dva profily, takže se změří asi dvojnásobek prvků — mez tomu
+   odpovídá, ať pojistka dál pozná měření, které se zaseklo. */
+const DOST = 70;
 if (zmereno < DOST) {
   console.log(`\nZměřilo se jen ${zmereno} prvků, čekáno aspoň ${DOST}.`);
   console.log('Test, který nic nezměří, projde vždycky — tohle není úspěch, ale porucha měření.');

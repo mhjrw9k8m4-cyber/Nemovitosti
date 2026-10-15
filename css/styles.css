@@ -2855,7 +2855,16 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
-.map-reset{display:inline-flex; align-items:center; gap:6px; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid rgba(31,81,56,0.22); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
+/* OBRYS Z TOKENU, NE RUČNĚ. Stálo tu rgba(31,81,56,0.22), což je proti
+   vlastní bílé výplni tlačítka 1,45 : 1 — pod mezí 3 : 1, kterou WCAG
+   1.4.11 žádá u hranice ovládacího prvku. Tři tlačítka nad mapou
+   (vrátit výběr, kreslit, barvy) tím na monitoru splývala s plochou.
+   --obrys-tlacitka je přesně na tohle a dává 4,10 : 1; čtyři ostatní
+   vedlejší tlačítka ho už berou, tahle tři se k nim jen nikdy
+   nepřidala. Naměřeno 15. 10. (scripts/test-okraje.mjs v profilu
+   monitor — do té chvíle zkouška měřila jen okno 390 px, kde se tahle
+   tlačítka neukazují). */
+.map-reset{display:inline-flex; align-items:center; gap:6px; background:var(--plocha-plovouci); color:var(--copper-bright); border:1px solid var(--obrys-tlacitka); border-radius:var(--r-lg); padding:8px 14px; font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; box-shadow:var(--shadow); transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), border-color var(--cas-zakladni) var(--ease); backdrop-filter:blur(4px);}
 .map-reset:hover{border-color:var(--copper-bright);}
 .map-reset:active{transform:translateY(1px);}
 .map-reset .mr-ic{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; flex:none;}
