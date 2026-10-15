@@ -467,11 +467,20 @@
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
     .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
     .pzm-cela-btn:hover{background:var(--ink-soft);}
-    /* ZPÁTKY NA POZEMEK. Pod zvětšením, tedy v témž sloupci vpravo —
-       u levého okraje si telefon bere gesto „zpět". Má popisek, ne jen
-       špendlík: samotná ikona na mapě plné špendlíků neřekne nic, a tohle
-       tlačítko se objevuje jen občas, takže se nemá kde naučit. */
-    .pzm-zpet-btn{position:absolute; z-index:500; right:10px; top:56px;
+    /* ZPÁTKY NA POZEMEK — DOLE VLEVO, NE VPRAVO POD ZVĚTŠENÍM.
+       Vpravo stálo do 14. 10. a na telefonu LEZLO NA PŘIBLIŽOVÁNÍ:
+       naměřeno na 390px displeji (mapa 356×300) tlačítko y 64–108,
+       ovladač „+/−" y 100–192 ve stejném sloupci — osm pixelů přes sebe,
+       a hlavně těsně nad sebou tři ovladače v jednom rohu. Na monitoru
+       to vidět nebylo, protože mapa je o 90 px vyšší a zvětšení sedí níž.
+       Vlevo dole je na obou šířkách volno: měřítko končí na y 277
+       (telefon) a 367 (monitor), uvedení zdrojů drží pravou půlku
+       (x 188+, resp. 550+). Tlačítko tedy stojí nad měřítkem a nikomu
+       nepřekáží — hlídá to zkouška v scripts/test-mapa-pozemku.mjs.
+       Popisek, ne jen špendlík: samotná ikona na mapě plné špendlíků
+       neřekne nic a tohle tlačítko se objevuje jen občas, takže se ho
+       nemá kde člověk naučit. */
+    .pzm-zpet-btn{position:absolute; z-index:500; left:10px; bottom:34px;
       min-height:36px; display:inline-flex; align-items:center; gap:6px;
       padding:0 12px 0 10px; border-radius:var(--r-sm);
       border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93);
@@ -611,8 +620,12 @@
          samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
       .pzm-kryti input{height:44px;}
       .pzm-cela-btn{width:44px; height:44px;}
-      /* Na dotyku terč 44 px a o kousek níž, ať nesedí na zvětšení. */
-      .pzm-zpet-btn{min-height:44px; top:64px; font-size:14px;}
+      /* Na dotyku terč 44 px. `top` tu dřív posouval tlačítko o kousek
+         níž, „ať nesedí na zvětšení" — jenže sedělo (viz měření
+         u pravidla výš) a od přesunu dolů vlevo by `top` i `bottom`
+         naráz tlačítko NATÁHLY přes celou mapu: naměřeno 202 px na
+         výšku místo 44. */
+      .pzm-zpet-btn{min-height:44px; font-size:14px;}
       .pzm-z, .pzm-v{height:44px;}
     }
   </style>

@@ -6596,6 +6596,66 @@ Podlaha v `test-rozvrzeni` spadla z dvaceti cílů na dvanáct — pod
 dvanáct by z nabídky zmizelo něco, co jinde na webu není (účet, mapa,
 ceny, kontakt, akce).
 
+## 3da. Tlačítko „Na pozemek" leželo na přibližování — a zkouška to neviděla — *15. 10.*
+
+Majitel poslal snímek mapy v detailu pozemku: tlačítko „Na pozemek"
+sedělo přesně na ovladači „+/−".
+
+**Změřeno** v prohlížeči proti rámu mapy, telefon 390×844 (mapa
+356×300):
+
+| ovladač | x | y |
+|---|---|---|
+| zvětšení | 302–346 | 10–54 |
+| **Na pozemek** | 216–346 | **64–108** |
+| přibližování | 298–344 | **100–192** |
+| měřítko | 5–83 | 277–295 |
+| uvedení zdrojů | 188–356 | 272–300 |
+
+Osm pixelů přes sebe a čtyři ovladače v jednom sloupci u pravého
+okraje. Na monitoru (mapa 718×390) se to neukázalo: mapa je o 90 px
+vyšší, takže přibližování sedí níž a mezera vyjde.
+
+Tlačítko je teď **dole vlevo** (`left:10px; bottom:34px`), tedy nad
+měřítkem a mimo pravý sloupec. Naměřeno po přesunu: telefon
+`x 10–134, y 222–266`, monitor `x 10–134, y 320–356`. Levý okraj si
+bere telefon na gesto „zpět" — proto `bottom` a ne `top`, ať tlačítko
+nestojí v dráze toho gesta nahoře, kde se jím listuje.
+
+Při přesunu šel pryč i `top:64px` z dotykového bloku: s `bottom` naráz
+by tlačítko **natáhlo přes celou mapu**, naměřeno 202 px na výšku
+místo 44.
+
+### Co bylo horší než to tlačítko: zkouška měřila telefon, jaký neexistuje
+
+K přesunu jsem napsal pojistku — průnik každé dvojice ovladačů na obou
+šířkách. Pak jsem ji **prověřil sabotáží**: vrátil jsem do
+`pozemek.html` přesně to CSS, které majitel vyfotil. **Zkouška
+prošla.**
+
+Důvod: pravidla pro telefon tu nestojí za šířkou okna, ale za
+`@media (pointer: coarse)`. Playwright do nich pustí jen kontext
+s `hasTouch` — a bez něj prohlížeč v okně 390 px vykreslí **layout
+monitoru**. Naměřeno: tlačítko bylo bez dotyku vysoké 36 px, s dotykem
+44, a právě těch osm pixelů byl celý překryv. Zkouška tedy měřila
+rozvržení, které na žádném telefonu neexistuje.
+
+Po doplnění `dotyk: true` sabotáž spadne tak, jak má:
+`✕ telefon 356×300: žádné dva ovladače mapy neleží na sobě — Na
+pozemek × přibližování (46×8 px)` — osm pixelů, přesně jak jsem je
+naměřil rukou. S opraveným CSS je zelená.
+
+**A není to jediná taková zkouška.** Ve `css/styles.css` u tokenu
+`--plocha-plovouci-plna` stojí týž příběh z minula („zkouška to
+neviděla, protože měřila bez dotyku"). Projel jsem proto všechny:
+**ze 45 zkoušek, které si otvírají úzké okno, 17 nezapíná dotyk** —
+mezi nimi `test-okraje`, `test-afordance`, `test-stabilita` a
+`test-rozdeleni-stylu`, tedy ta, která dokazuje, že zkrácený stylopis
+dává tytéž vypočtené styly jako plný. Za dotykovými a hover dotazy je
+ve stylopisu **36 pravidel**, a žádné z nich ta zkouška nikdy
+nesrovnala. To je další položka v `docs/optimalizace.md`, ne věc na
+jeden řádek.
+
 ## Co naopak nechybí
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze

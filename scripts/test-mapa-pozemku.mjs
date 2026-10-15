@@ -133,7 +133,16 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 async function detail(nast) {
   nast = nast || {};
   const zivi = nast.zivi || [];
-  const ctx = await prohlizec.newContext({ viewport: nast.viewport || { width: 1280, height: 860 } });
+  /* DOTYK SE MUSÍ ŘÍCT. Tenhle web má pravidla pro telefon schovaná
+     za `@media (pointer: coarse)`, ne za šířkou okna — a bez
+     emulace dotyku je prohlížeč nepustí dovnitř, i když je okno
+     široké 390 px. Naměřeno: tlačítko „Na pozemek" bylo bez dotyku
+     vysoké 36 px (jako na monitoru), s dotykem 44. Kontrola, která
+     měří rozvržení telefonu, tedy MUSÍ `dotyk: true` zapnout —
+     jinak měří něco, co na žádném telefonu neexistuje. */
+  const ctx = await prohlizec.newContext(Object.assign(
+    { viewport: nast.viewport || { width: 1280, height: 860 } },
+    nast.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
   const dotazy = [];
   /* Všechno v JEDNÉ obsluze. Playwright zkouší obsluhy v obráceném pořadí,
      než se přidaly, takže dvě obsluhy s překrývajícím se vzorem (jedna na
@@ -1492,6 +1501,66 @@ if (DRAZBA) {
       !po.maTlacitko && !/neodpov/i.test(po.text), po.text);
   }
   await ctxV.close();
+}
+
+// --- OVLADAČE MAPY SI NESMĚJÍ LÉZT NA SEBE ------------------------
+// Majitel poslal snímek: tlačítko „Na pozemek" leželo na přibližování.
+// Naměřeno na 390px displeji (mapa 356×300): tlačítko y 64–108,
+// ovladač „+/−" y 100–192, oba při pravém kraji — osm pixelů přes sebe
+// a tři ovladače namáčknuté v jednom rohu. Na monitoru to vidět nebylo:
+// mapa je tam o 90 px vyšší a přibližování sedí níž.
+//
+// Měří se průnik každé dvojice ovladačů, a to na OBOU šířkách —
+// kdyby se měřil jen monitor, projde i to, co je na telefonu rozbité.
+{
+  for (const [sirka, vyska, kde, dotyk] of [[390, 844, 'telefon', true], [1280, 860, 'monitor', false]]) {
+    const { ctx, p } = await detail({ viewport: { width: sirka, height: vyska }, dotyk });
+    await domapy(p);
+    await p.waitForTimeout(1200);
+    const v = await p.evaluate(() => {
+      const mapa = document.querySelector('.pzm-mapa');
+      if (!mapa) return null;
+      /* Tlačítko „Na pozemek" se ukazuje, až když se poloha odlepí od
+         značky. Pro měření se odkryje ručně — jde o jeho MÍSTO, ne
+         o to, kdy naskáká. */
+      const zpet = document.querySelector('.pzm-zpet-btn');
+      if (zpet) zpet.hidden = false;
+      const R = mapa.getBoundingClientRect();
+      const kus = (sel, jmeno) => {
+        const el = document.querySelector(sel);
+        if (!el || !el.getClientRects().length) return null;
+        const r = el.getBoundingClientRect();
+        return { jmeno, x: r.x - R.x, y: r.y - R.y, w: r.width, h: r.height };
+      };
+      return { mapa: { w: R.width, h: R.height }, prvky: [
+        kus('.pzm-cela-btn', 'zv\u011bt\u0161en\u00ed'),
+        kus('.pzm-zpet-btn', 'Na pozemek'),
+        kus('#pzm .leaflet-control-zoom', 'p\u0159ibli\u017eov\u00e1n\u00ed'),
+        kus('#pzm .leaflet-control-scale', 'm\u011b\u0159\u00edtko'),
+        kus('#pzm .leaflet-control-attribution', 'uveden\u00ed zdroj\u016f'),
+      ].filter(Boolean) };
+    });
+    if (!pravda(`${kde}: ovlada\u010de mapy se na\u0161ly`, !!v && v.prvky.length >= 4,
+      v ? `nalezeno ${v.prvky.length}` : 'mapa nevznikla')) continue;
+    const prunik = [];
+    for (let i = 0; i < v.prvky.length; i++) {
+      for (let j = i + 1; j < v.prvky.length; j++) {
+        const a = v.prvky[i], b = v.prvky[j];
+        const px = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+        const py = Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
+        if (px > 1 && py > 1) prunik.push(`${a.jmeno} \u00d7 ${b.jmeno} (${Math.round(px)}\u00d7${Math.round(py)} px)`);
+      }
+    }
+    pravda(`${kde} ${Math.round(v.mapa.w)}\u00d7${Math.round(v.mapa.h)}: \u017e\u00e1dn\u00e9 dva ovlada\u010de mapy nele\u017e\u00ed na sob\u011b`,
+      prunik.length === 0, prunik.join(', '));
+    /* A \u017e\u00e1dn\u00fd nesm\u00ed viset mimo mapu \u2014 to by u\u017e nebyl jen p\u0159ekryv,
+       ale ovlada\u010d, na kter\u00fd se neklepne. */
+    const venku = v.prvky.filter((a) => a.x < -1 || a.y < -1
+      || a.x + a.w > v.mapa.w + 1 || a.y + a.h > v.mapa.h + 1);
+    pravda(`${kde}: ka\u017ed\u00fd ovlada\u010d le\u017e\u00ed uvnit\u0159 mapy`, venku.length === 0,
+      venku.map((a) => a.jmeno).join(', '));
+    await ctx.close();
+  }
 }
 
 await prohlizec.close();
