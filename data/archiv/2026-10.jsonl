@@ -244,3 +244,20 @@
 {"k":"Městec Králové|1617/2|Nymburk|50.209|15.306#1rqui6q","m":"Městec Králové","o":"Nymburk","dr":"zahrada","t":"exekuce","v":2505,"c":1371333,"od":"2026-09-14","do":"2026-10-13","proc":"zmizela"}
 {"k":"Kroměříž|—|Kroměříž|49.203|17.253#1rqp3lh","m":"Kroměříž","o":"Kroměříž","dr":"stavební pozemek","t":"exekuce","v":0,"c":193333,"od":"2026-09-16","do":"2026-10-13","proc":"zmizela"}
 {"k":"Přerov|—|Přerov|49.477|17.634#1rqu993","m":"Přerov","o":"Přerov","dr":"zahrada","t":"exekuce","v":0,"c":827200,"od":"2026-09-16","do":"2026-10-13","proc":"zmizela"}
+{"k":"Švihov|—|Klatovy|49.453|13.324#kk4h","m":"Švihov","o":"Klatovy","dr":"trvalý travní porost","t":"sale","v":1974,"c":80000,"od":"2026-09-14","do":"2026-10-14","proc":"cena"}
+{"k":"Praha|—|Praha|50.024|14.561#i21kyf","m":"Praha","o":"Praha","dr":"ostatní plocha","t":"sale","v":1264,"c":3900000,"od":"2026-09-19","do":"2026-10-14","proc":"cena"}
+{"k":"Obrataň|—|Pelhřimov|49.446|14.977#18hdx","m":"Obrataň","o":"Pelhřimov","dr":"orná půda","t":"sale","v":1295,"c":38625,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Vysoké Pole|—|Zlín|49.169|17.939#1c5dx","m":"Vysoké Pole","o":"Zlín","dr":"trvalý travní porost","t":"sale","v":11769,"c":363590,"od":"2026-09-19","do":"2026-10-14","proc":"zmizela"}
+{"k":"Olomučany|—|Blansko|49.329|16.665#2vhnr","m":"Olomučany","o":"Blansko","dr":"orná půda","t":"sale","v":3012,"c":99910,"od":"2026-09-22","do":"2026-10-14","proc":"zmizela"}
+{"k":"Slatina|—|Nový Jičín|49.800|17.985#2q6zw","m":"Slatina","o":"Nový Jičín","dr":"orná půda","t":"sale","v":23868,"c":865200,"od":"2026-09-19","do":"2026-10-14","proc":"zmizela"}
+{"k":"Krupá|—|Rakovník|50.173|13.717#4qo03","m":"Krupá","o":"Rakovník","dr":"orná půda","t":"sale","v":4020,"c":149350,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"České Meziříčí|—|Rychnov nad Kněžnou|50.287|16.065#4ohsx","m":"České Meziříčí","o":"Rychnov nad Kněžnou","dr":"trvalý travní porost","t":"sale","v":1972,"c":77250,"od":"2026-09-19","do":"2026-10-14","proc":"zmizela"}
+{"k":"Ledce|—|Hradec Králové|50.213|16.050#1fex5","m":"Ledce","o":"Hradec Králové","dr":"orná půda","t":"sale","v":159716,"c":6999000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Bohuslavice|—|Náchod|50.313|16.082#1fex6","m":"Bohuslavice","o":"Náchod","dr":"orná půda","t":"sale","v":21216,"c":2200000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Hlinka|—|Bruntál|50.280|17.672#l7r8","m":"Hlinka","o":"Bruntál","dr":"stavební pozemek","t":"sale","v":751,"c":399000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Šternberk|—|Olomouc|49.752|17.315#2ou1x","m":"Šternberk","o":"Olomouc","dr":"lesní pozemek","t":"sale","v":505,"c":880000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Pavlovice u Přerova|—|Přerov|49.468|17.552#hztfgx","m":"Pavlovice u Přerova","o":"Přerov","dr":"pozemek","t":"sale","v":14429,"c":30000000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Sezemice|—|Pardubice|50.066|15.853#oey4","m":"Sezemice","o":"Pardubice","dr":"stavební pozemek","t":"sale","v":1679,"c":8395000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Třebenice|233/1|Litoměřice|50.478|13.986#1rqp60l","m":"Třebenice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":948,"c":26449,"od":"2026-09-23","do":"2026-10-14","proc":"zmizela"}
+{"k":"Brno|592|Brno-město|49.189|16.615#gnvrwp","m":"Brno","o":"Brno-město","dr":"ostatní plocha","t":"drazba","v":165,"c":1633000,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
+{"k":"Kytín|546/1|Praha-západ|49.857|14.227#1rqueb4","m":"Kytín","o":"Praha-západ","dr":"orná půda","t":"exekuce","v":0,"c":111467,"od":"2026-09-14","do":"2026-10-14","proc":"zmizela"}
