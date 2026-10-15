@@ -5660,7 +5660,22 @@
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
-    countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
+    /* NADPIS VE DVOU DÉLKÁCH — ALE JEDNÍM TEXTEM.
+       Na telefonu sdílí řádek s „Uloženými" a řazením, kam se
+       „Doporučené příležitosti · 1 930 na mapě" nevejde; rozlomilo by
+       to řádek na dva a první nabídku posunulo o dalších 22 px. Proto
+       je dlouhý popis ve vlastní značce (.mc-hl) a stylopis ho na
+       telefonu schová — zbyde „1 930 na mapě".
+
+       POČET SE NEOPISUJE DO DRUHÉ VĚTY, A MÁ TO DŮVOD. Nejdřív tu
+       stála ještě krátká podoba „1 930 pozemků" a dlouhá se celá
+       schovávala — jenže patnáct zkoušek čte počet z TOHOTO prvku
+       přes innerText, tedy jen to, co je doopravdy vykreslené, a hledá
+       v něm „N na mapě". Se schovanou .mc-sub jim vycházelo −1.
+       Jedno číslo na jednom místě je i tak správně; dvě podoby téhož
+       čísla by se dřív nebo později rozešly. */
+    countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
+      + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se

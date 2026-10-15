@@ -420,6 +420,11 @@ to{opacity:1;transform:none}
 .ms-vysledky{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px}
 .ms-vysledky .map-count{margin-bottom:0}
 .ms-vysledky>.mc-akce{flex:1 1 100%;margin-top:0}
+@media (min-width:1041px){.map-side>.ms-vysledky{order:1}
+.map-side>.mc-akce{order:2;margin-bottom:10px}
+.map-side>.recent-strip{order:3}
+.map-side>.opp-list{order:4}
+}
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .msv-ulozene{min-height:36px;padding:6px 12px;font-size:12px}
 .msv-razeni{display:flex;min-width:0}
@@ -1004,8 +1009,12 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .map-side{order:2;border-right:0;max-height:none}
 .map-holder{order:3;height:74vh;height:74dvh;max-height:640px;min-height:460px}
 .map-canvas{flex:1;min-height:0}
-.mv-toggle{display:flex;gap:4px;margin-top:14px;background:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px}
-.mvt-btn{flex:1;padding:10px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--text-ondark-mute);font-weight:600;font-family:inherit;font-size:14px;cursor:pointer;transition:background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.mcp-hledani{display:flex;align-items:center;gap:8px}
+.mcp-hledani .map-search{flex:1 1 auto;min-width:150px;position:relative}
+.mv-toggle{display:flex;flex:0 0 auto;gap:4px;margin-top:0;background:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px}
+.mvt-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 8px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--text-ondark-mute);font-weight:600;font-family:inherit;font-size:13px;cursor:pointer;transition:background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.mv-toggle .mvt-btn svg{display:none}
+.map-app.mv-seznam .mvt-n{display:none}
 .mvt-btn.active{background:var(--plocha-znacka);color:#fff}
 .map-app.mv-seznam .map-holder{display:none}
 .map-app:not(.mv-seznam) .map-side{display:none}
@@ -1271,7 +1280,15 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hh-l b{font-weight:700}
 @media (max-width:880px){.hero-map{padding:0 0 24px}
 }
-@media (max-width:560px){.hero-map .map-wide{margin-top:0;padding-top:48px;background:var(--panel)}
+@media (max-width:560px){.hero-map .map-wide{margin-top:0;padding-top:40px;background:var(--panel)}
+.ms-vysledky{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 8px;margin-bottom:8px}
+.ms-vysledky .msv-ovladani{flex:0 1 auto;justify-content:flex-end}
+.ms-vysledky .map-count{font-size:14px;letter-spacing:0;margin-bottom:0;flex:0 1 auto;min-width:0}
+.mc-hl,.ms-vysledky .mc-sep{display:none}
+.ms-vysledky .map-count{font-weight:700}
+.msv-ulozene{min-height:34px;padding:6px 10px}
+.msv-razeni .map-select{min-height:34px;max-width:150px;font-size:12px}
+.ms-vysledky .mc-pozn,.ms-vysledky .mc-nove{flex:1 1 100%;margin:0;font-size:11px}
 }
 .rail-mark{display:flex;align-items:baseline;gap:10px;margin:0 0 14px}
 .rail-mark .rm-n{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--accent-warm);font-variant-numeric:tabular-nums}

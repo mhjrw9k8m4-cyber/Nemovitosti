@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=29d7e7e3">
+  <link rel="stylesheet" href="css/uvod.min.css?v=556cfb4e">
 </head>
 <body>
 
@@ -222,7 +222,27 @@
     <div class="map-wide">
       <div class="map-app reveal mv-seznam" id="view-mapa">
         <div class="map-controls-panel">
+          <!-- HLEDÁNÍ A PŘEPÍNAČ NA JEDNOM ŘÁDKU.
+               Naměřeno na displeji 390 px: hledání zabíralo 46 px a pod
+               ním přepínač Seznam/Mapa dalších 54 px přes celou šířku,
+               tedy sto pixelů na dva ovladače, z nichž jeden má dvě
+               polohy. Velké realitní weby mají mapu jako IKONU vedle
+               hledání, ne jako pruh pod ním. Vedle sebe se vejdou:
+               358 px vnitřní šířky minus 104 px přepínače nechává poli
+               254 px, do kterých se text „Obec, druh, cena…" vejde celý
+               (naměřeno 150 px).
+               Přepínač NESMÍ do pruhu s výsledky, ačkoli tam patří
+               významem: .map-app:not(.mv-seznam) .map-side{display:none}
+               ho schovává spolu se seznamem, takže by po přepnutí na
+               mapu nebylo čím se vrátit. -->
+          <div class="mcp-hledani">
           <div class="map-search"><svg class="ms-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="map-search" placeholder="Obec, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
+  
+            <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
+              <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="mvt-t">Seznam</span> <span class="mvt-n" id="mvt-count"></span></button>
+              <button type="button" class="mvt-btn" data-mv="mapa" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg><span class="mvt-t">Mapa</span></button>
+            </div>
+          </div>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
           <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
@@ -420,10 +440,6 @@
           </div>
 
 
-          <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
-            <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Seznam <span class="mvt-n" id="mvt-count"></span></button>
-            <button type="button" class="mvt-btn" data-mv="mapa" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg>Mapa</button>
-          </div>
 
         </div>
 
@@ -467,10 +483,23 @@
                 </select>
               </label>
             </div>
-            <span class="mc-akce" id="mc-akce"></span>
           </div>
-          <div class="recent-strip" id="recent-strip" hidden></div>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
+          <!-- CO SE S VÝBĚREM DÁ DĚLAT, STOJÍ AŽ POD NÍM.
+               „Projít 1 930 pozemků po jednom" a „Stáhnout výběr" jsou
+               nástroje pro toho, kdo už výpis vidí a chce s ním něco
+               provést. Dokud stály NAD seznamem, odsouvaly první
+               nabídku o 136 px (naměřeno, displej 390 px) — tedy to
+               jediné, kvůli čemu sem člověk přišel, bylo až za nářadím
+               na práci s tím, co ještě neviděl.
+               Na monitoru zůstávají nahoře (viz .ms-vysledky v
+               css/styles.css): tam místo nechybí a pruh pod nadpisem
+               nikomu nic neodsouvá. -->
+          <span class="mc-akce" id="mc-akce"></span>
+          <!-- Totéž u naposledy prohlédnutých: komu se tam co nahromadí,
+               má je pod prvními nabídkami, ne místo nich. Na snímku od
+               majitele webu zabíraly dva pruhy nad první nabídkou. -->
+          <div class="recent-strip" id="recent-strip" hidden></div>
         </aside>
         <div class="map-holder">
           <div class="map-canvas">
@@ -930,7 +959,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=c9966191" defer></script>
+<script src="js/min/main.js?v=ee8ea51b" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

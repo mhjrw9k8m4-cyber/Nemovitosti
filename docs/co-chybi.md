@@ -6845,3 +6845,117 @@ proti okolí, hlídání v aplikaci, účty, psaní mezi lidmi, poznámky,
 offline režim, kontrola fotek AI modelem a kontrola databáze
 (`scripts/kontrola-databaze.mjs`). Zkoušek je 185 souborů a každá
 pojistka je prověřená sabotáží.
+
+---
+
+## 3df. Úvodní stránka: nad první nabídkou leželo 487 px ovládání — *15. 10.*
+
+Majitel webu poslal snímek vršku úvodní stránky z telefonu se slovy, že
+je to příšerné a že to má být předělané podle velkých realitních webů.
+Měl pravdu a dá se to změřit.
+
+**Co bylo (390×844, naměřeno):**
+
+| blok | px |
+|---|---|
+| hlavička | 65 |
+| **prázdný pruh pod ní** | **48** |
+| pole hledání | 46 |
+| přepínač Seznam / Mapa přes celou šířku | 54 |
+| nadpis výsledků, poznámka, „Uložené" a řazení | 92 |
+| pruh „Projít 1 930 po jednom" + „Stáhnout výběr" | 106 |
+| **první nabídka začínala na** | **487 px** |
+
+Pětaosmdesát procent toho, co člověk po otevření viděl, byly ovladače.
+A kdo už web používal, měl mezi tím ještě pruh naposledy prohlédnutých
+— na majitelově snímku dva řádky, tedy kolem 640 px.
+
+**Co dělají velké realitní weby jinak.** Na mobilu mají nahoře
+hledání, pod ním JEDEN řádek s počtem a řazením, a hned nabídky.
+Přepínač na mapu je drobné tlačítko vedle hledání, ne pruh. Nářadí
+na práci s výpisem (export, hromadné procházení) je až pod výsledky
+nebo v nabídce. *Pozn.: v téhle schránce není přístup k internetu
+(proxy odmítá i `parcelaka.cz`), takže jsem si ty weby nemohl otevřít
+a vycházel jsem z toho, co mají společné. Kdyby se měl brát za vzor
+jeden konkrétní, musel by ho majitel ukázat.*
+
+**Co se změnilo:**
+
+1. **Prázdný pruh 48 → 40 px.** Nejdřív jsem napsal 14 a byla to
+   chyba: `test-pod-hlavickou` neměří jen výchozí stav, ale i stránku
+   posunutou o 60 px, a o tom, jestli se na pole hledání dá ještě
+   klepnout, rozhoduje jeho STŘED. Počítáno: 65 (hlavička) + odsazení
+   + 10 (vnitřek panelu) + 23 (polovina pole) ≥ 125 ⇒ odsazení ≥ 27.
+   Se čtrnácti byl střed pole 53 px POD hranou hlavičky a na levou
+   polovinu nešlo klepnout. Těch 48 px tedy nebylo prázdno pro nic za
+   nic — ubralo se z nich osm, ne čtyřiatřicet.
+2. **Přepínač Seznam/Mapa na řádek k hledání.** Ušetřených 54 px.
+   Do `.map-side` (kam patří významem) nesmí: pravidlo
+   `.map-app:not(.mv-seznam) .map-side{display:none}` ho schovává
+   spolu se seznamem, takže by po přepnutí na mapu nebylo čím zpět.
+3. **Krátký nadpis na telefonu.** „Doporučené příležitosti · 1 930 na
+   mapě" → „1 930 na mapě": schová se POPIS, ne počet.
+   *Druhý pokus.* Nejdřív tam stála druhá, úplně krátká podoba
+   „1 930 pozemků" a dlouhá se celá schovávala — a spadly na tom dvě
+   zkoušky (`test-naseptavac`, `test-zlevnene-filtr`). Patnáct zkoušek
+   totiž čte počet z toho prvku přes `innerText`, tedy jen to, co je
+   doopravdy vykreslené, a hledá v něm „N na mapě"; se schovanou
+   `.mc-sub` jim vycházelo −1. Přepsat je nešlo: „na mapě" je ve
+   zkouškách na 150 místech. A je to tak správně i bez nich — dvě
+   podoby téhož čísla by se dřív nebo později rozešly.
+4. **„Projít po jednom" a „Stáhnout výběr" až POD seznam** — spolu
+   s naposledy prohlédnutými. Jsou to nástroje pro toho, kdo výpis už
+   vidí. Na monitoru zůstávají nahoře, kde místo nechybí: `.map-side`
+   je svislý flex, takže stačilo určit `order` nad 1040 px.
+
+**Naměřeno po přestavbě: první nabídka na 289 px místo 487** — a cena
+je na první obrazovce celá (vyfoceno).
+
+### Dvě vady, které vyplavilo až focení
+Měření obě přehlédlo, protože obě byly o vzhledu, ne o výšce:
+
+- **Počet i obě tlačítka byly vycentrované**, odsazené od levého kraje
+  o 67 px. Příčina: pravidlo o pár řádků výš dělá z `.ms-vysledky`
+  na telefonu SLOUPEC, a moje `align-items:center` v něm neznamenalo
+  „na jeden řádek", ale „všechno doprostřed". Řada se musela vrátit
+  výslovně.
+- **Nápis v poli hledání se ořízl** uprostřed slova „cena": pole mělo
+  188 px a nápis 200. Přepínač proto na telefonu přišel o ikony —
+  pravidlo „ikona sama nic neřekne" tu platí obráceně, popisek sám
+  o sobě řekne všechno. Pole má 230 px.
+
+### Pojistka a tři sabotáže
+`scripts/test-prvni-obrazovka.mjs` měl mez 560 px; utáhla se na **330**
+(naměřený stav 289) a přibyly dvě kontroly: nástroje i naposledy
+prohlédnuté musí začínat ZA první nabídkou.
+
+Sabotáž nejdřív odhalila díru v mé vlastní kontrole: když se z
+`index.html` vyhodí celé `id="mc-akce"`, `js/main.js` má záložní cestu
+a tlačítka připíše dovnitř nadpisu — pruh je zase nahoře, ale
+`getElementById` nenajde nic a kontrola projde **naprázdno**. Hledá se
+proto podle třídy `.mc-akce`, která je v obou případech. Po opravě
+sabotáž padá na obou kontrolách: *„nástroje začínají na 217 px, první
+nabídka na 383 px"*.
+
+### A ještě jedna, o které jsem si myslel, že je spravená
+`test-rozdeleni-stylu` spadla v jednom běhu a o pár minut dřív táž
+zkouška prošla: *„stejný strom zkrácený 2 070 prvků, plný 2 105"*.
+
+Zkouška porovnává dvě načtení téže stránky a první, co musí platit, je
+„je to tentýž strom". Čekala pevných 900 ms — jenže obsah úvodní
+stránky doskakuje z několika zdrojů najednou (`opportunities.json`,
+živé inzeráty z databáze, `zlevneni.json`) a Leaflet si do stránky
+dokresluje dlaždice a shluky. Když jedno z toho doběhlo před měřením
+a podruhé až po něm, liší se STROM, ne stylopis.
+
+Dřívější oprava ten rozdíl přičetla dlaždicím mapy a vyňala
+`.leaflet-tile` z porovnání. **Vyjmutí je správně a zůstává** — kolik
+dlaždic v DOM je, o stylopisu opravdu nic neříká —, ale příčinu to
+nevysvětlilo, jen zakrylo: rozdíl se vracel dál. Teď se čeká, dokud se
+počet prvků dvakrát po sobě nezopakuje (nejdéle 5 s). Dvakrát po sobě
+zeleně.
+
+Mimochodem: při hledání se ukázalo, že pořadí výpisu se mění i mezi
+dvěma návštěvami téhož dne — `js/poradi.js` přidává k dennímu otáčení
+náhodné přihození uložené v `sessionStorage`. Je to tak schválně
+a popsané to tam je; kdo si otevře dvě karty, uvidí dvě pořadí.

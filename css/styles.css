@@ -1986,6 +1986,18 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    18 px proti 8 px nad ovládáním — tři různé odstupy na třech řádcích
    téže hlavičky. */
 .ms-vysledky > .mc-akce{flex:1 1 100%; margin-top:0;}
+/* POŘADÍ VE ZNAČCE JE TELEFONNÍ, NA MONITORU SE SROVNÁ ZPÁTKY.
+   „Projít po jednom", „Stáhnout výběr" a naposledy prohlédnuté stojí
+   ve značce AŽ ZA seznamem, protože na telefonu odsouvaly první
+   nabídku o 136 px (viz komentář u #mc-akce v index.html). Na monitoru
+   je nahoře místa dost a nikomu nic neodsouvají, takže se sem vrací —
+   .map-side je svislý flex, stačí mu určit pořadí. */
+@media (min-width:1041px){
+  .map-side > .ms-vysledky{order:1;}
+  .map-side > .mc-akce{order:2; margin-bottom:10px;}
+  .map-side > .recent-strip{order:3;}
+  .map-side > .opp-list{order:4;}
+}
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
 .msv-ulozene{min-height:36px; padding:6px 12px; font-size:12px;}
 .msv-razeni{display:flex; min-width:0;}
@@ -2237,6 +2249,9 @@ h1 em{font-style:italic; font-weight:800; color:var(--copper-bright);
    mají nad výpisem jeden zřetelný nadpis a vedle něj řazení; číslo
    k němu patří jako tišší přípona (.mc-sub). */
 .map-count{font-size:17px; color:var(--text-ondark); font-weight:700; letter-spacing:-0.01em; margin-bottom:12px;}
+/* Dlouhý popis nadpisu („Doporučené příležitosti") se na telefonu
+   schovává v bloku do 560 px; zbyde samotný počet „1 930 na mapě".
+   Počet se přitom nikam neopisuje — viz komentář v js/main.js. */
 /* Nejvýhodnější — přidaná hodnota ukázaná čísly */
 .deals-sec[hidden]{display:none;}
 .deals-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:14px; margin-top:24px;}
@@ -3522,8 +3537,32 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .map-side{order:2; border-right:0; max-height:none;}
   .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
-  .mv-toggle{display:flex; gap:4px; margin-top:14px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
-  .mvt-btn{flex:1; padding:10px; border:0; border-radius:var(--r-ovladani); background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:14px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  /* HLEDÁNÍ A PŘEPÍNAČ VEDLE SEBE, NE POD SEBOU.
+     Dřív: pole 46 px a pod ním pruh přepínače 54 px = 100 px na dva
+     ovladače. Teď jeden řádek. Pole si bere zbytek šířky a nesmí se
+     scvrknout pod 150 px — tolik měří jeho vlastní nápis
+     „Obec, druh, cena…" (naměřeno). */
+  .mcp-hledani{display:flex; align-items:center; gap:8px;}
+  .mcp-hledani .map-search{flex:1 1 auto; min-width:150px; position:relative;}
+  .mv-toggle{display:flex; flex:0 0 auto; gap:4px; margin-top:0; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
+  /* Přepínač se zúžil, aby zbylo na pole hledání. Naměřeno: se
+     14px písmem a odsazením 11 px měřil 194 px a poli zbylo 168 —
+     jen o 18 px víc, než měří jeho vlastní nápis. S 13px písmem
+     a odsazením 8 px měří 150 px a poli zbývá 212. Výška 44 px
+     (dotykový terč) zůstává, zúžila se jen šířka. */
+  .mvt-btn{flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 8px; border:0; border-radius:var(--r-ovladani); background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:13px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  /* NA TELEFONU PŘEPÍNAČ BEZ IKON. Pravidlo „ikona sama nic neřekne"
+     tu platí obráceně: popisek sám o sobě řekne všechno, ikona je
+     navíc — a stojí 40 px šířky, která chybí poli hledání. S ikonami
+     měl přepínač 174 px a do pole se nápis „Obec, druh, cena…"
+     NEVEŠEL, ořízlo ho uprostřed slova „cena" (vyfoceno). */
+  .mv-toggle .mvt-btn svg{display:none;}
+  /* POČET JEN V POHLEDU NA MAPU. V seznamu stojí hned pod přepínačem
+     v hlavičce výsledků, takže by tu byl podruhé a bral 50 px šířky,
+     kterou potřebuje pole hledání. Na mapě žádná hlavička výsledků
+     není (.map-app:not(.mv-seznam) .map-side{display:none}), a tam je
+     naopak jediné místo, kde se počet dá přečíst. */
+  .map-app.mv-seznam .mvt-n{display:none;}
   .mvt-btn.active{background:var(--plocha-znacka); color:#fff;}
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
@@ -5789,7 +5828,46 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      oko všimne, a nic v ní není. Jako odsazení uvnitř bílé desky je
      z téhož místa vzduch nad hledáním. Ovládání se nehne ani o pixel
      (obě kontroly měří jeho y a ty sedí dál). */
-  .hero-map .map-wide{margin-top:0; padding-top:48px; background:var(--panel);}
+  /* Z 48 px na 40 — a ne níž, ačkoli jsem to zkoušel.
+     NEJDŘÍV JSEM NAPSAL 14 A BYLA TO CHYBA, kterou našla zkouška
+     test-pod-hlavickou: neměří jen výchozí stav, ale i stránku
+     posunutou o 60 px. Hlavička je pevná a vysoká 65 px, takže o tom,
+     jestli se na pole hledání dá při posunutí ještě klepnout,
+     rozhoduje jeho STŘED: musí při posunu 60 px zůstat pod hranou
+     hlavičky, tedy od začátku stránky aspoň 125 px.
+     Počítáno: 65 (hlavička) + odsazení + 10 (vnitřek panelu) + 23
+     (polovina pole) ≥ 125  ⇒  odsazení ≥ 27. Se čtyřiceti zbývá
+     13 px rezervy na delší pole; se čtrnácti byl střed pole 53 px POD
+     hranou hlavičky a klepnout na levou polovinu nešlo.
+     Osm pixelů tedy ušetřeno, ne čtyřiatřicet — zbytek té úspory
+     přinesl přepínač a nadpis. */
+  .hero-map .map-wide{margin-top:0; padding-top:40px; background:var(--panel);}
+
+  /* HLAVIČKA VÝSLEDKŮ NA JEDEN ŘÁDEK.
+     Měla 88 px: nadpis „Doporučené příležitosti · 1 930 na mapě", pod
+     ním poznámka o střídání pořadí a pod tím teprve „Uložené" a řazení.
+     Na telefonu z toho zbývá to, co odpovídá na „kolik jich je a podle
+     čeho jsou seřazené" — tedy krátký počet, uložené a rozbalovač,
+     všechno vedle sebe. Dlouhý nadpis je na monitoru, kde je místo. */
+  /* ŘÁDEK, NE SLOUPEC. Pár řádků výš (blok u 560 px) stojí
+     flex-direction:column — a samotné align-items:center by v sloupci
+     neznamenalo „na jednom řádku", ale „všechno doprostřed". Tak to
+     taky vypadalo: počet i obě tlačítka odsazené od levého kraje
+     o 67 px, jako by patřily někam jinam. Proto se tu řada vrací
+     výslovně. */
+  .ms-vysledky{flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 8px; margin-bottom:8px;}
+  .ms-vysledky .msv-ovladani{flex:0 1 auto; justify-content:flex-end;}
+  .ms-vysledky .map-count{font-size:14px; letter-spacing:0; margin-bottom:0; flex:0 1 auto; min-width:0;}
+  /* Schovává se POPIS, ne počet: zkoušky čtou počet z vykresleného
+     textu #map-count a hledají v něm „N na mapě". Odděluje se s ním
+     i tečka, která by jinak zbyla na začátku řádku. */
+  .mc-hl, .ms-vysledky .mc-sep{display:none;}
+  .ms-vysledky .map-count{font-weight:700;}
+  .msv-ulozene{min-height:34px; padding:6px 10px;}
+  .msv-razeni .map-select{min-height:34px; max-width:150px; font-size:12px;}
+  /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
+     řádek, ne do něj — v řádku by ho rozlomily na dva. */
+  .ms-vysledky .mc-pozn, .ms-vysledky .mc-nove{flex:1 1 100%; margin:0; font-size:11px;}
 }
 
 /* =====================================================================

@@ -27,10 +27,19 @@ await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
 const SIRKA = 390, VYSKA = 844;
-/* Mez 560 px, ne 505: naměřený stav je 505 a pevné číslo by spadlo při
-   první změně textu nadpisu. 560 je pořád o 139 px méně než 699, se
-   kterými se začínalo, a hlavně se pod ně vejde celý náhled nabídky. */
-const MEZ_PRVNI = 560;
+/* Mez se utáhla z 560 na 330 — naměřený stav je 289.
+   Kudy se těch 198 px ubralo (vše naměřeno na 390×844):
+     ·   8 px prázdný pruh pod hlavičkou (padding 48 → 40; níž to
+        nejde, viz počet u .map-wide v css/styles.css),
+     ·  54 px přepínač Seznam/Mapa, který se přestěhoval na řádek
+        k poli hledání místo pruhu pod ním,
+     ·  28 px dlouhý nadpis „Doporučené příležitosti · 1 930 na mapě",
+        který má na telefonu krátkou podobu „1 930 pozemků",
+     · 106 px pruh „Projít … po jednom" a „Stáhnout výběr", který je
+        teď AŽ POD seznamem (na monitoru zůstává nahoře).
+   Mez je o 41 px volnější než naměřený stav: tolik unese delší nadpis
+   i užší telefon, ale NEUNESE vrácení kteréhokoli z těch čtyř kusů. */
+const MEZ_PRVNI = 330;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -83,13 +92,27 @@ try {
          jako past, aby se druhá značka nevrátila odjinud. */
       znacek: Array.from(document.querySelectorAll('.logo, .uvod-logo'))
         .filter((e) => e.getBoundingClientRect().height > 4).length,
-      /* Pruh nástrojů („Projít … po jednom", „Stáhnout výběr") nad
-         výpisem. Měří se zvlášť, protože mez na začátek první karty je
-         volná a čtyřicet pixelů navíc by v ní zmizelo — a přitom právě
-         tenhle pruh byl z celého ovládání největší. */
-      nastroje: (function () {
-        const e = document.getElementById('mc-akce');
-        return e ? Math.round(e.getBoundingClientRect().height) : null;
+      /* Pruh nástrojů („Projít … po jednom", „Stáhnout výběr") a pruh
+         naposledy prohlédnutých. Na telefonu musí stát AŽ ZA první
+         nabídkou — měří se proto jejich začátek, ne výška. Výška by
+         totiž nic neřekla: pruh může být nízký a stejně odsouvat.
+         Měří se zvlášť od meze na první kartu, protože ta je volná
+         a sto pixelů navíc by se v ní dalo schovat. */
+      /* HLEDÁ SE PODLE TŘÍDY, NE PODLE id — A STÁLO TO JEDNU SABOTÁŽ.
+         Když se z index.html vyhodí celé `id="mc-akce"`, js/main.js má
+         záložní cestu: tlačítka připíše dovnitř nadpisu výpisu. Pruh
+         se tím vrátí NAD seznam, jenže getElementById už nic nenajde
+         a kontrola projde naprázdno. Třída .mc-akce je v obou
+         případech, takže se tahle díra zavřela. */
+      nastrojeY: (function () {
+        const e = document.querySelector('.mc-akce');
+        return e && e.getBoundingClientRect().height > 1
+          ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
+      })(),
+      nedavnoY: (function () {
+        const e = document.getElementById('recent-strip');
+        return e && e.getBoundingClientRect().height > 1
+          ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
       })(),
     };
   });
@@ -108,14 +131,19 @@ try {
   /* Past na návrat starého stavu: značka patří do lišty, a tam jednou. */
   pravda('a značka „Parcelka" na stránce nestojí dvakrát pod sebou',
     m.znacek === 1, `viditelných značek: ${m.znacek}`);
-  /* Past na návrat starého stavu, podruhé: pruh nástrojů měl 136 px
-     a v něm vysvětlující větu, kterou MONITOR odjakživa schovával.
-     Dnes má 98 px — dvě tlačítka pod sebou, obě jednořádková. Mez je
-     110, a je to počítané číslo, ne odhad: vrácení té věty přidá 46 px
-     (ověřeno sabotáží), takže by pruh skočil na 144. Volnějších dvanáct
-     pixelů snese delší počet nabídek, užší telefon ne víc. */
-  pravda('pruh nástrojů nad výpisem se vejde do 110 px',
-    je(m.nastroje) && m.nastroje <= 110, `má ${m.nastroje} px`);
+  /* Past na návrat starého stavu, podruhé: nářadí na práci s výpisem
+     patří POD výpis. Dokud stálo nad ním, odsouvalo první nabídku
+     o 106 px — tedy to jediné, kvůli čemu sem člověk přišel, bylo až
+     za nástroji na zacházení s tím, co ještě neviděl.
+     Pruh naposledy prohlédnutých je tatáž věc: komu se tam něco
+     nahromadí, má to pod nabídkami, ne místo nich. Na snímku od
+     majitele webu zabíral dva pruhy nad první nabídkou. */
+  pravda('„Projít po jednom" a „Stáhnout výběr" stojí až POD první nabídkou',
+    !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY > m.karta),
+    `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
+  pravda('a naposledy prohlédnuté taky, pokud tam nějaké jsou',
+    !je(m.nedavnoY) || (je(m.karta) && m.nedavnoY > m.karta),
+    `naposledy prohlédnuté začínají na ${m.nedavnoY} px, první nabídka na ${m.karta} px`);
   await ctx.close();
 
   /* ---- A TOTÉŽ NA VELKÉM MONITORU --------------------------------

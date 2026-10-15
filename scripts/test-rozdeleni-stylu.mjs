@@ -192,6 +192,38 @@ function balikStranky(stranka) {
   return m ? m[1] : null;
 }
 
+/* POČKAT NA USTÁLENÍ, NE NA PEVNÝCH 900 ms.
+   ------------------------------------------------------------------
+   Tahle zkouška porovnává dvě načtení téže stránky a první, co musí
+   platit, je „je to tentýž strom". Pevné čekání to neumí zaručit:
+   obsah na úvodní stránce doskakuje z několika zdrojů najednou
+   (data/opportunities.json, živé inzeráty z databáze, data/zlevneni.json)
+   a Leaflet si do stránky dokresluje dlaždice a shluky podle toho, kam
+   se zrovna stihl posunout. Když jedno z toho doběhlo před měřením
+   a podruhé až po něm, liší se STROM, ne stylopis — a zkouška spadne
+   na něčem, co nehlídá. Naměřeno: 2 070 proti 2 105 prvkům, a to při
+   běhu, kde o pár minut dřív táž zkouška prošla.
+
+   Čeká se proto, dokud se počet prvků DVAKRÁT PO SOBĚ nezopakuje,
+   nejdéle pět sekund. Spodních 900 ms zůstává, aby se neměřilo dřív,
+   než se vůbec začne kreslit.
+
+   (Co to NENÍ: dřívější pokus přičetl ten rozdíl dlaždicím mapy
+   a vyňal `.leaflet-tile` z porovnání. Vyjmutí je správně a zůstává —
+   kolik dlaždic v DOM je, o stylopisu opravdu nic neříká —, ale
+   příčinu to nevysvětlilo: rozdíl se vracel dál.) */
+async function ustal(page) {
+  await page.waitForTimeout(900);
+  let minule = -1, stejne = 0;
+  for (let i = 0; i < 25; i++) {
+    const ted = await page.evaluate(() => document.querySelectorAll('*').length);
+    stejne = (ted === minule) ? stejne + 1 : 0;
+    minule = ted;
+    if (stejne >= 2) return;
+    await page.waitForTimeout(200);
+  }
+}
+
 async function zmer(page, stranka, plny, balik) {
   await page.unroute('**/css/*.min.css*').catch(() => {});
   if (plny) {
@@ -199,7 +231,7 @@ async function zmer(page, stranka, plny, balik) {
       r.fulfill({ status: 200, contentType: 'text/css', body: PLNY }));
   }
   await page.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await page.waitForTimeout(900);
+  await ustal(page);
   return page.evaluate(SBER);
 }
 
