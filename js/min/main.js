@@ -1935,6 +1935,7 @@
   }
 
   function updateMapView() {
+    if (mapaCeka) { clearTimeout(mapaCeka); mapaCeka = 0; }
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);
     if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
@@ -1942,10 +1943,18 @@
 
     if (maska && map.hasLayer(maska)) maska.bringToBack();
   }
+
+  var mapaCeka = 0;
+  function mapaTed() {
+    if (!mapaCeka) return;
+    clearTimeout(mapaCeka);
+    mapaCeka = 0;
+    updateMapView();
+  }
   function syncMarkers(visIds) {
     lastVis = visIds.map(function (id) { return DATA[id]; });
     refreshKrajTips(lastVis);
-    updateMapView();
+    if (!mapaCeka) mapaCeka = setTimeout(function () { mapaCeka = 0; updateMapView(); }, 0);
     if (typeof updateKrajHead === 'function') updateKrajHead();
   }
 
@@ -2800,9 +2809,11 @@
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
       prepni: function (r) { nastavBarvy(r); },
-      barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
+
+      barvaTecky: function (i) { mapaTed(); var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
 
       tecka: function (i) {
+        mapaTed();
         var m = markers[i]; if (!m) return null;
         var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
         return { zaM2: zm ? zm(m._d) : null, barva: dotStyle(m._d).fillColor };

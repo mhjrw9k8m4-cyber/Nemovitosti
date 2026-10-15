@@ -2992,6 +2992,7 @@
 
   // Vždy: tečky pozemků + obrysy krajů přes ně
   function updateMapView() {
+    if (mapaCeka) { clearTimeout(mapaCeka); mapaCeka = 0; }
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);
     if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
@@ -2999,10 +3000,34 @@
     // Závoj patří úplně dolů — nad dlaždice, pod obrysy krajů i tečky.
     if (maska && map.hasLayer(maska)) maska.bringToBack();
   }
+  /* TEČKY SE PŘEKRESLUJÍ AŽ ZA VÝPISEM, NE PŘED NÍM.
+     ------------------------------------------------------------------
+     syncMarkers() stojí uprostřed renderList(), tedy DŘÍV, než se karty
+     zapíšou do stránky. Dokud se uvnitř rovnou kreslila mapa, čekal
+     výpis na 1 930 teček, obrysy krajů a závoj — a na telefonu je
+     přitom mapa v základním pohledu schovaná
+     (.map-app.mv-seznam .map-holder{display:none}), takže se čekalo
+     na něco, co nikdo nevidí.
+
+     Naměřeno (telefon 390 px, slabá linka, procesor ×4): updateMapView()
+     179–214 ms ve dvou voláních při startu. Data pro výpis (lastVis)
+     se nastaví dál okamžitě — odkládá se jen kreslení.
+
+     KDO SI MAPU VYŽÁDÁ, DOSTANE JI HNED. mapaTed() čekající kreslení
+     provede okamžitě; volá se odtud všude, kde se po překreslení sahá
+     na mapu ve stejném kroku. Bez toho by to byla tichá vada: tečky
+     o jeden snímek pozadu se na obrazovce nepoznají, ale v měření ano. */
+  var mapaCeka = 0;
+  function mapaTed() {
+    if (!mapaCeka) return;
+    clearTimeout(mapaCeka);
+    mapaCeka = 0;
+    updateMapView();
+  }
   function syncMarkers(visIds) {
     lastVis = visIds.map(function (id) { return DATA[id]; });
     refreshKrajTips(lastVis);
-    updateMapView();
+    if (!mapaCeka) mapaCeka = setTimeout(function () { mapaCeka = 0; updateMapView(); }, 0);
     if (typeof updateKrajHead === 'function') updateKrajHead(); // počet v nadpisu drží krok s filtry
   }
 
@@ -4178,10 +4203,16 @@
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
       prepni: function (r) { nastavBarvy(r); },
-      barvaTecky: function (i) { var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
+      /* mapaTed() napřed: kreslení teček je odložené o jeden krok
+         (viz syncMarkers), takže kdo se na ně ptá hned po překreslení
+         výpisu, by jinak dostal stav o krok pozadu. Na obrazovce se to
+         nepozná, v měření ano — a tichá vada ve zkoušce je horší než
+         žádná zkouška. */
+      barvaTecky: function (i) { mapaTed(); var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
       /* Cena za metr i barva k téže tečce — aby šlo ověřit, že barva
          s cenou roste, a ne jen že je pestrá. */
       tecka: function (i) {
+        mapaTed();
         var m = markers[i]; if (!m) return null;
         var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
         return { zaM2: zm ? zm(m._d) : null, barva: dotStyle(m._d).fillColor };

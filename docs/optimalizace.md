@@ -628,3 +628,47 @@ to nejdřív četl jako trojnásobnou práci. Není: `odhad()` má paměť
 (`pametOdhadu`), takže drtivá většina těch volání jsou laciné zásahy
 do ní. Celý cenový model stojí 426 ms, tedy devět procent — ne hlavní
 chod.
+
+---
+
+## 12. Výpis čekal na 1 930 teček, které na telefonu nikdo nevidí
+
+`syncMarkers()` stojí uprostřed `renderList()` — tedy DŘÍV, než se karty
+zapíšou do stránky — a uvnitř rovnou kreslilo mapu: tečky, obrysy krajů
+a závoj. Výpis tedy čekal na překreslení 1 930 teček. A na telefonu je
+přitom mapa v základním pohledu schovaná
+(`.map-app.mv-seznam .map-holder{display:none}`), takže se čekalo
+na něco, co nikdo nevidí.
+
+**Naměřeno** (telefon 390 px, slabá linka 1,6 Mb/s + 150 ms, procesor
+×4), pět načtení v každé poloze:
+
+| | jednotlivé běhy | medián |
+|---|---|---|
+| bez odložení | 4 327, 4 357, 4 473, 4 494, 4 584 | **4 473 ms** |
+| s odložením | 3 998, 4 024, 4 040, 4 119, 4 580 | **4 040 ms** |
+
+**O 433 ms rychleji** (10 %). Data pro výpis (`lastVis`) se nastaví dál
+okamžitě — odkládá se jen kreslení, o jeden krok smyčky.
+
+### Jedno měření tu neznamená nic
+První běh po úpravě vyšel 4 877 ms, tedy HŮŘ než před ní — a kdybych
+podle něj soudil, zahodil bych funkční opravu. Rozptyl mezi běhy je na
+tomhle stroji přes 500 ms. Proto pětkrát a medián.
+
+### Tichá vada, které se to muselo vyhnout
+Tečky o jeden krok pozadu se na obrazovce nepoznají, ale zkouška, která
+se na ně ptá hned po překreslení výpisu, by dostala stav před změnou —
+a prošla by ze špatného důvodu. `mapaTed()` proto čekající kreslení
+provede okamžitě a volá se ze všeho, co na tečky sahá (`PK_BARVY`).
+
+### Co se u toho našlo a NEUDĚLALO
+Měření ukázalo, že `renderList()` se při startu volá **dvakrát** (1 136
+ms dohromady při procesoru ×4): jednou přímo z `boot()`, podruhé
+z obnovy stavu hned po ní. Jedno z těch vykreslení je nejspíš zbytečné.
+
+Nepustil jsem se do toho: jméno té druhé funkce jsem četl ze
+zásobníku ZMINIFIKOVANÉHO skriptu, kde nemusí odpovídat zdroji, a obnova
+stavu z adresy, z uloženého filtru a z návratu na pozemek jsou tři různé
+cesty. Přestavovat podle nejistého čtení pořadí v osmitisícovém souboru
+je způsob, jak rozbít něco, co dnes funguje. Zapsáno jako další položka.
