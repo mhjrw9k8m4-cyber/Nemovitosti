@@ -11,6 +11,11 @@
 //
 // E-MAIL SE NEPOSÍLÁ. Hlídání je záležitost aplikace; e-mailem chodí jen
 // potvrzení účtu a obnova hesla, což řeší Supabase samo.
+/* SERVISNÍ PRACOVNÍK VYPNUTÝ: sw.js volá `skipWaiting()`
+   i `clients.claim()`, takže převezme i právě načtenou stránku
+   a od té chvíle obsluhuje `config.js` i `data/*.json` sám —
+   jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
+   přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
 
@@ -55,7 +60,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon stojí za
    `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna.
    (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-const ctx = await prohlizec.newContext({ viewport: { width: 420, height: 900 },
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 let data = STARE;   // co server právě vydává; test to v průběhu přepne
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
@@ -418,7 +423,7 @@ if (smazat) {
    A Enter v heslu musí odeslat: bez <form> to byla na telefonu největší
    klávesa, po které se nedělo nic. */
 {
-  const ctxOdhlaseny = await prohlizec.newContext({ viewport: { width: 420, height: 900 },
+  const ctxOdhlaseny = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxOdhlaseny.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -500,7 +505,8 @@ if (smazat) {
     { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '7/2', druh: 'orná půda',
       area: 1200, price: 400000, lat: 50.03, lng: 15.21, extra: 'inzerát', site: [] },
   ] };
-  const ctxX = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  const ctxX = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxX.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctxX.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
@@ -549,7 +555,8 @@ if (smazat) {
  * takže se čtou odtud — kdyby je critText zamlčel, bude to vidět tady.
  */
 {
-  const ctxU = await prohlizec.newContext({ viewport: { width: 420, height: 900 } });
+  const ctxU = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxU.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const pu = await ctxU.newPage();

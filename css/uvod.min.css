@@ -1341,14 +1341,16 @@ body>footer{flex:none}
 @media (min-width:1041px){.map-side{overflow-y:auto;overscroll-behavior:contain}
 .opp-list{overflow:visible;flex:none}
 .mc-rychly{padding:8px 10px;gap:10px}
-.mc-rychly .mcr-popis{display:none}
+.mc-rychly .mcr-popis{display:block;font-size:12px;line-height:1.3}
+.mc-rychly .mcr-popis-vic{display:none}
 .mcr-ic{width:30px;height:30px}
 .mcr-ic svg{width:17px;height:17px;stroke-width:2.12}
 .mc-akce{gap:6px}
 .mc-skryte{min-height:32px;padding:0 10px;font-size:13px}
 }
 @media (max-width:720px){.mc-rychly{padding:8px 10px;gap:10px}
-.mc-rychly .mcr-popis{display:none}
+.mc-rychly .mcr-popis{display:block;font-size:12px;line-height:1.3}
+.mc-rychly .mcr-popis-vic{display:none}
 .mcr-ic{width:30px;height:30px}
 .mcr-ic svg{width:17px;height:17px;stroke-width:2.12}
 .mc-akce{gap:6px;margin-top:8px}

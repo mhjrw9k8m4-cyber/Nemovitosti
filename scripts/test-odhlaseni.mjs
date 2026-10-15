@@ -50,7 +50,10 @@ try {
      Že je ve SKUTEČNÉM js/config.js false, drží scripts/test-rozesilac.mjs
      — tady by se to měřit nedalo, protože se ten soubor nahrazuje. */
   async function kontext(mailZapnuto, token) {
-    const ctx = await prohlizec.newContext();
+    /* Servisní pracovník vypnutý — jinak si `config.js` obsluhuje sám
+       a podstrčená falešná databáze přestane platit (CLAUDE.md,
+       oddíl o testech). */
+    const ctx = await prohlizec.newContext({ serviceWorkers: 'block' });
     await ctx.route('**/config.js*', (r) => r.fulfill({
       status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`

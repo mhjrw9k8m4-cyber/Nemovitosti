@@ -141,8 +141,20 @@ const vidu = (sel) => p.evaluate((s) => {
   {
     const CERVENA = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAAAA3NCSVQICAjb4U/gAAAAW0lEQVR4nO3BAQ0AAADCoPdPbQ8HFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHwbQe4AAeLq6lAAAAAASUVORK5CYII=', 'base64');
+    /* SERVISNÍ PRACOVNÍK MUSÍ BÝT VYPNUTÝ — jinak se tenhle oddíl neměří.
+       sw.js volá `skipWaiting()` i `clients.claim()`, takže převezme
+       i právě načtenou stránku, a `data/*.json` od té chvíle obsluhuje
+       on. Jeho dotazy přes `ctx.route` NEJDOU: stránka dostala
+       OPRAVDOVÉ `data/mapove-vrstvy.json` místo podstrčeného, zkoušela
+       pět živých vrstev úřadů, žádná v testu neodpověděla a v panelu
+       stálo „Vrstvy úřadů teď neodpovídají" — nula přepínačů.
+       Naměřeno 15. 10.: dotazů na podstrčenou zkušební dlaždici 0,
+       `pripravene()` vrátilo 0 vrstev a `mrtve` pět jmen z opravdového
+       souboru. Kontext výš (řádek 48) tu pojistku má od začátku;
+       tenhle ji neměl. (Táž past jako v scripts/test-pridat.mjs, viz
+       CLAUDE.md, oddíl o testech.) */
     const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
-      isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+      isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
     await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
     await ctx2.route('**/data/mapove-vrstvy.json*', (r) => r.fulfill({ status: 200,

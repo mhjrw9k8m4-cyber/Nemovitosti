@@ -1,6 +1,11 @@
 // Projde chat v opravdovém prohlížeči: zájemce napíše, majitel to uvidí
 // a odpoví, zájemce odpověď dostane. Plus věci, které se v Node otestovat
 // nedají — schránka vláken, hlavička konverzace a chování posuvníku.
+/* SERVISNÍ PRACOVNÍK VYPNUTÝ: sw.js volá `skipWaiting()`
+   i `clients.claim()`, takže převezme i právě načtenou stránku
+   a od té chvíle obsluhuje `config.js` i `data/*.json` sám —
+   jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
+   přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
 
 // Zkušební Supabase si test spustí sám — jedním příkazem a bez přípravy.
@@ -33,7 +38,7 @@ async function kontext(uid, token) {
      `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna,
      takže by se v úzkém okně bez emulace dotyku vykreslilo rozvržení
      monitoru. (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 760 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 760 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   // config.js míří na ostrou Supabase — podstrčíme falešnou.
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',

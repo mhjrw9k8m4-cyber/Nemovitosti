@@ -3675,9 +3675,10 @@
         }
       } finally { ukazProsle = false; }
     }
+
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-skryte" id="mc-prosle">' +
       (ukazProsle ? 'Schovat dražby po termínu'
-                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</button>';
+                  : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
 
     var podobnychStranou = 0;
     var _pnNazev = (!mistoFiltr && !ukazPodobne) ? presnyNazev() : null;
@@ -3702,7 +3703,9 @@
       + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
       + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
       + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
-      + '<span class="mcr-popis">Dvacet karet přes celou obrazovku — doprava uložit, doleva schovat.</span></span>'
+
+      + '<span class="mcr-popis"><span class="mcr-popis-vic">Dvacet karet přes celou obrazovku. </span>'
+      + 'Doprava uložit, doleva schovat.</span></span>'
       + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
 
     countEl.innerHTML = headLabel + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')

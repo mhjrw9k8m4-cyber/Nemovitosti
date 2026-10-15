@@ -6197,7 +6197,9 @@ body > footer{flex:none;}
   .map-side{overflow-y:auto; overscroll-behavior:contain;}
   .opp-list{overflow:visible; flex:none;}
   .mc-rychly{padding:8px 10px; gap:10px;}
-  .mc-rychly .mcr-popis{display:none;}
+  /* Ne celá věta, ale ta polovina, která říká, co se stane. */
+  .mc-rychly .mcr-popis{display:block; font-size:12px; line-height:1.3;}
+  .mc-rychly .mcr-popis-vic{display:none;}
   .mcr-ic{width:30px; height:30px;}
   .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
   .mc-akce{gap:6px;}
@@ -6216,15 +6218,25 @@ body > footer{flex:none;}
    ovládání a první karta začínala na y 699 z 844 — tedy pod obrazovkou.
    Z toho si tenhle pruh bral 136 px, nejvíc ze všech.
 
-   Co se tím ztrácí, říkám rovnou: věta „Dvacet karet přes celou
-   obrazovku — doprava uložit, doleva schovat." Zůstává nadpis tlačítka
-   s počtem („Projít 1 934 pozemků po jednom"), který nese to hlavní,
-   a na tabletu i monitoru se věta čte dál. Šestina obrazovky telefonu
-   za jednu vysvětlivku nad nabídkami je moc.
+   Co se tím ztrácelo, byla celá věta „Dvacet karet přes celou
+   obrazovku — doprava uložit, doleva schovat." A to bylo o půl věty
+   moc: druhá polovina je JEDINÉ místo, kde se člověk PŘED klepnutím
+   dozví, co se s pozemkem stane (hlídá to scripts/test-rychly-prohlizec.mjs
+   a od té doby, co se věta na telefonu schovala, ta zkouška padala).
+   Přeměřeno 15. 10. na 390×844: celá věta přidá tlačítku 26 px
+   (48 → 74) a pruh vyroste na 124 px, kdežto samotná druhá polovina
+   přidá 10 px (48 → 58) a pruh zůstane na 108, tedy pod mezí 110,
+   kterou si drží scripts/test-prvni-obrazovka.mjs. Deset pixelů za
+   větu, bez které se nedá odhadnout, co tlačítko udělá, je dobrý
+   obchod — šestina obrazovky za celou větu byla špatný.
+   Schovává se tedy jen první polovina (.mcr-popis-vic): kolik karet
+   to je, se člověk dozví i tak, hned jak výběr otevře.
    ===================================================================== */
 @media (max-width:720px){
   .mc-rychly{padding:8px 10px; gap:10px;}
-  .mc-rychly .mcr-popis{display:none;}
+  /* Ne celá věta, ale ta polovina, která říká, co se stane. */
+  .mc-rychly .mcr-popis{display:block; font-size:12px; line-height:1.3;}
+  .mc-rychly .mcr-popis-vic{display:none;}
   .mcr-ic{width:30px; height:30px;}
   .mcr-ic svg{width:17px; height:17px; stroke-width:2.12;}   /* 1,5 ÷ 17 × 24 */
   .mc-akce{gap:6px; margin-top:8px;}

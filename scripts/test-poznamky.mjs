@@ -20,6 +20,11 @@
 //    tentýž rozbitý slib, jen obráceně.
 //  • Nesmí růst bez meze. localStorage má kolem 5 MB na celý web
 //    a sdílí se s oblíbenými i s hlídáním.
+/* SERVISNÍ PRACOVNÍK VYPNUTÝ: sw.js volá `skipWaiting()`
+   i `clients.claim()`, takže převezme i právě načtenou stránku
+   a od té chvíle obsluhuje `config.js` i `data/*.json` sám —
+   jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
+   přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
 import { readdirSync } from 'node:fs';
 import path from 'node:path';
@@ -58,7 +63,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 1) napsat, uložit, vrátit se ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   const chybyJs = [];
   const odeslano = [];
@@ -128,7 +133,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 2) meze a plná schránka ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForTimeout(2000);
@@ -174,7 +179,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 3) poznámka je vidět v porovnání uložených ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForTimeout(2200);
@@ -190,7 +195,15 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   await p.goto(`${BASE}/porovnani.html`, { waitUntil: 'load' });
   await p.waitForTimeout(2500);
   const v = await p.evaluate(() => {
-    const e = document.querySelector('.por-pozn');
+    /* MOJE POZNÁMKA SE JMENUJE .por-moje-pozn, NE .por-pozn.
+       Hledalo se tu `.por-pozn` — a to je třída VYSVĚTLUJÍCÍCH odstavců
+       pod tabulkou („Zeleně je nejnižší cena za m²…"). Dokud nesly obě
+       věci tutéž třídu, zkouška si toho nevšimla; od chvíle, co se
+       poznámka přejmenovala (jinak ji ořezávalo pravidlo na dva řádky,
+       určené těm odstavcům), tu zkouška porovnávala poznámku s cizím
+       textem. Hlášení z 15. 10.: „v tabulce: Zeleně je nejnižší cena
+       za m²…". */
+    const e = document.querySelector('.por-moje-pozn');
     return { je: !!e, text: e ? e.textContent.trim() : null,
       radku: document.querySelectorAll('.por-tab tbody tr').length };
   });
@@ -208,7 +221,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
    srazila na 0,01 ms — ale pokud by zvětrala, pole by ukazovalo starý
    text a člověk by si myslel, že se mu poznámka neuložila. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForTimeout(2000);
@@ -267,7 +280,7 @@ const PRIHLAS = () => {
    z úplně jiného důvodu, než co měří. Podstrčení je proto součást
    přihlášení, ne volitelná ozdoba. */
 async function prihlasenyKontext(sirka, vyska) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: vyska } });
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: vyska } });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200,
     contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`
@@ -534,7 +547,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
  * ní ta karta?
  */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

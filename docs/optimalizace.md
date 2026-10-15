@@ -349,3 +349,60 @@ ale **nedá** jméno do místního rozsahu — a `regiony-meta.mjs`,
 `generate-data-rezy.mjs` i `mail-sklad.mjs` si tu funkci používají samy.
 Tři zkoušky spadly na `slug is not defined`. Správně je
 `import { slug } from './text.mjs'; export { slug };`.
+
+
+## 9. Servisní pracovník obsluhoval zkoušky — devět červených a jedna skrytá vada *15. 10.*
+
+**Tohle je největší nález téhle série a stojí za to ho napsat celý.**
+
+`sw.js` (offline režim) volá `skipWaiting()` **i** `clients.claim()`.
+To znamená, že pracovník **převezme i tu stránku, která ho právě
+zaregistrovala** — ne až tu příští. Od té chvíle obsluhuje `config.js`
+a `data/*.json` on, a **jeho dotazy přes `ctx.route` nejdou**: co si
+zkouška podstrčila, přestane platit a stránka dostane OPRAVDOVÝ soubor.
+
+Následek je zrádný tím, že zkouška nespadne na „podstrčení nezabralo",
+ale na něčem úplně jiném — a hledá se chyba ve webu:
+
+| zkouška | na co padala | co se opravdu stalo |
+|---|---|---|
+| `test-mapa-pozemku` | „bez mapové knihovny se ukáže nehybný snímek — náhrada false" | knihovna se NEPODAŘILO zahodit, pracovník ji vydal z mezipaměti — náhrada tedy neměla proč naskočit |
+| `test-vrstvy-mapa` | „podstrčená vrstva se nabídne — přepínačů 0" | stránka dostala opravdové `data/mapove-vrstvy.json`, zkoušela pět živých vrstev úřadů a žádná v testu neodpověděla |
+| `test-pridat` | 12 kontrol o „moje inzeráty" | stránka se ptala **opravdové databáze na supabase.co** |
+| `test-pamet` | výjimka `.toast-akce` je null | — |
+| `test-poznamky` | poznámka není vidět | — |
+| `test-chat-prohlizec` | po klepnutí do vlákna není psací pole | — |
+| `test-hlidani-prohlizec` | timeout | — |
+| `test-odhlaseni` | stránka nepotvrdí odhlášení | — |
+
+**Jedno `serviceWorkers: 'block'` v kontextu spravilo osm z nich.**
+Devátá (`test-poznamky`) padala po tom ještě na jedné věci, a byla to
+taky slepota měření: hledala `.por-pozn`, což je třída VYSVĚTLUJÍCÍCH
+odstavců pod tabulkou, ne moje poznámka (`.por-moje-pozn`).
+
+**A při tom se našly dvě pravé vady webu** — obě na první obrazovce
+telefonu, obě v pruhu nad výpisem:
+
+1. **Cena první nabídky nebyla vidět.** Když je v datech dražba po
+   termínu, přidá se do pruhu třetí tlačítko („Zobrazit dražby po
+   termínu (1)"). Naměřeno na 390 px: pruh má 370 px místa, ale
+   „Zobrazit dražby po termínu (1)" je 213 px a „Stáhnout výběr
+   (1 930)" 167 — dohromady 386. Zalomilo se to pod sebe, pruh vyrostl
+   z 98 na **148 px**, první karta spadla o 50 px a cena končila na
+   857 px z 844. Z tlačítka šlo pryč slovo „Zobrazit", které nic
+   nenese (číslo v závorce říká, že se něco skrývá): 157 px, dohromady
+   330, pruh zpátky na 98.
+2. **Rychlý výběr na telefonu neřekl, co udělá.** Věta „Dvacet karet
+   přes celou obrazovku — doprava uložit, doleva schovat" se na
+   telefonu schovávala celá, a to bylo o půl věty moc: druhá polovina
+   je jediné místo, kde se člověk PŘED klepnutím dozví, co se
+   s pozemkem stane. Přeměřeno: celá věta přidá 26 px (pruh na 124),
+   samotná druhá polovina 10 px (pruh 108, pod mezí 110). Deset pixelů
+   za to je dobrý obchod; šestina obrazovky za celou větu byl špatný.
+
+**Pravidlo do CLAUDE.md** (už je tam): kdykoli se v jednom kontextu
+něco podstrkuje přes `ctx.route`, musí být pracovník vypnutý. Zbývá to
+dotáhnout plošně — **54 zkoušek** route podstrkuje a pracovníka
+nevypíná. Dnes jsou zelené, protože na podstrčeném souboru nestojí,
+ale je to mina: stačí do takové zkoušky přidat kontrolu, která na něm
+stojí, a padne na něčem, co s webem nemá nic společného.

@@ -36,7 +36,20 @@ const pozemky = D.filter((d) => isFinite(d.lat) && isFinite(d.lng) && d.place &&
    i generátor stránek pozemků. Stránka má vzniknout pro to, co je vidět,
    ne pro každý řádek v datech: tentýž pozemek chodí ze dvou zdrojů. */
 const PKH = createRequire(import.meta.url)(path.join(ROOT, 'js', 'hlidani-logika.js'));
-const ukazane = PKH.bezDuplicit(pozemky);
+/* A DRAŽBA PO TERMÍNU UŽ ŽIVÁ NABÍDKA NENÍ. Tutéž podmínku používá
+   výpis okresu, strojové řezy i generátor stránek pozemků — a od
+   15. 10. je to i důvod, proč se stránka přepíše na ukončenou
+   (dřív to umělo jen zmizení ze zdroje). Kdyby ji tahle zkouška
+   neznala, hlásila by každou proběhlou dražbu jako „stránka nese
+   značku ukončení, a přesto je v datech". Podmínka stojí na jednom
+   místě (js/terminy.js), ať se obě strany nemohou rozejít. */
+createRequire(import.meta.url)(path.join(ROOT, 'js', 'terminy.js'));
+const TERM = globalThis.PK_TERMINY;
+if (!TERM || typeof TERM.poTerminu !== 'function') {
+  console.error('::error::js/terminy.js nedalo poTerminu — zkouška by brala proběhlé dražby za živé');
+  process.exit(1);
+}
+const ukazane = PKH.bezDuplicit(pozemky).filter((d) => !TERM.poTerminu(d));
 
 // --- 1) prohlížečový výpočet názvu musí sednout s generátorem -----------
 /* Tentýž název skládají DVA nezávislé kusy kódu: generátor v Node

@@ -5541,9 +5541,20 @@
         }
       } finally { ukazProsle = false; }
     }
+    /* BEZ SLOVA „ZOBRAZIT", A JE TO ZMĚŘENÉ. Na telefonu 390 px má pruh
+       nad výpisem 370 px místa a tlačítka se do něj skládají vedle sebe.
+       „Zobrazit dražby po termínu (1)" je 213 px a „Stáhnout výběr
+       (1 930)" 167 — dohromady 386, tedy o 16 px víc, než se vejde.
+       Zalomilo se to pod sebe a pruh vyrostl z 98 na 148 px: první
+       nabídka spadla o 50 px a CENA se už nevešla na první obrazovku
+       (končila na 857 px z 844). Bez toho slova má tlačítko 157 px,
+       dohromady 330 a pruh zůstává na 98. Slovo „Zobrazit" přitom
+       nenese nic: číslo v závorce říká, že se něco skrývá.
+       Stav „Schovat dražby po termínu" (178 px) se vedle vývozu vejde
+       taky. Hlídá scripts/test-prvni-obrazovka.mjs. */
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-skryte" id="mc-prosle">' +
       (ukazProsle ? 'Schovat dražby po termínu'
-                  : 'Zobrazit dražby po termínu (' + proslychStranou + ')') + '</button>';
+                  : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
     /* Kolik podobných názvů se právě nepočítá. Musí to být vidět:
        zúžit výpis a mlčet o tom je horší než vrátit moc — člověk pak
        neví, jestli nabídka není, nebo se jen skrývá. Počítá se přes
@@ -5592,7 +5603,14 @@
       + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
       + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
       + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
-      + '<span class="mcr-popis">Dvacet karet přes celou obrazovku — doprava uložit, doleva schovat.</span></span>'
+      /* VĚTA JE ROZDĚLENÁ NA DVĚ POLOVINY, A MÁ TO DŮVOD. Celá se
+         nevejde na úzký pruh (naměřeno: na telefonu by přidala 26 px),
+         ale druhá polovina je ta, která říká, CO SE STANE — a ta musí
+         být vidět, ještě než se do výběru klepne. Stojí 10 px. První
+         polovina (kolik karet) je příjemná, ne nutná, takže se na
+         úzkém pruhu schová (.mcr-popis-vic v css/styles.css). */
+      + '<span class="mcr-popis"><span class="mcr-popis-vic">Dvacet karet přes celou obrazovku. </span>'
+      + 'Doprava uložit, doleva schovat.</span></span>'
       + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
