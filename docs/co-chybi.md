@@ -6976,3 +6976,61 @@ tatáž oprava vznikla dřív a na úvodní stránku se nedonesla.
 dostane jednou a dvakrát zavolat nejde. Doplnit to znamená vyvést
 z `boot()` přípojku na dodatečné nabídky. Dnes to nepálí: inzerátů od
 majitelů je v datech nula — až jich bude víc, musí se to udělat.
+
+---
+
+## 3dh. NALEZENO: sdílený odkaz na výřez mapy na pomalejším telefonu nefungoval — *15. 10.*
+
+Našlo se to při hledání zbytečné práce, ne při hledání vady — a je to
+vada vážnější než to, kvůli čemu jsem tam šel.
+
+**Co se dělo.** `js/odkaz.js` zapisuje výřez mapy do adresy
+(`#m=šířka,délka,zoom`) při každé jeho změně, a první taková změna je
+ustavení mapy při startu. Obnova z adresy (`obnovZAdresy()`) běží
+AŽ POTOM — takže na pomalém zařízení četla hash, který si web mezitím
+přepsal sám. Sdílený výřez se tím ztratil a zahodil se do výchozího
+pohledu na celou republiku.
+
+**Naměřeno** (telefon 390 px, odkaz `#m=49.1951,16.6068,12`, tři běhy
+v každé poloze, čekaný zoom 12):
+
+| procesor | zoom po otevření |
+|---|---|
+| ×1 | 12, 12, 12 |
+| ×2 | 12, 12, 12 |
+| **×4** | **9, 9, 9** |
+| **×6** | **9, 9, 9** |
+
+Na rychlém stroji to fungovalo — proto si toho nikdo nevšiml. Na
+telefonu, kterému to trvá, odkaz na konkrétní místo poslal příjemce
+na celou republiku.
+
+**Opraveno** tím, že se adresa čte, jak vypadala PŘI OTEVŘENÍ stránky
+(`ADRESA_PRI_OTEVRENI`, zachycená při načtení skriptu, tedy dřív, než
+se vůbec postaví mapa). Po opravě je zoom 12 při ×1 i ×6.
+
+**Vedlejší zisk, kvůli kterému jsem tam původně šel:** odpadlo druhé
+celé překreslení výpisu. Naměřeno (slabá linka, procesor ×4, medián
+z pěti běhů):
+
+| | první nabídka | hlavní vlákno zaneprázdněno | uklidní se v |
+|---|---|---|---|
+| před | 4 228 ms | 2 870 ms | 5 446 ms |
+| **po** | 3 894 ms | **2 030 ms** | **4 475 ms** |
+
+Telefon udělá o 840 ms méně práce (−29 %) a stránka se uklidní skoro
+o sekundu dřív. Čas do první nabídky se skoro nezměnil — to druhé
+překreslení běželo až po ní.
+
+**Hlídá** `scripts/test-jedno-vykresleni.mjs` (v CI), obě poloviny:
+při čisté adrese se výpis vykreslí JEDNOU, a sdílený odkaz se pořád
+obnovuje (zoom i místo). Druhá polovina je stejně důležitá — kdyby se
+opravilo jen to první, web by přestal umět to, kvůli čemu ta obnova
+vznikla. Sabotáží ověřeno: s návratem ke čtení `location.hash` padnou
+všechny tři kontroly.
+
+**Jak se měří:** počtem vykreslení (`window.PK_VYKRESLENI`), ne časem.
+Čas by na zatíženém stroji kolísal víc než rozdíl, který se hlídá.
+A zkouška si schválně zpomaluje procesor čtyřikrát — bez toho se start
+stihne dřív, než si `js/odkaz.js` stačí do adresy zapsat, a prošla by
+ze špatného důvodu.

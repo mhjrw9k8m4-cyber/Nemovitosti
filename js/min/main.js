@@ -3449,6 +3449,8 @@
   });
 
   function renderList() {
+
+    try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
     stahniPoznamky();
 
     zapisAdresu();
@@ -4264,9 +4266,11 @@
     }, 350);
   }
 
+  var ADRESA_PRI_OTEVRENI = (function () { try { return location.hash || ''; } catch (e) { return ''; } })();
+
   function obnovZAdresy() {
-    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash)) return false;
-    var st = PKOdkaz.cti(location.hash);
+    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(ADRESA_PRI_OTEVRENI)) return false;
+    var st = PKOdkaz.cti(ADRESA_PRI_OTEVRENI);
     var neco = false;
 
     adresaDrzi = true;

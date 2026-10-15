@@ -715,6 +715,9 @@ jobs:
       - name: Pomalá databáze nedrží výpis
         run: node scripts/test-zive-strop.mjs
 
+      - name: Žádné překreslení výpisu navíc
+        run: node scripts/test-jedno-vykresleni.mjs
+
 
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs

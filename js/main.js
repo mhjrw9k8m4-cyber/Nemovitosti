@@ -5168,6 +5168,11 @@
   });
 
   function renderList() {
+    /* POČITADLO PRO ZKOUŠKU. Web ho sám nepoužívá. Je tu proto, že
+       zbytečné druhé překreslení celého výpisu se na obrazovce nepozná
+       — jen stojí telefon skoro sekundu práce. Změřit to zvenčí jinak
+       nejde; viz scripts/test-jedno-vykresleni.mjs. */
+    try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
     stahniPoznamky();
     // Adresa drží krok s filtry — odtud se sdílí (viz zapisAdresu()).
     zapisAdresu();
@@ -6369,12 +6374,30 @@
     }, 350);
   }
 
+  /* ADRESA, SE KTEROU ČLOVĚK PŘIŠEL — ne ta, kterou si web mezitím
+     zapsal sám.
+     ------------------------------------------------------------------
+     Čte se hned při načtení skriptu, tedy dřív, než se vůbec postaví
+     mapa. Důvod je naměřený: js/odkaz.js zapisuje výřez mapy do hashe
+     (#m=šířka,délka,zoom) při každé jeho změně, a první takovou změnou
+     je ustavení mapy při startu. Obnova z adresy ale běží AŽ POTOM —
+     takže si web obnovoval stav, který si o vteřinu dřív sám napsal.
+
+     Naměřeno (telefon 390 px, slabá linka, procesor ×4): stránka se
+     otevřela s hashem „" (prázdným) a obnova už v něm našla
+     „#m=49.83342,15.48104,9". Výsledkem bylo DRUHÉ celé překreslení
+     výpisu a zbytečné srovnání mapy tam, kde už stála.
+
+     Sdílený odkaz tím nepřichází o nic: ten hash v adrese JE, když se
+     stránka otevírá, takže se zachytí. */
+  var ADRESA_PRI_OTEVRENI = (function () { try { return location.hash || ''; } catch (e) { return ''; } })();
+
   /* Obnova z adresy. Vrací true, když se z ní něco vzalo — volající pak
      nesmí mapu srovnat na celou ČR, jinak by sdílený výřez zmizel dřív,
      než si ho člověk stihne prohlédnout. */
   function obnovZAdresy() {
-    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash)) return false;
-    var st = PKOdkaz.cti(location.hash);
+    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(ADRESA_PRI_OTEVRENI)) return false;
+    var st = PKOdkaz.cti(ADRESA_PRI_OTEVRENI);
     var neco = false;
     /* Po dobu obnovy se do adresy nepíše: každý `change` níž spustí
        renderList() a ten by adresu přepsal rozpracovaným stavem. */
