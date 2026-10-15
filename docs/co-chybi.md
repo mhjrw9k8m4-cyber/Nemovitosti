@@ -6656,6 +6656,38 @@ ve stylopisu **36 pravidel**, a žádné z nich ta zkouška nikdy
 nesrovnala. To je další položka v `docs/optimalizace.md`, ne věc na
 jeden řádek.
 
+## 3dd. Tlačítko „Na pozemek" je pryč z mapy — *15. 10.*
+
+Majitel poslal snímek podruhé: *„to tlačítko na pozemek chce dát jinam,
+překáží tam."* Měl pravdu a problém nebyl v tom, KDE nad mapou stojí.
+
+Napoprvé stálo vpravo nahoře a leželo na přibližování (bod 3da, osm
+pixelů překryvu). Přesunul jsem ho dolů vlevo, kde bylo podle měření
+volno — a překáželo dál: na mapě **430×300** zabíralo **130×44 bodů,
+tedy 6 % její plochy**, a leželo přes letecký snímek i přes hranice
+parcel. Mapa je na telefonu vysoká 300 bodů. Na takové mapě žádné
+„volné místo" není; je tam jen míň zajímavé místo.
+
+**Tlačítko proto nestojí na mapě vůbec** — je v pruhu pod ní, vedle
+podkladu a vrstev, tedy mezi ostatním ovládáním mapy, kam patří. Nad
+mapou zbylo jen zvětšení na celou obrazovku a přibližování. Naměřeno
+po přesunu (mapa, y se počítá od jejího horního okraje):
+
+| | telefon 356×300 | monitor 718×390 |
+|---|---|---|
+| zvětšení | y 10–54 | y 10–46 |
+| přibližování | y 100–192 | y 202–282 |
+| **Na pozemek** | **y 436–480 (pod mapou)** | **y 493–527 (pod mapou)** |
+
+Chová se dál stejně: ukáže se, až když se pohled od pozemku odlepí,
+a stisk vrátí přesně původní výřez. Terč má na dotyku 44 px, jako
+přepínače vedle.
+
+**Doloženo sabotáží:** vrácení `position:absolute; right:10px; top:56px`
+shodí novou kontrolu v obou profilech („leží přes mapu — patří do pruhu
+pod ní"), s opraveným CSS je zelená. Celkem `test-mapa-pozemku` 147
+kontrol, 0 chyb.
+
 ## 3db. OTEVŘENÁ OTÁZKA: klepnutí prstem na značku kraje — *15. 10.*
 
 Při zapínání dotyku ve zkouškách (bod 3da) se `scripts/test-mapa.mjs`

@@ -523,13 +523,6 @@
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
           '</button>' +
-
-          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
-            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-            '<span>Na pozemek</span>' +
-          '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
@@ -546,6 +539,13 @@
             '<span>Průhlednost vrstvy</span>' +
             '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
           '</label>' +
+
+          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
+            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span>Na pozemek</span>' +
+          '</button>' +
         '</div>' +
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +

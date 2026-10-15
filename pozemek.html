@@ -467,28 +467,28 @@
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
     .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
     .pzm-cela-btn:hover{background:var(--ink-soft);}
-    /* ZPÁTKY NA POZEMEK — DOLE VLEVO, NE VPRAVO POD ZVĚTŠENÍM.
-       Vpravo stálo do 14. 10. a na telefonu LEZLO NA PŘIBLIŽOVÁNÍ:
-       naměřeno na 390px displeji (mapa 356×300) tlačítko y 64–108,
-       ovladač „+/−" y 100–192 ve stejném sloupci — osm pixelů přes sebe,
-       a hlavně těsně nad sebou tři ovladače v jednom rohu. Na monitoru
-       to vidět nebylo, protože mapa je o 90 px vyšší a zvětšení sedí níž.
-       Vlevo dole je na obou šířkách volno: měřítko končí na y 277
-       (telefon) a 367 (monitor), uvedení zdrojů drží pravou půlku
-       (x 188+, resp. 550+). Tlačítko tedy stojí nad měřítkem a nikomu
-       nepřekáží — hlídá to zkouška v scripts/test-mapa-pozemku.mjs.
-       Popisek, ne jen špendlík: samotná ikona na mapě plné špendlíků
-       neřekne nic a tohle tlačítko se objevuje jen občas, takže se ho
+    /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
+       Dvakrát to bylo plovoucí tlačítko a dvakrát překáželo: vpravo
+       nahoře leželo na přibližování (naměřeno 8 px překryvu na 390px
+       displeji), vlevo dole zakrývalo snímek i hranice parcel —
+       na mapě 430×300 zabíralo 130×44 bodů, tedy 6 % její plochy.
+       Mapa je na telefonu vysoká 300 bodů; tam není „volné místo",
+       je tam jen míň zajímavé místo. Tlačítko proto stojí v pruhu pod
+       mapou, vedle podkladu a vrstev — tedy mezi ostatním ovládáním
+       mapy, kam patří. Nad mapou tím nezůstalo nic kromě zvětšení
+       a přibližování; hlídá to scripts/test-mapa-pozemku.mjs.
+       Popisek, ne jen špendlík: samotná ikona by v řadě přepínačů
+       neřekla nic a tohle tlačítko se objevuje jen občas, takže se ho
        nemá kde člověk naučit. */
-    .pzm-zpet-btn{position:absolute; z-index:500; left:10px; bottom:34px;
-      min-height:36px; display:inline-flex; align-items:center; gap:6px;
-      padding:0 12px 0 10px; border-radius:var(--r-sm);
-      border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93);
-      color:var(--copper-bright); cursor:pointer; box-shadow:var(--e1);
+    .pzm-zpet-btn{height:34px; display:inline-flex; align-items:center; gap:6px;
+      padding:0 14px 0 12px; border-radius:999px;
+      border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft);
+      color:var(--copper-bright); cursor:pointer;
       font:inherit; font-size:13px; font-weight:600; white-space:nowrap;
-      -webkit-tap-highlight-color:transparent;}
+      -webkit-tap-highlight-color:transparent;
+      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
     .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
-    .pzm-zpet-btn:hover{background:var(--ink-soft);}
+    .pzm-zpet-btn:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
     .pzm-zpet-btn[hidden]{display:none;}
     .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
     .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
@@ -620,12 +620,8 @@
          samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
       .pzm-kryti input{height:44px;}
       .pzm-cela-btn{width:44px; height:44px;}
-      /* Na dotyku terč 44 px. `top` tu dřív posouval tlačítko o kousek
-         níž, „ať nesedí na zvětšení" — jenže sedělo (viz měření
-         u pravidla výš) a od přesunu dolů vlevo by `top` i `bottom`
-         naráz tlačítko NATÁHLY přes celou mapu: naměřeno 202 px na
-         výšku místo 44. */
-      .pzm-zpet-btn{min-height:44px; font-size:14px;}
+      /* Na dotyku terč 44 px — stejně jako přepínače vrstev vedle. */
+      .pzm-zpet-btn{height:44px; font-size:14px;}
       .pzm-z, .pzm-v{height:44px;}
     }
   </style>
@@ -711,7 +707,7 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=90541aff"></script>
+<script src="js/min/pozemek.js?v=24a127e6"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

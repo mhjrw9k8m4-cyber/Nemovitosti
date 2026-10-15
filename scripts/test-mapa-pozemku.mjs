@@ -1375,7 +1375,7 @@ if (DRAZBA) {
   const doma = await stav();
   pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
   if (doma) {
-    pravda('tlačítko „Na pozemek" na mapě je', doma.je, 'chybí #pzm-zpet');
+    pravda('tlačítko „Na pozemek" pod mapou je', doma.je, 'chybí #pzm-zpet');
     pravda('a dokud jsem na pozemku, nezabírá výhled', doma.skryte === true,
       'je vidět i bez toho, že by se pohled hnul');
 
@@ -1530,6 +1530,7 @@ if (DRAZBA) {
          o to, kdy naskáká. */
       const zpet = document.querySelector('.pzm-zpet-btn');
       if (zpet) zpet.hidden = false;
+      const zpetR = zpet ? zpet.getBoundingClientRect() : null;
       const R = mapa.getBoundingClientRect();
       const kus = (sel, jmeno) => {
         const el = document.querySelector(sel);
@@ -1537,16 +1538,29 @@ if (DRAZBA) {
         const r = el.getBoundingClientRect();
         return { jmeno, x: r.x - R.x, y: r.y - R.y, w: r.width, h: r.height };
       };
-      return { mapa: { w: R.width, h: R.height }, prvky: [
+      return { mapa: { w: R.width, h: R.height },
+        /* „Na pozemek" se měří zvlášť: od 15. 10. nestojí NA mapě, ale
+           v pruhu pod ní (viz js/pozemek.js) — a právě to se tu hlídá. */
+        zpetJe: !!zpet,
+        zpetNadMapou: !!(zpetR && zpetR.top < R.bottom - 1 && zpetR.bottom > R.top + 1),
+        prvky: [
         kus('.pzm-cela-btn', 'zv\u011bt\u0161en\u00ed'),
-        kus('.pzm-zpet-btn', 'Na pozemek'),
         kus('#pzm .leaflet-control-zoom', 'p\u0159ibli\u017eov\u00e1n\u00ed'),
         kus('#pzm .leaflet-control-scale', 'm\u011b\u0159\u00edtko'),
         kus('#pzm .leaflet-control-attribution', 'uveden\u00ed zdroj\u016f'),
       ].filter(Boolean) };
     });
-    if (!pravda(`${kde}: ovlada\u010de mapy se na\u0161ly`, !!v && v.prvky.length >= 4,
+    if (!pravda(`${kde}: ovlada\u010de mapy se na\u0161ly`, !!v && v.prvky.length >= 3,
       v ? `nalezeno ${v.prvky.length}` : 'mapa nevznikla')) continue;
+    /* TLAČÍTKO „NA POZEMEK" NESMÍ STÁT NA MAPĚ.
+       Dvakrát tam stálo a dvakrát překáželo: vpravo nahoře leželo na
+       přibližování (8 px), vlevo dole zakrývalo snímek — na mapě
+       430×300 je to 130×44 bodů, tedy 6 % plochy. Mapa je na telefonu
+       vysoká 300 bodů a žádné „volné místo" na ní není. Je proto
+       v pruhu pod mapou a tahle kontrola hlídá, ať se tam nevrátí. */
+    pravda(`${kde}: tla\u010d\u00edtko „Na pozemek" je, a nestoj\u00ed na map\u011b`,
+      v.zpetJe && !v.zpetNadMapou,
+      v.zpetJe ? 'le\u017e\u00ed p\u0159es mapu \u2014 pat\u0159\u00ed do pruhu pod n\u00ed' : 'chyb\u00ed \u00fapln\u011b');
     const prunik = [];
     for (let i = 0; i < v.prvky.length; i++) {
       for (let j = i + 1; j < v.prvky.length; j++) {
