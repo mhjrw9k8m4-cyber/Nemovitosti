@@ -7782,9 +7782,61 @@
      co není rozbité.
      Když soubor chybí, nic se nestane — karty se vrátí k tomu, co ví
      z posledního běhu robota (cena_drive). */
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings'), loadJSON('data/zlevneni.json')])
+  /* ŽIVÉ INZERÁTY NESMÍ DRŽET CELÝ VÝPIS.
+     ------------------------------------------------------------------
+     Dotaz do databáze na inzeráty od majitelů stál v téhle řadě jako
+     všechno ostatní, jenže na rozdíl od souborů z našeho serveru jde
+     na cizí službu — a ta má na bezplatném tarifu studený start.
+     Dokud neodpověděla, neukázala se ANI JEDNA z 1 930 nabídek, které
+     už dávno ležely v prohlížeči.
+
+     Naměřeno (telefon 390 px, slabá linka 1,6 Mb/s, procesor ×4):
+
+       databáze odpoví hned  …  první nabídka za  4 264 ms
+       databáze mlčí  5 s    …  první nabídka za  9 187 ms
+       databáze mlčí 20 s    …  první nabídka za 23 686 ms
+       databáze mlčí vůbec   …  první nabídka NIKDY
+
+     Poslední řádek je ta vada: fetch bez stropu nikdy neskončí, takže
+     výpis zůstal navždy u šedých obdélníků. A nebyla to teorie —
+     přesně tohle hlásil majitel webu jako „stránka je extrémně pomalá
+     a dlouho se načítá".
+
+     Čeká se proto nejvýš ZIVE_STROP. Co nestihne, to se nepočká:
+     1 930 nabídek ze statického souboru je ten web, inzeráty od
+     majitelů jsou přídavek. Že se vynechaly, si drží příznak níž —
+     hlídá ho scripts/test-zive-strop.mjs.
+
+     LHŮTA JE STEJNÁ JAKO NA STRÁNCE POZEMKU (2 500 ms, ziveInzeraty()
+     v js/pozemek.js). Tam tahle oprava vznikla dřív a tady chyběla —
+     dvě různá čísla pro tutéž otázku by se rozešla jako všechno
+     zdvojené.
+
+     V ČEM JE STRÁNKA POZEMKU DÁL: ta se z pozdní odpovědi ještě
+     PŘEKRESLÍ, kdežto tady se zahodí. Je to vědomý dluh, ne přehlédnutí:
+     celá mapa i výpis běží uvnitř boot(), který dostane data jednou
+     a dvakrát se zavolat nedá (postavil by mapu znovu). Doplnit to
+     znamená vyvést z boot() přípojku na dodatečné nabídky — zapsáno
+     v docs/co-chybi.md. Dnes to nikoho nepálí: inzerátů od majitelů
+     je v datech nula. */
+  var ZIVE_STROP = 2500;
+  var ZIVE_POZDE = { pozde: true };
+  function ziveVcas() {
+    var slib = sbRpc('public_listings');
+    return Promise.race([slib, new Promise(function (hotovo) {
+      setTimeout(function () { hotovo(ZIVE_POZDE); }, ZIVE_STROP);
+    })]);
+  }
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3], zl = res[4];
+      if (live === ZIVE_POZDE) {
+        live = null;
+        /* Příznak pro zkoušku. Do konzole se nic nepíše schválně:
+           scripts/test-konzole.mjs hlídá, že návštěvník čistou konzoli
+           má, a pomalá cizí služba není chyba našeho webu. */
+        try { window.PK_ZIVE_VYNECHANA = true; } catch (e) {}
+      }
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
       /* Když se skutečná data nenačtou, web se do téhle chvíle beze slova
        * přepnul na čtrnáct záložních nabídek a tvářil se, že to je celá

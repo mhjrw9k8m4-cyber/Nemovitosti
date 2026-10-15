@@ -553,3 +553,78 @@ kontroly (*„objednáno 108 dlaždic z 24 náhledů"*), s vyřazeným
 probuzením padnou dvě jiné (*„s adresou 0 dlaždic — probuzení
 nefunguje vůbec"*). Druhý směr je důležitý: líné načítání, které
 nenačte nikdy, je horší vada než to, co se opravovalo.
+
+---
+
+## 11. Výpis čekal na cizí databázi — a když mlčela, neukázal se nikdy
+
+Tohle je ta vada, kterou majitel webu hlásil jako *„stránka je extrémně
+pomalá a dlouho se načítá"*. Našla se až měřením časové osy, ne
+pohledem do kódu.
+
+**První měření ukázalo, že viníkem není síť.** Telefon 390 px, slabá
+linka (1,6 Mb/s, 150 ms), procesor ×4:
+
+| | |
+|---|---|
+| FCP | 1 432 ms |
+| vše stažené | **2 573 ms** |
+| DOMContentLoaded | 2 404 ms |
+| **první nabídka** | **4 621 ms** |
+
+Dvě sekundy se tedy nestahuje, ale čeká. Profil procesoru ukázal
+3 243 ms dlouhých úloh, z toho `(program)` (překlad skriptů) 1 190 ms,
+cenový model 426 ms, `sortVis` + `declump` 304 ms.
+
+**Jenže pravý viník byl jinde.** Úvodní stránka skládá výpis z pěti
+zdrojů v jednom `Promise.all` a čtyři jsou soubory z našeho serveru.
+Pátý je dotaz do databáze na inzeráty od majitelů — tedy do cizí
+služby, která má na bezplatném tarifu studený start:
+
+| databáze odpoví | první nabídka |
+|---|---|
+| hned | 4 264 ms |
+| za 5 s | 9 187 ms |
+| za 20 s | 23 686 ms |
+| **vůbec** | **nikdy** |
+
+Poslední řádek je ta vada: `fetch` bez stropu nikdy neskončí, takže
+výpis zůstal navždy u šedých obdélníků — a 1 930 nabídek přitom už
+dávno leželo v prohlížeči.
+
+**Opraveno** lhůtou 2 500 ms. Co nestihne, to se nepočká: statický
+soubor je ten web, inzeráty od majitelů jsou přídavek.
+
+**Lhůta není vymyšlená — opsala se ze stránky pozemku.** Tam tatáž
+oprava vznikla dřív (`ziveInzeraty()` v `js/pozemek.js`, s komentářem
+„bez ní by na pomalé nebo spadlé databázi čekala i stránka obyčejné
+stažené nabídky"). Poučení z devatenácti set stránek se tedy nedoneslo
+na tu jedinou, kterou vidí každý první.
+
+**Dluh, který u toho zůstal:** stránka pozemku se z pozdní odpovědi
+ještě překreslí, úvodní ji zahodí. Celá mapa i výpis běží uvnitř
+`boot()`, který data dostane jednou a dvakrát zavolat nejde (postavil
+by mapu znovu); doplnit to znamená vyvést z `boot()` přípojku na
+dodatečné nabídky. Dnes to nepálí — inzerátů od majitelů je v datech
+nula.
+
+**Hlídá** `scripts/test-zive-strop.mjs` (v CI), ve třech polohách:
+databáze rychlá, mlčící 8 s a němá úplně. Prověřeno sabotáží — bez
+stropu padnou tři kontroly a u němé databáze se naměří
+*„němá null ms"*, tedy nabídky se neukázaly vůbec.
+
+### Co z toho NEPLYNE
+Zbylé zpoždění (4,3 s do první nabídky při zdravé databázi) je pořád
+hlavně práce hlavního vlákna, ne síť. Měřil jsem i strop toho, co by
+přineslo odložení Leafletu a osmi vedlejších skriptů: **stránka se
+pak neukáže vůbec.** Výpis je totiž navázaný na mapu — `syncMarkers()`
+nastaví `lastVis` a hned volá `updateMapView()`, takže bez Leafletu
+nevznikne ani seznam. Rozpojit to je položka 3 (rozdělení
+`js/main.js`), ne drobná úprava.
+
+### A jedna oprava mého vlastního závěru
+Měřidlo napočítalo 5 898 volání `MODEL.odhad()` na 1 930 nabídek a já
+to nejdřív četl jako trojnásobnou práci. Není: `odhad()` má paměť
+(`pametOdhadu`), takže drtivá většina těch volání jsou laciné zásahy
+do ní. Celý cenový model stojí 426 ms, tedy devět procent — ne hlavní
+chod.

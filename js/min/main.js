@@ -5399,9 +5399,22 @@
 
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
 
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), sbRpc('public_listings'), loadJSON('data/zlevneni.json')])
+  var ZIVE_STROP = 2500;
+  var ZIVE_POZDE = { pozde: true };
+  function ziveVcas() {
+    var slib = sbRpc('public_listings');
+    return Promise.race([slib, new Promise(function (hotovo) {
+      setTimeout(function () { hotovo(ZIVE_POZDE); }, ZIVE_STROP);
+    })]);
+  }
+  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3], zl = res[4];
+      if (live === ZIVE_POZDE) {
+        live = null;
+
+        try { window.PK_ZIVE_VYNECHANA = true; } catch (e) {}
+      }
       var arr = Array.isArray(j) ? j : (j && j.opportunities);
 
       var nouzovyRezim = !(arr && arr.length);

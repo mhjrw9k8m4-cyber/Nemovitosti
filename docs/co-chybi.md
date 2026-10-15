@@ -6959,3 +6959,20 @@ Mimochodem: při hledání se ukázalo, že pořadí výpisu se mění i mezi
 dvěma návštěvami téhož dne — `js/poradi.js` přidává k dennímu otáčení
 náhodné přihození uložené v `sessionStorage`. Je to tak schválně
 a popsané to tam je; kdo si otevře dvě karty, uvidí dvě pořadí.
+
+---
+
+## 3dg. NALEZENO: výpis čekal na databázi, a když mlčela, neukázal se nikdy — *15. 10.*
+
+Viz `docs/optimalizace.md`, položka 11. Shrnutí: úvodní stránka měla
+dotaz do cizí databáze v témže `Promise.all` jako vlastní datové
+soubory a `fetch` bez časového stropu nikdy neskončí. Při databázi
+mlčící 20 s se první nabídka ukázala za 23 686 ms, při němé nikdy.
+Opraveno lhůtou 2 500 ms — stejnou, jakou má `js/pozemek.js`, kde
+tatáž oprava vznikla dřív a na úvodní stránku se nedonesla.
+
+**Otevřený dluh:** stránka pozemku se z pozdní odpovědi překreslí,
+úvodní ji zahodí. Celá mapa i výpis běží uvnitř `boot()`, který data
+dostane jednou a dvakrát zavolat nejde. Doplnit to znamená vyvést
+z `boot()` přípojku na dodatečné nabídky. Dnes to nepálí: inzerátů od
+majitelů je v datech nula — až jich bude víc, musí se to udělat.
