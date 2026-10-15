@@ -100,14 +100,22 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 {
   const zarizeni = [
     ['Android', 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36',
-      /^geo:-?\d+\.\d+,-?\d+\.\d+\?q=/],
+      /^geo:-?\d+\.\d+,-?\d+\.\d+\?q=/, true],
     ['iPhone', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
-      /^https:\/\/maps\.apple\.com\/\?ll=-?\d+\.\d+,-?\d+\.\d+/],
+      /^https:\/\/maps\.apple\.com\/\?ll=-?\d+\.\d+,-?\d+\.\d+/, true],
     ['počítač', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
-      /^https:\/\/mapy\.cz\//],
+      /^https:\/\/mapy\.cz\//, false],
   ];
-  for (const [jm, ua, tvar] of zarizeni) {
-    const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, userAgent: ua });
+  /* DOTYK PODLE ZAŘÍZENÍ, ne podle šířky okna. Telefon se tu dosud
+     předstíral jen jménem v hlavičce prohlížeče — a pravidla pro telefon
+     tu stojí za `@media (pointer: coarse)`, takže se u „Androidu"
+     i „iPhonu" vykreslovalo rozvržení monitoru. Řádek „počítač" dotyk
+     nemá schválně: je to opravdu počítač, jen v malém okně.
+     (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  for (const [jm, ua, tvar, dotyk] of zarizeni) {
+    const ctx = await prohlizec.newContext(Object.assign(
+      { viewport: { width: 390, height: 844 }, userAgent: ua },
+      dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     const p = await ctx.newPage();
     await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
     await p.waitForTimeout(1800);

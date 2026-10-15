@@ -262,7 +262,12 @@ for (const s of VZOREK) {
    přečíst. Zkouší se přes opravdovou adresu smazaného pozemku, protože
    celé chování stojí na tom, co je v adrese. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 400, height: 860 } });
+  /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon tu stojí za
+     `@media (pointer: coarse)`, ne za šířkou okna, takže by se
+     v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
+     (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  const ctx = await prohlizec.newContext({ viewport: { width: 400, height: 860 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   const padlo = [];
   p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 140)));

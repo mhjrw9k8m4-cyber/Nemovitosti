@@ -74,7 +74,12 @@ const spatne = [];
 const kontrolaSpatne = [];
 let zmereno = 0;
 for (const s of STRANKY) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon tu stojí za
+     `@media (pointer: coarse)`, ne za šířkou okna, takže by se
+     v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
+     (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   const r = await p.goto(`${BASE}/${s}`, { waitUntil: 'load' }).catch(() => null);
   if (!r) { spatne.push(`${s}: nenačetla se`); await ctx.close(); continue; }

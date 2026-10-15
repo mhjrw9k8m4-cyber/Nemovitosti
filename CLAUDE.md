@@ -86,3 +86,16 @@ bash /tmp/suite.sh        # potřebuje PW_CHROMIUM a PK_LEAFLET_DIR
 ```
 
 Browser testy sdílejí port 8310 — nesmí běžet dva naráz.
+
+**Dvě pasti, které udělají ze zelené zkoušky slepou** (obě naměřeny
+15. 10., obě popsané v `docs/optimalizace.md`, položka 7):
+
+1. **Dotyk se musí říct.** Pravidla pro telefon stojí za
+   `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna.
+   Kontext bez `hasTouch` vykreslí v okně 390 px rozvržení monitoru,
+   takže 36 pravidel stylopisu zkouška nevyhodnotí vůbec.
+2. **Servisní pracovník se musí vypnout** (`serviceWorkers: 'block'`),
+   kdykoli se v jednom kontextu něco podstrkuje přes `ctx.route`
+   a naviguje se víckrát. Od druhé navigace obsluhuje soubory
+   pracovník a jeho dotazy přes `route` NEJDOU — podstrčený
+   `config.js` přestane platit a stránka se zeptá opravdové databáze.

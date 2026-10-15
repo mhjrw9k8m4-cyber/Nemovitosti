@@ -35,7 +35,19 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 /* Přepínač pro sondu níž: „obec se nenajde, okres ano". */
 let bezObce = false;
 async function otevri(prihlasit) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  // SERVISNÍ PRACOVNÍK MUSÍ BÝT VYPNUTÝ, jinak tahle zkouška neměří web,
+  // ale offline mezipaměť. Web má servisního pracovníka (offline režim) a
+  // ten si po prvním načtení začne obsluhovat soubory sám — jeho dotazy
+  // už přes `ctx.route` NEJDOU. Podstrčený `config.js` tím přestal
+  // platit a stránka „moje inzeráty" se po odeslání formuláře zeptala
+  // OPRAVDOVÉ databáze na supabase.co. Ta je v testu nedostupná, takže
+  // se ukázala věta „nepovedlo se načíst" a karet bylo nula — dvanáct
+  // kontrol padalo na něčem, co se webu vůbec netýká.
+  // Změřeno 15. 10. na téže stránce: bez vypnutí pracovníka 0 karet
+  // a `pf-count` = „—", s vypnutým 1 karta a `pf-count` = „1".
+  // (Týž trik si musela pořídit scripts/test-rozdeleni-stylu.mjs.)
+  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
+    serviceWorkers: 'block' });
   /* POZOR NA POŘADÍ: platí poslední zaregistrovaná cesta, ne první.
      Když se hrubý zákaz ven zapsal až nakonec, přebil i podstrčenou
      odpověď geokodéru — formulář pak skončil na „obec jsme nenašli"
@@ -46,9 +58,26 @@ async function otevri(prihlasit) {
   });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  /* Geokódování jde na nominatim.openstreetmap.org — ven se v testu
-     nechodí, tak se odpověď podstrčí. */
-  await ctx.route('**nominatim.openstreetmap.org**', (r) => {
+  // Geokódování jde na nominatim.openstreetmap.org — ven se v testu
+  // nechodí, tak se odpověď podstrčí.
+  //
+  // POZOR NA TVAR VZORU. Stál tu vzor bez lomítek („dvě zvězdičky,
+  // jméno stroje, dvě zvězdičky") a TO NIKDY NECHYTILO NIC: dvojitá
+  // zvězdička v Playwrightu zastupuje celé úseky cesty oddělené
+  // lomítky, ne libovolný kus textu, takže se o adresu
+  // https://nominatim.openstreetmap.org/search?… neopřel. Dotaz pak
+  // spolkla obsluha „všechno ostatní zahoď" hned nad tím, geokodér
+  // vrátil null a odeslání skončilo hláškou „Nepodařilo se najít obec
+  // na mapě" — tedy 22 kontrol padalo na něčem, co ani nebylo v kódu
+  // webu. Změřeno 15. 10. třemi vzory na téže stránce: bez lomítek
+  // nechyceno, s lomítky kolem jména stroje chyceno, s celou adresou
+  // a koncovou dvojitou zvězdičkou chyceno.
+  //
+  // (A pozor i na komentář o tom: sekvence zvězdička-zvězdička-lomítko
+  // ukončuje blokový komentář, takže tohle vysvětlení MUSÍ stát
+  // v řádkových komentářích. Napoprvé to shodilo celý skript na
+  // „ReferenceError: host is not defined".)
+  await ctx.route('**/nominatim.openstreetmap.org/**', (r) => {
     /* Když test chce, ať se OBEC nenajde: prázdná odpověď na všechno,
        co není dotaz na samotný okres. Tím se vyvolá poslední záchrana,
        která vrátí souřadnice okresního města — a přesně to se nesmí
@@ -553,7 +582,12 @@ async function odesli(p) {
  * půldruhé obrazovky dolů. Tahle zkouška hlídá, že se to nevrátí.
  */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 } });
+  /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon tu stojí za
+     `@media (pointer: coarse)`, ne za šířkou okna, takže by se
+     v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
+     (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
+  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

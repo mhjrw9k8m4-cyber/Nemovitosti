@@ -204,7 +204,7 @@ nevynucuje (`opacity:1 !important` ve stylopisu je, ale jen na
 Vynechaných hodnot je **1 602 z 2 180 910 (0,07 %)**, strop zkoušky je
 2 %.
 
-### Hotovo 5/17 — a každá něco našla
+### Hotovo 9 ze 17 — a každá něco našla
 
 | zkouška | co se změnilo | co se tím našlo |
 |---|---|---|
@@ -233,8 +233,43 @@ stromu**, takže to nebyla chyba webu, ale zkoušky. Teď u prázdné
 kategorie tvrdí to, co tvrdit lze (čip není vidět), a hlídá, že se
 změřily aspoň tři.
 
-**Zbývá 12 zkoušek**, v pořadí podle toho, jak moc měří vzhled:
-`test-ceska-pismena`, `test-stranky`, `test-pridat`, `test-souradnice`,
+### A u čtyř dalších se našly DVA pravé nálezy — *15. 10.*
+
+Dotyk zapnut v `test-ceska-pismena`, `test-stranky`, `test-pridat`
+a (podle zařízení, ne podle šířky okna) v `test-souradnice`. První tři
+prošly hned; `test-pridat` ne — a to byl nález.
+
+**`test-pridat` padala na 22 kontrolách z 71, a ani jedna nebyla
+o webu.** Dvě chyby, obě v té zkoušce:
+
+1. **Vzor adresy, který nikdy nic nechytil.** Geokodér se podstrkoval
+   vzorem bez lomítek (`**` + jméno stroje + `**`). Dvojitá zvězdička
+   v Playwrightu zastupuje úseky cesty oddělené lomítky, ne libovolný
+   kus textu, takže se o `https://nominatim.openstreetmap.org/search?…`
+   neopřel. Dotaz spolkla obsluha „všechno ostatní zahoď", geokodér
+   vrátil `null` a odeslání skončilo hláškou „Nepodařilo se najít obec
+   na mapě". Změřeno třemi vzory na téže stránce: bez lomítek
+   **nechyceno**, s lomítky kolem jména stroje **chyceno**, s celou
+   adresou **chyceno**. (Po opravě 22 → 12 chyb.)
+2. **Servisní pracovník obsluhoval soubory sám.** Web má offline režim
+   a jeho pracovník si od DRUHÉ navigace v témž kontextu začne soubory
+   obsluhovat z mezipaměti — a jeho dotazy přes `ctx.route` NEJDOU.
+   Podstrčený `config.js` tím přestal platit a stránka „moje inzeráty"
+   se po odeslání formuláře zeptala **opravdové databáze na
+   supabase.co**. Ta je v testu nedostupná, takže se ukázalo
+   „nepovedlo se načíst" a karet bylo nula. Změřeno na téže stránce:
+   bez vypnutého pracovníka **0 karet** a `pf-count` = „—",
+   s `serviceWorkers: 'block'` **1 karta** a `pf-count` = „1".
+   (Po opravě 12 → **0 chyb, 75 kontrol prochází**.)
+
+Druhá past je plošná: **60 zkoušek podstrkuje přes `ctx.route`
+a pracovníka nevypíná**, mezi nimi takové, které v jednom kontextu
+navigují sedmkrát (`test-uvod`) i jedenáctkrát (`test-poznamky`).
+Dnes jsou zelené — past kousne jen tam, kde zkouška na podstrčeném
+souboru opravdu závisí — ale je to tichá mina. Obě pasti jsou proto
+zapsané v `CLAUDE.md` v oddílu o testech.
+
+**Zbývá 8 zkoušek**, v pořadí podle toho, jak moc měří vzhled:
 `test-mapa`, `test-leaflet`, `test-mapa-pozemku` (zbylé oddíly —
 překryv ovladačů už dotyk má), `test-odznak-zprav`,
 `test-hlidani-prohlizec`, `test-profil-vypadek`, `test-chat-prohlizec`,
