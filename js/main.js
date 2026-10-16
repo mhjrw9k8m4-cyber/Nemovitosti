@@ -617,20 +617,50 @@
       var nalez = podleJmena[chip.getAttribute('data-zdroj') || ''];
       if (!nalez) return;
       var znacka = document.createElement('span');
-      /* TŘI STAVY, NE DVA. „Vypnutý" (chybí klíč, zdroj se ani nezkoušel)
-         vypadal dřív stejně jako „neodpověděl" — a to je rozdíl mezi
-         dočasným výpadkem a trvalým stavem, který nikdo neřeší, protože
-         o něm neví. */
-      var vypnuty = nalez.stav === 'vypnuto';
-      znacka.className = 'src-stav' + (nalez.stav === 'ok' && nalez.pocet ? '' : ' src-zle');
-      znacka.textContent = vypnuty ? 'nezapojený'
-        : (nalez.stav !== 'ok' ? 'nedostupný'
-          : (nalez.pocet ? nalez.pocet + '×' : 'bez záznamů'));
-      znacka.title = vypnuty
-        ? 'Zdroj zatím není zapojený' + (nalez.chyba ? ' (' + nalez.chyba + ')' : '')
-        : (nalez.stav !== 'ok'
-          ? 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '')
-          : 'Při poslední kontrole vrátil ' + nalez.pocet + ' záznamů');
+      /* ŠEST STAVŮ, NE DVA. Robot umí zapsat „ok", „chyba" (zdroj
+         neodpověděl), „vypnuto" (chybí klíč, zdroj se ani nezkoušel),
+         „prazdno" (odpověděl, ale nic nepřinesl), „pokles" / „propad"
+         (přinesl výrazně méně než jinak) a „zahazuje" (víc záznamů
+         zahodil než přijal). Odznak se dosud řídil jedinou podmínkou
+         `stav === 'ok'`, takže poslední tři stavy spadly do jedné
+         kolonky s mrtvým zdrojem a hlásily „nedostupný" s popiskem
+         „neodpověděl". To nebyla nepřesnost, ale lež, kterou bylo
+         vidět na ostrých datech: „OK dražby" měly stav „pokles“ a 45
+         záznamů, a web u nich tvrdil, že neodpověděly.
+         Zdroj, který přinesl o třetinu méně, je něco jiného než zdroj
+         mrtvý: číslo se musí ukázat (jinak nepoznám, jak hluboko to
+         spadlo) a zároveň být označené, ať se nepřehlédne. Proto se
+         stav rozepisuje do tabulky a NEZNÁMÝ stav nepropadne do
+         „v pořádku" — kdyby robot přidal sedmý, je radši vidět jako
+         oslabený než zamlčený. */
+      var stav = nalez.stav || 'ok';
+      var pocet = nalez.pocet || 0;
+      var oslabeny = stav === 'pokles' || stav === 'propad' || stav === 'zahazuje'
+        || (stav !== 'ok' && pocet > 0);
+      var text, popis, trida;
+      if (stav === 'vypnuto') {
+        text = 'nezapojený'; trida = ' src-zle';
+        popis = 'Zdroj zatím není zapojený' + (nalez.chyba ? ' (' + nalez.chyba + ')' : '');
+      } else if (!pocet) {
+        var odpovedel = stav === 'ok' || stav === 'prazdno';
+        text = odpovedel ? 'bez záznamů' : 'nedostupný'; trida = ' src-zle';
+        popis = odpovedel
+          ? 'Zdroj odpověděl, ale nepřinesl ani jeden záznam'
+          : 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '');
+      } else if (oslabeny) {
+        text = pocet + '× ↓'; trida = ' src-slabe';
+        popis = stav === 'zahazuje'
+          ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale víc nabídek zahodil než přijal'
+            + ' — možná se mu změnil tvar stránky'
+          : 'Zdroj odpověděl, ale přinesl výrazně méně než jinak (' + pocet
+            + ' záznamů) — možná přestal číst část stránky';
+      } else {
+        text = pocet + '×'; trida = '';
+        popis = 'Při poslední kontrole vrátil ' + pocet + ' záznamů';
+      }
+      znacka.className = 'src-stav' + trida;
+      znacka.textContent = text;
+      znacka.title = popis;
       chip.appendChild(znacka);
     });
   })();

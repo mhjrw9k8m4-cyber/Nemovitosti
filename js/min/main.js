@@ -416,16 +416,34 @@
       if (!nalez) return;
       var znacka = document.createElement('span');
 
-      var vypnuty = nalez.stav === 'vypnuto';
-      znacka.className = 'src-stav' + (nalez.stav === 'ok' && nalez.pocet ? '' : ' src-zle');
-      znacka.textContent = vypnuty ? 'nezapojený'
-        : (nalez.stav !== 'ok' ? 'nedostupný'
-          : (nalez.pocet ? nalez.pocet + '×' : 'bez záznamů'));
-      znacka.title = vypnuty
-        ? 'Zdroj zatím není zapojený' + (nalez.chyba ? ' (' + nalez.chyba + ')' : '')
-        : (nalez.stav !== 'ok'
-          ? 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '')
-          : 'Při poslední kontrole vrátil ' + nalez.pocet + ' záznamů');
+      var stav = nalez.stav || 'ok';
+      var pocet = nalez.pocet || 0;
+      var oslabeny = stav === 'pokles' || stav === 'propad' || stav === 'zahazuje'
+        || (stav !== 'ok' && pocet > 0);
+      var text, popis, trida;
+      if (stav === 'vypnuto') {
+        text = 'nezapojený'; trida = ' src-zle';
+        popis = 'Zdroj zatím není zapojený' + (nalez.chyba ? ' (' + nalez.chyba + ')' : '');
+      } else if (!pocet) {
+        var odpovedel = stav === 'ok' || stav === 'prazdno';
+        text = odpovedel ? 'bez záznamů' : 'nedostupný'; trida = ' src-zle';
+        popis = odpovedel
+          ? 'Zdroj odpověděl, ale nepřinesl ani jeden záznam'
+          : 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '');
+      } else if (oslabeny) {
+        text = pocet + '× ↓'; trida = ' src-slabe';
+        popis = stav === 'zahazuje'
+          ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale víc nabídek zahodil než přijal'
+            + ' — možná se mu změnil tvar stránky'
+          : 'Zdroj odpověděl, ale přinesl výrazně méně než jinak (' + pocet
+            + ' záznamů) — možná přestal číst část stránky';
+      } else {
+        text = pocet + '×'; trida = '';
+        popis = 'Při poslední kontrole vrátil ' + pocet + ' záznamů';
+      }
+      znacka.className = 'src-stav' + trida;
+      znacka.textContent = text;
+      znacka.title = popis;
       chip.appendChild(znacka);
     });
   })();

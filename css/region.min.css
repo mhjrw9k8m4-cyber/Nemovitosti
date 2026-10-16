@@ -190,7 +190,7 @@ to{opacity:1;transform:none}
 
 
 
-.sk{background:linear-gradient(90deg,var(--ink-soft2) 25%,var(--plocha-jemna-vic) 37%,var(--ink-soft2) 63%);background-size:400% 100%;border-radius:var(--r-xs);animation:skShimmer 1.4s ease infinite}
+.sk{background-color:var(--plocha-jemna);background-image:linear-gradient(90deg,transparent 25%,var(--plocha-jemna-vic) 37%,transparent 63%);background-size:400% 100%;border-radius:var(--r-xs);animation:skShimmer 1.4s ease infinite}
 @keyframes skShimmer{0%{background-position:100% 0}
 100%{background-position:0 0}
 }
@@ -237,8 +237,8 @@ to{opacity:1;transform:none}
 footer{border-top:1px solid var(--line);padding:28px 0}
 footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-ondark-mute);flex-wrap:wrap;gap:16px}
 .foot-pravni{display:flex;flex-wrap:wrap;align-items:center;gap:2px 20px}
-.foot-pravni a{display:inline-flex;align-items:center;min-height:44px;color:var(--text-ondark-mute);text-decoration:none;border-bottom:1px solid var(--line-strong);line-height:1.2;padding-bottom:1px}
-.foot-pravni a:hover{color:var(--copper);border-bottom-color:var(--copper)}
+.foot-pravni a{display:inline-flex;align-items:center;min-height:44px;color:var(--text-ondark-mute);line-height:1.2;text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:var(--line-strong);text-underline-offset:3px}
+.foot-pravni a:hover{color:var(--copper);text-decoration-color:var(--copper)}
 .foot-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:20px;font-size:12px;color:var(--text-ondark-mute);flex-wrap:wrap;gap:10px 16px;padding-bottom:80px}
 .to-top{position:fixed;bottom:24px;right:24px;display:inline-flex;align-items:center;gap:6px;height:46px;padding:0 16px 0 14px;border-radius:var(--r-pill);background:#fff;color:var(--copper-bright);border:1.5px solid var(--obrys-tlacitka);font-size:16px;font-weight:700;letter-spacing:0.01em;cursor:pointer;box-shadow:var(--e2);opacity:0;pointer-events:none;transform:translateY(12px) scale(.96);transition:opacity var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease);z-index:900}
 .to-top svg{width:19px;height:19px;stroke-width:1.89;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}

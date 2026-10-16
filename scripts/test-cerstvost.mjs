@@ -44,7 +44,22 @@ const SE_STAVEM = {
   sources: [
     { nazev: 'Dražby', stav: 'ok', pocet: 61, cas: dnesISO, chyba: null },
     { nazev: 'Bezrealitky', stav: 'chyba', pocet: 0, cas: dnesISO, chyba: 'HTTP 503' },
-    { nazev: 'Farmy', stav: 'ok', pocet: 412, cas: dnesISO, chyba: null },
+    /* NEZNÁMÝ stav s počtem. Robot jich umí zapsat šest a může přidat
+       sedmý; odznak ho nemá ukázat jako „v pořádku" — to je přesně ta
+       chyba, co tady byla, jen obráceně. */
+    { nazev: 'Farmy', stav: 'neco-noveho', pocet: 412, cas: dnesISO, chyba: null },
+    /* OSLABENÝ zdroj: odpověděl a něco přinesl, ale výrazně méně než
+       jinak. Scraper pro to má vlastní stavy („pokles" proti mediánu
+       posledních dnů, „propad" proti minulému běhu) — a odznak na webu
+       je dlouho ignoroval, protože se řídil jen `stav === 'ok'`. Takový
+       zdroj se hlásil jako „nedostupný" s popiskem „neodpověděl", což
+       nebyla jen nepřesnost: v ostrých datech měly „OK dražby" stav
+       „pokles" a 45 záznamů, a web u nich tvrdil, že neodpověděly. */
+    { nazev: 'OK dražby', stav: 'pokles', pocet: 45, cas: dnesISO, chyba: null },
+    /* A zdroj, který odpověděl a nic nepřinesl. Dřív u něj stálo
+       „nedostupný / neodpověděl" — to je jiná porucha a vede k jinému
+       hledání: tady neselhalo spojení, ale čtení stránky. */
+    { nazev: 'SPÚ', stav: 'prazdno', pocet: 0, cas: dnesISO, chyba: null },
   ],
   opportunities: OSTRA.opportunities,
 };
@@ -98,7 +113,11 @@ async function otevri(data) {
     hlavicka: (document.getElementById('data-updated') || {}).textContent || '',
     znacky: [...document.querySelectorAll('.source-chip')].map((c) => {
       const z = c.querySelector('.src-stav');
-      return { text: c.textContent.trim(), stav: z ? z.textContent : null, zle: z ? z.classList.contains('src-zle') : false };
+      return { zdroj: c.getAttribute('data-zdroj') || '', text: c.textContent.trim(),
+        stav: z ? z.textContent : null,
+        zle: z ? z.classList.contains('src-zle') : false,
+        slabe: z ? z.classList.contains('src-slabe') : false,
+        popis: z ? z.title : null };
     }),
   }));
   /* MEZERA MŮŽE BÝT NEZLOMITELNÁ. Od 14. 10. sází krok sazby i texty,
@@ -111,14 +130,42 @@ async function otevri(data) {
   const sesStavem = v.znacky.filter((z) => z.stav);
   pravda('u zdrojů je vidět, kolik naposledy přinesly', sesStavem.length >= 2,
     `se stavem jen ${sesStavem.length} z ${v.znacky.length}`);
-  pravda('funkční zdroj ukazuje počet záznamů',
-    sesStavem.some((z) => /61×|412×/.test(z.stav)), JSON.stringify(sesStavem));
+  /* Konkrétní zdroj, ne „některý z nich". Dřív stálo `/61×|412×/` přes
+     celý seznam — a tím by prošlo i to, že se číslo ukáže u cizího
+     odznaku. Právě na tom se tady už jednou pohořelo (páruje se podle
+     data-zdroj, ne podle textu). */
+  const funkcni = sesStavem.find((z) => z.zdroj === 'Dražby');
+  pravda('funkční zdroj ukazuje počet záznamů, a svůj',
+    !!(funkcni && funkcni.stav === '61×'), JSON.stringify(funkcni));
   // Tohle je jádro testu.
-  const spadly = sesStavem.find((z) => /bezrealitky/i.test(z.text));
+  const spadly = sesStavem.find((z) => z.zdroj === 'Bezrealitky');
   pravda('spadlý zdroj je označený jako nedostupný',
     !!(spadly && /nedostupn/.test(spadly.stav)), JSON.stringify(spadly));
   pravda('a je odlišený i barvou, ne jen slovem',
     !!(spadly && spadly.zle === true));
+  /* A teď ten čtvrtý stav. Oslabený zdroj má říct dvě věci zároveň:
+     KOLIK přinesl (bez čísla nepoznám, jak hluboko to spadlo) a že to
+     je málo. Nesmí tedy tvrdit „nedostupný", ani se tvářit normálně. */
+  const slaby = sesStavem.find((z) => z.zdroj === 'OK dražby');
+  pravda('oslabený zdroj ukazuje počet, který přinesl',
+    !!(slaby && /45/.test(slaby.stav)), JSON.stringify(slaby));
+  pravda('a netvrdí o sobě, že neodpověděl',
+    !!(slaby && !/nedostupn|bez záznam/.test(slaby.stav)), JSON.stringify(slaby));
+  pravda('ale je označený jako oslabený, ne jako v pořádku',
+    !!(slaby && slaby.slabe === true && slaby.zle === false), JSON.stringify(slaby));
+  pravda('a popisek vysvětluje, že přinesl méně než jinak',
+    !!(slaby && /méně/.test(slaby.popis || '')), JSON.stringify(slaby && slaby.popis));
+  /* Prázdná odpověď ≠ žádná odpověď. Obojí je špatně, ale hledá se
+     jinde: u prázdné stránka odpověděla a selhalo čtení. */
+  const prazdny = sesStavem.find((z) => z.zdroj === 'SPÚ');
+  pravda('zdroj, který odpověděl a nic nepřinesl, netvrdí „nedostupný"',
+    !!(prazdny && /bez záznam/.test(prazdny.stav)), JSON.stringify(prazdny));
+  pravda('a jeho popisek nemluví o neodpovězení',
+    !!(prazdny && !/neodpověděl/.test(prazdny.popis || '')), JSON.stringify(prazdny && prazdny.popis));
+  /* ŽÁDNÝ STAV NESMÍ PROPADNOUT do „v pořádku". */
+  const neznamy = sesStavem.find((z) => z.zdroj === 'Farmy');
+  pravda('neznámý stav s počtem se neukáže jako v pořádku',
+    !!(neznamy && neznamy.slabe === true && /412/.test(neznamy.stav)), JSON.stringify(neznamy));
   pravda('se stavem zdrojů nespadl žádný skript', chyby.length === 0, chyby[0]);
   await ctx.close();
 }

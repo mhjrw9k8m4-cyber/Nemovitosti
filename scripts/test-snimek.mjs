@@ -101,6 +101,9 @@ const v = await p.evaluate(() => {
     spendlik: !!s.querySelector('path[d^="M0 0C-7"]'),
     popisText: pop ? pop.textContent.replace(/\s+/g, ' ').trim() : null,
     popisSkryty: pop ? pop.getAttribute('aria-hidden') === 'true' : false,
+    nadpis: (document.querySelector('h1.pz-place') || {}).textContent || '',
+    vymera: [...document.querySelectorAll('.pz-klic')]
+      .map((e) => e.textContent).filter((t) => /Výměra/.test(t)).join(' '),
   };
 });
 pravda('snímek se na stránce pozemku vykreslí', v.jeSvg);
@@ -111,12 +114,25 @@ pravda('do snímku se nekreslí nic, co by vypadalo jako hranice pozemku',
 pravda('špendlík na přesném bodě zůstal', v.spendlik === true);
 pravda('pod snímkem stojí, kde je přesný obrys',
   /katastr/.test(v.popisText || ''), `popisek: „${v.popisText}"`);
-/* Jméno obce se bere z TOHO pozemku, který se otevřel — napevno
-   napsané „Police" platilo jen do chvíle, než se ta parcela z nabídek
-   ztratila. */
-pravda('a je v něm název místa i výměra',
-  !!POZEMEK && v.popisText.indexOf(POZEMEK.d.place) >= 0 && /ha|m²/.test(v.popisText || ''),
-  `popisek „${v.popisText}", čekané místo „${POZEMEK ? POZEMEK.d.place : '—'}"`);
+/* JMÉNO OBCE A VÝMĚRA V POPISKU UŽ NEJSOU, A JE TO ZÁMĚR.
+   Stály tam, dokud byl snímek jediné, co se na stránce ukázalo hned.
+   Dnes je o řádek níž nadpis „Ostatní plocha 6 336 m² — Benešov,
+   okres Benešov", takže popisek přes fotku říkal totéž podruhé.
+   Hlídá se tedy, že z TOHO pozemku pochází NADPIS (to je ta past na
+   napevno napsanou hodnotu) a že popisek nese jedinou věc, kterou ze
+   snímku poznat nelze — kde je přesný obrys. */
+pravda('a nadpis stránky nese název místa toho pozemku',
+  !!POZEMEK && (v.nadpis || '').indexOf(POZEMEK.d.place) >= 0,
+  `nadpis „${v.nadpis}", čekané místo „${POZEMEK ? POZEMEK.d.place : '—'}"`);
+/* Výměra se hledá v parametrech, ne v nadpisu: na vlastní stránce
+   pozemku ji nadpis nese („Ostatní plocha 6 336 m² — Benešov"),
+   kdežto na obecné pozemek.html?p=… je nadpis jen jméno obce.
+   Dlaždice „Výměra" je na obou. */
+pravda('a výměra stojí v parametrech hned pod cenou',
+  /ha|m²/.test(v.vymera || ''), `dlaždice: „${v.vymera}"`);
+pravda('a popisek přes snímek neopakuje, co je v nadpisu',
+  (v.popisText || '').indexOf(POZEMEK ? POZEMEK.d.place : 'xxx') < 0,
+  `popisek „${v.popisText}"`);
 pravda('popisek se odečítači obrazovky nečte dvakrát', v.popisSkryty === true,
   'název místa je hned pod snímkem v nadpisu — nemá znít dvakrát');
 pravda('při vykreslení snímku nespadl žádný skript', chyby.length === 0, chyby[0]);

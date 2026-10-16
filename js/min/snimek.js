@@ -73,15 +73,9 @@
   }
 
   function popis(d) {
-    if (!d.place) return '';
-    var v = d.area > 0
-      ? (d.area >= 10000 ? (d.area / 10000).toFixed(d.area >= 100000 ? 0 : 1).replace('.', ',') + '\u00a0ha'
-                         : String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²')
-      : '';
+    if (!d.place || !(d.area > 0)) return '';
     return '<span class="sn-popis" aria-hidden="true">' +
-      '<b>' + esc(d.place) + '</b>' +
-      (v ? '<i>' + v + '</i>' : '') +
-      (d.area > 0 ? '<u>přesný obrys pozemku najdete v katastru</u>' : '') +
+      '<u>přesný obrys pozemku najdete v katastru</u>' +
       '</span>';
   }
 

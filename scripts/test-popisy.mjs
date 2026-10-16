@@ -46,6 +46,18 @@ pravda('odkaz se nepřenese', !/https?:\/\/|www\./i.test(uklizeny), uklizeny);
 pravda('a nezůstane po nich věta bez obsahu („Volejte   nebo pište na")',
   uklizeny.indexOf('Volejte') === -1 && uklizeny.indexOf('pište') === -1, uklizeny);
 pravda('dvě slova nejsou popis', cistyPopis('Pozemek na prodej.') === '', JSON.stringify(cistyPopis('Pozemek na prodej.')));
+/* DROBNÁ TYPOGRAFIE. Inzeráty chodí tak, jak je kdo napsal — naměřeno
+   na patnácti vygenerovaných stránkách: mezera PŘED čárkou („v obci
+   Boseň , v atraktivní lokalitě"). Opravuje se jen to, co je bez
+   výjimky chyba; desetinná čárka se nesmí rozpadnout, proto se mezera
+   ZA čárkou nedoplňuje. */
+{
+  const t = cistyPopis('Nabízím k prodeji svažitý stavební pozemek o výměře 865 m² , '
+    + 'který je  kompletně zasíťovaný a připravený ke stavbě rodinného domu o výměře 1,5 ha.');
+  pravda('mezera před čárkou zmizí', t.indexOf(' ,') === -1 && t.indexOf('m²,') !== -1, t);
+  pravda('a zdvojená mezera taky', t.indexOf('  ') === -1, t);
+  pravda('ale desetinná čárka zůstane celá', t.indexOf('1,5 ha') !== -1, t);
+}
 pravda('prázdný vstup nespadne', cistyPopis(null) === '' && cistyPopis(undefined) === '');
 const dlouhy = cistyPopis(('Nabízíme ke koupi zemědělský pozemek o výměře 1,2 ha. '
   + 'Pozemek je přístupný po zpevněné cestě. Vhodné jako investice. ').repeat(8));

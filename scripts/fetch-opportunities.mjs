@@ -162,8 +162,17 @@ export function otiskOdkazu(o) {
   m = /farmy\.cz[^?#]*[?&]nab=(\d+)/.exec(u);                if (m) return 'fa|' + m[1];
   m = /sreality\.cz\/detail\/[^?#]*?\/(\d{5,})/.exec(u);  if (m) return 'sr|' + m[1];
   /* Neznámý zdroj: adresa je pořád lepší identita než otisk z okresu
-     a výměry, jen se na ni nedá spolehnout tak jako na číslo. */
-  return 'url|' + u;
+     a výměry, jen se na ni nedá spolehnout tak jako na číslo.
+     SROVNÁ SE DO JEDNOHO TVARU. Táž dražba chodí ze dvou stahovačů
+     pod dvěma zápisy adresy: „okdrazby.cz/drazba/28315" a
+     „www.okdrazby.cz/drazba/28315" — naměřeno na deseti dvojicích
+     v dnešních datech. Pro prohlížeč je to jedna nabídka (klicZdroje
+     v js/hlidani-logika.js srovnává adresu stejně), ale otisk pro
+     stáří je bral jako dvě různé, takže se po změně zápisu adresy
+     u zdroje nabídka tvářila jako nová. Protokol, „www." a lomítko
+     na konci nejsou identita, jsou to jen tvar zápisu. */
+  return 'url|' + u.replace(/^https?:\/\//i, '').replace(/^www\./i, '')
+    .replace(/\/+$/, '').toLowerCase();
 }
 
 /** Doplní `first_seen` do `fresh` podle `drive`. Mění předaná data.
@@ -946,6 +955,64 @@ export function zapisDoHistorie(historie, ted, dnes) {
   return { verze: 1, dny };
 }
 
+/* ZÁSTUPNÁ CENA. Inzerent, který cenu nechce psát, ji nenechá prázdnou —
+ * napíše číslo, které nic neznamená: 1 Kč, 1 000, 5 000. Dolní mez 5 000 Kč
+ * v valid() takový inzerát pustí dál (je přesně na ní) a web pak tvrdí věci,
+ * které nejsou pravda. Naměřeno na ostrých datech: zasíťovaný stavební
+ * pozemek 751 m² v Jizerním Vtelnu stál „5 000 Kč", tedy 6,7 Kč/m², zatímco
+ * pátý percentil stavebních pozemků je 239 Kč/m² a medián 2 844. Jeden
+ * inzerát, ale ten nejvíc vidět: řadíme podle výhodnosti, takže sedí první
+ * na mapě, dostane verdikt „výhodná cena" a táhne dolů medián svého místa.
+ *
+ * Práh se nehádá, počítá se z vlastních dat: pod pětinu pátého percentilu
+ * svého druhu. Pevné číslo by stárlo a u orné půdy (medián 45 Kč/m²) by
+ * znamenalo něco úplně jiného než u stavebních parcel.
+ *
+ * Dvě pojistky proti tomu, aby síto začalo žrát pravdu:
+ *   · druh s málo kusy se nepočítá (percentil z dvaceti čísel je náhoda),
+ *   · a kdyby mělo padnout víc než 1 % druhu, je špatně rozdělení, ne
+ *     inzeráty — tehdy se nic nevyhodí a jen se to nahlásí.
+ */
+export const MIN_VZORKU_DRUHU = 60;
+export const PODIL_P5 = 0.2;
+export const STROP_VYHOZENI = 0.01;
+
+export function bezZastupnychCen(nabidky) {
+  const skupiny = {};
+  for (const o of (nabidky || [])) {
+    if (!o || !(o.area > 0) || !(o.price > 0)) continue;
+    (skupiny[o.druh || '?'] || (skupiny[o.druh || '?'] = [])).push(o.price / o.area);
+  }
+  const prahy = {};
+  for (const druh in skupiny) {
+    const v = skupiny[druh].slice().sort((a, b) => a - b);
+    if (v.length < MIN_VZORKU_DRUHU) continue;
+    const p5 = v[Math.floor(0.05 * (v.length - 1))];
+    if (!(p5 > 0)) continue;
+    prahy[druh] = p5 * PODIL_P5;
+  }
+  const podezrele = [];
+  for (const o of (nabidky || [])) {
+    if (!o || !(o.area > 0) || !(o.price > 0)) continue;
+    const prah = prahy[o.druh || '?'];
+    if (prah && o.price / o.area < prah) podezrele.push(o);
+  }
+  /* Pojistka: moc nálezů v jednom druhu = chyba v prahu, ne v inzerátech. */
+  const prilis = new Set();
+  for (const druh in prahy) {
+    const kolik = podezrele.filter((o) => (o.druh || '?') === druh).length;
+    if (kolik > Math.max(1, Math.floor(skupiny[druh].length * STROP_VYHOZENI))) prilis.add(druh);
+  }
+  const vyhozeno = podezrele.filter((o) => !prilis.has(o.druh || '?'));
+  const ven = new Set(vyhozeno);
+  return {
+    cisto: (nabidky || []).filter((o) => !ven.has(o)),
+    vyhozeno,
+    neduveryhodnyDruh: [...prilis],
+    prahy,
+  };
+}
+
 export function porovnejZdroje(minule, ted) {
   const predchozi = {};
   for (const z of (minule || [])) if (z && z.nazev) predchozi[z.nazev] = +z.pocet || 0;
@@ -1307,6 +1374,16 @@ export function cistyPopis(t) {
     .trim();
   const vety = holy.split(/(?<=[.!?])\s+/).filter((v) => v && !KONTAKT.test(v));
   let x = vety.join(' ').replace(/\s+/g, ' ').trim();
+  /* DROBNÁ TYPOGRAFIE CIZÍHO TEXTU. Inzeráty chodí tak, jak je kdo
+     napsal, a na stránce pozemku je ten text to jediné od člověka,
+     který pozemek zná — stojí tedy za to, aby se dal číst. Naměřeno
+     na vygenerovaných stránkách: patnáct z nich mělo mezeru PŘED
+     čárkou nebo tečkou („v obci Boseň , v atraktivní lokalitě").
+     Opravuje se jen to, co je bez výjimky chyba: mezera před
+     interpunkcí a mezera zdvojená. Nic se nepřepisuje ani nedoplňuje
+     — mezera ZA čárkou se schválně nedoplňuje, protože „1,5 ha" by
+     se tím rozpadlo na „1, 5 ha". */
+  x = x.replace(/\s+([,.;:!?])/g, '$1').replace(/ {2,}/g, ' ');
   if (x.length > 460) {
     const rez = x.lastIndexOf('. ', 460);
     x = (rez > 200 ? x.slice(0, rez + 1) : x.slice(0, 460).replace(/\s+\S*$/, '') + '…');
@@ -1661,7 +1738,21 @@ async function main() {
     console.log(`Dvojníci (týž pozemek pod jiným číslem inzerátu): ${dvojnici.length} vynecháno`);
     for (const o of dvojnici.slice(0, 5)) console.log(`  · ${o.place}, okres ${o.okres} — ${o.area} m², ${o.price} Kč (${o.druh})`);
   }
-  const clean = cisto.sort(byDeal);
+  /* A inzeráty se zástupnou cenou („cena na dotaz" napsaná jako 5 000 Kč). */
+  const zast = bezZastupnychCen(cisto);
+  if (zast.vyhozeno.length) {
+    console.log(`Zástupná cena (nesmyslně nízká proti svému druhu): ${zast.vyhozeno.length} vynecháno`);
+    for (const o of zast.vyhozeno.slice(0, 5)) {
+      console.log(`  · ${o.place}, okres ${o.okres} — ${o.area} m², ${o.price} Kč`
+        + ` = ${Math.round(o.price / o.area)} Kč/m² (${o.druh}, práh ${Math.round(zast.prahy[o.druh || '?'])})`);
+    }
+  }
+  for (const druh of zast.neduveryhodnyDruh) {
+    console.error(`POZOR: u druhu „${druh}" by síto zástupných cen vyhodilo víc než`
+      + ` ${STROP_VYHOZENI * 100} % nabídek, takže nevyhodilo nic. Podívejte se, jestli`
+      + ' se u toho druhu nestahují ceny za jinou jednotku.');
+  }
+  const clean = zast.cisto.sort(byDeal);
 
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme

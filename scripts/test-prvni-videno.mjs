@@ -111,8 +111,26 @@ pravda('a diakritika v názvu otisk nerozhodí',
    kdy se zpřesňoval okres podle skutečné hranice. */
 {
   pravda('bez odkazu není co párovat', otiskOdkazu(N({})) === '', otiskOdkazu(N({})));
-  pravda('s odkazem je identita jeho', otiskOdkazu(N({ url: 'https://x.invalid/a' })) === 'url|https://x.invalid/a',
+  pravda('s odkazem je identita jeho', otiskOdkazu(N({ url: 'https://x.invalid/a' })) === 'url|x.invalid/a',
     otiskOdkazu(N({ url: 'https://x.invalid/a' })));
+  /* TÁŽ DRAŽBA POD DVĚMA ZÁPISY ADRESY. Dva stahovače posílají tentýž
+     okdrazby.cz jednou s „www." a jednou bez — naměřeno na deseti
+     dvojicích v datech. Prohlížeč je dávno spojuje (klicZdroje
+     v js/hlidani-logika.js); otisk pro stáří je do teď bral jako dvě
+     různé nabídky, takže by se po změně zápisu u zdroje nabídka
+     tvářila jako nová a přišla o svoje stáří. */
+  pravda('„www." a protokol nejsou identita',
+    otiskOdkazu(N({ url: 'https://okdrazby.cz/drazba/28315' }))
+      === otiskOdkazu(N({ url: 'https://www.okdrazby.cz/drazba/28315' })),
+    `${otiskOdkazu(N({ url: 'https://okdrazby.cz/drazba/28315' }))} × ${otiskOdkazu(N({ url: 'https://www.okdrazby.cz/drazba/28315' }))}`);
+  pravda('ani lomítko na konci',
+    otiskOdkazu(N({ url: 'https://x.invalid/a/' })) === otiskOdkazu(N({ url: 'https://x.invalid/a' })),
+    otiskOdkazu(N({ url: 'https://x.invalid/a/' })));
+  /* Dvě RŮZNÉ dražby se spojit nesmí — srovnání se smí dotknout jen
+     tvaru zápisu, ne čísla. */
+  pravda('ale dvě různá čísla dražby zůstanou dvě',
+    otiskOdkazu(N({ url: 'https://okdrazby.cz/drazba/28315' }))
+      !== otiskOdkazu(N({ url: 'https://okdrazby.cz/drazba/28316' })), 'spojilo se, co nemá');
   /* ZMĚNA KONCE ADRESY NESMÍ NIC ZNAMENAT. Bezrealitky u běžícího
      inzerátu doplní do adresy jméno obce. Naměřeno na celé gitové
      historii: stalo se to u 63 z 1 918 inzerátů. */
@@ -206,9 +224,11 @@ pravda('a diakritika v názvu otisk nerozhodí',
   ];
   const { nejdriv, podleOdkazu, precteno } = nejstarsiZHistorie(function* () { yield* verze; });
   pravda('rozbitá verze v historii dopočet neshodí', precteno === 2, `přečteno ${precteno}`);
+  /* Klíč je srovnaná adresa (bez protokolu, „www." a lomítka na konci)
+     — proto „url|x.invalid/a", ne celá adresa. */
   pravda('podle odkazu je nejstarší den ten první',
-    podleOdkazu.get('url|https://x.invalid/a') === '2026-09-14',
-    String(podleOdkazu.get('url|https://x.invalid/a')));
+    podleOdkazu.get('url|x.invalid/a') === '2026-09-14',
+    String(podleOdkazu.get('url|x.invalid/a')));
   /* Dnešní nabídka má datum z druhé verze — a z odkazu se dozví, že
      ji web viděl už týden předtím, jen pod jiným okresem. */
   const nab = [{ type: 'sale', okres: 'Beroun', place: 'Zdice', parcel: '—', area: 5023,

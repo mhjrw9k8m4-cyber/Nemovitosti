@@ -144,10 +144,23 @@ async function zmerPruh() {
       const r = k.getBoundingClientRect();
       if (r.left >= rr.left - 1 && r.right <= rr.right + 1) celych++;
     }
+    /* ŠÍŘKY SE MUSÍ ROVNAT. `flex:0 0 160px` je jen preferovaná šířka;
+       automatické minimum pružné položky ji umí roztáhnout podle obsahu
+       a pruh pak má rozsypané hrany (naměřeno 150/154/169/191 px). */
+    const sirky = karty.map((k) => Math.round(k.getBoundingClientRect().width));
+    /* A cena se nesmí krájet — u obce to nevadí (výpustka), u ceny by
+       „379 320…" lhalo. */
+    const orezCeny = karty.map((k) => {
+      const c = k.querySelector('.rs-price');
+      return c ? c.scrollWidth - c.clientWidth : 0;
+    });
     return {
       karet: karty.length,
       sObrazkem: karty.filter((k) => !!k.querySelector('.rs-foto img')).length,
       celych: celych,
+      sirky: sirky,
+      stejneSirky: sirky.length > 1 && Math.max(...sirky) - Math.min(...sirky) <= 1,
+      orezCeny: Math.max(0, ...orezCeny),
       /* Kousek další karty za hranou říká „pokračuje to" líp než šipka. */
       precnivaDal: rada.scrollWidth - rada.clientWidth > 8,
     };
@@ -211,6 +224,10 @@ try {
   pravda('a vejdou se tam aspoň dvě celé, s kouskem třetí za hranou',
     pruh.celych >= 2 && pruh.precnivaDal,
     `celých v záběru ${pruh.celych}, pokračuje za hranou: ${pruh.precnivaDal}`);
+  pravda('všechny karty v pruhu mají stejnou šířku',
+    pruh.stejneSirky, `šířky ${JSON.stringify(pruh.sirky)}`);
+  pravda('a cena se v nich nekrájí',
+    pruh.orezCeny === 0, `nejvíc ořezáno ${pruh.orezCeny} px`);
 
   zpravy.push(`  · naměřeno: telefon nářadí ${t.akce} px / nabídka ${t.karta} px;`
     + ` monitor nářadí ${m.akce} px / nabídka ${m.karta} px;`

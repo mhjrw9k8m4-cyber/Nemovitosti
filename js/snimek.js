@@ -117,16 +117,19 @@
      výměra (to je, co ten čtverec ukazuje), a ne okres, který stojí hned pod
      snímkem v hlavičce. A proto je pro odečítač obrazovky skrytá: název místa
      i výměru si přečte z textu stránky, dvakrát je slyšet nepotřebuje. */
+  /* POPISEK NESE JEN TO, CO SNÍMEK SÁM NEŘEKNE.
+     Stálo v něm jméno obce a výměra — a hned o řádek níž je nadpis
+     stránky: „Ostatní plocha 6 336 m² — Benešov, okres Benešov".
+     Tedy totéž dvakrát pod sebou, jen jednou bíle přes fotku. Velké
+     weby s nemovitostmi nechávají na snímku jen odznak; popisky jsou
+     pod ním, v textu.
+     Výhrada o obrysu zůstává: to je jediná věc, kterou z leteckého
+     snímku poznat NELZE a kterou by si jinak člověk domyslel špatně
+     (čára na snímku není hranice parcely). */
   function popis(d) {
-    if (!d.place) return '';
-    var v = d.area > 0
-      ? (d.area >= 10000 ? (d.area / 10000).toFixed(d.area >= 100000 ? 0 : 1).replace('.', ',') + '\u00a0ha'
-                         : String(Math.round(d.area)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0m²')
-      : '';
+    if (!d.place || !(d.area > 0)) return '';
     return '<span class="sn-popis" aria-hidden="true">' +
-      '<b>' + esc(d.place) + '</b>' +
-      (v ? '<i>' + v + '</i>' : '') +
-      (d.area > 0 ? '<u>přesný obrys pozemku najdete v katastru</u>' : '') +
+      '<u>přesný obrys pozemku najdete v katastru</u>' +
       '</span>';
   }
 

@@ -64,6 +64,26 @@ pravda('beze změny se nehlásí nic',
     najdi('Bezrealitky', [{ nazev: 'Bezrealitky', stav: 'ok', pocet: tesne }]) === null,
     `při ${tesne} z 1785`);
 }
+/* ZDROJ, KTERÝ VÍC ZAHODÍ NEŽ PŘINESE. Tohle síto v kódu je, ale nikdy
+   se nezkoušelo: parser, kterému se změní tvar stránky, často nespadne
+   — jen mu většina nabídek propadne na kontrole a součet zůstane
+   „v pořádku". Hlídá se obojí: že se to pozná, a že se to nehlásí
+   u zdroje, který zahodí jen několik kusů (to je normální provoz). */
+{
+  const n = najdi('Bezrealitky', [{ nazev: 'Bezrealitky', stav: 'ok', pocet: 1000, preskoceno: 1200 }]);
+  pravda('zdroj, který víc zahodí než přinese, se pozná',
+    n && n.druh === 'zahazuje' && n.preskoceno === 1200, JSON.stringify(n));
+}
+{
+  const n = najdi('Bezrealitky', [{ nazev: 'Bezrealitky', stav: 'ok', pocet: 1700, preskoceno: 80 }]);
+  pravda('ale pár zahozených kusů se nehlásí', n === null, JSON.stringify(n));
+}
+{
+  /* Pořadí sít: propad je vážnější nález a nemá ho přebít zahazování. */
+  const n = najdi('Bezrealitky', [{ nazev: 'Bezrealitky', stav: 'ok', pocet: 300, preskoceno: 900 }]);
+  pravda('a když zdroj zároveň propadl, hlásí se propad (vážnější nález)',
+    n && n.druh === 'propad', JSON.stringify(n));
+}
 pravda('malý zdroj se nehlídá — kolísá sám od sebe',
   najdi('Farmy', [{ nazev: 'Farmy', stav: 'ok', pocet: 0 }]) === null);
 pravda('nový zdroj se nemá s čím porovnat, a tak se nehlásí',
