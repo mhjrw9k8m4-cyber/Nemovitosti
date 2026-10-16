@@ -1241,12 +1241,21 @@ export function blokPro(d) {
   let text = `V okruhu ${s.mez} m se ${kolik} — dohromady ${vymeraText}`;
   if (s.cena !== null) text += ` za ${fmt(s.cena)} Kč`;
   text += '.';
-  /* PODÍL SOUČET NAFUKUJE: v inzerátu je výměra celé parcely, ale kupuje
-     se zlomek. Když je ve shluku, musí to u součtu stát. */
+  /* PODÍL SOUČET NAFUKUJE — ale jen ten, u kterého je v inzerátu výměra
+     celé parcely (viz podiluCele v scripts/bloky.mjs). Dřív se to psalo
+     u všech podílů, a tím u většiny z nich nepravdivě: u 400 z 507 je
+     uložená výměra už ta podílová, takže součet odpovídá. Zmínka o podílu
+     ve shluku zůstává u všech — je to podstatná vlastnost nabídky —, ale
+     věta o nafouknutém součtu jen tam, kde platí. */
   if (s.podilu) {
     text += s.podilu === 1
-      ? ' Jeden z nich je spoluvlastnický podíl, takže jeho výměra je za celou parcelu, ne za to, co se prodává.'
-      : ` ${fmt(s.podilu)} z nich jsou spoluvlastnické podíly, takže jejich výměra je za celé parcely, ne za to, co se prodává.`;
+      ? ' Jeden z nich je spoluvlastnický podíl.'
+      : ` ${fmt(s.podilu)} z nich jsou spoluvlastnické podíly.`;
+    if (s.podiluCele) {
+      text += s.podiluCele === 1
+        ? ' U jednoho z nich je výměra za celou parcelu, ne za to, co se prodává.'
+        : ` U ${fmt(s.podiluCele)} z nich je výměra za celé parcely, ne za to, co se prodává.`;
+    }
   }
   /* Netvrdí se, že parcely spolu SOUSEDÍ (na to by byly potřeba hranice
      z katastru) ani že se dají koupit najednou — prodejců může být víc. */

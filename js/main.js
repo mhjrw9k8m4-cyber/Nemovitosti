@@ -1387,6 +1387,11 @@
   /* Skryté pozemky — „tenhle mě nezajímá". Kdo prochází dvě stě nabídek,
    * potřebuje odškrtávat, co už viděl. */
   var SKRYTE_KLIC = 'pk_skryte_v1';
+  /* Klíč uloženého filtru stojí nahoře u ostatních, ne až u obnovFiltr()
+     o šest tisíc řádků níž: obnova se volá JEŠTĚ PŘED prvním vykreslením
+     výpisu (viz tam) a `var` by do té doby byla `undefined`, takže by
+     uložený filtr tiše nenašel nic. */
+  var FILTR_KLIC = 'pk_filtr_v1';
   var skryte = ctiUloz(SKRYTE_KLIC, []) || [];
   /* Tentýž klíč jako u uložených, ze stejného důvodu: skrytí jednoho
      pozemku schovávalo i jeho sousedy pod stejným hrubým klíčem. */
@@ -5008,9 +5013,10 @@
     try { return visible(d); } finally { druhVybrane = byl; }
   }
   /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
-     U spoluvlastnického podílu je v inzerátu výměra celé parcely, ale cena
-     jen za zlomek — dělit celou výměrou znamená vyrobit číslo, které
-     neplatí pro nikoho. V Praze tím vycházel podíl 1/13 lesa jako
+     U spoluvlastnického podílu je cena jen za zlomek pozemku, a u části
+     z nich je v inzerátu výměra celé parcely — dělit tou celou výměrou
+     znamená vyrobit číslo, které neplatí pro nikoho. (U těch ostatních
+     je výměra už podílová a dělit se nesmí; rozhoduje `vymera_podilu`.) V Praze tím vycházel podíl 1/13 lesa jako
      nejlevnější pozemek ze všech (75 Kč/m²), přestože je ve skutečnosti
      nejdražší z té pětice (969 Kč/m²). Pořadí bylo obrácené.
      Výpočet je v js/ceny.js, ať ho mapa i stránka pozemku mají stejný.
@@ -5511,8 +5517,17 @@
            u podílu neznámé velikosti proto neukazujeme vůbec (viz
            js/ceny.js), jenže ta dvě čísla svádějí k dělení i tak.
            Stačí u výměry říct, čeho se týká. */
+        /* A ŘÍCT TO SPRÁVNĚ. Štítek „celá parcela" visel u KAŽDÉHO
+           podílu — jenže u většiny z nich výměra celá parcela není:
+           robot umí z textu inzerátu dokázat, že uložená výměra je už
+           ta podílová (`vymera_podilu`), a v datech to platí u 400
+           z 507 podílů. Těm 400 tedy karta tvrdila, že pozemek je
+           zlomek toho, co je napsáno. Štítek proto říká, co ta výměra
+           opravdu je. */
         (hasArea(d)
-          ? '<span class="m">' + fmt(d.area) + '\u00a0m²' + (d.podil ? '<i class="m-celek">celá parcela</i>' : '') + '</span>'
+          ? '<span class="m">' + fmt(d.area) + '\u00a0m²'
+            + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
+            + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
         (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
@@ -7726,6 +7741,20 @@
     for (var vD = rozehrej; vD < konecDavky; vD++) demand(DATA[vD]);
     if (konecDavky < DATA.length) await dechni();
   }
+  /* ULOŽENÝ FILTR SE DOSADÍ JEŠTĚ PŘED PRVNÍM VYKRESLENÍM.
+     Dřív se obnovoval až o sto řádků níž, a protože ovládací prvky pak
+     ukazovaly jiný stav než výpis, muselo se hned vykreslit podruhé.
+     Naměřeno na telefonu 390 px s procesorem ×4, medián ze tří běhů:
+     bez uloženého filtru strávilo hlavní vlákno úlohami 1 961 ms,
+     s uloženým 2 398 ms — tedy 437 ms práce navíc, a to u KAŽDÉHO, kdo
+     se na web vrací (uloží se při prvním doteku filtru). Zkouška
+     scripts/test-jedno-vykresleni.mjs měřila jen čistou adresu bez
+     uloženého filtru, takže o tom druhém vykreslení nevěděla.
+     Pořadí je bezpečné: obnovFiltr() sahá jen na ovládací prvky, které
+     se vyhledaly kolem řádku 1044, a na proměnné filtrů. Nic mezi tímhle
+     místem a starým voláním filtry nečte — renderHeroLegenda() si čísla
+     bere z DATA, ne z vykresleného výpisu (má to u sebe napsané). */
+  obnovFiltr();
   renderList();
   renderRecent();
   /* DRUHÝ ODDECH: výpis je na obrazovce, zbytek startu (živý proužek,
@@ -7787,8 +7816,8 @@
 
   /* Poslední nastavení filtrů. Kdo si vybral „Ústecký kraj, stavební,
    * do milionu", nechce to příště klikat znovu. Ukládá se jen to, co si
-   * člověk sám nastavil — vyhledávací text ne, ten je jednorázový. */
-  var FILTR_KLIC = 'pk_filtr_v1';
+   * člověk sám nastavil — vyhledávací text ne, ten je jednorázový.
+   * FILTR_KLIC je nahoře u ostatních klíčů úložiště. */
   function ulozFiltr() {
     zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
@@ -7830,9 +7859,8 @@
     if (sortEl) sortEl.value = sortMode;
     return true;
   }
-  // Seznam se vykresluje už dřív, takže po obnovení filtru se musí překreslit —
-  // jinak by ovládací prvky ukazovaly filtr, který na výpis ještě nesedí.
-  if (obnovFiltr()) renderList();
+  /* Obnova filtru se volá výš, PŘED prvním vykreslením — tady už by
+     znamenala druhé překreslení celého výpisu (437 ms na telefonu). */
 
   /* Proužek „u vašeho místa od minule přibylo". Tohle je celý smysl
    * uloženého místa — jinak by si ho nikdo neukládal. */

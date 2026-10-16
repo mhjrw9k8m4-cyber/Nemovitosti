@@ -141,10 +141,11 @@ export function spust() {
       <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, ${fmt(podiluVSouboru)} ${podiluVSouboru === 1 ? 'řádek' : (podiluVSouboru >= 2 && podiluVSouboru <= 4 ? 'řádky' : 'řádků')} v souboru${podiluNaWebu !== podiluVSouboru ? `, na webu ${fmt(podiluNaWebu)} po odstranění duplicit` : ''})
         je cena za zlomek pozemku. Výměra ale neznamená u všech totéž:
         kde inzerát dokazuje, že je to už výměra podílu, má řádek
-        <code>vymera_podilu: true</code> (${fmt(podiluPodilova)} z ${fmt(podiluVSouboru)}) a dělit ji
-        <code>zlomek</code>em znamená spočítat cenu za metr násobně vyšší. U zbytku je výměra
-        celé parcely a dělit se musí. Kdo <code>vymera_podilu</code> přehlédne, dostane číslo,
-        které neplatí pro nikoho — a to v obou směrech.</li>
+        <code>vymera_podilu: true</code> (${fmt(podiluPodilova)} z ${fmt(podiluVSouboru)}) — a dělit
+        takovou výměru podílem ze <code>zlomek</code> znamená spočítat cenu za metr násobně
+        vyšší. U zbytku je výměra celé parcely a dělit se musí. Kdo
+        <code>vymera_podilu</code> přehlédne, dostane číslo, které neplatí pro nikoho — a to
+        v obou směrech.</li>
       <li><b>Co není v poli <code>site</code>, není totéž co „není".</b> Sítě se čtou z popisu
         inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
       <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala

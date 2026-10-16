@@ -54,7 +54,9 @@
   function tabulka(nalezene) {
     /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
        Dělit cenou lomeno celou výměrou je u spoluvlastnického podílu
-       nesmysl: v inzerátu je výměra celé parcely, cena jen za zlomek.
+       nesmysl: cena je za zlomek pozemku. (Jen u ČÁSTI podílů je výměra
+       v inzerátu celá parcela; u zbytku je už ta podílová a dělit by se
+       nesmělo — rozhoduje příznak `vymera_podilu`, viz vymeraVCene.)
        A tahle tabulka navíc nejnižší cenu za metr ZELENĚ DOPORUČUJE —
        takže by jako nejvýhodnější označila podíl, který je ve skutečnosti
        nejdražší z vybraných (týž omyl, jaký kdysi dělala mapa: podíl 1/13

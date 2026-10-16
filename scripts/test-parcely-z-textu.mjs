@@ -62,6 +62,23 @@ function pravda(popis, vyslo, proc) {
   pravda('dvě parcely a uříznutý text se zahodí', cb.cislo === null, 'vrátilo ' + cb.cislo);
   pravda('a je u toho napsané proč', /uprostřed|stropu/.test(cb.proc), cb.proc);
 
+  /* VÝPUSTKA JE PŘIZNANÝ ŘEZ. Od 16. 10. se popis krátí na konci věty
+     nebo mezi odrážkami a při řezu na odrážce dostane „…". Takový text
+     může být KRÁTKÝ a končit celou položkou — obě pojistky výš by ho
+     pustily a pravidlo „v popisu je právě jedno číslo" by mluvilo
+     o seznamu, ze kterého je vidět jen začátek.
+     Na dnešních datech to nic nemění (výpustkou končí čtyři popisy a ani
+     jeden z nich číslo nedával); je to pojistka pro to, co přijde
+     z příštího běhu robota. */
+  const vyp = najdi('k.ú. Lhota • Parcela č. 100/1 - o výměře 500 m² (Orná půda)…', d(500));
+  pravda('popis uříznutý výpustkou se zahodí, i když je krátký',
+    vyp.cislo === null, 'vrátilo ' + vyp.cislo);
+  pravda('a je u toho napsané, že je uříznutý', /výpustkou/.test(vyp.proc), vyp.proc);
+  /* A text, který výpustkou NEkončí, musí projít dál — jinak by pojistka
+     spolkla i celé popisy, ve kterých se „…" objeví uprostřed. */
+  pravda('výpustka uprostřed textu nic nezahazuje',
+    najdi('Pěkný pozemek… hned u lesa. Parcela č. 100/1 - o výměře 500 m². Konec.', d(500)).cislo === '100/1');
+
   /* Rudice: sedí výměra podílu, ne parcely. */
   const ru = najdi('k.ú. Rudice LV č. 65 o výměře 1976 m², podíl 1/2 • Parcela č. 3591 - o výměře 3952 m² (Lesní pozemek). Konec.', d(1976));
   pravda('výměra podílu místo výměry parcely neprojde', ru.cislo === null, 'vrátilo ' + ru.cislo);
@@ -248,6 +265,24 @@ for (const { f, o } of sPc.slice(0, 3)) {
       + '• Parcela č. 3132/6 - o výměře 8096 m² (Trvalý travní porost) • Parcela č.',
       { podil: true, zlomek: '1/4', area: 2939 }) === true);
 
+  /* TŘI ZPŮSOBY, JAK TÝŽ PRODEJCE PÍŠE „O VÝMĚŘE". Vzorek uznával jen
+     ten první a zbylé dva mu propadly. Čekal jsem, že na tom nesejde
+     (u těch nabídek přece nesedí velikosti) — a bylo to naopak: na
+     týchž popisech vzorek po rozšíření nasadí příznak 25 nabídkám
+     navíc a žádné ho neubere. */
+  pravda('„o CELKOVÉ výměře" se čte stejně jako „o výměře"',
+    vymeraJePodilova('k.ú. Stradonice u Zlonic LV č. 122 o celkové výměře 2296 m², podíl 7/32 '
+      + '• Parcela č. 287/1 - o výměře 10496 m² (Orná půda) • Parcela č.',
+      { podil: true, zlomek: '7/32', area: 2296 }) === true);
+  pravda('a dvě čísla listu vlastnictví („LV č. 622 a 188") taky',
+    vymeraJePodilova('k.ú. Zdounky LV č. 622 a 188 o výměře 2186 m², podíl 1/6 '
+      + '• Parcela č. 1097/28 - o výměře 7690 m² (Orná půda) • Parcela č.',
+      { podil: true, zlomek: '1/6', area: 2186 }) === true);
+  pravda('i s čárkou mezi čísly',
+    vymeraJePodilova('LV č. 10, 11 o celkové výměře 1902 m², podíl 1/2 '
+      + '• Parcela č. 5/1 - o výměře 3804 m² • Parcela č.',
+      { podil: true, zlomek: '1/2', area: 1902 }) === true);
+
   /* ---- a co se poznat NESMÍ ---- */
   pravda('bez vypsaných parcel se nic nenasazuje',
     vymeraJePodilova('Prodám podíl 1/2 na pozemku o výměře 1976 m².',
@@ -263,6 +298,20 @@ for (const { f, o } of sPc.slice(0, 3)) {
     vymeraJePodilova('LV č. 7 o výměře 3952 m², podíl 1/2 '
       + '• Parcela č. 1 - o výměře 1952 m² • Parcela č. 2 - o výměře 2000 m²',
       { podil: true, zlomek: '1/2', area: 3952 }) === false);
+  /* A rozšířený vzorek nesmí „LV č." najít přes půl věty: mezi číslem
+     a slovem „o výměře" smí stát jen další číslo oddělené „a" nebo
+     čárkou, nic jiného. */
+  /* A volná řeč mezi číslem a výměrou vzorek nepropustí. POZOR NA
+     STAVBU TOHO PŘÍKLADU: parcela musí být taková, aby neprošla ani
+     první cesta (součet × zlomek). Napoprvé jsem tu měl parcelu
+     3 804 m², a 3 804 × 1/2 = 1 902 — tedy přesně uložená výměra, takže
+     příznak sedl první cestou a zkouška padla na mém vstupu, ne na
+     kódu. Pět tisíc dává 2 500, což nesedí, a rozhodovat tak musí
+     opravdu jen vzorek LV. */
+  pravda('a volná řeč mezi číslem a výměrou vzorek nepropustí',
+    vymeraJePodilova('LV č. 7 a dalších pět parcel o výměře 1902 m², podíl 1/2 '
+      + '• Parcela č. 1 - o výměře 5000 m² • Parcela č.',
+      { podil: true, zlomek: '1/2', area: 1902 }) === false);
 }
 
 await ctx.close();

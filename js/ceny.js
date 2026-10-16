@@ -718,18 +718,32 @@
 
     /* PODÍL SE S CELÝMI POZEMKY SROVNÁVAT NEDÁ.
      *
-     * U spoluvlastnického podílu stojí v inzerátu výměra CELÉ parcely,
-     * ale cena jen za zlomek — cena za metr proto vyjde nízká z podstaty
-     * věci, ne proto, že je nabídka výhodná. Dokud se podíl nedal
-     * poznat, model to vědět nemohl (viz komentář u MEZ_POCHYBNA:
-     * „rozlišit skutečný trhák od podílu z dat NEJDE"). Teď to u části
-     * nabídek jde: inzerát to sám říká a robot to čte do pole `podil`.
-     *
      * Změřeno na ostrých datech: ze 629 nabídek, které web označoval za
      * výhodné, jich 194 (31 %) mělo v popisu napsáno, že jde o podíl —
      * a na úvodní stránce se rovnou nabízely jako nejlepší příležitosti.
      * Chválit je za cenu, která se s ostatními nedá srovnat, je horší
-     * než o ní mlčet. */
+     * než o ní mlčet.
+     *
+     * POZOR NA DŮVOD. Dřív tu stálo, že u podílu „stojí v inzerátu
+     * výměra CELÉ parcely, ale cena jen za zlomek, takže cena za metr
+     * vyjde nízká z podstaty věci". To už neplatí jako důvod: u 400
+     * z 507 podílů robot z textu dokázal, že uložená výměra je ta
+     * podílová (`vymera_podilu` o pár desítek řádků výš), a vymeraVCene
+     * tím pádem u všech podílů vrací metry, které kupující dostane.
+     * Čísla jsou tedy srovnatelná — a přesto se nesrovnávají, a to
+     * právem: podíl se prodává se slevou, protože se o pozemku
+     * rozhoduje společně s dalšími vlastníky. Naměřeno na orné půdě:
+     * medián 51 Kč/m² bez podílu, 40 Kč/m² s podílem, tedy o pětinu
+     * níž. Srovnávat podíl s celými pozemky by z té slevy udělalo
+     * „výhodnou cenu", což je tatáž chyba jako dřív, jen z jiné
+     * příčiny.
+     *
+     * CO BY ŠLO: srovnávat podíly MEZI SEBOU. Změřeno — 470 z 503
+     * podílů má v ČR aspoň deset podílů téhož druhu a 97 jich má aspoň
+     * deset i ve svém okrese, takže vzorek by na to byl. Je to ale
+     * změna cenového modelu, která vrátí podíly do „nejlepších
+     * příležitostí" na úvodní stránce, odkud je tenhle kód schválně
+     * vyřadil — takže to není oprava chyby, ale rozhodnutí. */
     function nesrovnatelna(d) { return !!(d && d.podil); }
 
     /* Percentil ceny za m² proti stejnému typu a druhu. null, když není dost

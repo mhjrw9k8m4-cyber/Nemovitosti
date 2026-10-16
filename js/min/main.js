@@ -889,6 +889,8 @@
   }
 
   var SKRYTE_KLIC = 'pk_skryte_v1';
+
+  var FILTR_KLIC = 'pk_filtr_v1';
   var skryte = ctiUloz(SKRYTE_KLIC, []) || [];
 
   function jeSkryty(d) { return PKKlic.jeMezi(skryte, d); }
@@ -3601,7 +3603,9 @@
       var figs =
 
         (hasArea(d)
-          ? '<span class="m">' + fmt(d.area) + '\u00a0m²' + (d.podil ? '<i class="m-celek">celá parcela</i>' : '') + '</span>'
+          ? '<span class="m">' + fmt(d.area) + '\u00a0m²'
+            + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
+            + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
         (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
 
@@ -5227,6 +5231,8 @@
     for (var vD = rozehrej; vD < konecDavky; vD++) demand(DATA[vD]);
     if (konecDavky < DATA.length) await dechni();
   }
+
+  obnovFiltr();
   renderList();
   renderRecent();
 
@@ -5266,7 +5272,6 @@
     }, 1200);
   }());
 
-  var FILTR_KLIC = 'pk_filtr_v1';
   function ulozFiltr() {
     zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
@@ -5305,8 +5310,6 @@
     if (sortEl) sortEl.value = sortMode;
     return true;
   }
-
-  if (obnovFiltr()) renderList();
 
   var mistoPruh = document.getElementById('misto-pruh');
   var mistoKmEl = document.getElementById('misto-km');

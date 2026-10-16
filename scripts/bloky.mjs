@@ -119,15 +119,23 @@ export function souhrn(o, ostatni) {
      kterém jedna položka chybí, by vypadal jako celková cena bloku —
      a byl by nižší, než jaká ve skutečnosti je. Radši žádné číslo. */
   const vsechnyMajiCenu = vse.every((x) => x.price > 0);
-  /* Spoluvlastnický podíl se do výměry bloku počítat nesmí: v inzerátu
-     je výměra celé parcely, ale kupuje se zlomek. Hlásí se proto zvlášť,
-     ať si čtenář ten součet umí opravit. */
+  /* Spoluvlastnický podíl se do výměry bloku počítat nesmí: kupuje se
+     zlomek pozemku. Hlásí se proto zvlášť, ať si čtenář ten součet umí
+     opravit.
+     DVĚ SKUPINY, NE JEDNA. Součet NAFUKUJE jen ten podíl, u kterého je
+     v inzerátu výměra celé parcely — a to je menšina: u 400 z 507
+     podílů robot z textu dokázal, že uložená výměra je už ta podílová
+     (`vymera_podilu`, viz scripts/parcely-z-textu.mjs). U těch součet
+     odpovídá tomu, co se prodává, a tvrdit u nich opak znamená poslat
+     čtenáře opravovat číslo, které je správné. */
   const podilu = vse.filter((x) => x.podil).length;
+  const podiluCele = vse.filter((x) => x.podil && !x.vymera_podilu).length;
   return {
     pocet: vse.length,
     vymera,
     cena: vsechnyMajiCenu ? vse.reduce((s, x) => s + x.price, 0) : null,
     podilu,
+    podiluCele,
     mez: MEZ_METRU,
     lat: vse.reduce((s, x) => s + x.lat, 0) / vse.length,
     lng: vse.reduce((s, x) => s + x.lng, 0) / vse.length,

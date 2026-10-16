@@ -672,3 +672,51 @@ zásobníku ZMINIFIKOVANÉHO skriptu, kde nemusí odpovídat zdroji, a obnova
 stavu z adresy, z uloženého filtru a z návratu na pozemek jsou tři různé
 cesty. Přestavovat podle nejistého čtení pořadí v osmitisícovém souboru
 je způsob, jak rozbít něco, co dnes funguje. Zapsáno jako další položka.
+
+## 13. Výpis se kreslil dvakrát každému, kdo se na web vrací *16. 10.*
+
+Položka 12 končila tím, že `renderList()` se při startu volá dvakrát, a že
+jsem se do toho nepustil: jméno druhé funkce jsem četl ze zásobníku
+**zminifikovaného** skriptu. Tenhle zápis to dořešuje — ve zdroji, kde se
+dá přečíst pořadí přesně.
+
+Druhé volání je `if (obnovFiltr()) renderList();` na konci `boot()`, sto
+řádků za prvním vykreslením. Komentář u něj to i přiznával: „Seznam se
+vykresluje už dřív, takže po obnovení filtru se musí překreslit — jinak by
+ovládací prvky ukazovaly filtr, který na výpis ještě nesedí."
+
+**Proč to zkouška nenašla.** `scripts/test-jedno-vykresleni.mjs` hlídá, že
+se výpis vykreslí JEDNOU, a procházela. Měřila ale čistou adresu
+a prázdné úložiště — a `obnovFiltr()` se spustí jen tehdy, když v úložišti
+leží `pk_filtr_v1`. Ten se uloží při prvním doteku kteréhokoli filtru
+a zůstane tam. Zkouška tedy měřila jediný případ, ve kterém k té vadě
+nedojde: první návštěvu.
+
+**Naměřeno** (telefon 390 px, procesor ×4, medián ze tří běhů, čas
+hlavního vlákna v úlohách přes `Performance.getMetrics`):
+
+| | vykreslení | hlavní vlákno |
+|---|---|---|
+| bez uloženého filtru | 1 | 1 938 ms |
+| s uloženým filtrem (před) | 2 | 2 465 ms |
+| s uloženým filtrem (po) | 1 | 1 957 ms |
+
+Tedy **půl sekundy práce navíc** u každého, kdo se vrací — a po opravě
+je to stejné jako u první návštěvy.
+
+**Oprava.** `obnovFiltr()` se volá o sto řádků výš, těsně před prvním
+`renderList()`. Klíč `FILTR_KLIC` se musel přesunout nahoru k ostatním
+klíčům úložiště: funkce jsou vytažené (hoisted), ale `var` by do té doby
+byla `undefined` a obnova by tiše nenašla nic.
+
+Pořadí je bezpečné a je to přečtené, ne odhadnuté: `obnovFiltr()` sahá jen
+na ovládací prvky vyhledané kolem řádku 1044 a na proměnné filtrů; nic mezi
+novým a starým místem filtry nečte. `renderHeroLegenda()` si čísla bere
+z `DATA`, ne z vykresleného výpisu — má to u sebe napsané.
+
+**Zkouška dostala tu chybějící polovinu.** Nově načte stránku, vloží do
+úložiště filtr a načte ji znovu — a kontroluje obojí: že se vykreslí jednou
+A že se filtr opravdu obnovil (záložka, cena, řazení, a že ve výpisu jsou
+jen nabídky toho typu). Druhá polovina je stejně důležitá jako první:
+oprava, po které web zapomene, co si člověk nastavil, je horší než ta
+vada.

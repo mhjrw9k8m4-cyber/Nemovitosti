@@ -329,7 +329,8 @@ function pctl(a,p){ if(!a.length) return 0; a=a.slice().sort((x,y)=>x-y); return
 /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
  *
  * Tyhle stránky ji dělily cenou lomeno celou výměrou. U spoluvlastnického
- * podílu je ale v inzerátu výměra CELÉ parcely a cena jen za ten zlomek,
+ * podílu je cena jen za zlomek pozemku (a u části z nich je v inzerátu
+ * navíc výměra CELÉ parcely — viz `vymera_podilu`),
  * takže vyšlo číslo, které neplatí pro nikoho. Mapa i stránka pozemku
  * přitom odjakživa počítají přes js/ceny.js s podílem — takže web o téže
  * nabídce tvrdil dvě různá čísla:
@@ -1102,7 +1103,7 @@ ${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
       dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
       rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
       <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
-${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — kupuje se zlomek pozemku a rozhoduje se o něm společně s dalšími vlastníky.${podiluCele ? ` U ${sklon(podiluCele,'jednoho z nich je','nich je','nich je')} ${podiluCele === podilu ? 'všech' : `<b>${podiluCele}</b>`} v inzerátu výměra celé parcely, takže cena za metr vychází nízko sama od sebe.` : ' Výměra u nich odpovídá tomu, co kupující dostane.'} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — kupuje se zlomek pozemku a rozhoduje se o něm společně s dalšími vlastníky.${podiluCele ? ` U ${podiluCele === 1 ? 'jednoho z nich' : (podiluCele === podilu ? 'všech' : `<b>${podiluCele}</b> z nich`)} je v inzerátu výměra celé parcely, takže ${podiluCele === 1 ? 'jeho' : 'jejich'} cena za metr vychází nízko sama od sebe.` : ' Výměra u nich odpovídá tomu, co kupující dostane.'} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-cross" style="margin-top:20px;">
         <div class="acx-copy">
@@ -1458,7 +1459,7 @@ for (const d of DRUH_STRANKY) {
         <div class="okr-stat"><b>${okresyNej.length ? Object.keys(poOkresu).length : 0}</b><span>${sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')}</span></div>
       </div>
 ${cenyRadka ? `      <p class="okr-more" style="margin-top:2px;">${cenyRadka} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
-${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — kupuje se zlomek pozemku.${podiluCele ? ` U ${podiluCele === podilu ? 'všech' : `<b>${fmt(podiluCele)}</b>`} z nich je v inzerátu výměra celé parcely, ale cena jen za ten zlomek.` : ''} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — kupuje se zlomek pozemku.${podiluCele ? ` U ${podiluCele === 1 ? 'jednoho z nich' : (podiluCele === podilu ? 'všech' : `<b>${fmt(podiluCele)}</b> z nich`)} je v inzerátu výměra celé parcely, ale cena jen za ten zlomek.` : ''} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
@@ -1529,7 +1530,7 @@ ${okresLinks ? `
  * Řez je týž jako v rozpočtovém nástroji (scripts/generate-rozpocet.mjs):
  * jen prodeje, bez spoluvlastnických podílů a bez cen, kterým cenový
  * model nevěří. Dražba má vyvolávací cenu, ne cenu — do „co koupím za
- * 200 tisíc" nepatří; u podílu je výměra celé parcely, ale cena jen za
+ * 200 tisíc" nepatří; u podílu je cena jen za
  * zlomek, takže by řez zaplavila zdánlivě levná pole. */
 const ROZPOCTY = META.ROZPOCTY;
 
@@ -1653,7 +1654,7 @@ for (const r of rozpocetVznikne) {
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>Nabídky do ${esc(r.popis)}</h2>
-          <p class="rules-note" style="margin-top:0;">Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_ROZPOCET}` : ''}. V ceně jsou <b>jen prodeje</b> — dražba má vyvolávací cenu, ne cenu, a spoluvlastnický podíl má cenu za zlomek, ale výměru celé parcely; ani jedno se s rozpočtem neporovnává. Vynechané jsou i ceny, které cenový model označí za nevěrohodné. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+          <p class="rules-note" style="margin-top:0;">Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_ROZPOCET}` : ''}. V ceně jsou <b>jen prodeje</b> — dražba má vyvolávací cenu, ne cenu, a spoluvlastnický podíl má cenu za zlomek pozemku, o kterém se rozhoduje společně s dalšími vlastníky; ani jedno se s rozpočtem neporovnává. Vynechané jsou i ceny, které cenový model označí za nevěrohodné. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}

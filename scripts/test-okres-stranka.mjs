@@ -124,8 +124,9 @@ function okresZeStranky(html) {
 }
 
 /* --- 4) CENA ZA METR MUSÍ BÝT TÁŽ JAKO V MAPĚ -----------------------
-   U spoluvlastnického podílu je v inzerátu výměra CELÉ parcely a cena jen
-   za ten zlomek. Mapa i stránka pozemku to přepočítávají (js/ceny.js),
+   U části spoluvlastnických podílů je v inzerátu výměra CELÉ parcely
+   a cena jen za ten zlomek (u zbytku je výměra už podílová — příznak
+   `vymera_podilu`). Mapa i stránka pozemku to přepočítávají (js/ceny.js),
    stránky okresů dělily cenou lomeno celou výměrou — a web o téže
    nabídce tvrdil dvě různá čísla (Benešov, podíl 1/6: 6 proti 33 Kč/m²).
    Tohle je pojistka proti tomu, aby se ta dvě místa znovu rozešla:

@@ -64,6 +64,45 @@ const dlouhy = cistyPopis(('Nabízíme ke koupi zemědělský pozemek o výměř
 pravda('dlouhý text se zkrátí a končí větou, ne půlkou slova',
   dlouhy.length <= 470 && /[.…]$/.test(dlouhy), `${dlouhy.length} znaků, konec: ${JSON.stringify(dlouhy.slice(-24))}`);
 
+/* ---------- 1b) ŘEZ NESMÍ PADNOUT DO ZKRATKY ----------------------
+   „Končí to tečkou" nestačí. Zkracovalo se podle `lastIndexOf('. ')`,
+   a u inzerátů na spoluvlastnické podíly tečka s mezerou není konec
+   věty, ale zkratka: „• Parcela č. 1002/2 - o výměře 32 m²". Řez padl
+   hned za „Parcela č." a na stránce zůstal viselec, který TEČKOU KONČÍ
+   — takže ho kontrola o kus výš pustila dál. Naměřeno na 1 623
+   uložených popisech: takhle uříznutých bylo 292, tedy 18 %, a nový
+   řez to spraví u 1 120 z nich, aniž by jediný pokazil. */
+const VYPIS = 'Nabízíme podíl na pozemcích přímo od vlastníka, bez provize a bez zbytečných výdajů. '
+  + 'k.ú. Slatina LV č. 2515 o výměře 4024 m², podíl 1/12'
+  + (' • Parcela č. 2189/1 - o výměře 40387 m² (Orná půda)').repeat(12);
+{
+  const t = cistyPopis(VYPIS);
+  pravda('výpis parcel se neuřízne uprostřed položky',
+    !/(?:Parcela č\.|LV č\.|o výměře|podíl)\s*$/.test(t.trim()),
+    `konec: ${JSON.stringify(t.slice(-40))}`);
+  pravda('a uřízne se mezi odrážkami, takže poslední položka je celá',
+    /\(Orná půda\)…$/.test(t.trim()) || /[.!?]$/.test(t.trim()),
+    `konec: ${JSON.stringify(t.slice(-40))}`);
+  pravda('a je vidět, že text pokračuje',
+    /…$/.test(t.trim()) || t.length < 460, `konec: ${JSON.stringify(t.slice(-16))}`);
+}
+{
+  /* Totéž u věty, která končí zkratkou „apod." uprostřed — tam se řezat
+     smí, protože za ní věta opravdu končí... ale „č." nikdy. */
+  const t = cistyPopis('Pozemek je rovinatý a oplocený. '.repeat(10) + 'Parcela č. 125/3 v k.ú. Lhota.');
+  pravda('zkratka „č." se nepovažuje za konec věty',
+    !/Parcela č\.$/.test(t.trim()), `konec: ${JSON.stringify(t.slice(-30))}`);
+}
+{
+  /* A text bez odrážek i bez tečky se pořád uřízne na mezeře, ne v půlce
+     slova — to je ta poslední záchrana, kterou nová pravidla nesmí vzít. */
+  const t = cistyPopis('slovobeztecky '.repeat(60));
+  pravda('text bez tečky a bez odrážek se uřízne s výpustkou', /…$/.test(t.trim()),
+    `konec: ${JSON.stringify(t.slice(-24))}`);
+  pravda('a ne v půlce slova', /\bslovobeztecky…$/.test(t.trim()),
+    `konec: ${JSON.stringify(t.slice(-24))}`);
+}
+
 /* ---------- 2. uložení ---------- */
 const data = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8'));
 const nabidky = data.opportunities || [];

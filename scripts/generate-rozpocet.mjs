@@ -19,9 +19,10 @@
    · dražby a exekuce — vyvolávací cena není cena, za kterou se koupí,
      a smíchat ji s nabídkovou by rozpočet posunulo dolů (a tedy lhalo
      ve prospěch webu);
-   · spoluvlastnické podíly — v ceně je zlomek, ve výměře celá parcela,
-     takže by se tvářily jako největší trháky přesně tam, kde člověk
-     hledá podle rozpočtu;
+   · spoluvlastnické podíly — v ceně je zlomek pozemku, o kterém se
+     rozhoduje společně s dalšími vlastníky, takže by se tvářily jako
+     největší trháky přesně tam, kde člověk hledá podle rozpočtu
+     (a u části z nich je navíc ve výměře celá parcela);
    · ceny, kterým cenový model nevěří (`pochybna`) — totéž, co jinde na
      webu: tvrdit něco cenou, před kterou sám varuju, nejde.
    ==================================================================== */

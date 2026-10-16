@@ -127,7 +127,8 @@ for (const s of STROPY) {
     'dražba má vyvolávací cenu, ne cenu — s rozpočtem se neporovnává');
   pravda(`${s.soubor}: ve výpisu není spoluvlastnický podíl`,
     !/<b>spoluvlastnický podíl/.test(h),
-    'u podílu je výměra celé parcely, ale cena jen za zlomek');
+    'u podílu je cena jen za zlomek pozemku a prodává se se slevou za společné rozhodování'
+    + ' — s rozpočtem na celý pozemek se to neporovnává');
 
   // --- 5) VĚTA O STAVEBNÍCH POZEMCÍCH -----------------------------
   const stavebnich = moje.filter((o) => CENY.druhGroup(o.druh) === 'Stavební / zastavěná').length;

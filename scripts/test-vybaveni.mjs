@@ -152,7 +152,11 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
    úplně jiné nabídky — a inzeráty ten zlomek většinou uvádějí. Čte se
    proto i on, ale jen jako ÚDAJ K PŘEČTENÍ: nic se jím nepřepočítává.
    Přepočítat výměru podílem by znamenalo vědět, jestli zdroj uvádí
-   výměru celé parcely, nebo už jen podílu — a to se z dat poznat nedá.
+   výměru celé parcely, nebo už jen podílu. Z VOLNÉHO TEXTU se to u části
+   nabídek poznat DÁ — rozhoduje o tom scripts/parcely-z-textu.mjs
+   a výsledek nese příznak `vymera_podilu` (400 z 507 podílů). Tenhle
+   modul si ho ale nevyrábí: čte jen to, co v inzerátu stojí, a přepočet
+   dělá cenový model (vymeraVCene v js/ceny.js), který ten příznak zná.
    Kdo si to chce spočítat, má aspoň z čeho. */
 {
   const zl = (t) => V.najdi(t).zlomek;

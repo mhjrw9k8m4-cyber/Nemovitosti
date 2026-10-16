@@ -360,7 +360,8 @@
        desetina (zlomky jako 9/792 nebo 1/71). Kdo si uložil okres,
        dostával tedy upozornění, z nichž čtvrtina byla na ideální podíl
        na poli — pro většinu lidí bezcenný, a ještě vypadá jako trhák,
-       protože v ceně je zlomek, ale výměra celé parcely.
+       protože v ceně je zlomek pozemku (a u části podílů je navíc
+       v inzerátu výměra celé parcely — viz `vymera_podilu`).
        Prázdná hodnota znamená „neřeším", tedy přesně dosavadní chování. */
     if (s.jen_celek && d.podil) return false;
     /* OKRUH OD MÍSTA. Mapa to umí odjakživa („Pozemky v okolí"),

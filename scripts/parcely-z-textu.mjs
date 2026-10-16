@@ -91,6 +91,14 @@ export function najdi(text, nabidka) {
   if (/(?:č|čís|čísl|parcela|výměře|výměra)\.?\s*$/i.test(orez)) {
     return { cislo: null, proc: 'popis končí uprostřed' };
   }
+  /* VÝPUSTKA JE PŘIZNANÝ ŘEZ. Od 16. 10. se popis nekrátí podle tečky
+     s mezerou (ta v „Parcela č. 1002/2" není konec věty), ale na konci
+     věty nebo mezi odrážkami — a když se řeže mezi odrážkami, přidá se
+     „…". Tím ale řez může padnout i hodně pod strop 440 znaků a obě
+     pojistky výš by ho pustily: text by končil celou položkou a byl by
+     krátký. Pravidlo „v popisu je právě jedno parcelní číslo" by pak
+     mluvilo o seznamu, ze kterého je vidět jen začátek. */
+  if (/…\s*$/.test(orez)) return { cislo: null, proc: 'popis je uříznutý (končí výpustkou)' };
 
   const za = s.slice(nalezy[0].index + nalezy[0][0].length,
     nalezy[0].index + nalezy[0][0].length + OKNO);
@@ -175,7 +183,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
    Když ani jedna cesta neprojde, vrací se false a model počítá jako
    dosud. Lepší nechat starý výpočet než příznak nasadit podle dohadu.
    ================================================================== */
-const LV_VYMERA = /LV\s*č\.?\s*\d+\s*o\s*v[ýy]m[ěe]ře\s*([\d\s ]+)\s*m\s*²?/i;
+/* „O VÝMĚŘE" SE V INZERÁTECH PÍŠE TŘEMI ZPŮSOBY. Vzorek dřív uznával
+   jen „LV č. 122 o výměře 2296 m²", kdežto ten samý prodejce píše taky
+   „o CELKOVÉ výměře" a „LV č. 622 A 188 o výměře". Čekal jsem, že na tom
+   nesejde, protože u těch nabídek nesedí velikosti — a spletl jsem se:
+   druhou důkazní cestou tím projdou další podíly, a to se shodou na
+   jedničku (LV 1 902 proti uložené výměře 1 903, LV 12 301 proti 12 302
+   — zaokrouhlení, ne náhoda). Jsou to nabídky, u kterých web dosud
+   tiskl cenu za metr vydělenou podruhé zlomkem. */
+const LV_VYMERA = /LV\s*č\.?\s*\d+(?:\s*(?:a|,)\s*\d+)*\s*o\s*(?:celkov[ée]\s*)?v[ýy]m[ěe]ře\s*([\d\s ]+)\s*m\s*²?/i;
 const PARCELA_VYMERA = /Parcela\s*č\.\s*[\d/]+\s*-\s*o\s*v[ýy]m[ěe]ře\s*([\d\s ]+)\s*m\s*²?/gi;
 /** Zlomek „1/2" → 0.5, jinak null. */
 export function zlomekCislo(z) {

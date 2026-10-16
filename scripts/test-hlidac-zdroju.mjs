@@ -178,6 +178,66 @@ pravda('první běh bez minulých čísel projde tiše',
     pravda('zdroj v chybě se do historie nezapisuje (nezkazí budoucí medián)',
       !Object.prototype.hasOwnProperty.call(
         zapisDoHistorie(stabilni, [{ nazev: 'Portál', stav: 'chyba', pocet: 0 }], dnes).dny[dnes], 'Portál'));
+    pravda('ani vypnutý zdroj',
+      !Object.prototype.hasOwnProperty.call(
+        zapisDoHistorie(stabilni, [{ nazev: 'Portál', stav: 'vypnuto', pocet: 0 }], dnes).dny[dnes], 'Portál'));
+    /* ALE OSLABENÝ ZDROJ SE ZAPSAT MUSÍ. Tohle je ta chyba, kterou měl
+       hlídač na vlastních datech: hlídače běží PŘED zápisem a stav si
+       přepíšou, takže podmínka `stav === 'ok'` vyhodila z historie
+       zrovna ten zdroj, o kterém je záznam potřeba. „OK dražby" dostaly
+       12. 10. stav „pokles" a od toho dne v souboru nejsou — pět dnů
+       ztracených měření, a po třiceti dnech by se zdroj sám od sebe
+       vrátil mezi zdravé, protože by nebylo s čím srovnávat. */
+    for (const stav of ['pokles', 'propad', 'zahazuje']) {
+      const d = zapisDoHistorie(stabilni, [{ nazev: 'Portál', stav, pocet: 45 }], dnes).dny[dnes];
+      pravda(`zdroj ve stavu „${stav}" se do historie zapíše`,
+        d.Portál && d.Portál.p === 45, JSON.stringify(d));
+      pravda('  a je u něj poznat, že ten den nebyl v pořádku',
+        d.Portál && d.Portál.v === 1, JSON.stringify(d));
+    }
+  }
+
+  /* --- Označený den se nesmí počítat do mediánu, ale nesmí ani zmizet --- */
+  {
+    const dnu = (n, hodnota) => {
+      const dny = {};
+      for (let i = 1; i <= n; i++) dny['2026-02-' + String(i).padStart(2, '0')] = { Portál: hodnota };
+      return { verze: 2, dny };
+    };
+    /* Deset zdravých dnů po stu → dnešních 50 je pokles. */
+    const zdrave = porovnejSHistorii(dnu(10, 100), [{ nazev: 'Portál', stav: 'ok', pocet: 50 }], '2026-03-01');
+    pravda('medián se počítá ze zdravých dnů', zdrave.length === 1 && zdrave[0].median === 100,
+      JSON.stringify(zdrave));
+    /* Tytéž dny, ale všechny označené → medián se z nich nepočítá
+       (jinak by úbytek byl za pár dnů „normální"), a přesto se mlčet
+       nesmí: v okně není ani jeden den v pořádku. */
+    const vadne = porovnejSHistorii(dnu(10, { p: 100, v: 1 }), [{ nazev: 'Portál', stav: 'ok', pocet: 50 }], '2026-03-01');
+    pravda('z označených dnů se medián nepočítá, ale úbytek se hlásí dál',
+      vadne.length === 1 && vadne[0].trva === true, JSON.stringify(vadne));
+    /* A sabotáž naruby: kdyby se označené dny počítaly jako zdravé,
+       dnešních 95 proti mediánu 100 by poplach nevyvolalo — a tady se
+       vyvolat MUSÍ, protože v okně není zdravý den. */
+    const dal = porovnejSHistorii(dnu(10, { p: 100, v: 1 }), [{ nazev: 'Portál', stav: 'ok', pocet: 95 }], '2026-03-01');
+    pravda('a hlásí se, i když je dnešek skoro na úrovni označených dnů',
+      dal.length === 1 && dal[0].trva === true, JSON.stringify(dal));
+    /* Jeden zdravý den mezi označenými na medián nestačí (pět je minimum)
+       — a to nesmí znamenat ticho. Tohle je díra, do které se dá
+       spadnout snadno: podmínka „ani jeden zdravý den" by při jednom
+       zdravém a devíti označených nespustila nic. */
+    const h = dnu(10, { p: 100, v: 1 });
+    h.dny['2026-02-05'] = { Portál: 100 };
+    const smes = porovnejSHistorii(h, [{ nazev: 'Portál', stav: 'ok', pocet: 50 }], '2026-03-01');
+    pravda('jeden zdravý den mezi označenými nestačí na medián, ale hlásí se dál',
+      smes.length === 1 && smes[0].trva === true, JSON.stringify(smes));
+    /* A naopak: nový zdroj s pár dny a bez označených dnů se nehlásí —
+       není z čeho soudit. */
+    const novy = porovnejSHistorii(dnu(3, 100), [{ nazev: 'Portál', stav: 'ok', pocet: 10 }], '2026-03-01');
+    pravda('nový zdroj s pár dny historie se nehlásí', novy.length === 0, JSON.stringify(novy));
+    /* Starý soubor s pouhými čísly se musí číst dál. */
+    const stary = porovnejSHistorii({ verze: 1, dny: dnu(10, 100).dny },
+      [{ nazev: 'Portál', stav: 'ok', pocet: 50 }], '2026-03-01');
+    pravda('starý soubor (jen čísla) se čte dál', stary.length === 1 && stary[0].median === 100,
+      JSON.stringify(stary));
   }
 
   /* A NAKONEC NA SKUTEČNÝCH ČÍSLECH. Prah 0,7 × medián nesmí vyhlásit
@@ -191,9 +251,14 @@ pravda('první běh bez minulých čísel projde tiše',
       'dnů jen ' + dny.length + ' — hlídač zatím nemá z čeho počítat');
     let poplachu = 0, porovnani = 0;
     for (let i = 5; i < dny.length; i++) {
-      const vyrez = { verze: 1, dny: {} };
+      const vyrez = { verze: h.verze || 1, dny: {} };
       for (const d of dny.slice(0, i)) vyrez.dny[d] = h.dny[d];
-      const dnesni = Object.entries(h.dny[dny[i]]).map(([nazev, pocet]) => ({ nazev, stav: 'ok', pocet }));
+      /* Den v historii je od verze 2 buď číslo, nebo `{p, v}` (den, kdy
+         byl zdroj označený). Bez tohohle rozbalení by se do `pocet`
+         dostal objekt, srovnání by vyšlo vždycky nepravdivě a kontrola
+         by prošla, protože by neměřila nic. */
+      const dnesni = Object.entries(h.dny[dny[i]]).map(([nazev, v]) => ({
+        nazev, stav: 'ok', pocet: (typeof v === 'number' ? v : (v && v.p) || 0) }));
       porovnani++;
       poplachu += porovnejSHistorii(vyrez, dnesni, dny[i]).length;
     }

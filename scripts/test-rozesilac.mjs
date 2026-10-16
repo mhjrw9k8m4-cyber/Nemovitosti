@@ -70,8 +70,22 @@ pravda('odkaz vede na vlastní stránku pozemku',
 
 const podil = sklad.text([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, podil_zlomek: '1/6' })] }], 'T');
 pravda('spoluvlastnický podíl se v e-mailu pojmenuje', /spoluvlastnický podíl 1\/6/.test(podil), podil);
-pravda('a vysvětlí se, že cena je za podíl a výměra celá',
-  /cena za podíl, ale výměra celé parcely/.test(podil), 'vysvětlení chybí');
+/* Co se v patičce vysvětlit MUSÍ: že je cena za zlomek pozemku. A co
+   se tvrdit NESMÍ: že je výměra celé parcely. Stálo to tam o všech
+   podílech, a u 400 z 507 to není pravda — robot u nich z textu
+   inzerátu dokázal, že uložená výměra je už ta podílová (příznak
+   `vymera_podilu`). Hlídá se proto obojí. */
+pravda('a vysvětlí se, že cena je za zlomek pozemku',
+  /cena za zlomek pozemku/.test(podil), 'vysvětlení chybí');
+pravda('a netvrdí se, že výměra je celé parcely',
+  !/výměra celé parcely|výměra za celou parcelu/.test(podil),
+  (podil.match(/.{0,50}výměra cel.{0,30}/) || [''])[0]);
+{
+  const html = sklad.html([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, podil_zlomek: '1/6' })] }], 'T');
+  pravda('a v HTML podobě e-mailu platí totéž',
+    /cena za zlomek pozemku/.test(html) && !/výměra celé parcely/.test(html),
+    (html.match(/.{0,50}spoluvlastnick.{0,90}/) || [''])[0]);
+}
 
 /* Strop: víc než MAX_V_MAILU se nevypisuje, ale počet se řekne celý. */
 const mnoho = Array.from({ length: sklad.MAX_V_MAILU + 5 },

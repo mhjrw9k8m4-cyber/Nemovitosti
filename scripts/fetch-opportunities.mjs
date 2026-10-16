@@ -918,6 +918,20 @@ function median(cisla) {
  *   ted      — pole zdrojů z tohohle běhu
  *   dnes     — 'YYYY-MM-DD' (dnešek se do mediánu NEPOČÍTÁ)
  */
+/* STAVY, PŘI KTERÝCH ZDROJ ODPOVĚDĚL. „chyba" a „vypnuto" znamenají, že
+   se nedozvídáme nic — nula z nich by budoucí medián jen pokazila.
+   Ostatní stavy jsou skutečná měření: zdroj odpověděl a něco přinesl,
+   jen toho bylo málo. */
+const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje']);
+/* Den v historii je buď číslo (zdroj byl ten den v pořádku), nebo
+   `{p: počet, v: 1}` — počet ze dne, kdy byl zdroj označený za oslabený.
+   Starší soubory mají jen čísla a čtou se dál. */
+function denPocet(x) {
+  if (typeof x === 'number') return x;
+  return (x && typeof x.p === 'number') ? x.p : null;
+}
+function denZdravy(x) { return typeof x === 'number'; }
+
 export function porovnejSHistorii(historie, ted, dnes) {
   const dny = (historie && historie.dny) || {};
   const klice = Object.keys(dny).filter((d) => d < dnes).sort().slice(-DNU_HISTORIE);
@@ -933,12 +947,33 @@ export function porovnejSHistorii(historie, ted, dnes) {
      bylo vidět, je jen šum v kódu. */
   for (const z of (ted || [])) {
     if (!z || z.stav !== 'ok') continue;
-    const rada = klice.map((d) => dny[d][z.nazev]).filter((x) => typeof x === 'number');
-    if (rada.length < 5) continue;
-    const med = median(rada);
-    if (!(med >= PRAH_SLEDOVANI)) continue;
-    if (z.pocet < med * PRAH_POKLESU) {
-      nalezy.push({ nazev: z.nazev, druh: 'pokles', median: med, ted: z.pocet, dnu: rada.length });
+    const zapisy = klice.map((d) => dny[d][z.nazev]).filter((x) => denPocet(x) !== null);
+    const zdrave = zapisy.filter(denZdravy).map(denPocet);
+    if (zdrave.length >= 5) {
+      const med = median(zdrave);
+      if (!(med >= PRAH_SLEDOVANI)) continue;
+      if (z.pocet < med * PRAH_POKLESU) {
+        nalezy.push({ nazev: z.nazev, druh: 'pokles', median: med, ted: z.pocet, dnu: zdrave.length });
+      }
+      continue;
+    }
+    /* ŽÁDNÝ ZDRAVÝ DEN V OKNĚ — a to není důvod mlčet.
+       Tohle je past, do které hlídač spadl na vlastních datech: označený
+       zdroj se přestával zapisovat do historie, takže mu okno postupně
+       vyschlo, medián se nedal spočítat a zdroj se po třiceti dnech sám
+       od sebe vrátil mezi zdravé. Úbytek se stal novou normou a v souboru
+       po něm nezbylo nic. („OK dražby" takhle vypadly z historie
+       12. 10., pět dnů po sobě — proto se to tady opravuje.)
+       Teď se označené dny zapisují taky, jen zvlášť — a když v celém okně
+       není ani jeden zdravý den, hlásí se to dál jako TRVAJÍCÍ pokles. */
+    const vadne = zapisy.filter((x) => !denZdravy(x)).map(denPocet);
+    /* Pozor na „aspoň jeden zdravý den" jako podmínku: s jedním zdravým
+       dnem a devíti označenými by medián spočítat nešlo (pět je minimum)
+       a tahle větev by taky nespustila — zdroj by vyšuměl do ticha. Platí
+       to tedy vždycky, když zdravých dnů není dost a označených je. */
+    if (vadne.length >= 5) {
+      nalezy.push({ nazev: z.nazev, druh: 'pokles', median: median(vadne), ted: z.pocet,
+        dnu: vadne.length, trva: true });
     }
   }
   return nalezy;
@@ -948,11 +983,24 @@ export function porovnejSHistorii(historie, ted, dnes) {
 export function zapisDoHistorie(historie, ted, dnes) {
   const dny = Object.assign({}, (historie && historie.dny) || {});
   const dnesni = {};
-  for (const z of (ted || [])) if (z && z.nazev && z.stav === 'ok') dnesni[z.nazev] = +z.pocet || 0;
+  /* ZAPISUJE SE KAŽDÁ SKUTEČNÁ ODPOVĚĎ, ne jen ta bezvadná. Dřív tu
+     stála podmínka `z.stav === 'ok'` — a protože hlídače běží PŘED
+     tímhle zápisem a stav si přepíšou, zdroj označený za oslabený
+     z historie vypadl. Tedy přesně ten, o kterém je záznam potřeba.
+     Naměřeno na ostrých datech: „OK dražby" dostaly 12. 10. stav
+     „pokles" a od toho dne v historii nejsou — pět dnů ztracených
+     měření. Den s označeným zdrojem se zapíše s příznakem, aby se do
+     mediánu nepočítal a úbytek se nestal novou normou. */
+  for (const z of (ted || [])) {
+    if (!z || !z.nazev || !ODPOVEDEL.has(z.stav)) continue;
+    const pocet = +z.pocet || 0;
+    if (!pocet) continue;
+    dnesni[z.nazev] = z.stav === 'ok' ? pocet : { p: pocet, v: 1 };
+  }
   dny[dnes] = dnesni;
   const klice = Object.keys(dny).sort();
   for (const k of klice.slice(0, Math.max(0, klice.length - HISTORIE_MAX))) delete dny[k];
-  return { verze: 1, dny };
+  return { verze: 2, dny };
 }
 
 /* ZÁSTUPNÁ CENA. Inzerent, který cenu nechce psát, ji nenechá prázdnou —
@@ -1363,6 +1411,59 @@ export function mistoZBezrealitky(adresa, uri) {
    kontakt byl. Co zbude, je popis pozemku; shánět se dá přes odkaz na
    inzerát, který je na stránce vedle. */
 const KONTAKT = /(\+?\d[\d\s]{7,}\d)|([\w.+-]+@[\w-]+\.[\w.]+)|(https?:\/\/)|(\bwww\.)/i;
+/* ZKRÁCENÍ POPISU NA MÍSTĚ, KDE VĚTA OPRAVDU KONČÍ.
+ *
+ * Dřív se řezalo podle `lastIndexOf('. ', 460)` — tedy podle tečky
+ * s mezerou. V inzerátech na spoluvlastnické podíly ale tečka s mezerou
+ * NENÍ konec věty, nýbrž zkratka: „• Parcela č. 1002/2 - o výměře
+ * 32 m²". Řez proto padl hned za „Parcela č." a stránka končila
+ * viselcem:
+ *
+ *   „… • Parcela č. 1018/20 - o výměře 111 m² (Vodní plocha) • Parcela č."
+ *
+ * Naměřeno na 1 623 uložených popisech: takhle uříznutých je 292, tedy
+ * 18 %. Nepoznalo se to podle chybějící tečky — ten viselec tečkou
+ * končí, takže každá kontrola „končí text tečkou?" ho pustila.
+ *
+ * Nové pravidlo má dvě cesty a bere tu, která uřízne co nejmíň:
+ *   · konec odrážky (text je výpis parcel, tak se řeže mezi položkami),
+ *   · konec VĚTY — tečka, před kterou nestojí známá zkratka.
+ * Když ani jedna nedosáhne rozumné délky, zbude ořez na mezeře
+ * s výpustkou, jako dřív.
+ */
+const ZKRATKY = new Set(['c', 'cp', 'parc', 'tj', 'napr', 'atd', 'apod', 'cca', 'resp',
+  'mj', 'ks', 'st', 'ul', 'nam', 'sv', 'zn', 'popr', 'tzv', 'odst', 'pism', 'zak', 'sb',
+  'ku', 'k', 'u', 'm', 'km', 'ha', 'max', 'min', 'pr', 'n', 'kat', 'lv', 'tel', 'ev',
+  'pozn', 'vc', 'hod', 'kc', 'tis', 'mil', 'cm', 'mm', 'll', 'a', 'o', 'z', 's']);
+
+function jeKonecVety(x, i) {
+  /* i = index tečky. Slovo před ní bez diakritiky a malými písmeny. */
+  const pred = x.slice(Math.max(0, i - 12), i).match(/([\p{L}]+)$/u);
+  if (!pred) return false;                     // „12." je číslo v seznamu
+  const slovo = pred[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (ZKRATKY.has(slovo)) return false;
+  /* Jednoznaková „slova" jsou skoro vždycky zkratka nebo iniciála. */
+  if (slovo.length < 2) return false;
+  return true;
+}
+
+export function zkratPopis(x, mez) {
+  if (x.length <= mez) return x;
+  let veta = -1;
+  for (let i = x.indexOf('. '); i !== -1 && i < mez; i = x.indexOf('. ', i + 1)) {
+    if (jeKonecVety(x, i)) veta = i;
+  }
+  /* Odrážky: řeže se PŘED odrážkou, aby nezůstala rozpůlená položka. */
+  const odrazka = x.lastIndexOf(' • ', mez);
+  const rez = Math.max(veta >= 0 ? veta + 1 : -1, odrazka > 0 ? odrazka : -1);
+  if (rez > 200) {
+    const konec = x.slice(0, rez).trimEnd();
+    /* Řez na odrážce nekončí tečkou — výpustka řekne, že to pokračuje. */
+    return /[.!?]$/.test(konec) ? konec : konec + '…';
+  }
+  return x.slice(0, mez).replace(/\s+\S*$/, '') + '…';
+}
+
 export function cistyPopis(t) {
   if (!t) return '';
   const holy = String(t)
@@ -1384,10 +1485,7 @@ export function cistyPopis(t) {
      — mezera ZA čárkou se schválně nedoplňuje, protože „1,5 ha" by
      se tím rozpadlo na „1, 5 ha". */
   x = x.replace(/\s+([,.;:!?])/g, '$1').replace(/ {2,}/g, ' ');
-  if (x.length > 460) {
-    const rez = x.lastIndexOf('. ', 460);
-    x = (rez > 200 ? x.slice(0, rez + 1) : x.slice(0, 460).replace(/\s+\S*$/, '') + '…');
-  }
+  if (x.length > 460) x = zkratPopis(x, 460);
   /* Dvě slova nejsou popis a prázdná slupka („Pozemek na prodej.") taky ne. */
   return x.length >= 60 ? x : '';
 }
@@ -1686,9 +1784,13 @@ async function main() {
     const z = zdroje.find((x) => x.nazev === n.nazev);
     /* Skok z minulého běhu je silnější nález — ten se nepřepisuje. */
     if (z && z.stav === 'ok') z.stav = 'pokles';
-    console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, medián posledních`
-      + ` ${n.dnu} dnů je ${n.median}. Není to skok, je to pomalý úbytek — podívejte se,`
-      + ' jestli parser nepřestal část stránky čist.');
+    console.error(n.trva
+      ? `POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů a v celém okně historie nemá`
+        + ` ani jeden den v pořádku (${n.dnu} označených dnů, medián ${n.median}). Úbytek`
+        + ' TRVÁ — nespraví se sám a nesmí se stát novou normou.'
+      : `POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů, medián posledních`
+        + ` ${n.dnu} dnů je ${n.median}. Není to skok, je to pomalý úbytek — podívejte se,`
+        + ' jestli parser nepřestal část stránky čist.');
   }
   try {
     writeFileSync(HIST_ZDROJU, JSON.stringify(zapisDoHistorie(historie, zdroje, DNES)));

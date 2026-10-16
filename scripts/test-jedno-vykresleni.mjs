@@ -47,8 +47,9 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 
-/** Načte úvodní stránku (volitelně s hashem) a vrátí, co se napočítalo. */
-async function nacti(hash) {
+/** Načte úvodní stránku (volitelně s hashem) a vrátí, co se napočítalo.
+    `filtr` = co má v úložišti ležet jako poslední nastavení filtrů. */
+async function nacti(hash, filtr) {
   /* DOTYK ZAPNUTÝ: telefonní rozvržení se řídí `pointer: coarse`, ne
      šířkou okna (CLAUDE.md). Procesor se zpomalí čtyřikrát — bez toho
      se start stihne dřív, než si js/odkaz.js vůbec stačí do adresy
@@ -62,6 +63,13 @@ async function nacti(hash) {
   const cdp = await ctx.newCDPSession(p);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
   await p.goto(`${BASE}/index.html${hash || ''}`, { waitUntil: 'load', timeout: 60000 });
+  if (filtr) {
+    /* Úložiště se dá naplnit až z té adresy, pak se stránka načte znovu
+       — tím vznikne přesně ta situace, kterou má většina návštěvníků:
+       vrací se a filtr z minula v úložišti leží. */
+    await p.evaluate((f) => localStorage.setItem('pk_filtr_v1', JSON.stringify(f)), filtr);
+    await p.reload({ waitUntil: 'load', timeout: 60000 });
+  }
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
   await p.waitForTimeout(5000);          // ať doběhne i to, co by přišlo navíc
@@ -69,6 +77,15 @@ async function nacti(hash) {
     vykresleni: window.PK_VYKRESLENI || 0,
     zoom: (window.PK_MAPA && window.PK_MAPA.getZoom) ? window.PK_MAPA.getZoom() : null,
     stred: (window.PK_MAPA && window.PK_MAPA.getCenter) ? window.PK_MAPA.getCenter() : null,
+    zalozka: (document.querySelector('#map-filters .filter-chip.active') || {}).dataset
+      ? document.querySelector('#map-filters .filter-chip.active').getAttribute('data-type') : null,
+    cena: (document.getElementById('map-cena') || {}).value || '',
+    razeni: (document.getElementById('map-sort') || {}).value || '',
+    jenJedenTyp: (function () {
+      var t = [...document.querySelectorAll('#opp-list .opp-item .opp-badge')]
+        .map(function (b) { return b.className; });
+      return t.length > 0 && t.every(function (x) { return /drazba/.test(x); });
+    }()),
   }));
   await ctx.close();
   return v;
@@ -92,7 +109,31 @@ try {
       && Math.abs(sdileny.stred.lng - 16.6068) < 0.2,
     `střed po obnově: ${sdileny.stred && sdileny.stred.lat}, ${sdileny.stred && sdileny.stred.lng}`);
 
-  zpravy.push(`  · naměřeno: čistá adresa ${cista.vykresleni} vykreslení, sdílený odkaz zoom ${sdileny.zoom}`);
+  /* ULOŽENÝ FILTR — a to je ta polovina, která tady chyběla.
+     Zkouška měřila jen čistou adresu, a obnova uloženého filtru běžela
+     o sto řádků za prvním vykreslením, takže se celý výpis kreslil
+     podruhé. Jen to nikdo neviděl: bez uloženého filtru se to nestane,
+     a kdo si jednou klepne na filtr, má ho uložený napořád.
+     Naměřeno (telefon 390 px, procesor ×4, medián ze tří běhů):
+     hlavní vlákno strávilo úlohami 2 465 ms s uloženým filtrem proti
+     1 938 ms bez něj — pět set milisekund navíc u KAŽDÉHO, kdo se
+     vrací. Po opravě 1 957 ms, tedy stejně jako bez filtru.
+     DRUHÁ POLOVINA JE STEJNĚ DŮLEŽITÁ: uložený filtr se musí pořád
+     obnovit, a to celý — jinak by se „oprava" projevila tak, že web
+     zapomíná, co si člověk nastavil. */
+  const sFiltrem = await nacti('', { typ: 'drazba', cena: 500000, razeni: 'price_asc' });
+  pravda('s uloženým filtrem se výpis taky vykreslí JEDNOU',
+    sFiltrem.vykresleni === 1,
+    `vykreslení: ${sFiltrem.vykresleni} — obnova filtru běží až po prvním vykreslení`);
+  pravda('a uložená záložka se opravdu obnovila', sFiltrem.zalozka === 'drazba',
+    `aktivní záložka: ${sFiltrem.zalozka}`);
+  pravda('i uložená cena', sFiltrem.cena === '500000', `v poli ceny: „${sFiltrem.cena}"`);
+  pravda('i uložené řazení', sFiltrem.razeni === 'price_asc', `v poli řazení: „${sFiltrem.razeni}"`);
+  pravda('a ve výpisu jsou jen nabídky toho typu, ne všechny',
+    sFiltrem.jenJedenTyp === true, 've výpisu jsou i jiné typy — filtr se obnovil jen v ovládání');
+
+  zpravy.push(`  · naměřeno: čistá adresa ${cista.vykresleni} vykreslení,`
+    + ` uložený filtr ${sFiltrem.vykresleni} vykreslení, sdílený odkaz zoom ${sdileny.zoom}`);
 } catch (e) {
   chyb++;
   zpravy.push('  ✕ test spadl: ' + (e && e.message ? e.message : e));

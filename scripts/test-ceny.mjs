@@ -182,8 +182,11 @@ pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.ch
   `levnější než ${pc && pc.cheaper} % podobných`);
 
 // --- 7b) Podíl, o kterém VÍME, se nesmí chválit jako výhodná koupě ----
-/* Spoluvlastnický podíl má cenu za m² nízkou z podstaty věci: v inzerátu
-   stojí výměra CELÉ parcely, ale cena jen za zlomek. Dokud se to nedalo
+/* Spoluvlastnický podíl má cenu za m² nízkou z podstaty věci: prodává se
+   se slevou, protože se o pozemku rozhoduje společně s dalšími vlastníky
+   (naměřeno na orné půdě: medián 51 Kč/m² bez podílu, 40 s podílem).
+   U části podílů je navíc v inzerátu výměra celé parcely, ale cena jen
+   za zlomek — to je ten druhý, hrubší případ. Dokud se to nedalo
    poznat, model to nemohl vědět a v komentářích u MEZ_POCHYBNA se
    poctivě píše, že rozlišit trhák od podílu z dat nejde.
    Jenže teď to u části nabídek jde — inzerát to sám říká a robot to čte

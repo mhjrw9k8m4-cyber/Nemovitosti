@@ -71,10 +71,13 @@ export function popisNabidky(d) {
   const v = d.area > 0 ? `${cislo(d.area)} m²` : 'výměra neuvedena';
   const kde = [d.place, d.okres && `okres ${d.okres}`].filter(Boolean).join(', ');
   const druh = d.druh || 'Pozemek';
-  /* PODÍL SE MUSÍ ŘÍCT. V ceně je zlomek, ale výměra celé parcely, takže
-     taková nabídka vypadá v e-mailu jako trhák — a je to past, kterou web
-     pojmenovává na každé stránce. Mlčet o ní v poště by bylo horší než
-     neposlat nic. */
+  /* PODÍL SE MUSÍ ŘÍCT. V ceně je zlomek pozemku, takže taková nabídka
+     vypadá v e-mailu jako trhák — a je to past, kterou web pojmenovává
+     na každé stránce. Mlčet o ní v poště by bylo horší než neposlat nic.
+     (Co se o výměře říct NESMÍ: že je to celá parcela. U 400 z 507
+     podílů je uložená výměra už ta podílová — robot to z textu inzerátu
+     dokázal a nese to příznak `vymera_podilu`. Patička e-mailu to dřív
+     tvrdila o všech.) */
   const podil = d.podil ? ` — spoluvlastnický podíl${d.podil_zlomek ? ` ${d.podil_zlomek}` : ''}` : '';
   /* A CENA, KTERÉ WEB SÁM NEVĚŘÍ, SE MUSÍ ŘÍCT TAKY. Přiznaný podíl
      výš je jen menší půlka problému: měřeno na ostrých datech, mezi
@@ -147,7 +150,8 @@ export function text(skupiny, token) {
   }
   r.push('', '---',
     'Ceny jsou NABÍDKOVÉ (co prodávající žádá), ne prodejní.',
-    'U spoluvlastnických podílů je cena za podíl, ale výměra celé parcely.',
+    'U spoluvlastnických podílů je cena za zlomek pozemku, o kterém se'
+    + ' rozhoduje společně s dalšími vlastníky.',
     '',
     `Posílání vypnete jedním klikem: ${odhl}`,
     `Jednotlivá hledání nastavíte na ${WEB}/hlidani.html`);
@@ -181,7 +185,8 @@ export function html(skupiny, token) {
   }
   kusy.push('<p style="margin-top:24px;font-size:13px;color:#4A5750">'
     + 'Ceny jsou <b>nabídkové</b> (co prodávající žádá), ne prodejní. '
-    + 'U spoluvlastnických podílů je cena za podíl, ale výměra celé parcely.</p>',
+    + 'U spoluvlastnických podílů je cena za zlomek pozemku, o kterém se rozhoduje'
+    + ' společně s dalšími vlastníky.</p>',
   `<p style="font-size:13px;color:#4A5750"><a href="${esc(odhl)}" style="color:#4A5750">`
     + 'Vypnout posílání jedním klikem</a> · '
     + `<a href="${esc(WEB)}/hlidani.html" style="color:#4A5750">Nastavit jednotlivá hledání</a></p>`,
