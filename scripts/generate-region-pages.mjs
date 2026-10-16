@@ -724,7 +724,17 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
      Změřeno na 523 řádcích z 2 820, tedy v každém pátém. Zůstává odkaz
      — ten navíc říká, KAM vede. */
   const jeSPU = !o.url && o.type === 'sale' && /SPÚ|státní půd/i.test(o.extra || '');
+  /* DVĚ ŘÁDKY, NE JEDNA DLOUHÁ VĚTA.
+     Všechno se sypalo do jednoho řádku podrobností a na telefonu z něj
+     byly tři: „ostatní plocha · 2 201 m² · inzerát uvádí příjezd ·
+     spoluvlastnický podíl 8/230". Karta tím začínala tím nejméně
+     důležitým a jméno obce i cena se odsouvaly dolů.
+     `bits` je proto jen to, CO to je (druh, výměra, okres) — stojí nad
+     jménem obce stejně jako na kartě ve výpisu na úvodní stránce.
+     Zbytek (termín dražby, co inzerát uvádí, podíl, odznak ceny) jde
+     do `extra` pod cenu, kde má karta výpisu odznaky. */
   const bits = [];
+  const extra = [];
   if(o.druh && o.druh!=='—') bits.push(esc(o.druh));
   if(o.area) bits.push('<b>'+fmt(o.area)+' m²</b>');
   if(!skryjOkres && o.okres) bits.push('okres '+esc(o.okres));
@@ -735,7 +745,7 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
      U dražeb zůstává `extra` v podrobnostech: nese datum konání, a to
      je termín, ne zdroj. */
   const portal = (o.extra && /^inzerát\s*[–—-]\s*(.+)$/.exec(o.extra.trim()) || [])[1] || '';
-  if(o.extra && o.extra!=='—' && !portal && !jeSPU) bits.push(esc(T.zdrojText(o.extra)));
+  if(o.extra && o.extra!=='—' && !portal && !jeSPU) extra.push(esc(T.zdrojText(o.extra)));
   /* ODPOČET DO DRAŽBY. V řádku stálo „Dražba 12. 10. 2026" a kolik to
      je do dneška, si musel čtenář spočítat sám. Přitom u dražby je
      termín to rozhodující — cena se dá zvážit potřeba, datum ne: kdo
@@ -751,16 +761,16 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
      vždycky a rozhoduje ono. */
   const dniDoTerminu = (o.type === 'drazba' || o.type === 'exekuce') ? T.daysUntil(o.extra) : null;
   if (dniDoTerminu != null && dniDoTerminu >= 0) {
-    bits.push(`<span class="opp-cd${T.countdownClass(dniDoTerminu)}">${esc(T.countdownText(dniDoTerminu))}</span>`);
+    extra.push(`<span class="opp-cd${T.countdownClass(dniDoTerminu)}">${esc(T.countdownText(dniDoTerminu))}</span>`);
   }
   /* Formulace musí zůstat opatrná: v popisech stojí „na hranici" stejně
      často jako „zavedeno", takže se tvrdí jen to, co inzerát uvádí. */
-  if(o.site && o.site.length) bits.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
+  if(o.site && o.site.length) extra.push('inzerát uvádí <b>'+esc(o.site.map(k=>VYB.nazev(k).toLowerCase()).join(', '))+'</b>');
   /* Podíl mění, CO se kupuje — bez něj vypadá cena za metr jako trhák. */
-  if(o.podil) bits.push('<b>spoluvlastnický podíl'+(o.zlomek?' '+esc(o.zlomek):'')+'</b>');
+  if(o.podil) extra.push('<b>spoluvlastnický podíl'+(o.zlomek?' '+esc(o.zlomek):'')+'</b>');
   const oc = odznakCeny(o);
-  if (oc) bits.push(oc);
-  if (navic) bits.push(navic);
+  if (oc) extra.push(oc);
+  if (navic) extra.push(navic);
   /* Odkaz ven se musel poznat až po klepnutí. Šipka „→" vypadá jako
      „další stránka", ne jako „odcházíš z webu" — a kdo poslouchá čtečku
      obrazovky, nepozná ani to. Proto šikmá šipka, doména v popisku
@@ -853,6 +863,7 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
         ${misto}
         ${cena}
         <span class="okr-meta">${bits.join(' · ')}</span>
+        ${extra.length ? `<span class="okr-extra">${extra.join(' · ')}</span>` : ''}
         ${src}
       </div>`;
 }
@@ -1050,24 +1061,25 @@ for(const okres of eligibleOkres){
         ${Object.keys(byType).length > 1 && byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
         ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
-${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
-${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
-      dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
-      rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
-      <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
-${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
-      <div class="add-cross" style="margin-top:0;">
-        <div class="acx-copy">
-          <h2>Prohlédněte si okres ${esc(okres)} na mapě</h2>
-          <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
-        </div>
-        <div class="acx-akce">
-          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě →</a>
-        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
-        </div>
-      </div>
+      <!-- CESTA VEN STOJÍ NAD VÝPISEM, i když výklad šel pod něj.
+           Hlídá to scripts/test-cesta-ven.mjs a má pravdu: kdo sjede
+           k nabídkám a zjistí, že v okrese nic pro něj není, musí mít
+           kam jít — a na velkém okrese je „pod výpisem" o čtyřicet
+           tisíc znaků dál. Velká pozvánka na mapu zůstává pod výpisem,
+           tohle je její jednořádková předzvěst. -->
+      <p class="okr-more okr-ven" style="margin-top:12px;"><a href="${krajLink}">Otevřít okres ${esc(okres)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
+      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI.
+           Pořadí tu bylo obrácené a dalo se to změřit: na telefonu 390 px
+           začínala první nabídka až na 1 870 px, tedy po dvou a půl
+           obrazovkách statistik, ceníkového odstavce, grafu a pozvánky na
+           mapu. Člověk z vyhledávače přitom hledá pozemky v okrese, ne
+           výklad o okrese. Velké zahraniční weby (Rightmove, Zillow,
+           Idealista) mají na stránce kraje či města vždycky nejdřív
+           výpis a text pod ním — a vyhledávačům to nevadí, obsah na
+           stránce zůstává celý, jen se čte v pořadí, v jakém ho chce
+           člověk. -->
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
@@ -1076,6 +1088,24 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
+        </div>
+      </div>
+
+${priceLine(priceStats(list)) ? `      <p class="okr-more" style="margin-top:20px;">${priceLine(priceStats(list))} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
+${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
+      dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
+      rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
+      <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
+
+      <div class="add-cross" style="margin-top:20px;">
+        <div class="acx-copy">
+          <h2>Prohlédněte si okres ${esc(okres)} na mapě</h2>
+          <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
+        </div>
+        <div class="acx-akce">
+          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
 
@@ -1199,17 +1229,21 @@ for(const kraj of eligibleKraj){
         ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
         ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
       </div>
-${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-top:2px;">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
-      <div data-graf-cen data-uroven="kraj" data-nazev="${esc(kraj)}" data-kde="${esc(meta.kde || ('v kraji ' + kraj))}"></div>
 
-      <div class="add-cross" style="margin-top:0;">
-        <div class="acx-copy">
-          <h2>Otevřít ${esc(meta.disp)} na mapě</h2>
-          <p>Celý kraj na interaktivní mapě — filtrujte podle ceny, výměry i druhu pozemku a proklikněte se do katastru.</p>
-        </div>
-        <div class="acx-akce">
-          <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
-        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
+      <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">Otevřít ${esc(meta.disp)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
+
+      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI — totéž jako na stránce okresu
+           (důvod s čísly stojí tam). Na kraji jde výpis před rozcestník
+           okresů: kdo přijde z vyhledávače na „pozemky ve Středočeském
+           kraji", chce vidět pozemky, ne nejdřív volit okres. -->
+      <div class="okr-blok">
+        <div class="rules-sect">
+          <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
+          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
+${razitkoCerstvosti}
+          <div class="okr-list">
+${rows}
+          </div>
         </div>
       </div>
 
@@ -1222,14 +1256,17 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-to
         </div>
       </div>
 
-      <div class="okr-blok">
-        <div class="rules-sect">
-          <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
-          <p class="rules-note" style="margin-top:0;">${tS.veta ? tS.veta + ' ' : ''}Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
-${razitkoCerstvosti}
-          <div class="okr-list">
-${rows}
-          </div>
+${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more" style="margin-top:20px;">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
+      <div data-graf-cen data-uroven="kraj" data-nazev="${esc(kraj)}" data-kde="${esc(meta.kde || ('v kraji ' + kraj))}"></div>
+
+      <div class="add-cross" style="margin-top:20px;">
+        <div class="acx-copy">
+          <h2>Otevřít ${esc(meta.disp)} na mapě</h2>
+          <p>Celý kraj na interaktivní mapě — filtrujte podle ceny, výměry i druhu pozemku a proklikněte se do katastru.</p>
+        </div>
+        <div class="acx-akce">
+          <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
 

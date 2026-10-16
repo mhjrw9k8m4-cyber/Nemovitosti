@@ -3,18 +3,27 @@
 // Spuštění: node scripts/test-nastroje-v-dosahu.mjs
 //   (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=cesta/k/chrome)
 //
-// PROČ. „Projít N pozemků po jednom", „Stáhnout výběr" a pruh naposledy
-// prohlédnutých stály NAD výpisem a odsouvaly první nabídku o 106 px —
-// to jediné, kvůli čemu sem člověk přišel, bylo až za nářadím na práci
-// s tím, co ještě neviděl. Přesunul jsem je tedy pod seznam, a tím je
-// zahodil: naměřeno 9 625 px, tedy 8 781 px za okrajem obrazovky, až za
-// všemi dvaceti čtyřmi kartami. Majitel webu se ozval, že funkce
-// zmizely, a měl pravdu — v seznamu dlouhém sedmnáct tisíc pixelů je
-// „níž" a „pryč" totéž.
+// PROČ. Tohle místo má čtyři podoby a každá vznikla z nějaké chyby:
+//   1. Nářadí stálo NAD výpisem jako dvouřádkový pruh a odsouvalo
+//      první nabídku o 106 px — to jediné, kvůli čemu sem člověk
+//      přišel, bylo až za nástroji na práci s tím, co ještě neviděl.
+//   2. Šlo tedy pod seznam, a tím zmizelo: naměřeno 9 625 px, tedy
+//      8 781 px za okrajem obrazovky, až za všemi dvaceti čtyřmi
+//      kartami. Majitel webu se ozval, že funkce zmizely, a měl
+//      pravdu — v seznamu dlouhém sedmnáct tisíc pixelů je „níž"
+//      a „pryč" totéž.
+//   3. Vkládalo se proto mezi karty (za druhou). Na dosah bylo, ale
+//      sedělo uprostřed výpisu jako reklama mezi nabídkami. Majitel:
+//      „tohle je taky uprostřed, udělej to tak, jak to vypadá
+//      v zahraničí."
+//   4. Teď je to řádek pilulek v hlavičce výpisu — nad nabídkami,
+//      ale jako JEDEN řádek, co se posouvá do strany, ne jako banner.
 //
-// Hlídají se proto OBĚ meze naráz:
-//   · nesmí stát nad první nabídkou (to byla první chyba),
-//   · a nesmí být dál než na dosah jednoho švihnutí (to byla druhá).
+// Hlídá se proto tohle:
+//   · nářadí je v hlavičce výpisu, ne uvnitř seznamu a ne za ním,
+//   · je na jednom řádku (zalomené na dva stálo 94 px),
+//   · a přežije překreslení výpisu.
+// Kolik to stojí první nabídce, měří scripts/test-prvni-obrazovka.mjs.
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -22,10 +31,11 @@ await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
-/* Dvě obrazovky telefonu (2 × 844). Naměřený stav je 1 058 px, tedy
-   jedno krátké švihnutí; mez 1 688 nechá místo na vyšší kartu, ale
-   zdaleka nepropustí stav „až na konci výpisu" (9 625). */
-const MEZ_TELEFON = 1688;
+/* Nářadí je nad výpisem, takže „na dosah" dnes znamená „na první
+   obrazovce": naměřeno 357 px. Mez 844 (jedna obrazovka telefonu)
+   nepropustí ani stav „až na konci výpisu" (9 625), ani návrat mezi
+   karty (1 058). */
+const MEZ_TELEFON = 844;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -63,6 +73,7 @@ async function zmer(nast) {
     return {
       karta: y(karta),
       akce: y(akce),
+      akceH: akce ? Math.round(akce.getBoundingClientRect().height) : null,
       akceVeVypisu: !!(akce && akce.closest('#opp-list')),
       rsVeVypisu: !!(rs && rs.closest('#opp-list')),
       /* Že je pruh naposledy prohlédnutých prázdný, je v pořádku (ukazuje
@@ -149,17 +160,18 @@ try {
   /* DOTYK MUSÍ BÝT ZAPNUTÝ: telefonní rozvržení stojí na `pointer: coarse`,
      ne na šířce okna (CLAUDE.md). */
   const t = await zmer({ viewport: { width: 390, height: 844 }, dotyk: true });
-  pravda('na telefonu je nářadí AŽ ZA první nabídkou',
-    t.akce !== null && t.karta !== null && t.akce > t.karta,
+  pravda('na telefonu stojí nářadí NAD první nabídkou, v hlavičce výpisu',
+    t.akce !== null && t.karta !== null && t.akce < t.karta,
     `nářadí na ${t.akce} px, první nabídka na ${t.karta} px`);
-  pravda(`a přitom nejvýš ${MEZ_TELEFON} px od začátku, ne na konci výpisu`,
+  pravda(`a je na první obrazovce (do ${MEZ_TELEFON} px), ne na konci výpisu`,
     t.akce !== null && t.akce <= MEZ_TELEFON,
     `nářadí na ${t.akce} px — to je až za kartami, kam nikdo nedoroluje`);
-  pravda('a je vložené mezi karty, ne pověšené za seznam',
-    t.akceVeVypisu, 'nářadí není uvnitř #opp-list');
-  pravda('naposledy prohlédnuté jsou taky mezi kartami, hned za první',
-    t.rsVeVypisu && t.rsPoKarte,
-    `uvnitř výpisu: ${t.rsVeVypisu}, hned za kartou: ${t.rsPoKarte}`);
+  pravda('a není vražené mezi karty',
+    !t.akceVeVypisu, 'nářadí sedí uvnitř #opp-list, tedy mezi nabídkami');
+  pravda('a drží se na JEDNOM řádku (zalomené na dva stálo 94 px)',
+    t.akceH !== null && t.akceH <= 56, `řádek nářadí je vysoký ${t.akceH} px`);
+  pravda('naposledy prohlédnuté nejsou mezi kartami, ale nad výpisem',
+    !t.rsVeVypisu, 'pruh naposledy prohlédnutých sedí uvnitř #opp-list');
 
   /* Na monitoru místa nahoře je dost a nic tam nikomu nepřekáží —
      nářadí tedy zůstává NAD výpisem a do seznamu se nelepí. */
@@ -188,8 +200,8 @@ try {
     po.akce !== null, 'po změně filtru #mc-akce na stránce není — vysypal ho seznam');
   pravda('a pruh naposledy prohlédnutých taky',
     po.rs, 'po změně filtru #recent-strip na stránce není');
-  pravda('a nářadí zůstalo za první nabídkou, ne nad ní',
-    po.akce !== null && po.karta !== null && po.akce > po.karta,
+  pravda('a nářadí zůstalo v hlavičce výpisu, ne mezi kartami',
+    po.akce !== null && po.karta !== null && po.akce < po.karta,
     `nářadí na ${po.akce} px, první nabídka na ${po.karta} px`);
 
   const pruh = await zmerPruh();

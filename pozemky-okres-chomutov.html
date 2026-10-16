@@ -31,7 +31,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/region.min.css?v=5ea455b6">
+  <link rel="stylesheet" href="css/region.min.css?v=8c3ae8a0">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Chomutov","inLanguage":"cs","description":"Nabídky pozemků v okrese Chomutov — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-chomutov.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":11,"itemListElement":[{"@type":"ListItem","position":1,"name":"Výsluní — Na prodej, 7765 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-vysluni-11cx2rk.html"},{"@type":"ListItem","position":2,"name":"Výsluní — Na prodej, 318 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-vysluni-127hmaq.html"},{"@type":"ListItem","position":3,"name":"Kadaň — Na prodej, 4579 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-kadan-em6yki.html"},{"@type":"ListItem","position":4,"name":"Výsluní — Na prodej, 4820 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-vysluni-1dhb6at.html"},{"@type":"ListItem","position":5,"name":"Výsluní — Na prodej, 5145 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-vysluni-1p1jhn1.html"},{"@type":"ListItem","position":6,"name":"Výsluní — Na prodej, 24719 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-vysluni-eiv7d2.html"},{"@type":"ListItem","position":7,"name":"Klášterec nad Ohří — Na prodej, 27592 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-klasterec-nad-ohri-1wgv1yu.html"},{"@type":"ListItem","position":8,"name":"Kadaň — Na prodej, 2155 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-kadan-x65jyd.html"},{"@type":"ListItem","position":9,"name":"Blatno — Na prodej, 1348 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-blatno-1nc6x81.html"},{"@type":"ListItem","position":10,"name":"Blatno — Na prodej, 1311 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-blatno-xzogk2.html"},{"@type":"ListItem","position":11,"name":"Nezabylice — Na prodej, 4042 m²","url":"https://www.parcelaka.cz/pozemek-chomutov-nezabylice-1gpqv3g.html"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Ústecký kraj","item":"https://www.parcelaka.cz/pozemky-ustecky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Chomutov","item":"https://www.parcelaka.cz/pozemky-okres-chomutov.html"}]}]
   </script>
@@ -107,21 +107,24 @@
            neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
            stojí „28× na prodej" ještě jednou. -->
 
+      <!-- CESTA VEN STOJÍ NAD VÝPISEM, i když výklad šel pod něj.
+           Hlídá to scripts/test-cesta-ven.mjs a má pravdu: kdo sjede
+           k nabídkám a zjistí, že v okrese nic pro něj není, musí mít
+           kam jít — a na velkém okrese je „pod výpisem" o čtyřicet
+           tisíc znaků dál. Velká pozvánka na mapu zůstává pod výpisem,
+           tohle je její jednořádková předzvěst. -->
+      <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=%C3%9Asteck%C3%BD#mapa">Otevřít okres Chomutov na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
-      <div data-graf-cen data-uroven="okres" data-nazev="Chomutov" data-kde="v okrese Chomutov"></div>
-      <p class="okr-more" style="margin-top:2px;">Z toho je <b>6</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
-
-      <div class="add-cross" style="margin-top:0;">
-        <div class="acx-copy">
-          <h2>Prohlédněte si okres Chomutov na mapě</h2>
-          <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
-        </div>
-        <div class="acx-akce">
-          <a href="index.html?kraj=%C3%9Asteck%C3%BD#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
-        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
-        </div>
-      </div>
-
+      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI.
+           Pořadí tu bylo obrácené a dalo se to změřit: na telefonu 390 px
+           začínala první nabídka až na 1 870 px, tedy po dvou a půl
+           obrazovkách statistik, ceníkového odstavce, grafu a pozvánky na
+           mapu. Člověk z vyhledávače přitom hledá pozemky v okrese, ne
+           výklad o okrese. Velké zahraniční weby (Rightmove, Zillow,
+           Idealista) mají na stránce kraje či města vždycky nejdřív
+           výpis a text pod ním — a vyhledávačům to nevadí, obsah na
+           stránce zůstává celý, jen se čte v pořadí, v jakém ho chce
+           člověk. -->
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese Chomutov</h2>
@@ -132,80 +135,107 @@
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22093/35179" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:40.7%;top:21.7%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-vysluni-11cx2rk.html">Výsluní<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>275 000 Kč</b><span class="okr-zametr" title="Jde o spoluvlastnický podíl 3/10. Výměra je ta podílová, tedy ta, která vám připadne — celá parcela je větší.">35 Kč/m²</span></span>
-        <span class="okr-meta">trvalý travní porost · <b>7 765 m²</b> · <b>spoluvlastnický podíl 3/10</b></span>
+        <span class="okr-meta">trvalý travní porost · <b>7 765 m²</b></span>
+        <span class="okr-extra"><b>spoluvlastnický podíl 3/10</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/949143-nabidka-prodej-pozemku-vysluni" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/18/88376/140718" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:28.3%;top:4.2%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-vysluni-127hmaq.html">Výsluní<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>299 000 Kč</b><span class="okr-zametr" title="Jde o spoluvlastnický podíl 3/10. Výměra je ta podílová, tedy ta, která vám připadne — celá parcela je větší.">940 Kč/m²</span></span>
-        <span class="okr-meta">trvalý travní porost · <b>318 m²</b> · inzerát uvádí <b>příjezd</b> · <b>spoluvlastnický podíl 3/10</b></span>
+        <span class="okr-meta">trvalý travní porost · <b>318 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>příjezd</b> · <b>spoluvlastnický podíl 3/10</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/949141-nabidka-prodej-pozemku-vysluni" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/18/88448/140736" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:30.3%;top:35.3%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-kadan-em6yki.html">Kadaň<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>399 000 Kč</b><span class="okr-zametr" title="Jde o spoluvlastnický podíl 1/6. Výměra je ta podílová, tedy ta, která vám připadne — celá parcela je větší.">87 Kč/m²</span></span>
-        <span class="okr-meta">orná půda · <b>4 579 m²</b> · <b>spoluvlastnický podíl 1/6</b></span>
+        <span class="okr-meta">orná půda · <b>4 579 m²</b></span>
+        <span class="okr-extra"><b>spoluvlastnický podíl 1/6</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1020838-nabidka-prodej-pozemku-kadan" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/17/44191/70352" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:58.2%;top:90.1%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-vysluni-1dhb6at.html">Výsluní<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>700 000 Kč</b><span class="okr-zametr">145 Kč/m²</span></span>
-        <span class="okr-meta">trvalý travní porost · <b>4 820 m²</b> · inzerát uvádí <b>příjezd</b></span>
+        <span class="okr-meta">trvalý travní porost · <b>4 820 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>příjezd</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1052633-nabidka-prodej-pozemku-vysluni" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/18/88375/140719" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:61.9%;top:71.7%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-vysluni-1p1jhn1.html">Výsluní<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>799 000 Kč</b><span class="okr-zametr" title="Jde o spoluvlastnický podíl 3/10. Výměra je ta podílová, tedy ta, která vám připadne — celá parcela je větší.">155 Kč/m²</span></span>
-        <span class="okr-meta">trvalý travní porost · <b>5 145 m²</b> · inzerát uvádí <b>příjezd</b> · <b>spoluvlastnický podíl 3/10</b></span>
+        <span class="okr-meta">trvalý travní porost · <b>5 145 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>příjezd</b> · <b>spoluvlastnický podíl 3/10</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/949140-nabidka-prodej-pozemku-vysluni" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22093/35180" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:14.6%;top:55.2%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-vysluni-eiv7d2.html">Výsluní<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>849 000 Kč</b><span class="okr-zametr" title="Jde o spoluvlastnický podíl 3/10. Výměra je ta podílová, tedy ta, která vám připadne — celá parcela je větší.">34 Kč/m²</span></span>
-        <span class="okr-meta">trvalý travní porost · <b>24 719 m²</b> · <b>spoluvlastnický podíl 3/10</b></span>
+        <span class="okr-meta">trvalý travní porost · <b>24 719 m²</b></span>
+        <span class="okr-extra"><b>spoluvlastnický podíl 3/10</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/949142-nabidka-prodej-pozemku-vysluni" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/14/5529/8790" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:18.8%;top:47.9%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-klasterec-nad-ohri-1wgv1yu.html">Klášterec nad Ohří<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>1 070 000 Kč</b><span class="okr-zametr">39 Kč/m²</span></span>
-        <span class="okr-meta">orná půda · <b>27 592 m²</b> · inzerát uvádí <b>příjezd</b></span>
+        <span class="okr-meta">orná půda · <b>27 592 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>příjezd</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1017556-nabidka-prodej-pozemku-klasterec-nad-ohri" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/18/88476/140776" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:34.6%;top:5.2%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-kadan-x65jyd.html">Kadaň<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>1 499 000 Kč</b></span>
-        <span class="okr-meta">zahrada · <b>2 155 m²</b> · inzerát uvádí <b>elektřina, voda, příjezd</b> · <b>spoluvlastnický podíl</b></span>
+        <span class="okr-meta">zahrada · <b>2 155 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>elektřina, voda, příjezd</b> · <b>spoluvlastnický podíl</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1056612-nabidka-prodej-pozemku-kadan" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/17/44145/70402" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:47.0%;top:52.0%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-blatno-1nc6x81.html">Blatno<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>1 995 000 Kč</b><span class="okr-zametr">1 480 Kč/m²</span></span>
-        <span class="okr-meta">stavební pozemek · <b>1 348 m²</b> · inzerát uvádí <b>elektřina, voda, kanalizace</b> · <b class="okr-sleva">−29 % proti okolí</b></span>
+        <span class="okr-meta">stavební pozemek · <b>1 348 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>elektřina, voda, kanalizace</b> · <b class="okr-sleva">−29 % proti okolí</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1014635-nabidka-prodej-pozemku-blatno" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/18/88291/140803" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:69.3%;top:64.1%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-blatno-xzogk2.html">Blatno<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>2 359 800 Kč</b><span class="okr-zametr">1 800 Kč/m²</span></span>
-        <span class="okr-meta">stavební pozemek · <b>1 311 m²</b> · inzerát uvádí <b>elektřina, voda, kanalizace</b></span>
+        <span class="okr-meta">stavební pozemek · <b>1 311 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>elektřina, voda, kanalizace</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1014636-nabidka-prodej-pozemku-blatno" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
       <div class="okr-item">
         <span class="okr-foto"><img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/17/44211/70442" width="256" height="256" loading="lazy" decoding="async" alt=""><i class="okr-pin" aria-hidden="true" style="left:8.2%;top:52.7%"></i></span>
         <a class="okr-place" href="pozemek-chomutov-nezabylice-1gpqv3g.html">Nezabylice<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena"><b>3 820 000 Kč</b><span class="okr-zametr">945 Kč/m²</span></span>
-        <span class="okr-meta">stavební pozemek · <b>4 042 m²</b> · inzerát uvádí <b>elektřina, voda</b></span>
+        <span class="okr-meta">stavební pozemek · <b>4 042 m²</b></span>
+        <span class="okr-extra">inzerát uvádí <b>elektřina, voda</b></span>
         <a class="okr-src" href="https://www.bezrealitky.cz/nemovitosti-byty-domy/1073586-nabidka-prodej-pozemku-nezabylice" target="_blank" rel="noopener nofollow" title="Otevře se v novém okně na bezrealitky.cz">Bezrealitky<span class="ext-ikona" aria-hidden="true">↗</span><span class="visually-hidden"> — bezrealitky.cz, otevře se v novém okně</span></a>
       </div>
           </div>
+        </div>
+      </div>
+
+
+
+      <div data-graf-cen data-uroven="okres" data-nazev="Chomutov" data-kde="v okrese Chomutov"></div>
+      <p class="okr-more" style="margin-top:2px;">Z toho je <b>6</b> spoluvlastnických podílů — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
+
+      <div class="add-cross" style="margin-top:20px;">
+        <div class="acx-copy">
+          <h2>Prohlédněte si okres Chomutov na mapě</h2>
+          <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
+        </div>
+        <div class="acx-akce">
+          <a href="index.html?kraj=%C3%9Asteck%C3%BD#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
 

@@ -19,7 +19,7 @@
       color-scheme:light;
       --bg:#E3EFE7; --card:#fff; --ink:#12241A; --dim:#4A5750; --line:rgba(20,35,28,0.16);
       --ok:#13663E; --okbg:#E6F4EC; --bad:#8C2F1E; --badbg:#FBEAE6; --warn:#8A5512; --warnbg:#FFF4DC;
-      --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+      --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--ink);
@@ -27,7 +27,7 @@
       padding:24px 16px 56px;line-height:1.6;}
     .wrap{max-width:880px;margin:0 auto}
     h1{font-size:24px;margin:0 0 6px;letter-spacing:-0.01em}
-    .lede{color:var(--dim);margin:0 0 20px;font-size:15px}
+    .lede{color:var(--dim);margin:0 0 20px;font-size:14px}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 20px 8px;margin-bottom:16px}
     .row{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line);align-items:flex-start}
     .row:first-child{border-top:0}
@@ -36,10 +36,10 @@
     .ok .dot{background:var(--okbg);color:var(--ok)} .bad .dot{background:var(--badbg);color:var(--bad)}
     .warn .dot{background:var(--warnbg);color:var(--warn)} .run .dot{background:#EEF6F1;color:var(--dim)}
     .txt{min-width:0;flex:1}
-    .name{display:block;font-weight:600;font-size:15px}
+    .name{display:block;font-weight:600;font-size:14px}
     .det{display:block;color:var(--dim);font-size:14px;margin-top:2px;word-break:break-word}
-    .det code{font-family:var(--mono);font-size:13px;background:#EEF6F1;padding:2px 4px;border-radius:6px}
-    h2{font-size:15px;margin:20px 0 0;letter-spacing:0.02em;text-transform:uppercase;color:var(--dim)}
+    .det code{font-family:var(--font-mono);font-size:13px;background:#EEF6F1;padding:2px 4px;border-radius:6px}
+    h2{font-size:14px;margin:20px 0 0;letter-spacing:0.02em;text-transform:uppercase;color:var(--dim)}
     button{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);
       padding:10px 16px;border-radius:10px;cursor:pointer}
     button:hover{background:#F5FAF7}
@@ -48,7 +48,7 @@
     .btns{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
     .note{font-size:13px;color:var(--dim);margin:10px 0 16px}
     pre{background:#12241A;color:#EEF6F1;border-radius:14px;padding:14px;overflow:auto;
-      font-family:var(--mono);font-size:13px;line-height:1.5;max-height:340px}
+      font-family:var(--font-mono);font-size:13px;line-height:1.5;max-height:340px}
     a{color:#0F5C3B}
   </style>
 </head>

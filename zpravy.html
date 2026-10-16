@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=bb8fbf8f">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=f9706098">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -60,11 +60,11 @@
     /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
        na 1440 px, 696 px prázdna). Viz .auth-card v css/styles.css. */
     .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
-    .zp-auth h2{font-size:17px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
+    .zp-auth h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
     .zp-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
-    .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:17px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
     .zp-in:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
-    .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:15px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
     /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
    podklad i obrys jako políčka nad ním, bajt po bajtu
@@ -89,7 +89,7 @@
     .zp-ava{width:44px; height:44px; border-radius:var(--r-md); flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14)); color:var(--copper-bright);}
     .zp-ava svg{width:22px; height:22px; stroke-width:1.64;}
     .zp-tmain{min-width:0; flex:1;}
-    .zp-tplace{font-weight:700; font-size:15px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .zp-tplace{font-weight:700; font-size:14px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .zp-tlast{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
     .zp-trole{font-size:11px; color:var(--copper-bright); font-weight:600;}
         /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
@@ -105,16 +105,16 @@
     .zp-empty svg{width:40px; height:40px; color:var(--line-strong); margin-bottom:8px;}
     /* Konverzace */
     .zp-conv-head{display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--line);}
-    .zp-conv-head .zp-cb{background:none; border:0; color:var(--text-ondark-mute); font-size:15px; cursor:pointer; font-weight:600; padding:4px;}
-    .zp-conv-head .zp-cti{font-weight:700; font-size:15px; color:var(--text-ondark); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .zp-conv-head .zp-cb{background:none; border:0; color:var(--text-ondark-mute); font-size:14px; cursor:pointer; font-weight:600; padding:4px;}
+    .zp-conv-head .zp-cti{font-weight:700; font-size:14px; color:var(--text-ondark); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .zp-conv-head a.zp-view{margin-left:auto; font-size:13px; color:var(--copper-bright); text-decoration:none; font-weight:600; white-space:nowrap;}
     .zp-msgs{padding:16px 14px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
-    .zp-b{max-width:76%; padding:8px 12px; border-radius:var(--r-md); font-size:15px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
+    .zp-b{max-width:76%; padding:8px 12px; border-radius:var(--r-md); font-size:14px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
     .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
     .zp-b.me{align-self:flex-end; background:var(--plocha-znacka); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:11px; opacity:.65; margin-top:2px; display:block;}
     .zp-cti{display:flex; flex-direction:column; line-height:1.2; min-width:0;}
-    .zp-cti b{font-size:15px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .zp-cti b{font-size:14px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .zp-cti span{font-size:12px; opacity:.7; font-weight:500;}
     .zp-b.ceka{opacity:.55;}
     .zp-b.chyba{outline:1.5px solid var(--c-exekuce); outline-offset:1px;}
@@ -126,7 +126,7 @@
     .zp-pocet[hidden]{display:none;}
     .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:6px;}
     .zp-compose{display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line); align-items:flex-end;}
-    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:17px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:10px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
     .zp-ta:focus{border-color:var(--copper-bright);}
     .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:var(--r-md); background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}

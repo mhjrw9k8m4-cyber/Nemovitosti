@@ -1,0 +1,110 @@
+/* JEDNA STUPNICE PÍSMA.
+   ==================================================================
+   Stejná nemoc jako u odstupů, jen o patro výš: velikosti písma byly
+   psané od ruky. Naměřeno před opravou — 10, 11, 12, 13, 14, 15, 16,
+   17, 18, 20, 22, 24, 26, 28, 30, 32, 38, 40, 44, 58 px, tedy DVACET
+   velikostí na jednom webu, k tomu pět tlouštěk (400–800). Majitel
+   webu: „celý web je blbě rozházený, věci mají různou velikost, druh
+   textu — celé to musíš sjednotit."
+   Má pravdu i měřitelně: rozdíl mezi 15 a 16 px nikdo nevidí, ale
+   v hlavě ano. Když má velikost libovolnou hodnotu, není se při psaní
+   stylu o co opřít a každé nové místo si vymyslí vlastní číslo —
+   a vedle sebe pak stojí dva nadpisy, dvě ceny a dva popisky, každý
+   o chlup jiný. Přesně to na obrazovce vypadá „rozházeně".
+
+   STUPNICE. Dole po jednom pixelu (tam je rozdíl vidět a drobné písmo
+   se jinak odstupňovat nedá), nahoře po čtyřech a osmi:
+
+       11  12  13  14  16  18  20  24  28  32  40  48  56  64  80  96
+
+   TLOUŠŤKY. Čtyři, ne pět: 400 (text), 500 (tišší popisek), 600
+   (důraz), 700 (nadpis a tlačítko). Osmistovka vedle sedmistovky
+   nevypadá jako jiný důraz, ale jako jiné písmo.
+
+   DRUH PÍSMA. Jeden — Inter, ve třech tokenech (--font-ui,
+   --font-display, --font-mono), které dnes ukazují na totéž. Natvrdo
+   psaná rodina do pravidla nepatří: příště by se rozešly.
+
+   Když nová velikost do stupnice nepatří, nepřidávej ji sem — vyber
+   nejbližší, která tam je. Stupnice má cenu jen potud, pokud se
+   nerozšiřuje. */
+import { readFileSync, readdirSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
+
+export const STUPNICE = new Set([11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96]);
+export const TLOUSTKY = new Set(['400', '500', '600', '700', 'inherit', 'normal', 'bold']);
+const RODINY = /^(var\(--font-(ui|display|mono)\)|inherit|'Inter',?.*)$/;
+
+/* Komentáře se vybílí, ale délka zůstane — čísla řádků pak ukazují na
+   opravdový řádek v souboru. Na rozdíl od odstupů se vnitřek var()
+   nebílí: `font-size:var(--h1-stranka)` je v pořádku a projde
+   rovnou, kdežto `var(--x, 15px)` by měl propadnout. */
+function ocisti(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, s => s.replace(/[^\n]/g, ' '));
+}
+
+export function mimoStupnici(text) {
+  const bez = ocisti(text);
+  const out = [];
+  const radek = (i) => bez.slice(0, i).split('\n').length;
+  for (const m of bez.matchAll(/(^|[;{\s])font-size\s*:\s*([^;}"']+)/g)) {
+    const hodnota = m[2].trim();
+    for (const c of hodnota.matchAll(/(\d+(?:\.\d+)?)px/g)) {
+      const n = parseFloat(c[1]);
+      if (STUPNICE.has(n)) continue;
+      out.push({ radek: radek(m.index), co: `font-size: ${hodnota.slice(0, 60)}`, proc: `${n}px není na stupnici` });
+    }
+  }
+  /* Tokeny --h1-* jsou taky velikosti písma, jen pojmenované. Bez
+     tohohle by stupnici obešly: „font-size:var(--h1-stranka)" projde
+     a číslo si token nese sám. */
+  for (const m of bez.matchAll(/(^|[;{\s])(--h1-[a-z-]+)\s*:\s*([^;}"']+)/g)) {
+    for (const c of m[3].matchAll(/(\d+(?:\.\d+)?)px/g)) {
+      const n = parseFloat(c[1]);
+      if (STUPNICE.has(n)) continue;
+      out.push({ radek: radek(m.index), co: `${m[2]}: ${m[3].trim().slice(0, 50)}`, proc: `${n}px není na stupnici` });
+    }
+  }
+  for (const m of bez.matchAll(/(^|[;{\s])font-weight\s*:\s*([^;}"']+)/g)) {
+    const h = m[2].trim();
+    /* Rozsah proměnlivého řezu v @font-face („400 800") je deklarace
+       písma, ne tloušťka textu — ten se tu neposuzuje. */
+    if (/^\d+\s+\d+$/.test(h)) continue;
+    if (TLOUSTKY.has(h)) continue;
+    out.push({ radek: radek(m.index), co: `font-weight: ${h.slice(0, 40)}`, proc: 'tloušťka není ze čtyř povolených' });
+  }
+  for (const m of bez.matchAll(/(^|[;{\s])font-family\s*:\s*([^;}"']+)/g)) {
+    const h = m[2].trim();
+    if (RODINY.test(h)) continue;
+    out.push({ radek: radek(m.index), co: `font-family: ${h.slice(0, 60)}`, proc: 'rodina patří do tokenu, ne do pravidla' });
+  }
+  return out;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const JE_VYROBENA = /^(pozemek|pozemky)-/;
+  const MIMO = new Set(['build-og.mjs']);
+  const soubory = ['css/styles.css'];
+  for (const f of readdirSync('.')) if (f.endsWith('.html') && !JE_VYROBENA.test(f)) soubory.push(f);
+  for (const f of readdirSync('scripts')) if (f.endsWith('.mjs') && !f.startsWith('test-') && !MIMO.has(f)) soubory.push('scripts/' + f);
+
+  let chyb = 0;
+  const zpravy = [];
+  for (const f of soubory) {
+    let text;
+    try { text = readFileSync(f, 'utf8'); } catch { continue; }
+    const n = mimoStupnici(text);
+    if (!n.length) continue;
+    console.log(`✕ ${f}: ${n.length} mimo stupnici písma`);
+    for (const x of n) console.log(`   ${f}:${x.radek}  ${x.co}   (${x.proc})`);
+    zpravy.push(`  ✕ ${f}:${n[0].radek} ${n[0].co}`);
+    chyb += n.length;
+  }
+  if (!chyb) console.log('✓ velikosti, tloušťky i rodiny písma drží jednu stupnici');
+  console.log(`\n${chyb ? chyb + ' mimo stupnici' : 'vše v pořádku'}\n`);
+  if (chyb) {
+    console.log('::error::Písmo: ' + chyb + ' deklarací mimo stupnici.' + pricinaChyb(zpravy));
+    process.exit(1);
+  }
+  process.exit(0);
+}

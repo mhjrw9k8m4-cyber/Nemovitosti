@@ -261,6 +261,15 @@ jobs:
       - name: Jedna stupnice odstupů
         run: node scripts/test-odstupy.mjs
 
+      - name: Jedna stupnice písma
+        run: node scripts/test-pismo.mjs
+
+      - name: Rozbalené hledání se zase zavře
+        run: node scripts/test-hledani-zavirani.mjs
+
+      - name: Spodní lišta s cenou a akcí
+        run: node scripts/test-lista-dole.mjs
+
       - name: Osnova nadpisů (jeden h1, žádný přeskok)
         run: node scripts/test-osnova.mjs
 

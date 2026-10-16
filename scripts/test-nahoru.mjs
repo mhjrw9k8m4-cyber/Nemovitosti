@@ -172,6 +172,16 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
          spadne tahle kontrola — a to je správně, protože to je ta
          chvíle, kdy začne vadit. */
       await p.evaluate(() => window.scrollTo(0, 1e7));
+      await p.evaluate(KLID);
+      /* DRUHÝ SKOK NA KONEC, A MÁ TO DŮVOD. Na krajských a okresních
+         stránkách se graf cenové hladiny kreslí, až když se k němu
+         někdo doroluje (js/graf-cen.js) — a od chvíle, kdy jde výpis
+         nabídek nahoru a graf pod něj, se dokresluje právě na konci
+         stránky. Stránka tím po prvním skoku vyroste o jeho výšku
+         a „konec" je zase o kus dál: naměřeno, patička zůstala
+         227 px pod spodní hranou okna. Člověk, který roluje postupně,
+         na to nenarazí; skok na konec ano. */
+      await p.evaluate(() => window.scrollTo(0, 1e7));
       const yK = await p.evaluate(KLID);
       const konec = await stav(p);
       const patka = await p.evaluate(() => {

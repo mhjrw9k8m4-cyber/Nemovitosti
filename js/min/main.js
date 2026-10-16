@@ -377,6 +377,9 @@
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
 
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
+
+    var un = document.getElementById('uvod-nabidka');
+    if (un) un.innerHTML = 'Nabízíme <b class="uvod-pocet">' + fmt(DATA.length) + '</b> ' + plPozemek(DATA.length);
   })();
 
   (function () {
@@ -944,15 +947,20 @@
         : '<span class="rs-foto rs-foto-bez"></span>';
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         foto +
-        '<span class="rs-misto">' +
-          '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
-          '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
-        '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
+        '<span class="rs-telo">' +
+          '<span class="rs-misto">' +
+            '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
+            '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
+          '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
+        '</span>' +
       '</button>';
     });
     h += '</div>';
     el.innerHTML = h;
     el.hidden = false;
+
+    var domov = document.querySelector('.map-side');
+    if (domov && domov.firstElementChild !== el) domov.insertBefore(el, domov.firstElementChild);
     rsStin(el.querySelector('.rs-row'));
   }
 
@@ -1110,11 +1118,18 @@
     cenovaStupnice = ceny.length >= 8 ? ceny : null;
   }
 
+  var CENA_ZARAZKY = [
+    [0.0, [180, 216, 170]],
+    [0.5, [170, 162, 164]],
+    [1.0, [158,  12,  72]]
+  ];
   function barvaCeny(t) {
-    var r = Math.round(198 - t * 126);
-    var g = Math.round(178 - t * 140);
-    var b = Math.round(222 - t * 112);
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
+    t = Math.max(0, Math.min(1, t));
+    var i = t <= 0.5 ? 0 : 1;
+    var a = CENA_ZARAZKY[i], b = CENA_ZARAZKY[i + 1];
+    var k = (t - a[0]) / (b[0] - a[0]);
+    var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
+    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
   function cenovaBarva(d) {
     if (!cenovaStupnice) return null;
@@ -3427,6 +3442,31 @@
 
       try { hotovo.blur(); } catch (e) {}
     });
+
+    function zavri() {
+      if (!document.body.classList.contains('hledani-rozbalene')) return;
+      prepni(false);
+      try { pole.blur(); } catch (e) {}
+    }
+
+    var NEZAVIRA = '.map-controls-panel, .rz-ov, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+    document.addEventListener('click', function (e) {
+      var cil = e.target;
+      if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
+      zavri();
+    }, true);
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+
+      var kde = document.activeElement;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      zavri();
+    });
+    pole.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+
+      setTimeout(zavri, 0);
+    });
   }());
 
   var msfBadge = document.getElementById('msf-badge');
@@ -3472,7 +3512,7 @@
     vykresliOkruhNaMape();
     ulozFiltr();
 
-    vytahniVlozky();
+    nastrojeDoHlavicky();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {
@@ -3534,8 +3574,8 @@
       var days = daysUntil(d.extra);
 
       var cd = days == null ? ''
-        : (days < 0 ? '<span class="opp-cd opp-proběhlo">proběhlo</span>'
-                    : '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>');
+        : (days < 0 ? '<span class="opp-cd opp-proběhlo">Dražba proběhla</span>'
+                    : '<span class="opp-cd' + countdownClass(days) + '">Dražba ' + countdownText(days) + '</span>');
 
       var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
       var sub = hasParcel(d) ? 'parc. ' + d.parcel : '';
@@ -3637,10 +3677,13 @@
       li.innerHTML =
         '<div class="opp-media">' +
           mapThumb(d) +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
+
+          '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
 
-          '<span>' + (jeSkryty(d) ? '↩' : '✕') + '</span></button>' +
+          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '↩' : '✕') + '</span>' +
+          '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
         '</div>' +
 
         '<div class="opp-body">' +
@@ -3711,7 +3754,7 @@
 
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
 
-    if (skryte.length) tlacitka += '<button type="button" class="mc-skryte" id="mc-skryte">' +
+    if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
 
     var proslychStranou = 0;
@@ -3725,7 +3768,7 @@
       } finally { ukazProsle = false; }
     }
 
-    if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-skryte" id="mc-prosle">' +
+    if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
 
@@ -3741,21 +3784,17 @@
         }
       } finally { ukazPodobne = false; }
     }
-    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-skryte" id="mc-podobne">' +
+    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
-    if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout výběr ('
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">Stáhnout výběr ('
       + fmt(matched) + ')</button>';
 
-    if (matched >= 5) tlacitka = '<button type="button" class="mc-rychly" id="mc-rychly">'
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
       + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
       + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
-      + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
-
-      + '<span class="mcr-popis"><span class="mcr-popis-vic">Dvacet karet přes celou obrazovku. </span>'
-      + 'Doprava uložit, doleva schovat.</span></span>'
-      + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
+      + 'Procházet po jednom</button>' + tlacitka;
 
     countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
@@ -3867,7 +3906,7 @@
       more.textContent = '…nebo si celou nabídku projděte na mapě';
       listEl.appendChild(more);
     }
-    zaradNastroje();
+    nastrojeDoHlavicky();
     prepocitejCipy();
     prekresliPosuvniky();
     prekresliVybaveni();
@@ -3876,39 +3915,15 @@
     prekresliAkceFiltru(matched);
   }
 
-  function vytahniVlozky() {
-    var domov = document.querySelector('.map-side');
-    if (!domov) return;
-    for (var i = 0; i < VLOZKY.length; i++) {
-      var a = document.getElementById(VLOZKY[i].id);
-      if (a && a.parentNode !== domov) domov.appendChild(a);
-    }
-  }
-  var VLOZKY = [
-    { id: 'recent-strip', poKarte: 1 },
-    { id: 'mc-akce', poKarte: 2 }
-  ];
-  function zaradNastroje() {
-    if (!listEl) return;
-    var uzke = false;
-    try { uzke = window.matchMedia('(max-width:1040px)').matches; } catch (e) {}
-    var domov = document.querySelector('.map-side');
-    var karty = listEl.querySelectorAll('.opp-item');
-    for (var i = 0; i < VLOZKY.length; i++) {
-      var v = VLOZKY[i];
-      var a = document.getElementById(v.id);
-      if (!a) continue;
-      if (!uzke || !karty.length) {
+  function nastrojeDoHlavicky() {
+    var a = document.getElementById('mc-akce');
 
-        if (domov && a.parentNode !== domov) domov.appendChild(a);
-        a.classList.remove('mc-akce-vlozka');
-        continue;
-      }
-      var za = karty[Math.min(v.poKarte, karty.length) - 1];
-      a.classList.add('mc-akce-vlozka');
-
-      if (za.nextSibling !== a) listEl.insertBefore(a, za.nextSibling);
-    }
+    var hlavicka = document.querySelector('.ms-vysledky');
+    if (!a || !hlavicka) return;
+    a.classList.remove('mc-akce-vlozka');
+    if (a.parentNode !== hlavicka) hlavicka.appendChild(a);
+    if (!a.getAttribute('data-stin')) { a.setAttribute('data-stin', 'ano'); rsStin(a); }
+    else { a.classList.toggle('je-dal', a.scrollWidth - a.clientWidth - a.scrollLeft > 8); }
   }
 
   function resetFilters() {

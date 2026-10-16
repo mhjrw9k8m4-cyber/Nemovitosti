@@ -558,13 +558,17 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   };
   const bezUctu = await zalozky(false);
   const sUctem = await zalozky(true);
-  /* DVANÁCT NEJMÉNĚ, A „Přidat pozemek" NAKONEC.
+  /* DVANÁCT NEJMÉNĚ, A „Přidat pozemek" NAKONEC VE ZNAČCE.
      Bylo tu pevných sedm (šest cílů a akce) z doby, kdy byla nabídka
      plochý seznam. Teď je rozdělená na oddíly a cílů je přes dvacet;
      pevné číslo by hlídalo jen to, že nikdo nepřidal odkaz. Hlídá se
      proto to, co je na tom podstatné: že se nabídka nescvrkla (podlaha)
-     a že akce stojí až za vším — v hlavičce na telefonu tlačítko není
-     (viz .header-cta), takže je to jediné místo, kde prodávající začne.
+     a že akce je ve značce poslední — v liště na širokém displeji
+     patří doprava na konec.
+     NA TELEFONU JE TO OBRÁCENĚ, a je to schválně: v šuplíku stojí
+     tlačítko úplně nahoře (css/styles.css, order:-2), protože
+     v hlavičce na telefonu žádné není a prodávající by k němu jinak
+     musel odrolovat celou nabídku. Měří to zkouška hned pod touhle.
      Co je uvnitř po oddílech, měří test-menu.
      PODLAHA SPADLA Z DVACETI NA DVANÁCT: 14. 10. se nabídka na přání
      majitele zúžila z 25 odkazů na 14 („je tam toho moc, nech tam jen
@@ -578,6 +582,43 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   pravda('Zprávy i Hlídání jsou v něm i bez přihlášení',
     ['zpravy.html', 'hlidani.html'].every((c) => bezUctu.some((h) => (h || '').endsWith(c))),
     `chybí: ${bezUctu.join(', ')}`);
+}
+
+/* --- „PŘIDAT POZEMEK" STOJÍ V ŠUPLÍKU NAHOŘE ------------------------
+ *
+ * Měřeno na 390×844 v OTEVŘENÉM šuplíku: tlačítko bylo na y 1 528
+ * z 1 652 px celé nabídky, tedy až za čtrnácti odkazy — a v hlavičce
+ * na telefonu žádné není (.header-cta se schovává), takže kdo přišel
+ * prodat, musel nejdřív projet celý web cizíma očima. Majitel webu:
+ * „a přidat pozemek bych dal nahoru."
+ * Značka se kvůli tomu nepřesouvá (v liště na širokém displeji patří
+ * tlačítko na konec) — dělá to `order`. Proto se to taky měří v pixelech
+ * a ne ve značce: pořadí ve značce by o tomhle nevypovědělo nic.
+ * Nad tlačítkem smí být jediná věc: křížek, kterým se panel zavírá. */
+{
+  const { ctx, p } = await otevri('kontakt.html', 390, 844);
+  await p.waitForTimeout(400);
+  await p.click('.nav-burger');
+  await p.waitForTimeout(500);
+  const m = await p.evaluate(() => {
+    const vidi = (e) => e.getClientRects().length > 0;
+    const y = (e) => Math.round(e.getBoundingClientRect().top);
+    const cta = document.querySelector('#nav a.btn-primary');
+    const krizek = document.querySelector('#nav .nav-zavrit');
+    const ostatni = [...document.querySelectorAll('#nav > *')]
+      .filter((e) => vidi(e) && e !== cta && e !== krizek && !e.classList.contains('nav-cta-note'))
+      .map((e) => ({ co: e.className || e.tagName, y: y(e) }))
+      .sort((a, b) => a.y - b.y);
+    return { ctaVidet: !!cta && vidi(cta), ctaY: cta ? y(cta) : null,
+      krizekY: krizek && vidi(krizek) ? y(krizek) : null,
+      prvniJiny: ostatni[0] || null };
+  });
+  await ctx.close();
+  pravda('v šuplíku na telefonu stojí „Přidat pozemek" hned pod křížkem, ne až na konci',
+    !!m.ctaVidet && m.prvniJiny != null && m.ctaY < m.prvniJiny.y,
+    JSON.stringify(m));
+  pravda('a křížek na zavření zůstává nad ním',
+    m.krizekY != null && m.ctaY != null && m.krizekY < m.ctaY, JSON.stringify(m));
 }
 
 /* --- OVLÁDÁNÍ SE MUSÍ DÁT TREFIT PRSTEM ------------------------------
@@ -791,8 +832,9 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
        („Stáhnout tabulku" a „Rychlý výběr") a ta se na 390 px vejdou
        vedle sebe — bez zúžení by tedy sabotáž nic nevyrobila a kontrola
        by se tvářila bezzubě, přestože bezzubá není. */
-    st.textContent = '.mc-akce{display:block !important; max-width:170px !important;}'
-      + ' .mc-skryte{margin-top:-8px !important; margin-bottom:-8px !important;}';
+    st.textContent = '.mc-akce{display:block !important; max-width:170px !important;'
+      + ' overflow:visible !important;}'
+      + ' .mc-nastroj{margin-top:-8px !important; margin-bottom:-8px !important;}';
     document.head.appendChild(st);
     /* Mezery mezi tlačítky patří k sabotáži, ne k ozdobě: bez nich nemá
        řádek kde zalomit, tlačítka by přetekla do strany a NEPŘEKRÝVALA
@@ -800,7 +842,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
        vypadalo to, že kontrola je bezzubá, a přitom byla špatně
        postavená sabotáž. Takhle je to přesně ten původní stav:
        tlačítka v textovém toku, zalomená pod sebe, se záporným okrajem. */
-    document.querySelectorAll('.mc-akce .mc-skryte').forEach((b, i) => {
+    document.querySelectorAll('.mc-akce .mc-nastroj').forEach((b, i) => {
       if (i) b.parentNode.insertBefore(document.createTextNode(' '), b);
     });
   });
@@ -819,9 +861,12 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 /* --- PRUH „NAPOSLEDY PROHLÉDNUTÉ" MUSÍ BÝT VIDĚT --------------------
  *
  * Stížnost: „to samé by chtělo i u naposledy prohlédnutých, chce to
- * nějak zvýraznit." Nadpis pruhu měl 12 px ztlumenou barvou, tedy MENŠÍ
- * písmo než nadpis výpisu pod ním (14 px), a pruh neměl vlastní plochu —
- * splýval s okolím.
+ * nějak zvýraznit." Pruh neměl vlastní plochu a splýval s okolím.
+ * Pak přišla stížnost opačná — „je to moc velké" — a pruh se přestěhoval
+ * nahoru nad výpis. Tam velký být nesmí: každý jeho pixel odsouvá první
+ * nabídku. Nadpis proto zdrobněl na 13 px (nahoře s ním nic nesoutěží)
+ * a měří se místo toho VÝŠKA celého pruhu. Kolik to dělá první nabídce,
+ * hlídá test-prvni-obrazovka.
  * A druhá, horší půlka: řádek se posouvá do strany, posuvník je schovaný
  * a ze čtyř prohlédnutých byly na telefonu vidět dvě (naměřeno 438 px za
  * pravou hranou). Nic o zbytku neřeklo. Proto je v nadpisu počet a za
@@ -854,6 +899,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       pocetVNadpisu: (document.querySelector('.rs-pocet') || { textContent: '' }).textContent.trim(),
       pismoNadpisu: cislo(getComputedStyle(hd).fontSize),
       pismoVypisu: vyp ? cislo(getComputedStyle(vyp).fontSize) : 0,
+      vyskaPruhu: Math.round(el.getBoundingClientRect().height),
+      vyskaCipu: Math.round(row.querySelector('.rs-chip').getBoundingClientRect().height),
       maPlochu: getComputedStyle(el).backgroundColor !== 'rgba(0, 0, 0, 0)',
       prectiva: Math.round(row.scrollWidth - row.clientWidth),
       tridy: row.className,
@@ -862,9 +909,15 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   pravda('pruh „Naposledy prohlédnuté" se ukázal (jinak není co měřit)',
     !!pruh && pruh.skryty === false && pruh.cipu >= 3, JSON.stringify(pruh));
   if (pruh) {
-    pravda('nadpis pruhu není menší než nadpis výpisu pod ním',
-      pruh.pismoNadpisu >= pruh.pismoVypisu - 1,
-      `pruh ${pruh.pismoNadpisu} px, výpis ${pruh.pismoVypisu} px`);
+    /* Nahoře nad výpisem je každý pixel vidět. Naměřeno: s řádky
+       a náhledem 48 px má pruh 109 px; s původními kartami měl 235
+       a první nabídka kvůli němu začínala až na 606 px. Mez 150 nechá
+       místo na delší jméno obce, ale velké karty neunese. */
+    pravda('pruh zůstal nízký (nahoře nad výpisem je každý pixel vidět)',
+      pruh.vyskaPruhu <= 150,
+      `pruh je vysoký ${pruh.vyskaPruhu} px, čip ${pruh.vyskaCipu} px`);
+    pravda('a jeho nadpis je pořád čitelný, ne drobek',
+      pruh.pismoNadpisu >= 12, `nadpis má ${pruh.pismoNadpisu} px`);
     pravda('a pruh má vlastní plochu, ať nesplývá s okolím', pruh.maPlochu,
       'pozadí je průhledné');
     pravda('a v nadpisu stojí, kolik jich je', String(pruh.cipu) === pruh.pocetVNadpisu,
@@ -936,11 +989,17 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       /* „linklike" z výjimek odešel: tahle třída nese „Odhlásit" a měla
          22 px, tedy polovinu normy. Dnes má pod (hover:none) 44 px, takže
          výjimku nepotřebuje — a výjimka, kterou nic nepotřebuje, jen
-         zakrývá další takový případ. Zbylé čtyři jsou prvky, u nichž
-         44 px nemá smysl: skip-link je pro čtečky, logo je nadpis
-         s odkazem a dvě ikonky na kartě mají vlastní, větší klikací
-         obálku. */
-      const VYJIMKY = ['skip-link', 'logo', 'opp-fav', 'opp-skryt'];
+         zakrývá další takový případ.
+
+         A ze stejného důvodu odešly i „opp-fav" a „opp-skryt". Byly to
+         holé ikonky na kartě (34 a 28 px) a výjimku měly proto, že měly
+         větší klikací obálku. Od chvíle, kdy u obou stojí slovo
+         („Skrýt", „Uložit"), mají pod dotykem 44 px samy o sobě —
+         naměřeno 80×44 a 88×44. Výjimka už nekryje nic.
+
+         Zbývají dvě, u nichž 44 px nemá smysl: skip-link je pro čtečky
+         a logo je nadpis s odkazem. */
+      const VYJIMKY = ['skip-link', 'logo'];
       const ven = [];
       document.querySelectorAll('a[href], button, summary, select, label.chip-check').forEach((e) => {
         const r = e.getBoundingClientRect();

@@ -20,7 +20,12 @@
    text nabídek se mění a pevné číslo by padalo na cizích datech.
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+
+const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -37,9 +42,24 @@ const SIRKA = 390, VYSKA = 844;
         který má na telefonu krátkou podobu „1 930 pozemků",
      · 106 px pruh „Projít … po jednom" a „Stáhnout výběr", který je
         teď AŽ POD seznamem (na monitoru zůstává nahoře).
-   Mez je o 41 px volnější než naměřený stav: tolik unese delší nadpis
-   i užší telefon, ale NEUNESE vrácení kteréhokoli z těch čtyř kusů. */
-const MEZ_PRVNI = 330;
+   NADPIS WEBU SI VZAL 68 px A MEZ ŠLA Z 330 NA 400.
+   Majitel webu si vyžádal nahoře velký nadpis „Parcelka" s větou, co
+   na stránce je. Naměřeno: první nabídka klesla z 292 na 360 px.
+   Je to vědomá cena za to, aby stránka vypadala jako web a ne jako
+   ovládací panel — pořád je to o 127 px lepší než 487 px, se kterými
+   se začínalo, a nabídka i s cenou se na první obrazovku vejde.
+
+   NÁŘADÍ VÝPISU SI VZALO 52 px A MEZ ŠLA Z 400 NA 450.
+   „Procházet po jednom", „Stáhnout výběr" a „Dražby po termínu" se
+   vrátily nad výpis — majitel webu je nechtěl mezi nabídkami („tohle
+   je taky uprostřed, udělej to tak, jak to vypadá v zahraničí").
+   Je to jeden řádek pilulek, který se posouvá do strany; zalomený na
+   dva řádky by stál 94 px. Naměřeno: první nabídka klesla z 360
+   na 409 px.
+   Mez je o 40 px volnější než naměřený stav: tolik unese delší nadpis
+   i užší telefon, ale NEUNESE vrácení kteréhokoli z těch kusů —
+   ani návrat nářadí do dvouřádkového pruhu. */
+const MEZ_PRVNI = 450;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -135,16 +155,63 @@ try {
      patří POD výpis. Dokud stálo nad ním, odsouvalo první nabídku
      o 106 px — tedy to jediné, kvůli čemu sem člověk přišel, bylo až
      za nástroji na zacházení s tím, co ještě neviděl.
-     Pruh naposledy prohlédnutých je tatáž věc: komu se tam něco
-     nahromadí, má to pod nabídkami, ne místo nich. Na snímku od
-     majitele webu zabíral dva pruhy nad první nabídkou. */
-  pravda('„Projít po jednom" a „Stáhnout výběr" stojí až POD první nabídkou',
-    !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY > m.karta),
+     Obojí se mezitím přestěhovalo NAHORU, na výslovné přání majitele
+     webu („mají být úplně nahoře", „tohle je taky uprostřed"). Tahle
+     kontrola tedy obrátila znaménko: nářadí MÁ stát nad první
+     nabídkou — a to, co z toho doopravdy bolí, hlídá mez MEZ_PRVNI
+     o kus výš a blok s naplněným pruhem níž. */
+  pravda('nářadí výpisu stojí v jeho hlavičce, ne mezi nabídkami',
+    !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY < m.karta),
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
-  pravda('a naposledy prohlédnuté taky, pokud tam nějaké jsou',
-    !je(m.nedavnoY) || (je(m.karta) && m.nedavnoY > m.karta),
-    `naposledy prohlédnuté začínají na ${m.nedavnoY} px, první nabídka na ${m.karta} px`);
   await ctx.close();
+
+  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" NAHOŘE -----------------
+     Pruh stojí nad výpisem, tedy odsouvá první nabídku — na výslovné
+     přání majitele webu („mají být úplně nahoře"). Aby to šlo, musel
+     zhubnout: z karet s velkým snímkem jsou řádky s náhledem 48 px.
+     Naměřeno: pruh 109 px, první nabídka klesla z 409 na 530 px.
+     Tahle zkouška je past na to, aby zase nevyrostl — v původní podobě
+     měl 235 px a první nabídka by spadla na 656. Mez je 580: unese
+     o 50 px delší pruh (třeba delší jméno obce na dvou řádcích),
+     ale NEUNESE návrat velkých karet.
+     Prázdný prohlížeč žádnou historii nemá, takže se musí naplnit —
+     jinak by kontrola prošla naprázdno nad schovaným pruhem. */
+  {
+    const nabidky = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+    const klice = nabidky
+      .filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
+      .slice(0, 5)
+      .map((x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|'));
+    const c2 = await prohlizec.newContext({
+      viewport: { width: SIRKA, height: VYSKA }, isMobile: true, hasTouch: true,
+      serviceWorkers: 'block', locale: 'cs-CZ',
+    });
+    const p2 = await c2.newPage();
+    await p2.goto(BASE + '/index.html', { waitUntil: 'load' });
+    await p2.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, klice);
+    await p2.reload({ waitUntil: 'load' });
+    await p2.waitForSelector('#recent-strip .rs-chip', { timeout: 25000 }).catch(() => {});
+    await p2.waitForTimeout(2000);
+    const r = await p2.evaluate(() => {
+      const el = document.getElementById('recent-strip');
+      const karta = document.querySelector('#opp-list .opp-item');
+      const y = (e) => e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
+      return { pruhY: y(el), pruhH: el ? Math.round(el.getBoundingClientRect().height) : null,
+        kartaY: y(karta), cipu: document.querySelectorAll('.rs-chip').length,
+        skryty: el ? el.hidden : null };
+    });
+    await c2.close();
+    pravda('pruh „Naposledy prohlédnuté" se naplnil (jinak není co měřit)',
+      !!r && r.skryty === false && r.cipu >= 3, JSON.stringify(r));
+    if (r && r.skryty === false) {
+      pravda('a stojí NAD první nabídkou, ne uprostřed výpisu',
+        r.pruhY !== null && r.kartaY !== null && r.pruhY < r.kartaY,
+        `pruh na ${r.pruhY} px, první nabídka na ${r.kartaY} px`);
+      pravda(`a první nabídka i s ním začíná nad 580 px (${r.kartaY})`,
+        r.kartaY !== null && r.kartaY < 580,
+        `pruh je vysoký ${r.pruhH} px a první nabídka začíná na ${r.kartaY} px`);
+    }
+  }
 
   /* ---- A TOTÉŽ NA VELKÉM MONITORU --------------------------------
      Druhá polovina téže otázky: kolik nabídek je vidět bez rolování.

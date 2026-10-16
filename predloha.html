@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=bb8fbf8f">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=f9706098">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -21,11 +21,11 @@
     /* Vlastní podoba nadpisů patří NAVIGACI předlohy, ne ukázkám — jinak
        by vzorník měřil sám sebe místo webu. Ukázky stojí v .typ. */
     .pz > h1{font-size:40px; margin-bottom:8px;}
-    .pz > p.lede{color:var(--text-ondark-mute); font-size:17px; max-width:var(--m-text); margin-bottom:12px;}
-    .pz > h2{font-size:24px; font-weight:800; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:20px; border-top:1px solid var(--line);}
+    .pz > p.lede{color:var(--text-ondark-mute); font-size:16px; max-width:var(--m-text); margin-bottom:12px;}
+    .pz > h2{font-size:24px; font-weight:700; letter-spacing:-0.02em; margin:56px 0 6px; padding-top:20px; border-top:1px solid var(--line);}
     .pz > h2:first-of-type{border-top:0;}
-    .pz > h2 + p{color:var(--text-ondark-mute); font-size:15px; max-width:var(--m-text); margin-bottom:20px;}
-    .pz > h3{font-size:15px; font-weight:700; margin:24px 0 12px;}
+    .pz > h2 + p{color:var(--text-ondark-mute); font-size:14px; max-width:var(--m-text); margin-bottom:20px;}
+    .pz > h3{font-size:14px; font-weight:700; margin:24px 0 12px;}
     .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
     .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
     .vzorek .nazev{font-weight:700; font-size:14px; margin-bottom:4px;}
@@ -101,11 +101,11 @@
      a vážnost, bezpatkové drží čitelnost textu a ovládání, strojové odlišuje čísla a štítky.
      Dvě písma dělají web korektní; teprve třetí mu dá charakter.</p>
   <div class="mrizka" style="margin-bottom:24px">
-    <div class="vzorek"><div style="font-family:var(--font-display);font-size:30px;font-weight:700">Příliš žluťoučký</div>
+    <div class="vzorek"><div style="font-family:var(--font-display);font-size:28px;font-weight:700">Příliš žluťoučký</div>
       <div class="nazev" style="margin-top:8px">Nadpisy — Source Serif 4</div><div class="kod">var(--font-display)</div></div>
     <div class="vzorek"><div style="font-family:var(--font-ui);font-size:20px;font-weight:600">Příliš žluťoučký kůň</div>
       <div class="nazev" style="margin-top:8px">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
-    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:17px;font-weight:500">1 951 · 800 m² · Kč</div>
+    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:16px;font-weight:500">1 951 · 800 m² · Kč</div>
       <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
   </div>
   <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
@@ -149,8 +149,8 @@
   <div style="background:linear-gradient(150deg,var(--ink-dark-2),var(--ink-dark) 58%,#0E1712);
               border-radius:var(--r-md); padding:24px; color:var(--text-ondeep); box-shadow:var(--e2);">
     <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent-warm-bright);margin-bottom:8px">Nadřádek</div>
-    <div style="font-family:var(--font-display);font-size:26px;font-weight:700;margin-bottom:6px">Nadpis na tmavém</div>
-    <p style="color:var(--text-ondeep-mute);font-size:15px;margin:0">Tlumený text má na tmavém pásu vlastní odstín
+    <div style="font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:6px">Nadpis na tmavém</div>
+    <p style="color:var(--text-ondeep-mute);font-size:14px;margin:0">Tlumený text má na tmavém pásu vlastní odstín
        (<code style="font-family:var(--font-mono)">--text-ondeep-mute</code>, 10,8 : 1). Šeď ze světlého motivu by tu zmizela
        a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
   </div>

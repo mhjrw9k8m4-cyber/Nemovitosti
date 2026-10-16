@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=fa1df2a7">
+  <link rel="stylesheet" href="css/uvod.min.css?v=b6778439">
 </head>
 <body>
 
@@ -197,7 +197,17 @@
        stránka neměla ŽÁDNÝ: odečítač obrazovky nemá kde začít a
        vyhledávač neví, o čem stránka je. Zpátky tedy jen nadpis, ne
        ta věta: říká, co na stránce je, a nikomu nepřekáží. -->
-  <h1 class="visually-hidden">Pozemky na prodej, v dražbě a v exekuci — mapa a výpis</h1>
+  <!-- VELKÝ NADPIS NA VÝSLOVNÉ PŘÁNÍ MAJITELE.
+       Nadpis tu byl schovaný pro odečítače: uvítací blok „1 955 pozemků
+       na jedné mapě" šel kdysi pryč a stránka zůstala bez nadpisu, což
+       nejde — odečítač nemá kde začít a vyhledávač neví, o čem stránka
+       je. Teď je vidět, a je to pořád JEDEN <h1>: značka nahlas, popis
+       stránky v něm schovaný pro odečítač i vyhledávač.
+       Dvakrát pod sebou tím značka nestojí: v liště je jako ODKAZ DOMŮ,
+       tohle je nadpis stránky. Sedí v tom prázdném pásmu pod lištou,
+       které tam stejně bylo — čtyřicet pixelů bílého nic. -->
+  <h1 class="uvod-znacka">Parcelka<span class="visually-hidden"> — pozemky na prodej, v dražbě a v exekuci, mapa a výpis</span></h1>
+  <p class="uvod-podtitul"><span id="uvod-nabidka">Pozemky</span> na prodej, v dražbě a v exekuci — na jedné mapě.</p>
 
   <!-- ROZCESTNÍK NA ZAČÁTEK, JEN NA TELEFONU.
        Na přání a podle Sreality: velká značka, jedna věta a šest dlaždic
@@ -483,22 +493,21 @@
                 </select>
               </label>
             </div>
+            <!-- CO SE S VÝBĚREM DÁ DĚLAT, STOJÍ V JEHO HLAVIČCE.
+                 „Procházet po jednom", „Stáhnout výběr" a „Zobrazit
+                 skryté" jsou nástroje k výpisu, takže patří k jeho
+                 ovládání — ne nad celou stránku a ne mezi nabídky.
+                 Obal zůstává prázdný a plní ho js/main.js při každém
+                 překreslení; je to vlastní prvek proto, aby přepsání
+                 nesmazalo rozbalovač řazení uprostřed výběru. -->
+            <span class="mc-akce" id="mc-akce"></span>
           </div>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
-          <!-- CO SE S VÝBĚREM DÁ DĚLAT, STOJÍ AŽ POD NÍM.
-               „Projít 1 930 pozemků po jednom" a „Stáhnout výběr" jsou
-               nástroje pro toho, kdo už výpis vidí a chce s ním něco
-               provést. Dokud stály NAD seznamem, odsouvaly první
-               nabídku o 136 px (naměřeno, displej 390 px) — tedy to
-               jediné, kvůli čemu sem člověk přišel, bylo až za nářadím
-               na práci s tím, co ještě neviděl.
-               Na monitoru zůstávají nahoře (viz .ms-vysledky v
-               css/styles.css): tam místo nechybí a pruh pod nadpisem
-               nikomu nic neodsouvá. -->
-          <span class="mc-akce" id="mc-akce"></span>
-          <!-- Totéž u naposledy prohlédnutých: komu se tam co nahromadí,
-               má je pod prvními nabídkami, ne místo nich. Na snímku od
-               majitele webu zabíraly dva pruhy nad první nabídkou. -->
+          <!-- NAPOSLEDY PROHLÉDNUTÉ. Ve značce stojí na konci, ve stránce
+               ale úplně nahoře: js/main.js (renderRecent) ho přesune na
+               začátek sloupce, jakmile je co ukázat. Nahoře může být
+               proto, že zhubnul na řádky s malým náhledem — velké karty
+               tu zabíraly 235 px a odsouvaly první nabídku. -->
           <div class="recent-strip" id="recent-strip" hidden></div>
         </aside>
         <div class="map-holder">
@@ -622,7 +631,7 @@
         <a class="kraj-item" href="pozemky-karlovarsky-kraj.html"><span class="kj-n">Karlovarský</span><span class="kj-c mono" data-kraj="Karlovarský">27 pozemků</span></a>
         <a class="kraj-item" href="pozemky-ustecky-kraj.html"><span class="kj-n">Ústecký</span><span class="kj-c mono" data-kraj="Ústecký">155 pozemků</span></a>
         <a class="kraj-item" href="pozemky-liberecky-kraj.html"><span class="kj-n">Liberecký</span><span class="kj-c mono" data-kraj="Liberecký">151 pozemků</span></a>
-        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">76 pozemků</span></a>
+        <a class="kraj-item" href="pozemky-kralovehradecky-kraj.html"><span class="kj-n">Královéhradecký</span><span class="kj-c mono" data-kraj="Královéhradecký">75 pozemků</span></a>
         <a class="kraj-item" href="pozemky-pardubicky-kraj.html"><span class="kj-n">Pardubický</span><span class="kj-c mono" data-kraj="Pardubický">97 pozemků</span></a>
         <a class="kraj-item" href="pozemky-vysocina-kraj.html"><span class="kj-n">Vysočina</span><span class="kj-c mono" data-kraj="Vysočina">52 pozemků</span></a>
         <a class="kraj-item" href="pozemky-jihomoravsky-kraj.html"><span class="kj-n">Jihomoravský</span><span class="kj-c mono" data-kraj="Jihomoravský">392 pozemků</span></a>
@@ -959,7 +968,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=070e8c0d"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=39518273" defer></script>
+<script src="js/min/main.js?v=154acb79" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

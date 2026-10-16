@@ -44,23 +44,25 @@ const stav = () => p.evaluate(() => {
 
 pravda('na telefonu je tlačítko rychlého výběru vidět', await p.isVisible('#mc-rychly'));
 
-/* --- A ŘEKNE, PROČ DO NĚJ LEZT, JEŠTĚ NEŽ SE OTEVŘE ----------------
-   Stálo na něm jen „Rychlý výběr" — jméno funkce, které může
-   znamenat uložený filtr nebo přednastavené hledání. Co to dělá, se
-   člověk dozvěděl až uvnitř (oddíl níž to kontroluje), tedy poté,
-   co se odvážil klepnout. Kdo neklepl, nedozvěděl se nic.
-   Hlídá se tedy TEXT PŘED otevřením: počet (to je ten důvod — projit
-   seznamu po jednom dává smysl u tisíce nabídek, ne u pěti) a oba
-   směry, aby bylo předem jasné, co se s pozemky stane. */
+/* --- A JMENUJE SE PODLE TOHO, CO DĚLÁ ------------------------------
+   Stálo na něm jen „Rychlý výběr" — jméno funkce, které může znamenat
+   uložený filtr nebo přednastavené hledání. Chvíli to proto byl pruh
+   přes celou šířku se dvěma řádky textu („Dvacet karet přes celou
+   obrazovku. Doprava uložit, doleva schovat."), jenže ten stál
+   uprostřed výpisu mezi nabídkami a majitel webu ho chtěl pryč.
+   Teď je to zase pilulka v řádku ovládání nad výpisem — a nese to, co
+   je na tom podstatné: SLOVESO. „Procházet po jednom" říká, co se
+   stane, na rozdíl od „Rychlý výběr".
+   Co znamená doprava a doleva, ukáže úvodní okénko hned po otevření;
+   kontroluje to oddíl hned pod tímhle, a to je to místo, kde na tom
+   doopravdy záleží — dřív, než člověk první nabídku odsvihne. */
 {
   const t = await p.evaluate(() => {
     const e = document.getElementById('mc-rychly');
     return e ? e.innerText.replace(/\s+/g, ' ').trim() : '';
   });
-  pravda('a předem řekne, kolik nabídek by se jinak muselo prolistovat',
-    /\d/.test(t), `na tlačítku stojí „${t}"`);
-  pravda('a co se stane doprava i doleva, ještě než se otevře',
-    /doprava/i.test(t) && /doleva/i.test(t), `na tlačítku stojí „${t}"`);
+  pravda('a stojí na něm, co se stane, ne jméno funkce',
+    /proch[áa]zet/i.test(t) && /po jednom/i.test(t), `na tlačítku stojí „${t}"`);
 }
 await p.click('#mc-rychly');
 await p.waitForTimeout(800);

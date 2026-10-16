@@ -58,9 +58,19 @@ if (vzorek) {
   pravda('odkaz vede na mapu bez zúžení na kraj',
     !!m && /^index\.html#mapa$/.test(m[1]),
     m ? `vede na „${m[1]}"` : 'odkaz se nenašel');
-  pravda('a hlavní tlačítko vedle něj zůstalo tím, co se nabízí první',
-    s.indexOf('btn-primary btn-glow') < s.indexOf('acx-vse'),
-    'cesta ven předběhla hlavní tlačítko');
+  /* Hlavní nabídka musí stát PŘED cestou ven — „nebo celá ČR" je
+     ústupová cesta, ne první volba. Dřív se to poznávalo podle třídy
+     velkého tlačítka (btn-primary btn-glow). Od chvíle, kdy jde výpis
+     nabídek hned pod statistiky, je nahoře jen jednořádková předzvěst
+     („Otevřít okres … na mapě → · nebo celá ČR") a velké tlačítko
+     zůstalo pod výpisem. Pořadí se proto měří v tom řádku: hned před
+     cestou ven musí stát odkaz na mapu toho kraje či okresu. */
+  const iVen = s.indexOf('acx-vse');
+  const predNim = s.slice(Math.max(0, iVen - 400), iVen);
+  pravda('a hlavní nabídka vedle něj zůstala tím, co se nabízí první',
+    /<a [^>]*href="[^"]*#mapa"[^>]*>\s*Otev/i.test(predNim)
+      || (s.indexOf('btn-primary btn-glow') >= 0 && s.indexOf('btn-primary btn-glow') < iVen),
+    'cesta ven předběhla hlavní nabídku');
 }
 
 console.log('\nCesta ven z okresu');

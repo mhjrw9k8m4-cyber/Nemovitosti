@@ -554,6 +554,18 @@
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
     // Živá čísla v hero proužku (sociální důkaz hned nahoře).
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
+    /* KOLIK TOHO NABÍZÍME — HNED POD ZNAČKOU.
+       Majitel webu si vyžádal, aby velikost nabídky stála nahoře,
+       pod nadpisem „Parcelka", ne až v liště nad výpisem.
+       Číslo nad výpisem totiž říká něco jiného: „1 919 na mapě" je
+       počet PO FILTRU a mění se s každým posunem mapy. Tohle je
+       celá nabídka a drží se.
+       Věta je postavená tak, že bez JavaScriptu dává smysl taky:
+       v HTML stojí „Pozemky na prodej, v dražbě a v exekuci — na jedné
+       mapě." a přepisuje se jen první slovo. Kdyby se číslo vepsalo
+       do stránky natvrdo, lhalo by den po sestavení. */
+    var un = document.getElementById('uvod-nabidka');
+    if (un) un.innerHTML = 'Nabízíme <b class="uvod-pocet">' + fmt(DATA.length) + '</b> ' + plPozemek(DATA.length);
   })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
@@ -1468,15 +1480,31 @@
         : '<span class="rs-foto rs-foto-bez"></span>';
       h += '<button type="button" class="rs-chip" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         foto +
-        '<span class="rs-misto">' +
-          '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
-          '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
-        '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
+        '<span class="rs-telo">' +
+          '<span class="rs-misto">' +
+            '<span class="rs-dot" style="background:' + TYPE[d.type].color + '"></span>' +
+            '<span class="rs-place">' + esc(d.place || '') + '</span></span>' +
+          '<span class="rs-price">' + fmt(d.price) + '\u00a0Kč</span>' +
+        '</span>' +
       '</button>';
     });
     h += '</div>';
     el.innerHTML = h;
     el.hidden = false;
+    /* ÚPLNĚ NAHOŘE, NE MEZI NABÍDKAMI.
+       Pruh se vkládal až ZA první kartu — aby neodsouval první nabídku
+       pod obrazovku. Jenže pak stál uprostřed výpisu a vypadal, že do
+       něj patří; majitel webu: „proč mám naposledy prohlédnuté
+       uprostřed stránky, mají být úplně nahoře". Má to i logiku:
+       je to návrat k tomu, co jsem už viděl, tedy něco, co se dělá
+       NEŽ začnu listovat, ne uprostřed listování.
+       Aby to neodsouvalo první nabídku, zhubnul: z karet s velkým
+       snímkem jsou řádky s malým náhledem (viz .rs-chip
+       v css/styles.css). Kolik to stojí pixelů, hlídá zkouška
+       v test-prvni-obrazovka — ta pruh naplní a změří, kde začne
+       první nabídka s ním. */
+    var domov = document.querySelector('.map-side');
+    if (domov && domov.firstElementChild !== el) domov.insertBefore(el, domov.firstElementChild);
     rsStin(el.querySelector('.rs-row'));
   }
   /* Náznak, že řádek pokračuje za hranou. CSS samo o přetečení neví,
@@ -1718,15 +1746,57 @@
      najednou znamenala „drahé" místo „dražba". Člověk pak nepozná ani to,
      že přepnul, ani co která barva říká — a legenda nad mapou tvrdí jedno,
      zatímco tečky nesou barvy z druhé soustavy.
-     Teď je stupnice fialová, od světlé po tmavou. Fialová na webu nic
-     jiného neznamená (druhy jsou modrá, oranžová a tmavě červená, značka
-     je zelená), takže přepnutí je vidět na první pohled, a tmavnutí čte
-     každý jako „víc" bez legendy. */
+     Fialová (světlá → tmavá) tu byla právě proto, že na webu nic jiného
+     neznamená. Majitel webu ale chce to, co u ceny čeká každý: ZELENÁ
+     LEVNÉ → ČERVENÁ DRAHÉ. Je to jeho web a je to čitelnější bez
+     legendy; kolize s druhy se musela vyřešit, ne obejít.
+
+     JAK SE TO VYŘEŠILO (spočítáno, ne odhadnuto):
+
+     1. DRAHÝ KONEC JE KARMÍN, NE ČERVENÁ — a vyšlo to až napotřetí.
+        Barva „Exekuce" je #8C2F1E, tedy tmavě cihlová: obyčejná červená
+        i vínová jsou od ní 35 bodů v RGB, což na mapě splývá. Karmín
+        rgb(158,12,72) má odstup 58 a pořád se čte jako „červená =
+        drahé".
+        POZOR NA SEBE: napoprvé jsem si hodnoty barev druhů VYMYSLEL
+        (vzal jsem rgb(178,38,32) místo skutečné #8C2F1E) a vyšly mi
+        odstupy, které neplatily. Hodnoty se musí číst ze stylopisu.
+
+     2. STŘED JE ŠEDÝ, NE ORANŽOVÝ — a stálo to dva pokusy.
+        Napoprvé jsem vedl stupnici přes oranžovou rgb(226,158,52),
+        protože „zelená → oranžová → červená" je přirozená cesta.
+        Jenže ORANŽOVÁ UŽ ZNAMENÁ „DRAŽBA" rgb(204,107,51) a odstup
+        vyšel jen 47 bodů. Spadla na tom zkouška test-barva-ceny, která
+        hlídá právě to, že v cenovém režimu z mapy barvy druhů zmizí —
+        a měla pravdu. Zkoušel jsem čtyři různé oranžovožluté středy,
+        všechny skončily 32 až 47 od dražby: každá cesta ze zelené do
+        červené přes teplé tóny prostě vede skrz barvu dražby.
+        Šedý střed to obchází a je to i správný tvar pro „od dobrého ke
+        špatnému": dva póly a tlumený střed. Nejbližší barva druhu je
+        teď 61 bodů daleko.
+
+     3. JAS KLESÁ MONOTÓNNĚ přes celou stupnici a ANI JEDEN KANÁL
+        po cestě nestoupá. To druhé není puntičkářství: když stoupá
+        jediný kanál, zaokrouhlení na celá čísla jas sem tam o kousek
+        zvedne a „levnější je světlejší" přestane platit. Naměřeno na
+        předchozí podobě stupnice: 28 takových míst z 2000 kroků,
+        a zkouška z toho udělala 6 851 obrácených dvojic.
+        Je to zároveň pojistka proti barvosleposti: červenozelená je
+        pro ni nejhorší možná dvojice, ale kdo odstín nerozliší,
+        přečte pořadí ze SVĚTLOSTI. Prověřeno simulací deuteranopie —
+        nejmenší rozdíl sousedních kroků je 30 (pod 20 se nepozná). */
+  var CENA_ZARAZKY = [
+    [0.0, [180, 216, 170]],   // levné — světlá zeleň
+    [0.5, [170, 162, 164]],   // střed — šedá
+    [1.0, [158,  12,  72]]    // drahé — karmín
+  ];
   function barvaCeny(t) {
-    var r = Math.round(198 - t * 126);
-    var g = Math.round(178 - t * 140);
-    var b = Math.round(222 - t * 112);
-    return 'rgb(' + r + ',' + g + ',' + b + ')';
+    t = Math.max(0, Math.min(1, t));
+    var i = t <= 0.5 ? 0 : 1;
+    var a = CENA_ZARAZKY[i], b = CENA_ZARAZKY[i + 1];
+    var k = (t - a[0]) / (b[0] - a[0]);
+    var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
+    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
   function cenovaBarva(d) {
     if (!cenovaStupnice) return null;
@@ -5138,6 +5208,75 @@
       /* Zaměření zpátky na pole by blok hned zase rozbalilo. */
       try { hotovo.blur(); } catch (e) {}
     });
+    /* A TEĎ TO, CO TU CELOU DOBU CHYBĚLO: ZAVÍRÁNÍ.
+       Komentář o kus výš sliboval čtyři způsoby, jak hledání zavřít
+       (Hotovo, Escape, klepnutí mimo, druhé klepnutí), ale v kódu byl
+       jediný — tlačítko „Hotovo". Jedno klepnutí do pole tedy otevřelo
+       filtry NATRVALO: naměřeno, že po Escapu, po odrolování o 1 200 px
+       i po klepnutí na kartu zůstala třída `hledani-rozbalene` na
+       <body> viset dál. Majitel webu: „proč to vidím, i když
+       nevyhledávám — má to být vidět, jen když vyhledávám."
+       Zavírá se tedy třemi dalšími způsoby:
+         · Escape (klávesnice),
+         · klepnutí kamkoli MIMO panel (prst),
+         · Enter v poli, tedy „už jsem zadal, co jsem chtěl".
+       Klepnutí uvnitř panelu nezavírá nic — jsou v něm i našeptávač
+       obcí a odznaky filtrů, a ty se musí dát použít. Posluchač je
+       v zachycovací fázi (`true`), aby zavření nezáviselo na tom,
+       jestli si klepnutí cestou někdo nevezme pro sebe. */
+    function zavri() {
+      if (!document.body.classList.contains('hledani-rozbalene')) return;
+      prepni(false);
+      try { pole.blur(); } catch (e) {}
+    }
+    /* ZAVÍRÁ SE AŽ NA KLEPNUTÍ, NE NA DOTEK PRSTU — a stálo to jednu
+       pokaženou zkoušku. Nejdřív to viselo na `pointerdown`, tedy na
+       okamžiku, kdy se prst dotkne: panel se složil ještě PŘED tím,
+       než klepnutí dopadlo, obsah pod prstem vyskočil o tři sta pixelů
+       nahoru a klepnutí přistálo na něčem úplně jiném. Chytila to
+       zkouška test-okoli („Zvětšit okruh na 50 km" se klepnout
+       nepodařilo) a na telefonu by to dělalo přesně to samé:
+       s otevřeným hledáním by klepnutí na kartu otevřelo jinou.
+       `click` v zachycovací fázi je to pravé: cíl už má prohlížeč
+       určený, takže se obsah posune až potom — a zachycovací fáze
+       znamená, že zavření nezávisí na tom, jestli si klepnutí cestou
+       někdo nevezme pro sebe (stopPropagation). */
+    /* Co hledání NEZAVÍRÁ: klepnutí uvnitř panelu (jsou v něm
+       našeptávač i filtry) a klepnutí v okně, které se nad panelem
+       otevřelo. Druhé je stejně důležité jako první a zjistila to
+       zkouška test-naseptavac: okno s rozsahem ceny se otevírá
+       z panelu a zavírá tlačítkem „Hotovo" uvnitř sebe — jenže to
+       tlačítko leží mimo panel, takže se po něm složil i panel pod
+       ním. Člověk se po zavření okna neměl kam vrátit: „Druh, cena,
+       výměra a další" už nebylo vidět. */
+    var NEZAVIRA = '.map-controls-panel, .rz-ov, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+    document.addEventListener('click', function (e) {
+      var cil = e.target;
+      if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
+      zavri();
+    }, true);
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+      /* ESCAPE ZAVÍRÁ JEN TO NEJVRCHNĚJŠÍ. Nad hledáním se otevírají
+         další okna (rozsah ceny a výměry, rychlý výběr) a Escape patří
+         jim: kdyby zavíral i panel pod nimi, zmizel by člověku zpod
+         rukou — po zavření okna by se neměl kam vrátit. Naměřeno na
+         zkoušce test-naseptavac: Escape nad otevřeným oknem filtrů
+         složil i panel a tlačítko „Druh, cena, výměra a další" pak
+         nešlo klepnout, protože už nebylo vidět.
+         Rozhoduje tedy zaměření: Escape složí hledání jen tehdy,
+         když je člověk uvnitř hledání. */
+      var kde = document.activeElement;
+      if (kde && kde.closest && !kde.closest('.map-controls-panel')) return;
+      zavri();
+    });
+    pole.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      /* Našeptávač si Enter bere na výběr obce ze seznamu. Zavřít se
+         smí až potom, jinak by zmizel seznam dřív, než se z něj
+         vybere — proto na konec fronty, ne hned. */
+      setTimeout(zavri, 0);
+    });
   }());
 
 
@@ -5210,16 +5349,16 @@
     updateFilterBadge();
     vykresliOkruhNaMape();
     ulozFiltr();
-    /* VLOŽKY VEN, NEŽ SE SEZNAM VYSYPE.
-       #mc-akce a #recent-strip sedí na telefonu UVNITŘ výpisu (viz
-       zaradNastroje níž) — a `listEl.innerHTML = ''` je prvky, ne jen
-       text. Bez tohohle kroku by je první překreslení (tedy první
-       sáhnutí na filtr) smazalo nadobro: getElementById by pak vracel
-       null, nářadí i pruh by zmizely a už se nevrátily.
+    /* NÁŘADÍ VEN, NEŽ SE SEZNAM VYSYPE.
+       Dnes už sedí v hlavičce výpisu, takže ho `innerHTML = ''`
+       nemá jak smazat — tohle je pojistka na stránku, která se
+       otevřela ještě s předchozí podobou (nářadí mezi kartami):
+       smazání by bylo nadobro, getElementById by vracel null a nářadí
+       by se po prvním sáhnutí na filtr už nevrátilo.
        Našla to zkouška test-rozvrzeni („Cannot read properties of null
        (reading 'hidden')"), ne já — ruční kontrola po PRVNÍM vykreslení
        je v pořádku a vada se ukáže až napodruhé. */
-    vytahniVlozky();
+    nastrojeDoHlavicky();
     listEl.innerHTML = '';
     var vis = [], visIds = [];
     DATA.forEach(function (d) {
@@ -5313,9 +5452,18 @@
       // countdownText() přitom „proběhlo" umí — jen se nikdy nezavolalo,
       // protože podmínka pouštěla dál jen budoucí termíny. Kdo klikne na
       // dražbu, která byla minulý měsíc, se podruhé nevrátí.
+      /* ODZNAK MUSÍ ŘÍCT, CO ZA TŘI DNY JE.
+         Stálo tu holé „za 3 dny" — a z toho se nepozná, jestli za tři
+         dny něco začíná, končí, nebo jestli to je stáří inzerátu.
+         Majitel webu se zeptal doslova „co znamená za 3 dny".
+         Termín v datech má jen dražba a exekuce (naměřeno na ostrých
+         datech: 101 + 9 nabídek, jiný druh termín nenese), takže to
+         slovo je vždycky „Dražba" a nemůže lhát.
+         countdownText() samotný se nemění: na stránce pozemku stojí
+         pod nadpisem „Dražba", kde je kontext jasný. */
       var cd = days == null ? ''
-        : (days < 0 ? '<span class="opp-cd opp-proběhlo">proběhlo</span>'
-                    : '<span class="opp-cd' + countdownClass(days) + '">' + countdownText(days) + '</span>');
+        : (days < 0 ? '<span class="opp-cd opp-proběhlo">Dražba proběhla</span>'
+                    : '<span class="opp-cd' + countdownClass(days) + '">Dražba ' + countdownText(days) + '</span>');
       /* DRUH JE NADPIS KARTY, PARCELA PATŘÍ K MÍSTU.
          Dřív stály vedle sebe v jednom podřádku („Ostatní plocha ·
          parc. 123/4"), což je dohromady věta o ničem: druh říká, CO se
@@ -5527,7 +5675,11 @@
       li.innerHTML =
         '<div class="opp-media">' +
           mapThumb(d) +
-          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG + '</button>' +
+          '<button type="button" class="opp-fav' + (isFav(d) ? ' on' : '') + '" aria-label="' + (isFav(d) ? 'Odebrat z uložených' : 'Uložit pozemek') + '">' + BM_SVG +
+          /* Záložka má taky slovo, ze stejného důvodu jako křížek vedle:
+             ikona sama o sobě neřekne, jestli ukládá, sdílí nebo hlásí.
+             Dvojice „Skrýt / Uložit" se na snímku přečte bez učení. */
+          '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
           /* ZNAK JE VE <span>, A NENÍ TO OZDOBA. Kroužek pod ním kreslí
              ::before jako absolutně umístěný prvek; pravidlo
@@ -5536,7 +5688,15 @@
              se kreslil PŘES křížek. Na kartě pak byl bílý puntík, a nic
              v něm. (Záložka pro uložení tuhle vadu nemá: její obsah je
              <svg>, tedy prvek.) */
-          '<span>' + (jeSkryty(d) ? '↩' : '✕') + '</span></button>' +
+          /* KŘÍŽEK SÁM O SOBĚ NEŘEKNE NIC — a tenhle křížek navíc něco
+             MAŽE z výpisu. Web má vlastní pravidlo, že ikona potřebuje
+             popisek (stojí u tlačítek nad mapou), a já ho tu porušil:
+             na kartě byl holý ✕, u kterého se nedalo poznat, jestli
+             zavírá kartu, maže poznámku nebo odebírá z uložených.
+             Majitel webu to řekl natvrdo: „jak mám vědět, co znamená
+             křížek". Teď je u znaku slovo. */
+          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '↩' : '✕') + '</span>' +
+          '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
         '</div>' +
         /* ROZVRŽENÍ TEXTU POD FOTKOU — TŘI ŘÁDKY, NE PĚT.
            Karta měla pod velkým náhledem pět samostatných odstavců za
@@ -5652,7 +5812,7 @@
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
-    if (skryte.length) tlacitka += '<button type="button" class="mc-skryte" id="mc-skryte">' +
+    if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
     /* Kolik dražeb po termínu se právě nepočítá. Počítá se přes filtry bez
        okolí a bez tohoto pravidla, ať to číslo odpovídá tomu, co by se
@@ -5678,7 +5838,7 @@
        nenese nic: číslo v závorce říká, že se něco skrývá.
        Stav „Schovat dražby po termínu" (178 px) se vedle vývozu vejde
        taky. Hlídá scripts/test-prvni-obrazovka.mjs. */
-    if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-skryte" id="mc-prosle">' +
+    if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
     /* Kolik podobných názvů se právě nepočítá. Musí to být vidět:
@@ -5697,7 +5857,7 @@
         }
       } finally { ukazPodobne = false; }
     }
-    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-skryte" id="mc-podobne">' +
+    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
     /* ČÍSLA SE PÍŠOU JEDNÍM ZPŮSOBEM. V hlavičce stránky stálo
@@ -5710,34 +5870,27 @@
        stahuje se právě to, co je vyfiltrované, ne celá databáze. */
     /* „Stáhnout výběr", ne „tabulku": dá se stáhnout i jako body do
        navigace, takže by slovo tabulka slibovalo jen půlku. */
-    if (matched) tlacitka += '<button type="button" class="mc-skryte" id="mc-vyvoz">Stáhnout výběr ('
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">Stáhnout výběr ('
       + fmt(matched) + ')</button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
-    /* RYCHLÝ VÝBĚR MÁ ŘÍCT, PROČ DO NĚJ LEZT.
-       Bylo to šesté stejně vypadající tlačítko v řadě a stálo na něm
-       jen jméno funkce. „Rychlý výběr" přitom může znamenat uložený
-       filtr, přednastavené hledání, cokoli — a co dělá doopravdy (jedna
-       nabídka přes celou obrazovku, doprava uložit, doleva schovat) se
-       člověk dozvěděl až UVNITŘ, tedy poté, co to otevřel. Kdo
-       neotevřel, nedozvěděl se nic.
-       Teď je to pruh přes celou šířku a nese důvod: kolik nabídek by
-       jinak musel prolistovat a co se s nimi stane. Počet stojí
-       v nadpisu, protože právě on je ten důvod — u pěti pozemků žádný
-       není, a tam se taky nenabízí. */
-    if (matched >= 5) tlacitka = '<button type="button" class="mc-rychly" id="mc-rychly">'
+    /* RYCHLÝ VÝBĚR JE ZPÁTKY PILULKA — A TENTOKRÁT SPRÁVNĚ.
+       Chvíli to byl pruh přes celou šířku se dvěma řádky textu, protože
+       samotné jméno „Rychlý výběr" neříkalo nic. Jenže ten pruh stál
+       mezi kartami uprostřed výpisu a vypadal tam jako reklama;
+       majitel webu: „tohle je taky uprostřed, udělej to tak, jak to
+       vypadá v zahraničí." Velké inzertní weby (Zillow, Rightmove,
+       Idealista) mají nad výsledky JEDEN řádek ovládání a pod ním už
+       jen nabídky — nic mezi nimi.
+       Tlačítko tedy jde nahoru k „Uloženým" a řazení a má tvar jako
+       ony. Vysvětlování se tím neztratilo: jméno „Procházet po jednom"
+       říká, co se stane, a co znamená doprava a doleva, ukáže úvodní
+       okénko hned po otevření (#rv-uvod v index.html) — tedy dřív, než
+       člověk první nabídku odsvihne. */
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
       + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
       + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
-      + '<span class="mcr-txt"><b class="mcr-nadpis">Projít ' + fmt(matched) + ' ' + plPozemek(matched) + ' po jednom</b>'
-      /* VĚTA JE ROZDĚLENÁ NA DVĚ POLOVINY, A MÁ TO DŮVOD. Celá se
-         nevejde na úzký pruh (naměřeno: na telefonu by přidala 26 px),
-         ale druhá polovina je ta, která říká, CO SE STANE — a ta musí
-         být vidět, ještě než se do výběru klepne. Stojí 10 px. První
-         polovina (kolik karet) je příjemná, ne nutná, takže se na
-         úzkém pruhu schová (.mcr-popis-vic v css/styles.css). */
-      + '<span class="mcr-popis"><span class="mcr-popis-vic">Dvacet karet přes celou obrazovku. </span>'
-      + 'Doprava uložit, doleva schovat.</span></span>'
-      + '<span class="mcr-sip" aria-hidden="true">›</span></button>' + tlacitka;
+      + 'Procházet po jednom</button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
@@ -5890,7 +6043,7 @@
       more.textContent = '…nebo si celou nabídku projděte na mapě';
       listEl.appendChild(more);
     }
-    zaradNastroje();    // nářadí nad výpisem patří na telefonu ZA první nabídku
+    nastrojeDoHlavicky();   // nářadí patří do hlavičky výpisu, ne mezi nabídky
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
     prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
@@ -5899,72 +6052,44 @@
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
   }
 
-  /* KDE STOJÍ NÁŘADÍ („Projít po jednom", „Stáhnout výběr")
-     ==================================================================
-     Na MONITORU nad výpisem, tam je místa dost.
-
-     Na TELEFONU hned ZA PRVNÍ NABÍDKOU, a je to kompromis mezi dvěma
-     chybami, které jsem udělal po sobě:
-
-       · Původně stálo nad výpisem a odsouvalo první nabídku o 106 px,
-         tedy to jediné, kvůli čemu sem člověk přišel, bylo až za
-         nářadím na práci s tím, co ještě neviděl.
-       · Přesunul jsem ho tedy na konec seznamu — a tím ho zahodil.
-         Naměřeno: začínalo na 9 625 px, tedy 8 781 px za okrajem
-         obrazovky, až za všemi dvaceti čtyřmi kartami. Majitel webu se
-         ozval, že funkce zmizely, a měl pravdu: „níž" a „pryč" je
-         v seznamu dlouhém sedmnáct tisíc pixelů totéž.
-
-     Za první kartou je vidět po jednom švihnutí a první nabídku
-     neodsouvá ani o pixel. Velké realitní weby vkládají mezi výsledky
-     pruhy úplně stejně.
-
-     DĚLÁ TO SKRIPT, PROTOŽE CSS NA TO NESTAČÍ: nářadí je sourozenec
-     seznamu, ne jeho položka, a pořadím ve flexu se mezi položky vsunout
-     nedá. Hlídá scripts/test-nastroje-v-dosahu.mjs. */
-  /* Naposledy prohlédnuté jdou za PRVNÍ kartu, nářadí až za druhou.
-     Obojí hned za sebou by po jedné nabídce udělalo dvěstěpadesátipixelovou
-     hráz; takhle je mezi nimi nabídka. Naposledy prohlédnuté jdou první,
-     protože pro vracejícího se člověka je to to užitečnější — tím
-     navazuje tam, kde přestal. */
-  /* Odloží vložky zpátky mezi sourozence seznamu, aby přežily jeho
-     vysypání. Zavolá se před každým překreslením; zaradNastroje() je
-     pak zase vrátí mezi karty. */
-  function vytahniVlozky() {
-    var domov = document.querySelector('.map-side');
-    if (!domov) return;
-    for (var i = 0; i < VLOZKY.length; i++) {
-      var a = document.getElementById(VLOZKY[i].id);
-      if (a && a.parentNode !== domov) domov.appendChild(a);
-    }
-  }
-  var VLOZKY = [
-    { id: 'recent-strip', poKarte: 1 },
-    { id: 'mc-akce', poKarte: 2 }
-  ];
-  function zaradNastroje() {
-    if (!listEl) return;
-    var uzke = false;
-    try { uzke = window.matchMedia('(max-width:1040px)').matches; } catch (e) {}
-    var domov = document.querySelector('.map-side');
-    var karty = listEl.querySelectorAll('.opp-item');
-    for (var i = 0; i < VLOZKY.length; i++) {
-      var v = VLOZKY[i];
-      var a = document.getElementById(v.id);
-      if (!a) continue;
-      if (!uzke || !karty.length) {
-        /* Na monitoru zpátky mezi sourozence seznamu; o pořadí se pak
-           postará `order` ve stylopisu. */
-        if (domov && a.parentNode !== domov) domov.appendChild(a);
-        a.classList.remove('mc-akce-vlozka');
-        continue;
-      }
-      var za = karty[Math.min(v.poKarte, karty.length) - 1];
-      a.classList.add('mc-akce-vlozka');
-      /* Vkládá se AŽ ZA kartu, ne před ni — před první kartou by to byl
-         zase pruh nad výpisem, jen o patro níž. */
-      if (za.nextSibling !== a) listEl.insertBefore(a, za.nextSibling);
-    }
+  /* NÁŘADÍ PATŘÍ DO HLAVIČKY VÝPISU, NE MEZI NABÍDKY.
+     Historie tohohle jednoho pruhu je poučná a stojí za zapsání:
+       1. Stál NAD výpisem a odsouval první nabídku o 106 px.
+       2. Šel tedy pod seznam — a tím zmizel: naměřeno 9 625 px, až za
+          všemi kartami. Majitel se ozval, že funkce zmizely.
+       3. Vkládal se proto mezi karty (za druhou). Na dosah byl, ale
+          seděl uprostřed výpisu jako reklama mezi nabídkami. Majitel:
+          „tohle je taky uprostřed, udělej to tak, jak to vypadá
+          v zahraničí."
+     Čtvrtá podoba je ta, kterou mají velké inzertní weby: nad výsledky
+     JEDEN řádek ovládání (řazení, uložené, nástroje) a pod ním už jen
+     nabídky. Nad výpisem to tentokrát nevadí, protože z pruhu jsou
+     pilulky vedle „Uložených" — ne dvouřádkový banner, kvůli kterému
+     ta první stížnost vznikla. Kolik to stojí pixelů první nabídce,
+     měří test-prvni-obrazovka.
+     Volá se i PŘED vysypáním seznamu: kdyby se nářadí z dřívější
+     podoby stránky našlo uvnitř #opp-list, `innerHTML = ''` by ho
+     smazalo nadobro (prvky, ne jen text) a getElementById by pak
+     vracel null. */
+  function nastrojeDoHlavicky() {
+    var a = document.getElementById('mc-akce');
+    /* VLASTNÍ ŘÁDEK, ALE JEN JEDEN — A POSOUVÁ SE DO STRANY.
+       Zkusil jsem pilulky přidat rovnou k „Uloženým" a řazení, do
+       řádku, který na stránce stejně už je: vyšlo to na nula pixelů
+       navíc, jenže řádek se tím posunul a „Uložené" i řazení z něj
+       vyjely ven. Primární ovládání se schovávat nesmí.
+       Nářadí má tedy řádek vlastní, zalomit se nesmí (tři pilulky pod
+       sebou daly 94 px) a posouvá se do strany jako řádky filtrů na
+       velkých inzertních webech. Stojí to 52 px — a první nabídka
+       pořád začíná nad mezí, kterou si web klade (test-prvni-obrazovka).
+       Stín za pravou hranou říká, že řádek pokračuje; dělá to táž
+       funkce jako u pruhu naposledy prohlédnutých, ne druhá kopie. */
+    var hlavicka = document.querySelector('.ms-vysledky');
+    if (!a || !hlavicka) return;
+    a.classList.remove('mc-akce-vlozka');
+    if (a.parentNode !== hlavicka) hlavicka.appendChild(a);
+    if (!a.getAttribute('data-stin')) { a.setAttribute('data-stin', 'ano'); rsStin(a); }
+    else { a.classList.toggle('je-dal', a.scrollWidth - a.clientWidth - a.scrollLeft > 8); }
   }
 
   function resetFilters() {

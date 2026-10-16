@@ -117,13 +117,27 @@ try {
      Pestrá stupnice sama o sobě nic neznamená — kdyby se barva přiřadila
      náhodně, předchozí kontroly by prošly všechny. */
   const dvojiceCen = await p.evaluate(() => {
+    /* Relativní jas podle ITU-R BT.709 — totéž, co používá výpočet
+       kontrastu. Funkce musí být UVNITŘ evaluate: běží v prohlížeči,
+       ne v Node. */
+    const jasZRGB = (r, g, b) => {
+      const l = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+      return 0.2126 * l(r) + 0.7152 * l(g) + 0.0722 * l(b);
+    };
     const ven = [];
     for (let i = 0; i < 2200; i++) {
       const t = window.PK_BARVY.tecka(i);
       if (!t) break;
       const m = /rgb\((\d+),(\d+),(\d+)\)/.exec(t.barva || '');
       if (!m || t.zaM2 == null || !isFinite(t.zaM2) || t.zaM2 <= 0) continue;
-      ven.push({ cena: t.zaM2, modra: +m[3] });
+      /* JAS, NE MODRÝ KANÁL. Dokud byla stupnice fialová, znamenalo
+         „světlejší" prakticky „modřejší" a stačilo číst m[3]. Od
+         chvíle, kdy stupnice jde ze zelené přes šedou do vínové, je
+         modrý kanál uprostřed VYŠŠÍ než na levném konci (135 → 163)
+         a kontrola by hlásila 6 851 obrácených dvojic na stupnici,
+         která je ve skutečnosti v pořádku. Relativní jas (ITU-R
+         BT.709) platí pro jakoukoli paletu — i pro tu fialovou. */
+      ven.push({ cena: t.zaM2, jas: jasZRGB(+m[1], +m[2], +m[3]) });
     }
     return ven;
   });
@@ -136,8 +150,8 @@ try {
       paru++;
       const levnejsi = a2.cena < b2.cena ? a2 : b2;
       const drazsi = a2.cena < b2.cena ? b2 : a2;
-      /* Složky v téhle stupnici s cenou KLESAJÍ (fialová tmavne). */
-      if (levnejsi.modra < drazsi.modra) obracene++;
+      /* Jas s cenou KLESÁ: levné je světlé, drahé tmavé. */
+      if (levnejsi.jas < drazsi.jas) obracene++;
     }
   }
   pravda(`porovnalo se dost dvojic pozemků (${paru})`, paru > 1000, `${paru}`);
@@ -159,17 +173,36 @@ try {
     const c = [...document.querySelectorAll('canvas')].find((x) => x.width > 200 && x.height > 200);
     if (!c) return null;
     const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-    let modre = 0, oranzove = 0, fialove = 0, barevne = 0;
+    /* BARVY DRUHŮ SE POROVNÁVAJÍ S JEJICH SKUTEČNÝMI HODNOTAMI, ne
+       pravidlem na kanály. „r > b+40 && r > g+20" označilo za
+       „oranžovou dražbu" i vínovou rgb(120,18,30), tedy drahý konec
+       cenové stupnice — kontrola pak hlásila, že barvy druhů z mapy
+       nezmizely, i když tam žádná nebyla. Rozhoduje vzdálenost
+       v RGB: do 45 je to ta barva, dál už ne. */
+    /* Hodnoty se ČTOU ZE STYLOPISU, nepíšou se sem. Napsal jsem je sem
+       jednou od oka a vyšlo, že „na mapě není ani jedna modrá tečka" —
+       skutečná --c-sale je #4361B8, ne rgb(74,144,190). */
+    const tok = (n, zal) => {
+      const v = getComputedStyle(document.documentElement).getPropertyValue(n).trim() || zal;
+      const m = /^#?([0-9a-f]{6})$/i.exec(v);
+      if (!m) return zal;
+      const h = m[1];
+      return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+    };
+    const DRUHY = { modra: tok('--c-sale', [67,97,184]), oranzova: tok('--c-drazba', [204,107,51]),
+      tmavoruda: tok('--c-exekuce', [140,47,30]) };
+    const bliz = (r,g,b,c) => Math.sqrt((r-c[0])**2+(g-c[1])**2+(b-c[2])**2) < 45;
+    let modre = 0, oranzove = 0, jine = 0, barevne = 0;
     for (let i = 0; i < d.length; i += 4) {
       if (d[i + 3] < 140) continue;
       const r = d[i], g = d[i + 1], b = d[i + 2];
       if (Math.abs(r - g) < 12 && Math.abs(g - b) < 12) continue;   // šeď podkladu
       barevne++;
-      if (b > r + 30 && b > g + 20 && g > r) modre++;
-      else if (b > r + 20 && g < r && g < b) fialove++;
-      else if (r > b + 40 && r > g + 20) oranzove++;
+      if (bliz(r,g,b,DRUHY.modra)) modre++;
+      else if (bliz(r,g,b,DRUHY.oranzova) || bliz(r,g,b,DRUHY.tmavoruda)) oranzove++;
+      else jine++;
     }
-    return { barevne, modre, oranzove, fialove };
+    return { barevne, modre, oranzove, jine };
   });
   await p.evaluate(() => window.PK_BARVY.prepni('druh'));
   await p.waitForTimeout(900);
@@ -180,9 +213,13 @@ try {
   pravda('na plátně vůbec jsou barevné tečky', !!pD && pD.barevne > 2000,
     pD ? `barevných pixelů jen ${pD.barevne}` : 'plátno se nenašlo');
   pravda('v režimu „druh" na mapě převažuje modrá „na prodej"',
-    !!pD && pD.modre > pD.fialove, pD ? JSON.stringify(pD) : '—');
+    !!pD && pD.modre > pD.jine, pD ? JSON.stringify(pD) : '—');
+  /* Nezávisle na tom, JAKÁ paleta se zrovna používá: po přepnutí musí
+     na mapě převážit barvy, které nejsou barvami druhů. Dřív tu stálo
+     „fialové > modré × 10", což byla přímo definice tehdejší palety —
+     a po změně stupnice na zelenou→vínovou by to neprošlo nikdy. */
   pravda('po přepnutí na cenu se mapa OPRAVDU přebarví (ne jen legenda)',
-    !!pC && pC.fialove > pC.modre * 10,
+    !!pC && pC.jine > pC.modre * 10,
     pC ? `${JSON.stringify(pC)} — výplň teček se nepřekreslila` : '—');
   pravda('a barvy druhů z mapy v cenovém režimu zmizí',
     !!pC && pC.modre + pC.oranzove < pC.barevne * 0.05,

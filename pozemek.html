@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=6a8d4f24">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=65fda04b">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -91,6 +91,16 @@
     .pz-gallery::-webkit-scrollbar{display:none;}
     .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3; display:inline-flex;}
+    /* SNÍMEK OD KRAJE KE KRAJI — tak ho mají na telefonu Rightmove,
+       Zillow i Idealista. V rámečku s odsazením vypadá jako ilustrace
+       v článku; přes celou šířku je to první, co o pozemku něco říká.
+       Záporný okraj přesně o odsazení .pz-wrap (16 px) a poměr 4:3,
+       protože na výšku je na telefonu místa víc než na šířku. */
+    @media (max-width:560px){
+      .pz-media{margin:0 -16px; width:auto; aspect-ratio:4/3; max-height:none;
+        border-radius:0; border-left:0; border-right:0; box-shadow:none;}
+      .pz-back{margin-bottom:12px;}
+    }
 
     .pz-head{margin:20px 0 0;}
     /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
@@ -100,17 +110,25 @@
     /* Dlouhý nadpis se na telefonu lámal mezi číslo a jednotku. */
     @media (max-width:560px){ .pz-place{font-size:24px;} }
     .pz-place{text-wrap:balance;}
-    .pz-okres{display:flex; align-items:center; gap:6px; font-size:15px; color:var(--text-ondark-mute); margin-top:6px;}
+    .pz-okres{display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-ondark-mute); margin-top:6px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
     .pz-dalky{font-size:12px; letter-spacing:0.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
+    /* Výhrada „vzdušnou čarou" se čte jako poznámka pod čarou, ne jako
+       součást údaje — proto závorka a ještě nižší důraz. */
+    .pz-dalky-pozn::before{content:' (';}
+    .pz-dalky-pozn::after{content:')';}
+    .pz-dalky-pozn{opacity:.8;}
     .pz-vobci{font-size:12px; letter-spacing:0.02em; margin-top:6px;}
     .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
 
     .pz-priceblock{margin:10px 0 0;}
-    .pz-pl{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin-bottom:4px;}
+    /* Verzálky s prostrkáním 0.1em jsou štítek v úředním formuláři.
+       U „Vyvolávací cena" jde o údaj, ne o kolonku — čte se jako věta,
+       proto normální písmo a malá velikost. */
+    .pz-pl{font-size:13px; font-weight:600; letter-spacing:0; color:var(--popisek); margin-bottom:2px;}
     .pz-price{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
-    .pz-price .pv{font-family:var(--font-ui); font-size:38px; font-weight:700; letter-spacing:-0.03em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
-    .pz-price .pm{font-size:15px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    .pz-price .pv{font-family:var(--font-ui); font-size:32px; font-weight:700; letter-spacing:-0.03em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
+    .pz-price .pm{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 
     /* BARVU VERDIKTU NESE KARTA, ne každý prvek zvlášť: odznak i pruh
        si ji vypisovaly po svém a na „warn" obě zapomněly (pozadí
@@ -224,7 +242,7 @@
       align-items:center; column-gap:16px; row-gap:0;
       padding:10px 12px; border-top:1px solid var(--line); min-height:44px;}
     .srv-radek:first-child{border-top:0;}
-    .srv-kde{grid-column:1; grid-row:1; font-size:15px; font-weight:600;
+    .srv-kde{grid-column:1; grid-row:1; font-size:14px; font-weight:600;
       color:var(--text-ondark); text-decoration:none;}
     a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
     a.srv-kde:hover{color:var(--copper-bright);}
@@ -259,7 +277,7 @@
       text-decoration:none; box-shadow:var(--e1);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
-    .kd-t{font-size:15px; font-weight:700; color:var(--text-ondark);}
+    .kd-t{font-size:14px; font-weight:700; color:var(--text-ondark);}
     .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
     /* NA TELEFONU JEN JMÉNA. Podtitulky („všechny pozemky v okrese")
        jsou na širokém displeji užitečné, ale na telefonu z nich jsou
@@ -292,7 +310,7 @@
     /* Popis od majitele: jeho vlastní slova, takže dostanou karta a klid
        na čtení. Odstavce zůstávají odstavci — člověk je tak psal. */
     .pz-popis{padding:16px; background:#fff; border:1px solid var(--line); border-radius:var(--r-plocha); box-shadow:var(--e1);}
-    .pz-popis p{margin:0 0 10px; font-size:15px; line-height:1.6; color:var(--text-ondark);}
+    .pz-popis p{margin:0 0 10px; font-size:16px; line-height:1.6; color:var(--text-ondark);}
     .pz-popis p:last-child{margin-bottom:0;}
 
     /* Blok o dražbě. Oranžová je barva dražeb všude na webu; do sedmi
@@ -305,7 +323,7 @@
     .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; color:var(--c-drazba-ink);}
     .pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute);}
     .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
-    .pzd-hlava b{font-size:15px; font-weight:700;}
+    .pzd-hlava b{font-size:14px; font-weight:700;}
     .pzd-kdy{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
     .pzd-pozn{margin:6px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
     .pzd-pozn b{color:var(--text-ondark);}
@@ -333,8 +351,8 @@
     .pz-konec{margin:0 0 24px; padding:16px 20px;
       border:1px solid var(--c-drazba-ink, #7E3C18);
       border-left-width:4px; border-radius:var(--r-md, 14px);
-      background:rgba(204,107,51,0.08); font-size:15px; line-height:1.6;}
-    .pz-konec b{display:block; font-size:17px; margin-bottom:4px;}
+      background:rgba(204,107,51,0.08); font-size:16px; line-height:1.6;}
+    .pz-konec b{display:block; font-size:16px; margin-bottom:4px;}
     .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
     .pz-konec ul{margin:0; padding-left:20px;}
     .pz-konec li{margin:2px 0;}
@@ -356,7 +374,7 @@
        základu 200 px (plus mezera) chtěly 410 a na 390px displeji je
        zbývalo 358, takže se každá roztáhla přes celý řádek a stránka
        z nich měla sloupec plný pilulek. Při 140 px se dvě vejdou. */
-    .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
+    .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:14px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
@@ -405,7 +423,7 @@
        podoba .pz-sect-h je 11,5px verzálky v šedé — to se čte jako
        nadpis odstavce, ne jako něco, na co se klepe. H2 zůstává kvůli
        osnově stránky, ale vypadá jako titulek ovládacího prvku. */
-    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:15px;
+    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:14px;
       letter-spacing:0; text-transform:none; color:var(--copper-bright);}
     /* A proto tu nemá co dělat ani vlasovka oddílu: řádek se rozbaluje,
        značka oddílu by z něj dělala nadpis. Totéž pravidlo jako
@@ -547,7 +565,7 @@
        (.opp-map má inset:0) a sám rámu žádnou výšku nedá. Výšku proto
        drží rám, stejnou jako by měla mapa. */
     .pzm-nahrada{height:390px;}
-    .pzm .leaflet-control-attribution{font-size:10px; max-width:70%;}
+    .pzm .leaflet-control-attribution{font-size:11px; max-width:70%;}
     @media (max-width:560px){
       .pzm-mapa{height:300px;}
       /* Na úzkém displeji se posuvník nevejde do řádku s přepínači, a když
@@ -569,7 +587,7 @@
     .pz-pozn-pole{display:block; width:100%; min-height:88px; padding:10px 12px;
       border:1px solid var(--line-ui); border-radius:var(--r-sm);
       background:var(--ink); color:var(--text-ondark);
-      font:inherit; font-size:15px; line-height:1.6; resize:vertical;
+      font:inherit; font-size:16px; line-height:1.6; resize:vertical;
       transition:border-color var(--cas-zakladni) var(--ease);}
     .pz-pozn-pole:focus{outline:none; border-color:var(--copper-bright);}
     .pz-pozn-kde{margin:8px 0 0; font-size:12px; line-height:1.5;
@@ -579,7 +597,7 @@
        vidět, že se má vzít doslova. Obě tlačítka mají 44 px — jedou se
        mačkat venku u pozemku, ne u stolu. */
     .pz-sour{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
-    .pz-sour code{font-family:var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    .pz-sour code{font-family:var(--font-mono);
       font-size:14px; letter-spacing:-0.01em; user-select:all; -webkit-user-select:all;}
     .pz-sour-kop, .pz-sour-nav{display:inline-flex; align-items:center; gap:6px;
       min-height:44px; padding:0 12px; border-radius:var(--r-sm);
@@ -707,7 +725,7 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=24a127e6"></script>
+<script src="js/min/pozemek.js?v=4c335bf4"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

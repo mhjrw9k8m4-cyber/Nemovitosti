@@ -134,8 +134,14 @@ pravda('a titulek stránky se nepřepíše na hlášku',
 {
   const f = zive.sort()[Math.floor(zive.length / 2)];
   const v = await otevri(f);
+  /* Dřív se vykreslení poznávalo podle verzálkového popisku „CENA"
+     nad částkou. Ten u běžného prodeje zmizel — slovo „cena" nad cenou
+     je tautologie a byl to přesně ten úřední dojem, na který si majitel
+     webu stěžoval (u dražby a exekuce „Vyvolávací"/„Odhadní cena"
+     zůstává, tam to NENÍ totéž co cena prodejní). Hledá se proto
+     samotná částka: popisek je ozdoba, číslo je ten obsah. */
   pravda('živá stránka pozemku se pořád vykreslí celá (cena, mapa, srovnání)',
-    /CENA|VYVOLÁVACÍ CENA/.test(v.text) && /POZEMEK NA MAPĚ/.test(v.text)
+    /\d\s*Kč/.test(v.text) && /POZEMEK NA MAPĚ/.test(v.text)
     && !/Pozemek nenalezen/.test(v.text),
     `${f}: ${v.text.slice(0, 120).replace(/\n/g, ' / ')}`);
   pravda('a statická část se na ní opravdu nahradila',

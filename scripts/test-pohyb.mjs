@@ -233,9 +233,14 @@ async function kontext(pohybVypnut) {
 //
 // DŘÍV TU BYL PUNTÍK NA PROUŽKU a měřilo se, že dojede zleva na svou
 // hodnotu. Proužek nahradil graf rozdělení (viz pvGrafHtml
-// v js/pozemek.js) a ten se schválně NENAJÍŽDÍ: tečky jsou data, ne
+// v js/pozemek.js) a ten se schválně NENAJÍŽDÍ: sloupce jsou data, ne
 // efekt, a po dojetí by stejně skončily tam, kde jsou hned. Měří se
 // proto opak — že stojí a nepřeskakuje.
+// Z teček se mezitím staly SLOUPCE (histogram, jako mají realitní
+// weby). Měří se proto součet nabídek ve sloupcích, ne počet sloupců:
+// každá nabídka musí v některém z nich být, i ta mimo osu — ta
+// v krajním. Kdyby se počítaly sloupce, prošlo by i to, že jich graf
+// nakreslí pět a polovinu nabídek po cestě ztratí.
 const ADRESA = `${BASE}/pozemek.html?p=Vala%C5%A1sk%C3%A1%20Senice%7C%E2%80%94%7CVset%C3%ADn&ll=49.238051,18.105773`;
 const kdeJeZnacka = (p) => p.evaluate(() => {
   const g = document.querySelector('.pvg');
@@ -244,8 +249,10 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   if (!pas || !z) return null;
   const t = pas.getBoundingClientRect(), r = z.getBoundingClientRect();
   const st = getComputedStyle(z);
+  let vSloupcich = 0;
+  g.querySelectorAll('.pvg-s').forEach((e) => { vSloupcich += parseInt(e.getAttribute('data-n'), 10) || 0; });
   return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
-    tecek: g.querySelectorAll('.pvg-t').length,
+    vSloupcich, sloupcu: g.querySelectorAll('.pvg-s').length,
     anim: st.animationName, prechod: st.transitionProperty };
 });
 {
@@ -258,16 +265,18 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   const potom = await kdeJeZnacka(p);
   pravda('graf rozdělení cen se na stránce vykreslí', !!potom, 'element .pvg-nase se nenašel');
   if (potom) {
-    /* Tečka na nabídku: musí jich být tolik, kolik věta nad grafem
-       slibuje. Bez tohohle by graf mohl kreslit tři tečky a nikdo by
-       se to nedozvěděl. */
+    /* Ve sloupcích musí stát tolik nabídek, kolik věta nad grafem
+       slibuje. Bez tohohle by graf mohl ukázat tři nabídky z dvanácti
+       a nikdo by se to nedozvěděl. */
     const kolikSlibuje = await p.evaluate(() => {
       const m = /\((\d+)\s+nab/.exec(document.querySelector('.pv-text').textContent || '');
       return m ? parseInt(m[1], 10) : null;
     });
-    pravda('a nakreslí tolik teček, kolik nabídek slibuje věta nad ním',
-      kolikSlibuje !== null && potom.tecek === kolikSlibuje,
-      `teček ${potom.tecek}, věta slibuje ${kolikSlibuje}`);
+    pravda('a ve sloupcích stojí tolik nabídek, kolik slibuje věta nad ním',
+      kolikSlibuje !== null && potom.vSloupcich === kolikSlibuje,
+      `ve sloupcích ${potom.vSloupcich}, věta slibuje ${kolikSlibuje}`);
+    pravda('a sloupců je aspoň tři, ne jeden na všechno',
+      potom.sloupcu >= 3, `sloupců ${potom.sloupcu}`);
     pravda('značka naší nabídky stojí a nenajíždí',
       Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
       `hned ${hned.posun.toFixed(1)} px, potom ${potom.posun.toFixed(1)} px, animace ${potom.anim}`);
@@ -279,9 +288,9 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
 }
 
 // --- 2b) GRAF SE DÁ PROJET PRSTEM ----------------------------------
-// Tečky měly `title` — popisek, který na telefonu NEEXISTUJE. Teď je
-// celý pás jeden terč: prst jede po ose a nad nejbližší tečkou vyskočí
-// bublina s cenou a pořadím. Měří se čtyři věci, a každá je past na
+// Celý graf je jeden terč: prst jede po ose a sloupec pod ním se
+// zvýrazní. Nad ním vyskočí bublina s tím, kolik nabídek v tom
+// cenovém pásmu je. Měří se čtyři věci, a každá je past na
 // jinou chybu:
 //   • terč má aspoň 44 px (jinak se do něj prstem nedá trefit),
 //   • klepnutí opravdu ukáže bublinu s číslem, ne prázdnou,
@@ -317,13 +326,13 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
       if (!bub || !karta) return null;
       const rb = bub.getBoundingClientRect(), rk = karta.getBoundingClientRect();
       return { skryta: bub.hidden, txt: (bub.textContent || '').trim(),
-        vybranych: document.querySelectorAll('.pvg-t.je-vyb').length,
+        vybranych: document.querySelectorAll('.pvg-s.je-vyb').length,
         vlevo: Math.round(rb.left - rk.left), vpravo: Math.round(rk.right - rb.right) };
     });
     pravda('klepnutí na graf ukáže bublinu s cenou za metr',
       !!v && !v.skryta && /\d/.test(v.txt) && /Kč\/m/.test(v.txt), JSON.stringify(v));
-    pravda('a zvýrazní právě jednu tečku', !!v && v.vybranych === 1,
-      `zvýrazněných teček: ${v && v.vybranych}`);
+    pravda('a zvýrazní právě jeden sloupec', !!v && v.vybranych === 1,
+      `zvýrazněných sloupců: ${v && v.vybranych}`);
     pravda('bublina zůstane uvnitř karty i u kraje osy',
       !!v && v.vlevo >= 0 && v.vpravo >= 0, JSON.stringify(v));
   }
@@ -346,7 +355,8 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
     hned && potom && Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
     `hned ${hned && hned.posun.toFixed(1)} px, potom ${potom && potom.posun.toFixed(1)} px (animace ${potom && potom.anim})`);
   pravda('a graf je i tak celý vykreslený',
-    potom && potom.tecek >= 10, potom ? `teček ${potom.tecek}` : 'graf se nenašel');
+    potom && potom.vSloupcich >= 10 && potom.sloupcu >= 3,
+    potom ? `nabídek ve sloupcích ${potom.vSloupcich}, sloupců ${potom.sloupcu}` : 'graf se nenašel');
   await ctx.close();
 }
 

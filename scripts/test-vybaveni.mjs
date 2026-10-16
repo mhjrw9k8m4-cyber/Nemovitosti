@@ -270,8 +270,11 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
      i v komentáři nad ním, takže volnější vzorek by přežil i vypnutí
      celé té věci. (Přišlo se na to sabotáží — kontrola neprošla, když
      měla.) */
+  /* Od přestavby karty (karta místo řádku) jdou tyhle dva údaje do
+     DRUHÉ řádky podrobností — `extra`, ne `bits`. Obsah je týž, jen
+     stojí pod cenou, kde má karta na úvodní stránce odznaky. */
   pravda('okresní a krajské stránky taky',
-    /bits\.push\('inzerát uvádí <b>'/.test(gen) && /bits\.push\('<b>spoluvlastnický podíl'/.test(gen));
+    /extra\.push\('inzerát uvádí <b>'/.test(gen) && /extra\.push\('<b>spoluvlastnický podíl'/.test(gen));
 
   /* A hlavně: opravdu to v hotových stránkách STOJÍ. Generátor se dá
      změnit a zapomenout spustit — tohle projde jen tehdy, když jsou

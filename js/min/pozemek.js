@@ -354,6 +354,14 @@
 
   var PVG = null;
 
+  function pvgKrok(hruby) {
+    if (!(hruby > 0) || !isFinite(hruby)) return 1;
+    var rad = Math.pow(10, Math.floor(Math.log(hruby) / Math.LN10));
+    var p = hruby / rad;
+    var n = (p <= 1) ? 1 : (p <= 2) ? 2 : (p <= 2.5) ? 2.5 : (p <= 5) ? 5 : 10;
+    return n * rad;
+  }
+
   function pvGrafHtml(pc, nase) {
     var vals = pc && pc.hodnoty;
     if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
@@ -363,79 +371,114 @@
     var min = vals[0], max = vals[n - 1], med = kv(0.5);
     if (!(max > min)) return '';
 
-    var X = function (poradi) { return (n === 1) ? 50 : (poradi / (n - 1)) * 100; };
-    var tecky = '';
-    for (i = 0; i < n; i++) {
-
-      tecky += '<span class="pvg-t" style="left:' + X(i).toFixed(2) + '%"></span>';
+    var p25 = kv(0.25), p75 = kv(0.75), iqr = p75 - p25;
+    var lo = (iqr > 0) ? Math.max(kv(0.02), p25 - 1.5 * iqr) : kv(0.02);
+    var hi = (iqr > 0) ? Math.min(kv(0.92), p75 + 1.5 * iqr) : kv(0.92);
+    if (!(hi > lo)) { lo = kv(0.02); hi = kv(0.92); }
+    if (!(hi > lo)) { lo = min; hi = max; }
+    if (!(hi > lo)) return '';
+    var krok = pvgKrok((hi - lo) / 8), zac = 0, konec = 0, pocet = 0, poj = 0;
+    while (poj++ < 10) {
+      zac = Math.floor(lo / krok) * krok;
+      konec = Math.ceil(hi / krok) * krok;
+      if (konec <= zac) konec = zac + krok;
+      pocet = Math.round((konec - zac) / krok);
+      if (pocet <= 12) break;
+      krok = pvgKrok(krok * 1.5);
     }
+    if (!(pocet >= 3) || !isFinite(pocet)) return '';
 
-    var podNami = 0;
-    for (i = 0; i < n; i++) { if (vals[i] <= nase) podNami++; }
-    var xNase = X(Math.max(0, Math.min(n - 1, podNami - 1)));
-    var xMed = X(Math.floor((n - 1) / 2));
+    var kose = [], podtece = 0, pretece = 0;
+    for (i = 0; i < pocet; i++) kose[i] = 0;
+    for (i = 0; i < n; i++) {
+      var k = Math.floor((vals[i] - zac) / krok);
+      if (k < 0) { k = 0; podtece++; }
+      else if (k > pocet - 1) { k = pocet - 1; pretece++; }
+      kose[k]++;
+    }
+    var nejvic = 0;
+    for (i = 0; i < pocet; i++) if (kose[i] > nejvic) nejvic = kose[i];
+    if (!nejvic) return '';
+    var X = function (v) { return Math.max(0, Math.min(100, ((v - zac) / (konec - zac)) * 100)); };
+    var nasKos = Math.max(0, Math.min(pocet - 1, Math.floor((nase - zac) / krok)));
+    var sloupce = '';
+    for (i = 0; i < pocet; i++) {
 
-    var hustota = (n > 45) ? ' je-husty' : (n > 22 ? ' je-stredni' : '');
-    PVG = { vals: vals, n: n, podNami: podNami };
+      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / nejvic) * 100)) : 0;
+      sloupce += '<span class="pvg-s' + (i === nasKos ? ' je-nase' : '') + '"'
+        + ' style="height:' + vyska + '%"'
+        + ' data-od="' + Math.round(zac + i * krok) + '"'
+        + ' data-do="' + Math.round(zac + (i + 1) * krok) + '"'
+        + ' data-n="' + kose[i] + '"></span>';
+    }
+    PVG = { kose: kose, pocet: pocet, zac: zac, krok: krok, n: n,
+      nasKos: nasKos, pretece: pretece, podtece: podtece };
+    var popisOsy = function (v, pr) { return fmt(Math.round(v)) + (pr ? ' ' + pr : ''); };
+    var stred = zac + Math.round(pocet / 2) * krok;
     return '<figure class="pvg">' +
-      '<div class="pvg-pas' + hustota + '" role="img" aria-label="' + esc('Pořadí ceny za m² mezi '
-        + n + ' nabídkami v okolí: tento pozemek ' + fmt(Math.round(nase))
+      '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
+        + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
         + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
         + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
-        '<span class="pvg-osa"></span>' +
-        '<span class="pvg-med" style="left:' + xMed.toFixed(2) + '%"></span>' +
-        tecky +
-        '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
-        '<span class="pvg-kurzor" hidden></span><span class="pvg-bub" hidden></span>' +
+        '<div class="pvg-sloupce">' + sloupce + '</div>' +
+        '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
+        '<span class="pvg-nase" style="left:' + X(nase).toFixed(2) + '%"></span>' +
+        '<span class="pvg-bub" hidden></span>' +
       '</div>' +
-      '<figcaption class="pvg-pop">' +
-        '<span>nejlevnější <b>' + fmt(Math.round(min)) + '</b></span>' +
-        '<span>medián <b>' + fmt(Math.round(med)) + '</b></span>' +
-        '<span>nejdražší <b>' + fmt(Math.round(max)) + '</b></span>' +
-      '</figcaption>' +
+      '<div class="pvg-osa">' +
+        '<span style="left:0">' + popisOsy(zac, podtece ? 'a méně' : '') + '</span>' +
+        '<span class="pvg-osa-stred" style="left:' + X(stred).toFixed(2) + '%">' + popisOsy(stred) + '</span>' +
+        '<span class="pvg-osa-konec" style="left:100%">' + popisOsy(konec, pretece ? 'a víc' : '') + '</span>' +
+      '</div>' +
       '<p class="pvg-vys"><span class="pvg-klic nase"></span>tento pozemek <b>'
-        + fmt(Math.round(nase)) + ' Kč/m²</b><span class="pvg-klic ost"></span>'
-        + n + ' nabídek v okolí, seřazeno od nejlevnější</p>' +
+        + fmt(Math.round(nase)) + ' Kč/m²</b>'
+        + '<span class="pvg-klic med"></span>medián <b>' + fmt(Math.round(med)) + ' Kč/m²</b></p>' +
+      '<p class="pvg-roz">' + n + ' nabídek v okolí, od <b>' + fmt(Math.round(min))
+        + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
     '</figure>';
   }
 
   function pvGrafOziv(host) {
     var pas = host && host.querySelector ? host.querySelector('.pvg-pas') : null;
     var d = PVG;
-    if (!pas || !d || !d.n) return;
-    var kur = pas.querySelector('.pvg-kurzor');
+    if (!pas || !d || !d.pocet) return;
     var bub = pas.querySelector('.pvg-bub');
-    var tecky = pas.querySelectorAll('.pvg-t');
-    if (!kur || !bub) return;
-    var vybrana = -1, odpocet = 0;
+    var sloupce = pas.querySelectorAll('.pvg-s');
+    if (!bub || !sloupce.length) return;
+    var vybrany = -1, odpocet = 0;
 
     function ukaz(i) {
-      var x = (d.n === 1) ? 50 : (i / (d.n - 1)) * 100;
-      kur.style.left = x.toFixed(2) + '%';
-      kur.hidden = false;
+      var s = sloupce[i];
+      if (!s) return;
+      var x = ((i + 0.5) / d.pocet) * 100;
+      var od = s.getAttribute('data-od'), do_ = s.getAttribute('data-do');
+      var kolik = parseInt(s.getAttribute('data-n'), 10) || 0;
 
+      var pasmo = (i === d.pocet - 1 && d.pretece) ? (fmt(+od) + ' Kč/m² a víc')
+        : (i === 0 && d.podtece) ? (fmt(+do_) + ' Kč/m² a méně')
+        : (fmt(+od) + '–' + fmt(+do_) + ' Kč/m²');
+      bub.innerHTML = '<b>' + esc(String(kolik)) + ' ' + esc(kolik === 1 ? 'nabídka'
+        : (kolik >= 2 && kolik <= 4 ? 'nabídky' : 'nabídek')) + '</b><i>' + esc(pasmo) + '</i>';
       bub.style.left = x.toFixed(2) + '%';
-      var jeNase = (i === d.podNami - 1);
-      bub.innerHTML = '<b>' + esc(fmt(Math.round(d.vals[i]))) + ' Kč/m²</b><i>'
-        + (jeNase ? 'tento pozemek' : esc(String(i + 1)) + '. z ' + d.n) + '</i>';
       bub.hidden = false;
+
       var rb = bub.getBoundingClientRect(), rp = pas.getBoundingClientRect();
       var posun = (rb.left < rp.left) ? (rp.left - rb.left)
         : (rb.right > rp.right) ? (rp.right - rb.right) : 0;
       if (posun) bub.style.left = 'calc(' + x.toFixed(2) + '% + ' + Math.round(posun) + 'px)';
-      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
-      if (tecky[i]) tecky[i].className = 'pvg-t je-vyb';
-      vybrana = i;
+      if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
+      s.classList.add('je-vyb');
+      vybrany = i;
     }
     function schovej() {
-      kur.hidden = true; bub.hidden = true;
-      if (vybrana >= 0 && tecky[vybrana]) tecky[vybrana].className = 'pvg-t';
-      vybrana = -1;
+      bub.hidden = true;
+      if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
+      vybrany = -1;
     }
     function indexZ(e) {
       var r = pas.getBoundingClientRect();
       var podil = (e.clientX - r.left) / Math.max(1, r.width);
-      return Math.max(0, Math.min(d.n - 1, Math.round(podil * (d.n - 1))));
+      return Math.max(0, Math.min(d.pocet - 1, Math.floor(podil * d.pocet)));
     }
     pas.addEventListener('pointerdown', function (e) {
       clearTimeout(odpocet);
@@ -976,7 +1019,9 @@
     var _zm = global.PK_CENY && global.PK_CENY.zaMetr ? global.PK_CENY.zaMetr(d) : null;
     var perM2 = _zm == null ? null : Math.round(_zm);
     var perM2Pozn = global.PK_CENY && global.PK_CENY.zaMetrPopis ? global.PK_CENY.zaMetrPopis(d) : '';
-    var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena' : (d.type === 'sale' || d.type === 'majitel' ? 'Cena' : 'Odhadní cena');
+
+    var priceLabel = d.type === 'drazba' ? 'Vyvolávací cena'
+      : (d.type === 'sale' || d.type === 'majitel' ? '' : 'Odhadní cena');
     var days = daysUntil(d.extra);
 
     var mapHref = 'https://mapy.cz/letecka?x=' + d.lng + '&y=' + d.lat + '&z=18&source=coor&id=' + d.lng + ',' + d.lat;
@@ -1050,14 +1095,18 @@
 
         '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
         (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
-        (dalkyText() ? '<div class="pz-dalky">vzdušnou čarou: ' + esc(dalkyText()) + '</div>' : '') +
+
+        (dalkyText()
+          ? '<div class="pz-dalky">' + esc(dalkyText())
+            + '<span class="pz-dalky-pozn">vzdušnou čarou</span></div>'
+          : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
         blokHtml() +
       '</div>' +
 
       '<div class="pz-bok">' +
       '<div class="pz-priceblock">' +
-        '<div class="pz-pl">' + priceLabel + '</div>' +
+        (priceLabel ? '<div class="pz-pl">' + priceLabel + '</div>' : '') +
         '<div class="pz-price"><span class="pv">' + fmt(d.price) + ' Kč</span>' +
           (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
 
@@ -1162,6 +1211,7 @@
     host.innerHTML = html;
 
     try { pripniAkce(host); } catch (e) {}
+    try { pzListaDole(host, d, perM2); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 
@@ -1430,6 +1480,41 @@
     videne[d._lid] = 1;
     try { sessionStorage.setItem(KLIC_ZHLEDNUTI, JSON.stringify(videne)); } catch (e) {}
     try { global.PKAuth.rpc('bump_view', { p_id: d._lid }, false); } catch (e) {}
+  }
+
+  function pzListaDole(host, d, perM2) {
+    if (!host || !global.IntersectionObserver) return;
+    var vzor = host.querySelector('.pz-akce-hlavni .pz-btn.primary');
+    var cena = host.querySelector('.pz-priceblock');
+    if (!vzor || !cena) return;
+    var stara = document.getElementById('pz-lista');
+    if (stara && stara.parentNode) stara.parentNode.removeChild(stara);
+
+    var lista = document.createElement('div');
+    lista.id = 'pz-lista';
+    lista.className = 'pz-lista';
+    var txt = document.createElement('div');
+    txt.className = 'pzl-text';
+    txt.innerHTML = '<b class="pzl-cena">' + esc(fmt(d.price)) + ' Kč</b>'
+      + (perM2 ? '<span class="pzl-m2">' + esc(fmt(perM2)) + ' Kč/m²</span>' : '');
+    var tl = vzor.cloneNode(true);
+    tl.removeAttribute('id');
+    tl.classList.add('pzl-btn');
+    lista.appendChild(txt);
+    lista.appendChild(tl);
+    document.body.appendChild(lista);
+
+    var vidi = { cena: true, akce: true };
+    var hlidac = new IntersectionObserver(function (zaznamy) {
+      for (var i = 0; i < zaznamy.length; i++) {
+        var z = zaznamy[i];
+        vidi[z.target === cena ? 'cena' : 'akce'] = z.isIntersecting;
+      }
+      lista.classList.toggle('je-videt', !vidi.cena && !vidi.akce);
+      document.body.classList.toggle('ma-listu', !vidi.cena && !vidi.akce);
+    }, { rootMargin: '0px 0px -72px 0px' });
+    hlidac.observe(cena);
+    hlidac.observe(vzor.parentNode);
   }
 
   function fillVerdict(d) {
