@@ -5025,34 +5025,64 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    ===================================================================== */
 /* GRAF ROZDĚLENÍ CEN — HISTOGRAM. Proč sloupce a ne tečky, s čísly,
    stojí u pvGrafHtml v js/pozemek.js. HTML, ne SVG: roztažené SVG
-   deformuje písmo i rysky. */
+   deformuje písmo i rysky.
+   Míry značek se drží jedné soustavy, která platí pro každý graf:
+   sloupec má 4px zaoblení NAHOŘE a hranu dole (data rostou z jedné
+   základny), sousední sloupce odděluje 2px mezera v barvě plochy (ne
+   obtah — obtah je inkoust navíc, který nenese data), mřížka a osy
+   jsou vlasové, nepřerušované a o stupeň ustupují. */
 .pvg{margin:14px 0 0;}
+/* Plocha grafu = popisky osy y vlevo + vlastní pás. Mřížka a sloupce
+   sdílejí souřadnice, takže ryska „8" opravdu leží na vrcholu
+   nejvyššího sloupce. */
+.pvg-plocha{display:flex; align-items:stretch; gap:8px;}
+.pvg-osa-y{position:relative; flex:none; width:16px; height:96px;
+  font-size:11px; line-height:1; color:var(--text-ondark-mute);
+  font-variant-numeric:tabular-nums;}
+.pvg-osa-y span{position:absolute; right:0; transform:translateY(50%);}
 /* Pás je jeden dotykový terč — proč, stojí u pvGrafOziv v js/pozemek.js.
-   `pan-y` nechá stránku rolovat prstem přes graf. */
-.pvg-pas{position:relative; height:86px; margin:0 2px; touch-action:pan-y; cursor:crosshair;}
-/* Sloupce stojí na společné čáře dole; `align-items:flex-end` je ta
-   čára. Mezera 2 px je jediné, co sloupce odděluje — obtah by při
-   dvanácti sloupcích na 322px kartě sežral třetinu šířky. */
-.pvg-sloupce{position:absolute; left:0; right:0; bottom:0; top:0;
+   `pan-y` nechá stránku rolovat prstem přes graf. Nahoře 20 px na
+   přímý popisek u našeho sloupce. */
+.pvg-pas{position:relative; flex:1 1 auto; height:96px; padding-top:20px;
+  touch-action:pan-y; cursor:crosshair;}
+/* Vlasová mřížka. Nepřerušovaná a o stupeň od plochy — nese měřítko,
+   ne sdělení. */
+.pvg-mriz{position:absolute; left:0; right:0; height:1px;
+  background:var(--line); pointer-events:none;}
+.pvg-sloupce{position:absolute; left:0; right:0; bottom:0; top:20px;
   display:flex; align-items:flex-end; gap:2px;
   border-bottom:1px solid var(--line-strong);}
+/* Zaoblení jen nahoře — data rostou z jedné základny, takže dolní
+   hrana musí zůstat ostrá. Čtyřka by byla ideál, nejmenší poloměr
+   v paletce webu je ale šestka a vlastní hodnota mimo paletku je horší
+   než dva pixely rozdílu (hlídá test-predloha). */
 .pvg-s{flex:1 1 0; min-width:0; border-radius:var(--r-xs) var(--r-xs) 0 0;
   background:var(--text-ondark-mute); opacity:0.3;}
 /* Sloupec, ve kterém stojí tenhle pozemek, nese barvu verdiktu —
-   tutéž, jakou má odznak nad grafem a puntík v legendě pod ním. */
+   tutéž, jakou má odznak nad grafem a puntík v legendě pod ním.
+   Zbytek je šedý: je to „zvýraznění jednoho", ne pět kategorií. */
 .pvg-s.je-nase{background:var(--vc); opacity:1;}
 .pvg-s.je-vyb{opacity:0.75;}
 .pvg-s.je-nase.je-vyb{opacity:0.85;}
 /* Ryska mediánu ustupuje: nese měřítko, ne sdělení. */
-.pvg-med{position:absolute; top:0; bottom:0; width:1px;
+.pvg-med{position:absolute; top:20px; bottom:0; width:1px;
   background:var(--line-strong); transform:translateX(-50%);}
 /* Kde přesně stojí tahle nabídka — na korunu, ne doprostřed sloupce. */
-.pvg-nase{position:absolute; top:0; bottom:0; width:2px;
+.pvg-nase{position:absolute; top:20px; bottom:0; width:2px;
   background:var(--vc); transform:translateX(-50%); z-index:2;}
 .pvg-nase::before{content:''; position:absolute; left:50%; top:-4px;
   width:9px; height:9px; border-radius:50%; background:var(--vc);
   transform:translateX(-50%);}
-.pvg-bub{position:absolute; bottom:calc(100% - 30px); transform:translateX(-50%);
+/* PŘÍMÝ POPISEK U ZVÝRAZNĚNÉHO SLOUPCE. Jeden jediný — popisek
+   u každého sloupce je chaos, který nikdo nečte; tenhle nese to, kvůli
+   čemu se na graf člověk dívá. Písmo zůstává v barvě textu, barvu nese
+   značka vedle něj. */
+.pvg-stitek{position:absolute; top:0; transform:translateX(-50%);
+  white-space:nowrap; font-size:11px; line-height:1.2;
+  color:var(--text-ondark-mute); pointer-events:none;}
+.pvg-stitek b{color:var(--text-ondark); font-weight:700;
+  font-variant-numeric:tabular-nums;}
+.pvg-bub{position:absolute; bottom:calc(100% - 40px); transform:translateX(-50%);
   z-index:3; pointer-events:none; white-space:nowrap; padding:4px 8px;
   border-radius:var(--r-xs); background:var(--text-ondark);
   color:var(--plocha-plovouci-plna); font-size:12px; line-height:1.4;
@@ -5061,7 +5091,9 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .pvg-bub i{font-style:normal; opacity:0.7; margin-left:6px;}
 /* Popisky osy sedí na svých hodnotách, ne na třetinách: krajní dva se
    zarovnávají dovnitř, ať nepřečuhují z karty. */
-.pvg-osa{position:relative; height:16px; margin:6px 2px 0; font-size:11px;
+/* Odsazení zleva přesně o sloupec popisků osy y (16 px) a mezeru
+   (8 px), ať popisky osy x začínají tam, kde začínají sloupce. */
+.pvg-osa{position:relative; height:16px; margin:6px 0 0 24px; font-size:11px;
   color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
 .pvg-osa span{position:absolute; top:0; white-space:nowrap;}
 .pvg-osa .pvg-osa-stred{transform:translateX(-50%);}

@@ -123,6 +123,11 @@
     return window.PK_CENY.blokOdhadu(MODEL, d, { fmt: fmt, esc: esc, trida: ' pz-odhad', dlouhy: true });
   }
 
+  function velkeNaZacatku(t) {
+    var s = String(t == null ? '' : t);
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+
   function heroLayers(d) {
     var col = TYPE[d.type].color;
 
@@ -399,12 +404,15 @@
     var nejvic = 0;
     for (i = 0; i < pocet; i++) if (kose[i] > nejvic) nejvic = kose[i];
     if (!nejvic) return '';
+
+    var strop = pvgKrok(nejvic);
+    if (strop < nejvic) strop = nejvic;
     var X = function (v) { return Math.max(0, Math.min(100, ((v - zac) / (konec - zac)) * 100)); };
     var nasKos = Math.max(0, Math.min(pocet - 1, Math.floor((nase - zac) / krok)));
     var sloupce = '';
     for (i = 0; i < pocet; i++) {
 
-      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / nejvic) * 100)) : 0;
+      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / strop) * 100)) : 0;
       sloupce += '<span class="pvg-s' + (i === nasKos ? ' je-nase' : '') + '"'
         + ' style="height:' + vyska + '%"'
         + ' data-od="' + Math.round(zac + i * krok) + '"'
@@ -415,15 +423,34 @@
       nasKos: nasKos, pretece: pretece, podtece: podtece };
     var popisOsy = function (v, pr) { return fmt(Math.round(v)) + (pr ? ' ' + pr : ''); };
     var stred = zac + Math.round(pocet / 2) * krok;
+
+    var rysky = '';
+    var popisky = '';
+
+    [1, 0.5].forEach(function (podil) {
+      var h = strop * podil;
+      if (!h || h !== Math.round(h)) return;
+      if (podil < 1 && strop < 4) return;
+      rysky += '<i class="pvg-mriz" style="bottom:' + (podil * 100) + '%"></i>';
+      popisky += '<span style="bottom:' + (podil * 100) + '%">' + h + '</span>';
+    });
+
+    var xNase = X(nase);
     return '<figure class="pvg">' +
-      '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
-        + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
-        + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
-        + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
-        '<div class="pvg-sloupce">' + sloupce + '</div>' +
-        '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
-        '<span class="pvg-nase" style="left:' + X(nase).toFixed(2) + '%"></span>' +
-        '<span class="pvg-bub" hidden></span>' +
+      '<div class="pvg-plocha">' +
+        '<div class="pvg-osa-y" aria-hidden="true">' + popisky + '</div>' +
+        '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
+          + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
+          + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
+          + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
+          rysky +
+          '<div class="pvg-sloupce">' + sloupce + '</div>' +
+          '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
+          '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
+          '<span class="pvg-stitek" style="left:' + xNase.toFixed(2) + '%">tento pozemek <b>'
+            + fmt(Math.round(nase)) + '</b></span>' +
+          '<span class="pvg-bub" hidden></span>' +
+        '</div>' +
       '</div>' +
       '<div class="pvg-osa">' +
         '<span style="left:0">' + popisOsy(zac, podtece ? 'a méně' : '') + '</span>' +
@@ -435,6 +462,17 @@
         + '<span class="pvg-klic med"></span>medián <b>' + fmt(Math.round(med)) + ' Kč/m²</b></p>' +
       '<p class="pvg-roz">' + n + ' nabídek v okolí, od <b>' + fmt(Math.round(min))
         + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
+
+      '<table class="visually-hidden"><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
+        '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
+        kose.map(function (kolik, i) {
+          var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
+          var pasmo = (i === pocet - 1 && pretece) ? (fmt(od) + ' Kč/m² a víc')
+            : (i === 0 && podtece) ? (fmt(doo) + ' Kč/m² a méně')
+            : (fmt(od) + '–' + fmt(doo) + ' Kč/m²');
+          return '<tr><th scope="row">' + pasmo + '</th><td>' + kolik + '</td></tr>';
+        }).join('') +
+      '</tbody></table>' +
     '</figure>';
   }
 
@@ -443,9 +481,17 @@
     var d = PVG;
     if (!pas || !d || !d.pocet) return;
     var bub = pas.querySelector('.pvg-bub');
+    var stitek = pas.querySelector('.pvg-stitek');
     var sloupce = pas.querySelectorAll('.pvg-s');
     if (!bub || !sloupce.length) return;
     var vybrany = -1, odpocet = 0;
+
+    if (stitek) {
+      var rs = stitek.getBoundingClientRect(), rpas = pas.getBoundingClientRect();
+      var pos = (rs.left < rpas.left) ? (rpas.left - rs.left)
+        : (rs.right > rpas.right) ? (rpas.right - rs.right) : 0;
+      if (pos) stitek.style.transform = 'translateX(calc(-50% + ' + Math.round(pos) + 'px))';
+    }
 
     function ukaz(i) {
       var s = sloupce[i];
@@ -462,6 +508,8 @@
       bub.style.left = x.toFixed(2) + '%';
       bub.hidden = false;
 
+      if (stitek) stitek.style.visibility = 'hidden';
+
       var rb = bub.getBoundingClientRect(), rp = pas.getBoundingClientRect();
       var posun = (rb.left < rp.left) ? (rp.left - rb.left)
         : (rb.right > rp.right) ? (rp.right - rb.right) : 0;
@@ -472,6 +520,7 @@
     }
     function schovej() {
       bub.hidden = true;
+      if (stitek) stitek.style.visibility = '';
       if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
       vybrany = -1;
     }
@@ -1035,7 +1084,8 @@
     klice.push({ k: 'Výměra', v: areaTxt(d),
       pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
     if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
-    klice.push({ k: 'Druh pozemku', v: esc(d.druh || '—'), pozn: '' });
+
+    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), pozn: '' });
 
     var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
@@ -1118,6 +1168,22 @@
 
       pzDrazbaHtml(d, days) +
 
+      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
+            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
+        }).join('') +
+      '</div>' +
+
+      (facts.length
+        ? '<div class="pz-specs">' +
+
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
+              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
+          '</div>'
+        : '') +
+
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
       pzSrovnaniHtml() +
@@ -1137,22 +1203,6 @@
       '</div>' +
 
       pzPopisInzerentaHtml() +
-
-      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
-      '<div class="pz-klice">' +
-        klice.map(function (f) {
-          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
-            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
-        }).join('') +
-      '</div>' +
-
-      (facts.length
-        ? '<div class="pz-specs">' +
-
-            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
-              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
-          '</div>'
-        : '') +
 
       pzMapaHtml(d) +
 

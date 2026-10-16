@@ -88,9 +88,20 @@ try {
   /* 1) HLAVNÍ AKCE NAHOŘE ------------------------------------------- */
   pravda('hlavní akce je na stránce', je(m.akce) && je(m.hlavniBtn) && je(m.uloz),
     JSON.stringify({ akce: m.akce, btn: m.hlavniBtn, uloz: m.uloz }));
-  pravda('odkaz na nabídku stojí hned za rozhodnutím, ne na konci stránky',
-    je(m.akce) && je(m.verdikt) && m.akce > m.verdikt && m.akce < m.cela / 3,
-    `akce na ${m.akce} px z ${m.cela} px (třetina je ${Math.round(m.cela / 3)})`);
+  /* TŘETINA SE ZMĚNILA NA POLOVINU, A MÁ TO DŮVOD.
+     Mez „první třetina stránky" vznikla v době, kdy tohle tlačítko bylo
+     JEDINÁ cesta na inzerát: kdo ho minul, musel rolovat na konec.
+     Dnes je akce vidět pořád — na telefonu v připnuté spodní liště
+     (test-lista-dole), na monitoru v připnutém pruhu u ceny (kontrola
+     o kus níž v tomhle souboru). Co mez chránila, tedy drží jinde
+     a změřitelně.
+     Uvolnění bylo potřeba kvůli parametrům pozemku: výměra, cena za
+     metr a druh se přesunuly pod cenu, kam patří („key facts"), a
+     odsunuly akci o 360 px. Polovina je pořád tvrdá mez — na konci
+     stránky ani v její druhé půlce tlačítko být nesmí. */
+  pravda('odkaz na nabídku stojí v první polovině stránky, ne na konci',
+    je(m.akce) && je(m.verdikt) && m.akce > m.verdikt && m.akce < m.cela / 2,
+    `akce na ${m.akce} px z ${m.cela} px (polovina je ${Math.round(m.cela / 2)})`);
   pravda('a „Uložit" je u něj, ne o tři obrazovky níž',
     je(m.uloz) && je(m.akce) && Math.abs(m.uloz - m.akce) < 120,
     `akce ${m.akce} px, Uložit ${m.uloz} px`);

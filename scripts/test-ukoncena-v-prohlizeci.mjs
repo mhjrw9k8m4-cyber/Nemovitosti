@@ -141,7 +141,7 @@ pravda('a titulek stránky se nepřepíše na hlášku',
      zůstává, tam to NENÍ totéž co cena prodejní). Hledá se proto
      samotná částka: popisek je ozdoba, číslo je ten obsah. */
   pravda('živá stránka pozemku se pořád vykreslí celá (cena, mapa, srovnání)',
-    /\d\s*Kč/.test(v.text) && /POZEMEK NA MAPĚ/.test(v.text)
+    /\d\s*Kč/.test(v.text) && /pozemek na mapě/i.test(v.text)
     && !/Pozemek nenalezen/.test(v.text),
     `${f}: ${v.text.slice(0, 120).replace(/\n/g, ' / ')}`);
   pravda('a statická část se na ní opravdu nahradila',

@@ -205,6 +205,14 @@
      pozemku, tenhle web nechce; viz js/snimek.js a js/main.js. */
   /* Velký snímek nahoře. Skládání dlaždic a obrys rozsahu dělá js/snimek.js —
      tentýž kód používá i náhled na kartě, aby se ty dva obrázky nerozešly. */
+  /* „ostatní plocha" → „Ostatní plocha". Jen první písmeno: zbytek
+     může nést vlastní jméno („orná půda v k. ú. …") a velké písmeno
+     uprostřed by bylo horší než malé na začátku. */
+  function velkeNaZacatku(t) {
+    var s = String(t == null ? '' : t);
+    return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+  }
+
   function heroLayers(d) {
     var col = TYPE[d.type].color;
     // Majitel nahrál skutečné fotky pozemku → listovací galerie (swipe na mobilu).
@@ -651,6 +659,13 @@
     var nejvic = 0;
     for (i = 0; i < pocet; i++) if (kose[i] > nejvic) nejvic = kose[i];
     if (!nejvic) return '';
+    /* STROP OSY JE KULATÉ ČÍSLO, ne výška nejvyššího sloupce. Když se
+       měřítko bere z maxima, stojí na ose „17" — a ryska s číslem, co
+       se nedá zapamatovat, měřítko spíš kazí. Strop se proto vybírá
+       z téže řady jako krok osy x (1, 2, 2,5, 5, 10 × mocnina deseti),
+       takže na ose stojí 20 a půlka je rovných 10. */
+    var strop = pvgKrok(nejvic);
+    if (strop < nejvic) strop = nejvic;
     var X = function (v) { return Math.max(0, Math.min(100, ((v - zac) / (konec - zac)) * 100)); };
     var nasKos = Math.max(0, Math.min(pocet - 1, Math.floor((nase - zac) / krok)));
     var sloupce = '';
@@ -658,7 +673,7 @@
       /* Nenulový sloupec je vidět vždycky: při jedné nabídce proti
          pětadvaceti by vyšel na 4 % výšky, tedy na 2 px, a vypadal by
          jako prázdno. Mez je 8 %. */
-      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / nejvic) * 100)) : 0;
+      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / strop) * 100)) : 0;
       sloupce += '<span class="pvg-s' + (i === nasKos ? ' je-nase' : '') + '"'
         + ' style="height:' + vyska + '%"'
         + ' data-od="' + Math.round(zac + i * krok) + '"'
@@ -669,15 +684,42 @@
       nasKos: nasKos, pretece: pretece, podtece: podtece };
     var popisOsy = function (v, pr) { return fmt(Math.round(v)) + (pr ? ' ' + pr : ''); };
     var stred = zac + Math.round(pocet / 2) * krok;
+    /* OSA Y MÁ DVĚ RYSKY, NE ŽÁDNOU. Sloupce bez měřítka říkají jen
+       „tenhle je vyšší"; s ryskou se dá přečíst KOLIK. Dvě stačí —
+       vrchol a půlka. Vodorovné čáry jsou vlasové a o stupeň ustupují,
+       jak se sluší na mřížku: nese měřítko, ne sdělení. */
+    var rysky = '';
+    var popisky = '';
+    /* Půlka se kreslí, jen když z ní vyjde kulaté číslo dost daleko od
+       vrcholu. Při vrcholu 3 vycházela „2" — ryska uprostřed s číslem,
+       které není polovina, mate víc, než pomůže. */
+    [1, 0.5].forEach(function (podil) {
+      var h = strop * podil;
+      if (!h || h !== Math.round(h)) return;
+      if (podil < 1 && strop < 4) return;
+      rysky += '<i class="pvg-mriz" style="bottom:' + (podil * 100) + '%"></i>';
+      popisky += '<span style="bottom:' + (podil * 100) + '%">' + h + '</span>';
+    });
+    /* PŘÍMÝ POPISEK U NAŠEHO SLOUPCE. Je to ten jediný údaj, kvůli
+       kterému se na graf člověk dívá — a dosud stál jen v legendě pod
+       ním, takže se musel párovat barvou. Popisek se u krajů zarovná
+       dovnitř, ať nevyleze z karty (dělá to pvGrafOziv po vložení). */
+    var xNase = X(nase);
     return '<figure class="pvg">' +
-      '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
-        + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
-        + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
-        + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
-        '<div class="pvg-sloupce">' + sloupce + '</div>' +
-        '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
-        '<span class="pvg-nase" style="left:' + X(nase).toFixed(2) + '%"></span>' +
-        '<span class="pvg-bub" hidden></span>' +
+      '<div class="pvg-plocha">' +
+        '<div class="pvg-osa-y" aria-hidden="true">' + popisky + '</div>' +
+        '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
+          + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
+          + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
+          + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
+          rysky +
+          '<div class="pvg-sloupce">' + sloupce + '</div>' +
+          '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
+          '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
+          '<span class="pvg-stitek" style="left:' + xNase.toFixed(2) + '%">tento pozemek <b>'
+            + fmt(Math.round(nase)) + '</b></span>' +
+          '<span class="pvg-bub" hidden></span>' +
+        '</div>' +
       '</div>' +
       '<div class="pvg-osa">' +
         '<span style="left:0">' + popisOsy(zac, podtece ? 'a méně' : '') + '</span>' +
@@ -689,6 +731,19 @@
         + '<span class="pvg-klic med"></span>medián <b>' + fmt(Math.round(med)) + ' Kč/m²</b></p>' +
       '<p class="pvg-roz">' + n + ' nabídek v okolí, od <b>' + fmt(Math.round(min))
         + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
+      /* TABULKA PRO ODEČÍTAČ A PRO TOHO, KDO BARVY NEVIDÍ. Graf je
+         obrázek; tohle jsou tatáž čísla ve sloupcích, takže se z grafu
+         nic nedozví jen oko. Nekreslí se, čte se. */
+      '<table class="visually-hidden"><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
+        '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
+        kose.map(function (kolik, i) {
+          var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
+          var pasmo = (i === pocet - 1 && pretece) ? (fmt(od) + ' Kč/m² a víc')
+            : (i === 0 && podtece) ? (fmt(doo) + ' Kč/m² a méně')
+            : (fmt(od) + '–' + fmt(doo) + ' Kč/m²');
+          return '<tr><th scope="row">' + pasmo + '</th><td>' + kolik + '</td></tr>';
+        }).join('') +
+      '</tbody></table>' +
     '</figure>';
   }
 
@@ -717,9 +772,19 @@
     var d = PVG;
     if (!pas || !d || !d.pocet) return;
     var bub = pas.querySelector('.pvg-bub');
+    var stitek = pas.querySelector('.pvg-stitek');
     var sloupce = pas.querySelectorAll('.pvg-s');
     if (!bub || !sloupce.length) return;
     var vybrany = -1, odpocet = 0;
+    /* Přímý popisek se u krajů zarazí, ať nevyleze z karty. Měří se po
+       vložení do stránky: „tento pozemek 314" je jinak široké než
+       „tento pozemek 22 628". */
+    if (stitek) {
+      var rs = stitek.getBoundingClientRect(), rpas = pas.getBoundingClientRect();
+      var pos = (rs.left < rpas.left) ? (rpas.left - rs.left)
+        : (rs.right > rpas.right) ? (rpas.right - rs.right) : 0;
+      if (pos) stitek.style.transform = 'translateX(calc(-50% + ' + Math.round(pos) + 'px))';
+    }
 
     function ukaz(i) {
       var s = sloupce[i];
@@ -737,6 +802,9 @@
         : (kolik >= 2 && kolik <= 4 ? 'nabídky' : 'nabídek')) + '</b><i>' + esc(pasmo) + '</i>';
       bub.style.left = x.toFixed(2) + '%';
       bub.hidden = false;
+      /* Bublina a přímý popisek sedí na témže místě — když naskočí
+         bublina, popisek na chvíli ustoupí, ať se nepřekrývají. */
+      if (stitek) stitek.style.visibility = 'hidden';
       /* Bublina se u krajů zarazí, ať nevyleze z karty ven. Srovnává se
          až PO vykreslení: její šířka se mění s obsahem („3 nabídky
          2 000–4 000 Kč/m²" je o půlku užší než „12 nabídek 10 000 Kč/m²
@@ -751,6 +819,7 @@
     }
     function schovej() {
       bub.hidden = true;
+      if (stitek) stitek.style.visibility = '';
       if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
       vybrany = -1;
     }
@@ -1595,7 +1664,12 @@
     klice.push({ k: 'Výměra', v: areaTxt(d),
       pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
     if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
-    klice.push({ k: 'Druh pozemku', v: esc(d.druh || '—'), pozn: '' });
+    /* VELKÉ PÍSMENO NA ZAČÁTKU. V datech je druh psaný malým („ostatní
+       plocha", „orná půda") — je to hodnota v tabulce, ne věta. V té
+       dlaždici ale stojí jako údaj sám o sobě, vedle „6 336 m²"
+       a „314 Kč/m²", takže malé počáteční písmeno vypadalo, jako by
+       tam spadlo omylem. Mění se jen vykreslení, ne data. */
+    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), pozn: '' });
 
     var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
@@ -1738,6 +1812,35 @@
          Kdo sem přijde po starším odkazu, musí se to dozvědět hned. */
       pzDrazbaHtml(d, days) +
 
+      /* PARAMETRY HNED POD CENOU — „key facts", jak tomu říkají velké
+         weby s nemovitostmi. Byly až za popisem od inzerenta, tedy na
+         telefonu na čtvrté obrazovce: výměra, cena za metr a druh
+         pozemku jsou přitom to, podle čeho se člověk rozhoduje, jestli
+         má číst dál. Rightmove, Zillow i Idealista to mají shodně:
+         snímek, cena, klíčové údaje, a teprve pak povídání.
+         Mapa zůstává AŽ ZA NIMI (napřed co to je, pak kde to je) —
+         hlídá to scripts/test-poradi-pozemku.mjs. */
+      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
+            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
+        }).join('') +
+      '</div>' +
+      /* Prázdný rámeček by vypadal jako chybějící obsah: když u pozemku
+         není ani parcelní číslo, ani souřadnice, ani zdroj, nevykreslí
+         se tabulka vůbec. */
+      (facts.length
+        ? '<div class="pz-specs">' +
+            /* `pozn` je vysvětlivka k hodnotě, ne další údaj: u parcelního
+               čísla z inzerátu u ní MUSÍ stát, odkud je. Dřív řádek nic
+               takového neumožňoval a vysvětlivka by musela být v hodnotě,
+               tedy stejně velkým písmem jako samo číslo. */
+            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
+              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
+          '</div>'
+        : '') +
+
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
       /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
@@ -1774,27 +1877,6 @@
          nemusela nic stahovat. Když chybí, nezobrazí se nic — ne prázdný
          nadpis. */
       pzPopisInzerentaHtml() +
-
-      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
-      '<div class="pz-klice">' +
-        klice.map(function (f) {
-          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
-            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
-        }).join('') +
-      '</div>' +
-      /* Prázdný rámeček by vypadal jako chybějící obsah: když u pozemku
-         není ani parcelní číslo, ani souřadnice, ani zdroj, nevykreslí
-         se tabulka vůbec. */
-      (facts.length
-        ? '<div class="pz-specs">' +
-            /* `pozn` je vysvětlivka k hodnotě, ne další údaj: u parcelního
-               čísla z inzerátu u ní MUSÍ stát, odkud je. Dřív řádek nic
-               takového neumožňoval a vysvětlivka by musela být v hodnotě,
-               tedy stejně velkým písmem jako samo číslo. */
-            facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
-              + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
-          '</div>'
-        : '') +
 
       /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
          nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",

@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=65fda04b">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=1fbc9626">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -91,17 +91,27 @@
     .pz-gallery::-webkit-scrollbar{display:none;}
     .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
     .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3; display:inline-flex;}
-    /* SNÍMEK OD KRAJE KE KRAJI — tak ho mají na telefonu Rightmove,
-       Zillow i Idealista. V rámečku s odsazením vypadá jako ilustrace
-       v článku; přes celou šířku je to první, co o pozemku něco říká.
-       Záporný okraj přesně o odsazení .pz-wrap (16 px) a poměr 4:3,
-       protože na výšku je na telefonu místa víc než na šířku. */
+    /* SNÍMEK OD KRAJE KE KRAJI, jako na telefonu u Rightmove, Zillow
+       i Idealisty: v rámečku s odsazením vypadá jako ilustrace
+       v článku. Záporný okraj je přesně odsazení .pz-wrap (16 px). */
     @media (max-width:560px){
       .pz-media{margin:0 -16px; width:auto; aspect-ratio:4/3; max-height:none;
         border-radius:0; border-left:0; border-right:0; box-shadow:none;}
       .pz-back{margin-bottom:12px;}
     }
 
+    /* NADPIS ODDÍLU, NE ŠTÍTEK V ARCHIVU. Bylo to 12px verzálky
+       s prostrkáním v šedé — typografie rejstříku, ne inzerátu. Velké
+       weby s nemovitostmi mají nad oddílem prostou větu v normálním
+       písmu; osmnáctka je stupeň pod nadpisem stránky a stupeň nad
+       textem, takže oddíl začíná viditelně a nekřičí. */
+    .pz-sect-h{font-size:18px; font-weight:700; letter-spacing:-0.01em; text-transform:none; color:var(--text-ondark); margin:40px 0 10px; position:relative;}
+    /* Měděná vlasovka nad nadpisem oddílu — táž značka, jakou má zbytek
+       webu u `.section-head::before`. Stojí MIMO tok, aby si z odstupu
+       40 px nic neubrala (soustava odstupů má držet v číslech; hlídá
+       scripts/test-parametry.mjs). */
+    .pz-sect-h::before{content:""; position:absolute; left:0; top:-14px;
+      width:52px; height:2px; border-radius:2px; background:var(--grad-warm); opacity:.85;}
     .pz-head{margin:20px 0 0;}
     /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
        dávalo časopis o přírodě, ne inzerát. Rozdíl dělá velikost
@@ -191,21 +201,6 @@
          10 px — uvnitř skupiny, co patří k sobě (místo → cena → verdikt),
           8 px — poznámka pod blokem, ke kterému se váže.
        Kdo přidá další blok, ať si vybere z těchhle čtyř. */
-    .pz-sect-h{font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek); margin:40px 0 10px; position:relative;}
-    /* Měděná vlasovka nad nadpisem oddílu — táž značka, jakou má zbytek
-       webu u `.section-head::before`, týž token `--grad-warm`, tytéž
-       míry (52×2 px). Stránka pozemku ji neměla; z přechodů na ní byla
-       mapová záložka a patička, nic víc.
-       VLASOVKA STOJÍ MIMO TOK, a to schválně. Nejdřív jsem ji dal do
-       toku jako na úvodní stránce a odstup nadpisu zkrátil o to, co si
-       vezme (26 + 2 + 12 = 40 px). Opticky to souhlasilo, jenže
-       scripts/test-parametry.mjs nečte optiku, čte odstupy: ohlásil
-       „navíc: 6, 26 px" — soustava 40/20/10/8 px má držet v číslech,
-       ne v součtu. Odsazená vlasovka si z toku nebere nic, takže
-       nadpisu zůstává 40 px shora a značka se vykreslí 14 px nad
-       jeho textem, uvnitř té mezery. */
-    .pz-sect-h::before{content:""; position:absolute; left:0; top:-14px;
-      width:52px; height:2px; border-radius:2px; background:var(--grad-warm); opacity:.85;}
     /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
        jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
        odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
@@ -426,8 +421,7 @@
     .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:14px;
       letter-spacing:0; text-transform:none; color:var(--copper-bright);}
     /* A proto tu nemá co dělat ani vlasovka oddílu: řádek se rozbaluje,
-       značka oddílu by z něj dělala nadpis. Totéž pravidlo jako
-       `.rail .section-head::before{display:none}` v css/styles.css. */
+       značka oddílu by z něj dělala nadpis. */
     .pz-gtk-sum .pz-sect-h::before{display:none;}
     .pz-gtk-kolik{margin-left:auto; font-size:13px; font-weight:700; white-space:nowrap;
       color:var(--copper-bright); background:var(--ink-soft); border:1px solid var(--line);
@@ -725,7 +719,7 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=3c8ae080"></script>
-<script src="js/min/pozemek.js?v=4c335bf4"></script>
+<script src="js/min/pozemek.js?v=23b04e23"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

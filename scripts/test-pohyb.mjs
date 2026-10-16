@@ -304,6 +304,14 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
   await p.waitForSelector('.pvg-nase', { timeout: 12000 }).catch(() => {});
   await p.waitForTimeout(2200);          // ať je po druhém vykreslení z dat
+  /* NEJDŘÍV K NĚMU DOROLOVAT. `touchscreen.tap` klepe na souřadnice
+     OKNA, ne stránky — a graf se mezitím posunul níž (parametry
+     pozemku šly nahoru pod cenu, viz js/pozemek.js). Bez odrolování
+     klepnutí dopadlo na y 1 206 v okně vysokém 844, tedy do prázdna,
+     a kontrola hlásila „bublina se neukázala", přestože graf fungoval.
+     Stálo to hodinu hledání v kódu, který byl v pořádku. */
+  await p.locator('.pvg-pas').scrollIntoViewIfNeeded().catch(() => {});
+  await p.waitForTimeout(400);
   const pas = await p.evaluate(() => {
     const e = document.querySelector('.pvg-pas');
     if (!e) return null;
