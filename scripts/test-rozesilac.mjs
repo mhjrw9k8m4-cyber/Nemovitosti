@@ -68,8 +68,29 @@ pravda('a říká, že ceny jsou nabídkové, ne prodejní',
 pravda('odkaz vede na vlastní stránku pozemku',
   jeden.includes('https://www.parcelaka.cz/pozemek-brno-venkov-kurim-abc123.html'), jeden);
 
-const podil = sklad.text([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, podil_zlomek: '1/6' })] }], 'T');
+const podil = sklad.text([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, zlomek: '1/6' })] }], 'T');
 pravda('spoluvlastnický podíl se v e-mailu pojmenuje', /spoluvlastnický podíl 1\/6/.test(podil), podil);
+
+/* A TEĎ NA SKUTEČNÉM ZÁZNAMU, ne na vymyšleném.
+   Tahle zkouška si dlouho podstrkovala nabídku s polem `podil_zlomek` —
+   jméno, které v datech ani ve scraperu není nikde (robot zapisuje
+   `zlomek`). Šablona e-mailu to jméno čekala, takže velikost podílu
+   zamlčela u všech, a zkouška přitom procházela: potvrzovala si vlastní
+   slovník. Proto se bere opravdový podíl z data/opportunities.json —
+   takový vstup se nedá omylem vyrobit. */
+{
+  const vse = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+  const skutecny = vse.find((o) => o.podil && o.zlomek);
+  pravda('v datech je podíl se známou velikostí (jinak zkouška nic neměří)',
+    !!skutecny, 'ani jeden podíl se zlomkem — hlídač velikosti podílu je bezzubý');
+  if (skutecny) {
+    const t = sklad.text([{ label: 'A', celkem: 1,
+      nove: [{ ...skutecny, soubor: 'pozemek-x.html' }] }], 'T');
+    pravda(`a jeho velikost (${skutecny.zlomek}) se v e-mailu opravdu objeví`,
+      t.includes('spoluvlastnický podíl ' + skutecny.zlomek),
+      (t.match(/.{0,40}spoluvlastnický podíl.{0,20}/) || [''])[0]);
+  }
+}
 /* Co se v patičce vysvětlit MUSÍ: že je cena za zlomek pozemku. A co
    se tvrdit NESMÍ: že je výměra celé parcely. Stálo to tam o všech
    podílech, a u 400 z 507 to není pravda — robot u nich z textu
@@ -81,7 +102,7 @@ pravda('a netvrdí se, že výměra je celé parcely',
   !/výměra celé parcely|výměra za celou parcelu/.test(podil),
   (podil.match(/.{0,50}výměra cel.{0,30}/) || [''])[0]);
 {
-  const html = sklad.html([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, podil_zlomek: '1/6' })] }], 'T');
+  const html = sklad.html([{ label: 'A', celkem: 1, nove: [nabidka({ podil: true, zlomek: '1/6' })] }], 'T');
   pravda('a v HTML podobě e-mailu platí totéž',
     /cena za zlomek pozemku/.test(html) && !/výměra celé parcely/.test(html),
     (html.match(/.{0,50}spoluvlastnick.{0,90}/) || [''])[0]);

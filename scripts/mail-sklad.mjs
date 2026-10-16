@@ -78,7 +78,20 @@ export function popisNabidky(d) {
      podílů je uložená výměra už ta podílová — robot to z textu inzerátu
      dokázal a nese to příznak `vymera_podilu`. Patička e-mailu to dřív
      tvrdila o všech.) */
-  const podil = d.podil ? ` — spoluvlastnický podíl${d.podil_zlomek ? ` ${d.podil_zlomek}` : ''}` : '';
+  /* POLE SE JMENUJE `zlomek`, NE `podil_zlomek`. Tenhle řádek čekal
+     `d.podil_zlomek` — jméno, které v datech ani ve scraperu není
+     nikde: robot zapisuje `zlomek` (viz pridejVybaveni v
+     scripts/fetch-opportunities.mjs). E-mail tedy u KAŽDÉHO podílu
+     napsal jen „spoluvlastnický podíl" a velikost zamlčel, i když ji
+     v datech má 501 z 507 podílů. A půlka pozemku a jedna 792. část
+     jsou úplně jiná nabídka.
+     Nepoznala to ani zkouška: podstrkovala si nabídku s polem
+     `podil_zlomek`, tedy se svým vlastním slovníkem — potvrzovala
+     jméno, které nikde neexistuje. Proto se teď zkouší i na SKUTEČNÉM
+     záznamu z data/opportunities.json. Starý název zůstává jako
+     záloha, kdyby ho někdy posílala databáze. */
+  const zlomek = d.zlomek || d.podil_zlomek || '';
+  const podil = d.podil ? ` — spoluvlastnický podíl${zlomek ? ` ${zlomek}` : ''}` : '';
   /* A CENA, KTERÉ WEB SÁM NEVĚŘÍ, SE MUSÍ ŘÍCT TAKY. Přiznaný podíl
      výš je jen menší půlka problému: měřeno na ostrých datech, mezi
      nabídkami pod 20 Kč/m² je přiznaný podíl JEDEN, kdežto cen, které
