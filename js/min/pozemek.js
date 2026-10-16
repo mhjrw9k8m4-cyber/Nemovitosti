@@ -318,12 +318,19 @@
     if (!MODEL || !hasArea(d) || !d.price) return '';
 
     if (d.podil) {
+
+      var jePodilova = !!d.vymera_podilu;
       return '<div class="pz-verdict warn">' +
         '<div class="pv-top"><span class="pv-badge">Prodává se podíl</span><span class="pv-cmp">Cena za m²</span></div>' +
-        '<div class="pv-text">Inzerát mluví o <b>spoluvlastnickém podílu' + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b>. V ceně je pak jen ' +
-        '<b>zlomek pozemku</b>, kdežto výměra je uvedená celá — cena za metr proto vychází nízká ' +
-        'sama od sebe a s celými pozemky se srovnat nedá. <b>Velikost podílu</b> si ověřte ' +
-        'v katastru a u zdroje.</div>' +
+        '<div class="pv-text">Inzerát mluví o <b>spoluvlastnickém podílu' + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b>. ' +
+        (jePodilova
+          ? 'Uvedená výměra je <b>ta podílová</b> — tedy ta, která vám připadne; celá parcela je větší. ' +
+            'Cena za metr tím pádem srovnatelná je. Pozor na něco jiného: podíl znamená, že o pozemku ' +
+            '<b>rozhodujete společně s dalšími vlastníky</b>. <b>Velikost podílu</b> si ověřte v katastru a u zdroje.'
+          : 'V ceně je pak jen <b>zlomek pozemku</b>, kdežto výměra je uvedená celá — cena za metr proto ' +
+            'vychází nízká sama od sebe a s celými pozemky se srovnat nedá. <b>Velikost podílu</b> si ověřte ' +
+            'v katastru a u zdroje.') +
+        '</div>' +
         '</div>' + odhadHtml(d);
     }
     if (MODEL.neduveryhodna(d)) {

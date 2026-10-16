@@ -3,7 +3,12 @@
 // Spuštění: node scripts/test-podil-v-nazvu.mjs   (nepotřebuje prohlížeč)
 //
 // NALEZENO MĚŘENÍM. U 537 z 2 072 stránek (26 %) se neprodává pozemek,
-// ale spoluvlastnický podíl: cena je za zlomek, výměra je celé parcely.
+// ale spoluvlastnický podíl: cena je za zlomek pozemku. (Pozor na jednu
+// věc, kterou tahle poznámka dřív tvrdila nepřesně: výměra JE celé
+// parcely jen u části z nich. Kde to inzerát dokazuje, je uložená
+// výměra už ta podílová — příznak `vymera_podilu`, 400 z 507 podílů.
+// Na tenhle test to nemá vliv, hlídá slovo „podíl" v názvu, ne výměru;
+// hlídá to scripts/test-verdikt-podilu.mjs.)
 // Tělo stránky to říká jasně a strukturovaná data to mají ve výhradě
 // u ceny — ale titulek, nadpis a popisek mlčely. Ani jedna z těch 537
 // stránek neměla slovo „podíl" v názvu.

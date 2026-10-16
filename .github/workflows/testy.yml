@@ -586,6 +586,9 @@ jobs:
       - name: Barva u verdiktu o ceně
         run: node scripts/test-verdikt.mjs
 
+      - name: Verdikt u spoluvlastnického podílu
+        run: node scripts/test-verdikt-podilu.mjs
+
       - name: Ikony (jedna sada, jedna tloušťka)
         run: node scripts/test-ikony.mjs
 

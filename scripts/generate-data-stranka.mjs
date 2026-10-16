@@ -31,6 +31,12 @@ export function spust() {
      Počítá se touž funkcí, jakou k tomu používá web, ne vlastní kopií:
      dvě kopie pravidla se dřív nebo později rozejdou. */
   const podiluVSouboru = (data.opportunities || []).filter((o) => o.podil).length;
+  /* KOLIK PODÍLŮ MÁ VÝMĚRU UŽ PODÍLOVOU. Věta v dokumentaci dřív tvrdila,
+     že u podílu je „výměra za celou parcelu" — a kdo podle toho dělil,
+     dostal u většiny řádků číslo nafouknuté zlomkem. Robot ten případ
+     rozlišuje příznakem `vymera_podilu` a v souboru ho má většina
+     podílů, takže to do popisu dat patří. */
+  const podiluPodilova = (data.opportunities || []).filter((o) => o.podil && o.vymera_podilu).length;
   const podiluNaWebu = (() => {
     try {
       const H = req(path.join(ROOT, 'js', 'hlidani-logika.js'));
@@ -133,8 +139,12 @@ export function spust() {
         nabízí, ne za kolik se prodal. Skutečné prodejní ceny ve veřejných zdrojích nejsou.</li>
       <li><b>Nejsou to všechny pozemky v ČR</b>, jen ty, které jsou právě někde nabízené.</li>
       <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, ${fmt(podiluVSouboru)} ${podiluVSouboru === 1 ? 'řádek' : (podiluVSouboru >= 2 && podiluVSouboru <= 4 ? 'řádky' : 'řádků')} v souboru${podiluNaWebu !== podiluVSouboru ? `, na webu ${fmt(podiluNaWebu)} po odstranění duplicit` : ''})
-        je cena za zlomek, ale výměra za celou parcelu. Kdo dělí jedno druhým bez ohledu na
-        <code>zlomek</code>, dostane číslo, které neplatí pro nikoho.</li>
+        je cena za zlomek pozemku. Výměra ale neznamená u všech totéž:
+        kde inzerát dokazuje, že je to už výměra podílu, má řádek
+        <code>vymera_podilu: true</code> (${fmt(podiluPodilova)} z ${fmt(podiluVSouboru)}) a dělit ji
+        <code>zlomek</code>em znamená spočítat cenu za metr násobně vyšší. U zbytku je výměra
+        celé parcely a dělit se musí. Kdo <code>vymera_podilu</code> přehlédne, dostane číslo,
+        které neplatí pro nikoho — a to v obou směrech.</li>
       <li><b>Co není v poli <code>site</code>, není totéž co „není".</b> Sítě se čtou z popisu
         inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
       <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala

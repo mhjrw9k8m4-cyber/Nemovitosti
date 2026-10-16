@@ -46,6 +46,21 @@ je('trvalý travní porost', D.zTextu('Vedeno jako trvalý travní porost'), 'tr
 je('louka', D.zTextu('Pěkná louka, 4 000 m2'), 'louka');
 je('pastvina', D.zTextu('Pastvina pro koně'), 'pastvina');
 je('zemědělský pozemek', D.zTextu('Zemědělský pozemek u obce'), 'zemědělský pozemek');
+/* POLE. Jen tam, kde je pole tím, co se prodává — slovo samo je past
+   a všech sedm pastí níž je doopravdy z našich popisů. */
+je('pole k prodeji je orná půda', D.zTextu('Nabízím k prodeji pole o rozloze 7 183 m²'), 'orná půda');
+je('a „jedná se o pole" taky', D.zTextu('Jedná se o pole s osobním vlastnictvím'), 'orná půda');
+je('a „má typ pole" taky', D.zTextu('Parcela má typ pole, parcelní číslo 423/40'), 'orná půda');
+je('a pole u podílu taky', D.zTextu('Nabízím ke koupi podílu 15/128 pole 12 054 m²'), 'orná půda');
+je('pole stojí nad zemědělským pozemkem (konkrétní před vágním)',
+  D.zTextu('Nabízím k prodeji pole, zemědělské účely'), 'orná půda');
+je('ale „navazuje na pole" je okolí, ne pozemek',
+  D.zTextu('Pozemek z východní strany volně navazuje na pole'), null);
+je('„nejedná se o obyčejné pole" není pole',
+  D.zTextu('Nejedná se o obyčejné pole, díky napojení na sítě'), null);
+je('a jméno obce s „Pole" taky ne',
+  D.zTextu('k.ú. Dobré Pole u Vitic, LV č. 155 o výměře 1104 m²'), null);
+je('ani „Vysoké Pole"', D.zTextu('k.ú. Vysoké Pole, LV č. 1239'), null);
 je('nic z toho → null', D.zTextu('Prodám pozemek, cena dohodou'), null);
 je('prázdný text → null', D.zTextu(''), null);
 

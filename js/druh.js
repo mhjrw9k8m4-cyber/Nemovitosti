@@ -60,7 +60,19 @@
     /* Jen zahrada jako pozemek. „Zahradní domek", „zahradnictví" ani
        „zahradní nábytek" pozemek zahradou nedělají. */
     { druh: 'zahrada', re: /\bzahrad[ayeu]\b|\bzahradou\b|\bzahradami\b|\bzahradni parcel\w*\b|\bzahradkarsk\w* (?:osad|kolon)\w*\b/g },
-    { druh: 'orná půda', re: /\born[aáyeou]\w*\b/g },
+    /* „POLE" JEN TAM, KDE JE PŘEDMĚTEM PRODEJE. Slovo samo o sobě je
+       past: v nabídce je „k.ú. Dobré Pole u Vitic" a „k.ú. Vysoké Pole"
+       (jména obcí), „volně navazuje na pole" (okolí, ne pozemek),
+       „nejedná se o obyčejné pole" (zápor) a „z 80 % kvalitní pole,
+       z 20 % smíšený les" (obojí). Z čtrnácti výskytů v popisech by
+       široké pravidlo pochybilo u sedmi — proto se chytá jen vazba, ve
+       které je pole tím, co se prodává. Naměřeno na 1 623 popisech:
+       sedm zásahů, všech sedm správně, a sedm vynechaných je přesně
+       těch sedm, která se vynechat mají.
+       Pole je v katastru orná půda — a tohle pravidlo stojí nad
+       „zemědělským pozemkem", takže čtyři nabídky, které dosud měly
+       jen ten vágní druh, dostanou konkrétní. */
+    { druh: 'orná půda', re: /\born[aáyeou]\w*\b|\bk prodeji pol[eií]\b|\bprodej pol[eií]\b|\bprodam pol[eií]\b|\bjedna se o pol[eií]\b|\btyp pol[eií]\b|\bke koupi (?:podilu )?(?:\d+\/\d+ )?pol[eií]\b/g },
     { druh: 'trvalý travní porost', re: /\btrval\w* travn\w*\b|\btravn\w* porost\w*\b/g },
     { druh: 'louka', re: /\blouk[aiyou]\b|\bloukou\b|\bloukam\w*\b/g },
     { druh: 'pastvina', re: /\bpastvin\w*\b/g },

@@ -499,12 +499,27 @@
        přebral po svém — nejspíš jako výhodnou koupi. Přesně to web dřív
        říkal nahlas: „Levnější než 96 % podobných pozemků." */
     if (d.podil) {
+      /* DVĚ RŮZNÉ SITUACE, NE JEDNA. Verdikt dosud všem podílům tvrdil
+         „výměra je uvedená celá" — a to u většiny z nich není pravda:
+         robot umí z textu inzerátu DOKÁZAT, že uložená výměra je už ta
+         podílová (příznak `vymera_podilu`, viz vymeraVCene v js/ceny.js),
+         a v datech ho má 400 z 507 podílů, tedy 79 %. Těm web radil
+         nevěřit číslu, které je přitom správné, a ještě naznačoval, že
+         pozemek je zlomek toho, co je napsáno. Cenový model si ty dva
+         případy rozlišuje odjakživa (zaMetrPopis má pro každý svou
+         větu) — jen verdikt o kus výš ne. */
+      var jePodilova = !!d.vymera_podilu;
       return '<div class="pz-verdict warn">' +
         '<div class="pv-top"><span class="pv-badge">Prodává se podíl</span><span class="pv-cmp">Cena za m²</span></div>' +
-        '<div class="pv-text">Inzerát mluví o <b>spoluvlastnickém podílu' + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b>. V ceně je pak jen ' +
-        '<b>zlomek pozemku</b>, kdežto výměra je uvedená celá — cena za metr proto vychází nízká ' +
-        'sama od sebe a s celými pozemky se srovnat nedá. <b>Velikost podílu</b> si ověřte ' +
-        'v katastru a u zdroje.</div>' +
+        '<div class="pv-text">Inzerát mluví o <b>spoluvlastnickém podílu' + (d.zlomek ? ' ' + esc(d.zlomek) : '') + '</b>. ' +
+        (jePodilova
+          ? 'Uvedená výměra je <b>ta podílová</b> — tedy ta, která vám připadne; celá parcela je větší. ' +
+            'Cena za metr tím pádem srovnatelná je. Pozor na něco jiného: podíl znamená, že o pozemku ' +
+            '<b>rozhodujete společně s dalšími vlastníky</b>. <b>Velikost podílu</b> si ověřte v katastru a u zdroje.'
+          : 'V ceně je pak jen <b>zlomek pozemku</b>, kdežto výměra je uvedená celá — cena za metr proto ' +
+            'vychází nízká sama od sebe a s celými pozemky se srovnat nedá. <b>Velikost podílu</b> si ověřte ' +
+            'v katastru a u zdroje.') +
+        '</div>' +
         '</div>' + odhadHtml(d);
     }
     if (MODEL.neduveryhodna(d)) {

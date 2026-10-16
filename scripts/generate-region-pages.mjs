@@ -996,6 +996,12 @@ for(const okres of eligibleOkres){
      nabídky to web říká, u okresu to nikde nestálo, přitom právě tady si
      člověk prohlíží ceny vedle sebe a ty podíly mu je sráží. */
   const podilu = list.filter((o)=>o.podil).length;
+  /* KOLIK Z NICH MÁ VÝMĚRU CELÉ PARCELY. Věta pod tím dřív tvrdila, že
+     u podílu je „v inzerátu výměra celé parcely" — a to u většiny z nich
+     není pravda: robot umí z textu dokázat, že uložená výměra je už ta
+     podílová (`vymera_podilu`), a v datech to platí u 400 z 507 podílů.
+     Souhrn se tedy nedá napsat jednou větou za všechny; rozdělí se. */
+  const podiluCele = list.filter((o)=>o.podil && !o.vymera_podilu).length;
   /* PODLE OBCE. Okres má i přes třicet nabídek v jednom dlouhém sloupci.
      Kdo hledá pozemek u konkrétní vsi, musí ho projít celý — a přitom
      se nabídky kupí: v okrese Litoměřice je patnáct z nich v jedné obci.
@@ -1096,7 +1102,7 @@ ${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
       dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
       rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
       <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
-${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek, takže cena za metr vychází nízko sama od sebe. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — kupuje se zlomek pozemku a rozhoduje se o něm společně s dalšími vlastníky.${podiluCele ? ` U ${sklon(podiluCele,'jednoho z nich je','nich je','nich je')} ${podiluCele === podilu ? 'všech' : `<b>${podiluCele}</b>`} v inzerátu výměra celé parcely, takže cena za metr vychází nízko sama od sebe.` : ' Výměra u nich odpovídá tomu, co kupující dostane.'} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-cross" style="margin-top:20px;">
         <div class="acx-copy">
@@ -1400,6 +1406,7 @@ for (const d of DRUH_STRANKY) {
   const priced = list.filter((o) => o.price > 0).map((o) => o.price).sort((a, b) => a - b);
   const minP = priced[0], maxP = priced[priced.length - 1];
   const podilu = list.filter((o) => o.podil).length;
+  const podiluCele = list.filter((o) => o.podil && !o.vymera_podilu).length;
   const ceny = priceStats(list);
   const cenyRadka = priceLine(ceny);
   const vypsane = list.slice(0, STROP_RADKU);
@@ -1451,7 +1458,7 @@ for (const d of DRUH_STRANKY) {
         <div class="okr-stat"><b>${okresyNej.length ? Object.keys(poOkresu).length : 0}</b><span>${sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')}</span></div>
       </div>
 ${cenyRadka ? `      <p class="okr-more" style="margin-top:2px;">${cenyRadka} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
-${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — v inzerátu je pak výměra celé parcely, ale cena jen za ten zlomek. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
+${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — kupuje se zlomek pozemku.${podiluCele ? ` U ${podiluCele === podilu ? 'všech' : `<b>${fmt(podiluCele)}</b>`} z nich je v inzerátu výměra celé parcely, ale cena jen za ten zlomek.` : ''} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
@@ -2349,7 +2356,10 @@ const celky = BLOKY.shluky(aktualni)
     const obce = [...new Set(g.map((o) => o.place))];
     const typy = [...new Set(g.map((o) => o.type))];
     return { g, vymera, cena, obce, typy, okres: g[0].okres,
-      podilu: g.filter((o) => o.podil).length };
+      podilu: g.filter((o) => o.podil).length,
+      /* Jen podíly, u kterých je sečtená výměra opravdu celá parcela —
+         u ostatních je to už ta podílová (viz `vymera_podilu`). */
+      podiluCele: g.filter((o) => o.podil && !o.vymera_podilu).length };
   })
   .sort((a, b) => b.vymera - a.vymera);
 
@@ -2374,7 +2384,7 @@ if (celky.length) {
     karty += `      <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>${esc(nadpis)} — ${c.g.length} ${pluralPozemek(c.g.length)} do ${BLOKY.MEZ_METRU} m od sebe</h2>
-          <p class="rules-note" style="margin-top:0;">Okres <a href="pozemky-okres-${slug(c.okres)}.html">${esc(c.okres)}</a> · dohromady <b>${esc(haText(c.vymera))}</b>${c.cena !== null ? ` za <b>${fmt(c.cena)} Kč</b>` : ' (u některé z nabídek chybí cena, takže se nesčítá)'}${c.podilu ? ` · ${fmt(c.podilu)} z nich ${c.podilu === 1 ? 'je spoluvlastnický podíl' : 'jsou spoluvlastnické podíly'}, takže ${c.podilu === 1 ? 'jeho výměra je' : 'jejich výměry jsou'} za celé parcely` : ''}.</p>
+          <p class="rules-note" style="margin-top:0;">Okres <a href="pozemky-okres-${slug(c.okres)}.html">${esc(c.okres)}</a> · dohromady <b>${esc(haText(c.vymera))}</b>${c.cena !== null ? ` za <b>${fmt(c.cena)} Kč</b>` : ' (u některé z nabídek chybí cena, takže se nesčítá)'}${c.podilu ? ` · ${fmt(c.podilu)} z nich ${c.podilu === 1 ? 'je spoluvlastnický podíl' : 'jsou spoluvlastnické podíly'}${c.podiluCele ? `, a u ${c.podiluCele === 1 ? 'jednoho z nich je výměra' : `${fmt(c.podiluCele)} z nich jsou výměry`} za celé parcely` : ''}` : ''}.</p>
           <ul class="rule-list">
 ${radky}
           </ul>
@@ -2413,7 +2423,7 @@ ${radky}
           <h2>Co tenhle seznam je a co není</h2>
           <p class="rules-note" style="margin-top:0;">Měří se <b>vzdušná čára mezi nabídkami</b>, ne hranice parcel — ty bychom museli mít z katastru a nemáme je. <b>Netvrdíme tedy, že spolu pozemky sousedí</b>, ani že se dají koupit najednou: každý může prodávat někdo jiný a každý za svých podmínek.</p>
           <p class="rules-note">Nabídky se spojují do ${BLOKY.MEZ_METRU} m, a to <b>řetězově</b>: když A a B dělí 200 m a B a C taky, je to jedna lokalita, i když od A k C je 400 m. Tak se chová pás parcel podél cesty. Vypisují se lokality, kde jsou aspoň <b>${CELKY_NEJMENE} nabídky</b>.</p>
-          <p class="rules-note">U <b>spoluvlastnického podílu</b> je v inzerátu výměra celé parcely, ale kupuje se zlomek — kde je ve skupině podíl, je to u součtu napsané. Celková cena se sčítá, jen když ji má <b>každá</b> nabídka ve skupině.</p>
+          <p class="rules-note">U <b>spoluvlastnického podílu</b> se kupuje zlomek pozemku; u části z nich je v inzerátu výměra celé parcely, a kde taková ve skupině je, stojí to u součtu. Celková cena se sčítá, jen když ji má <b>každá</b> nabídka ve skupině.</p>
         </div>
       </div>
 

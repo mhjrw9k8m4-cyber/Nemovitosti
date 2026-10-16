@@ -922,7 +922,14 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const jeProdej = d.type === 'sale';
   const vyhrady = [];
   if (!jeProdej) vyhrady.push('Vyvolávací cena ve veřejné dražbě, ne cena požadovaná prodávajícím.');
-  if (d.podil) vyhrady.push('Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele.');
+  /* Výhrada u ceny ve strukturovaných datech. I tady platí, že výměra
+     znamená u podílů dvě různé věci — a vyhledávač si tu větu opisuje
+     do výsledku, takže nepravda z ní vede dál než ze stránky samé. */
+  if (d.podil) {
+    vyhrady.push(d.vymera_podilu
+      ? 'Cena je za spoluvlastnický podíl; uvedená výměra je ta podílová, celá parcela je větší.'
+      : 'Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele.');
+  }
   const nabidka = d.price > 0 ? Object.assign(
     {
       '@type': 'Offer', price: d.price, priceCurrency: 'CZK', url,
@@ -988,10 +995,21 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + (d.parcel && d.parcel !== '—' ? `<dt>Parcela</dt><dd>č. ${esc(d.parcel)}</dd>` : '')
     /* PODÍL PATŘÍ I DO STATICKÉHO VÝPISU. Tělo stránky ho hlásí
        (js/pozemek.js: „inzerát mluví o spoluvlastnickém podílu"), ale
-       v tom, co vidí vyhledávač a kdo nemá JavaScript, nestálo nic —
-       a zrovna u podílu je to ta nejdůležitější věta: cena je za zlomek,
-       výměra za celou parcelu. */
-    + (d.podil ? `<dt>Vlastnictví</dt><dd>spoluvlastnický podíl${d.zlomek ? ' ' + esc(d.zlomek) : ''} — cena je za podíl, výměra za celou parcelu</dd>` : '')
+       v tom, co vidí vyhledávač a kdo nemá JavaScript, nestálo nic.
+       DVĚ RŮZNÉ VĚTY, NE JEDNA. Dřív tu všem podílům stálo „cena je za
+       podíl, výměra za celou parcelu" — a to u většiny z nich není
+       pravda. Robot umí z textu inzerátu dokázat, že uložená výměra je
+       už ta podílová (příznak `vymera_podilu`, viz
+       scripts/parcely-z-textu.mjs), a v datech ho má 400 z 507 podílů.
+       U těch 400 výměra odpovídá tomu, co kupující dostane — a tvrdit
+       opak znamená poslat člověka přepočítávat číslo, které je správné.
+       Příklad z dat: Žeraviny, LV 308 m², podíl 1/12, parcela 3 698 m²
+       — 3 698 ÷ 12 = 308, tedy uložená výměra JE ta podílová. */
+    + (d.podil ? `<dt>Vlastnictví</dt><dd>spoluvlastnický podíl${d.zlomek ? ' ' + esc(d.zlomek) : ''} — `
+      + (d.vymera_podilu
+        ? 'výměra je ta podílová, celá parcela je větší'
+        : 'cena je za podíl, výměra za celou parcelu')
+      + `</dd>` : '')
     + (d.extra ? `<dt>Stav / zdroj</dt><dd>${esc(lidskeDatum(d.extra))}</dd>` : '')
     /* JAK DALEKO JE TO DO MĚSTA. U pozemku na vsi je to první otázka
        a z názvu obce se nepozná — „Lovečkovice" samy o sobě neřeknou
@@ -1022,7 +1040,13 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        bez JavaScriptu plnohodnotný obsah. */
     + (srov ? `<h2>${srov.p ? 'Srovnatelné spoluvlastnické podíly v okolí'
       : 'Srovnatelné pozemky v okolí'}</h2><p>${esc(srov.v)}`
-      + (srov.p ? ' Ceny jsou za metr, který kupujícímu připadne — výměra je celá parcela.' : '')
+      /* Totéž u srovnání: „výměra je celá parcela" platí jen pro část
+         podílů, a tady se navíc srovnávají nabídky z obou skupin, takže
+         jedna věta za všechny by lhala vždycky aspoň polovině. Cena za
+         metr je u obou skupin spočítaná tak, aby to byl metr, který
+         kupující dostane (vymeraVCene v js/ceny.js) — a to je to, co
+         o ní jde říct pravdivě. */
+      + (srov.p ? ' Ceny jsou za metr, který kupujícímu připadne — u podílu to není celá parcela.' : '')
       + `</p><ul>`
       + srov.r.map((x) => `<li>${fmt(x.m)} Kč/m² — `
         + (x.ja ? `<b>tenhle pozemek</b>` : `<a href="${esc(x.s)}">${esc(x.o)}</a>`)
