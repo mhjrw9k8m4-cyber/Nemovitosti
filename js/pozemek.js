@@ -30,6 +30,15 @@
   function hasParcel(d) { return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+  /* Dvě podoby jedné ikony u zvětšení mapy: rohy mířící ven znamenají
+     „na celou obrazovku", rohy dovnitř „zpátky do stránky". Stojí tu
+     oboje pohromadě schválně — vykreslení si bere první, přepínač
+     obě, a kdyby každé místo mělo svůj vlastní opis cesty, stačilo by
+     upravit ikonu na jednom z nich a tlačítko by se po zvětšení
+     překlopilo do jiného tvaru, než s jakým začalo. */
+  var SIPKY_VEN = 'M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3';
+  var SIPKY_DOVNITR = 'M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3';
+
   /* Rozřazení druhů je v js/ceny.js — visí na něm cenový model, takže
      tady (ani v mapě) nesmí být vlastní kopie. Byly tři a stačilo by
      doplnit druh do jedné z nich; web by pak na stránce pozemku psal
@@ -998,7 +1007,7 @@
              a nástrojem, a stojí to jeden přepínač. */
           '<button type="button" class="pzm-cela-btn" id="pzm-cela" aria-label="Zvětšit mapu na celou obrazovku" title="Na celou obrazovku">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
+            '<path d="' + SIPKY_VEN + '"/></svg>' +
           '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
@@ -1446,12 +1455,22 @@
     /* Zvětšení na celou obrazovku. Velikost dotáhne premer() přes
        ResizeObserver, takže se tu o ni nikdo starat nemusí. */
     var celaBtn = document.getElementById('pzm-cela');
+    /* IKONA SE MUSÍ PŘEKLOPIT TAKY. Tlačítko nemá žádný text — veze
+       jedinou ikonu se čtyřmi rohy mířícími VEN, tedy „zvětšit". Po
+       zvětšení se měnil jen popisek pro odečítač a bublina na myši,
+       zatímco ikona dál zvala ke zvětšení mapy, která už přes celou
+       obrazovku byla. U tlačítka bez textu je ikona celé jeho sdělení,
+       takže to nebyla kosmetika, ale nepravdivý ovladač: vedle sebe
+       stálo „Zmenšit mapu zpět do stránky" a šipky ven.
+       Rohy se proto obracejí dovnitř. */
     function nastavCelou(zap) {
       obal.classList.toggle('pzm-cela-zap', zap);
       document.body.classList.toggle('pzm-cela-telo', zap);
       if (celaBtn) {
         celaBtn.setAttribute('aria-label', zap ? 'Zmenšit mapu zpět do stránky' : 'Zvětšit mapu na celou obrazovku');
         celaBtn.title = zap ? 'Zpět do stránky' : 'Na celou obrazovku';
+        var tah = celaBtn.querySelector('path');
+        if (tah) tah.setAttribute('d', zap ? SIPKY_DOVNITR : SIPKY_VEN);
       }
       setTimeout(premer, 60);
       setTimeout(premer, 320);

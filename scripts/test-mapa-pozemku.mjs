@@ -574,6 +574,10 @@ const HOST = {
   await p.waitForTimeout(2200);
   pravda('v mapě je tlačítko na zvětšení', await p.locator('#pzm-cela').count() === 1);
   const pred = await p.evaluate(() => window.PK_PZ_MAPA.getSize().y);
+  const ikonaPred = await p.evaluate(() => {
+    const t = document.querySelector('#pzm-cela path');
+    return t ? t.getAttribute('d') : '';
+  });
   await p.locator('#pzm-cela').click();
   await p.waitForTimeout(900);
   const po = await p.evaluate(() => ({
@@ -586,6 +590,8 @@ const HOST = {
       return e ? Math.round(e.getBoundingClientRect().height) : 0; })(),
     prepinace: [...document.querySelectorAll('.pzm-cela-zap .pzm-v')]
       .filter(function (b) { return b.getBoundingClientRect().height > 0; }).length,
+    ikona: (function () { var t = document.querySelector('#pzm-cela path');
+      return t ? t.getAttribute('d') : ''; })(),
   }));
   /* Nestačí „vyšší než dřív": ve zvětšení musí mapa zabrat většinu
      okna. Jinak se pod ní nakupí panel, popis a vysvětlivky a zbude
@@ -595,17 +601,28 @@ const HOST = {
     `${pred} px → ${po.mapa} px z okna ${po.okno} px`);
   pravda('a ovládání zůstane po ruce', po.panel > 20 && po.prepinace > 0,
     `panel je vysoký ${po.panel} px, viditelných přepínačů ${po.prepinace}`);
+  /* IKONA JE U TOHO TLAČÍTKA CELÉ JEHO SDĚLENÍ — žádný text na něm
+     není. Měnil se jen popisek pro odečítač a bublina na myši, takže
+     ve zvětšení stálo „Zmenšit mapu zpět do stránky" a vedle toho
+     šipky mířící ven. Pro každého, kdo odečítač nepoužívá, zvalo
+     tlačítko ke zvětšení mapy, která už přes celou obrazovku byla. */
+  pravda('a ikona se překlopí na „zmenšit"', !!po.ikona && po.ikona !== ikonaPred,
+    `před ${ikonaPred.slice(0, 24)}…, po ${String(po.ikona).slice(0, 24)}…`);
   await p.keyboard.press('Escape');
   await p.waitForTimeout(700);
   const zavreno = await p.evaluate(() => ({
     cela: !!document.querySelector('.pzm-cela-zap'),
     mapa: window.PK_PZ_MAPA.getSize().y,
     telo: document.body.classList.contains('pzm-cela-telo'),
+    ikona: (function () { var t = document.querySelector('#pzm-cela path');
+      return t ? t.getAttribute('d') : ''; })(),
   }));
   pravda('Escape zvětšení zavře', !zavreno.cela && !zavreno.telo,
     'mapa přes celou obrazovku bez cesty ven je past');
   pravda('a mapa se vrátí do původní velikosti', Math.abs(zavreno.mapa - pred) <= 2,
     `${pred} px → ${zavreno.mapa} px`);
+  pravda('a ikona se vrátí k „zvětšit"', zavreno.ikona === ikonaPred,
+    `začínalo ${ikonaPred.slice(0, 24)}…, zpátky ${String(zavreno.ikona).slice(0, 24)}…`);
   await ctx.close();
 }
 

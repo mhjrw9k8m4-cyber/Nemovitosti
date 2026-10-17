@@ -3731,6 +3731,9 @@
         var on = isFav(d);
         favBtn.classList.toggle('on', on);
         favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
+
+        var slovo = favBtn.querySelector('.os-t');
+        if (slovo) slovo.textContent = on ? 'Uloženo' : 'Uložit';
         if (favOnly) renderList();
       });
       var skrytBtn = li.querySelector('.opp-skryt');

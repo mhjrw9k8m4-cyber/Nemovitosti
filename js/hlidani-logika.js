@@ -406,9 +406,10 @@
      by to byla lež o jednom pozemku.
 
      Přesně tahle past už jednou sklapla. Tady se počítalo přes klíče,
-     ale centrum upozornění (js/upozorneni-feed.js) si filtrovalo záznamy
-     po svém — a hlásilo 1 970 nových pozemků, zatímco stránka hlídání
-     i mapa jich ukazovaly 1 957. Dvě čísla pro tutéž věc, a to jedno
+     ale centrum upozornění si filtrovalo záznamy po svém (dělal je
+     js/upozorneni-feed.js, dnes už v repozitáři není) — a hlásilo
+     1 970 nových pozemků, zatímco stránka hlídání i mapa jich
+     ukazovaly 1 957. Dvě čísla pro tutéž věc, a to jedno
      z nich byl odznak, na který se klikalo právě na tu druhou stránku.
 
      Řadí se od nejnovějšího. Pozemky bez data (robot je ještě

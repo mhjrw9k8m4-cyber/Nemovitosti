@@ -341,7 +341,17 @@ hlas('Chybí proměnná z paletky', chybi, 'Doplňte ji v :root v css/styles.css
   /* Proměnná se dá nastavit i zvenčí — `style="--w:42%"` ze skriptu. Taková
      v šabloně nadeklarovaná být nemůže a chybou není, tak se dohledá tam,
      odkud se vážně nastavuje. */
-  const zvenku = ['js/main.js', 'js/pozemek.js', 'js/upozorneni.js', 'js/centrum.js']
+  /* Seznam se nesmí mlčky vyprázdnit. Stály v něm i dva soubory,
+     co v repozitáři nejsou: js/upozorneni.js a js/centrum.js.
+     Šly pryč s Upozorněními, jenže `existsSync` je jen přeskočil. Kontrola tím zeslábla a nijak to neohlásila: kdyby
+     zmizel i js/main.js, zůstal by seznam prázdný a každá proměnná
+     nastavovaná ze skriptu by se počítala jako nenadeklarovaná.
+     Proto se chybějící soubor hlásí, ne přeskakuje. */
+  const SOUBORY_ZVENKU = ['js/main.js', 'js/pozemek.js'];
+  hlas('Soubor ze seznamu „odkud se proměnné nastavují" neexistuje',
+    SOUBORY_ZVENKU.filter((f) => !existsSync(path.join(ROOT, f))),
+    'Opravte seznam v scripts/test-predloha.mjs — jinak kontrola tiše zeslábne.');
+  const zvenku = SOUBORY_ZVENKU
     .filter((f) => existsSync(path.join(ROOT, f)))
     .map((f) => readFileSync(path.join(ROOT, f), 'utf8')).join('\n');
   const deklarovane = new Set([

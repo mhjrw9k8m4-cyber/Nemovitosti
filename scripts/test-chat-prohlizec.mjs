@@ -75,7 +75,8 @@ pM.on('pageerror', (e) => chybyKonzole.push(String(e)));
 /* ODZNAK V MENU JE PRYČ. Tady se zkoušelo, že nepřečtená zpráva
    i nové pozemky z hlídání svítí v nabídce — na tečce u hamburgeru,
    u položek Zprávy a Hlídání, na skupině „Moje" a v titulku záložky.
-   Vyráběl to js/upozorneni.js, který šel s odebranými Upozorněními.
+   Vyráběl to js/upozorneni.js — ten už v repozitáři není, šel
+   s odebranými Upozorněními.
    Počty nepřečtených ukazuje stránka Zprávy sama (kontroly hned níž)
    a nové pozemky stránka Hlídání. */
 

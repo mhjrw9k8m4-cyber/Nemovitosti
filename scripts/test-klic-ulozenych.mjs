@@ -177,11 +177,17 @@ async function sUlozenymi(klice) {
   const r = await page.evaluate(async () => {
     const b = document.querySelector('#opp-list .opp-fav');
     if (!b) return { chyba: 'záložka na kartě není' };
+    const stav = () => ({ slovo: (b.querySelector('.os-t') || {}).textContent,
+      popis: b.getAttribute('aria-label') });
+    const pred = stav();
     b.click();
     await new Promise((res) => setTimeout(res, 500));
+    const po = stav();
     let kl = [];
     try { kl = JSON.parse(localStorage.getItem('pk_fav_v1')) || []; } catch (e) {}
-    return { klice: kl };
+    b.click();
+    await new Promise((res) => setTimeout(res, 300));
+    return { klice: kl, pred, po, zpet: stav() };
   });
   pravda('záložka na kartě existuje', !r.chyba, r.chyba);
   pravda(`klepnutí uloží jeden klíč (${(r.klice || []).length})`, (r.klice || []).length === 1,
@@ -191,6 +197,26 @@ async function sUlozenymi(klice) {
   pravda('a je v NOVÉM tvaru (pkey + výměra)',
     (r.klice || []).length === 1 && /#v\d+$/.test(r.klice[0]),
     'uložilo se: ' + JSON.stringify(r.klice));
+
+  /* A TLAČÍTKO TO MUSÍ DÁT NAJEVO — slovem, ne jen barvou.
+     Při vykreslení karty se podle stavu píše „Uložit" nebo „Uloženo",
+     jenže obsluha klepnutí měnila jen třídu a popisek pro odečítač.
+     Karta se překresluje pouze při zapnutém filtru „jen uložené", takže
+     u uloženého pozemku dál stálo „Uložit" a tlačítko si odporovalo samo
+     se sebou: text „Uložit", popisek „Odebrat z uložených". Komentář
+     u vykreslení přitom říká, proč to slovo na tlačítku je — „ikona sama
+     o sobě neřekne, jestli ukládá, sdílí nebo hlásí".
+     Hlídá se obojí a hlídá se i cesta zpátky: druhé klepnutí musí vrátit
+     původní stav, jinak by se dalo projít jen jedním směrem. */
+  pravda('tlačítko po uložení změní slovo na „Uloženo"',
+    r.po && r.po.slovo === 'Uloženo', `po klepnutí stojí „${r.po && r.po.slovo}"`);
+  pravda('a popisek pro odečítač s ním souhlasí',
+    r.po && /Odebrat/.test(r.po.popis || ''), `popisek „${r.po && r.po.popis}"`);
+  pravda('a druhé klepnutí vrátí „Uložit"',
+    r.zpet && r.zpet.slovo === 'Uložit' && /Uložit pozemek/.test(r.zpet.popis || ''),
+    `zpátky stojí „${r.zpet && r.zpet.slovo}" / „${r.zpet && r.zpet.popis}"`);
+  pravda('a před klepnutím to byl opravdu neuložený pozemek',
+    r.pred && r.pred.slovo === 'Uložit', `na začátku stálo „${r.pred && r.pred.slovo}"`);
   await ctx.close();
 }
 

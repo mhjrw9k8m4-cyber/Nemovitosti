@@ -264,12 +264,6 @@ jobs:
       - name: Jedna stupnice písma
         run: node scripts/test-pismo.mjs
 
-      - name: Rozbalené hledání se zase zavře
-        run: node scripts/test-hledani-zavirani.mjs
-
-      - name: Spodní lišta s cenou a akcí
-        run: node scripts/test-lista-dole.mjs
-
       - name: Osnova nadpisů (jeden h1, žádný přeskok)
         run: node scripts/test-osnova.mjs
 
@@ -766,3 +760,17 @@ jobs:
 
       - name: Hlídání okruhu od místa
         run: node scripts/test-okruh-hlidani.mjs
+
+      # Obě si berou prohlížeč importem hned v hlavičce. Vznikly spolu
+      # s histogramem cen a zapsaly se do rychlé úlohy „testy", kde se
+      # Playwright neinstaluje — tedy do úlohy, kde nemohly udělat nic
+      # než padnout na chybějícím balíčku a vzít s sebou celý běh.
+      # Tutéž chybu už kdysi udělal test-verdikt.mjs a právě proto to
+      # hlídá scripts/test-staticka.mjs. Ta zkouška chybu našla hned;
+      # jen se k ní dva dny nikdo nedostal, protože moje místní sada
+      # ji přeskakovala podle slova „playwright" v komentáři.
+      - name: Rozbalené hledání se zase zavře
+        run: node scripts/test-hledani-zavirani.mjs
+
+      - name: Spodní lišta s cenou a akcí
+        run: node scripts/test-lista-dole.mjs

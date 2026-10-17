@@ -855,3 +855,75 @@ Hlídá `scripts/test-znackovani.mjs` přes všech 2 276 stránek. Měří
 `<li>` nebo `<p>`, kde prohlížeč zavírá za autora a nevyvážený zápis je
 legální). A hlídá i sám sebe: do vzorku se vadu zkusí přidat a měření ji
 musí poznat — jinak by zkouška mohla být zelená navždycky.
+
+## 17. Dvě tlačítka lhala o svém stavu a CI bylo dva dny červené *17. 10.*
+
+### Záložka na kartě říkala „Uložit" i poté, co uložila
+
+Obsluha klepnutí na kartě výpisu dělala tři věci ze čtyř: přepnula
+třídu, přepsala `aria-label` — a **viditelné slovo nechala být**.
+Karta se překresluje jen při zapnutém filtru „jen uložené", takže
+u uloženého pozemku dál stálo „Uložit", zatímco odečítač četl
+„Odebrat z uložených". Změřeno klepnutím:
+
+| | text na tlačítku | popisek pro odečítač | třída |
+|---|---|---|---|
+| před | `Uložit` | `Uložit pozemek` | ne |
+| po (vada) | `Uložit` | `Odebrat z uložených` | ano |
+| po (opraveno) | `Uloženo` | `Odebrat z uložených` | ano |
+
+Na stránce pozemku bylo totéž tlačítko odjakživa v pořádku, takže
+nešlo o rozhodnutí, ale o opomenutí na jednom ze dvou míst.
+Hlídá `scripts/test-klic-ulozenych.mjs` — čtyři kontroly včetně cesty
+zpátky (druhé klepnutí musí vrátit „Uložit"). Ověřeno sabotáží: po
+odstranění jediného řádku zkouška spadne.
+
+### Zvětšení mapy nabízelo zvětšit mapu, která už byla přes celou obrazovku
+
+Tlačítko `#pzm-cela` nemá žádný text — veze jedinou ikonu se čtyřmi
+rohy mířícími **ven**. Po zvětšení se měnil `aria-label` i bublina na
+myši, ikona ne. Vedle sebe tedy stálo „Zmenšit mapu zpět do stránky"
+a šipky ven; kdo odečítač nepoužívá, neměl z čeho poznat stav.
+
+U tlačítka bez textu je ikona celé jeho sdělení, takže rohy se teď
+obracejí dovnitř. Obě cesty leží v `js/pozemek.js` vedle sebe jako
+`SIPKY_VEN` a `SIPKY_DOVNITR` a vykreslení si bere tutéž konstantu —
+jinak by stačilo upravit ikonu na jednom ze dvou míst a tlačítko by se
+po zvětšení překlopilo do jiného tvaru, než s jakým začalo.
+Hlídá `scripts/test-mapa-pozemku.mjs`, taky ověřeno sabotáží.
+
+### A hlavně: rychlá úloha v CI padala na chybějícím balíčku
+
+`scripts/test-hledani-zavirani.mjs` a `scripts/test-lista-dole.mjs`
+vznikly s histogramem cen a zapsaly se do úlohy `testy`, kde se
+Playwright **neinstaluje**. Obě si ho berou importem hned v hlavičce,
+takže v CI nemohly udělat nic než padnout na `Cannot find package
+'playwright-core'` — a protože se tím zastaví celý běh, nespustilo se
+za nimi nic dalšího. Přesně na tohle je
+`scripts/test-staticka.mjs` a chybu opravdu našla. Jen se k ní dva dny
+nikdo nedostal, protože moje místní dávka zkoušku přeskakovala podle
+slova „playwright" **kdekoli v souboru** — a ta zkouška o něm mluví
+v komentáři. Dávka teď hledá import, ne slovo, a seznam zkoušek si
+bere přímo z `.github/workflows/testy.yml`, aby nemohl zestárnout.
+
+### Pojistka na lži v komentářích byla slepá dvakrát
+
+Kontrola „odkaz na soubor, který v repozitáři není" vznikla proto, že
+dokumentace popisovala rozesílač, který nikdy neexistoval. Měla dvě
+díry:
+
+1. **Nečetla styly.** `css/styles.css` u třístupňové škály nadpisů
+   tvrdilo „Hlídá scripts/test-nadpisy.mjs" — a taková zkouška není.
+   Škálu přitom hlídá `scripts/test-jeden-styl.mjs`, takže
+   kontrola existovala a jen se na ni odkazovalo jménem, které nikam
+   nevede. Komentáře ve stylech jsou stejně podrobné jako v kódu,
+   takže lhát umí stejně.
+2. **Přiznání si obstarala sama cesta.** Zmínit chybějící soubor se
+   smí, když se na témž řádku řekne, že chybí — a hledalo se to
+   v celém řádku včetně té cesty. Jenže js/upozorneni.js (není tu)
+   má ve jméně „neni", takže každá jeho zmínka se tvářila jako
+   přiznaná absence. Ze sedmi zmínek odebraných Upozornění se dívala na jednu.
+
+Po opravě (styly se čtou, cesta se z řádku vyškrtne a teprve zbytek se
+čte jako věta o ní) prochází 2 733 souborů a všech sedm zmínek je
+přeformulovaných tak, aby říkaly pravdu.

@@ -21,6 +21,9 @@
   function hasParcel(d) { return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
+  var SIPKY_VEN = 'M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3';
+  var SIPKY_DOVNITR = 'M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3';
+
   function druhGroup(s) {
     return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
@@ -645,7 +648,7 @@
 
           '<button type="button" class="pzm-cela-btn" id="pzm-cela" aria-label="Zvětšit mapu na celou obrazovku" title="Na celou obrazovku">' +
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>' +
+            '<path d="' + SIPKY_VEN + '"/></svg>' +
           '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
@@ -963,12 +966,15 @@
     function premer() { try { m.invalidateSize({ pan: false }); } catch (e) {} }
 
     var celaBtn = document.getElementById('pzm-cela');
+
     function nastavCelou(zap) {
       obal.classList.toggle('pzm-cela-zap', zap);
       document.body.classList.toggle('pzm-cela-telo', zap);
       if (celaBtn) {
         celaBtn.setAttribute('aria-label', zap ? 'Zmenšit mapu zpět do stránky' : 'Zvětšit mapu na celou obrazovku');
         celaBtn.title = zap ? 'Zpět do stránky' : 'Na celou obrazovku';
+        var tah = celaBtn.querySelector('path');
+        if (tah) tah.setAttribute('d', zap ? SIPKY_DOVNITR : SIPKY_VEN);
       }
       setTimeout(premer, 60);
       setTimeout(premer, 320);

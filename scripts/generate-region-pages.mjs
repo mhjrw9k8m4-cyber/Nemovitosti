@@ -125,8 +125,8 @@ import { esc, attr } from './text.mjs';
  * 114 nabídek po 417 px, takže je stránka 52 744 px vysoká — dvaašedesát
  * obrazovek — a nadpisy „Prohlédněte si okres na mapě" a „Kde je
  * v okrese nabídek nejvíc" stojí až na 50 468 a 50 739 px. Tam se nikdo
- * nedoroluje. Takových stránek je 31 z 77 nad pětadvacet nabídek a sedm
- * nad padesát.
+ * nedoroluje. Změřeno tehdy na 77 okresech: 31 z nich mělo nad
+ * pětadvacet nabídek a sedm nad padesát.
  *
  * ZKRÁTIT SEZNAM BY ALE ZNAMENALO ZAHODIT ODKAZY. U Hodonína 54 odkazů
  * na stránky pozemků, a ty jsou pro vyhledávač cesta dovnitř webu.

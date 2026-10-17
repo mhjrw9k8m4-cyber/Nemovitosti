@@ -5796,6 +5796,15 @@
         var on = isFav(d);
         favBtn.classList.toggle('on', on);
         favBtn.setAttribute('aria-label', on ? 'Odebrat z uložených' : 'Uložit pozemek');
+        /* A SLOVO NA TLAČÍTKU TAKY. Při vykreslení karty se píše „Uložit"
+           nebo „Uloženo" podle stavu, jenže klepnutí měnilo jen třídu
+           a popisek pro odečítač — viditelný text zůstal starý. Karta se
+           překresluje jen při zapnutém filtru „jen uložené", takže
+           u uloženého pozemku dál stálo „Uložit" a tlačítko si se svým
+           vlastním popiskem odporovalo. Změřeno klepnutím: text „Uložit",
+           popisek „Odebrat z uložených". */
+        var slovo = favBtn.querySelector('.os-t');
+        if (slovo) slovo.textContent = on ? 'Uloženo' : 'Uložit';
         if (favOnly) renderList();
       });
       var skrytBtn = li.querySelector('.opp-skryt');

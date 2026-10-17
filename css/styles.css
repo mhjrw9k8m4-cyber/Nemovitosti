@@ -209,7 +209,7 @@
        --h1-domu     titulní: jediná stránka, která je plakát
        --h1-nastroj  nástroj: hlídání, zprávy, můj inzerát, upozornění —
                      tam člověk pracuje a nadpis nemá křičet
-     Hlídá scripts/test-nadpisy.mjs. */
+     Hlídá scripts/test-jeden-styl.mjs. */
   /* I tyhle tři jsou velikosti písma, takže patří na touž stupnici
      jako všechno ostatní (scripts/test-pismo.mjs). Před sjednocením
      měly krajní hodnoty 30/50, 38/92 a 28 — tedy tři čísla ze

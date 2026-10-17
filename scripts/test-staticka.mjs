@@ -109,7 +109,12 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
       const cesta = path.join(dir, j);
       const st = fs.statSync(cesta);
       if (st.isDirectory()) { if (hloubka > 0) projdi(cesta, hloubka - 1); continue; }
-      if (/\.(mjs|js|sql|md|ya?ml|html)$/.test(j)) zdroje.push(cesta);
+      /* Styly se sem nepočítaly a právě ony lhaly: css/styles.css
+         u třístupňové škály nadpisů tvrdilo „Hlídá
+         scripts/test-nadpisy.mjs" — zkouška toho jména tu není (škálu
+         hlídá scripts/test-jeden-styl.mjs). Komentáře ve stylech jsou
+         přitom stejně podrobné jako v kódu, takže lhát umí stejně. */
+      if (/\.(mjs|js|sql|md|ya?ml|html|css)$/.test(j)) zdroje.push(cesta);
     }
   };
   projdi(ROOT, 2);
@@ -117,7 +122,17 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   /* Zmínit chybějící soubor SE SMÍ — pokud se na témž řádku říká, že
      chybí. Právě to je totiž ta užitečná informace („e-maily neposílá
      nikdo, protože rozesílač tu není"). Zakázané je tvrdit opak. */
-  const priznanaAbsence = /nen[ií]|chyb[ií]|neexistuj|nebyl|nemá|není v repozitáři/i;
+  /* Množné číslo je totéž přiznání. Bez „nejsou" se o dvou souborech
+     na jednom řádku nedalo napsat, že tu nejsou, než každý na vlastní
+     řádek — a to je pravidlo o psaní, ne o pravdivosti. */
+  const priznanaAbsence = /nen[ií]|nejsou|chyb[ií]|neexistuj|nebyl|nemá|není v repozitáři/i;
+  /* PŘIZNÁNÍ SE HLEDÁ MIMO SAMU CESTU. Jinak si ho jméno souboru
+     obstará samo: „js/upozorneni.js" obsahuje „neni", takže každá
+     zmínka toho souboru se tvářila jako přiznaná absence a kontrola ji
+     mlčky pustila dál. Změřeno: ze čtyř zmínek odebraných Upozornění
+     se dívala jen na jednu. Cesty se proto z řádku vyškrtnou a teprve
+     zbytek se čte jako věta o nich. */
+  const bezCest = (radek) => radek.replace(/\b(scripts|js|api|supabase)\/[\w-]+\.(?:mjs|js|sql)\b/g, ' ');
   for (const f of zdroje) {
     const rel_f = path.relative(ROOT, f);
     if (rel_f === 'scripts/test-staticka.mjs') continue;   // vlastní vzorek
@@ -126,7 +141,7 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
       for (const m of radek.matchAll(/\b(scripts|js|api|supabase)\/([\w-]+\.(?:mjs|js|sql))\b/g)) {
         const rel = m[1] + '/' + m[2];
         if (fs.existsSync(path.join(ROOT, rel))) continue;
-        if (priznanaAbsence.test(radek)) continue;
+        if (priznanaAbsence.test(bezCest(radek))) continue;
         if (!chybejici.has(rel)) chybejici.set(rel, new Set());
         chybejici.get(rel).add(rel_f);
       }
@@ -201,7 +216,7 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
      běžela současně v rychlé úloze. Naměřeno 23 takových z 87, než se
      přesunuly. Výjimky se píšou sem, s důvodem — ne zamlčením. */
   const PATRI_K_PROHLIZECI = new Set([
-    // scripts/test-neco.mjs  (důvod, proč patří do pomalé úlohy)
+    // 'scripts/test-<jméno>.mjs',  (důvod, proč patří do pomalé úlohy)
   ]);
   const zbytecneProh = [...vProh].filter((c) => !chceProhlizec(c) && !PATRI_K_PROHLIZECI.has(c));
   const dvakrat = [...new Set(vsechny.filter((x, i) => vsechny.indexOf(x) !== i))];

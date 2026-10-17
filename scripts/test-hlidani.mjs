@@ -521,9 +521,9 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
   const hlid = bezKomentaru(readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8'));
   /* Výpis nových pozemků v kartě hledání. Dřív to byla stránka
-     upozornění (js/centrum.js) a odznak v nabídce (js/upozorneni.js);
-     obojí šlo pryč s Upozorněními a zbyl tenhle modul, který hlídání
-     používá přímo. */
+     upozornění (js/centrum.js, v repozitáři už není) a odznak
+     v nabídce (js/upozorneni.js, taky není); obojí šlo pryč
+     s Upozorněními a zbyl tenhle modul, který hlídání používá přímo. */
   const vypis = bezKomentaru(readFileSync(new URL('../js/nove-pozemky.js', import.meta.url), 'utf8'));
   /* Pojistka: kdyby se ta místa přejmenovala, kontroly níž by hlídaly
      prázdno a tvářily se spokojeně. */

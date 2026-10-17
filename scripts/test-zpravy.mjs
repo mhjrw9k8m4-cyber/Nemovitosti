@@ -103,7 +103,7 @@ je('délka', 'prázdné pole nespadne', Z.stavDelky('').delka, 0);
 je('délka', 'mez je stejná jako v databázi', Z.MAX_ZPRAVA, 2000);
 
 /* ODZNAK NEPŘEČTENÝCH JE PRYČ. Byl v nabídce vedle „Upozornění" a šel
-   s nimi (js/upozorneni.js). Počty nepřečtených si počítá a ukazuje
+   s nimi — js/upozorneni.js v repozitáři není. Počty si počítá a ukazuje
    stránka Zprávy sama — to hlídají kontroly výš. */
 /* ---------------- výsledek ---------------- */
 console.log(`\nPsaní v aplikaci: ${bezi} testů`);
