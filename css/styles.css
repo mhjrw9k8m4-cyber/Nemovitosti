@@ -4755,6 +4755,28 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--copper-bright,#8CC3A4);}
 .okr-stat span{font-size:12px; color:var(--muted,#9db0a4); text-transform:uppercase; letter-spacing:0.04em;}
 .okr-list{display:flex; flex-direction:column; gap:10px; margin:14px 0 0;}
+/* DLOUHÝ OCAS VÝPISU. Okres Hodonín má 114 nabídek po 417 px, takže
+   stránka měla 52 744 px a nadpisy pod výpisem stály na 50 468 px —
+   tam se nikdo nedoroluje. Zbytek se proto skládá do <details>; obsah
+   zůstává v HTML i bez JavaScriptu (viz vypisSeZkracenim v
+   scripts/generate-region-pages.mjs).
+   Ovladač vypadá jako ostatní odkazy webu, ne jako nativní trojúhelník:
+   ten se v každém prohlížeči kreslí jinak a tady by vedle karet
+   vypadal jako cizí prvek. */
+.okr-vic{margin:0;}
+.okr-vic > summary{list-style:none; cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px; min-height:44px;
+  font-size:14px; font-weight:600; color:var(--copper);
+  text-decoration:underline; text-underline-offset:3px;}
+.okr-vic > summary::-webkit-details-marker{display:none;}
+.okr-vic > summary::after{content:""; width:9px; height:9px; flex:none;
+  border-right:2px solid currentColor; border-bottom:2px solid currentColor;
+  transform:rotate(45deg) translate(-2px,-2px);
+  transition:transform var(--cas-zakladni) var(--ease);}
+.okr-vic[open] > summary::after{transform:rotate(225deg) translate(-2px,-2px);}
+.okr-vic > summary:hover{color:var(--copper-bright);}
+.okr-vic > summary:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
+.okr-vic-list{display:flex; flex-direction:column; gap:10px; margin:10px 0 0;}
 /* PEVNÁ MŘÍŽKA MÍSTO ZALAMOVÁNÍ.
    Dokud byl řádek flexbox, měnil tvar podle délky textu: v okrese
    Benešov měl 19 řádků výšku 54 px a 11 řádků 83 px, protože popis se

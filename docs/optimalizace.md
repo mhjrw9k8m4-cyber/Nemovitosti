@@ -769,3 +769,89 @@ Prověřeno u toho i zbylých 35 prohlížečových zkoušek bez zaclánění:
 jediné tři sahají na `scrollHeight` a ani jedna z nich ho neporovnává
 s mezí — `test-ceny-hledani` měří stránku bez mapy vrstev, zbylé dvě jím
 jen rolují. Tahle vada byla jedna, ne řada.
+
+## 15. Okresní stránka měla dvaašedesát obrazovek *17. 10.*
+
+Okresní stránka vypisovala všechny nabídky okresu — jiné typy stránek
+strop mají (`STROP_RADKU` 60 u druhů, `STROP_ROZPOCET` 40 u rozpočtů),
+tahle ne. Naměřeno na telefonu 390 px, okres Hodonín:
+
+| | |
+|---|---|
+| nabídek ve výpisu | 114 |
+| výška jedné karty | 417 px (medián) |
+| výška stránky | **52 744 px = 62 obrazovek** |
+| „Prohlédněte si okres na mapě" | 50 468 px |
+| „Kde je v okrese nabídek nejvíc" | 50 739 px |
+
+Dvě celé sekce tedy stály tam, kam se nikdo nedoroluje. Z 77 okresů má
+31 přes pětadvacet nabídek a sedm přes padesát; u druhových stránek je
+to dalších deset z třinácti.
+
+**Zkrátit seznam ale nejde.** U Hodonína by se zahodilo 54 odkazů na
+stránky pozemků, a ty jsou pro vyhledávač cesta dovnitř webu. Zbytek se
+proto nezahazuje, jen skládá do `<details>`: obsah zůstává v HTML, čte
+ho odečítač i vyhledávač a nepotřebuje to ani řádek skriptu — bez
+JavaScriptu funguje `<details>` taky.
+
+Po změně: **14 391 px** (17 obrazovek), mapa na 12 116 px místo 50 468.
+Rozbalených zůstává 24 karet, zbytek je za ovladačem „Zobrazit zbylých
+90 nabídek". Ovladač vypadá jako ostatní odkazy webu, ne jako nativní
+trojúhelník — ten se v každém prohlížeči kreslí jinak.
+
+### A zkouška, která tiše neměřila nic
+
+Napsal jsem k tomu `scripts/test-dlouhy-vypis.mjs` a jeho nejdůležitější
+kontrola zněla „na stránce je tolik nabídek, kolik jich okres v datech
+má". Sabotáž (skutečné zahození zbytku výpisu) ji **nechala zelenou**.
+
+Příčina: název okresu se četl z nadpisu vzorem `Pozemky v okrese (…)`
+s obyčejnou mezerou, jenže krok sazby tam sází mezeru nezlomitelnou
+(znak 160). Vzor se nechytil ani jednou, `continue` kontrolu přeskočil
+u všech 77 stránek a zkouška hlásila úspěch, protože neměla co porovnat.
+
+Je to past, kterou má tenhle repozitář popsanou už u `test-cerstvost`
+(„vzor hlídá SLOVA, ne tvar mezery") — a stejně jsem do ní spadl.
+Mezery se teď nejdřív srovnají a přibyla pojistka, která hlásí, kolik
+okresů se opravdu porovnalo: kdyby jich bylo míň než 75, zkouška padne,
+i kdyby všechny porovnané seděly.
+
+## 16. Dva tisíce stránek zavíralo div, který neotevřely *17. 10.*
+
+Statický výpis na stránce pozemku se vkládal takhle:
+
+```js
+h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/, `<div id="pz-detail">${staticky}</div>`)
+```
+
+Vzor je **nenasytný**, takže se zastaví na PRVNÍM `</div>`. V předloze
+je uvnitř ještě jeden div („Načítám pozemek…"), takže se nahradila jen
+první polovina prvku a jeho vlastní zavírací značka zůstala navíc.
+Každá z 2 140 stránek pozemků měla o jeden `</div>` víc, než otevřela.
+Předloha `pozemek.html` přitom vyvážená byla — vadu dělal generátor.
+
+**Proč se na to nepřišlo pohledem.** Prohlížeč přebytečnou zavírací
+značku ignoruje, když není co zavřít, takže DOM vyšel správně: ověřeno,
+že `#pz-detail` seděl v `main > .pz-wrap` a `<main>` neobsahoval
+patičku. Na obrazovce tedy nebylo poznat nic. Platné HTML ale není
+kosmetika: počítá s ním každý nástroj, který na rozdíl od prohlížeče
+neodpouští.
+
+Hranice prvku se teď najde **počítáním úrovní vnoření** (`nahradPrvek`),
+ne regulárním výrazem — ten to neumí: nenasytný skončí u prvního
+`</div>`, hladový u posledního na stránce. Když HTML vyvážené není,
+funkce radši nesáhne na nic; pozná se to hned, stránka zůstane
+s hláškou „Načítám pozemek…".
+
+**Ukončené nabídky se znovu negenerují**, takže 221 stránek si tu vadu
+neslo dál. Opravuje je migrace na přesný otisk té vady
+(`</article></div></div>`, kde `</article>` uzavře statický výpis,
+první `</div>` prvek `#pz-detail` a druhý je ten přebytečný) — ověřeno
+na všech 221: vzor je na stránce právě jednou a po opravě vyjdou úrovně
+na nulu u všech do jedné.
+
+Hlídá `scripts/test-znackovani.mjs` přes všech 2 276 stránek. Měří
+`<div>`, protože jich je nejvíc a nemůžou se uzavřít samy (na rozdíl od
+`<li>` nebo `<p>`, kde prohlížeč zavírá za autora a nevyvážený zápis je
+legální). A hlídá i sám sebe: do vzorku se vadu zkusí přidat a měření ji
+musí poznat — jinak by zkouška mohla být zelená navždycky.

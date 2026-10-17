@@ -389,6 +389,15 @@ jobs:
       - name: Zařazení pozemku do okresu
         run: node scripts/test-okres.mjs
 
+      - name: Vyváženost značek
+        run: node scripts/test-znackovani.mjs
+
+      - name: Dlouhý výpis okresu
+        run: node scripts/test-dlouhy-vypis.mjs
+
+      - name: Komentáře v hotových stránkách
+        run: node scripts/test-komentare-v-strankach.mjs
+
   # Všechno, co potřebuje opravdový prohlížeč: chat, mapa, hlavička,
   # kontrast, dotykové terče, výpadky… Běží zvlášť od rychlých testů, aby
   # se kvůli stahování Chromia nečekalo na každou drobnost. Kroky, které
@@ -582,9 +591,6 @@ jobs:
 
       - name: Mapový podklad (tlumený, ale ne vybělený)
         run: node scripts/test-podklad.mjs
-
-      - name: Komentáře v hotových stránkách
-        run: node scripts/test-komentare-v-strankach.mjs
 
       - name: Barva u verdiktu o ceně
         run: node scripts/test-verdikt.mjs

@@ -116,6 +116,38 @@ const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec
 /* Únik do HTML drží jedno místo pro celý web (scripts/text.mjs).
    `attr` je totéž pod jménem, které u atributů čte lépe. */
 import { esc, attr } from './text.mjs';
+
+/* KOLIK NABÍDEK STOJÍ V OKRESNÍM VÝPISU ROZBALENÝCH.
+ *
+ * Okresní stránka vypisuje VŠECHNO — jiné typy stránek mají strop
+ * (STROP_RADKU u druhů, STROP_ROZPOCET u rozpočtů) a za ním větu „zbytek
+ * je na mapě", tahle ne. Naměřeno na telefonu 390 px: okres Hodonín má
+ * 114 nabídek po 417 px, takže je stránka 52 744 px vysoká — dvaašedesát
+ * obrazovek — a nadpisy „Prohlédněte si okres na mapě" a „Kde je
+ * v okrese nabídek nejvíc" stojí až na 50 468 a 50 739 px. Tam se nikdo
+ * nedoroluje. Takových stránek je 31 z 77 nad pětadvacet nabídek a sedm
+ * nad padesát.
+ *
+ * ZKRÁTIT SEZNAM BY ALE ZNAMENALO ZAHODIT ODKAZY. U Hodonína 54 odkazů
+ * na stránky pozemků, a ty jsou pro vyhledávač cesta dovnitř webu.
+ * Zbytek se proto nezahazuje, jen složí do <details>: obsah zůstává
+ * v HTML (vyhledávač ho vidí), čte ho i hlasový odečítač a nepotřebuje
+ * to ani řádek skriptu — bez JavaScriptu funguje <details> taky.
+ */
+const ROZBALENO_V_OKRESE = 24;
+
+/* Výpis, kterému se dlouhý ocas složí do <details>. Když je nabídek
+   málo, vrátí se prostě všechny — žádný ovladač, který nic neskrývá. */
+function vypisSeZkracenim(radky, mez) {
+  if (radky.length <= mez + 4) return radky.join('\n');
+  const vic = radky.length - mez;
+  const slovo = vic === 1 ? 'nabídku' : (vic >= 2 && vic <= 4 ? 'nabídky' : 'nabídek');
+  return radky.slice(0, mez).join('\n')
+    + `\n            <details class="okr-vic">`
+    + `<summary>Zobrazit zbylých ${fmt(vic)} ${slovo}</summary>`
+    + `<div class="okr-vic-list">\n${radky.slice(mez).join('\n')}\n</div></details>`;
+}
+
 function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('cs-CZ') : ''; }
 /* Čeština má u čísel tři tvary, ne dva: 1 okres, 2 okresy, 5 okresů.
    Štítky u čísel se psaly natvrdo v množném čísle, takže kraj Praha
@@ -1033,7 +1065,7 @@ for(const okres of eligibleOkres){
   const obecLinks = obceVic.slice(0,12).map((m)=>
     `<a href="index.html?obec=${encodeURIComponent(m)}&amp;okres=${encodeURIComponent(okres)}#mapa">${esc(m)} <span>${poObci[m]}</span></a>`).join('');
   const tS = typStrankyVypisu(list);
-  const rows = list.map((o)=>itemRow(o, true, null, tS.skryt)).join('\n');
+  const rows = vypisSeZkracenim(list.map((o)=>itemRow(o, true, null, tS.skryt)), ROZBALENO_V_OKRESE);
   const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
   const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
   const siblings = okresyVOkoli(okres, 6);

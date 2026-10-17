@@ -814,6 +814,45 @@ export function kamDal(d) {
  * v CSS nic neznamená. Hlídá scripts/test-vlozeny-styl.mjs porovnáním
  * s předlohou znak po znaku.
  */
+/* Nahradí CELÝ prvek, který začíná danou značkou — od ní až po její
+   vlastní zavírací značku, spočítanou podle úrovní vnoření. Regulární
+   výraz to neumí: nenasytný skončí u prvního `</div>`, hladový
+   u posledního na stránce. */
+/* PŘEBYTEČNÁ ZAVÍRACÍ ZNAČKA NA UŽ UKONČENÝCH STRÁNKÁCH.
+ *
+ * Statický blok se dřív vkládal nenasytným vzorem, který se zastavil na
+ * prvním `</div>`, takže v HTML zůstala zavírací značka navíc (viz
+ * nahradPrvek výš). Nově generované stránky už ji nemají, jenže ukončené
+ * se znovu negenerují — ty chodí jen touhle cestou. Bez tohohle kroku by
+ * si 221 stránek neplatné HTML neslo až do smazání.
+ *
+ * Opravuje se PŘESNÝ otisk té vady, ne „nějaký div navíc": `</article>`
+ * uzavře statický výpis, první `</div>` prvek #pz-detail a druhý je ten
+ * přebytečný. Ověřeno na všech 221: vzor je na stránce právě jednou
+ * a po jeho opravě vyjdou úrovně na nulu u všech do jedné.
+ */
+function migrujPrebytecnyDiv(html) {
+  const VZOR = '</article></div></div>';
+  if (html.split(VZOR).length - 1 !== 1) return html;   // jiný tvar — nesaháme
+  return html.replace(VZOR, '</article></div>');
+}
+
+function nahradPrvek(html, zacatek, cim) {
+  const od = html.indexOf(zacatek);
+  if (od < 0) return html;
+  const znacka = /<div\b|<\/div>/g;
+  znacka.lastIndex = od;
+  let hloubka = 0, m;
+  while ((m = znacka.exec(html)) !== null) {
+    hloubka += m[0] === '</div>' ? -1 : 1;
+    if (hloubka === 0) return html.slice(0, od) + cim + html.slice(m.index + m[0].length);
+  }
+  /* Nevyvážené HTML: radši se nesáhne na nic, než aby se uřízl zbytek
+     stránky. Pozná se to na první zkoušce — stránka zůstane s hláškou
+     „Načítám pozemek…". */
+  return html;
+}
+
 function bezKomentaruVeStylu(html) {
   return html.replace(/(<style[^>]*>)([\s\S]*?)(<\/style>)/g,
     (cele, zacatek, telo, konec) => zacatek + ocistiCss(telo) + konec);
@@ -1066,8 +1105,17 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
         + `</ul>`
       : '')
     + `</article>`;
-  h = h.replace(/<div id="pz-detail">[\s\S]*?<\/div>/,
-    `<div id="pz-detail">${staticky}</div>`);
+  /* CELÝ PRVEK, NE JEN PO PRVNÍ ZAVÍRACÍ ZNAČKU.
+     Stál tu nenasytný vzor `<div id="pz-detail">[\s\S]*?<\/div>` —
+     a ten se zastaví na PRVNÍM `</div>`, tedy uprostřed. V předloze je
+     uvnitř ještě jeden div („Načítám pozemek…"), takže se nahradilo
+     `<div id="pz-detail"><div class="pz-loading">…</div>` a původní
+     zavírací značka prvku zůstala navíc: každá z 2 140 stránek pozemků
+     měla o jeden `</div>` víc, než otevřela. Prohlížeč to odpouští —
+     DOM vyšel správně, ověřeno — ale platné HTML to není a nástroj,
+     který na rozdíl od prohlížeče neodpouští, si na tom vyláme zuby.
+     Hranice prvku se proto najde počítáním úrovní. */
+  h = nahradPrvek(h, '<div id="pz-detail">', `<div id="pz-detail">${staticky}</div>`);
 
   /* Předání skriptu: která nabídka to je, bez tahání z adresy.
 
@@ -1530,8 +1578,8 @@ export function generuj() {
       /* Úklid komentářů patří mezi přepisy, které musí na KAŽDOU stránku:
          ukončené stránky se jinak nepřepisují, takže by si 221 z nich
          komentáře z předlohy neslo až do smazání. */
-      const migrovano = bezKomentaruVHtml(migrujUkoncenaData(
-        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1]));
+      const migrovano = bezKomentaruVHtml(migrujPrebytecnyDiv(migrujUkoncenaData(
+        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1])));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }
