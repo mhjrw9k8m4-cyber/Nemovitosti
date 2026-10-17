@@ -886,6 +886,85 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   }
 }
 
+/* ---------------- proč nesedí nic ----------------
+ *
+ * Uložené hledání, kterému neodpovídá ani jeden pozemek, dosud řeklo
+ * „Celkem sedí: 0 pozemků" a slíbilo, že až nějaký přibude, vypíše ho.
+ * To je pravda, ale k ničemu: člověk nepozná, jestli čeká na vzácnou
+ * nabídku, nebo si uložil něco, co nemůže vyjít nikdy — a hlídání, po
+ * kterém nikdy nic nepřijde, si lidé vyloží jako rozbitý web.
+ *
+ * Odpověď se nehádá, měří se: každé kritérium se zkusí vypustit zvlášť.
+ * Rada ale musí být PRAVDIVÁ, a to je celé jádro téhle zkoušky —
+ * poslat člověka uvolnit cenu u hledání, kde by to nepomohlo, je horší
+ * než mlčet.
+ */
+{
+  const VZOREK = [
+    P({ price: 500000, area: 800, druh: 'stavební pozemek' }),
+    P({ price: 700000, area: 1200, druh: 'stavební pozemek' }),
+    P({ price: 300000, area: 4000, druh: 'orná půda' }),
+    /* Pozor na `place`: P() ho má ve výchozím stavu „Kolín" a mistoSedi()
+       se dívá na obec i okres, takže by tahle nabídka bez vlastní obce
+       spadla do hledání na Kolín — a zkouška by měřila něco jiného, než
+       si myslí. (Napoprvé přesně tohle udělala.) */
+    P({ okres: 'Tábor', place: 'Tábor', price: 100000, area: 900, druh: 'zahrada' }),
+  ];
+  je('nesedí', 'když něco sedí, nevysvětluje se nic',
+    H.procNicNesedi({ okres: 'Kolín' }, VZOREK), null);
+  const cena = H.procNicNesedi({ okres: 'Kolín', max_price: 100000 }, VZOREK);
+  je('nesedí', 'za prázdný výsledek může nejvyšší cena', cena && cena.kriterium, 'max_price');
+  je('nesedí', 'a řekne se, kolik by bez ní sedělo', cena && cena.kolik, 3);
+  const vymera = H.procNicNesedi({ okres: 'Kolín', min_area: 9000 }, VZOREK);
+  je('nesedí', 'jindy může za prázdno nejmenší výměra', vymera && vymera.kriterium, 'min_area');
+  /* Vypustit se smí jen to, co uvolnit JDE. „V okrese Kolín nic není,
+     ale v Táboře ano" není rada, je to popis toho, že hledání má smysl;
+     a kdo hledá dražby, nechce slyšet, ať se podívá na prodeje.
+     Hlídá se to na SEZNAMU, ne na výsledku: hromádka se předem zužuje
+     právě místem a typem, takže ani kdyby v seznamu byly, nemohly by
+     vyjít — a zkouška by prošla nad vadou, kterou má chytat. Seznam je
+     to jediné místo, kde je ta vada vidět. */
+  je('nesedí', 'místo se mezi uvolnitelné podmínky nepočítá',
+    Object.prototype.hasOwnProperty.call(H.JMENA_KRITERII, 'okres'), false);
+  je('nesedí', 'ani typ nabídky',
+    Object.prototype.hasOwnProperty.call(H.JMENA_KRITERII, 'ptype'), false);
+  /* Když nepomůže žádné jediné kritérium, může za to jejich KOMBINACE
+     — a polovičatá rada („zkuste cenu") by poslala člověka měnit něco,
+     co samo o sobě nestačí. */
+  const dve = H.procNicNesedi({ okres: 'Kolín', max_price: 100000, min_area: 9000 }, VZOREK);
+  je('nesedí', 'dvě nemožné podmínky naráz se nesvedou na jednu',
+    dve && dve.kriterium, null);
+  /* A vybírá se to, co pomůže NEJVÍC: rada má vést k největšímu nálezu,
+     ne k prvnímu, na který se narazí. Tahle dvojice to musí umět
+     rozlišit — zadání je schválně takové, že uvolnění ceny dá DVA
+     nálezy a uvolnění druhu JEDEN. (Napoprvé tu stálo zadání, kde byl
+     možný jen jeden kandidát, takže se o výběru neměřilo nic.) */
+  const vic = H.procNicNesedi({ okres: 'Kolín', max_price: 400000, druh: 'stavební pozemek' }, VZOREK);
+  je('nesedí', 'ze dvou možných se vybere ta s větším nálezem',
+    vic && vic.kriterium, 'max_price');
+  je('nesedí', '  a sedí u ní počet', vic && vic.kolik, 2);
+  /* Pojistka proti radě, která je rovnou lež: v okrese, kde není vůbec
+     nic, nemá cenu uvolňovat cenu. */
+  je('nesedí', 'v prázdném okrese se neradí uvolnit cenu',
+    (H.procNicNesedi({ okres: 'Zlín', max_price: 1 }, VZOREK) || {}).kriterium, null);
+  je('nesedí', 'bez dat se nevysvětluje nic', H.procNicNesedi({ okres: 'Kolín' }, []), null);
+  /* Jména se čtou jedinou větou („uvolnit NEJVYŠŠÍ CENU"), takže musí
+     být ve 4. pádu. Kdyby se někdo vrátil k 1. pádu, věta se rozsype
+     a nikdo si toho při čtení kódu nevšimne. */
+  je('nesedí', 'jméno kritéria je ve 4. pádu', H.JMENA_KRITERII.max_price, 'nejvyšší cenu');
+
+  /* A STRÁNKA TO MUSÍ OPRAVDU POUŽÍT. Výpočet, který nikdo nezavolá,
+     je mrtvý kód, co prochází zkouškami — tahle past tu už sklapla
+     u jiného výpočtu. Čte se ZDROJ BEZ KOMENTÁŘŮ, aby se zkouška
+     nechytla vlastního vysvětlení. */
+  const hlKod = readFileSync(new URL('../hlidani.html', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/<!--[\s\S]*?-->/g, ' ');
+  je('nesedí', 'stránka hlídání se na vysvětlení opravdu ptá',
+    /procNicNesedi\(/.test(hlKod), true);
+  je('nesedí', 'a vypíše z něj jméno podmínky i počet',
+    /proc\.jmeno[\s\S]{0,200}proc\.kolik/.test(hlKod), true);
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

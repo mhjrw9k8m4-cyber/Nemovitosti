@@ -927,3 +927,144 @@ díry:
 Po opravě (styly se čtou, cesta se z řádku vyškrtne a teprve zbytek se
 čte jako věta o ní) prochází 2 733 souborů a všech sedm zmínek je
 přeformulovaných tak, aby říkaly pravdu.
+
+## 18. Tři tiché způsoby, jak web lhal o tom, co ví *17. 10.*
+
+### Sken dražeb spolkl každou síťovou chybu
+
+„OK dražby" se nestahují seznamem — projíždí se **3 021 ID po jednom**
+a ptá se na každé zvlášť. Každá chyba u jednoho ID padala do prázdného
+`catch`, takže běh, ve kterém se tři sta dotazů nedoručilo, vypadal
+naprosto stejně jako běh, ve kterém portál opravdu měl míň dražeb.
+Číslo z takového běhu pak šlo do `data/zdroje-historie.json` jako měření
+a hlídač z něj počítal medián, podle kterého se hlásí úbytky.
+
+Práh je **odvozený, ne hádaný**: ze 3 021 ID je dražba pozemku asi
+1,5 %, takže desetina nedoručených dotazů znamená asi desetinu
+chybějících nabídek — a o desetinu nižší číslo se už nesmí vydávat za
+měření. Takový běh dostane vlastní stav `neuplne`, který
+
+* `porovnejSHistorii` přeskočí (všímá si jen stavu `ok`), takže nespustí
+  poplach o úbytku,
+* `zapisDoHistorie` nezapíše (není v seznamu `ODPOVEDEL`), takže
+  neotráví medián,
+* a odznak na webu ukáže s vlastním popiskem: „část dotazů se
+  nedoručila", ne „přinesl výrazně méně než jinak". To je jiné zjištění
+  a vede k jinému hledání — u poklesu se čte parser, u neúplného skenu
+  síť.
+
+### Okno skenu se opíralo o číslo, které stárne
+
+Sken začíná u nejvyššího ID z homepage; když se nenačte nebo se jí změní
+podoba odkazů, spadne to na pevné číslo v kódu. To číslo bylo **27 100**,
+zatímco dražby jsou dnes u **29 255** — sken by se posunul o dva tisíce
+ID vedle a nenašel skoro nic. Dolní hranici teď drží i nejvyšší ID,
+které už leží v datech; ta stárnout nemůže, protože se posouvá s nimi.
+
+### A okno skenu se posouvalo pryč od dražeb, které v něm měly zůstat
+
+Sken jde od nejvyššího ID o tři tisíce dolů. To okno se ale posouvá
+s tím, jak dražeb přibývá — takže dražba, která je aktivní dlouho, z něj
+jednou vypadne. **Zmizela by beze slova:** nebyla by v odpovědi, nic by
+se nepokazilo, jen by jí ubylo. Naměřeno na ostrých datech: nejstarší
+aktivní dražba má ID **27 070** při nejvyšším **29 255**, tedy rozpětí
+2 185 — pod stropem, ale ne o moc.
+
+Okno proto sahá i pod to, co už v datech leží (s rezervou 50 ID), a má
+strop 6 000, aby ho jediný starý záznam nenatáhl donekonečna i s dobou
+běhu.
+
+### Bezrealitky samy hlásí, kolik jich mají — a nikdo to nečetl
+
+Největší zdroj (92 % všech nabídek) se stahuje po stránkách po šedesáti
+a smyčka se při chybě jedné stránky prostě **zastaví**. Zbytek se ani
+nezkusí, takže se nemá co počítat jako selhání: běh vypadá úplný, jen
+přinesl míň. Přitom v každé odpovědi chodí `totalCount` — počet inzerátů,
+které zdroj na ten dotaz má. Vyžádal se a zahodil.
+
+Používá se **opatrně**: co přesně `totalCount` počítá, se odsud ověřit
+nedá (hostitel je ze schránky blokovaný), a kdyby počítal byť o kousek
+víc než kolik vrací `list`, hlásil by se největší zdroj jako neúplný při
+každém běhu a přestal by se zapisovat do historie — to by bylo horší než
+vada, kterou to má hlídat. Číslo se proto použije jen tam, kde **už
+víme**, že se smyčka utrhla chybou. Hlídá to vlastní kontrola: běh, který
+došel do konce, se podle hlášeného počtu nesoudí, ať hlásí cokoli.
+
+### U dražby chyběl termín právě tam, kde se čeká
+
+Ze 109 dražeb a exekucí v datech má termín **všech 109** a **64 z nich je
+do týdne**. U dražby je termín ta jediná věc, která nutí jednat.
+E-mail ho posílá odjakživa (`scripts/mail-sklad.mjs`), stránka „Nové na
+trhu" ho ukazuje — a dvě místa, kam se člověk dívá nejčastěji, o něm
+mlčela:
+
+* **karta hlídání** vypisovala „obec · výměra · cena" i o dražbě, která
+  je pozítří,
+* **uložené pozemky v profilu** taky, a právě uložený pozemek je ten,
+  ke kterému se chce člověk vrátit včas.
+
+Obojí teď počítá `js/terminy.js` — týž modul jako mapa, stránka pozemku
+i pošta, aby web o téže dražbě netvrdil na dvou místech dvě různé věci.
+
+### A v profilu se uložené pozemky vůbec nepárovaly
+
+Tohle byla ze všeho nejtišší vada. Mapa ukládá pozemky pod klíčem
+`obec|parcela|okres|šířka|délka#výměra` (`js/klic.js`), profil si ho
+skládal po svém jako `obec|parcela|okres`. **Žádný uložený pozemek se
+tedy v datech nenašel** — seznam vypisoval jen to, co se dalo přečíst
+z klíče: obec, okres a odznak „Uložený". Žádný druh, žádná výměra, žádná
+cena, a nikde nic, podle čeho by to šlo poznat. Porovnání
+(`js/porovnani.js`) to přitom celou dobu dělalo správně, a to pod oběma
+tvary klíče.
+
+Změřeno před opravou a po ní, na třech uložených pozemcích (dva živé,
+jeden už neexistující):
+
+| | před | po |
+|---|---|---|
+| živý prodej | `Uložený · okres Kolín` | `Prodej · stavební pozemek · 900 m² · 650 000 Kč · okres Kolín` |
+| živá dražba | `Uložený · okres Kolín` | `Dražba · orná půda · 2 400 m² · 310 000 Kč · okres Kolín · dražba za 3 dny` |
+| skončená | `Uložený · okres Kolín` | `Nabídka skončila · okres Kolín · už není v nabídce` |
+
+Ta třetí řádka je samostatný nález. Změřeno na archivu: za sedmnáct
+říjnových dnů zmizelo **308 nabídek z 1 944** (skoro šestina) a medián
+životnosti ukončené nabídky je **19 dní**. Uložený pozemek se tedy běžně
+stane neexistujícím — a profil o tom mlčel a ještě nabízel „Zobrazit na
+mapě", kde nebylo nic.
+
+A opačná chyba, která by byla horší: „nenašel jsem" a „nemám kde hledat"
+se nesmí plést. Když se data nestáhnou, nesmí profil prohlásit všechny
+uložené pozemky za skončené — hlídá to `scripts/test-profil-ulozene.mjs`
+vlastní kontrolou s nedostupným souborem.
+
+### A hlídání, kterému nesedí nic, konečně řekne proč
+
+Uložené hledání bez jediné shody dosud ukázalo „Celkem sedí: 0 pozemků"
+a slíbilo, že až nějaký přibude, vypíše ho. Je to pravda a je to
+k ničemu: člověk nepozná, jestli čeká na vzácnou nabídku, nebo si o dvě
+stě tisíc níž uložil něco, co nemůže vyjít nikdy. **Hlídání, po kterém
+nikdy nic nepřijde, si lidé vyloží jako rozbitý web, ne jako přísné
+zadání.**
+
+Odpověď se nehádá, měří se: každá uvolnitelná podmínka se zkusí vypustit
+zvlášť a změří se, kolik by pak sedělo. Vrací se ta s největším nálezem:
+
+> Zatím nesedí ani jeden pozemek. Nejvíc by pomohlo uvolnit **nejvyšší
+> cenu** — bez té podmínky sedí 3 pozemky. Až nějaký přibude, vypíšeme
+> ho rovnou sem.
+
+Tři věci, na kterých to stojí a které hlídají zkoušky:
+
+* **Místo a typ nabídky se nevypouštějí.** „V okrese Kolín nic není, ale
+  v Táboře ano" není rada, je to popis toho, že hledání má smysl; a kdo
+  hledá dražby, nechce slyšet, ať se podívá na prodeje.
+* **Když nepomůže žádná jediná podmínka, řekne se to.** Polovičatá rada
+  („zkuste cenu") by poslala člověka měnit něco, co samo o sobě nestačí.
+* **Vybírá se největší nález, ne první nalezený.**
+
+Cena výpočtu se měřila, ne odhadovala: devět pokusů nad dvěma tisíci
+nabídek je devatenáct tisíc porovnání na jedno hledání — naměřeno
+**554 ms za dvacet prázdných hledání**, a to na počítači. Místo a typ se
+nevypouštějí nikdy, takže se jimi dá hromádka předem zúžit; po tom
+zúžení je to **190 ms** za touž dvacítku a v okrese pár set porovnání
+místo devatenácti tisíc.

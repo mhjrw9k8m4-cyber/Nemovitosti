@@ -589,8 +589,73 @@
     return out;
   }
 
+  /* PROČ NESEDÍ NIC.
+   *
+   * Uložené hledání, kterému neodpovídá ani jeden pozemek, dosud řeklo
+   * „Celkem sedí: 0 pozemků" a slíbilo, že až nějaký přibude, vypíše ho.
+   * To je pravda, ale k ničemu: člověk nepozná, jestli čeká na vzácnou
+   * nabídku, nebo si o dvě stě tisíc níž uložil něco, co nemůže vyjít
+   * nikdy. A hlídání, po kterém nikdy nic nepřijde, si lidé vyloží jako
+   * rozbitý web, ne jako přísné zadání.
+   *
+   * Odpověď se nehádá, měří se: každé kritérium se zkusí vypustit
+   * zvlášť a zjistí se, kolik by pak sedělo. Vrací se to, po jehož
+   * vypuštění je nález největší — a jen tehdy, když je ten nález
+   * nenulový. Když nepomůže žádné jediné kritérium, může za to jejich
+   * KOMBINACE a říct se to musí taky; polovičatá rada („zkuste cenu")
+   * by poslala člověka měnit něco, co samo o sobě nestačí.
+   *
+   * Místo se schválně NEVYPOUŠTÍ. „V okrese Kolín nic není, ale v celé
+   * republice ano" není rada, je to popis toho, že hledání má smysl.
+   * Totéž platí pro druh nabídky: kdo hledá dražby, nechce slyšet, že
+   * se má podívat na prodeje. */
+  /* Jména jsou ve 4. pádu, protože se čtou jedinou větou: „nejvíc by
+     pomohlo uvolnit NEJVYŠŠÍ CENU". Skloňovat je za běhu by znamenalo
+     psát si vlastní češtinu kvůli devíti slovům. */
+  var JMENA_KRITERII = {
+    max_price: 'nejvyšší cenu', min_price: 'nejnižší cenu',
+    min_area: 'nejmenší výměru', max_area: 'největší výměru',
+    max_perm2: 'cenu za metr', jen_celek: 'podmínku „jen celé pozemky"',
+    druh: 'druh pozemku', features: 'požadované vybavení', okruh_km: 'okruh od místa',
+  };
+  function procNicNesedi(s, data) {
+    if (!s || !data || !data.length) return null;
+    var vse = data.filter(function (d) { return matches(s, d); });
+    if (vse.length) return null;                 // sedí něco, není co vysvětlovat
+    /* NEJDŘÍV ZÚŽIT, PAK ZKOUŠET. Devět pokusů nad dvěma tisíci nabídek
+       je devatenáct tisíc porovnání na jedno hledání — naměřeno 554 ms
+       za dvacet prázdných hledání, a to na počítači. Místo a typ nabídky
+       se přitom nevypouštějí nikdy (viz komentář výš), takže se jimi dá
+       hromádka předem zmenšit: v okrese zbude pár desítek nabídek
+       a z devatenácti tisíc porovnání je pár set. */
+    var zaklad = data;
+    if (s.okres || s.ptype) {
+      var uzke = { okres: s.okres, ptype: s.ptype };
+      zaklad = data.filter(function (d) { return matches(uzke, d); });
+      /* Když ani samotné místo nebo typ nesedí, nemá cenu zkoušet nic
+         dalšího — a říct „uvolněte cenu" by byla rovnou lež. */
+      if (!zaklad.length) return { kriterium: null, jmeno: null, kolik: 0 };
+    }
+    var nej = null;
+    for (var kl in JMENA_KRITERII) {
+      if (!Object.prototype.hasOwnProperty.call(JMENA_KRITERII, kl)) continue;
+      var hod = s[kl];
+      /* Prázdné kritérium se nevypouští — nic by to nezměnilo a rada
+         „zkuste zrušit něco, co jste nezadali" je horší než mlčení. */
+      if (hod == null || hod === '' || hod === false) continue;
+      if (kl === 'features' && !(hod && hod.length)) continue;
+      var bez = {};
+      for (var j in s) if (Object.prototype.hasOwnProperty.call(s, j)) bez[j] = s[j];
+      bez[kl] = (kl === 'features') ? [] : null;
+      var kolik = zaklad.filter(function (d) { return matches(bez, d); }).length;
+      if (kolik > 0 && (!nej || kolik > nej.kolik)) nej = { kriterium: kl, jmeno: JMENA_KRITERII[kl], kolik: kolik };
+    }
+    return nej || { kriterium: null, jmeno: null, kolik: 0 };
+  }
+
   return {
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
+           procNicNesedi: procNicNesedi, JMENA_KRITERII: JMENA_KRITERII,
            kriteriaUlozena: kriteriaUlozena, STUPNE_ULOZENI: SLOUPCE_STUPNU,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,

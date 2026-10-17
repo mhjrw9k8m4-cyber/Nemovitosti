@@ -853,6 +853,119 @@ export function ztratyZdroje(nazev) {
   return PRESKOCENO.get(nazev) || { pocet: 0, prvni: null };
 }
 
+/* A JEŠTĚ JEDNO ÚČTOVÁNÍ: KOLIK DOTAZŮ VŮBEC DOŠLO.
+ *
+ * „OK dražby" se nestahují seznamem — projíždí se tři tisíce ID po sobě
+ * a ptá se na každé zvlášť. Každá síťová chyba u jednoho ID přitom
+ * padala do prázdného `catch`, takže běh, ve kterém se tři sta dotazů
+ * neptalo vůbec, vypadal naprosto stejně jako běh, ve kterém portál
+ * opravdu měl míň dražeb. Číslo z takového běhu pak šlo do historie
+ * jako měření a hlídač podle něj počítal medián.
+ *
+ * Změřeno na ostrých datech: ze 3 021 ID je dražba pozemku asi 1,5 %,
+ * takže deset procent nedoručených dotazů znamená asi desetinu
+ * chybějících nabídek. Právě proto je práh desetina: když se nedoptám
+ * na desetinu ID, může být výsledek o desetinu nižší — a to už se
+ * nesmí vydávat za měření. */
+const SKEN = new Map();
+function skenDotaz(zdroj, selhalo, e) {
+  const z = SKEN.get(zdroj) || { dotazu: 0, selhalo: 0, prvni: null };
+  z.dotazu++;
+  if (selhalo) { z.selhalo++; if (!z.prvni) z.prvni = String((e && e.message) || e).slice(0, 140); }
+  SKEN.set(zdroj, z);
+}
+/* A DRUHÝ ZPŮSOB, JAK POZNAT NEÚPLNÝ BĚH: zdroj sám řekne, kolik jich má.
+ *
+ * Bezrealitky vracejí v každé odpovědi `totalCount` — tedy počet inzerátů,
+ * které na dotaz mají. Stahuje se po stránkách po šedesáti a smyčka se
+ * při chybě jedné stránky prostě ZASTAVÍ (`break`). Zbytek stránek se
+ * pak ani nezkusí, takže se ani nemá co počítat jako selhání: běh vypadá
+ * jako úplný, jen přinesl míň. U největšího zdroje (92 % všech nabídek)
+ * je to ten nejtišší možný způsob, jak přijít o část trhu.
+ *
+ * `totalCount` je proti tomu tvrdý údaj od zdroje samého — a porovnání
+ * s ním nic nestojí, protože ho dostáváme v každé odpovědi. */
+function skenOcekavej(zdroj, kolik) {
+  if (!(kolik > 0)) return;
+  const z = SKEN.get(zdroj) || { dotazu: 0, selhalo: 0, prvni: null };
+  /* Bere se NEJVYŠŠÍ hlášený počet. Mezi stránkami se číslo může hnout
+     (inzerát přibude nebo zmizí) a brát poslední by znamenalo měřit se
+     podle toho, co zdroj řekl naposled — tedy případně až po výpadku. */
+  z.ocekavano = Math.max(z.ocekavano || 0, kolik);
+  SKEN.set(zdroj, z);
+}
+function skenPrijato(zdroj, kolik) {
+  const z = SKEN.get(zdroj) || { dotazu: 0, selhalo: 0, prvni: null };
+  z.prijato = (z.prijato || 0) + (kolik || 0);
+  SKEN.set(zdroj, z);
+}
+/* Smyčka skončila CHYBOU, ne tím, že došly stránky. Bez tohohle rozlišení
+   by se `totalCount` muselo brát jako svaté — a co přesně počítá, se
+   odsud ověřit nedá (hostitel je ze schránky blokovaný). Kdyby počítal
+   byť jen o kousek víc než kolik vrací `list` (třeba i stažené inzeráty),
+   hlásil by se největší zdroj jako neúplný při KAŽDÉM běhu a přestal by
+   se zapisovat do historie. To by bylo horší než vada, kterou to má
+   hlídat. Číslo se proto používá jen k tomu, aby se u běhu, o kterém
+   UŽ VÍME, že se utrhl, dalo říct kolik toho chybí. */
+function skenUtrzeno(zdroj, e) {
+  const z = SKEN.get(zdroj) || { dotazu: 0, selhalo: 0, prvni: null };
+  z.utrzeno = true;
+  if (!z.prvni && e) z.prvni = String((e && e.message) || e).slice(0, 140);
+  SKEN.set(zdroj, z);
+}
+export function skenZdroje(nazev) {
+  return SKEN.get(nazev) || { dotazu: 0, selhalo: 0, prvni: null };
+}
+/* Desetina nedoručených dotazů = výsledek může být o desetinu nižší.
+   Dolní mez je proti šumu: u krátkého skenu by jediná chyba dala
+   procenta, která nic neznamenají. */
+export const PODIL_SELHANI = 0.1;
+export const MIN_SELHANI = 10;
+export function skenNeuplny(s) {
+  if (!s) return false;
+  /* Dva nezávislé způsoby, jak poznat neúplný běh. Stačí jeden: oba
+     měří totéž („nevidíme všechno"), jen z jiné strany. */
+  if (s.dotazu && s.selhalo >= MIN_SELHANI && s.selhalo > s.dotazu * PODIL_SELHANI) return true;
+  /* Chybí desetina toho, co zdroj sám hlásí. Dolní mez je tatáž a ze
+     stejného důvodu: u malého zdroje by jeden inzerát navíc nebo míň
+     dělal procenta, která nic neznamenají. */
+  if (s.utrzeno && s.ocekavano > 0) {
+    const chybi = s.ocekavano - (s.prijato || 0);
+    if (chybi >= MIN_SELHANI && chybi > s.ocekavano * PODIL_SELHANI) return true;
+  }
+  return false;
+}
+
+/* NEÚPLNÝ SKEN NENÍ MĚŘENÍ — a musí to být poznat na stavu zdroje.
+ * Když se nedoptáme na desetinu ID, může být výsledek o desetinu
+ * nižší; takové číslo nesmí jít do historie jako měření ani spustit
+ * poplach o úbytku. Dostane proto vlastní stav: `porovnejSHistorii`
+ * si všímá jen stavu „ok" a `zapisDoHistorie` zapisuje jen stavy ze
+ * seznamu ODPOVEDEL, takže „neuplne" projde obojím bez následků
+ * a přitom zůstane vidět v datech i na webu.
+ *
+ * Stojí to stranou main() schválně: tohle je jediný kus rozhodování
+ * v celém řetězci, který jde zkusit bez sítě — a tím pádem jediný,
+ * který jde hlídat zkouškou. */
+export function oznacNeuplne(zdroje, sken) {
+  const hlasky = [];
+  for (const z of (zdroje || [])) {
+    const sk = sken(z.nazev) || { dotazu: 0, selhalo: 0 };
+    if (z.stav !== 'ok' || !skenNeuplny(sk)) continue;
+    z.stav = 'neuplne';
+    /* Důvod se musí říct ten, který opravdu nastal. Dělit `dotazu`
+       u zdroje, kde se ID neprojíždějí, by dalo „NaN %" — a hláška,
+       která nedává smysl, se čte jako chyba hlášky, ne jako nález. */
+    const proc = (sk.dotazu && sk.selhalo)
+      ? `neptal se na ${sk.selhalo} z ${sk.dotazu} ID (${Math.round(sk.selhalo / sk.dotazu * 100)} %)`
+      : `přinesl ${sk.prijato || 0} z ${sk.ocekavano || 0} záznamů, které sám hlásí`;
+    hlasky.push(`POZOR: zdroj ${z.nazev} ${proc}. ${z.pocet} záznamů z takového běhu`
+      + ' není měření — do historie se nezapisuje.'
+      + (sk.prvni ? ' První potíž: ' + sk.prvni : ''));
+  }
+  return hlasky;
+}
+
 /* HLÍDAČ JEDNOTLIVÝCH ZDROJŮ.
  *
  * Pojistka proti „utržení" dat níž hlídá SOUČET: když se stáhne míň než
@@ -1198,15 +1311,57 @@ const OKD_DRUH = {
   'Lands for housing': 'stavební pozemek', 'Building land': 'stavební pozemek',
   'Other areas': 'ostatní plocha', 'Vineyards': 'vinice', 'Orchards': 'sad',
 };
+/* NEJVYŠŠÍ ID, KTERÉ UŽ MÁME V DATECH.
+   Okno skenu začíná u nejvyššího ID z homepage. Když se homepage
+   nenačte nebo se jí změní podoba odkazů, spadne to na pevné číslo
+   v kódu — a to stárne: dnes jsou dražby u 29 255, zatímco v kódu
+   stálo 27 100. Sken by se tím posunul o dva tisíce ID vedle a nenašel
+   skoro nic. Dolní hranici proto drží i to, co už v datech leží: ta se
+   stárnout nemůže, protože se každý běh posouvá s nimi. */
+export function nejvyssiOkdZDat(data) {
+  let max = 0;
+  for (const o of ((data && data.opportunities) || [])) {
+    const m = /okdrazby\.cz\/drazba\/(\d+)/.exec(o && o.url || '');
+    if (m && +m[1] > max) max = +m[1];
+  }
+  return max;
+}
+/* A DOLNÍ KONEC OKNA. Sken jde od nejvyššího ID o tři tisíce dolů — jenže
+   to okno se posouvá s tím, jak dražeb přibývá, takže dražba, která je
+   aktivní dlouho, z něj jednou vypadne. Zmizela by beze slova: nebyla by
+   v odpovědi, nic by se nepokazilo, jen by jí ubylo. Naměřeno na ostrých
+   datech: nejstarší aktivní dražba má ID 27 070 při nejvyšším 29 255,
+   tedy 2 185 — pod stropem, ale ne o moc.
+   Okno proto sahá i pod to, co už v datech máme. */
+export function nejnizsiOkdZDat(data) {
+  let min = 0;
+  for (const o of ((data && data.opportunities) || [])) {
+    const m = /okdrazby\.cz\/drazba\/(\d+)/.exec(o && o.url || '');
+    if (m && (!min || +m[1] < min)) min = +m[1];
+  }
+  return min;
+}
+/* Kam až sken sahá. Strop je pojistka proti jedinému starému záznamu,
+   který by jinak okno natahoval donekonečna — a s ním i dobu běhu. */
+export const OKD_OKNO = 3000;
+export const OKD_OKNO_STROP = 6000;
+export function oknoOkd(maxId, nejnizsiVDatech) {
+  const zaklad = maxId - OKD_OKNO;
+  const podleDat = nejnizsiVDatech > 0 ? nejnizsiVDatech - 50 : zaklad;
+  return Math.max(maxId - OKD_OKNO_STROP, Math.min(zaklad, podleDat));
+}
 async function fetchOkdrazby() {
   // 1) nejvyšší ID z homepage (okno pro sken)
   let maxId = 27100;
+  try { maxId = Math.max(maxId, nejvyssiOkdZDat(JSON.parse(readFileSync(OUT, 'utf8')))); } catch { /* první běh */ }
   try {
     const h = await (await fetch('https://www.okdrazby.cz/', { headers: UA })).text();
     const ids = [...h.matchAll(/\/drazba\/(\d+)-/g)].map((m) => +m[1]);
     if (ids.length) maxId = Math.max(maxId, ...ids);
   } catch { /* necháme výchozí odhad */ }
-  const HI = maxId + 20, LO = maxId - 3000;
+  let nejnizsi = 0;
+  try { nejnizsi = nejnizsiOkdZDat(JSON.parse(readFileSync(OUT, 'utf8'))); } catch { /* první běh */ }
+  const HI = maxId + 20, LO = oknoOkd(maxId, nejnizsi);
   const ids = [];
   for (let id = HI; id >= LO; id--) ids.push(id);
 
@@ -1215,8 +1370,16 @@ async function fetchOkdrazby() {
   async function worker() {
     while (idx < ids.length) {
       const id = ids[idx++];
+      /* Každé ID se do účtu zapíše právě jednou, a to AŽ NAKONEC
+         (`finally` proběhne i po `continue`). Kdyby se zapisovalo hned
+         po odpovědi, rozbité JSON u jednoho ID by se počítalo dvakrát:
+         jednou jako doručený dotaz a podruhé jako selhání. */
+      let doslo = false, potiz = null;
       try {
         const r = await fetch(`${OKD_API}/auctions/${id}`, { headers: { ...UA, accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+        /* Odpověď přišla — ať už 200, nebo 404 u neobsazeného ID.
+           Obojí je informace; nedoručený dotaz informace NENÍ. */
+        doslo = true;
         if (r.status !== 200) continue;
         const j = await r.json();
         const cats = j.categoriesLocalized || [];
@@ -1267,7 +1430,14 @@ async function fetchOkdrazby() {
           url: 'https://www.okdrazby.cz/drazba/' + id,
         });
         pridejVybaveni(out[out.length - 1], txt);
-      } catch { /* přeskoč rozbité ID */ }
+      } catch (e) {
+        /* Tady se dřív mlčelo. Rozbité JSON u jednoho ID je drobnost,
+           tři sta nedoručených dotazů je jiný běh — a poznat se to dá
+           jen tím, že se to počítá. */
+        potiz = e;
+      } finally {
+        skenDotaz('OK dražby', !doslo, potiz);
+      }
     }
   }
   await Promise.all(Array.from({ length: 8 }, worker));
@@ -1507,11 +1677,17 @@ async function fetchBezrealitky() {
         headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({ query, variables: { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'], estateType: ['POZEMEK'] } }),
       });
-      if (!r.ok) break;
+      if (!r.ok) { skenUtrzeno('Bezrealitky', 'HTTP ' + r.status); break; }
       const j = await r.json();
-      list = j && j.data && j.data.listAdverts && j.data.listAdverts.list;
-    } catch { break; }
+      const la = j && j.data && j.data.listAdverts;
+      /* Zdroj sám hlásí, kolik jich na dotaz má. Doteď se to pole jen
+         vyžádalo a zahodilo; teď je z něj pojistka proti tomu, aby se
+         smyčka zastavila uprostřed a nikdo si toho nevšiml. */
+      if (la && typeof la.totalCount === 'number') skenOcekavej('Bezrealitky', la.totalCount);
+      list = la && la.list;
+    } catch (e) { skenUtrzeno('Bezrealitky', e); break; }
     if (!Array.isArray(list) || !list.length) break;
+    skenPrijato('Bezrealitky', list.length);
     for (const a of list) {
      try {
       const price = a.price || 0;
@@ -1577,8 +1753,23 @@ async function fetchFarmy() {
   const ztraty = { nalezeno: ids.length, detailNedojel: 0, bezCeny: 0, bezOkresu: 0 };
   for (const id of ids) {
     let html;
-    try { const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA }); if (!r.ok) { ztraty.detailNedojel++; await sleep(200); continue; } html = await r.text(); }
-    catch { ztraty.detailNedojel++; continue; }
+    /* NEDOJETÝ DETAIL SE POČÍTÁ I DO DAT, NEJEN DO LOGU. Komentář výš
+       říká proč se to počítá; jenže se to pak jen vypsalo do konzole,
+       a log v GitHub Actions zmizí se strojem. Platí tu totéž co o
+       přeskočených nabídkách o kus výš: číslo musí skončit vedle stavu
+       zdroje, aby ho bylo vidět na webu a aby podle něj šlo poznat, že
+       běh nebyl úplný.
+       Pozor na rozdíl proti OK dražbám: tam se projíždějí ID naslepo
+       a 404 je běžná odpověď („tohle ID není dražba"), takže se počítá
+       jako doručený dotaz. Tady je každé ID z VÝPISU nabídek, takže
+       chybějící detail znamená ztracenou nabídku, ne prázdné místo. */
+    try {
+      const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA });
+      skenDotaz('Farmy', !r.ok, 'HTTP ' + r.status);
+      if (!r.ok) { ztraty.detailNedojel++; await sleep(200); continue; }
+      html = await r.text();
+    }
+    catch (e) { skenDotaz('Farmy', true, e); ztraty.detailNedojel++; continue; }
     await sleep(200); // slušnost k serveru
     const text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
     const g = text.match(/Poloha GPS\s+([\d.]+)N,?\s*([\d.]+)E/i);
@@ -1764,7 +1955,12 @@ async function main() {
     /* Kolik nabídek se u toho zdroje muselo přeskočit a proč ta první. */
     preskoceno: ztratyZdroje(SOURCES[i][0]).pocet,
     prvniPreskocena: ztratyZdroje(SOURCES[i][0]).prvni,
+    /* A u zdrojů, které se ptají po jednom ID: kolik dotazů vůbec došlo.
+       Nula znamená „tenhle zdroj se takhle nestahuje", ne „nic nedošlo". */
+    dotazu: skenZdroje(SOURCES[i][0]).dotazu,
+    selhalo: skenZdroje(SOURCES[i][0]).selhalo,
   }));
+  for (const hlaska of oznacNeuplne(zdroje, skenZdroje)) console.error(hlaska);
   /* Porovnání s minulým během. Čte se ze souboru, který se teprve bude
      přepisovat — tedy ještě ze starých dat. */
   let minuleZdroje = [];
@@ -1772,7 +1968,12 @@ async function main() {
   const nalezy = porovnejZdroje(minuleZdroje, zdroje);
   for (const n of nalezy) {
     const z = zdroje.find((x) => x.nazev === n.nazev);
-    if (z) z.stav = n.druh;                  // „prazdno" / „propad" se zapíše do dat
+    if (!z) continue;
+    /* Neúplný sken přebije jen „prazdno" — to běh zastavuje a zastavit
+       se má tak jako tak. „Propad" by naopak neúplné číslo prohlásil za
+       měření a zapsal do historie, a přesně tomu se tu předchází. */
+    if (z.stav === 'neuplne' && n.druh !== 'prazdno') continue;
+    z.stav = n.druh;                         // „prazdno" / „propad" se zapíše do dat
   }
   /* A druhé, pomalejší síto: dnešek proti mediánu posledních dnů.
      Historie se čte a zapisuje vedle dat, protože robot v CI historii

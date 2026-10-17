@@ -60,6 +60,7 @@ const SE_STAVEM = {
        „nedostupný / neodpověděl" — to je jiná porucha a vede k jinému
        hledání: tady neselhalo spojení, ale čtení stránky. */
     { nazev: 'SPÚ', stav: 'prazdno', pocet: 0, cas: dnesISO, chyba: null },
+
   ],
   opportunities: OSTRA.opportunities,
 };
@@ -167,6 +168,37 @@ async function otevri(data) {
   pravda('neznámý stav s počtem se neukáže jako v pořádku',
     !!(neznamy && neznamy.slabe === true && /412/.test(neznamy.stav)), JSON.stringify(neznamy));
   pravda('se stavem zdrojů nespadl žádný skript', chyby.length === 0, chyby[0]);
+  await ctx.close();
+}
+
+// --- 1b) Neúplný sken není změřený úbytek ----------------------------
+/* „OK dražby" se nestahují seznamem — projíždí se tři tisíce ID po
+   jednom. Když se část dotazů nedoručí, NEVÍME, jestli je nabídek míň;
+   víme jen, že jsme se na všechno nezeptali. Odznak to tedy nesmí
+   vydávat za zjištěný úbytek, protože to je jiné zjištění a vede
+   k jinému hledání: u poklesu se čte parser, u neúplného skenu síť.
+   Má to vlastní načtení stránky, protože dlaždic se zdroji je na webu
+   pět a všech pět už obsadily stavy výš. */
+{
+  const NEUPLNY = Object.assign({}, SE_STAVEM, { sources: [
+    { nazev: 'OK dražby', stav: 'neuplne', pocet: 52, cas: dnesISO, chyba: null,
+      dotazu: 3021, selhalo: 400 },
+  ] });
+  const { ctx, p, chyby } = await otevri(NEUPLNY);
+  const z = await p.evaluate(() => {
+    const chip = document.querySelector('.source-chip[data-zdroj="OK dražby"]');
+    const s = chip && chip.querySelector('.src-stav');
+    return s ? { stav: s.textContent, popis: s.title,
+      slabe: s.classList.contains('src-slabe'), zle: s.classList.contains('src-zle') } : null;
+  });
+  pravda('neúplný sken ukazuje počet, který stihl přinést',
+    !!(z && /52/.test(z.stav)), JSON.stringify(z));
+  pravda('a je označený jako oslabený, ne jako v pořádku',
+    !!(z && z.slabe === true && z.zle === false), JSON.stringify(z));
+  pravda('a popisek mluví o nedoručených dotazech, ne o zjištěném úbytku',
+    !!(z && /nedoručila/.test(z.popis || '') && !/výrazně méně/.test(z.popis || '')),
+    JSON.stringify(z && z.popis));
+  pravda('s neúplným skenem nespadl žádný skript', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
 

@@ -774,3 +774,6 @@ jobs:
 
       - name: Spodní lišta s cenou a akcí
         run: node scripts/test-lista-dole.mjs
+
+      - name: Uložené pozemky v profilu
+        run: node scripts/test-profil-ulozene.mjs

@@ -1,8 +1,13 @@
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(function () { return require('./hlidani-logika.js'); });
+  if (typeof module === 'object' && module.exports) {
 
-  else root.PKFeed = factory(function () { return root.PKHlidani; });
-})(typeof self !== 'undefined' ? self : this, function (pravidla) {
+    module.exports = factory(function () { return require('./hlidani-logika.js'); },
+      function () { require('./terminy.js'); return globalThis.PK_TERMINY; });
+  }
+
+  else root.PKFeed = factory(function () { return root.PKHlidani; },
+    function () { return root.PK_TERMINY; });
+})(typeof self !== 'undefined' ? self : this, function (pravidla, dejTerminy) {
   'use strict';
 
   var HL = new Proxy({}, { get: function (_, jm) { return pravidla()[jm]; } });
@@ -28,6 +33,21 @@
 
   var UKAZKA = 5;
 
+  function terminPolozky(d) {
+    if (!d || (d.type !== 'drazba' && d.type !== 'exekuce')) return null;
+    var T = dejTerminy && dejTerminy();
+    if (!T || !T.daysUntil) return null;
+    var dni = T.daysUntil(d.extra);
+    if (dni == null || dni < 0) return null;
+    var slovo = d.type === 'exekuce' ? 'nucená dražba' : 'dražba';
+    var kdy = T.zdrojText((/(\d{4})-(\d{2})-(\d{2})/.exec(d.extra || '') || [''])[0]);
+    return {
+      text: slovo + ' ' + T.countdownText(dni) + (kdy ? ' (' + kdy + ')' : ''),
+      dni: dni,
+      naleha: (T.countdownClass(dni) || '').trim(),
+    };
+  }
+
   function zeHlidani(hledani, data) {
     var out = [];
     (hledani || []).forEach(function (s) {
@@ -45,8 +65,13 @@
         titulek: cislovka(nove.length, ['nový pozemek', 'nové pozemky', 'nových pozemků']),
         misto: 'Hlídání „' + (s.label || (s.okres || 'celá ČR')) + '"',
         polozky: nove.slice(0, UKAZKA).map(function (d) {
+          var t = terminPolozky(d);
           return {
             popis: [d.place, vymera(d.area), cena(d.price)].filter(Boolean).join(' · '),
+
+            termin: t ? t.text : '',
+            terminDni: t ? t.dni : null,
+            terminNaleha: t ? t.naleha : '',
             druh: d.druh || '',
             typ: d.type || '',
             klic: HL.keyOf(d),

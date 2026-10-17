@@ -316,8 +316,43 @@
     return out;
   }
 
+  var JMENA_KRITERII = {
+    max_price: 'nejvyšší cenu', min_price: 'nejnižší cenu',
+    min_area: 'nejmenší výměru', max_area: 'největší výměru',
+    max_perm2: 'cenu za metr', jen_celek: 'podmínku „jen celé pozemky"',
+    druh: 'druh pozemku', features: 'požadované vybavení', okruh_km: 'okruh od místa',
+  };
+  function procNicNesedi(s, data) {
+    if (!s || !data || !data.length) return null;
+    var vse = data.filter(function (d) { return matches(s, d); });
+    if (vse.length) return null;
+
+    var zaklad = data;
+    if (s.okres || s.ptype) {
+      var uzke = { okres: s.okres, ptype: s.ptype };
+      zaklad = data.filter(function (d) { return matches(uzke, d); });
+
+      if (!zaklad.length) return { kriterium: null, jmeno: null, kolik: 0 };
+    }
+    var nej = null;
+    for (var kl in JMENA_KRITERII) {
+      if (!Object.prototype.hasOwnProperty.call(JMENA_KRITERII, kl)) continue;
+      var hod = s[kl];
+
+      if (hod == null || hod === '' || hod === false) continue;
+      if (kl === 'features' && !(hod && hod.length)) continue;
+      var bez = {};
+      for (var j in s) if (Object.prototype.hasOwnProperty.call(s, j)) bez[j] = s[j];
+      bez[kl] = (kl === 'features') ? [] : null;
+      var kolik = zaklad.filter(function (d) { return matches(bez, d); }).length;
+      if (kolik > 0 && (!nej || kolik > nej.kolik)) nej = { kriterium: kl, jmeno: JMENA_KRITERII[kl], kolik: kolik };
+    }
+    return nej || { kriterium: null, jmeno: null, kolik: 0 };
+  }
+
   return {
     tyzPozemek: tyzPozemek, normd: normd, keyOf: keyOf, matches: matches,
+           procNicNesedi: procNicNesedi, JMENA_KRITERII: JMENA_KRITERII,
            kriteriaUlozena: kriteriaUlozena, STUPNE_ULOZENI: SLOUPCE_STUPNU,
            mistoSedi: mistoSedi, druhSedi: druhSedi,
            klicShody: klicShody, bezDuplicit: bezDuplicit,

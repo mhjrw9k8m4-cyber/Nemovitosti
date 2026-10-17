@@ -625,7 +625,7 @@
       var stav = nalez.stav || 'ok';
       var pocet = nalez.pocet || 0;
       var oslabeny = stav === 'pokles' || stav === 'propad' || stav === 'zahazuje'
-        || (stav !== 'ok' && pocet > 0);
+        || stav === 'neuplne' || (stav !== 'ok' && pocet > 0);
       var text, popis, trida;
       if (stav === 'vypnuto') {
         text = 'nezapojený'; trida = ' src-zle';
@@ -638,11 +638,18 @@
           : 'Zdroj při poslední kontrole neodpověděl' + (nalez.chyba ? ': ' + nalez.chyba : '');
       } else if (oslabeny) {
         text = pocet + '× ↓'; trida = ' src-slabe';
+        /* „neuplne" říká něco jiného než „pokles": nevíme, jestli je
+           těch záznamů míň. Část dotazů se nedoručila, takže tohle
+           číslo není měření a nesmí se tvářit jako zjištěný úbytek. */
         popis = stav === 'zahazuje'
           ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale víc nabídek zahodil než přijal'
             + ' — možná se mu změnil tvar stránky'
-          : 'Zdroj odpověděl, ale přinesl výrazně méně než jinak (' + pocet
-            + ' záznamů) — možná přestal číst část stránky';
+          : stav === 'neuplne'
+            ? 'Část dotazů na tenhle zdroj se nedoručila, takže ' + pocet
+              + ' záznamů nemusí být všechno — do dlouhodobého srovnání se'
+              + ' takový běh nepočítá'
+            : 'Zdroj odpověděl, ale přinesl výrazně méně než jinak (' + pocet
+              + ' záznamů) — možná přestal číst část stránky';
       } else {
         text = pocet + '×'; trida = '';
         popis = 'Při poslední kontrole vrátil ' + pocet + ' záznamů';

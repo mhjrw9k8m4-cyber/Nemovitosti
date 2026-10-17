@@ -19,7 +19,9 @@ import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { porovnejZdroje, PRAH_SLEDOVANI, PRAH_PROPADU,
-  porovnejSHistorii, zapisDoHistorie, DNU_HISTORIE, PRAH_POKLESU, HISTORIE_MAX } from './fetch-opportunities.mjs';
+  porovnejSHistorii, zapisDoHistorie, DNU_HISTORIE, PRAH_POKLESU, HISTORIE_MAX,
+  skenNeuplny, oznacNeuplne, PODIL_SELHANI, MIN_SELHANI,
+  nejvyssiOkdZDat, nejnizsiOkdZDat, oknoOkd, OKD_OKNO, OKD_OKNO_STROP } from './fetch-opportunities.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN_H = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -292,6 +294,158 @@ pravda('první běh bez minulých čísel projde tiše',
       poplachu === 0, 'poplachů ' + poplachu + ' — prah je utažený: ' + planeU.join(', '));
   } else {
     pravda('data/zdroje-historie.json existuje', false, 'bez něj hlídač nemá paměť');
+  }
+}
+
+/* ---- NEÚPLNÝ SKEN NENÍ MĚŘENÍ ---------------------------------------
+ *
+ * „OK dražby" se nestahují seznamem — projíždí se tři tisíce ID po sobě.
+ * Každá síťová chyba u jednoho ID padala do prázdného `catch`, takže běh,
+ * ve kterém se tři sta dotazů nedoručilo, vypadal stejně jako běh, ve
+ * kterém portál opravdu měl míň dražeb. Takové číslo pak šlo do historie
+ * jako měření a počítal se z něj medián, podle kterého se hlásí úbytky.
+ *
+ * Práh je odvozený, ne hádaný: ze 3 021 ID je dražba pozemku asi 1,5 %,
+ * takže desetina nedoručených dotazů znamená asi desetinu chybějících
+ * nabídek — a o desetinu nižší číslo se už nesmí vydávat za měření.
+ */
+{
+  const sken = (dotazu, selhalo) => ({ dotazu, selhalo, prvni: null });
+  pravda('bezvadný sken je úplný', !skenNeuplny(sken(3021, 0)));
+  pravda('pár chyb z tří tisíc dotazů taky', !skenNeuplny(sken(3021, 9)));
+  pravda(`desetina nedoručených dotazů už ne (práh ${PODIL_SELHANI})`,
+    skenNeuplny(sken(3021, 400)));
+  pravda('těsně pod prahem to ještě projde',
+    !skenNeuplny(sken(1000, Math.floor(1000 * PODIL_SELHANI))));
+  pravda('a těsně nad ním už ne',
+    skenNeuplny(sken(1000, Math.floor(1000 * PODIL_SELHANI) + 1)));
+  /* Dolní mez je proti šumu: u krátkého skenu dá jediná chyba procenta,
+     která nic neznamenají. */
+  pravda(`u krátkého skenu rozhoduje i dolní mez (${MIN_SELHANI})`,
+    !skenNeuplny(sken(20, MIN_SELHANI - 1)));
+  pravda('zdroj, který se takhle nestahuje, se neoznačuje',
+    !skenNeuplny(sken(0, 0)));
+
+  /* DRUHÝ ZPŮSOB: zdroj sám řekne, kolik jich má.
+     Bezrealitky vracejí v každé odpovědi `totalCount`. Stahuje se po
+     stránkách a smyčka se při chybě jedné z nich prostě ZASTAVÍ — zbytek
+     se ani nezkusí, takže se nemá co počítat jako selhání a běh vypadá
+     úplný, jen přinesl míň. U největšího zdroje (92 % všech nabídek) je
+     to ten nejtišší možný způsob, jak přijít o část trhu. */
+  const podle = (ocekavano, prijato, utrzeno = true) =>
+    ({ dotazu: 0, selhalo: 0, ocekavano, prijato, utrzeno });
+  pravda('když se stáhne všechno, co zdroj hlásí, je to úplné',
+    !skenNeuplny(podle(1787, 1787)));
+  pravda('pár kusů rozdílu mezi stránkami nevadí', !skenNeuplny(podle(1787, 1780)));
+  pravda('chybějící desetina toho, co zdroj sám hlásí, už ano',
+    skenNeuplny(podle(1787, 1600)));
+  pravda('zastavená smyčka v půlce se pozná', skenNeuplny(podle(1787, 900)));
+  pravda('a u malého zdroje rozhoduje i dolní mez',
+    !skenNeuplny(podle(30, 30 - (MIN_SELHANI - 1))));
+  pravda('bez hlášeného počtu se podle něj nesoudí', !skenNeuplny(podle(0, 0)));
+  /* A TOHLE JE TA POJISTKA, KTERÁ ROZHODUJE O TOM, JESTLI SE NÁSTROJ DÁ
+     POUŽÍT. Co přesně `totalCount` počítá, se odsud ověřit nedá —
+     hostitel je ze schránky blokovaný. Kdyby počítal byť o kousek víc
+     než kolik vrací `list`, hlásil by se největší zdroj (92 % všech
+     nabídek) jako neúplný při KAŽDÉM běhu a přestal by se zapisovat do
+     historie. Proto se to číslo použije jen tam, kde UŽ VÍME, že se
+     smyčka utrhla chybou. Běh, který došel až do konce, se podle něj
+     nesoudí, ať hlásí cokoli. */
+  pravda('běh, který došel do konce, se podle hlášeného počtu nesoudí',
+    !skenNeuplny(podle(1787, 900, false)));
+
+  /* A TEĎ TO, O CO TU JDE: takové číslo nesmí do historie ani do
+     poplachu. Obojí se pozná podle stavu, takže se zkouší oba konce. */
+  const H = { verze: 2, dny: {} };
+  for (let i = 1; i <= 10; i++) H.dny['2026-10-' + String(i).padStart(2, '0')] = { 'OK dražby': 90 };
+  const neuplny = [{ nazev: 'OK dražby', stav: 'neuplne', pocet: 45 }];
+  pravda('z neúplného běhu se nehlásí úbytek',
+    porovnejSHistorii(H, neuplny, '2026-10-20').length === 0,
+    JSON.stringify(porovnejSHistorii(H, neuplny, '2026-10-20')));
+  pravda('a nezapisuje se do historie',
+    zapisDoHistorie(H, neuplny, '2026-10-20').dny['2026-10-20']['OK dražby'] === undefined);
+  /* Pojistka: kdyby se obojí řídilo něčím jiným než stavem, prošly by
+     obě kontroly výš i s úplným během — a neměřily by nic. */
+  const uplny = [{ nazev: 'OK dražby', stav: 'ok', pocet: 45 }];
+  pravda('  (a s týmž číslem z ÚPLNÉHO běhu se úbytek ohlásí)',
+    porovnejSHistorii(H, uplny, '2026-10-20').length === 1);
+  pravda('  (a zapíše se)',
+    zapisDoHistorie(H, uplny, '2026-10-20').dny['2026-10-20']['OK dražby'] === 45);
+
+  /* A kdo ten stav vlastně nastaví. Bez téhle kontroly by kontroly výš
+     hlídaly stav, který by do dat nikdo nikdy nenapsal. */
+  const SKEN = { 'OK dražby': sken(3021, 400), 'SPÚ': sken(0, 0), 'Dražby': sken(900, 3),
+    'Bezrealitky': podle(1787, 900) };
+  const zdroje = [
+    { nazev: 'OK dražby', stav: 'ok', pocet: 45 },
+    { nazev: 'SPÚ', stav: 'ok', pocet: 436 },
+    { nazev: 'Dražby', stav: 'ok', pocet: 80 },
+    { nazev: 'Farmy', stav: 'chyba', pocet: 0 },
+    { nazev: 'Bezrealitky', stav: 'ok', pocet: 870 },
+  ];
+  const hlasky = oznacNeuplne(zdroje, (n) => SKEN[n]);
+  pravda('zdroj s neúplným skenem dostane stav „neuplne"',
+    zdroje[0].stav === 'neuplne', JSON.stringify(zdroje[0]));
+  pravda('  a řekne se to nahlas, i s čísly',
+    hlasky.some((h) => /OK dražby/.test(h) && /400 z 3021 ID/.test(h) && /13 %/.test(h)),
+    JSON.stringify(hlasky));
+  pravda('zdroj stahovaný seznamem se nedotkne', zdroje[1].stav === 'ok');
+  pravda('ani zdroj s pár chybami ze skenu', zdroje[2].stav === 'ok');
+  pravda('a zdroj, který vůbec neodpověděl, si stav „chyba" nechá',
+    zdroje[3].stav === 'chyba');
+  pravda('zastavená smyčka u stránkovaného zdroje se taky označí',
+    zdroje[4].stav === 'neuplne', JSON.stringify(zdroje[4]));
+  /* Hláška musí říct DŮVOD, který opravdu nastal. U stránkovaného zdroje
+     se ID neprojíždějí, takže dělení `dotazu` by dalo „NaN %" — a hláška,
+     které není rozumět, se čte jako chyba hlášky, ne jako nález. */
+  pravda('  a řekne se u ní ten správný důvod, ne „NaN %"',
+    hlasky.some((h) => /Bezrealitky/.test(h) && /900 z 1787/.test(h) && !/NaN/.test(h)),
+    JSON.stringify(hlasky));
+}
+
+/* ---- OKNO SKENU SE NESMÍ OPÍRAT O PEVNÉ ČÍSLO V KÓDU ----------------
+ *
+ * Sken začíná u nejvyššího ID z homepage. Když se homepage nenačte nebo
+ * se jí změní podoba odkazů, spadne to na pevné číslo — a to stárne:
+ * v kódu stálo 27 100, zatímco dražby jsou dnes u 29 255. Sken by se
+ * posunul o dva tisíce ID vedle. Dolní hranici proto drží i nejvyšší ID,
+ * které už leží v datech; ta stárnout nemůže.
+ */
+{
+  pravda('z dat se přečte nejvyšší ID dražby',
+    nejvyssiOkdZDat({ opportunities: [
+      { url: 'https://www.okdrazby.cz/drazba/29255-pozemek' },
+      { url: 'https://www.okdrazby.cz/drazba/27070-pole' },
+      { url: 'https://www.bezrealitky.cz/nemovitosti/99999' },
+    ] }) === 29255);
+  pravda('prázdná data dají nulu, ne pád', nejvyssiOkdZDat({}) === 0 && nejvyssiOkdZDat(null) === 0);
+
+  /* A DOLNÍ KONEC OKNA. Sken jde od nejvyššího ID o tři tisíce dolů —
+     jenže to okno se posouvá s tím, jak dražeb přibývá, takže dražba,
+     která je aktivní dlouho, z něj jednou vypadne. Zmizela by beze
+     slova: nebyla by v odpovědi, nic by se nepokazilo, jen by jí ubylo.
+     Okno proto sahá i pod to, co už v datech máme — a má strop, aby ho
+     jediný starý záznam nenatáhl donekonečna i s dobou běhu. */
+  pravda('z dat se přečte i nejnižší ID dražby',
+    nejnizsiOkdZDat({ opportunities: [
+      { url: 'https://www.okdrazby.cz/drazba/29255-pozemek' },
+      { url: 'https://www.okdrazby.cz/drazba/27070-pole' },
+    ] }) === 27070);
+  pravda('bez dat se nejnižší ID nehádá', nejnizsiOkdZDat({}) === 0);
+  pravda('běžně okno zůstává tři tisíce ID',
+    oknoOkd(29255, 27070) === 29255 - OKD_OKNO);
+  pravda('stará aktivní dražba okno natáhne, aby z něj nevypadla',
+    oknoOkd(29255, 25000) === 25000 - 50);
+  pravda('a strop ho zastaví, aby jediný záznam nenatáhl běh donekonečna',
+    oknoOkd(29255, 20000) === 29255 - OKD_OKNO_STROP);
+  pravda('bez dat se okno počítá postaru', oknoOkd(29255, 0) === 29255 - OKD_OKNO);
+  /* A na ostrých datech: kdyby tahle funkce vracela nulu, okno skenu by
+     se znovu opíralo jen o pevné číslo a nikdo by si toho nevšiml. */
+  const DATA = path.join(KOREN_H, 'data', 'opportunities.json');
+  if (existsSync(DATA)) {
+    const skutecne = nejvyssiOkdZDat(JSON.parse(readFileSync(DATA, 'utf8')));
+    pravda(`a na ostrých datech vyjde skutečné ID (${skutecne})`, skutecne > 27100,
+      'vyšlo ' + skutecne + ' — buď v datech žádná dražba z OK dražeb není, nebo se změnil tvar adresy');
   }
 }
 

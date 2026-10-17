@@ -47,10 +47,17 @@ const STARE = { updated: '2026-01-01', opportunities: [
     area: 1200, price: 400000, lat: 50.02, lng: 15.20, extra: 'inzerát',
     site: ['elektrina', 'voda', 'cesta'] },
 ] };
+/* DRAŽBA S TERMÍNEM. Datum se počítá ode dneška, ne napevno: zkouška
+   běží každý den a napsané datum by za týden znamenalo něco jiného
+   (a za měsíc by to byla proběhlá dražba, kterou výpis právem mlčí). */
+const zaDnu = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const NOVE = { updated: '2026-01-02', opportunities: STARE.opportunities.concat([
   { place: 'Kolín-Sendražice', okres: 'Kolín', type: 'sale', parcel: '2/2', druh: 'stavební pozemek',
     area: 900, price: 650000, lat: 50.05, lng: 15.23, extra: 'inzerát',
     site: ['elektrina', 'kanalizace', 'plyn', 'cesta'] },
+  { place: 'Kolín-Štítary', okres: 'Kolín', type: 'drazba', parcel: '3/3', druh: 'orná půda',
+    area: 2400, price: 310000, lat: 50.04, lng: 15.18,
+    extra: 'dražba ' + zaDnu(3) + ' · OK dražby' },
 ]) };
 
 const RUCNI_SEZNAM = (/var DRUHY = \[([^\]]*)\]/.exec(
@@ -323,6 +330,82 @@ await p.waitForTimeout(2400);
       JSON.stringify(vypsane.slice(0, 4)));
     pravda('kdežto staré se jako nové nehlásí',
       !vypsane.some((t) => /Kolín/.test(t) && /1\/1/.test(t)), JSON.stringify(vypsane.slice(0, 4)));
+
+    /* TERMÍN DRAŽBY MUSÍ BÝT VIDĚT. Ze 109 dražeb a exekucí v ostrých
+       datech je 64 do týdne; u dražby je termín to jediné, co nutí
+       jednat. Karta o něm mlčela — stálo v ní „obec · výměra · cena"
+       i o dražbě, která je pozítří. E-mail to přitom píše odjakživa
+       (scripts/mail-sklad.mjs), takže web a pošta tvrdily o téže
+       dražbě každý něco jiného. */
+    const sTerminem = await p.evaluate(() => [...document.querySelectorAll('.hl-nove li')]
+      .map((li) => ({ text: (li.textContent || '').trim(),
+        znacka: (li.querySelector('.hl-termin') || {}).textContent || '',
+        trida: (li.querySelector('.hl-termin') || { className: '' }).className })));
+    const drazba = sTerminem.find((x) => /Štítary/.test(x.text));
+    pravda('u dražby je ve výpisu vidět termín', !!(drazba && /za 3 dny/.test(drazba.znacka)),
+      JSON.stringify(sTerminem));
+    pravda('  a je u něj i datum, protože „za 3 dny" po třech dnech lže',
+      !!(drazba && /\d+\. \d+\. \d{4}/.test(drazba.znacka)), JSON.stringify(drazba));
+    pravda('  a blízký termín je odlišený, ne jen napsaný',
+      !!(drazba && /\burg\b/.test(drazba.trida)), JSON.stringify(drazba));
+    const prodej = sTerminem.find((x) => /Sendražice/.test(x.text));
+    pravda('u obyčejného prodeje žádný termín nevzniká',
+      !!(prodej && !prodej.znacka), JSON.stringify(prodej));
+
+    /* HLEDÁNÍ, KTERÉMU NESEDÍ NIC, MUSÍ ŘÍCT PROČ.
+       Dosud u něj stálo „Až nějaký přibude, vypíšeme ho rovnou sem." —
+       pravda, ale k ničemu: člověk nepozná, jestli čeká na vzácnou
+       nabídku, nebo si uložil něco, co nemůže vyjít nikdy. A hlídání,
+       po kterém nikdy nic nepřijde, si lidé vyloží jako rozbitý web.
+       Ukládá se tu přes save_search, tedy touž cestou jako z formuláře,
+       a stránka se načte znovu — ať se měří hotová karta, ne vnitřek
+       výpočtu. */
+    await p.evaluate(async () => {
+      const a = JSON.parse(localStorage.getItem('pk_auth') || '{}');
+      await fetch(window.PK_SUPABASE_URL + '/rest/v1/rpc/save_search', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', apikey: window.PK_SUPABASE_KEY,
+          authorization: 'Bearer ' + (a.access_token || '') },
+        body: JSON.stringify({ p_label: 'Nemožné', p_okres: 'Kolín', p_druh: '',
+          p_type: '', p_max_price: 1000, p_min_area: 0, p_features: [] }),
+      });
+    });
+    await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(2400);
+    const prazdna = await p.evaluate(() => {
+      const it = [...document.querySelectorAll('.hl-item')]
+        .find((e) => /Nemožné/.test((e.querySelector('.hl-iname') || {}).textContent || ''));
+      return it ? { pocet: ((it.querySelector('.hl-count') || {}).textContent || '').trim(),
+        kam: ((it.querySelector('.hl-kam') || {}).textContent || '').trim(),
+        tucne: [...it.querySelectorAll('.hl-kam b')].map((b) => b.textContent) } : null;
+    });
+    pravda('uložilo se hledání, kterému nesedí nic (jinak zkouška nic neměří)',
+      !!(prazdna && /\b0\b/.test(prazdna.pocet)), JSON.stringify(prazdna));
+    pravda('karta řekne, která podmínka za prázdno může',
+      !!(prazdna && /nejvyšší cenu/.test(prazdna.kam) && prazdna.tucne.length === 1),
+      JSON.stringify(prazdna));
+    pravda('  a kolik by bez ní sedělo',
+      !!(prazdna && /bez té podmínky sedí \d+ pozem/.test(prazdna.kam)),
+      JSON.stringify(prazdna && prazdna.kam));
+    pravda('  a pořád slíbí, že nové vypíše',
+      !!(prazdna && /vypíšeme ho rovnou sem/.test(prazdna.kam)), JSON.stringify(prazdna && prazdna.kam));
+    /* A hned zase pryč. Kontroly níž počítají s tím, co tu leželo předtím
+       (mažou jedno hlídání a dívají se, co zbylo) — hledání navíc by jim
+       podstrčilo cizí stav a padaly by na něm, ne na své vadě. */
+    await p.evaluate(async () => {
+      const a = JSON.parse(localStorage.getItem('pk_auth') || '{}');
+      const hl = await (await fetch(window.PK_SUPABASE_URL + '/rest/v1/rpc/my_searches', {
+        method: 'POST', headers: { 'content-type': 'application/json', apikey: window.PK_SUPABASE_KEY,
+          authorization: 'Bearer ' + (a.access_token || '') }, body: '{}' })).json();
+      const moje = (hl || []).find((x) => x.label === 'Nemožné');
+      if (!moje) return;
+      await fetch(window.PK_SUPABASE_URL + '/rest/v1/rpc/delete_search', {
+        method: 'POST', headers: { 'content-type': 'application/json', apikey: window.PK_SUPABASE_KEY,
+          authorization: 'Bearer ' + (a.access_token || '') },
+        body: JSON.stringify({ p_id: moje.id }) });
+    });
+    await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+    await p.waitForTimeout(2400);
 
     const naMapu = karta.odkazy.find((a) => /^index\.html/.test(a.href));
     pravda('a druhá cesta vede na mapu', !!naMapu, JSON.stringify(karta.odkazy));

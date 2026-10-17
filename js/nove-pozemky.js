@@ -10,7 +10,14 @@
  * nemůže rozejít s tím, co ukazuje mapa.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(function () { return require('./hlidani-logika.js'); });
+  if (typeof module === 'object' && module.exports) {
+    /* js/terminy.js nic neexportuje — zavěsí se na globál (v Node tedy
+       na globalThis). Require se tu volá kvůli tomu vedlejšímu účinku
+       a čte se až výsledek; `return require(...)` by vrátilo prázdný
+       objekt a termín by v Node mlčky nikdy nevyšel. */
+    module.exports = factory(function () { return require('./hlidani-logika.js'); },
+      function () { require('./terminy.js'); return globalThis.PK_TERMINY; });
+  }
   /* PRAVIDLA HLÍDÁNÍ SE HLEDAJÍ AŽ PŘI VOLÁNÍ, ne při načtení. Dřív se
      brala rovnou (factory(root.PKHlidani)), takže stačilo, aby se
      tenhle soubor načetl o řádek dřív než js/hlidani-logika.js, a HL
@@ -18,8 +25,13 @@
      a skript padal na „Cannot read properties of undefined". Pořadí
      je srovnané, ale spoléhat se na něj znamená čekat, až ho někdo
      zase prohodí. */
-  else root.PKFeed = factory(function () { return root.PKHlidani; });
-})(typeof self !== 'undefined' ? self : this, function (pravidla) {
+  /* Termíny se podávají stejně líně a ze stejného důvodu: na stránce
+     hlídání se js/terminy.js načítá vedle tohohle souboru a pořadí se
+     dá prohodit. Když modul chybí, termín se prostě nenapíše — výpis
+     zůstane takový, jaký byl, místo aby se celá karta rozsypala. */
+  else root.PKFeed = factory(function () { return root.PKHlidani; },
+    function () { return root.PK_TERMINY; });
+})(typeof self !== 'undefined' ? self : this, function (pravidla, dejTerminy) {
   'use strict';
 
   var HL = new Proxy({}, { get: function (_, jm) { return pravidla()[jm]; } });
@@ -64,6 +76,36 @@
      upozornění; v kartě hlídání, kde je na to místo, jich unese pět. */
   var UKAZKA = 5;
 
+  /* TERMÍN DRAŽBY PATŘÍ DO VÝPISU.
+   *
+   * Měřeno na ostrých datech: ze 109 dražeb a exekucí má termín všech
+   * 109 a 64 z nich je do týdne. U dražby je termín ta jediná věc,
+   * která nutí jednat — a karta hlídání o něm mlčela. Stálo v ní
+   * „Vinné · 1 259 m² · 30 484 Kč" o dražbě, která je za tři dny.
+   *
+   * E-mail to říká odjakživa (scripts/mail-sklad.mjs) a počítá to
+   * z js/terminy.js. Tady se bere týž modul, aby web a pošta nemohly
+   * o téže dražbě tvrdit každý něco jiného; čtvrtá kopie počítání dnů
+   * by se rozešla stejně jako kdysi cenový verdikt.
+   *
+   * Datum se píše VEDLE odpočtu schválně: karta se vykreslí jednou
+   * a nechá se otevřená, takže samotné „za 3 dny" by po dvou dnech
+   * lhalo. Datum platí vždycky. */
+  function terminPolozky(d) {
+    if (!d || (d.type !== 'drazba' && d.type !== 'exekuce')) return null;
+    var T = dejTerminy && dejTerminy();
+    if (!T || !T.daysUntil) return null;
+    var dni = T.daysUntil(d.extra);
+    if (dni == null || dni < 0) return null;
+    var slovo = d.type === 'exekuce' ? 'nucená dražba' : 'dražba';
+    var kdy = T.zdrojText((/(\d{4})-(\d{2})-(\d{2})/.exec(d.extra || '') || [''])[0]);
+    return {
+      text: slovo + ' ' + T.countdownText(dni) + (kdy ? ' (' + kdy + ')' : ''),
+      dni: dni,
+      naleha: (T.countdownClass(dni) || '').trim(),   // 'urg' / 'soon' / ''
+    };
+  }
+
   function zeHlidani(hledani, data) {
     var out = [];
     (hledani || []).forEach(function (s) {
@@ -88,8 +130,14 @@
         titulek: cislovka(nove.length, ['nový pozemek', 'nové pozemky', 'nových pozemků']),
         misto: 'Hlídání „' + (s.label || (s.okres || 'celá ČR')) + '"',
         polozky: nove.slice(0, UKAZKA).map(function (d) {
+          var t = terminPolozky(d);
           return {
             popis: [d.place, vymera(d.area), cena(d.price)].filter(Boolean).join(' · '),
+            /* Termín stojí vedle popisu, ne v něm: na kartě se zvýrazní
+               podle naléhavosti a v prostém textu se dá připojit. */
+            termin: t ? t.text : '',
+            terminDni: t ? t.dni : null,
+            terminNaleha: t ? t.naleha : '',
             druh: d.druh || '',
             typ: d.type || '',
             klic: HL.keyOf(d),
