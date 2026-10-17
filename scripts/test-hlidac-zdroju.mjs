@@ -241,15 +241,29 @@ pravda('první běh bez minulých čísel projde tiše',
   }
 
   /* A NAKONEC NA SKUTEČNÝCH ČÍSLECH. Prah 0,7 × medián nesmí vyhlásit
-     poplach na historii, kterou máme — tam se za 19 dnů nic nerozbilo.
-     Kdyby ho vyhlásil, je prah utažený a hlásil by každý den plano. */
+     poplach na ZDRAVÝCH dnech historie, kterou máme. Kdyby ho vyhlásil,
+     je prah utažený a hlásil by každý den plano.
+
+     PŮVODNĚ TU STÁLO „na historii, kterou máme — tam se za 19 dnů nic
+     nerozbilo". To přestalo platit: zdroj „OK dražby" vracel 84 až 95
+     nabídek, pak pět dnů nevrátil nic a 17. 10. přišel se 45. Hlídač na
+     to upozornil správně — jenže tahle kontrola každý poplach počítala
+     jako planý, takže na prvním skutečném nálezu zčervenala.
+
+     Měří se tedy to, o co tu jde: planý poplach je poplach na dni,
+     který hlídač sám za zdravý považoval. Den, u kterého v historii
+     stojí značka `{p, v}` (tedy „zdroj ten den nebyl v pořádku"), se
+     do vzorku nebere — ne celý den, jen ten jeden zdroj, aby ostatní
+     dál měřily. Kolik se takhle vynechalo, se vypisuje; mlčky zúžený
+     vzorek je totéž jako zelená, která nic neměří. */
   const cesta = path.join(KOREN_H, 'data', 'zdroje-historie.json');
   if (existsSync(cesta)) {
     const h = JSON.parse(readFileSync(cesta, 'utf8'));
     const dny = Object.keys(h.dny || {}).sort();
     pravda(`historie zdrojů v repozitáři má ${dny.length} dnů`, dny.length >= 10,
       'dnů jen ' + dny.length + ' — hlídač zatím nemá z čeho počítat');
-    let poplachu = 0, porovnani = 0;
+    let poplachu = 0, porovnani = 0, vynechano = 0, merenych = 0;
+    const planeU = [];
     for (let i = 5; i < dny.length; i++) {
       const vyrez = { verze: h.verze || 1, dny: {} };
       for (const d of dny.slice(0, i)) vyrez.dny[d] = h.dny[d];
@@ -257,13 +271,25 @@ pravda('první běh bez minulých čísel projde tiše',
          byl zdroj označený). Bez tohohle rozbalení by se do `pocet`
          dostal objekt, srovnání by vyšlo vždycky nepravdivě a kontrola
          by prošla, protože by neměřila nic. */
-      const dnesni = Object.entries(h.dny[dny[i]]).map(([nazev, v]) => ({
-        nazev, stav: 'ok', pocet: (typeof v === 'number' ? v : (v && v.p) || 0) }));
-      porovnani++;
-      poplachu += porovnejSHistorii(vyrez, dnesni, dny[i]).length;
+      const dnesni = [];
+      for (const [nazev, v] of Object.entries(h.dny[dny[i]])) {
+        if (typeof v !== 'number') { vynechano++; continue; }   // označený den
+        dnesni.push({ nazev, stav: 'ok', pocet: v });
+      }
+      if (!dnesni.length) continue;
+      porovnani++; merenych += dnesni.length;
+      for (const p of porovnejSHistorii(vyrez, dnesni, dny[i])) {
+        poplachu++;
+        if (planeU.length < 4) planeU.push(`${dny[i]} ${p.nazev || ''}`.trim());
+      }
     }
-    pravda(`na ${porovnani} dnech skutečné historie nevyhlásil ani jeden planý poplach (${poplachu})`,
-      poplachu === 0, 'poplachů ' + poplachu + ' — prah je utažený');
+    /* Pojistka proti měření prázdna: kdyby značky pohltily celý vzorek,
+       kontrola by prošla s nulou porovnání a nikdo by si toho nevšiml. */
+    pravda(`vzorek zdravých dnů se nevyprázdnil (${merenych} měření, ${vynechano} označených vynecháno)`,
+      porovnani >= 10 && merenych >= 30,
+      `porovnání ${porovnani}, měření ${merenych} — na tolika se nedá o prahu nic tvrdit`);
+    pravda(`na ${porovnani} zdravých dnech skutečné historie nevyhlásil ani jeden planý poplach (${poplachu})`,
+      poplachu === 0, 'poplachů ' + poplachu + ' — prah je utažený: ' + planeU.join(', '));
   } else {
     pravda('data/zdroje-historie.json existuje', false, 'bez něj hlídač nemá paměť');
   }
