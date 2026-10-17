@@ -1,6 +1,7 @@
 # Slabá místa webu
 
-Rozbor k 17. 10. 2026. Není to seznam přání ani plán — je to seznam
+Rozbor k 17. 10. 2026, nad daty z posledního běhu robota (1 980
+nabídek). Není to seznam přání ani plán — je to seznam
 míst, kde web stojí na tenkém ledě, seřazený podle toho, kolik by
 stálo, kdyby se prolomil.
 
@@ -21,21 +22,22 @@ Změřeno nad `data/opportunities.json`:
 
 | zdroj | nabídek | podíl |
 |---|---:|---:|
-| Bezrealitky | 1 622 | 83 % |
+| Bezrealitky | 1 619 | 82 % |
 | SPÚ (§ 12) | 204 | 10 % |
+| OK dražby | 81 | 4 % |
 | Centrální evidence dražeb | 67 | 3 % |
-| OK dražby | 42 | 2 % |
 | Farmy.cz | 9 | 0,5 % |
 
-**Kdyby Bezrealitky přestaly odpovídat, zbylo by 322 nabídek z 1 944 —
-a 32 ze 77 okresů by zůstalo úplně prázdných.** Medián okresu by spadl
+**Kdyby Bezrealitky přestaly odpovídat, zbylo by 361 nabídek z 1 980 —
+a 25 ze 77 okresů by zůstalo úplně prázdných.** Medián okresu by spadl
 na tři nabídky. Z mapy českého trhu s pozemky by se stal seznam
 státních pozemků a dražeb.
 
-Není to teoretická obava. V téhle session hlídač zdrojů poprvé chytil
-skutečný výpadek: „OK dražby" pět dnů nevrátily nic a pak přišly se 45
-místo obvyklých 84–95. U zdroje, který nese 2 % obsahu, se to dá
-přežít. U toho, který nese 83 %, by to byl konec webu na tu dobu.
+Není to teoretická obava. Hlídač zdrojů právě poprvé chytil skutečný
+výpadek: „OK dražby" pět dnů nevrátily nic a pak přišly se 45 místo
+obvyklých 84–95. (V dalším běhu se zdroj vrátil na 81, takže to byl
+výpadek, ne konec.) U zdroje, který nese 4 % obsahu, se to dá přežít.
+U toho, který nese 82 %, by to byl konec webu na tu dobu.
 
 **Chybí Sreality**, tedy největší realitní portál v zemi. Zdroj je
 v kódu napsaný a čeká na `APIFY_TOKEN` (viz `docs/pred-vydanim.md`).
@@ -53,28 +55,28 @@ Web odpovídá na otázku „je tahle cena dobrá?". Přesnost té odpovědi se
 měří křížově na desetinách (`scripts/mericka-odhadu.mjs`): model se
 postaví z devíti dílů dat a odhaduje ten desátý.
 
-**Celkem: medián chyby 27,6 %**, a odhad vůbec nevznikne u 245 z 1 332
+**Celkem: medián chyby 27,5 %**, a odhad vůbec nevznikne u 245 z 1 329
 měřitelných nabídek. Rozpad podle druhu (totéž měřidlo):
 
 | druh | medián chyby | odhad vznikl |
 |---|---:|---:|
-| Orná půda | 21,6 % | 547 z 571 |
-| Louka / travní porost | 28,6 % | 258 z 270 |
-| Lesní pozemek | 29,4 % | **27 z 64** |
-| Stavební / zastavěná | **33,0 %** | 197 z 223 |
+| Orná půda | 21,6 % | 545 z 571 |
+| Louka / travní porost | 27,5 % | 257 z 270 |
+| Lesní pozemek | 33,6 % | **27 z 64** |
+| Stavební / zastavěná | **34,3 %** | 192 z 221 |
 | Vinice / sad | 36,2 % | 34 z 44 |
-| Ostatní plocha | **55,5 %** | 22 z 61 |
-| Jiný pozemek | 897 % | 2 z 40 |
+| Ostatní plocha | **58,9 %** | 24 z 61 |
+| Jiný pozemek | 854 % | 5 z 39 |
 
 Tři věci z té tabulky:
 
 1. **Nejhorší je to tam, kde jde o nejvíc peněz.** U stavebního pozemku
-   je medián chyby 33 %. Na pozemku za dva miliony je to ±660 000 Kč.
+   je medián chyby 34 %. Na pozemku za dva miliony je to ±680 000 Kč.
    Zároveň je to druh, kvůli kterému na takový web lidé chodí nejčastěji.
 2. **U lesních pozemků odhad většinou nevznikne vůbec** (27 ze 64).
    Člověk tam nedostane špatnou odpověď, dostane mlčení.
-3. **„Jiný pozemek" a „Ostatní plocha" jsou mimo.** U dvou nabídek ze
-   čtyřiceti vyšla chyba v řádu stovek procent. Pojistka v `js/ceny.js`
+3. **„Jiný pozemek" a „Ostatní plocha" jsou mimo.** U pěti nabídek ze
+   devětatřiceti vyšla chyba v řádu stovek procent. Pojistka v `js/ceny.js`
    ořezává jen odhady, které jsou hluboko POD cenou (to je u dražeb
    správně) — odhad několikanásobně NAD cenou projde.
 
@@ -93,7 +95,7 @@ ho možná nevydávat vůbec.
 
 ## 3. Polovina nabídek nemá s čím se srovnat
 
-Změřeno nad daty: **978 z 1 944 nabídek (50 %) leží ve skupině
+Změřeno nad daty: **998 z 1 980 nabídek (50 %) leží ve skupině
 okres + druh, která má méně než deset kusů.** Model na to má ústup
 (okres → kraj → celá ČR), takže odpověď dostanou — ale postavenou na
 vzorku, o kterém vlastní komentář v `js/ceny.js` píše, že je méně
@@ -175,36 +177,36 @@ Bez bodu 5 (měření) se ani nepozná, jestli se o to někdo pokouší.
 ## 8. Obsah stárne rychleji, než se zdá
 
 Změřeno nad archivem (`data/archiv/2026-10.jsonl`): **za sedmnáct
-říjnových dnů zmizelo 308 nabídek z 1 944** — skoro šestina. Medián
+říjnových dnů zmizelo 308 nabídek z 1 980** — skoro šestina. Medián
 životnosti ukončené nabídky je **19 dní**.
 
 Důsledky:
 
-* **SEO.** Z 2 140 stránek pozemků je 222 označených `noindex` —
+* **SEO.** Z 2 156 stránek pozemků je 215 označených `noindex` —
   náhrobky po skončených nabídkách, které čekají 90 dnů, než se smažou.
   Trvalou hodnotu ve vyhledávači nesou krajské, okresní a druhové
   stránky; stránky jednotlivých pozemků jsou z principu dočasné.
 * **Uložené pozemky.** Člověk si uloží pozemek a za tři týdny je
   v polovině případů pryč. (Profil to od dneška říká; předtím mlčel.)
-* **Dražby.** Ze 109 dražeb a exekucí je 64 do týdne. U nich je lhůta
+* **Dražby.** Ze 148 dražeb a exekucí je 66 do týdne. U nich je lhůta
   všechno — a na tu se nedá upozornit bez bodu 4.
 
 ---
 
 ## 9. Čtvrtina nabídek je něco jiného, než se zdá
 
-**507 z 1 944 nabídek (26 %) jsou spoluvlastnické podíly.** V ceně je
+**523 z 1 980 nabídek (26 %) jsou spoluvlastnické podíly.** V ceně je
 zlomek pozemku, v inzerátu bývá výměra celé parcely. Pro většinu
 kupujících je to bezcenné a zároveň to vypadá jako trhák.
 
 Web to na každém místě pojmenovává (cena za metr se počítá z výměry,
 která kupujícímu připadne; hlídání umí „jen celé pozemky"; verdikt se
 u podílu nevydává). Zbývající slabina je jinde: **podíly ředí vzorek,
-ze kterého se počítá obvyklá cena**. Měřidlo přesnosti pracuje s 1 332
-nabídkami z 1 944 — jsou to celé pozemky na prodej, tedy bez podílů
+ze kterého se počítá obvyklá cena**. Měřidlo přesnosti pracuje s 1 329
+nabídkami z 1 980 — jsou to celé pozemky na prodej, tedy bez podílů
 a bez dražeb, jejichž vyvolávací cena se s nabídkovou srovnávat nedá.
 
-A druhá nerovnováha: **stavebních pozemků je jen 230 (12 %)**, zatímco
+A druhá nerovnováha: **stavebních pozemků je jen 234 (12 %)**, zatímco
 orné půdy 571. Nabídka webu je zemědělská, zatímco poptávka na podobných
 webech bývá stavební. *(Druhá polovina té věty je úsudek — bez měření
 návštěvnosti ji nemám čím doložit.)*
@@ -224,8 +226,8 @@ návštěvnosti ji nemám čím doložit.)*
   která je zítra, to stačí; u nového inzerátu to znamená, že web o něm
   ví nejpozději za šest hodin. Rychlejší obnova znamená víc zátěže na
   cizí servery.
-* **Jeden repozitář, jeden člověk, jedna větev.** Zkoušek je 228 a CI
-  je drží, ale bus faktor je 1.
+* **Jeden repozitář, jeden člověk, jedna větev.** Zkoušek je 228 (111 bez prohlížeče, 117 v něm)
+  a CI je drží, ale bus faktor je 1.
 
 ---
 
