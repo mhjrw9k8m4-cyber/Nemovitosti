@@ -24,7 +24,6 @@ import { fileURLToPath } from 'node:url';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'http://127.0.0.1:8310';
 const BEZ = process.argv.includes('--bez-offline');
 const KOLIKRAT = 5;

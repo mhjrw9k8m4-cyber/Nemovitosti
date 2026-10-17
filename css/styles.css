@@ -6965,6 +6965,38 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    červená (data jsou), ale ani normál — jinak se to přehlédne. */
 .src-stav.src-slabe{background:rgba(138,85,18,0.45); color:#F7E3C3;}
 
+/* SOUŘADNICE POD MAPOU — a proto NE ve vloženém stylu pozemek.html.
+   Ten styl je kritický: nese to, co se kreslí na první obrazovce, a má
+   strop 41 kB (hlídá scripts/test-vlozeny-styl.mjs). Blok se souřadnicemi
+   stával mezi parametry, tedy nahoře; od chvíle, kdy sedí pod mapou
+   (měřeno na telefonu 390 px: mapa začíná na 2 611 px), je hluboko pod
+   přehybem a do kritického stylu nepatří. */
+/* SOUŘADNICE: číslo ke zkopírování a odkaz do navigace.
+   Číslo v <code> jde označit prstem i myší; tlačítka mají 44 px. */
+.pz-sour{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+.pz-sour code{font-family:var(--font-mono);
+  font-size:14px; letter-spacing:-0.01em; user-select:all; -webkit-user-select:all;}
+.pz-sour-kop, .pz-sour-nav{display:inline-flex; align-items:center; gap:6px;
+  min-height:44px; padding:0 12px; border-radius:var(--r-sm);
+  border:1px solid var(--line-ui); background:var(--ink);
+  font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark);
+  text-decoration:none; cursor:pointer;
+  transition:border-color var(--cas-zakladni) var(--ease);}
+.pz-sour-kop:hover, .pz-sour-nav:hover{border-color:var(--copper-bright);}
+/* 2,18 proto, že 16 × 2,18 ÷ 24 = 1,45 px — tah jako u ostatních ikon. */
+.pz-sour-kop svg, .pz-sour-nav svg{width:16px; height:16px; flex:none; stroke-width:2.18;}
+/* Na telefonu dvě linky, ne tři: 96 px místo 125. */
+@media (max-width:420px){ .pz-sour-radek{margin-right:0; flex:1 1 100%;}
+  .pz-sour-akce{flex:1 1 100%;}
+  .pz-sour-kop, .pz-sour-nav{flex:1 1 0; justify-content:center;} }
+/* Karta pod mapou; údaj a akce jsou dvě skupiny, aby se lámaly jako
+   celek (proč, viz sourHtml v js/pozemek.js). */
+.pz-sour{margin:10px 0 0; padding:10px 12px;
+  border:1px solid var(--line-ui); border-radius:var(--r-sm); background:var(--ink-soft);}
+.pz-sour-radek{display:flex; align-items:baseline; gap:8px; margin-right:auto;}
+.pz-sour-akce{display:flex; gap:8px;}
+.pz-sour-k{font-size:13px; color:var(--text-ondark-mute);}
+
 /* Dražba po termínu. Tlumeně a šedě — je to fakt, ne varování; nemá
    přetahovat pozornost od živých nabídek, ale musí být vidět. */
 .opp-cd.opp-proběhlo{
@@ -7694,8 +7726,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    stylů, když se ukončeným stránkám přestal posílat starý vložený styl,
    ve kterém se ten řetězec ještě vyskytoval. */
 @media (max-width:560px){
-  .pz-spec:has(.pz-sour) .k{grid-column:1 / -1; padding-bottom:0; border-bottom:none;}
-  .pz-spec:has(.pz-sour) .v{grid-column:1 / -1; padding-left:14px; padding-top:6px;}}
+}
 
 
 /* =====================================================================

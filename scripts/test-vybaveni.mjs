@@ -258,7 +258,15 @@ sedi('K pozemku nevede zpevněná komunikace.', []);
   /* „Detail na mapě" tu býval čtvrtým místem. Panel nad mapou se ale
      nikdy neotevřel a je pryč — zbyla karta, stránka pozemku, okresní
      stránky a robot, tedy čtyři místa, kde se o podílu mluví doopravdy. */
-  pravda('stránka pozemku taky', /spoluvlastnickém podílu <b>' \+ esc\(d\.zlomek\)/.test(poz));
+  /* Hlídá se SMYSL, ne znění: v řádku „Vlastnictví" na stránce pozemku
+     musí být velikost podílu. Dřív tu stál doslovný otisk věty
+     („spoluvlastnickém podílu <b>' + esc(d.zlomek)") a ta věta se
+     přepsala, jakmile se z řádku stal údaj místo souvětí — opakovala
+     totiž skoro doslova verdikt o 150 px níž. Zkouška padla na
+     přeformulování, ne na ztrátě toho zlomku. */
+  pravda('stránka pozemku taky',
+    /'Vlastnictví'[\s\S]{0,400}esc\(d\.zlomek\)/.test(poz),
+    'v řádku Vlastnictví se velikost podílu nevypisuje');
   pravda('okresní stránky taky', /o\.zlomek\?' '\+esc\(o\.zlomek\)/.test(gen));
   pravda('a robot si ji do dat ukládá',
     /if \(v\.zlomek\) o\.zlomek = v\.zlomek;/.test(readFileSync(path.join(ROOT, 'scripts', 'fetch-opportunities.mjs'), 'utf8')));

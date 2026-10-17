@@ -26,12 +26,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/region.min.css?v=d4b5bfc0">
+  <link rel="stylesheet" href="css/region.min.css?v=1aa3216c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky v okrese Prachatice","inLanguage":"cs","description":"Nabídky pozemků v okrese Prachatice — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-okres-prachatice.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":9,"itemListElement":[{"@type":"ListItem","position":1,"name":"Strunkovice nad Blanicí — Na prodej, 1026 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-strunkovice-nad-blanici-1opvob9.html"},{"@type":"ListItem","position":2,"name":"Strunkovice nad Blanicí — Na prodej, 1017 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-strunkovice-nad-blanici-14952sw.html"},{"@type":"ListItem","position":3,"name":"Vimperk — Na prodej, 12674 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-vimperk-1i13246.html"},{"@type":"ListItem","position":4,"name":"Vimperk — Na prodej, 15959 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-vimperk-1bkbpqw.html"},{"@type":"ListItem","position":5,"name":"Lhenice — Na prodej, 3266 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-lhenice-111qquk.html"},{"@type":"ListItem","position":6,"name":"Vimperk — Na prodej, 9729 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-vimperk-nvpavu.html"},{"@type":"ListItem","position":7,"name":"Svatá Maří — Na prodej, 25911 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-svata-mari-14pcolp.html"},{"@type":"ListItem","position":8,"name":"Vrbice — Dražba, 9030 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-vrbice-1hezuu2.html"},{"@type":"ListItem","position":9,"name":"Nová Pec — Na prodej, 8518 m²","url":"https://www.parcelaka.cz/pozemek-prachatice-nova-pec-1q9nmxz.html"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihočeský kraj","item":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Prachatice","item":"https://www.parcelaka.cz/pozemky-okres-prachatice.html"}]}]
   </script>
@@ -39,7 +37,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -90,8 +87,7 @@
         <div class="okr-stat"><b>9</b><span>pozemků</span></div>
         <div class="okr-stat"><b>8</b><span>na prodej</span></div>
         <div class="okr-stat"><b>1</b><span>dražba</span></div>
-        
-        
+
       </div>
       </div>
     </div>
@@ -101,30 +97,9 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <!-- Rozpad podle druhu se vypisuje, JEN když je co rozpadat. V okrese
-           Kolín je všech 28 nabídek na prodej, takže vedle sebe stály dvě
-           dlaždice s týmž číslem: „28 pozemků" a „28 na prodej". Druhá
-           neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
-           stojí „28× na prodej" ještě jednou. -->
-
-      <!-- CESTA VEN STOJÍ NAD VÝPISEM, i když výklad šel pod něj.
-           Hlídá to scripts/test-cesta-ven.mjs a má pravdu: kdo sjede
-           k nabídkám a zjistí, že v okrese nic pro něj není, musí mít
-           kam jít — a na velkém okrese je „pod výpisem" o čtyřicet
-           tisíc znaků dál. Velká pozvánka na mapu zůstává pod výpisem,
-           tohle je její jednořádková předzvěst. -->
+      
       <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=Jiho%C4%8Desk%C3%BD#mapa">Otevřít okres Prachatice na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
-      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI.
-           Pořadí tu bylo obrácené a dalo se to změřit: na telefonu 390 px
-           začínala první nabídka až na 1 870 px, tedy po dvou a půl
-           obrazovkách statistik, ceníkového odstavce, grafu a pozvánky na
-           mapu. Člověk z vyhledávače přitom hledá pozemky v okrese, ne
-           výklad o okrese. Velké zahraniční weby (Rightmove, Zillow,
-           Idealista) mají na stránce kraje či města vždycky nejdřív
-           výpis a text pod ním — a vyhledávačům to nevadí, obsah na
-           stránce zůstává celý, jen se čte v pořadí, v jakém ho chce
-           člověk. -->
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese Prachatice</h2>
@@ -192,7 +167,7 @@
         <a class="okr-place" href="pozemek-prachatice-vrbice-1hezuu2.html">Vrbice<span class="visually-hidden"> — detail pozemku</span></a>
         <span class="okr-cena" title="Vyvolávací cena — od ní se v dražbě přihazuje, konečná cena bývá vyšší."><b>3 900 000 Kč</b><span class="okr-zametr">432 Kč/m²</span></span>
         <span class="okr-meta">orná půda · <b>9 030 m²</b></span>
-        <span class="okr-extra">dražba 21. 10. 2026 · <span class="opp-cd urg">za 5 dní</span></span>
+        <span class="okr-extra">dražba 21. 10. 2026 · <span class="opp-cd urg">za 4 dny</span></span>
         
       </div>
       <div class="okr-item">
@@ -207,8 +182,6 @@
         </div>
       </div>
 
-
-
       <div data-graf-cen data-uroven="okres" data-nazev="Prachatice" data-kde="v okrese Prachatice"></div>
       <p class="okr-more" style="margin-top:2px;">Z toho jsou <b>4</b> spoluvlastnické podíly — kupuje se zlomek pozemku a rozhoduje se o něm společně s dalšími vlastníky. Výměra u nich odpovídá tomu, co kupující dostane. <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>
 
@@ -222,7 +195,6 @@
         <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
-
 
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
@@ -245,10 +217,6 @@
         </div>
       </div>
 
-      <!-- ODBĚR KANÁLEM. Čtrnáct krajských kanálů se obnovuje čtyřikrát
-           denně a odkazovala na ně jediná stránka (data.html), takže je
-           nikdo nenašel. Tady stojí u výpisu, kde to má smysl: kdo si
-           okres prochází, ten se sem vrací. -->
       <p class="okr-more" style="margin-top:20px;">Nechcete se sem vracet a koukat?
         <a href="novinky-jihocesky.xml">Nové pozemky v Jihočeském kraji odebírejte kanálem</a>
         — bez účtu a bez e-mailu. Nebo se podívejte, <a href="nove-pozemky.html">co je na trhu nového</a>.</p>
@@ -273,26 +241,9 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
-     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
-     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
-     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
-     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
-     takže těch 73 kB platil skoro každý návštěvník. -->
-<script src="js/min/menu.js?v=e897102e" defer></script>
-<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota,
-     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
-     chodí nejčastěji právě na stránky okresů.
 
-     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
-     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
-     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
-     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
-     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
-     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
-     z vyhledávačů. Že se to nevrátí, hlídá
-     scripts/test-skripty-na-strance.mjs. -->
+<script src="js/min/menu.js?v=e897102e" defer></script>
+
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/graf-cen.js?v=5c611223" defer></script>

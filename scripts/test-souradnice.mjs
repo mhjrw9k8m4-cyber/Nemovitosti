@@ -65,13 +65,39 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
     return { je: true, text: document.querySelector('#pz-sour-text').textContent.trim(),
       kop: Math.round(k.getBoundingClientRect().height),
       nav: Math.round(n.getBoundingClientRect().height),
-      // popisek řádku je .pz-spec .k (ne dt/th — tabulka faktů je z divů)
-      popisek: [...document.querySelectorAll('.pz-spec .k')].map((e) => e.textContent.trim())
-        .filter((t) => /Souřad/i.test(t)).length };
+      /* Popisek stojí v samotném bloku (.pz-sour-k). Dřív se hledal
+         v tabulce parametrů (.pz-spec .k) — tam souřadnice bývaly, než
+         se přestěhovaly pod mapu, kam otázka „jak se tam dostanu" patří
+         (měřeno: v tabulce stály 2 100 px nad mapou). */
+      popisek: [...document.querySelectorAll('.pz-sour-k')]
+        .filter((e) => /Souřad/i.test(e.textContent)).length,
+      /* A že jsou OPRAVDU u mapy, ne zase někde v parametrech. */
+      podMapou: (() => {
+        const m = document.querySelector('#pzm'), w2 = document.querySelector('.pz-sour');
+        if (!m || !w2) return null;
+        return w2.getBoundingClientRect().top >= m.getBoundingClientRect().bottom - 2;
+      })(),
+      vParametrech: !!document.querySelector('.pz-spec .pz-sour'),
+      vyska: Math.round(document.querySelector('.pz-sour').getBoundingClientRect().height),
+      naJedne: (() => {
+        const b2 = document.querySelector('#pz-sour-kop'), a2 = document.querySelector('#pz-sour-nav');
+        return !!(b2 && a2) && Math.abs(b2.getBoundingClientRect().top - a2.getBoundingClientRect().top) < 6;
+      })() };
   });
   pravda('stránka pozemku ukazuje souřadnice', v.je, 'blok .pz-sour na stránce není');
   if (!v.je) { await prohlizec.close(); hotovo(); }
   pravda('a je u nich popisek, aby bylo poznat, co to je', v.popisek > 0);
+  /* KDE STOJÍ. Dřív byly mezi parametry — tedy 2 100 px nad mapou
+     (naměřeno na telefonu 390 px: tabulka na 634 px, „Pozemek na mapě"
+     až na 2 697). „Jak se tam dostanu" se přitom čte u mapy, a v tabulce
+     ten jediný řádek zabíral 230 px ze čtyř set, které celá měla. */
+  pravda('stojí pod mapou, ne mezi parametry', v.podMapou === true,
+    'blok .pz-sour nezačíná až za mapou #pzm');
+  pravda('a v tabulce parametrů už nejsou', v.vParametrech === false,
+    'souřadnice jsou na stránce dvakrát — v parametrech i pod mapou');
+  pravda('obě tlačítka stojí vedle sebe, ne pod sebou', v.naJedne === true,
+    'zalomila se — blok tím naroste o 52 px');
+  pravda('a blok se nerozlézá do výšky', v.vyska > 0 && v.vyska <= 150, `${v.vyska} px`);
 
   /* Podoba: „49.71048, 15.01467". Desetinná TEČKA, čárka mezi, pět míst. */
   pravda('číslo je v podobě, kterou berou navigace (tečka, čárka, 5 míst)',

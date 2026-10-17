@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import * as SROV from './srovnatelne.mjs';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+import { bezKomentaruVHtml } from './text.mjs';
 /* Historie ceny jedné nabídky — z archivu, ne z posledního běhu robota.
    `cena_drive` v datech má 21 nabídek z 2 004 (přepíše se při každém
    běhu), archiv ví o 129. Stránka pozemku je přitom jediné místo, kde
@@ -818,6 +819,7 @@ function bezKomentaruVeStylu(html) {
     (cele, zacatek, telo, konec) => zacatek + ocistiCss(telo) + konec);
 }
 
+
 export function stranka(sablona, d, soubor = souborPro(d)) {
   const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
   const url = `${WEB}/${soubor}`;
@@ -1144,7 +1146,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-kamdal-data">${jsonVeStrance(kamDalSem)}</scr` + `ipt>\n$1`);
   }
-  return bezKomentaruVeStylu(h);
+  return bezKomentaruVHtml(bezKomentaruVeStylu(h));
 }
 
 /* Pravidlo pro duplicity je jedno pro celý web (js/hlidani-logika.js).
@@ -1525,8 +1527,11 @@ export function generuj() {
          opravilo jen v ukoncenaStranka(), zůstalo by sedm stránek, které
          strojově tvrdí InStock, navždy. Datum se bere to zapsané, ne
          dnešek: cena přestala platit tehdy. */
-      const migrovano = migrujUkoncenaData(
-        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1]);
+      /* Úklid komentářů patří mezi přepisy, které musí na KAŽDOU stránku:
+         ukončené stránky se jinak nepřepisují, takže by si 221 z nich
+         komentáře z předlohy neslo až do smazání. */
+      const migrovano = bezKomentaruVHtml(migrujUkoncenaData(
+        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1]));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }
@@ -1544,8 +1549,8 @@ export function generuj() {
        Žádný skript nechyběl, jen byly přeskládané; na druhý běh si to
        větev výš srovnala sama. Je to tedy tiché, opakované rozcházení,
        ne rozbitá stránka. */
-    fs.writeFileSync(cesta, ukoncenaStranka(
-      migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne));
+    fs.writeFileSync(cesta, bezKomentaruVHtml(ukoncenaStranka(
+      migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne)));
     ukonceno++;
   }
   return { hotove, datumy, smazano, ukonceno, prepsano };

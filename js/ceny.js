@@ -120,6 +120,23 @@
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }
 
+  /** Totéž v jedné krátké větě — pro místa, kde dlouhé vysvětlení stojí
+   *  hned vedle.
+   *
+   *  Na stránce pozemku se o podílu dalo přečíst ČTYŘIKRÁT na jedné
+   *  obrazovce: v dlaždici výměry, v dlaždici ceny za metr, v řádku
+   *  „Vlastnictví" a ve verdiktu — a dlaždice s cenou za metr nesla
+   *  celé souvětí z zaMetrPopis(), které verdikt o tři sta pixelů níž
+   *  opakuje skoro doslova. Dlaždice má říct, CO to číslo je; proč a co
+   *  si u toho ověřit, patří do verdiktu, který je na to udělaný.
+   *  Dlouhá věta zůstává tam, kde je sama za sebe: v bublině u čísla
+   *  ve výpisu, na mapě a na stránkách okresů. */
+  function zaMetrKratce(d) {
+    if (!d || !d.podil) return '';
+    if (zlomekPodilu(d) == null) return '';
+    return d.vymera_podilu ? 'za metr, který vám připadne' : 'přepočteno na váš podíl';
+  }
+
   /* CENA, KTEROU NESTANOVIL TRH.
    *
    * Do srovnávací hladiny patří jen běžné nabídky — proto se vynechávají
@@ -1127,6 +1144,7 @@
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
+    zaMetrKratce: zaMetrKratce,
     /* Ven kvůli generátoru stránek: kdo vydává „obvyklou cenu", musí
        úředně stanovenou cenu vynechat týmž pravidlem jako model. */
     spravniCena: spravniCena,

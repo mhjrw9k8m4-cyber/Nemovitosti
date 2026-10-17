@@ -26,12 +26,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/region.min.css?v=d4b5bfc0">
+  <link rel="stylesheet" href="css/region.min.css?v=1aa3216c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky podle krajů a okresů","inLanguage":"cs","description":"Přehled pozemků v 14 krajích a 77 okresech Česka — prodeje, dražby a exekuce z veřejných zdrojů na jedné mapě. Vyberte region a prohlédněte si aktuální nabídky.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-podle-okresu.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle krajů a okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"}]}]
   </script>
@@ -39,7 +37,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -257,13 +254,6 @@
         </div>
       </div>
 
-      <!-- NEŽ NĚCO PODEPÍŠETE. Tyhle články na webu byly, ale nevedl na
-           ně odkaz odnikud: „Jak koupit pozemek od obce" měl nula
-           příchozích odkazů a přitom stál v sitemap, takže ho web
-           nabízel vyhledávačům a vlastním návštěvníkům ne. Rádce na
-           stránce pozemku na část z nich odkazuje, jenže jen podmíněně
-           podle druhu nabídky — a nabídek typu „od obce" je v datech
-           dnes nula, takže ta větev nikdy nenastane. -->
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2>Než něco podepíšete</h2>
@@ -314,26 +304,9 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
-     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
-     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
-     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
-     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
-     takže těch 73 kB platil skoro každý návštěvník. -->
-<script src="js/min/menu.js?v=e897102e" defer></script>
-<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota,
-     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
-     chodí nejčastěji právě na stránky okresů.
 
-     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
-     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
-     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
-     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
-     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
-     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
-     z vyhledávačů. Že se to nevrátí, hlídá
-     scripts/test-skripty-na-strance.mjs. -->
+<script src="js/min/menu.js?v=e897102e" defer></script>
+
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>

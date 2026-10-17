@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+import { bezKomentaruVHtml } from './text.mjs';
 /* Odkaz na vlastní stránku pozemku. Které nabídce patří která stránka
    rozhoduje generátor těch stránek — proto se to mapování odsud jen
    PŮJČUJE. Spočítat si ho tu podruhé by znamenalo dvě pravdy o jednom
@@ -175,7 +176,13 @@ export function dvousloupcovaHlavicka(html) {
   return vysledek === bezStatu ? html : vysledek;
 }
 
-function write(file, html){ fs.writeFileSync(path.join(ROOT, file), dvousloupcovaHlavicka(html)); }
+/* KOMENTÁŘE SE DO HOTOVÝCH STRÁNEK NEZAPISUJÍ — stejné pravidlo jako
+   u stránek pozemků, jedna funkce pro obojí (scripts/text.mjs).
+   Naměřeno na 104 regionálních stránkách: 835 kB gzipem → 675 kB, tedy
+   1,53 kB při každém otevření. Zdůvodnění je u té funkce. */
+function write(file, html){
+  fs.writeFileSync(path.join(ROOT, file), bezKomentaruVHtml(dvousloupcovaHlavicka(html)));
+}
 
 const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.json'),'utf8'));
 /* Kdy robot naposledy zdroje procházel. Časté dotazy slibují „u každé

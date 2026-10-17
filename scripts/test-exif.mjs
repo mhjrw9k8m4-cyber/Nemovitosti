@@ -52,7 +52,6 @@ function jpegSExifem({ znacka, model, datum, lat, lng, software }) {
   };
 
   const ifd0 = [], exifIfd = [], gpsIfd = [];
-  const textOdkazy = [];      // {buffer, indexPolozky, ktereIFD} — offsety dopočítáme
 
   // připravíme hodnoty, offsety opravíme až budeme znát rozvržení
   const naText = (s) => ({ typ: 2, pocet: s.length + 1, off: pridejText(s) });

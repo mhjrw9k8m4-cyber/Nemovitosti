@@ -35,7 +35,6 @@ const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ZDROJ = path.join(KOREN, 'css', 'styles.css');
 const CIL = path.join(KOREN, 'css', 'styles.min.css');
 const CIL_REL = 'css/styles.min.css';
-const ZDROJ_REL = 'css/styles.css';
 const JS_MIN = path.join(KOREN, 'js', 'min');
 
 /** Očistí stylopis: komentáře pryč, mezery na minimum. Nic jiného. */
@@ -124,7 +123,6 @@ export function ocisti(css) {
    Šablonové literály přes víc řádků by byly další past (řádek v nich
    smí začínat „//" a není to komentář). Naměřeno: v js/ není ani jeden
    takový. Kopírují se přesto celé, včetně vnořených ${…}. */
-const JS_DIR = path.join(KOREN, 'js');
 
 /* Lomítko je buď dělení, nebo začátek regulárního výrazu. Rozhoduje
    předchozí token: po hodnotě (`a`, `)`, `]`, číslu) je to dělení, jinak

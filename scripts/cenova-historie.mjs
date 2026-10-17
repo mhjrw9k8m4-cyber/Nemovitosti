@@ -29,7 +29,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { nactiArchiv, dny } from './archiv-statistiky.mjs';
 
-const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /**
  * Z archivu udělá historii ceny podle klíče pozemku (pkey, bez ceny).

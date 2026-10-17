@@ -4,6 +4,7 @@
 // tabulka psala ještě ručně do HTML, rozešla by se s daty při prvním
 // novém poli. Takhle je jedno místo a stránka z něj jen roste.
 import fs from 'node:fs';
+import { bezKomentaruVHtml } from './text.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -272,7 +273,10 @@ ${pole}
   </section>
 </main>
 `;
-  fs.writeFileSync(path.join(ROOT, 'data.html'), hlavicka + telo + pata, 'utf8');
+  /* Komentáře do hotové stránky nezapisujeme — totéž pravidlo a tatáž
+     funkce jako u stránek pozemků a regionů (scripts/text.mjs). */
+  fs.writeFileSync(path.join(ROOT, 'data.html'),
+    bezKomentaruVHtml(hlavicka + telo + pata), 'utf8');
   console.log(`Stránka data.html: ${Object.keys(popis.pole).length} polí nabídky, `
     + `${Object.keys(popis.hlava).length} polí hlavičky, ${fmt(nabidek)} nabídek.`);
 }

@@ -660,6 +660,19 @@ body>footer{flex:none}
 .gtk-ol{margin:0;padding-left:1.35em;display:flex;flex-direction:column;gap:6px}
 .gtk-ol li{font-size:14px;line-height:1.6;color:var(--text-ondark)}
 .gtk-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
+.pz-sour{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.pz-sour code{font-family:var(--font-mono);font-size:14px;letter-spacing:-0.01em;user-select:all;-webkit-user-select:all}
+.pz-sour-kop,.pz-sour-nav{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--line-ui);background:var(--ink);font:inherit;font-size:13px;font-weight:600;color:var(--text-ondark);text-decoration:none;cursor:pointer;transition:border-color var(--cas-zakladni) var(--ease)}
+.pz-sour-kop:hover,.pz-sour-nav:hover{border-color:var(--copper-bright)}
+.pz-sour-kop svg,.pz-sour-nav svg{width:16px;height:16px;flex:none;stroke-width:2.18}
+@media (max-width:420px){.pz-sour-radek{margin-right:0;flex:1 1 100%}
+.pz-sour-akce{flex:1 1 100%}
+.pz-sour-kop,.pz-sour-nav{flex:1 1 0;justify-content:center}
+}
+.pz-sour{margin:10px 0 0;padding:10px 12px;border:1px solid var(--line-ui);border-radius:var(--r-sm);background:var(--ink-soft)}
+.pz-sour-radek{display:flex;align-items:baseline;gap:8px;margin-right:auto}
+.pz-sour-akce{display:flex;gap:8px}
+.pz-sour-k{font-size:13px;color:var(--text-ondark-mute)}
 @media (pointer:coarse){input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px !important}
 }
 
@@ -717,9 +730,7 @@ to{opacity:1;transform:none}
 .pz-spec:last-child .k,.pz-spec:last-child .v{border-bottom:none}
 .pz-spec .k{color:var(--text-ondark-mute);font-size:14px}
 .pz-spec .v{color:var(--text-ondark);font-weight:600;font-size:14px;text-align:left;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere;line-height:1.4}
-@media (max-width:560px){.pz-spec:has(.pz-sour) .k{grid-column:1 / -1;padding-bottom:0;border-bottom:none}
-.pz-spec:has(.pz-sour) .v{grid-column:1 / -1;padding-left:14px;padding-top:6px}
-}
+
 .pz-bok{display:contents}
 @media (min-width:1100px){.pz-wrap{padding-left:32px;padding-right:32px}
 #pz-detail{display:grid;grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,340px);column-gap:40px;align-items:start}

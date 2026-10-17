@@ -1455,6 +1455,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper)}
 .src-stav{margin-left:8px;padding:1px 6px;border-radius:var(--r-pill);font-family:var(--font-mono);font-size:12px;font-variant-numeric:tabular-nums;background:rgba(255,255,255,0.12);color:var(--text-ondeep-mute)}
 .src-stav.src-zle{background:rgba(140,47,30,0.4);color:#FBDCD4}
 .src-stav.src-slabe{background:rgba(138,85,18,0.45);color:#F7E3C3}
+
 .opp-cd.opp-proběhlo{background:var(--ink-soft2);color:var(--text-ondark-mute);border:1px solid var(--line-strong);font-weight:600}
 .opp-item:has(.opp-proběhlo) .opp-price{color:var(--text-ondark-mute)}
 .datovy-vypadek{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px;padding:12px 16px;border-radius:var(--r-md);border:1px solid var(--c-drazba-ink);background:rgba(232,179,65,0.16);font-size:14px;line-height:1.5;color:var(--text-ondark)}

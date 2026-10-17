@@ -22,6 +22,8 @@
    dávají smysl: co se čte dřív, stojí výš.
    ================================================================== */
 import { chromium } from 'playwright-core';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -56,6 +58,59 @@ try {
     viewport: { width: 360, height: 800 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
+  /* CIZÍ SLUŽBY SE ODŘÍZNOU — jinak tahle zkouška neměří kód, ale síť.
+     Mapa si u ČÚZK a dalších úřadů zjišťuje, které vrstvy jedou, a podle
+     odpovědi dokreslí řadu přepínačů a legendu. Tady se přitom měří
+     VÝŠKA celé stránky proti mezi 4,2 obrazovky — a ten rozdíl je velký:
+     naměřeno na téže stránce 3 319 px bez vrstev a 3 773 px s nimi,
+     tedy 454 px, skoro tři čtvrtě obrazovky. Zkouška tak vycházela
+     jinak v sandboxu (služby blokované) a jinak v CI, kde internet je,
+     a dokonce i mezi dvěma běhy vedle sebe, podle toho, jestli se
+     odpověď stihla vrátit do dvou a půl vteřiny.
+     Pořadí a výška stránky jsou vlastnost našeho kódu; měří se proto
+     v jednom známém stavu. Že se vrstvy ukazují, když služby jedou,
+     hlídají zkoušky mapy (test-mapa-pozemku, test-vrstvy). */
+  const PRAZDNY_PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'base64');
+  await ctx.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    if (r.request().resourceType() === 'image') {
+      return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNY_PNG });
+    }
+    return r.abort();
+  });
+  /* LEAFLET ALE MUSÍ DOJET, jinak se mapa nevykreslí vůbec a mez výšky
+     by změkla o celou mapu — zkouška by pak prošla i stránce, která je
+     ve skutečnosti delší. Bere se místní kopie, stejně jako v ostatních
+     zkouškách (PK_LEAFLET_DIR). Bez té proměnné se cizí adresa pustí
+     ven: v CI se Leaflet stáhne a stav je týž, jen pomaleji. */
+  const LEAFLET = process.env.PK_LEAFLET_DIR || '';
+  if (LEAFLET) {
+    await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+      const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+      if (!existsSync(f)) return r.abort();
+      return r.fulfill({ status: 200,
+        contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(f) });
+    });
+    await ctx.route(BASE + STRANKA, async (r) => {
+      const o = await r.fetch();
+      return r.fulfill({ status: 200, contentType: 'text/html; charset=utf-8',
+        body: (await o.text()).replace(/\s+integrity="[^"]*"/g, '') });
+    });
+  } else {
+    await ctx.unroute('**/*');
+    await ctx.route('**/*', (r) => {
+      const u = new URL(r.request().url());
+      if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+      if (u.hostname === 'unpkg.com') return r.continue();
+      if (r.request().resourceType() === 'image') {
+        return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNY_PNG });
+      }
+      return r.abort();
+    });
+  }
   const p = await ctx.newPage();
   await p.goto(BASE + STRANKA, { waitUntil: 'load' });
   await p.waitForSelector('.pz-priceblock', { timeout: 20000 });

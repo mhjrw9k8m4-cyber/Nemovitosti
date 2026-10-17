@@ -72,3 +72,41 @@ export function esc(s) {
 
 /** Totéž pod jménem, které čte lépe u atributů. */
 export const attr = esc;
+
+/* KOMENTÁŘE V HTML DO HOTOVÝCH STRÁNEK NEPATŘÍ.
+ *
+ * Generátor stránek pozemků už dávno čistí vložený <style> a zdůvodnění
+ * je u něj napsané (bezKomentaruVeStylu): předloha je ZDROJ, komentáře
+ * v ní jsou to, podle čeho se upravuje, a do hotových stránek nepatří. U komentářů mimo <style> to platí stejně, jen tím
+ * krokem nikdy neprošly — a jeden z nich byl na hotové stránce dokonce
+ * nepravdivý: „TENHLE SOUBOR JE VZOR, NE STRÁNKA. Bez `?p=` v adrese je
+ * na něm jediná věta „Načítám pozemek…"." To je pravda o předloze
+ * pozemek.html, ne o pozemek-benesov-benesov-1sjtz7b.html, kde celý
+ * obsah stojí v HTML. Kopírovalo se to na 2 140 stránek.
+ *
+ * Naměřeno na všech stránkách pozemků: 19,90 MB gzipem → 17,27 MB,
+ * tedy 1,26 kB při každém otevření inzerátu.
+ *
+ * BEZPEČNOST: nejde přes celý text regulárním výrazem. V <script> i
+ * <style> může „<!--" stát jako kus kódu nebo textu, a sebrat ho odtud
+ * by stránku rozbilo. Dokument se proto nejdřív rozdělí na ty bloky
+ * a čistí se jen to mezi nimi. (Ověřeno na 300 stránkách: ani v jednom
+ * skriptu ani stylu takový řetězec dnes není — tohle je pojistka pro
+ * to, co přijde.)
+ *
+ * POŘADÍ: volá se až úplně nakonec, po migrujSkripty(). Ta si totiž
+ * značkuje místo pro skripty komentářem <!--PK-SEM-SKRIPTY--> a kdyby
+ * se čistilo dřív, zmizela by jí značka pod rukama.
+ */
+export function bezKomentaruVHtml(html) {
+  const bloky = /<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi;
+  let out = '', konec = 0;
+  for (const m of html.matchAll(bloky)) {
+    out += html.slice(konec, m.index).replace(/<!--[\s\S]*?-->/g, '');
+    out += m[0];
+    konec = m.index + m[0].length;
+  }
+  out += html.slice(konec).replace(/<!--[\s\S]*?-->/g, '');
+  /* Po komentáři zůstane prázdný řádek; dva za sebou se slijí v jeden. */
+  return out.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n');
+}

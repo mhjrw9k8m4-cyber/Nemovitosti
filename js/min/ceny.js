@@ -44,6 +44,12 @@
       ' — tolik platíte za metr, který vám připadne. Výměra v inzerátu je celá parcela.';
   }
 
+  function zaMetrKratce(d) {
+    if (!d || !d.podil) return '';
+    if (zlomekPodilu(d) == null) return '';
+    return d.vymera_podilu ? 'za metr, který vám připadne' : 'přepočteno na váš podíl';
+  }
+
   function spravniCena(d) {
     return !!d && /SPÚ|státní půd/i.test(d.extra || '');
   }
@@ -496,6 +502,7 @@
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
+    zaMetrKratce: zaMetrKratce,
 
     spravniCena: spravniCena,
 

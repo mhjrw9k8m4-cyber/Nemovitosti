@@ -724,9 +724,6 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
      našlo právě v rádci (js/radce.js): u podílu říkal zeleně „může to
      být příležitost" — 66 nabídek ze 186 (35 %). */
   const zdrojeSlevy = { 'js/main.js': main, 'js/radce.js': radce };
-  const bezPoznamek = main
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
-    .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' ');
   const ocisti = (t) => t
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/(^|[^:])\/\/[^\n]*/g, (m, p1) => p1 + ' ');

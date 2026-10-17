@@ -29,12 +29,9 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
 
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=2a350251">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=814c56b6">
   <style>
     .kt-mail{display:flex; align-items:center; gap:14px; margin:6px 0 4px; padding:16px 16px; background:rgba(126,196,157,0.08); border:1px solid rgba(126,196,157,0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -48,7 +45,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -113,14 +109,7 @@
         inzerátu; chybějící údaj znamená, že o tom inzerát mlčel.</li>
       <li><b>Výměra může být <code>null</code></b> — zdroj ji neuvedl a z textu se nedala
         bezpečně přečíst. Raději nic než cizí číslo.</li>
-      <!-- INZERÁTY OD MAJITELŮ V TOM SOUBORU NEJSOU. Nahoře je napsané
-           „všechny nabídky jsou v jednom souboru" a u stažených dat to
-           platí. Jenže na mapě jsou vedle nich i inzeráty, které sem
-           vloží sami majitelé — ty chodí ze serveru a do
-           data/opportunities.json je robot nepíše. Dnes je jich nula,
-           takže si toho nikdo nevšimne; ten slib se tedy rozbije přesně
-           ve chvíli, kdy někdo první inzerát vloží. Proto to tu stojí
-           teď, ne až potom. Hlídá to scripts/test-data-rozhrani.mjs. -->
+      
       <li><b>Nejsou v něm inzeráty od majitelů.</b> Co sem vloží sám
         majitel pozemku, se na mapě ukazuje vedle stažených nabídek, ale
         do tohohle souboru to nepatří — chodí to z naší databáze a může
@@ -212,11 +201,6 @@
       bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
   </section>
 
-  <!-- HISTORIE CENY JE JEDINÁ VĚC, KTEROU NIKDE JINDE NESEŽENETE.
-       Soubor data/zlevneni.json leží veřejně, web si ho bere na mapu
-       a dosud o něm na téhle stránce nestálo nic — kdo si bere naše
-       data, o něm nevěděl, přestože je to to nejcennější, co tu je.
-       Čísla se dopočítávají při sestavení, ať se nerozejdou. -->
   <section class="wrap dt-sekce">
     <h2>Komu cena spadla — a kdy</h2>
     <p class="dt-uvod">Tohle je jediná část našich dat, která se nikde jinde nedá vzít:
@@ -269,7 +253,6 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<!-- Vercel Web Analytics (navstevnost) -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
    web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
@@ -280,7 +263,7 @@
 
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
-<script src="js/min/ceny.js?v=4934b598" defer></script>
+<script src="js/min/ceny.js?v=e2209086" defer></script>
 <script src="js/min/klic.js?v=4a04bc24"></script>
 <script src="js/min/ulozene.js?v=c1363c70"></script>
 <script src="js/min/moje-data.js?v=cb86b8d0" defer></script>

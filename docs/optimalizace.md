@@ -720,3 +720,52 @@ A že se filtr opravdu obnovil (záložka, cena, řazení, a že ve výpisu jsou
 jen nabídky toho typu). Druhá polovina je stejně důležitá jako první:
 oprava, po které web zapomene, co si člověk nastavil, je horší než ta
 vada.
+
+## 14. Souřadnice stály dva tisíce pixelů od mapy *16. 10.*
+
+Na stránce pozemku byl mezi parametry řádek „Souřadnice" s číslem a dvěma
+velkými tlačítky — „Kopírovat" a „Navigovat". Naměřeno na telefonu 390 px:
+ten jediný řádek měl **230 px ze 400**, které celá tabulka parametrů měla,
+a stál na 634 px, kdežto „Pozemek na mapě" začíná až na **2 697 px**.
+
+Otázka „jak se tam dostanu" se přitom čte u mapy. Blok se proto přestěhoval
+pod ni, kde stojí vedle ostatního ovládání mapy, a dostal podobu vlastní
+karty: údaj nahoře, obě akce pod ním. Popisek, číslo i obě tlačítka byly
+dřív čtyři volné prvky v jednom pružném řádku a lámaly se, jak zrovna
+vyšla šířka — „Kopírovat" zůstalo u čísla a „Navigovat" spadlo samo přes
+celou šířku. Teď jsou to dvě skupiny, takže se lámou jako celek: **96 px
+místo 125**.
+
+A hlavně: styl toho bloku se tím vystěhoval z vloženého `<style>`
+v `pozemek.html`. Ten styl je kritický — nese první obrazovku a má strop
+41 kB. Blok se souřadnicemi je nově hluboko pod přehybem, takže do něj
+nepatří; vložený styl spadl ze **40,6 kB na 39,4 kB**.
+
+### A u toho se našla zkouška, která měřila síť, ne kód
+
+`scripts/test-poradi-pozemku.mjs` hlídá, že se celá stránka vejde do
+4,2 obrazovky. Nezaclánila ale cizí požadavky — a mapa si u ČÚZK a dalších
+úřadů zjišťuje, které vrstvy jedou, a podle odpovědi dokreslí řadu
+přepínačů a legendu.
+
+Naměřeno na téže stránce a témže kódu:
+
+| | výška |
+|---|---|
+| bez mapových vrstev (služby nedojely) | 3 319 px |
+| s vrstvami | 3 773 px |
+
+**454 px, skoro tři čtvrtě obrazovky.** Zkouška tedy vycházela jinak
+v sandboxu (služby blokované) než v CI, kde internet je — a dokonce i mezi
+dvěma běhy vedle sebe, podle toho, jestli se odpověď stihla vrátit do dvou
+a půl vteřiny.
+
+Měří se teď v jednom známém stavu: cizí požadavky se odříznou, obrázky se
+nahradí prázdným pixelem a Leaflet se podstrčí z místní kopie (bez něj by
+se mapa nevykreslila vůbec a mez by změkla o celou mapu). Že se vrstvy
+ukazují, když služby jedou, hlídají zkoušky mapy.
+
+Prověřeno u toho i zbylých 35 prohlížečových zkoušek bez zaclánění:
+jediné tři sahají na `scrollHeight` a ani jedna z nich ho neporovnává
+s mezí — `test-ceny-hledani` měří stránku bez mapy vrstev, zbylé dvě jím
+jen rolují. Tahle vada byla jedna, ne řada.

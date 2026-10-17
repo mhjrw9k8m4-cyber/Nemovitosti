@@ -955,6 +955,38 @@
      snímku nad stránkou. Tady by to byla druhá kopie téhož. */
   var ZAKLADY = (global.PK_SNIMEK && global.PK_SNIMEK.podklady) || [];
 
+  /* Řádek se souřadnicemi pod mapou. Obě tlačítka mají 44 px — jedou se
+     mačkat venku u pozemku, ne u stolu. Číslo stojí v <code>, aby šlo
+     označit prstem i myší a aby bylo vidět, že se má vzít doslova. */
+  function sourHtml(d) {
+    if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
+    var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
+    /* DVĚ SKUPINY, NE ČTYŘI VOLNÉ PRVKY. Když popisek, číslo a obě
+       tlačítka visely v jednom pružném řádku, zalomilo se to, jak
+       zrovna vyšla šířka: „Kopírovat" zůstalo nahoře u čísla
+       a „Navigovat" spadlo samo na druhou linku přes celou šířku.
+       Takhle se lámou jako celek — údaj nahoře, akce pod ním. */
+    return '<div class="pz-sour pz-sour-mapa">' +
+        '<span class="pz-sour-radek">' +
+          '<span class="pz-sour-k">Souřadnice</span>' +
+          '<code id="pz-sour-text">' + esc(sour) + '</code>' +
+        '</span>' +
+        '<span class="pz-sour-akce">' +
+        '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+            'stroke-linecap="round" stroke-linejoin="round">' +
+            '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
+            '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
+          '<span>Kopírovat</span></button>' +
+        '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+            'stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
+          '<span>Navigovat</span></a>' +
+        '</span>' +
+      '</div>';
+  }
+
   function pzMapaHtml(d) {
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
     return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
@@ -1013,6 +1045,16 @@
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
       '</div>' +
+      /* SOUŘADNICE A NAVIGACE POD MAPOU. Na prohlídku se jezdí autem
+         a do navigace se zadává bod, ne „okres Benešov". Stránka
+         souřadnice zná — staví z nich mapu i odkazy do katastru —
+         a dřív je vypisovala nahoře mezi parametry, tedy dva tisíce
+         pixelů od mapy. Tady jsou v kontextu: pod obrázkem místa,
+         vedle ostatního ovládání mapy.
+         Podoba je ta, kterou berou Mapy.cz, Google i Seznam navigace:
+         desetinné stupně s TEČKOU a čárkou mezi nimi. S desetinnou
+         čárkou by se při vložení rozpadly na čtyři čísla. */
+      sourHtml(d) +
       /* Odkaz na plán obce zůstává i kdyby žádná vrstva nejela: územní plán
          vydává každá obec zvlášť a to, co je v celostátní vrstvě, nemusí být
          to, co platí na úřadě. Tohle je jediná věta na stránce, která se
@@ -1674,11 +1716,24 @@
        je dohledávka a zůstává řádkem — jen už s popiskem a hodnotou
        vedle sebe, ne na opačných koncích. */
     var klice = [];
-    /* U podílu je v inzerátu výměra CELÉ parcely — musí to být napsané,
-       jinak si ji každý vydělí cenou za podíl. */
+    /* U PODÍLU MUSÍ BÝT NAPSANÉ, ČEHO SE TA VÝMĚRA TÝKÁ — a správně.
+       Stálo tu „celá parcela — kupuje se jen podíl" u VŠECH podílů,
+       a dlaždice hned vedle přitom u většiny z nich říká pravý opak:
+       „Výměra je ta podílová, tedy ta, která vám připadne — celá parcela
+       je větší." Dvě sousední dlaždice na jedné obrazovce si tak
+       odporovaly. U 400 z 507 podílů robot z textu inzerátu dokázal,
+       že uložená výměra je už ta podílová (`vymera_podilu`), takže
+       poznámka vlevo byla nepravdivá u čtyř pětin z nich. */
     klice.push({ k: 'Výměra', v: areaTxt(d),
-      pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
-    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
+      pozn: (d.podil && hasArea(d))
+        ? (d.vymera_podilu ? 'váš podíl — celá parcela je větší' : 'celá parcela — kupuje se jen podíl')
+        : '' });
+    /* V dlaždici krátká věta, ne celé souvětí — proč a co si ověřit,
+       stojí ve verdiktu o kus níž (viz zaMetrKratce v js/ceny.js). */
+    var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
+      ? global.PK_CENY.zaMetrKratce(d) : '';
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²',
+      pozn: perM2Kratce || perM2Pozn || '' });
     /* VELKÉ PÍSMENO NA ZAČÁTKU. V datech je druh psaný malým („ostatní
        plocha", „orná půda") — je to hodnota v tabulce, ne věta. V té
        dlaždici ale stojí jako údaj sám o sobě, vedle „6 336 m²"
@@ -1701,31 +1756,14 @@
       facts.push({ k: 'Parcela', v: 'č. ' + esc(window.PK_POZEMEK.pc),
         pozn: 'podle textu inzerátu, neověřeno v katastru' });
     }
-    /* SOUŘADNICE S SEBOU. Na prohlídku se jezdí autem a do navigace se
-       zadává bod, ne „okres Benešov". Stránka přitom souřadnice zná —
-       stavěla z nich mapu i odkazy do katastru — a člověku je neřekla,
-       takže si je musel opisovat z adresy nebo hádat z mapy.
-       Podoba je ta, kterou berou Mapy.cz, Google i Seznam navigace:
-       desetinné stupně s TEČKOU a čárkou mezi nimi. S desetinnou čárkou
-       by se při vložení rozpadly na čtyři čísla. */
-    if (isFinite(d.lat) && isFinite(d.lng)) {
-      var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
-      facts.push({ k: 'Souřadnice', v:
-        '<span class="pz-sour">' +
-          '<code id="pz-sour-text">' + esc(sour) + '</code>' +
-          '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-              'stroke-linecap="round" stroke-linejoin="round">' +
-              '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
-              '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
-            '<span>Kopírovat</span></button>' +
-          '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-              'stroke-linecap="round" stroke-linejoin="round">' +
-              '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
-            '<span>Navigovat</span></a>' +
-        '</span>' });
-    }
+    /* SOUŘADNICE NEJSOU V PARAMETRECH, ALE POD MAPOU — a je to schválně.
+       Stály tady, mezi „Parcela" a „Kategorie", jako jediný řádek se
+       dvěma velkými tlačítky: 230 px z necelých 400, které celá tabulka
+       měla. A hlavně 2 100 px nad mapou — měřeno na telefonu 390 px je
+       tabulka parametrů na 634 px a „Pozemek na mapě" až na 2 697.
+       „Jak se tam dostanu" je otázka, která se čte u mapy, ne mezi
+       údaji; tam teď ten řádek stojí (viz pzMapaHtml). Tabulka zůstává
+       tím, čím má být: čtyři krátké údaje pod sebou. */
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
     /* ŽÁDNÝ ŘÁDEK „INZERÁT UVÁDÍ" TADY UŽ NENÍ — a schválně.
@@ -1741,9 +1779,21 @@
        zlomek pozemku, ne pozemek. Bez toho vypadá cena za metr jako
        trhák. */
     if (d.podil) {
-      facts.push({ k: 'Vlastnictví', v: d.zlomek
-        ? 'inzerát mluví o spoluvlastnickém podílu <b>' + esc(d.zlomek) + '</b> — ověřte si ho v katastru'
-        : 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
+      /* V TABULCE FAKT, NE VĚTA. Stálo tu celé „inzerát mluví
+         o spoluvlastnickém podílu 1/12 — ověřte si ho v katastru"
+         a o sto padesát pixelů níž začíná verdikt větou „Inzerát mluví
+         o spoluvlastnickém podílu 1/12." Dvakrát totéž na jedné
+         obrazovce, jen jednou v tabulce a podruhé v rámečku, který je
+         na to udělaný.
+         Tabulka parametrů má nést údaj; proč a co si ověřit patří do
+         verdiktu. Když se verdikt neukáže (chybí výměra nebo cena,
+         takže není co srovnávat), vrátí se do řádku i to upozornění —
+         jinak by se o ověření nedočetl nikdo. */
+      var budeVerdikt = !!(MODEL && hasArea(d) && d.price);
+      var dovetek = budeVerdikt ? ''
+        : (d.zlomek ? ' — ověřte si ho v katastru' : ' — ověřte si velikost podílu v katastru');
+      facts.push({ k: 'Vlastnictví', v: 'spoluvlastnický podíl'
+        + (d.zlomek ? ' <b>' + esc(d.zlomek) + '</b>' : '') + dovetek });
     }
 
     /* HLAVNÍ AKCE PATŘÍ NAHORU, NE NA ČTVRTOU OBRAZOVKU. Odkaz na

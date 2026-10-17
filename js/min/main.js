@@ -123,15 +123,11 @@
   };
   function krajOf(d){ return OKRES_KRAJ[(d.okres || '').trim()] || null; }
 
-  var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
-
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
 
   var pkey = window.PKKlic.pkey;
   var pkeyLegacy = window.PKKlic.pkeyLegacy;
   var PKKlic = window.PKKlic;
-
-  var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
 
   function fmt(n){ return (n == null ? '' : n.toString()).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); }
 
@@ -164,14 +160,9 @@
     return !!pod && pod.indexOf(g) >= 0;
   }
 
-  var FEEDBACK_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
-  var FEEDBACK_EMAIL = (typeof window !== 'undefined' && window.PK_FORM_EMAIL) || '';
-
   var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
   var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
   var SB_READY = !!(SB_URL && SB_KEY);
-
-  var viewedLids = {};
 
   function sbRpc(fn, args) {
     if (!SB_READY) return Promise.resolve(null);

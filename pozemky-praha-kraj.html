@@ -26,12 +26,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/region.min.css?v=d4b5bfc0">
+  <link rel="stylesheet" href="css/region.min.css?v=1aa3216c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky Praha","inLanguage":"cs","description":"Nabídky pozemků v Praze — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-praha-kraj.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":21,"itemListElement":[{"@type":"ListItem","position":1,"name":"Praha — Na prodej, 1305 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1s76lj1.html"},{"@type":"ListItem","position":2,"name":"Praha — Na prodej, 4214 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1vdxiie.html"},{"@type":"ListItem","position":3,"name":"Praha — Na prodej, 2304 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1aib4ep.html"},{"@type":"ListItem","position":4,"name":"Praha — Na prodej, 7770 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1yogv99.html"},{"@type":"ListItem","position":5,"name":"Devonská — Na prodej, 306 m²","url":"https://www.parcelaka.cz/pozemek-praha-devonska-sdemdt.html"},{"@type":"ListItem","position":6,"name":"Praha — Na prodej, 5394 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-xep0k3.html"},{"@type":"ListItem","position":7,"name":"Praha — Na prodej, 4890 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-yx1s6p.html"},{"@type":"ListItem","position":8,"name":"Praha — Na prodej, 1817 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1lzu9yo.html"},{"@type":"ListItem","position":9,"name":"Na Chvalce — Na prodej, 290 m²","url":"https://www.parcelaka.cz/pozemek-praha-na-chvalce-tirq4i.html"},{"@type":"ListItem","position":10,"name":"Praha — Na prodej, 1264 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1lsiec5.html"},{"@type":"ListItem","position":11,"name":"Praha — Na prodej, 10316 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1lzuabb.html"},{"@type":"ListItem","position":12,"name":"Praha — Na prodej, 4726 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1cafhy5.html"},{"@type":"ListItem","position":13,"name":"Praha — Na prodej, 5802 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-1lsieb5.html"},{"@type":"ListItem","position":14,"name":"Praha — Na prodej, 491 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-zccdtj.html"},{"@type":"ListItem","position":15,"name":"Praha — Na prodej, 28407 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-je5nua.html"},{"@type":"ListItem","position":16,"name":"Borovská — Na prodej, 853 m²","url":"https://www.parcelaka.cz/pozemek-praha-borovska-wgv9wp.html"},{"@type":"ListItem","position":17,"name":"Praha — Na prodej, 9655 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-11divtn.html"},{"@type":"ListItem","position":18,"name":"Ke Korunce — Na prodej, 10442 m²","url":"https://www.parcelaka.cz/pozemek-praha-ke-korunce-aka02e.html"},{"@type":"ListItem","position":19,"name":"Praha — Na prodej, 3576 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-zccdtl.html"},{"@type":"ListItem","position":20,"name":"Praha — Na prodej, 9482 m²","url":"https://www.parcelaka.cz/pozemek-praha-praha-evlms0.html"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Praha","item":"https://www.parcelaka.cz/pozemky-praha-kraj.html"}]}]
   </script>
@@ -39,7 +37,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -89,8 +86,7 @@
       <div class="okr-stats">
         <div class="okr-stat"><b>21</b><span>pozemků</span></div>
         <div class="okr-stat"><b>1</b><span>okres</span></div>
-        
-        
+
       </div>
       </div>
     </div>
@@ -100,13 +96,8 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-
       <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=Praha#mapa">Otevřít Praha na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
-      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI — totéž jako na stránce okresu
-           (důvod s čísly stojí tam). Na kraji jde výpis před rozcestník
-           okresů: kdo přijde z vyhledávače na „pozemky ve Středočeském
-           kraji", chce vidět pozemky, ne nejdřív volit okres. -->
       <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nejlevnější pozemky v Praze</h2>
@@ -222,7 +213,6 @@
         </div>
       </div>
 
-
       <div data-graf-cen data-uroven="kraj" data-nazev="Praha" data-kde="v kraji Praha"></div>
 
       <div class="add-cross" style="margin-top:20px;">
@@ -260,26 +250,9 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
-     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
-     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
-     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
-     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
-     takže těch 73 kB platil skoro každý návštěvník. -->
-<script src="js/min/menu.js?v=e897102e" defer></script>
-<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota,
-     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
-     chodí nejčastěji právě na stránky okresů.
 
-     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
-     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
-     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
-     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
-     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
-     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
-     z vyhledávačů. Že se to nevrátí, hlídá
-     scripts/test-skripty-na-strance.mjs. -->
+<script src="js/min/menu.js?v=e897102e" defer></script>
+
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/graf-cen.js?v=5c611223" defer></script>

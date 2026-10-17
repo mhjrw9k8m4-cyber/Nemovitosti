@@ -90,30 +90,15 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
         vyska: Math.round(Math.max(rk.height, rv.height)) });
       levyOkraj.push(Math.round(rv.left));
     }
-    /* Výška souřadnic se bere z celého řádku (obě buňky), ne ze seznamu
-       výš — ten už ten řádek nemusí obsahovat, když stojí na dvou
-       linkách. Právě ta výška byla původní vada (149 px). */
-    const sourEl = [...document.querySelectorAll('.pz-spec')]
-      .find((r) => r.querySelector('.pz-sour'));
-    const sourVyskaPrima = sourEl ? (() => {
-      const k = sourEl.querySelector('.k').getBoundingClientRect();
-      const v2 = sourEl.querySelector('.v').getBoundingClientRect();
-      return Math.round(Math.max(k.bottom, v2.bottom) - Math.min(k.top, v2.top));
-    })() : 0;
-    /* Vada nebyla „velké číslo", ale ZALOMENÁ TLAČÍTKA: „Kopírovat"
-       a „Navigovat" se nevešla vedle sebe a spadla pod sebe, čímž řádek
-       narostl na 149 px. Ptáme se proto rovnou na to — stojí na jedné
-       lince? Výška je jen pojistka navrch: 126 px je poctivé minimum
-       (popisek 36 + číslo 20 + 44px terč na prst + odsazení), pod to se
-       to bez ztráty trefitelnosti nedostane. */
-    const tlacitkaNaJedne = (() => {
-      const w = document.querySelector('.pz-sour');
-      if (!w) return null;
-      const b2 = w.querySelector('#pz-sour-kop'), a2 = w.querySelector('#pz-sour-nav');
-      if (!b2 || !a2) return null;
-      return Math.abs(b2.getBoundingClientRect().top - a2.getBoundingClientRect().top) < 6;
-    })();
-    const sourRadek = mezery.find((m) => /Souřad/i.test(m.popis));
+    /* SOUŘADNICE UŽ V TABULCE NEJSOU — a kontroluje se právě to.
+       Byly tu jediným řádkem se dvěma velkými tlačítky: 230 px ze čtyř
+       set, které celá tabulka měla, a 2 100 px nad mapou (tabulka na
+       634 px, „Pozemek na mapě" až na 2 697). Přestěhovaly se pod mapu,
+       kde otázka „jak se tam dostanu" patří; jejich vlastní měření
+       (popisek, 44px terče, tlačítka vedle sebe, výška) je teď v
+       scripts/test-souradnice.mjs. Tady zůstává jen pojistka proti
+       návratu — a proti tomu, aby stály na stránce dvakrát. */
+    const sourVTabulce = !!document.querySelector('.pz-spec .pz-sour');
     const vel = (e) => parseFloat(getComputedStyle(e).fontSize);
     return {
       klicu: klic.length,
@@ -123,8 +108,7 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
       radku: mezery.length,
       nejvetsiMezera: mezery.length ? Math.max(...mezery.map((m) => m.mezera)) : 0,
       rozptylOkraju: levyOkraj.length ? Math.max(...levyOkraj) - Math.min(...levyOkraj) : 0,
-      sourVyska: sourVyskaPrima,
-      tlacitkaNaJedne: tlacitkaNaJedne,
+      sourVTabulce: sourVTabulce,
       preteka: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -141,10 +125,8 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
     v.nejvetsiMezera <= 60, `největší mezera ${v.nejvetsiMezera} px`);
   pravda('hodnoty začínají na jedné svislici',
     v.rozptylOkraju <= 2, `levé okraje se rozcházejí o ${v.rozptylOkraju} px`);
-  pravda('obě tlačítka u souřadnic stojí vedle sebe, ne pod sebou',
-    v.tlacitkaNaJedne === true, 'zalomila se — řádek tím naroste o 52 px');
-  pravda('a ten řádek se nerozlézá do výšky',
-    v.sourVyska > 0 && v.sourVyska <= 130, `${v.sourVyska} px`);
+  pravda('souřadnice v tabulce parametrů nejsou (patří pod mapu)',
+    v.sourVTabulce === false, 'řádek se souřadnicemi je zpátky v tabulce — zabere 230 px ze čtyř set');
   pravda('nic nepřetéká do stran', v.preteka <= 0, `přetéká o ${v.preteka} px`);
   pravda('a stránka u toho nespadne', padlo.length === 0, padlo.slice(0, 2).join(' | '));
   await p.close();

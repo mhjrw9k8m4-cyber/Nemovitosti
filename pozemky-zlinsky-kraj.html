@@ -26,12 +26,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/region.min.css?v=d4b5bfc0">
+  <link rel="stylesheet" href="css/region.min.css?v=1aa3216c">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Pozemky Zlínský kraj","inLanguage":"cs","description":"Nabídky pozemků ve Zlínském kraji — prodeje, dražby a exekuce z veřejných zdrojů.","mainEntityOfPage":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html","publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":{"@type":"ItemList","numberOfItems":148,"itemListElement":[{"@type":"ListItem","position":1,"name":"Napajedla — Na prodej, 1075 m²","url":"https://www.parcelaka.cz/pozemek-zlin-napajedla-1mefj0l.html"},{"@type":"ListItem","position":2,"name":"Holešov — Exekuce","url":"https://www.parcelaka.cz/pozemek-kromeriz-holesov-1f9ejxh.html"},{"@type":"ListItem","position":3,"name":"Jasenná — Na prodej, 517 m²","url":"https://www.parcelaka.cz/pozemek-zlin-jasenna-zdzp2t.html"},{"@type":"ListItem","position":4,"name":"Napajedla — Na prodej, 2279 m²","url":"https://www.parcelaka.cz/pozemek-zlin-napajedla-azo66k.html"},{"@type":"ListItem","position":5,"name":"Lešná — Na prodej, 1470 m²","url":"https://www.parcelaka.cz/pozemek-vsetin-lesna-jxhw99.html"},{"@type":"ListItem","position":6,"name":"Kvasice — Na prodej, 557 m²","url":"https://www.parcelaka.cz/pozemek-kromeriz-kvasice-bwitob.html"},{"@type":"ListItem","position":7,"name":"Uherské Hradiště — Na prodej, 777 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-uherske-hradiste-ow8dte.html"},{"@type":"ListItem","position":8,"name":"Rudice — Na prodej, 1976 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-rudice-1g2tek0.html"},{"@type":"ListItem","position":9,"name":"Částkov — Na prodej, 1352 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-wcduku.html"},{"@type":"ListItem","position":10,"name":"Pašovice — Na prodej, 94 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-pasovice-1s127wx.html"},{"@type":"ListItem","position":11,"name":"Pašovice — Na prodej, 1189 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-pasovice-1s127zp.html"},{"@type":"ListItem","position":12,"name":"Kvasice — Na prodej, 825 m²","url":"https://www.parcelaka.cz/pozemek-kromeriz-kvasice-1lng5cg.html"},{"@type":"ListItem","position":13,"name":"Lípa — Na prodej, 2300 m²","url":"https://www.parcelaka.cz/pozemek-zlin-lipa-11ztdjl.html"},{"@type":"ListItem","position":14,"name":"Luhačovice — Na prodej, 1903 m²","url":"https://www.parcelaka.cz/pozemek-zlin-luhacovice-ybimpx.html"},{"@type":"ListItem","position":15,"name":"Částkov — Na prodej, 1591 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-castkov-1uoj7kb.html"},{"@type":"ListItem","position":16,"name":"Soběsuky — Na prodej, 1023 m²","url":"https://www.parcelaka.cz/pozemek-kromeriz-sobesuky-1k5pgjl.html"},{"@type":"ListItem","position":17,"name":"Pašovice — Na prodej, 1740 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-pasovice-hidxpu.html"},{"@type":"ListItem","position":18,"name":"Buchlovice — Na prodej, 1282 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-buchlovice-16nviib.html"},{"@type":"ListItem","position":19,"name":"Uherské Hradiště — Na prodej, 1202 m²","url":"https://www.parcelaka.cz/pozemek-uherske-hradiste-uherske-hradiste-1gd2mkx.html"},{"@type":"ListItem","position":20,"name":"Podolí — Na prodej, 1836 m²","url":"https://www.parcelaka.cz/pozemek-vsetin-podoli-1wgy4mq.html"}]}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"}]}]
   </script>
@@ -39,7 +37,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -100,13 +97,8 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-
       <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=Zl%C3%ADnsk%C3%BD#mapa">Otevřít Zlínský kraj na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
-      <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI — totéž jako na stránce okresu
-           (důvod s čísly stojí tam). Na kraji jde výpis před rozcestník
-           okresů: kdo přijde z vyhledávače na „pozemky ve Středočeském
-           kraji", chce vidět pozemky, ne nejdřív volit okres. -->
       <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nejlevnější pozemky ve Zlínském kraji</h2>
@@ -263,26 +255,9 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
-     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
-     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
-     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
-     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
-     takže těch 73 kB platil skoro každý návštěvník. -->
-<script src="js/min/menu.js?v=e897102e" defer></script>
-<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota,
-     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
-     chodí nejčastěji právě na stránky okresů.
 
-     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
-     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
-     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
-     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
-     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
-     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
-     z vyhledávačů. Že se to nevrátí, hlídá
-     scripts/test-skripty-na-strance.mjs. -->
+<script src="js/min/menu.js?v=e897102e" defer></script>
+
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/graf-cen.js?v=5c611223" defer></script>

@@ -180,16 +180,13 @@
   };
   function krajOf(d){ return OKRES_KRAJ[(d.okres || '').trim()] || null; }
 
-  // Katastrální mapa (ikatastr.cz) — parametr "info" na souřadnicích parcelu
-  // rovnou IDENTIFIKUJE a vyznačí (ukáže bublinu s parcelou), ne jen vycentruje.
-  // Kontakt na majitele z inzerátu — e-mail → mailto:, jinak telefon → tel:
-  // Státní půda SPÚ (§ 12) nemá stránku pro konkrétní parcelu — prodává se přes
-  // veřejnou nabídku, kam se podává žádost. Odkážeme tedy na skutečný seznam nabídek.
-  var SPU_OFFERS = 'https://spu.gov.cz/nabidky/prehled-cela-cr';
-  // Vede odkaz na KONKRÉTNÍ inzerát/dražbu (má cestu nebo parametr),
-  // nebo jen na úvodní stránku portálu? Podle toho volíme poctivý štítek,
-  // ať tlačítko neslibuje konkrétní stránku, když otevře jen rozcestník.
-  // Konkrétní akční odkaz „kde se to kupuje / kde s tím něco udělám"
+  /* OSIŘELÉ KOMENTÁŘE TU UŽ NEJSOU. Stálo tady pět vysvětlení k věcem,
+     které se dávno přestěhovaly do js/pozemek.js — odkaz do katastru,
+     kontakt na majitele, nabídka SPÚ, štítek akčního odkazu — a jediné,
+     co po nich v tomhle souboru zbylo, byla konstanta SPU_OFFERS, kterou
+     nic nečetlo. V repozitáři, kde jsou komentáře dokumentací, je
+     vysvětlení bez kódu horší než žádné: kdo tu hledal „Název vlastní
+     stránky pozemku", našel tabulku diakritiky. */
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
   // Stabilní klíč pozemku — pro oblíbené i sdílení odkazu.
@@ -209,12 +206,6 @@
   var pkey = window.PKKlic.pkey;
   var pkeyLegacy = window.PKKlic.pkeyLegacy;
   var PKKlic = window.PKKlic;
-  /* Název vlastní stránky pozemku. Týž výpočet dělá generátor v Node
-     (scripts/generate-parcel-pages.mjs) i js/pozemek.js — kdyby se
-     rozešly, vedly by odkazy na neexistující soubor. Hlídá to
-     scripts/test-stranky-pozemku.mjs. */
-  var PK_DIAKR = { 'á':'a','č':'c','ď':'d','é':'e','ě':'e','í':'i','ň':'n','ó':'o','ř':'r','š':'s','ť':'t','ú':'u','ů':'u','ý':'y','ž':'z' };
-  // Zkopírování textu do schránky s bezpečnou zálohou pro starší prohlížeče
 
   // Bez pojistky na null tu padne celé vykreslení, kdyby do čísla přišlo
   // prázdno. Táž podoba jako v js/pozemek.js, ať se ty dvě nerozcházejí.
@@ -266,12 +257,12 @@
     return !!pod && pod.indexOf(g) >= 0;
   }
 
-  /* ---------- Zpětná vazba (okno) ----------
-     Cíl odeslání se nastavuje na JEDNOM místě: js/config.js (PK_FORM_ENDPOINT / PK_FORM_EMAIL).
-     Dokud je prázdné, okno upřímně řekne, že odesílání dokončujeme. */
-  var FEEDBACK_ENDPOINT = (typeof window !== 'undefined' && window.PK_FORM_ENDPOINT) || '';
-  var FEEDBACK_EMAIL = (typeof window !== 'undefined' && window.PK_FORM_EMAIL) || '';
-  // Zpětná vazba i kontakt jdou napřímo na e-mail info@parcelaka.cz (žádný formulář ani databáze).
+  /* Zpětná vazba i kontakt jdou napřímo na e-mail info@parcelaka.cz —
+     žádný formulář ani databáze. (Nad tímhle řádkem stál komentář, který
+     tvrdil opak: že se cíl odeslání nastavuje v js/config.js přes
+     PK_FORM_ENDPOINT a PK_FORM_EMAIL. Okno zpětné vazby je pryč, obě
+     konstanty nic nečetlo — zůstal jen slib, který si se sousedním
+     řádkem odporoval.) */
 
   /* Mobilní menu má vlastní modul — js/menu.js. Tenhle kód tu byl
      ve své nejlepší podobě (se zavřením Escapem i klepnutím mimo), ale
@@ -287,8 +278,6 @@
   var SB_URL = (typeof window !== 'undefined' && window.PK_SUPABASE_URL) || '';
   var SB_KEY = (typeof window !== 'undefined' && window.PK_SUPABASE_KEY) || '';
   var SB_READY = !!(SB_URL && SB_KEY);
-  // Které živé inzeráty už jsme v této návštěvě započítali (ať se zhlédnutí nenafukuje).
-  var viewedLids = {};
   // Volání Supabase funkce (RPC) — pro živé inzeráty od majitelů.
   function sbRpc(fn, args) {
     if (!SB_READY) return Promise.resolve(null);

@@ -612,6 +612,31 @@
 
   var ZAKLADY = (global.PK_SNIMEK && global.PK_SNIMEK.podklady) || [];
 
+  function sourHtml(d) {
+    if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
+    var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
+
+    return '<div class="pz-sour pz-sour-mapa">' +
+        '<span class="pz-sour-radek">' +
+          '<span class="pz-sour-k">Souřadnice</span>' +
+          '<code id="pz-sour-text">' + esc(sour) + '</code>' +
+        '</span>' +
+        '<span class="pz-sour-akce">' +
+        '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+            'stroke-linecap="round" stroke-linejoin="round">' +
+            '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
+            '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
+          '<span>Kopírovat</span></button>' +
+        '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
+            'stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
+          '<span>Navigovat</span></a>' +
+        '</span>' +
+      '</div>';
+  }
+
   function pzMapaHtml(d) {
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
     return '<h2 class="pz-sect-h">Pozemek na mapě</h2>' +
@@ -649,6 +674,8 @@
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
       '</div>' +
+
+      sourHtml(d) +
 
       '<p class="pzm-pod">Vrstvy jsou náhled z veřejných služeb úřadů, ne potvrzení. Rozhoduje platný výkres na úřadě — ' +
         '<a href="' + esc(planHledatUrl(d)) + '" target="_blank" rel="noopener">' + esc(planHledatText(d)) + VEN + '</a>.</p>';
@@ -1089,8 +1116,14 @@
     var klice = [];
 
     klice.push({ k: 'Výměra', v: areaTxt(d),
-      pozn: (d.podil && hasArea(d)) ? 'celá parcela — kupuje se jen podíl' : '' });
-    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', pozn: perM2Pozn || '' });
+      pozn: (d.podil && hasArea(d))
+        ? (d.vymera_podilu ? 'váš podíl — celá parcela je větší' : 'celá parcela — kupuje se jen podíl')
+        : '' });
+
+    var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
+      ? global.PK_CENY.zaMetrKratce(d) : '';
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²',
+      pozn: perM2Kratce || perM2Pozn || '' });
 
     klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), pozn: '' });
 
@@ -1102,31 +1135,16 @@
         pozn: 'podle textu inzerátu, neověřeno v katastru' });
     }
 
-    if (isFinite(d.lat) && isFinite(d.lng)) {
-      var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
-      facts.push({ k: 'Souřadnice', v:
-        '<span class="pz-sour">' +
-          '<code id="pz-sour-text">' + esc(sour) + '</code>' +
-          '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-              'stroke-linecap="round" stroke-linejoin="round">' +
-              '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
-              '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
-            '<span>Kopírovat</span></button>' +
-          '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-              'stroke-linecap="round" stroke-linejoin="round">' +
-              '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
-            '<span>Navigovat</span></a>' +
-        '</span>' });
-    }
     facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
 
     if (d.podil) {
-      facts.push({ k: 'Vlastnictví', v: d.zlomek
-        ? 'inzerát mluví o spoluvlastnickém podílu <b>' + esc(d.zlomek) + '</b> — ověřte si ho v katastru'
-        : 'inzerát mluví o spoluvlastnickém podílu — ověřte si velikost podílu v katastru' });
+
+      var budeVerdikt = !!(MODEL && hasArea(d) && d.price);
+      var dovetek = budeVerdikt ? ''
+        : (d.zlomek ? ' — ověřte si ho v katastru' : ' — ověřte si velikost podílu v katastru');
+      facts.push({ k: 'Vlastnictví', v: 'spoluvlastnický podíl'
+        + (d.zlomek ? ' <b>' + esc(d.zlomek) + '</b>' : '') + dovetek });
     }
 
     var hlavniAkce = (d.type === 'majitel'

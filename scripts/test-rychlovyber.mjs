@@ -25,7 +25,6 @@ function je(popis, vyslo, cekano) {
   if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}\n      čekáno ${b}, vyšlo ${a}`); }
 }
-const pravda = (popis, podm, detail) => je(popis, !!podm, true) || detail;
 
 const P = (k) => ({ k: k, place: 'Obec ' + k });
 

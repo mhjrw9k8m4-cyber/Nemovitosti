@@ -26,12 +26,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
   <link rel="manifest" href="manifest.webmanifest">
-  <!-- Písma leží u nás (fonts/), ne na Googlu. Přednačítají se, aby dojela
-       souběžně se stylopisem — jinak si je prohlížeč objedná až ve chvíli,
-       kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
+  
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=2a350251">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=814c56b6">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":"https://www.parcelaka.cz/cena-pozemku.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"}]}]
   </script>
@@ -39,7 +37,6 @@
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
-
 
 <header id="header">
   <div class="wrap">
@@ -84,10 +81,7 @@
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
-      <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
-           je níž. Celostátní medián zemědělské půdy je to jediné číslo,
-           které platí všude — a kdo přišel z vyhledávače, má odpověď
-           dřív, než cokoli odroluje. -->
+      
       <p class="sub">Zemědělská půda u nás stojí obvykle <b>45 Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.</p>
     </div>
     </div>
@@ -96,22 +90,11 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <!-- GRAF CENOVÉ HLADINY ZA CELOU ČR. Byl na 91 stránkách okresů
-           a krajů, ale na stránce, která je přímo o cenách, chyběl — a to
-           je ta nejpodivnější díra: data pro celostátní řadu v
-           data/historie-cen.json ležela od začátku (osm řad podle druhu,
-           z toho čtyři dost klidné na kreslení), jen je nikdo nežádal.
-           Je to TENTÝŽ prvek i skript jako na okresech, žádný druhý
-           výpočet; řadu si vybere js/graf-cen.js sám podle toho, která je
-           nejlépe doložená, a když by žádná klidná nebyla, nenakreslí nic
-           — ani prázdný rámeček. Stojí hned pod podnadpisem, protože ten
-           říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <div data-graf-cen data-uroven="cr" data-kde="v celé ČR"></div>
         </div>
       </div>
-
 
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
@@ -150,27 +133,20 @@
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
           <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
-          <!-- Žádný odstavec s návodem: co se má napsat, říká samo pole
-               („Třeba Benešov nebo Zdice"), a že je výsledek za celý
-               okres, stojí v metodice dole. Věta navíc tady znamenala
-               tři řádky textu nad jedním polem. -->
+          
           <div class="cenh" style="margin-top:14px;">
             <div class="cenh-pole">
               <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
               <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
                 aria-expanded="false" aria-autocomplete="list" aria-controls="cenh-navrhy"
                 aria-labelledby="ceny-hledat-nadpis" placeholder="Třeba Benešov nebo Zdice">
-              <!-- Nabídka patří DOVNITŘ pole, ne vedle něj: plave na
-                   top:100 % a to se počítá z nejbližšího polohovaného rodiče.
-                   Vedle pole by to byla celá .cenh včetně karty s výsledkem,
-                   takže by návrhy skočily až pod ni. -->
+              
               <ul class="cenh-navrhy" id="cenh-navrhy" role="listbox" hidden></ul>
             </div>
             <div class="cenh-vysledek" id="cenh-vysledek" role="status" aria-live="polite"></div>
           </div>
         </div>
       </div>
-
 
       <div class="add-card" style="margin-top:20px;">
         <div class="rules-sect">
@@ -247,7 +223,6 @@
         </div>
       </div>
 
-
           <details class="cen-metodika cen-samostatna">
             <summary>Jak tahle čísla počítáme</summary>
             <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>, z veřejně inzerovaných pozemků. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
@@ -287,26 +262,9 @@
 </footer>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<!-- MENU, NE FORMULÁŘ. Tady býval js/pridat.js, tedy 73,4 kB logiky
-     k přidání pozemku — a to jen proto, že v něm byla obsluha mobilního
-     menu. Na téhle stránce žádný takový formulář není. Modul js/menu.js
-     má pod 2 kB a dělá to samé (a lépe: zavírá i Escapem a klepnutím
-     mimo). Stránky okresů a krajů jsou nejčastější vstup z vyhledávače,
-     takže těch 73 kB platil skoro každý návštěvník. -->
-<script src="js/min/menu.js?v=e897102e" defer></script>
-<!-- Stav přihlášení v nabídce (jméno v „Můj profil"). Musí být i tady:
-     tyhle stránky se generují znovu při každém běhu datového robota,
-     takže co není v šabloně, to příští běh smaže — a lidé z vyhledávání
-     chodí nejčastěji právě na stránky okresů.
 
-     JS/HLIDANI-LOGIKA.JS SE ODSUD ODEBRALO. Stálo tu kvůli odznaku
-     upozornění v nabídce (nepřečtené zprávy, nové pozemky z hlídání) —
-     jenže ta funkce je z webu odebraná a odznak nikdo nevyplňuje:
-     naměřeno, že #nav-zpravy ani #nav-hlidani neplní žádný skript
-     na webu. Zůstalo tedy 11 kB kódu, který se stahoval na 126
-     stránkách a nic na nich nedělal — a mezi nimi všechny vstupy
-     z vyhledávačů. Že se to nevrátí, hlídá
-     scripts/test-skripty-na-strance.mjs. -->
+<script src="js/min/menu.js?v=e897102e" defer></script>
+
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=bec7a315" defer></script>
 <script src="js/min/graf-cen.js?v=5c611223" defer></script>
