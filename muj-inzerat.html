@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=f6b2a2ba">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=7c222a5c">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -466,7 +466,7 @@
      co dokázal přečíst z klíče. Teď se páruje týmž modulem jako na mapě
      a na porovnání, a to pod VŠEMI tvary klíče, aby se starší uložené
      pozemky neztratily. -->
-<script src="js/min/klic.js?v=4a04bc24"></script>
+<script src="js/min/klic.js?v=85f3251f"></script>
 <!-- Termíny dražeb. U uložených pozemků se píše „dražba za 3 dny" —
      počítá to týž modul jako mapa, stránka pozemku, hlídání i e-mail,
      aby web o téže dražbě netvrdil na dvou místech dvě různé věci. -->
@@ -606,8 +606,13 @@
             return typeof p === 'string' && p.indexOf('"') === -1 &&
               /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
           }) : [];
+          /* NÁHLED MÁ ŘÍCT, ČEHO JE. Prázdný alt je správně u ozdoby —
+             u fotky vlastního inzerátu ale ne: je to jediná věc, podle
+             které se v seznamu pozná, který inzerát je který, a odečítač
+             z ní nedostal nic. Obec je v řádku pod fotkou, takže se
+             neopakuje zbytečně: alt říká, CO to je a KDE. */
           var thumb = ph.length ? '<div class="mi-lthumb">' +
-              '<img src="' + ph[0] + '" alt="" loading="lazy">' +
+              '<img src="' + ph[0] + '" alt="' + esc('Fotka pozemku' + (r.place ? ' — ' + r.place : '')) + '" loading="lazy">' +
               (ph.length > 1 ? '<span class="n">' + ph.length + ' fotky</span>' : '') +
             '</div>' : '';
           /* Stav inzerátu. První nabídka z nového účtu čeká na kontrolu

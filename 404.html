@@ -42,7 +42,11 @@
   </style>
 </head>
 <body>
-  <div class="card">
+  <!-- ORIENTAČNÍ BOD STRÁNKY. Odečítač nabízí skok „na hlavní obsah"
+       podle <main>; bez něj se na téhle stránce nedá nikam skočit
+       a čte se od začátku, značku po značce. Je to jediný obsah
+       stránky, takže <main> patří přesně sem. -->
+  <main class="card">
     <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
       <rect x="1" y="1" width="30" height="30" rx="9" fill="#26694A"/>
       <path d="M16 8c-3.3 0-6 2.7-6 6 0 4.2 6 10 6 10s6-5.8 6-10c0-3.3-2.7-6-6-6z" fill="none" stroke="#fff" stroke-width="1.9" stroke-linejoin="round"/>
@@ -54,7 +58,7 @@
       <a id="okres-link" href="/" hidden></a>
       <a id="home-link" href="/">Otevřít mapu pozemků</a>
     </div>
-  </div>
+  </main>
   <script>
     /* Dřív tahle stránka po dvou a půl vteřinách sama skočila na mapu.
        Kdo sem přišel, nestihl si přečíst, co se stalo, a ocitl se jinde,

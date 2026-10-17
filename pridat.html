@@ -48,7 +48,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=f6b2a2ba">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=7c222a5c">
 </head>
 <body>
 
@@ -325,7 +325,12 @@
                     <span class="boost-desc">Zvýrazněná nabídka se drží výš v seznamu, má výraznější bod na mapě a odznak „Zvýrazněno“. Základní inzerát je i tak zdarma a vidět.</span>
                   </span>
                 </label>
-                <p class="boost-note">Volitelné. Placené zvýraznění právě spouštíme — zatím přidejte nabídku <b>zdarma</b> a jakmile bude online platba připravená, dáme vám vědět.</p>
+                <!-- „Dáme vám vědět" byl slib, který web nemůže dodržet:
+                     rozesílání e-mailů je vypnuté (PK_MAIL_ZAPNUTO v
+                     js/config.js). Blok je sice zatím hidden, jenže text
+                     by se odkrytím stal živým — a slíbit zprávu, která
+                     nepřijde, je horší než neslíbit nic. -->
+                <p class="boost-note">Volitelné. Placené zvýraznění zatím není v provozu — nabídku přidejte <b>zdarma</b>, je vidět i bez něj.</p>
               </div>
 
               <!-- POLE „VAŠE JMÉNO" TU BÝVALO, a bylo POVINNÉ — přitom se
@@ -417,7 +422,7 @@
 
           <div class="aside-card">
             <h3>Proč přidat právě sem</h3>
-            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b><span>Lidé, kteří na Parcelce aktivně hledají pozemky.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b><span>Objeví se na mapě i ve výpisu mezi nabídkami z veřejných zdrojů.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Rychle na mapě</b><span>Nabídka se objeví mezi ostatními. První z nového účtu si projdeme, nejpozději do 24 hodin je venku.</span></span></div>
             <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b><span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
           </div>

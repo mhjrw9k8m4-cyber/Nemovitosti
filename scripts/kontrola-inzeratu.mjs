@@ -15,6 +15,7 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY  — bez nich skript nic nedělá
 //   KONTROLA_LIMIT=50                        — kolik inzerátů projít (výchozí 200)
 import { createRequire } from 'node:module';
+import { BOT_UA } from './bot-ua.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -51,7 +52,7 @@ async function pokus(url, metoda = 'HEAD') {
   try {
     const r = await fetch(url, {
       method: metoda, redirect: 'follow', signal: ac.signal,
-      headers: { 'User-Agent': 'ParcelkaBot/1.0 (+https://parcelaka.cz)' },
+      headers: { 'User-Agent': BOT_UA },
     });
     return { stav: r.status, url: r.url || url, typ: r.headers.get('content-type') || '', chyba: null };
   } catch (e) {

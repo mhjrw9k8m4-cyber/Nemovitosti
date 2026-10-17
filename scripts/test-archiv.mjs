@@ -200,6 +200,40 @@ if (fs.existsSync(ADR)) {
   }
 }
 
+/* --- KLÍČ POZEMKU BEZ VÝMĚRY --------------------------------------
+ * Tohle je past, do které web už jednou spadl: klíč je pkey plus
+ * výměra, a když výměra chybí, dosadí se nula — takže dva různé
+ * pozemky na týchž souřadnicích dostanou týž klíč. V datech to byla
+ * jedna dvojice ve Zlíně (ovocný sad za 758 523 Kč a stavební pozemek
+ * za 6 104 Kč) a znamenalo to, že uložit jeden označí oba a poznámka
+ * k jednomu se ukáže u druhého.
+ *
+ * Kontrola nad daty (v test-klic-ulozenych.mjs) tenhle případ chytila
+ * jen proto, že zrovna v datech byl. Až ta dvojice z nabídek zmizí,
+ * projde i rozbitý klíč. Tyhle tři kontroly proto stojí na VYMYŠLENÝCH
+ * nabídkách a platí vždycky. */
+{
+  const zaklad = { place: 'Zlín', okres: 'Zlín', lat: 49.2271, lng: 17.6664 };
+  const sad = { ...zaklad, druh: 'ovocný sad', price: 758523 };
+  const stavebni = { ...zaklad, druh: 'stavební pozemek', price: 6104 };
+  je('dva pozemky bez výměry se liší klíčem, když se liší druhem',
+    KLICX.klicPozemku(sad) !== KLICX.klicPozemku(stavebni), true);
+  /* A pozor na druhou stranu: týž pozemek vyvěšený znovu (jiná cena,
+     jiný odkaz) musí mít klíč POŘÁD STEJNÝ, jinak by člověku zmizel
+     z „Uložených" pokaždé, když majitel nabídku obnoví. */
+  je('ale týž pozemek s jinou cenou a jiným odkazem má klíč stejný',
+    KLICX.klicPozemku({ ...sad, price: 700000, url: 'https://a.cz/1' })
+      === KLICX.klicPozemku({ ...sad, price: 758523, url: 'https://b.cz/2' }), true);
+  /* Starý tvar klíče („#v0") se musí dál číst — jinak by se po téhle
+     změně ztratilo, co si kdo uložil dřív. */
+  je('starý tvar klíče je pořád mezi klíči pro čtení',
+    KLICX.kliceProCteni(sad).indexOf(KLICX.pkey(sad) + '#v0') >= 0, true);
+  /* A u pozemku S VÝMĚROU se nesmělo změnit vůbec nic. */
+  const sVymerou = { ...zaklad, druh: 'orná půda', area: 3732 };
+  je('u pozemku s výměrou zůstal klíč beze změny',
+    KLICX.klicPozemku(sVymerou) === KLICX.pkey(sVymerou) + '#v3732', true);
+}
+
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');
 console.log(zpravy.join('\n'));
 if (chyb) { console.error(`\n::error::Archiv: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }

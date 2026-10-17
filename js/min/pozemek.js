@@ -41,15 +41,10 @@
     return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function (c) { return PK_DIAKR[c] || c; })
       .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
-  function pkOtisk(s) {
-    var h = 5381;
-    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-    return h.toString(36);
-  }
 
   var pkeyPlny = window.PKKlic.pkey;
   function souborPozemku(d) {
-    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
+    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + window.PKKlic.otisk(pkeyPlny(d)) + '.html';
   }
 
   function mistoRadek(d, titul) {
@@ -652,6 +647,13 @@
           '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
+
+          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
+            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span>Na pozemek</span>' +
+          '</button>' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
             ZAKLADY.map(function (z, i) {
               return '<button class="pzm-z' + (i === 0 ? ' on' : '') + '" type="button" data-zaklad="' + z.id +
@@ -666,13 +668,6 @@
             '<span>Průhlednost vrstvy</span>' +
             '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
           '</label>' +
-
-          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
-            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-            '<span>Na pozemek</span>' +
-          '</button>' +
         '</div>' +
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
@@ -1141,7 +1136,6 @@
         pozn: 'podle textu inzerátu, neověřeno v katastru' });
     }
 
-    facts.push({ k: 'Kategorie', v: esc(t.label) });
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
 
     if (d.podil) {
@@ -1215,6 +1209,8 @@
           '</div>'
         : '') +
 
+      pzFeaturesHtml(d) +
+
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
       pzSrovnaniHtml() +
@@ -1236,8 +1232,6 @@
       pzPopisInzerentaHtml() +
 
       pzMapaHtml(d) +
-
-      pzFeaturesHtml(d) +
 
       pzPopisHtml(d) +
 

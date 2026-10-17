@@ -91,9 +91,25 @@ Bez klíčů běží nasucho a sám vypíše, co mu chybí.
 
 ## 3. Databáze
 
-`supabase/00-vse.sql` je jeden spustitelný soubor (2 334 řádků,
-56 funkcí, 16 politik RLS) složený ze všech dílčích migrací.
-Pustit v Supabase → SQL Editor.
+`supabase/00-vse.sql` je jeden spustitelný soubor složený ze všech
+dílčích migrací. Pustit v Supabase → SQL Editor (nebo tlačítkem
+„Nasadit SQL" na GitHubu, workflow `nasad-sql.yml`).
+
+Změřeno 17. 10. na čistém PostgreSQL 16 (přesně to dělá
+`scripts/test-sql-cista.mjs`): 2 814 řádků, 15 tabulek, 39 vlastních
+funkcí, 12 politik RLS v `public` a 3 nad úložištěm fotek, 38 indexů.
+Projde bez jediné chyby. *(Dřív tu stálo „2 334 řádků, 56 funkcí,
+16 politik" — čísla se s každou migrací mění, tahle jsou aspoň
+datovaná a změřená, ne odhadnutá.)*
+
+**Pustit znovu, i když to už jednou proběhlo.** Přibyl
+`supabase/vykon.sql`: dva chybějící indexy, přepsané `my_threads()`
+a `unread_count()` (352 ms → 1,3 ms u odznaku nepřečtených, který se
+počítá při otevření každé stránky), jedinečnost potvrzovacích
+a odhlašovacích tokenů a úklid starších podob `save_search`. Dokud se
+soubor nepustí, web jede na starých funkcích — nic se nerozbije, jen
+to zůstane pomalé a tokeny nejedinečné. Celý soubor jde pustit
+opakovaně.
 
 Jestli to už proběhlo, pozná se na `/diagnostika.html` — ta ověří
 podpisy funkcí, které web volá.

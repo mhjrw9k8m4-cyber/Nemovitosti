@@ -26,6 +26,7 @@ import { dirname, join } from 'node:path';
 
 import { createRequire } from 'node:module';
 import { bezEmodzi } from './text-inzeratu.mjs';
+import { BOT_UA } from './bot-ua.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -376,6 +377,96 @@ export function prorezMezipamet(cache = GEO_CACHE, hlasit = true) {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* ---------- JEDNO MÍSTO, KUDY VEDE KAŽDÉ STAŽENÍ ----------
+ *
+ * Dřív si každý zdroj volal fetch() sám a každý jinak: osm volání
+ * nemělo ČASOVÝ LIMIT (zaseknuté spojení by drželo celou úlohu až do
+ * limitu GitHubu) a ŽÁDNÉ volání se neopakovalo. Jedno 503 nebo jeden
+ * zavřený socket tím shodil celý zdroj na ten den — a protože robot
+ * běží jednou za šest hodin, byla z chvilkového výpadku šestihodinová
+ * díra v datech. Hlídač zdrojů to pozná (skenNeuplny), ale poznat
+ * není totéž co přežít.
+ *
+ * Co helper dělá:
+ *   · časový limit na KAŽDÝ pokus (výchozí 20 s),
+ *   · opakuje jen to, co má smysl opakovat: síťovou chybu a stavy
+ *     408, 425, 429, 500, 502, 503, 504. Na 403 ani 404 se neopakuje —
+ *     tam by druhý pokus jen přitížil cizímu serveru,
+ *   · čeká mezi pokusy exponenciálně (1 s, 2 s) a k tomu náhodný
+ *     přídavek, aby tři zdroje nezaklepaly ve stejnou milisekundu,
+ *   · RESPEKTUJE Retry-After, když ho server pošle. To je ta hlavička,
+ *     kterou server říká „přijď za tolik vteřin"; ignorovat ji a tlačit
+ *     dál je přesně to chování, kvůli kterému roboty blokují.
+ *
+ * CO TENHLE HELPER SCHVÁLNĚ NEDĚLÁ: nestřídá hlavičku user-agent ani
+ * adresy a nepokouší se vypadat jako prohlížeč. Robot se představuje
+ * pravdivě a jmenovitě, a když ho někdo nechce, nechodí tam. Obcházení
+ * ochran proti robotům není „odolnost", je to cizí rozhodnutí, které
+ * nám nepatří měnit.
+ */
+export { BOT_UA } from './bot-ua.mjs';
+export const STAHNI_POKUSY = 3;        // celkem, tedy dva opravné
+export const STAHNI_CAS = 20000;       // ms na jeden pokus
+export const STAHNI_CEKANI_STROP = 30000;
+const OPAKOVATELNE = new Set([408, 425, 429, 500, 502, 503, 504]);
+
+export function jeOpakovatelny(stav) { return OPAKOVATELNE.has(Number(stav)); }
+
+/* Kolik čekat před dalším pokusem. Oddělené od sítě, aby se to dalo
+   změřit bez ní — a aby šlo dokázat, že Retry-After opravdu vyhrává
+   nad vlastním odpočtem. Vrací milisekundy. */
+export function cekaniPoPokusu(pokus, retryAfter) {
+  const zaklad = 1000 * Math.pow(2, Math.max(0, pokus - 1));
+  const nahoda = Math.floor(Math.random() * 250);
+  let ms = zaklad + nahoda;
+  const od = retryAfter == null ? null : String(retryAfter).trim();
+  if (od) {
+    const vterin = Number(od);
+    if (Number.isFinite(vterin) && vterin >= 0) ms = Math.max(ms, vterin * 1000);
+    else {
+      const kdy = Date.parse(od);
+      if (Number.isFinite(kdy)) ms = Math.max(ms, kdy - Date.now());
+    }
+  }
+  return Math.max(0, Math.min(ms, STAHNI_CEKANI_STROP));
+}
+
+/* Vrací odpověď fetch(), takže volající pracuje dál jako dřív
+   (r.ok, r.text(), r.json()). Když se nepovede ani poslední pokus,
+   chyba vyletí — stejně jako dřív u holého fetch(). */
+export async function stahni(url, volby = {}) {
+  /* `cekaniNasobek` je tu kvůli zkoušce: ta si ověřuje, že se opakuje
+     správně, a nemá u toho tři vteřiny čekat. V běhu robota se nikde
+     nenastavuje, takže platí 1. */
+  const { pokusy = STAHNI_POKUSY, casLimit = STAHNI_CAS, cekaniNasobek = 1, headers, ...zbytek } = volby;
+  let posledni = null;
+  for (let pokus = 1; pokus <= Math.max(1, pokusy); pokus++) {
+    try {
+      const r = await fetch(url, {
+        ...zbytek,
+        headers: { 'user-agent': BOT_UA, ...(headers || {}) },
+        signal: zbytek.signal || AbortSignal.timeout(casLimit),
+      });
+      if (pokus < pokusy && jeOpakovatelny(r.status)) {
+        /* Tělo odpovědi, které se nepřečte, drží spojení otevřené —
+           undici ho vrátí do zásoby až po dočtení. Při osmi souběžných
+           dělnících a opakování by se tím zásoba vyčerpala a robot by
+           se zasekl na něčem, co vypadá jako pomalá síť. */
+        try { if (r.body && typeof r.body.cancel === 'function') await r.body.cancel(); } catch (e) {}
+        await sleep(cekaniPoPokusu(pokus, r.headers && r.headers.get('retry-after')) * cekaniNasobek);
+        posledni = new Error(`${r.status} ${r.statusText || ''}`.trim());
+        continue;
+      }
+      return r;
+    } catch (e) {
+      posledni = e;
+      if (pokus >= pokusy) break;
+      await sleep(cekaniPoPokusu(pokus, null) * cekaniNasobek);
+    }
+  }
+  throw posledni || new Error('stahni: nepovedlo se');
+}
+
 // deterministický malý rozptyl (ať se parcely ve stejné obci nekryjí)
 export function jitterAround(lat, lng, seedStr, amp) {
   let h = 0;
@@ -386,7 +477,7 @@ export function jitterAround(lat, lng, seedStr, amp) {
 }
 
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
-const GEO_UA = { 'user-agent': 'ParcelkaBot/1.0 (+https://www.parcelaka.cz)' };
+const GEO_UA = { 'user-agent': BOT_UA };
 /* Okres se dosud předával jen do klíče mezipaměti, ale do DOTAZU ne — ptali
    jsme se prostě na „Police, Česko" a brali první výsledek. Jenže Polic je
    v Česku víc: nabídka z okresu Vsetín tak skončila u Jemnice, 177 km jinde.
@@ -402,7 +493,7 @@ async function geocodeName(place, okres) {
   let coord = null;
   try {
     const q = encodeURIComponent(place + (okres ? ', okres ' + okres : '') + ', Česko');
-    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+    const r = await stahni(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
     if (r.ok) {
       const j = await r.json();
       if (Array.isArray(j)) {
@@ -468,7 +559,7 @@ async function castPodleGPS(lat, lng) {
   let cast = null;
   try {
     const u = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=cs&lat=${lat}&lon=${lng}`;
-    const r = await fetch(u, { headers: OBEC_UA });
+    const r = await stahni(u, { headers: OBEC_UA });
     if (r.ok) cast = castZOdpovedi(await r.json());
   } catch { /* síť selhala – zůstane bez čtvrti, nic se nerozbije */ }
   GEO_CACHE[key] = cast;
@@ -604,7 +695,7 @@ export function geocode(o, seedStr) {
 
 // Centrální evidence veřejných dražeb (cevd.gov.cz) — oficiální otevřená data.
 // Vybíráme jen aktivní dražby (stav "Uveřejněno"), kde je předmětem pozemek.
-const UA = { 'user-agent': 'ParcelkaBot/1.0 (+https://www.parcelaka.cz)' };
+const UA = { 'user-agent': BOT_UA };
 
 function parseArea(text) {
   const m = String(text).match(/(\d[\d\s.]*)\s*m(?:2|²)/i);
@@ -1197,7 +1288,7 @@ async function fetchDrazby() {
   for (const y of [year, year - 1]) {
     let data;
     try {
-      const r = await fetch(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
+      const r = await stahni(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
       if (!r.ok) continue;
       data = await r.json();
     } catch { continue; }
@@ -1355,7 +1446,7 @@ async function fetchOkdrazby() {
   let maxId = 27100;
   try { maxId = Math.max(maxId, nejvyssiOkdZDat(JSON.parse(readFileSync(OUT, 'utf8')))); } catch { /* první běh */ }
   try {
-    const h = await (await fetch('https://www.okdrazby.cz/', { headers: UA })).text();
+    const h = await (await stahni('https://www.okdrazby.cz/', { headers: UA })).text();
     const ids = [...h.matchAll(/\/drazba\/(\d+)-/g)].map((m) => +m[1]);
     if (ids.length) maxId = Math.max(maxId, ...ids);
   } catch { /* necháme výchozí odhad */ }
@@ -1376,7 +1467,7 @@ async function fetchOkdrazby() {
          jednou jako doručený dotaz a podruhé jako selhání. */
       let doslo = false, potiz = null;
       try {
-        const r = await fetch(`${OKD_API}/auctions/${id}`, { headers: { ...UA, accept: 'application/json' }, signal: AbortSignal.timeout(20000) });
+        const r = await stahni(`${OKD_API}/auctions/${id}`, { headers: { ...UA, accept: 'application/json' } });
         /* Odpověď přišla — ať už 200, nebo 404 u neobsazeného ID.
            Obojí je informace; nedoručený dotaz informace NENÍ. */
         doslo = true;
@@ -1459,7 +1550,7 @@ function splitCsvLine(line) {
 async function fetchProdejSPU() {
   // 1) na přehledové stránce najdeme odkaz na aktuální CSV pozemků
   let page;
-  try { page = await (await fetch('https://spu.gov.cz/nabidky/prehled-cela-cr', { headers: UA })).text(); }
+  try { page = await (await stahni('https://spu.gov.cz/nabidky/prehled-cela-cr', { headers: UA })).text(); }
   catch { return []; }
   const m = page.match(/href="([^"]*pozemky\d[^"]*\.csv)"/i);
   if (!m) return [];
@@ -1467,7 +1558,7 @@ async function fetchProdejSPU() {
   if (!url.startsWith('http')) url = 'https://spu.gov.cz' + (url.startsWith('/') ? url : '/' + url);
   // 2) stáhneme a dekódujeme (Windows-1250)
   let buf;
-  try { const r = await fetch(url, { headers: UA }); if (!r.ok) return []; buf = Buffer.from(await r.arrayBuffer()); }
+  try { const r = await stahni(url, { headers: UA }); if (!r.ok) return []; buf = Buffer.from(await r.arrayBuffer()); }
   catch { return []; }
   let txt;
   try { txt = new TextDecoder('windows-1250').decode(buf); } catch { txt = buf.toString('latin1'); }
@@ -1672,7 +1763,7 @@ async function fetchBezrealitky() {
   for (let p = 0; p < PAGES; p++) {
     let list;
     try {
-      const r = await fetch('https://api.bezrealitky.cz/graphql/', {
+      const r = await stahni('https://api.bezrealitky.cz/graphql/', {
         method: 'POST',
         headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
         body: JSON.stringify({ query, variables: { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'], estateType: ['POZEMEK'] } }),
@@ -1737,7 +1828,7 @@ async function fetchBezrealitky() {
 async function fetchFarmy() {
   const BASE = 'https://farmy.cz';
   let listHtml;
-  try { const r = await fetch(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
+  try { const r = await stahni(BASE + '/inzerce_aktualni_nabidky', { headers: UA }); if (!r.ok) return []; listHtml = await r.text(); }
   catch { return []; }
   const ids = [...new Set([
     ...[...listHtml.matchAll(/nabidka_detail\?nab=(\d+)/g)].map((m) => m[1]),
@@ -1764,7 +1855,7 @@ async function fetchFarmy() {
        jako doručený dotaz. Tady je každé ID z VÝPISU nabídek, takže
        chybějící detail znamená ztracenou nabídku, ne prázdné místo. */
     try {
-      const r = await fetch(BASE + '/nabidka_detail?nab=' + id, { headers: UA });
+      const r = await stahni(BASE + '/nabidka_detail?nab=' + id, { headers: UA });
       skenDotaz('Farmy', !r.ok, 'HTTP ' + r.status);
       if (!r.ok) { ztraty.detailNedojel++; await sleep(200); continue; }
       html = await r.text();
@@ -1833,11 +1924,15 @@ async function fetchSreality() {
   let items;
   try {
     const input = { category_main_cb: 3, category_type_cb: 1, maxItems: 4000 }; // pozemky na prodej
-    const r = await fetch(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}`, {
+    /* JEDINÝ POKUS SCHVÁLNĚ. Tenhle běh trvá až pět minut a stojí
+       kredit; opakovat ho po neúspěchu znamená platit dvakrát za
+       totéž. Zdroj je navíc volitelný — bez tokenu se vynechá celý. */
+    const r = await stahni(`https://api.apify.com/v2/acts/${actor}/run-sync-get-dataset-items?token=${encodeURIComponent(token)}`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(input),
-      signal: AbortSignal.timeout(290000),
+      pokusy: 1,
+      casLimit: 290000,
     });
     if (!r.ok) { console.error(`Sreality/Apify: HTTP ${r.status} — zkontroluj token/actor.`); return []; }
     items = await r.json();

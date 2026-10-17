@@ -134,6 +134,7 @@ try {
          sbalená. Napsat sem obal znamená, že se po jeho zrušení
          nenajde nic a kontrola projde, i kdyby se formulář vrátil. */
       mapa: y('.pzm'), kalk: y('.pz-nav-box, .pz-nav-obal, #pz-nav, #nav-kupni'),
+      site: y('.pz-feats'),
       pozn: y('.pz-pozn-box'), sdilet: y('.pz-actions'),
       cela: Math.round(document.body.scrollHeight), obrazovka: window.innerHeight,
     };
@@ -181,6 +182,49 @@ try {
     `mapa na ${m.mapa} px z ${m.cela} px = ${Math.round(100 * m.mapa / m.cela)} %`);
   pravda('a až za parametry — napřed co to je, pak kde',
     je(m.mapa) && je(m.klice) && m.klice < m.mapa, `parametry ${m.klice}, mapa ${m.mapa}`);
+
+  /* 3b) CO TO UMÍ, PŘED TÍM, CO TO STOJÍ ---------------------------- */
+  /* „Vede tam cesta?" a „je u toho elektřina?" je u pozemku otázka
+     ANO/NE: pozemek bez přístupu je bez ohledu na cenu něco jiného než
+     pozemek s ním, a banka na něj nemusí půjčit (říká to i vlastní
+     rádce pristupova-cesta-pozemek.html). Rozhoduje to tedy DŘÍV než
+     cena — a sekce stála až za mapou a za popisem inzerenta: naměřeno
+     na telefonu 390 px parametry na 699 px a sítě na 2 458 px, tedy
+     na třetí obrazovce a 1 456 px pod tím, k čemu patří.
+     Sekce se nevykreslí, když o sítích ani přístupu nevíme nic —
+     kontrola proto platí jen tam, kde je co měřit. */
+  if (je(m.site)) {
+    pravda('sítě a přístup se čtou dřív než verdikt o ceně',
+      je(m.verdikt) && m.site < m.verdikt, `sítě ${m.site} px, verdikt ${m.verdikt} px`);
+    pravda('a drží se u parametrů, ne až za mapou',
+      je(m.klice) && je(m.mapa) && m.site > m.klice && m.site < m.mapa,
+      `parametry ${m.klice}, sítě ${m.site}, mapa ${m.mapa}`);
+  } else {
+    /* NA TÉHLE STRÁNCE SE SÍTĚ NEVYKRESLILY — a mlčet o tom nejde.
+       Sekce se schválně nezobrazuje, když o sítích ani přístupu nevíme
+       nic, takže je to legitimní stav; jenže pak obě kontroly výš
+       neměří nic a zkouška by zezelenala i nad pořadím, které se mezitím
+       vrátilo zpátky za mapu. Pořadí se proto ověří ještě v ŠABLONĚ:
+       v js/pozemek.js musí volání pzFeaturesHtml stát před blokem
+       verdiktu. Je to hloupá kontrola na text, ale měří přesně to
+       rozhodnutí, o které jde. */
+    const zdroj = readFileSync(new URL('../js/pozemek.js', import.meta.url), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ');
+    /* Hledá se POSLEDNÍ výskyt, ne první: `pzMapaHtml(d)` i
+       `pzFeaturesHtml(d)` stojí v souboru dvakrát — nejdřív jako hlavička
+       definice, teprve potom jako volání v šabloně. Podle prvního výskytu
+       vycházelo, že sítě jsou až za mapou, protože se porovnávaly
+       definice, ne pořadí na stránce. */
+    const iSite = zdroj.lastIndexOf('pzFeaturesHtml(d)');
+    const iVerdikt = zdroj.lastIndexOf("'<div id=\"pz-verdict\">'");
+    const iMapa = zdroj.lastIndexOf('pzMapaHtml(d)');
+    pravda('(sítě na vzorku nejsou) — ale v šabloně stojí před verdiktem',
+      iSite > 0 && iVerdikt > 0 && iSite < iVerdikt,
+      `pzFeaturesHtml na ${iSite}, verdikt na ${iVerdikt}`);
+    pravda('(…) a před mapou',
+      iSite > 0 && iMapa > 0 && iSite < iMapa,
+      `pzFeaturesHtml na ${iSite}, mapa na ${iMapa}`);
+  }
 
   /* 4) NÁSTROJE AŽ POTOM -------------------------------------------- */
   /* Kalkulačka „Vyplatí se to?" je pryč na přání majitele. Byl to

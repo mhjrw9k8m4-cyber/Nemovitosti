@@ -12,7 +12,16 @@
   <style>body{background:#E3EFE7;color:#12241A;font-family:'Inter','Helvetica Neue',Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}a{color:#0F5C3B;font-weight:600}</style>
 </head>
 <body>
-  <p>Přesměrování na <a href="pridat.html">Přidat pozemek</a><a href="novinky.xml">Kanál nových pozemků</a><a href="data.html">Data ke stažení</a>…</p>
+  <!-- Odkazy stály bez oddělovače slepené v jedné větě („Přidat
+       pozemekKanál nových pozemkůData ke stažení"). Vidí to každý,
+       komu nedojede skript nebo kdo sem dojde dřív, než se stihne
+       přesměrovat — a je to první dojem ze stránky, která má jen
+       jednu větu. -->
+  <p>Přesměrování na <a href="pridat.html">Přidat pozemek</a>…</p>
+  <nav aria-label="Další odkazy">
+    <a href="novinky.xml">Kanál nových pozemků</a> ·
+    <a href="data.html">Data ke stažení</a>
+  </nav>
   <script>location.replace('pridat.html');</script>
 <!-- Vercel Web Analytics (navstevnost) -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí

@@ -72,17 +72,12 @@
     return String(s || '').toLowerCase().replace(/[áčďéěíňóřšťúůýž]/g, function (c) { return PK_DIAKR[c] || c; })
       .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
-  function pkOtisk(s) {
-    var h = 5381;
-    for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
-    return h.toString(36);
-  }
   /* Klíč pozemku počítá js/klic.js — jedno místo pro celý web. Byl tu
      opsaný podruhé a dvě kopie téhož výpočtu se rozejdou; tady by se to
      projevilo tím, že by stránka odkazovala na soubor, který neexistuje. */
   var pkeyPlny = window.PKKlic.pkey;
   function souborPozemku(d) {
-    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + pkOtisk(pkeyPlny(d)) + '.html';
+    return 'pozemek-' + pkSlug(d.okres) + '-' + pkSlug(d.place) + '-' + window.PKKlic.otisk(pkeyPlny(d)) + '.html';
   }
   /* ČTVRŤ U VELKÝCH MĚST. U velkých měst uvádí zdroj jen celou obec
      („Praha" = 496 km²), takže je ten řádek k ničemu. Robot k ní
@@ -1011,6 +1006,38 @@
           '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
+          /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
+             Mapa jde posouvat a přibližovat, ale nic nevedlo zpátky: kdo
+             si odjel podívat se, kudy se k pozemku jede, musel stránku
+             načíst znovu, aby ho zase našel. Velká mapa na úvodu na to má
+             „Celá ČR", výběr okolí „Ukázat okruh"; tady nebylo nic.
+
+             PROČ POD MAPOU. Nejdřív to bylo plovoucí tlačítko vpravo
+             nahoře — a leželo na přibližování (naměřeno 8 px překryvu na
+             390px displeji). Přesunulo se tedy dolů vlevo, kde bylo
+             volno, a majitel poslal další snímek: pořád překáží. Má
+             pravdu, a problém není v tom, KDE nad mapou stojí: mapa je
+             na telefonu vysoká 300 bodů a každý plovoucí ovladač z ní
+             ukusuje. Na 430×300 zabíralo 130×44 bodů, tedy 6 % plochy,
+             a leželo přes snímek i přes hranice parcel.
+             V pruhu pod mapou nepřekáží ničemu a stojí vedle ostatního
+             ovládání mapy, kam patří. Ukazuje se dál jen tehdy, když je
+             k čemu — dokud je pozemek v záběru, není ho vidět.
+
+             A JE PRVNÍ V PRUHU, NE POSLEDNÍ. „Je pořád na dohled" byla
+             nedoložená věta: tlačítko stálo až za podkladem, za vrstvami
+             a za posuvníkem průhlednosti. Naměřeno na telefonu 390×844
+             po popojetí mapou: mapa končila na 555 px a tlačítko začínalo
+             na 828 px — tedy v posledních šestnácti bodech obrazovky,
+             a svou výškou 44 px přetékalo 28 px pod okraj. Kdo mapou
+             popojel, neviděl ho; majitel ho právem hlásil jako chybějící.
+             Hned pod mapou je naopak tam, kde se po něm sáhne. */
+          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
+            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<span>Na pozemek</span>' +
+          '</button>' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
             ZAKLADY.map(function (z, i) {
               return '<button class="pzm-z' + (i === 0 ? ' on' : '') + '" type="button" data-zaklad="' + z.id +
@@ -1026,30 +1053,6 @@
             '<span>Průhlednost vrstvy</span>' +
             '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
           '</label>' +
-          /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
-             Mapa jde posouvat a přibližovat, ale nic nevedlo zpátky: kdo
-             si odjel podívat se, kudy se k pozemku jede, musel stránku
-             načíst znovu, aby ho zase našel. Velká mapa na úvodu na to má
-             „Celá ČR", výběr okolí „Ukázat okruh"; tady nebylo nic.
-
-             PROČ POD MAPOU. Nejdřív to bylo plovoucí tlačítko vpravo
-             nahoře — a leželo na přibližování (naměřeno 8 px překryvu na
-             390px displeji). Přesunulo se tedy dolů vlevo, kde bylo
-             volno, a majitel poslal další snímek: pořád překáží. Má
-             pravdu, a problém není v tom, KDE nad mapou stojí: mapa je
-             na telefonu vysoká 300 bodů a každý plovoucí ovladač z ní
-             ukusuje. Na 430×300 zabíralo 130×44 bodů, tedy 6 % plochy,
-             a leželo přes snímek i přes hranice parcel.
-             V pruhu pod mapou nepřekáží ničemu, je pořád na dohled
-             a stojí vedle ostatního ovládání mapy, kam patří. Ukazuje
-             se dál jen tehdy, když je k čemu — dokud je pozemek
-             v záběru, není ho vidět. */
-          '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
-            'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-            '<span>Na pozemek</span>' +
-          '</button>' +
         '</div>' +
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
@@ -1783,7 +1786,15 @@
        „Jak se tam dostanu" je otázka, která se čte u mapy, ne mezi
        údaji; tam teď ten řádek stojí (viz pzMapaHtml). Tabulka zůstává
        tím, čím má být: čtyři krátké údaje pod sebou. */
-    facts.push({ k: 'Kategorie', v: esc(t.label) });
+    /* ŘÁDEK „KATEGORIE" TU UŽ NENÍ — byl to týž údaj podruhé.
+       Odznak s druhem nabídky („Na prodej", „Dražba") vykresluje
+       heroLayers() na úplný začátek stránky, a to v OBOU větvích,
+       s fotkami i bez nich — je tedy na stránce vždycky. Řádek
+       „Kategorie: Na prodej" ho opakoval o 745 px níž (naměřeno na
+       telefonu 390 px: odznak na 141 px, tabulka na 886 px), uvnitř
+       bloku mezi klíčovými údaji a verdiktem, tedy na tom nejdražším
+       místě stránky. Tabulka tím zhubla na to, co opravdu přidává:
+       parcelní číslo a odkud ten údaj je. */
     if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
     /* ŽÁDNÝ ŘÁDEK „INZERÁT UVÁDÍ" TADY UŽ NENÍ — a schválně.
        Stával tu výčet „elektřina, voda, kanalizace, plyn" jako další
@@ -1925,6 +1936,20 @@
           '</div>'
         : '') +
 
+      /* SÍTĚ A PŘÍSTUP PATŘÍ K PARAMETRŮM, NE ZA MAPU.
+         U pozemku je „vede tam cesta?" a „je u toho elektřina?" otázka
+         ANO/NE: pozemek bez přístupu je bez ohledu na cenu něco jiného
+         než pozemek s ním, a banka na něj nemusí půjčit (říká to i vlastní
+         rádce pristupova-cesta-pozemek.html). Je to tedy údaj, který
+         rozhoduje DŘÍV než cena — a stál až za mapou a za popisem
+         inzerenta. Naměřeno na telefonu 390 px: parametry na 699 px,
+         sítě na 2 458 px, tedy na třetí obrazovce a 1 456 px pod tím,
+         k čemu patří. Jsou krátké (dvě značky a věta, dohromady 110 px),
+         takže se verdikt posune jen o kousek.
+         Když o sítích nevíme nic, nevykreslí se nic — ne prázdný nadpis
+         (viz pzFeaturesHtml). */
+      pzFeaturesHtml(d) +
+
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
       /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
@@ -1970,8 +1995,6 @@
          čtvrté obrazovce. U pozemku je přitom poloha hned po ceně to
          první, co se člověk ptá: vede tam cesta? co je kolem? */
       pzMapaHtml(d) +
-
-      pzFeaturesHtml(d) +
 
       /* RÁDCE: ZABALENÝ, ALE V INZERÁTU — NE AŽ POD PATIČKOU.
          Zabalený je proto, že je to zeď textu: změřeno na telefonu měl

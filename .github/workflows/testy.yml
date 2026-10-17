@@ -112,6 +112,12 @@ jobs:
       - name: Hlídač jednotlivých zdrojů (tiše spadlý zdroj)
         run: node scripts/test-hlidac-zdroju.mjs
 
+      - name: Stahování ze zdrojů (opakování, Retry-After, časový limit)
+        run: node scripts/test-stahovani.mjs
+
+      - name: Dvojí kopie téže funkce na jedné stránce
+        run: node scripts/test-kopie-funkci.mjs
+
       - name: Dražby z otevřených dat CEVD (výměra celé položky)
         run: node scripts/test-drazby-cevd.mjs
 

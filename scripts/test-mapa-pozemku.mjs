@@ -1384,9 +1384,15 @@ if (DRAZBA) {
     const m = window.PK_PZ_MAPA, b = document.getElementById('pzm-zpet');
     if (!m) return null;
     const c = m.getCenter(), r = b ? b.getBoundingClientRect() : null;
+    const mapaEl = document.querySelector('.pzm-mapa') || document.querySelector('.pzm');
+    const rm = mapaEl ? mapaEl.getBoundingClientRect() : null;
     return { lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5), zoom: m.getZoom(),
       je: !!b, skryte: b ? b.hidden : null,
-      sirka: r ? Math.round(r.width) : 0, vyska: r ? Math.round(r.height) : 0 };
+      sirka: r ? Math.round(r.width) : 0, vyska: r ? Math.round(r.height) : 0,
+      /* Poloha v OKNĚ, ne na stránce: jde o to, jestli ho člověk vidí
+         ve chvíli, kdy kouká na mapu. */
+      top: r ? Math.round(r.top) : null, dno: r ? Math.round(r.bottom) : null,
+      mapaDno: rm ? Math.round(rm.bottom) : null, okno: window.innerHeight };
   });
 
   const doma = await stav();
@@ -1403,6 +1409,21 @@ if (DRAZBA) {
     pravda('po odjetí od pozemku se ukáže', pryc.skryte === false,
       'zůstalo skryté — cesta zpátky zase není');
     pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44, `${pryc.sirka}×${pryc.vyska} px`);
+    /* A HLAVNĚ: JE VIDĚT, KDYŽ SE ČLOVĚK DÍVÁ NA MAPU.
+       „V pruhu pod mapou je pořád na dohled" byla nedoložená věta.
+       Tlačítko stálo v pruhu až ZA podkladem, vrstvami a posuvníkem
+       průhlednosti — naměřeno na telefonu 390×844 po popojetí mapou:
+       mapa končila na 555 px a tlačítko začínalo na 828 px, tedy
+       v posledních šestnácti bodech obrazovky, a svou výškou 44 px
+       přetékalo 28 px pod okraj. Kdo mapou popojel, neviděl ho.
+       Měří se proto vzdálenost od spodního okraje mapy a to, že se
+       celé vejde do okna. */
+    pravda('a je celé v okně, ne pod jeho okrajem',
+      pryc.dno !== null && pryc.dno <= pryc.okno,
+      `tlačítko ${pryc.top}–${pryc.dno} px, okno má ${pryc.okno} px`);
+    pravda('a drží se hned pod mapou, ne až za celým ovládáním',
+      pryc.mapaDno !== null && pryc.top - pryc.mapaDno < 80,
+      `mapa končí na ${pryc.mapaDno} px, tlačítko začíná na ${pryc.top} px`);
 
     await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
     await p.waitForTimeout(1200);

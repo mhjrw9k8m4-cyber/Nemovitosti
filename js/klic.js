@@ -121,16 +121,38 @@
      STARÝ TVAR SE POŘÁD ČTE. Co si člověk uložil dřív, je v prohlížeči
      i na serveru zapsané pod pkey; kdyby se přestalo číst, přišel by
      o to. Zapisuje se nový tvar, čte se oboje — viz kliceProCteni. */
+  /* BEZ VÝMĚRY SE DVA RŮZNÉ POZEMKY SLIJÍ V JEDEN.
+     Klíč je pkey (obec, okres, souřadnice na tři desetiny) plus výměra.
+     Když výměra chybí, dosadí se nula — a dva různé pozemky na témže
+     místě dostanou týž klíč. Naměřeno v datech: 20 z 1 980 nabídek je
+     bez výměry a jedna taková dvojice stojí ve Zlíně na jedněch
+     souřadnicích: ovocný sad za 758 523 Kč a stavební pozemek za
+     6 104 Kč. Uložit jeden znamenalo označit oba, a poznámka napsaná
+     k jednomu se ukázala u druhého.
+     Rozlišuje je DRUH, ne cena ani odkaz: druh patří pozemku a drží
+     i tehdy, když majitel nabídku stáhne a vyvěsí znovu — kdežto odkaz
+     se tím změní a klíč by přestal být týž pozemek. (Právě proto
+     klicArchivu, který si pamatuje JEDNU NABÍDKU, odkaz používá a tahle
+     funkce ne.) Cena se mění průběžně, takže tou se rozlišovat nedá.
+     STARÝ TVAR SE DÁL ČTE — viz kliceProCteni; co si kdo uložil dřív,
+     se neztratí. */
   function klicPozemku(d) {
     if (!d) return '';
     var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
-    return pkey(d) + '#v' + v;
+    if (v > 0) return pkey(d) + '#v' + v;
+    var dr = String(d.druh == null ? '' : d.druh).trim().toLowerCase();
+    return pkey(d) + '#v0' + (dr ? 'd' + otisk(dr) : '');
   }
   /* Klíče, pod kterými se pozemek může mít uložený: nový tvar a starý.
      Jedno místo, aby se všechny části webu ptaly stejně. */
   function kliceProCteni(d) {
     if (!d) return [];
-    return [klicPozemku(d), pkey(d)];
+    /* Prostřední je TVAR PŘED ROZLIŠENÍM PODLE DRUHU (pkey + „#v0").
+       U pozemků s výměrou je shodný s prvním a nic nestojí; u pozemků
+       bez výměry je to ten klíč, pod kterým má člověk uložené, co si
+       uložil dřív. Bez něj by mu po téhle změně zmizely z „Uložených". */
+    var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
+    return [klicPozemku(d), pkey(d) + '#v' + v, pkey(d)];
   }
   /* Je pozemek v tom seznamu klíčů? Snese pole i objekt (poznámky). */
   function jeMezi(sbirka, d) {

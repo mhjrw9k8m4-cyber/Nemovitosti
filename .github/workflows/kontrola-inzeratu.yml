@@ -37,3 +37,16 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           KONTROLA_LIMIT: ${{ github.event.inputs.limit || '200' }}
+
+      # Úklid tabulek, které jinak jen rostou (návštěvnost starší dvou let,
+      # záznamy o odeslané poště starší půl roku). Jede AŽ ZA kontrolou a
+      # s `if: always()`, aby se pustil i tehdy, když kontrola inzerátů
+      # spadne — nemají spolu nic společného, jen sdílejí jedno noční okno
+      # a jeden klíč. Vlastní selhání úlohu neshodí: skript končí nulou a
+      # případný problém hlásí jako ::warning::.
+      - name: Úklid databáze
+        if: always()
+        run: node scripts/uklid-databaze.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

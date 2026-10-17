@@ -1068,3 +1068,406 @@ nabídek je devatenáct tisíc porovnání na jedno hledání — naměřeno
 nevypouštějí nikdy, takže se jimi dá hromádka předem zúžit; po tom
 zúžení je to **190 ms** za touž dvacítku a v okrese pár set porovnání
 místo devatenácti tisíc.
+
+## 19. Na stránce pozemku stálo nejdůležitější na třetí obrazovce *17. 10.*
+
+Majitel: „když rozkliknu inzerát, informace nejsou seřazené podle
+nejdůležitější k nejméně důležité." Tak jsem to změřil — pořadí
+a svislou polohu každého bloku na telefonu 390 px, na živé nabídce
+s popisem i sítěmi.
+
+### Co se naměřilo
+
+| obrazovka | blok | rozhoduje o |
+|---|---|---|
+| 0,2 | foto / mapka + odznak druhu | první dojem |
+| 0,5 | nadpis: druh, výměra, obec | co to je |
+| 0,7 | cena a Kč/m² | kolik |
+| 0,8 | Parametry (výměra, Kč/m², druh) | — |
+| 1,0 | Kategorie · Stav/zdroj | — |
+| 1,2 | **verdikt ceny** | je to dobrá cena |
+| 1,6 | Co byste měli vědět | co ověřit |
+| 1,6 | tlačítko na inzerát | — |
+| 1,8 | popis od inzerenta | co o tom říká prodávající |
+| 2,2 | mapa | kde to je |
+| **2,9** | **Sítě a vybavení** | **jestli se tam dá vůbec stavět** |
+| 3,1+ | náklady, poznámka, katastr, kam dál | nástroje |
+
+### Co z toho je vada
+
+**Sítě a přístup na třetí obrazovce.** U pozemku je „vede tam cesta?"
+a „je u toho elektřina?" otázka ANO/NE: pozemek bez přístupu je bez
+ohledu na cenu něco jiného než pozemek s ním, a banka na něj nemusí
+půjčit — říká to vlastní rádce `pristupova-cesta-pozemek.html`.
+Rozhoduje to tedy **dřív než cena**, a stálo to **1 456 px pod**
+parametry, až za mapou a za popisem inzerenta.
+
+Sekce je přitom malá (dvě značky a věta, 110 px), takže ji stačilo
+přesunout k parametrům. Naměřeno po přesunu: sítě z 2 458 px na
+974 px, verdikt se posunul o 119 px dolů, **celková výška stránky se
+nezměnila**.
+
+**Kategorie dvakrát.** Odznak s druhem nabídky („Na prodej", „Dražba")
+kreslí `heroLayers()` na úplný začátek stránky — a to v obou větvích,
+s fotkami i bez nich, takže je tam vždycky. Řádek „Kategorie: Na
+prodej" ho opakoval o 745 px níž, uvnitř bloku mezi klíčovými údaji
+a verdiktem, tedy na nejdražším místě stránky. Tabulka po jeho
+odebrání zhubla z 96 px na 48 px a zbylo v ní to, co opravdu přidává:
+parcelní číslo a odkud je údaj.
+
+Hlídá to `scripts/test-poradi-pozemku.mjs`, a to dvěma způsoby: na
+stránce (sítě před verdiktem a před mapou) a — když na vzorku sítě
+nejsou, protože o nich u té nabídky nic nevíme — v šabloně. Bez té
+druhé cesty by zkouška nad prázdným vzorkem mlčky zezelenala.
+
+### Co se změřilo a NEUDĚLALO
+
+**Trojí opakování klíčových údajů.** Nadpis zní „Vodní plocha
+14 101 m² — Nové Hrady", pruh pod ním „250 000 Kč · 18 Kč/m²"
+a dlaždice „Parametry" ukazují znovu 14 101 m², 18 Kč/m² a Vodní
+plochu — všechno do 250 px pod sebou. Vypadá to jako vata, ale není:
+dlaždice ty hodnoty **pojmenovávají** („Výměra", „Cena za m²", „Druh"),
+kdežto nadpis je věta, a u spoluvlastnických podílů nesou navíc
+výhradu („váš podíl — celá parcela je větší"). Nadpis zároveň slouží
+jako titulek pro vyhledávač, takže z něj ty údaje vyndat nejde.
+Je to tedy cena za to, že SEO i čtenář potřebují totéž — ne vada.
+
+**Popis od inzerenta až za tlačítkem.** Slova člověka, který pozemek
+zná, stojí pod tlačítkem „Inzerát" — kdo klepne, nepřečte je. Posunout
+je výš ale znamená posunout tlačítko pod polovinu stránky, a to je
+mez, kterou `test-poradi-pozemku.mjs` hlídá schválně (dřív bylo
+tlačítko až na čtvrté obrazovce). Jedno nebo druhé; rozhodnutí je na
+majiteli, proto se tu nic neměnilo.
+
+### A tlačítko „Na pozemek" bylo pod okrajem obrazovky *17. 10.*
+
+Majitel poslal snímek malé mapy: „chybí tlačítko na vycentrování."
+Tlačítko přitom existuje — ukazuje se, až se pohled odlepí od značky,
+a vrací mapu přesně tam, kde začala. Měření ukázalo, proč ho neviděl.
+
+Naměřeno na telefonu 390×844 po popojetí mapou:
+
+| | mapa končí | tlačítko začíná | vejde se do okna |
+|---|---:|---:|---|
+| předtím | 555 px | **828 px** | ne — přetéká 28 px pod okraj |
+| teď | 555 px | **569 px** | ano |
+
+Komentář v kódu u něj tvrdil, že „v pruhu pod mapou je pořád na
+dohled". Nebyla to pravda: v tom pruhu stálo až **za** podkladem
+(Letecká/Základní), za tlačítky vrstev a za posuvníkem průhlednosti —
+tedy v posledních šestnácti bodech obrazovky, a svou výškou 44 px
+přetékalo pod okraj. Kdo mapou popojel, neviděl ho.
+
+Opravou není plovoucí ovladač na mapě: ten už majitel dvakrát zamítl
+a měl pravdu — mapa je na telefonu vysoká 300 bodů a každý plovoucí
+prvek z ní ukusuje (naměřeno 130×44 px, tedy 6 % plochy). Tlačítko
+proto zůstává v pruhu, jen je v něm **první**, ne poslední.
+
+Hlídá to `scripts/test-mapa-pozemku.mjs` dvěma novými kontrolami:
+celé se vejde do okna a od spodního okraje mapy je blíž než 80 px.
+Ověřeno sabotáží: po vrácení na konec pruhu kontrola padne.
+
+### Čtyři ovladače v jedné sestavě, dva různé tvary *17. 10.*
+
+Majitel poslal snímek hlavičky výpisu: „všechny ty rámečky by měly být
+stejně velké." Změřeno na telefonu 390 px — a je to jinak, než to
+vypadá:
+
+| ovladač | výška | zaoblení |
+|---|---:|---:|
+| Uložené | 44 px | 14 px |
+| Doporučené (řazení) | 44 px | 14 px |
+| Procházet po jednom | 44 px | **999 px** |
+| Stáhnout výběr | 44 px | **999 px** |
+
+**Na výšce se shodovaly všechny čtyři.** Lišil se jen rádius: horní
+dva měkký obdélník, dolní dva plná pilulka. Vedle sebe to čte jako dvě
+různé komponenty — přesně ten pocit „skoro hotové", který se nedá
+ukázat prstem.
+
+Pravidlo webu přitom existuje a je zapsané u tokenu `--r-ovladani`:
+*co se ovládá, má `--r-ovladani`; pilulka zůstává ODZNAKU (zapínatelnému
+filtru) a kulatému tlačítku s ikonou.* „Procházet po jednom" ani
+„Stáhnout výběr" odznaky nejsou — nic nepřepínají, spouštějí akci.
+
+**A proč to zkouška nechytila.** `scripts/test-zaobleni.mjs` vymáhala
+jen polovinu pravidla: v kódu stálo `if (e.pilulka) continue;`, takže
+jako pilulka prošlo cokoli. Teď se vymáhá celé — pilulku smí mít
+přepínač (pozná se podle `aria-pressed`, `aria-checked`, `role="switch"`
+nebo třídy zapnutého stavu), kulaté tlačítko s ikonou, nebo prvek
+z pojmenovaného seznamu výjimek, kde je u každé napsáno proč.
+Změřeno, kdo v tom seznamu musí být: `opp-fav` a `opp-skryt` (přepínají
+a mění si slovo, ale `aria-pressed` schválně nemají, aby odečítač
+nečetl stav dvakrát), `filter-chip` (vypnutý nenese žádnou třídu)
+a `add-jak-sum` (rozbalovátko, ne tlačítko).
+
+Ověřeno sabotáží: s vrácenou pilulkou zkouška hlásí přesně
+`mc-nastroj (pilulka, ale není odznak) ×4`.
+
+### Nadpis úvodní stránky říkal jméno webu, ne co na něm je *17. 10.*
+
+Majitel: „tenhle nadpis Parcelka je zbytečný, vypadá chudě a hnusně."
+Má pravdu dvakrát.
+
+**Opticky.** Totéž slovo nese lišta o kousek výš, takže pod sebou
+stálo dvakrát: logo „Parcelka" a pod ním velké „Parcelka". Komentář
+u toho pravidla si toho byl vědom („slovo pod lištou, která nese
+totéž, ale vypadá jako vada") a řešil to tím, že pod nadpis přidal
+ještě větu — tedy další řádek navíc.
+
+**Věcně.** `<h1>` je to nejcennější místo stránky pro vyhledávač
+i pro odečítač obrazovky, a bylo v něm jméno webu — jediné slovo,
+které o obsahu stránky neříká nic. Popis se schovával uvnitř jako
+`visually-hidden`.
+
+Teď je v nadpisu ta věta: „Nabízíme **1 940** pozemků na prodej,
+v dražbě a v exekuci — na jedné mapě." Počet doplní `js/main.js`;
+bez skriptu zůstane „Pozemky na prodej…", což dává smysl taky. Dva
+prvky se slily v jeden a stránka se zkrátila:
+
+| | první nabídka — telefon | — monitor |
+|---|---:|---:|
+| předtím | 407 px | 474 px |
+| teď | 403 px | **428 px** |
+
+**A u toho se našla mrtvá proměnná.** `--h1-domu` (stupeň „titulní
+stránka je plakát") nepoužívalo jediné pravidlo — plakát šel kdysi
+pryč a stupeň po něm zůstal. Nadpis si přitom držel opsaných 40 px
+**mimo stupnici**, a to i mimo dosah zkoušky: `test-jeden-styl.mjs`
+hledá pravidla se selektorem `h1`, kdežto tohle byla pouhá třída.
+Stupeň teď znamená to, co na té stránce opravdu je (jedna věta, ne
+plakát: `clamp(20px, 2.4vw, 28px)`), nadpis ho používá a selektor je
+`h1.uvod-nadpis`, takže ho zkouška konečně vidí. Ověřeno sabotáží:
+po vepsání 22px hlásí `„h1.uvod-nadpis" = 22px`.
+
+### Jméno v liště mělo mluvit, a šeptalo *17. 10.*
+
+Majitel: „tady ten nápis by měl mít duši a být velký."
+
+Bylo to 24 px na monitoru, 20 px na telefonu a **barva běžného
+textu** — tedy slovo, které v liště nic neřídí: stejně barevné jako
+věta pod ním. Zelenou značku nesla jen dlaždice 29 px vedle.
+
+Teď je to **28 px na všech šířkách, prostrkání -0.03em a tmavá zeleň
+značky** (`--copper`, 8,2 : 1 na bílé liště). Rodina
+písma se nemění — na tomhle webu dělá rozdíl mezi nadpisem a textem
+váha, velikost a prostrkání, ne druhé písmo (viz komentář
+u `--font-display`), a jméno značky má mít jedno písmo. Dlaždice
+vyrostla 29 → 32 px, což je navíc kresba v měřítku 1 : 1:
+`assets/logo-mark.svg` má plátno 32×32.
+
+**Výška hlavičky se u toho nesměla hnout** — stránka si pod ni dělá
+místo pevným číslem (`--vyska-hlavicky`: 65 px telefon, 85 px
+monitor). Drží to `line-height:1` a ta dlaždice: řádek jména je
+28 px, dlaždice 32 px, takže o výšce odkazu rozhoduje dlaždice —
+přesně těch 32 px, co tam byly dřív (20 × 1,6). Na monitoru je navíc
+rezerva, obsah lišty je tam 44 px vysoký kvůli tlačítku v navigaci.
+
+| šířka | hlavička předtím | teď | šířka jména |
+|---|---:|---:|---:|
+| 320 px | 65 px | 65 px | 120 → 155 px |
+| 390 px | 65 px | 65 px | 120 → 155 px |
+| 880 px | 65 px | 65 px | 120 → 155 px |
+| 1041 px | 85,4 px | 85,4 px | 136 → 155 px |
+| 1440 px | 85,4 px | 85,4 px | 136 → 155 px |
+
+Mezera mezi jménem a navigací, kvůli které kdysi v liště stálo
+„ParcelkaMapa", je i v nejtěsnějším místě (1041 px) 267 px.
+
+Nová zkouška v `scripts/test-hlavicka.mjs` hlídá obojí najednou,
+protože to jde proti sobě: nápis musí **zůstat velký** (někdo ho
+příště zmenší, aby se lišta „uklidnila") a zároveň **nesmí hlavičku
+zvýšit**. Měří velikost, váhu, prostrkání, že barva není barva
+běžného textu, spočítaný poměr jasů proti liště, a že výšku odkazu
+drží dlaždice, ne řádek písma. Ověřeno sabotáží: s vrácenými
+původními hodnotami hlásí 8 chyb (velikost, prostrkání, barva
+a příčina výšky, pokaždé na telefonu i na monitoru).
+
+**Váha zůstala 700, a stálo to jeden omyl.** Napsal jsem 800 —
+vypadalo to líp — a `scripts/test-pismo.mjs` to zastavil: stupnice
+vah webu má čtyři hodnoty a končí na 700, s výslovným pravidlem
+„nepřidávej novou, vezmi nejbližší, která tam je". Je to tak správně:
+nápis nemá být jediné místo webu s vlastní vahou. U toho se ale
+našla **lež v komentáři** u `@font-face`. Stálo tam, že osa sahá
+do 800, protože „sedm pravidel webu si o ni říká (zvýrazněná slova
+v nadpisech úvodu)". Ta pravidla jsou dávno pryč — o váhu 800 si
+dnes neříká ani jedno. Zápis `400 800` zůstává, protože popisuje
+**soubor**, ne stylopis; komentář to teď říká takhle.
+
+**A jedna past u té sabotáže.** První pokus sabotoval
+`css/styles.min.css` a zkouška prošla — úvodní stránka ten soubor
+vůbec nenačítá, má vlastní balík `css/uvod.min.css`. Sabotáž
+na rozděleném CSS musí trefit ten balík, který stránka opravdu
+stahuje, jinak „projde" znamená jen „neměřím".
+
+### Databáze: kde se četla celá tabulka *17. 10.*
+
+Databáze se dala zkoušet celou dobu — `scripts/test-sql-cista.mjs` umí
+na holém PostgreSQL 16 založit úplně všechno z `supabase/00-vse.sql` —
+jen se v ní nikdy neměřil VÝKON. Nasypal jsem do ní 2 000 účtů,
+50 000 inzerátů a 200 000 zpráv (ne dnešek: dnes jsou v tabulkách
+jednotky řádků) a pustil `explain analyze` na dotazy, které web volá
+nejčastěji:
+
+| dotaz | kdy se volá | předtím | teď |
+|---|---|---:|---:|
+| `unread_count()` | při otevření **každé** stránky (odznak v menu) | 352,6 ms | **1,3 ms** |
+| `my_threads()` | schránka zpráv | 183,0 ms | **5,7 ms** |
+| brzda chatu „3 vteřiny" | při **každé** odeslané zprávě | 16,8 ms | **0,05 ms** |
+| hodinový limit zpráv | tamtéž | 14,0 ms | **0,08 ms** |
+| kvóta inzerátů účtu | při každém přidání inzerátu | 8,8 ms | **0,16 ms** |
+| brzda „inzerát za 90 s" | tamtéž | 3,9 ms | **0,03 ms** |
+| `my_listings()` | moje inzeráty | 4,2 ms | **0,21 ms** |
+
+Příčiny byly dvě a jedna z nich mě nejdřív nenapadla.
+
+**Chyběly dva indexy.** `listings.user_id` čte osm míst v SQL a index
+na něm nebyl žádný; `chat_messages.sender_id` se čte dvakrát při každé
+odeslané zprávě, taky bez indexu. Zajímavé je, že cizí klíče na tom
+byly dobře — katalog databáze ukázal **nula** cizích klíčů bez indexu.
+Chyběly indexy přesně tam, kde vazba *není* cizí klíč.
+
+**A pak to OR.** `my_threads()` i `unread_count()` se ptaly „buď jsem
+kupující, NEBO jsem majitel inzerátu" jednou podmínkou. Takový dotaz
+neumí PostgreSQL obsloužit indexem ani jedné strany a čte celou
+tabulku zpráv. Nejdřív jsem z `my_threads()` vyhodil tři závislé
+poddotazy (poslední zpráva, její čas a počet nepřečtených se počítaly
+zvlášť pro každé vlákno) — vypadalo to jako ta pravá příčina.
+**Naměřeno 189 ms místo 183 ms, tedy nic.** Teprve rozpad OR na UNION
+dvou větví, z nichž každá jde po svém indexu, dal 5,7 ms. Bez měření
+bych byl spokojený s tím prvním přepisem.
+
+Obě podoby vracejí **přesně tytéž řádky** — porovnáno přes `EXCEPT`
+v obou směrech, nula rozdílů. A protože to je výkonová oprava, kterou
+jde snadno zase pokazit, hlídá ji zkouška, která v téže databázi
+vyrobí i **starou podobu** a porovná ji s živou: shodu řádků a čas
+poměrem (ne pevnou mezí v milisekundách, ta by na pomalejším stroji
+hlásila planý poplach). Ověřeno sabotáží: s vráceným OR hlásí
+„a je aspoň třikrát rychlejší" chybu, se zahozenými indexy hlásí
+chybu „jde po indexu, ne přes celou tabulku".
+
+**Čtyři podoby jedné funkce.** `save_search` přibírala parametry ve
+čtyřech krocích (ceny, celé pozemky, střed a okruh) a každá podoba
+v databázi zůstala. Nebyl to jen nepořádek: PostgREST si vybírá podle
+jmen poslaných parametrů, takže kdyby klient jeden vynechal, uložilo
+by se hledání TIŠE bez něj — třeba bez okruhu, a člověku by pak
+chodila pošta z celé republiky. Zůstala jediná podoba. Mimochodem
+právě tahle úklidová změna odhalila, že kontrola „anon nedostane nic
+ze `save_search`" volala tu **nejstarší** podobu se sedmi parametry:
+po jejím smazání by volání spadlo na „funkce neexistuje" a kontrola
+by prošla, i kdyby funkce vracela cizí hledání komukoli.
+
+**Tokeny spoléhaly na náhodu.** `confirm_token` i `unsubscribe_token`
+slouží k tomu, že někdo BEZ přihlášení něco změní, hledají se podle
+sebe sama a jedinečné nebyly — jen nepravděpodobné (`gen_random_uuid`).
+Teď jsou jedinečné pravidlem databáze, a ten unikátní index je zároveň
+to, po čem hledání jde. Totéž u `payments.stripe_session_id`: webhook
+od Stripu umí přijít dvakrát a bez jedinečnosti by z jedné platby byly
+dva řádky. Platby ještě neběží — pravidlo má být v databázi dřív než
+první platba, ne po ní.
+
+**Vazba, která byla jen v komentáři.** U `listings.payment_id` stálo
+„vazba na tabulku payments". Žádná vazba to nebyla: sloupec nikdo
+nečetl, nikdo nepsal a databáze o ní nevěděla. Teď je to cizí klíč.
+
+**Úklid, který se nikdy nespustil.** `uklid_navstevnosti()` maže
+čítače starší dvou let a existuje od začátku — v celém repozitáři na
+ni byl jediný odkaz, a ten v komentáři jiného testu. `mail_poslane`
+a `push_poslane` rostly úplně bez úklidu, přestože obě mají index na
+čase (založený pro úklid, který se nenapsal). Přibyla funkce
+`uklid_posty()` a hlavně `scripts/uklid-databaze.mjs`, který se pouští
+z noční úlohy „Kontrola inzerátů" — tam, kde už servisní klíč je.
+Úklid, který se nespouští, je jen slib.
+
+### Robot: jedno 503 znamenalo šestihodinovou díru *17. 10.*
+
+Každý zdroj si volal `fetch()` sám a každý jinak. **Osm z jedenácti
+volání nemělo časový limit** — zaseknuté spojení by drželo celou úlohu
+až do limitu GitHubu — a **žádné volání se neopakovalo**. Protože
+robot běží jednou za šest hodin, byla z chvilkového výpadku
+šestihodinová díra v datech. Hlídač zdrojů to pozná (`skenNeuplny`),
+jenže poznat není totéž co přežít.
+
+Všech jedenáct míst teď vede přes jeden `stahni()`:
+
+* časový limit na každý pokus (20 s, u Apify 290 s),
+* opakuje jen to, co má smysl: síťovou chybu a stavy 408, 425, 429,
+  500, 502, 503, 504. Na 403 ani 404 se neopakuje — druhý pokus by jen
+  přitížil cizímu serveru a odpověď by byla stejná,
+* mezi pokusy čeká 1 s, 2 s a k tomu náhodný přídavek, ať tři zdroje
+  nezaklepou ve stejnou milisekundu,
+* **respektuje `Retry-After`**, když ho server pošle — ale ne přes
+  třicet vteřin, aby jeden zdroj nezabral celý běh,
+* u Apify schválně jediný pokus: ten běh trvá až pět minut a stojí
+  kredit, opakovat ho znamená platit dvakrát za totéž.
+
+**Co se schválně NEDĚLÁ: nic se neobchází.** Žádné střídání hlaviček
+user-agent, žádné střídání adres, žádné předstírání prohlížeče. Robot
+se představuje jmenovitě a pravdivě, a kdo ho nechce, má ho na co
+zablokovat — to je cizí rozhodnutí a nepatří nám ho měnit. Jméno bylo
+navíc v repozitáři **dvakrát jinak** (`www.parcelaka.cz`
+a `parcelaka.cz`); pro člověka totéž, pro protistranu dvě různá jména.
+Je v `scripts/bot-ua.mjs`, jednou.
+
+Zkouška `scripts/test-stahovani.mjs` podstrčí vlastní `fetch()`
+a hlídá čtyři věci, které jdou proti sobě: že se po chybě opakuje, že
+se po 403/404 NEopakuje, že se čeká podle serveru, a že po poslední
+marné zkoušce chyba vyletí, místo aby ji někdo spolkl. Sítě se
+nedotkne.
+
+### Tatáž funkce dvakrát na jedné stránce *17. 10.*
+
+Web nemá bundler: stránka si načte moduly, které potřebuje, a modul si
+nesmí nic doimportovat. Drobné pomůcky se proto psaly znovu v každém
+modulu — změřeno **17 funkcí** s bajt po bajtu totožným dvojčetem
+a **sedm dvojic**, které se potkávají na téže stránce, takže se stáhnou
+obě.
+
+Bajty jsou tu to menší zlo (jde o stovky znaků). Horší je rozejít se:
+kdo opraví escapování HTML v jedné kopii a druhou nenajde, opraví půl
+stránky a nic to neřekne.
+
+Sloučit šlo jedno: `js/pozemek.js` měl vlastní `pkOtisk()`, přestože na
+téže stránce leží `js/klic.js`, který totéž vyváží jako `PKKlic.otisk`
+— a `pozemek.js` na `PKKlic` stejně sahá o pár řádků výš. U zbytku by
+sloučení znamenalo novou závislost dražší než pět řádků kódu
+(`js/hlidani-logika.js` běží i v Node v rozesílači a nesmí si
+přitáhnout `js/ceny.js`, který sahá na DOM). Ty zůstávají — ale
+pojmenované, s důvodem, a hlídané: `scripts/test-kopie-funkci.mjs`
+hlásí každou NOVOU dvojí kopii a stejně tak dvojici ze seznamu, která
+zmizela. To druhé je ten případ, kvůli kterému zkouška vznikla: zmizí
+totiž i tehdy, když se **jedna kopie opraví a druhá ne**. Ověřeno
+sabotáží.
+
+Zkouška rovnou našla dvojici, kterou jsem při ručním procházení
+přehlédl (`js/pridat.js:escHtml` a `js/snimek.js:esc` na `pridat.html`).
+
+**A jedna chyba u toho.** Nový soubor jsem pojmenoval
+`scripts/test-dvojnici.mjs` — a přepsal tím zkoušku, která se tak
+jmenovala už dřív (týž pozemek pod dvěma inzeráty). Všimla si toho až
+`test-staticka.mjs`, protože zkouška pak stála ve workflow dvakrát.
+Původní je zpátky z gitu, nová se jmenuje `test-kopie-funkci.mjs`.
+
+### Dva různé pozemky pod jedním klíčem *17. 10.*
+
+Tohle našla sada sama, až na konci: `test-klic-ulozenych.mjs` hlásil,
+že zbylé kolize klíčů se neliší jen cenou. Nebyla to moje změna —
+přišlo to s daty robota a na čistém checkoutu by to padlo stejně.
+
+Klíč pozemku je `pkey` (obec, okres, souřadnice na tři desetinná
+místa) plus výměra. Když výměra chybí, dosadí se nula — a dva různé
+pozemky na témže místě dostanou **týž klíč**. Změřeno v datech: 20
+z 1 980 nabídek je bez výměry a jedna taková dvojice stojí ve Zlíně na
+jedněch souřadnicích: **ovocný sad za 758 523 Kč a stavební pozemek za
+6 104 Kč**. Uložit jeden znamenalo označit oba; poznámka napsaná
+k jednomu se ukázala u druhého; „už jsem viděl" platilo za oba.
+
+Rozlišuje je teď **druh**. Ne cena (mění se průběžně) a ne odkaz:
+druh patří pozemku a drží i tehdy, když majitel nabídku stáhne
+a vyvěsí znovu — kdežto odkaz se tím změní a klíč by přestal
+označovat týž pozemek. (Právě proto `klicArchivu`, který si pamatuje
+JEDNU NABÍDKU, odkaz používá — a kolizí má nula.) Starý tvar klíče se
+dál čte, takže co si kdo uložil dřív, se neztratí.
+
+Kolize různých pozemků: **1 → 0**, u pozemků s výměrou se klíč
+nezměnil ani o znak.

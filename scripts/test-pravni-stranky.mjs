@@ -54,7 +54,12 @@ const CEKANO = {
      závěrem; tyhle dvě výjimky jsou důvod, proč otisk nemá brát ani
      sazbu, ani rám.) */
   'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '6d47377c69282f18' },
-  'podminky.html': { datum: 'říjen 2026', otisk: '6c7f2bd0b9c1bd23' },
+  /* 17. 10.: v bodě o zneužívání webu se „obcházení stránek robotem"
+     změnilo na „procházení". „Obcházet" znamená česky především obejít
+     něco (zákon, zabezpečení) — v odstavci, který vyjmenovává zakázané
+     jednání, je taková dvojznačnost vada. Měsíc zůstává („říjen 2026"),
+     protože úprava padla do něj. */
+  'podminky.html': { datum: 'říjen 2026', otisk: 'a61e0b80907796c5' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */

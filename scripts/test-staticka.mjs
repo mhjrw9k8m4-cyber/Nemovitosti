@@ -727,3 +727,58 @@ if (podezreni > 40) {
   }
   console.log(`Komentáře: ${zdroje.length} zdrojů, žádný netvrdí v přítomném čase počet, který se mění sám.`);
 }
+
+/* ---- ČLÁNEK BEZ DROBEČKŮ VISÍ V HIERARCHII NA NIČEM ---------------
+ *
+ * Stránky pozemků, krajů i okresů nesou BreadcrumbList odjakživa —
+ * rádce ne. Naměřeno: 2 155 stránek pozemků a 106 krajských a okresních
+ * drobečky mělo, jedenáct článků ani jeden. Ve výsledcích hledání se
+ * místo cesty („Pozemky › Jak koupit pozemek v dražbě") ukáže holá
+ * adresa a článek vypadá jako stránka odnikud.
+ *
+ * Kontrola je schválně hloupá: kde je Article, musí být i
+ * BreadcrumbList. Nic o jeho obsahu netvrdí — jen že tam je.
+ */
+{
+  /* Čtou se VŠECHNY stránky, i vygenerované. Napoprvé tu stála výjimka
+     na jména začínající „pozemek-" — a vyhodila i pozemek-od-obce.html,
+     což je ručně psaný rádce, ne vygenerovaná stránka pozemku. Zkouška
+     tím o jednom článku z jedenácti nevěděla. Filtrovat podle JMÉNA
+     souboru je hádání; rozhoduje tedy obsah: koho se to týká, pozná se
+     podle toho, že nese Article. */
+  const clanky = [];
+  const bezDrobecku = [];
+  let neplatnych = 0;
+  for (const f of fs.readdirSync(ROOT)) {
+    if (!f.endsWith('.html')) continue;
+    const h = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    let maClanek = false, maDrobecky = false;
+    for (const m of h.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/g)) {
+      let j;
+      try { j = JSON.parse(m[1]); } catch (e) { neplatnych++; continue; }
+      const typy = (Array.isArray(j) ? j : [j]).map((x) => x && x['@type']).join('+');
+      if (/Article/.test(typy)) maClanek = true;
+      if (/BreadcrumbList/.test(typy)) maDrobecky = true;
+    }
+    if (!maClanek) continue;
+    clanky.push(f);
+    if (!maDrobecky) bezDrobecku.push(f);
+  }
+  /* Pojistka proti měření prázdna: kdyby se články přejmenovaly nebo
+     přestaly nést Article, seznam by byl prázdný a kontrola by „prošla"
+     s nulou. */
+  if (clanky.length < 5) {
+    console.error(`::error::Ke kontrole drobečků se našlo jen ${clanky.length} článků — seznam se nenaplnil, kontrola nic neměřila.`);
+    process.exit(1);
+  }
+  if (neplatnych) {
+    console.error(`::error::Na stránkách je ${neplatnych} bloků ld+json, které nejsou platný JSON.`);
+    process.exit(1);
+  }
+  if (bezDrobecku.length) {
+    console.error('::error::Článek bez BreadcrumbList: ' + bezDrobecku.join(', '));
+    console.error('      Doplňte druhý blok ld+json vedle Article — bez něj se ve výsledcích hledání ukáže holá adresa.');
+    process.exit(1);
+  }
+  console.log(`Drobečky u článků: ${clanky.length} článků, všechny nesou i BreadcrumbList.`);
+}

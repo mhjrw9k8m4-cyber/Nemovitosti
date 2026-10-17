@@ -326,6 +326,68 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['úzký t
   await ctx.close();
 }
 
+/* --- 3c) Jméno značky je nápis, ne popisek ---------------------------
+ *
+ * Majitel řekl, že nápis v liště má „mít duši a být velký". Bylo to
+ * 24 px / 20 px na telefonu, barva běžného textu — v liště splývalo
+ * s navigací. Je z toho 28 px, prostrkání -0.03em a tmavá zeleň
+ * značky.
+ *
+ * Tahle kontrola hlídá obojí najednou, protože to jde proti sobě:
+ *   · nápis musí ZŮSTAT velký (někdo ho příště zmenší, aby se lišta
+ *     „uklidnila"), a
+ *   · nesmí hlavičku zvýšit (pak by pod ní zůstal pruh pozadí; to už
+ *     měří 3b, ale tady se pozná PŘÍČINA — o výšce odkazu má rozhodovat
+ *     dlaždice, ne řádek písma).
+ * A ještě barvu: zeleň značky se dá omylem nahradit tokenem, který je
+ * na bílé liště světlý. Proto se poměr jasů počítá, ne odhaduje. */
+for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
+  const { ctx, p } = await otevri(opt, 'index.html');
+  const v = await p.evaluate(() => {
+    const a = document.querySelector('header .logo');
+    const m = a.querySelector('.logo-mark');
+    const c = getComputedStyle(a);
+    const rgb = (s) => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    const jas = (barva) => {
+      const [r, g, b] = rgb(barva).map((x) => {
+        const u = x / 255;
+        return u <= 0.03928 ? u / 12.92 : ((u + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const pozadi = getComputedStyle(document.querySelector('header')).backgroundColor;
+    const [a1, a2] = [jas(c.color), jas(pozadi)].sort((x, y) => y - x);
+    return {
+      velikost: parseFloat(c.fontSize),
+      vaha: Number(c.fontWeight),
+      proklad: parseFloat(c.letterSpacing) / parseFloat(c.fontSize),
+      barva: c.color,
+      barvaTextu: getComputedStyle(document.body).color,
+      pomer: Math.round(((a1 + 0.05) / (a2 + 0.05)) * 10) / 10,
+      vyskaOdkazu: Math.round(a.getBoundingClientRect().height),
+      vyskaDlazdice: Math.round(m.getBoundingClientRect().height),
+    };
+  });
+  pravda(`${jm}: jméno značky je velké (≥ 28 px)`, v.velikost >= 28,
+    `má ${v.velikost} px — v liště je to jediný nápis, který má mluvit nahlas`);
+  /* 700 je nejvyšší váha stupnice webu (scripts/test-pismo.mjs), takže
+     tohle není „zvyš ji ještě", ale „neklesni pod nejtěžší řez". */
+  pravda(`${jm}: a má nejvyšší váhu stupnice (700)`, v.vaha >= 700, `váha ${v.vaha}`);
+  pravda(`${jm}: s prostrkáním nadpisu (≤ -0.025em)`, v.proklad <= -0.025,
+    `prostrkání ${v.proklad.toFixed(3)}em — na tomhle webu dělá rozdíl mezi nadpisem a textem váha, velikost a prostrkání, ne rodina písma`);
+  pravda(`${jm}: nese barvu značky, ne barvu běžného textu`, v.barva !== v.barvaTextu,
+    `jméno i text stránky mají ${v.barva}`);
+  pravda(`${jm}: a ta barva je na liště čitelná (≥ 4,5 : 1)`, v.pomer >= 4.5,
+    `naměřeno ${v.pomer} : 1`);
+  /* O výšce odkazu rozhoduje dlaždice — řádek písma se do ní musí vejít.
+     Jakmile ho přeroste (větší písmo nebo line-height zpátky na 1.6),
+     hlavička povyroste a pod ní zůstane pruh pozadí. */
+  pravda(`${jm}: výšku odkazu drží dlaždice, ne řádek písma`,
+    v.vyskaOdkazu === v.vyskaDlazdice,
+    `odkaz ${v.vyskaOdkazu} px, dlaždice ${v.vyskaDlazdice} px`);
+  await ctx.close();
+}
+
 /* --- 4) Nad hlavičkou nesmí ležet míchaná celoobrazovková vrstva ------
  *
  * Tohle je ta příčina, kterou tři opravy minuly: hledalo se na hlavičce,

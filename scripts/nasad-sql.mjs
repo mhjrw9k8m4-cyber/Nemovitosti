@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /* NASAZENÍ DATABÁZE JEDNÍM TLAČÍTKEM
    ==================================================================
-   Celá databáze je v supabase/00-vse.sql — 2 300 řádků, 117 kB. Doteď
+   Celá databáze je v supabase/00-vse.sql — přes dva tisíce řádků
+   a víc než sto kilobajtů. (Přesné číslo tu nestojí schválně: soubor
+   roste s každou migrací a komentář by zestárnul dřív, než by si ho
+   někdo přečetl. Dřív tu stálo „2 300 řádků, 117 kB", a bylo to
+   o pět set řádků vedle.) Doteď
    se nasazovala tak, že člověk soubor otevřel, označil, zkopíroval
    a vložil do SQL editoru Supabase. U počítače je to dvě minuty; na
    telefonu je to neproveditelné, a právě na telefonu se tenhle web

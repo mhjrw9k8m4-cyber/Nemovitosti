@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=fd62d549">
+  <link rel="stylesheet" href="css/uvod.min.css?v=cf37ec71">
 </head>
 <body>
 
@@ -191,23 +191,18 @@
 
 <main>
 
-  <!-- HLAVNÍ NADPIS STRÁNKY, ALE NEVIDITELNÝ. Jediný <h1>, co úvodní
-       stránka měla, byl uvítací blok „1 955 pozemků na jedné mapě" —
-       a ten šel na výslovné přání pryč. Odešel s ním i nadpis, takže
-       stránka neměla ŽÁDNÝ: odečítač obrazovky nemá kde začít a
-       vyhledávač neví, o čem stránka je. Zpátky tedy jen nadpis, ne
-       ta věta: říká, co na stránce je, a nikomu nepřekáží. -->
-  <!-- VELKÝ NADPIS NA VÝSLOVNÉ PŘÁNÍ MAJITELE.
-       Nadpis tu byl schovaný pro odečítače: uvítací blok „1 955 pozemků
-       na jedné mapě" šel kdysi pryč a stránka zůstala bez nadpisu, což
-       nejde — odečítač nemá kde začít a vyhledávač neví, o čem stránka
-       je. Teď je vidět, a je to pořád JEDEN <h1>: značka nahlas, popis
-       stránky v něm schovaný pro odečítač i vyhledávač.
-       Dvakrát pod sebou tím značka nestojí: v liště je jako ODKAZ DOMŮ,
-       tohle je nadpis stránky. Sedí v tom prázdném pásmu pod lištou,
-       které tam stejně bylo — čtyřicet pixelů bílého nic. -->
-  <h1 class="uvod-znacka">Parcelka<span class="visually-hidden"> — pozemky na prodej, v dražbě a v exekuci, mapa a výpis</span></h1>
-  <p class="uvod-podtitul"><span id="uvod-nabidka">Pozemky</span> na prodej, v dražbě a v exekuci — na jedné mapě.</p>
+  <!-- NADPIS ŘÍKÁ, CO TU JE — ne jak se web jmenuje.
+       Stála tu značka: „Parcelka" velkým písmem a pod ní tišší věta.
+       Jenže totéž slovo nese lišta o kousek výš, takže se pod sebou
+       opakovalo dvakrát — a majitel to popsal jako „chudé a hnusné".
+       Má pravdu i věcně: <h1> je to nejcennější místo stránky pro
+       vyhledávač i pro odečítač, a bylo v něm jméno webu, tedy to
+       jediné, co o stránce neříká nic.
+       Teď je v něm ta věta. Počet doplní js/main.js (#uvod-nabidka);
+       bez skriptu zůstane „Pozemky na prodej…", což dává smysl taky.
+       Dva prvky se tím slily v jeden: naměřeno 94 px na obě šířky
+       předtím, viz docs/optimalizace.md. -->
+  <h1 class="uvod-nadpis"><span id="uvod-nabidka">Pozemky</span> na prodej, v dražbě a v exekuci — na jedné mapě.</h1>
 
   <!-- ROZCESTNÍK NA ZAČÁTEK, JEN NA TELEFONU.
        Na přání a podle Sreality: velká značka, jedna věta a šest dlaždic
@@ -751,7 +746,7 @@
         <details class="gl-item"><summary><h3>Územní plán</h3></summary><p>Obecní dokument, který říká, co se kde smí stavět. Rozhoduje o tom, jestli je pozemek stavební — ne inzerát. Nahlédnout jde na úřadě obce s rozšířenou působností.</p></details>
         <details class="gl-item"><summary><h3>Přístupová cesta</h3></summary><p>Právo dostat se na pozemek z veřejné komunikace. Bez něj má pozemek výrazně nižší cenu a banka na něj nemusí půjčit. Ověřuje se v katastru, ne od oka z mapy.</p></details>
         <details class="gl-item"><summary><h3>Orná půda</h3></summary><p>Zemědělská půda určená k pěstování. Nejlevnější druh pozemku. Stavět na ní nelze bez vynětí ze zemědělského půdního fondu, což stojí čas i peníze a nemusí vyjít.</p></details>
-        <details class="gl-item"><summary><h3>Trvalý travní porost</h3></summary><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na ní bez vynětí nestaví.</p></details>
+        <details class="gl-item"><summary><h3>Trvalý travní porost</h3></summary><p>Louky a pastviny. Podobně jako orná půda patří do zemědělského půdního fondu, takže se na nich bez vynětí nestaví.</p></details>
         <details class="gl-item"><summary><h3>Ostatní plocha</h3></summary><p>Sběrný druh pro pozemky, které nejsou pole, les ani zastavěná plocha — třeba manipulační plochy či zeleň. Co na nich jde, řekne až územní plán.</p></details>
         <details class="gl-item"><summary><h3>BPEJ</h3></summary><p>Bonitovaná půdně ekologická jednotka — pětimístný kód kvality zemědělské půdy. Čím lepší bonita, tím dražší je vynětí ze zemědělského půdního fondu.</p></details>
       </div>
@@ -962,7 +957,7 @@
 <script src="js/min/dotaz.js?v=b06521dd" defer></script>
 <script src="js/min/hledani.js?v=c49c1410" defer></script>
 <script src="js/min/okruh.js?v=f11683ef" defer></script>
-<script src="js/min/klic.js?v=4a04bc24"></script>
+<script src="js/min/klic.js?v=85f3251f"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <!-- Poznámky i tady: aby bylo na kartě vidět, u kterého pozemku si
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->

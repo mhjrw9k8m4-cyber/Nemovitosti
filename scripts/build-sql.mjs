@@ -52,6 +52,10 @@ const PORADI = [
   // Až za watch-alerts.sql: zužuje pravidlo, které zakládá schema.sql
   // a znovu potvrzuje watch-alerts.sql, takže musí běžet po obou.
   ['hlidani-anon-uzce.sql', 'veřejný zápis do watch_subscriptions bez obejití potvrzení e-mailu'],
+  // Až za vším, co zakládá tabulky a funkce: přepisuje my_threads()
+  // i unread_count() a zahazuje starší podoby save_search, takže musí
+  // běžet po souborech, které je vytvořily.
+  ['vykon.sql', 'indexy, přepsané dotazy chatu a úklid starších podob funkcí'],
   // Úplně na konci schválně: vypisuje oprávnění všech funkcí výš, takže
   // má smysl teprve až jsou všechny založené.
   ['kontrola-opravneni.sql', 'kdo smí spustit kterou funkci — a kde to zůstalo na výchozím'],

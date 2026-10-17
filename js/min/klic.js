@@ -44,12 +44,16 @@
   function klicPozemku(d) {
     if (!d) return '';
     var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
-    return pkey(d) + '#v' + v;
+    if (v > 0) return pkey(d) + '#v' + v;
+    var dr = String(d.druh == null ? '' : d.druh).trim().toLowerCase();
+    return pkey(d) + '#v0' + (dr ? 'd' + otisk(dr) : '');
   }
 
   function kliceProCteni(d) {
     if (!d) return [];
-    return [klicPozemku(d), pkey(d)];
+
+    var v = (typeof d.area === 'number' && isFinite(d.area)) ? Math.round(d.area) : 0;
+    return [klicPozemku(d), pkey(d) + '#v' + v, pkey(d)];
   }
 
   function jeMezi(sbirka, d) {

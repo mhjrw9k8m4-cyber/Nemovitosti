@@ -95,14 +95,29 @@ function vytahni(soubor) {
     /* V js/pozemek.js se tatáž funkce jmenuje pkeyPlny. */
     alias = 'var pkeyPlny = pkey;';
   }
-  return [mapaM ? mapaM[0] : '', kus('pkSlug'), kus('pkOtisk'), klic, alias,
+  /* OTISK TAKY UŽ V TOM SOUBORU NENÍ. js/pozemek.js měl vlastní kopii
+     (pkOtisk), přestože na téže stránce leží js/klic.js, který totéž
+     vyváží jako PKKlic.otisk — kopie je pryč a soubor volá PKKlic.
+     Tahle kontrola ho proto musí vzít odtud a podstrčit `window`,
+     jinak spadne na „window is not defined" místo toho, aby řekla,
+     jestli se dva výpočty názvu stránky rozešly. */
+  let otisk = kus('pkOtisk');
+  let okno = '';
+  if (!otisk) {
+    const puvodni = src;
+    src = fs.readFileSync(path.join(ROOT, 'js', 'klic.js'), 'utf8');
+    otisk = kus('otisk');
+    src = puvodni;
+    okno = 'var window = { PKKlic: { otisk: otisk, pkey: typeof pkey === "function" ? pkey : null } };';
+  }
+  return [mapaM ? mapaM[0] : '', kus('pkSlug'), otisk, klic, alias, okno,
     kus('souborPozemku')].join('\n');
 }
 
 for (const [soubor] of ZDROJE) {
   const zdroj = vytahni(soubor);
   pravda(`výpočet názvu stránky se dá z ${soubor} vytáhnout`,
-    zdroj.indexOf('souborPozemku') > 0, 'nenašly se funkce pkSlug/pkOtisk/souborPozemku');
+    zdroj.indexOf('souborPozemku') > 0, 'nenašly se funkce pkSlug/otisk/souborPozemku');
   /* Bez klíče by se níž porovnávalo něco jiného, než co web počítá —
      a kontrola by mlčela. */
   pravda('a je v něm i klíč pozemku (z js/klic.js, když ho soubor jen volá)',
@@ -301,12 +316,22 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
       const soubor = i === 0 ? souborPro(d) : souborProDalsi(d);
       const cesta = path.join(ROOT, soubor);
       if (!fs.existsSync(cesta)) { chybi.push(`${soubor} (${d.price} Kč / ${d.area} m²)`); return; }
-      /* A hlavně: stránka musí nést SVOJI výměru, ne sousedovu. Kdyby se
+      /* A hlavně: stránka musí nést SVÉ ÚDAJE, ne sousedovy. Kdyby se
          jen vyrobil soubor navíc s obsahem toho druhého, kontrola „soubor
-         existuje" by prošla a člověk by dál četl cizí údaje. */
+         existuje" by prošla a člověk by dál četl cizí údaje.
+
+         VÝMĚRU NEMÁ KAŽDÁ NABÍDKA. U dražeb z OK dražeb se nedá vždycky
+         vyčíst a v datech je pak `area: null`. Zkouška z toho skládala
+         vzor „null m²", který na stránce samozřejmě nikdy není — a hlásila
+         vadu generátoru tam, kde chyběl údaj ve zdroji. (Stránka sama se
+         chová správně: o výměře, kterou nezná, mlčí.) Rozlišuje se tedy
+         podle toho, co ta nabídka má: výměrou, a když není, cenou. */
       const h = fs.readFileSync(cesta, 'utf8');
-      if (h.indexOf(mezera(d.area) + '\u00a0m²') < 0 && h.indexOf(mezera(d.area) + ' m²') < 0) {
-        cizi.push(`${soubor} neuvádí ${mezera(d.area)} m²`);
+      const maVymeru = typeof d.area === 'number' && d.area > 0;
+      const udaj = maVymeru ? mezera(d.area) : mezera(d.price);
+      const jednotka = maVymeru ? 'm²' : 'Kč';
+      if (h.indexOf(udaj + '\u00a0' + jednotka) < 0 && h.indexOf(udaj + ' ' + jednotka) < 0) {
+        cizi.push(`${soubor} neuvádí ${udaj} ${jednotka}`);
       }
     });
   }

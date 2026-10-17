@@ -185,7 +185,12 @@ try {
        kontrola je tu proto, aby to platilo i po příští úpravě. */
     for (const fn of ['moje_poznamky()', 'my_listings()', 'my_threads()', 'my_searches()',
       'unread_count()', 'my_limit()', 'my_listing_quota()',
-      `save_search('x','x','x','x',0,0,'{}')`,
+      /* ŽIVÁ PODOBA, NE TA PRVNÍ. Dokud tu stálo volání se sedmi
+         parametry, kontrola měřila něco jiného, než si myslela:
+         supabase/vykon.sql starší podoby save_search zahazuje, takže
+         by volání spadlo na „funkce neexistuje" — a `!r.ok` by prošlo
+         i kdyby funkce komukoli vracela cizí hledání. */
+      `save_search('x','x','x','x',0,0,'{}',0,0,0,false,null,null,null)`,
       `send_message('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002','ahoj')`,
       `thread_messages('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002')`]) {
       const r = jdeZavolat('anon', fn);
@@ -366,6 +371,149 @@ try {
     pravda('cizí token nic nezmění',
       jako('', "select unsubscribe_mail('00000000-0000-0000-0000-000000000000')") === 'f',
       'neznámý token vrátil true');
+  }
+
+  /* ---- VÝKON: INDEXY A PŘEPSANÉ DOTAZY CHATU ---------------------
+     Tady se neměří zdroj, ale PLÁN a ČAS na opravdových datech.
+     Nasype se 300 účtů, 20 000 inzerátů a 60 000 zpráv — ne proto, že
+     by tolik dnes bylo (dnes je v tabulkách pár řádků), ale proto, že
+     při téhle velikosti se pozná rozdíl mezi „jde po indexu" a „čte
+     celou tabulku". Při dnešní velikosti by se nepoznalo nic a
+     kontrola by platila vždycky.
+
+     ČAS SE MĚŘÍ POMĚREM, NE PEVNÝM ČÍSLEM. Stará podoba se v téhle
+     databázi vyrobí znovu (…_stare) a porovná se s živou. Pevná mez
+     v milisekundách by na pomalejším stroji hlásila planý poplach;
+     poměr dvou dotazů na témže stroji ne. Naměřeno při psaní:
+     unread_count 74,5 → 1,3 ms, my_threads 61,2 → 8,6 ms. */
+  {
+    const nasyp = `
+      insert into auth.users (id, email, email_confirmed_at)
+        select gen_random_uuid(), 'v'||g||'@priklad.cz', now() from generate_series(1,300) g;
+      insert into listings (status, place, okres, area, price, user_id, created_at)
+        select 'approved','Obec'||(g%50),'Okres'||(g%76),1000,200000,u.id, now()-(g||' minutes')::interval
+        from generate_series(1,20000) g
+        join (select id, row_number() over (order by id) n from auth.users) u on u.n = (g % 300) + 1;
+      insert into chat_messages (listing_id, buyer_id, sender_id, body, created_at)
+        select l.id, u.id, case when g%2=0 then u.id else l.user_id end, 'z'||g, now()-(g||' seconds')::interval
+        from generate_series(1,60000) g
+        join (select id, user_id, row_number() over (order by id) n from listings) l on l.n = (g*7 % 20000) + 1
+        join (select id, row_number() over (order by id) n from auth.users) u on u.n = (g*13 % 300) + 1;
+      analyze;`;
+    psql(['-d', 'zkouska', '-q'], nasyp);
+    const kdo = psql(['-d', 'zkouska', '-tAc',
+      'select buyer_id from chat_messages group by buyer_id order by count(*) desc limit 1']).trim();
+
+    /* Stará podoba obou funkcí, slovo od slova jak vypadala před
+       supabase/vykon.sql. Je tu proto, aby bylo s čím porovnávat —
+       a aby bylo vidět, co přesně se změnilo. */
+    psql(['-d', 'zkouska', '-q'], `
+      create or replace function unread_count_stare() returns integer
+      language sql security definer set search_path = public as $f$
+        select coalesce(count(*),0)::int from chat_messages m
+        join listings l on l.id = m.listing_id
+        where m.read_at is null and m.sender_id <> auth.uid()
+          and (m.buyer_id = auth.uid() or l.user_id = auth.uid());
+      $f$;
+      create or replace function my_threads_stare()
+      returns table(listing_id uuid, buyer_id uuid, place text, okres text,
+        is_owner boolean, last_body text, last_at timestamptz, unread integer)
+      language sql security definer set search_path = public as $f$
+        with mine as (
+          select distinct m.listing_id, m.buyer_id from chat_messages m
+          join listings l on l.id = m.listing_id
+          where m.buyer_id = auth.uid() or l.user_id = auth.uid()
+        )
+        select mine.listing_id, mine.buyer_id, l.place, l.okres, (l.user_id = auth.uid()),
+          (select body from chat_messages x where x.listing_id = mine.listing_id and x.buyer_id = mine.buyer_id order by x.created_at desc limit 1),
+          (select created_at from chat_messages x where x.listing_id = mine.listing_id and x.buyer_id = mine.buyer_id order by x.created_at desc limit 1),
+          (select count(*) from chat_messages x where x.listing_id = mine.listing_id and x.buyer_id = mine.buyer_id and x.sender_id <> auth.uid() and x.read_at is null)::int
+        from mine join listings l on l.id = mine.listing_id order by 7 desc;
+      $f$;`);
+
+    // Nejkratší ze tří běhů — jeden běh umí zdržet cokoli, co běží vedle.
+    const cas = (dotaz) => {
+      let nej = Infinity;
+      for (let i = 0; i < 3; i++) {
+        const out = psqlVse(['-d', 'zkouska', '-tAc',
+          `set pk.uid = '${kdo}'; explain (analyze, costs off) ${dotaz}`]);
+        const m = /Execution Time: ([\d.]+) ms/.exec(out);
+        if (m) nej = Math.min(nej, parseFloat(m[1]));
+      }
+      return nej;
+    };
+    /* psql vrátí i hlášku „SET" od prvního příkazu, takže se bere
+       POSLEDNÍ neprázdný řádek. Bez toho se porovnávaly řetězce
+       „SET\n0" a kontrola hlásila rozdíl tam, kde žádný nebyl. */
+    const jakoKdo = (dotaz) => {
+      const radky = psql(['-d', 'zkouska', '-tAc', `set pk.uid = '${kdo}'; ${dotaz}`])
+        .split('\n').map((r) => r.trim()).filter(Boolean);
+      return radky.length ? radky[radky.length - 1] : '';
+    };
+
+    /* 1) Odznak nepřečtených — volá se při otevření KAŽDÉ stránky. */
+    pravda('unread_count() vrací totéž co jeho stará podoba',
+      jakoKdo('select unread_count()') === jakoKdo('select unread_count_stare()'),
+      `nové ${jakoKdo('select unread_count()')} vs staré ${jakoKdo('select unread_count_stare()')}`);
+    const unNove = cas('select unread_count()');
+    const unStare = cas('select unread_count_stare()');
+    pravda('a je aspoň třikrát rychlejší (OR rozpadlý na UNION jde po indexu)',
+      unNove * 3 <= unStare, `nové ${unNove} ms, staré ${unStare} ms`);
+
+    /* 2) Schránka. Shoda se měří přes EXCEPT v OBOU směrech — jinak by
+       prošla i podoba, která vrátí jen část vláken. */
+    const rozdil = jakoKdo(`select count(*) from (
+        (select * from my_threads() except select * from my_threads_stare())
+        union all
+        (select * from my_threads_stare() except select * from my_threads())) t`);
+    pravda('my_threads() vrací přesně tytéž řádky co stará podoba', rozdil === '0',
+      `řádků, které se liší: ${rozdil}`);
+    const mtNove = cas('select * from my_threads()');
+    const mtStare = cas('select * from my_threads_stare()');
+    pravda('a je taky aspoň třikrát rychlejší', mtNove * 3 <= mtStare,
+      `nové ${mtNove} ms, staré ${mtStare} ms`);
+
+    /* 3) Kvóta a brzdy — nejčtenější dotazy nad listings a chat_messages.
+       Tady se dá plán přečíst přímo, protože to není volání funkce. */
+    const plan = (dotaz) => psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${kdo}'; explain (costs off) ${dotaz}`]);
+    pravda('počítání inzerátů účtu jde po indexu, ne přes celou tabulku',
+      !/Seq Scan on listings/.test(plan(`select count(*) from listings where user_id = '${kdo}'`)),
+      'plán čte celou tabulku listings');
+    pravda('brzda chatu („neposlal jsi něco před chvílí") jde po indexu',
+      !/Seq Scan on chat_messages/.test(plan(
+        `select 1 from chat_messages where sender_id = '${kdo}' and created_at > now() - interval '3 seconds'`)),
+      'plán čte celou tabulku chat_messages');
+
+    /* 4) Jedinečnost tokenů. Náhoda není pravidlo — tohle je pravidlo. */
+    const dvojity = psqlVse(['-d', 'zkouska', '-tAc',
+      `insert into watch_subscriptions(email, confirm_token) values ('a@priklad.cz','TOTEZ'),('b@priklad.cz','TOTEZ')`]);
+    pravda('dvakrát týž potvrzovací token databáze nepustí', /ERROR/.test(dvojity),
+      'oba řádky se uložily — jeden token by pak potvrdil dvě hlídání');
+
+    /* 5) save_search má jedinou podobu. Čtyři podoby znamenaly, že
+       PostgREST mohl vybrat tu starší a hledání uložit TIŠE bez okruhu. */
+    const podob = psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public' and p.proname = 'save_search'`]).trim();
+    pravda('save_search má v databázi jedinou podobu', podob === '1',
+      `podob je ${podob} — klient může trefit starší a uložit hledání bez části filtrů`);
+
+    /* 6) Úklid odeslané pošty: smí ho pustit jen server a maže jen staré. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into mail_poslane(hledani_id, klic, poslano_at)
+         select id, 'stary', now() - interval '400 days' from saved_searches limit 1;
+       insert into mail_poslane(hledani_id, klic, poslano_at)
+         select id, 'cerstvy', now() from saved_searches limit 1;`]);
+    for (const role of ['anon', 'authenticated']) {
+      const r = psqlVse(['-d', 'zkouska', '-tAc', `set role ${role}; select uklid_posty(180);`]);
+      pravda(`${role} nesmí pustit úklid pošty`, /ERROR/i.test(r), 'prošlo: ' + r.replace(/\s+/g, ' ').slice(0, 90));
+    }
+    const smazano = psql(['-d', 'zkouska', '-tAc', 'select uklid_posty(180)']).trim();
+    pravda('úklid smaže starý záznam o odeslané poště', smazano === '1', `smazáno ${smazano} řádků`);
+    pravda('a čerstvý nechá být (jinak by se nabídka poslala podruhé)',
+      psql(['-d', 'zkouska', '-tAc', `select count(*) from mail_poslane where klic = 'cerstvy'`]).trim() === '1',
+      'úklid smazal i čerstvý záznam');
   }
 } finally {
   try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}

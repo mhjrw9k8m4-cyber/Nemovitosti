@@ -64,8 +64,15 @@ zpravy.push(`  · pozn.: řez „po termínu" dnes odřízl ${prosle} z ${vse.le
 
 /* Slovo na dlaždici se bere, jak na stránce doopravdy stojí — v českém
    skloňování. Neznámé slovo je CHYBA: právě tím kontrola tiše oslepne. */
+/* Slova z dlaždic → druh nabídky. Musí tu být VŠECHNY tvary, které
+   čeština u toho počtu použije: jedna dražba, dvě dražby, pět dražeb.
+   Chybějící tvar kontrolu nezastaví mlčky — dlaždice se přeskočí
+   a zkouška to ohlásí (viz „neznamych" níž). Naposledy takhle propadlo
+   „exekucí": v datech se objevila první exekuce v okrese, kde jich bylo
+   pět a víc, a ten tvar tu do té doby nebyl potřeba. */
 const TYP = {
-  'na prodej': 'sale', 'exekuce': 'exekuce',
+  'na prodej': 'sale',
+  'exekuce': 'exekuce', 'exekucí': 'exekuce',
   'dražba': 'drazba', 'dražby': 'drazba', 'dražeb': 'drazba',
   'od majitele': 'majitel', 'od obce': 'obec',
 };

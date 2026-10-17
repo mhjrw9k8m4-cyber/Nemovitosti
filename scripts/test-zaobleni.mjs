@@ -43,6 +43,26 @@ const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 
 const STRANKY = ['index.html', 'cena-pozemku.html', 'hlidani.html', 'porovnani.html',
   'pridat.html', 'profil.html', 'kontakt.html'];
+
+/* PILULKY, KTERÉ ODZNAKEM JSOU, ale nedají se tak poznat ze značky.
+   Píše se sem jméno třídy a důvod — ne proto, aby se dalo pravidlo
+   obejít, ale aby se u každé výjimky dalo přečíst, proč platí. */
+const PILULKY = new Set([
+  /* Záložka na kartě. Přepíná uložení a mění si slovo („Uložit" /
+     „Uloženo") i popisek pro odečítač; aria-pressed schválně nemá,
+     protože se u ní mění přístupný NÁZEV, a obojí najednou by
+     odečítač přečetl dvakrát. */
+  'opp-fav',
+  /* Totéž pro skrytí nabídky: „Skrýt" / „Vrátit". */
+  'opp-skryt',
+  /* Filtrační odznak nad výpisem; zapnutý nese .active, vypnutý nic —
+     a měří se i ten vypnutý. */
+  'filter-chip',
+  /* <summary> „Jak to funguje" na přidání pozemku. Rozbalovátko není
+     tlačítko ani pole: netvrdí, že se do něj píše, a pilulka u něj
+     čte jako odznak sekce. */
+  'add-jak-sum',
+]);
 const SIRKY = [390, 1440];
 
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },
@@ -82,14 +102,36 @@ for (const s of STRANKY) {
         const pilulka = rad >= r.height / 2 - 0.5;
         const jmeno = (typeof e.className === 'string' && e.className.trim())
           ? e.className.trim().split(/\s+/)[0] : e.tagName.toLowerCase();
-        ven.push({ rad: Math.round(rad * 10) / 10, pilulka, jmeno });
+        /* Je ten prvek ODZNAK? Rozhoduje chování, ne vzhled: přepínač
+           se pozná podle aria-pressed / aria-checked / role=switch,
+           nebo podle toho, že si nese třídu zapnutého stavu. */
+        const prepinac = e.hasAttribute('aria-pressed') || e.hasAttribute('aria-checked')
+          || e.getAttribute('role') === 'switch'
+          || /(^|\s)(on|active)(\s|$)/.test(String(e.className || ''));
+        const kulate = Math.abs(r.width - r.height) <= 4;
+        ven.push({ rad: Math.round(rad * 10) / 10, pilulka, jmeno, prepinac, kulate });
       }
       return { token, ven };
     });
     if (v.token && !tokenPx) tokenPx = v.token;
     for (const e of v.ven) {
       ovladani++;
-      if (e.pilulka) continue;                       // odznak nebo kulaté tlačítko
+      if (e.pilulka) {
+        /* PILULKA NENÍ VOLNÁ VSTUPENKA. Dokud se tu psalo jen
+           `if (e.pilulka) continue;`, prošel jako pilulka COKOLI —
+           a přesně tím proklouzla akční tlačítka nad výpisem:
+           „Procházet po jednom" a „Stáhnout výběr" stály plnou
+           pilulkou přímo pod „Uložené" a řazením, která mají
+           --r-ovladani. V jedné sestavě tedy byly dva tvary; majitel
+           to poslal na snímku. Pravidlo v hlavičce téhle zkoušky
+           přitom říká, komu pilulka patří — jen se vymáhala polovina.
+           Teď se vymáhá celé: pilulku smí mít odznak (přepínač),
+           kulaté tlačítko s ikonou, nebo prvek ze seznamu níž. */
+        if (e.prepinac || e.kulate || PILULKY.has(e.jmeno)) continue;
+        const kp = `${e.jmeno} (pilulka, ale není odznak)`;
+        mimo.set(kp, (mimo.get(kp) || 0) + 1);
+        continue;
+      }
       if (Math.abs(e.rad - (v.token || 14)) < 0.51) continue;
       const k = `${e.jmeno} (${e.rad} px)`;
       mimo.set(k, (mimo.get(k) || 0) + 1);
@@ -108,7 +150,7 @@ pravda(`vykreslená hodnota tokenu se načetla (${tokenPx} px)`, tokenPx > 0,
 pravda(`je co měřit — ovládacích prvků s vlastní plochou: ${ovladani}`,
   ovladani >= 60, `jen ${ovladani} na ${STRANKY.length} stránkách`);
 
-pravda('každý ovládací prvek má --r-ovladani, nebo je to pilulka',
+pravda('každý ovládací prvek má --r-ovladani, nebo je odznak s pilulkou',
   mimo.size === 0,
   [...mimo.entries()].map(([k, n]) => `${k} ×${n}`).join(', ') +
   `\n      — pravidlo je jedno zaoblení (${tokenPx} px) na všechno, čím se ovládá;` +

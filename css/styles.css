@@ -35,9 +35,12 @@
    používá (nejmenší je 400, největší 800); samo zúžení osy ušetřilo
    22 kB. Zápis v @font-face musí tomu souboru odpovídat: kdyby tvrdil
    100–900, prohlížeč by o chybějící krajní váhy žádal a dopočítával si
-   je sám. Váha 800 zůstává — sedm pravidel webu si o ni říká
-   (zvýrazněná slova v nadpisech úvodu) a při zápisu 400–700 by tiše
-   zeslábla.
+   je sám. Horní 800 v zápisu popisuje SOUBOR, ne stylopis: dnes si
+   o ni neříká ani jedno pravidlo. Dřív tu stálo, že sedm — zvýrazněná
+   slova v nadpisech úvodu — jenže ta pravidla jsou dávno pryč a věta
+   tu po nich zůstala. Stupnice vah webu končí na 700 a hlídá to
+   scripts/test-pismo.mjs; víc než 700 tedy do stylopisu nepatří,
+   i když by to písmo umělo.
 
    ROZSAHY ZNAKŮ ODPOVÍDAJÍ SOUBORŮM. Místo jednoho U+0000-00FF stojí
    v zápisu U+0020-007E a U+00A0-00FF: řídicí znaky (U+0000-001F
@@ -215,7 +218,14 @@
      měly krajní hodnoty 30/50, 38/92 a 28 — tedy tři čísla ze
      stupnice a tři odnikud. */
   --h1-stranka:clamp(28px, 4.2vw, 48px);
-  --h1-domu:clamp(40px, 6.4vw, 96px);
+  /* Titulní stránka byla dlouho plakát a stupeň tomu odpovídal
+     (40–96 px). Plakát šel pryč a zůstala po něm MRTVÁ PROMĚNNÁ:
+     --h1-domu nepoužívalo jediné pravidlo, zatímco nadpis úvodní
+     stránky si držel opsaných 40 px mimo stupnici — a tím i mimo
+     dosah zkoušky, která stupně hlídá (ta se dívá na selektory
+     s h1, ne na třídy). Stupeň teď znamená to, co na té stránce
+     opravdu je: jedna věta, ne značka. */
+  --h1-domu:clamp(20px, 2.4vw, 28px);
   --h1-nastroj:28px;
   /* MŘÍŽKOVÁ TEXTURA. Tutéž čtverečkovanou texturu nese šest ploch:
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
@@ -1273,9 +1283,30 @@ header.shrink{padding:12px 0;}
      takže tu nezbylo co přepisovat.) */
 }
 header .wrap{display:flex; align-items:center; justify-content:space-between;}
-.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.02em; font-size:24px; display:flex; align-items:center; gap:10px; text-decoration:none;}
-.logo-mark{width:29px; height:29px; border-radius:var(--r-sm); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
-.logo-mark.small{width:16px; height:18px;}
+/* ZNAČKA V LIŠTĚ JE NÁPIS, NE POPISEK.
+   Bylo to 24 px na monitoru a 20 px na telefonu, váha 700, barva
+   stejná jako běžný text — tedy slovo, které v liště splývalo s
+   navigací. Teď je to jediný prvek hlavičky, který má mluvit nahlas:
+   28 px na všech šířkách, nejvyšší váha stupnice (700), prostrkání
+   -0.03em (přesně to,
+   čím se na tomhle webu liší nadpis od textu — viz komentář u
+   --font-display: rodina je jedna, rozdíl dělá VÁHA, VELIKOST a
+   PROSTRKÁNÍ), a barva --copper, tedy tmavá zeleň značky. Tím jméno
+   patří ke značce v dlaždici vedle, ne k textu stránky. Kontrast na
+   bílé liště 8,2 : 1.
+   VÝŠKA HLAVIČKY SE TÍM NESMÍ HNOUT a nehnula se. Stránka si pod
+   hlavičku dělá místo pevným číslem (--vyska-hlavicky: 65 px na
+   telefonu, 85 px na monitoru) a shodu hlídá scripts/test-hlavicka.mjs.
+   Drží to `line-height:1` a dlaždice 32 px: řádek jména je 28 px,
+   dlaždice 32 px, takže o výšce odkazu rozhoduje dlaždice — přesně
+   těch 32 px, které tam byly i dřív (20 px × 1,6 = 32). Na monitoru
+   je obsah lišty stejně vysoký kvůli tlačítku v navigaci (44 px),
+   takže je tam ještě rezerva. Naměřeno na 320, 390, 880, 900, 1041
+   a 1440 px: hlavička 65 / 65 / 65 / 65 / 85,4 / 85,4 px před i po.
+   Dlaždice 29 → 32 px je navíc kresba v měřítku 1 : 1 — logo-mark.svg
+   má plátno 32×32. */
+.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--copper); display:flex; align-items:center; gap:10px; text-decoration:none;}
+.logo-mark{width:32px; height:32px; border-radius:var(--r-sm); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
 
 /* ROZCESTNÍK NA TELEFONU JE PRYČ — NA PŘÁNÍ MAJITELE.
    Stál nad hledáním na úvodní stránce: šest dlaždic (Stavební, Zahrady,
@@ -2867,14 +2898,20 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    ním stojí i věta, co stránka nabízí. Tím je z toho hlavička webu,
    ne druhá značka. Popis stránky pro odečítač a vyhledávač zůstává
    uvnitř <h1> (viz index.html). */
-.uvod-znacka{font-family:var(--font-display); font-size:40px; font-weight:700;
-  letter-spacing:-0.03em; line-height:1.1; color:var(--text-ondark);
-  max-width:var(--m-wrap); margin:0 auto; padding:24px 32px 0;}
-.uvod-podtitul{max-width:var(--m-wrap); margin:4px auto 0; padding:0 32px;
-  font-size:16px; color:var(--text-ondark-mute);}
+/* Selektor je `h1.uvod-nadpis`, ne jen třída — a to schválně.
+   scripts/test-jeden-styl.mjs hlídá, že velikost nadpisu pochází
+   z pojmenovaného stupně, jenže hledá pravidla se SELEKTOREM h1.
+   Dokud byl nadpis úvodní stránky jen třída, zkouška o něm nevěděla
+   a mohl si (a taky si držel) opsaných 40 px mimo stupnici. */
+h1.uvod-nadpis{font-family:var(--font-display); font-size:var(--h1-domu); font-weight:700;
+  letter-spacing:-0.01em; line-height:1.3; color:var(--text-ondark);
+  max-width:var(--m-wrap); margin:0 auto; padding:16px 32px 0;}
 /* Počet nabídek je v té větě to jediné, co se mění — a jediné, co je
-   slib. Proto plná barva textu, zbytek věty zůstává tišší. */
-.uvod-pocet{color:var(--text-ondark); font-weight:700;}
+   slib. Dokud byla věta podtitulkem, odlišovala se plnou barvou od
+   tišší šedi okolo. Teď je z ní <h1> a celá je plnou barvou, takže
+   číslo nese jen <b>: v nadpisu psaném 700 už není kam přidat, a dva
+   odstíny v jedné větě by z nadpisu udělaly dva nadpisy. */
+.uvod-pocet{font-weight:700;}
 
 .opp-chips{display:flex; flex-wrap:wrap; gap:6px;}
 /* JEDEN TVAR PRO VŠECHNY ODZNAKY, BARVA NESE VÝZNAM.
@@ -3871,7 +3908,10 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      z 390. Vlevo to je i u Sreality a u všeho ostatního, co má na
      telefonu hamburger. */
   header .wrap{justify-content:flex-start;}
-  .logo{font-size:20px;}
+  /* Jméno značky má na telefonu STEJNOU velikost jako na monitoru.
+     Zmenšovat ho tu není proč: v liště s ním stojí jen hamburger,
+     naměřená šířka odkazu je 155 px z 390 a výšku lišty určuje
+     dlaždice, ne písmo. */
   .header-cta{display:none;}
   /* V nabídce už akce NĚNÍ duplicitní — je jediná, takže se ukazuje. */
   /* Mobilní menu = kompaktní panel u horní lišty (jen na výšku obsahu), sjíždí
@@ -6194,8 +6234,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      zůstává zelený, protože nese význam. */
   /* Velký nadpis nahoře. Na telefonu sedí v pásmu pod lištou, které
      tam bylo prázdné. */
-  .uvod-znacka{font-size:28px; margin:0; padding:16px 20px 0;}
-  .uvod-podtitul{padding:0 20px; margin:2px 0 0; font-size:14px;}
+  /* Velikost drží stupeň (--h1-domu), tady se řeší jen okraje. */
+  h1.uvod-nadpis{margin:0; padding:12px 20px 0;}
   /* Prázdné pásmo pod lištou už drží nadpis, ne odsazení. */
   .hero-map .map-wide{padding-top:14px;}
 
@@ -6611,7 +6651,17 @@ body > footer{flex:none;}
      jako pouhý text. --line-ui je táž čára, jakou mají pilulky filtrů
      vedle. */
   color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-ui);
-  border-radius:var(--r-pill); padding:0 12px; min-height:36px; cursor:pointer;
+  /* ZAOBLENÍ JAKO U OSTATNÍCH OVLADAČŮ V TÉŽE ŘADĚ, ne pilulka.
+     Pravidlo webu zní (viz --r-ovladani výš): co se ovládá, má
+     --r-ovladani; pilulka zůstává ODZNAKU (zapínatelnému filtru)
+     a kulatému tlačítku s ikonou. „Procházet po jednom" ani
+     „Stáhnout výběr" nejsou odznaky — nic nepřepínají, spouštějí
+     akci. Stály přitom přímo pod „Uložené" a řazením, která se na
+     telefonu srovnala na 44 px a --r-ovladani, takže v jedné sestavě
+     byly dva různé tvary: měkký obdélník nad plnou pilulkou. Majitel
+     to poslal na snímku a má pravdu — na výšce se shodovaly (obojí
+     44 px), lišil se jen rádius. */
+  border-radius:var(--r-ovladani); padding:0 12px; min-height:36px; cursor:pointer;
   display:inline-flex; align-items:center; white-space:nowrap;
   transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .mc-nastroj:hover{color:var(--copper); border-color:var(--copper-bright);}
