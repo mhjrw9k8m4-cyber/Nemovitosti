@@ -253,6 +253,8 @@
 
   var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
   var HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+
+  var POZN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
   var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
 
   function pzPopisInzerentaHtml() {
@@ -1212,7 +1214,12 @@
       '<div class="pz-head">' +
 
         '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
-        (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
+
+        '<div class="pz-head-radek">' +
+          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '<span></span>') +
+          '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
+            + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
+        '</div>' +
 
         (dalkyText()
           ? '<div class="pz-dalky">' + esc(dalkyText())
@@ -1432,6 +1439,41 @@
       });
       poznEl.addEventListener('blur', function () { clearTimeout(cas); ulozTed(); });
       window.addEventListener('pagehide', function () { clearTimeout(cas); ulozTed(); });
+
+      var skokEl = document.getElementById('pz-pozn-skok');
+      if (skokEl) {
+        var skokT = skokEl.querySelector('.pz-pozn-skok-t');
+
+        function obnovSkok() {
+          var ma = !!(poznEl.value || '').trim();
+          if (skokT) skokT.textContent = ma ? 'Moje poznámka' : 'Přidat poznámku';
+          skokEl.classList.toggle('ma-text', ma);
+          skokEl.setAttribute('aria-label', ma
+            ? 'Moje poznámka k tomuhle pozemku — přejít na ni'
+            : 'Přidat poznámku k tomuhle pozemku');
+        }
+        obnovSkok();
+        poznEl.addEventListener('input', obnovSkok);
+        skokEl.hidden = false;
+        skokEl.addEventListener('click', function () {
+          var box = poznEl.closest ? poznEl.closest('.pz-pozn-box') : null;
+          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+          catch (e) { (box || poznEl).scrollIntoView(); }
+
+          setTimeout(function () {
+            try { poznEl.focus({ preventScroll: true }); } catch (e) { poznEl.focus(); }
+          }, 420);
+
+          if (box) {
+            box.classList.add('pz-pozn-sviti');
+            setTimeout(function () { box.classList.remove('pz-pozn-sviti'); }, 1400);
+          }
+        });
+
+        if (global.PKPoznamky.sync) {
+          global.PKPoznamky.sync().then(function () { obnovSkok(); }).catch(function () {});
+        }
+      }
     }
 
     var sourKop = document.getElementById('pz-sour-kop');

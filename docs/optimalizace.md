@@ -1830,3 +1830,50 @@ strop 0,05).
 
 Do té doby platí, co se změřilo: na výpis se na středním telefonu čeká
 1,7 s a třetina toho je cenový model; obrazovka ale prázdná není.
+
+## 24. K poznámce se člověk musel prorolovat celou stránkou *18. 10.*
+
+Majitel to viděl na telefonu dřív než já: „Přidat poznámku by mělo být
+hned nahoře." Změřeno, odkud kam: tlačítko je teď na **y 535 px**
+(390 × 844), políčko poznámky leží na **y 2 436 px** — tedy **1 900 px
+pod ním**, skoro dvě a půl obrazovky. Kdo se vrátí z prohlídky a chce
+si zapsat, co viděl, musel projet celou stránkou.
+
+**Nahoře je CESTA, ne druhé políčko.** Dvě pole na jednu poznámku by
+znamenala dvě pravdy o tomtéž, a pořadí stránky („moje věci" patří
+k sobě, dole) je změřené a hlídá ho `scripts/test-poradi-pozemku.mjs`.
+Tlačítko tedy k políčku skočí, **rovnou do něj zaostří** (bez toho musí
+člověk klepnout ještě jednou) a na chvíli ho obtáhne, aby bylo poznat,
+kam přistál. Jakmile poznámka existuje, nahoře se z „Přidat poznámku"
+stane „Moje poznámka" — na první obrazovce je vidět, že si u téhle
+nabídky něco zapsal.
+
+**Vedle nadpisu to nešlo a je to spočítané.** Nadpis má 28px písmo;
+tlačítko měří 170 px, takže by nadpisu na 360px displeji zbylo 190 px —
+čtyři řádky. Řádek „okres Benešov" má kolem 130 px, takže vedle sebe
+vyjdou. Změřeno na 320 / 360 / 390 / 1 440 px: 170 × 44 px, nikde
+nepřetéká a nikde nepřekrývá nadpis. Čtyřicet čtyři pixelů je mez, co
+si web klade na dotykové terče.
+
+**Dvě věci, které chytily zkoušky, ne já:**
+
+* **Sabotáž „tlačítko zůstane skryté" shodila zkoušku timeoutem, ne
+  pojmenovanou chybou.** Playwright na skryté tlačítko čeká třicet
+  vteřin a pak celý soubor spadne — v CI by z toho nebylo poznat, co je
+  špatně. Klepe se proto až po kontrole, že je tlačítko vidět.
+* **Zvýraznění jsem napsal přes `box-shadow` a `test-vlozeny-styl.mjs`
+  to odmítl:** `box-shadow` má `.pz-pozn-box` nastavený i ve vloženém
+  stylu předlohy, takže by tutéž vlastnost řídila dvě místa a časem by
+  se rozešla. Obtažení kreslí **outline** — ve vloženém stylu není, nic
+  nepřeskládá (CLS) a ze stejného důvodu se píše `border-color`, ne
+  zkratka `border`, kterou má předloha.
+
+Devět nových kontrol v `scripts/test-poznamky.mjs` (64/64); sabotáž
+„zaostření a zvýraznění pryč" shodí dvě z nich.
+
+**A ještě jedna zkouška k uloženým pozemkům na účtu**, protože jde
+o situaci, která teprve nastane: mezi nasazením webu a puštěním
+`supabase/ulozene-na-uctu.sql` odpovídá databáze na uložené pozemky
+„takovou funkci neznám" (404). V tom okně se nesmí stát to nejhorší —
+že web uložené pozemky **smaže**, protože je „na účtu nenašel".
+Sabotáž (neúspěšné stažení brané jako prázdný účet) to shodí.

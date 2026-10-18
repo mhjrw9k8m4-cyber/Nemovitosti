@@ -234,5 +234,35 @@ const NOVY = 'zkouska-novy-tady#v200';
   await ctx2.close();
 }
 
+/* ---- 7) DATABÁZE JEŠTĚ NEUMÍ, CO WEB VOLÁ ------------------------
+   Tohle NENÍ vymyšlená situace: supabase/ulozene-na-uctu.sql je v
+   docs/pred-vydanim.md jako věc, kterou má majitel teprve pustit.
+   Mezi nasazením webu a puštěním SQL tedy existuje okno, ve kterém
+   PostgREST na ulozeny_uloz i moje_ulozene odpoví „takovou funkci
+   neznám" (404). V tom okně se nesmí stát TO NEJHORŠÍ, co se stát
+   může: že web uložené pozemky smaže, protože je „na účtu nenašel".
+   Měří se proto obojí — že se uložení dál zapíše v prohlížeči,
+   a že se nic neztratí. */
+{
+  const ctx = await kontext('majitel', { [FAV]: [NOVY], [NAHRANO]: { [NOVY]: 1 } });
+  /* 404 na všechny čtyři funkce — přesně jako databáze, která je nezná. */
+  await ctx.route(/\/rest\/v1\/rpc\/(ulozeny_uloz|ulozeny_smaz|moje_ulozene|ulozene_nahraj)/,
+    (r) => r.fulfill({ status: 404, contentType: 'application/json',
+      body: JSON.stringify({ message: 'Could not find the function public.ulozeny_uloz(p_klic)' }) }));
+  const { p, chybyJs } = await otevri(ctx);
+  await p.waitForTimeout(1500);
+  const pred = await schranka(p);
+  pravda('při neznámé funkci se uložené pozemky NESMAŽOU',
+    pred.favs.indexOf(NOVY) >= 0, `ve schránce: ${JSON.stringify(pred.favs)}`);
+  await p.click('#pz-fav');
+  await p.waitForTimeout(1000);
+  const po = await schranka(p);
+  pravda('a uložení se dál zapíše aspoň v prohlížeči',
+    po.favs.length === pred.favs.length + 1,
+    `před: ${JSON.stringify(pred.favs)}, po: ${JSON.stringify(po.favs)}`);
+  pravda('a stránka přitom nespadne', chybyJs.length === 0, chybyJs[0]);
+  await ctx.close();
+}
+
 await prohlizec.close();
 hotovo();

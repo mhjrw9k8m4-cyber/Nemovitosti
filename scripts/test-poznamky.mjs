@@ -131,6 +131,80 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   await ctx.close();
 }
 
+/* ---- 1b) ZKRATKA K POZNÁMCE JE NAHOŘE ----
+   Políčko leží dole mezi „mými věcmi" (pořadí stránky je změřené a hlídá
+   ho scripts/test-poradi-pozemku.mjs) — na telefonu tedy přes dva tisíce
+   pixelů od nadpisu. Kdo si jde zapsat, co na pozemku viděl, se k tomu
+   nesmí prorolovat celou stránkou, a tak je nahoře CESTA k němu.
+   Měří se, že ta cesta opravdu vede: že je tlačítko vidět bez rolování,
+   že po klepnutí je políčko na obrazovce A ZAOSTŘENÉ (samotný doskok
+   bez zaostření znamená, že člověk musí ještě jednou klepnout),
+   a že tlačítko pozná, že poznámka už existuje. */
+{
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const p = await ctx.newPage();
+  const chybyJs = [];
+  p.on('pageerror', (e) => chybyJs.push(String(e)));
+  await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
+  await p.waitForSelector('#pz-pozn-skok', { timeout: 20000 }).catch(() => {});
+  await p.waitForTimeout(1800);
+
+  const nahore = await p.evaluate(() => {
+    const b = document.getElementById('pz-pozn-skok');
+    if (!b) return null;
+    const r = b.getBoundingClientRect();
+    return { text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
+      vidno: r.top >= 0 && r.bottom <= innerHeight && r.width > 0,
+      vyska: Math.round(r.height), sirka: Math.round(r.width),
+      pretejka: r.right > document.documentElement.clientWidth + 1 };
+  });
+  // PŘEDPOKLAD: bez tlačítka nemá smysl měřit nic dalšího
+  pravda('nahoře na stránce je zkratka k poznámce', !!nahore, 'tlačítko #pz-pozn-skok není');
+  if (nahore) {
+    pravda('a je vidět bez rolování', nahore.vidno,
+      `tlačítko: ${JSON.stringify(nahore)}`);
+    pravda('a stojí na něm, co se stane', /přidat poznámku/i.test(nahore.text),
+      `na tlačítku stojí „${nahore.text}"`);
+    pravda('a dá se trefit prstem (44 px)', nahore.vyska >= 44,
+      `vysoké ${nahore.vyska} px`);
+    pravda('a nevyleze z obrazovky', !nahore.pretejka, `šířka ${nahore.sirka} px`);
+  }
+  /* KLEPE SE JEN NA TO, CO JE VIDĚT. Playwright na skryté tlačítko čeká
+     třicet vteřin a pak zkoušku SHODÍ — místo pojmenované chyby by
+     v CI byl výpis o timeoutu, ze kterého není poznat, co je špatně.
+     (Vyzkoušeno sabotáží: tlačítko zůstalo skryté a zkouška spadla
+     přesně takhle.) */
+  if (nahore && nahore.vidno) {
+    await p.click('#pz-pozn-skok');
+    await p.waitForTimeout(1000);
+    const po = await p.evaluate(() => {
+      const t = document.getElementById('pz-pozn-text');
+      const r = t.getBoundingClientRect();
+      const box = t.closest('.pz-pozn-box');
+      return { vidno: r.top >= 0 && r.bottom <= innerHeight,
+        zaostreno: document.activeElement === t,
+        sviti: !!(box && box.classList.contains('pz-pozn-sviti')) };
+    });
+    pravda('klepnutí přivede políčko na obrazovku', po.vidno, JSON.stringify(po));
+    pravda('a rovnou do něj zaostří, ať se neklepe dvakrát', po.zaostreno, JSON.stringify(po));
+    pravda('a na chvíli ukáže, KAM se přišlo', po.sviti, JSON.stringify(po));
+
+    await p.fill('#pz-pozn-text', 'Zkouška — rozbitý plot u severní hranice.');
+    await p.waitForTimeout(500);
+    const popsane = await p.evaluate(() => {
+      const b = document.getElementById('pz-pozn-skok');
+      return { text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
+        maText: b.classList.contains('ma-text') };
+    });
+    pravda('a jakmile poznámka je, tlačítko to nahoře ukáže',
+      /moje poznámka/i.test(popsane.text) && popsane.maText,
+      `na tlačítku stojí „${popsane.text}", třída ma-text: ${popsane.maText}`);
+    pravda('nic se u toho nerozbilo', chybyJs.length === 0, chybyJs[0]);
+  }
+  await ctx.close();
+}
+
 /* ---- 2) meze a plná schránka ---- */
 {
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });

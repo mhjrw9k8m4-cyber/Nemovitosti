@@ -2379,6 +2379,15 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 @media (max-width:679px){.pz-klice>.pz-klic:last-child:nth-child(odd){grid-column:1 / -1}
 }
 .pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 16px;background:var(--ink-soft);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-head-radek{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.pz-head-radek>.pz-okres{margin:0;min-width:0}
+.pz-pozn-skok{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 14px;margin-top:4px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--ink);color:var(--text-ondark);cursor:pointer;font:inherit;font-size:14px;font-weight:600;line-height:1.2;transition:border-color var(--cas-zakladni) var(--ease),background-color var(--cas-zakladni) var(--ease)}
+.pz-pozn-skok>svg{width:18px;height:18px;flex:0 0 auto;color:var(--copper-bright)}
+.pz-pozn-skok:hover{border-color:var(--copper-bright)}
+.pz-pozn-skok:active{background:var(--ink-soft)}
+.pz-pozn-skok.ma-text{border-color:var(--copper-bright);background:var(--ink-soft)}
+.pz-pozn-box{transition:border-color var(--cas-zakladni) var(--ease)}
+.pz-pozn-box.pz-pozn-sviti{border-color:var(--copper-bright);outline:3px solid rgba(43,118,82,0.25);outline-offset:0}
 .pz-klic>.pz-klic-ic{position:absolute;top:12px;right:12px;width:20px;height:20px;padding:0;color:var(--copper-bright);opacity:0.45;pointer-events:none}
 .pz-klic>.pz-klic-ic>svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .pz-klic b,.pz-klic>span:not(.pz-klic-ic){padding-right:28px}

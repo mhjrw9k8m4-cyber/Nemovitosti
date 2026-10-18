@@ -7839,6 +7839,47 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    Ikony jsou ozdoba, ne informace — co dlaždice říká, stojí v ní
    slovem, takže jdou z přístupného stromu ven (aria-hidden v
    js/pozemek.js). */
+/* =====================================================================
+   ZKRATKA K POZNÁMCE U NADPISU (stránka pozemku)
+   =====================================================================
+   Políčko na poznámku leží dole mezi „mými věcmi" a tam zůstává —
+   pořadí stránky je změřené a hlídá ho scripts/test-poradi-pozemku.mjs.
+   Na telefonu je ale přes dva tisíce pixelů od nadpisu, takže kdo si
+   jde zapsat, co na pozemku viděl, se k tomu musí prorolovat celou
+   stránkou. Nahoře je proto CESTA k němu, ne druhé políčko: dvě pole
+   na jednu poznámku by znamenala dvě pravdy o tomtéž.
+   Řádek s nadpisem je kvůli tomu flex: tlačítko si vezme, co potřebuje,
+   nadpis zbytek (min-width:0, jinak by ho dlouhé slovo roztáhlo a
+   tlačítko vytlačilo z obrazovky). */
+.pz-head-radek{display:flex; align-items:center; justify-content:space-between;
+  gap:12px; flex-wrap:wrap; margin-top:8px;}
+.pz-head-radek > .pz-okres{margin:0; min-width:0;}
+.pz-pozn-skok{flex:0 0 auto; display:inline-flex; align-items:center; gap:8px;
+  min-height:44px; padding:8px 14px; margin-top:4px;
+  border:1px solid var(--line-strong); border-radius:var(--r-ovladani);
+  background:var(--ink); color:var(--text-ondark); cursor:pointer;
+  font:inherit; font-size:14px; font-weight:600; line-height:1.2;
+  transition:border-color var(--cas-zakladni) var(--ease),
+    background-color var(--cas-zakladni) var(--ease);}
+.pz-pozn-skok > svg{width:18px; height:18px; flex:0 0 auto; color:var(--copper-bright);}
+.pz-pozn-skok:hover{border-color:var(--copper-bright);}
+.pz-pozn-skok:active{background:var(--ink-soft);}
+/* Když už poznámka je, je to vidět na první obrazovce — a tlačítko
+   přestane zvát k psaní a začne ukazovat, kam se vrátit. */
+.pz-pozn-skok.ma-text{border-color:var(--copper-bright); background:var(--ink-soft);}
+/* Po doskoku má být poznat, KAM se přišlo; bez toho vypadá doskok
+   doprostřed stránky jako překlep. Je to změna rámečku, ne poskakování:
+   nic se nehýbe, takže se nic nepřeskládá (CLS).
+   OBRYS, NE STÍN. Napoprvé tu stál box-shadow — a scripts/test-vlozeny-styl.mjs
+   to zachytil: `box-shadow` má .pz-pozn-box nastavený i ve vloženém stylu
+   předlohy, takže by tutéž vlastnost řídila dvě místa a časem by se
+   rozešla. Obrys (outline) kreslí vně rámečku, nic nepřeskládá a ve
+   vloženém stylu není. Ze stejného důvodu se píše border-COLOR, ne
+   zkratka border, kterou má předloha. */
+.pz-pozn-box{transition:border-color var(--cas-zakladni) var(--ease);}
+.pz-pozn-box.pz-pozn-sviti{border-color:var(--copper-bright);
+  outline:3px solid rgba(43,118,82,0.25); outline-offset:0;}
+
 /* SELEKTOR MUSÍ BÝT SILNĚJŠÍ NEŽ `.pz-klic > span` — jinak značku
    přebarví popisek. Dlaždice má popisky stylované přes `.pz-klic >
    span` (dvě třídy), kdežto `.pz-klic-ic` je jen jedna: značka tím
