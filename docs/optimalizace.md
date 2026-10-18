@@ -1762,21 +1762,38 @@ potřebuje skóre pro **každou** nabídku, ne jen pro viditelné. Vnitřek
 odhadu už jednou zlevněný byl (kroky se počítají až ve chvíli, kdy na
 ně dojde) a `demand()` si výsledek pamatuje v `d._demand`.
 
-**Co by to spravilo a proč jsem to neudělal.** Odhad je deterministická
-funkce dat, takže by ho mohl spočítat generátor a prohlížeč jen přečíst
-hotové číslo — ušetří se těch 221 ms (13 % cesty k první nabídce na
-telefonu). Neudělal jsem to teď ze dvou důvodů, a oba jsou měřitelné,
-ne pocitové:
+**Co by to spravilo.** Odhad je deterministická funkce dat, takže ho může
+spočítat generátor a prohlížeč jen přečíst hotové číslo — ušetří se těch
+221 ms (13 % cesty k první nabídce na telefonu).
 
-1. **Dva zdroje pravdy o ceně už tenhle web jednou pokazily.** Mapa
-   měla vlastní kopii výpočtu, rozešla se se stránkou pozemku a u 34
-   nabídek každá tvrdila něco jiného (viz komentář u `MODEL` v
-   `js/main.js`). Předpočítaný soubor je přesně druhý zdroj pravdy;
-   musí se proto generovat TÍMŽ kódem, co běží v prohlížeči.
-2. **`js/ceny.js` dnes v Node neběží** — sahá na DOM (je to i zapsané
-   jako důvod jedné povolené dvojí kopie v `scripts/test-kopie-funkci.mjs`).
-   Nejdřív by se z něj musela vyčlenit čistě počítací část, a to je
-   samostatná práce, ne přívažek k měření.
+**A rovnou oprava toho, co jsem o tom napsal poprvé.** Stálo tu, že
+`js/ceny.js` v Node neběží, protože sahá na DOM — **to je nepravda**
+a vzal jsem ji z komentáře u povolené dvojí kopie v
+`scripts/test-kopie-funkci.mjs` (opraveno i tam). Ověřeno: celý soubor
+se v Node načte **bez jediné náhrady**, `postav` trvá 28 ms a odhad pro
+všech 1 983 nabídek 69 ms. Generovat se tedy dá hned, a navíc TÍMŽ
+kódem, co běží v prohlížeči — čímž padá i druhá obava (dva zdroje
+pravdy o ceně tenhle web jednou pokazily: mapa měla vlastní kopii
+výpočtu a u 34 nabídek tvrdila něco jiného než stránka pozemku).
+
+**Rozhoduje to, co se posílá po drátě.** Změřeno gzipem:
+
+| co by se posílalo navíc | raw | gzip | proti dnešním datům |
+|---|---:|---:|---:|
+| odhady jako objekty (13 polí) | 397 kB | **51 kB** | +64 % |
+| odhady po sloupcích, zaokrouhlené | 62 kB | **15 kB** | +19 % |
+| (dnešní `data/opportunities.json`) | 654 kB | 79 kB | — |
+
+Patnáct kilobajtů gzipem je na LTE osm milisekund, na pomalém připojení
+ale přes čtvrt sekundy — tedy víc, než kolik se ušetří na procesoru.
+Objektová podoba je jednoznačně špatná, sloupcová vyhrává jen tam, kde
+je signál. **Zajímavější je přitom druhá polovina:** stránka pozemku si
+dnes tahá `data/model.json` (59 kB raw) jen proto, aby si jeden verdikt
+spočítala sama. Tam by předpočítání bajty NEPŘIDALO, ale UBRALO —
+verdikt je šest čísel a do vlastního datového ostrůvku stránky se vejde
+zdarma. Jen je potřeba nejdřív doložit, že ty řádky nepotřebuje i seznam
+srovnatelných pozemků pod verdiktem; dokud to není změřené, nechávám
+obojí být.
 
 Do té doby platí, co se změřilo: start stojí 1,7 s na středním telefonu
 a třetina toho je cenový model.

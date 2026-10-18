@@ -42,8 +42,11 @@ function pravda(popis, vyslo, proc) {
    „soubor:funkce" seřazená abecedně, hodnota důvod. */
 const KOPIE = {
   'js/ceny.js:zaMetr | js/hlidani-logika.js:zaMetr':
-    'hlidani-logika.js běží i v Node (rozesílač pošty) a nesmí si přitáhnout ceny.js, '
-    + 'který sahá na DOM; sloučení by znamenalo závislost jen kvůli třem řádkům',
+    'rozesílač pošty běží v Node a kvůli třem řádkům si nebude tahat celý cenový '
+    + 'model (22 kB). Dřív tu stálo, že ceny.js „sahá na DOM" — to je NEPRAVDA, '
+    + 'ověřeno 18. 10.: js/ceny.js se v Node načte bez jediné náhrady '
+    + '(postav 28 ms, odhad pro všech 1 983 nabídek 69 ms). Důvod je tedy váha '
+    + 'závislosti, ne prostředí',
   'js/ceny.js:zlomekPodilu | js/hlidani-logika.js:zlomekPodilu':
     'totéž: rozesílač počítá shodu hlídání bez prohlížeče, tedy bez ceny.js',
   'js/exif.js:datumNaCas | js/kontrola.js:datumNaCas':
