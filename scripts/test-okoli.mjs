@@ -85,9 +85,11 @@ async function telefon(poloha) {
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
-  /* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
-     zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
-     v DOMu je, ale není vidět. */
+  /* POHLED SE ŽÁDÁ JMÉNEM, AŤ JE VÝCHOZÍ KTERÝKOLI. Úvodní stránka má na
+     telefonu dva pohledy nad sebou a vidět je jen jeden; výchozí se za dva
+     dny obrátil dvakrát (17. 10. na mapu, 18. 10. zpátky na seznam). Co tahle
+     zkouška měří, žije ve VÝPISU — tohle přepnutí je proto pojistka, ne
+     reakce na jednu konkrétní podobu webu. */
   await naSeznam(p);
   return { ctx, p, chyby };
 }

@@ -30,10 +30,9 @@ const p = await ctx.newPage();
 await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
 await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
 await p.waitForTimeout(3500);
-/* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
-   zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
-   v DOMu je, ale není vidět. */
-await naSeznam(p);
+/* Pohled se žádá jménem: rychlý výběr se pouští z nářadí VÝPISU, a ten je
+   v mapovém pohledu skrytý. Výchozí pohled se za dva dny obrátil dvakrát,
+   tak se na něj zkouška nespoléhá. */await naSeznam(p);
 
 const stav = () => p.evaluate(() => {
   const cti = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (e) { return []; } };

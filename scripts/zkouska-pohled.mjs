@@ -1,12 +1,12 @@
 /* Přepnutí Seznam / Mapa pro zkoušky v prohlížeči.
  * ====================================================================
  * PROČ TOHLE EXISTUJE. Úvodní stránka má na telefonu dva pohledy nad
- * sebou a vidět je vždycky jen jeden: od 17. 10. se otevírá MAPOU
- * (dřív seznamem, viz js/main.js). Zkoušky, které měří cokoli ve
- * VÝPISU — nářadí nad kartami, křížek na skrytí, líné dlaždice,
- * paměť rolování — tedy musí nejdřív přepnout; jinak čekají třicet
- * vteřin na tlačítko, které v DOMu je, ale není vidět, a hlásí to
- * jako „chybí".
+ * sebou a vidět je vždycky jen jeden. Který je výchozí, se za dva dny
+ * obrátilo dvakrát (17. 10. na mapu, 18. 10. zpátky na seznam, obojí
+ * na přání majitele — viz js/main.js), takže se na to nedá spoléhat.
+ * Zkouška, která měří cokoli v jednom z těch pohledů, si ho proto
+ * vyžádá JMÉNEM; jinak čeká třicet vteřin na prvek, který v DOMu je,
+ * ale není vidět, a hlásí to jako „chybí".
  *
  * A NESMÍ SE TO PSÁT PODLE TOHO, CO JE PRÁVĚ AKTIVNÍ. Zkouška podkladu
  * mapy klikala na `.mvt-btn:not(.active)` ve významu „přepni na mapu".

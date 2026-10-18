@@ -1648,6 +1648,15 @@ o nakládání s údaji, který neodpovídá tomu, co web dělá, je horší ne�
 
 ## 21. Mapa napřed rozbila čtrnáct zkoušek — a jedna z nich měla pravdu *18. 10.*
 
+> **Dodatek z 18. 10. večer: výchozí pohled je zase SEZNAM.** Majitel si
+> mapu napřed prohlédl na telefonu a rozhodl se pro seznam — vrátilo se
+> to tedy tam, kde to bylo. Co z celé té cesty ZŮSTALO, a stojí za ni:
+> paměť pohledu na dobu návštěvy (popsaná níž), pomůcka
+> `scripts/zkouska-pohled.mjs`, která si pohled vyžádá **jménem**, a
+> čtyři nálezy, které s pohledem nesouvisely vůbec. Zápis níž nechávám
+> tak, jak vznikl — je to doklad o tom, co ta změna stála, a příště se
+> podle něj dá rozhodnout rychleji.
+
 Změna výchozího pohledu na telefonu (mapa místo seznamu, na přání
 majitele) stála **čtrnáct padlých prohlížečových zkoušek ze 119**.
 Deset z nich mělo jednu příčinu: výpis je v mapovém pohledu skrytý,
@@ -1664,8 +1673,10 @@ tím přišel o místo ve výpisu, které si prošel — a to je přesně ta vad
 která se tu kdysi pracně opravovala (dřív tam vycházela nula). Mapa
 napřed má platit pro **otevření webu**, ne pro každé načtení stránky.
 Volba pohledu se proto pamatuje na dobu návštěvy (`sessionStorage`,
-klíč `pk_pohled_v1`); `localStorage` by z „mapa napřed" udělal
-nastavení, které si nikdo nezvolil.
+klíč `pk_pohled_v1`); `localStorage` by z jednoho klepnutí udělal
+nastavení, které si nikdo nezvolil. Platí to pro oba výchozí pohledy:
+kdo si teď přepne na mapu a otevře z ní nabídku, vrátí se zpátky na
+mapu, ne na začátek seznamu.
 
 Statické značky v `index.html` se srovnaly s novým výchozím stavem —
 dřív v HTML stálo „Seznam aktivní" a skript to po načtení obracel.
@@ -1799,8 +1810,11 @@ obojí být.
 Změřeno při témže čtyřnásobném zpomalení procesoru: **první vykreslení
 (FCP) 236 ms na úvodní stránce a 248 ms na stránce pozemku**, stránka
 pozemku je celá načtená za 380 ms. Těch 1,7 s je čas, kdy je ve výpisu
-první KARTA NABÍDKY — tedy až po mapě, nadpisu s živými čísly a hledání,
-které jsou na obrazovce čtvrt sekundy po otevření. Dlouhé úlohy proto
+první KARTA NABÍDKY — tedy až po nadpisu s živými čísly, hledání
+a hlavičce výpisu, které jsou na obrazovce čtvrt sekundy po otevření.
+(Měřeno 18. 10. dopoledne, kdy se úvodní stránka otevírala mapou;
+pořadí prvků nad výpisem je v obou podobách stejné, čas k první kartě
+taky — kreslí se z týchž dat a týmž kódem.) Dlouhé úlohy proto
 nezdržují, co člověk vidí, ale to, jak rychle web reaguje na první
 dotek.
 

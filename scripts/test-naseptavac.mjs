@@ -67,11 +67,12 @@ async function otevri(opt, init) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(3600);
-  /* NA TELEFONU SE ÚVODNÍ STRÁNKA OTEVÍRÁ MAPOU (od 17. 10., viz
-     js/main.js). Všechno, co tahle zkouška měří — našeptávač, počet
-     nad výpisem, nabídka „zobrazit i podobné názvy" — žije ve VÝPISU,
-     a ten je v mapovém pohledu schovaný. Bez tohohle přepnutí čekala
-     zkouška 30 vteřin na tlačítko, které v DOMu je, ale není vidět. */
+  /* POHLED SE ŽÁDÁ JMÉNEM. Všechno, co tahle zkouška měří — našeptávač,
+     počet nad výpisem, nabídka „zobrazit i podobné názvy" — žije ve VÝPISU.
+     Výchozí pohled se za dva dny obrátil dvakrát (17. 10. na mapu, 18. 10.
+     zpátky na seznam), takže se na něj nespoléhá: bez přepnutí čekala
+     zkouška v mapovém pohledu třicet vteřin na tlačítko, které v DOMu je,
+     ale není vidět. */
   await p.evaluate(() => {
     const b = [...document.querySelectorAll('.mv-toggle .mvt-btn')]
       .find((x) => /seznam/i.test(x.textContent || ''));

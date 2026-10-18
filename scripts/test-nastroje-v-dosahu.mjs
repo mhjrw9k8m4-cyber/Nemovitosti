@@ -63,7 +63,7 @@ async function zmer(nast) {
     nast.dotyk ? { isMobile: true, hasTouch: true } : {}));
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  // Nářadí je ve VÝPISU; pohled se žádá jménem, ať je výchozí kterýkoli.
   await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
@@ -97,7 +97,7 @@ async function zmerPoFiltru() {
   });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  // Nářadí je ve VÝPISU; pohled se žádá jménem, ať je výchozí kterýkoli.
   await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
@@ -130,7 +130,7 @@ async function zmerPruh() {
   });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  // Nářadí je ve VÝPISU; pohled se žádá jménem, ať je výchozí kterýkoli.
   await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item[data-pk]').length > 3,
     null, { timeout: 60000 });

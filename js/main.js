@@ -704,22 +704,20 @@
   })();
 
   /* Přepínač Seznam / Mapa (mobil): zobrazí jedno místo obojího nad sebou.
-     VÝCHOZÍ JE MAPA — NA PŘÁNÍ MAJITELE, A JE TO OBRAT.
-     Dřív se otevíral SEZNAM s odůvodněním „na úvodní stránce mají být
-     hned vidět nabídky, ne ovládání mapy", a opíralo se to o měření:
-     první nabídka začínala na y 699 z 844 px, tedy pod ohybem, a
-     scripts/test-prvni-obrazovka.mjs od té doby hlídal, že začíná nad
-     450 px.
-     Majitel to rozhodl jinak: „u webu, který staví na mapě, má být mapa
-     to první, co uživatel po otevření vidí." Změřeno, co to stojí: na
-     telefonu 390 × 844 se do první obrazovky nevejde ani jedna karta
-     nabídky — nad obsahem je lišta 65 px, nadpis, hledání s přepínačem
-     a hlavička výpisu, takže jakýkoli pruh mapy odsune první kartu ke
-     spodnímu okraji. Obojí naráz na téhle výšce nejde; je to volba, ne
-     chyba, a tahle poznámka je tu proto, aby se to příště nevracelo
-     tam a zpět bez čísel.
-     Seznam je na jedno klepnutí vedle a nese svůj počet
-     („Seznam (1 942)"), takže se neztratí. */
+     VÝCHOZÍ JE SEZNAM. Na úvodní stránce mají být hned vidět nabídky,
+     ne ovládání mapy; mapa je na jedno klepnutí vedle.
+     TOHLE SE 17. 10. NA PŘÁNÍ MAJITELE OBRÁTILO NA MAPU A 18. 10. SE
+     VRÁTILO ZPÁTKY — taky na jeho přání, když si to prohlédl na
+     telefonu. Zůstává tu obojí zapsané, aby se to potřetí nerozhodovalo
+     poslepu: na displeji 390 × 844 px nejde mít nad ohybem zároveň mapu
+     i kartu nabídky. Nad obsahem je lišta 65 px, nadpis, hledání
+     s přepínačem a hlavička výpisu, takže jakýkoli pruh mapy odsune
+     první kartu ke spodnímu okraji (naměřeno y 699 z 844). Je to volba
+     mezi dvěma věcmi, ne chyba — a volba padla na nabídky.
+     Co z toho mezidobí ZŮSTALO, protože to má smysl pro obě varianty:
+     volba pohledu se pamatuje na dobu návštěvy (sessionStorage), takže
+     kdo si přepne na mapu a otevře nabídku, vrátí se zpátky na mapu
+     a ne na začátek. */
   (function () {
     var appEl = document.querySelector('.map-app');
     var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
@@ -758,12 +756,13 @@
         setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
       }
     }
-    /* VOLBA SE PAMATUJE NA DOBU NÁVŠTĚVY. Mapa napřed platí pro OTEVŘENÍ
-       webu, ne pro každé načtení stránky: kdo se vrátí z pozemku zpátky,
-       musí přistát ve výpisu u své karty, jinak přijde o to, co prošel —
-       a je to přesně to ztracené místo, které se opravovalo dřív (paměť
-       rolování, scripts/test-pamet.mjs).
-       sessionStorage, ne localStorage: příští návštěva začne zase mapou. */
+    /* VOLBA SE PAMATUJE NA DOBU NÁVŠTĚVY. Výchozí pohled platí pro
+       OTEVŘENÍ webu, ne pro každé načtení stránky: kdo si přepne na mapu
+       a otevře z ní nabídku, musí se vrátit zpátky na mapu — jinak přijde
+       o to, co prošel (totéž ztracené místo, které se opravovalo
+       u paměti rolování, scripts/test-pamet.mjs).
+       sessionStorage, ne localStorage: příští návštěva začne zase
+       výchozím pohledem, ne tím, co si člověk kdysi přepnul. */
     function prepni(mv) {
       try { sessionStorage.setItem('pk_pohled_v1', mv); } catch (e) {}
       setView(mv);
@@ -773,7 +772,7 @@
     });
     var zapamatovany = null;
     try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
-    setView(zapamatovany === 'seznam' ? 'seznam' : 'mapa', true);
+    setView(zapamatovany === 'mapa' ? 'mapa' : 'seznam', true);
     // Odkaz „+ N dalších příležitostí najdete na mapě" pod seznamem musí mapu
     // opravdu ukázat — jinak by odkazoval na něco, co není vidět.
     document.addEventListener('click', function (e) {

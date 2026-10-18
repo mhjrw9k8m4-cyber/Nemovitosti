@@ -505,7 +505,7 @@
     });
     var zapamatovany = null;
     try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
-    setView(zapamatovany === 'seznam' ? 'seznam' : 'mapa', true);
+    setView(zapamatovany === 'mapa' ? 'mapa' : 'seznam', true);
 
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('.opp-more') : null;

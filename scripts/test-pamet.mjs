@@ -107,9 +107,9 @@ await p.waitForFunction(() => {
 await p.evaluate((d) => { try { localStorage.setItem('pk_navsteva_v1', JSON.stringify(d)); } catch (e) {} }, MINULE);
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(4200);
-/* Na telefonu se web OTEVÍRÁ mapou (od 17. 10.) a karty výpisu jsou skryté.
-   Stačí přepnout jednou: volba se pamatuje na dobu návštěvy (sessionStorage),
-   takže přežije i ta načtení stránky níž. */
+/* Pohled se žádá jménem, ať je výchozí kterýkoli (za dva dny se obrátil
+   dvakrát). Stačí to jednou: volba se pamatuje na dobu návštěvy
+   (sessionStorage), takže přežije i ta načtení stránky níž. */
 await naSeznam(p);
 
 // --- 1) „Nové od minulé návštěvy" ------------------------------------

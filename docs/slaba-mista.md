@@ -265,8 +265,10 @@ parcely, hotové je: katastrální hranice jsou na mapě jako vrstva.
 **4) „Všechno na jedné dlouhé stránce" — ČÁSTEČNĚ.** Změřeno na
 telefonu 390 × 844: stránka pozemku **3 263 px, tedy 3,9 obrazovky**,
 a dvě nejdelší části (rádce, „Co byste měli vědět") jsou sbalené.
-Okresní výpis má strop 60 řádků. Úvodní stránka se od 17. 10. otevírá
-mapou, která zabere 67 % první obrazovky. Zbývá: na monitoru pod
+Okresní výpis má strop 60 řádků. Úvodní stránka se otevírá seznamem
+nabídek (17. 10. se to na přání majitele obrátilo na mapu a 18. 10.
+vrátilo zpátky); mapa je na jedno klepnutí vedle a volba vydrží celou
+návštěvu. Zbývá: na monitoru pod
 1 100 px se stránka pozemku rozpínala do šířky okna — opraveno
 18. 10. (viz `docs/optimalizace.md`, oddíl 22).
 
