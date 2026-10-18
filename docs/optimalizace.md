@@ -1795,5 +1795,24 @@ zdarma. Jen je potřeba nejdřív doložit, že ty řádky nepotřebuje i seznam
 srovnatelných pozemků pod verdiktem; dokud to není změřené, nechávám
 obojí být.
 
-Do té doby platí, co se změřilo: start stojí 1,7 s na středním telefonu
-a třetina toho je cenový model.
+**A spravedlivě k těm číslům výš:** „1,7 s" není prázdná obrazovka.
+Změřeno při témže čtyřnásobném zpomalení procesoru: **první vykreslení
+(FCP) 236 ms na úvodní stránce a 248 ms na stránce pozemku**, stránka
+pozemku je celá načtená za 380 ms. Těch 1,7 s je čas, kdy je ve výpisu
+první KARTA NABÍDKY — tedy až po mapě, nadpisu s živými čísly a hledání,
+které jsou na obrazovce čtvrt sekundy po otevření. Dlouhé úlohy proto
+nezdržují, co člověk vidí, ale to, jak rychle web reaguje na první
+dotek.
+
+Doměřeno i na stránce pozemku (4× CPU): `postav` tam stojí jen **7 ms**
+(model se staví z malého souboru, ne z plných dat), takže předpočítání
+verdiktu by tam ušetřilo bajty, ne čas — a zdaleka ne těch 110 ms, co
+jsem čekal, než jsem to změřil. Nejdražší je tam `pvGrafOziv` (109 ms):
+vynucené přepočítání rozvržení hned po vložení HTML, aby popisek
+v histogramu nevylezl z karty. Běží to AŽ PO prvním vykreslení, takže
+na tom, co člověk vidí, se to neprojeví — a odkládat to na pozdější
+rámec by jen přesunulo tutéž práci a riskovalo poskok popisku (CLS má
+strop 0,05).
+
+Do té doby platí, co se změřilo: na výpis se na středním telefonu čeká
+1,7 s a třetina toho je cenový model; obrazovka ale prázdná není.
