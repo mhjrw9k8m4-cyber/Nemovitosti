@@ -231,6 +231,70 @@ návštěvnosti ji nemám čím doložit.)*
 
 ---
 
+## 11. Osm výhrad k celku — co z nich platí (měřeno 18. 10.)
+
+Majitel sepsal osm výhrad k systému jako celku. Tady je u každé číslo,
+ne dojem: co platí, co už neplatí a co platí, ale nejde to odsud.
+
+**1) Úřední desky obcí nejsou zapojené — PLATÍ.** Změřeno nad
+`data/opportunities.json`: typu `obec` je **0 z 1 982 nabídek**.
+Roura pro ně přitom hotová je (kategorie „Obecní záměr" v mapě,
+generátor stránek, `scripts/test-obec.mjs` projde celou cestu od dat
+po detail) — chybí jen zdroj. Web o tom **nelže**: slib „Z úřední
+desky" se 11. 10. odstranil a hlídá to `scripts/test-sliby.mjs`.
+Zapojení nejde udělat odsud: `edesky.cz` i `data.gov.cz` jsou ze
+zdejšího prostředí nedostupné (síťová politika odpoví na CONNECT 403),
+takže parser se nemá o co opřít a psát ho podle hádaného formátu
+znamená robota, který spadne až v provozu.
+
+**2) Závislost na třetích stranách — PLATÍ, zmírněno.** Podíly zdrojů
+jsou v oddíle 1 (82 % jeden zdroj). Co se změnilo: stahování má tři
+pokusy, respektuje `Retry-After`, má časový limit 20 s a tichý výpadek
+jednotlivého zdroje hlásí hlídač. To ale neřeší závislost — jen ji
+přestane zakrývat.
+
+**3) Tečky místo polygonů — PLATÍ, ale ne z nedbalosti.** Polygon
+parcely se kreslí z katastrálního území a parcelního čísla. Změřeno:
+**skutečné parcelní číslo má 283 z 1 982 nabídek (14,3 %)**, u zbytku
+stojí v datech „—"; kód katastrálního území nemáme ani u jedné.
+Polygon by tedy šel u sedmi nabídek z padesáti, a i u nich by se
+musela obkreslit data ČÚZK (odsud nedostupná; sledování listů
+vlastnictví jsem odmítl a trvám na tom). Co jde bez identifikace
+parcely, hotové je: katastrální hranice jsou na mapě jako vrstva.
+
+**4) „Všechno na jedné dlouhé stránce" — ČÁSTEČNĚ.** Změřeno na
+telefonu 390 × 844: stránka pozemku **3 263 px, tedy 3,9 obrazovky**,
+a dvě nejdelší části (rádce, „Co byste měli vědět") jsou sbalené.
+Okresní výpis má strop 60 řádků. Úvodní stránka se od 17. 10. otevírá
+mapou, která zabere 67 % první obrazovky. Zbývá: na monitoru pod
+1 100 px se stránka pozemku rozpínala do šířky okna — opraveno
+18. 10. (viz `docs/optimalizace.md`, oddíl 22).
+
+**5) Ukládání jen do prohlížeče — NEPLATÍ UŽ.** Uložené pozemky chodí
+od 18. 10. na účet (`supabase/ulozene-na-uctu.sql`,
+`js/ulozene-ucet.js`, 21 kontrol v prohlížeči); poznámky a hlídaná
+hledání chodily na účet už dřív. **Bez přihlášení** to dál zůstává
+v jednom prohlížeči — to je záměr, ne nedostatek.
+
+**6) Slabý onboarding — ČÁSTEČNĚ NEPLATÍ.** Co je na první obrazovce
+telefonu změřeno: věta s živými čísly („Nabízíme 1 942 pozemků…“),
+hledání, přepínač **i s počtem** („Seznam (1 942)") a nad mapou
+nápověda „Klepněte na kraj". Chybí průvodce prvním hledáním; to je
+úsudek, ne měření.
+
+**7) Chybí platební model — PLATÍ, je ale hotový a vypnutý.** Stripe
+i placené zvýraznění inzerátu jsou napsané a zkoušené; čekají na IČO
+a účet (`docs/pred-vydanim.md`). Dokud to majitel nezapne, nejde
+o vývoj, ale o rozhodnutí.
+
+**8) Alerty nejsou okamžité — PLATÍ.** Rozesílání běží plánovaně
+ráno (cron 7:35) a je **vypnuté** (`PK_MAIL_ZAPNUTO = false`,
+`--opravdu` v `rozesilani.yml`). Okamžitost znamená dvě věci:
+zapnout maily a běhat častěji než jednou denně. První je rozhodnutí
+majitele, druhé je pak jeden řádek v plánu.
+
+---
+
 ## Co bych dělal a v jakém pořadí
 
 Seřazeno podle poměru „co to přinese" ku „co to stojí". **První tři
