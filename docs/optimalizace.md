@@ -1731,3 +1731,52 @@ Hlídá to `scripts/test-rozvrzeni.mjs` na čtyřech šířkách (820, 1 024,
 1 099, 1 440) a měří OBOJÍ — že blok nepřeroste míru sloupce i že
 přitom nezeširoknul odstavec. Sabotáž (vypnuté pravidlo) shodí tři
 kontroly.
+
+## 23. Co stojí start úvodní stránky na telefonu — změřeno, zatím neopraveno *18. 10.*
+
+Profilováno na úvodní stránce při **čtyřnásobném zpomalení procesoru**
+(střední telefon), nad místním serverem, tedy bez vlivu sítě:
+
+| co | 1× CPU | 4× CPU |
+|---|---:|---:|
+| první nabídka ve výpisu | 1 188 ms | **1 692 ms** |
+| dlouhých úloh (nad 50 ms) | 7 | 9 |
+| nejdelší úloha | 279 ms | **367 ms** |
+| součet dlouhých úloh | 1 000 ms | 1 654 ms |
+
+Jedna úloha 367 ms znamená třetinu sekundy, kdy telefon nereaguje na
+dotek. Skripty samy jsou po dřívějších úpravách v pořádku:
+`js/min/main.js` leží **jen na úvodní stránce** (233 kB, 64 kB
+gzipem; celkem 382 kB / 108 kB gzipem) a stránka pozemku si ho netahá.
+
+**Kde ten čas je.** Z profilu (vlastní čas funkcí, 4× CPU): vyhodnocení
+`main.js` 227 ms, `sortVis` 77 ms, cenový model `ceny` + `okoliCeny` +
+`odhadSpocti` **221 ms** dohromady, `declump` 63 ms, Leaflet 77 ms.
+
+**A tohle je to číslo, o které jde.** Obalil jsem `MODEL.odhad` a změřil
+volání: **3 932 odhadů proběhne DŘÍV, než se vykreslí prvních 24 karet**
+— tedy dvakrát na každou z 1 982 nabídek (druhé volání padne do paměti
+výsledků, takže je levné), a hned po vykreslení ještě 1 942 percentilů.
+Není to plýtvání z nepozornosti: výchozí řazení je „Doporučené" a to
+potřebuje skóre pro **každou** nabídku, ne jen pro viditelné. Vnitřek
+odhadu už jednou zlevněný byl (kroky se počítají až ve chvíli, kdy na
+ně dojde) a `demand()` si výsledek pamatuje v `d._demand`.
+
+**Co by to spravilo a proč jsem to neudělal.** Odhad je deterministická
+funkce dat, takže by ho mohl spočítat generátor a prohlížeč jen přečíst
+hotové číslo — ušetří se těch 221 ms (13 % cesty k první nabídce na
+telefonu). Neudělal jsem to teď ze dvou důvodů, a oba jsou měřitelné,
+ne pocitové:
+
+1. **Dva zdroje pravdy o ceně už tenhle web jednou pokazily.** Mapa
+   měla vlastní kopii výpočtu, rozešla se se stránkou pozemku a u 34
+   nabídek každá tvrdila něco jiného (viz komentář u `MODEL` v
+   `js/main.js`). Předpočítaný soubor je přesně druhý zdroj pravdy;
+   musí se proto generovat TÍMŽ kódem, co běží v prohlížeči.
+2. **`js/ceny.js` dnes v Node neběží** — sahá na DOM (je to i zapsané
+   jako důvod jedné povolené dvojí kopie v `scripts/test-kopie-funkci.mjs`).
+   Nejdřív by se z něj musela vyčlenit čistě počítací část, a to je
+   samostatná práce, ne přívažek k měření.
+
+Do té doby platí, co se změřilo: start stojí 1,7 s na středním telefonu
+a třetina toho je cenový model.

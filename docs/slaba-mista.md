@@ -293,6 +293,24 @@ ráno (cron 7:35) a je **vypnuté** (`PK_MAIL_ZAPNUTO = false`,
 zapnout maily a běhat častěji než jednou denně. První je rozhodnutí
 majitele, druhé je pak jeden řádek v plánu.
 
+## 12. Značková barva na webu JE — a není měděná *18. 10.*
+
+Jedna z výhrad zněla „chybějící vizuální identita, všechno je šedé".
+Změřil jsem to tokeny, ne okem: nad ohybem telefonu 390 × 844 nese
+značkovou barvu **175 prvků** — aktivní záložka přepínače
+(`#004F2F` s bílým textem), ovládání mapy a tlačítko „Nahoru"
+(`#2B7652`), značka v hlavičce (`#0F5C3B`) i odznaky shluků.
+
+Identita tedy existuje a je **tmavě zelená**, ne šedá. (Token se
+historicky jmenuje `--copper`, ačkoli v něm dávno žádná měď není —
+to je na přejmenování, ne na přebarvení.)
+
+Požadavek na tmavě modrou (navy) je proto **změna vkusu, ne oprava
+vady**: kontrastní zkouška nad zelenou prochází, `docs/vizualni-jazyk.md`
+i barevné zkoušky na ní stojí. Přebarvit se dá, ale je to práce na
+celou paletu a nic změřeného ji nevyžaduje — proto ji nedělám sám
+od sebe.
+
 ---
 
 ## Co bych dělal a v jakém pořadí
