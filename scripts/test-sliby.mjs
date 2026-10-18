@@ -45,7 +45,10 @@ const nabidky = data.opportunities || [];
      se vypisuje po jednom. Čísla se rozejdou tiše: přibude zdroj, číslo
      zůstane — a web tvrdí něco, co si sám pod tím vyvrací. */
   const cipu = (idx.match(/class="source-chip"/g) || []).length;
-  const napsano = /<b>(\d+)<\/b><span>veřejných zdrojů/.exec(idx);
+  /* MEZERA MEZI ZNAČKAMI JE DOVOLENÁ. Mezi </b> a <span> stojí od 17. 10.
+     mezera, aby se číslo a slovo nelepily („5veřejných zdrojů“); vzor bez
+     \s* kvůli ní přestal číslo najít a zkouška hlásila „napsáno ?“. */
+  const napsano = /<b>(\d+)<\/b>\s*<span>veřejných zdrojů/.exec(idx);
   pravda('počet zdrojů v úvodu sedí se seznamem pod ním',
     !!napsano && Number(napsano[1]) === cipu,
     `napsáno ${napsano ? napsano[1] : '?'}, vypsaných zdrojů ${cipu}`);
@@ -267,7 +270,7 @@ function chibiPrazdne(a) { return a.length === 0; }
     `jen ve strukturovaných datech: ${chybi.join(' | ')}`);
   pravda('a žádná na stránce nechybí ve strukturovaných datech', navic.length === 0,
     `jen na stránce: ${navic.join(' | ')}`);
-  const napsano = /<span class="rm-n">(\d+)<\/span><span class="rm-l">otázek/.exec(idx);
+  const napsano = /<span class="rm-n">(\d+)<\/span>\s*<span class="rm-l">otázek/.exec(idx);
   pravda('a počet u nadpisu sedí', !!napsano && Number(napsano[1]) === videt.length,
     `napsáno ${napsano ? napsano[1] : '?'}, otázek ${videt.length}`);
 }

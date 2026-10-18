@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=cf37ec71">
+  <link rel="stylesheet" href="css/uvod.min.css?v=9ab8c81d">
 </head>
 <body>
 
@@ -225,7 +225,7 @@
          Číslo nabídek nezmizelo z webu: stojí nad výpisem („Doporučené
          příležitosti · N na mapě"), kde k něčemu je. -->
     <div class="map-wide">
-      <div class="map-app reveal mv-seznam" id="view-mapa">
+      <div class="map-app reveal" id="view-mapa">
         <div class="map-controls-panel">
           <!-- HLEDÁNÍ A PŘEPÍNAČ NA JEDNOM ŘÁDKU.
                Naměřeno na displeji 390 px: hledání zabíralo 46 px a pod
@@ -244,8 +244,8 @@
           <div class="map-search"><svg class="ms-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="map-search" placeholder="Obec, druh, cena…" autocomplete="off" aria-label="Hledat — dá se napsat celá věta, třeba les do 30 km od Brna do 500 tis" role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="map-search-navrhy"><ul class="ms-navrhy" id="map-search-navrhy" role="listbox" aria-label="Našeptané obce" hidden></ul></div>
   
             <div class="mv-toggle" role="tablist" aria-label="Přepnout seznam a mapu">
-              <button type="button" class="mvt-btn active" data-mv="seznam" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="mvt-t">Seznam</span> <span class="mvt-n" id="mvt-count"></span></button>
-              <button type="button" class="mvt-btn" data-mv="mapa" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg><span class="mvt-t">Mapa</span></button>
+              <button type="button" class="mvt-btn" data-mv="seznam" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="mvt-t">Seznam</span> <span class="mvt-n" id="mvt-count"></span></button>
+              <button type="button" class="mvt-btn active" data-mv="mapa" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg><span class="mvt-t">Mapa</span></button>
             </div>
           </div>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
@@ -602,7 +602,7 @@
   <!-- 1 · TIPY NA DOBROU KOUPI (konkrétní nabídky, schované když nejsou) -->
   <section class="section pt-0 deals-sec rail" id="vyhodne" hidden>
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n" id="deals-n">4</span><span class="rm-l">tipy dnes</span></div>
+      <div class="rail-mark reveal"><span class="rm-n" id="deals-n">4</span> <span class="rm-l">tipy dnes</span></div>
       <div class="section-head reveal"><h2>Tipy na dobrou koupi.</h2></div>
       <div class="deals-grid" id="deals-grid"></div>
     </div>
@@ -614,7 +614,7 @@
        ně nevedl jediný odkaz. -->
   <section class="section pt-0 kraje-sec rail" id="kraje">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">14</span><span class="rm-l">krajů</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">14</span> <span class="rm-l">krajů</span></div>
       <div class="section-head reveal">
         <h2>Pozemky podle kraje.</h2>
       </div>
@@ -649,7 +649,7 @@
   <!-- 3 · CO UVIDÍTE NA MAPĚ (vysvětlení barev hned po procházení) -->
   <section class="section pt-0 rail" id="stavy">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">5</span><span class="rm-l">druhů příležitostí</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">5</span> <span class="rm-l">druhů příležitostí</span></div>
       <div class="section-head reveal"><h2>Pět druhů příležitostí — každý svou barvou.</h2></div>
       <div class="status-grid">
         <div class="status-card reveal" style="--c-druh:var(--c-sale)"><div class="status-top"><svg class="ic" style="color:var(--c-sale)"><use href="#i-tag"/></svg>Na prodej<span class="status-n" data-type="sale"></span></div><ul class="status-list"><li>Aktivně nabízené k prodeji</li><li>Proklik přímo na inzerát</li></ul></div>
@@ -664,7 +664,7 @@
   <!-- 4 · JAK TO FUNGUJE -->
   <section class="section rail" id="jak-funguje">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">3</span><span class="rm-l">kroky</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">3</span> <span class="rm-l">kroky</span></div>
       <div class="section-head reveal"><h2>Jak najdete pozemek — ve třech krocích.</h2></div>
       <div class="steps">
         <div class="step reveal"><div class="icon-badge"><svg class="ic"><use href="#i-map"/></svg></div><div class="idx mono">01</div><h3>Otevřete mapu</h3><p>Sbíráme data z veřejných zdrojů a spojíme je na jednu mapu. Jsou tam jen pozemky, kde se něco děje — barva napoví druh příležitosti.</p></div>
@@ -678,13 +678,13 @@
   <section class="sources" id="zdroje">
     <div class="wrap">
       <div class="src-stats reveal">
-        <div class="src-stat"><b id="stat-count">—</b><span>příležitostí na mapě</span></div>
-        <div class="src-stat"><b id="stat-okres">—</b><span>okresů po celé ČR</span></div>
-        <div class="src-stat"><b>5</b><span>veřejných zdrojů</span></div>
+        <div class="src-stat"><b id="stat-count">—</b> <span>příležitostí na mapě</span></div>
+        <div class="src-stat"><b id="stat-okres">—</b> <span>okresů po celé ČR</span></div>
+        <div class="src-stat"><b>5</b> <span>veřejných zdrojů</span></div>
         <!-- Hodnota je ČÍSLO, ne věta: ve čtveřici obřích číslic se
              „4× denně" zalomilo na dva řádky a popisky pod ním si
              přestaly sedět na jednu linku. -->
-        <div class="src-stat"><b>4×</b><span>denně obnovuje robot</span></div>
+        <div class="src-stat"><b>4×</b> <span>denně obnovuje robot</span></div>
       </div>
       <p class="sources-lead">Tyhle zdroje jsou roztroušené po internetu i úředních deskách obcí — my je každý den projdeme a dáme na jednu mapu. Nic tajného, vše dohledatelné:</p>
       <p class="data-updated mono" id="data-updated" aria-live="polite"></p>
@@ -714,11 +714,11 @@
   <!-- 6 · POZEMKY OD LIDÍ (přímo od majitelů) -->
   <section class="section pt-0 rail" id="od-lidi">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">0 %</span><span class="rm-l">provize</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">0 %</span> <span class="rm-l">provize</span></div>
       <div class="section-head reveal"><h2>Pozemky přímo od majitelů.</h2></div>
       <div id="user-listings" class="odl-wrap reveal" aria-live="polite"></div>
       <div class="odl-cta reveal">
-        <div class="odl-cta-txt"><b>Máte pozemek na prodej?</b><span>Přidejte ho zdarma — bez provize, s přímým kontaktem na vás. Stačí si založit účet.</span></div>
+        <div class="odl-cta-txt"><b>Máte pozemek na prodej?</b> <span>Přidejte ho zdarma — bez provize, s přímým kontaktem na vás. Stačí si založit účet.</span></div>
         <a href="pridat.html" class="btn-primary">Přidat pozemek →</a>
       </div>
     </div>
@@ -728,7 +728,7 @@
   <!-- 7a · SLOVNÍČEK -->
   <section class="section pt-0 rail" id="slovnicek">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">18</span><span class="rm-l">pojmů</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">18</span> <span class="rm-l">pojmů</span></div>
       <div class="section-head reveal"><h2>Nevyznáte se v pojmech? Vysvětlíme.</h2></div>
       <div class="glossary reveal">
         <details class="gl-item"><summary><h3>Dražba</h3></summary><p>Veřejný prodej pozemku tomu, kdo nabídne nejvíc. Startovní cena bývá pod trhem. Pevný termín a pravidla — online nebo u exekutora.</p></details>
@@ -756,7 +756,7 @@
   <!-- 7b · ČASTÉ DOTAZY -->
   <section class="section pt-0 rail" id="faq">
     <div class="wrap">
-      <div class="rail-mark reveal"><span class="rm-n">9</span><span class="rm-l">otázek</span></div>
+      <div class="rail-mark reveal"><span class="rm-n">9</span> <span class="rm-l">otázek</span></div>
       <div class="section-head reveal"><h2>Na co se lidé ptají nejčastěji.</h2></div>
       <div class="faq reveal">
         <details class="faq-item"><summary>Odkud berete data?</summary><p>Z veřejných a legálních zdrojů: Centrální evidence veřejných dražeb (dobrovolné i nucené dražby), Státní pozemkový úřad (nabídky pozemků k prodeji podle § 12) a inzeráty pozemků z portálů, které to dovolují (Bezrealitky, Farmy.cz). Ověření vždy přes katastr nemovitostí. Nic tajného, vše dohledatelné.</p></details>
@@ -843,7 +843,7 @@
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/cisteni.js?v=e1a692c2"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/auth.js?v=68e6addb" defer></script>
 <script src="js/min/dropdown.js?v=1746af15" defer></script>
 <script src="js/min/snimek.js?v=6bead750" defer></script>
 <script src="js/min/terminy.js?v=cf102557" defer></script>
@@ -958,12 +958,13 @@
 <script src="js/min/hledani.js?v=c49c1410" defer></script>
 <script src="js/min/okruh.js?v=f11683ef" defer></script>
 <script src="js/min/klic.js?v=85f3251f"></script>
+<script src="js/min/ulozene-ucet.js?v=35e316ad"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <!-- Poznámky i tady: aby bylo na kartě vidět, u kterého pozemku si
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
-<script src="js/min/poznamky.js?v=070e8c0d"></script>
+<script src="js/min/poznamky.js?v=96f9b539"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=3fc5fa99" defer></script>
+<script src="js/min/main.js?v=77ea5981" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

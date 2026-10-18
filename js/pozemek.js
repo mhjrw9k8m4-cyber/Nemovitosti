@@ -50,6 +50,21 @@
   /* Termíny dražeb — společné s mapou, viz js/terminy.js. Dřív tu byla
      doslovná kopie z js/main.js; dvě kopie téhož výpočtu se v tomhle
      projektu už jednou rozešly a je to chyba, kterou nikdo nevidí. */
+  /* IKONY DO DLAŽDIC S KLÍČOVÝMI ÚDAJI.
+     Kreslené tahem, 1,8 px, currentColor — stejná rodina jako ikony
+     jinde na webu (.ic v css/styles.css). Jsou to OZDOBNÉ značky, ne
+     informace: co dlaždice říká, stojí v ní slovem, takže jdou ven
+     z přístupného stromu (aria-hidden). Kdo je nevidí, nepřijde o nic. */
+  var IKONY = {
+    plocha: '<svg viewBox="0 0 24 24"><path d="M3 8V3h5"/><path d="M21 8V3h-5"/>'
+      + '<path d="M3 16v5h5"/><path d="M21 16v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>',
+    cena: '<svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z"/>'
+      + '<circle cx="7.5" cy="7.5" r="1.1"/></svg>',
+    druh: '<svg viewBox="0 0 24 24"><path d="M12 3 5 13h4l-3 5h12l-3-5h4z"/><path d="M12 18v3"/></svg>',
+    kalendar: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/>'
+      + '<path d="M8 3v4M16 3v4M3 11h18"/></svg>',
+    podil: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>',
+  };
   var T = window.PK_TERMINY;
   function daysUntil(extra) { return T.daysUntil(extra); }
   function countdownText(days) { return T.countdownText(days); }
@@ -266,9 +281,14 @@
   function isFav(d) { return window.PKKlic.jeMezi(favs(), d); }
   function toggleFav(d) {
     var arr = favs(), stary = window.PKKlic.klicVe(arr, d);
+    var klic = stary !== null ? stary : window.PKKlic.klicPozemku(d);
     if (stary !== null) arr.splice(arr.indexOf(stary), 1);
-    else arr.push(window.PKKlic.klicPozemku(d));
+    else arr.push(klic);
     try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
+    /* A na účet, je-li kam — stejně jako na mapě (js/main.js).
+       Zápis do prohlížeče je hotový výš, takže na tomhle volání nic
+       nestojí a nečeká se na ně. */
+    if (global.PKUlozeneUcet) { try { global.PKUlozeneUcet.zmena(klic, stary === null); } catch (e) {} }
     return stary === null;
   }
 
@@ -1746,7 +1766,7 @@
        odporovaly. U 400 z 507 podílů robot z textu inzerátu dokázal,
        že uložená výměra je už ta podílová (`vymera_podilu`), takže
        poznámka vlevo byla nepravdivá u čtyř pětin z nich. */
-    klice.push({ k: 'Výměra', v: areaTxt(d),
+    klice.push({ k: 'Výměra', v: areaTxt(d), ikona: 'plocha',
       pozn: (d.podil && hasArea(d))
         ? (d.vymera_podilu ? 'váš podíl — celá parcela je větší' : 'celá parcela — kupuje se jen podíl')
         : '' });
@@ -1754,14 +1774,68 @@
        stojí ve verdiktu o kus níž (viz zaMetrKratce v js/ceny.js). */
     var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
       ? global.PK_CENY.zaMetrKratce(d) : '';
-    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²',
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', ikona: 'cena',
       pozn: perM2Kratce || perM2Pozn || '' });
     /* VELKÉ PÍSMENO NA ZAČÁTKU. V datech je druh psaný malým („ostatní
        plocha", „orná půda") — je to hodnota v tabulce, ne věta. V té
        dlaždici ale stojí jako údaj sám o sobě, vedle „6 336 m²"
        a „314 Kč/m²", takže malé počáteční písmeno vypadalo, jako by
        tam spadlo omylem. Mění se jen vykreslení, ne data. */
-    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), pozn: '' });
+    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
+
+    /* ČTVRTÁ DLAŽDICE: TERMÍN, NEBO CO VLASTNĚ KUPUJETE.
+       Tři dlaždice říkaly, CO se prodává a ZA KOLIK. Čtvrtá doplňuje
+       tu věc, která u daného typu nabídky rozhoduje nejvíc:
+
+       · u dražby a exekuce TERMÍN. Je to polovina rozhodnutí — kdo se
+         podívá o den později, čte historii. Datum nese `extra`
+         a vytahuje ho js/terminy.js, týmž výpočtem jako mapa. Mají ho
+         všechny: změřeno 148 ze 148 dražeb a exekucí.
+
+       · u ostatních VLASTNICTVÍ, tedy jestli se prodává celý pozemek,
+         nebo jen podíl. U pozemku to mění úplně všechno (s podílem se
+         nedá stavět ani plotit bez ostatních spoluvlastníků) a dosud
+         to stálo jen jako řádek v tabulce pod dlaždicemi. Podílů je
+         v datech 507 z 1 982.
+
+       CO TU SCHVÁLNĚ NENÍ: „v nabídce od". Napsal jsem ji jako první
+       a je to lež: 79,2 % nabídek (1 569 z 1 982) má v `first_seen`
+       jedno a totéž datum, protože se ten sloupec vyplnil najednou,
+       když vznikl. „V nabídce 33 dní" by u čtyř pětin stránek bylo
+       číslo vycucané z toho, kdy jsme si začali psát poznámky —
+       ne z toho, kdy nabídka vznikla. Stejný závěr je o kus níž
+       u data zkontrolování (viz komentář u pz-cas). */
+    var ctvrtaJeVlastnictvi = (function () {
+      var dny = daysUntil(d.extra);
+      if (dny != null && (d.type === 'drazba' || d.type === 'exekuce')) {
+        var ymd = T.auctionYMD(d.extra);
+        var den = ymd ? (+ymd.slice(6, 8)) + '. ' + (+ymd.slice(4, 6)) + '. ' + ymd.slice(0, 4) : '';
+        if (den) {
+          klice.push({ k: 'Termín dražby', v: esc(den), ikona: 'kalendar',
+            pozn: countdownText(dny) || '' });
+          return false;
+        }
+      }
+      /* A TŘETÍ MOŽNOST: ŽÁDNÁ ČTVRTÁ DLAŽDICE.
+         U pozemku, který se prodává celý a není v dražbě, by čtvrtá
+         dlaždice říkala „Celý pozemek" — tedy že tu NENÍ nic zvláštního.
+         To je výplň, ne údaj: zabere na telefonu celý další řádek
+         mřížky (naměřeno 134 px) a nikomu nic nového neřekne. Dlaždice
+         se proto ukáže jen tam, kde má co říct — u dražby termín,
+         u podílu podíl. Tři dlaždice jsou lepší než čtvrtá prázdná.
+         (Zadání znělo „3–4 dlaždice"; tohle je ta trojka.)
+
+         VYSVĚTLIVKA JEN TAM, KDE SE JINDE NEVYSVĚTLÍ. U podílu říká
+         celou věc verdikt o kus níž („Prodává se podíl"), takže ji
+         dlaždice neopakuje. Když se verdikt neukáže (chybí výměra nebo
+         cena, není co srovnávat), vysvětlivka v dlaždici zůstává. */
+      if (!d.podil) return false;
+      var jeVerdikt = !!(MODEL && hasArea(d) && d.price);
+      klice.push({ k: 'Vlastnictví', ikona: 'podil',
+        v: 'Podíl' + (d.zlomek ? '\u00a0' + esc(d.zlomek) : ''),
+        pozn: jeVerdikt ? '' : 'rozhodují i ostatní spoluvlastníci' });
+      return true;
+    }());
 
     var facts = [];
     if (hasParcel(d)) facts.push({ k: 'Parcela', v: 'č. ' + esc(d.parcel) });
@@ -1822,8 +1896,25 @@
       var budeVerdikt = !!(MODEL && hasArea(d) && d.price);
       var dovetek = budeVerdikt ? ''
         : (d.zlomek ? ' — ověřte si ho v katastru' : ' — ověřte si velikost podílu v katastru');
-      facts.push({ k: 'Vlastnictví', v: 'spoluvlastnický podíl'
-        + (d.zlomek ? ' <b>' + esc(d.zlomek) + '</b>' : '') + dovetek });
+      /* DVAKRÁT TOTÉŽ NA JEDNÉ OBRAZOVCE UŽ NE. Od chvíle, kdy je
+         vlastnictví čtvrtou dlaždicí, říkal řádek v tabulce hned pod ní
+         přesně to samé („Podíl 1/2" × „spoluvlastnický podíl 1/2") —
+         naměřeno 47 px navíc a dvě tvrzení o jedné věci. Řádek proto
+         zůstává jen tam, kde dlaždice o vlastnictví není, tedy u dražeb
+         s termínem. Výhrada „ověřte si velikost podílu v katastru"
+         se tím ale ztratit nesmí: když se nevejde do řádku, připíše se
+         k dlaždici. */
+      if (!ctvrtaJeVlastnictvi) {
+        facts.push({ k: 'Vlastnictví', v: 'spoluvlastnický podíl'
+          + (d.zlomek ? ' <b>' + esc(d.zlomek) + '</b>' : '') + dovetek });
+      } else if (dovetek) {
+        for (var ki = 0; ki < klice.length; ki++) {
+          if (klice[ki].k !== 'Vlastnictví') continue;
+          klice[ki].pozn = (d.zlomek ? 'velikost podílu' : 'velikost podílu')
+            + ' si ověřte v katastru';
+          break;
+        }
+      }
     }
 
     /* HLAVNÍ AKCE PATŘÍ NAHORU, NE NA ČTVRTOU OBRAZOVKU. Odkaz na
@@ -1918,8 +2009,19 @@
       '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
       '<div class="pz-klice">' +
         klice.map(function (f) {
-          return '<div class="pz-klic"><b>' + f.v + '</b><span>' + f.k + '</span>' +
-            (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '') + '</div>';
+          /* ZNAČKA JDE AŽ NAKONEC, i když leží v pravém horním rohu.
+             Umístění dělá CSS (position:absolute), takže na pořadí ve
+             stromu nezáleží pro vzhled — zato záleží pro čtení: hodnota
+             a popisek mají jít první. A ještě jedna věc, na kterou se
+             přišlo až měřením: dvě zkoušky čtou popisek dlaždice jako
+             `el.querySelector('span')`. Kdyby značka stála první, vrátil
+             by ten dotaz prázdný text a kontroly by přestaly měřit
+             výměru — tiše, protože by prostě nenašly žádnou dlaždici. */
+          return '<div class="pz-klic">'
+            + '<b>' + f.v + '</b><span>' + f.k + '</span>'
+            + (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '')
+            + (f.ikona && IKONY[f.ikona] ? '<span class="pz-klic-ic" aria-hidden="true">' + IKONY[f.ikona] + '</span>' : '')
+            + '</div>';
         }).join('') +
       '</div>' +
       /* Prázdný rámeček by vypadal jako chybějící obsah: když u pozemku
@@ -1970,22 +2072,30 @@
         pzGtkHtml(d) +
       '</details>' +
 
-      /* ROZHODNUTÍ A AKCE HNED POD NÍM. Nahoře jsou dvě tlačítka a ne
-         víc: jít na nabídku a schovat si ji. Ostatní cesty ven čekají
-         dole, kde se po nich sáhne, až když pozemek zaujme. */
-      '<div class="pz-akce-hlavni">' + hlavniAkce +
-        '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'
-          + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
-      '</div>' +
-
       /* POPIS OD INZERENTA. Dosud na stránce pozemku nestálo ani slovo od
          toho, kdo ho zná — jen čísla a věty, které si web poskládal sám.
          Text přichází z inzerátu, je zbavený kontaktů (celé věty s telefonem
          nebo e-mailem se zahazují, viz scripts/fetch-opportunities.mjs)
          a leží v ostrůvku JSONu rovnou v téhle stránce, aby si kvůli němu
          nemusela nic stahovat. Když chybí, nezobrazí se nic — ne prázdný
-         nadpis. */
+         nadpis.
+
+         A STOJÍ NAD TLAČÍTKY, NE POD NIMI. Pořadí na stránce je pořadí
+         rozhodování: co to je → za kolik → co o tom říká člověk, který
+         to zná → co s tím chci dělat. Dřív se tlačítko „Inzerát"
+         nabízelo DŘÍV, než se dal přečíst jediný řádek od inzerenta —
+         tedy ve chvíli, kdy o pozemku vím jen čísla. Akce tím neodjela
+         daleko: na telefonu je pořád v první polovině stránky (změřeno
+         1 352 → 1 640 px z 3 879). */
       pzPopisInzerentaHtml() +
+
+      /* ROZHODNUTÍ A AKCE HNED POD POPISEM. Nahoře jsou dvě tlačítka a ne
+         víc: jít na nabídku a schovat si ji. Ostatní cesty ven čekají
+         dole, kde se po nich sáhne, až když pozemek zaujme. */
+      '<div class="pz-akce-hlavni">' + hlavniAkce +
+        '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'
+          + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
+      '</div>' +
 
       /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
          nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",
@@ -2155,6 +2265,17 @@
       favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
       toast(on ? 'Uloženo mezi oblíbené' : 'Odebráno z oblíbených');
     });
+    /* A STÁHNOUT, CO JE NA ÚČTU. Bez tohohle by pozemek uložený na
+       telefonu hlásil na počítači „Uložit" — tedy že uložený není.
+       Tlačítko se po stažení srovná podle toho, co doopravdy platí. */
+    if (favBtn && global.PKUlozeneUcet && global.PKUlozeneUcet.sync) {
+      global.PKUlozeneUcet.sync().then(function (zmen) {
+        if (!zmen) return;
+        var on = isFav(d);
+        favBtn.classList.toggle('on', on);
+        favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
+      }).catch(function () {});
+    }
     // sdílet
     var shareBtn = document.getElementById('pz-share');
     if (shareBtn) shareBtn.addEventListener('click', function () {

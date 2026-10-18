@@ -149,10 +149,10 @@
      Zápis jde vždycky nejdřív do prohlížeče (ať je psaní okamžité a ať
      se nic neztratí, když zrovna není signál) a teprve pak na server.
      Opačné pořadí by znamenalo, že poznámka napsaná v lese zmizí. */
-  function prihlasen() {
-    try { return !!(root.PKAuth && root.PKAuth.ready && root.PKAuth.loggedIn()); }
-    catch (e) { return false; }
-  }
+  /* Odpovídá js/auth.js (PKAuth.prihlasen), ne tenhle modul: co znamená
+     „přihlášený", je jedno pravidlo pro celý web. Tři slova obalu tu
+     zůstávají, protože modul musí přežít i stránku bez auth.js. */
+  function prihlasen() { return !!(root.PKAuth && root.PKAuth.prihlasen && root.PKAuth.prihlasen()); }
   function posli(klic, t) {
     if (!prihlasen()) return Promise.resolve(false);
     return root.PKAuth.rpc('poznamka_uloz', { p_klic: klic, p_text: t })

@@ -218,27 +218,65 @@ if (cil) {
 // informaci potřebuje vidět hned. Zároveň se tu ověřuje hledání podle
 // PARCELNÍHO ČÍSLA: kdo drží výpis z katastru, má po ruce číslo parcely,
 // ne název obce.
+/* PODÍL A ÚŘEDNÍ CENA SEM NEPATŘÍ, A NENÍ TO VÝMLUVA.
+   U spoluvlastnického podílu je nízká cena za metr věc ZE ZÁKONA —
+   kupuje se osmina pozemku za osminu peněz — a u pozemků, které SPÚ
+   prodává podle § 12, cenu stanovil úřad, ne trh. Karta to u obou
+   říká vlastním odznakem („podíl 1/8", „úřední cena (§ 12)") a
+   varování o ceně u nich schválně NEMÁ; naměřeno bylo, že ze 204
+   takových nabídek dostalo 147 poplašný odznak, u kterého nebylo co
+   ověřovat. Tahle kontrola proto musí hledat podezřelou nabídku MEZI
+   TĚMI, kterých se varování týká — jinak měří něco jiného, než si
+   myslí. (A přesně to se stalo: po přerovnání dat vyšla jako první
+   podezřelá nabídka podíl 1/8 ve Svinošicích a kontrola spadla na
+   chybějící odznak, který tam být nemá. Chyba byla v kontrole.)
+   Že se u podílu odznak opravdu NEUKÁŽE, se měří hned pod tím. */
 const podezrely = await p.evaluate((D) => {
   const M = window.PK_CENY.postav(D);
-  const d = D.find((x) => M.neduveryhodna(x));
-  return d ? { place: d.place, parcel: d.parcel } : null;
+  const d = D.find((x) => M.neduveryhodna(x) && !x.podil && !(M.spravniCena && M.spravniCena(x)));
+  return d ? { place: d.place, parcel: d.parcel, price: d.price } : null;
 }, CISTA);
-pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou', !!podezrely);
+const podezrelyPodil = await p.evaluate((D) => {
+  const M = window.PK_CENY.postav(D);
+  const d = D.find((x) => M.neduveryhodna(x) && x.podil);
+  return d ? { place: d.place, parcel: d.parcel, price: d.price } : null;
+}, CISTA);
+pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou (a není to podíl)', !!podezrely);
 if (podezrely) {
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p3.waitForTimeout(4500);
-  await p3.evaluate((q) => {
-    const e = document.getElementById('map-search');
-    e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
-  }, podezrely.place);
-  await p3.waitForTimeout(700);
-  const karta = await p3.evaluate(() => {
-    const li = document.querySelector('.opp-item');
-    return li ? { text: li.textContent.replace(/\s+/g, ' ').trim(), overit: !!li.querySelector('.opp-overit') } : null;
-  });
+  /* Karta se hledá podle CENY, ne „první ve výpisu". V obci může stát
+     nabídek víc a ta první nemusí být ta hledaná — kontrola by pak
+     měřila cizí kartu. Číslice se porovnávají bez mezer: sazba do nich
+     píše nezlomitelnou mezeru (U+00A0), občas i úzkou (U+202F). */
+  const kartaPro = async (co) => {
+    await p3.evaluate((q) => {
+      const e = document.getElementById('map-search');
+      e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
+    }, co.place);
+    await p3.waitForTimeout(700);
+    return p3.evaluate((cena) => {
+      const vsechny = [...document.querySelectorAll('.opp-item')];
+      const li = vsechny.find((e) => e.textContent.replace(/\D/g, '').indexOf(String(cena)) >= 0) || vsechny[0];
+      return li ? { text: li.textContent.replace(/\s+/g, ' ').trim(),
+        overit: !!li.querySelector('.opp-overit'),
+        podilovy: /podíl/i.test(li.textContent) } : null;
+    }, co.price);
+  };
+  const karta = await kartaPro(podezrely);
   pravda('podezřelá nabídka má varování rovnou na kartě',
     !!(karta && karta.overit), karta ? karta.text.slice(0, 120) : 'karta se nenašla');
+
+  /* A druhá strana téhož rozhodnutí: u podílu se varování ukázat NESMÍ.
+     Bez téhle kontroly by se „oprava", která odznak vrátí všem, poznala
+     až z toho, že si toho někdo všimne na webu. */
+  if (podezrelyPodil) {
+    const kp = await kartaPro(podezrelyPodil);
+    pravda('u spoluvlastnického podílu se varování naopak neukazuje (je to cena ze zákona)',
+      !!(kp && !kp.overit && kp.podilovy),
+      kp ? `odznak „ověřit": ${kp.overit}, slovo „podíl" na kartě: ${kp.podilovy} — ${kp.text.slice(0, 110)}` : 'karta se nenašla');
+  }
 
   // Hledání podle parcelního čísla.
   const sParcelou = await p.evaluate((D) => {

@@ -117,9 +117,9 @@ pravda(`v hlavičce je ${n7} nových za 7 dní`,
   new RegExp('<b>' + mez(n7) + ' pozem').test(h),
   'podtitulek: ' + ((/<p class="sub">([\s\S]*?)<\/p>/.exec(h) || [])[1] || '—').replace(/<[^>]*>/g, ''));
 pravda(`dlaždice uvádí ${n7} nových za 7 dní`,
-  new RegExp('<b>' + mez(n7) + '</b><span>nových za 7 dní').test(h));
+  new RegExp('<b>' + mez(n7) + '</b>\\s*<span>nových za 7 dní').test(h));
 pravda(`dlaždice uvádí ${n14} nových za 14 dní`,
-  new RegExp('<b>' + mez(n14) + '</b><span>nových za 14 dní').test(h));
+  new RegExp('<b>' + mez(n14) + '</b>\\s*<span>nových za 14 dní').test(h));
 /* A kontrola, že okno není o den delší, než stránka tvrdí. Na dnešních
    datech je v tom čtrnáct nabídek. */
 const dnyVOkne = new Set(noveZa(7).map((o) => o.first_seen));
@@ -175,8 +175,8 @@ for (const o of aktualni) {
 pravda('archiv zná změny cen, je co měřit', zmeny.dolu.length >= 5,
   `zlevnilo ${zmeny.dolu.length}, zdražilo ${zmeny.nahoru.length}, k ověření ${zmeny.pod.length}`);
 pravda(`dlaždice uvádí ${zmeny.dolu.length} zlevněných`,
-  new RegExp('<b>' + mez(zmeny.dolu.length) + '</b><span>zlevn').test(h),
-  'na stránce: ' + ((/<b>([\d\s]+)<\/b><span>zlevn/.exec(h) || [])[1] || '—'));
+  new RegExp('<b>' + mez(zmeny.dolu.length) + '</b>\\s*<span>zlevn').test(h),
+  'na stránce: ' + ((/<b>([\d\s]+)<\/b>\s*<span>zlevn/.exec(h) || [])[1] || '—'));
 
 /* Řádky změn: „předtím <b>199 000 Kč</b> (−46 %, 29. 9. 2026)". */
 /* Oddíl = od svého nadpisu do nadpisu dalšího oddílu. Počítat

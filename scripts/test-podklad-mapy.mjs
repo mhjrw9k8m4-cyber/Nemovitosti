@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naMapu } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -65,13 +66,14 @@ async function otevri(sirka, dotyk) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p.waitForTimeout(2300);
-  /* Na telefonu je výchozí pohled SEZNAM a mapa je skrytá — bez
+  /* Na telefonu je vidět jen jeden pohled a tady se měří MAPA — bez
      přepnutí by se měřil prvek o nulové velikosti a vypadalo by to,
-     že přepínač chybí. (Napoprvé se to tak i stalo.) */
-  if (dotyk) {
-    const b = await p.$('.mvt-btn:not(.active)');
-    if (b) { await b.click(); await p.waitForTimeout(1600); }
-  }
+     že přepínač chybí. (Napoprvé se to tak i stalo.)
+     Dřív tu stálo `.mvt-btn:not(.active)`, tedy „ten druhý". Ve chvíli,
+     kdy se 17. 10. výchozí pohled obrátil na mapu, to začalo přepínat na
+     SEZNAM a dvě kontroly spadly na šířce 0 px. Pohled se proto žádá
+     jménem. */
+  if (dotyk) { await naMapu(p, 1600); }
   return { ctx, p };
 }
 /* PŘEPÍNAČ PODKLADU JE OD 15. 10. V PANELU „VRSTVY", NE NAD MAPOU.

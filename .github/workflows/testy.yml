@@ -118,6 +118,9 @@ jobs:
       - name: Dvojí kopie téže funkce na jedné stránce
         run: node scripts/test-kopie-funkci.mjs
 
+      - name: Noční úklid databáze (nespadne a nevyzradí klíč)
+        run: node scripts/test-uklid-databaze.mjs
+
       - name: Dražby z otevřených dat CEVD (výměra celé položky)
         run: node scripts/test-drazby-cevd.mjs
 
@@ -204,7 +207,14 @@ jobs:
       # Nestačí, že se soubory sečtou — musí z nich jít databázi opravdu
       # založit. Když se to poprvé zkusilo, vysypalo to šest chyb a na
       # novém projektu vůbec nevznikly funkce pro zprávy.
+      # PK_SQL_VYZADOVAN: bez PostgreSQL se zkouška PŘESKAKUJE, a to je
+      # v pořádku u člověka, ne tady. Instalace končí „|| true", takže
+      # kdyby se balíček nestáhl, úloha by zeleně prošla a nejsilnější
+      # kontrola databáze by tiše nehlídala nic. S touhle proměnnou
+      # chybějící PostgreSQL úlohu shodí.
       - name: Databáze jde založit na čistém PostgreSQL
+        env:
+          PK_SQL_VYZADOVAN: '1'
         run: |
           sudo apt-get install -y --no-install-recommends postgresql >/dev/null 2>&1 || true
           node scripts/test-sql-cista.mjs
@@ -700,6 +710,9 @@ jobs:
       - name: Pořadí na stránce pozemku (důležité nahoře)
         run: node scripts/test-poradi-pozemku.mjs
 
+      - name: Mezera mezi číslem a slovem (text stránky, ne jen vzhled)
+        run: node scripts/test-cislo-a-slovo.mjs
+
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
         run: node scripts/test-prvni-obrazovka.mjs
 
@@ -754,6 +767,9 @@ jobs:
 
       - name: Soukromá poznámka k pozemku
         run: node scripts/test-poznamky.mjs
+
+      - name: Uložené pozemky na účtu
+        run: node scripts/test-ulozene-ucet.mjs
 
       - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
         run: node scripts/test-parametry.mjs

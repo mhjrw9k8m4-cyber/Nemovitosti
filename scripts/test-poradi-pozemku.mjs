@@ -172,6 +172,82 @@ try {
     je(m.radce) && je(m.akce) && m.radce < m.akce,
     `rádce ${m.radce} px, akce ${m.akce} px`);
 
+  /* 2b) A SLOVO OD ČLOVĚKA TAKY ------------------------------------- */
+  /* Pořadí na stránce je pořadí rozhodování: co to je → za kolik → co
+     o tom říká ten, kdo to zná → co s tím chci dělat. Tlačítko
+     „Inzerát" se dřív nabízelo DŘÍV, než se dal přečíst jediný řádek
+     od inzerenta. Popis má 1 621 z 1 982 nabídek, takže se kontrola
+     týká většiny stránek; když popis chybí, není co měřit. */
+  if (je(m.popis)) {
+    pravda('popis od inzerenta se čte dřív, než se odejde na inzerát',
+      je(m.akce) && m.popis < m.akce, `popis ${m.popis} px, akce ${m.akce} px`);
+  }
+
+  /* 2c) ČTVRTÁ DLAŽDICE ---------------------------------------------- */
+  /* Tři dlaždice říkaly, CO se prodává a ZA KOLIK. Čtvrtá doplňuje to,
+     co u dané nabídky rozhoduje nejvíc: u dražby termín, u ostatních
+     vlastnictví (celý pozemek, nebo jen podíl — s podílem se nedá
+     stavět bez ostatních spoluvlastníků). */
+  const dlazdice = await p.evaluate(() => [...document.querySelectorAll('.pz-klic')]
+    .map((e) => ({ popisek: (e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '',
+      maZnacku: !!e.querySelector('.pz-klic-ic svg') })));
+  /* Čtvrtá dlaždice se ukazuje JEN TAM, KDE MÁ CO ŘÍCT: u dražby
+     termín, u spoluvlastnického podílu podíl. Tahle stránka není ani
+     jedno, takže tu čtvrtá dlaždice být NESMÍ — „Celý pozemek" by byla
+     výplň, která zabere celý další řádek mřížky a nic nového neřekne.
+     Že se dlaždice u dražby opravdu ukáže, se měří o kus níž na
+     skutečné dražební stránce. */
+  const jeDrazba = await p.evaluate(() =>
+    /dražb|exekuc/i.test((document.querySelector('.pz-media .opp-badge') || {}).textContent || ''));
+  const jePodil = await p.evaluate(() =>
+    /podíl/i.test((document.querySelector('h1.pz-place') || {}).textContent || ''));
+  if (jeDrazba || jePodil) {
+    pravda('u dražby/podílu stojí mezi klíčovými údaji i to, co rozhoduje',
+      dlazdice.some((x) => /Termín dražby|Vlastnictví/.test(x.popisek)),
+      'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
+  } else {
+    pravda('u běžné nabídky nejsou dlaždice dopl­ňované výplní',
+      dlazdice.length === 3 && !dlazdice.some((x) => /Vlastnictví/.test(x.popisek)),
+      'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
+  }
+
+  /* A TEĎ TA DRUHÁ STRANA: na skutečné dražební stránce dlaždice
+     s termínem BÝT MUSÍ. Stránka se hledá v datech, ne natvrdo —
+     dražby se obměňují a pevný odkaz by za týden ukazoval na stránku,
+     která už jen hlásí „nabídka skončila". Když se žádná nenajde
+     (v datech zrovna není dražba s termínem), kontrola to řekne
+     a neměří naprázdno. */
+  {
+    const KOREN = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+    const K = (await import('node:module')).createRequire(import.meta.url)(
+      path.join(KOREN, 'js', 'klic.js')).PKKlic;
+    const data = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+    const bezDiakritiky = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    let drazba = null;
+    for (const o of data.opportunities) {
+      if (!(o.type === 'drazba' || o.type === 'exekuce')) continue;
+      if (!/\d{4}-\d{2}-\d{2}/.test(o.extra || '')) continue;
+      const soubor = 'pozemek-' + bezDiakritiky(o.okres) + '-' + bezDiakritiky(o.place)
+        + '-' + K.otisk(K.pkey(o)) + '.html';
+      if (existsSync(path.join(KOREN, soubor))) { drazba = soubor; break; }
+    }
+    pravda('v datech je dražba s termínem, na které to jde zkusit', !!drazba,
+      'žádná dražební stránka se nenašla — kontrola níž by neměřila nic');
+    if (drazba) {
+      const pd = await ctx.newPage();
+      await pd.goto(BASE + '/' + drazba, { waitUntil: 'load' });
+      await pd.waitForTimeout(2500);
+      const popisky = await pd.evaluate(() => [...document.querySelectorAll('.pz-klic')]
+        .map((e) => ((e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim()));
+      pravda(`u dražby stojí mezi klíčovými údaji termín (${drazba})`,
+        popisky.some((x) => /Termín dražby/.test(x)), 'dlaždice: ' + popisky.join(', '));
+      await pd.close();
+    }
+  }
+  pravda('a každá dlaždice má svou značku', dlazdice.length > 0 && dlazdice.every((x) => x.maZnacku),
+    'bez značky: ' + dlazdice.filter((x) => !x.maZnacku).map((x) => x.popisek).join(', '));
+
   /* 3) KDE TO JE, PATŘÍ K TOMU, CO TO JE ---------------------------- */
   /* Mez je 55 %, ne 50: mapa dnes začíná na 52 % (1 637 z 3 154 px),
      kdežto před předěláním na 68 % (2 543 z 3 748). Padesát procent by

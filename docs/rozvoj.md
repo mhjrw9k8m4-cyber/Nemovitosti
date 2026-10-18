@@ -105,11 +105,15 @@ třecí místa, seřazená podle toho, kolik lidí se jich dotkne:
    nabídek má skupina okres + druh míň než deset kusů, takže se
    porovnává přes kraj nebo celou ČR. Na stránce by mělo být vidět,
    **z čeho** se srovnává — dnes se to píše, ale drobně.
-3. **Uložené pozemky žijí jen v tom prohlížeči.** Je to poctivě
-   napsané a je to správné rozhodnutí (bez účtu), ale znamená to, že
-   se člověk o svou práci připraví přechodem na mobil. Nabídnout
-   „přenést do účtu" v okamžiku, kdy má uložené tři a víc, je levná
-   konverze s jasnou protihodnotou.
+3. **Uložené pozemky už na účet chodí — ale jen přihlášenému.**
+   Od `supabase/ulozene-na-uctu.sql` a `js/ulozene-ucet.js` se seznam
+   slučuje mezi zařízeními (uložení jde vždycky nejdřív do prohlížeče,
+   na účet až potom; odebrání na jednom telefonu drží i na druhém —
+   hlídá to `scripts/test-ulozene-ucet.mjs`). **Co zbývá:** bez účtu
+   to dál žije v jednom prohlížeči, což je záměr, jenže se o tom člověk
+   dozví až z titulku tlačítka. Nabídnout „přenést do účtu" v okamžiku,
+   kdy má uložené tři a víc, je levná konverze s jasnou protihodnotou —
+   nahrání už je hotové (`ulozene_nahraj`), chybí jen ta výzva.
 4. **Odchod na zdroj je slepý konec.** Jakmile člověk klikne na
    inzerát, web o něm neví a nemá ho čím vrátit. Jediná dnešní pojistka
    je uložení pozemku — a to je dobrovolné. Nabídnout uložení **ve

@@ -42,6 +42,9 @@
     { klic: 'pk_rv_uvod_v1', kde: 'local', skupina: 'provoz', nazev: 'Viděný úvod rychlého výběru',
       popis: 'Jen příznak, že už jste vysvětlení četli — podruhé se neukáže.',
       pocet: jeNeco },
+    { klic: 'pk_fav_nahrano_v1', kde: 'local', skupina: 'provoz', nazev: 'Co z uložených zná účet',
+      popis: 'Aby šlo poznat odebrání na jiném zařízení od pozemku uloženého bez přihlášení.',
+      pocet: klicuObjektu, jednotka: ['pozemek', 'pozemky', 'pozemků'] },
     { klic: 'pk_device', kde: 'local', skupina: 'provoz', nazev: 'Označení zařízení',
       popis: 'Náhodné číslo, aby šlo poznat tentýž prohlížeč. Není v něm nic o vás.',
       pocet: jeNeco },
@@ -59,7 +62,10 @@
       popis: 'Aby se nabídky nepřeskupovaly při každém překreslení.', pocet: jeNeco },
 
     { klic: 'pk_mereni_relace', kde: 'session', skupina: 'provoz', nazev: 'Započítaná návštěva',
-      popis: 'Aby se jedna návštěva nepočítala do statistiky dvakrát.', pocet: jeNeco }
+      popis: 'Aby se jedna návštěva nepočítala do statistiky dvakrát.', pocet: jeNeco },
+    { klic: 'pk_pohled_v1', kde: 'session', skupina: 'provoz', nazev: 'Seznam, nebo mapa',
+      popis: 'Který pohled jste si na telefonu vybrali. Příští návštěva začne zase mapou.',
+      pocet: jeNeco }
   ];
 
   var SKUPINY = [

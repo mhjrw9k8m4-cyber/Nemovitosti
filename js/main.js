@@ -139,11 +139,11 @@
     } catch (e) { return zaloha; }
   }
   var TYPE = {
-    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
-    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), ink: tokenBarva('--c-sale-ink', '#364E95'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
+    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), ink: tokenBarva('--c-drazba-ink', '#7E3C18'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), ink: tokenBarva('--c-exekuce-ink', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
+    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), ink: tokenBarva('--c-obec-ink', '#0A626B'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), ink: tokenBarva('--c-majitel-ink', '#6E3EB1'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
   // 14 krajů ČR — přehled po krajích (rozdělení mapy). Okres → kraj + střed kraje.
   var KRAJE = {
@@ -346,7 +346,11 @@
            osobními údaji musí odpovídat tomu, co web dělá — a tenhle
            neodpovídal. Rozděleno proto na to, co kde opravdu je. */
         '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
-        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, vaše inzeráty a zprávy ukládáme na server (Supabase). Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
+        /* ULOŽENÉ POZEMKY A POZNÁMKY PŘIHLÁŠENÉHO NA SERVER CHODÍ — od chvíle,
+           kdy se synchronizují mezi zařízeními (js/ulozene-ucet.js,
+           js/poznamky.js). Nechat tu starou větu „na server nejdou" by byla
+           lež právě o tom, co o člověku víme nejvíc. */
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
         /* „Žádné sledovací skripty“ tu stalo, zatímco 2 006 stránek
            načítalo /_vercel/insights/script.js. Na GitHub Pages ten soubor
@@ -699,15 +703,34 @@
     });
   })();
 
-  // Přepínač Seznam / Mapa (mobil): zobrazí jedno místo obojího nad sebou.
-  // Výchozí je SEZNAM — na úvodní stránce mají být hned vidět nabídky, ne
-  // ovládání mapy. Mapa je na jedno klepnutí vedle.
+  /* Přepínač Seznam / Mapa (mobil): zobrazí jedno místo obojího nad sebou.
+     VÝCHOZÍ JE MAPA — NA PŘÁNÍ MAJITELE, A JE TO OBRAT.
+     Dřív se otevíral SEZNAM s odůvodněním „na úvodní stránce mají být
+     hned vidět nabídky, ne ovládání mapy", a opíralo se to o měření:
+     první nabídka začínala na y 699 z 844 px, tedy pod ohybem, a
+     scripts/test-prvni-obrazovka.mjs od té doby hlídal, že začíná nad
+     450 px.
+     Majitel to rozhodl jinak: „u webu, který staví na mapě, má být mapa
+     to první, co uživatel po otevření vidí." Změřeno, co to stojí: na
+     telefonu 390 × 844 se do první obrazovky nevejde ani jedna karta
+     nabídky — nad obsahem je lišta 65 px, nadpis, hledání s přepínačem
+     a hlavička výpisu, takže jakýkoli pruh mapy odsune první kartu ke
+     spodnímu okraji. Obojí naráz na téhle výšce nejde; je to volba, ne
+     chyba, a tahle poznámka je tu proto, aby se to příště nevracelo
+     tam a zpět bez čísel.
+     Seznam je na jedno klepnutí vedle a nese svůj počet
+     („Seznam (1 942)"), takže se neztratí. */
   (function () {
     var appEl = document.querySelector('.map-app');
     var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
     if (!appEl || !mvBtns.length) return;
     var mapFittedVisible = false;
-    function setView(mv) {
+    /* `prvni` = nastavení při otevření stránky, ne klepnutí člověka.
+       Rozdíl je jediný, ale podstatný: po klepnutí se k mapě odroluje
+       (jinak by z ní pod ovládáním byl vidět jen horní okraj a člověk
+       by měl dojem, že se nic nestalo), kdežto při otevření stránky by
+       takové posunutí bylo samovolné rolování — to se nedělá. */
+    function setView(mv, prvni) {
       var seznam = mv === 'seznam';
       appEl.classList.toggle('mv-seznam', seznam);
       mvBtns.forEach(function (b) {
@@ -722,7 +745,7 @@
       // Po přepnutí na mapu k ní rovnou odrolovat. Ovládání nad ní zabere
       // půl obrazovky, takže bez toho je z mapy vidět jen horní okraj a
       // člověk má dojem, že klepnutí nic neudělalo.
-      if (!seznam && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
+      if (!seznam && !prvni && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
       // Dvakrát schválně: napoprvé už po 70 ms, ať to není vidět, a znovu po
       // ustálení rozměrů. Jedno srovnání nestačilo — mapa se rozbalovala ještě
       // po něm a republika pak seděla nakřivo, u spodního okraje.
@@ -735,15 +758,27 @@
         setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
       }
     }
+    /* VOLBA SE PAMATUJE NA DOBU NÁVŠTĚVY. Mapa napřed platí pro OTEVŘENÍ
+       webu, ne pro každé načtení stránky: kdo se vrátí z pozemku zpátky,
+       musí přistát ve výpisu u své karty, jinak přijde o to, co prošel —
+       a je to přesně to ztracené místo, které se opravovalo dřív (paměť
+       rolování, scripts/test-pamet.mjs).
+       sessionStorage, ne localStorage: příští návštěva začne zase mapou. */
+    function prepni(mv) {
+      try { sessionStorage.setItem('pk_pohled_v1', mv); } catch (e) {}
+      setView(mv);
+    }
     mvBtns.forEach(function (b) {
-      b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
+      b.addEventListener('click', function () { prepni(b.getAttribute('data-mv')); });
     });
-    setView('seznam');
+    var zapamatovany = null;
+    try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
+    setView(zapamatovany === 'seznam' ? 'seznam' : 'mapa', true);
     // Odkaz „+ N dalších příležitostí najdete na mapě" pod seznamem musí mapu
     // opravdu ukázat — jinak by odkazoval na něco, co není vidět.
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('.opp-more') : null;
-      if (t) setView('mapa');
+      if (t) prepni('mapa');
     });
   })();
 
@@ -1434,9 +1469,14 @@
   function isFav(d){ return PKKlic.jeMezi(favs, d); }
   function toggleFav(d){
     var stary = PKKlic.klicVe(favs, d);
+    var klic = stary !== null ? stary : PKKlic.klicPozemku(d);
+    var pridano = stary === null;
     if (stary !== null) favs.splice(favs.indexOf(stary), 1);
-    else favs.push(PKKlic.klicPozemku(d));
+    else favs.push(klic);
     saveFavs(); refreshFavBtn();
+    /* Na účet AŽ POTOM a bez čekání: uložení musí být okamžité i bez
+       signálu. Nepřihlášenému se nestane nic (viz js/ulozene-ucet.js). */
+    if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
   }
   function refreshFavBtn(){
     if (!favEl) return;
@@ -1444,11 +1484,13 @@
     favEl.innerHTML = BM_SVG + '<span>Uložené' + (n ? ' (' + n + ')' : '') + '</span>';
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
-    /* Uložené pozemky leží v tomhle prohlížeči, nikde jinde — kdo si je
-       uloží na telefonu, na počítači je nenajde. Účet na to zatím není
-       (uložení funguje i bez přihlášení, což je záměr), ale mlčet o tom
-       by znamenalo nechat člověka zjistit to ztrátou. */
-    favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
+    /* Věta se mění podle toho, jestli je kam ukládat. Slibovat
+       „uvidíte je i jinde" nepřihlášenému by byla lež; tvrdit
+       „zůstávají jen tady" přihlášenému taky, od chvíle, kdy se
+       ukládají na účet. */
+    favEl.title = (window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+      ? 'Uložené pozemky se ukládají k vašemu účtu — uvidíte je i na jiném zařízení.'
+      : 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte. Po přihlášení se přenesou na účet.';
     /* ODKAZ NA POROVNÁNÍ AŽ OD DVOU. S jedním uloženým pozemkem není co
        porovnávat a odkaz by byl jen další věc na obrazovce. Vyrábí se
        tady, a ne v HTML, protože počet uložených zná jen prohlížeč. */
@@ -2539,14 +2581,26 @@
      stech je to šum — a ten šum stejně vidět je, protože tečky pod
      odznakem zůstávají všechny a mají svou barvu. */
   var SHLUK_MENSINA = 0.25;
+  /* BARVA BUBLINY SE ŠIPKOU NAHORU: INKOUSTOVÁ, NE ZÁKLADNÍ.
+     V bublině stojí bílé číslo. Na základních barvách typů je bílá
+     slabá — změřeno: dražba 3,67 : 1, „od majitele" 4,89, obecní
+     záměr 5,22, a protože se barva ještě míchala s 18 % bílé
+     (color-mix), spadlo to na 2,85 / 3,55 / 3,66. Mez pro text téhle
+     velikosti je 4,5. Inkoustové varianty (-ink), které web už má
+     a používá je pro text na světlém, dávají s bílou 7,0 až 8,3.
+     Proč to žádná zkouška nechytila: kontrast se měří z vypočtených
+     barev pozadí a `color-mix()` vrací Chromium jako `color(srgb …)`,
+     což parser v scripts/test-kontrast.mjs neuměl přečíst — bral to
+     jako průhledno a měřil bílou proti podkladu mapy. Parser to teď
+     umí a tahle bublina je první, co odhalil. */
   function shlukBarva(cleny) {
     var m = {}, n = cleny.length;
     for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
-    if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.color;
-    if ((m.drazba || 0) / n >= SHLUK_MENSINA) return TYPE.drazba.color;
+    if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.ink || TYPE.exekuce.color;
+    if ((m.drazba || 0) / n >= SHLUK_MENSINA) return TYPE.drazba.ink || TYPE.drazba.color;
     var nej = null, nejN = 0;
     for (var t in m) if (m[t] > nejN) { nejN = m[t]; nej = t; }
-    return (TYPE[nej] && TYPE[nej].color) || TYPE.sale.color;
+    return (TYPE[nej] && (TYPE[nej].ink || TYPE[nej].color)) || TYPE.sale.ink || TYPE.sale.color;
   }
 
   function vyrobShluk(s) {
@@ -5340,6 +5394,22 @@
      Stahuje se odsud, ne z bootu: výpis se vykresluje i cestami, které
      bootem neprojdou (sdílený odkaz, obnovený filtr), a značka má být
      vidět při každé z nich. */
+  /* ULOŽENÉ POZEMKY SE STÁHNOU Z ÚČTU STEJNĚ JAKO POZNÁMKY — a ze
+     stejného důvodu: v novém prohlížeči nejsou, dokud se nestáhnou.
+     Sloučení (co nahrát, co naopak smazat, protože to člověk odebral
+     jinde) dělá js/ulozene-ucet.js. */
+  var favStazeno = false;
+  function stahniUlozene() {
+    if (favStazeno || !window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+    favStazeno = true;
+    window.PKUlozeneUcet.sync().then(function (zmen) {
+      if (!zmen) return;
+      try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
+      refreshFavBtn();
+      renderList();
+    }).catch(function () {});
+  }
+
   var poznStazeno = false;
   function stahniPoznamky() {
     if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
@@ -5372,6 +5442,7 @@
        nejde; viz scripts/test-jedno-vykresleni.mjs. */
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
     stahniPoznamky();
+    stahniUlozene();
     // Adresa drží krok s filtry — odtud se sdílí (viz zapisAdresu()).
     zapisAdresu();
     /* Počty u štítků druhu se přepočítávají při každém překreslení —
@@ -5854,7 +5925,9 @@
     if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
       (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
-    if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
+    if (favOnly) pripisky += ' <span class="mc-pozn">'
+      + ((window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+        ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
     /* „Doporučené" není žebříček, pořadí se každý den zamíchá. Stávalo
        to v závorce u volby řazení, kde to přečetl jen ten, kdo rozbalil
        seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
@@ -5961,6 +6034,20 @@
     countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
+    /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
+       Tlačítko pod filtry neslo slovo „Hotovo" — tedy nic o tom, co
+       člověk právě nastavil. Majitel chtěl vidět, jak filtr mění počet
+       výsledků, a je to i jediné místo, kde se to dá říct dřív, než
+       panel zmizí: „Zobrazit 1 420 pozemků". Text se přepisuje při
+       každém přepočtu výběru, takže číslo nikdy nelže. Když nevyhovuje
+       nic, nehlásí „Zobrazit 0 pozemků" (to je nabídka, která nic
+       nenabízí), ale „Zavřít filtry". */
+    var hotovoBtn = document.getElementById('msr-hotovo');
+    if (hotovoBtn) {
+      hotovoBtn.textContent = matched > 0
+        ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
+        : 'Zavřít filtry';
+    }
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se
        přepisoval celý pruh, zmizely by uprostřed výběru. */

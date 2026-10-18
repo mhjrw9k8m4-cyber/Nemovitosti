@@ -225,7 +225,7 @@
      dosah zkoušky, která stupně hlídá (ta se dívá na selektory
      s h1, ne na třídy). Stupeň teď znamená to, co na té stránce
      opravdu je: jedna věta, ne značka. */
-  --h1-domu:clamp(20px, 2.4vw, 28px);
+  --h1-domu:clamp(24px, 2.4vw, 28px);
   --h1-nastroj:28px;
   /* MŘÍŽKOVÁ TEXTURA. Tutéž čtverečkovanou texturu nese šest ploch:
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
@@ -1140,19 +1140,20 @@ body.vm-otevreno{overflow:hidden;}
    leží, ale číslo v něm musí zůstat čitelné i nad tmavým podkladem.
    ===================================================================== */
 .pk-shluk-obal{background:none; border:0; display:flex; align-items:center; justify-content:center;}
+/* BEZ MÍCHÁNÍ S BÍLOU. Bublina měla `color-mix(… 82%, #fff)`, což ji
+   o pětinu zesvětlilo — a bílé číslo v ní tím kleslo pod čitelnou mez
+   (naměřeno 2,59 až 3,97 : 1 podle typu, mez je 4,5). Barva teď chodí
+   z js/main.js rovnou inkoustová (-ink) a nemíchá se. */
 .pk-shluk{display:flex; align-items:center; justify-content:center;
-  border-radius:50%; background:color-mix(in srgb, var(--sh) 82%, #fff);
+  border-radius:50%; background:var(--sh);
   border:2px solid rgba(255,255,255,0.95); box-shadow:var(--e2);
   color:#fff; font-family:var(--font-ui); font-weight:700; letter-spacing:-0.01em;
   cursor:pointer; transition:transform var(--cas-rychly) var(--ease);}
 .pk-shluk b{font-size:inherit; line-height:1;}
 .leaflet-marker-icon:hover .pk-shluk{transform:scale(1.08);}
 .leaflet-marker-icon:focus-visible .pk-shluk{outline:3px solid var(--copper-bright); outline-offset:2px;}
-/* Prohlížeč bez color-mix dostane rovnou barvu druhu — shluk pak není
-   o odstín světlejší, ale pořád je to shluk správné barvy. */
-@supports not (background:color-mix(in srgb, red 50%, #fff)){
-  .pk-shluk{background:var(--sh);}
-}
+/* (Záložní pravidlo pro prohlížeče bez color-mix už není potřeba —
+   nemíchá se vůbec.) */
 .pk-misto{display:block; width:18px; height:18px; border-radius:50%;
   background:#8A5512; border:3px solid #fff; box-shadow:var(--e2);}
 
@@ -1946,6 +1947,29 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    Panel je tím delší. To je u filtrů v pořádku — proto má dole
    přilepené tlačítko, které průběžně říká, kolik nabídek zbývá. */
 .mcv-rada, .mcv-rada.mcv-sloupec{display:grid; grid-template-columns:minmax(0,1fr); gap:6px; margin-top:8px;}
+/* NA TELEFONU DVA SLOUPCE, NE OSM ŘÁDKŮ POD SEBOU.
+   Osm voleb druhu pozemku pod sebou dělalo z panelu filtrů dlouhý
+   svitek: 8 × 44 px a mezi nimi 7 × 6 px, dohromady 394 px jen na
+   jednu otázku. Majitel to popsal jako „obří vertikální seznam".
+   Proč to dřív byl jeden sloupec: naměřilo se, že nejdelší popisek
+   („Zemědělská půda" + počet) potřebuje 174 px ze 166 dostupných,
+   tedy o 8 px víc. To ale platilo jen pro popisek na JEDNOM řádku —
+   a popisek se zalomit může. „Louka / travní porost" se zalomí za
+   lomítkem, dlaždice povyroste z 44 na ~62 px a všech osm se vejde
+   do čtyř řádků: 4 × 62 + 3 × 6 = 266 px místo 394. O 128 px míň,
+   a terč pro prst zůstává nad 44 px.
+   Platí jen v panelu na telefonu; na širokém displeji má panel
+   1 070 px a sloupce si počítá sám (viz .map-controls níž). */
+@media (min-width:360px) and (max-width:1040px){
+  .map-controls-panel .mcv-rada,
+  .map-controls-panel .mcv-rada.mcv-sloupec{grid-template-columns:repeat(2, minmax(0,1fr));}
+  .map-controls-panel .mcp-t{white-space:normal; line-height:1.3;}
+}
+/* POD 360 px ZŮSTÁVÁ JEDEN SLOUPEC. Změřeno na 320 px: dlaždice má
+   136 px, z toho na popisek zbude po zaškrtávátku, počtu a odsazení
+   asi 62 px — a to nestačí ani na jedno slovo („zastavěná"), takže
+   se text ořezával u pěti dlaždic z osmi. Dva sloupce mají cenu jen
+   tam, kde se do nich text vejde. */
 /* JEDNA SOUČÁSTKA PRO VŠECHNY VOLBY V PANELU. Druh pozemku, co uvádí
    inzerát i příležitosti byly tři různě vypadající věci: pilulky bez
    zaškrtnutí, pilulky bez zaškrtnutí a pilulky se zaškrtnutím. Teď je
@@ -3762,11 +3786,20 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   body.hledani-rozbalene .ms-rozsirene{display:block;}
   /* Když je rozbaleno, je u toho čím to zavřít. Na širokém displeji
      se tenhle blok nikdy neschovává, takže tam tlačítko nesvítí. */
+  /* HLAVNÍ AKCE PANELU VYPADÁ JAKO HLAVNÍ AKCE.
+     Tlačítko bylo bílé s obrysem — tedy vizuálně totéž co „Uložené",
+     „Doporučené" nebo „Stáhnout výběr", kterých je v horní části
+     telefonu pět. Majitel: „uživatel nepozná, co je hlavní akce."
+     Teď je to jediná plná plocha ve značkové zeleni v celém panelu;
+     ostatní ovládání zůstává v obrysu. Pravidlo webu zní: plná zeleň
+     pro JEDNU hlavní akci, obrys pro vedlejší (viz .btn-secondary). */
   .msr-hotovo{display:block; width:100%; margin-top:12px; padding:12px;
-    border:1px solid var(--obrys-tlacitka); border-radius:var(--r-ovladani);
-    background:var(--panel); color:var(--plocha-znacka);
-    font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer;}
-  .msr-hotovo:active{background:rgba(31,81,56,0.08);}
+    border:1px solid var(--plocha-znacka); border-radius:var(--r-ovladani);
+    background:var(--plocha-znacka); color:#fff;
+    font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer;
+    box-shadow:var(--e1);
+    transition:background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+  .msr-hotovo:active{background:var(--copper); transform:translateY(1px);}
   .map-side{order:2; border-right:0; max-height:none;}
   .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
@@ -5005,7 +5038,18 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-index-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:16px;}
 .okr-index-grid a{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; background:var(--surface-2,#1b2b22); border:1px solid var(--line,#2C3F35); border-radius:var(--r-md); text-decoration:none; color:var(--text-ondark, #12241A); font-weight:600; font-size:14px;}
 .okr-index-grid a:hover{border-color:var(--copper-bright,#8CC3A4);}
-.okr-index-grid a span{color:var(--muted,#9db0a4); font-weight:500; font-size:13px;}
+/* POČET JE ÚDAJ, NE ŠEDÁ POZNÁMKA. Číslo u kraje a okresu bylo
+   tlumeně šedé a tisklo se k pravému okraji dlaždice — majitel to
+   popsal jako „natlačená čísla bez barevného odlišení". Je to přitom
+   jediná věc, podle které se mezi sedmdesáti sedmi okresy vybírá.
+   Dostává proto vlastní plochu: zelený obrys značky, zelené číslice
+   a tabulkovou šířku číslic, aby se dala čísla pod sebou porovnávat.
+   Zaoblení --r-sm, ne pilulka: pilulky má tenhle web vyhrazené pro
+   přepínače a odznaky stavu (hlídá scripts/test-zaobleni.mjs). */
+.okr-index-grid a span{flex:none; padding:2px 8px; border-radius:var(--r-sm);
+  border:1px solid var(--obrys-tlacitka); background:var(--panel);
+  color:var(--copper); font-weight:700; font-size:12px;
+  font-variant-numeric:tabular-nums; white-space:nowrap;}
 .okr-kraj-h{margin:24px 0 4px; font-family:var(--font-mono); font-size:12px; font-weight:600;
   text-transform:uppercase; letter-spacing:var(--popisek-proklad); color:var(--copper-bright,#8CC3A4);}
 
@@ -7754,19 +7798,64 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    popisek pod ním — tak se to čte na jedno kouknutí, místo aby se
    luštil řádek tabulky. Buňky se samy přeskládají: tři vedle sebe,
    na úzkém displeji dvě a pak jedna. */
-.pz-klice{display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr));
+/* POČET SLOUPCŮ SE URČUJE ŠÍŘKOU, NE `auto-fit`. S auto-fit se mezi
+   560 a 680 px vešly do řádku TŘI dlaždice ze čtyř a čtvrtá zůstala
+   sama — naměřeno 359 px prázdna z 528, tedy 68 % posledního řádku.
+   Přesně ten druh díry, kvůli kterému se tahle mřížka kdysi
+   předělávala; auto-fit o počtu dlaždic nic neví, takže ji neuměl
+   zahnat. Pevné stupně to řeší: jedna dlaždice na nejužším displeji,
+   dvě na telefonu, čtyři od 680 px. A `:has` dorovná případy, kdy
+   dlaždice nejsou čtyři (u nabídky bez ceny nebo bez výměry chybí
+   „Cena za m²"), aby ani tam nezbyl prázdný sloupec. */
+.pz-klice{display:grid; grid-template-columns:minmax(0, 1fr);
   gap:10px; margin:0 0 10px;}
+@media (min-width:360px){ .pz-klice{grid-template-columns:repeat(2, minmax(0, 1fr));} }
+@media (min-width:680px){
+  .pz-klice{grid-template-columns:repeat(4, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(3):last-child){grid-template-columns:repeat(3, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(2):last-child){grid-template-columns:repeat(2, minmax(0, 1fr));}
+}
 /* OSAMĚLÁ DLAŽDICE SE ROZTÁHNE. Na telefonu se vejdou dvě vedle sebe,
    takže tři údaje nechávaly třetí samotný a vedle něj díru — naměřeno
    184 px prázdna z 358, tedy přes polovinu řádku. Právě tohle dělalo
    ze stránky „kostky". Pravidlo platí jen tam, kde jsou sloupce dva
    (na širší obrazovce se tři vejdou na jeden řádek a není co řešit). */
-@media (max-width:560px){
+/* Mez je 680 px, tedy přesně tam, kde mřížka přepíná na čtyři sloupce:
+   dokud jsou sloupce dva, platí „lichá poslední dlaždice se roztáhne".
+   Dřív tu stálo 560 px — číslo z doby, kdy počet sloupců určoval
+   auto-fit, a mezi 560 a 680 px tím pravidlo přestalo platit, i když
+   sloupce byly pořád dva. */
+@media (max-width:679px){
   .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
 }
-.pz-klic{display:flex; flex-direction:column; gap:4px; padding:14px 16px;
+.pz-klic{position:relative; display:flex; flex-direction:column; gap:4px; padding:14px 16px;
   background:var(--ink-soft); border:1px solid var(--line-strong);
   border-radius:var(--r-plocha); box-shadow:var(--e1);}
+/* ZNAČKA V ROHU, NE PŘED ČÍSLEM. Dlaždice se čte odshora: velké číslo,
+   pod ním co to je. Ikona před číslem by se do té cesty postavila a
+   ještě by ukrojila z místa, kde stojí „1 630 m²". V rohu dělá to, co
+   má — dá dlaždici tvář a pomůže oku najít tu správnou, aniž by cokoli
+   odsunula. Je tlumená (ne plná barva): nemá soupeřit s číslem.
+   Ikony jsou ozdoba, ne informace — co dlaždice říká, stojí v ní
+   slovem, takže jdou z přístupného stromu ven (aria-hidden v
+   js/pozemek.js). */
+/* SELEKTOR MUSÍ BÝT SILNĚJŠÍ NEŽ `.pz-klic > span` — jinak značku
+   přebarví popisek. Dlaždice má popisky stylované přes `.pz-klic >
+   span` (dvě třídy), kdežto `.pz-klic-ic` je jen jedna: značka tím
+   vyšla šedá jako popisek a výplň toho pravidla jí srazila šířku na
+   nulu. Naměřeno: svg 0 × 22 px a barva rgb(88,95,91) místo měděné.
+   Proto `.pz-klic > .pz-klic-ic` (taky dvě třídy, a stojí níž) a výplň
+   se popiskům dává bez značky. */
+/* 20 px, NE 22. Tah je na celém webu 1,8 v soustavě 24 — na obrazovce
+   z toho u 19px ikony vyjde 1,43 px a u 22px 1,65 px. Rozdíl 0,22 px už
+   oko pozná a scripts/test-ikony.mjs ho hlídá (strop 0,2); 20 px dává
+   1,50 px, tedy sadu, která vypadá jako jedna. */
+.pz-klic > .pz-klic-ic{position:absolute; top:12px; right:12px; width:20px; height:20px;
+  padding:0; color:var(--copper-bright); opacity:0.45; pointer-events:none;}
+.pz-klic > .pz-klic-ic > svg{display:block; width:20px; height:20px; fill:none; stroke:currentColor;
+  stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+/* Číslo se smí roztáhnout jen k ikoně, ne pod ni. */
+.pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
 .pz-klic b{font-size:24px; line-height:1.2; color:var(--text-ondark);
   font-variant-numeric:tabular-nums;}
 .pz-klic > span{font-size:13px; color:var(--text-ondark-mute);}

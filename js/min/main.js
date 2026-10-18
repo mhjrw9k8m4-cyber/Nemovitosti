@@ -82,11 +82,11 @@
     } catch (e) { return zaloha; }
   }
   var TYPE = {
-    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
-    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
-    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
-    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
-    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
+    sale:    { label: 'Na prodej',    color: tokenBarva('--c-sale', '#4361B8'), ink: tokenBarva('--c-sale-ink', '#364E95'), link: { label: 'Nabídka SPÚ',          url: 'https://spu.gov.cz/nabidky' } },
+    drazba:  { label: 'Dražba',       color: tokenBarva('--c-drazba', '#CC6B33'), ink: tokenBarva('--c-drazba-ink', '#7E3C18'), link: { label: 'Dražební portál',     url: 'https://www.portaldrazeb.cz/' } },
+    exekuce: { label: 'Exekuce',      color: tokenBarva('--c-exekuce', '#8C2F1E'), ink: tokenBarva('--c-exekuce-ink', '#8C2F1E'), link: { label: 'Ověřit v katastru', url: 'https://www.ikatastr.cz/' } },
+    obec:    { label: 'Obecní záměr', zkratka: 'Záměr obce', color: tokenBarva('--c-obec', '#12AEBE'), ink: tokenBarva('--c-obec-ink', '#0A626B'), link: { label: 'Úřední deska obce',    url: 'https://www.uredni-deska.cz/' } },
+    majitel: { label: 'Přímo od majitele', zkratka: 'Od majitele', color: tokenBarva('--c-majitel', '#8B4FE0'), ink: tokenBarva('--c-majitel-ink', '#6E3EB1'), link: { label: 'Ověřit v katastru',    url: 'https://www.ikatastr.cz/' } }
   };
 
   var KRAJE = {
@@ -217,7 +217,8 @@
         '<li><b>E-mail:</b> použijeme jen pro upozornění nebo poptávku, o kterou si sami řeknete. Neprodáváme ho a neposíláme spam — kdykoli se odhlásíte.</li>' +
 
         '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
-        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, vaše inzeráty a zprávy ukládáme na server (Supabase). Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
+
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
 
         '<li><b>Provoz:</b> web běží na GitHub Pages. Žádná reklama a žádné profilování návštěvníků. Nepoužíváme cookies třetích stran.</li>' +
@@ -473,7 +474,8 @@
     var mvBtns = document.querySelectorAll('.mv-toggle .mvt-btn');
     if (!appEl || !mvBtns.length) return;
     var mapFittedVisible = false;
-    function setView(mv) {
+
+    function setView(mv, prvni) {
       var seznam = mv === 'seznam';
       appEl.classList.toggle('mv-seznam', seznam);
       mvBtns.forEach(function (b) {
@@ -482,7 +484,7 @@
         b.setAttribute('aria-selected', String(on));
       });
 
-      if (!seznam && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
+      if (!seznam && !prvni && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
 
       if (!seznam && typeof map !== 'undefined' && map) {
         var srovnej = function () {
@@ -493,14 +495,21 @@
         setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
       }
     }
+
+    function prepni(mv) {
+      try { sessionStorage.setItem('pk_pohled_v1', mv); } catch (e) {}
+      setView(mv);
+    }
     mvBtns.forEach(function (b) {
-      b.addEventListener('click', function () { setView(b.getAttribute('data-mv')); });
+      b.addEventListener('click', function () { prepni(b.getAttribute('data-mv')); });
     });
-    setView('seznam');
+    var zapamatovany = null;
+    try { zapamatovany = sessionStorage.getItem('pk_pohled_v1'); } catch (e) {}
+    setView(zapamatovany === 'seznam' ? 'seznam' : 'mapa', true);
 
     document.addEventListener('click', function (e) {
       var t = e.target && e.target.closest ? e.target.closest('.opp-more') : null;
-      if (t) setView('mapa');
+      if (t) prepni('mapa');
     });
   })();
 
@@ -912,9 +921,13 @@
   function isFav(d){ return PKKlic.jeMezi(favs, d); }
   function toggleFav(d){
     var stary = PKKlic.klicVe(favs, d);
+    var klic = stary !== null ? stary : PKKlic.klicPozemku(d);
+    var pridano = stary === null;
     if (stary !== null) favs.splice(favs.indexOf(stary), 1);
-    else favs.push(PKKlic.klicPozemku(d));
+    else favs.push(klic);
     saveFavs(); refreshFavBtn();
+
+    if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
   }
   function refreshFavBtn(){
     if (!favEl) return;
@@ -923,7 +936,9 @@
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
 
-    favEl.title = 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte.';
+    favEl.title = (window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+      ? 'Uložené pozemky se ukládají k vašemu účtu — uvidíte je i na jiném zařízení.'
+      : 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte. Po přihlášení se přenesou na účet.';
 
     var por = document.getElementById('map-porovnat');
     if (!por) {
@@ -1585,14 +1600,15 @@
   }
 
   var SHLUK_MENSINA = 0.25;
+
   function shlukBarva(cleny) {
     var m = {}, n = cleny.length;
     for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
-    if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.color;
-    if ((m.drazba || 0) / n >= SHLUK_MENSINA) return TYPE.drazba.color;
+    if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.ink || TYPE.exekuce.color;
+    if ((m.drazba || 0) / n >= SHLUK_MENSINA) return TYPE.drazba.ink || TYPE.drazba.color;
     var nej = null, nejN = 0;
     for (var t in m) if (m[t] > nejN) { nejN = m[t]; nej = t; }
-    return (TYPE[nej] && TYPE[nej].color) || TYPE.sale.color;
+    return (TYPE[nej] && (TYPE[nej].ink || TYPE[nej].color)) || TYPE.sale.ink || TYPE.sale.color;
   }
 
   function vyrobShluk(s) {
@@ -3499,6 +3515,18 @@
     else { msfBadge.hidden = true; }
   }
 
+  var favStazeno = false;
+  function stahniUlozene() {
+    if (favStazeno || !window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+    favStazeno = true;
+    window.PKUlozeneUcet.sync().then(function (zmen) {
+      if (!zmen) return;
+      try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
+      refreshFavBtn();
+      renderList();
+    }).catch(function () {});
+  }
+
   var poznStazeno = false;
   function stahniPoznamky() {
     if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
@@ -3520,6 +3548,7 @@
 
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
     stahniPoznamky();
+    stahniUlozene();
 
     zapisAdresu();
 
@@ -3771,7 +3800,9 @@
     if (novych) pripisky += ' <span class="mc-nove">' + fmt(novych) + ' ' +
       (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
 
-    if (favOnly) pripisky += ' <span class="mc-pozn">uloženo jen v tomhle prohlížeči</span>';
+    if (favOnly) pripisky += ' <span class="mc-pozn">'
+      + ((window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+        ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
 
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
 
@@ -3820,6 +3851,13 @@
     countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
+
+    var hotovoBtn = document.getElementById('msr-hotovo');
+    if (hotovoBtn) {
+      hotovoBtn.textContent = matched > 0
+        ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
+        : 'Zavřít filtry';
+    }
 
     var akceEl = document.getElementById('mc-akce') || countEl;
     if (akceEl !== countEl) akceEl.innerHTML = tlacitka;

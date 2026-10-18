@@ -26,6 +26,7 @@
 // Kolik to stojí první nabídce, měří scripts/test-prvni-obrazovka.mjs.
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -62,6 +63,8 @@ async function zmer(nast) {
     nast.dotyk ? { isMobile: true, hasTouch: true } : {}));
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
   await p.waitForTimeout(1500);
@@ -94,6 +97,8 @@ async function zmerPoFiltru() {
   });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
   await p.waitForTimeout(1200);
@@ -125,6 +130,8 @@ async function zmerPruh() {
   });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  // Na telefonu se úvodní stránka otevírá mapou; nářadí je ve VÝPISU.
+  await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item[data-pk]').length > 3,
     null, { timeout: 60000 });
   await p.evaluate(() => {

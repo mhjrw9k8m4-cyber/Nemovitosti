@@ -115,7 +115,7 @@ for (const f of fs.readdirSync(KOREN).sort()) {
     const druhy = new Set(list.map((o) => o.type));
     if (druhy.size > 1) ocekavanoDlazdic += DRUHY_DLAZDIC.filter((t) => druhy.has(t)).length;
   }
-  for (const mm of h.matchAll(/<div class="okr-stat"><b>([\d\s]+)<\/b><span>([^<]*)<\/span>/g)) {
+  for (const mm of h.matchAll(/<div class="okr-stat"><b>([\d\s]+)<\/b>\s*<span>([^<]*)<\/span>/g)) {
     const slovo = mm[2];
     if (/^pozemk/.test(slovo)) continue;            // celkový počet se měří výš
     const typ = TYP[slovo];

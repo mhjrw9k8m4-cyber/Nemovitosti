@@ -1471,3 +1471,237 @@ dál čte, takže co si kdo uložil dřív, se neztratí.
 
 Kolize různých pozemků: **1 → 0**, u pozemků s výměrou se klíč
 nezměnil ani o znak.
+
+### Dvě zkoušky, které hlídají zkoušky *17. 10.*
+
+**Noční úklid běží se servisním klíčem — a výpisy běhů jsou veřejné.**
+`scripts/uklid-databaze.mjs` dostává klíč, který obchází veškerá
+oprávnění. `scripts/test-uklid-databaze.mjs` proto skript pustí
+doopravdy, ale proti vlastnímu serveru na localhostu, a hlídá čtyři
+věci: že bez údajů neudělá nic a skončí v pořádku, že chybějící
+funkce v databázi (majitel ještě nepustil migraci) poradí, co s tím,
+místo aby spadla, že selhání databáze je **varování, ne pád celé
+noční úlohy** — a že se klíč neobjeví ve výpisu. Ověřeno sabotáží:
+s klíčem dopsaným do chybové hlášky zkouška padá.
+
+**A nejsilnější kontrola databáze mohla tiše nehlídat nic.**
+`test-sql-cista.mjs` zakládá celou databázi na opravdovém PostgreSQL
+— a když PostgreSQL není, přeskočí se. To je správné u člověka na
+notebooku. V CI se ale balíček instaluje příkazem, který končí
+`|| true` (aby úloha nespadla na výpadku zrcadla), takže kdyby se
+jednou nestáhl, úloha by byla **zelená a neověřila by nic**. Workflow
+teď nastavuje `PK_SQL_VYZADOVAN=1` a zkouška v tom případě končí
+chybou. Ověřeno tím, že jsem PostgreSQL na chvíli schoval: s
+proměnnou končí kódem 1, bez ní nulou.
+
+### Detail inzerátu: co dělá stránku „technickou" *17. 10.*
+
+Majitel: *„inzeráty působí uměle a neosobně — chybí dominantní fotka,
+nahuštěný technický text, všechno má stejnou vizuální váhu, popis je
+utopený, tlačítka jsou šedivá a schovaná."* Dvě věci z toho měření
+vyvrátilo a je poctivé to říct dřív, než se začne něco „opravovat":
+
+**Fotka nechybí někdy, chybí vždycky.** Změřeno: **0 z 1 982 nabídek**
+má jedinou fotku — veřejné zdroje (dražby, SPÚ, inzeráty) je nedávají
+a v datech pro ně není ani pole. Fotku může mít jen inzerát přidaný
+přes náš formulář. Velká fotka v záhlaví tedy není věc vzhledu; muselo
+by to začít u zdrojů dat.
+
+**Záhlaví už dominantní je a není to ilustrace.** Vykresluje ho
+`js/snimek.js`: je to skutečný satelitní snímek toho pozemku poskládaný
+z dlaždic, 390 × 293 px na telefonu a 720 × 400 na monitoru. Sám jsem
+se spletl — v měření vypadalo prázdně, protože jsem si v testovacím
+prohlížeči blokoval externí obrázky, tedy právě ty dlaždice. (Dlaždice
+se objednávají až u okna: jinak by úvodní stránka stáhla 2,23 MB
+navíc, viz komentář v `js/snimek.js`.)
+
+**Fixní spodní lišta na telefonu taky existuje** — `#pz-lista` s cenou,
+cenou za m² a hlavním tlačítkem v akcentní zeleni; naskočí, jakmile
+zmizí z dohledu cena i tlačítka.
+
+Co se tedy opravdu změnilo:
+
+| | předtím | teď |
+|---|---|---|
+| cena | 32 px | **40 px** (dlaždice mají 24, cena je konečně největší číslo stránky) |
+| dlaždice | 3, bez značek | **3–4 se značkami** |
+| čtvrtá dlaždice | — | **termín dražby**, nebo **podíl** |
+| popis inzerenta | až ZA tlačítky | **před tlačítky**, na monitoru 18 px |
+| řádek „Vlastnictví" v tabulce | vždy | jen tam, kde není dlaždicí |
+
+**Čtvrtá dlaždice se ukáže, jen když má co říct.** Napsal jsem ji
+nejdřív pro všechny — u běžné nabídky by stála „Celý pozemek", tedy že
+tu nic zvláštního není. Taková výplň stojí celý další řádek mřížky
+(naměřeno 134 px na telefonu), takže zůstává jen tam, kde nese
+rozhodnutí: u dražby termín (má ho 148 ze 148), u podílu podíl (507
+z 1 982). Jakmile je vlastnictví dlaždicí, mizí řádek v tabulce hned
+pod ní, který říkal totéž (47 px a dvě tvrzení o jedné věci).
+
+**A dlaždice, kterou jsem napsal jako první, byla lež.** „V nabídce ·
+12 dní" — jenže **1 569 z 1 982 nabídek (79,2 %) má v `first_seen`
+jedno a totéž datum**, protože se ten sloupec vyplnil najednou, když
+vznikl. Stálo to i v komentáři o pár set řádků níž v tomtéž souboru;
+našel jsem to až při čtení kódu kolem.
+
+**Ikony byly chvíli neviditelné.** Vykreslily se, ale naměřeno
+`svg 0 × 22 px` a barva `rgb(88,95,91)` místo měděné: popisky dlaždice
+stylovalo `.pz-klic > span` (dvě třídy), kdežto značka měla
+`.pz-klic-ic` (jedna). Prohrála na specificitě a výplň z toho pravidla
+jí srazila šířku na nulu. Na snímku to vypadalo prostě „nic tam není".
+
+**Mřížka dlaždic měla díru mezi 560 a 680 px.** Do řádku se vešly tři
+dlaždice ze čtyř a čtvrtá zůstala sama: **359 px prázdna z 528, tedy
+68 % posledního řádku**. `auto-fit` o počtu dlaždic neví, takže ji
+neuměl zahnat; nahradily ho pevné stupně (1 / 2 / 4 sloupce) a `:has`
+pro případy, kdy dlaždice nejsou čtyři. Změřeno na jedenácti šířkách
+od 320 do 1 440 px a se třemi i se čtyřmi dlaždicemi: díra je všude
+nula.
+
+**Tři vlastní hodnoty mimo stupnici** chytila rychlá sada:
+`padding-right:26px` (stupnice zná 24 a 28), `opacity:0.42` (mřížka po
+0,05) a **řádkování 1,75**. Stupnice řádkování končí na 1,6 a v testu
+stojí „vyber nejbližší hodnotu, nerozšiřuj ji" — volnější proklad
+tedy neprošel a čitelnost popisu řeší to, co systém dovoluje: na
+monitoru 18 px (18 × 1,6 = 28,8 px mezi řádky proti 25,6) a šířka
+56 znaků.
+
+Co jsem **neudělal**: dvousloupcové rozložení „tabulka parametrů |
+popis" na monitoru. Ty dva bloky jsou v DOMu daleko od sebe (mezi nimi
+verdikt o ceně a rádce) a posadit je vedle sebe by znamenalo přeskládat
+pořadí, které se ladilo o den dřív. Je to samostatná práce, ne přívažek
+k téhle.
+
+Hlídá to `scripts/test-poradi-pozemku.mjs`: popis před tlačítky,
+dlaždice se značkami, žádná výplňová čtvrtá dlaždice u běžné nabídky —
+a že se u dražby termín opravdu ukáže, se měří **na skutečné dražební
+stránce**, kterou si zkouška najde v datech. Natvrdo zapsaný odkaz by
+za týden ukazoval na nabídku, která už skončila.
+
+## 20. Uložené pozemky byly poslední věc, co zůstávala v jednom telefonu *17. 10.*
+
+Poznámky k pozemkům chodily na účet (`supabase/poznamky.sql`), uložená
+hledání taky (`supabase/saved-searches.sql`). To nejčastější — „tenhle
+si schovám" — nechodilo nikam: seznam ležel v `localStorage` pod
+`pk_fav_v1` a nic víc. Kdo si v autobuse uložil dvacet pozemků na
+telefonu, doma na počítači neviděl ani jeden a tlačítko mu u všech
+hlásilo „Uložit", tedy že uložené nejsou.
+
+Databázová strana je `supabase/ulozene-na-uctu.sql`: tabulka `ulozene`
+(klíč `user_id` + `klic`), RLS na čtení i mazání jen svých řádků
+a čtyři funkce — `ulozeny_uloz`, `ulozeny_smaz`, `moje_ulozene`
+a `ulozene_nahraj` pro hromadné nahrání jedním voláním. Dvacet
+samostatných kol přes síť by na telefonu trvalo vteřiny a půlka by se
+po cestě ztratila. Strop je 500 klíčů na účet; je to ochrana proti
+tomu, aby si někdo z účtu udělal úložiště, ne škrcení člověka.
+Vyzkoušeno na místním PostgreSQL 16: uložení projde, druhé uložení
+téhož klíče nepřidá nic, hromadné nahrání dvou klíčů vrátí 2, mazání
+projde a **prázdný klíč neprojde**.
+
+**Těžká část nebylo ukládání, ale mazání.** „Mám to tady a na účtu to
+není" jsou dvě různé situace a splést je znamená, že smazání nikdy
+nedrží — na tom pohořely poznámky, než se to spravilo:
+
+* klíč, který **už byl nahraný**, a na účtu teď není ⇒ někdo ho odebral
+  na druhém zařízení, smaž ho i tady;
+* klíč, který nahraný **nikdy nebyl** (uložený před přihlášením nebo bez
+  signálu) ⇒ nahraj ho, nemazat.
+
+Proto se vedle seznamu drží druhá mapa `pk_fav_nahrano_v1` — „co účet
+určitě zná". Zápis jde vždycky **nejdřív do prohlížeče** a na účet až
+potom, bez čekání: uložení musí být okamžité a nesmí se ztratit bez
+signálu. Nepřihlášenému se nemění nic.
+
+**Jedna chyba v tom byla a našla se čtením, ne testem.** Po hromadném
+nahrání se značka „účet to zná" dávala **bez ohledu na to, jak volání
+skončilo**. Kdo si uloží pozemek v metru, nahrání selže a značka přesto
+padne — a příští sloučení ten klíč přečte jako „účet ho zná a teď tam
+není", tedy jako smazaný jinde, a **smaže ho**. Z chybějícího signálu
+by se tak stala ztráta dat. Značka se teď dává jen při úspěchu; nahrání
+se zkusí příště znovu.
+
+**Stránka pozemku taky musela stahovat.** Bez toho by pozemek uložený
+na telefonu hlásil na počítači „Uložit" — synchronizace by běžela
+jen na mapě, tedy přesně tam, kde to člověk nejspíš nehledá.
+
+Hlídá to `scripts/test-ulozene-ucet.mjs` (21 kontrol v prohlížeči,
+proti falešné Supabase, takže se měří celá cesta i mezi dvěma
+„telefony"). Čtyři sabotáže, čtyři různé pády:
+
+| co jsem rozbil | co spadlo |
+|---|---|
+| obrácená podmínka „nahraný ⇒ smaž" | 3 kontroly |
+| „nikdy nemazat, co na účtu není" | smazání na jiném zařízení nedrží |
+| odeslání i nepřihlášenému | uložení opustilo zařízení bez účtu |
+| vypnuté stahování na stránce pozemku | 7 kontrol |
+
+Zkouška se přitom ptá i na to, co se stát **nesmí**: nepřihlášenému
+nesmí uložení opustit zařízení (uložené pozemky jsou seznam toho, o co
+se člověk zajímá — bez účtu to není naše věc) a **jeden účet nesmí
+vidět do druhého**.
+
+**A tři větné sliby, které tím zestaraly.** Na stránce „Co si web
+pamatuje" stálo, že uložené pozemky „na server nejdou"; ve výpisu
+uložených se psalo „uloženo jen v tomhle prohlížeči"; a v kódu zůstal
+komentář „účet na to zatím není". Všechno tři se opravilo — slib
+o nakládání s údaji, který neodpovídá tomu, co web dělá, je horší než
+žádný.
+
+## 21. Mapa napřed rozbila čtrnáct zkoušek — a jedna z nich měla pravdu *18. 10.*
+
+Změna výchozího pohledu na telefonu (mapa místo seznamu, na přání
+majitele) stála **čtrnáct padlých prohlížečových zkoušek ze 119**.
+Deset z nich mělo jednu příčinu: výpis je v mapovém pohledu skrytý,
+takže zkoušky čekaly třicet vteřin na tlačítka, která v DOMu jsou, ale
+nejsou vidět. V hlášení to vypadalo jako „prvek chybí"; naměřeno
+`y: 0 px`, `šířka 0 px`, `locator resolved to 24 elements` — tedy
+„je jich čtyřiadvacet a ani jeden není vidět".
+
+**Jedna z těch zkoušek ale nehlásila svou vadu, nýbrž moji.** Paměť
+rolování (`scripts/test-pamet.mjs`, oddíl „návrat zpět vrátí člověka
+tam, kde ve výpisu byl") padala správně: po mé změně se **každé**
+načtení stránky otevřelo mapou, tedy i návrat z nabídky zpátky. Člověk
+tím přišel o místo ve výpisu, které si prošel — a to je přesně ta vada,
+která se tu kdysi pracně opravovala (dřív tam vycházela nula). Mapa
+napřed má platit pro **otevření webu**, ne pro každé načtení stránky.
+Volba pohledu se proto pamatuje na dobu návštěvy (`sessionStorage`,
+klíč `pk_pohled_v1`); `localStorage` by z „mapa napřed" udělal
+nastavení, které si nikdo nezvolil.
+
+Statické značky v `index.html` se srovnaly s novým výchozím stavem —
+dřív v HTML stálo „Seznam aktivní" a skript to po načtení obracel.
+
+**Pomůcka pro zkoušky místo deseti opisů.** `scripts/zkouska-pohled.mjs`
+(`naSeznam` / `naMapu`) a tři věci, které se do ní musely napsat, aby
+nebyla horší než ten opis:
+
+* **pohled se žádá jménem.** Zkouška podkladu mapy klikala na
+  `.mvt-btn:not(.active)` ve významu „přepni na mapu". Jak se výchozí
+  pohled obrátil, začalo to přepínat na seznam a dvě kontroly spadly na
+  šířce 0 px;
+* **čeká se na JS, ne na hodinky.** Tlačítka jsou ve statickém HTML, ale
+  přepínají až od chvíle, kdy `js/main.js` navěsí obsluhu — klepnutí
+  dřív by tiše nic neudělalo a zkouška by měřila skrytý pohled dál;
+* **výsledek se ověřuje** na třídě `.map-app.mv-seznam` a při nezdaru se
+  klepne ještě jednou.
+
+Nová kontrola na paměť pohledu je v `scripts/test-prvni-obrazovka.mjs`
+a prokázaly ji dvě sabotáže: zapomenout volbu ⇒ padne „po načtení
+stránky znovu zůstane seznam"; vrátit seznam jako výchozí ⇒ padnou čtyři
+kontroly (mapa po otevření, aktivní záložka, nová i příští návštěva).
+
+**Čtyři nálezy, které s pohledem nesouvisely:**
+
+* **Stránka „Moje data" mlčela o dvou klíčích**, které si web ukládá
+  (`pk_fav_nahrano_v1`, `pk_pohled_v1`). Ta stránka slibuje úplný výčet,
+  takže mlčení je tam chyba, ne drobnost — a našla to zkouška, ne já.
+* **Zkouška hlídala doslovný zápis.** `test-mapa-pozemku` kontroloval
+  regexem `arr.push(window.PKKlic.klicPozemku(d))`. Ten se změnil (klíč
+  musí jít i na účet, takže leží v proměnné), ale záměr platí dál. Čte se
+  teď **tělo** `toggleFav` a hlídá se, odkud klíč je; přibyla kontrola,
+  že obě poloviny posílají na účet **týž** klíč, pod kterým uložily.
+* **Ikony dlaždic měly o 0,22 px tlustší stopu** než zbytek webu
+  (22 px × tah 1,8 v soustavě 24 = 1,65 px proti 1,43 px u 19px ikony;
+  strop je 0,2 px). Zmenšeno na 20 px → 1,50 px.
+* **Dvě natvrdo psané mezery mezi `</b>` a `<span>`** v `test-sliby` —
+  táž třída chyby jako ty čtyři dřív, kdy oprava „14krajů → 14 krajů"
+  rozbila vzory, které mezeru nečekaly.

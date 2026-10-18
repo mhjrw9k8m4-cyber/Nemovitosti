@@ -36,7 +36,7 @@
   
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=cea24a62">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=d0fd23b3">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -77,7 +77,7 @@
 .pz-priceblock{margin:10px 0 0}
 .pz-pl{font-size:13px;font-weight:600;letter-spacing:0;color:var(--popisek);margin-bottom:2px}
 .pz-price{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.pz-price .pv{font-family:var(--font-ui);font-size:32px;font-weight:700;letter-spacing:-0.03em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
+.pz-price .pv{font-family:var(--font-ui);font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
 .pz-price .pm{font-size:14px;font-weight:600;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
 .pz-verdict{--vc:var(--copper-bright);--vt:#fff;margin:20px 0 0;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--vc);box-shadow:var(--e1)}
 .pz-verdict.good{--vc:var(--c-ok-ink)}
@@ -95,6 +95,8 @@
 .pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
 .pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
 .pz-popis-inzerent{max-width:var(--m-text);margin:0 0 6px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
+@media (min-width:900px){.pz-popis-inzerent{font-size:18px}
+}
 .srv{margin:0}
 .srv-veta{max-width:var(--m-text);margin:0 0 12px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
 .srv-seznam{list-style:none;margin:0;padding:0;max-width:var(--m-text)}
@@ -332,13 +334,14 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/vybaveni.js?v=8e3b34f9"></script>
 <script src="js/min/radce.js?v=565dda2c"></script>
 <script src="js/min/klic.js?v=85f3251f"></script>
+<script src="js/min/ulozene-ucet.js?v=35e316ad"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
-<script src="js/min/poznamky.js?v=070e8c0d"></script>
+<script src="js/min/poznamky.js?v=96f9b539"></script>
 
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 3 810 m² — Dolní Újezd","description":"Na prodej · 200 000 Kč (52 Kč/m²) · 3 810 m² · Dolní Újezd, okres Přerov. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-prerov-dolni-ujezd-1xwcthw.html","address":{"@type":"PostalAddress","addressLocality":"Dolní Újezd","addressRegion":"Přerov","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.549515,"longitude":17.52062},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":3810,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":200000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-prerov-dolni-ujezd-1xwcthw.html","itemOffered":{"@type":"Place","name":"Trvalý travní porost 3 810 m² — Dolní Újezd"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Olomoucký kraj","item":"https://www.parcelaka.cz/pozemky-olomoucky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Přerov","item":"https://www.parcelaka.cz/pozemky-okres-prerov.html"},{"@type":"ListItem","position":5,"name":"Trvalý travní porost 3 810 m² — Dolní Újezd","item":"https://www.parcelaka.cz/pozemek-prerov-dolni-ujezd-1xwcthw.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Dolní Újezd|—|Přerov|49.550|17.521","ll":[49.549515,17.52062],"v":3810,"c":200000,"r":"data/okres/prerov.json"};</script>
-<script src="js/min/pozemek.js?v=a767a571"></script>
+<script src="js/min/pozemek.js?v=4be5c7dd"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
@@ -347,7 +350,7 @@ body.pzm-cela-telo{overflow:hidden}
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/auth.js?v=68e6addb" defer></script>
 <script src="js/min/hlavicka.js?v=52634b3e" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b2023a39" defer></script>

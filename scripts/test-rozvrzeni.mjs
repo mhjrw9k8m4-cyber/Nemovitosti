@@ -28,6 +28,7 @@ import { rozbalHledani } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 // Tentýž server jako ostatní testy: servíruje statické soubory na 8310.
 await import('./falesna-supabase-chat.mjs');
@@ -197,6 +198,10 @@ async function otevri(soubor, sirka, vyska) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${soubor}`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(1500);
+  /* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
+     zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
+     v DOMu je, ale není vidět. */
+  await naSeznam(p);
   return { ctx, p };
 }
 
@@ -366,7 +371,7 @@ async function otevri(soubor, sirka, vyska) {
     const h = readFileSync(new URL(f, KOREN), 'utf8');
     const usek = h.slice(h.indexOf('<div class="okr-stats">'));
     const dlazdice = [...usek.slice(0, usek.indexOf('</div>\n      </div>') + 6)
-      .matchAll(/<b>([\d\s\u00a0]+)<\/b><span>([^<]+)<\/span>/g)]
+      .matchAll(/<b>([\d\s\u00a0]+)<\/b>\s*<span>([^<]+)<\/span>/g)]
       .map((m) => ({ n: Number(m[1].replace(/[\s\u00a0]/g, '')), co: m[2] }));
     if (dlazdice.length < 2) continue;
     prohlednuto++;
@@ -1359,6 +1364,8 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(3600);
+  // Nářadí výpisu („Dražby po termínu") je v mapovém pohledu skryté.
+  await naSeznam(p);
   const cti = () => p.evaluate(() => ({
     obce: [...document.querySelectorAll('.opp-item')].map((e) => (e.querySelector('.opp-place') || e).textContent.trim().slice(0, 30)),
     karet: document.querySelectorAll('.opp-item').length,
@@ -1669,6 +1676,8 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
       await ctx.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
       const po = await ctx.newPage();
       await po.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+      // Odznaky jsou na kartách VÝPISU; v mapovém pohledu mají nulové rozměry.
+      await naSeznam(po);
       await po.waitForSelector('.opp-item .opp-badge', { timeout: 20000 }).catch(() => {});
       await po.waitForTimeout(500);
       const v = await po.evaluate(() => {

@@ -90,8 +90,52 @@ try {
   });
   const p = await ctx.newPage();
   await p.goto(BASE + '/index.html', { waitUntil: 'load' });
-  await p.waitForSelector('.opp-item', { timeout: 25000 });
+  await p.waitForSelector('.mv-toggle .mvt-btn', { timeout: 25000 });
   await p.waitForTimeout(2500);
+
+  /* ---- NEJDŘÍV TO, CO JE VIDĚT PO OTEVŘENÍ -------------------------
+     Od 17. 10. se úvodní stránka na telefonu otevírá MAPOU, ne
+     seznamem (rozhodnutí majitele: „u webu, který staví na mapě, má
+     být mapa to první, co uživatel vidí" — viz js/main.js). Tahle
+     zkouška proto měří dvě věci místo jedné:
+       1) po otevření je v první obrazovce MAPA,
+       2) a seznam je na jedno klepnutí vedle, i s počtem nabídek.
+     Kontroly na první kartu a cenu se dělají AŽ POTOM, v seznamu —
+     to, co platilo dřív pro výchozí pohled, platí dál pro ten, do
+     kterého se klepne. */
+  const uvod = await p.evaluate(() => {
+    const leaf = document.querySelector('.leaflet-container');
+    const r = leaf ? leaf.getBoundingClientRect() : null;
+    const btns = [...document.querySelectorAll('.mv-toggle .mvt-btn')]
+      .map((b) => ({ text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
+        aktivni: b.classList.contains('active'),
+        vidno: b.getBoundingClientRect().top < innerHeight }));
+    return { mapa: r ? { top: Math.round(r.top), v: Math.round(r.height), s: Math.round(r.width) } : null,
+      okno: innerHeight, btns };
+  });
+  pravda('po otevření je na telefonu vidět mapa',
+    !!uvod.mapa && uvod.mapa.v > 200 && uvod.mapa.s > 200 && uvod.mapa.top < uvod.okno,
+    'mapa: ' + JSON.stringify(uvod.mapa) + ', okno ' + uvod.okno);
+  pravda('a přepínač na seznam je taky vidět, i s počtem nabídek',
+    uvod.btns.some((b) => /seznam/i.test(b.text) && b.vidno && /\d/.test(b.text)),
+    'přepínač: ' + JSON.stringify(uvod.btns));
+  pravda('a aktivní je mapa, ne seznam',
+    uvod.btns.some((b) => /mapa/i.test(b.text) && b.aktivni),
+    'přepínač: ' + JSON.stringify(uvod.btns));
+
+  /* ---- A TEĎ SEZNAM, KAM SE KLEPNE ---------------------------------
+     Všechno níž měří seznam: že první nabídka začíná nad mezí, že je
+     u ní vidět cena a že nad ni nepolezou nástroje. Právě kvůli tomu
+     tahle zkouška kdysi vznikla (naměřeno 699 px z 844) a ta hodnota
+     se hlídat nepřestala — jen se měří v pohledu, kde seznam je. */
+  await p.evaluate(() => {
+    const b = [...document.querySelectorAll('.mv-toggle .mvt-btn')].find((x) => /seznam/i.test(x.textContent || ''));
+    if (b) b.click();
+  });
+  await p.waitForSelector('.opp-item', { timeout: 25000 });
+  await p.waitForTimeout(1500);
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await p.waitForTimeout(400);
 
   const m = await p.evaluate(() => {
     const y = (e) => e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
@@ -191,6 +235,14 @@ try {
     await p2.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, klice);
     await p2.reload({ waitUntil: 'load' });
     await p2.waitForSelector('#recent-strip .rs-chip', { timeout: 25000 }).catch(() => {});
+    /* Po načtení je na telefonu vidět MAPA, takže se musí přepnout na
+       seznam — jinak se měří karta, která není vykreslená, a vyjde
+       y = 0. (Přesně to se stalo při přepisu téhle zkoušky.) */
+    await p2.evaluate(() => {
+      const b = [...document.querySelectorAll('.mv-toggle .mvt-btn')].find((x) => /seznam/i.test(x.textContent || ''));
+      if (b) b.click();
+    });
+    await p2.waitForSelector('#opp-list .opp-item', { timeout: 25000 }).catch(() => {});
     await p2.waitForTimeout(2000);
     const r = await p2.evaluate(() => {
       const el = document.getElementById('recent-strip');
@@ -247,6 +299,56 @@ try {
   pravda('takže bez rolování jsou vidět aspoň dvě celé nabídky',
     s.cele >= 2, `celých karet na obrazovce: ${s.cele}`);
   await sirokyCtx.close();
+
+  /* ---- VOLBA POHLEDU VYDRŽÍ NÁVŠTĚVU, ALE NE DALŠÍ -----------------
+     Mapa napřed platí pro OTEVŘENÍ webu. Kdyby platila pro každé
+     načtení stránky, vracel by se člověk z pozemku zpátky na mapu
+     a přišel by o místo ve výpisu — a to se tu kdysi pracně
+     opravovalo (paměť rolování, scripts/test-pamet.mjs). Měří se obojí:
+     že si web volbu po dobu návštěvy pamatuje, a že PŘÍŠTÍ návštěva
+     začne zase mapou (jinak by se z „mapa napřed" stalo nastavení,
+     které si nikdo nezvolil). */
+  const telefon = { serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, locale: 'cs-CZ' };
+  const jeSeznam = (str) => str.evaluate(() => {
+    const a = document.querySelector('.map-app');
+    return !!(a && a.classList.contains('mv-seznam'));
+  });
+  const naSeznamKlepnutim = (str) => str.evaluate(() => {
+    const b = [...document.querySelectorAll('.mv-toggle .mvt-btn')]
+      .find((x) => (x.getAttribute('data-mv') || '') === 'seznam');
+    if (b) b.click();
+  });
+  {
+    const ctxP = await prohlizec.newContext(telefon);
+    const pp = await ctxP.newPage();
+    await pp.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    await pp.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+    await pp.waitForTimeout(1800);
+    pravda('nová návštěva začíná mapou', (await jeSeznam(pp)) === false,
+      'hned po otevření je zapnutý seznam');
+    await naSeznamKlepnutim(pp);
+    await pp.waitForTimeout(800);
+    // PŘEDPOKLAD: bez přepnutí by další kontrola neměřila nic
+    pravda('klepnutí na Seznam výpis opravdu ukáže', (await jeSeznam(pp)) === true,
+      'po klepnutí na Seznam zůstala mapa');
+    await pp.reload({ waitUntil: 'load' });
+    await pp.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+    await pp.waitForTimeout(1800);
+    pravda('a po načtení stránky znovu zůstane seznam, ne mapa',
+      (await jeSeznam(pp)) === true,
+      'volba se nepamatuje — návrat z pozemku hodí člověka zpátky na mapu');
+    await ctxP.close();
+
+    const ctxD = await prohlizec.newContext(telefon);
+    const pd = await ctxD.newPage();
+    await pd.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    await pd.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+    await pd.waitForTimeout(1800);
+    pravda('ale příští návštěva začne zase mapou', (await jeSeznam(pd)) === false,
+      'volba přežila návštěvu — to už je nastavení, které si nikdo nezvolil');
+    await ctxD.close();
+  }
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);

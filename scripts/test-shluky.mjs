@@ -110,12 +110,23 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     (celkem.drazba || 0) + (celkem.exekuce || 0) > 0, JSON.stringify(celkem));
 
   /* Barva → druh. Čte se z palety stránky, ne z pevně opsaných řetězců,
-     aby zkouška nezastarala při změně palety. */
+     aby zkouška nezastarala při změně palety.
+     POZNÁVAJÍ SE OBĚ VARIANTY. Bublina shluku nese BÍLÉ číslo, takže
+     od 17. 10. bere inkoustový odstín (-ink): na základních barvách
+     měla bílá podle typu 2,59 až 3,97 : 1, což je pod mezí 4,5 (viz
+     komentář u shlukBarva v js/main.js). Tečka jednotlivé nabídky
+     zůstává v základní barvě, protože na ní žádný text není. Zkouška
+     tedy musí znát obojí — jinak by hlásila „barva není z palety"
+     právě u opravy, kvůli které se to dělalo. */
   const paleta = await p.evaluate(() => {
     const st = getComputedStyle(document.documentElement);
     const m = {};
     for (const [t, v2] of [['sale', '--c-sale'], ['drazba', '--c-drazba'], ['exekuce', '--c-exekuce'],
-      ['obec', '--c-obec'], ['majitel', '--c-majitel']]) m[st.getPropertyValue(v2).trim().toUpperCase()] = t;
+      ['obec', '--c-obec'], ['majitel', '--c-majitel']]) {
+      m[st.getPropertyValue(v2).trim().toUpperCase()] = t;
+      const ink = st.getPropertyValue(v2 + '-ink').trim().toUpperCase();
+      if (ink) m[ink] = t;
+    }
     return m;
   });
 

@@ -1101,11 +1101,11 @@ for(const okres of eligibleOkres){
            neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
            stojí „28× na prodej" ještě jednou. -->
       <div class="okr-stats">
-        <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
-        ${Object.keys(byType).length > 1 && byType.sale?`<div class="okr-stat"><b>${byType.sale}</b><span>na prodej</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b><span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
+        <div class="okr-stat"><b>${count}</b> <span>${pluralPozemek(count)}</span></div>
+        ${Object.keys(byType).length > 1 && byType.sale?`<div class="okr-stat"><b>${byType.sale}</b> <span>na prodej</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b> <span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b> <span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
+        ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b> <span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
       </div>
 
       <!-- CESTA VEN STOJÍ NAD VÝPISEM, i když výklad šel pod něj.
@@ -1270,10 +1270,10 @@ for(const kraj of eligibleKraj){
     <div class="wrap okr-wrap">
 
       <div class="okr-stats">
-        <div class="okr-stat"><b>${count}</b><span>${pluralPozemek(count)}</span></div>
-        <div class="okr-stat"><b>${okresList.length}</b><span>${sklon(okresList.length,'okres','okresy','okresů')}</span></div>
-        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b><span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
-        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b><span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
+        <div class="okr-stat"><b>${count}</b> <span>${pluralPozemek(count)}</span></div>
+        <div class="okr-stat"><b>${okresList.length}</b> <span>${sklon(okresList.length,'okres','okresy','okresů')}</span></div>
+        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b> <span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
+        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b> <span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
       </div>
 
       <p class="okr-more okr-ven" style="margin-top:12px;"><a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">Otevřít ${esc(meta.disp)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
@@ -1494,8 +1494,8 @@ for (const d of DRUH_STRANKY) {
     <div class="wrap okr-wrap">
 
       <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(count)}</b><span>${sklon(count, d.jm[0], d.jm[1], d.jm[2])}</span></div>
-        <div class="okr-stat"><b>${okresyNej.length ? Object.keys(poOkresu).length : 0}</b><span>${sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')}</span></div>
+        <div class="okr-stat"><b>${fmt(count)}</b> <span>${sklon(count, d.jm[0], d.jm[1], d.jm[2])}</span></div>
+        <div class="okr-stat"><b>${okresyNej.length ? Object.keys(poOkresu).length : 0}</b> <span>${sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')}</span></div>
       </div>
 ${cenyRadka ? `      <p class="okr-more" style="margin-top:2px;">${cenyRadka} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 ${podilu ? `      <p class="okr-more" style="margin-top:2px;">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — kupuje se zlomek pozemku.${podiluCele ? ` U ${podiluCele === 1 ? 'jednoho z nich' : (podiluCele === podilu ? 'všech' : `<b>${fmt(podiluCele)}</b> z nich`)} je v inzerátu výměra celé parcely, ale cena jen za ten zlomek.` : ''} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
@@ -1674,9 +1674,9 @@ for (const r of rozpocetVznikne) {
     <div class="wrap okr-wrap">
 
       <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(count)}</b><span>${pluralPozemek(count)}</span></div>
-        <div class="okr-stat"><b>${fmt(okresuCelkem)}</b><span>${sklon(okresuCelkem, 'okres', 'okresy', 'okresů')}</span></div>
-        <div class="okr-stat"><b>${fmt(medVymera)} m²</b><span>mediánová výměra</span></div>
+        <div class="okr-stat"><b>${fmt(count)}</b> <span>${pluralPozemek(count)}</span></div>
+        <div class="okr-stat"><b>${fmt(okresuCelkem)}</b> <span>${sklon(okresuCelkem, 'okres', 'okresy', 'okresů')}</span></div>
+        <div class="okr-stat"><b>${fmt(medVymera)} m²</b> <span>mediánová výměra</span></div>
       </div>
       <p class="okr-more" style="margin-top:2px;">Prostřední cena za metr v tomhle rozpočtu je <b>${fmt(medZaM)} Kč/m²</b> — <a href="cena-pozemku.html">ceny pozemků v ČR</a>.</p>
 
@@ -1861,9 +1861,9 @@ let novychZaTyden = 0;
     <div class="wrap okr-wrap">
 
       <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(novych7)}</b><span>nových za 7 dní</span></div>
-        <div class="okr-stat"><b>${fmt(nove.length)}</b><span>nových za ${DNU_NOVE} dní</span></div>
-        <div class="okr-stat"><b>${fmt(zlevnene.length)}</b><span>${sklon(zlevnene.length, 'zlevnilo', 'zlevnily', 'zlevnilo')}</span></div>
+        <div class="okr-stat"><b>${fmt(novych7)}</b> <span>nových za 7 dní</span></div>
+        <div class="okr-stat"><b>${fmt(nove.length)}</b> <span>nových za ${DNU_NOVE} dní</span></div>
+        <div class="okr-stat"><b>${fmt(zlevnene.length)}</b> <span>${sklon(zlevnene.length, 'zlevnilo', 'zlevnily', 'zlevnilo')}</span></div>
       </div>
 ${razitkoCerstvosti}
 

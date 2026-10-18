@@ -55,6 +55,8 @@ const PORADI = [
   // Až za vším, co zakládá tabulky a funkce: přepisuje my_threads()
   // i unread_count() a zahazuje starší podoby save_search, takže musí
   // běžet po souborech, které je vytvořily.
+  // Na ničem výš nezávisí: vlastní tabulka, klíč pozemku je text z dat.
+  ['ulozene-na-uctu.sql', 'uložené pozemky na účtu, ne jen v prohlížeči'],
   ['vykon.sql', 'indexy, přepsané dotazy chatu a úklid starších podob funkcí'],
   // Úplně na konci schválně: vypisuje oprávnění všech funkcí výš, takže
   // má smysl teprve až jsou všechny založené.

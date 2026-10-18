@@ -32,6 +32,9 @@ const kontroly = new Map();
    supabase/poznamky.sql — prázdný text maže, nad 2 000 znaků se ODMÍTNE
    (ne tiše zkrátí) a jeden účet nevidí do druhého. */
 const poznamky = new Map();
+/* Uložené pozemky na účtu: uid → Map(klíč → kdy). Viz
+   supabase/ulozene-na-uctu.sql. */
+const ulozene = new Map();
 hledani.set(UID_MAJITEL, [{ id: 's1', label: 'Tábor', okres: 'Tábor', druh: null, ptype: null,
   max_price: 0, min_area: 0, features: [], created_at: new Date().toISOString() }]);
 let poradi = 0;
@@ -154,6 +157,46 @@ const server = http.createServer((req, res) => {
         const out = [...moje.entries()].map(([klic, z]) => ({ klic, text: z.text, zmeneno: z.zmeneno }));
         out.sort((a, b) => String(b.zmeneno).localeCompare(String(a.zmeneno)));
         return send(200, JSON.stringify(out));
+      }
+
+      /* ULOŽENÉ POZEMKY NA ÚČTU — chová se jako supabase/ulozene-na-uctu.sql:
+         jeden účet nevidí do druhého, prázdný i přepálený klíč se ODMÍTNE
+         (vrací false, ne tiché uložení), nad stropem 500 to spadne a druhé
+         uložení téhož klíče nic nepřidá. */
+      if (fn === 'ulozeny_uloz') {
+        const k = String(args.p_klic == null ? '' : args.p_klic).trim();
+        if (!ulozene.has(uid)) ulozene.set(uid, new Map());
+        const moje = ulozene.get(uid);
+        if (!k || k.length > 200) return send(200, JSON.stringify(false));
+        if (moje.size >= 500 && !moje.has(k)) {
+          return send(400, JSON.stringify({ message: 'uložených pozemků je už 500 — nejdřív nějaké odeberte' }));
+        }
+        if (!moje.has(k)) moje.set(k, new Date(Date.now() + (poradi += 1)).toISOString());
+        return send(200, JSON.stringify(true));
+      }
+      if (fn === 'ulozeny_smaz') {
+        const k = String(args.p_klic == null ? '' : args.p_klic).trim();
+        if (ulozene.has(uid)) ulozene.get(uid).delete(k);
+        return send(200, JSON.stringify(true));
+      }
+      if (fn === 'moje_ulozene') {
+        const moje = ulozene.get(uid) || new Map();
+        const out = [...moje.entries()].map(([klic, kdy]) => ({ klic, kdy }));
+        out.sort((a, b) => String(b.kdy).localeCompare(String(a.kdy)));
+        return send(200, JSON.stringify(out));
+      }
+      if (fn === 'ulozene_nahraj') {
+        const klice = Array.isArray(args.p_klice) ? args.p_klice : [];
+        if (!ulozene.has(uid)) ulozene.set(uid, new Map());
+        const moje = ulozene.get(uid);
+        let vlozeno = 0;
+        for (const x of klice.slice(0, 500)) {
+          const k = String(x == null ? '' : x).trim();
+          if (!k || k.length > 200 || moje.has(k)) continue;
+          moje.set(k, new Date(Date.now() + (poradi += 1)).toISOString());
+          vlozeno += 1;
+        }
+        return send(200, JSON.stringify(vlozeno));
       }
 
       if (fn === 'send_message') {

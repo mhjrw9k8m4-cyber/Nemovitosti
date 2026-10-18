@@ -27,6 +27,7 @@ import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -76,6 +77,10 @@ try {
   });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  /* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
+     zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
+     v DOMu je, ale není vidět. */
+  await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('svg.opp-map').length > 0, null, { timeout: 30000 });
   await p.waitForTimeout(2500);
 

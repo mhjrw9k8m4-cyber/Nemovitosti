@@ -26,6 +26,7 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -106,6 +107,10 @@ await p.waitForFunction(() => {
 await p.evaluate((d) => { try { localStorage.setItem('pk_navsteva_v1', JSON.stringify(d)); } catch (e) {} }, MINULE);
 await p.reload({ waitUntil: 'domcontentloaded' });
 await p.waitForTimeout(4200);
+/* Na telefonu se web OTEVÍRÁ mapou (od 17. 10.) a karty výpisu jsou skryté.
+   Stačí přepnout jednou: volba se pamatuje na dobu návštěvy (sessionStorage),
+   takže přežije i ta načtení stránky níž. */
+await naSeznam(p);
 
 // --- 1) „Nové od minulé návštěvy" ------------------------------------
 const stav = await p.evaluate(() => {
@@ -653,6 +658,11 @@ pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
   await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
   await p2.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
   await p2.waitForTimeout(2500);
+  /* Nový kontext, tedy nová návštěva — a ta začíná mapou. Ve výpisu se
+     tady odroluje k páté kartě, takže se musí přepnout; a protože si web
+     volbu pamatuje na dobu návštěvy, přistane návrat z pozemku zpátky ve
+     výpisu, ne na mapě. Právě to je to místo, které se tu měří. */
+  await naSeznam(p2);
   const odchod = await p2.evaluate(() => {
     const k = document.querySelectorAll('.opp-item')[4];
     if (!k) return null;

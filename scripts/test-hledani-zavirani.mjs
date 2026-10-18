@@ -19,6 +19,7 @@
        a filtry — ty se musí dát použít). */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -44,6 +45,10 @@ const otevri = async () => { await p.click('#map-search'); await p.waitForTimeou
 
 try {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  /* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
+     zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
+     v DOMu je, ale není vidět. */
+  await naSeznam(p);
   await p.waitForSelector('#opp-list .opp-item', { timeout: 30000 });
   await p.waitForTimeout(1200);
 

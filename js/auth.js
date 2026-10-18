@@ -40,6 +40,11 @@
     return (Number(s.expires_at) - Math.floor(Date.now() / 1000)) > (rezerva || 0);
   }
   function loggedIn() { var s = getSession(); return !!(s && s.access_token); }
+  /* „JE KAM UKLÁDAT?" — jedna odpověď pro celý web. Poznámky i uložené
+     pozemky se tím řídí a každý modul si to dřív rozhodoval sám
+     (`ready && loggedIn()`); v den, kdy se změní, co „přihlášený"
+     znamená, by se obě kopie rozešly a nic by to neřeklo. */
+  function prihlasen() { try { return !!(URL && KEY) && loggedIn(); } catch (e) { return false; } }
   function email() { var s = getSession(); return (s && s.user && s.user.email) || ''; }
   function uid() { var s = getSession(); return (s && s.user && s.user.id) || ''; }
   function token() { var s = getSession(); return (s && s.access_token) || ''; }
@@ -231,7 +236,7 @@
 
   window.PKAuth = {
     ready: !!(URL && KEY),
-    getSession: getSession, loggedIn: loggedIn, email: email, uid: uid, token: token, deviceId: deviceId,
+    getSession: getSession, loggedIn: loggedIn, prihlasen: prihlasen, email: email, uid: uid, token: token, deviceId: deviceId,
     signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive, platiJeste: platiJeste,
     recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
   };

@@ -38,11 +38,31 @@ const MERENI = `(() => {
     const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
     return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
   };
+  /* ČTE I zápis color(srgb …), NE JEN rgb(). Chromium vrací výsledek
+     funkce color-mix() ve tvaru color(srgb 0.4 0.49 0.77) — a dokud
+     to parser neuměl, vracel null, pozadí se tvářilo jako průhledné
+     a měřila se barva o několik vrstev výš. Prakticky: bílé číslo
+     v barevné bublině na mapě vycházelo jako „bílá na světle zelené
+     mapě", tedy 1,14 : 1, a vypadalo to jako chyba zkoušky. Chyba to
+     byla, ale v parseru — a schovala skutečný nález: bublina měla
+     s bílou 2,6 až 4,0 : 1 (viz .pk-shluk v css/styles.css).
+     Složky v zápisu color(srgb …) jsou 0–1, proto × 255. */
   const parse = (s) => {
-    const m = /rgba?\\(([^)]+)\\)/.exec(s || '');
-    if (!m) return null;
-    const p = m[1].split(',').map((x) => parseFloat(x));
-    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    const t = String(s || '');
+    const m = /rgba?\\(([^)]+)\\)/.exec(t);
+    if (m) {
+      const p = m[1].split(',').map((x) => parseFloat(x));
+      return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+    }
+    const c = /color\\(\\s*srgb\\s+([^)]+)\\)/.exec(t);
+    if (c) {
+      const casti = c[1].split('/');
+      const p = casti[0].trim().split(/\\s+/).map((x) => parseFloat(x));
+      if (p.length < 3 || p.some((x) => !isFinite(x))) return null;
+      const a = casti[1] !== undefined ? parseFloat(casti[1]) : 1;
+      return { r: p[0] * 255, g: p[1] * 255, b: p[2] * 255, a: isFinite(a) ? a : 1 };
+    }
+    return null;
   };
   const smichej = (pop, spod) => ({
     r: pop.r * pop.a + spod.r * (1 - pop.a),

@@ -30,6 +30,7 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -84,6 +85,10 @@ async function telefon(poloha) {
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
+  /* ÚVODNÍ STRÁNKA SE NA TELEFONU OTEVÍRÁ MAPOU (od 17. 10.), a co tahle
+     zkouška měří, žije ve VÝPISU — bez přepnutí by čekala na prvek, který
+     v DOMu je, ale není vidět. */
+  await naSeznam(p);
   return { ctx, p, chyby };
 }
 

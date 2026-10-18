@@ -87,7 +87,8 @@ async function otevri(d) {
     const cis = (t) => Number(String(t || '').replace(/[^\d]/g, ''));
     let vym = 0;
     for (const e of document.querySelectorAll('.pz-klic')) {
-      if (((e.querySelector('span') || {}).textContent || '').trim() !== 'Výměra') continue;
+      /* `span:not(.pz-klic-ic)` — ten druhý span v dlaždici je ozdobná značka. */
+      if (((e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim() !== 'Výměra') continue;
       vym = cis((e.querySelector('b') || {}).textContent); break;
     }
     /* Hlavní tlačítko na zdroj je <a class="pz-btn primary" target="_blank">.

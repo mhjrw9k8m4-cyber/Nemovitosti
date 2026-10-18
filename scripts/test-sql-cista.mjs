@@ -55,7 +55,18 @@ const bin = najdiPg();
 if (!bin) {
   console.log('\nZaložení databáze na čistém PostgreSQL');
   console.log('  ⚠ PostgreSQL tu není — test se přeskakuje.');
-  console.log('    (V CI musí být, jinak tenhle test nic nehlídá.)\n');
+  /* A V CI SE NEPŘESKAKUJE. Instalace balíčku ve workflow končí
+     „|| true", aby úloha nespadla na dočasném výpadku zrcadla — jenže
+     tím se z „nejsilnější kontrola databáze" stane „zelená úloha,
+     která nehlídá nic", a nikdo si toho nevšimne. Workflow proto
+     nastavuje PK_SQL_VYZADOVAN=1 a tady to končí chybou. */
+  if (process.env.PK_SQL_VYZADOVAN === '1') {
+    console.log('    PK_SQL_VYZADOVAN=1 — tady se přeskakovat nesmí.\n');
+    console.log('::error::Databáze: PostgreSQL chybí, a tahle úloha ho vyžaduje.'
+      + ' Zkouška by jinak prošla, aniž by cokoli ověřila.');
+    process.exit(1);
+  }
+  console.log('    (U sebe je to v pořádku; v CI to hlídá PK_SQL_VYZADOVAN.)\n');
   process.exit(0);
 }
 

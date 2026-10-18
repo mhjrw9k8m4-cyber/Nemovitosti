@@ -771,12 +771,16 @@ if (DRAZBA) {
     const v = await p.evaluate(() => ({
       chips: [...document.querySelectorAll('.pz-feat')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
       radky: [...document.querySelectorAll('.pz-spec')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      /* Od 17. 10. může podíl stát v DLAŽDICI místo v řádku tabulky
+         (viz „čtvrtá dlaždice" v js/pozemek.js). Měří se proto obojí:
+         jde o to, že se o podílu člověk dozví, ne kterým prvkem. */
+      dlazdice: [...document.querySelectorAll('.pz-klic')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
     }));
     pravda('po klepnutí z mapy jsou na stránce sítě z inzerátu', v.chips.length > 0,
       'sekce „Sítě a vybavení" je prázdná — stránka zůstala na tom, co přišlo z mapy');
-    pravda('a je na ní i řádek o spoluvlastnickém podílu',
-      v.radky.some((r) => /podíl/i.test(r)),
-      `řádky parametrů: ${v.radky.join(' | ').slice(0, 200)}`);
+    pravda('a stojí na ní i spoluvlastnický podíl (řádkem, nebo dlaždicí)',
+      v.radky.concat(v.dlazdice).some((r) => /podíl/i.test(r)),
+      `řádky: ${v.radky.join(' | ').slice(0, 120)} // dlaždice: ${v.dlazdice.join(' | ').slice(0, 120)}`);
     /* DVĚ VYKRESLENÍ = DVĚ PŘÍPRAVY MAPY. Příprava čeká, až se rám
        dostane do zorného pole, a pak dotahuje Leaflet; když druhé
        vykreslení začne dřív, než knihovna dorazí, počkají si na ni obě
@@ -1026,14 +1030,44 @@ if (DRAZBA) {
      PKKlic.klicPozemku (pkey + výměra) — a hlavně po TÉMŽE, protože
      zapisují do jednoho úložiště. Jak se to projeví uživateli, zkouší
      scripts/test-klic-ulozenych.mjs; tady se hlídá jen ta shoda. */
+  /* ČTE SE TĚLO FUNKCE, NE CELÝ SOUBOR. Dřív tu stál regex na doslovný
+     zápis `arr.push(window.PKKlic.klicPozemku(d))` — a spadl v den, kdy
+     si toggleFav nový klíč uložila do proměnné. Musela: posílá ho i na
+     účet (js/ulozene-ucet.js). Doslovný zápis ale není to, o co jde;
+     jde o to, ODKUD se klíč bere a že se ukládá týž. */
+  const telo = (zdroj, jmeno) => {
+    const i = zdroj.indexOf('function ' + jmeno + '(');
+    if (i < 0) return '';
+    const od = zdroj.indexOf('{', i);
+    let hl = 0;
+    for (let j = od; j < zdroj.length; j++) {
+      if (zdroj[j] === '{') hl++;
+      else if (zdroj[j] === '}') { hl--; if (hl === 0) return zdroj.slice(od, j + 1); }
+    }
+    return '';
+  };
+  /* Nový klíč smí vzniknout JEDINĚ z PKKlic.klicPozemku a uložit se musí
+     přesně ten (ne přepočítaný podruhé, ne hrubý pkey). */
+  const ukladaSpravne = (t) => /PKKlic\.klicPozemku\(d\)/.test(t)
+    && /(?:var|let|const)\s+klic\s*=\s*[^;]*PKKlic\.klicPozemku\(d\)/.test(t)
+    && /push\(klic\)/.test(t)
+    && !/push\(\s*pkey/.test(t);
+  const tStranka = telo(zdrojStranky, 'toggleFav');
+  const tMapa = telo(zdrojMapy, 'toggleFav');
   pravda('stránka pozemku ukládá pod klicPozemku, ne pod hrubý klíč',
-    /isFav\(d\)\s*\{\s*return window\.PKKlic\.jeMezi\(favs\(\), d\)/.test(zdrojStranky)
-    && /arr\.push\(window\.PKKlic\.klicPozemku\(d\)\)/.test(zdrojStranky),
+    /PKKlic\.jeMezi\(favs\(\), d\)/.test(telo(zdrojStranky, 'isFav'))
+    && ukladaSpravne(tStranka),
     'isFav/toggleFav v js/pozemek.js nepoužívají PKKlic.klicPozemku — uložené se rozejdou s mapou');
   pravda('a mapa taky',
-    /function isFav\(d\)\{ return PKKlic\.jeMezi\(favs, d\); \}/.test(zdrojMapy)
-    && /favs\.push\(PKKlic\.klicPozemku\(d\)\)/.test(zdrojMapy),
+    /PKKlic\.jeMezi\(favs, d\)/.test(telo(zdrojMapy, 'isFav'))
+    && ukladaSpravne(tMapa),
     'isFav/toggleFav v js/main.js nepoužívají PKKlic.klicPozemku');
+  /* A OBĚ POLOVINY MUSÍ POSLAT TÝŽ KLÍČ NA ÚČET. Kdyby jedna poslala
+     přepočítaný a druhá uložený, rozešly by se dva seznamy téhož —
+     tentokrát mezi prohlížečem a účtem. */
+  pravda('a obě hlásí změnu na účet tím samým klíčem',
+    /PKUlozeneUcet\.zmena\(klic,/.test(tStranka) && /PKUlozeneUcet\.zmena\(klic,/.test(tMapa),
+    'toggleFav neposílá na účet klíč, pod kterým uložil (js/ulozene-ucet.js)');
   pravda('a obě poloviny sahají do téhož úložiště (proto na tom záleží)',
     /pk_fav_v1/.test(zdrojStranky) && /pk_fav_v1/.test(zdrojMapy),
     'kdyby si každá polovina vedla vlastní seznam, tohle by nebyl problém — a tahle zkouška by neměla smysl');

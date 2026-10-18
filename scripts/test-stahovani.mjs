@@ -18,6 +18,7 @@
    ==================================================================== */
 import { stahni, cekaniPoPokusu, jeOpakovatelny, BOT_UA, STAHNI_CEKANI_STROP }
   from './fetch-opportunities.mjs';
+import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -155,6 +156,21 @@ pravda('opakovatelné stavy sedí', [408, 425, 429, 500, 502, 503, 504].every(je
 // --- 8) Jméno robota je jedno, a pravdivé --------------------------
 pravda('robot má jedno jméno a vede na web', /^ParcelkaBot\/\d/.test(BOT_UA) && /parcelaka\.cz/.test(BOT_UA),
   `BOT_UA = ${BOT_UA}`);
+
+// --- 9) A nikdo nesmí chodit mimo ----------------------------------
+/* Celý smysl helperu je v tom, že JÍM VEDE KAŽDÉ STAŽENÍ. Kdyby si
+   příští zdroj zavolal fetch() po svém, neměl by ani časový limit, ani
+   opakování — a nepoznalo by se to, protože by to normálně fungovalo.
+   Dokud nespadne síť. Proto se počítá, kolik holých fetch() ve zdroji
+   zbylo: jediné povolené je to uvnitř stahni(). */
+{
+  const zdroj = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const holych = (zdroj.match(/(?<![.\w])fetch\s*\(/g) || []).length;
+  pravda('ve scraperu zbylo jediné holé fetch() — to uvnitř stahni()', holych === 1,
+    `holých volání fetch(): ${holych}. Nový zdroj má volat stahni(), jinak je bez `
+    + 'časového limitu i bez opakování.');
+}
 
 console.log('\nStahování ze zdrojů');
 console.log(zpravy.join('\n'));

@@ -21,6 +21,7 @@
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naSeznam } from './zkouska-pohled.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -68,6 +69,8 @@ try {
   await p.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
 
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  // Tlačítko stahování stojí v nářadí VÝPISU, a ten je v mapovém pohledu skrytý.
+  await naSeznam(p);
   await p.waitForSelector('#mc-vyvoz', { timeout: 15000 });
 
   /* --- 1) Tlačítko otevírá okno, nestahuje ------------------------- */
@@ -248,6 +251,8 @@ try {
     const t = await ctxT.newPage();
     await t.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
     await t.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    // Na telefonu je výpis s nářadím skrytý, dokud se nepřepne z mapy.
+    await naSeznam(t);
     await t.waitForSelector('#mc-vyvoz', { timeout: 15000 });
     await t.click('#mc-vyvoz');
     await t.waitForTimeout(400);

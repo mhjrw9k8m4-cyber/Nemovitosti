@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=7c222a5c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=e00c009f">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -331,15 +331,15 @@
           <div class="pf-stats">
             <div class="pf-stat">
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
-              <b id="pf-count">—</b><span>Moje inzeráty</span>
+              <b id="pf-count">—</b> <span>Moje inzeráty</span>
             </div>
             <div class="pf-stat">
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <b id="pf-views">—</b><span>Zhlédnutí celkem</span>
+              <b id="pf-views">—</b> <span>Zhlédnutí celkem</span>
             </div>
             <div class="pf-stat">
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>
-              <b id="pf-fav">—</b><span>Uložené pozemky</span>
+              <b id="pf-fav">—</b> <span>Uložené pozemky</span>
             </div>
           </div>
           <!-- „VŠECHNO VAŠE NA JEDNOM MÍSTĚ" stálo v úvodu stránky,
@@ -354,11 +354,11 @@
           <div class="pf-stats pf-stats--2">
             <a class="pf-stat pf-stat--jde" href="zpravy.html">
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
-              <b id="pf-zpravy">—</b><span>Nepřečtené zprávy</span>
+              <b id="pf-zpravy">—</b> <span>Nepřečtené zprávy</span>
             </a>
             <a class="pf-stat pf-stat--jde" href="hlidani.html">
               <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-              <b id="pf-hlidani">—</b><span>Moje hlídání</span>
+              <b id="pf-hlidani">—</b> <span>Moje hlídání</span>
             </a>
           </div>
           <div class="pf-actions">
@@ -472,7 +472,7 @@
      aby web o téže dražbě netvrdil na dvou místech dvě různé věci. -->
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=bec7a315" defer></script>
+<script src="js/min/auth.js?v=68e6addb" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -670,9 +670,9 @@
               '<span class="mi-lstatus' + (isLive ? ' ok' : '') + (zamitnuty ? ' ne' : '') + '">' + stavText + '</span>' +
             '</div>' +
             '<div class="mi-lstats">' +
-              '<div class="mi-lstat"><b>' + fmt(r.views || 0) + '</b><span>Zhlédnutí</span></div>' +
-              '<div class="mi-lstat"><b>' + (r.area ? fmt(r.area) : '—') + '</b><span>m² výměra</span></div>' +
-              '<div class="mi-lstat"><b>' + (r.price ? fmt(r.price) : '—') + '</b><span>Kč cena</span></div>' +
+              '<div class="mi-lstat"><b>' + fmt(r.views || 0) + '</b> <span>Zhlédnutí</span></div>' +
+              '<div class="mi-lstat"><b>' + (r.area ? fmt(r.area) : '—') + '</b> <span>m² výměra</span></div>' +
+              '<div class="mi-lstat"><b>' + (r.price ? fmt(r.price) : '—') + '</b> <span>Kč cena</span></div>' +
             '</div>' +
             /* ODKAZ NA VLASTNÍ STRÁNKU INZERÁTU. Majitel se dosud ke svému
                inzerátu dostal jedině „na mapě" — tedy k tečce mezi ostatními.

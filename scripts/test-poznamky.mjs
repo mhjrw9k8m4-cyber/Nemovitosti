@@ -606,7 +606,9 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
         /* Dlaždice .pz-klic má hodnotu v <b> a popisek v <span>. */
         let v = 0;
         for (const el of document.querySelectorAll('.pz-klic')) {
-          const popis = ((el.querySelector('span') || {}).textContent || '').trim();
+          /* `span:not(.pz-klic-ic)` — v dlaždici je od 17. 10. ještě
+             jeden span: ozdobná značka. Popisek je ten druhý. */
+          const popis = ((el.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim();
           if (popis !== 'Výměra') continue;
           const hodnota = ((el.querySelector('b') || {}).textContent || '').replace(/[\s\u00a0]/g, '');
           const m = hodnota.match(/^(\d+)m²/);

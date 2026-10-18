@@ -83,10 +83,7 @@
   }
   function kolik() { return Object.keys(cti()).length; }
 
-  function prihlasen() {
-    try { return !!(root.PKAuth && root.PKAuth.ready && root.PKAuth.loggedIn()); }
-    catch (e) { return false; }
-  }
+  function prihlasen() { return !!(root.PKAuth && root.PKAuth.prihlasen && root.PKAuth.prihlasen()); }
   function posli(klic, t) {
     if (!prihlasen()) return Promise.resolve(false);
     return root.PKAuth.rpc('poznamka_uloz', { p_klic: klic, p_text: t })

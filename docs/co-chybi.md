@@ -1008,10 +1008,12 @@ v souboru, protože pozdější `create policy` tu dřívější přepíše. Hl�
 a hlídá i opačný směr — že důvod nezůstal po pravidle, které už není.
 Sabotáž (vrátit podmínku na `true`) hlásí obě konkrétní kontroly.
 
-**Co zůstává na majiteli:** pustit `supabase/hlidani-anon-uzce.sql`
-v Supabase → SQL Editor. V repozitáři je to hotové a v balíku
-`00-vse.sql` taky, takže kdo databázi zakládá znovu, dostane ji už
-zúženou; v té dnes běžící je pravidlo pořád to staré.
+**Co zůstává na majiteli:** pustit `supabase/00-vse.sql` v Supabase →
+SQL Editor (tedy celý balík, ne jen `hlidani-anon-uzce.sql`). Balík
+obsahuje tenhle zúžený zápis i všechno pozdější — od 17. 10. hlavně
+`supabase/vykon.sql` s chybějícími indexy a přepsanými dotazy chatu.
+Kdo databázi zakládá znovu, dostane rovnou všechno; v té dnes běžící
+je pravidlo pořád to staré. Celý balík jde pustit opakovaně.
 
 ## 3y. Graf na stránku „Ceny pozemků" — a nález, že graf a číslo nad ním počítá každé jinak — *částečně 10. 10.*
 
