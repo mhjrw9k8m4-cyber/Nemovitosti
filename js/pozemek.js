@@ -2412,14 +2412,22 @@
         skokEl.hidden = false;
         skokEl.addEventListener('click', function () {
           var box = poznEl.closest ? poznEl.closest('.pz-pozn-box') : null;
-          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+          /* KDO SI VYPNE POHYB, TOMU SE NEROLUJE PLYNULE. Stylopis to
+             respektuje (`@media (prefers-reduced-motion:reduce)` vypíná
+             scroll-behavior), ale `behavior:'smooth'` zadané ze skriptu
+             by to pravidlo přebilo — a plynulé rolování přes dva tisíce
+             pixelů je přesně ten pohyb, kvůli kterému si ho lidé vypínají. */
+          var klidne = false;
+          try { klidne = !!(window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: klidne ? 'auto' : 'smooth' }); }
           catch (e) { (box || poznEl).scrollIntoView(); }
           /* Zaostření AŽ PO doskoku: na telefonu vyskočí klávesnice
              a stránkou to hne, takže kdyby se zaostřilo hned, přistál
              by člověk jinde, než kam se rolovalo. */
           setTimeout(function () {
             try { poznEl.focus({ preventScroll: true }); } catch (e) { poznEl.focus(); }
-          }, 420);
+          }, klidne ? 0 : 420);
           /* Krátké zvýraznění: po doskoku má být poznat, KAM se přišlo.
              Bez toho vypadá doskok doprostřed stránky jako překlep. */
           if (box) {

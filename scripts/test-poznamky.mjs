@@ -205,6 +205,43 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   await ctx.close();
 }
 
+/* ---- 1c) KDO SI VYPNE POHYB, TOMU SE NEROLUJE PLYNULE ----
+   Stylopis `prefers-reduced-motion` respektuje, jenže `behavior:'smooth'`
+   zadané ze skriptu by to pravidlo přebilo — a plynulé rolování přes dva
+   tisíce pixelů je přesně ten pohyb, kvůli kterému si ho lidé vypínají.
+   Měří se to, co je vidět: se zapnutým „méně pohybu" je políčko
+   zaostřené hned (skok je okamžitý), ne až po skoro půl vteřině, co
+   trvá plynulé dojetí. */
+{
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+    locale: 'cs-CZ', reducedMotion: 'reduce' });
+  const p = await ctx.newPage();
+  await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
+  await p.waitForSelector('#pz-pozn-skok', { timeout: 20000 }).catch(() => {});
+  await p.waitForTimeout(1800);
+  const je = await p.evaluate(() => {
+    const b = document.getElementById('pz-pozn-skok');
+    return !!b && !b.hidden && b.getBoundingClientRect().width > 0;
+  });
+  pravda('i s vypnutým pohybem je zkratka k poznámce na stránce', je,
+    'tlačítko #pz-pozn-skok chybí nebo není vidět');
+  if (je) {
+    await p.click('#pz-pozn-skok');
+    await p.waitForTimeout(150);
+    const hned = await p.evaluate(() => {
+      const t = document.getElementById('pz-pozn-text');
+      const r = t.getBoundingClientRect();
+      return { zaostreno: document.activeElement === t,
+        vidno: r.top >= 0 && r.bottom <= innerHeight };
+    });
+    pravda('a políčko je zaostřené HNED, ne až po dojetí', hned.zaostreno,
+      JSON.stringify(hned));
+    pravda('a je i na obrazovce', hned.vidno, JSON.stringify(hned));
+  }
+  await ctx.close();
+}
+
 /* ---- 2) meze a plná schránka ---- */
 {
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });

@@ -1459,12 +1459,16 @@
         skokEl.hidden = false;
         skokEl.addEventListener('click', function () {
           var box = poznEl.closest ? poznEl.closest('.pz-pozn-box') : null;
-          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+
+          var klidne = false;
+          try { klidne = !!(window.matchMedia
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (e) {}
+          try { (box || poznEl).scrollIntoView({ block: 'center', behavior: klidne ? 'auto' : 'smooth' }); }
           catch (e) { (box || poznEl).scrollIntoView(); }
 
           setTimeout(function () {
             try { poznEl.focus({ preventScroll: true }); } catch (e) { poznEl.focus(); }
-          }, 420);
+          }, klidne ? 0 : 420);
 
           if (box) {
             box.classList.add('pz-pozn-sviti');

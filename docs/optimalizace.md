@@ -1868,8 +1868,25 @@ si web klade na dotykové terče.
   nepřeskládá (CLS) a ze stejného důvodu se píše `border-color`, ne
   zkratka `border`, kterou má předloha.
 
-Devět nových kontrol v `scripts/test-poznamky.mjs` (64/64); sabotáž
-„zaostření a zvýraznění pryč" shodí dvě z nich.
+Devět nových kontrol v `scripts/test-poznamky.mjs`; sabotáž „zaostření
+a zvýraznění pryč" shodí dvě z nich.
+
+**A ještě jedna věc, kterou jsem si do toho zanesl sám:** skok jsem
+napsal jako `behavior:'smooth'`. Stylopis sice `prefers-reduced-motion`
+respektuje (vypíná `scroll-behavior`), jenže hodnota zadaná ze skriptu
+to pravidlo přebije — a plynulé rolování přes dva tisíce pixelů je
+přesně ten pohyb, kvůli kterému si ho lidé vypínají. Se zapnutým „méně
+pohybu" se teď skáče rovnou a zaostřuje se hned (bez čekání na dojetí).
+Měří to další tři kontroly (67/67) a sabotáž je shodí.
+
+**Poznámka k metodě, protože mě to stálo jeden běh navíc:** první
+sabotáž téhle věci jsem napsal tak, že za hodnotu v objektu připsala
+`// SABOTAZ` — zbytek řádku se tím stal komentářem a celý modul přestal
+být platný JavaScript. Zkouška spadla, ale na úplně jiné kontrole
+(„na stránce pozemku je pole na poznámku") a s jedinou úspěšnou.
+**Sabotáž, která rozbije syntax, nedokazuje nic:** neukáže, že kontrola
+hlídá chování, jen že soubor musí jít přeložit. Platí ta druhá, která
+vyměnila hodnotu za hodnotu.
 
 **A ještě jedna zkouška k uloženým pozemkům na účtu**, protože jde
 o situaci, která teprve nastane: mezi nasazením webu a puštěním
