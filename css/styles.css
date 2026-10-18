@@ -4403,9 +4403,17 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-field label{font-size:13px; font-weight:600; color:var(--text-ondark);}
 .add-field .req{color:var(--copper-bright);}
 .add-field .hint{font-size:12px; color:var(--text-ondark-mute); font-weight:400;}
+/* MIN-WIDTH:0 NENÍ KOSMETIKA. Políčko formuláře si bez ní drží vlastní
+   nejmenší šířku odvozenou z atributu `size` (dvacet znaků) — naměřeno
+   264 px. Mřížka `.add-grid` z toho udělala sloupec 329 px uvnitř okna
+   320 px, takže na úzkém telefonu šlo celou stránkou „přidat pozemek"
+   posouvat do stran. Vidět to nebylo: formulář se ukazuje jen
+   přihlášenému, kdežto zkouška chodila po stránce nepřihlášená
+   a 320 px se neměřilo vůbec. Obojí je od 18. 10. jinak
+   (scripts/test-konzole.mjs). */
 .add-form input, .add-form select, .add-form textarea{
   background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:12px 14px;
-  font-size:16px; color:var(--text-ondark); font-family:inherit; width:100%;
+  font-size:16px; color:var(--text-ondark); font-family:inherit; width:100%; min-width:0;
 }
 .add-form textarea{resize:vertical; min-height:96px;}
 .add-form input::placeholder, .add-form textarea::placeholder{color:var(--text-zastupny);}
@@ -4579,7 +4587,10 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
 @keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(31,81,56,0.55);}70%{box-shadow:0 0 0 13px rgba(31,81,56,0);}100%{box-shadow:0 0 0 0 rgba(31,81,56,0);}}
 @media (max-width:900px){
-  .add-grid{grid-template-columns:1fr; gap:24px;}
+  /* minmax(0,1fr), ne 1fr: `1fr` je zkratka pro minmax(AUTO,1fr) a to
+     „auto" znamená „nejmenší šířka obsahu" — jediné přerostlé políčko
+     tím roztáhne celý sloupec za okraj okna. */
+  .add-grid{grid-template-columns:minmax(0, 1fr); gap:24px;}
   .add-aside{position:static;}
 }
 

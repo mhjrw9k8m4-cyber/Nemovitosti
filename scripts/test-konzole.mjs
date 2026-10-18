@@ -234,6 +234,15 @@ async function projdi(sirka, popisSirky) {
 
 await projdi(1280, 'Počítač');
 await projdi(390, 'Mobil');
+/* A JEŠTĚ ÚZKÝ MOBIL. Dlouho se měřilo jen 390 px a 320 px nikdo
+   neprošel, přestože jinde v repozitáři je to běžná šířka (iPhone SE,
+   levné Androidy). Stálo to přesně jeden tichý nález: na stránce
+   pozemku byl obsah 350 px široký v okně 320 px, takže se stránka
+   dala posouvat do stran — a vinu na tom měla TABULKA PRO ODEČÍTAČ,
+   kterou nikdo nevidí (`.visually-hidden` má width:1px a overflow:hidden,
+   jenže tabulka overflow ignoruje a její nejmenší možná šířka vyhraje).
+   Od 18. 10. se proto chodí i po 320 px. */
+await projdi(320, 'Úzký mobil');
 
 await prohlizec.close();
 console.log('\nChyby skriptů a přetékání — ' + STRANKY.length + ' druhů stránek, na mobilu i na počítači');

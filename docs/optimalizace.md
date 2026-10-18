@@ -1877,3 +1877,41 @@ o situaci, která teprve nastane: mezi nasazením webu a puštěním
 „takovou funkci neznám" (404). V tom okně se nesmí stát to nejhorší —
 že web uložené pozemky **smaže**, protože je „na účtu nenašel".
 Sabotáž (neúspěšné stažení brané jako prázdný účet) to shodí.
+
+## 25. Dvě stránky se na úzkém telefonu daly posouvat do stran *18. 10.*
+
+Přetékání do stran hlídá `scripts/test-konzole.mjs` — jenže chodilo po
+webu na **1 280 a 390 px**, a 320 px (iPhone SE, levné Androidy) nikdo
+neměřil, přestože jinde v repozitáři je to běžná šířka. Stálo to dva
+tiché nálezy:
+
+**1) Stránka pozemku: obsah 350 px v okně 320.** Vinu měla **tabulka
+pro odečítač, kterou nikdo nevidí** — tatáž čísla, jaká kreslí histogram
+cen, ve sloupcích. Třída `.visually-hidden` má `width:1px` a
+`overflow:hidden`, jenže **tabulka `overflow` ignoruje** a její
+nejmenší možná šířka vyhraje nad `width:1px`; absolutně umístěný prvek
+pak roztáhne posuvnou plochu dokumentu (`clip` maluje, ale neměří).
+Tabulka je teď zabalená v obyčejném `div`u s touž třídou — ten
+`overflow` dodrží. Naměřeno po opravě: 320 px obsahu v okně 320.
+
+**2) Stránka „přidat pozemek": obsah 349 px v okně 320 — ale jen
+přihlášenému.** Políčko formuláře si drží vlastní nejmenší šířku
+odvozenou z atributu `size` (dvacet znaků), **naměřeno 264 px**. Mřížka
+`.add-grid` z toho udělala sloupec **329 px** uvnitř okna 320. Vidět to
+nebylo ze dvou důvodů najednou: formulář se ukazuje jen přihlášenému
+a zkouška po té stránce chodila nepřihlášená.
+
+Opraveno dvakrát, a obojí schválně:
+
+* `min-width:0` na políčkách formuláře — to je příčina;
+* `grid-template-columns:minmax(0, 1fr)` místo `1fr` — `1fr` je zkratka
+  pro `minmax(auto, 1fr)` a to „auto" znamená „nejmenší šířka obsahu",
+  takže jediné přerostlé políčko roztáhne celý sloupec za okraj okna.
+
+**Sabotáž ukázala, že stačí jedno:** když jsem odebral jen `min-width`,
+zkouška prošla (mřížka to uhlídala). Shodí ji teprve odebrání obojího —
+a pak padnou obě kontroly („žádnou stránkou nejde pohnout do stran"
+i „nic nevyčuhuje"). Obě pravidla tedy zůstávají: jedno léčí příčinu,
+druhé je pojistka pro příští políčko.
+
+Od 18. 10. chodí zkouška i po **320 px**.

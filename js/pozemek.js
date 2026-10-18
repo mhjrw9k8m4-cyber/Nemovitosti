@@ -776,7 +776,17 @@
       /* TABULKA PRO ODEČÍTAČ A PRO TOHO, KDO BARVY NEVIDÍ. Graf je
          obrázek; tohle jsou tatáž čísla ve sloupcích, takže se z grafu
          nic nedozví jen oko. Nekreslí se, čte se. */
-      '<table class="visually-hidden"><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
+      /* OBAL, NE SAMOTNÁ TABULKA. `.visually-hidden` má width:1px
+         a overflow:hidden — jenže TABULKA overflow ignoruje a její
+         nejmenší možná šířka vyhraje nad width:1px. Absolutně
+         umístěný prvek tím pádem roztáhne posuvnou plochu dokumentu:
+         naměřeno na 320px displeji obsah 350 px v okně 320, tedy
+         stránka pozemku se dala posouvat do stran kvůli tabulce,
+         která není vidět. (Zkoušel to dřív `clip` — ten ale maluje,
+         ne měří.) Obal je obyčejný div: ten overflow dodrží a dovnitř
+         to zabalí. */
+      '<div class="visually-hidden">' +
+      '<table><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
         '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
         kose.map(function (kolik, i) {
           var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
@@ -786,6 +796,7 @@
           return '<tr><th scope="row">' + pasmo + '</th><td>' + kolik + '</td></tr>';
         }).join('') +
       '</tbody></table>' +
+      '</div>' +
     '</figure>';
   }
 

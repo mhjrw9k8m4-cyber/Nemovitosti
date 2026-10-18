@@ -483,7 +483,8 @@
       '<p class="pvg-roz">' + n + ' nabídek v okolí, od <b>' + fmt(Math.round(min))
         + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
 
-      '<table class="visually-hidden"><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
+      '<div class="visually-hidden">' +
+      '<table><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
         '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
         kose.map(function (kolik, i) {
           var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
@@ -493,6 +494,7 @@
           return '<tr><th scope="row">' + pasmo + '</th><td>' + kolik + '</td></tr>';
         }).join('') +
       '</tbody></table>' +
+      '</div>' +
     '</figure>';
   }
 
