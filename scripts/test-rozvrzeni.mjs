@@ -1826,6 +1826,48 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   }
 }
 
+/* --- Stránka pozemku se nerozpíná do šířky okna -------------------
+   Mřížka s cenou vpravo začíná na 1 100 px. Pod ní se obsah dřív
+   rozpínal přes celé okno: naměřeno na 1 024 px (iPad naležato, půlka
+   okna na monitoru) dlaždice parametrů 992 px, zatímco odstavec popisu
+   má čtecí míru 636 px — bloky téže stránky o 356 px rozdílné. Nečte se
+   to jako sloupec, ale jako rozsypané bloky.
+   Měří se obojí: že blok nepřeroste míru sloupce, A ŽE PŘITOM NEZEŠIROKL
+   odstavec. Při první opravě se totiž stalo přesně tohle — pravidlo
+   `#pz-detail > *{max-width:…}` přebilo svou specificitou čtecí míru
+   odstavce a rozšířilo ho ze 636 na 720 px. */
+{
+  const STRANKA = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  pravda('je na čem měřit — stránka pozemku', !!STRANKA, 'žádná stránka pozemku');
+  if (STRANKA) {
+    for (const sirka of [820, 1024, 1099, 1440]) {
+      const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+        viewport: { width: sirka, height: 900 } });
+      const p = await ctx.newPage();
+      await p.goto(`${BASE}/${STRANKA}`, { waitUntil: 'load' }).catch(() => {});
+      await p.waitForSelector('.pz-klice', { timeout: 20000 }).catch(() => {});
+      await p.waitForTimeout(600);
+      const v = await p.evaluate(() => {
+        const m = (sel) => { const e = document.querySelector(sel); if (!e) return null;
+          return Math.round(e.getBoundingClientRect().width); };
+        return { klice: m('.pz-klice'), specs: m('.pz-specs'), popis: m('.pz-popis-inzerent') };
+      });
+      // PŘEDPOKLAD: bez vykreslených dlaždic by kontroly níž prošly naprázdno
+      pravda(`${sirka} px: dlaždice parametrů se vykreslily`, !!v.klice,
+        'dlaždice nejsou — nic se neměří');
+      if (v.klice) {
+        pravda(`${sirka} px: bloky nepřerostou míru sloupce (720 px)`,
+          v.klice <= 724 && (v.specs == null || v.specs <= 724),
+          `dlaždice ${v.klice} px, tabulka ${v.specs} px`);
+        pravda(`${sirka} px: a odstavec popisu drží čtecí míru, ne šířku bloku`,
+          v.popis == null || v.popis <= 660,
+          `popis ${v.popis} px (blok ${v.klice} px)`);
+      }
+      await ctx.close();
+    }
+  }
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

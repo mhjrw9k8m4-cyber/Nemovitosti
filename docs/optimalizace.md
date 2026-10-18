@@ -1705,3 +1705,29 @@ kontroly (mapa po otevření, aktivní záložka, nová i příští návštěva
 * **Dvě natvrdo psané mezery mezi `</b>` a `<span>`** v `test-sliby` —
   táž třída chyby jako ty čtyři dřív, kdy oprava „14krajů → 14 krajů"
   rozbila vzory, které mezeru nečekaly.
+
+## 22. Mezi tabletem a monitorem se stránka pozemku rozsypala *18. 10.*
+
+Mřížka s cenou vpravo (720 px obsah + 340 px cena) začíná na 1 100 px —
+pod ní se nevejde. Co se ale dělo POD tou mezí, nikdo neměřil: obsah se
+rozpínal přes celé okno. **Naměřeno na 1 024 px** (iPad naležato, půlka
+okna na monitoru): dlaždice parametrů **992 px**, zatímco odstavec popisu
+drží čtecí míru **636 px**. Bloky téže stránky o 356 px rozdílné se
+nečtou jako sloupec, nýbrž jako rozsypané bloky — a je to přesně ta
+„nelogická vrstva obsahu", kterou šlo vidět a nešlo pojmenovat.
+
+Míra je teď v pásmu 820–1 099 px stejná jako nad ním (720 px, vlevo),
+takže se při změně šířky okna nic nepřeskládává. Místo vpravo zbude
+prázdné — na monitoru tam patří cena.
+
+**A rovnou past, do které jsem při tom spadl.** Napoprvé to stálo na
+`#pz-detail > *{max-width:var(--m-sloupec)}`. Jenže selektor s ID
+přebije třídu, takže to **rozšířilo odstavec popisu** z čtecích 636 px
+na 720 — oprava šířky bloků by tím zhoršila to, co se opravdu čte.
+Naměřeno a opraveno: míru má obal (`#pz-detail`), bloky se o ni podělí
+a každý si svůj vlastní užší strop nechá.
+
+Hlídá to `scripts/test-rozvrzeni.mjs` na čtyřech šířkách (820, 1 024,
+1 099, 1 440) a měří OBOJÍ — že blok nepřeroste míru sloupce i že
+přitom nezeširoknul odstavec. Sabotáž (vypnuté pravidlo) shodí tři
+kontroly.

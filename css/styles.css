@@ -7906,6 +7906,25 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    přesně takové, jaké bylo.
    ===================================================================== */
 .pz-bok{display:contents;}
+/* MEZI TELEFONEM A MONITOREM: SLOUPEC SE NESMÍ ROZTÁHNOUT DO ŠÍŘKY OKNA.
+   Mřížka s cenou vpravo začíná na 1 100 px (720 + 40 + 340 + 2× 32 se
+   dřív nevejde). Pod ní se ale obsah dosud rozpínal přes celé okno:
+   naměřeno na 1 024 px (iPad naležato, půlka okna na monitoru) dlaždice
+   parametrů 992 px, zatímco popis má čtecí míru 636 px — tedy bloky
+   téže stránky o 356 px rozdílné. Nečte se to jako sloupec, nýbrž jako
+   rozsypané bloky.
+   Stejná míra jako nad 1 100 px a stejně vlevo, ať se při změně šířky
+   okna nic nepřeskládává; místo vpravo zbude prázdné, protože tam na
+   monitoru patří cena. */
+@media (min-width:820px) and (max-width:1099px){
+  /* MÍRA PATŘÍ OBALU, NE KAŽDÉMU BLOKU. Napoprvé to stálo na
+     `#pz-detail > *{max-width:…}` — a protože selektor s ID přebije
+     třídu, ROZŠÍŘILO to odstavec popisu z čtecích 636 px na 720.
+     Naměřeno; tedy oprava šířky bloků by zhoršila to, co se čte.
+     Omezený je proto obal: bloky se o míru podělí a každý si svůj
+     vlastní užší strop (--m-text) nechá. */
+  #pz-detail{max-width:var(--m-sloupec);}
+}
 @media (min-width:1100px){
   /* Boční odsazení 32 px jako u ostatních stránek (.wrap): předloha má
      ve vloženém stylu 16 px kvůli telefonu a obsah by tím na monitoru

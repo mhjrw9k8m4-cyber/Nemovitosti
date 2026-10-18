@@ -2395,6 +2395,8 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .pz-spec .v{color:var(--text-ondark);font-weight:600;font-size:14px;text-align:left;font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere;line-height:1.4}
 @media (max-width:560px){}
 .pz-bok{display:contents}
+@media (min-width:820px) and (max-width:1099px){#pz-detail{max-width:var(--m-sloupec)}
+}
 @media (min-width:1100px){.pz-wrap{padding-left:32px;padding-right:32px}
 #pz-detail{display:grid;grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,340px);column-gap:40px;align-items:start}
 #pz-detail>*{grid-column:1;min-width:0}
