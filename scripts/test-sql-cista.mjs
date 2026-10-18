@@ -25,7 +25,7 @@
 // si jí nikdo nevšimne. Proto tenhle test: skript se pustí doopravdy
 // a nesmí ohlásit ŽÁDNOU chybu, kromě těch, které patří jen Supabase.
 import { execFileSync, execSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -131,6 +131,35 @@ try {
     .map((r) => r.replace(/^psql:[^:]*:/, 'řádek '));
   pravda('00-vse.sql projde na čisté databázi bez chyb', chyby.length === 0,
     chyby.slice(0, 8).join('\n      '));
+
+  /* SOUPIS, CO Z TOHO VZNIKLO — vypisuje se schválně.
+     docs/pred-vydanim.md cituje čísla („tolik tabulek, tolik funkcí"),
+     a ta se s každou migrací mění. Dokud se nevypisovala, opisovala se
+     ručně a tiše stárla: stálo tam „56 funkcí", když jich bylo 39.
+     Tohle je jediné místo, kde je lze změřit na doopravdy založené
+     databázi, takže se odsud mají brát. */
+  {
+    const spocti = (sql) => Number((psql(['-d', 'zkouska', '-tAc', sql]) || '0').trim()) || 0;
+    const zdroj = readFileSync(path.join(ROOT, 'supabase', '00-vse.sql'), 'utf8');
+    /* VLASTNÍ funkce, ne všechno, co v public leží. Dotaz na pg_proc jich
+       napočítá 79, protože v public jsou i funkce z rozšíření a spouštěčů —
+       a číslo v dokumentaci má být o tom, co píšeme my. Proto se protne
+       s tím, co 00-vse.sql doopravdy zakládá. */
+    const nasePodleZdroje = new Set([...zdroj.matchAll(/create (?:or replace )?function\s+(\w+)\s*\(/g)]
+      .map((m) => m[1]));
+    const vPublic = (psql(['-d', 'zkouska', '-tAc',
+      `select distinct p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public'`]) || '').split('\n').map((x) => x.trim()).filter(Boolean);
+    const souhrn = {
+      tabulek: spocti(`select count(*) from pg_tables where schemaname = 'public'`),
+      funkci: vPublic.filter((f) => nasePodleZdroje.has(f)).length,
+      politik: spocti(`select count(*) from pg_policies where schemaname = 'public'`),
+      indexu: spocti(`select count(*) from pg_indexes where schemaname = 'public'`),
+      radku: zdroj.split('\n').length,
+    };
+    console.log(`  · soupis: ${souhrn.radku} řádků SQL → ${souhrn.tabulek} tabulek, `
+      + `${souhrn.funkci} vlastních funkcí, ${souhrn.politik} politik RLS, ${souhrn.indexu} indexů`);
+  }
 
   /* A hlavně: opravdu z toho vznikne to, co web volá. Samotné „bez
      chyb" nestačí — chyba uprostřed skriptu se dá i přehlédnout. */
