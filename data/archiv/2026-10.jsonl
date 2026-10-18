@@ -306,3 +306,21 @@
 {"k":"Popůvky|—|Brno-venkov|49.182|16.474#i41to7","m":"Popůvky","o":"Brno-venkov","dr":"pozemek","t":"sale","v":1186,"c":6600000,"od":"2026-09-14","do":"2026-10-16","proc":"zmizela"}
 {"k":"Ibišková|—|Praha|50.018|14.563#oah4","m":"Ibišková","o":"Praha","dr":"stavební pozemek","t":"sale","v":778,"c":15521100,"od":"2026-09-19","do":"2026-10-16","proc":"zmizela"}
 {"k":"Na Kindlovce|—|Praha|50.117|14.445#p4tr","m":"Na Kindlovce","o":"Praha","dr":"stavební pozemek","t":"sale","v":1239,"c":25899000,"od":"2026-09-14","do":"2026-10-16","proc":"zmizela"}
+{"k":"Hradištko|—|Praha-západ|49.870|14.399#2plzj","m":"Hradištko","o":"Praha-západ","dr":"pozemek","t":"sale","v":2498,"c":6700000,"od":"2026-09-14","do":"2026-10-17","proc":"cena"}
+{"k":"Jesenice|—|Praha-západ|49.951|14.539#5cbqd","m":"Jesenice","o":"Praha-západ","dr":"stavební pozemek","t":"sale","v":900,"c":9790000,"od":"2026-10-07","do":"2026-10-17","proc":"cena"}
+{"k":"Miletín|—|Jičín|50.409|15.685#25ax1","m":"Miletín","o":"Jičín","dr":"stavební pozemek","t":"sale","v":1200000,"c":165000000,"od":"2026-10-16","do":"2026-10-17","proc":"zmizela"}
+{"k":"Žumberk|—|Chrudim|49.873|15.858#p31c","m":"Žumberk","o":"Chrudim","dr":"stavební pozemek","t":"sale","v":808,"c":2750000,"od":"2026-09-14","do":"2026-10-17","proc":"zmizela"}
+{"k":"Ohaře|—|Kolín|50.098|15.290#2r3u0","m":"Ohaře","o":"Kolín","dr":"stavební pozemek","t":"sale","v":835,"c":4999999,"od":"2026-09-15","do":"2026-10-17","proc":"zmizela"}
+{"k":"K Rybníku|—|Praha-západ|49.972|14.515#ptvp","m":"K Rybníku","o":"Praha-západ","dr":"stavební pozemek","t":"sale","v":506,"c":11450000,"od":"2026-10-06","do":"2026-10-17","proc":"zmizela"}
+{"k":"Úštěk|849|Litoměřice|50.583|14.342#1rqp60t","m":"Úštěk","o":"Litoměřice","dr":"zahrada","t":"drazba","v":94,"c":9644,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Velké Žernoseky|1241/9|Litoměřice|50.538|14.064#1rqp5w3","m":"Velké Žernoseky","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":6245,"c":650860,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Lovosice|3036/4|Litoměřice|50.512|14.049#1rqpv6f","m":"Lovosice","o":"Litoměřice","dr":"zastavěná plocha a nádvoří","t":"drazba","v":23,"c":10484,"od":"2026-10-13","do":"2026-10-17","proc":"zmizela"}
+{"k":"Lovosice|3038/5|Litoměřice|50.518|14.047#1rqpv6e","m":"Lovosice","o":"Litoměřice","dr":"zastavěná plocha a nádvoří","t":"drazba","v":345,"c":157265,"od":"2026-10-13","do":"2026-10-17","proc":"zmizela"}
+{"k":"Velemín|926/5|Litoměřice|50.538|13.973#1rqp5w2","m":"Velemín","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":3876,"c":3077544,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Úštěk|67|Litoměřice|50.589|14.342#1rqp60j","m":"Úštěk","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1375,"c":1153564,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Třebušín|59|Litoměřice|50.596|14.207#1rqp60m","m":"Třebušín","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":432,"c":371571,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Třebušín|523/13|Litoměřice|50.596|14.200#1rqp60h","m":"Třebušín","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":132,"c":190281,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Úštěk|847/12|Litoměřice|50.581|14.339#1rqp60i","m":"Úštěk","o":"Litoměřice","dr":"trvalý travní porost","t":"drazba","v":570,"c":905160,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Úštěk|158|Litoměřice|50.590|14.344#1rqp60s","m":"Úštěk","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":101,"c":207765,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Lovosice|3033/22|Litoměřice|50.520|14.054#1rqp5w6","m":"Lovosice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":28,"c":71741,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Úštěk|16/5|Litoměřice|50.580|14.346#1rqp60g","m":"Úštěk","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":68,"c":1160828,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
