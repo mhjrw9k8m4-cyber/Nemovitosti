@@ -435,7 +435,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px}
 .add-check.err{color:var(--c-exekuce-ink)}
 .auth-card{position:relative;z-index:1;max-width:var(--m-karta);margin:0;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:32px 28px 24px;box-shadow:var(--shadow-lg)}
 .auth-tabs{display:flex;gap:6px;padding:4px;background:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:20px}
-.auth-tab{flex:1;padding:10px 8px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--text-ondark-mute);font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.auth-tab{flex:1;min-height:48px;padding:10px 8px;border:0;border-radius:var(--r-ovladani);background:none;color:var(--text-ondark-mute);font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
 .auth-tab.active{background:var(--plocha-znacka);color:#fff}
 .auth-forgot{text-align:center;margin-top:2px}
 .auth-head{text-align:center;margin-bottom:24px}
@@ -447,7 +447,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px}
 .auth-field .hint{font-size:12px;font-weight:400;color:var(--text-ondark-mute)}
 .auth-inp{position:relative;display:flex;align-items:center}
 .auth-inp .auth-ico{position:absolute;left:14px;width:18px;height:18px;stroke-width:2;color:var(--text-ondark-mute);pointer-events:none;transition:color var(--cas-zakladni) var(--ease);z-index:1}
-.auth-inp input{width:100%;background:var(--ink);border:1px solid var(--line-ui);border-radius:var(--r-ovladani);padding:14px 40px 14px 40px;font-size:16px;color:var(--text-ondark);font-family:inherit;transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.auth-inp input{width:100%;min-height:48px;background:var(--ink);border:1px solid var(--line-ui);border-radius:var(--r-ovladani);padding:12px 40px;font-size:16px;color:var(--text-ondark);font-family:inherit;transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .auth-inp input::placeholder{color:var(--text-zastupny)}
 .auth-inp input:focus{outline:none;border-color:var(--copper-bright);background:var(--ink-soft);box-shadow:0 0 0 3px rgba(126,196,157,0.16)}
 .auth-inp:focus-within .auth-ico{color:var(--copper-bright)}

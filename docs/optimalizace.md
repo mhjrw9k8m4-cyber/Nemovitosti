@@ -1980,3 +1980,32 @@ i 320 px): jedna výška, jedno zaoblení, rovné dvojice, žádný nápis přes
 rámeček a žádný posuv stránky do stran. Měří skutečné rozměry
 v prohlížeči, ne zápis v CSS. Sabotáž (návrat k flexu a starému
 přepínači) shodí **šest** kontrol.
+
+## 27. Zkouška zaoblení nikdy nechodila po stránce pozemku *18. 10.*
+
+Když se srovnal pruh nad výpisem (oddíl 26), udělal jsem si soupis tvarů
+ovladačů na sedmi druzích stránek — výška × zaoblení × velikost písma.
+Stránka pozemku jich měla **sedm**, stránka „přidat pozemek" **šest**:
+
+| co | bylo | teď |
+|---|---|---|
+| „Otevřít v katastru" / „Sdílet" pod sebou | 52 px / **48 px** | obojí 52 px |
+| „Kopírovat" a „Navigovat" pod mapou | **r10** | r14 |
+| tlačítko zvětšení mapy | **r10** | r14 |
+| přihlašovací karta: záložky / pole / tlačítko | **46 / 50 / 48 px** | 48 px |
+
+**Proč to nikdo nechytil:** `scripts/test-zaobleni.mjs` vymáhá pravidlo
+„co se ovládá, má `--r-ovladani`" — ale chodil po sedmi stránkách,
+mezi kterými **stránka pozemku nebyla**. Je to přitom nejčastější druh
+stránky na webu (2 159 kusů) a chodí se na ni z mapy i z vyhledávače.
+
+Jakmile se do seznamu přidala, **našla hned dvě další porušení**, která
+jsem okem minul: rozbalovátko „Co byste měli vědět" a **políčko na
+poznámku** měly taky 10 px. Obojí je ovladač, ne plocha. Adresa se do
+zkoušky bere z dat (`scripts/adresa-pozemku.mjs`), ne napevno — natvrdo
+zapsaná nabídka jednou zmizí a zkouška by měřila prázdno.
+
+Sabotáž (vrácení jednoho zaoblení na 10 px) kontrolu shodí, takže to
+pokrytí není naoko. Čtrnáct dalších zkoušek, kterých se ty stránky
+týkají, prošlo beze změny; vložený styl šablony je po přidaných
+komentářích na 40,6 kB proti stropu 41 kB.

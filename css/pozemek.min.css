@@ -661,7 +661,7 @@ body>footer{flex:none}
 .gtk-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .pz-sour{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .pz-sour code{font-family:var(--font-mono);font-size:14px;letter-spacing:-0.01em;user-select:all;-webkit-user-select:all}
-.pz-sour-kop,.pz-sour-nav{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--line-ui);background:var(--ink);font:inherit;font-size:13px;font-weight:600;color:var(--text-ondark);text-decoration:none;cursor:pointer;transition:border-color var(--cas-zakladni) var(--ease)}
+.pz-sour-kop,.pz-sour-nav{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--ink);font:inherit;font-size:13px;font-weight:600;color:var(--text-ondark);text-decoration:none;cursor:pointer;transition:border-color var(--cas-zakladni) var(--ease)}
 .pz-sour-kop:hover,.pz-sour-nav:hover{border-color:var(--copper-bright)}
 .pz-sour-kop svg,.pz-sour-nav svg{width:16px;height:16px;flex:none;stroke-width:2.18}
 @media (max-width:420px){.pz-sour-radek{margin-right:0;flex:1 1 100%}

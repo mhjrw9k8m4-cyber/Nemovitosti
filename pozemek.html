@@ -52,7 +52,7 @@
        se mapa na chvíli rozsype. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=83114094">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=f9d3dd44">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -404,7 +404,10 @@
     .pz-actions .pz-abtn:first-child{flex-basis:100%; background:var(--plocha-znacka);
       border-color:transparent; color:#fff; font-weight:700; box-shadow:var(--e2);}
     .pz-actions .pz-abtn:first-child svg{color:#fff;}
-    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:48px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    /* 52 px jako .pz-btn nad ním. „Otevřít v katastru" (52) a „Sdílet"
+       (48) stály pod sebou a lišily se o čtyři pixely — na snímku
+       z telefonu to vypadá jako dvě různé sady tlačítek. */
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
     .pz-abtn:active{transform:scale(.98);}
     .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
@@ -420,7 +423,11 @@
        Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
     .pz-gtk-obal{margin:20px 0 0;}
     .pz-gtk-sum{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none;
-      padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-plocha);
+      /* --r-ovladani: na rozbalovátko se KLEPE, je to ovladač, ne plocha.
+         S --r-plocha (10 px) stálo mezi čtrnáctkami jako třetí tvar;
+         našla to zkouška zaoblení, jakmile začala chodit i po stránce
+         pozemku. */
+      padding:14px 16px; border:1px solid var(--line); border-radius:var(--r-ovladani);
       background:#fff; box-shadow:var(--e1);
       transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .pz-gtk-sum::-webkit-details-marker{display:none;}
@@ -481,7 +488,8 @@
        zvětšení k ničemu. */
     .pzm-mapa{position:relative;}
     .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
-      border-radius:var(--r-sm); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
+      /* --r-ovladani jako ostatní ovladače; --r-sm z něj dělalo třetí tvar. */
+      border-radius:var(--r-ovladani); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
       box-shadow:var(--e1); -webkit-tap-highlight-color:transparent;}
     /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
        stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu
@@ -589,8 +597,9 @@
     .pz-pozn-hlava h2{font-size:16px; margin:0;}
     .pz-pozn-stav{margin-left:auto; font-size:12px; color:var(--text-ondark-mute);}
     .pz-pozn-stav.chyba{color:var(--c-exekuce);}
+    /* Políčko na poznámku je pole — tedy --r-ovladani, ne --r-sm. */
     .pz-pozn-pole{display:block; width:100%; min-height:88px; padding:10px 12px;
-      border:1px solid var(--line-ui); border-radius:var(--r-sm);
+      border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
       background:var(--ink); color:var(--text-ondark);
       font:inherit; font-size:16px; line-height:1.6; resize:vertical;
       transition:border-color var(--cas-zakladni) var(--ease);}

@@ -25,6 +25,7 @@
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { adresaPozemku } from './adresa-pozemku.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -41,8 +42,15 @@ function pravda(popis, vyslo, proc) {
    --r-ovladani jednou změnilo, zkouška se má přizpůsobit, ne spadnout. */
 const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
 
+/* A STRÁNKA POZEMKU — nejčastější druh stránky na webu (2 159 kusů)
+   tu dlouho nebyl, takže se na ní pravidlo o zaoblení nevymáhalo.
+   Stálo to dva tiché nálezy: „Kopírovat"/„Navigovat" pod mapou
+   a tlačítko zvětšení mapy měly --r-sm (10 px), kdežto všechno kolem
+   --r-ovladani (14). Adresa se bere z dat, ne napevno: natvrdo
+   zapsaná nabídka se jednou ztratí a zkouška by měřila prázdno. */
 const STRANKY = ['index.html', 'cena-pozemku.html', 'hlidani.html', 'porovnani.html',
-  'pridat.html', 'profil.html', 'kontakt.html'];
+  'pridat.html', 'profil.html', 'kontakt.html',
+  (adresaPozemku() || {}).url || 'pozemek.html'];
 
 /* PILULKY, KTERÉ ODZNAKEM JSOU, ale nedají se tak poznat ze značky.
    Píše se sem jméno třídy a důvod — ne proto, aby se dalo pravidlo
