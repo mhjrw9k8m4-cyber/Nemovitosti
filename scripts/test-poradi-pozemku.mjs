@@ -316,11 +316,23 @@ try {
 
   /* 5) A CELKEM SE TO ZKRÁTILO -------------------------------------- */
   /* Mez je volná schválně: text nabídek se mění a pevné číslo by
-     padalo na cizích datech. 4,2 obrazovky je pořád o půl obrazovky
-     méně než naměřených 4,7 před předěláním. */
-  pravda('celá stránka se vejde do 4,2 obrazovky telefonu',
-    m.cela <= m.obrazovka * 4.2,
-    `${m.cela} px = ${(m.cela / m.obrazovka).toFixed(1)} obrazovky`);
+     padalo na cizích datech. 4,4 obrazovky je pořád o třetinu obrazovky
+     méně než naměřených 4,7 před předěláním.
+     MEZ SE 18. 10. ZVEDLA ZE 4,2 NA 4,4 a je to úprava zkoušky, ne webu,
+     takže patří říct proč. Dvě věci:
+       · od napsání téhle meze na stránku přibyl POPIS OD INZERENTA
+         (odstavec 128 px i s nadpisem oddílu 79 px, tedy 0,26 obrazovky)
+         — obsah, o který si majitel řekl. Mez, kterou by takový přírůstek
+         musel překročit, měří stav z doby před ním, ne délku stránky;
+       · 4,2 nemělo rezervu na PROSTŘEDÍ. Nad týmž kódem a týmiž daty
+         vyšlo 3 328 px (4,16) tady a 3 371 px (4,21) na běhači CI —
+         rozdíl 43 px v sazbě a mapovém rámu. Zkouška tím padala podle
+         toho, KDE běží, ne co měří.
+     Ani jedno není důvod stránku natahovat: smysl meze (po předělání se
+     nesmí vrátit k 4,7) platí dál a zbývá do ní 0,2 obrazovky. */
+  pravda('celá stránka se vejde do 4,4 obrazovky telefonu',
+    m.cela <= m.obrazovka * 4.4,
+    `${m.cela} px = ${(m.cela / m.obrazovka).toFixed(2)} obrazovky`);
   /* Co po kalkulačce zbylo a zůstat má: odkaz na rozepsané náklady
      koupě. Ten počítá z vlastní ceny pozemku, ne z hádání. */
   pravda('ale odkaz na rozepsané náklady koupě zůstal',
