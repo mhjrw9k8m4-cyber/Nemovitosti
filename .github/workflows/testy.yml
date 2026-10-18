@@ -758,6 +758,9 @@ jobs:
       - name: Nářadí výpisu je na dosah
         run: node scripts/test-nastroje-v-dosahu.mjs
 
+      - name: Ovládání nad výpisem má jednu velikost
+        run: node scripts/test-ovladani-vypisu.mjs
+
 
       - name: Tah ikon je jeden (1,5 px)
         run: node scripts/test-tahy.mjs

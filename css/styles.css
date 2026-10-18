@@ -3810,7 +3810,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      „Obec, druh, cena…" (naměřeno). */
   .mcp-hledani{display:flex; align-items:center; gap:8px;}
   .mcp-hledani .map-search{flex:1 1 auto; min-width:150px; position:relative;}
-  .mv-toggle{display:flex; flex:0 0 auto; gap:4px; margin-top:0; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
+  /* JEDNA VÝŠKA PRO VŠECHNO V TÉHLE ŘADĚ. Přepínač měl vlastní rámeček
+     a výplň 4 px, takže vedle 44px pole hledání stál jako 54px blok —
+     dva ovladače vedle sebe, každý jiný. Teď je to dráha bez rámečku:
+     vnější výška je přesně výška tlačítek (44 px), zaoblení totéž co
+     u pole i u pilulek (--r-ovladani) a zapnutá půlka je zelená
+     pilulka uvnitř. Dotykový terč se nezmenšil — tlačítka mají dál
+     44 px, zmizela jen výplň kolem nich. */
+  .mv-toggle{display:flex; flex:0 0 auto; gap:0; margin-top:0; background:var(--plocha-jemna);
+    border:0; border-radius:var(--r-ovladani); padding:0; overflow:hidden;}
   /* Přepínač se zúžil, aby zbylo na pole hledání. Naměřeno: se
      14px písmem a odsazením 11 px měřil 194 px a poli zbylo 168 —
      jen o 18 px víc, než měří jeho vlastní nápis. S 13px písmem
@@ -6270,6 +6278,47 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .ms-vysledky{flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px 8px; margin-bottom:8px;}
   .ms-vysledky .msv-ovladani{flex:0 1 auto; justify-content:flex-end;}
 
+  /* STEJNÁ POLÍČKA, NE ČTYŘI RŮZNĚ ŠIROKÉ. Nad výpisem stojí dvě
+     dvojice ovladačů pod sebou — „Uložené / Doporučené" a „Procházet
+     po jednom / Stáhnout výběr". Výškou i zaoblením se shodovaly, ale
+     šířka jim vyšla podle délky nápisu (84, 103, 182 a 167 px), takže
+     pravý okraj byl roztřepený a blok se četl jako čtyři různé věci.
+     Dělí se proto o řádek rovným dílem (flex:1 1 0) — čtyři políčka
+     téže velikosti a u každého větší terč pro prst.
+     FLEX, NE GRID: mřížka se zkoušela první a rozsypala vnitřek
+     tlačítek (ikona v „Uložené" se roztáhla přes půl řádku, druhý
+     ovladač z řady vypadl). Flex mění jen šířku, ne vnitřní skládání. */
+  /* `.map-side .mc-akce` schválně: samotné `.mc-akce` leží v souboru
+     níž (ř. ~6739) s `display:flex` a při stejné síle by vyhrálo
+     pozdější pravidlo — obě tlačítka by pak seděla přes sebe na celou
+     šířku. Naměřeno: obojí 370 px na téže řádce. */
+  .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
+    display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:8px; width:100%; flex:1 1 100%;}
+  .ms-vysledky .msv-ovladani > *:not([hidden]),
+  .map-side .mc-akce > *:not([hidden]),
+  .ms-vysledky > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
+  /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
+     `display:inline-flex` z .mc-prep, takže se musí schovat výslovně. */
+  .ms-vysledky .msv-ovladani > [hidden]{display:none;}
+  /* POD 360 px JEDEN SLOUPEC. Dva sloupce dají na 320px displeji
+     políčka po 146 px, kdežto „Procházet po jednom" potřebuje 160
+     a „Stáhnout výběr (1 942)" 167 — nápisy pak lezou přes rámeček
+     a málem do sebe (vyfoceno). Na celou šířku se vejdou oba a velikost
+     zůstává jednotná, jen pod sebou. */
+  @media (max-width:360px){
+    .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
+      grid-template-columns:1fr;}
+  }
+  .ms-vysledky .msv-ovladani .mc-prep, .mc-akce .mc-nastroj{justify-content:center;}
+  /* Řazení je v téže řadě jako ostatní — tedy taky na střed. Vlastní
+     rozbalovací seznam má nápis zarovnaný vlevo (.cdd-btn), což v řadě
+     čtyř políček vyčnívalo jako jediné. */
+  .ms-vysledky .msv-ovladani .cdd-btn{justify-content:center;}
+  .ms-vysledky .msv-ovladani .cdd-btn .cdd-lbl{flex:0 1 auto; text-align:center;}
+  .msv-razeni .map-select{max-width:none; width:100%;}
+  .mc-akce{width:100%;}
+
   /* JEDEN TVAR PRO CELÝ PRUH NAD VÝPISEM.
      ----------------------------------------------------------------
      Naměřeno, jak to vypadalo: „Uložené" a „Doporučené" stojí vedle
@@ -6303,6 +6352,16 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     background:var(--panel);
     color:var(--text-ondark);
     font-size:13px; font-weight:600;}
+  /* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST. Ikonu tam vkládá
+     js/main.js (BM_SVG) a v její značce není width ani height —
+     velikost jí tedy musí dát styl. Nikdy ji nedostala: tlačítko bylo
+     úzké přesně na text, takže se ikona scvrkla na nulu a nikdo si
+     toho nevšiml. Jakmile se tlačítka srovnala na stejnou šířku,
+     místo se našlo a záložka vyrostla na 110 × 110 px přes půl řádku
+     (a černá, protože bez `fill:currentColor` zůstane výchozí).
+     Šestnáct pixelů je táž míra, jakou mají ikony v přepínači
+     Seznam/Mapa vedle. */
+  .ms-vysledky .msv-ulozene svg{flex:none; width:16px; height:16px; fill:currentColor;}
   /* Zapnuté „Uložené" zůstává zelené — to není nejednotnost, to je stav. */
   .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
   /* Pole hledání mělo 46 px proti 44 u všeho ostatního. */
@@ -6319,7 +6378,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
   .ms-vysledky .mc-sub{color:var(--text-ondark-mute); font-weight:600;}
   .msv-ulozene{min-height:34px; padding:6px 10px;}
-  .msv-razeni .map-select{min-height:34px; max-width:150px; font-size:12px;}
+  /* 13px jako sousedé. Dvanáctka tu byla jediná v celé řadě a dělala
+     z řazení „menší" ovladač, ačkoli je stejně důležitý jako „Uložené".
+     A ŽÁDNÝ STROP ŠÍŘKY: 150 px z něj dělalo užší políčko než
+     „Uložené" vedle (193 px), tedy přesně tu nejednotnost, kvůli které
+     se tahle řada rovnala. */
+  .msv-razeni .map-select{min-height:34px; max-width:none; width:100%; font-size:13px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva. */
   .ms-vysledky .mc-pozn, .ms-vysledky .mc-nove{flex:1 1 100%; margin:0; font-size:11px;}
@@ -6705,7 +6769,11 @@ body > footer{flex:none;}
      zkouškou okrajů, mez je 3 : 1 (WCAG 1.4.11). Tlačítko tak vypadalo
      jako pouhý text. --line-ui je táž čára, jakou mají pilulky filtrů
      vedle. */
-  color:var(--text-ondark); background:var(--plocha-jemna); border:1px solid var(--line-ui);
+  /* BÍLÉ POZADÍ, NE ŠEDÉ. „Uložené" a výběr řazení o řádek výš jsou
+     bílé s linkou; tyhle dvě byly šedé s linkou, takže v jedné sestavě
+     stály tři různé ovladače. Shodují se teď ve všem kromě šířky:
+     44 px, --r-ovladani, bílá, 13px písmo. */
+  color:var(--text-ondark); background:none; border:1px solid var(--line-ui);
   /* ZAOBLENÍ JAKO U OSTATNÍCH OVLADAČŮ V TÉŽE ŘADĚ, ne pilulka.
      Pravidlo webu zní (viz --r-ovladani výš): co se ovládá, má
      --r-ovladani; pilulka zůstává ODZNAKU (zapínatelnému filtru)

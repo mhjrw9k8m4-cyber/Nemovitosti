@@ -1932,3 +1932,51 @@ i „nic nevyčuhuje"). Obě pravidla tedy zůstávají: jedno léčí příčin
 druhé je pojistka pro příští políčko.
 
 Od 18. 10. chodí zkouška i po **320 px**.
+
+## 26. Pět ovladačů nad výpisem, pět různých velikostí *18. 10.*
+
+Majitel poslal snímek telefonu s jedinou větou: všechna políčka mají mít
+stejnou velikost. Měl pravdu a dá se to vyčíslit — tohle stálo nad
+výpisem vedle sebe:
+
+| ovladač | před | problém |
+|---|---|---|
+| hledání | 44 px, r14 | — |
+| přepínač Seznam / Mapa | **54 px**, r10 | vlastní rámeček a výplň 4 px |
+| „Uložené" | 44 px, **194 px** široké | — |
+| řazení („Doporučené") | 44 px, **150 px**, **12px písmo** | strop šířky i menší písmo |
+| „Procházet po jednom" | 44 px, **182 px**, **šedá výplň** | jiná plocha než pilulky nad ním |
+| „Stáhnout výběr" | 44 px, **167 px**, šedá výplň | — |
+
+Teď mají všechny 44 px, `--r-ovladani`, tutéž linku, 13px písmo (hledání
+16 px — pod tím iPhone při klepnutí do pole zvětší celou stránku)
+a **stejnou šířku**: dvojice se dělí o řádek na půl (181 px na 390px
+displeji).
+
+**Záložka v „Uložené" přitom nikdy neměla žádnou velikost.** Ikonu tam
+vkládá `js/main.js` (BM_SVG) a v její značce není `width` ani `height` —
+velikost jí musí dát styl a nikdy ji nedostala. Tlačítko bylo úzké
+přesně na text, takže se ikona **scvrkla na nulu** a nikdo si toho
+nevšiml. Jakmile se tlačítka srovnala na stejnou šířku, místo se našlo
+a záložka vyrostla na **110 × 110 px přes půl řádku**, černá (bez
+`fill:currentColor` zůstane výchozí). Šestnáct pixelů je táž míra, jakou
+mají ikony v přepínači vedle.
+
+**Dva pokusy, které měření vrátilo:**
+
+* **Mřížka napoprvé rozsypala vnitřek tlačítek** — ta nenastavená ikona
+  a druhý ovladač, který z řady vypadl, protože `.mc-akce` má
+  `display:flex` níž v souboru a při stejné síle vyhrálo pozdější
+  pravidlo (naměřeno: obě tlačítka 370 px na téže řádce). Po opravě
+  ikony a se selektorem `.map-side .mc-akce` mřížka sedí.
+* **Na 320 px dávaly dva sloupce políčka po 146 px**, kdežto „Procházet
+  po jednom" potřebuje 160 a „Stáhnout výběr (1 942)" 167 — nápisy lezly
+  přes rámeček a málem do sebe (vyfoceno). Pod 360 px se proto skládají
+  pod sebe, každé na plnou šířku. Stejná velikost zůstává, jen jinak
+  poskládaná.
+
+Hlídá to nová `scripts/test-ovladani-vypisu.mjs` (16 kontrol na 390
+i 320 px): jedna výška, jedno zaoblení, rovné dvojice, žádný nápis přes
+rámeček a žádný posuv stránky do stran. Měří skutečné rozměry
+v prohlížeči, ne zápis v CSS. Sabotáž (návrat k flexu a starému
+přepínači) shodí **šest** kontrol.
