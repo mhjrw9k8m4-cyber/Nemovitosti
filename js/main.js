@@ -1328,8 +1328,15 @@
     try { var v = localStorage.getItem(klic); return v == null ? zaloha : JSON.parse(v); }
     catch (e) { return zaloha; }
   }
+  /* ZÁPIS, KTERÝ SE NEPOVEDE, SE MUSÍ PŘIZNAT. Dřív tu stálo
+     `catch (e) {}` — tedy při plné paměti prohlížeče se tiše nestalo
+     nic, zatímco tlačítko se přepnulo do stavu „uloženo". Člověk by
+     o svoje pozemky přišel a nepoznal to. Vrací se proto, jestli zápis
+     prošel; kdo ukládá něco, co si člověk schválně schoval, se podle
+     toho zařídí. (Totéž už dělají poznámky — js/poznamky.js.) */
   function zapisUloz(klic, hodnota) {
-    try { localStorage.setItem(klic, JSON.stringify(hodnota)); } catch (e) {}
+    try { localStorage.setItem(klic, JSON.stringify(hodnota)); return true; }
+    catch (e) { return false; }
   }
 
   /* „Nové od minulé návštěvy". Co tuhle funkci drží, je POŘADÍ: datum se
@@ -1458,7 +1465,13 @@
     var stary = PKKlic.klicVe(skryte, d);
     if (stary !== null) skryte.splice(skryte.indexOf(stary), 1);
     else skryte.push(PKKlic.klicPozemku(d));
-    zapisUloz(SKRYTE_KLIC, skryte);
+    if (!zapisUloz(SKRYTE_KLIC, skryte)) {
+      /* Vrátit zpět: schovaný pozemek, který se neuložil, by se po
+         načtení stránky objevil znovu a člověk by nevěděl proč. */
+      if (stary !== null) skryte.push(stary); else skryte.pop();
+      showToast('Nepovedlo se uložit — plná paměť prohlížeče');
+      return;
+    }
   }
   /* VRÁCENÍ MUSÍ BÝT „UKAŽ ZPÁTKY", NE „PŘEPNI". Hláška s tlačítkem
      „Vrátit" žije šest sekund a za tu dobu se stav může změnit jinde —
@@ -1488,7 +1501,7 @@
   /* ---------- Oblíbené pozemky (uložené v prohlížeči) ---------- */
   var FAV_KEY = 'pk_fav_v1';
   var favs = (function () { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } })();
-  function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} }
+  function saveFavs(){ return zapisUloz(FAV_KEY, favs); }
   /* KLÍČ NESMÍ BÝT HRUBÝ pkey. Prokázáno v prohlížeči: jeden uložený
      klíč v Jirnech označil pět různých pozemků za 6,6 až 11,2 milionu.
      Ukládá se proto PKKlic.klicPozemku (pkey + výměra), ale ČTE se
@@ -1500,7 +1513,15 @@
     var pridano = stary === null;
     if (stary !== null) favs.splice(favs.indexOf(stary), 1);
     else favs.push(klic);
-    saveFavs(); refreshFavBtn();
+    if (!saveFavs()) {
+      /* Nepovedlo se — stav se vrátí zpátky, ať tlačítko nelže. */
+      if (pridano) { var i = favs.indexOf(klic); if (i >= 0) favs.splice(i, 1); }
+      else { favs.push(klic); }
+      refreshFavBtn();
+      showToast('Nepovedlo se uložit — plná paměť prohlížeče');
+      return;
+    }
+    refreshFavBtn();
     /* Na účet AŽ POTOM a bez čekání: uložení musí být okamžité i bez
        signálu. Nepřihlášenému se nestane nic (viz js/ulozene-ucet.js). */
     if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }

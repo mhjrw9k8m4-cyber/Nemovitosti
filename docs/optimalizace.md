@@ -3019,3 +3019,61 @@ hlásily vadu, která v aplikaci není: tlačítka přepínače jsou ve
 statickém HTML, ale **počet** do nich dopisuje až vykreslený výpis; a
 `test-afordance` čekala pevných 900 ms po `domcontentloaded`. Obě teď
 čekají na vykreslený výpis. Tři běhy po sobě v pořádku (9 a 19 kontrol).
+
+---
+
+## 44. Uložení pozemku umělo tiše selhat *19. 10.*
+
+Prověrka osobních funkcí (poznámky, historie, uložené, hlídač) podle
+zadání „ověř, že data nevypadávají a jsou správně klíčovaná". Většina
+odpovědí byla dobrá — a jedna špatná.
+
+### Vada
+
+```js
+function saveFavs(){ try { localStorage.setItem(FAV_KEY, …); } catch (e) {} }
+```
+
+Při plné paměti prohlížeče se **nestalo nic**, ale tlačítko se přepnulo
+na „Uloženo". Po načtení stránky znovu by tam ten pozemek nebyl a člověk
+by nepoznal proč. Totéž u **skrývání** pozemku a u sdíleného
+`zapisUloz`, přes který jde i filtr, místo a pohled.
+
+Poznámky to přitom uměly správně už dřív (`js/poznamky.js` vrací `false`
+a stránka napíše „nepovedlo se uložit — plná paměť prohlížeče“);
+uložené a skryté na to zapomněly.
+
+### Oprava
+
+`zapisUloz` vrací, jestli zápis prošel. Kde se ukládá rozhodnutí
+člověka, se při nezdaru **stav vrátí zpátky** (aby tlačítko nelhalo) a
+přijde hláška. Tedy: uložení pozemku, skrytí pozemku.
+
+### Zkouška a sabotáž
+
+V `scripts/test-klic-ulozenych.mjs` přibyly čtyři kontroly: schránka se
+„zaplní" jen na ten jeden klíč (`pk_fav_v1`), klepne se na záložku a
+měří se trojí — tlačítko, schránka, hláška.
+
+| | |
+|---|---|
+| čistý běh | `✓ při plné paměti se tlačítko NEPŘEPNE do „Uloženo"`, `✓ a nic se opravdu neuložilo`, `✓ a člověk se doví proč` |
+| sabotáž (vrácené `catch (e) {}`) | `✕ po klepnutí stojí „Uloženo" — a přitom se nic neuložilo`, `✕ hláška: „"` |
+
+### A co prověrka potvrdila
+
+| věc | stav |
+|---|---|
+| historie se zapíše hned při otevření detailu | `PKVideno.oznac(d)` při vykreslení |
+| strop historie | **600 záznamů, zapomínání po 180 dnech** |
+| poznámky | prodleva **600 ms**, k tomu zápis při odchodu z pole i při opuštění stránky, stav „uloženo / smazáno / nepovedlo se" |
+| klíčování | `klicPozemku` = pkey + výměra; hrubý pkey označoval až pět pozemků naráz |
+| běh bez přihlášení | ano, a hlídá se i to, že nepřihlášenému nic neodejde ze zařízení |
+
+### A ještě jedna vlastní nedbalost
+
+Nový kontext ve zkoušce neměl `serviceWorkers: 'block'` a
+`test-zkousky-meri` mi ho vrátil hláškou „kdo podstrkuje přes route,
+vypíná servisního pracovníka". To je past č. 2 z `CLAUDE.md` — a tohle
+je přesně to, kvůli čemu se meta-zkoušky psaly: kontrola, že kontroly
+měří to, co si myslí.

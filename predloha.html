@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=7b7a227f">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=91e18807">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -221,8 +221,7 @@
   var prechody = [
     ['Teplý', '--grad-warm', 'linka nad nadpisem, důrazy'],
     ['Teplý jemný', '--grad-warm-soft', 'štítky a výzvy'],
-    ['Studený jemný', '--grad-cool-soft', 'štítky kategorie prodej'],
-    ['Značkový', '--brand-grad', 'tlačítka']
+    ['Studený jemný', '--grad-cool-soft', 'štítky kategorie prodej']
   ];
   document.getElementById('prechody').innerHTML = prechody.map(function (g) {
     return '<div class="vzorek"><div class="pole" style="background:' + v(g[1]) + '; border:1px solid var(--line)"></div>' +

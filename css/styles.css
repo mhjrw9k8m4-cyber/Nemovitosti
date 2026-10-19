@@ -337,7 +337,6 @@
      plocha na co se přelévat: velký pruh s výzvou, logo, hlavička.
      Bílý text na ní drží 8,0 : 1. */
   --plocha-znacka:#004F2F;
-  --brand-grad:linear-gradient(135deg, #2C7150 0%, #256546 55%, #1B4A34 100%);
   /* ---------------------------------------------------------------
      KATEGORIE. Dřív to byla duha: chladná modř, sytá zlatá a semaforová
      červená. Na zeleno-béžovém webu to nepůsobilo jako systém, ale jako tři
@@ -445,12 +444,9 @@
   --pas-na-akcentu:#fff;
   --pas-dlazdice:rgba(20,35,28,0.04);
   --pas-linka:var(--line);
-  --pas-zavoj-a:rgba(138,85,18,0.07);
-  --pas-zavoj-b:rgba(31,81,56,0.07);
   /* SVĚTLO Z ROHŮ. Patička ho měla a vysvětlivka u ní tvrdila „stejný
      jazyk jako tmavý pás" — jenže úvodní pás ho neměl, takže patička
      byla bohatší než úvod. Teď je to jeden předpis pro obojí. */
-  --pas-zavoje:none;   /* závoje pryč — pás je plná plocha */
   --pas-nadpis:var(--accent-warm);
   /* OBRYS OVLÁDACÍHO PRVKU NA PÁSU. --pas-linka je na jemné předěly
      (1,22 : 1), ale hranice prvku, se kterým se dá pracovat, musí mít
@@ -5779,9 +5775,9 @@ footer{position:relative; isolation:isolate; overflow:hidden;
   border-top:1px solid var(--line);
   background:var(--pas-plocha-paticka);
   color:var(--pas-text-mute); padding:48px 0 24px; margin-top:8px;}
-/* Světlo z rohů a katastrální mřížka — stejný jazyk jako tmavý pás. */
-footer::before{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:var(--pas-zavoje);}
+/* Katastrální mřížka — stejný jazyk jako tmavý pás. (Světlo z rohů tu
+   bývalo taky, ale po zploštění pásů kreslilo `none`: pseudoprvek, co
+   nic nemaluje, je jen další vrstva k počítání.) */
 footer::after{content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
   background-image:linear-gradient(to right, var(--pas-mrizka) 1px, transparent 1px),
                    linear-gradient(to bottom, var(--pas-mrizka) 1px, transparent 1px);
@@ -6700,7 +6696,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    ------------------------------------------------------------------ */
 .add-hero:not(.app-hero){position:relative; isolation:isolate; overflow:hidden;
   padding:96px 0 56px;
-  background:var(--pas-zavoje), var(--pas-plocha);}
+  background:var(--pas-plocha);}
 .add-hero:not(.app-hero)::before{content:""; position:absolute; inset:0;
   pointer-events:none; z-index:0;
   background-image:

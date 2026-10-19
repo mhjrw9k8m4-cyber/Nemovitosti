@@ -854,8 +854,10 @@
     try { var v = localStorage.getItem(klic); return v == null ? zaloha : JSON.parse(v); }
     catch (e) { return zaloha; }
   }
+
   function zapisUloz(klic, hodnota) {
-    try { localStorage.setItem(klic, JSON.stringify(hodnota)); } catch (e) {}
+    try { localStorage.setItem(klic, JSON.stringify(hodnota)); return true; }
+    catch (e) { return false; }
   }
 
   var NAVSTEVA_KLIC = 'pk_navsteva_v1';
@@ -924,7 +926,12 @@
     var stary = PKKlic.klicVe(skryte, d);
     if (stary !== null) skryte.splice(skryte.indexOf(stary), 1);
     else skryte.push(PKKlic.klicPozemku(d));
-    zapisUloz(SKRYTE_KLIC, skryte);
+    if (!zapisUloz(SKRYTE_KLIC, skryte)) {
+
+      if (stary !== null) skryte.push(stary); else skryte.pop();
+      showToast('Nepovedlo se uložit — plná paměť prohlížeče');
+      return;
+    }
   }
 
   function odskryj(d) {
@@ -937,7 +944,7 @@
 
   var FAV_KEY = 'pk_fav_v1';
   var favs = (function () { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } })();
-  function saveFavs(){ try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} }
+  function saveFavs(){ return zapisUloz(FAV_KEY, favs); }
 
   function isFav(d){ return PKKlic.jeMezi(favs, d); }
   function toggleFav(d){
@@ -946,7 +953,15 @@
     var pridano = stary === null;
     if (stary !== null) favs.splice(favs.indexOf(stary), 1);
     else favs.push(klic);
-    saveFavs(); refreshFavBtn();
+    if (!saveFavs()) {
+
+      if (pridano) { var i = favs.indexOf(klic); if (i >= 0) favs.splice(i, 1); }
+      else { favs.push(klic); }
+      refreshFavBtn();
+      showToast('Nepovedlo se uložit — plná paměť prohlížeče');
+      return;
+    }
+    refreshFavBtn();
 
     if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
   }

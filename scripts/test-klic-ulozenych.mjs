@@ -225,6 +225,52 @@ async function sUlozenymi(klice) {
   await ctx.close();
 }
 
+/* --- PLNÁ PAMĚŤ SE MUSÍ PŘIZNAT ------------------------------------
+   Zápis do schránky uměl tiše selhat: `catch (e) {}` spolkl chybu,
+   tlačítko se přepnulo na „Uloženo" a po načtení stránky znovu tam ten
+   pozemek nebyl. Člověk by o uložené pozemky přišel a nepoznal to.
+   Měří se tedy obojí: že se tlačítko vrátí do „Uložit" A že se o tom
+   člověk doví. (Totéž u poznámek hlídá scripts/test-poznamky.mjs.) */
+{
+  /* serviceWorkers: 'block' — v tomhle souboru se podstrkuje přes
+     ctx.route a od druhé navigace by soubory obsluhoval servisní
+     pracovník (CLAUDE.md, past č. 2). Hlídá to test-zkousky-meri, který
+     mi tenhle kontext bez něj rovnou vrátil. */
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
+  const page = await ctx.newPage();
+  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.waitForSelector('#opp-list .opp-fav', { timeout: 20000 }).catch(() => {});
+  const v = await page.evaluate(async () => {
+    const b = document.querySelector('#opp-list .opp-fav');
+    if (!b) return { chyba: 'záložka na kartě není' };
+    const slovo = () => ((b.querySelector('.os-t') || {}).textContent || '').trim();
+    const pred = slovo();
+    /* Schránka se „zaplní" jen na tenhle jeden zápis. */
+    const puv = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = (k, h) => {
+      if (k === 'pk_fav_v1') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
+      return puv(k, h);
+    };
+    b.click();
+    await new Promise((r) => setTimeout(r, 300));
+    localStorage.setItem = puv;
+    const t = document.getElementById('toast');
+    let ulozeno = [];
+    try { ulozeno = JSON.parse(localStorage.getItem('pk_fav_v1') || '[]'); } catch (e) {}
+    return { pred, po: slovo(), hlaska: (t && t.textContent) || '', vSchrance: ulozeno.length };
+  });
+  pravda('je co měřit — na kartě je záložka a pozemek není uložený',
+    !v.chyba && v.pred === 'Uložit', v.chyba || `na začátku stálo „${v.pred}"`);
+  if (!v.chyba) {
+    pravda('při plné paměti se tlačítko NEPŘEPNE do „Uloženo"', v.po === 'Uložit',
+      `po klepnutí stojí „${v.po}" — a přitom se nic neuložilo`);
+    pravda('a nic se opravdu neuložilo', v.vSchrance === 0, `ve schránce ${v.vSchrance} klíčů`);
+    pravda('a člověk se doví proč', /plná paměť/i.test(v.hlaska), `hláška: „${v.hlaska}"`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 
 console.log('\nKlíč uložených pozemků: ' + (ok + chyb) + ' kontrol');
