@@ -22,6 +22,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { ocisti as ocistiCss } from './minifikace.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -33,6 +34,11 @@ function pravda(popis, vyslo, proc) {
 
 const html = readFileSync(path.join(KOREN, 'pozemek.html'), 'utf8');
 const m = html.match(/<style>([\s\S]*?)<\/style>/);
+/* ZDROJ UŽ NENÍ STRÁNKA. Vložený styl se píše v css/pozemek-vlozeny.css
+   a do <style> v pozemek.html ho vkládá scripts/vloz-styl-pozemku.mjs
+   už očištěný (viz tam, proč). Pravidla, tokeny a komentáře se proto
+   měří na ZDROJI; na stránce se měří to, co se opravdu posílá. */
+const zdroj = readFileSync(path.join(KOREN, 'css', 'pozemek-vlozeny.css'), 'utf8');
 // PŘEDPOKLAD: bez vloženého stylu nemá smysl měřit nic dalšího
 pravda('stránka pozemku má vložený styl', !!m, 've pozemek.html žádný <style> není');
 if (!m) {
@@ -42,8 +48,9 @@ if (!m) {
   console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
-const styl = m[1];
+const styl = zdroj;
 const bez = styl.replace(/\/\*[\s\S]*?\*\//g, '');
+const vlozeny = m[1];
 
 /* ---- 1) velikost TOHO, CO SE OPRAVDU POSÍLÁ ----
    Strop se dlouho měřil na předloze, tedy VČETNĚ KOMENTÁŘŮ, protože se
@@ -57,18 +64,13 @@ const bez = styl.replace(/\/\*[\s\S]*?\*\//g, '');
    Předloha se přesto měří taky, jen volněji: je to jediná stránka,
    která vložený styl posílá i s komentáři (je to ZDROJ, nečistí se),
    a chodí se na ni z mapy. */
-const STROP_KB = 24;        // dnešní stav 21,0 kB
-/* 41, ne 40 — a tohle je důvod, ať to příště někdo nemusí hádat.
-   Při čtyřiceti zbývalo nad dnešním stavem 18 BAJTŮ (40 942 z 40 960).
-   To už není rozpočet, to je zmrazení dnešní velikosti: neprošel by
-   ani jeden nový řádek stylu, ani jedna věta komentáře — a komentáře
-   jsou přesně to, čím tenhle web vysvětluje sám sebe. Strop zůstává,
-   jen má zase k čemu sloužit; 41 kB dává přes tisíc bajtů místa.
-   SKUTEČNÁ OPRAVA JE JINDE a je zapsaná v docs/co-chybi.md: pozemek.html
-   je jediná stránka, která čtenáři posílá 16,5 kB komentářů ve stylu,
-   protože je zároveň zdroj i servírovaná stránka. Až se předloha
-   oddělí od výstupu, tenhle strop může spadnout hluboko. */
-const STROP_PREDLOHY_KB = 41;
+const STROP_KB = 24;        // dnešní stav 20,4 kB
+/* STROP NA PŘEDLOHU TU BÝVAL (41 kB) a 19. 10. se naplnil do bajtu —
+   byl to strop na KOMENTÁŘE, tedy na to, čím tenhle web vysvětluje sám
+   sebe. Zmizel tím, že se předloha oddělila od výstupu: zdroj je
+   css/pozemek-vlozeny.css a do stránky se vkládá očištěný (pozemek.html
+   spadla z 52,0 na 29,7 kB). Komentáře teď nestojí nic a strop na ně
+   není potřeba — hlídá se místo toho, že se do stránky NEDOSTANOU. */
 
 const hotove = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
 pravda('je co měřit — vygenerované stránky pozemků se našly',
@@ -96,15 +98,25 @@ pravda('do hotových stránek se neposílají komentáře ze stylu',
   `${sKomentarem.length} stránek je má, např. ${sKomentarem.slice(0, 3).join(', ')} `
   + '— běželo sestavení (scripts/oprav.mjs)?');
 
-const kb = styl.length / 1024;
-pravda(`předloha pozemek.html se vejde do ${STROP_PREDLOHY_KB} kB i s komentáři`,
-  kb <= STROP_PREDLOHY_KB, `má ${kb.toFixed(1)} kB`);
-/* Komentáře v předloze jsou to, podle čeho se styl upravuje. Kdyby je
+/* Komentáře ve zdroji jsou to, podle čeho se styl upravuje. Kdyby je
    někdo „zoptimalizoval" pryč, ušetří nula bajtů (na čtenáře se
    nedostanou) a přijde se o jediný výklad těch pravidel. */
-pravda('a komentáře v předloze zůstávají — na čtenáře se stejně nedostanou',
+pravda('a komentáře ve zdroji zůstávají — na čtenáře se stejně nedostanou',
   styl.length - bez.length > 8000,
   `komentářů je ${((styl.length - bez.length) / 1024).toFixed(1)} kB`);
+/* A TEĎ TA DRUHÁ STRANA: na pozemek.html se chodí z mapy, takže je to
+   taky stránka pro lidi. Dokud byla zároveň zdrojem, posílala 16,5 kB
+   komentářů (7,2 kB po zabalení) každému, kdo si otevřel mapu pozemku. */
+pravda('a do pozemek.html se taky neposílají', !/\/\*/.test(vlozeny),
+  've <style> ve pozemek.html jsou komentáře — běželo sestavení (scripts/oprav.mjs)?');
+/* Vložený styl se nesmí od zdroje ODCHÝLIT: kdyby se do pozemek.html
+   připsalo pravidlo rukou, zmizí při příštím sestavení a nikdo nebude
+   vědět proč. Proto znak po znaku proti očištěnému zdroji. */
+pravda('vložený styl ve stránce je očištěný zdroj, znak po znaku',
+  vlozeny === ocistiCss(zdroj),
+  `stránka ${(vlozeny.length / 1024).toFixed(1)} kB, očištěný zdroj `
+  + `${(ocistiCss(zdroj).length / 1024).toFixed(1)} kB — píše se do `
+  + 'css/pozemek-vlozeny.css, ne do pozemek.html');
 
 /* ---- 1b) očištění nesmí nic jiného změnit ----
    Čistič je týž, jakým prochází css/styles.css — ale tohle je styl,
@@ -209,8 +221,10 @@ pravda('a komentáře v předloze zůstávají — na čtenáře se stejně nedo
 
 console.log('\nVložený styl na stránce pozemku');
 console.log(zpravy.join('\n'));
-console.log(`  (${kb.toFixed(1)} kB, ${(bez.match(/\{/g) || []).length} pravidel, ` +
-  `${(bez.match(/var\(--/g) || []).length}× token)`);
+console.log(`  (zdroj ${(zdroj.length / 1024).toFixed(1)} kB, ve stránce `
+  + `${(vlozeny.length / 1024).toFixed(1)} kB, `
+  + `${(bez.match(/\{/g) || []).length} pravidel, `
+  + `${(bez.match(/var\(--/g) || []).length}× token)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Vložený styl: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
 process.exit(0);

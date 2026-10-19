@@ -62,592 +62,231 @@
        Adresa řezu je u každé stránky jiná, takže se tady psát nedá;
        prohlížeč si ji vezme z ostrůvku window.PK_POZEMEK dole. -->
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
-  <style>
-    /* Stránka inzerátu — tmavé (modré) téma, jednotné se zbytkem webu. */
-    #obsah{background:var(--bg);}
-    /* Míra stránky, ne sloupce: vystředěných 720 px začínalo na 376,
-       zbytek webu na 152. Čtecí míru nese obsah (styles.css). */
-    .pz-wrap{max-width:var(--m-wrap); margin:0 auto; padding:20px 16px 56px; color:var(--text-ondark); font-family:var(--font-ui);}
-    .pz-back{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--text-ondark-mute); text-decoration:none; margin-bottom:16px;}
-    .pz-back:hover{color:var(--text-ondark);}
-    .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
-
-    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line); box-shadow:var(--e2);}
-    /* NALEZENO MĚŘENÍM na telefonu: odznak byl 95 × 202 px místo
-       95 × 31 a svým rozostřením rozmazal popisku pod sebou — jméno
-       obce i výměra byly nečitelné. Příčina je v css/styles.css:
-       v úzkém zobrazení se odznak posouvá na `bottom:7px` kvůli
-       KARTÁM NA MAPĚ, kde je náhled vysoký 116 px a nahoře sedí
-       záložka. Tady platí `top:13px` (vyšší váha selektoru), ale
-       `bottom` nic nepřebíjelo — odznak se tedy natáhl mezi oba
-       okraje. Proto se `bottom` i `display` u obou odznaků ruší
-       výslovně: hero snímek na stránce pozemku je 358 px široký a
-       pravidla pro stopadesátipixelovou kartu na něj nepatří. */
-    /* JEDEN ODZNAK, NE DVA: zůstává tu JEN poloha, zbytek si odznak
-       bere z css/styles.css. Opis se rozešel ve váze, odsazení
-       i podkladu (bílá na .6 dávala 4,94 : 1 proti 8,09 : 1 a ještě
-       rozostřovala snímek). Hlídá scripts/test-hlavicka-pozemku.mjs. */
-    .pz-media .opp-badge{top:13px; left:13px; bottom:auto; display:inline-flex;}
-    .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
-    .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
-    /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
-    .pz-gallery{position:absolute; inset:0; display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; scrollbar-width:none; z-index:1;}
-    .pz-gallery::-webkit-scrollbar{display:none;}
-    .pz-shot{flex:0 0 100%; width:100%; height:100%; object-fit:cover; scroll-snap-align:center; scroll-snap-stop:always; display:block; user-select:none;}
-    .pz-media .opp-count{position:absolute; right:13px; bottom:13px; left:auto; z-index:3; display:inline-flex;}
-    /* SNÍMEK OD KRAJE KE KRAJI, jako na telefonu u Rightmove, Zillow
-       i Idealisty: v rámečku s odsazením vypadá jako ilustrace
-       v článku. Záporný okraj je přesně odsazení .pz-wrap (16 px). */
-    @media (max-width:560px){
-      .pz-media{margin:0 -16px; width:auto; aspect-ratio:4/3; max-height:none;
-        border-radius:0; border-left:0; border-right:0; box-shadow:none;}
-      .pz-back{margin-bottom:12px;}
-    }
-
-    /* NADPIS ODDÍLU, NE ŠTÍTEK V ARCHIVU. Bylo to 12px verzálky
-       s prostrkáním v šedé — typografie rejstříku, ne inzerátu. Velké
-       weby s nemovitostmi mají nad oddílem prostou větu v normálním
-       písmu; osmnáctka je stupeň pod nadpisem stránky a stupeň nad
-       textem, takže oddíl začíná viditelně a nekřičí. */
-    .pz-sect-h{font-size:18px; font-weight:700; letter-spacing:-0.01em; text-transform:none; color:var(--text-ondark); margin:40px 0 8px; position:relative;}
-    /* Měděná vlasovka nad nadpisem oddílu — táž značka, jakou má zbytek
-       webu u `.section-head::before`. Stojí MIMO tok, aby si z odstupu
-       40 px nic neubrala (soustava odstupů má držet v číslech; hlídá
-       scripts/test-parametry.mjs). */
-    .pz-sect-h::before{content:""; position:absolute; left:0; top:-14px;
-      width:52px; height:2px; border-radius:2px; background:var(--grad-warm); opacity:.85;}
-    .pz-head{margin:20px 0 0;}
-    /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
-       dávalo časopis o přírodě, ne inzerát. Rozdíl dělá velikost
-       a tučnost, ne druhá rodina písma. */
-    .pz-place{font-family:var(--font-ui); font-size:28px; font-weight:700; letter-spacing:-0.02em; color:var(--text-ondark); line-height:1.2;}
-    /* Dlouhý nadpis se na telefonu lámal mezi číslo a jednotku. */
-    @media (max-width:560px){ .pz-place{font-size:24px;} }
-    .pz-place{text-wrap:balance;}
-    .pz-okres{display:flex; align-items:center; gap:4px; font-size:14px; color:var(--text-ondark-mute); margin-top:4px;}
-    .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
-    .pz-dalky{font-size:12px; letter-spacing:0.02em; color:var(--text-ondark-mute); margin-top:4px; opacity:.85;}
-    /* Výhrada „vzdušnou čarou" se čte jako poznámka pod čarou, ne jako
-       součást údaje — proto závorka a ještě nižší důraz. */
-    .pz-dalky-pozn::before{content:' (';}
-    .pz-dalky-pozn::after{content:')';}
-    .pz-dalky-pozn{opacity:.8;}
-    .pz-vobci{font-size:12px; letter-spacing:0.02em; margin-top:4px;}
-    .pz-vobci a{color:var(--text-ondark); text-decoration:underline; text-underline-offset:2px;}
-
-    .pz-priceblock{margin:8px 0 0;}
-    /* Verzálky s prostrkáním 0.1em jsou štítek v úředním formuláři.
-       U „Vyvolávací cena" jde o údaj, ne o kolonku — čte se jako věta,
-       proto normální písmo a malá velikost. */
-    .pz-pl{font-size:13px; font-weight:600; letter-spacing:0; color:var(--popisek); margin-bottom:2px;}
-    .pz-price{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
-    .pz-price .pv{font-family:var(--font-ui); font-size:40px; font-weight:700; letter-spacing:-0.03em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
-    .pz-price .pm{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
-    /* Odkud nabídka je — drobným písmem pod cenou. Osmička je „poznámka
-       pod blokem" ze soustavy odstupů (viz rytmus stránky níž). */
-    .pz-zdroj{margin-top:8px; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
-
-    /* BARVU VERDIKTU NESE KARTA, ne každý prvek zvlášť: odznak i pruh
-       si ji vypisovaly po svém a na „warn" obě zapomněly (pozadí
-       rgba(0,0,0,0)). Text jde s barvou — tmavý na modré dával 3,11 : 1
-       proti normě 4,5. Kontrasty s bílou: sale 5,77 · exekuce 8,27 ·
-       warn 6,20. */
-    /* DESKA JE BÍLÁ, BARVU NESE PROUŽEK A ODZNAK. Vybarvené panely pod
-       sebou dělaly barevnou skládanku. Barva nezmizela, jen přestala
-       přebíjet text — a kontrast stoupl na nejvyšší možný. */
-    .pz-verdict{--vc:var(--copper-bright); --vt:#fff;
-      margin:20px 0 0; padding:16px; border-radius:var(--r-plocha);
-      background:#fff; border:1px solid var(--line); border-left:3px solid var(--vc); box-shadow:var(--e1);}
-    /* VERDIKT O CENĚ NENÍ KATEGORIE: „Výhodná cena" nosila --c-sale,
-       tedy modrou, která jinde znamená „na prodej". Zelená = v pořádku.
-       Bílá na #13663E dává 7,01 : 1 (dřív 5,77 na modré). */
-    .pz-verdict.good{--vc:var(--c-ok-ink);}
-    /* ODZNAK JE PODKLAD, NE TEXT. Oranžová --c-drazba jako pozadí
-       drobného odznaku nestačí ani s nejtmavším inkoustem (4,44 : 1,
-       norma 4,5). Na podklad jde --c-drazba-ink, text bílý (8,25 : 1). */
-    .pz-verdict.mid{--vc:var(--c-drazba-ink);}
-    .pz-verdict.bad{--vc:var(--c-exekuce);}
-    /* Přestěhováno z css/styles.css: tatáž třída ze dvou souborů se
-       rozejde. Barva bere token, ne napevno zapsané #8A5512 — jedna
-       paleta na celém webu. (Dřív tu stál i důvod „poslechne tmavý
-       režim"; ten už neplatí, tmavý režim web nemá.)
-       --vt se NEPŘEPISUJE: --accent-warm je tmavá hněď a bílá na ní dává
-       6,20 : 1. Tmavý inkoust, který tu chvíli stál, dával 2,63 : 1 —
-       tmavé na tmavém. Jméno --text-ondark svádí: znamená text, který
-       se píše tam, kde je plocha světlá, ne text na tmavý podklad. */
-    .pz-verdict.warn{--vc:var(--accent-warm);}
-    .pv-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
-    /* Slovo na odznaku má váhu 600 jako všechna ostatní slova na
-       odznacích; 700 je vyhrazená číslům (.msf-badge, .chip-n). */
-    .pv-badge{font-size:13px; font-weight:600; padding:2px 8px; border-radius:999px;
-      background:var(--vc); color:var(--vt);}
-    .pv-cmp{font-size:12px; color:var(--text-ondark-mute); font-weight:600;}
-    .pv-text{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
-    .pv-text b{color:var(--text-ondark);}
-    /* GRAF ROZDĚLENÍ CEN SE PŘESTĚHOVAL DO css/styles.css.
-       Vložený styl je tu kvůli tomu, co je vidět HNED — aby se na
-       kostru stránky nečekalo na druhý soubor. Graf ale kreslí až
-       js/pozemek.js, když dopočítá cenu, tedy dlouho poté, co stylopis
-       dorazil; v každé z 1 995 stránek pozemků tedy leželo 1,6 kB
-       pravidel, která se do prvního vykreslení nepoužijou.
-       Rozdělovač stylopisu je v základním balíku nechá: k tokůnům
-       stránky se přičítají slova ze všech skriptů, které si stránka
-       táhne, a `pvg-*` stojí v js/min/pozemek.js. */
-
-    /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.
-       Stránka pozemku měla jediný nadpis — ten hlavní — a zbytek byly
-       obyčejné divy, takže se v ní odečítačem obrazovky nedalo skákat po
-       sekcích; byl to jeden dlouhý blok. Vzhled se nemění, mění se
-       význam. */
-    /* RYTMUS STRÁNKY MÁ ČTYŘI ODSTUPY, NE DESET. Naměřeno na telefonu
-       390 px: mezi dvaceti bloky bylo DESET různých mezer (8, 10, 14,
-       16, 18, 20, 24, 28, 32, 40 px) — každý blok jinak daleko, takže
-       stránka nevypadala jako jeden celek, ale jako poskládané kostky.
-       Stížnost zněla „je to jak z Minecraftu" a byla oprávněná.
-       Teď platí čtyři hodnoty a každá něco znamená:
-         40 px — před nadpisem oddílu (nový oddíl),
-         20 px — mezi samostatnými bloky,
-         10 px — uvnitř skupiny, co patří k sobě (místo → cena → verdikt),
-          8 px — poznámka pod blokem, ke kterému se váže.
-       Kdo přidá další blok, ať si vybere z těchhle čtyř. */
-    /* Popis od inzerenta. Cizí text, u kterého nevíme, jak bude dlouhý ani
-       jak bude psaný — drží se proto na čtecí míře a odsazuje se jako
-       odstavec, ne jako karta. Žádný rámeček: na stránce už tři jsou
-       a čtvrtý by z ní udělal šuplíkový systém. */
-    /* VÍC POZEMKŮ NA JEDNOM MÍSTĚ. Stojí hned pod nadpisem a vzdálenostmi,
-       protože odpovídá na touž otázku „co tu vlastně je" — ne na otázku
-       o ceně. Tlumená deska, ne odznak: je to upozornění, ne nabídka. */
-    .pz-blok{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-plocha); font-size:14px; line-height:1.6;
-      background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft));
-      border:1px solid var(--line); color:var(--text-ondark);}
-    .pz-blok b{color:var(--copper-bright);}
-    .pz-blok-pozn{display:block; margin-top:4px; font-size:13px; color:var(--text-ondark-mute);}
-    .pz-naklady{margin:20px 0 0; font-size:14px; color:var(--text-ondark-mute);}
-    .pz-naklady a{font-weight:600; color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
-    /* POPIS OD ČLOVĚKA SE ČTE JINAK NEŽ TABULKA. Je to jediný souvislý
-       text na stránce, a na širokém displeji ho nese o stupeň větší
-       písmo (18 px), takže má i víc místa mezi řádky: 16 × 1,6 = 25,6 px
-       proti 18 × 1,6 = 28,8 px. Větší PROKLAD by se nabízel, jenže
-       stupnice řádkování tohohle webu končí na 1,6 (hlídá
-       scripts/test-typografie.mjs) a rozšiřovat ji kvůli jednomu
-       odstavci by znamenalo, že stupnice přestává něco znamenat.
-       Šířku drží --m-text (56 znaků), aby oko trefilo další řádek. */
-    .pz-popis-inzerent{max-width:var(--m-text); margin:0 0 4px; font-size:16px;
-      line-height:1.6; color:var(--text-ondark);}
-    @media (min-width:900px){
-      .pz-popis-inzerent{font-size:18px;}
-    }
-    /* ===== SROVNATELNÉ POZEMKY ======================================
-       Žebříček, a tak se i čte: ceny v jednom sloupci vpravo, tabulkovou
-       šířkou číslic, aby se daly přejet okem shora dolů. Tenhle pozemek
-       stojí mezi ostatními na svém místě a je podbarvený — tím je
-       pořadí z věty nad seznamem vidět, aniž by ho někdo musel počítat.
-
-       DVA SLOUPCE, NE ČTYŘI. Výměra a vzdálenost jsou poznámka k místu,
-       ne další údaj k porovnávání; stojí pod názvem drobně. Čtyři pole
-       v jedné lince udělají z pěti řádků mřížku, ve které se nedá nic
-       najít — přesně to se stalo na stránce s cenami pozemků.
-
-       ŽÁDNÝ RÁMEČEK: na stránce už tři jsou (viz .pz-popis-inzerent). */
-    .srv{margin:0;}
-    .srv-veta{max-width:var(--m-text); margin:0 0 12px; font-size:16px;
-      line-height:1.6; color:var(--text-ondark);}
-    .srv-seznam{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
-    .srv-radek{display:grid; grid-template-columns:minmax(0,1fr) auto;
-      align-items:center; column-gap:16px; row-gap:0;
-      padding:8px 12px; border-top:1px solid var(--line); min-height:44px;}
-    .srv-radek:first-child{border-top:0;}
-    .srv-kde{grid-column:1; grid-row:1; font-size:14px; font-weight:600;
-      color:var(--text-ondark); text-decoration:none;}
-    a.srv-kde{text-decoration:underline; text-underline-offset:3px;}
-    a.srv-kde:hover{color:var(--copper-bright);}
-    .srv-detail{grid-column:1; grid-row:2; font-size:13px;
-      color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
-    .srv-c{grid-column:2; grid-row:1 / span 2; justify-self:end;
-      font-size:16px; font-weight:700; color:var(--text-ondark);
-      font-variant-numeric:tabular-nums; white-space:nowrap;}
-    /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
-       stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
-       i pro toho, kdo barvy nerozliší. */
-    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
-      box-shadow:inset 3px 0 0 var(--plocha-znacka);}
-    .srv-ja .srv-kde{font-weight:700;}
-    .srv-pozn{max-width:var(--m-text); margin:8px 0 0; font-size:13px;
-      line-height:1.6; color:var(--text-ondark-mute);}
-
-    /* KAM DÁL — rozcestník na konci stránky. Naměřeno: z vykresleného
-       detailu nevedl ani jeden odkaz na okres, kraj ani druh. Jsou to
-       odkazy, ne tlačítka — proto obrys, ne výplň značky. Dlaždice je
-       aspoň 48 px vysoká, aby se do ní dalo klepnout prstem; pod
-       dvěma sloupci na šířku se mřížka sama zalomí pod sebe. */
-    /* Dva sloupce i na telefonu. Čtyři dlaždice pod sebou přidaly
-       stránce 330 px a celek přetekl mez „vejde se do 4,2 obrazovky"
-       (naměřeno 3 429 px = 4,3). Rozcestník je to poslední na stránce
-       a nemá stát za to, že se k němu nedoroluje. */
-    .kd-mriz{display:grid; gap:8px; max-width:var(--m-text);
-      grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));}
-    .kd-polozka{display:flex; flex-direction:column; justify-content:center;
-      gap:2px; min-height:56px; padding:8px 12px; border-radius:var(--r-ovladani);
-      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
-      text-decoration:none; box-shadow:var(--e1);
-      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .kd-polozka:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
-    .kd-t{font-size:14px; font-weight:700; color:var(--text-ondark);}
-    .kd-p{font-size:12px; line-height:1.4; color:var(--text-ondark-mute);}
-    /* NA TELEFONU JEN JMÉNA. Podtitulky („všechny pozemky v okrese")
-       jsou na širokém displeji užitečné, ale na telefonu z nich jsou
-       čtyři zalomené řádky navíc a celá stránka kvůli nim přetekla mez
-       „vejde se do 4,2 obrazovky" (scripts/test-poradi-pozemku.mjs).
-       Jména dlaždic — „Okres Benešov", „Středočeský kraj" — říkají, kam
-       vedou, i bez nich. */
-    @media (max-width:560px){
-      .kd-p{display:none;}
-      .kd-polozka{min-height:48px; padding:8px 12px;}
-      /* 20, ne 24: odstupy na téhle stránce smí být jen ze slovníku
-         8/10/20/40 px a hlídá to scripts/test-parametry.mjs. Napsal jsem
-         24 „od oka" a plná dávka zkoušek to chytila — rozdíl čtyř pixelů
-         nikdo nepozná, rozsypaný slovník ano. */
-      .pz-kamdal .pz-sect-h{margin-top:20px;}
-    }
-    
-
-    
-    
-    .pz-feats{display:flex; flex-wrap:wrap; gap:8px;}
-    .pz-feat{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--text-ondark); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
-    .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
-    .pz-feat-acc svg{color:var(--text-ondark-mute);}
-    /* ODKUD TY SÍTĚ JSOU. U stažených nabídek je z textu inzerátu vytáhl
-       robot — není to úřední evidence a slibovat to tak by byla lež
-       přesně v tom místě, kde se člověk rozhoduje, jestli se pro pozemek
-       rozjede. */
-    .pz-feat-zdroj{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
-    /* Popis od majitele: jeho vlastní slova, takže dostanou karta a klid
-       na čtení. Odstavce zůstávají odstavci — člověk je tak psal. */
-    .pz-popis{padding:16px; background:#fff; border:1px solid var(--line); border-radius:var(--r-plocha); box-shadow:var(--e1);}
-    .pz-popis p{margin:0 0 8px; font-size:16px; line-height:1.6; color:var(--text-ondark);}
-    .pz-popis p:last-child{margin-bottom:0;}
-
-    /* Blok o dražbě. Oranžová je barva dražeb všude na webu; do sedmi
-       dnů se zesílí, po termínu zšedne. */
-    .pz-drazba{margin:20px 0 2px; padding:16px; border-radius:var(--r-plocha);
-      background:#fff; border:1px solid var(--line); border-left:3px solid var(--c-drazba-ink); box-shadow:var(--e1);}
-    /* Naléhavost nese tloušťka a barva proužku, ne vybarvení desky. */
-    .pz-drazba.blizko{border-left-width:5px;}
-    .pz-drazba.prosle{border-left-color:var(--line-ui); background:var(--ink-soft2); box-shadow:none;}
-    .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; color:var(--c-drazba-ink);}
-    .pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute);}
-    .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
-    .pzd-hlava b{font-size:14px; font-weight:700;}
-    .pzd-kdy{font-size:13px; font-weight:600; color:var(--text-ondark-mute);}
-    .pzd-pozn{margin:4px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
-    .pzd-pozn b{color:var(--text-ondark);}
-    /* Neutrální, ne oranžové: oranžová tu znamená „dražba" a na
-       tlačítku by se tvářila jako výstraha. */
-    .pzd-odkaz{display:inline-flex; align-items:center; gap:8px; min-height:44px; margin-top:12px;
-      padding:0 16px; border-radius:var(--r-ovladani); background:#fff;
-      border:1px solid var(--obrys-tlacitka); color:var(--text-ondark);
-      font-size:14px; font-weight:700; text-decoration:none;}
-    /* Bílá na jasné dražební oranžové je 3,67 : 1, tedy pod normou.
-       Stav při najetí myší zkouška kontrastu nevidí; --c-drazba-ink je
-       tatáž barva v tmavší čitelné variantě. */
-    .pzd-odkaz:hover{border-color:var(--copper-bright); color:var(--copper);}
-
-    .pz-cas{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
-    .pz-cas b{color:var(--text-ondark); font-weight:600;}
-    .pz-cas.je-stara{color:var(--c-exekuce-ink);}
-    .pz-cta{display:flex; gap:8px; margin:20px 0 0; flex-wrap:wrap;}
-    /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ.
-       Stránka se po zmizení nabídky nemaže, jen se přepíše — jinak by
-       každý uložený odkaz a každý výsledek ve vyhledávači skončil na 404.
-       Pruh musí být vidět na první pohled a nesmí jít přehlédnout, proto
-       stojí hned nahoře v obsahu a nese barvu z řady upozornění, ne
-       značkovou zelenou: tohle není nabídka, tohle je oznámení. */
-    .pz-konec{margin:0 0 24px; padding:16px 20px;
-      border:1px solid var(--c-drazba-ink, #7E3C18);
-      border-left-width:4px; border-radius:var(--r-md, 14px);
-      background:rgba(204,107,51,0.08); font-size:16px; line-height:1.6;}
-    .pz-konec b{display:block; font-size:16px; margin-bottom:4px;}
-    .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
-    .pz-konec ul{margin:0; padding-left:20px;}
-    .pz-konec li{margin:2px 0;}
-    /* 44px terč i tady: odkazy v pruhu jsou často to jediné, kam se dá
-       z ukončené nabídky jít dál. */
-    .pz-konec a{display:inline-flex; align-items:center; min-height:44px;
-      color:var(--copper); text-underline-offset:3px;}
-    /* LIŠTA S CENOU A AKCÍ U SPODNÍHO OKRAJE. Jen na úzké obrazovce:
-       na stole jsou hlavní tlačítka vedle obsahu a lišta by jen ubírala
-       místo. Naměřeno na telefonu 390×844: stránka je 3 106 px dlouhá,
-       cena stojí 542 px od začátku a tlačítka až 1 990 px, tedy 2,4
-       obrazovky — tak dlouho není na obrazovce nic, čím jednat.
-       Barvy i tvar jsou z palety, ne vlastní: lišta je kus webu, ne
-       cizí plovoucí prvek. */
-    /* Lišta s cenou a akcí u spodního okraje tu byla a je pryč — viz
-       js/pozemek.js. S ní odešlo i pravidlo, které kvůli ní zvedalo
-       kolečko „Nahoru" o její výšku. */
-    /* Dvě vedlejší cesty ven se vejdou vedle sebe i na telefonu: při
-       základu 200 px (plus mezera) chtěly 410 a na 390px displeji je
-       zbývalo 358, takže se každá roztáhla přes celý řádek a stránka
-       z nich měla sloupec plný pilulek. Při 140 px se dvě vejdou. */
-    .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:14px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
-    .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
-    .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
-    .pz-btn.primary:hover{filter:brightness(1.06);}
-    .pz-btn.ghost{background:var(--ink-soft); color:var(--copper-bright); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
-    .pz-btn.ghost:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
-    .pz-btn.ghost:active{transform:scale(.985);}
-    /* HLAVNÍ AKCE HNED POD VERDIKTEM. Dvě tlačítka, ne šest: jít na
-       nabídku a uložit si ji. „Uložit" se drží na šířce svého textu,
-       aby hlavní tlačítko zůstalo hlavní i pohledem. */
-    .pz-akce-hlavni{display:flex; gap:8px; margin:20px 0 0; flex-wrap:wrap;}
-    /* Akce v připnutém pruhu u ceny; třídu nasazuje js/pozemek.js (pripniAkce), kde je i důvod. */
-    .pz-akce-v-boku{display:grid; gap:8px; margin:12px 0 0; padding-top:12px; border-top:1px solid var(--line);}
-    .pz-btn.ulozit{flex:0 1 auto; padding:0 20px; background:var(--ink-soft); color:var(--text-ondark); border:1.5px solid var(--obrys-tlacitka);}
-    .pz-btn.ulozit.on{color:var(--copper-bright); border-color:var(--copper-bright);}
-    .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
-    .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
-    /* „Otevřít v katastru" působilo jako vypnuté: bledá výplň, tenká
-       linka a stejná váha písma jako u popisků. Je to přitom odkaz,
-       kterým se ověřuje vlastník — na téhle stránce jedna z mála věcí,
-       co má člověk opravdu udělat. */
-    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:var(--plocha-znacka);
-      border-color:transparent; color:#fff; font-weight:700; box-shadow:var(--e2);}
-    .pz-actions .pz-abtn:first-child svg{color:#fff;}
-    /* 52 px jako .pz-btn nad ním. „Otevřít v katastru" (52) a „Sdílet"
-       (48) stály pod sebou a lišily se o čtyři pixely — na snímku
-       z telefonu to vypadá jako dvě různé sady tlačítek. */
-    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text-ondark); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .pz-abtn:hover{border-color:var(--copper-bright); background:var(--ink-soft2); box-shadow:var(--e2);}
-    .pz-abtn:active{transform:scale(.98);}
-    .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
-    .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--copper-bright);}
-    .pz-abtn.on svg{color:#fff;}
-
-    /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
-       ne kurzíva: musí být na první pohled jiné než údaje o pozemku. */
-    .pz-pozor{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-sm); font-size:13px; line-height:1.6;
-      background:rgba(232,179,65,.14); border:1px solid rgba(124,81,5,.34); color:var(--accent-warm);}
-    /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
-       nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
-       Bez toho by se z nadpisu nedalo poznat, že se dá rozbalit. */
-    .pz-gtk-obal{margin:20px 0 0;}
-    .pz-gtk-sum{display:flex; align-items:center; gap:8px; cursor:pointer; list-style:none;
-      /* --r-ovladani: na rozbalovátko se KLEPE, je to ovladač, ne plocha.
-         S --r-plocha (10 px) stálo mezi čtrnáctkami jako třetí tvar;
-         našla to zkouška zaoblení, jakmile začala chodit i po stránce
-         pozemku. */
-      padding:12px 16px; border:1px solid var(--line); border-radius:var(--r-ovladani);
-      background:#fff; box-shadow:var(--e1);
-      transition:border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .pz-gtk-sum::-webkit-details-marker{display:none;}
-    .pz-gtk-sum:hover{border-color:var(--copper-bright); box-shadow:var(--e2);}
-    /* NADPIS UVNITŘ SOUHRNU SE NESMÍ TVÁŘIT JAKO POPISEK SEKCE. Zděděná
-       podoba .pz-sect-h je 11,5px verzálky v šedé — to se čte jako
-       nadpis odstavce, ne jako něco, na co se klepe. H2 zůstává kvůli
-       osnově stránky, ale vypadá jako titulek ovládacího prvku. */
-    .pz-gtk-sum .pz-sect-h{margin:0; border:0; padding:0; font-size:14px;
-      letter-spacing:0; text-transform:none; color:var(--copper-bright);}
-    /* A proto tu nemá co dělat ani vlasovka oddílu: řádek se rozbaluje,
-       značka oddílu by z něj dělala nadpis. */
-    .pz-gtk-sum .pz-sect-h::before{display:none;}
-    .pz-gtk-kolik{margin-left:auto; font-size:13px; font-weight:700; white-space:nowrap;
-      color:var(--copper-bright); background:var(--ink-soft); border:1px solid var(--line);
-      padding:2px 8px; border-radius:var(--r-pill);}
-    .pz-gtk-kolik:empty{display:none;}
-    /* Slovo „Rozbalit" je jediné, co bez pochyb říká, že se s blokem dá
-       něco dělat; samotná šipka u nadpisu vypadá jako ozdoba. */
-    .pz-gtk-akce{font-size:13px; font-weight:700; color:var(--copper-bright); white-space:nowrap;}
-    .pz-gtk-akce .otv{display:none;}
-    .pz-gtk-obal[open] .pz-gtk-akce .zav{display:none;}
-    .pz-gtk-obal[open] .pz-gtk-akce .otv{display:inline;}
-    .pz-gtk-sum::after{content:""; flex:none; width:9px; height:9px; margin-left:1px;
-      border-right:2px solid var(--copper-bright); border-bottom:2px solid var(--copper-bright);
-      transform:rotate(45deg) translate(-2px,-2px); transition:transform var(--cas-zakladni) var(--ease);}
-    .pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0; border-bottom-right-radius:0; box-shadow:none;}
-    .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
-    .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
-    /* Deska rádce a deska mapy nesou přelev shora dolů, stejný jako
-       `.add-card` na přehledových stránkách: z --ink-soft2 do --ink-soft.
-       Obě barvy web má, obě jsou plochy, žádná nová do palety nepřibyla.
-       Naměřeno: na stránce pozemku byly tyhle dvě desky (688×562
-       a 688×450 px) největší placky na stránce. */
-    /* Jeden podklad pro všechny oddíly, rozdíl dělá linka a odstup. */
-    .pz-gtk{background:#fff; border:1px solid var(--line); border-radius:var(--r-plocha); padding:16px;}
-    .pz-gtk .g-row{display:flex; flex-direction:column; gap:2px; padding:8px 0; border-bottom:1px solid var(--line);}
-    .pz-gtk .g-row:first-child{padding-top:0;} .pz-gtk .g-row:last-of-type{border-bottom:none;}
-    .pz-gtk .g-k{font-size:12px; font-weight:700; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
-    .pz-gtk .g-v{font-size:14px; color:var(--text-ondark-mute); line-height:1.6;} .pz-gtk .g-v b{color:var(--text-ondark);}
-    /* Barva podle závažnosti — varování musí jít poznat od informace. */
-    /* Tři otázky k položení. Číslovaný seznam, ne odrážky: je to seznam
-       věcí k odbavení, ne výčet možností. */
-    .pz-gtk .g-otazky{padding-top:12px; margin-top:2px; border-top:1px solid var(--line);}
-    .pz-gtk .g-otazky .g-k{display:block; margin-bottom:8px;}
-    .pz-gtk .g-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:8px;}
-    .pz-gtk .g-ol li{font-size:14px; line-height:1.6; color:var(--text-ondark);}
-    .pz-gtk .g-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
-    .pz-gtk .g-foot{font-size:12px; color:var(--text-ondark-mute); line-height:1.5; margin-top:12px; font-style:italic;}
-
-    /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
-       přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
-       přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); box-shadow:var(--e2);}
-    .pzm-mapa{height:390px; width:100%; background:var(--ink);}
-    /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
-       zůstane pod ní — ovládání musí být po ruce i tam, jinak je
-       zvětšení k ničemu. */
-    .pzm-mapa{position:relative;}
-    .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
-      /* --r-ovladani jako ostatní ovladače; --r-sm z něj dělalo třetí tvar. */
-      border-radius:var(--r-ovladani); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--copper-bright); cursor:pointer; padding:0;
-      box-shadow:var(--e1); -webkit-tap-highlight-color:transparent;}
-    /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
-       stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu
-       než při 16 px a ikona pak vypadá tučnější než ostatní.
-       (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
-       přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
-    .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
-    .pzm-cela-btn:hover{background:var(--ink-soft);}
-    /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
-       Dvakrát to bylo plovoucí tlačítko a dvakrát překáželo: vpravo
-       nahoře leželo na přibližování (naměřeno 8 px překryvu na 390px
-       displeji), vlevo dole zakrývalo snímek i hranice parcel —
-       na mapě 430×300 zabíralo 130×44 bodů, tedy 6 % její plochy.
-       Mapa je na telefonu vysoká 300 bodů; tam není „volné místo",
-       je tam jen míň zajímavé místo. Tlačítko proto stojí v pruhu pod
-       mapou, vedle podkladu a vrstev — tedy mezi ostatním ovládáním
-       mapy, kam patří. Nad mapou tím nezůstalo nic kromě zvětšení
-       a přibližování; hlídá to scripts/test-mapa-pozemku.mjs.
-       Popisek, ne jen špendlík: samotná ikona by v řadě přepínačů
-       neřekla nic a tohle tlačítko se objevuje jen občas, takže se ho
-       nemá kde člověk naučit. */
-    .pzm-zpet-btn{height:34px; display:inline-flex; align-items:center; gap:4px;
-      padding:0 12px 0 12px; border-radius:999px;
-      border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft);
-      color:var(--copper-bright); cursor:pointer;
-      font:inherit; font-size:13px; font-weight:600; white-space:nowrap;
-      -webkit-tap-highlight-color:transparent;
-      transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-    .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
-    .pzm-zpet-btn:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
-    .pzm-zpet-btn[hidden]{display:none;}
-    .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
-    .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
-    .pzm-cela-zap .pzm-panel{flex:none;}
-    /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
-       je i v malém zobrazení, takže tady jen ubírá místo; vysvětlivky
-       barev zůstávají (bez nich je plán jen skvrna), ale jen na pruh. */
-    .pzm-cela-zap .pzm-popis{display:none;}
-    .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:8px 12px;}
-    .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
-    body.pzm-cela-telo{overflow:hidden;}
-    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
-    .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:2px; flex:none;}
-    .pzm-z{height:31px; padding:0 12px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark-mute); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-    .pzm-z.on{background:var(--ink-soft); color:var(--copper-bright); box-shadow:var(--e1);}
-    .pzm-vr{display:flex; flex-wrap:wrap; gap:4px; align-items:center; min-height:34px;}
-    .pzm-v{height:34px; padding:0 12px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft); font:inherit; font-size:13px; font-weight:600; color:var(--text-ondark); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
-    .pzm-v:hover{border-color:var(--copper-bright); background:var(--ink-soft2);}
-    .pzm-v:active{transform:scale(.98);}
-    .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
-    .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
-    /* Posuvník se NEODTLAČUJE doprava (margin-left:auto). Když se přepínače
-       zalomí do druhého řádku, zůstal by viset sám v pravém rohu pod nimi
-       a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
-    .pzm-kryti{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--text-ondark-mute);}
-    .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
-    .pzm-popis{margin:0; padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft); font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
-    /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
-       nakreslil. Není to chyba, je to stav — proto ne červená, ale
-       značková barva a rovnou tlačítko, které to spraví. */
-    .pzm-daleko{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--text-ondark);}
-    .pzm-priblizit{flex:none; font:inherit; font-size:13px; font-weight:700; cursor:pointer;
-      padding:4px 12px; min-height:34px; border-radius:var(--r-ovladani);
-      border:1.5px solid var(--copper); background:var(--ink-soft); color:var(--copper);
-      transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-        /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
-       --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
-       tmavá zelená #0F5C3B, v tmavém světlá máta #7FD1A3. Jako podklad pod
-       bílé písmo tedy funguje jen v jednom z nich — v tmavém dává 1,82 : 1,
-       což je nečitelné. --plocha-znacka je naopak určená právě k tomuhle:
-       9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
-       Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
-       (odznaky s počtem) nebo při najetí myší. */
-    .pzm-priblizit:hover{background:var(--plocha-znacka); color:#fff;}
-    /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
-       nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
-    .pzm-leg{display:flex; flex-wrap:wrap; gap:12px; padding:12px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
-    .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:4px; max-width:100%;}
-    .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--text-ondark-mute);}
-    .pzm-leg-k img{max-width:100%; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
-    .pzm-pod{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondark-mute);}
-    .pzm-pod a{color:var(--copper-bright); font-weight:600;}
-    .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
-    /* Bez mapové knihovny zbyde nehybný snímek — ať to není prázdný rám.
-       Snímek se kreslí jako podklad karty, takže je položený absolutně
-       (.opp-map má inset:0) a sám rámu žádnou výšku nedá. Výšku proto
-       drží rám, stejnou jako by měla mapa. */
-    .pzm-nahrada{height:390px;}
-    .pzm .leaflet-control-attribution{font-size:11px; max-width:70%;}
-    @media (max-width:560px){
-      .pzm-mapa{height:300px;}
-      /* Na úzkém displeji se posuvník nevejde do řádku s přepínači, a když
-         se zalomí doprava, visí v prázdnu. Ať zabere celý řádek. */
-      .pzm-kryti{width:100%;}
-      .pzm-kryti input{flex:1;}
-    }
-
-    /* Vysvětlivka u přepočtené ceny za metr — kurzívou, menší, pod číslem:
-       je to poznámka k údaji, ne další údaj. */
-    /* SOUKROMÁ POZNÁMKA (js/poznamky.js). Vypadá jako papír na stole,
-       ne jako formulář: nic se neodesílá a není co potvrzovat. */
-    .pz-pozn-box{margin-top:20px; padding:12px; border:1px solid var(--line-strong);
-      border-radius:var(--r-plocha); background:var(--ink-soft); box-shadow:var(--e1);}
-    .pz-pozn-hlava{display:flex; align-items:baseline; gap:8px; margin-bottom:8px;}
-    .pz-pozn-hlava h2{font-size:16px; margin:0;}
-    .pz-pozn-stav{margin-left:auto; font-size:12px; color:var(--text-ondark-mute);}
-    .pz-pozn-stav.chyba{color:var(--c-exekuce);}
-    /* Políčko na poznámku je pole — tedy --r-ovladani, ne --r-sm. */
-    .pz-pozn-pole{display:block; width:100%; min-height:88px; padding:8px 12px;
-      border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
-      background:var(--ink); color:var(--text-ondark);
-      font:inherit; font-size:16px; line-height:1.6; resize:vertical;
-      transition:border-color var(--cas-zakladni) var(--ease);}
-    .pz-pozn-pole:focus{outline:none; border-color:var(--copper-bright);}
-    .pz-pozn-kde{margin:8px 0 0; font-size:12px; line-height:1.5;
-      color:var(--text-ondark-mute);}
-    .pz-loading, .pz-empty{padding:64px 16px; text-align:center; color:var(--text-ondark-mute);}
-    /* NEŽ SKRIPT DOPLNÍ CELÝ DETAIL, DRŽÍ SE TU VÝŠKA OBRAZOVKY.
-       Vygenerovaná stránka nese statický náhled vysoký 343 px (mobil),
-       kdežto vykreslený detail má 2 015 px. Patička tím stála na prvním
-       okně a ve 120. ms odskočila o půl druhého tisíce pixelů dolů —
-       naměřeno CLS 0,29 na vlastní stránce pozemku a 0,56 na
-       pozemek.html?p=…, tedy nejvíc na celém webu (mez je 0,1).
-       Sto procent výšky okna je míň, než co přijde, takže se nic
-       nezmenší; a když skript nedoběhne, zbude dole prázdno místo
-       patičky nalepené pod odstavec. */
-    #pz-detail{min-height:100vh;}
-    .pz-empty a{color:var(--copper-bright); font-weight:600;}
-  
-    /* PRST POTŘEBUJE 44 PX. Web si tu mez klade sám, jenže měřila se jen
-       na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
-       odkaz zpět na seznam 22 px, zvětšení mapy 36 px, přepínače
-       podkladu 31 px a vrstev 34 px — a to jsou prvky, kterými se mapa
-       na telefonu jedině ovládá.
-       Platí jen na dotykových displejích, aby se na počítači nic
-       nezvětšovalo zbytečně. */
-    @media (pointer: coarse) {
-      .pz-back{min-height:44px;}
-      /* Posuvník průhlednosti vrstvy měl 16 px. Prstem se do šestnácti
-         pixelů netrefí nikdo — a je to jediný způsob, jak si na telefonu
-         prohlédnout, co je pod úřední vrstvou. Vyšší plocha na chytání;
-         samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
-      .pzm-kryti input{height:44px;}
-      .pzm-cela-btn{width:44px; height:44px;}
-      /* Na dotyku terč 44 px — stejně jako přepínače vrstev vedle. */
-      .pzm-zpet-btn{height:44px; font-size:14px;}
-      .pzm-z, .pzm-v{height:44px;}
-    }
-  </style>
+  <style>#obsah{background:var(--bg)}
+.pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px 16px 56px;color:var(--text-ondark);font-family:var(--font-ui)}
+.pz-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--text-ondark-mute);text-decoration:none;margin-bottom:16px}
+.pz-back:hover{color:var(--text-ondark)}
+.pz-back svg{width:16px;height:16px;stroke-width:2.25}
+.pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--ink-soft2);border:1px solid var(--line);box-shadow:var(--e2)}
+.pz-media .opp-badge{top:13px;left:13px;bottom:auto;display:inline-flex}
+.pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
+.opp-badge.sale::before{background:var(--c-sale)}
+.opp-badge.drazba::before{background:var(--c-drazba)}
+.opp-badge.exekuce::before{background:var(--c-exekuce)}
+.opp-badge.obec::before{background:var(--c-obec)}
+.opp-badge.majitel::before{background:var(--c-majitel)}
+.pz-gallery{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
+.pz-gallery::-webkit-scrollbar{display:none}
+.pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none}
+.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3;display:inline-flex}
+@media (max-width:560px){.pz-media{margin:0 -16px;width:auto;aspect-ratio:4/3;max-height:none;border-radius:0;border-left:0;border-right:0;box-shadow:none}
+.pz-back{margin-bottom:12px}
+}
+.pz-sect-h{font-size:18px;font-weight:700;letter-spacing:-0.01em;text-transform:none;color:var(--text-ondark);margin:40px 0 8px;position:relative}
+.pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--grad-warm);opacity:.85}
+.pz-head{margin:20px 0 0}
+.pz-place{font-family:var(--font-ui);font-size:28px;font-weight:700;letter-spacing:-0.02em;color:var(--text-ondark);line-height:1.2}
+@media (max-width:560px){.pz-place{font-size:24px}
+}
+.pz-place{text-wrap:balance}
+.pz-okres{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--text-ondark-mute);margin-top:4px}
+.pz-okres svg{width:16px;height:16px;stroke-width:2.25}
+.pz-dalky{font-size:12px;letter-spacing:0.02em;color:var(--text-ondark-mute);margin-top:4px;opacity:.85}
+.pz-dalky-pozn::before{content:' ('}
+.pz-dalky-pozn::after{content:')'}
+.pz-dalky-pozn{opacity:.8}
+.pz-vobci{font-size:12px;letter-spacing:0.02em;margin-top:4px}
+.pz-vobci a{color:var(--text-ondark);text-decoration:underline;text-underline-offset:2px}
+.pz-priceblock{margin:8px 0 0}
+.pz-pl{font-size:13px;font-weight:600;letter-spacing:0;color:var(--popisek);margin-bottom:2px}
+.pz-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pz-price .pv{font-family:var(--font-ui);font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
+.pz-price .pm{font-size:14px;font-weight:600;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.pz-zdroj{margin-top:8px;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
+.pz-verdict{--vc:var(--copper-bright);--vt:#fff;margin:20px 0 0;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--vc);box-shadow:var(--e1)}
+.pz-verdict.good{--vc:var(--c-ok-ink)}
+.pz-verdict.mid{--vc:var(--c-drazba-ink)}
+.pz-verdict.bad{--vc:var(--c-exekuce)}
+.pz-verdict.warn{--vc:var(--accent-warm)}
+.pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.pv-badge{font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--vc);color:var(--vt)}
+.pv-cmp{font-size:12px;color:var(--text-ondark-mute);font-weight:600}
+.pv-text{font-size:14px;color:var(--text-ondark-mute);line-height:1.5}
+.pv-text b{color:var(--text-ondark)}
+.pz-blok{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-plocha);font-size:14px;line-height:1.6;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));border:1px solid var(--line);color:var(--text-ondark)}
+.pz-blok b{color:var(--copper-bright)}
+.pz-blok-pozn{display:block;margin-top:4px;font-size:13px;color:var(--text-ondark-mute)}
+.pz-naklady{margin:20px 0 0;font-size:14px;color:var(--text-ondark-mute)}
+.pz-naklady a{font-weight:600;color:var(--copper-bright);text-decoration:underline;text-underline-offset:3px}
+.pz-popis-inzerent{max-width:var(--m-text);margin:0 0 4px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
+@media (min-width:900px){.pz-popis-inzerent{font-size:18px}
+}
+.srv{margin:0}
+.srv-veta{max-width:var(--m-text);margin:0 0 12px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
+.srv-seznam{list-style:none;margin:0;padding:0;max-width:var(--m-text)}
+.srv-radek{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:16px;row-gap:0;padding:8px 12px;border-top:1px solid var(--line);min-height:44px}
+.srv-radek:first-child{border-top:0}
+.srv-kde{grid-column:1;grid-row:1;font-size:14px;font-weight:600;color:var(--text-ondark);text-decoration:none}
+a.srv-kde{text-decoration:underline;text-underline-offset:3px}
+a.srv-kde:hover{color:var(--copper-bright)}
+.srv-detail{grid-column:1;grid-row:2;font-size:13px;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.srv-c{grid-column:2;grid-row:1 / span 2;justify-self:end;font-size:16px;font-weight:700;color:var(--text-ondark);font-variant-numeric:tabular-nums;white-space:nowrap}
+.srv-ja{background:rgba(44,113,80,0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
+.srv-ja .srv-kde{font-weight:700}
+.srv-pozn{max-width:var(--m-text);margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--text-ondark-mute)}
+.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.kd-polozka:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
+.kd-t{font-size:14px;font-weight:700;color:var(--text-ondark)}
+.kd-p{font-size:12px;line-height:1.4;color:var(--text-ondark-mute)}
+@media (max-width:560px){.kd-p{display:none}
+.kd-polozka{min-height:48px;padding:8px 12px}
+.pz-kamdal .pz-sect-h{margin-top:20px}
+}
+.pz-feats{display:flex;flex-wrap:wrap;gap:8px}
+.pz-feat{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--text-ondark);background:var(--ink-soft);border:1px solid var(--line-strong);padding:8px 12px;border-radius:var(--r-plocha)}
+.pz-feat svg{width:17px;height:17px;stroke-width:2.12;color:var(--copper-bright)}
+.pz-feat-acc svg{color:var(--text-ondark-mute)}
+.pz-feat-zdroj{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
+.pz-popis{padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-popis p{margin:0 0 8px;font-size:16px;line-height:1.6;color:var(--text-ondark)}
+.pz-popis p:last-child{margin-bottom:0}
+.pz-drazba{margin:20px 0 2px;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--c-drazba-ink);box-shadow:var(--e1)}
+.pz-drazba.blizko{border-left-width:5px}
+.pz-drazba.prosle{border-left-color:var(--line-ui);background:var(--ink-soft2);box-shadow:none}
+.pzd-hlava{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;color:var(--c-drazba-ink)}
+.pz-drazba.prosle .pzd-hlava{color:var(--text-ondark-mute)}
+.pzd-hlava svg{width:17px;height:17px;stroke-width:2.1;flex:none}
+.pzd-hlava b{font-size:14px;font-weight:700}
+.pzd-kdy{font-size:13px;font-weight:600;color:var(--text-ondark-mute)}
+.pzd-pozn{margin:4px 0 0;font-size:13px;line-height:1.6;color:var(--text-ondark-mute)}
+.pzd-pozn b{color:var(--text-ondark)}
+.pzd-odkaz{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:12px;padding:0 16px;border-radius:var(--r-ovladani);background:#fff;border:1px solid var(--obrys-tlacitka);color:var(--text-ondark);font-size:14px;font-weight:700;text-decoration:none}
+.pzd-odkaz:hover{border-color:var(--copper-bright);color:var(--copper)}
+.pz-cas{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
+.pz-cas b{color:var(--text-ondark);font-weight:600}
+.pz-cas.je-stara{color:var(--c-exekuce-ink)}
+.pz-cta{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.pz-konec{margin:0 0 24px;padding:16px 20px;border:1px solid var(--c-drazba-ink,#7E3C18);border-left-width:4px;border-radius:var(--r-md,14px);background:rgba(204,107,51,0.08);font-size:16px;line-height:1.6}
+.pz-konec b{display:block;font-size:16px;margin-bottom:4px}
+.pz-konec p{margin:12px 0 4px;font-weight:700;font-size:14px}
+.pz-konec ul{margin:0;padding-left:20px}
+.pz-konec li{margin:2px 0}
+.pz-konec a{display:inline-flex;align-items:center;min-height:44px;color:var(--copper);text-underline-offset:3px}
+.pz-btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.pz-btn svg{width:19px;height:19px;stroke-width:1.89;flex:none}
+.pz-btn.primary{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
+.pz-btn.primary:hover{filter:brightness(1.06)}
+.pz-btn.ghost{background:var(--ink-soft);color:var(--copper-bright);border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1)}
+.pz-btn.ghost:hover{border-color:var(--copper-bright);background:var(--ink-soft2)}
+.pz-btn.ghost:active{transform:scale(.985)}
+.pz-akce-hlavni{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.pz-akce-v-boku{display:grid;gap:8px;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.pz-btn.ulozit{flex:0 1 auto;padding:0 20px;background:var(--ink-soft);color:var(--text-ondark);border:1.5px solid var(--obrys-tlacitka)}
+.pz-btn.ulozit.on{color:var(--copper-bright);border-color:var(--copper-bright)}
+.pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.pz-actions .pz-abtn{flex:1 1 0;min-width:0}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;background:var(--plocha-znacka);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--e2)}
+.pz-actions .pz-abtn:first-child svg{color:#fff}
+.pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--ink-soft);border:1.5px solid var(--obrys-tlacitka);color:var(--text-ondark);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.pz-abtn:hover{border-color:var(--copper-bright);background:var(--ink-soft2);box-shadow:var(--e2)}
+.pz-abtn:active{transform:scale(.98)}
+.pz-abtn.on{color:#fff;border-color:transparent;background:var(--plocha-znacka);box-shadow:var(--glow)}
+.pz-abtn svg{width:17px;height:17px;stroke-width:2.12;color:var(--copper-bright)}
+.pz-abtn.on svg{color:#fff}
+.pz-pozor{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-sm);font-size:13px;line-height:1.6;background:rgba(232,179,65,.14);border:1px solid rgba(124,81,5,.34);color:var(--accent-warm)}
+.pz-gtk-obal{margin:20px 0 0}
+.pz-gtk-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-ovladani);background:#fff;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
+.pz-gtk-sum::-webkit-details-marker{display:none}
+.pz-gtk-sum:hover{border-color:var(--copper-bright);box-shadow:var(--e2)}
+.pz-gtk-sum .pz-sect-h{margin:0;border:0;padding:0;font-size:14px;letter-spacing:0;text-transform:none;color:var(--copper-bright)}
+.pz-gtk-sum .pz-sect-h::before{display:none}
+.pz-gtk-kolik{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap;color:var(--copper-bright);background:var(--ink-soft);border:1px solid var(--line);padding:2px 8px;border-radius:var(--r-pill)}
+.pz-gtk-kolik:empty{display:none}
+.pz-gtk-akce{font-size:13px;font-weight:700;color:var(--copper-bright);white-space:nowrap}
+.pz-gtk-akce .otv{display:none}
+.pz-gtk-obal[open] .pz-gtk-akce .zav{display:none}
+.pz-gtk-obal[open] .pz-gtk-akce .otv{display:inline}
+.pz-gtk-sum::after{content:"";flex:none;width:9px;height:9px;margin-left:1px;border-right:2px solid var(--copper-bright);border-bottom:2px solid var(--copper-bright);transform:rotate(45deg) translate(-2px,-2px);transition:transform var(--cas-zakladni) var(--ease)}
+.pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
+.pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
+.pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
+.pz-gtk{background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);padding:16px}
+.pz-gtk .g-row{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pz-gtk .g-row:first-child{padding-top:0}
+.pz-gtk .g-row:last-of-type{border-bottom:none}
+.pz-gtk .g-k{font-size:12px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:var(--text-ondark-mute)}
+.pz-gtk .g-v{font-size:14px;color:var(--text-ondark-mute);line-height:1.6}
+.pz-gtk .g-v b{color:var(--text-ondark)}
+.pz-gtk .g-otazky{padding-top:12px;margin-top:2px;border-top:1px solid var(--line)}
+.pz-gtk .g-otazky .g-k{display:block;margin-bottom:8px}
+.pz-gtk .g-ol{margin:0;padding-left:1.35em;display:flex;flex-direction:column;gap:8px}
+.pz-gtk .g-ol li{font-size:14px;line-height:1.6;color:var(--text-ondark)}
+.pz-gtk .g-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
+.pz-gtk .g-foot{font-size:12px;color:var(--text-ondark-mute);line-height:1.5;margin-top:12px;font-style:italic}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:linear-gradient(180deg,var(--ink-soft2),var(--ink-soft));box-shadow:var(--e2)}
+.pzm-mapa{height:390px;width:100%;background:var(--ink)}
+.pzm-mapa{position:relative}
+.pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--copper-bright);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
+.pzm-cela-btn svg{width:19px;height:19px;stroke-width:1.8}
+.pzm-cela-btn:hover{background:var(--ink-soft)}
+.pzm-zpet-btn{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 12px 0 12px;border-radius:999px;border:1.5px solid rgba(31,81,56,.26);background:var(--ink-soft);color:var(--copper-bright);cursor:pointer;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.pzm-zpet-btn svg{width:16px;height:16px;stroke-width:2;flex:none}
+.pzm-zpet-btn:hover{border-color:var(--copper-bright);background:var(--ink-soft2)}
+.pzm-zpet-btn[hidden]{display:none}
+.pzm-cela-zap{position:fixed;inset:0;z-index:1200;border-radius:0;border:0;display:flex;flex-direction:column;background:var(--ink)}
+.pzm-cela-zap .pzm-mapa{flex:1 1 auto;height:auto;min-height:0}
+.pzm-cela-zap .pzm-panel{flex:none}
+.pzm-cela-zap .pzm-popis{display:none}
+.pzm-cela-zap .pzm-leg{max-height:17vh;overflow:auto;padding:8px 12px}
+.pzm-cela-zap .pzm-leg-k img{max-height:11vh;width:auto}
+body.pzm-cela-telo{overflow:hidden}
+.pzm-panel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--ink-soft)}
+.pzm-zaklad{display:inline-flex;background:var(--ink-soft);border:1px solid var(--line);border-radius:999px;padding:2px;flex:none}
+.pzm-z{height:31px;padding:0 12px;border:0;background:transparent;border-radius:999px;font:inherit;font-size:13px;font-weight:600;color:var(--text-ondark-mute);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.pzm-z.on{background:var(--ink-soft);color:var(--copper-bright);box-shadow:var(--e1)}
+.pzm-vr{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:34px}
+.pzm-v{height:34px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(31,81,56,.26);background:var(--ink-soft);font:inherit;font-size:13px;font-weight:600;color:var(--text-ondark);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease)}
+.pzm-v:hover{border-color:var(--copper-bright);background:var(--ink-soft2)}
+.pzm-v:active{transform:scale(.98)}
+.pzm-v.on{background:var(--plocha-znacka);border-color:transparent;color:#fff;box-shadow:var(--glow)}
+.pzm-hleda,.pzm-nic{display:inline-flex;align-items:center;gap:8px;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
+.pzm-kryti{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase;color:var(--text-ondark-mute)}
+.pzm-kryti input{width:104px;accent-color:var(--plocha-znacka)}
+.pzm-popis{margin:0;padding:8px 12px;border-top:1px solid var(--line);background:var(--ink-soft);font-size:13px;line-height:1.6;color:var(--text-ondark-mute)}
+.pzm-daleko{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;color:var(--text-ondark)}
+.pzm-priblizit{flex:none;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;min-height:34px;border-radius:var(--r-ovladani);border:1.5px solid var(--copper);background:var(--ink-soft);color:var(--copper);transition:background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.pzm-priblizit:hover{background:var(--plocha-znacka);color:#fff}
+.pzm-leg{display:flex;flex-wrap:wrap;gap:12px;padding:12px 12px;border-top:1px solid var(--line);background:var(--ink-soft)}
+.pzm-leg-k{margin:0;display:flex;flex-direction:column;gap:4px;max-width:100%}
+.pzm-leg-k figcaption{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-ondark-mute)}
+.pzm-leg-k img{max-width:100%;background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px}
+.pzm-pod{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--text-ondark-mute)}
+.pzm-pod a{color:var(--copper-bright);font-weight:600}
+.pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.pzm-nahrada{height:390px}
+.pzm .leaflet-control-attribution{font-size:11px;max-width:70%}
+@media (max-width:560px){.pzm-mapa{height:300px}
+.pzm-kryti{width:100%}
+.pzm-kryti input{flex:1}
+}
+.pz-pozn-box{margin-top:20px;padding:12px;border:1px solid var(--line-strong);border-radius:var(--r-plocha);background:var(--ink-soft);box-shadow:var(--e1)}
+.pz-pozn-hlava{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.pz-pozn-hlava h2{font-size:16px;margin:0}
+.pz-pozn-stav{margin-left:auto;font-size:12px;color:var(--text-ondark-mute)}
+.pz-pozn-stav.chyba{color:var(--c-exekuce)}
+.pz-pozn-pole{display:block;width:100%;min-height:88px;padding:8px 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--ink);color:var(--text-ondark);font:inherit;font-size:16px;line-height:1.6;resize:vertical;transition:border-color var(--cas-zakladni) var(--ease)}
+.pz-pozn-pole:focus{outline:none;border-color:var(--copper-bright)}
+.pz-pozn-kde{margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--text-ondark-mute)}
+.pz-loading,.pz-empty{padding:64px 16px;text-align:center;color:var(--text-ondark-mute)}
+#pz-detail{min-height:100vh}
+.pz-empty a{color:var(--copper-bright);font-weight:600}
+@media (pointer:coarse){.pz-back{min-height:44px}
+.pzm-kryti input{height:44px}
+.pzm-cela-btn{width:44px;height:44px}
+.pzm-zpet-btn{height:44px;font-size:14px}
+.pzm-z,.pzm-v{height:44px}
+}</style>
 </head>
 <body>
 

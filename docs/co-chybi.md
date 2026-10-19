@@ -194,7 +194,16 @@ z vyhledávače.
 
 Čistí se **jen vygenerované stránky**, ne předloha `pozemek.html` ani
 ručně psané stránky: předloha je zdroj a komentáře v ní jsou to, podle
-čeho se styl upravuje. Čistič je týž, jakým prochází `css/styles.css`,
+čeho se styl upravuje.
+
+> **DOPSÁNO 19. 10.: předloha se od výstupu oddělila.** Strop na její
+> velikost (41 kB) se naplnil do bajtu a stal se tím stropem na
+> KOMENTÁŘE. Zdroj vloženého stylu je dnes `css/pozemek-vlozeny.css`
+> (42 kB i s komentáři, bez stropu) a do `<style>` ve `pozemek.html` ho
+> vkládá už očištěný `scripts/vloz-styl-pozemku.mjs` — tedy týmž
+> čističem a se stejným výsledkem, jaký měly vygenerované stránky
+> (ověřeno znak po znaku). `pozemek.html` spadla z **52,0 na 29,7 kB**,
+> a je to stránka, na kterou se chodí z mapy z každé stránky pozemku. Čistič je týž, jakým prochází `css/styles.css`,
 a výsledek je znak po znaku tentýž styl — ověřeno porovnáním po
 odstranění komentářů, mezer a středníku před závorkou.
 

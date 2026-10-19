@@ -139,7 +139,10 @@ pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)'
    Měří se stylopis I vložený styl stránky pozemku: tatáž osa zapsaná
    ve dvou souborech se rozejde, a právě tam ten rozchod byl. */
 {
-  const vlozeny = readFileSync('pozemek.html', 'utf8');
+  /* Zdroj vloženého stylu, ne stránka: do pozemek.html se vkládá už
+     očištěný (scripts/vloz-styl-pozemku.mjs), takže nález ve stránce
+     by posílal opravovat výstup. */
+  const vlozeny = readFileSync('css/pozemek-vlozeny.css', 'utf8');
   const vlozenyBez = vlozeny.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
   const selektorU = (text, i) => {
     const pred = text.slice(0, i);
@@ -149,7 +152,7 @@ pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)'
     return pred.slice(predtim + 1, zac).trim().replace(/\s+/g, ' ');
   };
   const nalezy = [];
-  for (const [jmeno, text] of [['css/styles.css', bez], ['pozemek.html', vlozenyBez]]) {
+  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyBez]]) {
     const re = /aspect-ratio\s*:\s*([^;}]+)/g;
     let m;
     while ((m = re.exec(text))) {

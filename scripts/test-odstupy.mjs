@@ -65,7 +65,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
      stupnicí stránky nemají co dělat. */
   const JE_VYROBENA = /^(pozemek|pozemky)-/;
   const MIMO = new Set(['build-og.mjs']);
-  const soubory = ['css/styles.css'];
+  /* Všechny ručně psané stylopisy, ne jen ten hlavní: vložený styl
+     stránky pozemku se píše v css/pozemek-vlozeny.css a do stránky se
+     vkládá očištěný (scripts/vloz-styl-pozemku.mjs). Očištěné kopie
+     (*.min.css) se vynechávají — jsou to výstupy, ne zdroje. */
+  const soubory = readdirSync('css')
+    .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
+    .sort()
+    .map((f) => 'css/' + f);
   for (const f of readdirSync('.')) if (f.endsWith('.html') && !JE_VYROBENA.test(f)) soubory.push(f);
   for (const f of readdirSync('scripts')) if (f.endsWith('.mjs') && !f.startsWith('test-') && !MIMO.has(f)) soubory.push('scripts/' + f);
 

@@ -27,6 +27,10 @@ const KROKY = [
   ['generate-okresy-hrube.mjs', 'proředěné hranice okresů pro kontrolu ve formuláři'],
   ['generate-region-pages.mjs', 'stránky krajů a okresů, čísla v úvodu, dražby, rozcestník, sitemap'],
   // Až PO regionálních: ty přepisují sitemap celou, tenhle krok se do ní dopisuje.
+  /* PŘED generátorem stránek pozemků: ten čte pozemek.html jako
+     předlohu, takže očištěný styl zdědí i všech ~2 000 stránek.
+     Zdroj s komentáři je css/pozemek-vlozeny.css. */
+  ['vloz-styl-pozemku.mjs', 'vložený styl stránky pozemku ze zdroje'],
   ['generate-parcel-pages.mjs', 'vlastní stránka pro každý pozemek (sdílení a vyhledávače)'],
   // Až PO stránkách pozemků: kanál na ně odkazuje, takže musí existovat.
   /* Řezy dat po okresech — vedle celku, pro toho, kdo chce jeden okres.

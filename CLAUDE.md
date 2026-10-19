@@ -93,7 +93,12 @@ smaže i nezacommitované opravy v témže souboru (stalo se: zmizela
 oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
 balíček stylů, který stránka opravdu načítá**: úvodní stránka má
 `css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
-`css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška. V CI proto
+`css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška.
+**Vložený styl stránky pozemku se píše v `css/pozemek-vlozeny.css`**, ne
+ve `pozemek.html` — tam ho vkládá už očištěný
+`scripts/vloz-styl-pozemku.mjs` (a pak ho dědí i ~2 000 vygenerovaných
+stránek). Pravidlo dopsané rukou do `pozemek.html` zmizí při příštím
+sestavení; hlídá to `scripts/test-vlozeny-styl.mjs` znak po znaku. V CI proto
 jedou ve **dvou směnách** (`v-prohlizeci`, `v-prohlizeci-2`), každá ve
 vlastní úloze na vlastním stroji, kolem 31 minut; místně se pouští
 jedna sada za druhou.
