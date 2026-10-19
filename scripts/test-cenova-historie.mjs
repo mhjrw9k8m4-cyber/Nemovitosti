@@ -25,12 +25,17 @@ import { createRequire } from 'node:module';
 import { historiePodleKlice, jenZmeny } from './cenova-historie.mjs';
 import { nactiArchiv } from './archiv-statistiky.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const Z = createRequire(import.meta.url)(path.join(ROOT, 'js', 'zlevneni.js'));
 
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Historie ceny', zpravy);
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }

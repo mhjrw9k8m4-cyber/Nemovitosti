@@ -22,6 +22,7 @@
  */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -31,6 +32,10 @@ const STRANKY = ['index.html', 'pozemky-okres-tabor.html', 'hlidani.html',
 const SIRKY = [[390, 844], [1280, 900]];
 
 let ok = 0, chyb = 0; const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Vmáčknuto', zpravy);
 function pravda(popis, podm, detail) {
   if (podm) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${detail ? '\n      ' + detail : ''}`); }

@@ -26,10 +26,15 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const PORT = 8310;
 let ok = 0, chyb = 0; const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Prázdno', zpravy);
 function pravda(popis, v, proc) {
   if (v) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }

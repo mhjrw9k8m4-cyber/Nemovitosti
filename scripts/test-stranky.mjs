@@ -14,11 +14,16 @@
 import { chromium } from 'playwright-core';
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { hlasPad } from './zkouska-pad.mjs';
 
 const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 let chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('stranky', zpravy);
 function chyba(txt) { chyb++; zpravy.push('  ✕ ' + txt); }
 
 /* ---------- 1. mrtvé odkazy ve všech .html ---------- */

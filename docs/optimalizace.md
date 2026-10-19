@@ -2825,3 +2825,69 @@ Mapa v detailu pozemku  (PŘERUŠENO — zkouška spadla, nedoběhla)
 
 Sedm pojmenovaných kontrol místo jedné stopy výjimky. Chybějící prvek
 pořád patří do pojmenované kontroly — ale pád už není slepý.
+
+---
+
+## 41. Sreality standard: čtyřková mříž a tři úrovně na kartě *19. 10.*
+
+Majitel přinesl popis toho, jak drží typografii a mřížku Sreality, a
+chtěl stejnou úroveň. Napřed se tedy měřilo, co z toho web už splňuje —
+protože polovina těch pravidel v něm platila.
+
+| pravidlo | stav před |
+|---|---|
+| hlavní cena `text-2xl`+ bold | `.opp-price` 24 px / 700 ✔ |
+| popisy s `leading-relaxed` | `body{line-height:1.6}` ✔ |
+| sekundární text 60–70 % kontrastu | `--popisek` 10,60 : 1 proti 16,24 : 1 = **65 %** ✔ |
+| neprůhledné plochy, tenké linky | ✔ (sklo šlo pryč v položce 32) |
+| **název / lokalita `text-lg`–`xl`** | ✘ druh 14 px, místo 14 px |
+| **přísná mříž 8/4 px** | ✘ 575 odstupů na 6/10/14 px |
+
+### Mříž: 575 hodnot, a ani jedna nahoru
+
+Hodnoty 6, 10 a 14 px se přepsaly na nejbližší násobek čtyř, **při
+remíze dolů** (6→4, 10→8, 14→12). Důvod pro „dolů" je měřitelný:
+nahoru by rozvržení narostlo a na 320 px šířky se pere o místo řádek
+hledání, u kterého se dříve počítalo na pixely (položka 31).
+
+Sáhlo se výhradně do `margin/padding/gap` — tímtéž vzorkem, jakým měří
+`scripts/test-odstupy.mjs` — takže zaoblení (vlastní stupnice),
+šířky ani velikosti písma zůstaly. Stupnice v té zkoušce se pak zúžila
+z 21 hodnot na **18**: 6, 10 a 14 už neprojdou. Zůstávají 1 a 2 px, to
+nejsou odstupy rozvržení, ale vlásečnice a mezery uvnitř řádku.
+
+### Karta měla dvě úrovně, ne tři
+
+Druh 14 px, místo 14 px, doplňková čísla 13 px — mezi tím, **co se
+prodává**, a doplňkem byl rozdíl jednoho pixelu, takže hierarchie
+stála jen na tučnosti.
+
+| řádek | dřív | teď |
+|---|---|---|
+| druh pozemku | 14 px / 700 | **18 px / 600** |
+| výměra, Kč/m² | 13 px | **14 px / 500** |
+| cena | 24 px / 700 | beze změny |
+| odznak | 12 px / 700 | 12 px / **600** |
+
+Váha nadpisu klesla schválně: **pořadí nese velikost, tučnost ať
+nekřičí dvakrát.**
+
+### Dvakrát totéž poučení: rozměr se říká, ne dopočítává
+
+Mříž ubrala dvakrát 2 px na dvou místech, kde na tom součtu viselo
+něco podstatného. Obojí našly zkoušky, ne oko:
+
+1. **`summary.add-jak-sum` spadlo na 40 px.** Dotykový terč měl 44 px
+   jen náhodou — 2×10 px odsazení plus řádek a obrys.
+   `✕ ovládání se dá trefit prstem i mimo úvodní stránku … 40 px`
+2. **Hlavička na telefonu spadla z 65 na 61 px**, ale stránka si pod ni
+   dál nechávala 65. Čtyři pixely prázdného pruhu.
+   `✕ --vyska-hlavicky (65) sedí na skutečnou výšku (61)`
+
+Oboje je spravené stejně: **výška se říká** (`min-height:44px`,
+`min-height:var(--vyska-hlavicky)` a token na 64 px, tedy na mříži),
+ne dopočítává z odsazení. Kdyby se jen vrátily ty dva pixely, mříž by
+byla děravá a past by zůstala nastražená pro příště.
+
+Po opravách: `test-rozvrzeni` 162 kontrol a `test-hlavicka` 77 kontrol
+bez chyby, sada rychlých zkoušek 116/116.

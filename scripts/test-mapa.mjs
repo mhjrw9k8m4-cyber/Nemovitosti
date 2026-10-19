@@ -19,6 +19,7 @@
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -26,6 +27,10 @@ await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('mapa', zpravy);
 function je(popis, vyslo, cekano) {
   const a = JSON.stringify(vyslo), b = JSON.stringify(cekano);
   if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }

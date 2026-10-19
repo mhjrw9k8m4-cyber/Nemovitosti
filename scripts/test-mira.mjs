@@ -22,6 +22,12 @@
  * se délka řádku neprojeví.
  */
 import { chromium } from 'playwright-core';
+import { hlasPad } from './zkouska-pad.mjs';
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Tahle zkouška si kontroly nedrží v seznamu (vypisuje je rovnou), takže
+   se u pádu nemá co vypsat — ale pojmenovaný titulek a MÍSTO ve zkoušce
+   jsou pořád víc než nahá stopa výjimky. */
+hlasPad('Míra sazby', []);
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 

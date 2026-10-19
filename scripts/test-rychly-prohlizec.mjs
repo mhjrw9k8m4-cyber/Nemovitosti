@@ -15,10 +15,15 @@
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 await import('./falesna-supabase-chat.mjs');
 
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0; const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Rychlý výběr', zpravy);
 function pravda(popis, podm, detail) {
   if (podm) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${detail ? '\n      ' + detail : ''}`); }

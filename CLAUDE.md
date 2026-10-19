@@ -169,8 +169,10 @@ barvy:
     obec:    "#277686"
   hlida:     scripts/test-odstiny.mjs, test-tokeny.mjs, test-okraje.mjs
 odstupy:
-  stupnice: [0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
-  hlida:    scripts/test-odstupy.mjs
+  stupnice: [0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
+  pravidlo: "přísná čtyřková mříž; 1 a 2 px jsou vlásečnice a mezery v řádku, ne odstupy rozvržení"
+  pozor:    "klíčový rozměr se ŘÍKÁ, ne dopočítává z odsazení — dotykový terč min-height:44px, hlavička min-height:var(--vyska-hlavicky). Dvě místa na tom spadla, když mříž ubrala 2 px (viz docs/optimalizace.md, položka 41)."
+  hlida:    scripts/test-odstupy.mjs, test-rozvrzeni.mjs, test-hlavicka.mjs
 zaobleni:
   r-xs: 6px     # drobnosti uvnitř tlačítek
   r-sm: 10px    # --r-plocha: karty, panely

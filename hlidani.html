@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=75398ff2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=ff320259">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -57,17 +57,17 @@
        ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
        pod ním by zůstal vlevo. */
     .hl-wrap{max-width:var(--m-uzky); margin-inline:auto;}
-    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:14px;}
+    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:12px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
        přes obrazovku a půl rolování, o kterém nikdo neví. Kdo si přišel
        zkontrolovat, co hlídá, viděl formulář a odešel.
        Dvě záložky to postaví vedle sebe. Když uložené hlídání není ani
        jedno, přepínač se nenabízí — nebylo by mezi čím přepínat. */
-    .hl-prepin{display:flex; gap:6px; margin-bottom:14px; padding:4px;
+    .hl-prepin{display:flex; gap:4px; margin-bottom:12px; padding:4px;
       background:var(--ink); border:1px solid var(--line-ui); border-radius:var(--r-md);}
-    .hl-tab{flex:1; min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
-      font:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:0 10px;
+    .hl-tab{flex:1; min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:4px;
+      font:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:0 8px;
       border:0; border-radius:var(--r-sm); background:none; color:var(--text-ondark-mute);
       transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-tab:hover{color:var(--text-ondark);}
@@ -85,7 +85,7 @@
        značkovým textem. Rozeznatelné na první pohled, a nic to
        nepřekřikuje. */
     .hl-tab.je{background:var(--ink-soft); color:var(--copper); box-shadow:var(--e1);}
-    .hl-tab-n{min-width:21px; height:21px; padding:0 6px; border-radius:var(--r-sm);
+    .hl-tab-n{min-width:21px; height:21px; padding:0 4px; border-radius:var(--r-sm);
       background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700;
       display:inline-flex; align-items:center; justify-content:center;}
     /* Odznak s počtem zůstává značkový i na zapnuté záložce — jezdec je
@@ -103,25 +103,25 @@
     /* Prázdné místo pro kartu, než se dopočítá. Výška je naměřená
        z hotové karty (531 px na širokém displeji), ať patička nemusí
        nikam skákat. */
-    .hl-ukazka-misto{min-height:531px; display:flex; flex-direction:column; gap:14px; justify-content:center;}
+    .hl-ukazka-misto{min-height:531px; display:flex; flex-direction:column; gap:12px; justify-content:center;}
     .hl-ukazka-misto .sk{height:18px;}
     .hl-ukazka-misto .sk:nth-child(1){width:46%;}
     .hl-ukazka-misto .sk:nth-child(2){width:92%;}
     .hl-ukazka-misto .sk:nth-child(3){width:84%;}
     .hl-ukazka-misto .sk:nth-child(4){width:88%;}
     .hl-ukazka-misto .sk:nth-child(5){width:60%;}
-    .hl-ukazka h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
-    .hl-ukazka p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
+    .hl-ukazka h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:4px;}
+    .hl-ukazka p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:12px; line-height:1.5;}
     .hlu-list{list-style:none; margin:0 0 12px; padding:0;}
-    .hlu-list li{padding:10px 0; border-top:1px solid var(--line);}
+    .hlu-list li{padding:8px 0; border-top:1px solid var(--line);}
     .hlu-list li:first-child{border-top:0; padding-top:0;}
     .hlu-k{display:block; font-weight:700; font-size:14px; color:var(--text-ondark);}
     .hlu-p{display:block; font-size:13px; color:var(--text-ondark-mute); margin-top:2px;}
     .hlu-n{display:block; font-size:14px; color:var(--text-ondark); margin-top:4px;}
     .hlu-pozn{font-size:13px; line-height:1.6; color:var(--text-ondark-mute); margin:0;}
-    .hl-auth h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:6px;}
-    .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:14px; line-height:1.5;}
-    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 14px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none; font-family:inherit;}
+    .hl-auth h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:4px;}
+    .hl-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:12px; line-height:1.5;}
+    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none; font-family:inherit;}
     .hl-in:focus,.hl-sel:focus{border-color:var(--copper-bright); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
     .hl-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .hl-btn:hover{filter:brightness(1.05);} .hl-btn:active{transform:scale(.99);}
@@ -143,7 +143,7 @@
     /* Formulář působil nedodělaně: pár políček pod sebou, žádné členění
        a nadpis odbytý emodži. Teď má hlavičku, oddíly s linkou mezi nimi
        a rychlé volby — ať je na první pohled vidět, co všechno jde zadat. */
-    .hl-new-head{margin-bottom:14px;}
+    .hl-new-head{margin-bottom:12px;}
     .hl-new-head b{display:block; font-family:var(--font-display); font-size:20px; color:var(--text-ondark); letter-spacing:-0.01em;}
     .hl-new-head span{display:block; margin-top:2px; font-size:14px; color:var(--text-ondark-mute);}
     .hl-sekce{padding:16px 0; border-top:1px solid var(--line);}
@@ -152,7 +152,7 @@
        stejně malých popisků — oko se nemělo čeho chytit a celé to
        působilo nedodělaně. Ikona a o dva stupně větší nadpis dělí
        formulář na čtyři věci, které se dají přeletět pohledem. */
-    .hl-sekce-h{display:flex; align-items:center; gap:8px; margin-bottom:10px;}
+    .hl-sekce-h{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
     .hl-sekce-h svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--copper);
       stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
     .hl-sekce-h b{font-size:14px; font-weight:700; color:var(--text-ondark); letter-spacing:0.01em;}
@@ -172,13 +172,13 @@
        a z „m²" „M²", což jsou v češtině obojí chybné zápisy jednotek. */
     .hl-lbl.jemny{font-weight:600; color:var(--text-ondark-mute); font-size:12px; letter-spacing:0.01em;}
     .hl-pozn{font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-ondark-mute); opacity:.85;}
-    .hl-napoveda{margin:6px 0 0; font-size:12px; line-height:1.5; color:var(--text-ondark-mute);}
+    .hl-napoveda{margin:4px 0 0; font-size:12px; line-height:1.5; color:var(--text-ondark-mute);}
     /* Hlavička je lepivá; bez tohohle odsazení se nadpis karty schová pod ni,
        jakmile se na kartu odkáže nebo se k ní doroluje. */
     .hl-card{scroll-margin-top:80px;}
     /* Rychlé volby jen vyplní políčka pod sebou — je tedy pořád vidět,
        co se nastavilo, a dá se to přepsat po svém. */
-    .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 10px;}
+    .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       min-height:38px; padding:8px 12px; border-radius:999px;
       border:1.5px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark);
@@ -188,7 +188,7 @@
     .hl-rychle:focus-visible{outline:2px solid var(--copper); outline-offset:2px;}
     /* Kolik pozemků tomu dnes odpovídá. Dřív se to člověk dozvěděl až po
        uložení — a když nic, neměl podle čeho poznat, co to zabilo. */
-    .hl-souhrn{margin:4px 0 12px; padding:10px 12px; border-radius:var(--r-md); font-size:14px;
+    .hl-souhrn{margin:4px 0 12px; padding:8px 12px; border-radius:var(--r-md); font-size:14px;
       line-height:1.5; background:rgba(31,81,56,.10); color:var(--text-ondark);
       border:1px solid rgba(31,81,56,.22);}
     .hl-souhrn b{font-weight:700;}
@@ -196,7 +196,7 @@
     .hl-lbl{font-size:13px; font-weight:700; color:var(--text-ondark-mute); margin:8px 2px 4px; display:block;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
-    .hl-feats{display:flex; flex-wrap:wrap; gap:6px; margin:2px 0 6px;}
+    .hl-feats{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 4px;}
     /* Počet u volby. Tlumený, ale čitelný — je to podklad k rozhodnutí,
        ne ozdoba. */
     .hl-chip-n{font-variant-numeric:tabular-nums; font-size:12px; opacity:.72;}
@@ -206,9 +206,9 @@
     .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text-ondark); cursor:pointer; user-select:none; background:var(--ink-soft2);}
     .hl-chip.on{border-color:var(--copper-bright); background:rgba(31,81,56,.12); color:var(--copper-bright); font-weight:700;}
     /* Seznam hledání */
-    .hl-item{padding:14px 16px; border-bottom:1px solid var(--line);}
+    .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}
     .hl-item:last-child{border-bottom:0;}
-    .hl-itop{display:flex; align-items:center; gap:10px;}
+    .hl-itop{display:flex; align-items:center; gap:8px;}
     .hl-iname{font-weight:700; font-size:14px; color:var(--text-ondark); flex:1; min-width:0;}
         /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --copper.
        --copper je barva PÍSMA a mezi režimy se obrací: ve světlém je to
@@ -227,7 +227,7 @@
        normu splňují). A nebylo to vidět, protože se přepínač vykresluje
        jen se zapnutou vlajkou PK_MAIL_ZAPNUTO — vada by přišla na svět
        až v den, kdy se posílání zapne. */
-    .hl-mail{display:inline-flex; align-items:center; gap:8px; margin-top:6px;
+    .hl-mail{display:inline-flex; align-items:center; gap:8px; margin-top:4px;
       min-height:44px; padding:2px 0;
       font-size:14px; font-weight:600; cursor:pointer;}
     .hl-mail input{width:18px; height:18px; accent-color:var(--copper); cursor:pointer;}
@@ -236,7 +236,7 @@
     /* Výpis nových pozemků rovnou v kartě hledání. Vznikl po odebrání
        Upozornění, kam karta dřív odkazovala — teď na otázku „kde je
        uvidím" odpovídá sama. */
-    .hl-nove{list-style:none; margin:10px 0 0; padding:0; display:flex; flex-direction:column; gap:2px;}
+    .hl-nove{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:2px;}
     .hl-nove li{font-size:14px; line-height:1.5;}
     .hl-nove a{display:flex; min-height:44px; align-items:center;
       color:var(--copper-bright); text-decoration:underline; text-underline-offset:3px;}
@@ -245,7 +245,7 @@
        týdne — u dražby je termín to jediné, co nutí jednat, a karta
        hlídání o něm mlčela. Barvy jsou tytéž jako u odpočtu na kartě
        nabídky (.opp-cd), ať to po webu neznamená pokaždé něco jiného. */
-    .hl-termin{display:inline-block; margin-left:8px; padding:1px 6px; border-radius:var(--r-pill);
+    .hl-termin{display:inline-block; margin-left:8px; padding:1px 4px; border-radius:var(--r-pill);
       border:1px solid var(--line); background:var(--plocha-jemna); color:var(--text-ondark-mute);
       font-size:12px; font-weight:600; white-space:nowrap; text-decoration:none;}
     .hl-termin.soon{color:var(--c-drazba-ink); background:rgba(204,107,51,0.10); border-color:rgba(204,107,51,0.3);}
@@ -261,7 +261,7 @@
     /* Tlačítka jsou u hlídání s novými pozemky tři („Ukázat nové",
        „Zobrazit na mapě", koš). Natěsnaná do jedné řady by se na úzkém
        telefonu lámal text uvnitř nich, tak se radši zalomí. */
-    .hl-acts{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+    .hl-acts{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
     .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text-ondark); display:flex; align-items:center; justify-content:center; text-decoration:none;}
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}

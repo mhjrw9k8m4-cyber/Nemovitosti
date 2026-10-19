@@ -34,6 +34,7 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    než se rozběhne js/pozemek.js — dohromady 39 sekund v patnácti
    místech jen v tomhle souboru. Viz scripts/zkouska-pripraveno.mjs. */
 import { pripravenoPozemek, pripravenoVypis, pripravenoKdyz, poznamkaUlozena, sitUtichla } from './zkouska-pripraveno.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -42,6 +43,10 @@ const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Poznámky', zpravy);
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }

@@ -22,6 +22,12 @@
 // sada deklarací a přesně ty se měří. Je to tím rychlé a spolehlivé.
 import { readFileSync } from 'node:fs';
 import { chromium } from 'playwright-core';
+import { hlasPad } from './zkouska-pad.mjs';
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Tahle zkouška si kontroly nedrží v seznamu (vypisuje je rovnou), takže
+   se u pádu nemá co vypsat — ale pojmenovaný titulek a MÍSTO ve zkoušce
+   jsou pořád víc než nahá stopa výjimky. */
+hlasPad('Barvy po najetí myší', []);
 
 const STRANKY = ['index.html', 'pridat.html', 'hlidani.html',
   'zpravy.html', 'muj-inzerat.html', 'kontakt.html', 'pozemek.html',

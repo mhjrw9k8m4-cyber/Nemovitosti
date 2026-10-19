@@ -19,7 +19,13 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
-export const STUPNICE = new Set([0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]);
+/* PŘÍSNÁ ČTYŘKOVÁ MŘÍŽ. Do 19. 10. stupnice povolovala i 6, 10 a 14 px,
+   tedy dvojkový podkrok — a web toho využíval v 575 místech z 1 342.
+   Hodnoty se přepsaly na nejbližší násobek čtyř, při remíze DOLŮ
+   (6→4, 10→8, 14→12), aby se rozvržení nikde nezvětšilo a nehrozilo
+   přetékání na úzkých šířkách. Zůstávají 1 a 2 px: to nejsou odstupy
+   rozvržení, ale vlásečnice a mezery mezi slovy v řádku. */
+export const STUPNICE = new Set([0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]);
 const VLASTNOSTI = /(^|[;{\s])(margin|padding|gap|row-gap|column-gap)(-top|-right|-bottom|-left)?\s*:\s*([^;}]+)/g;
 
 /* Komentáře a vnitřek var() se vybílí, ale délka zůstane — čísla řádků

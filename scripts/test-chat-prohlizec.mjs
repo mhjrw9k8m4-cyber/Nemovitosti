@@ -10,6 +10,7 @@ import { chromium } from 'playwright-core';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
 import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 // Zkušební Supabase si test spustí sám — jedním příkazem a bez přípravy.
 // Spuštění: node scripts/test-chat-prohlizec.mjs
@@ -24,6 +25,10 @@ const UID_ZAJEMCE = '22222222-2222-4222-8222-222222222222';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('chat-prohlizec', zpravy);
 function je(popis, vyslo, cekano) {
   const a = JSON.stringify(vyslo), b = JSON.stringify(cekano);
   if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }

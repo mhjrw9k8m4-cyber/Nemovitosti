@@ -33,6 +33,7 @@ import { naSeznam } from './zkouska-pohled.mjs';
    Tahle zkouška otevírá stránku na 23 místech, některá v cyklu přes
    třináct šířek, takže se pevné čekání po goto platilo desítky krát. */
 import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 // Tentýž server jako ostatní testy: servíruje statické soubory na 8310.
 await import('./falesna-supabase-chat.mjs');
@@ -42,6 +43,10 @@ const KOREN = new URL('..', import.meta.url).pathname;
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
+   Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí
+   všechny kontroly, které do té chvíle prošly, a v CI zbyde jen stopa. */
+hlasPad('Rozvržení', zpravy);
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
