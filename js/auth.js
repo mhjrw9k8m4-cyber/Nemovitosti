@@ -23,14 +23,25 @@
   /* K session se ukládá i ABSOLUTNÍ čas vypršení. Bez něj se nedalo poznat,
      jestli přihlášení ještě platí, a token se proto obnovoval při každém
      načtení stránky — viz platiJeste() a keepAlive() níž. */
+  /* VRACÍ, JESTLI SE SESSION OPRAVDU ULOŽILA. Dřív se chyba spolkla
+     a přihlášení skončilo nejhorším možným způsobem: server heslo
+     přijal, login() řekl ok a panel se pak překreslil jako odhlášený —
+     bez jediného slova proč. Přihlášení žije JEN ve schránce
+     prohlížeče (loggedIn() ji čte při každém dotazu), takže zápis,
+     který neprojde, znamená, že se člověk nepřihlásil. */
   function setSession(s) {
     try {
       if (s) {
         if (!s.expires_at && s.expires_in) s.expires_at = Math.floor(Date.now() / 1000) + Number(s.expires_in);
         localStorage.setItem(LSKEY, JSON.stringify(s));
       } else localStorage.removeItem(LSKEY);
-    } catch (e) {}
+      return true;
+    } catch (e) { return false; }
   }
+  /* Jedna věta pro obě cesty (přihlášení i registrace). „Zakázaná" je
+     tam schválně: v anonymním okně nebo se zakázanými soubory třetích
+     stran se schránka nedá použít vůbec. */
+  var NEULOZENO = { msg: 'Přihlášení se nepovedlo uložit — plná nebo zakázaná paměť prohlížeče.' };
   /** Platí přihlášení ještě aspoň `rezerva` sekund? Bez známého času platnosti
       raději řekneme, že ne — obnovit navíc je menší zlo než vypadnout. */
   function platiJeste(rezerva) {
@@ -63,8 +74,9 @@
     }).then(function (r) {
       return r.json().then(function (j) {
         // Když je „Confirm email" vypnuté, přijde rovnou session → přihlásíme.
-        if (r.ok && j.access_token) { setSession(j); }
-        else if (r.ok && j.session && j.session.access_token) { setSession(j.session); }
+        var sess = (r.ok && j.access_token) ? j
+          : ((r.ok && j.session && j.session.access_token) ? j.session : null);
+        if (sess && !setSession(sess)) return { ok: false, data: NEULOZENO, session: false };
         return { ok: r.ok, data: j, session: loggedIn() };
       });
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });
@@ -76,7 +88,7 @@
       body: JSON.stringify({ email: mail, password: pw })
     }).then(function (r) {
       return r.json().then(function (j) {
-        if (r.ok && j.access_token) { setSession(j); }
+        if (r.ok && j.access_token && !setSession(j)) return { ok: false, data: NEULOZENO };
         return { ok: r.ok && !!j.access_token, data: j };
       });
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });

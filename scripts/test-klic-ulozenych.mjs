@@ -22,7 +22,7 @@
      D) a uložení pod STARÝM klíčem pořád najde svůj pozemek
    ================================================================== */
 import { chromium } from 'playwright-core';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
@@ -267,6 +267,104 @@ async function sUlozenymi(klice) {
       `po klepnutí stojí „${v.po}" — a přitom se nic neuložilo`);
     pravda('a nic se opravdu neuložilo', v.vSchrance === 0, `ve schránce ${v.vSchrance} klíčů`);
     pravda('a člověk se doví proč', /plná paměť/i.test(v.hlaska), `hláška: „${v.hlaska}"`);
+  }
+  await ctx.close();
+}
+
+/* --- A TOTÉŽ NA STRÁNCE POZEMKU ------------------------------------
+   Mapa se přiznávat naučila, stránka pozemku ne: `catch (e) {}`
+   spolkl chybu, tlačítko se přepnulo na „Uloženo" a hláška řekla
+   „Uloženo mezi oblíbené", jenže ve schránce nebylo nic. Je to tatáž
+   příhoda na druhém místě — a druhé místo se musí měřit zvlášť, jinak
+   se opraví jen to první. */
+{
+  const vse = readdirSync(ROOT).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
+  /* Doběhlá nabídka ukáže hlášku „už není aktuální" a tlačítko „Uložit"
+     vůbec nevykreslí — na té se měřit nedá. */
+  const stranka = vse.find((f) => !/class="pz-konec"/.test(readFileSync(path.join(ROOT, f), 'utf8')));
+  pravda('je co měřit — živá stránka pozemku', !!stranka,
+    `ze ${vse.length} stránek pozemků žádná není živá`);
+  if (stranka) {
+    const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+      viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
+    const page = await ctx.newPage();
+    await page.goto(`http://127.0.0.1:8310/${stranka}`, { waitUntil: 'load' });
+    await page.waitForSelector('#pz-fav', { timeout: 20000 }).catch(() => {});
+    const v = await page.evaluate(async () => {
+      const b = document.getElementById('pz-fav');
+      if (!b) return { chyba: 'tlačítko „Uložit" na stránce není' };
+      const slovo = () => ((b.querySelector('span') || {}).textContent || '').trim();
+      const pred = slovo();
+      const puv = localStorage.setItem.bind(localStorage);
+      localStorage.setItem = (k, h) => {
+        if (k === 'pk_fav_v1') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
+        return puv(k, h);
+      };
+      b.click();
+      await new Promise((r) => setTimeout(r, 300));
+      localStorage.setItem = puv;
+      const t = document.getElementById('toast');
+      let ulozeno = [];
+      try { ulozeno = JSON.parse(localStorage.getItem('pk_fav_v1') || '[]'); } catch (e) {}
+      return { pred, po: slovo(), hlaska: (t && t.textContent) || '', vSchrance: ulozeno.length };
+    });
+    pravda('je co měřit — na stránce pozemku stojí „Uložit"',
+      !v.chyba && v.pred === 'Uložit', v.chyba || `na začátku stálo „${v.pred}"`);
+    if (!v.chyba) {
+      pravda('při plné paměti se tlačítko na pozemku NEPŘEPNE do „Uloženo"',
+        v.po === 'Uložit', `po klepnutí stojí „${v.po}" — a přitom se nic neuložilo`);
+      pravda('a nic se opravdu neuložilo (pozemek)', v.vSchrance === 0,
+        `ve schránce ${v.vSchrance} klíčů`);
+      pravda('a hláška nelže o uložení', /plná paměť/i.test(v.hlaska) && !/^Uloženo/.test(v.hlaska),
+        `hláška: „${v.hlaska}"`);
+    }
+    await ctx.close();
+  }
+}
+
+/* --- HLÍDANÉ MÍSTO: SLIB, KTERÝ NEPŘEŽIJE ZAVŘENÍ KARTY ------------
+   Pruh nad seznamem hlásí „Hlídané místo: Křinec · okolí do 10 km" —
+   tedy slib, že se k tomu web po návratu vrátí. Zápis uměl selhat
+   mlčky (zapisUloz vrací true/false, ale ulozMisto si výsledek
+   nechával pro sebe) a místo žilo jen do zavření karty.
+   MĚŘÍ SE OBOJÍ: že to okolí tentokrát FUNGUJE (vzít je zpátky by
+   bylo horší) a že se o té pomíjivosti člověk doví. */
+{
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
+  const page = await ctx.newPage();
+  /* Místo se nasazuje předem: vybírání na mapě má svoje zkoušky
+     (scripts/test-okoli.mjs), tady jde o zápis, ne o výběr. */
+  await page.addInitScript(() => {
+    localStorage.setItem('pk_misto_v1', JSON.stringify({
+      lat: 50.087, lng: 14.421, km: 10, nazev: 'Praha' }));
+  });
+  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.waitForSelector('#misto-zapnout', { timeout: 20000 }).catch(() => {});
+  const v = await page.evaluate(async () => {
+    const b = document.getElementById('misto-zapnout');
+    if (!b) return { chyba: 'přepínač „Ukázat jen okolí" na stránce není' };
+    const pred = (b.textContent || '').trim();
+    const puv = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = (k, h) => {
+      if (k === 'pk_misto_v1') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
+      return puv(k, h);
+    };
+    b.click();
+    await new Promise((r) => setTimeout(r, 500));
+    localStorage.setItem = puv;
+    const t = document.getElementById('toast');
+    return { pred, po: (b.textContent || '').trim(),
+      hlaska: (t && t.textContent) || '',
+      zapnuto: b.getAttribute('aria-pressed') };
+  });
+  pravda('je co měřit — přepínač okolí stojí na „Ukázat jen okolí"',
+    !v.chyba && /jen okolí/i.test(v.pred), v.chyba || `stálo tam „${v.pred}"`);
+  if (!v.chyba) {
+    pravda('okolí se při plné paměti stejně zapne (tuhle návštěvu platí)',
+      v.zapnuto === 'true', `aria-pressed="${v.zapnuto}", na tlačítku „${v.po}"`);
+    pravda('ale je řečeno, že se to po zavření karty zapomene',
+      /zapomene/i.test(v.hlaska), `hláška: „${v.hlaska}"`);
   }
   await ctx.close();
 }

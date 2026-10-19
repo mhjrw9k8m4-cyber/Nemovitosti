@@ -902,7 +902,19 @@
     }
     return (nej && nejKm <= 25) ? nej.place : null;
   }
-  function ulozMisto(m) { mojeMisto = m; if (m) zapisUloz(MISTO_KLIC, m); else { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} } }
+
+  function ulozMisto(m) {
+    mojeMisto = m;
+    if (!m) { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} return true; }
+    return zapisUloz(MISTO_KLIC, m);
+  }
+
+  var mistoNeulozenoReceno = false;
+  function hlasNeulozeneMisto(co) {
+    if (mistoNeulozenoReceno) return;
+    mistoNeulozenoReceno = true;
+    showToast(co + ' se nepovedlo uložit — po zavření karty se zapomene');
+  }
 
   function kmOd(a, d) {
     return (window.PKOkruh && window.PKOkruh.km) ? window.PKOkruh.km(a, d) : Infinity;
@@ -2203,7 +2215,7 @@
     userPos = { lat: pos.lat, lng: pos.lng };
     var km = (mojeMisto && mojeMisto.km) || 10;
 
-    ulozMisto({ lat: pos.lat, lng: pos.lng, km: km,
+    var mistoUlozeno = ulozMisto({ lat: pos.lat, lng: pos.lng, km: km,
       nazev: nazev || najdiNazevMista(pos.lat, pos.lng), pribl: !!approx });
     okoliZap = true;
     selectedKraj = null;
@@ -2228,6 +2240,8 @@
     if (mistoPruh && cil !== 'seznam') setTimeout(function () {
       try { mistoPruh.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
     }, 420);
+
+    if (!mistoUlozeno) { hlasNeulozeneMisto('Hlídané místo'); return; }
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
       ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
@@ -3939,7 +3953,8 @@
           '<br><button type="button" id="okoli-pryc" class="reset-btn">Zobrazit celou ČR</button></li>';
         var vb = listEl.querySelector('#okoli-vic');
         if (vb) vb.addEventListener('click', function () {
-          mojeMisto.km = navrh.km; ulozMisto(mojeMisto);
+          mojeMisto.km = navrh.km;
+          if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
           if (mistoKmEl) mistoKmEl.value = String(navrh.km);
           vykresliMisto(); ramujMisto(); updateKrajHead(); renderList();
         });
@@ -5480,7 +5495,7 @@
   if (mistoKmEl) mistoKmEl.addEventListener('change', function () {
     if (!mojeMisto) return;
     mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
-    ulozMisto(mojeMisto);
+    if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
     vykresliMisto();
     ramujMisto();
     updateKrajHead();

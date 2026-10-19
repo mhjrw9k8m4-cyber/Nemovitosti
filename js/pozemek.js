@@ -284,7 +284,15 @@
     var klic = stary !== null ? stary : window.PKKlic.klicPozemku(d);
     if (stary !== null) arr.splice(arr.indexOf(stary), 1);
     else arr.push(klic);
-    try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
+    /* ZÁPIS, KTERÝ SE NEPOVEDE, SE MUSÍ PŘIZNAT. Na mapě (js/main.js)
+       to tlačítko dělá, tady mlčelo: na plné schránce prohlížeče se
+       přepnulo na „Uloženo" a hláška řekla „Uloženo mezi oblíbené",
+       jenže v prohlížeči nebylo nic — po načtení stránky znovu
+       „Uložit". Vracet se nemá co (favs() čte schránku při každém
+       volání, v paměti se nic nedrží), takže stačí říct volajícímu,
+       že se to nestalo: null místo true/false. */
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }
+    catch (e) { return null; }
     /* A na účet, je-li kam — stejně jako na mapě (js/main.js).
        Zápis do prohlížeče je hotový výš, takže na tomhle volání nic
        nestojí a nečeká se na ně. */
@@ -2321,6 +2329,10 @@
     var favBtn = document.getElementById('pz-fav');
     if (favBtn) favBtn.addEventListener('click', function () {
       var on = toggleFav(d);
+      /* null = schránka to nevzala. Tlačítko se tedy NEPŘEPÍNÁ: to, co
+         na něm stojí, dál platí — a hláška řekne proč. Táž věta jako
+         na mapě, protože je to táž příhoda. */
+      if (on === null) { toast('Nepovedlo se uložit — plná paměť prohlížeče'); return; }
       favBtn.classList.toggle('on', on);
       favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
       toast(on ? 'Uloženo mezi oblíbené' : 'Odebráno z oblíbených');

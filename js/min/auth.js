@@ -23,8 +23,11 @@
         if (!s.expires_at && s.expires_in) s.expires_at = Math.floor(Date.now() / 1000) + Number(s.expires_in);
         localStorage.setItem(LSKEY, JSON.stringify(s));
       } else localStorage.removeItem(LSKEY);
-    } catch (e) {}
+      return true;
+    } catch (e) { return false; }
   }
+
+  var NEULOZENO = { msg: 'Přihlášení se nepovedlo uložit — plná nebo zakázaná paměť prohlížeče.' };
 
   function platiJeste(rezerva) {
     var s = getSession();
@@ -53,8 +56,9 @@
     }).then(function (r) {
       return r.json().then(function (j) {
 
-        if (r.ok && j.access_token) { setSession(j); }
-        else if (r.ok && j.session && j.session.access_token) { setSession(j.session); }
+        var sess = (r.ok && j.access_token) ? j
+          : ((r.ok && j.session && j.session.access_token) ? j.session : null);
+        if (sess && !setSession(sess)) return { ok: false, data: NEULOZENO, session: false };
         return { ok: r.ok, data: j, session: loggedIn() };
       });
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });
@@ -66,7 +70,7 @@
       body: JSON.stringify({ email: mail, password: pw })
     }).then(function (r) {
       return r.json().then(function (j) {
-        if (r.ok && j.access_token) { setSession(j); }
+        if (r.ok && j.access_token && !setSession(j)) return { ok: false, data: NEULOZENO };
         return { ok: r.ok && !!j.access_token, data: j };
       });
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });

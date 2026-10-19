@@ -165,7 +165,9 @@
     var klic = stary !== null ? stary : window.PKKlic.klicPozemku(d);
     if (stary !== null) arr.splice(arr.indexOf(stary), 1);
     else arr.push(klic);
-    try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); } catch (e) {}
+
+    try { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }
+    catch (e) { return null; }
 
     if (global.PKUlozeneUcet) { try { global.PKUlozeneUcet.zmena(klic, stary === null); } catch (e) {} }
     return stary === null;
@@ -1369,6 +1371,8 @@
     var favBtn = document.getElementById('pz-fav');
     if (favBtn) favBtn.addEventListener('click', function () {
       var on = toggleFav(d);
+
+      if (on === null) { toast('Nepovedlo se uložit — plná paměť prohlížeče'); return; }
       favBtn.classList.toggle('on', on);
       favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
       toast(on ? 'Uloženo mezi oblíbené' : 'Odebráno z oblíbených');

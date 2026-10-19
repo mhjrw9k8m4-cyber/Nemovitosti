@@ -1434,7 +1434,26 @@
     }
     return (nej && nejKm <= 25) ? nej.place : null;
   }
-  function ulozMisto(m) { mojeMisto = m; if (m) zapisUloz(MISTO_KLIC, m); else { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} } }
+  /* VRACÍ, JESTLI SE TO OPRAVDU ULOŽILO. Pruh nad seznamem pak hlásí
+     „Hlídané místo: Křinec · okolí do 10 km" — tedy slib, že se k tomu
+     web po návratu vrátí. Na plné schránce prohlížeče se zápis nepovedl
+     a nikdo to neřekl: místo fungovalo do zavření karty a pak zmizelo.
+     V paměti se přitom nechává schválně (na rozdíl od oblíbených):
+     okolí si člověk právě naklikal na mapě a vzít mu ho zpátky by bylo
+     horší než říct, že to nepřežije zavření karty. */
+  function ulozMisto(m) {
+    mojeMisto = m;
+    if (!m) { try { localStorage.removeItem(MISTO_KLIC); } catch (e) {} return true; }
+    return zapisUloz(MISTO_KLIC, m);
+  }
+  /* Jednou dost. Kdo posouvá okruh, nemá dostat tutéž hlášku u každého
+     kroku posuvníku. */
+  var mistoNeulozenoReceno = false;
+  function hlasNeulozeneMisto(co) {
+    if (mistoNeulozenoReceno) return;
+    mistoNeulozenoReceno = true;
+    showToast(co + ' se nepovedlo uložit — po zavření karty se zapomene');
+  }
   /* Vzdálenost je v js/okruh.js — tentýž výpočet potřebuje okolí místa,
      okruh z věty i řazení podle blízkosti, a kopie se rozcházejí. */
   function kmOd(a, d) {
@@ -3468,7 +3487,7 @@
     // Místo si pamatujeme vždycky — i to přibližné. Jinak by se člověk po
     // návratu na web musel ptát znovu. Že je přibližné, se pozná podle
     // značky na mapě a napíše se to i do hlavičky.
-    ulozMisto({ lat: pos.lat, lng: pos.lng, km: km,
+    var mistoUlozeno = ulozMisto({ lat: pos.lat, lng: pos.lng, km: km,
       nazev: nazev || najdiNazevMista(pos.lat, pos.lng), pribl: !!approx });
     okoliZap = true;
     selectedKraj = null;
@@ -3495,6 +3514,11 @@
     if (mistoPruh && cil !== 'seznam') setTimeout(function () {
       try { mistoPruh.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
     }, 420);
+    /* JEDNA HLÁŠKA, A TA DŮLEŽITĚJŠÍ. Když se místo nepovedlo uložit,
+       nemá smysl hlásit počet pozemků v okolí: na tom se nic nezmění,
+       zato o tom, že okolí nepřežije zavření karty, by se nikdo nedověděl.
+       Hlášky se v témže místě překrývají — tahle tedy musí být poslední. */
+    if (!mistoUlozeno) { hlasNeulozeneMisto('Hlídané místo'); return; }
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
       ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
@@ -6162,7 +6186,8 @@
           '<br><button type="button" id="okoli-pryc" class="reset-btn">Zobrazit celou ČR</button></li>';
         var vb = listEl.querySelector('#okoli-vic');
         if (vb) vb.addEventListener('click', function () {
-          mojeMisto.km = navrh.km; ulozMisto(mojeMisto);
+          mojeMisto.km = navrh.km;
+          if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
           if (mistoKmEl) mistoKmEl.value = String(navrh.km);
           vykresliMisto(); ramujMisto(); updateKrajHead(); renderList();
         });
@@ -8142,7 +8167,7 @@
   if (mistoKmEl) mistoKmEl.addEventListener('change', function () {
     if (!mojeMisto) return;
     mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
-    ulozMisto(mojeMisto);
+    if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
     vykresliMisto();
     ramujMisto();     // nový okruh musí být vidět celý, jinak se změna nepozná
     updateKrajHead();

@@ -43,7 +43,7 @@ function pustZadrzene() {
   for (const f of v) f();
 }
 function resetStav() {
-  stav = { platnyToken: 'r1', pocetObnov: 0, pouzite: new Set(), odpoved: 'ok', poradi: [],
+  stav = { platnyToken: 'r1', pocetObnov: 0, pocetPrihlaseni: 0, pouzite: new Set(), odpoved: 'ok', poradi: [],
     /* Kolik odpovědí na obnovu se zadrží a pustí NARÁZ. Nula = odpovídá se
        hned (tak se chová server při jediné stránce). Dvojka vyrábí to, co
        se děje doopravdy při dvou kartách: oba prohlížeče dostanou odpověď
@@ -65,6 +65,18 @@ const server = createServer((req, res) => {
     if (req.url.indexOf('/auth/v1/token') === 0) {
       let telo = {};
       try { telo = JSON.parse(Buffer.concat(chunks).toString() || '{}'); } catch (e) {}
+      /* PŘIHLÁŠENÍ HESLEM JE JINÁ VĚC NEŽ OBNOVA. Týž koncový bod
+         obsluhuje obojí, ale rozlišuje je grant_type: obnova posílá
+         jednorázový refresh_token (a ten si server hlídá), přihlášení
+         e-mail a heslo. Bez tohohle rozlišení skončilo přihlášení
+         odpovědí „Invalid Refresh Token" a kontroly o plné paměti
+         procházely z úplně jiného důvodu, než tvrdily. */
+      if (req.url.indexOf('grant_type=password') >= 0) {
+        stav.pocetPrihlaseni++;
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ access_token: 'a-login', refresh_token: stav.platnyToken,
+          expires_in: 3600, user: { id: 'u1', email: 'test@example.invalid' } }));
+      }
       stav.pocetObnov++;
       stav.poradi.push(telo.refresh_token);
       if (stav.odpoved === '503') { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end('{"msg":"upstream"}'); }
@@ -326,6 +338,45 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   pravda('ale platné přihlášení hlavička zbytečně neobnovuje', stav.pocetObnov === 0,
     `server dostal ${stav.pocetObnov} žádostí — každá spálí jednorázový token`);
   await ctx.close(); await ctx2.close();
+}
+
+/* --- PLNÁ PAMĚŤ PŘI PŘIHLÁŠENÍ SE MUSÍ PŘIZNAT ---------------------
+   Přihlášení žije JEN ve schránce prohlížeče — loggedIn() ji čte při
+   každém dotazu. Když zápis neprošel, setSession() chybu spolkl,
+   login() přesto vrátil ok a panel se překreslil jako odhlášený.
+   Server tedy heslo přijal, člověk se nepřihlásil a nikdo mu neřekl
+   proč. Měří se obojí: že login() ohlásí NEúspěch a že má po ruce
+   větu, kterou je co napsat (js/pridat.js ji bere z data.msg). */
+{
+  resetStav();
+  const ctx = await prohlizec.newContext();
+  const p = await ctx.newPage();
+  await p.goto('http://127.0.0.1:8399/prazdno');
+  await p.evaluate(() => {
+    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_KEY = 'anon';
+  });
+  await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+  const v = await p.evaluate(async () => {
+    /* Schránka se „zaplní" jen na session, ne na celý prohlížeč. */
+    const puv = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = (k, h) => {
+      if (k === 'pk_auth') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
+      return puv(k, h);
+    };
+    const r = await window.PKAuth.login('nekdo@example.invalid', 'tajne');
+    localStorage.setItem = puv;
+    return { ok: r && r.ok, zprava: (r && r.data && (r.data.msg || r.data.error_description)) || '',
+      prihlasen: !!window.PKAuth.loggedIn() };
+  });
+  pravda('je co měřit — server přihlášení heslem přijal', stav.pocetPrihlaseni >= 1,
+    `falešný Supabase dostal ${stav.pocetPrihlaseni} přihlášení heslem — bez něj by se měřilo něco jiného`);
+  pravda('při plné paměti login() NEhlásí úspěch', v.ok === false,
+    `login() vrátil ok=${v.ok}, a přitom PKAuth.loggedIn() je ${v.prihlasen}`);
+  pravda('a člověk opravdu přihlášený není', v.prihlasen === false,
+    'loggedIn() tvrdí ano — session ve schránce není');
+  pravda('a je čím to vysvětlit', /paměť/i.test(v.zprava), `zpráva: „${v.zprava}"`);
+  await ctx.close();
 }
 
 await prohlizec.close();
