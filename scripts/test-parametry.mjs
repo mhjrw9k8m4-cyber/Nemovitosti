@@ -64,8 +64,25 @@ function hotovo() {
   process.exit(0);
 }
 
-const stranka = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
-pravda('je na čem měřit — stránka pozemku', !!stranka);
+/* MĚŘÍ SE STRÁNKA, KTERÁ TABULKU OPRAVDU MÁ. Od chvíle, kdy se zdroj
+   nabídky přestěhoval pod cenu, zbývá v tabulce jediný možný řádek —
+   parcelní číslo — a to zná jen část nabídek. První stránka v abecedě
+   ho nemá, takže by se odstupy a svislice v tabulce měřily na prázdnu
+   a kontroly by procházely samy od sebe. Pozná se to ze statické
+   verze stránky (<dt>Parcela</dt>) nebo z ostrůvku PK_POZEMEK, kde
+   generátor nese číslo vytažené z textu inzerátu (pc). */
+const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
+const sParcelou = vsechny.find((f) => {
+  const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+  /* Doběhlá nabídka ukáže místo stránky hlášku „už není aktuální"
+     a nevykreslí ani dlaždice, ani tabulku — na té se měřit nedá.
+     Hledá se TŘÍDA v značce, ne slovo `pz-konec` kdekoli: pravidla pro
+     tu hlášku stojí ve vloženém stylu každé stránky. */
+  return /"pc":/.test(h) && !/class="pz-konec"/.test(h);
+});
+const stranka = sParcelou || vsechny[0];
+pravda('je na čem měřit — stránka pozemku s tabulkou parametrů', !!sParcelou,
+  sParcelou ? sParcelou : `žádná z ${vsechny.length} stránek nemá parcelní číslo`);
 if (!stranka) hotovo();
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
@@ -128,8 +145,15 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
     v.klicVelikost > v.radekVelikost, `${v.klicVelikost} px proti ${v.radekVelikost} px`);
   pravda('popisek a hodnota drží u sebe (nejvýš 60 px)',
     v.nejvetsiMezera <= 60, `největší mezera ${v.nejvetsiMezera} px`);
-  pravda('hodnoty začínají na jedné svislici',
-    v.rozptylOkraju <= 2, `levé okraje se rozcházejí o ${v.rozptylOkraju} px`);
+  /* KOLIK ŘÁDKŮ TABULKA MÁ, SE MUSÍ ŘÍCT. Od chvíle, kdy se zdroj
+     nabídky přestěhoval pod cenu, zbývá v tabulce JEDINÝ možný řádek —
+     parcelní číslo. Svislice se mezi jedním řádkem neměří: bez téhle
+     poznámky by kontrola níž tiše procházela naprázdno. */
+  zpravy.push(`    · řádků v tabulce: ${v.radku}`);
+  if (v.radku >= 2) {
+    pravda('hodnoty začínají na jedné svislici',
+      v.rozptylOkraju <= 2, `levé okraje se rozcházejí o ${v.rozptylOkraju} px`);
+  }
   pravda('souřadnice v tabulce parametrů nejsou (patří pod mapu)',
     v.sourVTabulce === false, 'řádek se souřadnicemi je zpátky v tabulce — zabere 230 px ze čtyř set');
   pravda('nic nepřetéká do stran', v.preteka <= 0, `přetéká o ${v.preteka} px`);

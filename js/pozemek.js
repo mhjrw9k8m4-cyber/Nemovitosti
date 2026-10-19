@@ -1819,6 +1819,9 @@
        číslo vycucané z toho, kdy jsme si začali psát poznámky —
        ne z toho, kdy nabídka vznikla. Stejný závěr je o kus níž
        u data zkontrolování (viz komentář u pz-cas). */
+    /* Jestli termín dražby stojí v dlaždici, se pozná jen odsud — a ví
+       to o kus níž řádek se zdrojem, aby datum nepsal podruhé. */
+    var terminVDlazdici = false;
     var ctvrtaJeVlastnictvi = (function () {
       var dny = daysUntil(d.extra);
       if (dny != null && (d.type === 'drazba' || d.type === 'exekuce')) {
@@ -1827,6 +1830,7 @@
         if (den) {
           klice.push({ k: 'Termín dražby', v: esc(den), ikona: 'kalendar',
             pozn: countdownText(dny) || '' });
+          terminVDlazdici = true;
           return false;
         }
       }
@@ -1883,7 +1887,21 @@
        bloku mezi klíčovými údaji a verdiktem, tedy na tom nejdražším
        místě stránky. Tabulka tím zhubla na to, co opravdu přidává:
        parcelní číslo a odkud ten údaj je. */
-    if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
+    /* ŘÁDEK „STAV / ZDROJ" TU UŽ NENÍ — přestěhoval se pod cenu
+       (viz zdrojRadek níž). Odkud ten údaj je, je otázka k ceně:
+       „1 990 000 Kč, a kdo to říká". Naměřeno na stránce 1440 px:
+       cena stála na y 168, zdroj na y 854 — tedy o obrazovku a půl
+       níž, v tabulce, kde se na něj nikdo neptal. V datech je to
+       přitom jediná věta o původu nabídky (1 624× inzerát Bezrealitky,
+       204× prodej státní půdy SPÚ § 12, 75× dražba přes OK dražby,
+       33× dražba bez dražebníka, 9× inzerát Farmy.cz). */
+    var zdrojRadek = d.extra ? zdrojText(d.extra) : '';
+    if (zdrojRadek && terminVDlazdici) {
+      zdrojRadek = zdrojRadek.replace(/\s*\d{1,2}\.\s*\d{1,2}\.\s*\d{4}/, '')
+        .replace(/\s+/g, ' ').replace(/^[\s·–-]+|[\s·–-]+$/g, '');
+      /* Bez dražebníka zbyde „dražba" — to už stojí v odznaku. */
+      if (!/[·–]/.test(zdrojRadek)) zdrojRadek = '';
+    }
     /* ŽÁDNÝ ŘÁDEK „INZERÁT UVÁDÍ" TADY UŽ NENÍ — a schválně.
        Stával tu výčet „elektřina, voda, kanalizace, plyn" jako další
        řádek téhle tabulky. Od chvíle, kdy sekce „Sítě a vybavení"
@@ -2019,6 +2037,15 @@
            ověřit jinde — minulou cenu vidí jen od nás — tak ať je aspoň
            úplný. Větu skládá js/zlevneni.js, stejně jako pro kartu. */
         pzZmenaCenyHtml(d) +
+        /* ODKUD JE TO, PATŘÍ K TOMU, KOLIK TO STOJÍ. Drobným písmem
+           a potichu — není to údaj, podle kterého se vybírá, ale ten,
+           bez kterého se číslu nad ním nedá věřit.
+           DATUM DRAŽBY SE TU NEOPAKUJE: když ho má dlaždice „Termín
+           dražby", zbyde ze zápisu jen dražebník („nucená dražba ·
+           OK dražby"). A kdyby po vyškrtnutí datumu zbylo jen slovo
+           „dražba", neřekne řádek nic, co by nestálo v odznaku nad
+           snímkem — pak se vynechá celý. */
+        (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
       '</div>' +
       '</div>' +
 

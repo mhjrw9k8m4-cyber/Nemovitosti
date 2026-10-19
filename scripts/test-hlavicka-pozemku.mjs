@@ -197,7 +197,97 @@ pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
   }
   pravda('odznak nad snímkem je na telefonu chip, ne pruh přes celý náhled',
     spatne.length === 0, spatne.slice(0, 3).join(' | '));
+
+  /* A JE TO TÝŽ ODZNAK JAKO NA KARTĚ. Stránka pozemku si pravidlo
+     opsala z css/styles.css a opis se rozešel: váha 700 proti 600,
+     odsazení 4px 12px proti 4px 8px, podklad .6 proti .74 a navíc
+     rozostření pod ním (bílá na tom podkladu dávala 4,94 : 1 proti
+     8,09 : 1). Měří se SROVNÁNÍM s odznakem, který na téže stránce
+     stojí mimo `.pz-media` — kdyby se ty vlastnosti znovu někde
+     přepsaly, srovnání se rozejde. Poloha se nesrovnává, ta se tu
+     přepisovat MÁ (viz výš). */
+  const opis = await uzky.evaluate(() => {
+    const zivy = document.querySelector('.pz-media .opp-badge');
+    if (!zivy) return null;
+    const vzor = document.createElement('span');
+    vzor.className = zivy.className;
+    vzor.textContent = zivy.textContent;
+    document.body.appendChild(vzor);
+    const co = ['fontSize', 'fontWeight', 'letterSpacing', 'padding', 'borderRadius',
+      'color', 'backgroundColor', 'backdropFilter', 'gap'];
+    const a = getComputedStyle(zivy), b = getComputedStyle(vzor);
+    const rozdil = co.filter((k) => a[k] !== b[k]).map((k) => `${k}: ${a[k]} ≠ ${b[k]}`);
+    const blur = a.backdropFilter;
+    vzor.remove();
+    return { rozdil, blur };
+  });
+  pravda('odznak na snímku se neliší od odznaku na kartě ničím než polohou',
+    !!opis && opis.rozdil.length === 0, opis ? opis.rozdil.join(' | ') : 'odznak nenalezen');
+  pravda('a nic pod ním nerozostřuje',
+    !!opis && (opis.blur === 'none' || !opis.blur), opis && opis.blur);
   await uzky.close();
+}
+
+// ---- 5) odkud nabídka je: pod cenou, a jen tam -------------------
+/* NALEZENO MĚŘENÍM na 1440 px: cena stála na y 168, údaj „Stav / zdroj"
+   až na y 854 — tedy o obrazovku a půl níž, v tabulce parametrů.
+   „Kdo to říká" je přitom otázka k ceně, ne k parametrům. Zápis se
+   přestěhoval pod cenu a z tabulky zmizel; hlídá se OBOJÍ, protože
+   tentýž údaj dvakrát na jedné stránce je horší než pozdě.
+   A ještě jedna past: u dražby nese datum dlaždice „Termín dražby",
+   takže v zápisu o zdroji nemá co dělat. */
+{
+  const siroky = await ctx.newPage();
+  await siroky.setViewportSize({ width: 1440, height: 900 });
+  const vse = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
+  /* Doběhlá nabídka ukáže hlášku „už není aktuální" a cenu nevykreslí.
+     Zdroj se hledá ve STATICKÉ verzi stránky, kde zápis zůstává jako
+     řádek definičního seznamu — podle něj se pozná, co která stránka
+     o svém původu ví, bez otevírání v prohlížeči. */
+  const zivaSe = (vzor) => vse.find((f) => {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    return !/class="pz-konec"/.test(h) && vzor.test(h);
+  });
+  const sDrazbou = zivaSe(/<dt>Stav \/ zdroj<\/dt><dd>[^<]*dražba[^<]*\d{4}/);
+  const sInzeratem = zivaSe(/<dt>Stav \/ zdroj<\/dt><dd>[^<]*inzerát/);
+  pravda('je co měřit — stránka s inzerátem i stránka s dražbou',
+    !!sDrazbou && !!sInzeratem, `inzerát: ${sInzeratem || 'nenalezen'}, dražba: ${sDrazbou || 'nenalezen'}`);
+  const zmer = async (f) => {
+    await siroky.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+    await siroky.waitForSelector('.pz-price', { timeout: 20000 }).catch(() => {});
+    return siroky.evaluate(() => {
+      const z = document.querySelector('.pz-zdroj');
+      const c = document.querySelector('.pz-price');
+      const rz = z && z.getBoundingClientRect(), rc = c && c.getBoundingClientRect();
+      return {
+        text: z ? z.textContent.replace(/\s+/g, ' ').trim() : null,
+        podCenou: !!(rz && rc) && rz.top >= rc.bottom - 2 && (rz.top - rc.bottom) <= 120,
+        odstup: (rz && rc) ? Math.round(rz.top - rc.bottom) : null,
+        vTabulce: [...document.querySelectorAll('.pz-spec .k')]
+          .some((e) => /zdroj/i.test(e.textContent || '')),
+        termin: [...document.querySelectorAll('.pz-klic')]
+          .some((e) => /Termín dražby/.test(e.textContent || '')),
+      };
+    });
+  };
+  if (sInzeratem) {
+    const m = await zmer(sInzeratem);
+    pravda('u inzerátu stojí zdroj hned pod cenou',
+      !!m.text && m.podCenou, `„${m.text}", odstup od ceny ${m.odstup} px`);
+    pravda('a jmenuje ten web', /inzerát/i.test(m.text || '') && /[–·]/.test(m.text || ''), m.text);
+    pravda('v tabulce parametrů už podruhé není', m.vTabulce === false,
+      'řádek „Stav / zdroj" je zpátky v tabulce — týž údaj dvakrát');
+  }
+  if (sDrazbou) {
+    const m = await zmer(sDrazbou);
+    pravda('u dražby stojí zdroj taky pod cenou a jmenuje dražebníka',
+      !!m.text && m.podCenou && /[–·]/.test(m.text || ''), `„${m.text}", odstup ${m.odstup} px`);
+    pravda('je co měřit — datum dražby nese dlaždice', m.termin === true,
+      'dlaždice „Termín dražby" na stránce není, takže se opakování datumu nedá poznat');
+    pravda('a zápis o zdroji datum neopakuje',
+      !/\d{1,2}\.\s*\d{1,2}\.\s*\d{4}/.test(m.text || ''), m.text);
+  }
+  await siroky.close();
 }
 
 await prohlizec.close();

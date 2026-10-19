@@ -45,7 +45,7 @@
 .pz-back:hover{color:var(--text-ondark)}
 .pz-back svg{width:16px;height:16px;stroke-width:2.25}
 .pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--ink-soft2);border:1px solid var(--line);box-shadow:var(--e2)}
-.pz-media .opp-badge{position:absolute;top:13px;left:13px;bottom:auto;z-index:3;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;letter-spacing:0.02em;padding:4px 12px 4px 8px;border-radius:var(--r-sm);color:#fff;background:rgba(12,26,18,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.pz-media .opp-badge{top:13px;left:13px;bottom:auto;display:inline-flex}
 .pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
 .opp-badge.sale::before{background:var(--c-sale)}
 .opp-badge.drazba::before{background:var(--c-drazba)}
@@ -79,13 +79,14 @@
 .pz-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .pz-price .pv{font-family:var(--font-ui);font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--text-ondark);font-variant-numeric:tabular-nums;line-height:1}
 .pz-price .pm{font-size:14px;font-weight:600;color:var(--text-ondark-mute);font-variant-numeric:tabular-nums}
+.pz-zdroj{margin-top:8px;font-size:13px;line-height:1.5;color:var(--text-ondark-mute)}
 .pz-verdict{--vc:var(--copper-bright);--vt:#fff;margin:20px 0 0;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--vc);box-shadow:var(--e1)}
 .pz-verdict.good{--vc:var(--c-ok-ink)}
 .pz-verdict.mid{--vc:var(--c-drazba-ink)}
 .pz-verdict.bad{--vc:var(--c-exekuce)}
 .pz-verdict.warn{--vc:var(--accent-warm)}
 .pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.pv-badge{font-size:13px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--vc);color:var(--vt)}
+.pv-badge{font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--vc);color:var(--vt)}
 .pv-cmp{font-size:12px;color:var(--text-ondark-mute);font-weight:600}
 .pv-text{font-size:14px;color:var(--text-ondark-mute);line-height:1.5}
 .pv-text b{color:var(--text-ondark)}
@@ -341,7 +342,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 4 701 m² — Biskupice, okres Zlín","description":"Na prodej · 159 999 Kč (34 Kč/m²) · 4 701 m² · Biskupice, okres Zlín. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-zlin-biskupice-1hrg7qy.html","address":{"@type":"PostalAddress","addressLocality":"Biskupice","addressRegion":"Zlín","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.075139,"longitude":17.709477},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":4701,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":159999,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-zlin-biskupice-1hrg7qy.html","itemOffered":{"@type":"Place","name":"Orná půda 4 701 m² — Biskupice, okres Zlín"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Zlínský kraj","item":"https://www.parcelaka.cz/pozemky-zlinsky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Zlín","item":"https://www.parcelaka.cz/pozemky-okres-zlin.html"},{"@type":"ListItem","position":5,"name":"Orná půda 4 701 m² — Biskupice, okres Zlín","item":"https://www.parcelaka.cz/pozemek-zlin-biskupice-1hrg7qy.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Biskupice|—|Zlín|49.075|17.709","ll":[49.075139,17.709477],"v":4701,"c":159999,"r":"data/okres/zlin.json","pc":"660/1"};</script>
-<script src="js/min/pozemek.js?v=8af94b5f"></script>
+<script src="js/min/pozemek.js?v=722df73f"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

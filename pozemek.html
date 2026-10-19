@@ -83,7 +83,15 @@
        okraje. Proto se `bottom` i `display` u obou odznaků ruší
        výslovně: hero snímek na stránce pozemku je 358 px široký a
        pravidla pro stopadesátipixelovou kartu na něj nepatří. */
-    .pz-media .opp-badge{position:absolute; top:13px; left:13px; bottom:auto; z-index:3; display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; letter-spacing:0.02em; padding:4px 12px 4px 8px; border-radius:var(--r-sm); color:#fff; background:rgba(12,26,18,.6); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);}
+    /* JEDEN ODZNAK, NE DVA. Zbytek pravidla byl opsaný z css/styles.css
+       a při opisování se rozešel: váha 700 proti 600, odsazení
+       4px 12px proti 4px 8px, podklad .6 proti .74 a navíc rozostření
+       pod ním. NAMĚŘENO nad světlou fotkou: bílá na rgba(12,26,18,.6)
+       dává 4,94 : 1, na rgba(8,20,14,.74) 8,09 : 1 — rozostření
+       čitelnost nenahradí, jen rozmazává snímek pod sebou. Tady proto
+       zůstává JEN poloha; velikost, váhu, odsazení i podklad si odznak
+       bere z jediného pravidla v css/styles.css. */
+    .pz-media .opp-badge{top:13px; left:13px; bottom:auto; display:inline-flex;}
     .pz-media .opp-badge::before{content:""; width:8px; height:8px; border-radius:50%; flex:none;}
     .opp-badge.sale::before{background:var(--c-sale);} .opp-badge.drazba::before{background:var(--c-drazba);} .opp-badge.exekuce::before{background:var(--c-exekuce);} .opp-badge.obec::before{background:var(--c-obec);} .opp-badge.majitel::before{background:var(--c-majitel);}
     /* Galerie nahraných fotek — vodorovný swipe (scroll-snap), bez JS */
@@ -139,6 +147,9 @@
     .pz-price{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
     .pz-price .pv{font-family:var(--font-ui); font-size:40px; font-weight:700; letter-spacing:-0.03em; color:var(--text-ondark); font-variant-numeric:tabular-nums; line-height:1;}
     .pz-price .pm{font-size:14px; font-weight:600; color:var(--text-ondark-mute); font-variant-numeric:tabular-nums;}
+    /* Odkud nabídka je — drobným písmem pod cenou. Osmička je „poznámka
+       pod blokem" ze soustavy odstupů (viz rytmus stránky níž). */
+    .pz-zdroj{margin-top:8px; font-size:13px; line-height:1.5; color:var(--text-ondark-mute);}
 
     /* BARVU VERDIKTU NESE KARTA, ne každý prvek zvlášť: odznak i pruh
        si ji vypisovaly po svém a na „warn" obě zapomněly (pozadí
@@ -170,7 +181,9 @@
        se píše tam, kde je plocha světlá, ne text na tmavý podklad. */
     .pz-verdict.warn{--vc:var(--accent-warm);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
-    .pv-badge{font-size:13px; font-weight:700; padding:2px 8px; border-radius:999px;
+    /* Slovo na odznaku má váhu 600 jako všechna ostatní slova na
+       odznacích; 700 je vyhrazená číslům (.msf-badge, .chip-n). */
+    .pv-badge{font-size:13px; font-weight:600; padding:2px 8px; border-radius:999px;
       background:var(--vc); color:var(--vt);}
     .pv-cmp{font-size:12px; color:var(--text-ondark-mute); font-weight:600;}
     .pv-text{font-size:14px; color:var(--text-ondark-mute); line-height:1.5;}
@@ -722,7 +735,7 @@
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
-<script src="js/min/pozemek.js?v=8af94b5f"></script>
+<script src="js/min/pozemek.js?v=722df73f"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

@@ -1145,6 +1145,7 @@
 
     klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
 
+    var terminVDlazdici = false;
     var ctvrtaJeVlastnictvi = (function () {
       var dny = daysUntil(d.extra);
       if (dny != null && (d.type === 'drazba' || d.type === 'exekuce')) {
@@ -1153,6 +1154,7 @@
         if (den) {
           klice.push({ k: 'Termín dražby', v: esc(den), ikona: 'kalendar',
             pozn: countdownText(dny) || '' });
+          terminVDlazdici = true;
           return false;
         }
       }
@@ -1173,7 +1175,13 @@
         pozn: 'podle textu inzerátu, neověřeno v katastru' });
     }
 
-    if (d.extra) facts.push({ k: 'Stav / zdroj', v: esc(zdrojText(d.extra)) });
+    var zdrojRadek = d.extra ? zdrojText(d.extra) : '';
+    if (zdrojRadek && terminVDlazdici) {
+      zdrojRadek = zdrojRadek.replace(/\s*\d{1,2}\.\s*\d{1,2}\.\s*\d{4}/, '')
+        .replace(/\s+/g, ' ').replace(/^[\s·–-]+|[\s·–-]+$/g, '');
+
+      if (!/[·–]/.test(zdrojRadek)) zdrojRadek = '';
+    }
 
     if (d.podil) {
 
@@ -1238,6 +1246,8 @@
           (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
 
         pzZmenaCenyHtml(d) +
+
+        (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
       '</div>' +
       '</div>' +
 
