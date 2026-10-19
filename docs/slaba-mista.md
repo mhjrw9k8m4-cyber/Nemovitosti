@@ -304,7 +304,7 @@ značkovou barvu **175 prvků** — aktivní záložka přepínače
 (`#2B7652`), značka v hlavičce (`#0F5C3B`) i odznaky shluků.
 
 Identita tedy existuje a je **tmavě zelená**, ne šedá. (Token se
-historicky jmenuje `--copper`, ačkoli v něm dávno žádná měď není —
+historicky jmenuje `--znacka`, ačkoli v něm dávno žádná měď není —
 to je na přejmenování, ne na přebarvení.)
 
 Požadavek na tmavě modrou (navy) je proto **změna vkusu, ne oprava

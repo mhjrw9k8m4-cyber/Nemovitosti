@@ -166,8 +166,8 @@ pismo:
   hlida:     scripts/test-pismo.mjs, test-typografie.mjs, test-pisma.mjs
 barvy:
   znacka:        "#004F2F"   # plná plocha hlavní akce
-  znacka-tmava:  "#0F5C3B"   # --copper, text a linky
-  znacka-svetla: "#2B7652"   # --copper-bright
+  znacka-tmava:  "#0F5C3B"   # --znacka, text a linky
+  znacka-svetla: "#2B7652"   # --znacka-svetla
   text:          "#101513"
   plocha-stranky: "#F2F4F3"
   plocha-zapustena: "#EDEFEE"

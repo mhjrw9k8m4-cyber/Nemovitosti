@@ -394,7 +394,7 @@ hlas('Předloha ukazuje proměnnou, která v šabloně není', neznama,
    nejsytějším místě plochy klesne běžný akcent #276646 na 4,2 : 1.
    Jenže totéž umí i tmavší odstín téže zelené — #1F5138 dává 5,6 : 1
    a značka zůstane značkou.
-   Hlídá se proto ODSTÍN: kdo token --copper-bright někde přepíše, smí
+   Hlídá se proto ODSTÍN: kdo token --znacka-svetla někde přepíše, smí
    ho ztmavit nebo zesvětlit, ale ne přebarvit. Mez 30° je velkorysá;
    modrá byla 79° od zelené.
    Značka má odstíny DVA, ne jeden: zelenou a k ní teplou měď, která na
@@ -416,7 +416,7 @@ hlas('Předloha ukazuje proměnnou, která v šabloně není', neznama,
     return (h + 360) % 360;
   };
   const odchylka = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
-  const vsechny = [...css.matchAll(/--copper-bright:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
+  const vsechny = [...css.matchAll(/--znacka-svetla:\s*(#[0-9a-fA-F]{6})/g)].map((m) => m[1]);
   const med = (css.match(/--accent-warm-bright:\s*(#[0-9a-fA-F]{6})/) || [])[1];
   const rodiny = [vsechny[0], med].filter(Boolean).map(hue).filter((h) => h != null);
   const zaklad = rodiny.length ? rodiny[0] : null;
@@ -425,13 +425,13 @@ hlas('Předloha ukazuje proměnnou, která v šabloně není', neznama,
     const h = hue(barva);
     if (h == null || !rodiny.length) continue;
     const d = Math.round(Math.min.apply(null, rodiny.map((z) => odchylka(h, z))));
-    if (d > 30) jine.push(`--copper-bright:${barva} je o ${d}° mimo obě značkové rodiny (${vsechny[0]}, ${med || '?'})`);
+    if (d > 30) jine.push(`--znacka-svetla:${barva} je o ${d}° mimo obě značkové rodiny (${vsechny[0]}, ${med || '?'})`);
   }
   hlas('Značkový token je někde přebarvený na jiný odstín', jine,
     'Kontrast se zvedá ztmavením téže barvy, ne změnou odstínu.');
   if (zaklad == null) {
     chyb++;
-    rest.push('\n  ✕ Token --copper-bright se v šabloně nenašel — kontrola odstínu nic neměří.');
+    rest.push('\n  ✕ Token --znacka-svetla se v šabloně nenašel — kontrola odstínu nic neměří.');
   }
 }
 

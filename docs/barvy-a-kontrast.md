@@ -54,7 +54,7 @@ Kontrast byl jen půlka věci. Zbytek dělala typografie a efekty:
 
 ## Šmrnc: měď
 
-Proměnné se odjakživa jmenují `--copper` (měď), jenže držely modrofialovou
+Proměnné se odjakživa jmenují `--znacka` (měď), jenže držely modrofialovou
 — původní teplý tón se cestou ztratil a zůstala obecná technologická modř.
 
 Měď `--accent-warm: #A8450F` (5,1 : 1 na stránce) se vrací, ale **ve vší

@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=6cfa706c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=7ac5dfc8">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -138,7 +138,7 @@
   <div class="mrizka" id="prechody"></div>
   <div class="pozn">Text na barevné ploše potřebuje <b>vlastní tón</b>. Tam, kde se vrstvy meshe
      potkají, je podklad znatelně tmavší než zbytek stránky — běžný akcent tam klesl na 3,9 : 1.
-     Úvodní plocha si proto uvnitř předefinuje <code>--copper-bright</code> a
+     Úvodní plocha si proto uvnitř předefinuje <code>--znacka-svetla</code> a
      <code>--text-ondark-mute</code>. Okem se to nepozná; odhalil to až
      <code>scripts/test-kontrast.mjs</code>, když se naučil měřit i přechody.</div>
 
@@ -201,7 +201,7 @@
   var barvy = [
     ['Text', '--text-ondark', '#FFFFFF', 'hlavní písmo'],
     ['Text tlumený', '--text-ondark-mute', '#FFFFFF', 'popisky'],
-    ['Akcent', '--copper-bright', '#FFFFFF', 'odkazy, čísla'],
+    ['Akcent', '--znacka-svetla', '#FFFFFF', 'odkazy, čísla'],
     ['Měď', '--accent-warm', '#FFFFFF', 'důraz — střídmě'],
     ['Na prodej', '--c-sale-ink', '#FFFFFF', 'text štítku'],
     ['Dražba', '--c-drazba-ink', '#FFFFFF', 'text štítku'],

@@ -6,7 +6,7 @@
  * Dvě věci se u něj rozbily potichu a obojí bylo vidět jen na obrazovce:
  *
  * 1) Odznak měl svou barvu nastavenou jen u „mid" a „warn". „good"
- *    i „bad" zůstávaly na výchozím --copper-bright, což je v tomhle
+ *    i „bad" zůstávaly na výchozím --znacka-svetla, což je v tomhle
  *    motivu ZELENÁ. „Vyšší cena" tedy nosila zelený odznak na červené
  *    kartě — a zelená všude jinde na webu znamená „v pořádku".
  *    Ta zelená navíc s tmavým textem odznaku dávala jen 2,66 : 1.

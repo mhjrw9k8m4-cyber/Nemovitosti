@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=6cfa706c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=7ac5dfc8">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -63,7 +63,7 @@
     .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:var(--ink); border:1px solid var(--line-strong);
       color:var(--text-ondark-mute); border-radius:var(--r-sm); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni), border-color var(--cas-zakladni);}
     .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
-    .pf-logout:hover{color:var(--text-ondark); border-color:var(--copper-bright);}
+    .pf-logout:hover{color:var(--text-ondark); border-color:var(--znacka-svetla);}
     .pf-logout span{display:none;}
     .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px;}
     .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
@@ -77,9 +77,9 @@
     .pf-stat--jde:hover{border-color:var(--line-strong); transform:translateY(-2px);}
     /* A ať to jde poznat i bez myši (na telefonu žádný :hover není). */
     .pf-stat--jde span{text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:3px;}
-    .pf-stat--jde:hover span{text-decoration-color:var(--copper-bright);}
+    .pf-stat--jde:hover span{text-decoration-color:var(--znacka-svetla);}
     .pf-stat-ico{width:20px; height:20px; color:var(--text-ondark-mute); margin-bottom:4px;}
-    .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--copper-bright); font-variant-numeric:tabular-nums;}
+    .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--znacka-svetla); font-variant-numeric:tabular-nums;}
     .pf-stat span{display:block; font-family:var(--font-mono); font-size:11px; font-weight:600; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:var(--popisek-proklad); line-height:1.2; margin-top:4px;}
     /* DRUHÝ PÁS: ne statistika o mně, ale MÍSTA, kam se odsud jde.
        Proto vlastní řádek o dvou dlaždicích, a ne šest v mřížce po
@@ -116,7 +116,7 @@
     /* Skončená nabídka: řekne se to slovem, ne jen barvou odznaku. */
     .sv-pryc{color:var(--c-exekuce-ink); font-weight:600;}
     .sv-actions{display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);}
-    .sv-map{flex:1 1 auto; font-size:14px; font-weight:700; color:var(--copper-bright); text-decoration:none;}
+    .sv-map{flex:1 1 auto; font-size:14px; font-weight:700; color:var(--znacka-svetla); text-decoration:none;}
     .sv-map:active{opacity:.7;}
     .sv-del{flex:none; background:none; border:1px solid var(--line-strong); color:var(--text-ondark-mute); border-radius:var(--r-sm); padding:4px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
@@ -147,7 +147,7 @@
     .mi-lstatus.ne{background:rgba(176,58,46,.12); color:#9c3025; border-color:rgba(176,58,46,.4);}
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px;}
     .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 8px; text-align:center;}
-    .mi-lstat b{display:block; font-size:20px; font-weight:700; color:var(--copper-bright); font-variant-numeric:tabular-nums; line-height:1.1;}
+    .mi-lstat b{display:block; font-size:20px; font-weight:700; color:var(--znacka-svetla); font-variant-numeric:tabular-nums; line-height:1.1;}
     .mi-lstat span{display:block; font-size:11px; color:var(--text-ondark-mute); text-transform:uppercase; letter-spacing:0.02em; margin-top:4px;}
     /* Tlačítka jsou tři („Otevřít inzerát", „Zobrazit na mapě", „Smazat"),
        tak se musí umět zalomit: natěsnané do jedné řady by se na úzkém
@@ -280,7 +280,7 @@
         </form>
         <!-- Potvrzení po odeslání odkazu na reset hesla -->
         <div class="auth-sent" id="mi-sent" hidden>
-          <div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/><path d="m8.5 13.5 2 2 4.5-4.5" stroke="var(--copper-bright)"/></svg></div>
+          <div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/><path d="m8.5 13.5 2 2 4.5-4.5" stroke="var(--znacka-svetla)"/></svg></div>
           <h3>Odkaz je na cestě</h3>
           <p>Pokud u nás účet s adresou <b id="mi-sent-email">—</b> existuje, dorazí na něj během chvilky e-mail s odkazem pro nastavení nového hesla. Klepněte na něj a rovnou si zvolíte nové heslo.</p>
           <p class="auth-sent-note">Nepřišlo to? Mrkněte do složky <b>Spam / Hromadné</b>. E-maily chodí s malým zpožděním.</p>
@@ -392,7 +392,7 @@
              to říkají rovnou: „nepovedlo se načíst". Tady to chybělo. -->
         <div id="mi-chyba" hidden>
           <div class="pf-empty">
-            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6" stroke="var(--copper-bright)"/><path d="M12 16.5v.01" stroke="var(--copper-bright)"/></svg></div>
+            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6" stroke="var(--znacka-svetla)"/><path d="M12 16.5v.01" stroke="var(--znacka-svetla)"/></svg></div>
             <h3>Inzeráty se teď nepovedlo načíst</h3>
             <p>Spojení se serverem se nepodařilo navázat. Vaše inzeráty nikam nezmizely — zkuste to prosím za chvíli znovu.</p>
             <button type="button" class="btn-primary pf-add" id="mi-znovu">Zkusit znovu</button>
@@ -400,7 +400,7 @@
         </div>
         <div id="mi-empty" hidden>
           <div class="pf-empty">
-            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M12 14v3M10.5 15.5h3" stroke="var(--copper-bright)"/></svg></div>
+            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M12 14v3M10.5 15.5h3" stroke="var(--znacka-svetla)"/></svg></div>
             <h3>Zatím tu žádný inzerát nemáte</h3>
             <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
             <a class="btn-primary pf-add" href="pridat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Přidat pozemek zdarma</a>
@@ -524,7 +524,7 @@
             try { history.replaceState(null, '', location.pathname); } catch(e){}
             // Úspěch — přehledné potvrzení, pak rovnou do profilu
             nf.innerHTML = '<div class="auth-sent" style="border:0;padding:0;">' +
-              '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--copper-bright)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
+              '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--znacka-svetla)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
               '<h3>Heslo změněno</h3><p>Nové heslo je uložené. Za okamžik vás přihlásíme do profilu…</p></div>';
             setTimeout(function(){ show(); }, 1200);
           } else {

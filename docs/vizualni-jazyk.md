@@ -116,7 +116,7 @@ neprůhledný podklad pod nimi a měří se i místo, kde se všechny potkají.
 
 Jakmile to začalo fungovat, test rovnou zastavil první verzi meshe:
 v nejsytějším místě měl nadřádek **2,8 : 1**. Mesh se proto zesvětlil
-a úvodní plocha si uvnitř předefinuje `--copper-bright`
+a úvodní plocha si uvnitř předefinuje `--znacka-svetla`
 a `--text-ondark-mute` na tmavší tóny — **text na barevné ploše potřebuje
 vlastní tón.** Okem se to nepozná.
 

@@ -1249,7 +1249,7 @@ textu** — tedy slovo, které v liště nic neřídí: stejně barevné jako
 věta pod ním. Zelenou značku nesla jen dlaždice 29 px vedle.
 
 Teď je to **28 px na všech šířkách, prostrkání -0.03em a tmavá zeleň
-značky** (`--copper`, 8,2 : 1 na bílé liště). Rodina
+značky** (`--znacka`, 8,2 : 1 na bílé liště). Rodina
 písma se nemění — na tomhle webu dělá rozdíl mezi nadpisem a textem
 váha, velikost a prostrkání, ne druhé písmo (viz komentář
 u `--font-display`), a jméno značky má mít jedno písmo. Dlaždice
@@ -2441,7 +2441,7 @@ a bílou) zbylo **146**, a z nich byla většina legitimní:
 
 Skutečných duplikátů, tedy hodnot napsaných ručně tam, kde na ně token
 existuje, bylo **osm**: dvakrát `--c-warn`, dvakrát `--surface-2`,
-dvakrát `--ink-dark`, jednou `--copper`, jednou `--c-ok-ink`. Všech
+dvakrát `--ink-dark`, jednou `--znacka`, jednou `--c-ok-ink`. Všech
 osm je nahrazeno.
 
 **Poučení je o měření, ne o barvách:** „266 hexů" je údaj, který zní

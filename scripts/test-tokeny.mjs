@@ -96,10 +96,11 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
 
 /* --- Bílý text na plné ploše musí být čitelný ----------------------- */
 /* PRAVIDLO SE PŘESTAVĚLO, PROTOŽE JEHO DŮVOD ZMIZEL.
-   Původně tu stálo: „--copper a --copper-bright se nesmí používat jako
+   Původně tu stálo (token se tehdy jmenoval --copper): „--znacka
+   a --znacka-svetla se nesmí používat jako
    plocha pod bílým písmem, protože se mezi režimy obracejí — ve světlém
    tmavá zelená, v tmavém světlá máta, a bílá na mátě dává 1,82 : 1."
-   To platilo, dokud web měl tmavý režim. Nemá. --copper je dnes vždycky
+   To platilo, dokud web měl tmavý režim. Nemá. --znacka je dnes vždycky
    #0F5C3B a bílá na něm dává 8,03 : 1, takže ten zákaz by od teď
    zakazoval něco, co je v pořádku — a to je horší než žádné pravidlo.
 
