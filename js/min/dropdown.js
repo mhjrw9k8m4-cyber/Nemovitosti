@@ -2,6 +2,11 @@
   function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
   ready(function () {
     var opened = null, poradiPanelu = 0;
+
+    var IKONY = {
+
+      razeni: '<path d="M6 4v15"/><path d="M3 16l3 3 3-3"/><path d="M12 6h9M12 12h6.5M12 18h4"/>'
+    };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -57,6 +62,13 @@
       btn.type = 'button'; btn.className = 'map-select cdd-btn';
       btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false');
       if (sel.getAttribute('aria-label')) btn.setAttribute('aria-label', sel.getAttribute('aria-label'));
+      var ikJm = sel.getAttribute('data-ikona');
+      if (ikJm && IKONY[ikJm]) {
+        var ik = document.createElement('span');
+        ik.className = 'mcn-ic'; ik.setAttribute('aria-hidden', 'true');
+        ik.innerHTML = '<svg viewBox="0 0 24 24">' + IKONY[ikJm] + '</svg>';
+        btn.appendChild(ik);
+      }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);
       root.appendChild(btn);
 

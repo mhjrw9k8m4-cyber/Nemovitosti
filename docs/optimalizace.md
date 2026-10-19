@@ -2009,3 +2009,225 @@ Sabotáž (vrácení jednoho zaoblení na 10 px) kontrolu shodí, takže to
 pokrytí není naoko. Čtrnáct dalších zkoušek, kterých se ty stránky
 týkají, prošlo beze změny; vložený styl šablony je po přidaných
 komentářích na 40,6 kB proti stropu 41 kB.
+
+## 28. Ořízlý nápis, neviditelná záložka a hlavní akce, která nebyla vidět *18. 10.*
+
+Majitel poslal snímek řady nad výpisem a tři věty: že je to graficky
+špatně, že „procházet po jednom je jedna z hlavních věcí na webu, takže
+by to mělo být nějak vidět", a že má být **u všeho ikonka**. Všechno
+trojí šlo změřit.
+
+### Co bylo naměřeno
+
+| věc | naměřeno | kde |
+|---|---|---|
+| nápis „Obec, druh, cena…" | **145 px** textu do **135 px** místa | 390 px |
+| řada hledání + přepínač | **331 px** do **300 px** šířky | 320 px |
+| záložka v „Uložené" | **0 × 0 px** | 561 px a výš |
+| lupa v poli hledání | **18 px**, ostatní značky 16 | všude |
+| přepínač Seznam / Mapa | **46 px** vysoký, sousedé 44 | dotyk |
+| „Procházet po jednom" | táž bílá plocha jako sousedé | všude |
+
+První řádek je ten, který majitel vyfotil: nápis končil uprostřed slova
+„cena". Druhý je horší a nebyl vidět vůbec — na 320px displeji se
+přepínač do řady nevešel, a protože se zúžit nesmí (`flex:0 0 auto`),
+**slovo „Mapa" leželo za okrajem obrazovky**. Stránkou to přitom nešlo
+posunout, takže na to nevedla žádná cesta.
+
+### Záložka, která v CSS „byla", a na obrazovce nebyla
+
+Ikonu do „Uložených" vkládá `js/main.js` (BM_SVG) a v její značce není
+ani `width`, ani `height`. Velikost jí dával stylopis — ale **jen
+v bloku pro telefon** (do 560 px). Od 561 px výš tedy měřila 0 × 0 px:
+tlačítko „Uložené" nemělo na tabletu ani na monitoru žádnou značku, jen
+text. V oddílu 26 je popsaný opačný extrém téže chyby (110 × 110 px
+a černá); tohle je ta tichá polovina, která vydržela o den déle, protože
+nula nikoho netrkne. Míra se proto říká **jednou pro všechny šířky**.
+
+### Co se změnilo
+
+* **Nápis se vejde.** Lupa je blíž ke kraji (14 → 12 px) a odsazení
+  zprava menší (14 → 10 px), přepínač užší (173 → **161 px**, menší
+  výplň a mezera). Z 135 px místa je **155** proti 145px nápisu.
+* **Pod 360 px se řada dělí na dva řádky** — pole přes celou šířku
+  a pod ním přepínač jako dvě záložky. Na první obrazovce to nic
+  nestojí: zkoušky prvního dojmu měří 390 px, kde řada zůstává
+  jednořádková.
+* **Linka přepínače je `outline`, ne `border`.** Okraj 1 px nahoře
+  i dole dělal ze 44px tlačítek 46px ovladač, tedy o dva víc než
+  u všech sousedů. `outline` s `outline-offset:-1px` vypadá stejně,
+  ale do rozměru se nepočítá a dotykový terč zůstává 44 px. **Našla to
+  až rozšířená zkouška**, ne oko — rozdíl dvou pixelů v jedné řadě
+  nikdo nevidí, a přesně proto se měří.
+* **Značka u každého ovladače.** Pět nových: stahování (šipka do
+  přihrádky), hodiny u dražeb po termínu, lupa s plusem u podobných
+  názvů, oko a přeškrtnuté oko u skrytých, šipka s čárami u řazení.
+  Kreslí se do viewBoxu 24, velikost i tah dává jedno pravidlo
+  (`.mcn-ic`), takže jsou všechny 16 px a tah 1,5 px na obrazovce.
+  Značka řazení se bere z `data-ikona` na `<select>`, aby o ní
+  rozhodovala stránka, ne obsluha rozbalovátka.
+* **Hlavní akce je vidět.** „Procházet po jednom" má zelenou plochu
+  a bílý nápis — týž jazyk, jakým web říká „zapnuto" u filtrů.
+  **Velikost zůstává stejná** jako u sousedů; to si majitel vymohl
+  o zprávu dřív a hlídá se to dál.
+* **Jeden tvar i na monitoru.** „Uložené" bylo pilulka (`--r-pill`) bez
+  plochy vedle bílých obdélníků s `--r-ovladani`; telefon to měl
+  srovnané už dřív, teď to platí pro všechny šířky. Nářadí mělo
+  `background:none`, ačkoli jeho vlastní komentář sliboval bílou.
+
+### Zkouška
+
+`scripts/test-ovladani-vypisu.mjs` vyrostla ze 16 na **26 kontrol**.
+Nové hlídají, že každý ovladač má vykreslenou značku (ne značku
+v kódu — nula se počítá jako „není"), že všechny značky mají tutéž
+míru, že hlavní akce má jinou a **plnou** plochu než sousedé a že se
+nápis v poli hledání vejde celý.
+
+Šest sabotáží, každá vrácením jedné změny:
+
+| sabotáž | shodila |
+|---|---|
+| odebraná značka u „Stáhnout výběr" | značku u každého ovladače |
+| lupa zpátky na 18 px | tutéž míru značek |
+| hlavní akce bez plochy | jinou plochu než sousedé |
+| hlavní akce poloprůsvitná | plnou barvu, ne průhledno |
+| větší odsazení v poli hledání | nápis se vejde celý |
+| `outline` zpátky na `border` | jednu výšku v řadě |
+
+Každá trefila právě tu kontrolu, kvůli které vznikla. Sabotáž
+s odsazením shodila jen jednu ze dvou šířek — na 320 px je řada
+rozdělená na dva řádky, takže tam pole má místa dost. Je to správně
+a stojí to za zapsání: jedna kontrola na dvou šířkách nejsou dvě
+nezávislé kontroly.
+
+### Co na to řekla vlastní pravidla webu
+
+Plná sada pak shodila **čtyři** další zkoušky — a všechny čtyři měly
+pravdu. Stojí za vypsání, protože ani jednu z nich by oko nenašlo:
+
+* **`test-odstupy`:** nová čísla 36, 7 a 5 px nebyla na stupnici odstupů.
+  Opraveno na 32, 6 a 4 — stupnice má cenu jen potud, pokud se kvůli
+  jednomu místu nerozšiřuje. (Řada se tím nezhoršila: pole má teď
+  165 px vnitřku na 145px nápis, tedy ještě o čtyři víc než předtím.)
+* **`test-zaobleni`:** zapnutá půlka přepínače má zaoblení 0, kdežto
+  pravidlo zní „co se ovládá, má `--r-ovladani`". Je to ale půlka
+  SLOŽENÉHO ovladače: zaoblení nese obal a ořezává jím obsah, a se
+  čtrnáctkou uvnitř by se zelená půlka zakulatila i na vnitřní straně.
+  Zkouška se proto naučila jednu úzkou výjimku — nula projde jen tehdy,
+  když rodič má `--r-ovladani` **a zároveň** ořezává. Bez té druhé
+  podmínky by stačilo cokoli zabalit do zakulaceného divu.
+* **`test-okraje`:** „Uložené" a řazení zůstaly na telefonu bílé na
+  skoro bílém pozadí (1,09 : 1) **bez okraje**. Nebyl to záměr: při
+  sabotáži předtím vrátil hromadný `replace` v Pythonu linku na dvou
+  místech místo jednoho a přepsal i pravidlo, kterého se netýkal. Je to
+  poučení o metodě — sabotáž se musí vracet obnovením souboru, ne
+  zpětnou záměnou řetězce, protože ten se trefí i jinam.
+* **`test-hierarchie`:** sytou značkovou plochu smí na úvodní stránce
+  nést nejvýš tři akce a „Procházet po jednom" byla čtvrtá. Zkouška
+  k tomu rovnou říká, co se má stát: *rozhodněte, co je hlavní, místo
+  zvedání stropu.* Ustoupila výzva v prázdném stavu „Pozemky od lidí" —
+  ukazuje se, jen dokud žádný vložený pozemek není, stojí v čárkovaném
+  boxu a vede na „Přidat pozemek", tedy na totéž co trvalé tlačítko
+  v hlavičce. Dvakrát tatáž akce v plné zeleni je přesně to, čemu ten
+  strop brání; výzvou být nepřestala, jen je teď obrysem.
+
+Strop se tedy nezvedl. Zelená plocha na úvodní stránce zůstává na
+třech a nese ji: tlačítko v hlavičce, „Zobrazit N pozemků" pod filtry
+a nově „Procházet po jednom".
+
+### A jedna červená, která s tím nesouvisela
+
+`test-zlevnene-filtr` hlídá, jestli se vyplatí stahovat
+`data/zlevneni.json`: archiv zná celou historii cen, poslední běh
+robota jen změny proti včerejšku. Měřil to **podílem** — archiv musí
+dodat víc než polovinu všech nalezených změn — a ten podíl spadl na
+49 %. Změřeno den po dni z historie repozitáře:
+
+| den | archiv | z běhu | podíl |
+|---|---|---|---|
+| 14. 10. | 38 | 25 | 60 % |
+| 15. 10. | 38 | 27 | 58 % |
+| 16. 10. | 39 | 30 | 57 % |
+| 17. 10. | 41 | 30 | 58 % |
+| 18. 10. | 40 | **42** | **49 %** |
+
+Archiv je celé to období klidný (38–41, roste s počtem klíčů 69 → 76).
+Co se zdvojnásobilo, je běh robota: 25 → 42. Podíl tedy spadl pod
+polovinu, **aniž archiv o cokoli zeslábl**. Je to přesně tentýž hod
+mincí, jaký ta zkouška v komentáři vytýká své ještě starší podobě
+(„archiv dodal aspoň dvakrát tolik co běh" padlo na rovných 2,0).
+
+Měří se proto nově **absolutní počet změn, o které by se bez archivu
+přišlo** — na jmenovateli nezávisí a odpovídá přesně na tu otázku,
+kvůli které zkouška vznikla. Mez je 30, tedy pod naměřeným pásmem
+38–41 s rezervou, ale dost vysoko, aby kousla, kdyby archiv spadl na
+polovinu. Podíl se dál vypisuje do hlášky, takže je posun vidět i ve
+chvíli, kdy kontrola projde. Sabotáž (archiv zkrácený na dvanáct klíčů)
+ji shodí: „bez archivu by chybělo 7 změn z 49 (14 %)".
+
+## 29. Vysvětlivky k mapě byly psané nejmenším písmem na webu *18. 10.*
+
+Majitel poslal snímek telefonu s pruhem pod mapou: *„dole je jen malý
+nápis co je co, chtělo by to výraznější text, aby věděli, co ty barvy
+znamenají."* Naměřeno na 390 px, jak to bylo:
+
+| co | naměřeno | proč to vadí |
+|---|---|---|
+| písmo legendy | **12 px** | nejmenší stupeň, jaký web má — a to u jediného místa, kde se barvy vysvětlují |
+| tečky | **10–12 px** | při téhle velikosti splývá kosočtverec (dražba) s trojúhelníkem (exekuce) |
+| šířka pruhu | **304 z 390 px** | `max-width:calc(100% - 86px)` |
+| nadpis | **žádný** | řádek čtyř slov s puntíky; nikde není řečeno, že je to klíč k mapě |
+
+Ta `max-width` je nejzajímavější: **je to pozůstatek po stěhování.**
+Legenda dřív PLAVALA nad mapou a musela uhýbat sloupci ovladačů vpravo —
+proto si ubírala 86 px. Když se přestěhovala pod mapu (oddíl v tomhle
+souboru o tom, že plovoucí legenda ukusovala 7 % plochy mapy), mez
+zůstala. Pod mapou nemá čemu uhýbat a text se kvůli ní lámal na dva
+řádky, i když místo bylo.
+
+**Teď:** 13 px na telefonu a 14 na monitoru, tečky 14 px, plná šířka
+a nadpis **„CO ZNAMENAJÍ ZNAČKY"** (při barvení podle ceny „CO ZNAMENAJÍ
+BARVY" — legenda se mění s režimem, tak se s ním mění i nadpis). Nadpis
+mluví týmž hlasem jako ostatní drobné popisky webu (`--popisek-proklad`,
+verzálky, strojopis), takže nepřibyl patnáctý styl pro totéž.
+
+Nadpis se přidává **až k hotovému obsahu**, ne na začátku: když v datech
+není ani jeden druh, legenda zůstane prázdná a `.map-legend:empty` ji
+schová. Se samotným nadpisem by se pruh ukázal a nevysvětloval nic.
+
+Hlídá to `scripts/test-tvary.mjs` (17 kontrol místo 13): měří se **na
+telefonu**, protože tam je místa nejmíň a tam to majitel vyfotil —
+velikost písma, velikost teček, plná šířka pruhu i přítomnost nadpisu.
+Čtyři sabotáže (zmenšit písmo, zmenšit tečky, vrátit `max-width`,
+odebrat nadpis) shodí každá právě svou kontrolu.
+
+## 30. Zkouška, která stála na tom, co zrovna vynese denní zamíchání *19. 10.*
+
+`test-rychly-prohlizec` spadla přes noc, aniž se čehokoli v jejím oboru
+dotkl. Příčina: skládá si klíč poznámky z toho, co karta **ukazuje** —
+schválně, aby neopisovala implementaci. Jenže u pozemku **bez výměry**
+to nejde: klíč je pak `pkey` + `#v0` + otisk druhu (`js/klic.js`) a ten
+otisk na obrazovce nikde není. Zkouška brala prostě první kartu, a která
+to je, rozhoduje denní zamíchání „Doporučených". Dnes vyšla Hrabová
+s výměrou 0 a hlášení znělo:
+
+    ✕ karta ukazuje výměru, ze které se klíč skládá
+        karta Hrabová|—|Ostrava-město|49.767|18.282, výměra 0
+    ✕ a uloží se pod klíč TÉ karty
+        uloženo pod ["…#v0dprbxqq"]
+
+**V aplikaci nebylo nic špatně** — poznámka se uložila přesně pod ten
+klíč, pod který patří. Špatně bylo to, že zkouška sama neuměla klíč
+poskládat, a tvářila se, že našla vadu.
+
+Dobře na tom je jedna věc: **autor s tou možností počítal** a napsal si
+přímo nad kontrolu „PŘEDPOKLAD: kdyby karta výměru neukazovala, složil
+by se klíč `#v0` a kontrola níž by prošla na náhodě". Proto zkouška
+spadla hlasitě, místo aby mlčky prošla na nesprávném klíči. Tohle je ten
+rozdíl mezi křehkou a tichou zkouškou: křehká otravuje, tichá lže.
+
+Opraveno dolistováním: hledá se mezi **prvními deseti** kartami ta
+s výměrou. Kdyby žádná taková nebyla, řekne se to rovnou — mlčky měřit
+dál by znamenalo prohlásit za ověřené něco, co ověřené není. Kontrola
+klíče zůstává, co byla: sabotáž `klicPozemku` (klíč o jedničku vedle)
+ji shodí.

@@ -107,6 +107,19 @@ for (const s of STRANKY) {
         const maOkraj = parseFloat(c.borderTopWidth) > 0 && c.borderTopStyle !== 'none';
         if (!maPlochu && !maOkraj) continue;
         const rad = parseFloat(c.borderTopLeftRadius) || 0;
+        /* PŮLKA SLOŽENÉHO OVLADAČE ZAOBLENÍ MÍT NESMÍ.
+           Přepínač Seznam/Mapa je jeden ovladač rozdělený vlasovou
+           čarou na dvě půlky: zaoblení nese OBAL a ořezává jím obsah
+           (overflow:hidden), takže vnitřní tlačítka musí mít nulu —
+           se čtrnáctkou by se zapnutá zelená půlka zakulatila i na
+           vnitřní straně a od dělicí čáry by ji oddělil bílý půlměsíc.
+           Vidět je tedy zaoblení obalu, a to pravidlo splňuje. Výjimka
+           je úzká schválně: nula projde JEN tehdy, když rodič má
+           --r-ovladani a zároveň ořezává. Bez té druhé podmínky by
+           stačilo cokoli zabalit do zakulaceného divu. */
+        const ro = e.parentElement ? getComputedStyle(e.parentElement) : null;
+        if (rad === 0 && ro && ro.overflow === 'hidden'
+          && Math.abs((parseFloat(ro.borderTopLeftRadius) || 0) - (token || 14)) < 0.51) continue;
         const pilulka = rad >= r.height / 2 - 0.5;
         const jmeno = (typeof e.className === 'string' && e.className.trim())
           ? e.className.trim().split(/\s+/)[0] : e.tagName.toLowerCase();

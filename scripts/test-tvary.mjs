@@ -108,6 +108,58 @@ pravda('tvary v legendě se navzájem liší',
   new Set(legenda.map((l) => l.tvar)).size === legenda.length,
   JSON.stringify(legenda.map((l) => l.tvar)));
 
+/* --- 2b) A JE TA LEGENDA VŮBEC ČITELNÁ? ------------------------------
+   Tvar v legendě je k ničemu, když ho nikdo nepřečte. Majitel poslal
+   snímek telefonu s větou „dole je jen malý nápis co je co, chtělo by
+   to výraznější text, aby věděli, co ty barvy znamenají" — a měl pravdu
+   na milimetr: naměřeno 12px písmo (nejmenší stupeň na webu), tečky
+   10–12 px a max-width, která legendě ubírala 86 px z 390. Hlídá se
+   proto i VELIKOST, ne jen přítomnost.
+   Měří se na TELEFONU, protože tam je místa nejmíň a tam to taky
+   majitel vyfotil. */
+{
+  const tel = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const tp = await tel.newPage();
+  await tp.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await tp.waitForTimeout(2600);
+  // Na telefonu se začíná seznamem; legenda je u mapy.
+  await tp.evaluate(() => { const b = document.querySelector('.mvt-btn[data-mv="mapa"]'); if (b) b.click(); });
+  await tp.waitForTimeout(1600);
+  const lg = await tp.evaluate(() => {
+    const e = document.getElementById('map-legend');
+    if (!e) return null;
+    const cs = getComputedStyle(e);
+    const r = e.getBoundingClientRect();
+    const rodic = e.parentElement.getBoundingClientRect();
+    const tecky = [...e.querySelectorAll('.lg-dot')].map((d) => Math.round(d.getBoundingClientRect().width));
+    const nad = e.querySelector('.lg-nadpis');
+    return { pismo: parseFloat(cs.fontSize), vaha: parseInt(cs.fontWeight, 10),
+      sirka: Math.round(r.width), rodicSirka: Math.round(rodic.width),
+      tecky, nadpis: nad ? nad.textContent.trim() : null };
+  });
+  pravda('legenda se na telefonu vůbec vykreslila', !!lg, 'prvek #map-legend nemá rozměr');
+  if (lg) {
+    /* Třináct je nejmenší stupeň, jakým na tomhle webu mluví ovládání
+       (viz řada nad výpisem). Vysvětlivky k mapě nesmějí být menší. */
+    pravda('legenda má aspoň 13px písmo', lg.pismo >= 13, 'má ' + lg.pismo + ' px');
+    /* Tvar se pozná od tvaru až od určité velikosti: při deseti
+       pixelech splývá kosočtverec s trojúhelníkem. */
+    pravda('a tečky v ní mají aspoň 13 px', lg.tecky.length > 0 && Math.min(...lg.tecky) >= 13,
+      'nejmenší má ' + (lg.tecky.length ? Math.min(...lg.tecky) : '—') + ' px');
+    /* Legenda leží POD mapou a nemá čemu uhýbat. Když si někdo zase
+       vzpomene na max-width z dob, kdy plavala nad ní, text se zbytečně
+       láme a majitel pošle další snímek. */
+    pravda('a bere celou šířku pruhu pod mapou', lg.sirka >= lg.rodicSirka - 1,
+      lg.sirka + ' px z ' + lg.rodicSirka + ' px');
+    /* Bez nadpisu je to řádek slov s puntíky a nikde není řečeno,
+       že je to klíč k mapě. */
+    pravda('a má nadpis, který říká, co to je', /^Co znamenaj/.test(lg.nadpis || ''),
+      'nadpis: ' + JSON.stringify(lg.nadpis));
+  }
+  await tel.close();
+}
+
 // --- 3) Jádro: opravdu se ty tvary na plátno kreslí? ------------------
 // Přečteme pixely kolem bodu a porovnáme, kolik barvy je v horní a v dolní
 // desetině výšky tvaru. Trojúhelník má nahoře špičku a dole základnu, takže

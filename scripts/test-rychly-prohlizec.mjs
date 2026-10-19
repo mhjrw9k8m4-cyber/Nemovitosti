@@ -254,7 +254,7 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
      (window.PKKlic.klicPozemku), stejně jako to skládá scripts/test-poznamky.mjs.
      Dokud se tu čekal hrubý klíč, zkouška hlásila vadu, která v aplikaci
      není. */
-  const karta = await p.evaluate(() => {
+  const prectiKartu = () => p.evaluate(() => {
     const k = (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '';
     let v = 0;
     for (const el of document.querySelectorAll('#rv-karta .rv-cislo')) {
@@ -264,6 +264,23 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
     }
     return { pk: k, vymera: v };
   });
+  /* DOLISTUJEME KE KARTĚ S VÝMĚROU, MÍSTO ABYCHOM BRALI PRVNÍ.
+     Tahle část skládá klíč z toho, co karta UKAZUJE, aby neopisovala
+     implementaci. U pozemku BEZ výměry to ale nejde: klíč je pak
+     pkey + „#v0" + otisk druhu (js/klic.js), a otisk na obrazovce
+     nikde není. Dokud se brala prostě první karta, záleželo to na
+     tom, kterou nabídku zrovna vynese denní zamíchání „Doporučených"
+     — 19. 10. vyšla Hrabová s výměrou 0 a zkouška spadla na tom, že
+     sama neumí poskládat klíč, ne na vadě v aplikaci.
+     Hledá se proto mezi prvními deseti karta s výměrou. Když by žádná
+     taková nebyla, řekne se to rovnou — mlčky měřit dál by znamenalo
+     prohlásit za ověřené něco, co ověřené není. */
+  let karta = await prectiKartu();
+  for (let i = 0; i < 10 && !(karta.vymera > 0); i++) {
+    await p.keyboard.press('ArrowRight');
+    await p.waitForTimeout(260);
+    karta = await prectiKartu();
+  }
   /* HRUBÝ klíč slouží jen k poznání, že je to táž karta; poznámka se
      ukládá pod složený. */
   const pkHrube = karta.pk;

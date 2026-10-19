@@ -130,7 +130,7 @@
        skript se bez „L" nedostal přes start. Člověk viděl prázdnou
        stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=29032acf">
+  <link rel="stylesheet" href="css/uvod.min.css?v=9d43f1fc">
 </head>
 <body>
 
@@ -233,9 +233,13 @@
                tedy sto pixelů na dva ovladače, z nichž jeden má dvě
                polohy. Velké realitní weby mají mapu jako IKONU vedle
                hledání, ne jako pruh pod ním. Vedle sebe se vejdou:
-               358 px vnitřní šířky minus 104 px přepínače nechává poli
-               254 px, do kterých se text „Obec, druh, cena…" vejde celý
-               (naměřeno 150 px).
+               z 370 px řady bere přepínač 155 a poli zbývá 201, z toho
+               165 px vnitřku — nápis „Obec, druh, cena…" měří 145 px,
+               takže se vejde celý i se značkami v přepínači.
+               POD 360 px UŽ NE: tam má řada 300 px a dvojice by
+               potřebovala 313, takže se dělí na dva řádky (stylopis,
+               blok u 360 px). Dřív se nedělila a slovo „Mapa" leželo
+               za okrajem obrazovky.
                Přepínač NESMÍ do pruhu s výsledky, ačkoli tam patří
                významem: .map-app:not(.mv-seznam) .map-side{display:none}
                ho schovává spolu se seznamem, takže by po přepnutí na
@@ -468,7 +472,7 @@
               <button type="button" class="mc-prep msv-ulozene" id="map-fav" aria-pressed="false"><span class="mcp-v" aria-hidden="true"></span>Uložené</button>
               <label class="msv-razeni">
                 <span class="visually-hidden">Seřadit výsledky</span>
-                <select class="map-select" id="map-sort" aria-label="Řazení příležitostí">
+                <select class="map-select" id="map-sort" data-ikona="razeni" aria-label="Řazení příležitostí">
                   <!-- „denně se střídá" stálo tady v závorce a bylo to
                        jediné místo na webu, kde se to přiznávalo — jenže
                        v zavřeném rozbalovači se text ořízl a přečetl ho
@@ -844,7 +848,7 @@
 <script src="js/min/cisteni.js?v=e1a692c2"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=68e6addb" defer></script>
-<script src="js/min/dropdown.js?v=1746af15" defer></script>
+<script src="js/min/dropdown.js?v=ec6c64b8" defer></script>
 <script src="js/min/snimek.js?v=6bead750" defer></script>
 <script src="js/min/terminy.js?v=cf102557" defer></script>
 <!-- STAŽENÍ VÝBĚRU. Dřív to bylo jedno klepnutí a hned soubor: tabulka
@@ -964,7 +968,7 @@
      člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
 <script src="js/min/poznamky.js?v=96f9b539"></script>
 <script src="js/min/mapove-vrstvy.js?v=3aa2d8b2" defer></script>
-<script src="js/min/main.js?v=a469cf62" defer></script>
+<script src="js/min/main.js?v=df857a72" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

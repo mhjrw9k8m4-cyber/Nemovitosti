@@ -189,6 +189,34 @@
      stránky pozemku", našel tabulku diakritiky. */
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+  /* ZNAČKY OVLADAČŮ NAD VÝPISEM.
+     Majitel webu: „udělej speciální ikonky u všeho" — každé políčko
+     v té řadě má svou značku, aby se od sousedů poznalo dřív, než se
+     přečte nápis. Kreslí se do viewBoxu 24 bez výplně; tah, velikost
+     i barvu dává stylopis (.mcn-ic v css/styles.css), takže jsou
+     všechny stejně tlusté a stejně velké.
+     Značka NIKDY nestojí sama — nápis zůstává u každé z nich. */
+  var IKONY_NASTROJU = {
+    // Dvě karty za sebou: jedna nabídka přes celou obrazovku, pak další.
+    rychly: '<path d="M8 3h11a2 2 0 0 1 2 2v11"/><rect x="3" y="7" width="14" height="14" rx="2"/>',
+    // Šipka dolů do přihrádky — stahování souboru, jak to zná každý.
+    vyvoz: '<path d="M12 3v10"/><path d="M8 10l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+    // Hodiny: dražby po termínu, tedy věc, které vypršel čas.
+    prosle: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/>',
+    // Lupa s plusem: ukázat i to, co je hledanému názvu jen podobné.
+    podobne: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M19.5 19.5l-4.1-4.1"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/>',
+    // Oko: odkryjeme skryté nabídky.
+    odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+    // Přeškrtnuté oko: zase je schováme.
+    zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
+  };
+  /* Značka se vrací jako hotový kus značkování, ať je na všech čtyřech
+     místech stejná — i ten obal s aria-hidden. */
+  function ikonaNastroje(jmeno) {
+    var d = IKONY_NASTROJU[jmeno];
+    if (!d) return '';
+    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' + d + '</svg></span>';
+  }
   // Stabilní klíč pozemku — pro oblíbené i sdílení odkazu.
   //
   // Dřív to bylo jen místo|parcela|okres. Jenže parcelní číslo zná jen menšina
@@ -4322,6 +4350,13 @@
   /* LEGENDA SE MUSÍ MĚNIT S REŽIMEM BARVY. Kdyby zůstala u druhů,
      zatímco tečky barví cena, popisovala by něco, co na mapě není —
      a to je horší než nemít legendu vůbec. */
+  /* NADPIS NAD VYSVĚTLIVKAMI. Bez něj je to řádek čtyř slov s puntíky
+     a nikde není řečeno, že je to klíč k mapě — majitel na to ukázal
+     na snímku telefonu. Zní podle toho, co se zrovna barví: u druhů
+     „značky" (liší se i tvarem), u ceny „barvy". */
+  function nadpisLegendy(cena) {
+    return '<span class="lg-nadpis">Co znamenají ' + (cena ? 'barvy' : 'značky') + '</span>';
+  }
   function prekresliLegendu() {
     if (!legendEl) return;
     if (rezimBarvy === 'cena') {
@@ -4329,7 +4364,8 @@
       for (var i = 0; i <= 4; i++) {
         kusy += '<span class="lg-dot" style="background:' + barvaCeny(i / 4) + '"></span>';
       }
-      legendEl.innerHTML = '<span class="lg-item">levné ' + kusy + ' drahé</span>'
+      legendEl.innerHTML = nadpisLegendy(true)
+        + '<span class="lg-item">levné ' + kusy + ' drahé</span>'
         + '<span class="lg-item"><span class="lg-dot" style="background:#8A9A92"></span>cena za m² neznámá</span>';
       return;
     }
@@ -4342,7 +4378,11 @@
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot tv-' + (TVAR[tp] || 'kruh') + '" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do ' + DNI_KONCI + ' dní</span>';
-    legendEl.innerHTML = lh;
+    /* Nadpis se přidává AŽ TADY, ne na začátku: `lh` zůstává prázdné,
+       když v datech není ani jeden druh, a prázdnou legendu schovává
+       `.map-legend:empty`. Se samotným nadpisem by se ten pruh ukázal
+       a nevysvětloval by nic. */
+    legendEl.innerHTML = lh ? (nadpisLegendy(false) + lh) : '';
   }
   prekresliLegendu();
 
@@ -5935,6 +5975,7 @@
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
+      ikonaNastroje(ukazSkryte ? 'zakryt' : 'odkryt') +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
     /* Kolik dražeb po termínu se právě nepočítá. Počítá se přes filtry bez
        okolí a bez tohoto pravidla, ať to číslo odpovídá tomu, co by se
@@ -5961,6 +6002,7 @@
        Stav „Schovat dražby po termínu" (178 px) se vedle vývozu vejde
        taky. Hlídá scripts/test-prvni-obrazovka.mjs. */
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
+      ikonaNastroje('prosle') +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
     /* Kolik podobných názvů se právě nepočítá. Musí to být vidět:
@@ -5980,6 +6022,7 @@
       } finally { ukazPodobne = false; }
     }
     if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
+      ikonaNastroje('podobne') +
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
     /* ČÍSLA SE PÍŠOU JEDNÍM ZPŮSOBEM. V hlavičce stránky stálo
@@ -5992,8 +6035,8 @@
        stahuje se právě to, co je vyfiltrované, ne celá databáze. */
     /* „Stáhnout výběr", ne „tabulku": dá se stáhnout i jako body do
        navigace, takže by slovo tabulka slibovalo jen půlku. */
-    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">Stáhnout výběr ('
-      + fmt(matched) + ')</button>';
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">'
+      + ikonaNastroje('vyvoz') + 'Stáhnout výběr (' + fmt(matched) + ')</button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     /* RYCHLÝ VÝBĚR JE ZPÁTKY PILULKA — A TENTOKRÁT SPRÁVNĚ.
@@ -6010,9 +6053,7 @@
        okénko hned po otevření (#rv-uvod v index.html) — tedy dřív, než
        člověk první nabídku odsvihne. */
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
-      + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
-      + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
-      + 'Procházet po jednom</button>' + tlacitka;
+      + ikonaNastroje('rychly') + 'Procházet po jednom</button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
@@ -7061,9 +7102,20 @@
     if (!items.length) {
       // Prázdný stav rovnou s tlačítkem — a schováme zdvojený CTA box níž.
       wrap.className = 'odl-wrap odl-empty reveal is-visible';
+      /* OBRYS, NE PLNÁ ZELEŇ — A JE TO ROZHODNUTÍ, NE ÚSTUPEK.
+         Web si sám klade strop: sytou značkovou plochu smí na úvodní
+         stránce nést nejvýš tři akce (scripts/test-hierarchie.mjs).
+         Obsazené byly tlačítko v hlavičce, „Zobrazit N pozemků" pod
+         filtry a tohle. Když majitel řekl, že „Procházet po jednom" je
+         jedna z hlavních věcí na webu, musela jedna ze tří ustoupit —
+         a tahle je nejslabší ze všech: je to PRÁZDNÝ STAV (ukazuje se,
+         jen dokud žádný vložený pozemek není), stojí v čárkovaném boxu
+         a vede na „Přidat pozemek", tedy na totéž, co nese trvalé
+         tlačítko v hlavičce. Dvakrát tatáž akce v plné zeleni je přesně
+         to, čemu ten strop brání. Výzvou být nepřestala, jen obrysem. */
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
         '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
-        '<a href="pridat.html" class="btn-primary odl-empty-btn">Přidat pozemek zdarma →</a>';
+        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat pozemek zdarma →</a>';
       if (cta) cta.style.display = 'none';
       return;
     }

@@ -1670,8 +1670,14 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    případ. Na tom hlídá scripts/test-jazyk.mjs: slovník odstupů má mít
    nejvýš 22 hodnot, jinak se z návrhu stane sbírka náhodných čísel. */
 .map-search input{width:100%; background:#fff; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); padding:12px 14px 12px 40px; font-size:16px; color:#12241A; font-family:inherit; box-shadow:var(--e1);}
+/* LUPA MĚLA 18 px, OSTATNÍ ZNAČKY V ŘADĚ 16. Pole hledání stojí vedle
+   přepínače Seznam/Mapa a nad „Uloženými", řazením a nářadím — a tam
+   mají značky šestnáct. Osmnáctka tu byla jediná a v řadě to bylo
+   vidět. Tah je zapsaný v samotné značce (stroke-width="2"), což by
+   při 16 px dalo vykreslených 1,33 px místo 1,5; proto ho stylopis
+   přepisuje na 2,25, stejně jako u .mcn-ic. */
 .ms-lupa{position:absolute; left:14px; top:50%; transform:translateY(-50%);
-  width:18px; height:18px; color:var(--text-zastupny); pointer-events:none; z-index:1;}
+  width:16px; height:16px; stroke-width:2.25; color:var(--text-zastupny); pointer-events:none; z-index:1;}
 /* `:has()`, ne `~`: obecný sourozenecký selektor míří jen na prvky ZA
    polem, kdežto lupa stojí před ním. S `~` by barva nikdy nenaskočila
    a pravidlo by se jen tvářilo, že funguje. */
@@ -2076,6 +2082,29 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
 }
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
 .msv-ulozene{min-height:36px; padding:6px 12px; font-size:12px;}
+/* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST — A NA MONITORU TO BYLO
+   NULA. Ikonu tam vkládá js/main.js (BM_SVG) a v její značce není ani
+   width, ani height; velikost jí tedy musí dát stylopis. Dlouho ji
+   dostala jen na telefonu (blok u 560 px), takže od 561 px výš měřila
+   naměřeně 0 × 0 px: tlačítko „Uložené" nemělo na monitoru ŽÁDNOU
+   značku, jen text. (Na telefonu to zas jednou vyrostlo na 110 × 110
+   a černé, protože bez fill:currentColor zůstane výchozí barva — o to
+   větší důvod říct míru jednou a pro všechny šířky.)
+   Šestnáct pixelů je táž míra, jakou mají ikony v přepínači
+   Seznam/Mapa vedle. Hlídá scripts/test-ovladani-vypisu.mjs. */
+.msv-ulozene svg{flex:none; width:16px; height:16px; fill:var(--plocha-znacka);}
+/* Zapnuté „Uložené" je zelené a značka v něm bílá — stav se pozná
+   i podle ní, nejen podle plochy. */
+.msv-ulozene.on svg{fill:currentColor;}
+/* JEDEN TVAR A JEDNA PLOCHA PRO CELOU ŘADU, NE JEN NA TELEFONU.
+   .mc-prep je pilulka (--r-pill) a bez plochy, protože se používá
+   i jako odznak v panelu filtrů. V řadě nad výpisem ale stojí vedle
+   rozbalovátka řazení a nad „Procházet po jednom" — obojí bílý
+   obdélník s --r-ovladani. Naměřeno na 1280 px: pilulka 999 px vedle
+   obdélníku 14 px, jedna bez plochy a druhá bílá. Telefon to měl
+   srovnané už dřív (blok u 560 px); tady se totéž říká pro všechny
+   šířky, ať se to nerozchází podle toho, kdo se zrovna dívá. */
+.msv-ulozene{border-radius:var(--r-ovladani); background:var(--panel);}
 .msv-razeni{display:flex; min-width:0;}
 .msv-razeni .map-select{width:auto; min-width:0; max-width:210px; min-height:36px; padding:6px 28px 6px 10px; font-size:13px;}
 @media (max-width:560px){
@@ -2267,7 +2296,11 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    pointer-events zrušil, byla by přes ovládání neviditelná vrstva.
    Tahle věta je specifičtější než obě a drží to na 1×1. */
 .cdd > select.cdd-native{width:1px; height:1px; min-width:0; max-width:none; min-height:0; flex:none; padding:0;}
-.cdd-btn{display:flex; align-items:center; text-align:left;}
+.cdd-btn{display:flex; align-items:center; gap:8px; text-align:left;}
+/* Rozbalovátko si značku bere z data-ikona na <select> (js/dropdown.js).
+   Šipka vpravo zůstává tou samou šipkou jako u .map-select — značka
+   vlevo říká, ČEHO se rozbalovátko týká, ne že se rozbaluje.
+   Velikost ani tah se tu neřeší: platí .mcn-ic pro celou řadu. */
 .cdd-btn .cdd-lbl{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .cdd.open>.cdd-btn{border-color:var(--copper-bright); background:var(--ink-soft2, var(--ink-soft));}
 .cdd-panel{position:fixed; z-index:2500; display:none; padding:6px;
@@ -3099,16 +3132,35 @@ h1.uvod-nadpis{font-family:var(--font-display); font-size:var(--h1-domu); font-w
    7 % plochy mapy (naměřeno na displeji 430 px) — a zrovna dolní
    pruh mapy je místo, kam se při posouvání kouká. Pod mapou je na
    očích stejně a nic nezakrývá. */
-.map-legend{display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 14px;
-  padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft);
-  font-size:13px; font-weight:600; color:var(--text-ondark);}
+/* LEGENDA MUSÍ BÝT ČITELNÁ, JINAK NENÍ K NIČEMU.
+   Majitel poslal snímek telefonu: „dole je jen malý nápis co je co,
+   chtělo by to výraznější text, aby věděli, co ty barvy znamenají."
+   Naměřeno na 390 px, jak to bylo:
+     · písmo 12 px — nejmenší stupeň, jaký web má, a to u jediného
+       místa, které vysvětluje barvy na mapě;
+     · tečky 10–12 px, takže se kosočtverec od trojúhelníku nedal
+       rozeznat (to jsou přitom dva různé druhy nabídky);
+     · max-width:calc(100% - 86px) ubíralo 86 px šířky a legenda se
+       kvůli tomu lámala na dva řádky — ta mez zbyla z doby, kdy
+       legenda PLAVALA NAD mapou a musela uhnout ovladačům. Pod mapou
+       nemá čemu uhýbat, box měl 304 px z 390.
+   Teď: 13 px na telefonu a 14 na monitoru, tečky 14 px a plná šířka.
+   A hlavně NADPIS — bez něj je to řádek čtyř slov s puntíky a není
+   řečeno, že je to klíč k mapě. Zní podle toho, co se zrovna barví:
+   podle druhu „Co znamenají značky", podle ceny „Co znamenají barvy". */
+.map-legend{display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px 16px;
+  padding:12px; border-top:1px solid var(--line); background:var(--ink-soft);
+  font-size:14px; font-weight:600; color:var(--text-ondark);}
 .map-legend:empty{display:none;}
+/* Týž hlas, jakým mluví ostatní drobné popisky webu (viz --popisek-proklad). */
+.lg-nadpis{flex:1 1 100%; font-family:var(--font-mono); font-size:12px; font-weight:600;
+  letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek);}
 .lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
-.lg-dot{width:11px; height:11px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(20,35,28,0.16); flex:none;}
+.lg-dot{width:14px; height:14px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(20,35,28,0.16); flex:none;}
 .lg-ring{position:relative; background:var(--c-drazba);}
 .lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
 .lg-urgent{color:var(--copper-bright);}
-@media (max-width:560px){ .map-legend{font-size:12px; padding:6px 10px; gap:4px 10px; max-width:calc(100% - 86px);} .lg-dot{width:10px; height:10px;} }
+@media (max-width:560px){ .map-legend{font-size:13px; padding:10px 12px; gap:8px 14px;} .lg-dot{width:13px; height:13px;} }
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
@@ -3810,27 +3862,52 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      „Obec, druh, cena…" (naměřeno). */
   .mcp-hledani{display:flex; align-items:center; gap:8px;}
   .mcp-hledani .map-search{flex:1 1 auto; min-width:150px; position:relative;}
-  /* JEDNA VÝŠKA PRO VŠECHNO V TÉHLE ŘADĚ. Přepínač měl vlastní rámeček
-     a výplň 4 px, takže vedle 44px pole hledání stál jako 54px blok —
-     dva ovladače vedle sebe, každý jiný. Teď je to dráha bez rámečku:
-     vnější výška je přesně výška tlačítek (44 px), zaoblení totéž co
-     u pole i u pilulek (--r-ovladani) a zapnutá půlka je zelená
-     pilulka uvnitř. Dotykový terč se nezmenšil — tlačítka mají dál
-     44 px, zmizela jen výplň kolem nich. */
-  .mv-toggle{display:flex; flex:0 0 auto; gap:0; margin-top:0; background:var(--plocha-jemna);
-    border:0; border-radius:var(--r-ovladani); padding:0; overflow:hidden;}
-  /* Přepínač se zúžil, aby zbylo na pole hledání. Naměřeno: se
-     14px písmem a odsazením 11 px měřil 194 px a poli zbylo 168 —
-     jen o 18 px víc, než měří jeho vlastní nápis. S 13px písmem
-     a odsazením 8 px měří 150 px a poli zbývá 212. Výška 44 px
-     (dotykový terč) zůstává, zúžila se jen šířka. */
-  .mvt-btn{flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:0 8px; border:0; border-radius:var(--r-ovladani); background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:13px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-  /* NA TELEFONU PŘEPÍNAČ BEZ IKON. Pravidlo „ikona sama nic neřekne"
-     tu platí obráceně: popisek sám o sobě řekne všechno, ikona je
-     navíc — a stojí 40 px šířky, která chybí poli hledání. S ikonami
-     měl přepínač 174 px a do pole se nápis „Obec, druh, cena…"
-     NEVEŠEL, ořízlo ho uprostřed slova „cena" (vyfoceno). */
-  .mv-toggle .mvt-btn svg{display:none;}
+  /* LUPA BLÍŽ KE KRAJI A MENŠÍ ODSAZENÍ ZPRAVA — kvůli nápisu v poli.
+     Naměřeno na 390 px: „Obec, druh, cena…" měří 145 px a pole mu
+     dávalo 135, takže se nápis ořízl uprostřed slova „cena" (vyfotil
+     to majitel webu). Osm pixelů vlevo a čtyři vpravo mu přidají
+     dvanáct; zbytek přinese užší přepínač pod tímhle pravidlem.
+     ČÍSLA JSOU ZE STUPNICE ODSTUPŮ. První pokus psal 36 px a
+     scripts/test-odstupy.mjs ho shodil — stupnice má cenu jen potud,
+     pokud se kvůli jednomu místu nerozšiřuje. */
+  .mcp-hledani .ms-lupa{left:12px;}
+  .mcp-hledani .map-search input{padding-left:32px; padding-right:10px;}
+  /* PŘEPÍNAČ VYPADÁ JAKO POLE VEDLE NĚJ, NE JAKO ZELENÝ ŠPALEK.
+     Nejdřív měl vlastní rámeček a výplň 4 px, takže vedle 44px pole
+     stál jako 54px blok. Pak to byla šedá dráha se zelenou pilulkou —
+     a majitel na snímku ukázal, proč to nedává smysl: na bílém řádku
+     ležel šedý blok a v něm tmavě zelený špalek nalepený na kraj.
+     Teď je to JEDEN ovladač v téže kůži jako hledání (bílá, linka
+     --line-ui, --r-ovladani) rozdělený na dvě půlky vlasovou čarou;
+     zapnutá půlka je zelená a vyplní svůj díl celý. Výška 44 px
+     i dotykový terč zůstávají. */
+  /* LINKA JE OBRYS, NE OKRAJ — JINAK PŘEPÍNAČ PŘERŮSTÁ ŘADU.
+     Naměřeno: vnitřní tlačítka mají na dotykové obrazovce 44 px
+     (pravidlo u `pointer: coarse` níž) a okraj 1 px nahoře i dole
+     z toho udělal 46, kdežto pole hledání vedle a všechna políčka pod
+     ním mají 44. Zkouška test-ovladani-vypisu to ohlásila jako
+     [44,46,44,44,44,44].
+     `outline` se vykresluje stejně jako okraj (s outline-offset:-1px
+     uvnitř a po zaoblení), ale do rozměru se nepočítá — přepínač tak
+     měří přesně tolik co jeho sousedé a dotykový terč zůstává 44. */
+  .mv-toggle{display:flex; flex:0 0 auto; gap:0; margin-top:0; background:var(--panel);
+    border:0; outline:1px solid var(--line-ui); outline-offset:-1px;
+    border-radius:var(--r-ovladani); padding:0; overflow:hidden;}
+  .mv-toggle .mvt-btn + .mvt-btn{border-left:1px solid var(--line-ui);}
+  /* PŘEPÍNAČ SE ZÚŽIL, ABY ZBYLO NA POLE HLEDÁNÍ. Naměřeno na 390 px:
+     se 14px písmem a odsazením 11 px měřil 194 px a poli zbylo 168.
+     S 13px písmem, odsazením 6 px, mezerou 4 px a 16px značkami měří
+     155 px a poli zbývá 201, z toho 165 px vnitřku na 145px nápis.
+     Výška 44 px (dotykový terč) zůstává, zúžila se jen šířka. */
+  .mvt-btn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:4px; min-height:42px; padding:0 6px; border:0; border-radius:0; background:none; color:var(--text-ondark-mute); font-weight:600; font-family:inherit; font-size:13px; cursor:pointer; white-space:nowrap; transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  /* ZNAČKY V PŘEPÍNAČI. Chvíli tu bylo `display:none` s odůvodněním,
+     že popisek řekne všechno sám a značky stojí 40 px šířky, která
+     chybí poli hledání. Platilo to jen potud, pokud se šířka brala
+     přepínači. Majitel chce značku u každého ovladače v téhle řadě
+     a místo se našlo jinde: užší výplň, menší mezera a bližší lupa.
+     Naměřeno po té změně — nápis v poli má 165 px místa na 145 px
+     textu, tedy dvacet navíc i se značkami. */
+  .mv-toggle .mvt-btn svg{display:block; width:16px; height:16px; flex:none;}
   /* POČET JEN V POHLEDU NA MAPU. V seznamu stojí hned pod přepínačem
      v hlavičce výsledků, takže by tu byl podruhé a bral 50 px šířky,
      kterou potřebuje pole hledání. Na mapě žádná hlavička výsledků
@@ -3838,6 +3915,20 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      naopak jediné místo, kde se počet dá přečíst. */
   .map-app.mv-seznam .mvt-n{display:none;}
   .mvt-btn.active{background:var(--plocha-znacka); color:#fff;}
+  /* POD 360 px SE ŘADA ROZDĚLÍ NA DVĚ, PROTOŽE SE NEVEJDE.
+     Naměřeno na 320 px: řada má 300 px, pole si drží svých 150
+     (vlastní min-width) a přepínač 155 — dohromady 313, tedy o 13 px
+     víc, než se vejde (před zúžením přepínače to bylo 331 a 31). Přepínač se zúžit nemůže (flex:0 0 auto),
+     takže z něj ubyl pravý kraj a slovo „Mapa" leželo za okrajem
+     obrazovky. Na vlastním řádku je přes celou šířku a vypadá tak,
+     co to je: dvě záložky nad výpisem.
+     Na první obrazovce to nic nestojí — zkoušky prvního dojmu měří
+     390 px, kde řada zůstává jednořádková. */
+  @media (max-width:360px){
+    .mcp-hledani{flex-wrap:wrap;}
+    .mcp-hledani .map-search{flex:1 1 100%;}
+    .mv-toggle{flex:1 1 100%;}
+  }
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
@@ -6356,16 +6447,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     background:var(--panel);
     color:var(--text-ondark);
     font-size:13px; font-weight:600;}
-  /* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST. Ikonu tam vkládá
-     js/main.js (BM_SVG) a v její značce není width ani height —
-     velikost jí tedy musí dát styl. Nikdy ji nedostala: tlačítko bylo
-     úzké přesně na text, takže se ikona scvrkla na nulu a nikdo si
-     toho nevšiml. Jakmile se tlačítka srovnala na stejnou šířku,
-     místo se našlo a záložka vyrostla na 110 × 110 px přes půl řádku
-     (a černá, protože bez `fill:currentColor` zůstane výchozí).
-     Šestnáct pixelů je táž míra, jakou mají ikony v přepínači
-     Seznam/Mapa vedle. */
-  .ms-vysledky .msv-ulozene svg{flex:none; width:16px; height:16px; fill:currentColor;}
   /* Zapnuté „Uložené" zůstává zelené — to není nejednotnost, to je stav. */
   .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
   /* Pole hledání mělo 46 px proti 44 u všeho ostatního. */
@@ -6777,7 +6858,7 @@ body > footer{flex:none;}
      bílé s linkou; tyhle dvě byly šedé s linkou, takže v jedné sestavě
      stály tři různé ovladače. Shodují se teď ve všem kromě šířky:
      44 px, --r-ovladani, bílá, 13px písmo. */
-  color:var(--text-ondark); background:none; border:1px solid var(--line-ui);
+  color:var(--text-ondark); background:var(--panel); border:1px solid var(--line-ui);
   /* ZAOBLENÍ JAKO U OSTATNÍCH OVLADAČŮ V TÉŽE ŘADĚ, ne pilulka.
      Pravidlo webu zní (viz --r-ovladani výš): co se ovládá, má
      --r-ovladani; pilulka zůstává ODZNAKU (zapínatelnému filtru)
@@ -6789,8 +6870,9 @@ body > footer{flex:none;}
      to poslal na snímku a má pravdu — na výšce se shodovaly (obojí
      44 px), lišil se jen rádius. */
   border-radius:var(--r-ovladani); padding:0 12px; min-height:36px; cursor:pointer;
-  display:inline-flex; align-items:center; white-space:nowrap;
-  transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  display:inline-flex; align-items:center; gap:8px; white-space:nowrap;
+  transition:border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease),
+    background var(--cas-zakladni) var(--ease);}
 .mc-nastroj:hover{color:var(--copper); border-color:var(--copper-bright);}
 
 /* RYCHLÝ VÝBĚR: PILULKA S IKONOU, NE PRUH PŘES CELOU ŠÍŘKU.
@@ -6801,14 +6883,41 @@ body > footer{flex:none;}
    doprava a doleva, řekne úvodní okénko po otevření (#rv-uvod).
    Ikona zůstává: je to jediná pilulka v řadě, která přepíná způsob
    procházení, ne obsah výpisu. */
-.mc-rychly{gap:8px;}
-.mcr-ic{flex:none; display:flex; align-items:center; justify-content:center;
+/* ZNAČKA U KAŽDÉHO OVLADAČE, NE JEN U JEDNOHO.
+   Dlouho měl ikonu pouze „Procházet po jednom" a sousedé v téže řadě
+   („Stáhnout výběr", „Dražby po termínu", „Zobrazit skryté", řazení)
+   byly holý text — čtyři stejně velká políčka, která se od sebe daly
+   rozeznat jen přečtením. Majitel webu: „udělej speciální ikonky
+   u všeho". Značky se kreslí jednou rukou: viewBox 24, tah dává tenhle
+   stylopis, takže jsou na všech stejně tlusté.
+   IKONA NIKDY NESTOJÍ SAMA. Nápis zůstává u každé z nich; obrázek bez
+   slova se na tomhle webu neuhodne (a odečítač obrazovky by přečetl
+   prázdno — proto aria-hidden na obalu). */
+.mcn-ic{flex:none; display:flex; align-items:center; justify-content:center;
   color:var(--plocha-znacka);}
 /* TAH MUSÍ VYJÍT NA 1,5 px NA OBRAZOVCE. Ikona je kreslená do viewBoxu
    24 a zmenšuje se, takže se s ní zmenšuje i tah: vykreslený tah je
-   šířka × stroke-width ÷ 24. U 18px ikony to dělá 1,5 ÷ 18 × 24 = 2. */
-.mcr-ic svg{width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:2;
+   šířka × stroke-width ÷ 24. U 16px ikony to dělá 1,5 ÷ 16 × 24 = 2,25 —
+   táž míra i týž tah jako v přepínači Seznam/Mapa a u záložky
+   v „Uložené", aby v jedné řadě nestály tři různě velké značky. */
+.mcn-ic svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.25;
   stroke-linecap:round; stroke-linejoin:round;}
+
+/* HLAVNÍ VĚC V ŘADĚ MÁ BÝT VIDĚT NA PRVNÍ POHLED.
+   Majitel webu: „procházet po jednom je jedna z hlavních věcí na webu,
+   takže by to mělo být nějak vidět". Dosud se to od sousedů lišilo jen
+   ikonou — stejná bílá, stejná linka, stejná velikost. Velikost zůstává
+   stejná (tu si majitel vymohl o zprávu dřív a hlídá ji
+   scripts/test-ovladani-vypisu.mjs), mění se PLOCHA: zelená výplň
+   a bílý nápis, tedy týž jazyk, jakým web říká „zapnuto" u filtrů
+   a „hlavní akce" u tlačítka pod filtry. V řadě tak stojí jedno plné
+   políčko a kolem něj obtažená — pořadí důležitosti je vidět bez
+   čtení. */
+.mc-rychly{background:var(--plocha-znacka); border-color:transparent; color:#fff;
+  font-weight:700; box-shadow:var(--e1);}
+.mc-rychly .mcn-ic{color:#fff;}
+.mc-rychly:hover{background:var(--copper); border-color:transparent; color:#fff;}
+.mc-rychly:hover .mcn-ic{color:#fff;}
 
 /* NA ŠIROKÉM DISPLEJI JE VÝPIS V ÚZKÉM SLOUPCI VEDLE MAPY A LIŠTA NAD
    NÍM MU NESMÍ SEBRAT MÍSTO. Naměřeno na 1280×900: nad výpisem stálo

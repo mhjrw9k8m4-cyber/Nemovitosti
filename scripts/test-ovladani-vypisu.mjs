@@ -24,6 +24,21 @@
  * na 320 px pod sebou (dva sloupce by daly 146 px a nápisy by lezly přes
  * rámeček — taky vyfoceno). V obou případech ale platí: co je v jedné
  * řadě, má tutéž velikost.
+ *
+ * A HLÍDÁ SE JEŠTĚ TROJÍ, taky na majitelovu žádost:
+ *
+ *   1. KAŽDÝ OVLADAČ MÁ SVOU ZNAČKU („udělej speciální ikonky u všeho").
+ *      Stejně velká políčka se jinak od sebe nedají rozeznat jinak než
+ *      přečtením. Měří se skutečný rámeček značky — záložka v „Uložené"
+ *      byla od 561 px výš naměřeně 0 × 0 px, tedy neviditelná, a nikdo
+ *      si toho rok nevšiml, protože v CSS „byla".
+ *   2. „PROCHÁZET PO JEDNOM" JE VIDĚT JAKO HLAVNÍ. Majitel: „je to jedna
+ *      z hlavních věcí na webu, takže by to mělo být nějak vidět."
+ *      Velikost zůstává stejná jako u sousedů (viz výš), liší se PLOCHA:
+ *      zelená výplň proti bílé.
+ *   3. NÁPIS V POLI HLEDÁNÍ SE NESMÍ OŘÍZNOUT. „Obec, druh, cena…" měří
+ *      145 px a pole mu dávalo 135 — nápis končil uprostřed slova
+ *      „cena" (vyfoceno). Měří se šířka textu proti vnitřní šířce pole.
  */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -74,6 +89,37 @@ try {
       };
     });
 
+    /* ZNAČKY A PLOCHY. Měří se zvlášť, ať zůstane mer() nahoře krátké.
+       Značka se hledá JAKO VYKRESLENÝ RÁMEČEK, ne jako přítomnost
+       značky v kódu — přesně to byl případ záložky v „Uložené“. */
+    const z = await p.evaluate(() => {
+      const ik = (s) => { const e = document.querySelector(s); if (!e) return null;
+        const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; };
+      const plocha = (s) => { const e = document.querySelector(s); return e ? getComputedStyle(e).backgroundColor : null; };
+      const inp = document.getElementById('map-search');
+      let napis = 0, vnitrni = 0;
+      if (inp) {
+        const cs = getComputedStyle(inp);
+        const cv = document.createElement('canvas').getContext('2d');
+        cv.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+        napis = Math.ceil(cv.measureText(inp.placeholder || '').width);
+        vnitrni = Math.round(inp.getBoundingClientRect().width
+          - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+      }
+      return {
+        znacky: {
+          hledání: ik('.mcp-hledani .ms-lupa'),
+          'přepínač': ik('.mv-toggle .mvt-btn.active svg'),
+          'Uložené': ik('#map-fav svg'),
+          'řazení': ik('.ms-vysledky .msv-razeni .cdd-btn .mcn-ic svg'),
+          'Procházet po jednom': ik('#mc-rychly .mcn-ic svg'),
+          'Stáhnout výběr': ik('#mc-vyvoz .mcn-ic svg'),
+        },
+        plochy: { rychly: plocha('#mc-rychly'), vyvoz: plocha('#mc-vyvoz'), ulozene: plocha('#map-fav') },
+        napis, vnitrni,
+      };
+    });
+
     const jsou = ['hledani', 'prepinac', 'ulozene', 'razeni', 'rychly', 'vyvoz'].filter((k) => v[k]);
     // PŘEDPOKLAD: bez vykreslených ovladačů by kontroly níž prošly naprázdno
     pravda(`${sirka} px: všech šest ovladačů se vykreslilo`, jsou.length === 6,
@@ -111,6 +157,30 @@ try {
     });
     pravda(`${sirka} px: žádný nápis neleze přes rámeček`, vysyp.length === 0, vysyp.join('; '));
     pravda(`${sirka} px: a stránkou nejde pohnout do stran`, !v.pretek, 'obsah je širší než okno');
+
+    /* 1. ZNAČKA U KAŽDÉHO. Nula se počítá jako „není“ — v CSS to tak
+       dlouho vypadalo, že tam je, a na obrazovce nebylo nic. */
+    const bezZnacky = Object.keys(z.znacky).filter((k) => !z.znacky[k] || z.znacky[k].w < 12 || z.znacky[k].h < 12);
+    pravda(`${sirka} px: každý ovladač má svou značku`, bezZnacky.length === 0,
+      'bez značky: ' + bezZnacky.map((k) => k + '=' + JSON.stringify(z.znacky[k])).join(', '));
+    /* A značky jsou stejně velké. Tři různě velké obrázky v jedné řadě
+       jsou táž nejednotnost jako tři různě velká políčka. */
+    const miry = [...new Set(Object.values(z.znacky).filter(Boolean).map((x) => x.w + 'x' + x.h))];
+    pravda(`${sirka} px: a všechny značky mají tutéž míru`, miry.length === 1,
+      'míry: ' + miry.join(', '));
+
+    /* 2. HLAVNÍ AKCE SE POZNÁ BEZ ČTENÍ. */
+    pravda(`${sirka} px: „Procházet po jednom" má jinou plochu než sousedé`,
+      !!z.plochy.rychly && z.plochy.rychly !== z.plochy.vyvoz && z.plochy.rychly !== z.plochy.ulozene,
+      `rychlý ${z.plochy.rychly}, vývoz ${z.plochy.vyvoz}, uložené ${z.plochy.ulozene}`);
+    /* Plná plocha, ne průhledná — průhledné pozadí by se „lišilo" taky,
+       a přitom by nebylo vidět vůbec nic. */
+    const plny = /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(z.plochy.rychly || '');
+    pravda(`${sirka} px: a ta plocha je plná barva, ne průhledno`, plny, 'plocha: ' + z.plochy.rychly);
+
+    /* 3. NÁPIS V POLI HLEDÁNÍ. */
+    pravda(`${sirka} px: nápis v poli hledání se vejde celý`, z.napis > 0 && z.napis <= z.vnitrni,
+      `nápis ${z.napis} px, místo ${z.vnitrni} px`);
     await ctx.close();
   }
 } catch (e) {

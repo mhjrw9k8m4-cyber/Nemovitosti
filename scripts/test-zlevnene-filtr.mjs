@@ -89,21 +89,38 @@ pravda(`očekáváme ${cekano.zlevnene.length} zlevněných nabídek`, cekano.zl
 /* Kvůli čemu to celé vzniklo: poslední běh robota vidí jen změny proti
    včerejšku, archiv vidí celou historii. Kdyby archiv přestal přidávat,
    filtr je k ničemu a nemá smysl kvůli němu stahovat další soubor.
-   Měří se PODÍL na všech nalezených změnách, ne násobek běhu.
-   Násobek („archiv dodal aspoň dvakrát tolik co běh") spadl na dnešních
-   datech přesně na hranu — 42 proti 21, tedy rovných 2,0 — a to nebylo
-   tím, že by archiv zeslábl: má pořád stejných 72 klíčů, jen robot měl
-   rušnější den (22 → 25 nabídek se změněnou cenou). Násobek
-   na kulatém čísle je tedy hod mincí, ne měřítko. Podíl říká totéž
-   srozumitelněji: bez toho souboru by filtr našel jen menšinu toho,
-   co najde s ním. */
+
+   MĚŘÍ SE, KOLIK ZMĚN BY BEZ ARCHIVU CHYBĚLO — ne podíl, ne násobek.
+   Oboje se tu už vystřídalo a oboje padlo ze stejného důvodu: jmenovatel
+   je počet změn, které zachytil poslední běh robota, a ten kolísá podle
+   toho, jak rušný měl robot den. Změřeno den po dni z historie
+   repozitáře (scripts/, 14.–18. 10.):
+
+       den     archiv  z běhu  podíl
+       14. 10.   38      25     60 %
+       15. 10.   38      27     58 %
+       16. 10.   39      30     57 %
+       17. 10.   41      30     58 %
+       18. 10.   40      42     49 %   ← tady padl podíl > 0,5
+
+   Archiv je přes celé to období klidný (38–41, roste s počtem klíčů
+   69 → 76). Co se zdvojnásobilo, je běh robota: 25 → 42. Podíl tedy
+   spadl pod polovinu, aniž archiv o cokoli zeslábl — stejný hod mincí,
+   jaký předtím předvedl násobek na rovných 2,0.
+
+   Absolutní počet se o jmenovatele neopírá a odpovídá přesně na tu
+   otázku, kvůli které zkouška vznikla: bez toho souboru by filtr
+   nenašel čtyřicet nabídek, které zlevnily dřív než včera. Mez je 30 —
+   pod naměřeným pásmem 38–41 s rezervou, ale dost vysoko na to, aby
+   kousla, kdyby archiv spadl na polovinu. Podíl se dál vypisuje do
+   hlášky, takže je posun vidět i ve chvíli, kdy kontrola projde. */
 {
   const celkem = cekano.zArchivu + cekano.zBehu;
   const podil = celkem ? cekano.zArchivu / celkem : 0;
-  pravda(`archiv dodal ${cekano.zArchivu} z ${celkem} změn (${Math.round(podil * 100)} %), `
-    + `poslední běh robota ${cekano.zBehu}`,
-    celkem > 0 && podil > 0.5,
-    'archiv už nepřidává většinu změn, takže se ten soubor nevyplatí stahovat');
+  pravda(`bez archivu by chybělo ${cekano.zArchivu} změn z ${celkem} `
+    + `(${Math.round(podil * 100)} %), poslední běh robota ${cekano.zBehu}`,
+    cekano.zArchivu >= 30,
+    'archiv přidává míň než třicet změn, takže se ten soubor nevyplatí stahovat');
 }
 
 const kde = process.env.PW_CHROMIUM || '';

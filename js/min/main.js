@@ -125,6 +125,27 @@
 
   var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
 
+  var IKONY_NASTROJU = {
+
+    rychly: '<path d="M8 3h11a2 2 0 0 1 2 2v11"/><rect x="3" y="7" width="14" height="14" rx="2"/>',
+
+    vyvoz: '<path d="M12 3v10"/><path d="M8 10l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+
+    prosle: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/>',
+
+    podobne: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M19.5 19.5l-4.1-4.1"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/>',
+
+    odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+
+    zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
+  };
+
+  function ikonaNastroje(jmeno) {
+    var d = IKONY_NASTROJU[jmeno];
+    if (!d) return '';
+    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' + d + '</svg></span>';
+  }
+
   var pkey = window.PKKlic.pkey;
   var pkeyLegacy = window.PKKlic.pkeyLegacy;
   var PKKlic = window.PKKlic;
@@ -2816,6 +2837,9 @@
 
   var legendEl = document.getElementById('map-legend');
 
+  function nadpisLegendy(cena) {
+    return '<span class="lg-nadpis">Co znamenají ' + (cena ? 'barvy' : 'značky') + '</span>';
+  }
   function prekresliLegendu() {
     if (!legendEl) return;
     if (rezimBarvy === 'cena') {
@@ -2823,7 +2847,8 @@
       for (var i = 0; i <= 4; i++) {
         kusy += '<span class="lg-dot" style="background:' + barvaCeny(i / 4) + '"></span>';
       }
-      legendEl.innerHTML = '<span class="lg-item">levné ' + kusy + ' drahé</span>'
+      legendEl.innerHTML = nadpisLegendy(true)
+        + '<span class="lg-item">levné ' + kusy + ' drahé</span>'
         + '<span class="lg-item"><span class="lg-dot" style="background:#8A9A92"></span>cena za m² neznámá</span>';
       return;
     }
@@ -2836,7 +2861,8 @@
       if (present2[tp]) lh += '<span class="lg-item"><span class="lg-dot tv-' + (TVAR[tp] || 'kruh') + '" style="background:' + TYPE[tp].color + '"></span>' + TYPE[tp].label + '</span>';
     });
     if (urgentN) lh += '<span class="lg-item lg-urgent"><span class="lg-dot lg-ring"></span>končí do ' + DNI_KONCI + ' dní</span>';
-    legendEl.innerHTML = lh;
+
+    legendEl.innerHTML = lh ? (nadpisLegendy(false) + lh) : '';
   }
   prekresliLegendu();
 
@@ -3807,6 +3833,7 @@
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
 
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
+      ikonaNastroje(ukazSkryte ? 'zakryt' : 'odkryt') +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';
 
     var proslychStranou = 0;
@@ -3821,6 +3848,7 @@
     }
 
     if (proslychStranou || ukazProsle) tlacitka += '<button type="button" class="mc-nastroj" id="mc-prosle">' +
+      ikonaNastroje('prosle') +
       (ukazProsle ? 'Schovat dražby po termínu'
                   : 'Dražby po termínu (' + proslychStranou + ')') + '</button>';
 
@@ -3837,16 +3865,15 @@
       } finally { ukazPodobne = false; }
     }
     if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
+      ikonaNastroje('podobne') +
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
-    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">Stáhnout výběr ('
-      + fmt(matched) + ')</button>';
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">'
+      + ikonaNastroje('vyvoz') + 'Stáhnout výběr (' + fmt(matched) + ')</button>';
 
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
-      + '<span class="mcr-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 0 1 2 2v11"/>'
-      + '<rect x="3" y="7" width="14" height="14" rx="2"/></svg></span>'
-      + 'Procházet po jednom</button>' + tlacitka;
+      + ikonaNastroje('rychly') + 'Procházet po jednom</button>' + tlacitka;
 
     countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
@@ -4633,9 +4660,10 @@
     if (!items.length) {
 
       wrap.className = 'odl-wrap odl-empty reveal is-visible';
+
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
         '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
-        '<a href="pridat.html" class="btn-primary odl-empty-btn">Přidat pozemek zdarma →</a>';
+        '<a href="pridat.html" class="btn-secondary odl-empty-btn">Přidat pozemek zdarma →</a>';
       if (cta) cta.style.display = 'none';
       return;
     }
