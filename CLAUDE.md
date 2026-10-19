@@ -130,6 +130,12 @@ jedna sada za druhou.
    vršku. Zkrátit je na „DOM utichl" znamená, že zkouška projde, protože
    se nekoukala — nebo spadne na vadě, která v aplikaci není. U všech je
    to na místě napsané.
+   **A pozor na ručně vyvolanou událost:** `page.click()` si playwright
+   opakuje, dokud prvek nereaguje, ale `evaluate` s
+   `dispatchEvent(new Event('input'))` se provede hned — když ještě
+   není navěšená obsluha, neudělá nic a zkouška měří cizí stav. Přesně
+   tím spadl v CI běh 556 (`test-shoda`). Čeká se proto na VÝSLEDEK té
+   události, ne na dobu po ní.
    Pomůcky: `scripts/zkouska-pripraveno.mjs` (čekání na stav),
    `scripts/zkouska-pad.mjs` (při pádu vypíše, kam zkouška došla —
    jinak v CI zbyde jen stopa výjimky a ani jedna ✕).

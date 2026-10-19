@@ -2891,3 +2891,51 @@ byla děravá a past by zůstala nastražená pro příště.
 
 Po opravách: `test-rozvrzeni` 162 kontrol a `test-hlavicka` 77 kontrol
 bez chyby, sada rychlých zkoušek 116/116.
+
+---
+
+## 42. První pád po hromadném převodu čekání *19. 10.*
+
+CI běh 556 shodil `test-shoda` na kontrole „podezřelá nabídka má
+varování rovnou na kartě". Lokálně táž zkouška prošla 27/27. Nebyla to
+vada webu — byl to **můj převod** z položky 40: `waitForTimeout(4500)`
+po načtení úvodní stránky se změnil na `domUtichlo(350)`.
+
+### Co se dělo
+
+„DOM utichl" nastal **dřív, než byl výpis živý**. Zkouška pak zapsala
+jméno obce do hledání ručně vyvolanou událostí:
+
+```js
+e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
+```
+
+Obsluha ještě navěšená nebyla, takže se nestalo nic — a měřila se
+**cizí karta**. V hlášce proto stál text úplně jiné nabídky
+(„Lukavec u Lovosic… −56 % proti okolí"), což vypadalo jako vada
+aplikace.
+
+### Dvě poučení, ne jedno
+
+1. **Ručně vyvolaná událost si nepočká, klepnutí ano.** `page.click()`
+   playwright opakuje, dokud prvek nereaguje; `dispatchEvent` uvnitř
+   `evaluate` se provede hned a tiše do prázdna. Po hromadném převodu
+   jsem proto všech 53 míst projel strojově a hledal vzorec „hned po
+   `domUtichlo` se něco ovládá". Našla se čtyři — tři klepnutí (v
+   pořádku) a jedno `dispatchEvent` (druhý blok téže zkoušky). Opravena
+   obě.
+2. **Záložní karta z chyby dělá lež.** V té zkoušce stálo
+   `const li = vsechny.find(…) || vsechny[0]` — když se hledaná nabídka
+   nenašla, měřila se první ve výpisu. Hláška pak mluvila o jiné
+   nabídce, než o které si zkouška myslela. Záloha je pryč: když karta
+   není, řekne se to.
+
+### Jak se teď čeká
+
+| krok | dřív | teď |
+|---|---|---|
+| po načtení | 4 500 ms → `domUtichlo(350)` | vykreslený výpis **a** cenový model (`window.PK_CENY`) |
+| po zapsání do hledání | 700 / 900 ms | až je ve výpisu karta s tou cenou (resp. ta parcela) |
+| když se nenajde | vzala se první karta | kontrola to řekne |
+
+Pět běhů po sobě, pokaždé 27 v pořádku, 9–10 s na běh.

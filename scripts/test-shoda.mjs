@@ -21,7 +21,7 @@ import pathMod from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
-import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { domUtichlo, pripravenoVypis, pripravenoKdyz } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -253,7 +253,13 @@ pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou (a není to pod�
 if (podezrely) {
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await domUtichlo(p3, 350);   // bylo waitForTimeout(4500)
+  /* ČEKÁ SE NA VYKRESLENÝ VÝPIS A NA CENOVÝ MODEL, ne na klid v DOMu.
+     „DOM utichl" se tu dočkal dřív, než byl výpis živý, hledání pak
+     nic neudělalo a zkouška měřila cizí kartu — v CI z toho byl pád
+     (běh 556: ✕ podezřelá nabídka má varování rovnou na kartě, a za
+     tím text úplně jiné nabídky). */
+  await pripravenoVypis(p3);
+  await pripravenoKdyz(p3, () => !!(window.PK_CENY && window.PK_CENY.postav));
   /* Karta se hledá podle CENY, ne „první ve výpisu". V obci může stát
      nabídek víc a ta první nemusí být ta hledaná — kontrola by pak
      měřila cizí kartu. Číslice se porovnávají bez mezer: sazba do nich
@@ -263,10 +269,19 @@ if (podezrely) {
       const e = document.getElementById('map-search');
       e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
     }, co.place);
-    await p3.waitForTimeout(700);
+    /* Čeká se, až hledání OPRAVDU zabere — tedy až je ve výpisu karta
+       s tou cenou. Pevných 700 ms tu stačilo jen tehdy, když se nad
+       tím spalo 4,5 s po načtení. */
+    await p3.waitForFunction((cena) => [...document.querySelectorAll('.opp-item')]
+      .some((e) => e.textContent.replace(/\D/g, '').indexOf(String(cena)) >= 0),
+      co.price, { timeout: 10000 }).catch(() => {});
     return p3.evaluate((cena) => {
       const vsechny = [...document.querySelectorAll('.opp-item')];
-      const li = vsechny.find((e) => e.textContent.replace(/\D/g, '').indexOf(String(cena)) >= 0) || vsechny[0];
+      /* ŽÁDNÁ NÁHRADNÍ KARTA. Dřív tu stálo `|| vsechny[0]`: když se
+         hledaná nabídka nenašla, měřila se první ve výpisu — a chyba
+         pak lhala, protože vypsala text úplně jiné nabídky. Když
+         karta není, řekne se to. */
+      const li = vsechny.find((e) => e.textContent.replace(/\D/g, '').indexOf(String(cena)) >= 0);
       return li ? { text: li.textContent.replace(/\s+/g, ' ').trim(),
         overit: !!li.querySelector('.opp-overit'),
         podilovy: /podíl/i.test(li.textContent) } : null;
@@ -445,12 +460,20 @@ if (podezrely) {
   if (podil) {
     const p4 = await ctx.newPage();
     await p4.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-    await domUtichlo(p4, 350);   // bylo waitForTimeout(4500)
+    /* Totéž jako výš: vykreslený výpis a cenový model, ne „klid v DOMu".
+       Hledání se vyvolává ručně vyvolanou událostí, takže si samo
+       nepočká, až bude výpis živý — na rozdíl od klepnutí, které
+       playwright opakuje. */
+    await pripravenoVypis(p4);
+    await pripravenoKdyz(p4, () => !!(window.PK_CENY && window.PK_CENY.postav));
     await p4.evaluate((q) => {
       const e = document.getElementById('map-search');
       e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
     }, podil.place);
-    await p4.waitForTimeout(900);
+    // Čeká se, až hledání zabere — tedy až je ve výpisu ta parcela.
+    await p4.waitForFunction((parcel) => [...document.querySelectorAll('.opp-item')]
+      .some((e) => (e.textContent || '').indexOf('parc. ' + parcel) !== -1),
+      podil.parcel, { timeout: 10000 }).catch(() => {});
     const karta = await p4.evaluate((parcel) => {
       const li = [...document.querySelectorAll('.opp-item')]
         .find((e) => (e.textContent || '').indexOf('parc. ' + parcel) !== -1);

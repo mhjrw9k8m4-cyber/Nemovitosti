@@ -8258,7 +8258,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 .pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
 .pz-klic b{font-size:24px; line-height:1.2; color:var(--text-ondark);
   font-variant-numeric:tabular-nums;}
-.pz-klic > span{font-size:13px; color:var(--text-ondark-mute);}
+/* POPISEK DLAŽDICE JE ÚDAJ, NE POZNÁMKA POD ČAROU: 14 px a váha 500,
+   stejně jako doplňková čísla na kartě ve výpisu (.opp-figures .m).
+   Odstín zůstává tlumený schválně — viz níž, proč se nezvedal. */
+.pz-klic > span{font-size:14px; font-weight:500; color:var(--text-ondark-mute);}
 .pz-klic i{font-size:12px; line-height:1.5; font-style:italic; color:var(--text-ondark-mute);}/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
    Řádky byly flex se space-between, takže se hodnota lepila na pravý
    okraj — na počítači 435 px od svého popisku. Mřížka je na .pz-specs
