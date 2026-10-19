@@ -28,10 +28,17 @@
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs.
+   Vrstvy mapy dojíždějí překreslováním DOMu, takže se dá počkat na
+   klid místo na 2,5 s po každém otevření detailu (a těch je šest). */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 const BASE = 'http://127.0.0.1:8310';
 let chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs. */
+hlasPad('Mapa v detailu pozemku', zpravy);
 function pravda(popis, podm, detail) {
   if (podm) { zpravy.push('  ✓ ' + popis); return true; }
   chyb++; zpravy.push('  ✕ ' + popis + (detail ? ' — ' + detail : ''));
@@ -222,7 +229,7 @@ async function detail(nast) {
   const padlo = [];
   p.on('pageerror', (e) => padlo.push(String((e && e.message) || e).slice(0, 160)));
   await p.goto(`${BASE}/${nast.cil || CIL.url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
-  await p.waitForTimeout(1500);
+  await domUtichlo(p, 350);
   return { ctx, p, padlo, dotazy };
 }
 
@@ -230,7 +237,7 @@ async function detail(nast) {
 async function domapy(p) {
   await p.locator('#pzm').scrollIntoViewIfNeeded().catch(() => {});
   await p.waitForFunction(() => !!window.PK_PZ_MAPA, null, { timeout: 12000 }).catch(() => {});
-  await p.waitForTimeout(900);
+  await domUtichlo(p, 300);
 }
 /** Přepínače vrstev, které se právě nabízejí. */
 const prepinace = (p) => p.evaluate(() => [...document.querySelectorAll('.pzm-v')].map((b) => b.textContent.trim()));
@@ -286,7 +293,7 @@ const HOST = {
 {
   const { ctx, p } = await detail({ zivi: [] });
   await domapy(p);
-  await p.waitForTimeout(2500);
+  await domUtichlo(p, 400);
   const v = await prepinace(p);
   pravda('když služby úřadů mlčí, nenabízí se ani jeden přepínač', v.length === 0, v.join(', '));
   const stav = await p.evaluate(() => ({
@@ -307,7 +314,7 @@ const HOST = {
 {
   const { ctx, p } = await detail({ zivi: [HOST.zaplavy] });
   await domapy(p);
-  await p.waitForTimeout(2500);
+  await domUtichlo(p, 400);
   const v = await prepinace(p);
   const def = (NAST.vrstvy || []).find((x) => x.id === 'zaplavy');
   pravda('nabídne se právě ta jedna vrstva, která odpověděla',
@@ -319,7 +326,7 @@ const HOST = {
 {
   const { ctx, p, dotazy } = await detail({ zivi: [HOST.katastr, HOST.zaplavy, HOST.ochrana] });
   await domapy(p);
-  await p.waitForTimeout(2600);
+  await domUtichlo(p, 400);
   const v = await prepinace(p);
   pravda('nabídnou se všechny vrstvy, jejichž služba odpověděla', v.length >= 3, v.join(', '));
 
@@ -363,12 +370,22 @@ const HOST = {
   const pred = await p.evaluate(() => window.PK_PZ_MAPA.getZoom());
   pravda('pro zkoušku se mapa oddálí pod hranici vrstvy', pred < def.odPriblizeni,
     `zoom ${pred}, vrstva potřebuje ${def.odPriblizeni} — kontrola níž by neměla co ověřovat`);
-  await p.locator('.pzm-v[data-id="katastr"]').click();
-  await p.waitForTimeout(1600);
+  /* CHYBĚJÍCÍ PŘEPÍNAČ MÁ SKONČIT POJMENOVANOU CHYBOU, NE PÁDEM. Bez
+     stropu čeká playwright 30 s a pak zkoušku SHODÍ — v CI zbyde
+     „locator.click: Timeout 30000ms exceeded" a z toho není poznat, co
+     je špatně. Vyzkoušeno sabotáží: přepínačům vrstev jsem odebral
+     třídu `pzm-v` a padlo to přesně takhle, bez jediné ✕. */
+  const prepinacJe = await p.locator('.pzm-v[data-id="katastr"]')
+    .click({ timeout: 5000 }).then(() => true).catch(() => false);
+  pravda('přepínač katastrální vrstvy je na mapě a dá se zapnout', prepinacJe,
+    'tlačítko .pzm-v[data-id="katastr"] se nenašlo — kontroly níž pak neměří vrstvu, ale jeho nepřítomnost');
+  await domUtichlo(p, 400);
   const po = await p.evaluate(() => ({
-    zapnuto: document.querySelector('.pzm-v[data-id="katastr"]').classList.contains('on'),
-    rika: document.querySelector('.pzm-v[data-id="katastr"]').getAttribute('aria-pressed'),
-    kryti: !document.getElementById('pzm-kryti').hidden,
+    zapnuto: !!(document.querySelector('.pzm-v[data-id="katastr"]') || { classList: { contains: () => false } })
+      .classList.contains('on'),
+    rika: (document.querySelector('.pzm-v[data-id="katastr"]') || { getAttribute: () => null })
+      .getAttribute('aria-pressed'),
+    kryti: !(document.getElementById('pzm-kryti') || { hidden: true }).hidden,
     popis: (document.getElementById('pzm-popis') || {}).textContent || '',
     uvedeni: (document.querySelector('#pzm .leaflet-control-attribution') || {}).textContent || '',
     zoom: window.PK_PZ_MAPA.getZoom(),
@@ -469,13 +486,18 @@ const HOST = {
   pravda('posuvník průhlednost opravdu mění', plne > po.pruhlednost, `${po.pruhlednost} → ${plne}`);
 
   // vypnutí
-  await p.locator('.pzm-v[data-id="katastr"]').click();
-  await p.waitForTimeout(600);
+  // Totéž jako výš: strop a pojmenovaná chyba místo pádu na timeoutu.
+  const lzeVypnout = await p.locator('.pzm-v[data-id="katastr"]')
+    .click({ timeout: 5000 }).then(() => true).catch(() => false);
+  await domUtichlo(p, 300);
   const vypnuto = await p.evaluate(() => ({
-    on: document.querySelector('.pzm-v[data-id="katastr"]').classList.contains('on'),
-    kryti: !document.getElementById('pzm-kryti').hidden,
-    popis: !document.getElementById('pzm-popis').hidden,
+    on: !!(document.querySelector('.pzm-v[data-id="katastr"]') || { classList: { contains: () => false } })
+      .classList.contains('on'),
+    kryti: !(document.getElementById('pzm-kryti') || { hidden: true }).hidden,
+    popis: !(document.getElementById('pzm-popis') || { hidden: true }).hidden,
   }));
+  pravda('přepínač vrstvy je na mapě i podruhé', lzeVypnout,
+    'tlačítko .pzm-v[data-id="katastr"] zmizelo');
   pravda('druhé klepnutí vrstvu vypne', !vypnuto.on);
   pravda('a zmizí s ní i posuvník a popis', !vypnuto.kryti && !vypnuto.popis);
   pravda('a vysvětlivky taky',
@@ -489,7 +511,7 @@ const HOST = {
 {
   const { ctx, p } = await detail({ zivi: [HOST.katastr], bezLegend: true });
   await domapy(p);
-  await p.waitForTimeout(2600);
+  await domUtichlo(p, 400);
   /* Hranice parcel se zapínají samy, takže se na nic neklepe — kdyby
      se sem klepnulo, vrstva by se naopak vypnula. */
   await p.waitForTimeout(1800);
@@ -511,7 +533,7 @@ const HOST = {
 {
   const { ctx, p } = await detail({ zivi: [HOST.katastr] });
   await domapy(p);
-  await p.waitForTimeout(2800);
+  await domUtichlo(p, 400);
   const stav = await p.evaluate(() => ({
     nabidnute: [...document.querySelectorAll('.pzm-v')].map((b) => b.textContent.trim()),
     pozn: (document.querySelector('.pzm-nic') || {}).textContent || '',
@@ -571,7 +593,7 @@ const HOST = {
 {
   const { ctx, p } = await detail({ zivi: [HOST.katastr] });
   await domapy(p);
-  await p.waitForTimeout(2200);
+  await domUtichlo(p, 400);
   pravda('v mapě je tlačítko na zvětšení', await p.locator('#pzm-cela').count() === 1);
   const pred = await p.evaluate(() => window.PK_PZ_MAPA.getSize().y);
   const ikonaPred = await p.evaluate(() => {

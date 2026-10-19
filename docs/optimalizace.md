@@ -2329,6 +2329,26 @@ jediné místo, kde se ta zkouška dala obejít.
   nejsou sklo, ale tmavá plocha, bez které by dialog nebyl čitelný —
   jen už se pod nimi nic nerozmazává.
 
+**PRŮSVITNÉ ZŮSTALY TŘI — A SCHVÁLNĚ.** Odznaky na fotkách karet
+(`.opp-badge`, `.opp-count`, `.opp-media .opp-fav`) mají
+`rgba(8,20,14,0.74)` a bílý text. Vypadá to jako týž případ, ale je
+opačný, a dá se to spočítat. Rozhoduje SMĚR:
+
+| plocha | text | nejhorší případ |
+|---|---|---|
+| světlá průsvitná (to, co bylo nad mapou) | tmavý | nad tmavou fotkou tmavý na tmavém — **nedá se zaručit** |
+| tmavá průsvitná (odznaky na fotkách) | bílý | **vždy aspoň 8,19 : 1** |
+
+Spočítáno pro nejhorší podklad, jaký může pod odznakem být — čistě
+bílou fotku: `0,74 × rgb(8,20,14) + 0,26 × bílá` dá `rgb(72,81,77)`
+a bílý text na ní má **8,19 : 1**. Nad sněhem 8,75, nad trávou 12,9,
+nad černou 19,5. Mez WCAG AA je 4,5.
+
+Tmavá plocha s bílým textem se dá přidáním čehokoli pod ni jen
+**zesvětlit** — a i úplné zesvětlení o 26 % zůstane dost tmavé. Světlá
+plocha s tmavým textem takový strop nemá. Proto ty tři zůstávají
+a ostatní šly pryč.
+
 **Dva komentáře tím zestárly a musely se přepsat.** V tomhle
 repozitáři jsou komentáře dokumentace, takže komentář popisující
 rozmazání, které už neexistuje, je horší než žádný:
@@ -2484,3 +2504,324 @@ soubor.
 
 Sabotáž (vrátit jeden `fetch` a smazat jeden strop) shodí obě
 kontroly.
+
+---
+
+## 37. Zkouška, která v CI spadla a lokálně ne *19. 10.*
+
+Majitel přinesl e-mail z GitHub Actions: úloha `v-prohlizeci` padla po
+48 minutách. **Nebyl to ale stav webu** — ten e-mail patřil běhu **553**
+(commit `233e18661`); běh **554** nad commitem, který na větvi opravdu
+je (`e0cbfb7f0`), dojel celý: 121 zkoušek, zelená. Předtím padl i běh
+**552**, a to na strážci podílu archivu u filtru „Zlevněné" — ten už je
+spravený jinak (čeká se na počet změn, ne na podíl).
+
+Zbyl tedy jeden skutečný nález: **tři kontroly poznámky v
+`scripts/test-rychly-prohlizec.mjs` padaly v CI, a lokálně procházely.**
+
+### Co se dělo
+
+Hlášení z běhu 553:
+
+```
+✕ poznámka se uloží a řekne to            stav „"
+✕ a uloží se pod klíč TÉ karty            uloženo pod []
+✕ šipka uprostřed psaní kartou nehne      před Červený Újezd…, po Břeclav…
+```
+
+Jeden kořen, tři příznaky. Rozhodnutí o kartě (`rvRozhodni`,
+`js/main.js`) kartě přilepí `odlet-vpravo`/`odlet-vlevo` a další kartu
+vykreslí **až o 300 ms později**. Zkouška si mezi prvními deseti kartami
+hledá takovou, která ukazuje výměru (bez výměry se nedá složit klíč
+poznámky), a mezi stisky čekala **260 ms**. Na pomalejším stroji CI tak
+čtení i klepnutí padlo doprostřed toho okna:
+
+1. přečetl se klíč karty, která už odlétala,
+2. políčko poznámky se otevřelo na kartě, kterou překreslení zahodilo,
+3. `p.type('#rv-pozn', …)` psal do prvku, který mezitím zmizel — a
+   playwright na tom **nezakopne**: do skrytého `textarea` „napíše" bez
+   chyby, klávesy spadnou do stránky a nikam se nezapíšou (proto
+   `stav „"` a `uloženo pod []`),
+4. `p.focus('#rv-pozn')` na skrytém políčku taky mlčí: kurzor zůstane
+   na `BODY`, takže šipka kartou pohnula **právem**.
+
+### Reprodukce, ne dohad
+
+Lokálně to procházelo, protože se ta smyčka obvykle vůbec neotočí —
+první karta výměru má. Stačilo jeden stisk vynutit:
+
+```
+po 260 ms: {"pk":"Libochovice…","tridy":"rv-karta chystam-ano odlet-vpravo"}
+po kliknutí na výzvu: {"skryte":true,"zamereno":"BODY"}
+výsledek: {"stav":"","podKlicem":false,"klice":[]}
+karta po šipce: Lukavec u Lovosic…      ← pohnula se
+```
+
+Tedy přesně tři příznaky z CI, na příkaz.
+
+### Oprava
+
+Nečeká se delší dobu, **čeká se na stav**:
+
+| místo | dřív | teď |
+|---|---|---|
+| po stisku šipky | `waitForTimeout(260)` | karta je na místě a nemá třídu `odlet-`/`chystam-` |
+| po klepnutí na „Přidat poznámku" | `waitForTimeout(250)` | `#rv-pozn` má `hidden === false` — a je to **vypsaná kontrola**, ne tiché čekání |
+| po napsání poznámky | `waitForTimeout(1100)` | poznámka je v `localStorage` pod klíčem té karty |
+| po šipce uprostřed psaní | `waitForTimeout(500)` | měří se **hned**: obsluha klávesy přilepí `odlet-` synchronně |
+| po „Tenhle ne" | `waitForTimeout(900)` | karta je nová a nikam neletí |
+
+Totéž pod stejným vynuceným stiskem: karta `rv-karta` (bez odletu),
+`{"skryte":false,"zamereno":"rv-pozn"}`, `stav „uloženo"`,
+`podKlicem: true`, po šipce karta stojí.
+
+### A jedna sabotáž, která nejdřív proklouzla
+
+Nová kontrola „kurzor je v políčku" **přežila** sabotáž, která
+aplikaci `pole.focus()` sebrala — protože `p.type` si prvek zaměří sám,
+takže se měřil playwright, ne web. Kurzor se proto měří **před psaním**,
+a je z toho vlastní kontrola („psát jde bez druhého klepnutí").
+
+Tři sabotáže na opravené zkoušce (všechny trefa):
+
+| sabotáž | co padlo |
+|---|---|
+| aplikace nedá kurzor do políčka | `a rovnou v něm stojí kurzor` |
+| psaní už nechrání kartu před šipkou | `šipka uprostřed psaní kartou nehne` — a to **ještě než** se karta vymění: `(a karta odlétá)` |
+| výzva políčko neodkryje | `klepnutí … políčko opravdu otevře` + čtyři navázané |
+
+Kontrol v té zkoušce je 44 → **46**.
+
+### Co z toho platí dál
+
+Ve zkouškách je **735 pevných čekání ve 116 souborech**, z toho 81
+kratších než 320 ms. Nejsou všechna špatná — čekání po navigaci je něco
+jiného než čekání v animaci. Pravidlo ale platí: **kde se čeká na to, co
+teprve udělá aplikace, se čeká na stav.** Zapsáno do `CLAUDE.md` jako
+třetí past vedle dotyku a servisního pracovníka.
+
+---
+
+## 38. Hodina na verdikt a čtvrt hodiny rezervy *19. 10.*
+
+Z téhož e-mailu vypadl druhý nález, který s poznámkou nesouvisí:
+**úloha `v-prohlizeci` jela 59 minut 26 sekund proti stropu 75 minut.**
+To jsou dvě věci naráz — člověk se verdikt dozví až za hodinu, a na
+pomalejším stroji zbývá čtvrt hodiny, než CI úlohu zabije a neřekne
+vůbec nic.
+
+Měřeno lokálně z časů logů poslední celé sady (`scratchpad/logy`,
+rozdíly časů zápisu): **56,6 minuty na 106 zkouškách**, tedy totéž co
+v CI. Čísla sedí i po jednotlivých zkouškách:
+
+| zkouška | místně | CI (běh 554) |
+|---|---|---|
+| `test-rozvrzeni` | 308 s | 291 s |
+| `test-okoli` | 308 s | 303 s |
+| `test-konzole` | 232 s | 224 s |
+| `test-rozdeleni-stylu` | 182 s | 148 s |
+| `test-pridat` | 145 s | 120 s |
+
+Podstatné je rozložení: dvě zkoušky samy zaberou deset minut, zatímco
+většina doběhne do dvaceti sekund. Dělit sadu podle **počtu** by tedy
+nic nevyřešilo.
+
+### Dvě směny vedle sebe
+
+Sada je rozdělená na `v-prohlizeci` (61 zkoušek) a `v-prohlizeci-2`
+(60 zkoušek) — rozděleno hladovým algoritmem podle naměřených délek,
+takže na obě vyšlo **31,3 minuty**. Běží současně, strop je 50 minut
+(skoro dvojnásobek naměřeného času místo dnešních 126 %). Chromium se
+instaluje dvakrát, asi minuta; to se při půlhodině úspory vyplatí.
+
+### Dvě pojistky, které by o druhé směně nevěděly
+
+Rozdělení úlohy nemůže propadnout tím, že kontroly čtou jen původní
+jméno. Obě se opravily a obě se sabotovaly:
+
+| sabotáž | co padlo |
+|---|---|
+| ze druhé směny zmizí zkouška | `Zkouška existuje, ale nikdo ji nespouští: scripts/test-chat-prohlizec.mjs` |
+| zkouška z prohlížeče přesunuta do rychlé úlohy | `Zkouška potřebuje prohlížeč, ale je v úloze bez něj` |
+| `test-roadmap` zapomene druhou směnu | `zkoušek s prohlížečem: 61` místo 121 |
+
+`scripts/test-staticka.mjs` dřív řezal YAML podle `wf.indexOf('\n  v-prohlizeci:')`;
+teď čte **klíče úloh** a za „prohlížečovou" bere každou, jejíž klíč
+začíná `v-prohlizeci`. `scripts/test-roadmap.mjs` směny sčítá — jinak by
+README tvrdilo polovinu.
+
+Počty v `docs/roadmap.md` se nemění: 116 zkoušek bez prohlížeče, 121
+s ním.
+
+---
+
+## 39. Zkoušky, které většinu času spí *19. 10.*
+
+Z opravy běhu 553 (položka 37) vypadla otázka, kolik takových čekání
+„na hodinky" vlastně je. Odpověď: **735 pevných čekání ve 116
+souborech**, a z nich **201 stojí hned za `goto`/`reload`** — tedy
+„počkej, než se rozběhne JS stránky". To je **8,5 minuty** čistého
+spánku, každé započítané jen raz (v cyklu je jich víc).
+
+Zátěž stroje přitom byla **0,28 ze čtyř jader**. Sada netrvala hodinu
+proto, že by počítala — proto, že spala.
+
+| zkouška | délka | z toho pevná čekání |
+|---|---|---|
+| `test-poznamky` | 60 s | **52,6 s (88 %)** |
+| `test-pamet` | 90 s | 55,1 s (61 %) |
+| `test-mapa-pozemku` | 139 s | 74,0 s (53 %) |
+| `test-naseptavac` | 125 s | 32,7 s |
+
+### Pomocník: `scripts/zkouska-pripraveno.mjs`
+
+Čeká se na **pozorovatelný stav**: vykreslené políčko poznámky
+(`pripravenoPozemek`), vykreslenou kartu výpisu (`pripravenoVypis`),
+hlášku o uložení (`poznamkaUlozena`), utichlou síť (`sitUtichla`) nebo
+na libovolnou podmínku (`pripravenoKdyz`). Žádná z nich **nevyhazuje** —
+vrací `false`, aby chybu pojmenovala zkouška, ne výpis timeoutu.
+
+### `test-poznamky`: 60 s → 14 s
+
+Pevných čekání z **52,6 s na 1,15 s**, kontrol z 67 na **69**.
+
+| dřív | teď |
+|---|---|
+| `goto` + 2 200 ms (6×) | políčko poznámky i věta u něj jsou na stránce |
+| `blur` + 1 200 ms | hláška „uloženo" **a** utichlá síť |
+| `blur` + 1 200 ms (přihlášený) | ten konkrétní požadavek `rpc/poznamka_uloz` |
+| `goto` + 3 000 ms (druhý prohlížeč) | odpověď `rpc/moje_poznamky`; čekání se zakládá **před** navigací |
+| `click` na kartu + 3 200 ms | přesun jako takový (KAM se došlo, měří kontrola) |
+
+**Dvě čekání zůstala pevná schválně**: u zkratky k poznámce se měří
+právě to, co se za tu dobu má stát (doskok a zaostření), a u „méně
+pohybu" je krátkost (150 ms) sama tou kontrolou. Kdo si počká na
+„políčko je zaostřené" a pak změří, že je zaostřené, nezměřil nic.
+
+### Tři nálezy, které z toho spadly
+
+1. **Pevné čekání 500 ms, které nehlídalo nic.** Popisek tlačítka
+   přepisuje obsluha `input` synchronně — a 500 ms bylo navíc *kratší*
+   než prodleva ukládání (600 ms). Zrušeno.
+2. **Čekání na kostru načítání.** První verze čekala na `#opp-list li` —
+   jenže ve statickém HTML jsou čtyři `li.opp-skel` (šedé obrysy, než
+   data dojdou) a ty `data-pk` nenesou. Sada to hlásila jako vadu webu:
+   „karet: 4, klíč první: null". Teď se čeká na `.opp-item`, tedy na
+   **vykreslenou** kartu.
+3. **Zkouška, která místo chyby padala výjimkou.** `JSON.parse` bez
+   `|| '{}'`: jak ukládání tiše selhalo, zbylo v CI jen
+   „Cannot convert undefined or null to object". Teď se to řekne
+   jménem („zápis poznámky do schránky vůbec proběhl") a zbytek bloku
+   se neměří.
+
+### Sabotáže
+
+| sabotáž | co padlo |
+|---|---|
+| poznámka odejde ven i nepřihlášenému | `a NEODEŠLA ven ze zařízení` — s pojmenovaným požadavkem v detailu |
+| ukládání do schránky tiše selže | **15 kontrol**, a jménem (dřív výjimka) |
+| odznak „Poznámka" se ve výpisu nekreslí | **8 kontrol**; běh 22 s místo 14 — bounded čekání vypršelo a kontrola to řekla |
+
+To je ten rozdíl, o který jde: **na zdravém webu je zkouška rychlá, na
+rozbitém pojmenuje vadu.**
+
+---
+
+## 40. Pět zkoušek, které spaly, a čtyři, které spát musí *19. 10.*
+
+Pokračování položky 39. Měřeno vždy před a po, na témže stroji.
+
+| zkouška | před | po | ušetřeno |
+|---|---|---|---|
+| `test-rozvrzeni` | 308 s | **159 s** | −149 s |
+| `test-okoli` | 308 s | **256 s** | −52 s |
+| `test-mapa-pozemku` | 139 s | **93 s** | −46 s |
+| `test-poznamky` | 60 s | **14 s** | −46 s |
+| `test-pamet` | 89 s | **81 s** | −8 s |
+
+Plus deset dalších zkoušek, kde se převedla **jen** čekání stojící hned
+za `goto`/`reload` (tedy prokazatelně ne to, co se měří): 53 míst,
+**145 s** pevného spánku. Dohromady je to přes **osm minut** z hodinové
+sady — a zároveň zmizela celá ta třída selhání „na pomalejším stroji to
+nestihlo".
+
+### Kde se úspora brala
+
+Ne v jednom dlouhém čekání, ale v krátkém čekání uvnitř něčeho, co se
+volá pořád:
+
+* `test-rozvrzeni` otevírá stránku na **23 místech** přes funkci
+  `otevri()`, a ta v sobě měla 1 500 ms. Jeden cyklus jí projde
+  **třináct šířek**. Další cyklus desetkrát čekal 2 500 + 500 ms.
+* `test-okoli` má `jdiNaMisto()` a `klepniDoMapy()` — 900 až 1 300 ms
+  na volání, volají se v cyklech přes okruhy i pozemky.
+* `test-mapa-pozemku` šestkrát otevře detail a pokaždé čekal 2,5 s na
+  dojetí vrstev.
+
+Nový `domUtichlo()` nasadí `MutationObserver` a čeká na **klid v DOMu**
+(se stropem, protože stránka s dojíždějícími dlaždicemi se neutiší).
+
+### Pět čekání, která se musela vrátit zpátky
+
+Dvě jsem našel při kontrole vlastní práce, třetí našla sada. Tohle je
+důležitější než ta úspora:
+
+1. **`test-stabilita`, 2× `waitForTimeout(6000)`** — není to čekání na
+   připravenost, ale **měřicí okno**: pozorovatel po celou tu dobu sbírá
+   poskoky rozvržení (CLS). Zkrácení na „DOM utichl" by zakrylo poskok,
+   který přijde později (třeba od obrázku ze sítě), a zkouška by prošla
+   proto, že se nekoukala.
+2. **`test-pohyb`, 2× čekání mezi dvěma měřeními polohy značky** — okno
+   animace. Leaflet posouvá značku transformací, což DOM **nemění**,
+   takže „DOM utichl" by se dočkal hned a změřilo by se půl pohybu.
+
+3. **`test-stabilita`, `waitForTimeout(2600)`** — tohle jsem sám
+   nenašel, **našla to sada**. Je to zase měřicí okno, ale jiného druhu:
+   čeká se, až aplikaci **vyprší lhůta**. Hlídka drží vršek stránky
+   2,5 s po načtení a kontrola ověřuje, že POTOM už nedrží. „DOM utichl"
+   se dočkal dřív, hlídka byla ještě živá a zkouška padla na vadě, která
+   v aplikaci není: „drží vršek i po 2,6 s". Čeká se tedy pevně, a
+   o chlup dýl než ta lhůta.
+
+Zbytek převedených míst prošel i strojovou kontrolou na vzorec
+„měřím → čekám → měřím znovu"; další takový tam není. Vzorec „čekám, až
+něco vyprší" se takhle najít nedá — na ten je potřeba sada.
+
+### Tři vlastní chyby, které stojí za zapsání
+
+* **Sabotáž, která nic nesabotovala.** Dotykové terče jsem zmenšil
+  v `css/styles.min.css` — jenže úvodní stránka má svůj balíček
+  `css/uvod.min.css` (a stránky okresů `region.min.css`). Běh byl
+  157 s jako čistý a padlo 0; vypadalo to jako slepá zkouška, a byla to
+  slepá sabotáž. Na správném souboru padly tři kontroly.
+* **`git checkout --` po sabotáži.** Tím jsem si smazal vlastní
+  (nezacommitovanou) opravu `test-roadmap`, která sčítá obě směny.
+  Vyplavalo to až v sadě: „zkoušek s prohlížečem: 61" místo 121.
+  Sabotáž se proto vrací **ze zálohy souboru**, ne z gitu.
+* **`{ classList: new Set() }`** jako záloha pro chybějící prvek —
+  `Set` nemá `.contains`, má `.has`, takže by z toho byl `TypeError`.
+
+### A když zkouška spadne, ať to pořád něco řekne
+
+Dvě sabotáže (`pzm-v` bez třídy, odpojené klepnutí do mapy výběru)
+zkoušku **shodily výjimkou**: `locator.click: Timeout 30000ms exceeded`
+a `element is not enabled`. Návratový kód 1, takže CI je červené —
+ale **ani jedna ✕**, a všechny kontroly, které do té chvíle prošly, se
+zahodily.
+
+Nejprve se zpevnila ta konkrétní místa (klepnutí má strop a vlastní
+kontrolu, navazující měření jsou odolná proti `null`), ale pádů bylo
+dál dost. Proto `scripts/zkouska-pad.mjs`: zaregistruje se na
+`uncaughtException` i `unhandledRejection` a při pádu vypíše, kam
+zkouška došla, kolik kontrol prošlo, a `::error::` s první řádkou chyby
+**i s místem ve zkoušce**. Tatáž sabotáž teď vypíše:
+
+```
+Mapa v detailu pozemku  (PŘERUŠENO — zkouška spadla, nedoběhla)
+  ✕ nabídne se právě ta jedna vrstva, která odpověděla — nabízí se: (nic)
+  ✕ hranice parcel se zapnou samy — … jen špendlík …
+  ✕ přepínač katastrální vrstvy je na mapě a dá se zapnout — … se nenašlo
+```
+
+Sedm pojmenovaných kontrol místo jedné stopy výjimky. Chybějící prvek
+pořád patří do pojmenované kontroly — ale pád už není slepý.

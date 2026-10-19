@@ -19,6 +19,9 @@ import { chromium } from 'playwright-core';
 import { readFileSync, existsSync } from 'node:fs';
 import pathMod from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -192,7 +195,7 @@ if (cil) {
   const p2 = await ctx.newPage();
   await p2.goto(`${BASE}/pozemek.html?p=${encodeURIComponent(cil.klic)}&ll=${cil.ll}`,
     { waitUntil: 'domcontentloaded' });
-  await p2.waitForTimeout(6000);
+  await domUtichlo(p2, 350);   // bylo waitForTimeout(6000)
   const videt = await p2.evaluate(() => {
     const e = document.querySelector('.md-odhad');
     if (!e) return null;
@@ -245,7 +248,7 @@ pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou (a není to pod�
 if (podezrely) {
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p3.waitForTimeout(4500);
+  await domUtichlo(p3, 350);   // bylo waitForTimeout(4500)
   /* Karta se hledá podle CENY, ne „první ve výpisu". V obci může stát
      nabídek víc a ta první nemusí být ta hledaná — kontrola by pak
      měřila cizí kartu. Číslice se porovnávají bez mezer: sazba do nich
@@ -366,7 +369,7 @@ if (podezrely) {
     if (!existsSync(cesta)) continue;
     const ps = await ctx.newPage();
     await ps.goto(`${BASE}/${zapis.soubor}`, { waitUntil: 'load' });
-    await ps.waitForTimeout(3000);
+    await domUtichlo(ps, 350);   // bylo waitForTimeout(3000)
     const text = await ps.evaluate(() => {
       const e = document.getElementById('pz-verdict');
       return e ? e.textContent.replace(/\s+/g, ' ').trim() : '';
@@ -437,7 +440,7 @@ if (podezrely) {
   if (podil) {
     const p4 = await ctx.newPage();
     await p4.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-    await p4.waitForTimeout(4500);
+    await domUtichlo(p4, 350);   // bylo waitForTimeout(4500)
     await p4.evaluate((q) => {
       const e = document.getElementById('map-search');
       e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));

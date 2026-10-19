@@ -22,6 +22,9 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -73,7 +76,7 @@ async function kontext(pohybVypnut) {
   const chyby = [];
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(4200);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(4200)
 
   /* V CI se Leaflet stahuje ze sítě, takže se hranice krajů vykreslí později
      než na místním stroji. Pevné čekání 4 sekundy tam nestačilo a test se
@@ -261,6 +264,10 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
   await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
   const hned = await kdeJeZnacka(p);
+  /* PEVNĚ SCHVÁLNĚ: mezi `hned` a měřením níž leží OKNO ANIMACE, ne
+     čekání na připravenost. Leaflet posouvá značku transformací, což
+     DOM nemění — „DOM utichl" by se tedy dočkal hned a zkouška by
+     změřila půl pohybu (nebo žádný). */
   await p.waitForTimeout(1200);
   const potom = await kdeJeZnacka(p);
   pravda('graf rozdělení cen se na stránce vykreslí', !!potom, 'element .pvg-nase se nenašel');
@@ -357,6 +364,10 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
   await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
   const hned = await kdeJeZnacka(p);
+  /* PEVNĚ SCHVÁLNĚ: mezi `hned` a měřením níž leží OKNO ANIMACE, ne
+     čekání na připravenost. Leaflet posouvá značku transformací, což
+     DOM nemění — „DOM utichl" by se tedy dočkal hned a zkouška by
+     změřila půl pohybu (nebo žádný). */
   await p.waitForTimeout(900);
   const potom = await kdeJeZnacka(p);
   pravda('s vypnutými animacemi se v grafu nic nehýbe',

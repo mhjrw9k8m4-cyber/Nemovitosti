@@ -29,6 +29,10 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs.
+   Tahle zkouška otevírá stránku na 23 místech, některá v cyklu přes
+   třináct šířek, takže se pevné čekání po goto platilo desítky krát. */
+import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
 
 // Tentýž server jako ostatní testy: servíruje statické soubory na 8310.
 await import('./falesna-supabase-chat.mjs');
@@ -197,7 +201,10 @@ async function otevri(soubor, sirka, vyska) {
   }
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${soubor}`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(1500);
+  /* Měří se ROZVRŽENÍ desítek různých stránek, takže se nedá čekat na
+     jeden konkrétní prvek — každá stránka má jiný. Čeká se proto na to,
+     že stránka přestala měnit DOM. */
+  await domUtichlo(p, 350);
   /* POHLED SE ŽÁDÁ JMÉNEM, AŤ JE VÝCHOZÍ KTERÝKOLI. Úvodní stránka má na
      telefonu dva pohledy nad sebou a vidět je jen jeden; výchozí se za dva
      dny obrátil dvakrát (17. 10. na mapu, 18. 10. zpátky na seznam). Co tahle
@@ -269,7 +276,7 @@ async function otevri(soubor, sirka, vyska) {
      ušetřilo na odsazeních. */
   const { ctx, p } = await otevri('index.html', 360, 640);
   await rozbalHledani(p);
-  await p.waitForTimeout(2200);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const v = await p.evaluate(() => {
     const vidno = (id) => { const e = document.getElementById(id) || document.querySelector(id);
       return !!(e && !e.hidden && getComputedStyle(e).display !== 'none' && e.getClientRects().length); };
@@ -318,7 +325,7 @@ async function otevri(soubor, sirka, vyska) {
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
   await rozbalHledani(p);
-  await p.waitForTimeout(2600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   await p.evaluate(() => scrollTo(0, 1400));
   await p.waitForTimeout(900);
   const v = await p.evaluate(() => {
@@ -423,7 +430,7 @@ async function otevri(soubor, sirka, vyska) {
 for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const { ctx, p } = await otevri('index.html', w, h);
   await rozbalHledani(p);
-  await p.waitForTimeout(1600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const otevrelo = await p.evaluate(() => {
     const t = document.querySelector('[data-info]');
     if (!t) return false;
@@ -642,7 +649,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
   await rozbalHledani(p);
-  await p.waitForTimeout(2600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   /* PRUH „NAPOSLEDY PROHLÉDNUTÉ" DO TOHO PATŘÍ TAKY. Jeho odznaky měly
      31 px a nikdo si toho nevšiml, protože se pruh nikdy neukázal:
      zapisovala do něj jediná funkce a k té se nedalo dostat. Ukáže se od
@@ -655,7 +662,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   })();
   await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, dvaKlice);
   await p.reload({ waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   pravda('pruh „Naposledy prohlédnuté" se v měření objevil (jinak se jeho odznaky nezměří)',
     await p.evaluate(() => !document.getElementById('recent-strip').hidden),
     'pruh se neukázal — kontrola níž by o jeho odznacích nic neřekla');
@@ -882,7 +889,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 {
   const { ctx, p } = await otevri('index.html', 390, 844);
   await rozbalHledani(p);
-  await p.waitForTimeout(2200);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const klice = (() => {
     const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
     return d.filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
@@ -988,10 +995,10 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   const nalezyKlavesnice = [];
   for (const stranka of STRANKY) {
     await p2.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
-    await p2.waitForTimeout(2500);
+    await domUtichlo(p2, 350);
     // Sbalené sekce se rozbalí — zavřený blok nemá rozměr a měření by ho minulo.
     await p2.evaluate(() => { document.querySelectorAll('details').forEach((x) => { x.open = true; }); });
-    await p2.waitForTimeout(500);
+    await domUtichlo(p2, 200);
     const male = await p2.evaluate(() => {
       /* „linklike" z výjimek odešel: tahle třída nese „Odhlásit" a měla
          22 px, tedy polovinu normy. Dnes má pod (hover:none) 44 px, takže
@@ -1075,7 +1082,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 {
   const { ctx, p: p5 } = await otevri('index.html', 390, 844);
   await rozbalHledani(p5);
-  await p5.waitForTimeout(3000);
+  await pripravenoVypis(p5); await domUtichlo(p5, 300);
   await p5.fill('#map-search', 'Kol');
   await p5.waitForTimeout(1200);
   const v = await p5.evaluate(() => {
@@ -1301,7 +1308,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
 for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
   const { ctx, p } = await otevri('index.html', w, h);
   await rozbalHledani(p);
-  await p.waitForTimeout(2200);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const v = await p.evaluate(() => {
     const e = document.getElementById('map-search');
     if (!e) return null;
@@ -1473,7 +1480,7 @@ for (const [w, h] of [[390, 844], [360, 780]]) {
 for (const [w, h] of [[1440, 900], [1280, 900], [1100, 900], [1024, 900], [820, 900]]) {
   const { ctx, p } = await otevri('index.html', w, h);
   await rozbalHledani(p);
-  await p.waitForTimeout(2600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const v = await p.evaluate(() => {
     const g = document.getElementById('deals-grid');
     if (!g || !g.children.length) return null;
@@ -1503,7 +1510,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [1100, 900], [1024, 900], [820, 
 for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   const { ctx, p } = await otevri('index.html', w, h);
   await rozbalHledani(p);
-  await p.waitForTimeout(2600);
+  await pripravenoVypis(p); await domUtichlo(p, 300);
   const v = await p.evaluate(() => {
     const sp = document.querySelector('.odl-empty span'), bt = document.querySelector('.odl-empty-btn');
     if (!sp || !bt) return null;

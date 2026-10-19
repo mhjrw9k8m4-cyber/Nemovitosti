@@ -7,6 +7,9 @@
    jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 // Zkušební Supabase si test spustí sám — jedním příkazem a bez přípravy.
 // Spuštění: node scripts/test-chat-prohlizec.mjs
@@ -145,7 +148,7 @@ await pM.close();
 const pT = await cMajitel.newPage();
 pT.on('pageerror', (e) => chybyKonzole.push(String(e)));
 await pT.goto(`${BASE}/pozemky-okres-tabor.html`);
-await pT.waitForTimeout(1500);
+await domUtichlo(pT, 350);   // bylo waitForTimeout(1500)
 je('žádná vyskakovací hláška se neukáže', await pT.locator('.upo-toast').count(), 0);
 // jako by mezitím něco přibylo: snížíme poslední známý počet a zahodíme paměť
 await pT.evaluate(() => {
@@ -153,7 +156,7 @@ await pT.evaluate(() => {
   sessionStorage.removeItem('pk_upozorneni_v1');
 });
 await pT.reload();
-await pT.waitForTimeout(2500);
+await domUtichlo(pT, 350);   // bylo waitForTimeout(2500)
 je('ani při přírůstku nic nevyskočí', await pT.locator('.upo-toast').count(), 0);
 /* Značka v hlavičce („něco přibylo") byla součást odznaku upozornění
    a šla s ním. Hlášku, která tu dřív vyskakovala, nic nenahrazuje —
@@ -184,7 +187,7 @@ await pT.close();
   const cZpis = await kontext(UID_ZAJEMCE, 'tok-zajemce');
   const pZpis = await cZpis.newPage();
   await pZpis.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
-  await pZpis.waitForTimeout(1500);
+  await domUtichlo(pZpis, 350);   // bylo waitForTimeout(1500)
   await pZpis.evaluate(([lid]) => window.PKAuth.rpc('send_message',
     { p_listing: lid, p_buyer: null, p_body: 'Ještě jeden dotaz k přístupové cestě.' }, true), [LISTING]);
   await pZpis.close();
@@ -195,16 +198,16 @@ await pT.close();
   pP.on('pageerror', (e) => chybyKonzole.push('profil: ' + e.message));
 
   await pP.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
-  await pP.waitForTimeout(2000);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(2000)
   const odznaky = await pP.locator('.zp-badge').allInnerTexts();
   const naZpravach = odznaky.reduce((a, t) => a + (parseInt(t, 10) || 0), 0);
 
   await pP.goto(`${BASE}/hlidani.html`, { waitUntil: 'load' });
-  await pP.waitForTimeout(3000);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(3000)
   const naHlidani = await pP.locator('#hl-root .hl-item').count();
 
   await pP.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'load' });
-  await pP.waitForTimeout(2500);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(2500)
   const cti = async (id) => parseInt((await pP.locator('#' + id).innerText()).replace(/[^0-9]/g, ''), 10);
 
   /* VIDĚT, ne jen „být v DOMu". Napoprvé tu stálo count() === 1 a sabotáž
@@ -222,11 +225,11 @@ await pT.close();
 
   /* A teď ZMĚNA: konverzace se přečte, číslo v profilu musí spadnout. */
   await pP.goto(`${BASE}/zpravy.html`, { waitUntil: 'load' });
-  await pP.waitForTimeout(1500);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(1500)
   await pP.locator('.zp-thread').first().click();
-  await pP.waitForTimeout(2000);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(2000)
   await pP.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'load' });
-  await pP.waitForTimeout(2500);
+  await domUtichlo(pP, 350);   // bylo waitForTimeout(2500)
   je('po přečtení konverzace číslo v profilu spadne na nulu', await cti('pf-zpravy'), 0);
 
   await pP.close();

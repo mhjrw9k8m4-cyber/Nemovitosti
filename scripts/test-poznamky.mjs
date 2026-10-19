@@ -30,6 +30,10 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY. Po goto se tu dřív spalo 2 200 ms,
+   než se rozběhne js/pozemek.js — dohromady 39 sekund v patnácti
+   místech jen v tomhle souboru. Viz scripts/zkouska-pripraveno.mjs. */
+import { pripravenoPozemek, pripravenoVypis, pripravenoKdyz, poznamkaUlozena, sitUtichla } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -77,7 +81,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     if (t.indexOf(ZNACKA) >= 0) odeslano.push(r.method() + ' ' + r.url().slice(0, 90));
   });
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2200);
+  await pripravenoPozemek(p);
 
   const je = await p.evaluate(() => {
     const t = document.querySelector('#pz-pozn-text');
@@ -96,7 +100,12 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
      a dokud test zůstával v poli, neproběhlo nic, co se na odchod váže.
      Sabotáž „pošli poznámku na server" tím prošla nepovšimnuta. */
   await p.evaluate(() => document.querySelector('#pz-pozn-text').blur());
-  await p.waitForTimeout(1200);
+  /* Uložení je při odchodu z pole okamžité, takže se čeká na jeho
+     viditelnou značku. A pak ještě na to, až utichne síť — jinak by
+     kontrola „poznámka neodešla ven" prošla jen proto, že se měřilo
+     dřív, než by takový požadavek vůbec vznikl. */
+  await poznamkaUlozena(p, /uložen/i);
+  await sitUtichla(p);
   const po = await p.evaluate(() => ({
     stav: document.querySelector('#pz-pozn-stav').textContent.trim(),
     ulozeno: (() => { try {
@@ -112,14 +121,15 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     'poznámka se objevila v požadavku na: ' + odeslano.slice(0, 2).join(', '));
 
   await p.reload({ waitUntil: 'load' });
-  await p.waitForTimeout(2200);
+  await pripravenoPozemek(p);
   const znovu = await p.evaluate(() => document.querySelector('#pz-pozn-text').value);
   pravda('a po načtení stránky znovu tam pořád je', znovu === TEXT, `v poli: „${znovu}"`);
 
   /* Prázdná poznámka se SMAŽE a řekne se to — „uloženo" u prázdného
      pole by znamenalo, že se někam uložilo prázdno. */
   await p.fill('#pz-pozn-text', '');
-  await p.waitForTimeout(1200);
+  await poznamkaUlozena(p, /smazán/i);
+  await sitUtichla(p);
   const prazdno = await p.evaluate(() => ({
     stav: document.querySelector('#pz-pozn-stav').textContent.trim(),
     klicu: (() => { try { return Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')).length; }
@@ -148,7 +158,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   p.on('pageerror', (e) => chybyJs.push(String(e)));
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForSelector('#pz-pozn-skok', { timeout: 20000 }).catch(() => {});
-  await p.waitForTimeout(1800);
+  await pripravenoPozemek(p);
 
   const nahore = await p.evaluate(() => {
     const b = document.getElementById('pz-pozn-skok');
@@ -177,6 +187,9 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
      přesně takhle.) */
   if (nahore && nahore.vidno) {
     await p.click('#pz-pozn-skok');
+    /* TOHLE ČEKÁNÍ ZŮSTÁVÁ PEVNÉ, a to schválně. Měří se právě to, co
+       se za tu dobu má stát — doskok a zaostření. Kdo si na „políčko je
+       zaostřené" počká a pak změří, že je zaostřené, nezměřil nic. */
     await p.waitForTimeout(1000);
     const po = await p.evaluate(() => {
       const t = document.getElementById('pz-pozn-text');
@@ -191,7 +204,11 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     pravda('a na chvíli ukáže, KAM se přišlo', po.sviti, JSON.stringify(po));
 
     await p.fill('#pz-pozn-text', 'Zkouška — rozbitý plot u severní hranice.');
-    await p.waitForTimeout(500);
+    /* Bez čekání: popisek tlačítka přepisuje obsluha události „input"
+       (obnovSkok v js/pozemek.js), tedy ještě v tom samém kroku, co
+       fill() vyvolá. Dřív se tu spalo 500 ms — a to bylo navíc KRATŠÍ
+       než prodleva ukládání (600 ms), takže to čekání nehlídalo ani to,
+       co si možná myslelo. */
     const popsane = await p.evaluate(() => {
       const b = document.getElementById('pz-pozn-skok');
       return { text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
@@ -219,7 +236,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await p.waitForSelector('#pz-pozn-skok', { timeout: 20000 }).catch(() => {});
-  await p.waitForTimeout(1800);
+  await pripravenoPozemek(p);
   const je = await p.evaluate(() => {
     const b = document.getElementById('pz-pozn-skok');
     return !!b && !b.hidden && b.getBoundingClientRect().width > 0;
@@ -228,6 +245,9 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     'tlačítko #pz-pozn-skok chybí nebo není vidět');
   if (je) {
     await p.click('#pz-pozn-skok');
+    /* I tohle čekání je pevné schválně: krátké JE ta kontrola. Se
+       zapnutým „méně pohybu" musí být políčko zaostřené hned, ne až po
+       skoro půl vteřině plynulého dojetí. */
     await p.waitForTimeout(150);
     const hned = await p.evaluate(() => {
       const t = document.getElementById('pz-pozn-text');
@@ -247,7 +267,8 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2000);
+  // Tenhle blok sahá jen na window.PKPoznamky, takže stačí, až je modul tam.
+  await pripravenoKdyz(p, () => !!window.PKPoznamky);
   const v = await p.evaluate(() => {
     const P = window.PKPoznamky;
     const m = {};
@@ -293,18 +314,32 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2200);
+  await pripravenoPozemek(p);
   // ulož pozemek i poznámku
   await p.fill('#pz-pozn-text', TEXT);
-  await p.waitForTimeout(900);
+  await poznamkaUlozena(p, /uložen/i);
+  /* Tlačítko „Uložit" vykresluje až JS, tak se na něj počká — jinak by
+     se do schránky neklepnulo vůbec a čekání pod tím by jen vypršelo
+     (vrací `false`, ne výjimku, takže by se vada poznala až na kontrole
+     „uložený pozemek je v porovnání", a to jako cizí vina). */
+  const tlacitko = await pripravenoKdyz(p, () => !!document.querySelector('#pz-fav'));
   const ulozen = await p.evaluate(() => {
     const b = document.querySelector('#pz-fav');
     if (b) b.click();
-    return true;
+    return !!b;
   });
-  await p.waitForTimeout(600);
+  pravda('na stránce je tlačítko „Uložit" (bez něj není co porovnávat)',
+    tlacitko && ulozen === true, 'tlačítko #pz-fav se nenašlo');
+  /* Čeká se, až je pozemek OPRAVDU mezi uloženými — klepnutí na „Uložit"
+     zapisuje do schránky, a to je pozorovatelné. */
+  await pripravenoKdyz(p, () => {
+    try { return JSON.parse(localStorage.getItem('pk_fav_v1') || '[]').length > 0; }
+    catch (e) { return false; }
+  });
   await p.goto(`${BASE}/porovnani.html`, { waitUntil: 'load' });
-  await p.waitForTimeout(2500);
+  /* Čeká se na VYKRESLENOU stránku porovnání, ne na řádky: počet řádků
+     je to, co se vzápětí měří. */
+  await pripravenoKdyz(p, () => !!document.querySelector('.por-tab, .por-prazdno'));
   const v = await p.evaluate(() => {
     /* MOJE POZNÁMKA SE JMENUJE .por-moje-pozn, NE .por-pozn.
        Hledalo se tu `.por-pozn` — a to je třída VYSVĚTLUJÍCÍCH odstavců
@@ -335,7 +370,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2000);
+  await pripravenoKdyz(p, () => !!window.PKPoznamky);
   const v = await p.evaluate(() => {
     const P = window.PKPoznamky;
     const d = { place: 'Mezipaměť', parcel: '9', okres: 'Benešov', lat: 49.9, lng: 14.7 };
@@ -349,8 +384,16 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     const poSmazani = P.text(d);      // a smazání
     // zápis z jiné karty prohlížeče: schránku změní někdo zvenčí
     P.uloz(d, 'moje');
-    const k = Object.keys(JSON.parse(localStorage.getItem(P.KLIC)))[0];
-    const m = JSON.parse(localStorage.getItem(P.KLIC));
+    /* A NEJDŘÍV: OPRAVDU SE NĚCO ZAPSALO? Dokud se tu parsovalo rovnou,
+       stačilo, aby ukládání tiše selhalo, a celá zkouška spadla na
+       „Cannot convert undefined or null to object" — tedy na výjimce,
+       ze které v CI není poznat co a kde. (Vyzkoušeno sabotáží: zápis
+       do localStorage jsem z modulu odstranil.) Teď se to řekne jménem
+       a zbytek bloku se neměří. */
+    const syrove = localStorage.getItem(P.KLIC);
+    if (!syrove) return { nicSeNeulozilo: true, prazdne, poPrvnim, poDruhem, poSmazani };
+    const k = Object.keys(JSON.parse(syrove))[0];
+    const m = JSON.parse(syrove);
     m[k] = { text: 'z druhé karty', kdy: Date.now() };
     localStorage.setItem(P.KLIC, JSON.stringify(m));
     window.dispatchEvent(new StorageEvent('storage', { key: P.KLIC }));
@@ -361,10 +404,13 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     const poUprave = P.text(d);
     return { prazdne, poPrvnim, poDruhem, poSmazani, poCizim, poUprave };
   });
+  pravda('zápis poznámky do schránky vůbec proběhl (jinak není co měřit)',
+    !v.nicSeNeulozilo, 'po P.uloz() je pk_poznamky_v1 prázdné');
   pravda('po uložení vrací text() nový text, ne starou mezipaměť',
     v.prazdne === '' && v.poPrvnim === 'první', JSON.stringify(v));
   pravda('a po přepsání ten přepsaný', v.poDruhem === 'druhá', `vrátilo „${v.poDruhem}"`);
   pravda('a po smazání nic', v.poSmazani === '', `vrátilo „${v.poSmazani}"`);
+  if (!v.nicSeNeulozilo) {
   pravda('změna z jiné karty prohlížeče mezipaměť zahodí',
     v.poCizim === 'z druhé karty', `vrátilo „${v.poCizim}"`);
   /* Ve schránce v tu chvíli leží „z druhé karty" (přepsala ji ta
@@ -372,6 +418,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
      ta hodnota — ne „moje". */
   pravda('a vsechny() vrací kopii — volající nerozbije ostatním výpis',
     v.poUprave === 'z druhé karty', `po úpravě kopie vrátilo „${v.poUprave}"`);
+  }
   await ctx.close();
 }
 
@@ -408,7 +455,15 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     if (/\/rpc\/poznamka_uloz/.test(r.url())) naServer.push(r.postData() || '');
   });
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2400);
+  /* PŘIHLÁŠENÍ JE PŘEDPOKLAD, NE MĚŘENÁ VĚC. Věta u pole se dosazuje
+     dvakrát: nejdřív podle toho, co ví stránka hned, a po dojití účtu
+     znovu (rekniKde za PKPoznamky.sync v js/pozemek.js). Čekat jen na
+     „věta je neprázdná" by tedy mohlo trefit tu PRVNÍ, nepřihlášenou —
+     a zkouška by padla na vadě, která v aplikaci není. Čeká se proto na
+     přihlášení; CO ta věta říká, se měří až potom. */
+  await pripravenoKdyz(p, () => !!(window.PKPoznamky && window.PKPoznamky.prihlasen
+    && window.PKPoznamky.prihlasen()) && !!document.getElementById('pz-pozn-text')
+    && ((document.getElementById('pz-pozn-kde') || {}).textContent || '').trim().length > 0);
 
   /* Mezery se sjednotí už při čtení: věta prošla českou sazbou, takže
      v ní stojí „k\u00a0vašemu účtu". Zkouška se ptá na SLOVA. */
@@ -420,8 +475,12 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     !/neodesílá|nevidíme ji ani my/i.test(slib), `věta: „${slib.slice(0, 120)}"`);
 
   await p.fill('#pz-pozn-text', TEXT_UCET);
+  /* Požadavek se nečeká na hodinky, ale na sebe samého — a když
+     nepřijde, řekne to kontrola pod tím, ne timeout. */
+  const odchod = p.waitForRequest((r) => /\/rpc\/poznamka_uloz/.test(r.url()),
+    { timeout: 10000 }).catch(() => null);
   await p.evaluate(() => document.querySelector('#pz-pozn-text').blur());
-  await p.waitForTimeout(1200);
+  await odchod;
   pravda('napsaná poznámka ODEŠLE na účet', naServer.length > 0,
     `požadavků na poznamka_uloz: ${naServer.length}`);
   pravda('a pošle se s ní ten text, co člověk napsal',
@@ -435,8 +494,15 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
      i na jiném telefonu". */
   const ctx2 = await prihlasenyKontext(1100, 900);
   const p2 = await ctx2.newPage();
+  /* Čeká se na ODPOVĚĎ z účtu, ne na tři vteřiny. Čekání se zakládá
+     DŘÍV než navigace: kdyby se registrovalo po ní, mohla by odpověď
+     dorazit mezitím a zkouška by pak stála o strop zbytečně. Co se
+     z té odpovědi objeví v políčku, se měří až potom. */
+  const zUctu = p2.waitForResponse((r) => /\/rpc\/moje_poznamky/.test(r.url()),
+    { timeout: 20000 }).catch(() => null);
   await p2.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p2.waitForTimeout(3000);
+  await zUctu;
+  await pripravenoKdyz(p2, () => !!document.getElementById('pz-pozn-text'));
   const druhy = await p2.evaluate(() => ({
     vPoli: document.querySelector('#pz-pozn-text').value,
     vSchrance: Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')).length,
@@ -468,7 +534,13 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     const chybyJs = [];
     p3.on('pageerror', (e) => chybyJs.push(String(e)));
     await p3.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-    await p3.waitForTimeout(4500);
+    /* POZOR NA KOSTRU NAČÍTÁNÍ. Čekat na `#opp-list li` nestačí: ve
+       statickém HTML jsou čtyři `li.opp-skel` (šedé obrysy, než data
+       dojdou) a ty žádné data-pk nenesou. Napsané takhle to zkouška
+       hlásila jako vadu webu — „karet: 4, klíč první: null". Čeká se
+       proto na VYKRESLENOU kartu (.opp-item), a ŽE nese klíč, měří
+       kontrola pod tím. */
+    await pripravenoVypis(p3);
 
     const karta = await p3.evaluate(() => {
       const li = document.querySelector('#opp-list li[data-pk]');
@@ -488,7 +560,10 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
       pravda('poznámka se uloží na účet i pro pozemek z výpisu', poslano === true);
       await p3.evaluate(() => localStorage.removeItem('pk_poznamky_v1'));
       await p3.reload({ waitUntil: 'load' });
-      await p3.waitForTimeout(5000);
+      /* ČEKÁ SE NA TO, CO SE ČEKÁ — ne dýl. Značka má přijít z účtu, tak
+         se na ni počká (strop 10 s). Kontrola tím nezvětrá: když značka
+         nepřijde, čekání vyprší a kontroly pod tím to řeknou jménem. */
+      await pripravenoKdyz(p3, () => !!document.querySelector('#opp-list .opp-pozn'), null, 10000);
 
       const v = await p3.evaluate((k) => {
         const znacky = [...document.querySelectorAll('#opp-list .opp-pozn')];
@@ -569,7 +644,9 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   const ctx = await prihlasenyKontext(1100, 900);
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
-  await p.waitForTimeout(2400);
+  // Blok sahá na moduly, ne na vykreslení — čeká se tedy na ně a na přihlášení.
+  await pripravenoKdyz(p, () => !!(window.PKPoznamky && window.PKKlic && window.PKAuth
+    && window.PKPoznamky.prihlasen && window.PKPoznamky.prihlasen()));
 
   const d = { place: 'Mazání', parcel: '7', okres: 'Benešov', lat: 49.9, lng: 14.7 };
   /* klicPozemku, ne pkey: pod hrubým pkey ležely poznámky k pěti různým
@@ -580,7 +657,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
 
   // 1) napsat a nechat potvrdit účtem
   await p.evaluate((dd) => window.PKPoznamky.uloz(dd, 'u plotu je studna'), d);
-  await p.waitForTimeout(900);
+  // Čeká se na potvrzení účtem (příznak „nahrano"), ne na 900 ms.
+  await pripravenoKdyz(p, (k) => {
+    try { return (JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[k] || {}).nahrano === true; }
+    catch (e) { return false; }
+  }, klic, 10000);
   const poZapisu = await p.evaluate((k) =>
     (JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[k] || {}).nahrano === true, klic);
   pravda('potvrzená poznámka se označí jako známá účtu', poZapisu === true,
@@ -603,7 +684,9 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     `sync() vrátil ${zmen}`);
 
   // 4) a nenahraje ji zpátky na účet
-  await p.waitForTimeout(700);
+  /* Tady se měří, že se něco NESTALO, takže se musí dát síti šance to
+     udělat: čeká se, až utichne provoz, ne pevných 700 ms. */
+  await sitUtichla(p);
   const naUctu = await p.evaluate(() =>
     window.PKAuth.rpc('moje_poznamky', {}).then((r) => (r && r.data) || []));
   pravda('a nenahraje ji zpátky na účet',
@@ -622,7 +705,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     return k;
   }, d2);
   await p.evaluate(() => window.PKPoznamky.sync());
-  await p.waitForTimeout(900);
+  // Nahrání je pozorovatelné na příznaku „nahrano" — čeká se na něj.
+  await pripravenoKdyz(p, (k) => {
+    try { return (JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[k] || {}).nahrano === true; }
+    catch (e) { return false; }
+  }, klic2, 10000);
   const po2 = await p.evaluate((k) => ({
     jeJeste: !!JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[k],
   }), klic2);
@@ -665,7 +752,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
   await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-  await p.waitForTimeout(2600);
+  await pripravenoKdyz(p, () => !!window.PKKlic && !!document.querySelector('.opp-item[data-pk]'));
   /* Která karta je ta „složená", se počítá ze SKUTEČNÝCH dat týmž
      pravidlem jako web — ne z ručního seznamu, který by zestárl. */
   const slozena = await p.evaluate(async () => {
@@ -684,8 +771,13 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   pravda('ve výpisu je karta, jejíž záznam vznikl složením dvou (jinak není co měřit)',
     !slozena.zadna, JSON.stringify(slozena));
   if (!slozena.zadna) {
+    /* Čeká se na PŘESUN, ne na 3,2 s — a jen na přesun jako takový.
+       KAM se došlo a co ta stránka ukazuje, měří kontroly pod tím; čekat
+       na „adresa obsahuje pozemek" by z nich udělalo prázdná slova. */
+    const presun = p.waitForNavigation({ waitUntil: 'load', timeout: 25000 }).catch(() => null);
     await p.evaluate((i) => document.querySelectorAll('.opp-item')[i].click(), slozena.i);
-    await p.waitForTimeout(3200);
+    await presun;
+    await pripravenoKdyz(p, () => !!document.querySelector('.pz-price .pv'), null, 15000);
     const stranka = await p.evaluate(() => ({
       url: location.pathname,
       /* Cena stojí v .pz-price > .pv; vedle ní v témže bloku bývá i cena
@@ -704,7 +796,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
         t.value = 'Ověřit v katastru.';
         t.dispatchEvent(new Event('input', { bubbles: true }));
       });
-      await p.waitForTimeout(1000);
+      // Zápis je odložený o 600 ms; čeká se na jeho výsledek, ne na lhůtu.
+      await pripravenoKdyz(p, () => {
+        try { return Object.keys(JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')).length > 0; }
+        catch (e) { return false; }
+      }, null, 10000);
       /* KLÍČ SE SKLÁDÁ Z OBOJÍHO: z pkey té karty (data-pk) a z výměry,
          kterou si stránka nese vepsanou (window.PK_POZEMEK.v). Prosté
          „začíná na data-pk" by nestačilo — pod jedním pkey leží až pět
@@ -738,7 +834,10 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
         `uloženo pod ${JSON.stringify(ulozeno.klice)}, čekáno ${cekanyKlic}`);
       await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
       await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-      await p.waitForTimeout(2600);
+      /* Počká se na tu konkrétní kartu (strop 10 s) — a když nepřijde,
+         kontroly pod tím to řeknou jménem místo timeoutu. */
+      await pripravenoKdyz(p, (k) => [...document.querySelectorAll('.opp-item')]
+        .some((x) => x.getAttribute('data-pk') === k), slozena.klic, 10000);
       const odznak = await p.evaluate((k) => {
         const e = [...document.querySelectorAll('.opp-item')].find((x) => x.getAttribute('data-pk') === k);
         return { kartaJe: !!e, maOdznak: e ? !!e.querySelector('.opp-pozn') : null };

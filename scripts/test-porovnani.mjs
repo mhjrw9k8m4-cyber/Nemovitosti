@@ -22,6 +22,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -137,7 +140,7 @@ p.on('pageerror', (e) => chyby.push(String(e).slice(0, 140)));
 await p.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
 await p.evaluate(() => localStorage.removeItem('pk_fav_v1'));
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(1500);
+await domUtichlo(p, 350);   // bylo waitForTimeout(1500)
 const prazdna = await p.evaluate(() => ({
   prazdnaTabulka: !!document.querySelector('.por-tab tbody tr:not(.por-ukazka *)')
     && !document.querySelector('.por-ukazka'),
@@ -205,7 +208,7 @@ pravda('bez uložených se neukáže prázdná tabulka, ale vysvětlení',
 /* 2) se třemi uloženými se objeví právě ty tři */
 await p.evaluate((k) => localStorage.setItem('pk_fav_v1', JSON.stringify(k)), vzorky.map(klic));
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(2500);
+await domUtichlo(p, 350);   // bylo waitForTimeout(2500)
 const t = await p.evaluate(() => {
   const tab = document.querySelector('.por-tab');
   if (!tab) return null;
@@ -251,7 +254,7 @@ pravda('s uloženými pozemky ukázka zmizí',
 /* 3) klíč, který v datech není, nesmí stránku shodit */
 await p.evaluate(() => localStorage.setItem('pk_fav_v1', JSON.stringify(['tenhle|klic|neexistuje||'])));
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(2000);
+await domUtichlo(p, 350);   // bylo waitForTimeout(2000)
 const zmizely = await p.evaluate(() => (document.getElementById('porovnani') || {}).textContent.trim().slice(0, 80));
 pravda('uložený pozemek, který už v nabídce není, stránku neshodí',
   /uložen/i.test(zmizely) && chyby.length === 0, `${zmizely} | ${chyby.join(' ')}`);
@@ -270,7 +273,7 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
   await pm.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
   await pm.evaluate(() => localStorage.removeItem('pk_fav_v1'));
   await pm.reload({ waitUntil: 'domcontentloaded' });
-  await pm.waitForTimeout(2500);
+  await domUtichlo(pm, 350);   // bylo waitForTimeout(2500)
   const v = await pm.evaluate(() => {
     const o = document.querySelector('.por-tab-obal');
     if (!o) return null;
@@ -322,7 +325,7 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
     const dvojice = [uredni[0], bezne[0]];
     await p.evaluate((k) => localStorage.setItem('pk_fav_v1', JSON.stringify(k)), dvojice.map(klic));
     await p.reload({ waitUntil: 'domcontentloaded' });
-    await p.waitForTimeout(2500);
+    await domUtichlo(p, 350);   // bylo waitForTimeout(2500)
     const v = await p.evaluate(() => {
       const rad = [...document.querySelectorAll('.por-tab tbody tr')];
       return rad.map((r) => ({
@@ -361,7 +364,7 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
   await pv.goto(`${BASE}/porovnani.html`, { waitUntil: 'domcontentloaded' });
   await pv.evaluate(() => localStorage.removeItem('pk_fav_v1'));
   await pv.reload({ waitUntil: 'domcontentloaded' });
-  await pv.waitForTimeout(1800);
+  await domUtichlo(pv, 350);   // bylo waitForTimeout(1800)
   const v = await pv.evaluate(() => {
     /* Ořez pozná jedině porovnání skutečné a vykreslené výšky; samotný
        `overflow:hidden` ještě nic neznamená, dokud se text vejde. */

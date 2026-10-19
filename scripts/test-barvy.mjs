@@ -17,6 +17,9 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { adresaPozemku } from './adresa-pozemku.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -103,7 +106,7 @@ async function zjisti(url) {
   const chyby = [];
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(url, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(3800);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(3800)
   const v = await p.evaluate((kat) => {
     const cs = getComputedStyle(document.documentElement);
     const tok = {}, dot = {};
@@ -181,7 +184,7 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   const chyby = [];
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(3800);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(3800)
   let mereno = 0;
   for (const k of KATEGORIE) {
     const btn = await p.$(`[data-type="${k}"]`);
@@ -259,7 +262,7 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
 {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(3800);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(3800)
   const v = await p.evaluate(() => {
     const karty = [...document.querySelectorAll('.status-card')].map((e) => {
       const zn = e.querySelector('.status-n');
@@ -329,7 +332,7 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForFunction(() => document.querySelectorAll('.opp-item').length > 5,
     { timeout: 25000 }).catch(() => {});
-  await p.waitForTimeout(1200);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(1200)
   const v = await p.evaluate(() => {
     const DRUHY = ['sale', 'drazba', 'exekuce', 'obec', 'majitel'];
     const ko = getComputedStyle(document.documentElement);

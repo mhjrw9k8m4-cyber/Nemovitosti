@@ -275,10 +275,24 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
      Hledá se proto mezi prvními deseti karta s výměrou. Když by žádná
      taková nebyla, řekne se to rovnou — mlčky měřit dál by znamenalo
      prohlásit za ověřené něco, co ověřené není. */
+  /* POČKAT, AŽ KARTA DOLETÍ — a ne na hodinky.
+     Rozhodnutí přilepí kartě „odlet-vpravo/vlevo" a další kartu vykreslí
+     až o 300 ms později (js/main.js, rvRozhodni). Dokud se tu čekalo
+     260 ms, čtení i klepnutí padlo doprostřed toho okna: políčko poznámky
+     se otevřelo na kartě, kterou překreslení zahodilo, napsaný text se
+     ztratil a šipka zase posouvala karty. Přesně tím spadl v CI běh 553
+     (tři kontroly níž), zatímco tady to procházelo — smyčka se obvykle
+     vůbec neotočí. Čeká se proto na STAV balíčku: karta je na místě a
+     nikam neletí. */
+  const dolet = () => p.waitForFunction(() => {
+    const k = document.getElementById('rv-karta');
+    return !!k && !/odlet-|chystam-/.test(k.className);
+  }, null, { timeout: 15000 });
+  await dolet();
   let karta = await prectiKartu();
   for (let i = 0; i < 10 && !(karta.vymera > 0); i++) {
     await p.keyboard.press('ArrowRight');
-    await p.waitForTimeout(260);
+    await dolet();
     karta = await prectiKartu();
   }
   /* HRUBÝ klíč slouží jen k poznání, že je to táž karta; poznámka se
@@ -298,9 +312,33 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
     start.skryte === true, JSON.stringify(start));
   if (start.vyzva) {
     await p.evaluate(() => document.getElementById('rv-pozn-vyzva').click());
-    await p.waitForTimeout(250);
+    /* POLÍČKO MUSÍ BÝT OPRAVDU VIDĚT. Do skrytého textarea
+       playwrightovské p.type klidně „napíše" — klávesy spadnou do stránky
+       a nikam se nezapíšou, takže by se dál měřilo nic. Proto se na
+       otevření čeká a zároveň se o něm mlčí jen tak dlouho, dokud se
+       nedočká: když se nedočká, je to vypsaná chyba, ne tiché čekání. */
+    const otevreno = await p.waitForFunction(() => {
+      const t = document.getElementById('rv-pozn');
+      return !!t && t.hidden === false;
+    }, null, { timeout: 10000 }).then(() => true).catch(() => false);
+    pravda('klepnutí na „Přidat poznámku" políčko opravdu otevře', otevreno,
+      'políčko zůstalo schované');
+    /* KURZOR SE MĚŘÍ TEĎ, PŘED PSANÍM. p.type si políčko zaměří sám, takže
+       po něm by kontrola měřila playwright, ne web — a to si zkouška už
+       jednou nechala projít (sabotáž, která aplikaci zaměření vzala, jí
+       proklouzla). Kdo klepl na „Přidat poznámku", má mít kurzor rovnou
+       v políčku; druhé klepnutí navíc je vada. */
+    const kurzorHned = await p.evaluate(() => (document.activeElement || {}).id || '');
+    pravda('a rovnou v něm stojí kurzor (psát jde bez druhého klepnutí)',
+      kurzorHned === 'rv-pozn', `zaměřeno „${kurzorHned}"`);
     await p.type('#rv-pozn', 'U lesa, zavolat.');
-    await p.waitForTimeout(1100);
+    /* Zápis je odložený o 600 ms (js/main.js). Čeká se na jeho VÝSLEDEK,
+       ne na uplynulou dobu; když nepřijde, řekne to kontrola níž. */
+    await p.waitForFunction((k) => {
+      let m = {};
+      try { m = JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}'); } catch (e) {}
+      return !!(m[k] && /U lesa/.test(m[k].text || ''));
+    }, klic, { timeout: 10000 }).catch(() => {});
     const ulozeno = await p.evaluate((k) => {
       let m = {};
       try { m = JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}'); } catch (e) {}
@@ -310,15 +348,30 @@ pravda('a nabízená karta není ani jeden z nich', nevraci.kolize === 0,
     pravda('poznámka se uloží a řekne to', /ulož/i.test(ulozeno.stav || ''), `stav „${ulozeno.stav}"`);
     pravda('a uloží se pod klíč TÉ karty', ulozeno.podKlicem === true,
       `karta ${klic}, uloženo pod ${JSON.stringify(ulozeno.klice)}`);
-    /* Šipky jinak kartu rozhodují — uprostřed psaní by pozemek odletěl. */
-    await p.focus('#rv-pozn');
+    /* Šipky jinak kartu rozhodují — uprostřed psaní by pozemek odletěl.
+       Kurzor se sem nestaví znovu: psaní ho v políčku nechalo. Dřív tu
+       bylo p.focus('#rv-pozn') — a to je past: skryté políčko zaměří
+       „úspěšně", kurzor zůstane ve stránce a šipka pak kartou pohne
+       právem. Kde kurzor stojí, se proto měří a je to součást kontroly:
+       bez něj by neznamenala nic. */
+    const kdeKurzor = await p.evaluate(() => (document.activeElement || {}).id || '');
     await p.keyboard.press('ArrowRight');
-    await p.waitForTimeout(500);
-    const poSipce = await p.evaluate(() => (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '');
-    pravda('šipka uprostřed psaní kartou nehne', poSipce === pkHrube,
-      `před ${pkHrube}, po ${poSipce}`);
+    /* Bez čekání: rozhodnutí přilepí kartě třídu „odlet-" ještě v obsluze
+       klávesy, takže hned po stisku je vidět i rozhodnutí, které se teprve
+       chystá překreslit. Čekat na hodinky by znamenalo měřit pozdě. */
+    const poSipce = await p.evaluate(() => {
+      const k = document.getElementById('rv-karta') || { dataset: {}, className: '' };
+      return { pk: k.dataset.pk || '', leti: /odlet-/.test(k.className || '') };
+    });
+    pravda('šipka uprostřed psaní kartou nehne',
+      kdeKurzor === 'rv-pozn' && poSipce.pk === pkHrube && !poSipce.leti,
+      `kurzor „${kdeKurzor}", před ${pkHrube}, po ${poSipce.pk}`
+      + (poSipce.leti ? ' (a karta odlétá)' : ''));
     await p.evaluate(() => document.getElementById('rv-ne').click());
-    await p.waitForTimeout(900);
+    await p.waitForFunction((pk) => {
+      const k = document.getElementById('rv-karta');
+      return !!k && !/odlet-|chystam-/.test(k.className) && (k.dataset.pk || '') !== pk;
+    }, pkHrube, { timeout: 15000 }).catch(() => {});
     const dalsi = await p.evaluate(() => ({
       karta: (document.getElementById('rv-karta') || { dataset: {} }).dataset.pk || '',
       hodnota: (document.getElementById('rv-pozn') || { value: null }).value,

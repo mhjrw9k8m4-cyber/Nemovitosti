@@ -18,6 +18,9 @@
 //   4. co server odmítne, to web nevydává za uložené.
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -106,7 +109,7 @@ async function otevri(prihlasit) {
   p.on('pageerror', (e) => padlo.push(String(e).slice(0, 160)));
   p.setDefaultTimeout(8000);
   await p.goto(`${BASE}/pridat.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2600);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2600)
   return { ctx, p, padlo };
 }
 
@@ -206,7 +209,7 @@ async function odesli(p) {
 {
   const { ctx, p, padlo } = await otevri(true);
   await p.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2800);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2800)
   const v = await p.evaluate(() => ({
     karet: document.querySelectorAll('.mi-lcard').length,
     odznak: (document.querySelector('.mi-lstatus') || {}).textContent || '',
@@ -278,7 +281,7 @@ async function odesli(p) {
   }).catch(() => {});
 
   await p.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2800);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2800)
   const v = await p.evaluate(() => {
     const el = document.querySelector('.mi-potiz');
     return { je: !!el, text: el ? el.textContent.replace(/\s+/g, ' ').trim() : '' };
@@ -297,7 +300,7 @@ async function odesli(p) {
     body: JSON.stringify({ id: lid, ok: true, nalezy: [] }),
   }).catch(() => {});
   await p.reload({ waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2600);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2600)
   pravda('u inzerátu, kde je všechno v pořádku, se nic nestraší',
     await p.evaluate(() => !document.querySelector('.mi-potiz')));
   pravda('a nic při tom nespadlo', padlo.length === 0, padlo.join(' | '));
@@ -596,7 +599,7 @@ async function odesli(p) {
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p = await ctx.newPage();
   await p.goto(`${BASE}/pridat.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2400);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
   const v = await p.evaluate(() => {
     const y = (e) => (e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null);
     const prvni = document.querySelector('.auth-tabs')

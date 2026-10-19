@@ -24,6 +24,9 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -109,7 +112,7 @@ const p = await ctx.newPage();
 const chyby = [];
 p.on('pageerror', (e) => chyby.push(String(e)));
 await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(4500);
+await domUtichlo(p, 350);   // bylo waitForTimeout(4500)
 
 /* ---- PRUH S ŽIVÝMI ÚDAJI V ÚVODU UŽ NENÍ --------------------------
    Byly tu tři skupiny kontrol: že se pruh vykreslil a každý ze tří údajů
@@ -323,7 +326,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
 {
   await p.goto(`${BASE}/index.html?kraj=${encodeURIComponent('Jihomoravský')}#mapa`,
     { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2200);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2200)
   const v = await p.evaluate(() => {
     const c = document.querySelector('.ms-chipy');
     const cislo = (t) => { const m = /(\d[\d\s\u00a0]*)/.exec(String(t).replace(/\u00a0/g, ' ')); return m ? +m[1].replace(/\s/g, '') : -1; };
@@ -362,7 +365,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   await p.goto(`${BASE}/index.html#mapa`, { waitUntil: 'domcontentloaded' });
   await p.evaluate(() => { try { localStorage.removeItem('pk_filtr_v1'); } catch (e) {} });
   await p.reload({ waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2600);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2600)
   const stav = () => p.evaluate(() => {
     const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
       .replace(/\u00a0/g, ' '));
@@ -537,7 +540,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   } else {
     await p.goto(`${BASE}/index.html?obec=${encodeURIComponent(nej.obec)}`
       + `&okres=${encodeURIComponent(nej.okres)}#mapa`, { waitUntil: 'domcontentloaded' });
-    await p.waitForTimeout(2400);
+    await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
     const v = await p.evaluate(() => {
       const c = document.querySelector('.ms-chipy');
       const m = /(\d[\d\s\u00a0]*)/.exec(String((document.getElementById('map-count') || {}).textContent)
@@ -566,7 +569,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
  */
 {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(3600);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(3600)
   const v = await p.evaluate(() => {
     const tipy = window.PK_TIPY || null;
     const karty = [...document.querySelectorAll('.deal-card')].map((c) => ({
@@ -610,7 +613,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
  */
 {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(3600);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(3600)
   const v = await p.evaluate(() => {
     const karty = [...document.querySelectorAll('.opp-item')].map((li) => {
       const ch = li.querySelector('.opp-deal');

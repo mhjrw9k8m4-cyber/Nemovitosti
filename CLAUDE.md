@@ -86,9 +86,18 @@ bash /tmp/suite.sh        # potřebuje PW_CHROMIUM a PK_LEAFLET_DIR
 ```
 
 Browser testy sdílejí port 8310 — nesmí běžet dva naráz.
+**Sabotáž se vrací ze ZÁLOHY souboru, ne přes `git checkout --`** — ten
+smaže i nezacommitované opravy v témže souboru (stalo se: zmizela
+oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
+balíček stylů, který stránka opravdu načítá**: úvodní stránka má
+`css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
+`css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška. V CI proto
+jedou ve **dvou směnách** (`v-prohlizeci`, `v-prohlizeci-2`), každá ve
+vlastní úloze na vlastním stroji, kolem 31 minut; místně se pouští
+jedna sada za druhou.
 
-**Dvě pasti, které udělají ze zelené zkoušky slepou** (obě naměřeny
-15. 10., obě popsané v `docs/optimalizace.md`, položka 7):
+**Tři pasti, které udělají ze zelené zkoušky slepou** (první dvě naměřeny
+15. 10., třetí 19. 10.; popsané v `docs/optimalizace.md`, položky 7 a 37):
 
 1. **Dotyk se musí říct.** Pravidla pro telefon stojí za
    `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna.
@@ -99,6 +108,29 @@ Browser testy sdílejí port 8310 — nesmí běžet dva naráz.
    a naviguje se víckrát. Od druhé navigace obsluhuje soubory
    pracovník a jeho dotazy přes `route` NEJDOU — podstrčený
    `config.js` přestane platit a stránka se zeptá opravdové databáze.
+3. **Čeká se na stav, ne na hodinky.** Karta rychlého výběru odlétá
+   300 ms a až potom se vykreslí další (`rvRozhodni` v `js/main.js`).
+   Zkouška, která po stisku čekala 260 ms, sahala doprostřed toho okna
+   — a `p.type('#rv-pozn', …)` do SKRYTÉHO textarea „napíše" bez
+   chyby: klávesy spadnou do stránky a nikam se nezapíšou. Stejně
+   mlčky lže `p.focus` na skrytém prvku. V CI (pomalejší stroj) tím
+   spadl běh 553 na třech kontrolách poznámky, zatímco lokálně to
+   procházelo. Místo prodlužování čekání se čeká na pozorovatelný stav
+   (`waitForFunction`: karta je na místě a nemá třídu `odlet-`,
+   políčko má `hidden === false`, poznámka je v `localStorage`).
+   A kde se měří, že se něco NESTALO, měří se hned po stisku: obsluha
+   klávesy přilepí třídu `odlet-` synchronně, takže na hodinky není
+   důvod čekat.
+   **Ale pozor na opačnou chybu:** `waitForTimeout` někdy NENÍ čekání na
+   připravenost, ale **měřicí okno** — `test-stabilita` jím sbírá poskoky
+   rozvržení (CLS), `test-pohyb` jím nechává dojet animaci značky (ta DOM
+   nemění) a `test-stabilita` jím čeká, až aplikaci VYPRŠÍ lhůta hlídky
+   vršku. Zkrátit je na „DOM utichl" znamená, že zkouška projde, protože
+   se nekoukala — nebo spadne na vadě, která v aplikaci není. U všech je
+   to na místě napsané.
+   Pomůcky: `scripts/zkouska-pripraveno.mjs` (čekání na stav),
+   `scripts/zkouska-pad.mjs` (při pádu vypíše, kam zkouška došla —
+   jinak v CI zbyde jen stopa výjimky a ani jedna ✕).
 
 ---
 
@@ -159,7 +191,10 @@ strop:
   hlida: scripts/test-hierarchie.mjs
 zakazano:
   - "backdrop-filter kdekoli (sklo a rozostření — zrušeno 19. 10., viz oddíl 32)"
-  - "průsvitné plochy pod textem: kontrast pak závisí na tom, co je pod nimi"
+  - "SVĚTLÁ průsvitná plocha pod TMAVÝM textem: kontrast pak závisí na
+     tom, co je pod ní. Opačný směr (tmavá plocha + bílý text) dovolen
+     je — má spočitatelný strop: i nad bílou fotkou vyjde 8,19 : 1.
+     Tak jsou udělané odznaky na fotkách karet."
   - "font jiný než Inter bez podřezání v fonts/ (test-pisma pozná znak mimo sadu)"
   - "nové barvy mimo tokeny"
 ```

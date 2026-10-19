@@ -31,6 +31,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs.
+   Pomocné funkce níž (jdiNaMisto, klepniDoMapy) se volají v cyklech,
+   takže se každé pevné čekání platí mnohokrát. */
+import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
+import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -38,6 +43,8 @@ await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
+/* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs. */
+hlasPad('Hlídané místo a pozemky v okolí', zpravy);
 function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
@@ -84,7 +91,7 @@ async function telefon(poloha) {
   const chyby = [];
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(4200);
+  await pripravenoVypis(p);
   /* POHLED SE ŽÁDÁ JMÉNEM, AŤ JE VÝCHOZÍ KTERÝKOLI. Úvodní stránka má na
      telefonu dva pohledy nad sebou a vidět je jen jeden; výchozí se za dva
      dny obrátil dvakrát (17. 10. na mapu, 18. 10. zpátky na seznam). Co tahle
@@ -104,7 +111,7 @@ async function otevriVybirac(p, spoustec) {
   await p.waitForSelector('.vm-ov', { timeout: 8000 }).catch(() => {});
   // V CI se Leaflet stahuje ze sítě — čeká se na mapu, ne na hodinky.
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  await p.waitForTimeout(900);
+  await domUtichlo(p, 300);
 }
 /** Posune mapu výběru na dané místo a MÍSTO UKÁŽE — bez hledání, jak to
     musí umět i člověk. Samotné posunutí mapy zvenčí je jen nastavení
@@ -115,16 +122,30 @@ async function jdiNaMisto(p, lat, lng, z = 10) {
   // objekt neumí poslat zpátky („object reference chain is too long").
   await p.evaluate(([la, ln, zz]) => { if (window.PK_VM_MAPA) window.PK_VM_MAPA.setView([la, ln], zz); },
     [lat, lng, z]);
-  await p.waitForTimeout(900);
+  await domUtichlo(p, 250);
   const b = await p.locator('#vm-mapa').boundingBox();
   await p.mouse.click(Math.round(b.x + b.width / 2), Math.round(b.y + b.height / 2));
-  await p.waitForTimeout(1200);
+  await domUtichlo(p, 300);
 }
+/** Potvrdí výběr místa. VYPNUTÉ „Vybrat" má skončit pojmenovanou chybou,
+ *  ne pádem: playwright na nezapnutelné tlačítko čeká 30 s a pak zkoušku
+ *  SHODÍ — v CI pak zbyde „element is not enabled" a z toho není poznat,
+ *  co je špatně. (Vyzkoušeno sabotáží: klepnutí do mapy jsem v aplikaci
+ *  odpojil, takže se místo nevybralo, „Vybrat" zůstalo vypnuté a zkouška
+ *  padla přesně takhle — bez jediné ✕.) */
+async function potvrdVyber(p, kde) {
+  const slo = await p.locator('#vm-ok').click({ timeout: 6000 })
+    .then(() => true).catch(() => false);
+  pravda(`${kde}: „Vybrat" jde potvrdit (bez toho se místo nevybere)`, slo,
+    'tlačítko #vm-ok zůstalo vypnuté nebo chybí');
+  return slo;
+}
+
 /** Klepnutí do mapy výběru — tím se místo ukazuje. */
 async function klepniDoMapy(p, fx = 0.5, fy = 0.5) {
   const b = await p.locator('#vm-mapa').boundingBox();
   await p.mouse.click(Math.round(b.x + b.width * fx), Math.round(b.y + b.height * fy));
-  await p.waitForTimeout(1300);
+  await domUtichlo(p, 300);
 }
 /** Co výběr místa právě ukazuje. */
 const stavVybiraku = (p) => p.evaluate(() => {
@@ -799,7 +820,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await otevriVybirac(p, '#map-near');
   await jdiNaMisto(p, 50.028, 15.200);   // Kolín
   const nabidka = (await stavVybiraku(p)).pocet;
-  await p.click('#vm-ok');
+  await potvrdVyber(p, 'výběr místa');
   await p.waitForTimeout(2200);
 
   const v = await p.evaluate(() => {
@@ -915,7 +936,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('a pamatuje si zvolený okruh', znovu.km === '50', `nabízí ${znovu.km} km místo 50`);
   if (znovu.otevreno) {
     await jdiNaMisto(p, 49.414, 14.657);   // Tábor
-    await p.click('#vm-ok');
+    await potvrdVyber(p, 'výběr místa');
     await p.waitForTimeout(2200);
     const druhe = await p.evaluate(() => ({
       hlavicka: (document.querySelector('.kh-txt b') || {}).textContent || '',
@@ -1120,7 +1141,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.waitForSelector('.vm-ov', { timeout: 12000 }).catch(() => {});
   const cekani = (Date.now() - t0) / 1000;
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  await p.waitForTimeout(600);
+  await domUtichlo(p, 300);
   const v = await p.evaluate(() => {
     const mapa = document.getElementById('vm-mapa');
     const r = mapa ? mapa.getBoundingClientRect() : null;
@@ -1228,9 +1249,9 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.waitForTimeout(500);
   await p.selectOption('#map-sort', 'near');
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
-  await p.waitForTimeout(900);
+  await domUtichlo(p, 300);
   await jdiNaMisto(p, 50.028, 15.200);   // Kolín
-  await p.click('#vm-ok');
+  await potvrdVyber(p, 'výběr místa');
   await p.waitForTimeout(2200);
   const v = await p.evaluate(() => ({
     razeni: (document.getElementById('map-sort') || {}).value,

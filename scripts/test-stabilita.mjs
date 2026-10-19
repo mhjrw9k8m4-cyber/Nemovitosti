@@ -25,6 +25,9 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 /* JEDEN POZOROVATEL PRO OBĚ MĚŘENÍ.
    Byl tu dvakrát, a ty dvě kopie se už rozešly: jedna vypisovala u uzlu
@@ -182,6 +185,11 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
        init-skript, ne evaluate po načtení. */
     await p.addInitScript(POZOROVATEL);
     await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
+    /* TOHLE ČEKÁNÍ MUSÍ ZŮSTAT PEVNÉ. Není to čekání na připravenost,
+       ale MĚŘICÍ OKNO: pozorovatel (nasazený init-skriptem) po celou tu
+       dobu sbírá poskoky rozvržení. Kdo ho zkrátí na „DOM utichl",
+       přestane vidět poskok, který přijde později — třeba od obrázku
+       dojíždějícího ze sítě — a zkouška projde proto, že se nekoukala. */
     await p.waitForTimeout(6000);
     const v = await p.evaluate((sel) => ({
       cls: +window.__cls.toFixed(4),
@@ -228,6 +236,11 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
       user: { id: 'u1', email: 'test@example.invalid' },
     })));
     await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
+    /* TOHLE ČEKÁNÍ MUSÍ ZŮSTAT PEVNÉ. Není to čekání na připravenost,
+       ale MĚŘICÍ OKNO: pozorovatel (nasazený init-skriptem) po celou tu
+       dobu sbírá poskoky rozvržení. Kdo ho zkrátí na „DOM utichl",
+       přestane vidět poskok, který přijde později — třeba od obrázku
+       dojíždějícího ze sítě — a zkouška projde proto, že se nekoukala. */
     await p.waitForTimeout(6000);
     const v = await p.evaluate((sel) => ({
       cls: +window.__cls.toFixed(4), kdo: window.__kdo,
@@ -309,6 +322,12 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
 
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  /* A TOHLE ČEKÁNÍ JE TŘETÍ MĚŘICÍ OKNO — tentokrát se čeká, až
+     aplikaci VYPRŠÍ LHŮTA. Hlídka drží vršek stránky 2,5 s po načtení;
+     kontrola pod tím ověřuje, že POTOM už nedrží. „DOM utichl" se
+     dočkal dřív, hlídka byla ještě živá a zkouška padla na vadě, která
+     v aplikaci není — naměřeno v sadě: „drží vršek i po 2,6 s".
+     Čeká se tedy pevně, a o chlup dýl než trvá ta lhůta. */
   await p3.waitForTimeout(2600);
   await p3.evaluate(() => window.scrollTo(0, 900));
   await p3.waitForTimeout(400);

@@ -33,7 +33,18 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
 
 export const STUPNICE = new Set([11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96]);
 export const TLOUSTKY = new Set(['400', '500', '600', '700', 'inherit', 'normal', 'bold']);
-const RODINY = /^(var\(--font-(ui|display|mono)\)|inherit|'Inter',?.*)$/;
+/* ČTVRTÝ TOKEN, A JE TO JEDINÝ, KTERÝ MÍŘÍ JINAM NEŽ NA INTER.
+   --font-ui, --font-display i --font-mono ukazují dodnes na totéž
+   (Inter), takže to nejsou tři hlasy, ale tři jména jednoho.
+   --font-nadpis je první skutečně jiný hlas: systémový serif na
+   VELKÉ nadpisy (h1, h1.uvod-nadpis, .section-head h2). Důvod je
+   v css/styles.css u jeho definice — stručně: serif na nadpisy
+   a grotesk na údaje je nejstarší typografický pár a úředním věcem
+   jako dražba a exekuce sedí; a protože je systémový, nestojí ani
+   bajt navíc a nemusí se podřezávat.
+   Pravidlo „rodina patří do tokenu, ne do pravidla" platí dál —
+   přibylo jedno jméno, ne možnost psát rodiny natvrdo. */
+const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*)$/;
 
 /* Komentáře se vybílí, ale délka zůstane — čísla řádků pak ukazují na
    opravdový řádek v souboru. Na rozdíl od odstupů se vnitřek var()

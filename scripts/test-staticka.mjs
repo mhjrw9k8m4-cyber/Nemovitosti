@@ -175,9 +175,16 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
   const jinde = fs.readdirSync('.github/workflows')
     .filter((f) => f !== 'testy.yml')
     .map((f) => fs.readFileSync('.github/workflows/' + f, 'utf8')).join('\n');
-  const iT = wf.indexOf('\n  testy:'), iP = wf.indexOf('\n  v-prohlizeci:');
-  const ulohaBez = iT < iP ? wf.slice(iT, iP) : wf.slice(iT);
-  const ulohaProh = iT < iP ? wf.slice(iP) : wf.slice(iP, iT);
+  /* ÚLOHY SE ČTOU PODLE KLÍČŮ, ne podle dvou pevných jmen a řezání
+     řetězce. Zkoušky v prohlížeči jedou ve dvou směnách naráz
+     („v-prohlizeci" a „v-prohlizeci-2", viz komentář ve workflow);
+     dokud se tu hledalo jen `\n  v-prohlizeci:`, druhá směna by
+     kontrolou propadla celá — a zrovna tahle kontrola má hlídat, že se
+     na žádnou zkoušku nezapomnělo. */
+  const bloky = wf.split(/\n  (?=[\w-]+:\n)/).slice(1);
+  const klicUlohy = (b) => (b.match(/^\s*([\w-]+):/) || [])[1] || '';
+  const ulohaBez = bloky.filter((b) => klicUlohy(b) === 'testy').join('\n');
+  const ulohaProh = bloky.filter((b) => /^v-prohlizeci/.test(klicUlohy(b))).join('\n');
   /* Počítají se jen SPOUŠTĚNÉ zkoušky, tedy řádky s „run:". Kdyby se bralo
      celé znění souboru, počítala by se i zmínka v komentáři v hlavičce
      workflow — a hlásilo by se, že zkouška běží dvakrát, i když běží jednou.

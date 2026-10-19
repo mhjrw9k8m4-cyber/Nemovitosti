@@ -17,6 +17,9 @@
    jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { readFileSync } from 'node:fs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -286,7 +289,7 @@ data = NOVE;   // robot mezitím našel další pozemek
    hledání za viděné, takže seznam nových zmizel dřív, než ho někdo
    stačil přečíst, a v Upozorněních po něm nezbylo nic. */
 await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(2400);
+await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
 {
   const karta = await p.evaluate(() => {
     const it = [...document.querySelectorAll('.hl-item')]
@@ -371,7 +374,7 @@ await p.waitForTimeout(2400);
       });
     });
     await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-    await p.waitForTimeout(2400);
+    await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
     const prazdna = await p.evaluate(() => {
       const it = [...document.querySelectorAll('.hl-item')]
         .find((e) => /Nemožné/.test((e.querySelector('.hl-iname') || {}).textContent || ''));
@@ -405,7 +408,7 @@ await p.waitForTimeout(2400);
         body: JSON.stringify({ p_id: moje.id }) });
     });
     await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-    await p.waitForTimeout(2400);
+    await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
 
     const naMapu = karta.odkazy.find((a) => /^index\.html/.test(a.href));
     pravda('a druhá cesta vede na mapu', !!naMapu, JSON.stringify(karta.odkazy));
@@ -435,7 +438,7 @@ await p.waitForTimeout(2400);
   /* Zpátky na hlídání: kontrola o kus výš klepla na „Zobrazit na mapě",
      takže se stránka přepnula a karty tu už nejsou. */
   await p.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2400);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
   const odkazy = await p.evaluate(() => [...document.querySelectorAll('.hl-nove li a')]
     .map((a) => ({ href: a.getAttribute('href') || '', text: (a.textContent || '').trim() })));
   pravda('vypsané pozemky jsou odkazy, ne jen text', odkazy.length > 0,
@@ -522,7 +525,7 @@ if (smazat) {
     ['zpravy.html', '#ze', '#zp'],
   ]) {
     await o.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
-    await o.waitForTimeout(2000);
+    await domUtichlo(o, 350);   // bylo waitForTimeout(2000)
     const m = await o.evaluate((s) => {
       const vidno = (x) => !!x && x.getClientRects().length > 0;
       /* Past je odkaz PRYČ ze stránky, který se tváří jako přihlášení.
@@ -550,7 +553,7 @@ if (smazat) {
      pryč. Pravidlo je stejné: Enter v heslu je na telefonu největší
      klávesa a bez <form> se po ní nedělo nic. */
   await o.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-  await o.waitForTimeout(2200);
+  await domUtichlo(o, 350);   // bylo waitForTimeout(2200)
   if (!(await o.$('#hp'))) {
     chyb++; zpravy.push('  ✕ Enter v heslu přihlásí — pole pro heslo na hlidani.html vůbec není');
   } else {
@@ -602,7 +605,7 @@ if (smazat) {
   });
   const px = await ctxX.newPage();
   await px.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-  await px.waitForTimeout(2200);
+  await domUtichlo(px, 350);   // bylo waitForTimeout(2200)
   await px.click('.hl-tab[data-zalozka="nove"]').catch(() => {});
   await px.waitForTimeout(600);
   const vx = await px.evaluate(() => {
@@ -644,7 +647,7 @@ if (smazat) {
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const pu = await ctxU.newPage();
   await pu.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
-  await pu.waitForTimeout(3200);
+  await domUtichlo(pu, 350);   // bylo waitForTimeout(3200)
   const u = await pu.evaluate(() => {
     const o = document.querySelector('.hl-ukazka');
     if (!o) return null;

@@ -27,6 +27,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
+import { pripravenoVypis, pripravenoKdyz } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -106,7 +108,10 @@ await p.waitForFunction(() => {
 }, null, { timeout: 15000 });
 await p.evaluate((d) => { try { localStorage.setItem('pk_navsteva_v1', JSON.stringify(d)); } catch (e) {} }, MINULE);
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(4200);
+/* Žádné 4 200 ms: naSeznam() pod tím si na vykreslený výpis počká sám
+   (čeká na `#opp-list .opp-item`), takže to čekání bylo dvakrát totéž —
+   jen hodinami. */
+await pripravenoVypis(p);
 /* Pohled se žádá jménem, ať je výchozí kterýkoli (za dva dny se obrátil
    dvakrát). Stačí to jednou: volba se pamatuje na dobu návštěvy
    (sessionStorage), takže přežije i ta načtení stránky níž. */
@@ -365,7 +370,14 @@ await p.evaluate(() => {
   } catch (e) {}
 });
 await p.reload({ waitUntil: 'domcontentloaded' });
-await p.waitForTimeout(4200);
+/* Nejdřív vykreslený výpis (ze stejných dat vzniká i proužek), pak
+   bounded čekání na proužek — ŽE se ukázal, měří kontrola pod tím, a
+   když se neukáže, čekání vyprší a ona to řekne jménem. */
+await pripravenoVypis(p);
+await pripravenoKdyz(p, () => {
+  const el = document.getElementById('misto-pruh');
+  return !!el && !el.hidden;
+}, null, 8000);
 const misto = await p.evaluate(() => {
   const el = document.getElementById('misto-pruh');
   if (!el || el.hidden) return null;

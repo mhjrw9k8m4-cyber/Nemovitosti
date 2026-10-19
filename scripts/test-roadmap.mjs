@@ -98,7 +98,12 @@ function vJobu(jmeno) {
   const j = joby.find((b) => b.trimStart().startsWith(jmeno + ':'));
   return j ? [...j.matchAll(/node (scripts\/test-[a-z0-9-]+\.mjs)/g)].length : 0;
 }
-const bez = vJobu('testy'), sProhlizecem = vJobu('v-prohlizeci');
+/* Zkoušky v prohlížeči jedou ve DVOU směnách vedle sebe (v-prohlizeci
+   a v-prohlizeci-2), tak se sečtou — jinak by README tvrdilo, že jich
+   je polovina. (Tahle oprava už tu jednou byla a zmizela: při úklidu
+   po sabotáži jsem soubor vrátil přes `git checkout --`, což smazalo
+   i ji. Proto se sabotáže vracejí ze ZÁLOHY souboru, ne z gitu.) */
+const bez = vJobu('testy'), sProhlizecem = vJobu('v-prohlizeci') + vJobu('v-prohlizeci-2');
 pravda(`úkoly v CI se našly (${bez} bez prohlížeče, ${sProhlizecem} s ním)`,
   bez > 10 && sProhlizecem > 10, `${bez} / ${sProhlizecem}`);
 maCislo('| Zkoušky |', 'souborů se zkouškami', souboru);

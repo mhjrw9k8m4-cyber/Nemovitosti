@@ -24,6 +24,9 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
+   rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -91,7 +94,7 @@ try {
   const p = await ctx.newPage();
   await p.goto(BASE + '/index.html', { waitUntil: 'load' });
   await p.waitForSelector('.mv-toggle .mvt-btn', { timeout: 25000 });
-  await p.waitForTimeout(2500);
+  await domUtichlo(p, 350);   // bylo waitForTimeout(2500)
 
   /* ---- NEJDŘÍV TO, CO JE VIDĚT PO OTEVŘENÍ -------------------------
      Úvodní stránka se na telefonu otevírá SEZNAMEM: hned mají být vidět
@@ -271,7 +274,7 @@ try {
   const w = await sirokyCtx.newPage();
   await w.goto(BASE + '/index.html', { waitUntil: 'load' });
   await w.waitForSelector('#opp-list .opp-item', { timeout: 25000 });
-  await w.waitForTimeout(2500);
+  await domUtichlo(w, 350);   // bylo waitForTimeout(2500)
   const s = await w.evaluate(() => {
     const side = document.querySelector('.map-side');
     const karty = Array.from(document.querySelectorAll('#opp-list .opp-item')).slice(0, 2)
@@ -319,7 +322,7 @@ try {
     const pp = await ctxP.newPage();
     await pp.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await pp.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-    await pp.waitForTimeout(1800);
+    await domUtichlo(pp, 350);   // bylo waitForTimeout(1800)
     pravda('nová návštěva začíná seznamem', (await jeSeznam(pp)) === true,
       'hned po otevření je zapnutá mapa');
     await klepni(pp, 'mapa');
@@ -329,7 +332,7 @@ try {
       'po klepnutí na Mapu zůstal seznam');
     await pp.reload({ waitUntil: 'load' });
     await pp.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-    await pp.waitForTimeout(1800);
+    await domUtichlo(pp, 350);   // bylo waitForTimeout(1800)
     pravda('a po načtení stránky znovu zůstane mapa, ne seznam',
       (await jeSeznam(pp)) === false,
       'volba se nepamatuje — návrat z pozemku hodí člověka zpátky na seznam');
@@ -339,7 +342,7 @@ try {
     const pd = await ctxD.newPage();
     await pd.goto(`${BASE}/index.html`, { waitUntil: 'load' });
     await pd.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-    await pd.waitForTimeout(1800);
+    await domUtichlo(pd, 350);   // bylo waitForTimeout(1800)
     pravda('ale příští návštěva začne zase seznamem', (await jeSeznam(pd)) === true,
       'volba přežila návštěvu — to už je nastavení, které si nikdo nezvolil');
     await ctxD.close();
