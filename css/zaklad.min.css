@@ -382,6 +382,9 @@ html.pk-prihlasen .app-hero{padding-bottom:4px}
 .odj-stav.nic{color:var(--text-ondark-mute)}
 @media (max-width:520px){.odj-radek .btn-ghost{width:100%}
 }
+.section.tesne-nahore{padding-top:20px}
+.add-field>p.hint{margin:4px 0 0}
+.ul-tags + .ul-topline{margin-top:4px}
 .add-lead{font-size:16px;color:var(--text-ondark-mute);margin:0 0 20px;padding:12px 16px;background:var(--ink-soft);border:1px solid var(--line);border-radius:var(--r-sm);line-height:1.6}
 .add-lead b{color:var(--text-ondark)}
 .add-form{display:flex;flex-direction:column;gap:16px}

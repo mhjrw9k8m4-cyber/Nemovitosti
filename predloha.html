@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=91e18807">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=6cfa706c">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -233,7 +233,7 @@
   document.getElementById('odstupy').innerHTML = [4, 8, 12, 16, 24, 32, 48, 64].map(function (n) {
     return '<div style="text-align:center"><div style="width:' + n + 'px; height:' + n +
       'px; background:var(--accent-warm); border-radius:2px;"></div>' +
-      '<div class="kod" style="margin-top:6px">' + n + '</div></div>';
+      '<div class="kod" style="margin-top:4px">' + n + '</div></div>';
   }).join('');
 })();
 </script>

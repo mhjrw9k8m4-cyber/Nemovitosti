@@ -1656,7 +1656,11 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    ne odznak, protože se tu něco vysvětluje. */
 .sources-over{display:flex; align-items:baseline; gap:8px; margin:12px 0 0; max-width:var(--m-text);
   font-size:14px; line-height:1.6; color:var(--text-ondark-mute);}
-.sources-over .s-dot{flex:none; transform:translateY(-1px);}
+/* Tečka u věty o katastru nese ZNAČKOVOU barvu webu, ne barvu
+   kategorie: katastr není druh nabídky. Barva stávala v `style="…"`
+   v index.html. (Token --copper je dnes zelený; jméno zůstalo
+   z dřívější palety.) */
+.sources-over .s-dot{flex:none; transform:translateY(-1px); background:var(--copper);}
 
 /* Sections */
 /* JEDEN RYTMUS PRO VŠECHNY ODDÍLY, a o stupeň větší.
@@ -4614,6 +4618,20 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .odj-stav.ok{color:var(--c-ok-ink,#178a53); font-weight:600;}
 .odj-stav.nic{color:var(--text-ondark-mute);}
 @media (max-width:520px){ .odj-radek .btn-ghost{width:100%;} }
+/* ODDÍL, KTERÝ NAVAZUJE NA PŘEDCHOZÍ. Celý web má mezi oddíly
+   --oddil-y; na „přidat pozemek" jde formulář hned za úvodem téže
+   stránky, takže plná mezera by uprostřed jedné myšlenky udělala
+   předěl. Dvacítka je ze soustavy odstupů (mezi samostatnými bloky)
+   a stávala v `style="…"` v pridat.html. */
+.section.tesne-nahore{padding-top:20px;}
+/* Poznámka pod polem formuláře. Odstup stával v `style="…"` u dvou
+   odstavců a byl 6 px, tedy mimo soustavu (4, 8, 12 …); čtyřka je
+   nejbližší hodnota dolů, takže se jí nic neroztáhlo. Platí pro
+   odstavec, ne pro `<span class="hint">` vedle popisku pole. */
+.add-field > p.hint{margin:4px 0 0;}
+/* Druhá řádka v náhledu inzerátu („Přímo od majitele") stojí pod
+   štítky, ne pod cenou — proto jen ona má odstup. */
+.ul-tags + .ul-topline{margin-top:4px;}
 .add-lead{font-size:16px; color:var(--text-ondark-mute); margin:0 0 20px; padding:12px 16px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); line-height:1.6;}
 .add-lead b{color:var(--text-ondark);}
 /* ODDÍLY FORMULÁŘE. Byl to jeden sloupec devíti bloků po osmnácti

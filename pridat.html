@@ -48,14 +48,14 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=91e18807">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=6cfa706c">
 </head>
 <body>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<svg width="0" height="0" aria-hidden="true" focusable="false">
   <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
@@ -128,7 +128,7 @@
     </div>
   </section>
 
-  <section class="section" style="padding-top:20px;">
+  <section class="section tesne-nahore">
     <div class="wrap">
       <div class="add-grid">
 
@@ -177,7 +177,7 @@
           <div class="auth-bar" id="auth-bar" hidden>Přihlášen: <b id="auth-email"></b> · <span id="quota-info"></span><a href="muj-inzerat.html">Můj profil</a> · <button type="button" id="au-logout" class="linklike">Odhlásit</button></div>
 
           <div class="add-card" id="prodej-card" hidden>
-            <p class="add-lead" style="margin-top:0;">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka se objeví na mapě mezi ostatními; první z nového účtu si napřed projdeme. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
+            <p class="add-lead">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka se objeví na mapě mezi ostatními; první z nového účtu si napřed projdeme. Spravovat ji pak můžete v <b>Mém profilu</b>. Zdarma a bez provize.</p>
             <!-- MÁM INZERÁT JINDE. Kdo prodává pozemek, má ho skoro vždycky
                  vypsaný ještě někde jinde — a přepisovat totéž podruhé ručně
                  je otrava, ve které se dělají chyby. Políčko na odkaz tu
@@ -227,7 +227,7 @@
                 <h3 class="add-sekce-cap">Fotky pozemku <span class="add-sekce-hint">nepovinné · zobrazí se v inzerátu · max 8</span></h3>
               <div class="add-field photo-field">
                 <label class="photo-drop" for="p-fotky"><b>Přidat fotky</b> <span>Klepněte a vyberte fotky pozemku — klidně několik naráz. Pořadí změníte přetažením, první je titulní.</span></label>
-                <p class="hint" style="margin:6px 0 0;">Fotky se automaticky zkontrolují (kvalita i obsah) — nahrávejte jen skutečné fotky pozemku.</p>
+                <p class="hint">Fotky se automaticky zkontrolují (kvalita i obsah) — nahrávejte jen skutečné fotky pozemku.</p>
                 <input id="p-fotky" type="file" accept="image/*" multiple>
                 <div class="photo-preview" id="p-fotky-preview"></div>
               </div>
@@ -351,7 +351,7 @@
               <div class="add-field">
                 <label for="p-kontakt">Telefon <span class="hint">(nepovinné — uvidí ho zájemci v inzerátu)</span></label>
                 <input id="p-kontakt" type="tel" inputmode="tel" autocomplete="tel" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="777 123 456">
-                <p class="hint" style="margin:6px 0 0;">E-mail už máme z vašeho účtu a v inzerátu se neukazuje. Bez čísla se zájemci ozvou přes Zprávy.</p>
+                <p class="hint">E-mail už máme z vašeho účtu a v inzerátu se neukazuje. Bez čísla se zájemci ozvou přes Zprávy.</p>
               </div>
               <label class="add-check">
                 <input type="checkbox" id="p-souhlas" required>
@@ -387,7 +387,7 @@
               <div class="ul-topline"><span class="ul-price" id="lp-price">Cena</span><span class="ul-perm2" id="lp-perm2"></span></div>
               <p class="ul-desc" id="lp-desc" hidden></p>
               <div class="ul-tags" id="lp-tags"></div>
-              <div class="ul-topline" style="margin-top:4px;"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Přímo od majitele</span></div>
+              <div class="ul-topline"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Přímo od majitele</span></div>
             </div>
             <div class="pc-strength">
               <div class="pcs-top"><span>Síla inzerátu <span class="pcs-help" title="Ukazuje, jak úplný a lákavý je váš inzerát. Čím víc vyplníte (fotky, popis, sítě…), tím vyšší číslo — a tím víc zájemců obvykle přitáhne. Není to povinné, jen vodítko.">?</span></span><span class="pcs-right"><b id="pcs-tier" class="pcs-tier">Začínáme</b><b id="pcs-pct">0 %</b></span></div>

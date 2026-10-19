@@ -280,7 +280,7 @@ h1 em{font-style:italic;font-weight:700;color:var(--copper-bright);background:no
 .s-dot{width:8px;height:8px;border-radius:50%}
 .opp-figures .m .m-celek{display:block;margin-top:2px;font-size:12px;font-style:italic;font-weight:500;color:var(--text-ondark-mute);letter-spacing:0}
 .sources-over{display:flex;align-items:baseline;gap:8px;margin:12px 0 0;max-width:var(--m-text);font-size:14px;line-height:1.6;color:var(--text-ondark-mute)}
-.sources-over .s-dot{flex:none;transform:translateY(-1px)}
+.sources-over .s-dot{flex:none;transform:translateY(-1px);background:var(--copper)}
 .section{padding:var(--oddil-y) 0}
 .section.pt-0{padding-top:0}
 .section.band{background:var(--ink-soft);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding-top:var(--oddil-y);padding-bottom:var(--oddil-y)}

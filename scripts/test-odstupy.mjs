@@ -26,7 +26,13 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    přetékání na úzkých šířkách. Zůstávají 1 a 2 px: to nejsou odstupy
    rozvržení, ale vlásečnice a mezery mezi slovy v řádku. */
 export const STUPNICE = new Set([0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]);
-const VLASTNOSTI = /(^|[;{\s])(margin|padding|gap|row-gap|column-gap)(-top|-right|-bottom|-left)?\s*:\s*([^;}]+)/g;
+/* UVOZOVKA PATŘÍ MEZI ZAČÁTKY. Zkouška o sobě výš tvrdila, že čte
+   i `style="…"`, a nečetla: v `style="margin:6px 0 0"` stojí `margin`
+   hned za uvozovkou, ne za `;`, `{` ani mezerou — a vzorek takový
+   začátek nedovoloval. Prošla tím dvě místa v pridat.html s 6 px,
+   tedy mimo čtyřkovou mříž. První vlastnost v každém atributu byla
+   celou dobu neviditelná; druhá a další se měřily. */
+const VLASTNOSTI = /(^|[;{\s"'])(margin|padding|gap|row-gap|column-gap)(-top|-right|-bottom|-left)?\s*:\s*([^;}]+)/g;
 
 /* Komentáře a vnitřek var() se vybílí, ale délka zůstane — čísla řádků
    pak ukazují na opravdový řádek v souboru. */

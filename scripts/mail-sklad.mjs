@@ -186,7 +186,7 @@ export function html(skupiny, token) {
       + `<span style="font-weight:400;color:#4A5750">(${g.celkem})</span></h2>`);
     for (const d of g.nove.slice(0, MAX_V_MAILU)) {
       const p = popisNabidky(d);
-      kusy.push('<div style="padding:10px 0;border-bottom:1px solid #E3E8E5">'
+      kusy.push('<div style="padding:8px 0;border-bottom:1px solid #E3E8E5">'
         + `<a href="${esc(odkazNaPozemek(d))}" style="color:#13663E;font-weight:600;text-decoration:none">`
         + `${esc(p.nadpis)}</a><br>`
         + `<span style="color:#4A5750">${esc(p.radek)}</span></div>`);

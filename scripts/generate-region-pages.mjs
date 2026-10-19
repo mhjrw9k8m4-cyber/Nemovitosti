@@ -1523,7 +1523,7 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
-${zbyva ? `          <p class="okr-more" style="margin-top:14px;"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
+${zbyva ? `          <p class="okr-more" style="margin-top:12px;"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>
 
@@ -1698,7 +1698,7 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
-${zbyva ? `          <p class="okr-more" style="margin-top:14px;"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
+${zbyva ? `          <p class="okr-more" style="margin-top:12px;"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>
 
@@ -1882,7 +1882,7 @@ ${noveBody ? `
           <h2>Nově přidané</h2>
           <p class="rules-note" style="margin-top:0;">${tNov.veta ? tNov.veta + ' ' : ''}Od nejnovějšího dne${zbyvaNovych ? `, vypsáno prvních ${STROP_NOVYCH}` : ''}. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${noveBody}
-${zbyvaNovych ? `          <p class="okr-more" style="margin-top:14px;"><a href="index.html#mapa">${zbyvajici(zbyvaNovych)} ${fmt(zbyvaNovych)} ${pluralPozemek(zbyvaNovych)} najdete na mapě →</a></p>` : ''}
+${zbyvaNovych ? `          <p class="okr-more" style="margin-top:12px;"><a href="index.html#mapa">${zbyvajici(zbyvaNovych)} ${fmt(zbyvaNovych)} ${pluralPozemek(zbyvaNovych)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>` : ''}
 
@@ -1894,7 +1894,7 @@ ${zlevnene.length ? `
           <div class="okr-list">
 ${zlevnene.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
           </div>
-${zlevnene.length > STROP_ZMEN ? `          <p class="okr-more" style="margin-top:14px;"><a href="index.html?zlevnene=1#mapa">Všechny zlevněné na mapě →</a></p>` : ''}
+${zlevnene.length > STROP_ZMEN ? `          <p class="okr-more" style="margin-top:12px;"><a href="index.html?zlevnene=1#mapa">Všechny zlevněné na mapě →</a></p>` : ''}
         </div>
       </div>` : ''}
 
@@ -2205,7 +2205,7 @@ ${sekceTrhu}
                („Třeba Benešov nebo Zdice"), a že je výsledek za celý
                okres, stojí v metodice dole. Věta navíc tady znamenala
                tři řádky textu nad jedním polem. -->
-          <div class="cenh" style="margin-top:14px;">
+          <div class="cenh" style="margin-top:12px;">
             <div class="cenh-pole">
               <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
               <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
