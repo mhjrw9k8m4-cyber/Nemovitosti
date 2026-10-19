@@ -78,8 +78,10 @@ aby někdo (včetně AI) „uklidil" řešení, jehož důvod není vidět z kó
 
 ## Testy
 
-86 skriptů v CI, dva joby: rychlý (`testy`) a prohlížečový
-(`v-prohlizeci`). Celá sada místně trvá kolem 45 minut:
+237 zkoušek v CI (116 bez prohlížeče, 121 s ním) ve třech úlohách:
+rychlá `testy` a dvě směny v prohlížeči (`v-prohlizeci`,
+`v-prohlizeci-2`) — ty běží vedle sebe, každá kolem 31 minut. Místně
+jedna sada za druhou, dohromady kolem 50 minut:
 
 ```
 bash /tmp/suite.sh        # potřebuje PW_CHROMIUM a PK_LEAFLET_DIR

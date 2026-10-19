@@ -66,7 +66,13 @@ export function spocitej() {
     pozemku: html.filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)).length,
     okresnich: html.filter((f) => f.startsWith('pozemky-okres-')).length,
     krajskych: html.filter((f) => /^pozemky-[a-z-]+-kraj\.html$/.test(f)).length,
-    souboru, bezProhlizece: vJobu('testy'), sProhlizecem: vJobu('v-prohlizeci'),
+    /* Zkoušky v prohlížeči jedou ve DVOU směnách vedle sebe
+       (v-prohlizeci a v-prohlizeci-2), tak se sečtou — jinak by tabulka
+       v roadmapě tvrdila polovinu. Naměřeno: po rozdělení úlohy sem
+       oprav.mjs zapsal „116+61" a scripts/test-roadmap.mjs to vzápětí
+       shodil, protože ten už sčítat umí. */
+    souboru, bezProhlizece: vJobu('testy'),
+    sProhlizecem: vJobu('v-prohlizeci') + vJobu('v-prohlizeci-2'),
     den: (opp.updated || '').split('T')[0],
   };
 }
