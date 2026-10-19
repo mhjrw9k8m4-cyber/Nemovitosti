@@ -5147,8 +5147,20 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   column-gap:12px; row-gap:4px; align-items:baseline; align-content:start;
   padding:12px 12px; background:var(--surface-2,#1b2b22);
   border:1px solid var(--line,#2C3F35); border-radius:var(--r-md);}
+/* POMĚR STRAN JE JEDEN NA CELÉM WEBU: 16/10. Naměřeno na stránce
+   okresu — na telefonu měl tenhle snímek 290 × 181 px (1,60), na
+   monitoru 128 × 128 (1,00). Týž letecký výřez tedy vypadal v jednom
+   výpisu jinak než ve druhém, a dokonce jinak než sám o sobě po
+   zúžení okna. Čtverec nic neříkal, byl to jen rozměr, který se
+   v řádkové podobě hodil; 16/10 drží karta ve výpisu (.opp-media),
+   kostra při načítání (.skel-thumb), náhled v „Uložených"
+   (.ul-thumb), náhled ve formuláři (.mp-ram) i hero na stránce
+   pozemku. Řádek okresu se tím navíc zkrátí ze 142 na 120 px (u těch
+   bez třetího řádku textu na 99), takže se na obrazovku vejde víc
+   nabídek. Výjimka na úvodní stránce zůstává a má svůj důvod zapsaný
+   výš u `.map-side .opp-media`: vedle seznamu tam stojí velká mapa. */
 .okr-item .okr-foto{grid-area:foto; align-self:start; position:relative; display:block;
-  width:128px; aspect-ratio:1; overflow:hidden; border-radius:var(--r-sm);
+  width:128px; aspect-ratio:16/10; overflow:hidden; border-radius:var(--r-sm);
   background:var(--ink-dark); background-image:
     linear-gradient(rgba(206,228,212,0.07) 1px, transparent 1px),
     linear-gradient(90deg, rgba(206,228,212,0.07) 1px, transparent 1px);

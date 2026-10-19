@@ -43,6 +43,21 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
 
 export const PRUHLEDNOST_KROK = 0.05;
 export const LINKY = [1, 1.5, 2, 3];
+/* POMĚR STRAN NÁHLEDU. Jeden na celém webu: 16/10. Naměřeno na
+   stránce okresu — týž letecký výřez měl na telefonu 290 × 181 px
+   (1,60) a na monitoru 128 × 128 (1,00), tedy jiný tvar v jednom
+   výpisu než ve druhém. Výjimky jsou vypsané i s důvodem; selektor
+   je klíč, aby se poznalo, čeho se výjimka týká. */
+export const POMER = '16/10';
+/* Výjimka říká I SVOU HODNOTU: jinak by selektor, který výjimku má,
+   směl mít poměr jakýkoli. `.pz-media` je přesně ten případ — na
+   monitoru má 16/10 a výjimka se týká jen telefonní podoby. */
+export const POMER_VYJIMKY = {
+  '.map-side .opp-media': { je: 'auto', proc: 'vedle seznamu na úvodní stránce stojí velká mapa, takže mapka u karty je to nejvíc zdvojené, co karta má — 150 px výšky sráží kartu na 362 px, aby se vešla na notebook 1280×700' },
+  '.photo-preview .pp img': { je: '1/1', proc: 'miniatura NAHRANÉHO SOUBORU ve formuláři, ne náhled nabídky — čtverečky v řádku se porovnávají mezi sebou' },
+  '.pz-media': { je: '4/3', proc: 'hero na stránce pozemku jde na telefonu od kraje ke kraji a 4/3 je tam výška, kterou snímek unese' },
+};
+
 /* Animace s vlastním časem — každá s důvodem, proč do tokenu nepatří. */
 export const VLASTNI_CAS = {
   livepulse: 'tep u značky „žije" — vlastní rytmus, ne nájezd',
@@ -120,7 +135,41 @@ const mrtveVyjimky = Object.keys(VLASTNI_CAS).filter((j) => !new RegExp('@keyfra
 pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)',
   mrtveVyjimky.length === 0, mrtveVyjimky.join(', '));
 
-console.log('\nSoustava: průhlednost, linky, čas');
+/* ---- poměr stran náhledů ---------------------------------------
+   Měří se stylopis I vložený styl stránky pozemku: tatáž osa zapsaná
+   ve dvou souborech se rozejde, a právě tam ten rozchod byl. */
+{
+  const vlozeny = readFileSync('pozemek.html', 'utf8');
+  const vlozenyBez = vlozeny.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
+  const selektorU = (text, i) => {
+    const pred = text.slice(0, i);
+    const zac = pred.lastIndexOf('{');
+    if (zac < 0) return '?';
+    const predtim = Math.max(pred.lastIndexOf('}', zac), pred.lastIndexOf('{', zac - 1));
+    return pred.slice(predtim + 1, zac).trim().replace(/\s+/g, ' ');
+  };
+  const nalezy = [];
+  for (const [jmeno, text] of [['css/styles.css', bez], ['pozemek.html', vlozenyBez]]) {
+    const re = /aspect-ratio\s*:\s*([^;}]+)/g;
+    let m;
+    while ((m = re.exec(text))) {
+      nalezy.push({ kde: jmeno, sel: selektorU(text, m.index),
+        hodnota: m[1].trim().replace(/\s+/g, ''),
+        radek: text.slice(0, m.index).split('\n').length });
+    }
+  }
+  pravda('je co měřit — poměry stran se ve stylech vůbec vyskytují',
+    nalezy.length >= 6, `nalezeno ${nalezy.length}`);
+  const cizi = nalezy.filter((n) => n.hodnota !== POMER
+    && !(POMER_VYJIMKY[n.sel] && POMER_VYJIMKY[n.sel].je === n.hodnota));
+  pravda(`náhledy mají jeden poměr stran (${POMER})`, cizi.length === 0,
+    cizi.map((n) => `${n.kde}:${n.radek} ${n.sel} → ${n.hodnota}`).join(' | '));
+  const mrtve = Object.keys(POMER_VYJIMKY).filter((sel) => !nalezy.some((n) => n.sel === sel));
+  pravda('a žádná vypsaná výjimka není mrtvá (ten selektor opravdu existuje)',
+    mrtve.length === 0, mrtve.join(', '));
+}
+
+console.log('\nSoustava: průhlednost, linky, čas, poměr stran');
 console.log(zpravy.join('\n'));
 console.log(`  (výjimek s vlastním časem ${Object.keys(VLASTNI_CAS).length}, každá s napsaným důvodem)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
