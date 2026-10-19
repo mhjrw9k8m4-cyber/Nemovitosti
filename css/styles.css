@@ -299,13 +299,19 @@
    písmo čitelné) a kostra načítání; ty zůstávají a je u nich napsané
    proč. Co zdobilo plochy, je teď plná barva: pásy sekcí, podklady
    odznaků, předěl a proužek pod nadpisem. */
-  --grad-warm:#8A5512;
-  --grad-warm-soft:#F6EEE4;
-  --grad-cool-soft:#E4EDE9;
+/* Tři tokeny tady BÝVALY a jsou pryč (19. 10.):
+   --grad-warm:#8A5512 byla TÁŽ hodnota jako --accent-warm, tedy druhé
+   jméno pro jednu barvu (obě použití berou --accent-warm);
+   --grad-warm-soft:#F6EEE4 a --grad-cool-soft:#E4EDE9 už neměly ani
+   jedno živé použití — všechna čtyři stála v mrtvých pravidlech
+   (odznak u okresu v background-image a odznaky v „Jak to funguje",
+   které jsou display:none). Jméno --grad- navíc po zploštění přelivů
+   lhalo: žádný z nich nebyl přeliv. */
   /* Plocha stránky: dlouhý svislý přechod. Barva se mění tak pomalu, že
      si toho nikdo nevšimne přímo — všimne si, že stránka „dýchá". */
-  /* Předěl sekcí: linka, která se do stran vytrácí, místo tvrdé hrany. */
-  --grad-predel:var(--line-strong);
+  /* Předěl sekcí BÝVAL linka, která se do stran vytrácí; po zploštění
+     přelivů z něj zbyl alias na --line-strong, tedy jedna barva pod
+     dvěma jmény. Obě použití berou --line-strong přímo. */
   /* ZÁVAN BARVY OD ČÁRY. Bloky druhů příležitostí nesou barvu jen svislou
      čárou vlevo (tak to bylo schválně rozhodnuto — kartu tam nechceme).
      Jenže na světlé ploše z toho byl text s proužkem a nic víc: spodek
@@ -617,8 +623,6 @@
 
 /* Ikony */
 .ic{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none;}
-.icon-badge{width:44px; height:44px; border-radius:var(--r-md); display:inline-flex; align-items:center; justify-content:center; margin-bottom:20px; background:var(--plocha-jemna); border:1px solid var(--line);}
-.icon-badge .ic{width:22px; height:22px;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
 /* Atribut hidden musí vždy skrýt prvek — jinak ho pravidla s display:flex/grid
@@ -3395,7 +3399,6 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 /* Steps */
 .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:32px;}
 .step{border-top:1px solid var(--line); padding-top:24px;}
-.step .icon-badge{margin-bottom:12px;}
 .step .idx{color:var(--znacka-svetla); font-size:12px; letter-spacing:0.1em; margin-bottom:4px;}
 .step h3{font-family:var(--font-ui); font-weight:700; font-size:20px; letter-spacing:-0.01em; margin-bottom:8px;}
 .step p{font-size:16px; color:var(--text-ondark-mute);}
@@ -5706,20 +5709,24 @@ body{background:var(--bg);}
    nechtěný následek. Je pryč i s proměnnou.
 
    4. Štítky kategorií: barva se v nich přelévá místo placaté výplně. */
-.okr-badge.t-sale{background-image:var(--grad-cool-soft);}
-.okr-badge.t-drazba, .okr-badge.t-exekuce, .okr-badge.t-majitel, .okr-badge.t-obec{background-image:var(--grad-warm-soft);}
+/* ODZNAK NA SNÍMKU U OKRESU DRŽÍ TMAVÝ ZÁKLAD (.opp-badge), a je to
+   tak správně: dvě pravidla, která mu tady měnila podklad na světlý,
+   byla MRTVÁ. Stálo v nich `background-image:var(--grad-cool-soft)`,
+   tedy BARVA v background-image — to prohlížeč zahodí (naměřeno
+   backgroundImage: none). Převést je na `background` by bylo ještě
+   horší: #F6EEE4 pod bílým písmem je nečitelné. Smazáno 19. 10. */
 .okr-badge{border-color:currentColor;}
 
 /* 5. Předěly sekcí se do stran vytrácejí. Tvrdá linka přes celou šířku
       krájí stránku na díly; vytrácející se ji jen naznačí. */
 .section.band{border-top:0; border-bottom:0; position:relative;}
-.section.band::before{content:""; position:absolute; top:0; left:0; right:0; height:1px; background:var(--grad-predel);}
+.section.band::before{content:""; position:absolute; top:0; left:0; right:0; height:1px; background:var(--line-strong);}
 .sources{border-top:0; border-bottom:0; position:relative;}
-.sources::before, .sources::after{content:""; position:absolute; left:0; right:0; height:1px; background:var(--grad-predel);}
+.sources::before, .sources::after{content:""; position:absolute; left:0; right:0; height:1px; background:var(--line-strong);}
 .sources::before{top:0;} .sources::after{bottom:0;}
 
 /* 6. Měděná linka nad nadpisem sekce je taky přechod, ne placka. */
-.section-head::before{background:var(--grad-warm);}
+.section-head::before{background:var(--accent-warm);}
 
 /* 6b. ZNAČKA ODDÍLU DOJELA NA JEDNU STRÁNKU Z 2 207. Měděná vlasovka nad
       nadpisem je v předloze (§5) hlavní značka oddílu — a třídu
@@ -5736,7 +5743,7 @@ body{background:var(--bg);}
       a druhá značka by si s ním konkurovala. */
 .rules-sect > h2{position:relative;}
 .rules-sect > h2::before{content:""; display:block; width:52px; height:2px;
-  border-radius:2px; background:var(--grad-warm); opacity:0.85; margin-bottom:12px;}
+  border-radius:2px; background:var(--accent-warm); opacity:0.85; margin-bottom:12px;}
 .clanek .rules-sect > h2::before{display:none;}
 
 /* =====================================================================
@@ -5857,12 +5864,6 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .steps{position:relative;}
 .step{border-top:0; padding-top:0; display:grid; grid-template-columns:auto 1fr;
   column-gap:16px; row-gap:2px; align-items:start; position:relative;}
-.step .icon-badge{grid-column:1; grid-row:1 / span 3; margin:0; width:52px; height:52px;
-  border-radius:var(--r-md); border:1px solid var(--line-strong); position:relative; z-index:1;
-  background:var(--grad-warm-soft); color:var(--accent-warm);}
-.step:nth-child(2) .icon-badge{background:var(--grad-cool-soft); color:var(--znacka-svetla);}
-.step:nth-child(3) .icon-badge{background:linear-gradient(135deg, rgba(27,74,52,0.16), rgba(27,74,52,0.06)); color:#1B4A34;}
-.step .icon-badge .ic{width:24px; height:24px;}
 .step .idx{grid-column:2; margin:2px 0 2px; font-size:12px; letter-spacing:0.14em; color:var(--text-ondark-mute);}
 .step h3{grid-column:2; margin-bottom:4px;}
 .step p{grid-column:2;}
@@ -5883,7 +5884,6 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   .step::before{left:52px; right:-36px; top:25px; bottom:auto; width:auto; height:2px;
     background:linear-gradient(90deg, var(--line-strong), rgba(138,85,18,0.4));}
   .step{grid-template-columns:1fr; row-gap:0;}
-  .step .icon-badge{grid-row:auto; grid-column:1; margin-bottom:12px;}
   .step .idx, .step h3, .step p{grid-column:1;}
 }
 @media (max-width:1040px){
@@ -5940,7 +5940,6 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .steps{gap:48px;}
 .step{background:none; background-image:none; border:0; border-radius:0; padding:0;
   display:block; position:relative;}
-.step .icon-badge{display:none;}
 .step .idx{display:block; font-family:var(--font-display); font-weight:700;
   font-size:56px; line-height:0.9; letter-spacing:-0.04em;
   color:var(--accent-warm); opacity:0.3; margin:0 0 12px;}

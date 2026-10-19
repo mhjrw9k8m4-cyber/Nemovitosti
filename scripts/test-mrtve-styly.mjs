@@ -121,6 +121,40 @@ const bezDuvodu = Object.entries(SKLADANE).filter(([, d]) => !d || d.length < 20
 pravda('a každá výjimka má napsané, kdo tu třídu skládá',
   bezDuvodu.length === 0, bezDuvodu.join(', '));
 
+/* ---- a mrtvé ikony ve spritu --------------------------------------
+   Táž vada o patro vedle: stránka si v <svg> nese sadu <symbol>, a když
+   se z ní odebere místo, kde se ikona kreslila, symbol zůstane. Nikdo
+   si toho nevšimne — je neviditelný, jen se stahuje. Naměřeno 19. 10.:
+   po smazání mrtvých odznaků v „Jak to funguje" zbyl ve index.html
+   osiřelý `i-click`.
+   Hledá se v ručně psaných stránkách a ve skriptech, protože `<use>`
+   může dopsat i JavaScript; vygenerované stránky pozemků a okresů se
+   počítají jako výskyt taky (nesou týž sprite). */
+{
+  const rucni = fs.readdirSync(KOREN)
+    .filter((f) => f.endsWith('.html') && !/^(pozemek|pozemky)-/.test(f));
+  const zdrojeOdkazu = [];
+  for (const f of rucni) zdrojeOdkazu.push(fs.readFileSync(path.join(KOREN, f), 'utf8'));
+  for (const d of ['js', 'scripts']) {
+    for (const f of fs.readdirSync(path.join(KOREN, d))) {
+      if (!/\.(m?js)$/.test(f) || /^test-/.test(f)) continue;
+      zdrojeOdkazu.push(fs.readFileSync(path.join(KOREN, d, f), 'utf8'));
+    }
+  }
+  const vse = zdrojeOdkazu.join('\n');
+  const symboly = [];
+  for (const f of rucni) {
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    for (const m of h.matchAll(/<symbol[^>]*\sid="([^"]+)"/g)) symboly.push({ f, id: m[1] });
+  }
+  pravda(`je co měřit — ikony ve spritu (${symboly.length})`, symboly.length >= 10,
+    `nalezeno ${symboly.length} symbolů`);
+  const osirele = symboly.filter((x) => !new RegExp('href="#' + x.id + '"').test(vse));
+  pravda('žádná ikona ve spritu není osiřelá (nikde se nekreslí)',
+    osirele.length === 0,
+    osirele.map((x) => `${x.f}: #${x.id}`).join(', ') + ' — smažte symbol, nebo ikonu někde použijte');
+}
+
 console.log('\nMrtvá pravidla ve stylopisu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
