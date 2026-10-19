@@ -32,6 +32,10 @@ on:
 jobs:
   rozeslat:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (rozesílá e-maily a push).
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4

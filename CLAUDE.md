@@ -99,3 +99,75 @@ Browser testy sdílejí port 8310 — nesmí běžet dva naráz.
    a naviguje se víckrát. Od druhé navigace obsluhuje soubory
    pracovník a jeho dotazy přes `route` NEJDOU — podstrčený
    `config.js` přestane platit a stránka se zeptá opravdové databáze.
+
+---
+
+## Designová soustava — jeden blok, ne tři sta komentářů
+
+Formát je převzatý z `design-md-format=spec` (gstack). Důvod: tokeny
+byly rozsypané po komentářích v `css/styles.css` a po 2 300 řádcích
+`docs/optimalizace.md`, takže se k nim nedalo dostat jinak než čtením
+celého stylopisu. Tohle je jejich soupis na jednom místě. **Zdrojem
+pravdy zůstává `css/styles.css` a zkoušky** — když se rozejdou, platí
+ony; tenhle blok se má srovnat.
+
+```yaml
+pismo:
+  rodina:   Inter (display, ui i mono — jedna rodina, podřezaná v fonts/)
+  velikosti: [11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96]
+  vahy:      [400, 500, 600, 700]
+  prokladani: [-0.04em, -0.03em, -0.02em, -0.01em, 0, .02em, .07em, .1em]
+  radkovani: nejvyse 1.6
+  hlida:     scripts/test-pismo.mjs, test-typografie.mjs, test-pisma.mjs
+barvy:
+  znacka:        "#004F2F"   # plná plocha hlavní akce
+  znacka-tmava:  "#0F5C3B"   # --copper, text a linky
+  znacka-svetla: "#2B7652"   # --copper-bright
+  text:          "#101513"
+  plocha-stranky: "#F2F4F3"
+  plocha-zapustena: "#EDEFEE"
+  panel:         "#ffffff"   # i --plocha-plovouci: plná, nikdy průsvitná
+  linka:         "rgba(16,21,19,0.55)"
+  druhy:
+    prodej:  "#4361B8"
+    drazba:  "#CC6B33"
+    exekuce: "#8C2F1E"
+    obec:    "#277686"
+  hlida:     scripts/test-odstiny.mjs, test-tokeny.mjs, test-okraje.mjs
+odstupy:
+  stupnice: [0, 1, 2, 4, 6, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
+  hlida:    scripts/test-odstupy.mjs
+zaobleni:
+  r-xs: 6px     # drobnosti uvnitř tlačítek
+  r-sm: 10px    # --r-plocha: karty, panely
+  r-md: 14px    # --r-ovladani: tlačítka, pole, rozbalovátka
+  r-lg: 20px    # --r-obraz: mapa, fotky
+  r-pill: 999px # ODZNAK (zapínatelný filtr) a kulaté tlačítko s ikonou
+  pravidlo: "co se ovládá, má --r-ovladani; pilulka patří odznaku"
+  hlida:    scripts/test-zaobleni.mjs
+casy:
+  rychly: .12s   zakladni: .2s   pomaly: .4s
+stavy:
+  vypnuto:    "opacity .45, cursor not-allowed, bez stínu a bez reakce na hover"
+  pracuje-se: "aria-busy=true → opacity .7, cursor progress"
+  hlida:      scripts/test-afordance.mjs
+dotyk:
+  terc: "nejméně 44 px pod @media (pointer: coarse)"
+  hlida: scripts/test-dotyk.mjs
+strop:
+  syta-znackova-plocha: "nejvýš 3 prvky na index.html"
+  hlida: scripts/test-hierarchie.mjs
+zakazano:
+  - "backdrop-filter kdekoli (sklo a rozostření — zrušeno 19. 10., viz oddíl 32)"
+  - "průsvitné plochy pod textem: kontrast pak závisí na tom, co je pod nimi"
+  - "font jiný než Inter bez podřezání v fonts/ (test-pisma pozná znak mimo sadu)"
+  - "nové barvy mimo tokeny"
+```
+
+### Dva vizuální směry před psaním kódu
+
+Když se navrhuje nová sekce nebo se předělává vzhled stávající,
+**nejdřív se ukážou dvě podoby jako snímky a majitel si vybere** —
+teprve pak se píše kód. Důvod je úsporný: dvě varianty v prohlížeči
+stojí pár minut, kdežto nasazená a pak zamítnutá přepsaná sekce stojí
+běh celé sady zkoušek a ještě jednou tutéž práci.

@@ -20,6 +20,10 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (robot stahuje a přepisuje 2 159 stránek).
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@v4

@@ -95,6 +95,25 @@ Bez klíčů běží nasucho a sám vypíše, co mu chybí.
 dílčích migrací. Pustit v Supabase → SQL Editor (nebo tlačítkem
 „Nasadit SQL" na GitHubu, workflow `nasad-sql.yml`).
 
+**Na to tlačítko jsou potřeba tajemství, která jinde v tomhle seznamu
+nestála:**
+
+* `SUPABASE_URL` — adresa vašeho projektu (`https://…supabase.co`,
+  najdete ji v Supabase → Settings → API). Čtou ji tři úlohy:
+  `nasad-sql.yml`, `kontrola-inzeratu.yml` a `rozesilani.yml`. Tajná
+  není, ale v Secrets být musí, jinak ty úlohy neví, kam se hlásit.
+* `SUPABASE_PAT` — osobní přístupový token ze
+  [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens).
+  Bez něj úloha skončí hláškou „Chybí SUPABASE_PAT". Přes SQL Editor
+  v prohlížeči token potřeba není; je jen pro to tlačítko.
+
+Obojí se vkládá v GitHubu → Settings → Secrets and variables → Actions.
+
+*(Vysvětlená ta tajemství byla v samotných úlohách i ve skriptech, ale
+ne tady — a tenhle seznam je to jediné, podle čeho se web spouští.
+`SUPABASE_URL` jsem při prvním zápisu minul a našla ho až ta zkouška,
+která na to od teď dohlíží: `scripts/test-tajemstvi.mjs`.)*
+
 Změřeno 18. 10. na čistém PostgreSQL 16: **2 917 řádků, 16 tabulek,
 42 vlastních funkcí, 14 politik RLS, 39 indexů.** Projde bez jediné
 chyby. Čísla se s každou migrací mění, takže se **už neopisují ručně**:

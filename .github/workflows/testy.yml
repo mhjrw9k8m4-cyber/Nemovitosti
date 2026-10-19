@@ -25,6 +25,10 @@ concurrency:
 jobs:
   testy:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (celá sada 115 + 121 zkoušek, místně kolem 45 minut).
+    timeout-minutes: 75
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -408,12 +412,22 @@ jobs:
       - name: Komentáře v hotových stránkách
         run: node scripts/test-komentare-v-strankach.mjs
 
+      - name: Na každé tajemství je majitel upozorněn
+        run: node scripts/test-tajemstvi.mjs
+
+      - name: Žádné volání ven nevisí donekonečna
+        run: node scripts/test-casove-limity.mjs
+
   # Všechno, co potřebuje opravdový prohlížeč: chat, mapa, hlavička,
   # kontrast, dotykové terče, výpadky… Běží zvlášť od rychlých testů, aby
   # se kvůli stahování Chromia nečekalo na každou drobnost. Kroky, které
   # prohlížeč potřebují, musí být V TOMHLE jobu — jinde se neinstaluje.
   v-prohlizeci:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (celá sada 115 + 121 zkoušek, místně kolem 45 minut).
+    timeout-minutes: 75
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -760,6 +774,9 @@ jobs:
 
       - name: Ovládání nad výpisem má jednu velikost
         run: node scripts/test-ovladani-vypisu.mjs
+
+      - name: Vyhledávání pozemků má jeden vzhled
+        run: node scripts/test-hledani-vzhled.mjs
 
 
       - name: Tah ikon je jeden (1,5 px)

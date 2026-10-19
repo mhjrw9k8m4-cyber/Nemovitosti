@@ -36,6 +36,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Tabulky, které SMÍ číst kdokoli bez přihlášení. Seznam je krátký
@@ -92,7 +93,7 @@ export function bezKlicu(text, klice) {
 }
 
 async function ziskej(url, cesta, klic, token) {
-  const r = await fetch(url.replace(/\/+$/, '') + cesta, {
+  const r = await fetchSLimitem(url.replace(/\/+$/, '') + cesta, {
     headers: Object.assign({ apikey: klic },
       token ? { Authorization: 'Bearer ' + token } : { Authorization: 'Bearer ' + klic }),
   });
@@ -309,7 +310,7 @@ export async function zalozZkusebniUcet(url, serviceKlic) {
      účet založil na cizí adresu. */
   const email = `kontrola-${id}@parcelaka-kontrola.invalid`;
   const heslo = 'K' + id + '!x';
-  const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/admin/users', {
+  const r = await fetchSLimitem(url.replace(/\/+$/, '') + '/auth/v1/admin/users', {
     method: 'POST',
     headers: { apikey: serviceKlic, Authorization: 'Bearer ' + serviceKlic,
       'content-type': 'application/json' },
@@ -322,7 +323,7 @@ export async function zalozZkusebniUcet(url, serviceKlic) {
 
 export async function smazZkusebniUcet(url, serviceKlic, idUzivatele) {
   if (!idUzivatele) return false;
-  const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/admin/users/' + idUzivatele, {
+  const r = await fetchSLimitem(url.replace(/\/+$/, '') + '/auth/v1/admin/users/' + idUzivatele, {
     method: 'DELETE',
     headers: { apikey: serviceKlic, Authorization: 'Bearer ' + serviceKlic },
   });
@@ -331,7 +332,7 @@ export async function smazZkusebniUcet(url, serviceKlic, idUzivatele) {
 
 /* ---------- spuštění z příkazové řádky ---------- */
 async function prihlas(url, anonKlic, email, heslo) {
-  const r = await fetch(url.replace(/\/+$/, '') + '/auth/v1/token?grant_type=password', {
+  const r = await fetchSLimitem(url.replace(/\/+$/, '') + '/auth/v1/token?grant_type=password', {
     method: 'POST',
     headers: { apikey: anonKlic, 'content-type': 'application/json' },
     body: JSON.stringify({ email, password: heslo }),

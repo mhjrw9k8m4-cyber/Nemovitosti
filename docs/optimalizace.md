@@ -2231,3 +2231,256 @@ s výměrou. Kdyby žádná taková nebyla, řekne se to rovnou — mlčky měř
 dál by znamenalo prohlásit za ověřené něco, co ověřené není. Kontrola
 klíče zůstává, co byla: sabotáž `klicPozemku` (klíč o jedničku vedle)
 ji shodí.
+
+## 31. Vyhledávání pozemků: pět dílů, pět různých vzhledů *19. 10.*
+
+Majitel: *„vylepši vizuálně konečně to vyhledávání pozemků na další level
+v úplnosti a profesionalitě."* Vyhledávání není jedno políčko — je to
+pole, našeptávač obcí, odznaky rozpoznané z věty, odznaky druhů a panel
+filtrů. Každý díl si žil vlastním životem; naměřeno na 390 px:
+
+| co | bylo | teď |
+|---|---|---|
+| našeptávač obcí | **207 px z 370**, položky **57 px** (tři zalomené řádky) | přes celou řadu, jeden řádek na položku, 44 px |
+| odznaky druhů | šedé `rgb(237,239,238)` vedle bílých sousedů | bílé jako sousedé |
+| jejich šířky | 89 / 126 / 122 / 133 px | **181 px všechny** |
+| značka druhu | **8 px** — kosočtverec splýval s trojúhelníkem | 12 px |
+| odznaky z věty | **tři barvy** bez vysvětlení, terč **30 px** | jedna barva, 44 px |
+| políčka druhů v panelu | první řada 77 px, zbylé 58 | všechna stejná |
+| „Cena za m²" | hodnota nalepená za popiskem | v jednom sloupci se sousedy |
+
+### Kdo je pro našeptávač souřadnicovou soustavou
+
+Nejzajímavější je ten první řádek. `.ms-navrhy` má `left:0; right:0`,
+takže se roztáhne na **nejbližšího pozicovaného předka** — a tím bylo
+samo pole hledání (207 px). Řada má přitom 370. Sto třiašedesát pixelů
+leželo vedle ladem a návrhy se do zbytku nevešly: „Brno-venkov" se
+lámalo uprostřed jména.
+
+Oprava není v šířce, ale v té soustavě: pole se vrátí do statického toku
+(`position:static`) a relativní je celá řada. Lupa uvnitř pole je taky
+absolutní, takže se přepočítá na tutéž řadu — `left:12px` platí dál,
+protože pole začíná na jejím levém kraji, a `top:50%` taky, protože
+jednořádková řada je stejně vysoká jako pole. Pro dvouřádkovou podobu
+pod 360 px se obojí doopraví výslovně.
+
+**Je to past na příště:** cokoli dalšího, co se do `.map-search` dá
+s `position:absolute` (třeba křížek na vymazání), se napříště pozicuje
+podle ŘADY, ne podle pole. Je to napsané u pravidla v `css/styles.css`.
+
+### Jedna barva pro odznaky z věty
+
+Odznaky rozpoznané z věty měly tři barvy: místo a druh zelené, cena
+a výměra hnědé (`--accent-warm` #8A5512), sítě světle zelené. Vypadalo
+to jako náhoda — a hůř: hnědá leží v téže rodině jako oranžová u dražeb,
+takže si řádek půjčoval barvu, která na webu znamená něco jiného. Rozdíl
+mezi místem, cenou a druhem přitom nese TEXT odznaku; barva by ho musela
+nejdřív někde vysvětlit, a nikde se nevysvětluje.
+
+### Zkouška a co na sobě našla
+
+Nová `scripts/test-hledani-vzhled.mjs` (14 kontrol) měří skutečné
+rozměry a barvy v prohlížeči. Devět sabotáží, každá vrací jednu změnu.
+
+**Tři z nich napoprvé netrefily a stálo to za to.** Dvě byly nevěrné —
+vracely jen půlku změny (`nowrap` jen u jména, mřížku bez druhého řádku
+pravidla), takže se původní vada nevrátila a nebylo co chytit. Třetí
+odhalila **chybu v samotné zkoušce**: kontrola „všechna políčka jsou
+stejně vysoká" hlásila ✓ i po odebrání `grid-auto-rows:1fr`, zatímco
+sonda ve stejnou chvíli měřila 77 / 77 / 58 / 58 / 58 / 58 / 58 / 58.
+Zkouška si totiž před otevřením panelu napsala do hledání celou větu,
+takže se dívala na **zúžený** seznam druhů, kde je výška jednotná i bez
+té opravy. Měřila jinou skupinu, než o které mluvila. Po opravě (čistá
+stránka před měřením) sabotáž kontrolu shodí.
+
+Poučení k zapsání: **sabotáž musí vracet celou změnu, ne její půlku** —
+jinak neprokazuje kontrolu, ale jen to, že zbytek pravidla ještě drží.
+
+### Žádná pevná pauza
+
+Zkouška původně spala 2 600 ms a pak měřila. Na vytížené mašině v CI je
+to sázka: když se data načtou o chlup později, ohlásí vadu, která
+v aplikaci není. Všech sedm pevných pauz je proto nahrazeno čekáním na
+stav — že se dopočítal výpis, že se objevil první návrh, že se vykreslily
+odznaky, že má panel políčka. V souboru nezbyl ani jeden
+`waitForTimeout`.
+
+## 32. Pryč se sklem: dvacet rozmazání a jedna průsvitná plocha *19. 10.*
+
+Majitel: *„skleněné efekty, rozostření a poloprůhlednosti umějí působit
+strašně pouťově, zapatlaně a nečitelně… ostré hrany, plné barvy,
+absolutní minimalistická čistota."*
+
+Má pravdu i měřitelně, ne jen vkusem: **text na průsvitné rozmazané
+ploše má kontrast podle toho, co je zrovna pod ním.** U ovladačů nad
+mapou to znamená, že kontrast nápisu „Celá ČR" závisí na tom, jestli
+je pod ním les, pole nebo voda — takže se nedá ani zaručit, ani
+změřit. Plná barva se změří jednou a platí vždycky. Celý web přitom
+kontrast vymáhá zkouškou (`test-okraje`), takže průsvitné plochy byly
+jediné místo, kde se ta zkouška dala obejít.
+
+**Co se změnilo:**
+
+* `--plocha-plovouci` byla `rgba(255,255,255,0.95)` a je `#fff`. Jeden
+  řádek, ale týká se **23 míst** — všech ovladačů nad mapou, odznaků
+  nad fotkami a plovoucích pruhů.
+* **Dvacet deklarací `backdrop-filter`** je pryč. Zůstaly jen ztmavovací
+  vrstvy pod dialogy (`.modal-backdrop`, `.nav-stin`, `.loc-ov`): ty
+  nejsou sklo, ale tmavá plocha, bez které by dialog nebyl čitelný —
+  jen už se pod nimi nic nerozmazává.
+
+**Dva komentáře tím zestárly a musely se přepsat.** V tomhle
+repozitáři jsou komentáře dokumentace, takže komentář popisující
+rozmazání, které už neexistuje, je horší než žádný:
+
+1. U lepivé hlavičky stálo, proč se rozmazání vypíná **jen na dotyku**
+   (na iPhonu se rozmazaná vrstva překresluje se zpožděním a hlavička
+   při rolování „ujede"). Platí to dál jako historie, ale teď je
+   rozmazání pryč i z monitoru.
+2. U mobilní nabídky stálo, že podivně počítaný `bottom` je kvůli
+   tomu, že `backdrop-filter` hlavičky dělá vztažný rámec i pro
+   `position:fixed` potomky. Od zrušení rozmazání to **neplatí** —
+   jenže ten panel je `absolute`, takže se na jeho chování nic
+   nezměnilo a počítaný `bottom` platí dál. Kdyby tam ta oprava
+   nebyla, příští čtenář by se řídil nepravdou.
+
+Ověřeno v prohlížeči: `.map-nastroj`, `.kraj-hint`, `.map-podklad`
+i hlavička mají `rgb(255,255,255)` a `backdrop-filter: none`.
+
+## 33. Zkouška, která našla díru dřív, než ji někdo prožil *19. 10.*
+
+`docs/pred-vydanim.md` se jmenuje „Co musí zapojit majitel webu" a je
+to jediný seznam, podle kterého se web spouští. Oddíl „3. Databáze"
+odkazoval na tlačítko „Nasadit SQL", ale neřekl, že k němu je potřeba
+token — takže kdo by podle toho seznamu postupoval, klepl by a dostal
+„Chybí SUPABASE_PAT".
+
+Doplnil jsem ho ručně. Pak jsem napsal `scripts/test-tajemstvi.mjs`,
+který projde `.github/workflows/*.yml`, vybere z nich každé
+`secrets.X` (kromě `GITHUB_TOKEN`, ten dává GitHub sám) a vymáhá dvojí:
+
+* **A)** každé stojí v majitelově seznamu,
+* **B)** a je vysvětlené tam, kde se používá — v komentáři úlohy nebo
+  ve skriptu. Jméno samo neřekne, kde se ten klíč vezme.
+
+**Na prvním běhu to shodilo mou vlastní opravu:** `SUPABASE_URL`
+používají tři úlohy (`nasad-sql`, `kontrola-inzeratu`, `rozesilani`)
+a v seznamu taky nebyl. Ruční doplnění jedné položky našlo jednu
+díru; zkouška našla dvě. Soupis se vypisuje do hlášky, takže je posun
+vidět, i když kontrola projde.
+
+## 34. Vypnuté ovladače vypadaly sedmi způsoby — nebo nijak *19. 10.*
+
+Z dokumentu o „perfektních stavech" vyšla jediná, zato pravá vada.
+Naměřeno: ovladače se v `js/` vypínají na **17 místech**, ale vzhled
+vypnutého stavu byl v CSS popsaný jen **sedmkrát a pokaždé jinak** —
+průhlednost 0,45 / 0,4 / 0,4 / 0,5 / 0,6 / 0,8 a kurzor `default`,
+`progress` i `not-allowed`. Zbylých deset ovladačů po vypnutí
+nevypadalo nijak: že nejdou použít, se člověk dozvěděl, až když do nich
+marně klepl.
+
+**Dvě různé věci vypadaly stejně.** `disabled` znamená na webu dvojí:
+„teď to nejde" (prázdný výběr, nic k vývozu) a „pracuje se" (zjišťuje
+se poloha). Čekání se nemá tvářit jako zákaz. Rozlišuje se proto
+`aria-busy`, který odečítač obrazovky přečte jako „zaneprázdněno" —
+web ho ve stylopisu nepoužíval ani jednou:
+
+| stav | plocha | kurzor |
+|---|---|---|
+| teď to nejde | průhlednost 0,45 | `not-allowed` |
+| pracuje se (`aria-busy`) | průhlednost 0,7 | `progress` |
+
+**Dvě pravidla se přede mnou schovala zápisem `[disabled]` místo
+`:disabled`**, takže je hledání nenašlo a první sjednocení bylo
+neúplné. Ohlásila to až rozšířená zkouška: `.map-near-btn[disabled]`
+měl 0,8 a `progress` — a po přečtení bylo jasné, že to vůbec není
+vypnutý stav, ale „hledá se poloha", tedy případ pro `aria-busy`.
+
+`scripts/test-afordance.mjs` („na ovládání musí být vidět, že je
+ovládání") dostal rub téhož pravidla, 6 → 9 kontrol: vypne skutečná
+tlačítka na vykreslené stránce a změří, že zhubnou **stejně**, že
+kurzor říká „nejde", a že se „pracuje se" liší.
+
+## 35. Osmdesát čtyři natvrdo zapsaných barev, které tam nebyly *19. 10.*
+
+Z dokumentu o čistém kódu vyšel bod „všechny barvy z centrálních
+proměnných". Napočítal jsem 266 hexů v `css/styles.css` a odhadl, že
+po odečtení tokenů a bílé zbývá kolem **84** k prověření. To číslo
+bylo špatně a stojí za zapsání proč.
+
+Po napsání přesného hledače (vynechat komentáře, `:root`, SVG v `data:`
+a bílou) zbylo **146**, a z nich byla většina legitimní:
+
+* **20× `#000`** — vždy uvnitř `mask-image`. Tam `#000` neznamená
+  černou, ale **neprůhlednost**: je to alfa kanál masky. Nahradit to
+  tokenem by nedávalo smysl.
+* **záložní hodnoty ve `var()`** — `var(--c-drazba,#CC6B33)` je
+  obranný zápis pro případ, že token chybí, ne duplicita.
+* **definice přechodů v `:root`** — `--grad-warm` má stopy napsané
+  hexem, protože token definuje.
+
+Skutečných duplikátů, tedy hodnot napsaných ručně tam, kde na ně token
+existuje, bylo **osm**: dvakrát `--c-warn`, dvakrát `--surface-2`,
+dvakrát `--ink-dark`, jednou `--copper`, jednou `--c-ok-ink`. Všech
+osm je nahrazeno.
+
+**Poučení je o měření, ne o barvách:** „266 hexů" je údaj, který zní
+jako nepořádek, ale 70 z nich je bílá a dalších 20 je alfa kanál.
+Číslo bez rozboru svádí k práci, která není potřeba — přesně to, před
+čím varuje zásada měřit dřív, než se vyvozuje.
+
+## 36. Sedm volání ven bez limitu a osm úloh bez stropu *19. 10.*
+
+Systémový audit (z majitelova zadání) našel jednu pravou vadu ve dvou
+patrech, a je to ta nejtišší možná: nic nepadalo, jen to mohlo viset.
+
+**Patro první — `fetch` bez limitu.** Z devíti skriptů, které běží
+v úlohách GitHubu, volalo `fetch` **sedm** bez jakéhokoli
+`AbortSignal`. `fetch` bez něj čeká, dokud druhá strana neodpoví nebo
+nezavře spojení; když mlčí, čeká se dál.
+
+**Patro druhé — žádný strop úlohy.** Ani jedna z **osmi** úloh neměla
+`timeout-minutes`, takže visící běh nemělo co zastavit dřív než
+GitHub sám — po **šesti hodinách**.
+
+**Co by se stalo.** `send-alerts.mjs` rozesílá e-maily přes Resend.
+Kdyby Resend neodmítl, ale jen přestal odpovídat, `rozesilani.yml`
+visí šest hodin, spotřebuje minuty a hlavně **další naplánovaný běh
+se do té doby nespustí**. Úloha přitom nespadne — v přehledu svítí
+jako běžící, takže si toho nikdo nevšimne.
+
+**Dva skripty byly na tom hůř:** `fetch-okresy.mjs` a
+`uklid-databaze.mjs` neměly ani jeden `catch`. Výpadek zdroje je
+shodil výjimkou, takže v logu zbyl stack trace místo věty.
+
+### Co se změnilo
+
+* **`scripts/fetch-s-limitem.mjs`** — jedno místo, kde se volá ven.
+  Vzor je převzatý z `kontrola-inzeratu.mjs`, kde už byl
+  (AbortController + `setTimeout`); tady je vytažený, aby se
+  neopisoval do sedmi souborů. Výchozí limit **20 s**: déle než
+  nejpomalejší zdroj (ČÚZK i Supabase odpovídají v jednotkách vteřin)
+  a krátce dost, aby si toho úloha všimla dřív než člověk. Chyba
+  z limitu se přejmenuje na „Zdroj neodpověděl do 20 s: …" — v logu je
+  to rozdíl mezi hádáním a diagnózou.
+* **Jedenáct volání** v sedmi skriptech přes něj.
+* **Stropy do všech osmi úloh**, velkoryse nad obvyklou dobou běhu:
+  robot 90 min, zkoušky 75, kontrola inzerátů 60, rozesílání 30,
+  zbytek 20. Nejde o hlídání výkonu, ale o to, aby viselo nanejvýš
+  tolik.
+* **`try/catch` do těch dvou skriptů.** `uklid-databaze` vrací při
+  výpadku stav 0 („nedošlo to tam"), který volající odliší od chyby,
+  kterou databáze vrátila sama.
+
+### Zkouška
+
+`scripts/test-casove-limity.mjs` vybere z úloh **produkční** skripty
+(zkoušky se nepočítají — ty běží pod vlastním `timeout` a míří na
+vlastní server), vyhodí komentáře a hledá holé `fetch(`. Vlastní
+AbortController bere jako rovnocennou obranu, protože tak to dělá
+`kontrola-inzeratu.mjs`. Druhá kontrola porovná počet `runs-on`
+s počtem `timeout-minutes` — strop musí mít **každá** úloha, ne
+soubor.
+
+Sabotáž (vrátit jeden `fetch` a smazat jeden strop) shodí obě
+kontroly.

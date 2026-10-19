@@ -40,6 +40,7 @@ import { fileURLToPath } from 'node:url';
 import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
 import * as sklad from './mail-sklad.mjs';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require_ = createRequire(import.meta.url);
 const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
@@ -60,7 +61,7 @@ const MAIL_API = process.env.PK_MAIL_API || 'https://api.resend.com/emails';
 const log = (...a) => console.log(...a);
 
 async function sb(cesta, volby = {}) {
-  const r = await fetch(SUPABASE_URL + '/rest/v1/' + cesta, {
+  const r = await fetchSLimitem(SUPABASE_URL + '/rest/v1/' + cesta, {
     ...volby,
     headers: {
       apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,
@@ -79,7 +80,7 @@ const rpc = (jmeno, args) => sb('rpc/' + jmeno, { method: 'POST', body: JSON.str
    lidé místo odhlášení klikají na „spam", a to poškodí doručování všem. */
 async function posli({ komu, predmet, text, html, odhlasit }) {
   if (!odhlasit) throw new Error('bez odhlašovacího odkazu se neposílá');
-  const r = await fetch(MAIL_API, {
+  const r = await fetchSLimitem(MAIL_API, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + MAIL_KEY, 'Content-Type': 'application/json' },
     body: JSON.stringify({

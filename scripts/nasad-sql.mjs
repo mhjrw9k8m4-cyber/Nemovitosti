@@ -38,6 +38,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOUBOR = path.join(KOREN, 'supabase', '00-vse.sql');
 const API = process.env.SUPABASE_API || 'https://api.supabase.com';
@@ -124,7 +125,7 @@ async function main() {
   log('Posílám do databáze…');
   let odpoved;
   try {
-    odpoved = await fetch(`${API}/v1/projects/${ref}/database/query`, {
+    odpoved = await fetchSLimitem(`${API}/v1/projects/${ref}/database/query`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: sql }),

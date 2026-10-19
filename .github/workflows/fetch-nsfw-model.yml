@@ -10,6 +10,10 @@ on:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (stahuje model).
+    timeout-minutes: 30
     permissions:
       contents: write
     steps:

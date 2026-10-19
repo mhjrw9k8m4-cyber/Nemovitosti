@@ -25,6 +25,7 @@
    vykon.sql), skript to řekne a skončí v pořádku — úklid není důvod,
    proč by měla noční kontrola inzerátů spadnout.
    ==================================================================== */
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const DNI = Math.max(parseInt(process.env.UKLID_DNI || '180', 10) || 180, 30);
@@ -37,15 +38,25 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 /* Vrací { stav, telo }. Servisní klíč se nikam nevypisuje — ani do
    chybové hlášky; obchází veškerá oprávnění, takže by stačil jeden
    snímek obrazovky z běhu úlohy. */
+/* VÝPADEK SE HLÁSÍ STAVEM, NE PÁDEM. Doteď tu nebyl `catch`: když
+   databáze neodpověděla, skript spadl uprostřed úklidu a volající se
+   nedozvěděl, které kroky doběhly. Stav 0 znamená „nedošlo to tam" —
+   volající ho umí odlišit od chyby, kterou databáze vrátila sama. */
 async function rpc(jmeno, parametry) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${jmeno}`, {
-    method: 'POST',
-    headers: {
-      apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(parametry || {}),
-  });
+  let r;
+  try {
+    r = await fetchSLimitem(`${SUPABASE_URL}/rest/v1/rpc/${jmeno}`, {
+      method: 'POST',
+      headers: {
+        apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(parametry || {}),
+    });
+  } catch (e) {
+    return { stav: 0, telo: 'spojení selhalo: '
+      + ((e && (e.message || e.code)) || 'neznámá chyba').slice(0, 160) };
+  }
   return { stav: r.status, telo: (await r.text()).slice(0, 200) };
 }
 

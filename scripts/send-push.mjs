@@ -36,6 +36,7 @@ import { mapaSouboru, klicNabidky } from './generate-parcel-pages.mjs';
 import { posli as posliPush } from './web-push.mjs';
 import { terminText, tvarNovyPozemek } from './mail-sklad.mjs';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const require_ = createRequire(import.meta.url);
 const PKH = require_(path.join(ROOT, 'js', 'hlidani-logika.js'));
@@ -58,7 +59,7 @@ const MAX_V_UPOZORNENI = 3;
 const log = (...a) => console.log(...a);
 
 async function sb(cesta, volby = {}) {
-  const r = await fetch(SUPABASE_URL + '/rest/v1/' + cesta, {
+  const r = await fetchSLimitem(SUPABASE_URL + '/rest/v1/' + cesta, {
     ...volby,
     headers: {
       apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,

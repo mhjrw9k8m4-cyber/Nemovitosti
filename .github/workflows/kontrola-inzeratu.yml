@@ -19,6 +19,10 @@ on:
 jobs:
   kontrola:
     runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj
+    # GitHub úlohu zastaví až po šesti hodinách a další
+    # naplánovaný běh se do té doby nespustí (obchází tisíce odkazů, každý s vlastním limitem).
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4

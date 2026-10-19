@@ -95,6 +95,60 @@ for (const s of STRANKY) {
     nemaNic.map((n) => `„${n.text}" (${n.trida}) — bez plochy, okraje i podtržení, a nenese to ani skupina`).join('; '));
   await ctx.close();
 }
+
+/* ===================================================================
+   RUB TÉHOŽ PRAVIDLA: VYPNUTÉ OVLÁDÁNÍ MUSÍ VYPADAT VYPNUTĚ
+   ===================================================================
+   Naměřeno: ovladače se v js/ vypínají na 17 místech, ale vzhled
+   vypnutého stavu byl v CSS popsaný jen PĚTKRÁT a pokaždé jinak
+   (průhlednost 0,6 / 0,4 / 0,4 / 0,5, kurzor `progress` i `default`).
+   Dvanáct ovladačů tedy po vypnutí vypadalo pořád stejně — že nejdou
+   použít, se člověk dozvěděl, až když do nich marně klepl.
+
+   A JEŠTĚ JEDNO ROZLIŠENÍ: `disabled` znamená na webu dvojí — „teď to
+   nejde" a „pracuje se". Čekání se nemá tvářit jako zákaz, proto se
+   odlišuje atributem aria-busy. Měří se obojí, na doopravdy
+   vykreslených prvcích. */
+{
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const p2 = await ctx.newPage();
+  await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await p2.waitForTimeout(2200);
+  const v = await p2.evaluate(() => {
+    const vzorky = [...document.querySelectorAll('button')]
+      .filter((e) => e.offsetParent && !e.disabled).slice(0, 6);
+    if (!vzorky.length) return null;
+    const pred = vzorky.map((e) => getComputedStyle(e).opacity);
+    vzorky.forEach((e) => { e.disabled = true; });
+    const po = vzorky.map((e) => ({ pruhlednost: getComputedStyle(e).opacity,
+      kurzor: getComputedStyle(e).cursor }));
+    /* Jeden z nich navíc označíme jako „pracuje se". */
+    vzorky[0].setAttribute('aria-busy', 'true');
+    const zanepraz = { pruhlednost: getComputedStyle(vzorky[0]).opacity,
+      kurzor: getComputedStyle(vzorky[0]).cursor };
+    vzorky.forEach((e) => { e.disabled = false; e.removeAttribute('aria-busy'); });
+    return { pocet: vzorky.length, pred, po, zanepraz };
+  });
+  pravda('našly se zapnuté ovladače, na kterých se to dá změřit', !!(v && v.pocet >= 3),
+    'nenašlo se dost tlačítek');
+  if (v) {
+    pravda('vypnutý ovladač je průhlednější než zapnutý',
+      v.po.every((x) => parseFloat(x.pruhlednost) < 1),
+      'průhlednosti po vypnutí: ' + JSON.stringify(v.po.map((x) => x.pruhlednost)));
+    /* Jedna hodnota, ne čtyři — to byl ten původní nepořádek. */
+    pravda('a všechny vypnuté vypadají stejně',
+      new Set(v.po.map((x) => x.pruhlednost)).size === 1,
+      'průhledností: ' + JSON.stringify([...new Set(v.po.map((x) => x.pruhlednost))]));
+    pravda('a kurzor říká, že to nejde',
+      v.po.every((x) => x.kurzor === 'not-allowed'),
+      'kurzory: ' + JSON.stringify([...new Set(v.po.map((x) => x.kurzor))]));
+    pravda('„pracuje se" se od „nejde" liší',
+      v.zanepraz.kurzor === 'progress' && v.zanepraz.pruhlednost !== v.po[0].pruhlednost,
+      `zaneprázdněné: ${JSON.stringify(v.zanepraz)}, vypnuté: ${JSON.stringify(v.po[0])}`);
+  }
+  await ctx.close();
+}
 await prohlizec.close();
 /* Předpoklad: kdyby selektor nic nenašel, všechny kontroly výš by prošly
    na prázdné množině a test by neznamenal nic. */

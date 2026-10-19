@@ -3,6 +3,7 @@
 // převodníkem TopoJSON→GeoJSON (bez závislostí). Spouští se v GitHub Actions.
 import { writeFileSync } from 'node:fs';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const SOURCES = [
   'https://raw.githubusercontent.com/siwekm/czech-geojson/master/kraje.json',
   'https://raw.githubusercontent.com/deldersveld/topojson/master/countries/czech-republic/czech-republic-regions.json'
@@ -87,7 +88,7 @@ function simpGeom(g) {
 
 let data = null, used = null;
 for (const url of SOURCES) {
-  try { const r = await fetch(url); if (r.ok) { data = await r.json(); used = url; break; } console.warn('přeskočeno', r.status, url); }
+  try { const r = await fetchSLimitem(url); if (r.ok) { data = await r.json(); used = url; break; } console.warn('přeskočeno', r.status, url); }
   catch (e) { console.warn('chyba', e.message, url); }
 }
 if (!data) { console.error('Žádný zdroj nedostupný'); process.exit(1); }

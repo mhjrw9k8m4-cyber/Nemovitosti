@@ -2516,15 +2516,16 @@
 
     gpsEl.addEventListener('click', function () {
       if (!navigator.geolocation) return;
-      gpsEl.disabled = true;
+
+      gpsEl.disabled = true; gpsEl.setAttribute('aria-busy', 'true');
       navigator.geolocation.getCurrentPosition(function (p) {
-        gpsEl.disabled = false;
+        gpsEl.disabled = false; gpsEl.removeAttribute('aria-busy');
         vybranoMisto = true;
         nastavMisto(p.coords.latitude, p.coords.longitude);
         jdiNa(p.coords.latitude, p.coords.longitude);
         prepocti();
       }, function (err) {
-        gpsEl.disabled = false;
+        gpsEl.disabled = false; gpsEl.removeAttribute('aria-busy');
 
         if (pocetEl) {
           pocetEl.textContent = (err && err.code === 1)
@@ -2751,11 +2752,11 @@
     function tryGeoInline() {
       if (!navigator.geolocation) { if (errEl) { errEl.textContent = 'Tento prohlížeč neumí polohu — napište obec výše.'; errEl.hidden = false; } return; }
       if (errEl) errEl.hidden = true;
-      if (retryBtn) { retryBtn.textContent = 'Zjišťuji polohu…'; retryBtn.disabled = true; }
+      if (retryBtn) { retryBtn.textContent = 'Zjišťuji polohu…'; retryBtn.disabled = true; retryBtn.setAttribute('aria-busy', 'true'); }
       navigator.geolocation.getCurrentPosition(function (pos) {
         close(); scrollToMap(); enterNearAt({ lat: pos.coords.latitude, lng: pos.coords.longitude }, false);
       }, function (er) {
-        if (retryBtn) { retryBtn.textContent = 'Použít mou polohu'; retryBtn.disabled = false; }
+        if (retryBtn) { retryBtn.textContent = 'Použít mou polohu'; retryBtn.disabled = false; retryBtn.removeAttribute('aria-busy'); }
         if (errEl) {
           errEl.textContent = (er && er.code === 1)
             ? 'Poloha je u tohoto webu vypnutá. Napište prosím obec výše 👆'

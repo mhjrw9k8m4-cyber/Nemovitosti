@@ -14,6 +14,7 @@
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const ZDROJ = 'https://raw.githubusercontent.com/siwekm/czech-geojson/master/okresy.json';
 // V předloze má Praha jako jediná jiný název než u nás.
 const PREJMENUJ = { 'území Hlavního města Prahy': 'Praha' };
@@ -52,9 +53,22 @@ function zjednodusGeometrii(g) {
   throw new Error('neznámý typ geometrie: ' + g.type);
 }
 
-const r = await fetch(ZDROJ, { headers: { 'user-agent': 'parcelka-bot' } });
-if (!r.ok) { console.error('Hranice okresů se nepodařilo stáhnout: HTTP ' + r.status); process.exit(1); }
-const geo = await r.json();
+/* VÝPADEK ZDROJE NENÍ PÁD. Doteď tu nebyl jediný `catch`: když zdroj
+   neodpověděl, skript spadl výjimkou a v logu úlohy zbyl stack trace
+   místo věty, co se stalo. Hranice okresů se navíc mění jednou za
+   roky — když se nestáhnou, nemá cenu nic přepisovat, stačí to říct
+   a skončit s chybou, kterou jde přečíst. */
+let geo;
+try {
+  const r = await fetchSLimitem(ZDROJ, { headers: { 'user-agent': 'parcelka-bot' } });
+  if (!r.ok) { console.error('Hranice okresů se nepodařilo stáhnout: HTTP ' + r.status); process.exit(1); }
+  geo = await r.json();
+} catch (e) {
+  console.error('Hranice okresů se nepodařilo stáhnout: '
+    + ((e && (e.code === 'CASOVY_LIMIT' ? e.message : (e.message || e.code))) || 'neznámá chyba'));
+  console.error('Zdroj: ' + ZDROJ);
+  process.exit(1);
+}
 const ven = {};
 let bodu = 0, bodyPuvodne = 0;
 for (const f of geo.features || []) {
