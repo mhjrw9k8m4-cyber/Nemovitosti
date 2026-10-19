@@ -23,6 +23,8 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { rozbalHledani } from './rozbal-hledani.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA STAV — viz scripts/zkouska-pripraveno.mjs. */
+import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -65,7 +67,13 @@ for (const s of STRANKY) {
      oddíl o přestavbě podle Sreality), takže filtrovací čipy mají nulový
      obdélník a měřit by nebylo co — kontrola „a bylo vůbec co měřit"
      tohle přesně hlídá a taky to ohlásila. */
-  await p.waitForTimeout(900);
+  /* ČEKÁ SE NA VYKRESLENÝ OBSAH, NE NA 900 MS. Na pomalejším stroji
+     (CI, běh 557) se za tu dobu stihlo vykreslit jen osm ovládacích
+     prvků z dvanácti a kontrola „a bylo vůbec co měřit" správně padla —
+     jenže na vadě, která v aplikaci není. Na úvodní stránce se proto
+     čeká na vykreslený výpis, všude na ustálený DOM. */
+  if (/index\.html$/.test(s)) await pripravenoVypis(p);
+  await domUtichlo(p, 350);
   await rozbalHledani(p).catch(() => {});
   const nalezy = await p.evaluate((sel) => {
     const pruhledna = (c) => !c || c === 'transparent' || /rgba\([^)]*,\s*0(\.0+)?\s*\)/.test(c);

@@ -46,8 +46,6 @@ export const LINKY = [1, 1.5, 2, 3];
 /* Animace s vlastním časem — každá s důvodem, proč do tokenu nepatří. */
 export const VLASTNI_CAS = {
   livepulse: 'tep u značky „žije" — vlastní rytmus, ne nájezd',
-  float1: 'obláček na pozadí; 14 a 16 s záměrně různě, aby se nesesynchronizovaly',
-  float2: 'druhý obláček, 18 s — viz float1',
   undersweep: 'linka pod nadpisem přejede jednou při příjezdu, s prodlevou',
   mePulse: 'kroužek u mé značky — tep',
   pkRadar: 'radar na mapě — pulsuje, nenajíždí',

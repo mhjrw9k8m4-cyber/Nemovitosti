@@ -2939,3 +2939,83 @@ aplikace.
 | když se nenajde | vzala se první karta | kontrola to řekne |
 
 Pět běhů po sobě, pokaždé 27 v pořádku, 9–10 s na běh.
+
+---
+
+## 43. Vizuální balast pryč — a co zůstat musí *19. 10.*
+
+Majitel poslal tři varianty téhož zadání: „smaž všechny gradienty,
+stíny, poloprůhledné vrstvy; udělej z toho industriální nástroj jako
+Sreality". Napřed se tedy **spočítalo, co v tom stylopisu vlastně je**,
+protože plošné „smaž všechny" by rozbilo víc, než spraví.
+
+### Co odešlo
+
+| co | kolik |
+|---|---|
+| **„Aurora"** — tři rozmazané (`blur(80px)`) animované koule za hlavičkou | z **20 stránek**, −1 130 znaků CSS |
+| přeliv v hlavním tlačítku (přes plnou zeleň) | 1 |
+| přelivy na plochách: pásy sekcí a patičky, dva radiální závoje, závoj nad úvodní plochou, podklady odznaků, předěl, proužek pod nadpisem | ~10 |
+
+U aurory stála v kódu i poznámka, že na mobilu žrala výkon a sekal
+scroll. **Snímek před a po je přitom k nerozeznání** — byla na krytí
+0,1 za mřížkovou texturou. Čistý náklad bez viditelného přínosu.
+
+### Co zůstalo, a proč
+
+Z 57 „barevných přechodů" je ozdoba menšina:
+
+* **18 masek** (`mask-image`) — konec posuvného pruhu, který říká „je kam
+  rolovat". Smazat je znamená vzít afordanci.
+* **12 mřížkových textur** (1px linky) — jsou v designové soustavě a
+  hlídá je zkouška.
+* **závoj nad fotkou a mapou** — drží čitelnost bílého písma na snímku.
+  Bez něj padá kontrast; totéž dělá i Sreality.
+* **kostra načítání** (šimr přes prázdnou kartu).
+
+A dvě věci ze zadání se **neudělaly schválně**:
+
+1. **„Smaž všechny `box-shadow`."** Naměřeno: stíny jsou `--e1/--e2/--e3`
+   s krytím 0,06–0,12 u blízkého stínu. To není pouť, to je odlišení
+   karty od plochy — a je to v soustavě i ve zkoušce.
+2. **„Cena `font-black` (900)."** Stupnice vah je {400, 500, 600, 700} a
+   hlídá ji `test-pismo`. Cena má 700 při 24 px na kartě a 40 px na
+   detailu; devítistovka by přidala jen rozbitou stupnici.
+
+### Karta a detail konečně lícují
+
+Měřeno na vykresleném stavu:
+
+| plocha | dřív | teď |
+|---|---|---|
+| karta ve výpisu | 20 px (`--r-obraz`) | **10 px** (`--r-plocha`) |
+| kostra načítání | 20 px | **10 px** (jinak rohy při dojetí dat „cuknou") |
+| karta okresu | 20 px | **10 px** |
+| dlaždice a panely na detailu | 10 px | 10 px |
+
+Karta **je plocha, ne obraz** — a přechod mezi výpisem a detailem už
+nemění tvar rohů.
+
+### Odznaky: jeden hlas, měřeno na vykresleném stavu
+
+Zdrojová pravidla tvrdila dvojí (12 px u osmnácti, váha 600 u sedmi a
+700 u dvanácti), ale **vykreslený stav je jednotný: 13 px / 600**,
+protože `.opp-chips > *` ta pravidla přebíjí. Statická zkouška nad
+zdrojem by tedy hlídala něco jiného, než co lidé vidí — a taky ji
+sabotáž přešla, protože selektor `.opp-overit` do sítě „badge|chip"
+vůbec nespadl. Kontrola je proto v `test-tvary`, kde se měří
+**vykreslené** odznaky: jedna velikost, jedna váha. Sabotáž (jednomu
+odznaku vnucená váha 700) padá na `váhy: 600, 700`.
+
+Váhy ve zdroji se stejně srovnaly, aby zdroj neříkal nic jiného než
+obrazovka: slovní odznaky 600, **počítadla zůstávají na 700** — tam je
+to číslo a při 12 px se tenčí číslice hůř čtou.
+
+### Dvě zkoušky, které CI chytilo mimo tohle
+
+Běh 557 shodil `test-prvni-obrazovka` („a u seznamu stojí počet
+nabídek") a `test-afordance` („bylo vůbec co měřit — nalezeno 8"). Obě
+hlásily vadu, která v aplikaci není: tlačítka přepínače jsou ve
+statickém HTML, ale **počet** do nich dopisuje až vykreslený výpis; a
+`test-afordance` čekala pevných 900 ms po `domcontentloaded`. Obě teď
+čekají na vykreslený výpis. Tři běhy po sobě v pořádku (9 a 19 kontrol).

@@ -282,6 +282,39 @@ if (drazba) {
 
 pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
 
+/* --- ODZNAKY MLUVÍ JEDNÍM HLASEM -----------------------------------
+   Na jedné kartě stojí vedle sebe „Dražba", „−48 % proti okolí",
+   „Doporučujeme", „podíl 15/128" a „úřední cena (§ 12)". Když má každý
+   jinou velikost nebo váhu, karta vypadá slepená ze tří webů.
+   MĚŘÍ SE VYKRESLENÝ STAV, ne pravidla ve stylopisu: ta se překrývají
+   (v css/styles.css má půl tuctu odznaků napsáno 12 px, ale
+   `.opp-chips > *` je přebíjí na 13 px) — zkouška nad zdrojem by tedy
+   hlídala něco jiného, než co lidé vidí. Naměřeno 19. 10.: 13 px / 600
+   u všech. */
+{
+  const odznaky = await p.evaluate(() => {
+    const ven = [];
+    for (const k of [...document.querySelectorAll('.opp-item')].slice(0, 12)) {
+      for (const e of k.querySelectorAll('.opp-chips > *, .opp-badge')) {
+        const s = getComputedStyle(e);
+        ven.push({ trida: e.className, px: s.fontSize, vaha: s.fontWeight });
+      }
+    }
+    return ven;
+  });
+  /* PŘEDPOKLAD: bez odznaků se nedá měřit jejich jednota. */
+  pravda('je co měřit — odznaky na kartách', odznaky.length >= 5,
+    `našlo se jich ${odznaky.length}`);
+  if (odznaky.length >= 5) {
+    const velikosti = [...new Set(odznaky.map((o) => o.px))];
+    const vahy = [...new Set(odznaky.map((o) => o.vaha))];
+    pravda('odznaky na kartách mají jednu velikost', velikosti.length === 1,
+      `velikosti: ${velikosti.join(', ')} — např. ${odznaky.map((o) => o.trida + ' ' + o.px).slice(0, 4).join(' | ')}`);
+    pravda('a jednu váhu', vahy.length === 1,
+      `váhy: ${vahy.join(', ')} — např. ${odznaky.map((o) => o.trida + ' ' + o.vaha).slice(0, 4).join(' | ')}`);
+  }
+}
+
 await prohlizec.close();
 console.log('\nDruh příležitosti se pozná i bez barev');
 console.log(zpravy.join('\n'));

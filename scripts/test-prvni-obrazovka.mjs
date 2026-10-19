@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
-import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -99,7 +99,12 @@ try {
   const p = await ctx.newPage();
   await p.goto(BASE + '/index.html', { waitUntil: 'load' });
   await p.waitForSelector('.mv-toggle .mvt-btn', { timeout: 25000 });
-  await domUtichlo(p, 350);   // bylo waitForTimeout(2500)
+  /* Tlačítka přepínače jsou ve statickém HTML, ale POČET nabídek do nich
+     dopisuje až vykreslení výpisu. Čekat jen na „ustálený DOM" tedy
+     nestačí — v CI (běh 557) se měřil přepínač bez čísla a kontrola
+     „a u seznamu stojí počet nabídek" padla na vadě, která tam není. */
+  await pripravenoVypis(p);
+  await domUtichlo(p, 350);
 
   /* ---- NEJDŘÍV TO, CO JE VIDĚT PO OTEVŘENÍ -------------------------
      Úvodní stránka se na telefonu otevírá SEZNAMEM: hned mají být vidět

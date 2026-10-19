@@ -199,6 +199,9 @@ dotyk:
 strop:
   syta-znackova-plocha: "nejvýš 3 prvky na index.html"
   hlida: scripts/test-hierarchie.mjs
+prelivy:
+  pravidlo: "ozdobný přeliv na ploše ne — plná barva. ZŮSTÁVAJÍ: masky (konec posuvného pruhu), mřížková textura, závoj nad fotkou (drží čitelnost bílého písma) a šimr kostry načítání; smazat je = vzít afordanci nebo kontrast"
+  hlida:    scripts/test-predloha.mjs, test-kontrast.mjs, test-tvary.mjs
 zakazano:
   - "backdrop-filter kdekoli (sklo a rozostření — zrušeno 19. 10., viz oddíl 32)"
   - "SVĚTLÁ průsvitná plocha pod TMAVÝM textem: kontrast pak závisí na

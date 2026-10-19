@@ -287,13 +287,19 @@
      Všechny vycházejí ze DVOU tónů, které web má — hluboké modři
      a mědi. Duha z osmi barev není přechod, je to zmatek.
      --------------------------------------------------------------- */
-  --grad-warm:linear-gradient(135deg, #A66A16 0%, #8A5512 52%, #6E420D 100%);
-  --grad-warm-soft:linear-gradient(135deg, rgba(166,106,22,0.16), rgba(138,85,18,0.06));
-  --grad-cool-soft:linear-gradient(135deg, rgba(44,113,80,0.16), rgba(27,74,52,0.06));
+/* PLNÉ BARVY MÍSTO PŘELIVŮ. Měřeno 19. 10.: ve stylopisu bylo 57
+   barevných přechodů. Většina z nich ale nic nezdobí — jsou to masky
+   (ukazují, že je kam rolovat), závoj nad fotkou (aby na ní bylo bílé
+   písmo čitelné) a kostra načítání; ty zůstávají a je u nich napsané
+   proč. Co zdobilo plochy, je teď plná barva: pásy sekcí, podklady
+   odznaků, předěl a proužek pod nadpisem. */
+  --grad-warm:#8A5512;
+  --grad-warm-soft:#F6EEE4;
+  --grad-cool-soft:#E4EDE9;
   /* Plocha stránky: dlouhý svislý přechod. Barva se mění tak pomalu, že
      si toho nikdo nevšimne přímo — všimne si, že stránka „dýchá". */
   /* Předěl sekcí: linka, která se do stran vytrácí, místo tvrdé hrany. */
-  --grad-predel:linear-gradient(90deg, transparent, var(--line-strong) 18%, var(--line-strong) 82%, transparent);
+  --grad-predel:var(--line-strong);
   /* ZÁVAN BARVY OD ČÁRY. Bloky druhů příležitostí nesou barvu jen svislou
      čárou vlevo (tak to bylo schválně rozhodnuto — kartu tam nechceme).
      Jenže na světlé ploše z toho byl text s proužkem a nic víc: spodek
@@ -431,8 +437,8 @@
      #FCFCFC, #F8F8F8) mělo R=G=B — tedy ani stopu zeleně. Pás teď začíná
      zelenkavě a plynule přechází do plochy stránky; bílé karty na něm
      pak samy vystoupí, místo aby s ním splývaly. */
-  --pas-plocha:linear-gradient(180deg, #EFF6F2 0%, #E8F1EC 52%, var(--bg) 100%);
-  --pas-plocha-paticka:linear-gradient(170deg, var(--bg) 0%, #E8F1EC 52%, #EFF6F2 100%);
+  --pas-plocha:#EDF3EF;
+  --pas-plocha-paticka:#EDF3EF;
   --pas-text:var(--text-ondark);
   --pas-text-mute:var(--text-ondark-mute);
   --pas-akcent:var(--copper);
@@ -444,8 +450,7 @@
   /* SVĚTLO Z ROHŮ. Patička ho měla a vysvětlivka u ní tvrdila „stejný
      jazyk jako tmavý pás" — jenže úvodní pás ho neměl, takže patička
      byla bohatší než úvod. Teď je to jeden předpis pro obojí. */
-  --pas-zavoje:radial-gradient(60% 80% at 8% 0%, var(--pas-zavoj-a), transparent 62%),
-               radial-gradient(55% 75% at 96% 100%, var(--pas-zavoj-b), transparent 66%);
+  --pas-zavoje:none;   /* závoje pryč — pás je plná plocha */
   --pas-nadpis:var(--accent-warm);
   /* OBRYS OVLÁDACÍHO PRVKU NA PÁSU. --pas-linka je na jemné předěly
      (1,22 : 1), ale hranice prvku, se kterým se dá pracovat, musí mít
@@ -892,25 +897,16 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
 .btn-glow{box-shadow:var(--glow);}
 
 /* Aurora pozadí hero */
-.aurora{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; contain:strict;}
 /* Rozmazané poletující skvrny na pozadí jsou to, co působí „futuristicky".
    Nemažou se — drží hloubku —, ale ztlumily se na polovinu a jedna z nich
    je teplá, aby pozadí nebylo jen studené. */
-.aurora span{position:absolute; border-radius:50%; filter:blur(80px); opacity:0.1; transform:translateZ(0); will-change:transform;}
-.aurora .a1{width:420px; height:420px; background:radial-gradient(circle, rgba(79,165,122,0.3), transparent 70%); top:-120px; right:-80px; animation:float1 14s ease-in-out infinite;}
-.aurora .a2{width:360px; height:360px; background:radial-gradient(circle, rgba(60,140,100,0.22), transparent 70%); bottom:-140px; left:-100px; animation:float2 18s ease-in-out infinite;}
-.aurora .a3{width:300px; height:300px; background:radial-gradient(circle, rgba(138,85,18,0.22), transparent 70%); top:40%; left:40%; animation:float1 16s ease-in-out infinite reverse;}
-@keyframes float1{0%,100%{transform:translate(0,0);} 50%{transform:translate(-30px,40px);}}
-@keyframes float2{0%,100%{transform:translate(0,0);} 50%{transform:translate(40px,-30px);}}
-/* Mobil: animované rozmazané „aurora" koule žraly výkon a scroll sekal —
-   na dotykových displejích je necháme staticky (vzhled zůstane, sekání zmizí). */
 @media (max-width:768px){
-  .aurora span{animation:none !important; will-change:auto; filter:blur(70px); opacity:0.1;}
 }
 .hero{position:relative; overflow:hidden;}
 
 /* teplá záře shora — útulnost + šmrnc */
-.hero::before{content:""; position:absolute; inset:0; background:radial-gradient(120% 80% at 50% -15%, rgba(110,150,125,0.06), transparent 58%); pointer-events:none; z-index:0;}
+/* Závoj nad úvodním pásem pryč: plocha je plná, hloubku dělá linka
+   a odstup, ne rozptýlená skvrna. */
 /* elegantní podtržení zvýrazněného slova */
 h1 em{position:relative; z-index:0;}
 /* Linka jde ZA písmena (z-index:-1). Kdyby ležela nad nimi, přeškrtla by
@@ -1522,7 +1518,10 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    spadl terč na 33 px — a test dotykových terčů to nehlásil, protože
    měřil pět stránek z třiceti dvou. 44 px je mez, kterou si ten test
    drží; tady je napsaná jednou pro všechna tlačítka. */
-.btn-primary{background:var(--brand-grad); background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:8px 20px; border-radius:var(--r-ovladani);
+/* PLNÁ BARVA, ŽÁDNÝ PŘELIV. Tlačítko mělo přes plnou zeleň ještě
+   přeliv --brand-grad; na ploše 36 px vysoké to nikdo nepozná jako
+   záměr, jen to rozmazává hranu barvy. */
+.btn-primary{background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:8px 20px; border-radius:var(--r-ovladani);
   display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; border:1px solid rgba(31,81,56,0.55); box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease); white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:var(--glow-lg);}
 /* Obrysy ovládacích prvků drží alfu 0,6. Při 0,4 vyjde proti bílé kontrast
@@ -2660,8 +2659,13 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    Teď má placeholder TÝŽ tvar i rozměry jako karta: plocha, obrys,
    zaoblení, snímek 16:10 nahoře, pod ním tři řádky — druh, místo
    a cena (ta je vyšší, protože cena na kartě je velká). */
+/* KARTA JE PLOCHA, NE OBRAZ. Měřeno 19. 10.: karta ve výpisu měla
+   --r-obraz (20 px), kdežto dlaždice a panely na stránce pozemku
+   --r-plocha (10 px) — týž druh plochy, dvoje zaoblení, a na přechodu
+   mezi výpisem a detailem to bilo do očí. Kostra načítání musí držet
+   totéž co karta, jinak se při dojetí dat rohy „cuknou". */
 .opp-skel{display:block; padding:0; overflow:hidden; margin-bottom:16px;
-  border:1px solid var(--line); border-radius:var(--r-obraz);
+  border:1px solid var(--line); border-radius:var(--r-plocha);
   background:var(--panel); box-shadow:var(--e1);}
 .opp-skel .skel-thumb{display:block; width:100%; height:auto; aspect-ratio:16 / 10;
   border-radius:0;}
@@ -2708,7 +2712,7 @@ h1 em{font-style:italic; font-weight:700; color:var(--copper-bright);
    měkký stín a vzduch kolem textu. Fotka sedí v jejím horním rohu,
    ne na vlastním ostrůvku. Tak to má každý velký realitní web. */
 .opp-item{position:relative; display:block; padding:0; overflow:hidden;
-  border:1px solid var(--line); border-radius:var(--r-obraz);
+  border:1px solid var(--line); border-radius:var(--r-plocha);
   background:var(--panel); box-shadow:var(--e1);
   margin-bottom:16px; cursor:pointer;
   transition:transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
@@ -3172,7 +3176,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .odl-card{text-align:left; font:inherit; cursor:pointer; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px; display:flex; flex-direction:column; gap:4px; transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .odl-card:hover{border-color:var(--c-majitel); transform:translateY(-2px); box-shadow:var(--e2);}
 .odl-card:focus-visible{outline:2px solid var(--copper-bright); outline-offset:2px;}
-.odl-badge{align-self:flex-start; font-size:12px; font-weight:700; color:#fff; background:var(--c-majitel); border-radius:var(--r-pill); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase;}
+.odl-badge{align-self:flex-start; font-size:12px; font-weight:600; color:#fff; background:var(--c-majitel); border-radius:var(--r-pill); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase;}
 .odl-place{font-family:var(--font-ui); font-size:20px; font-weight:600; color:var(--text-ondark); margin-top:2px;}
 .odl-sub{font-size:13px; color:var(--text-ondark-mute);}
 .odl-figs{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:2px; font-variant-numeric:tabular-nums;}
@@ -4897,7 +4901,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
 .ul-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:16px; display:flex; flex-direction:column; gap:4px; transition:border-color var(--cas-zakladni) var(--ease), transform var(--cas-zakladni) var(--ease);}
 .ul-card:hover{border-color:var(--line-strong); transform:translateY(-2px);}
-.ul-badge{align-self:flex-start; font-size:12px; font-weight:700; padding:2px 8px; border-radius:var(--r-lg); text-transform:uppercase; letter-spacing:0.02em; color:#fff;}
+.ul-badge{align-self:flex-start; font-size:12px; font-weight:600; padding:2px 8px; border-radius:var(--r-lg); text-transform:uppercase; letter-spacing:0.02em; color:#fff;}
 .ul-card h3{font-size:16px;}
 .ul-meta{font-size:13px; color:var(--text-ondark-mute);}
 .ul-price{font-family:var(--font-ui); font-size:20px; color:var(--copper-bright);}
@@ -5257,7 +5261,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 /* „úřední cena (§ 12)" v řádku výpisu. Fakt o tom, za co se prodává —
    ne varování (jantar) ani sleva (zelená). Proto jen zvýrazněný text
    v téže barvě jako ostatní podrobnosti řádku. */
-.okr-item .okr-urad{font-weight:700; color:var(--text-ondark-mute);}
+.okr-item .okr-urad{font-weight:600; color:var(--text-ondark-mute);}
 /* Nabídka bez ceny se nesmí tvářit jako levná ani se schovat — sloupec
    zůstane, jen v něm stojí, že cena není. */
 .okr-item .okr-bezceny{font-size:13px; color:var(--text-ondark-mute); font-style:italic;}
@@ -5286,7 +5290,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-item:hover a.okr-place{text-decoration-color:currentColor;}
 /* Aby podložení nekopírovalo tvar řádku na pixel k okrajům textu. */
 .okr-list .okr-item{border-radius:var(--r-sm);}
-.okr-item .okr-badge{font-size:12px; font-weight:700; letter-spacing:var(--odznak-proklad); text-transform:uppercase; padding:2px 8px; border-radius:var(--r-pill); border:1px solid currentColor;}
+.okr-item .okr-badge{font-size:12px; font-weight:600; letter-spacing:var(--odznak-proklad); text-transform:uppercase; padding:2px 8px; border-radius:var(--r-pill); border:1px solid currentColor;}
 /* Odhad proti okolí — táž barva jako na mapě, ať to člověk pozná,
    i když přijde z vyhledávače rovnou sem. */
 .okr-sleva{color:var(--c-ok-ink);}
@@ -5659,7 +5663,6 @@ body{background:var(--bg);}
      u akcentu, mez je 4,5 : 1 — a test kontrastu prochází celý web. */
   --copper-bright:#0F5C3B;
   --text-ondark-mute:#3E4A43;}
-.add-hero .aurora, .hero-map .aurora{display:none;}
 /* 3. ZDE BÝVAL „JEMNÝ LESK ODSHORA" NA KARTÁCH. Nebyl.
    `--grad-karta` byl `linear-gradient(180deg, #fff 0%, #fff 100%)`,
    tedy bílá do bílé — plochá výplň, která se jen tvářila jako přechod.
@@ -6385,7 +6388,7 @@ a.rz-okres:hover{color:var(--copper-bright);}
    má Rightmove ve výsledcích), na telefonu nahoře přes celou šířku. */
 .okr-list{gap:12px;}
 .okr-item{background:var(--panel); border:1px solid var(--line);
-  border-radius:var(--r-obraz); box-shadow:var(--e1); overflow:hidden;
+  border-radius:var(--r-plocha); box-shadow:var(--e1); overflow:hidden;
   padding:0 0 12px;}
 /* Text se odsazuje po dílcích, ne kartou: snímek musí jít od kraje ke
    kraji, jinak je z karty zase jen obrázek v rámečku. */
@@ -7407,7 +7410,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 
 /* „Cena k ověření" na kartě. Jantar, ne červená: je to upozornění, ať se
    člověk podívá, ne tvrzení, že je nabídka podvod. */
-.opp-overit{display:inline-block; font-size:12px; font-weight:700; color:#7C5105;
+/* SLOVNÍ ODZNAKY MAJÍ JEDNU VÁHU: 600. Měřeno 19. 10.: odznaky byly
+   skoro všechny 12 px, ale váha se dělila na 600 (sedm pravidel) a 700
+   (dvanáct), takže tatáž věc křičela na dvou místech různě. Počítadla
+   (.msf-badge, .chip-n) zůstávají na 700 — tam je to číslo, ne slovo,
+   a při 12 px se tenčí číslice hůř čtou. */
+.opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
   background:rgba(232,179,65,0.16); border:1px solid rgba(124,81,5,0.3);
   border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
 
@@ -7421,7 +7429,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
    ne varování, ne výhoda — fakt o tom, za co se prodává. Proto tentýž
    neutrální styl, ne jantar jako u „ceny k ověření". */
 .opp-podil,
-.opp-urad{display:inline-block; font-size:12px; font-weight:700;
+.opp-urad{display:inline-block; font-size:12px; font-weight:600;
   color:var(--text-ondark-mute); background:rgba(30,66,48,0.08);
   border:1px solid rgba(30,66,48,0.22);
   border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
@@ -7630,7 +7638,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--copper);}
 /* Úřední cena (§ 12) v porovnávací tabulce. Stejný tón jako odznak
    v krajských výpisech (.okr-urad): tučně, tlumenou barvou — je to
    upřesnění ceny, ne pochvala ani varování. */
-.por-tab .por-urad{font-weight:700; color:var(--text-ondark-mute); font-size:12px;}
+.por-tab .por-urad{font-weight:600; color:var(--text-ondark-mute); font-size:12px;}
 .por-tab tbody th{font-weight:700; font-size:14px;}
 .por-tab tbody th span{display:block; font-weight:400; font-size:12px; color:var(--text-ondark-mute);}
 .por-tab tbody th a{color:var(--text-ondark); text-decoration:none;}
