@@ -324,3 +324,21 @@
 {"k":"Úštěk|158|Litoměřice|50.590|14.344#1rqp60s","m":"Úštěk","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":101,"c":207765,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
 {"k":"Lovosice|3033/22|Litoměřice|50.520|14.054#1rqp5w6","m":"Lovosice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":28,"c":71741,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
 {"k":"Úštěk|16/5|Litoměřice|50.580|14.346#1rqp60g","m":"Úštěk","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":68,"c":1160828,"od":"2026-09-24","do":"2026-10-17","proc":"zmizela"}
+{"k":"Veselí nad Lužnicí|—|Tábor|49.151|14.689#20wp1","m":"Veselí nad Lužnicí","o":"Tábor","dr":"ostatní plocha","t":"sale","v":3732,"c":39000,"od":"2026-09-27","do":"2026-10-18","proc":"cena"}
+{"k":"Český Dub|—|Liberec|50.663|15.021#22c3n","m":"Český Dub","o":"Liberec","dr":"trvalý travní porost","t":"sale","v":1126,"c":39000,"od":"2026-09-27","do":"2026-10-18","proc":"cena"}
+{"k":"Bílá|—|Liberec|50.660|15.034#22c97","m":"Bílá","o":"Liberec","dr":"orná půda","t":"sale","v":652,"c":23000,"od":"2026-09-27","do":"2026-10-18","proc":"cena"}
+{"k":"Proseč pod Ještědem|—|Liberec|50.690|14.994#1dsw5","m":"Proseč pod Ještědem","o":"Liberec","dr":"orná půda","t":"sale","v":14459,"c":550000,"od":"2026-09-14","do":"2026-10-18","proc":"cena"}
+{"k":"Český Dub|—|Liberec|50.694|14.980#hxsgil","m":"Český Dub","o":"Liberec","dr":"orná půda","t":"sale","v":14247,"c":555000,"od":"2026-09-14","do":"2026-10-18","proc":"cena"}
+{"k":"Pardubická|—|Pardubice|50.084|15.880#ms10","m":"Pardubická","o":"Pardubice","dr":"orná půda","t":"sale","v":83000,"c":4000000,"od":"2026-10-16","do":"2026-10-18","proc":"cena"}
+{"k":"Brodce|—|Mladá Boleslav|50.336|14.862#1ykyv","m":"Brodce","o":"Mladá Boleslav","dr":"stavební pozemek","t":"sale","v":6928,"c":526528,"od":"2026-10-01","do":"2026-10-18","proc":"cena"}
+{"k":"Horky nad Jizerou|—|Mladá Boleslav|50.324|14.831#1yku8","m":"Horky nad Jizerou","o":"Mladá Boleslav","dr":"stavební pozemek","t":"sale","v":23561,"c":1790669,"od":"2026-10-01","do":"2026-10-18","proc":"cena"}
+{"k":"Brodce|—|Mladá Boleslav|50.329|14.887#1ykud","m":"Brodce","o":"Mladá Boleslav","dr":"stavební pozemek","t":"sale","v":9906,"c":782574,"od":"2026-10-01","do":"2026-10-18","proc":"cena"}
+{"k":"Děčín|—|Děčín|50.789|14.172#2vmnh","m":"Děčín","o":"Děčín","dr":"stavební pozemek","t":"sale","v":650,"c":2275000,"od":"2026-10-05","do":"2026-10-18","proc":"cena"}
+{"k":"Ostrov u Macochy|—|Blansko|49.382|16.763#ed4liq","m":"Ostrov u Macochy","o":"Blansko","dr":"pozemek","t":"sale","v":1059,"c":4500750,"od":"2026-10-12","do":"2026-10-18","proc":"cena"}
+{"k":"Lhota pod Libčany|—|Hradec Králové|50.160|15.696#21mrm","m":"Lhota pod Libčany","o":"Hradec Králové","dr":"stavební pozemek","t":"sale","v":950,"c":3990000,"od":"2026-10-12","do":"2026-10-18","proc":"cena"}
+{"k":"Vanovice|—|Blansko|49.569|16.659#212ne","m":"Vanovice","o":"Blansko","dr":"stavební pozemek","t":"sale","v":1800,"c":2160000,"od":"2026-10-11","do":"2026-10-18","proc":"zmizela"}
+{"k":"Vrábče|—|České Budějovice|48.916|14.376#42qna","m":"Vrábče","o":"České Budějovice","dr":"stavební pozemek","t":"sale","v":1400,"c":4130000,"od":"2026-09-14","do":"2026-10-18","proc":"zmizela"}
+{"k":"Tovární|—|Břeclav|48.894|16.818#22dql","m":"Tovární","o":"Břeclav","dr":"stavební pozemek","t":"sale","v":666,"c":4250000,"od":"2026-10-04","do":"2026-10-18","proc":"zmizela"}
+{"k":"Brod nad Dyjí|—|Břeclav|48.875|16.535#oyzr","m":"Brod nad Dyjí","o":"Břeclav","dr":"stavební pozemek","t":"sale","v":523,"c":4000000,"od":"2026-09-19","do":"2026-10-18","proc":"zmizela"}
+{"k":"Borovská|—|Praha|50.082|14.645#oz2e","m":"Borovská","o":"Praha","dr":"stavební pozemek","t":"sale","v":853,"c":11000000,"od":"2026-09-19","do":"2026-10-18","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-18","proc":"zmizela"}
