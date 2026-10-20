@@ -4018,6 +4018,55 @@ Deklarace funkcí zůstanou, kde jsou — hoistují se.
 * Ověřit to umí jedině celá sada v prohlížeči (121 zkoušek, kolem
   75 minut), a to po každém kroku.
 
+### Doměřeno 20. 10.: plán výš je neúplný
+
+Tři měření, která v něm chyběla.
+
+**1. Kolik ten řez vynese.** Změřeno na úvodní stránce v okně 390 px:
+kdy se objeví první nabídka ve výpisu, jednou tak, jak to je dnes,
+a jednou se zdrženou mapovou knihovnou (route ji pustí až o 3 s
+později, tedy jako by na kritické cestě vůbec nebyla).
+
+| | knihovna | první nabídka |
+|---|---|---|
+| jak je to dnes | 70 ms | **1 046 / 599 ms** |
+| se zdrženou knihovnou | 3 047 ms | **3 998 / 3 946 ms** |
+
+Zdržení se přeneslo **jedna ku jedné**: výpis se objeví přesně o ty tři
+vteřiny později. Výpis tedy na knihovně nevisí jen formálně přes ten
+`return` — visí na ní celým svým časem. Na místním serveru to nic
+nestojí (knihovna dojede za 70 ms), na opravdové lince stojí přesně
+tolik, kolik trvá stáhnout 36,1 kB.
+
+**2. Na čem ten řez doopravdy stojí.** Měření výš počítalo příkazy;
+rozhoduje ale, kdo na osm mapových proměnných sáhne. Po opravě vzoru
+(původní `\bmap\b` se trefil i do `'map-filters'`, `DATA.map(` a do
+českého slova „mapě" v komentáři na konci řádku — proto napočítal o 14
+míst víc) vychází:
+
+| | kolik |
+|---|---|
+| výkonných příkazů, které na ně sáhnou při načtení | **27** |
+| a je to TÝŽ seznam jako u `L.` / `map.` | ano |
+| **pojmenovaných funkcí, které na ně sahají při volání** | **38** (asi 110 odkazů) |
+| z toho dosažitelných z `renderList()` | **15** |
+
+Ta třetí řádka je ta práce, kterou plán výš nezmiňoval: přesunout
+27 příkazů nestačí, protože dokud mapa nestojí, musí **38 funkcí** umět,
+že `map` je `null`. A není to okrajové: `syncMarkers()` stojí uprostřed
+`renderList()`, takže na mapu sahá i vykreslení samotného výpisu.
+
+**3. Kde ten kód vlastně je.** Celá ta „horní úroveň" je tělo
+`async function boot(DATA, KRAJE_GEOM, …)` (ř. 609–8390), která se volá
+až po dotažení dat. Strážce tedy neopouští modul, ale `boot` — a s ním
+i výpis.
+
+Řez je pořád proveditelný a pořád bodový. Je to ale **práce na 38
+funkcí**, ne na osm proměnných, a po každém kroku ji umí ověřit jedině
+celá sada v prohlížeči (121 zkoušek, ~75 minut). Měřicí skripty, kterými
+se to zjistilo, nejsou v repozitáři — jsou jednorázové a jejich čísla
+jsou tady.
+
 Řez je tedy proveditelný a je bodový, ne plošný. Je to ale samostatná
 práce na několik kroků s měřením mezi nimi — ne něco, co se přibalí
 k úklidu.
