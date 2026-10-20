@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=b83c77b7">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=b8eaad19">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -180,7 +180,7 @@
        co se nastavilo, a dá se to přepsat po svém. */
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
-      min-height:38px; padding:8px 12px; border-radius:999px;
+      min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
       border:1.5px solid var(--line-strong); background:var(--plocha-tlumena); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
@@ -203,7 +203,7 @@
     /* Volba, pod kterou dnes není nic. Neschovává se: zmizelá volba mate
        víc než volba s nulou. */
     .hl-chip.hl-nula{opacity:.55;}
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-pill); font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(31,81,56,.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}
@@ -218,7 +218,7 @@
        9,72 : 1 ve světlém a 5,21 : 1 v tmavém.
        Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
        (odznaky s počtem) nebo při najetí myší. */
-    .hl-new-badge{background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;}
+    .hl-new-badge{background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; padding:2px 8px; border-radius:var(--r-pill); white-space:nowrap;}
     .hl-new-badge.zero{background:var(--plocha-tlumena); color:var(--muted);}
     .hl-crit{font-size:13px; color:var(--muted); margin-top:4px; line-height:1.5;}
     /* TERČ MÁ MÍT 44 px. Napsané to tu bylo na 22 px — zaškrtávátko 18 px

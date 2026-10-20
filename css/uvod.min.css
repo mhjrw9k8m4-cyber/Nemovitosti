@@ -1287,7 +1287,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 100%{box-shadow:0 0 0 0 rgba(91,217,138,0)}
 }
 .hh-legenda{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 20px}
-.hh-l{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--text);background:var(--plocha-karta);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+.hh-l{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--text);background:var(--plocha-karta);border:1px solid var(--line);padding:4px 8px;border-radius:var(--r-pill)}
 .hh-l i{width:9px;height:9px;border-radius:50%;flex:none;background:var(--b,#4361B8)}
 .hh-l[data-druh="sale"]{--b:var(--c-sale,#4361B8)}
 .hh-l[data-druh="drazba"]{--b:var(--c-drazba,#CC6B33)}

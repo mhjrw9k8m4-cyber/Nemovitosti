@@ -85,7 +85,7 @@
 .pz-verdict.bad{--vc:var(--c-exekuce)}
 .pz-verdict.warn{--vc:var(--accent-warm)}
 .pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-.pv-badge{font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--vc);color:var(--vt)}
+.pv-badge{font-size:13px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--vc);color:var(--vt)}
 .pv-cmp{font-size:12px;color:var(--muted);font-weight:600}
 .pv-text{font-size:14px;color:var(--muted);line-height:1.5}
 .pv-text b{color:var(--text)}
@@ -206,7 +206,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--znacka-svetla);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
 .pzm-cela-btn svg{width:19px;height:19px;stroke-width:1.8}
 .pzm-cela-btn:hover{background:var(--plocha-karta)}
-.pzm-zpet-btn{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 12px 0 12px;border-radius:999px;border:1.5px solid rgba(31,81,56,.26);background:var(--plocha-karta);color:var(--znacka-svetla);cursor:pointer;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.pzm-zpet-btn{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 12px 0 12px;border-radius:var(--r-pill);border:1.5px solid rgba(31,81,56,.26);background:var(--plocha-karta);color:var(--znacka-svetla);cursor:pointer;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .pzm-zpet-btn svg{width:16px;height:16px;stroke-width:2;flex:none}
 .pzm-zpet-btn:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
 .pzm-zpet-btn[hidden]{display:none}
@@ -218,11 +218,11 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pzm-cela-zap .pzm-leg-k img{max-height:11vh;width:auto}
 body.pzm-cela-telo{overflow:hidden}
 .pzm-panel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);background:var(--plocha-karta)}
-.pzm-zaklad{display:inline-flex;background:var(--plocha-karta);border:1px solid var(--line);border-radius:999px;padding:2px;flex:none}
-.pzm-z{height:31px;padding:0 12px;border:0;background:transparent;border-radius:999px;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
+.pzm-zaklad{display:inline-flex;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-pill);padding:2px;flex:none}
+.pzm-z{height:31px;padding:0 12px;border:0;background:transparent;border-radius:var(--r-pill);font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .pzm-z.on{background:var(--plocha-karta);color:var(--znacka-svetla);box-shadow:var(--e1)}
 .pzm-vr{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:34px}
-.pzm-v{height:34px;padding:0 12px;border-radius:999px;border:1.5px solid rgba(31,81,56,.26);background:var(--plocha-karta);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease)}
+.pzm-v{height:34px;padding:0 12px;border-radius:var(--r-pill);border:1.5px solid rgba(31,81,56,.26);background:var(--plocha-karta);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease)}
 .pzm-v:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
 .pzm-v:active{transform:scale(.98)}
 .pzm-v.on{background:var(--plocha-znacka);border-color:transparent;color:#fff;box-shadow:var(--glow)}

@@ -20,7 +20,7 @@
 //
 // Pravidlo: každé pravidlo, které určuje velikost h1, bere hodnotu
 // z některého z těch tří stupňů — nebo stojí v seznamu výjimek s důvodem.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const zdroj = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
@@ -207,6 +207,63 @@ const roztece = new Set(mrizky.map((b) =>
 pravda('rozteče jsou nejvýš dvě a obě pojmenované', roztece.size <= 2
   && [...roztece].every((r) => ROZTECE.some((t) => r.includes(t))),
   'rozteče: ' + [...roztece].join('  |  '));
+
+// =====================================================================
+// PILULKA
+//
+// Zaoblení pilulky je --r-pill (999px). Hlídač na zaoblení
+// (scripts/test-zaobleni.mjs) měří VYKRESLENÉ hodnoty, a to na osmi
+// vybraných stránkách — na zápis se tedy nikdo nedíval. Naměřeno
+// 20. 10.: 999px stálo opsané na dvanácti místech, z toho dvakrát
+// přímo v css/styles.css a pětkrát v css/pozemek-vlozeny.css, odkud
+// se vkládá do 2 179 stránek pozemku. Proti 53 místům, která už token
+// braly — tedy ne záměr, jen nehoda.
+//
+// Čísla jsou tady stejná, takže se tím nic nevykreslí jinak. Jde o to,
+// aby se dala pilulka jednou změnit: před opravou by se změnila na
+// padesáti třech místech a na dvanácti zůstala.
+// =====================================================================
+{
+  /* Čtou se všechny ručně psané stylopisy (ne *.min.css — to jsou
+     výstupy) a vložené <style> ručně psaných stránek. Vyrobené
+     stránky se nečtou: pozemky-* vlastní <style> nemají a pozemek-*
+     do něj dostanou očištěný css/pozemek-vlozeny.css, který se čte
+     výš ze zdroje. */
+  const JE_VYROBENA = /^(pozemek|pozemky)-/;
+  /* 404 a diagnostika si schválně NENAČÍTAJÍ stylopis: mají vyjít
+     i tehdy, když ostatní soubory chybí. Token by v nich byl
+     nedefinovaná proměnná a prohlížeč by deklaraci zahodil, takže
+     zaoblení se tam píše číslem — a je to tam tak napsané. */
+  const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html']);
+  const zdroje = readdirSync('css')
+    .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
+    .sort()
+    .map((f) => ['css/' + f, readFileSync('css/' + f, 'utf8')]);
+  for (const f of readdirSync('.')) {
+    if (!f.endsWith('.html') || JE_VYROBENA.test(f) || BEZ_STYLOPISU.has(f)) continue;
+    const h = readFileSync(f, 'utf8');
+    if (h.indexOf('<style') >= 0) zdroje.push([f, h]);
+  }
+  const opsana = [];
+  let sTokenem = 0;
+  for (const [jmeno, syrove] of zdroje) {
+    /* Komentáře pryč, ale délka zůstane — číslo řádku pak ukazuje na
+       opravdový řádek souboru. */
+    const t = syrove.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
+    sTokenem += (t.match(/border-radius\s*:[^;}]*var\(--r-pill\)/g) || []).length;
+    for (const m of t.matchAll(/border-radius\s*:\s*([^;}]*\b999px[^;}]*)/g)) {
+      opsana.push(`${jmeno}:${t.slice(0, m.index).split('\n').length}  border-radius:${m[1].trim()}`);
+    }
+  }
+  pravda(`je co měřit — pilulka se ve zdrojích vyskytuje (${sTokenem}× tokenem)`,
+    sTokenem > 10, `jen ${sTokenem} — čte kontrola vůbec stylopisy?`);
+  pravda('token --r-pill se nikde nepřepisuje (jinak by „jedna hodnota" nebyla jedna)',
+    (zdroje.map(([, t]) => (t.match(/--r-pill\s*:/g) || []).length)
+      .reduce((a, b) => a + b, 0)) === 1, 'definic je víc než jedna');
+  pravda('pilulka se píše tokenem, ne opsaným číslem — i ve vložených stylech',
+    opsana.length === 0,
+    opsana.join('\n      ') + '\n      napiš var(--r-pill)');
+}
 
 console.log('\nJeden styl — pojmenovaná hodnota místo opsaného čísla');
 console.log(zpravy.join('\n'));

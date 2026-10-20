@@ -4408,3 +4408,60 @@ táž chyba ve dvou podobách: scan měl seznam zdrojů (dva soubory) a vzor
 měl zakázanou abecedu (uvozovky), a v obou případech se mimo ten rozsah
 roky nic neověřovalo. Když kontrola projde, je dobré se jednou zeptat
 **na čem** prošla — a to číslo si vypsat.
+
+## 74. Pilulka napsaná číslem na dvanácti místech *20. 10.*
+
+Zaoblení pilulky je `--r-pill` (999 px). Hlídač na zaoblení,
+`scripts/test-zaobleni.mjs`, měří **vykreslené** hodnoty — a to je
+dobře, protože přes média a přebití se zápis a výsledek rozcházejí.
+Jenže měří je na **osmi vybraných stránkách** a staticky čte jen
+`css/styles.css`, takže na to, jak je zaoblení *zapsané*, se nikdo
+nedíval.
+
+Naměřeno:
+
+| | míst |
+|---|---|
+| pilulka tokenem | 53 |
+| pilulka opsaná jako `999px` | **12** |
+
+Dvanáctka není v koutě webu: dvakrát přímo v `css/styles.css` a
+**pětkrát v `css/pozemek-vlozeny.css`**, odkud se vkládá do 2 179
+stránek pozemku. Zbytek ve vložených stylech `hlidani.html` (3×),
+`muj-inzerat.html` a `predloha.html`.
+
+Čísla jsou stejná, takže se tím nevykreslí nic jinak — a přesně proto
+to nikdo nenašel. Jde o to, aby se dala pilulka jednou změnit: dnes by
+se změnila na padesáti třech místech a na dvanácti zůstala.
+
+### Co se nemění
+
+- **`404.html` a `diagnostika.html`** si schválně nenačítají stylopis
+  (mají vyjít i tehdy, když ostatní soubory chybí). Token by v nich byl
+  nedefinovaná proměnná a prohlížeč by deklaraci zahodil, takže se tam
+  zaoblení píše číslem. Obě stránky stojí ve výjimce hlídače i s tímhle
+  důvodem — sedm hodnot celkem.
+- **`.pz-sect-h::before` má `border-radius:2px`** a na stupnici
+  (6 / 10 / 14 / 20 / pilulka) není. Je to 52 × 2 px vysoká ozdobná
+  linka nad nadpisem oddílu; dvojka jí zakulacuje konce. Zaoblení
+  ovládacího prvku to není, takže se na ni pravidlo o stupnici
+  nevztahuje.
+
+### Hlídač
+
+Přibyl do `scripts/test-jeden-styl.mjs` — tedy tam, kde už se hlídá
+„pojmenovaná hodnota místo opsaného čísla" pro velikost nadpisu a pro
+mřížkovou texturu. Čte **všechny ručně psané stylopisy** (`css/*.css`
+kromě `*.min.css`, což jsou výstupy) **a vložené `<style>` ručně psaných
+stránek**; vyrobené stránky ne, protože `pozemky-*` vlastní `<style>`
+nemají a `pozemek-*` do něj dostanou očištěný `css/pozemek-vlozeny.css`,
+který se čte ze zdroje.
+
+Ke kontrole patří dvě pojistky, aby neměřila prázdno a nedala se obejít:
+že se pilulka ve zdrojích vůbec vyskytuje (53× tokenem), a že se
+`--r-pill` nikde **nepřepisuje** — jinak by „jedna hodnota" nebyla jedna.
+
+Sabotáž, všechny tři zvlášť: `999px` vrácené do `css/pozemek-vlozeny.css`
+i do vloženého stylu `hlidani.html` kontrolu shodí a vypíše
+`css/pozemek-vlozeny.css:138` a `hlidani.html:206` — tedy soubor
+i opravdový řádek; druhá definice `--r-pill` shodí pojistku o přepsání.

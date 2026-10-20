@@ -4665,7 +4665,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    odpověď. Odznak se vůbec nevykreslí, dokud není co ukázat. */
 .uc-taby a{display:inline-flex; align-items:center; gap:8px;}
 .uc-tab-pocet{display:inline-flex; align-items:center; justify-content:center;
-  min-width:20px; height:20px; padding:0 4px; border-radius:999px;
+  min-width:20px; height:20px; padding:0 4px; border-radius:var(--r-pill);
   background:var(--plocha-znacka); color:#fff;
   font-family:var(--font-mono); font-size:11px; font-weight:700; line-height:1;
   font-variant-numeric:tabular-nums;}
@@ -6605,7 +6605,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hh-legenda{display:flex; flex-wrap:wrap; gap:4px; margin:0 0 20px;}
 .hh-l{display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600;
   color:var(--text); background:var(--plocha-karta); border:1px solid var(--line);
-  padding:4px 8px; border-radius:999px;}
+  padding:4px 8px; border-radius:var(--r-pill);}
 .hh-l i{width:9px; height:9px; border-radius:50%; flex:none; background:var(--b,#4361B8);}
 .hh-l[data-druh="sale"]{--b:var(--c-sale,#4361B8);}
 .hh-l[data-druh="drazba"]{--b:var(--c-drazba,#CC6B33);}
