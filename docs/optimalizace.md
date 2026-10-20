@@ -4160,3 +4160,33 @@ Sabotáže:
    `okr-urad` na `okr-urad-SABOTAZ`, jenže zkouška hledá podřetězec,
    takže se dál shodovala. Sabotáž, která neplatí, je horší než žádná
    — tvrdí, že je kontrola slabá, a přitom slabá byla ona.
+
+## 70. Prázdná výplň, kvůli které tlačítko viselo samo vpravo *20. 10.*
+
+Na stránce pozemku stojí „Přidat poznámku" v řádku s okresem
+(`.pz-head-radek`, flex se `space-between`): vlevo „okres Benešov",
+vpravo tlačítko. Komentář u toho v `js/pozemek.js` vysvětluje proč —
+vedle NADPISU se tlačítko na telefonu nevejde, vedle řádku s okresem
+ano.
+
+Jenže **řádek s okresem na stránce často není**: titulek ho už
+obsahuje. Pro ten případ se místo něj vkládal `<span></span>` jako
+výplň, aby `space-between` mělo co odstrčit. Výsledek: tlačítko viselo
+samo u pravého okraje levého sloupce — na 1280 px na **x 610–776**,
+s nadpisem nad ním vlevo a vzdáleností pod ním vlevo. Nemělo mezi čím
+být a četlo se jako omylem položený prvek.
+
+Naměřeno na vzorku 25 stránek pozemků: **15 z nich** (tři pětiny) řádek
+s okresem nemá. Jde tedy zhruba o 1 160 z 1 940 stránek.
+
+Bez té výplně zůstane v řádku jediný prvek a flex ho položí doleva —
+pod nadpis, k levé svislici, na které začíná všechno ostatní. Naměřeno
+po opravě na 390 / 760 / 1060 / 1280 / 1600 px: levý okraj tlačítka se
+rovná levému okraji řádku na všech pěti šířkách. Stránky, které řádek
+s okresem mají, se nezměnily (dva prvky, `space-between` dál platí).
+
+Hlídají to dvě kontroly v `scripts/test-poznamky.mjs` na vzorku dvanácti
+stránek: že jsou ve vzorku **obě** podoby řádku (jinak by se měřila jen
+jedna větev) a že tlačítko nevisí u pravého okraje tam, kde je v řádku
+samo. Sabotáž (výplň zpátky) shodila obě — a to i tu první, protože se
+s výplní „obě podoby" počítají jako jedna.

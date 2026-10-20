@@ -882,5 +882,56 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await ctx.close();
 }
 
+/* ---- TLAČÍTKO „PŘIDAT POZNÁMKU" NESMÍ VISET SAMO VPRAVO ----
+   Stojí v řádku s okresem (`.pz-head-radek`, flex se `space-between`):
+   vlevo „okres Benešov", vpravo tlačítko. Jenže řádek s okresem na
+   stránce často NENÍ — titulek ho už obsahuje — a dřív se místo něj
+   vkládal prázdný <span> jako výplň, aby `space-between` tlačítko
+   odstrčilo doprava. Viselo pak samo u pravého okraje levého sloupce
+   (na 1280 px na x 610–776), s nadpisem nad ním vlevo a vzdáleností
+   pod ním vlevo — nemělo mezi čím být.
+   Měří se na VZORKU stránek, protože který případ nastane, určuje
+   titulek: ze vzorku 25 stránek nemělo řádek s okresem 15. */
+{
+  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    viewport: { width: 1280, height: 1000 } });
+  const p = await ctx.newPage();
+  const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
+  const krok = Math.max(1, Math.floor(vsechny.length / 12));
+  const vzorek = vsechny.filter((_, i) => i % krok === 0).slice(0, 12);
+  let sOkresem = 0, bezOkresu = 0;
+  const rozpory = [];
+  for (const f of vzorek) {
+    await p.goto(`${BASE}/${f}`, { waitUntil: 'load' });
+    await p.waitForFunction(() => !!document.querySelector('.pz-head-radek'),
+      null, { timeout: 20000 }).catch(() => {});
+    const m = await p.evaluate(() => {
+      const r = document.querySelector('.pz-head-radek');
+      if (!r) return null;
+      const btn = r.querySelector('.pz-pozn-skok');
+      if (!btn) return null;
+      const rr = r.getBoundingClientRect(), br = btn.getBoundingClientRect();
+      return { okres: !!r.querySelector('.pz-okres'),
+        odOkraje: Math.round(br.left - rr.left),
+        prazdnaVypln: [...r.children].some((e) => !(e.textContent || '').trim() && e !== btn) };
+    });
+    if (!m) continue;
+    if (m.prazdnaVypln) { rozpory.push(`${f}: v řádku je prázdná výplň`); continue; }
+    if (m.okres) {
+      sOkresem++;
+      if (m.odOkraje < 50) rozpory.push(`${f}: řádek má okres, ale tlačítko stojí vlevo (${m.odOkraje} px)`);
+    } else {
+      bezOkresu++;
+      if (m.odOkraje > 1) rozpory.push(`${f}: v řádku je samo, a přesto visí ${m.odOkraje} px od okraje`);
+    }
+  }
+  // PŘEDPOKLAD: bez obou případů by kontrola měřila jen jednu větev
+  pravda(`ve vzorku jsou obě podoby řádku (s okresem ${sOkresem}, bez ${bezOkresu})`,
+    sOkresem > 0 && bezOkresu > 0, `s okresem ${sOkresem}, bez okresu ${bezOkresu} z ${vzorek.length}`);
+  pravda('tlačítko „Přidat poznámku" nevisí samo u pravého okraje',
+    rozpory.length === 0, rozpory.slice(0, 4).join('\n      '));
+  await ctx.close();
+}
+
 await prohlizec.close();
 hotovo();

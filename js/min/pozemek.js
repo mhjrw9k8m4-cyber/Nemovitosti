@@ -1269,7 +1269,7 @@
         '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
 
         '<div class="pz-head-radek">' +
-          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '<span></span>') +
+          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
           '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
             + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
         '</div>' +

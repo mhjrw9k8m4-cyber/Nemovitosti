@@ -2082,8 +2082,17 @@
            kdežto řádek „okres Benešov" má kolem 130 px a zbude na něj
            místo. Vedle nadpisu se tak ocitne jen na monitoru, kde je
            šířky dost. */
+        /* PRÁZDNÝ <span> TU BÝVAL JAKO VÝPLŇ, aby `space-between`
+           odstrčilo tlačítko doprava. Jenže řádek s okresem na stránce
+           často NENÍ (titulek ho už obsahuje — ze vzorku 25 stránek
+           u 15, tedy u tří pětin) a tlačítko pak viselo samo u pravého
+           okraje levého sloupce: na 1280 px na x 610–776, s nadpisem
+           nad ním vlevo a vzdáleností pod ním vlevo. Nemělo mezi čím
+           být. Bez té výplně zůstane v řádku jediný prvek a flex ho
+           položí doleva, pod nadpis — tam, kde začíná všechno ostatní.
+           Hlídá to scripts/test-poznamky.mjs. */
         '<div class="pz-head-radek">' +
-          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '<span></span>') +
+          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
           '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
             + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
         '</div>' +
