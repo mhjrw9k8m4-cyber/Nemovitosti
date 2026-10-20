@@ -262,20 +262,19 @@
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
      „s-mrizka" a patka. Měřením vyšlo, že má TŘI ROZTEČE (58, 52
      a 44 px) a TŘI KRYTÍ ČAR (6 % a 4 % bílé, 4 % inkoustu).
-     Rozteče jsou dvě a každá má důvod:
-       --mrizka-bunka        velké plochy: pásy, sekce, patka
-       --mrizka-bunka-panel  panel mobilního menu, kde by se 52 px
-                             vešlo dvakrát a z mřížky by zbyl kříž
-     Tři hrubosti téže textury ale důvod neměly: právě po rozteči
-     člověk pozná, že plochy patří k sobě. U menu to stálo i
-     v komentáři („mřížka i tady — menu patří k webu"), a hodnota
-     přitom říkala opak.
+     Rozteč je dnes JEDNA — 52 px na všech plochách, které texturu
+     nesou (pásy, sekce, patka). Tři hrubosti téže textury důvod
+     neměly: právě po rozteči člověk pozná, že plochy patří k sobě.
+     Druhá rozteč (--mrizka-bunka-panel:34px) tu byla kvůli panelu
+     mobilního menu, kde by se 52 px vešlo dvakrát a z mřížky by zbyl
+     kříž — jenže menu texturu dávno nemá a token zůstal viset
+     nepoužitý. Smazán 20. 10.; kdyby se někdy mřížka do užší plochy
+     vrátila, bude to rozhodnutí znovu, ne dědictví.
      Barvy jsou dvě, a to se důvodem: na tmavé ploše svítí čára bíle,
      na světlé je z inkoustu. Patka je tmavá, takže bere bílou —
      dosud měla 4 % místo 6 %, což nebylo rozhodnutí.
      Hlídá scripts/test-jeden-styl.mjs. */
   --mrizka-bunka:52px;
-  --mrizka-bunka-panel:34px;
   /* --mrizka-cara-tmava (bílá linka pro tmavé plochy) odstraněn: po
      zrušení tmavého režimu ho nepoužívalo nic a obě mřížky dnes berou
      --pas-mrizka, tedy barvu pro světlý povrch. */
@@ -527,12 +526,15 @@
      62ch, 44ch, 42ch, 40ch, 36ch, 24ch, 18ch, 17ch, 13ch, 76 %, 70 %,
      60 %). Oko při čtení hledá sloupec; když každý blok končí jinde,
      je stránka roztřepená i tam, kde má místa dost.
-     Šest příček pro bloky a tři míry pro text — šířka ODSTAVCE se měří
+     Pět příček pro bloky a tři míry pro text — šířka ODSTAVCE se měří
      ve znacích, ne v pixelech: to je jediná míra, která drží i při jiné
-     velikosti písma. */
+     velikosti písma.
+     ŠESTÁ PŘÍČKA (--m-stredni:880px, „oddíl s nadpisem a úvodem") tu
+     byla a nikdo ji nepoužíval: oddíly berou buď 1040, nebo čtecí 720.
+     Smazána 20. 10. — příčka, na které nikdo nestojí, žebřík jen
+     prodlužuje. */
   --m-wrap:1200px;     /* stránka */
   --m-siroky:1040px;   /* mřížky, mapy, výpisy */
-  --m-stredni:880px;   /* oddíl s nadpisem a úvodem */
   --m-sloupec:720px;   /* sloupec článku i s kraji */
   --m-uzky:560px;      /* formuláře, boční panely */
   --m-karta:440px;     /* karty a okna */

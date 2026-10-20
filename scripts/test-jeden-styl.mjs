@@ -130,8 +130,10 @@ pravda('obsahový nadpis už velikost nemění přes @media',
 // vidět vůbec nic. Obě dnes berou --pas-mrizka, která ukazuje na
 // --mrizka-cara-svetla, a bílá varianta je odstraněná.
 // =====================================================================
-const TEXTURA = ['--mrizka-bunka', '--mrizka-bunka-panel',
-                 '--mrizka-cara-svetla'];
+/* --mrizka-bunka-panel (34 px pro panel mobilního menu) tu BÝVAL.
+   Menu texturu dávno nemá, token zůstal viset nepoužitý a 20. 10. byl
+   smazán — rozteč je dnes jedna. */
+const TEXTURA = ['--mrizka-bunka', '--mrizka-cara-svetla'];
 pravda('mřížková textura má hodnoty v paletě',
   TEXTURA.every((t) => new RegExp(`${t}\\s*:`).test(css)),
   'chybí: ' + TEXTURA.filter((t) => !new RegExp(`${t}\\s*:`).test(css)).join(', '));
@@ -186,7 +188,7 @@ pravda('přezdívky za mřížkovou čáru nikde nenesou vlastní barvu',
   nepoctive.length === 0, nepoctive.join(', '));
 const CARY = [...ZAKLADNI, ...prezdivky.filter((t) => !nepoctive.includes(t))]
   .map((t) => 'var(' + t + ')');
-const ROZTECE = ['var(--mrizka-bunka)', 'var(--mrizka-bunka-panel)'];
+const ROZTECE = ['var(--mrizka-bunka)'];
 const opsane = mrizky.filter((b) => {
   const bunka = (b.text.match(/background-size:\s*([^;}]+)/) || [])[1] || '';
   const cara = (b.text.match(/linear-gradient\(to right,\s*([^,]+)/) || [])[1] || '';
