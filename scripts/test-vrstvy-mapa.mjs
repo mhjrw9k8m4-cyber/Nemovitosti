@@ -66,9 +66,17 @@ try {
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p.waitForTimeout(3000);
 
-  pravda('modul vrstev je na hlavní stránce',
-    await p.evaluate(() => !!(window.PK_VRSTVY && window.PK_VRSTVY.pripravene)),
-    'window.PK_VRSTVY chybí — vrstvy by na hlavní mapě nebyly');
+  /* MODUL VRSTEV SE DOTAHUJE AŽ PO KLEPNUTÍ na „Zkusit, které vrstvy
+     jedou" (změřeno: bez doteku se PK_VRSTVY na úvodní stránce ani
+     jednou nepřečte — viz docs/optimalizace.md, oddíl 64, a hlídá to
+     scripts/test-odlozene-skripty.mjs). Do té doby tu BÝT NEMÁ: tahle
+     kontrola stávala obráceně a je to právě ta polovina slibu, kterou
+     by šlo rozbít tím, že se značka <script> vrátí.
+     Že se modul dotáhne, až na něj přijde řada, dokazuje o kus níž
+     kontrola „a TEPRVE TEĎ se zkouší služby úřadů". */
+  pravda('modul vrstev se na hlavní stránku předem nestahuje',
+    await p.evaluate(() => !window.PK_VRSTVY),
+    'window.PK_VRSTVY je na stránce hned po načtení — bere ho každý, kdo vrstvy nikdy nezapne');
 
   /* Při pohledu na celou ČR se žádná vrstva nevykreslí, takže se nemá
      nabízet ani jedna.

@@ -69,6 +69,12 @@ rozvržení, změř to za stejných podmínek a prostříhaně (A/B v jednom bě
 Pozor: místní server bez komprese nadhodnocuje velikosti 3–8×, protože
 GitHub Pages gzipuje.
 
+A „které moduly stránka potřebuje" se taky MĚŘÍ, nečte z kódu: na
+`window` se dá přes `Object.defineProperty` pověsit getter, který si
+zapíše první přečtení a odkud přišlo. Z úkolu „osm skriptů načítat až
+při prvním použití" tak zbyly tři — zbylé čtyři se při startu opravdu
+čtou (viz docs/optimalizace.md, oddíl 64).
+
 ## Komentáře
 
 Píšou se **proč**, ne *co*. Čtvrtina souborů má v hlavičce odstavec

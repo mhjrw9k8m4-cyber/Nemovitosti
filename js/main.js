@@ -2,6 +2,60 @@
 (function () {
   'use strict';
 
+  /* =====================================================================
+     SKRIPT AŽ PŘI PRVNÍM POUŽITÍ
+     =====================================================================
+     Změřeno na úvodní stránce (telefon 390 px i monitor 1280 px, žádný
+     dotek): tři moduly se za celé načtení ANI JEDNOU nepřečtou —
+     PKVyvoz, PKRychly a PK_VRSTVY. Měřilo se přes Object.defineProperty
+     na window, takže to není odhad z četby kódu: getter se nezavolal.
+     Pro srovnání ostatní, které se číst MUSÍ (a zůstávají proto
+     značkou <script>): PKAuth v 167 ms, PKHledani 250 ms,
+     PKUlozeneUcet 308 ms, PKPoznamky 377 ms.
+
+     Dohromady 13,0 kB po zabalení gzipem, které si bral každý — včetně
+     všech, kdo na úvodní stránce jen projdou výpis. Adresu i s razítkem
+     ?v= nese <meta name="pk-odlozeny" data-src="…"> v index.html (týž
+     způsob, jakým se dotahuje mapová knihovna), takže ji
+     scripts/orazitkuj-verze.mjs orazítkuje stejně jako značku <script>.
+
+     SLIB SE DRŽÍ, I KDYŽ SE DOTAŽENÍ NEPOVEDE: při chybě se z mapy
+     smaže, aby druhé klepnutí zkusilo znovu. Jinak by jediný výpadek
+     sítě tlačítko umlčel do konce návštěvy. */
+  var odlozeneModuly = {};
+  function dotahniModul(klic, jmenoGlobalu) {
+    /* UŽ JE TADY? Pak se nestahuje. Zní to zbytečně — vždyť se volá jen
+       tam, kde modul chybí — jenže přednačtení pod rukou se spouští bez
+       ptaní, a kdyby se značka <script> někdy vrátila, stahoval by se
+       týž soubor dvakrát. Zkouška scripts/test-odlozene-skripty.mjs to
+       právě takhle chytila („vyžádáno: vyvoz, vyvoz"). */
+    if (jmenoGlobalu && window[jmenoGlobalu]) return Promise.resolve();
+    if (odlozeneModuly[klic]) return odlozeneModuly[klic];
+    var slib = new Promise(function (hotovo, chyba) {
+      var meta = document.querySelector('meta[name="pk-odlozeny"][data-klic="' + klic + '"]');
+      var adresa = meta && meta.getAttribute('data-src');
+      if (!adresa) { chyba(new Error('odložený skript „' + klic + '" nemá adresu')); return; }
+      var sc = document.createElement('script');
+      sc.src = adresa;
+      sc.onload = function () { hotovo(); };
+      sc.onerror = function () { odlozeneModuly[klic] = null; chyba(new Error(adresa)); };
+      document.head.appendChild(sc);
+    });
+    odlozeneModuly[klic] = slib;
+    return slib;
+  }
+  /* PŘEDNAČTENÍ NA NAJETÍ MYŠÍ NEBO NA FOKUS. Mezi „najel jsem na
+     tlačítko" a „klepl jsem" je na myši zhruba dvě desetiny vteřiny —
+     dost na to, aby se pět kilobajtů stihlo dotáhnout a okno se
+     otevřelo bez čekání. Na dotyku najetí není, takže tam o to
+     přijdeme; proto se pod tlačítky čeká na výsledek, ne naopak. */
+  function pripravModulPoRuce(prvek, klic, jmenoGlobalu) {
+    if (!prvek) return;
+    var zkus = function () { dotahniModul(klic, jmenoGlobalu).catch(function () {}); };
+    prvek.addEventListener('pointerenter', zkus, { once: true });
+    prvek.addEventListener('focus', zkus, { once: true });
+  }
+
   // Reset stránky = začni nahoře (ne tam, kde jsem byl). Safari jinak při
   // znovunačtení/otevření panelu vrací starou pozici scrollu — to nechceme.
   // Výjimka: sdílený odkaz na konkrétní pozemek/kraj (?p=/?kraj=/?lid=) nebo
@@ -3216,8 +3270,18 @@
 
     function nactiVrstvy() {
       if (vrstvyNacteno) return;
+      /* Modul se dotahuje až po klepnutí na „Zkusit, které vrstvy jedou".
+         Příznak se přitom NESMÍ nastavit dřív, než je modul v ruce —
+         jinak by se po neúspěšném dotažení druhé klepnutí mlčky vrátilo
+         a panel by zůstal viset na hlášce. */
+      if (!window.PK_VRSTVY) {
+        vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
+        dotahniModul('vrstvy', 'PK_VRSTVY').then(nactiVrstvy, function () {
+          vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.';
+        });
+        return;
+      }
       vrstvyNacteno = true;
-      if (!window.PK_VRSTVY) { vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.'; return; }
       vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
       var s2 = map.getCenter();
       var prvni = true;
@@ -4673,7 +4737,16 @@
   }
   function stahniTabulku() {
     var vrstva = document.getElementById('vyv-vrstva');
-    if (!vrstva || !window.PKVyvoz) return;
+    if (!vrstva) return;
+    /* Modul se dotahuje až teď (viz zavaděč nahoře). Okno se do té doby
+       neotevře: prázdné okno s počty, které se dopočítají za chvíli, by
+       bylo horší než čtvrt vteřiny ticha po klepnutí. */
+    if (!window.PKVyvoz) {
+      dotahniModul('vyvoz', 'PKVyvoz').then(stahniTabulku, function () {
+        showToast('Stahování se nepodařilo načíst — zkuste to prosím znovu');
+      });
+      return;
+    }
     vyvozPopisStav();
     vrstva.hidden = false;
     var ok = document.getElementById('vyv-ok');
@@ -6144,8 +6217,10 @@
     else if (tlacitka) countEl.innerHTML += '<span class="mc-akce">' + tlacitka + '</span>';
     var vb = akceEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
+    pripravModulPoRuce(vb, 'vyvoz', 'PKVyvoz');
     var rb = akceEl.querySelector('#mc-rychly');
     if (rb) rb.addEventListener('click', function (e) { e.stopPropagation(); otevriRychly(); });
+    pripravModulPoRuce(rb, 'rychly', 'PKRychly');
     var sb = akceEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = akceEl.querySelector('#mc-prosle');
@@ -6480,9 +6555,14 @@
     if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
   }
   function otevriRychly() {
-    if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
+    if (!window.PKRychly) {
+      dotahniModul('rychly', 'PKRychly').then(otevriRychly, function () {
+        showToast('Rychlý výběr se nepodařilo načíst — zkuste to prosím znovu');
+      });
+      return;
+    }
     rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';

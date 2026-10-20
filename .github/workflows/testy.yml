@@ -787,6 +787,9 @@ jobs:
       - name: Druh příležitosti se pozná i bez barev
         run: node scripts/test-tvary.mjs
 
+      - name: Tři moduly se stahují až při prvním použití
+        run: node scripts/test-odlozene-skripty.mjs
+
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 

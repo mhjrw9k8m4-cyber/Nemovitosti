@@ -3877,3 +3877,78 @@ z `getComputedStyle(el, '::after')` (včetně `box-sizing`, protože
 ho největším `scale`, který najde v `@keyframes` daného jména
 v `document.styleSheets`. Sabotáž (zpátky na 2,2) obě nové kontroly
 shodila a vypsala přesně těch −2,4 px.
+
+## 64. Tři moduly, které se bez doteku nikdy nespustí *20. 10.*
+
+Úvodní stránka si brala značkou `<script>` osm modulů, o kterých se
+vedl úkol „načítat až při prvním použití". Místo odhadu z četby kódu
+se změřilo, co se opravdu čte: přes `Object.defineProperty` na `window`
+dostal každý z nich getter, který si zapsal první přečtení a odkud
+přišlo. Načtení úvodní stránky, **žádný dotek**, telefon 390 px
+i monitor 1280 px:
+
+| modul | čte se bez doteku? | kdy a odkud |
+|---|---|---|
+| `PKVyvoz` | **ne** | — |
+| `PKRychly` | **ne** | — |
+| `PK_VRSTVY` | **ne** | — |
+| `PKAuth` | ano | 167 ms, `hlavicka.js` → `vypln` |
+| `PKHledani` | ano | 250 ms, `main.js` → `boot` |
+| `PKUlozeneUcet` | ano | 308 ms, `main.js` → `refreshFavBtn` |
+| `PKPoznamky` | ano | 377 ms, `main.js` → `stahniPoznamky` (z `renderList`) |
+
+**Osm to tedy není, jsou to tři.** Zbylé čtyři se při startu opravdu
+čtou: `PKHledani` se v `main.js` bere do proměnné (`var HL =
+window.PKHledani || {…}`), `PKPoznamky` kreslí značku poznámky na kartě
+ve výpisu, `PKUlozeneUcet` rozhoduje o popisku tlačítka „Uložit"
+a `PKAuth` o podobě hlavičky. Odložit je znamená ten start přestavět —
+to je jiná práce a jiné riziko, takže se do tohohle kroku nebere.
+`mereni.js` (1,0 kB gzip) je navíc majáček bez globálu, který sám čeká
+na `load`; i ten zůstává.
+
+### Co to ušetří
+
+| modul | min | gzip | brotli |
+|---|---|---|---|
+| `vyvoz.js` | 5 084 B | 2 119 B | 1 929 B |
+| `rychlovyber.js` | 2 855 B | 1 066 B | 973 B |
+| `mapove-vrstvy.js` | 5 479 B | 2 151 B | 1 892 B |
+| **celkem** | **13 418 B** | **5 336 B** | **4 794 B** |
+
+K tomu tři požadavky méně na lince, která je podle měření z oddílu 60
+na pomalé 4G nasycená.
+
+### Jak
+
+Adresa i s razítkem `?v=` stojí v `<meta name="pk-odlozeny"
+data-klic="…" data-src="…">` — týmž způsobem, jakým se dotahuje mapová
+knihovna, takže ji `scripts/orazitkuj-verze.mjs` orazítkuje stejně jako
+značku `<script>`. `dotahniModul(klic, jménoGlobálu)` v `js/main.js`
+vrátí slib; tři místa prvního použití (`stahniTabulku`, `otevriRychly`,
+`nactiVrstvy`) na něj počkají a pak se zavolají znovu.
+
+**Pod rukou se přednačítá.** Mezi „najel jsem myší na tlačítko"
+a „klepl jsem" je zhruba dvě desetiny vteřiny — dost na pět kilobajtů.
+Na dotyku najetí není, proto se pod tlačítky čeká na výsledek.
+
+**Když se dotažení nepovede**, slib se z mapy smaže, aby druhé klepnutí
+zkusilo znovu; člověk dostane hlášku (`showToast`), ne mlčící tlačítko.
+Ověřeno v prohlížeči s odstřelenou adresou: hláška přijde, okno se
+neotevře prázdné, druhé klepnutí po obnovení sítě okno otevře a stránka
+u toho nespadne.
+
+### Sabotáže
+
+Tři, a každá shodila něco jiného:
+
+1. **Značka `<script>` zpátky** → spadlo „nebere značkou", „bez doteku
+   se nestáhl" a „PKVyvoz zatím není". A při té příležitosti vyšlo
+   najevo, že se soubor stáhne **dvakrát** (vyžádáno: `vyvoz, vyvoz`):
+   přednačtení pod rukou se spouštělo bez ptaní. Zavaděč proto napřed
+   kouká, jestli globál už na stránce není.
+2. **Rozbité jméno metaznačky** → spadly všechny čtyři kontroly „dotáhne
+   se, když má". Bez nich by šlo „nestahuje se předem" splnit i tím, že
+   se modul nenačte nikdy a tlačítko mlčí.
+3. **Odmítnutý slib zůstal v mapě** → spadlo „druhé klepnutí okno
+   otevře". Tohle je přesně ten tichý druh poruchy, který by se jinak
+   projevil až u člověka, kterému jednou vypadla síť.

@@ -1,6 +1,32 @@
 (function () {
   'use strict';
 
+  var odlozeneModuly = {};
+  function dotahniModul(klic, jmenoGlobalu) {
+
+    if (jmenoGlobalu && window[jmenoGlobalu]) return Promise.resolve();
+    if (odlozeneModuly[klic]) return odlozeneModuly[klic];
+    var slib = new Promise(function (hotovo, chyba) {
+      var meta = document.querySelector('meta[name="pk-odlozeny"][data-klic="' + klic + '"]');
+      var adresa = meta && meta.getAttribute('data-src');
+      if (!adresa) { chyba(new Error('odložený skript „' + klic + '" nemá adresu')); return; }
+      var sc = document.createElement('script');
+      sc.src = adresa;
+      sc.onload = function () { hotovo(); };
+      sc.onerror = function () { odlozeneModuly[klic] = null; chyba(new Error(adresa)); };
+      document.head.appendChild(sc);
+    });
+    odlozeneModuly[klic] = slib;
+    return slib;
+  }
+
+  function pripravModulPoRuce(prvek, klic, jmenoGlobalu) {
+    if (!prvek) return;
+    var zkus = function () { dotahniModul(klic, jmenoGlobalu).catch(function () {}); };
+    prvek.addEventListener('pointerenter', zkus, { once: true });
+    prvek.addEventListener('focus', zkus, { once: true });
+  }
+
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) {}
 
   var pkVrstvy = [];
@@ -2020,8 +2046,15 @@
 
     function nactiVrstvy() {
       if (vrstvyNacteno) return;
+
+      if (!window.PK_VRSTVY) {
+        vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
+        dotahniModul('vrstvy', 'PK_VRSTVY').then(nactiVrstvy, function () {
+          vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.';
+        });
+        return;
+      }
       vrstvyNacteno = true;
-      if (!window.PK_VRSTVY) { vrstvyPanel.textContent = 'Vrstvy se nepodařilo načíst.'; return; }
       vrstvyPanel.textContent = 'Zkouším, které vrstvy odpovídají…';
       var s2 = map.getCenter();
       var prvni = true;
@@ -3060,7 +3093,14 @@
   }
   function stahniTabulku() {
     var vrstva = document.getElementById('vyv-vrstva');
-    if (!vrstva || !window.PKVyvoz) return;
+    if (!vrstva) return;
+
+    if (!window.PKVyvoz) {
+      dotahniModul('vyvoz', 'PKVyvoz').then(stahniTabulku, function () {
+        showToast('Stahování se nepodařilo načíst — zkuste to prosím znovu');
+      });
+      return;
+    }
     vyvozPopisStav();
     vrstva.hidden = false;
     var ok = document.getElementById('vyv-ok');
@@ -3921,8 +3961,10 @@
     else if (tlacitka) countEl.innerHTML += '<span class="mc-akce">' + tlacitka + '</span>';
     var vb = akceEl.querySelector('#mc-vyvoz');
     if (vb) vb.addEventListener('click', function (e) { e.stopPropagation(); stahniTabulku(); });
+    pripravModulPoRuce(vb, 'vyvoz', 'PKVyvoz');
     var rb = akceEl.querySelector('#mc-rychly');
     if (rb) rb.addEventListener('click', function (e) { e.stopPropagation(); otevriRychly(); });
+    pripravModulPoRuce(rb, 'rychly', 'PKRychly');
     var sb = akceEl.querySelector('#mc-skryte');
     if (sb) sb.addEventListener('click', function (e) { e.stopPropagation(); ukazSkryte = !ukazSkryte; renderList(); });
     var pb = akceEl.querySelector('#mc-prosle');
@@ -4140,9 +4182,14 @@
     if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
   }
   function otevriRychly() {
-    if (!window.PKRychly) return;
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
+    if (!window.PKRychly) {
+      dotahniModul('rychly', 'PKRychly').then(otevriRychly, function () {
+        showToast('Rychlý výběr se nepodařilo načíst — zkuste to prosím znovu');
+      });
+      return;
+    }
     rvNalozDavku();
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
