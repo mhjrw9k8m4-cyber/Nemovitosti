@@ -125,6 +125,63 @@ try {
   pravda('a jsou na stránce jen jednou — je to stěhování, ne kopie',
     dvakrat.length === 0, dvakrat.join(', '));
   await ctx.close();
+
+  /* ===== A TOTÉŽ NA TELEFONU: SVISLICE PATŘÍ MEZI ČÍSLA V ŘÁDKU =====
+     Naměřeno na nove-pozemky.html: tři čísla (97 / 150 / 73) se vejdou
+     do jednoho řádku od 430 px. Pod tím se třetí zalomilo — a vzalo si
+     s sebou svislici i odsazení 32 px, takže na 390 px začínalo na
+     53 px, kdežto první číslo na 20. Byl z toho osamělý údaj zavěšený
+     na čáře, která nic neodděluje.
+     Měří se VÝSLEDEK: žádný údaj, který v okně začíná nový řádek, nesmí
+     mít svislici vlevo. Kdyby v datech narostla čísla a zalomila řádek
+     dřív, spadne to tady — a mez ve stylopisu se posune. */
+  {
+    /* Dotyk se zapíná, i když se tu na nic neklepá: pravidla pro telefon
+       visí na `@media (pointer: coarse)` a bez `hasTouch` by se měřila
+       myší podoba v úzkém okně (hlídá scripts/test-zkousky-meri.mjs). */
+    const ctxT = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
+      serviceWorkers: 'block', locale: 'cs-CZ', isMobile: true, hasTouch: true });
+    const pt = await ctxT.newPage();
+    const visici = [], zalomene = [];
+    for (const stranka of STRANKY) {
+      for (const sirka of [320, 360, 390, 430]) {
+        await pt.setViewportSize({ width: sirka, height: 900 });
+        await pt.goto(BASE + '/' + stranka, { waitUntil: 'load' });
+        const m = await pt.evaluate(() => {
+          const r = document.querySelector('.okr-stats');
+          if (!r) return null;
+          const deti = [...r.children].map((e) => {
+            const q = e.getBoundingClientRect(), c = getComputedStyle(e);
+            return { top: Math.round(q.top), l: Math.round(q.left),
+              ram: parseFloat(c.borderLeftWidth) || 0,
+              t: (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 20) };
+          });
+          const radky = {};
+          for (const d of deti) { (radky[d.top] = radky[d.top] || []).push(d); }
+          /* Prvním v řádku je ten nejvíc vlevo — ne ten první v pořadí. */
+          const prvni = Object.keys(radky).map((k) => radky[k]
+            .slice().sort((a, b) => a.l - b.l)[0]);
+          return { radku: Object.keys(radky).length, prvni,
+            okraje: prvni.map((d) => d.l) };
+        });
+        if (!m || !m.prvni.length) continue;
+        if (m.radku > 1) zalomene.push(`${stranka}@${sirka}`);
+        for (const d of m.prvni) {
+          if (d.ram > 0) visici.push(`${stranka}@${sirka}: „${d.t}" začíná řádek a má vlevo svislici`);
+        }
+        /* A všechny řádky musí začínat na téže svislici, jinak je to
+           pořád rozházené, i kdyby čára nebyla. */
+        const rozptyl = Math.max(...m.okraje) - Math.min(...m.okraje);
+        if (rozptyl > 1) visici.push(`${stranka}@${sirka}: řádky začínají na ${m.okraje.join(' a ')} px`);
+      }
+    }
+    // PŘEDPOKLAD: bez zalomení by kontrola pod tím neměřila nic
+    pravda('na úzkém displeji se řada čísel opravdu zalomí (jinak není co měřit)',
+      zalomene.length > 0, 'ani na 320 px se řada nezalomila');
+    pravda('a žádné číslo, které začíná řádek, nevisí na svislici',
+      visici.length === 0, visici.slice(0, 4).join('\n      '));
+    await ctxT.close();
+  }
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);

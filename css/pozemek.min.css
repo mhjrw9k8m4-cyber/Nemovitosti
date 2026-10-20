@@ -562,6 +562,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 
 
 
+
 a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::after{content:"\2197";display:inline-block;margin-left:4px;font-size:0.9em;opacity:0.7;text-decoration:none}
 
 

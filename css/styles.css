@@ -6260,6 +6260,22 @@ main .okr-hero + .section{padding-top:16px;}
 /* Dvě čísla stejné velikosti vedle sebe oko slepí v jedno („20 20"). Mezi
    ně patří svislice — stejně jako u čísel na hlavní stránce. */
 .okr-stat + .okr-stat{padding-left:32px; border-left:1px solid var(--line-strong);}
+/* JENŽE SVISLICE PATŘÍ MEZI ČÍSLA V ŘÁDKU, NE ZA KAŽDÉ DRUHÉ V POŘADÍ.
+   Naměřeno na nove-pozemky.html: tři čísla (97 / 150 / 73) se vejdou
+   do řádku od 430 px; pod tím se třetí zalomí — a vzalo si s sebou
+   svislici i odsazení 32 px, takže na 390 px začínalo na 53 px,
+   kdežto první číslo na 20. Vypadalo to jako osamělý údaj zavěšený na
+   čáře, která nic neodděluje.
+   Pod mezí se proto jede mřížkou o dvou sloupcích: kde co stojí, je
+   pak jisté, a svislici dostane jen to, co opravdu stojí v druhém
+   sloupci. Mez 429 px je naměřená, ne odhadnutá — kdyby v datech
+   narostla čísla, zalomí se to dřív a scripts/test-hlavicka-stranky.mjs
+   to ohlásí. */
+@media (max-width:429px){
+  .okr-stats{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:20px 32px;}
+  .okr-stat + .okr-stat{padding-left:0; border-left:0;}
+  .okr-stats > .okr-stat:nth-child(even){padding-left:32px; border-left:1px solid var(--line-strong);}
+}
 
 /* Ceny podle druhu — seznam sourozenců, ne stromeček.
    Nepoužívá .okr-stat schválně: ta dlaždice je dělaná na dvě krátká čísla

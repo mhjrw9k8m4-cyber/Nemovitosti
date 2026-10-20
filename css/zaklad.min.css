@@ -739,6 +739,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 main .okr-hero + .section{padding-top:16px}
 @media (max-width:880px){main .okr-hero + .section{padding-top:12px}
 }
+
 .cenh{position:relative;margin-top:12px}
 .cenh-pole{position:relative;display:flex;align-items:center}
 .cenh-lupa{position:absolute;left:14px;width:20px;height:20px;flex:none;color:var(--popisek);pointer-events:none}

@@ -4052,3 +4052,45 @@ Hlídají to tři kontroly v `scripts/test-porovnani.mjs` (maska je na
 začátku, je to opravdu `mask-image`, a na konci mizí). Sabotáže:
 vyhodit volání `stinyTabulek()` → spadly první dvě; nastavit třídu
 napevno místo přepínání → spadla třetí.
+
+## 67. Třetí číslo v hlavičce viselo na svislici *20. 10.*
+
+Hlavička vstupních stránek má řadu velkých čísel („97 nových za 7 dní",
+„150 nových za 14 dní", „73 zlevnilo"). Mezi nimi je svislice, a ta má
+dobrý důvod: dvě čísla stejné velikosti vedle sebe oko slepí v jedno.
+Jenže se dělala pravidlem `.okr-stat + .okr-stat`, tedy **podle pořadí
+ve zdroji, ne podle místa v řádku**.
+
+Naměřeno na `nove-pozemky.html`: tři čísla se vejdou do jednoho řádku
+**od 430 px**. Pod tím se třetí zalomí — a vezme si s sebou svislici
+i odsazení 32 px, takže na 390 px začínalo na **53 px**, kdežto první
+číslo na **20**. Osamělý údaj zavěšený na čáře, která nic neodděluje.
+
+Pod mezí se proto jede **mřížkou o dvou sloupcích**: kde co stojí, je
+pak jisté, a svislici dostane jen to, co opravdu stojí v druhém
+sloupci. Řádek tím i trochu ztratil na výšce (třetí číslo se posunulo
+z 422 na 410 px).
+
+**Sabotáž ukázala, že to není jen ta jedna stránka:** po vyhození
+pravidla spadla kontrola i na `pozemky-stredocesky-kraj.html`
+(„3 exekuce" na 320–390 px) a na `pozemky-do-1-milionu.html`
+(„4 504 m² mediánová výměra" na 320 px) — krajské a rozpočtové stránky
+mají čísla čtyři, takže se zalamují taky.
+
+Hlídají to dvě kontroly v `scripts/test-hlavicka-stranky.mjs` na čtyřech
+rodinách stránek × čtyřech šířkách (320/360/390/430). Měří se výsledek,
+ne zápis: najde se, co v daném okně **začíná řádek** (nejlevější prvek
+v každé řádce, ne první v pořadí), a u takového prvku nesmí být svislice
+vlevo; k tomu se hlídá, že všechny řádky začínají na téže svislici.
+Mez 429 px je naměřená — kdyby v datech narostla čísla a zalomila řádek
+dřív, kontrola to ohlásí a mez se posune.
+
+### Dvě vlastní pojistky repozitáře u toho zabraly
+
+1. `test-staticka` našla, že komentář ve stylopisu odkazoval na
+   `scripts/test-cisla-radek.mjs` — soubor, který jsem nakonec nezaložil
+   (kontroly šly do existující zkoušky).
+2. `test-zkousky-meri` našla, že nový kontext měří okno 390 px **bez
+   zapnutého dotyku**; pravidla pro telefon přitom visí na
+   `@media (pointer: coarse)`, takže by se měřila myší podoba v úzkém
+   okně.
