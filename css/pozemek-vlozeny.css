@@ -71,7 +71,7 @@
        40 px nic neubrala (soustava odstupů má držet v číslech; hlídá
        scripts/test-parametry.mjs). */
     .pz-sect-h::before{content:""; position:absolute; left:0; top:-14px;
-      width:52px; height:2px; border-radius:2px; background:var(--grad-warm); opacity:.85;}
+      width:52px; height:2px; border-radius:2px; background:var(--accent-warm); opacity:.85;}
     .pz-head{margin:20px 0 0;}
     /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
        dávalo časopis o přírodě, ne inzerát. Rozdíl dělá velikost
@@ -174,7 +174,7 @@
        protože odpovídá na touž otázku „co tu vlastně je" — ne na otázku
        o ceně. Tlumená deska, ne odznak: je to upozornění, ne nabídka. */
     .pz-blok{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-plocha); font-size:14px; line-height:1.6;
-      background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft));
+      background:var(--ink-soft);
       border:1px solid var(--line); color:var(--text-ondark);}
     .pz-blok b{color:var(--znacka-svetla);}
     .pz-blok-pozn{display:block; margin-top:4px; font-size:13px; color:var(--text-ondark-mute);}
@@ -446,7 +446,7 @@
     /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); box-shadow:var(--e2);}
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e2);}
     .pzm-mapa{height:390px; width:100%; background:var(--ink);}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je

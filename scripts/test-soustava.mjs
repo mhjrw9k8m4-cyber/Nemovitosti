@@ -58,6 +58,30 @@ export const POMER_VYJIMKY = {
   '.pz-media': { je: '4/3', proc: 'hero na stránce pozemku jde na telefonu od kraje ke kraji a 4/3 je tam výška, kterou snímek unese' },
 };
 
+/* PŘELIV NA PLOŠE MUSÍ MÍT DŮVOD. Ze 57 přelivů ve stylopisu jich 19
+   jen zdobilo plochu (karty, úvodní plocha „Přidat pozemek", pás
+   s počítadly, spojnice kroků, pruh síly hesla) — a většina z nich
+   nebyla ani vidět: přelévala bílou do bílé (#FFFFFF → #F7F8F8).
+   Zbytek práci dělá, a tady je vypsaný i s tou prací. Masky
+   (mask-image) se nevypisují: maska není plocha, je to tvar.
+   Měří se `background` a `background-image`; klíč je selektor tak, jak
+   stojí ve stylopisu. */
+export const PRELIVY = {
+  '.mcf-akce': 'maska na kraji vodorovného pásu akcí — říká, že je kam rolovat',
+  '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
+  '.opp-media': 'podklad náhledu, než se snímek stáhne — a vrstva pod závojem',
+  '.opp-mgrad': 'závoj nad snímkem: bez něj není bílé písmo na fotce čitelné',
+  '.sn-popis': 'týž závoj pod popiskou na snímku pozemku',
+  '.okr-item .okr-foto': 'mříž v zástupném snímku — opakovaná 1px linka, tedy vzor, ne přeliv barev',
+  '.s-mrizka::before': 'mříž na pozadí sekce, stejný vzor z 1px linek',
+  '.add-hero::after, .section.band::after': 'mříž na pásu a nad úvodní plochou',
+  'footer::after': 'mříž v patičce — opakovaná 1px linka, tedy vzor, ne přeliv barev',
+  '.okr-band::before': 'mříž na pásu stránky okresu',
+  '.add-hero:not(.app-hero)::before': 'mříž nad úvodní plochou „Přidat pozemek"',
+  '.vm-mapa-obal::after': 'stín při spodním kraji mapy ve výběru místa — říká, že mapa pokračuje pod ovládáním',
+  '.por-tab tbody th::after, .por-tab thead th:first-child::after': 'maska u přimrzlého sloupce v porovnání — ukazuje, že tabulka pokračuje do strany',
+};
+
 /* Animace s vlastním časem — každá s důvodem, proč do tokenu nepatří. */
 export const VLASTNI_CAS = {
   livepulse: 'tep u značky „žije" — vlastní rytmus, ne nájezd',
@@ -82,6 +106,19 @@ const css = readFileSync('css/styles.css', 'utf8');
    opravdový řádek a z komentářů se do nálezů nic nedostane. */
 const bez = css.replace(/\/\*[\s\S]*?\*\//g, (s) => s.replace(/[^\n]/g, ' '));
 const radek = (i) => bez.slice(0, i).split('\n').length;
+/* Zdroj vloženého stylu stránky pozemku, ne stránka: do pozemek.html se
+   vkládá už očištěný (scripts/vloz-styl-pozemku.mjs), takže nález ve
+   stránce by posílal opravovat výstup. */
+const vlozenyCisty = readFileSync('css/pozemek-vlozeny.css', 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
+/* Selektor pravidla, ve kterém stojí znak na pozici `i`. */
+const selektor = (text, i) => {
+  const pred = text.slice(0, i);
+  const zac = pred.lastIndexOf('{');
+  if (zac < 0) return '?';
+  const predtim = Math.max(pred.lastIndexOf('}', zac), pred.lastIndexOf('{', zac - 1));
+  return pred.slice(predtim + 1, zac).trim().replace(/\s+/g, ' ');
+};
 
 /* ---- 1) průhlednost: jeden zápis ---- */
 const bezNuly = [];
@@ -139,24 +176,12 @@ pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)'
    Měří se stylopis I vložený styl stránky pozemku: tatáž osa zapsaná
    ve dvou souborech se rozejde, a právě tam ten rozchod byl. */
 {
-  /* Zdroj vloženého stylu, ne stránka: do pozemek.html se vkládá už
-     očištěný (scripts/vloz-styl-pozemku.mjs), takže nález ve stránce
-     by posílal opravovat výstup. */
-  const vlozeny = readFileSync('css/pozemek-vlozeny.css', 'utf8');
-  const vlozenyBez = vlozeny.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
-  const selektorU = (text, i) => {
-    const pred = text.slice(0, i);
-    const zac = pred.lastIndexOf('{');
-    if (zac < 0) return '?';
-    const predtim = Math.max(pred.lastIndexOf('}', zac), pred.lastIndexOf('{', zac - 1));
-    return pred.slice(predtim + 1, zac).trim().replace(/\s+/g, ' ');
-  };
   const nalezy = [];
-  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyBez]]) {
+  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyCisty]]) {
     const re = /aspect-ratio\s*:\s*([^;}]+)/g;
     let m;
     while ((m = re.exec(text))) {
-      nalezy.push({ kde: jmeno, sel: selektorU(text, m.index),
+      nalezy.push({ kde: jmeno, sel: selektor(text, m.index),
         hodnota: m[1].trim().replace(/\s+/g, ''),
         radek: text.slice(0, m.index).split('\n').length });
     }
@@ -172,7 +197,31 @@ pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)'
     mrtve.length === 0, mrtve.join(', '));
 }
 
-console.log('\nSoustava: průhlednost, linky, čas, poměr stran');
+/* ---- přelivy na ploše --------------------------------------------- */
+{
+  const nalezy = [];
+  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyCisty]]) {
+    const re = /(background|background-image)\s*:\s*[^;}]*gradient\(/g;
+    let m;
+    while ((m = re.exec(text))) {
+      nalezy.push({ kde: jmeno, sel: selektor(text, m.index),
+        radek: text.slice(0, m.index).split('\n').length });
+    }
+  }
+  const bezDuvodu = nalezy.filter((n) => !PRELIVY[n.sel]);
+  pravda('každý přeliv na ploše je ve výčtu i s tím, co dělá',
+    bezDuvodu.length === 0,
+    bezDuvodu.map((n) => `${n.kde}:${n.radek} ${n.sel}`).join(' | ')
+      + ' — ozdobný přeliv zploštěte na plnou barvu, funkční dopište do PRELIVY i s důvodem');
+  const mrtve = Object.keys(PRELIVY).filter((sel) => !nalezy.some((n) => n.sel === sel));
+  pravda(`a žádný vypsaný přeliv není mrtvý (${nalezy.length} na ploše)`,
+    mrtve.length === 0, mrtve.join(' | '));
+  const kratke = Object.entries(PRELIVY).filter(([, d]) => !d || d.length < 20).map(([k]) => k);
+  pravda('a u každého je napsané, proč plnou barvou nejde',
+    kratke.length === 0, kratke.join(', '));
+}
+
+console.log('\nSoustava: průhlednost, linky, čas, poměr stran, přelivy');
 console.log(zpravy.join('\n'));
 console.log(`  (výjimek s vlastním časem ${Object.keys(VLASTNI_CAS).length}, každá s napsaným důvodem)`);
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

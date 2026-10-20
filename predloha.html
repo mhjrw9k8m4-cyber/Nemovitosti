@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=90f58afb">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=8c7e837e">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -130,17 +130,23 @@
     <p class="eyebrow">Nadřádek · strojové písmo<span class="skala" data-mera></span></p>
   </div>
 
-  <h2>5. Barevné přechody</h2>
-  <p>Web měl barvu jen na tlačítkách, jinak samé plochy. Přechody jsou to, čím velké weby drží
-     plochu živou: barva se plynule přelévá místo toho, aby se lámala hranou. Všechny vycházejí
-     ze <b>dvou</b> tónů, které web má — hluboké modři a mědi. Duha z osmi barev není přechod,
-     je to zmatek.</p>
-  <div class="mrizka" id="prechody"></div>
-  <div class="pozn">Text na barevné ploše potřebuje <b>vlastní tón</b>. Tam, kde se vrstvy meshe
-     potkají, je podklad znatelně tmavší než zbytek stránky — běžný akcent tam klesl na 3,9 : 1.
-     Úvodní plocha si proto uvnitř předefinuje <code>--znacka-svetla</code> a
-     <code>--text-ondark-mute</code>. Okem se to nepozná; odhalil to až
-     <code>scripts/test-kontrast.mjs</code>, když se naučil měřit i přechody.</div>
+  <h2>5. Plné plochy — a kde přeliv zůstává</h2>
+  <p>Plochy jsou <b>plné barvy</b>. Přeliv jako ozdoba z webu zmizel: ze 57 přelivů ve stylopisu
+     jich 19 jen zdobilo plochu (karty, úvodní plocha stránky „Přidat pozemek“, pás s počítadly,
+     spojnice kroků, pruh síly hesla) a jsou pryč. Většina z nich přitom nebyla ani vidět —
+     přelévala bílou do bílé (#FFFFFF → #F7F8F8). Tam, kde se vrstvy potkávaly, naopak dělaly
+     potíž: podklad tam byl znatelně tmavší a text na něm klesal na 4,2 : 1.</p>
+  <p>Zbylých 38 přelivů není ozdoba a zůstává — každý dělá práci, kterou plnou barvou udělat nejde:</p>
+  <ul>
+    <li><b>Masky na krajích</b> rolovatelných pásů (<code>mask-image</code>) — říkají, že je kam
+      rolovat dál.</li>
+    <li><b>Závoj nad fotkou</b> (<code>.opp-mgrad</code>, <code>.sn-popis</code>) — bez něj není
+      bílé písmo na snímku čitelné.</li>
+    <li><b>Kostra načítání</b> (<code>.sk</code>) — přejezd, který říká „ještě se to nese“.</li>
+    <li><b>Mříž v zástupném snímku</b> — opakovaná 1px linka, tedy vzor, ne přeliv barev.</li>
+  </ul>
+  <div class="pozn">Hlídá to <code>scripts/test-soustava.mjs</code>: každý přeliv na ploše musí být
+     ve výčtu i s důvodem. Nový přeliv neprojde, dokud se nenapíše, co dělá.</div>
 
   <h2>6. Tmavý pás</h2>
   <p>Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je to, čím velké weby
@@ -215,18 +221,6 @@
       '<div class="nazev">' + b[0] + '</div><div class="kod">var(' + b[1] + ') · ' + barva + '</div>' +
       '<div class="kod" style="margin-top:4px">' + b[3] + '</div>' +
       '<span class="pomer' + (ok ? '' : ' slabe') + '">' + p.toFixed(2) + ' : 1</span></div>';
-  }).join('');
-
-  /* --- barevné přechody --- */
-  var prechody = [
-    ['Teplý', '--grad-warm', 'linka nad nadpisem, důrazy'],
-    ['Teplý jemný', '--grad-warm-soft', 'štítky a výzvy'],
-    ['Studený jemný', '--grad-cool-soft', 'štítky kategorie prodej']
-  ];
-  document.getElementById('prechody').innerHTML = prechody.map(function (g) {
-    return '<div class="vzorek"><div class="pole" style="background:' + v(g[1]) + '; border:1px solid var(--line)"></div>' +
-      '<div class="nazev">' + g[0] + '</div><div class="kod">var(' + g[1] + ')</div>' +
-      '<div class="kod" style="margin-top:4px">' + g[2] + '</div></div>';
   }).join('');
 
   /* --- odstupy --- */

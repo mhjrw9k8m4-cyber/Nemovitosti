@@ -77,7 +77,20 @@ pravda('a oboje se opravdu vyskytlo (jinak se neměří nic)',
 const data = JSON.parse(fs.readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
 const PKH = (await import('node:module')).createRequire(import.meta.url)(
   path.join(KOREN, 'js', 'hlidani-logika.js'));
-const cisto = PKH.bezDuplicit(data.opportunities || []);
+/* A TOTÉŽ OKNO, JAKÉ ZAVÍRÁ STRÁNKA. Dražba po termínu není nabídka
+   a okresní stránky ji vynechávají; tahle kontrola ji ale počítala dál,
+   takže jediný den v roce — ten po dražbě — hlásila ztrátu, která se
+   nekonala (Litoměřice: stránka 80, „v datech" 85). Je to táž past,
+   kvůli které je podmínka v js/terminy.js jen na jednom místě: kdo ji
+   nezavře taky, měří něco jiného. */
+const PKT = (await import('node:module')).createRequire(import.meta.url);
+PKT(path.join(KOREN, 'js', 'terminy.js'));
+const T = globalThis.PK_TERMINY;
+if (!T || typeof T.poTerminu !== 'function') {
+  console.error('::error::js/terminy.js nedalo poTerminu — kontrola by počítala i proběhlé dražby');
+  process.exit(1);
+}
+const cisto = PKH.bezDuplicit(data.opportunities || []).filter((o) => !T.poTerminu(o));
 const poOkresech = {};
 for (const o of cisto) poOkresech[o.okres] = (poOkresech[o.okres] || 0) + 1;
 const neshody = [];

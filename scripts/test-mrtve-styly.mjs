@@ -73,6 +73,28 @@ function chod(dir) {
     if (/^styles(\.min)?\.css$|^zaklad\.min\.css$/.test(e.name)) continue;
     let s; try { s = fs.readFileSync(p, 'utf8'); } catch (x) { continue; }
     souboru++;
+    /* KOMENTÁŘ NENÍ POUŽITÍ. Zkouška hledá slova v celém repozitáři,
+       takže třídu udržela naživu i věta, která říkala, že ta třída UŽ
+       NENÍ. Naměřeno 19. 10.: `.counters` a `.c-num` (sekce
+       s počítadly) držela při životě poznámka v js/main.js, která
+       doslova psala „celá sekce s počítadly je pryč".
+       ČISTÍ SE PODLE JAZYKA, ne naslepo. První pokus pouštěl na HTML
+       i pravidla pro komentáře z JavaScriptu — a protože otevírací
+       značka komentáře uvnitř skriptu nebo stylu najde svůj konec
+       o kus níž, vymazalo to kus stránky: `.photo-preview`
+       i `.add-more` se tím staly „mrtvými", ačkoli v pridat.html
+       stojí. (A tenhle komentář ukazuje proč: stačí do něj napsat
+       uzavírací značku a skončí dřív, než má.) */
+    if (/\.html$/.test(e.name)) {
+      s = s.replace(/<!--[\s\S]*?-->/g, ' ');
+      /* Komentáře uvnitř vloženého stylu — tam je komentář opravdu
+         komentářem. Hledá se jen mezi <style> a </style>. */
+      s = s.replace(/<style[^>]*>[\s\S]*?<\/style>/g,
+        (blok) => blok.replace(/\/\*[\s\S]*?\*\//g, ' '));
+    } else if (/\.m?js$/.test(e.name)) {
+      s = s.replace(/\/\*[\s\S]*?\*\//g, ' ')
+        .replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+    }
     if (e.name.endsWith('.html')) {
       for (const m of s.matchAll(/class="([^"]*)"/g)) for (const w of m[1].split(/\s+/)) if (w) tokeny.tridy.add(w);
       for (const m of s.matchAll(/id="([^"]*)"/g)) if (m[1]) tokeny.idy.add(m[1]);

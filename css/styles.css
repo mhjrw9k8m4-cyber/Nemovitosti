@@ -742,7 +742,7 @@ path.leaflet-interactive:focus, path.leaflet-interactive:focus-visible{ outline:
 ::selection{background:var(--znacka); color:var(--ink);}
 section[id]{scroll-margin-top:calc(var(--vyska-hlavicky, 85px) + 14px);}
 h1,h2{text-wrap:balance;}
-.c-num, .stat .num{font-variant-numeric:tabular-nums;}
+.stat .num{font-variant-numeric:tabular-nums;}
 .btn-primary:hover{transform:translateY(-1px);}
 /* Vlastní scrollbar */
 *{scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent;}
@@ -3201,7 +3201,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    na každé šířce. */
 .odl-empty span{color:var(--text-ondark-mute); font-size:14px; line-height:1.6; max-width:var(--m-popisek); display:block; margin-inline:auto;}
 .odl-empty-btn{display:inline-block; margin-top:16px;}
-.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:linear-gradient(135deg, rgba(138,85,18,0.12), rgba(138,85,18,0.04)); border:1px solid rgba(138,85,18,0.3); border-radius:var(--r-lg);}
+.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:#EAE7E1; border:1px solid rgba(138,85,18,0.3); border-radius:var(--r-lg);}
 .odl-cta-txt{display:flex; flex-direction:column; gap:2px;}
 .odl-cta-txt b{font-size:16px; color:var(--text-ondark); font-weight:700;}
 .odl-cta-txt span{font-size:14px; color:var(--text-ondark-mute);}
@@ -3392,10 +3392,6 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 /* Sekundární akce — decentní odkaz, ne největší tlačítko v detailu
    (dřív přebíjelo hlavní akce jako Katastr / Inzerát). */
 
-/* Počítadla */
-.counters{padding:56px 0; background:linear-gradient(180deg, var(--ink-soft2) 0%, var(--ink-soft) 55%, var(--ink) 100%); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
-.c-num{font-family:var(--font-ui); font-size:40px; font-weight:600; color:var(--znacka-svetla); line-height:1;}
-
 /* Steps */
 .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:32px;}
 .step{border-top:1px solid var(--line); padding-top:24px;}
@@ -3436,7 +3432,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .rc-ico{width:44px; height:44px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.3); margin-bottom:16px;}
 .rc-ico .ic{width:22px; height:22px; color:var(--znacka-svetla);}
 /* Poptávka pro realitky/obce */
-.realtor-contact{margin-top:20px; background:linear-gradient(135deg, var(--ink-soft) 0%, var(--ink-soft2) 100%); border:1px solid var(--line); border-radius:var(--r-md); padding:32px; display:grid; grid-template-columns:1fr 1.1fr; gap:32px; align-items:center;}
+.realtor-contact{margin-top:20px; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:32px; display:grid; grid-template-columns:1fr 1.1fr; gap:32px; align-items:center;}
 .rct-copy h2{font-family:var(--font-display); font-size:24px; font-weight:700; letter-spacing:-0.02em; margin-bottom:8px;}
 .rct-copy p{font-size:16px; color:var(--text-ondark-mute); line-height:1.6;}
 .rct-form{display:flex; flex-direction:column; gap:8px;}
@@ -3599,7 +3595,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 .modal[hidden]{display:none;}
 .modal-backdrop{position:absolute; inset:0; background:rgba(9,21,15,0.7); opacity:0; transition:opacity var(--cas-zakladni) var(--ease);}
 .modal.open .modal-backdrop{opacity:1;}
-.modal-card{position:relative; z-index:1; width:100%; max-width:var(--m-karta); background:linear-gradient(160deg, var(--ink-soft), var(--ink-soft2)); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px; box-shadow:var(--shadow-lg); transform:translateY(18px) scale(.97); opacity:0; transition:transform var(--cas-pomaly) var(--ease), opacity var(--cas-pomaly) var(--ease);}
+.modal-card{position:relative; z-index:1; width:100%; max-width:var(--m-karta); background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px; box-shadow:var(--shadow-lg); transform:translateY(18px) scale(.97); opacity:0; transition:transform var(--cas-pomaly) var(--ease), opacity var(--cas-pomaly) var(--ease);}
 .modal.open .modal-card{transform:none; opacity:1;}
 .modal-card .eyebrow{margin-bottom:12px;}
 .modal-card h3{font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:8px;}
@@ -3698,7 +3694,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 @keyframes locCardIn{from{opacity:0; transform:translateY(18px) scale(.95)}to{opacity:1; transform:none}}
 .loc-ov{animation:locOvIn var(--cas-zakladni) ease both;}
 .loc-card{animation:locCardIn var(--cas-pomaly) cubic-bezier(.2,.9,.3,1.25) both;}
-.loc-ic{background:linear-gradient(135deg,rgba(31,81,56,0.16),rgba(138,85,18,0.12)); box-shadow:var(--glow);}
+.loc-ic{background:var(--plocha-jemna); box-shadow:var(--glow);}
 .loc-btn{transition:transform var(--cas-rychly) var(--ease), filter var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
 .loc-btn:active{transform:scale(.975);}
 .loc-btn.primary{box-shadow:var(--e2);}
@@ -4475,7 +4471,6 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      panel měl x = −20 px, tedy prvních 20 px nabídky bylo mimo
      obrazovku. Pravidlo zmizelo s pásem, ke kterému patřilo. */
   .status-grid{grid-template-columns:1fr;}
-  .c-num{font-size:32px;}
 }
 
 /* ---------- Stránky „Přidat pozemek na prodej" a „Inzerce" ----------
@@ -4694,7 +4689,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-check input{width:18px; height:18px; flex:none; margin-top:1px; accent-color:var(--znacka);}
 .add-check a{color:var(--znacka-svetla);}
 /* Volitelné zvýraznění inzerátu (placený upsell, poctivě označený) */
-.add-boost{border:1px solid rgba(31,81,56,0.4); background:linear-gradient(180deg, rgba(44,113,80,0.12), rgba(44,113,80,0.04)); border-radius:var(--r-md); padding:16px 16px;}
+.add-boost{border:1px solid rgba(31,81,56,0.4); background:#EEF4F1; border-radius:var(--r-md); padding:16px 16px;}
 .boost-head{display:flex; align-items:flex-start; gap:12px; cursor:pointer;}
 .boost-head input{width:20px; height:20px; flex:none; margin-top:2px; accent-color:var(--znacka);}
 .boost-txt{display:flex; flex-direction:column; gap:2px;}
@@ -4730,7 +4725,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    sloupec má 662, ne 440). Napodruhé jsem středil jen kartu — a nadpis,
    úvod i záložky zůstaly vlevo, takže stránka vypadala rozpůlená.
    Středí se proto celý sloupec, viz `.section.app-section` níž. */
-.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft)); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
+.auth-card{position:relative; z-index:1; max-width:var(--m-karta); margin:0; background:var(--ink-soft); border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:32px 28px 24px; box-shadow:var(--shadow-lg);}
 .auth-tabs{display:flex; gap:4px; padding:4px; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); margin-bottom:20px;}
 /* JEDNA VÝŠKA V CELÉ KARTĚ. Naměřeno na telefonu: záložky 46 px,
    pole 50 px a hlavní tlačítko 48 px — tři výšky ve čtyřech ovladačích
@@ -4850,11 +4845,11 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-hero{position:relative; overflow:hidden;}
 .add-hero .wrap{position:relative; z-index:1;}
 .add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:32px; align-items:start;}
-.add-card{position:relative; background:linear-gradient(180deg, var(--ink-soft2), var(--ink-soft));
+.add-card{position:relative; background:var(--ink-soft);
   border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:28px 28px;
   box-shadow:var(--e3);}
 .add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
-  background:linear-gradient(90deg, transparent, var(--znacka), transparent); opacity:0.75;}
+  background:var(--znacka); opacity:0.75;}
 .add-aside{display:flex; flex-direction:column; gap:16px; position:sticky; top:96px;}
 .aside-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
 .aside-card > h3{font-size:14px; margin-bottom:16px; letter-spacing:0.01em;}
@@ -4999,7 +4994,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .mp-stav.err{color:var(--c-exekuce-ink);}
 /* Rozšířené karty nabídek */
 .ul-thumb{aspect-ratio:16/10; border-radius:var(--r-sm); overflow:hidden; margin:-2px 0 4px; position:relative;
-  background:radial-gradient(circle at 50% 38%, #22493A, var(--ink) 88%);}
+  background:var(--ink);}
 .ul-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .ul-thumb .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-ondark-mute);}
 .ul-thumb .ph svg{width:32px; height:32px; opacity:0.45; stroke:currentColor; fill:none; stroke-width:1.125;}
@@ -5054,9 +5049,9 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    konec pruhu a odznak vedle něj konečně ukazují totéž. Všechny tři
    zastávky jsou tokeny, takže se v tmavém režimu přeladí s paletou. */
 .pcs-bar i{display:block; height:100%; width:0; border-radius:var(--r-lg);
-  background:linear-gradient(90deg, var(--znacka), var(--znacka-svetla), var(--c-ok));
+  background:var(--znacka-svetla);
   transition:width var(--cas-pomaly) var(--ease);}
-.pcs-bar i.full{background:linear-gradient(90deg, var(--c-ok), #5FB07E);}
+.pcs-bar i.full{background:var(--c-ok);}
 .pcs-hint{font-size:12px; color:var(--text-ondark-mute); margin-top:8px; line-height:1.5;}
 .pcs-hint b{color:var(--text-ondark);}
 /* Úroveň inzerátu (Začínáme … Špičkový) */
@@ -5080,12 +5075,12 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    černý text, takže by poměr spadl z 6,80 : 1 na 2,55 : 1 — tedy pod
    normu, a vypadalo by to jako překlep ve vykreslování.
    (Naměřeno: #5FB07E 6,80 : 1, --c-ok 5,51 : 1, --c-ok-ink 2,55 : 1.) */
-.pc-strength[data-lvl="5"] .pcs-tier{color:#0e1a14; background:linear-gradient(90deg, var(--c-ok), #5FB07E);}
+.pc-strength[data-lvl="5"] .pcs-tier{color:#0e1a14; background:var(--c-ok);}
 
 /* Hero — 3 kroky, jak přidání funguje */
 .add-steps{list-style:none; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:24px; max-width:var(--m-sloupec); padding:0;}
 .add-steps li{display:flex; gap:8px; align-items:flex-start; background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px;}
-.as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:linear-gradient(135deg,var(--znacka),var(--znacka-svetla)); box-shadow:var(--glow);}
+.as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--ink); background:var(--znacka); box-shadow:var(--glow);}
 .as-txt{display:flex; flex-direction:column;}
 .as-txt b{font-size:14px; color:var(--text-ondark); margin-bottom:2px;}
 .as-txt > span{font-size:12px; color:var(--text-ondark-mute); line-height:1.4;}
@@ -5678,11 +5673,14 @@ body{background:var(--bg);}
       a přes rozostření 80 px z nich zbude mlha. Vrstvené radiální přechody
       dělají totéž, ale doopravdy: teplá barva vlevo nahoře, studená vpravo,
       hluboká modř u dolního okraje. Dva tóny webu proti sobě, nic dalšího. */
+/* ZPLOŠTĚNO 19. 10. Tři vrstvené radiální skvrny byly totéž, co se
+   z úvodní plochy (.hero) odneslo už dřív: ozdoba, která navíc dělala
+   potíže. Tam, kde se všechny tři potkaly, byl podklad znatelně tmavší
+   než zbytek stránky, takže běžný akcent na něm klesal na 4,2 : 1 a text
+   se musel ztmavovat zvlášť (viz komentář níž — platí dál, jen už ho
+   nic nevynucuje). Plná plocha je táž, jakou mají pásy sekcí. */
 .add-hero{
-  background-image:
-    radial-gradient(58% 52% at 10% 4%,  rgba(224,184,120,0.3), transparent 64%),
-    radial-gradient(52% 56% at 92% 10%, rgba(150,200,170,0.4), transparent 64%),
-    radial-gradient(72% 58% at 52% 108%, rgba(150,190,165,0.3), transparent 66%);
+  background-color:var(--pas-plocha);
   background-repeat:no-repeat;
   /* Text na barevné ploše potřebuje vlastní tón. Tam, kde se všechny tři
      vrstvy potkají, je podklad znatelně tmavší než zbytek stránky — běžný
@@ -5871,7 +5869,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 /* Spojnice mezi dlaždicemi — tohle je to „napojení". Vede od jedné
    dlaždice k další a u posledního kroku končí. */
 .step::before{content:""; position:absolute; left:26px; top:52px; bottom:-30px; width:2px;
-  background:linear-gradient(180deg, var(--line-strong), rgba(138,85,18,0.4)); z-index:0;}
+  background:var(--line-strong); z-index:0;}
 .step:last-child::before{display:none;}
 
 /* ZLOM JE 1041, NE 961. Kroky se do řady srovnají až nad 1040 px
@@ -5882,7 +5880,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 @media (min-width:1041px){
   /* Na počítači jdou kroky vedle sebe, takže spojnice je vodorovná. */
   .step::before{left:52px; right:-36px; top:25px; bottom:auto; width:auto; height:2px;
-    background:linear-gradient(90deg, var(--line-strong), rgba(138,85,18,0.4));}
+    background:var(--line-strong);}
   .step{grid-template-columns:1fr; row-gap:0;}
   .step .idx, .step h3, .step p{grid-column:1;}
 }
@@ -5957,7 +5955,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
      větu — bez jediného rámečku. Zlom stejný jako výš: pod 1041 px
      stojí kroky pod sebou a vodorovná linka by z nich trčela ven. */
   .step::before{display:block; content:""; position:absolute; left:0; right:-46px; top:30px;
-    height:1px; background:linear-gradient(90deg, rgba(138,85,18,0.4), var(--line)); z-index:0;}
+    height:1px; background:var(--line); z-index:0;}
   .step:last-child::before{display:none;}
   .step .idx, .step h3, .step p{position:relative; z-index:1;}
   .step .idx{background:var(--bg); display:inline-block; padding-right:12px;}
