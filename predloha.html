@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=8c7e837e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=1fd19326">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -21,15 +21,15 @@
     /* Vlastní podoba nadpisů patří NAVIGACI předlohy, ne ukázkám — jinak
        by vzorník měřil sám sebe místo webu. Ukázky stojí v .typ. */
     .pz > h1{font-size:40px; margin-bottom:8px;}
-    .pz > p.lede{color:var(--text-ondark-mute); font-size:16px; max-width:var(--m-text); margin-bottom:12px;}
+    .pz > p.lede{color:var(--muted); font-size:16px; max-width:var(--m-text); margin-bottom:12px;}
     .pz > h2{font-size:24px; font-weight:700; letter-spacing:-0.02em; margin:56px 0 4px; padding-top:20px; border-top:1px solid var(--line);}
     .pz > h2:first-of-type{border-top:0;}
-    .pz > h2 + p{color:var(--text-ondark-mute); font-size:14px; max-width:var(--m-text); margin-bottom:20px;}
+    .pz > h2 + p{color:var(--muted); font-size:14px; max-width:var(--m-text); margin-bottom:20px;}
     .pz > h3{font-size:14px; font-weight:700; margin:24px 0 12px;}
     .mrizka{display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
     .vzorek{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
     .vzorek .nazev{font-weight:700; font-size:14px; margin-bottom:4px;}
-    .vzorek .kod{font-family:var(--font-mono); font-size:12px; color:var(--text-ondark-mute); word-break:break-all;}
+    .vzorek .kod{font-family:var(--font-mono); font-size:12px; color:var(--muted); word-break:break-all;}
     .pole{height:66px; border-radius:var(--r-sm); margin-bottom:12px; display:grid; place-items:center;
       font-family:var(--font-mono); font-size:12px; font-weight:600;}
     .pomer{display:inline-block; margin-top:8px; font-family:var(--font-mono); font-size:11px; font-weight:600;
@@ -37,10 +37,10 @@
     .pomer.slabe{background:rgba(174,30,30,.12); color:var(--c-exekuce-ink);}
     .radaTvaru{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;}
     .tvar{width:96px; height:70px; background:var(--ink-soft); border:1px solid var(--line-strong);
-      display:grid; place-items:center; font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute);}
-    .pozn{font-size:14px; color:var(--text-ondark-mute); line-height:1.6; margin-top:12px; padding-left:12px; border-left:3px solid var(--accent-warm);}
+      display:grid; place-items:center; font-family:var(--font-mono); font-size:11px; color:var(--muted);}
+    .pozn{font-size:14px; color:var(--muted); line-height:1.6; margin-top:12px; padding-left:12px; border-left:3px solid var(--accent-warm);}
     .typ p, .typ div{margin-bottom:8px;}
-    .skala{font-family:var(--font-mono); font-size:11px; color:var(--text-ondark-mute); display:block; margin-top:2px;}
+    .skala{font-family:var(--font-mono); font-size:11px; color:var(--muted); display:block; margin-top:2px;}
   </style>
 </head>
 <body>
@@ -185,7 +185,7 @@
     return '<div class="vzorek" style="box-shadow:' + (v(h[1]) || 'none') + '">' +
       '<div class="nazev">' + h[0] + '</div>' +
       '<div class="kod">var(' + h[1] + ')</div>' +
-      '<div class="kod" style="margin-top:8px;color:var(--text-ondark)">' + h[2] + '</div></div>';
+      '<div class="kod" style="margin-top:8px;color:var(--text)">' + h[2] + '</div></div>';
   }).join('');
 
   /* --- tvary --- */
@@ -205,8 +205,8 @@
     return (Math.max(A, B) + 0.05) / (Math.min(A, B) + 0.05); }
 
   var barvy = [
-    ['Text', '--text-ondark', '#FFFFFF', 'hlavní písmo'],
-    ['Text tlumený', '--text-ondark-mute', '#FFFFFF', 'popisky'],
+    ['Text', '--text', '#FFFFFF', 'hlavní písmo'],
+    ['Text tlumený', '--muted', '#FFFFFF', 'popisky'],
     ['Akcent', '--znacka-svetla', '#FFFFFF', 'odkazy, čísla'],
     ['Měď', '--accent-warm', '#FFFFFF', 'důraz — střídmě'],
     ['Na prodej', '--c-sale-ink', '#FFFFFF', 'text štítku'],

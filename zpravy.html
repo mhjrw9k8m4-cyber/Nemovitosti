@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=8c7e837e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=1fd19326">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -60,9 +60,9 @@
     /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
        na 1440 px, 696 px prázdna). Viz .auth-card v css/styles.css. */
     .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
-    .zp-auth h2{font-size:16px; font-weight:700; color:var(--text-ondark); margin-bottom:4px;}
-    .zp-auth p{font-size:14px; color:var(--text-ondark-mute); margin-bottom:12px; line-height:1.5;}
-    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text-ondark); margin-bottom:8px; outline:none;}
+    .zp-auth h2{font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;}
+    .zp-auth p{font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text); margin-bottom:8px; outline:none;}
     .zp-in:focus{border-color:var(--znacka-svetla); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
     .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
@@ -79,7 +79,7 @@
        Kontrast textu 6,83 : 1. */
     .zp-btn.sec{background:var(--panel); color:var(--znacka-svetla);
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
-    .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--text-ondark-mute);}
+    .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--muted);}
     .zp-msg.err{color:var(--c-exekuce);}
     .zp-auth form{margin:0;}
     /* Seznam vláken */
@@ -89,8 +89,8 @@
     .zp-ava{width:44px; height:44px; border-radius:var(--r-md); flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14)); color:var(--znacka-svetla);}
     .zp-ava svg{width:22px; height:22px; stroke-width:1.64;}
     .zp-tmain{min-width:0; flex:1;}
-    .zp-tplace{font-weight:700; font-size:14px; color:var(--text-ondark); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    .zp-tlast{font-size:13px; color:var(--text-ondark-mute); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
+    .zp-tplace{font-weight:700; font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .zp-tlast{font-size:13px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px;}
     .zp-trole{font-size:11px; color:var(--znacka-svetla); font-weight:600;}
         /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --znacka.
        --znacka je barva PÍSMA a mezi režimy se obrací: ve světlém je to
@@ -101,16 +101,16 @@
        Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
        (odznaky s počtem) nebo při najetí myší. */
     .zp-badge{min-width:20px; height:20px; padding:0 4px; border-radius:var(--r-sm); background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none;}
-    .zp-empty{padding:32px 20px; text-align:center; color:var(--text-ondark-mute); font-size:14px; line-height:1.6;}
+    .zp-empty{padding:32px 20px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;}
     .zp-empty svg{width:40px; height:40px; color:var(--line-strong); margin-bottom:8px;}
     /* Konverzace */
     .zp-conv-head{display:flex; align-items:center; gap:8px; padding:12px 12px; border-bottom:1px solid var(--line);}
-    .zp-conv-head .zp-cb{background:none; border:0; color:var(--text-ondark-mute); font-size:14px; cursor:pointer; font-weight:600; padding:4px;}
-    .zp-conv-head .zp-cti{font-weight:700; font-size:14px; color:var(--text-ondark); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .zp-conv-head .zp-cb{background:none; border:0; color:var(--muted); font-size:14px; cursor:pointer; font-weight:600; padding:4px;}
+    .zp-conv-head .zp-cti{font-weight:700; font-size:14px; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
     .zp-conv-head a.zp-view{margin-left:auto; font-size:13px; color:var(--znacka-svetla); text-decoration:none; font-weight:600; white-space:nowrap;}
     .zp-msgs{padding:16px 12px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
     .zp-b{max-width:76%; padding:8px 12px; border-radius:var(--r-md); font-size:14px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
-    .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text-ondark); border-bottom-left-radius:5px;}
+    .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text); border-bottom-left-radius:5px;}
     .zp-b.me{align-self:flex-end; background:var(--plocha-znacka); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:11px; opacity:.65; margin-top:2px; display:block;}
     .zp-cti{display:flex; flex-direction:column; line-height:1.2; min-width:0;}
@@ -126,13 +126,13 @@
     .zp-pocet[hidden]{display:none;}
     .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:4px;}
     .zp-compose{display:flex; gap:8px; padding:8px 12px; border-top:1px solid var(--line); align-items:flex-end;}
-    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text-ondark); outline:none;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text); outline:none;}
     .zp-ta:focus{border-color:var(--znacka-svetla);}
     .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:var(--r-md); background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}
     .zp-send svg{width:20px; height:20px; stroke-width:1.8;}
-    .zp-note{font-size:12px; color:var(--text-ondark-mute); text-align:center; padding:8px 12px 0; line-height:1.5;}
-    .zp-load{padding:28px; text-align:center; color:var(--text-ondark-mute); font-size:14px;}
+    .zp-note{font-size:12px; color:var(--muted); text-align:center; padding:8px 12px 0; line-height:1.5;}
+    .zp-load{padding:28px; text-align:center; color:var(--muted); font-size:14px;}
     /* KOSTRA NEŽ DORAZÍ DATA. #zp-root byl do příchodu skriptu prázdný a
        patička mu seděla těsně pod nohama; jakmile se vykreslila první karta,
        skočila patička o 321 px důl. Změřeno pozorovatelem layout-shift:
@@ -336,7 +336,7 @@
       html += '<a class="zp-thread" href="zpravy.html?l=' + encodeURIComponent(t.listing_id) + '&b=' + encodeURIComponent(t.buyer_id) + '&o=' + (t.is_owner ? '1' : '0') + '">' +
         '<div class="zp-ava">' + ICON_CHAT + '</div>' +
         '<div class="zp-tmain">' +
-          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--text-ondark-mute)">· okr. ' + esc(t.okres) + '</span>' : '') +
+          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--muted)">· okr. ' + esc(t.okres) + '</span>' : '') +
             (t.last_at ? '<span class="zp-tvremeno">' + timeTxt(t.last_at) + '</span>' : '') + '</div>' +
           '<div class="zp-trole">' + esc(role) + '</div>' +
           '<div class="zp-tlast">' + esc((t.last_body || '').slice(0, 60)) + '</div>' +

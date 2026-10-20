@@ -80,7 +80,7 @@ function zaklad(sel) {
 }
 
 /* SPECIFICITA. Bez ní test lže. Patička má .foot-col a:hover{color:
-   var(--text-ondark)} a o osm set řádků níž, v části pro tmavý pás,
+   var(--text)} a o osm set řádků níž, v části pro tmavý pás,
    .foot-col a:hover{color:var(--text-ondeep)}. Na stránce vyhraje to
    druhé a všechno je v pořádku — kdo ale zkouší pravidla po jednom,
    nahlásí jedenáct chyb, které neexistují. Proto se u každého prvku
