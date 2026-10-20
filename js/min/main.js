@@ -807,18 +807,35 @@
     return m;
   }
 
+  var _pnKlic = null, _pnHod = null;
   function presnyNazev() {
+    var klic = searchTerm + '\u0000' + DATA.length;
+    if (_pnKlic === klic) return _pnHod;
     var q = HL.norm(searchTerm);
-    return (q && znamaJmena()[q]) ? q : null;
+    _pnHod = (q && znamaJmena()[q]) ? q : null;
+    _pnKlic = klic;
+    return _pnHod;
+  }
+
+  function schovej(d, klic, hodnota) {
+    try { Object.defineProperty(d, klic, { value: hodnota, enumerable: false, configurable: true }); }
+    catch (e) {}
+    return hodnota;
+  }
+  function normObce(d) {
+    return d.__nm !== undefined ? d.__nm : schovej(d, '__nm', HL.norm(d.place));
+  }
+  function normOkresu(d) {
+    return d.__no !== undefined ? d.__no : schovej(d, '__no', HL.norm(d.okres));
   }
   function jePresna(d, q) {
-    return HL.norm(d.place) === q || HL.norm(d.okres) === q;
+    return normObce(d) === q || normOkresu(d) === q;
   }
   function sediMisto(d) {
     if (!mistoFiltr) return true;
-    if (mistoFiltr.typ === 'okres') return HL.norm(d.okres) === HL.norm(mistoFiltr.okres);
-    return HL.norm(d.place) === HL.norm(mistoFiltr.place)
-      && (!mistoFiltr.okres || HL.norm(d.okres) === HL.norm(mistoFiltr.okres));
+    if (mistoFiltr.typ === 'okres') return normOkresu(d) === HL.norm(mistoFiltr.okres);
+    return normObce(d) === HL.norm(mistoFiltr.place)
+      && (!mistoFiltr.okres || normOkresu(d) === HL.norm(mistoFiltr.okres));
   }
   function popisMista() {
     if (!mistoFiltr) return '';

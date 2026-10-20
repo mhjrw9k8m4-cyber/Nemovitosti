@@ -119,8 +119,15 @@ function okresZeStranky(html) {
   pravda('mapa čte z adresy ?obec=', /\[\?&\]obec=/.test(main));
   pravda('a nastaví podle něj PŘESNÉ místo, ne hledání textu',
     /mistoFiltr = \{ typ: 'obec', place: obec/.test(main));
+  /* Hlídá se SROVNÁNÍ CELÝCH NÁZVŮ, ne konkrétní jméno funkce: od
+     20. 10. se normalizované jméno obce schovává k záznamu (normObce,
+     viz oddíl 79 v docs/optimalizace.md), protože se počítalo pro
+     každou nabídku při každém vykreslení. Chování je totéž —
+     normObce(d) vrací HL.norm(d.place) — ale zápis se změnil a tahle
+     kontrola na něm spadla. Vzor proto bere obě podoby; co se nesmí
+     stát, je návrat k hledání podřetězce (indexOf). */
   pravda('přesné místo srovnává celý název obce i okresu',
-    /HL\.norm\(d\.place\) === HL\.norm\(mistoFiltr\.place\)/.test(main));
+    /(?:HL\.norm\(d\.place\)|normObce\(d\)) === HL\.norm\(mistoFiltr\.place\)/.test(main));
 }
 
 /* --- 4) CENA ZA METR MUSÍ BÝT TÁŽ JAKO V MAPĚ -----------------------

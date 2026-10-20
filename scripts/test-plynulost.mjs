@@ -151,6 +151,65 @@ try {
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();
+
+  /* =================================================================
+     A KOLIKRÁT SE PŘI NAČTENÍ NORMALIZUJE JMÉNO OBCE
+     =================================================================
+     Počet volání, ne milisekundy: je to bezrozměrné, takže se tím měří
+     kód, ne stroj, na kterém zkouška zrovna běží — týž důvod, proč se
+     výš měří POMĚR úloh.
+
+     Naměřeno 20. 10. na telefonu 390 px: při načtení BEZ JEDINÉHO
+     DOTEKU se HL.norm volalo 23 366× (18,8 ms) a po napsání dotazu
+     200 569× (108,4 ms). Všechno z presnyNazev(), jejíž odpověď závisí
+     jen na dotazu — a volala se z filtru pro KAŽDOU nabídku. Po
+     zapamatování výsledku a schování normalizovaných jmen k záznamu:
+     1 volání při načtení, 7 770 při psaní.
+
+     Mez je schválně volná (100): hlídá se ŘÁD, ne přesné číslo. Kdyby
+     se to zapamatování rozbilo, vyskočí to na desetitisíce. */
+  {
+    const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 780 },
+      isMobile: true, hasTouch: true, serviceWorkers: 'block' });
+    const p2 = await ctx2.newPage();
+    /* Metody modulu se obalí počítadlem DŘÍV, než si je main.js vezme
+       do proměnné — drží tentýž objekt, takže se započítají i volání
+       přes ni. */
+    await p2.addInitScript(() => {
+      window.__pkNorm = 0;
+      var ulozeno = null;
+      Object.defineProperty(window, 'PKHledani', {
+        configurable: true,
+        get: function () { return ulozeno; },
+        set: function (v) {
+          ulozeno = {};
+          for (const k of Object.keys(v)) {
+            const f = v[k];
+            if (typeof f !== 'function') { ulozeno[k] = f; continue; }
+            ulozeno[k] = k === 'norm'
+              ? function () { window.__pkNorm++; return f.apply(v, arguments); }
+              : function () { return f.apply(v, arguments); };
+          }
+        },
+      });
+    });
+    await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    await p2.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+      null, { timeout: 60000 }).catch(() => {});
+    const stav = await p2.evaluate(() => ({
+      norm: window.__pkNorm,
+      modul: !!window.PKHledani,
+      karet: document.querySelectorAll('#opp-list .opp-item').length,
+    }));
+    pravda('je co měřit — modul hledání je na stránce a výpis se vykreslil',
+      stav.modul && stav.karet > 0,
+      `modul ${stav.modul}, karet ${stav.karet}`);
+    pravda(`normalizace jmen se při načtení bez doteku volá jen párkrát (${stav.norm}×)`,
+      stav.norm <= 100,
+      `${stav.norm} volání — presnyNazev() se nejspíš přestalo pamatovat`
+      + ' a počítá se pro každou nabídku znovu');
+    await ctx2.close();
+  }
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}
   hotovo(e);

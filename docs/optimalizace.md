@@ -4842,3 +4842,89 @@ jen přetékající: u té první by maska lhala.
 
 Sabotáž: průchod přesunutý zpátky **pod** strážce `if (!host) return`
 shodí obě nové kontroly.
+
+## 79. Konstanta, která se počítala pro každou nabídku zvlášť *20. 10.*
+
+Hledalo se něco jiného. Oddíl 64 nechal `PKHledani` značkou `<script>`
+s odůvodněním „při startu se opravdu čte", a po zkušenosti z oddílu 76
+(kde se „čte se" ukázalo jako špatná otázka) stálo za to to přeměřit:
+**používá se ten modul, nebo se jen přečte do proměnné?**
+
+Metody modulu dostaly počítadlo dřív, než si je `main.js` vezme — drží
+tentýž objekt, takže se započítají i volání přes jeho proměnnou `HL`.
+
+| | volání `HL.norm` | čas |
+|---|---|---|
+| načtení, žádný dotek | **23 366** | 18,8 ms |
+| po napsání „benesov" (8 vykreslení) | **200 569** | 108,4 ms |
+
+**Hypotéza se nepotvrdila** — modul se opravdu používá a odložit ho
+nejde; závěr oddílu 64 platí. Jenže to číslo samo je nález.
+
+### Odkud to šlo
+
+Ze zásobníku: **všech 23 366 volání z `presnyNazev()`**. Ta funkce
+vrací dotaz, pokud je celý přesným názvem obce nebo okresu — tedy
+odpověď, která **závisí jen na dotazu**. Pro celé vykreslení je to
+konstanta. A volala se z filtru **pro každou nabídku** (`okPresne`):
+1 949 nabídek × ~12 průchodů.
+
+Při napsaném dotazu k tomu přibylo 46 712 volání z `jePresna()`, která
+normalizuje `d.place` a `d.okres` — neměnná pole záznamu — znovu při
+každém vykreslení.
+
+### Oprava: dvakrát totéž, co repozitář už dělá
+
+1. **`presnyNazev()` si pamatuje výsledek.** Klíč nese dotaz i
+   `DATA.length`, aby po dotažení nových nabídek nelhal — stejně jako
+   `znamaJmena()` o pár řádků výš.
+2. **Normalizované jméno obce a okresu se schová k záznamu** (`__nm`,
+   `__no`, neviditelné pro `Object.keys` i `JSON.stringify`) — týž
+   postup jako `__pk` v `js/klic.js`, u kterého stojí, že byl „nejdražší
+   funkcí stránky".
+
+| | před | po |
+|---|---|---|
+| načtení, žádný dotek | 23 366 volání / 18,8 ms | **1** / 0,2 ms |
+| po napsání dotazu | 200 569 / 108,4 ms | **7 770** / 7,7 ms |
+
+Tedy **o 93 % méně práce** při psaní do hledání — a to je přesně ta
+chvíle, kdy se na telefonu překresluje nejčastěji.
+
+Čísla jsou horní odhad: počítadlo v obalu samo něco stojí. Měřilo se
+jím ale před i po stejně, takže rozdíl platí.
+
+### Hlídač
+
+`scripts/test-plynulost.mjs` dostal novou kontrolu: při načtení bez
+doteku se normalizace jmen smí zavolat **nejvýš stokrát**. Počet volání,
+ne milisekundy — je to bezrozměrné, takže se tím měří kód, ne stroj, na
+kterém zkouška běží. Je to týž důvod, proč se v té zkoušce výš měří
+poměr úloh místo pevné meze. Mez je schválně volná: hlídá se řád, a
+kdyby se zapamatování rozbilo, vyskočí číslo na desetitisíce.
+
+### A jedna zkouška spadla na zápisu, ne na chování
+
+`test-okres-stranka.mjs` hlídá, že se místo z adresy `?obec=` srovnává
+**celým názvem**, ne hledáním podřetězce — jinak by „Lhota" vytáhla
+všechny Lhoty v republice. Dělá to ale čtením zdroje:
+
+```
+/HL\.norm\(d\.place\) === HL\.norm\(mistoFiltr\.place\)/
+```
+
+Po zapamatování se tentýž výraz píše `normObce(d) === HL.norm(…)`, takže
+kontrola spadla, i když se chování nezměnilo ani o písmeno. Vzor teď
+bere obě podoby a u něj stojí proč. Ověřeno, že pořád hlídá: záměna za
+`indexOf` ho shodí.
+
+Je to cena za kontrolu, která čte zápis místo vykreslení — a ta cena
+stojí za to. Kdyby se ta kontrola měřila v prohlížeči, musela by
+nasimulovat obec, jejíž název je podřetězcem jiné, a to je křehčí než
+jeden výraz ve zdroji.
+
+### Co si z toho odnést
+
+**Přeměřit starý závěr se vyplatí i tehdy, když se potvrdí.** Hypotéza
+„modul se jen čte" padla — a při jejím ověřování vypadlo z měření něco,
+co nikdo nehledal: že se konstanta počítá dvacetkrát tisíc za vykreslení.

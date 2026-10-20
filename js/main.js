@@ -1277,19 +1277,58 @@
     _jmena = m; _jmenaKlic = DATA.length;
     return m;
   }
-  /* Vrátí dotaz, pokud je CELÝ přesným názvem obce nebo okresu. */
+  /* Vrátí dotaz, pokud je CELÝ přesným názvem obce nebo okresu.
+
+     ZAPAMATUJE SI VÝSLEDEK, a není to předčasná chytrost: volá se to
+     z filtru PRO KAŽDOU NABÍDKU (viz okPresne níž), jenže odpověď
+     závisí jen na dotazu — pro celé vykreslení je to konstanta.
+     Naměřeno na telefonu 390 px: při načtení bez jediného doteku
+     23 366 volání HL.norm (18,8 ms), po napsání „benesov" 200 569
+     volání (108,4 ms). Je to táž úvaha, jakou má o kus výš znamaJmena()
+     a v js/klic.js pkey.
+     Klíč nese i délku dat: po dotažení nových nabídek se seznam známých
+     jmen přepočítá a stará odpověď by mohla lhát. */
+  var _pnKlic = null, _pnHod = null;
   function presnyNazev() {
+    var klic = searchTerm + '\u0000' + DATA.length;
+    if (_pnKlic === klic) return _pnHod;
     var q = HL.norm(searchTerm);
-    return (q && znamaJmena()[q]) ? q : null;
+    _pnHod = (q && znamaJmena()[q]) ? q : null;
+    _pnKlic = klic;
+    return _pnHod;
+  }
+  /* NORMALIZOVANÉ JMÉNO SE SCHOVÁ K ZÁZNAMU. Obec ani okres se u nabídky
+     nemění, ale jePresna() a sediMisto() je normalizovaly PRO KAŽDOU
+     NABÍDKU při KAŽDÉM vykreslení. Naměřeno na telefonu 390 px po
+     napsání „benesov": 46 712 volání HL.norm z jePresna.
+     Vlastnost je neviditelná pro Object.keys i JSON.stringify — týž
+     postup jako __pk v js/klic.js, aby se nepřimíchala do dat.
+     Platí to proto, že HL se bere jednou při startu a už se nemění
+     (js/min/hledani.js je na úvodní stránce značkou <script>). Kdyby se
+     ten modul jednou odkládal, musel by klíč nést i to, čí normalizace
+     hodnotu spočítala.
+     A jméno se po zapamatování už nemění: jediné místo, které d.place
+     přepisuje, je PKCisteni.pozemky() — a to běží PŘED voláním boot(),
+     tedy dřív, než se tahle hodnota vůbec poprvé spočítá. */
+  function schovej(d, klic, hodnota) {
+    try { Object.defineProperty(d, klic, { value: hodnota, enumerable: false, configurable: true }); }
+    catch (e) {}
+    return hodnota;
+  }
+  function normObce(d) {
+    return d.__nm !== undefined ? d.__nm : schovej(d, '__nm', HL.norm(d.place));
+  }
+  function normOkresu(d) {
+    return d.__no !== undefined ? d.__no : schovej(d, '__no', HL.norm(d.okres));
   }
   function jePresna(d, q) {
-    return HL.norm(d.place) === q || HL.norm(d.okres) === q;
+    return normObce(d) === q || normOkresu(d) === q;
   }
   function sediMisto(d) {
     if (!mistoFiltr) return true;
-    if (mistoFiltr.typ === 'okres') return HL.norm(d.okres) === HL.norm(mistoFiltr.okres);
-    return HL.norm(d.place) === HL.norm(mistoFiltr.place)
-      && (!mistoFiltr.okres || HL.norm(d.okres) === HL.norm(mistoFiltr.okres));
+    if (mistoFiltr.typ === 'okres') return normOkresu(d) === HL.norm(mistoFiltr.okres);
+    return normObce(d) === HL.norm(mistoFiltr.place)
+      && (!mistoFiltr.okres || normOkresu(d) === HL.norm(mistoFiltr.okres));
   }
   function popisMista() {
     if (!mistoFiltr) return '';
