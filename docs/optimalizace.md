@@ -4125,3 +4125,38 @@ se vůbec přečetlo (91, aby kontrola nemohla projít naprázdno) a že
 nikde není v rozpadu **jediný** údaj rovný součtu. Víc druhů projde —
 „28× na prodej, 3× dražba" nese informaci navíc. Sabotáž (rozpad se
 píše vždycky) shodila druhou kontrolu na 43 stránkách.
+
+## 69. Práh, který se hýbal s trhem, ne s webem *20. 10.*
+
+Dávka dat z 20. 10. shodila `scripts/test-strop-ceny.mjs`, aniž by se
+na stránkách cokoli pokazilo. Kontrola zněla:
+
+> z nedůvěryhodných je **část** státní půda (`spuNdv > 0 && spuNdv < ndv`)
+
+Smysl měla: u státní půdy podle § 12 je nízká cena za metr daná
+zákonem, ne chybou v inzerátu, takže tam místo varování „cena
+k ověření" stojí „úřední cena (§ 12)". Kdyby výjimka platila pro
+všechny nebo pro nikoho, kontrola pod ní by jednu z větví neprošla
+a tiše by procházela naprázdno.
+
+Jenže tenhle dotaz na data odpovídá **podle toho, co zrovna je na
+trhu**. Dnes byly všechny nedůvěryhodné nabídky státní půda — **8 z 8**
+— a zkouška spadla. Je to tentýž druh stárnutí jako práh „aspoň 60
+dlaždic" v `test-cisla-okresu` (oddíl o okresních číslech): práh, který
+se hýbe s daty, nehlídá web, ale náladu trhu.
+
+**Poměr se teď jen vypíše** (`· nedůvěryhodných 8, z toho státní půda
+8`) a nepodmiňuje nic. Místo něj se počítá, **kolik řádků se v které
+větvi opravdu ověřilo** — a každá větev se kontroluje jen tehdy, když
+do ní něco spadlo. Prázdná větev tím nemůže projít jako „žádná chyba".
+
+Sabotáže:
+
+1. Přestat počítat ověřené větve → „u státní půdy se „úřední cena"
+   opravdu ověřila (0×)" spadla.
+2. Přejmenovat třídu odznaku v generátoru → spadly obě kontroly, a to
+   s výpisem konkrétních obcí (Úněšov, Hodonice, Pernarec, Zálesí
+   u Bítova). **Napoprvé ta sabotáž neplatila:** přejmenoval jsem
+   `okr-urad` na `okr-urad-SABOTAZ`, jenže zkouška hledá podřetězec,
+   takže se dál shodovala. Sabotáž, která neplatí, je horší než žádná
+   — tvrdí, že je kontrola slabá, a přitom slabá byla ona.

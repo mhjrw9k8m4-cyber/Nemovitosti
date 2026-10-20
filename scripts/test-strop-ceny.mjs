@@ -181,13 +181,21 @@ pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad
        (§ 12)" — údaj přesnější, ne mlčení. Výjimka platí JEN pro ně:
        u všech ostatních se varování vyžaduje dál. */
     const spuNdv = ndv.filter((o) => MODEL.spravniCena(o));
-    pravda(`z nedůvěryhodných je část státní půda (${spuNdv.length} z ${ndv.length})`,
-      spuNdv.length > 0 && spuNdv.length < ndv.length,
-      `${spuNdv.length} z ${ndv.length} — výjimka níž by platila pro všechny nebo pro nikoho`);
+    /* KOLIK JICH JE, SE JEN ŘEKNE — NEPODMIŇUJE SE TÍM. Napsané to tu
+       bylo jako kontrola „část, ne všechny" (spuNdv > 0 && < ndv), aby
+       výjimka neplatila pro všechny nebo pro nikoho. Jenže to je práh,
+       který se hýbe s DATY, ne s webem: 20. 10. přišla dávka, ve které
+       bylo všech osm nedůvěryhodných nabídek státní půda — a zkouška
+       spadla, aniž by se na stránkách cokoli pokazilo. (Totéž se tu
+       jednou stalo s prahem „aspoň 60 dlaždic", viz test-cisla-okresu.)
+       Místo prahu se proto měří, že se obě větve opravdu prošly —
+       a to každá jen tehdy, když do ní vůbec něco spadlo. */
+    zpravy.push(`    · nedůvěryhodných ${ndv.length}, z toho státní půda ${spuNdv.length}`);
     /* Kdyby data přestala nedůvěryhodné nabídky obsahovat, kontrola pod
        tím by neměla co měřit a tiše by procházela. */
     pravda(`model nějaké nabídky za nedůvěryhodné má (${ndv.length})`, ndv.length > 0);
     const chybi = [];
+    const overeno = { urad: 0, overit: 0 };
     let nalezeno = 0;
     for (const o of ndv) {
       const f = `pozemky-okres-${okresSlug(o.okres)}.html`;
@@ -206,7 +214,7 @@ pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad
       const ceka = MODEL.spravniCena(o) ? 'okr-urad' : 'okr-overit';
       if (radek.indexOf(ceka) === -1) {
         chybi.push(`${f}: ${o.place} ${o.price} Kč bez odznaku (čekáno ${ceka})`);
-      }
+      } else if (ceka === 'okr-urad') { overeno.urad++; } else { overeno.overit++; }
       /* A naopak: u státní půdy tam to varování stát NESMÍ. */
       if (MODEL.spravniCena(o) && radek.indexOf('okr-overit') !== -1) {
         chybi.push(`${f}: ${o.place} ${o.price} Kč — úřední cena, a přesto varování`);
@@ -217,6 +225,18 @@ pravda('žádná vysázená cena za metr není nad mezí', nad.length === 0, nad
     pravda('u každé nedůvěryhodné nabídky stojí „cena k ověření" (u státní půdy „úřední cena")',
       chybi.length === 0,
       chybi.slice(0, 4).join(' | '));
+    /* A ŽE SE TA VĚTEV OPRAVDU PROŠLA. Bez tohohle by kontrola výš
+       prošla i tehdy, kdyby se jedna z obou podob odznaku na stránkách
+       vůbec nevyskytla — ověřených nula je taky „žádná chyba". */
+    if (spuNdv.length) {
+      pravda(`a u státní půdy se „úřední cena" opravdu ověřila (${overeno.urad}×)`,
+        overeno.urad === spuNdv.length, `ověřeno ${overeno.urad} z ${spuNdv.length}`);
+    }
+    if (ndv.length - spuNdv.length) {
+      pravda(`a u ostatních „cena k ověření" taky (${overeno.overit}×)`,
+        overeno.overit === ndv.length - spuNdv.length,
+        `ověřeno ${overeno.overit} z ${ndv.length - spuNdv.length}`);
+    }
   }
 }
 
