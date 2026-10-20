@@ -21,7 +21,7 @@ import pathMod from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
-import { domUtichlo, pripravenoVypis, pripravenoKdyz } from './zkouska-pripraveno.mjs';
+import { domUtichlo, pripravenoVypis, pripravenoKdyz, vykresleniPo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -307,11 +307,10 @@ if (podezrely) {
     return d ? { parcel: d.parcel, place: d.place } : null;
   }, CISTA);
   if (sParcelou) {
-    await p3.evaluate((q) => {
+    await vykresleniPo(p3, () => p3.evaluate((q) => {
       const e = document.getElementById('map-search');
       e.value = q; e.dispatchEvent(new Event('input', { bubbles: true }));
-    }, sParcelou.parcel);
-    await p3.waitForTimeout(700);
+    }, sParcelou.parcel));
     const nalez = await p3.evaluate(() => [...document.querySelectorAll('.opp-item')]
       .map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
     pravda('hledat jde i podle parcelního čísla', nalez.length > 0,

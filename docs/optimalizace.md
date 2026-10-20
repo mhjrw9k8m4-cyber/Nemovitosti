@@ -3720,3 +3720,59 @@ se to vede jako jeden úkol a ne dva.
 brotli, tedy na téže lince kolem **200 ms**, a k tomu ušetřený parser
 a kompilace 144 kB skriptu, což je na slabém telefonu víc než ten
 přenos.
+
+## 61. Dvacet dva čekání po `dispatchEvent` — a dva nálezy pod nimi *20. 10.*
+
+Po úklidu z 19. 10. (201 pevných čekání, 8,5 minuty) zbývala jedna
+rodina: **po ručně vyvolané události se čekalo pevnou dobu.** Takových
+míst bylo **22 v jedenácti zkouškách, dohromady 16,5 s**. Je to ta
+nejzrádnější podoba pevného čekání: `page.click()` si playwright
+opakuje, dokud prvek nereaguje, ale `evaluate` s
+`dispatchEvent(new Event('input'))` se provede hned — a když je čekání
+pod zátěží krátké, zkouška měří stav PŘED zásahem a tvrdí o něm něco,
+co o něm neplatí.
+
+**Čeká se teď na výsledek.** Filtr, řazení i hledání vedou v js/main.js
+na jedinou `renderList()`, která si přičte `window.PK_VYKRESLENI`
+(počitadlo pro zkoušky, web ho nepoužívá). Z toho je nový pomocník
+`vykresleniPo(p, zásah)` v `scripts/zkouska-pripraveno.mjs` — udělá
+zásah a počká, až výpis vznikne znovu. Kde výpis není (poznámka
+u okruhu hlídání, popis okna vývozu, stín u posuvného řádku), čeká se
+na tu konkrétní viditelnou změnu; dvě obsluhy jsou **synchronní**, takže
+se u nich nečeká vůbec (`rsStin` v js/main.js, `obnovOkruhPozn`
+v hlidani.html) — pevné čekání tam bylo zbytečné celé.
+
+Jedno pevné čekání **zůstalo schválně**: 1 800 ms, kterými
+`test-ceny-hledani` dokazuje, že se rejstřík obcí při pouhém otevření
+stránky NESTAHUJE. Dokazovat, že se něco nestalo, chce čas; na „DOM
+utichl" to zkrátit nelze, protože stahování by mohlo přijít až po něm.
+
+### Dva nálezy, které pevná čekání zakrývala
+
+1. **Adresa se zapisuje odloženě.** `zapisAdresu()` v js/main.js má
+   `setTimeout`, takže překreslení výpisu ještě neznamená, že je stav
+   v adrese. Jak jsem to čekání vyhodil jako zbytečné, spadlo šest
+   kontrol sdíleného odkazu („v hashi zůstal jen stav mapy"). Čeká se
+   tedy na to, že se hash proti předchozímu stavu změnil.
+2. **`scroll-behavior:smooth` plus `click` rovná se nestálá zkouška.**
+   `html{scroll-behavior:smooth}` ve stylopisu znamená, že si
+   playwright pole pod ohybem odroluje PLYNULE — a `fill` podruhé.
+   Měřila se přitom poloha seznamu návrhů: naměřeno pole na y 783–835
+   (u dolní hrany, seznam se otevřel nahoru) proti 435–487 po dojezdu
+   (seznam pod polem). Zkouška jednou vyšla a jednou ne. Delší čekání
+   je špatná odpověď; správná je **`reducedMotion: 'reduce'`** na tom
+   kontextu, protože stylopis má na tu předvolbu pravidlo, které
+   rolování i přechody vypne. Od té chvíle je stav po kliknutí hned
+   konečný a zkouška dává 32/0 opakovaně.
+
+Vedle toho se u téže zkoušky ukázalo, proč nelze čekat na „něco se
+změnilo" naslepo: do `napis()` se píše někdy týž text jako posledně,
+takže se nezmění nic a čekání došlo do stropu — **tři čekání po 10 s**.
+Čeká se proto na pořadí „seznam se zavřel → seznam se otevřel".
+
+### Čas
+
+Jedenáct zkoušek, které se měnily, před a po (týž stroj, jedna po
+druhé): **477 → 453 s**. Není to o rychlost — ušetřených 24 s je
+vedlejší produkt. Jde o to, že zkouška teď nemůže mlčky měřit stav před
+zásahem; a jedna skutečná nestálost se tím našla a odstranila.

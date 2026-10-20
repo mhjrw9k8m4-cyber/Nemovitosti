@@ -171,6 +171,17 @@ jedna sada za druhou.
    není navěšená obsluha, neudělá nic a zkouška měří cizí stav. Přesně
    tím spadl v CI běh 556 (`test-shoda`). Čeká se proto na VÝSLEDEK té
    události, ne na dobu po ní.
+   **A po ručně vyvolané události se čeká na VÝSLEDEK.** Filtr, řazení
+   i hledání vedou v js/main.js na jedinou `renderList()`, která si
+   přičte `window.PK_VYKRESLENI` — z toho je `vykresleniPo(p, zásah)`.
+   Dvě pasti pod tím (naměřeno 20. 10., `docs/optimalizace.md` 61):
+   `zapisAdresu()` zapisuje adresu ODLOŽENĚ (setTimeout), takže
+   překreslení ještě neznamená stav v adrese; a `html{scroll-behavior:
+   smooth}` dělá z `click` i `fill` plynulé rolování, takže se geometrie
+   měří v půlce pohybu — na to je `reducedMotion: 'reduce'` v kontextu,
+   ne delší čekání. Čekat naslepo na „něco se změnilo" nejde tam, kde se
+   píše týž text jako posledně: pak se čeká na pořadí „zavřelo se →
+   otevřelo se".
    Pomůcky: `scripts/zkouska-pripraveno.mjs` (čekání na stav),
    `scripts/zkouska-pad.mjs` (při pádu vypíše, kam zkouška došla —
    jinak v CI zbyde jen stopa výjimky a ani jedna ✕).

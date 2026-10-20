@@ -28,6 +28,9 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
+   scripts/zkouska-pripraveno.mjs (vykresleniPo). */
+import { pripravenoKdyz, vykresleniPo } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -130,14 +133,15 @@ async function zmerPoFiltru() {
   await naSeznam(p);
   await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
-  await p.waitForTimeout(1200);
+  /* Nářadí nad výpisem vzniká v témže běhu jako karty, ale pruh `#mc-akce`
+     se dosazuje až po nich — čeká se tedy na něj, ne na hodinky. */
+  await pripravenoKdyz(p, () => !!document.getElementById('mc-akce'));
   /* Řazením, ne filtrem druhu: mění pořadí, ne počet nabídek, takže
      výpis zůstane plný a kontrola níž má co měřit. */
-  await p.evaluate(() => {
+  await vykresleniPo(p, () => p.evaluate(() => {
     const s = document.getElementById('map-sort');
     if (s) { s.value = 'price_asc'; s.dispatchEvent(new Event('change', { bubbles: true })); }
-  });
-  await p.waitForTimeout(1800);
+  }));
   const v = await p.evaluate(() => {
     const y = (e) => e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
     const a = document.getElementById('mc-akce');

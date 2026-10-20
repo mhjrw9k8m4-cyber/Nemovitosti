@@ -23,6 +23,8 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
+import { pripravenoKdyz } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -274,7 +276,12 @@ try {
       r.checked = true;
       r.dispatchEvent(new Event('change', { bubbles: true }));
     });
-    await t.waitForTimeout(250);
+    /* Popis okna přepisuje `vyvozPopisStav()` v js/main.js synchronně
+       v obsluze `change`, takže se čeká jen na to, že se opravdu
+       přepsal na variantu GPX — ne na hodinky. Rozvržení a přetečení,
+       o které tu jde, měří kontroly pod tím. */
+    await pripravenoKdyz(t, () => /do navigace/.test(
+      (document.getElementById('vyv-popis') || {}).textContent || ''), null, 5000);
     const m = await t.evaluate(() => {
       const okno = document.querySelector('.vyv-okno');
       const ok = document.getElementById('vyv-ok');

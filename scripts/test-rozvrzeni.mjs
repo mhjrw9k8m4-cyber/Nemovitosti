@@ -950,7 +950,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       const row = document.querySelector('.rs-row');
       row.scrollLeft = row.scrollWidth;
       row.dispatchEvent(new Event('scroll'));
-      await new Promise((r) => setTimeout(r, 120));
+      /* Obsluha přepíná třídy SYNCHRONNĚ (rsStin v js/main.js), takže
+         po dispatchEvent je hotovo — čekat 120 ms nebylo na co. */
       return row.className;
     });
     pravda('a na konci řádku stín zmizí (neslibuje, co tam není)',

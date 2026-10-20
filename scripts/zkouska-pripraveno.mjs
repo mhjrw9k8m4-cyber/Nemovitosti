@@ -97,3 +97,25 @@ export async function domUtichlo(p, ticho = 400, strop = 15000) {
   return pripravenoKdyz(p, (t) => document.readyState === 'complete'
     && !!window.__pkTicho && (Date.now() - window.__pkTicho.kdy) > t, ticho, strop);
 }
+
+/* PŘEKRESLENÍ VÝPISU PO ZÁSAHU (úvodní stránka).
+ *
+ * Filtr, řazení i hledání vedou v js/main.js na jedinou funkci
+ * `renderList()`, a ta si na začátku přičte `window.PK_VYKRESLENI`
+ * (počitadlo je tam pro zkoušky, web ho sám nepoužívá). Čeká se tedy
+ * na to, že výpis vznikl ZNOVU — ne na dobu, o které si zkouška myslí,
+ * že na to stačí.
+ *
+ * Proč to tu je: po `dispatchEvent` zbylo ve zkouškách 22 míst
+ * s pevným čekáním, dohromady 16,5 s. Pevná doba je buď zbytečně
+ * dlouhá, nebo v CI pod zátěží krátká — a tam, kde je krátká, zkouška
+ * měří stav PŘED zásahem a tvrdí o něm něco, co o něm neplatí.
+ *
+ * Hledání je odložené (debounce), takže se čeká i na tu prodlevu;
+ * štědrý strop se platí jen tehdy, když se nestane nic.
+ */
+export async function vykresleniPo(p, zasah, strop = STROP) {
+  const pred = await p.evaluate(() => window.PK_VYKRESLENI || 0).catch(() => 0);
+  await zasah();
+  return pripravenoKdyz(p, (n) => (window.PK_VYKRESLENI || 0) > n, pred, strop);
+}

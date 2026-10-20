@@ -25,6 +25,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
+import { pripravenoKdyz } from './zkouska-pripraveno.mjs';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -107,7 +109,16 @@ async function prihlasen(upravy) {
   /* Formulář nového hlídání je na vlastní záložce; výchozí je „moje".
      Bez přepnutí je tlačítko „Uložit hlídání" v DOM, ale neviditelné. */
   const zal = await p.$('.hl-tab[data-zalozka="nove"]');
-  if (zal) { await zal.click(); await p.waitForTimeout(800); }
+  /* Po přepnutí záložky se čeká na to, že je tlačítko „Uložit hlídání"
+     opravdu vidět — neviditelnému prvku by `p.click()` ani `p.type()`
+     neřekly, že na něj nedosáhly (viz pravidlo 3 v CLAUDE.md). */
+  if (zal) {
+    await zal.click();
+    await pripravenoKdyz(p, () => {
+      const e = document.getElementById('ns-save');
+      return !!e && !!e.offsetParent;
+    }, null, 10000);
+  }
   return { ctx, p };
 }
 async function vyplnit(p, misto, km) {
@@ -117,7 +128,13 @@ async function vyplnit(p, misto, km) {
     const s = document.querySelector('#ns-okruh');
     s.value = k; s.dispatchEvent(new Event('change', { bubbles: true }));
   }, [misto, String(km)]);
-  await p.waitForTimeout(500);
+  /* Poznámku dosazuje `obnovOkruhPozn()` v hlidani.html SYNCHRONNĚ
+     v obsluze události, takže na hodinky není důvod čekat — čeká se
+     jen na to, že v ní vůbec něco stojí. CO v ní stojí, měří volající. */
+  await pripravenoKdyz(p, () => {
+    const e = document.querySelector('#ns-okruh-pozn');
+    return !!e && (e.textContent || '').trim().length > 0;
+  }, null, 5000);
   return p.evaluate(() => document.querySelector('#ns-okruh-pozn').textContent.trim());
 }
 

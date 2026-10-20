@@ -26,6 +26,53 @@ import { chromium } from 'playwright-core';
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
+import { pripravenoKdyz, domUtichlo } from './zkouska-pripraveno.mjs';
+
+/* Našeptávač je odložený (debounce), takže po napsání se čeká na jeho
+   ODPOVĚĎ. Čeká se na ZMĚNU proti stavu před psaním, ne na to, že
+   „něco je" — na stránce totiž zůstává předchozí výsledek a čekání na
+   neprázdno by skončilo hned. (Napoprvé to tak bylo a sedm kontrol
+   měřilo minulé hledání: u „Nesmyslno" stála ve výsledku pořád Aš.)
+     stavHledani      — co je na stránce teď (návrhy, výsledek, hláška)
+     odpovedZmenena   — čeká, až se to proti tomu změní
+     vysledekJe       — vypsala se cenová tabulka (.cenh-radek) */
+const stavHledani = (st) => st.evaluate(() => ({
+  n: document.querySelectorAll('.cenh-navrh').length,
+  v: ((document.getElementById('cenh-vysledek') || {}).innerText || '').trim().slice(0, 120),
+  h: ((document.querySelector('.cenh-hlaska') || {}).textContent || '').trim().slice(0, 60),
+}));
+const odpovedZmenena = (st, pred) => pripravenoKdyz(st, (q) => {
+  const n = document.querySelectorAll('.cenh-navrh').length;
+  const v = ((document.getElementById('cenh-vysledek') || {}).innerText || '').trim().slice(0, 120);
+  const h = ((document.querySelector('.cenh-hlaska') || {}).textContent || '').trim().slice(0, 60);
+  return n !== q.n || v !== q.v || h !== q.h;
+}, pred, 10000);
+const vysledekJe = (st) => pripravenoKdyz(st,
+  () => !!document.querySelector('.cenh-radek'), null, 10000);
+const navrhyOtevrene = (st) => pripravenoKdyz(st, () => {
+  const n = document.getElementById('cenh-navrhy');
+  return !!n && !n.hidden && n.children.length > 0;
+}, null, 10000);
+/* Rolování je plynulé (html{scroll-behavior:smooth}), a `click` na pole
+   pod ohybem si ho playwright sám odroluje do zorného pole. Dokud se
+   nezastaví, měří se poloha seznamu v půlce pohybu — kontrola „otevírá
+   se pod polem" pak jednou vyjde a jednou ne. */
+const rolovaniStoji = async (st) => {
+  await st.evaluate(() => { window.__pkRol = { y: Math.round(window.scrollY), n: 0 }; });
+  return pripravenoKdyz(st, () => {
+    const y = Math.round(window.scrollY);
+    const s = window.__pkRol;
+    if (s.y === y) s.n++; else { s.y = y; s.n = 0; }
+    return s.n >= 6;
+  }, null, 5000);
+};
+/* Po šipce a Enteru se seznam zavře; čeká se na to, ne na kartu —
+   tu měří kontrola. */
+const navrhyZavrene = (st) => pripravenoKdyz(st, () => {
+  const n = document.getElementById('cenh-navrhy');
+  return !n || n.hidden || n.children.length === 0;
+}, null, 10000);
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -69,7 +116,7 @@ try {
   p.on('pageerror', (e) => chybyKonzole.push(String(e)));
   await p.goto(`${BASE}/cena-pozemku.html`, { waitUntil: 'load' });
   await p.waitForSelector('#cenh-vstup', { timeout: 15000 });
-  await p.waitForTimeout(800);
+  await domUtichlo(p, 300);
 
   /* --- 1) dlouhé seznamy a mapa jsou pryč ------------------------- */
   const zbytky = await p.evaluate(() => ({
@@ -88,11 +135,15 @@ try {
   const stazeno = [];
   p.on('request', (r) => { if (/ceny-mist\.json/.test(r.url())) stazeno.push(r.url()); });
   await p.reload({ waitUntil: 'load' });
+  /* TOHLE JE MĚŘICÍ OKNO, ne čekání na připravenost: dokazuje se, že se
+     něco NESTALO, a to chce čas. Na „DOM utichl" se zkrátit nedá —
+     stahování by mohlo přijít až po něm a kontrola by mlčela. */
   await p.waitForTimeout(1800);
   pravda('rejstřík obcí se při pouhém otevření stránky nestahuje', stazeno.length === 0,
     `stáhlo se ${stazeno.length}×`);
   await p.click('#cenh-vstup');
-  await p.waitForTimeout(1200);
+  /* Čeká se na ten požadavek, ne na dobu, po které už tam asi bude. */
+  await p.waitForRequest(/ceny-mist\.json/, { timeout: 10000 }).catch(() => null);
   pravda('a stáhne se, až když se do pole klepne', stazeno.length > 0,
     'po zaměření pole se rejstřík nestáhl');
 
@@ -106,8 +157,9 @@ try {
   const rozdily = [];
   for (const okres of sCenou.slice(0, 5)) {
     await p.fill('#cenh-vstup', '');
+    const predOkresem = await stavHledani(p);
     await p.fill('#cenh-vstup', okres.n);
-    await p.waitForTimeout(700);
+    await odpovedZmenena(p, predOkresem);
     /* Vybrat se musí OKRES, ne stejnojmenná obec. */
     const vybral = await p.evaluate(() => {
       const li = [...document.querySelectorAll('.cenh-navrh')]
@@ -117,7 +169,7 @@ try {
       return true;
     });
     if (!vybral) { rozdily.push(`${okres.n}: v návrzích není jako okres`); continue; }
-    await p.waitForTimeout(400);
+    await vysledekJe(p);
     const zHledani = await p.evaluate(() => {
       const r = [...document.querySelectorAll('.cenh-radek')]
         .find((e) => /Zemědělská/.test((e.querySelector('.cenh-druh') || {}).textContent || ''));
@@ -142,13 +194,16 @@ try {
   pravda('je na čem zkoušet obec', !!obec, 'žádná obec v okrese s cenou');
   if (obec) {
     await p.fill('#cenh-vstup', '');
+    const predObci = await stavHledani(p);
     await p.fill('#cenh-vstup', obec[0]);
-    await p.waitForTimeout(700);
+    await odpovedZmenena(p, predObci);
     await p.evaluate(() => {
       const li = document.querySelector('.cenh-navrh');
       if (li) li.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     });
-    await p.waitForTimeout(400);
+    /* Čeká se na vypsanou tabulku, ne na dobu po klepnutí; VĚTU pod ní
+       měří kontrola níž. */
+    await vysledekJe(p);
     const text = await p.evaluate(() => (document.getElementById('cenh-vysledek') || {}).innerText || '');
     /* TOHLE JE TA NEJDŮLEŽITĚJŠÍ VĚTA NA CELÉ STRÁNCE. Bez ní člověk
        čte medián okresu jako cenu ve své vesnici — a podle toho se
@@ -167,8 +222,9 @@ try {
 
   /* --- 5) neznámá lokalita nesmí mlčet --------------------------- */
   await p.fill('#cenh-vstup', '');
+  const predNesmyslem = await stavHledani(p);
   await p.fill('#cenh-vstup', 'Nesmyslno');
-  await p.waitForTimeout(900);
+  await odpovedZmenena(p, predNesmyslem);
   const prazdno = await p.evaluate(() => ({
     navrhu: document.querySelectorAll('.cenh-navrh').length,
     text: (document.getElementById('cenh-vysledek') || {}).innerText || '',
@@ -184,8 +240,9 @@ try {
 
   /* --- 6) píše se bez háčků -------------------------------------- */
   await p.fill('#cenh-vstup', '');
+  const predBenes = await stavHledani(p);
   await p.fill('#cenh-vstup', 'benes');
-  await p.waitForTimeout(900);
+  await odpovedZmenena(p, predBenes);
   const bezHacku = await p.evaluate(() => [...document.querySelectorAll('.cenh-navrh')]
     .map((e) => (e.querySelector('.cenh-n-nazev') || {}).textContent));
   pravda('„benes" najde Benešov (háčky na telefonu nikdo nepíše)',
@@ -193,11 +250,12 @@ try {
 
   /* --- 7) klávesnice --------------------------------------------- */
   await p.fill('#cenh-vstup', '');
+  const predKolin = await stavHledani(p);
   await p.fill('#cenh-vstup', 'kolin');
-  await p.waitForTimeout(900);
+  await odpovedZmenena(p, predKolin);
   await p.press('#cenh-vstup', 'ArrowDown');
   await p.press('#cenh-vstup', 'Enter');
-  await p.waitForTimeout(500);
+  await navrhyZavrene(p);
   pravda('vybrat se dá i klávesnicí, nejen myší',
     await p.evaluate(() => !!document.querySelector('.cenh-karta')),
     'po šipce a Enteru se nic nevypsalo');
@@ -226,9 +284,18 @@ try {
    * telefonu visualViewport opravdu zmenší (vlastnost platformy). Co se
    * dokazuje: že se web podle naměřené volné výšky zařídí.
    */
+  /* ROLOVÁNÍ TADY MUSÍ BÝT OKAMŽITÉ. Stránka má html{scroll-behavior:smooth}
+     a `click` i `fill` si pole odrolují do zorného pole — plynule, tedy
+     několik set milisekund. Měří se přitom POLOHA seznamu návrhů, takže
+     v půlce pohybu vyjde něco jiného: naměřeno pole na y 783–835 (u dolní
+     hrany, seznam se otevřel nahoru) proti 435–487 po dojezdu (seznam pod
+     polem). Pevné čekání 700 ms to dřív zakrývalo.
+     `reducedMotion: 'reduce'` je ta pravá cesta, ne delší čekání: stylopis
+     na něj má @media pravidlo, které rolování i přechody vypne
+     (css/styles.css), takže je stav po kliknutí hned konečný. */
   const k = await prohlizec.newContext({
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
-    serviceWorkers: 'block', locale: 'cs-CZ',
+    serviceWorkers: 'block', locale: 'cs-CZ', reducedMotion: 'reduce',
   });
   await k.addInitScript(() => {
     const et = new EventTarget();
@@ -251,14 +318,20 @@ try {
   const q = await k.newPage();
   await q.goto(`${BASE}/cena-pozemku.html`, { waitUntil: 'load' });
   await q.waitForSelector('#cenh-vstup', { timeout: 15000 });
-  await q.waitForTimeout(900);
+  await domUtichlo(q, 300);
   pravda('falešný visualViewport se do stránky dostal',
     await q.evaluate(() => typeof window.__klavesnice === 'function'),
     'bez něj by celá sekce neměřila nic');
 
   const napis = async (text, volno) => {
     await q.click('#cenh-vstup');
+    /* Prázdné pole seznam zavře — čeká se na to, aby se pak dalo poznat,
+       že ho napsaný text znovu OTEVŘEL. Čekat na „stav se změnil" tady
+       nejde: psal by se někdy týž text jako posledně a změna by nepřišla
+       (naměřeno: tři čekání po 10 s do stropu). */
     await q.fill('#cenh-vstup', '');
+    await navrhyZavrene(q);
+    await rolovaniStoji(q);
     await q.evaluate((h) => window.__klavesnice(h, 0), volno);
     /* Co dělá skutečný prohlížeč: odroluje stránku tak, aby zaostřené
        pole zůstalo vidět. Bez toho by pole zůstalo pod klávesnicí a
@@ -266,11 +339,27 @@ try {
     await q.evaluate(() => {
       const r = document.getElementById('cenh-vstup').getBoundingClientRect();
       const dno = window.visualViewport.offsetTop + window.visualViewport.height;
-      if (r.bottom > dno - 8) window.scrollBy(0, Math.ceil(r.bottom - dno + 8));
+      /* `behavior: 'instant'` schválně: stránka má
+         html{scroll-behavior:smooth}, takže by se rolovalo půl sekundy
+         a geometrie seznamu by se měřila v půlce pohybu. Skutečnému
+         prohlížeči jde o KONCOVÝ stav, a ten je týž. */
+      if (r.bottom > dno - 8) {
+        window.scrollTo({ top: window.scrollY + Math.ceil(r.bottom - dno + 8), behavior: 'instant' });
+      }
       window.visualViewport.dispatchEvent(new Event('resize'));
     });
+    await rolovaniStoji(q);
     await q.fill('#cenh-vstup', text);
-    await q.waitForTimeout(700);
+    await navrhyOtevrene(q);
+    /* `fill` si pole taky odroluje do zorného pole — a plynule. Naměřeno:
+       bez čekání na dojezd stálo pole na y 783–835 (u dolní hrany)
+       a seznam se otevřel nahoru, kdežto po dojezdu je pole na 435–487
+       a seznam pod ním. Pevné čekání 700 ms to dřív zakrývalo. */
+    await rolovaniStoji(q);
+    /* A ještě na dojezd polohy seznamu: `nadKlavesnici()` v
+       js/ceny-hledani.js se pouští i z obsluhy `visualViewport`, takže
+       se poloha může po vykreslení ještě jednou přepočítat. */
+    await domUtichlo(q, 150);
     return q.evaluate(() => {
       const n = document.getElementById('cenh-navrhy');
       const h = document.querySelector('.cenh-hlaska');
@@ -331,7 +420,7 @@ try {
     }), 'v <ul> přibyl prvek, který není nabídkou');
   await q.keyboard.press('ArrowDown');
   await q.keyboard.press('Enter');
-  await q.waitForTimeout(500);
+  await navrhyZavrene(q);
   pravda('šipka a Enter vybere první z opravených návrhů',
     (await q.inputValue('#cenh-vstup')) === op.jmena[0],
     `první návrh „${op.jmena[0]}", v poli „${await q.inputValue('#cenh-vstup')}"`);

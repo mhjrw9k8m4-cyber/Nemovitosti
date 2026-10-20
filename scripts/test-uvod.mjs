@@ -26,7 +26,7 @@ import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
-import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { domUtichlo, vykresleniPo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -143,11 +143,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
    z prázdného seznamu musí vést cesta ven na jedno klepnutí, jinak je
    to slepá ulička a člověk odejde. */
 {
-  await p.evaluate(() => {
+  await vykresleniPo(p, () => p.evaluate(() => {
     const e = document.getElementById('map-search');
     e.value = 'qwertzuiop nic takoveho'; e.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  await p.waitForTimeout(1600);
+  }));
   const stav = await p.evaluate(() => {
     const h = document.querySelector('#map-count, .map-count');
     const telo = (document.querySelector('.opp-list') || document.body).textContent || '';
@@ -166,11 +165,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   pravda('a je odtud cesta ven na jedno klepnutí', stav.vychod.some((t) => /Zrušit/i.test(t)),
     `v prázdném seznamu jsou jen: ${stav.vychod.join(' | ') || '(nic)'}`);
   // uklidit po sobě, ať další kontroly vidí normální stav
-  await p.evaluate(() => {
+  await vykresleniPo(p, () => p.evaluate(() => {
     const e = document.getElementById('map-search');
     e.value = ''; e.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  await p.waitForTimeout(1200);
+  }));
 }
 
 /* --- PANEL FILTRŮ: CO JE FILTR A CO NENÍ ---------------------------

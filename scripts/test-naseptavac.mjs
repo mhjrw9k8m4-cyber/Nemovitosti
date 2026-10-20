@@ -24,6 +24,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky: odznaky filtrů kreslí
+   `prekresliChipy()` na konci `renderList()` v js/main.js, a ten si
+   přičte počitadlo. Viz scripts/zkouska-pripraveno.mjs (vykresleniPo). */
+import { vykresleniPo } from './zkouska-pripraveno.mjs';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -751,37 +755,42 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   const bezOdznaku = [];
   for (const o of ovladani) {
     const pred = (await st()).odznaky.length;
-    await p.evaluate((x) => {
+    await vykresleniPo(p, () => p.evaluate((x) => {
       const el = document.querySelector(x.sel);
       if (!el) return;
       if (x.druh === 'tlacitko') { el.click(); return; }
       el.value = x.hodnota;
       el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, o);
-    await p.waitForTimeout(650);
+    }, o));
     const po = await st();
     if (po.odznaky.length <= pred) bezOdznaku.push(o.popis);
     // zpátky do výchozího stavu, ať se filtry nesčítají
-    await p.evaluate((x) => {
+    await vykresleniPo(p, () => p.evaluate((x) => {
       const el = document.querySelector(x.sel);
       if (!el) return;
       if (x.druh === 'tlacitko') { el.click(); return; }
       el.value = x.druh === 'select' ? (el.querySelector('option[value="all"]') ? 'all' : '') : '';
       el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, o);
-    await p.waitForTimeout(450);
+    }, o));
   }
   pravda('každý zapnutý filtr je vidět jako odznak', bezOdznaku.length === 0,
     'bez odznaku zůstalo: ' + bezOdznaku.join(', '));
 
   /* Číslo v odznaku musí sedět s tím, kolik odznaků je vidět. Dřív to
      byly dva nezávislé výčty a rozešly se. */
-  await p.evaluate(() => {
-    const q = document.getElementById('map-search'); q.value = 'orná do 1 mil'; q.dispatchEvent(new Event('input', { bubbles: true }));
-    const m = document.getElementById('map-perm2'); m.value = '50'; m.dispatchEvent(new Event('change', { bubbles: true }));
-    document.getElementById('map-urgent').click();
-  });
-  await p.waitForTimeout(1100);
+  /* TŘI ZÁSAHY, TŘI ČEKÁNÍ. Dohromady by se nepoznalo, kdy je hotový
+     ten poslední: hledání je odložené (debounce), kdežto rozbalovátko
+     a přepínač překreslují hned — po jednom překreslení by zkouška
+     čtla stav, ve kterém věta ještě není. Konečný stav je týž. */
+  await vykresleniPo(p, () => p.evaluate(() => {
+    const q = document.getElementById('map-search');
+    q.value = 'orná do 1 mil'; q.dispatchEvent(new Event('input', { bubbles: true }));
+  }));
+  await vykresleniPo(p, () => p.evaluate(() => {
+    const m = document.getElementById('map-perm2');
+    m.value = '50'; m.dispatchEvent(new Event('change', { bubbles: true }));
+  }));
+  await vykresleniPo(p, () => p.evaluate(() => document.getElementById('map-urgent').click()));
   const spolu = await st();
   pravda('věta i ovládání dají dohromady odznaky', spolu.odznaky.length >= 4, JSON.stringify(spolu.odznaky));
   pravda('a číslo u panelu sedí s počtem odznaků', spolu.cislo === spolu.odznaky.length,
@@ -942,8 +951,10 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       'pravidlo .mcf-akce{flex-direction:column-reverse} v úzkém @media chybí');
   }
 
-  await p.evaluate(() => { const e = document.getElementById('map-cena'); e.value = '300000'; e.dispatchEvent(new Event('change', { bubbles: true })); });
-  await p.waitForTimeout(900);
+  await vykresleniPo(p, () => p.evaluate(() => {
+    const e = document.getElementById('map-cena');
+    e.value = '300000'; e.dispatchEvent(new Event('change', { bubbles: true }));
+  }));
   const sFiltrem = await stav();
   pravda('po nastavení filtru se počet na tlačítku změní', sFiltrem.cislo !== bez.cislo && sFiltrem.cislo > 0,
     `bez filtru ${bez.cislo}, s filtrem ${sFiltrem.cislo}`);

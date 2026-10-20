@@ -12,6 +12,9 @@
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
+   scripts/zkouska-pripraveno.mjs (vykresleniPo). */
+import { vykresleniPo, pripravenoKdyz } from './zkouska-pripraveno.mjs';
 await import('./falesna-supabase-chat.mjs');
 
 const BASE = 'http://127.0.0.1:8310';
@@ -59,29 +62,33 @@ pravda('a modul na adresy je na stránce',
   (await p.evaluate(() => typeof window.PKOdkaz)) === 'object', 'window.PKOdkaz chybí');
 
 /* --- nastavíme filtry tak, jak to udělá člověk ---------------------- */
-await p.click('[data-type="exekuce"]').catch(() => {});
-await p.waitForTimeout(400);
+/* Adresu zapisuje `zapisAdresu()` v js/main.js ODLOŽENĚ (setTimeout),
+   takže překreslení výpisu ještě neznamená, že je stav v adrese.
+   Čeká se proto na to, že se hash proti dnešnímu stavu ZMĚNIL — co
+   v něm stojí, měří kontroly pod tím. (Napoprvé jsem to čekání
+   vyhodil jako zbytečné a šest kontrol spadlo: v hashi zůstal jen
+   stav mapy.) */
+const hashPredFiltry = await p.evaluate(() => location.hash);
+await vykresleniPo(p, () => p.click('[data-type="exekuce"]').catch(() => {}));
 // Cena do: je to číselné pole, ne rozbalovátko.
-await p.evaluate(() => {
+await vykresleniPo(p, () => p.evaluate(() => {
   const el = document.getElementById('map-cena');
   if (el) { el.value = '900000'; el.dispatchEvent(new Event('change', { bubbles: true })); }
-});
-await p.waitForTimeout(500);
+}));
 /* ŘAZENÍ SE MUSÍ NASTAVIT NAPEVNO. Výchozí „Doporučené" schválně
    obsahuje náhodné přihození na každou návštěvu (prihozeniSeance()
    v js/poradi.js), takže dvě různé návštěvy vidí jiné pořadí — a je to
    tak správně. Porovnávat pořadí by pod ním neznamenalo nic. Navíc se
    tím zkouší, že se řazení vůbec sdílí; dřív se nesdílelo. */
-await p.evaluate(() => {
+await vykresleniPo(p, () => p.evaluate(() => {
   const el = document.getElementById('map-sort');
   if (el) { el.value = 'price_asc'; el.dispatchEvent(new Event('change', { bubbles: true })); }
-});
-await p.waitForTimeout(600);
+}));
 /* Rozbalovátko krajů (#map-kraj) v index.html DNES NENÍ — js/main.js na
    něj sahá, ale prvek v HTML chybí, takže krajFiltr zůstává 'all'. Do
    adresy se proto nedostane a zkoušet ho tu nemá smysl; v seznamu
    sdílených zůstává, aby odkaz fungoval, až se ovladač vrátí. */
-await p.waitForTimeout(1200);
+await pripravenoKdyz(p, (h) => location.hash !== h, hashPredFiltry, 10000);
 
 const poNastaveni = await p.evaluate(COJEVIDET);
 const hash = await p.evaluate(() => location.hash);

@@ -28,7 +28,7 @@ import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
-import { pripravenoVypis, pripravenoKdyz } from './zkouska-pripraveno.mjs';
+import { pripravenoVypis, pripravenoKdyz, vykresleniPo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 await import('./falesna-supabase-chat.mjs');
@@ -314,13 +314,12 @@ pravda('„Zobrazit skryté" ho vrátí do seznamu', poZobrazeni.celkem === 5, `
 pravda('vrácený skrytý pozemek je ztlumený', poZobrazeni.ztlumene === 1, `ztlumených ${poZobrazeni.ztlumene}`);
 
 // --- 4) Filtr přežije obnovení stránky --------------------------------
-await p.evaluate(() => {
+await vykresleniPo(p, () => p.evaluate(() => {
   const el = document.getElementById('map-cena');
   // Pozor: je to <select> s pevnými volbami. Hodnota, která mezi nimi není,
   // se tiše zahodí — proto 250000, ne kulatých 200000.
   if (el) { el.value = '250000'; el.dispatchEvent(new Event('change', { bubbles: true })); }
-});
-await p.waitForTimeout(600);
+}));
 const predObnovou = await p.evaluate(() => document.querySelectorAll('.opp-item').length);
 await p.reload({ waitUntil: 'domcontentloaded' });
 /* Čeká se na VÝSLEDEK, ne na hodiny — pevné čekání je vždycky jen sázka
@@ -404,12 +403,19 @@ if (misto) {
 }
 
 // Zmenšením okruhu musí novinky zmizet — Obec 4 i 5 jsou dál než 2 km.
+/* Čeká se na to, že se proužek PŘEPSAL — ne na to, co v něm stojí (to
+   měří kontroly pod tím) a ne na hodinky. Kdyby se nepřepsal, spadnou
+   kontroly se starým textem, což je poctivější než timeout. */
+const mistoPred = await p.evaluate(() => document.querySelector('.mp-hlavni').textContent);
 await p.evaluate(() => {
   const el = document.getElementById('misto-km');
   el.value = '2';
   el.dispatchEvent(new Event('change', { bubbles: true }));
 });
-await p.waitForTimeout(400);
+await pripravenoKdyz(p, (t) => {
+  const e = document.querySelector('.mp-hlavni');
+  return !!e && e.textContent !== t;
+}, mistoPred, 10000);
 const uzsi = await p.evaluate(() => ({
   hlavni: document.querySelector('.mp-hlavni').textContent,
   zvyrazneno: document.getElementById('misto-pruh').classList.contains('ma-novinky'),

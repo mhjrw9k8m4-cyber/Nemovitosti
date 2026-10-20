@@ -26,6 +26,9 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+/* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
+   scripts/zkouska-pripraveno.mjs (vykresleniPo). */
+import { vykresleniPo } from './zkouska-pripraveno.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -145,11 +148,10 @@ for (const skupina of jenCena.slice(0, 1)) {
     const e = document.getElementById('map-count');
     return e && /\d/.test(e.textContent);
   }, { timeout: 25000 }).catch(() => {});
-  await page.evaluate((obec) => {
+  await vykresleniPo(page, () => page.evaluate((obec) => {
     const i = document.getElementById('map-search');
     if (i) { i.value = obec; i.dispatchEvent(new Event('input', { bubbles: true })); }
-  }, cil.place);
-  await page.waitForTimeout(1500);
+  }, cil.place));
   const nasel = await page.evaluate((cena) => {
     const karty = [...document.querySelectorAll('#opp-list > li')].filter((li) => li.querySelector('.opp-body'));
     const i = karty.findIndex((li) => String(li.innerText).replace(/[\s\u00a0]/g, '').indexOf(cena + 'Kč') >= 0);
