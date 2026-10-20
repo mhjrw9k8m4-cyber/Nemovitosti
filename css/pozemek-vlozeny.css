@@ -568,7 +568,7 @@
       background:var(--plocha-zapustena); color:var(--text);
       font:inherit; font-size:16px; line-height:1.6; resize:vertical;
       transition:border-color var(--cas-zakladni) var(--ease);}
-    .pz-pozn-pole:focus{outline:none; border-color:var(--znacka-svetla);}
+    .pz-pozn-pole:focus{border-color:var(--znacka-svetla);}
     .pz-pozn-kde{margin:8px 0 0; font-size:12px; line-height:1.5;
       color:var(--muted);}
     .pz-loading, .pz-empty{padding:64px 16px; text-align:center; color:var(--muted);}

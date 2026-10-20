@@ -78,6 +78,14 @@ podruhé premisa „v datech taková nabídka je", kterou určuje skladba
 trhu. Mez se měří na nejhorším případě, ne na prvním, a premisa, kterou
 určují data, se nepodmiňuje — vypíše se a větev se přeskočí.
 
+A u sjednocování se ptej, co z toho je vůbec VIDĚT. 20. 10. měl web
+sedm podob zaměření; samo sjednocení do jedné by vypadalo jako hotová
+práce. Teprve změřený kontrast ukázal, že formulářová pole si obrys
+vypínala a nahradila ho změnou okraje na 1,2 : 1 — tedy že na nich
+klávesnicí nebylo vidět vůbec nic, zatímco zbytek webu má 5,5 : 1.
+Počet receptů je příznak; měřit se má ten rozdíl, kvůli kterému ty
+recepty existují.
+
 A když kontrola PROJDE, zeptej se jednou, **na čem** prošla — a to
 číslo si vypiš. 20. 10. se ukázalo, že úklid přelivů (oddíl 19) minul
 pět ozdobných přelivů, protože hlídač četl jen dva stylopisy a do

@@ -4465,3 +4465,87 @@ Sabotáž, všechny tři zvlášť: `999px` vrácené do `css/pozemek-vlozeny.cs
 i do vloženého stylu `hlidani.html` kontrolu shodí a vypíše
 `css/pozemek-vlozeny.css:138` a `hlidani.html:206` — tedy soubor
 i opravdový řádek; druhá definice `--r-pill` shodí pojistku o přepsání.
+
+## 75. Sedm podob zaměření — a u polí nebylo vidět žádné *20. 10.*
+
+Úkol začal jako kosmetika: ve stylopisu stálo devět zápisů tvaru
+`box-shadow:0 0 0 Npx rgba(…)`. Roztřídění podle selektoru ukázalo, že
+část z nich jsou halo kolem tečky nebo vnitřní vlasová linka, a ty se
+sjednocovat nemají. Zbylo **sedm prstenců u polí, v pěti receptech**.
+
+Místo hádání, jestli je to vidět, jsem **prošel sedm stránek
+tabulátorem** (97 zaměřitelných prvků) a u každého prvku zapsal, jak
+zaměření vypadá po doběhnutí přechodu. Vyšlo **sedm různých podob**:
+
+| podoba | kde |
+|---|---|
+| obrys 2px `--znacka-svetla`, odstup 2 px | odkazy, tlačítka |
+| obrys 2px `--znacka`, odstup 3 px | rozbalovátka `<summary>` |
+| obrys 2px `--znacka`, odstup 2 px | „Skrýt", „Jak to funguje" |
+| prstenec 4px `rgba(31,81,56,.14)` | hlídání, zprávy |
+| prstenec 3px `rgba(126,196,157,.16)` | přihlášení |
+| prstenec 3px `rgba(126,196,157,.22)` | hledání nad mapou |
+| prstenec 3px `rgba(176,116,42,.16)` | kalkulačka ceny (měděný) |
+
+### A pak se to otočilo
+
+Změřený kontrast ukázal, že o kosmetiku nejde:
+
+| | poměr |
+|---|---|
+| prstenec proti ploše | **1,11 – 1,31 : 1** |
+| změna barvy okraje mezi stavy (šedá → zelená) | **1,21 – 1,35 : 1** |
+| obrys 2 px všude jinde na webu | **5,50 : 1** |
+
+Pole si totiž obrys **vypínala** (`outline:none`) a nechávala za sebe
+jen ten okraj a prstenec. Obojí je pod prahem, kdy to oko pozná — takže
+formulářová pole byla jediná místa na webu, kde při ovládání klávesnicí
+nebylo vidět, kde člověk stojí. Hypotéza, že měděný prstenec stojí na
+měděném pásu a proto je jiný, se **nepotvrdila**: změřeno, že všech sedm
+polí leží na bílé.
+
+Vypnutý obrys přitom neměl u jediného z nich napsaný důvod — na rozdíl
+od `.leaflet-container`, kde stojí a platí.
+
+### Co se změnilo
+
+- **Obrys se nevypíná.** Dodá ho obecné pravidlo `:focus-visible`, tedy
+  jen při ovládání klávesnicí; po klepnutí myší zůstává vzhled stejný
+  jako dřív. Týká se i polí, která obrys rušila v základním pravidle
+  (`.hl-in`, `.zp-in`, `.zp-ta`, `.loc-input`, `.pz-pozn-pole`).
+- **Jeden obrys:** `2px solid var(--znacka-svetla)`, odstup 2 px.
+  Dřívější tmavší zeleň (7 pravidel) i odstupy 1 a 3 px jsou pryč.
+- **Jeden prstenec:** token `--prstenec-pole` místo pěti receptů. Zůstal
+  jako ozdoba — u tokenu je napsané, že ukazatelem zaměření není.
+- **`.vm-pole`** je pole bez rámečku uvnitř kresleného obalu; tam obrys
+  uvnitř nedává smysl, takže ho kreslí obal přes
+  `:has(input:focus-visible)`. Dřív se zaměření poznalo jen podle
+  okraje obalu, tedy na 1,21 : 1.
+
+Dvě výjimky zůstaly a dostaly napsaný důvod: `.dv-znovu` má inkoustový
+obrys, protože sedí na dražební oranžové ploše, a shluk na mapě má 3 px,
+protože leží na pestrých dlaždicích.
+
+**Po opravě** táž procházka přes týchž sedm stránek: **jedna podoba**
+obrysu. Třetí varianta, která se ve výpisu ještě objeví, je týž token —
+jen si ho plocha `.add-hero` záměrně ztmavuje na `#0F5C3B`, aby na ní
+vyšel kontrast (důvod je u toho pravidla popsaný už od dřívějška).
+
+### Hlídač
+
+Čtyři kontroly v `scripts/test-jeden-styl.mjs`, čtou stylopisy i vložené
+styly: že je co měřit (26 pravidel s obrysem), že obrys je všude týž, že
+se nikde nevypíná bez důvodu, a že prstenec pochází z tokenu (7×).
+K tomu se u každé výjimky ověřuje, že má napsaný důvod.
+
+Sabotáž, všechny tři zvlášť: obrys přepsaný na `3px solid var(--znacka)`
+s odstupem 4 px, vrácené `outline:none` u `.rv-pozn:focus` a vrácený
+opsaný prstenec do `zpravy.html` — každá shodí svou kontrolu a vypíše
+soubor, řádek i selektor.
+
+### Co si z toho odnést
+
+**Sjednocení je záminka, ne cíl.** Kdyby se těch pět prstenců jen
+přepsalo na jeden, vypadalo by to jako hotová práce — a pole by dál
+neměla vidět, kde stojí. Rozdíl udělalo to, že se místo počítání receptů
+změřilo, co z toho je vůbec vidět.

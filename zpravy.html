@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=b8eaad19">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=8bf57a25">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -62,8 +62,8 @@
     .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
     .zp-auth h2{font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;}
     .zp-auth p{font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
-    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--plocha-tlumena); color:var(--text); margin-bottom:8px; outline:none;}
-    .zp-in:focus{border-color:var(--znacka-svetla); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--plocha-tlumena); color:var(--text); margin-bottom:8px;}
+    .zp-in:focus{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
     .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
     /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
@@ -126,7 +126,7 @@
     .zp-pocet[hidden]{display:none;}
     .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:4px;}
     .zp-compose{display:flex; gap:8px; padding:8px 12px; border-top:1px solid var(--line); align-items:flex-end;}
-    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--plocha-tlumena); color:var(--text); outline:none;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--plocha-tlumena); color:var(--text);}
     .zp-ta:focus{border-color:var(--znacka-svetla);}
     .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:var(--r-md); background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}

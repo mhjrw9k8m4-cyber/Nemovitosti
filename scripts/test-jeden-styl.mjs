@@ -223,36 +223,37 @@ pravda('rozteče jsou nejvýš dvě a obě pojmenované', roztece.size <= 2
 // aby se dala pilulka jednou změnit: před opravou by se změnila na
 // padesáti třech místech a na dvanácti zůstala.
 // =====================================================================
+/* ZDROJE PRO OBĚ KONTROLY NÍŽ. Čtou se všechny ručně psané stylopisy
+   (ne *.min.css — to jsou výstupy) a vložené <style> ručně psaných
+   stránek. Vyrobené stránky se nečtou: pozemky-* vlastní <style>
+   nemají a pozemek-* do něj dostanou očištěný css/pozemek-vlozeny.css,
+   který se čte ze zdroje.
+   404 a diagnostika si schválně NENAČÍTAJÍ stylopis: mají vyjít i tehdy,
+   když ostatní soubory chybí, takže v nich tokeny k mání nejsou. */
+const JE_VYROBENA = /^(pozemek|pozemky)-/;
+const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html']);
+const zdroje = readdirSync('css')
+  .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
+  .sort()
+  .map((f) => ['css/' + f, readFileSync('css/' + f, 'utf8')]);
+for (const f of readdirSync('.')) {
+  if (!f.endsWith('.html') || JE_VYROBENA.test(f) || BEZ_STYLOPISU.has(f)) continue;
+  const h = readFileSync(f, 'utf8');
+  if (h.indexOf('<style') >= 0) zdroje.push([f, h]);
+}
+/* Komentáře pryč, ale délka zůstane — číslo řádku pak ukazuje na
+   opravdový řádek souboru. */
+const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
+const kdeJe = (t, i) => t.slice(0, i).split('\n').length;
+
 {
-  /* Čtou se všechny ručně psané stylopisy (ne *.min.css — to jsou
-     výstupy) a vložené <style> ručně psaných stránek. Vyrobené
-     stránky se nečtou: pozemky-* vlastní <style> nemají a pozemek-*
-     do něj dostanou očištěný css/pozemek-vlozeny.css, který se čte
-     výš ze zdroje. */
-  const JE_VYROBENA = /^(pozemek|pozemky)-/;
-  /* 404 a diagnostika si schválně NENAČÍTAJÍ stylopis: mají vyjít
-     i tehdy, když ostatní soubory chybí. Token by v nich byl
-     nedefinovaná proměnná a prohlížeč by deklaraci zahodil, takže
-     zaoblení se tam píše číslem — a je to tam tak napsané. */
-  const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html']);
-  const zdroje = readdirSync('css')
-    .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
-    .sort()
-    .map((f) => ['css/' + f, readFileSync('css/' + f, 'utf8')]);
-  for (const f of readdirSync('.')) {
-    if (!f.endsWith('.html') || JE_VYROBENA.test(f) || BEZ_STYLOPISU.has(f)) continue;
-    const h = readFileSync(f, 'utf8');
-    if (h.indexOf('<style') >= 0) zdroje.push([f, h]);
-  }
   const opsana = [];
   let sTokenem = 0;
   for (const [jmeno, syrove] of zdroje) {
-    /* Komentáře pryč, ale délka zůstane — číslo řádku pak ukazuje na
-       opravdový řádek souboru. */
-    const t = syrove.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
+    const t = bezKomentaru(syrove);
     sTokenem += (t.match(/border-radius\s*:[^;}]*var\(--r-pill\)/g) || []).length;
     for (const m of t.matchAll(/border-radius\s*:\s*([^;}]*\b999px[^;}]*)/g)) {
-      opsana.push(`${jmeno}:${t.slice(0, m.index).split('\n').length}  border-radius:${m[1].trim()}`);
+      opsana.push(`${jmeno}:${kdeJe(t, m.index)}  border-radius:${m[1].trim()}`);
     }
   }
   pravda(`je co měřit — pilulka se ve zdrojích vyskytuje (${sTokenem}× tokenem)`,
@@ -263,6 +264,92 @@ pravda('rozteče jsou nejvýš dvě a obě pojmenované', roztece.size <= 2
   pravda('pilulka se píše tokenem, ne opsaným číslem — i ve vložených stylech',
     opsana.length === 0,
     opsana.join('\n      ') + '\n      napiš var(--r-pill)');
+}
+
+// =====================================================================
+// ZAMĚŘENÍ
+//
+// Procházka tabulátorem přes sedm stránek (97 zaměřitelných prvků)
+// našla 20. 10. SEDM různých podob zaměření: tři obrysy (dvě zeleně,
+// odstupy 1, 2 i 3 px) a čtyři měkké prstence u polí. O tom, kterou
+// podobu prvek dostane, rozhodovalo jen to, které pravidlo ho chytí.
+//
+// Horší než nejednotnost bylo, co se naměřilo u polí. Ta si obrys
+// vypínala a nechávala za sebe změnu barvy okraje plus prstenec:
+//     okraj mezi stavy   1,21 – 1,35 : 1
+//     prstenec k ploše   1,11 – 1,31 : 1
+//     obrys jinde na webu        5,50 : 1
+// Pole tak byla jediná místa, kde klávesnicí nebylo poznat, kde člověk
+// stojí. Obrys se proto nevypíná a prstenec zůstal jako ozdoba —
+// jedna hodnota (--prstenec-pole) místo pěti.
+//
+// Pravidlo: obrys zaměření je 2px solid var(--znacka-svetla); odstup
+// 2 px, nebo -2 px tam, kde se kreslí dovnitř (záložka v pásu).
+// Prstenec u pole se bere z tokenu. Výjimky mají napsaný důvod.
+// =====================================================================
+{
+  const OBRYS = '2px solid var(--znacka-svetla)';
+  const ODSTUPY = new Set(['2px', '-2px']);
+  /* Obrys, který se liší, a proč. Bez důvodu tu nemá co dělat. */
+  const VYJIMKY_OBRYS = {
+    '.dv-znovu:focus-visible':
+      'tlačítko sedí na dražební oranžové ploše, kde by značková zeleň splynula s okrajem',
+    '.leaflet-marker-icon:focus-visible .pk-shluk':
+      'shluk leží na mapových dlaždicích — na pestrém podkladu se dvoupixelový obrys ztratí',
+  };
+  /* Kde se obrys vypíná a proč. */
+  const VYJIMKY_VYPNUTO = {
+    '.vm-pole input':
+      'vstup je bez rámečku uvnitř kresleného obalu; zaměření kreslí obal přes :has(input:focus-visible)',
+    '.leaflet-container':
+      'SVG kraje i canvas mají od Leafletu tabindex, takže by kolem tvaru vznikl obdélník',
+  };
+  const cizi = [], vypnute = [], cizePrsteny = [];
+  let sObrysem = 0, sPrstencem = 0;
+  for (const [jmeno, syrove] of zdroje) {
+    const t = bezKomentaru(syrove);
+    for (const m of t.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().replace(/\s+/g, ' ');
+      const telo = m[2];
+      const kde = `${jmeno}:${kdeJe(t, m.index)}`;
+      const obrys = (telo.match(/outline\s*:\s*([^;}]+)/) || [])[1];
+      if (obrys && /none/.test(obrys)) {
+        /* Výjimka se poznává podle toho, že selektor některý z vypsaných
+           klíčů OBSAHUJE — seznamy s více selektory se tak nemusí opisovat. */
+        if (!Object.keys(VYJIMKY_VYPNUTO).some((k) => sel.includes(k))) {
+          vypnute.push(`${kde}  ${sel.slice(0, 56)}`);
+        }
+        continue;
+      }
+      if (obrys && /:focus/.test(sel)) {
+        sObrysem++;
+        const odstup = ((telo.match(/outline-offset\s*:\s*([^;}]+)/) || [])[1] || '').trim();
+        const sedi = obrys.trim() === OBRYS && ODSTUPY.has(odstup);
+        if (!sedi && !Object.keys(VYJIMKY_OBRYS).some((k) => sel.includes(k))) {
+          cizi.push(`${kde}  ${sel.slice(0, 44)} → ${obrys.trim()} off:${odstup || '—'}`);
+        }
+      }
+      if (/:focus/.test(sel)) {
+        const bs = (telo.match(/box-shadow\s*:\s*([^;}]+)/) || [])[1];
+        if (!bs) continue;
+        if (bs.includes('var(--prstenec-pole)')) { sPrstencem++; continue; }
+        if (/\b0 0 0 \d/.test(bs)) cizePrsteny.push(`${kde}  ${sel.slice(0, 44)} → ${bs.trim().slice(0, 40)}`);
+      }
+    }
+  }
+  pravda(`je co měřit — pravidel s obrysem zaměření je ${sObrysem}`,
+    sObrysem > 15, `jen ${sObrysem} — čte kontrola vůbec stylopisy?`);
+  pravda('obrys zaměření je všude týž (2px var(--znacka-svetla), odstup 2 nebo -2 px)',
+    cizi.length === 0, cizi.join('\n      '));
+  pravda('nikde se obrys zaměření nevypíná bez napsaného důvodu',
+    vypnute.length === 0,
+    vypnute.join('\n      ') + '\n      změna barvy okraje sama dává 1,2 : 1 — to se nepozná');
+  pravda(`prstenec u pole se bere z tokenu (${sPrstencem}×)`,
+    cizePrsteny.length === 0, cizePrsteny.join('\n      '));
+  for (const [sel, duvod] of Object.entries({ ...VYJIMKY_OBRYS, ...VYJIMKY_VYPNUTO })) {
+    pravda(`výjimka „${sel}" má napsaný důvod`,
+      typeof duvod === 'string' && duvod.length >= 30, 'důvod chybí nebo je příliš krátký');
+  }
 }
 
 console.log('\nJeden styl — pojmenovaná hodnota místo opsaného čísla');
