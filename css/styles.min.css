@@ -2160,7 +2160,7 @@ to{opacity:1;transform:none}
 .por-tab tbody th::after,.por-tab thead th:first-child::after{content:"";position:absolute;top:0;right:0;bottom:-1px;width:10px;transform:translateX(100%);background:linear-gradient(90deg,rgba(8,20,14,0.10),rgba(8,20,14,0));pointer-events:none}
 @media (min-width:1060px){.por-tab tbody th::after,.por-tab thead th:first-child::after{display:none}
 }
-.por-tab-obal.je-dal{mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
+.por-tab-obal.je-dal,.dt-tab-obal.je-dal{mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent)}
 .por-nej{color:var(--c-ok-ink);font-weight:700}
 .hl-zaskrt{display:flex;align-items:flex-start;gap:8px;min-height:44px;padding:4px 0;cursor:pointer}
 .hl-zaskrt input{width:20px;height:20px;margin:2px 0 0;flex:none;accent-color:var(--znacka)}

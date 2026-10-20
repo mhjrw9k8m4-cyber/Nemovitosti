@@ -4720,3 +4720,125 @@ na `if (!window.PKVyvoz)` — jenže uvnitř bloku zůstal řádek, který
 modul stahuje, takže se stahoval dál a zkouška prošla. Neplatná sabotáž
 vypadá jako důkaz, a přitom nedokazuje nic; musela se vyhodit i ta
 vnitřní větev.
+
+## 77. Obálka, kterou nebylo vidět na vlastní dlaždici *20. 10.*
+
+Pokračování řady „hlídač platí jen pro soubory, do kterých se podívá"
+(oddíly 73–75). Tentokrát barvy: `scripts/test-barvy.mjs` měří
+**vykreslení** na vybraných stránkách, staticky čte jen `css/styles.css`
+— a do vložených `<style>` ručně psaných stránek se nedívá nikdo.
+
+Naměřeno: **13 hexů** mimo bílou a černou. Z toho jeden byl vada, kterou
+je vidět na první pohled, jakmile se změří.
+
+### Ikona pošty měla 1,93 : 1
+
+```
+.kt-mail .kt-ico{… background:var(--plocha-znacka);}      /* #004F2F */
+.kt-mail .kt-ico svg{… color:#081410;}                    /* skoro černá */
+```
+
+Tmavý inkoust na tmavě zelené dlaždici. **1,93 : 1** — grafickému prvku
+se žádá aspoň 3. Obálka na dlaždici byla spíš tušená než vidět, a bylo
+to tak na **pěti stránkách** (`data`, `kontakt`, `moje-data`,
+`odhlasit-maily`, `porovnani`), protože se to pravidlo kopírovalo.
+
+Bílá dá na téže ploše **9,72 : 1** a je to táž volba, jakou na
+`--plocha-znacka` dělá `.pf-avatar` i `.btn-primary`. Ověřeno snímkem
+před i po.
+
+### Tři odznaky s ručně namíchanou barvou
+
+`muj-inzerat.html` mělo tři stavy odznaku zapsané číslem, i když paletka
+ty barvy pojmenované má. U jednoho to nestačilo ani na čtení:
+
+| | plocha odznaku | bylo | je |
+|---|---|---|---|
+| `.mi-lstatus.ok` | rgba(31,163,99,.12) | `#178a53` → **3,85 : 1** | `var(--c-ok-ink)` → **6,15 : 1** |
+| `.mi-potiz` | rgba(232,179,65,.13) | `#6b4604` → 7,73 : 1 | `var(--c-warn)` → 5,71 : 1 |
+| `.mi-lstatus.ne` | rgba(176,58,46,.12) | `#9c3025` → 6,11 : 1 | `var(--c-exekuce-ink)` → 6,89 : 1 |
+
+První řádek je skutečná vada: 3,85 proti mezi 4,5 : 1 pro drobné písmo.
+U jantarové hlášky kontrast klesne, ale zůstává vysoko nad mezí —
+a `--c-warn` je token, který pro upozornění v soustavě je. Pravidlo
+„novou hodnotu nepřidávej, vyber nejbližší, která v soustavě je" platí
+i tady.
+
+### A třetí stránka bez stylopisu
+
+`inzerce.html` si nenačítá **žádný** stylopis (`rel="stylesheet"`: 0),
+takže tokeny nemá k dispozici a `#12241A` i `#0F5C3B` v ní stojí číslem
+po právu — stejně jako serif v `404.html`. Je to tedy třetí stránka té
+rodiny vedle `404.html` a `diagnostika.html` a patří do výjimek
+hlídačů i s důvodem.
+
+### Hlídač
+
+V `scripts/test-jeden-styl.mjs` přibylo: **vložený styl nesmí opisovat
+barvu, kterou už token má**. Obranná náhrada `var(--jméno, #záloha)` je
+v pořádku a vyjímá se; bílá a černá se nepočítají, protože bílá má
+v paletce dvě jména a `color:#fff` na značkové ploše píše i sám
+stylopis — kontrola by hlásila 40 míst, kde se nic nepokazilo.
+
+**Co se u toho opravilo na hlídači samotném:** kontroly četly celý
+soubor stránky, ne jen vnitřek `<style>`. Hlásily proto
+`predloha.html:179` — jenže tam ten `#F7F8F8` stojí v **odstavci, který
+úklid přelivů popisuje**. Všechny tři kontroly (pilulka, zaměření,
+barva) teď čtou jen vložený styl; zbytek stránky se vybílí na mezery
+stejné délky, aby čísla řádků dál ukazovala na opravdový řádek.
+
+Sabotáž: `background:#004F2F` místo `var(--plocha-znacka)` ve vloženém
+stylu `hlidani.html` kontrolu shodí a vypíše `hlidani.html:221
+#004F2F = --plocha-znacka`.
+
+## 78. Osm posuvných pruhů, jeden o sobě mlčel *20. 10.*
+
+Oddíl 66 dal tabulce porovnání masku „pokračuje vpravo". Otázka, která
+se tehdy nepoložila: **kolik takových pruhů web vlastně má?**
+
+Ve stylopisu je `overflow-x:auto` na **osmi** místech. Změřeno
+v prohlížeči na telefonu 390 px — ne ze zápisu, protože o tom, jestli
+pruh opravdu přetéká, rozhoduje obsah:
+
+| pruh | přetéká? | říká to? |
+|---|---|---|
+| `.por-tab-obal` (porovnání) | 745 / 348 | ano |
+| `.dt-tab-obal` (data, 2. tabulka) | **460 / 348** | **ne** |
+| `.dt-tab-obal` (data, 1. tabulka) | vejde se | — |
+| `.mc-akce`, `.uc-taby .wrap` (4 stránky) | vejde se | — |
+| `.recent-strip .rs-row`, filtry v panelu | v měřeném stavu na stránce nebyly | — |
+
+Takže **jeden jediný** — a je to táž vada, jakou řešil oddíl 66, jen na
+stránce, kam oprava nedosáhla. O pruzích na úvodní stránce se netvrdí
+nic: v měřeném stavu (nepřihlášený, zavřený panel) na stránce nebyly.
+
+### Proč oprava nedosáhla
+
+`stinyTabulek()` v `js/porovnani.js` hledá `.por-tab-obal` **uvnitř
+`#porovnani`**. Jenže `data.html` ten soubor taky načítá — a modul se
+ukončí hned na druhém řádku, `if (!host) return`, protože `#porovnani`
+na té stránce není.
+
+### Jak se to spravilo bez třetí kopie
+
+Logika stínu existuje dvakrát: `rsStin` v `js/main.js` a `stinPosuvu`
+v `js/porovnani.js`. U té druhé je napsané, proč se opakuje — vlastní
+soubor kvůli deseti řádkům by byl požadavek navíc na každé stránce,
+která je nepotřebuje. Třetí kopie tedy vznikat neměla.
+
+Nemusela: stačilo těch deset řádků **spustit dřív, než se modul ukončí**.
+`stinPosuvu` je teď nad strážcem, hned za ním jde průchod přes obaly,
+které na stránce stojí napevno (`.dt-tab-obal`), a teprve pak se modul
+rozhodne, jestli má co porovnávat. Maska je táž (jeden selektorový pár
+ve stylopisu), protože obě tabulky mají říkat totéž.
+
+### Hlídač
+
+V `scripts/test-porovnani.mjs` přibyl oddíl 4b: na `data.html` se změří,
+které obaly přetékají, a **každý přetékající** musí nést masku. Pojistka
+„je co měřit" hlásí poměr (1 ze 2) — kdyby se obsah tabulky jednou
+zúžil tak, že se vejde, kontrola by jinak prošla na prázdnu. Měří se
+jen přetékající: u té první by maska lhala.
+
+Sabotáž: průchod přesunutý zpátky **pod** strážce `if (!host) return`
+shodí obě nové kontroly.

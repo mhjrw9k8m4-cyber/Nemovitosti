@@ -7898,7 +7898,11 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    vypadalo jako chyba vykreslení. Táž maska jako u .rs-row
    a .mc-akce; třídu přepíná stinPosuvu v js/porovnani.js podle toho,
    jestli je ještě kam jet (po dojetí na konec by stín lhal). */
-.por-tab-obal.je-dal{mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);
+/* Tabulka na data.html má tutéž masku, a je to týž selektorový pár
+   schválně: obě tabulky se na telefonu posouvají do strany a obě to
+   mají říct stejně. Naměřeno 20. 10.: .dt-tab-obal přetékal 460/348
+   a nenapovídal nic. */
+.por-tab-obal.je-dal, .dt-tab-obal.je-dal{mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);
   -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);}
 .por-nej{color:var(--c-ok-ink); font-weight:700;}
 /* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré

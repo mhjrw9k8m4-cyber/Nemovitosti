@@ -336,6 +336,45 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
   await mob.close();
 }
 
+/* 4b) A TÁŽ MASKA NA data.html.
+   Tabulka „Data Parcelky" se na telefonu posouvá do strany stejně jako
+   tahle — naměřeno 20. 10.: 460 px obsahu do 348 px okna — a o tom, že
+   pokračuje, nedávala znát nic. Opravilo se to tím, že se stín zapíná
+   DŘÍV, než se js/porovnani.js ukončí na chybějícím #porovnani; tahle
+   kontrola hlídá, že ten průchod nikdo nepřesune zpátky pod strážce.
+   Měří se jen ten obal, který opravdu přetéká: první tabulka na
+   stránce se do okna vejde a maska by u ní lhala. */
+{
+  const mob2 = await prohlizec.newContext({ viewport: { width: 390, height: 780 },
+    isMobile: true, hasTouch: true, serviceWorkers: 'block' });
+  const pd = await mob2.newPage();
+  await pd.goto(`${BASE}/data.html`, { waitUntil: 'load' });
+  await pd.waitForSelector('.dt-tab-obal', { timeout: 30000 }).catch(() => {});
+  const stav = await pd.evaluate(() => {
+    const obaly = [...document.querySelectorAll('.dt-tab-obal')];
+    const pretekajici = obaly.filter((o) => o.scrollWidth - o.clientWidth > 8);
+    return {
+      obalu: obaly.length,
+      pretekajicich: pretekajici.length,
+      bezMasky: pretekajici.filter((o) => !o.classList.contains('je-dal'))
+        .map((o) => o.scrollWidth + '/' + o.clientWidth),
+      maska: pretekajici.length
+        ? ((getComputedStyle(pretekajici[0]).maskImage !== 'none'
+            ? getComputedStyle(pretekajici[0]).maskImage
+            : getComputedStyle(pretekajici[0]).webkitMaskImage) || '')
+        : '',
+    };
+  });
+  pravda(`je co měřit — na data.html přetéká ${stav.pretekajicich} z ${stav.obalu} tabulek`,
+    stav.pretekajicich > 0,
+    'žádná tabulka nepřetéká — kontrola by prošla na prázdnu');
+  pravda('a každá přetékající říká maskou, že pokračuje',
+    stav.bezMasky.length === 0, 'bez masky: ' + stav.bezMasky.join(', '));
+  pravda('a je to opravdu maska, ne jen třída',
+    /gradient/.test(stav.maska), `mask-image: ${stav.maska}`);
+  await mob2.close();
+}
+
 /* 5) ÚŘEDNÍ CENA (§ 12) MUSÍ BÝT V TABULCE POZNAT.
    U prodeje státní půdy stanoví cenu úřad, ne trh. Web to označuje na
    kartě, v bloku i rádcem na stránce pozemku a v krajských výpisech —

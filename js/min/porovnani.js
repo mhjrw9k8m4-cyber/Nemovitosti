@@ -1,5 +1,19 @@
 (function () {
   'use strict';
+
+  function stinPosuvu(el) {
+    if (!el) return;
+    var prepni = function () {
+      el.classList.toggle('je-dal', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    };
+    prepni();
+    el.addEventListener('scroll', prepni, { passive: true });
+    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(el); } catch (e) {} }
+  }
+
+  var pevne = document.querySelectorAll('.dt-tab-obal');
+  for (var i = 0; i < pevne.length; i++) stinPosuvu(pevne[i]);
+
   var host = document.getElementById('porovnani');
   if (!host) return;
   var FAV_KEY = 'pk_fav_v1';
@@ -92,15 +106,6 @@
       + '<tbody>' + radky + '</tbody></table></div>';
   }
 
-  function stinPosuvu(el) {
-    if (!el) return;
-    var prepni = function () {
-      el.classList.toggle('je-dal', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
-    };
-    prepni();
-    el.addEventListener('scroll', prepni, { passive: true });
-    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(el); } catch (e) {} }
-  }
   function stinyTabulek() {
     var obaly = host.querySelectorAll('.por-tab-obal');
     for (var i = 0; i < obaly.length; i++) stinPosuvu(obaly[i]);

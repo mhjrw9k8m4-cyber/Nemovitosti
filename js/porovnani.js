@@ -15,6 +15,27 @@
  */
 (function () {
   'use strict';
+  /* STÍN „POKRAČUJE VPRAVO" STOJÍ NAD STRÁŽCEM — a je to schválně.
+     Týž soubor se načítá i na data.html, kde #porovnani není, takže se
+     celý modul hned ukončil. Jenže tam je .dt-tab-obal, který na
+     telefonu přetéká 460/348 a o tom, že pokračuje, nedával znát nic.
+     Třetí kopie těch deseti řádků kvůli tomu vznikat nemusí: stačí je
+     spustit dřív, než se modul ukončí. (Druhá kopie je rsStin
+     v js/main.js a důvod, proč se opakuje, je popsaný níž.) */
+  function stinPosuvu(el) {
+    if (!el) return;
+    var prepni = function () {
+      el.classList.toggle('je-dal', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    };
+    prepni();
+    el.addEventListener('scroll', prepni, { passive: true });
+    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(el); } catch (e) {} }
+  }
+  /* Obaly, které na stránce stojí napevno (tabulka porovnání se teprve
+     vykresluje, tu řeší stinyTabulek níž). */
+  var pevne = document.querySelectorAll('.dt-tab-obal');
+  for (var i = 0; i < pevne.length; i++) stinPosuvu(pevne[i]);
+
   var host = document.getElementById('porovnani');
   if (!host) return;
   var FAV_KEY = 'pk_fav_v1';
@@ -155,15 +176,6 @@
 
      Třída se PŘEPÍNÁ, nestaví se napevno: po dojetí na konec už není
      co slibovat a stín by lhal. */
-  function stinPosuvu(el) {
-    if (!el) return;
-    var prepni = function () {
-      el.classList.toggle('je-dal', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
-    };
-    prepni();
-    el.addEventListener('scroll', prepni, { passive: true });
-    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(el); } catch (e) {} }
-  }
   function stinyTabulek() {
     var obaly = host.querySelectorAll('.por-tab-obal');
     for (var i = 0; i < obaly.length; i++) stinPosuvu(obaly[i]);

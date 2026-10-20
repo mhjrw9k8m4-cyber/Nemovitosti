@@ -231,7 +231,7 @@ pravda('rozteče jsou nejvýš dvě a obě pojmenované', roztece.size <= 2
    404 a diagnostika si schválně NENAČÍTAJÍ stylopis: mají vyjít i tehdy,
    když ostatní soubory chybí, takže v nich tokeny k mání nejsou. */
 const JE_VYROBENA = /^(pozemek|pozemky)-/;
-const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html']);
+const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html', 'inzerce.html']);
 const zdroje = readdirSync('css')
   .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
   .sort()
@@ -245,12 +245,25 @@ for (const f of readdirSync('.')) {
    opravdový řádek souboru. */
 const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '));
 const kdeJe = (t, i) => t.slice(0, i).split('\n').length;
+/* U STRÁNKY SE ČTE JEN VNITŘEK <style>. Zbytek se vybílí na mezery
+   stejné délky, aby čísla řádků ukazovala na opravdový řádek souboru.
+   Bez toho kontrola barev hlásila predloha.html:179 — jenže tam ten
+   #F7F8F8 stojí v odstavci, který úklid přelivů POPISUJE. */
+function jenStyl(jmeno, text) {
+  if (jmeno.endsWith('.css')) return text;
+  let ven = text.replace(/[^\n]/g, ' ');
+  for (const m of text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) {
+    const zac = m.index + m[0].indexOf(m[1]);
+    ven = ven.slice(0, zac) + m[1] + ven.slice(zac + m[1].length);
+  }
+  return ven;
+}
 
 {
   const opsana = [];
   let sTokenem = 0;
   for (const [jmeno, syrove] of zdroje) {
-    const t = bezKomentaru(syrove);
+    const t = bezKomentaru(jenStyl(jmeno, syrove));
     sTokenem += (t.match(/border-radius\s*:[^;}]*var\(--r-pill\)/g) || []).length;
     for (const m of t.matchAll(/border-radius\s*:\s*([^;}]*\b999px[^;}]*)/g)) {
       opsana.push(`${jmeno}:${kdeJe(t, m.index)}  border-radius:${m[1].trim()}`);
@@ -307,7 +320,7 @@ const kdeJe = (t, i) => t.slice(0, i).split('\n').length;
   const cizi = [], vypnute = [], cizePrsteny = [];
   let sObrysem = 0, sPrstencem = 0;
   for (const [jmeno, syrove] of zdroje) {
-    const t = bezKomentaru(syrove);
+    const t = bezKomentaru(jenStyl(jmeno, syrove));
     for (const m of t.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
       const sel = m[1].trim().replace(/\s+/g, ' ');
       const telo = m[2];
@@ -350,6 +363,53 @@ const kdeJe = (t, i) => t.slice(0, i).split('\n').length;
     pravda(`výjimka „${sel}" má napsaný důvod`,
       typeof duvod === 'string' && duvod.length >= 30, 'důvod chybí nebo je příliš krátký');
   }
+}
+
+// =====================================================================
+// BARVA, KTERÁ UŽ MÁ JMÉNO
+//
+// Naměřeno 20. 10.: ve vložených stylech ručně psaných stránek stálo
+// 13 hexů mimo bílou a černou. Tři z nich byly hodnoty, které paletka
+// už pojmenované má — a tři další byly ručně namíchané odstíny barev,
+// které jméno mají taky. Jedna z nich navíc nestačila na čtení:
+// #178a53 na ploše odznaku dával 3,85 : 1 proti mezi 4,5 : 1.
+//
+// Hlídá se jen to první: hodnota, kterou token UŽ MÁ, se nemá psát
+// číslem. „Namíchal jsem si vlastní odstín" tahle kontrola nepozná
+// a ani nemá — od toho je test-barvy, který měří vykreslení.
+// =====================================================================
+{
+  /* Tokeny se čtou z paletky; měří se proti nim všechno ostatní.
+     css/styles.css se nečte — tam ty tokeny bydlí. */
+  const paleta = new Map();
+  const styly = readFileSync('css/styles.css', 'utf8');
+  for (const m of styly.matchAll(/(--[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\s*[;}]/g)) {
+    const h = m[2].toLowerCase();
+    if (!paleta.has(h)) paleta.set(h, m[1]);
+  }
+  const opsane = [];
+  for (const [jmeno, syrove] of zdroje) {
+    if (jmeno === 'css/styles.css') continue;
+    const t = bezKomentaru(jenStyl(jmeno, syrove))
+      /* `var(--token, #zaloha)` je obranná náhrada pro případ, že token
+         chybí — ta se opisovat musí, jinak by náhrada nebyla žádná. */
+      .replace(/var\(\s*--[a-z0-9-]+\s*,\s*#[0-9a-fA-F]{3,8}\s*\)/g, 'var()');
+    for (const m of t.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+      const h = m[0].toLowerCase();
+      /* BÍLÁ A ČERNÁ SE NEPOČÍTAJÍ. Bílá má v paletce dvě jména
+         (--text-ondeep i --plocha-karta) a `color:#fff` na značkové
+         ploše je zápis, který používá i sám stylopis (.btn-primary).
+         Kontrola by hlásila 40 míst, kde se nic nepokazilo. */
+      if (h === '#fff' || h === '#ffffff' || h === '#000' || h === '#000000') continue;
+      if (!paleta.has(h)) continue;
+      opsane.push(`${jmeno}:${kdeJe(t, m.index)}  ${m[0]} = ${paleta.get(h)}`);
+    }
+  }
+  pravda(`je co měřit — paletka má ${paleta.size} pojmenovaných barev`,
+    paleta.size > 20, `jen ${paleta.size} — čte kontrola vůbec paletku?`);
+  pravda('žádný vložený styl neopisuje barvu, která už má jméno',
+    opsane.length === 0,
+    opsane.join('\n      ') + '\n      napiš var(--jméno); obranná náhrada var(--jméno, #…) je v pořádku');
 }
 
 console.log('\nJeden styl — pojmenovaná hodnota místo opsaného čísla');
