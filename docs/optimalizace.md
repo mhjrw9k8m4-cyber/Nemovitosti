@@ -3952,3 +3952,72 @@ Tři, a každá shodila něco jiného:
 3. **Odmítnutý slib zůstal v mapě** → spadlo „druhé klepnutí okno
    otevře". Tohle je přesně ten tichý druh poruchy, který by se jinak
    projevil až u člověka, kterému jednou vypadla síť.
+
+## 65. Kudy vede řez main.js — změřeno, zatím neprovedeno *20. 10.*
+
+`js/main.js` má 480 kB zdroje, 237 kB po minifikaci a **54,3 kB po
+brotli**. Měření pokrytím z oddílu 59 ukázalo, že se z něj na první
+obrazovce nevykoná 132 kB. Cíl je rozdělit ho tak, aby se výpis
+vykreslil **bez mapové knihovny** — na telefonu totiž `#leaflet-map`
+při startu nemá ani výšku (úvod jede v režimu seznamu), a Leaflet
+(36,1 kB brotli) přitom stojí na nasycené lince PŘED `main.js`.
+
+Než se do toho sáhne, bylo potřeba vědět, kde ten řez vlastně vede.
+
+### Co drží výpis u mapy
+
+Jediný příkaz: `if (!mapEl || typeof L === 'undefined') { …hláška…;
+return; }`. Ten `return` opouští celou obalující funkci, takže se
+nevykoná nic pod ním — a výpis je pod ním.
+
+### Jak je kód rozložený
+
+Horní úroveň za tím strážcem má **790 příkazů**. Hrubé rozdělení podle
+toho, jestli se v nich vyskytne `L.` nebo `map`:
+
+| | bloků | řádků |
+|---|---|---|
+| dotýká se mapy | 112 | 3 608 |
+| nedotýká se | 678 | 4 061 (53 %) |
+
+Takhle vzato jsou to **169 střídajících se pásem** — mapový a nemapový
+kód je prolezlý skrz naskrz a souvislý řez tudy nevede.
+
+**Jenže to je špatná míra.** Většina těch „mapových" pásem jsou
+DEKLARACE FUNKCÍ, které se při načtení jen zavedou a `map` se v nich
+dotkne až později. Když se spočítají zvlášť:
+
+| | bloků |
+|---|---|
+| deklarace funkcí (hoistují se, při načtení nic nedělají) | 200 |
+| výkonné příkazy celkem | 590 |
+| **z toho takových, které při načtení sáhnou na `L.` nebo `map.`** | **28** |
+
+A proměnných, které takový výkonný příkaz zakládá, je **osm**:
+`map` (ř. 901), `dotsRenderer` (958), `PkTvar` (1012), `dotLayer`
+(2168), `shlukLayer` (2583), `czBounds` (3349), `radarVrstva` (4612),
+`radarIkona` (4613).
+
+### Z toho plyne plán
+
+Řez nevede mezi dvěma soubory, ale mezi **deklaracemi a spuštěním**:
+osm proměnných se vytáhne nad strážce (jako `null`), 28 výkonných
+příkazů se složí do `spustMapu()` a ten se zavolá, až je `L` k mání.
+Deklarace funkcí zůstanou, kde jsou — hoistují se.
+
+**Co je na tom zrádné a proč se to nedělá naslepo:**
+
+* Příkazy jsou rozházené mezi ř. 901 a 8391 a některé pozdější čtou,
+  co ty dřívější založily (`DATA.forEach` staví značky z `PkTvar`).
+  Po přesunu musí zůstat jejich vzájemné pořadí.
+* Obsluhy událostí, které dnes volají `map.invalidateSize()` rovnou,
+  musí umět, že `map` je zatím `null`.
+* `L.Canvas.include` a `L.CircleMarker.extend` (ř. 1000–1018) se bez
+  knihovny mlčky přeskočí a tečky na mapě spadnou na kolečka — to je
+  přesně ta tichá porucha, kterou hlídá `scripts/test-tvary.mjs`.
+* Ověřit to umí jedině celá sada v prohlížeči (121 zkoušek, kolem
+  75 minut), a to po každém kroku.
+
+Řez je tedy proveditelný a je bodový, ne plošný. Je to ale samostatná
+práce na několik kroků s měřením mezi nimi — ne něco, co se přibalí
+k úklidu.
