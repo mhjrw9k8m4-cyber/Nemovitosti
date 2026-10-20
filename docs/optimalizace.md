@@ -4061,6 +4061,28 @@ Ta třetí řádka je ta práce, kterou plán výš nezmiňoval: přesunout
 až po dotažení dat. Strážce tedy neopouští modul, ale `boot` — a s ním
 i výpis.
 
+**4. Které z těch 27 se opravdu musí odložit.** Část z nich mapu jen
+zmíní v těle obsluhy, která se spustí až později. Po vyhození těl
+vnořených funkcí (párováním závorek — odsazení na to nestačí, obsluha
+u `mapEl.addEventListener` má tělo odsazené jako příkaz horní úrovně)
+vychází **22 příkazů, které na mapu sáhnou už při načtení**, a 7, které
+jen registrují obsluhu.
+
+Ani to dělení ale není hotové. Tři z té druhé hromádky běží taky hned,
+jen to vzor nepozná: `(function schovejPriTazeni(){…})()` je IIFE,
+`DATA.forEach(function (d, i) { … new PkTvar … })` volá obsluhu
+synchronně a `setTimeout(…, 300)` sice až za 300 ms, ale na mapu
+spoléhá. Zbývají tedy **čtyři**, které opravdu počkají na událost
+(změna velikosti okna, dvě obsluhy kreslení, zrušení místa) — a ty
+potřebují jen pojistku na `null`.
+
+**Z toho plyne i poznámka k nářadí:** v repozitáři není parser JavaScriptu
+(`scripts/minifikace.mjs` jen odstraňuje komentáře a mezery). Každé
+zpřesnění toho dělení vzorem našlo další výjimku, a přepisovat
+osmitisícový soubor regulárními výrazy je přesně ta chytrost, před
+kterou komentář v minifikaci varuje. Krok A se má dělat po jednotlivých
+místech a s ověřením, ne jedním skriptem.
+
 Řez je pořád proveditelný a pořád bodový. Je to ale **práce na 38
 funkcí**, ne na osm proměnných, a po každém kroku ji umí ověřit jedině
 celá sada v prohlížeči (121 zkoušek, ~75 minut). Měřicí skripty, kterými
