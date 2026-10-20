@@ -3260,3 +3260,42 @@ platilo jen na jedné šířce okna.
 
 Zkouška si třetí nástroj nově **přidá sama**, takže nestojí na dni
 v kalendáři.
+
+## 54. Co váží úvodní stránka — a co by na tom šlo změnit *20. 10.*
+
+Změřeno v prohlížeči na telefonním profilu (390 px, dotyk), dlaždice
+mapy podstrčené prázdné, takže čísla jsou jen to, co posílá web:
+
+| stránka | celkem | největší položky |
+|---|---:|---|
+| úvod | 1 517 kB | `opportunities.json` 639, `main.js` 230, `leaflet.js` 144, `uvod.min.css` 139 |
+| pozemek | 402 kB | `pozemek.js` 79, `pozemek.min.css` 59, `model.json` 58 |
+| okres | 184 kB | `region.min.css` 56, stránka 51, písma 46 |
+
+Největší je tedy datový soubor úvodní stránky. Po zabalení (gzip 9)
+má **77,4 kB** a v něm:
+
+| co by se změnilo | nezabalené | gzipem |
+|---|---:|---:|
+| dnešní stav | 621,9 kB | **77,4 kB** |
+| bez pole `url` | 461,4 kB | **58,8 kB** |
+| se slovníky (extra, druh, okres, type, site) | 530,5 kB | 76,2 kB |
+| obojí | 370,0 kB | 58,2 kB |
+
+**Slovníky nemají smysl** — a to je ten nález. Nezabalený soubor by
+zhubl o 91 kB, jenže gzip tytéž opakované řetězce najde sám: rozdíl
+po zabalení je 1,2 kB. Byla by to složitost (dekódování v prohlížeči)
+za nic. Totéž u zkracování adres: `url` váží 158,7 kB nezabaleně, ale
+po zabalení jen 18,6 — adresy se sdíleným začátkem gzip stlačí na
+12 %, takže ruční prefixy už nemají co ušetřit.
+
+**Jediná opravdová úspora je adresy vůbec neposílat** (−18,6 kB
+gzipem, tedy čtvrtina souboru). Úvodní stránka je k ničemu nepoužívá
+až na jednu věc: při klepnutí na pozemek je vloží do `sessionStorage`
+(`pk_open`), aby se stránka pozemku vykreslila okamžitě i s tlačítkem
+„Inzerát". Bez nich by tlačítko doskočilo, až dorazí okresní řez —
+a právě proti tomu ten handoff vznikl.
+
+Je to tedy **volba, ne vada**, a rozhodnout ji má měření na pomalé
+síti: o kolik dřív se úvod vykreslí proti tomu, o kolik později se
+na stránce pozemku objeví „Inzerát". Zapsáno, aby se na to nezapomnělo.
