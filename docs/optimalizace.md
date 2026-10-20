@@ -3661,3 +3661,62 @@ mapa na dohled** (dnes se stahuje vždy).
 
 Zapsáno jako samostatné úkoly, protože obojí je práce s rizikem
 regrese: obsluha klepnutí musí existovat dřív, než na ni někdo klepne.
+
+## 60. Měřicí server, který zabaluje — a co na telefonu stojí v cestě *20. 10.*
+
+Všechna dosavadní měření přenosu na místním serveru byla **nadsazená**:
+`python3 -m http.server` posílá soubory surově, kdežto hosting (Vercel)
+zabaluje sám. Ve scratchpadu proto teď stojí třicetiřádkový server,
+který balí brotli nebo gzipem podle `Accept-Encoding` — a servíruje
+dvě kopie webu zároveň: novou (port 8368) a pracovní kopii z HEAD
+(8369). Od téhle chvíle se měří na něm.
+
+Rozdíl je velký. Čas po první nabídku ve výpisu, telefon 390×844,
+pomalá 4G (1,6 Mb/s, 150 ms RTT):
+
+| server | čas |
+|---|---:|
+| surově (jako dosud) | 7 178 ms |
+| **zabalený (jako na hostingu)** | **3 541 ms** |
+
+Čísla z položek 54, 56 a 58 tedy platí jako **rozdíly**, ne jako
+absolutní časy — a u rozdílů je správná ta zabalená varianta, což tam
+u každého stojí.
+
+### Časová osa na telefonu (zabaleno)
+
+| dojelo | co | surová velikost |
+|---:|---|---:|
+| 1 271 ms | `data/mapa.json` (přednačtené, proto první) | 470,0 kB |
+| 1 456 ms | `vendor/leaflet/leaflet.css` | 14,5 kB |
+| 1 482 ms | `css/uvod.min.css` | 138,8 kB |
+| 1 608 / 1 723 ms | písma | 46,4 kB |
+| **2 269 ms** | **`vendor/leaflet/leaflet.js`** | 144,1 kB |
+| **3 101 ms** | **`js/min/main.js`** | 230,0 kB |
+| 3 545 ms | první nabídka ve výpisu | |
+
+Linka je nasycená, takže se soubory **řadí za sebe** — a mapová
+knihovna stojí v té řadě před `main.js`, bez kterého výpis nevznikne.
+
+### A na telefonu ji přitom není kam dát
+
+Měřeno na 390×844: `#leaflet-map` má **výšku 0 a není v okně** — úvod
+startuje v režimu seznamu (`.map-app.mv-seznam .map-holder{display:none}`)
+a na mapu se přepíná tlačítkem. Na 1 280 px je naopak mapa hned vidět
+(y 285, výška 592). Pravidlo v `scripts/test-leaflet.mjs` („knihovnu si
+dopředu bere jen index.html, tam mapa JE ta stránka") tedy platí pro
+monitor a pro telefon ne.
+
+**Proč to nejde opravit přesunutím značky `<script>`.** Výpis a mapa
+se staví v jednom běhu a ten běh začíná kontrolou
+`if (!mapEl || typeof L === 'undefined') { …hláška…; return; }` —
+bez knihovny se tedy nevykreslí ani výpis, a to schválně: v tu chvíli
+nebyl důvod to rozdělovat (knihovna chodila vždycky). Odložit knihovnu
+na telefonu znamená **rozdělit ten běh**: nejdřív výpis z dat, mapa až
+potom. To je tatáž práce jako rozdělení `main.js` (položka 59), takže
+se to vede jako jeden úkol a ne dva.
+
+Čekaná úspora, až se to udělá: `leaflet.js` + `leaflet.css` je 39 kB
+brotli, tedy na téže lince kolem **200 ms**, a k tomu ušetřený parser
+a kompilace 144 kB skriptu, což je na slabém telefonu víc než ten
+přenos.
