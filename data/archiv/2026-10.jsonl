@@ -342,3 +342,17 @@
 {"k":"Brod nad Dyjí|—|Břeclav|48.875|16.535#oyzr","m":"Brod nad Dyjí","o":"Břeclav","dr":"stavební pozemek","t":"sale","v":523,"c":4000000,"od":"2026-09-19","do":"2026-10-18","proc":"zmizela"}
 {"k":"Borovská|—|Praha|50.082|14.645#oz2e","m":"Borovská","o":"Praha","dr":"stavební pozemek","t":"sale","v":853,"c":11000000,"od":"2026-09-19","do":"2026-10-18","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-18","proc":"zmizela"}
+{"k":"Kobylí|—|Břeclav|48.936|16.907#4s39m","m":"Kobylí","o":"Břeclav","dr":"orná půda","t":"sale","v":14816,"c":510000,"od":"2026-09-14","do":"2026-10-19","proc":"zmizela"}
+{"k":"Vilémovice|—|Blansko|49.362|16.757#429np","m":"Vilémovice","o":"Blansko","dr":"orná půda","t":"sale","v":2510,"c":99000,"od":"2026-09-14","do":"2026-10-19","proc":"zmizela"}
+{"k":"Čebín|—|Brno-venkov|49.296|16.482#18igd","m":"Čebín","o":"Brno-venkov","dr":"orná půda","t":"sale","v":3943,"c":195700,"od":"2026-09-19","do":"2026-10-19","proc":"zmizela"}
+{"k":"Vojtanov|—|Cheb|50.148|12.304#m2rl","m":"Vojtanov","o":"Cheb","dr":"ostatní plocha","t":"sale","v":1280,"c":63860,"od":"2026-09-14","do":"2026-10-19","proc":"zmizela"}
+{"k":"Čebín|—|Brno-venkov|49.300|16.482#18igc","m":"Čebín","o":"Brno-venkov","dr":"orná půda","t":"sale","v":4738,"c":236900,"od":"2026-09-19","do":"2026-10-19","proc":"zmizela"}
+{"k":"Ondřejov|—|Praha-východ|49.917|14.784#1c65l","m":"Ondřejov","o":"Praha-východ","dr":"trvalý travní porost","t":"sale","v":16750,"c":8500000,"od":"2026-09-19","do":"2026-10-19","proc":"zmizela"}
+{"k":"Přerov|—|Přerov|49.519|17.421#2o0nf","m":"Přerov","o":"Přerov","dr":"stavební pozemek","t":"sale","v":1330,"c":4641700,"od":"2026-09-14","do":"2026-10-19","proc":"zmizela"}
+{"k":"Srdov|—|Litoměřice|50.601|14.290#1rqp5zr","m":"Srdov","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":547,"c":17574,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Rohatce|—|Litoměřice|50.461|14.229#1rqp5fb","m":"Rohatce","o":"Litoměřice","dr":"orná půda","t":"drazba","v":81752,"c":2795918,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Rohatce|—|Litoměřice|50.461|14.229#1rqp3h0","m":"Rohatce","o":"Litoměřice","dr":"orná půda","t":"drazba","v":103755,"c":3548421,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Rohatce|210/5|Litoměřice|50.461|14.229#1rqp5fa","m":"Rohatce","o":"Litoměřice","dr":"orná půda","t":"drazba","v":30523,"c":1043887,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Horní Nezly|St. 93|Litoměřice|50.577|14.229#1rqp5zq","m":"Horní Nezly","o":"Litoměřice","dr":"pozemek","t":"drazba","v":50,"c":63520,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Cerhonice|466/10|Písek|49.410|14.066#17alwdm","m":"Cerhonice","o":"Písek","dr":"pozemek","t":"drazba","v":1326,"c":2254000,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-19","proc":"zmizela"}
