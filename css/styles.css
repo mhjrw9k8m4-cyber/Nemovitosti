@@ -7825,6 +7825,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 @media (min-width:1060px){   /* na šířku se tabulka vejde celá, stín by lhal */
   .por-tab tbody th::after, .por-tab thead th:first-child::after{display:none;}
 }
+/* A VPRAVO? Tam dlouho nebylo nic. Naměřeno na 390 px: tabulka je
+   745 px široká, do okna se jí vejde 348 — 397 px (53 %) leží mimo
+   a hlavička „CENA ZA M²" se uřízla uprostřed slova, takže to
+   vypadalo jako chyba vykreslení. Táž maska jako u .rs-row
+   a .mc-akce; třídu přepíná stinPosuvu v js/porovnani.js podle toho,
+   jestli je ještě kam jet (po dojetí na konec by stín lhal). */
+.por-tab-obal.je-dal{mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);}
 .por-nej{color:var(--c-ok-ink); font-weight:700;}
 /* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré
    zprávy, zdražení v barvě upozornění — ne poplašně červeně, protože to

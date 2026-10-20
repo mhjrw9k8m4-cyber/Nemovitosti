@@ -304,6 +304,35 @@ pravda('a při ničem z toho stránka nespadla', chyby.length === 0, chyby.join(
     pravda('a zůstane vidět i po posunutí na druhý konec tabulky', v.po,
       `po posunu je „${v.nazev}" mimo okno (position: ${v.lepi})`);
   }
+
+  /* STÍN ZA PRAVOU HRANOU — „TABULKA POKRAČUJE".
+     Vlevo to prozradí přilepený první sloupec (kontroly výš), vpravo
+     dlouho nebylo nic: hlavička „CENA ZA M²" se uřízla uprostřed slova
+     a vypadalo to jako chyba vykreslení. Maska .je-dal to říká — a
+     musí UMĚT ZMIZET: po dojetí na konec už není co slibovat.
+     Čeká se na třídu, ne na čas: `scrollLeft` vyvolá událost scroll
+     až po kroku, takže čtení hned za zápisem měří stav před ním. */
+  await pm.evaluate(() => { document.querySelector('.por-tab-obal').scrollLeft = 0; });
+  const naZacatku = await pm.waitForFunction(
+    () => document.querySelector('.por-tab-obal').classList.contains('je-dal'),
+    null, { timeout: 15000 }).then(() => true).catch(() => false);
+  pravda('na začátku tabulky maska říká, že se jede dál', naZacatku,
+    'třída .je-dal na .por-tab-obal není — vpravo nic nenapovídá, že tabulka pokračuje');
+  const maskaZacatek = await pm.evaluate(() => {
+    const c = getComputedStyle(document.querySelector('.por-tab-obal'));
+    return c.maskImage !== 'none' ? c.maskImage : c.webkitMaskImage;
+  });
+  pravda('a je to opravdu maska, ne jen třída',
+    /gradient/.test(maskaZacatek || ''), `mask-image: ${maskaZacatek}`);
+  await pm.evaluate(() => {
+    const o = document.querySelector('.por-tab-obal');
+    o.scrollLeft = o.scrollWidth;
+  });
+  const naKonci = await pm.waitForFunction(
+    () => !document.querySelector('.por-tab-obal').classList.contains('je-dal'),
+    null, { timeout: 15000 }).then(() => true).catch(() => false);
+  pravda('a po dojetí na konec zmizí (jinak by lhala)', naKonci,
+    'maska zůstala i na konci tabulky');
   await mob.close();
 }
 

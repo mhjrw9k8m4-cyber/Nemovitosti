@@ -92,6 +92,20 @@
       + '<tbody>' + radky + '</tbody></table></div>';
   }
 
+  function stinPosuvu(el) {
+    if (!el) return;
+    var prepni = function () {
+      el.classList.toggle('je-dal', el.scrollWidth - el.clientWidth - el.scrollLeft > 8);
+    };
+    prepni();
+    el.addEventListener('scroll', prepni, { passive: true });
+    if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(el); } catch (e) {} }
+  }
+  function stinyTabulek() {
+    var obaly = host.querySelectorAll('.por-tab-obal');
+    for (var i = 0; i < obaly.length; i++) stinPosuvu(obaly[i]);
+  }
+
   function vykresli(nalezene, chybejicich) {
     host.innerHTML =
       tabulka(nalezene)
@@ -100,6 +114,7 @@
       + (chybejicich
         ? '<p class="por-pozn">' + chybejicich + ' uložených pozemků už v nabídce není — zdroj je stáhl.</p>'
         : '');
+    stinyTabulek();
   }
 
   function ukazka(D) {
@@ -143,6 +158,7 @@
       + tabulka(tri)
       + '<p class="por-pozn">Zeleně je <b>nejnižší cena za m²</b> a <b>největší výměra</b> '
       + 'z porovnávaných. Svoje pozemky sem dostanete záložkou na jejich kartě.</p></div>');
+    stinyTabulek();
   }
 
   var klice = ulozene();

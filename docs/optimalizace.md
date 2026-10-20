@@ -4021,3 +4021,34 @@ Deklarace funkcí zůstanou, kde jsou — hoistují se.
 Řez je tedy proveditelný a je bodový, ne plošný. Je to ale samostatná
 práce na několik kroků s měřením mezi nimi — ne něco, co se přibalí
 k úklidu.
+
+## 66. Tabulka porovnání vpravo mlčela *20. 10.*
+
+Porovnávací tabulka se na telefonu nerozpadá do karet — jede se do
+strany, aby zůstaly sloupce pod sebou. Naměřeno na 390 px: tabulka je
+**745 px** široká, do okna se jí vejde **348**, takže **397 px (53 %)**
+leží mimo.
+
+Vlevo to prozradí přilepený první sloupec a stín pod ním
+(`.por-tab tbody th::after`) — ten je ve stylopisu popsaný a je to
+promyšlené. **Vpravo ale nebylo nic:** hlavička „CENA ZA M²" se uřízla
+uprostřed slova a na snímku to vypadalo jako chyba vykreslení, ne jako
+pozvání švihnout prstem.
+
+Použila se **táž maska**, jakou má pruh naposledy prohlédnutých
+(`.rs-row`) a řada nástrojů nad výpisem (`.mc-akce`) — třída `.je-dal`,
+28 px přechodu. Třída se **přepíná**, nestaví napevno: po dojetí na
+konec už není co slibovat a stín by lhal. (Ten vlevo je oproti tomu
+statický — ale ten mluví o přilepeném sloupci, pod kterým se obsah
+opravdu protahuje celou dobu, a nad 1060 px, kde se tabulka vejde celá,
+se vypíná.)
+
+**Těch deset řádků se opakuje, a je to napsané proč:** funkci `rsStin`
+má `js/main.js`, který se na `porovnani.html` nenačítá. Vlastní soubor
+kvůli deseti řádkům by byl požadavek navíc na každé stránce, která je
+nepotřebuje.
+
+Hlídají to tři kontroly v `scripts/test-porovnani.mjs` (maska je na
+začátku, je to opravdu `mask-image`, a na konci mizí). Sabotáže:
+vyhodit volání `stinyTabulek()` → spadly první dvě; nastavit třídu
+napevno místo přepínání → spadla třetí.
