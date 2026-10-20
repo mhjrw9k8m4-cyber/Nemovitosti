@@ -7303,12 +7303,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kladno-stradonice-1dpty16.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-kladno-hradecno-1cpmcjn.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -8911,12 +8905,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-domazlice-pec-jss9jt.html</loc>
-    <lastmod>2026-10-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-cesky-krumlov-malsin-1i0wcfa.html</loc>
     <lastmod>2026-10-19</lastmod>
     <changefreq>weekly</changefreq>
@@ -8925,6 +8913,12 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-cesky-krumlov-malsin-1sjhhdi.html</loc>
     <lastmod>2026-10-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-domazlice-pec-jss9jt.html</loc>
+    <lastmod>2026-10-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
