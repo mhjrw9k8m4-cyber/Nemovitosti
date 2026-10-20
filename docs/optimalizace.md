@@ -3601,3 +3601,63 @@ adresu nepředává a že **historie cen na řez dosedne** (88 z 88).
 Kdyby řez na serveru chyběl, stránka si vezme celek: stáhne o 19 kB
 víc, místo aby skončila v nouzovém režimu se čtrnácti záložními
 nabídkami.
+
+## 59. Kam jde 680 kB kódu na úvodní stránce *20. 10.*
+
+Po datech (položka 58) jsou na úvodu největší položky stylopis a skripty.
+Změřeno **pokrytím v Chromiu** (CSS i JS coverage), po bajtech, na dvou
+šířkách (390 a 1 280 px) a po běžné interakci — hledání, čtyři filtry,
+řazení, uložení pozemku, otevření menu, doscrollování dolů. Nevyužité je
+jen to, co nepoužila **ani jedna** ze šířek: pravidlo pro monitor je na
+telefonu „nevyužité" a naopak, takže měřit na jedné šířce by nadsadilo.
+
+| soubor | posláno | použito | nevyužito | přes drát (brotli) |
+|---|---:|---:|---:|---:|
+| `js/min/main.js` | 228,4 kB | 96,3 (42 %) | **132,1 kB** | 52,6 kB |
+| `vendor/leaflet/leaflet.js` | 144,1 kB | 68,8 (48 %) | 75,3 kB | 36,1 kB |
+| `css/uvod.min.css` | 138,8 kB | 72,7 (52 %) | 66,1 kB | 21,9 kB |
+| `js/min/dotaz.js` | 17,4 kB | 5,7 (33 %) | 11,7 kB | 4,8 kB |
+| `js/min/hlidani-logika.js` | 12,5 kB | 4,1 (33 %) | 8,4 kB | 3,8 kB |
+| `js/min/hledani.js` | 7,8 kB | 0,7 (**9 %**) | 7,1 kB | 2,3 kB |
+| `js/min/auth.js` | 7,7 kB | 1,2 (15 %) | 6,5 kB | 1,9 kB |
+| **dohromady** | **680,0 kB** | **315,1 (46 %)** | **364,9 kB** | ~146 kB |
+
+**NEVYUŽITÉ NENÍ MRTVÉ, a to je u téhle metody to hlavní.** Pokrytí
+říká „tenhle bajt se v téhle návštěvě nevykonal", ne „tenhle bajt je
+zbytečný". Největší nepoužité bloky jsou poznat jménem a všechny patří
+k funkcím, které člověk vyvolá klepnutím:
+
+| co | kolik |
+|---|---:|
+| `otevriVyberMista` — ukázat místo na mapě | 18,4 kB |
+| `.rv-*` — rychlovýběr (listování kartami prstem) | 7,4 kB |
+| `showLocModal` + `.loc-*` — okénko „Kde hledat?" | 4,7 kB |
+| `rvKresli`, `rvRozhodni`, `rvPoznamka`, `rvChytejPrst` | 5,6 kB |
+| `.rz-*` — překryv „Na co mám" | 3,2 kB |
+| `vyvozStahni`, `vyvozPopisStav`, `.vyv-okno` | 4,0 kB |
+| `navrhySlovnik`, `ukazNavrhy` — našeptávač | 3,2 kB |
+| `zapniKresleni` — kreslení oblasti na mapě | 1,3 kB |
+| `.modal-*`, `.mapa-nedojela`, `@media print` | 4,3 kB |
+
+### Co z toho plyne
+
+Smazat není co; **odložit** je co. Osm souborů, které úvodní stránka
+stahuje a parsuje hned, se na první obrazovce téměř nepoužije:
+`hledani.js` (9 %), `auth.js` (15 %), `mapove-vrstvy.js` (9 %),
+`vyvoz.js` (17 %), `mereni.js` (19 %), `ulozene-ucet.js` (19 %),
+`rychlovyber.js` (21 %), `poznamky.js` (28 %) — dohromady **11,3 kB
+brotli** a, co je na telefonu dražší, práce parseru a kompilátoru.
+Jsou to už dnes samostatné soubory s `defer`, takže se nemusí nic
+rozdělovat: stačí je načíst až při prvním použití.
+
+Druhá, větší položka je `main.js`: 132 kB nevyužitého ve jmenovaných
+blocích. Tam už jde o rozdělení souboru, ne o přesun značky `<script>`,
+takže to je samostatná práce a chce vlastní měření (kolik z toho je
+opravdu za klepnutím a kolik běží pokaždé, jen na jiné šířce).
+
+A Leaflet: 75 kB nevyužitého ve knihovně, kterou nepíšeme. Vlastní
+mapová knihovna není na stole; co se dá, je stáhnout ji **až když je
+mapa na dohled** (dnes se stahuje vždy).
+
+Zapsáno jako samostatné úkoly, protože obojí je práce s rizikem
+regrese: obsluha klepnutí musí existovat dřív, než na ni někdo klepne.
