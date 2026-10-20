@@ -2441,7 +2441,7 @@ a bílou) zbylo **146**, a z nich byla většina legitimní:
 
 Skutečných duplikátů, tedy hodnot napsaných ručně tam, kde na ně token
 existuje, bylo **osm**: dvakrát `--c-warn`, dvakrát `--surface-2`,
-dvakrát `--ink-dark`, jednou `--znacka`, jednou `--c-ok-ink`. Všech
+dvakrát `--plocha-tmava`, jednou `--znacka`, jednou `--c-ok-ink`. Všech
 osm je nahrazeno.
 
 **Poučení je o měření, ne o barvách:** „266 hexů" je údaj, který zní

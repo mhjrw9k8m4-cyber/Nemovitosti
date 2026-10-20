@@ -179,7 +179,7 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
   };
   const PLOCHY = [['bílá karta', [255, 255, 255]],
     ['plocha stránky', naRgb(hodnoty.get('--bg') || '#ffffff')],
-    ['zapuštěná plocha', naRgb(hodnoty.get('--ink') || '#ffffff')]];
+    ['zapuštěná plocha', naRgb(hodnoty.get('--plocha-zapustena') || '#ffffff')]];
 
   const sNahradou = [...STYL.matchAll(/var\(\s*(--[A-Za-z0-9_-]+)\s*,\s*([^(),]+?)\s*\)/g)]
     .map((m) => [m[1], m[2]]);
@@ -324,6 +324,52 @@ const mrtve = [...urcene].filter((t) =>
   && !JEN_PRO_REZIM.test(t) && !ZDROJE.some((s) => s.includes(t)));
 zpravy.push('  · určených a nikde nepoužitých: ' + (mrtve.length || 0)
   + (mrtve.length ? ' (' + mrtve.slice(0, 8).join(', ') + ')' : ''));
+
+/* --- JEDNA BARVA, JEDNO JMÉNO (nebo napsaný důvod) ------------------
+   Naměřeno 20. 10.: #FFFFFF mělo v :root ŠEST jmen, #8A5512 dvě,
+   #8C2F1E tři a #EDF3EF dvě. Dva stejné hexy vedle sebe nejsou alias,
+   je to dvojí zdroj pravdy: rozejdou se a nikdo si toho nevšimne.
+   Kde se role opravdu mohou rozejít (text proti ploše, plovoucí pruh
+   proti kartě), se token ponechá — a je tady vypsaný i s tím proč.
+   Kde se rozejít nemají, token na ten druhý ODKAZUJE: `var(--jiny)`,
+   takže se nemá co rozejít (a tahle kontrola ho pak nevidí, protože
+   hodnota není hex). */
+const STEJNA_BARVA = {
+  '--plocha-karta': 'plocha karty a panelu — bílá, protože karta má ležet NAD stránkou',
+  '--text-ondeep': 'bílý TEXT na tmavém pásu; kdyby pás zesvětlal, mění se text, ne plocha',
+  '--plocha-plovouci': 'plovoucí pruh (lepivá hlavička) — má svou tlumenou dvojici --plocha-plovouci-tlum',
+  '--plocha-plovouci-plna': 'neprůhledná varianta pro dotyk; MUSÍ se rovnat <meta name="theme-color"> (dnes #FFFFFF), jinak je nahoře na telefonu vidět šev',
+};
+{
+  const koren = /:root\s*\{([\s\S]*?)\n\}/.exec(STYL);
+  const tok = {};
+  for (const d of (koren ? koren[1] : '').split(';')) {
+    const i = d.indexOf(':');
+    if (i < 0) continue;
+    const k = d.slice(0, i).trim(), v = d.slice(i + 1).trim();
+    if (k.startsWith('--')) tok[k] = v;
+  }
+  pravda('je co měřit — tokeny v :root', Object.keys(tok).length > 80,
+    `nalezeno ${Object.keys(tok).length}`);
+  const podle = {};
+  for (const [k, v] of Object.entries(tok)) {
+    const n = v.toLowerCase().replace(/\s+/g, '');
+    if (!/^#|^rgba?\(/.test(n)) continue;          // odkaz var(--x) tu není hodnota
+    const norm = n === '#fff' ? '#ffffff' : (n === '#000' ? '#000000' : n);
+    (podle[norm] = podle[norm] || []).push(k);
+  }
+  const bezDuvodu = [];
+  for (const [v, ks] of Object.entries(podle)) {
+    if (ks.length < 2) continue;
+    for (const k of ks) if (!STEJNA_BARVA[k]) bezDuvodu.push(`${v} → ${k}`);
+  }
+  pravda('táž barva pod víc jmény jen tam, kde je napsané proč',
+    bezDuvodu.length === 0,
+    bezDuvodu.join(' | ') + ' — buď ať jeden token odkazuje na druhý (var(--jiny)), nebo dopiš do STEJNA_BARVA, co ta jména rozlišuje');
+  const mrtveDuvody = Object.keys(STEJNA_BARVA).filter((k) => !tok[k]);
+  pravda('a žádný vypsaný důvod není mrtvý (ten token existuje)',
+    mrtveDuvody.length === 0, mrtveDuvody.join(', '));
+}
 
 console.log('\nTokeny stylu (barvy, míry, stíny)');
 console.log(zpravy.join('\n'));

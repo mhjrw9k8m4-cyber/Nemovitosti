@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=1fd19326">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585386c6">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -55,14 +55,14 @@
        ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
        pod ním by zůstal vlevo. */
     .zp-wrap{max-width:var(--m-uzky); margin-inline:auto;}
-    .zp-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1);}
+    .zp-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1);}
     /* Přihlášení */
     /* Vystředěná, ne přilepená vlevo: vpravo od ní nic není (měřeno
        na 1440 px, 696 px prázdna). Viz .auth-card v css/styles.css. */
     .zp-auth{padding:20px; max-width:var(--m-karta); margin:8px auto;}
     .zp-auth h2{font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;}
     .zp-auth p{font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
-    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text); margin-bottom:8px; outline:none;}
+    .zp-in{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--plocha-tlumena); color:var(--text); margin-bottom:8px; outline:none;}
     .zp-in:focus{border-color:var(--znacka-svetla); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
     .zp-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .zp-btn:hover{filter:brightness(1.05);} .zp-btn:active{transform:scale(.99);}
@@ -72,12 +72,12 @@
    kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
     /* BÍLÁ NAPEVNO SVÍTILA V TMAVÉM REŽIMU. Tlačítko „Vytvořit účet"
        a „Přidat vlastní pozemek" mělo background:#fff, tedy barvu
-       zapsanou napevno místo tokenu --panel. Vzniklo to v době, kdy web
+       zapsanou napevno místo tokenu --plocha-karta. Vzniklo to v době, kdy web
        měl i tmavý režim a ta bílá plocha v něm zůstávala svítit
        (24 864 px²); tmavý režim je pryč, ale důvod zůstává stejný:
        plocha má brát token, aby se s paletou nerozešla.
        Kontrast textu 6,83 : 1. */
-    .zp-btn.sec{background:var(--panel); color:var(--znacka-svetla);
+    .zp-btn.sec{background:var(--plocha-karta); color:var(--znacka-svetla);
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .zp-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--muted);}
     .zp-msg.err{color:var(--c-exekuce);}
@@ -85,7 +85,7 @@
     /* Seznam vláken */
     .zp-thread{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); cursor:pointer; text-decoration:none; color:inherit;}
     .zp-thread:last-child{border-bottom:0;}
-    .zp-thread:hover{background:var(--ink-soft2);}
+    .zp-thread:hover{background:var(--plocha-tlumena);}
     .zp-ava{width:44px; height:44px; border-radius:var(--r-md); flex:none; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14)); color:var(--znacka-svetla);}
     .zp-ava svg{width:22px; height:22px; stroke-width:1.64;}
     .zp-tmain{min-width:0; flex:1;}
@@ -110,7 +110,7 @@
     .zp-conv-head a.zp-view{margin-left:auto; font-size:13px; color:var(--znacka-svetla); text-decoration:none; font-weight:600; white-space:nowrap;}
     .zp-msgs{padding:16px 12px; min-height:280px; max-height:56vh; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
     .zp-b{max-width:76%; padding:8px 12px; border-radius:var(--r-md); font-size:14px; line-height:1.4; word-wrap:break-word; white-space:pre-wrap;}
-    .zp-b.them{align-self:flex-start; background:var(--ink-soft2); color:var(--text); border-bottom-left-radius:5px;}
+    .zp-b.them{align-self:flex-start; background:var(--plocha-tlumena); color:var(--text); border-bottom-left-radius:5px;}
     .zp-b.me{align-self:flex-end; background:var(--plocha-znacka); color:#fff; border-bottom-right-radius:5px;}
     .zp-time{font-size:11px; opacity:.65; margin-top:2px; display:block;}
     .zp-cti{display:flex; flex-direction:column; line-height:1.2; min-width:0;}
@@ -126,7 +126,7 @@
     .zp-pocet[hidden]{display:none;}
     .zp-tvremeno{font-size:11px; opacity:.6; flex:none; margin-left:4px;}
     .zp-compose{display:flex; gap:8px; padding:8px 12px; border-top:1px solid var(--line); align-items:flex-end;}
-    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--ink-soft2); color:var(--text); outline:none;}
+    .zp-ta{flex:1; resize:none; min-height:44px; max-height:120px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-md); font-size:16px; font-family:inherit; background:var(--plocha-tlumena); color:var(--text); outline:none;}
     .zp-ta:focus{border-color:var(--znacka-svetla);}
     .zp-send{flex:none; width:48px; height:44px; border:0; border-radius:var(--r-md); background:var(--plocha-znacka); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center;}
     .zp-send:disabled{opacity:.5;}

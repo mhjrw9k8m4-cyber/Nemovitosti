@@ -39,11 +39,11 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=1fd19326">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585386c6">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
-      background:linear-gradient(155deg, var(--ink-soft2), var(--ink-soft));
+      background:linear-gradient(155deg, var(--plocha-tlumena), var(--plocha-karta));
       border:1px solid var(--line-strong); box-shadow:var(--e3);
       animation:authFade .35s var(--ease) both;}
     .pf-card::before{content:""; position:absolute; inset:0; pointer-events:none;
@@ -60,13 +60,13 @@
        znamená „v pořádku, běží" — to je přesně, co ta tečka říká. */
     .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-ok); box-shadow:0 0 0 3px rgba(31,163,99,0.22);}
     .pf-id .pf-mail{font-size:16px; font-weight:700; color:var(--text); overflow-wrap:anywhere; margin-top:2px; line-height:1.3;}
-    .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:var(--ink); border:1px solid var(--line-strong);
+    .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:var(--plocha-zapustena); border:1px solid var(--line-strong);
       color:var(--muted); border-radius:var(--r-sm); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni), border-color var(--cas-zakladni);}
     .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
     .pf-logout:hover{color:var(--text); border-color:var(--znacka-svetla);}
     .pf-logout span{display:none;}
     .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px;}
-    .pf-stat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
+    .pf-stat{background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
     /* ZDVIH JEN TAM, KDE SE NĚCO STANE. Pravidlo platilo pro všechny
        tři dlaždice, ale obsluhu klepnutí měla jen „Uložené pozemky".
        Dvě dlaždice se tedy pod myší zvedly a slíbily klepnutí, které
@@ -94,7 +94,7 @@
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
     .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
     /* Prázdný stav */
-    .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--ink-soft);}
+    .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--plocha-karta);}
     .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center;
       background:rgba(126,196,157,.09); border:1px solid var(--line-strong);}
     .pf-empty-ico svg{width:32px; height:32px; color:var(--text);
@@ -107,7 +107,7 @@
     .pf-empty .pf-add{width:auto; padding-left:20px; padding-right:20px;}
     /* Uložené pozemky — čisté karty */
     #mi-saved{display:flex; flex-direction:column; gap:8px;}
-    .sv-item{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px; transition:border-color var(--cas-zakladni) var(--ease);}
+    .sv-item{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px; transition:border-color var(--cas-zakladni) var(--ease);}
     .sv-item:hover{border-color:var(--line-strong);}
     .sv-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
     .sv-place{font-weight:700; font-size:14px; color:var(--text); line-height:1.2;}
@@ -122,13 +122,13 @@
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
     /* Moje inzeráty — čisté karty se statistikami */
     #mi-list{display:flex; flex-direction:column; gap:12px;}
-    .mi-lcard{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); padding:12px; box-shadow:var(--e1);}
+    .mi-lcard{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-lg); padding:12px; box-shadow:var(--e1);}
     .mi-lthumb{position:relative; margin-bottom:12px;}
     .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:var(--r-md); display:block;}
     .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
     .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px;}
     .mi-lplace{font-size:16px; font-weight:700; color:var(--text); line-height:1.2; letter-spacing:-0.01em;}
-    .mi-lstatus{flex:none; font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; white-space:nowrap; background:var(--ink); color:var(--muted); border:1px solid var(--line-strong);}
+    .mi-lstatus{flex:none; font-size:12px; font-weight:700; padding:4px 8px; border-radius:999px; white-space:nowrap; background:var(--plocha-zapustena); color:var(--muted); border:1px solid var(--line-strong);}
     .mi-lstatus.ok{background:rgba(31,163,99,.12); color:#178a53; border-color:rgba(31,163,99,.4);}
     /* Nález noční kontroly. Jantar, ne červená: inzerát dál běží, jen je
        na něm co spravit — je to upozornění, ne rozsudek. */
@@ -146,7 +146,7 @@
     .mi-ceka-ne{background:rgba(176,58,46,.1); border-color:rgba(176,58,46,.35);}
     .mi-lstatus.ne{background:rgba(176,58,46,.12); color:#9c3025; border-color:rgba(176,58,46,.4);}
     .mi-lstats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px;}
-    .mi-lstat{background:var(--ink); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 8px; text-align:center;}
+    .mi-lstat{background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-md); padding:8px 8px; text-align:center;}
     .mi-lstat b{display:block; font-size:20px; font-weight:700; color:var(--znacka-svetla); font-variant-numeric:tabular-nums; line-height:1.1;}
     .mi-lstat span{display:block; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.02em; margin-top:4px;}
     /* Tlačítka jsou tři („Otevřít inzerát", „Zobrazit na mapě", „Smazat"),

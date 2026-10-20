@@ -28,7 +28,7 @@
     .pz-back:hover{color:var(--text);}
     .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
 
-    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--ink-soft2); border:1px solid var(--line); box-shadow:var(--e2);}
+    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--plocha-tlumena); border:1px solid var(--line); box-shadow:var(--e2);}
     /* NALEZENO MĚŘENÍM na telefonu: odznak byl 95 × 202 px místo
        95 × 31 a svým rozostřením rozmazal popisku pod sebou — jméno
        obce i výměra byly nečitelné. Příčina je v css/styles.css:
@@ -174,7 +174,7 @@
        protože odpovídá na touž otázku „co tu vlastně je" — ne na otázku
        o ceně. Tlumená deska, ne odznak: je to upozornění, ne nabídka. */
     .pz-blok{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-plocha); font-size:14px; line-height:1.6;
-      background:var(--ink-soft);
+      background:var(--plocha-karta);
       border:1px solid var(--line); color:var(--text);}
     .pz-blok b{color:var(--znacka-svetla);}
     .pz-blok-pozn{display:block; margin-top:4px; font-size:13px; color:var(--muted);}
@@ -244,10 +244,10 @@
       grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));}
     .kd-polozka{display:flex; flex-direction:column; justify-content:center;
       gap:2px; min-height:56px; padding:8px 12px; border-radius:var(--r-ovladani);
-      background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka);
+      background:var(--plocha-karta); border:1.5px solid var(--obrys-tlacitka);
       text-decoration:none; box-shadow:var(--e1);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .kd-polozka:hover{border-color:var(--znacka-svetla); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .kd-polozka:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena); box-shadow:var(--e2);}
     .kd-t{font-size:14px; font-weight:700; color:var(--text);}
     .kd-p{font-size:12px; line-height:1.4; color:var(--muted);}
     /* NA TELEFONU JEN JMÉNA. Podtitulky („všechny pozemky v okrese")
@@ -270,7 +270,7 @@
     
     
     .pz-feats{display:flex; flex-wrap:wrap; gap:8px;}
-    .pz-feat{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--text); background:var(--ink-soft); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
+    .pz-feat{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--text); background:var(--plocha-karta); border:1px solid var(--line-strong); padding:8px 12px; border-radius:var(--r-plocha);}
     .pz-feat svg{width:17px; height:17px; stroke-width:2.12; color:var(--znacka-svetla);}
     .pz-feat-acc svg{color:var(--muted);}
     /* ODKUD TY SÍTĚ JSOU. U stažených nabídek je z textu inzerátu vytáhl
@@ -290,7 +290,7 @@
       background:#fff; border:1px solid var(--line); border-left:3px solid var(--c-drazba-ink); box-shadow:var(--e1);}
     /* Naléhavost nese tloušťka a barva proužku, ne vybarvení desky. */
     .pz-drazba.blizko{border-left-width:5px;}
-    .pz-drazba.prosle{border-left-color:var(--line-ui); background:var(--ink-soft2); box-shadow:none;}
+    .pz-drazba.prosle{border-left-color:var(--line-ui); background:var(--plocha-tlumena); box-shadow:none;}
     .pzd-hlava{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; color:var(--c-drazba-ink);}
     .pz-drazba.prosle .pzd-hlava{color:var(--muted);}
     .pzd-hlava svg{width:17px; height:17px; stroke-width:2.1; flex:none;}
@@ -349,8 +349,8 @@
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
     .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
-    .pz-btn.ghost{background:var(--ink-soft); color:var(--znacka-svetla); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
-    .pz-btn.ghost:hover{border-color:var(--znacka-svetla); background:var(--ink-soft2);}
+    .pz-btn.ghost{background:var(--plocha-karta); color:var(--znacka-svetla); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
+    .pz-btn.ghost:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
     .pz-btn.ghost:active{transform:scale(.985);}
     /* HLAVNÍ AKCE HNED POD VERDIKTEM. Dvě tlačítka, ne šest: jít na
        nabídku a uložit si ji. „Uložit" se drží na šířce svého textu,
@@ -358,7 +358,7 @@
     .pz-akce-hlavni{display:flex; gap:8px; margin:20px 0 0; flex-wrap:wrap;}
     /* Akce v připnutém pruhu u ceny; třídu nasazuje js/pozemek.js (pripniAkce), kde je i důvod. */
     .pz-akce-v-boku{display:grid; gap:8px; margin:12px 0 0; padding-top:12px; border-top:1px solid var(--line);}
-    .pz-btn.ulozit{flex:0 1 auto; padding:0 20px; background:var(--ink-soft); color:var(--text); border:1.5px solid var(--obrys-tlacitka);}
+    .pz-btn.ulozit{flex:0 1 auto; padding:0 20px; background:var(--plocha-karta); color:var(--text); border:1.5px solid var(--obrys-tlacitka);}
     .pz-btn.ulozit.on{color:var(--znacka-svetla); border-color:var(--znacka-svetla);}
     .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
     .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
@@ -372,8 +372,8 @@
     /* 52 px jako .pz-btn nad ním. „Otevřít v katastru" (52) a „Sdílet"
        (48) stály pod sebou a lišily se o čtyři pixely — na snímku
        z telefonu to vypadá jako dvě různé sady tlačítek. */
-    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--ink-soft); border:1.5px solid var(--obrys-tlacitka); color:var(--text); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
-    .pz-abtn:hover{border-color:var(--znacka-svetla); background:var(--ink-soft2); box-shadow:var(--e2);}
+    .pz-abtn{display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; padding:0 16px; border-radius:var(--r-ovladani); background:var(--plocha-karta); border:1.5px solid var(--obrys-tlacitka); color:var(--text); font-size:14px; font-weight:600; text-decoration:none; cursor:pointer; -webkit-tap-highlight-color:transparent; box-shadow:var(--e1); transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
+    .pz-abtn:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena); box-shadow:var(--e2);}
     .pz-abtn:active{transform:scale(.98);}
     .pz-abtn.on{color:#fff; border-color:transparent; background:var(--plocha-znacka); box-shadow:var(--glow);}
     .pz-abtn svg{width:17px; height:17px; stroke-width:2.12; color:var(--znacka-svetla);}
@@ -407,7 +407,7 @@
        značka oddílu by z něj dělala nadpis. */
     .pz-gtk-sum .pz-sect-h::before{display:none;}
     .pz-gtk-kolik{margin-left:auto; font-size:13px; font-weight:700; white-space:nowrap;
-      color:var(--znacka-svetla); background:var(--ink-soft); border:1px solid var(--line);
+      color:var(--znacka-svetla); background:var(--plocha-karta); border:1px solid var(--line);
       padding:2px 8px; border-radius:var(--r-pill);}
     .pz-gtk-kolik:empty{display:none;}
     /* Slovo „Rozbalit" je jediné, co bez pochyb říká, že se s blokem dá
@@ -423,7 +423,7 @@
     .pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px);}
     .pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0; border-top-right-radius:0; border-top:0;}
     /* Deska rádce a deska mapy nesou přelev shora dolů, stejný jako
-       `.add-card` na přehledových stránkách: z --ink-soft2 do --ink-soft.
+       `.add-card` na přehledových stránkách: z --plocha-tlumena do --plocha-karta.
        Obě barvy web má, obě jsou plochy, žádná nová do palety nepřibyla.
        Naměřeno: na stránce pozemku byly tyhle dvě desky (688×562
        a 688×450 px) největší placky na stránce. */
@@ -446,8 +446,8 @@
     /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--ink-soft); box-shadow:var(--e2);}
-    .pzm-mapa{height:390px; width:100%; background:var(--ink);}
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--plocha-karta); box-shadow:var(--e2);}
+    .pzm-mapa{height:390px; width:100%; background:var(--plocha-zapustena);}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je
        zvětšení k ničemu. */
@@ -462,7 +462,7 @@
        (2 ÷ 24 × 19 = 1,58 px proti 1,33 px u šestnáctibodových —
        přesně ten rozdíl hlídá scripts/test-ikony.mjs.) */
     .pzm-cela-btn svg{width:19px; height:19px; stroke-width:1.8;}
-    .pzm-cela-btn:hover{background:var(--ink-soft);}
+    .pzm-cela-btn:hover{background:var(--plocha-karta);}
     /* ZPÁTKY NA POZEMEK — V PRUHU POD MAPOU, NE NA MAPĚ.
        Dvakrát to bylo plovoucí tlačítko a dvakrát překáželo: vpravo
        nahoře leželo na přibližování (naměřeno 8 px překryvu na 390px
@@ -478,15 +478,15 @@
        nemá kde člověk naučit. */
     .pzm-zpet-btn{height:34px; display:inline-flex; align-items:center; gap:4px;
       padding:0 12px 0 12px; border-radius:999px;
-      border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft);
+      border:1.5px solid rgba(31,81,56,.26); background:var(--plocha-karta);
       color:var(--znacka-svetla); cursor:pointer;
       font:inherit; font-size:13px; font-weight:600; white-space:nowrap;
       -webkit-tap-highlight-color:transparent;
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
     .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
-    .pzm-zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--ink-soft2);}
+    .pzm-zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
     .pzm-zpet-btn[hidden]{display:none;}
-    .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--ink);}
+    .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--plocha-zapustena);}
     .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
     .pzm-cela-zap .pzm-panel{flex:none;}
     /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
@@ -496,13 +496,13 @@
     .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:8px 12px;}
     .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
     body.pzm-cela-telo{overflow:hidden;}
-    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
-    .pzm-zaklad{display:inline-flex; background:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:2px; flex:none;}
+    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; border-top:1px solid var(--line); background:var(--plocha-karta);}
+    .pzm-zaklad{display:inline-flex; background:var(--plocha-karta); border:1px solid var(--line); border-radius:999px; padding:2px; flex:none;}
     .pzm-z{height:31px; padding:0 12px; border:0; background:transparent; border-radius:999px; font:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-    .pzm-z.on{background:var(--ink-soft); color:var(--znacka-svetla); box-shadow:var(--e1);}
+    .pzm-z.on{background:var(--plocha-karta); color:var(--znacka-svetla); box-shadow:var(--e1);}
     .pzm-vr{display:flex; flex-wrap:wrap; gap:4px; align-items:center; min-height:34px;}
-    .pzm-v{height:34px; padding:0 12px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--ink-soft); font:inherit; font-size:13px; font-weight:600; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
-    .pzm-v:hover{border-color:var(--znacka-svetla); background:var(--ink-soft2);}
+    .pzm-v{height:34px; padding:0 12px; border-radius:999px; border:1.5px solid rgba(31,81,56,.26); background:var(--plocha-karta); font:inherit; font-size:13px; font-weight:600; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    .pzm-v:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
     .pzm-v:active{transform:scale(.98);}
     .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
     .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
@@ -511,14 +511,14 @@
        a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
     .pzm-kryti{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--muted);}
     .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
-    .pzm-popis{margin:0; padding:8px 12px; border-top:1px solid var(--line); background:var(--ink-soft); font-size:13px; line-height:1.6; color:var(--muted);}
+    .pzm-popis{margin:0; padding:8px 12px; border-top:1px solid var(--line); background:var(--plocha-karta); font-size:13px; line-height:1.6; color:var(--muted);}
     /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
        nakreslil. Není to chyba, je to stav — proto ne červená, ale
        značková barva a rovnou tlačítko, které to spraví. */
     .pzm-daleko{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; color:var(--text);}
     .pzm-priblizit{flex:none; font:inherit; font-size:13px; font-weight:700; cursor:pointer;
       padding:4px 12px; min-height:34px; border-radius:var(--r-ovladani);
-      border:1.5px solid var(--znacka); background:var(--ink-soft); color:var(--znacka);
+      border:1.5px solid var(--znacka); background:var(--plocha-karta); color:var(--znacka);
       transition:background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
         /* PLNÁ PLOCHA SE BERE Z --plocha-znacka, NE Z --znacka.
        --znacka je barva PÍSMA a mezi režimy se obrací: ve světlém je to
@@ -531,10 +531,10 @@
     .pzm-priblizit:hover{background:var(--plocha-znacka); color:#fff;}
     /* Vysvětlivky. Obrázek dodává sama služba, takže o jeho vzhledu
        nerozhodujeme — jen mu dáme bílý podklad, ať je čitelný i tmavý. */
-    .pzm-leg{display:flex; flex-wrap:wrap; gap:12px; padding:12px 12px; border-top:1px solid var(--line); background:var(--ink-soft);}
+    .pzm-leg{display:flex; flex-wrap:wrap; gap:12px; padding:12px 12px; border-top:1px solid var(--line); background:var(--plocha-karta);}
     .pzm-leg-k{margin:0; display:flex; flex-direction:column; gap:4px; max-width:100%;}
     .pzm-leg-k figcaption{font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted);}
-    .pzm-leg-k img{max-width:100%; background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
+    .pzm-leg-k img{max-width:100%; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-sm); padding:4px;}
     .pzm-pod{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--muted);}
     .pzm-pod a{color:var(--znacka-svetla); font-weight:600;}
     .pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45));}
@@ -557,7 +557,7 @@
     /* SOUKROMÁ POZNÁMKA (js/poznamky.js). Vypadá jako papír na stole,
        ne jako formulář: nic se neodesílá a není co potvrzovat. */
     .pz-pozn-box{margin-top:20px; padding:12px; border:1px solid var(--line-strong);
-      border-radius:var(--r-plocha); background:var(--ink-soft); box-shadow:var(--e1);}
+      border-radius:var(--r-plocha); background:var(--plocha-karta); box-shadow:var(--e1);}
     .pz-pozn-hlava{display:flex; align-items:baseline; gap:8px; margin-bottom:8px;}
     .pz-pozn-hlava h2{font-size:16px; margin:0;}
     .pz-pozn-stav{margin-left:auto; font-size:12px; color:var(--muted);}
@@ -565,7 +565,7 @@
     /* Políčko na poznámku je pole — tedy --r-ovladani, ne --r-sm. */
     .pz-pozn-pole{display:block; width:100%; min-height:88px; padding:8px 12px;
       border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
-      background:var(--ink); color:var(--text);
+      background:var(--plocha-zapustena); color:var(--text);
       font:inherit; font-size:16px; line-height:1.6; resize:vertical;
       transition:border-color var(--cas-zakladni) var(--ease);}
     .pz-pozn-pole:focus{outline:none; border-color:var(--znacka-svetla);}

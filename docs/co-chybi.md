@@ -1150,7 +1150,7 @@ rozměr:
   ten řádek se rozbaluje, značka oddílu by z něj dělala nadpis. Totéž
   pravidlo, jaké má `.rail .section-head::before`.
 - `.pz-gtk` a `.pzm` (688×562 a 688×450 px, dvě největší placky na
-  stránce) nesou přelev shora dolů z `--ink-soft2` do `--ink-soft`,
+  stránce) nesou přelev shora dolů z `--plocha-tlumena` do `--plocha-karta`,
   stejný jako `.add-card` na přehledech.
 
 Po opravě: stránka pozemku **4 → 9** ploch s přechodem, okresní **5 → 8**,

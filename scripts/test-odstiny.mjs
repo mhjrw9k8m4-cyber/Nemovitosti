@@ -2,7 +2,7 @@
 //
 // Spuštění: node scripts/test-odstiny.mjs   (nepotřebuje prohlížeč)
 //
-// Tenhle web je teple zelenočerný: --ink-dark je #14231C, tedy odstín 152°.
+// Tenhle web je teple zelenočerný: --plocha-tmava je #14231C, tedy odstín 152°.
 // Závoje, stíny a ztmavená pozadí ale dlouho byly MODROČERNÉ — odstín okolo
 // 210°. Nebyla to jedna nedbalost: naměřeno 18 výskytů proti 83 teplým,
 // a ležely zrovna na nejvíc viditelných místech — závoj nad fotkou a tři

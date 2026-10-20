@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=1fd19326">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585386c6">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -57,7 +57,7 @@
        ne jen karta v něm: jinak by se vystředilo přihlášení a seznam
        pod ním by zůstal vlevo. */
     .hl-wrap{max-width:var(--m-uzky); margin-inline:auto;}
-    .hl-card{background:var(--ink-soft); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:12px;}
+    .hl-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-lg); box-shadow:var(--e1); margin-bottom:12px;}
     /* PŘEPÍNAČ MEZI NOVÝM A ULOŽENÝM.
        Uložená hlídání ležela pod celým formulářem nového: na telefonu
        přes obrazovku a půl rolování, o kterém nikdo neví. Kdo si přišel
@@ -65,7 +65,7 @@
        Dvě záložky to postaví vedle sebe. Když uložené hlídání není ani
        jedno, přepínač se nenabízí — nebylo by mezi čím přepínat. */
     .hl-prepin{display:flex; gap:4px; margin-bottom:12px; padding:4px;
-      background:var(--ink); border:1px solid var(--line-ui); border-radius:var(--r-md);}
+      background:var(--plocha-zapustena); border:1px solid var(--line-ui); border-radius:var(--r-md);}
     .hl-tab{flex:1; min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:4px;
       font:inherit; font-size:14px; font-weight:700; cursor:pointer; padding:0 8px;
       border:0; border-radius:var(--r-sm); background:none; color:var(--muted);
@@ -81,10 +81,10 @@
        plocha s bílým písmem. Dvě řady ovládání nad sebou, z toho spodní
        křiklavější než vrchní — oko z toho nepozná, co je kde.
        Použitý je vzor, který zná každý segmentovaný přepínač: zapuštěná
-       dráha (--ink) a na ní zvednutý světlý jezdec (--ink-soft) se
+       dráha (--plocha-zapustena) a na ní zvednutý světlý jezdec (--plocha-karta) se
        značkovým textem. Rozeznatelné na první pohled, a nic to
        nepřekřikuje. */
-    .hl-tab.je{background:var(--ink-soft); color:var(--znacka); box-shadow:var(--e1);}
+    .hl-tab.je{background:var(--plocha-karta); color:var(--znacka); box-shadow:var(--e1);}
     .hl-tab-n{min-width:21px; height:21px; padding:0 4px; border-radius:var(--r-sm);
       background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700;
       display:inline-flex; align-items:center; justify-content:center;}
@@ -121,7 +121,7 @@
     .hlu-pozn{font-size:13px; line-height:1.6; color:var(--muted); margin:0;}
     .hl-auth h2{font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;}
     .hl-auth p{font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
-    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--ink-soft2); color:var(--text); margin-bottom:8px; outline:none; font-family:inherit;}
+    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--plocha-tlumena); color:var(--text); margin-bottom:8px; outline:none; font-family:inherit;}
     .hl-in:focus,.hl-sel:focus{border-color:var(--znacka-svetla); box-shadow:0 0 0 4px rgba(31,81,56,.14);}
     .hl-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .hl-btn:hover{filter:brightness(1.05);} .hl-btn:active{transform:scale(.99);}
@@ -129,7 +129,7 @@
    podklad i obrys jako políčka nad ním, bajt po bajtu
    (rgb(243,241,236), rgba(20,35,28,0.55) 1px). Bere si teď podobu,
    kterou web pro vedlejší akci má — bílo, zelený obrys, měděný text. */
-    .hl-btn.sec{background:var(--ink-soft); color:var(--znacka-svetla);
+    .hl-btn.sec{background:var(--plocha-karta); color:var(--znacka-svetla);
       border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1); margin-top:8px;}
     .hl-msg{font-size:13px; margin:8px 2px 0; text-align:center; color:var(--muted);}
     .hl-msg.err{color:var(--c-exekuce);}
@@ -181,7 +181,7 @@
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       min-height:38px; padding:8px 12px; border-radius:999px;
-      border:1.5px solid var(--line-strong); background:var(--ink-soft2); color:var(--text);
+      border:1.5px solid var(--line-strong); background:var(--plocha-tlumena); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -203,7 +203,7 @@
     /* Volba, pod kterou dnes není nic. Neschovává se: zmizelá volba mate
        víc než volba s nulou. */
     .hl-chip.hl-nula{opacity:.55;}
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--ink-soft2);}
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:999px; font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(31,81,56,.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}
@@ -219,7 +219,7 @@
        Zkoušky to neodhalily, protože se tyhle prvky kreslí jen přihlášenému
        (odznaky s počtem) nebo při najetí myší. */
     .hl-new-badge{background:var(--plocha-znacka); color:#fff; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;}
-    .hl-new-badge.zero{background:var(--ink-soft2); color:var(--muted);}
+    .hl-new-badge.zero{background:var(--plocha-tlumena); color:var(--muted);}
     .hl-crit{font-size:13px; color:var(--muted); margin-top:4px; line-height:1.5;}
     /* TERČ MÁ MÍT 44 px. Napsané to tu bylo na 22 px — zaškrtávátko 18 px
        a kolem nic. Naměřeno na mobilu 390×844: ze všech zaškrtávátek na
@@ -262,7 +262,7 @@
        „Zobrazit na mapě", koš). Natěsnaná do jedné řady by se na úzkém
        telefonu lámal text uvnitř nich, tak se radši zalomí. */
     .hl-acts{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
-    .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--ink-soft2); color:var(--text); display:flex; align-items:center; justify-content:center; text-decoration:none;}
+    .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--plocha-tlumena); color:var(--text); display:flex; align-items:center; justify-content:center; text-decoration:none;}
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:28px 20px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;}
