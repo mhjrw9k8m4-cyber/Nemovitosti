@@ -82,6 +82,30 @@ async function zmer(nast) {
       karta: y(karta),
       akce: y(akce),
       akceH: akce ? Math.round(akce.getBoundingClientRect().height) : null,
+      akceDeti: akce ? akce.children.length : 0,
+      /* A CO KDYŽ NÁSTROJE PŘIBYDOU? Jejich počet závisí na datech
+         a na tom, co výpis zrovna skrývá: „Procházet po jednom"
+         a „Stáhnout výběr" jsou vždycky, „Zobrazit skryté" a „Dražby
+         po termínu" podle okolností. Den po dražbě jich tedy bývá
+         víc — a dvousloupcová mřížka je na telefonu zalomila pod sebe
+         (naměřeno 96 px místo 44). Zkouška proto třetí nástroj
+         PŘIDÁ a změří, že řádek zůstal jeden a jen se dá posunout
+         do strany. Na datech to nestojí: kdyby se čekalo na den po
+         dražbě, měřilo by se to jednou za čas. */
+      akceH3: (() => {
+        if (!akce || !akce.firstElementChild) return null;
+        const pridane = [];
+        while (akce.children.length < 3) {
+          const k = akce.firstElementChild.cloneNode(true);
+          k.removeAttribute('id');
+          akce.appendChild(k);
+          pridane.push(k);
+        }
+        const v = Math.round(akce.getBoundingClientRect().height);
+        const posuvny = akce.scrollWidth - akce.clientWidth > 8;
+        pridane.forEach((k) => k.remove());
+        return { v, posuvny };
+      })(),
       akceVeVypisu: !!(akce && akce.closest('#opp-list')),
       rsVeVypisu: !!(rs && rs.closest('#opp-list')),
       /* Že je pruh naposledy prohlédnutých prázdný, je v pořádku (ukazuje
@@ -195,6 +219,10 @@ try {
     !t.akceVeVypisu, 'nářadí sedí uvnitř #opp-list, tedy mezi nabídkami');
   pravda('a drží se na JEDNOM řádku (zalomené na dva stálo 94 px)',
     t.akceH !== null && t.akceH <= 56, `řádek nářadí je vysoký ${t.akceH} px`);
+  pravda('a drží jeden řádek i při třech nástrojích (jen se posune do strany)',
+    !!t.akceH3 && t.akceH3.v <= 56 && t.akceH3.posuvny === true,
+    t.akceH3 ? `se třemi nástroji je řádek ${t.akceH3.v} px a posouvat `
+      + (t.akceH3.posuvny ? 'jde' : 'NEJDE') : 'nářadí nemá co klonovat');
   pravda('naposledy prohlédnuté nejsou mezi kartami, ale nad výpisem',
     !t.rsVeVypisu, 'pruh naposledy prohlédnutých sedí uvnitř #opp-list');
 

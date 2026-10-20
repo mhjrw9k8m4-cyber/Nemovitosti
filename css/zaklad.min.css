@@ -825,6 +825,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 }
 
 @media (max-width:560px){
+
 }
 
 .add-hero:not(.app-hero){position:relative;isolation:isolate;overflow:hidden;padding:96px 0 56px;background:var(--pas-plocha)}

@@ -6607,6 +6607,38 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
       grid-template-columns:1fr;}
   }
+  /* TŘI NÁSTROJE SE DO DVOU SLOUPCŮ NEVEJDOU — a mřížka je pak zalomí
+     pod sebe. NAMĚŘENO 20. 10. (den po dražbě, kdy k „Procházet po
+     jednom" a „Stáhnout výběr" přibyde „Dražby po termínu"): pruh
+     vyrostl ze 44 na 96 px a první nabídka spadla o padesát pixelů.
+     Řádek nářadí se přitom ZALAMOVAT NEMÁ — základní pravidlo o kus
+     níž říká „posouvá se do strany" a má k tomu i stín za hranou
+     (.mc-akce.je-dal), který říká, že řádek pokračuje. Dvousloupcová
+     mřížka to na telefonu přebíjela. Při třech a víc nástrojích se
+     proto vrací k posuvnému řádku; při dvou zůstává mřížka, protože
+     vedle sebe vyplní šířku beze zbytku.
+     Počítá se SKUTEČNÝ počet dětí, ne stav dat: nástrojů je mezi
+     dvěma a čtyřmi podle toho, co výpis zrovna skrývá. */
+  .map-side .mc-akce:has(> *:nth-child(3)),
+  .ms-vysledky > .mc-akce:has(> *:nth-child(3)){
+    grid-auto-flow:column; grid-template-columns:none;
+    grid-auto-columns:calc((100% - 8px) / 2); overflow-x:auto;}
+  /* Pod 360 px má buňka celou šířku — a sloupec nářadí s ní. MUSÍ TO
+     STÁT AŽ ZA pravidlem výš: obě mají tutéž sílu selektoru, takže
+     rozhoduje pořadí v souboru. Napoprvé jsem to dal nad něj a sloupec
+     zůstal poloviční (naměřeno 148 px, nápis 152 px — text lezl přes
+     rámeček). */
+  @media (max-width:360px){
+    .map-side .mc-akce:has(> *:nth-child(3)),
+    .ms-vysledky > .mc-akce:has(> *:nth-child(3)){grid-auto-columns:100%;}
+  }
+  /* ŠÍŘKA SLOUPCE SE DOPOČÍTÁVÁ, NEPÍŠE SE. Ovladače nad výpisem mají
+     mít všechny jednu velikost — i ty v řadě nad nimi, které drží
+     dvousloupcová mřížka. Sloupec nářadí je proto přesně tak široký
+     jako buňka té mřížky: (šířka − mezera) / 2. Napsat sem naměřených
+     188 px by platilo jen na jedné šířce okna.
+     Hlídá scripts/test-ovladani-vypisu.mjs (ovladače mají jednu
+     velikost) a scripts/test-nastroje-v-dosahu.mjs (jeden řádek). */
   .ms-vysledky .msv-ovladani .mc-prep, .mc-akce .mc-nastroj{justify-content:center;}
   /* Řazení je v téže řadě jako ostatní — tedy taky na střed. Vlastní
      rozbalovací seznam má nápis zarovnaný vlevo (.cdd-btn), což v řadě

@@ -1300,6 +1300,9 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .ms-vysledky .msv-ovladani>[hidden]{display:none}
 @media (max-width:360px){.ms-vysledky .msv-ovladani,.map-side .mc-akce,.ms-vysledky>.mc-akce{grid-template-columns:1fr}
 }
+.map-side .mc-akce:has(>*:nth-child(3)),.ms-vysledky>.mc-akce:has(>*:nth-child(3)){grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 8px) / 2);overflow-x:auto}
+@media (max-width:360px){.map-side .mc-akce:has(>*:nth-child(3)),.ms-vysledky>.mc-akce:has(>*:nth-child(3)){grid-auto-columns:100%}
+}
 .ms-vysledky .msv-ovladani .mc-prep,.mc-akce .mc-nastroj{justify-content:center}
 .ms-vysledky .msv-ovladani .cdd-btn{justify-content:center}
 .ms-vysledky .msv-ovladani .cdd-btn .cdd-lbl{flex:0 1 auto;text-align:center}
