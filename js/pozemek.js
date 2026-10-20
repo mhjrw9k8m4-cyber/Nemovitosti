@@ -1729,6 +1729,81 @@
     else if (siroko.addListener) siroko.addListener(uloz);
   }
 
+  /* DLOUHÉ ČÍSLO SE DO DLAŽDICE NEVEJDE — A NEMÁ, KDE SE ZLOMIT.
+     Naměřeno na 390 px na pozemek-praha-zapad-jesenice-17ku2kl.html:
+     „23 458 Kč/m²" je 164,1 px široké, dlaždice má vnitřních 141 px
+     a z toho 28 px drží značka v pravém horním rohu, takže na číslo
+     zbývá 113 px. Text tím přejel přes značku a „²" uřízl okraj karty
+     (přesah 22 px za dlaždici). Zlomit se nedá: mezery v číslech jsou
+     podle typografického pravidla nezlomitelné (U+00A0), takže celá
+     hodnota je jeden kus — a i kdyby nebyla, zlomené „23 458 / Kč/m²"
+     je horší než o dva stupně menší číslo.
+
+     POČÍTAT ZNAKY NESTAČÍ, a bylo to první, co jsem zkusil. Při devíti
+     znacích je „Podíl 1/2" 105,0 px (vejde se), „12 630 m²" 123,4 px
+     a „neuvedena" 130,8 px (nevejde se ani jedno): číslice jsou
+     tabulkové a stejně široké, písmena ne. Rozhoduje proto naměřená
+     šířka, ne délka řetězce.
+
+     DVA STUPNĚ DOLŮ, OBA ZE STUPNICE (24 → 20 → 16 px). První stupeň
+     zároveň schová značku — je to tlumená ozdoba s aria-hidden, kdežto
+     uříznuté číslo je ten údaj, kvůli kterému člověk na stránku přišel.
+     Po prvním stupni je „23 458 Kč/m²" 136,8 px a vejde se do 141 px
+     uvolněných po značce; druhý stupeň (109,4 px) drží i ceny
+     přes 100 000 Kč/m². Když ani ten nestačí, zůstane menší číslo
+     a text se aspoň nekreslí přes značku.
+
+     MĚŘÍ SE ZNOVU PŘI ZMĚNĚ ŠÍŘKY MŘÍŽKY, ne okna: sloupce jsou jeden,
+     dva, nebo čtyři (viz .pz-klice), takže o tom, co se vejde,
+     nerozhoduje jen šířka displeje. Hlídá to scripts/test-parametry.mjs. */
+  function pzPresahujeHodnota(b) {
+    var vpravo = parseFloat(global.getComputedStyle(b).paddingRight) || 0;
+    /* clientWidth je včetně výplně, vlevo žádná není. */
+    var misto = b.clientWidth - vpravo;
+    var r = document.createRange();
+    r.selectNodeContents(b);
+    /* Půl pixelu tolerance: šířky vycházejí ze zlomků a rovnost na
+       hranici by zmenšovala i hodnotu, která se přesně vejde. */
+    return r.getBoundingClientRect().width > misto + 0.5;
+  }
+
+  function pzVelikostHodnot(host) {
+    var dl = host.querySelectorAll('.pz-klic');
+    for (var i = 0; i < dl.length; i++) {
+      var b = dl[i].querySelector('b');
+      if (!b) continue;
+      /* Napřed zpátky na plnou velikost: po zvětšení okna se musí dát
+         zmenšení i vzít zpátky, jinak by na tabletu zůstalo 16px číslo
+         z telefonu. */
+      dl[i].classList.remove('pz-dlouha', 'pz-velmi-dlouha');
+      if (!pzPresahujeHodnota(b)) continue;
+      dl[i].classList.add('pz-dlouha');
+      if (pzPresahujeHodnota(b)) dl[i].classList.add('pz-velmi-dlouha');
+    }
+  }
+
+  function pzHlidejVelikostHodnot(host) {
+    pzVelikostHodnot(host);
+    var mrizka = host.querySelector('.pz-klice');
+    if (!mrizka) return;
+    /* PAMATUJE SI ŠÍŘKU, NE JEN TO, ŽE SE ROZMĚR ZMĚNIL. Zmenšení čísla
+       umí změnit VÝŠKU mřížky (hodnota se přestane lámat na dva řádky),
+       a to je zase změna rozměru: bez téhle podmínky se ResizeObserver
+       budí sám od sebe a v konzoli se objeví „loop completed with
+       undelivered notifications". */
+    var posledni = Math.round(mrizka.getBoundingClientRect().width);
+    function znovu() {
+      var w = Math.round(mrizka.getBoundingClientRect().width);
+      if (w === posledni) return;
+      posledni = w;
+      pzVelikostHodnot(host);
+    }
+    if (global.ResizeObserver) {
+      try { new global.ResizeObserver(znovu).observe(mrizka); return; } catch (e) {}
+    }
+    global.addEventListener('resize', znovu);
+  }
+
   function render(d) {
     if (strankaUkoncena()) return;
     var t = TYPE[d.type];
@@ -2301,6 +2376,10 @@
        pořadí bloků hlídá scripts/test-poradi-pozemku.mjs na 360 px. */
     try { pripniAkce(host); } catch (e) {}
     try { pzListaDole(host, d, perM2); } catch (e) {}
+    /* AŽ ZA PŘIPNUTÍM: pripniAkce na monitoru PŘESOUVÁ blok s cenou do
+       pravého pruhu, takže se napřed musí ustálit rozvržení a teprve
+       pak měřit, co se do dlaždice vejde. */
+    try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

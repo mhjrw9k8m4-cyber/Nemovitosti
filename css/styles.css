@@ -8431,6 +8431,14 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
 .pz-klic b{font-size:24px; line-height:1.2; color:var(--text);
   font-variant-numeric:tabular-nums;}
+/* DVA STUPNĚ DOLŮ PRO HODNOTU, KTERÁ SE NEVEJDE. Třídy přidává podle
+   NAMĚŘENÉ šířky pzVelikostHodnot v js/pozemek.js — proč se nedají
+   počítat znaky a odkud jsou ta čísla, stojí tam. Značka u prvního
+   stupně mizí: je to ozdoba s aria-hidden, kdežto uříznuté číslo je
+   údaj. 20 a 16 px jsou stupně téže stupnice jako 24 px. */
+.pz-klic.pz-dlouha > .pz-klic-ic{display:none;}
+.pz-klic.pz-dlouha b{font-size:20px; padding-right:0;}
+.pz-klic.pz-velmi-dlouha b{font-size:16px;}
 /* POPISEK DLAŽDICE JE ÚDAJ, NE POZNÁMKA POD ČAROU: 14 px a váha 500,
    stejně jako doplňková čísla na kartě ve výpisu (.opp-figures .m).
    Odstín zůstává tlumený schválně — viz níž, proč se nezvedal. */

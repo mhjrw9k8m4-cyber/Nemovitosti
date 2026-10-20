@@ -161,6 +161,113 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   await p.close();
 }
 
+/* ===== DLOUHÁ HODNOTA SE MUSÍ VEJÍT DO DLAŽDICE ===================
+ * Naměřeno na 390 px na pozemek-praha-zapad-jesenice-17ku2kl.html:
+ * „23 458 Kč/m²" bylo 164,1 px široké, dlaždice má vnitřních 141 px
+ * a z toho 28 px drží značka v rohu — číslo tedy přejelo přes značku
+ * a „²" uřízl okraj karty (přesah 22 px za obsah dlaždice).
+ *
+ * PROČ TO NEZACHYTILA KONTROLA „nic nepřetéká do stran" výš: ta měří
+ * `documentElement.scrollWidth`, tedy jestli se roluje CELÁ stránka.
+ * Mřížka dlaždic má sloupce `minmax(0, 1fr)`, takže se nerozšíří —
+ * text z ní vyteče, ale stránka o tom neví a hlásila nula.
+ *
+ * Měří se tedy obsah dlaždice, a to na stránkách s NEJDELŠÍMI
+ * hodnotami v datech (vybírají se z ostrůvku PK_POZEMEK, ne ze
+ * seznamu jmen — data se obnovují čtyřikrát denně) a na šířkách, kde
+ * mřížka přepíná počet sloupců. Opravu dělá pzVelikostHodnot
+ * v js/pozemek.js.
+ */
+{
+  /* Nejdelší hodnoty v datech: výměra („547 418 m²") a cena za metr
+     („23 458 Kč/m²"). Délka se počítá stejně, jako to dělá stránka —
+     mezery po tisících a jednotka za nezlomitelnou mezerou. */
+  const sMezerami = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const kandidati = [];
+  let bezVymery = null;
+  for (const f of vsechny) {
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    if (/class="pz-konec"/.test(h)) continue;
+    const m = h.match(/PK_POZEMEK=(\{.*?\});/s);
+    if (!m) continue;
+    let o;
+    try { o = JSON.parse(m[1]); } catch { continue; }
+    if (!o.v && !bezVymery) { bezVymery = f; continue; }
+    if (!o.v) continue;
+    const dl = Math.max(sMezerami(o.v).length + 3,
+      o.c ? sMezerami(o.c / o.v).length + 6 : 0);
+    kandidati.push({ f, dl });
+  }
+  kandidati.sort((a, b) => b.dl - a.dl);
+  /* Tři nejdelší, k nim stránka bez výměry (hodnota „neuvedena", což
+     jsou písmena, ne tabulkové číslice) a jedna obyčejná pro kontrast. */
+  const mereneStranky = [...new Set([...kandidati.slice(0, 3).map((x) => x.f),
+    bezVymery, stranka].filter(Boolean))];
+  pravda('je na čem měřit — nejdelší hodnota v datech má aspoň 10 znaků',
+    kandidati.length > 0 && kandidati[0].dl >= 10,
+    kandidati.length ? `nejdelší ${kandidati[0].dl} znaků (${kandidati[0].f})` : 'žádná stránka s výměrou');
+
+  /* Šířky: 320 px je nejužší telefon (jeden sloupec), 360 a 390 dva
+     sloupce, 679/680 je mez, na které mřížka přepíná na čtyři, a 760
+     je ta nejtěsnější varianta se čtyřmi sloupci. */
+  const SIRKY = [320, 360, 390, 679, 680, 760];
+  const p = await prohlizec.newPage({ viewport: { width: 390, height: 1000 } });
+  const prilis = [];
+  const velikosti = new Set();
+  let zmenseno = 0, dlazdic = 0;
+  for (const f of mereneStranky) {
+    for (const sirka of SIRKY) {
+      await p.setViewportSize({ width: sirka, height: 1000 });
+      await p.goto(`${BASE}/${f}`, { waitUntil: 'load' });
+      /* NA VÝSLEDEK, NE NA ČAS: dlaždice kreslí js/pozemek.js až po
+         dotažení dat okresu, takže pevné čekání by zkoušku buď
+         zdržovalo, nebo ji nechalo měřit prázdno. */
+      await p.waitForFunction(() => document.querySelectorAll('.pz-klic b').length > 0,
+        null, { timeout: 30000 });
+      const v = await p.evaluate(() => [...document.querySelectorAll('.pz-klic')].map((e) => {
+        const b = e.querySelector('b');
+        const r = document.createRange();
+        r.selectNodeContents(b);
+        const text = r.getBoundingClientRect();
+        const cs = getComputedStyle(e), d = e.getBoundingClientRect();
+        const obsahR = d.right - parseFloat(cs.paddingRight) - parseFloat(cs.borderRightWidth);
+        const ic = e.querySelector('.pz-klic-ic');
+        const znacka = ic && getComputedStyle(ic).display !== 'none'
+          ? ic.getBoundingClientRect().left : null;
+        return { t: b.textContent.trim(), px: parseFloat(getComputedStyle(b).fontSize),
+          presah: Math.round((text.right - obsahR) * 10) / 10,
+          naZnacku: znacka == null ? null : Math.round((text.right - znacka) * 10) / 10 };
+      }));
+      for (const x of v) {
+        dlazdic++;
+        velikosti.add(x.px);
+        if (x.px < 24) zmenseno++;
+        if (x.presah > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" vyteklo z dlaždice o ${x.presah} px`);
+        else if (x.naZnacku != null && x.naZnacku > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" leze na značku o ${x.naZnacku} px`);
+      }
+    }
+  }
+  await p.close();
+
+  zpravy.push(`\n  — dlaždice parametrů na ${mereneStranky.length} stránkách × ${SIRKY.length} šířkách`);
+  // PŘEDPOKLAD: bez dlaždic by kontroly níž procházely naprázdno
+  pravda('dlaždice se změřily', dlazdic >= mereneStranky.length * SIRKY.length * 2,
+    `změřeno ${dlazdic}`);
+  pravda('žádná hodnota nevyteče z dlaždice ani neleze na značku',
+    prilis.length === 0, prilis.slice(0, 4).join('\n      '));
+  /* A DRUHÁ STRANA TÉŽE VĚCI: kdyby se zmenšování vypnulo, kontrola výš
+     by spadla — ale kdyby se zapnulo na všechno, taky by procházela.
+     Tohle hlídá, že se zmenšuje jen tam, kde je potřeba, a jen na
+     stupně stupnice. */
+  pravda('a aspoň jedna dlouhá hodnota se kvůli tomu zmenšila',
+    zmenseno > 0, 'žádná hodnota se nezmenšila — měří se tohle vůbec?');
+  pravda('zmenšuje se jen na stupně stupnice (24/20/16 px)',
+    [...velikosti].every((x) => [24, 20, 16].indexOf(x) !== -1),
+    `naměřené velikosti: ${[...velikosti].sort((a, b) => b - a).join(', ')} px`);
+  pravda('a nezmenšily se všechny', zmenseno < dlazdic,
+    `zmenšeno ${zmenseno} z ${dlazdic} — zmenšování se spouští i tam, kde není potřeba`);
+}
+
 /* ===== RYTMUS STRÁNKY: ČTYŘI ODSTUPY, NE DESET ==================
  * Stížnost majitele webu: „koukni, jak je to položené, ty mezery — web
  * má být sloučený a místo toho je to jak z Minecraftu."

@@ -204,6 +204,7 @@ pismo:
   vahy:      [400, 500, 600, 700]
   prokladani: [-0.04em, -0.03em, -0.02em, -0.01em, 0, .02em, .07em, .1em]
   radkovani: nejvyse 1.6
+  pozor:     "hodnota, která se nemá kde zlomit (číslo s jednotkou za nezlomitelnou mezerou), se zmenšuje podle NAMĚŘENÉ šířky, ne podle počtu znaků — při devíti znacích je „Podíl 1/2“ 105 px a „neuvedena“ 130,8 px. Dělá to pzVelikostHodnot v js/pozemek.js, hlídá scripts/test-parametry.mjs."
   hlida:     scripts/test-pismo.mjs, test-typografie.mjs, test-pisma.mjs
 barvy:
   znacka:        "#004F2F"   # plná plocha hlavní akce

@@ -3776,3 +3776,72 @@ Jedenáct zkoušek, které se měnily, před a po (týž stroj, jedna po
 druhé): **477 → 453 s**. Není to o rychlost — ušetřených 24 s je
 vedlejší produkt. Jde o to, že zkouška teď nemůže mlčky měřit stav před
 zásahem; a jedna skutečná nestálost se tím našla a odstranila.
+
+## 62. Cena za metr nevlezla do dlaždice — a proč počítat znaky nestačí *20. 10.*
+
+Na snímku telefonu (390 px) stránky
+`pozemek-praha-zapad-jesenice-17ku2kl.html` byla v bloku „Parametry
+pozemku" **hodnota „23 458 Kč/m²" uříznutá okrajem karty** a cestou
+přejela přes značku v rohu dlaždice.
+
+Naměřeno: text **164,1 px**, vnitřek dlaždice **141 px**, a z toho
+**28 px** drží výplň rezervovaná pro značku — na číslo tedy zbývalo
+**113 px**. Přesah za obsah dlaždice **22 px**, přes značku **39 px**.
+Zlomit se to nemělo kde: mezery v číslech jsou podle typografického
+pravidla nezlomitelné (U+00A0), takže celá hodnota je jeden kus.
+
+**Žádná dosavadní zkouška to nemohla najít.** `test-parametry` měla
+kontrolu „nic nepřetéká do stran", jenže ta měří
+`documentElement.scrollWidth`, tedy jestli se roluje CELÁ stránka.
+Mřížka dlaždic má sloupce `minmax(0, 1fr)` a nerozšíří se, takže text
+z ní vyteče a stránka o tom neví. Hlásila nulu celou dobu.
+
+### Počítat znaky nestačí — a byl to první pokus
+
+Nabízelo se přidat třídu podle délky řetězce. Změřeno na třech
+hodnotách o **devíti znacích**:
+
+| hodnota | šířka při 24 px | vejde se do 113 px? |
+|---|---|---|
+| `Podíl 1/2` | 105,0 px | ano |
+| `12 630 m²` | 123,4 px | ne |
+| `neuvedena` | 130,8 px | ne |
+
+Číslice jsou tabulkové a stejně široké, písmena ne. Délka řetězce
+o přetečení nerozhoduje — rozhoduje naměřená šířka.
+
+### Co se tedy dělá
+
+`pzVelikostHodnot` v `js/pozemek.js` po vykreslení **změří** každou
+hodnotu (rozsah textu proti obsahové šířce) a případně přidá dva
+stupně dolů, oba ze stupnice: **24 → 20 → 16 px**. První stupeň
+zároveň schová značku — je to tlumená ozdoba s `aria-hidden`, kdežto
+uříznuté číslo je ten údaj, kvůli kterému člověk na stránku přišel.
+Po prvním stupni má „23 458 Kč/m²" 136,8 px a vejde se do 141 px
+uvolněných po značce; druhý stupeň (109,4 px) drží i ceny
+přes 100 000 Kč/m².
+
+Měří se znovu při změně **šířky mřížky**, ne okna: sloupce jsou jeden,
+dva, nebo čtyři. Pozorovatel si proto pamatuje poslední šířku — zmenšení
+čísla umí změnit VÝŠKU mřížky, a bez té podmínky se `ResizeObserver`
+budí sám od sebe a v konzoli se objeví „loop completed with undelivered
+notifications".
+
+### Nejhorší případ není telefon
+
+Zkouška měří pět stránek (tři s nejdelší hodnotou v datech — vybírají
+se z ostrůvku `PK_POZEMEK`, ne ze seznamu jmen, protože se data
+obnovují čtyřikrát denně — k tomu jednu bez výměry a jednu obyčejnou)
+na šesti šířkách. Sabotáž (pravidla ze stylopisu pryč) ukázala, co
+by se bez opravy dělo na `pozemek-brno-mesto-brno-jfm9d8.html`
+(„21 221 Kč/m²"): **42,1 px při 680 px**, tedy přesně tam, kde mřížka
+přepíná na čtyři sloupce, **38,1 px při 360 px** a 22,1 px při 760 px.
+Na telefonu (390 px), odkud nález přišel, to bylo „jen" 23,1 px —
+nejhorší případ tedy není ten, na kterém se to našlo.
+
+Hlídají to čtyři kontroly: nic nevyteče a neleze na značku, aspoň jedna
+dlouhá hodnota se opravdu zmenšila (jinak by první kontrola procházela
+naprázdno), zmenšuje se jen na stupně stupnice, a **nezmenšily se
+všechny** — ta poslední chytila sabotáž „zmenšuj vždycky", po které
+první tři kontroly dál svítily zeleně.
+
