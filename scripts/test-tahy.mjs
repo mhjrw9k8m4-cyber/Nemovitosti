@@ -27,9 +27,15 @@ await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
+/* PŘIBYLY DVĚ STRÁNKY S NEJVÍC IKONAMI — formulář „Přidat pozemek"
+   a „Uložené". Vzorek měl deset stránek a 43 ikon; po smazání tří
+   odznaků v „Jak to funguje" (byly display:none, viz 20. 10.) spadl
+   na 30 a předpoklad „je co měřit" (40) přestal platit. Snížit mez by
+   znamenalo měřit míň a tvářit se, že se nic nestalo; správně je
+   přibrat stránky, které ikony opravdu nesou. */
 const STRANKY = ['/index.html', '/hlidani.html', '/porovnani.html', '/kontakt.html',
   '/muj-inzerat.html', '/zpravy.html', '/cena-pozemku.html', '/drazby-pozemku.html',
-  '/podminky.html', '/ochrana-udaju.html'];
+  '/podminky.html', '/ochrana-udaju.html', '/pridat.html', '/ulozene.html'];
 const CIL = 1.5;
 const TOLERANCE = 0.1;   // 1,40–1,60 px: pokryje zaokrouhlení stroke-width na dvě místa
 

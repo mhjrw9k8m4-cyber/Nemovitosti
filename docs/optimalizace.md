@@ -3298,4 +3298,33 @@ a právě proti tomu ten handoff vznikl.
 
 Je to tedy **volba, ne vada**, a rozhodnout ji má měření na pomalé
 síti: o kolik dřív se úvod vykreslí proti tomu, o kolik později se
-na stránce pozemku objeví „Inzerát". Zapsáno, aby se na to nezapomnělo.
+na stránce pozemku objeví „Inzerát".
+
+### Půlka toho měření hotová
+
+Pomalá 4G (1,6 Mb/s, 150 ms RTT), telefonní profil, soubory ze
+serveru, medián ze tří běhů — čas od začátku načítání po **první
+nabídku ve výpisu**:
+
+| | čas |
+|---|---:|
+| s adresami | 7 981 ms |
+| bez adres | 7 179 ms |
+| **rozdíl** | **802 ms** |
+
+Pozor na to, co tohle číslo je a co není: místní server **nezabaluje**,
+takže se přenáší 622 proti 461 kB. Kdo servíruje gzipem (a to je
+dnes skoro každý), přenese 77,4 proti 58,8 kB, tedy rozdíl 18,6 kB —
+na téže lince kolem 90 ms. Skutečná úspora je tedy někde mezi
+**0,1 a 0,8 s** podle toho, jestli hosting balí.
+
+A jedno poučení o měření samotném: první pokus podstrčil zmenšený
+soubor přes `route.fulfill` a vyšel rozdíl **22 ms**. Falešně: co
+zkouška vyrobí v paměti, neprojde emulovaným zpomalením sítě —
+musí se to poslat ze serveru (`route.continue({ url })`).
+
+**Druhá půlka měření zatím nevyšla**: sonda, která měla změřit, o kolik
+později se na stránce pozemku objeví tlačítko „Inzerát", skončila ve
+všech šesti bězích na časovém limitu (klepnutí na kartu v zpomaleném
+prohlížeči nedoputovalo tam, kam mělo). Dokud tohle číslo není, nemá
+se podle čeho rozhodnout — a tipovat se to nebude.
