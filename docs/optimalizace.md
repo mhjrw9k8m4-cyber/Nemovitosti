@@ -4088,9 +4088,40 @@ dřív, kontrola to ohlásí a mez se posune.
 ### Dvě vlastní pojistky repozitáře u toho zabraly
 
 1. `test-staticka` našla, že komentář ve stylopisu odkazoval na
-   `scripts/test-cisla-radek.mjs` — soubor, který jsem nakonec nezaložil
-   (kontroly šly do existující zkoušky).
+   zkoušku, kterou jsem nakonec nezaložil — kontroly šly do existující
+   `scripts/test-hlavicka-stranky.mjs`, ale komentář o tom nevěděl.
 2. `test-zkousky-meri` našla, že nový kontext měří okno 390 px **bez
    zapnutého dotyku**; pravidla pro telefon přitom visí na
    `@media (pointer: coarse)`, takže by se měřila myší podoba v úzkém
    okně.
+
+## 68. Totéž číslo potřetí v jedné větě *20. 10.*
+
+Podnadpis okresní stránky zněl: „Aktuálně evidujeme **33 pozemků**
+v okrese Benešov — **33× na prodej**." Když jsou všechny nabídky
+jednoho druhu, není ten rozpad informace, ale **zopakovaný součet** —
+a v dlaždici pod ním stálo totéž číslo potřetí.
+
+Dlaždice se vyřešily dřív (vypisují se, jen když je co rozpadat;
+komentář v generátoru u toho sám přiznává „a v podnadpisu nad tím stojí
+„28× na prodej" ještě jednou"). Věta zůstala. Naměřeno: týkalo se to
+**43 z 91** okresních a krajských stránek — a všech 43 je dnes
+„na prodej".
+
+Když je druh jediný, píše se teď místo počtu to, **co to za nabídky
+je**: „— všechny na prodej." Vazby jsou pro každý druh zvlášť, protože
+„všechny na prodej" se řekne hezky a „všechny dražba" ne:
+
+| druh | jedna nabídka | víc |
+|---|---|---|
+| prodej | na prodej | všechny na prodej |
+| dražba | jde o dražbu | všechno jsou dražby |
+| exekuce | jde o exekuci | všechno jsou exekuce |
+| záměr obce | jde o záměr obce | všechno jsou záměry obcí |
+| od majitele | od majitele | všechny od majitele |
+
+Hlídá to dvojice kontrol v `scripts/test-cisla-okresu.mjs`: kolik vět
+se vůbec přečetlo (91, aby kontrola nemohla projít naprázdno) a že
+nikde není v rozpadu **jediný** údaj rovný součtu. Víc druhů projde —
+„28× na prodej, 3× dražba" nese informaci navíc. Sabotáž (rozpad se
+píše vždycky) shodila druhou kontrolu na 43 stránkách.

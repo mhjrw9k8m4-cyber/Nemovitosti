@@ -117,6 +117,31 @@ const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec
    `attr` je totéž pod jménem, které u atributů čte lépe. */
 import { esc, attr } from './text.mjs';
 
+/* ROZPAD PODLE DRUHU, KDYŽ JE CO ROZPADAT — a věta, když není.
+   U dlaždic s čísly se to vyřešilo už dřív (v okrese Kolín je všech 28
+   nabídek na prodej, takže vedle sebe stály „28 pozemků" a „28 na
+   prodej"), jenže v podnadpisu nad nimi zůstalo „28× na prodej" —
+   tedy totéž číslo potřetí v jedné větě. Naměřeno: týká se 43 z 91
+   okresních a krajských stránek.
+   Když je druh jediný, nepíše se tedy počet, ale co to za nabídky je.
+   Vazby jsou pro každý druh zvlášť: „všechny na prodej" se řekne
+   hezky, „všechny dražba" ne. */
+const JEDINY_DRUH = {
+  sale:    { jeden: 'na prodej',       vic: 'všechny na prodej' },
+  drazba:  { jeden: 'jde o dražbu',    vic: 'všechno jsou dražby' },
+  exekuce: { jeden: 'jde o exekuci',   vic: 'všechno jsou exekuce' },
+  obec:    { jeden: 'jde o záměr obce', vic: 'všechno jsou záměry obcí' },
+  majitel: { jeden: 'od majitele',     vic: 'všechny od majitele' },
+};
+function rozpadDruhu(byType) {
+  const druhy = Object.keys(byType).sort((a, b) => byType[b] - byType[a]);
+  if (druhy.length === 1) {
+    const t = druhy[0], v = JEDINY_DRUH[t];
+    if (v) return byType[t] === 1 ? v.jeden : v.vic;
+  }
+  return druhy.map((t) => `${byType[t]}× ${(TYPE_LABEL[t] || t).toLowerCase()}`).join(', ');
+}
+
 /* KOLIK NABÍDEK STOJÍ V OKRESNÍM VÝPISU ROZBALENÝCH.
  *
  * Okresní stránka vypisuje VŠECHNO — jiné typy stránek mají strop
@@ -1017,7 +1042,7 @@ for(const okres of eligibleOkres){
   const file = okresFile(okres);
   const count = list.length;
   const byType={}; for(const o of list) byType[o.type]=(byType[o.type]||0)+1;
-  const typeParts = Object.keys(byType).sort((a,b)=>byType[b]-byType[a]).map(t=>`${byType[t]}× ${(TYPE_LABEL[t]||t).toLowerCase()}`);
+  const typeParts = rozpadDruhu(byType);
   const priced = list.filter(o=>o.price>0).map(o=>o.price).sort((a,b)=>a-b);
   const minP=priced[0], maxP=priced[priced.length-1];
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
@@ -1087,7 +1112,7 @@ for(const okres of eligibleOkres){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
-      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> v okrese ${esc(okres)} — ${esc(typeParts.join(', '))}. Vše z <b>veřejných zdrojů</b> na jedné mapě, s prokliky na ověření v katastru. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
+      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> v okrese ${esc(okres)} — ${esc(typeParts)}. Vše z <b>veřejných zdrojů</b> na jedné mapě, s prokliky na ověření v katastru. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
     </div>
     </div>
   </section>
@@ -1204,7 +1229,7 @@ for(const kraj of eligibleKraj){
   const file = krajFile(kraj);
   const count = list.length;
   const byType={}; for(const o of list) byType[o.type]=(byType[o.type]||0)+1;
-  const typeParts = Object.keys(byType).sort((a,b)=>byType[b]-byType[a]).map(t=>`${byType[t]}× ${(TYPE_LABEL[t]||t).toLowerCase()}`);
+  const typeParts = rozpadDruhu(byType);
   const priced=list.filter(o=>o.price>0).map(o=>o.price).sort((a,b)=>a-b);
   const minP=priced[0], maxP=priced[priced.length-1];
   const okresList = Object.keys(byOkres).filter(ok=>OKRES_KRAJ[ok]===kraj).sort((a,b)=>byOkres[b].length-byOkres[a].length);
@@ -1261,7 +1286,7 @@ for(const kraj of eligibleKraj){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
-      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> ${esc(meta.loc)} — ${esc(typeParts.join(', '))}. Vyberte okres, nebo si otevřete celý kraj na mapě. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
+      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> ${esc(meta.loc)} — ${esc(typeParts)}. Vyberte okres, nebo si otevřete celý kraj na mapě. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
     </div>
     </div>
   </section>

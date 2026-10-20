@@ -150,6 +150,37 @@ pravda('a je co měřit (aspoň jedna dlaždice)', dlazdic > 0, 'žádná dlažd
 pravda('a žádná dlaždice se nepřeskočila kvůli neznámému slovu', neznamych === 0,
   `přeskočeno ${neznamych} — doplňte slovo do tabulky TYP`);
 
+/* ===== TOTÉŽ ČÍSLO POTŘETÍ V JEDNÉ VĚTĚ =============================
+   Podnadpis zní „Aktuálně evidujeme 33 pozemků v okrese Benešov —
+   33× na prodej." Když je druh nabídek jediný, je ten rozpad jen
+   zopakovaný součet: číslo stojí ve větě dvakrát a (dokud se to
+   neopravilo) potřetí v dlaždici pod ní. Naměřeno: týkalo se to
+   43 z 91 okresních a krajských stránek.
+   Měří se ta věta, ne generátor: najde se celkový počet a všechny
+   počty v rozpadu, a když je v rozpadu JEDINÝ údaj a rovná se součtu,
+   je to ta zbytečná věta. (Víc druhů je v pořádku — „28× na prodej,
+   3× dražba" nese informaci navíc.) */
+{
+  const vsechny = fs.readdirSync(KOREN).filter((f) => /^pozemky-.+\.html$/.test(f));
+  const VETA = /Aktuálně evidujeme <b>(\d[\d\u00a0 ]*)[^<]*<\/b>([^—]*)— ([^.]*)\./;
+  let vet = 0;
+  const opakuje = [];
+  for (const f of vsechny) {
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    const m = h.match(VETA);
+    if (!m) continue;
+    vet++;
+    const celkem = m[1].replace(/[\u00a0 ]/g, '');
+    const kusy = [...m[3].matchAll(/(\d[\d\u00a0 ]*)×/g)].map((x) => x[1].replace(/[\u00a0 ]/g, ''));
+    if (kusy.length === 1 && kusy[0] === celkem) opakuje.push(`${f}: „${m[3]}" u ${celkem}`);
+  }
+  // PŘEDPOKLAD: bez vět se nedá měřit nic
+  pravda(`podnadpis s počtem se přečetl (${vet} stránek)`, vet >= 70,
+    `přečteno ${vet} — změnila se podoba věty „Aktuálně evidujeme …"?`);
+  pravda('a nikde neopakuje týž počet ještě jednou jako „rozpad"',
+    opakuje.length === 0, opakuje.slice(0, 4).join('\n      '));
+}
+
 /* --- A TOTÉŽ NA KRAJSKÝCH STRÁNKÁCH -------------------------------
    Čtrnáct krajů, táž tvrzení. Jméno kraje se NEBERE z <h1> — tam stojí
    skloněné („v Jihočeském kraji", „na Vysočině", „v Praze") a klíč
