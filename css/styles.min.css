@@ -1522,6 +1522,13 @@ to{opacity:1;transform:none}
 .okr-item .okr-src{font-size:13px;font-weight:600;color:var(--znacka-svetla,#8CC3A4);text-decoration:none;white-space:nowrap}
 .okr-item .okr-src:hover{text-decoration:underline}
 .okr-more{color:var(--muted,#9db0a4);font-size:14px;margin:12px 0 0}
+.okr-wrap>.add-card,.okr-wrap>.add-cross{margin-top:20px}
+.okr-wrap>.okr-zacatek{margin-top:0}
+.okr-more.okr-mezi{margin-top:20px}
+.okr-more.okr-dal{margin-top:8px}
+.okr-more.okr-tesne{margin-top:2px}
+.rules-sect>:is(h2,h3) + .rules-note{margin-top:0}
+.okr-kraj-h a{color:inherit}
 .okr-index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:16px}
 .okr-index-grid a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 12px;background:var(--surface-2,#1b2b22);border:1px solid var(--line,#2C3F35);border-radius:var(--r-md);text-decoration:none;color:var(--text,#12241A);font-weight:600;font-size:14px}
 .okr-index-grid a:hover{border-color:var(--znacka-svetla,#8CC3A4)}

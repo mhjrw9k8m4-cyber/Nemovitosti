@@ -5350,6 +5350,43 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-item .okr-src{font-size:13px; font-weight:600; color:var(--znacka-svetla,#8CC3A4); text-decoration:none; white-space:nowrap;}
 .okr-item .okr-src:hover{text-decoration:underline;}
 .okr-more{color:var(--muted,#9db0a4); font-size:14px; margin:12px 0 0;}
+/* SVISLÁ OSNOVA PŘEHLEDOVÝCH STRÁNEK PATŘÍ SEM, NE DO ATRIBUTŮ.
+   Generátor přehledových stránek (scripts/generate-region-pages.mjs)
+   psal odstupy do `style=` u každého prvku zvlášť: 44× margin-top:20px,
+   23× margin-top:0 u poznámky pod nadpisem, 7× 12 px, které se rovnaly
+   výchozímu stavu odstavce, 4× 8 px, 4× 2 px — 88 vložených stylů pro
+   jediný rozměr. Zbylo z nich 23 jmenných výjimek v šabloně. V HTML se tím opakoval týž údaj devětkrát na stránce
+   a měnit osnovu znamenalo hledat v šabloně, ne ve stylopisu.
+   Pravidla níž dělají totéž jednou a výjimky mají jméno.
+   20 px je týž odstup, jaký má `.okr-stats` pod sebou. */
+.okr-wrap > .add-card,
+.okr-wrap > .add-cross{margin-top:20px;}
+/* ODSTUP NENÍ POLOHA, ALE ROLE. Napoprvé tu stálo `:first-child{margin-top:0}`
+   a změřilo se, že je to vedle: na cena-pozemku.html otevírá oddíl deska,
+   která odstup nad sebou chce (20 px), na pozemky-podle-okresu.html ho
+   nechce, a na okresní stránce je prvním prvkem odstavec s 12 px, protože
+   dlaždice se statistikou si přepis `scripts/generate-region-pages.mjs`
+   přenese nahoru do hlavičky. Táž poloha, tři různá přání — jméno proto
+   nese roli, ne pořadí. */
+.okr-wrap > .okr-zacatek{margin-top:0;}
+/* SAMOSTATNÝ ODSTAVEC MEZI DESKAMI. Výchozích 12 px je odstup uvnitř desky;
+   mezi deskami se měří na 20 px jako u desek samých.
+   Jméno `okr-mezi`, ne `okr-blok`: ten je o 1 100 řádek níž obsazený
+   (oddíl na pozemky-pohromade.html, `margin-top:32px; padding-top:24px;
+   border-top`) a odstavec s ním narostl o 25 px — vyhrála sice přesnější
+   `.okr-more.okr-blok` v odstupu, ale výplň a linka zůstaly. Změřeno na
+   cena-pozemku.html: odstavec „Souvisí:" 67 → 92 px. */
+.okr-more.okr-mezi{margin-top:20px;}
+/* DRUHÝ ODSTAVEC TÉŽE MYŠLENKY („Nevíte, kde hledat?" → „Než koupíte").
+   Nepatří k dalšímu bloku, patří k odstavci nad sebou. */
+.okr-more.okr-dal{margin-top:8px;}
+/* ŘÁDEK K ČÍSLU NAD SEBOU — vysvětluje dlaždice se statistikou nebo graf
+   přímo nad ním, takže se ho drží. */
+.okr-more.okr-tesne{margin-top:2px;}
+/* Poznámka přilepená k nadpisu desky: odstup už dal nadpis. */
+.rules-sect > :is(h2, h3) + .rules-note{margin-top:0;}
+/* Kraj v nadpisu žebříčku okresů je odkaz, ale nese barvu nadpisu. */
+.okr-kraj-h a{color:inherit;}
 .okr-index-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; margin-top:16px;}
 .okr-index-grid a{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:12px 12px; background:var(--surface-2,#1b2b22); border:1px solid var(--line,#2C3F35); border-radius:var(--r-md); text-decoration:none; color:var(--text, #12241A); font-weight:600; font-size:14px;}
 .okr-index-grid a:hover{border-color:var(--znacka-svetla,#8CC3A4);}

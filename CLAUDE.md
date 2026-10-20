@@ -94,6 +94,15 @@ oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
 balíček stylů, který stránka opravdu načítá**: úvodní stránka má
 `css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
 `css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška.
+**Odstupy přehledových stránek stojí ve stylopisu, ne v `style=`.**
+`scripts/generate-region-pages.mjs` jich měl 88 v atributech; teď jsou
+u `.okr-wrap` v `css/styles.css` a nestandardní hodnota má jméno podle
+role (`okr-mezi`, `okr-dal`, `okr-tesne`, `okr-zacatek`). Nové jméno
+třídy si **nejdřív ověř grepem po celém stylopisu** — `okr-blok` už
+bylo obsazené a přidalo odstavci 25 px výplně a linku (`docs/optimalizace.md`,
+položka 55). V `style=` smí zůstat jen to, co je **daty**: šířka pruhu
+v procentech, poloha špendlíku.
+
 **Vložený styl stránky pozemku se píše v `css/pozemek-vlozeny.css`**, ne
 ve `pozemek.html` — tam ho vkládá už očištěný
 `scripts/vloz-styl-pozemku.mjs` (a pak ho dědí i ~2 000 vygenerovaných

@@ -3323,8 +3323,96 @@ soubor přes `route.fulfill` a vyšel rozdíl **22 ms**. Falešně: co
 zkouška vyrobí v paměti, neprojde emulovaným zpomalením sítě —
 musí se to poslat ze serveru (`route.continue({ url })`).
 
-**Druhá půlka měření zatím nevyšla**: sonda, která měla změřit, o kolik
-později se na stránce pozemku objeví tlačítko „Inzerát", skončila ve
-všech šesti bězích na časovém limitu (klepnutí na kartu v zpomaleném
-prohlížeči nedoputovalo tam, kam mělo). Dokud tohle číslo není, nemá
-se podle čeho rozhodnout — a tipovat se to nebude.
+### Druhá půlka: detail na tom netratí nic
+
+První sonda skončila ve všech šesti bězích na časovém limitu, protože
+čekala na text `Inzerát|Katastr|Ověřit` — a tlačítko se u dražby
+jmenuje „K dražbě". Po přepsání (čeká se na první `<a class="primary">`,
+jehož odkaz nevede na ikatastr.cz) měření dojelo. Táž pomalá 4G,
+klepnutí na první kartu ve výpisu, medián ze tří běhů, čas od
+klepnutí po odkaz na zdroj:
+
+| | čas |
+|---|---:|
+| s adresami v handoffu | 2 229 ms |
+| bez adres | 2 217 ms |
+| **rozdíl** | **−12 ms** |
+
+Žádný. A dá se to i vysvětlit: handoff sice vykreslí stránku okamžitě
+(`render(quick)` v js/pozemek.js nečeká na data), ale přes pomalou linku
+trvá samo načtení stránky pozemku ty dvě sekundy — a **okresní řez**
+(`data/okres/<okres>.json`, u Benešova 33 nabídek) dorazí hned za ní
+a adresu nese taky. Handoff tedy nešetří čekání na data, šetří jen
+jeden malý soubor, který by stejně přišel.
+
+### Rozhodnutí: adresy na úvodní stránku neposílat
+
+Změřené obě strany: **−18,6 kB gzipem** na úvodní stránce (čtvrtina
+největšího souboru, na pomalé 4G kolem 90 ms, bez balení 802 ms) proti
+**nule** na detailu. Rozhoduje se tedy pro vynechání.
+
+Jak, aby se nerozbil otevřený dataset: `data/opportunities.json` je
+zveřejněný soubor, na který odkazuje data.html, a adresy z něj
+vyhazovat nemá smysl. Úvodní stránka si místo něj má stahovat **vlastní
+řez bez adres** (okresní řezy i statické stránky pozemků se dál
+generují z plného souboru, který má `url` dál). Jediné místo, které
+`url` na úvodu používá, je handoff na řádku 6374 v js/main.js — ten
+pole prostě přestane předávat a stránka pozemku si adresu vezme
+z okresního řezu, jak se právě změřilo.
+
+To už je samostatná práce (nový soubor v překladu, přepnutý `loadJSON`,
+nová jména v `?v=`, zkoušky na obojí), vedená jako úkol zvlášť.
+
+## 55. Osmdesát osm odstupů v atributu `style=` *20. 10.*
+
+Generátor přehledových stránek psal svislou osnovu do `style=` u
+každého prvku zvlášť: 44× `margin-top:20px`, 23× `margin-top:0`
+u poznámky pod nadpisem, 7× 12 px, 4× 8 px, 4× 2 px a čtyři
+jednotlivosti — **88 vložených stylů pro jediný rozměr** v šabloně,
+ze které se vyrábí přes tisíc stránek. V HTML se tím opakoval týž
+údaj devětkrát na stránce a měnit odstupy mezi deskami znamenalo
+hledat v generátoru, ne ve stylopisu.
+
+Teď to stojí v `css/styles.css` jednou a výjimky mají jméno podle
+role: `okr-mezi` (samostatný odstavec mezi deskami, 20 px),
+`okr-dal` (druhý odstavec téže myšlenky, 8 px), `okr-tesne` (řádek
+k číslu nad sebou, 2 px) a `okr-zacatek` (prvek, který oddíl
+otevírá, 0). V šabloně zbylo 23 jmenných výjimek místo 88 atributů;
+sedm odstupů bylo přepsání výchozího stavu týmž číslem a zmizelo
+úplně, stejně jako `margin-bottom:0` (to dělá `*{margin:0}` samo),
+`display:inline` na `<span>` a `color:inherit` u odkazu v nadpisu
+žebříčku (má teď pravidlo `.okr-kraj-h a`).
+
+**Čím se to ověřilo.** Sonda projde šestnáct stránek (okres, kraj,
+druh, rozpočet, nové, dražby, ceny, podle okresů, pohromade, a čtyři
+statické články jako kontrolu) na 390 a 1 280 px a čte u sedmi druhů
+prvků oba svislé odstupy a vrchní hranu; u pěti z nich navíc **každý
+prvek v `<body>`**, vrchní hranu i výšku. Srovnává se s pracovní
+kopií z HEAD (`git worktree`), která se servíruje na druhém portu —
+takže se měří dva weby zároveň, ne dvě chvíle. Výsledek: **žádný
+prvek se nepohnul ani o pixel**, počty prvků souhlasí, jediným
+rozdílem v otisku je přidané jméno třídy.
+
+**Dva nálezy z toho ověřování** (bez měření by prošly oba):
+
+1. Napoprvé tu stálo `:first-child{margin-top:0}` — a je to vedle.
+   Na cena-pozemku.html otevírá oddíl deska, která odstup nad sebou
+   **chce**, na pozemky-podle-okresu.html ho nechce, a na okresní
+   stránce je prvním prvkem odstavec s 12 px, protože dlaždice se
+   statistikou si generátor přenese nahoru do hlavičky. Táž poloha,
+   tři různá přání: odstup je role, ne pořadí.
+2. Jméno `okr-blok` už bylo o 1 100 řádek níž obsazené (oddíl na
+   pozemky-pohromade.html: `margin-top:32px; padding-top:24px;
+   border-top`). Přesnější `.okr-more.okr-blok` sice vyhrála
+   v odstupu, ale výplň a linka zůstaly — odstavec „Souvisí:" na
+   cena-pozemku.html narostl ze 67 na 92 px a s ním celá stránka
+   o 25 px. Proto `okr-mezi`.
+
+Zbyly tři vložené styly a všechny jsou **daty**, ne osnovou: šířka
+pruhu v žebříčku krajů (`width:${podíl}%`) a poloha špendlíku na
+náhledu okresu (`left/top` v procentech).
+
+Zbývá totéž v **ručně psaných stránkách**: 21 souborů s vloženými
+odstupy (nejvíc `predloha.html` a `zpravy.html`, u článků `padding-top`
+a `margin-top` u patního odkazu). Dokud tam jsou, nemá smysl psát
+zkoušku, která vložené odstupy zakáže úplně — až po nich.
