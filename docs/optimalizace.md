@@ -4928,3 +4928,76 @@ jeden výraz ve zdroji.
 **Přeměřit starý závěr se vyplatí i tehdy, když se potvrdí.** Hypotéza
 „modul se jen čte" padla — a při jejím ověřování vypadlo z měření něco,
 co nikdo nehledal: že se konstanta počítá dvacetkrát tisíc za vykreslení.
+
+
+## 80. Vynucené rozvržení: změřeno, NEUDĚLÁNO *20. 10.*
+
+Oddíl 79 našel drahé místo počítáním volání jedné funkce. Tahle otázka
+byla obecnější — **kde úvodní stránka opravdu tráví procesor?** — a
+odpověď na ni skončila tím, že se kód nezměnil. Je to tedy záznam
+o optimalizaci, která se neudělala, a proč.
+
+### Co profil ukázal
+
+CDP Profiler, telefon 390 px, procesor 4× zpomalený (stejně jako
+v `test-plynulost`). Nejdražší funkcí z `main.js` vyšla
+`nastrojeDoHlavicky()` — krátká funkce bez jediného cyklu, která
+přesune řádek nářadí do hlavičky výpisu.
+
+První běh ukázal **266,5 ms**, opakování **95,8 / 106,8 / 123,7 ms**.
+Ta dvěstěšedesátka byl odlehlý vzorek ze studeného startu serveru;
+platí to druhé. (Táž past jako v oddílu 72 — jen tentokrát jediný
+*běh*, ne jediná stránka.)
+
+Proč krátká funkce stojí stovku milisekund: zasahuje do DOM
+(`classList.remove`, `appendChild`) a **hned za tím čte geometrii**
+(`scrollWidth`). Tím prohlížeč musí spočítat rozvržení okamžitě — a
+protože ta funkce běží z `renderList()`, je to rozvržení celého
+čerstvě postaveného seznamu.
+
+### Co se zkusilo a proč to nepomohlo
+
+Měření se odložilo do `requestAnimationFrame`. V profilu to vypadalo
+jako úspěch: funkce ze žebříčku nejdražších zmizela, a to ve třech
+bězích ze tří.
+
+**Byl to ale klam z přejmenování.** Práce se přesunula do anonymní
+funkce uvnitř `requestAnimationFrame`, a tím se v profilu slila do
+velké položky „(anonymní)". Jakmile se to měření vytáhlo do pojmenované
+funkce, bylo zpátky: 108–182 ms.
+
+Důvod je věcný: **callback `requestAnimationFrame` běží PŘED
+rozvržením**, takže čtení geometrie v něm rozvržení vynutí úplně
+stejně. Odložení o jeden snímek posune, kdy se to stane, ne jestli.
+
+### Rozhodlo jediné číslo, které se nedá obejít
+
+Vlastní čas VŠECH funkcí z `main.js` dohromady, tři běhy:
+
+| podoba | běhy | průměr |
+|---|---|---|
+| synchronně (jak to je) | 508 / 624 / 481 ms | 538 |
+| odložené do `requestAnimationFrame` | 588 / 487 / 566 ms | **547** |
+| čtení geometrie úplně pryč | 458 / 443 / 509 ms | 470 |
+
+Odložení tedy neušetří **nic** — rozsahy se překrývají. Horní mez toho,
+co vůbec jde získat, je rozdíl mezi prvním a třetím řádkem: kolem
+**70 ms zpomaleného procesoru, tedy asi 17 ms skutečných**. A to by
+znamenalo stín „pokračuje vpravo" buď zrušit, nebo postavit na něčem
+jiném než na čtení geometrie.
+
+Změna se proto **vrátila zpět** i s hlídačem, který k ní patřil. Sedmnáct
+milisekund nestojí za složitější kód — a hlavně: hlídač by hlídal
+pravidlo („nečti geometrii v té funkci"), o kterém teď víme, že samo
+o sobě nic neřeší.
+
+### Co si z toho odnést
+
+1. **Profil ukazuje, kde se čas tráví, ne proč.** Stovka milisekund
+   v krátké funkci bez cyklu není její práce; je to účet za něco, co si
+   vyžádala jinde.
+2. **Pozor na zlepšení, které je jen přejmenování.** Když práce zmizí
+   z jedné položky profilu, má se ověřit, že nepřibyla v jiné — nejlépe
+   součtem, který se přesunem obejít nedá.
+3. **Jeden běh profilu je jeden vzorek.** Než se na jeho čísle začne
+   stavět, má se zopakovat.
