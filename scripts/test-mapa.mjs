@@ -69,17 +69,33 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    otázka je zapsaná v docs/co-chybi.md (bod 3db), ať nezapadne. Dotyková
    pravidla na úvodní mapě měří scripts/test-dotyk.mjs
    a scripts/test-rozvrzeni.mjs, obě s dotykem zapnutým. */
-/* BEZ DOTYKU, A JE TO ZMĚŘENÉ, ne jen zvyk. Se zapnutým dotykem
-   (hasTouch, s isMobile i bez) padá osm kontrol — ale NE kvůli
-   klepnutí: to v dotykovém kontextu funguje, značka kraje se dá
-   vybrat `touchscreen.tap`em i `mouse.click`em (změřeno 20. 10., viz
-   docs/co-chybi.md 3db). Padá hledání VOLNÉHO MÍSTA uvnitř kraje:
-   s dotykem se chytací plochy zvětšují (@media (pointer: coarse)),
-   značky zakryjí obrys skoro celý a bod, kde `elementFromPoint` vrací
-   obrys, nezbyde. Přepsat zkoušku na to je samostatná práce; co se
-   o dotyku na mapě tvrdit dá, měří test-dotyk a test-rozvrzeni. */
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 } });
-const klepni = (x, y) => p.mouse.click(Math.round(x), Math.round(y));
+/* S DOTYKEM, protože mapa je na telefonu to hlavní. Dlouho tu běžel
+   profil bez dotyku a u něj stála otevřená otázka, jestli se kraj na
+   dotyku vůbec dá vybrat (docs/co-chybi.md 3db). Odpověď se našla
+   měřením 20. 10. a je prostá: PRVNÍ KLEPNUTÍ NA DOTYKU MAPU JEN
+   PROBUDÍ — `probudMapu()` v js/main.js vrátí true a obsluha skončí,
+   protože zamčená mapa by jinak na telefonu brala rolování stránky.
+   Na myši se to nedělá (kolečko mapa nebere, takže zamykat netřeba).
+   Zkouška proto mapu nejdřív probudí a teprve potom klepe; bez toho
+   padlo osm kontrol v kaskádě a vypadalo to jako vada výběru kraje.
+   Ověřeno: po probuzení vybere kraj `mouse.click`, `touchscreen.tap`
+   i `dispatchEvent` — na značce kraje i na obrysu. */
+const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 },
+  hasTouch: true, isMobile: true });
+/* KLEPNUTÍ, KTERÉ POČÍTÁ SE ZAMČENOU MAPOU. Na dotyku je mapa po
+   načtení i po každém odrolování zamčená — bere rolování stránky — a
+   první klepnutí ji jen probudí (js/main.js, probudMapu). Člověk to
+   na telefonu dělá přesně takhle: klepne, nic se nestane, klepne
+   znovu. Zkouška proto před klepnutím zjistí, jestli je mapa zamčená,
+   a když ano, klepne dvakrát. Bez toho padlo osm kontrol v kaskádě
+   a vypadalo to jako vada výběru kraje (viz docs/co-chybi.md 3db). */
+const mapaZamcena = () => p.evaluate(() =>
+  !(window.PK_MAPA && window.PK_MAPA.dragging && window.PK_MAPA.dragging.enabled()));
+const klepni = async (x, y) => {
+  const X = Math.round(x), Y = Math.round(y);
+  if (await mapaZamcena()) { await p.mouse.click(X, Y); await p.waitForTimeout(400); }
+  return p.mouse.click(X, Y);
+};
 // Test nesmí sahat ven z počítače: cizí obrázky (dlaždice mapy) nahradíme
 // prázdnými, ostatní cizí požadavky zahodíme. Pozor na pořadí — Playwright
 // bere poslední zaregistrovanou shodu, takže tohle musí být PRVNÍ.
@@ -151,6 +167,49 @@ async function priprav() {
   return null;
 }
 pravda('mapa je pod hlavičkou opravdu vidět', !!(await priprav()), 'vidět jen ' + Math.round(videtPx) + ' px');
+
+/* PROBUZENÍ MAPY — a rovnou se změří, že se to děje. Na dotyku je mapa
+   po načtení ZAMČENÁ: bere jen rolování stránky, dokud do ní člověk
+   jednou neklepne. Je to schválně (js/main.js, probudMapu) a je to
+   vidět i na tom, že první klepnutí ještě kraj nevybere. */
+{
+  const predtim = await p.evaluate(() => ({
+    zamceno: !!document.querySelector('.map-holder.kraj-lock, .map-holder.zamceno')
+      || !(window.PK_MAPA && window.PK_MAPA.dragging && window.PK_MAPA.dragging.enabled()),
+  }));
+  pravda('na dotyku je mapa po načtení zamčená (bere rolování stránky)',
+    predtim.zamceno === true, 'mapa je rovnou odemčená — probuzení se nedá změřit');
+  /* Probouzí se na PRÁZDNÉM místě mapy, ne doprostřed: uprostřed leží
+     značka kraje a probuzení by rovnou vybralo kraj (naměřeno: „Kraj
+     Vysočina"), takže by se přehled republiky rozpadl ještě dřív, než
+     se začne měřit. Hledá se bod, pod kterým není ani značka, ani
+     obrys, ani tečka — typicky roh okna mapy za hranicí republiky. */
+  const prazdno = await p.evaluate(() => {
+    const r = document.querySelector('.map-holder').getBoundingClientRect();
+    const hl = document.querySelector('header').getBoundingClientRect().bottom;
+    for (let i = 1; i < 12; i++) for (let j = 1; j < 12; j++) {
+      const x = Math.round(r.left + r.width * i / 13), y = Math.round(r.top + r.height * j / 13);
+      if (y < Math.max(r.top, hl) + 12 || y > r.bottom - 12) continue;
+      const el = document.elementFromPoint(x, y);
+      if (!el) continue;
+      if (el.closest && (el.closest('.pk-shluk-obal') || el.closest('.leaflet-control'))) continue;
+      if (el.tagName === 'path' || el.classList.contains('leaflet-interactive')) continue;
+      return { x, y, pod: el.tagName + '.' + (el.getAttribute('class') || '').slice(0, 30) };
+    }
+    return null;
+  });
+  pravda('je kam klepnout naprázdno (jinak by probuzení rovnou vybralo kraj)',
+    !!prazdno, 'celé okno mapy je pokryté značkami a obrysy');
+  if (!prazdno) { console.log(zpravy.join('\n')); await prohlizec.close(); process.exit(1); }
+  await klepni(prazdno.x, prazdno.y);
+  await p.waitForTimeout(900);
+  const po = await p.evaluate(() => ({
+    odemceno: !!(window.PK_MAPA && window.PK_MAPA.dragging && window.PK_MAPA.dragging.enabled()),
+  }));
+  pravda('a první klepnutí ji probudí (teprve druhé vybírá)', po.odemceno === true,
+    'mapa zůstala zamčená — následující kontroly by měřily probuzení, ne výběr');
+  await priprav();
+}
 
 // Pomůcky uvnitř stránky: souřadnice teček v okně, kraj pod daným bodem,
 // a tolerance klepnutí spočítaná ze stejných čísel jako v main.js.

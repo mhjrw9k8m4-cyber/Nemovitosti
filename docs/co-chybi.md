@@ -6822,15 +6822,21 @@ i bez, `hasTouch` samotné i s `isMobile`), vždy s podstrčenými dlaždicemi:
   při 1280 px má 845 × 592 px. (`scripts/test-mapa.mjs` přepínač
   používá — ale probe, kterým se to tehdy zkoušelo, ne.)
 
-**Co z toho JEŠTĚ nevyšlo.** Když se dotyk zapne celé zkoušce
-`scripts/test-mapa.mjs`, osm kontrol pořád padá — a je to jiná věc než
-klepnutí. Padá mezi nimi „je na co klepnout uvnitř vybraného kraje",
-tedy kontrola, která teprve HLEDÁ volné místo uvnitř kraje, kde
-`elementFromPoint` vrací obrys. S dotykem se chytací plochy zvětšují
-(pravidla za `@media (pointer: coarse)`), takže značky zakryjí obrys
-skoro celý a volné místo nezbyde. Není to tedy „klepnutí nefunguje",
-ale „zkouška počítá s plochami, jaké na dotyku nejsou". Zbývá ji na to
-přepsat; do té doby běží v profilu bez dotyku a tohle je u ní napsané.
+**A pak se našlo i to zbylé — zkouška běží s dotykem.** Když se dotyk
+zapnul celé zkoušce, padalo osm kontrol v kaskádě. Příčina je JEDNA
+a je v kódu webu napsaná jako záměr: na dotyku je mapa po načtení
+**zamčená** (bere rolování stránky) a první klepnutí ji jen PROBUDÍ —
+`probudMapu()` v `js/main.js` vrátí `true` a obsluha skončí. Na myši se
+to nedělá, protože kolečko mapa nebere a zamykat není proč. Změřeno na
+obrysu Plzeňského kraje: bez dotyku vybere kraj jedno klepnutí, s dotykem
+ani `mouse.click`, ani `touchscreen.tap`, ani `dispatchEvent` — ale
+po probouzecím klepnutí vyberou kraj všechny tři.
+
+`scripts/test-mapa.mjs` proto běží v profilu `hasTouch + isMobile`
+a klepání má obalené: když je mapa zamčená, klepne dvakrát, jak to na
+telefonu dělá člověk. Přibyly tři kontroly (mapa je po načtení zamčená,
+první klepnutí ji probudí, a je kam klepnout naprázdno) a sada je
+51/51 zelená. Sabotáž `dotykoveOvladani = false` shodí tu prostřední.
 
 ## 3dc. NALEZENO: devět prohlížečových zkoušek je červených a nebylo to ode mě — *15. 10.*
 
