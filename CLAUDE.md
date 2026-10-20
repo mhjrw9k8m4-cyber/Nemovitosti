@@ -94,6 +94,16 @@ oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
 balíček stylů, který stránka opravdu načítá**: úvodní stránka má
 `css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
 `css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška.
+**Úvodní stránka stahuje `data/mapa.json`, ne celek.** Je to týž soubor
+bez duplicit a bez pole `url` (−19 kB gzipem, čtvrtina toho, co se
+přenese; měření v `docs/optimalizace.md` 58). Na adrese inzerátu přitom
+visely dvě věci, které se bez ní rozbijí TICHO: slučování duplicit
+(`klicZdroje` v js/hlidani-logika.js — proto se duplicity odstraňují už
+v překladu) a historie cen (`data/zlevneni.json` je proto klíčovaný
+klíčem POZEMKU, ne nabídky). Klíč uložených pozemků adresu nepoužívá
+a používat nesmí. Když se do řezu něco přidává nebo ubírá, hlídá to
+`scripts/test-data-rezy.mjs` znak za znakem.
+
 **Odstup nikdy nepatří do `style=`** — ani v šabloně, ani ve značkách
 skládaných v JavaScriptu. Hlídá to `scripts/test-odstupy.mjs` (čte
 stylopisy, stránky, generátory i `js/*.js`); výjimky jsou dvě a mají

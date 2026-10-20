@@ -80,7 +80,7 @@ const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { wi
 let data = STARE;   // co server právě vydává; test to v průběhu přepne
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
   contentType: 'application/json', body: JSON.stringify(data) }));
 await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
   contentType: 'application/json', body: '[]' }));
@@ -518,7 +518,7 @@ if (smazat) {
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxOdhlaseny.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  await ctxOdhlaseny.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+  await ctxOdhlaseny.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(data) }));
   await ctxOdhlaseny.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: '[]' }));
@@ -600,7 +600,7 @@ if (smazat) {
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxX.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  await ctxX.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+  await ctxX.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA_X) }));
   await ctxX.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: '[]' }));

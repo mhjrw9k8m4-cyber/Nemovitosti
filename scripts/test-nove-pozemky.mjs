@@ -166,7 +166,7 @@ pravda('každý vypsaný den má v datech nabídku', dnyIso.every((d) => dnyVDat
 // --- 5) ZMĚNY CEN: přepočet z archivu -------------------------------
 const zmeny = { dolu: [], nahoru: [], pod: [] };
 for (const o of aktualni) {
-  const hist = historie[PKKlic.klicArchivu(o)];
+  const hist = historie[PKKlic.klicPozemku(o)];
   const s = hist && hist.length > 1 ? Object.assign({}, o, { h: hist }) : o;
   const z = PKZ.zmena(s);
   if (!z) continue;
@@ -215,7 +215,7 @@ pravda(`a žádné není nad ${PKZ.MEZ_PODEZRELA} % (to má vlastní oddíl)`,
     let n = 0;
     for (const o of aktualni) {
       if (o.type !== 'drazba' && o.type !== 'exekuce') continue;
-      const hist = historie[PKKlic.klicArchivu(o)];
+      const hist = historie[PKKlic.klicPozemku(o)];
       const x = hist && hist.length > 1 ? Object.assign({}, o, { h: hist }) : o;
       const z = PKZ.zmena(x);
       if (z && z.dolu && !z.podezrela) n++;

@@ -3506,3 +3506,98 @@ dohledává i při návratu, kde se měří odznak „Poznámka".
 Zkouška má o jednu kontrolu víc (70 místo 69) a sabotáž ji shodí:
 vypnuté zpracování `?q=` v js/main.js → „a po dohledání obce
 (Medvědice) je jeho karta ve výpisu ✕ {"zadna":true,"karet":24}".
+
+## 58. Adresy inzerátů z úvodní stránky — a tři věci, které na nich visely *20. 10.*
+
+Rozhodnutí z položky 54 je provedené: úvodní stránka od teď stahuje
+**data/mapa.json**, což jsou tytéž nabídky bez duplicit a **bez pole
+`url`**. Změřeno na skutečném překladu:
+
+| soubor | surově | gzip | brotli |
+|---|---:|---:|---:|
+| `opportunities.json` (dosud) | 637,3 kB | 77,3 kB | 56,1 kB |
+| `mapa.json` (teď) | 470,0 kB | **58,1 kB** | **43,4 kB** |
+
+To, co úvodní stránka stáhne na datech celkem, spadlo **705,5 → 538,2 kB**
+(sonda čte délky odpovědí na `/data/*`). Čas od začátku načítání po
+první nabídku ve výpisu na pomalé 4G (1,6 Mb/s, 150 ms RTT, medián ze
+tří běhů, místní server **nezabaluje**): **7 977 → 7 144 ms, tedy
+−833 ms**. Hosting je Vercel a ten balí sám, takže přes drát jde
+rozdíl 19,2 kB gzipem nebo 12,7 kB brotli — na téže lince kolem
+**95, resp. 65 ms**.
+
+**Proč zrovna `url`.** Změřeno po polích, co se stane, když se které
+vynechá — kolik ubere surově a kolik po zabalení:
+
+| pole | surově | gzip | brotli |
+|---|---:|---:|---:|
+| `url` | 160,2 kB | **−18,6 kB** | **−12,2 kB** |
+| `lng` | 31,6 kB | −11,0 kB | −7,8 kB |
+| `place` | 39,3 kB | −10,7 kB | −6,6 kB |
+| `lat` | 31,2 kB | −10,6 kB | −7,5 kB |
+| `area` | 23,3 kB | −7,2 kB | −5,5 kB |
+| `extra` | 64,0 kB | −1,7 kB | −0,9 kB |
+
+`url` je největší jak surově, tak po zabalení — a je to jediné pole,
+které úvodní stránka opravdu nepotřebuje. (Hezky se na tom vidí, že
+surová velikost nic neříká: `extra` má 64 kB, ale je to pár
+opakujících se vět, takže po zabalení nestojí skoro nic.)
+
+### Tři věci, které na adrese visely, aniž by to bylo vidět
+
+Tohle je ten nález. Vynechat pole vypadá jako jednořádková změna; ve
+skutečnosti na něm visely tři věci a dvě z nich by se projevily tiše.
+
+1. **Slučování duplicit.** `bezDuplicit` v js/hlidani-logika.js slučuje
+   v PRVNÍM kroku podle adresy zdroje (`klicZdroje`). Bez `url` ten krok
+   nenajde nic a na úvodu se objevilo **1 964 nabídek místo 1 940** —
+   tedy 24 dvakrát. Naměřeno na počítadle v záhlaví mapy. Řeší se to
+   tím, že se duplicity odstraní už v překladu, **touž funkcí**; stránka
+   ji pustí znovu a nenajde co slučovat (hlídá to zkouška).
+2. **Odznak „Zlevněno".** Historie cen (data/zlevneni.json) byla
+   klíčovaná **klíčem nabídky** (`pkey` + otisk adresy inzerátu), takže
+   bez adresy by se nenašla u 1 720 nabídek z 1 940 — odznak i graf
+   historie by z mapy zmizely a nic by to neohlásilo. (Spočítáno přesně:
+   se starými klíči by úvod bez adresy našel 220 nabídek z 1 940, totiž
+   právě ty, které adresu nemají.) Soubor je proto
+   klíčovaný **klíčem pozemku** (`pkey` + výměra), tedy týmž, pod kterým
+   si lidé pozemky ukládají. Archiv si adresu v klíči nechává: ten si
+   pamatuje JEDNU NABÍDKU, kdežto zlevneni.json je zobrazovací řez pro
+   dnešní nabídky, který se čtyřikrát denně přestavuje. Ověřeno
+   měřením: stránka přilepí historii **88 nabídkám před i po změně**
+   (číslo si js/main.js vypisuje s `window.PK_DEBUG`).
+3. **Co na adrese NEVISÍ:** klíč uložených pozemků a poznámek
+   (`klicPozemku`). Ten adresu schválně nepoužívá a je to v js/klic.js
+   napsané — „odkaz se změní, když majitel nabídku vyvěsí znovu, a klíč
+   by přestal být týž pozemek". Kdyby ji používal, přišel by každý
+   o uložené pozemky. Tohle byla ta nejdůležitější věc ke zjištění,
+   a dobrá zpráva.
+
+### Čím se nešlo
+
+**Nechat `url` a poslat jen jeho otisk** (`#20wp1`, pět znaků) by
+zachovalo klíč archivu bez druhé cesty v kódu. Změřeno: soubor by měl
+473,8 kB surově, ale **65,8 kB gzipem** — tedy jen −11,5 kB místo
+−19,2, protože náhodně vypadající otisky se nezabalí. Polovina úspory
+za pole, které nikdo nečte. Zahozeno.
+
+**Druhá kopie dat v repozitáři** je u krajských řezů zakázaná
+a s odhadem „zdvojnásobilo by to přírůstek historie" (viz hlavičku
+scripts/generate-data-rezy.mjs). Tady se to změřilo: šest skutečných
+po sobě jdoucích verzí dat z historie repozitáře, commitnutých jednou
+samy a jednou s odvozeným souborem, dalo `.git` **260 kB proti 280 kB**
+— tedy **+3,3 kB na aktualizaci**, ne +460. Git ukládá odvozený soubor
+jako rozdíl proti sourozenci v témže commitu, se kterým se shoduje ze
+tří čtvrtin. Při čtyřech aktualizacích denně je to kolem 5 MB za rok;
+odhad podle surové velikosti byl mimo o dva řády.
+
+### Pojistky
+
+`scripts/test-data-rezy.mjs` má o **13 kontrol** víc: že řez existuje,
+že je to znak za znakem celek bez duplicit a bez `url`, že na něm
+stránka už nemá co slučovat, že hlavička souhlasí, že úvod přednačítá
+řez a ne celek, že si celek nechává jen jako záložní cestu, že handoff
+adresu nepředává a že **historie cen na řez dosedne** (88 z 88).
+Kdyby řez na serveru chyběl, stránka si vezme celek: stáhne o 19 kB
+víc, místo aby skončila v nouzovém režimu se čtrnácti záložními
+nabídkami.

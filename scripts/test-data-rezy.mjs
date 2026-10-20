@@ -185,6 +185,91 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
   bajtuNejvetsi < fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size / 3,
   'řezy nejsou o mnoho menší — k čemu by pak byly');
 
+/* 7) ŘEZ PRO ÚVODNÍ STRÁNKU: celek bez jediného pole
+   ------------------------------------------------------------------
+   Úvodní stránka stahuje data/mapa.json, což má být TÝŽ soubor jako
+   celek bez pole `url`. Kdyby se rozešel v čemkoli jiném — jiné pořadí,
+   chybějící nabídka, zaokrouhlená cena — vypadal by web normálně a jen
+   by ukazoval jiná data než zbytek. Srovnává se proto nabídka po
+   nabídce ZNAK ZA ZNAKEM, ne počty. */
+{
+  const cesta = path.join(ROOT, 'data', 'mapa.json');
+  const je = fs.existsSync(cesta);
+  pravda('řez pro úvodní stránku existuje (data/mapa.json)', je, 'soubor chybí');
+  if (je) {
+    const M = JSON.parse(fs.readFileSync(cesta, 'utf8'));
+    const mapa = M.opportunities || [];
+    /* SROVNÁVÁ SE S CELKEM BEZ DUPLICIT, ne se syrovým souborem.
+       Duplicity se slučují podle ADRESY ZDROJE, a tu řez nenese —
+       stránka by je tedy znovu nenašla a ukázala by 24 nabídek dvakrát.
+       Dělá se to proto už v překladu, touž funkcí. */
+    pravda(`a má tytéž nabídky jako celek bez duplicit, v témže pořadí (${mapa.length})`,
+      mapa.length === bezDuplicit.length, `řez ${mapa.length}, bez duplicit ${bezDuplicit.length}`);
+    const bezUrl = (o) => { const c = Object.assign({}, o); delete c.url; return JSON.stringify(c); };
+    let rozdilny = null;
+    for (let i = 0; i < Math.min(mapa.length, bezDuplicit.length); i++) {
+      if (JSON.stringify(mapa[i]) !== bezUrl(bezDuplicit[i])) { rozdilny = i; break; }
+    }
+    pravda('a každá nabídka je znak za znakem tatáž, jen bez pole url',
+      rozdilny === null, rozdilny === null ? '' : `první rozdíl u nabídky ${rozdilny}: `
+        + `řez ${JSON.stringify(mapa[rozdilny]).slice(0, 90)}`);
+    /* A ŽE SE TÍM NIC NESLOUČÍ NAVÍC: pustit `bezDuplicit` na řez (tedy
+       to, co udělá stránka) už nesmí najít co slučovat. Jinak by se
+       počet na úvodu rozešel s počtem v řezech a na stránkách. */
+    pravda('a stránka na něm už nemá co slučovat (pustí bezDuplicit znovu)',
+      PKH.bezDuplicit(mapa).length === mapa.length,
+      `po druhém sloučení ${PKH.bezDuplicit(mapa).length} z ${mapa.length}`);
+    pravda('a adresa inzerátu v něm není ani jednou',
+      !/"url"\s*:/.test(fs.readFileSync(cesta, 'utf8')),
+      'pole url v řezu zůstalo — pak nic neušetří');
+    const uspora = fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size - fs.statSync(cesta).size;
+    pravda(`a je o co stát (${(uspora / 1024).toFixed(0)} kB surově méně než celek)`,
+      uspora > 100 * 1024, `ušetří jen ${(uspora / 1024).toFixed(0)} kB`);
+    pravda('a hlavička souhlasí s celkem (datum i soupis zdrojů)',
+      M.updated === celek.updated && M.updated_at === celek.updated_at
+        && JSON.stringify(M.sources || null) === JSON.stringify(celek.sources || null),
+      `řez ${M.updated}, celek ${celek.updated}`);
+  }
+  /* A ŽE SI HO ÚVOD OPRAVDU BERE. Bez tohohle by se řez vyráběl do
+     prázdna a nikdo by si toho nevšiml — soubor na disku je, stránka
+     funguje, jen stahuje o 160 kB víc. */
+  const idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  pravda('úvodní stránka přednačítá řez, ne celek',
+    /rel="preload"[^>]+data\/mapa\.json/.test(idx) && !/rel="preload"[^>]+data\/opportunities\.json/.test(idx),
+    'v index.html stojí preload na celek');
+  const main = fs.readFileSync(path.join(ROOT, 'js', 'main.js'), 'utf8');
+  pravda('a stahuje ho i skriptem', /loadJSON\('data\/mapa\.json'\)/.test(main),
+    "js/main.js si řez nebere");
+  pravda('a celek si nechává jen jako záložní cestu',
+    /nabidkyProUvod\(\)/.test(main) && !/Promise\.all\(\[loadJSON\('data\/opportunities\.json'\)/.test(main),
+    'úvod si pořád bere celek jako první');
+  /* ADRESA SE NEPŘEDÁVÁ DÁL. Handoff do sessionStorage ji nosil, a to by
+     znamenalo, že ji úvod potřebuje — změřeno, že nešetří nic. */
+  pravda('a handoff na stránku pozemku adresu nepředává',
+    !/url: d\.url/.test(main), 'v handoffu zůstalo url: d.url');
+  /* ODZNAK „ZLEVNĚNO" MUSÍ NA ŘEZ DOSEDNOUT. Historie cen je
+     v data/zlevneni.json a dokud byla klíčovaná klíčem NABÍDKY (ten
+     nese otisk adresy inzerátu), nenašla by se na úvodu ani jednou —
+     a odznak by zmizel u 1 720 nabídek z 1 940, aniž by to cokoli
+     ohlásilo. Klíč je proto klíč POZEMKU; kontrola to počítá na
+     skutečných datech, ne na vzorku. */
+  const KLIC = createRequire(import.meta.url)(path.join(ROOT, 'js', 'klic.js')).PKKlic;
+  const zl = (() => {
+    try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'zlevneni.json'), 'utf8')); }
+    catch (e) { return { nabidky: {} }; }
+  })();
+  const M2 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'mapa.json'), 'utf8'));
+  let sedi = 0;
+  for (const o of M2.opportunities || []) if (zl.nabidky[KLIC.klicPozemku(o)]) sedi++;
+  const celkemZl = Object.keys(zl.nabidky || {}).length;
+  pravda(`a historie cen na řez dosedne (${sedi} z ${celkemZl} v zlevneni.json)`,
+    celkemZl > 0 && sedi >= celkemZl * 0.9,
+    `našlo se ${sedi} z ${celkemZl} — odznak „Zlevněno" by na mapě chyběl`);
+  pravda('a stránka ji hledá klíčem pozemku, ne nabídky',
+    /zl\.nabidky\[window\.PKKlic\.klicPozemku\(d\)\]/.test(main),
+    'js/main.js hledá historii klíčem, který nese adresu inzerátu');
+}
+
 console.log('\nŘezy dat po okresech');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

@@ -80,7 +80,7 @@ const vse = PKH.bezDuplicit(PKC.pozemky((data.opportunities || data).slice()));
    není. Filtr je má pustit dál a tahle zkouška je musí umět spočítat. */
 const cekano = { zlevnene: [], zdrazene: [], podezrele: [], sum: 0, zArchivu: 0, zBehu: 0 };
 for (const d of vse) {
-  const h = zl.nabidky[KLIC.klicArchivu(d)];
+  const h = zl.nabidky[KLIC.klicPozemku(d)];
   if (h && h.length > 1) d.h = h;
   const z = Z.zmena(d);
   if (!z) { if (d.h) cekano.sum++; continue; }

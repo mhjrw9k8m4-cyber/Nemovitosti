@@ -88,7 +88,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 async function otevri(dataJdou) {
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
     viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
-  await ctx.route('**/data/opportunities.json*', (r) => (dataJdou
+  await ctx.route('**/data/{opportunities,mapa}.json*', (r) => (dataJdou
     ? r.fulfill({ status: 200, contentType: 'application/json',
       body: JSON.stringify({ updated: '2026-10-17', opportunities: NABIDKY }) })
     : r.fulfill({ status: 503, contentType: 'text/plain', body: 'mimo provoz' })));

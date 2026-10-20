@@ -671,7 +671,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   });
   const ctxZ = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
-  await ctxZ.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+  await ctxZ.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA) }));
   const pz = await ctxZ.newPage();
   /* NEJDŘÍV SE MUSÍ DOLOŽIT, ŽE STRÁNKA BĚŽÍ NA PODSTRČENÝCH DATECH.
@@ -686,8 +686,12 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
    * Proto se čeká na ODPOVĚĎ s daty a pak na to, až karet bude VÍC, než
    * kolik má záloha. Teprve potom má smysl se ptát na odznak — a když
    * se to nepovede, řekne se rovnou tohle, ne něco jiného. */
+  /* OBĚ JMÉNA: úvodní stránka stahuje od 20. 10. řez bez adres
+     (data/mapa.json) a celek si nechává jen jako záložní cestu. Dokud
+     se čekalo jen na celek, odpověď „nepřišla" — a kontrola hlásila
+     záložní data, přestože na mapě stálo 1 940 nabídek z podstrčených. */
   const odpoved = pz.waitForResponse(
-    (r) => /data\/opportunities\.json/.test(r.url()), { timeout: 30000 }).catch(() => null);
+    (r) => /data\/(opportunities|mapa)\.json/.test(r.url()), { timeout: 30000 }).catch(() => null);
   await pz.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
   const dataDojela = !!(await odpoved);
   /* Počet karet ve výpisu je stránkovaný (je jich míň než záloha), takže

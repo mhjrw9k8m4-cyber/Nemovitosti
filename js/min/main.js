@@ -4072,7 +4072,8 @@
       sessionStorage.setItem('pk_open', JSON.stringify({
         place: d.place, okres: d.okres, cast: d.cast, parcel: d.parcel, druh: d.druh,
         price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
-        extra: d.extra, url: d.url, featured: d.featured,
+
+        extra: d.extra, featured: d.featured,
 
         contact: d.contact,
         site: d.site, features: d.features, access: d.access,
@@ -5598,6 +5599,13 @@
 
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
 
+  function nabidkyProUvod() {
+    return loadJSON('data/mapa.json').then(function (j) {
+      if (j && (Array.isArray(j) ? j.length : (j.opportunities || []).length)) return j;
+      return loadJSON('data/opportunities.json');
+    });
+  }
+
   var ZIVE_STROP = 2500;
   var ZIVE_POZDE = { pozde: true };
   function ziveVcas() {
@@ -5606,7 +5614,7 @@
       setTimeout(function () { hotovo(ZIVE_POZDE); }, ZIVE_STROP);
     })]);
   }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
+  Promise.all([nabidkyProUvod(), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3], zl = res[4];
       if (live === ZIVE_POZDE) {
@@ -5650,7 +5658,8 @@
       if (zl && zl.nabidky) {
         var _h = 0;
         base.forEach(function (d) {
-          var h = zl.nabidky[window.PKKlic.klicArchivu(d)];
+
+          var h = zl.nabidky[window.PKKlic.klicPozemku(d)];
           if (h && h.length > 1) { d.h = h; _h++; }
         });
         if (window.PK_DEBUG) console.log('historie ceny: ' + _h);

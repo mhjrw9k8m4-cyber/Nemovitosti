@@ -91,7 +91,7 @@ const page = await ctx.newPage();
 for (const v of ['**://*.tile.*/**', '**://*.openstreetmap.org/**', '**/_vercel/**']) {
   await page.route(v, (r) => r.fulfill({ status: 204, body: '' })).catch(() => {});
 }
-await page.route('**/data/opportunities.json*', (r) =>
+await page.route('**/data/{opportunities,mapa}.json*', (r) =>
   r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data()) }));
 
 await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });

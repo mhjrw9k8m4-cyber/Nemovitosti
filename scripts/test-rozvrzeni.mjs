@@ -978,7 +978,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     isMobile: true, hasTouch: true, locale: 'cs-CZ', permissions: [] });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+  await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA_H) }));
   await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: '[]' }));
@@ -1366,7 +1366,7 @@ for (const [w, h] of [[320, 568], [375, 667], [390, 844]]) {
     if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
     return r.abort();
   });
-  await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+  await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(data) }));
   await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: '[]' }));
@@ -1682,7 +1682,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     for (const sirka of [1400, 1040, 320]) {
       const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 900 },
         locale: 'cs-CZ', permissions: [] });
-      await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+      await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
         contentType: 'application/json', body: JSON.stringify(DATA_O) }));
       await ctx.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
         contentType: 'application/json', body: '[]' }));

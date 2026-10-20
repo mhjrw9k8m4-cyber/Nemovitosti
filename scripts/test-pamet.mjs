@@ -78,7 +78,7 @@ await ctx.route('**/*', (r) => {
 });
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
   contentType: 'application/json', body: podstrcena() }));
 if (LEAFLET) {
   await ctx.route('https://unpkg.com/leaflet@**', (r) => {

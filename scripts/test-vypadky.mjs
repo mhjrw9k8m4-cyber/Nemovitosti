@@ -79,7 +79,7 @@ async function otevri(obsluhaDat, volby) {
   });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  await ctx.route('**/data/opportunities.json*', obsluhaDat);
+  await ctx.route('**/data/{opportunities,mapa}.json*', obsluhaDat);
   if (LEAFLET) {
     await ctx.route('https://unpkg.com/leaflet@**', (r) => {
       const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));

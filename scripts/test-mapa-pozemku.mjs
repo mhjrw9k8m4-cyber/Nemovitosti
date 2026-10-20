@@ -180,7 +180,7 @@ async function detail(nast) {
          na tutéž knihovnu — a teprve pak se obě vrhnou na tentýž rám.
          Kdyby knihovna přišla dřív, první příprava by mapu postavila do
          starého (ještě připojeného) rámu a ke srážce by nedošlo. */
-      if (nast.pomalaData && /data\/opportunities\.json/.test(u.pathname)) {
+      if (nast.pomalaData && /data\/(opportunities|mapa)\.json/.test(u.pathname)) {
         return new Promise((hotovo) => setTimeout(() => hotovo(r.continue()), 500));
       }
       /* Databáze schválně pomalá. Živé inzeráty od majitelů si stránka

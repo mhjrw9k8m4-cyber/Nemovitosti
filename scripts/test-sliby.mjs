@@ -373,7 +373,7 @@ async function host(inzeraty, prilezitosti) {
      lidí a dostanou type:'majitel'. Kategorie jako obecní záměr tedy jinak
      než tudy do stránky nepropadne. */
   if (prilezitosti) {
-    await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
       contentType: 'application/json',
       body: JSON.stringify(Object.assign({}, data, { opportunities: prilezitosti })) }));
   }

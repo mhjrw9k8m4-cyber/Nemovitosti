@@ -237,6 +237,55 @@ export async function spust() {
   rejstrik.rezy.push({ uroven: 'model', nazev: null, soubor: 'data/model.json',
     pocet: modelVstup.rez.pocet, bajtu: bajtuModel });
 
+  /* ---- CO STAHUJE ÚVODNÍ STRÁNKA ----
+     Týž soubor jako celek, jen BEZ POLE `url`. Úvodní stránka adresy
+     inzerátů k ničemu nepoužívá: vykresluje mapu a výpis, a odkaz na
+     zdroj je až na stránce pozemku, která si ho bere z řezu svého
+     okresu (ten `url` nese dál). Jediné místo, kde se adresa z úvodu
+     posílala dál, byl handoff do sessionStorage — a změřilo se, že
+     nešetří nic: s ním i bez něj doskočí odkaz na zdroj po klepnutí na
+     kartu stejně rychle (2 229 proti 2 217 ms na pomalé 4G, medián ze
+     tří běhů), protože přes pomalou linku trvá samo načtení stránky ty
+     dvě sekundy a okresní řez dorazí hned za ní.
+     Úspora: 620,6 → 460,4 kB surově, 77,3 → 58,6 kB po zabalení, tedy
+     **18,7 kB přes drát** — čtvrtina největšího souboru na webu.
+
+     TOHLE JE DRUHÁ KOPIE TÝCHŽ NABÍDEK, a tím se příčí pravidlu
+     u krajských řezů o pár řádek výš. Rozdíl je v tom, že tady je cena
+     ZMĚŘENÁ, ne odhadnutá z velikosti souboru: šest skutečných po sobě
+     jdoucích verzí dat ze historie repozitáře, commitnutých jednou samy
+     a jednou s odvozeným souborem, dalo .git 260 kB proti 280 kB —
+     tedy **+3,3 kB na jednu aktualizaci**, ne +460. Git totiž ukládá
+     odvozený soubor jako rozdíl proti sourozenci v témže commitu,
+     se kterým se shoduje ve třech čtvrtinách. Při čtyřech
+     aktualizacích denně je to kolem 5 MB za rok (.git má 875 MB).
+
+     DUPLICITY SE ODSTRAŇUJÍ UŽ TADY, a není to volba: `bezDuplicit`
+     v js/hlidani-logika.js slučuje v prvním kroku PODLE ADRESY ZDROJE
+     (klicZdroje). Bez pole `url` by ten krok nenašel nic a na úvodní
+     stránce by se objevilo 24 nabídek dvakrát — naměřeno (1 964 karet
+     proti 1 940). Udělá se to tedy jednou v překladu, touž funkcí;
+     stránka ji pustí znovu a nenajde už co slučovat. Termín se
+     nefiltruje: co se dá ještě koupit, rozhoduje stránka podle data
+     v prohlížeči, a tenhle soubor leží na serveru i přes noc.
+     Hlídá to scripts/test-data-rezy.mjs znak za znakem. */
+  const proMapu = bezDuplicit;
+  const mapaVstup = Object.assign({}, hlavicka, {
+    sources: celek.sources,
+    rez: { uroven: 'mapa', nazev: null, soubor: 'data/mapa.json', pocet: proMapu.length },
+    popis: 'Co stahuje úvodní stránka: tytéž nabídky jako data/opportunities.json '
+      + 'bez duplicit a bez pole url (adresu inzerátu úvod nepoužívá). Adresy jsou '
+      + 'v řezech okresů.',
+    opportunities: proMapu.map((o) => {
+      const c = Object.assign({}, o);
+      delete c.url;
+      return c;
+    }),
+  });
+  const bajtuMapa = zapis('data/mapa.json', mapaVstup);
+  rejstrik.rezy.push({ uroven: 'mapa', nazev: null, soubor: 'data/mapa.json',
+    pocet: proMapu.length, bajtu: bajtuMapa });
+
   const prazdnych = uklid('okres', ziveOkres, 'okres');
 
   rejstrik.celek = {

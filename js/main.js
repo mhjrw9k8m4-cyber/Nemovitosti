@@ -6371,7 +6371,12 @@
       sessionStorage.setItem('pk_open', JSON.stringify({
         place: d.place, okres: d.okres, cast: d.cast, parcel: d.parcel, druh: d.druh,
         price: d.price, area: d.area, type: d.type, lat: d.lat, lng: d.lng,
-        extra: d.extra, url: d.url, featured: d.featured,
+        /* ADRESA INZERÁTU SE NEPŘEDÁVÁ, a je to změřené: s ní i bez ní
+           doskočí odkaz na zdroj po klepnutí na kartu stejně rychle
+           (2 229 proti 2 217 ms na pomalé 4G) — stránka pozemku si ho
+           bere z řezu svého okresu, který dorazí hned za stránkou.
+           Úvod ji proto ani nestahuje (nabidkyProUvod výš). */
+        extra: d.extra, featured: d.featured,
         // Bez kontaktu se z okamžitě vykreslené stránky nedá majiteli ozvat.
         contact: d.contact,
         site: d.site, features: d.features, access: d.access,
@@ -8313,7 +8318,19 @@
      pozemky i po opravě. „no-store" by soubor stahoval celý pokaždé znovu;
      takhle při shodě přijde jen prázdná odpověď „nezměnilo se". */
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
-  /* ZLEVNĚNÍ SE STAHUJE SOUBĚŽNĚ, ne po. Kdyby se čekalo až na hotová
+  /* ÚVOD STAHUJE ŘEZ BEZ ADRES INZERÁTŮ (data/mapa.json). Je to týž
+     soubor jako data/opportunities.json bez jediného pole `url`, které
+     tahle stránka k ničemu nepoužívá — 58,6 místo 77,3 kB přes drát,
+     tedy o čtvrtinu méně. Vyrábí ho scripts/generate-data-rezy.mjs.
+     Kdyby ten soubor na serveru nebyl (špatné nasazení), vezme se celek:
+     stránka pak jen stáhne o 18,7 kB víc, místo aby skončila
+     v nouzovém režimu se čtrnácti záložními nabídkami. */
+  function nabidkyProUvod() {
+    return loadJSON('data/mapa.json').then(function (j) {
+      if (j && (Array.isArray(j) ? j.length : (j.opportunities || []).length)) return j;
+      return loadJSON('data/opportunities.json');
+    });
+  }  /* ZLEVNĚNÍ SE STAHUJE SOUBĚŽNĚ, ne po. Kdyby se čekalo až na hotová
      data, odznak by na kartách doskočil později a výpis by poskočil.
      ŽE TO NIC NESTOJÍ, JE ZMĚŘENÉ, ne odhadnuté. Na pomalé 4G (1,6 Mb/s,
      150 ms RTT) a čtyřnásobně zpomaleném procesoru skončil ve všech pěti
@@ -8370,7 +8387,7 @@
       setTimeout(function () { hotovo(ZIVE_POZDE); }, ZIVE_STROP);
     })]);
   }
-  Promise.all([loadJSON('data/opportunities.json'), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
+  Promise.all([nabidkyProUvod(), loadJSON('data/kraje.json'), loadJSON('data/user-listings.json'), ziveVcas(), loadJSON('data/zlevneni.json')])
     .then(function (res) {
       var j = res[0], kraje = res[1], ul = res[2], live = res[3], zl = res[4];
       if (live === ZIVE_POZDE) {
@@ -8435,7 +8452,11 @@
       if (zl && zl.nabidky) {
         var _h = 0;
         base.forEach(function (d) {
-          var h = zl.nabidky[window.PKKlic.klicArchivu(d)];
+          /* PODLE KLÍČE POZEMKU, ne nabídky: úvodní stránka stahuje řez
+             bez adres inzerátů (nabidkyProUvod výš) a klíč archivu
+             adresu nese. data/zlevneni.json je od 20. 10. klíčovaný
+             týmž klíčem, pod kterým si lidé pozemky ukládají. */
+          var h = zl.nabidky[window.PKKlic.klicPozemku(d)];
           if (h && h.length > 1) { d.h = h; _h++; }
         });
         if (window.PK_DEBUG) console.log('historie ceny: ' + _h);

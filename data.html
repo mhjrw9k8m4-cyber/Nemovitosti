@@ -176,7 +176,7 @@
   <section class="wrap dt-sekce">
     <h2>Jen jeden okres? Nemusíte brát všechno</h2>
     <p class="dt-uvod">Celý soubor má 637&nbsp;kB. Komu jde
-      o jeden okres, tomu stačí jeho řez — a ten má 58&nbsp;kB
+      o jeden okres, tomu stačí jeho řez — a ten má 470&nbsp;kB
       v nejhorším případě.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/okres/benesov.json</code></p>
     <ul class="dt-seznam">
@@ -196,6 +196,10 @@
         patří, stojí v rozcestníku pod <code>kraje</code>.</li>
       <li><b>Okres bez nabídek</b> má řez taky — prázdný. Vrátit 404 by znamenalo, že si
         každý musí ošetřit rozdíl mezi „nic tam není“ a „spletl jsem adresu“.</li>
+      <li><b>Ještě jeden řez je celostátní:</b> <a href="data/mapa.json">data/mapa.json</a>
+        je celek bez jediného pole — <code>url</code>, tedy adresy inzerátu. Stahuje ho naše
+        úvodní stránka, protože mapu ani výpis adresa nezajímá a je to o čtvrtinu dat míň
+        přes drát. Pro cizí použití je lepší celek nebo řez okresu: v nich adresy jsou.</li>
     </ul>
     <p class="dt-pozn">Je to obyčejný soubor na obyčejném serveru: cachovatelný, bez klíče,
       bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
@@ -210,10 +214,12 @@
     <ul class="dt-seznam">
       <li><b>Tvar</b> je <code>{ den, nabidky: { "&lt;klíč&gt;": [[den, cena], …] } }</code>.
         Dvojice jdou odpředu a den u každé znamená, kdy ta cena <b>začala</b> platit.</li>
-      <li><b>Klíč je náš vnitřní</b> — obec, parcela, okres, souřadnice a otisk adresy
-        inzerátu. Na nabídky z <code>opportunities.json</code> se dá napojit jen tím
-        výpočtem, který na to má web (<code>js/klic.js</code>); jako trvalý identifikátor
-        ho neberte, může se změnit.</li>
+      <li><b>Klíč je náš vnitřní</b> — obec, parcela, okres, souřadnice a výměra
+        (<code>klicPozemku</code>). Na nabídky z <code>opportunities.json</code> se dá
+        napojit jen tím výpočtem, který na to má web (<code>js/klic.js</code>); jako
+        trvalý identifikátor ho neberte, může se změnit. Do 20.&nbsp;10. v něm místo
+        výměry stál otisk adresy inzerátu; změnilo se to proto, aby se historie dala
+        najít i bez adresy — tu úvodní stránka nestahuje.</li>
       <li><b>Jen nabídky, které na trhu jsou.</b> U těch, co zmizely, historii máme, ale
         do tohohle souboru nepatří — na mapě by se nikdy nepoužila.</li>
       <li><b>Změnu pod 3 % nehlásíme</b> ani tady, ani na stránkách: bývá to zaokrouhlení

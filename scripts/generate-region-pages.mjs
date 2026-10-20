@@ -1792,7 +1792,10 @@ let novychZaTyden = 0;
   })();
   const zlevnene = [], zdrazene = [], kOvereni = [];
   for (const o of aktualni) {
-    const h = historie[PKKlic.klicArchivu(o)];
+    /* Klíč POZEMKU, ne nabídky: data/zlevneni.json je tak klíčované,
+       aby se historie dala najít i bez adresy inzerátu (úvodní stránka
+       ji nestahuje). Viz scripts/generate-zlevneni.mjs. */
+    const h = historie[PKKlic.klicPozemku(o)];
     const s = h && h.length > 1 ? Object.assign({}, o, { h }) : o;
     const z = PKZ.zmena(s);
     if (!z) continue;

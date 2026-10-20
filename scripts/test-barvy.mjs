@@ -93,7 +93,7 @@ if (LEAFLET) {
    jen to, co v datech je, dvě kategorie z pěti by nehlídala — a přesně u té
    páté se stala chyba: puntík u „Přímo od majitele" byl průhledný.
    Dvě nabídky se proto podstrčí. */
-await ctx.route('**/data/opportunities.json*', async (r) => {
+await ctx.route('**/data/{opportunities,mapa}.json*', async (r) => {
   const o = await r.fetch();
   const j = JSON.parse(await o.text());
   const vzor = (j.opportunities || []).find((x) => x.type === 'sale');
