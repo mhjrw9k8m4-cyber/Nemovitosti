@@ -3077,3 +3077,186 @@ Nový kontext ve zkoušce neměl `serviceWorkers: 'block'` a
 vypíná servisního pracovníka". To je past č. 2 z `CLAUDE.md` — a tohle
 je přesně to, kvůli čemu se meta-zkoušky psaly: kontrola, že kontroly
 měří to, co si myslí.
+
+---
+
+## 45. Odkud nabídka je, patří k ceně *20. 10.*
+
+Naměřeno na stránce pozemku (1440 px): cena stála na y 168, údaj
+„Stav / zdroj" až na y 854 — tedy o obrazovku a půl níž, v tabulce
+parametrů. „Kdo to říká" je přitom otázka k ceně, ne k parametrům,
+a v datech je to jediná věta o původu nabídky:
+
+| zápis v datech | kolikrát |
+|---|---:|
+| inzerát – Bezrealitky | 1 624 |
+| prodej státní půdy (SPÚ, § 12) | 204 |
+| dražba `<datum>` · OK dražby | 75 |
+| dražba `<datum>` (bez dražebníka) | 33 |
+| inzerát – Farmy.cz | 9 |
+
+Zápis se přestěhoval pod cenu (y 247 na monitoru, y 636 na telefonu)
+a z tabulky zmizel — týž údaj dvakrát na jedné stránce je horší než
+pozdě. U dražby nese datum dlaždice „Termín dražby", takže z řádku
+zbyde jen dražebník („Zdroj: dražba · OK dražby"); kdyby po vyškrtnutí
+datumu zbylo jen slovo „dražba", neřekne řádek nic, co nestojí
+v odznaku nad snímkem, a vynechá se celý.
+
+### Jeden odznak, ne dva
+
+Stránka pozemku si pravidlo pro odznak nad snímkem opsala
+z `css/styles.css` a opis se rozešel: váha 700 proti 600, odsazení
+`4px 12px` proti `4px 8px`, podklad `.6` proti `.74` a navíc rozostření
+pod ním. Nad světlou fotkou dává bílá na `rgba(12,26,18,.6)` **4,94 : 1**,
+na `rgba(8,20,14,.74)` **8,09 : 1** — rozostření čitelnost nenahradí,
+jen rozmazává snímek pod sebou. Z pravidla zůstala jen poloha.
+
+Zkouška to teď měří **srovnáním**: vedle živého odznaku se postaví
+kopie mimo `.pz-media` a devět vlastností se porovná. Sabotáž (vrácená
+váha i rozostření) ji shodí.
+
+## 46. Tři další zápisy, které umlčely vlastní selhání *20. 10.*
+
+Pokračování bodu 44 na místech, kam se tehdy nedošlo. Každé lhalo jinak:
+
+* **stránka pozemku, „Uložit"** — `catch (e) {}` spolkl chybu, tlačítko
+  se přepnulo na „Uloženo" a hláška řekla „Uloženo mezi oblíbené",
+  jenže ve schránce nebylo nic;
+* **hlídané místo** — pruh hlásí „Hlídané místo: Praha · okolí do
+  10 km", tedy slib, že se k tomu web po návratu vrátí; `zapisUloz`
+  výsledek vracel, `ulozMisto` si ho nechával pro sebe. Okolí se teď
+  při nezdaru **zapne** (člověk si ho právě naklikal na mapě), ale
+  řekne se, že to nepřežije zavření karty;
+* **přihlášení** — nejhorší z trojice: přihlášení žije JEN ve schránce
+  prohlížeče (`loggedIn()` ji čte při každém dotazu), takže zápis,
+  který neprojde, znamená, že se člověk nepřihlásil. `setSession()`
+  chybu spolkl, `login()` přesto vrátil `ok` — server heslo přijal
+  a panel se překreslil jako odhlášený, bez jediného slova proč.
+
+A jedna past se při tom chytila sama: falešný Supabase ve zkoušce
+odpovídal na přihlášení heslem „Invalid Refresh Token", protože
+rozlišení podle `grant_type` neměl — dvě kontroly tím procházely
+z jiného důvodu, než tvrdily.
+
+## 47. Jeden poměr stran náhledu, ne tři *20. 10.*
+
+Týž letecký výřez měl na stránce okresu na telefonu 290 × 181 px
+(1,60) a na monitoru 128 × 128 (1,00). Zbytek webu přitom drží 16/10:
+karta ve výpisu, kostra při načítání, náhled v Uložených, náhled ve
+formuláři i hero na stránce pozemku. Řádek okresu se srovnáním zkrátil
+ze 142 na 120 px.
+
+Nová osa v `scripts/test-soustava.mjs` vedle průhlednosti, linek a času.
+Výjimky (mapka u karty na úvodní stránce, miniatura nahrané fotky, hero
+na telefonu) musí uvést **i svou hodnotu** — jinak by selektor
+s výjimkou směl mít poměr jakýkoli.
+
+## 48. Kontrola odstupů, která celou dobu neviděla první vlastnost *20. 10.*
+
+`scripts/test-odstupy.mjs` o sobě tvrdila, že čte i `style="…"`,
+a nečetla: v `style="margin:6px 0 0"` stojí `margin` hned za uvozovkou,
+ne za `;`, `{` ani mezerou, a vzorek takový začátek nedovoloval.
+**První vlastnost v každém atributu byla neviditelná.** Po přidání
+uvozovky mezi dovolené začátky vyšlo 16 odstupů mimo čtyřkovou mříž
+v osmi souborech (11× 14px, 3× 6px, 10px a −14px).
+
+Ve `index.html` u toho zbyly tři zápisy, které nejsou data:
+`position:absolute` na spritu s ikonami (naměřeno, že **nedělá nic** —
+se `static` je výška stránky do bajtu stejná), barva tečky u věty
+o katastru a poznámka pod e-mailem s 12 px tam, kde každá jiná
+`.rules-note` má 8.
+
+## 49. Předloha stránky pozemku se oddělila od stránky *20. 10.*
+
+`pozemek.html` byla zároveň ZDROJ vloženého stylu (41 kB, z toho
+16,5 kB komentářů) a STRÁNKA, na kterou vede odkaz „Otevřít na mapě"
+z každé z 1 945 stránek pozemků. Kdo si ji otevřel, stáhl si komentáře,
+které nikdy nikdo nepřečte (7,2 kB po zabalení).
+
+A hlavně: její velikost se hlídala stropem, takže to byl **strop na
+komentáře** — na to, čím tenhle web vysvětluje sám sebe. Toho dne se
+naplnil do bajtu (41,0 z 41 kB).
+
+Zdroj je dnes `css/pozemek-vlozeny.css` (bez stropu), očištěnou podobu
+vkládá `scripts/vloz-styl-pozemku.mjs` týmž čističem jako u
+`css/styles.css`, a to **před** generátorem stránek. Ověřeno znak po
+znaku, že výsledek je bajt za bajtem tentýž, jaký generátor do stránek
+vkládal už dřív; `pozemek.html` spadla z 52,0 na 29,7 kB.
+
+## 50. Jména, která lhala *20. 10.*
+
+Web si zakládá na tom, že se věci jmenují, jak se chovají. V paletě to
+neplatilo na čtyřech místech naráz:
+
+| jméno | co říkalo | co to bylo |
+|---|---|---|
+| `--copper` | měď | zelená `#0F5C3B` (a komentář psal „modrá") |
+| `--text-ondark` | text na tmavém | tmavý text na SVĚTLOU plochu |
+| `--ink-soft` | inkoust | bílá PLOCHA karty |
+| `--grad-warm` | přeliv | plná barva, a navíc táž jako `--accent-warm` |
+
+Přejmenováno na `--znacka`, `--text`, `--plocha-karta`, a duplicitní
+tokeny zrušeny. Bílá měla v `:root` **šest jmen**; zbyly čtyři role,
+které se rozejít MOHOU (plocha karty, bílý text na tmavém pásu,
+plovoucí pruh a jeho neprůhledná varianta vázaná na `theme-color`),
+a u každé je napsané proč. Kde se rozejít nemají, token na druhý
+**odkazuje** (`var(--jiny)`), takže se nemá co rozejít.
+
+Ověřeno měřením, ne jen zkouškami: sada barev vykreslených na sedmi
+stránkách je před i po přejmenování TATÁŽ.
+
+## 51. Mrtvý blok, osiřelé ikony a dojeté přelivy *20. 10.*
+
+„Jak to funguje" dostalo velké číslice místo ikon v rámečku a na konci
+stylopisu stojí `.step .icon-badge{display:none}`. Šest pravidel nad
+tím ale zůstalo a nastavovalo odznaku rozměry, podklad i barvu —
+naměřeno v prohlížeči: všechny tři odznaky mají rect 0 × 0.
+
+Táž vada o patro vedle: `<symbol>` ve spritu, ke kterému už nevede
+`<use>`. Nová kontrola v `scripts/test-mrtve-styly.mjs` jich našla
+pět a `index.html` zhubla o 1 207 bajtů. Zkouška si u toho vyžádala
+opravu sama sebe: slovo v KOMENTÁŘI se počítalo jako použití, takže
+`.counters` držela při životě poznámka, která doslova psala „celá
+sekce s počítadly je pryč".
+
+Přelivů bylo 57 a 19 z nich jen zdobilo plochu — většina přitom
+přelévala bílou do bílé (`#FFFFFF → #F7F8F8`). Zbylých 38 dělá práci,
+kterou plnou barvou udělat nejde (masky na krajích, závoj nad fotkou,
+kostra načítání, mříž z 1px linek) a je vypsaných i s důvodem.
+
+## 52. Mapa se konečně zkouší na dotyku *20. 10.*
+
+Otevřená otázka z 15. 10. (viz `docs/co-chybi.md` 3db) zněla, jestli
+se kraj na dotyku vůbec dá vybrat. Odpověď je prostá a je v kódu
+napsaná jako záměr: **první klepnutí na dotyku mapu jen PROBUDÍ** —
+zamčená mapa jinak na telefonu bere rolování stránky.
+
+Změřeno na obrysu Plzeňského kraje: bez dotyku vybere kraj jedno
+klepnutí; s dotykem nevybere ani `mouse.click`, ani `touchscreen.tap`,
+ani `dispatchEvent` — a po probouzecím klepnutí vyberou kraj všechny
+tři. To poslední je důležité: `dispatchEvent` je čistý DOM bez emulace
+vstupu, takže se tím vyloučilo omezení podstrčeného klepnutí.
+
+`scripts/test-mapa.mjs` běží od té doby v profilu `hasTouch + isMobile`
+a klepání má obalené: když je mapa zamčená, klepne dvakrát. 51 kontrol
+místo 48.
+
+## 53. Tři nástroje nad výpisem zalomily řádek *20. 10.*
+
+Zkouška „Nářadí výpisu je na dosah" zčervenala v CI v 00:05, tedy pár
+minut po půlnoci, a nebylo to z žádné změny v kódu: den po dražbě
+přibyde k „Procházet po jednom" a „Stáhnout výběr" třetí nástroj
+„Dražby po termínu (1)". Do dvousloupcové mřížky se tři tlačítka
+nevejdou — pruh vyrostl ze 44 na 96 px a první nabídka spadla ze 396
+na 448 px.
+
+Řádek nářadí se přitom zalamovat nemá; základní pravidlo to říká
+(„nezalamuje se, posouvá se do strany") a má k tomu i stín za pravou
+hranou. Mřížka pro telefon to přebíjela. Při třech a víc nástrojích se
+proto vrací k jednomu posuvnému řádku, a šířka sloupce se **dopočítává**
+z buňky té mřížky — `calc((100% - 8px) / 2)` — aby měly všechny
+ovladače nad výpisem jednu velikost. Napsat tam naměřených 188 px by
+platilo jen na jedné šířce okna.
+
+Zkouška si třetí nástroj nově **přidá sama**, takže nestojí na dni
+v kalendáři.
