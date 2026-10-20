@@ -6805,6 +6805,33 @@ zapnutým a obě zelené: značka kraje má terč aspoň 44 px.
 `click` dosyntetizoval) klepnout na značku kraje a podívat se, jestli
 se kraj vybere. Do té doby je to otázka, ne nález.
 
+### ODPOVĚĎ — *20. 10.*: web je v pořádku, past byla jinde
+
+Změřeno patnácti průchody ve čtyřech profilech (390 i 1280 px, s dotykem
+i bez, `hasTouch` samotné i s `isMobile`), vždy s podstrčenými dlaždicemi:
+
+* **klepnutí na značku kraje VYBERE kraj ve VŠECH profilech**, a to
+  `mouse.click`, `touchscreen.tap` i `dispatchEvent` — v dotykovém
+  kontextu stejně jako bez něj (ověřeno na „Jihočeský kraj" i na
+  „Kraj Vysočina", zoom skočil ze 6,25 na 8). Podstrčený vstup tedy
+  omezení není a vada webu to není taky.
+* **Proč se to 15. 10. nepovedlo změřit:** na telefonu se úvodní stránka
+  otevírá na SEZNAMU a mapa je za přepínačem — `.map-holder` má
+  `display:none`, takže značky mají v DOM rozměr 0 × 0 a klepnutí nemá
+  kam dopadnout. Měřeno: při 390 px je mapa skrytá kvůli `.map-holder`,
+  při 1280 px má 845 × 592 px. (`scripts/test-mapa.mjs` přepínač
+  používá — ale probe, kterým se to tehdy zkoušelo, ne.)
+
+**Co z toho JEŠTĚ nevyšlo.** Když se dotyk zapne celé zkoušce
+`scripts/test-mapa.mjs`, osm kontrol pořád padá — a je to jiná věc než
+klepnutí. Padá mezi nimi „je na co klepnout uvnitř vybraného kraje",
+tedy kontrola, která teprve HLEDÁ volné místo uvnitř kraje, kde
+`elementFromPoint` vrací obrys. S dotykem se chytací plochy zvětšují
+(pravidla za `@media (pointer: coarse)`), takže značky zakryjí obrys
+skoro celý a volné místo nezbyde. Není to tedy „klepnutí nefunguje",
+ale „zkouška počítá s plochami, jaké na dotyku nejsou". Zbývá ji na to
+přepsat; do té doby běží v profilu bez dotyku a tohle je u ní napsané.
+
 ## 3dc. NALEZENO: devět prohlížečových zkoušek je červených a nebylo to ode mě — *15. 10.*
 
 Pustil jsem celou prohlížečovou sadu (108 zkoušek) a **dvanáct jich

@@ -69,6 +69,15 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    otázka je zapsaná v docs/co-chybi.md (bod 3db), ať nezapadne. Dotyková
    pravidla na úvodní mapě měří scripts/test-dotyk.mjs
    a scripts/test-rozvrzeni.mjs, obě s dotykem zapnutým. */
+/* BEZ DOTYKU, A JE TO ZMĚŘENÉ, ne jen zvyk. Se zapnutým dotykem
+   (hasTouch, s isMobile i bez) padá osm kontrol — ale NE kvůli
+   klepnutí: to v dotykovém kontextu funguje, značka kraje se dá
+   vybrat `touchscreen.tap`em i `mouse.click`em (změřeno 20. 10., viz
+   docs/co-chybi.md 3db). Padá hledání VOLNÉHO MÍSTA uvnitř kraje:
+   s dotykem se chytací plochy zvětšují (@media (pointer: coarse)),
+   značky zakryjí obrys skoro celý a bod, kde `elementFromPoint` vrací
+   obrys, nezbyde. Přepsat zkoušku na to je samostatná práce; co se
+   o dotyku na mapě tvrdit dá, měří test-dotyk a test-rozvrzeni. */
 const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 } });
 const klepni = (x, y) => p.mouse.click(Math.round(x), Math.round(y));
 // Test nesmí sahat ven z počítače: cizí obrázky (dlaždice mapy) nahradíme
