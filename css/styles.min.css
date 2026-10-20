@@ -1164,7 +1164,7 @@ footer .wrap:not(.foot-bottom){flex-direction:column;align-items:flex-start}
 .status-grid{grid-template-columns:1fr}
 }
 .add-hero{padding:128px 0 20px}
-.add-hero h1{font-family:var(--font-display);font-weight:700;line-height:1.2;letter-spacing:-0.02em;max-width:var(--m-sloupec)}
+.add-hero h1{max-width:var(--m-sloupec)}
 .add-hero .sub{font-size:16px;color:var(--muted);margin-top:16px;max-width:var(--m-text)}
 .add-wrap{max-width:var(--m-wrap)}
 .add-wrap>*{max-width:var(--m-sloupec)}

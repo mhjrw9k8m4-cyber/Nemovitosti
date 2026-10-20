@@ -4517,8 +4517,18 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    se nedotýká — jen nové třídy .add-*. */
 .add-hero{padding:128px 0 20px;}
 /* Nadpisy appkových stránek zůstávaly bezpatkové a ve váze 500 — vedle
-   úvodní stránky pak působily jako jiný web. */
-.add-hero h1{font-family:var(--font-display); font-weight:700; line-height:1.2; letter-spacing:-0.02em; max-width:var(--m-sloupec);}
+   úvodní stránky pak působily jako jiný web.
+   A PŘESNĚ TO SE PAK STALO ZNOVU, obráceně. 19. 10. dostaly nadpisy
+   vlastní písmo (--font-nadpis, serif) pravidlem na h1 — jenže tohle
+   pravidlo je o třídu specifičtější a font-family si drželo. Naměřeno
+   na 27 ručně psaných stránkách: osm mělo titulek serifem (úvod,
+   okresní a krajské stránky, „Moje data"), DEVATENÁCT bezpatkově —
+   mezi nimi všechny rádcovské články, právní stránky i „Přidat
+   pozemek". Dvě třetiny webu tedy mluvily jiným hlasem než zbytek,
+   a dělila je jen třída, kterou stránka náhodou používá.
+   Rodina, prokládání i prokládání řádků proto zůstávají na h1 —
+   tady zbývá jen šířka sloupce. Hlídá scripts/test-pismo.mjs. */
+.add-hero h1{max-width:var(--m-sloupec);}
 .add-hero .sub{font-size:16px; color:var(--muted); margin-top:16px; max-width:var(--m-text);}
 /* =====================================================================
    JEDNA SVISLICE NA STRÁNKU.

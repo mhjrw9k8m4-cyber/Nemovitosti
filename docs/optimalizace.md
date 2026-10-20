@@ -4190,3 +4190,42 @@ stránek: že jsou ve vzorku **obě** podoby řádku (jinak by se měřila jen
 jedna větev) a že tlačítko nevisí u pravého okraje tam, kde je v řádku
 samo. Sabotáž (výplň zpátky) shodila obě — a to i tu první, protože se
 s výplní „obě podoby" počítají jako jedna.
+
+## 71. Dvě třetiny titulků mluvily jiným hlasem *20. 10.*
+
+19. 10. dostaly nadpisy vlastní písmo: `--font-nadpis` (Georgia /
+Times New Roman / DejaVu Serif) pravidlem na `h1`, `h1.uvod-nadpis`
+a `.section-head h2`. Záměr byl jasný — „celý web psal jedním
+bezserifovým řezem, takže se nadpis od popisku lišil jen velikostí".
+
+Jenže o pět dní starší pravidlo `.add-hero h1` si rodinu nastavovalo
+samo (`--font-display`, tedy Inter) — a protože je o třídu
+specifičtější, drželo se. Naměřeno na **27 ručně psaných stránkách**:
+
+| | stránek |
+|---|---|
+| titulek serifem | 8 |
+| titulek bezpatkově | **19** |
+
+Mezi těmi devatenácti byly **všechny rádcovské články** (jak číst list
+vlastnictví, územní plán, dražby, věcné břemeno, přístupová cesta,
+hypotéka…), **právní stránky** (podmínky, ochrana údajů) i „Přidat
+pozemek" a „Porovnání". O hlasu titulku tedy rozhodovalo jen to, kterou
+třídu hlavičky stránka náhodou používá.
+
+Ironií je, že právě ten komentář nad pravidlem mluví o témž problému,
+jen obráceně: „Nadpisy appkových stránek zůstávaly bezpatkové a ve
+váze 500 — vedle úvodní stránky pak působily jako jiný web." Přesně to
+se stalo znovu, jen z druhé strany.
+
+Pravidlu zbyla jen šířka sloupce; rodinu, prokládání i prokládání
+řádků řeší `h1`. Po opravě: **27 z 27 serifem**.
+
+### Hlídá to zápis, ne vykreslení
+
+Nová kontrola v `scripts/test-pismo.mjs` (statická, bez prohlížeče)
+hledá v `css/styles.css` pravidlo, které cílí na `h1` a zároveň si
+nastavuje vlastní `font-family`. Takové pravidlo je vždycky
+specifičtější než holé `h1`, takže ho přebije — ať stojí kdekoli.
+Sabotáž (vrátit `font-family:var(--font-display)`) kontrolu shodila
+a vypsala přesně to pravidlo.

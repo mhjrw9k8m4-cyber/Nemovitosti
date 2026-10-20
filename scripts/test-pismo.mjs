@@ -101,6 +101,40 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   let chyb = 0;
   const zpravy = [];
+
+  /* VELKÝ NADPIS MÁ JEDEN HLAS — A PŘEBÍT SE NESMÍ.
+     19. 10. dostaly nadpisy serif pravidlem na `h1`. O pět dní starší
+     `.add-hero h1` ale rodinu nastavovalo samo, a protože je
+     o třídu specifičtější, drželo se. Naměřeno na 27 ručně psaných
+     stránkách: OSM mělo titulek serifem a DEVATENÁCT bezpatkově —
+     všechny rádcovské články, právní stránky i „Přidat pozemek".
+     Rozhodovalo přitom jen to, kterou třídu hlavičky stránka náhodou
+     používá.
+     Čte se zápis, ne vykreslení: hledá se pravidlo, které cílí na h1
+     a zároveň si nastavuje vlastní rodinu. Takové pravidlo je vždycky
+     specifičtější než holé `h1`, takže ho přebije — ať už je kdekoli. */
+  {
+    const css = readFileSync('css/styles.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    const prebiji = [];
+    for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim(), telo = m[2];
+      if (!/(^|[\s>+~,])h1\b/.test(sel)) continue;
+      if (/^\s*h1\s*$/.test(sel)) continue;          // samotné `h1` je ten zdroj pravdy
+      const ff = telo.match(/font-family\s*:\s*([^;}]+)/);
+      if (!ff) continue;
+      if (/--font-nadpis/.test(ff[1])) continue;
+      prebiji.push(`${sel.slice(0, 60)} → ${ff[1].trim().slice(0, 40)}`);
+    }
+    if (prebiji.length) {
+      console.log(`✕ css/styles.css: ${prebiji.length}× se nadpisu h1 přebíjí rodina písma`);
+      for (const x of prebiji) console.log('   ' + x);
+      zpravy.push(`  ✕ rodinu h1 přebíjí: ${prebiji[0]}`);
+      chyb += prebiji.length;
+    } else {
+      console.log('✓ rodinu velkého nadpisu nikdo nepřebíjí');
+    }
+  }
+
   for (const f of soubory) {
     let text;
     try { text = readFileSync(f, 'utf8'); } catch { continue; }
