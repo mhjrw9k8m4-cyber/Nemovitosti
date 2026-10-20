@@ -4310,3 +4310,101 @@ Práh naměřený „na jednom vzorku a jedné stránce" je odhad, ne mez.
 U obou nálezů šlo o totéž: číslo vypadalo jako změřené, ale měřilo se
 jen tam, kde zrovna bylo pohodlné měřit — jedna stránka se třemi čísly,
 jeden den s jednou skladbou trhu.
+
+## 73. Pět přelivů, kam hlídač nedosáhl *20. 10.*
+
+Úklid přelivů (oddíl 19) i jeho hlídač v `scripts/test-soustava.mjs`
+čtou **dva soubory**: `css/styles.css` a `css/pozemek-vlozeny.css`.
+Jenže ručně psané stránky si část stylu nesou samy ve `<style>` —
+a tam hlídač nikdy nekoukl. Naměřeno: **dvanáct z jednatřiceti**
+ručně psaných stránek má vlastní `<style>` a přežilo v nich **pět
+ozdobných přelivů**.
+
+| nález | bylo | je |
+|---|---|---|
+| `404.html:37` `a` | `linear-gradient(135deg,#2C7150,#256546,#1B4A34)` | `#004F2F` |
+| `muj-inzerat.html:46` `.pf-card` | `linear-gradient(155deg, var(--plocha-tlumena), var(--plocha-karta))` | `var(--plocha-karta)` |
+| `muj-inzerat.html:50` `.pf-card::before` | `radial-gradient(… rgba(126,196,157,.16) …)` | pravidlo smazáno celé |
+| `predloha.html:65` `.pas-ukazka` | `linear-gradient(150deg,var(--plocha-tmava-2),var(--plocha-tmava) 58%,#0E1712)` | `var(--plocha-tmava)` |
+| `zpravy.html:89` `.zp-ava` | `linear-gradient(135deg,rgba(166,106,22,.18),rgba(31,81,56,.14))` | `var(--plocha-tlumena)` |
+
+Dva nálezy jsou víc než kosmetika:
+
+- `.pf-card::before` byla **záře přes celou kartu profilu** — pravidlo
+  jen kvůli ní existovalo, takže zmizelo i s `position:absolute`
+  a `inset:0`. A s ním i čtyři deklarace, které držely jenom ji:
+  `position:relative` a `overflow:hidden` na `.pf-card` (zářivý
+  pseudoprvek potřeboval, do čeho se ukotvit a čím se oříznout) a
+  `position:relative` na `.pf-head` a `.pf-stats` (ty se jen potřebovaly
+  dostat nad ni). Změřeno snímkem karty ve dvou šířkách, s panelem
+  odkrytým až po doběhnutí skriptů stránky: po jejich vypnutí se liší
+  **59 pixelů z 657 336** s největší odchylkou 3 (na 1440 px pět) —
+  tedy vyhlazení na zaoblených rozích, nic jiného.
+- `.pas-ukazka` je zrovna ta ukázka tmavého pásu, která má čtenáři
+  vzorníku **předvést tokeny** — a měla v sobě `#0E1712` natvrdo, mimo
+  paletku. Opravdové tmavé pásy na webu — `#realitky` a `.sources` —
+  jsou přitom plná `var(--plocha-tmava)` bez jediného přelivu, takže
+  ukázka nepředváděla to, co se na webu používá. Teď ano.
+
+A tlačítko na 404 se trefilo do webu i jinak: `#004F2F` je přesně
+`--plocha-znacka`, tedy táž barva, jakou má `.btn-primary` všude
+jinde. Přeliv začínal na `#2C7150`, takže se hlavní tlačítko na jediné
+stránce, kterou uvidí každý, kdo si splete adresu, lišilo od hlavního
+tlačítka na zbytku webu.
+
+**Změřený kontrast se nikde nezhoršil**, u téhož tlačítka se výrazně
+zlepšil: bílý text na `#004F2F` dává **9,72 : 1** proti dřívějším
+**5,86 : 1** na nejsvětlejším místě přelivu. `.pas-ukazka` má 16,24 : 1
+(přeliv měl 14,61–18,26) a měď na ní 8,74 : 1, jak token slibuje.
+Ikona v `.zp-ava` má na plné ploše 5,17 : 1 — grafickému prvku stačí 3.
+
+### Co hlídač čte teď
+
+Scan dostal třetí zdroj: obsah `<style>` **každé ručně psané stránky**.
+Mimo zůstávají vyrobené stránky, a to měřitelně po právu — `pozemky-*`
+vlastní `<style>` vůbec nemají (0 ze 104) a `pozemek-*` do něj dostanou
+očištěný `css/pozemek-vlozeny.css` (2 179 stránek), který se čte výš ze
+zdroje; že se vkládá opravdu on, hlídá `test-vlozeny-styl`.
+
+Ze stránky se do scanu pouští **jen vnitřek `<style>`**, zbytek se
+vybílí na mezery stejné délky — číslo řádku v hlášce pak ukazuje na
+opravdový řádek souboru, ne na pozici ve výřezu. Sabotáž (vrátit přeliv
+do `.zp-ava`) kontrolu shodila a vypsala `zpravy.html:89 .zp-ava`, tedy
+soubor, řádek i selektor.
+
+### A vedlejší nález: vzor, který se na uvozovkách zastavil
+
+Když 404 dostala nadpis serifem vypsaným natvrdo (nemá odkud vzít token,
+viz oddíl 71), `test-pismo` ji nahlásil — ale s hodnotou `Georgia,`.
+Vzor na rodiny si totiž zakazoval `'` i `"`:
+
+```
+font-family\s*:\s*([^;}"']+)     ← starý
+font-family\s*:\s*([^;}]+)       ← nový
+```
+
+Rodina ale uvozovkami běžně **začíná**. Naměřeno na stejné sadě souborů:
+
+| | deklarací `font-family` |
+|---|---|
+| starý vzor viděl | 133 |
+| nový vidí | **138** |
+
+Rozdíl je šest deklarací s uvozovkami, ne pět: **pět** vzor minul úplně
+(`'Inter','Helvetica Neue',Arial,sans-serif` v 404, `diagnostika` a
+`inzerce`, dvakrát `@font-face` ve stylopisu) a u **jedné** se shodl jen
+na začátku a hlásil chybu, která žádná nebyla. Hlídač tedy roky tiše
+pouštěl každou rodinu zapsanou od uvozovky — tedy právě tu podobu, ve
+které se cizí písmo píše.
+
+Sabotáž: `font-family:'Comic Sans MS',cursive` v 404. Nový vzor hlásí
+`404.html:30 font-family: 'Comic Sans MS',cursive`; starý na témž
+souboru našel jedinou hodnotu — `Georgia,`.
+
+### Co si z toho odnést
+
+**Hlídač platí jen pro soubory, do kterých se podívá.** Oba nálezy jsou
+táž chyba ve dvou podobách: scan měl seznam zdrojů (dva soubory) a vzor
+měl zakázanou abecedu (uvozovky), a v obou případech se mimo ten rozsah
+roky nic neověřovalo. Když kontrola projde, je dobré se jednou zeptat
+**na čem** prošla — a to číslo si vypsat.

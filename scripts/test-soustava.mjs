@@ -38,7 +38,7 @@
  *   seznam animací, které si svůj vlastní čas drží, je tady vypsaný
  *   i s důvodem, aby to nebylo smetiště.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 export const PRUHLEDNOST_KROK = 0.05;
@@ -197,10 +197,37 @@ pravda('a žádná vypsaná výjimka není mrtvá (ta animace opravdu existuje)'
     mrtve.length === 0, mrtve.join(', '));
 }
 
+/* A TAKY STRÁNKY, KTERÉ SI NESOU VLASTNÍ STYL. Úklid přelivů projel
+   oba stylopisy — jenže ručně psané stránky si část stylu nesou samy ve
+   <style> a ten sem nikdy nedosáhl. Naměřeno 20. 10.: pět ozdobných
+   přelivů přežilo právě tam (tlačítko na 404.html, plocha karty a záře
+   nad ní na muj-inzerat.html, avatar v zpravy.html, ukázka tmavého pásu
+   v predloha.html).
+   Vyrobené stránky se nečtou: pozemky-* vlastní <style> vůbec nemají a
+   pozemek-* do něj dostanou očištěný css/pozemek-vlozeny.css, který se
+   čte výš ze zdroje — a že se vkládá opravdu on, hlídá test-vlozeny-styl.
+   Předloha pozemek.html je na tom stejně. */
+const VYROBENA = /^(pozemek|pozemky)-/;
+const vlozeneStranky = readdirSync('.')
+  .filter((f) => f.endsWith('.html') && !VYROBENA.test(f) && f !== 'pozemek.html')
+  .map((f) => [f, readFileSync(f, 'utf8')])
+  .filter(([, h]) => h.indexOf('<style') >= 0)
+  .map(([f, h]) => {
+    /* Ze stránky zbude jen obsah <style>; všechno ostatní se vybílí na
+       mezery, aby čísla řádků v nálezu ukazovala na opravdový řádek. */
+    let ven = h.replace(/[^\n]/g, ' ');
+    for (const m of h.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) {
+      const zac = m.index + m[0].indexOf(m[1]);
+      ven = ven.slice(0, zac) + m[1] + ven.slice(zac + m[1].length);
+    }
+    return [f, ven.replace(/\/\*[\s\S]*?\*\//g, (x) => x.replace(/[^\n]/g, ' '))];
+  });
+
 /* ---- přelivy na ploše --------------------------------------------- */
 {
   const nalezy = [];
-  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyCisty]]) {
+  for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyCisty],
+    ...vlozeneStranky]) {
     const re = /(background|background-image)\s*:\s*[^;}]*gradient\(/g;
     let m;
     while ((m = re.exec(text))) {

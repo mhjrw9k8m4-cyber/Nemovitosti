@@ -42,13 +42,16 @@
   <link rel="stylesheet" href="css/zaklad.min.css?v=b83c77b7">
   <style>
     /* Karta profilu */
-    .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
-      background:linear-gradient(155deg, var(--plocha-tlumena), var(--plocha-karta));
+    /* Kotvu ani ořez karta nepotřebuje: position:relative a
+       overflow:hidden tu držely jen zrušenou záři .pf-card::before —
+       nic jiného uvnitř není ani absolutně umístěné, ani přetékající.
+       Změřeno snímkem ve dvou šířkách: po jejich vypnutí se liší
+       59 pixelů z 657 336 (vyhlazení rohů), nic víc. */
+    .pf-card{border-radius:var(--r-lg); padding:24px 20px 20px;
+      background:var(--plocha-karta);
       border:1px solid var(--line-strong); box-shadow:var(--e3);
       animation:authFade .35s var(--ease) both;}
-    .pf-card::before{content:""; position:absolute; inset:0; pointer-events:none;
-      background:radial-gradient(120% 90% at 88% -10%, rgba(126,196,157,.16), transparent 60%);}
-    .pf-head{position:relative; display:flex; align-items:center; gap:12px;}
+    .pf-head{display:flex; align-items:center; gap:12px;}
     .pf-avatar{flex:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
       font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:0.02em;
       box-shadow:0 0 0 4px rgba(31,81,56,0.16), var(--glow);}
@@ -65,7 +68,7 @@
     .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
     .pf-logout:hover{color:var(--text); border-color:var(--znacka-svetla);}
     .pf-logout span{display:none;}
-    .pf-stats{position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px;}
+    .pf-stats{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:20px;}
     .pf-stat{background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px 12px; min-width:0; text-align:center; transition:border-color var(--cas-zakladni), transform var(--cas-zakladni);}
     /* ZDVIH JEN TAM, KDE SE NĚCO STANE. Pravidlo platilo pro všechny
        tři dlaždice, ale obsluhu klepnutí měla jen „Uložené pozemky".

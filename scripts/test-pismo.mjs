@@ -44,7 +44,12 @@ export const TLOUSTKY = new Set(['400', '500', '600', '700', 'inherit', 'normal'
    bajt navíc a nemusí se podřezávat.
    Pravidlo „rodina patří do tokenu, ne do pravidla" platí dál —
    přibylo jedno jméno, ne možnost psát rodiny natvrdo. */
-const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*)$/;
+/* A JEDNA STRÁNKA SI RODINU PSÁT MUSÍ. 404.html schválně nenačítá
+   css/styles.css (má vyjít i tehdy, když ostatní soubory chybí), takže
+   v ní nejsou tokeny k mání: `var(--font-nadpis)` by byla nedefinovaná
+   proměnná a deklarace by se zahodila. Povolené jsou proto obě rodiny
+   vypsané přesně tak, jak stojí v paletce — ne libovolný serif. */
+const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*|Georgia,'Times New Roman','DejaVu Serif',serif)$/;
 
 /* Komentáře se vybílí, ale délka zůstane — čísla řádků pak ukazují na
    opravdový řádek v souboru. Na rozdíl od odstupů se vnitřek var()
@@ -84,7 +89,12 @@ export function mimoStupnici(text) {
     if (TLOUSTKY.has(h)) continue;
     out.push({ radek: radek(m.index), co: `font-weight: ${h.slice(0, 40)}`, proc: 'tloušťka není ze čtyř povolených' });
   }
-  for (const m of bez.matchAll(/(^|[;{\s])font-family\s*:\s*([^;}"']+)/g)) {
+  /* UVOZOVKY SE ČÍST MUSÍ. Vzor si tu dřív zakazoval ' i " — jenže
+     rodina běžně uvozovkami ZAČÍNÁ ('Inter','Helvetica Neue',…), takže
+     se na takovém zápisu vůbec neshodl a tiše ho pouštěl; a u zápisu
+     Georgia,'Times New Roman',… se naopak shodl jen na „Georgia," a
+     hlásil chybu, která žádná nebyla. Čte se proto celá hodnota. */
+  for (const m of bez.matchAll(/(^|[;{\s])font-family\s*:\s*([^;}]+)/g)) {
     const h = m[2].trim();
     if (RODINY.test(h)) continue;
     out.push({ radek: radek(m.index), co: `font-family: ${h.slice(0, 60)}`, proc: 'rodina patří do tokenu, ne do pravidla' });

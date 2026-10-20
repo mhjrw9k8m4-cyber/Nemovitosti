@@ -62,7 +62,12 @@
     /* UKÁZKA TMAVÉHO PÁSU. Osm deklarací stálo v `style=` čtyř prvků,
        včetně odstupů — a byla to zrovna ta ukázka, která má čtenáři
        vzorníku předvést tokeny. */
-    .pas-ukazka{background:linear-gradient(150deg,var(--plocha-tmava-2),var(--plocha-tmava) 58%,#0E1712);
+    /* PLNOU BARVOU, JAKO OPRAVDOVÉ TMAVÉ PÁSY. Stál tu přeliv přes
+       tři odstíny, z toho jeden (#0E1712) mimo paletku — a to zrovna
+       v ukázce, která má tokeny předvádět. Pásy, které ukazuje
+       (#realitky a .sources v css/styles.css), přitom žádný přeliv
+       nemají: jsou plná --plocha-tmava. */
+    .pas-ukazka{background:var(--plocha-tmava);
       border-radius:var(--r-md); padding:24px; color:var(--text-ondeep); box-shadow:var(--e2);}
     .pas-ukazka .pas-nadradek{font-family:var(--font-mono); font-size:12px; letter-spacing:0.07em;
       text-transform:uppercase; color:var(--accent-warm-bright); margin-bottom:8px;}

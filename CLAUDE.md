@@ -78,6 +78,15 @@ podruhé premisa „v datech taková nabídka je", kterou určuje skladba
 trhu. Mez se měří na nejhorším případě, ne na prvním, a premisa, kterou
 určují data, se nepodmiňuje — vypíše se a větev se přeskočí.
 
+A když kontrola PROJDE, zeptej se jednou, **na čem** prošla — a to
+číslo si vypiš. 20. 10. se ukázalo, že úklid přelivů (oddíl 19) minul
+pět ozdobných přelivů, protože hlídač četl jen dva stylopisy a do
+vložených `<style>` ručně psaných stránek nedosáhl; a že vzor na rodiny
+písma si zakazoval uvozovky, takže každou rodinu zapsanou od uvozovky
+roky tiše pouštěl (133 viděných deklarací proti 138 skutečným). Hlídač
+platí jen pro soubory, do kterých se podívá, a pro abecedu, kterou si
+dovolí číst.
+
 A „které moduly stránka potřebuje" se taky MĚŘÍ, nečte z kódu: na
 `window` se dá přes `Object.defineProperty` pověsit getter, který si
 zapíše první přečtení a odkud přišlo. Z úkolu „osm skriptů načítat až
