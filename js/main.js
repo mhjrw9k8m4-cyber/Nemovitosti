@@ -9,12 +9,21 @@
      dotek): tři moduly se za celé načtení ANI JEDNOU nepřečtou —
      PKVyvoz, PKRychly a PK_VRSTVY. Měřilo se přes Object.defineProperty
      na window, takže to není odhad z četby kódu: getter se nezavolal.
-     Pro srovnání ostatní, které se číst MUSÍ (a zůstávají proto
-     značkou <script>): PKAuth v 167 ms, PKHledani 250 ms,
-     PKUlozeneUcet 308 ms, PKPoznamky 377 ms.
+     Pro srovnání ostatní, které se při startu číst MUSÍ: PKAuth
+     v 167 ms, PKHledani 250 ms, PKUlozeneUcet 308 ms, PKPoznamky
+     377 ms.
 
-     Dohromady 13,0 kB po zabalení gzipem, které si bral každý — včetně
-     všech, kdo na úvodní stránce jen projdou výpis. Adresu i s razítkem
+     U DVOU Z NICH ALE ROZHODUJE STAV, NE ZNAČKA. Poznámky kreslí na
+     kartě odznak a slučují s účtem, uložené přenášejí na účet —
+     a prvnímu návštěvníkovi bez účtu neudělají ani jedno, protože
+     v prohlížeči nemá ani poznámku, ani uložený pozemek. Dotahují se
+     proto podle úložiště a přihlášení (stahniPoznamky, stahniUlozene)
+     a při prvním uložení. Zůstávají jen PKAuth (podoba hlavičky, jinak
+     by to bliklo) a PKHledani (bere se do proměnné rovnou v bootu).
+
+     Dohromady 13,0 kB po zabalení gzipem u prvních tří a dalších
+     2,5 kB u těch dvou — a to si bral každý, včetně všech, kdo na
+     úvodní stránce jen projdou výpis. Adresu i s razítkem
      ?v= nese <meta name="pk-odlozeny" data-src="…"> v index.html (týž
      způsob, jakým se dotahuje mapová knihovna), takže ji
      scripts/orazitkuj-verze.mjs orazítkuje stejně jako značku <script>.
@@ -44,6 +53,25 @@
     odlozeneModuly[klic] = slib;
     return slib;
   }
+  /* PŘIHLÁŠENÍ SE PTÁ PKAuth, NE PKUlozeneUcet. Dřív se na to main.js
+     ptal uloženého účtu — jenže ten odpověď jen přeposílá
+     (js/ulozene-ucet.js: `return !!(root.PKAuth && root.PKAuth.prihlasen
+     && root.PKAuth.prihlasen())`). Kvůli dvěma popiskům se tak musel
+     stahovat celý modul. */
+  function jePrihlasen() {
+    try { return !!(window.PKAuth && window.PKAuth.prihlasen && window.PKAuth.prihlasen()); }
+    catch (e) { return false; }
+  }
+  /* MÁ TEN PROHLÍŽEČ VŮBEC CO UKAZOVAT? Prázdný klíč, „{}" a „[]" se
+     počítají jako nic — po smazání poslední poznámky tam totiž zůstane
+     prázdný objekt, ne nic, a modul by se dotahoval nadarmo. */
+  function mamVUlozisti(klic) {
+    try {
+      var s = localStorage.getItem(klic);
+      return !!s && s !== '{}' && s !== '[]' && s !== 'null';
+    } catch (e) { return false; }
+  }
+
   /* PŘEDNAČTENÍ NA NAJETÍ MYŠÍ NEBO NA FOKUS. Mezi „najel jsem na
      tlačítko" a „klepl jsem" je na myši zhruba dvě desetiny vteřiny —
      dost na to, aby se pět kilobajtů stihlo dotáhnout a okno se
@@ -1597,7 +1625,12 @@
     refreshFavBtn();
     /* Na účet AŽ POTOM a bez čekání: uložení musí být okamžité i bez
        signálu. Nepřihlášenému se nestane nic (viz js/ulozene-ucet.js). */
-    if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
+    /* Modul se dotáhne až tady, při prvním uložení — do té doby ho
+       nepotřebuje nikdo. Zápis do prohlížeče proběhl výš a nezávisle,
+       takže na stažení nic nečeká. */
+    sUlozenymi(function () {
+      if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
+    });
   }
   function refreshFavBtn(){
     if (!favEl) return;
@@ -1609,7 +1642,7 @@
        „uvidíte je i jinde" nepřihlášenému by byla lež; tvrdit
        „zůstávají jen tady" přihlášenému taky, od chvíle, kdy se
        ukládají na účet. */
-    favEl.title = (window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+    favEl.title = jePrihlasen()
       ? 'Uložené pozemky se ukládají k vašemu účtu — uvidíte je i na jiném zařízení.'
       : 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte. Po přihlášení se přenesou na účet.';
     /* ODKAZ NA POROVNÁNÍ AŽ OD DVOU. S jedním uloženým pozemkem není co
@@ -4735,14 +4768,26 @@
     var ok = document.getElementById('vyv-ok');
     if (ok) ok.disabled = !n;
   }
+  var vyvozPoznamkyZkusit = true;
   function stahniTabulku() {
     var vrstva = document.getElementById('vyv-vrstva');
     if (!vrstva) return;
     /* Modul se dotahuje až teď (viz zavaděč nahoře). Okno se do té doby
        neotevře: prázdné okno s počty, které se dopočítají za chvíli, by
        bylo horší než čtvrt vteřiny ticha po klepnutí. */
-    if (!window.PKVyvoz) {
-      dotahniModul('vyvoz', 'PKVyvoz').then(stahniTabulku, function () {
+    /* A POZNÁMKY S NÍM, ZE STEJNÉHO DŮVODU JAKO U RYCHLÉHO VÝBĚRU.
+       Vývoz umí sloupec s poznámkou i vrstvu „jen s poznámkou"
+       (vyvozPomocne a vyvozSada níž) — obojí jen tehdy, když je
+       PKPoznamky na stránce. Bez toho by okno nabízelo nulu a sloupec
+       by ve vyvezeném souboru chyběl, aniž by to kdo řekl.
+       Zkusí se jen jednou, ať se otevírání nezacyklí. */
+    if (!window.PKVyvoz || (vyvozPoznamkyZkusit && !window.PKPoznamky)) {
+      var slibyV = [dotahniModul('vyvoz', 'PKVyvoz')];
+      if (vyvozPoznamkyZkusit && !window.PKPoznamky) {
+        vyvozPoznamkyZkusit = false;
+        slibyV.push(dotahniModul('poznamky', 'PKPoznamky').catch(function () {}));
+      }
+      Promise.all(slibyV).then(stahniTabulku, function () {
         showToast('Stahování se nepodařilo načíst — zkuste to prosím znovu');
       });
       return;
@@ -5558,24 +5603,51 @@
      stejného důvodu: v novém prohlížeči nejsou, dokud se nestáhnou.
      Sloučení (co nahrát, co naopak smazat, protože to člověk odebral
      jinde) dělá js/ulozene-ucet.js. */
+  /* MODUL AŽ TEHDY, KDYŽ JE CO SLUČOVAT. Sloučení s účtem dává smysl
+     jen přihlášenému; nepřihlášenému `sync()` stejně nic neudělá (viz
+     js/ulozene-ucet.js), takže se kvůli němu nestahuje nic. */
   var favStazeno = false;
   function stahniUlozene() {
-    if (favStazeno || !window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+    if (favStazeno || !jePrihlasen()) return;
     favStazeno = true;
-    window.PKUlozeneUcet.sync().then(function (zmen) {
-      if (!zmen) return;
-      try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
-      refreshFavBtn();
-      renderList();
-    }).catch(function () {});
+    sUlozenymi(function () {
+      if (!window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+      window.PKUlozeneUcet.sync().then(function (zmen) {
+        if (!zmen) return;
+        try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
+        refreshFavBtn();
+        renderList();
+      }).catch(function () {});
+    });
+  }
+  /* Modul uložených se dotáhne a teprve pak se udělá, co se mělo.
+     Když se stažení nepovede, neudělá se nic — a to je v pořádku:
+     uložené pozemky žijí v prohlížeči i bez něj, modul jen přidává
+     přenos na účet. */
+  function sUlozenymi(pak) {
+    dotahniModul('ulozene-ucet', 'PKUlozeneUcet').then(pak).catch(function () {});
   }
 
+  /* POZNÁMKY TAKY AŽ TEHDY, KDYŽ JSOU. Modul kreslí na kartě odznak
+     „Poznámka" a slučuje poznámky s účtem. Prvnímu návštěvníkovi bez
+     účtu neudělá ani jedno: v prohlížeči žádnou poznámku nemá. Dotahuje
+     se proto jen tehdy, když v úložišti poznámka je (vrátivší se
+     návštěvník) nebo když je kdo přihlášený (může je mít na účtu).
+     Po dotažení se výpis překreslí, aby odznak naskočil. */
   var poznStazeno = false;
   function stahniPoznamky() {
-    if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
+    if (poznStazeno) return;
+    if (!jePrihlasen() && !mamVUlozisti('pk_poznamky_v1')) return;
     poznStazeno = true;   // nastavit PŘED voláním, ať se překreslení nezacyklí
-    window.PKPoznamky.sync().then(function (zmen) {
-      if (zmen) renderList();
+    dotahniModul('poznamky', 'PKPoznamky').then(function () {
+      if (!window.PKPoznamky) return;
+      /* Odznak na kartě se čte z prohlížeče, takže překreslit se musí
+         i tehdy, když sloučení s účtem nic nezmění nebo neběží. */
+      renderList();
+      if (!window.PKPoznamky.sync) return;
+      window.PKPoznamky.sync().then(function (zmen) {
+        if (zmen) renderList();
+      }).catch(function () {});
     }).catch(function () {});
   }
 
@@ -6086,8 +6158,7 @@
       (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">'
-      + ((window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
-        ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
+      + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
     /* „Doporučené" není žebříček, pořadí se každý den zamíchá. Stávalo
        to v závorce u volby řazení, kde to přečetl jen ten, kdo rozbalil
        seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
@@ -6554,11 +6625,26 @@
     if (n) n.hidden = ukaz;
     if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
   }
+  /* POZNÁMKY SE DOTAHUJÍ SPOLU S RYCHLÝM VÝBĚREM. Karta rychlého výběru
+     nabízí „Přidat poznámku" — a ta nabídka se kreslí jen tehdy, když
+     je PKPoznamky na stránce (viz rvKarta níž). Od chvíle, kdy se
+     poznámky dotahují podle stavu prohlížeče, by ta nabídka komukoli
+     bez poznámky zmizela. Chytila to scripts/test-rychly-prohlizec.mjs
+     („na kartě je nabídka Přidat poznámku": vyzva:false).
+     Zkusí se JEN JEDNOU: kdyby se dotažení nepovedlo, nesmí se
+     otevírání zacyklit — rychlý výběr má jet i bez poznámek. */
+  var rvPoznamkyZkusit = true;
+
   function otevriRychly() {
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
-    if (!window.PKRychly) {
-      dotahniModul('rychly', 'PKRychly').then(otevriRychly, function () {
+    if (!window.PKRychly || (rvPoznamkyZkusit && !window.PKPoznamky)) {
+      var sliby = [dotahniModul('rychly', 'PKRychly')];
+      if (rvPoznamkyZkusit && !window.PKPoznamky) {
+        rvPoznamkyZkusit = false;
+        sliby.push(dotahniModul('poznamky', 'PKPoznamky').catch(function () {}));
+      }
+      Promise.all(sliby).then(otevriRychly, function () {
         showToast('Rychlý výběr se nepodařilo načíst — zkuste to prosím znovu');
       });
       return;

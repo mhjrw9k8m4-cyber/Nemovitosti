@@ -4620,3 +4620,103 @@ soubor, řádek i selektor.
 přepsalo na jeden, vypadalo by to jako hotová práce — a pole by dál
 neměla vidět, kde stojí. Rozdíl udělalo to, že se místo počítání receptů
 změřilo, co z toho je vůbec vidět.
+
+## 76. Dva ze čtyř zbylých modulů prvnímu návštěvníkovi neudělají nic *20. 10.*
+
+Oddíl 64 odložil tři moduly z osmi a u zbylých čtyř napsal, že se při
+startu opravdu čtou, takže je odložit znamená přestavět start. U dvou
+z nich se ukázalo, že přestavovat se nemusí skoro nic — stačilo se
+zeptat jinak.
+
+**Nečte se „jestli se modul čte", ale „k čemu je tomuhle návštěvníkovi".**
+
+- `PKPoznamky` (čten ve 377 ms) kreslí na kartě odznak „Poznámka"
+  a slučuje poznámky s účtem. Obojí potřebuje, aby v prohlížeči
+  **nějaká poznámka byla**, nebo aby byl kdo přihlášený. Prvnímu
+  návštěvníkovi bez účtu nenajde ani jedno.
+- `PKUlozeneUcet` (308 ms) přenáší uložené pozemky na účet. Nepřihlášenému
+  `sync()` stejně neudělá nic — to je napsané přímo v `js/ulozene-ucet.js`.
+
+Rozhoduje proto **stav prohlížeče**, ne značka ve stránce: klíč
+v úložišti (`pk_poznamky_v1`), přihlášení, nebo první uložení pozemku.
+
+### Jeden modul navíc odpadl jen tím, že se ptáme správného
+
+`refreshFavBtn()` a popisek „uloženo na účtu / jen v prohlížeči" se
+ptaly `PKUlozeneUcet.prihlasen()`. Jenže ta funkce odpověď jen
+přeposílá — `js/ulozene-ucet.js` v ní dělá
+`return !!(root.PKAuth && root.PKAuth.prihlasen && root.PKAuth.prihlasen())`.
+Kvůli dvěma popiskům se tak stahoval celý modul. Teď se main.js ptá
+rovnou `PKAuth`, který na úvodní stránce stejně je.
+
+### Co to ušetří
+
+Změřeno na první návštěvě (telefon 390 px, prázdný prohlížeč, žádný
+účet, žádný dotek):
+
+| | |
+|---|---|
+| souborů z `js/min/` méně | **2** |
+| nestaženo | `ulozene-ucet.js`, `poznamky.js` |
+| velikost | **7 621 B** min · **2 470 B** gzip · **2 275 B** brotli |
+| vykreslení výpisu | **1** (nepřibylo) |
+
+Pro srovnání: tři moduly z oddílu 64 ušetřily 4 794 B brotli, takže
+tyhle dva přidávají skoro polovinu toho, co celý předchozí krok.
+A hlavně — obě položky byly `<script>` **bez `defer`**, tedy skripty,
+které zdržují zpracování stránky.
+
+### Zůstávají dva
+
+`PKAuth` (167 ms) rozhoduje o podobě hlavičky, takže by odložení
+bliklo prázdnou hlavičkou; `PKHledani` (250 ms) se v `boot` bere do
+proměnné (`var HL = window.PKHledani || {…}`). Ani jeden se neodkládá.
+
+### Hlídač
+
+`scripts/test-odlozene-skripty.mjs` dostal obě půlky pravidla, protože
+samotné „nestahuje se" by se dalo splnit i tím, že se modul nenačte
+nikdy a odznak poznámky už nikdo neuvidí:
+
+- prvnímu návštěvníkovi se **nestáhne ani jeden** a ani jeden globál na
+  stránce není;
+- s poznámkou v úložišti se modul **dotáhne a odznak na kartě naskočí**;
+- po prvním uložení pozemku se **dotáhne modul uložených**.
+
+Poznámka k měření: klíč poznámky je `klicPozemku` (pkey + výměra), ne
+hrubý pkey, a hodnota má pole `text`. S obojím špatně se modul stáhl,
+výpis překreslil — a odznak se neměl u čeho objevit. Zkouška proto
+zapisuje poznámku ke **všem** nabídkám: která z nich se na první
+stránce výpisu vykreslí, rozhoduje řazení a stránkování.
+
+Sabotáže, každá zvlášť: vrácená značka `<script>` pro `poznamky.js`
+shodí statickou kontrolu i tu o prvním návštěvníkovi; vyřazené
+dotažení poznámek shodí obě kontroly o odznaku; vyřazené dotažení
+uložených shodí kontrolu o prvním uložení.
+
+### Co se u toho rozbilo — a je to ta zajímavá část
+
+Odložení se **šíří dál, než kam člověk kouká**. Dva jiné moduly totiž
+kreslí podle toho, jestli je `PKPoznamky` na stránce:
+
+- **Rychlý výběr** má na kartě „Přidat poznámku" — a to tlačítko se
+  vykreslí jen `window.PKPoznamky ? … : ''`. Od chvíle, kdy se poznámky
+  dotahují podle stavu, by ta nabídka zmizela každému, kdo zatím žádnou
+  poznámku nemá — tedy přesně tomu, komu je nabízena. Chytila to
+  `scripts/test-rychly-prohlizec.mjs` (`"vyzva":false`).
+- **Vývoz** umí sloupec s poznámkou a vrstvu „jen s poznámkou"
+  (`vyvozPomocne`, `vyvozSada`). Bez modulu by okno nabídlo nulu
+  a sloupec by ve vyvezeném souboru chyběl, **aniž by to kdo řekl**.
+  Tohle nechytil nikdo — našlo se to až pohledem na to, kdo další se
+  na `PKPoznamky` ptá.
+
+Obojí se opravilo stejně: poznámky se dotahují **spolu** s rychlým
+výběrem i s vývozem, a to jen jednou — kdyby se to nepovedlo, nesmí se
+otevírání zacyklit, protože obojí má jet i bez poznámek.
+
+**A sabotáž, která neplatila.** První pokus o shození těch dvou nových
+kontrol jen přepsal podmínku `if (!window.PKVyvoz || (…&& !PKPoznamky))`
+na `if (!window.PKVyvoz)` — jenže uvnitř bloku zůstal řádek, který
+modul stahuje, takže se stahoval dál a zkouška prošla. Neplatná sabotáž
+vypadá jako důkaz, a přitom nedokazuje nic; musela se vyhodit i ta
+vnitřní větev.

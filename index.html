@@ -955,26 +955,38 @@
 <script src="js/min/hledani.js?v=c49c1410" defer></script>
 <script src="js/min/okruh.js?v=f11683ef" defer></script>
 <script src="js/min/klic.js?v=85f3251f"></script>
-<script src="js/min/ulozene-ucet.js?v=35e316ad"></script>
 <script src="js/min/videno.js?v=e21d5bf3"></script>
-<!-- Poznámky i tady: aby bylo na kartě vidět, u kterého pozemku si
-     člověk něco poznamenal. Soubor má 1,5 kB po minifikaci. -->
-<script src="js/min/poznamky.js?v=96f9b539"></script>
-<!-- TŘI SKRIPTY, KTERÉ SE BEZ DOTEKU NIKDY NESPUSTÍ. Změřeno na
-     úvodní stránce (telefon i monitor, žádný dotek): PKVyvoz, PKRychly
-     ani PK_VRSTVY se za celé načtení ANI JEDNOU nepřečtou — kdežto
-     PKAuth (167 ms), PKHledani (250 ms), PKUlozeneUcet (308 ms)
-     a PKPoznamky (377 ms) ano, a ty proto zůstávají značkou <script>.
-     Tyhle tři si js/main.js dotáhne sám, až na ně přijde řada:
-     vývoz při otevření okna, rychlý výběr při otevření karet, vrstvy
-     po klepnutí na „Zkusit, které vrstvy jedou". Adresa i s razítkem
-     ?v= stojí v data-src — stejně jako u mapové knihovny, aby ji
-     scripts/orazitkuj-verze.mjs orazítkoval taky.
+<!-- PĚT SKRIPTŮ, KTERÉ SI STRÁNKA DOTÁHNE SAMA, AŽ NA NĚ PŘIJDE ŘADA.
+     Tři z nich se bez doteku nikdy nespustí — změřeno na úvodní
+     stránce (telefon i monitor, žádný dotek) přes Object.defineProperty
+     na window: PKVyvoz, PKRychly ani PK_VRSTVY se za celé načtení ANI
+     JEDNOU nepřečtou. Dotáhnou se při otevření okna vývozu, při
+     otevření karet rychlého výběru a po klepnutí na „Zkusit, které
+     vrstvy jedou".
+
+     Další dva se sice čtou (PKUlozeneUcet ve 308 ms, PKPoznamky
+     ve 377 ms), ale PRVNÍMU NÁVŠTĚVNÍKOVI NEUDĚLAJÍ NIC: odznak
+     „Poznámka" na kartě i sloučení s účtem potřebují, aby v prohlížeči
+     poznámka nebo uložený pozemek VŮBEC BYL, anebo aby byl kdo
+     přihlášený. Rozhoduje se proto podle úložiště a přihlášení, ne
+     podle značky ve stránce; po dotažení se výpis překreslí, aby
+     odznak naskočil. Uložené se navíc dotáhnou při prvním uložení.
+     Na popisky „uloženo na účtu / jen v prohlížeči" se main.js ptá
+     rovnou PKAuth — uložený účet tu odpověď stejně jen přeposílal.
+
+     PKAuth (167 ms) a PKHledani (250 ms) zůstávají značkou <script>:
+     na prvním rozhoduje podoba hlavičky, takže by to bliklo, a druhý
+     se bere do proměnné hned v bootu.
+
+     Adresa i s razítkem ?v= stojí v data-src — stejně jako u mapové
+     knihovny, aby ji scripts/orazitkuj-verze.mjs orazítkoval taky.
      Hlídá scripts/test-odlozene-skripty.mjs. -->
 <meta name="pk-odlozeny" data-klic="vyvoz" data-src="js/min/vyvoz.js?v=b3737f01">
 <meta name="pk-odlozeny" data-klic="rychly" data-src="js/min/rychlovyber.js?v=fd603238">
 <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
-<script src="js/min/main.js?v=9623ed69" defer></script>
+<meta name="pk-odlozeny" data-klic="ulozene-ucet" data-src="js/min/ulozene-ucet.js?v=35e316ad">
+<meta name="pk-odlozeny" data-klic="poznamky" data-src="js/min/poznamky.js?v=96f9b539">
+<script src="js/min/main.js?v=8d227a9c" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

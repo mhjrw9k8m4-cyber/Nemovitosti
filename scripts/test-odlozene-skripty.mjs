@@ -68,10 +68,18 @@ const MODULY = [
   { klic: 'rychly', soubor: 'rychlovyber.js', global: 'PKRychly' },
   { klic: 'vrstvy', soubor: 'mapove-vrstvy.js', global: 'PK_VRSTVY' },
 ];
+/* A dva, které se nevyvolávají tlačítkem, ale STAVEM. Poznámky
+   i uložené se dotáhnou jen tehdy, když je v prohlížeči co ukazovat
+   (poznámka, uložený pozemek) nebo když je kdo přihlášený. Prvnímu
+   návštěvníkovi neudělají nic, a právě to se měří níž. */
+const PODLE_STAVU = [
+  { klic: 'ulozene-ucet', soubor: 'ulozene-ucet.js', global: 'PKUlozeneUcet' },
+  { klic: 'poznamky', soubor: 'poznamky.js', global: 'PKPoznamky' },
+];
 
 // ===== 1) CO STOJÍ V HTML ==============================================
 const html = fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8');
-for (const m of MODULY) {
+for (const m of MODULY.concat(PODLE_STAVU)) {
   /* Hledá se ZNAČKA, ne jméno souboru kdekoli v textu: adresa stojí
      i v metaznačce a v komentáři nad ní. */
   const znacka = new RegExp('<script[^>]+src="js/min/' + m.soubor.replace('.', '\\.') + '[^"]*"');
@@ -92,9 +100,12 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
 const p = await ctx.newPage();
 const vyzadane = [];
+const vyzadaneStav = [];
 p.on('request', (r) => {
   const m = MODULY.find((x) => r.url().includes('/js/min/' + x.soubor));
   if (m) vyzadane.push(m.klic);
+  const sm = PODLE_STAVU.find((x) => r.url().includes('/js/min/' + x.soubor));
+  if (sm) vyzadaneStav.push(sm.klic);
 });
 const padlo = [];
 p.on('pageerror', (e) => padlo.push(String(e)));
@@ -110,11 +121,15 @@ pravda('výpis se vykreslil, je na čem měřit',
   (await p.$$('#opp-list .opp-item')).length > 0, 've výpisu nejsou karty');
 pravda('po načtení bez jediného doteku se nestáhl ani jeden z nich',
   vyzadane.length === 0, 'stáhlo se: ' + vyzadane.join(', '));
-for (const m of MODULY) {
+for (const m of MODULY.concat(PODLE_STAVU)) {
   pravda(`a ${m.global} na stránce (zatím) není`,
     await p.evaluate((g) => !window[g], m.global),
     'modul se nějak dostal na stránku i bez doteku');
 }
+/* Čistý prohlížeč = žádná poznámka, žádný uložený pozemek, nikdo
+   přihlášený. Pro takovou návštěvu jsou oba moduly k ničemu. */
+pravda('ani poznámky a uložené se prvnímu návštěvníkovi nestahují',
+  vyzadaneStav.length === 0, 'stáhlo se: ' + vyzadaneStav.join(', '));
 
 // ===== 3) PO KLEPNUTÍ SE DOTÁHNOU A OKNO SE OTEVŘE =====================
 await p.click('#mc-vyvoz');
@@ -127,6 +142,13 @@ pravda('po klepnutí na „Stáhnout" se okno vývozu otevřelo',
 pravda('a popis v něm zná počet sloupců z modulu',
   /\d+\s*sloupc/.test(await p.textContent('#vyv-popis').catch(() => '') || ''),
   'popis: ' + JSON.stringify((await p.textContent('#vyv-popis').catch(() => '') || '').slice(0, 80)));
+/* ODLOŽENÍ SE NESMÍ ŠÍŘIT DÁL. Vývoz umí sloupec s poznámkou i vrstvu
+   „jen s poznámkou", ale jen když je PKPoznamky na stránce — jinak okno
+   nabídne nulu a sloupec ve vyvezeném souboru chybí, aniž by to kdo
+   řekl. Dotahuje se proto spolu s vývozem. */
+pravda('a s vývozem se dotáhly i poznámky (jinak by chyběl sloupec)',
+  await p.evaluate(() => !!window.PKPoznamky),
+  'PKPoznamky na stránce není — vývoz by mlčky vynechal poznámky');
 await p.keyboard.press('Escape');
 await p.waitForSelector('#vyv-vrstva[hidden]', { timeout: 20000 }).catch(() => {});
 
@@ -135,6 +157,13 @@ await p.waitForSelector('#rv-vrstva:not([hidden])', { timeout: 30000 }).catch(()
 pravda('po klepnutí na „Rychlý výběr" se okno s kartami otevřelo',
   await p.evaluate(() => { const e = document.getElementById('rv-vrstva'); return !!e && !e.hidden; }),
   'okno zůstalo zavřené');
+/* Táž vazba jako u vývozu: na kartě rychlého výběru se píše poznámka
+   rovnou, a ta nabídka se kreslí jen s PKPoznamky na stránce.
+   Chytila to scripts/test-rychly-prohlizec.mjs („vyzva":false). */
+pravda('a nabídka „Přidat poznámku" je na kartě',
+  await p.evaluate(() => !!document.getElementById('rv-pozn-vyzva')
+    || !!document.querySelector('#rv-vrstva .rv-pozn')),
+  'na kartě není — poznámky se s rychlým výběrem nedotáhly');
 await p.keyboard.press('Escape');
 
 /* Vrstvy úřadů mají vlastní tlačítko UVNITŘ panelu („Zkusit, které
@@ -198,6 +227,72 @@ await ctx.close();
     'zavaděč si schoval odmítnutý slib a tlačítko zůstalo umlčené');
   pravda('a stránka u výpadku nespadne', padlo2.length === 0, padlo2.slice(0, 2).join(' | '));
   await ctx2.close();
+}
+
+// ===== 5) A KDYŽ JE CO UKAZOVAT, DOTÁHNOU SE ===========================
+/* Druhá půlka pravidla. „Nestahuje se" by se dalo splnit i tím, že se
+   modul nenačte nikdy a odznak poznámky na kartě už nikdo neuvidí. */
+{
+  /* Poznámka se zapíše ke VŠEM nabídkám. Které se na první stránce
+     výpisu vykreslí, rozhoduje řazení a stránkování; při měření jsem
+     se nejdřív trefil do jediné nabídky, která na první stránce
+     nebyla, a vypadalo to jako chyba mechanismu.
+     Klíč je klicPozemku (pkey + výměra), ne hrubý pkey, a hodnota má
+     pole `text` — oboje podle js/klic.js a js/poznamky.js. */
+  const data = JSON.parse(fs.readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+  const vse = data.opportunities || data;
+  const poznamky = {};
+  for (const o of vse) {
+    const pk = [o.place || '', o.parcel || '', o.okres || '',
+      typeof o.lat === 'number' ? o.lat.toFixed(3) : '',
+      typeof o.lng === 'number' ? o.lng.toFixed(3) : ''].join('|');
+    const v = (typeof o.area === 'number' && isFinite(o.area)) ? Math.round(o.area) : 0;
+    if (v > 0) poznamky[pk + '#v' + v] = { text: 'moje poznámka', kdy: Date.now() };
+  }
+  pravda('je z čeho poznámky vyrobit (jinak by se měřilo prázdno)',
+    Object.keys(poznamky).length > 100, 'klíčů jen ' + Object.keys(poznamky).length);
+
+  const ctx3 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const p3 = await ctx3.newPage();
+  const stazeno3 = [];
+  p3.on('request', (r) => { if (/\/js\/min\/poznamky\.js/.test(r.url())) stazeno3.push('poznamky'); });
+  const padlo3 = [];
+  p3.on('pageerror', (e) => padlo3.push(String(e)));
+  await p3.addInitScript((m) => {
+    try { localStorage.setItem('pk_poznamky_v1', JSON.stringify(m)); } catch (e) {}
+  }, poznamky);
+  await p3.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await p3.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+    null, { timeout: 60000 });
+  /* Na výsledek, ne na čas: modul se dotahuje a výpis se pak překresluje. */
+  await p3.waitForFunction(() => document.querySelectorAll('.opp-pozn').length > 0,
+    null, { timeout: 30000 }).catch(() => {});
+  pravda('když je poznámka v prohlížeči, modul poznámek se dotáhne',
+    stazeno3.length > 0, 'nestáhl se — odznak „Poznámka" by na kartě nikdy nebyl');
+  pravda('a odznak „Poznámka" na kartě naskočí',
+    (await p3.$$('.opp-pozn')).length > 0,
+    'modul se stáhl, ale výpis se po něm nepřekreslil');
+  pravda('a stránka u toho nespadla', padlo3.length === 0, padlo3.slice(0, 2).join(' | '));
+  await ctx3.close();
+
+  /* Uložené: dotáhnou se při prvním uložení pozemku. */
+  const ctx4 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const p4 = await ctx4.newPage();
+  const stazeno4 = [];
+  p4.on('request', (r) => { if (/\/js\/min\/ulozene-ucet\.js/.test(r.url())) stazeno4.push('ulozene'); });
+  const padlo4 = [];
+  p4.on('pageerror', (e) => padlo4.push(String(e)));
+  await p4.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await p4.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+    null, { timeout: 60000 });
+  pravda('tlačítko „Uložit" je na kartě (jinak by se nebylo čeho chytit)',
+    !!(await p4.$('#opp-list .opp-item .opp-fav')), 'na kartě není .opp-fav');
+  await p4.click('#opp-list .opp-item .opp-fav').catch(() => {});
+  await p4.waitForFunction(() => !!window.PKUlozeneUcet, null, { timeout: 30000 }).catch(() => {});
+  pravda('po prvním uložení se modul uložených dotáhne',
+    stazeno4.length > 0, 'nestáhl se — uložené by se nikdy nepřenesly na účet');
+  pravda('a stránka u toho nespadla', padlo4.length === 0, padlo4.slice(0, 2).join(' | '));
+  await ctx4.close();
 }
 
 await prohlizec.close();

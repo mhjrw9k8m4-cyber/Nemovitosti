@@ -20,6 +20,18 @@
     return slib;
   }
 
+  function jePrihlasen() {
+    try { return !!(window.PKAuth && window.PKAuth.prihlasen && window.PKAuth.prihlasen()); }
+    catch (e) { return false; }
+  }
+
+  function mamVUlozisti(klic) {
+    try {
+      var s = localStorage.getItem(klic);
+      return !!s && s !== '{}' && s !== '[]' && s !== 'null';
+    } catch (e) { return false; }
+  }
+
   function pripravModulPoRuce(prvek, klic, jmenoGlobalu) {
     if (!prvek) return;
     var zkus = function () { dotahniModul(klic, jmenoGlobalu).catch(function () {}); };
@@ -1001,7 +1013,9 @@
     }
     refreshFavBtn();
 
-    if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
+    sUlozenymi(function () {
+      if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
+    });
   }
   function refreshFavBtn(){
     if (!favEl) return;
@@ -1010,7 +1024,7 @@
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
 
-    favEl.title = (window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
+    favEl.title = jePrihlasen()
       ? 'Uložené pozemky se ukládají k vašemu účtu — uvidíte je i na jiném zařízení.'
       : 'Uložené pozemky zůstávají v tomhle prohlížeči — na jiném zařízení je neuvidíte. Po přihlášení se přenesou na účet.';
 
@@ -3091,12 +3105,18 @@
     var ok = document.getElementById('vyv-ok');
     if (ok) ok.disabled = !n;
   }
+  var vyvozPoznamkyZkusit = true;
   function stahniTabulku() {
     var vrstva = document.getElementById('vyv-vrstva');
     if (!vrstva) return;
 
-    if (!window.PKVyvoz) {
-      dotahniModul('vyvoz', 'PKVyvoz').then(stahniTabulku, function () {
+    if (!window.PKVyvoz || (vyvozPoznamkyZkusit && !window.PKPoznamky)) {
+      var slibyV = [dotahniModul('vyvoz', 'PKVyvoz')];
+      if (vyvozPoznamkyZkusit && !window.PKPoznamky) {
+        vyvozPoznamkyZkusit = false;
+        slibyV.push(dotahniModul('poznamky', 'PKPoznamky').catch(function () {}));
+      }
+      Promise.all(slibyV).then(stahniTabulku, function () {
         showToast('Stahování se nepodařilo načíst — zkuste to prosím znovu');
       });
       return;
@@ -3613,22 +3633,36 @@
 
   var favStazeno = false;
   function stahniUlozene() {
-    if (favStazeno || !window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+    if (favStazeno || !jePrihlasen()) return;
     favStazeno = true;
-    window.PKUlozeneUcet.sync().then(function (zmen) {
-      if (!zmen) return;
-      try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
-      refreshFavBtn();
-      renderList();
-    }).catch(function () {});
+    sUlozenymi(function () {
+      if (!window.PKUlozeneUcet || !window.PKUlozeneUcet.sync) return;
+      window.PKUlozeneUcet.sync().then(function (zmen) {
+        if (!zmen) return;
+        try { favs = JSON.parse(localStorage.getItem(FAV_KEY)) || favs; } catch (e) {}
+        refreshFavBtn();
+        renderList();
+      }).catch(function () {});
+    });
+  }
+
+  function sUlozenymi(pak) {
+    dotahniModul('ulozene-ucet', 'PKUlozeneUcet').then(pak).catch(function () {});
   }
 
   var poznStazeno = false;
   function stahniPoznamky() {
-    if (poznStazeno || !window.PKPoznamky || !window.PKPoznamky.sync) return;
+    if (poznStazeno) return;
+    if (!jePrihlasen() && !mamVUlozisti('pk_poznamky_v1')) return;
     poznStazeno = true;
-    window.PKPoznamky.sync().then(function (zmen) {
-      if (zmen) renderList();
+    dotahniModul('poznamky', 'PKPoznamky').then(function () {
+      if (!window.PKPoznamky) return;
+
+      renderList();
+      if (!window.PKPoznamky.sync) return;
+      window.PKPoznamky.sync().then(function (zmen) {
+        if (zmen) renderList();
+      }).catch(function () {});
     }).catch(function () {});
   }
 
@@ -3897,8 +3931,7 @@
       (novych === 1 ? 'nový od minule' : (novych >= 2 && novych <= 4 ? 'nové od minule' : 'nových od minule')) + '</span>';
 
     if (favOnly) pripisky += ' <span class="mc-pozn">'
-      + ((window.PKUlozeneUcet && window.PKUlozeneUcet.prihlasen())
-        ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
+      + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
 
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
 
@@ -4181,11 +4214,19 @@
     if (n) n.hidden = ukaz;
     if (ukaz) { var ok = rvPrvek('rv-uvod-ok'); if (ok) { try { ok.focus(); } catch (e) {} } }
   }
+
+  var rvPoznamkyZkusit = true;
+
   function otevriRychly() {
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
-    if (!window.PKRychly) {
-      dotahniModul('rychly', 'PKRychly').then(otevriRychly, function () {
+    if (!window.PKRychly || (rvPoznamkyZkusit && !window.PKPoznamky)) {
+      var sliby = [dotahniModul('rychly', 'PKRychly')];
+      if (rvPoznamkyZkusit && !window.PKPoznamky) {
+        rvPoznamkyZkusit = false;
+        sliby.push(dotahniModul('poznamky', 'PKPoznamky').catch(function () {}));
+      }
+      Promise.all(sliby).then(otevriRychly, function () {
         showToast('Rychlý výběr se nepodařilo načíst — zkuste to prosím znovu');
       });
       return;
