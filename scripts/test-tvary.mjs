@@ -139,9 +139,43 @@ pravda('tvary v legendě se navzájem liší',
     const rodic = e.parentElement.getBoundingClientRect();
     const tecky = [...e.querySelectorAll('.lg-dot')].map((d) => Math.round(d.getBoundingClientRect().width));
     const nad = e.querySelector('.lg-nadpis');
+    /* PULZUJÍCÍ KRUH SE MUSÍ VEJÍT. Puntík „končí do 14 dní" se
+       v legendě láme na druhý řádek, takže stojí jako první zleva —
+       a kruh kolem něj se při animaci roztahuje. Naměřeno na 390 px:
+       základ 19 px (poloměr 9,5), střed 18,5 px od okraje; při
+       scale(2,2) z toho vyšel poloměr 20,9 px a kruh přetekl o 2,4 px
+       ZA OKRAJ OKNA, kde ho hrana uřízla na placku.
+       Nejširší okamžik se nedá změřit snímkem (je to pseudoprvek
+       a animace běží dokola), takže se spočítá: vnějšek základního
+       kruhu × největší scale z @keyframes. */
+    const kr = e.querySelector('.lg-ring');
+    let pulz = null;
+    if (kr) {
+      const a = getComputedStyle(kr, '::after');
+      const kb = kr.getBoundingClientRect();
+      let max = 1;
+      for (const ss of document.styleSheets) {
+        let pravidla;
+        try { pravidla = ss.cssRules; } catch { continue; }
+        for (const pr of pravidla) {
+          if (pr.name !== a.animationName || !pr.cssRules) continue;
+          for (const kf of pr.cssRules) {
+            const m = /scale\(([\d.]+)\)/.exec(kf.style.transform || '');
+            if (m) max = Math.max(max, parseFloat(m[1]));
+          }
+        }
+      }
+      const ram = parseFloat(a.borderTopWidth) || 0;
+      const vnejsi = a.boxSizing === 'border-box'
+        ? parseFloat(a.width) : parseFloat(a.width) + 2 * ram;
+      const stred = kb.left + kb.width / 2;
+      pulz = { max, vnejsi,
+        vlevoVOkne: Math.round((stred - (vnejsi / 2) * max) * 10) / 10,
+        vlevoVLegende: Math.round((stred - (vnejsi / 2) * max - r.left) * 10) / 10 };
+    }
     return { pismo: parseFloat(cs.fontSize), vaha: parseInt(cs.fontWeight, 10),
       sirka: Math.round(r.width), rodicSirka: Math.round(rodic.width),
-      tecky, nadpis: nad ? nad.textContent.trim() : null };
+      tecky, pulz, nadpis: nad ? nad.textContent.trim() : null };
   });
   pravda('legenda se na telefonu vůbec vykreslila', !!lg, 'prvek #map-legend nemá rozměr');
   if (lg) {
@@ -161,6 +195,17 @@ pravda('tvary v legendě se navzájem liší',
        že je to klíč k mapě. */
     pravda('a má nadpis, který říká, co to je', /^Co znamenaj/.test(lg.nadpis || ''),
       'nadpis: ' + JSON.stringify(lg.nadpis));
+    // PŘEDPOKLAD: bez pulzujícího puntíku není co měřit
+    pravda('legenda má i pulzující puntík „končí do ... dní"', !!lg.pulz,
+      'prvek .lg-ring v legendě není');
+    if (lg.pulz) {
+      pravda('a jeho kruh se v nejširší chvíli vejde do okna',
+        lg.pulz.vlevoVOkne >= -0.5,
+        `v nejširší chvíli sahá na ${lg.pulz.vlevoVOkne} px, tedy ${-lg.pulz.vlevoVOkne} px za okraj `
+        + `(základ ${lg.pulz.vnejsi} px × scale ${lg.pulz.max})`);
+      pravda('a nevyteče ani z legendy', lg.pulz.vlevoVLegende >= -0.5,
+        `sahá ${lg.pulz.vlevoVLegende} px od levého okraje legendy`);
+    }
   }
   await tel.close();
 }

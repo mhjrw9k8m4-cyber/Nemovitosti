@@ -1217,7 +1217,17 @@ body.vm-otevreno{overflow:hidden;}
 /* Špendlík vybraného pozemku na mapě — bez rámečku divIconu, s jemným stínem */
 .sel-pin{background:none; border:none;}
 .sel-pin svg{display:block; filter:drop-shadow(0 3px 4px rgba(0,0,0,0.4));}
-@keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(2.2); opacity:0;}}
+/* STROP PULZU JE DANÝ TÍM, KDE TEN KRUH STOJÍ. Jediné místo, kde se
+   mping používá, je puntík v legendě mapy (.lg-ring) — značky na mapě
+   se kreslí na plátno, ne CSS. A řádek „končí do 14 dní" se v legendě
+   láme na druhý řádek, takže jeho puntík stojí jako první zleva.
+   Naměřeno na 390 px: základní kruh má vnějšek 19 px (poloměr 9,5)
+   a jeho střed je 18,5 px od levého okraje okna. Při scale(2,2) z toho
+   vyjde poloměr 20,9 px, tedy -2,4 px: kruh v nejširší chvíli PŘETEKL
+   ZA OKRAJ OKNA a hrana ho uřízla — na snímku je z pulzu placka.
+   scale(1,8) dává 17,1 px a vejde se (na monitoru, kde je puntík 14 px
+   a střed 19 px, vychází 18 px). Hlídá to scripts/test-tvary.mjs. */
+@keyframes mping{0%{transform:scale(0.75); opacity:0.7;} 100%{transform:scale(1.8); opacity:0;}}
 
 /* Header */
 /* „-webkit-sticky" kvůli starším iOS, kde samotné „sticky" neplatí.

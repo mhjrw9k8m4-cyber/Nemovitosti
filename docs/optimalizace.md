@@ -3845,3 +3845,35 @@ naprázdno), zmenšuje se jen na stupně stupnice, a **nezmenšily se
 všechny** — ta poslední chytila sabotáž „zmenšuj vždycky", po které
 první tři kontroly dál svítily zeleně.
 
+## 63. Pulz v legendě mapy uřízla hrana okna *20. 10.*
+
+V legendě pod mapou má řádek „končí do 14 dní" puntík, kolem kterého
+pulzuje kruh (`@keyframes mping`). Legenda se na telefonu láme na dva
+řádky, takže ten puntík stojí **jako první zleva** — a kruh kolem něj
+se při animaci roztahuje.
+
+Naměřeno na 390 px: základní kruh má vnějšek **19 px** (poloměr 9,5)
+a jeho střed stojí **18,5 px** od levého okraje okna. Při `scale(2.2)`
+z toho vyjde poloměr **20,9 px**, tedy **−2,4 px**: kruh v nejširší
+chvíli přetekl za okraj okna a hrana ho uřízla. Na snímku v polovině
+cyklu, kdy je kruh ještě dobře vidět (opacity kolem 0,35), z pulzu
+nebyl kruh, ale **placka s rovnou levou hranou**.
+
+`scale(1.8)` dává poloměr 17,1 px a vejde se; na monitoru, kde je
+puntík 14 px a střed 19 px, vychází 18 px. Rozdíl mezi 2,2 a 1,8 na
+pohled nepoznat, uříznutou hranu ano.
+
+**`mping` používá jediné místo na webu** — právě tenhle puntík.
+Značky na mapě se kreslí na plátno (viz `scripts/test-tvary.mjs`),
+ne přes CSS, takže se nebylo potřeba rozdvojovat na dvě animace.
+
+### Jak se to hlídá, když to nejde vyfotit
+
+Nejširší okamžik je pseudoprvek `::after` uprostřed běžící animace —
+`getBoundingClientRect` na něj nesáhne a snímek chytí náhodný snímek
+cyklu. Zkouška to proto **spočítá**: vezme vnějšek základního kruhu
+z `getComputedStyle(el, '::after')` (včetně `box-sizing`, protože
+`width` je tam 17 px a rámeček 1 px navíc na každé straně) a vynásobí
+ho největším `scale`, který najde v `@keyframes` daného jména
+v `document.styleSheets`. Sabotáž (zpátky na 2,2) obě nové kontroly
+shodila a vypsala přesně těch −2,4 px.
