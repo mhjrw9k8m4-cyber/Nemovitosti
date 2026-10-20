@@ -3416,3 +3416,93 @@ Zbývá totéž v **ručně psaných stránkách**: 21 souborů s vloženými
 odstupy (nejvíc `predloha.html` a `zpravy.html`, u článků `padding-top`
 a `margin-top` u patního odkazu). Dokud tam jsou, nemá smysl psát
 zkoušku, která vložené odstupy zakáže úplně — až po nich.
+
+## 56. Zbylých 65 odstupů v atributech — a zkouška, která je už nepustí *20. 10.*
+
+Po generátoru (položka 55) zbývaly odstupy v `style=` v ručně psaných
+stránkách a v jednom skriptu: **62 v 21 souboru a 3 v `js/main.js`**.
+Teď jich je **nula** a hlídá to zkouška.
+
+**Co se našlo cestou — pětkrát něco jiného, než se čekalo:**
+
+1. **Jméno už existovalo.** Šestnáct stránek mělo
+   `<section class="section" style="padding-top:20px">` hned za úvodním
+   pásem. Táž hodnota má přitom ve stylopisu třídu `tesne-nahore`
+   už dávno — a používala ji jedna jediná stránka (`pridat.html`).
+   Nepřibylo tedy nic, jen se těch šestnáct přihlásilo k existujícímu
+   jménu.
+2. **Odstup nese deska PŘED mezerou, ne za ní.** Deset stránek rádce
+   dávalo druhé desce `margin-top:20px`. Napsat to jako
+   `.add-card + .add-card{margin-top}` vypadá správně a na telefonu to
+   i vyšlo — na širokém displeji ale obal přepne na mřížku a **v mřížce
+   se okraje neslévají**, takže se 20 px přičetlo k `margin-bottom:20px`,
+   který už tři karty mají samy. Naměřeno +20 px na třech stránkách.
+   Pravidlo je proto `.add-card:has(+ .add-card){margin-bottom:20px}` —
+   táž vlastnost s touž hodnotou se nesečte.
+3. **Jeden prvek v selektoru přebije tři třídy.**
+   `.rules-sect > .rules-note.pod-textem` (tři třídy) prohrálo
+   s `.clanek .rules-sect > p + .rules-note` (tři třídy **a jeden
+   prvek**), přestože stojí v souboru pod ním. Poznámka spadla o 4 px.
+4. **Přepis odhalil hodnotu mimo mříž.** Hláška „ve vašem okolí teď nic
+   není" měla `padding:20px 6px` v atributu — a atributy v `js/*.js`
+   zkouška odstupů dosud nečetla. Jak se to přepsalo do stylopisu,
+   ohlásila 6 px jako hodnotu mimo čtyřkovou mříž. Jsou z nich 4 px
+   (při remíze dolů), tedy o 2 px užší hláška; to je jediná změna
+   rozvržení v celé položce.
+5. **Vzorník sám sebe neposlouchal.** `predloha.html` má v šestém oddílu
+   napsáno, že „ukázky se kreslí skutečnými třídami, ne vepsanými
+   čísly" — a dvanáct rozměrů měl v atributech, ukázku tmavého pásu
+   celou. Zaklínit nová pravidla do `.vzorek` byla chyba: popisek pod
+   čtvercem barvy stojí v `.radaTvaru`, pravidlo na něj nedosáhlo
+   a čtverce se srazily o 4 px (211 → 203). Bez zaklínění souhlasí.
+
+**Čím se to ověřilo.** Dvacet dvě stránky na 390 a 1 280 px, otisk
+každého prvku v `<body>` proti pracovní kopii z HEAD na druhém portu —
+**žádný posun**, jen jiná jména tříd v otisku. Co se skládá
+v JavaScriptu až ve stavu, do kterého se sonda nedostane (prázdný
+rozhovor, potvrzení o změně hesla, hláška o prázdném okolí, okénko
+„Kde hledat?"), se měřilo jinak: táž značka v obou podobách vložená do
+téže stránky a porovnané **vypočtené hodnoty** — čtrnáct prvků,
+všechny shodné. U `diagnostika.html` otisk nejde: je živá a vrací jiný
+počet prvků i při srovnání HEAD se sebou samým (21 „posunů"), takže
+u ní platí jen to, že se řádek s verzí nepohnul.
+
+**Zkouška.** `scripts/test-odstupy.mjs` dosud hlídala HODNOTU odstupu;
+teď hlídá i MÍSTO — v `style=` nesmí stát `margin`, `padding` ani
+`gap`. Vyjímá se `scripts/mail-sklad.mjs` (e-mailoví klienti `<style>`
+zahazují, inline je tam jediná cesta) a `js/mereni-hlavicky.js`
+(ladicí panel, který se načte jen s `?mereni` a má vlastní soustavu,
+jako `build-og.mjs`). Zkouška navíc čte **i `js/*.js`**, což dřív ne —
+a hned se tím našel bod 4. Komentáře se bílí podle jazyka, aby se
+nezopakovala chyba z `test-mrtve-styly.mjs`.
+Sabotáž: vrácený `style="padding-top:20px"` do stránky a
+`style="margin-top:5px"` do `js/main.js` shodí obě kontroly naráz
+(a 5 px navíc i tu o stupnici).
+
+Hranice je napsaná rovnou: hlídají se **literální atributy**, ne
+`setAttribute('style', …)`. Jediné místo, které to tak dělá, je právě
+ten ladicí panel — a ten je ze zkoušky vyjmutý jmenovitě.
+
+## 57. Předpoklad, který závisel na pořadí dat *20. 10.*
+
+CI shodilo zkoušku poznámek na kontrole, která si sama říká předpoklad:
+„ve výpisu je karta, jejíž záznam vznikl složením dvou (jinak není co
+měřit)" → `{"zadna":true,"karet":24}`. **Lokálně přitom prošla** — tedy
+podruhé týž druh rozdílu u téže zkoušky (položka o CI výš, úkol 9).
+
+Příčina není v měřeném kódu. Výpis ukazuje **prvních 24** nabídek
+a složených záznamů je v datech **17 z 1 975**; jestli jedna padne na
+první obrazovku, rozhoduje pořadí, a to se mění s každou aktualizací
+dat od robota. Zkouška tedy stála na náhodě a v CI ta náhoda nevyšla.
+
+Snížit nárok (měřit kteroukoli kartu) by znamenalo přestat měřit právě
+tu nejtěžší, kvůli které zkouška vznikla — složený záznam, jaký
+v syrových datech samostatně není. Správně je **přestat se spoléhat na
+pořadí**: složený záznam se najde v datech (týmž modulem jako web,
+`PKHlidani.bezDuplicit`) a výpis se na jeho obec **dohledá** přes
+`?q=…`, tedy touž cestou, jakou by na něj narazil člověk. Stejně se
+dohledává i při návratu, kde se měří odznak „Poznámka".
+
+Zkouška má o jednu kontrolu víc (70 místo 69) a sabotáž ji shodí:
+vypnuté zpracování `?q=` v js/main.js → „a po dohledání obce
+(Medvědice) je jeho karta ve výpisu ✕ {"zadna":true,"karet":24}".

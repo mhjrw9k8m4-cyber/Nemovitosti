@@ -2497,6 +2497,15 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
    mají nad výpisem jeden zřetelný nadpis a vedle něj řazení; číslo
    k němu patří jako tišší přípona (.mc-sub). */
 .map-count{font-size:16px; color:var(--text); font-weight:700; letter-spacing:-0.01em; margin-bottom:12px;}
+/* HLÁŠENÍ „tady nic není" na místě počtu: celá věta, ne štítek, takže
+   se neřídí ani velkými písmeny, ani tučností počtu. Skládá se
+   v js/main.js, který to měl v atributu `style=` na dvou místech —
+   tedy dvakrát opsané v textu, kde to žádná zkouška stylů nenašla.
+   A hned to na sebe prozradilo: po přepsání do stylopisu zkouška
+   odstupů ohlásila, že 6 px po stranách je mimo čtyřkovou mříž. Je
+   z nich 4 px (při remíze dolů, jak stupnice velí) — hláška se tím
+   zúžila o 2 px z každé strany a to je celá změna. */
+.map-count.mc-prazdno{padding:20px 4px; text-transform:none; font-weight:400; line-height:1.6;}
 /* Dlouhý popis nadpisu („Doporučené příležitosti") se na telefonu
    schovává v bloku do 560 px; zbyde samotný počet „1 930 na mapě".
    Počet se přitom nikam neopisuje — viz komentář v js/main.js. */
@@ -3666,6 +3675,9 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 .loc-ic{width:60px; height:60px; margin:0 auto 12px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--plocha-tlumena);}
 .loc-ic svg{width:30px; height:30px; color:var(--znacka-svetla);}
 .loc-card h3{font-size:20px; font-weight:700; margin-bottom:8px;}
+/* Pole pro obec: 4 px pod nadpisem okénka. Skládá se v js/main.js
+   a mělo to v atributu `style=`. */
+.loc-pole{margin-top:4px;}
 .loc-card p{font-size:16px; color:var(--muted); line-height:1.5; margin-bottom:12px;}
 
 .loc-card b{color:var(--text);}
@@ -4515,6 +4527,16 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    (152 px na 1440) a řádek textu se nenatáhne přes celou obrazovku. */
 .add-wrap{max-width:var(--m-wrap);}
 .add-wrap > *{max-width:var(--m-sloupec);}
+/* DVĚ DESKY ZA SEBOU MAJÍ MEZI SEBOU 20 PX. Deset stránek rádce to
+   mělo v atributu `style=` u každé druhé desky zvlášť.
+   Odstup nese deska PŘED mezerou, ne za ní — a to kvůli měření:
+   `.nak-karta`, `.sml-upozorneni` a `.sml-karta-form` už mají
+   `margin-bottom:20px` samy (potřebují ho i tam, kde za nimi deska
+   není). Na širokém displeji je obal mřížka a v mřížce se okraje
+   NESLÉVAJÍ, takže `margin-top` na následující desce by se k jejich
+   okraji přičetl — naměřeno +20 px na třech stránkách. Takhle jde
+   o tutéž vlastnost s touž hodnotou a dvakrát se nesečte. */
+.add-wrap > .add-card:has(+ .add-card){margin-bottom:20px;}
 /* JEDEN PROFIL, TŘI ZÁLOŽKY.
    Zprávy, Hlídání a Můj profil jsou tři stránky jednoho účtu. Každá
    začínala sloganem a odstavcem, který vysvětluje, k čemu ta funkce je —
@@ -4889,6 +4911,11 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 /* ---------- Pravidla inzerce / nahlášení ---------- */
 .rules-sect{margin-bottom:4px;}
 .rules-sect + .rules-sect{margin-top:20px;}
+/* FORMULÁŘ ZA VÝKLADEM (Nahlásit inzerát): 16 px, ne 4. Stránka to
+   měla jako `margin-bottom:16px` u poslední poznámky uvnitř oddílu —
+   což je týž odstup napsaný o prvek vedle, a sléval se s okrajem
+   oddílu. Odstup patří mezi oddíl a formulář. */
+.add-card > .rules-sect + .add-form{margin-top:16px;}
 .rules-sect h2{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; color:var(--text); margin-bottom:12px;}
 .rule-list{list-style:none; display:flex; flex-direction:column; gap:8px;}
 .rule-list li{position:relative; padding-left:28px; font-size:16px; color:var(--muted); line-height:1.6;}
@@ -6896,6 +6923,16 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   margin-bottom:12px;}
 .clanek .rules-sect > p{margin-bottom:12px;}
 .clanek .rules-sect > p + .rule-list, .clanek .rules-sect > p + .rules-note{margin-top:16px;}
+/* VÝJIMKA S JMÉNEM: poznámka, která patří k odstavci NAD sebou, ne
+   k dalšímu bloku (odkaz na podrobnější rádce hned za vysvětlením).
+   Dvě stránky to měly v `style=`.
+   Druhý selektor není navíc: pravidlo nad ním má v sobě JEDEN PRVEK
+   (`p`), takže je silnější než tři třídy a šestnáct pixelů vyhrálo
+   i nad pravidlem, které stojí pod ním. Naměřeno na
+   list-vlastnictvi-katastr.html: poznámka spadla o 4 px (12 px odstupu
+   odstavce nad ní vystřídalo 16 px vlastního). Čtyři třídy to srovnají. */
+.rules-sect > .rules-note.pod-textem,
+.clanek .rules-sect > .rules-note.pod-textem{margin-top:0;}
 .clanek .rules-sect > p:last-child, .clanek .rules-sect > ul:last-child{margin-bottom:0;}
 
 /* Na široké obrazovce číslo odejde na okraj sazby. */
@@ -8090,6 +8127,14 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    toho je, a má vedle sebe tlačítko, kterým to zmizí. */
 .md-hlava{padding-top:28px;}
 .md-uvod{max-width:var(--m-text); margin-top:8px; line-height:1.6;}
+/* ÚVODNÍ VĚTA, KTERÁ STOJÍ PŘÍMO V <main> (ochrana-udaju.html) — nad
+   úvodním pásem a mimo jakýkoli `.wrap`, takže nemá od koho dostat
+   šířku, středění ani odstup od okraje okna a bere si je sama.
+   62 ch není omyl ani záměr: `--m-text` mělo tuhle hodnotu, než se
+   čtecí sloupec zúžil na 56 ch, a tahle věta u staré šířky zůstala.
+   Stránka to měla v `style=`; zužovat ji je rozhodnutí o sazbě, ne
+   přepis odstupů, tak hodnota zůstává, dokud ho někdo neudělá. */
+main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .md-obsah{padding-bottom:40px;}
 .md-skup{margin-top:24px;}
 .md-skup-h{display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px;}

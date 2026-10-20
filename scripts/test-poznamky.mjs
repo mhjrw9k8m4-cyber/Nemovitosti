@@ -758,24 +758,52 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
   await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
   await pripravenoKdyz(p, () => !!window.PKKlic && !!document.querySelector('.opp-item[data-pk]'));
-  /* Která karta je ta „složená", se počítá ze SKUTEČNÝCH dat týmž
-     pravidlem jako web — ne z ručního seznamu, který by zestárl. */
-  const slozena = await p.evaluate(async () => {
+  /* Který záznam je ten „složený", se počítá ze SKUTEČNÝCH dat týmž
+     pravidlem jako web (`PKHlidani.bezDuplicit`, tentýž modul) — ne
+     z ručního seznamu, který by zestárl.
+     HLEDÁ SE V DATECH, NE MEZI VYKRESLENÝMI KARTAMI. Výpis ukazuje
+     prvních 24 nabídek a složených záznamů je 17 z 1 975, takže to,
+     jestli jedna padne na první obrazovku, rozhoduje pořadí — a to se
+     s každou aktualizací dat mění. V CI to takhle i spadlo: „zadna:
+     true, karet: 24", tedy zkouška neměřila nic a tvrdila to narovinu.
+     Snížit nárok (třeba měřit libovolnou kartu) by znamenalo přestat
+     měřit právě tu nejtěžší, kvůli které zkouška vznikla. Záznam se
+     proto najde v datech a výpis se na jeho obec DOHLEDÁ (?q=…), tedy
+     touž cestou, jakou by na něj narazil člověk. */
+  const slozeny = await p.evaluate(async () => {
     const r = await fetch('data/opportunities.json');
     const j = await r.json();
-    const syrove = {};
-    (j.opportunities || []).forEach((x) => { syrove[window.PKKlic.pkey(x)] = true; });
-    const karty = [...document.querySelectorAll('.opp-item')];
-    const i = karty.findIndex((e) => !syrove[e.getAttribute('data-pk') || '']);
-    if (i === -1) return { zadna: true, karet: karty.length };
-    const cena = (karty[i].querySelector('.opp-price') || { textContent: '' }).textContent.replace(/\s/g, '');
-    return { i, klic: karty[i].getAttribute('data-pk'), cena, karet: karty.length };
+    const syrova = j.opportunities || [];
+    const syrove = new Set(syrova.map((x) => window.PKKlic.pkey(x)));
+    const ven = window.PKHlidani.bezDuplicit(syrova);
+    const s = ven.filter((x) => !syrove.has(window.PKKlic.pkey(x)));
+    return { kolik: s.length, zCelku: ven.length, syrovych: syrova.length,
+      prvni: s.length ? { klic: window.PKKlic.pkey(s[0]), place: s[0].place, okres: s[0].okres } : null };
   });
-  /* PŘEDPOKLAD: kdyby ve výpisu žádná složená karta nebyla, zkouška by
+  /* PŘEDPOKLAD: kdyby složený záznam v datech nebyl, zkouška by
      neměřila nic — a vada by se vrátila nepozorovaně. */
-  pravda('ve výpisu je karta, jejíž záznam vznikl složením dvou (jinak není co měřit)',
-    !slozena.zadna, JSON.stringify(slozena));
-  if (!slozena.zadna) {
+  pravda('v datech je záznam, který vznikl složením dvou (jinak není co měřit)',
+    !!slozeny.prvni, JSON.stringify(slozeny));
+  if (slozeny.prvni) {
+    /* Dohledání obce; `?q=` nastaví hledací pole a přefiltruje výpis
+       (js/main.js, obsluha parametrů v adrese). */
+    const dohledej = async () => {
+      await p.goto(`${BASE}/index.html?q=${encodeURIComponent(slozeny.prvni.place)}`, { waitUntil: 'load' }).catch(() => {});
+      await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
+      await pripravenoKdyz(p, (k) => [...document.querySelectorAll('.opp-item')]
+        .some((x) => x.getAttribute('data-pk') === k), slozeny.prvni.klic, 15000);
+    };
+    await dohledej();
+    const slozena = await p.evaluate((k) => {
+      const karty = [...document.querySelectorAll('.opp-item')];
+      const i = karty.findIndex((e) => e.getAttribute('data-pk') === k);
+      if (i === -1) return { zadna: true, karet: karty.length };
+      const cena = (karty[i].querySelector('.opp-price') || { textContent: '' }).textContent.replace(/\s/g, '');
+      return { i, klic: k, cena, karet: karty.length };
+    }, slozeny.prvni.klic);
+    pravda(`a po dohledání obce (${slozeny.prvni.place}) je jeho karta ve výpisu`,
+      !slozena.zadna, JSON.stringify(slozena));
+    if (!slozena.zadna) {
     /* Čeká se na PŘESUN, ne na 3,2 s — a jen na přesun jako takový.
        KAM se došlo a co ta stránka ukazuje, měří kontroly pod tím; čekat
        na „adresa obsahuje pozemek" by z nich udělalo prázdná slova. */
@@ -837,12 +865,10 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
       pravda('poznámka se uloží pod klíč TÉ karty, ze které jsem přišel',
         ulozeno.klice.indexOf(cekanyKlic) !== -1,
         `uloženo pod ${JSON.stringify(ulozeno.klice)}, čekáno ${cekanyKlic}`);
-      await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
-      await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
-      /* Počká se na tu konkrétní kartu (strop 10 s) — a když nepřijde,
-         kontroly pod tím to řeknou jménem místo timeoutu. */
-      await pripravenoKdyz(p, (k) => [...document.querySelectorAll('.opp-item')]
-        .some((x) => x.getAttribute('data-pk') === k), slozena.klic, 10000);
+      /* Zpátky do výpisu TOUŽ cestou, tedy s dohledanou obcí: bez ní
+         by karta zase nemusela být mezi prvními 24 a odznak by se
+         neměl kde ukázat. */
+      await dohledej();
       const odznak = await p.evaluate((k) => {
         const e = [...document.querySelectorAll('.opp-item')].find((x) => x.getAttribute('data-pk') === k);
         return { kartaJe: !!e, maOdznak: e ? !!e.querySelector('.opp-pozn') : null };
@@ -850,6 +876,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
       pravda('a ve výpisu je ta karta zase (jinak se odznak nemá kde ukázat)',
         odznak.kartaJe, JSON.stringify(odznak));
       pravda('a nese odznak „Poznámka"', odznak.maOdznak === true, JSON.stringify(odznak));
+    }
     }
   }
   await ctx.close();

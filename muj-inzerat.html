@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=67076613">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585e1e51">
   <style>
     /* Karta profilu */
     .pf-card{position:relative; overflow:hidden; border-radius:var(--r-lg); padding:24px 20px 20px;
@@ -176,6 +176,20 @@
       /* Rezerva viz komentář u #mi-dole v těle stránky. */
     #mi-dole{min-height:354px;}
     @media (min-width:700px){ #mi-dole{min-height:332px;} }
+    /* ODSTUPY ZE STYLE= DO STYLOPISU. Sedm prvků na téhle stránce mělo
+       rozměr v atributu; čtyři z nich stačí zaklínit do vlastního `id`,
+       které už měly, takže nepřibyla žádná nová jména kromě dvou:
+       `.mi-znovu` (řádek „Už jste inzerát přidali?") a `.auth-sent.vnorena`
+       (potvrzení, které se vkládá DOVNITŘ karty, takže nemá mít vlastní
+       rám ani výplň). */
+    #mi-login + .auth-forgot{margin:12px 0 0;}
+    #mi-moje-wrap{margin:28px 0 0;}
+    .mi-znovu{margin-top:12px;}
+    #mi-reload{font-size:13px;}
+    #mi-saved-wrap{margin-top:24px;}
+    #mi-saved-wrap > .rules-sect{margin:0;}
+    #mi-saved-wrap > .rules-note{margin:4px 0 12px;}
+    .auth-sent.vnorena{border:0; padding:0;}
 </style>
 </head>
 <body>
@@ -274,7 +288,7 @@
             </div>
           </div>
           <button type="submit" class="btn-primary auth-submit" id="mi-login">Přihlásit se</button>
-          <p class="auth-forgot" style="text-align:center;margin:12px 0 0;"><button type="button" class="auth-link" id="mi-forgot" style="background:none;border:0;cursor:pointer;font:inherit;padding:0;">Zapomněli jste heslo?</button></p>
+          <p class="auth-forgot"><button type="button" class="auth-link" id="mi-forgot">Zapomněli jste heslo?</button></p>
           <p class="auth-alt">Nemáte účet? <a class="auth-link" href="pridat.html">Vytvořit zdarma</a></p>
           <p class="add-msg auth-msg" id="mi-auth-msg" role="status" aria-live="polite"></p>
         </form>
@@ -368,7 +382,7 @@
           </div>
         </div>
 
-        <div class="rules-sect" id="mi-moje-wrap" style="margin:28px 0 0;"><h2>Moje inzeráty</h2></div>
+        <div class="rules-sect" id="mi-moje-wrap"><h2>Moje inzeráty</h2></div>
         <!-- MÍSTO PRO INZERÁTY SI DRŽÍ VÝŠKU OD ZAČÁTKU.
              Nejdřív je tu jen řádek „Načítám…" (22 px) a po odpovědi
              databáze ho vystřídá buď seznam, nebo karta „zatím žádný
@@ -404,7 +418,7 @@
             <h3>Zatím tu žádný inzerát nemáte</h3>
             <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
             <a class="btn-primary pf-add" href="pridat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Přidat pozemek zdarma</a>
-            <div style="margin-top:12px;"><button type="button" id="mi-reload" class="linklike" style="font-size:13px;">Už jste inzerát přidali? Načíst znovu</button></div>
+            <div class="mi-znovu"><button type="button" id="mi-reload" class="linklike">Už jste inzerát přidali? Načíst znovu</button></div>
           </div>
         </div>
         </div><!-- /mi-dole -->
@@ -426,9 +440,9 @@
       }catch(e){}}());</script>
 
       <!-- Uložené pozemky (lokální, funguje i bez přihlášení) -->
-      <div id="mi-saved-wrap" style="margin-top:24px;">
-        <div class="rules-sect" style="margin:0;"><h2>Uložené pozemky</h2></div>
-        <p class="rules-note" style="margin:4px 0 12px;">Pozemky, které jste si na mapě označili záložkou. Uloženo přímo ve vašem prohlížeči — zůstanou vám, dokud si je nesmažete.</p>
+      <div id="mi-saved-wrap">
+        <div class="rules-sect"><h2>Uložené pozemky</h2></div>
+        <p class="rules-note">Pozemky, které jste si na mapě označili záložkou. Uloženo přímo ve vašem prohlížeči — zůstanou vám, dokud si je nesmažete.</p>
         <div class="okr-list" id="mi-saved"></div>
         <div id="mi-saved-empty" hidden>
           <div class="pf-empty">
@@ -523,7 +537,7 @@
           if (r && r.ok) {
             try { history.replaceState(null, '', location.pathname); } catch(e){}
             // Úspěch — přehledné potvrzení, pak rovnou do profilu
-            nf.innerHTML = '<div class="auth-sent" style="border:0;padding:0;">' +
+            nf.innerHTML = '<div class="auth-sent vnorena">' +
               '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--znacka-svetla)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
               '<h3>Heslo změněno</h3><p>Nové heslo je uložené. Za okamžik vás přihlásíme do profilu…</p></div>';
             setTimeout(function(){ show(); }, 1200);

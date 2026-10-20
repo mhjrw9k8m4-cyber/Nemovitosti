@@ -4257,7 +4257,7 @@
         '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
         '<h3>Kde hledat?</h3>' +
-        '<div style="margin-top:4px;">' +
+        '<div class="loc-pole">' +
           '<input type="text" id="loc-town" class="loc-input" inputmode="text" autocomplete="off" autocapitalize="words" ' +
             'placeholder="Napište obec (např. Kolín)">' +
           '<div id="loc-err" class="loc-err" hidden></div>' +
@@ -6181,7 +6181,7 @@
           (navrh ? ' Do ' + navrh.km + ' km ' + (navrh.kolik === 1 ? 'je 1 pozemek' :
             (navrh.kolik >= 2 && navrh.kolik <= 4 ? 'jsou ' + navrh.kolik + ' pozemky' : 'je ' + navrh.kolik + ' pozemků')) + '.'
             : ' Ani ve větším okruhu zatím nic.');
-        listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
+        listEl.innerHTML = '<li class="map-count mc-prazdno">' + emptyMsg +
           (navrh ? '<br><button type="button" id="okoli-vic" class="reset-btn">Zvětšit okruh na ' + navrh.km + ' km</button>' : '') +
           '<br><button type="button" id="okoli-pryc" class="reset-btn">Zobrazit celou ČR</button></li>';
         var vb = listEl.querySelector('#okoli-vic');
@@ -6224,7 +6224,7 @@
       } else {
         emptyMsg = 'Tady zrovna nic není. Příležitostí přibývá každý týden — zkuste to za pár dní.';
       }
-      listEl.innerHTML = '<li class="map-count" style="padding:20px 6px; text-transform:none; font-weight:400; line-height:1.6;">' + emptyMsg +
+      listEl.innerHTML = '<li class="map-count mc-prazdno">' + emptyMsg +
         (opravaNav ? '<br><button type="button" id="hledat-opravu" class="reset-btn">Hledat ' + esc(opravaNav) + '</button>' : '') +
         (vinik && !opravaNav ? '<br><button type="button" id="pusti-vinika" class="reset-btn">Zrušit ' + esc(vinik.ctvrty) + '</button>' : '') +
         (anyFilter ? '<br><button type="button" id="reset-filtry" class="reset-btn">Zrušit filtry</button>' : '') + '</li>';

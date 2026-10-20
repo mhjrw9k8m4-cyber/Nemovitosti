@@ -533,6 +533,7 @@ to{opacity:1;transform:none}
 @media (min-width:561px){.ms-vysledky .map-count{flex:1 1 200px;min-width:0}
 }
 .map-count{font-size:16px;color:var(--text);font-weight:700;letter-spacing:-0.01em;margin-bottom:12px}
+.map-count.mc-prazdno{padding:20px 4px;text-transform:none;font-weight:400;line-height:1.6}
 .deals-sec[hidden]{display:none}
 .deals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-top:24px}
 .deals-grid:has(>:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -938,6 +939,7 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 .loc-ic{width:60px;height:60px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--plocha-tlumena)}
 .loc-ic svg{width:30px;height:30px;color:var(--znacka-svetla)}
 .loc-card h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.loc-pole{margin-top:4px}
 .loc-card p{font-size:16px;color:var(--muted);line-height:1.5;margin-bottom:12px}
 .loc-card b{color:var(--text)}
 .loc-btns{display:flex;flex-direction:column;gap:8px;margin-top:4px}

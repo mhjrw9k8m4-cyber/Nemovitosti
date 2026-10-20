@@ -35,7 +35,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=67076613">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585e1e51">
 
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"WebApplication","name":"Na co mám? — pozemek podle rozpočtu","applicationCategory":"FinanceApplication","operatingSystem":"Web","inLanguage":"cs","description":"Z rozpočtu a výměry spočítá, ve kterých okresech se dnes dá koupit pozemek. Počítá ze skutečných nabídek.","offers":{"@type":"Offer","price":0,"priceCurrency":"CZK"},"publisher":{"@type":"Organization","name":"Parcelka"},"url":"https://www.parcelaka.cz/na-co-mam-pozemek.html"}
@@ -99,7 +99,7 @@
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="add-card" style="margin-top:0;">
+      <div class="add-card okr-zacatek">
         <div class="rules-sect">
           <h2 id="rz-nadpis">Kolik máte a co hledáte</h2>
           <div class="rz-pole" role="group" aria-labelledby="rz-nadpis">
@@ -123,7 +123,7 @@
         </div>
       </div>
 
-      <div class="add-card" style="margin-top:20px;">
+      <div class="add-card">
         <div class="rules-sect">
           <h2>Kde se za to dá koupit</h2>
           <!-- Výsledek je živá oblast: mění se při psaní, takže ho
@@ -149,10 +149,10 @@
            scripts/generate-region-pages.mjs z téhož řezu dat a nesou
            navíc číslo, které tady není: kolik z nabídek v té ceně jsou
            opravdu stavební pozemky. -->
-      <div class="add-card" style="margin-top:20px;">
+      <div class="add-card">
         <div class="rules-sect">
           <h2>Nejčastější rozpočty — hotové výpisy</h2>
-          <p class="rules-note" style="margin-top:0;">Celý seznam nabídek do dané ceny, s tím, kolik z nich jsou stavební pozemky a ve kterých okresech jich je nejvíc.</p>
+          <p class="rules-note">Celý seznam nabídek do dané ceny, s tím, kolik z nich jsou stavební pozemky a ve kterých okresech jich je nejvíc.</p>
           <div class="okr-index-grid">
             <a href="pozemky-do-200-tisic.html">Do 200 000 Kč</a>
             <a href="pozemky-do-500-tisic.html">Do 500 000 Kč</a>
@@ -162,7 +162,7 @@
         </div>
       </div>
 
-      <div class="add-cross" style="margin-top:20px;">
+      <div class="add-cross">
         <div class="acx-copy">
           <h3>Víte kde, ale ne za kolik?</h3>
           <p>Obvyklé ceny po krajích a okresech, s rozpětím.</p>
@@ -170,7 +170,7 @@
         <a href="cena-pozemku.html" class="btn-primary btn-glow">Ceny pozemků →</a>
       </div>
 
-      <p class="okr-more" style="margin-top:20px;">Souvisí: <a href="hypoteka-na-pozemek.html">hypotéka na pozemek</a> · <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
+      <p class="okr-more okr-mezi">Souvisí: <a href="hypoteka-na-pozemek.html">hypotéka na pozemek</a> · <a href="kolik-stoji-koupe-pozemku.html">náklady při koupi</a> · <a href="pozemky-podle-okresu.html">pozemky podle regionu</a>.</p>
 
     </div>
   </section>

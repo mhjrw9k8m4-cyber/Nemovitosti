@@ -13,7 +13,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=67076613">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585e1e51">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -41,6 +41,43 @@
     .pozn{font-size:14px; color:var(--muted); line-height:1.6; margin-top:12px; padding-left:12px; border-left:3px solid var(--accent-warm);}
     .typ p, .typ div{margin-bottom:8px;}
     .skala{font-family:var(--font-mono); font-size:11px; color:var(--muted); display:block; margin-top:2px;}
+    /* ROZMĚRY VZORNÍKU PATŘÍ SEM, ne do atributů. Dvanáct míst na téhle
+       stránce mělo odstup v `style=` — a to u stránky, která o tři oddíly
+       níž sama tvrdí, že „ukázky se kreslí skutečnými třídami, ne
+       vepsanými čísly". Jména říkají roli: `pod-ukazkou` je popisek pod
+       vzorkem, `vyrazny` je kód, který JE ta ukázka (barva textu, ne
+       tlumená), `na-stred` je popisek pod čtvercem barvy. */
+    /* VZORKY SAMY. Tři písma, plocha s mřížkou, čtecí řádka a popisek
+       pod čtvercem barvy — všechno stálo v `style=`, i když oddíl pod
+       tím tvrdí, že „ukázky se kreslí skutečnými třídami". Velikosti
+       jsou tady vypsané schválně: vzorník NEMÁ ukazovat nadpis webu,
+       ukazuje PÍSMO, takže se nesmí vázat na `h1` — to se jednou změní
+       a vzorek by se změnil s ním. */
+    .vz-plocha{height:130px; display:grid; place-items:center;}
+    .vz-pismo.vz-display{font-family:var(--font-display); font-size:28px; font-weight:700;}
+    .vz-pismo.vz-ui{font-family:var(--font-ui); font-size:20px; font-weight:600;}
+    .vz-pismo.vz-mono{font-family:var(--font-mono); font-size:16px; font-weight:500;}
+    .vz-radka{max-width:var(--m-text);}
+    .vz-stred{text-align:center;}
+    /* UKÁZKA TMAVÉHO PÁSU. Osm deklarací stálo v `style=` čtyř prvků,
+       včetně odstupů — a byla to zrovna ta ukázka, která má čtenáři
+       vzorníku předvést tokeny. */
+    .pas-ukazka{background:linear-gradient(150deg,var(--plocha-tmava-2),var(--plocha-tmava) 58%,#0E1712);
+      border-radius:var(--r-md); padding:24px; color:var(--text-ondeep); box-shadow:var(--e2);}
+    .pas-ukazka .pas-nadradek{font-family:var(--font-mono); font-size:12px; letter-spacing:0.07em;
+      text-transform:uppercase; color:var(--accent-warm-bright); margin-bottom:8px;}
+    .pas-ukazka .pas-nadpis{font-family:var(--font-display); font-size:24px; font-weight:700; margin-bottom:4px;}
+    .pas-ukazka p{color:var(--text-ondeep-mute); font-size:14px; margin:0;}
+    .pas-ukazka code{font-family:var(--font-mono);}
+    .mrizka.pisma{margin-bottom:24px;}
+    /* Bez `.vzorek` v selektoru: popisek pod čtvercem barvy stojí
+       v `.radaTvaru`, ne ve vzorku — zaklíněné pravidlo na něj nedosáhlo
+       a čtverce se o 4 px srazily (naměřeno 211 → 203 px). */
+    .nazev.pod-ukazkou{margin-top:8px;}
+    .kod.pod-ukazkou{margin-top:4px;}
+    .kod.pod-ukazkou.na-stred{text-align:center;}
+    .kod.vyrazny{margin-top:8px; color:var(--text);}
+    #odstupy{display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;}
   </style>
 </head>
 <body>
@@ -86,7 +123,7 @@
   <h3>Katastrální mřížka</h3>
   <p>Jemná síť v pozadí sekce. Dělá to, co chybělo: dává ploše texturu, aniž by křičela.
      Je tak slabá, že si jí nikdo přímo nevšimne — všimne si jen toho, že plocha není mrtvá.</p>
-  <div class="vzorek s-mrizka" style="height:130px; display:grid; place-items:center;">
+  <div class="vzorek s-mrizka vz-plocha">
     <span class="kod">.s-mrizka</span></div>
 
   <h2>3. Barvy</h2>
@@ -100,13 +137,13 @@
   <p><b>Tři písma, jak to mají velké realitní weby.</b> Patkové na nadpisy dává webu tvář
      a vážnost, bezpatkové drží čitelnost textu a ovládání, strojové odlišuje čísla a štítky.
      Dvě písma dělají web korektní; teprve třetí mu dá charakter.</p>
-  <div class="mrizka" style="margin-bottom:24px">
-    <div class="vzorek"><div style="font-family:var(--font-display);font-size:28px;font-weight:700">Příliš žluťoučký</div>
-      <div class="nazev" style="margin-top:8px">Nadpisy — Source Serif 4</div><div class="kod">var(--font-display)</div></div>
-    <div class="vzorek"><div style="font-family:var(--font-ui);font-size:20px;font-weight:600">Příliš žluťoučký kůň</div>
-      <div class="nazev" style="margin-top:8px">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
-    <div class="vzorek"><div style="font-family:var(--font-mono);font-size:16px;font-weight:500">1 951 · 800 m² · Kč</div>
-      <div class="nazev" style="margin-top:8px">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
+  <div class="mrizka pisma">
+    <div class="vzorek"><div class="vz-pismo vz-display">Příliš žluťoučký</div>
+      <div class="nazev pod-ukazkou">Nadpisy — Source Serif 4</div><div class="kod">var(--font-display)</div></div>
+    <div class="vzorek"><div class="vz-pismo vz-ui">Příliš žluťoučký kůň</div>
+      <div class="nazev pod-ukazkou">Text a ovládání — Archivo</div><div class="kod">var(--font-ui)</div></div>
+    <div class="vzorek"><div class="vz-pismo vz-mono">1 951 · 800 m² · Kč</div>
+      <div class="nazev pod-ukazkou">Čísla a štítky — IBM Plex Mono</div><div class="kod">var(--font-mono)</div></div>
   </div>
   <p>Hierarchii dělá velikost a váha, ne bledost. Nic pod 600 u nadpisů.</p>
   <!-- UKÁZKY SE KRESLÍ SKUTEČNÝMI TŘÍDAMI, ne vepsanými čísly. Dokud tu
@@ -125,7 +162,7 @@
          z prohlížeče se nedrží nikde. Ukazovat tu tedy holý <h3> by byla
          ukázka něčeho, co na webu neexistuje. -->
     <div class="clanek"><div class="rules-sect"><h2>Nadpis oddílu v rádci<span class="skala" data-mera></span></h2></div></div>
-    <p style="max-width:var(--m-text);">Běžný text. Nejvýš čtyřiašedesát znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala" data-mera></span></p>
+    <p class="vz-radka">Běžný text. Nejvýš čtyřiašedesát znaků na řádek — delší řádek se špatně sleduje a oko ztrácí návaznost.<span class="skala" data-mera></span></p>
     <p class="okr-more">Doplňkový text a popisky.<span class="skala" data-mera></span></p>
     <p class="eyebrow">Nadřádek · strojové písmo<span class="skala" data-mera></span></p>
   </div>
@@ -152,19 +189,18 @@
   <p>Web byl celý světlý — jedna dlouhá plocha bez nádechu. Tmavá sekce je to, čím velké weby
      dělají rytmus: oko si odpočine a pak se znovu chytne. Na webu je <b>jedna</b>. Kdyby byly tři,
      je z toho zase jednolitá plocha, jen tmavá.</p>
-  <div style="background:linear-gradient(150deg,var(--plocha-tmava-2),var(--plocha-tmava) 58%,#0E1712);
-              border-radius:var(--r-md); padding:24px; color:var(--text-ondeep); box-shadow:var(--e2);">
-    <div style="font-family:var(--font-mono);font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--accent-warm-bright);margin-bottom:8px">Nadřádek</div>
-    <div style="font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:4px">Nadpis na tmavém</div>
-    <p style="color:var(--text-ondeep-mute);font-size:14px;margin:0">Tlumený text má na tmavém pásu vlastní odstín
-       (<code style="font-family:var(--font-mono)">--text-ondeep-mute</code>, 10,8 : 1). Šeď ze světlého motivu by tu zmizela
-       a měď by zhnědla — proto i <code style="font-family:var(--font-mono)">--accent-warm-bright</code> (8,0 : 1).</p>
+  <div class="pas-ukazka">
+    <div class="pas-nadradek">Nadřádek</div>
+    <div class="pas-nadpis">Nadpis na tmavém</div>
+    <p>Tlumený text má na tmavém pásu vlastní odstín
+       (<code>--text-ondeep-mute</code>, 10,8 : 1). Šeď ze světlého motivu by tu zmizela
+       a měď by zhnědla — proto i <code>--accent-warm-bright</code> (8,0 : 1).</p>
   </div>
 
   <h2>7. Odstupy</h2>
   <p>Násobky čtyřky. Když se míchají odstupy 13, 17 a 22 px, oko to nepozná jako rytmus,
      jen jako nepořádek.</p>
-  <div id="odstupy" style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end;"></div>
+  <div id="odstupy"></div>
 </div>
 
 <script>
@@ -185,14 +221,14 @@
     return '<div class="vzorek" style="box-shadow:' + (v(h[1]) || 'none') + '">' +
       '<div class="nazev">' + h[0] + '</div>' +
       '<div class="kod">var(' + h[1] + ')</div>' +
-      '<div class="kod" style="margin-top:8px;color:var(--text)">' + h[2] + '</div></div>';
+      '<div class="kod vyrazny">' + h[2] + '</div></div>';
   }).join('');
 
   /* --- tvary --- */
   var tvary = [['--r-xs','drobné'],['--r-sm','tlačítka'],['--r-md','karty'],['--r-lg','panely'],['--r-pill','štítky']];
   document.getElementById('tvary').innerHTML = tvary.map(function (t) {
     return '<div><div class="tvar" style="border-radius:' + v(t[0]) + '">' + v(t[0]) + '</div>' +
-      '<div class="kod" style="text-align:center;margin-top:4px">' + t[1] + '</div></div>';
+      '<div class="kod pod-ukazkou na-stred">' + t[1] + '</div></div>';
   }).join('');
 
   /* --- barvy s měřeným kontrastem --- */
@@ -219,15 +255,15 @@
     return '<div class="vzorek">' +
       '<div class="pole" style="background:' + b[2] + '; color:' + barva + '; border:1px solid var(--line)">Aa · 123</div>' +
       '<div class="nazev">' + b[0] + '</div><div class="kod">var(' + b[1] + ') · ' + barva + '</div>' +
-      '<div class="kod" style="margin-top:4px">' + b[3] + '</div>' +
+      '<div class="kod pod-ukazkou">' + b[3] + '</div>' +
       '<span class="pomer' + (ok ? '' : ' slabe') + '">' + p.toFixed(2) + ' : 1</span></div>';
   }).join('');
 
   /* --- odstupy --- */
   document.getElementById('odstupy').innerHTML = [4, 8, 12, 16, 24, 32, 48, 64].map(function (n) {
-    return '<div style="text-align:center"><div style="width:' + n + 'px; height:' + n +
+    return '<div class="vz-stred"><div style="width:' + n + 'px; height:' + n +
       'px; background:var(--accent-warm); border-radius:2px;"></div>' +
-      '<div class="kod" style="margin-top:4px">' + n + '</div></div>';
+      '<div class="kod pod-ukazkou">' + n + '</div></div>';
   }).join('');
 })();
 </script>

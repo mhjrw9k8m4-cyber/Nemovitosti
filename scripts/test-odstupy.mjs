@@ -42,6 +42,42 @@ function ocisti(text) {
     .replace(/var\([^()]*\)/g, s => s.replace(/[^\n]/g, ' '));
 }
 
+/* ODSTUP NEPATŘÍ DO ATRIBUTU `style=`.
+   Zkouška výš hlídá HODNOTU, tahle MÍSTO. Generátor přehledových stránek
+   měl 88 odstupů v atributech, ruční stránky dalších 62 a js/main.js tři
+   — a dokud tam byly, nedalo se o osnově stránky nic přečíst ve
+   stylopisu: týž údaj stál devětkrát na stránce a měnil se v šabloně.
+   V atributu smí zůstat jen to, co je DATY (šířka pruhu v procentech,
+   poloha špendlíku), a to odstup nikdy není.
+
+   Vyjímá se scripts/mail-sklad.mjs: e-mailoví klienti zahazují <style>,
+   takže inline styl je v e-mailu jediná cesta, ne nedbalost. */
+const BEZ_PRAVIDLA = new Set(['scripts/mail-sklad.mjs']);
+const VLOZENY = /style\s*=\s*(["'])((?:(?!\1)[\s\S])*)\1/g;
+const ODSTUP_V_ATRIBUTU = /(^|[;\s])(margin|padding|gap|row-gap|column-gap)(-top|-right|-bottom|-left)?\s*:/;
+
+/* Komentáře se bílí PODLE JAZYKA. Na tom se to už jednou podělalo
+   v scripts/test-mrtve-styly.mjs: pravidla JavaScriptu pustěná na HTML
+   smazala značky a živé třídy vypadaly jako mrtvé. */
+function bezKomentaru(text, soubor) {
+  const nic = (x) => x.replace(/[^\n]/g, ' ');
+  if (soubor.endsWith('.html')) return text.replace(/<!--[\s\S]*?-->/g, nic);
+  return text.replace(/\/\*[\s\S]*?\*\//g, nic).replace(/^[ \t]*\/\/.*$/gm, nic);
+}
+
+export function odstupyVAtributu(text, soubor) {
+  if (BEZ_PRAVIDLA.has(soubor)) return [];
+  const bez = bezKomentaru(text, soubor);
+  const out = [];
+  let m;
+  VLOZENY.lastIndex = 0;
+  while ((m = VLOZENY.exec(bez))) {
+    if (!ODSTUP_V_ATRIBUTU.test(m[2])) continue;
+    out.push({ radek: bez.slice(0, m.index).split('\n').length, kde: m[2].replace(/\s+/g, ' ').trim().slice(0, 70) });
+  }
+  return out;
+}
+
 export function mimoStupnici(text) {
   const bez = ocisti(text);
   const out = [];
@@ -65,6 +101,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
      stupnicí stránky nemají co dělat. */
   const JE_VYROBENA = /^(pozemek|pozemky)-/;
   const MIMO = new Set(['build-og.mjs']);
+  /* js/mereni-hlavicky.js je ladicí panel, který se načte jen s „?mereni"
+     v adrese. Má vlastní barvy i rozměry (vypisuje čísla na telefonu nad
+     web, ne do webu), takže se stupnicí stránky nemá co dělat — stejně
+     jako build-og.mjs. */
+  const MIMO_JS = new Set(['mereni-hlavicky.js']);
   /* Všechny ručně psané stylopisy, ne jen ten hlavní: vložený styl
      stránky pozemku se píše v css/pozemek-vlozeny.css a do stránky se
      vkládá očištěný (scripts/vloz-styl-pozemku.mjs). Očištěné kopie
@@ -76,11 +117,24 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const f of readdirSync('.')) if (f.endsWith('.html') && !JE_VYROBENA.test(f)) soubory.push(f);
   for (const f of readdirSync('scripts')) if (f.endsWith('.mjs') && !f.startsWith('test-') && !MIMO.has(f)) soubory.push('scripts/' + f);
 
+  /* Skripty v js/ skládají značky v prohlížeči, takže odstup v atributu
+     tam dopadne stejně jako v šabloně — jen ho nenajde ani hledání ve
+     stylopisu, ani zkouška výš. */
+  for (const f of readdirSync('js')) if (f.endsWith('.js') && !MIMO_JS.has(f)) soubory.push('js/' + f);
+
   let chyb = 0;
   const zpravy = [];
+  let vAtributu = 0;
   for (const f of soubory) {
     let text;
     try { text = readFileSync(f, 'utf8'); } catch { continue; }
+    const a = odstupyVAtributu(text, f);
+    if (a.length) {
+      console.log(`\u2715 ${f}: ${a.length} odstupů v atributu style=`);
+      for (const x of a) console.log(`   ${f}:${x.radek}  ${x.kde}`);
+      zpravy.push(`\u2715 ${f}: ${a.length} odstupů v style=\n   ${f}:${a[0].radek} ${a[0].kde}`);
+      vAtributu += a.length;
+    }
     const n = mimoStupnici(text);
     if (!n.length) continue;
     console.log(`\u2715 ${f}: ${n.length} odstup\u016f mimo stupnici`);
@@ -90,10 +144,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     zpravy.push(`\u2715 ${f}: ${n.length} mimo stupnici\n   ${f}:${n[0].radek} ${n[0].px}px`);
     chyb += n.length;
   }
-  if (chyb) {
-    console.log(`\nMimo stupnici: ${chyb}. Vyber nejbli\u017e\u0161\u00ed hodnotu ze stupnice, neroz\u0161i\u0159uj ji.`);
-    console.error(`::error::Odstupy: ${chyb} mimo stupnici.` + pricinaChyb(zpravy));
+  if (chyb || vAtributu) {
+    if (chyb) console.log(`\nMimo stupnici: ${chyb}. Vyber nejbli\u017e\u0161\u00ed hodnotu ze stupnice, neroz\u0161i\u0159uj ji.`);
+    if (vAtributu) console.log(`\nV atributu style=: ${vAtributu}. Odstup pat\u0159\u00ed do stylopisu a v\u00fdjimka m\u00e1 m\u00edt jm\u00e9no podle role.`);
+    console.error(`::error::Odstupy: ${chyb} mimo stupnici, ${vAtributu} v atributu style=.` + pricinaChyb(zpravy));
     process.exit(1);
   }
   console.log(`Jedna stupnice odstup\u016f dr\u017e\u00ed: ${soubory.length} souborů, ${STUPNICE.size} dovolených hodnot.`);
+  console.log('A \u017e\u00e1dn\u00fd odstup nestoj\u00ed v atributu style= (mimo e-maily).');
 }

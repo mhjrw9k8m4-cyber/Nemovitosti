@@ -347,6 +347,7 @@ footer .wrap:not(.foot-bottom){flex-direction:column;align-items:flex-start}
 .add-hero .sub{font-size:16px;color:var(--muted);margin-top:16px;max-width:var(--m-text)}
 .add-wrap{max-width:var(--m-wrap)}
 .add-wrap>*{max-width:var(--m-sloupec)}
+.add-wrap>.add-card:has(+ .add-card){margin-bottom:20px}
 html.pk-prihlasen .app-hero .sub{display:none}
 html.pk-prihlasen .app-hero{padding-bottom:4px}
 .add-hero.app-hero{padding:28px 0 4px}
@@ -516,6 +517,7 @@ to{opacity:1;transform:none}
 }
 .rules-sect{margin-bottom:4px}
 .rules-sect + .rules-sect{margin-top:20px}
+.add-card>.rules-sect + .add-form{margin-top:16px}
 .rules-sect h2{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-0.01em;color:var(--text);margin-bottom:12px}
 .rule-list{list-style:none;display:flex;flex-direction:column;gap:8px}
 .rule-list li{position:relative;padding-left:28px;font-size:16px;color:var(--muted);line-height:1.6}
@@ -648,6 +650,7 @@ to{opacity:1;transform:none}
 .okr-badge.t-majitel{color:var(--c-majitel-ink)}
 .okr-more{color:var(--muted,#9db0a4);font-size:14px;margin:12px 0 0}
 .okr-wrap>.add-card,.okr-wrap>.add-cross{margin-top:20px}
+.okr-wrap>.okr-zacatek{margin-top:0}
 .okr-more.okr-mezi{margin-top:20px}
 .rules-sect>:is(h2,h3) + .rules-note{margin-top:0}
 .okr-index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:16px}
@@ -859,6 +862,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .clanek .rules-sect h2{font-size:24px;line-height:1.2;letter-spacing:-0.02em;margin-bottom:12px}
 .clanek .rules-sect>p{margin-bottom:12px}
 .clanek .rules-sect>p + .rule-list,.clanek .rules-sect>p + .rules-note{margin-top:16px}
+.rules-sect>.rules-note.pod-textem,.clanek .rules-sect>.rules-note.pod-textem{margin-top:0}
 .clanek .rules-sect>p:last-child,.clanek .rules-sect>ul:last-child{margin-bottom:0}
 @media (min-width:1100px){.clanek .rules-sect::before{position:absolute;left:-72px;top:24px;margin:0;text-align:right;width:44px;font-size:14px}
 }
@@ -1066,6 +1070,7 @@ to{opacity:1;transform:none}
 
 .md-hlava{padding-top:28px}
 .md-uvod{max-width:var(--m-text);margin-top:8px;line-height:1.6}
+main>.md-uvod{max-width:62ch;margin:20px auto 0;padding:0 20px}
 .md-obsah{padding-bottom:40px}
 .md-skup{margin-top:24px}
 .md-skup-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}

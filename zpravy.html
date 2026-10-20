@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=67076613">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=585e1e51">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -161,6 +161,20 @@
     .zp-kostra .sk:nth-child(3){width:70%;}
     .zp-kostra .sk:nth-child(4){width:40%;}
 
+    /* ODSTUPY A STŘEDĚNÍ ZE STYLE=. Šest míst v téhle stránce skládalo
+       HTML v JavaScriptu a rozměr psalo do atributu — tedy do textu,
+       kde ho nenajde ani zkouška odstupů, ani hledání ve stylopisu.
+       `jako-odkaz` je `.zp-btn` použité na `<a>`: tlačítko středí text
+       samo, odkaz ne, a podtržení se musí vypnout.
+       Dvě prázdná místa v rozhovoru se liší o 4 px (20 a 16) a nikdo
+       neumí říct proč; sjednotit je chce rozhodnutí, ne přepis, tak
+       zůstávají dvě jména. */
+    .zp-okres{font-weight:400; color:var(--muted);}
+    .zp-empty-vic{margin-top:4px;}
+    .zp-empty-akce{margin-top:12px; display:flex; flex-direction:column; gap:8px;}
+    .zp-btn.jako-odkaz{display:flex; align-items:center; justify-content:center; text-decoration:none;}
+    .zp-empty.zp-prazdno-rozhovor{padding:20px 8px;}
+    .zp-empty.zp-prazdno-chyba{padding:16px 8px;}
   </style>
 </head>
 <body>
@@ -317,13 +331,13 @@
          vlastní inzerát a nechat zájemce napsat vám. */
       root.innerHTML = '<div class="zp-card"><div class="zp-empty">' + ICON_CHAT +
         '<div><b>Zatím tu nemáte žádnou konverzaci.</b></div>' +
-        '<div style="margin-top:4px;">Psát se dá u inzerátů označených <b>„Přímo od majitele"</b> — ' +
+        '<div class="zp-empty-vic">Psát se dá u inzerátů označených <b>„Přímo od majitele"</b> — ' +
         'u nich najdete tlačítko <b>„Napsat majiteli"</b>. U nabídek sbíraných z veřejných zdrojů ' +
         '(dražby, SPÚ, inzertní portály) vede odkaz k původnímu zdroji.</div>' +
-        '<div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">' +
-          '<a class="zp-btn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;" ' +
+        '<div class="zp-empty-akce">' +
+          '<a class="zp-btn jako-odkaz" ' +
             'href="index.html?q=' + encodeURIComponent('od majitele') + '">Ukázat pozemky od majitelů</a>' +
-          '<a class="zp-btn sec" style="display:flex; align-items:center; justify-content:center; text-decoration:none;" ' +
+          '<a class="zp-btn sec jako-odkaz" ' +
             'href="pridat.html">Přidat vlastní pozemek</a>' +
         '</div></div></div>';
       return;
@@ -336,7 +350,7 @@
       html += '<a class="zp-thread" href="zpravy.html?l=' + encodeURIComponent(t.listing_id) + '&b=' + encodeURIComponent(t.buyer_id) + '&o=' + (t.is_owner ? '1' : '0') + '">' +
         '<div class="zp-ava">' + ICON_CHAT + '</div>' +
         '<div class="zp-tmain">' +
-          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span style="font-weight:400;color:var(--muted)">· okr. ' + esc(t.okres) + '</span>' : '') +
+          '<div class="zp-tplace">' + esc(t.place || 'Pozemek') + (t.okres ? ' <span class="zp-okres">· okr. ' + esc(t.okres) + '</span>' : '') +
             (t.last_at ? '<span class="zp-tvremeno">' + timeTxt(t.last_at) + '</span>' : '') + '</div>' +
           '<div class="zp-trole">' + esc(role) + '</div>' +
           '<div class="zp-tlast">' + esc((t.last_body || '').slice(0, 60)) + '</div>' +
@@ -430,7 +444,7 @@
     function uDna() { return (msgsEl.scrollHeight - msgsEl.scrollTop - msgsEl.clientHeight) < 60; }
     function render(rows, sjed) {
       if (!rows.length && !cekajici.length) {
-        msgsEl.innerHTML = '<div class="zp-empty" style="padding:20px 8px;">' + (isOwner
+        msgsEl.innerHTML = '<div class="zp-empty zp-prazdno-rozhovor">' + (isOwner
           ? 'Zatím žádná zpráva.'
           : 'Napište majiteli první zprávu — třeba se zeptejte na dostupnost, sítě nebo přístupovou cestu. 👇') + '</div>';
         return;
@@ -451,7 +465,7 @@
       A.rpc('thread_messages', { p_listing: listing, p_buyer: buyer }, true).then(function (res) {
         if (!res || !res.ok) {
           if (res && res.expired) { zastavCasovace(); renderAuth('Přihlášení vypršelo, přihlaste se prosím znovu.', true); return; }
-          if (first) msgsEl.innerHTML = '<div class="zp-empty" style="padding:16px 8px;">Konverzaci se nepovedlo načíst.</div>';
+          if (first) msgsEl.innerHTML = '<div class="zp-empty zp-prazdno-chyba">Konverzaci se nepovedlo načíst.</div>';
           return;
         }
         var rows = Array.isArray(res.data) ? res.data : [];

@@ -317,12 +317,14 @@ footer .wrap:not(.foot-bottom){flex-direction:column;align-items:flex-start}
 .add-hero .sub{font-size:16px;color:var(--muted);margin-top:16px;max-width:var(--m-text)}
 .add-wrap{max-width:var(--m-wrap)}
 .add-wrap>*{max-width:var(--m-sloupec)}
+.add-wrap>.add-card:has(+ .add-card){margin-bottom:20px}
 
 
 .odj-stav{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
 .odj-stav.ok{color:var(--c-ok-ink,#178a53);font-weight:600}
 .odj-stav.nic{color:var(--muted)}
 
+.section.tesne-nahore{padding-top:20px}
 .add-field>p.hint{margin:4px 0 0}
 .add-field{display:flex;flex-direction:column;gap:4px}
 .add-field label{font-size:13px;font-weight:600;color:var(--text)}

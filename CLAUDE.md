@@ -94,14 +94,25 @@ oprava `test-roadmap`, která sčítá obě směny). A **sabotovat se musí ten
 balíček stylů, který stránka opravdu načítá**: úvodní stránka má
 `css/uvod.min.css`, okresní `css/region.min.css`; sabotáž ve
 `css/styles.min.css` pro ně neudělá nic a vypadá to jako slepá zkouška.
-**Odstupy přehledových stránek stojí ve stylopisu, ne v `style=`.**
-`scripts/generate-region-pages.mjs` jich měl 88 v atributech; teď jsou
-u `.okr-wrap` v `css/styles.css` a nestandardní hodnota má jméno podle
-role (`okr-mezi`, `okr-dal`, `okr-tesne`, `okr-zacatek`). Nové jméno
-třídy si **nejdřív ověř grepem po celém stylopisu** — `okr-blok` už
-bylo obsazené a přidalo odstavci 25 px výplně a linku (`docs/optimalizace.md`,
-položka 55). V `style=` smí zůstat jen to, co je **daty**: šířka pruhu
-v procentech, poloha špendlíku.
+**Odstup nikdy nepatří do `style=`** — ani v šabloně, ani ve značkách
+skládaných v JavaScriptu. Hlídá to `scripts/test-odstupy.mjs` (čte
+stylopisy, stránky, generátory i `js/*.js`); výjimky jsou dvě a mají
+napsaný důvod: `scripts/mail-sklad.mjs` a `js/mereni-hlavicky.js`.
+V atributu smí zůstat jen to, co je **daty**: šířka pruhu v procentech,
+poloha špendlíku. Nestandardní hodnota dostane **jméno podle role**
+(`okr-mezi`, `okr-dal`, `okr-tesne`, `okr-zacatek`, `pod-textem`,
+`tesne-nahore`, `mc-prazdno`).
+
+Tři věci, na kterých to při přepisu stojí (naměřeno, `docs/optimalizace.md`
+55–56):
+1. **Nové jméno třídy si nejdřív ověř grepem po celém stylopisu.**
+   `okr-blok` už bylo obsazené a přidalo odstavci 25 px výplně a linku.
+2. **Jeden prvek v selektoru přebije tři třídy.** `.clanek .rules-sect > p
+   + .rules-note` vyhraje nad `.rules-sect > .rules-note.pod-textem`,
+   i když stojí v souboru výš.
+3. **V mřížce se okraje neslévají.** Odstup mezi dvěma deskami proto
+   nese deska PŘED mezerou (`:has(+ .add-card){margin-bottom}`), jinak
+   se na širokém displeji přičte k tomu, co si karta nese sama.
 
 **Vložený styl stránky pozemku se píše v `css/pozemek-vlozeny.css`**, ne
 ve `pozemek.html` — tam ho vkládá už očištěný
