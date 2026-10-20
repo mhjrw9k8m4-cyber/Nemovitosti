@@ -69,6 +69,15 @@ rozvržení, změř to za stejných podmínek a prostříhaně (A/B v jednom bě
 Pozor: místní server bez komprese nadhodnocuje velikosti 3–8×, protože
 GitHub Pages gzipuje.
 
+A pozor na práh naměřený „na jednom vzorku": 20. 10. spadly v CI dvě
+kontroly, které lokálně procházely, a obojí mělo tentýž kořen — číslo
+vypadalo jako změřené, jenže se měřilo jen tam, kde to bylo pohodlné.
+Jednou to byla mez 429 px odvozená z jediné stránky se třemi čísly (na
+stránce se čtyřmi se vešla o tři pixely a v CI ji sebral posuvník),
+podruhé premisa „v datech taková nabídka je", kterou určuje skladba
+trhu. Mez se měří na nejhorším případě, ne na prvním, a premisa, kterou
+určují data, se nepodmiňuje — vypíše se a větev se přeskočí.
+
 A „které moduly stránka potřebuje" se taky MĚŘÍ, nečte z kódu: na
 `window` se dá přes `Object.defineProperty` pověsit getter, který si
 zapíše první přečtení a odkud přišlo. Z úkolu „osm skriptů načítat až

@@ -4229,3 +4229,84 @@ nastavuje vlastní `font-family`. Takové pravidlo je vždycky
 specifičtější než holé `h1`, takže ho přebije — ať stojí kdekoli.
 Sabotáž (vrátit `font-family:var(--font-display)`) kontrolu shodila
 a vypsala přesně to pravidlo.
+
+## 72. Dvě zkoušky, které spadly v CI a lokálně ne *20. 10.*
+
+Běh 584 shodil dvě kontroly. Obě lokálně procházely — a každá z jiného
+důvodu.
+
+### 1. Mez, která se vešla o tři pixely
+
+Oprava z oddílu 67 (svislice mezi čísly v hlavičce) přepíná pod
+**429 px** na dvousloupcovou mřížku. To číslo bylo naměřené: při Interu
+se čtyři čísla do řádku vejdou od 430 px. Jenže „vejdou" tam znamenalo
+**o tři pixely**: součet čísel je 291 px, mezery 3 × 32 = 96 px,
+dohromady 387 proti 390 px obsahu.
+
+V CI se na `pozemky-stredocesky-kraj.html` při 430 px zalomilo — stačí
+svislý posuvník, jiné zaokrouhlení, cokoli. Ověřeno, že to **není
+písmem**: s Interem i bez staženého písma (náhradní metriky) vychází
+součet stejně, 291 px.
+
+Mez je teď **559 px**: nad ní řádek, pod ní mřížka. Při 560 px zbývá
+přes 130 px rezervy, takže se do ní vejde i pětimístný počet. Zkouška
+měří obě strany té meze (…, 500, 559, 560, 680) — právě na hranici to
+prasklo, tak se hranice hlídá.
+
+Cena: mezi 430 a 559 px se tři čísla skládají do dvou řádků místo
+jednoho. Za jistotu, že svislice visí jen tam, kde má, to stojí.
+
+### 2. Premisa, kterou určuje trh
+
+`test-shoda` hledala „nabídku s nevěrohodnou cenou, která není podíl" —
+a navíc ani státní půda podle § 12. Dávka dat z 20. 10. měla všechny
+nevěrohodné nabídky ze státní půdy (8 z 8, viz oddíl 69), takže se
+nenašlo nic a tvrdá premisa spadla. **Totéž stárnutí jako v oddílu 69**,
+jen o dům dál.
+
+Měří se proto obě větve zvlášť a každá jen tehdy, když do ní něco
+spadlo; pojistka proti prázdnu je, že aspoň **jedna** z nich něco mít
+musí. Přeskočená větev se vypíše („…dnes v datech není, tahle část se
+přeskočila") — týmž způsobem, jaký ta zkouška už jednou použila
+o dvě stě řádků níž. O pokrytí se tím nepřichází: že odznak
+„k ověření" opravdu vzniká, hlídá `test-strop-ceny` na okresních
+stránkách.
+
+Sabotáž: vynutit prázdno v obou větvích → nová premisa spadla.
+
+### 3. A třetí, kterou našla až celá sada
+
+Po obou opravách jsem pustil **celou sadu v prohlížeči** (121 zkoušek),
+ne jen cílený výběr — právě ta zkratka ty dvě chyby propustila. Sada
+shodila `test-vrstveni`: „oddíly nabídky jsou jen dva" a jeden z nich
+měl text **„Moje"**, tedy kus rozestavěného dokumentu.
+
+Lokálně se to nereprodukovalo: samostatný průchod ukáže čtyři oddíly
+(Pozemky, Příležitosti, Rádce, Můj profil), každý s ikonou, a to hned
+i po dvou dalších průchodech. Rozdíl dělá **zátěž**: ta část zkoušky
+čekala `waitForTimeout(1500)` po načtení a `500 ms` po klepnutí na
+hamburger. Pod plnou sadou to nestačilo a měřil se dokument, který se
+teprve skládal.
+
+Čeká se teď na výsledek: na hamburger, potom na otevřený panel, ve
+kterém jsou všechny jeho oddíly vidět — a nakonec na to, co se opravdu
+měří, tedy až `elementFromPoint` na měřeném bodě trefí panel. Bez téhle
+poslední podmínky zkouška spadla znovu, jen na jiné kontrole („nahoře
+na otevřeném panelu je opravdu panel: čekáno pás, vyšlo nic"): panel se
+vysouvá, takže „je na obrazovce" ještě neznamená „na tomhle bodě už
+leží".
+
+**Změřeno, kolik času tam vlastně je:** od klepnutí na hamburger po
+trefu do panelu uplyne na nezatíženém stroji **137–149 ms**. Pevných
+500 ms tedy mělo rezervu jen 3,4× — a to plná sada sebere. Po opravě
+čtyři běhy za sebou zelené tam, kde stará podoba padala.
+
+Je to táž rodina, jakou řešil úklid pevných čekání (oddíly 61 a dřív) —
+jen tahle tři čekání v ní zbyla.
+
+### Co si z toho odnést
+
+Práh naměřený „na jednom vzorku a jedné stránce" je odhad, ne mez.
+U obou nálezů šlo o totéž: číslo vypadalo jako změřené, ale měřilo se
+jen tam, kde zrovna bylo pohodlné měřit — jedna stránka se třemi čísly,
+jeden den s jednou skladbou trhu.

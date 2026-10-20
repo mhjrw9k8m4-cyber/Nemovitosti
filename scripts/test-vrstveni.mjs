@@ -93,11 +93,32 @@ async function stranka(sirka, prihlasit) {
 {
   const ctx = await stranka(390, true);
   const p = await ctx.newPage();
-  await p.goto(`${BASE}/pozemky-okres-tabor.html`);
-  await p.waitForTimeout(1500);
+  await p.goto(`${BASE}/pozemky-okres-tabor.html`, { waitUntil: 'load' });
+  /* ČEKÁ SE NA VÝSLEDEK, NE NA HODINY. Stálo tu 1 500 ms po načtení
+     a 500 ms po klepnutí — a pod zátěží to nestačilo: v jednom běhu
+     celé sady vyšlo, že oddíly nabídky jsou jen dva a jeden z nich má
+     text „Moje", tedy kus rozestavěného dokumentu. Zkouška pak
+     spadla na webu, kde nebylo nic rozbitého.
+     Čeká se proto na hamburger a potom na otevřený panel, ve kterém
+     jsou všechny jeho oddíly vidět. */
+  await p.waitForSelector('.nav-burger', { timeout: 20000 });
   /* Zavřený panel je mimo obrazovku, takže by se měřilo prázdno. */
   await p.click('.nav-burger');
-  await p.waitForTimeout(500);
+  await p.waitForFunction(() => {
+    const nav = document.querySelector('#nav');
+    if (!nav) return false;
+    const r = nav.getBoundingClientRect();
+    if (r.width < 10 || r.right <= 0) return false;      // panel je venku
+    if ([...nav.querySelectorAll('.nav-sk > summary')]
+      .filter((h) => h.getClientRects().length).length < 3) return false;
+    /* A NAKONEC NA TO, CO SE OPRAVDU MĚŘÍ. Panel se vysouvá, takže
+       „je na obrazovce" ještě neznamená „na tomhle bodě už leží".
+       Dokud se na měřený bod netrefí, je výsledek stavem uprostřed
+       přechodu — a zkouška z něj udělá hlášku „čekáno pás, vyšlo nic". */
+    const r2 = nav.getBoundingClientRect();
+    const el = document.elementFromPoint(Math.round(r2.x + 20), Math.round(r2.y + r2.height / 2));
+    return !!(el && el.closest('#nav'));
+  }, null, { timeout: 20000 });
 
   const stav = await p.evaluate(() => {
     const nav = document.querySelector('#nav');

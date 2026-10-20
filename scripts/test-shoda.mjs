@@ -249,7 +249,23 @@ const podezrelyPodil = await p.evaluate((D) => {
   const d = D.find((x) => M.neduveryhodna(x) && x.podil);
   return d ? { place: d.place, parcel: d.parcel, price: d.price } : null;
 }, CISTA);
-pravda('v datech je aspoň jedna nabídka s nevěrohodnou cenou (a není to podíl)', !!podezrely);
+/* KTERÁ NABÍDKA SE NAJDE, URČUJE TRH — ZKOUŠKA NE.
+   Tahle kontrola tu stála jako tvrdé „aspoň jedna taková v datech
+   JE". Jenže hledá nabídku, která je nevěrohodná a zároveň NENÍ ani
+   podíl, ani státní půda podle § 12 — a 20. 10. přišla dávka, ve
+   které byly všechny nevěrohodné nabídky státní půda (8 z 8, viz
+   scripts/test-strop-ceny.mjs). Zkouška spadla, aniž by se na webu
+   cokoli pokazilo; je to tentýž druh stárnutí jako práh „aspoň 60
+   dlaždic" v test-cisla-okresu.
+   Měří se proto obě větve zvlášť a každá jen tehdy, když do ní něco
+   spadlo — a pojistka proti prázdnu je, že aspoň jedna z nich něco
+   mít musí. Že odznak „k ověření" opravdu vzniká, hlídá navíc
+   test-strop-ceny na okresních stránkách, takže o pokrytí se tím
+   nepřichází. */
+pravda('je co měřit — v datech je aspoň jedna nevěrohodná nabídka',
+  !!(podezrely || podezrelyPodil),
+  'ani mimo podíly, ani mezi podíly se dnes žádná nenašla');
+if (!podezrely) zpravy.push('  — nevěrohodná nabídka mimo podíly a státní půdu dnes v datech není, tahle část se přeskočila');
 if (podezrely) {
   const p3 = await ctx.newPage();
   await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });

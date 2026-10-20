@@ -144,7 +144,11 @@ try {
     const pt = await ctxT.newPage();
     const visici = [], zalomene = [];
     for (const stranka of STRANKY) {
-      for (const sirka of [320, 360, 390, 430]) {
+      /* 559 a 560 jsou obě strany meze ve stylopisu: pod ní mřížka,
+         nad ní řádek. Právě na téhle hranici to jednou prasklo —
+         při 430 px se čtyři čísla vešla o tři pixely a v CI se
+         zalomila, protože tam ubral šířku posuvník. */
+      for (const sirka of [320, 360, 390, 430, 500, 559, 560, 680]) {
         await pt.setViewportSize({ width: sirka, height: 900 });
         await pt.goto(BASE + '/' + stranka, { waitUntil: 'load' });
         const m = await pt.evaluate(() => {
