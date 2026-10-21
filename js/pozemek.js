@@ -300,10 +300,15 @@
     return stary === null;
   }
 
+  /* Pořadí jako v js/main.js a ze stejného důvodu: živá oblast musí být
+     v přístupnostním stromu dřív, než se jí změní obsah. Podrobně
+     u showToast() tam. */
   function toast(msg) {
     var t = document.getElementById('toast');
     if (!t) return;
-    t.textContent = msg; t.hidden = false; t.classList.add('show');
+    t.textContent = '';
+    t.hidden = false;
+    requestAnimationFrame(function () { t.textContent = msg; t.classList.add('show'); });
     setTimeout(function () { t.classList.remove('show'); t.hidden = true; }, 2200);
   }
 

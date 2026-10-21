@@ -793,6 +793,9 @@ jobs:
       - name: Jméno třídy je slib, že existuje pravidlo
         run: node scripts/test-mrtva-jmena.mjs
 
+      - name: Hláška se ohlásí — živá oblast je ve stromu dřív než text
+        run: node scripts/test-ohlaseni.mjs
+
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 

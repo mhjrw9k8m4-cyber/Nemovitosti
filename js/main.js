@@ -413,25 +413,43 @@
      jediná cesta zpět bylo tlačítko „Zobrazit skryté" nahoře u počtu
      nabídek, tedy mimo obrazovku, když se skrývá uprostřed výpisu.
      Hláška, která jen oznámí „skryto", je v takové chvíli k ničemu. */
+  /* ŽIVÁ OBLAST MUSÍ BÝT VE STROMU DŘÍV, NEŽ SE JÍ ZMĚNÍ OBSAH.
+     Stálo tu `textContent = msg` a odkrytí teprve o pár řádků níž.
+     `hidden` je display:none, a takový prvek v přístupnostním stromu
+     NENÍ — text nastavený do skryté živé oblasti tedy není změna,
+     kterou by odečítač viděl, a odkrytí prvku, který už text má, se
+     jako aktualizace `aria-live` nehlásí spolehlivě (NVDA a JAWS to
+     běžně minou). Nese to přitom věty, které jinak člověk nemá odkud
+     zjistit: „Nepovedlo se uložit — plná paměť prohlížeče",
+     „Nepodařilo se stáhnout…", „Uloženo mezi oblíbené".
+     Teď se oblast odkryje PRÁZDNÁ a text se do ní vloží až v dalším
+     snímku — tedy jako skutečná změna uvnitř viditelné živé oblasti.
+     Na vzhledu to nemění nic: prolnutí `.show` se přidávalo v rAF už
+     dřív, takže text dorazí v tom samém snímku jako ono.
+     Co se tím NEPROKÁZALO: jak se zachová konkrétní odečítač. Změřit
+     se dá jenom pořadí (viz scripts/test-ohlaseni.mjs), ne zážitek. */
   function showToast(msg, akce) {
     if (!toastEl) return;
-    toastEl.textContent = msg;
+    toastEl.textContent = '';
     toastEl.classList.toggle('s-akci', !!akce);
-    if (akce) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'toast-akce';
-      b.textContent = akce.text;
-      b.addEventListener('click', function () {
-        clearTimeout(toastT);
-        toastEl.classList.remove('show');
-        setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
-        akce.fn();
-      });
-      toastEl.appendChild(b);
-    }
     toastEl.removeAttribute('hidden');
-    requestAnimationFrame(function () { toastEl.classList.add('show'); });
+    requestAnimationFrame(function () {
+      toastEl.textContent = msg;
+      if (akce) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'toast-akce';
+        b.textContent = akce.text;
+        b.addEventListener('click', function () {
+          clearTimeout(toastT);
+          toastEl.classList.remove('show');
+          setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
+          akce.fn();
+        });
+        toastEl.appendChild(b);
+      }
+      toastEl.classList.add('show');
+    });
     clearTimeout(toastT);
     toastT = setTimeout(function () {
       toastEl.classList.remove('show');

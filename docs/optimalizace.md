@@ -5948,3 +5948,88 @@ z toho bylo 0,08 až 1,42, tedy nic. Kdybych rozhodoval podle hodnoty,
 vymyslel bych patnáct jmen pro barvy, které už jméno měly. A naopak:
 u `#1F5138` vypadala odchylka 2,48 jako „totéž", ale při 0,7 vyšla
 2,80 — proto zůstala.
+
+
+## 92. Hláška, kterou odečítač nemá jak slyšet *21. 10.*
+
+Toast je `<div role="status" aria-live="polite" hidden>` a nese věty,
+které člověk jinak nemá odkud zjistit: *„Nepovedlo se uložit — plná
+paměť prohlížeče"*, *„Nepodařilo se stáhnout…"*, *„Uloženo mezi
+oblíbené"*, *„Souřadnice zkopírovány"*. Všechny tři jeho obsluhy ale
+nastavovaly text **dřív**, než oblast odkryly:
+
+```js
+toastEl.textContent = msg;          // js/main.js:418
+…
+toastEl.removeAttribute('hidden');  // js/main.js:433
+```
+
+Totéž v `js/pozemek.js` (`t.textContent = msg; t.hidden = false;` na
+jednom řádku) a v `js/pridat.js`.
+
+### Změřeno v přístupnostním stromu
+
+Ne na odečítači — ten v Chromiu změřit nejde — ale na tom, co odečítač
+čte. Snímek stromu před a po vyvolání hlášky:
+
+```
+dokud je toast hidden   → uzel role=status ve stromu NENÍ
+po vyvolání hlášky      → uzel role=status je, a text v něm už JE
+                          (DOM: „Pozemek skrytý z výpisuVrátit")
+```
+
+`hidden` je `display:none`, takže prvek ve stromu není vůbec. Text
+vložený do skryté živé oblasti tedy není změna, kterou by odečítač
+viděl — a oblast se pak do stromu přidá **už s hotovým obsahem**, což
+není aktualizace `aria-live`, ale nový uzel. Že se nový uzel s
+`role=status` ohlásí, není zaručené; NVDA a JAWS to běžně minou.
+
+### Oprava: odkryj prázdnou, text vlož až potom
+
+```js
+toastEl.textContent = '';
+toastEl.removeAttribute('hidden');      // oblast je ve stromu a prázdná
+requestAnimationFrame(function () {
+  toastEl.textContent = msg;            // ZMĚNA uvnitř živé oblasti
+  toastEl.classList.add('show');
+});
+```
+
+Na vzhledu to nemění nic: prolnutí `.show` se přidávalo v `rAF` už
+dřív, takže text dorazí v tom samém snímku jako ono. Stejná úprava na
+třech místech.
+
+### Hlídač měří POŘADÍ, a víc netvrdí
+
+`scripts/test-ohlaseni.mjs` nasadí na toast `MutationObserver` ještě
+před vyvoláním hlášky a zapíše, co se stalo dřív: odkrytí, nebo text.
+Hláška se vyvolá tou cestou, kterou by šel člověk:
+
+| obsluha | čím se vyvolá | jak se měří |
+|---|---|---|
+| `js/main.js` | „Tenhle mě nezajímá" ve výpisu (navíc ta složitější větev — toast s tlačítkem „Vrátit") | pořadí v prohlížeči |
+| `js/pozemek.js` | „Kopírovat" u souřadnic (hlášku pustí obě cesty, i ta záložní bez schránky) | pořadí v prohlížeči |
+| `js/pridat.js` | hláška visí až na odeslání inzerátu do databáze | pořadí **čtené ze zdroje** |
+
+Ta třetí je slabší kontrola a je tak i pojmenovaná: měřit ji v
+prohlížeči by znamenalo falešnou Supabase a nahrané fotky kvůli jedinému
+pořadí. Pozná tedy přepsanou obsluhu, ale neprokáže, co prohlížeč
+opravdu udělá.
+
+Co ta zkouška **neprokazuje** ani u prvních dvou: že konkrétní odečítač
+hlášku přečte. Měří mechanismus — živá oblast musí být ve stromu dřív,
+než se jí změní obsah — a v zápisu to má napsané, ať se z toho nedělá
+důkaz, který to není.
+
+Prokázáno sabotáží na obou polovinách: s původním pořadím padly obě
+měřené obsluhy (`text:… → odkryto`), a když se pořadí vrátilo jen v
+`js/pridat.js`, padly přesně ty dvě zdrojové kontroly.
+
+### Co z toho platí dál
+
+**`hidden` na živé oblasti znamená, že ta oblast neexistuje.** Pořadí
+„nastav text, pak odkryj" vypadá v kódu úplně nevinně a na obrazovce
+funguje; chybí jen to, co na obrazovce není vidět. Je to třetí nález
+tohohle druhu za dnešek — po oddílu 85 (tlačítko, které se nekreslilo
+nikde) a 89 (oddíl, který měl obsah a byl na opacity 0): **vady, které
+nejsou vidět, nenahlásí nikdo, dokud se na ně nezačne měřit.**

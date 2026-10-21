@@ -176,7 +176,9 @@
   function toast(msg) {
     var t = document.getElementById('toast');
     if (!t) return;
-    t.textContent = msg; t.hidden = false; t.classList.add('show');
+    t.textContent = '';
+    t.hidden = false;
+    requestAnimationFrame(function () { t.textContent = msg; t.classList.add('show'); });
     setTimeout(function () { t.classList.remove('show'); t.hidden = true; }, 2200);
   }
 

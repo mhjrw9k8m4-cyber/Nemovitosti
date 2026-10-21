@@ -5,8 +5,13 @@
   var toastT = null;
   function showToast(msg) {
     if (!toastEl) return;
-    toastEl.textContent = msg; toastEl.removeAttribute('hidden');
-    toastEl.classList.add('show');
+
+    toastEl.textContent = '';
+    toastEl.removeAttribute('hidden');
+    requestAnimationFrame(function () {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+    });
     clearTimeout(toastT);
     toastT = setTimeout(function () { toastEl.classList.remove('show'); setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300); }, 3200);
   }

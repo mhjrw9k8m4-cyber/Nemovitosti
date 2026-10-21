@@ -244,23 +244,26 @@
 
   function showToast(msg, akce) {
     if (!toastEl) return;
-    toastEl.textContent = msg;
+    toastEl.textContent = '';
     toastEl.classList.toggle('s-akci', !!akce);
-    if (akce) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'toast-akce';
-      b.textContent = akce.text;
-      b.addEventListener('click', function () {
-        clearTimeout(toastT);
-        toastEl.classList.remove('show');
-        setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
-        akce.fn();
-      });
-      toastEl.appendChild(b);
-    }
     toastEl.removeAttribute('hidden');
-    requestAnimationFrame(function () { toastEl.classList.add('show'); });
+    requestAnimationFrame(function () {
+      toastEl.textContent = msg;
+      if (akce) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'toast-akce';
+        b.textContent = akce.text;
+        b.addEventListener('click', function () {
+          clearTimeout(toastT);
+          toastEl.classList.remove('show');
+          setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300);
+          akce.fn();
+        });
+        toastEl.appendChild(b);
+      }
+      toastEl.classList.add('show');
+    });
     clearTimeout(toastT);
     toastT = setTimeout(function () {
       toastEl.classList.remove('show');

@@ -16,8 +16,14 @@
   var toastT = null;
   function showToast(msg) {
     if (!toastEl) return;
-    toastEl.textContent = msg; toastEl.removeAttribute('hidden');
-    toastEl.classList.add('show');
+    /* Pořadí jako v js/main.js a ze stejného důvodu: živá oblast musí
+       být v přístupnostním stromu dřív, než se jí změní obsah. */
+    toastEl.textContent = '';
+    toastEl.removeAttribute('hidden');
+    requestAnimationFrame(function () {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+    });
     clearTimeout(toastT);
     toastT = setTimeout(function () { toastEl.classList.remove('show'); setTimeout(function () { toastEl.setAttribute('hidden', ''); }, 300); }, 3200);
   }

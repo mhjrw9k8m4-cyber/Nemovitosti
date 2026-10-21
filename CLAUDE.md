@@ -159,9 +159,20 @@ něj měří barvy odznaků. Před takovým mazáním patří obyčejný
 `grep -rn 'jméno'` přes celý repozitář, bez vzoru — a pak **celá** sada
 v prohlížeči, ne vybraná podmnožina.
 
+**`hidden` na živé oblasti znamená, že ta oblast neexistuje.** `hidden`
+je `display:none`, a takový prvek v přístupnostním stromu NENÍ — text
+vložený do skryté `aria-live` oblasti tedy není změna, kterou by
+odečítač viděl, a oblast, která se do stromu přidá už s hotovým textem,
+je nový uzel, ne aktualizace. Pořadí „nastav text, pak odkryj" vypadá
+v kódu nevinně a na obrazovce funguje bezchybně; chybí jen to, co na
+obrazovce není vidět. Naměřeno (oddíl 92) na všech třech obsluhách
+toastu. Platí to i obecněji: **vada, která není vidět, se nenahlásí
+sama** — stejný druh nálezu jako tlačítko, které se nekreslilo nikde
+(oddíl 85), a oddíl s obsahem na `opacity:0` (89).
+
 ## Testy
 
-237 zkoušek v CI (116 bez prohlížeče, 121 s ním) ve třech úlohách:
+240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:
 rychlá `testy` a dvě směny v prohlížeči (`v-prohlizeci`,
 `v-prohlizeci-2`) — ty běží vedle sebe, každá kolem 31 minut. Místně
 jedna sada za druhou, dohromady kolem 50 minut:
