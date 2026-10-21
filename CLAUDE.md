@@ -230,6 +230,17 @@ musí DŘÍV, než se tam přesune zaměření, protože odečítač čte pole v
 chvíli příchodu. Naměřeno (oddíl 99): na pridat.html nebylo ani jedno
 z obojího. Má být obojí.
 
+**A lokálně zelená zkouška neznamená zelená v CI, dokud je nástroj
+v obou jiný.** CI si Playwright instaluje v každém běhu nepřipnutý
+(`npm install playwright-core playwright`), takže běží na nejnovějším;
+lokálně je v node_modules 1.49.1. Naměřeno (oddíl 101): v 1.64 už
+`page.accessibility` NENÍ, takže kontrola prošla lokálně a v CI spadla
+na hlášku o webu. Co je citlivé na verzi, změř v té, kterou si
+nainstaluje CI (instalace do vedlejší složky a jeden `node -e` to řekne
+za půl minuty), a strom čti přes CDP, ne přes obal. **A `try/catch`
+kolem měření umí udělat z poruchy nástroje nález o webu** — když se
+měření nepovede, musí to kontrola říct jako „nepovedlo se změřit".
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:

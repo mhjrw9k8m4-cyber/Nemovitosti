@@ -6702,3 +6702,76 @@ který nikdo neostříhá.
 vada.** Jedna a tatáž šířka je v jednom místě v pořádku a v druhém
 chyba — a kontrola, která to nerozlišuje, pak buď hlásí plané nálezy
 (dlaždice mapy, tabulka), nebo neřekne nic.
+
+## 101. Lokálně 1.49, v CI 1.64 — a to API už neexistuje *21. 10.*
+
+Kontrola z oddílu 99 (chyba v přístupnostním stromu u pole) prošla
+lokálně dvakrát a v CI spadla. Jediná ze všech:
+
+```
+✓ chyby: zaměření jde na pole, které vadí (input#p-obec)
+✓ chyby: to pole je označené jako neplatné
+✓ chyby: a ukazuje na hlášku, která říká co je špatně
+✓ chyby: označené je právě jedno pole (1)
+✕ chyby: v přístupnostním stromu je pole neplatné A má popis s chybou
+      uzel pole se ve stromu nenašel
+```
+
+Všechny ostatní kontroly, i ty na atributech, prošly i v CI. Vadilo
+tedy čtení stromu, ne web.
+
+### Příčina: jiná verze nástroje, ne jiný web
+
+```
+lokálně   node_modules/playwright-core   1.49.1
+v CI      npm install playwright-core playwright   → 1.64.1
+```
+
+CI si Playwright instaluje v každém běhu nanovo a bez připnuté verze,
+takže běží na nejnovějším. A v 1.64 už `page.accessibility` **není**.
+Změřeno v obou verzích na prázdné stránce:
+
+```
+1.49.1   page.accessibility existuje? true
+1.64.1   page.accessibility existuje? false
+```
+
+Zkouška to měla v `try/catch`, takže se chyba nástroje převlékla za
+nález o webu („uzel se ve stromu nenašel"). To je ta nejhorší podoba
+selhání: hlásí se špatná příčina.
+
+### Oprava: číst strom protokolem, ne obalem
+
+Strom se teď čte přes CDP — `DOM.querySelector` +
+`Accessibility.getPartialAXTree`. Je to protokol Chromia, ne API
+Playwrightu, takže na verzi obalu nezávisí. Změřeno v **obou** verzích
+a vrací totéž:
+
+```
+{"role":"textbox","name":"Obec / lokalita *",
+ "description":"Vyplňte prosím obec nebo lokalitu.","invalid":"true"}
+```
+
+A když CDP nejde, kontrola spadne nahlas s textem „strom se nepodařilo
+přečíst: …" — mlčky přeskočená kontrola je horší než žádná, protože
+tvrdí pokrytí, které neexistuje.
+
+### Hlídač: to API se nemá vrátit
+
+Do `scripts/test-zkousky-meri.mjs` (zkouška zkoušek, bez prohlížeče)
+přibyla kontrola, že **žádná zkouška nepoužívá `page.accessibility`**.
+Hledá se jen v kódu, ne v komentářích — právě v nich je o tom API
+napsané, proč se nepoužívá. Sabotáž: vrátit ho do kódu → spadne.
+
+### Co z toho platí dál
+
+**Lokálně zelená zkouška neznamená zelená v CI, dokud je nástroj
+v obou jiný.** CI si Playwright instaluje nepřipnutý, takže si verzi
+nevybíráme — a cokoli citlivého na verzi se musí změřit v TÉ, kterou
+si nainstaluje CI. Instalace do vedlejší složky a jeden `node -e` to
+řekne za půl minuty; červená CI za půl hodiny.
+
+A podruhé totéž, co je v oddílu 94: **`try/catch` kolem měření umí
+udělat z poruchy nástroje nález o webu.** Když se měření nepovede,
+musí to kontrola říct jako „nepovedlo se změřit", ne jako „web je
+rozbitý".

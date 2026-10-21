@@ -119,6 +119,30 @@ pravda(`kdo měří okno do 560 px, zapíná dotyk (${uzkych} takových kontext�
 pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
   mrtveVyjimky.length === 0, mrtveVyjimky.join(', '));
 
+/* ---- API, KTERÉ V CI NEEXISTUJE ----
+   Naměřeno (oddíl 101): lokálně je v node_modules playwright-core
+   1.49.1, ale CI si v každém běhu instaluje NEJNOVĚJŠÍ
+   (`npm install playwright-core playwright`) — dnes 1.64.1. A v té už
+   `page.accessibility` NENÍ. Zkouška, která ho použije, projde
+   lokálně a v CI spadne na „uzel se ve stromu nenašel", tedy na hlášku
+   o webu, i když je vada v nástroji. Přístupnostní strom se proto čte
+   přes CDP (DOM.querySelector + Accessibility.getPartialAXTree), což
+   je protokol Chromia a proti verzi Playwrightu je stálý — změřeno
+   v obou verzích.
+   Hledá se jen ve KÓDU, ne v komentářích: právě o tom API se v nich
+   píše, proč se nepoužívá. */
+{
+  const mrtveApi = [];
+  for (const f of soubory) {
+    const t = fs.readFileSync(path.join(SKRIPTY, f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')      // blokové komentáře
+      .replace(/^[ \t]*\/\/.*$/gm, '');       // řádkové komentáře
+    if (/\.accessibility\s*\./.test(t)) mrtveApi.push(f);
+  }
+  pravda('žádná zkouška nepoužívá page.accessibility (v Playwrightu, který si instaluje CI, není)',
+    mrtveApi.length === 0, mrtveApi.join(', ') + ' — čti strom přes CDP, viz test-pridat.mjs');
+}
+
 console.log('\nZkoušky měří to, co si myslí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

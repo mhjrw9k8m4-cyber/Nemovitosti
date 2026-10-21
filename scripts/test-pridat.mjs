@@ -807,21 +807,46 @@ async function odesli(p) {
     pravda(`chyby: označené je právě jedno pole (${prvni.kolik})`, prvni.kolik === 1, JSON.stringify(prvni));
 
     /* A TEĎ TO, CO Z TOHO DOOPRAVDY VIDÍ ODEČÍTAČ. Atributy jsou
-       prostředek; tohle je výsledek. */
-    let uzel = null;
-    try {
-      const ax = await p.accessibility.snapshot({ interestingOnly: false });
-      const najdi = (n) => {
-        if (!n) return null;
-        if (n.name && /Obec/i.test(n.name) && n.role === 'textbox') return n;
-        for (const d of (n.children || [])) { const r = najdi(d); if (r) return r; }
-        return null;
-      };
-      uzel = najdi(ax);
-    } catch (e) { uzel = null; }
+       prostředek; tohle je výsledek.
+       ČTE SE PŘES CDP, NE PŘES page.accessibility.snapshot(). Má to
+       naměřený důvod: lokálně (playwright-core 1.49) to staré API
+       funguje, ale CI si instaluje nejnovější Playwright, kde už
+       `page.accessibility` není — a kontrola tam spadla s „uzel se ve
+       stromu nenašel", zatímco všechny ostatní prošly. Protokol
+       Chromia (DOM.querySelector + Accessibility.getPartialAXTree) je
+       proti verzi Playwrightu stálý. Když CDP nejde, kontrola spadne
+       NAHLAS — mlčky přeskočená kontrola je horší než žádná. */
+    let uzel = null, axChyba = '';
+    {
+      const cdp = await p.context().newCDPSession(p).catch((e) => { axChyba = String(e).slice(0, 80); return null; });
+      if (cdp) {
+        try {
+          await cdp.send('DOM.enable');
+          await cdp.send('Accessibility.enable');
+          const { root } = await cdp.send('DOM.getDocument', { depth: -1 });
+          const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '#p-obec' });
+          if (!nodeId) { axChyba = 'pole #p-obec se v DOM nenašlo'; }
+          else {
+            const { nodes } = await cdp.send('Accessibility.getPartialAXTree', { nodeId, fetchRelatives: false });
+            const u = (nodes || []).find((n) => n.role && n.role.value
+              && n.role.value !== 'none' && n.role.value !== 'generic');
+            if (!u) { axChyba = `uzel ve stromu nenalezen (uzlů ${(nodes || []).length})`; }
+            else {
+              const vl = (jm) => {
+                const x = (u.properties || []).find((q) => q.name === jm);
+                return x && x.value ? String(x.value.value) : '';
+              };
+              uzel = { role: u.role.value, name: u.name && u.name.value,
+                description: u.description && u.description.value, invalid: vl('invalid') };
+            }
+          }
+        } catch (e) { axChyba = String(e).slice(0, 80); }
+        await cdp.detach().catch(() => {});
+      }
+    }
     pravda('chyby: v přístupnostním stromu je pole neplatné A má popis s chybou',
       !!uzel && uzel.invalid === 'true' && /obec|lokalit/i.test(uzel.description || ''),
-      uzel ? JSON.stringify(uzel) : 'uzel pole se ve stromu nenašel');
+      uzel ? JSON.stringify(uzel) : ('strom se nepodařilo přečíst: ' + axChyba));
 
     /* Značka drží jen do chvíle, kdy se pole začne opravovat — jinak by
        odečítač hlásil chybu, která už neplatí. */
