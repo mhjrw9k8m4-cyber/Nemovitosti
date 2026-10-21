@@ -5096,3 +5096,84 @@ vlastní návštěvníka.** Kontrola „stáhne se, když má" je v jednom
 prohlížeči s kontrolou „nestáhne se předem" jen zdánlivě úplná: obě
 pak mluví o témže člověku a o tom druhém — tom, pro kterého se modul
 stahovat nemá — neřekne žádná z nich nic.
+
+## 82. Fotka vlastního inzerátu byla pás, ne náhled *21. 10.*
+
+Náhled fotky má na webu jeden poměr — **16/10**. Drží ho karta ve výpisu
+(`.opp-media`), řádek okresu (`.okr-item .okr-foto`), uložené
+(`.ul-thumb`), náhled v mapě (`.mp-ram`), velký snímek na stránce
+pozemku (`.pz-media`) i kostra načítání. Jediná výjimka
+(`.map-side .opp-media`) má u sebe změřený důvod.
+
+Na `muj-inzerat.html` se ale poměr psal **pixelovou výškou**:
+
+```css
+.mi-lthumb img{width:100%; height:160px; object-fit:cover; …}
+```
+
+Šířku si bere karta, výška je pevná — takže poměr vychází z toho, jak
+široké okno člověk zrovna má. Změřeno v prohlížeči:
+
+| šířka okna | fotka | poměr |
+|---|---|---|
+| telefon 390 px | 324 × 160 | **2,02 : 1** |
+| monitor 1280 px | 694 × 160 | **4,34 : 1** |
+
+Proti 16/10 = 1,60 : 1. A protože je tam `object-fit:cover`, nejde
+o zploštěnou fotku, ale o **výřez**: na monitoru z fotky pozemku zbyl
+prostřední pás a zmizelo nebe i popředí — tedy právě to, podle čeho
+majitel svůj inzerát v seznamu pozná.
+
+### Oprava: pevná šířka, poměr z ní
+
+```css
+.mi-lthumb{position:relative; margin-bottom:12px; width:256px; max-width:100%;}
+.mi-lthumb img{width:100%; aspect-ratio:16/10; height:auto; object-fit:cover; …}
+```
+
+Stejný recept jako u `.okr-item .okr-foto`, kde je šířka 128 px.
+A **256 px dává přesně 160 px výšky**, tedy tu samou výšku jako dosud:
+svislý rytmus karty se nemění ani o pixel, mění se jen výřez. Po
+opravě naměřeno 256 × 160 = 1,60 : 1 na obou šířkách.
+
+### Hlídač, a čím se liší od toho, co tu už bylo
+
+`scripts/test-nahledy-vypisu.mjs` poměr hlídá — ale jen na vyrobených
+stránkách s `.okr-item`. Tohle místo nehlídalo nic.
+
+Nový blok POMĚR NÁHLEDU v `scripts/test-jeden-styl.mjs` čte všechny
+stylopisy i vložené styly ručně psaných stránek a hlásí pravidlo, které
+u náhledu určuje **pevnou pixelovou výšku, když šířka pevná není**.
+Splnit se to dá dvěma způsoby, oběma správnými: napsat `aspect-ratio`,
+nebo určit krabici oběma rozměry (tak to mají ikony a čtvercová
+`.rs-foto` 44 × 44).
+
+Dvě věci, které musely být v pravidle přesně:
+
+* **`aspect-ratio:auto` není poměr, je to jeho vypnutí.** Kontrola proto
+  uznává jen číselnou hodnotu. Bez toho by jí dokumentovaná výjimka
+  `.map-side .opp-media` (`aspect-ratio:auto; height:150px`) prošla jako
+  splněná a zmizela by z dohledu.
+* **`max-height` ani `line-height` to není.** Před `height` nesmí stát
+  pomlčka, jinak by kontrola hlásila desítky míst, kde se nic nepokazilo.
+
+Změřeno: pravidel náhledu s pixelovou výškou je 8 (ikony, tečky
+u odznaků, čtvercová `.rs-foto`) — kontrola tedy opravdu čte, co má,
+a hlásí z nich jednu jedinou, dokumentovanou výjimku.
+
+### Čím je to prokázané
+
+| co se pokazilo | co spadlo |
+|---|---|
+| vrácena pevná výška `height:160px` | *„žádný náhled nemá pevnou výšku bez pevné šířky"* (28/1) |
+| důvod u výjimky zkrácen na jedno slovo | *„výjimka .map-side .opp-media má napsaný důvod"* (28/1) |
+| výjimka přepsána na selektor, který nic nehlásí | *„a je pořád potřeba"* **i** samotný nález (27/2) |
+
+Třetí řádek je ten, kvůli kterému tabulka výjimek nezaroste: výjimka,
+která už není potřeba, se má zrušit, ne zapomenout.
+
+### Mimochodem, při tom samém souboru
+
+`animation:authFade .35s` byl jediný tvrdě psaný čas v celém webu mimo
+dlouhé pulzy animací. Tokeny jsou `--cas-zakladni` (.2s) a
+`--cas-pomaly` (.4s); nahrazeno druhým z nich.

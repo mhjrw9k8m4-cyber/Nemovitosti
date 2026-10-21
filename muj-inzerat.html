@@ -50,7 +50,7 @@
     .pf-card{border-radius:var(--r-lg); padding:24px 20px 20px;
       background:var(--plocha-karta);
       border:1px solid var(--line-strong); box-shadow:var(--e3);
-      animation:authFade .35s var(--ease) both;}
+      animation:authFade var(--cas-pomaly) var(--ease) both;}
     .pf-head{display:flex; align-items:center; gap:12px;}
     .pf-avatar{flex:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
       font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:0.02em;
@@ -126,8 +126,20 @@
     /* Moje inzeráty — čisté karty se statistikami */
     #mi-list{display:flex; flex-direction:column; gap:12px;}
     .mi-lcard{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-lg); padding:12px; box-shadow:var(--e1);}
-    .mi-lthumb{position:relative; margin-bottom:12px;}
-    .mi-lthumb img{width:100%; height:160px; object-fit:cover; border-radius:var(--r-md); display:block;}
+    /* POMĚR, NE PEVNÁ VÝŠKA. Stálo tu `width:100%; height:160px`, což
+       je jediné místo na webu, kde se poměr náhledu psal pixelem —
+       a vycházel z něj pás: naměřeno 694×160 = 4,34 : 1 na monitoru
+       a 324×160 = 2,02 : 1 na telefonu 390 px, proti 16/10 = 1,60 : 1
+       všude jinde (.opp-media, .okr-foto, .ul-thumb, .mp-ram,
+       .pz-media). Z fotky pozemku při object-fit:cover zbyla při tom
+       prostřední pětina.
+       Šířka je proto PEVNÁ a poměr se počítá z ní — stejný recept jako
+       u .okr-item .okr-foto, kde je 128 px. 256 px dává přesně 160 px
+       výšky, tedy TU SAMOU výšku jako dosud: svislý rytmus karty se
+       nemění, mění se jen výřez. Jediná výjimka na webu
+       (.map-side .opp-media) má svůj změřený důvod zapsaný u sebe. */
+    .mi-lthumb{position:relative; margin-bottom:12px; width:256px; max-width:100%;}
+    .mi-lthumb img{width:100%; aspect-ratio:16/10; height:auto; object-fit:cover; border-radius:var(--r-md); display:block;}
     .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
     .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px;}
     .mi-lplace{font-size:16px; font-weight:700; color:var(--text); line-height:1.2; letter-spacing:-0.01em;}

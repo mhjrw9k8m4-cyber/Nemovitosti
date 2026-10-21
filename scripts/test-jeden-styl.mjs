@@ -412,6 +412,66 @@ function jenStyl(jmeno, text) {
     opsane.join('\n      ') + '\n      napiš var(--jméno); obranná náhrada var(--jméno, #…) je v pořádku');
 }
 
+// =====================================================================
+// POMĚR NÁHLEDU
+//
+// Náhled fotky má na webu jeden poměr: 16/10. Drží ho .opp-media,
+// .okr-item .okr-foto, .ul-thumb, .mp-ram, .pz-media i kostra výpisu.
+// Na muj-inzerat.html se ale psal PIXELOVOU VÝŠKOU (`width:100%;
+// height:160px`) a vycházel z toho pás — naměřeno v prohlížeči
+// 694×160 = 4,34 : 1 na monitoru a 324×160 = 2,02 : 1 na telefonu
+// 390 px. Při object-fit:cover z fotky pozemku zbyla prostřední pětina.
+// Nehlídalo to nic: scripts/test-nahledy-vypisu.mjs se dívá jen na
+// vyrobené stránky s .okr-item.
+//
+// Pravidlo: pravidlo, které určuje velikost náhledu, nesmí mít pevnou
+// pixelovou VÝŠKU, když šířka pevná není. Poměr se píše aspect-ratio
+// (a `aspect-ratio:auto` je jeho vypnutí, ne splnění), nebo se krabice
+// určí oběma rozměry — tak to mají ikony a čtvercová .rs-foto 44×44.
+// Výjimka musí mít napsaný důvod, a musí být pořád potřeba.
+// =====================================================================
+{
+  const JMENO_NAHLEDU = /thumb|foto|media|snimek|nahled|obraz/i;
+  const VYJIMKY_POMER = {
+    '.map-side .opp-media':
+      'vedle seznamu na úvodní stránce stojí velká mapa, takže výřez mapky u karty je to nejvíc zdvojené, co karta má; 150 px je výška, kterou si karta drží jako svoje minimum (změřeno: karta spadne na 362 px a vejde se na notebook 1280×700)',
+  };
+  const pasy = [], kandidati = new Set();
+  let merenych = 0;
+  for (const [jmeno, syrove] of zdroje) {
+    const t = bezKomentaru(jenStyl(jmeno, syrove));
+    for (const m of t.matchAll(/([^{}@]+)\{([^{}]*)\}/g)) {
+      const sel = m[1].trim().replace(/\s+/g, ' ');
+      const telo = m[2];
+      if (!JMENO_NAHLEDU.test(sel)) continue;
+      /* `max-height` ani `line-height` to není — před „height" nesmí
+         stát pomlčka. */
+      if (!/(?<![-\w])height\s*:\s*\d+(?:\.\d+)?px/.test(telo)) continue;
+      merenych++;
+      if (/aspect-ratio\s*:\s*[\d.]/.test(telo)) continue;
+      if (/(?<![-\w])width\s*:\s*\d+(?:\.\d+)?px/.test(telo)) continue;
+      kandidati.add(sel);
+      if (sel in VYJIMKY_POMER) continue;
+      pasy.push(`${jmeno}:${kdeJe(t, m.index)}  ${sel}  {${telo.trim().replace(/\s+/g, ' ')}}`);
+    }
+  }
+  // PŘEDPOKLAD: bez pravidel náhledu by kontrola měřila prázdno
+  pravda(`je co měřit — ${merenych} pravidel náhledu určuje výšku pixelem`,
+    merenych >= 5, `jen ${merenych} — hledá kontrola vůbec pravidla náhledů?`);
+  pravda('žádný náhled nemá pevnou výšku bez pevné šířky (poměr se píše aspect-ratio)',
+    pasy.length === 0,
+    pasy.join('\n      ') + '\n      napiš aspect-ratio (16/10), nebo urči krabici oběma rozměry');
+  for (const [sel, duvod] of Object.entries(VYJIMKY_POMER)) {
+    pravda(`výjimka ${sel} má napsaný důvod`,
+      typeof duvod === 'string' && duvod.length >= 30,
+      'důvod chybí nebo je moc krátký — bez něj tabulka tiše roste');
+    /* A platí to obojím směrem: výjimka, která už není potřeba, se má
+       zrušit, ne zapomenout. */
+    pravda(`a je pořád potřeba (${sel})`, kandidati.has(sel),
+      'pravidlo už pevnou výšku bez pevné šířky nemá — výjimku smaž');
+  }
+}
+
 console.log('\nJeden styl — pojmenovaná hodnota místo opsaného čísla');
 console.log(zpravy.join('\n'));
 console.log(`\nzměřeno: ${nalezy.length} pravidel určuje velikost h1`);
