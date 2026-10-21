@@ -776,6 +776,105 @@ async function odesli(p) {
   try { fsp.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
 }
 
+/* ---- CHYBU MUSÍ ŘÍCT I POLE, ne jen hláška nad formulářem ----
+   Naměřeno (oddíl 99): po odeslání prázdného inzerátu se zaměření
+   přesune na „Obec" a hláška dojde do živé oblasti — ale pole samo
+   o chybě nevědělo. Na celé stránce nebylo ani jedno `aria-invalid`
+   ani `aria-describedby`, takže odečítač při přesunu zaměření přečetl
+   jen „Obec, edit text" a ohlášení živé oblasti mu do toho skočilo.
+   Měří se to, co z toho vidí odečítač: uzel pole v přístupnostním
+   stromu (role, jméno, POPIS, příznak invalid). */
+{
+  const { ctx, p, padlo } = await otevri(true);
+  const jeFormular = await p.evaluate(() => { const c = document.getElementById('prodej-card'); return !!(c && !c.hidden); });
+  // PŘEDPOKLAD: bez formuláře se nedá měřit nic
+  pravda('chyby: formulář je k dispozici', jeFormular, 'prodej-card je schovaný');
+  if (jeFormular) {
+    await p.evaluate(() => document.getElementById('form-prodej').requestSubmit());
+    await p.waitForTimeout(600);
+    const prvni = await p.evaluate(() => {
+      const a = document.activeElement;
+      return { kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '')) : 'nic',
+        invalid: a ? a.getAttribute('aria-invalid') : null,
+        popis: a ? a.getAttribute('aria-describedby') : null,
+        hlaska: (document.getElementById('msg-prodej') || {}).textContent || '',
+        kolik: document.querySelectorAll('[aria-invalid="true"]').length };
+    });
+    pravda(`chyby: zaměření jde na pole, které vadí (${prvni.kdo})`, prvni.kdo === 'input#p-obec', JSON.stringify(prvni));
+    pravda('chyby: to pole je označené jako neplatné', prvni.invalid === 'true', JSON.stringify(prvni));
+    pravda('chyby: a ukazuje na hlášku, která říká co je špatně',
+      prvni.popis === 'msg-prodej' && /obec|lokalit/i.test(prvni.hlaska), JSON.stringify(prvni));
+    pravda(`chyby: označené je právě jedno pole (${prvni.kolik})`, prvni.kolik === 1, JSON.stringify(prvni));
+
+    /* A TEĎ TO, CO Z TOHO DOOPRAVDY VIDÍ ODEČÍTAČ. Atributy jsou
+       prostředek; tohle je výsledek. */
+    let uzel = null;
+    try {
+      const ax = await p.accessibility.snapshot({ interestingOnly: false });
+      const najdi = (n) => {
+        if (!n) return null;
+        if (n.name && /Obec/i.test(n.name) && n.role === 'textbox') return n;
+        for (const d of (n.children || [])) { const r = najdi(d); if (r) return r; }
+        return null;
+      };
+      uzel = najdi(ax);
+    } catch (e) { uzel = null; }
+    pravda('chyby: v přístupnostním stromu je pole neplatné A má popis s chybou',
+      !!uzel && uzel.invalid === 'true' && /obec|lokalit/i.test(uzel.description || ''),
+      uzel ? JSON.stringify(uzel) : 'uzel pole se ve stromu nenašel');
+
+    /* Značka drží jen do chvíle, kdy se pole začne opravovat — jinak by
+       odečítač hlásil chybu, která už neplatí. */
+    await p.fill('#p-obec', 'Brno');
+    await p.waitForTimeout(250);
+    const poOprave = await p.evaluate(() => {
+      const e = document.getElementById('p-obec');
+      return { invalid: e.getAttribute('aria-invalid'), popis: e.getAttribute('aria-describedby') };
+    });
+    pravda('chyby: jak se pole opravuje, značka i vazba mizí',
+      poOprave.invalid === null && poOprave.popis === null, JSON.stringify(poOprave));
+
+    /* Druhé odeslání: značka se přestěhuje na pole, které vadí teď. */
+    await p.evaluate(() => document.getElementById('form-prodej').requestSubmit());
+    await p.waitForTimeout(600);
+    const druhe = await p.evaluate(() => {
+      const a = document.activeElement;
+      return { kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '')) : 'nic',
+        invalid: a ? a.getAttribute('aria-invalid') : null,
+        obec: document.getElementById('p-obec').getAttribute('aria-invalid'),
+        kolik: document.querySelectorAll('[aria-invalid="true"]').length };
+    });
+    pravda(`chyby: značka se přestěhuje na další pole a na opraveném nezůstane (${druhe.kdo})`,
+      druhe.invalid === 'true' && druhe.obec === null && druhe.kolik === 1, JSON.stringify(druhe));
+
+    /* A TEĎ CESTA BEZ PSANÍ. Hodnotu umí do pole vložit i web sám —
+       tlačítko „Načíst údaje" vyplní inzerát z odkazu jinde a nemusí
+       u toho poslat `input`. Když se značka uklízí jen při psaní,
+       zůstane na poli, které už je v pořádku, viset stará chyba.
+       Naměřeno: bez tohohle kroku se úklid při odeslání nedal shodit
+       vůbec — kontrola výš je planá, protože psaní uklidí značku dřív. */
+    await p.evaluate(() => {
+      const o = document.getElementById('p-okres');
+      if (o) o.value = 'Brno-město';          // bez `input`, jako to dělá web
+      const v = document.getElementById('p-vymera');
+      if (v) v.value = '';                    // ať je důvod chyby jinde
+    });
+    await p.evaluate(() => document.getElementById('form-prodej').requestSubmit());
+    await p.waitForTimeout(600);
+    const bezPsani = await p.evaluate(() => {
+      const a = document.activeElement;
+      return { kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '')) : 'nic',
+        okres: (document.getElementById('p-okres') || {}).getAttribute ? document.getElementById('p-okres').getAttribute('aria-invalid') : '?',
+        kolik: document.querySelectorAll('[aria-invalid="true"]').length,
+        ktera: [...document.querySelectorAll('[aria-invalid="true"]')].map((e) => '#' + e.id) };
+    });
+    pravda(`chyby: po vyplnění BEZ PSANÍ zůstane označené jen jedno pole (${bezPsani.ktera.join(', ') || 'žádné'})`,
+      bezPsani.kolik === 1 && bezPsani.okres === null, JSON.stringify(bezPsani));
+    pravda('chyby: nic se u toho nerozbilo', padlo.length === 0, padlo.join(' | '));
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nPřidání vlastního pozemku — celá cesta');
 console.log(zpravy.join('\n'));

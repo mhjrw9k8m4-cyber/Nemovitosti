@@ -993,6 +993,28 @@
     return el.closest('.add-field') || el.closest('.add-check');
   }
 
+  /* CHYBU MUSÍ ŘÍCT I POLE, ne jen hláška nad formulářem.
+     Naměřeno (oddíl 99): po odeslání prázdného inzerátu se zaměření
+     přesune na „Obec" a hláška „Vyplňte prosím obec nebo lokalitu."
+     dojde do živé oblasti — ale pole samo o chybě neví. Na celé
+     stránce nebylo ani jedno `aria-invalid` ani `aria-describedby`.
+     Odečítač tedy při přesunu zaměření přečte „Obec, edit text"
+     a ohlášení živé oblasti mu do toho skočí, nebo se ztratí — a kdo
+     se k poli vrátí za minutu, nemá si co přečíst.
+     S vazbou na hlášku se chyba čte jako součást pole, kdykoli znovu.
+     Značka drží jen do chvíle, kdy se to pole začne opravovat. */
+  function popisPridej(el, id) {
+    var t = (el.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+    if (t.indexOf(id) < 0) t.push(id);
+    el.setAttribute('aria-describedby', t.join(' '));
+  }
+  function popisOdeber(el, id) {
+    var t = (el.getAttribute('aria-describedby') || '').split(/\s+/)
+      .filter(function (x) { return x && x !== id; });
+    if (t.length) el.setAttribute('aria-describedby', t.join(' '));
+    else el.removeAttribute('aria-describedby');
+  }
+
   function handle(formId, msgId, buildData, validate, okMsg, toastMsg, sender) {
     var form = document.getElementById(formId);
     if (!form) return;
@@ -1002,6 +1024,12 @@
     function clearOne(e) {
       var w = e.target.closest && (e.target.closest('.add-field') || e.target.closest('.add-check'));
       if (w) w.classList.remove('err');
+      /* Se zvýrazněním mizí i vazba na hlášku: od chvíle, kdy se pole
+         opravuje, by říkala něco, co už nemusí platit. */
+      if (e.target.getAttribute && e.target.getAttribute('aria-invalid') === 'true') {
+        e.target.removeAttribute('aria-invalid');
+        popisOdeber(e.target, msgId);
+      }
     }
     form.addEventListener('input', clearOne);
     form.addEventListener('change', clearOne);
@@ -1010,13 +1038,25 @@
       var ms = document.getElementById(msgId);
       ms.classList.remove('err', 'ok'); ms.textContent = '';
       Array.prototype.forEach.call(form.querySelectorAll('.add-field.err, .add-check.err'), function (w) { w.classList.remove('err'); });
+      Array.prototype.forEach.call(form.querySelectorAll('[aria-invalid="true"]'), function (el) {
+        el.removeAttribute('aria-invalid');
+        popisOdeber(el, msgId);
+      });
       var err = validate();   // '' když OK, jinak {msg, id}
       if (err) {
         ms.textContent = err.msg || err; ms.classList.add('err');
         var w = err.id ? fieldWrap(err.id) : null;
         if (w) w.classList.add('err');
         var el = err.id ? document.getElementById(err.id) : null;
-        if (el) { try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); } el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        if (el) {
+          /* Vazba a značka PŘED zaměřením: odečítač čte pole ve chvíli,
+             kdy na něj zaměření přijde, a co nemá nastavené tehdy, to
+             už nepřečte. */
+          el.setAttribute('aria-invalid', 'true');
+          popisPridej(el, msgId);
+          try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
+          el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
         return;
       }
       if (!SB_READY) { ms.textContent = OFFLINE; return; }

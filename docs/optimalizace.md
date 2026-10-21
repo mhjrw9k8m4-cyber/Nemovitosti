@@ -6581,3 +6581,83 @@ mění `matchMedia`. Emulace tedy nic nezastavuje — zastavuje to web.
 Tady byla odpověď „protože to drží jedno pravidlo výš", a správný krok
 byl kontroly sloučit a ten důvod napsat. Jinde by stejná odpověď
 znamenala, že kontrola měří nesprávnou věc.
+
+## 99. Chybu ve formuláři pole neřeklo *21. 10.*
+
+Odeslání prázdného inzerátu dělalo tři ze čtyř věcí správně:
+
+```
+hláška „Vyplňte prosím obec nebo lokalitu."  → do živé oblasti (role=status)  ✓
+zaměření                                      → na pole, které vadí            ✓
+zvýraznění                                    → červený rámeček u pole         ✓
+pole samo                                     → aria-invalid: NIC
+                                                aria-describedby: NIC
+```
+
+Na celé stránce nebylo **ani jedno** `aria-invalid` ani
+`aria-describedby`. Odečítač tedy ve chvíli, kdy na pole přijde
+zaměření, přečte „Obec, edit text" — a ohlášení živé oblasti mu do
+toho skočí, nebo se ztratí docela. A kdo se k poli vrátí za minutu,
+nemá si co přečíst: hláška je nahoře nad formulářem a s polem ji nic
+nespojuje.
+
+### Oprava: chyba se stane součástí pole
+
+Při chybě se poli nasadí `aria-invalid="true"` a do `aria-describedby`
+přidá id hlášky — **ještě před** zaměřením, protože odečítač čte pole
+v tom okamžiku, kdy na něj zaměření přijde; co tam není tehdy, to už
+nepřečte. Značka drží jen do chvíle, kdy se to pole začne opravovat.
+
+Měří se to, co z toho vidí odečítač, ne atributy:
+
+```
+uzel pole v přístupnostním stromu:
+  role: textbox
+  name: „Obec / lokalita *"
+  description: „Vyplňte prosím obec nebo lokalitu."
+  invalid: true
+```
+
+Vazba se přidává a odebírá po tokenech (`aria-describedby` může nést
+i jiné popisy), takže se dá použít i na formuláři, který už nějaký
+popis má.
+
+### Úklid na třech místech, a jedno z nich šlo poznat jen touhle cestou
+
+Značka se uklízí při psaní do pole (`input`/`change`), při dalším
+odeslání a nikde jinde. Sabotáž úklidu **při odeslání** nejdřív
+neshodila nic — protože než se odešle podruhé, uklidí značku už psaní.
+Pak jsem si všiml cesty, kde se nepíše: tlačítko „Načíst údaje" vyplní
+inzerát z odkazu jinde a hodnoty do polí vloží **web sám**, bez
+události `input`. Kdyby se značka uklízela jen při psaní, zůstala by na
+poli, které už je v pořádku, viset stará chyba. Kontrola to teď dělá
+přesně takhle — `el.value = …` bez události — a sabotáž na ní padne
+(dvě označená pole místo jednoho).
+
+### Prokázáno čtyřmi sabotážemi
+
+```
+aria-invalid se nenasadí      → spadlo 5 kontrol (včetně uzlu ve stromu)
+vazba na hlášku se nepřidá    → spadly 2 (vazba a popis ve stromu)
+úklid při psaní pryč          → spadlo „jak se pole opravuje, značka mizí"
+úklid při odeslání pryč       → spadlo „po vyplnění BEZ PSANÍ zůstane jedno pole"
+```
+
+### A jeden negativní výsledek vedle toho
+
+Při téhle práci jsem proměřil i `autocomplete` na formuláři inzerátu:
+ze 21 polí ho má pět a **je to správně**. Telefon má `autocomplete=tel`,
+přihlašovací e-mail `email`, okres schválně `off` (má vlastní
+našeptávač) — a u obce, výměry, ceny a parcelního čísla by autofill
+vyplňoval ÚDAJE O ČLOVĚKU do polí, která popisují POZEMEK. „Obec" tady
+není bydliště toho, kdo inzeruje. Nic se tedy nemění.
+
+### Co z toho platí dál
+
+**Hláška nad formulářem a chyba u pole nejsou totéž.** Živá oblast to
+řekne jednou a pak je to pryč; vazba na pole to řekne vždycky, když se
+k poli vrátíš. Obojí se nevylučuje — má být obojí.
+
+A znovu to, co se opakuje celý den: **sabotáž ukázala na cestu, která
+by mě jinak nenapadla.** Úklid při odeslání vypadal jako samozřejmý
+druhý zámek, dokud se nenašel případ, kdy je to zámek jediný.

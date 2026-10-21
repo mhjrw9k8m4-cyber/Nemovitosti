@@ -223,6 +223,13 @@ prvek. **A slib v atributu je závazek na všechno, co znamená:**
 tabulátoru, Escape a vrácení zaměření. Tři ze čtyř oken ho napsaná
 měla a nedržela.
 
+**Hláška nad formulářem a chyba u pole nejsou totéž.** Živá oblast to
+řekne jednou a pak je to pryč; `aria-invalid` + `aria-describedby` na
+poli to řeknou vždycky, když se k němu člověk vrátí — a nasadit se
+musí DŘÍV, než se tam přesune zaměření, protože odečítač čte pole ve
+chvíli příchodu. Naměřeno (oddíl 99): na pridat.html nebylo ani jedno
+z obojího. Má být obojí.
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:
