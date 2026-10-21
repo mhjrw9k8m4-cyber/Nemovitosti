@@ -2393,9 +2393,16 @@
           '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
           '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
         '</div>' +
+        /* JMÉNO POLE, NE JEN PLACEHOLDER. Naměřeno (oddíl 95): ze 946
+           ovladačů na dvanácti typech stránek bylo tohle jediné, které
+           nemělo přístupné jméno — spoléhalo na placeholder. Ten ale
+           jméno pole není: zmizí, jak se začne psát, a odečítače ho
+           berou jen jako záložní zdroj. Ukazuje se proto na nadpis
+           oddílu („Moje poznámka"), který už tu stojí — vlastní text
+           by byl druhé místo, kde se totéž říká, a ta dvě se rozejdou. */
         '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
           'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
-          'aria-describedby="pz-pozn-kde"></textarea>' +
+          'aria-labelledby="pz-pozn-nadpis" aria-describedby="pz-pozn-kde"></textarea>' +
         /* VĚTA SE MUSELA ZMĚNIT SPOLU S CHOVÁNÍM. Stálo tu „zůstává jen
            v tomhle prohlížeči, nikam se neodesílá, nevidíme ji ani my".
            Od chvíle, kdy se poznámky vážou na účet, by to byla lež —

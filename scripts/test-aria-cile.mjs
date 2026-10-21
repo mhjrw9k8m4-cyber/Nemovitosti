@@ -9,6 +9,15 @@
  * se to neprojeví — stránka vypadá stejně, jen čtečka přestane vědět,
  * co k čemu patří. Přesně taková vada se nepozná pohledem.
  *
+ * DRUHÁ VĚC, KTEROU TENHLE TEST MĚŘÍ: že každý ovladač má přístupné
+ * JMÉNO. Je to tatáž vada z téhož důvodu — tlačítko bez jména se
+ * odečítači ohlásí jako „tlačítko" a pohledem se to nepozná, protože
+ * na obrazovce je na něm ikona. Naměřeno (oddíl 95): z 946 ovladačů na
+ * dvanácti typech stránek neměl jméno jeden jediný, a byl to textarea,
+ * který spoléhal na placeholder. Placeholder jméno pole NENÍ: zmizí,
+ * jak se začne psát. Proto se tu počítá zvlášť a placeholder se za
+ * jméno nebere.
+ *
  * ZE STRÁNKY, NE ZE ZDROJÁKU. Zkusil jsem to nejdřív hledat v HTML a
  * vyšlo dvanáct nálezů, všech dvanáct planých: hlidani.html si záložky
  * skládá v JavaScriptu, takže ve zdrojáku stojí `id="hl-t-' + id + '"`
@@ -16,6 +25,7 @@
  * až když je stránka hotová.
  */
 import { chromium } from 'playwright-core';
+import { readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 await import('./falesna-supabase-chat.mjs');
@@ -27,6 +37,13 @@ const BASE = 'http://127.0.0.1:8310';
 const STRANKY = ['hlidani.html', 'zpravy.html', 'muj-inzerat.html',
   'index.html', 'pridat.html', 'kolik-stoji-koupe-pozemku.html',
   'kupni-smlouva-pozemek.html', 'hypoteka-na-pozemek.html', 'kontakt.html'];
+/* A jedna stránka pozemku. Přidala se kvůli jménům ovladačů — jediný
+   nález z měření byl právě tam (poznámka u pozemku) a bez ní by ho
+   zkouška neviděla. Bere se první podle abecedy, ať je volba
+   zapsatelná a nezávisí na datech. */
+const pozemek = readdirSync(new URL('..', import.meta.url))
+  .filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+if (pozemek) STRANKY.push(pozemek);
 
 let ok = 0, chyb = 0; const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
@@ -40,7 +57,7 @@ function pravda(popis, podm, detail) {
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-let vazeb = 0; const poStrankach = {};
+let vazeb = 0, ovladacu = 0; const poStrankach = {};
 
 for (const s of STRANKY) {
   const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
@@ -86,13 +103,51 @@ for (const s of STRANKY) {
       pocet++;
       if (!document.getElementById(cil)) nalez.push(`label („${(e.textContent || '').trim().slice(0, 30)}")  for="${cil}"`);
     });
-    return { nalez: [...new Set(nalez)], pocet };
+    /* ---- přístupná jména ovladačů ---- */
+    const JMENO = (e) => {
+      const al = (e.getAttribute('aria-label') || '').trim();
+      if (al) return al;
+      const lb = e.getAttribute('aria-labelledby');
+      if (lb) {
+        const t = lb.split(/\s+/).map((i) => {
+          const x = document.getElementById(i); return x ? (x.textContent || '').trim() : '';
+        }).join(' ').trim();
+        if (t) return t;
+      }
+      const txt = (e.textContent || '').replace(/\s+/g, ' ').trim();
+      if (txt) return txt;
+      const ti = (e.getAttribute('title') || '').trim();
+      if (ti) return ti;
+      const img = e.querySelector('img[alt]');
+      if (img && (img.getAttribute('alt') || '').trim()) return img.getAttribute('alt').trim();
+      if (e.id) {
+        const l = document.querySelector('label[for="' + e.id + '"]');
+        if (l && (l.textContent || '').trim()) return (l.textContent || '').trim();
+      }
+      const l2 = e.closest ? e.closest('label') : null;
+      if (l2 && (l2.textContent || '').trim()) return (l2.textContent || '').trim();
+      return '';   // placeholder se za jméno NEBERE — viz hlavička
+    };
+    const OVLADACE = 'button, a[href], input:not([type="hidden"]), select, textarea,'
+      + ' [role="button"], [role="tab"], [role="switch"]';
+    const bezJmena = []; let ovladacu = 0;
+    document.querySelectorAll(OVLADACE).forEach((e) => {
+      ovladacu++;
+      if (!JMENO(e)) {
+        const r = e.getBoundingClientRect();
+        bezJmena.push(popisPrvku(e) + (r.width > 0 && r.height > 0 ? '' : ' (zrovna skrytý)'));
+      }
+    });
+    return { nalez: [...new Set(nalez)], pocet, bezJmena: [...new Set(bezJmena)], ovladacu };
   });
 
   vazeb += v.pocet;
   poStrankach[s] = v.pocet;
+  ovladacu += v.ovladacu;
   pravda(`${s}: každá vazba vede na existující prvek (${v.pocet})`,
     v.nalez.length === 0, v.nalez.slice(0, 8).join('\n      '));
+  pravda(`${s}: a každý ovladač má přístupné jméno (${v.ovladacu})`,
+    v.bezJmena.length === 0, v.bezJmena.slice(0, 8).join('\n      '));
   await ctx.close();
 }
 
@@ -110,6 +165,12 @@ for (const s of STRANKY) {
    další, pozná se to. */
 pravda(`a bylo vůbec co měřit (${vazeb} vazeb)`, vazeb >= 43,
   `nalezeno jen ${vazeb} vazeb — stránky se nenačetly`);
+/* Druhá pojistka proti měření prázdna, zvlášť pro jména: mez je podle
+   měření: na těchhle deseti stránkách 678. (Celé měření v oddílu 95 jich
+   na dvanácti stránkách našlo 946 — jiný seznam stránek a delší čekání,
+   proto jiné číslo.) */
+pravda(`a bylo co měřit u jmen (${ovladacu} ovladačů)`, ovladacu >= 500,
+  `nalezeno jen ${ovladacu} ovladačů — stránky se nenačetly`);
 pravda(`a záložky na Hlídání se opravdu postavily (${poStrankach['hlidani.html'] || 0})`,
   (poStrankach['hlidani.html'] || 0) >= 10,
   'přihlášení nezabralo — bez něj se místo záložek vykreslí výzva k přihlášení a test nic neměří');

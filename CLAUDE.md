@@ -190,6 +190,14 @@ měřit. A v témž oddílu i opačná stránka té věci: jedna změna mimo ži
 oblast je horší nález než devatenáct — čím je stránka prostší, tím
 dražší je mlčení.
 
+**Placeholder není jméno pole.** Je to nápověda, co napsat, a mizí
+právě ve chvíli, kdy se pole používá. Naměřeno (oddíl 95): z 946
+ovladačů na dvanácti typech stránek neměl přístupné jméno jeden jediný
+a byl to textarea s placeholderem. Hlídá to scripts/test-aria-cile.mjs.
+**A 945 z 946 je dobrá zpráva, kterou je stejně potřeba zapsat** —
+jinak se za rok nepozná, jestli se ta jedna výjimka spravila, nebo
+jestli se jen přestalo měřit.
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:

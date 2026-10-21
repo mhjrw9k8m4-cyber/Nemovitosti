@@ -6251,3 +6251,74 @@ A ta vlastní past stojí za druhé přečtení: **nula naměřená špatným
 zadáním vypadá stejně jako nula skutečná.** Než se z nuly udělá nález,
 musí být jasné, že se to, co se měří, vůbec stalo — proto je v každé
 sadě kontrol jedna, která měří jen to, že bylo co měřit.
+
+## 95. Devět set čtyřicet pět z devíti set čtyřiceti šesti *21. 10.*
+
+Oddíly 92–94 hledaly vady, které nejsou vidět, u hlášení změn. Druhá
+třída téhož druhu je **ovladač bez přístupného jména**: tlačítko,
+které má na obrazovce ikonu a odečítači se ohlásí jako „tlačítko".
+Pohledem se to nepozná — na obrazovce je přitom všechno v pořádku.
+
+Žádná zkouška to nehlídala, tak jsem to změřil: na dvanácti typech
+stránek se pro každý `button`, `a[href]`, `input`, `select`, `textarea`
+a prvek s `role=button/tab/switch` spočítalo jméno v tom pořadí, v jakém
+ho hledá odečítač (`aria-label` → `aria-labelledby` → text → `title` →
+`alt` obrázku → `<label for>`), a **placeholder se za jméno nebral**.
+
+```
+index.html          všech 251 ovladačů má jméno
+nove-pozemky.html   všech 248
+okresní stránka     všech 114
+pridat.html          všech 59
+pozemek-*.html           1 ze 47 BEZ JMÉNA
+muj-inzerat.html     všech 46
+moje-data.html       všech 36
+hlidani.html         všech 30
+zpravy.html          všech 30
+data.html            všech 31
+porovnani.html       všech 27
+kontakt.html         všech 27
+                    ─────────────────────────
+                     945 z 946 jméno má
+```
+
+**Negativní výsledek je taky výsledek** a patří do zápisu: devět set
+čtyřicet pět ovladačů jméno má, a nebyla to náhoda — ikony na kartách,
+v liště i na mapě ho dostaly průběžně, jak se stavěly.
+
+### Jediný nález: pole, které se spoléhalo na placeholder
+
+```
+textarea#pz-pozn-text   → (jen placeholder) „Co jste tu viděli — příjezd,
+                            sousedi, co říkal majitel…"
+```
+
+Soukromá poznámka u pozemku. Placeholder jméno pole **není**: zmizí,
+jak se do pole začne psát, takže kdo se k němu vrátí, už nemá co
+přečíst, a odečítače ho berou jen jako záložní zdroj. Opravou je
+`aria-labelledby="pz-pozn-nadpis"` — ukazuje se na nadpis oddílu
+(„Moje poznámka"), který nad polem stojí. Vlastní `aria-label` by byl
+druhé místo, kde se říká totéž, a ta dvě místa se jednou rozejdou.
+
+### Hlídač: tam, kde už se ARIA měří
+
+Nepřibyla nová zkouška — přibyla druhá polovina do
+`scripts/test-aria-cile.mjs`, která už tyhle vazby na stránkách měří
+a má pro to i přihlášený falešný účet. Z 11 kontrol je 23. Do seznamu
+jejích stránek se přidala jedna stránka pozemku (první podle abecedy),
+protože právě tam ten jediný nález byl a bez ní by ho zkouška neviděla.
+Měří se 678 ovladačů (jiný seznam stránek a kratší čekání než u měření
+výš, proto jiné číslo než 946), a mez „bylo co měřit" je podle toho.
+
+```
+aria-labelledby z pole poznámky pryč → spadlo „každý ovladač má jméno" na stránce pozemku
+```
+
+### Co z toho platí dál
+
+**Placeholder není jméno.** Je to nápověda, co do pole napsat, a mizí
+právě ve chvíli, kdy se pole používá.
+
+A k těm číslům: **945 z 946 je dobrá zpráva, kterou je stejně potřeba
+napsat** — jinak se za rok nepozná, jestli se ta jedna výjimka
+spravila, nebo jestli se jen přestalo měřit.

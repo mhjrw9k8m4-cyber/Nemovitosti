@@ -1394,9 +1394,10 @@
           '<h2 id="pz-pozn-nadpis">Moje poznámka</h2>' +
           '<span class="pz-pozn-stav" id="pz-pozn-stav" role="status" aria-live="polite"></span>' +
         '</div>' +
+
         '<textarea id="pz-pozn-text" class="pz-pozn-pole" rows="3" maxlength="2000" ' +
           'placeholder="Co jste tu viděli — příjezd, sousedi, co říkal majitel…" ' +
-          'aria-describedby="pz-pozn-kde"></textarea>' +
+          'aria-labelledby="pz-pozn-nadpis" aria-describedby="pz-pozn-kde"></textarea>' +
 
         '<p class="pz-pozn-kde" id="pz-pozn-kde"></p>' +
       '</section>' +
