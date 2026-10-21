@@ -356,3 +356,22 @@
 {"k":"Horní Nezly|St. 93|Litoměřice|50.577|14.229#1rqp5zq","m":"Horní Nezly","o":"Litoměřice","dr":"pozemek","t":"drazba","v":50,"c":63520,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
 {"k":"Cerhonice|466/10|Písek|49.410|14.066#17alwdm","m":"Cerhonice","o":"Písek","dr":"pozemek","t":"drazba","v":1326,"c":2254000,"od":"2026-09-30","do":"2026-10-19","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-19","proc":"zmizela"}
+{"k":"Brňany|—|Litoměřice|50.478|14.155#3f4y0","m":"Brňany","o":"Litoměřice","dr":"trvalý travní porost","t":"sale","v":3770,"c":135000,"od":"2026-09-16","do":"2026-10-20","proc":"cena"}
+{"k":"Liběšice|—|Louny|50.282|13.595#3b7ca","m":"Liběšice","o":"Louny","dr":"ostatní plocha","t":"sale","v":2620,"c":149000,"od":"2026-09-14","do":"2026-10-20","proc":"cena"}
+{"k":"Bakov nad Jizerou|—|Mladá Boleslav|50.459|14.958#2slet","m":"Bakov nad Jizerou","o":"Mladá Boleslav","dr":"orná půda","t":"sale","v":193989,"c":11200000,"od":"2026-09-14","do":"2026-10-20","proc":"cena"}
+{"k":"Ostrov u Macochy|—|Blansko|49.382|16.763#ed4liq","m":"Ostrov u Macochy","o":"Blansko","dr":"pozemek","t":"sale","v":1059,"c":4288950,"od":"2026-10-19","do":"2026-10-20","proc":"cena"}
+{"k":"Lomnice nad Lužnicí|—|Jindřichův Hradec|49.099|14.723#hxz8fy","m":"Lomnice nad Lužnicí","o":"Jindřichův Hradec","dr":"orná půda","t":"sale","v":1007,"c":28000,"od":"2026-09-19","do":"2026-10-20","proc":"zmizela"}
+{"k":"Vřeskovice|—|Klatovy|49.521|13.284#4s3ex","m":"Vřeskovice","o":"Klatovy","dr":"orná půda","t":"sale","v":3050,"c":120000,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Ludmírov|—|Prostějov|49.641|16.854#4s6n7","m":"Ludmírov","o":"Prostějov","dr":"orná půda","t":"sale","v":5525,"c":220000,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Mistřice|—|Uherské Hradiště|49.080|17.560#4sfky","m":"Mistřice","o":"Uherské Hradiště","dr":"orná půda","t":"sale","v":1518,"c":79000,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Stradonice|—|Kladno|50.290|14.049#3bane","m":"Stradonice","o":"Kladno","dr":"orná půda","t":"sale","v":2296,"c":205000,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Mníšek|—|Liberec|50.829|15.048#i0fvz2","m":"Mníšek","o":"Liberec","dr":"trvalý travní porost","t":"sale","v":7252,"c":875000,"od":"2026-09-19","do":"2026-10-20","proc":"zmizela"}
+{"k":"Veselí nad Moravou|—|Hodonín|48.966|17.399#hzqijc","m":"Veselí nad Moravou","o":"Hodonín","dr":"orná půda","t":"sale","v":2150,"c":349000,"od":"2026-09-19","do":"2026-10-20","proc":"zmizela"}
+{"k":"Prosetín|—|Chrudim|49.833|15.958#1f8w4","m":"Prosetín","o":"Chrudim","dr":"stavební pozemek","t":"sale","v":2300,"c":3500000,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Hostomice|—|Beroun|49.840|14.020#pqn4","m":"Hostomice","o":"Beroun","dr":"pozemek","t":"sale","v":1248,"c":4305600,"od":"2026-09-14","do":"2026-10-20","proc":"zmizela"}
+{"k":"Libochovice|—|Litoměřice|50.406|14.042#1rqp5zm","m":"Libochovice","o":"Litoměřice","dr":"orná půda","t":"drazba","v":2697,"c":74618,"od":"2026-09-30","do":"2026-10-20","proc":"zmizela"}
+{"k":"Libochovice|122|Litoměřice|50.406|14.042#1rqp5zo","m":"Libochovice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1470,"c":133770,"od":"2026-09-30","do":"2026-10-20","proc":"zmizela"}
+{"k":"Litoměřice|—|Litoměřice|50.534|14.131#1rqp5zn","m":"Litoměřice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":2647,"c":292839,"od":"2026-09-30","do":"2026-10-20","proc":"zmizela"}
+{"k":"Libochovice|385/2|Litoměřice|50.406|14.042#1rqp5zp","m":"Libochovice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1195,"c":613035,"od":"2026-09-30","do":"2026-10-20","proc":"zmizela"}
+{"k":"Lovečkovice|47|Litoměřice|50.621|14.263#1rqp5zk","m":"Lovečkovice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":144,"c":109550,"od":"2026-09-30","do":"2026-10-20","proc":"zmizela"}
+{"k":"Ruda nad Moravou|St. 50|Šumperk|49.981|16.874#18647ch","m":"Ruda nad Moravou","o":"Šumperk","dr":"zastavěná plocha a nádvoří","t":"drazba","v":285,"c":2970000,"od":"2026-09-25","do":"2026-10-20","proc":"zmizela"}
