@@ -125,6 +125,13 @@ něco, co není. Hlídat se to dá jen měřením v prohlížeči (jména z DOM
 proti selektorům), ne čtením zdroje — skládaná jména jako
 `'opp-item ' + d.type` žádný regex spolehlivě nesloží.
 
+**U odkládání měř dvakrát a věz, co ti měření zaslepilo.** „Globál se
+při načtení nepřečte" má tři různé příčiny a každá vede k jinému
+spouštěči: nikdy se nepoužije, použije se až po rolování, nebo až
+odpoví cizí server. A u modulu, který se spouští SÁM (posluchač na
+DOMContentLoaded), neříká nečtený globál vůbec nic — je to jen export.
+Naměřeno v oddílu 88: ze čtyř nul byly dvě nálezy a dvě past.
+
 **Kdo zavede nový zápis, zavede ho i všem čtenářům.** Zkoušky čtou
 zdroje vzory, a vzor umí jen tu abecedu, kterou dostal. Naměřeno
 (oddíl 87): průhledné barvy se začaly psát `rgba(var(--c-ok-rgb),.12)`,

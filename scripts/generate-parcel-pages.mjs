@@ -536,6 +536,50 @@ export function migrujLeaflet(h) {
   return out;
 }
 
+/* ODLOŽENÉ MODULY SE NA UKONČENÉ STRÁNKY NEDOSTANOU SAMY.
+ *
+ * Když se v předloze vymění `<script src="…">` za
+ * `<meta name="pk-odlozeny" data-klic="…" data-src="…">`, srovná
+ * migrujSkripty níž seznam skriptů podle předlohy — takže ukončená
+ * stránka o ten skript přijde. Metaznačku jí ale NEDOPLNÍ nikdo:
+ * žádný krok v řetězu <meta> nesynchronizuje. Modul by se tedy na
+ * 167 ukončených stránkách nenačetl nikdy a nikdo by se to nedozvěděl,
+ * protože zbytek stránky vypadá v pořádku.
+ *
+ * Doplňuje se to tudy, stejnou cestou a ze stejného důvodu jako
+ * migrujLeaflet výš. Idempotentní: co už ve stránce je, se nepřidává.
+ * Vkládá se za metaznačku `pk-leaflet-css` (na stránce pozemku je
+ * vždycky) a když tam není, tak před `</head>`. */
+export function migrujOdlozene(sablona, h) {
+  const zPredlohy = [...sablona.matchAll(/[ \t]*<meta name="pk-odlozeny"[^>]*>\n?/g)].map((m) => m[0]);
+  if (!zPredlohy.length) return h;
+  let out = h;
+  /* NEJDŘÍV PRYČ SE ZNAČKOU <script>, A MUSÍ SE TO DĚLAT TUDY.
+     migrujSkripty níž takový skript NEODEBERE: jakmile zmizí
+     z předlohy, platí pro něj pravidlo o „cizím" skriptu, a ten
+     zůstává, dokud soubor existuje na disku. Odložený modul na disku
+     pochopitelně je, takže by si o něj ukončená stránka říkala
+     značkou dál — a stáhla by ho, i když se o pár řádků výš dotahuje
+     na vyžádání. Naměřeno na 246 ukončených stránkách. */
+  for (const znacka of zPredlohy) {
+    const soubor = (/data-src="(?:js\/(?:min\/)?)?([A-Za-z0-9_-]+\.js)/.exec(znacka) || [])[1];
+    if (!soubor) continue;
+    const vzor = new RegExp('[ \\t]*<script src="js/(?:min/)?'
+      + soubor.replace('.', '\\.') + '(?:\\?v=[A-Za-z0-9]+)?"[^>]*></script>\\n?', 'g');
+    out = out.replace(vzor, '');
+  }
+  /* A pak metaznačky, které ve stránce nejsou — celým blokem naráz, aby
+     držely pořadí předlohy. Vkládá se za `pk-leaflet-css` (na stránce
+     pozemku je vždycky), a když tam není, před `</head>`. */
+  const chybi = zPredlohy.filter((znacka) => {
+    const klic = (/data-klic="([^"]+)"/.exec(znacka) || [])[1];
+    return klic && !new RegExp('<meta name="pk-odlozeny" data-klic="' + klic + '"').test(out);
+  }).map((znacka) => znacka.replace(/^[ \t]*/, '  ').replace(/\n?$/, '\n')).join('');
+  if (!chybi) return out;
+  const zaCss = /([ \t]*<meta name="pk-leaflet-css"[^>]*>\n)/;
+  return zaCss.test(out) ? out.replace(zaCss, '$1' + chybi) : out.replace('</head>', chybi + '</head>');
+}
+
 /* SKRIPTY NA UKONČENÝCH STRÁNKÁCH ZAOSTÁVALY ZA PŘEDLOHOU.
  *
  * Ukončená stránka se obsahově nepřepisuje (viz generuj()), takže se na
@@ -1579,7 +1623,7 @@ export function generuj() {
          ukončené stránky se jinak nepřepisují, takže by si 221 z nich
          komentáře z předlohy neslo až do smazání. */
       const migrovano = bezKomentaruVHtml(migrujPrebytecnyDiv(migrujUkoncenaData(
-        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))), uz[1])));
+        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1])));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }

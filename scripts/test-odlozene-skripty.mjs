@@ -380,5 +380,122 @@ await ctx.close();
   await ctx5.close();
 }
 
+// ===== 7) A TOTÉŽ NA STRÁNCE POZEMKU: VRSTVY ÚŘADŮ AŽ S MAPOU =======
+/* Odložení dlouho končilo na úvodní stránce. Stránka pozemku si přitom
+   brala 21 skriptů a je to nejnavštěvovanější typ stránky (1 949 kusů,
+   vstup z vyhledávačů). Změřeno Object.defineProperty na window
+   (telefon 390 i monitor 1280): PK_VRSTVY se při načtení nepřečte ANI
+   JEDNOU a po dorolování k mapě dvakrát; PKBpej se čte teprve tehdy, až
+   vrstvy vrátí přepínač BPEJ. Dohromady 3 410 B brotli, které stahoval
+   každý — i ten, kdo k mapě nikdy nedoroluje, protože nahoře na stránce
+   je cena, popis a vybavení.
+   Měří se obě půlky, protože „nestahuje se" by splnil i modul, který se
+   nenačte nikdy a vrstvy by zmizely. */
+{
+  /* Měří se na ŽIVÉ stránce. Na ukončené se půlka obsahu nekreslí
+     a měřilo by se něco jiného. */
+  const VYROBENA = /^pozemek-.+-[0-9a-z]{5,8}\.html$/;
+  let zivaStranka = null;
+  for (const f of fs.readdirSync(KOREN)) {
+    if (!VYROBENA.test(f)) continue;
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    if (h.indexOf('window.PK_UKONCENO=') < 0) { zivaStranka = f; break; }
+  }
+  pravda('našla se živá stránka pozemku, na které jde měřit',
+    !!zivaStranka, 'všechny stránky pozemků jsou ukončené?');
+
+  if (zivaStranka) {
+    const ctx5 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+    /* Cizí servery se neptáme — vrstvy úřadů jsou cizí služby a tahle
+       kontrola měří, co si stáhne NÁŠ web, ne jestli odpovídá katastr. */
+    await ctx5.route('**/*', (r) => {
+      const u = new URL(r.request().url());
+      return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
+    });
+    const p5 = await ctx5.newPage();
+    const stazeno5 = [];
+    p5.on('request', (r) => {
+      if (/\/js\/min\/mapove-vrstvy\.js/.test(r.url())) stazeno5.push('vrstvy');
+      if (/\/js\/min\/bpej\.js/.test(r.url())) stazeno5.push('bpej');
+    });
+    const padlo5 = [];
+    p5.on('pageerror', (e) => padlo5.push(String(e)));
+    await p5.goto(`${BASE}/${zivaStranka}`, { waitUntil: 'load' });
+    /* Na výsledek, ne na čas: stránka je hotová, až stojí cena. */
+    await p5.waitForFunction(() => !!document.getElementById('pz-verdict'),
+      null, { timeout: 30000 }).catch(() => {});
+    pravda('stránka pozemku se vykreslila, je na čem měřit',
+      await p5.evaluate(() => !!document.getElementById('pzm')),
+      'rám mapy (#pzm) na stránce není');
+    pravda('při otevření se vrstvy úřadů ani BPEJ nestahují',
+      stazeno5.length === 0, 'stáhlo se: ' + stazeno5.join(', '));
+    pravda('a ani jeden z těch dvou modulů na stránce není',
+      await p5.evaluate(() => !window.PK_VRSTVY && !window.PKBpej),
+      'modul se na stránku dostal i bez dorolování');
+
+    /* A druhá půlka: po dorolování k mapě se dotáhnout MUSÍ. */
+    await p5.evaluate(() => {
+      const m = document.getElementById('pzm');
+      if (m) m.scrollIntoView({ block: 'center' });
+    });
+    await p5.waitForFunction(() => !!window.PK_VRSTVY, null, { timeout: 30000 }).catch(() => {});
+    pravda('po dorolování k mapě se vrstvy úřadů dotáhnou',
+      await p5.evaluate(() => !!window.PK_VRSTVY),
+      'PK_VRSTVY se nedotáhlo — vrstvy by na stránce pozemku nebyly nikdy');
+    pravda('a spolu s nimi i BPEJ (čte se až v přepínači, čekat by bylo pozdě)',
+      await p5.evaluate(() => !!window.PKBpej),
+      'PKBpej se nedotáhlo — přepínač BPEJ by chvíli nefungoval');
+    pravda('a stránka u toho nespadla', padlo5.length === 0, padlo5.slice(0, 2).join(' | '));
+    await ctx5.close();
+  }
+}
+
+/* A do HTML: předloha ani vyrobené stránky si ty dva moduly nesmějí
+   brát značkou <script>. Pozor, tohle není samozřejmé — migrujSkripty
+   v generátoru takový skript z UKONČENÝCH stránek neodebere: jakmile
+   zmizí z předlohy, platí pro něj pravidlo o „cizím" skriptu a ten
+   zůstává, dokud soubor existuje na disku. Odebírá ho proto
+   migrujOdlozene, a tahle kontrola hlídá, že to opravdu udělal —
+   naměřeno na 246 ukončených stránkách. */
+{
+  const ODLOZENE_POZEMEK = [['vrstvy', 'mapove-vrstvy.js'], ['bpej', 'bpej.js']];
+  const predloha = fs.readFileSync(path.join(KOREN, 'pozemek.html'), 'utf8');
+  for (const [klic, soubor] of ODLOZENE_POZEMEK) {
+    pravda(`pozemek.html má <meta name="pk-odlozeny" data-klic="${klic}">`,
+      new RegExp('<meta name="pk-odlozeny" data-klic="' + klic + '" data-src="js/min/'
+        + soubor.replace('.', '\\.') + '\\?v=[A-Za-z0-9]+">').test(predloha),
+      'bez metaznačky (a bez razítka) nemá dotahniModul odkud vzít adresu');
+  }
+  /* VYROBENÁ STRÁNKA SE NEPOZNÁ PODLE JMÉNA — tuhle past si generátor
+     píše u sebe a já do ní šlápl: `pozemek-od-obce.html` je ručně psaný
+     rádce a kontrola na něm hlásila chybějící metaznačku. Pozná se podle
+     obsahu, značkou `window.PK_POZEMEK=`, stejně jako v
+     scripts/generate-parcel-pages.mjs. */
+  const stranky = fs.readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)
+    && fs.readFileSync(path.join(KOREN, f), 'utf8').indexOf('window.PK_POZEMEK=') >= 0);
+  pravda(`je co měřit — vyrobených stránek pozemků je ${stranky.length}`,
+    stranky.length > 100, 'stránky pozemků se nenašly');
+  const spatne = [];
+  let ukoncenych = 0;
+  for (const f of stranky) {
+    const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    if (h.indexOf('window.PK_UKONCENO=') >= 0) ukoncenych++;
+    for (const [klic, soubor] of ODLOZENE_POZEMEK) {
+      if (new RegExp('<script src="js/(?:min/)?' + soubor.replace('.', '\\.')).test(h)) {
+        spatne.push(f + ': bere ' + soubor + ' značkou <script>');
+      }
+      if (!new RegExp('data-klic="' + klic + '"').test(h)) {
+        spatne.push(f + ': chybí metaznačka ' + klic);
+      }
+    }
+    if (spatne.length > 6) break;
+  }
+  // PŘEDPOKLAD: bez ukončených stránek by se nezměřilo to, kvůli čemu to tu je
+  pravda(`a jsou mezi nimi ukončené (${ukoncenych}), kterých se šablona netýká`,
+    ukoncenych > 0, 'žádná ukončená stránka — migrujOdlozene by se neměl na čem ukázat');
+  pravda('žádná stránka pozemku si ty dva moduly nebere značkou, a všechny mají metaznačky',
+    spatne.length === 0, spatne.slice(0, 6).join('\n      '));
+}
+
 await prohlizec.close();
 hotovo();

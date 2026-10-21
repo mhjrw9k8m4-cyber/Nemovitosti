@@ -1485,11 +1485,28 @@
       });
     }
 
-    if (global.PK_VRSTVY) {
-      nabidniVrstvy();
-    } else {
-      vrstvy.innerHTML = '';
-    }
+    /* VRSTVY ÚŘADŮ SE DOTAHUJÍ AŽ TEĎ — tedy až se staví mapa, a ta se
+       staví teprve, když je na dohled (viz pripravMapu níž). Nahoře na
+       stránce je cena, popis a vybavení, takže kdo nedoroluje, nestáhne
+       nic.
+       Změřeno (Object.defineProperty na window, telefon 390 i monitor
+       1280): PK_VRSTVY se při načtení nepřečte ANI JEDNOU a po rolování
+       k mapě dvakrát; PKBpej se čte teprve tehdy, až vrstvy vrátí
+       přepínač BPEJ. Dohromady 3 410 B brotli (mapove-vrstvy 1 892,
+       bpej 1 518) na každé z 1 949 stránek.
+       BPEJ SE DOTAHUJE SPOLU S VRSTVAMI, ne vlastním spouštěčem: čte se
+       uvnitř pridejPrepinac(), tedy ve chvíli, kdy už se přepínače
+       kreslí — a čekat tam na stažení by znamenalo přepínač, který
+       chvíli nefunguje.
+       Když se dotažení nepovede, vrstvy se chovají jako dřív, tedy jako
+       by modul nebyl: řádek se vyprázdní a mapa jede dál. */
+    Promise.all([
+      dotahniModul('vrstvy', 'PK_VRSTVY').catch(function () { return false; }),
+      dotahniModul('bpej', 'PKBpej').catch(function () { return false; }),
+    ]).then(function () {
+      if (global.PK_VRSTVY) nabidniVrstvy();
+      else vrstvy.innerHTML = '';
+    });
 
     /* VELIKOST MAPY. Jedno „invalidateSize" po 60 ms nestačí: na telefonu
        se výška mění ještě dlouho potom (načtou se písma, doskáče lišta
@@ -1559,6 +1576,30 @@
      scripts/orazitkuj-verze.mjs dalo razítko ?v= jako každému jinému
      odkazu; bez razítka by se po výměně knihovny vracejícím návštěvníkům
      servírovala stará. */
+  /* ODLOŽENÝ MODUL: TÁŽ ÚMLUVA JAKO NA ÚVODNÍ STRÁNCE.
+     Adresa stojí v `<meta name="pk-odlozeny" data-klic="…" data-src="…">`,
+     takže jí scripts/orazitkuj-verze.mjs dá razítko ?v= jako každému
+     jinému odkazu. Slib se schovává, aby se modul nestahoval dvakrát
+     (stránka se vykresluje dvakrát — z handoffu a pak z plných dat).
+     Když se stažení nepovede, slib se SMAŽE: příští pokus to zkusí
+     znovu, místo aby se opíral o odmítnutý slib. */
+  var moduly = {};
+  function dotahniModul(klic, jmeno) {
+    if (global[jmeno]) return Promise.resolve(true);
+    if (moduly[klic]) return moduly[klic];
+    var zn = document.querySelector('meta[name="pk-odlozeny"][data-klic="' + klic + '"]');
+    var adresa = zn && zn.getAttribute('data-src');
+    if (!adresa) return Promise.resolve(false);
+    moduly[klic] = new Promise(function (dej, chyba) {
+      var s = document.createElement('script');
+      s.src = adresa;
+      s.onload = function () { dej(!!global[jmeno]); };
+      s.onerror = function () { delete moduly[klic]; chyba(new Error(klic)); };
+      document.head.appendChild(s);
+    });
+    return moduly[klic];
+  }
+
   var leafletSlib = null;   // null = nezkoušeno; jinak Promise<boolean>
   function sLeafletem(hotovo) {
     if (global.L && global.L.map) return hotovo();

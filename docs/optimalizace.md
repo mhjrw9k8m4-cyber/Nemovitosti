@@ -5621,3 +5621,110 @@ skládal z pole (oddíl 86), sabotáž, která nedošla až na stránku
 (oddíl 85), a teď dvě zkoušky, které nový zápis barvy neumí přečíst.
 Pokaždé to chytila sada, ne přemýšlení; a pokaždé byla správná oprava
 „naučit čtenáře", ne „ubrat, co měří".
+
+## 88. Vrstvy úřadů až s mapou — a tři pasti, které měření samo neukáže *21. 10.*
+
+Odložení modulů (oddíly 64 a 76) skončilo na úvodní stránce. Stránka
+pozemku si přitom brala **21 skriptů, ~57,9 kB brotli** — a je to
+nejnavštěvovanější typ stránky: 1 949 kusů, vstup z vyhledávačů.
+
+### Měření
+
+Object.defineProperty na `window`, živá stránka pozemku, telefon 390
+i monitor 1280, cizí servery odstřižené. Počet čtení globálu při
+načtení / po dorolování k mapě:
+
+```
+PK_CENY 47/47 · PKAuth 18/18 · PKKlic 12/12 · PKPoznamky 8/8 · PK_RADCE 5/5
+PK_SNIMEK 3/6 · PKHlidani 3/3 · PKUlozeneUcet 3/3 · PKVybaveni 3/3
+PKZlevneni 2/2 · PKVideno 2/2 · PKCisteni 2/2 · PK_TERMINY 1/1
+PK_VRSTVY 0/2 · PKBpej 0/0 · PKMenu 0/0 · PKHlavicka 0/0
+```
+
+Čtyři nuly — a **dvě z nich nejsou nálezy**:
+
+* **`PKMenu`** se nečte, protože `menu.js` se spouští SÁM
+  (`napoj(document)` na `DOMContentLoaded`) a globál je jen export,
+  o který nikdo nestojí. Odložit ho znamená vypnout hamburger.
+* **`PKHlavicka`** neexistuje: `hlavicka.js` globál nedefinuje vůbec.
+  Měřil jsem jméno, které na stránce nikdy nebylo, a dostal nulu.
+
+Z toho první pravidlo: **„globál se nepřečte" je důkaz jen u modulu,
+který se POUŽÍVÁ skrz svůj globál.** U modulu, který se spustí sám,
+to neříká nic.
+
+A třetí past vyšla až z druhého měření:
+
+* **`PK_VRSTVY`** má po načtení nulu, ale po dorolování k mapě dvě
+  čtení. Mapa se na stránce pozemku staví teprve, až je na dohled
+  (oddíl 30) — nahoře je cena, popis a vybavení. Bez toho druhého
+  měření by „nikdy nepřečteno" znamenalo jen „ještě se k tomu
+  nedostalo" a odložení by rozbilo vrstvy každému, kdo doroluje.
+* **`PKBpej`** má nulu i po dorolování, ale **jen v sandboxu**:
+  `pripravene()` se nedoptá cizích služeb, nevrátí žádnou vrstvu,
+  takže se nepřidá přepínač a řádek `def.id === 'bpej' && global.PKBpej`
+  neproběhne. Se sítí se přečte hned, jak se vrstvy vykreslí.
+
+`PK_RADCE` (5 955 B brotli, druhý největší modul) kandidát **není**:
+kreslí blok „Co byste měli vědět" a počet „N věcí" vedle nadpisu při
+prvním vykreslení.
+
+### Co se tedy udělalo
+
+`mapove-vrstvy.js` (1 892 B brotli) a `bpej.js` (1 518 B) patří k jedné
+věci — vrstvám úřadů — a dotahují se **tím samým spouštěčem jako
+Leaflet**: až se staví mapa. Kdo k mapě nedoroluje, nestáhne **3 410 B
+brotli**; stránka si bere 19 skriptů místo 21.
+
+BPEJ se dotahuje **spolu** s vrstvami, ne vlastním spouštěčem: čte se
+uvnitř `pridejPrepinac()`, tedy ve chvíli, kdy se přepínače už kreslí,
+a čekat tam na stažení by znamenalo přepínač, který chvíli nefunguje.
+
+Mechanismus je týž jako na úvodní stránce — `<meta name="pk-odlozeny"
+data-klic="…" data-src="…">` a `dotahniModul()`, takže adresy razítkuje
+`orazitkuj-verze.mjs` jako každý jiný odkaz. Na stránce pozemku k tomu
+stačilo osmnáct řádků vedle už existujícího `sLeafletem()`.
+
+### A past v generátoru, kterou si generátor sám předpověděl
+
+Ukončené stránky (dnes 246) se obsahově nepřepisují, jen projdou řetězem
+migrátorů. `migrujSkripty` srovná seznam skriptů podle předlohy —
+**ale odložený modul z nich neodebere.** Má to u sebe napsané: jakmile
+skript zmizí z předlohy, platí pro něj pravidlo o „cizím" skriptu
+a ten zůstává, dokud soubor existuje na disku. Odložený modul na disku
+pochopitelně je. A metaznačku by ukončené stránce nedoplnil nikdo:
+žádný krok v řetězu `<meta>` nesynchronizuje.
+
+Výsledek první verze: **2 181 stránek mělo metaznačky A ZÁROVEŇ si
+dál bralo oba moduly značkou** `<script>`. Nový `migrujOdlozene` proto
+dělá obojí — odebere značky a doplní metaznačky, celým blokem naráz, aby
+držely pořadí předlohy.
+
+### Čím je to prokázané
+
+| co se pokazilo | co spadlo |
+|---|---|
+| `dotahniModul` nic nestáhne | *„po dorolování se vrstvy dotáhnou"* + *„a spolu s nimi BPEJ"* (57/2) |
+| `migrujOdlozene` vyřazen z řetězu, a metaznačky odebrány z 246 ukončených | *„žádná stránka pozemku … a všechny mají metaznačky"* (58/1) |
+
+Druhý řádek napodruhé. **První pokus o něj neprokázal nic:** vyřadil
+jsem migrátor z řetězu a zkouška prošla — protože ukončené stránky už
+metaznačky měly z předchozího, správného běhu. Sabotáž migračního kroku
+musí odčinit i to, co ten krok udělal dřív, jinak ji zakryje už hotový
+stav. (Dnes potřetí varianta téhož: oddíl 84 — sabotáž, která nechá
+naživu druhou cestu; oddíl 85 — sabotáž, která nedojde až na stránku.)
+
+A při psaní té zkoušky jsem šlápl do pasti, kterou generátor taky
+popisuje u sebe: **vyrobená stránka se nepozná podle jména.** Filtr
+`pozemek-*.html` chytil `pozemek-od-obce.html`, což je ručně psaný
+rádce, a kontrola na něm hlásila chybějící metaznačku. Pozná se podle
+obsahu, značkou `window.PK_POZEMEK=`.
+
+### Co z toho platí dál
+
+**Měření ukáže, co se NEČTE; co z toho jde odložit, rozhodne až druhá
+otázka — udělá ten modul něco sám?** A třetí: *kdy* se to čte. Nula
+hned po načtení může znamenat „nikdy", „až po rolování" nebo „až
+odpoví cizí server", a každá z těch tří odpovědí vede k jinému
+spouštěči. Měřit se proto musí aspoň dvakrát a vědět, co měření
+zaslepilo.

@@ -971,11 +971,13 @@
       });
     }
 
-    if (global.PK_VRSTVY) {
-      nabidniVrstvy();
-    } else {
-      vrstvy.innerHTML = '';
-    }
+    Promise.all([
+      dotahniModul('vrstvy', 'PK_VRSTVY').catch(function () { return false; }),
+      dotahniModul('bpej', 'PKBpej').catch(function () { return false; }),
+    ]).then(function () {
+      if (global.PK_VRSTVY) nabidniVrstvy();
+      else vrstvy.innerHTML = '';
+    });
 
     function premer() { try { m.invalidateSize({ pan: false }); } catch (e) {} }
 
@@ -1007,6 +1009,23 @@
     }
     global.addEventListener('resize', premer);
     global.addEventListener('orientationchange', function () { setTimeout(premer, 250); });
+  }
+
+  var moduly = {};
+  function dotahniModul(klic, jmeno) {
+    if (global[jmeno]) return Promise.resolve(true);
+    if (moduly[klic]) return moduly[klic];
+    var zn = document.querySelector('meta[name="pk-odlozeny"][data-klic="' + klic + '"]');
+    var adresa = zn && zn.getAttribute('data-src');
+    if (!adresa) return Promise.resolve(false);
+    moduly[klic] = new Promise(function (dej, chyba) {
+      var s = document.createElement('script');
+      s.src = adresa;
+      s.onload = function () { dej(!!global[jmeno]); };
+      s.onerror = function () { delete moduly[klic]; chyba(new Error(klic)); };
+      document.head.appendChild(s);
+    });
+    return moduly[klic];
   }
 
   var leafletSlib = null;
