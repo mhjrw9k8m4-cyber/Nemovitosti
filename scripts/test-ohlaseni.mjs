@@ -245,18 +245,34 @@ if (stranka) zkontroluj('pozemek', await zmerPoradi(stranka, '#pz-sour-kop'));
     pravda('výpis: „nic nenalezeno" se taky ohlásí',
       /Nic nenalezeno/.test(prazdno[prazdno.length - 1] || ''), JSON.stringify(prazdno));
 
-    /* d) posun mapy není nový dotaz — po každém tažení opakovat
-       „15 pozemků" je otrava, ne pomoc. */
+    /* d) PŘEKRESLENÍ BEZ ZMĚNY DOTAZU se neohlašuje. V životě je to
+       posun mapy: výřez se změní, počet „na mapě" taky, ale dotaz ne —
+       a opakovat „15 pozemků" po každém tažení je otrava, ne pomoc.
+       SPOUŠTÍ SE TO PŘEKRESLENÍM, NE TAŽENÍM MAPY, a má to naměřený
+       důvod: první podoba téhle kontroly mapou hýbat zkoušela
+       (`PK_MAPA.panBy`), jenže Leaflet se stahuje až když je mapa na
+       dohled — na téhle stránce se tedy nepostavil, posun se nestal
+       a kontrola byla PLANÁ: prošla i tehdy, když se porovnávání
+       dotazu z kódu odebralo. Teď se pošle `change` na řazení BEZ
+       změny volby, což je přesně „překresli se stejným dotazem". */
     await p.evaluate(() => { window.__oh.length = 0; });
-    await p.evaluate(() => {
-      const m = window.PK_MAPA || window.mapa || null;
-      if (m && m.panBy) m.panBy([60, 0]);
-      else window.dispatchEvent(new Event('resize'));
+    const prekresleno = await p.evaluate(() => {
+      const pred = window.PK_VYKRESLENI || 0;
+      const s = document.getElementById('map-sort');
+      if (!s) return false;
+      s.dispatchEvent(new Event('change', { bubbles: true }));   // táž volba
+      const m = window.PK_MAPA;
+      if (m && m.panBy) { try { m.panBy([60, 0]); } catch (e) {} }
+      return pred;
     });
     await p.waitForTimeout(1800);
-    const posun = await p.evaluate(() => window.__oh.slice());
-    pravda('výpis: posun mapy stejný dotaz neohlašuje znovu', posun.length === 0,
-      JSON.stringify(posun));
+    const posun = await p.evaluate(([pred]) => ({ oh: window.__oh.slice(),
+      vykresleni: (window.PK_VYKRESLENI || 0) - pred }), [prekresleno]);
+    // PŘEDPOKLAD: bez překreslení by se neměřilo nic
+    pravda(`výpis: překreslení se opravdu stalo (${posun.vykresleni}×)`,
+      posun.vykresleni >= 1, 'renderList() neproběhl — kontrola níž by byla planá');
+    pravda('výpis: překreslení beze změny dotazu se neohlašuje znovu', posun.oh.length === 0,
+      JSON.stringify(posun.oh));
     pravda('výpis: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
   }
   await p.close();
