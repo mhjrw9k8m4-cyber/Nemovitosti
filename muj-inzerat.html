@@ -39,7 +39,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=cd31e487">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=3614a56c">
   <style>
     /* Karta profilu */
     /* Kotvu ani ořez karta nepotřebuje: position:relative a
@@ -54,7 +54,7 @@
     .pf-head{display:flex; align-items:center; gap:12px;}
     .pf-avatar{flex:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
       font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:0.02em;
-      box-shadow:0 0 0 4px rgba(31,81,56,0.16), var(--glow);}
+      box-shadow:0 0 0 4px rgba(var(--znacka-hluboka-rgb),0.16), var(--glow);}
     .pf-id{min-width:0; flex:1;}
     .pf-id .pf-hello{display:flex; align-items:center; gap:4px; font-family:var(--font-mono); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:var(--popisek-proklad); font-weight:600;}
     /* Tečka u „Přihlášeno jako" svítila --c-sale, což je modrá barva
@@ -99,7 +99,7 @@
     /* Prázdný stav */
     .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--plocha-karta);}
     .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center;
-      background:rgba(126,196,157,.09); border:1px solid var(--line-strong);}
+      background:rgba(var(--plocha-znacka-svetla-rgb),.09); border:1px solid var(--line-strong);}
     .pf-empty-ico svg{width:32px; height:32px; color:var(--text);
       /* 1,125 proto, že 32 × 1,125 ÷ 24 = 1,5 px — tah jako u všech
          ostatních ikon. V HTML je u ikony atribut stroke-width="1.6",
@@ -140,7 +140,7 @@
        (.map-side .opp-media) má svůj změřený důvod zapsaný u sebe. */
     .mi-lthumb{position:relative; margin-bottom:12px; width:256px; max-width:100%;}
     .mi-lthumb img{width:100%; aspect-ratio:16/10; height:auto; object-fit:cover; border-radius:var(--r-md); display:block;}
-    .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(12,26,18,.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
+    .mi-lthumb .n{position:absolute; left:10px; bottom:10px; background:rgba(var(--text-rgb),.66); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:var(--r-sm);}
     .mi-lhead{display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px;}
     .mi-lplace{font-size:16px; font-weight:700; color:var(--text); line-height:1.2; letter-spacing:-0.01em;}
     .mi-lstatus{flex:none; font-size:12px; font-weight:700; padding:4px 8px; border-radius:var(--r-pill); white-space:nowrap; background:var(--plocha-zapustena); color:var(--muted); border:1px solid var(--line-strong);}
@@ -152,14 +152,14 @@
     /* Nález noční kontroly. Jantar, ne červená: inzerát dál běží, jen je
        na něm co spravit — je to upozornění, ne rozsudek. */
     .mi-potiz{margin:0 0 12px; padding:8px 12px; border-radius:var(--r-sm);
-      background:rgba(232,179,65,.13); border:1px solid rgba(124,81,5,.32); color:var(--c-warn); font-size:13px;}
+      background:rgba(var(--accent-warm-bright-rgb),.13); border:1px solid rgba(var(--accent-warm-rgb),.32); color:var(--c-warn); font-size:13px;}
     .mi-potiz ul{margin:4px 0 0; padding-left:16px;}
     .mi-potiz li{margin:2px 0;}
     .mi-potiz-pozn{display:block; margin-top:4px; font-size:12px; opacity:.85;}
     /* Čeká na kontrolu. Modrošedá, ne jantar: není to nález ani chyba,
        je to prostě stav, ve kterém se zatím nic nepokazilo. */
     .mi-ceka{margin:0 0 12px; padding:8px 12px; border-radius:var(--r-sm);
-      background:rgba(31,81,56,.09); border:1px solid rgba(31,81,56,.3); color:var(--text); font-size:13px; line-height:1.6;}
+      background:rgba(var(--znacka-hluboka-rgb),.09); border:1px solid rgba(var(--znacka-hluboka-rgb),.3); color:var(--text); font-size:13px; line-height:1.6;}
     .mi-ceka b{display:block; margin-bottom:2px;}
     .mi-ceka span{display:block; color:var(--muted); font-size:13px;}
     .mi-ceka-ne{background:rgba(176,58,46,.1); border-color:rgba(176,58,46,.35);}

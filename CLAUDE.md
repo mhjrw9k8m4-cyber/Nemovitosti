@@ -125,6 +125,15 @@ něco, co není. Hlídat se to dá jen měřením v prohlížeči (jména z DOM
 proti selektorům), ne čtením zdroje — skládaná jména jako
 `'opp-item ' + d.type` žádný regex spolehlivě nesloží.
 
+**U barvy nerozhoduje její hodnota, ale jak vypadá tam, kde se
+používá.** Průhlednou barvu se musí měřit PO SLOŽENÍ přes podklad
+a při těch průhlednostech, které se opravdu používají. Naměřeno
+(oddíl 91): patnáct barev bez jména mělo od pojmenované dvojnice
+odchylku 0,7–4,8 v OKLabu, ale po složení 0,08–1,42, tedy nic — byly
+to barvy z paletky napsané přibližně, ne nové barvy. A obráceně:
+#1F5138 vypadala s 2,48 jako „totéž", při průhlednosti 0,7 ale vyšla
+2,80 a jméno dostala.
+
 **U odkládání měř dvakrát a věz, co ti měření zaslepilo.** „Globál se
 při načtení nepřečte" má tři různé příčiny a každá vede k jinému
 spouštěči: nikdy se nepoužije, použije se až po rolování, nebo až

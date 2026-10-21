@@ -5867,3 +5867,84 @@ Dva hlídače na jednu věc, každý z jedné strany: `test-mrtve-styly`
 hlásí **pravidlo bez prvku**, `test-mrtva-jmena` **prvek bez pravidla**.
 Ani jeden sám nestačí — a ten druhý musí měřit v prohlížeči, protože
 jméno, které se skládá, ve zdroji celé nestojí.
+
+## 91. Dvacet čtyři barev bez jména — a patnáct z nich už jméno mělo *21. 10.*
+
+Oddíl 87 skončil nálezem, který byl větší než on sám: kromě 39 kopií
+pojmenovaných barev je ve zdrojích **136 výskytů 24 barev, které token
+nemají vůbec**. Vypadalo to na práci „vymyslet dvacet čtyři jmen".
+Nebyla.
+
+### Měření rozhodlo za mě
+
+Pro každou z těch 24 barev jsem spočítal odchylku v OKLabu (×100) proti
+každé pojmenované barvě z paletky — a hlavně **odchylku po složení**:
+barvu položenou přes podklad při těch průhlednostech, které se opravdu
+používají.
+
+| barva | výskytů | nejblíž | odchylka barvy | po složení |
+|---|---|---|---|---|
+| #1F5138 | 46 | `--plocha-znacka` | 2,48 | **2,80** |
+| #08140E | 13 | `--text` | 1,78 | 1,16 |
+| #14231C | 6 | `--plocha-tmava` | 0,68 | 0,08 |
+| #E8B341 | 5 | `--accent-warm-bright` | 4,81 | 1,11 |
+| #7C5105 | 4 | `--accent-warm` | 3,05 | 0,97 |
+| #0C1A12 | 4 | `--text` | 2,10 | 1,42 |
+| …a dalších devět | | | | **do 1,10** |
+
+Čtrnáct barev je po složení od své pojmenované dvojnice vzdálené
+**nejvýš 1,42** — to je pod mezí, kde se dvě plochy vedle sebe dají
+rozeznat. Nejsou to tedy nové barvy; jsou to **barvy z paletky napsané
+přibližně**. Snesly se tedy k tokenu, ze kterého měly vycházet, zápisem
+`rgba(var(--token-rgb), a)` podle oddílu 87.
+
+A měření zároveň ukázalo pět vnitřních hnízd: `#08140E`, `#0C1A12`,
+`#0C1611`, `#09150F` a `#08140D` jsou mezi sebou do odchylky 2,48 —
+pět zápisů téže téměř černé zelenočerné, lišících se o jednotku
+v kanálu. Všech pět teď bere `--text`.
+
+### Dvě barvy jméno dostaly, protože si ho zasloužily
+
+**`--znacka-hluboka:#1F5138`** (46 výskytů) — nejčastější barva webu
+bez jména, a ani jedno z těch míst ji nepoužívá naplno. Drží prstenec
+zaměření, záři, obrys tlačítek, osmnáct okrajů, dvanáct tónovaných
+ploch a šest stínů. Ke `--plocha-znacka` má po složení **2,80**, a to
+při nejsilnější použité průhlednosti (0,7 u obrysu tlačítek) — tam už
+je rozdíl vidět, když se dvě plochy položí vedle sebe. Sloučit je je
+rozhodnutí o vzhledu, ne úklid, a **neudělalo se.**
+
+**`--plocha-znacka-svetla:#7EC49D`** (21 výskytů) — tónovaná plocha
+a okraj u panelů, které zvou k akci: rozbalovací rada, poštovní kontakt
+na šesti stránkách, ikona odeslaného přihlášení. Od každé zelené
+v paletce je daleko (po složení `--c-ok` 6,60 · `--text-ondeep-mute`
+4,92 · `--znacka-svetla` 9,78 · `--brand-live` 10,22), takže přimknout
+se nedala.
+
+### Výsledek a co zbývá
+
+Z **24 barev / 136 výskytů** je po tomhle oddílu **8 barev / 23
+výskytů** — a všech osm je skutečně svoje. Zbývá na nich jedno
+rozhodnutí o vzhledu, které jsem si nevzal:
+
+* **Čtyři červené na jednu práci.** `#E4483D` (6×), `#B03A2E` (4×),
+  `#C83C28` (2×) a `#AE1E1E` (1×) dělají všechny totéž: světlý
+  červený podklad pod textem v `--c-exekuce-ink` — termín dražby „dnes",
+  zamítnutý inzerát, chyba ve zprávách, slabý poměr v předloze. Čtyři
+  stránky, čtyři vlastní červené. Proti `--c-exekuce` jsou po složení
+  **0,73 · 2,69 · 2,97 · 4,65**, takže tři z nich by se sloučit daly
+  bez povšimnutí a čtvrtá (`#E4483D` při 0,3) by se viditelně změnila.
+  Je to táž úloha jako „bílá má šest jmen" z oddílu 22 — a stejně jako
+  tam jde o rozhodnutí, ne o úklid.
+* `#5BD98A` (3×) a `#5FB07E` (3×) — dvě jasné zeleně v září; od
+  `--c-ok` 16,28 a 6,92.
+* `#FFC43C` (2×) a `#6E9682` (2×).
+
+### Co z toho platí dál
+
+**U barvy nerozhoduje její hodnota, ale jak vypadá tam, kde se
+používá.** Patnáct z těch dvaceti čtyř barev mělo od pojmenované
+dvojnice odchylku 0,7 až 4,8 — a po složení při skutečné průhlednosti
+z toho bylo 0,08 až 1,42, tedy nic. Kdybych rozhodoval podle hodnoty,
+vymyslel bych patnáct jmen pro barvy, které už jméno měly. A naopak:
+u `#1F5138` vypadala odchylka 2,48 jako „totéž", ale při 0,7 vyšla
+2,80 — proto zůstala.
