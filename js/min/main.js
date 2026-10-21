@@ -3756,8 +3756,8 @@
       var hot = !!hotIds[d._id];
       var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
-      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
-        + (jeVidene ? ' je-videne' : '');
+
+      li.className = 'opp-item' + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
 
       li.setAttribute('data-pk', pkey(d));
@@ -3996,7 +3996,7 @@
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
       + ikonaNastroje('rychly') + 'Procházet po jednom</button>' + tlacitka;
 
-    countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
+    countEl.innerHTML = '<span>' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
 

@@ -1012,7 +1012,10 @@
        zrovna vyšla šířka: „Kopírovat" zůstalo nahoře u čísla
        a „Navigovat" spadlo samo na druhou linku přes celou šířku.
        Takhle se lámou jako celek — údaj nahoře, akce pod ním. */
-    return '<div class="pz-sour pz-sour-mapa">' +
+    /* Modifikátor `pz-sour-mapa` tu stál bez jediného pravidla ve
+       stylopisu — vypadal jako varianta, kterou něco kreslí jinak,
+       a žádná taková varianta není. */
+    return '<div class="pz-sour">' +
         '<span class="pz-sour-radek">' +
           '<span class="pz-sour-k">Souřadnice</span>' +
           '<code id="pz-sour-text">' + esc(sour) + '</code>' +

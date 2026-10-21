@@ -108,6 +108,23 @@ Píšou se **proč**, ne *co*. Čtvrtina souborů má v hlavičce odstavec
 zkoušelo a nefungovalo. Je to nejcennější věc v repozitáři: brání tomu,
 aby někdo (včetně AI) „uklidil" řešení, jehož důvod není vidět z kódu.
 
+**Komentář, který lže, je horší než žádný.** Žádný nikoho nikam
+nepošle; lživý pošle. Když se funkce odstraní nebo přestaví, komentář
+u ní se musí přepsat týmž krokem — jinak zůstane popis světa, který už
+neplatí, a nikdo se o tom nedozví, protože na obrazovce se nic
+nepokazilo. Naměřeno (oddíl 83): patnáct řádků popisovalo v přítomném
+čase barevné obtažení karty podle druhu, které na webu nikdy nebylo,
+a jiný komentář tvrdil, že stylopis schová nadpis na telefonu —
+pravidlo k tomu neexistuje. Když se měření v komentáři ještě hodí,
+nemaže se: přepíše se na **záznam rozhodnutí** („zváženo, neuděláno,
+a proč").
+
+**Jméno třídy je slib, že existuje pravidlo.** Jméno, které píše JS
+a nečte je ani stylopis, ani kód, ani zkouška, pošle čtenáře hledat
+něco, co není. Hlídat se to dá jen měřením v prohlížeči (jména z DOM
+proti selektorům), ne čtením zdroje — skládaná jména jako
+`'opp-item ' + d.type` žádný regex spolehlivě nesloží.
+
 ## Testy
 
 237 zkoušek v CI (116 bez prohlížeče, 121 s ním) ve třech úlohách:

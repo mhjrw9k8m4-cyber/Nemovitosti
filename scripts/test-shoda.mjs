@@ -395,6 +395,22 @@ if (podezrely) {
   const { mapaSouboru, klicNabidky } = await import('./generate-parcel-pages.mjs');
   const STRANKY = mapaSouboru(CISTA);
   let zmereno = 0;
+  /* ARCHIV SE NEPŘEDĚLÁVÁ, A NEMÁ TEDY VERDIKT.
+     Dražba po termínu propadne v generátoru do větve ukončených (viz
+     „DRAŽBA PO TERMÍNU UŽ NENÍ ŽIVÁ NABÍDKA" v
+     scripts/generate-parcel-pages.mjs): stránka dostane pruh „Nabídka
+     už není aktuální", `noindex,follow` a ŽÁDNÉ srovnání s obvyklou
+     cenou. Vzorky se přitom vybírají z pozemků, u kterých se syrový
+     a očištěný model rozcházejí — a mezi ty se takové nabídky dostanou
+     snadno: 21. 10. to byly dvě dražby s termínem 20. 10.
+     (pozemek-litomerice-loveckovice-nil4ie a -libochovice-155xnsc)
+     a kontrola na nich ohlásila „verdikt se vůbec nevykreslil", tedy
+     chybu u stránek, které ho podle návrhu mít nemají. Přeskakují se
+     proto stejně jako v šesti dalších zkouškách (test-osnova,
+     test-misto-prahy, test-nabidka-pro-stroje, test-stranky-pozemku).
+     Nepočítají se do `zmereno`, takže se hledá dál — a kolik jich bylo,
+     se vypíše, ať je vidět, že se neměřilo prázdno. */
+  let archivu = 0;
   const spatne = [];
   for (const v of vzorky) {
     if (zmereno >= 3) break;
@@ -402,6 +418,7 @@ if (podezrely) {
     if (!zapis) continue;
     const cesta = new URL('../' + zapis.soubor, import.meta.url).pathname;
     if (!existsSync(cesta)) continue;
+    if (readFileSync(cesta, 'utf8').indexOf('window.PK_UKONCENO=') >= 0) { archivu++; continue; }
     const ps = await ctx.newPage();
     await ps.goto(`${BASE}/${zapis.soubor}`, { waitUntil: 'load' });
     await domUtichlo(ps, 350);   // bylo waitForTimeout(3000)
@@ -440,8 +457,10 @@ if (podezrely) {
     }
     zmereno++;
   }
-  pravda(`změřily se skutečné stránky pozemků (${zmereno})`, zmereno >= 3,
-    `jen ${zmereno} — stránky se nenašly nebo neexistují`);
+  pravda(`změřily se skutečné stránky pozemků (${zmereno}`
+    + `${archivu ? `, ${archivu} přeskočeno jako archiv` : ''})`, zmereno >= 3,
+    `jen ${zmereno} (archivu ${archivu}) — stránky se nenašly, neexistují, `
+    + 'nebo jsou všechny vzorky po termínu');
   pravda('a na každé stojí číslo z modelu BEZ duplicit, tedy totéž co na mapě',
     spatne.length === 0, spatne.join('\n      '));
 }

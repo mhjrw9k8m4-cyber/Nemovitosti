@@ -633,7 +633,7 @@
     if (!isFinite(d.lat) || !isFinite(d.lng)) return '';
     var sour = d.lat.toFixed(5) + ', ' + d.lng.toFixed(5);
 
-    return '<div class="pz-sour pz-sour-mapa">' +
+    return '<div class="pz-sour">' +
         '<span class="pz-sour-radek">' +
           '<span class="pz-sour-k">Souřadnice</span>' +
           '<code id="pz-sour-text">' + esc(sour) + '</code>' +

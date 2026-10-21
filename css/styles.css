@@ -2794,22 +2794,25 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
   margin-bottom:16px; cursor:pointer;
   transition:transform var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), opacity var(--cas-zakladni) var(--ease);}
 .opp-item:hover{box-shadow:var(--e2);}
-/* OBTAŽENÍ PODLE DRUHU. Karta nesla barvu druhu jen v odznaku na rohu
-   snímku; ve výpisu plném karet se tím druh poznal až po přečtení.
-   Okraj ho řekne dřív, než člověk začne číst — a je to právě okraj,
-   ne plocha: barevná výplň by z výpisu udělala duhu a brala pozornost
-   fotkám i ceně.
-   SÍLA JE ZMĚŘENÁ, ne odhadnutá. Neutrální okraj karty (--line-strong)
-   má proti výplni 1,90 : 1 a barevná obtažení míří do téhož pásma —
-   naměřeno 1,90 až 2,00 : 1. Je tedy vidět barvu, ale karta nekřičí.
-   Procenta jsou proto u každého druhu jiná: oranžová u dražby a tyrkys
-   u obce jsou samy o sobě světlé, tmavě červená u exekuce naopak tmavá,
-   takže stejné číslo by dalo pětkrát jinak silný okraj (při jednotných
-   45 % vycházelo 1,82 až 2,24).
-   Zbytek webu používá stejný recept (rgba 0,4–0,55 u .is-hot
-   a .is-featured), takže tohle nic nového nezavádí.
-   Fallback: color-mix neumí starý prohlížeč, ten nechá neutrální okraj
-   z pravidla výš — karta pak vypadá jako dřív, nerozbije se nic. */
+/* OBTAŽENÍ PODLE DRUHU: ZVÁŽENO, NEUDĚLÁNO.
+   ------------------------------------------------------------------
+   Tenhle komentář tu patnáct řádků popisoval v přítomném čase barevný
+   okraj karty podle druhu — a žádné takové pravidlo ve stylopisu
+   nikdy nestálo. Kdo šel za `.opp-item.drazba` nebo `.is-hot`, hledal
+   pravidlo, které neexistuje. Zůstává jako záznam rozhodnutí, protože
+   měření v něm má cenu a bylo by hloupé ho zahodit:
+
+   Neutrální okraj karty (--line-strong) má proti výplni 1,90 : 1
+   a barevná obtažení míří do TÉHOŽ pásma — naměřeno 1,90 až 2,00 : 1.
+   Okraj podle druhu by tedy od neutrálního nebyl k rozeznání; aby
+   byl, musel by křičet. Jednotné procento navíc nejde: oranžová
+   u dražby a tyrkys u obce jsou samy světlé, tmavě červená u exekuce
+   tmavá, takže při jednotných 45 % vycházelo 1,82 až 2,24.
+
+   A hlavně: od té doby má karta vlastní plochu (bílá deska, vlasová
+   linka, stín — viz pravidlo výš) a druh nese odznak v rohu snímku.
+   Barevný okraj by k tomu přidal třetí hlas o témže. Jméno druhu se
+   proto na kartu už ani nepíše (viz js/main.js, renderList). */
 /* Zvednutí karty bylo dřív jen posunutí — stín zůstal stejný, takže se karta
    nezvedla, jen poskočila. Teď se zvedne i stínem. */
 .opp-item:hover, .opp-item.hl{transform:translateY(-2px);}
@@ -2923,6 +2926,10 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
 .rv-bilance{display:flex; gap:8px; font-size:13px; font-weight:700;
   font-variant-numeric:tabular-nums; color:var(--muted); white-space:nowrap;}
 .rv-bilance:empty{display:none;}
+/* ZELENÁ JEN NA JEDNÉ POLOVINĚ, A JE TO ZÁMĚR. „♥ uloženo" je to,
+   co člověk z procházení chce mít; „✕ skryto" je jen druhá strana téhož
+   počtu a zůstává v tlumené barvě, kterou dává celá lišta výš. Pravidlo
+   pro .rvb-ne tu tedy NECHYBÍ — bylo by to přepsání téže hodnoty. */
 .rv-bilance .rvb-ano{color:var(--znacka);}
 .rv-bilance .zmena{animation:rvPocet var(--cas-pomaly) var(--ease);}
 @keyframes rvPocet{0%{transform:scale(1);} 40%{transform:scale(1.28);} 100%{transform:scale(1);}}

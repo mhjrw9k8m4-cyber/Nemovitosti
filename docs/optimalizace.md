@@ -5177,3 +5177,168 @@ která už není potřeba, se má zrušit, ne zapomenout.
 `animation:authFade .35s` byl jediný tvrdě psaný čas v celém webu mimo
 dlouhé pulzy animací. Tokeny jsou `--cas-zakladni` (.2s) a
 `--cas-pomaly` (.4s); nahrazeno druhým z nich.
+
+## 83. Pět jmen tříd, která nikdo nečte, a dva komentáře, které lhaly *21. 10.*
+
+Napsal jsem si prototyp, který porovnává jména tříd psaná v JS se
+selektory ve stylopisech. Našel deset jmen; po jednom po druhém z nich
+zbylo **pět skutečných**. Žádné z nich není vidět — a právě proto to
+nikdo nenahlásil.
+
+### Co se našlo
+
+Na kartě ve výpisu (`js/main.js`, `renderList`) stálo:
+
+```js
+li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '')
+  + (isFeatured(d) ? ' is-featured' : '') + (jeVidene ? ' je-videne' : '');
+```
+
+Z těch čtyř jmen čte někdo **jen `je-videne`**. Na
+`.opp-item.sale/.drazba/.exekuce`, `.is-hot` ani `.is-featured` není ve
+stylopisu jediné pravidlo, v kódu jediné `classList.contains` a ve
+zkouškách jediný selektor.
+
+A hned za tím ten horší nález: v `css/styles.css` nad `.opp-item` stálo
+**patnáct řádků komentáře, které v přítomném čase popisovaly barevné
+obtažení karty podle druhu** — i s naměřenými kontrasty, procenty po
+druzích a záložním pravidlem pro prohlížeče bez `color-mix`. Žádné
+takové pravidlo ve stylopisu nebylo; po komentáři následovalo hned
+`.opp-item:hover`. Komentář přibyl commitem b4fd3d0a9, poslední živý
+`color-mix` z webu odstranil 53c8fe746.
+
+Totéž podruhé u nadpisu výpisu: `countEl.innerHTML` stavěl
+`<span class="mc-hl">` a komentář u toho tvrdil, že „dlouhý popis je ve
+vlastní značce a **stylopis ho na telefonu schová**". Pravidlo `.mc-hl`
+ve stylopisu není (ověřeno i v očištěných kopiích). Nadpis se
+neschovává — a schovávat se nemá, protože novější řešení
+(`.map-count` jako flex po dílcích, `.mc-sep{display:none}`) ten
+problém řeší zalamováním po dílcích.
+
+A ještě `pz-sour-mapa` — modifikátor bez pravidla, který vypadal jako
+varianta, kterou něco kreslí jinak.
+
+### Co se NESMĚLO smazat
+
+`hot` a `isFeatured()` jsou živé: `hot` kreslí odznak `.opp-hot`,
+`isFeatured()` řadí výpis, barví značku na mapě, kreslí odznak
+„Zvýrazněno" a `featured` nastavuje platební webhook, který hlídá
+`scripts/test-platba.mjs`. V datech je dnes `featured` pravdivé u 0
+z 1 970 nabídek — jenže to je stav trhu, ne mrtvý kód. Zmizela jen ta
+jména tříd, ne výpočty za nimi.
+
+### Jeden nález, který se při kontrole rozpadl
+
+`.rvb-ne` v bilanci rychlého výběru (`♥ N` / `✕ N`) jsem si nejdřív
+zapsal jako chybějící pravidlo: stylovaná je jen `.rvb-ano`. Není to
+pravda — `.rv-bilance` dává celé liště `color:var(--muted)` a zelená
+`.rvb-ano` ji přebíjí, takže tlumené „✕" je záměr. Zůstává tedy, jen
+je u něj teď napsané, že pravidlo pro druhou polovinu **nechybí**,
+protože by to bylo přepsání téže hodnoty.
+
+### Proč to staticky hlídat nejde — a čím to změřit
+
+Prototyp **nálezy na kartě nenašel sám**: `'opp-item ' + d.type +
+(hot ? ' is-hot' : '')` není jeden řetězec a žádný regex nad zdrojem to
+spolehlivě nesloží. Musel jsem na ně přijít čtením.
+
+Měření v prohlížeči to ale umí, a vyšlo krátké: na index.html je po
+vykreslení výpisu v DOM **332 různých jmen tříd** a 32 z nich nemá
+pravidlo v `css/*.css`. Z těch 32 je **26 Leafletových** (stylopis
+k nim je `vendor/leaflet/leaflet.css`, který se do porovnání musí
+přidat), takže k rozhodnutí zbývá šest. Hlídač je tedy proveditelný;
+patří k němu tabulka výjimek se zapsaným „kdo to jméno čte", jakou má
+`scripts/test-mrtve-styly.mjs` pro opačný směr.
+
+### A při tom měření vypadl nález na jinou kůru
+
+Dvě ze těch šesti jmen jsou `cta-full` a `cta-short` — dvě varianty
+popisku v tlačítku „Přidat pozemek" v liště. Celé tlačítko je přitom
+`display:none` na **všech** šířkách (`css/styles.css:1638` a znovu
+`:4273` uvnitř `@media` pro telefon), zatímco komentář nad prvním
+z nich tvrdí, že „na mobilu se ukáže přímo v liště". Zapsáno jako
+samostatný úkol — jestli má lišta CTA mít, je rozhodnutí majitele, ne
+úklid.
+
+### Co z toho platí dál
+
+**Jméno třídy je slib, že existuje pravidlo.** Když neexistuje, pošle
+čtenáře hledat něco, co není — a zpráva o tom nepřijde nikdy, protože
+na obrazovce se nic nepokazilo. Platí to i pro komentáře: tenhle oddíl
+našel dva, které popisovaly v přítomném čase funkci, jež na webu nikdy
+nebyla nebo už dávno není. **Komentář, který lže, je horší než žádný** —
+žádný nikoho nikam nepošle.
+
+## 84. Zkouška, kterou shodil kalendář *21. 10.*
+
+CI spadlo na `test-shoda.mjs` — na kontrole „a na každé stojí číslo
+z modelu BEZ duplicit, tedy totéž co na mapě":
+
+```
+pozemek-litomerice-loveckovice-nil4ie.html: verdikt se vůbec nevykreslil
+pozemek-litomerice-libochovice-155xnsc.html: verdikt se vůbec nevykreslil
+```
+
+Lokálně se to reprodukovalo napoprvé, takže to nebyl výpadek běhu.
+
+### Příčina není v kódu, je v datu
+
+Obě stránky jsou **dražby s termínem 20. 10.** Generátor stránek má
+pravidlo „dražba po termínu už není živá nabídka" (viz komentář
+u `generuj()` v `scripts/generate-parcel-pages.mjs`): takovou stránku
+nepřepisuje jako živou, ale pustí ji do větve **ukončených** —
+dostane pruh „Nabídka už není aktuální", `noindex,follow`, odkazy na
+podobné pozemky v okrese a po `DNI_ARCHIV` dnech se smaže. Srovnání
+s obvyklou cenou na ní **schválně není**: dražba, která skončila, nemá
+hledajícímu co nabídnout.
+
+`test-shoda.mjs` si přitom vzorky vybírá z pozemků, u kterých se
+**syrový a očištěný model rozcházejí** — a mezi ty se dražba po
+termínu dostane snadno. Včera byly ty dvě dražby živé a kontrola
+prošla; dnes jsou v archivu a kontrola hlásí chybu u stránek, které
+podle návrhu verdikt mít nemají.
+
+Jiné zkoušky to pravidlo znají a archiv vynechávají
+(`test-osnova`, `test-misto-prahy`, `test-nabidka-pro-stroje`,
+`test-stranky-pozemku` — „archiv se nepředělává"). `test-shoda` ho
+neznala, protože se jí do vzorku archivní stránka dosud nikdy
+netrefila.
+
+### Oprava
+
+Stránka s `window.PK_UKONCENO=` se přeskočí a **nepočítá se do
+změřených**, takže se hledá dál. Kolik se jich přeskočilo, se vypisuje:
+
+```
+✓ změřily se skutečné stránky pozemků (3, 2 přeskočeno jako archiv)
+```
+
+Bez toho čísla by nebylo z výpisu poznat, jestli se neměřilo prázdno.
+
+### Čím je to prokázané — a jedna sabotáž, která neprokázala nic
+
+| co se pokazilo | co spadlo |
+|---|---|
+| `fillVerdict()` nic nenapíše (a ani statická značka) | *„a na každé stojí číslo z modelu"* + *„blok s odhadem je vykreslený"* (18/2) |
+| přeskok archivu spolkne každou stránku | *„změřily se skutečné stránky pozemků (0, 32 přeskočeno)"* (22/1) |
+
+Druhý řádek je ten, který drží opravu poctivou: přeskakování nesmí umět
+spolknout celou kontrolu.
+
+**A první pokus o tu první sabotáž neprokázal nic.** Vyprázdnil jsem
+statickou značku `'<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>'`
+— a zkouška **prošla**. Verdikt totiž doplňuje ještě `fillVerdict()`
+po dotažení modelu, takže se nic nestalo. Teprve když jsem vypnul obě
+místa, kontrola spadla. Je to podruhé v téhle session (viz oddíl 76):
+**sabotáž, která nechá naživu druhou cestu k témuž výsledku, vypadá
+jako důkaz, a přitom nedokazuje nic.**
+
+### Co z toho platí dál
+
+**Zkouška, která si vzorek vybírá z dat, se dřív nebo později trefí do
+jejich okraje.** Tady to byl kalendář: termín dražby přešel a stránka
+změnila povahu. Takový pád nemá v kódu příčinu a nemá smysl ho hledat
+v posledním commitu — stačí se podívat, co na té stránce stojí dnes
+a nestálo včera. Čemu se vyhnout: „opravit" to tak, že se nález
+umlčí. Přeskočit se smí jen to, co podle návrhu měřit nejde, a i pak
+se musí vypsat, kolik toho bylo.

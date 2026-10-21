@@ -5815,8 +5815,19 @@
       var hot = !!hotIds[d._id];
       var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
-      li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')
-        + (jeVidene ? ' je-videne' : '');
+      /* JEN JMÉNA, KTERÁ NĚKDO ČTE. Stálo tu `'opp-item ' + d.type +
+         (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')`.
+         Ověřeno: na `.opp-item.sale/.drazba/.exekuce`, `.is-hot` ani
+         `.is-featured` není ve stylopisu jediné pravidlo, v kódu
+         jediné `classList.contains` a ve zkouškách jediný selektor.
+         Komentář u .opp-item v css/styles.css přitom patnáct řádků
+         popisoval barevné obtažení karty podle druhu, které na webu
+         nikdy nebylo — kdo přišel za tím jménem, hledal pravidlo,
+         které neexistuje.
+         Výpočty za nimi se NERUŠÍ: `hot` kreslí odznak .opp-hot níž
+         a isFeatured() řadí výpis, barví značku na mapě a kreslí
+         odznak „Zvýrazněno". Zmizela jen ta tři jména. */
+      li.className = 'opp-item' + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
       /* Klíč pozemku na kartě. _id je číslo z dat a mezi běhy robota se
          mění; klíč je to, pod čím si web pamatuje oblíbené, viděné
@@ -6294,12 +6305,18 @@
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
-    /* NADPIS VE DVOU DÉLKÁCH — ALE JEDNÍM TEXTEM.
+    /* NADPIS JE VLASTNÍ DÍLEK, NE ZAČÁTEK VĚTY.
        Na telefonu sdílí řádek s „Uloženými" a řazením, kam se
-       „Doporučené příležitosti · 1 930 na mapě" nevejde; rozlomilo by
-       to řádek na dva a první nabídku posunulo o dalších 22 px. Proto
-       je dlouhý popis ve vlastní značce (.mc-hl) a stylopis ho na
-       telefonu schová — zbyde „1 930 na mapě".
+       „Doporučené příležitosti · 1 930 na mapě" nevejde. Kdyby to byl
+       plynulý text, zalomil by se tam, kde zrovna došla šířka; takhle
+       se zalomí po dílcích — nadpis, za ním číslo. Pravidla k tomu
+       stojí u .map-count v css/styles.css.
+       ZNAČKA PROTO VLASTNÍ JMÉNO NEMÁ. Dřív tu stálo `class="mc-hl"`
+       a komentář tvrdil, že „stylopis ho na telefonu schová" — žádné
+       pravidlo .mc-hl ale ve stylopisu nikdy nebylo (ověřeno i v min),
+       nadpis se neschovává a schovávat se nemá, protože zalamování po
+       dílcích ten problém řeší jinak. Jméno, které nikdo nečte, posílá
+       čtenáře hledat pravidlo, které neexistuje.
 
        POČET SE NEOPISUJE DO DRUHÉ VĚTY, A MÁ TO DŮVOD. Nejdřív tu
        stála ještě krátká podoba „1 930 pozemků" a dlouhá se celá
@@ -6308,7 +6325,7 @@
        v něm „N na mapě". Se schovanou .mc-sub jim vycházelo −1.
        Jedno číslo na jednom místě je i tak správně; dvě podoby téhož
        čísla by se dřív nebo později rozešly. */
-    countEl.innerHTML = '<span class="mc-hl">' + headLabel + '</span>'
+    countEl.innerHTML = '<span>' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
     /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
