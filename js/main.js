@@ -7391,7 +7391,15 @@
     var cta = document.querySelector('.odl-cta');
     if (!items.length) {
       // Prázdný stav rovnou s tlačítkem — a schováme zdvojený CTA box níž.
-      wrap.className = 'odl-wrap odl-empty reveal is-visible';
+      /* `in`, NE `is-visible`. Na `.is-visible` není ve stylopisu jediné
+         pravidlo; viditelnost dělá `.reveal.in{opacity:1}`. Blok se
+         přitom staví AŽ po dotažení dat, takže ho pozorovatel z bootu
+         (`querySelectorAll('.reveal')` na začátku souboru) nemá jak
+         odhalit — a přepsání className mu navíc smaže `in`, kdyby ho
+         přidat stihl. Naměřeno: oddíl „Pozemky přímo od majitelů" měl
+         na telefonu 259 px a na monitoru 227 px obsahu při opacity 0,
+         tedy pod nadpisem zela děra. */
+      wrap.className = 'odl-wrap odl-empty reveal in';
       /* OBRYS, NE PLNÁ ZELEŇ — A JE TO ROZHODNUTÍ, NE ÚSTUPEK.
          Web si sám klade strop: sytou značkovou plochu smí na úvodní
          stránce nést nejvýš tři akce (scripts/test-hierarchie.mjs).
@@ -7410,7 +7418,8 @@
       return;
     }
     if (cta) cta.style.display = '';
-    wrap.className = 'odl-wrap odl-grid reveal is-visible';
+    /* Viz poznámka u prázdného stavu výš: `in`, ne `is-visible`. */
+    wrap.className = 'odl-wrap odl-grid reveal in';
     wrap.innerHTML = items.slice(0, 9).map(function (d) {
       var perM2 = zaMetr(d);
       return '<button type="button" class="odl-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +

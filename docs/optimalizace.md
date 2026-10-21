@@ -5728,3 +5728,73 @@ hned po načtení může znamenat „nikdy", „až po rolování" nebo „až
 odpoví cizí server", a každá z těch tří odpovědí vede k jinému
 spouštěči. Měřit se proto musí aspoň dvakrát a vědět, co měření
 zaslepilo.
+
+## 89. Oddíl, ve kterém obsah byl a vidět nebyl *21. 10.*
+
+Oddíl 83 skončil tím, že mrtvá jména tříd se musí hlídat **měřením
+v DOM**, a oddíl 86 tím, že staticky to nejde. Tak jsem to měření
+rozšířil na pět typů stránek — a první, co z něj vypadlo, nebyl mrtvý
+název, ale **díra na úvodní stránce**.
+
+### Co se naměřilo
+
+```
+#user-listings   třída: odl-wrap odl-empty reveal is-visible
+                 opacity: 0   transform: translateY(22px)
+                 výška: 259 px (telefon) / 227 px (monitor)
+                 dětí: 3, z toho s obdélníkem: 3
+```
+
+Tedy: oddíl **„Pozemky přímo od majitelů"** má obsah, má výšku, jeho tři
+prvky mají rozměr — a je na `opacity: 0`. Pod nadpisem zela čtvrt
+obrazovky prázdna a výzva *„Zatím tu žádné nejsou — buďte první"*
+s tlačítkem „Přidat pozemek zdarma" se nikdy neukázala. Na obou šířkách.
+
+### Příčina: jméno, které vypadá správně
+
+`renderUserListings()` v `js/main.js` přepisoval `className` na
+`'odl-wrap odl-empty reveal is-visible'`. Na `.is-visible` ale **není
+v žádném stylopisu jediné pravidlo** — ověřeno i ve všech pěti
+očištěných kopiích. Viditelnost dělá `.reveal.in{opacity:1}`.
+
+A pozorovatel to zachránit nemohl, i když přesně na to je:
+
+```js
+var reveals = document.querySelectorAll('.reveal');   // na začátku boot()
+… if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+```
+
+Seznam se čte **jednou při startu**, a tenhle blok se staví až po
+dotažení dat. A i kdyby ho pozorovatel sledoval, přepsání celého
+`className` by mu `in` smazalo.
+
+Oprava je jedno slovo: `in` místo `is-visible`. Naměřeno po ní —
+opacity 1, transform none, všechny tři prvky vidět.
+
+### Hlídač měří opacity, ne jméno třídy
+
+Nový oddíl 3 v `scripts/test-prazdno.mjs` — tedy v té zkoušce, která už
+dvě díry na stránkách našla. Měří se **spočítaná opacity** právě proto,
+že jméno třídy vypadalo správně a nefungovalo.
+
+Jeden detail stál za druhý pokus: `.reveal` má přechod 0,4 s, takže
+hned po přidání `in` je opacity ještě někde mezi nulou a jedničkou
+a kontrola hlásila `opacity 0` i na opravené verzi. Čeká se tedy na
+VÝSLEDEK (až dojede na 1), ne na čas — a když nedojede, vypíše se
+i třída, která na prvku zůstala.
+
+Prokázáno sabotáží: vrácené `is-visible` → *„a je vidět"* spadlo
+(opacity 0, výška 227 px, vidět 3 z 3 — tedy přesně ten popis díry).
+
+### Co z toho platí dál
+
+**Tohle byl nejdražší možný druh mrtvého jména: takový, který něco
+schová.** Mrtvá jména z oddílu 83 nestála nic — nikdo se o ně neopřel.
+Tohle jméno se tvářilo, že něco dělá, a v tichosti vzalo úvodní stránce
+celý oddíl. A nenahlásilo to nic: značkování vypadá správně, konzole
+mlčí, zkoušky měřily text a odkazy, které v DOM **jsou**.
+
+Proto to měření pokračuje: zbývá z něj třináct jmen bez pravidla
+(šest mrtvých k úklidu, sedm živých úchytů pro JS a zkoušky, které
+patří do tabulky výjimek s napsaným „kdo je čte"). To je další úkol —
+tenhle oddíl je jeho první nález.

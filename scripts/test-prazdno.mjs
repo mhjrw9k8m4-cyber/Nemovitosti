@@ -182,6 +182,61 @@ const KOTVY = [
 pravda(`kotvy se opravdu zkoušely (${kotevZkouseno})`, kotevZkouseno >= 3, 'jen ' + kotevZkouseno);
 pravda('žádná kotva neskončí pod hlavičkou', podHlavickou.length === 0, podHlavickou.join('\n      '));
 
+/* --- 3) CO SE VYKRESLÍ, MUSÍ BÝT VIDĚT -------------------------------
+ *
+ * Třetí díra, a tahle byla nejhorší, protože v ní obsah BYL. Oddíl
+ * „Pozemky přímo od majitelů" na úvodní stránce dostává obsah ze skriptu
+ * a ten mu při tom přepisoval `className` na
+ * `'odl-wrap odl-empty reveal is-visible'`. Na `.is-visible` ale není
+ * v žádném stylopisu jediné pravidlo (ověřeno i v očištěných kopiích);
+ * viditelnost dělá `.reveal.in{opacity:1}`. Blok tedy zůstal na
+ * `opacity:0` s posunem 22 px — naměřeno 259 px obsahu na telefonu
+ * a 227 px na monitoru, pod nadpisem zela díra a výzva „Zatím tu žádné
+ * nejsou — buďte první" se nikdy neukázala.
+ *
+ * Pozorovatel z bootu to zachránit nemohl: `querySelectorAll('.reveal')`
+ * se čte na začátku a tenhle blok se staví až po dotažení dat; přepsání
+ * className by mu navíc `in` smazalo, i kdyby ho přidat stihl.
+ *
+ * Měří se spočítaná opacity, ne jméno třídy: právě proto, že jméno
+ * vypadalo správně a nefungovalo. */
+{
+  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const p = await ctx.newPage();
+  await p.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
+  /* Na výsledek, ne na čas: blok dostane obsah teprve z dat. */
+  await p.waitForFunction(() => {
+    const e = document.getElementById('user-listings');
+    return !!e && e.children.length > 0;
+  }, null, { timeout: 60000 }).catch(() => {});
+  /* A pak na VÝSLEDEK, ne na čas: `.reveal` má přechod 0,4 s, takže
+     hned po přidání `in` je opacity ještě někde mezi nulou a jedničkou.
+     Čeká se tedy, až dojede — a když nedojede, kontrola níž to řekne
+     i s tím, co na prvku zůstalo. */
+  await p.waitForFunction(() => {
+    const e = document.getElementById('user-listings');
+    return !!e && getComputedStyle(e).opacity === '1';
+  }, null, { timeout: 10000 }).catch(() => {});
+  const m = await p.evaluate(() => {
+    const e = document.getElementById('user-listings');
+    if (!e) return null;
+    const cs = getComputedStyle(e);
+    return { deti: e.children.length, trida: e.className,
+      opacity: parseFloat(cs.opacity), vyska: Math.round(e.getBoundingClientRect().height),
+      vidi: [...e.children].filter((x) => x.getClientRects().length).length };
+  });
+  // PŘEDPOKLAD: bez obsahu by se neměřila viditelnost, ale prázdno
+  pravda('oddíl „přímo od majitelů" dostal obsah, je co měřit',
+    !!m && m.deti > 0 && m.vyska > 50,
+    m ? `dětí ${m.deti}, výška ${m.vyska} px` : 'prvek #user-listings na stránce není');
+  if (m && m.deti > 0) {
+    pravda(`a je vidět (opacity ${m.opacity}, výška ${m.vyska} px, vidět ${m.vidi} z ${m.deti})`,
+      m.opacity === 1 && m.vidi === m.deti,
+      `třída „${m.trida}" — na .is-visible není pravidlo, viditelnost dělá .reveal.in`);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 srv.close();
 

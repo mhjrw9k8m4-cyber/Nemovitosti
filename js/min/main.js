@@ -4797,7 +4797,7 @@
     var cta = document.querySelector('.odl-cta');
     if (!items.length) {
 
-      wrap.className = 'odl-wrap odl-empty reveal is-visible';
+      wrap.className = 'odl-wrap odl-empty reveal in';
 
       wrap.innerHTML = '<b>Zatím tu žádné nejsou — buďte první.</b>' +
         '<span>Vložte svůj pozemek a objeví se tady i na mapě mezi ostatními, hned jak ho ověříme.</span>' +
@@ -4806,7 +4806,8 @@
       return;
     }
     if (cta) cta.style.display = '';
-    wrap.className = 'odl-wrap odl-grid reveal is-visible';
+
+    wrap.className = 'odl-wrap odl-grid reveal in';
     wrap.innerHTML = items.slice(0, 9).map(function (d) {
       var perM2 = zaMetr(d);
       return '<button type="button" class="odl-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
