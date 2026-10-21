@@ -88,7 +88,7 @@ export function tabulka(c) {
 | Databáze | Supabase, ${c.tabulky} tabulek a ${c.funkce} funkcí (RPC). Sloučený balík k nahrání je \`supabase/00-vse.sql\`. |
 | Data příležitostí | ${fmt(c.nabidek)} nabídek (${fmt(c.prodeju)} prodejů, ${fmt(c.drazeb)} dražeb, ${fmt(c.exekuci)} exekucí), ${fmt(c.popisy)} popisů od inzerentů. Na webu je z toho vidět ${fmt(c.bezDup)} — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (\`update-data.yml\`). |
 | Stránky | ${fmt(c.pozemku)} vlastních stránek pozemků, ${c.okresnich} okresních, ${c.krajskych} krajských — všechny generované, v \`sitemap.xml\`. |
-| Zkoušky | ${fmt(c.souboru)} souborů, v CI dva úkoly: ${c.bezProhlizece} bez prohlížeče, ${c.sProhlizecem} s prohlížečem. |`;
+| Zkoušky | ${fmt(c.souboru)} souborů, v CI tři úlohy: ${c.bezProhlizece} bez prohlížeče, ${c.sProhlizecem} s prohlížečem ve dvou směnách. |`;
 }
 
 export function prepis(text, c) {
