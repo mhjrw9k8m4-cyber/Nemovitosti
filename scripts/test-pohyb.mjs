@@ -384,6 +384,62 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
   await ctx.close();
 }
 
+/* ---- A NIC JINÉHO SE TAKY HÝBAT NESMÍ ----
+   Kontroly výš měří dvě konkrétní odezvy, na kterých ten slib stojí.
+   Tahle projde CELOU stránku a počítá to, co člověka s omezením pohybu
+   obtěžuje nejvíc: NEKONEČNÉ animace (pulzování, probleskující kostra)
+   a přechody, které něčím POSOUVAJÍ (transform).
+   Naměřeno (oddíl 98): bez omezení pohybu je na úvodní stránce jedna
+   nekonečná animace a 16 posunů, na stránce pozemku jedna a dva —
+   a s omezením nula a nula na obou. Není to tedy kontrola prázdna:
+   měří se obojí a číslo bez omezení musí být nenulové, jinak by
+   stránka mohla být jen rozbitá.
+   JEDNA KONTROLA NA OBOJÍ, A MÁ TO NAMĚŘENÝ DŮVOD. Nejdřív to byly
+   dvě (animace zvlášť, posuny zvlášť) a ta na animace PADNOUT
+   NEMOHLA: v css/styles.css je jedno globální pravidlo
+   `@media (prefers-reduced-motion:reduce){ *{animation:none
+   !important; transition:none !important} }`, takže s omezením pohybu
+   nemá co proklouznout — a dokud tam je, nedá se ta kontrola shodit
+   ani novou animací bez vlastního pravidla (zkoušeno). Drží to tedy
+   jedno pravidlo a hlídá se jako jedna věc; sabotáž, která tuhle
+   kontrolu shodí, je právě odebrání toho pravidla. */
+for (const [jmeno, adresa] of [['úvodní stránka', `${BASE}/index.html`], ['stránka pozemku', ADRESA]]) {
+  const pohyb = {};
+  for (const vypnuto of [true, false]) {
+    const ctx = await kontext(vypnuto);
+    const p = await ctx.newPage();
+    await p.goto(adresa, { waitUntil: 'load' }).catch(() => {});
+    await p.waitForTimeout(2500);
+    pohyb[vypnuto ? 'vypnuto' : 'zapnuto'] = await p.evaluate(() => {
+      const nekonecne = [], posuny = [];
+      for (const e of document.querySelectorAll('*')) {
+        const st = getComputedStyle(e);
+        const r = e.getBoundingClientRect();
+        if (!(r.width > 0 && r.height > 0) || st.visibility === 'hidden' || st.display === 'none' || st.opacity === '0') continue;
+        const jm = e.id ? '#' + e.id : e.tagName.toLowerCase() + '.' + ((e.className || '').toString().split(' ')[0] || '');
+        if (st.animationName && st.animationName !== 'none' && st.animationIterationCount === 'infinite') {
+          nekonecne.push(jm + ' ← ' + st.animationName);
+        }
+        const td = parseFloat(st.transitionDuration) || 0;
+        if (td > 0 && /transform|all/.test(st.transitionProperty || '')) {
+          posuny.push(jm + ' ← ' + st.transitionProperty);
+        }
+      }
+      return { nekonecne: [...new Set(nekonecne)], posuny: [...new Set(posuny)] };
+    });
+    await ctx.close();
+  }
+  const zap = pohyb.zapnuto, vyp = pohyb.vypnuto;
+  // PŘEDPOKLAD: bez omezení pohybu se hýbat MUSÍ, jinak se neměří nic
+  pravda(`${jmeno}: bez omezení pohybu se opravdu hýbe (${zap.nekonecne.length} animací, ${zap.posuny.length} posunů)`,
+    zap.nekonecne.length + zap.posuny.length > 0,
+    'nic se nehýbe ani bez omezení — kontrola níž by byla planá');
+  pravda(`${jmeno}: s omezením pohybu se nehýbe nic`,
+    vyp.nekonecne.length === 0 && vyp.posuny.length === 0,
+    `nekonečné animace: ${vyp.nekonecne.slice(0, 4).join(' | ') || 'žádné'}`
+    + `\n      posuny: ${vyp.posuny.slice(0, 4).join(' | ') || 'žádné'}`);
+}
+
 await prohlizec.close();
 console.log('\nPohyb — drobná odezva, a pro koho ne, tak žádná');
 console.log(zpravy.join('\n'));

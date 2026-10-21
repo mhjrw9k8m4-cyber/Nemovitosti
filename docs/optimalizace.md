@@ -6526,3 +6526,58 @@ a trefit ho v jeho vlastním středu.
 A opačně: **slib v atributu je závazek na čtyři věci, ne na jednu.**
 `aria-modal="true"` je jedno slovo v kódu a znamená zaměření, zámek,
 zavření a vrácení. Tři ze čtyř oken ho napsaná měla a nedržela.
+
+## 98. Omezený pohyb: nula ku sedmnácti *21. 10.*
+
+Kdo má v systému zapnuté „omezit pohyb" (`prefers-reduced-motion:
+reduce`), nemá dostat nic, co se samo hýbe — u části lidí to vyvolá
+nevolnost nebo závrať. Dvě konkrétní odezvy (tečka pod kurzorem, pruh
+s cenou) to hlídaly od oddílu 44, ale celá stránka ne. Změřeno
+průchodem přes všechny prvky:
+
+```
+                   bez omezení pohybu        s omezením
+úvodní stránka     1 nekonečná animace,      0 a 0
+                   16 přechodů s transform
+stránka pozemku    1 a 2                     0 a 0
+```
+
+**Negativní výsledek, a je za ním jedno pravidlo**, které stojí za
+zapsání: v `css/styles.css` je
+
+```css
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  *{animation:none !important; transition:none !important;}
+}
+```
+
+Vedle něj je ještě třináct pravidel pro jednotlivé věci (`.sk`,
+`.pk-radar span`, `.mnb-ceka`, `#nav`…), která doplňují, jak má prvek
+vypadat, když se zastaví — ale to, že se zastaví, drží ta jedna
+hvězdička.
+
+### Kontrola, která padnout nemohla
+
+Nejdřív jsem napsal kontroly dvě: na nekonečné animace a na přechody
+s `transform`. Sabotáž shodila jen tu druhou. Ta první shodit nešla
+**ničím** — ani novou animací přidanou bez vlastního pravidla pro
+omezení pohybu, protože globální hvězdička zastaví i ji. Dokud to
+pravidlo ve stylopisu je, nemá co proklouznout; a kdyby zmizelo, spadne
+kontrola na posuny.
+
+Jsou z toho tedy dvě kontroly na stránku, ne tři: „bez omezení se
+opravdu hýbe" (jinak by se neměřilo nic) a „s omezením se nehýbe nic".
+Sabotáž: odebrat tu jednu hvězdičku → spadne na obou stránkách.
+
+Cestou k tomu jsem ještě vyvrátil vlastní podezření, že to celé měří
+jen emulaci v Playwrightu: na prázdné stránce s `reducedMotion:
+'reduce'` animace běží dál (`animationName: t`, `running`) a jen se
+mění `matchMedia`. Emulace tedy nic nezastavuje — zastavuje to web.
+
+### Co z toho platí dál
+
+**Když kontrolu nejde shodit, zjisti PROČ — a podle toho ji zařaď.**
+Tady byla odpověď „protože to drží jedno pravidlo výš", a správný krok
+byl kontroly sloučit a ten důvod napsat. Jinde by stejná odpověď
+znamenala, že kontrola měří nesprávnou věc.
