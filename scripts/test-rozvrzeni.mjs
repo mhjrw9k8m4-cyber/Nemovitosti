@@ -1885,6 +1885,51 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
   }
 }
 
+/* ---- NA 320 px SE STRÁNKA NESMÍ ROLOVAT DO STRANY ----
+   320 CSS px je mez, se kterou počítá WCAG 1.4.10 (reflow) — je to
+   šířka nejmenšího běžného telefonu a zároveň to, co zbude z velkého
+   displeje při 400% zvětšení. Vodorovné rolování celé stránky je na
+   takové šířce vada, kterou se dá ztratit obsah: text uteče za okraj
+   a půlka řádku není, jak přečíst.
+   Hlídá se jediná věc, protože ta rozhoduje: `scrollWidth` CELÉ
+   stránky proti jejímu `clientWidth`. Jednotlivé prvky, které jdou za
+   okraj uvnitř posuvné nebo ostříhané oblasti (dlaždice mapy, tabulka
+   s posuvem), přetékat SMÍ — to je záměr a hlídají ho zkoušky
+   u těch oblastí.
+   Naměřeno (oddíl 100): na třinácti typech stránek je přestřel 0 px
+   všude. Je to tedy hlídač proti příštímu kroku vedle, ne nález.
+   CO TUHLE KONTROLU SHODÍ A CO NE (zkoušeno sabotáží): pevná šířka
+   420 px na KARTĚ ve výpisu nezmůže nic — výpis ji ostříhá a stránka
+   se nepohne. Táž šířka na PATIČCE, tedy na prvku v běžném toku,
+   stránku rozjede o 100 px a kontrola spadne. Hlídá se tím přesně to,
+   co vodorovné rolování dělá: široký prvek, který nikdo neostříhá. */
+{
+  /* Jedna stránka pozemku a jedna okresní, obě první podle abecedy —
+     ať je volba zapsatelná a nezávisí na tom, co zrovna přinesl robot. */
+  const POZEMEK = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const OKRES = readdirSync(KOREN).filter((f) => /^pozemky-okres-.+\.html$/.test(f)).sort()[0];
+  const UZKE = ['index.html', POZEMEK, OKRES, 'pridat.html', 'muj-inzerat.html',
+    'hlidani.html', 'zpravy.html', 'porovnani.html', 'moje-data.html', 'data.html',
+    'kontakt.html', 'nove-pozemky.html', 'podminky.html'].filter(Boolean);
+  let merenych = 0;
+  for (const s of UZKE) {
+    const { ctx, p } = await otevri(s, 320, 800);
+    const v = await p.evaluate(() => ({
+      prestrel: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      sirka: document.documentElement.clientWidth,
+      obsahu: document.body ? Math.round(document.body.getBoundingClientRect().height) : 0,
+    }));
+    /* PŘEDPOKLAD: prázdná nebo nenačtená stránka se do strany neroluje
+       taky — a neměřilo by se nic. */
+    if (v.obsahu > 400) merenych++;
+    pravda(`${s}: na 320 px se stránka neroluje do strany (přestřel ${v.prestrel} px)`,
+      v.prestrel <= 1 && v.sirka === 320, JSON.stringify(v));
+    await ctx.close();
+  }
+  pravda(`a bylo co měřit — ${merenych} stránek s obsahem`, merenych >= UZKE.length - 1,
+    `stránek s obsahem jen ${merenych} z ${UZKE.length}`);
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));

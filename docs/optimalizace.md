@@ -6661,3 +6661,44 @@ k poli vrátíš. Obojí se nevylučuje — má být obojí.
 A znovu to, co se opakuje celý den: **sabotáž ukázala na cestu, která
 by mě jinak nenapadla.** Úklid při odeslání vypadal jako samozřejmý
 druhý zámek, dokud se nenašel případ, kdy je to zámek jediný.
+
+## 100. Na 320 pixelech se nic nerozjede *21. 10.*
+
+320 CSS px je mez, se kterou počítá WCAG 1.4.10: šířka nejmenšího
+běžného telefonu a zároveň to, co z velkého displeje zbude při 400%
+zvětšení. Vodorovné rolování celé stránky je na takové šířce vada,
+kterou se dá ztratit obsah — text uteče za okraj a půlka řádku není,
+jak přečíst. Měřeno na třinácti typech stránek:
+
+```
+index.html             přestřel 0 px        hlidani.html      0 px
+stránka pozemku        0 px                 zpravy.html       0 px
+okresní stránka        0 px                 porovnani.html    0 px
+pridat.html            0 px                 moje-data.html    0 px
+muj-inzerat.html       0 px                 data.html         0 px
+kontakt.html           0 px                 nove-pozemky.html 0 px
+podminky.html          0 px
+```
+
+Negativní výsledek, a zapisuje se stejně jako nález — aby se za rok
+poznalo, že se to měřilo.
+
+### Hlídač, a čím se dá shodit
+
+Hlídá se jediná věc: `scrollWidth` celé stránky proti jejímu
+`clientWidth`. Jednotlivé prvky, které jdou za okraj **uvnitř posuvné
+nebo ostříhané oblasti** (dlaždice mapy, tabulka s posuvem), přetékat
+smí — to je záměr a hlídají ho zkoušky u těch oblastí.
+
+Sabotáž to ukázala přesně: pevná šířka 420 px na **kartě ve výpisu**
+nezmůže nic, protože výpis ji ostříhá. Táž šířka na **patičce**, tedy
+na prvku v běžném toku, rozjede stránku o 100 px a kontrola spadne.
+Hlídá se tím tedy právě to, co vodorovné rolování působí: široký prvek,
+který nikdo neostříhá.
+
+### Co z toho platí dál
+
+**Přetékat uvnitř posuvné oblasti je funkce, přetékat ve stránce je
+vada.** Jedna a tatáž šířka je v jednom místě v pořádku a v druhém
+chyba — a kontrola, která to nerozlišuje, pak buď hlásí plané nálezy
+(dlaždice mapy, tabulka), nebo neřekne nic.
