@@ -68,7 +68,7 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="kupni-smlouva-pozemek.html">Kupní smlouva</a>
         <a href="kolik-stoji-koupe-pozemku.html">Náklady koupě</a>
       </div></details>
-      <a href="kontakt.html" class="nav-kontakt">Kontakt</a>
+      <a href="kontakt.html">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
         <a href="muj-inzerat.html" id="nav-ucet">Moje inzeráty</a>

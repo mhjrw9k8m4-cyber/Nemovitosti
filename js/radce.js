@@ -411,7 +411,13 @@
   function html(d, model) {
     var r = rady(d, model);
     var radky = r.radky.map(function (x) {
-      return '<div class="gtk-row gtk-' + x.lvl + '"><span class="gtk-k">' + x.klic + '</span><span class="gtk-v">' + x.txt + '</span></div>';
+      /* ÚROVEŇ SE NEPÍŠE DO TŘÍDY. Stálo tu `gtk-' + x.lvl`, tedy
+         gtk-ok / gtk-mid / gtk-warn — a na žádnou z nich není ve
+         stylopisu pravidlo, stejně jako na g-* ve světlé podobě níž.
+         Vážnost se tedy počítá a nikde se neukazuje; jméno třídy jen
+         slibovalo pravidlo, které není. Kdyby se vážnost měla ukázat,
+         `rady()` ji vrací dál v `x.lvl` a dopsat ji je na jeden řádek. */
+      return '<div class="gtk-row"><span class="gtk-k">' + x.klic + '</span><span class="gtk-v">' + x.txt + '</span></div>';
     }).join('');
     var otaz = r.otazky.map(function (o) { return '<li>' + o + '</li>'; }).join('');
     /* Zavřený i tady. „Rozkliknout pozemek" znamená kartu na mapě stejně
@@ -435,7 +441,8 @@
   function htmlSvetla(d, model) {
     var r = rady(d, model);
     var radky = r.radky.map(function (x) {
-      return '<div class="g-row g-' + x.lvl + '"><span class="g-k">' + x.klic + '</span><span class="g-v">' + x.txt + '</span></div>';
+      /* Viz poznámka u tmavé podoby výš: úroveň se do třídy nepíše. */
+      return '<div class="g-row"><span class="g-k">' + x.klic + '</span><span class="g-v">' + x.txt + '</span></div>';
     }).join('');
     var otaz = r.otazky.map(function (o) { return '<li>' + o + '</li>'; }).join('');
     return '<div class="pz-gtk">' + radky +

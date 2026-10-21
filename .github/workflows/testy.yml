@@ -790,6 +790,9 @@ jobs:
       - name: Tři moduly se stahují až při prvním použití
         run: node scripts/test-odlozene-skripty.mjs
 
+      - name: Jméno třídy je slib, že existuje pravidlo
+        run: node scripts/test-mrtva-jmena.mjs
+
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 

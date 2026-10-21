@@ -5798,3 +5798,72 @@ Proto to měření pokračuje: zbývá z něj třináct jmen bez pravidla
 (šest mrtvých k úklidu, sedm živých úchytů pro JS a zkoušky, které
 patří do tabulky výjimek s napsaným „kdo je čte"). To je další úkol —
 tenhle oddíl je jeho první nález.
+
+## 90. Hlídač na „jméno je slib, že existuje pravidlo" *21. 10.*
+
+Oddíl 83 našel mrtvá jména tříd čtením. Oddíl 86 předvedl, že čtení
+nestačí — smazal jsem `d.type` jako mrtvé a shodil tím `test-barvy`,
+protože ho zkouška hledá jménem z pole. Oddíl 89 našel měřením první
+skutečnou závadu. Tenhle oddíl ten hlídač dopisuje.
+
+### Proč to nejde ze zdroje
+
+Jména se **skládají na obou stranách**:
+
+```js
+'opp-item ' + d.type + (hot ? ' is-hot' : '')        // pisatel
+DRUHY.find((c) => e.classList.contains(c))           // čtenář
+```
+
+Žádný rozumný vzor nad zdrojem ani jedno spolehlivě nesloží. Měří se
+proto výsledek: jména z DOM proti selektorům, na šesti typech stránek
+(úvodní, pozemek, okres, kontakt, můj inzerát, hlídání).
+
+### Dvě věci, bez kterých by hlídač lhal
+
+* **Leafletův stylopis se musí přičíst.** Bez `vendor/leaflet/leaflet.css`
+  hlásí 26 falešných nálezů: jeho jména v DOM jsou, jeho pravidla ale
+  v `css/` nejsou.
+* **Vložený `<style>` té stránky taky.** Stránky aplikace si část
+  vzhledu píšou v hlavičce.
+
+Změřeno po doplnění obojího: 704 jmen tříd na šesti stránkách,
+**6 bez pravidla** — a všech šest je živých.
+
+### Šest mrtvých jmen pryč, šest živých do tabulky
+
+Uklizeno: `kraje-sec` (oddíl krajů na úvodní stránce), `mvt-t` (popisek
+v záložce Seznam/Mapa), `nav-kontakt` (odkaz v kánonu lišty, tedy na
+2 313 stránkách), `okr-ven` (modifikátor v generátoru regionů),
+`ceka-na-skript` (pravidlo k němu zrušil už úklid prázdna pod obsahem)
+a `g-<lvl>` / `gtk-<lvl>` v `js/radce.js`.
+
+To poslední stojí za větu: rádce počítá u každého řádku **vážnost**
+(`ok` / `mid` / `warn`) a psal ji do jména třídy — ve světlé i tmavé
+podobě. Na žádnou z těch šesti tříd není pravidlo, takže se vážnost
+nikde neukazuje. Jméno jen slibovalo rozlišení, které není. Kdyby se
+ukázat měla, `rady()` ji vrací dál v `x.lvl` a dopsat ji je na jeden
+řádek — **to už je ale rozhodnutí o vzhledu, ne úklid.**
+
+Živá jména bez pravidla jsou dvojího druhu a obojí je legitimní:
+úchyt pro skript (`os-t`, `pz-pozn-skok-t`) a úchyt pro zkoušku
+(`pk-maska`, `leaflet-dots-pane`), plus dvě vnitřnosti Leafletu
+(`leaflet-control-container`, `leaflet-proxy`). Každé má v tabulce
+napsané, **kdo ho čte** — jinak tabulka tiše roste a kontrola přestane
+být k něčemu. A platí to obojím směrem: výjimka na jméno, které se na
+stránkách neobjevuje, se taky ohlásí.
+
+### Čím je to prokázané
+
+| co se pokazilo | co spadlo |
+|---|---|
+| `kraje-sec` vráceno do index.html | *„každé jméno třídy v DOM má pravidlo"* (15/1) |
+| důvod u výjimky zkrácen na jedno slovo | *„výjimka .pk-maska má napsaný důvod"* (15/1) |
+| výjimka přepsána na jméno, které v DOM není | *„a je pořád potřeba"* **i** nález (14/2) |
+
+### Co z toho platí dál
+
+Dva hlídače na jednu věc, každý z jedné strany: `test-mrtve-styly`
+hlásí **pravidlo bez prvku**, `test-mrtva-jmena` **prvek bez pravidla**.
+Ani jeden sám nestačí — a ten druhý musí měřit v prohlížeči, protože
+jméno, které se skládá, ve zdroji celé nestojí.

@@ -261,7 +261,8 @@
   function html(d, model) {
     var r = rady(d, model);
     var radky = r.radky.map(function (x) {
-      return '<div class="gtk-row gtk-' + x.lvl + '"><span class="gtk-k">' + x.klic + '</span><span class="gtk-v">' + x.txt + '</span></div>';
+
+      return '<div class="gtk-row"><span class="gtk-k">' + x.klic + '</span><span class="gtk-v">' + x.txt + '</span></div>';
     }).join('');
     var otaz = r.otazky.map(function (o) { return '<li>' + o + '</li>'; }).join('');
 
@@ -279,7 +280,8 @@
   function htmlSvetla(d, model) {
     var r = rady(d, model);
     var radky = r.radky.map(function (x) {
-      return '<div class="g-row g-' + x.lvl + '"><span class="g-k">' + x.klic + '</span><span class="g-v">' + x.txt + '</span></div>';
+
+      return '<div class="g-row"><span class="g-k">' + x.klic + '</span><span class="g-v">' + x.txt + '</span></div>';
     }).join('');
     var otaz = r.otazky.map(function (o) { return '<li>' + o + '</li>'; }).join('');
     return '<div class="pz-gtk">' + radky +

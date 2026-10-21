@@ -1138,7 +1138,7 @@ for(const okres of eligibleOkres){
            kam jít — a na velkém okrese je „pod výpisem" o čtyřicet
            tisíc znaků dál. Velká pozvánka na mapu zůstává pod výpisem,
            tohle je její jednořádková předzvěst. -->
-      <p class="okr-more okr-ven"><a href="${krajLink}">Otevřít okres ${esc(okres)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
+      <p class="okr-more"><a href="${krajLink}">Otevřít okres ${esc(okres)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
       <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI.
            Pořadí tu bylo obrácené a dalo se to změřit: na telefonu 390 px
@@ -1300,7 +1300,7 @@ for(const kraj of eligibleKraj){
         ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b> <span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
       </div>
 
-      <p class="okr-more okr-ven"><a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">Otevřít ${esc(meta.disp)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
+      <p class="okr-more"><a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">Otevřít ${esc(meta.disp)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
       <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI — totéž jako na stránce okresu
            (důvod s čísly stojí tam). Na kraji jde výpis před rozcestník
