@@ -3695,6 +3695,32 @@
     renderList();
   });
 
+  var ohlasT = null, ohlasPodpis = null;
+  function ohlasVysledky(matched) {
+    var el = document.getElementById('vysledky-stav');
+    if (!el) return;
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    var vzato = [];
+    if (mistoFiltr) vzato.push(popisMista());
+    for (var i = 0; i < casti.length; i++) if (casti[i].popis) vzato.push(casti[i].popis);
+    var veta = (matched === 0 ? 'Nic nenalezeno' : fmt(matched) + ' ' + plPozemek(matched) + ' ve výpisu')
+      + (vzato.length ? '. Z hledání vzato: ' + vzato.join(', ') : '');
+    var podpis;
+    try {
+      var stav = stavProAdresu();
+      stav.poloha = null;
+      podpis = JSON.stringify(stav) + '|' + favOnly + '|' + ukazSkryte + '|' + ukazProsle;
+    } catch (e) { podpis = veta; }
+
+    if (ohlasPodpis === null) { ohlasPodpis = podpis; return; }
+    clearTimeout(ohlasT);
+    ohlasT = setTimeout(function () {
+      if (podpis === ohlasPodpis) return;
+      ohlasPodpis = podpis;
+      el.textContent = veta;
+    }, 700);
+  }
+
   function renderList() {
 
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
@@ -4009,6 +4035,7 @@
         ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
         : 'Zavřít filtry';
     }
+    ohlasVysledky(matched);
 
     var akceEl = document.getElementById('mc-akce') || countEl;
     if (akceEl !== countEl) akceEl.innerHTML = tlacitka;

@@ -495,6 +495,15 @@
                  nesmazalo rozbalovač řazení uprostřed výběru. -->
             <span class="mc-akce" id="mc-akce"></span>
           </div>
+          <!-- CO SE ZMĚNÍ, SE MUSÍ DÁT I SLYŠET. Nadpis výpisu říká
+               „Doporučené příležitosti · 15 na mapě" a při hledání se
+               přepisuje — jenže nadpis živá oblast není a odečítač se
+               o něm nedozví. Naměřeno (oddíl 93): po napsání „Brno" se
+               na stránce změní 19 míst a v živé oblasti není ani jedno.
+               Tahle oblast je ve stromu od začátku a PRÁZDNÁ (viz
+               oddíl 92 — text vložený do skryté oblasti se nehlásí),
+               plní ji ohlasVysledky() v js/main.js. -->
+          <p class="visually-hidden" id="vysledky-stav" role="status" aria-live="polite" aria-atomic="true"></p>
           <ul class="opp-list" id="opp-list" aria-label="Seznam příležitostí"><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li><li class="opp-skel" aria-hidden="true"><span class="skel-thumb sk"></span><span class="skel-body"><span class="sk sk-l1"></span><span class="sk sk-l2"></span><span class="sk sk-l3"></span></span></li></ul>
           <!-- NAPOSLEDY PROHLÉDNUTÉ. Ve značce stojí na konci, ve stránce
                ale úplně nahoře: js/main.js (renderRecent) ho přesune na
@@ -985,7 +994,7 @@
 <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
 <meta name="pk-odlozeny" data-klic="ulozene-ucet" data-src="js/min/ulozene-ucet.js?v=35e316ad">
 <meta name="pk-odlozeny" data-klic="poznamky" data-src="js/min/poznamky.js?v=96f9b539">
-<script src="js/min/main.js?v=8ed3c20c" defer></script>
+<script src="js/min/main.js?v=e1343897" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

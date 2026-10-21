@@ -170,6 +170,17 @@ toastu. Platí to i obecněji: **vada, která není vidět, se nenahlásí
 sama** — stejný druh nálezu jako tlačítko, které se nekreslilo nikde
 (oddíl 85), a oddíl s obsahem na `opacity:0` (89).
 
+**Co se na stránce změní, se musí dát i slyšet — a jde to spočítat.**
+Nasaď MutationObserver na `<body>`, udělej to, co by udělal člověk,
+a u každého změněného místa se podívej, jestli leží v živé oblasti.
+Naměřeno (oddíl 93): po napsání hledání se na úvodní stránce změní 19
+míst a v živé oblasti je jedno — a ani to není ono. Devatenáct ku jedné
+není dojem, je to číslo. U takového ohlášení pak platí tři věci, každá
+vykoupená vlastní chybou: čeká se, aby odečítač nemluvil přes psaní;
+porovnává se DOTAZ, ne ta věta (týž počet u jiného dotazu by hlášení
+spolkl); a základ se bere hned při prvním vykreslení, ne až v čekajícím
+hlášení (jinak ho zruší dotaz napsaný do 700 ms).
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:

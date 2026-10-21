@@ -144,6 +144,124 @@ if (stranka) zkontroluj('pozemek', await zmerPoradi(stranka, '#pz-sour-kop'));
   }
 }
 
+/* ---- 4) POČET VÝSLEDKŮ po hledání a filtru (js/main.js) ----
+   Nadpis výpisu se při hledání přepisuje, ale nadpis živá oblast není.
+   Naměřeno v oddílu 93: po napsání „Brno" se na stránce změní 19 míst
+   a v živé oblasti není ani jedno; u vybraného druhu 0 z 13. Hlídá se
+   tedy, že #vysledky-stav je ve stromu, je po načtení PRÁZDNÝ a že se
+   do něj po zásahu člověka dostane počet — jednou, ne po každém úhozu. */
+{
+  const p = await ctx.newPage();
+  const chybyJs = [];
+  p.on('pageerror', (e) => chybyJs.push(String(e)));
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+    null, { timeout: 60000 }).catch(() => {});
+
+  /* Pozorovatel se nasadí HNED po prvním vykreslení — a hned se taky
+     píše. Je to naměřený případ: dokud se „první vykreslení se
+     nehlásí" rozhodovalo teprve v čekajícím hlášení, dotaz napsaný do
+     700 ms to čekající hlášení zrušil a sám se za „první" vzal. Člověk
+     napsal hledání a neohlásilo se nic. */
+  const sleduje = await p.evaluate(() => {
+    const el = document.getElementById('vysledky-stav');
+    if (!el) return false;
+    window.__oh = [];
+    new MutationObserver(() => window.__oh.push((el.textContent || '').trim()))
+      .observe(el, { childList: true, characterData: true, subtree: true });
+    return true;
+  });
+  const zaklad = await p.evaluate(() => {
+    const el = document.getElementById('vysledky-stav');
+    if (!el) return { chyba: 'prvek #vysledky-stav na stránce není' };
+    let skryty = null;
+    for (let x = el; x; x = x.parentElement) {
+      const s = getComputedStyle(x);
+      if (x.hasAttribute('hidden') || s.display === 'none' || s.visibility === 'hidden') {
+        skryty = (x === el ? 'sám' : (x.id || x.className || x.tagName)); break;
+      }
+    }
+    return { role: el.getAttribute('role'), live: el.getAttribute('aria-live'),
+      text: (el.textContent || '').trim(), skryty };
+  });
+  pravda('výpis: oblast pro počet výsledků na stránce je', !zaklad.chyba, zaklad.chyba);
+  if (!zaklad.chyba) {
+    pravda('výpis: je to živá oblast (role=status, aria-live=polite)',
+      zaklad.role === 'status' && zaklad.live === 'polite', JSON.stringify(zaklad));
+    /* .visually-hidden je posun za okraj, ne display:none — prvek
+       tedy v přístupnostním stromu JE (na rozdíl od `hidden`, viz
+       oddíl 92). Kdyby se schoval displayem, oblast by zmizela. */
+    pravda('výpis: a je ve stromu, ne schovaná displayem', zaklad.skryty === null,
+      `schováno přes: ${zaklad.skryty}`);
+    // PŘEDPOKLAD: první vykreslení se hlásit NEMÁ (skočilo by do čtení stránky)
+    pravda('výpis: po načtení je prázdná (první vykreslení se nehlásí)',
+      zaklad.text === '', `stojí v ní „${zaklad.text}"`);
+  }
+  pravda('výpis: dá se sledovat, co se do oblasti dostane', sleduje === true,
+    'oblast chybí, nebylo co sledovat');
+
+  if (sleduje) {
+    /* a) dotaz napsaný HNED, ještě než se usadí první vykreslení */
+    await p.click('#map-search');
+    await p.type('#map-search', 'Brno', { delay: 90 });
+    await p.press('#map-search', 'Enter');
+    await p.waitForTimeout(1800);
+    const hned = await p.evaluate(() => window.__oh.slice());
+    pravda(`výpis: hledání napsané hned po načtení se ohlásí (${JSON.stringify(hned)})`,
+      hned.length >= 1 && /pozemk|Nic nenalezeno/.test(hned[hned.length - 1] || ''),
+      'do oblasti se nedostalo nic — hledání zůstalo neslyšené');
+    // Čtyři úhozy, jedno ohlášení: jinak by odečítač mluvil přes psaní.
+    pravda(`výpis: čtyři úhozy daly jedno ohlášení, ne čtyři (${hned.length})`,
+      hned.length <= 2, `ohlášení: ${JSON.stringify(hned)}`);
+
+    /* b) věta, ze které web něco rozpozná. Odznaky „Rozpoznáno
+       z hledání" jsou jinak vidět jenom očima, a právě ony říkají,
+       jak web té větě rozumí. */
+    await p.evaluate(() => { window.__oh.length = 0; });
+    await p.fill('#map-search', 'les do 500 tis');
+    await p.press('#map-search', 'Enter');
+    await p.waitForTimeout(1800);
+    const veta = await p.evaluate(() => ({ oh: window.__oh.slice(),
+      odznaky: [...document.querySelectorAll('#ms-chipy .msch')].map((x) => x.textContent.replace(/✕/g, '').trim()) }));
+    /* NEZLOMITELNÉ MEZERY ZPÁTKY NA OBYČEJNÉ. Sázecí krok v
+       scripts/oprav.mjs po jednoznakovém slově mezeru nahrazuje
+       U+00A0 („Z\u00A0hledání"), a hlídá to vlastní zkouška. Vzor
+       psaný obyčejnou mezerou by tu proto neprošel — a spadl by na
+       správně vysázeném textu. */
+    const posledni = (veta.oh[veta.oh.length - 1] || '').replace(/\u00A0/g, ' ');
+    pravda('výpis: u napsané věty se ohlásí i to, co se z ní vzalo',
+      /Z hledání vzato/.test(posledni), `v oblasti stojí „${posledni}"`);
+    pravda(`výpis: a je to totéž, co stojí v odznacích (${JSON.stringify(veta.odznaky)})`,
+      veta.odznaky.length > 0 && veta.odznaky.every((o) => posledni.indexOf(o) >= 0),
+      `odznaky ${JSON.stringify(veta.odznaky)} vs „${posledni}"`);
+
+    /* c) dotaz, na který nic nevyhovuje. Ten je ze všech nejdůležitější:
+       prázdný výpis se nepozná ani hmatem. */
+    await p.evaluate(() => { window.__oh.length = 0; });
+    await p.fill('#map-search', 'qwrtzpxk');
+    await p.press('#map-search', 'Enter');
+    await p.waitForTimeout(1800);
+    const prazdno = await p.evaluate(() => window.__oh.slice());
+    pravda('výpis: „nic nenalezeno" se taky ohlásí',
+      /Nic nenalezeno/.test(prazdno[prazdno.length - 1] || ''), JSON.stringify(prazdno));
+
+    /* d) posun mapy není nový dotaz — po každém tažení opakovat
+       „15 pozemků" je otrava, ne pomoc. */
+    await p.evaluate(() => { window.__oh.length = 0; });
+    await p.evaluate(() => {
+      const m = window.PK_MAPA || window.mapa || null;
+      if (m && m.panBy) m.panBy([60, 0]);
+      else window.dispatchEvent(new Event('resize'));
+    });
+    await p.waitForTimeout(1800);
+    const posun = await p.evaluate(() => window.__oh.slice());
+    pravda('výpis: posun mapy stejný dotaz neohlašuje znovu', posun.length === 0,
+      JSON.stringify(posun));
+    pravda('výpis: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
+  }
+  await p.close();
+}
+
 await ctx.close();
 await prohlizec.close();
 srv.close();

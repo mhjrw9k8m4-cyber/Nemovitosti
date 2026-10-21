@@ -6033,3 +6033,111 @@ funguje; chybí jen to, co na obrazovce není vidět. Je to třetí nález
 tohohle druhu za dnešek — po oddílu 85 (tlačítko, které se nekreslilo
 nikde) a 89 (oddíl, který měl obsah a byl na opacity 0): **vady, které
 nejsou vidět, nenahlásí nikdo, dokud se na ně nezačne měřit.**
+
+## 93. Devatenáct změn na stránce, jedna v živé oblasti *21. 10.*
+
+Oddíl 92 opravil hlášku (toast). Ta ale nese jen drobnosti — a zůstala
+otázka, co se vlastně ohlásí z toho hlavního, co web dělá: z hledání
+a filtrů. Změřeno MutationObserverem přes celé `<body>`: po každém
+zásahu člověka se posbírala všechna změněná místa a u každého se
+dohledalo, jestli leží v živé oblasti (`aria-live`, `role=status`).
+
+```
+napsání „Brno" do hledání        19 změněných míst, v živé oblasti 1
+vybrání druhu (pilulka filtru)   13 změněných míst, v živé oblasti 0
+```
+
+A to jedno není ani ono: je to `#user-listings` (oddíl „Pozemky přímo
+od majitelů"), které se se hledáním nemá co dělat. Mezi změnami přitom
+bylo všechno, na čem při hledání záleží:
+
+```
+#map-count    „Doporučené příležitosti · 15 na mapě"
+#mvt-count    „(15)"
+#msr-hotovo   „Zobrazit 15 pozemků"
+#mc-druhy     „Orná půda 8 · Louka 0 · Stavební 4 …"
+#opp-list     celý výpis karet
+```
+
+Kdo nevidí, napsal tedy hledání a **nedozvěděl se nic** — ani „nic
+nenalezeno", což je ze všech stavů ten nejdůležitější: prázdný výpis
+se nepozná ani hmatem.
+
+### Oprava: jedna živá oblast, která řekne počet
+
+V `index.html` přibyl `<p id="vysledky-stav" class="visually-hidden"
+role="status" aria-live="polite" aria-atomic="true">`, prázdný a ve
+stromu od začátku (proč prázdný, stojí v oddílu 92). Plní ho
+`ohlasVysledky()` v `js/main.js` z jediného místa — z `renderList()`,
+kterým prochází všech 50 cest, jak se dá výpis změnit.
+
+Hlásí se počet, a u napsané věty i to, co se z ní vzalo:
+
+```
+„les do 500 tis"     → „60 pozemků ve výpisu. Z hledání vzato: do 500 tis, Lesní pozemek"
+„do 30 km od Brna"   → „163 pozemků ve výpisu. Z hledání vzato: do 30 km (Brno)"
+„stavební Brno do 2 mil" → „Nic nenalezeno. Z hledání vzato: do 2 mil, Stavební / zastavěná"
+```
+
+Ta druhá věta není ozdoba. Odznaky „Rozpoznáno z hledání" (`#ms-chipy`)
+jsou jediné místo, kde web přiznává, jak té větě rozuměl — a byly vidět
+jenom očima. Zkouška proto porovnává ohlášení s textem odznaků, aby se
+ty dvě podoby nemohly rozejít.
+
+### Dvě vady vlastního návrhu, obě našlo měření
+
+**Porovnávat větu nestačí.** První podoba hlásila jen tehdy, když se
+věta lišila od poslední ohlášené — aby posun mapy neopakoval „15
+pozemků" po každém tažení. Naměřeno: „Brno" vyšlo na týchž 15 pozemků
+jako výchozí výpis, takže se napsané hledání **neohlásilo vůbec**.
+Porovnává se proto podpis DOTAZU — stav, který si web sám zapisuje do
+adresy (`stavProAdresu()`), bez výřezu mapy. Posun mapy tím pořád
+mlčí, ale jiný dotaz se stejným počtem se ohlásí.
+
+**Základ se musí vzít hned, ne v čekajícím hlášení.** První vykreslení
+se hlásit nemá (skočilo by odečítači do čtení právě otevřené stránky).
+Dokud se to ale rozhodovalo teprve uvnitř čekajícího `setTimeout`,
+stačilo napsat dotaz do 700 ms od prvního vykreslení: čekající hlášení
+se zrušilo a za „první" se vzal ten dotaz. Člověk napsal hledání
+a neslyšel nic. Základ se teď bere synchronně při prvním vykreslení.
+
+### Tři podmínky, aby to byla pomoc a ne otrava
+
+| podmínka | proč |
+|---|---|
+| čeká se 700 ms | jinak odečítač mluví přes psaní (čtyři úhozy = čtyři hlášení) |
+| hlásí se jen změněný dotaz | posun mapy mění „na mapě", opakovat počet po každém tažení je otrava |
+| první vykreslení se nehlásí | počet si člověk přečte v nadpisu výpisu, kam právě došel |
+
+### Hlídač a sabotáže
+
+Nová část v `scripts/test-ohlaseni.mjs` (ze 14 kontrol je 26). Měří
+pořadí i obsah: oblast je ve stromu, po načtení je prázdná, dotaz
+napsaný HNED po načtení se ohlásí, čtyři úhozy dají jedno ohlášení,
+„nic nenalezeno" se ohlásí, posun mapy se neohlašuje znovu.
+
+```
+odebrané volání ohlasVysledky()        → spadly 4 kontroly (do oblasti nepřišlo nic)
+základ brán až v čekajícím hlášení     → spadlo „hledání napsané hned po načtení" ([])
+čekání 700 ms → 0 ms                   → spadlo „čtyři úhozy daly jedno ohlášení" (4)
+oblast schovaná atributem hidden       → spadlo „je ve stromu, ne schovaná displayem"
+```
+
+Jedna vlastní past u zkoušky stojí za zápis: vzor `/Z hledání vzato/`
+na správně vysázeném textu **nesedí**. Sázecí krok v `oprav.mjs` totiž
+po jednoznakovém slově mezeru nahrazuje nezlomitelnou (U+00A0), takže
+ve stránce stojí „Z hledání". Zkouška si proto mezery narovná,
+než začne porovnávat — jinak by padala na tom, co je správně.
+
+Co se tím **neprokázalo**: jak se zachová konkrétní odečítač. Měří se
+mechanismus, ne zážitek.
+
+### Co z toho platí dál
+
+**Co se na stránce změní, se musí dát i slyšet — a jde to spočítat.**
+Devatenáct ku jedné není dojem, je to číslo, a dá se naměřit u každé
+obrazovky, kterou web má. Hned první takové počítání mimo úvodní
+stránku vrátilo další nález: `hlidani.html` a `zpravy.html` nemají
+živou oblast ani jednu a zpětná vazba přihlašování se tam píše do
+obyčejného `div` (a místy se ten `div` staví rovnou s textem uvnitř,
+což je nový uzel, ne změna). To je samostatná položka.

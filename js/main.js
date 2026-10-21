@@ -5730,6 +5730,57 @@
     renderList();
   });
 
+  /* OHLÁŠENÍ POČTU VÝSLEDKŮ. Naměřeno (oddíl 93): po napsání „Brno"
+     do hledání se na stránce změní 19 míst a v živé oblasti není ani
+     jedno — kdo nevidí, napsal hledání a nedozvěděl se nic, ani „nic
+     nenalezeno". U vybraného druhu to bylo 0 z 13. Hlásí se proto
+     počet, a u napsané věty i to, co se z ní vzalo: odznaky
+     „Rozpoznáno z hledání" (#ms-chipy) jsou jinak vidět jenom očima,
+     a právě ony říkají, jak web věty rozumí.
+     TŘI PODMÍNKY, ABY TO BYLA POMOC A NE OTRAVA:
+      · čeká se 700 ms, takže psaní po písmenech nehlásí každý úhoz;
+      · hlásí se, jen když se změnil DOTAZ, ne počet. Posun mapy mění
+        „na mapě" a opakovat po každém tažení „15 pozemků" je otrava.
+        Naopak porovnávat jen tu větu by bylo horší, než se zdálo:
+        naměřeno, že „Brno" dalo týž počet 15 jako výchozí výpis, takže
+        by se napsané hledání neohlásilo vůbec — člověk by napsal dotaz
+        a neslyšel nic. Podpisem je proto stav, který si web sám
+        zapisuje do adresy (stavProAdresu()) BEZ výřezu mapy.
+      · PRVNÍ vykreslení se nehlásí vůbec. To by odečítači skočilo do
+        čtení stránky, kterou si člověk právě otevřel — počet si
+        přečte v nadpisu výpisu, kam právě došel.
+     Oblast samotná je v index.html a je ve stromu od začátku prázdná;
+     proč to tak musí být, stojí v oddílu 92 u showToast(). */
+  var ohlasT = null, ohlasPodpis = null;
+  function ohlasVysledky(matched) {
+    var el = document.getElementById('vysledky-stav');
+    if (!el) return;
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    var vzato = [];
+    if (mistoFiltr) vzato.push(popisMista());
+    for (var i = 0; i < casti.length; i++) if (casti[i].popis) vzato.push(casti[i].popis);
+    var veta = (matched === 0 ? 'Nic nenalezeno' : fmt(matched) + ' ' + plPozemek(matched) + ' ve výpisu')
+      + (vzato.length ? '. Z hledání vzato: ' + vzato.join(', ') : '');
+    var podpis;
+    try {
+      var stav = stavProAdresu();
+      stav.poloha = null;   // výřez mapy není nový dotaz
+      podpis = JSON.stringify(stav) + '|' + favOnly + '|' + ukazSkryte + '|' + ukazProsle;
+    } catch (e) { podpis = veta; }
+    /* ZÁKLAD SE BERE HNED, NE AŽ V ČEKAJÍCÍM HLÁŠENÍ. Naměřeno:
+       když se „první vykreslení se nehlásí" rozhodovalo teprve uvnitř
+       setTimeoutu, stačilo napsat dotaz do 700 ms od prvního
+       vykreslení — čekající hlášení se tím zrušilo a za „první" se
+       vzal ten dotaz. Člověk napsal hledání a neohlásilo se nic. */
+    if (ohlasPodpis === null) { ohlasPodpis = podpis; return; }
+    clearTimeout(ohlasT);
+    ohlasT = setTimeout(function () {
+      if (podpis === ohlasPodpis) return;
+      ohlasPodpis = podpis;
+      el.textContent = veta;
+    }, 700);
+  }
+
   function renderList() {
     /* POČITADLO PRO ZKOUŠKU. Web ho sám nepoužívá. Je tu proto, že
        zbytečné druhé překreslení celého výpisu se na obrazovce nepozná
@@ -6368,6 +6419,7 @@
         ? ('Zobrazit ' + fmt(matched) + ' ' + plPozemek(matched))
         : 'Zavřít filtry';
     }
+    ohlasVysledky(matched);
     /* Tlačítka do VLASTNÍHO obalu, ne do hlavičky. Vedle nich stojí
        „Uložené" a rozbalovač řazení, které se nepřekreslují — kdyby se
        přepisoval celý pruh, zmizely by uprostřed výběru. */
