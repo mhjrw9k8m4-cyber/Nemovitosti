@@ -499,13 +499,77 @@
         '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     }
   };
+  /* ZÁMEK TABULÁTORU. Okno překrývá celou stránku a hlásí se jako
+     `aria-modal`, čímž slibuje, že za ním nic není. Bez zámku ale
+     tabulátor za okraj uteče do obsahu, který není vidět — a ovládání
+     klávesnicí se ztratí. Kolečko se zavírá samo: za posledním prvkem
+     je první.
+     STOJÍ TU, A NE U PRVNÍHO OKNA, KTERÉ HO ZAČALO POUŽÍVAT. Předtím
+     byl zanořený uvnitř obsluhy stahování, takže ho okno se zásadami
+     soukromí nevidělo — volání z něj shodilo celý skript
+     („ReferenceError: zamkniTab is not defined") a úvodní stránka
+     zůstala bez výpisu. Používají ho čtyři okna, patří tedy tam, odkud
+     ho vidí všechna. */
+  function zamkniTab(ov) {
+    ov.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var f = ov.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
+      var viditelne = [];
+      for (var i = 0; i < f.length; i++) {
+        if (f[i].disabled) continue;
+        if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
+      }
+      if (!viditelne.length) return;
+      var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
+      if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
+      else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
+    });
+  }
+
+  /* ODKUD SE OKNO OTEVŘELO — a kam se zaměření po zavření vrátí.
+     Pamatuje se i ID, a má to naměřený důvod: zavření okna přestaví
+     výpis, takže tlačítko v jeho hlavičce je potom JINÝ prvek se
+     stejným id (oddíl 96). Podle samotného prvku by se zaměření
+     nevrátilo nikam a klávesnice by skončila na <body>. */
+  function otviracZapamatuj() {
+    var a = document.activeElement;
+    if (!a || a === document.body || a === document.documentElement) return null;
+    return { prvek: a, id: a.id || '' };
+  }
+  function otviracZamer(o) {
+    if (!o) return;
+    var el = (o.id && document.getElementById(o.id))
+      || (o.prvek && o.prvek.isConnected ? o.prvek : null);
+    if (!el) return;
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+  }
+
   var iModal = document.getElementById('info-modal');
+  /* OKNO SI MUSÍ ZAMĚŘENÍ VZÍT, PODRŽET A VRÁTIT. Naměřeno (oddíl 97)
+     na všech oknech úvodní stránky — tohle bylo z nich nejhorší:
+       zaměření šlo do okna:    NE (zůstalo na odkazu za oknem)
+       tabulátor zůstal v okně: NE, utekl na „nahoru"
+       Escape zavřel:           ano
+       zaměření zpátky:         NE
+     Okno přitom hlásí `aria-modal="true"`, čímž slibuje, že za ním nic
+     není — a kdo jede klávesnicí, tabuloval po stránce, kterou nevidí.
+     Zámek tabulátoru se připne jednou, prvek je ve stránce od začátku. */
+  var iOtvirac = null;
+  if (iModal) zamkniTab(iModal);
   function openInfo(key) {
     var d = INFO[key]; if (!iModal || !d) return;
+    // Kam se zaměření vrátí. Bere se PŘED otevřením okna.
+    iOtvirac = otviracZapamatuj();
     document.getElementById('info-title').textContent = d.t;
     document.getElementById('info-body').innerHTML = d.h;
     iModal.removeAttribute('hidden');
-    requestAnimationFrame(function () { iModal.classList.add('open'); });
+    requestAnimationFrame(function () {
+      iModal.classList.add('open');
+      /* Zaměření na „Zavřít": je to jediná akce okna a zároveň to
+         odečítači přečte, kde se člověk octl. */
+      var z = iModal.querySelector('.modal-close-bar') || iModal.querySelector('button');
+      if (z) { try { z.focus(); } catch (e) {} }
+    });
     document.body.style.overflow = 'hidden';
     vrstvaOtevrena('zdroje', function () { closeInfo(true); });
   }
@@ -515,6 +579,10 @@
     iModal.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(function () { iModal.setAttribute('hidden', ''); }, 250);
+    /* Zaměření zpátky tam, odkud se okno otevřelo — jinak klávesnice
+       skončí na <body>, tedy na začátku stránky (viz oddíl 96). */
+    otviracZamer(iOtvirac);
+    iOtvirac = null;
   }
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-info]');
@@ -3821,8 +3889,15 @@
           '<button class="vm-ok" type="button" id="vm-ok">Zobrazit pozemky</button>' +
         '</div>' +
       '</div>';
+    /* Zaměření do okna, zámek tabulátoru a vrácení na otvírač —
+       stejná trojice jako u ostatních oken (oddíl 97). Naměřeno tady:
+       zaměření šlo do okna NE, tabulátor utekl, zpátky se nevrátilo. */
+    var vmOtvirac = otviracZapamatuj();
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
+    zamkniTab(ov);
+    var vmPrvni = ov.querySelector('.vm-x');
+    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
 
     /* ZOOM VPRAVO DOLE, jako na hlavní mapě. Leaflet ho dává vlevo
        nahoru — tedy přesně do pruhu u levého okraje displeje, kde telefon
@@ -4390,6 +4465,7 @@
          ho sem poslal, se o tom musí dozvědět. Jinak by dál tvrdil něco,
          co neplatí (řazení „Nejblíž ke mně" bez známé polohy). */
       if (!potvrzeno && typeof nast.zruseno === 'function') nast.zruseno();
+      otviracZamer(vmOtvirac);
     }
     document.addEventListener('keydown', naKlavesu);
     /* Bez obalu by se do zavri() dostala událost kliknutí a chovala se
@@ -4745,27 +4821,6 @@
 
   var posledniVyber = [];
 
-  /* ZÁMEK TABULÁTORU. Okno překrývá celou stránku a hlásí se jako
-     `aria-modal`, čímž slibuje, že za ním nic není. Bez zámku ale
-     tabulátor za okraj uteče do obsahu, který není vidět — a ovládání
-     klávesnicí se ztratí. Kolečko se zavírá samo: za posledním prvkem
-     je první. Používá to i okno rozsahu cen, ať se slib drží všude
-     stejně. */
-  function zamkniTab(ov) {
-    ov.addEventListener('keydown', function (e) {
-      if (e.key !== 'Tab') return;
-      var f = ov.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
-      var viditelne = [];
-      for (var i = 0; i < f.length; i++) {
-        if (f[i].disabled) continue;
-        if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
-      }
-      if (!viditelne.length) return;
-      var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
-      if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
-      else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
-    });
-  }
 
   /* ---------- STAŽENÍ VÝBĚRU ----------
    *
@@ -6846,10 +6901,16 @@
      Zkusí se JEN JEDNOU: kdyby se dotažení nepovedlo, nesmí se
      otevírání zacyklit — rychlý výběr má jet i bez poznámek. */
   var rvPoznamkyZkusit = true;
+  var rvOtvirac = null, rvZamcen = false;
 
   function otevriRychly() {
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
+    /* OTVÍRAČ SE PAMATUJE HNED, ne až za dotažením modulu. Naměřeno:
+       otevriRychly() se při prvním otevření volá dvakrát (podruhé až
+       je modul v prohlížeči) a při tom druhém volání už zaměření na
+       tlačítku není — zapamatovat se musí při tom prvním. */
+    rvOtvirac = otviracZapamatuj() || rvOtvirac;
     if (!window.PKRychly || (rvPoznamkyZkusit && !window.PKPoznamky)) {
       var sliby = [dotahniModul('rychly', 'PKRychly')];
       if (rvPoznamkyZkusit && !window.PKPoznamky) {
@@ -6862,6 +6923,9 @@
       return;
     }
     rvNalozDavku();
+    /* Zámek tabulátoru se připíná jednou — otevriRychly() se volá
+       i podruhé, když se dotahuje modul (oddíl 97). */
+    if (!rvZamcen) { zamkniTab(rvVrstva); rvZamcen = true; }
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
     var prvne = !rvUvodVidel();
@@ -6900,6 +6964,11 @@
     rvStav = null;
     if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     renderList();   // uložené a skryté se musí projevit i ve výpisu
+    /* Zaměření zpátky na otvírač. Je to AŽ ZA renderList(): ten výpis
+       přestaví a sám zaměření vrací (oddíl 96) — kdyby se vracelo
+       dřív, přepsal by ho. */
+    otviracZamer(rvOtvirac);
+    rvOtvirac = null;
   }
 
   function tvarNabidek(n) {

@@ -298,13 +298,53 @@
         '</ul><p>Otázky? Napište nám přes <a href="#realitky" data-close>kontaktní formulář</a>.</p>'
     }
   };
+
+  function zamkniTab(ov) {
+    ov.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var f = ov.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
+      var viditelne = [];
+      for (var i = 0; i < f.length; i++) {
+        if (f[i].disabled) continue;
+        if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
+      }
+      if (!viditelne.length) return;
+      var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
+      if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
+      else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
+    });
+  }
+
+  function otviracZapamatuj() {
+    var a = document.activeElement;
+    if (!a || a === document.body || a === document.documentElement) return null;
+    return { prvek: a, id: a.id || '' };
+  }
+  function otviracZamer(o) {
+    if (!o) return;
+    var el = (o.id && document.getElementById(o.id))
+      || (o.prvek && o.prvek.isConnected ? o.prvek : null);
+    if (!el) return;
+    try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+  }
+
   var iModal = document.getElementById('info-modal');
+
+  var iOtvirac = null;
+  if (iModal) zamkniTab(iModal);
   function openInfo(key) {
     var d = INFO[key]; if (!iModal || !d) return;
+
+    iOtvirac = otviracZapamatuj();
     document.getElementById('info-title').textContent = d.t;
     document.getElementById('info-body').innerHTML = d.h;
     iModal.removeAttribute('hidden');
-    requestAnimationFrame(function () { iModal.classList.add('open'); });
+    requestAnimationFrame(function () {
+      iModal.classList.add('open');
+
+      var z = iModal.querySelector('.modal-close-bar') || iModal.querySelector('button');
+      if (z) { try { z.focus(); } catch (e) {} }
+    });
     document.body.style.overflow = 'hidden';
     vrstvaOtevrena('zdroje', function () { closeInfo(true); });
   }
@@ -314,6 +354,9 @@
     iModal.classList.remove('open');
     document.body.style.overflow = '';
     setTimeout(function () { iModal.setAttribute('hidden', ''); }, 250);
+
+    otviracZamer(iOtvirac);
+    iOtvirac = null;
   }
   document.addEventListener('click', function (e) {
     var t = e.target.closest('[data-info]');
@@ -2403,8 +2446,13 @@
           '<button class="vm-ok" type="button" id="vm-ok">Zobrazit pozemky</button>' +
         '</div>' +
       '</div>';
+
+    var vmOtvirac = otviracZapamatuj();
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
+    zamkniTab(ov);
+    var vmPrvni = ov.querySelector('.vm-x');
+    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
 
     var m = L.map(ov.querySelector('#vm-mapa'), {
       zoomControl: false, attributionControl: false, preferCanvas: true,
@@ -2794,6 +2842,7 @@
       document.removeEventListener('keydown', naKlavesu);
 
       if (!potvrzeno && typeof nast.zruseno === 'function') nast.zruseno();
+      otviracZamer(vmOtvirac);
     }
     document.addEventListener('keydown', naKlavesu);
 
@@ -3060,22 +3109,6 @@
   }
 
   var posledniVyber = [];
-
-  function zamkniTab(ov) {
-    ov.addEventListener('keydown', function (e) {
-      if (e.key !== 'Tab') return;
-      var f = ov.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
-      var viditelne = [];
-      for (var i = 0; i < f.length; i++) {
-        if (f[i].disabled) continue;
-        if (f[i].offsetParent !== null || f[i] === document.activeElement) viditelne.push(f[i]);
-      }
-      if (!viditelne.length) return;
-      var prvni = viditelne[0], posledni = viditelne[viditelne.length - 1];
-      if (e.shiftKey && document.activeElement === prvni) { e.preventDefault(); posledni.focus(); }
-      else if (!e.shiftKey && document.activeElement === posledni) { e.preventDefault(); prvni.focus(); }
-    });
-  }
 
   function vyvozPomocne() {
     return {
@@ -4307,10 +4340,13 @@
   }
 
   var rvPoznamkyZkusit = true;
+  var rvOtvirac = null, rvZamcen = false;
 
   function otevriRychly() {
     rvVrstva = rvPrvek('rv-vrstva');
     if (!rvVrstva) return;
+
+    rvOtvirac = otviracZapamatuj() || rvOtvirac;
     if (!window.PKRychly || (rvPoznamkyZkusit && !window.PKPoznamky)) {
       var sliby = [dotahniModul('rychly', 'PKRychly')];
       if (rvPoznamkyZkusit && !window.PKPoznamky) {
@@ -4323,6 +4359,8 @@
       return;
     }
     rvNalozDavku();
+
+    if (!rvZamcen) { zamkniTab(rvVrstva); rvZamcen = true; }
     rvVrstva.hidden = false;
     document.body.style.overflow = 'hidden';
     var prvne = !rvUvodVidel();
@@ -4358,6 +4396,9 @@
     rvStav = null;
     if (rvOdlet) { clearTimeout(rvOdlet); rvOdlet = null; }
     renderList();
+
+    otviracZamer(rvOtvirac);
+    rvOtvirac = null;
   }
 
   function tvarNabidek(n) {

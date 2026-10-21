@@ -325,6 +325,137 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
   await ctx.close();
 }
 
+/* ---- OKNA: ZAMĚŘENÍ DOVNITŘ, ZÁMEK TABULÁTORU, ESCAPE, VRÁCENÍ ----
+   Okno hlásí `aria-modal="true"`, čímž slibuje, že za ním nic není.
+   Naměřeno (oddíl 97): okno se zásadami soukromí zaměření vůbec
+   nepřebralo, tabulátor z něj utekl na „nahoru" a po zavření zůstalo
+   zaměření ve vzduchu; „Vyberte své okolí" totéž; „Procházet po
+   jednom" mělo zaměření, ale ne zámek ani vrácení. Jen okno stahování
+   bylo celé v pořádku.
+
+   OTVÍRAČ MUSÍ BÝT DOSAŽITELNÝ, A HLÍDÁ SE TO. Na tomhle jsem se
+   spálil: pilulku „Cena" jsem v sondě otevíral `click()`em, jenže ta
+   leží v zavřeném `<details>` panelu filtrů — na obrazovce má rozměr,
+   ale je za mapou a zaměřit se nedá. „Nález" byl artefakt měření ve
+   stavu, do kterého se člověk nedostane. Každé okno se proto měří jen
+   přes otvírač, který JDE ZAMĚŘIT a leží NAHOŘE (hit-test v jeho
+   středu vrací jeho vlastní prvek). */
+{
+  const OKNA = [
+    ['zásady soukromí', '[data-info]', '#info-modal'],
+    ['stáhnout tabulku', '#mc-vyvoz', '#vyv-vrstva'],
+    ['procházet po jednom', '#mc-rychly', '#rv-vrstva'],
+    ['vyberte své okolí', '#map-near', '.vm-panel'],
+  ];
+  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const p = await ctx.newPage();
+  const chybyJs = [];
+  p.on('pageerror', (e) => chybyJs.push(String(e)));
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
+  await p.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+    null, { timeout: 60000 }).catch(() => {});
+  /* Otvírač se hledá mezi VŠEMI, co selektoru odpovídají, a bere se
+     první dosažitelný. Taky naměřeno: `[data-info]` je i v mobilní
+     nabídce, která je na počítači schovaná, a querySelector vrací
+     právě ten schovaný — kontrola pak hlásila „není nahoře" o prvku,
+     ke kterému se člověk na téhle šířce vůbec nedostane.
+     A k prvku se nejdřív přijde: „Zásady soukromí" jsou v patičce, pod
+     okrajem okna, takže hit-test by vrátil null. Rozlišit se musí
+     ZAKRYTÝ prvek (vada) od prvku ZA OKRAJEM (v pořádku). */
+  /* Otvírač se hledá mezi VŠEMI, co selektoru odpovídají, a bere se
+     první dosažitelný. Taky naměřeno: `[data-info]` je v patičce, tedy
+     hluboko pod okrajem okna, a stránka má plynulé rolování
+     (`scroll-behavior`) — hit-test hned po scrollIntoView() proto
+     vracel null a kontrola hlásila „není nahoře" o prvku, který je
+     v pořádku. Rolování se tedy nechá DOJET a měří se až potom.
+     Rozlišit se musí ZAKRYTÝ prvek (vada) od prvku ZA OKRAJEM. */
+  async function vid(sel) {
+    const kolik = await p.locator(sel).count();
+    if (!kolik) return { je: false };
+    let posledni = null;
+    for (let i = 0; i < kolik; i++) {
+      const l = p.locator(sel).nth(i);
+      /* Dojet k prvku umí Playwright sám a správně — vlastní
+         scrollIntoView + čekání jsem zkusil a měřil jsem s ním starý
+         obdélník (stránka roluje plynule a rect se čte dřív, než
+         rolování dojede). Tady je to jedna řádka a je spolehlivá. */
+      await l.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
+      await p.waitForTimeout(200);
+      const v = await l.evaluate((e) => {
+        const r = e.getBoundingClientRect();
+        e.focus();
+        const r2 = e.getBoundingClientRect();     // po focusu: ten taky roluje
+        const na = (r2.width && r2.height)
+          ? document.elementFromPoint(Math.round(r2.x + r2.width / 2), Math.round(r2.y + r2.height / 2)) : null;
+        const ok = document.activeElement === e && !!(na && (na === e || e.contains(na)));
+        if (ok) window.__otv = e;
+        return { je: true, zamerit: document.activeElement === e, nahore: !!(na && (na === e || e.contains(na))),
+          kde: Math.round(r.y) + '→' + Math.round(r2.y),
+          naBode: na ? (na.id || na.tagName) : 'nic' };
+      });
+      posledni = Object.assign({ zKolika: kolik }, v);
+      if (v.zamerit && v.nahore) return posledni;
+    }
+    await p.evaluate(() => { window.__otv = null; });
+    return posledni;
+  }
+  for (const [jmeno, otvirac, okno] of OKNA) {
+    const o = await vid(otvirac);
+    // PŘEDPOKLAD: co nejde zaměřit a není nahoře, to člověk neotevře
+    pravda(`okno „${jmeno}": otvírač jde zaměřit a leží nahoře`,
+      o.je && o.zamerit && o.nahore, JSON.stringify(o));
+    if (!(o.je && o.zamerit && o.nahore)) continue;
+    await p.keyboard.press('Enter');       // otevřít klávesou, ne myší
+    await p.waitForTimeout(700);
+    const uvnitr = await p.evaluate((s) => {
+      const okno = document.querySelector(s);
+      const vid2 = (e) => { if (!e || e.hasAttribute('hidden')) return false;
+        const st = getComputedStyle(e); const r = e.getBoundingClientRect();
+        return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+      const a = document.activeElement;
+      const f = okno ? [...okno.querySelectorAll('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])')]
+        .filter((x) => !x.disabled && vid2(x)) : [];
+      if (f.length) f[f.length - 1].focus();     // postav se na poslední prvek
+      return { vidi: vid2(okno), uvnitr: !!(okno && a && okno.contains(a)), ovladacu: f.length,
+        kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '')) : 'nic' };
+    }, okno);
+    pravda(`okno „${jmeno}": otevřelo se klávesou (${uvnitr.ovladacu} ovladačů)`,
+      uvnitr.vidi && uvnitr.ovladacu > 0, JSON.stringify(uvnitr));
+    pravda(`okno „${jmeno}": zaměření šlo DOVNITŘ (${uvnitr.kdo})`, uvnitr.uvnitr === true,
+      'zaměření zůstalo za oknem — klávesnicí se v něm nedá začít');
+    await p.keyboard.press('Tab');
+    await p.waitForTimeout(200);
+    const zamek = await p.evaluate((s) => {
+      const okno = document.querySelector(s); const a = document.activeElement;
+      return { uvnitr: !!(okno && a && okno.contains(a)),
+        kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '.' + ((a.className || '').split(' ')[0] || ''))) : 'nic' };
+    }, okno);
+    pravda(`okno „${jmeno}": tabulátor z něj neuteče (${zamek.kdo})`, zamek.uvnitr === true,
+      'tabulátor utekl za okno, do obsahu, který není vidět — a `aria-modal` tvrdí, že tam nic není');
+    await p.keyboard.press('Escape');
+    await p.waitForTimeout(800);
+    const po = await p.evaluate(([s]) => {
+      const okno = document.querySelector(s);
+      const vid2 = (e) => { if (!e || e.hasAttribute('hidden')) return false;
+        const st = getComputedStyle(e); const r = e.getBoundingClientRect();
+        return st.display !== 'none' && st.visibility !== 'hidden' && r.width > 0 && r.height > 0; };
+      const a = document.activeElement;
+      const otv = window.__otv;      // ten, který se opravdu použil
+      /* „Na otvírači" znamená i prvek, který ho nahradil se stejným id:
+         zavření okna přestaví nářadí výpisu (oddíl 96), takže #mc-rychly
+         po zavření je JINÝ prvek — a zaměření na něm je správný výsledek. */
+      return { zavreno: !vid2(okno),
+        naOtvirac: !!(otv && a && (a === otv || (otv.id && a.id === otv.id))),
+        kdo: a ? (a.tagName.toLowerCase() + (a.id ? '#' + a.id : '.' + ((a.className || '').split(' ')[0] || ''))) : 'nic' };
+    }, [okno]);
+    pravda(`okno „${jmeno}": Escape ho zavře`, po.zavreno === true, 'okno po Escape pořád svítí');
+    pravda(`okno „${jmeno}": a zaměření se vrátí na otvírač (${po.kdo})`, po.naOtvirac === true,
+      'zaměření skončilo jinde — klávesnicí se člověk octne na začátku stránky (oddíl 96)');
+  }
+  pravda('okna: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nZaostření klávesnicí');
 console.log(zpravy.join('\n'));

@@ -6424,3 +6424,105 @@ v seznamu), takže rozbité chování vypadalo stejně jako správné.
 Sabotáž se proto nedělá jednou na konci — dělá se na každou kontrolu
 zvlášť a hledá se u ní věta „co by vypadalo stejně, i kdyby to bylo
 rozbité".
+
+## 97. Okna, která slibují `aria-modal` a nedrží to *21. 10.*
+
+Okno přes celou obrazovku hlásí `role="dialog" aria-modal="true"`, čímž
+slibuje, že **za ním nic není**. Od okna se tedy čekají čtyři věci:
+zaměření si vezme, tabulátor v něm udrží, Escape ho zavře a po zavření
+zaměření vrátí tam, odkud se otevřelo. Změřeno na všech oknech úvodní
+stránky:
+
+| okno | zaměření dovnitř | zámek tabulátoru | Escape | vrácení |
+|---|---|---|---|---|
+| Zásady soukromí (`#info-modal`) | **ne** | **uteklo na „nahoru"** | ano | **ne** |
+| Vyberte své okolí (`.vm-ov`) | **ne** | **uteklo** | ano | **ne** |
+| Procházet po jednom (`#rv-vrstva`) | ano | **uteklo** | ano | **ne** |
+| Stáhnout tabulku (`#vyv-vrstva`) | ano | ano | ano | ano |
+
+Jedno ze čtyř bylo celé v pořádku — a právě u něj byl v kódu zámek
+tabulátoru s poznámkou „používá to i okno rozsahu cen, ať se slib drží
+všude stejně". Slib se jinde nedržel.
+
+### Oprava
+
+Dvě společné funkce (`otviracZapamatuj` / `otviracZamer`) vedle zámku
+tabulátoru: před otevřením se zapamatuje, co bylo zaměřené, po zavření
+se tam zaměření vrátí. Pamatuje se i **id**, protože zavření okna
+přestaví výpis a nářadí v jeho hlavičce je potom jiný prvek se stejným
+id (oddíl 96) — podle samotného prvku by se zaměření nevrátilo nikam.
+Okna navíc dostala `zamkniTab()` a zaměření na svou zavírací akci.
+
+A jeden krok, který nebyl vidět, ale rozhodl: **`zamkniTab` byl
+zanořený uvnitř obsluhy stahování**, takže ho okno se zásadami
+soukromí nevidělo. První pokus o jeho použití shodil celý skript
+(`ReferenceError: zamkniTab is not defined`) a úvodní stránka zůstala
+bez výpisu. Používají ho čtyři okna, takže patří tam, odkud ho vidí
+všechna.
+
+### NÁLEZ, KTERÝ BYL ARTEFAKT MĚŘENÍ
+
+Páté okno — rozsah ceny (`.rz-ov`) — vyšlo zpočátku taky jako vadné:
+po zavření zaměření nikde. Hodinu jsem hledal příčinu v kódu, a pak ji
+našel ve své vlastní sondě:
+
+```
+pilulka „Cena"  rozměr 228×48 na (751, 781)
+                dá se zaměřit: NE
+                na jejím středu leží: <path>  (mapa)
+```
+
+Pilulka leží v panelu filtrů, což je `<details>`, a ten byl **zavřený**.
+Obsah zavřeného `<details>` je na počítači kvůli pravidlu
+`position:absolute` sice vysázený (má rozměr), ale leží za mapou a
+**zaměřit se nedá**. Sonda okno otvírala `click()`em, který na
+nezaměřitelný prvek funguje — otevřela tedy okno ze stavu, do kterého
+se člověk nedostane ani klávesnicí, ani myší. S otevřeným panelem se
+to okno chová správně: zaměření jde dovnitř, tabulátor drží, Escape
+zavře, zaměření se vrátí.
+
+Změny, které jsem na základě toho „nálezu" udělal (`id` pro pilulku
+a vrácení zaměření v dalším snímku), jsou **vrácené zpátky**. Opravovat
+něco, co není rozbité, znamená přidat kód a komentář, který tvrdí
+naměřený důvod — a ten důvod by byl lež.
+
+Hlídač to proto měří jen přes otvírač, který **jde zaměřit a leží
+nahoře** (hit-test v jeho středu vrací jeho vlastní prvek). Ta jedna
+podmínka je celé poučení převedené na kontrolu.
+
+### Tři pasti v té kontrole, všechny naměřené
+
+* `querySelector('[data-info]')` vrací první prvek v DOM, a ten může
+  být ve schované mobilní nabídce. Hledá se tedy mezi **všemi** a bere
+  se první dosažitelný.
+* Odkaz v patičce je hluboko pod okrajem okna, takže hit-test vrací
+  `null` — to není zakrytí, to je „ještě jsem k němu nedošel".
+  Rolování dělá `locator.scrollIntoViewIfNeeded()`; vlastní
+  `scrollIntoView()` jsem zkusil a měřil s ním **starý obdélník**
+  (stránka roluje plynule a `getBoundingClientRect()` se přečetl dřív,
+  než rolování dojelo).
+* „Zaměření je zpátky na otvírači" musí uznat i prvek, který otvírač
+  **nahradil se stejným id** — zavření okna přestaví nářadí výpisu.
+
+### Prokázáno šesti sabotážemi
+
+```
+zámek z okna zásad pryč         → spadlo „tabulátor z něj neuteče" (uteklo na #to-top)
+zaměření dovnitř z okna zásad   → spadlo „zaměření šlo DOVNITŘ"
+vrácení z okna zásad            → spadlo „zaměření se vrátí na otvírač" (body)
+zámek z okna „okolí"            → spadlo „tabulátor z něj neuteče" (body.vm-otevreno)
+vrácení z okna „okolí"          → spadlo „zaměření se vrátí na otvírač"
+zámek z rychlého výběru         → spadlo „tabulátor z něj neuteče"
+```
+
+### Co z toho platí dál
+
+**Měř ve stavu, do kterého se člověk dostane.** `click()` ze skriptu
+funguje i na prvek, který není zaměřitelný a není ani vidět — a sonda
+pak poslušně naměří chování, které v životě nenastane. Než se z měření
+stane nález, musí být jasné, že se k tomu prvku dá dojít: zaměřit ho
+a trefit ho v jeho vlastním středu.
+
+A opačně: **slib v atributu je závazek na čtyři věci, ne na jednu.**
+`aria-modal="true"` je jedno slovo v kódu a znamená zaměření, zámek,
+zavření a vrácení. Tři ze čtyř oken ho napsaná měla a nedržela.

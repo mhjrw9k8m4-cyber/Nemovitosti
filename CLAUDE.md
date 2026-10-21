@@ -210,6 +210,19 @@ záchrana není. Pozor i na stav, který si kontroly přestavují navzájem,
 a na to, že `page.reload()` čistou stránku nedělá: web si stav zapisuje
 do adresy.
 
+**A měř ve stavu, do kterého se člověk dostane.** `click()` ze skriptu
+funguje i na prvek, který není zaměřitelný a není vidět — sonda pak
+poslušně naměří chování, které v životě nenastane. Naměřeno (oddíl 97):
+„okno rozsahu ceny nevrací zaměření" byl artefakt, protože jsem ho
+otvíral z pilulky v zavřeném `<details>`; s otevřeným panelem je to
+okno v pořádku a změny, které jsem podle toho „nálezu" udělal, jsou
+vrácené. Než se z měření stane nález, musí být jasné, že se k tomu
+prvku dá dojít: jde zaměřit a hit-test v jeho středu vrací jeho vlastní
+prvek. **A slib v atributu je závazek na všechno, co znamená:**
+`aria-modal="true"` není jen vzhled — je to zaměření dovnitř, zámek
+tabulátoru, Escape a vrácení zaměření. Tři ze čtyř oken ho napsaná
+měla a nedržela.
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:
