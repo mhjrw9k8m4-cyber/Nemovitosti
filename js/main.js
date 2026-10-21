@@ -5815,19 +5815,27 @@
       var hot = !!hotIds[d._id];
       var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
-      /* JEN JMÉNA, KTERÁ NĚKDO ČTE. Stálo tu `'opp-item ' + d.type +
-         (hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')`.
-         Ověřeno: na `.opp-item.sale/.drazba/.exekuce`, `.is-hot` ani
-         `.is-featured` není ve stylopisu jediné pravidlo, v kódu
-         jediné `classList.contains` a ve zkouškách jediný selektor.
+      /* JEN JMÉNA, KTERÁ NĚKDO ČTE. Stálo tu navíc
+         `(hot ? ' is-hot' : '') + (isFeatured(d) ? ' is-featured' : '')`
+         a na ta dvě jména není v celém repozitáři jediné pravidlo,
+         jediné `classList.contains` ani jediná zmínka ve zkoušce.
          Komentář u .opp-item v css/styles.css přitom patnáct řádků
          popisoval barevné obtažení karty podle druhu, které na webu
          nikdy nebylo — kdo přišel za tím jménem, hledal pravidlo,
          které neexistuje.
          Výpočty za nimi se NERUŠÍ: `hot` kreslí odznak .opp-hot níž
          a isFeatured() řadí výpis, barví značku na mapě a kreslí
-         odznak „Zvýrazněno". Zmizela jen ta tři jména. */
-      li.className = 'opp-item' + (jeVidene ? ' je-videne' : '');
+         odznak „Zvýrazněno".
+         DRUH (`d.type`) NA KARTĚ ZŮSTÁVÁ, i když na něj taky není
+         jediné pravidlo ve stylopisu. ČTE HO ZKOUŠKA:
+         scripts/test-barvy.mjs podle něj u každé karty ve výpisu zjistí,
+         který druh to je, a pak ověří, že puntík odznaku má barvu
+         SVÉHO druhu z palety. Dělá to `DRUHY.find((c) =>
+         e.classList.contains(c))`, tedy jménem z pole — hledání
+         `classList.contains('sale')` ho nenajde a já jsem na to právě
+         takhle narazil: jméno jsem smazal jako mrtvé a zkouška pak
+         měřila nulu karet. */
+      li.className = 'opp-item ' + d.type + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
       /* Klíč pozemku na kartě. _id je číslo z dat a mezi běhy robota se
          mění; klíč je to, pod čím si web pamatuje oblíbené, viděné

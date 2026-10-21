@@ -3757,7 +3757,7 @@
       var jeVidene = PKKlic.jeMezi(videneKlice, d);
       var li = document.createElement('li');
 
-      li.className = 'opp-item' + (jeVidene ? ' je-videne' : '');
+      li.className = 'opp-item ' + d.type + (jeVidene ? ' je-videne' : '');
       li.setAttribute('data-id', d._id);
 
       li.setAttribute('data-pk', pkey(d));

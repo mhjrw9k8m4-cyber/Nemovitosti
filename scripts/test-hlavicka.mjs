@@ -637,6 +637,74 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
  * vadou není — a zkouška, která padá pro nic, přestane být brána vážně.
  * Kdyby se patička se značkou někdy vrátila, patří sem zpátky i tohle. */
 
+/* --- 9) V LIŠTĚ NESTOJÍ NIC, CO SE NEKRESLÍ NIKDE -------------------
+ *
+ * PROČ TAHLE KONTROLA VZNIKLA. Mezi značkou a navigací stál na 2 311
+ * stránkách odkaz `<a class="btn-primary header-cta">Přidat pozemek</a>`
+ * a stylopis ho schovával DVĚMA pravidly `display:none` — jedním pro
+ * široký displej a druhým uvnitř @media pro telefon. Nekreslil se tedy
+ * nikde. Komentář u prvního z nich přitom tvrdil, že „na mobilu se
+ * ukáže přímo v liště"; byl o pět měsíců starší než rozhodnutí dát
+ * akci do šuplíku (viz oddíl 6 v scripts/test-rozvrzeni.mjs).
+ * Nenahlásilo to nic: mrtvý prvek v liště nic nerozbije, jen se každému
+ * návštěvníkovi každé stránky stáhne a nikdy neukáže.
+ *
+ * JAK SE TO MĚŘÍ. Ne čtením stylopisu — `display:none` v základu je
+ * u lišty normální (hamburger na monitoru, šuplík na telefonu) a kdo
+ * prvek ukáže, může být i skript. Měří se tedy VÝSLEDEK na dvou
+ * šířkách: prvek, který nemá ani jeden obdélník na 390 px ANI na
+ * 1280 px, se nekreslí nikde. Co se objeví teprve po klepnutí, musí
+ * být ve výjimkách — s napsaným důvodem, a kontrola hlásí i výjimku,
+ * která už potřeba není. */
+{
+  const VYJIMKY_LISTA = {
+    'div.nav-stin': 'závoj pod otevřeným šuplíkem — objeví se teprve po klepnutí na hamburger, bez doteku ho na žádné šířce vidět není',
+  };
+  const skryteNa = async (opt) => {
+    const { ctx, p } = await otevri(opt, 'index.html');
+    const seznam = await p.evaluate(() => {
+      const hl = document.getElementById('header');
+      if (!hl) return null;
+      const out = [];
+      hl.querySelectorAll('*').forEach((e) => {
+        /* Tvary uvnitř <svg> vlastní obdélník nemají a nic to neznamená. */
+        if (e.closest('svg')) return;
+        if (e.getClientRects().length) return;
+        const c = (e.getAttribute('class') || '').trim();
+        out.push(e.tagName.toLowerCase() + (c ? '.' + c.split(/\s+/).join('.') : '')
+          + (e.id ? '#' + e.id : ''));
+      });
+      return out;
+    });
+    await ctx.close();
+    return seznam;
+  };
+  const naTelefonu = await skryteNa(TELEFON);
+  const naMonitoru = await skryteNa(MONITOR);
+  pravda('lišta se našla na obou šířkách',
+    naTelefonu !== null && naMonitoru !== null, 'na stránce není #header');
+  /* PŘEDPOKLAD: na každé šířce se v liště něco schovává (na monitoru
+     šuplík i hamburger, na telefonu zase to, co patří na široký
+     displej). Kdyby se neschovávalo nic, kontrola níž by prošla
+     naprázdno. */
+  pravda(`je co měřit — schovaných prvků v liště: ${(naTelefonu || []).length} na telefonu, `
+    + `${(naMonitoru || []).length} na monitoru`,
+    (naTelefonu || []).length > 0 && (naMonitoru || []).length > 0,
+    'na jedné ze šířek se neschovává nic — měří se vůbec otevřená stránka?');
+  const nikde = [...new Set((naTelefonu || []).filter((x) => (naMonitoru || []).includes(x)))]
+    .filter((x) => !(x in VYJIMKY_LISTA));
+  pravda('nic v liště se neschovává na OBOU šířkách naráz',
+    nikde.length === 0,
+    nikde.join(', ') + ' — kreslí se to vůbec někde? Takhle tam viselo tlačítko .header-cta');
+  for (const [k, duvod] of Object.entries(VYJIMKY_LISTA)) {
+    pravda(`výjimka ${k} má napsaný důvod`,
+      typeof duvod === 'string' && duvod.length >= 30, 'bez důvodu tabulka tiše roste');
+    pravda(`a je pořád potřeba (${k})`,
+      (naTelefonu || []).includes(k) && (naMonitoru || []).includes(k),
+      'prvek se na některé šířce už kreslí — výjimku smaž');
+  }
+}
+
 await prohlizec.close();
 console.log('\nLepivá hlavička — drží nahoře a nic pod ní neprosvítá');
 console.log(zpravy.join('\n'));

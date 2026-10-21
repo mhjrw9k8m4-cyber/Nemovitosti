@@ -247,7 +247,7 @@ async function otevri(soubor, sirka, vyska) {
       const mezera = Math.round(odkazy[0].getBoundingClientRect().left - logo.getBoundingClientRect().right);
       // Odkaz, který se sám zalomil na dva řádky (kromě tlačítka s výplní).
       const sirsi = odkazy.filter((a) => {
-        if (a.classList.contains('btn-primary') || a.classList.contains('header-cta')) return false;
+        if (a.classList.contains('btn-primary')) return false;
         const r = a.getBoundingClientRect();
         return r.height > parseFloat(getComputedStyle(a).lineHeight) * 1.6;
       }).map((a) => a.textContent.trim());
@@ -607,7 +607,9 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  *
  * Měřeno na 390×844 v OTEVŘENÉM šuplíku: tlačítko bylo na y 1 528
  * z 1 652 px celé nabídky, tedy až za čtrnácti odkazy — a v hlavičce
- * na telefonu žádné není (.header-cta se schovává), takže kdo přišel
+ * na telefonu žádné není (stálo tam `.header-cta`, jenže schované na
+ * všech šířkách; dnes je zrušené, viz oddíl 85 v docs/optimalizace.md),
+ * takže kdo přišel
  * prodat, musel nejdřív projet celý web cizíma očima. Majitel webu:
  * „a přidat pozemek bych dal nahoru."
  * Značka se kvůli tomu nepřesouvá (v liště na širokém displeji patří

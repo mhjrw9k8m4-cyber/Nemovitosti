@@ -81,11 +81,25 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
 
 const VZOR = /<nav id="nav"[\s\S]*?<\/nav>/;
 
+/* CTA „Přidat pozemek" V LIŠTĚ SE VYNDÁVÁ, nevkládá.
+   Mezi značkou a navigací stál na 2 311 stránkách odkaz
+   `<a class="btn-primary header-cta">` se dvěma variantami popisku —
+   a `css/styles.css` ho schovával dvěma pravidly `display:none`, jedním
+   pro široký displej a druhým uvnitř @media pro telefon. Nekreslil se
+   tedy nikde: akce je na širokém displeji v navigaci (.nav-add) a na
+   telefonu první věcí v šuplíku (změřené rozhodnutí, viz
+   scripts/test-rozvrzeni.mjs). Vyndává se to tudy, protože lišta je
+   kánon pro celý web — včetně stránek ukončených nabídek, které se
+   obsahově nepřepisují a kterých by se změna šablony nedotkla.
+   Idempotentní: druhý průchod už nemá co odebrat. */
+const CTA_PRYC = /[ \t]*<a href="pridat\.html" class="btn-primary header-cta">[\s\S]*?<\/a>\n?/;
+
 /** Vepíše kánon do jedné stránky. Vrací ji beze změny, když lištu nemá. */
 export function sjednotHlavicku(html, soubor) {
   if (!VZOR.test(html)) return html;
   /* Na úvodní stránce vede mapa na kotvu, odjinud na index.html —
      relativní „#mapa" by jinde skočil na místo, které tam není. */
   const naMape = /(^|\/)index\.html$/.test(String(soubor || ''));
-  return html.replace(VZOR, NAV_HTML.replace(NAV_MAPA, naMape ? '#mapa' : 'index.html#mapa'));
+  const bezCta = html.replace(CTA_PRYC, '');
+  return bezCta.replace(VZOR, NAV_HTML.replace(NAV_MAPA, naMape ? '#mapa' : 'index.html#mapa'));
 }

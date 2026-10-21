@@ -125,6 +125,15 @@ něco, co není. Hlídat se to dá jen měřením v prohlížeči (jména z DOM
 proti selektorům), ne čtením zdroje — skládaná jména jako
 `'opp-item ' + d.type` žádný regex spolehlivě nesloží.
 
+**A „nikdo to nečte" je tvrzení o budoucím hledání, ne o kódu.**
+Skládá se nejen psaní jména, ale i jeho ČTENÍ: `DRUHY.find((c) =>
+e.classList.contains(c))` nenajde nikdo, kdo hledá
+`classList.contains('sale')`. Naměřeno tvrdě (oddíl 86): smazal jsem
+`d.type` z karty jako mrtvé jméno a shodil tím zkoušku, která podle
+něj měří barvy odznaků. Před takovým mazáním patří obyčejný
+`grep -rn 'jméno'` přes celý repozitář, bez vzoru — a pak **celá** sada
+v prohlížeči, ne vybraná podmnožina.
+
 ## Testy
 
 237 zkoušek v CI (116 bez prohlížeče, 121 s ním) ve třech úlohách:

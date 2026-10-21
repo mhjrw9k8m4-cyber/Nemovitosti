@@ -5178,7 +5178,7 @@ která už není potřeba, se má zrušit, ne zapomenout.
 dlouhé pulzy animací. Tokeny jsou `--cas-zakladni` (.2s) a
 `--cas-pomaly` (.4s); nahrazeno druhým z nich.
 
-## 83. Pět jmen tříd, která nikdo nečte, a dva komentáře, které lhaly *21. 10.*
+## 83. Jména tříd, která nikdo nečte, a dva komentáře, které lhaly *21. 10.*
 
 Napsal jsem si prototyp, který porovnává jména tříd psaná v JS se
 selektory ve stylopisech. Našel deset jmen; po jednom po druhém z nich
@@ -5194,10 +5194,11 @@ li.className = 'opp-item ' + d.type + (hot ? ' is-hot' : '')
   + (isFeatured(d) ? ' is-featured' : '') + (jeVidene ? ' je-videne' : '');
 ```
 
-Z těch čtyř jmen čte někdo **jen `je-videne`**. Na
-`.opp-item.sale/.drazba/.exekuce`, `.is-hot` ani `.is-featured` není ve
-stylopisu jediné pravidlo, v kódu jediné `classList.contains` a ve
-zkouškách jediný selektor.
+Na `.opp-item.sale/.drazba/.exekuce`, `.is-hot` ani `.is-featured`
+není ve stylopisu jediné pravidlo, v kódu jediné `classList.contains`
+a ve zkouškách jediný selektor — tak jsem to změřil a **u jednoho ze
+tří jsem se spletl**; jak, stojí o dva oddíly níž (oddíl 86). `d.type`
+je zpátky, `is-hot` a `is-featured` pryč.
 
 A hned za tím ten horší nález: v `css/styles.css` nad `.opp-item` stálo
 **patnáct řádků komentáře, které v přítomném čase popisovaly barevné
@@ -5342,3 +5343,150 @@ v posledním commitu — stačí se podívat, co na té stránce stojí dnes
 a nestálo včera. Čemu se vyhnout: „opravit" to tak, že se nález
 umlčí. Přeskočit se smí jen to, co podle návrhu měřit nejde, a i pak
 se musí vypsat, kolik toho bylo.
+
+## 85. Tlačítko, které se nekreslilo nikde, a přesto bylo na 2 311 stránkách *21. 10.*
+
+Vypadlo to z měření k oddílu 83: mezi jmény tříd, která jsou v DOM a ve
+stylopisu k nim není pravidlo, stály `cta-full` a `cta-short`. Dva
+popisky jednoho odkazu v liště:
+
+```html
+<a href="pridat.html" class="btn-primary header-cta">
+  <span class="cta-full">Přidat pozemek</span><span class="cta-short">Přidat</span></a>
+```
+
+Celý ten odkaz je přitom **`display:none` na všech šířkách** — jednou
+v základu (`css/styles.css:1638`) a znovu uvnitř `@media` pro telefon
+(`:4273`). Žádné pravidlo ho nikde nevracelo; ověřeno i v očištěných
+kopiích (`css/pozemek.min.css`, `css/region.min.css`). Stál na **2 311
+stránkách** a nikdo ho nikdy neviděl.
+
+### Komentář u toho tvrdil opak
+
+> Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
+> tady se skryje; **na mobilu se ukáže přímo v liště** (aby bylo vidět
+> hned, ne schované v menu).
+
+Neplatilo to a nemělo platit. Vedle toho druhého `display:none` stojí
+novější komentář „V nabídce už akce NENÍ duplicitní — je jediná, takže
+se ukazuje", a `scripts/test-rozvrzeni.mjs` má celý oddíl o tom, jak se
+„Přidat pozemek" **přesunulo nahoru do šuplíku** (naměřeno: bylo na
+y 1 528 z 1 652 px, tedy až za čtrnácti odkazy). Rozhodnutí tedy padlo
+a bar CTA bylo zrušeno; jen ta jedna věta o něm zůstala.
+
+### Oprava
+
+Značka se vyndává v `scripts/hlavicka.mjs`, protože lišta je kánon pro
+celý web — **včetně stránek ukončených nabídek**, které se obsahově
+nepřepisují a kterých by se změna šablony nedotkla. Odstraněna i ze
+tří zdrojů, které ji vyráběly (`index.html`, `pozemek.html`,
+`scripts/generate-region-pages.mjs`), a ze stylopisu zmizela čtyři
+pravidla: dvě `display:none`, `min-height:44px` pro dotyk a jméno ve
+dvou společných seznamech přechodů. Komentář je dnes záznamem
+rozhodnutí.
+
+### Hlídač: měří se VÝSLEDEK, ne stylopis
+
+Čtení stylopisu by na to nestačilo — `display:none` v základu je u lišty
+normální (hamburger na monitoru, šuplík na telefonu) a kdo prvek ukáže,
+může být i skript. Nový oddíl 9 v `scripts/test-hlavicka.mjs` proto měří
+obdélníky: **prvek v `#header`, který nemá ani jeden obdélník na 390 px
+ANI na 1280 px, se nekreslí nikde.** Co se objeví teprve po klepnutí,
+musí být ve výjimkách s napsaným důvodem — dnes je tam jedna
+(`div.nav-stin`, závoj pod otevřeným šuplíkem) a kontrola hlásí i
+výjimku, která už potřeba není.
+
+Změřeno: v liště se na telefonu schovávají 2 prvky, na monitoru 21 —
+průnik je po opravě prázdný.
+
+### Čím je to prokázané — a proč první sabotáž neprošla
+
+| co se pokazilo | co spadlo |
+|---|---|
+| odkaz vrácen do `index.html` + `display:none` do stylopisu | *„nic v liště se neschovává na OBOU šířkách naráz"* (81/1) |
+| výjimka přepsána na prvek, který se nikde neschovává | *„a je pořád potřeba"* (80/2) |
+
+První pokus ale **neudělal nic**: dopsal jsem pravidlo do
+`css/styles.css`, a zkouška prošla se stejnými počty (2 a 21). Důvod je
+věcný a stojí za zapamatování — **úvodní stránka nenačítá
+`styles.css`, ale `css/uvod.min.css`**, zkrácenou kopii, do které
+`scripts/rozdel-styly.mjs` vybírá jen pravidla na třídy, které na té
+stránce opravdu jsou. Dokud jsem ten krok nespustil, pravidlo se
+k prohlížeči nedostalo, prvek byl vidět a kontrola správně mlčela.
+Je to podruhé dnes (viz oddíl 84): **sabotáž, která nedojde až na
+stránku, vypadá jako důkaz.**
+
+Mimochodem je to zároveň pochvala pro hlídače: měří skutečně
+servírovaný stylopis, ne ten, který si člověk upravuje.
+
+### Co z toho platí dál
+
+**Prvek, který se nekreslí nikde, je mrtvý kód, který se přesto stahuje
+— a nenahlásí ho nic.** Nerozbije stránku, nespadne na něm zkouška,
+jen tam je. Hlídat se to dá jedině měřením výsledku na obou šířkách;
+čtení stylopisu na to nestačí, protože „schováno v základu" je
+u responzivní lišty normální stav.
+
+## 86. Jak jsem si sám předvedl pravidlo z oddílu 83 *21. 10.*
+
+Oddíl 83 končí větou „jméno třídy je slib, že existuje pravidlo" a
+poznámkou, že staticky to hlídat nejde, protože skládaná jména žádný
+regex nesloží. **Hodinu po tom, co jsem to napsal, mi na tom spadlo
+CI** — a ne na skládání v kódu, ale na skládání v té zkoušce.
+
+### Co spadlo
+
+Běh 598, `test-barvy.mjs`:
+
+```
+✓ výpis má karty, na kterých jde druh měřit
+✕ každá karta ve výpisu nese odznak druhu
+    z 0 karet jich odznak s popiskem nemá 0
+✕ a puntík odznaku má barvu svého druhu z palety
+✕ a ten puntík je opravdu vykreslený, ne průhledný
+```
+
+„Z **0** karet" je ta důležitá část: karty na stránce byly (první
+kontrola prošla), jen zkouška u žádné z nich nepoznala druh.
+
+### Proč mě hledání nenašlo nic
+
+`test-barvy.mjs` zjišťuje druh karty takhle:
+
+```js
+const DRUHY = ['sale', 'drazba', 'exekuce', 'obec', 'majitel'];
+const druh = DRUHY.find((c) => e.classList.contains(c)) || null;
+```
+
+Jméno třídy tedy **nestojí v kódu nikde celé**: přijde z pole.
+Hledal jsem `classList.contains` s literálem a selektory `.opp-item.`
+ve stylopisech i ve zkouškách — a tahle podoba není ani jedno. Smazal
+jsem `d.type` z karty jako mrtvé jméno a zkouška, která podle něj
+měří barvy odznaků, začala měřit nulu.
+
+Je to **týž mechanismus, který jsem o oddíl výš popsal z druhé
+strany**: `'opp-item ' + d.type` nenajde regex, který hledá hotové
+jméno. Jen jsem si neuvědomil, že to platí i pro ČTENÁŘE, ne jen pro
+pisatele.
+
+### Oprava
+
+`d.type` je na kartě zpátky — a u toho napsané, KDO ho čte, včetně
+toho, že se hledá jménem z pole, takže ho běžný grep nenajde.
+`is-hot` a `is-featured` zůstávají pryč: na ty dvě jména opravdu není
+v celém repozitáři nic (prověřeno ještě jednou, tentokrát obyčejným
+`grep -rn` přes všechny soubory, ne jen vzorem u `contains`).
+
+### Co z toho platí dál
+
+**„Nikdo to nečte" je tvrzení o budoucím hledání, ne o kódu.** Vyslovit
+ho smím jen tehdy, když jsem hledal i podobu, ve které jméno v kódu
+celé nestojí — tedy u čtení stejně jako u psaní. Nejspolehlivější
+hledání je to nejhloupější: `grep -rn 'jméno'` přes celý repozitář,
+bez vzoru, a potom se podívat na každý výskyt.
+
+A druhá věc, praktická: **mazání jména třídy je změna, po které se
+pouští CELÁ sada v prohlížeči, ne vybraná podmnožina.** Pustil jsem
+dvanáct zkoušek, které jsem si vybral podle toho, čeho se změna
+„týká" — a ta jedna, co na tom stála, mezi nimi nebyla. Celá sada ten
+nález měla; běžela ale naposled před touhle změnou.

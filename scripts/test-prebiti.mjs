@@ -149,7 +149,7 @@ for (let a = 0; a < jednotride.length; a++) {
   for (let b = a + 1; b < jednotride.length; b++) {
     const B = jednotride[b];
     if (B.trida === A.trida) continue;
-    /* Výběry z jednoho bloku (`.btn-primary, .header-cta{…}`) se nepřebíjejí
+    /* Výběry z jednoho bloku (`.btn-primary, .lp-btn, .nav-add{…}`) se nepřebíjejí
        — nesou tytéž deklarace a porovnávat je spolu nedává smysl. */
     if (B.blok === A.blok) continue;
     const dB = deklarace(B.telo);

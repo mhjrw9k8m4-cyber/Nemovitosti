@@ -784,11 +784,11 @@ h1,h2{text-wrap:balance;}
    hmatatelnou odezvu (jemné zmáčknutí) a zapne setrvačné rolování. */
 a, button, [role="button"], input, select, textarea, label, summary{ -webkit-tap-highlight-color:transparent; }
 button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="submit"]{ touch-action:manipulation; }
-.btn-primary, .lp-btn, .header-cta, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-nastroj, .okr-src{
+.btn-primary, .lp-btn, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-nastroj, .okr-src{
   transition:transform var(--cas-rychly) var(--ease), background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);
 }/* Hmatatelné zmáčknutí při klepnutí */
 
-.btn-primary:active, .lp-btn:active, .header-cta:active, .nav-add:active, .pf-add:active, .pf-logout:active, .auth-submit:active{
+.btn-primary:active, .lp-btn:active, .nav-add:active, .pf-add:active, .pf-logout:active, .auth-submit:active{
   transform:translateY(0) scale(.97);
 }
 /* Na dotykových displejích se :hover „zasekne" po klepnutí — proto tam
@@ -1632,10 +1632,19 @@ button:disabled:hover, input:disabled:hover, select:disabled:hover,
    byla ve skutečnosti „pracuje se" (hledá se poloha) a patří tedy
    pod aria-busy. Našla to zkouška, ne oko. */
 .btn-primary:active{transform:translateY(1px);}
-/* Stálé CTA „Přidat pozemek" v liště. Na počítači je akce už v navigaci,
-   tady se skryje; na mobilu se ukáže přímo v liště (aby bylo vidět hned,
-   ne schované v menu). */
-.header-cta{display:none;}
+/* CTA „PŘIDAT POZEMEK" V LIŠTĚ: ZRUŠENO, NE SCHOVÁNO.
+   Stál tu odkaz `.header-cta` a dvě pravidla `display:none` — jedno
+   tady, druhé uvnitř @media pro telefon — takže se nekreslil NA ŽÁDNÉ
+   šířce. Komentář u toho přitom tvrdil, že „na mobilu se ukáže přímo
+   v liště"; neplatilo to a nemělo platit: akce je na širokém displeji
+   v navigaci (.nav-add) a na telefonu první věcí v šuplíku, což je
+   změřené rozhodnutí (viz „PŘIDAT POZEMEK STOJÍ V ŠUPLÍKU NAHOŘE"
+   v scripts/test-rozvrzeni.mjs — naměřeno y 1 528 z 1 652 px, než se
+   přesunulo nahoru). Odkaz nesl ještě dvě varianty popisku
+   (.cta-full / .cta-short), ani jedna bez pravidla, takže kdyby se
+   tlačítko někdy vrátilo, ukázaly by se obě („Přidat pozemekPřidat").
+   Značka se proto vyndala z lišty (scripts/hlavicka.mjs) a hlídá to
+   zkouška. */
 
 /* (Tečka na hamburgeru je pryč i s hamburgerem. Žádný skript ji stejně
    nikdy nevytvářel — byl to styl bez prvku. Že na telefonu není vidět
@@ -4270,7 +4279,6 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Zmenšovat ho tu není proč: v liště s ním stojí jen hamburger,
      naměřená šířka odkazu je 155 px z 390 a výšku lišty určuje
      dlaždice, ne písmo. */
-  .header-cta{display:none;}
   /* V nabídce už akce NĚNÍ duplicitní — je jediná, takže se ukazuje. */
   /* Mobilní menu = kompaktní panel u horní lišty (jen na výšku obsahu), sjíždí
      zpod hlavičky se zaoblenými spodními rohy. Pod ním je stránka jen zjemněná,
@@ -7381,9 +7389,6 @@ body > footer{flex:none;}
      navíc terč, který se trefuje hned po psaní, kdy ruka drží telefon
      jednou rukou a palec je nejblíž právě tady. */
   .filter-chip, .map-near-btn, .mc-nastroj, .msch { min-height:44px; }
-  /* Hlavní tlačítko v hlavičce mělo 41 px — o tři chybějící pixely
-     u toho nejdůležitějšího knoflíku na webu nemá cenu se hádat. */
-  .header-cta { min-height:44px; }
   /* Odkazy v patičce měly 31 px a rozestup 40 px. Je to plnohodnotná
      navigace (Pozemky, Ceny, Přidat pozemek, Můj profil…), ne text ve
      větě, takže mez platí i na ně. Odsazení se zmenší, ať z toho není
