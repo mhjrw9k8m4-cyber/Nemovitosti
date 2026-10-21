@@ -1663,10 +1663,16 @@
     }
     refreshFavBtn();
     /* Na účet AŽ POTOM a bez čekání: uložení musí být okamžité i bez
-       signálu. Nepřihlášenému se nestane nic (viz js/ulozene-ucet.js). */
-    /* Modul se dotáhne až tady, při prvním uložení — do té doby ho
-       nepotřebuje nikdo. Zápis do prohlížeče proběhl výš a nezávisle,
-       takže na stažení nic nečeká. */
+       signálu. Zápis do prohlížeče proběhl výš a nezávisle, takže na
+       dotažení modulu nic nečeká.
+       A NEPŘIHLÁŠENÉMU SE NEDOTAHUJE VŮBEC. `zmena()` v
+       js/ulozene-ucet.js začíná `if (!klic || !prihlasen()) return`,
+       takže by se stáhlo 2 897 B (889 B brotli) a vykonalo se v nich
+       jedno `return`. Uložení samo na modulu nestojí — žije
+       v prohlížeči — a pozemek uložený před přihlášením se na účet
+       dostane stejně: nahraje ho `sync()` při prvním vykreslení výpisu
+       po přihlášení (viz stahniUlozene()). */
+    if (!jePrihlasen()) return;
     sUlozenymi(function () {
       if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
     });

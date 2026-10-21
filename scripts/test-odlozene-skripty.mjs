@@ -53,6 +53,16 @@ function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
+/* ČEKÁ NA VÝSLEDEK, NE NA ČAS — jenže na to, co se stalo v SÍTI,
+   a to prohlížeč ve waitForFunction nevidí. */
+async function pockejNa(podminka, limit = 30000) {
+  const konec = Date.now() + limit;
+  while (Date.now() < konec) {
+    if (podminka()) return true;
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  return false;
+}
 function hotovo() {
   console.log('\nOdložené skripty');
   console.log(zpravy.join('\n'));
@@ -275,7 +285,13 @@ await ctx.close();
   pravda('a stránka u toho nespadla', padlo3.length === 0, padlo3.slice(0, 2).join(' | '));
   await ctx3.close();
 
-  /* Uložené: dotáhnou se při prvním uložení pozemku. */
+  /* ULOŽENÉ: NEPŘIHLÁŠENÉMU SE NESTAHUJÍ, ANI KDYŽ UKLÁDÁ. Tlačítko
+     „Uložit" má i on a uložení mu musí fungovat — jenže `zmena()`
+     v js/ulozene-ucet.js začíná `if (!klic || !prihlasen()) return`.
+     Stáhlo by se 889 B (brotli) a neudělalo se jimi nic. Hlídá se proto
+     obojí: že se nestáhne, A že se uložení přesto povede. To druhé je
+     tu důležitější — „nestahuje se" by se dalo splnit i rozbitým
+     tlačítkem. */
   const ctx4 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p4 = await ctx4.newPage();
   const stazeno4 = [];
@@ -288,11 +304,80 @@ await ctx.close();
   pravda('tlačítko „Uložit" je na kartě (jinak by se nebylo čeho chytit)',
     !!(await p4.$('#opp-list .opp-item .opp-fav')), 'na kartě není .opp-fav');
   await p4.click('#opp-list .opp-item .opp-fav').catch(() => {});
-  await p4.waitForFunction(() => !!window.PKUlozeneUcet, null, { timeout: 30000 }).catch(() => {});
-  pravda('po prvním uložení se modul uložených dotáhne',
-    stazeno4.length > 0, 'nestáhl se — uložené by se nikdy nepřenesly na účet');
+  /* Na výsledek, ne na čas: počet v liště se přepíše až po zápisu. */
+  await p4.waitForFunction(
+    () => /\(\s*1\s*\)/.test((document.getElementById('map-fav') || {}).textContent || ''),
+    null, { timeout: 20000 }).catch(() => {});
+  pravda('nepřihlášenému se uložení povede (zápis i počet v liště)',
+    await p4.evaluate(() => {
+      let n = 0;
+      try { n = (JSON.parse(localStorage.getItem('pk_fav_v1')) || []).length; } catch (e) {}
+      return n === 1 && /\(\s*1\s*\)/.test((document.getElementById('map-fav') || {}).textContent || '');
+    }),
+    'uložení neprošlo — buď se nezapsalo, nebo o tom tlačítko nic neříká');
+  pravda('a modul uložených se mu nestáhne (pro něj nic neudělá)',
+    stazeno4.length === 0, 'stáhlo se — 889 B (brotli) za nic');
   pravda('a stránka u toho nespadla', padlo4.length === 0, padlo4.slice(0, 2).join(' | '));
   await ctx4.close();
+}
+
+// ===== 6) A PŘIHLÁŠENÉMU ANO, VČETNĚ CESTY NA ÚČET ====================
+/* Druhá půlka pravidla z pětky. Kdyby se modul odložil i přihlášenému,
+   uložený pozemek by na druhém zařízení nebyl — a nikdo by se to
+   nedozvěděl, protože v tomhle prohlížeči by vypadalo všechno správně.
+   NESTAČÍ TU HLÍDAT, ŽE JE MODUL NA STRÁNCE: přihlášenému se stahuje
+   už při načtení kvůli sloučení, takže by kontrola prošla i s úplně
+   mrtvou cestou od tlačítka. Měří se proto to, co udělá JEN ona:
+   volání `ulozeny_uloz` s klíčem pozemku. */
+{
+  const ctx5 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  /* Přihlášení se předstírá stejně jako v scripts/test-poznamky.mjs:
+     podstrčený config.js (aby PKAuth.ready platilo) a session
+     v úložišti. Žádný skutečný účet ani síť k tomu není potřeba. */
+  await ctx5.route('**/config.js*', (r) => r.fulfill({
+    status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`
+      + 'window.PK_MAIL_ZAPNUTO=false;',
+  }));
+  const rpcVolani = [];
+  await ctx5.route('**/rest/v1/rpc/*', (r) => {
+    const jmeno = r.request().url().split('/rpc/')[1].split('?')[0];
+    rpcVolani.push({ jmeno, telo: r.request().postData() || '' });
+    r.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify(jmeno === 'moje_ulozene' ? { ok: true, data: [] } : { ok: true }) });
+  });
+  await ctx5.route('**/auth/v1/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await ctx5.addInitScript(() => {
+    try {
+      localStorage.setItem('pk_auth', JSON.stringify({
+        access_token: 'tok-majitel', refresh_token: 'ref-majitel',
+        expires_at: Math.floor(Date.now() / 1000) + 3600,
+        user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@test.cz' },
+      }));
+    } catch (e) {}
+  });
+  const p5 = await ctx5.newPage();
+  const stazeno5 = [];
+  p5.on('request', (r) => { if (/\/js\/min\/ulozene-ucet\.js/.test(r.url())) stazeno5.push('ulozene'); });
+  const padlo5 = [];
+  p5.on('pageerror', (e) => padlo5.push(String(e)));
+  await p5.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await p5.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
+    null, { timeout: 60000 });
+  // PŘEDPOKLAD: bez poznaného přihlášení by se měřil zase odhlášený
+  pravda('předstírané přihlášení web poznal',
+    await p5.evaluate(() => !!(window.PKAuth && window.PKAuth.prihlasen && window.PKAuth.prihlasen())),
+    'PKAuth.prihlasen() je false — podstrčený config.js nebo pk_auth nezabral');
+  await p5.click('#opp-list .opp-item .opp-fav').catch(() => {});
+  const doslo = await pockejNa(() => rpcVolani.some((v) => v.jmeno === 'ulozeny_uloz'));
+  pravda('přihlášenému je modul uložených na stránce',
+    stazeno5.length > 0, 'nestáhl se — uložené by se na účet nikdy nepřenesly');
+  pravda('a uložení dojde na účet (ulozeny_uloz s klíčem pozemku)',
+    doslo && /"p_klic"\s*:\s*"[^"]+#v\d+"/.test(
+      (rpcVolani.find((v) => v.jmeno === 'ulozeny_uloz') || {}).telo || ''),
+    'volání: ' + (rpcVolani.map((v) => v.jmeno).join(', ') || 'žádné'));
+  pravda('a stránka u toho nespadla', padlo5.length === 0, padlo5.slice(0, 2).join(' | '));
+  await ctx5.close();
 }
 
 await prohlizec.close();

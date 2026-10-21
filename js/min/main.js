@@ -1030,6 +1030,7 @@
     }
     refreshFavBtn();
 
+    if (!jePrihlasen()) return;
     sUlozenymi(function () {
       if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
     });

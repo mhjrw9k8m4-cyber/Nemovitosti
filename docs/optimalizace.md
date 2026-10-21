@@ -5001,3 +5001,98 @@ o sobě nic neřeší.
    součtem, který se přesunem obejít nedá.
 3. **Jeden běh profilu je jeden vzorek.** Než se na jeho čísle začne
    stavět, má se zopakovat.
+
+## 81. Modul, který se stáhl nepřihlášenému a hned se vrátil *21. 10.*
+
+Nález z vlastní revize diffu, ne z prohlížeče ani ze zkoušky — a právě
+proto stojí za zápis: zkouška, která to místo hlídala, byla **napsaná
+tak, že by se u ní oprava jevila jako chyba**.
+
+### Co se stalo
+
+Oddíl 76 odložil poslední čtyři moduly na první použití. Uložené
+pozemky (`js/ulozene-ucet.js`) se dotahovaly ze dvou míst: při načtení
+výpisu kvůli sloučení s účtem, a při prvním klepnutí na „Uložit".
+To první se správně hlídalo přihlášením:
+
+```js
+function stahniUlozene() {
+  if (favStazeno || !jePrihlasen()) return;
+```
+
+To druhé ne. `toggleFav()` modul dotáhl každému, kdo si uložil pozemek
+— jenže modul sám začíná:
+
+```js
+function zmena(klic, pridano) {
+  if (!klic || !prihlasen()) return Promise.resolve(false);
+```
+
+Nepřihlášený si tedy stáhl **2 897 B (889 B brotli)**, aby se v nich
+vykonalo jedno `return`. Není to chyba ve funkci webu: uložení běží
+v prohlížeči a na modulu nestojí ani ono, ani odznak na tlačítku.
+Je to přesně ten druh nákladu, kvůli kterého celý oddíl 76 vznikl —
+jen zůstal na místě, kam se nedohlédlo.
+
+### Oprava
+
+```js
+    if (!jePrihlasen()) return;
+    sUlozenymi(function () {
+      if (window.PKUlozeneUcet) { try { window.PKUlozeneUcet.zmena(klic, pridano); } catch (e) {} }
+    });
+```
+
+Co se tím neztrácí: pozemek uložený před přihlášením se na účet
+dostane stejně jako dřív — nahraje ho `sync()` při prvním
+vykreslení výpisu po přihlášení (`stahniUlozene()` se nezamkne,
+dokud `jePrihlasen()` neplatí, protože `favStazeno` se nastavuje
+teprve za tou podmínkou).
+
+### Zkouška, která by opravu označila za chybu
+
+V `scripts/test-odlozene-skripty.mjs` stála kontrola:
+
+> po prvním uložení se modul uložených dotáhne
+
+a běžela v **čistém, nepřihlášeném** prohlížeči. Po opravě by
+spadla — a kdo by ji opravoval zevnitř, mohl by snadno smazat tu
+jedinou větu, která hlídá, že se modul dotáhne vůbec někdy.
+Rozdělila se proto na dvě poloviny, každou s vlastním prohlížečem:
+
+* **nepřihlášený** — uložení se povede (zápis do `pk_fav_v1` i počet
+  v liště „Uložené (1)") a `js/min/ulozene-ucet.js` se **nestáhne**;
+* **přihlášený** — modul na stránce je a uložení **dojde na účet**.
+
+Druhá polovina nemůže měřit „je modul na stránce": přihlášenému se
+stahuje už při načtení kvůli sloučení, takže by prošla i s úplně
+mrtvou cestou od tlačítka. Měří proto to, co udělá jen ona — volání
+`ulozeny_uloz` s klíčem pozemku, odchycené na `**/rest/v1/rpc/*`.
+Přihlášení se předstírá jako v `scripts/test-poznamky.mjs`:
+podstrčený `config.js` a session v úložišti, žádný skutečný účet.
+
+### Čím je to prokázané
+
+Tři sabotáže, každá na opravené verzi, pokaždé přes `minifikace.mjs`
++ `orazitkuj-verze.mjs`, aby prohlížeč dostal opravdu ten pokažený kód:
+
+| co se pokazilo | co spadlo |
+|---|---|
+| závora `if (!jePrihlasen()) return;` smazána | *„a modul uložených se mu nestáhne"* (46/1) |
+| závora obrácena na `if (jePrihlasen())` | *„a modul se mu nestáhne"* **i** *„a uložení dojde na účet"* (45/2) |
+| `refreshFavBtn()` po uložení smazáno | *„nepřihlášenému se uložení povede"* (46/1) |
+
+Druhý řádek je ten důležitý. Kontrola **„přihlášenému je modul
+uložených na stránce" prošla i s úplně mrtvou cestou od tlačítka** —
+přesně jak se čekalo, protože modul si přihlášený stáhne už při
+načtení kvůli sloučení. Kdyby ta kontrola byla v oddílu jediná,
+sabotáž by projela bez povšimnutí. Chytilo to až odchycené volání
+`ulozeny_uloz`.
+
+### Co z toho platí dál
+
+**Odložení se musí hlídat z obou stran, a každá strana potřebuje
+vlastní návštěvníka.** Kontrola „stáhne se, když má" je v jednom
+prohlížeči s kontrolou „nestáhne se předem" jen zdánlivě úplná: obě
+pak mluví o témže člověku a o tom druhém — tom, pro kterého se modul
+stahovat nemá — neřekne žádná z nich nic.
