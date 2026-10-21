@@ -36,7 +36,23 @@ function pravda(popis, vyslo, proc) {
 // Komentáře zahodit — ale po řádcích, ať čísla řádků dál platí.
 // (Měření, které to neudělalo, hlásilo tři barvy, jež jsou jen zápisem
 //  v komentáři o tom, že se stará studená barva ODSTRANILA.)
-const css = zdroj.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+
+/* BARVA POJMENOVANÁ PO KANÁLECH SE PŘED MĚŘENÍM ROZBALÍ.
+   Devět barev z paletky se používá i průhledně a `rgba()` neumí vzít
+   hex z tokenu, takže se berou po kanálech:
+   `rgba(var(--c-ok-rgb),.12)`. Pro prohlížeč je to táž barva (spočítaná
+   hodnota je byte za byte stejná), pro TUHLE kontrolu ale ne. Vzor
+   `rgba?\([^)]*\)` se zastaví na PRVNÍ zavírací závorce, takže z toho
+   zápisu urve `rgba(var(--c-ok-rgb)` — `rgb()` níž to nerozluští, barva
+   se mlčky nezměří a přesto se v počtu objeví. Naměřeno při zavedení:
+   z 268 barev v pravidlech jich takhle vypadlo 23.
+   Rozbalí se proto zpátky na čísla, než se začne měřit. */
+const KANALY = new Map();
+for (const m of zdroj.matchAll(/(--[\w-]+-rgb)\s*:\s*(\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3})\s*;/g)) {
+  KANALY.set(m[1], m[2].replace(/\s+/g, ''));
+}
+const rozbalKanaly = (t) => t.replace(/var\((--[\w-]+-rgb)\)/g, (cel, jm) => KANALY.get(jm) || cel);
+const css = rozbalKanaly(zdroj.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' ')));
 
 function rgb(s) {
   s = s.toLowerCase().replace(/\s+/g, '');

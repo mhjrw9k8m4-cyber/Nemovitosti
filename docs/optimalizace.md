@@ -5490,3 +5490,134 @@ pouští CELÁ sada v prohlížeči, ne vybraná podmnožina.** Pustil jsem
 dvanáct zkoušek, které jsem si vybral podle toho, čeho se změna
 „týká" — a ta jedna, co na tom stála, mezi nimi nebyla. Celá sada ten
 nález měla; běžela ale naposled před touhle změnou.
+
+## 87. Barva, kterou `rgba()` neumí vzít z tokenu *21. 10.*
+
+Oddíl 45 uklidil hexy opsané ve vložených stylech a hlídač na to pustil.
+Hlídač ale čte jen **hexy** — a tatáž barva napsaná deseti číslicemi je
+pro něj neviditelná. Měření ji našlo: **39 míst**, kde se barva
+z paletky psala průhledně rukou.
+
+```css
+.mi-lstatus.ok{background:rgba(31,163,99,.12); border-color:rgba(31,163,99,.4);}
+/* 31,163,99 je --c-ok. Napsané ručně, protože rgba() hex z tokenu
+   vzít neumí. */
+```
+
+Devět tokenů, 36 různých párů (token, průhlednost):
+
+| token | výskytů | různých průhlednostní |
+|---|---|---|
+| `--brand-live` | 16 | 8 |
+| `--plocha-tmava-2` | 11 | 7 |
+| `--c-drazba` | 6 | 3 |
+| `--text` | 5 | 5 |
+| `--accent-warm` | 4 | 3 |
+| `--c-ok` | 4 | 3 |
+| `--c-exekuce` | 3 | 3 |
+| `--c-ok-ink` | 2 | 2 |
+| `--znacka-svetla` | 1 | 1 |
+
+Bílá a černá se do toho nepočítají: `rgba(255,255,255,.12)` není kopie
+tokenu, je to závoj — a stejný zápis používá i sám stylopis.
+
+### Tři cesty, všechny barevně přesné. Rozhodlo třetí číslo
+
+| zápis | spočítaná hodnota | brotli |
+|---|---|---|
+| `rgba(var(--x-rgb), .4)` | `rgba(31, 81, 56, 0.4)` | +76 B |
+| `color-mix(in srgb, var(--x) 40%, transparent)` | `color(srgb 0.121569 0.317647 0.219608 / 0.4)` | +48 B |
+| `rgb(from var(--x) r g b / 40%)` | `color(srgb 0.121569 0.317647 0.219608 / 0.4)` | — |
+
+`color-mix` s `transparent` je matematicky **přesně** totéž co `rgba`
+(míchá se s předmnoženou alfou, takže vyjde ta samá barva i alfa) a je
+o 28 B menší. Vybralo se přesto to první, protože **spočítanou hodnotu
+čtou desítky zkoušek** — `test-kontrast`, `test-barvy`, `test-odstiny`,
+`test-barva-listy`, `test-barva-ceny` a další porovnávají barvy ve
+tvaru `rgba(…)`. Změnit jim formát za 28 bajtů by bylo špatně
+spočítané.
+
+Podpora v tom nehraje roli, i když to tak může vypadat: `color-mix`
+z webu kdysi vypadl (commit 53c8fe746), ale kvůli BARVĚ — bublina
+shluku se míchala s bílou, zesvětlila se o pětinu a bílé číslo v ní
+spadlo na 2,59–3,97 : 1. `CSS.supports` ho hlásí jako podporovaný.
+
+### Proč se tedy barva píše dvakrát
+
+U `-ink` variant stojí v paletce výslovně: *„Dva stejné hexy vedle sebe
+by vypadaly jako překlep a mohly se rozejít."* Tady jsou dva zápisy
+téže barvy taky — jen se **rozejít nemohou**, protože to hlídá nový
+blok RGBA PO KANÁLECH v `scripts/test-jeden-styl.mjs`:
+
+* každý `--x-rgb` sedí **přesně** na hex tokenu `--x`,
+* žádný companion token nezůstal nepoužitý (jinak je to mrtvé jméno),
+* a žádné `rgba()` nikde neopisuje barvu, kterou token má.
+
+Elegantnější cesta — psát barvu po kanálech a hex z nich dopočítat
+(`--c-ok:rgb(var(--c-ok-rgb))`) — se neudělala z téhož důvodu jako
+`color-mix`: změnila by to, co vrací `getPropertyValue('--c-ok')`,
+z `#1FA363` na `rgb(31,163,99)`. To čtou čtyři zkoušky
+(`test-barvy`, `test-hlavicka`, `test-shluky`, `test-zaobleni`).
+
+### Co měření našlo navíc, a co se v tomhle oddílu NEDĚLÁ
+
+Kromě 39 kopií **pojmenovaných** barev je ve zdrojích **136 výskytů 24
+barev, které token nemají vůbec**:
+
+```
+rgb(31, 81, 56)    = #1F5138   46×
+rgb(126, 196, 157) = #7EC49D   21×
+rgb(8, 20, 14)     = #08140E   13×
+rgb(20, 35, 28)    = #14231C    6×   …a dalších dvacet
+```
+
+#1F5138 je **čtvrtá** tmavá zeleň webu (vedle `--znacka`,
+`--plocha-znacka` a `--znacka-svetla`) a objevuje se **jen průhledná** —
+v `--prstenec-pole`, v `.pk-me::after`, v tónovaných panelech. Nikdy
+neprosvitne naplno, a proto jí nikdo jméno nedal.
+
+Tohle není táž úloha a nesmí se dělat týmž strojem. U barvy, která se
+používá jen průhledná, není správná odpověď „přidat `--x-rgb`" —
+správná odpověď je **pojmenovat výsledek podle toho, co to na obrazovce
+je**: plocha, závoj, prstenec. Web už takovou rodinu má
+(`--plocha-*`, `--prstenec-pole`), takže jde o rozšíření soustavy, ne
+o mechanickou záměnu. Zapsáno jako samostatný úkol.
+
+### A hned nato: dvě zkoušky, kterým ten nový zápis nikdo nenaučil
+
+Změna barvy na obrazovce nezměnila — spočítané hodnoty jsou byte za
+byte stejné a všech devět barevných zkoušek v prohlížeči prošlo. Rozbila
+ale dva ČTENÁŘE stylopisu, oba v rychlé sadě:
+
+* **`test-odstiny`** hlásil „nalezeno jen 245 — čte test vůbec
+  css/styles.css?". Jeho vzor `rgba?\([^)]*\)` se zastaví na PRVNÍ
+  zavírací závorce, takže z `rgba(var(--c-ok-rgb),.12)` urve
+  `rgba(var(--c-ok-rgb)` — to se do počtu započítá, ale rozluštit se
+  nedá, takže barva se **mlčky nezměří**. Z 268 barev v pravidlech jich
+  takhle vypadlo 23.
+* **`test-predloha`** hlásil „vlastní stín mimo paletku" u `404.html` —
+  stránky, která se nezměnila ani o znak. Porovnává stíny s paletkou
+  DOSLOVA, a `--e1` má od té chvíle `rgba(var(--plocha-tmava-2-rgb),0.08)`,
+  zatímco 404.html (ta stylopis schválně nenačítá) píše
+  `rgba(24,45,34,0.08)`.
+
+Obě se spravily stejně a správným směrem: **naučily se ten zápis
+rozbalit**, ne přestat měřit. Pět řádků, které z `var(--x-rgb)` udělají
+zpátky `r,g,b`, než se začne cokoli počítat. `test-odstiny` je zpátky na
+268 barvách, `test-predloha` na 120 stínech z paletky ze 159.
+
+### Co z toho platí dál
+
+**Hlídač barev musí umět všechny abecedy, kterými se barva píše.** Po
+oddílu 45 se zdálo, že opsané barvy jsou vyřešené; byly — v hexu. Totéž
+číslo v `rgba()` leželo na 39 místech a hlídač se na něj nepodíval,
+protože se na takový zápis neumí podívat. Je to táž past jako
+u písmových rodin v oddílu 73 (regex, který se zastavil na uvozovce)
+a stojí ve dvou verzích v CLAUDE.md.
+
+A rub téhož: **kdo zavede nový zápis, zavede ho i všem čtenářům.**
+Dnes to byly tři případy po sobě — mrtvé jméno třídy, které čtenář
+skládal z pole (oddíl 86), sabotáž, která nedošla až na stránku
+(oddíl 85), a teď dvě zkoušky, které nový zápis barvy neumí přečíst.
+Pokaždé to chytila sada, ne přemýšlení; a pokaždé byla správná oprava
+„naučit čtenáře", ne „ubrat, co měří".

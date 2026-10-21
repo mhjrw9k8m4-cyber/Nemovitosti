@@ -27,7 +27,22 @@ const ocisti = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '');
   }
 }
 
-const css = ocisti(readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8'));
+/* BARVA POJMENOVANÁ PO KANÁLECH SE PŘED POROVNÁNÍM ROZBALÍ.
+   Stupnice hloubky (--e1 … --glow) obsahuje barvy, a devět barev
+   z paletky se používá i průhledně, takže se berou po kanálech:
+   `rgba(var(--plocha-tmava-2-rgb),0.08)`. Stránky bez stylopisu
+   (404, diagnostika) píšou týž stín ČÍSLEM, a tahle kontrola je
+   porovnává s paletkou DOSLOVA — po zavedení kanálů si tedy přestaly
+   odpovídat a 404.html začala hlásit „vlastní stín mimo paletku",
+   přitom se nezměnila ani o znak. Rozbalí se proto zpátky na čísla,
+   než se cokoli porovná. */
+const SUROVY_STYL = readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
+const KANALY = new Map();
+for (const m of SUROVY_STYL.matchAll(/(--[\w-]+-rgb)\s*:\s*(\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3})\s*;/g)) {
+  KANALY.set(m[1], m[2].replace(/\s+/g, ''));
+}
+const rozbalKanaly = (t) => t.replace(/var\((--[\w-]+-rgb)\)/g, (cel, jm) => KANALY.get(jm) || cel);
+const css = rozbalKanaly(ocisti(SUROVY_STYL));
 
 // Stupnice neplatí jen v šabloně. Stránky aplikace si vlastní podobu píšou
 // v hlavičce, do <style>, a hlídač tam dosud nekoukal — právě proto se
@@ -66,7 +81,10 @@ for (const f of readdirSync(ROOT).filter(RUCNI).sort()) {
   const syrove = readFileSync(path.join(ROOT, f), 'utf8');
   if (f !== 'pozemek.html' && syrove.includes('pz-media')) continue;   // kopie šablony
   const bloky = [...syrove.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]);
-  if (bloky.length) zdroje.push({ jmeno: f, css: ocisti(bloky.join('\n')),
+  /* Rozbalují se i vložené styly stránek: `.pf-dot` v muj-inzerat.html
+     už svůj prstenec píše po kanálech a porovnání s paletkou je
+     doslovné, takže by jinak nesedlo ani tam, kde sedět má. */
+  if (bloky.length) zdroje.push({ jmeno: f, css: rozbalKanaly(ocisti(bloky.join('\n'))),
     maPaletku: MA_PALETKU(syrove) });
 }
 

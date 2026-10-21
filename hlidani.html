@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=3e0cff80">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=cd31e487">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -192,7 +192,7 @@
       line-height:1.5; background:rgba(31,81,56,.10); color:var(--text);
       border:1px solid rgba(31,81,56,.22);}
     .hl-souhrn b{font-weight:700;}
-    .hl-souhrn.prazdno{background:rgba(140,47,30,.09); border-color:rgba(140,47,30,.24);}
+    .hl-souhrn.prazdno{background:rgba(var(--c-exekuce-rgb),.09); border-color:rgba(var(--c-exekuce-rgb),.24);}
     .hl-lbl{font-size:13px; font-weight:700; color:var(--muted); margin:8px 2px 4px; display:block;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
@@ -248,7 +248,7 @@
     .hl-termin{display:inline-block; margin-left:8px; padding:1px 4px; border-radius:var(--r-pill);
       border:1px solid var(--line); background:var(--plocha-jemna); color:var(--muted);
       font-size:12px; font-weight:600; white-space:nowrap; text-decoration:none;}
-    .hl-termin.soon{color:var(--c-drazba-ink); background:rgba(204,107,51,0.10); border-color:rgba(204,107,51,0.3);}
+    .hl-termin.soon{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10); border-color:rgba(var(--c-drazba-rgb),0.3);}
     .hl-termin.urg{color:var(--c-exekuce-ink); background:rgba(228,72,61,0.10); border-color:rgba(228,72,61,0.3);}
     /* Na úzkém displeji se řádek zalomí, ať odznak nevytlačí obec z výpisu. */
     @media (max-width:420px){

@@ -225,7 +225,7 @@
     /* Podbarvení je krytí jedné barvy, ne druhý odstín: tak se nemůže
        stát, že se řádek v jednom režimu ztratí. Levá linka ho drží
        i pro toho, kdo barvy nerozliší. */
-    .srv-ja{background:rgba(44,113,80,0.10); border-radius:var(--r-plocha);
+    .srv-ja{background:rgba(var(--brand-live-rgb),0.10); border-radius:var(--r-plocha);
       box-shadow:inset 3px 0 0 var(--plocha-znacka);}
     .srv-ja .srv-kde{font-weight:700;}
     .srv-pozn{max-width:var(--m-text); margin:8px 0 0; font-size:13px;
@@ -322,7 +322,7 @@
     .pz-konec{margin:0 0 24px; padding:16px 20px;
       border:1px solid var(--c-drazba-ink, #7E3C18);
       border-left-width:4px; border-radius:var(--r-md, 14px);
-      background:rgba(204,107,51,0.08); font-size:16px; line-height:1.6;}
+      background:rgba(var(--c-drazba-rgb),0.08); font-size:16px; line-height:1.6;}
     .pz-konec b{display:block; font-size:16px; margin-bottom:4px;}
     .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
     .pz-konec ul{margin:0; padding-left:20px;}
@@ -454,7 +454,7 @@
     .pzm-mapa{position:relative;}
     .pzm-cela-btn{position:absolute; z-index:500; right:10px; top:10px; width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center;
       /* --r-ovladani jako ostatní ovladače; --r-sm z něj dělalo třetí tvar. */
-      border-radius:var(--r-ovladani); border:1px solid rgba(24,45,34,.25); background:rgba(255,255,255,.93); color:var(--znacka-svetla); cursor:pointer; padding:0;
+      border-radius:var(--r-ovladani); border:1px solid rgba(var(--plocha-tmava-2-rgb),.25); background:rgba(255,255,255,.93); color:var(--znacka-svetla); cursor:pointer; padding:0;
       box-shadow:var(--e1); -webkit-tap-highlight-color:transparent;}
     /* Tloušťka tahu se dopočítává k velikosti, ne opisuje z předlohy:
        stejné „stroke-width 2" má při 19 px na obrazovce silnější stopu

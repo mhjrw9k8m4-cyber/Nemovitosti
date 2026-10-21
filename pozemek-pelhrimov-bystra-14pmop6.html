@@ -34,7 +34,7 @@
   
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=767a9448">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=910191fb">
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
 .pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px 16px 56px;color:var(--text);font-family:var(--font-ui)}
@@ -105,7 +105,7 @@ a.srv-kde{text-decoration:underline;text-underline-offset:3px}
 a.srv-kde:hover{color:var(--znacka-svetla)}
 .srv-detail{grid-column:1;grid-row:2;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .srv-c{grid-column:2;grid-row:1 / span 2;justify-self:end;font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
-.srv-ja{background:rgba(44,113,80,0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
+.srv-ja{background:rgba(var(--brand-live-rgb),0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
 .srv-ja .srv-kde{font-weight:700}
 .srv-pozn{max-width:var(--m-text);margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
@@ -141,7 +141,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-cas b{color:var(--text);font-weight:600}
 .pz-cas.je-stara{color:var(--c-exekuce-ink)}
 .pz-cta{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
-.pz-konec{margin:0 0 24px;padding:16px 20px;border:1px solid var(--c-drazba-ink,#7E3C18);border-left-width:4px;border-radius:var(--r-md,14px);background:rgba(204,107,51,0.08);font-size:16px;line-height:1.6}
+.pz-konec{margin:0 0 24px;padding:16px 20px;border:1px solid var(--c-drazba-ink,#7E3C18);border-left-width:4px;border-radius:var(--r-md,14px);background:rgba(var(--c-drazba-rgb),0.08);font-size:16px;line-height:1.6}
 .pz-konec b{display:block;font-size:16px;margin-bottom:4px}
 .pz-konec p{margin:12px 0 4px;font-weight:700;font-size:14px}
 .pz-konec ul{margin:0;padding-left:20px}
@@ -201,7 +201,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--plocha-karta);box-shadow:var(--e2)}
 .pzm-mapa{height:390px;width:100%;background:var(--plocha-zapustena)}
 .pzm-mapa{position:relative}
-.pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(24,45,34,.25);background:rgba(255,255,255,.93);color:var(--znacka-svetla);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
+.pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(var(--plocha-tmava-2-rgb),.25);background:rgba(255,255,255,.93);color:var(--znacka-svetla);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
 .pzm-cela-btn svg{width:19px;height:19px;stroke-width:1.8}
 .pzm-cela-btn:hover{background:var(--plocha-karta)}
 .pzm-zpet-btn{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 12px 0 12px;border-radius:var(--r-pill);border:1.5px solid rgba(31,81,56,.26);background:var(--plocha-karta);color:var(--znacka-svetla);cursor:pointer;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}

@@ -125,6 +125,15 @@ něco, co není. Hlídat se to dá jen měřením v prohlížeči (jména z DOM
 proti selektorům), ne čtením zdroje — skládaná jména jako
 `'opp-item ' + d.type` žádný regex spolehlivě nesloží.
 
+**Kdo zavede nový zápis, zavede ho i všem čtenářům.** Zkoušky čtou
+zdroje vzory, a vzor umí jen tu abecedu, kterou dostal. Naměřeno
+(oddíl 87): průhledné barvy se začaly psát `rgba(var(--c-ok-rgb),.12)`,
+což na obrazovce nezměnilo nic (spočítaná hodnota je byte za byte
+stejná), a hned nato dvě zkoušky v rychlé sadě hlásily nesmysly —
+jedna „čte test vůbec styles.css?", druhá vlastní stín na stránce,
+která se nezměnila. Správná oprava je naučit čtenáře nový zápis
+rozbalit, nikdy ne ubrat, co měří.
+
 **A „nikdo to nečte" je tvrzení o budoucím hledání, ne o kódu.**
 Skládá se nejen psaní jména, ale i jeho ČTENÍ: `DRUHY.find((c) =>
 e.classList.contains(c))` nenajde nikdo, kdo hledá

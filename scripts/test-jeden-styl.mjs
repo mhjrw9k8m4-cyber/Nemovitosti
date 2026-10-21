@@ -472,6 +472,83 @@ function jenStyl(jmeno, text) {
   }
 }
 
+// =====================================================================
+// RGBA PO KANÁLECH
+//
+// `rgba()` neumí vzít barvu z hex tokenu, takže se devět barev
+// z paletky psalo průhledně RUKOU: `rgba(31,163,99,0.12)` místo
+// `--c-ok`. Naměřeno 39 míst v stylopisech a ve vložených stylech
+// ručně psaných stránek. Až se token pohne — a v jedné session se
+// hýbaly tři (--copper, --text-ondark, --znacka-svetla) — zůstanou ty
+// průhledné kopie beze slova na staré barvě.
+//
+// Barva se proto píše ještě po kanálech (`--c-ok-rgb:31,163,99`) a
+// průhledné použití ji bere odtud. Je to týž hex dvakrát, což si web
+// jinde zakazuje (viz `--c-exekuce-ink:var(--c-exekuce)` a komentář
+// u něj) — tady to jde jen proto, že ROZEJÍT SE NEMOHOU: hlídá se
+// to tady. Kontroly jsou tři:
+//  · každý `--x-rgb` sedí PŘESNĚ na hex tokenu `--x`,
+//  · žádný companion token nezůstal nepoužitý (jinak je to mrtvé jméno),
+//  · a žádné rgba() nikde neopisuje barvu, kterou token má.
+//
+// Bílá a černá se nepočítají: `rgba(255,255,255,.12)` není kopie
+// tokenu, je to závoj, a stejný zápis používá i sám stylopis.
+// =====================================================================
+{
+  const naKanaly = (h) => {
+    let x = h.replace('#', '');
+    if (x.length === 3) x = [...x].map((c) => c + c).join('');
+    return x.length >= 6 ? [0, 2, 4].map((i) => parseInt(x.slice(i, i + 2), 16)) : null;
+  };
+  /* Hex tokeny se čtou ze zdroje css/styles.css — paletka je jedna pro
+     celý web a vložené styly stránek si ji jen půjčují. */
+  const hexy = new Map();
+  for (const m of css.matchAll(/(--[a-z0-9-]+)\s*:\s*(#[0-9A-Fa-f]{3,8})\s*[;}]/g)) {
+    if (!hexy.has(m[1])) { const r = naKanaly(m[2]); if (r) hexy.set(m[1], r); }
+  }
+  const kanaly = new Map();
+  for (const m of css.matchAll(/(--[a-z0-9-]+)-rgb\s*:\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*;/g)) {
+    kanaly.set(m[1], [+m[2], +m[3], +m[4]]);
+  }
+  // PŘEDPOKLAD: bez companion tokenů by kontroly níž měřily prázdno
+  pravda(`je co měřit — barev po kanálech je ${kanaly.size}`,
+    kanaly.size >= 5, `jen ${kanaly.size} — čte kontrola vůbec :root?`);
+
+  const rozejdene = [];
+  for (const [t, r] of kanaly) {
+    const h = hexy.get(t);
+    if (!h) { rozejdene.push(`${t}-rgb je, ale hex token ${t} ne`); continue; }
+    if (h.join(',') !== r.join(',')) {
+      rozejdene.push(`${t}-rgb = ${r.join(',')}, ale ${t} = rgb(${h.join(', ')})`);
+    }
+  }
+  pravda('každá barva po kanálech sedí na svém hex tokenu',
+    rozejdene.length === 0,
+    rozejdene.join('\n      ') + '\n      ty dva zápisy téže barvy se rozešly — sjednoť je');
+
+  const nepouzite = [...kanaly.keys()].filter((t) => !zdroje.some(([jmeno, syrove]) =>
+    bezKomentaru(jenStyl(jmeno, syrove)).indexOf('var(' + t + '-rgb)') >= 0));
+  pravda('a žádná z nich nezůstala nepoužitá',
+    nepouzite.length === 0,
+    nepouzite.map((t) => t + '-rgb').join(', ') + ' — barvu po kanálech nikdo nebere, smaž ji');
+
+  /* A teď samotný nález: rgba() s čísly, která už mají jméno. */
+  const opsane = [];
+  for (const [jmeno, syrove] of zdroje) {
+    const t = bezKomentaru(jenStyl(jmeno, syrove));
+    for (const m of t.matchAll(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*[,/]\s*([0-9.]+)\s*\)/g)) {
+      const r = [+m[1], +m[2], +m[3]];
+      if (r.join(',') === '255,255,255' || r.join(',') === '0,0,0') continue;
+      const token = [...hexy.entries()].find(([, h]) => h.join(',') === r.join(','));
+      if (!token) continue;   // barva bez jména je jiná úloha (viz docs, oddíl 87)
+      opsane.push(`${jmeno}:${kdeJe(t, m.index)}  ${m[0]} = ${token[0]}`);
+    }
+  }
+  pravda('žádné rgba() neopisuje barvu, která už má jméno',
+    opsane.length === 0,
+    opsane.join('\n      ') + '\n      napiš rgba(var(--jméno-rgb), a)');
+}
+
 console.log('\nJeden styl — pojmenovaná hodnota místo opsaného čísla');
 console.log(zpravy.join('\n'));
 console.log(`\nzměřeno: ${nalezy.length} pravidel určuje velikost h1`);

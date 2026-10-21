@@ -290,7 +290,7 @@
      tam, kde má padnout důraz. Jeden teplý tón proti hluboké modři dává webu
      tvář; deset teplých tónů by z něj udělalo cirkus. 5,1 : 1 na stránce. */
   --accent-warm:#8A5512;
-  --accent-warm-soft:rgba(138,85,18,0.12);
+  --accent-warm-soft:rgba(var(--accent-warm-rgb),0.12);
 
   /* ---------------------------------------------------------------
      BAREVNÉ PŘECHODY — viz předloha.html
@@ -391,6 +391,39 @@
      by vypadaly jako překlep a mohly se rozejít. */
   --c-sale-ink:#364E95; --c-drazba-ink:#7E3C18; --c-exekuce-ink:var(--c-exekuce);
   --c-obec-ink:#0A626B; --c-majitel-ink:#6E3EB1; --c-ok-ink:#13663E;
+  /* TÁŽ BARVA PO KANÁLECH, PRO PRŮHLEDNÉ POUŽITÍ.
+     ---------------------------------------------------------------
+     Devět barev z téhle paletky se na webu používalo i průhledně —
+     a protože `rgba()` neumí vzít hex z tokenu, psaly se v nich
+     ručně: `rgba(31,163,99,0.12)` místo `--c-ok`. Naměřeno 39 míst
+     v stylopisech a vložených stylech. Až se token pohne (a v jedné
+     session se hýbaly tři), zůstanou ty kopie beze slova na staré
+     barvě.
+     PROČ TAKHLE A NE JINAK. Barevně přesné jsou tři cesty;
+     rozhodl formát SPOČÍTANÉ hodnoty, protože ho čtou desítky
+     zkoušek. `rgba(var(--x-rgb), .4)` dává `rgba(31, 81, 56, 0.4)`,
+     tedy byte za byte totéž co dnes (+76 B brotli). Naproti tomu
+     `color-mix(in srgb, var(--x) 40%, transparent)` i
+     `rgb(from var(--x) r g b / 40%)` dávají
+     `color(srgb 0.12 0.32 0.22 / 0.4)` — jiný zápis téže barvy,
+     který by musel přepsat každou kontrolu barev na webu.
+     A proč se tedy barva píše dvakrát, když u `-ink` výš stojí, že
+     dva stejné hexy vedle sebe se mohou rozejít? Protože tady se
+     rozejít NEMOHOU: scripts/test-jeden-styl.mjs ověřuje, že každý
+     `--x-rgb` sedí přesně na hex tokenu `--x`. Elegantnější cesta
+     (psát po kanálech a hex z nich dopočítat: `--c-ok:rgb(var(--c-ok-rgb))`)
+     se neudělala z téhož důvodu jako color-mix — změnila by to, co
+     vrací `getPropertyValue('--c-ok')`, z `#1FA363` na
+     `rgb(31,163,99)`, a to čtou čtyři zkoušky. */
+  --plocha-tmava-2-rgb:24,45,34;
+  --text-rgb:16,21,19;
+  --znacka-svetla-rgb:43,118,82;
+  --brand-live-rgb:44,113,80;
+  --accent-warm-rgb:138,85,18;
+  --c-drazba-rgb:204,107,51;
+  --c-exekuce-rgb:140,47,30;
+  --c-ok-rgb:31,163,99;
+  --c-ok-ink-rgb:19,102,62;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -399,13 +432,13 @@
      ukazatele síly hesla byla prázdná. Inkoustová s nízkou průhledností
      dělá to, co ta barva měla dělat: o stupeň jiná plocha než karta pod
      ní, ať je ta karta bílá nebo zelenkavá. */
-  --plocha-jemna: rgba(16,21,19,0.05);
-  --plocha-jemna-vic: rgba(16,21,19,0.075);
-  --line: rgba(16,21,19,0.14);
+  --plocha-jemna: rgba(var(--text-rgb),0.05);
+  --plocha-jemna-vic: rgba(var(--text-rgb),0.075);
+  --line: rgba(var(--text-rgb),0.14);
   /* Špendlík místa u obce na kartě (.opp-place::before). Jako maska,
      ne obrázek — barvu si bere z textu kolem. */
   --ikona-spendlik: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22s7-7.1 7-12A7 7 0 0 0 5 10c0 4.9 7 12 7 12Z' fill='%23000'/%3E%3Ccircle cx='12' cy='10' r='2.6' fill='%23fff'/%3E%3C/svg%3E");
-  --line-strong: rgba(16,21,19,0.28);
+  --line-strong: rgba(var(--text-rgb),0.28);
   /* Okraj ovládacího prvku. Políčko, seznam nebo tlačítko musí být od plochy
      pod sebou odlišené poměrem aspoň 3:1 (WCAG 2.1, pravidlo 1.4.11) — jinak
      to vypadá, že tam žádné políčko není. Slabší linky výš na to nestačí:
@@ -413,7 +446,7 @@
      scripts/test-okraje.mjs. */
   /* Zeleň je světlejší než původní navy, takže stejné krytí dalo jen
      2,96 : 1 a test okrajů spadl. Zesíleno na 0,54. */
-  --line-ui: rgba(16,21,19,0.55);
+  --line-ui: rgba(var(--text-rgb),0.55);
   /* PODKLAD POD VÝPISEM. Bílé karty na bílé stránce se nezvednou —
      je z toho plocha textu s vlasovými linkami, tedy přesně ten
      „suchý, robotický" dojem. Každý velký realitní web má pod kartami
@@ -493,13 +526,13 @@
      Stíny jsou chladně modré, ne černé — černý stín na světlém pozadí
      dělá špínu. Dvě vrstvy: ostrý obrys blízko prvku a měkký rozptyl.
      --------------------------------------------------------------- */
-  --e0:inset 0 1px 2px rgba(24,45,34,0.08);                                     /* v ploše */
-  --e1:0 1px 2px rgba(24,45,34,0.06), 0 6px 16px -10px rgba(24,45,34,0.22);     /* karta */
-  --e2:0 2px 4px rgba(24,45,34,0.08), 0 14px 32px -14px rgba(24,45,34,0.3);    /* zvednuté */
-  --e3:0 6px 12px rgba(24,45,34,0.12), 0 34px 70px -26px rgba(24,45,34,0.4);   /* nad obsahem */
+  --e0:inset 0 1px 2px rgba(var(--plocha-tmava-2-rgb),0.08);                                     /* v ploše */
+  --e1:0 1px 2px rgba(var(--plocha-tmava-2-rgb),0.06), 0 6px 16px -10px rgba(var(--plocha-tmava-2-rgb),0.22);     /* karta */
+  --e2:0 2px 4px rgba(var(--plocha-tmava-2-rgb),0.08), 0 14px 32px -14px rgba(var(--plocha-tmava-2-rgb),0.3);    /* zvednuté */
+  --e3:0 6px 12px rgba(var(--plocha-tmava-2-rgb),0.12), 0 34px 70px -26px rgba(var(--plocha-tmava-2-rgb),0.4);   /* nad obsahem */
   /* Vysunuté zdola (panel detailu) — stín musí jít VZHŮRU, jinak vypadá
      panel, jako by se propadal do stránky. */
-  --e3-up:0 -6px 12px rgba(24,45,34,0.08), 0 -28px 60px -24px rgba(24,45,34,0.3);
+  --e3-up:0 -6px 12px rgba(var(--plocha-tmava-2-rgb),0.08), 0 -28px 60px -24px rgba(var(--plocha-tmava-2-rgb),0.3);
   /* Značková záře pod modrými tlačítky. Taky jedna škála, ne devět. */
   /* PRSTENEC POD POLEM — ozdoba, ne ukazatel zaměření.
      Naměřeno 20. 10.: proti bílé ploše má poměr 1,31 : 1, tedy pod
@@ -2518,7 +2551,7 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
 .opp-fav:active{transform:scale(1.2);}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
-.opp-deal{display:inline-block; font-size:12px; font-weight:700; color:var(--c-ok-ink); background:rgba(31,163,99,0.12); border:1px solid rgba(19,102,62,0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
+.opp-deal{display:inline-block; font-size:12px; font-weight:700; color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border:1px solid rgba(var(--c-ok-ink-rgb),0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
 /* NADPIS, ČÍSLO A POZNÁMKA JSOU TŘI DÍLKY V JEDNÉ MŘÍŽCE, ne jedna
    dlouhá věta. Dokud to byl plynulý text, lámal se, kde zrovna došla
    šířka, a 440px sloupec z něj udělal tři nestejně odsazené řádky.
@@ -2614,8 +2647,8 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
    vedlejší informaci. Zůstává zelený (je to dobrá zpráva), ale jen
    textem na světlé podložce, bez přechodu a bez stínu. */
 .deal-badge{align-self:flex-start; margin-top:4px; font-size:12px; font-weight:600;
-  color:var(--znacka-svetla); background:rgba(44,113,80,0.08);
-  border:1px solid rgba(44,113,80,0.22); border-radius:var(--r-pill);
+  color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.08);
+  border:1px solid rgba(var(--brand-live-rgb),0.22); border-radius:var(--r-pill);
   /* 4 px, ne 3: trojka by byla jediná v celé úvodní stránce a slovník
      odstupů má strop 22 hodnot (test-jazyk). Čtyřku už používá odznak
      na kartě výpisu, takže se nic nepřidává. */
@@ -3211,7 +3244,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    jsou na to v paletě přesně pro tenhle případ. */
 /* Termín: podbarvení ze stejné rodiny jako u slevy, aby odznaky vedle
    sebe byly jeden útvar ve dvou barvách, ne obrys vedle výplně. */
-.opp-cd.soon{color:var(--c-drazba-ink); background:rgba(204,107,51,0.10); border-color:rgba(204,107,51,0.3);}
+.opp-cd.soon{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10); border-color:rgba(var(--c-drazba-rgb),0.3);}
 .opp-cd.urg{color:var(--c-exekuce-ink); background:rgba(228,72,61,0.10); border-color:rgba(228,72,61,0.3);}
 /* Počet nabídek na filtračních tlačítkách */
 .chip-n{display:inline-block; margin-left:4px; font-size:12px; font-weight:700; padding:0 4px; border-radius:var(--r-sm); background:var(--plocha-jemna-vic); color:var(--muted); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
@@ -3284,7 +3317,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    na každé šířce. */
 .odl-empty span{color:var(--muted); font-size:14px; line-height:1.6; max-width:var(--m-popisek); display:block; margin-inline:auto;}
 .odl-empty-btn{display:inline-block; margin-top:16px;}
-.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:#EAE7E1; border:1px solid rgba(138,85,18,0.3); border-radius:var(--r-lg);}
+.odl-cta{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-top:20px; padding:20px 24px; background:#EAE7E1; border:1px solid rgba(var(--accent-warm-rgb),0.3); border-radius:var(--r-lg);}
 .odl-cta-txt{display:flex; flex-direction:column; gap:2px;}
 .odl-cta-txt b{font-size:16px; color:var(--text); font-weight:700;}
 .odl-cta-txt span{font-size:14px; color:var(--muted);}
@@ -3497,7 +3530,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .status-card{background:var(--plocha-tlumena); border:1px solid var(--line); border-radius:var(--r-md); padding:24px;}
 .status-top{display:flex; align-items:center; gap:8px; font-family:var(--font-ui); font-size:16px; font-weight:500; margin-bottom:12px;}
 .status-top .dot{width:11px; height:11px; border-radius:50%;}
-.status-n{margin-left:auto; font-family:var(--font-ui); font-size:12px; font-weight:700; letter-spacing:0.01em; color:var(--znacka-svetla); background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.4); border-radius:var(--r-sm); padding:2px 8px; white-space:nowrap;}
+.status-n{margin-left:auto; font-family:var(--font-ui); font-size:12px; font-weight:700; letter-spacing:0.01em; color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.12); border:1px solid rgba(var(--brand-live-rgb),0.4); border-radius:var(--r-sm); padding:2px 8px; white-space:nowrap;}
 .status-n.is-zero{color:var(--muted); background:var(--plocha-jemna); border-color:var(--line);}
 .status-card p{font-size:14px; color:var(--muted);}
 .status-list{list-style:none; display:flex; flex-direction:column; gap:8px; margin:0;}
@@ -3512,7 +3545,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 
 /* Embed */
 
-.rc-ico{width:44px; height:44px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:rgba(44,113,80,0.12); border:1px solid rgba(44,113,80,0.3); margin-bottom:16px;}
+.rc-ico{width:44px; height:44px; border-radius:var(--r-sm); display:flex; align-items:center; justify-content:center; background:rgba(var(--brand-live-rgb),0.12); border:1px solid rgba(var(--brand-live-rgb),0.3); margin-bottom:16px;}
 .rc-ico .ic{width:22px; height:22px; color:var(--znacka-svetla);}
 /* Poptávka pro realitky/obce */
 .realtor-contact{margin-top:20px; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:32px; display:grid; grid-template-columns:1fr 1.1fr; gap:32px; align-items:center;}
@@ -5043,12 +5076,12 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .calc-hint{font-size:13px; color:var(--znacka-svetla); font-weight:600; min-height:15px; margin-top:-8px;}
 /* Fotky */
 .photo-drop{display:block; border:1.5px dashed var(--line-strong); border-radius:var(--r-sm); padding:16px; text-align:center; cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
-.photo-drop:hover{border-color:var(--znacka); background:rgba(44,113,80,0.06);}
+.photo-drop:hover{border-color:var(--znacka); background:rgba(var(--brand-live-rgb),0.06);}
 /* SAMOTNÉ POLE PRO VÝBĚR FOTEK JE OPTICKY SKRYTÉ (1×1 px, průhledné) —
    klávesnicí se na něj dostat dá, ale nebylo vidět kam. Zaměření se
    proto kreslí na plochu „Přidat fotky", tedy tam, kam se člověk dívá. */
 .photo-field:has(input[type=file]:focus-visible) .photo-drop{
-  border-color:var(--znacka-svetla); background:rgba(44,113,80,0.08);
+  border-color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.08);
   outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 .photo-drop b{color:var(--znacka-svetla); font-size:14px;}
 .photo-drop span{display:block; font-size:12px; color:var(--muted); margin-top:4px;}
@@ -5091,7 +5124,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .chip-check{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--line); border-radius:var(--r-lg); font-size:13px; color:var(--text); cursor:pointer; transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease);}
 .chip-check input{width:16px; height:16px; accent-color:var(--znacka); margin:0;}
 .chip-check:hover{border-color:var(--znacka);}
-.chip-check:has(input:checked){border-color:var(--znacka); background:rgba(44,113,80,0.12);}
+.chip-check:has(input:checked){border-color:var(--znacka); background:rgba(var(--brand-live-rgb),0.12);}
 /* Náhled místa ve formuláři „přidat pozemek". Rám drží poměr stran,
    aby karta neposkakovala, než se snímek stáhne. Barvy jsou tytéž jako
    u hlášky pod formulářem (.add-msg) — stejná zpráva má vypadat stejně,
@@ -5119,8 +5152,8 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
 /* ---------- Grády: živý náhled inzerátu + víc energie ---------- */
 .add-chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:20px;}
-.add-chips span{font-size:13px; font-weight:600; color:var(--znacka-svetla); background:rgba(44,113,80,0.12);
-  border:1px solid rgba(44,113,80,0.3); border-radius:var(--r-lg); padding:4px 12px;}
+.add-chips span{font-size:13px; font-weight:600; color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.12);
+  border:1px solid rgba(var(--brand-live-rgb),0.3); border-radius:var(--r-lg); padding:4px 12px;}
 /* Vstupní animace karet */
 .add-card, .add-aside > .aside-card{animation:addfade var(--cas-pomaly) var(--ease) both;}
 .add-aside > .aside-card:nth-child(2){animation-delay:.09s;}
@@ -5174,9 +5207,9 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    → zelená → zelená → zelená a nedala se přečíst jako postup.
    Teď je stupeň 2 jen o něco výraznější tlumená barva: začátek cesty,
    ne jiná kategorie. */
-.pc-strength[data-lvl="2"] .pcs-tier{color:var(--text); background:rgba(44,113,80,0.12);}
-.pc-strength[data-lvl="3"] .pcs-tier{color:var(--znacka-svetla); background:rgba(44,113,80,0.16);}
-.pc-strength[data-lvl="4"] .pcs-tier{color:var(--znacka-svetla); background:rgba(44,113,80,0.22);}
+.pc-strength[data-lvl="2"] .pcs-tier{color:var(--text); background:rgba(var(--brand-live-rgb),0.12);}
+.pc-strength[data-lvl="3"] .pcs-tier{color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.16);}
+.pc-strength[data-lvl="4"] .pcs-tier{color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.22);}
 /* KONEC ŘADY ZŮSTÁVÁ SVĚTLEJŠÍ ZELENÁ, A SCHVÁLNĚ NE TOKENEM.
    Zkusil jsem #5FB07E nahradit za var(--c-ok-ink), ať je to „čistě
    z palety". Jenže přípona -ink v téhle paletě znamená čitelnější
@@ -7225,7 +7258,7 @@ body > footer{flex:none;}
    Kdo prochází dvě stě nabídek, potřebuje vidět, co je nové, a odškrtnout
    si, co ho nezajímá. Všechno běží v prohlížeči, bez účtu.
    ------------------------------------------------------------------ */
-.opp-nove{background:var(--accent-warm-soft); color:var(--accent-warm); border-color:rgba(138,85,18,0.3);}
+.opp-nove{background:var(--accent-warm-soft); color:var(--accent-warm); border-color:rgba(var(--accent-warm-rgb),0.3);}
 /* MOJE POZNÁMKA. Jediný odznak, který napsal ČLOVĚK — ostatní říkají, co
    o pozemku víme my. Proto má jinou barvu než „Nové": zelenou značkovou,
    ne měď. Nová barva se tu nezavádí schválně; web stojí na dvou tónech
@@ -7681,10 +7714,10 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 .src-stav{margin-left:8px; padding:1px 4px; border-radius:var(--r-pill);
   font-family:var(--font-mono); font-size:12px; font-variant-numeric:tabular-nums;
   background:rgba(255,255,255,0.12); color:var(--text-ondeep-mute);}
-.src-stav.src-zle{background:rgba(140,47,30,0.4); color:#FBDCD4;}
+.src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.4); color:#FBDCD4;}
 /* Oslabený zdroj: odpověděl, ale přinesl výrazně méně. Není to
    červená (data jsou), ale ani normál — jinak se to přehlédne. */
-.src-stav.src-slabe{background:rgba(138,85,18,0.45); color:#F7E3C3;}
+.src-stav.src-slabe{background:rgba(var(--accent-warm-rgb),0.45); color:#F7E3C3;}
 
 /* SOUŘADNICE POD MAPOU — a proto NE ve vloženém stylu pozemek.html.
    Ten styl je kritický: nese to, co se kreslí na první obrazovce, a má
@@ -8511,7 +8544,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    zkratka border, kterou má předloha. */
 .pz-pozn-box{transition:border-color var(--cas-zakladni) var(--ease);}
 .pz-pozn-box.pz-pozn-sviti{border-color:var(--znacka-svetla);
-  outline:3px solid rgba(43,118,82,0.25); outline-offset:0;}
+  outline:3px solid rgba(var(--znacka-svetla-rgb),0.25); outline-offset:0;}
 
 /* SELEKTOR MUSÍ BÝT SILNĚJŠÍ NEŽ `.pz-klic > span` — jinak značku
    přebarví popisek. Dlaždice má popisky stylované přes `.pz-klic >
