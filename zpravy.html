@@ -290,9 +290,16 @@
           '<button class="zp-btn" type="submit" id="zlogin">Přihlásit se</button>' +
           '<button class="zp-btn sec" type="button" id="zsignup">Vytvořit účet</button>' +
         '</form>' +
-        '<div class="zp-msg' + (err ? ' err' : '') + '" id="zauthmsg">' + (msg || '') + '</div>' +
+        /* ŽIVÁ OBLAST, A PRÁZDNÁ — stejně jako na hlidani.html a ze
+           stejného naměřeného důvodu (oddíl 94): po klepnutí na
+           „Přihlásit se" se změní jedno místo na stránce a živá oblast
+           to nebyla. Text se vkládá až potom, protože oblast přidaná
+           do stromu už s textem je nový uzel (oddíl 92). */
+        '<div class="zp-msg' + (err ? ' err' : '') + '" id="zauthmsg" role="status"></div>' +
       '</div>';
     var em = document.getElementById('ze'), pw = document.getElementById('zp'), mEl = document.getElementById('zauthmsg');
+    // Text až do dalšího snímku — viz poznámka u #zauthmsg výš.
+    if (msg) requestAnimationFrame(function () { mEl.textContent = msg; });
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
     function ok(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
     // Enter v heslu odesílá — na telefonu je to největší klávesa a dřív
@@ -399,8 +406,17 @@
           '<a class="zp-view" id="zc-view" href="index.html?lid=' + encodeURIComponent(listing) + '">Zobrazit pozemek</a>' +
         '</div>' +
         '<div class="zp-msgs" id="zc-msgs"><div class="zp-load">Načítám…</div></div>' +
-        '<div class="zp-err" id="zc-err" hidden></div>' +
+        '<div class="zp-err" id="zc-err" role="status" hidden></div>' +
+        /* POČET ZNAKŮ ŽIVÁ OBLAST NENÍ, A JE TO ZÁMĚR. Přepisuje se při
+           každém úhozu („zbývá 412 znaků"), takže by odečítač mluvil
+           přes psaní. Co je opravdu třeba vědět — že se zpráva nevejde
+           — se po odeslání řekne v #zc-err, a ta oblast živá je. */
         '<div class="zp-pocet" id="zc-pocet" hidden></div>' +
+        /* NOVÁ ZPRÁVA SE MUSÍ DÁT I SLYŠET. Konverzace se dotahuje každých
+           15 s a #zc-msgs se přepisuje celý — živá oblast z něj udělat
+           nelze, odečítač by po každém dotažení přečetl celý rozhovor
+           znovu. Hlásí se proto jen to, co je nové, a jednou větou. */
+        '<p class="visually-hidden" id="zc-ohlas" role="status" aria-live="polite"></p>' +
         '<div class="zp-compose">' +
           '<textarea class="zp-ta" id="zc-ta" rows="1" aria-label="Text zprávy" placeholder="Napište zprávu…" maxlength="' + (Z.MAX_ZPRAVA + 100) + '"></textarea>' +
           '<button class="zp-send" id="zc-send" aria-label="Odeslat">' + ICON_SEND + '</button>' +
@@ -414,7 +430,16 @@
 
     document.getElementById('zc-back').addEventListener('click', function () { zastavCasovace(); location.href = 'zpravy.html'; });
 
-    function chyba(text) { if (!text) { errEl.hidden = true; errEl.textContent = ''; return; } errEl.textContent = text; errEl.hidden = false; }
+    /* Pořadí jako u hlášky v js/main.js a ze stejného důvodu (oddíl 92):
+       `hidden` je display:none, takže prvek v přístupnostním stromu
+       NENÍ a text vložený do skryté živé oblasti se nehlásí. Odkryje se
+       tedy prázdná a text se vloží až v dalším snímku. */
+    function chyba(text) {
+      if (!text) { errEl.hidden = true; errEl.textContent = ''; return; }
+      errEl.textContent = '';
+      errEl.hidden = false;
+      requestAnimationFrame(function () { errEl.textContent = text; });
+    }
 
     /* Hlavička: o který pozemek jde a s kým si píšu. Dřív tu stálo jen
        „Konverzace" — majitel se třemi zájemci u jednoho pozemku netušil,
@@ -469,9 +494,17 @@
         }
         var rows = Array.isArray(res.data) ? res.data : [];
         if (!first && Z.otiskZprav(rows) === Z.otiskZprav(zobrazene) && !cekajici.length) return;
-        var sjed = first || uDna() || Z.prisloNoveOdDruheho(zobrazene, rows);
+        var nove = !first && Z.prisloNoveOdDruheho(zobrazene, rows);
+        var sjed = first || uDna() || nove;
         zobrazene = rows;
         render(rows, sjed);
+        /* Dotažení na pozadí je jediná změna na stránce, o které člověk
+           nijak nemůže vědět — nic neklikal. Hlásí se proto jedna věta,
+           ne obsah: ten si přečte v rozhovoru, kam teď ví, že má jít. */
+        if (nove) {
+          var oh = document.getElementById('zc-ohlas');
+          if (oh) { oh.textContent = ''; requestAnimationFrame(function () { oh.textContent = 'Nová zpráva v rozhovoru.'; }); }
+        }
       });
     }
 

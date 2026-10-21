@@ -107,11 +107,32 @@ je('ve vlákně jsou obě zprávy', await pM.locator('.zp-b').count(), 2);
 await pZ.waitForFunction(() => document.querySelectorAll('.zp-b.them').length === 1, null, { timeout: 25000 });
 je('odpověď dorazila sama, bez obnovení stránky',
   (await pZ.textContent('.zp-b.them')).includes('ano, je volný'), true);
+/* A MUSÍ SE DÁT I SLYŠET. Zpráva dorazí dotažením na pozadí — nic
+   člověk neklikal, takže o ní jinak nemá jak vědět. Celý rozhovor
+   živou oblastí být nemůže (přepisuje se celý každých 15 s, odečítač
+   by ho přečetl znovu), hlásí se proto jedna věta ve #zc-ohlas.
+   Měří se tady, protože tady odpověď doopravdy dorazí. */
+await pZ.waitForFunction(() => {
+  const e = document.getElementById('zc-ohlas');
+  return e && (e.textContent || '').trim().length > 0;
+}, null, { timeout: 8000 }).catch(() => {});
+je('nová zpráva se ohlásí do živé oblasti',
+  (await pZ.textContent('#zc-ohlas')).trim(), 'Nová zpráva v rozhovoru.');
+je('a ta oblast je živá (role=status)',
+  await pZ.getAttribute('#zc-ohlas', 'role'), 'status');
 
 /* ---------- 5. odmítnutí od serveru se ukáže srozumitelně ---------- */
 await pZ.fill('#zc-ta', 'RYCHLE');
 await pZ.click('#zc-send');
-await pZ.waitForSelector('#zc-err:not([hidden])', { timeout: 8000 });
+/* ČEKÁ SE NA TEXT, NE JEN NA ODKRYTÍ. Chybová hláška v rozhovoru je
+   živá oblast (role=status), a ta se musí odkrýt PRÁZDNÁ a text dostat
+   až v dalším snímku — jinak se odečítači nehlásí (oddíl 92, hlídá
+   scripts/test-ohlaseni.mjs). Čekání na `:not([hidden])` tedy skončí
+   o snímek dřív, než je co číst, a zkouška hlásila prázdný řetězec. */
+await pZ.waitForFunction(() => {
+  const e = document.getElementById('zc-err');
+  return e && !e.hidden && (e.textContent || '').trim().length > 0;
+}, null, { timeout: 8000 });
 je('hláška „chvíli počkejte" je přeložená do věty',
   (await pZ.textContent('#zc-err')).trim(), 'Moment — mezi zprávami nechte pár vteřin.');
 je('neodeslaný text zůstal v poli, nemusí se psát znovu', await pZ.inputValue('#zc-ta'), 'RYCHLE');

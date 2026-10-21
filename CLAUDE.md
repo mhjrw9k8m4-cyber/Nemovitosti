@@ -181,6 +181,15 @@ porovnává se DOTAZ, ne ta věta (týž počet u jiného dotazu by hlášení
 spolkl); a základ se bere hned při prvním vykreslení, ne až v čekajícím
 hlášení (jinak ho zruší dotaz napsaný do 700 ms).
 
+**A nula naměřená špatným zadáním vypadá stejně jako nula skutečná.**
+Naměřeno (oddíl 94): „po klepnutí na Přihlásit se se nezmění nic" bylo
+moje zadání, ne vada — do políčka jsem dal neplatný e-mail a odeslání
+zastavila vlastní kontrola prohlížeče, takže se obsluha nespustila.
+V každé sadě kontrol proto patří jedna, která měří jen to, že BYLO CO
+měřit. A v témž oddílu i opačná stránka té věci: jedna změna mimo živou
+oblast je horší nález než devatenáct — čím je stránka prostší, tím
+dražší je mlčení.
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:

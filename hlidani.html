@@ -571,7 +571,14 @@
           '<button class="hl-btn" type="submit" id="hlogin">Přihlásit se</button>' +
           '<button class="hl-btn sec" type="button" id="hsignup">Vytvořit účet</button>' +
         '</form>' +
-        '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg">' + (msg || '') + '</div>' +
+        /* ŽIVÁ OBLAST, A PRÁZDNÁ. Naměřeno (oddíl 94): po klepnutí na
+           „Přihlásit se" se změní jedno jediné místo na stránce —
+           tenhle div — a živá oblast to nebyla. Kdo nevidí, zmáčkl
+           přihlášení a nedozvěděl se ani „Zadejte e-mail a heslo",
+           ani „Přihlášení se nepovedlo". A text se sem nesmí vložit
+           rovnou: oblast, která se do stromu přidá už s textem, je
+           nový uzel, ne změna uvnitř živé oblasti (oddíl 92). */
+        '<div class="hl-msg' + (err ? ' err' : '') + '" id="hauthmsg" role="status"></div>' +
       '</div>' +
       /* Místo pro kartu „Co vám hlídání pošle“, která se teprve počítá. */
       '<div class="hl-card hl-ukazka hl-ukazka-misto" aria-hidden="true">'
@@ -580,6 +587,8 @@
     if (DATA.length) ukazkaHlidani();
     else loadData().then(ukazkaHlidani, function () {});
     var em = document.getElementById('he'), pw = document.getElementById('hp'), mEl = document.getElementById('hauthmsg');
+    // Text až do další snímku — viz poznámka u #hauthmsg výš.
+    if (msg) requestAnimationFrame(function () { mEl.textContent = msg; });
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
     function okc(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
     // Enter v heslu odesílá — na telefonu je to největší klávesa a dřív
@@ -771,7 +780,10 @@
 
         '<div class="hl-souhrn" id="ns-souhrn"></div>' +
         '<button class="hl-btn" id="ns-save">Uložit hlídání</button>' +
-        '<div class="hl-msg" id="ns-msg"></div>' +
+        /* Živá oblast: nese „Ukládám…", „Uložení se nepovedlo." a hlavně
+           větu o tom, co se z hlídání nepropsalo. Staví se prázdná a
+           plní se až potom, takže je to změna uvnitř oblasti. */
+        '<div class="hl-msg" id="ns-msg" role="status"></div>' +
       '</div>';
   }
   function wireNewSearch(afterSave) {
@@ -873,6 +885,11 @@
     }
     var okruhSel = document.getElementById('ns-okruh');
     if (okruhSel) okruhSel.addEventListener('change', function () { obnovOkruhPozn(); prepocti(); });
+    /* ŽIVÁ OBLAST TU ZVÁŽENÁ BYLA A NENÍ — poznámka se přepisuje při
+       KAŽDÉM úhozu v políčku místa (posluchač na `input` hned níž),
+       takže by odečítač mluvil přes psaní. Rozhodující věta z ní se
+       navíc po uložení řekne znovu v #ns-msg („Místo okruhu hlídáme
+       celý okres."), a ta oblast živá je. */
     var okresIn = document.getElementById('ns-okres');
     if (okresIn) okresIn.addEventListener('input', obnovOkruhPozn);
     obnovOkruhPozn();

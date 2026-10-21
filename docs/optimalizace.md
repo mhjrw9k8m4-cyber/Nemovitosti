@@ -6141,3 +6141,113 @@ stránku vrátilo další nález: `hlidani.html` a `zpravy.html` nemají
 živou oblast ani jednu a zpětná vazba přihlašování se tam píše do
 obyčejného `div` (a místy se ten `div` staví rovnou s textem uvnitř,
 což je nový uzel, ne změna). To je samostatná položka.
+
+## 94. Dvě stránky účtu bez jediné živé oblasti *21. 10.*
+
+Oddíl 93 skončil tím, že se počítání změn vyplatí udělat i mimo
+úvodní stránku. První takové měření — všechny živé oblasti na čtrnácti
+typech stránek — vrátilo tohle:
+
+```
+index.html        4 živé oblasti
+pridat.html       7
+muj-inzerat.html  4
+pozemek-*.html    3
+kontakt.html      1 (hláška)
+hlidani.html      0
+zpravy.html       0
+```
+
+Dvě stránky, na kterých se pracuje s účtem, nemají živou oblast **ani
+jednu**. A měření toho, co se na nich po zásahu člověka změní, je
+tentokrát krátké — mění se jedno jediné místo:
+
+```
+hlidani.html  klepnutí na „Přihlásit se"
+   → mimo živou oblast  #hauthmsg  „Zadejte e-mail a heslo (aspoň 6 znaků)."
+   → v živé oblasti: 0 z 1
+zpravy.html   klepnutí na „Přihlásit se"
+   → mimo živou oblast  #zauthmsg  „Zadejte e-mail a heslo (aspoň 6 znaků)."
+   → v živé oblasti: 0 z 1
+```
+
+Jedno místo, a není slyšet. Kdo nevidí, zmáčkl přihlášení a nedozvěděl
+se ani „Zadejte e-mail a heslo", ani „Přihlašuji…", ani „Přihlášení se
+nepovedlo." Stránka přitom nemá co jiného říct — formulář je celý její
+obsah.
+
+### Past při měření, kterou stojí za to si zapsat
+
+První pokus hlásil „0 z 0": po klepnutí se nezměnilo nic. Důvod nebyl
+ve stránce, ale v mém zadání — do políčka jsem napsal neplatný e-mail,
+a `<input type="email">` s neplatnou hodnotou zastaví odeslání vlastní
+kontrolou prohlížeče, takže se obsluha vůbec nespustí. Měřit se musí
+platným e-mailem a krátkým heslem, aby se dostalo na kontrolu webu.
+Nula naměřená špatným zadáním vypadá úplně stejně jako nula skutečná.
+
+### Co se opravilo
+
+| místo | co nese | jak |
+|---|---|---|
+| `#hauthmsg`, `#zauthmsg` | zpětná vazba přihlášení a zakládání účtu | `role="status"`, a oblast se staví PRÁZDNÁ (text až v dalším snímku) |
+| `#ns-msg` (hlidani) | „Ukládám…", „Uložení se nepovedlo.", a hlavně větu o tom, co se z hlídání nepropsalo | `role="status"` |
+| `#zc-err` (zpravy) | chyba v rozhovoru („Moment — mezi zprávami nechte pár vteřin.") | `role="status"` + odkrývá se prázdná, text až potom (oddíl 92) |
+| nová zpráva od druhého | dotažení na pozadí každých 15 s | nová oblast `#zc-ohlas`: „Nová zpráva v rozhovoru." |
+
+Proč se obě přihlašovací hlášky musely stavět prázdné: `renderAuth(msg)`
+vykresluje celý formulář `innerHTML`em a text hlášky do něj vkládala
+rovnou. Oblast, která se do stromu přidá už s textem, je **nový uzel**,
+ne změna uvnitř živé oblasti — a nový uzel se jako `aria-live` nehlásí
+(oddíl 92).
+
+### Dvě místa, kde se rozhodlo NIC NEDĚLAT
+
+**Počet znaků ve zprávě** (`#zc-pocet`, „zbývá 412 znaků") se přepisuje
+při každém úhozu. Živá oblast by znamenala, že odečítač mluví přes
+psaní. To, co je opravdu třeba vědět — že se zpráva nevejde — se po
+odeslání řekne v `#zc-err`, a ta oblast živá je.
+
+**Poznámka u okruhu hlídání** (`#ns-okruh-pozn`, „Hlídá se vše do 30 km
+od místa Brno") se přepisuje při každém úhozu v políčku místa, tedy
+týž problém. Rozhodující věta z ní se navíc po uložení řekne znovu
+v `#ns-msg` („Místo okruhu hlídáme celý okres."), a to živá oblast je.
+
+Obojí je v těch stránkách napsané jako poznámka u kódu, ať se příště
+nehledá, proč tam živá oblast není.
+
+**Celý rozhovor živou oblastí být nesmí** a hlídá se to. `#zc-msgs` se
+dotahuje každých 15 s a přepisuje se celý; `aria-live` by znamenal, že
+odečítač po každém dotažení přečte celou konverzaci znovu. Proto se
+hlásí jen to, co je nové, a jednou větou.
+
+### Hlídač: dvě měřená místa navíc, ne jen čtení zdroje
+
+`scripts/test-ohlaseni.mjs` má 42 kontrol (bylo 26). Přihlašovací
+formulář je dostupný bez účtu, takže se obě stránky měří doopravdy
+v prohlížeči. Uložení hlídání a nová zpráva potřebují účet a živou
+databázi — a ty se **změřily tam, kde se odehrávají**, nad falešnou
+Supabase: nová zpráva v `test-chat-prohlizec.mjs`, uložení hlídání
+v `test-hlidani-prohlizec.mjs`. Ve `test-ohlaseni.mjs` k nim zůstaly
+jen zdrojové kontroly, a je u nich napsané, kde se měří pravda.
+
+```
+role=status z #hauthmsg pryč       → spadlo „změna je v živé oblasti" (žádná) i „hlásí se v #hauthmsg"
+#zauthmsg postaven s textem uvnitř → spadlo „obě stránky staví hlášku přihlášení PRÁZDNOU"
+text před odkrytím v chyba()       → spadlo „odkrývá se PRÁZDNÁ (text až v dalším snímku)"
+aria-live na celém #zc-msgs        → spadlo „celý rozhovor živá oblast NENÍ"
+ohlášení nové zprávy odebráno      → spadlo v test-chat-prohlizec („nová zpráva se ohlásí")
+role=status z #ns-msg pryč         → spadlo v test-hlidani-prohlizec
+```
+
+### Co z toho platí dál
+
+**Jedna změna mimo živou oblast je horší nález než devatenáct.** Na
+úvodní stránce se nehlásilo 18 z 19 změn, ale člověk měl aspoň výpis,
+kterým se dá projít. Tady se mění jedno jediné místo na celé stránce —
+a je to právě ta věta, která říká, proč se nic nestalo. Čím je stránka
+prostší, tím dražší je mlčení.
+
+A ta vlastní past stojí za druhé přečtení: **nula naměřená špatným
+zadáním vypadá stejně jako nula skutečná.** Než se z nuly udělá nález,
+musí být jasné, že se to, co se měří, vůbec stalo — proto je v každé
+sadě kontrol jedna, která měří jen to, že bylo co měřit.

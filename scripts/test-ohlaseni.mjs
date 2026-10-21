@@ -262,6 +262,94 @@ if (stranka) zkontroluj('pozemek', await zmerPoradi(stranka, '#pz-sour-kop'));
   await p.close();
 }
 
+/* ---- 5) ZPĚTNÁ VAZBA FORMULÁŘŮ na stránkách účtu ----
+   Naměřeno v oddílu 94: hlidani.html ani zpravy.html neměly živou
+   oblast ANI JEDNU. Po klepnutí na „Přihlásit se" se změní jedno
+   jediné místo na stránce — hláška pod formulářem — a živá oblast to
+   nebyla, takže se člověk nedozvěděl ani „Zadejte e-mail a heslo",
+   ani „Přihlášení se nepovedlo". Přihlašovací formulář je na obou
+   stránkách dostupný bez účtu, takže se dá měřit doopravdy. */
+for (const [stranka, pole, heslo, tlacitko, oblast] of [
+  ['hlidani.html', '#he', '#hp', '#hlogin', 'hauthmsg'],
+  ['zpravy.html', '#ze', '#zp', '#zlogin', 'zauthmsg'],
+]) {
+  const p = await ctx.newPage();
+  const chybyJs = [];
+  p.on('pageerror', (e) => chybyJs.push(String(e)));
+  await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
+  const je = await p.waitForSelector(tlacitko, { timeout: 45000 }).then(() => true).catch(() => false);
+  pravda(`${stranka}: přihlašovací formulář se vykreslí`, je, `tlačítko ${tlacitko} nepřišlo`);
+  if (je) {
+    const v = await p.evaluate(async ([f, h, t]) => {
+      const zmeny = [];
+      const ziva = (n) => { for (let x = n; x; x = x.parentElement) {
+        if (x.hasAttribute && (x.hasAttribute('aria-live') || ['status', 'alert', 'log'].includes(x.getAttribute('role')))) return x.id || x.tagName;
+      } return null; };
+      const mo = new MutationObserver((zs) => { for (const z of zs) {
+        const n = z.target.nodeType === 1 ? z.target : z.target.parentElement;
+        if (!n) continue;
+        zmeny.push({ kdo: n.id ? '#' + n.id : n.tagName.toLowerCase(), ziva: ziva(n),
+          text: (n.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 50) });
+      } });
+      mo.observe(document.body, { childList: true, characterData: true, subtree: true });
+      /* Platný e-mail a krátké heslo: na neplatný e-mail by formulář
+         zastavila vlastní kontrola prohlížeče a obsluha by se vůbec
+         nespustila (naměřeno — a je to past, do které jsem spadl). */
+      document.querySelector(f).value = 'kdo@priklad.cz';
+      document.querySelector(h).value = '12';
+      document.querySelector(t).click();
+      await new Promise((r) => setTimeout(r, 900));
+      mo.disconnect();
+      const m = new Map();
+      for (const x of zmeny) { const k = x.kdo + '|' + (x.ziva || '-'); if (!m.has(k)) m.set(k, x); }
+      return { zmeny: [...m.values()] };
+    }, [pole, heslo, tlacitko]);
+    // PŘEDPOKLAD: bez změny na stránce by se neměřilo nic
+    pravda(`${stranka}: klepnutí na „Přihlásit se" něco změní (${v.zmeny.length})`,
+      v.zmeny.length >= 1, 'na stránce se nezměnilo nic — nebylo co měřit');
+    const vZive = v.zmeny.filter((x) => x.ziva);
+    pravda(`${stranka}: a ta změna je v živé oblasti (${vZive.map((x) => x.ziva).join(', ') || 'žádná'})`,
+      v.zmeny.length > 0 && vZive.length === v.zmeny.length,
+      'mimo živou oblast: ' + v.zmeny.filter((x) => !x.ziva).map((x) => x.kdo + ' „' + x.text + '"').join(' | '));
+    pravda(`${stranka}: hlásí se to v #${oblast}`, vZive.some((x) => x.ziva === oblast),
+      JSON.stringify(vZive));
+    pravda(`${stranka}: nic se u toho nerozbilo`, chybyJs.length === 0, chybyJs.join(' | '));
+  }
+  await p.close();
+}
+
+/* ---- 6) Co se bez účtu vyvolat nedá — pořadí ČTENÉ ZE ZDROJE ----
+   Uložení hlídání, chyba v rozhovoru a nová zpráva od druhého
+   potřebují přihlášení a živou databázi. Čte se tedy zdroj stránek.
+   Slabší kontrola, a je tak i pojmenovaná: pozná přepsané místo,
+   neprokáže, co prohlížeč udělá. Doopravdy se obojí měří tam, kde se
+   ty cesty odehrávají nad falešnou Supabase: nová zpráva
+   v scripts/test-chat-prohlizec.mjs, uložení hlídání
+   v scripts/test-hlidani-prohlizec.mjs. */
+{
+  const h = readFileSync(path.join(KOREN, 'hlidani.html'), 'utf8');
+  const z = readFileSync(path.join(KOREN, 'zpravy.html'), 'utf8');
+  pravda('hlidani.html: hláška u uložení hlídání je živá oblast',
+    /id="ns-msg" role="status"/.test(h), 'na #ns-msg není role=status');
+  pravda('zpravy.html: chybová hláška v rozhovoru je živá oblast',
+    /id="zc-err" role="status"/.test(z), 'na #zc-err není role=status');
+  pravda('zpravy.html: a odkrývá se PRÁZDNÁ (text až v dalším snímku)',
+    /errEl\.hidden = false;\s*requestAnimationFrame/.test(z),
+    'text se vkládá dřív, než se oblast odkryje — viz oddíl 92');
+  pravda('zpravy.html: nová zpráva od druhého se ohlásí vlastní větou',
+    /id="zc-ohlas"/.test(z) && /Nová zpráva v rozhovoru/.test(z),
+    'chybí #zc-ohlas nebo věta, kterou se hlásí');
+  /* Celý rozhovor živá oblast být NESMÍ: dotahuje se každých 15 s
+     a přepisuje se celý, takže by se po každém dotažení přečetl znovu. */
+  pravda('zpravy.html: celý rozhovor (#zc-msgs) živá oblast NENÍ',
+    !/id="zc-msgs"[^>]*(aria-live|role="(status|log|alert)")/.test(z),
+    'na #zc-msgs je živá oblast — odečítač bude po každém dotažení číst celý rozhovor');
+  /* A hláška se nesmí vkládat do oblasti rovnou při jejím vzniku. */
+  pravda('obě stránky staví hlášku přihlášení PRÁZDNOU',
+    !/id="hauthmsg"[^>]*>' \+ \(msg/.test(h) && !/id="zauthmsg"[^>]*>' \+ \(msg/.test(z),
+    'oblast se do stromu přidává už s textem — to je nový uzel, ne změna (oddíl 92)');
+}
+
 await ctx.close();
 await prohlizec.close();
 srv.close();

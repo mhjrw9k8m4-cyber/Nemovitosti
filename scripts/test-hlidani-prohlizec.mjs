@@ -263,6 +263,21 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
 
 const pred = await p.$$eval('.hl-iname', (e) => e.map((x) => x.textContent));
 await p.fill('#ns-okres', 'Kolín');
+/* Hláška u uložení MUSÍ BÝT ŽIVÁ OBLAST. Nese „Ukládám…", „Uložení se
+   nepovedlo." a hlavně větu o tom, co se z hlídání nepropsalo — a to
+   je informace, kterou člověk nemá odkud jinud vzít. Změřeno a
+   doloženo v oddílu 94; tady se čte role prvku, do kterého se to píše,
+   protože právě tady se uložení doopravdy odehraje. */
+{
+  const r = await p.evaluate(() => {
+    const e = document.getElementById('ns-msg');
+    return e ? { role: e.getAttribute('role'), text: (e.textContent || '').trim() } : null;
+  });
+  pravda('hláška u uložení hlídání je živá oblast (role=status)',
+    !!r && r.role === 'status', JSON.stringify(r));
+  pravda('a je prázdná, dokud se nic neuložilo', !!r && r.text === '',
+    `stojí v ní „${r && r.text}"`);
+}
 await p.click('#ns-save');
 await p.waitForTimeout(1400);
 /* Po uložení se musí ukázat SEZNAM. Kdyby zůstal formulář, člověk nemá
