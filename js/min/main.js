@@ -3721,9 +3721,51 @@
     }, 700);
   }
 
+  function zapamatujZamereni() {
+    var a = document.activeElement;
+    if (!a || a === document.body || a === document.documentElement) return null;
+    var karta = a.closest ? a.closest('.opp-item') : null;
+    var karty = karta ? [].slice.call(listEl.querySelectorAll('.opp-item')) : null;
+    return {
+      id: a.id || '',
+      trida: (typeof a.className === 'string' && a.className) ? a.className.trim().split(/\s+/)[0] : '',
+      pk: karta ? karta.getAttribute('data-pk') : '',
+      poradi: karty ? karty.indexOf(karta) : -1,
+      naKarte: !!karta && a !== karta
+    };
+  }
+  function vratZamereni(z) {
+    if (!z) return;
+
+    var a = document.activeElement;
+    if (a && a !== document.body && a !== document.documentElement && a.isConnected) return;
+    function dej(el) {
+      if (!el) return false;
+
+      try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+      return document.activeElement === el;
+    }
+
+    if (z.id && dej(document.getElementById(z.id))) return;
+    if (z.pk) {
+      var karty = [].slice.call(listEl.querySelectorAll('.opp-item'));
+      var ta = null;
+      for (var i = 0; i < karty.length; i++) if (karty[i].getAttribute('data-pk') === z.pk) { ta = karty[i]; break; }
+
+      var nova = ta || karty[z.poradi] || karty[z.poradi - 1] || karty[0];
+      if (nova) {
+        if (z.naKarte && z.trida && dej(nova.querySelector('.' + z.trida))) return;
+        if (dej(nova)) return;
+      }
+    }
+
+    dej(document.getElementById('mc-skryte'));
+  }
+
   function renderList() {
 
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
+    var zamereni = zapamatujZamereni();
     stahniPoznamky();
     stahniUlozene();
 
@@ -4153,6 +4195,7 @@
     prekresliOvladani();
     prekresliChipy();
     prekresliAkceFiltru(matched);
+    vratZamereni(zamereni);
   }
 
   function nastrojeDoHlavicky() {

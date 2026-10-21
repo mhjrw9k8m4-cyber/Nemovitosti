@@ -198,6 +198,18 @@ a byl to textarea s placeholderem. Hlídá to scripts/test-aria-cile.mjs.
 jinak se za rok nepozná, jestli se ta jedna výjimka spravila, nebo
 jestli se jen přestalo měřit.
 
+**Zelená zkouška není hotová zkouška: sabotuj KAŽDOU kontrolu zvlášť.**
+Naměřeno (oddíl 96): zkouška na zaměření klávesnice měla 32 zelených
+kontrol a dvě z nich byly PLANÉ — shodit se nedaly ničím. Obě z téhož
+důvodu: měřily na prvku, který měl záchranu (políčko s `id` se najde
+podle id i při rozbitém vracení; první karta ve výpisu zůstane první,
+takže klíč i pořadí ukazují na totéž), takže rozbité chování vypadalo
+stejně jako správné. U každé kontroly si proto řekni větu „co by
+vypadalo stejně, i kdyby to bylo rozbité" — a změř to tam, kde žádná
+záchrana není. Pozor i na stav, který si kontroly přestavují navzájem,
+a na to, že `page.reload()` čistou stránku nedělá: web si stav zapisuje
+do adresy.
+
 ## Testy
 
 240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:

@@ -5781,12 +5781,83 @@
     }, 700);
   }
 
+  /* ZAMĚŘENÍ KLÁVESNICE MUSÍ PŘEŽÍT PŘEKRESLENÍ VÝPISU.
+     Naměřeno (oddíl 96) tak, že se před klepnutím prvek zaměřil a po
+     překreslení se přečetlo document.activeElement:
+
+       křížek „Tenhle mě nezajímá" na kartě → body
+       „Zobrazit skryté (1)" v hlavičce     → body
+
+     Kdo jede klávesnicí, zmáčkne na kartě ✕ a skončí na začátku
+     dokumentu: aby se dostal zpátky tam, kde byl, musí protabovat
+     hlavičku, hledání i filtry. Přitom karta sama o vině není — výpis
+     se celý přestaví (`listEl.innerHTML = ''`) a nářadí v hlavičce
+     taky, takže zaměřený prvek prostě přestane existovat a prohlížeč
+     zaměření upustí na <body>.
+
+     NIC SE NEKRADE. Vrací se jen tehdy, když zaměření doopravdy spadlo
+     na <body> — kdo píše do hledání (a renderList běží při každém
+     úhozu), o kurzor nepřijde. */
+  function zapamatujZamereni() {
+    var a = document.activeElement;
+    if (!a || a === document.body || a === document.documentElement) return null;
+    var karta = a.closest ? a.closest('.opp-item') : null;
+    var karty = karta ? [].slice.call(listEl.querySelectorAll('.opp-item')) : null;
+    return {
+      id: a.id || '',
+      trida: (typeof a.className === 'string' && a.className) ? a.className.trim().split(/\s+/)[0] : '',
+      pk: karta ? karta.getAttribute('data-pk') : '',
+      poradi: karty ? karty.indexOf(karta) : -1,
+      naKarte: !!karta && a !== karta
+    };
+  }
+  function vratZamereni(z) {
+    if (!z) return;
+    /* JEDINÁ POJISTKA, A VYBRALO JI MĚŘENÍ. Nejdřív tu byly dvě: k téhle
+       ještě `if (z.prvek.isConnected) return` s poznámkou „prvek přežil,
+       není co řešit". Sabotáž ji odhalila jako MRTVOU — když prvek
+       překreslení přežije, podrží si i zaměření, takže se vrátí už na
+       řádku níž. Změřeno i na nářadí, které nastrojeDoHlavicky()
+       PŘESTĚHUJE (appendChild v Chromiu zaměření neupustí: #mc-vyvoz
+       po překreslení zaměřený zůstal). A kdyby někdy přežil a zaměření
+       přesto upustil, ta pojistka by vrácení ZABRÁNILA, tedy škodila. */
+    var a = document.activeElement;
+    if (a && a !== document.body && a !== document.documentElement && a.isConnected) return;
+    function dej(el) {
+      if (!el) return false;
+      /* preventScroll: vracíme zaměření, ne pohled. Bez toho by
+         prohlížeč k prvku odskrolloval a člověk by si myslel, že mu
+         stránka ujela sama. */
+      try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+      return document.activeElement === el;
+    }
+    // Nářadí v hlavičce se přestaví se stejnými id — stačí je najít znovu.
+    if (z.id && dej(document.getElementById(z.id))) return;
+    if (z.pk) {
+      var karty = [].slice.call(listEl.querySelectorAll('.opp-item'));
+      var ta = null;
+      for (var i = 0; i < karty.length; i++) if (karty[i].getAttribute('data-pk') === z.pk) { ta = karty[i]; break; }
+      /* Když karta zmizela (právě se skryla), bere se ta, co nastoupila
+         na její místo — tedy stejné místo v seznamu, jako kdyby člověk
+         viděl. Na konci seznamu předchozí. */
+      var nova = ta || karty[z.poradi] || karty[z.poradi - 1] || karty[0];
+      if (nova) {
+        if (z.naKarte && z.trida && dej(nova.querySelector('.' + z.trida))) return;
+        if (dej(nova)) return;
+      }
+    }
+    /* Poslední záchyt: „Zobrazit skryté" v hlavičce výpisu. Je to
+       zároveň cesta zpátky k tomu, co se právě skrylo. */
+    dej(document.getElementById('mc-skryte'));
+  }
+
   function renderList() {
     /* POČITADLO PRO ZKOUŠKU. Web ho sám nepoužívá. Je tu proto, že
        zbytečné druhé překreslení celého výpisu se na obrazovce nepozná
        — jen stojí telefon skoro sekundu práce. Změřit to zvenčí jinak
        nejde; viz scripts/test-jedno-vykresleni.mjs. */
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
+    var zamereni = zapamatujZamereni();
     stahniPoznamky();
     stahniUlozene();
     // Adresa drží krok s filtry — odtud se sdílí (viz zapisAdresu()).
@@ -6562,6 +6633,7 @@
     prekresliOvladani(); // políčka a přepínače podle toho, co opravdu platí
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
+    vratZamereni(zamereni);   // zaměření klávesnice nesmí spadnout na <body>
   }
 
   /* NÁŘADÍ PATŘÍ DO HLAVIČKY VÝPISU, NE MEZI NABÍDKY.

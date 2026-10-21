@@ -6322,3 +6322,105 @@ právě ve chvíli, kdy se pole používá.
 A k těm číslům: **945 z 946 je dobrá zpráva, kterou je stejně potřeba
 napsat** — jinak se za rok nepozná, jestli se ta jedna výjimka
 spravila, nebo jestli se jen přestalo měřit.
+
+## 96. Zaměření klávesnice spadlo na začátek stránky *21. 10.*
+
+Třetí třída vad, které nejsou vidět. Prstenec zaostření se na webu
+hlídá od oddílu 44 — ale k ničemu není, když zaměření **zmizí úplně**.
+Změřeno tak, že se prvek zaměřil, klepnulo se na něj a přečetlo se
+`document.activeElement`:
+
+```
+pilulka druhu ve filtru              → button.filter-chip   (drží)
+srdíčko „Uložit" na kartě            → button.opp-fav       (drží)
+„Uložené" nad výpisem                → button#map-fav       (drží)
+křížek „Tenhle mě nezajímá" na kartě → body    ← SPADLO
+„Zobrazit skryté (1)" v hlavičce     → body    ← SPADLO
+```
+
+Kdo jede klávesnicí, zmáčkne na kartě ✕ a octne se na začátku
+dokumentu. Aby se dostal zpátky tam, kde byl, musí protabovat hlavičku,
+hledání i filtry. A karta sama o vině není: výpis se celý přestaví
+(`listEl.innerHTML = ''`) a nářadí v hlavičce taky, takže zaměřený
+prvek přestane existovat a prohlížeč zaměření upustí na `<body>`.
+
+### Oprava: zapamatovat před překreslením, vrátit po něm
+
+Dvě funkce vedle `renderList()`. Před přestavbou se zapamatuje `id`,
+první třída, klíč karty (`data-pk`) a místo v seznamu; po přestavbě se
+zaměření vrátí v tomhle pořadí:
+
+1. prvek se stejným **id** (tak se vrací nářadí v hlavičce),
+2. karta se stejným **klíčem** — ta samá nabídka, i když se posunula,
+3. karta na **stejném místě** v seznamu (když ta původní zmizela,
+   třeba se právě skryla nebo ji řazení odstěhovalo na jinou stranu),
+4. jako poslední záchyt „Zobrazit skryté" v hlavičce výpisu, což je
+   zároveň cesta zpátky k tomu, co se právě skrylo.
+
+Vrací se jen tehdy, když zaměření doopravdy spadlo na `<body>` — kdo
+píše do hledání (a `renderList()` běží při každém úhozu), o kurzor
+nepřijde. A zaměřuje se s `preventScroll`: vracíme zaměření, ne pohled.
+
+### Sabotáž odhalila DVĚ MOJE KONTROLY JAKO PLANÉ
+
+Tohle je ta část, kterou stojí za to si zapsat. Zkouška po napsání
+vypadala hotově — 32 kontrol, všechny zelené. Pak jsem shodil tři věci
+v kódu a dvě sabotáže **nic neshodily**:
+
+| sabotáž | mělo spadnout | spadlo |
+|---|---|---|
+| vracení odebráno celé | tři kontroly | ✓ spadly |
+| pojistka proti krádeži odebrána | „psaní do hledání o kurzor nepřipraví" | **nic** |
+| karta se hledá podle pořadí, ne podle klíče | „zůstane zaměřená táž karta" | **nic** |
+
+První planá kontrola měřila **políčko hledání** — a to má `id`. I
+rozbité vracení ho tedy najde podle id a zaměří nazpátek týž prvek: na
+obrazovce se nestane nic. Krádež se dá změřit jen na prvku **bez id
+a mimo výpis** (vzal se odkaz v hlavičce) — a ještě musí existovat cíl,
+kam by zaměření uteklo: poslední záchyt je „Zobrazit skryté", a to
+tlačítko na stránce je jen tehdy, když je něco skrytého. Bez skryté
+nabídky zůstane zaměření na odkazu i s rozbitou pojistkou.
+
+Druhá planá kontrola brala **první kartu** ve výpisu. Ta zůstala první,
+takže klíč i pořadí ukazovaly na tutéž věc. Měřit se to dá jen na kartě
+zprostřed, nad kterou se jedna skryje: pak se zaměřená posune o jedno
+výš a hledání podle pořadí by zaměřilo JINOU nabídku.
+
+A ještě dvě pasti, obě od stavu, který si kontroly navzájem přestavovaly:
+
+* jedna kontrola zapnula „Zobrazit skryté" a další pak klepnutím na
+  křížek kartu **odskryla** (je to přepínač), takže zmizelo i tlačítko,
+  na kterém se měla měřit krádež;
+* `page.reload()` čistou stránku **nedělá** — web si stav výpisu
+  zapisuje do adresy, takže se po vymazání `localStorage` obnovil
+  i s hledáním „Brno" z předchozí kontroly. Jít se musí na čistou
+  adresu.
+* a výchozí řazení „Doporučené" se střídá: výpis se po načtení ještě
+  sám přemíchá (naměřeno: z pěti karet zůstaly na svém místě dvě).
+  Scénář proto přepne na „Nejnovější" a čeká, až se seznam dvakrát po
+  sobě přečte stejně.
+
+Po těchhle opravách shodí každá ze tří sabotáží právě to své: 6 / 1 / 2
+kontroly.
+
+### A jedna pojistka, kterou sabotáž vyhodila z kódu
+
+Napsal jsem do `vratZamereni()` dvě podmínky, aby se zaměření
+nekradlo — vedle té účinné ještě `if (z.prvek.isConnected) return`
+(„prvek přežil, není co řešit"). Sabotáž ji označila za mrtvou a měření
+to potvrdilo: když prvek překreslení přežije, podrží si i zaměření —
+změřeno i na nářadí, které `nastrojeDoHlavicky()` **přestěhuje**
+(`appendChild` v Chromiu zaměření neupustí: `#mc-vyvoz` zaměřený
+zůstal). A kdyby někdy přežil a zaměření přesto upustil, ta podmínka by
+vrácení **zabránila** — tedy by škodila. Je venku.
+
+### Co z toho platí dál
+
+**Zelená zkouška není hotová zkouška.** Dokud se nezkusí, co ji shodí,
+není jasné, jestli měří věc, nebo jen to, že web vůbec jde.
+Tady byly plané dvě z pěti kontrol a obě byly plané z téhož důvodu:
+měřily na prvku, který měl **záchranu** (id, nebo první místo
+v seznamu), takže rozbité chování vypadalo stejně jako správné.
+Sabotáž se proto nedělá jednou na konci — dělá se na každou kontrolu
+zvlášť a hledá se u ní věta „co by vypadalo stejně, i kdyby to bylo
+rozbité".
