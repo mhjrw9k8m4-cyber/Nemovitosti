@@ -455,6 +455,12 @@ jobs:
         run: |
           npm install --no-audit --no-fund playwright-core playwright
           npx playwright install --with-deps chromium
+          # KTERÁ VERZE TO VLASTNĚ JE. Instaluje se nepřipnutá, takže se
+          # mění sama — a rozdíl proti verzi v node_modules u mě na stroji
+          # už jednou udělal červenou CI při zelené zkoušce (oddíl 101:
+          # page.accessibility v 1.64 neexistuje). Ať je to v logu vidět
+          # na první pohled, než se bude hádat o příčině.
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
       - name: Kontrola fotek (že běží a odkud se bere)
         run: node scripts/test-kontrola-fotek.mjs
 
@@ -668,6 +674,12 @@ jobs:
         run: |
           npm install --no-audit --no-fund playwright-core playwright
           npx playwright install --with-deps chromium
+          # KTERÁ VERZE TO VLASTNĚ JE. Instaluje se nepřipnutá, takže se
+          # mění sama — a rozdíl proti verzi v node_modules u mě na stroji
+          # už jednou udělal červenou CI při zelené zkoušce (oddíl 101:
+          # page.accessibility v 1.64 neexistuje). Ať je to v logu vidět
+          # na první pohled, než se bude hádat o příčině.
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
 
       - name: Projít chat v prohlížeči
         run: node scripts/test-chat-prohlizec.mjs
