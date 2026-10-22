@@ -147,6 +147,21 @@ v zeměpisu 3 km. Vkládá se proto `insertBefore` před první stylopis
 v hlavičce, ne `appendChild`. A hlídá to zkouška, která měří
 GEOMETRII, ne vzhled (scripts/test-mapa.mjs, oddíl 1a).
 
+**Vzorek pevným krokem není malý vzorek — je JEDEN vzorek.** Zkouška,
+která si vezme každou n-tou stránku a chce na nich aspoň N nálezů,
+nepadá a neprochází podle webu, ale podle toho, kam krok dopadl.
+22. 10. čekalo ve vzorku 24 stránek ~11 verdiktů o ceně (má je 47,6 %
+nabídek) a vzorek chytil sedm — CI červená, na webu nic. Kde se měří na
+vzorku, patří k němu PRÁH NA TO, CO SE ZMĚŘILO: vzorek se rozšiřuje,
+dokud nálezů není dost, a strop drží dobu běhu.
+
+**A sabotáž, která neshodila nic, může znamenat, že zkouška měří něco
+jiného, než si myslíš.** Táž zkouška přežila zvýšení počtu v `js/ceny.js`
+— protože očekávanou hodnotu si počítá týmž modelem ze zdroje, takže se
+posunou obě strany. Složila ji až změna v servírované kopii
+`js/min/ceny.js`. Dokud nevíš, PROČ sabotáž neprošla, nevíš ani, co ta
+zkouška hlídá; a když to zjistíš, patří to k ní napsat.
+
 **Živý stav není konec časové osy.** Historie ceny se skládá
 z uzavřených období v archivu a nakonec z živé nabídky — a ten poslední
 bod se přilepoval na konec bez porovnání dne. `od` živé nabídky je

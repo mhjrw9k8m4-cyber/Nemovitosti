@@ -7103,3 +7103,53 @@ přebázováním na robotův commit. Sada tedy nebyla špatně — jen měřila
 jiná data. Kde data přitéká zvenčí, je zelená sada tvrzení o datech
 z té chvíle, ne o kódu navždy; rozhodnout může až CI nad tím, co je na
 větvi doopravdy.
+
+## 104. Vzorek 24 stránek rozhodoval o zelené podle toho, na co trefil
+
+Druhá věc z téže červené CI, a jiného druhu: `test-vzorek-verdiktu.mjs`
+si bere vzorek stránek pozemků pevným krokem napříč abecedou a chce,
+aby na nich verdikt o ceně stál aspoň osmkrát — jinak prý „nemá co
+měřit". Na datech od robota se ukázal sedmkrát a zkouška spadla, i když
+na webu nebylo nic špatně.
+
+### Vzorek byl malý, ne nešťastný
+
+Změřeno na celých datech, ne na vzorku:
+
+| | nabídek | podíl |
+|---|---|---|
+| s verdiktem o ceně | 916 | **47,6 %** |
+| bez verdiktu, spoluvlastnický podíl | 526 | 27,3 % |
+| bez verdiktu, jiné | 482 | 25,1 % |
+| celkem | 1 924 | |
+
+Ve dvaceti čtyřech stránkách se tedy čeká ~11 verdiktů. Krok je ale
+pevný — padne vždy na tytéž soubory — takže to není náhoda, nýbrž jeden
+konkrétní systematický vzorek, který se při změně dat stal verdikty
+chudým. Zelená i červená pak nevypovídaly o webu, ale o tom, kam krok
+shodou okolností dopadl. Tatáž vada podrazila i třetí kontrolu
+(„hlášky o podílu jsou menšina"): ve vzorku 7 : 7, v datech 526 : 916.
+
+### Oprava
+
+Vzorek se rozšiřuje, dokud nemá co měřit: nejméně 24 stránek (ať se
+měří i ty BEZ verdiktu — na nich stojí kontrola „nikde verdikt neukázal
+tam, kde ho model nemá") a nejméně 12 verdiktů o ceně, se stropem
+60 stránek, aby běh neutekl. Po opravě: 14 verdiktů z 24 stránek,
+hlášky o podílu 3 ze 17. Prokázáno nárůstem: cíl zvednutý na 22
+donutil zkoušku projít 40 stránek.
+
+### A sabotáž, která neshodila nic — protože neměla jak
+
+Chtěl jsem prokázat, že zkouška má pořád zuby, a zvýšil v `js/ceny.js`
+počet nabídek o jeden. **Prošlo to.** Ne proto, že by zkouška byla
+slepá, ale protože měří něco jiného, než jsem si myslel: očekávaný
+počet si sama spočítá týmž modelem ze ZDROJE, takže změna ve zdroji
+posune obě strany stejně. Prohlížeč si přitom servíruje
+`js/min/ceny.js` — a změna jen v téhle kopii zkoušku složila, přesně
+na kontrole „počet v textu se rovná tomu, co ze zdroje spočítá model".
+
+Zkouška tedy hlídá, že se servírovaná kopie nerozešla se zdrojem a že
+stránka opravdu ukazuje, co model spočítá. Chybu v samotném modelu
+najít nemůže — a teď to u ní stojí napsané, aby se o tom znovu nikdo
+nepřesvědčoval sabotáží, která nemá jak zabrat.

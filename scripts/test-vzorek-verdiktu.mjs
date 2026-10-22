@@ -62,7 +62,13 @@ for (const v of ['**://*.tile.*/**', '**://*.openstreetmap.org/**', '**/_vercel/
 
 /* Očekávané počty se spočítají ZDE, ze stejných dat a týmž modelem,
    jaký běží v prohlížeči (js/ceny.js). Stránka se pak neporovnává
-   s jinou stránkou, ale s nezávislým výpočtem ze zdroje. */
+   s jinou stránkou, ale s výpočtem ze ZDROJE.
+   CO TÍM TEDY JDE A CO NEJDE ZMĚŘIT. Node čte js/ceny.js, prohlížeč
+   servíruje js/min/ceny.js — kontrola níž hlídá, že se ty dvě kopie
+   nerozešly a že stránka opravdu ukazuje, co model spočítá. Chybu
+   v samotném modelu najít NEMŮŽE: posune obě strany stejně. Naměřeno
+   22. 10. sabotáží, která právě proto neshodila nic — teprve změna
+   jen v minifikované kopii zkoušku složila, a to na téhle kontrole. */
 const require_ = createRequire(import.meta.url);
 const PKH = require_(path.join(KOREN, 'js', 'hlidani-logika.js'));
 new Function(fs.readFileSync(path.join(KOREN, 'js', 'ceny.js'), 'utf8'))();
@@ -82,14 +88,28 @@ const dejNabidku = (jmeno) => podleSouboru.get(jmeno) || null;
 /* Vzorek stránek napříč abecedou, ne prvních pár z jednoho okresu —
    jinak by se měřil jeden kraj a jedna velikost vzorku. */
 const vsechny = fs.readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)).sort();
+/* NEJMÉNĚ tolik stránek, ať se měří i ty BEZ verdiktu (na nich stojí
+   kontrola „nikde verdikt neukázal tam, kde ho model nemá“). */
 const KOLIK = 24;
-const krok = Math.max(1, Math.floor(vsechny.length / KOLIK));
-const stranky = [];
-for (let i = 0; i < vsechny.length && stranky.length < KOLIK; i += krok) stranky.push(vsechny[i]);
+/* A nejméně tolik verdiktů o ceně, ať je co porovnávat. Pevný vzorek
+   24 stránek na to nestačí: verdikt má 47,6 % nabídek (916 z 1 924),
+   takže se jich ve dvaceti čtyřech čeká ~11 — ale krok je pevný, vždy
+   padne na tytéž soubory, a 22. 10. padl na vzorek, kde jich bylo
+   sedm. Zelená nebo červená pak nevypovídala o webu, nýbrž o tom, na
+   co krok shodou okolností trefil. Vzorek se proto rozšiřuje, dokud
+   verdiktů není dost — a strop drží dobu běhu. */
+const CIL_VERDIKTU = 12;
+const STROP = 60;
+const krok = Math.max(1, Math.floor(vsechny.length / STROP));
+const kandidati = [];
+for (let i = 0; i < vsechny.length && kandidati.length < STROP; i += krok) kandidati.push(vsechny[i]);
 
 let sVerdiktem = 0, bezPoctu = 0, nesedi = 0, podDeset = 0, jine = 0, porovnano = 0, nespojeno = 0, bezNabidky = 0;
 const ukazky = [];
-for (const s of stranky) {
+const stranky = [];
+for (const s of kandidati) {
+  if (stranky.length >= KOLIK && sVerdiktem >= CIL_VERDIKTU) break;
+  stranky.push(s);
   await page.goto(`${BASE}/${s}`, { waitUntil: 'load' });
   await page.waitForTimeout(700);
   const v = await page.evaluate(() => {
