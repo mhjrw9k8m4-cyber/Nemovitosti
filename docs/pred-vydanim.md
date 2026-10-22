@@ -5,6 +5,31 @@ za majitele nikdo udělat nemůže — jsou to účty, klíče a peníze.
 
 Řazeno podle toho, co nejvíc chybí lidem, kteří web používají dnes.
 
+## Kolik to celkem zabere
+
+Aby bylo vidět, že to není nekonečný seznam. Odhady jsou čistého času,
+ne čekání na DNS.
+
+| | co | kolik |
+|---|---|---|
+| 0 | měření návštěvnosti do Supabase | pár minut |
+| 1 | doména v Resendu (3 záznamy u Wedosu) + klíč do Secrets | ~30 min |
+| 2 | zapnout rozesílání upozornění | minuty, až je hotové 1 |
+| 3 | databáze — pustit SQL a dvě tajemství | ~1 hodina |
+| 4 | Stripe (ostré klíče až s IČO) | rozhodnutí, ne práce |
+| 5 | push do telefonu (VAPID) | ~30 min |
+| 6 | volitelné (Sreality) | ~10 min |
+| 7 | rozhodnutí o čtyřech červených | jedno písmeno |
+| 8 | ověřit, že se CI spouští sama | ~5 min |
+
+**Body 0 a 1 jsou to podstatné**; zbytek web neblokuje. Reálně je to
+jeden až dva večery a web je venku.
+
+**Co NENÍ na tomhle seznamu, je hotové.** Kód i zkoušky jsou zavřené a
+CI zelená. Co by se dalo ještě leštit (zbývá 28 ovládacích prvků
+v oknech a naklikaných stavech, viz oddíl 108 v `docs/optimalizace.md`),
+návštěvník nepozná a vydání to nebrání.
+
 ---
 
 ## 0. Nahrát měření návštěvnosti  ← nejlevnější a nejdřív
@@ -170,6 +195,53 @@ Hotové je všechno ostatní: migrace, service worker, strana prohlížeče,
 
 - `APIFY_TOKEN` + `APIFY_SREALITY_ACTOR` — přidá Sreality jako zdroj
   nabídek. Bez klíče se zdroj přeskočí, nic se nerozbije.
+
+---
+
+## 7. Rozhodnutí o vzhledu: čtyři červené
+
+**Co se děje dnes:** světlé červené podbarvení pod tmavě červeným textem
+dělá na webu sedm míst — termín dražby „dnes", zamítnutý inzerát, chyba
+ve zprávách, slabý poměr v předloze — a jsou na to **čtyři různé
+červené** (`#E4483D` 6×, `#B03A2E` 4×, `#C83C28` 2×, `#AE1E1E` 1×).
+Změřeno v prohlížeči: všech sedm míst sedí na **bílé kartě**, takže se
+ta čtveřice nepřizpůsobuje různým plochám — jsou to čtyři odpovědi na
+tutéž otázku.
+
+Čitelnost je v pořádku u všech variant (nejnižší hodnota 6,73 proti
+požadavku 4,5), takže se rozhoduje **jen o vzhledu**:
+
+| | co to udělá | nejhorší posun vzhledu |
+|---|---|---|
+| **A** | jedna červená, průhlednosti zůstanou | 5,56 — na jednom místě vidět |
+| **B** | jedna červená a jedna dvojice průhlednosti (0,10 / 0,30) | 4,52 — na jednom místě vidět |
+| **C** | dvě červené podle role: paletová pro soud o stavu, jasná pro tlak času | 2,97 — na hranici poznatelnosti |
+
+(Posun je odchylka v OKLabu ×100; do 2 se na obrazovce nepozná.)
+
+**Doporučení: C.** Ty dvě červené nedělají totéž — „Dražba dnes" tlačí
+časem a chce být vidět, „Zamítnuto" je hotový soud a tlačit nemá. Čtyři
+barvy jsou chyba, dvě jsou rozhodnutí. A je to jediná varianta, u které
+se dnešní web prakticky nezmění.
+
+Web se dá vydat i bez toho — je to kosmetika, ne vada.
+
+---
+
+## 8. Ověřit, že se CI spouští sama
+
+**Co se stalo 22. 10.:** push na větev `claude/web-design-sketch-ewjjrr`
+nevyrobil žádný běh — ani po 35 minutách. Běh musel být zařazen ručně
+(Actions → *Testy a kontrola kódu* → **Run workflow**) a pak doběhl
+zeleně za 38 minut. Totéž u commitu datového robota, ale tam to normální
+být může: push udělaný přes `GITHUB_TOKEN` workflow záměrně nespouští.
+
+**Proč to stojí za pohled:** když se CI nespustí, commit vypadá jako
+nezkoušený a nikdo to nepozná — zelená nechybí, ona prostě není.
+
+**Co zkontrolovat:** GitHub → Settings → Actions, jestli nedošly minuty
+nebo se nezměnilo oprávnění; a jestli se to opakuje. Ruční spuštění
+funguje vždy, workflow má `workflow_dispatch`.
 
 ---
 
