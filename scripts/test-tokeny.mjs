@@ -243,6 +243,12 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
       return { h: ((h * 60) + 360) % 360, s: d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1)), l };
     };
     const jeModra = (rgb) => { const x = naHsl(rgb); return x.h >= 195 && x.h <= 285 && x.s > 0.10; };
+    /* TOTÉŽ PRO ČERVENOU, A ZE STEJNÉHO DŮVODU. Do 22. 10. dělaly jednu
+       práci — světlé podbarvení pod tmavě červeným textem — ČTYŘI ručně
+       psané červené na sedmi místech. Nenašel je žádný hlídač; přišlo se
+       na ně ručním procházením a stejně tiše se mohly vrátit. Hledá se
+       tedy červená mimo paletu úplně stejně, jako se hledá modrá. */
+    const jeCervena = (rgb) => { const x = naHsl(rgb); return (x.h >= 345 || x.h <= 20) && x.s > 0.25 && x.l > 0.15 && x.l < 0.75; };
 
     /* Hodnoty přiřazené tokenům --c-* jsou barvy kategorií a modré být
        smějí. Ostatní tokeny ne — token jménem --line modrý být nemá. */
@@ -251,8 +257,8 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
       kategorie.add(m[2].replace(/\s+/g, '').toLowerCase());
     }
 
-    let barev = 0, kategoriiModrych = 0;
-    const modre = [];
+    let barev = 0, kategoriiModrych = 0, kategoriiCervenych = 0;
+    const modre = [], cervene = [];
     for (const [jmeno, text] of zdrojeStylu) {
       const bez = text.replace(/\/\*[\s\S]*?\*\//g, ' ');
       for (const m of bez.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
@@ -270,8 +276,13 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
           }
           if (!rgb) continue;
           barev++;
+          const klic = zapis.replace(/\s+/g, '').toLowerCase();
+          if (jeCervena(rgb)) {
+            if (kategorie.has(klic)) kategoriiCervenych++;
+            else cervene.push(`${jmeno}: ${sel} — ${zapis} (odstín ${Math.round(naHsl(rgb).h)}°)`);
+          }
           if (!jeModra(rgb)) continue;
-          if (kategorie.has(zapis.replace(/\s+/g, '').toLowerCase())) { kategoriiModrych++; continue; }
+          if (kategorie.has(klic)) { kategoriiModrych++; continue; }
           modre.push(`${jmeno}: ${sel} — ${zapis} (odstín ${Math.round(naHsl(rgb).h)}°)`);
         }
       }
@@ -280,11 +291,24 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
        neznamenalo: barvy se musí najít, a odstín se musí počítat
        správně — což dokazuje právě to, že barvy kategorií jako modré
        rozpozná. */
-    pravda(`barvy se v pravidlech opravdu našly (${barev})`, barev >= 300, 'nalezeno jen ' + barev);
+    /* PODLAHA SE NESMÍ LEPIT NA DNEŠNÍ ČÍSLO. Počet barev zapsaných
+       přímo v pravidlech KLESÁ, kdykoli nějaká dostane jméno — a to je
+       smysl té práce, ne porucha. Když 22. 10. dostaly jméno čtyři
+       ručně psané červené, spadl ze 300 na 292 a zkouška to nahlásila
+       jako chybu, přestože web byl o kus lepší. Podlaha je tu jen proto,
+       aby „nic modrého tu není" neznamenalo „nic jsem nenašel"; stačí
+       tedy s rezervou pod dnešním stavem. Že se odstín počítá správně,
+       dokazuje sesterská kontrola (barvy kategorií rozpozná jako modré),
+       ne tohle číslo. */
+    pravda(`barvy se v pravidlech opravdu našly (${barev})`, barev >= 250, 'nalezeno jen ' + barev);
     pravda(`a počítání odstínu funguje (${kategoriiModrych} modrých barev kategorií)`,
       kategoriiModrych >= 2, 'modrou kategorii nerozpoznalo — výpočet odstínu je rozbitý');
     pravda('mimo barvy kategorií není na webu nic modrého', modre.length === 0,
       [...new Set(modre)].slice(0, 10).join('\n      '));
+    pravda(`a počítání odstínu najde i červenou (${kategoriiCervenych} z palety)`,
+      kategoriiCervenych >= 2, 'červenou z palety nerozpoznalo — kontrola níž by pak nic neznamenala');
+    pravda('ani nic červeného mimo paletu', cervene.length === 0,
+      [...new Set(cervene)].slice(0, 10).join('\n      '));
 
     /* --- Barva zrušeného tmavého režimu ------------------------------
      *

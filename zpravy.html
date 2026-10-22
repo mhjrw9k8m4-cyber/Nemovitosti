@@ -43,7 +43,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=3614a56c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=da828f5f">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed — jedna svislice se zbytkem stránky. */
@@ -119,7 +119,7 @@
     .zp-b.ceka{opacity:.55;}
     .zp-b.chyba{outline:1.5px solid var(--c-exekuce); outline-offset:1px;}
     .zp-err{margin:0 12px 8px; padding:8px 12px; border-radius:var(--r-sm); font-size:13px;
-      background:rgba(200,60,40,.12); color:var(--c-exekuce); border:1px solid rgba(200,60,40,.3);}
+      background:rgba(var(--c-exekuce-rgb),.12); color:var(--c-exekuce); border:1px solid rgba(var(--c-exekuce-rgb),.3);}
     .zp-err[hidden]{display:none;}
     .zp-pocet{font-size:12px; opacity:.7; padding:0 12px 8px; text-align:right;}
     .zp-pocet.prilis{color:var(--c-exekuce); opacity:1; font-weight:700;}

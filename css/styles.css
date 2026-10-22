@@ -401,6 +401,17 @@
      proti leteckému snímku je pořád dobře vidět. */
   --c-sale:#4361B8; --c-drazba:#CC6B33; --c-exekuce:#8C2F1E; --c-obec:#277686; --c-majitel:#8B4FE0;
   --c-ok:#1FA363;               /* zelená = úspěch/ověřeno/„v pořádku" (NE kategorie „na prodej") */
+  /* DRUHÁ ČERVENÁ, A MÁ SVOU PRÁCI. `--c-exekuce` je soud o stavu —
+     zamítnuto, chyba, slabý poměr; tahle je TLAK ČASU: „Dražba dnes",
+     termín u hlídaného místa. Dvě barvy proto, že nedělají totéž:
+     termín na vás tlačí a chce být vidět, hotový soud tlačit nemá.
+     Do 22. 10. tu práci dělaly ČTYŘI ručně psané červené (#E4483D 6×,
+     #B03A2E 4×, #C83C28 2×, #AE1E1E 1×) na sedmi místech, a všechna
+     sedí na bílé kartě — nebyly to tedy barvy pro různé plochy, ale
+     čtyři odpovědi na tutéž otázku. Sloučeno na dvě; posun vzhledu
+     nejvýš 2,97 v OKLabu (do 2 se nepozná), čitelnost nejhůř 6,73
+     proti požadavku 4,5. Podrobně v docs/pred-vydanim.md, bod 7. */
+  --c-nalehave:#E4483D;
   /* Tytéž barvy pro TEXT. Sytý odstín je správný pro puntík na mapě nebo
      výplň štítku, ale jako drobné písmo na světlém pozadí neprojde normou
      (zlatá #FFA60A má 1,7 : 1 — prakticky nečitelná). Tyhle varianty mají
@@ -447,6 +458,7 @@
   --accent-warm-rgb:138,85,18;
   --c-drazba-rgb:204,107,51;
   --c-exekuce-rgb:140,47,30;
+  --c-nalehave-rgb:228,72,61;
   --c-ok-rgb:31,163,99;
   --c-ok-ink-rgb:19,102,62;
   --znacka-hluboka-rgb:31,81,56;
@@ -3276,7 +3288,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 /* Termín: podbarvení ze stejné rodiny jako u slevy, aby odznaky vedle
    sebe byly jeden útvar ve dvou barvách, ne obrys vedle výplně. */
 .opp-cd.soon{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10); border-color:rgba(var(--c-drazba-rgb),0.3);}
-.opp-cd.urg{color:var(--c-exekuce-ink); background:rgba(228,72,61,0.10); border-color:rgba(228,72,61,0.3);}
+.opp-cd.urg{color:var(--c-exekuce-ink); background:rgba(var(--c-nalehave-rgb),0.10); border-color:rgba(var(--c-nalehave-rgb),0.3);}
 /* Počet nabídek na filtračních tlačítkách */
 .chip-n{display:inline-block; margin-left:4px; font-size:12px; font-weight:700; padding:0 4px; border-radius:var(--r-sm); background:var(--plocha-jemna-vic); color:var(--muted); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
 .filter-chip.active .chip-n{background:rgba(var(--plocha-tmava-2-rgb),0.3); color:inherit;}
@@ -5146,9 +5158,15 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .pp-stav{display:block; font-size:12px; line-height:1.4; padding:4px 4px 4px; text-align:center;
   word-break:break-word; hyphens:auto;}
 .pp-stav.ceka{color:var(--muted);}
-.pp-stav.dobre{color:var(--c-ok, #6BCB8B);}
-.pp-stav.pozor{color:var(--c-warn, #E8B341);}
-.pp-stav.spatne{color:var(--c-danger, #FF6B6B);}
+/* ZÁLOŽNÍ HODNOTY PRYČ. `var(--c-ok, #6BCB8B)` vypadá jako opatrnost,
+   ale ten token existuje — záloha se tedy nikdy neuplatní a je to jen
+   třetí, čtvrtá a pátá barva, která si s paletou odporuje: #FF6B6B
+   proti --c-danger (#8C2F1E) je úplně jiná červená. Že tokeny existují,
+   hlídá kontrola „Tokeny stylu (žádná odvolávka na nic)". Našel to
+   hlídač červené mimo paletu 22. 10., ne oko. */
+.pp-stav.dobre{color:var(--c-ok);}
+.pp-stav.pozor{color:var(--c-warn);}
+.pp-stav.spatne{color:var(--c-danger);}
 .photo-preview .pp img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block;}
 /* Skupina štítků (sítě) */
 .check-group{display:flex; flex-wrap:wrap; gap:8px;}
