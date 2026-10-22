@@ -553,8 +553,18 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     });
     pravda(`odkaz na obec ${nej.jmeno} ukáže přesně tolik, kolik stránka okresu slíbila`,
       v.pocet === nej.n, `slíbeno ${nej.n}, v seznamu ${v.pocet}`);
+    /* OBĚ STRANY STEJNĚ, JINAK SE POROVNÁVAJÍ DVA RŮZNÉ ZÁPISY TÉHOŽ
+       JMÉNA. Sazba dává za jednopísmenné slovo PEVNOU mezeru, takže na
+       stránce okresu stojí „Klobouky u\u00a0Brna". Text odznaku se nahoře
+       scvrkává přes `\s+`, a to `\u00a0` zahrnuje — porovnávalo se tedy
+       jméno s pevnou mezerou proti textu s obyčejnou a `indexOf` vracel
+       −1. Naměřeno 22. 10.: ze 319 odkazů na obec jich 18 (5,6 %) nese
+       pevnou mezeru a zrovna dva z nich byly nejpočetnější, takže si
+       zkouška vybrala právě je. Do té doby to byla jen nášlapná mina
+       čekající na data. */
+    const bezPevnych = (t) => String(t).replace(/\s+/g, ' ').trim();
     pravda('a je vidět, která obec je vybraná',
-      v.text.indexOf(nej.jmeno) >= 0, `odznaky: „${v.text.slice(0, 90)}"`);
+      bezPevnych(v.text).indexOf(bezPevnych(nej.jmeno)) >= 0, `odznaky: „${v.text.slice(0, 90)}"`);
   }
 }
 

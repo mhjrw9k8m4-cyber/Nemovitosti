@@ -155,6 +155,16 @@ nabídek) a vzorek chytil sedm — CI červená, na webu nic. Kde se měří na
 vzorku, patří k němu PRÁH NA TO, CO SE ZMĚŘILO: vzorek se rozšiřuje,
 dokud nálezů není dost, a strop drží dobu běhu.
 
+**Co porovnáváš, scvrkni stejně.** Zkouška brala jméno obce z HTML
+stránky okresu, kde prošlo českou sazbou (`Klobouky u\u00a0Brna`), a
+hledala ho v textu odznaku, který si předtím scvrkla přes `\s+` — a to
+`\u00a0` zahrnuje. Porovnávaly se dva zápisy téhož jména a `indexOf`
+vracel −1. Mina ležela ve zkoušce od začátku: pevnou mezeru má 18 z 319
+odkazů na obec (5,6 %) a spustila ji až data, která dvě z nich poslala
+na první místo. Jedna strana normalizovaná a druhá ne je chyba, která
+počká na vzácný vstup. A obráceně: když zkouška spadne na datech a web
+je v pořádku, podezřelý je ZÁPIS, ne hodnota.
+
 **Zkouška, která měří jen to, co vidí odhlášený, neměří celou stránku.**
 `muj-inzerat.html` je v seznamu zkoušky okrajů od začátku, ale odhlášenému
 se seznam inzerátů nevykreslí — celý řádek s tlačítky vzniká až z odpovědi

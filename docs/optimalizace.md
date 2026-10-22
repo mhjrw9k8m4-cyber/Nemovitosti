@@ -7216,3 +7216,55 @@ Stránka za přihlášením není „nezkoušená stránka" — je to stránka, 
 si zkouška myslí, že ji zkouší. A je to tišší podoba slepoty než chybějící
 soubor: zkouška běží, zelená svítí a počet změřených prvků nikdo
 neporovnává.
+
+
+## 106. Nášlapná mina v zkoušce: pevná mezera proti obyčejné *22. 10.*
+
+CI #619 složila jediná kontrola ze 125 — „a je vidět, která obec je
+vybraná" v úvodní obrazovce. Na webu přitom nebylo nic špatně: odznak
+hlásil přesně to, co měl, **„Klobouky u Brna (okr. Břeclav)"**.
+
+Zkouška bere nejpočetnější odkaz na obec ze stránek okresů, otevře
+`index.html?obec=…&okres=…` a ptá se, jestli je to jméno vidět v odznaku.
+Jenže jméno si vzala z HTML stránky okresu — a tam prošlo **českou
+sazbou**, takže po jednoznakové předložce nese nezlomitelnou mezeru:
+`Klobouky u Brna`. Text odznaku se přitom scvrkával přes `\s+`, což
+` ` zahrnuje. Porovnávaly se tedy dva různé zápisy téhož jména a
+`indexOf` vracel −1.
+
+### Proč to vylezlo až teď
+
+| | |
+|---|---|
+| odkazů na obec na stránkách okresů | 319 |
+| z toho jméno s pevnou mezerou | **18 (5,6 %)** |
+| v nejpočetnějších dvou | „Újezd u Brna" a „Klobouky u Brna", obě po 14 |
+
+Zkouška si vybírá tu obec, která má nejvíc nabídek. Do 22. 10. to byla
+vždycky obec bez jednoznakové předložky; nová data od robota posunula
+nahoru rovnou dvě, které ji mají. Mina ležela ve zkoušce od začátku a
+čekala na data — nespustila ji žádná změna kódu.
+
+Opraveno u kořene: **obě strany se scvrknou stejně.** Datum se nevymýšlí,
+jméno se nepřepisuje — jen se nesrovnávají dva různé zápisy. Sabotáž:
+odznaku se sebralo jméno místa (vypisoval jen „Vybrané místo") → zkouška
+padá právě na téhle kontrole.
+
+### Vedlejší nález: sazba končí u generátorů
+
+Když se při tom měřilo, ukázalo se, že pravidlo o nezlomitelné mezeře
+platí jen na tom, co vyrobí generátory. Co vykresluje prohlížeč, jím
+neprochází: ze **1 957 nabídek jich má 122 (6,2 %)** v názvu místa
+jednopísmenné slovo a **všech 122** nese obyčejnou mezeru — „Čistá u
+Horek", „Ostrov u Macochy", „Brodek u Konice". `scripts/test-sazba.mjs`
+o tom neví, protože čte statické HTML, ne DOM. Zapsáno jako samostatný
+úkol; tenhle oddíl to nespravuje, aby oprava červené CI zůstala jedna
+věc.
+
+### Co z toho platí dál
+
+**Co porovnáváš, scvrkni stejně.** Jedna strana normalizovaná a druhá ne
+je chyba, která se neprojeví, dokud se nesejde se vzácným vstupem — tady
+5,6 % jmen a jeden konkrétní maximalizační výběr. A obráceně: když
+zkouška spadne na datech a web je v pořádku, podezřelý je **zápis**, ne
+hodnota.
