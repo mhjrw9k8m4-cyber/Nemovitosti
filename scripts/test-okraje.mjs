@@ -81,6 +81,37 @@ for (const s of STRANKY) {
   await p.evaluate(() => { document.querySelectorAll('details').forEach((d) => { d.open = true; }); });
   await p.waitForTimeout(250);
 
+  /* OVLÁDÁNÍ, KTERÉ SE ODHLÁŠENÉMU NEVYKRESLÍ, TAHLE ZKOUŠKA NEMĚŘILA.
+     `muj-inzerat.html` je v seznamu stránek od začátku, ale bez
+     přihlášení je v něm jen přihlašovací pole — celý seznam inzerátů
+     včetně tlačítek si vykreslí až JavaScript z odpovědi databáze. Pravidla
+     pro ta tlačítka přitom ve stylopisu stránky stojí a platí.
+     Stálo to jeden nález: `.mi-lbtn.danger` („Smazat") je bílé tlačítko
+     na bílé kartě a jeho jediná hranice měla proti kartě 1,60 : 1,
+     tedy polovinu požadavku. Zkouška ho neviděla, protože ve stránce
+     nebyl.
+     Vzorek se proto postaví tak, jak ho stránka opravdu skládá (karta →
+     tlačítka), a měří se s ostatními. Není to podstrčený výsledek: měří
+     se pravidla ze stylopisu té stránky, ne vymyšlené barvy — a aby bylo
+     v případném nálezu na první pohled vidět, odkud je, nese prvek `id`
+     se slovem „vzorek". */
+  if (s === 'muj-inzerat.html') {
+    await p.evaluate(() => {
+      const host = document.querySelector('main') || document.body;
+      const karta = document.createElement('div');
+      karta.className = 'mi-lcard';
+      /* Ve vzorku je JEN tlačítko. Zbytek řádku (dva odkazy a odznak
+         stavu) jsou `<a>` a `<span>`, a ty se do PRVKY nepočítají —
+         postavit je sem by vypadalo, že se měří, a neměřilo by se nic.
+         Ověřeno: se vzorkem je měřených prvků o jeden na profil víc. */
+      karta.innerHTML = '<div class="mi-lactions">'
+        + '<button class="mi-lbtn danger" id="vzorek-smazat" type="button">Smazat</button>'
+        + '</div>';
+      host.appendChild(karta);
+    });
+    await p.waitForTimeout(100);
+  }
+
   const data = await p.evaluate((sel) => {
     const rgb = (t) => { const m = /rgba?\(([^)]+)\)/.exec(t); if (!m) return null;
       const c = m[1].split(',').map(parseFloat); return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };

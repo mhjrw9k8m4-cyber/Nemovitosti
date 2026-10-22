@@ -7153,3 +7153,66 @@ Zkouška tedy hlídá, že se servírovaná kopie nerozešla se zdrojem a že
 stránka opravdu ukazuje, co model spočítá. Chybu v samotném modelu
 najít nemůže — a teď to u ní stojí napsané, aby se o tom znovu nikdo
 nepřesvědčoval sabotáží, která nemá jak zabrat.
+
+
+## 105. Bílé tlačítko na bílé kartě — a zkouška, která ho nikdy neviděla *22. 10.*
+
+Při přípravě rozhodnutí o čtyřech červených (bod 57 v seznamu úkolů) se
+nejdřív musel změřit podklad. Výsledek byl jednoznačný a sám o sobě
+užitečný: **všech sedm míst, kde ty čtyři červené stojí, sedí na bílé
+kartě.** Žádná z nich není přizpůsobená jiné ploše — jsou to čtyři různé
+odpovědi na tutéž otázku. Měřeno v prohlížeči, ne odhadnuto: každé místo
+se postavilo tak, jak ho stránka opravdu skládá (karta → řádek → odznak),
+a pak se šlo po předcích, dokud nebylo pozadí neprůhledné.
+
+Samotná volba barvy je rozhodnutí o vzhledu a čeká na majitele. Cestou se
+ale našlo něco, co rozhodnutí není.
+
+### Nález: hranice ovládacího prvku na polovinu požadavku
+
+`.mi-lbtn.danger` — tlačítko „Smazat" u vlastního inzerátu — je **bílé
+tlačítko na bílé kartě**. Jediné, co ho ohraničuje, je okraj, a ten byl
+napsaný ručně jako `rgba(228,72,61,.35)`:
+
+| | proti bílé kartě |
+|---|---|
+| okraj `rgba(228,72,61,.35)` | **1,60 : 1** |
+| požadavek WCAG 1.4.11 | 3,00 : 1 |
+| `rgba(var(--c-exekuce-rgb),.6)` | 3,21 : 1 |
+| plná `--c-exekuce` (stav po nájezdu) | 8,27 : 1 |
+
+Že tam má být paletová červená, přitom říkal **sám stylopis**: barva
+textu tlačítka je `var(--c-exekuce)` a po nájezdu se na ni přepne i
+okraj. Ručně psaná jasná červená byla odchylka od pravidla, které si
+tentýž blok o řádek níž sám stanovil — ne volba. Proto se spravila hned
+a nečeká na rozhodnutí o zbylých jedenácti výskytech.
+
+### Proč to zkouška nenašla
+
+`scripts/test-okraje.mjs` měří přesně tohle a `muj-inzerat.html` má v
+seznamu stránek od začátku. Jenže **odhlášenému se seznam inzerátů
+nevykreslí** — celý řádek s tlačítky vzniká až z odpovědi databáze.
+Zkouška tedy stránku otevřela, naměřila přihlašovací pole a odešla s tím,
+že je všechno v pořádku. Pravidla pro ta tlačítka přitom ve stylopisu
+stránky stojí a platí.
+
+Opraveno vzorkem: zkouška si na té stránce postaví kartu s tlačítkem tak,
+jak ji stránka skládá, a měří ji s ostatními. Ve vzorku je **jen
+tlačítko** — zbytek řádku jsou `<a>` a `<span>`, které se do měřeného
+výběru nepočítají, a postavit je tam by vypadalo, že se měří.
+
+Prokázáno dvěma sabotážemi:
+
+* starý okraj zpátky → zkouška spadne na obou profilech a pojmenuje
+  viníka (`button#vzorek-smazat.mi-lbtn.danger`, 1,61 : 1);
+* starý okraj zpátky **a vzorek vypnutý** → zkouška projde a napíše
+  „každý ovládací prvek je od svého pozadí odlišený". To je ta slepota,
+  černé na bílém: 107 prvků místo 109.
+
+### Co z toho platí dál
+
+**Zkouška, která měří jen to, co vidí odhlášený, neměří celou stránku.**
+Stránka za přihlášením není „nezkoušená stránka" — je to stránka, o které
+si zkouška myslí, že ji zkouší. A je to tišší podoba slepoty než chybějící
+soubor: zkouška běží, zelená svítí a počet změřených prvků nikdo
+neporovnává.

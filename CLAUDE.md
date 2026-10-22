@@ -155,6 +155,15 @@ nabídek) a vzorek chytil sedm — CI červená, na webu nic. Kde se měří na
 vzorku, patří k němu PRÁH NA TO, CO SE ZMĚŘILO: vzorek se rozšiřuje,
 dokud nálezů není dost, a strop drží dobu běhu.
 
+**Zkouška, která měří jen to, co vidí odhlášený, neměří celou stránku.**
+`muj-inzerat.html` je v seznamu zkoušky okrajů od začátku, ale odhlášenému
+se seznam inzerátů nevykreslí — celý řádek s tlačítky vzniká až z odpovědi
+databáze. Zkouška tedy otevřela stránku, naměřila přihlašovací pole a
+odešla se zelenou; mezitím mělo tlačítko „Smazat" hranici 1,60 : 1 proti
+požadovaným 3,0 (WCAG 1.4.11). Kde se ovládání vykresluje až po
+přihlášení, patří ke zkoušce VZOREK postavený tak, jak ho stránka skládá —
+a do vzorku jen to, co ta zkouška doopravdy měří.
+
 **A sabotáž, která neshodila nic, může znamenat, že zkouška měří něco
 jiného, než si myslíš.** Táž zkouška přežila zvýšení počtu v `js/ceny.js`
 — protože očekávanou hodnotu si počítá týmž modelem ze zdroje, takže se

@@ -177,8 +177,16 @@
     .mi-lbtn:active{transform:scale(.98);}
     .mi-lbtn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
     .mi-lbtn.primary:hover{filter:brightness(1.05);}
-    .mi-lbtn.danger{flex:none; background:#fff; color:var(--c-exekuce); border-color:rgba(228,72,61,.35); padding:0 16px;}
-    .mi-lbtn.danger:hover{border-color:var(--c-exekuce); background:rgba(228,72,61,.06);}
+    /* OKRAJ JE TU JEDINÁ HRANICE: bílé tlačítko na bílé kartě. Na
+       rgba(228,72,61,.35) z něj byl proti kartě poměr 1,60 : 1, tedy
+       polovina toho, co WCAG 1.4.11 žádá po hranici ovládacího prvku
+       (3,0) — a vlastní zkouška scripts/test-okraje.mjs ho minula jen
+       proto, že odhlášenému se seznam inzerátů nevykreslí. Že tu má být
+       paletová červená, říkal už stav po nájezdu i barva textu; ručně
+       psaná jasná červená byla odchylka od vlastního pravidla.
+       Naměřeno nad bílou kartou: 0,35 → 1,60 · 0,60 → 3,21 · plná 8,27. */
+    .mi-lbtn.danger{flex:none; background:#fff; color:var(--c-exekuce); border-color:rgba(var(--c-exekuce-rgb),.6); padding:0 16px;}
+    .mi-lbtn.danger:hover{border-color:var(--c-exekuce); background:rgba(var(--c-exekuce-rgb),.06);}
     .mi-lbtn.danger:disabled{opacity:.5; cursor:default;}
     @media (min-width:480px){ .pf-logout span{display:inline;} }
   
