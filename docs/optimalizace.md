@@ -6989,3 +6989,52 @@ předchozího. Je to přesně ta past, na kterou je v CLAUDE.md pravidlo:
 Bez knihovny se dřív nevykreslil ani výpis a člověk zůstal u prázdné
 stránky s větou „Výpis se načítá z mapy, a ta nedojela". Dnes je výpis
 celý a hláška zůstala jen v rámu mapy — tam, kde je pravdivá.
+
+### Co ten popis sám rozbil: próza o kódu platila za kód
+
+Poslední věc, která na tomhle úkolu spadla, nespadla v kódu webu, ale
+v tomhle dokumentu. Hlídač mrtvých pravidel ve stylopisu
+(`scripts/test-mrtve-styly.mjs`) si vede tabulku `SKLADANE`: jména
+tříd, která v repozitáři nikde doslova nestojí, protože je kód skládá
+po částech za běhu. U každé je napsáno, kdo ji skládá, a zkouška navíc
+hlídá, aby tabulka tiše nerostla: výjimku, která už není potřeba, chce
+vyhodit.
+
+Jedna z nich je Leafletova `.leaflet-marker-icon` — v `leaflet.js`
+stojí jen `'leaflet-marker-'` a zbytek se dolepuje. Jak jsem ale
+o oddíl výš popsal kaskádovou past, napsal jsem to jméno celé. Hlídač
+prohledává i `.md`, takže ho našel, usoudil, že třída v repozitáři
+doslova je, a výjimku prohlásil za zbytečnou. Rychlá sada spadla
+`7 z 8`.
+
+Zajímavé je, že ten hlídač tuhle vadu zná — o pár řádků níž má dlouhý
+komentář **„komentář není použití"** a z HTML i z JavaScriptu si
+komentáře opravdu odstraňuje. Jen Markdown nečistí nijak, protože
+v Markdownu není komentář: tam je komentář **celý soubor**.
+
+Lákavá oprava byla vyhodit tu jednu výjimku, jak zkouška radí. Byla by
+to lež: třída se pořád skládá za běhu a výjimka by se musela vrátit,
+jen co někdo ten odstavec v dokumentaci přepíše. Opraveno u kořene —
+`.md` se do hledání nepočítá:
+
+| | souborů | slov | mrtvých pravidel | potřebných výjimek |
+|---|---|---|---|---|
+| s Markdownem | 2 692 | 97 485 | 0 | 7 z 8 |
+| bez Markdownu | 2 673 | 92 981 | 0 | **8 z 8** |
+
+Vyloučení Markdownu tedy nic nezaslepilo: nezmrtvělo ani jedno
+pravidlo. A sabotáž to potvrdila dvakrát — přidané
+`.nikdy-nikde-xyz{color:red}` hlídač najde dál, a `.md` vrácené do
+hledání zkoušku zase složí na téže kontrole.
+
+**Sonda, která to měla změřit, nejdřív lhala.** Kopii zkoušky jsem
+pustil pod jménem, které nezačínalo `test-` — a protože se z hledání
+vynechávají právě a jen takto pojmenované soubory, prohledávala se ta
+kopie sama. Celá tabulka
+`SKLADANE` v ní stojí doslova, takže vyšlo, že potřeba není ani jedna
+výjimka z osmi, a zároveň že není mrtvé ani jedno pravidlo — protimluv,
+který jiná odpověď než „sonda je rozbitá" nemá. Je to táž past, na
+kterou ten test v komentáři sám upozorňuje: *„a tenhle soubor by se
+počítal sám"*. Po přejmenování tak, aby název začínal
+`test-`, vyšla čísla v tabulce výše. (Obě kopie byly dočasné a v
+repozitáři nezůstaly.)

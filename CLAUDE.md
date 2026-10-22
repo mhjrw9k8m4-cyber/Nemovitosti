@@ -147,6 +147,19 @@ v zeměpisu 3 km. Vkládá se proto `insertBefore` před první stylopis
 v hlavičce, ne `appendChild`. A hlídá to zkouška, která měří
 GEOMETRII, ne vzhled (scripts/test-mapa.mjs, oddíl 1a).
 
+**Dokumentace není použití — a tím pádem ani důkaz.** Hlídač mrtvých
+pravidel (scripts/test-mrtve-styly.mjs) hledá jména tříd v celém
+repozitáři a z HTML i JS si správně odstraňuje komentáře: věta o třídě
+není její použití. Markdown ale nečistil nijak, takže próza o kódu
+platila za kód. 22. 10. to zaskočilo: popis kaskádové pasti výše napsal
+jméno skládané Leafletovy třídy celé, hlídač ji uznal za doslova
+přítomnou a výjimku pro ni prohlásil za zbytečnou — ačkoli se ta třída
+pořád skládá za běhu. Opraveno u kořene: `.md` se do hledání nepočítá.
+Změřeno před změnou, aby to nebyla slepá úprava: bez Markdownu nezmrtví
+ani jedno pravidlo a potřeba je všech osm výjimek místo sedmi. Píše-li
+se tedy nějaká stráž „hledám to slovo kdekoli", patří k ní seznam
+míst, kde zmínka použitím NENÍ, a ne jen seznam přípon.
+
 **A sabotáž umí ukázat chybu v novém kódu, ne v sabotáži.** Vrácení
 značky `<script>` zpátky mělo shodit pět kontrol o řezu; shodilo deset,
 protože nová cesta „knihovna už je na světě při startu" sahala na

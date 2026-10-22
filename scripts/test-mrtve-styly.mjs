@@ -63,7 +63,15 @@ function chod(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) { if (!/^(\.git|node_modules)$/.test(e.name)) chod(p); continue; }
-    if (!/\.(html|m?js|json|md|sql|yml|xml)$/.test(e.name)) continue;
+    /* DOKUMENTACE SE NEPOČÍTÁ. Markdown je próza o kódu, ne kód:
+       věta v docs/ nebo v CLAUDE.md třídu nepoužívá, jen o ní mluví —
+       táž vada jako komentář o pár řádků níž, jen o patro vedle.
+       Naměřeno 22. 10.: popis kaskádové pasti v docs/optimalizace.md
+       napsal `.leaflet-marker-icon` celé, a tím prohlásil výjimku pro
+       tuhle třídu za zbytečnou, ačkoli ji Leaflet pořád skládá za běhu.
+       Změřeno před změnou: bez .md nezmrtví ANI JEDNO pravidlo (0)
+       a potřeba je všech 8 výjimek místo sedmi. */
+    if (!/\.(html|m?js|json|sql|yml|xml)$/.test(e.name)) continue;
     /* ZKOUŠKY SE NEPOČÍTAJÍ. Třída zmíněná ve zkoušce není použití —
        naopak, bývá to zkouška na to, že ta třída na stránce UŽ NENÍ
        (scripts/test-ceny-hledani.mjs hlídá, že #cen-mapa zmizela).
