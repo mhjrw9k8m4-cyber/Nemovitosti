@@ -8,6 +8,12 @@ import { fileURLToPath } from 'url';
 import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
+/* SAZBA SE TÝKÁ I HODNOT ATRIBUTŮ. Krok sazby (scripts/sazba.mjs) sahá
+   jen na text MEZI značkami — a `data-kde="v okrese Tábor"` je atribut,
+   který si prohlížeč teprve vypíše jako viditelný text. Předložka v něm
+   tedy zůstávala s obyčejnou mezerou a na úzké obrazovce končila sama
+   na konci řádku. Osazuje se proto rovnou při sestavení hodnoty. */
+import { osaz } from './sazba.mjs';
 import { bezKomentaruVHtml } from './text.mjs';
 /* Odkaz na vlastní stránku pozemku. Které nabídce patří která stránka
    rozhoduje generátor těch stránek — proto se to mapování odsud jen
@@ -1165,7 +1171,7 @@ ${priceLine(priceStats(list)) ? `      <p class="okr-more okr-mezi">${priceLine(
 ${/* Graf vývoje hladiny. Vykreslí se JEN tehdy, když pro okres existuje
       dost klidná řada (js/graf-cen.js) — jinak zůstane prázdné místo bez
       rámečku. Data si skript stáhne sám, až se k němu někdo doroluje. */''}
-      <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="v okrese ${esc(okres)}"></div>
+      <div data-graf-cen data-uroven="okres" data-nazev="${esc(okres)}" data-kde="${osaz('v okrese ' + esc(okres))}"></div>
 ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu,'je','jsou','je')} <b>${podilu}</b> ${sklon(podilu,'spoluvlastnický podíl','spoluvlastnické podíly','spoluvlastnických podílů')} — kupuje se zlomek pozemku a rozhoduje se o něm společně s dalšími vlastníky.${podiluCele ? ` U ${podiluCele === 1 ? 'jednoho z nich' : (podiluCele === podilu ? 'všech' : `<b>${podiluCele}</b> z nich`)} je v inzerátu výměra celé parcely, takže ${podiluCele === 1 ? 'jeho' : 'jejich'} cena za metr vychází nízko sama od sebe.` : ' Výměra u nich odpovídá tomu, co kupující dostane.'} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
       <div class="add-cross">
@@ -1327,7 +1333,7 @@ ${rows}
       </div>
 
 ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more okr-mezi">${priceLine(priceByKraj[kraj]||{})} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
-      <div data-graf-cen data-uroven="kraj" data-nazev="${esc(kraj)}" data-kde="${esc(meta.kde || ('v kraji ' + kraj))}"></div>
+      <div data-graf-cen data-uroven="kraj" data-nazev="${esc(kraj)}" data-kde="${osaz(esc(meta.kde || ('v kraji ' + kraj)))}"></div>
 
       <div class="add-cross">
         <div class="acx-copy">
@@ -2219,7 +2225,7 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
            říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
       <div class="add-card">
         <div class="rules-sect">
-          <div data-graf-cen data-uroven="cr" data-kde="v celé ČR"></div>
+          <div data-graf-cen data-uroven="cr" data-kde="${osaz('v celé ČR')}"></div>
         </div>
       </div>
 

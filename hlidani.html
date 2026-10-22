@@ -378,7 +378,7 @@
 
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/ucet-taby.js?v=24ab9283" defer></script>
-<script src="js/min/cisteni.js?v=e1a692c2"></script>
+<script src="js/min/cisteni.js?v=eb0c14e9"></script>
 <script src="js/min/config.js?v=8ba36013"></script>
 <script src="js/min/auth.js?v=f3c79c04"></script>
 <script src="js/min/okruh.js?v=f11683ef"></script>
@@ -428,9 +428,13 @@
   /* „od 500 000 Kč do 2 000 000 Kč" je dvakrát táž jednotka a dvakrát
      táž informace. Rozsah patří do jednoho údaje. */
   function rozsah(od, do_, jednotka) {
-    if (od && do_) return [fmt(od) + '\u2013' + fmt(do_) + ' ' + jednotka];
-    if (do_) return ['do ' + fmt(do_) + ' ' + jednotka];
-    if (od) return ['od ' + fmt(od) + ' ' + jednotka];
+    /* ČÍSLO A JEDNOTKA SE NEROZDĚLÍ. Na kartě hlídání stálo „do 2 000 000"
+       a na dalším řádku „Kč" — týž přehmat, jaký na generovaných
+       stránkách hlídá krok sestavení (scripts/sazba.mjs). Tenhle text
+       ale skládá prohlížeč, takže tudy neprojde. */
+    if (od && do_) return [fmt(od) + '\u2013' + fmt(do_) + '\u00a0' + jednotka];
+    if (do_) return ['do\u00a0' + fmt(do_) + '\u00a0' + jednotka];
+    if (od) return ['od\u00a0' + fmt(od) + '\u00a0' + jednotka];
     return [];
   }
 
@@ -452,7 +456,7 @@
        údajem („500 000–2 000 000 Kč"), ne dvěma vedle sebe. */
     p.push.apply(p, rozsah(s.min_price, s.max_price, 'Kč'));
     p.push.apply(p, rozsah(s.min_area, s.max_area, 'm²'));
-    if (s.max_perm2) p.push('do ' + fmt(s.max_perm2) + ' Kč/m²');
+    if (s.max_perm2) p.push('do\u00a0' + fmt(s.max_perm2) + '\u00a0Kč/m²');
     if (s.jen_celek) p.push('jen celé pozemky');
     if (s.features && s.features.length) p.push(s.features.map(esc).join(', '));
     /* Když po odečtení jména nezbylo nic, je to hlídání celého okresu bez
@@ -553,9 +557,9 @@
       + '<p>Upozornění chodí jen na pozemky, které nově <b>přibudou</b> — ne na celý seznam. '
       + 'Takhle často by se ozvala tahle tři hlídání:</p>'
       + '<ul class="hlu-list">' + radky.join('') + '</ul>'
-      + '<p class="hlu-pozn">Počítáno z dnešní nabídky toutéž funkcí, která pak vyhodnocuje '
+      + '<p class="hlu-pozn">Počítáno z\u00a0dnešní nabídky toutéž funkcí, která pak vyhodnocuje '
       + 'vaše vlastní hlídání. Svoje podmínky si nastavíte po přihlášení — druh, okres, cenu, '
-      + 'výměru i to, co pozemek musí mít.</p>';
+      + 'výměru i\u00a0to, co pozemek musí mít.</p>';
     if (misto) misto.replaceWith(box); else root.appendChild(box);
   }
 

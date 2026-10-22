@@ -138,7 +138,12 @@
     return out;
   }
 
+  var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
+  var VZOR_SAZBA = new RegExp(
+    '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
+  function sazba(t) { return String(t == null ? '' : t).replace(VZOR_SAZBA, '$1$2\u00a0'); }
+
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
-    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT,
+    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
     kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY };
 });

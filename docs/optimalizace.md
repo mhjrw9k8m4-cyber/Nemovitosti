@@ -7268,3 +7268,77 @@ je chyba, která se neprojeví, dokud se nesejde se vzácným vstupem — tady
 5,6 % jmen a jeden konkrétní maximalizační výběr. A obráceně: když
 zkouška spadne na datech a web je v pořádku, podezřelý je **zápis**, ne
 hodnota.
+
+
+## 107. Česká sazba končila u generátorů *22. 10.*
+
+Z oddílu 106 zbyl nedodělek: pravidlo o nezlomitelné mezeře platilo jen
+na tom, co vyrobí krok sestavení. Co skládá PROHLÍŽEČ — jména obcí na
+kartách, ceny v shrnutí hlídání, data, hlášky — tím krokem neprojde.
+
+### Měřeno v DOM, ne ve zdroji
+
+Stejnou funkcí, jakou používá statická zkouška (`zbyva` ze
+`scripts/sazba.mjs`), aby se neporovnávala dvě pravidla:
+
+| | |
+|---|---|
+| prohlédnuto textů na osmi typech stránek | 1 204 |
+| porušuje pravidlo **v DOM** | **11** |
+| porušuje pravidlo **ve zdrojích týchž stránek** | **0** |
+
+Jedenáct nálezů byly tři různé věci:
+
+* **jméno obce z dat** („Lukavec u Lovosic") — v datech má jednopísmenné
+  slovo v místě 122 z 1 957 nabídek (6,2 %) a všech 122 neslo obyčejnou
+  mezeru;
+* **číslo a jednotka** v textech skládaných prohlížečem — „do 2 000 000"
+  a na dalším řádku „Kč" na kartě hlídání;
+* **ručně psané věty** v `js/*.js` a ve vložených skriptech stránek.
+
+### Oprava: sazba při výpisu, nikdy v datech
+
+Do `js/cisteni.js` přibylo `sazba()` — ta část pravidla, kterou si
+prohlížeč musí udělat sám. Volá se **až při vypisování**: hodnota
+`place` zůstává s obyčejnou mezerou, protože podle ní se hledá,
+porovnává a skládá adresa. Nezlomitelná mezera uvnitř dat je past, na
+které zkouška spadla o oddíl dřív.
+
+Ručně psané řetězce dostaly ` ` rovnou do textu — tak, jak to kód
+dávno dělá u „Kč". A jedno místo bylo jinde, než by člověk čekal:
+`data-kde="v okrese Tábor"` je **atribut**, a krok sazby sahá jen na
+text mezi značkami. Osazuje se proto už při sestavení hodnoty
+v `scripts/generate-region-pages.mjs`.
+
+### Hlídač: zkouška, která čte DOM
+
+`scripts/test-sazba-dom.mjs` projde jedenáct typů stránek a měří totéž
+co statická zkouška — jen v DOM. Dvě věci v ní stojí za zmínku, obě
+z dnešních chyb:
+
+1. **Stránka pozemku se nebere první v pořadí.** Jméno obce
+   s jednopísmenným slovem má jen **147 z 2 215** stránek (6,6 %), takže
+   první v abecedě se na tu cestu vůbec nezeptá. Vybírá se podle
+   titulku, který generátor už osadil.
+2. **Hlídá se i POČET prohlédnutých textů.** Kdyby se stránka přestala
+   vykreslovat, zkouška by jinak prošla nad prázdným DOM a svítila
+   zeleně.
+
+A hned se vyplatila: našla čtyři věci, na které jsem při ručním
+procházení nepřišel — popisek grafu „Rozdělení ceny za m² u 13 nabídek",
+druh pozemku „Zastavěná plocha a nádvoří", data („26. 11. 2026") a právě
+ten atribut `data-kde`. Sabotáž: `PKCisteni.sazba()` pryč od jména obce
+→ zkouška padá a jmenuje `index.html`.
+
+### Co z toho platí dál
+
+**Změna vzhledu textu je změna dat pro každou zkoušku, která ten text
+čte.** Po opravě spadly tři zkoušky — a ani jedna kvůli webu: porovnávaly
+očekávání s obyčejnou mezerou proti textu, který ji už má nezlomitelnou.
+Je to týž přehmat jako v oddílu 106, podruhé za den a z opačné strany:
+tam se nenormalizovalo očekávání, tady se změnil měřený text. Odtud
+pravidlo v CLAUDE.md: **co porovnáváš, scvrkni stejně** — a když sahneš
+na sazbu, projdi zkoušky, které ten text čtou.
+
+Zkouška měří jen stav odhlášeného návštěvníka; text, který se vykreslí
+až po přihlášení, o sobě pořád neví a stojí to u ní napsané.

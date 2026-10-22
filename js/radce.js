@@ -47,7 +47,7 @@
        něco mění: u zemědělské půdy se z výměry počítá odvod za vynětí,
        u lesa se od hektaru mění pravidlo pro dělení. */
     var a = (d && maVymeru(d)) ? d.area : 0;
-    var zVymery = a ? ' Odvod za vynětí se počítá z <b>výměry</b> — tady z ' + m2(a) + ' m².' : '';
+    var zVymery = a ? ' Odvod za vynětí se počítá z\u00a0<b>výměry</b> — tady z\u00a0' + m2(a) + ' m².' : '';
     if (g === 'Stavební / zastavěná' && /zastav/.test(dr)) {
       return { lvl: 'mid', txt: 'V katastru vedeno jako <b>zastavěná plocha a nádvoří</b> — podle zápisu na pozemku <b>něco stojí</b> nebo stálo. Zjistěte, co to je, jestli je to v ceně a v jakém je stavu; u stavby se kupuje i to, co je pod ní.' };
     }

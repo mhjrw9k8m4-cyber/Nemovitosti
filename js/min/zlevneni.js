@@ -40,7 +40,8 @@
     if (z.podezrela) return 'Cena se změnila o ' + z.procent + ' % — ověřit';
 
     if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + ' %';
-    return (z.dolu ? 'Zlevněno o ' : 'Zdraženo o ') + z.procent + ' %';
+
+    return (z.dolu ? 'Zlevněno o\u00a0' : 'Zdraženo o\u00a0') + z.procent + '\u00a0%';
   }
 
   function popis(z, fmt) {
@@ -59,7 +60,7 @@
 
   function lidsky(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
-    return m ? (+m[3] + '. ' + (+m[2]) + '. ' + m[1]) : String(iso || '');
+    return m ? (+m[3] + '.\u00a0' + (+m[2]) + '.\u00a0' + m[1]) : String(iso || '');
   }
 
   return { zmena: zmena, krok: krok, text: text, popis: popis, lidsky: lidsky,

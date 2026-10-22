@@ -10,6 +10,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+
+/* MEZERY SE SROVNAJÍ NA OBOU STRANÁCH. Věta o změně ceny drží „o 25 %"
+   i datum pohromadě nezlomitelnou mezerou, aby číslo nezůstalo na konci
+   řádku bez jednotky — v očekávání se ale píše obyčejná. Kdyby se
+   porovnávaly tak, jak jsou, zkouška by hlásila rozdíl tam, kde je týž
+   text jen jinak vysázený. (Přesně tahle past 22. 10. složila CI;
+   podrobně v docs/optimalizace.md, oddíl 106.) */
+const mez = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const Z = createRequire(import.meta.url)(path.join(ROOT, 'js', 'zlevneni.js'));
 
@@ -25,14 +33,14 @@ const fmt = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 {
   const z = Z.zmena({ price: 1500000, cena_drive: 2000000, cena_zmena: '2026-09-20' });
   pravda('zlevnění o čtvrtinu se pozná', z && z.dolu === true && z.procent === 25, JSON.stringify(z));
-  pravda('a věta zní „Zlevněno o 25 %"', Z.text(z) === 'Zlevněno o 25 %', Z.text(z));
+  pravda('a věta zní „Zlevněno o 25 %"', mez(Z.text(z)) === 'Zlevněno o 25 %', Z.text(z));
   pravda('v popisku je původní cena i datum',
-    /2 000 000 Kč/.test(Z.popis(z, fmt)) && /20\. 9\. 2026/.test(Z.popis(z, fmt)), Z.popis(z, fmt));
+    /2 000 000 Kč/.test(mez(Z.popis(z, fmt))) && /20\. 9\. 2026/.test(mez(Z.popis(z, fmt))), Z.popis(z, fmt));
 }
 {
   const z = Z.zmena({ price: 1200000, cena_drive: 1000000 });
   pravda('zdražení se nezamlčuje', z && z.dolu === false && z.procent === 20, JSON.stringify(z));
-  pravda('a věta zní „Zdraženo o 20 %"', Z.text(z) === 'Zdraženo o 20 %', Z.text(z));
+  pravda('a věta zní „Zdraženo o 20 %"', mez(Z.text(z)) === 'Zdraženo o 20 %', Z.text(z));
 }
 
 /* --- kdy se MLČÍ --- */
@@ -80,7 +88,7 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
   /* A obyčejná sleva se tím nesmí pokazit. */
   const bezna = Z.krok(450000, 399000, '2026-09-15');
   pravda('běžná sleva zůstala slevou',
-    !!bezna && bezna.podezrela === false && Z.text(bezna) === 'Zlevněno o 11 %', 'text: ' + Z.text(bezna));
+    !!bezna && bezna.podezrela === false && mez(Z.text(bezna)) === 'Zlevněno o 11 %', 'text: ' + Z.text(bezna));
 
   /* krok() a zmena() musí vydat totéž — jinak by karta (zmena)
      a historie ceny (krok) tvrdily o jedné ceně dvě různé věci. */
@@ -106,7 +114,7 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
 {
   const dole = (typ) => Z.zmena({ price: 700000, cena_drive: 1000000, cena_zmena: '2026-10-05', type: typ });
   const prodej = dole('sale');
-  pravda('u prodeje věta zůstává „Zlevněno o 30 %"', Z.text(prodej) === 'Zlevněno o 30 %', Z.text(prodej));
+  pravda('u prodeje věta zůstává „Zlevněno o 30 %"', mez(Z.text(prodej)) === 'Zlevněno o 30 %', Z.text(prodej));
   pravda('a nic o dražbě v popisku nepřibylo',
     !/vyvolávací|exekutor/i.test(Z.popis(prodej, fmt)), Z.popis(prodej, fmt));
   const drazba = dole('drazba');

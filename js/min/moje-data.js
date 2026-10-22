@@ -49,7 +49,7 @@
       html += '</section>';
     });
     html += '<section class="md-vse">' +
-      '<p>Dohromady je to <b>' + velikost(celkem) + '</b> v ' + stav.length + ' položkách.</p>' +
+      '<p>Dohromady je to <b>' + velikost(celkem) + '</b> v\u00a0' + stav.length + ' položkách.</p>' +
       '<button type="button" class="md-smaz-vse" id="md-smaz-vse">Smazat úplně všechno</button>' +
 
       '<p class="md-pozn">Tohle maže jen to, co je ve vašem prohlížeči. Co je na vašem ' +

@@ -497,7 +497,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/min/cisteni.js?v=e1a692c2"></script>
+<script src="js/min/cisteni.js?v=eb0c14e9"></script>
 <!-- Klíče uložených pozemků. Profil si je dlouho skládal po svém jako
      „obec|parcela|okres" — jenže mapa je ukládá jako
      „obec|parcela|okres|šířka|délka#výměra" (js/klic.js). Žádný uložený
@@ -528,7 +528,7 @@
       try {
         var d = new Date(iso);
         if (isNaN(d)) return '';
-        return d.getDate() + '. ' + (d.getMonth() + 1) + '.';
+        return d.getDate() + '.\u00a0' + (d.getMonth() + 1) + '.';
       } catch (e) { return ''; }
     }
     /* U čekání na kontrolu je hodina podstatná: „nejpozději 25. 9." je
@@ -538,7 +538,7 @@
       try {
         var d = new Date(iso);
         if (isNaN(d)) return '';
-        return d.getDate() + '. ' + (d.getMonth() + 1) + '. v ' +
+        return d.getDate() + '.\u00a0' + (d.getMonth() + 1) + '. v\u00a0' +
           d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
       } catch (e) { return ''; }
     }

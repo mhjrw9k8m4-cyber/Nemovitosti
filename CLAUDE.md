@@ -163,7 +163,10 @@ vracel −1. Mina ležela ve zkoušce od začátku: pevnou mezeru má 18 z 319
 odkazů na obec (5,6 %) a spustila ji až data, která dvě z nich poslala
 na první místo. Jedna strana normalizovaná a druhá ne je chyba, která
 počká na vzácný vstup. A obráceně: když zkouška spadne na datech a web
-je v pořádku, podezřelý je ZÁPIS, ne hodnota.
+je v pořádku, podezřelý je ZÁPIS, ne hodnota. A platí to i obráceně:
+**změna vzhledu textu je změna dat pro každou zkoušku, která ten text
+čte.** Když web začal sázet česky i v prohlížeči (oddíl 107), spadly
+čtyři zkoušky — a ani jedna kvůli webu.
 
 **Zkouška, která měří jen to, co vidí odhlášený, neměří celou stránku.**
 `muj-inzerat.html` je v seznamu zkoušky okrajů od začátku, ale odhlášenému

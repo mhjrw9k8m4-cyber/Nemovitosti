@@ -274,7 +274,7 @@
       var sameDay = d.toDateString() === now.toDateString();
       var hh = ('0' + d.getHours()).slice(-2), mm = ('0' + d.getMinutes()).slice(-2);
       if (sameDay) return hh + ':' + mm;
-      return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '. ' + hh + ':' + mm;
+      return ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.\u00a0' + hh + ':' + mm;
     } catch (e) { return ''; }
   }
 
@@ -283,7 +283,7 @@
     root.innerHTML =
       '<div class="zp-card zp-auth">' +
         '<h2>Přihlaste se</h2>' +
-        '<p>Zprávy jsou soukromé, tak se stačí rychle přihlásit (nebo si během chvilky vytvořit účet). Váš e-mail nikdo z prodejců ani kupujících neuvidí.</p>' +
+        '<p>Zprávy jsou soukromé, tak se stačí rychle přihlásit (nebo si během chvilky vytvořit účet). Váš e-mail nikdo z\u00a0prodejců ani kupujících neuvidí.</p>' +
         '<form id="zauthf">' +
           '<input class="zp-in" id="ze" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
           '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +

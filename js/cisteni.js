@@ -217,7 +217,25 @@
     return out;
   }
 
+  /* ČESKÁ SAZBA PRO TEXT, KTERÝ NEPROŠEL SESTAVENÍM.
+     Jednopísmenná předložka nesmí zůstat na konci řádku — „Klobouky u"
+     a o řádek níž „Brna". Na 1 995 generovaných stránkách to hlídá krok
+     sestavení (scripts/sazba.mjs, 20 840 nezlomitelných mezer); jména
+     obcí, která vypisuje PROHLÍŽEČ z dat, tím krokem ale neprojdou:
+     v datech má 122 z 1 957 nabídek (6,2 %) v místě jednopísmenné slovo
+     a všech 122 neslo obyčejnou mezeru.
+     SAHÁ SE JEN NA ZOBRAZENÍ. Hodnota `place` se nemění — jde se podle
+     ní hledat, porovnávat a skládat adresa, a nezlomitelná mezera uvnitř
+     dat je past: právě na ní 22. 10. zhavarovala zkouška, která
+     porovnávala jméno z vygenerované stránky s textem odznaku.
+     Plné pravidlo (i o číslech a jednotkách) je v scripts/sazba.mjs; tady
+     je jen ta jeho část, kterou si prohlížeč musí udělat sám. */
+  var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
+  var VZOR_SAZBA = new RegExp(
+    '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
+  function sazba(t) { return String(t == null ? '' : t).replace(VZOR_SAZBA, '$1$2\u00a0'); }
+
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
-    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT,
+    majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
     kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY };
 });

@@ -191,7 +191,7 @@
   function datumText(extra) {
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(extra || '');
     if (!m) return '';
-    return (+m[3]) + '. ' + MESICE[(+m[2]) - 1] + ' ' + m[1];
+    return (+m[3]) + '.\u00a0' + MESICE[(+m[2]) - 1] + '\u00a0' + m[1];
   }
   function pzZmenaCenyHtml(d) {
     var Z = window.PKZlevneni;
@@ -463,8 +463,8 @@
     return '<figure class="pvg">' +
       '<div class="pvg-plocha">' +
         '<div class="pvg-osa-y" aria-hidden="true">' + popisky + '</div>' +
-        '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u '
-          + n + ' nabídek v okolí: tento pozemek ' + fmt(Math.round(nase))
+        '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u\u00a0'
+          + n + ' nabídek v\u00a0okolí: tento pozemek ' + fmt(Math.round(nase))
           + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
           + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
           rysky +
@@ -488,7 +488,7 @@
         + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
 
       '<div class="visually-hidden">' +
-      '<table><caption>Rozdělení ceny za m² u ' + n + ' nabídek v okolí</caption>' +
+      '<table><caption>Rozdělení ceny za m² u\u00a0' + n + ' nabídek v\u00a0okolí</caption>' +
         '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
         kose.map(function (kolik, i) {
           var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
@@ -589,7 +589,7 @@
     var m = /(\d{4})-(\d{2})-(\d{2})/.exec(updated || '');
     if (!m) return;
     var dnesStr = new Date().toISOString().slice(0, 10);
-    var kdy = m[0] === dnesStr ? 'dnes' : (+m[3]) + '. ' + (+m[2]) + '. ' + m[1];
+    var kdy = m[0] === dnesStr ? 'dnes' : (+m[3]) + '.\u00a0' + (+m[2]) + '.\u00a0' + m[1];
     var dni = Math.floor((Date.now() - new Date(+m[1], +m[2] - 1, +m[3]).getTime()) / 86400000);
     el.innerHTML = 'Údaje jsou kopie ze zdroje, zkontrolováno <b>' + kdy + '</b>'
       + (isFinite(dni) && dni >= 4 ? ' — tedy před ' + dni + ' dny' : '')
@@ -625,7 +625,7 @@
     var obec = d.place || '';
     if (!obec) return 'najít územní plán';
     if (d.okres && obec === d.okres) return 'najít územní plán v okrese ' + obec;
-    return 'najít územní plán obce ' + obec;
+    return 'najít územní plán obce ' + PKCisteni.sazba(obec);
   }
   var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
 
@@ -1214,7 +1214,7 @@
       var dny = daysUntil(d.extra);
       if (dny != null && (d.type === 'drazba' || d.type === 'exekuce')) {
         var ymd = T.auctionYMD(d.extra);
-        var den = ymd ? (+ymd.slice(6, 8)) + '. ' + (+ymd.slice(4, 6)) + '. ' + ymd.slice(0, 4) : '';
+        var den = ymd ? (+ymd.slice(6, 8)) + '.\u00a0' + (+ymd.slice(4, 6)) + '.\u00a0' + ymd.slice(0, 4) : '';
         if (den) {
           klice.push({ k: 'Termín dražby', v: esc(den), ikona: 'kalendar',
             pozn: countdownText(dny) || '' });

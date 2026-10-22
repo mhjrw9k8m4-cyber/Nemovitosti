@@ -654,6 +654,9 @@ jobs:
       - name: Uložené pozemky v profilu
         run: node scripts/test-profil-ulozene.mjs
 
+      - name: Sazba v textu, který skládá prohlížeč
+        run: node scripts/test-sazba-dom.mjs
+
   v-prohlizeci-2:
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub

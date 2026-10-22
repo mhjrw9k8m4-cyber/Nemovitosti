@@ -131,8 +131,14 @@ pravda('„posledních 7 dní" je sedm kalendářních dnů, ne osm',
 pravda('stránka přiznává, že „nové" je nové v evidenci',
   /Nové <b>v naší evidenci<\/b>/.test(h),
   'bez téhle věty je číslo v hlavičce nepravda');
-pravda(`přiznání uvádí skutečný první den evidence (${PKZ.lidsky(prvniDen)})`,
-  h.includes('<b>' + PKZ.lidsky(prvniDen) + '</b>'));
+/* `h` má nahoře pevné mezery sražené na obyčejné, takže se stejně musí
+   srovnat i očekávání: PKZ.lidsky() od 22. 10. drží datum pohromadě
+   („14.\u00a09.\u00a02026"), aby den nezůstal na konci řádku bez roku.
+   Porovnávat jedno s druhým tak, jak jsou, by znamenalo porovnávat dva
+   zápisy téhož data — past z oddílu 106. */
+const bezPevnych = (t) => String(t).replace(/\s+/g, ' ');
+pravda(`přiznání uvádí skutečný první den evidence (${bezPevnych(PKZ.lidsky(prvniDen))})`,
+  h.includes('<b>' + bezPevnych(PKZ.lidsky(prvniDen)) + '</b>'));
 pravda(`a skutečný počet nabídek z toho dne (${backlog})`,
   new RegExp('naráz ' + mez(backlog) + ' nabídek').test(h),
   'na stránce: ' + ((/naráz ([\d\s]+) nabídek/.exec(h) || [])[1] || '—'));

@@ -15,7 +15,7 @@
   var MESICE = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
   function denKratce(iso) {
     var c = String(iso).split('-');
-    return c.length === 3 ? (+c[2]) + '. ' + MESICE[+c[1] - 1] : iso;
+    return c.length === 3 ? (+c[2]) + '.\u00a0' + MESICE[+c[1] - 1] : iso;
   }
   function cislo(n) {
     return (Math.round(n * 10) / 10).toFixed(n < 100 ? 1 : 0).replace('.', ',')

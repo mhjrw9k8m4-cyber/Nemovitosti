@@ -788,7 +788,7 @@
       if (!isNaN(t)) cas = ' v ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
     }
     el.textContent = (m[0] === dnesStr ? 'Zdroje zkontrolovány dnes' + cas
-      : 'Zdroje zkontrolovány ' + (+m[3]) + '. ' + (+m[2]) + '. ' + m[1] + cas);
+      : 'Zdroje zkontrolovány ' + (+m[3]) + '.\u00a0' + (+m[2]) + '.\u00a0' + m[1] + cas);
     var upd = new Date(+m[1], +m[2] - 1, +m[3]);
     var days = Math.floor((Date.now() - upd.getTime()) / 86400000);
     if (isFinite(days) && days >= 4) {
@@ -1587,8 +1587,9 @@
   }
   function popisMista() {
     if (!mistoFiltr) return '';
-    if (mistoFiltr.typ === 'okres') return 'celý okres ' + mistoFiltr.okres;
-    return mistoFiltr.place + (mistoFiltr.okres ? ' (okr. ' + mistoFiltr.okres + ')' : '');
+    if (mistoFiltr.typ === 'okres') return 'celý okres ' + PKCisteni.sazba(mistoFiltr.okres);
+    return PKCisteni.sazba(mistoFiltr.place)
+      + (mistoFiltr.okres ? ' (okr.\u00a0' + PKCisteni.sazba(mistoFiltr.okres) + ')' : '');
   }
   /* Co web z napsané věty pochopil jako filtr (js/dotaz.js). Je to VRSTVA
      NAD ručními ovládátky, ne jejich přepis: kdo smaže text, zůstanou mu
@@ -6540,7 +6541,7 @@
           /* 1. ŘÁDEK — CO SE PRODÁVÁ A KOLIK TOHO JE. Druh tučně, za ním
              výměra, cena za metr a vzdálenost jemně. */
           '<div class="opp-nadpis">' +
-            '<b class="opp-druh">' + esc(druhCap || 'Pozemek') + '</b>' +
+            '<b class="opp-druh">' + PKCisteni.sazba(esc(druhCap || 'Pozemek')) + '</b>' +
             '<span class="opp-figures">' + figs + '</span>' +
           '</div>' +
           /* 2. ŘÁDEK — KDE TO JE. „Už otevřeno" stojí u NÁZVU MÍSTA, ne
@@ -6548,7 +6549,10 @@
              štítek, ne varování — neznamená „prodáno" ani „nezajímavé",
              jen „tenhle jsi už viděl", aby se nemuselo klepat podruhé. */
           '<div class="opp-meta">' +
-            '<span class="opp-place">' + d.place +
+            /* JMÉNO OBCE PROJDE SAZBOU AŽ TADY, PŘI VÝPISU. V datech
+               musí zůstat obyčejná mezera — podle `place` se hledá,
+               porovnává a skládá adresa. Viz PKCisteni.sazba(). */
+            '<span class="opp-place">' + PKCisteni.sazba(d.place) +
               (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
             '</span>' +
             (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
@@ -6881,7 +6885,7 @@
       pat.innerHTML =
         '<button type="button" class="ops-btn" data-krok="-1"' + (jePrvni ? ' disabled' : '') + '>'
           + '<span aria-hidden="true">‹</span> Předchozí</button>'
-        + '<span class="ops-kde">Strana <b>' + fmt(stranka + 1) + '</b> z ' + fmt(stran) + '</span>'
+        + '<span class="ops-kde">Strana <b>' + fmt(stranka + 1) + '</b> z\u00a0' + fmt(stran) + '</span>'
         + '<button type="button" class="ops-btn" data-krok="1"' + (jePosledni ? ' disabled' : '') + '>'
           + 'Další <span aria-hidden="true">›</span></button>';
       listEl.appendChild(pat);

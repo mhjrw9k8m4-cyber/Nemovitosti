@@ -265,7 +265,12 @@ import { fileURLToPath } from 'node:url';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+/* STRÁŽ SE PÍŠE TAK, JAK JI ZBYTEK REPOZITÁŘE PÍŠE. Dělala totéž
+   i v podobě `path.resolve(process.argv[1]) === fileURLToPath(...)`,
+   jenže statická kontrola (scripts/test-staticka.mjs) hlídá jediný
+   tvar — a od chvíle, co tenhle modul importuje i zkouška sazby
+   v prohlížeči, se na to přišlo. Jeden idiom, jedna kontrola. */
+if (import.meta.url === `file://${process.argv[1]}`) {
   const nasucho = process.argv.includes('--nasucho');
   const soubory = readdirSync(KOREN).filter((f) => f.endsWith('.html'));
   let zmeneno = 0, mezer = 0;

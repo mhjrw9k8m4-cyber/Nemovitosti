@@ -60,7 +60,7 @@
       html += '</section>';
     });
     html += '<section class="md-vse">' +
-      '<p>Dohromady je to <b>' + velikost(celkem) + '</b> v ' + stav.length + ' položkách.</p>' +
+      '<p>Dohromady je to <b>' + velikost(celkem) + '</b> v\u00a0' + stav.length + ' položkách.</p>' +
       '<button type="button" class="md-smaz-vse" id="md-smaz-vse">Smazat úplně všechno</button>' +
       /* Co tahle stránka NEUMÍ, musí být napsané. Slíbit „smazáno" a nechat
          přitom data na serveru by bylo horší než mlčet. */

@@ -733,7 +733,10 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     pravda('i „Zdraženo o X %" — pohyb nahoru se nezamlčuje', v.nahoru.length > 0,
       JSON.stringify(v.nahoru));
     pravda('v popisku odznaku stojí původní cena i datum',
-      v.dolu.every((x) => /Kč/.test(x.p) && /\d+\. \d+\. \d{4}/.test(x.p)),
+      /* Datum drží od 22. 10. pohromadě nezlomitelnou mezerou (den by
+         jinak zůstal na konci řádku bez roku), takže se před porovnáním
+         srovnají mezery — vzor s obyčejnou by ho nenašel. Viz oddíl 107. */
+      v.dolu.every((x) => /Kč/.test(x.p) && /\d+\.\s\d+\.\s\d{4}/.test(String(x.p).replace(/\s+/g, ' '))),
       JSON.stringify(v.dolu.slice(0, 2)));
     /* Pojistka proti bezzubosti: podstrčená drobná změna (1 %) se na
        kartě objevit NESMÍ, jinak by odznak svítil u všeho. */
