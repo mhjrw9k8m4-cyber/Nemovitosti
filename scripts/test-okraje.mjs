@@ -95,20 +95,42 @@ for (const s of STRANKY) {
      se pravidla ze stylopisu té stránky, ne vymyšlené barvy — a aby bylo
      v případném nálezu na první pohled vidět, odkud je, nese prvek `id`
      se slovem „vzorek". */
-  if (s === 'muj-inzerat.html') {
-    await p.evaluate(() => {
+  /* KOLIK TOHO BYLO. Změřeno 22. 10.: z 99 tříd ovládacích prvků, které
+     šablony umí vyrobit, jich odhlášený nikdy neuvidí 33 — a hlídač je
+     tedy nikdy neměřil. Devět dalších vysvětlily stránky, kam tahle
+     zkouška vůbec nechodila. Ve vzorcích níž je to, co stojí za
+     přihlášením; ve vzorku je vždycky JEN prvek, který se měří (odkazy
+     `<a>` a odznaky `<span>` se do PRVKY nepočítají, takže postavit je
+     sem by vypadalo, že se měří, a neměřilo by se nic). */
+  const VZORKY_ZA_PRIHLASENIM = {
+    'muj-inzerat.html': '<div class="mi-lcard"><div class="mi-lactions">'
+      + '<button class="mi-lbtn danger" id="vzorek-smazat" type="button">Smazat</button>'
+      /* `.mi-lbtn` bez přívlastku a `.mi-lbtn.primary` tu NEJSOU: stránka
+         je skládá jako `<a>`, ne jako tlačítko (muj-inzerat.html, řádky
+         s „Otevřít inzerát" a „Zobrazit na mapě"). Postavit je jako
+         <button> by vyrobilo nález o vzorku, ne o webu — odkaz bez
+         rámečku a bez výplně je z měření vyjmutý záměrně, protože tvar
+         mu dělá text. */
+      + '</div><button class="sv-del" id="vzorek-odebrat" type="button">Odebrat</button></div>',
+    'hlidani.html': '<div class="hl-card">'
+      + '<button class="hl-tab" id="vzorek-tab" type="button">Hlídaná místa</button>'
+      + '<button class="hl-chip" id="vzorek-chip" type="button">elektřina</button>'
+      + '<button class="hl-a" id="vzorek-a" type="button">Upravit</button>'
+      + '<button class="hl-rychle" id="vzorek-rychle" type="button">Do 500 000 Kč</button>'
+      + '<select class="hl-sel" id="vzorek-sel"><option>orná půda</option></select>'
+      + '<button class="del" id="vzorek-del" type="button">Smazat</button></div>',
+    'zpravy.html': '<div class="zp-card">'
+      + '<textarea class="zp-ta" id="vzorek-ta">Dobrý den</textarea>'
+      + '<button class="zp-send" id="vzorek-send" type="button">Odeslat</button>'
+      + '<input class="zp-cb" id="vzorek-cb" type="checkbox"></div>',
+  };
+  if (VZORKY_ZA_PRIHLASENIM[s]) {
+    await p.evaluate((html) => {
       const host = document.querySelector('main') || document.body;
-      const karta = document.createElement('div');
-      karta.className = 'mi-lcard';
-      /* Ve vzorku je JEN tlačítko. Zbytek řádku (dva odkazy a odznak
-         stavu) jsou `<a>` a `<span>`, a ty se do PRVKY nepočítají —
-         postavit je sem by vypadalo, že se měří, a neměřilo by se nic.
-         Ověřeno: se vzorkem je měřených prvků o jeden na profil víc. */
-      karta.innerHTML = '<div class="mi-lactions">'
-        + '<button class="mi-lbtn danger" id="vzorek-smazat" type="button">Smazat</button>'
-        + '</div>';
-      host.appendChild(karta);
-    });
+      const obal = document.createElement('div');
+      obal.innerHTML = html;
+      host.appendChild(obal);
+    }, VZORKY_ZA_PRIHLASENIM[s]);
     await p.waitForTimeout(100);
   }
 

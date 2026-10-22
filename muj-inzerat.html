@@ -121,7 +121,11 @@
     .sv-actions{display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line);}
     .sv-map{flex:1 1 auto; font-size:14px; font-weight:700; color:var(--znacka-svetla); text-decoration:none;}
     .sv-map:active{opacity:.7;}
-    .sv-del{flex:none; background:none; border:1px solid var(--line-strong); color:var(--muted); border-radius:var(--r-sm); padding:4px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
+    /* HRANICE OVLÁDACÍHO PRVKU PATŘÍ NA --line-ui — na --line-strong
+       (0,28) měla proti kartě 1,88 : 1 proti prahu 3,0 (WCAG 1.4.11).
+       Hlídač okrajů to neviděl, protože se seznam uložených vykreslí
+       až po přihlášení. Naměřeno 22. 10. */
+    .sv-del{flex:none; background:none; border:1px solid var(--line-ui); color:var(--muted); border-radius:var(--r-sm); padding:4px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:color var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
     /* Moje inzeráty — čisté karty se statistikami */
     #mi-list{display:flex; flex-direction:column; gap:12px;}

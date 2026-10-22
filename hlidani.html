@@ -181,7 +181,7 @@
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
       min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-      border:1.5px solid var(--line-strong); background:var(--plocha-tlumena); color:var(--text);
+      border:1.5px solid var(--line-ui); background:var(--plocha-tlumena); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -203,7 +203,13 @@
     /* Volba, pod kterou dnes není nic. Neschovává se: zmizelá volba mate
        víc než volba s nulou. */
     .hl-chip.hl-nula{opacity:.55;}
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-strong); border-radius:var(--r-pill); font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
+        /* HRANICE OVLÁDACÍHO PRVKU PATŘÍ NA --line-ui. Na --line-strong
+       (0,28) měla proti kartě 1,87 : 1, tedy pod prahem 3,0 z WCAG
+       1.4.11 — a hlídač okrajů to nikdy neviděl, protože se tohle
+       ovládání odhlášenému nevykreslí. Zbytek webu už dávno používá
+       --line-ui (0,55 → 4,01), jak ukazuje `.filter-chip` na úvodní
+       stránce, který zkouškou prochází. Naměřeno 22. 10. */
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-pill); font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}
@@ -262,7 +268,7 @@
        „Zobrazit na mapě", koš). Natěsnaná do jedné řady by se na úzkém
        telefonu lámal text uvnitř nich, tak se radši zalomí. */
     .hl-acts{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
-    .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-strong); background:var(--plocha-tlumena); color:var(--text); display:flex; align-items:center; justify-content:center; text-decoration:none;}
+    .hl-a{flex:1 1 120px; height:40px; border-radius:var(--r-sm); font-size:14px; font-weight:600; cursor:pointer; border:1px solid var(--line-ui); background:var(--plocha-tlumena); color:var(--text); display:flex; align-items:center; justify-content:center; text-decoration:none;}
     .hl-a.pri{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
     .hl-a.del{flex:0 0 44px; color:var(--c-exekuce);}
     .hl-empty{padding:28px 20px; text-align:center; color:var(--muted); font-size:14px; line-height:1.6;}

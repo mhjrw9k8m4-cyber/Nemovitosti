@@ -168,6 +168,13 @@ je v pořádku, podezřelý je ZÁPIS, ne hodnota. A platí to i obráceně:
 čte.** Když web začal sázet česky i v prohlížeči (oddíl 107), spadly
 čtyři zkoušky — a ani jedna kvůli webu.
 
+**Vzorek je tvrzení o tom, jak stránka vypadá — a musí být pravdivé.**
+Postavit prvek jiným tagem, než ho web používá (`<button>` tam, kde
+stránka skládá `<a>`), vyrobí nález o vzorku, ne o webu — a to je horší
+než díra v pokrytí, protože se to tváří jako práce. U každého vzorku
+patří napsat, z čeho je odvozený, a prvky v něm nesou `id` se slovem
+„vzorek", aby bylo v nálezu vidět, odkud je.
+
 **Zkouška, která měří jen to, co vidí odhlášený, neměří celou stránku.**
 `muj-inzerat.html` je v seznamu zkoušky okrajů od začátku, ale odhlášenému
 se seznam inzerátů nevykreslí — celý řádek s tlačítky vzniká až z odpovědi

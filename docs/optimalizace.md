@@ -7342,3 +7342,64 @@ na sazbu, projdi zkoušky, které ten text čtou.
 
 Zkouška měří jen stav odhlášeného návštěvníka; text, který se vykreslí
 až po přihlášení, o sobě pořád neví a stojí to u ní napsané.
+
+
+## 108. Hlídači vzhledu viděli jen to, co vidí odhlášený *22. 10.*
+
+Oddíl 105 skončil jedním nálezem a jednou větou do CLAUDE.md: zkouška,
+která měří jen stav odhlášeného návštěvníka, neměří celou stránku. Tady
+se to dotáhlo na číslo.
+
+### Kolik toho hlídač okrajů nevidí
+
+Šablony v `js/*.js` a ve vložených skriptech stránek umí vyrobit **99
+tříd ovládacích prvků** (`button`, `input`, `select`, `textarea`).
+Změřeno proti živému DOM bez přihlášení:
+
+| | |
+|---|---|
+| viděno odhlášenému | 66 |
+| **nikdy neviděno** | **33** |
+| z toho vysvětlily stránky, kam zkouška vůbec nechodila | 9 |
+
+Zbylých 33 jsou tři různé příčiny dohromady: ovládání za přihlášením,
+ovládání v okně, které se teprve musí otevřít, a stav, který se musí
+naklikat. Tenhle oddíl řeší jen tu první.
+
+### Pět ovladačů pod prahem
+
+Vzorky se postavily tak, jak je stránka skládá, a rozhodla **sama
+zkouška** se svými výjimkami — ne vlastní metr. Nález:
+
+| prvek | okraj proti ploše | |
+|---|---|---|
+| `.hl-chip` (vybavení u hlídání) | 1,87 | pod prahem |
+| `.hl-a` (akce u hlídaného místa) | 1,87 | pod prahem |
+| `.hl-rychle` (rychlá volba ceny) | 1,87 | pod prahem |
+| `.zp-ta` (pole pro zprávu) | 1,87 | pod prahem |
+| `.sv-del` (odebrat uložený pozemek) | 1,88 | pod prahem |
+| požadavek WCAG 1.4.11 | 3,00 | |
+
+Všech pět stavělo hranici na `--line-strong` (0,28). Zbytek webu přitom
+na hranici ovládacího prvku dávno používá `--line-ui` (0,55 → **4,01**)
+— ukazuje to `.filter-chip` na úvodní stránce, který zkouškou prochází.
+Nebylo to tedy rozhodnutí o vzhledu, ale pět míst, která zůstala pozadu,
+protože se na ně nikdo nedíval. Sjednoceno na `--line-ui`; měřených
+prvků je po doplnění vzorků **125** místo 107 a všechny projdou.
+
+### Vzorek musí stát tak, jak stránka skládá
+
+Při psaní vzorků jsem si sám vyrobil nález, který neexistoval:
+`.mi-lbtn` a `.mi-lbtn.primary` jsem postavil jako `<button>`, jenže
+stránka je skládá jako `<a>` — odkaz bez rámečku i výplně je z měření
+vyjmutý záměrně, protože tvar mu dělá text. Oba vzorky jsou pryč a je
+u nich napsané proč.
+
+### Co z toho platí dál
+
+**Vzorek je tvrzení o tom, jak stránka vypadá — a musí být pravdivé.**
+Postavit prvek jiným tagem, než ho web používá, vyrobí nález o vzorku,
+ne o webu; a je to horší než díra v pokrytí, protože se tváří jako
+práce. Proto u každého vzorku stojí, z čeho je odvozený, a prvky v něm
+nesou `id` se slovem „vzorek", aby bylo v nálezu na první pohled vidět,
+odkud je.
