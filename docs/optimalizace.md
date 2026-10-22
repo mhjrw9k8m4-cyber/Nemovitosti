@@ -3955,6 +3955,9 @@ Tři, a každá shodila něco jiného:
 
 ## 65. Kudy vede řez main.js — změřeno, zatím neprovedeno *20. 10.*
 
+> **Provedeno 22. 10.** Jak to dopadlo a co z tohohle plánu nevyšlo,
+> je v oddílu 102.
+
 `js/main.js` má 480 kB zdroje, 237 kB po minifikaci a **54,3 kB po
 brotli**. Měření pokrytím z oddílu 59 ukázalo, že se z něj na první
 obrazovce nevykoná 132 kB. Cíl je rozdělit ho tak, aby se výpis
@@ -6775,3 +6778,214 @@ A podruhé totéž, co je v oddílu 94: **`try/catch` kolem měření umí
 udělat z poruchy nástroje nález o webu.** Když se měření nepovede,
 musí to kontrola říct jako „nepovedlo se změřit", ne jako „web je
 rozbitý".
+
+## 102. Řez main.js proveden: výpis už nečeká na mapu *22. 10.*
+
+Oddíl 65 ten řez změřil a nechal neprovedený. Tohle je jeho provedení —
+a tři věci v tom plánu nevyšly tak, jak se v něm čekalo.
+
+### Co drželo výpis u knihovny
+
+Jediný příkaz v `js/main.js`:
+
+```js
+if (!mapEl || typeof L === 'undefined') { …hláška…; return; }
+```
+
+`return` opouštěl `boot()`, a výpis nabídek je pod ním — ve stejném
+běhu. Navíc `index.html` brala knihovnu značkou `<script defer>` PŘED
+`main.js`, takže se `main.js` ani nezačal vykonávat, dokud nebyl
+Leaflet stažený A spuštěný.
+
+### Kolik to stálo
+
+Spuštění `leaflet.js` z mezipaměti, medián z pěti načtení:
+
+| procesor | překlad + spuštění |
+|---|---|
+| 1× (stolní) | **30 ms** |
+| 4× zpomalený (telefon) | **62 ms** |
+
+A vodopád na úvodní stránce (390 px, 1,6 Mb/s, 150 ms, procesor ×4,
+medián ze tří načtení, místní server tedy BEZ komprese):
+
+| | start | dojelo | velikost |
+|---|---|---|---|
+| mapa.json | 266 ms | 7 153 ms | 470 kB |
+| kraje.json | 270 ms | 1 940 ms | 60 kB |
+| **leaflet.js** | 935 ms | **4 736 ms** | **144 kB** |
+| main.js | 1 189 ms | 6 596 ms | 238 kB |
+| **první nabídka ve výpisu** | | **8 006 ms** | |
+
+Knihovna tedy nestála jen těch 62 ms procesoru — zabírala 144 kB téhož
+potrubí, kterým se táhla data a `main.js`. Po řezu z toho seznamu
+zmizela docela a `main.js` dojel o 905 ms dřív.
+
+### Jak to stojí teď
+
+`map` je zpočátku `null`. Práce, která knihovnu potřebuje, se zapisuje
+do fronty přes `azBudeMapa(f)`; `postavMapu()` mapu postaví a frontu
+vysype **v původním pořadí**. Knihovnu si `main.js` dotahuje sám
+z `<meta name="pk-leaflet">` — hned, když je rám mapy na obrazovce
+vidět, jinak teprve na konci `boot()`, kdy je výpis hotový.
+
+Fronta, ne druhá funkce: mapové příkazy jsou rozházené mezi ř. 1000
+a 8400 a pozdější čtou, co založily dřívější. Obalit každý na místě
+zachová pořadí i uzávěry; přesouvat je někam dolů by znamenalo
+přerovnat obojí.
+
+### Co to vyneslo
+
+Měřeno proti předchozí verzi ve vedlejším pracovním stromu, aby to bylo
+proti čemu (1,6 Mb/s, 150 ms, procesor ×4, medián ze tří načtení):
+
+| | první nabídka | tečky na mapě |
+|---|---|---|
+| 390 px před | 8 152 ms | 8 240 ms |
+| **390 px po** | **7 247 ms** (−905) | **7 602 ms** (−638) |
+| 1280 px před | 8 363 ms | 8 783 ms |
+| **1280 px po** | **7 544 ms** (−819) | **8 028 ms** (−755) |
+
+**Zrychlila se i sama mapa, a na obou šířkách.** To plán nečekal:
+čekalo se, že mapa o něco zpomalí. Knihovna se dnes netahá souběžně
+s `mapa.json` a `main.js`, ale až je potrubí volné — a volné potrubí ji
+stáhne rychleji, než když se o něj dělí.
+
+Na nasazeném webu bude to číslo menší: místní server neumí brotli,
+takže tady se přenášelo 144 kB tam, kde se ve skutečnosti přenáší
+36,1 kB. Co je na obou stejné, je POŘADÍ — a to je to, co se měnilo.
+
+### Tři věci, které plán v oddílu 65 neuhádl
+
+**1. Vzor `\bmap\b` lže, a lhal i podruhé.** Oddíl 65 to u sebe už
+jednou opravoval; rozkráječ napsaný teď znovu napočítal 41 míst místo
+14, protože `\b` se trefí i doprostřed `'map-podklad'`. Opraveno
+pohledem vzad: `(?<![\w'"-])map(?![\w-])`.
+
+**2. Dělit příkazy jen podle `;` nestačí.** První rozkráječ nenašel dvě
+místa, která na mapu sahají uvnitř bloku `if (…) { … }` na nejvyšší
+úrovni — blok nekončí středníkem, takže se slil s dalším příkazem.
+Dokud se nezačalo dělit i na koncích bloků (a rozlišovat `}` od
+`} else`, `} catch`, `});`), zbývala obě jako tichá vada: stránka
+skončila chybou `Cannot read properties of null (reading 'on')` a výpis
+nebyl ŽÁDNÝ. Po doplnění zbylo z 478 příkazů nejvyšší úrovně **jedno**
+podezřelé místo, a to byl planý poplach (`var markers = [];`).
+
+**3. Sledovač na `map` nefunguje.** Pokus nahradit `map` objektem,
+který by každé sáhnutí nahlásil, skončil hned: takový objekt je
+**pravdivý**, takže `azBudeMapa()` všechnu frontu provedlo rovnou
+a měřilo se něco jiného. Seznam nakonec dal rozkráječ a chyby
+v konzoli.
+
+### Co našla sabotáž
+
+Vrácení značky `<script src=leaflet.js defer>` do `index.html` mělo
+shodit pět kontrol o řezu. Shodilo deset: při 1280 px se nevykreslil
+výpis vůbec a v konzoli byla chyba. Příčina byla v novém kódu, ne
+v sabotáži — když knihovna existuje UŽ při `boot()`, `postavMapu()`
+doběhne do míst, kde dohání to, co výpis minul, a sáhne na `mapLocked`
+a `lastVis`, které v té chvíli ještě nikdo nenastavil. Dohánění se
+proto dělá jen po `boot()`; dřív ho dělat netřeba, protože zbytek
+`boot()` si s hotovou mapou poradí sám.
+
+Dohánět se musí čtyři věci, a žádnou z nich fronta nezachytí — volá je
+`renderList()`, ne příkaz v `boot()`: zámek posouvání (`setPan`),
+tečky a obrysy (`updateMapView`), okruh kolem vybraného místa
+(`vykresliOkruhNaMape`) a hlídané místo (`vykresliMistoNaMape`). Každá
+z nich se dá zavolat podruhé bez škody — u okruhu proto, že si podpis
+při prázdném běhu NEULOŽÍ.
+
+### Jeden nález, který by zkoušky bez okruhu minuly
+
+Kontrola na dohánění okruhu a hlídaného místa (oddíl E zkoušky) padla
+hned při napsání — a nebyla to vada kontroly. `openFromUrl()` volá při
+načtení `lockDots()` a ten `renderDots()`, tedy kreslení teček, do
+kterého se jde **ještě než mapa stojí**: `Cannot read properties of
+null (reading 'clearLayers')`. Postihlo by to každého, kdo přijde
+s odkazem `?q=` nebo `?druh=` — a takové odkazy vedou ze statických
+stránek i z „Hlídání". Pojistka je proto v `renderDots()`, ne
+u volajících: volající jsou tři a každý jiný.
+
+Potom se projely VŠECHNY podoby, kterými se na úvodní stránku dá
+přijít — dvanáct (čistě, `?q=` obec, `?q=` okruh, `?druh=`, `?maxc=`,
+`?mina=`, `?zlevnene=`, `#m=` výřez, zapamatovaný mapový pohled,
+návrat ze stránky pozemku, hlídané místo, letecký podklad) × dvě šířky
+× knihovna zdržená i zablokovaná. **48 z 48**: výpis vždycky, mapa po
+dojetí vždycky celá, v konzoli ani jedna chyba.
+
+### Nejdražší nález: přesunutý stylopis obrátil kaskádu
+
+Celá sada (125 zkoušek) skončila 123 : 2. Jedna chyba byla zkouška,
+která hlídala staré chování (`test-vypadky.mjs` — viz níž). Druhá byla
+skutečná vada, a stála nejvíc práce:
+
+`test-mapa.mjs` hlásil, že **jeden ze čtyř odznaků shluku leží mimo
+vybraný kraj**. Porovnání s předchozí verzí ve vedlejším pracovním
+stromu ukázalo, že se neliší vůbec nic z toho, co by člověk hledal
+první: tentýž kraj (Karlovarský), tentýž zoom (6,25 → 8), tentýž
+střed, tytéž čtyři shluky se stejnými počty, tentýž počet vykreslení
+výpisu, tatáž vnitřní velikost mapy i pixelOrigin. Rozdíl byl
+v DOM:
+
+| | vnitřní prvek odznaku | obal (chytací plocha) |
+|---|---|---|
+| předchozí verze | `[117, 382, 28, 28]` | `[109, 374, 44, 44]` |
+| po řezu | `[109, 374, 28, 28]` | `[109, 374, 44, 44]` |
+
+Číslo v odznaku se přestalo středit — sedlo si do levého horního kouta
+své plochy, o 8 px vedle. V zeměpisu je to při zoomu 8 asi 3 km, a tím
+odznak vyšel za hranici kraje.
+
+**Proč.** `css/styles.css` má
+`.pk-shluk-obal{display:flex; align-items:center; justify-content:center}`.
+Leaflet má ve svém stylopisu `display:block` na `.leaflet-marker-icon`
+— tedy stejná specifičnost. V `index.html` stál `<link>` na
+leaflet.css PŘED `css/uvod.min.css`, takže vyhrávala naše pravidla.
+Jakmile si ten styl dotahuje `main.js` a přidá ho na KONEC hlavičky,
+vyhraje Leaflet.
+
+Oprava je jeden řádek: `insertBefore` před první `<link rel=stylesheet>`
+nebo `<style>` v hlavičce, místo `appendChild`. Tím se pořadí kaskády
+zachová.
+
+**Na obrazovce by si toho nikdo nevšiml.** Číslo v kolečku vypadá
+vystředěně, i když je o 8 px vedle; všimla si toho zkouška, která měří
+GEOMETRII, ne vzhled. A našla se jedině proto, že se porovnávalo
+s předchozí verzí — samotná chyba zní jako nález o datech („odznak je
+za hranicí kraje"), ne o stylopisu.
+
+### Co sabotáž shodila, kontrola po kontrole
+
+Sedm sabotáží, každá přes celou zkoušku `test-vypis-bez-mapy.mjs`:
+
+| sabotáž | shozených kontrol |
+|---|---|
+| značka `<script>` zpátky do `index.html` | 5 (o řezu) |
+| pryč s `if (!map) return` v `updateMapView()` | 6 (chyba v konzoli) |
+| pryč s dohnaným `updateMapView()` | 4 (53 vrstev místo 2 007) |
+| knihovna spadne a `mapaNedojela()` se nezavolá | 2 (hláška v rámu) |
+| stará hláška zpátky do výpisu | 2 |
+| razítko `?v=` u metaznačky zrušené | 1 (+2 planě, viz níž) |
+| pryč s ranou objednávkou, když je mapa vidět | 1 (pořadí na monitoru) |
+| pryč s objednávkou na konci `boot()` | 6 (na telefonu mapa nikdy) |
+
+Dvě věci z toho stojí za zapsání.
+
+**Ta poslední sabotáž shodila i „po přepnutí na mapu se mapa postaví".**
+Přepnutí pohledu si tedy knihovnu samo neobjedná — jen ji použije.
+Je to schválně (viz komentář u `setView()`: objednávka odtud byla mrtvá
+pojistka), ale platí to jen tak dlouho, dokud `chciMapu()` na konci
+`boot()` opravdu stojí. Kdyby ho někdo odstranil, mapa už na telefonu
+nepřijde vůbec — a tahle zkouška to pozná.
+
+**A u té sabotáže s razítkem padly dvě kontroly navíc — planě.** Skript
+sabotáží vracel po každém kole zdroje, ale u tohohle kola nespustil
+minifikaci, takže `js/min/main.js` nesl ještě sabotáž z kola
+předchozího. Je to přesně ta past, na kterou je v CLAUDE.md pravidlo:
+**měří se to, co se servíruje, ne to, co je ve zdroji.**
+
+### Co se tím mimochodem spravilo
+
+Bez knihovny se dřív nevykreslil ani výpis a člověk zůstal u prázdné
+stránky s větou „Výpis se načítá z mapy, a ta nedojela". Dnes je výpis
+celý a hláška zůstala jen v rámu mapy — tam, kde je pravdivá.

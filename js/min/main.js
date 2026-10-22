@@ -460,6 +460,13 @@
 
   async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
 
+  var mapEl = document.getElementById('leaflet-map');
+  var map = null;
+  var mapaFronta = [];
+  var mapaVzdana = false;
+  var mapaSeTaha = false;
+  var bootDobehl = false;
+
   (function odstranDuplicity() {
     var ven = window.PKHlidani.bezDuplicit(DATA);
     if (ven.length !== DATA.length) DATA = ven;
@@ -591,13 +598,16 @@
 
       if (!seznam && !prvni && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
 
-      if (!seznam && typeof map !== 'undefined' && map) {
-        var srovnej = function () {
-          map.invalidateSize();
-          if (!mapFittedVisible && !selectedKraj) fitAllCZ();
-        };
-        setTimeout(srovnej, 70);
-        setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
+      if (!seznam) {
+
+        azBudeMapa(function () {
+          var srovnej = function () {
+            map.invalidateSize();
+            if (!mapFittedVisible && !selectedKraj) fitAllCZ();
+          };
+          setTimeout(srovnej, 70);
+          setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
+        });
       }
     }
 
@@ -618,30 +628,78 @@
     });
   })();
 
-  var mapEl = document.getElementById('leaflet-map');
-
-  if (!mapEl || typeof L === 'undefined') {
-    if (mapEl) {
-      mapEl.innerHTML =
-        '<div class="mapa-nedojela" role="status">' +
-          '<b>Mapu se nepodařilo načíst.</b>' +
-          '<span>Zkuste stránku obnovit. Pozemky si můžete projít i bez mapy —' +
-          ' v přehledu podle krajů a okresů.</span>' +
-          '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
-        '</div>';
-    }
-    var seznamEl = document.getElementById('opp-list');
-    if (seznamEl) {
-      seznamEl.innerHTML = '<li class="map-count">Výpis se načítá z mapy, a ta nedojela.' +
-        ' Zkuste obnovit stránku, nebo použijte <a href="pozemky-podle-okresu.html">přehled podle okresů</a>.</li>';
-    }
-    return;
+  function azBudeMapa(f) {
+    if (map) { f(); return; }
+    mapaFronta.push(f);
+  }
+  function mapaNedojela() {
+    mapaVzdana = true;
+    mapaFronta.length = 0;
+    if (!mapEl) return;
+    mapEl.innerHTML =
+      '<div class="mapa-nedojela" role="status">' +
+        '<b>Mapu se nepodařilo načíst.</b>' +
+        '<span>Zkuste stránku obnovit. Výpis nabídek pod mapou funguje i tak,' +
+        ' a pozemky si můžete projít v přehledu podle krajů a okresů.</span>' +
+        '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
+      '</div>';
   }
 
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false,
-    zoomSnap: 0.25, zoomDelta: 1 }).setView([49.82, 15.47], 7);
+  function postavMapu() {
+    if (map || mapaVzdana || !mapEl) return;
+    if (typeof L === 'undefined' || !L.map) { mapaNedojela(); return; }
+    map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false,
+      zoomSnap: 0.25, zoomDelta: 1 }).setView([49.82, 15.47], 7);
 
-  try { window.PK_MAPA = map; } catch (e) {}
+    try { window.PK_MAPA = map; } catch (e) {}
+
+    while (mapaFronta.length) mapaFronta.shift()();
+
+    if (!bootDobehl) return;
+
+    setPan(!mapLocked);
+    updateMapView();
+    vykresliOkruhNaMape();
+    vykresliMistoNaMape();
+    try { window.PK_MAPA_HOTOVA = true; } catch (e) {}
+  }
+
+  function chciMapu() {
+    if (map || mapaVzdana || mapaSeTaha) return;
+    if (typeof L !== 'undefined' && L.map) { postavMapu(); return; }
+    mapaSeTaha = true;
+    var zn = document.querySelector('meta[name="pk-leaflet"]');
+    var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+    var hotovo = function () {
+      if (typeof L !== 'undefined' && L.map) postavMapu();
+      else mapaNedojela();
+    };
+    var knihovna = function () {
+      var sc = document.createElement('script');
+      sc.src = adresa;
+      sc.onload = hotovo;
+      sc.onerror = function () { mapaNedojela(); };
+      document.head.appendChild(sc);
+    };
+    var styl = document.querySelector('meta[name="pk-leaflet-css"]');
+    var adresaStylu = styl && styl.getAttribute('data-src');
+    if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+      knihovna();
+      return;
+    }
+    var lk = document.createElement('link');
+    lk.rel = 'stylesheet';
+    lk.href = adresaStylu;
+    lk.onload = knihovna;
+    lk.onerror = knihovna;
+
+    var prvniStyl = document.head.querySelector('link[rel="stylesheet"], style');
+    if (prvniStyl) document.head.insertBefore(lk, prvniStyl);
+    else document.head.appendChild(lk);
+  }
+  try { window.PK_CHCI_MAPU = chciMapu; } catch (e) {}
+
+  if (mapEl && mapEl.offsetParent !== null && mapEl.offsetHeight > 0) chciMapu();
 
   (function schovejPriTazeni() {
     var korenEl = document.documentElement;
@@ -656,10 +714,12 @@
       if (casovac) clearTimeout(casovac);
       casovac = setTimeout(zpet, 2000);
     }
-    map.on('movestart', tahne);
-    map.on('zoomstart', tahne);
-    map.on('moveend', zpet);
-    map.on('zoomend', zpet);
+    azBudeMapa(function () {
+      map.on('movestart', tahne);
+      map.on('zoomstart', tahne);
+      map.on('moveend', zpet);
+      map.on('zoomend', zpet);
+    });
 
     document.addEventListener('focusin', zpet, true);
     document.addEventListener('pointerdown', function (e) {
@@ -667,10 +727,13 @@
     }, true);
   }());
 
+  var dotsRenderer = null;
+  azBudeMapa(function () {
   map.createPane('dotsPane');
   map.getPane('dotsPane').style.zIndex = 450;
   map.getPane('dotsPane').style.pointerEvents = 'none';
-  var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
+  dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
+  });
 
   var TVAR = { sale: 'kruh', drazba: 'kosoctverec', exekuce: 'trojuhelnik', obec: 'ctverec', majitel: 'kriz' };
 
@@ -698,7 +761,9 @@
     }
     ctx.closePath();
   }
-  if (typeof L !== 'undefined' && L.Canvas) {
+  var PkTvar = null;
+  azBudeMapa(function () {
+  if (L.Canvas) {
     L.Canvas.include({
       _updatePkTvar: function (layer) {
         if (!this._drawing || layer._empty()) return;
@@ -710,16 +775,19 @@
       }
     });
   }
-  var PkTvar = (typeof L !== 'undefined' && L.CircleMarker) ? L.CircleMarker.extend({
+  PkTvar = L.CircleMarker ? L.CircleMarker.extend({
     _updatePath: function () {
 
       if (this._renderer._updatePkTvar) this._renderer._updatePkTvar(this);
       else this._renderer._updateCircle(this);
     }
   }) : null;
-  if (map.attributionControl) map.attributionControl.setPosition('bottomleft');
+  });
 
-  L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+  azBudeMapa(function () {
+    if (map.attributionControl) map.attributionControl.setPosition('bottomleft');
+    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+  });
 
   var PODKLADY = (window.PK_SNIMEK && window.PK_SNIMEK.podklady) || [];
   var PODKLAD_KLIC = 'pk_podklad_v1';
@@ -733,6 +801,8 @@
   var podkladVrstva = null;
   function nastavPodklad(id, ulozit) {
     var def = podkladDef(id);
+
+    azBudeMapa(function () {
     if (podkladVrstva) map.removeLayer(podkladVrstva);
 
     var ostre = def.id !== 'zakladni';
@@ -742,6 +812,7 @@
       className: def.id === 'zakladni' ? 'pk-basemap' : 'pk-basemap-foto'
     }).addTo(map);
     podkladVrstva.bringToBack();
+    });
     var ovl = document.getElementById('map-podklad');
     if (ovl) {
       [].forEach.call(ovl.querySelectorAll('button'), function (b) {
@@ -772,12 +843,15 @@
     mapLocked = !on;
 
     var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'keyboard'];
-    fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
-    if (map.touchZoom) map.touchZoom.enable();
+
+    if (map) {
+      fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
+      if (map.touchZoom) map.touchZoom.enable();
+    }
 
     mapEl.style.touchAction = on ? 'none' : 'pan-y';
     if (lockBtn) lockBtn.hidden = !on;
-    if (on) setTimeout(function () { map.invalidateSize(); }, 60);
+    if (on) setTimeout(function () { if (map) map.invalidateSize(); }, 60);
   }
   setPan(false);
 
@@ -791,7 +865,7 @@
 
   var resetBtn = document.getElementById('map-reset');
   if (resetBtn) resetBtn.addEventListener('click', function () { clearKraj(); });
-  window.addEventListener('resize', function () { map.invalidateSize(); });
+  window.addEventListener('resize', function () { if (map) map.invalidateSize(); });
 
   var listEl = document.getElementById('opp-list');
   var countEl = document.getElementById('map-count');
@@ -1412,7 +1486,8 @@
     selPoly = L.marker([d.lat, d.lng], { icon: icon, interactive: false, keyboard: false, zIndexOffset: 1000 }).addTo(map);
   }
 
-  var dotLayer = L.layerGroup();
+  var dotLayer = null;
+  azBudeMapa(function () { dotLayer = L.layerGroup(); });
   var krajLayer = null;
   var lastVis = [], krajCounts = {};
 
@@ -1475,10 +1550,14 @@
   DATA.forEach(function (d, i) {
     d._id = i;
     d._gkraj = krajGeoOf(d);
-    var st = dotStyle(d); st.interactive = false;
-    var m = PkTvar ? new PkTvar([d.lat, d.lng], st) : L.circleMarker([d.lat, d.lng], st);
-    m._d = d;
-    markers.push(m);
+  });
+  azBudeMapa(function () {
+    DATA.forEach(function (d) {
+      var st = dotStyle(d); st.interactive = false;
+      var m = PkTvar ? new PkTvar([d.lat, d.lng], st) : L.circleMarker([d.lat, d.lng], st);
+      m._d = d;
+      markers.push(m);
+    });
   });
 
   var podKurzorem = null;
@@ -1496,26 +1575,29 @@
     });
     podKurzorem = d;
   }
-  if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
-    map.on('mousemove', function (e) {
-      if (dotsLocked || (!lastSingles.length && !lastShluky.length)) { zvyrazniTecku(null); return; }
-      var cp = e.containerPoint, best = null, bestDist = Infinity;
-      for (var i = 0; i < lastSingles.length; i++) {
-        var d = lastSingles[i];
-        if (selectedKraj && d._gkraj !== selectedKraj) continue;
-        var p = map.latLngToContainerPoint([d.lat, d.lng]);
-        var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
-        if (dist < bestDist) { bestDist = dist; best = d; }
-      }
 
-      var tol = Math.max(14, DOT_R + 8);
-      if (best && bestDist <= tol * tol) { zvyrazniTecku(best); return; }
-      zvyrazniTecku(null);
+  azBudeMapa(function () {
+    if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
+      map.on('mousemove', function (e) {
+        if (dotsLocked || (!lastSingles.length && !lastShluky.length)) { zvyrazniTecku(null); return; }
+        var cp = e.containerPoint, best = null, bestDist = Infinity;
+        for (var i = 0; i < lastSingles.length; i++) {
+          var d = lastSingles[i];
+          if (selectedKraj && d._gkraj !== selectedKraj) continue;
+          var p = map.latLngToContainerPoint([d.lat, d.lng]);
+          var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+          if (dist < bestDist) { bestDist = dist; best = d; }
+        }
 
-      if (nejblizsiClen(cp, tol)) mapEl.style.cursor = 'pointer';
-    });
-    map.on('mouseout', function () { zvyrazniTecku(null); });
-  }
+        var tol = Math.max(14, DOT_R + 8);
+        if (best && bestDist <= tol * tol) { zvyrazniTecku(best); return; }
+        zvyrazniTecku(null);
+
+        if (nejblizsiClen(cp, tol)) mapEl.style.cursor = 'pointer';
+      });
+      map.on('mouseout', function () { zvyrazniTecku(null); });
+    }
+  });
 
   function nejblizsiClen(cp, tol) {
     var nej = null, nejDist = tol * tol;
@@ -1530,49 +1612,52 @@
   }
 
   var krajJustSelected = false;
-  map.on('click', function (e) {
 
-    if (vybiramMisto) {
-      vybiramMisto = false;
-      document.body.classList.remove('vybiram-misto');
+  azBudeMapa(function () {
+    map.on('click', function (e) {
 
-      enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
-      return;
-    }
-    if (probudMapu()) return;
-    if (krajJustSelected) { krajJustSelected = false; return; }
+      if (vybiramMisto) {
+        vybiramMisto = false;
+        document.body.classList.remove('vybiram-misto');
 
-    if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
-    var cp = e.containerPoint, best = null, bestDist = Infinity;
-    for (var i = 0; i < lastSingles.length; i++) {
-      var d = lastSingles[i];
+        enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
+        return;
+      }
+      if (probudMapu()) return;
+      if (krajJustSelected) { krajJustSelected = false; return; }
 
-      if (selectedKraj && d._gkraj !== selectedKraj) continue;
-      var p = map.latLngToContainerPoint([d.lat, d.lng]);
-      var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
-      if (dist < bestDist) { bestDist = dist; best = d; }
-    }
+      if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
+      var cp = e.containerPoint, best = null, bestDist = Infinity;
+      for (var i = 0; i < lastSingles.length; i++) {
+        var d = lastSingles[i];
 
-    var tol = Math.max(30, DOT_R + 26);
-    if (best && bestDist <= tol * tol) { gotoInzerat(best); return; }
+        if (selectedKraj && d._gkraj !== selectedKraj) continue;
+        var p = map.latLngToContainerPoint([d.lat, d.lng]);
+        var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+        if (dist < bestDist) { bestDist = dist; best = d; }
+      }
 
-    var clen = nejblizsiClen(cp, tol);
-    if (clen) { otevriShluk(clen.s); return; }
+      var tol = Math.max(30, DOT_R + 26);
+      if (best && bestDist <= tol * tol) { gotoInzerat(best); return; }
 
-    var cil = best, cilDist = bestDist;
-    for (var ci2 = 0; ci2 < lastCleny.length; ci2++) {
-      var c2 = lastCleny[ci2];
-      if (selectedKraj && c2.d._gkraj !== selectedKraj) continue;
-      var pc = map.latLngToContainerPoint([c2.d.lat, c2.d.lng]);
-      var cdx = pc.x - cp.x, cdy = pc.y - cp.y, cd = cdx * cdx + cdy * cdy;
-      if (cd < cilDist) { cilDist = cd; cil = c2.d; }
-    }
-    if (!cil) return;
-    var okoli = Math.max(90, tol * 2.4);
-    if (cilDist > okoli * okoli) return;
-    var z = map.getZoom();
-    if (z >= 15) return;
-    map.setView([cil.lat, cil.lng], Math.min(15, z + 2), { animate: true });
+      var clen = nejblizsiClen(cp, tol);
+      if (clen) { otevriShluk(clen.s); return; }
+
+      var cil = best, cilDist = bestDist;
+      for (var ci2 = 0; ci2 < lastCleny.length; ci2++) {
+        var c2 = lastCleny[ci2];
+        if (selectedKraj && c2.d._gkraj !== selectedKraj) continue;
+        var pc = map.latLngToContainerPoint([c2.d.lat, c2.d.lng]);
+        var cdx = pc.x - cp.x, cdy = pc.y - cp.y, cd = cdx * cdx + cdy * cdy;
+        if (cd < cilDist) { cilDist = cd; cil = c2.d; }
+      }
+      if (!cil) return;
+      var okoli = Math.max(90, tol * 2.4);
+      if (cilDist > okoli * okoli) return;
+      var z = map.getZoom();
+      if (z >= 15) return;
+      map.setView([cil.lat, cil.lng], Math.min(15, z + 2), { animate: true });
+    });
   });
 
   var krajByName = {};
@@ -1613,9 +1698,13 @@
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
-  var maska = postavMasku();
-  if (maska) maska.addTo(map);
+  var maska = null;
+  azBudeMapa(function () {
+    maska = postavMasku();
+    if (maska) maska.addTo(map);
+  });
 
+  azBudeMapa(function () {
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
@@ -1645,6 +1734,7 @@
       }
     });
   }
+  });
 
   function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
 
@@ -1671,7 +1761,8 @@
 
   var SHLUK_TESNY = 16;
   var SHLUK_TESNY_MIN = 2;
-  var shlukLayer = L.layerGroup();
+  var shlukLayer = null;
+  azBudeMapa(function () { shlukLayer = L.layerGroup(); });
   var lastSingles = [];
   var lastShluky = [];
 
@@ -1871,6 +1962,7 @@
 
   function renderDots(vis) {
 
+    if (!dotLayer) return;
     prepocitejStupnici(vis);
     if (rezimBarvy === 'cena') resizeDots();
     dotLayer.clearLayers();
@@ -2148,12 +2240,17 @@
         vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
       });
     }
-    map.on('zoomend', vrstvyViditelnost);
-    vrstvyViditelnost();
+
+    azBudeMapa(function () {
+      map.on('zoomend', vrstvyViditelnost);
+      vrstvyViditelnost();
+    });
   }
 
   function updateMapView() {
     if (mapaCeka) { clearTimeout(mapaCeka); mapaCeka = 0; }
+
+    if (!map) return;
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);
     if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
@@ -2176,9 +2273,13 @@
     if (typeof updateKrajHead === 'function') updateKrajHead();
   }
 
-  var czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
-  function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [12, 12], maxZoom: 9 }); }
-  fitAllCZ();
+  var czBounds = null;
+  function fitAllCZ() {
+    if (!map) return;
+    if (!czBounds) czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
+    if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [12, 12], maxZoom: 9 });
+  }
+  azBudeMapa(fitAllCZ);
 
   var selectedKraj = null;
   var nearMode = false, userPos = null, userMarker = null, nearCircle = null;
@@ -3054,10 +3155,12 @@
     };
   } catch (e) {}
 
+  azBudeMapa(function () {
   map.on('zoomend', function () {
     if (nearMode) return;
     if (map.getZoom() >= 10) { if (dotsLocked) lockDots(false); }
     else if (!selectedKraj) { if (!dotsLocked) lockDots(true); }
+  });
   });
 
   function dotRadiusForZoom() {
@@ -3083,13 +3186,21 @@
     }
   }
 
-  map.on('zoomend', function () { resizeDots(); prekresliRadar(); renderDots(lastVis); });
-  resizeDots();
+  azBudeMapa(function () {
+    map.on('zoomend', function () { resizeDots(); prekresliRadar(); renderDots(lastVis); });
+    resizeDots();
+  });
 
-  var radarVrstva = L.layerGroup().addTo(map);
-  var radarIkona = L.divIcon({ className: 'pk-radar', html: '<span></span><span></span>',
-    iconSize: [26, 26], iconAnchor: [13, 13] });
+  var radarVrstva = null;
+  var radarIkona = null;
+  azBudeMapa(function () {
+    radarVrstva = L.layerGroup().addTo(map);
+    radarIkona = L.divIcon({ className: 'pk-radar', html: '<span></span><span></span>',
+      iconSize: [26, 26], iconAnchor: [13, 13] });
+    prekresliRadar();
+  });
   function prekresliRadar() {
+    if (!radarVrstva) return;
     radarVrstva.clearLayers();
     for (var i = 0; i < DATA.length; i++) {
       var d = DATA[i];
@@ -4730,12 +4841,15 @@
 
       if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true, true); neco = true; } catch (e) {} }
       if (st.poloha) {
-        try {
-          map.invalidateSize();
-          map.setView([st.poloha.lat, st.poloha.lng], st.poloha.zoom || 10, { animate: false });
-          if ((st.poloha.zoom || 0) >= 10 && typeof lockDots === 'function') lockDots(false);
-          neco = true;
-        } catch (e) {}
+
+        neco = true;
+        azBudeMapa(function () {
+          try {
+            map.invalidateSize();
+            map.setView([st.poloha.lat, st.poloha.lng], st.poloha.zoom || 10, { animate: false });
+            if ((st.poloha.zoom || 0) >= 10 && typeof lockDots === 'function') lockDots(false);
+          } catch (e) {}
+        });
       }
     } finally {
       adresaDrzi = false;
@@ -5801,9 +5915,11 @@
     if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
     if (ret.kraj) { try { selectKraj(ret.kraj, true, ret.krajVypis !== ret.kraj); } catch (e) {} }
-    map.invalidateSize();
-    map.setView([ret.lat, ret.lng], z, { animate: false });
-    if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
+    azBudeMapa(function () {
+      map.invalidateSize();
+      map.setView([ret.lat, ret.lng], z, { animate: false });
+      if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
+    });
 
     if (typeof ret.y !== 'number' && holderEl) {
       [60, 240, 500].forEach(function (ms) { setTimeout(function () { holderEl.scrollIntoView({ block: 'center' }); }, ms); });
@@ -5815,7 +5931,14 @@
 
   vratPozici(navratZPozemku);
 
-  setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
+  azBudeMapa(function () {
+    setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
+  });
+  bootDobehl = true;
+
+  chciMapu();
+
+  if (map) { try { window.PK_MAPA_HOTOVA = true; } catch (e) {} }
   }
 
   function loadJSON(url) { return fetch(url, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }

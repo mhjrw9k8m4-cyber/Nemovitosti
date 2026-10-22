@@ -808,6 +808,9 @@ jobs:
       - name: Hláška se ohlásí — živá oblast je ve stromu dřív než text
         run: node scripts/test-ohlaseni.mjs
 
+      - name: Výpis nečeká na mapovou knihovnu
+        run: node scripts/test-vypis-bez-mapy.mjs
+
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 

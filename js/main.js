@@ -721,6 +721,20 @@
      kde bylo — žádné přesouvání kódu, jen dvě místa, kde se pustí
      prohlížeč ke slovu. */
   async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
+  /* STAV MAPY STOJÍ NAHOŘE, i když mapový blok je až o čtyři stovky řádků
+     dál. Důvod: přepínač pohledu (seznam / mapa) je mezi tím, a kdo si
+     naposledy nechal zapnutou mapu, otevře stránku v mapovém pohledu —
+     přepínač si tedy o knihovnu řekne DŘÍV, než mapový blok vůbec přijde
+     ke slovu, a musí mít kam ten požadavek zapsat. Kdyby `var mapaFronta`
+     stálo níž, přepsalo by při svém vykonání frontu, do které už se
+     zapsalo, a požadavek by se tiše zahodil.
+     Co to všechno znamená, je sepsané u azBudeMapa() v mapovém bloku. */
+  var mapEl = document.getElementById('leaflet-map');
+  var map = null;
+  var mapaFronta = [];
+  var mapaVzdana = false;
+  var mapaSeTaha = false;
+  var bootDobehl = false;
   /* Odstranění duplicit žije v js/hlidani-logika.js — počítat se musí
      stejně na mapě i v hlídání. Dokud to byly dvě kopie, mapa hlásila
      1 940 pozemků a hlídání 1 953. */
@@ -943,13 +957,28 @@
       // Dvakrát schválně: napoprvé už po 70 ms, ať to není vidět, a znovu po
       // ustálení rozměrů. Jedno srovnání nestačilo — mapa se rozbalovala ještě
       // po něm a republika pak seděla nakřivo, u spodního okraje.
-      if (!seznam && typeof map !== 'undefined' && map) {
-        var srovnej = function () {
-          map.invalidateSize();
-          if (!mapFittedVisible && !selectedKraj) fitAllCZ();
-        };
-        setTimeout(srovnej, 70);
-        setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
+      if (!seznam) {
+        /* TADY SE O KNIHOVNU NEŘÍKÁ, A JE TO ZMĚŘENÉ. Napoprvé tu stálo
+           `chciMapu()` — přepnutí na mapu přece knihovnu potřebuje.
+           Jenže boot() je od začátku do konce JEDNA úloha prohlížeče,
+           takže dřív než doběhne, nemá klepnutí jak dorazit; a na konci
+           boot() se o knihovnu říká vždycky. A kdo otevře stránku
+           rovnou v mapovém pohledu (pamatuje se v sessionStorage),
+           tomu se o ni řekne ještě dřív — v mapovém bloku, protože rám
+           mapy je vidět. Ověřeno odebráním: zkouška
+           scripts/test-vypis-bez-mapy.mjs zůstala 31 z 31, tedy to
+           volání nikdy nic neudělalo. Mrtvá pojistka je horší než
+           žádná: vypadá, že se o něco stará.
+           Co tu zůstat MUSÍ, je srovnání rozměrů — mapa se staví do
+           rámu, který byl do téhle chvíle schovaný. */
+        azBudeMapa(function () {
+          var srovnej = function () {
+            map.invalidateSize();
+            if (!mapFittedVisible && !selectedKraj) fitAllCZ();
+          };
+          setTimeout(srovnej, 70);
+          setTimeout(function () { srovnej(); mapFittedVisible = true; }, 320);
+        });
       }
     }
     /* VOLBA SE PAMATUJE NA DOBU NÁVŠTĚVY. Výchozí pohled platí pro
@@ -978,46 +1007,167 @@
   })();
 
   /* ---------- Interaktivní mapa (Leaflet) ---------- */
-  var mapEl = document.getElementById('leaflet-map');
-  /* Bez mapové knihovny se odsud dál nedá pokračovat — všechno níž na ní
-     stojí. Dřív se tu prostě skončilo: mapa nebyla, seznam pozemků se
-     nevykreslil taky (je ve stejném běhu) a člověk zůstal u prázdné
-     stránky, na které nic nenapovídalo, co se stalo. Mlčení je tu to
-     nejhorší, co se dá udělat.
+  /* VÝPIS NEČEKÁ NA MAPOVOU KNIHOVNU.
+     ==================================================================
+     Tady dřív stálo `if (!mapEl || typeof L === 'undefined') { … return; }`
+     — jediný příkaz, který držel celý zbytek boot() u Leafletu. A držel
+     i výpis: ten je pod ním, ve stejném běhu. Naměřeno (úvodní stránka,
+     390 px): když se knihovna zdrží o tři vteřiny, objeví se první
+     nabídka ve výpisu o přesně ty tři vteřiny později. Výpis na ní
+     neviselo formálně, visel na ní celým svým časem.
 
-     Knihovna se od té doby servíruje z vlastního serveru (dřív z cizího
-     unpkg.com, viz vendor/leaflet/PUVOD.md), takže tenhle případ má
-     nastat jen při rozbitém nasazení. I tak musí být slyšet — a musí
-     zbýt cesta dál: přehled podle okresů je obyčejné HTML a vypíše
-     pozemky i bez jediného skriptu. */
-  if (!mapEl || typeof L === 'undefined') {
-    if (mapEl) {
-      mapEl.innerHTML =
-        '<div class="mapa-nedojela" role="status">' +
-          '<b>Mapu se nepodařilo načíst.</b>' +
-          '<span>Zkuste stránku obnovit. Pozemky si můžete projít i bez mapy —' +
-          ' v přehledu podle krajů a okresů.</span>' +
-          '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
-        '</div>';
-    }
-    var seznamEl = document.getElementById('opp-list');
-    if (seznamEl) {
-      seznamEl.innerHTML = '<li class="map-count">Výpis se načítá z mapy, a ta nedojela.' +
-        ' Zkuste obnovit stránku, nebo použijte <a href="pozemky-podle-okresu.html">přehled podle okresů</a>.</li>';
-    }
-    return;
+     Co to stojí doopravdy (změřeno 22. 10.): spuštění leaflet.js
+     z mezipaměti trvá 30 ms na stolním stroji a 62 ms při procesoru
+     zpomaleném 4×, a na lince tahle knihovna zabírá 144 kB (36,1 kB
+     po brotli) téhož potrubí, kterým se táhne mapa.json a main.js.
+     Na telefonu je přitom mapa v základním pohledu SCHOVANÁ
+     (.map-app.mv-seznam .map-holder{display:none}) — čekalo se tedy na
+     něco, co nikdo nevidí.
+
+     JAK TO TEĎ STOJÍ. `map` je zpočátku null a práce, která knihovnu
+     potřebuje, se zapisuje do fronty přes azBudeMapa(). boot() doběhne
+     celý, výpis se vykreslí, a teprve pak (nebo hned, je-li mapa na
+     obrazovce vidět) se dotáhne knihovna: postavMapu() postaví mapu
+     a frontu vysype V PŮVODNÍM POŘADÍ, takže mapa skončí ve stejném
+     stavu, jako kdyby se všechno vykonalo rovnou.
+
+     PROČ FRONTA A NE DRUHÁ FUNKCE. Mapové příkazy jsou rozházené mezi
+     ř. 1000 a 8400 a pozdější čtou, co založily dřívější (značky se
+     staví z PkTvar). Přesunout je někam dolů znamená přerovnat pořadí
+     a rozbít uzávěry; fronta nechává každý příkaz na jeho místě
+     a zachová i pořadí.
+
+     BEZ KNIHOVNY SE NEMLČÍ. Když se nedotáhne, do rámu mapy přijde
+     hláška (mapaNedojela() níž) — ale výpis zůstane, protože ten už
+     na ní nestojí. Dřív zůstala prázdná stránka, na které nic
+     nenapovídalo, co se stalo. */
+  /* Práce, která potřebuje mapu. Je-li mapa hotová, provede se hned —
+     tím je tahle cesta na stolním počítači a při každém dalším volání
+     naprosto stejná jako dřív. */
+  function azBudeMapa(f) {
+    if (map) { f(); return; }
+    mapaFronta.push(f);
   }
-
-  // Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
-  // zoomSnap 0.25: Leaflet smí přiblížit i „mezi" celé stupně. S celými stupni
-  // se republika do mapy nevešla o kousek, spadla o stupeň níž a plavala pak
-  // uprostřed prázdné plochy — polovina mapy nebyla k ničemu.
-  var map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false,
-    zoomSnap: 0.25, zoomDelta: 1 }).setView([49.82, 15.47], 7);
-  // Úchyt na mapu pro automatické testy a ruční prohlédnutí v konzoli.
-  // Web sám ho nikde nepoužívá — čte se jen zvenčí (poloha teček, přiblížení),
-  // aby se dalo strojově ověřit, že se mapa chová, jak má.
-  try { window.PK_MAPA = map; } catch (e) {}
+  function mapaNedojela() {
+    mapaVzdana = true;
+    mapaFronta.length = 0;
+    if (!mapEl) return;
+    mapEl.innerHTML =
+      '<div class="mapa-nedojela" role="status">' +
+        '<b>Mapu se nepodařilo načíst.</b>' +
+        '<span>Zkuste stránku obnovit. Výpis nabídek pod mapou funguje i tak,' +
+        ' a pozemky si můžete projít v přehledu podle krajů a okresů.</span>' +
+        '<a class="btn-primary" href="pozemky-podle-okresu.html">Pozemky podle okresů</a>' +
+      '</div>';
+  }
+  /* Start oddálený na celou ČR (přesné vyrovnání na data řeší fitAllCZ níže).
+     zoomSnap 0.25: Leaflet smí přiblížit i „mezi" celé stupně. S celými stupni
+     se republika do mapy nevešla o kousek, spadla o stupeň níž a plavala pak
+     uprostřed prázdné plochy — polovina mapy nebyla k ničemu. */
+  function postavMapu() {
+    if (map || mapaVzdana || !mapEl) return;
+    if (typeof L === 'undefined' || !L.map) { mapaNedojela(); return; }
+    map = L.map(mapEl, { scrollWheelZoom: false, zoomControl: false, boxZoom: false,
+      zoomSnap: 0.25, zoomDelta: 1 }).setView([49.82, 15.47], 7);
+    // Úchyt na mapu pro automatické testy a ruční prohlédnutí v konzoli.
+    // Web sám ho nikde nepoužívá — čte se jen zvenčí (poloha teček, přiblížení),
+    // aby se dalo strojově ověřit, že se mapa chová, jak má.
+    try { window.PK_MAPA = map; } catch (e) {}
+    /* Fronta se vysype V POŘADÍ, v jakém se do ní zapisovalo. shift(),
+       ne forEach: úkol smí přidat další úkol (setView() si po postavení
+       mapy říká o srovnání rozměrů) a ten musí doběhnout taky. */
+    while (mapaFronta.length) mapaFronta.shift()();
+    /* DOHÁNÍ SE JEN TO, CO UTEKLO. Když mapa vznikne ještě BĚHEM boot()
+       (knihovna už byla na světě — dnes k tomu nemá jak dojít, protože si
+       ji stahuje tenhle kód sám, ale stačilo by ji vrátit do <script>),
+       je zbytek boot() teprve před sebou a udělá to všechno sám: `map`
+       už stojí, takže azBudeMapa() provádí rovnou. Dohánět v té chvíli
+       znamená sáhnout na mapLocked a lastVis, které ještě nikdo
+       nenastavil — naměřeno sabotáží (značka <script> zpátky v
+       index.html): 0 karet ve výpisu a chyba v konzoli. */
+    if (!bootDobehl) return;
+    /* A DOHNAT TO, CO PŘI VYKRESLOVÁNÍ VÝPISU PADLO DO PRÁZDNA.
+       Fronta na to nestačí: tyhle čtyři věci nevolá příkaz v boot(), ale
+       renderList() (přímo nebo přes syncMarkers()) — a ten běžel dřív,
+       než mapa byla. Každá z nich se dala zavolat znovu bez škody:
+       setPan() jen přepíná, updateMapView() kreslí ze stavu,
+       vykresliOkruhNaMape() má podpis (a ten se při prázdném běhu
+       NEULOŽÍ, takže teď projde) a vykresliMistoNaMape() značku nejdřív
+       odebere.
+       Zjistilo se to měřením: `map` dostal sledovač, který hlásil každé
+       sáhnutí, a tahle čtyři místa zbyla jako ta, kam se ve chvíli
+       vykreslování výpisu sáhne, aniž by o tom fronta věděla. */
+    setPan(!mapLocked);
+    updateMapView();
+    vykresliOkruhNaMape();
+    vykresliMistoNaMape();
+    try { window.PK_MAPA_HOTOVA = true; } catch (e) {}
+  }
+  /* DOTAŽENÍ KNIHOVNY. Adresa stojí v <meta name="pk-leaflet" data-src>,
+     ne tady, aby jí scripts/orazitkuj-verze.mjs dalo razítko ?v= jako
+     každému jinému odkazu; bez razítka by se po výměně knihovny
+     vracejícím návštěvníkům servírovala stará.
+     STYL JDE PŘED KNIHOVNOU a čeká se na něj: Leaflet si po startu měří
+     rozměry dlaždic, a kdyby styl dorazil až po něm, byly by chvíli
+     posunuté. Totéž už dělá js/pozemek.js — tohle je tentýž postup, ne
+     druhý. Chyba stahování běh nezastaví: o tom, co se stane bez
+     knihovny, rozhoduje mapaNedojela(). */
+  function chciMapu() {
+    if (map || mapaVzdana || mapaSeTaha) return;
+    if (typeof L !== 'undefined' && L.map) { postavMapu(); return; }
+    mapaSeTaha = true;
+    var zn = document.querySelector('meta[name="pk-leaflet"]');
+    var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
+    var hotovo = function () {
+      if (typeof L !== 'undefined' && L.map) postavMapu();
+      else mapaNedojela();
+    };
+    var knihovna = function () {
+      var sc = document.createElement('script');
+      sc.src = adresa;
+      sc.onload = hotovo;
+      sc.onerror = function () { mapaNedojela(); };
+      document.head.appendChild(sc);
+    };
+    var styl = document.querySelector('meta[name="pk-leaflet-css"]');
+    var adresaStylu = styl && styl.getAttribute('data-src');
+    if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+      knihovna();
+      return;
+    }
+    var lk = document.createElement('link');
+    lk.rel = 'stylesheet';
+    lk.href = adresaStylu;
+    lk.onload = knihovna;
+    lk.onerror = knihovna;
+    /* PŘED NAŠE STYLY, NE NA KONEC HLAVIČKY — jinak se obrátí kaskáda.
+       V index.html stál <link> na leaflet.css PŘED css/uvod.min.css, takže
+       naše pravidla přebíjela Leaflet. Když se tenhle <link> přidal na
+       konec hlavičky, vyhrál Leaflet: jeho `display:block`
+       na .leaflet-marker-icon porazilo naše
+       `.pk-shluk-obal{display:flex; align-items:center;…}` a číslo
+       v odznaku shluku přestalo být vystředěné — sedlo si do levého
+       horního kouta své 44px plochy, tedy o 8 px vedle.
+       Naměřeno 22. 10.: vnitřní prvek 28×28 na souřadnicích obalu 44×44,
+       a odznak se tím na mapě posunul o 8 px (v zeměpisu ~3 km) — dost na
+       to, aby odznak z Karlovarského kraje vyšel za hranicí. Chytil to
+       scripts/test-mapa.mjs, oddíl 1a. Na obrazovce by si toho nikdo
+       nevšiml: číslo v kolečku vypadá vystředěně, i když není. */
+    var prvniStyl = document.head.querySelector('link[rel="stylesheet"], style');
+    if (prvniStyl) document.head.insertBefore(lk, prvniStyl);
+    else document.head.appendChild(lk);
+  }
+  try { window.PK_CHCI_MAPU = chciMapu; } catch (e) {}
+  /* JE MAPA VIDĚT? Pak se o knihovnu řekne HNED, ne až na konci boot().
+     Na monitoru je mapa polovina první obrazovky a čekat s ní na dokončení
+     výpisu by byla výměna jedné vady za druhou. Na telefonu je v základním
+     pohledu schovaná (display:none), takže offsetParent vyjde null a
+     knihovna se dotáhne teprve, až je výpis hotový — nebo až si člověk
+     mapu přepne.
+     Je to JEDNO čtení rozměru (tedy jedno vynucené rozvržení) na celý
+     běh; měřeno v oddílu 48 docs/optimalizace.md, kde se řešilo, kolik
+     jich tu je. */
+  if (mapEl && mapEl.offsetParent !== null && mapEl.offsetHeight > 0) chciMapu();
 
   /* MAPA DOSTANE PŘI TAŽENÍ CELOU PLOCHU.
    *
@@ -1053,10 +1203,12 @@
       if (casovac) clearTimeout(casovac);
       casovac = setTimeout(zpet, 2000);
     }
-    map.on('movestart', tahne);
-    map.on('zoomstart', tahne);
-    map.on('moveend', zpet);
-    map.on('zoomend', zpet);
+    azBudeMapa(function () {
+      map.on('movestart', tahne);
+      map.on('zoomstart', tahne);
+      map.on('moveend', zpet);
+      map.on('zoomend', zpet);
+    });
     /* Klávesnice a dotyk mimo mapu musí ovládání vrátit okamžitě. */
     document.addEventListener('focusin', zpet, true);
     document.addEventListener('pointerdown', function (e) {
@@ -1066,10 +1218,13 @@
   // Tečky kreslíme přes CANVAS (jeden obraz místo tisíce HTML značek) → plynulé i s ~1000 pozemky na mobilu.
   // Vrstva teček je vizuálně nad kraji, ale klikání propouští dolů (pointer-events:none),
   // takže se dá vždy vybrat kraj pod ní. Klik na tečku řešíme ručně (map click + nejbližší bod).
+  var dotsRenderer = null;
+  azBudeMapa(function () {
   map.createPane('dotsPane');
   map.getPane('dotsPane').style.zIndex = 450; // nad overlayPane (kraje) = 400, pod popupy
   map.getPane('dotsPane').style.pointerEvents = 'none'; // canvas nechytá kliky → projdou na kraje
-  var dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
+  dotsRenderer = L.canvas({ pane: 'dotsPane', padding: 0.5 });
+  });
 
   // ---------------------------------------------------------------
   // TVARY NA MAPĚ
@@ -1111,7 +1266,9 @@
     }
     ctx.closePath();
   }
-  if (typeof L !== 'undefined' && L.Canvas) {
+  var PkTvar = null;
+  azBudeMapa(function () {
+  if (L.Canvas) {
     L.Canvas.include({
       _updatePkTvar: function (layer) {
         if (!this._drawing || layer._empty()) return;
@@ -1123,17 +1280,20 @@
       }
     });
   }
-  var PkTvar = (typeof L !== 'undefined' && L.CircleMarker) ? L.CircleMarker.extend({
+  PkTvar = L.CircleMarker ? L.CircleMarker.extend({
     _updatePath: function () {
       // Když by starší Leaflet naši metodu neznal, spadne to zpátky na kolečko.
       if (this._renderer._updatePkTvar) this._renderer._updatePkTvar(this);
       else this._renderer._updateCircle(this);
     }
   }) : null;
-  if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
+  });
   // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
   // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
-  L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+  azBudeMapa(function () {
+    if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
+    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+  });
   // Podklad: OpenStreetMap (zdarma, bez API klíče). CARTO začal vyžadovat klíč
   // (dlaždice ukazovaly „API KEY REQUIRED"). Jemný filtr (viz .pk-basemap v CSS)
   // udrží čistý světlý vzhled; barevné tečky pozemků jsou v jiné vrstvě, filtr je nezmění.
@@ -1161,6 +1321,9 @@
   var podkladVrstva = null;
   function nastavPodklad(id, ulozit) {
     var def = podkladDef(id);
+    /* Dlaždice potřebují mapu; přepínač nad mapou ne (je to obyčejný
+       DOM a localStorage), takže ten se nastaví hned a vrstva do fronty. */
+    azBudeMapa(function () {
     if (podkladVrstva) map.removeLayer(podkladVrstva);
     /* Filtr .pk-basemap stahuje barevnost ZÁKLADNÍ mapy do palety webu.
        Na leteckém snímku nemá co dělat: ten filtr by z fotografie udělal
@@ -1186,6 +1349,7 @@
       className: def.id === 'zakladni' ? 'pk-basemap' : 'pk-basemap-foto'
     }).addTo(map);
     podkladVrstva.bringToBack();
+    });
     var ovl = document.getElementById('map-podklad');
     if (ovl) {
       [].forEach.call(ovl.querySelectorAll('button'), function (b) {
@@ -1225,13 +1389,18 @@
     // touchZoom (pinch dvěma prsty) NECHÁVÁME zapnutý pořád — aby dva prsty
     // přiblížily MAPU, ne celou stránku (na iOS jinak pinch zoomuje celý web).
     var fns = ['dragging', 'scrollWheelZoom', 'doubleClickZoom', 'keyboard'];
-    fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
-    if (map.touchZoom) map.touchZoom.enable();
+    /* Bez mapy se nastaví jen touch-action a tlačítko. Zámek si postavMapu()
+       dožene sám (setPan(!mapLocked) po vysypání fronty) — do fronty to
+       nepatří: setPan() se volá i z obsluh a fronta by se jimi plnila. */
+    if (map) {
+      fns.forEach(function (f) { if (map[f]) map[f][on ? 'enable' : 'disable'](); });
+      if (map.touchZoom) map.touchZoom.enable();
+    }
     // touch-action: zamčeno → stránka jde svisle scrollovat prstem, ale pinch
     //   chytne mapa (prohlížeč nezoomuje web); puštěno → mapou jde volně hýbat.
     mapEl.style.touchAction = on ? 'none' : 'pan-y';
     if (lockBtn) lockBtn.hidden = !on; // tlačítko „Zamknout mapu" jen když je odemčeno
-    if (on) setTimeout(function () { map.invalidateSize(); }, 60);
+    if (on) setTimeout(function () { if (map) map.invalidateSize(); }, 60);
   }
   setPan(false);
   /* PRVNÍ DOTEK MAPU JEN PROBUDÍ. Mapa se načítá zamčená schválně: přes
@@ -1262,7 +1431,7 @@
   // Tlačítko „Celá ČR" — vrátí pohled nad celou mapu a zruší výběr kraje (místo +/− ovládání zoomu).
   var resetBtn = document.getElementById('map-reset');
   if (resetBtn) resetBtn.addEventListener('click', function () { clearKraj(); });
-  window.addEventListener('resize', function () { map.invalidateSize(); });
+  window.addEventListener('resize', function () { if (map) map.invalidateSize(); });
 
   var listEl = document.getElementById('opp-list');
   var countEl = document.getElementById('map-count');
@@ -2329,7 +2498,8 @@
   }
 
   // Tečkovaná mapa pozemků + obrysy krajů pro orientaci
-  var dotLayer = L.layerGroup();
+  var dotLayer = null;
+  azBudeMapa(function () { dotLayer = L.layerGroup(); });
   var krajLayer = null;
   var lastVis = [], krajCounts = {};
 
@@ -2401,13 +2571,21 @@
     return krajOf(d); // záloha pro body mimo polygon (nepřesné geokódování)
   }
 
+  /* ČÍSLO A KRAJ HNED, ZNAČKA DO FRONTY. `_id` a `_gkraj` potřebuje
+     VÝPIS (syncMarkers() podle _id sahá do DATA, filtr podle kraje čte
+     _gkraj), takže ten průchod musí proběhnout rovnou. Značek je skoro
+     dva tisíce a jsou k ničemu, dokud mapa nestojí — ty čekají. */
   DATA.forEach(function (d, i) {
     d._id = i;
     d._gkraj = krajGeoOf(d); // kraj podle geometrie = kde bod na mapě leží
-    var st = dotStyle(d); st.interactive = false; // klik řešíme ručně (canvas nechytá události)
-    var m = PkTvar ? new PkTvar([d.lat, d.lng], st) : L.circleMarker([d.lat, d.lng], st);
-    m._d = d;
-    markers.push(m);
+  });
+  azBudeMapa(function () {
+    DATA.forEach(function (d) {
+      var st = dotStyle(d); st.interactive = false; // klik řešíme ručně (canvas nechytá události)
+      var m = PkTvar ? new PkTvar([d.lat, d.lng], st) : L.circleMarker([d.lat, d.lng], st);
+      m._d = d;
+      markers.push(m);
+    });
   });
 
   /* Tečka pod kurzorem trochu naroste. Není to ozdoba: tečky se na mapě
@@ -2439,34 +2617,37 @@
     });
     podKurzorem = d;
   }
-  if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
-    map.on('mousemove', function (e) {
-      if (dotsLocked || (!lastSingles.length && !lastShluky.length)) { zvyrazniTecku(null); return; }
-      var cp = e.containerPoint, best = null, bestDist = Infinity;
-      for (var i = 0; i < lastSingles.length; i++) {
-        var d = lastSingles[i];
-        if (selectedKraj && d._gkraj !== selectedKraj) continue;
-        var p = map.latLngToContainerPoint([d.lat, d.lng]);
-        var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
-        if (dist < bestDist) { bestDist = dist; best = d; }
-      }
-      // Užší tolerance než u kliknutí: myš míří přesně, a kdyby se zvýrazňovalo
-      // i zdaleka, poskakovalo by to po mapě samo od sebe.
-      var tol = Math.max(14, DOT_R + 8);
-      if (best && bestDist <= tol * tol) { zvyrazniTecku(best); return; }
-      zvyrazniTecku(null);
-      /* NAD HROMÁDKOU SE NEZVÝRAZŇUJE JEDNA TEČKA. Slíbit konkrétní
-         pozemek by byla lež: klepnutí pustí do hromádky, neotevře ho.
-         Ukazovátko se ale změnit MUSÍ — něco se stane, a mlčení je na
-         dotyku i u myši to nejhorší. Dřív se tu nedělalo vůbec nic
-         a zkouška to chytila: „najel jsem na 40 teček a žádná
-         nereagovala" (teček ve shlucích je v kraji skoro každá).
-         Tolerance je TÁŽ jako u samotné tečky — pod kurzorem je tečka,
-         ne hromádka. */
-      if (nejblizsiClen(cp, tol)) mapEl.style.cursor = 'pointer';
-    });
-    map.on('mouseout', function () { zvyrazniTecku(null); });
-  }
+  /* Myš na mapě: obsluhy se navěsí, až mapa stojí. */
+  azBudeMapa(function () {
+    if (!(typeof matchMedia === 'function' && matchMedia('(hover: none)').matches)) {
+      map.on('mousemove', function (e) {
+        if (dotsLocked || (!lastSingles.length && !lastShluky.length)) { zvyrazniTecku(null); return; }
+        var cp = e.containerPoint, best = null, bestDist = Infinity;
+        for (var i = 0; i < lastSingles.length; i++) {
+          var d = lastSingles[i];
+          if (selectedKraj && d._gkraj !== selectedKraj) continue;
+          var p = map.latLngToContainerPoint([d.lat, d.lng]);
+          var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+          if (dist < bestDist) { bestDist = dist; best = d; }
+        }
+        // Užší tolerance než u kliknutí: myš míří přesně, a kdyby se zvýrazňovalo
+        // i zdaleka, poskakovalo by to po mapě samo od sebe.
+        var tol = Math.max(14, DOT_R + 8);
+        if (best && bestDist <= tol * tol) { zvyrazniTecku(best); return; }
+        zvyrazniTecku(null);
+        /* NAD HROMÁDKOU SE NEZVÝRAZŇUJE JEDNA TEČKA. Slíbit konkrétní
+           pozemek by byla lež: klepnutí pustí do hromádky, neotevře ho.
+           Ukazovátko se ale změnit MUSÍ — něco se stane, a mlčení je na
+           dotyku i u myši to nejhorší. Dřív se tu nedělalo vůbec nic
+           a zkouška to chytila: „najel jsem na 40 teček a žádná
+           nereagovala" (teček ve shlucích je v kraji skoro každá).
+           Tolerance je TÁŽ jako u samotné tečky — pod kurzorem je tečka,
+           ne hromádka. */
+        if (nejblizsiClen(cp, tol)) mapEl.style.cursor = 'pointer';
+      });
+      map.on('mouseout', function () { zvyrazniTecku(null); });
+    }
+  });
 
   /* Nejbližší tečka, která patří do hromádky — do dané tolerance.
      Hledá se TEČKA, ne střed hromádky: měřit ke středu znamená sáhnout
@@ -2487,74 +2668,77 @@
   // Interaktivní jsou JEN tečky ve vybraném kraji. Klik do jiného kraje ten kraj jen
   // vybere (předchozí se zamkne) — teprve další klik na tečku v něm otevře detail.
   var krajJustSelected = false; // klik, který právě přepnul kraj, neotevírá detail
-  map.on('click', function (e) {
-    // Výběr vlastního místa má přednost před vším ostatním: dokud je zapnutý,
-    // klepnutí do mapy neotevírá pozemek ani nevybírá kraj.
-    if (vybiramMisto) {
-      vybiramMisto = false;
-      document.body.classList.remove('vybiram-misto');
-      // Stejná cesta jako u GPS: seznam se přepne na okolí, ne jen mapa.
-      enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
-      return;
-    }
-    if (probudMapu()) return;
-    if (krajJustSelected) { krajJustSelected = false; return; }
-    // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
-    /* Hledá se jen mezi SAMOTNÝMI tečkami. Kdyby se hledalo mezi všemi,
-       klepnutí vedle shluku by otevřelo pozemek, který je v něm schovaný —
-       tedy jeden z dvaceti, vybraný náhodou podle vzdálenosti od prstu.
-       Do shluku se vchází klepnutím na něj. */
-    if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
-    var cp = e.containerPoint, best = null, bestDist = Infinity;
-    for (var i = 0; i < lastSingles.length; i++) {
-      var d = lastSingles[i];
-      // Když je vybraný kraj, bereme jen jeho tečky; bez kraje (přiblíženo) bereme kteroukoli viditelnou.
-      if (selectedKraj && d._gkraj !== selectedKraj) continue;
-      var p = map.latLngToContainerPoint([d.lat, d.lng]);
-      var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
-      if (dist < bestDist) { bestDist = dist; best = d; }
-    }
-    // Prstem se přesně netrefíte na tečku — tolerance roste s velikostí tečky
-    // (a tím i s přiblížením), aby se pozemek dal spolehlivě rozkliknout.
-    var tol = Math.max(30, DOT_R + 26);
-    if (best && bestDist <= tol * tol) { gotoInzerat(best); return; }
+  /* Klik do mapy: obsluha se navěsí, až mapa stojí. */
+  azBudeMapa(function () {
+    map.on('click', function (e) {
+      // Výběr vlastního místa má přednost před vším ostatním: dokud je zapnutý,
+      // klepnutí do mapy neotevírá pozemek ani nevybírá kraj.
+      if (vybiramMisto) {
+        vybiramMisto = false;
+        document.body.classList.remove('vybiram-misto');
+        // Stejná cesta jako u GPS: seznam se přepne na okolí, ne jen mapa.
+        enterNearAt({ lat: e.latlng.lat, lng: e.latlng.lng }, false, null, 'seznam');
+        return;
+      }
+      if (probudMapu()) return;
+      if (krajJustSelected) { krajJustSelected = false; return; }
+      // Tečky jsou klikací, když nejsou zamčené (po výběru kraje NEBO po přiblížení mapy).
+      /* Hledá se jen mezi SAMOTNÝMI tečkami. Kdyby se hledalo mezi všemi,
+         klepnutí vedle shluku by otevřelo pozemek, který je v něm schovaný —
+         tedy jeden z dvaceti, vybraný náhodou podle vzdálenosti od prstu.
+         Do shluku se vchází klepnutím na něj. */
+      if (dotsLocked || (!lastSingles.length && !lastShluky.length)) return;
+      var cp = e.containerPoint, best = null, bestDist = Infinity;
+      for (var i = 0; i < lastSingles.length; i++) {
+        var d = lastSingles[i];
+        // Když je vybraný kraj, bereme jen jeho tečky; bez kraje (přiblíženo) bereme kteroukoli viditelnou.
+        if (selectedKraj && d._gkraj !== selectedKraj) continue;
+        var p = map.latLngToContainerPoint([d.lat, d.lng]);
+        var dx = p.x - cp.x, dy = p.y - cp.y, dist = dx * dx + dy * dy;
+        if (dist < bestDist) { bestDist = dist; best = d; }
+      }
+      // Prstem se přesně netrefíte na tečku — tolerance roste s velikostí tečky
+      // (a tím i s přiblížením), aby se pozemek dal spolehlivě rozkliknout.
+      var tol = Math.max(30, DOT_R + 26);
+      if (best && bestDist <= tol * tol) { gotoInzerat(best); return; }
 
-    // Netrefené klepnutí dřív neudělalo VŮBEC NIC — a to je na dotyku to
-    // nejhorší: člověk klepne, nic se nestane, a neví, jestli je web
-    // rozbitý nebo se netrefil. Když je poblíž nějaký pozemek, klepnutí
-    // proto mapu přiblíží k němu; tečky se tím zvětší a další pokus už
-    // sedne. Když poblíž není nic, mapa se nehne (přiblížit se do prázdna
-    // by bylo horší než nic).
-    /* A KDYŽ JE POD PRSTEM NAHLOUČENÁ TEČKA, PLATÍ TO SAMÉ. Hledalo se
-       jen mezi samotnými tečkami, takže tam, kde shlukování zabralo,
-       klepnutí neudělalo VŮBEC NIC: tečka je vidět, prst na ni klepne,
-       a nic. Naměřeno po přechodu na okruh: v Jihočeském kraji je ve
-       shlucích 114 teček ze 118, tedy skoro každá — a dvě zkoušky to
-       zachytily („trefa do tečky otevře stránku pozemku", „netrefené
-       klepnutí mapu přiblížilo").
-       Klepnutí na nahloučenou tečku proto dělá totéž, co klepnutí na její
-       odznak: pustí dovnitř. Tím se jen uznává, co člověk viděl. */
-    var clen = nejblizsiClen(cp, tol);
-    if (clen) { otevriShluk(clen.s); return; }
+      // Netrefené klepnutí dřív neudělalo VŮBEC NIC — a to je na dotyku to
+      // nejhorší: člověk klepne, nic se nestane, a neví, jestli je web
+      // rozbitý nebo se netrefil. Když je poblíž nějaký pozemek, klepnutí
+      // proto mapu přiblíží k němu; tečky se tím zvětší a další pokus už
+      // sedne. Když poblíž není nic, mapa se nehne (přiblížit se do prázdna
+      // by bylo horší než nic).
+      /* A KDYŽ JE POD PRSTEM NAHLOUČENÁ TEČKA, PLATÍ TO SAMÉ. Hledalo se
+         jen mezi samotnými tečkami, takže tam, kde shlukování zabralo,
+         klepnutí neudělalo VŮBEC NIC: tečka je vidět, prst na ni klepne,
+         a nic. Naměřeno po přechodu na okruh: v Jihočeském kraji je ve
+         shlucích 114 teček ze 118, tedy skoro každá — a dvě zkoušky to
+         zachytily („trefa do tečky otevře stránku pozemku", „netrefené
+         klepnutí mapu přiblížilo").
+         Klepnutí na nahloučenou tečku proto dělá totéž, co klepnutí na její
+         odznak: pustí dovnitř. Tím se jen uznává, co člověk viděl. */
+      var clen = nejblizsiClen(cp, tol);
+      if (clen) { otevriShluk(clen.s); return; }
 
-    /* PŘIBLÍŽIT SE MÁ K NEJBLIŽŠÍ TEČCE, ať je samotná, nebo ve shluku.
-       Hledalo se jen mezi samotnými — a v kraji, kde se shluklo všechno,
-       tedy nebylo k čemu: klepnutí vedle tečky neudělalo nic. Naměřeno
-       v malém kraji: 29 nabídek, 5 odznaků, 0 samotných teček. */
-    var cil = best, cilDist = bestDist;
-    for (var ci2 = 0; ci2 < lastCleny.length; ci2++) {
-      var c2 = lastCleny[ci2];
-      if (selectedKraj && c2.d._gkraj !== selectedKraj) continue;
-      var pc = map.latLngToContainerPoint([c2.d.lat, c2.d.lng]);
-      var cdx = pc.x - cp.x, cdy = pc.y - cp.y, cd = cdx * cdx + cdy * cdy;
-      if (cd < cilDist) { cilDist = cd; cil = c2.d; }
-    }
-    if (!cil) return;
-    var okoli = Math.max(90, tol * 2.4);
-    if (cilDist > okoli * okoli) return;
-    var z = map.getZoom();
-    if (z >= 15) return;                       // dál už nemá smysl přibližovat
-    map.setView([cil.lat, cil.lng], Math.min(15, z + 2), { animate: true });
+      /* PŘIBLÍŽIT SE MÁ K NEJBLIŽŠÍ TEČCE, ať je samotná, nebo ve shluku.
+         Hledalo se jen mezi samotnými — a v kraji, kde se shluklo všechno,
+         tedy nebylo k čemu: klepnutí vedle tečky neudělalo nic. Naměřeno
+         v malém kraji: 29 nabídek, 5 odznaků, 0 samotných teček. */
+      var cil = best, cilDist = bestDist;
+      for (var ci2 = 0; ci2 < lastCleny.length; ci2++) {
+        var c2 = lastCleny[ci2];
+        if (selectedKraj && c2.d._gkraj !== selectedKraj) continue;
+        var pc = map.latLngToContainerPoint([c2.d.lat, c2.d.lng]);
+        var cdx = pc.x - cp.x, cdy = pc.y - cp.y, cd = cdx * cdx + cdy * cdy;
+        if (cd < cilDist) { cilDist = cd; cil = c2.d; }
+      }
+      if (!cil) return;
+      var okoli = Math.max(90, tol * 2.4);
+      if (cilDist > okoli * okoli) return;
+      var z = map.getZoom();
+      if (z >= 15) return;                       // dál už nemá smysl přibližovat
+      map.setView([cil.lat, cil.lng], Math.min(15, z + 2), { animate: true });
+    });
   });
 
   // Tečkovaná mapa: každý pozemek = tečka. Navíc obrysy krajů pro orientaci.
@@ -2631,9 +2815,13 @@
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
-  var maska = postavMasku();
-  if (maska) maska.addTo(map);
+  var maska = null;
+  azBudeMapa(function () {
+    maska = postavMasku();
+    if (maska) maska.addTo(map);
+  });
 
+  azBudeMapa(function () {
   if (KRAJE_GEOM) {
     var feats = Object.keys(KRAJE_GEOM).map(function (k) { return { type: 'Feature', properties: { kraj: k }, geometry: KRAJE_GEOM[k] }; });
     krajLayer = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
@@ -2663,6 +2851,7 @@
       }
     });
   }
+  });
   // České skloňování: 1 pozemek · 2–4 pozemky · 5+ pozemků
   function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
   /** Název místa jde do innerHTML — projede se přes tohle, ať se do stránky
@@ -2744,7 +2933,8 @@
      těsně u sebe stačí dvě. */
   var SHLUK_TESNY = 16;      // co je blíž než tohle, to se prstem nerozliší
   var SHLUK_TESNY_MIN = 2;
-  var shlukLayer = L.layerGroup();
+  var shlukLayer = null;
+  azBudeMapa(function () { shlukLayer = L.layerGroup(); });
   var lastSingles = [];      // tečky, které NEJSOU ve shluku — jen ty se dají trefit
   var lastShluky = [];       // a hromádky, do kterých se vchází klepnutím
   /* Tečka → hromádka, do které patří. Hledá se pak nejbližší TEČKA (ne
@@ -3042,6 +3232,17 @@
        datech, po zafiltrování na jeden okres by všechny tečky vyšly
        stejně — a barva by přestala nést informaci právě tam, kde se
        člověk dívá nejpozorněji. */
+    /* DOKUD NESTOJÍ MAPA, NENÍ KAM KRESLIT — a není to chyba: výpis se
+       vykresluje dřív než ona (viz azBudeMapa() výš). Pojistka sedí
+       tady, a ne u volajících, protože volající jsou tři a každý jiný:
+       updateMapView(), obsluha zoomend a lockDots(). Ten poslední je
+       důvod, proč tu pojistka JE: lockDots() se dostane ke slovu už
+       při načtení z openFromUrl(), tedy u každého, kdo přijde
+       s odkazem `?q=` nebo `?druh=` — a tam ještě dotLayer neexistuje.
+       Naměřeno 22. 10.: „Cannot read properties of null (reading
+       'clearLayers')" a na mapě pak chyběly i okruh a hlídané místo.
+       Překreslí se to samo: postavMapu() zavolá updateMapView(). */
+    if (!dotLayer) return;
     prepocitejStupnici(vis);
     if (rezimBarvy === 'cena') resizeDots();
     dotLayer.clearLayers();
@@ -3463,13 +3664,22 @@
         vrstvyPanel.textContent = 'Vrstvy úřadů teď neodpovídají. Mapa i tak funguje.';
       });
     }
-    map.on('zoomend', vrstvyViditelnost);
-    vrstvyViditelnost();
+    /* Vrstvy úřadů se překreslují podle přiblížení, takže potřebují mapu;
+       panel a tlačítko jsou obyčejný DOM a stojí hned. */
+    azBudeMapa(function () {
+      map.on('zoomend', vrstvyViditelnost);
+      vrstvyViditelnost();
+    });
   }
 
   // Vždy: tečky pozemků + obrysy krajů přes ně
   function updateMapView() {
     if (mapaCeka) { clearTimeout(mapaCeka); mapaCeka = 0; }
+    /* Dokud nestojí mapa, není co kreslit — a není to chyba: výpis se
+       vykresluje dřív než ona. postavMapu() tohle zavolá, až bude.
+       Vrstvy (dotLayer, shlukLayer) se zakládají ve frontě, takže
+       podmínka na `map` mluví i o nich. */
+    if (!map) return;
     if (krajLayer && !map.hasLayer(krajLayer)) krajLayer.addTo(map);
     renderDots(lastVis);
     if (!map.hasLayer(dotLayer)) dotLayer.addTo(map);
@@ -3510,9 +3720,13 @@
 
   // Oddálí mapu tak, aby byla vidět celá rozloha nabídek (celá ČR).
   // Přizpůsobí se velikosti displeje – na mobilu i na počítači.
-  var czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
-  function fitAllCZ() { if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [12, 12], maxZoom: 9 }); }
-  fitAllCZ();
+  var czBounds = null;
+  function fitAllCZ() {
+    if (!map) return;
+    if (!czBounds) czBounds = L.latLngBounds(DATA.map(function (d) { return [d.lat, d.lng]; }));
+    if (czBounds.isValid()) map.fitBounds(czBounds, { padding: [12, 12], maxZoom: 9 });
+  }
+  azBudeMapa(fitAllCZ);
 
   /* ---------- Výběr kraje: nejdřív kraj, teprve pak klikací tečky ----------
      Dokud si člověk nevybere kraj, jsou tečky (pozemky) zamčené a klepnutí
@@ -4729,10 +4943,12 @@
 
   // Po přiblížení mapy zpřístupníme tečky přímo (netřeba nejdřív vybírat kraj).
   // Na přehledu (oddálené) zůstává výběr kraje — tam se tečky překrývají.
+  azBudeMapa(function () {
   map.on('zoomend', function () {
     if (nearMode) return;
     if (map.getZoom() >= 10) { if (dotsLocked) lockDots(false); }
     else if (!selectedKraj) { if (!dotsLocked) lockDots(true); }
+  });
   });
 
   // Body ROSTOU s přiblížením (jsou to canvas kroužky s pevnou velikostí v px, takže
@@ -4771,8 +4987,10 @@
      každém zoomu musí přepočítat. Při POSUNU ne: počítá se ve světových
      pixelech, takže tažení mapy na výsledku nic nemění — a překreslovat
      tisíce značek při každém tažení by mapu zaseklo. */
-  map.on('zoomend', function () { resizeDots(); prekresliRadar(); renderDots(lastVis); });
-  resizeDots();
+  azBudeMapa(function () {
+    map.on('zoomend', function () { resizeDots(); prekresliRadar(); renderDots(lastVis); });
+    resizeDots();
+  });
 
   /* RADAR u dražeb, které končí do sedmi dní.
      Tečky se kreslí do plátna, kde se animovat nedají — musel by se
@@ -4781,10 +4999,16 @@
      je 14 z necelých dvou tisíc), takže to nic nestojí.
      Ukazuje se jen to, co je zrovna ve výpisu — jinak by radar upozorňoval
      na dražby, které si člověk odfiltroval. */
-  var radarVrstva = L.layerGroup().addTo(map);
-  var radarIkona = L.divIcon({ className: 'pk-radar', html: '<span></span><span></span>',
-    iconSize: [26, 26], iconAnchor: [13, 13] });
+  var radarVrstva = null;
+  var radarIkona = null;
+  azBudeMapa(function () {
+    radarVrstva = L.layerGroup().addTo(map);
+    radarIkona = L.divIcon({ className: 'pk-radar', html: '<span></span><span></span>',
+      iconSize: [26, 26], iconAnchor: [13, 13] });
+    prekresliRadar();
+  });
   function prekresliRadar() {
+    if (!radarVrstva) return;   // dokud nestojí mapa, není kam puls kreslit
     radarVrstva.clearLayers();
     for (var i = 0; i < DATA.length; i++) {
       var d = DATA[i];
@@ -7374,12 +7598,18 @@
          (rozbalovátko nad mapou), takže příjemce uvidí totéž co odesílatel. */
       if (st.selectedKraj) { try { selectKraj(st.selectedKraj, true, true); neco = true; } catch (e) {} }
       if (st.poloha) {
-        try {
-          map.invalidateSize();
-          map.setView([st.poloha.lat, st.poloha.lng], st.poloha.zoom || 10, { animate: false });
-          if ((st.poloha.zoom || 0) >= 10 && typeof lockDots === 'function') lockDots(false);
-          neco = true;
-        } catch (e) {}
+        /* Výřez se dosadí, až mapa stojí — ale `neco` se nastaví hned:
+           ta návratová hodnota rozhoduje, jestli se má výpis překreslit
+           a jestli se pak vyrovnávat na celou ČR, a to platí bez ohledu
+           na to, kdy dojede knihovna. */
+        neco = true;
+        azBudeMapa(function () {
+          try {
+            map.invalidateSize();
+            map.setView([st.poloha.lat, st.poloha.lng], st.poloha.zoom || 10, { animate: false });
+            if ((st.poloha.zoom || 0) >= 10 && typeof lockDots === 'function') lockDots(false);
+          } catch (e) {}
+        });
       }
     } finally {
       adresaDrzi = false;
@@ -8736,9 +8966,11 @@
     if (!ret || typeof ret.lat !== 'number') return false;
     var z = ret.z || 12;
     if (ret.kraj) { try { selectKraj(ret.kraj, true, ret.krajVypis !== ret.kraj); } catch (e) {} }
-    map.invalidateSize();
-    map.setView([ret.lat, ret.lng], z, { animate: false });
-    if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
+    azBudeMapa(function () {
+      map.invalidateSize();
+      map.setView([ret.lat, ret.lng], z, { animate: false });
+      if (z >= 10) { try { if (dotsLocked) lockDots(false); } catch (e) {} }
+    });
     /* Mapu máme; pozici ve stránce vrací vratPozici() za všech okolností
        (i když výřez obnovila adresa), tak se tu o ni nestaráme.
        Když záznam pozici nenese (starší podoba), aspoň ukážeme mapu. */
@@ -8762,7 +8994,20 @@
   vratPozici(navratZPozemku);
   // Po dopočítání rozměrů mapy znovu vyrovnáme na celou ČR (pokud nejde o
   // sdílený odkaz na konkrétní parcelu, který si drží vlastní přiblížení).
-  setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
+  azBudeMapa(function () {
+    setTimeout(function () { map.invalidateSize(); if (!deepLinked) fitAllCZ(); }, 300);
+  });
+  bootDobehl = true;
+  /* A TEPRVE TEĎ MAPOVÁ KNIHOVNA — výpis je vykreslený a data dole.
+     Když je mapa vidět, řeklo se o ni už v mapovém bloku a tohle je
+     prázdné volání (chciMapu() si to pamatuje). */
+  chciMapu();
+  /* Příznak pro zkoušky. Stojí tady, a ne jen v postavMapu(), kvůli
+     případu, kdy mapa vznikla JEŠTĚ BĚHEM boot(): tam se dohánění
+     přeskakuje (zbytek boot() to udělá sám), takže hotová je teprve
+     teď. Kdyby se nastavoval dřív, zkouška by se na mapu podívala
+     uprostřed stavby. */
+  if (map) { try { window.PK_MAPA_HOTOVA = true; } catch (e) {} }
   }
 
   /* ---------- Načtení reálných dat s bezpečnou zálohou ---------- */

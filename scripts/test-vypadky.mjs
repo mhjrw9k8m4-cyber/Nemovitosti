@@ -176,7 +176,14 @@ async function otevri(obsluhaDat, volby) {
    se nevykreslila mapa ANI seznam pozemků — člověk viděl prázdnou stránku
    a web mu neřekl ani slovo. Dřív stačil výpadek cizího unpkg.com; od té
    doby se knihovna servíruje z vlastního serveru, ale zmlknout nesmí ani
-   při rozbitém nasazení. */
+   při rozbitém nasazení.
+
+   22. 10. SE TO SPRAVILO U KOŘENE. Výpis už na knihovně nestojí vůbec
+   (viz docs/optimalizace.md, oddíl 102), takže se bez ní vykreslí celý.
+   Tím se obrátily dvě kontroly níž: dřív se čekalo, že prázdný seznam
+   řekne, PROČ je prázdný; dneska se čeká, že prázdný NENÍ — a že se v něm
+   ta hláška o mapě NEOBJEVÍ, protože by lhala. Hláška zůstala v rámu
+   mapy, tam, kde je pravdivá. */
 {
   // Nejdřív staticky: knihovna se nesmí vrátit na cizí server.
   const uvod = readFileSync('index.html', 'utf8');
@@ -199,6 +206,7 @@ async function otevri(obsluhaDat, volby) {
       odkazZMapy: !!(m && m.querySelector('a[href="pozemky-podle-okresu.html"]')),
       vSeznamu: s ? s.textContent.replace(/\s+/g, ' ').trim() : '',
       odkazZeSeznamu: !!(s && s.querySelector('a[href="pozemky-podle-okresu.html"]')),
+      karet: s ? s.querySelectorAll('.opp-item').length : 0,
     };
   });
   pravda('bez knihovny je stránka opravdu bez mapy', v.L === false,
@@ -207,11 +215,14 @@ async function otevri(obsluhaDat, volby) {
     `v mapě stojí: „${v.vMape}"`);
   pravda('vysvětlení uslyší i odečítač obrazovky', v.role === 'status', `role=${v.role}`);
   pravda('a nabídne cestu dál — přehled podle okresů', v.odkazZMapy);
-  // Na mobilu je mapa schovaná za přepínačem, takže hláška u ní by zůstala
-  // neviděná. Prázdný seznam vidí každý, proto mluví i on.
-  pravda('i prázdný seznam řekne proč', /nedojela|nepodařilo/i.test(v.vSeznamu),
+  /* A TEĎ TO PODSTATNÉ: seznam se vykreslil. Na telefonu je mapa
+     v základním pohledu schovaná, takže tahle cesta je jediná, kterou
+     člověk bez knihovny vůbec něco uvidí. */
+  pravda('bez knihovny se seznam pozemků vykreslí (a není prázdný)',
+    v.karet > 0, `karet ${v.karet} — výpis na knihovně pořád visí`);
+  pravda('a hláška o nedojeté mapě v seznamu NENÍ (tam by lhala)',
+    !/nedojela|nepodařilo/i.test(v.vSeznamu) && !v.odkazZeSeznamu,
     `v seznamu stojí: „${v.vSeznamu.slice(0, 80)}"`);
-  pravda('a taky nabídne přehled podle okresů', v.odkazZeSeznamu);
   pravda('a nic se přitom nerozsypalo do konzole', chyby.length === 0, chyby[0]);
   await ctx.close();
 }

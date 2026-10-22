@@ -71,9 +71,19 @@ for (const f of stranky) {
 }
 pravda(`stránky pozemků se našly (${pozemky.length}) — jinak kontrola měří prázdno`,
   pozemky.length > 1000, `jen ${pozemky.length}`);
-pravda('knihovnu si dopředu bere jen index.html (tam mapa JE ta stránka)',
-  dopredu.length === 1 && dopredu[0] === 'index.html',
+/* AŽ 22. 10. SE TO DOTÁHLO I NA ÚVODNÍ STRÁNKU. Tady dřív stálo
+   „knihovnu si dopředu bere jen index.html (tam mapa JE ta stránka)" —
+   a ta věta v závorce nebyla pravda na telefonu: v základním pohledu je
+   mapa schovaná (display:none) a čekal na ni VÝPIS. Naměřeno
+   (390 px, 1,6 Mb/s, procesor ×4): první nabídka v 8 006 ms, po řezu
+   7 146 ms. Hlídá to scripts/test-vypis-bez-mapy.mjs. */
+pravda('knihovnu si značkou <script> nebere dopředu ŽÁDNÁ stránka — ani úvodní',
+  dopredu.length === 0,
   `${dopredu.length}: ` + dopredu.slice(0, 5).join(', '));
+pravda('a úvodní stránka ji má v metaznačce i s razítkem',
+  /<meta name="pk-leaflet" data-src="vendor\/leaflet\/leaflet\.js\?v=[A-Za-z0-9]+">/
+    .test(fs.readFileSync(path.join(KOREN, 'index.html'), 'utf8')),
+  'index.html si knihovnu nemá kde vzít, nebo adresa nenese ?v=');
 pravda('každá stránka pozemku má <meta name="pk-leaflet" data-src>',
   bezMeta.length === 0, `${bezMeta.length} bez něj: ` + bezMeta.slice(0, 3).join(', '));
 pravda('a ta adresa nese razítko ?v= (bez něj se po výměně servíruje stará kopie)',

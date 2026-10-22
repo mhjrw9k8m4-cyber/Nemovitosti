@@ -101,6 +101,66 @@ zapíše první přečtení a odkud přišlo. Z úkolu „osm skriptů načítat
 při prvním použití" tak zbyly tři — zbylé čtyři se při startu opravdu
 čtou (viz docs/optimalizace.md, oddíl 64).
 
+**Hledat jméno proměnné vzorem `\b…\b` nestačí.** `\bmap\b` se trefí
+i doprostřed `'map-podklad'` nebo `'map-filters'`, protože pomlčka je
+hranice slova — a napočítá o tři čtvrtiny míst víc, než kolik jich je.
+Jméno v kódu se hledá pohledem vzad a dopředu:
+`(?<![\w'"-])map(?![\w-])`. Chytilo se to dvakrát, pokaždé na tomtéž
+(docs/optimalizace.md, oddíly 65 a 102).
+
+**A příkaz nekončí jen středníkem.** Rozkráječ, který dělí tělo funkce
+podle `;` na úrovni jedna, slije `if (…) { … }` s tím, co je za ním —
+blok totiž středníkem nekončí. Dva takové bloky tak zůstaly 22. 10.
+nenalezené, a každý z nich znamenal ŽÁDNÝ výpis a chybu v konzoli.
+Dělit se musí i na `}`, a rozlišovat je od `} else`, `} catch`,
+`} finally` a `});`.
+
+**Sledovač vložený tam, kde byla hodnota `null`, je pravdivý — a tím
+změní tu větev, kterou měříš.** Pokus nahradit `map` objektem, který by
+nahlásil každé sáhnutí, skončil hned: `if (map) …` se obrátilo a kód,
+který se měl odložit, se provedl rovnou. Když se měří, CO se bez
+hodnoty stane, musí ta hodnota zůstat nepravdivá; seznam míst pak dá
+rozkráječ a chyby v konzoli.
+
+**Odložení není hotové tím, že se práce zapíše do fronty.** Fronta
+zachytí jen to, co zavolal příkaz v odloženém bloku. Co proběhlo
+naprázdno jinde — v tomhle případě čtyři věci, které volá
+`renderList()` — se musí dohnat jmenovitě a každá z nich musí snést
+druhé zavolání. Seznam takových míst se nehádá: `map` dostal pojistku
+`if (!map) return`, a každé místo, které se po postavení mapy
+neobnovilo samo, se našlo jako chybějící tečka, obrys nebo zámek.
+
+**Mrtvou pojistku pozná jedině odebrání.** `chciMapu()` v přepínači
+pohledu vypadalo nutně — přepnutí na mapu přece knihovnu potřebuje.
+Po odebrání zůstala zkouška 31 z 31: `boot()` je jedna úloha
+prohlížeče, takže dřív než doběhne, nemá klepnutí jak dorazit, a na
+konci `boot()` se o knihovnu říká vždycky. Pojistka, která nemá jak
+zafungovat, je horší než žádná — vypadá, že se o něco stará.
+
+**Přesunout stylopis znamená přepsat kaskádu.** Když se `<link>`
+přestane psát do HTML a začne vkládat z JavaScriptu, skončí na KONCI
+hlavičky — a tím přebije všechno, co jsme napsali my, pokud má stejnou
+specifičnost. Leafletovo `display:block` na `.leaflet-marker-icon` tak
+22. 10. porazilo naše `.pk-shluk-obal{display:flex}` a číslo v odznaku
+shluku se přestalo středit: o 8 px vedle, na obrazovce nepoznatelné,
+v zeměpisu 3 km. Vkládá se proto `insertBefore` před první stylopis
+v hlavičce, ne `appendChild`. A hlídá to zkouška, která měří
+GEOMETRII, ne vzhled (scripts/test-mapa.mjs, oddíl 1a).
+
+**A sabotáž umí ukázat chybu v novém kódu, ne v sabotáži.** Vrácení
+značky `<script>` zpátky mělo shodit pět kontrol o řezu; shodilo deset,
+protože nová cesta „knihovna už je na světě při startu" sahala na
+proměnné, které v té chvíli ještě nikdo nenastavil. Když sabotáž shodí
+víc, než co popírá, ten přebytek je nález.
+
+**Dva naměřené časy se porovnávají jen tehdy, když jsou měřené stejně.**
+Čas vykreslení výpisu zjištěný opakovaným dotazem po 10 ms je až o těch
+10 ms pozdější, než ve skutečnosti byl; čas zdroje ze záznamu
+`performance` je přesný. Na localhostu byly ty dvě chvíle 22 ms od sebe
+— kontrola by v CI kolísala. Místo porovnávání časů se zaznamenává
+OKAMŽIK: synchronně při vložení značky `<script>` se zapíše, jestli už
+karty ve výpisu ve stránce jsou. To kolísat nemá čím.
+
 ## Komentáře
 
 Píšou se **proč**, ne *co*. Čtvrtina souborů má v hlavičce odstavec

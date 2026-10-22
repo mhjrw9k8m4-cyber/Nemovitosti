@@ -125,11 +125,21 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <!-- Mapová knihovna z VLASTNÍHO serveru, ne z unpkg.com. Když cizí CDN
-       nedojelo, nestáhla se — a s ní padl celý výpis pozemků, protože
-       skript se bez „L" nedostal přes start. Člověk viděl prázdnou
-       stránku bez vysvětlení. Viz vendor/leaflet/PUVOD.md. -->
-  <link rel="stylesheet" href="vendor/leaflet/leaflet.css?v=ec929f11">
+  <!-- MAPOVÁ KNIHOVNA SE NEBERE DOPŘEDU — ani jejím stylem.
+       Z vlastního serveru, ne z unpkg.com: když cizí CDN nedojelo,
+       nestáhla se a s ní padl celý výpis pozemků (viz vendor/leaflet/PUVOD.md).
+       Od 22. 10. tu nestojí značkou <script defer> ani <link>, ale
+       metaznačkou, a dotahuje si ji js/main.js sám — až je výpis
+       vykreslený, nebo hned, když je mapa na obrazovce vidět. Naměřeno
+       (390 px): dokud se čekalo na knihovnu, zdržení knihovny se na
+       první nabídku ve výpisu přeneslo jedna ku jedné, a na telefonu je
+       přitom mapa v základním pohledu schovaná. Styl (14,8 kB) jde dolů
+       spolu s knihovnou a před ní, aby si Leaflet neměřil dlaždice bez
+       něj. Totéž dělají stránky pozemků.
+       Adresy stojí v data-src, aby jim scripts/orazitkuj-verze.mjs dalo
+       razítko ?v= jako každému jinému odkazu. -->
+  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
+  <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
   <link rel="stylesheet" href="css/uvod.min.css?v=8942a3a5">
 </head>
 <body>
@@ -846,7 +856,6 @@
   </div>
 </div>
 
-<script src="vendor/leaflet/leaflet.js?v=5a640ff8" defer></script>
 <script src="js/min/menu.js?v=e897102e" defer></script>
 <script src="js/min/cisteni.js?v=e1a692c2"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
@@ -994,7 +1003,7 @@
 <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
 <meta name="pk-odlozeny" data-klic="ulozene-ucet" data-src="js/min/ulozene-ucet.js?v=35e316ad">
 <meta name="pk-odlozeny" data-klic="poznamky" data-src="js/min/poznamky.js?v=96f9b539">
-<script src="js/min/main.js?v=fcf11137" defer></script>
+<script src="js/min/main.js?v=97936669" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,
