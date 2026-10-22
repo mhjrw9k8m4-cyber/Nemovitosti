@@ -75,7 +75,24 @@ export function historiePodleKlice(uzavrene, stav) {
     }
     const z = zive[k];
     if (z && z.c > 0 && z.od && (!body.length || body[body.length - 1].c !== z.c)) {
-      body.push({ d: z.od, c: Math.round(z.c) });
+      /* DEN ŽIVÉ CENY NESMÍ SKOČIT DOZADU. `z.od` je věk inzerátu, ne
+         den, kdy začala platit dnešní cena — a když nabídka ze zdroje
+         zmizí a znovu se objeví, přinese si s sebou původní, starší
+         `od`. Tím se bod dostal PŘED uzavřené období a historie se
+         čtená odpředu obrátila: vypadalo to jako zdražení tam, kde
+         nabídka zlevnila.
+         Naměřeno 22. 10. na 126 živých nabídkách s archivem: pět má
+         `od` starší než poslední uzavřené období, a u jedné se k tomu
+         liší cena — Semily, archiv „399 000 od 19. 9. do 16. 10.“,
+         živě „299 000 od 14. 9.“. Ostatní čtyři mají cenu stejnou,
+         takže je stejně zahodí pravidlo o opakovaném údaji výš.
+         Dolní mez je tedy `do` posledního uzavřeného období: den, od
+         kterého starou cenu už nevidíme. Víc říct nelze a datum si
+         nevymýšlíme — jen se nelže o pořadí. */
+      const poslRadek = rs.length ? rs[rs.length - 1] : null;
+      const mez = (poslRadek && poslRadek.do) || '';
+      const den = (body.length && z.od <= body[body.length - 1].d && mez > z.od) ? mez : z.od;
+      body.push({ d: den, c: Math.round(z.c) });
     }
     if (!body.length) continue;
     /* Zmizela? Jen když po ní nic živého není a poslední řádek to říká. */

@@ -7038,3 +7038,68 @@ kterou ten test v komentáři sám upozorňuje: *„a tenhle soubor by se
 počítal sám"*. Po přejmenování tak, aby název začínal
 `test-`, vyšla čísla v tabulce výše. (Obě kopie byly dočasné a v
 repozitáři nezůstaly.)
+
+## 103. Historie ceny se obrátila: živý stav se přilepil bez porovnání dne
+
+Tohle nenašla sada u mě, ale CI — a na datech, která robot dovezl až po
+mém posledním běhu. Padala jediná kontrola ze 125 prohlížečových
+zkoušek: *„body jsou [den, cena] a dny jdou odpředu"* ve filtru
+„Zlevněné“.
+
+### Co to bylo
+
+Historii ceny skládá `scripts/cenova-historie.mjs` ze dvou zdrojů.
+Archiv drží UZAVŘENÁ období (při změně ceny se období se starou cenou
+uzavře), dnešní cenu nedrží žádný řádek — ta je v živém stavu. Poslední
+bod se tedy bral odtud a **přilepoval na konec bez porovnání dne**.
+
+Jenže `od` živé nabídky je věk inzerátu, ne den, kdy začala platit
+dnešní cena. Když nabídka ze zdroje zmizí a znovu se objeví, přinese si
+s sebou původní, starší datum. Pak bod skočí dozadu:
+
+| | den | cena |
+|---|---|---|
+| archiv (uzavřeno 16. 10.) | 19. 9. | 399 000 |
+| živý stav | **14. 9.** | 299 000 |
+
+Historie čtená odpředu pak říkala „299 000 od 14. 9., pak 399 000 od
+19. 9.“ — tedy **zdražení u pozemku, který zlevnil o 25 %**. A protože
+poslední bod nebyl nejnižší, nabídka se zároveň nedostala do výpisu
+zlevněných, kde patří.
+
+### Rozsah, změřeno před opravou
+
+| | počet |
+|---|---|
+| živých nabídek s archivem | 126 |
+| z nich s `od` starším než poslední uzavřené období | 5 |
+| z těch pěti s jinou cenou (tedy s rozbitým pořadím) | **1** |
+
+Ostatní čtyři mají cenu stejnou, takže je stejně zahodí pravidlo
+o opakovaném údaji. Proto to roky nevadilo a vylezlo to na jedné
+nabídce v Semilech.
+
+### Oprava
+
+Když je `od` živé nabídky starší než poslední bod, vezme se místo něj
+`do` posledního uzavřeného období — den, od kterého starou cenu už
+nevidíme. Víc se z dat poctivě říct nedá; datum se nevymýšlí, jen se
+nelže o pořadí. Po opravě:
+
+    [["2026-09-19", 399000], ["2026-10-16", 299000]]
+
+a na stránce pozemku i ve výpisu stojí `předtím 399 000 Kč (−25 %,
+16. 10. 2026)`.
+
+Sabotáž: pojistka pryč → padne právě ta jedna kontrola a žádná jiná.
+Prošly `test-zlevnene-filtr` (20/20), `test-cenova-historie`,
+`test-data-rezy`, `test-data-rozhrani`, `test-nove-pozemky`
+a `test-rozdeleni-stylu`.
+
+### Co si z toho odnést
+
+Zkoušky u mě běžely nad daty, která byla v repozitáři **před**
+přebázováním na robotův commit. Sada tedy nebyla špatně — jen měřila
+jiná data. Kde data přitéká zvenčí, je zelená sada tvrzení o datech
+z té chvíle, ne o kódu navždy; rozhodnout může až CI nad tím, co je na
+větvi doopravdy.

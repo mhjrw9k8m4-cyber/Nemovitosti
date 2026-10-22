@@ -147,6 +147,20 @@ v zeměpisu 3 km. Vkládá se proto `insertBefore` před první stylopis
 v hlavičce, ne `appendChild`. A hlídá to zkouška, která měří
 GEOMETRII, ne vzhled (scripts/test-mapa.mjs, oddíl 1a).
 
+**Živý stav není konec časové osy.** Historie ceny se skládá
+z uzavřených období v archivu a nakonec z živé nabídky — a ten poslední
+bod se přilepoval na konec bez porovnání dne. `od` živé nabídky je
+přitom VĚK INZERÁTU, ne den, kdy začala platit dnešní cena: když
+nabídka ze zdroje zmizí a znovu se objeví, přinese si původní, starší
+datum. 22. 10. se tím jedna historie obrátila a vypadala jako zdražení
+tam, kde pozemek zlevnil o 25 %. Naměřeno: z 126 živých nabídek
+s archivem jich pět nese starší `od`, a jen u jedné se k tomu liší
+cena — proto se to objevilo až teď a jen v CI, na datech, která robot
+dovezl po mém posledním běhu sady. Dolní mez je `do` posledního
+uzavřeného období: datum si nevymýšlíme, jen se nelže o pořadí.
+Obecně: **kde se jedna řada skládá ze dvou zdrojů, patří k napojení
+porovnání, ne důvěra v pořadí.**
+
 **Dokumentace není použití — a tím pádem ani důkaz.** Hlídač mrtvých
 pravidel (scripts/test-mrtve-styly.mjs) hledá jména tříd v celém
 repozitáři a z HTML i JS si správně odstraňuje komentáře: věta o třídě
