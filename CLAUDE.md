@@ -616,3 +616,16 @@ celou dobu jmenované v zásadách soukromí. Hosty se proto čtou
 z `data/mapove-vrstvy.json` a adresa Supabase z `js/config.js`.
 Měření v prohlížeči říká, co se děje na té jedné cestě, kterou
 jsi prošel; zdroj říká, co se může stát na všech.
+
+### Co běží při parsování, nesmí se opírat o to, co má `defer`
+
+`js/pozemek.js` se vykonává už při parsování stránky, kdežto
+`js/auth.js` a `js/config.js` mají `defer` — při prvním vykreslení
+(z ostrůvku dat v HTML) tedy přihlášení často JEŠTĚ NENÍ po ruce.
+Kdo v takovém místě napíše `if (PKAuth && PKAuth.prihlasen())`,
+dostane „nepřihlášený" a tiše neudělá nic. Nalezeno 23. 10. na dvou
+místech (uložené pozemky a poznámky), kde to znamenalo, že se cizí
+zařízení hlásilo „Uložit" a u poznámky stála nepravda o tom, kde
+skončí. Správně: pokus zopakovat po `load` (a ještě krátce po něm,
+protože obnova prošlého tokenu je asynchronní), nebo to volat při každém
+vykreslení, jak to dělá `js/main.js`.

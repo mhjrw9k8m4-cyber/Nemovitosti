@@ -7739,3 +7739,46 @@ Poučení, které platí nad tuhle práci: **když se kopie chová jinak než
 originál, nejdřív se ptej, co kopii obklopuje** — ne co je v ní
 napsané. Hodina hledání závodu v `js/pozemek.js` padla na tom, že jsem
 tuhle otázku položil až jako čtvrtou.
+
+### A ještě dvě: závod, který CSP jen vynesla na světlo
+
+Po té opravě zbyly ze třiceti padlých zkoušek dvě — `test-ulozene-ucet`
+a `test-poznamky`. Obě mají `bypassCSP`, takže hlavička na nich nic
+neblokovala, a přesto padaly jen s ní. Postup, kterým se to zúžilo:
+
+| pokus | výsledek |
+|---|---|
+| stejný kód a data, hlavičky sundané | **projde** |
+| navíc neškodná `<meta name="pokus">` | projde — nejde o přítomnost prvku |
+| povolná politika `default-src * 'unsafe-inline' 'unsafe-eval'` | **padá** — nejde o to, co politika zakazuje |
+| politika i bez `bypassCSP` | padá — nejde o obcházení |
+| ruční zavolání `PKUlozeneUcet.sync()` v té stránce | **projde** |
+
+Tedy: nic nebylo zakázané, jen se to **nestihlo zavolat**. A to je
+závod, který na webu byl celou dobu: `js/pozemek.js` běží už při
+parsování stránky, kdežto `js/auth.js` má `defer` a vykoná se teprve
+po něm. Při prvním vykreslení (z ostrůvku dat v HTML) proto přihlášení
+často ještě není po ruce — `sync()` tiše vrátí `null` a stránka
+zůstane u stavu z prohlížeče. Hlavička načasování posunula o pár
+milisekund a z „občas" se stalo „vždy".
+
+Důsledky, které to mělo bez jakékoli zkoušky:
+
+* pozemek uložený na telefonu hlásil na počítači **„Uložit"** — tedy
+  že uložený není. Přesně tomu měl ten kód zabránit (stojí to
+  v komentáři u něj);
+* u poznámky stála nepřihlášenému věta „zůstává jen v tomhle
+  prohlížeči… nikam se neodesílá", **i když byl přihlášený** a poznámka
+  šla na účet. To není nepřesnost, to je nepravda o tom, kde ta
+  poznámka skončí.
+
+Opraveno na obou místech stejně: pokus se zopakuje po `load` (kdy už
+odložené skripty proběhly) a ještě jednou krátce po něm, protože
+`prihlasen()` si u prošlého tokenu řekne o obnovu a ta je asynchronní.
+Úspěšný pokus se počítá jen jeden, takže se nestahuje dvakrát.
+`js/main.js` tenhle závod nemá — tam se `stahniUlozene()` volá při
+každém vykreslení výpisu, takže se dožene sám.
+
+**Co z toho platí dál:** hlavička CSP se tu zachovala jako zátěžová
+zkouška načasování. Nic nerozbila — jen přestala schovávat dvě místa,
+kde web spoléhal na to, co se stihne načíst dřív.

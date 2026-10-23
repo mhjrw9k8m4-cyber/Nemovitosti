@@ -1679,6 +1679,44 @@
      („stránka neshodila žádnou chybu") — jenže až po klepnutí do mapy,
      tedy v běhu, kde na pořadí závisí. Proto navíc druhá pojistka
      v zapniMapu(). */
+  /* STAŽENÍ ULOŽENÝCH NESMÍ ZÁVISET NA TOM, CO SE STIHLO NAČÍST DŘÍV.
+     Dřív tu stálo jen `if (global.PKUlozeneUcet && ...sync) sync()`
+     — jedna zkouška při vykreslení. Jenže tenhle skript běží už při
+     parsování stránky, kdežto js/auth.js má `defer`, takže se vykonává
+     teprve po něm: při prvním vykreslení (z ostrůvku dat v HTML) tedy
+     PKAuth často ještě není a `sync()` tiše neudělá nic. Důsledek je
+     přesně to, čemu měl ten kód zabránit: pozemek uložený na telefonu
+     hlásí na počítači „Uložit".
+     Naměřeno 23. 10., když na web přišla CSP: načasování se posunulo
+     a dvě zkoušky (test-ulozene-ucet, test-poznamky) spadly na tom, že
+     ze účtu nestáhl nic — ne na hlavičce, na tomhle závodu. Proto se
+     o to pokusí znovu po 'load', kdy už odložené skripty proběhly.
+     Pokus se počítá jen ten úspěšný, takže se nestahuje dvakrát. */
+  var ulozeneStazeno = false;
+  function stahniUlozene(d, favBtn) {
+    function srovnejTlacitko() {
+      var on = isFav(d);
+      favBtn.classList.toggle('on', on);
+      var span = favBtn.querySelector('span');
+      if (span) span.textContent = on ? 'Uloženo' : 'Uložit';
+    }
+    function zkus() {
+      if (ulozeneStazeno) return true;
+      var m = global.PKUlozeneUcet;
+      if (!m || !m.sync || !m.prihlasen || !m.prihlasen()) return false;
+      ulozeneStazeno = true;
+      m.sync().then(function (zmen) { if (zmen) srovnejTlacitko(); }).catch(function () {});
+      return true;
+    }
+    if (zkus()) return;
+    if (global.addEventListener) {
+      global.addEventListener('load', function () { zkus(); }, { once: true });
+      /* A ještě jednou krátce po něm: `prihlasen()` si u prošlého tokenu
+         řekne o obnovu, a ta je asynchronní. */
+      global.setTimeout(zkus, 400);
+    }
+  }
+
   var mapaVerze = 0;
   function pripravMapu(d) {
     var moje = ++mapaVerze;
@@ -2502,14 +2540,7 @@
     /* A STÁHNOUT, CO JE NA ÚČTU. Bez tohohle by pozemek uložený na
        telefonu hlásil na počítači „Uložit" — tedy že uložený není.
        Tlačítko se po stažení srovná podle toho, co doopravdy platí. */
-    if (favBtn && global.PKUlozeneUcet && global.PKUlozeneUcet.sync) {
-      global.PKUlozeneUcet.sync().then(function (zmen) {
-        if (!zmen) return;
-        var on = isFav(d);
-        favBtn.classList.toggle('on', on);
-        favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
-      }).catch(function () {});
-    }
+    if (favBtn) stahniUlozene(d, favBtn);
     // sdílet
     var shareBtn = document.getElementById('pz-share');
     if (shareBtn) shareBtn.addEventListener('click', function () {
@@ -2546,11 +2577,21 @@
       }
       rekniKde();
       /* Doplnění z účtu může dorazit až po vykreslení; pak se políčko
-         i věta srovnají podle toho, co doopravdy platí. */
-      if (global.PKPoznamky.sync) {
+         i věta srovnají podle toho, co doopravdy platí.
+         A TAKY SE NA NĚJ MUSÍ POČKAT. Tenhle skript běží už při
+         parsování stránky, kdežto js/auth.js má `defer` — při prvním
+         vykreslení (z ostrůvku dat v HTML) proto přihlášení často ještě
+         není po ruce, `sync()` tiše vrátí null a u pole zůstane věta pro
+         nepřihlášeného: „zůstává jen v tomhle prohlížeči". Tedy nepravda
+         o tom, kde ta poznámka skončí. Stejný závod jako u uložených
+         pozemků výš; naměřeno 23. 10., když na web přišla CSP a
+         načasování se posunulo. */
+      function zUctuDopln() {
+        if (!global.PKPoznamky.sync) return true;
+        if (!(global.PKPoznamky.prihlasen && global.PKPoznamky.prihlasen())) return false;
         global.PKPoznamky.sync().then(function (n) {
-          if (n == null) return;
           rekniKde();
+          if (n == null) return;
           var zUctu = global.PKPoznamky.text(d);
           /* Nepřepisovat, co má člověk rozepsané pod rukou. */
           if (document.activeElement !== poznEl && zUctu && zUctu !== poznEl.value) {
@@ -2558,6 +2599,14 @@
             puvodni = zUctu;
           }
         }).catch(function () {});
+        return true;
+      }
+      if (!zUctuDopln() && global.addEventListener) {
+        global.addEventListener('load', function () {
+          /* Ještě jednou krátce po 'load': `prihlasen()` si u prošlého
+             tokenu řekne o obnovu, a ta je asynchronní. */
+          if (!zUctuDopln()) global.setTimeout(zUctuDopln, 400);
+        }, { once: true });
       }
       poznEl.value = global.PKPoznamky.text(d);
       var puvodni = poznEl.value;

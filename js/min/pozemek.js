@@ -1066,6 +1066,30 @@
     leafletSlib.then(hotovo);
   }
 
+  var ulozeneStazeno = false;
+  function stahniUlozene(d, favBtn) {
+    function srovnejTlacitko() {
+      var on = isFav(d);
+      favBtn.classList.toggle('on', on);
+      var span = favBtn.querySelector('span');
+      if (span) span.textContent = on ? 'Uloženo' : 'Uložit';
+    }
+    function zkus() {
+      if (ulozeneStazeno) return true;
+      var m = global.PKUlozeneUcet;
+      if (!m || !m.sync || !m.prihlasen || !m.prihlasen()) return false;
+      ulozeneStazeno = true;
+      m.sync().then(function (zmen) { if (zmen) srovnejTlacitko(); }).catch(function () {});
+      return true;
+    }
+    if (zkus()) return;
+    if (global.addEventListener) {
+      global.addEventListener('load', function () { zkus(); }, { once: true });
+
+      global.setTimeout(zkus, 400);
+    }
+  }
+
   var mapaVerze = 0;
   function pripravMapu(d) {
     var moje = ++mapaVerze;
@@ -1447,14 +1471,7 @@
       toast(on ? 'Uloženo mezi oblíbené' : 'Odebráno z oblíbených');
     });
 
-    if (favBtn && global.PKUlozeneUcet && global.PKUlozeneUcet.sync) {
-      global.PKUlozeneUcet.sync().then(function (zmen) {
-        if (!zmen) return;
-        var on = isFav(d);
-        favBtn.classList.toggle('on', on);
-        favBtn.querySelector('span').textContent = on ? 'Uloženo' : 'Uložit';
-      }).catch(function () {});
-    }
+    if (favBtn) stahniUlozene(d, favBtn);
 
     var shareBtn = document.getElementById('pz-share');
     if (shareBtn) shareBtn.addEventListener('click', function () {
@@ -1486,10 +1503,12 @@
       }
       rekniKde();
 
-      if (global.PKPoznamky.sync) {
+      function zUctuDopln() {
+        if (!global.PKPoznamky.sync) return true;
+        if (!(global.PKPoznamky.prihlasen && global.PKPoznamky.prihlasen())) return false;
         global.PKPoznamky.sync().then(function (n) {
-          if (n == null) return;
           rekniKde();
+          if (n == null) return;
           var zUctu = global.PKPoznamky.text(d);
 
           if (document.activeElement !== poznEl && zUctu && zUctu !== poznEl.value) {
@@ -1497,6 +1516,13 @@
             puvodni = zUctu;
           }
         }).catch(function () {});
+        return true;
+      }
+      if (!zUctuDopln() && global.addEventListener) {
+        global.addEventListener('load', function () {
+
+          if (!zUctuDopln()) global.setTimeout(zUctuDopln, 400);
+        }, { once: true });
       }
       poznEl.value = global.PKPoznamky.text(d);
       var puvodni = poznEl.value;
