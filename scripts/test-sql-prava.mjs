@@ -309,6 +309,19 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
   pravda('a seznam před vydáním to nastavení jmenuje',
     /Confirm email/i.test(seznam) && /ZAPNUT/i.test(seznam),
     'nastavení, bez kterého nejde inzerovat, v seznamu chybělo');
+
+  /* Druhé nastavení téhož druhu: kam smí vést odkaz z e-mailu. Odkaz na
+     obnovu hesla nese jednorázový token; web posílá v redirect_to svou
+     adresu, ale rozhoduje seznam v Supabase. Dokud je v něm `*`, může
+     kdokoli vyrobit odkaz, který přistane s tokenem na cizí stránce.
+     Z repozitáře to nejde ani nastavit, ani změřit — jde jen zajistit,
+     že to v seznamu před vydáním stojí. */
+  pravda('a jmenuje i seznam adres, kam smí vést odkazy z e-mailu',
+    /Redirect URLs/i.test(seznam) && /Site URL/i.test(seznam) && /nikdy `\*`/i.test(seznam),
+    'bez omezení adres může odkaz na obnovu hesla přistát s tokenem na cizí stránce');
+  pravda('a web v odkazu posílá vlastní adresu',
+    /redirect_to/.test(readFileSync(path.join(KOREN, 'js', 'auth.js'), 'utf8')),
+    'bez redirect_to by odkaz vedl tam, kam určí Supabase');
 }
 
 console.log('\nPráva v databázi');

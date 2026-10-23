@@ -369,39 +369,63 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
        kontroly brala první kartu a byla planá: ta zůstala první, takže
        pořadí i klíč ukazovaly na totéž. */
     await cistaStranka();
+    /* KARTA PRO MĚŘENÍ MUSÍ MÍT JEDNOZNAČNÝ KLÍČ.
+       Klíč `data-pk` je složený z místa, okresu a zaokrouhlených
+       souřadnic, takže dvě různé nabídky na jednom místě mají klíč TÝŽ —
+       a v datech to opravdu je (23. 10. stály ve výpisu vedle sebe dvě
+       karty „Habry|—|Havlíčkův Brod|49.753|15.513"). Na dvojčeti se
+       tvrzení „zůstala TÁŽ karta, ne ta, co je teď na jejím místě"
+       dokázat NEDÁ: obě podmínky mluví o tomtéž řetězci a zkouška hlásí
+       pád s hláškou „čekáno X, je X" (přesně to spadlo v CI #648).
+       Zkusil jsem to i obráceně — označit si prvek atributem a hledat
+       značku. Nefunguje a je to poučné: po skrytí karty se výpis
+       PŘEKRESLÍ, takže zaměřená karta je nový prvek a značka je pryč.
+       Totožnost tedy nese jen klíč, a proto se vybírá karta, jejíž klíč
+       je ve výpisu právě jeden. */
     const pred4b = await p.evaluate(() => {
       const karty = [...document.querySelectorAll('#opp-list .opp-item')];
       if (karty.length < 4) return null;
-      const k = karty[2];
+      const klice = karty.map((x) => x.getAttribute('data-pk'));
+      const pocet = {};
+      klice.forEach((k) => { pocet[k] = (pocet[k] || 0) + 1; });
+      /* Od druhé karty: nad ní musí zůstat co skrýt (skrývá se první). */
+      const i = klice.findIndex((k, idx) => idx >= 1 && pocet[k] === 1);
+      if (i < 0) return { bezJednoznacne: true, klice };
+      const k = karty[i];
       k.focus();
       if (document.activeElement !== k) return null;
-      return { pk: k.getAttribute('data-pk'), poradi: 2, podPk: karty[3].getAttribute('data-pk'),
-        klice: karty.map((x) => x.getAttribute('data-pk')) };
+      return { pk: klice[i], poradi: i, klice };
     });
     pravda('výpis: jsou aspoň čtyři karty, na kterých se to dá změřit', !!pred4b,
       've výpisu není dost karet');
-    if (pred4b) {
+    /* Kdyby se ve výpisu sešly samé dvojčata, nemá se to měřit na slepo:
+       ať je vidět, že kontrola neproběhla, místo falešného zeleného. */
+    pravda('výpis: a je mezi nimi karta s jednoznačným klíčem',
+      !(pred4b && pred4b.bezJednoznacne),
+      'všechny karty ve výpisu mají klíč shodný s jinou — totožnost nejde dokázat: '
+      + JSON.stringify((pred4b && pred4b.klice || []).slice(0, 6)));
+    if (pred4b && !pred4b.bezJednoznacne) {
       await p.evaluate(() => {
         /* .click() ze skriptu zaměření NEPŘEBÍRÁ (na rozdíl od klepnutí
            myší), takže zůstane na kartě zprostřed — přesně jak potřebujeme. */
         document.querySelector('#opp-list .opp-item .opp-skryt').click();
       });
       await p.waitForTimeout(900);
-      const po4b = await p.evaluate(() => {
+      const po4b = await p.evaluate((kam) => {
         const e = document.activeElement;
         const karta = e && e.closest ? e.closest('.opp-item') : null;
         const karty = [...document.querySelectorAll('#opp-list .opp-item')];
         return { pk: karta ? karta.getAttribute('data-pk') : null,
           poradi: karta ? karty.indexOf(karta) : -1,
-          naMiste: karty[2] ? karty[2].getAttribute('data-pk') : null,
+          naMiste: karty[kam] ? karty[kam].getAttribute('data-pk') : null,
           klice: karty.map((x) => x.getAttribute('data-pk')) };
-      });
+      }, pred4b.poradi);
       /* PŘEDPOKLAD: kdyby se karta nepřesunula, kontrola níž nic neměří. */
       pravda(`výpis: skrytím karty nad ní se zaměřená posunula (${pred4b.poradi} → ${po4b.poradi})`,
-        po4b.poradi === 1, JSON.stringify(po4b));
+        po4b.poradi === pred4b.poradi - 1, JSON.stringify(po4b));
       pravda('výpis: a zaměřená zůstala TÁŽ karta, ne ta, co je teď na jejím místě',
         po4b.pk === pred4b.pk && po4b.pk !== po4b.naMiste,
-        `čekáno ${pred4b.pk}, je ${po4b.pk} (na původním místě je ${po4b.naMiste})`
+        `čekáno ${pred4b.pk}, je ${po4b.pk} (na původním místě ${pred4b.poradi} je ${po4b.naMiste})`
         + `\n      před: ${JSON.stringify(pred4b.klice.slice(0, 5))}`
         + `\n      po:   ${JSON.stringify(po4b.klice.slice(0, 5))}`);
     }

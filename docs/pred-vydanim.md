@@ -144,6 +144,19 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**Adresy, kam smí vést odkazy z e-mailu** (Supabase →
+Authentication → URL Configuration). *Site URL* nastavit na
+`https://www.parcelaka.cz` a *Redirect URLs* omezit na vlastní domény
+(`https://www.parcelaka.cz/**`, případně adresu vedlejšího nasazení) —
+**nikdy `*`**. Odkaz na obnovu hesla nese jednorázový token a web
+posílá v `redirect_to` svou vlastní adresu (`js/auth.js`, funkce
+`recover`), ale Supabase přijme jen adresu z tohohle seznamu: dokud
+v něm je `*`, může kdokoli vyrobit odkaz na obnovu hesla, který
+přistane s tokenem na cizí stránce. Token sám chodí ve *fragmentu*
+adresy (`#access_token=…`), takže se na server neposílá a web ho
+z adresního řádku hned zahodí — ale komu přistane v prohlížeči, ten ho
+má.
+
 **„Confirm email" musí být ZAPNUTÉ** (Supabase → Authentication →
 Sign In / Providers → Email). Bez potvrzeného e-mailu `create_listing`
 inzerát odmítne — a odmítne ho hláškou „nejdřív potvrďte e-mail,

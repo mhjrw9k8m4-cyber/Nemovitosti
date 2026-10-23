@@ -8544,3 +8544,35 @@ Poučení, které stojí za zapsání: **rada pro majitele je taky kód** —
 zestárne stejně jako komentář a může udělat větší škodu než vada
 v programu, protože ji nikdo neodladí. A hlídač na prózu se vyplatil
 podruhé v jednom dni (poprvé u slibů o datech, oddíl 120).
+
+## 125. Zkouška zaostření měřila totožnost klíčem, který se v datech opakuje *23. 10.*
+
+CI #648 spadlo na kontrole „zaměřená zůstala TÁŽ karta, ne ta, co je teď
+na jejím místě" — a hláška byla sama o sobě nález: **„čekáno
+`Habry|—|Havlíčkův Brod|49.753|15.513`, je
+`Habry|—|Havlíčkův Brod|49.753|15.513`".** Očekávané i naměřené bylo
+totéž a kontrola přesto padla.
+
+Příčina: totožnost karty se měřila atributem `data-pk`, a ten je složený
+z místa, okresu a zaokrouhlených souřadnic. **Dvě různé nabídky na jednom
+místě mají klíč týž** — a po odpoledním obnovení dat stály ve výpisu dvě
+takové karty vedle sebe. Druhá podmínka (`pk ≠ klíč karty, která je teď
+na tom místě`) tedy nemohla projít, i když web zaměření drží správně.
+Byla to vada MĚŘENÍ, ne webu.
+
+Cestou se naměřila ještě jedna věc, která stojí za zapsání: zkusil jsem
+totožnost řešit značkou na prvku (`setAttribute` před skrytím, hledat ji
+po něm). **Nefunguje — po skrytí karty se výpis překreslí**, zaměřená
+karta je nový prvek a značka je pryč. Totožnost tedy v tomhle webu nese
+jen klíč; proto se vybírá karta, jejíž klíč je ve výpisu **právě jeden**.
+
+Navíc je tam kontrola, že se taková karta vůbec našla: kdyby se ve výpisu
+sešla samá dvojčata, nemá se měřit na slepo a tvářit se zeleně.
+
+Sabotáž, dva směry, oba zachyceny: (1) zaměření po skrytí násilně
+přesunuté na kartu, která je teď na původním místě → padne obojí
+(posun i totožnost); (2) výběr karty s opakujícím se klíčem, tedy stav
+před opravou → padne právě ta jedna kontrola, co padala v CI.
+
+test-zaostreni 59/59 (o jednu kontrolu víc než dřív). Lokální sada
+v prohlížeči 128/129 → 129/129 s touhle opravou.
