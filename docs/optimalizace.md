@@ -8609,3 +8609,34 @@ vést odkazy z e-mailu** (Supabase → Authentication → URL Configuration).
 Dokud je v něm `*`, může kdokoli vyrobit odkaz na obnovu hesla, který
 přistane s tokenem na cizí stránce. Že to v seznamu stojí, hlídá
 `test-sql-prava.mjs`.
+
+## 127. Hlavička Referrer-Policy: změřeno, NEUDĚLÁNO *23. 10.*
+
+Z hlaviček, které jde na statickém hostingu nastavit přes `<meta>`, mi
+zbývala jedna: `<meta name="referrer">`. Na všech 2 368 stránkách ji
+nemá **žádná**. Otázka tedy byla, co prohlížeč posílá bez ní — a to se
+dá změřit, ne odhadnout.
+
+Měření (`scripts/mereni-referer.mjs`: naše stránka na jednom portu,
+„cizí server" na druhém, obrázek i `fetch` přes hranici původu,
+Chromium 1194):
+
+```
+stránka: http://127.0.0.1:8401/stranka.html?tajny=parametr#fragment
+obrázek → Referer: http://127.0.0.1:8401/
+fetch   → Referer: http://127.0.0.1:8401/
+```
+
+Tedy **jen původ** — bez cesty, bez dotazu, bez fragmentu. Dnešní
+prohlížeče mají `strict-origin-when-cross-origin` jako výchozí chování,
+takže ta meta by **nezměnila nic**: mapové servery ani Supabase se
+o konkrétní stránku pozemku z hlavičky nedozví ani teď.
+
+Kde by pomohla: prohlížeč starší než rok 2020 (výchozí
+`no-referrer-when-downgrade` posílal celou adresu). Cena: řádek na
+2 368 stránkách a další hlídač. **Neudělal jsem to** — a je to tady
+zapsané i s tím, jak to znovu změřit, aby se příště nerozhodovalo
+dojmem. Kdyby se měnil hosting (Vercel, CDN), patří `Referrer-Policy`
+do hlaviček serveru spolu s těmi, které `<meta>` neumí vůbec
+(`Strict-Transport-Security`, `X-Frame-Options`) — jak stojí
+v `docs/pred-vydanim.md`, bod 6.

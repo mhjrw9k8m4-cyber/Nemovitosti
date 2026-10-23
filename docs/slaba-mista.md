@@ -363,10 +363,12 @@ zkoušku a sabotáž, podrobně `docs/optimalizace.md`, oddíly 112–123):
 Co zavřít **nejde odsud** a co je vědomá hranice:
 
 1. **Hlavičky, které umí jen server.** `Strict-Transport-Security`,
-   `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`,
-   `Permissions-Policy`. GitHub Pages je statické hosting a `<meta>`
-   část z nich ignoruje. Je to v `docs/pred-vydanim.md` jako volitelný
-   bod 6 (až na Vercelu nebo za CDN).
+   `X-Frame-Options`/`frame-ancestors`, `Permissions-Policy`. GitHub
+   Pages je statické hosting a `<meta>` část z nich ignoruje. Je to
+   v `docs/pred-vydanim.md` jako volitelný bod 6 (až na Vercelu nebo za
+   CDN). U `Referrer-Policy` to `<meta>` umí — ale změřeno 23. 10., že
+   dnešní prohlížeč posílá cizím serverům jen původ i bez ní, takže by
+   nezměnila nic (oddíl 127 v `docs/optimalizace.md`).
 2. **Nastavení projektu v Supabase**: povolené adresy pro odkazy
    z e-mailu, potvrzování e-mailu, vlastní SMTP. Z repozitáře se to
    nedá ani nastavit, ani změřit — jen napsat do seznamu před vydáním.
