@@ -7879,3 +7879,22 @@ změnila — jinak by zkouška mohla projít nad nezměněným výpisem.
 větví pravidla, je jen půl zkoušky — a to, která větev se spustí, se
 může změnit s daty. Taková kontrola nespadne, když se web rozbije; spadne,
 až se změní vstupy. Proto se měří pravidlo, ne jeden jeho projev.
+
+### Zprávy mezi lidmi: jediné místo, kde se stojí a padá na escapování
+
+`test-escape-dom.mjs` měří karty a stránku pozemku — tam cizí text teče
+přes čištění dat. **Zprávy mezi lidmi tudy nejdou vůbec:** píše je druhý
+člověk, chodí přes Supabase a do HTML je skládá vlastní kopie
+escapování přímo v `zpravy.html`. Je to tedy jediné místo na webu, kde
+cizí text stojí a padá na escapování — a zrovna tam to nic nehlídalo.
+
+`scripts/test-escape-zpravy.mjs` pošle v chatu tři nálože a prohlédne
+**obě strany**: pisatele i majitele, který dostane text, co nepsal.
+Naměřeno: tři zprávy se odeslaly, nic se nespustilo, nevznikl žádný
+prvek a text je na stránce vidět **jako text** — tedy escapovaný, ne
+zahozený (na rozdíl od karet, kde čištění ostré znaky maže).
+
+**Sabotáž je uvnitř zkoušky.** Stránka se umí doručit s vyřazeným
+escapováním (přepíše se jen ta jedna funkce) a pak se nálož spustit
+musí. Bez toho by zkouška mohla být zelená proto, že se zpráva vůbec
+neodeslala — a ne proto, že web escapuje.

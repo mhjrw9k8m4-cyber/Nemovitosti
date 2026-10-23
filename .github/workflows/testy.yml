@@ -663,6 +663,9 @@ jobs:
       - name: Cizí text se vykreslí jako text, ne jako kód
         run: node scripts/test-escape-dom.mjs
 
+      - name: Zpráva od cizího člověka je text, ne kód
+        run: node scripts/test-escape-zpravy.mjs
+
   v-prohlizeci-2:
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
