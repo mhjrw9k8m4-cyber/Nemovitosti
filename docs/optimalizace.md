@@ -8083,3 +8083,63 @@ Hlídá to `scripts/test-sql-prava.mjs` (7 nových kontrol), doloženo
 sabotáží: zrušený strop i zrušená vazba na účet → poplach. A protože
 zkouška čte SQL v repozitáři, je u ní napsané i to, co změřit nejde:
 **jestli to někdo pustil, pozná jen Supabase.**
+
+## 117. Přihlášky k hlídání rostly bez stropu a nikdo je neuklízel *23. 10.*
+
+`subscribe_watch(e-mail, okres, typy)` je jediná funkce, která **zvětšuje
+databázi** a kterou smí zavolat kdokoli s veřejným klíčem (formulář na
+`hlidani.html` běží z prohlížeče, takže ten klíč je v každém zdroji
+stránky). Co dělala správně: ověřovala tvar adresy, nedovolila vložit
+řádek už potvrzený ani si vybrat potvrzovací token (to hlídá
+`test-anon-zapis.mjs`), a opakované přihlášení na týž okres jen oživila
+bez nového potvrzení. Co nedělala vůbec:
+
+* **strop na jednu adresu.** Okresů je 77 a `okres = NULL` znamená celou
+  republiku — jedna adresa si tedy mohla nechat založit **78 řádků**,
+  a cizí skript mohl ten formulář vyplnit tisíckrát s tisícem adres.
+* **úklid.** `uklid_posty()` maže záznamy o odeslané poště a pushi,
+  **nepotvrzené přihlášky nemazal nikdo**. Řádek po někom, kdo si
+  potvrzení nikdy nerozklikl, ležel v tabulce navždy.
+
+Co to dnes doopravdy stojí, se dá změřit: **odesílání potvrzovacího
+e-mailu v repozitáři zatím není** (žádný kód `watch_subscriptions`
+nečte a nic neposílá), takže z toho nejde dělat rozesílání spamu cizím
+lidem. Co z toho jde, jsou řádky v databázi — a ta je na bezplatném
+tarifu, 500 MB. Je to tedy **strop proti nabývání, ne proti spamu**;
+až e-maily posílat začneme, platí oboje.
+
+Hotovo:
+
+* **strop 12 míst na jednu adresu** uvnitř `if not found`, takže
+  oživení existující přihlášky (změna typů) na něj nenarazí. Dvanáct
+  hlídaných míst je nad rámec toho, co člověk uhlídá očima; komu to
+  nestačí, zařídí si účet a hlídání v aplikaci.
+* **`uklid_hlidani(p_dni default 30)`** maže `confirmed = false` starší
+  než lhůta, s podlahou sedmi dní (`greatest(…, 7)`), aby ani špatně
+  zadaný argument nesmazal dnešní přihlášky. Pustit ji smí **jen
+  `service_role`**, ne veřejný klíč.
+* volání z noční `scripts/uklid-databaze.mjs` (třetí úloha; lhůtu lze
+  přepsat `UKLID_HLIDANI_DNI`).
+
+Hlídá to dvojice zkoušek:
+
+* `test-sql-prava.mjs` (5 kontrol) čte SQL v repozitáři: strop
+  v `subscribe_watch` je, úklid existuje, maže **jen** nepotvrzené
+  (`confirmed = false` ano, `confirmed = true` nikde), a práva má jen
+  služba.
+* `test-sql-cista.mjs` (10 kontrol) totéž **zkouší na živém
+  PostgreSQL rolí `anon`** — tedy přesně tou cestou, kterou má cizí
+  skript: dvanáct přihlášek projde, třináctá spadne, jiná adresa
+  projde dál, znovupřihlášení na už hlídaný okres taky; a úklid smaže
+  starou nepotvrzenou, potvrzenou stejně starou nechá, čerstvé nechá
+  a `uklid_hlidani(0)` nesmaže nic.
+
+Sabotáž, pět směrů, všechny zachyceny: strop pryč (ve čtení SQL
+i živě), práva úklidu přidělená `anon`, úklid mazající i potvrzené,
+podlaha sedmi dní pryč. A při té druhé zaskočil i starší hlídač
+„každá `security definer` funkce si ověří, kdo volá" — dvě nezávislé
+zkoušky na tutéž chybu.
+
+Jedna věc, kterou zkouška změřit nemůže: **jestli ten SQL někdo pustil
+na běžícím projektu.** Je to proto v `docs/pred-vydanim.md` jako jeden
+běh `supabase/00-vse.sql`.

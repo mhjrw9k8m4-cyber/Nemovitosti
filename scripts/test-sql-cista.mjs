@@ -554,6 +554,60 @@ try {
     pravda('a čerstvý nechá být (jinak by se nabídka poslala podruhé)',
       psql(['-d', 'zkouska', '-tAc', `select count(*) from mail_poslane where klic = 'cerstvy'`]).trim() === '1',
       'úklid smazal i čerstvý záznam');
+
+    /* 7) Přihlášky k hlídání e-mailem. subscribe_watch je jediná funkce,
+       kterou smí zavolat kdokoli s veřejným klíčem A která zvětšuje
+       databázi. Měříme to proto rolí anon, ne superuživatelem —
+       tedy přesně tou cestou, kterou má cizí skript k dispozici. */
+    /* `set role anon;` v témže -c vypíše navíc řádek SET, takže se díváme
+       na POSLEDNÍ neprázdný řádek: `t` = přihláška prošla. */
+    const prihlas = (eml, okres) => {
+      const vystup = psqlVse(['-d', 'zkouska', '-tAc',
+        `set role anon; select subscribe_watch('${eml}', ${okres === null ? 'null' : `'${okres}'`});`]);
+      const radky = vystup.split('\n').map((r) => r.trim()).filter(Boolean);
+      return { chyba: /ERROR/i.test(vystup), ano: radky[radky.length - 1] === 't' };
+    };
+    const OKRESY = ['Benešov', 'Beroun', 'Blansko', 'Brno-město', 'Brno-venkov', 'Bruntál',
+      'Břeclav', 'Cheb', 'Chomutov', 'Chrudim', 'Jeseník', 'Jičín'];
+    let prosloPrihlasek = 0;
+    for (const okres of OKRESY) if (prihlas('dotera@priklad.cz', okres).ano) prosloPrihlasek++;
+    pravda('dvanáct míst na jeden e-mail databáze pustí', prosloPrihlasek === 12,
+      `prošlo jen ${prosloPrihlasek} z 12 — strop je přísnější, než má být`);
+    pravda('a třinácté už ne', prihlas('dotera@priklad.cz', 'Karlovy Vary').chyba,
+      'třináctá přihláška prošla — jedna adresa si nasbírá přihlášku na každý okres');
+    pravda('strop platí na adresu, ne na celou tabulku (jiný e-mail projde)',
+      prihlas('druhy@priklad.cz', 'Karlovy Vary').ano,
+      'strop zablokoval i cizí adresu — to by vypnulo hlídání všem');
+    pravda('a znovupřihlášení na už hlídaný okres strop nezdrží',
+      prihlas('dotera@priklad.cz', 'Benešov').ano,
+      'oživení existující přihlášky narazilo na strop — člověk si pak nezmění typy');
+
+    /* Úklid nepotvrzených. Bez něj v tabulce navždy leží řádky po někom,
+       kdo si přihlášku nikdy nepotvrdil (třeba ji vypsal cizí skript). */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into watch_subscriptions(email, okres, confirmed, confirm_token)
+         values ('stary@priklad.cz', 'Kladno', false, 'TOKEN-STARY'),
+                ('potvrzeny@priklad.cz', 'Kladno', true, 'TOKEN-POTVRZENY');
+       update watch_subscriptions set created_at = now() - interval '90 days'
+        where email in ('stary@priklad.cz', 'potvrzeny@priklad.cz');`]);
+    for (const role of ['anon', 'authenticated']) {
+      const r = psqlVse(['-d', 'zkouska', '-tAc', `set role ${role}; select uklid_hlidani(30);`]);
+      pravda(`${role} nesmí pustit úklid hlídání`, /ERROR/i.test(r),
+        'prošlo: ' + r.replace(/\s+/g, ' ').slice(0, 90));
+    }
+    const uklizeno = psql(['-d', 'zkouska', '-tAc', 'select uklid_hlidani(30)']).trim();
+    pravda('úklid smaže starou nepotvrzenou přihlášku', uklizeno === '1', `smazáno ${uklizeno} řádků`);
+    pravda('a potvrzenou nechá být, i když je stejně stará',
+      psql(['-d', 'zkouska', '-tAc',
+        `select count(*) from watch_subscriptions where email = 'potvrzeny@priklad.cz'`]).trim() === '1',
+      'úklid smazal potvrzenou přihlášku — člověk by přestal dostávat poštu bez slova');
+    pravda('a čerstvé nepotvrzené taky (má ještě čas si kliknout)',
+      psql(['-d', 'zkouska', '-tAc',
+        `select count(*) from watch_subscriptions where email = 'dotera@priklad.cz'`]).trim() === '12',
+      'úklid smazal i dnešní přihlášky');
+    pravda('a kratší lhůtu než týden si vynutit nenecháme',
+      psql(['-d', 'zkouska', '-tAc', 'select uklid_hlidani(0)']).trim() === '0',
+      'uklid_hlidani(0) smazal čerstvé řádky — podlaha sedmi dní neplatí');
   }
 } finally {
   try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}

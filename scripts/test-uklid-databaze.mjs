@@ -73,10 +73,18 @@ function spust(env) {
   const s = await server((u) => ({ stav: 200, telo: /uklid_posty/.test(u) ? '7' : '3' }));
   const r = await spust({ SUPABASE_URL: s.url, SUPABASE_SERVICE_ROLE_KEY: KLIC, UKLID_DNI: '180' });
   s.zavri();
-  pravda('zavolá obě úklidové funkce', s.volani.length === 2
-    && s.volani.some((v) => /uklid_navstevnosti/.test(v.cesta))
-    && s.volani.some((v) => /uklid_posty/.test(v.cesta)),
-    'zavoláno: ' + s.volani.map((v) => v.cesta).join(', '));
+  /* SEZNAM FUNKCÍ SE ČTE ZE SKRIPTU, ne z paměti. Dřív tu stálo
+     „zavolá OBĚ úklidové funkce" s pevnou dvojkou — a při třetí
+     úklidové funkci (nepotvrzené přihlášky k hlídání) zkouška spadla
+     na vadu, která žádná nebyla. Takhle kontrola roste s tím, co se
+     opravdu uklízí, a pořád hlásí, když se na některou zapomene. */
+  const zdrojUklidu = (await import('node:fs')).readFileSync(
+    new URL('./uklid-databaze.mjs', import.meta.url), 'utf8');
+  const cekane = [...zdrojUklidu.matchAll(/\['(uklid_[a-z_]+)'/g)].map((m) => m[1]);
+  const nezavolane = cekane.filter((jm) => !s.volani.some((v) => v.cesta.includes(jm)));
+  pravda(`zavolá všechny úklidové funkce ze svého seznamu (${cekane.length})`,
+    cekane.length >= 2 && nezavolane.length === 0 && s.volani.length === cekane.length,
+    `v seznamu: ${cekane.join(', ')} · zavoláno: ${s.volani.map((v) => v.cesta.split('/').pop()).join(', ')}`);
   pravda('pošle, kolik dní se má nechat', /"p_dni":180/.test(s.volani.map((v) => v.telo).join(' ')),
     'těla: ' + s.volani.map((v) => v.telo).join(' '));
   pravda('napíše, kolik řádků ubylo', /smazáno 3 řádků/.test(r.vystup) && /smazáno 7 řádků/.test(r.vystup),

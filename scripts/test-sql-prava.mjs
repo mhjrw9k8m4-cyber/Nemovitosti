@@ -42,7 +42,7 @@ function pravda(popis, vyslo, proc) {
    být nemá. */
 const VYJIMKY = {
   public_listings: 'vrací jen zveřejněné inzeráty, tedy to, co je stejně vidět na webu',
-  subscribe_watch: 'přihlášení e-mailu k hlídání; samo nic neprozradí a potvrzuje se odkazem s tokenem (confirm_watch)',
+  subscribe_watch: 'přihlášení e-mailu k hlídání; samo nic neprozradí, potvrzuje se odkazem s tokenem (confirm_watch) a má strop na jeden e-mail',
   zapis_navstevu: 'zápis návštěvy do statistiky; nic nečte a nemá komu co vydat',
 };
 
@@ -139,6 +139,28 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
   const mazani = (SQL.match(/create\s+policy\s+"listing photos owner delete"[\s\S]*?;/i) || [''])[0];
   pravda('a mazat smí jen vlastník nahraného souboru',
     /owner\s*=\s*auth\.uid\(\)/.test(mazani), mazani.replace(/\s+/g, ' ').slice(0, 120));
+}
+
+/* ---- 5) co smí kdokoli zavolat, nesmí růst bez konce ------------- */
+/* subscribe_watch je volatelná veřejným klíčem (formulář běží
+   z prohlížeče), takže je to jediná cesta, jak může cizí skript
+   zvětšovat naši databázi. Dvě pojistky: strop na jeden e-mail
+   a noční úklid nepotvrzených. */
+{
+  const prihlaska = (SQL.match(/create\s+or\s+replace\s+function\s+subscribe_watch[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('přihláška k hlídání se v SQL opravdu najde', prihlaska.length > 0);
+  pravda('a má strop na počet přihlášek k jednomu e-mailu',
+    /count\(\*\)[\s\S]*watch_subscriptions[\s\S]*raise exception/i.test(prihlaska),
+    'bez stropu si jedna adresa nasbírá přihlášku na každý okres');
+  const uklid = (SQL.match(/create\s+or\s+replace\s+function\s+uklid_hlidani[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('a nepotvrzené přihlášky má kdo uklidit', uklid.length > 0,
+    'uklid_hlidani v SQL není');
+  pravda('úklid maže JEN nepotvrzené (potvrzené a odhlášené zůstanou)',
+    /confirmed\s*=\s*false/i.test(uklid) && !/confirmed\s*=\s*true/i.test(uklid),
+    uklid.replace(/\s+/g, ' ').slice(0, 140));
+  pravda('a pustit ho smí jen služba, ne veřejný klíč',
+    /revoke all on function uklid_hlidani\(integer\) from public, anon, authenticated/i.test(SQL)
+    && /grant execute on function uklid_hlidani\(integer\) to service_role/i.test(SQL));
 }
 
 console.log('\nPráva v databázi');

@@ -144,13 +144,21 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**A kvůli přihláškám k hlídání.** Týmž během přijde strop dvanácti
+hlídaných míst na jednu e-mailovou adresu (`subscribe_watch` smí
+zavolat kdokoli s veřejným klíčem) a funkce `uklid_hlidani()`, která
+maže nepotvrzené přihlášky starší třiceti dní; volá ji noční
+`uklid-databaze.mjs`. Dokud SQL neproběhne, může si jedna adresa
+nechat založit přihlášku na každý okres a nepotvrzené řádky v tabulce
+leží navždy.
+
 *(Vysvětlená ta tajemství byla v samotných úlohách i ve skriptech, ale
 ne tady — a tenhle seznam je to jediné, podle čeho se web spouští.
 `SUPABASE_URL` jsem při prvním zápisu minul a našla ho až ta zkouška,
 která na to od teď dohlíží: `scripts/test-tajemstvi.mjs`.)*
 
-Změřeno 18. 10. na čistém PostgreSQL 16: **2 917 řádků, 16 tabulek,
-42 vlastních funkcí, 14 politik RLS, 39 indexů.** Projde bez jediné
+Změřeno 23. 10. na čistém PostgreSQL 16: **2 971 řádků, 16 tabulek,
+43 vlastních funkcí, 14 politik RLS, 39 indexů.** Projde bez jediné
 chyby. Čísla se s každou migrací mění, takže se **už neopisují ručně**:
 vypisuje je `scripts/test-sql-cista.mjs` na doopravdy založené databázi
 (řádek „· soupis: …"), odkud se sem mají brát. *(Dřív tu stálo „2 334

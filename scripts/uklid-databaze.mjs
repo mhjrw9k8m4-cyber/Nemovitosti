@@ -60,9 +60,16 @@ async function rpc(jmeno, parametry) {
   return { stav: r.status, telo: (await r.text()).slice(0, 200) };
 }
 
+/* Dny u nepotvrzených přihlášek jsou JINÉ než u pošty: na potvrzovací
+   odkaz člověk klikne za minutu, nebo nikdy. Měsíc je tedy velkorysý
+   strop a držet je půl roku by znamenalo držet jen cizí smetí —
+   subscribe_watch smí zavolat kdokoli s veřejným klíčem. */
+const DNI_HLIDANI = Math.max(parseInt(process.env.UKLID_HLIDANI_DNI || '30', 10) || 30, 7);
+
 const ukoly = [
   ['uklid_navstevnosti', {}, 'čítače návštěvnosti starší dvou let'],
   ['uklid_posty', { p_dni: DNI }, `záznamy o odeslané poště starší ${DNI} dní`],
+  ['uklid_hlidani', { p_dni: DNI_HLIDANI }, `nepotvrzené přihlášky k hlídání starší ${DNI_HLIDANI} dní`],
 ];
 
 let chyb = 0;

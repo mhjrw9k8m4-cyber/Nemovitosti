@@ -1045,6 +1045,15 @@ begin
      set types = coalesce(p_types,'{}'), active = true
    where lower(email) = eml and okres is not distinct from okr;
   if not found then
+    -- STROP NA JEDEN E-MAIL. Tuhle funkci smí zavolat kdokoli
+    -- s veřejným klíčem (formulář běží z prohlížeče), a bez stropu si
+    -- jedna adresa může nasbírat přihlášku na KAŽDÝ okres i na celou
+    -- republiku — tedy 78 řádků, které si o ně nikdo neřekl. Dvanáct
+    -- hlídaných míst je nad rámec toho, co člověk uhlídá očima;
+    -- komu nestačí, ten si zařídí účet a hlídání v aplikaci.
+    if (select count(*) from watch_subscriptions where lower(email) = eml) >= 12 then
+      raise exception 'na tuhle adresu je přihlášek už dost';
+    end if;
     insert into watch_subscriptions(email, okres, types, active, confirmed, confirm_token)
     values (eml, okr, coalesce(p_types,'{}'), true, false, gen_random_uuid()::text);
   end if;
@@ -1072,6 +1081,30 @@ declare n int; begin
    where unsubscribe_token = p_token;
   get diagnostics n = row_count; return n > 0;
 end; $$;
+
+-- ---------- 5) Úklid: nepotvrzené přihlášky se nehromadí ----------
+-- Přihláška bez potvrzení nic neposílá (čeká na dvojí potvrzení) a po
+-- měsíci už na ni nikdo neklikne — leží tedy v databázi nadarmo. A je
+-- to i jediná cesta, jak může tabulku zvětšit někdo cizí: funkci
+-- subscribe_watch smí zavolat kdokoli s veřejným klíčem, takže strop
+-- na jeden e-mail je jen polovina odpovědi; druhá je tenhle úklid.
+-- Potvrzené přihlášky se NEMAŽÍ, ani ty odhlášené: `active = false`
+-- je doklad, že o to člověk nestojí, a na druhé přihlášení se tím
+-- nepošle nové potvrzení.
+-- Volá se z nočního scripts/uklid-databaze.mjs, stejně jako úklid
+-- pošty a návštěvnosti; smí ho pustit jen service_role.
+create or replace function uklid_hlidani(p_dni integer default 30)
+returns integer language plpgsql security definer set search_path = public as $$
+declare dni int := greatest(coalesce(p_dni, 30), 7); n int;
+begin
+  delete from watch_subscriptions
+   where confirmed = false
+     and created_at < now() - make_interval(days => dni);
+  get diagnostics n = row_count;
+  return n;
+end; $$;
+revoke all on function uklid_hlidani(integer) from public, anon, authenticated;
+grant execute on function uklid_hlidani(integer) to service_role;
 
 -- Oprávnění: formulář i potvrzovací/odhlašovací odkaz běží z prohlížeče (anon)
 grant execute on function subscribe_watch(text, text, text[]) to anon, authenticated;
