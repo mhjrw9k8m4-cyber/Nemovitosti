@@ -8448,3 +8448,56 @@ rozešlý s hláškou v SQL, stránka pro ten stav bez věty.
 Upozornění do telefonu zatím nejedou (chybí VAPID klíče v Secrets —
 `docs/pred-vydanim.md`), ale **funkce volatelná je už dnes**, takže ta
 díra byla živá bez ohledu na to, jestli se něco posílá.
+
+## 123. Dvě cesty, kterými databáze rostla zvenčí *23. 10.*
+
+Po čtyřech stropech (oddíly 117, 121, 122) jsem si ten seznam udělal
+úplný: **které funkce volatelné zvenčí zapisují, a která z nich má
+strop.** Měřeno nad `supabase/00-vse.sql`, 17 funkcí. Většina z těch bez
+stropu jen přepisuje řádek, který už existuje (`set_search_mail`,
+`confirm_watch`, `unsubscribe_watch`, `mark_search_seen`…), takže tam
+není co ohraničovat. Dvě z nich ale **zakládají nové řádky**:
+
+**1) `zapis_navstevu` — vlastní měření návštěvnosti.** Řádek vzniká pro
+každou kombinaci `(den, stránka, zdroj, zařízení)`. Jméno stránky je
+`[a-z0-9._-]{1,80}` a zdroj `[a-z0-9.-]{1,60}` — tedy **volný text ve
+svém vzoru**, takže kdokoli anonymně vyrobí libovolně mnoho kombinací,
+a tím libovolně mnoho řádků. `uklid_navstevnosti()` maže až po dvou
+letech, takže to obrana není.
+
+Hotovo: **5 000 řádků za den** je strop. Je to nad rámec téhle reality
+(web má kolem 2 400 stránek a zdrojů bývají jednotky), takže víc
+znamená, že čítače někdo plní, ne že přišlo víc lidí. A hlavně:
+**strop se nedrží tajný.** Zahozená zobrazení se sečtou do řádku
+`(strop)`, takže v přehledu je vidět, že se ten den strop sepnul a kolik
+se do něj nevešlo. Mlčet by znamenalo, že čísla toho dne tiše přestala
+odpovídat skutečnosti — a to je u měření ta nejhorší možná vada.
+Kombinace, která se dnes už počítala, se počítá dál i nad stropem.
+
+**2) `ulozene_nahraj` — hromadné nahrání uložených pozemků.** Mělo
+`limit 500`, což omezovalo **jedno volání**, ne účet: dvěma voláními se
+strop 500 (který hlídá `ulozeny_uloz`) obešel. Teď se dopočítá volné
+místo do téhož čísla a vrácený počet vložených řádků to přizná sám.
+
+Hlídači: `test-sql-prava.mjs` 6 nových kontrol (včetně té, že obě čísla
+— jednotlivé i hromadné ukládání — jsou si rovna) a `test-sql-cista.mjs`
+6 nových **na živém PostgreSQL**: tabulka se předem naplní na 4 998
+řádků, pod stropem nová kombinace vznikne, nad stropem už ne, zahozená
+zobrazení se najdou v řádku `(strop)` a už známá kombinace se počítá
+dál; hromadné nahrání dvakrát po sobě skončí na 500 a třetí vrátí nulu.
+
+Sabotáž, čtyři směry, všechny zachyceny: denní strop pryč, strop bez
+značky `(strop)`, strop zahazující i známou kombinaci, hromadné nahrání
+zpátky s limitem na volání.
+
+Co tím **není** vyřešené a je to změřené: `bump_view` (počítadlo
+zhlédnutí inzerátu) a `zapis_navstevu` jdou pořád **nafukovat** — jen už
+z toho neroste tabulka. Řádek se přepisuje, takže je to otázka
+pravdivosti čísel, ne místa. Brzda proti nafukování by potřebovala
+poznat, kdo volá, a to by znamenalo ukládat si IP nebo označení
+zařízení ke každému zhlédnutí; to je horší cena než vada, kterou by to
+opravilo (a v zásadách soukromí stojí, že nic takového neděláme). Co se
+tím dá získat, je navíc malé: `views` vidí jen majitel inzerátu na své
+stránce „Moje inzeráty", nikde se podle nich neřadí ani nic
+nezvýhodňuje, a čísla návštěvnosti nečte veřejná stránka vůbec.
+Zapsáno jako vědomá hranice, ne jako nedodělek.

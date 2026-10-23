@@ -144,6 +144,12 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**A kvůli dvěma cestám, kterými databáze rostla zvenčí.** Měření
+návštěvnosti má od 23. 10. denní strop 5 000 řádků (se značkou
+`(strop)`, aby bylo vidět, že se sepnul) a hromadné nahrání uložených
+pozemků počítá volné místo do stropu 500 na účet, místo limitu na jedno
+volání. Bez spuštění jde oběma cestami zvenčí zakládat řádky bez konce.
+
 **A kvůli odběrům upozornění.** `push_odber_uloz` ověřoval jen to, že
 tři argumenty nejsou prázdné; od 23. 10. hlídá i tvar adresy (https),
 délku (500 / 200 / 100 znaků) a počet zařízení na jeden účet (10). Bez

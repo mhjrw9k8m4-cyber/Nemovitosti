@@ -667,6 +667,61 @@ try {
     psql(['-d', 'zkouska', '-q', '-c',
       `delete from push_odbery where user_id in ('${TEL}', '${PRAZDNY}')`]);
 
+    /* 10) Dvě cesty, kterými by databáze rostla zvenčí.
+       (a) Měření návštěvnosti: řádek vzniká pro každou kombinaci
+       (den, stránka, zdroj, zařízení) a oba texty jsou volné, takže
+       kdokoli anonymně vyrobí libovolně mnoho řádků. Strop se zkouší
+       tak, že se tabulka na dnešní den předem naplní. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `delete from navstevnost where den = current_date;
+       insert into navstevnost(den, stranka, zdroj, zarizeni, zobrazeni, navstevy)
+         select current_date, 'strana-' || i || '.html', '', 'stolni', 1, 1 from generate_series(1, 4998) i;`]);
+    const kolik = () => Number(psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from navstevnost where den = current_date`]).trim());
+    const predStropem = kolik();
+    psqlVse(['-d', 'zkouska', '-tAc', `set role anon; select zapis_navstevu('nova-1.html','','stolni',true);`]);
+    pravda('pod stropem se nová kombinace zapíše', kolik() === predStropem + 1,
+      `řádků bylo ${predStropem}, po zápisu ${kolik()}`);
+    psqlVse(['-d', 'zkouska', '-tAc', `set role anon; select zapis_navstevu('nova-2.html','','stolni',true);`]);
+    const naStropu = kolik();
+    for (let i = 0; i < 5; i++) {
+      psqlVse(['-d', 'zkouska', '-tAc', `set role anon; select zapis_navstevu('vymyslena-${i}.html','zdroj${i}.cz','stolni',true);`]);
+    }
+    pravda('nad stropem už nové řádky nevznikají', kolik() === naStropu + 1,
+      `pět vymyšlených stránek přidalo ${kolik() - naStropu} řádků (čekal se jen řádek (strop))`);
+    pravda('a zahozená zobrazení se spočítají do řádku „(strop)"',
+      Number(psql(['-d', 'zkouska', '-tAc',
+        `select coalesce(sum(zobrazeni),0) from navstevnost where den = current_date and stranka = '(strop)'`]).trim()) === 5,
+      'čísla toho dne by se tiše rozešla se skutečností');
+    pravda('ale už známá kombinace se počítá dál i nad stropem',
+      Number(psql(['-d', 'zkouska', '-tAc',
+        `select zobrazeni from navstevnost where den = current_date and stranka = 'nova-1.html'`]).trim()) >= 1
+      && (psqlVse(['-d', 'zkouska', '-tAc', `set role anon; select zapis_navstevu('nova-1.html','','stolni',false);`]),
+          Number(psql(['-d', 'zkouska', '-tAc',
+            `select zobrazeni from navstevnost where den = current_date and stranka = 'nova-1.html'`]).trim()) === 2),
+      'strop by zahodil i měření stránek, které se dnes už počítaly');
+    psql(['-d', 'zkouska', '-q', '-c', `delete from navstevnost where den = current_date`]);
+
+    /* (b) Hromadné nahrání uložených pozemků. Strop 500 je na ÚČET;
+       `limit 500` v SQL omezoval jedno volání, takže se dvěma voláními
+       obešel. */
+    const HROM = '55555555-5555-5555-5555-555555555555';
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into auth.users(id, email) values ('${HROM}', 'hromada@priklad.cz') on conflict (id) do nothing;
+       delete from ulozene where user_id = '${HROM}';`]);
+    const nahraj = (od, do_) => psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${HROM}'; select ulozene_nahraj(array(select 'k' || i from generate_series(${od}, ${do_}) i));`]);
+    nahraj(1, 400);
+    nahraj(401, 900);
+    const celkem = Number(psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from ulozene where user_id = '${HROM}'`]).trim());
+    pravda('hromadné nahrání neobejde strop 500 na účet', celkem === 500,
+      `na účtu je ${celkem} uložených pozemků`);
+    const dalsi = nahraj(1000, 1100).trim();
+    pravda('a další nahrání už nevloží nic', /(^|\n)\s*0\s*$/.test(dalsi),
+      `vrátilo „${dalsi.replace(/\s+/g, ' ')}" — mělo vrátit 0`);
+    psql(['-d', 'zkouska', '-q', '-c', `delete from ulozene where user_id = '${HROM}'`]);
+
     /* Úklid nepotvrzených. Bez něj v tabulce navždy leží řádky po někom,
        kdo si přihlášku nikdy nepotvrdil (třeba ji vypsal cizí skript). */
     psql(['-d', 'zkouska', '-q', '-c',

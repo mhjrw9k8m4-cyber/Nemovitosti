@@ -237,6 +237,36 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
     'přepínač by se vrátil zpátky a nikdo by neřekl proč');
 }
 
+/* ---- 8) co zvenčí ROSTE, to má strop --------------------------- */
+/* Rozdíl proti ostatním stropům: tyhle dvě funkce nepřepisují řádek,
+   ale zakládají nový. Měření návštěvnosti zakládá řádek pro každou
+   kombinaci (den, stránka, zdroj, zařízení) a oba texty jsou volné;
+   hromadné nahrání uložených mělo `limit 500` na JEDNO volání, takže se
+   strop 500 na účet obešel dvěma voláními. */
+{
+  const navsteva = (SQL.match(/create\s+or\s+replace\s+function\s+zapis_navstevu[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('měření návštěvnosti se v SQL najde', navsteva.length > 0);
+  pravda('a má denní strop na počet řádků',
+    /count\(\*\)[\s\S]*from navstevnost[\s\S]*current_date[\s\S]*>=\s*\d+/i.test(navsteva),
+    'kdokoli anonymně vyrobí libovolně mnoho kombinací, tedy řádků');
+  pravda('a sepnutý strop se pozná z dat, ne jen z kódu',
+    /'\(strop\)'/.test(navsteva),
+    'zahozená zobrazení by zmizela a čísla toho dne by tiše lhala');
+  pravda('a strop nezahodí měření kombinace, která se dnes už počítala',
+    /not exists[\s\S]*from navstevnost[\s\S]*stranka\s*=\s*s/i.test(navsteva),
+    'nad stropem by se přestalo počítat i to, co se počítat má');
+
+  const hromada = (SQL.match(/create\s+or\s+replace\s+function\s+ulozene_nahraj[\s\S]*?\$\$;/i) || [''])[0];
+  const jeden = (SQL.match(/create\s+or\s+replace\s+function\s+ulozeny_uloz[\s\S]*?\$\$;/i) || [''])[0];
+  const sJedne = /from ulozene where user_id = uid\)\s*>=\s*(\d+)/.exec(jeden);
+  const sHromady = /greatest\(0,\s*(\d+)\s*-/.exec(hromada);
+  pravda('hromadné nahrání uložených počítá volné místo do stropu', !!sHromady,
+    '`limit 500` omezoval jedno volání, ne účet — dvěma voláními se strop obešel');
+  pravda('a je to týž strop jako u jednotlivého ukládání',
+    !!sJedne && !!sHromady && sJedne[1] === sHromady[1],
+    `jednotlivě ${sJedne ? sJedne[1] : '(nic)'}, hromadně ${sHromady ? sHromady[1] : '(nic)'}`);
+}
+
 console.log('\nPráva v databázi');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

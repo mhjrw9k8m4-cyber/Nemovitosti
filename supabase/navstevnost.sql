@@ -88,6 +88,28 @@ begin
 
   d := case when p_zarizeni = 'mobil' then 'mobil' else 'stolni' end;
 
+  /* DENNÍ STROP NA POČET ŘÁDKŮ. Řádek vzniká pro každou kombinaci
+     (den, stránka, zdroj, zařízení) a `stranka` i `zdroj` jsou volný
+     text ve svém vzoru — kdokoli anonymně vyrobí libovolně mnoho
+     kombinací, tedy libovolně mnoho řádků. Úklid (uklid_navstevnosti)
+     maže až po dvou letech, takže to není obrana.
+     Pět tisíc řádků za den je nad rámec téhle reality: web má kolem
+     2 400 stránek a zdrojů bývá jednotky. Víc znamená, že čítače někdo
+     plní, ne že by přišlo víc lidí.
+     STROP SE NEDRŽÍ TAJNÝ. Zahodit zobrazení a mlčet by znamenalo, že
+     se čísla toho dne tiše rozešla se skutečností; místo toho se
+     započítají do řádku `(strop)`, takže je v přehledu vidět, že se
+     ten den strop sepnul a kolik se do něj nevešlo. */
+  if (select count(*) from navstevnost where den = current_date) >= 5000
+     and not exists (select 1 from navstevnost
+                      where den = current_date and stranka = s and zdroj = z and zarizeni = d) then
+    insert into navstevnost (den, stranka, zdroj, zarizeni, zobrazeni, navstevy)
+    values (current_date, '(strop)', '', d, 1, 0)
+    on conflict (den, stranka, zdroj, zarizeni) do update
+      set zobrazeni = navstevnost.zobrazeni + 1;
+    return;
+  end if;
+
   insert into navstevnost (den, stranka, zdroj, zarizeni, zobrazeni, navstevy)
   values (current_date, s, z, d, 1, case when p_prvni then 1 else 0 end)
   on conflict (den, stranka, zdroj, zarizeni) do update

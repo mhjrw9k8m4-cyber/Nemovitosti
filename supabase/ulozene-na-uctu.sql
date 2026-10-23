@@ -79,13 +79,20 @@ grant execute on function moje_ulozene() to authenticated;
    telefonu trvalo vteřiny a půlka by se po cestě ztratila. */
 create or replace function ulozene_nahraj(p_klice text[])
 returns integer language plpgsql security definer set search_path = public as $$
-declare uid uuid := auth.uid(); vlozeno int := 0;
+declare uid uuid := auth.uid(); vlozeno int := 0; volno int;
 begin
   if uid is null then return 0; end if;
+  /* STROP JE NA ÚČET, NE NA JEDNO VOLÁNÍ. Dřív tu stálo `limit 500`,
+     což omezovalo jedno nahrání — opakovaným voláním se strop 500,
+     který hlídá `ulozeny_uloz`, obešel. Tady se proto dopočítá volné
+     místo do TÉHOŽ čísla; co se nevejde, se nenahraje a návratová
+     hodnota (kolik řádků vzniklo) to přizná sama. */
+  select greatest(0, 500 - (select count(*) from ulozene where user_id = uid)) into volno;
+  if volno = 0 then return 0; end if;
   insert into ulozene(user_id, klic)
   select uid, k from unnest(coalesce(p_klice, '{}')) as k
    where trim(k) <> '' and length(k) <= 200
-   limit 500
+   limit volno
   on conflict (user_id, klic) do nothing;
   get diagnostics vlozeno = row_count;
   return vlozeno;
