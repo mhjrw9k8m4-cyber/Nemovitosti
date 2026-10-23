@@ -629,3 +629,20 @@ zařízení hlásilo „Uložit" a u poznámky stála nepravda o tom, kde
 skončí. Správně: pokus zopakovat po `load` (a ještě krátce po něm,
 protože obnova prošlého tokenu je asynchronní), nebo to volat při každém
 vykreslení, jak to dělá `js/main.js`.
+
+### Nová úloha v CI má napsaná práva a balíčky bere ze zámku
+
+Osm úloh v `.github/workflows` mělo 23. 10. napsané `permissions:`
+jen ve třech případech; zbylé jely s tím, co má repozitář nastavené
+v prohlížeči — tedy mimo historii. Pravidlo: každá nová úloha má
+`permissions: contents: read`, a `contents: write` jen tehdy, když
+opravdu pushuje. Úloha, která nepushuje, přidá checkoutu
+`persist-credentials: false` (token pak neleží v `.git/config`,
+dokud v téže úloze běží stovky skriptů a instalace z npm).
+
+Balíčky se instalují `npm ci --omit=dev --ignore-scripts` (zámek
+rozhoduje), a když to jinak nejde, s PŘIPNUTOU verzí
+(`playwright@1.64.1`). `npm install jmeno` bez verze neposlouchá
+`package-lock.json` — a rozdíl verzí playwrightu už jednou udělal
+červenou CI při zelené zkoušce. Cizí akce (co není `actions/*`) musí
+být připnutá na SHA. Hlídá to `scripts/test-ci-prava.mjs`.

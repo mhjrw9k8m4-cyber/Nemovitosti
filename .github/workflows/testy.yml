@@ -22,6 +22,14 @@ concurrency:
   group: testy-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
+# NEJMENŠÍ POTŘEBNÁ PRÁVA. Bez tohohle bloku dostane úloha práva, která
+# má repozitář nastavená ve svém nastavení — tedy něco, co v repozitáři
+# vidět není a co se dá přepnout mimo historii. Tahle úloha nic
+# nezapisuje (nekomituje, nepíše komentáře, nenahrává artefakty), takže
+# jí stačí přečíst si zdroj. Hlídá to scripts/test-ci-prava.mjs.
+permissions:
+  contents: read
+
 jobs:
   testy:
     runs-on: ubuntu-latest
@@ -32,6 +40,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
 
       - name: Node.js
         uses: actions/setup-node@v4
@@ -205,7 +220,13 @@ jobs:
 
       - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
         run: |
-          npm install --no-audit --no-fund --omit=dev jpeg-js
+          # PODLE ZÁMKU A BEZ INSTALAČNÍCH SKRIPTŮ. `npm install jpeg-js`
+          # jmenuje balíček, takže si verzi vybere znovu podle ^0.4.4 —
+          # package-lock.json u toho neplatí. `npm ci` nainstaluje přesně
+          # to, co je v zámku, a --ignore-scripts nepustí životní skripty
+          # balíčků (dnes žádný takový nemáme, ale nová verze ho přidat
+          # může a spustila by se bez čtení). Hlídá scripts/test-ci-prava.mjs.
+          npm ci --no-audit --no-fund --omit=dev --ignore-scripts
           node scripts/test-kontrola-e2e.mjs
 
       # Nestačí, že se soubory sečtou — musí z nich jít databázi opravdu
@@ -418,6 +439,9 @@ jobs:
       - name: Práva v databázi (RLS a kdo smí volat funkce)
         run: node scripts/test-sql-prava.mjs
 
+      - name: Práva úloh v CI a odkud se berou balíčky
+        run: node scripts/test-ci-prava.mjs
+
       - name: Nálož v datech neprojde generátory
         run: node scripts/test-escape-generatory.mjs
 
@@ -451,6 +475,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
 
       - name: Node.js
         uses: actions/setup-node@v4
@@ -459,13 +490,17 @@ jobs:
 
       - name: Prohlížeč
         run: |
-          npm install --no-audit --no-fund playwright-core playwright
+          # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
+          # verze, takže se instalovalo to, co bylo na npm nejnovější
+          # v minutě běhu — jednou to rozsvítilo CI při zelené zkoušce
+          # (oddíl 101: page.accessibility v 1.64 neexistuje). Zvednout
+          # verzi je od teď změna v repozitáři, kterou je vidět.
+          # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
+          # ne životním skriptem balíčku.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
           npx playwright install --with-deps chromium
-          # KTERÁ VERZE TO VLASTNĚ JE. Instaluje se nepřipnutá, takže se
-          # mění sama — a rozdíl proti verzi v node_modules u mě na stroji
-          # už jednou udělal červenou CI při zelené zkoušce (oddíl 101:
-          # page.accessibility v 1.64 neexistuje). Ať je to v logu vidět
-          # na první pohled, než se bude hádat o příčině.
+          # Verze zůstává v logu: hádat se o příčině červené CI se nemá
+          # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
       - name: Kontrola fotek (že běží a odkud se bere)
         run: node scripts/test-kontrola-fotek.mjs
@@ -682,6 +717,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
 
       - name: Node.js
         uses: actions/setup-node@v4
@@ -690,13 +732,17 @@ jobs:
 
       - name: Prohlížeč
         run: |
-          npm install --no-audit --no-fund playwright-core playwright
+          # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
+          # verze, takže se instalovalo to, co bylo na npm nejnovější
+          # v minutě běhu — jednou to rozsvítilo CI při zelené zkoušce
+          # (oddíl 101: page.accessibility v 1.64 neexistuje). Zvednout
+          # verzi je od teď změna v repozitáři, kterou je vidět.
+          # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
+          # ne životním skriptem balíčku.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
           npx playwright install --with-deps chromium
-          # KTERÁ VERZE TO VLASTNĚ JE. Instaluje se nepřipnutá, takže se
-          # mění sama — a rozdíl proti verzi v node_modules u mě na stroji
-          # už jednou udělal červenou CI při zelené zkoušce (oddíl 101:
-          # page.accessibility v 1.64 neexistuje). Ať je to v logu vidět
-          # na první pohled, než se bude hádat o příčině.
+          # Verze zůstává v logu: hádat se o příčině červené CI se nemá
+          # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
 
       - name: Projít chat v prohlížeči

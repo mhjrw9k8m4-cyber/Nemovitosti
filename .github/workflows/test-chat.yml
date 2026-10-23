@@ -7,6 +7,14 @@ name: Test psaní v aplikaci
 on:
   workflow_dispatch: {}
 
+# NEJMENŠÍ POTŘEBNÁ PRÁVA. Bez tohohle bloku dostane úloha práva, která
+# má repozitář nastavená ve svém nastavení — tedy něco, co v repozitáři
+# vidět není a co se dá přepnout mimo historii. Tahle úloha nic
+# nezapisuje (nekomituje, nepíše komentáře, nenahrává artefakty), takže
+# jí stačí přečíst si zdroj. Hlídá to scripts/test-ci-prava.mjs.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -16,6 +24,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

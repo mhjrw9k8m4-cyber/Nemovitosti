@@ -8143,3 +8143,81 @@ zkoušky na tutéž chybu.
 Jedna věc, kterou zkouška změřit nemůže: **jestli ten SQL někdo pustil
 na běžícím projektu.** Je to proto v `docs/pred-vydanim.md` jako jeden
 běh `supabase/00-vse.sql`.
+
+## 118. Pět úloh v CI bez napsaných práv a balíčky „co je právě nejnovější" *23. 10.*
+
+Zabezpečení webu má druhou polovinu, která na webu není vidět:
+**co může udělat úloha na GitHubu.** Změřeno 23. 10. nad
+`.github/workflows` (osm souborů):
+
+| Co | Jak to bylo |
+|---|---|
+| `permissions:` napsané | **3 z 8** |
+| úlohy s nejsilnějšími tajemstvími | 3 (service-role klíč, Resend, privátní VAPID) — **žádná z nich práva napsaná neměla** |
+| token z checkoutu na disku | ve **všech** úlohách (`persist-credentials` se nenastavuje, výchozí je `true`) |
+| instalace balíčků jménem bez verze | **4 místa** (`jpeg-js`, 2× `playwright-core playwright`) |
+| cizí akce (mimo `actions/*`) | 0 |
+| vložení příkazu přes `${{ github.event… }}` | 0 |
+
+Co na tom je špatně:
+
+* **Práva, která nejsou v repozitáři, nejsou vidět.** Úloha bez
+  `permissions:` dostane to, co má repozitář nastavené v prohlížeči —
+  tedy stav mimo historii, který se dá přepnout jedním klikem a nikdo
+  si toho nevšimne. U úlohy, která nic nezapisuje, je správná odpověď
+  `contents: read`.
+* **Token z checkoutu leží v `.git/config` po celou úlohu** a vedle
+  toho se v téže úloze instalují balíčky z npm a pouští se stovky
+  skriptů. Žádný skript v `scripts/` s gitem nemluví (změřeno: ani
+  jedno volání), takže `persist-credentials: false` nic nestojí.
+* **`npm install jpeg-js` neposlouchá `package-lock.json`.** Jmenovaný
+  balíček si verzi vybere znovu podle rozsahu `^0.4.4`. A
+  `npm install playwright-core playwright` bez verze vzal to, co bylo
+  na npm nejnovější v minutě běhu: `fetch-nsfw-model.yml` má přitom
+  připnuté `playwright@1.47.2`, takže mezi dvěma úlohami téhož
+  repozitáře bylo **sedmnáct menších vydání** rozdílu. Ten rozdíl už
+  jednou rozsvítil CI při zelené zkoušce (oddíl 101:
+  `page.accessibility` ve 1.64 neexistuje) — tahle vada není
+  hypotetická, byla zaplacená.
+* **Instalace pouští životní skripty balíčků.** Dnes žádný náš balíček
+  žádný nemá (změřeno nad zámkem: `hasInstallScript` nikde), ale nové
+  vydání ho přidat může — a spustilo by se v úloze, kde je
+  service-role klíč k databázi, bez toho, že by si ho kdokoli přečetl.
+
+Hotovo:
+
+* `permissions: contents: read` do pěti úloh, které nic nezapisují;
+  `contents: write` zůstává jen třem, které opravdu pushují;
+* `persist-credentials: false` u checkoutu v těch pěti;
+* `npm ci --omit=dev --ignore-scripts` místo `npm install jpeg-js`
+  (zámek rozhoduje) a připnutý `playwright-core@1.64.1
+  playwright@1.64.1` místo nepřipnutého — zvednout verzi je od teď
+  změna v repozitáři, kterou je vidět;
+* `--ignore-scripts` i u připnuté instalace ve `fetch-nsfw-model.yml`.
+
+Vyzkoušeno, ne odhadnuto: `npm ci --omit=dev --ignore-scripts` nad
+zámkem nainstaluje 23 balíčků a `jpeg-js` 0.4.4 dekóduje; připnutá
+instalace playwrightu bez životních skriptů dá funkční API i funkční
+`npx playwright install` (ověřeno `--dry-run`).
+
+Hlídá to `scripts/test-ci-prava.mjs` (12 kontrol) a jsou v něm dvě
+kontroly opačným směrem, aby se ty hlavní nedaly „splnit" naplocho:
+kdo pushuje, ten `contents: write` i token POTŘEBUJE. Nové je taky
+pravidlo do budoucna: **cizí akce musí být připnutá na SHA.** Dnes
+žádnou nemáme (jen `actions/checkout` a `actions/setup-node`), a právě
+proto je ta kontrola levná — platit začne ve chvíli, kdy někdo první
+cizí akci přidá. U `actions/*` zůstává značka `@v4` schválně: SHA bez
+Dependabota zestárne a nikdo ho nezvedne, a tahle dvě jména jsou od
+GitHubu samotného.
+
+Sabotáž, osm směrů, všechny zachyceny: práva pryč, zápis bez pushe,
+push bez práva zápisu, token na disku, pushující úloha bez tokenu,
+balíček bez verze, instalace bez `--ignore-scripts`, cizí akce na
+značku, titulek pull requestu vložený do příkazu.
+
+Dvakrát přitom spadla moje vlastní kontrola, a obojí stojí za zápis:
+čtení `with:` bloku checkoutu se zastavilo na prvním komentáři
+(nastavení tam bylo napsané, kontrola ho neviděla) a za balíček si
+spočítala `2>&1` z přesměrování. Obojí je totéž poučení jako u
+escapování v oddílu 115: **kontrola, která si čte text po svém, musí
+mít doloženo, že vidí to, co je v souboru napsané** — jinak křičí vlka.

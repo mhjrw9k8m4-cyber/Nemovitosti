@@ -29,6 +29,14 @@ on:
         required: false
         default: false
 
+# NEJMENŠÍ POTŘEBNÁ PRÁVA. Bez tohohle bloku dostane úloha práva, která
+# má repozitář nastavená ve svém nastavení — tedy něco, co v repozitáři
+# vidět není a co se dá přepnout mimo historii. Tahle úloha nic
+# nezapisuje (nekomituje, nepíše komentáře, nenahrává artefakty), takže
+# jí stačí přečíst si zdroj. Hlídá to scripts/test-ci-prava.mjs.
+permissions:
+  contents: read
+
 jobs:
   rozeslat:
     runs-on: ubuntu-latest
@@ -39,6 +47,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
 
       - name: Node.js
         uses: actions/setup-node@v4
