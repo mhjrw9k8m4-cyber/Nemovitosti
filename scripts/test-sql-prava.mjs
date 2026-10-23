@@ -193,6 +193,50 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
     `poznámky ${dKlic ? dKlic[1] : '(nic)'}, uložené ${dUloz ? dUloz[1] : '(nic)'}`);
 }
 
+/* ---- 7) odběry upozornění: strop a tvar ------------------------- */
+/* Řádek v push_odbery je jedinečný podle endpointu, takže bez stropu
+   mohl kterýkoli přihlášený účet zakládat řádky bez konce — a bez
+   kontroly tvaru tam šel uložit jakýkoli text, ne adresa push služby. */
+{
+  const push = (SQL.match(/create\s+or\s+replace\s+function\s+push_odber_uloz[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('ukládání odběru se v SQL najde', push.length > 0);
+  pravda('a endpoint musí být https adresa', /\^https:\/\//.test(push),
+    'co není adresa push služby, není odběr');
+  pravda('a má strop na délku', /length\(p_endpoint\)\s*>\s*\d+/.test(push)
+    && /length\(p_p256dh\)\s*>\s*\d+/.test(push) && /length\(p_auth\)\s*>\s*\d+/.test(push),
+    'bez stropu na délku se sem dá uložit megabajt');
+  pravda('a strop na počet zařízení na jeden účet',
+    /count\(\*\)[\s\S]*from push_odbery[\s\S]*>=\s*\d+/i.test(push),
+    'účet si může zakládat odběry bez konce');
+  pravda('a přeuložení už známého zařízení strop nezdrží',
+    /not exists[\s\S]*from push_odbery[\s\S]*endpoint\s*=\s*p_endpoint/i.test(push),
+    'po přeinstalování prohlížeče by se klíče u plného stropu neuložily');
+
+  /* A WEB O TOM MUSÍ UMĚT ŘÍCT. Strop, o kterém se mlčí, vypadá jako
+     „nejde to a nevím proč": přepínač se vrátí zpátky a vedle stojí
+     věta o povolení v prohlížeči, se kterou to nemá nic společného.
+     Text výjimky je proto ve TŘECH kopiích — v SQL, v js/push.js (podle
+     něj se ten případ pozná) a ve větě na hlidani.html. Tahle kontrola
+     drží všechny tři u sebe. */
+  const hlaska = (/raise exception '([^']*odběrů upozornění[^']*)'/.exec(push) || ['', ''])[1];
+  pravda('hláška o plném stropu odběrů se v SQL najde', hlaska.length > 0,
+    'bez ní se ten případ nedá od ostatních chyb poznat');
+  const pushJs = readFileSync(path.join(KOREN, 'js', 'push.js'), 'utf8');
+  /* Vzor se bere JAKÝKOLI, který se na tu zprávu ptá — ne jen ten
+     správný. Kdyby se hledal rovnou se správným textem, zkouška by
+     u rozešlého vzoru vypsala prázdno místo toho, co tam doopravdy je. */
+  const vzor = (/\/([^/\n]+)\/i\.test\(zprava\)/.exec(pushJs) || ['', ''])[1];
+  pravda('a js/push.js ten případ pozná podle téže hlášky',
+    !!vzor && new RegExp(vzor, 'i').test(hlaska),
+    `v SQL „${hlaska}", v js/push.js vzor „${vzor}"`);
+  pravda('a vrací pro něj vlastní stav, ne obecnou chybu',
+    /'plno'/.test(pushJs), "js/push.js nevrací 'plno' — stránka pak nemá podle čeho větu vybrat");
+  const hlidani = readFileSync(path.join(KOREN, 'hlidani.html'), 'utf8');
+  pravda('a stránka hlídání pro ten stav má větu',
+    /stav === 'plno'/.test(hlidani) && /deseti zařízeních/.test(hlidani),
+    'přepínač by se vrátil zpátky a nikdo by neřekl proč');
+}
+
 console.log('\nPráva v databázi');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

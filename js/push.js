@@ -83,7 +83,17 @@
           var p256dh = (j && j.keys && j.keys.p256dh) || naBase64url(odber.getKey('p256dh'));
           var auth = (j && j.keys && j.keys.auth) || naBase64url(odber.getKey('auth'));
           return rpc('push_odber_uloz', { p_endpoint: odber.endpoint, p_p256dh: p256dh, p_auth: auth }, true)
-            .then(function (res) { return (res && res.error) ? 'chyba' : 'hotovo'; });
+            .then(function (res) {
+              if (!res || !res.error) return 'hotovo';
+              /* STROP NA POČET ZAŘÍZENÍ se musí poznat od ostatních chyb,
+                 jinak by se člověku napsalo „prohlížeč se zeptá na
+                 povolení" u něčeho, co povolením vůbec není. Pozná se
+                 podle textu výjimky (PostgREST ho posílá v message);
+                 ta věta je v supabase/hlidani-pushem.sql a shodu obou
+                 míst hlídá scripts/test-sql-prava.mjs. */
+              var zprava = String((res.error && (res.error.message || res.error.hint)) || '');
+              return /odběrů upozornění/i.test(zprava) ? 'plno' : 'chyba';
+            });
         });
       })
       .catch(function () { return 'chyba'; });

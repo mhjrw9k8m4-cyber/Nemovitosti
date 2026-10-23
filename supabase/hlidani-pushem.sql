@@ -75,6 +75,29 @@ begin
   if uid is null then raise exception 'musíte být přihlášeni'; end if;
   if coalesce(p_endpoint,'') = '' or coalesce(p_p256dh,'') = '' or coalesce(p_auth,'') = ''
     then return false; end if;
+  /* TVAR A DÉLKA. Endpoint vydává push služba prohlížeče, takže je to
+     vždycky https adresa — ty dnešní mají kolem 200 znaků (Google,
+     Mozilla, Apple). Klíče jsou base64: p256dh 87 znaků, auth 22.
+     Dosud se hlídalo jen to, že ty tři texty nejsou prázdné, takže se
+     sem dal uložit megabajt čehokoli. Na délku se proto hlídá s rezervou
+     a tvar endpointu se ověří: co není https adresa, není odběr. */
+  if p_endpoint !~ '^https://[^[:space:]]+$' or length(p_endpoint) > 500 then
+    raise exception 'adresa odběru nevypadá jako adresa push služby';
+  end if;
+  if length(p_p256dh) > 200 or length(p_auth) > 100 then
+    raise exception 'klíče odběru jsou příliš dlouhé';
+  end if;
+  /* STROP NA POČET ZAŘÍZENÍ. Řádek je jedinečný podle endpointu, takže
+     bez stropu mohl kterýkoli přihlášený účet zakládat řádky bez konce
+     (databáze je na bezplatném tarifu, 500 MB). Deset zařízení na jeden
+     účet je nad rámec toho, co člověk nosí; komu to nestačí, ten starý
+     odběr odhlásí — a prohlížeč to dělá sám, když se odběr zneplatní.
+     Platí jen pro NOVÝ endpoint: přeuložení klíčů u už známého zařízení
+     (po přeinstalování prohlížeče) musí jít i při plném stropu. */
+  if (select count(*) from push_odbery where user_id = uid) >= 10
+     and not exists (select 1 from push_odbery where endpoint = p_endpoint and user_id = uid) then
+    raise exception 'odběrů upozornění je na tomhle účtu už dost (10)';
+  end if;
   -- Týž endpoint může po přeinstalování patřit témuž účtu znovu; klíče
   -- se pak mění, takže se přepíšou. Na cizí účet ho přepsat nelze.
   insert into push_odbery(user_id, endpoint, p256dh, auth)

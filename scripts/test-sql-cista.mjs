@@ -628,6 +628,45 @@ try {
     psql(['-d', 'zkouska', '-q', '-c', `delete from poznamky where user_id = '${DRUHY}'`]);
     psql(['-d', 'zkouska', '-q', '-c', `delete from poznamky where user_id = '${JA}'`]);
 
+    /* 9) Odběry upozornění do telefonu: strop na počet, tvar a délka.
+       Zkouší se rolí přihlášeného, tedy tou cestou, kterou má kdokoli
+       registrovaný. Druhý účet (prázdný) je tu schválně: na plném účtu
+       by odmítnutí mohlo přijít od stropu na POČET, a kontrola tvaru by
+       pak měřila něco jiného, než co tvrdí — na to jsem u poznámek
+       (oddíl 121) už jednou narazil. */
+    const TEL = '33333333-3333-3333-3333-333333333333';
+    const PRAZDNY = '44444444-4444-4444-4444-444444444444';
+    const jakoTel = (sql) => psqlVse(['-d', 'zkouska', '-tAc', `set pk.uid = '${TEL}'; ${sql}`]);
+    const jakoPrazdny = (sql) => psqlVse(['-d', 'zkouska', '-tAc', `set pk.uid = '${PRAZDNY}'; ${sql}`]);
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into auth.users(id, email) values ('${TEL}', 'tel@priklad.cz'), ('${PRAZDNY}', 'prazdny@priklad.cz')
+         on conflict (id) do nothing;
+       insert into push_odbery(user_id, endpoint, p256dh, auth)
+         select '${TEL}', 'https://push.priklad.cz/' || i, 'klic-' || i, 'auth-' || i from generate_series(1, 9) i;`]);
+    pravda('desáté zařízení na účet projde',
+      !/ERROR/i.test(jakoTel(`select push_odber_uloz('https://push.priklad.cz/10','klic','auth')`)),
+      'neprošlo ani desáté — strop je přísnější, než má být');
+    pravda('a jedenácté už ne',
+      /ERROR/i.test(jakoTel(`select push_odber_uloz('https://push.priklad.cz/11','klic','auth')`)),
+      'účet si může zakládat odběry bez konce');
+    pravda('přeuložení klíčů u známého zařízení jde i při plném stropu',
+      !/ERROR/i.test(jakoTel(`select push_odber_uloz('https://push.priklad.cz/5','novy-klic','novy-auth')`)),
+      'po přeinstalování prohlížeče by se klíče neuložily');
+    pravda('je co měřit — na prázdném účtu platný odběr projde',
+      !/ERROR/i.test(jakoPrazdny(`select push_odber_uloz('https://push.priklad.cz/jiny','klic','auth')`)),
+      'ani platný odběr neprošel — pak kontroly pod tím nic neváží');
+    pravda('co není https adresa, se jako odběr nepřijme',
+      /ERROR/i.test(jakoPrazdny(`select push_odber_uloz('tohle není adresa','klic','auth')`)),
+      'do tabulky šel uložit jakýkoli text');
+    pravda('a dlouhá adresa taky ne',
+      /ERROR/i.test(jakoPrazdny(`select push_odber_uloz('https://push.priklad.cz/' || repeat('x', 600),'klic','auth')`)),
+      'bez stropu na délku se sem dá uložit megabajt');
+    pravda('ani dlouhé klíče',
+      /ERROR/i.test(jakoPrazdny(`select push_odber_uloz('https://push.priklad.cz/dalsi', repeat('k', 300),'auth')`)),
+      'klíče jsou base64 o 87 a 22 znacích, tohle je něco jiného');
+    psql(['-d', 'zkouska', '-q', '-c',
+      `delete from push_odbery where user_id in ('${TEL}', '${PRAZDNY}')`]);
+
     /* Úklid nepotvrzených. Bez něj v tabulce navždy leží řádky po někom,
        kdo si přihlášku nikdy nepotvrdil (třeba ji vypsal cizí skript). */
     psql(['-d', 'zkouska', '-q', '-c',

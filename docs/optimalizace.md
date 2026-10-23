@@ -8401,3 +8401,50 @@ na co je napsaná** (oddíly 115 a 120).
 
 V běžícím projektu to platí teprve po spuštění `supabase/00-vse.sql` —
 zapsáno v `docs/pred-vydanim.md`, oddíl 3.
+
+## 122. Odběry upozornění: tři texty bez stropu a bez tvaru *23. 10.*
+
+Po poznámkách (oddíl 121) zbývala poslední tabulka, do které smí
+zakládat řádky kterýkoli přihlášený účet: `push_odbery` — adresa push
+služby prohlížeče a dva klíče, kterými se zpráva zašifruje pro to
+zařízení. `push_odber_uloz` ověřoval **jen to, že ty tři texty nejsou
+prázdné.** Nehlídal:
+
+* **počet zařízení.** Řádek je jedinečný podle endpointu, takže šlo
+  zakládat řádky bez konce;
+* **délku.** `endpoint`, `p256dh` i `auth` jsou `text` bez stropu —
+  jedním voláním se dal uložit megabajt (třikrát);
+* **tvar.** Endpoint vydává push služba prohlížeče, takže je to vždycky
+  `https://…`; funkce přijala jakýkoli text.
+
+Hotovo: **10 zařízení na účet** (nad rámec toho, co člověk nosí; přes
+to prohlížeč stejně starý odběr sám zneplatní), **500 / 200 / 100
+znaků** (dnešní endpointy mají kolem 200, klíče base64 87 a 22 — strop
+je rezerva, ne cíl) a **`^https://`** na endpointu. Strop na počet platí
+jen pro NOVÝ endpoint: přeuložení klíčů u už známého zařízení (po
+přeinstalování prohlížeče) musí jít i při plném stropu.
+
+**A web o tom umí říct.** Strop, o kterém se mlčí, vypadá jako „nejde to
+a nevím proč": přepínač se vrátí zpátky a vedle stojí věta o povolení
+v prohlížeči, se kterou to nemá nic společného. `js/push.js` proto ten
+případ pozná podle textu výjimky a vrací vlastní stav `'plno'`;
+`hlidani.html` pro něj má větu o deseti zařízeních. Text té výjimky je
+tím ve třech kopiích (SQL, `js/push.js`, `hlidani.html`) — a **drží je
+u sebe kontrola**, která hlášku z SQL vytáhne a ověří, že se na ni
+klient opravdu ptá.
+
+Hlídači: `test-sql-prava.mjs` 9 nových kontrol (5 nad SQL, 4 nad tím,
+že to web umí vysvětlit), `test-sql-cista.mjs` 7 nových **na živém
+PostgreSQL rolí přihlášeného**. Druhý, prázdný účet je v nich schválně:
+na plném účtu by odmítnutí mohlo přijít od stropu na POČET a kontrola
+tvaru by měřila něco jiného, než co tvrdí — na to jsem u poznámek
+narazil (oddíl 121), takže se to tady udělalo hned správně.
+
+Sabotáž, sedm směrů, všechny zachyceny: strop na počet pryč, strop
+brzdící i přeuložení známého zařízení, tvar a délka endpointu pryč,
+strop na délku klíčů pryč, klient strop nepozná, vzor v klientovi
+rozešlý s hláškou v SQL, stránka pro ten stav bez věty.
+
+Upozornění do telefonu zatím nejedou (chybí VAPID klíče v Secrets —
+`docs/pred-vydanim.md`), ale **funkce volatelná je už dnes**, takže ta
+díra byla živá bez ohledu na to, jestli se něco posílá.

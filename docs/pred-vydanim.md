@@ -144,6 +144,12 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**A kvůli odběrům upozornění.** `push_odber_uloz` ověřoval jen to, že
+tři argumenty nejsou prázdné; od 23. 10. hlídá i tvar adresy (https),
+délku (500 / 200 / 100 znaků) a počet zařízení na jeden účet (10). Bez
+spuštění může kterýkoli registrovaný účet zakládat řádky bez konce
+a s libovolně dlouhými texty.
+
 **A kvůli stropům na poznámky.** `poznamka_uloz` hlídal jen délku
 textu; od 23. 10. hlídá i počet poznámek na jeden účet (300, týž strop
 jako v prohlížeči) a délku klíče pozemku (200 znaků, týž jako
