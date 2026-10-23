@@ -367,6 +367,10 @@ zkoušku a sabotáž, podrobně `docs/optimalizace.md`, oddíly 112–123):
 * **Heslo** má aspoň osm znaků u zakládání i u nového hesla — a u
   přihlášení se délka schválně nehlídá, aby zvýšení nevyhodilo lidi se
   staršími kratšími hesly.
+* **Odkazy do nového okna** mají `rel` s `noopener` všechny (2 790 na
+  2 806 prohlédnutých souborech), takže cizí stránka nemůže přepsat
+  adresu v okně, ze kterého se na ni kleplo. Dřív to hlídala jedna
+  kontrola na jednom odkazu.
 
 Dvě měření, která **nic nenašla** (a je to taky výsledek): `npm audit
 --omit=dev` hlásí 0 zranitelností a v repozitáři není žádný tajný klíč —
@@ -394,6 +398,12 @@ Co zavřít **nejde odsud** a co je vědomá hranice:
 4. **Zkouška umí měřit jen repozitář.** Jestli někdo pustil
    `supabase/00-vse.sql` na běžícím projektu, pozná jen Supabase —
    a dokud se nepustí, platí všechny stropy výš jen na papíře.
+5. **Počet fotek v úložišti není zastropovaný.** Velikost ano (3 MB),
+   typ ano (jen JPEG), cizí složka ne (zápis jen pod vlastní `uid`)
+   a v inzerátu je jich nejvýš osm — ale kolik souborů si přihlášený
+   účet do své složky nahraje, nehlídá nic, a platí to vlastník
+   projektu. Je to jediná ze zapisovatelných cest, která zůstala bez
+   stropu; sepsáno jako úkol, ne jako hranice.
 
 ---
 

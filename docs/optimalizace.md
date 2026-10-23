@@ -8747,3 +8747,63 @@ v souboru vedle sebe, výjimka pro zakládání kryla i podmínku
 u přihlášení; sabotáž prošla. Teď rozhoduje **samotný řádek**: jméno
 funkce nebo proměnné na něm řekne, k čemu ta podmínka patří. Potřetí
 dnes totéž poučení (oddíly 120, 121).
+
+## 130. Odkazy do nového okna: 2 790 jich je, hlídal se jeden *23. 10.*
+
+Odkaz s `target="_blank"` dá otevřené stránce `window.opener` — živé
+držadlo na okno, ze kterého se na ni kleplo. Cizí stránka s ním naše
+údaje nepřečte (jiná adresa, prohlížeč to nepustí), umí ale to jediné,
+co stačí: přepsat `opener.location`. Člověk klepne na odkaz do inzertního
+webu, přečte si ho, vrátí se na naši kartu — a je na přihlašovací
+stránce, která se té naší jen podobá. Reverse tabnabbing.
+
+**Naměřeno.** Odkazů do nového okna je v repozitáři **2 790** a `rel`
+s `noopener` měly **všechny**. Hlídala to ale **jediná kontrola na
+jediném odkazu** (`scripts/test-mapa-pozemku.mjs:1415`). Celé to stálo
+na tom, že nikdo nikdy nezapomene — a zapomenout má kde ve třech
+vrstvách:
+
+| kde | kolik | kdo to píše |
+|---|---|---|
+| hotové stránky (106 souborů: 77 okresních výpisů, 29 ručních) | 2 770 | generátory a ruka |
+| šablony generátorů ve `scripts/` | 11 | ruka |
+| staví skript za běhu (`js/pozemek.js`, `js/smlouva-stranka.js`) | 6 = 3 místa × (zdroj + zmenšená kopie) | ruka |
+
+Na 2 232 stránkách pozemků žádný `target="_blank"` **není**: odkaz na
+zdroj si tam stránka postaví až v prohlížeči — a to je právě to třetí
+místo v tabulce.
+
+**Udělané:** `scripts/test-nove-okno.mjs` (4 kontroly) projde 2 806
+souborů a žádá `noopener` u každého odkazu do nového okna, v značce
+i u odkazu stavěného skriptem. Navíc hlídá `window.open` — tím by to
+proklouzlo, protože `rel` u něj neexistuje (dnes ho web nepoužívá
+nikde). Dvě kontroly jsou **o samotném měření**: odkazů se musí najít
+aspoň 2 000 a souborů aspoň 2 000, jinak by zkouška mohla projít nad
+prázdnem a tvrdit, že je vše v pořádku.
+
+Sabotáž, **pět směrů, všechny zachyceny** (na kopii stromu, aby
+běžící sada nepřišla o půdu pod nohama): ruční stránka bez `rel`,
+hotová okresní stránka bez `rel`, šablona generátoru bez `rel`,
+`a.rel = 'noopener'` smazané ze skriptu, a `rel`, které zůstalo, ale
+`noopener` z něj zmizelo (`rel="nofollow"` sám nestačí). Šestá sabotáž
+měřila zkoušku samu: na stromu s jedním souborem spadly obě kontroly
+měření — tedy pozná, že neměří nic.
+
+**Dvakrát si zkouška musela vyjasnit, co vlastně čte.** Nejdřív hlásila
+dva nálezy v `scripts/test-karta-vede-spravne.mjs` — tam ale
+`[target="_blank"]` stojí jako **selektor** v `querySelector`, odkaz se
+jím hledá, nestaví, a `rel` se k němu připsat nedá. Rozhoduje se proto
+podle toho, jestli `target` stojí **uvnitř značky `<a`**, která se
+před ním neuzavřela; selektor v hranaté závorce se počítá zvlášť a ten
+počet se vypisuje, ať je vidět, co výjimka spolkla. A pak hlásila
+nález v **sobě**: svůj vlastní souhrn si vypisovala textem, který sama
+hledá. Souhrn se přepsal, aby ten vzorec neobsahoval.
+
+Prohlížeče dávají `noopener` u `target="_blank"` samy už od Safari 12.1,
+Chrome 88 a Firefoxu 79. Hlídá se to i tak: na starším telefonu, ve
+WebView v aplikaci nebo v nějaké čtečce ta výchozí hodnota být nemusí,
+a napsat ji nic nestojí.
+
+**Co se tím NEzavřelo:** `window.open` dnes web nepoužívá, takže
+kontrola C je zatím prázdná pojistka do budoucna — a je to tak
+napsané i v komentáři zkoušky.

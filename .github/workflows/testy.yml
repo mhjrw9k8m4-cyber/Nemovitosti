@@ -442,6 +442,9 @@ jobs:
       - name: Práva úloh v CI a odkud se berou balíčky
         run: node scripts/test-ci-prava.mjs
 
+      - name: Odkazy do nového okna mají noopener
+        run: node scripts/test-nove-okno.mjs
+
       - name: Nálož v datech neprojde generátory
         run: node scripts/test-escape-generatory.mjs
 
