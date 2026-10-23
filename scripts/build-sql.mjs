@@ -35,6 +35,9 @@ const PORADI = [
   ['listings-features.sql', 'vybavení pozemku a přístup'],
   ['listings-moderation.sql', 'přísnější moderace obsahu'],
   ['listings-tiers.sql', 'limity počtu inzerátů podle účtu (account_tier)'],
+  // Až za listings-tiers.sql: strop na počet fotek se násobí povoleným
+  // počtem inzerátů, a ten umí jen my_limit() z toho souboru.
+  ['uloziste-strop.sql', 'strop na počet fotek, které účet nahraje do úložiště'],
   ['listings-rekonstrukce.sql', 'poslední verze create_listing — tu volá web'],
   ['listing-checks.sql', 'výsledky pravidelné kontroly odkazů a fotek'],
   // Musí být AŽ ZA listing-checks.sql (čte z jeho tabulky) a za

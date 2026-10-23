@@ -136,7 +136,7 @@ Obojí se vkládá v GitHubu → Settings → Secrets and variables → Actions.
 
 ### 3a. Pustit SQL ZNOVU, i když databáze už stojí
 
-Od 23. 10. je v balíku šest věcí, které běžící projekt bez nového
+Od 23. 10. je v balíku sedm věcí, které běžící projekt bez nového
 spuštění nemá — a každá z nich je díra nebo cesta, kterou databáze roste
 zvenčí. `00-vse.sql` jde pustit opakovaně, takže stačí jeden běh.
 
@@ -162,6 +162,17 @@ zvenčí. `00-vse.sql` jde pustit opakovaně, takže stačí jeden běh.
 * **Hromadné nahrání uložených pozemků**: počítá volné místo do stropu
   500 **na účet**, místo limitu na jedno volání (dvěma voláními se
   obcházel).
+* **Strop na počet fotek v úložišti** (`supabase/uloziste-strop.sql`):
+  24 souborů na účet, u placeného účtu 24 × povolený počet inzerátů.
+  Bez spuštění může kterýkoli přihlášený účet sypat do své složky 3MB
+  JPEGy bez konce, i když nemá ani jeden inzerát — a platí je vlastník
+  projektu. Drží to ve dvou vrstvách: politika (jeden zápis) a spouštěč
+  (vícerádkový zápis jedním příkazem). **Spouštěč se na hostovaném
+  Supabase vytvořit nemusí** — `postgres` nemusí mít vlastnictví
+  `storage.objects`. Je obalený tak, že se skript nezastaví; ve výpisu
+  se pak objeví poznámka „Spouštěč stropu fotek se nevytvořil". Strop
+  pak drží jen politika, což je proti dnešnímu webu dost (úložiště
+  přijímá jeden soubor na jeden dotaz), ale je dobré o tom vědět.
 
 Hlídá to `scripts/test-sql-prava.mjs` a `scripts/test-sql-cista.mjs` —
 ale jen v repozitáři: **že to někdo pustil, pozná jen Supabase.**

@@ -8807,3 +8807,69 @@ a napsat ji nic nestojí.
 **Co se tím NEzavřelo:** `window.open` dnes web nepoužívá, takže
 kontrola C je zatím prázdná pojistka do budoucna — a je to tak
 napsané i v komentáři zkoušky.
+
+## 131. Úložiště fotek: strop na velikost i typ byl, na POČET ne *23. 10.*
+
+Fotky se nahrávají **z prohlížeče přímo do úložiště** (`listing-photos`),
+ještě než inzerát vznikne. Zavřené tam bylo všechno kromě jednoho:
+
+| co | čím | bylo? |
+|---|---|---|
+| velikost souboru | `file_size_limit` 3 MB na bucketu | ano |
+| typ souboru | `allowed_mime_types` = jen `image/jpeg` | ano |
+| cizí složka | insert policy, zápis jen pod vlastní `uid` | ano |
+| fotek v jednom inzerátu | `create_listing`, nejvýš 8 | ano |
+| **kolik souborů účet nahraje** | — | **ne** |
+
+Účet si kdokoli založí na libovolnou adresu a inzerát k nahrávání
+potřeba není. Dokud by se nenaplnilo úložiště projektu, šlo tam sypat
+3MB JPEGy — a platí je vlastník.
+
+**Udělané** (`supabase/uloziste-strop.sql`, v balíku až za
+`listings-tiers.sql`, protože čte `my_limit()`): **24 souborů na účet**,
+u placeného účtu 24 × povolený počet inzerátů. Čtyřiadvacítka je
+trojnásobek toho, co jeden inzerát ukáže — fotky se dají dvakrát
+přefotit a nahrát znovu, než strop dojde; free účet tím má nejvýš 72 MB.
+Počítá se podle složky (`name like '<uid>/%'`), ne podle sloupce
+`owner`: složka je ta samá podmínka, na které stojí zápis, umí se opřít
+o index `(bucket_id, name)` a u souboru nahraného service-role klíčem
+`owner` být nemusí. Přidaná `my_photo_space()` říká webu, kolik místa
+zbývá.
+
+**A JEDNA VRSTVA NESTAČILA.** Politika se ptá dotazem na tutéž tabulku,
+do které zapisuje — a ten dotaz **nevidí řádky z téhož příkazu**.
+Naměřeno: `insert … select … generate_series(1, 30)` prošel celý, strop
+nestrop. Z dnešního webu ta cesta nevede (úložiště bere jeden soubor na
+jeden dotaz a schéma `storage` není přes PostgREST vidět), ale spoléhat
+na to, co zvenčí „zatím nejde", je slabá pojistka. Druhá vrstva je proto
+**spouštěč** `before insert … for each row`: ten se volá na každý řádek
+zvlášť, takže už vidí i ty předchozí. Po jeho přidání se týž
+třicetiřádkový zápis odmítne.
+
+**ÚLOŽIŠTĚ SE DOSUD NEPROMĚŘILO ANI JEDNOU.** `scripts/test-sql-cista.mjs`
+pouští celý balík na opravdovém PostgreSQL — ale schéma `storage` tam
+neexistuje, takže tři politiky nad `storage.objects` vůbec nevznikly
+a chyba se **schválně promíjela** jako rozdíl prostředí. Práva úložiště
+tím byla mimo dosah zkoušky. Teď se schéma podstrčí (dvě tabulky,
+`owner`, `foldername()` se stejným chováním jako na Supabase — vrací
+cestu bez jména souboru) a měří se 8 nových věcí; celkem 93.
+
+Sabotáž, **šest směrů, všechny zachyceny**: strop vyndaný z politiky,
+strop vyndaný ze spouštěče, spouštěč bez rozlišení placeného účtu,
+zápis povolený i do cizí složky, `my_photo_space()` slibující místo i na
+stropu, a podstrčené úložiště bez zapnutého RLS (to poslední měří
+zkoušku samu — bez RLS by byly politiky jen ozdoba).
+
+**A zprvu byla zkouška slepá přesně tam, kde měla vidět nejlíp.** Vyndal
+jsem stropovou podmínku z politiky a zůstala zelená: dochytil to
+spouštěč. Dvě vrstvy, jedno měření — tedy ani jedna vrstva doopravdy
+změřená. Teď se spouštěč v průběhu zkoušky **schválně odpojí**, aby se
+politika měřila sama, a pak se vrátí pro vícerádkový zápis. (Totéž
+poučení jako v oddílech 120, 121 a 129, jen z jiné strany: tam si hlídač
+špatně četl text, tady si zkouška neuvědomila, že měří dvě věci naráz.)
+
+**Co ještě neumí:** spouštěč smí na `storage.objects` založit jen
+vlastník té tabulky, a tím `postgres` na hostovaném Supabase být nemusí.
+Je proto obalený v `do … exception`, takže skript nezastaví — jen
+napíše poznámku. Zapsáno v `docs/pred-vydanim.md` i jako hranice
+v `docs/slaba-mista.md`.

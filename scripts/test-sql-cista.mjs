@@ -118,11 +118,38 @@ try {
     create or replace function auth.uid() returns uuid language sql stable as $$
       select nullif(current_setting('pk.uid', true), '')::uuid $$;
     create extension if not exists pgcrypto;
+    /* A SCHÉMA „storage" (úložiště fotek). Na Supabase ho zakládá
+       samo úložiště, na holém PostgreSQL neexistuje — a dokud se
+       nepodstrčilo, PRÁVA ÚLOŽIŠTĚ SE TESTEM NIKDY NEPROHNALA:
+       tři politiky nad storage.objects padaly na „schema does not
+       exist" a ta chyba se schválně promíjela jako rozdíl prostředí
+       (JEN_SUPABASE výš). Stačí na to tolik, kolik 00-vse.sql
+       opravdu používá: dvě tabulky, vlastník a foldername().
+       Pozor na foldername: na Supabase vrací cestu BEZ jména
+       souboru, takže u „<uid>/a.jpg" je [1] to uid. Tady se to
+       napodobuje stejně, jinak by zkouška měřila jinou funkci, než
+       jaká poběží doopravdy. */
+    create schema if not exists storage;
+    create table if not exists storage.buckets (
+      id text primary key, name text, public boolean,
+      file_size_limit bigint, allowed_mime_types text[]);
+    create table if not exists storage.objects (
+      id uuid primary key default gen_random_uuid(),
+      bucket_id text references storage.buckets(id),
+      name text, owner uuid, created_at timestamptz not null default now());
+    alter table storage.objects enable row level security;
+    create or replace function storage.foldername(name text) returns text[]
+      language sql immutable as $fn$
+        select (string_to_array(name, '/'))[1:greatest(array_length(string_to_array(name, '/'), 1) - 1, 0)]
+      $fn$;
     do $do$ begin
       if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon; end if;
       if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;
       if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role; end if;
     end $do$;
+    grant usage on schema storage to anon, authenticated, service_role;
+    grant select, insert, delete on storage.objects to anon, authenticated, service_role;
+    grant select on storage.buckets to anon, authenticated, service_role;
   `);
 
   const vystup = psqlVse(['-d', 'zkouska', '-f', path.join(ROOT, 'supabase', '00-vse.sql')]);
@@ -748,6 +775,93 @@ try {
     pravda('a kratší lhůtu než týden si vynutit nenecháme',
       psql(['-d', 'zkouska', '-tAc', 'select uklid_hlidani(0)']).trim() === '0',
       'uklid_hlidani(0) smazal čerstvé řádky — podlaha sedmi dní neplatí');
+
+    /* ÚLOŽIŠTĚ FOTEK. Do dneška se jeho práva neproměřila ani jednou:
+       bez schématu `storage` se tři politiky nad storage.objects
+       nevytvořily a chyba se promíjela (viz příprava prostředí výš).
+       Zavřené tam bylo všechno kromě POČTU: velikost 3 MB, typ jen
+       JPEG, zápis jen do vlastní složky, 8 fotek v inzerátu — ale
+       kolik souborů účet nahraje, nehlídalo nic, a nahrává se přímo
+       z prohlížeče, ještě než inzerát vznikne. */
+    const POL = Number(psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects'`]).trim());
+    pravda(`politiky úložiště se opravdu vytvořily (${POL})`, POL === 3,
+      'na storage.objects jsou ' + POL + ' politiky — bez nich zkoušky níž neměří nic');
+
+    const F1 = '66666666-6666-6666-6666-666666666666';   // free účet
+    const F2 = '77777777-7777-7777-7777-777777777777';   // placený účet
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into auth.users(id, email) values ('${F1}', 'fotky1@priklad.cz'), ('${F2}', 'fotky2@priklad.cz')
+         on conflict (id) do nothing;
+       insert into account_tier(user_id, max_listings) values ('${F2}', 20)
+         on conflict (user_id) do update set max_listings = 20;
+       delete from storage.objects where bucket_id = 'listing-photos';`]);
+    // Nahrání JEDNÉ fotky jako přihlášený člověk — přesně tak, jak chodí z prohlížeče.
+    const nahrajFotku = (kdo, jmeno) => psqlVse(['-d', 'zkouska', '-tAc',
+      `set role authenticated; set pk.uid = '${kdo}';
+       insert into storage.objects(bucket_id, name, owner) values ('listing-photos', '${jmeno}', '${kdo}');`]);
+
+    pravda('fotka do vlastní složky projde', /INSERT 0 1/.test(nahrajFotku(F1, F1 + '/1.jpg')),
+      'nahrání vlastní fotky skončilo chybou — zkoušky níž by měřily zavřené dveře');
+    pravda('fotka do CIZÍ složky neprojde', /ERROR/i.test(nahrajFotku(F1, F2 + '/pod-cizim.jpg')),
+      'prošel zápis pod cizí předponu — podle složky se pozná, čí fotka to je');
+
+    /* Strop. Prvních 23 souborů se doplní jako vlastník tabulky (RLS se
+       na něj nevztahuje) — zkouší se až to jedno nahrání NAD stropem,
+       a to už jako přihlášený člověk. Jinak by se měřilo, jak dlouho
+       trvá 24 zápisů, ne jestli strop drží. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into storage.objects(bucket_id, name, owner)
+         select 'listing-photos', '${F1}/' || i || '.jpg', '${F1}' from generate_series(2, 24) i;`]);
+    const zbyvaPredStropem = psql(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${F1}'; select my_photo_space()`]).trim().split('\n').pop();
+    pravda('na stropu hlásí my_photo_space() nulu', zbyvaPredStropem === '0',
+      `hlásí ${zbyvaPredStropem} — web by sliboval místo, které už není`);
+
+    /* STROP DRŽÍ VE DVOU VRSTVÁCH a musí se měřit každá zvlášť. Politika
+       nad jedním zápisem, spouštěč nad vícerádkovým (politika se ptá
+       dotazem na tutéž tabulku a ten řádky z téhož příkazu nevidí).
+       Dokud se měřily spolu, prošla sabotáž: vyndal jsem stropovou
+       podmínku z politiky a zkouška zůstala zelená, protože ji dochytil
+       spouštěč. Proto se tu spouštěč SCHVÁLNĚ odpojí. */
+    psql(['-d', 'zkouska', '-q', '-c', 'drop trigger if exists uloziste_strop_fotek on storage.objects']);
+    pravda('dvacátá pátá fotka free účtu neprojde ani bez spouštěče (drží politika)',
+      /ERROR/i.test(nahrajFotku(F1, F1 + '/25.jpg')),
+      'strop 24 souborů na účet nedrží v politice — zbyl by jen spouštěč');
+    psql(['-d', 'zkouska', '-q', '-c',
+      `create trigger uloziste_strop_fotek before insert on storage.objects
+         for each row execute function uloziste_strop_fotek()`]);
+
+    /* A placený účet má strop vyšší — jinak by byl strop jen zdánlivě
+       odstupňovaný a 24 by platilo pro všechny. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into storage.objects(bucket_id, name, owner)
+         select 'listing-photos', '${F2}/' || i || '.jpg', '${F2}' from generate_series(1, 24) i;`]);
+    pravda('placenému účtu dvacátá pátá fotka projde', /INSERT 0 1/.test(nahrajFotku(F2, F2 + '/25.jpg')),
+      'strop se nenásobí povoleným počtem inzerátů (my_limit)');
+    /* A JEDNÍM PŘÍKAZEM? Politika se ptá dotazem na tutéž tabulku,
+       takže je otázka, jestli při vícerádkovém zápisu vidí řádky
+       z téhož příkazu. Kdyby ne, obešel by se strop jedním vložením
+       o dvaceti pěti řádcích. Měří se to schválně: tahle cesta sice
+       z prohlížeče nevede (úložiště přijímá jeden soubor na jeden
+       dotaz a schéma storage není přes PostgREST vidět), ale vědět
+       se to má. */
+    psql(['-d', 'zkouska', '-q', '-c', `delete from storage.objects where name like '${F1}/%'`]);
+    const najednou = psqlVse(['-d', 'zkouska', '-tAc',
+      `set role authenticated; set pk.uid = '${F1}';
+       insert into storage.objects(bucket_id, name, owner)
+         select 'listing-photos', '${F1}/h' || i || '.jpg', '${F1}' from generate_series(1, 30) i;`]);
+    const poNajednou = Number(psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from storage.objects where name like '${F1}/%'`]).trim());
+    pravda('strop nejde obejít ani jedním příkazem o třiceti řádcích (tady měří spouštěč)',
+      /ERROR/i.test(najednou) && poNajednou === 0,
+      `vložilo se ${poNajednou} řádků (čekalo se 0 a chyba)`);
+
+    const zbyvaPlacenemu = psql(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${F2}'; select my_photo_space()`]).trim().split('\n').pop();
+    pravda('a my_photo_space() mu hlásí zbytek, ne nulu', Number(zbyvaPlacenemu) > 0,
+      `hlásí ${zbyvaPlacenemu}`);
+    psql(['-d', 'zkouska', '-q', '-c', `delete from storage.objects where bucket_id = 'listing-photos'`]);
   }
 } finally {
   try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}
