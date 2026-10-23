@@ -1302,9 +1302,20 @@ grant execute on function delete_listing(uuid) to authenticated;
 -- =====================================================================
 
 -- ---------- 1) Úložiště fotek ----------
-insert into storage.buckets (id, name, public)
-values ('listing-photos', 'listing-photos', true)
-on conflict (id) do update set public = true;
+-- STROP NA VELIKOST A SEZNAM TYPŮ, ne jen „veřejné". Bez nich smí
+-- přihlášený uživatel uložit do VEŘEJNÉHO úložiště cokoli a jak
+-- velkého chce: HTML, SVG se skriptem, nebo dvougigabajtový soubor.
+-- Nic z toho by sice neběželo na naší adrese, ale leželo by to na
+-- adrese našeho projektu — a platili bychom to.
+-- Čísla jsou podle toho, co klient opravdu posílá (js/pridat.js):
+-- fotka se zmenší na 1 600 px a překóduje na JPEG v kvalitě 0,82,
+-- takže vychází do jednoho megabajtu; 3 MB je rezerva, ne cíl.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('listing-photos', 'listing-photos', true, 3145728, array['image/jpeg'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 -- ---------- 1b) Jistota: sloupce, které funkce potřebují ----------
 alter table listings add column if not exists user_id uuid;
@@ -1319,11 +1330,21 @@ create policy "listing photos public read"
   on storage.objects for select
   using (bucket_id = 'listing-photos');
 
--- Nahrávat smí jen přihlášený uživatel
+-- Nahrávat smí jen přihlášený uživatel, a JEN DO SVÉ SLOŽKY.
+-- Dřív tu stálo jen `bucket_id = 'listing-photos'`, takže kdokoli
+-- přihlášený mohl psát i pod cizí předponu (`<cizi-uid>/…`). Přepsat
+-- cizí fotku se tím nedalo (na storage.objects není politika pro
+-- update, takže upsert RLS zamítne), ale zakládat soubory v cizí
+-- složce ano — a podle složky se pozná, čí fotka to je.
+-- Klient jméno skládá jako `<uid>/<čas>-<poradi>-<náhoda>.jpg`
+-- (js/pridat.js), takže tahle podmínka na dnešní chování sedí.
 drop policy if exists "listing photos auth upload" on storage.objects;
 create policy "listing photos auth upload"
   on storage.objects for insert to authenticated
-  with check (bucket_id = 'listing-photos');
+  with check (
+    bucket_id = 'listing-photos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 -- Mazat smí jen vlastník nahrané fotky
 drop policy if exists "listing photos owner delete" on storage.objects;

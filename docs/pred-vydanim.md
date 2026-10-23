@@ -134,6 +134,16 @@ nestála:**
 
 Obojí se vkládá v GitHubu → Settings → Secrets and variables → Actions.
 
+**Pustit to SQL znovu, i když databáze už stojí — kvůli úložišti
+fotek.** Od 23. 10. je ve `supabase/listings-photos.sql` navíc strop
+na velikost souboru (3 MB), seznam povolených typů (jen `image/jpeg`)
+a podmínka, že přihlášený smí nahrávat **jen do své složky**. Bez
+spuštění zůstane běžící projekt bez nich: do veřejného úložiště by šlo
+uložit cokoli a jak velkého. `on conflict` je napsané tak, že to
+nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
+nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
+někdo pustil, pozná jen Supabase).
+
 *(Vysvětlená ta tajemství byla v samotných úlohách i ve skriptech, ale
 ne tady — a tenhle seznam je to jediné, podle čeho se web spouští.
 `SUPABASE_URL` jsem při prvním zápisu minul a našla ho až ta zkouška,

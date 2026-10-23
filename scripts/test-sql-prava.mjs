@@ -109,6 +109,38 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
     mrtveVyjimky.size === 0, `nepoužité: ${[...mrtveVyjimky].join(', ')}`);
 }
 
+/* ---- 4) veřejné úložiště fotek: strop, typy a vlastní složka ----- */
+/* Úložiště je VEŘEJNÉ (fotka se musí ukázat v inzerátu), takže se
+   nesmí stát odkladištěm: bez stropu na velikost a bez seznamu typů
+   tam přihlášený uživatel uloží cokoli a jak velkého chce. A bez
+   vazby cesty na `auth.uid()` může zakládat soubory v cizí složce,
+   přitom právě podle složky se pozná, čí fotka to je. */
+{
+  const kos = (SQL.match(/insert\s+into\s+storage\.buckets[\s\S]*?;/i) || [''])[0];
+  pravda('úložiště fotek se v SQL opravdu zakládá', /listing-photos/.test(kos),
+    'insert do storage.buckets se nenašel — další tři kontroly by měřily prázdno');
+  pravda('má strop na velikost souboru', /file_size_limit/.test(kos),
+    'bez stropu se do veřejného úložiště vejde cokoli');
+  pravda('a seznam povolených typů, a jsou v něm jen obrázky',
+    /allowed_mime_types/.test(kos) && /image\//.test(kos) && !/(text|application)\//.test(kos),
+    kos.replace(/\s+/g, ' ').slice(0, 120));
+  /* Po `on conflict` se to musí nastavit i existujícímu úložišti —
+     jinak by oprava platila jen pro čerstvý projekt a ten běžící by
+     zůstal bez stropu. */
+  pravda('a nastaví se i úložišti, které už existuje (on conflict)',
+    /on\s+conflict[\s\S]*file_size_limit[\s\S]*allowed_mime_types/i.test(kos),
+    'on conflict ta nastavení nepřepisuje');
+
+  const nahravani = (SQL.match(/create\s+policy\s+"listing photos auth upload"[\s\S]*?;/i) || [''])[0];
+  pravda('politika pro nahrávání existuje', nahravani.length > 0);
+  pravda('a váže cestu na účet, který nahrává (vlastní složka)',
+    /auth\.uid\(\)/.test(nahravani) && /foldername/.test(nahravani),
+    nahravani.replace(/\s+/g, ' ').slice(0, 140));
+  const mazani = (SQL.match(/create\s+policy\s+"listing photos owner delete"[\s\S]*?;/i) || [''])[0];
+  pravda('a mazat smí jen vlastník nahraného souboru',
+    /owner\s*=\s*auth\.uid\(\)/.test(mazani), mazani.replace(/\s+/g, ' ').slice(0, 120));
+}
+
 console.log('\nPráva v databázi');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

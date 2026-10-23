@@ -8045,3 +8045,41 @@ nepoužitelná** — po třech falešných poplaších by si ji každý vypnul.
   (`" onerror="window.__XSS=4`) se cesta „text v atributu"
   nezkoušela vůbec — a zkouška byla přitom zelená. Teď je naměřeno,
   že v atributech končí na **2 029 stránkách**, escapovaná.
+
+---
+
+## 116. Veřejné úložiště fotek bez stropu a bez seznamu typů *23. 10.*
+
+Úložiště `listing-photos` je **veřejné** — fotka se musí ukázat
+v inzerátu. Politiky na něm byly tři a vypadaly rozumně: čtení pro
+kohokoli, nahrávání pro přihlášeného, mazání pro vlastníka. Dvě věci
+v nich ale chyběly:
+
+* **žádný strop na velikost a žádný seznam typů.** `insert into
+  storage.buckets` nastavoval jen `public = true`, takže přihlášený
+  uživatel mohl do veřejného úložiště uložit **cokoli a jak velkého
+  chce** — HTML, SVG se skriptem, dvougigabajtový soubor. Na naší
+  adrese by to neběželo, ale leželo by to na adrese našeho projektu
+  a platili bychom to.
+* **nahrávání nebylo vázané na účet.** Podmínka byla jen
+  `bucket_id = 'listing-photos'`, takže kdokoli přihlášený mohl psát
+  i pod cizí předponu (`<cizi-uid>/…`) — a přitom právě podle složky
+  se pozná, čí fotka to je. Přepsat cizí fotku se nedalo (na
+  `storage.objects` není politika pro `update`, takže upsert RLS
+  zamítne), ale zakládat soubory v cizí složce ano.
+
+Doplněno podle toho, **co klient opravdu posílá** (`js/pridat.js`):
+fotka se zmenší na 1 600 px a překóduje na JPEG v kvalitě 0,82, takže
+vychází do jednoho megabajtu. Strop je proto 3 MB (rezerva, ne cíl),
+seznam typů `image/jpeg` a cesta se váže na `auth.uid()` přes
+`storage.foldername(name)` — což na dnešní pojmenování
+(`<uid>/<čas>-<poradi>-<náhoda>.jpg`) sedí.
+
+`on conflict` ta nastavení přepisuje i existujícímu úložišti, aby
+oprava neplatila jen pro čerstvý projekt; běžící by jinak zůstal bez
+stropu. Je to zapsané v `docs/pred-vydanim.md` jako jeden běh SQL.
+
+Hlídá to `scripts/test-sql-prava.mjs` (7 nových kontrol), doloženo
+sabotáží: zrušený strop i zrušená vazba na účet → poplach. A protože
+zkouška čte SQL v repozitáři, je u ní napsané i to, co změřit nejde:
+**jestli to někdo pustil, pozná jen Supabase.**
