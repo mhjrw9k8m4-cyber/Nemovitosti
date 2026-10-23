@@ -8576,3 +8576,36 @@ před opravou → padne právě ta jedna kontrola, co padala v CI.
 
 test-zaostreni 59/59 (o jednu kontrolu víc než dřív). Lokální sada
 v prohlížeči 128/129 → 129/129 s touhle opravou.
+
+## 126. Jednorázový token na obnovu hesla zůstával v adrese *23. 10.*
+
+Odkaz z e-mailu „obnovit heslo" přistane na `muj-inzerat.html` a nese
+jednorázový token ve **fragmentu** adresy (`#access_token=…`). To je ta
+lepší polovina: fragment prohlížeč na server neposílá, takže token
+neskončí v logu serveru ani v hlavičce `Referer`, a service worker
+adresy s dotazem ani fragmentem neukládá (oddíl o offline režimu).
+
+Ta druhá polovina byla horší: **z adresního řádku se token mazal až po
+úspěšném uložení** nového hesla. Kdo to nedokončil — zavřel kartu,
+spletl si heslo, nechal stránku otevřenou — nechal si jednorázový token
+v adrese a **v historii prohlížeče**, a ta se u přihlášeného prohlížeče
+synchronizuje mezi zařízeními.
+
+Hotovo: adresa se uklidí **hned**, jak se token přečte
+(`history.replaceState`). Token žije dál v proměnné, takže formulář
+funguje stejně; na úspěchu už se adresa neuklízí podruhé.
+
+Hlídá to `scripts/test-profil-vypadek.mjs` (3 nové kontroly nad falešným
+Supabase) a měří **obojí**: že je adresa hned uklizená A že se token
+nezahodil — uložení nového hesla ho musí poslat serveru. Jedna věc bez
+druhé je buď díra, nebo rozbitá obnova hesla.
+
+Sabotáž, dva směry, oba zachyceny: adresa se neuklidí (stav před
+opravou) a s adresou se zahodí i token.
+
+K tomu se do `docs/pred-vydanim.md` dopsalo nastavení, které s tímhle
+tokenem souvisí a z repozitáře se ověřit nedá: **seznam adres, kam smí
+vést odkazy z e-mailu** (Supabase → Authentication → URL Configuration).
+Dokud je v něm `*`, může kdokoli vyrobit odkaz na obnovu hesla, který
+přistane s tokenem na cizí stránce. Že to v seznamu stojí, hlídá
+`test-sql-prava.mjs`.

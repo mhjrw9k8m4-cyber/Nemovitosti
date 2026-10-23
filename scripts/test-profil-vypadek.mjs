@@ -114,6 +114,50 @@ pravda(`a dlaždice nelžou nulou (${b.pocet} / ${b.zhlednuti})`,
   `počet „${b.pocet}", zhlédnutí „${b.zhlednuti}" — nula je tvrzení, ne neznalost`);
 pravda('nezůstane viset „Načítám…"', !b.nacitam, 'stránka se zasekla na načítání');
 
+/* ---- C) ODKAZ NA OBNOVU HESLA: TOKEN NESMÍ ZŮSTAT V ADRESE -----
+   Odkaz z e-mailu přistane na téhle stránce a nese jednorázový token ve
+   FRAGMENTU adresy (#access_token=…). Fragment se na server neposílá,
+   takže neskončí v logu ani v Referer — ale v adresním řádku a
+   v historii prohlížeče zůstával, dokud člověk nové heslo neuložil. Kdo
+   to nedokončil, nechal si token v historii, a ta se u přihlášeného
+   prohlížeče synchronizuje mezi zařízeními.
+   Měří se obojí: že je adresa hned uklizená A že se token nezahodil —
+   uložení nového hesla ho musí poslat serveru. Jedna věc bez druhé je
+   buď díra, nebo rozbitá obnova hesla. */
+{
+  const ctx = await browser.newContext({ bypassCSP: true, locale: 'cs-CZ', serviceWorkers: 'block' });
+  const page = await ctx.newPage();
+  let poslanyToken = null;
+  await page.route('**/auth/v1/user', (r) => {
+    poslanyToken = (r.request().headers()['authorization'] || '').replace(/^Bearer /, '');
+    r.fulfill({ status: 200, contentType: 'application/json', body: '{"id":"u1","email":"a@b.cz"}' });
+  });
+  await page.goto(`${BASE}/muj-inzerat.html#access_token=TESTTOKEN&type=recovery&refresh_token=R`,
+    { waitUntil: 'load' });
+  await page.waitForTimeout(800);
+  const v = await page.evaluate(() => {
+    const vidno = (id) => {
+      const e = document.getElementById(id);
+      if (!e) return false;
+      const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+      return !e.hidden && s.display !== 'none' && s.visibility !== 'hidden' && r.height > 0;
+    };
+    return { hash: location.hash, adresa: location.pathname + location.search + location.hash,
+      formular: vidno('mi-newpw'), prihlaseni: vidno('mi-auth') };
+  });
+  pravda('obnova hesla: ukáže se formulář na nové heslo', v.formular,
+    `formulář není vidět (adresa „${v.adresa}") — pak se neměří obnova hesla`);
+  pravda('obnova hesla: token je z adresy hned pryč', v.hash === '',
+    `v adrese zůstalo „${v.hash}" — jednorázový token leží v historii prohlížeče`);
+  /* A pořád to musí jít dokončit: token žije v proměnné, ne v adrese. */
+  await page.fill('#mi-newpass', 'tajneheslo1');
+  await page.click('#mi-savepw');
+  await page.waitForTimeout(600);
+  pravda('obnova hesla: a uložení nového hesla ten token serveru pošle',
+    poslanyToken === 'TESTTOKEN', `server dostal „${poslanyToken}"`);
+  await ctx.close();
+}
+
 await browser.close();
 console.log('\nProfil při výpadku serveru');
 console.log(zpravy.join('\n'));

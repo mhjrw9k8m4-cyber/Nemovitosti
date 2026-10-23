@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-5X6yybRIO/ABAm4IIMjBMMGNuHSiVGWrPab+W+xon7w=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-ukeLHDoFnOuwNosIjNbL72O2gTXRx9dn76JLx8TeiNk=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
   <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
@@ -554,6 +554,15 @@
     // Přišel uživatel z odkazu „obnovit heslo" v e-mailu? → ukázat formulář pro nové heslo.
     var recTok = A.recoveryToken ? A.recoveryToken() : '';
     if (recTok) {
+      /* TOKEN HNED PRYČ Z ADRESY. Přišel ve fragmentu
+         (#access_token=…), takže se na server neposílá — ale v adresním
+         řádku a v historii prohlížeče zůstával, dokud člověk nové heslo
+         neuložil. Kdo to nedokončil (zavřel kartu, spletl si heslo),
+         nechal si jednorázový token v historii — a ta se u přihlášeného
+         prohlížeče synchronizuje mezi zařízeními. Čte se jen raz, dál
+         žije v proměnné recTok, takže formulář funguje stejně.
+         Dřív se tohle dělalo až po úspěšném uložení. */
+      try { history.replaceState(null, '', location.pathname); } catch (e) {}
       authBox.hidden = true; panel.hidden = true; newpwBox.hidden = false;
       var nf = q('mi-newpw-form'), nmsg = q('mi-newpw-msg');
       function nsay(t, err){ if(nmsg){ nmsg.textContent=t; nmsg.className='add-msg'+(err?' err':' ok'); } }
@@ -566,8 +575,8 @@
         nsay('Ukládám…');
         A.setPassword(np, recTok).then(function (r) {
           if (r && r.ok) {
-            try { history.replaceState(null, '', location.pathname); } catch(e){}
             // Úspěch — přehledné potvrzení, pak rovnou do profilu
+            // (adresu jsme uklidili hned na začátku, viz výš)
             nf.innerHTML = '<div class="auth-sent vnorena">' +
               '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--znacka-svetla)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
               '<h3>Heslo změněno</h3><p>Nové heslo je uložené. Za okamžik vás přihlásíme do profilu…</p></div>';
