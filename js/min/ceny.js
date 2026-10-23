@@ -124,6 +124,8 @@
 
   var MEZ_ROZPTYL = 1.2;
 
+  var MEZ_CHYBA_DRUHU = 50;
+
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
@@ -147,8 +149,10 @@
     return ven;
   }
 
-  function postav(DATA, okresKraj) {
+  function postav(DATA, okresKraj, chybaDruhu) {
     okresKraj = okresKraj || OKRES_KRAJ;
+
+    chybaDruhu = chybaDruhu || null;
     var podleTypu = {};
 
     var typOkres = {};
@@ -365,6 +369,16 @@
       pametOdhadu.set(d, v);
       return v;
     }
+
+    function chybaProDruh(g) {
+      var z = chybaDruhu && chybaDruhu[g];
+      return z && typeof z.ch === 'number' ? z.ch : null;
+    }
+
+    function nepresnyDruh(g) {
+      var ch = chybaProDruh(g);
+      return ch != null && ch > MEZ_CHYBA_DRUHU;
+    }
     function odhadSpocti(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
@@ -409,7 +423,8 @@
 
           rozptyl: rozptyl,
 
-          nejisty: rozptyl != null && rozptyl > MEZ_ROZPTYL
+          chybaDruhu: chybaProDruh(g),
+          nejisty: (rozptyl != null && rozptyl > MEZ_ROZPTYL) || nepresnyDruh(g)
         };
       }
       return null;
@@ -432,6 +447,10 @@
       MEZ_POCHYBNA: MEZ_POCHYBNA,
       MEZ_SLEVA: MEZ_SLEVA,
       MEZ_ROZPTYL: MEZ_ROZPTYL,
+      MEZ_CHYBA_DRUHU: MEZ_CHYBA_DRUHU,
+      chybaProDruh: chybaProDruh,
+
+      presnostDruhu: function (g) { return (chybaDruhu && chybaDruhu[g]) || null; },
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
@@ -450,6 +469,9 @@
 
     if (!o || !o.podleVelikosti) return '';
     var kde = kdeText(o.uroven, o.kde);
+
+    var chD = model.chybaProDruh ? model.chybaProDruh(o.druh) : null;
+    var mlciOCastce = chD != null && chD > (model.MEZ_CHYBA_DRUHU || 50);
 
     var coJe = model.spravniCena && model.spravniCena(d) ? 'Cena stanovená úředně'
       : d.type === 'drazba' ? 'Vyvolávací cena'
@@ -483,17 +505,35 @@
     if (o.podOdhadem < 15) return '';
     return '<div class="md-odhad' + (volby.trida || '') + '">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
 
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">'
+        + (mlciOCastce ? 'neuvádíme' : fmt(o.castka) + '\u00a0Kč') + '</span></div>' +
+
+      (mlciOCastce ? '' :
       '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
         (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
-                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>' +
+                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>') +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
       o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
       'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
       (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
-      '</p></div>';
+      '</p>' + vetaOPresnosti(model, o, fmt, mlciOCastce) + '</div>';
+  }
+
+  function vetaOPresnosti(model, o, fmt, mlciOCastce) {
+    if (!model || !model.presnostDruhu) return '';
+    var z = model.presnostDruhu(o.druh);
+    if (!z || typeof z.ch !== 'number') return '';
+    var dolni = Math.round(o.zaM2 * (1 - z.ch / 100));
+    var horni = Math.round(o.zaM2 * (1 + z.ch / 100));
+    return '<p class="mo-pozn">Jak přesné to bývá: u tohoto druhu mine odhad typicky o <b>'
+      + z.ch + '\u00a0%</b>'
+      + (dolni > 0 ? ', tedy zhruba <b>' + fmt(dolni) + '\u2013' + fmt(horni) + '\u00a0Kč/m²</b>' : '')
+      + '. Změřeno křížově na ' + z.n + ' nabídkách téhož druhu'
+      + (z.z < z.n ? ' (u ' + (z.n - z.z) + ' z nich odhad nevznikne vůbec)' : '') + '.'
+      + (mlciOCastce ? ' Proto u tohoto druhu obvyklou cenu neuvádíme — pořadí mezi podobnými pozemky platí dál.' : '')
+      + '</p>';
   }
 
   var DOST_NABIDEK = 25;

@@ -720,7 +720,11 @@
      start rozpadne na tři úlohy místo jedné. Všechno ostatní zůstává,
      kde bylo — žádné přesouvání kódu, jen dvě místa, kde se pustí
      prohlížeč ke slovu. */
-  async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
+  /* PRESNOST = jak přesný je cenový model podle druhu (naměřený medián
+     chyby). Veze to s sebou řez dat — viz scripts/generate-data-rezy.mjs.
+     Jede to až sem proto, aby mapa a stránka pozemku tvrdily o témž
+     pozemku tutéž nejistotu; dřív se takhle rozešel celý cenový verdikt. */
+  async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav, PRESNOST) {
   /* STAV MAPY STOJÍ NAHOŘE, i když mapový blok je až o čtyři stovky řádků
      dál. Důvod: přepínač pohledu (seznam / mapa) je mezi tím, a kdo si
      naposledy nechal zapnutou mapu, otevře stránku v mapovém pohledu —
@@ -2072,7 +2076,7 @@
    * skončila jen v jedné z nich, takže mapa a stránka pozemku u 34 nabídek
    * tvrdily každá něco jiného. */
   var MODEL = (window.PK_CENY && window.PK_CENY.postav)
-    ? window.PK_CENY.postav(DATA) : null;
+    ? window.PK_CENY.postav(DATA, null, PRESNOST) : null;
   // Hranice bere web z cenového modelu, ne z vlastních čísel — jinak by si
   // mapa, karta a stránka pozemku u téhož pozemku zase odporovaly.
   var MEZ_SLEVA = (MODEL && MODEL.MEZ_SLEVA) || 15;
@@ -9166,6 +9170,6 @@
         });
         if (window.PK_DEBUG) console.log('historie ceny: ' + _h);
       }
-      boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources);
+      boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources, (j && j.chyba) || null);
     });
 })();

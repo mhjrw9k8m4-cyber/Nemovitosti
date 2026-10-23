@@ -291,6 +291,12 @@
    * Velikost vzorku NIC nepředpovídá (rozchod 13 % u vzorku do deseti
    * nabídek, 15 % u dvaceti) — proto se hlídá rozptyl, ne počet. */
   var MEZ_ROZPTYL = 1.2;
+  /* Od jaké naměřené chyby druhu se částka přestane tvrdit. Padesát
+     procent je úsudek, ne zlom v datech: nad ním odhad mine typicky
+     o víc než polovinu ceny, a to už není vodítko. Dnes to odděluje
+     ornou půdu (22 %), louku (31 %), stavební (35 %), vinici (42 %)
+     a les (45 %) od ostatní plochy (61 %) a „jiného pozemku" (284 %). */
+  var MEZ_CHYBA_DRUHU = 50;
 
   /* ROZBALENÍ SLOUPCOVÉHO VSTUPU MODELU (data/model.json).
    *
@@ -332,8 +338,16 @@
     return ven;
   }
 
-  function postav(DATA, okresKraj) {
+  function postav(DATA, okresKraj, chybaDruhu) {
     okresKraj = okresKraj || OKRES_KRAJ;
+    /* JAK PŘESNÝ TENHLE MODEL JE, PODLE DRUHU. Přijde z data/model.json
+       jako { "Orná půda": { ch: 22, z: 543, n: 567 }, … } — křížově
+       naměřený medián chyby v procentech, u kolika nabídek odhad vznikl
+       a kolik jich v té skupině je (scripts/presnost-odhadu.mjs).
+       KDYŽ TO VOLAJÍCÍ NEPŘEDÁ, nic se nepředstírá: u čísla se nenapíše
+       rozmezí a nic se neumlčí. Radši žádné tvrzení o nejistotě než
+       vymyšlené. */
+    chybaDruhu = chybaDruhu || null;
     var podleTypu = {};     // type|druh  → ceny za m² (na věrohodnost)
     /* TÉŽ, ALE MÍSTNĚ. Percentil bral pozemky téhož druhu z CELÉ
        republiky. Odhad o kus níž to schválně nesmí — stojí u něj, že
@@ -885,6 +899,20 @@
       pametOdhadu.set(d, v);
       return v;
     }
+    /* Naměřená chyba druhu, nebo null. */
+    function chybaProDruh(g) {
+      var z = chybaDruhu && chybaDruhu[g];
+      return z && typeof z.ch === 'number' ? z.ch : null;
+    }
+    /* DRUH, U KTERÉHO SE ČÍSLO NEMÁ TVRDIT. Medián chyby přes polovinu
+       znamená, že odhad mine typicky o víc než polovinu ceny — u „jiného
+       pozemku" je to dnes 284 %. Percentilový verdikt („dražší než 70 %
+       podobných") u takového pozemku zůstává: ten se neopírá o model,
+       ale o seřazené ceny, a poctivý je. Mlčí se jen o ČÁSTCE. */
+    function nepresnyDruh(g) {
+      var ch = chybaProDruh(g);
+      return ch != null && ch > MEZ_CHYBA_DRUHU;
+    }
     function odhadSpocti(d) {
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
@@ -968,7 +996,12 @@
              tak, že by z jiné poloviny dat vyšlo výrazně jiné číslo.
              Neskrývá se — jen se u něj nepíše částka, kterou bychom tím
              tvrdili přesněji, než jak to umíme. */
-          nejisty: rozptyl != null && rozptyl > MEZ_ROZPTYL
+          /* Křížově naměřená chyba modelu PRO TENHLE DRUH, v procentech.
+             null, když se nezměřila (volající ji nepředal) nebo když
+             v tom druhu odhad nikdy nevznikne — u zahrad je to dnes
+             0 z 59. */
+          chybaDruhu: chybaProDruh(g),
+          nejisty: (rozptyl != null && rozptyl > MEZ_ROZPTYL) || nepresnyDruh(g)
         };
       }
       return null;
@@ -1006,6 +1039,11 @@
       MEZ_POCHYBNA: MEZ_POCHYBNA,
       MEZ_SLEVA: MEZ_SLEVA,
       MEZ_ROZPTYL: MEZ_ROZPTYL,
+      MEZ_CHYBA_DRUHU: MEZ_CHYBA_DRUHU,
+      chybaProDruh: chybaProDruh,
+      /* Celý naměřený záznam { ch, z, n } — blokOdhadu z něj píše větu
+         o přesnosti, takže potřebuje i počty, ne jen procento. */
+      presnostDruhu: function (g) { return (chybaDruhu && chybaDruhu[g]) || null; },
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
@@ -1039,6 +1077,9 @@
        trhák vždycky — a nebyla by to pravda. */
     if (!o || !o.podleVelikosti) return '';
     var kde = kdeText(o.uroven, o.kde);
+    /* Umí model tenhle druh natolik, aby se dala tvrdit částka? */
+    var chD = model.chybaProDruh ? model.chybaProDruh(o.druh) : null;
+    var mlciOCastce = chD != null && chD > (model.MEZ_CHYBA_DRUHU || 50);
     /* Nabídková, vyvolávací, uváděná — nebo úředně stanovená. U státní
        půdy podle § 12 to není cena, kterou si někdo řekl; stanovil ji
        úřad. Říct jí „nabídková" je nepřesné i v tom nejsmířlivějším
@@ -1113,21 +1154,63 @@
     if (o.podOdhadem < 15) return '';
     return '<div class="md-odhad' + (volby.trida || '') + '">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">' + fmt(o.castka) + ' Kč</span></div>' +
+      /* U DRUHU, KTERÝ MODEL NEUMÍ, SE ČÁSTKA NEVYDÁVÁ. Medián chyby přes
+         polovinu znamená, že číslo mine typicky o víc než polovinu ceny —
+         napsat ho vedle skutečné ceny by bylo tvrzení, které neuneseme.
+         Percentilový verdikt („dražší než 70 % podobných") u takového
+         pozemku zůstává: ten se neopírá o model, ale o seřazené ceny.
+         Kontext se nezatajuje — medián i vzorek stojí o kus níž, jen bez
+         částky a bez rozdílu v procentech. */
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">'
+        + (mlciOCastce ? 'neuvádíme' : fmt(o.castka) + '\u00a0Kč') + '</span></div>' +
       // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
       /* Podíl patří mezi důvody k tlumenému podání stejně jako pochybná
          sleva: text pod tím varuje, tak nesmí být vysázený jako radostná
          zpráva. */
       /* `o.podil` tu už být nemůže — podíl se vrátil o kus výš. */
+      (mlciOCastce ? '' :
       '<div class="mo-rozdil' + (o.pochybna || o.nejisty ? ' mo-pochybna' : '') + '"><b>o ' + o.podOdhadem + ' % níž</b>' +
         (o.pochybna ? ' — takový rozdíl bývá spoluvlastnický podíl nebo jiná výměra, ověřte si to'
           : o.nejisty ? ' — ale ceny podobných pozemků ' + kde + ' se mezi sebou liší násobky, takže tohle číslo je jen hrubé vodítko'
-                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>' +
+                    : ', tedy zhruba o ' + fmt(o.rozdil) + '\u00a0Kč') + '</div>') +
       '<p class="mo-pozn">Spočítáno z mediánu <b>' + fmt(Math.round(o.zaM2)) + ' Kč/m²</b> — z <b>' +
       o.vzorek + '</b> nabídek stejného druhu (' + esc(o.druh.toLowerCase()) + ') a podobné výměry ' + kde + '. ' +
       'Jsou to ceny <b>nabídkové</b>, ne za kolik se pozemky opravdu prodaly' +
       (volby.dlouhy ? ' — to ve veřejných zdrojích není. Berte to jako vodítko, ne jako odhad znalce.' : '.') +
-      '</p></div>';
+      '</p>' + vetaOPresnosti(model, o, fmt, mlciOCastce) + '</div>';
+  }
+
+  /* JAK DALEKO TO OBVYKLE MINE — a řekne se to u čísla, ne v dokumentaci.
+   *
+   * Číslo vedle percentilu se tvářilo přesněji, než jak to umíme.
+   * Křížovým měřením (scripts/presnost-odhadu.mjs) vyjde medián chyby
+   * u orné půdy 22 %, u stavebního pozemku 35 %, u lesa 45 %. Na pozemku
+   * za dva miliony je 35 % plus minus 700 tisíc — a to u druhu, kvůli
+   * kterému na takový web lidé chodí nejčastěji. Dokud to u čísla
+   * nestálo, tvrdil web víc, než ví.
+   *
+   * ROZMEZÍ SE POČÍTÁ Z TÉHOŽ ČÍSLA, kterým se model měří: medián
+   * absolutní procentní chyby. Není to interval spolehlivosti a netváří
+   * se tak — „mine typicky o X %" znamená, že u poloviny nabídek je
+   * chyba menší a u poloviny větší.
+   *
+   * KDYŽ SE PŘESNOST NEZMĚŘILA (řez dat ji nenese, třeba na záložní
+   * cestě přes plná data), nenapíše se nic. Vymyšlená nejistota je horší
+   * než žádná.
+   */
+  function vetaOPresnosti(model, o, fmt, mlciOCastce) {
+    if (!model || !model.presnostDruhu) return '';
+    var z = model.presnostDruhu(o.druh);
+    if (!z || typeof z.ch !== 'number') return '';
+    var dolni = Math.round(o.zaM2 * (1 - z.ch / 100));
+    var horni = Math.round(o.zaM2 * (1 + z.ch / 100));
+    return '<p class="mo-pozn">Jak přesné to bývá: u tohoto druhu mine odhad typicky o <b>'
+      + z.ch + '\u00a0%</b>'
+      + (dolni > 0 ? ', tedy zhruba <b>' + fmt(dolni) + '\u2013' + fmt(horni) + '\u00a0Kč/m²</b>' : '')
+      + '. Změřeno křížově na ' + z.n + ' nabídkách téhož druhu'
+      + (z.z < z.n ? ' (u ' + (z.n - z.z) + ' z nich odhad nevznikne vůbec)' : '') + '.'
+      + (mlciOCastce ? ' Proto u tohoto druhu obvyklou cenu neuvádíme — pořadí mezi podobnými pozemky platí dál.' : '')
+      + '</p>';
   }
 
   /* KOLIK NABÍDEK UŽ JE NA CENU OKRESU DOST.

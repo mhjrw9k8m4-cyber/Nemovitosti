@@ -202,8 +202,26 @@
   // kopie výpočtu a rozešla se: stránka pozemku hlásila „Výhodná cena"
   // i u nabídek, které mapa už odmítala jako nevěrohodné.
   var MODEL = null;
+  /* Jak přesný je cenový model podle druhu — naměřený medián chyby, který
+     veze s sebou řez dat (scripts/generate-data-rezy.mjs). Drží se stranou
+     od DATA proto, že model se staví i z plných dat, kde řez není; když
+     se nezměří, u čísla se prostě nenapíše rozmezí. */
+  /* Stránka si přesnost nese s sebou (window.PK_POZEMEK.ch) — to je
+     jediná cesta, která platí vždycky. Řez okresu ji veze taky, jenže
+     na něj se nemusí dojít: u nabídky se živými inzeráty nebo bez řezu
+     se sáhne po plných datech a ta ji nenesou. */
+  var PRESNOST = null;
   function buildIndex(DATA) {
-    MODEL = (window.PK_CENY && window.PK_CENY.postav) ? window.PK_CENY.postav(DATA) : null;
+    /* OSTRŮVEK SE ČTE AŽ TEĎ, ne při načtení souboru. Změřeno 22. 10.:
+       při čtení v těle modulu byl `window.PK_POZEMEK` u šesti stránek
+       z osmnácti ještě prázdný (pořadí skriptů), takže se model postavil
+       bez naměřené přesnosti — a věta o tom, jak daleko odhad mine, se
+       na nich neukázala. Na dvanácti ostatních to vyšlo jen proto, že
+       tam přesnost mezitím dorazila z řezu okresu.
+       Přednost má řez: nese tytéž hodnoty a platí i pro šablonu bez
+       ostrůvku. */
+    if (!PRESNOST && window.PK_POZEMEK && window.PK_POZEMEK.ch) PRESNOST = window.PK_POZEMEK.ch;
+    MODEL = (window.PK_CENY && window.PK_CENY.postav) ? window.PK_CENY.postav(DATA, null, PRESNOST) : null;
   }
   // (Tmavá varianta verdiktu tu bývala jako priceBarHtml — na téhle stránce
   //  se nikdy nevykreslovala, používá se světlá pzVerdictHtml níž. Smazáno.)
@@ -3212,6 +3230,7 @@
       var jRez = r[0];
       var radky = (r[1] && window.PK_CENY && window.PK_CENY.rozbalModel)
         ? window.PK_CENY.rozbalModel(r[1]) : null;
+      if (r[1] && r[1].chyba) PRESNOST = r[1].chyba;
       if (!jRez || !radky) { plnaData(); return; }
       var sedlo = zpracuj(jRez, [], true, radky);
       zivePrislib.then(function (zive) {

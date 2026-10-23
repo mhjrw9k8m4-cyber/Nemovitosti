@@ -27,6 +27,7 @@ import * as SROV from './srovnatelne.mjs';
 import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
 import { bezKomentaruVHtml } from './text.mjs';
+import { presnostPodleDruhu } from './presnost-odhadu.mjs';
 /* Historie ceny jedné nabídky — z archivu, ne z posledního běhu robota.
    `cena_drive` v datech má 21 nabídek z 2 004 (přepíše se při každém
    běhu), archiv ví o 129. Stránka pozemku je přitom jediné místo, kde
@@ -85,6 +86,32 @@ export function naposledZmeneno(d) {
   const dnes = new Date().toISOString().slice(0, 10);
   return nej > dnes ? dnes : nej;
 }
+/* PŘESNOST MODELU SE VKLÁDÁ DO STRÁNKY, A CELÁ.
+   Řez okresu ji veze taky, jenže stránka pozemku na něj nemusí dojít:
+   když má nabídka živé inzeráty nebo řez chybí, sáhne se po plných
+   datech — a ta ji nenesou. Změřeno 22. 10.: z osmnácti stránek s blokem
+   odhadu šest větu o přesnosti nemělo právě proto.
+   NEJDŘÍV JSEM VKLÁDAL JEN SKUPINU TÉ STRÁNKY (asi 45 B) a vyšlo to
+   stejně špatně — 12 z 18. Důvod: stránka vykresluje odhad i u SROVNATELNÝCH
+   pozemků, a ty bývají jiného druhu. Stránka o lesním pozemku tak
+   ukazovala blok o orné půdě, pro kterou vloženou přesnost neměla.
+   Vkládá se proto celá tabulka (asi 330 B), což je pořád o řád míň než
+   jeden požadavek navíc. */
+let PRESNOST_DRUHU = null;
+function presnostVsechDruhu() {
+  if (!PRESNOST_DRUHU) {
+    const p = presnostPodleDruhu(nabidky(), CENY);
+    PRESNOST_DRUHU = {};
+    for (const g of Object.keys(p)) {
+      if (!g) continue;
+      const z = p[g];
+      if (z.median == null) continue;
+      PRESNOST_DRUHU[g] = { ch: Math.round(z.median), z: z.kolik, n: z.celkem };
+    }
+  }
+  return Object.keys(PRESNOST_DRUHU).length ? PRESNOST_DRUHU : null;
+}
+
 function historieCeny(d) {
   if (_historie === null) {
     try { const a = nactiArchiv(); _historie = historiePodleKlice(a.uzavrene, a.stav); }
@@ -1189,7 +1216,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        hlavně míň práce pro parser v telefonu.
        Cesta stojí tady, protože okres zná generátor; stránka by si ho
        z vlastního HTML musela luštit. */
-    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}, parcelaZTextu(d) ? { pc: parcelaZTextu(d) } : {}))};</scr` + `ipt>\n$1`);
+    + `<script>window.PK_POZEMEK=${jsonVeStrance(Object.assign({ k: pkey(d), ll: [d.lat, d.lng], v: d.area || 0, c: d.price || 0, r: `data/okres/${slug(d.okres)}.json` }, historieCeny(d) ? { h: historieCeny(d) } : {}, parcelaZTextu(d) ? { pc: parcelaZTextu(d) } : {}, presnostVsechDruhu() ? { ch: presnostVsechDruhu() } : {}))};</scr` + `ipt>\n$1`);
   /* POPIS OD INZERENTA, vepsaný rovnou do stránky. Leží v samostatném
      souboru (data/popisy.json), protože do opportunities.json, který čte
      úvodní stránka, nepatří — přidal by k němu zhruba megabajt. Sem se

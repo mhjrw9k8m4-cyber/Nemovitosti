@@ -133,6 +133,28 @@ console.log(`nabídek celkem ${VSE.length}, měří se na ${VZOREK.length} celý
 const A = krizove((model, d) => odhadDnesni(model, d));
 console.log(`dnešní model            medián chyby ${A.median.toFixed(1)} %   (odhad vznikl u ${A.kolik} z ${VZOREK.length})`);
 
+/* ROZPAD PODLE DRUHU (--podle-druhu). Jedno číslo za celý web zakrývá,
+   že se přesnost mezi druhy liší několikanásobně — a právě podle toho se
+   rozhoduje, kde odhad vydávat a kde mlčet. Počítá to scripts/presnost-odhadu.mjs,
+   týž modul, ze kterého bere čísla generátor řezů do data/model.json:
+   kdyby to byly dvě kopie, web by u čísla psal jinou nejistotu, než
+   jakou naměří tohle měřidlo. */
+if (process.argv.includes('--podle-druhu')) {
+  const { presnostPodleDruhu } = await import('./presnost-odhadu.mjs');
+  const podle = presnostPodleDruhu(VSE, CENY);
+  const radky = Object.entries(podle)
+    .map(([g, z]) => ({ g: g || '(bez druhu)', ...z }))
+    .sort((x, y) => (x.median ?? 1e9) - (y.median ?? 1e9));
+  console.log('\ndruh'.padEnd(26) + 'medián chyby   odhad vznikl');
+  for (const r of radky) {
+    console.log(r.g.padEnd(25) + (r.median == null ? '     —' : (r.median.toFixed(1) + ' %').padStart(11))
+      + ('   ' + r.kolik + ' z ' + r.celkem).padStart(16));
+  }
+  const soucet = radky.reduce((s2, r) => s2 + r.kolik, 0);
+  console.log('\nSoučet „odhad vznikl" se rovná celkovému počtu odhadů: ' + soucet + ' = ' + A.kolik
+    + (soucet === A.kolik ? '' : '   ← NESEDÍ, rozpad měří něco jiného než celek'));
+}
+
 if (process.argv.includes('--okoli')) {
   /* Zkouší se víc nastavení: jedno číslo by neřeklo, jestli nápad
      nefunguje, nebo jen není doladěný. */

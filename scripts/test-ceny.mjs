@@ -1307,6 +1307,54 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   }
 }
 
+/* ---- ODHAD PŘIZNÁVÁ, JAK DALEKO MINE -------------------------------
+ *
+ * Číslo vedle percentilu se tvářilo přesněji, než jak to umíme: křížově
+ * naměřený medián chyby je u orné půdy 22 %, u stavebního pozemku 35 %
+ * a u „jiného pozemku" 284 %. Od 22. 10. to web u čísla říká — a tam,
+ * kde je chyba přes polovinu, částku nevydává vůbec.
+ *
+ * Měří se tři věci, protože každá se může pokazit zvlášť:
+ *   1) s naměřenou přesností se věta ukáže a rozmezí sedí na procento,
+ *   2) BEZ ní se nic nevymýšlí (volající přesnost předat nemusí),
+ *   3) nad mezí se částka netvrdí, ale percentil zůstává.
+ */
+{
+  const PRESNA = { 'Orná půda': { ch: 20, z: 90, n: 100 } };
+  const HROZNA = { 'Orná půda': { ch: 80, z: 10, n: 100 } };
+  const vzorek = pole(12, (i) => ({
+    place: 'Vzorkov', okres: 'Kolín', type: 'sale', druh: 'orná půda',
+    area: 5000, price: 5000 * (60 + i), lat: 50 + i / 1000, lng: 15,
+  }));
+  const levny = { place: 'Levná', okres: 'Kolín', type: 'sale', druh: 'orná půda',
+    area: 5000, price: 5000 * 40, lat: 50.004, lng: 15 };
+  const fmt = (x) => String(x);
+  const sPresnosti = PK_CENY.postav([...vzorek, levny], OKRES_KRAJ, PRESNA);
+  const bezPresnosti = PK_CENY.postav([...vzorek, levny], OKRES_KRAJ);
+  const sHroznou = PK_CENY.postav([...vzorek, levny], OKRES_KRAJ, HROZNA);
+
+  const bS = PK_CENY.blokOdhadu(sPresnosti, levny, { fmt, esc: (x) => x });
+  const bB = PK_CENY.blokOdhadu(bezPresnosti, levny, { fmt, esc: (x) => x });
+  const bH = PK_CENY.blokOdhadu(sHroznou, levny, { fmt, esc: (x) => x });
+
+  pravda('u odhadu stojí, jak daleko obvykle mine', /mine odhad typicky o <b>20/.test(bS), bS.slice(-200));
+  const o = sPresnosti.odhad(levny);
+  const dolni = Math.round(o.zaM2 * 0.8), horni = Math.round(o.zaM2 * 1.2);
+  pravda('a rozmezí odpovídá tomu procentu (' + dolni + '–' + horni + ' Kč/m²)',
+    bS.indexOf(String(dolni)) >= 0 && bS.indexOf(String(horni)) >= 0, bS.slice(-200));
+  pravda('bez naměřené přesnosti se žádná nejistota nevymýšlí',
+    bB.indexOf('mine odhad typicky') < 0, bB.slice(-160));
+  pravda('nad mezí chyby se částka netvrdí', bH.indexOf('neuvádíme') >= 0, bH.slice(0, 200));
+  pravda('a je u toho napsané proč', /Proto u tohoto druhu obvyklou cenu neuvádíme/.test(bH), bH.slice(-220));
+  pravda('percentilový verdikt tím netrpí — ten se o model neopírá',
+    sHroznou.percentil(levny) != null && sPresnosti.percentil(levny) != null,
+    'percentil u nepřesného druhu zmizel, a to je chyba: řadí se podle cen, ne podle modelu');
+  /* A pojistka proti bezzubosti: mez musí být mezi těmi dvěma vzorky. */
+  pravda('mez chyby leží mezi 20 % a 80 % (jinak by ta dvojice neměřila nic)',
+    sPresnosti.MEZ_CHYBA_DRUHU > 20 && sPresnosti.MEZ_CHYBA_DRUHU < 80,
+    'MEZ_CHYBA_DRUHU = ' + sPresnosti.MEZ_CHYBA_DRUHU);
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

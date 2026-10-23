@@ -7403,3 +7403,78 @@ ne o webu; a je to horší než díra v pokrytí, protože se tváří jako
 práce. Proto u každého vzorku stojí, z čeho je odvozený, a prvky v něm
 nesou `id` se slovem „vzorek", aby bylo v nálezu na první pohled vidět,
 odkud je.
+
+
+## 109. Odhad ceny přiznal, jak daleko mine *23. 10.*
+
+Jediné místo, kde web tvrdil víc, než ví: vedle poctivého percentilu
+(„dražší než 70 % podobných") stálo číslo, které se tvářilo přesně.
+
+### Změřeno, ne odhadnuto
+
+Křížově na desetinách (`scripts/presnost-odhadu.mjs` — nový modul, aby
+měřidlo i web počítaly totéž): model se postaví z devíti dílů dat
+a odhaduje ten desátý.
+
+| druh | medián chyby | odhad vznikl |
+|---|---:|---:|
+| Orná půda | 22 % | 543 z 567 |
+| Louka / travní porost | 31 % | 259 z 272 |
+| Stavební / zastavěná | **35 %** | 195 z 226 |
+| Vinice / sad | 42 % | 34 z 45 |
+| Lesní pozemek | 45 % | **29 z 68** |
+| Ostatní plocha | **61 %** | 23 z 62 |
+| Jiný pozemek | **284 %** | 4 z 39 |
+| Zahrada | — | **0 z 59** |
+
+Nejhorší je to tam, kde jde o nejvíc peněz: u stavebního pozemku je 35 %
+na dvou milionech ±700 tisíc. A u zahrad odhad nevznikne ani jednou z 59
+— tam člověk nedostane špatné číslo, dostane mlčení.
+
+### Co se změnilo
+
+* **U čísla stojí, jak daleko mine.** „Jak přesné to bývá: u tohoto
+  druhu mine odhad typicky o 22 %, tedy zhruba 52–81 Kč/m². Změřeno
+  křížově na 567 nabídkách téhož druhu (u 24 z nich odhad nevznikne
+  vůbec)."
+* **Kde je chyba přes polovinu, částka se nevydává.** Ostatní plocha
+  (61 %) a „jiný pozemek" (284 %) dostanou „Obvyklá cena — neuvádíme"
+  a větu proč. Percentilový verdikt zůstává: ten se neopírá o model, ale
+  o seřazené ceny.
+* **Číslo veze s sebou DATA, ne konstanta v kódu.** Data se mění každý
+  den robotem; konstanta by zestárla potichu. Řez modelu i řez pro mapu
+  nesou tutéž tabulku (332 B), aby mapa a stránka pozemku netvrdily
+  o témž pozemku jinou nejistotu.
+
+### Tři vlastní chyby po cestě
+
+1. **Tvrdil jsem, že pojistka je jednostranná** — podle staršího
+   dokumentu. V kódu jsou tři: cena 8× nad odhadem odhad zahodí, sleva
+   přes 60 % se označí „ověřit cenu" a velký rozptyl srovnávaných cen
+   částku umlčí. Opraveno dřív, než jsem podle toho něco změnil.
+2. **Do stránky jsem vložil jen skupinu té stránky** (45 B místo 330).
+   Vyšlo to stejně špatně, 12 z 18: stránka vykresluje odhad i u pozemků
+   jiného druhu. Vkládá se celá tabulka.
+3. **Ostrůvek jsem četl v těle modulu**, kde ještě nemusí být naplněný.
+   Čte se až při stavbě modelu.
+
+### Jak se ví, že to doopravdy dojde na obrazovku
+
+Sabotáž: věta se z bloku odstranila → ze stránek s odhadem ji nemá ani
+jedna (0 z 18); vrácena → má ji 12 z 18. Zbylých šest jsou bloky
+u spoluvlastnického podílu a úředně stanovené ceny, kde web odhad
+záměrně netvrdí vůbec — a to byla ta nejdelší odbočka celé práce: než
+jsem to změřil, vypadalo to jako díra v zapojení.
+
+K tomu sedm kontrol v `scripts/test-ceny.mjs`: že se věta ukáže, že
+rozmezí sedí na procento, že se BEZ naměřené přesnosti nic nevymýšlí, že
+nad mezí se částka netvrdí, a že mez leží mezi oběma zkušebními vzorky —
+jinak by ta dvojice neměřila nic.
+
+### Co z toho platí dál
+
+**Nejistotu je potřeba vézt s daty, ne s kódem.** Číslo, které se měří
+na datech, zestárne přesně tak rychle jako ta data — a konstanta v kódu
+o tom mlčí. A platí i obrácené: **dokud se nezměří, ať se nic netvrdí.**
+Když přesnost k modelu nedorazí, nenapíše se žádné rozmezí; vymyšlená
+nejistota je horší než žádná.

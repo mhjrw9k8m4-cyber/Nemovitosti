@@ -571,12 +571,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-blansko.html</loc>
     <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -584,6 +578,12 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-znojmo.html</loc>
+    <lastmod>2026-10-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemky-okres-brno-mesto.html</loc>
     <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -11911,12 +11911,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-lovosice-ujowin.html</loc>
-    <lastmod>2026-09-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-zlin-zlin-pvtut7.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -11973,18 +11967,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-litomerice-kalovice-147ileb.html</loc>
     <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-lovosice-7hwj43.html</loc>
-    <lastmod>2026-09-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-lovosice-12h4fr4.html</loc>
-    <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -12079,12 +12061,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-nachod-police-nad-metuji-1v140mx.html</loc>
-    <lastmod>2026-09-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-nachod-police-nad-metuji-o0mqmu.html</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -12135,12 +12111,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-kladno-cvrcovice-1jnezke.html</loc>
     <lastmod>2026-10-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-brno-mesto-brno-jfm9d8.html</loc>
-    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

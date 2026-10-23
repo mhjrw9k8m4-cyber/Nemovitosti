@@ -122,8 +122,12 @@
   }
 
   var MODEL = null;
+
+  var PRESNOST = null;
   function buildIndex(DATA) {
-    MODEL = (window.PK_CENY && window.PK_CENY.postav) ? window.PK_CENY.postav(DATA) : null;
+
+    if (!PRESNOST && window.PK_POZEMEK && window.PK_POZEMEK.ch) PRESNOST = window.PK_POZEMEK.ch;
+    MODEL = (window.PK_CENY && window.PK_CENY.postav) ? window.PK_CENY.postav(DATA, null, PRESNOST) : null;
   }
 
   function odhadHtml(d) {
@@ -1897,6 +1901,7 @@
       var jRez = r[0];
       var radky = (r[1] && window.PK_CENY && window.PK_CENY.rozbalModel)
         ? window.PK_CENY.rozbalModel(r[1]) : null;
+      if (r[1] && r[1].chyba) PRESNOST = r[1].chyba;
       if (!jRez || !radky) { plnaData(); return; }
       var sedlo = zpracuj(jRez, [], true, radky);
       zivePrislib.then(function (zive) {

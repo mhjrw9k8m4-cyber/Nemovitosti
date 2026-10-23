@@ -458,7 +458,7 @@
     return new Promise(function (r) { setTimeout(r, 0); });
   }
 
-  async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav) {
+  async function boot(DATA, KRAJE_GEOM, updated, updatedAt, zdrojeStav, PRESNOST) {
 
   var mapEl = document.getElementById('leaflet-map');
   var map = null;
@@ -1246,7 +1246,7 @@
   })();
 
   var MODEL = (window.PK_CENY && window.PK_CENY.postav)
-    ? window.PK_CENY.postav(DATA) : null;
+    ? window.PK_CENY.postav(DATA, null, PRESNOST) : null;
 
   var MEZ_SLEVA = (MODEL && MODEL.MEZ_SLEVA) || 15;
   var MEZ_POCHYBNA = (MODEL && MODEL.MEZ_POCHYBNA) || 60;
@@ -6010,6 +6010,6 @@
         });
         if (window.PK_DEBUG) console.log('historie ceny: ' + _h);
       }
-      boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources);
+      boot(base, kraje || null, j && j.updated, j && j.updated_at, j && j.sources, (j && j.chyba) || null);
     });
 })();

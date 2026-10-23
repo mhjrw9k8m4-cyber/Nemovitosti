@@ -41,6 +41,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
    si člověk může řez odvodit z adresy stránky, na které stojí. Ta
    funkce je od 15. 10. jedna pro celý web (scripts/text.mjs). */
 import { slug } from './text.mjs';
+import { presnostPodleDruhu } from './presnost-odhadu.mjs';
 export { slug };
 
 /* SESTAVENÍ JE VE FUNKCI, NE NA NEJVYŠŠÍ ÚROVNI.
@@ -197,6 +198,28 @@ export async function spust() {
      pozorování jako každé jiné, dokonce lepší než inzerát, protože cena
      byla skutečně zaplacená. Vyhodit ji by znamenalo zahazovat data bez
      důvodu. Model proto čte `bezDuplicit`, ne `vse`. */
+  /* JAK PŘESNÝ TEN MODEL JE, PODLE DRUHU — spočítá se JEDNOU pro oba
+     řezy. Číslo vedle percentilu („obvyklá cena 180 Kč/m²") se tvářilo
+     přesněji, než jak to umíme: křížově naměřený medián chyby je
+     u orné půdy 22 %, u stavebního pozemku 35 %, u ostatní plochy 61 %
+     a u „jiného pozemku" 284 %. Web to teď u čísla přiznává a tam, kde
+     je chyba přes polovinu, číslo nevydává vůbec.
+     Proč do dat a ne do konstanty v js/ceny.js: data se mění každý den
+     robotem, konstanta by zestárla potichu. Počítá to
+     scripts/presnost-odhadu.mjs — týž modul, jaký používá měřidlo
+     (scripts/mericka-odhadu.mjs --podle-druhu), takže se web a měřidlo
+     nemůžou rozejít. Stojí to 137 ms. */
+  const chybaModelu = (() => {
+    const presnost = presnostPodleDruhu(bezDuplicit, CENY);
+    const ven = {};
+    for (const g of Object.keys(presnost)) {
+      if (!g) continue;
+      const z = presnost[g];
+      ven[g] = { ch: z.median == null ? null : Math.round(z.median), z: z.kolik, n: z.celkem };
+    }
+    return ven;
+  })();
+
   const modelVstup = (() => {
     /* ÚŘEDNĚ STANOVENÁ CENA SE DO MODELU NEVOZÍ. Prodej státní půdy podle
        § 12 je v datech vedený jako běžný prodej, ale cenu u něj stanoví
@@ -227,6 +250,7 @@ export async function spust() {
     }
     return Object.assign({}, hlavicka, {
       rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: proModel.length },
+      chyba: chybaModelu,
       popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
         + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
         + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla).',
@@ -273,6 +297,11 @@ export async function spust() {
   const mapaVstup = Object.assign({}, hlavicka, {
     sources: celek.sources,
     rez: { uroven: 'mapa', nazev: null, soubor: 'data/mapa.json', pocet: proMapu.length },
+    /* PŘESNOST MODELU JEDE S ŘEZEM, aby si úvodní stránka nemusela
+       stahovat ještě data/model.json jen kvůli dvěma stům bajtů. Je to
+       táž hodnota jako tam — kdyby mapa a stránka pozemku dostaly každá
+       jinou, tvrdily by o témž pozemku jinou nejistotu. */
+    chyba: chybaModelu,
     popis: 'Co stahuje úvodní stránka: tytéž nabídky jako data/opportunities.json '
       + 'bez duplicit a bez pole url (adresu inzerátu úvod nepoužívá). Adresy jsou '
       + 'v řezech okresů.',

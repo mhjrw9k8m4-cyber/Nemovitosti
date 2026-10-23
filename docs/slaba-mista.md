@@ -91,6 +91,13 @@ druhu v okrese, z 23 nabídek") je poctivý a ten bych nechal. Problém je
 říct, jak široké je to rozmezí — a u druhů, kde je chyba přes 50 %,
 ho možná nevydávat vůbec.
 
+**HOTOVO 23. 10.** Obojí. U čísla teď stojí „u tohoto druhu mine odhad
+typicky o 22 %, tedy zhruba 52–81 Kč/m², změřeno křížově na 567
+nabídkách", a u ostatní plochy (61 %) a „jiného pozemku" (284 %) se
+částka nevydává vůbec — percentil zůstává. Naměřená chyba jede s daty,
+ne jako konstanta v kódu, takže nezestárne potichu. Podrobně
+v `docs/optimalizace.md`, oddíl 109.
+
 ---
 
 ## 3. Polovina nabídek nemá s čím se srovnat
@@ -328,9 +335,9 @@ položky nejsou kód** — a to je samo o sobě zjištění.
 4. **Druhý velký zdroj nabídek** (Sreality přes Apify). Opravuje bod 1,
    3 a kus bodu 2 naráz — víc nabídek znamená hustší srovnání a tím
    přesnější odhad.
-5. **Říct u odhadu, jak je nejistý** — a u druhů, kde je medián chyby
-   přes 50 %, ho nevydávat. Je to půlden práce a odstraňuje to jedinou
-   věc, kde web tvrdí víc, než ví.
+5. ~~**Říct u odhadu, jak je nejistý** — a u druhů, kde je medián chyby
+   přes 50 %, ho nevydávat.~~ **Hotovo 23. 10.** (oddíl 109
+   v `docs/optimalizace.md`).
 
 Co bych **nedělal**: nepouštěl bych se do dalších funkcí vlastní
 inzerce, dokud nebude bod 1. Je postavená celá a prázdná; další kus
