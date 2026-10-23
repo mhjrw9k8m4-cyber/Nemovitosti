@@ -76,7 +76,20 @@
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });
   }
 
-  function logout() { setSession(null); }
+  function logout() {
+    var s = getSession();
+    var t = s && s.access_token;
+    setSession(null);
+    if (!t) return Promise.resolve(true);
+    if (!URL || !KEY) return Promise.resolve(false);
+    try {
+      return fetch(URL + '/auth/v1/logout?scope=local', {
+        method: 'POST',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + t },
+        keepalive: true
+      }).then(function (r) { return !!r.ok; }, function () { return false; });
+    } catch (e) { return Promise.resolve(false); }
+  }
 
   function recover(mail) {
     var redir = '';

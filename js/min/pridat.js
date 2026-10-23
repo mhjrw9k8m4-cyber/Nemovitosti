@@ -1109,7 +1109,15 @@
       PKAuth.recover(c.e).then(function () { say('Poslali jsme vám na e-mail odkaz pro nastavení nového hesla. Zkontrolujte i spam.'); });
     });
     var lo = document.getElementById('au-logout');
-    if (lo) lo.addEventListener('click', function () { if (window.PKAuth) { PKAuth.logout(); refresh(); } });
+    if (lo) lo.addEventListener('click', function () {
+      if (!window.PKAuth) return;
+
+      var slib = PKAuth.logout();
+      refresh();
+      if (slib && slib.then) slib.then(function (zruseno) {
+        if (!zruseno) say('Odhlášeno v tomhle prohlížeči. Serveru se to oznámit nepovedlo — zkuste to prosím znovu, až budete online.', true);
+      });
+    });
   })();
 
   (function () {

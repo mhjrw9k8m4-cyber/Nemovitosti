@@ -44,6 +44,8 @@ function pustZadrzene() {
 }
 function resetStav() {
   stav = { platnyToken: 'r1', pocetObnov: 0, pocetPrihlaseni: 0, pouzite: new Set(), odpoved: 'ok', poradi: [],
+    /* Co dostal koncový bod /auth/v1/logout a jak na něj odpovídat. */
+    odhlaseni: [], odhlaseniOdpoved: 'ok',
     /* Kolik odpovědí na obnovu se zadrží a pustí NARÁZ. Nula = odpovídá se
        hned (tak se chová server při jediné stránce). Dvojka vyrábí to, co
        se děje doopravdy při dvou kartách: oba prohlížeče dostanou odpověď
@@ -98,6 +100,12 @@ const server = createServer((req, res) => {
       if (cekajiciOdpovedi.length >= stav.drzObnovy) pustZadrzene();
       else setTimeout(() => { if (cekajiciOdpovedi.length) pustZadrzene(); }, 900);
       return;
+    }
+    if (req.url.indexOf('/auth/v1/logout') === 0) {
+      stav.odhlaseni.push({ url: req.url, autorizace: req.headers['authorization'] || '',
+        apikey: req.headers['apikey'] || '' });
+      if (stav.odhlaseniOdpoved === '500') { res.writeHead(500, { 'Content-Type': 'application/json' }); return res.end('{}'); }
+      res.writeHead(204); return res.end();
     }
     res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{}');
   });
@@ -376,6 +384,86 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   pravda('a člověk opravdu přihlášený není', v.prihlasen === false,
     'loggedIn() tvrdí ano — session ve schránce není');
   pravda('a je čím to vysvětlit', /paměť/i.test(v.zprava), `zpráva: „${v.zprava}"`);
+  await ctx.close();
+}
+
+/* --- ODHLÁŠENÍ MUSÍ PLATIT I NA SERVERU ---------------------------
+   Naměřeno 23. 10.: logout() byl `setSession(null)`, tedy jen
+   removeItem('pk_auth'), a v celém repozitáři nebylo ANI JEDNO volání
+   /auth/v1/logout. Obnovovací token tedy po „Odhlásit se" zůstal na
+   Supabase platný — a právě tím úkonem člověk říká, že má přístup
+   skončit. Měří se obojí: že se to serveru pošle, a že se lokálně
+   odhlásí i tehdy, když server neodpoví. */
+{
+  resetStav();
+  const { ctx, p } = await sPrihlasenim(3600);
+  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  await p.waitForTimeout(200);
+  pravda('odhlášení pošle serveru, že sezení končí', stav.odhlaseni.length === 1,
+    `server dostal ${stav.odhlaseni.length} žádostí o odhlášení — obnovovací token tam zůstává platný`);
+  const z = stav.odhlaseni[0] || {};
+  pravda('a pošle u toho token toho člověka (ne jen veřejný klíč)',
+    z.autorizace === 'Bearer a0', `Authorization: „${z.autorizace}"`);
+  pravda('a ruší jen tohle zařízení (scope=local, ne telefon s ním)',
+    /[?&]scope=local\b/.test(z.url || ''), `adresa: „${z.url}"`);
+  pravda('potvrzené zrušení ohlásí jako úspěch', zruseno === true, `logout() vrátil ${zruseno}`);
+  pravda('a ve schránce prohlížeče nezůstane nic',
+    (await p.evaluate(() => localStorage.getItem('pk_auth'))) === null,
+    'pk_auth ve schránce zůstal');
+  await ctx.close();
+}
+/* Server selže. Odhlásit se MUSÍ stejně — a logout() to přizná. */
+{
+  resetStav();
+  stav.odhlaseniOdpoved = '500';
+  const { ctx, p } = await sPrihlasenim(3600);
+  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  await p.waitForTimeout(200);
+  pravda('je co měřit — server odhlášení odmítl', stav.odhlaseni.length === 1,
+    `server dostal ${stav.odhlaseni.length} žádostí`);
+  pravda('při chybě serveru je člověk odhlášený stejně', (await jePrihlasen(p)) === false,
+    'odpověď serveru zdržela úkon, který člověk právě udělal');
+  pravda('ale logout() nelže, že se to zrušilo', zruseno === false, `logout() vrátil ${zruseno}`);
+  await ctx.close();
+}
+/* Bez signálu — adresa, na které nikdo neposlouchá. */
+{
+  resetStav();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
+  const p = await ctx.newPage();
+  await p.goto('http://127.0.0.1:8399/prazdno');
+  await p.evaluate(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({
+      access_token: 'a0', refresh_token: 'r1',
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      user: { id: 'u1', email: 'test@example.invalid' } }));
+    window.PK_SUPABASE_URL = 'http://127.0.0.1:8398';   // nikdo tam není
+    window.PK_SUPABASE_KEY = 'anon';
+  });
+  await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  pravda('bez signálu je člověk odhlášený taky', (await jePrihlasen(p)) === false,
+    'bez sítě se odhlášení neprovedlo ani lokálně');
+  pravda('a i tady se přizná, že server o tom neví', zruseno === false,
+    `logout() vrátil ${zruseno}`);
+  await ctx.close();
+}
+/* A kdo přihlášený není, ten serveru nic posílat nemá. */
+{
+  resetStav();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
+  const p = await ctx.newPage();
+  await p.goto('http://127.0.0.1:8399/prazdno');
+  await p.evaluate(() => {
+    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_KEY = 'anon';
+  });
+  await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
+  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  await p.waitForTimeout(150);
+  pravda('odhlášení bez přihlášení serveru nic neposílá', stav.odhlaseni.length === 0,
+    `server dostal ${stav.odhlaseni.length} žádostí, a nebylo co rušit`);
+  pravda('a neplatí to za selhání', zruseno === true, `logout() vrátil ${zruseno}`);
   await ctx.close();
 }
 

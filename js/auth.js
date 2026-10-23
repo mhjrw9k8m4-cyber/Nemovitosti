@@ -94,7 +94,33 @@
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });
   }
 
-  function logout() { setSession(null); }
+  /* ODHLÁŠENÍ MUSÍ PLATIT I NA SERVERU. Dřív tu stálo jen
+     `setSession(null)`, tedy „smaž schránku prohlížeče" — a obnovovací
+     token zůstal na Supabase PLATNÝ. Kdo jeho kopii má (záloha
+     prohlížeče, synchronizovaný profil, sdílený počítač), mohl si
+     přihlášení obnovovat dál; „Odhlásit se" je přitom právě ten úkon,
+     kterým člověk říká, že má přístup skončit.
+     scope=local SCHVÁLNĚ: výchozí chování Supabase je `global`, tedy
+     odhlásit i telefon a druhý počítač. To by bylo překvapení —
+     odhlašuje se tohle zařízení.
+     LOKÁLNĚ SE ODHLAŠUJE VŽDYCKY, i bez signálu: odpověď serveru nemá
+     co držet úkon, který člověk právě udělal. Vrací se ale, jestli to
+     server potvrdil, aby to stránka mohla PŘIZNAT (muj-inzerat.html
+     a js/pridat.js) místo tiché polopravdy. */
+  function logout() {
+    var s = getSession();
+    var t = s && s.access_token;
+    setSession(null);                       // tady a hned, bez ohledu na síť
+    if (!t) return Promise.resolve(true);   // nebylo co rušit
+    if (!URL || !KEY) return Promise.resolve(false);
+    try {
+      return fetch(URL + '/auth/v1/logout?scope=local', {
+        method: 'POST',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + t },
+        keepalive: true
+      }).then(function (r) { return !!r.ok; }, function () { return false; });
+    } catch (e) { return Promise.resolve(false); }
+  }
 
   // Zapomenuté heslo — pošle na e-mail odkaz pro nastavení nového hesla.
   // redirect_to říká Supabase, kam odkaz z e-mailu vede zpět (náš web).

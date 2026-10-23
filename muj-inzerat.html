@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-8qrYSp2DkQQ+WaG55ANQuHbsXCY4iSxTo96lIZc264Y=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-fffAHNBC6LBq5g6miTBAdTR035GDXpPrDjnyHvJgYtQ=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
   <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
@@ -516,7 +516,7 @@
      aby web o téže dražbě netvrdil na dvou místech dvě různé věci. -->
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=f3c79c04" defer></script>
+<script src="js/min/auth.js?v=d6ba06aa" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -760,7 +760,15 @@
         else { say((r.data && (r.data.error_description||r.data.msg||r.data.message)) || 'Přihlášení se nepovedlo — zkontrolujte e-mail a heslo.', true); }
       });
     });
-    var lo = q('mi-logout'); if (lo) lo.addEventListener('click', function () { A.logout(); show(); });
+    var lo = q('mi-logout'); if (lo) lo.addEventListener('click', function () {
+      /* Odhlášení ruší sezení i na serveru. Když se to nepovede (bez
+         signálu), musí to být vidět: tiše by to znamenalo, že token na
+         serveru dál platí, a člověk by si myslel, že je pryč. */
+      A.logout().then(function (zruseno) {
+        if (!zruseno) say('Odhlášeno v tomhle prohlížeči. Serveru se to oznámit nepovedlo — udělejte to prosím znovu, až budete online.', true);
+      });
+      show();
+    });
 
     // Zapomenuté heslo
     var fg = q('mi-forgot');

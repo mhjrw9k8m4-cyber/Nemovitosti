@@ -8221,3 +8221,51 @@ Dvakrát přitom spadla moje vlastní kontrola, a obojí stojí za zápis:
 spočítala `2>&1` z přesměrování. Obojí je totéž poučení jako u
 escapování v oddílu 115: **kontrola, která si čte text po svém, musí
 mít doloženo, že vidí to, co je v souboru napsané** — jinak křičí vlka.
+
+## 119. „Odhlásit se" smazalo schránku prohlížeče a serveru neřeklo nic *23. 10.*
+
+`logout()` v `js/auth.js` byl jeden řádek: `setSession(null)`, tedy
+`removeItem('pk_auth')`. Změřeno 23. 10.: v celém repozitáři nebylo
+**ani jedno** volání `/auth/v1/logout`. Odhlášení tedy znamenalo
+„zapomeň to tady" — a **obnovovací token zůstal na Supabase platný**.
+
+Proč to není kosmetika: ten token se dá obnovovat dál, takže kdo jeho
+kopii má, má i přístup k účtu. A kopie se dělají samy: záloha
+prohlížeče, synchronizovaný profil, cizí počítač, kde si někdo
+schránku přečetl dřív, než se smazala. „Odhlásit se" je přitom právě
+ten úkon, kterým člověk říká, že má přístup **skončit** — ne ten,
+kterým říká „skryj to přede mnou".
+
+Hotovo (`js/auth.js`):
+
+* `POST /auth/v1/logout?scope=local` s **tokenem toho člověka**
+  v `Authorization` (veřejný klíč by zrušil prázdno);
+* **`scope=local` schválně.** Výchozí chování Supabase je `global`,
+  tedy odhlásit i telefon a druhý počítač. To by bylo překvapení:
+  klepnutí na „Odhlásit se" v jednom prohlížeči má odhlásit tohle
+  zařízení;
+* **lokálně se odhlašuje vždycky**, i bez signálu — odpověď serveru
+  nemá co držet úkon, který člověk právě udělal;
+* `logout()` vrací, **jestli to server potvrdil**, a obě stránky
+  s tlačítkem (`muj-inzerat.html`, `js/pridat.js`) to přiznají:
+  „Odhlášeno v tomhle prohlížeči. Serveru se to oznámit nepovedlo —
+  udělejte to prosím znovu, až budete online." Tiché selhání by tady
+  bylo nejhorší ze všech možností: člověk by si myslel, že je pryč.
+
+Hlídá to `scripts/test-prihlaseni.mjs` (9 nových kontrol nad falešným
+Supabase, celkem 33): žádost odejde právě jedna, nese `Bearer` token
+člověka a `scope=local`, schránka zůstane prázdná, potvrzené zrušení
+se hlásí jako úspěch — a v obou nepovedených směrech (server vrátí
+500, adresa neodpovídá vůbec) je člověk odhlášený **stejně** a
+`logout()` nelže. Devátá kontrola měří opačný směr: kdo přihlášený
+není, ten serveru nemá co posílat.
+
+Sabotáž, pět směrů, všechny zachyceny: zpátky jen `setSession(null)`,
+`scope=global`, veřejný klíč místo tokenu, lokální odhlášení až po
+úspěchu serveru, `logout()` hlásící úspěch vždycky.
+
+Co zkouška změřit **nemůže**: jestli Supabase ten token na své straně
+opravdu zneplatní. Měří se, že se pošle správná žádost se správným
+tokenem a rozsahem; zbytek je chování Supabase, a vyzkoušet to proti
+živému projektu by znamenalo přihlašovat se tam zkušebním účtem —
+to je práce pro majitele, ne pro CI.
