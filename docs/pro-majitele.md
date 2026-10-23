@@ -118,6 +118,20 @@ mapě jich je hodně.
 
 ---
 
+## 7b. Co vadou NENÍ (ať se to nespravuje podruhé)
+
+Při kritice 23. 10. jsem si dvě věci napsal jako vadu a nejsou:
+
+* **„Nové na trhu" není prázdné.** `first_seen` má sice 1 529 z 1 953
+  nabídek shodné (den, kdy se evidence zavedla), ale `nove-pozemky.html`
+  je mezi novinky nepočítá a **říká to rovnou**. Za posledních sedm dní
+  je tam 111 skutečně nových nabídek.
+* **Cenová historie se vede.** Je v `data/zlevneni.json` (ne v poli
+  `cena_zmena`, podle kterého jsem počítal poprvé): 83 zlevnění za
+  sedm dní.
+
+---
+
 ## 8. Odložené, dokud není 1–5
 
 * **VAPID a upozornění do telefonu** — klíče vygenerované, do Secrets

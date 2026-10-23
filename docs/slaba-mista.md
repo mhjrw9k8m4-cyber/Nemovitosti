@@ -362,10 +362,16 @@ verdiktem a co se s tím udělalo, je v oddílu 135
 `docs/optimalizace.md`; **spravit se to v kódu nedá** — opravou je
 druhý zdroj dat (bod 1 v `docs/pro-majitele.md`).
 
-Dvě věci, kterými se web vrací a které jsou skoro prázdné: `first_seen`
-má 1 529 z 1 953 nabídek shodné (den, kdy se to pole zavedlo), takže
-„nové na trhu" nenese informaci, a zaznamenaná **změna ceny je
-u 56 nabídek z 1 953 (2,9 %)** za celou republiku.
+**A dvě věci, které jsem si napsal jako vadu, vadou nejsou** —
+stojí to tu, aby je někdo nespravoval podruhé. `first_seen` má sice
+1 529 z 1 953 nabídek shodné (den, kdy se to pole zavedlo), ale
+`nove-pozemky.html` ty nabídky mezi novinky **nepočítá a říká to
+rovnou** („Evidenci jsme začali 14. 9. a toho dne naskočilo naráz
+1 529 nabídek, které na trhu byly už dřív"), a stránka pozemku z téhož
+důvodu schválně neukazuje „v nabídce od". Signál je tedy mladý, ale
+pravdivý: za posledních sedm dní 111 nových nabídek a 83 zlevnění.
+Cenová historie se vede zvlášť v `data/zlevneni.json`, ne polem
+`cena_zmena` (podle kterého jsem počítal poprvé a vyšlo mi 56).
 
 ---
 
