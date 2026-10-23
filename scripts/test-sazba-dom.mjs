@@ -72,8 +72,9 @@ const server = createServer((q, s) => {
 await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 
 /* STRÁNKA POZEMKU SE NEBERE PRVNÍ V POŘADÍ, ALE TA, KTERÁ MÁ CO MĚŘIT.
-   Těch stránek je 2 215 a jméno obce s jednopísmenným slovem má jen 147
-   z nich (6,6 %) — „Ostrov u Macochy", „Bezděčí u Velkých Opatovic".
+   Naměřeno 22. 10. na 2 215 stránkách: jméno obce s jednopísmenným slovem
+   mělo jen 147 z nich (6,6 %) — „Ostrov u Macochy", „Bezděčí u Velkých
+   Opatovic". Přítomný čas by tu lhal: za dva dny už jich bylo 2 221.
    Kdyby se brala první v abecedě, zkouška by se ptala na obec, kde není
    co pokazit, a cestu „jméno obce z dat projde sazbou až při výpisu" by
    neprošla vůbec. (Přesně takovým pevným vzorkem si 22. 10. jiná zkouška

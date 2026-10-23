@@ -562,3 +562,14 @@ Když se navrhuje nová sekce nebo se předělává vzhled stávající,
 teprve pak se píše kód. Důvod je úsporný: dvě varianty v prohlížeči
 stojí pár minut, kdežto nasazená a pak zamítnutá přepsaná sekce stojí
 běh celé sady zkoušek a ještě jednou tutéž práci.
+
+### Hlídač s výjimkou na celou složku nehlídá tam, kde se píše nejvíc
+
+Pravidlo „počet, který se mění sám od sebe, nepatří do přítomného času"
+platilo od 19. 10., ale hlídač vynechával `test-*.mjs` a `docs/` — a
+zastaralá čísla se sešla přesně tam (viz oddíl 111). **Výjimka se zúží
+na svůj důvod, ne na složku:** důvod byl, že hlídač cituje staré
+nepravdy a spadl by sám na sobě, takže se dnes vynechává řádek
+s uvozovkami, ne celá složka se zkouškami. Když se píše nová výjimka,
+patří k ní věta, co přesně kryje — a měření, co po ní zbyde
+nepokryté.

@@ -6884,11 +6884,12 @@ výmluva** — jde se po jedné.
 
 Ať je seznam poctivý v obou směrech. Hotové a ověřené: stahování ze
 šesti zdrojů 4× denně s pojistkami proti tichému selhání, archiv
-nabídek a změn cen, 2 062 stránek pozemků se srovnáním cen, odhad ceny
-proti okolí, hlídání v aplikaci, účty, psaní mezi lidmi, poznámky,
+nabídek a změn cen, přes dva tisíce stránek pozemků se srovnáním cen,
+odhad ceny proti okolí, hlídání v aplikaci, účty, psaní mezi lidmi, poznámky,
 offline režim, kontrola fotek AI modelem a kontrola databáze
-(`scripts/kontrola-databaze.mjs`). Zkoušek je 185 souborů a každá
-pojistka je prověřená sabotáží.
+(`scripts/kontrola-databaze.mjs`). Zkoušek je přes dvě stě souborů a každá
+pojistka je prověřená sabotáží. (Dolní hranice, ne přesný počet — ten
+se mění sám a dřív tady stálo 185.)
 
 ---
 

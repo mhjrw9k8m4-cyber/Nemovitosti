@@ -246,8 +246,9 @@ návštěvnosti ji nemám čím doložit.)*
   která je zítra, to stačí; u nového inzerátu to znamená, že web o něm
   ví nejpozději za šest hodin. Rychlejší obnova znamená víc zátěže na
   cizí servery.
-* **Jeden repozitář, jeden člověk, jedna větev.** Zkoušek je 228 (111 bez prohlížeče, 117 v něm)
-  a CI je drží, ale bus faktor je 1.
+* **Jeden repozitář, jeden člověk, jedna větev.** Zkoušky drží CI ve dvou
+  sadách (bez prohlížeče a v něm); kolik jich je, říká `scripts/` a běh CI,
+  ne tenhle odstavec — číslo tady zastaralo za dva dny. Bus faktor je 1.
 
 ---
 
@@ -263,7 +264,8 @@ generátor stránek, `scripts/test-obec.mjs` projde celou cestu od dat
 po detail) — chybí jen zdroj. Web o tom **nelže**: slib „Z úřední
 desky" se 11. 10. odstranil a hlídá to `scripts/test-sliby.mjs`.
 Zapojení nejde udělat odsud: `edesky.cz` i `data.gov.cz` jsou ze
-zdejšího prostředí nedostupné (síťová politika odpoví na CONNECT 403),
+zdejšího prostředí nedostupné (síťová politika odpoví na CONNECT 403;
+přeměřeno 23. 10., stále platí),
 takže parser se nemá o co opřít a psát ho podle hádaného formátu
 znamená robota, který spadne až v provozu.
 

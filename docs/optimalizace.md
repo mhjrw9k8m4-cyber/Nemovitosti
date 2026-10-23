@@ -7516,3 +7516,62 @@ tvrdil. Patnáct minut měření ukázalo, že by web zhoršila — a to je
 levnější než ji zavést a čekat, až se někdo zeptá, proč je odhad horší
 než loni. Stejně jako u bodu 48 (vynucené rozvržení) platí: **změřeno,
 NEUDĚLÁNO** je taky výsledek, a patří ho zapsat.
+
+---
+
+## 111. Pravidlo proti zastaralým počtům hlídalo jen polovinu repozitáře *23. 10.*
+
+V hlavičce `sw.js` je zapsané pravidlo, které si web sám na sobě
+objevil: *„Stálo tu — ‚na 2 125 stránkách' — a za pár týdnů jich bylo
+2 158. Počet, který se mění sám od sebe, se do komentáře psát nemá:
+nikdo ho neopraví a začne lhát."* Hlídá ho `test-staticka.mjs`.
+
+Jenže hlídač se díval do `js/` a `scripts/`, a tam **vynechával
+`test-*.mjs`** — a do `docs/` se nedíval vůbec. Tedy přesně tam, kde se
+na tomhle webu píše nejvíc prózy o číslech. Naměřeno dnes nad celým
+repozitářem:
+
+| místo | tvrzení | skutečnost |
+|---|---|---|
+| `docs/slaba-mista.md` | „Zkoušek je 228 (111 bez prohlížeče, 117 v něm)" | 116 a 126, souborů 245 |
+| `docs/co-chybi.md` | „2 062 stránek pozemků" | 2 221 |
+| `docs/co-chybi.md` | „Zkoušek je 185 souborů" | 245 |
+| `scripts/test-sazba-dom.mjs` | „Těch stránek je 2 215" | 2 221 |
+
+Ta poslední je moje vlastní poznámka, napsaná **22. 10.** — tedy den
+předtím. Pravidlo, které tenhle web vymyslel, jsem porušil do dvou dnů
+od chvíle, kdy jsem o něm psal, a hlídač mi to nemohl říct, protože na
+zkoušky nesahal.
+
+### Proč nešlo jen smazat ten řádek s výjimkou
+
+Rozšíření na zkoušky a dokumentaci potřebuje rozlišit dvě věci, které
+předtím rozlišovat nemuselo. Změřeno nad repozitářem, kolik míst která
+hranice zachytí:
+
+1. **Čísla pod tisíc nejsou počty, které se mění samy.** Okresních
+   stránek je 77 a krajských 14 — to je správní dělení státu, ne stav
+   dat. Samo se tu mění jen to, co je v tisících (stránky pozemků,
+   nabídky). Bez téhle hranice by hlídač nutil přepsat poctivou větu
+   „okresních stránek je 77" ve dvou místech `test-cisla-okresu.mjs`
+   a v `docs/co-chybi.md`.
+2. **Citace se nehlídá.** Ty staré nepravdy cituje jak komentář v
+   `test-staticka.mjs`, tak `docs/co-chybi.md` — aby bylo vidět, o čem
+   pravidlo je. Pozná se to podle uvozovek „ na témž nebo předchozím
+   řádku. Bez té výjimky **hlídač spadne sám na sobě**, a byla to první
+   věc, co po rozšíření udělal.
+
+S oběma hranicemi projde celý repozitář: **384 souborů, 0 nálezů.**
+Doložené sabotáží ve čtyřech směrech: přítomný čas s počtem v tisících
+ve zkoušce → poplach; totéž v `docs/` → poplach; táž věta v uvozovkách
+→ ticho; „okresních stránek je 77" → ticho.
+
+### Co z toho platí dál
+
+**Hlídač, který vynechává zkoušky a dokumentaci, nehlídá tam, kde se
+píše nejvíc.** Je to ten samý omyl jako v oddílu 108, kde hlídači
+vzhledu měřili jen stav odhlášeného: výjimka se zapsala kvůli jednomu
+konkrétnímu důvodu (vlastní text hlídače by sám na sebe spadl) a pak
+tiše kryla celou složku. Správná odpověď není výjimku smazat, ale
+zúžit ji na to, proč vznikla — tady z „celé `test-*.mjs`" na „řádek
+s uvozovkami".

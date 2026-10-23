@@ -700,39 +700,71 @@ if (podezreni > 40) {
    Hlídá se jen PŘÍTOMNÝ ČAS s číslem („stránek je 2 105"). Naměřený
    stav v minulém čase („na 2 105 stránkách", „naměřeno na 2 001
    nabídkách") je něco jiného: ten se měnit NEMÁ, protože popisuje, co
-   se tehdy změřilo. */
+   se tehdy změřilo.
+
+   ROZŠÍŘENO 23. 10., protože hlídač měl dvě slepá místa a obě lhala.
+   Vynechával `test-*.mjs` a nedíval se do `docs/` — a za ty dva dny
+   se tam sešly tři nepravdy: `docs/slaba-mista.md` tvrdil „zkoušek je
+   228" (souborů je přes dvě stě čtyřicet), `docs/co-chybi.md` „2 062
+   stránek pozemků" a „zkoušek je 185", a poznámka v
+   `scripts/test-sazba-dom.mjs` „těch stránek je 2 215", zatímco jich
+   bylo 2 221. Tedy i soubor, který to pravidlo zapsal, ho o dva dny
+   později porušil jinde.
+
+   Aby šlo pokrýt i zkoušky a dokumentaci, musí hlídač rozlišit dvě
+   věci, které předtím rozlišovat nemusel:
+
+   1. ČÍSLA POD TISÍC SE NEHLÍDAJÍ. Okresních stránek je 77 a krajských
+      14 — to nejsou počty, které se mění samy, ale správní dělení
+      státu. Samo se tu mění jen to, co je v tisících: stránky pozemků
+      a nabídky. Měřeno nad celým repozitářem je to jediný rozdíl, který
+      k rozlišení stačí (jinak by hlídač nutil přepsat poctivou větu
+      „okresních stránek je 77" v `test-cisla-okresu.mjs`).
+   2. CITACE SE NEHLÍDÁ. Právě tenhle komentář a `docs/co-chybi.md`
+      ty staré nepravdy citují, aby bylo vidět, o čem pravidlo je.
+      Pozná se podle českých uvozovek „ na témž nebo předchozím řádku;
+      bez té výjimky hlídač spadne sám na sobě — což bylo první, co
+      po rozšíření udělal. */
 {
   const zdroje = [];
-  const projdi = (adresar) => {
+  const projdi = (adresar, pripony) => {
     for (const f of fs.readdirSync(path.join(ROOT, adresar), { withFileTypes: true })) {
       if (f.isDirectory()) continue;
-      if (!/\.(js|mjs)$/.test(f.name)) continue;
-      if (/^test-/.test(f.name)) continue;
+      if (!pripony.test(f.name)) continue;
       zdroje.push(path.join(adresar, f.name));
     }
   };
-  projdi('js'); projdi('scripts');
+  projdi('js', /\.(js|mjs)$/); projdi('scripts', /\.(js|mjs)$/);
+  projdi('docs', /\.md$/);
   zdroje.push('sw.js');
   /* Jen počet STRÁNEK, protože právě o něm to pravidlo je. U nabídek se
      táž slova používají v naměřených větách („z 2 014 nabídek je 1 852
      na prodej"), a ty se měnit nemají — lint na ně narazil hned při
      prvním běhu a správná odpověď byla zúžit lint, ne přepisovat
      poctivě naměřené číslo. */
-  const PRITOMNY = /(stránek|stránky) (je|jsou) [0-9][0-9\s\u00a0]{2,}/gi;
+  const PRITOMNY = /(stránek|stránky) (je|jsou) ([0-9][0-9\s\u00a0]*[0-9])/gi;
+  const MEZ = 1000;                     /* viz bod 1 v hlavičce oddílu */
   const lzi = [];
   for (const rel of zdroje) {
     let s;
     try { s = fs.readFileSync(path.join(ROOT, rel), "utf8"); } catch (e) { continue; }
+    const radky = s.split('\n');
     for (const m of s.matchAll(PRITOMNY)) {
-      lzi.push(`${rel}:${s.slice(0, m.index).split('\n').length} „${m[0].trim()}"`);
+      const kolik = Number(String(m[3]).replace(/[\s\u00a0]/g, ''));
+      if (!(kolik >= MEZ)) continue;
+      const cislo = s.slice(0, m.index).split('\n').length;
+      const radek = radky[cislo - 1] || '';
+      const predchozi = radky[cislo - 2] || '';
+      if (radek.indexOf('\u201e') >= 0 || predchozi.indexOf('\u201e') >= 0) continue;
+      lzi.push(`${rel}:${cislo} „${m[0].trim()}"`);
     }
   }
   if (lzi.length) {
-    console.error('::error::Počet, který se mění sám od sebe, nepatří do komentáře: '
+    console.error('::error::Počet, který se mění sám od sebe, nepatří do komentáře ani do dokumentace: '
       + lzi.slice(0, 4).join(' | '));
     process.exit(1);
   }
-  console.log(`Komentáře: ${zdroje.length} zdrojů, žádný netvrdí v přítomném čase počet, který se mění sám.`);
+  console.log(`Komentáře a dokumentace: ${zdroje.length} souborů, žádný netvrdí v přítomném čase počet, který se mění sám.`);
 }
 
 /* ---- ČLÁNEK BEZ DROBEČKŮ VISÍ V HIERARCHII NA NIČEM ---------------
