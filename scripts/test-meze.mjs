@@ -273,6 +273,83 @@ pravda(`limit volného účtu je stejný v create_listing i my_listing_quota (${
   limitVytvor !== undefined && limitVytvor === limitKvota,
   `create_listing pouští ${limitVytvor}, web ukazuje ${limitKvota} — jedno z těch čísel člověk vidí a druhé platí`);
 
+/* ---- NEJMENŠÍ DÉLKA HESLA -----------------------------------------
+   Stálo to jako číslo 6 v jedenácti místech (js/pridat.js, hlidani.html,
+   zpravy.html, muj-inzerat.html, pridat.html). Teď je zdroj jeden —
+   MEZE.hesloMin — jenže js/kontrola.js se načítá JEN na pridat.html
+   (18,8 kB minifikovaně; přidávat ho na tři další stránky kvůli jednomu
+   číslu je horší obchod než ta kopie). Ostatní stránky proto mají
+   záložní hodnotu `|| N` a TA SE MUSÍ ROVNAT. Tohle je ten hlídač.
+
+   A druhá, důležitější věc: u PŘIHLÁŠENÍ se délka hesla hlídat NESMÍ.
+   Kdo si účet zakládal, když stačilo šest znaků, musí se dál dostat
+   dovnitř; podmínka na délku u přihlášení není bezpečnost, ale zámek
+   na vlastních dveřích. Co je krátké, odmítne server. */
+{
+  const min = KONTROLA.MEZE.hesloMin;
+  pravda(`nejmenší délka hesla je v MEZE (${min})`, typeof min === 'number' && min >= 8,
+    `MEZE.hesloMin = ${min} — dnešní praxe je aspoň osm znaků (NIST SP 800-63B)`);
+
+  const soubory = ['js/pridat.js', 'hlidani.html', 'zpravy.html', 'muj-inzerat.html', 'pridat.html'];
+  const rozchod = [];
+  const prihlaseniSDelkou = [];
+  for (const f of soubory) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    /* a) záložní hodnoty `|| 8` u hesloMin */
+    for (const m of t.matchAll(/MEZE\.hesloMin\)\s*\|\|\s*(\d+)/g)) {
+      if (Number(m[1]) !== min) rozchod.push(`${f}: záložní hodnota ${m[1]} ≠ ${min}`);
+    }
+    /* b) text pro člověka „aspoň N znaků" u hesla */
+    for (const m of t.matchAll(/[Aa]spoň[\s\u00a0](\d+)[\s\u00a0]znaků/g)) {
+      if (Number(m[1]) !== min) rozchod.push(`${f}: text „aspoň ${m[1]} znaků" ≠ ${min}`);
+    }
+    /* c) minlength u pole na NOVÉ heslo (u přihlašovacího být nemá — viz níž) */
+    for (const m of t.matchAll(/<input[^>]*autocomplete="new-password"[^>]*>/g)) {
+      const dl = /minlength="(\d+)"/.exec(m[0]);
+      if (!dl) rozchod.push(`${f}: pole na nové heslo bez minlength`);
+      else if (Number(dl[1]) !== min) rozchod.push(`${f}: minlength="${dl[1]}" ≠ ${min}`);
+    }
+    /* d) PŘIHLAŠOVACÍ pole nesmí mít minlength — vyhodilo by starší
+       krátká hesla ještě před odesláním. */
+    for (const m of t.matchAll(/<input[^>]*autocomplete="current-password"[^>]*>/g)) {
+      if (/minlength="\d+"/.test(m[0])) prihlaseniSDelkou.push(`${f}: ${m[0].slice(0, 90)}`);
+    }
+  }
+  pravda('a všechna místa v prohlížeči se s ní srovnávají', rozchod.length === 0,
+    rozchod.join('\n      '));
+  pravda('přihlašovací pole nehlídá délku (jinak by vyhodilo starší krátká hesla)',
+    prihlaseniSDelkou.length === 0, prihlaseniSDelkou.join('\n      '));
+
+  /* e) a v kódu: podmínka na délku smí stát jen u zakládání účtu nebo
+     u nového hesla. ROZHODUJE SAMOTNÝ ŘÁDEK, ne okolí: nejdřív jsem
+     koukal na šest řádků kolem, a protože `okPrihlaseni` a `okZalozeni`
+     stojí v souboru vedle sebe, výjimka pro zakládání krylA i podmínku
+     u přihlášení — sabotáž „přihlášení zpátky hlídá délku" prošla.
+     Jméno funkce nebo proměnné na tom řádku to řekne jednoznačně. */
+  const PATRI_K_ZALOZENI = /signup|zalozeni|zaloz|new-password|newpass|nMin|setPassword/i;
+  const podezrele = [];
+  for (const f of soubory) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    const radky = t.split('\n');
+    radky.forEach((r, i) => {
+      if (!/(length\s*<\s*(?:nMin|hesloMin\(\)|\d+)|length\s*>=\s*(?:nMin|hesloMin\(\)|\d+))/.test(r)) return;
+      if (!/hesl|pass|\bnp\b|c\.p|pw/i.test(r)) return;
+      if (PATRI_K_ZALOZENI.test(r)) return;
+      podezrele.push(`${f}:${i + 1}: ${r.trim().slice(0, 100)}`);
+    });
+  }
+  pravda('a podmínka na délku hesla stojí jen u zakládání účtu a nového hesla',
+    podezrele.length === 0, podezrele.join('\n      '));
+
+  /* f) nastavení, které tohle číslo teprve vynutí, je u majitele
+     v Supabase — z repozitáře se dá zajistit jen to, že o něm ví
+     seznam před vydáním. */
+  const seznam = readFileSync(path.join(KOREN, 'docs', 'pred-vydanim.md'), 'utf8');
+  pravda('a seznam před vydáním říká, že totéž číslo patří do Supabase',
+    /Minimum password length|nejmenší délk\w+ hesla/i.test(seznam) && new RegExp(String(min)).test(seznam),
+    'bez toho hlídá délku jen prohlížeč a dá se obejít voláním API');
+}
+
 console.log('\nMeze v prohlížeči a na serveru');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

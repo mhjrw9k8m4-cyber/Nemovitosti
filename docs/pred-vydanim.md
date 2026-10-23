@@ -144,6 +144,14 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**Nejmenší délka hesla: 8** (Supabase → Authentication → Sign In /
+Providers → *Minimum password length*). Web o osmi znacích mluví
+a hlídá je u zakládání účtu i u nového hesla (`MEZE.hesloMin`
+v `js/kontrola.js`), ale **vynutit to umí jen Supabase**: kontrola
+v prohlížeči se obejde voláním API. Výchozí hodnota u Supabase je 6.
+U *přihlášení* se délka schválně nehlídá, aby se dostal dovnitř i ten,
+kdo si účet zakládal s kratším heslem.
+
 **Adresy, kam smí vést odkazy z e-mailu** (Supabase →
 Authentication → URL Configuration). *Site URL* nastavit na
 `https://www.parcelaka.cz` a *Redirect URLs* omezit na vlastní domény

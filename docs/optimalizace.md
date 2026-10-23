@@ -8697,3 +8697,53 @@ ta padne právě v sandboxovaném rámu.
 Zůstává napsané v `docs/pred-vydanim.md` (bod 6): na serveru, který umí
 hlavičky, patří `X-Frame-Options`/`frame-ancestors` nasadit a tuhle
 pojistku nechat jako druhou obranu.
+
+## 129. Heslo stačilo šestiznakové — a šestka stála v jedenácti místech *23. 10.*
+
+Změřeno 23. 10.: nejmenší délka hesla je **6 znaků** a je napsaná
+**jedenáctkrát** — `js/pridat.js` (kontrola + nápověda u pole),
+`hlidani.html` (dvě hlášky), `zpravy.html` (dvě hlášky),
+`muj-inzerat.html` (dvě kontroly + dva atributy `minlength`),
+`pridat.html` (`minlength`). Žádný společný zdroj; `MEZE`
+v `js/kontrola.js`, kam to patří, o hesle nevěděly.
+
+Šest znaků je navíc pod dnešní praxí: NIST SP 800-63B doporučuje aspoň
+osm a **žádná** pravidla na skladbu (vynucené „velké písmeno
+a číslice" vedou na `Heslo1!`).
+
+**A tady se to málem pokazilo.** Napsat „všude osm" by vypadalo jako
+zpřísnění a byl by to zámek na vlastních dveřích: ty formuláře jsou
+sdílené pro přihlášení i zakládání účtu, takže by se každý, kdo si účet
+zakládal s šestiznakovým heslem, **přestal dostat dovnitř** — klient by
+ho odmítl ještě před odesláním. Pravidlo je proto rozdělené:
+
+* **zakládání účtu a nové heslo** → aspoň `MEZE.hesloMin` (8);
+* **přihlášení** → jen „nějaké heslo"; co je krátké, odmítne server.
+
+Z atributů to plyne stejně: `minlength="8"` má pole
+`autocomplete="new-password"`, a pole `current-password` **nemá
+minlength vůbec**.
+
+Jedno číslo, jeden zdroj — ale s výjimkou, která je taky změřená:
+`js/kontrola.js` se načítá jen na `pridat.html` (18,8 kB minifikovaně).
+Přidávat ho na tři další stránky kvůli jednomu číslu je horší obchod
+než záložní hodnota `|| 8` v místě — a ta se **musí rovnat**.
+
+Hlídá to `scripts/test-meze.mjs` (6 nových kontrol, celkem 83): číslo
+v `MEZE` je aspoň osm, všechny záložní hodnoty i všechny texty „aspoň
+N znaků" se s ním rovnají, pole na nové heslo má `minlength` rovné jemu,
+**přihlašovací pole minlength NEMÁ**, podmínka na délku stojí jen
+u zakládání a nového hesla, a seznam před vydáním jmenuje totéž číslo
+jako nastavení Supabase (bez něj hlídá délku jen prohlížeč a dá se
+obejít voláním API).
+
+Sabotáž, čtyři směry, všechny zachyceny: rozešlá záložní hodnota,
+`minlength` na přihlašovacím poli, podmínka na délku u přihlášení,
+chybějící nastavení v seznamu před vydáním.
+
+**A jedna moje kontrola zprvu nechytla, co měla.** Rozhodovala podle
+šesti řádků kolem — a protože `okPrihlaseni` a `okZalozeni` stojí
+v souboru vedle sebe, výjimka pro zakládání kryla i podmínku
+u přihlášení; sabotáž prošla. Teď rozhoduje **samotný řádek**: jméno
+funkce nebo proměnné na něm řekne, k čemu ta podmínka patří. Potřetí
+dnes totéž poučení (oddíly 120, 121).

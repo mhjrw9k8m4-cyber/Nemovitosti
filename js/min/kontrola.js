@@ -12,7 +12,9 @@
     popisMin: 20, popisMax: 2000,
     obecMin: 2, obecMax: 60,
     odkazMax: 300,
-    fotekMax: 8
+    fotekMax: 8,
+
+    hesloMin: 8
   };
 
   function ok(varovani) { return varovani ? { ok: true, varovani: varovani } : { ok: true }; }

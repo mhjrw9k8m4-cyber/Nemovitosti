@@ -1241,9 +1241,19 @@
     var msg = document.getElementById('au-msg');
     function say(t, err) { if (msg) { msg.textContent = t; msg.className = 'add-msg' + (err ? ' err' : ' ok'); } }
     function creds() { return { e: ((document.getElementById('au-email') || {}).value || '').trim().toLowerCase(), p: (document.getElementById('au-pass') || {}).value || '' }; }
+    /* Délka hesla se hlídá JEN u zakládání účtu. U přihlášení ne:
+       kdo má starší kratší heslo, musí se dál dostat dovnitř (viz
+       MEZE.hesloMin v js/kontrola.js). */
+    function hesloMin() {
+      var K = window.PKKontrola;
+      return (K && K.MEZE && K.MEZE.hesloMin) || 8;
+    }
     function okCreds(c) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e)) { say('Zadejte platný e-mail.', true); return false; }
-      if (c.p.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return false; }
+      if (!c.p) { say('Zadejte heslo.', true); return false; }
+      if (mode === 'signup' && c.p.length < hesloMin()) {
+        say('Heslo musí mít aspoň ' + hesloMin() + ' znaků.', true); return false;
+      }
       return true;
     }
     function errText(d) { return (d && (d.error_description || d.msg || d.message || d.error)) || ''; }
@@ -1266,7 +1276,7 @@
       if (titleEl) titleEl.textContent = mode === 'signup' ? 'Vytvořte si účet' : 'Přihlaste se';
       if (subEl) subEl.textContent = mode === 'signup' ? 'Nový účet zdarma — stačí e-mail a heslo.' : 'Máte už účet? Zadejte e-mail a heslo.';
       if (submitBtn) submitBtn.textContent = mode === 'signup' ? 'Vytvořit účet zdarma' : 'Přihlásit se';
-      if (passHint) passHint.textContent = mode === 'signup' ? '(aspoň 6 znaků)' : '';
+      if (passHint) passHint.textContent = mode === 'signup' ? ('(aspoň ' + hesloMin() + ' znaků)') : '';
       var pw = document.getElementById('au-pass'); if (pw) pw.setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
       if (forgotWrap) forgotWrap.hidden = (mode === 'signup');
       say('');

@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-ukeLHDoFnOuwNosIjNbL72O2gTXRx9dn76JLx8TeiNk=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-QZSqew5u3lP6RC6dKtV3n1HUy3ylFdqZD7RdpMvDTaM=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
   <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
@@ -329,7 +329,7 @@
             <label for="mi-pass">Heslo</label>
             <div class="auth-inp">
               <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              <input id="mi-pass" type="password" autocomplete="current-password" minlength="6" placeholder="••••••" required>
+              <input id="mi-pass" type="password" autocomplete="current-password" placeholder="••••••" required>
               <button type="button" class="auth-eye" data-pw-toggle="mi-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
@@ -364,7 +364,7 @@
             <label for="mi-newpass">Nové heslo</label>
             <div class="auth-inp">
               <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              <input id="mi-newpass" type="password" autocomplete="new-password" minlength="6" placeholder="Aspoň 6 znaků" required>
+              <input id="mi-newpass" type="password" autocomplete="new-password" minlength="8" placeholder="Aspoň 8 znaků" required>
               <button type="button" class="auth-eye" data-pw-toggle="mi-newpass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
             </div>
           </div>
@@ -585,7 +585,8 @@
       nf.addEventListener('submit', function (e) {
         e.preventDefault();
         var np = q('mi-newpass').value||'';
-        if (np.length < 6) { nsay('Heslo musí mít aspoň 6 znaků.', true); return; }
+        var K = window.PKKontrola, nMin = (K && K.MEZE && K.MEZE.hesloMin) || 8;
+        if (np.length < nMin) { nsay('Heslo musí mít aspoň ' + nMin + ' znaků.', true); return; }
         if (nbtn) { nbtn.disabled = true; nbtn.textContent = 'Ukládám…'; }
         nsay('Ukládám…');
         A.setPassword(np, recTok).then(function (r) {
@@ -777,7 +778,11 @@
       e.preventDefault();
       var em = (q('mi-email').value||'').trim().toLowerCase(), pw = q('mi-pass').value||'';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { say('Zadejte platný e-mail.', true); return; }
-      if (pw.length < 6) { say('Heslo musí mít aspoň 6 znaků.', true); return; }
+      /* U PŘIHLÁŠENÍ SE DÉLKA HESLA NEHLÍDÁ. Stála tu podmínka na šest
+         znaků; po zvýšení na osm (MEZE.hesloMin) by vyhodila
+         každého, kdo má starší kratší heslo — a to není bezpečnost, to
+         je zámek na vlastních dveřích. Co je krátké, odmítne server. */
+      if (!pw) { say('Zadejte heslo.', true); return; }
       say('Přihlašuji…');
       A.login(em, pw).then(function (r) {
         if (r.ok) { say(''); show(); }

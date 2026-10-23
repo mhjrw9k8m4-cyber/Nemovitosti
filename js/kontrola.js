@@ -32,7 +32,20 @@
     popisMin: 20, popisMax: 2000,
     obecMin: 2, obecMax: 60,
     odkazMax: 300,
-    fotekMax: 8
+    fotekMax: 8,
+    /* NEJMENŠÍ DÉLKA HESLA. Bylo to šest znaků a stálo to zvlášť
+       v jedenácti místech (js/pridat.js, hlidani.html, zpravy.html,
+       muj-inzerat.html, pridat.html) — tedy číslo bez zdroje, které se
+       dřív nebo později rozejde. Osm je dnešní praxe (NIST SP 800-63B:
+       aspoň osm znaků a žádná pravidla na skladbu, protože „velké
+       písmeno a číslice" vedou na Heslo1!).
+       PLATÍ JEN PRO ZAKLÁDÁNÍ ÚČTU A NOVÉ HESLO, ne pro přihlášení:
+       kdo má starší kratší heslo, musí se dál přihlásit — jinak by ho
+       zvýšení stropu z webu vyhodilo. Hlídá to scripts/test-meze.mjs.
+       A server to neví: nejmenší délku si drží Supabase ve svém
+       nastavení, takže klient se dá obejít — je to v
+       docs/pred-vydanim.md, oddíl 3. */
+    hesloMin: 8
   };
 
   function ok(varovani) { return varovani ? { ok: true, varovani: varovani } : { ok: true }; }

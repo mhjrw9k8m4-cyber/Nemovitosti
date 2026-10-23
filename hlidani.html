@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-oUt3e7t+MgmU5/XPU+OXyTnrlzCnWfnEpBmjqbZY6Ok='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-Gt99/fqxQZL2cmvCp8mauv6FdGQYllF+WsfF2NBZGTA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v muj-inzerat.html a pridat.html. Stránky účtu začínají
        odstavcem, který vysvětluje, k čemu ta funkce je, a ten přihlášený
@@ -616,17 +616,25 @@
     // Text až do další snímku — viz poznámka u #hauthmsg výš.
     if (msg) requestAnimationFrame(function () { mEl.textContent = msg; });
     function creds() { return { e: (em.value || '').trim(), p: pw.value || '' }; }
-    function okc(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e) && c.p.length >= 6; }
+    /* DVĚ PODMÍNKY, NE JEDNA. Délka hesla patří k ZAKLÁDÁNÍ účtu;
+       u přihlášení by jen vyhodila člověka se starším kratším heslem
+       (viz MEZE.hesloMin v js/kontrola.js). */
+    function hesloMin() {
+      var K = window.PKKontrola; return (K && K.MEZE && K.MEZE.hesloMin) || 8;
+    }
+    function jeEmail(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.e); }
+    function okcPrihlaseni(c) { return jeEmail(c) && !!c.p; }
+    function okcZalozeni(c) { return jeEmail(c) && c.p.length >= hesloMin(); }
     // Enter v heslu odesílá — na telefonu je to největší klávesa a dřív
     // po ní nenásledovalo nic.
     document.getElementById('hauthf').addEventListener('submit', function (udalost) {
       udalost.preventDefault();
-      var c = creds(); if (!okc(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'hl-msg err'; return; }
+      var c = creds(); if (!okcPrihlaseni(c)) { mEl.textContent = 'Zadejte e-mail a heslo.'; mEl.className = 'hl-msg err'; return; }
       mEl.textContent = 'Přihlašuji…'; mEl.className = 'hl-msg';
       A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo.'; mEl.className = 'hl-msg err'; } });
     });
     document.getElementById('hsignup').addEventListener('click', function () {
-      var c = creds(); if (!okc(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň 6 znaků).'; mEl.className = 'hl-msg err'; return; }
+      var c = creds(); if (!okcZalozeni(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň ' + hesloMin() + ' znaků).'; mEl.className = 'hl-msg err'; return; }
       mEl.textContent = 'Zakládám účet…'; mEl.className = 'hl-msg';
       A.signup(c.e, c.p).then(function (r) {
         if (r && r.ok) { if (r.session) start(); else A.login(c.e, c.p).then(function (r2) { if (r2 && r2.ok) start(); else { mEl.textContent = 'Účet vytvořen, přihlaste se.'; mEl.className = 'hl-msg'; } }); }
