@@ -7698,3 +7698,44 @@ ohlášené porušení, i podkročený počet uzlů). Opraveno dvakrát:
   sazbu. Ten komentář u sazby popisoval tenhle druh poruchy do detailu
   („zkouška padne na vadu, kterou nezpůsobila") a o dva měsíce později
   se stalo totéž s hlavičkou.
+
+### Co CSP rozbila: třicet zkoušek a sedm úředních serverů
+
+Hlavička prošla vlastní zkouškou, a přesto po ní v prohlížečové sadě
+spadlo **třicet zkoušek** z 127. Byly to dvě různé věci a ani jedna
+nebyla vidět na jedenácti stránkách, které jsem proměřil.
+
+**1) Vrstvy mapy z úředních serverů (skutečná mezera v politice).**
+Přepínatelné vrstvy — hranice parcel, územní plány, záplavová území,
+BPEJ, ochrana přírody — chodí ze sedmi WMS serverů
+(`services.cuzk.gov.cz`, `services.cuzk.cz`, `geoportal.gov.cz`,
+`geoportal.uur.cz`, `gis.nature.cz`, `heis.vuv.cz`, `mapy.spucr.cz`).
+Při měření se nezapnuly, protože jsem koukal na stránky v okně
+monitoru a k mapě se nesjelo; na stránce pozemku v telefonu se zapnou
+samy a prohlížeč odmítl **13 dlaždic**. Všech sedm serverů přitom bylo
+celou dobu jmenovaných v zásadách soukromí — **dokument o nich věděl,
+moje měření ne.** Teď se hosty čtou z `data/mapove-vrstvy.json`, takže
+nová vrstva politiku posune s sebou.
+
+**2) Playwright ovládá stránku `eval`em (vada v harnessu, ne na webu).**
+Zbytek zkoušek padal tak, že se mapa nepostavila a vypadalo to na
+rozbitý web. V hlášce o porušení ale nebyl **žádný zdrojový soubor** —
+a to byla ta nápověda: `eval` nevolá stránka, volá ho vstřikovaný kód
+Playwrightu, kterým se roluje k prvku a čeká na podmínku
+(`waitForFunction`). Pod přísným `script-src` tedy přestane fungovat
+ovládání, ne web. Playwright na to má volbu `bypassCSP`; dostalo ji
+**124 zkoušek**, a `test-csp.mjs` ji naopak mít nesmí — ta jediná měří,
+jestli hlavička platí. Hlídá se to v obou směrech.
+
+### Čím mě to málem vyvedlo na slepou kolej
+
+Zkouška padala v `scripts/`, ale moje přístrojovaná kopie
+v odkladišti **procházela** — a to třikrát po sobě. Vypadalo to na
+závod v kódu stránky. Příčina byla jinde: odkladiště má **vlastní
+`node_modules/playwright-core`**, tedy jinou verzi, než si bere
+repozitář. Kopie tím měřila něco jiného než originál.
+
+Poučení, které platí nad tuhle práci: **když se kopie chová jinak než
+originál, nejdřív se ptej, co kopii obklopuje** — ne co je v ní
+napsané. Hodina hledání závodu v `js/pozemek.js` padla na tom, že jsem
+tuhle otázku položil až jako čtvrtou.

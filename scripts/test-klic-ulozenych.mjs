@@ -102,7 +102,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 /** Otevře mapu s předem nasazenými uloženými klíči a vrátí, co je ve „Uložených". */
 async function sUlozenymi(klice) {
   /* serviceWorkers: 'block' — jinak stránku obsluhuje uložená kopie. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 },
     locale: 'cs-CZ', serviceWorkers: 'block' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
@@ -166,7 +166,7 @@ async function sUlozenymi(klice) {
    kdyby tlačítko na kartě dál zapisovalo starý tvar. Tohle klepne na
    záložku u první karty ve výpisu a podívá se, co ve schránce přibylo. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 },
     locale: 'cs-CZ', serviceWorkers: 'block' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
@@ -236,7 +236,7 @@ async function sUlozenymi(klice) {
      ctx.route a od druhé navigace by soubory obsluhoval servisní
      pracovník (CLAUDE.md, past č. 2). Hlídá to test-zkousky-meri, který
      mi tenhle kontext bez něj rovnou vrátil. */
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
   const page = await ctx.newPage();
   await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
@@ -285,7 +285,7 @@ async function sUlozenymi(klice) {
   pravda('je co měřit — živá stránka pozemku', !!stranka,
     `ze ${vse.length} stránek pozemků žádná není živá`);
   if (stranka) {
-    const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
       viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
     const page = await ctx.newPage();
     await page.goto(`http://127.0.0.1:8310/${stranka}`, { waitUntil: 'load' });
@@ -330,7 +330,7 @@ async function sUlozenymi(klice) {
    MĚŘÍ SE OBOJÍ: že to okolí tentokrát FUNGUJE (vzít je zpátky by
    bylo horší) a že se o té pomíjivosti člověk doví. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
   const page = await ctx.newPage();
   /* Místo se nasazuje předem: vybírání na mapě má svoje zkoušky

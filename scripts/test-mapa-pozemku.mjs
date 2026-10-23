@@ -152,7 +152,7 @@ async function detail(nast) {
      vysoké 36 px (jako na monitoru), s dotykem 44. Kontrola, která
      měří rozvržení telefonu, tedy MUSÍ `dotyk: true` zapnout —
      jinak měří něco, co na žádném telefonu neexistuje. */
-  const ctx = await prohlizec.newContext(Object.assign(
+  const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true },
     { serviceWorkers: 'block', viewport: nast.viewport || { width: 1280, height: 860 } },
     nast.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
   const dotazy = [];
@@ -1125,7 +1125,7 @@ if (DRAZBA) {
   if (jednoznacny) {
     const klic = jednoznacny[0];
     const cekanaObec = klic.split('|')[0];
-    const ctxK = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 860 } });
+    const ctxK = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 860 } });
     // Cizí služby (mapové vrstvy, fonty) sem netahat — jde jen o to, jaký
     // pozemek stránka podle klíče najde.
     await ctxK.route('**/*', (r) => {
@@ -1173,7 +1173,7 @@ if (DRAZBA) {
     if (vybrany) {
       const klic = [vybrany.place || '', vybrany.parcel || '', vybrany.okres || '',
         vybrany.lat.toFixed(3), vybrany.lng.toFixed(3)].join('|');
-      const ctxP = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 860 } });
+      const ctxP = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 860 } });
       await ctxP.route('**/*', (r) => {
         const u = new URL(r.request().url());
         if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -1386,7 +1386,7 @@ if (DRAZBA) {
   const vz = najdi(() => true);
   if (!vz) throw new Error('nenašel se pozemek s polohou a cenou');
   const { url, d } = vz;
-  const ctxP = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+  const ctxP = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
   const pz = await ctxP.newPage();
   await pz.goto(`${BASE}/${url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await pz.waitForTimeout(2200);
@@ -1427,7 +1427,7 @@ if (DRAZBA) {
    vidět, jakmile se pohled odlepí; a stisk vrátí PŘESNĚ původní střed
    i přiblížení (jinak by se z „zpátky" stalo „někam zpátky"). */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' });
@@ -1517,7 +1517,7 @@ if (DRAZBA) {
  * jestli zrovna odpovídá cizí server.
  */
 {
-  const ctxV = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 } });
+  const ctxV = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 } });
   await ctxV.route('**/*', (r) => {
     const u = new URL(r.request().url());
     if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();

@@ -60,7 +60,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 let vazeb = 0, ovladacu = 0; const poStrankach = {};
 
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   /* PŘIHLÁŠENÝ, JINAK TENHLE TEST NIC NEMĚŘÍ. Záložky na Hlídání se
      skládají v JavaScriptu a právě ony byly důvod, proč test vznikl —
      jenže odhlášenému se místo nich vykreslí výzva k přihlášení.

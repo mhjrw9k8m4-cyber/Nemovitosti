@@ -125,7 +125,7 @@ await new Promise((r) => setTimeout(r, 300));
 const BASE = 'http://127.0.0.1:8310';
 /* serviceWorkers: 'block' — bez toho stránku obsluhuje uložená kopie
    z offline režimu a zkouška čte staré HTML, aniž by to poznala. */
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());

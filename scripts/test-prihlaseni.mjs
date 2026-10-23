@@ -109,7 +109,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 
 /** Stránka s načteným auth.js a uloženým přihlášením. */
 async function sPrihlasenim(vyprsiZa) {
-  const ctx = await prohlizec.newContext();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
   await p.goto('http://127.0.0.1:8399/prazdno');
   await p.evaluate((v) => {
@@ -182,7 +182,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
 // Přesně to, co se dělo doopravdy — a co člověka vyhazovalo.
 {
   resetStav();
-  const ctx = await prohlizec.newContext();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
   await p.goto('http://127.0.0.1:8399/prazdno');
   await p.evaluate(() => {
@@ -232,7 +232,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   for (let i = 0; i < POKUSU; i++) {
     resetStav();
     stav.drzObnovy = 2;          // obě odpovědi ve stejnou chvíli
-    const ctx = await prohlizec.newContext();
+    const ctx = await prohlizec.newContext({ bypassCSP: true });
     const zaloz = async () => {
       const p = await ctx.newPage();
       await p.goto('http://127.0.0.1:8399/prazdno');
@@ -291,7 +291,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
  */
 {
   resetStav();
-  const ctx = await prohlizec.newContext();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
   await p.goto('http://127.0.0.1:8399/prazdno');
   await p.evaluate(() => {
@@ -319,7 +319,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   /* A na stránce, kde platnost NEdochází, se nic posílat nemá —
      jinak by se jednorázové tokeny pálily při každém načtení. */
   resetStav();
-  const ctx2 = await prohlizec.newContext();
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true });
   const p2 = await ctx2.newPage();
   await p2.goto('http://127.0.0.1:8399/prazdno');
   await p2.evaluate(() => {
@@ -349,7 +349,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
    větu, kterou je co napsat (js/pridat.js ji bere z data.msg). */
 {
   resetStav();
-  const ctx = await prohlizec.newContext();
+  const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
   await p.goto('http://127.0.0.1:8399/prazdno');
   await p.evaluate(() => {

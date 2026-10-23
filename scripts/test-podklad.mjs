@@ -48,7 +48,7 @@ const POPISKY = { obec: '#333333', ulice: '#6C6C6C', papír: '#F2EFE9' };
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const p = await (await prohlizec.newContext()).newPage();
+const p = await (await prohlizec.newContext({ bypassCSP: true })).newPage();
 
 /** Projede vzorky filtrem a vrátí výslednou barvu každého z nich. */
 async function pres(filtr, vzorky) {

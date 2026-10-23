@@ -48,7 +48,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   const chybyKonzole = [];
   p.on('pageerror', (e) => chybyKonzole.push(String(e)));

@@ -144,7 +144,7 @@ const kde = process.env.PW_CHROMIUM || '';
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());

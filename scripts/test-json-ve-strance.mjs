@@ -133,7 +133,7 @@ const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 // Playwright zkouší obsluhy v OBRÁCENÉM pořadí registrace, takže ta
 // nejobecnější (vše) musí jít PRVNÍ — jinak by přebila tu konkrétní,
 // stránka by se vůbec nenačetla a všechny zkoušky pod tím by mlčely.

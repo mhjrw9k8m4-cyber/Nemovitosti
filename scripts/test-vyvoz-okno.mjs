@@ -63,7 +63,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 1280, height: 900 },
     serviceWorkers: 'block',
     acceptDownloads: true,
@@ -250,7 +250,7 @@ try {
      že se „Stáhnout" ocitne pod okrajem obrazovky a nejde na něj
      doklepnout, nebo že se tlačítka zmáčknou na nedotknutelnou výšku. */
   {
-    const ctxT = await ctx.browser().newContext({
+    const ctxT = await ctx.browser().newContext({ bypassCSP: true, 
       viewport: { width: 360, height: 640 },
       isMobile: true, hasTouch: true, locale: 'cs-CZ',
       serviceWorkers: 'block', acceptDownloads: true,

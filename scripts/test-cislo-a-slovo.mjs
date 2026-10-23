@@ -61,7 +61,7 @@ await new Promise((r) => server.listen(8310, '127.0.0.1', r));
 const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());

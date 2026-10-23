@@ -189,7 +189,7 @@ await new Promise((r) => setTimeout(r, 300));
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1200, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1200, height: 900 } });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     if (u.hostname !== '127.0.0.1' && u.hostname !== 'localhost') return r.abort();

@@ -46,7 +46,7 @@ const browser = await chromium.launch(PW ? { executablePath: PW } : {});
    do zapis_navstevu. `nastav` smí před načtením dosadit vlastní stráže
    (nesledovat, webdriver…). */
 async function otevri(stranka, nastav) {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await browser.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const page = await ctx.newPage();
   const poslano = [];
   /* Celý web se servíruje z disku pod jménem parcelaka.cz. */
@@ -142,7 +142,7 @@ pravda('automatizovaný prohlížeč se nepočítá (vlastní zkoušky nekazí �
 
 /* ---- D) mimo ostrý web ---------------------------------------------- */
 {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await browser.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const page = await ctx.newPage();
   const poslano = [];
   await ctx.route('**/rest/v1/rpc/zapis_navstevu*', (r) => { poslano.push(1); return r.fulfill({ status: 204, body: '' }); });

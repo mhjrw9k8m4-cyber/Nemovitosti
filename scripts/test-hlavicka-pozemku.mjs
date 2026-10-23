@@ -120,7 +120,7 @@ const server = http.createServer((req, res) => {
 await new Promise((r) => server.listen(8310, r));
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM });
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block' });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block' });
 const page = await ctx.newPage();
 
 /* Vzorek napříč abecedou, ne prvních deset: první soubory jsou

@@ -107,7 +107,7 @@ const MERENI = `(() => {
 let celkemSHidden = 0;
 const nalezy = [];
 for (const s of VYBER) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 }, hasTouch: true, isMobile: true });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 900 }, hasTouch: true, isMobile: true });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   await ctx.route('**/*', (r) => {

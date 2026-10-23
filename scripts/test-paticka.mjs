@@ -46,7 +46,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 
 /** Změří patičku na jedné stránce v jedné šířce. */
 async function zmer(stranka, sirka) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: sirka, height: 900 },
     isMobile: sirka < 700, hasTouch: sirka < 700, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });

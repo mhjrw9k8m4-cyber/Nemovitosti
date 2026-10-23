@@ -71,7 +71,7 @@ const UCTY = {
    produkce — a protože je ze sandboxu nedostupná, tiše by „neprošla"
    z úplně jiného důvodu, než co měří. */
 async function kontext(kdo, predem) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200,
     contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`

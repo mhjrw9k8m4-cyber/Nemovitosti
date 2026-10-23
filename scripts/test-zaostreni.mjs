@@ -49,7 +49,7 @@ function pravda(popis, vyslo, proc) {
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
@@ -114,7 +114,7 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
    jedině protabováním hlavičky, hledání a filtrů.
    Měří se document.activeElement před a po. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));
@@ -347,7 +347,7 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
     ['procházet po jednom', '#mc-rychly', '#rv-vrstva'],
     ['vyberte své okolí', '#map-near', '.vm-panel'],
   ];
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));

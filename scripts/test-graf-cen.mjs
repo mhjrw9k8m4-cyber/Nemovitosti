@@ -108,7 +108,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
    podstrkují (test-barva-ceny, test-cenova-mapa), si service worker
    blokují; tahle jediná ne, protože si stránky otevírala rovnou z
    prohlížeče, bez vlastního kontextu. */
-const kontext = await prohlizec.newContext({ serviceWorkers: 'block' });
+const kontext = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block' });
 
 async function otevri(okres, sirka) {
   const p = await kontext.newPage();

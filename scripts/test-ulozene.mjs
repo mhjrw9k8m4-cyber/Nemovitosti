@@ -114,7 +114,7 @@ if (!U || !U.KLICE) hotovo();
 /* ---- 3) stránka vypisuje a maže ---- */
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1100, height: 1000 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1100, height: 1000 } });
   await ctx.addInitScript(() => {
     localStorage.setItem('pk_fav_v1', JSON.stringify(['a|1|X|50.0|14.0', 'b|2|Y|49.0|15.0']));
     localStorage.setItem('pk_poznamky_v1', JSON.stringify({ k1: { text: 'plot', kdy: Date.now() } }));

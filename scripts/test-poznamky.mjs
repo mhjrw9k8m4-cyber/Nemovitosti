@@ -72,7 +72,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 1) napsat, uložit, vrátit se ---- */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   const chybyJs = [];
   const odeslano = [];
@@ -156,7 +156,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
    bez zaostření znamená, že člověk musí ještě jednou klepnout),
    a že tlačítko pozná, že poznámka už existuje. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   const chybyJs = [];
@@ -235,7 +235,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
    zaostřené hned (skok je okamžitý), ne až po skoro půl vteřině, co
    trvá plynulé dojetí. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', reducedMotion: 'reduce' });
   const p = await ctx.newPage();
@@ -269,7 +269,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 2) meze a plná schránka ---- */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   // Tenhle blok sahá jen na window.PKPoznamky, takže stačí, až je modul tam.
@@ -316,7 +316,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
 
 /* ---- 3) poznámka je vidět v porovnání uložených ---- */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await pripravenoPozemek(p);
@@ -372,7 +372,7 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
    srazila na 0,01 ms — ale pokud by zvětrala, pole by ukazovalo starý
    text a člověk by si myslel, že se mu poznámka neuložila. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1100, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
   await pripravenoKdyz(p, () => !!window.PKPoznamky);
@@ -443,7 +443,7 @@ const PRIHLAS = () => {
    z úplně jiného důvodu, než co měří. Podstrčení je proto součást
    přihlášení, ne volitelná ozdoba. */
 async function prihlasenyKontext(sirka, vyska) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: vyska } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: sirka, height: vyska } });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200,
     contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`
@@ -750,7 +750,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
  * ní ta karta?
  */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -893,7 +893,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
    Měří se na VZORKU stránek, protože který případ nastane, určuje
    titulek: ze vzorku 25 stránek nemělo řádek s okresem 15. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1280, height: 1000 } });
   const p = await ctx.newPage();
   const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();

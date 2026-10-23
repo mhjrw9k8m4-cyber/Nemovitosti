@@ -47,7 +47,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 async function kontext(pohybVypnut) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1280, height: 900 },
     reducedMotion: pohybVypnut ? 'reduce' : 'no-preference',
   });
@@ -310,7 +310,7 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
 //   • `touch-action` nechá stránku rolovat — bez toho by prst na grafu
 //     přestal hýbat stránkou a web by působil zaseknutě.
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     hasTouch: true, isMobile: true });
   const p = await ctx.newPage();
   await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });

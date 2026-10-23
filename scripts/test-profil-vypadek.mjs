@@ -51,7 +51,7 @@ async function profil(rozbij) {
      `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna,
      takže by se v úzkém okně bez emulace dotyku vykreslilo rozvržení
      monitoru. (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await browser.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
   const page = await ctx.newPage();
   await page.addInitScript(([u]) => {

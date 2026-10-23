@@ -70,7 +70,7 @@ try {
      SERVISNÍ PRACOVNÍK MUSÍ BÝT ZAKÁZANÝ: tenhle test odposlouchává
      požadavky přes ctx.route a skrz servisního pracovníka by neviděl
      nic (taky CLAUDE.md). */
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', serviceWorkers: 'block',
   });

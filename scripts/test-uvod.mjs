@@ -90,7 +90,7 @@ const PRAZDNA_DLAZDICE = Buffer.from(
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
@@ -677,7 +677,7 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     else if (i % 3 === 1) { o.cena_drive = Math.round(o.price * 0.8); o.cena_zmena = '2026-09-25'; }
     else { o.cena_drive = Math.round(o.price * 1.01); }   // pod mezí → musí mlčet
   });
-  const ctxZ = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctxZ = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxZ.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
     contentType: 'application/json', body: JSON.stringify(DATA) }));

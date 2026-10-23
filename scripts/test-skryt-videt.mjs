@@ -53,7 +53,7 @@ const prohlizec = await chromium.launch({
 try {
   /* DOTYK ZAPNUTÝ: bez něj se při 390 px vykreslí rozvržení pro monitor,
      kde je křížek schválně schovaný až do najetí myší (CLAUDE.md). */
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', serviceWorkers: 'block',
   });

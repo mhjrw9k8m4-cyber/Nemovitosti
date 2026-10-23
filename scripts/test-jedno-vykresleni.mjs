@@ -60,7 +60,7 @@ async function nacti(hash, filtr) {
      se start stihne dřív, než si js/odkaz.js vůbec stačí do adresy
      zapsat, a zkouška by prošla ze špatného důvodu (ověřeno: bez
      zpomalení vyšlo jedno vykreslení i s původní vadou). */
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', serviceWorkers: 'block',
   });

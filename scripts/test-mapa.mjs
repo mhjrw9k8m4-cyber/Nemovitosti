@@ -80,7 +80,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    padlo osm kontrol v kaskádě a vypadalo to jako vada výběru kraje.
    Ověřeno: po probuzení vybere kraj `mouse.click`, `touchscreen.tap`
    i `dispatchEvent` — na značce kraje i na obrysu. */
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 900 },
   hasTouch: true, isMobile: true });
 /* KLEPNUTÍ, KTERÉ POČÍTÁ SE ZAMČENOU MAPOU. Na dotyku je mapa po
    načtení i po každém odrolování zamčená — bere rolování stránky — a
@@ -702,7 +702,7 @@ if (daleko) {
    výpisu pustí sám. Měří se obojí: že se karty samy nezúžily, a že se
    tím tlačítkem zúžit DAJÍ — jinak by stačilo filtrování zrušit. */
 {
-  const ctx2 = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
   const p2 = await ctx2.newPage();

@@ -57,7 +57,7 @@ try {
     /* Servisní pracovník vypnutý — jinak si `config.js` obsluhuje sám
        a podstrčená falešná databáze přestane platit (CLAUDE.md,
        oddíl o testech). */
-    const ctx = await prohlizec.newContext({ serviceWorkers: 'block' });
+    const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block' });
     await ctx.route('**/config.js*', (r) => r.fulfill({
       status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon-klic';`

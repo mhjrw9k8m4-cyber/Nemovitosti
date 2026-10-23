@@ -54,7 +54,7 @@ async function otevri(prihlasit) {
   // Změřeno 15. 10. na téže stránce: bez vypnutí pracovníka 0 karet
   // a `pf-count` = „—", s vypnutým 1 karta a `pf-count` = „1".
   // (Týž trik si musela pořídit scripts/test-rozdeleni-stylu.mjs.)
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 },
     serviceWorkers: 'block' });
   /* POZOR NA POŘADÍ: platí poslední zaregistrovaná cesta, ne první.
      Když se hrubý zákaz ven zapsal až nakonec, přebil i podstrčenou
@@ -594,7 +594,7 @@ async function odesli(p) {
      `@media (pointer: coarse)`, ne za šířkou okna, takže by se
      v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
      (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());

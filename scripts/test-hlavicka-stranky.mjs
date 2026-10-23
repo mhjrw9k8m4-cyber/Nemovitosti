@@ -79,7 +79,7 @@ try {
   pravda('a čísla se přesunula do hlavičky na většině z nich',
     sPanelem >= sHlavickou * 0.8, `${sPanelem} ze ${sHlavickou}`);
 
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', locale: 'cs-CZ',
   });
   const p = await ctx.newPage();
@@ -139,7 +139,7 @@ try {
     /* Dotyk se zapíná, i když se tu na nic neklepá: pravidla pro telefon
        visí na `@media (pointer: coarse)` a bez `hasTouch` by se měřila
        myší podoba v úzkém okně (hlídá scripts/test-zkousky-meri.mjs). */
-    const ctxT = await prohlizec.newContext({ viewport: { width: 390, height: 900 },
+    const ctxT = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 900 },
       serviceWorkers: 'block', locale: 'cs-CZ', isMobile: true, hasTouch: true });
     const pt = await ctxT.newPage();
     const visici = [], zalomene = [];

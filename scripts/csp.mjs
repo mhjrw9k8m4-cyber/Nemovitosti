@@ -99,6 +99,21 @@ const DLAZDICE = ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.org
 const SATELIT = 'https://server.arcgisonline.com';
 const GEOKODER = 'https://nominatim.openstreetmap.org';
 
+/* VRSTVY MAPY ZE ZDROJE, NE Z PAMĚTI. Přepínatelné vrstvy (hranice
+   parcel, územní plány, záplavová území, BPEJ, ochrana přírody) chodí
+   z úředních WMS serverů a jsou vypsané v data/mapove-vrstvy.json.
+   První podoba politiky je neměla, protože se odvozovala z toho, kam
+   sahalo jedenáct stránek v prohlížeči — a tyhle vrstvy se při tom
+   měření nezapnuly. Na stránce pozemku v telefonu se zapnou samy a
+   prohlížeč pak odmítl 13 dlaždic. Teď se hosty čtou z toho souboru:
+   přibude-li vrstva, politika se posune s ní. */
+export function vrstvyHosty() {
+  const t = readFileSync(path.join(KOREN, 'data', 'mapove-vrstvy.json'), 'utf8');
+  const nalez = t.match(/https:\/\/[a-z0-9.-]+/gi) || [];
+  if (!nalez.length) throw new Error('v data/mapove-vrstvy.json nejsou žádné adresy — politika by vznikla naslepo');
+  return [...new Set(nalez.map((u) => u.toLowerCase()))].sort();
+}
+
 /* Stránka, která si může načíst model na kontrolu fotek. Viz hlavička
    oddílu o výjimce: pravidlo, ne seznam. */
 export function potrebujeEval(html) {
@@ -114,7 +129,7 @@ export function politika(hashe, eval_) {
     /* Hashe, ne 'unsafe-inline': podstrčený <script> se nespustí. */
     ['script-src', ["'self'", ...(eval_ ? ["'unsafe-eval'"] : []), ...hashe.map((h) => `'${h}'`)]],
     ['style-src', ["'self'", "'unsafe-inline'"]],
-    ['img-src', ["'self'", 'data:', 'blob:', SATELIT, ...DLAZDICE, sb]],
+    ['img-src', ["'self'", 'data:', 'blob:', SATELIT, ...DLAZDICE, ...vrstvyHosty(), sb]],
     ['font-src', ["'self'"]],
     ['connect-src', ["'self'", sb, GEOKODER]],
     ['worker-src', ["'self'"]],

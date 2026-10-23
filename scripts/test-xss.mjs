@@ -95,7 +95,7 @@ const JED = {
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
   body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
 await ctx.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,

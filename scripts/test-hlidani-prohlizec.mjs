@@ -75,7 +75,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 /* DOTYK SE MUSÍ ŘÍCT: pravidla pro telefon stojí za
    `@media (pointer: coarse)` a `(hover: none)`, ne za šířkou okna.
    (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 420, height: 900 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 let data = STARE;   // co server právě vydává; test to v průběhu přepne
 await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
@@ -529,7 +529,7 @@ if (smazat) {
    A Enter v heslu musí odeslat: bez <form> to byla na telefonu největší
    klávesa, po které se nedělo nic. */
 {
-  const ctxOdhlaseny = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+  const ctxOdhlaseny = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 420, height: 900 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxOdhlaseny.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -611,7 +611,7 @@ if (smazat) {
     { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '7/2', druh: 'orná půda',
       area: 1200, price: 400000, lat: 50.03, lng: 15.21, extra: 'inzerát', site: [] },
   ] };
-  const ctxX = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+  const ctxX = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 420, height: 900 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxX.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
@@ -661,7 +661,7 @@ if (smazat) {
  * takže se čtou odtud — kdyby je critText zamlčel, bude to vidět tady.
  */
 {
-  const ctxU = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 420, height: 900 },
+  const ctxU = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 420, height: 900 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctxU.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

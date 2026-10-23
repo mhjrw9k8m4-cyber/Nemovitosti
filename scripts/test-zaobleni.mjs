@@ -87,7 +87,7 @@ let tokenPx = null;
 
 for (const s of STRANKY) {
   for (const w of SIRKY) {
-    const ctx = await prohlizec.newContext({ viewport: { width: w, height: 900 },
+    const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: w, height: 900 },
       hasTouch: w < 800, isMobile: w < 800 });
     const p = await ctx.newPage();
     try { await p.goto(`${BASE}/${s}`, { waitUntil: 'load' }); }

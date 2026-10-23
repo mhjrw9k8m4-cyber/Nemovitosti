@@ -66,7 +66,7 @@ const prohlizec = await chromium.launch({
 });
 
 async function zmer(nast) {
-  const ctx = await prohlizec.newContext(Object.assign(
+  const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true },
     { viewport: nast.viewport, serviceWorkers: 'block', locale: 'cs-CZ' },
     nast.dotyk ? { isMobile: true, hasTouch: true } : {}));
   const p = await ctx.newPage();
@@ -123,7 +123,7 @@ async function zmer(nast) {
 
 /** Sáhne na filtr (tedy vynutí překreslení) a podívá se, co přežilo. */
 async function zmerPoFiltru() {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', serviceWorkers: 'block',
   });
@@ -157,7 +157,7 @@ async function zmerPoFiltru() {
 
 /** Naplní „naposledy prohlédnuté" a změří, jak pruh vypadá. */
 async function zmerPruh() {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     locale: 'cs-CZ', serviceWorkers: 'block',
   });

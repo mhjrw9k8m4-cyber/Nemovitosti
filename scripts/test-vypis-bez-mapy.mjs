@@ -89,7 +89,7 @@ const ZDRZENI = 2000;
 /** Otevře úvodní stránku a vrátí, kdy se objevila první nabídka a jak
     skončila mapa. `rezim`: 'ok' | 'zdrz' | 'blok'. */
 async function nacti(sirka, rezim) {
-  const ctx = await prohlizec.newContext({ viewport: { width: sirka, height: 844 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: sirka, height: 844 }, serviceWorkers: 'block' });
   /* Všechno cizí se odřízne (dlaždice OpenStreetMap, Supabase): měří se
      tahle stránka, ne cizí servery. */
   await ctx.route('**/*', (r) => {
@@ -219,7 +219,7 @@ for (const sirka of [390, 1280]) {
    dolů teprve po výpisu. Tahle cesta je ta, kterou člověk mapu vidí
    poprvé — a musí být vidět CELÁ, i když se na ni přepne hned. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 }, serviceWorkers: 'block',
     isMobile: true, hasTouch: true });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
@@ -264,7 +264,7 @@ for (const sirka of [390, 1280]) {
    je postavMapu(). Bez toho by na mapě tiše chyběly: na obrazovce se
    to nepozná, protože mapa jinak vypadá hotová. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

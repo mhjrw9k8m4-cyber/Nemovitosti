@@ -209,7 +209,7 @@ const vse = [];
 let zmerenoCelkem = 0;
 for (const REZIM of REZIMY)
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 900 },
     hasTouch: true, isMobile: true });
   if (REZIM.volba) {
     await ctx.addInitScript((v) => { try { localStorage.setItem('pk_rezim_v1', v); } catch (e) { /* ok */ } }, REZIM.volba);

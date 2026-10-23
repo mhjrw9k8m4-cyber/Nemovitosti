@@ -59,7 +59,7 @@ const PRAZDNA_DLAZDICE = Buffer.from(
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 }, deviceScaleFactor: 1 });
 // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
@@ -123,7 +123,7 @@ pravda('tvary v legendě se navzájem liší',
    Měří se na TELEFONU, protože tam je místa nejmíň a tam to taky
    majitel vyfotil. */
 {
-  const tel = await prohlizec.newContext({ serviceWorkers: 'block',
+  const tel = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const tp = await tel.newPage();
   await tp.goto(`${BASE}/index.html`, { waitUntil: 'load' });

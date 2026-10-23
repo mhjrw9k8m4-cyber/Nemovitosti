@@ -133,7 +133,7 @@ const prohlizec = await chromium.launch({
 });
 try {
   for (const [jmS, vp, mob] of SIRKY) {
-    const ctx = await prohlizec.newContext({
+    const ctx = await prohlizec.newContext({ bypassCSP: true, 
       viewport: vp, isMobile: mob, hasTouch: mob, serviceWorkers: 'block', locale: 'cs-CZ',
     });
     for (const [jmM, cesta] of MISTA) {

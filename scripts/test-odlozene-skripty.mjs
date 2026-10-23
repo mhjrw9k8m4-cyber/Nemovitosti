@@ -107,7 +107,7 @@ for (const m of MODULY.concat(PODLE_STAVU)) {
 }
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
 const p = await ctx.newPage();
 const vyzadane = [];
 const vyzadaneStav = [];
@@ -206,7 +206,7 @@ await ctx.close();
    klepnutí to zkusí znovu (ne že je tlačítko umlčené do konce návštěvy,
    protože si zavaděč schoval odmítnutý slib). */
 {
-  const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   let padat = true;
   await ctx2.route('**/js/min/vyvoz.js*', (r) => (padat ? r.abort() : r.continue()));
   const p2 = await ctx2.newPage();
@@ -262,7 +262,7 @@ await ctx.close();
   pravda('je z čeho poznámky vyrobit (jinak by se měřilo prázdno)',
     Object.keys(poznamky).length > 100, 'klíčů jen ' + Object.keys(poznamky).length);
 
-  const ctx3 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx3 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p3 = await ctx3.newPage();
   const stazeno3 = [];
   p3.on('request', (r) => { if (/\/js\/min\/poznamky\.js/.test(r.url())) stazeno3.push('poznamky'); });
@@ -292,7 +292,7 @@ await ctx.close();
      obojí: že se nestáhne, A že se uložení přesto povede. To druhé je
      tu důležitější — „nestahuje se" by se dalo splnit i rozbitým
      tlačítkem. */
-  const ctx4 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx4 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p4 = await ctx4.newPage();
   const stazeno4 = [];
   p4.on('request', (r) => { if (/\/js\/min\/ulozene-ucet\.js/.test(r.url())) stazeno4.push('ulozene'); });
@@ -330,7 +330,7 @@ await ctx.close();
    mrtvou cestou od tlačítka. Měří se proto to, co udělá JEN ona:
    volání `ulozeny_uloz` s klíčem pozemku. */
 {
-  const ctx5 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx5 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   /* Přihlášení se předstírá stejně jako v scripts/test-poznamky.mjs:
      podstrčený config.js (aby PKAuth.ready platilo) a session
      v úložišti. Žádný skutečný účet ani síť k tomu není potřeba. */
@@ -405,7 +405,7 @@ await ctx.close();
     !!zivaStranka, 'všechny stránky pozemků jsou ukončené?');
 
   if (zivaStranka) {
-    const ctx5 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+    const ctx5 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
     /* Cizí servery se neptáme — vrstvy úřadů jsou cizí služby a tahle
        kontrola měří, co si stáhne NÁŠ web, ne jestli odpovídá katastr. */
     await ctx5.route('**/*', (r) => {

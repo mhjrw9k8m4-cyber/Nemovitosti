@@ -68,7 +68,7 @@ const zmer = (p) => p.evaluate(() => {
 try {
   /* TELEFON. Dotyk musí být zapnutý: telefonní rozvržení stojí na
      `hover:none`, ne na šířce okna. */
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
@@ -105,7 +105,7 @@ try {
   await ctx.close();
 
   /* MONITOR. Tam je připnutý pruh u ceny, takže lišta dole nemá co dělat. */
-  const ctx2 = await prohlizec.newContext({
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 1280, height: 900 }, serviceWorkers: 'block', locale: 'cs-CZ',
   });
   const p2 = await ctx2.newPage();

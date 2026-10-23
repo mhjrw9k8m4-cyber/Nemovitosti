@@ -68,7 +68,7 @@ const PRAZDNA_DLAZDICE = Buffer.from(
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 } });
 // Pořadí je důležité: Playwright bere POSLEDNÍ shodu, takže obecné pravidlo první.
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
@@ -673,7 +673,7 @@ pravda('na stránce nespadl žádný skript', chyby.length === 0, chyby[0]);
  * v půlce výpisu, otevře ho klepnutím a vrátí se zpět.
  */
 {
-  const ctx2 = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

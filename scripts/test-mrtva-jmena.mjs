@@ -107,7 +107,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 const bezPravidla = new Map();   // jméno -> na kterých stránkách
 let jmenCelkem = 0;
 for (const stranka of STRANKY) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   /* Cizí servery se neptáme: měří se naše značkování, ne dostupnost
      dlaždic a vrstev úřadů. */
   await ctx.route('**/*', (r) => {

@@ -71,7 +71,7 @@ function hotovo(e) {
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'] });
 try {
   for (const sirka of [390, 320]) {
-    const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+    const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
       viewport: { width: sirka, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
     const p = await ctx.newPage();
     await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });

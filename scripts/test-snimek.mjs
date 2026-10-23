@@ -74,7 +74,7 @@ pravda('čtyřikrát větší výměra = dvakrát delší strana', Math.abs(pome
 // --- 3) Co se opravdu vykreslí ---------------------------------------
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 1000 } });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 1000 } });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

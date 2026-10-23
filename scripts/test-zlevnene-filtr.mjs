@@ -134,7 +134,7 @@ await new Promise((r) => setTimeout(r, 300));
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 /* serviceWorkers: 'block' — jinak stránku obsluhuje uložená kopie
    z offline režimu a zkouška čte staré HTML i stará data. */
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 },
   locale: 'cs-CZ', serviceWorkers: 'block' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());

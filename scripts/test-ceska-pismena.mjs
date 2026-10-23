@@ -83,7 +83,7 @@ for (const s of STRANKY) {
      `@media (pointer: coarse)`, ne za šířkou okna, takže by se
      v úzkém okně bez emulace dotyku vykreslilo rozvržení monitoru.
      (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await b.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   const r = await p.goto(`${BASE}/${s}`, { waitUntil: 'load' }).catch(() => null);

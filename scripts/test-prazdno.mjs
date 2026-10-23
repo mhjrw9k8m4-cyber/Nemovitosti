@@ -63,7 +63,7 @@ const STRANKY = ['hlidani.html', 'muj-inzerat.html', 'zpravy.html',
 const MEZ = 170;
 
 async function otevri(sirka) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: sirka, height: 844 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: sirka, height: 844 } });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
@@ -201,7 +201,7 @@ pravda('žádná kotva neskončí pod hlavičkou', podHlavickou.length === 0, po
  * Měří se spočítaná opacity, ne jméno třídy: právě proto, že jméno
  * vypadalo správně a nefungovalo. */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   await p.goto(`http://127.0.0.1:${PORT}/index.html`, { waitUntil: 'load' });
   /* Na výsledek, ne na čas: blok dostane obsah teprve z dat. */

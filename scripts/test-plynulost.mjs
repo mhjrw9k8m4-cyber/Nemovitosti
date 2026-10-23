@@ -87,7 +87,7 @@ const prohlizec = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
@@ -169,7 +169,7 @@ try {
      Mez je schválně volná (100): hlídá se ŘÁD, ne přesné číslo. Kdyby
      se to zapamatování rozbilo, vyskočí to na desetitisíce. */
   {
-    const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 780 },
+    const ctx2 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 780 },
       isMobile: true, hasTouch: true, serviceWorkers: 'block' });
     const p2 = await ctx2.newPage();
     /* Metody modulu se obalí počítadlem DŘÍV, než si je main.js vezme

@@ -40,7 +40,7 @@ function pravda(popis, vyslo, proc) {
 const prohlizec = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'],
 });
-const ctx = await prohlizec.newContext({
+const ctx = await prohlizec.newContext({ bypassCSP: true, 
   viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
   serviceWorkers: 'block', locale: 'cs-CZ',
 });

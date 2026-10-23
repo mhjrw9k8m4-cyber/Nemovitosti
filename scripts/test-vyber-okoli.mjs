@@ -29,7 +29,7 @@ await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
-const TELEFON = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
+const TELEFON = { bypassCSP: true, viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
@@ -182,7 +182,7 @@ let slibenyPocet = null;
 
 /* ---- 6) povolená poloha mapu přenese ---- */
 {
-  const ctx = await prohlizec.newContext({ ...TELEFON, permissions: ['geolocation'],
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  ...TELEFON, permissions: ['geolocation'],
     geolocation: { latitude: 50.0755, longitude: 14.4378 } });
   const { p, otevreno } = await otevri(ctx);
   if (otevreno) {

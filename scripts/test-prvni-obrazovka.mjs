@@ -92,7 +92,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: SIRKA, height: VYSKA }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
@@ -233,7 +233,7 @@ try {
       .filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
       .slice(0, 5)
       .map((x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|'));
-    const c2 = await prohlizec.newContext({
+    const c2 = await prohlizec.newContext({ bypassCSP: true, 
       viewport: { width: SIRKA, height: VYSKA }, isMobile: true, hasTouch: true,
       serviceWorkers: 'block', locale: 'cs-CZ',
     });
@@ -278,7 +278,7 @@ try {
      i 1920 — strop min(34vw, 460px) se zarazil kolem 1 350 px okna —
      zatímco mapa rostla z 980 na 1 460. Na obrazovce byla jedna a půl
      nabídky, ať byl monitor jakkoli velký. */
-  const sirokyCtx = await prohlizec.newContext({
+  const sirokyCtx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 1920, height: 1080 }, serviceWorkers: 'block', locale: 'cs-CZ',
   });
   const w = await sirokyCtx.newPage();
@@ -316,7 +316,7 @@ try {
      Měří se obojí: že si web volbu po dobu návštěvy pamatuje, a že
      PŘÍŠTÍ návštěva začne zase výchozím pohledem — jinak by se z jednoho
      klepnutí stalo nastavení, které si nikdo nezvolil. */
-  const telefon = { serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const telefon = { bypassCSP: true, serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' };
   const jeSeznam = (str) => str.evaluate(() => {
     const a = document.querySelector('.map-app');

@@ -55,7 +55,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 
 /* ---- 1) řádek se souřadnicemi je vidět a dá se zkopírovat ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1100, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1100, height: 900 },
     permissions: ['clipboard-read', 'clipboard-write'] });
   const p = await ctx.newPage();
   const chybyJs = [];
@@ -144,7 +144,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
      nemá schválně: je to opravdu počítač, jen v malém okně.
      (Jak se to našlo: bod 3da v docs/co-chybi.md.) */
   for (const [jm, ua, tvar, dotyk] of zarizeni) {
-    const ctx = await prohlizec.newContext(Object.assign(
+    const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true },
       { viewport: { width: 390, height: 844 }, userAgent: ua },
       dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
     const p = await ctx.newPage();

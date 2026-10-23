@@ -63,7 +63,7 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 
 /** Telefon. Volitelně s povolenou polohou. */
 async function telefon(poloha) {
-  const ctx = await prohlizec.newContext(Object.assign({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     deviceScaleFactor: 2, locale: 'cs-CZ',
   }, poloha ? { permissions: ['geolocation'], geolocation: poloha } : { permissions: [] }));

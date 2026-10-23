@@ -51,7 +51,7 @@ await new Promise((r) => srv.listen(PORT, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${PORT}`;
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
 await ctx.route('**/*', (r) => {
   const u = new URL(r.request().url());
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();

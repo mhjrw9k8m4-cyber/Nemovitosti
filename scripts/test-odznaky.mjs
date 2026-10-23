@@ -152,7 +152,7 @@ let zmereno = 0;
 /* Jen světlý — tmavý režim web nemá. */
 for (const rezim of ['light'])
 for (const s of STRANKY) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 900 },
     hasTouch: true, isMobile: true });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

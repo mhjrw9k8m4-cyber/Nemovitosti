@@ -90,7 +90,7 @@ try {
   let ctx = null, p = null;
   const cerstvaMapa = async () => {
     if (ctx) await ctx.close();
-    ctx = await prohlizec.newContext({
+    ctx = await prohlizec.newContext({ bypassCSP: true, 
       viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
       serviceWorkers: 'block', locale: 'cs-CZ',
     });

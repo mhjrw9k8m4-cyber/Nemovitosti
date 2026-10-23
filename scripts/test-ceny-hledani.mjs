@@ -107,7 +107,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
@@ -293,7 +293,7 @@ try {
      `reducedMotion: 'reduce'` je ta pravá cesta, ne delší čekání: stylopis
      na něj má @media pravidlo, které rolování i přechody vypne
      (css/styles.css), takže je stav po kliknutí hned konečný. */
-  const k = await prohlizec.newContext({
+  const k = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ', reducedMotion: 'reduce',
   });

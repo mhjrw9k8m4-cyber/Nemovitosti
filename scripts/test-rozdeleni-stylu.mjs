@@ -254,7 +254,7 @@ const PROFILY = [
   { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
 ];
 async function kontext(profil) {
-  const ctx = await browser.newContext(Object.assign(
+  const ctx = await browser.newContext(Object.assign({ bypassCSP: true },
     { viewport: profil.viewport, serviceWorkers: 'block' },
     profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
 /* PÍSMA SE V OBOU NAČTENÍCH ZAHAZUJÍ — jinak tahle zkouška neměří

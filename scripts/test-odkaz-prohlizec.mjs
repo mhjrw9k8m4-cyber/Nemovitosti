@@ -30,7 +30,7 @@ function pravda(popis, podm, detail) {
 }
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined });
-const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
 
 /* Co je na obrazovce vidět. Počet z hlavičky i prvních pár nabídek —
    samotný počet by sedl i u úplně jiného výběru stejné velikosti. */
@@ -107,7 +107,7 @@ pravda('filtry výpis opravdu zúžily (jinak by se měřilo nic)',
 pravda('a pořád je co ukazovat', (poNastaveni.naMape || 0) > 0, JSON.stringify(poNastaveni));
 
 /* --- a teď ten odkaz pošleme „někomu jinému" ------------------------ */
-const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+const ctx2 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
 const p2 = await ctx2.newPage();
 await p2.goto(`${BASE}/index.html${hash}`, { waitUntil: 'load' });
 await pockej(p2);
@@ -129,7 +129,7 @@ pravda('a stejné nabídky ve stejném pořadí',
    naposled skončil (restoreMapReturn), a to je žádoucí — jenže ve
    stejném kontextu by se obnovil filtrovaný pohled a zkouška by měřila
    paměť, ne kotvu. */
-const ctx3 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+const ctx3 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
 const p3 = await ctx3.newPage();
 await p3.goto(`${BASE}/index.html#podminky`, { waitUntil: 'load' });
 await pockej(p3);
@@ -149,7 +149,7 @@ pravda('a kotva v adrese zůstane (nepřepíše ji stav mapy)',
   poKotve.hash === '#podminky', `v adrese „${poKotve.hash}"`);
 
 /* --- rozbitá adresa nesmí shodit stránku ---------------------------- */
-const ctx4 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+const ctx4 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
 const p4 = await ctx4.newPage();
 const chybyKonzole = [];
 p4.on('pageerror', (e) => chybyKonzole.push(String(e.message)));

@@ -50,7 +50,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   const cizi = [];
   const chybyKonzole = [];
@@ -195,7 +195,7 @@ const vidu = (sel) => p.evaluate((s) => {
        souboru. Kontext výš (řádek 48) tu pojistku má od začátku;
        tenhle ji neměl. (Táž past jako v scripts/test-pridat.mjs, viz
        CLAUDE.md, oddíl o testech.) */
-    const ctx2 = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+    const ctx2 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
       isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
     await ctx2.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
       body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));

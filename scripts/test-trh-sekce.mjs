@@ -67,7 +67,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 /* serviceWorkers: 'block' — bez toho obsluhuje stránku uložená kopie
    z offline režimu a zkouška čte staré HTML, aniž by to poznala. */
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
 const page = await ctx.newPage();
 await page.route('**/*', (r) => {

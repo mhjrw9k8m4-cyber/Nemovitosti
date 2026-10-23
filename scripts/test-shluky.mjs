@@ -53,7 +53,7 @@ const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 
 for (const [W, H] of [[390, 844], [1280, 900]]) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: W, height: H },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: W, height: H },
     deviceScaleFactor: 1, isMobile: W < 700, hasTouch: W < 700 });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());

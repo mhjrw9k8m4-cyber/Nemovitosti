@@ -59,7 +59,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 360, height: 800 }, isMobile: true, hasTouch: true,
     serviceWorkers: 'block', locale: 'cs-CZ',
   });
@@ -357,7 +357,7 @@ try {
     const bok = document.querySelector('.pz-bok');
     return !!(akce && bok && bok.contains(akce));
   });
-  const sirokyCtx = await prohlizec.newContext({
+  const sirokyCtx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: 1440, height: 900 }, serviceWorkers: 'block', locale: 'cs-CZ',
   });
   const w = await sirokyCtx.newPage();

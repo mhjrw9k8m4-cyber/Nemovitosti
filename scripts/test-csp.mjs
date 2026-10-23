@@ -111,6 +111,35 @@ const nenapsane = ciziVPolitice.filter((h) => zasady.indexOf(h.replace(/^[abc]\.
 pravda(`každý cizí server z politiky je jmenovaný v zásadách soukromí (${ciziVPolitice.length})`,
   nenapsane.length === 0, `chybí v ochrana-udaju.html: ${nenapsane.join(', ')}`);
 
+/* OSTATNÍ ZKOUŠKY V PROHLÍŽEČI MUSÍ CSP OBCHÁZET — a tahle ne.
+   Naměřeno 23. 10., když politika přišla na web: 30 zkoušek v prohlížeči
+   spadlo a vypadalo to na rozbitý web. Nebyl: Playwright ovládá stránku
+   vstřikovaným kódem a ten si volá eval, takže pod přísným script-src
+   přestane fungovat scrollování k prvku i waitForFunction. V hlášce
+   o porušení nebyl žádný zdrojový soubor — proto to vypadalo na
+   stránku. Na tohle má Playwright volbu bypassCSP: zkouška pak ovládá
+   stránku, jako by hlavička nebyla, a jestli hlavička platí, měří
+   TAHLE zkouška — ta ji naopak obcházet nesmí, jinak by neměřila nic. */
+{
+  /* Zkouška v prohlížeči se pozná podle toho, že si bere playwright —
+     ne podle slova „newContext" v textu: test-zkousky-meri.mjs si ho
+     nese ve vzoru, kterým rozebírá ostatní zkoušky, a prohlížeč
+     nespouští. */
+  const bez = [], mojeVolani = [];
+  for (const f of readdirSync(path.join(KOREN, 'scripts'))) {
+    if (!/^test-.*\.mjs$/.test(f)) continue;
+    const t = readFileSync(path.join(KOREN, 'scripts', f), 'utf8');
+    if (t.indexOf("from 'playwright-core'") < 0) continue;
+    const volani = t.match(/\.newContext\([\s\S]{0,200}/g) || [];
+    if (f === 'test-csp.mjs') { mojeVolani.push(...volani); continue; }
+    if (volani.length && !volani.every((v) => /bypassCSP/.test(v)) && t.indexOf('bypassCSP') < 0) bez.push(f);
+  }
+  pravda('každá ostatní zkouška v prohlížeči si CSP obchází (bypassCSP)',
+    bez.length === 0, bez.length ? `bez něj: ${bez.slice(0, 4).join(', ')} (celkem ${bez.length})` : '');
+  pravda(`a tahle zkouška ho naopak nemá (jinak by neměřila nic) — ${mojeVolani.length} vlastní volání`,
+    mojeVolani.length > 0 && mojeVolani.every((v) => !/bypassCSP/.test(v)));
+}
+
 /* ---- server, který umí stránku na požádání napadnout -------------- */
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml',

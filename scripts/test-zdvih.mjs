@@ -79,7 +79,7 @@ for (const s of STRANKY) {
   /* Na šířku stolního počítače: na 390 px je `@media (hover:none)`
      sice nevypíná (to závisí na zařízení, ne na šířce), ale některé
      dlaždice tam vůbec nejsou. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1200);

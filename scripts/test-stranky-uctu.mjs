@@ -80,7 +80,7 @@ const prohlizec = await chromium.launch({
   args: ['--no-sandbox'],
 });
 try {
-  const ctx = await prohlizec.newContext({
+  const ctx = await prohlizec.newContext({ bypassCSP: true, 
     viewport: { width: SIRKA, height: 900 }, serviceWorkers: 'block', locale: 'cs-CZ',
   });
   const p = await ctx.newPage();

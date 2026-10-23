@@ -58,7 +58,7 @@ for (const s of STRANKY) {
      v docs/co-chybi.md.)
      Druhý profil (monitor) tady nepotřebuje: tam :hover je a jeho
      barvy měří scripts/test-najeti.mjs. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -123,7 +123,7 @@ for (const s of STRANKY) {
    odlišuje atributem aria-busy. Měří se obojí, na doopravdy
    vykreslených prvcích. */
 {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block',
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
   const p2 = await ctx.newPage();
   await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' });

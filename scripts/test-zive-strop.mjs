@@ -58,7 +58,7 @@ const prohlizec = await chromium.launch({
 async function zkus(jak) {
   /* SERVISNÍ PRACOVNÍK ZAKÁZANÝ: tenhle test podstrkuje odpovědi přes
      ctx.route a skrz pracovníka by se k požadavkům nedostal (CLAUDE.md). */
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', locale: 'cs-CZ' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', locale: 'cs-CZ' });
   await ctx.route('**://*.supabase.co/**', async (r) => {
     if (jak === 'nema') return;                       // odpověď nikdy nepřijde
     if (jak === 'pomala') await new Promise((x) => setTimeout(x, 8000));

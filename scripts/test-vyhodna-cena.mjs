@@ -86,7 +86,7 @@ function data() {
 
 const PW = process.env.PW_CHROMIUM;
 const browser = await chromium.launch(PW ? { executablePath: PW } : {});
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+const ctx = await browser.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
 const page = await ctx.newPage();
 for (const v of ['**://*.tile.*/**', '**://*.openstreetmap.org/**', '**/_vercel/**']) {
   await page.route(v, (r) => r.fulfill({ status: 204, body: '' })).catch(() => {});

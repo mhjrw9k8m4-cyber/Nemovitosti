@@ -68,7 +68,7 @@ for (const s of STRANKY) {
      pravidla @media (hover:none) — tedy zrovna ta, která terče na dotyk
      zvětšují. Test by pak měřil podobu pro myš a hlásil chyby, které na
      mobilu nejsou (a naopak by minul ty, které tam jsou). */
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
     hasTouch: true, isMobile: true });
   // Bez Leafletu se skript mapy ukončí dřív, než vykreslí karty nabídek —
   // a jejich tlačítka (srdíčko) by se tím vůbec nezměřila. Je-li po ruce

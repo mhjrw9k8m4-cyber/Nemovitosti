@@ -46,7 +46,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 
 /* ---- 1) celá cesta: otevřít pozemek → vrátit se → vidět značku ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));
@@ -108,7 +108,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 
 /* ---- 2) seznam nesmí růst donekonečna ani pamatovat napořád ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p.waitForTimeout(2000);
@@ -156,7 +156,7 @@ const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIU
 
 /* ---- 3) bez schránky se nesmí nic rozbít ---- */
 {
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 } });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 } });
   const p = await ctx.newPage();
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));

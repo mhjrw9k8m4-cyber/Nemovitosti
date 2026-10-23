@@ -30,7 +30,7 @@ function pravda(popis, podm, detail) {
 }
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'] });
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 const p = await ctx.newPage();
 await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
 await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});

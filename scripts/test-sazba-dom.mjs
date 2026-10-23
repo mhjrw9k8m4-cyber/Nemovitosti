@@ -104,7 +104,7 @@ const prohlizec = await chromium.launch({
 try {
   /* Servisní pracovník se vypíná: obsluhuje data/*.json a stránka by
      místo serveru dostala jeho kopii (viz scripts/test-zkousky-meri.mjs). */
-  const ctx = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   for (const s of STRANKY) {
     await p.goto(`http://127.0.0.1:${PORT}/${s}`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});

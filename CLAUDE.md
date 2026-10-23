@@ -596,3 +596,23 @@ bez něj nepoběží kontrola fotek; je to odvozené pravidlem (bere
 `pridat.js`/`fototema.js` a má `<input type="file">`), ne seznamem,
 a zkouška hlídá oba směry i to, že si žádný skript v `js/`
 nepouští text jako kód.
+
+### Zkouška v prohlížeči si CSP obchází (`bypassCSP: true`)
+
+Playwright roluje k prvku a čeká na podmínku vstřikovaným kódem,
+který si volá `eval` — pod přísným `script-src` tedy přestane
+fungovat OVLÁDÁNÍ, ne web. Když CSP přišla na web, spadlo tím
+třicet zkoušek a vypadalo to na rozbité stránky; v hlášce
+o porušení nebyl žádný zdrojový soubor, což je ta nápověda. Nová
+zkouška v prohlížeči proto zakládá kontext s `bypassCSP: true`
+— jediná vyjímka je `scripts/test-csp.mjs`, která měří právě to,
+jestli hlavička platí. Hlídá se to v obou směrech.
+
+### Cizí server do politiky patří ze ZDROJE, ne z měření
+
+Vrstvy mapy (sedm úředních WMS serverů) v první podobě politiky
+chyběly, protože se při měření v prohlížeči nezapnuly — ač byly
+celou dobu jmenované v zásadách soukromí. Hosty se proto čtou
+z `data/mapove-vrstvy.json` a adresa Supabase z `js/config.js`.
+Měření v prohlížeči říká, co se děje na té jedné cestě, kterou
+jsi prošel; zdroj říká, co se může stát na všech.

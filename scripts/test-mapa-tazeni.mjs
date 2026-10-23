@@ -57,7 +57,7 @@ const prohlizec = await chromium.launch({
 });
 try {
   /* Telefon: tam se to zapíná (@media (hover:none)) a tam na tom záleží. */
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },
     hasTouch: true, isMobile: true, serviceWorkers: 'block' });
   const p = await ctx.newPage();
   const chybyKonzole = [];
@@ -150,7 +150,7 @@ try {
   /* NA POČÍTAČI SE TO DĚLAT NEMÁ: mapa je tam v kartě s okrajem, hlavička
      jí nic nebere a myš nikdo netáhne přes půl obrazovky. Blikalo by to
      bez užitku. */
-  const ctx2 = await prohlizec.newContext({ viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  const ctx2 = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p2 = await ctx2.newPage();
   await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p2.waitForTimeout(2500);

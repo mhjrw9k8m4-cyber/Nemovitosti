@@ -349,7 +349,7 @@ const PRAZDNA = Buffer.from(
 
 /** Prohlížeč bez jediného přihlášení — přesně tak, jak web slibuje. */
 async function host(inzeraty, prilezitosti) {
-  const ctx = await prohlizec.newContext({ serviceWorkers: 'block', viewport: { width: 1280, height: 900 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 1280, height: 900 },
     locale: 'cs-CZ', permissions: [], reducedMotion: 'reduce' });
   await ctx.route('**/*', (r) => {
     const u = new URL(r.request().url());
