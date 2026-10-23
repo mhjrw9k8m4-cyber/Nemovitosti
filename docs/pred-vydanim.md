@@ -134,73 +134,70 @@ nestála:**
 
 Obojí se vkládá v GitHubu → Settings → Secrets and variables → Actions.
 
-**Pustit to SQL znovu, i když databáze už stojí — kvůli úložišti
-fotek.** Od 23. 10. je ve `supabase/listings-photos.sql` navíc strop
-na velikost souboru (3 MB), seznam povolených typů (jen `image/jpeg`)
-a podmínka, že přihlášený smí nahrávat **jen do své složky**. Bez
-spuštění zůstane běžící projekt bez nich: do veřejného úložiště by šlo
-uložit cokoli a jak velkého. `on conflict` je napsané tak, že to
-nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
-nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
-někdo pustil, pozná jen Supabase).
+### 3a. Pustit SQL ZNOVU, i když databáze už stojí
 
-**Nejmenší délka hesla: 8** (Supabase → Authentication → Sign In /
-Providers → *Minimum password length*). Web o osmi znacích mluví
-a hlídá je u zakládání účtu i u nového hesla (`MEZE.hesloMin`
-v `js/kontrola.js`), ale **vynutit to umí jen Supabase**: kontrola
-v prohlížeči se obejde voláním API. Výchozí hodnota u Supabase je 6.
-U *přihlášení* se délka schválně nehlídá, aby se dostal dovnitř i ten,
-kdo si účet zakládal s kratším heslem.
+Od 23. 10. je v balíku šest věcí, které běžící projekt bez nového
+spuštění nemá — a každá z nich je díra nebo cesta, kterou databáze roste
+zvenčí. `00-vse.sql` jde pustit opakovaně, takže stačí jeden běh.
 
-**Adresy, kam smí vést odkazy z e-mailu** (Supabase →
-Authentication → URL Configuration). *Site URL* nastavit na
-`https://www.parcelaka.cz` a *Redirect URLs* omezit na vlastní domény
-(`https://www.parcelaka.cz/**`, případně adresu vedlejšího nasazení) —
-**nikdy `*`**. Odkaz na obnovu hesla nese jednorázový token a web
-posílá v `redirect_to` svou vlastní adresu (`js/auth.js`, funkce
-`recover`), ale Supabase přijme jen adresu z tohohle seznamu: dokud
-v něm je `*`, může kdokoli vyrobit odkaz na obnovu hesla, který
-přistane s tokenem na cizí stránce. Token sám chodí ve *fragmentu*
-adresy (`#access_token=…`), takže se na server neposílá a web ho
-z adresního řádku hned zahodí — ale komu přistane v prohlížeči, ten ho
-má.
+* **Úložiště fotek** (`supabase/listings-photos.sql`): strop na velikost
+  souboru (3 MB), seznam povolených typů (jen `image/jpeg`) a podmínka,
+  že přihlášený smí nahrávat **jen do své složky**. Bez spuštění by do
+  veřejného úložiště šlo uložit cokoli a jak velkého. `on conflict` to
+  nastaví i existujícímu úložišti.
+* **Přihlášky k hlídání**: strop dvanácti hlídaných míst na jednu
+  e-mailovou adresu (`subscribe_watch` smí zavolat kdokoli s veřejným
+  klíčem) a funkce `uklid_hlidani()`, která maže nepotvrzené přihlášky
+  starší třiceti dní (volá ji noční `uklid-databaze.mjs`). Bez toho si
+  jedna adresa nechá založit přihlášku na každý okres a nepotvrzené
+  řádky leží navždy.
+* **Poznámky**: `poznamka_uloz` hlídal jen délku textu; nově i počet
+  poznámek na účet (300, týž strop jako v prohlížeči) a délku klíče
+  pozemku (200 znaků, týž jako u uložených).
+* **Odběry upozornění**: `push_odber_uloz` ověřoval jen to, že tři
+  argumenty nejsou prázdné; nově i tvar adresy (`https`), délku
+  (500 / 200 / 100 znaků) a počet zařízení na účet (10).
+* **Měření návštěvnosti**: denní strop 5 000 řádků, se značkou
+  `(strop)`, aby bylo vidět, že se sepnul.
+* **Hromadné nahrání uložených pozemků**: počítá volné místo do stropu
+  500 **na účet**, místo limitu na jedno volání (dvěma voláními se
+  obcházel).
 
-**„Confirm email" musí být ZAPNUTÉ** (Supabase → Authentication →
-Sign In / Providers → Email). Bez potvrzeného e-mailu `create_listing`
-inzerát odmítne — a odmítne ho hláškou „nejdřív potvrďte e-mail,
-poslali jsme vám odkaz", takže s vypnutým potvrzováním čeká člověk na
-e-mail, který nikdy nepřijde. (V `supabase/listings-auth.sql` dlouho
-stála rada to pro hladký start vypnout; 23. 10. opravena, protože
-mezitím se potvrzení začalo vyžadovat.) Souvisí to s vlastním SMTP
-z bodu 1: dokud se nenastaví, posílá potvrzovací e-maily Supabase ze
-své adresy a s nízkým denním stropem — na zkoušení to stačí, na provoz
-ne.
+Hlídá to `scripts/test-sql-prava.mjs` a `scripts/test-sql-cista.mjs` —
+ale jen v repozitáři: **že to někdo pustil, pozná jen Supabase.**
 
-**A kvůli dvěma cestám, kterými databáze rostla zvenčí.** Měření
-návštěvnosti má od 23. 10. denní strop 5 000 řádků (se značkou
-`(strop)`, aby bylo vidět, že se sepnul) a hromadné nahrání uložených
-pozemků počítá volné místo do stropu 500 na účet, místo limitu na jedno
-volání. Bez spuštění jde oběma cestami zvenčí zakládat řádky bez konce.
+### 3b. Nastavení projektu, která SQL neumí
 
-**A kvůli odběrům upozornění.** `push_odber_uloz` ověřoval jen to, že
-tři argumenty nejsou prázdné; od 23. 10. hlídá i tvar adresy (https),
-délku (500 / 200 / 100 znaků) a počet zařízení na jeden účet (10). Bez
-spuštění může kterýkoli registrovaný účet zakládat řádky bez konce
-a s libovolně dlouhými texty.
+Tyhle tři věci nejsou v žádném souboru a z repozitáře se ani ověřit
+nedají. Že o nich tenhle seznam ví, hlídá `scripts/test-sql-prava.mjs`.
 
-**A kvůli stropům na poznámky.** `poznamka_uloz` hlídal jen délku
-textu; od 23. 10. hlídá i počet poznámek na jeden účet (300, týž strop
-jako v prohlížeči) a délku klíče pozemku (200 znaků, týž jako
-u uložených). Bez spuštění může kterýkoli registrovaný účet psát řádky
-bez konce — databáze je na bezplatném tarifu 500 MB.
-
-**A kvůli přihláškám k hlídání.** Týmž během přijde strop dvanácti
-hlídaných míst na jednu e-mailovou adresu (`subscribe_watch` smí
-zavolat kdokoli s veřejným klíčem) a funkce `uklid_hlidani()`, která
-maže nepotvrzené přihlášky starší třiceti dní; volá ji noční
-`uklid-databaze.mjs`. Dokud SQL neproběhne, může si jedna adresa
-nechat založit přihlášku na každý okres a nepotvrzené řádky v tabulce
-leží navždy.
+* **„Confirm email" ZAPNUTÉ** (Authentication → Sign In / Providers →
+  Email). Bez potvrzeného e-mailu `create_listing` inzerát odmítne —
+  a odmítne ho hláškou „nejdřív potvrďte e-mail, poslali jsme vám
+  odkaz", takže s vypnutým potvrzováním čeká člověk na e-mail, který
+  nikdy nepřijde. (V `supabase/listings-auth.sql` dlouho stála rada to
+  pro hladký start vypnout; 23. 10. opravena.) Souvisí to s vlastním
+  SMTP z bodu 1: dokud se nenastaví, posílá potvrzení Supabase ze své
+  adresy a s nízkým denním stropem — na zkoušení to stačí, na provoz
+  ne.
+* **Nejmenší délka hesla: 8** (Authentication → Sign In / Providers →
+  *Minimum password length*; výchozí je 6). Web o osmi znacích mluví
+  a hlídá je u zakládání účtu i u nového hesla (`MEZE.hesloMin`
+  v `js/kontrola.js`), ale **vynutit to umí jen Supabase**: kontrola
+  v prohlížeči se obejde voláním API. U *přihlášení* se délka schválně
+  nehlídá, aby se dostal dovnitř i ten, kdo si účet zakládal s kratším
+  heslem.
+* **Adresy, kam smí vést odkazy z e-mailu** (Authentication → URL
+  Configuration): *Site URL* na `https://www.parcelaka.cz`
+  a *Redirect URLs* omezit na vlastní domény (`https://www.parcelaka.cz/**`,
+  případně adresu vedlejšího nasazení) — **nikdy `*`**. Odkaz na obnovu
+  hesla nese jednorázový token a web posílá v `redirect_to` svou
+  vlastní adresu (`js/auth.js`, funkce `recover`), ale přijme ji jen
+  Supabase podle tohohle seznamu: dokud je v něm `*`, může kdokoli
+  vyrobit odkaz na obnovu hesla, který přistane s tokenem na cizí
+  stránce. Token sám chodí ve *fragmentu* adresy (`#access_token=…`),
+  takže se na server neposílá a web ho z adresního řádku hned zahodí —
+  ale komu přistane v prohlížeči, ten ho má.
 
 *(Vysvětlená ta tajemství byla v samotných úlohách i ve skriptech, ale
 ne tady — a tenhle seznam je to jediné, podle čeho se web spouští.
