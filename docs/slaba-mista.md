@@ -359,6 +359,20 @@ zkoušku a sabotáž, podrobně `docs/optimalizace.md`, oddíly 112–123):
   co patří účtu.
 * **Úlohy v CI** mají napsaná nejmenší potřebná práva, nenechávají si
   token na disku a balíčky instalují ze zámku bez životních skriptů.
+* **Rámování cizí stránkou** (clickjacking) je na stránkách, kde
+  klepnutí mění účet nebo uložená data, zavřené — a změřeno, že chrání
+  skrytí, ne vyskakování z rámu.
+* **Jednorázový token na obnovu hesla** se z adresy maže hned, ne až po
+  uložení nového hesla.
+* **Heslo** má aspoň osm znaků u zakládání i u nového hesla — a u
+  přihlášení se délka schválně nehlídá, aby zvýšení nevyhodilo lidi se
+  staršími kratšími hesly.
+
+Dvě měření, která **nic nenašla** (a je to taky výsledek): `npm audit
+--omit=dev` hlásí 0 zranitelností a v repozitáři není žádný tajný klíč —
+jediný řetězec, který na klíč vypadá, je *falešný* klíč ve zkoušce, na
+němž se ověřuje, že se klíče z výpisů mažou. Veřejný „publishable" klíč
+v `js/config.js` tam patří a je u něj napsané proč.
 
 Co zavřít **nejde odsud** a co je vědomá hranice:
 
