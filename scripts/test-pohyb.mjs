@@ -26,11 +26,14 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
 import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const BASE = 'http://127.0.0.1:8310';
+const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
@@ -249,7 +252,35 @@ async function kontext(pohybVypnut) {
 // každá nabídka musí v některém z nich být, i ta mimo osu — ta
 // v krajním. Kdyby se počítaly sloupce, prošlo by i to, že jich graf
 // nakreslí pět a polovinu nabídek po cestě ztratí.
-const ADRESA = `${BASE}/pozemek.html?p=Vala%C5%A1sk%C3%A1%20Senice%7C%E2%80%94%7CVset%C3%ADn&ll=49.238051,18.105773`;
+/* ADRESA SE VYBÍRÁ MĚŘENÍM, NE RUKOU. Stála tu pevně („Valašská
+   Senice, okres Vsetín") a 23. 10. ta stránka přestala mít graf — ne
+   vadou, ale správně: od toho dne se verdikt o ceně nevydá tam, kde
+   srovnávací přihrádku drží jediný inzerent (MEZ_JEDEN_INZERENT
+   v js/ceny.js), a Vsetín je zrovna jeden z okresů, kde ten
+   velkoobchodník drží 86 % nabídek. Čtyři kontroly pak padaly na
+   „graf se nenašel" — a nebyla to vada grafu.
+   Bere se tedy první nabídka, které TÝŽ model verdikt dá. Kdyby se
+   takhle nedala najít žádná, zkouška to řekne (kontrola níž), ne aby
+   měřila prázdno. */
+const VYBER = (() => {
+  const okno = {};
+  // eslint-disable-next-line no-new-func
+  new Function('window', readFileSync(path.join(KOREN, 'js', 'ceny.js'), 'utf8'))(okno);
+  const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
+  const vse = PKH.bezDuplicit(JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || []);
+  const model = okno.PK_CENY.postav(vse);
+  for (const d of vse) {
+    if (!d.lat || !d.lng || !d.place || !d.okres) continue;
+    const pc = model.percentil(d);
+    if (!pc || !(pc.sample >= 10)) continue;
+    return d;
+  }
+  return null;
+})();
+const ADRESA = VYBER
+  ? `${BASE}/pozemek.html?p=${encodeURIComponent(`${VYBER.place}|${VYBER.cast || '—'}|${VYBER.okres}`)}`
+    + `&ll=${VYBER.lat},${VYBER.lng}`
+  : `${BASE}/pozemek.html`;
 const kdeJeZnacka = (p) => p.evaluate(() => {
   const g = document.querySelector('.pvg');
   if (!g) return null;
@@ -263,6 +294,8 @@ const kdeJeZnacka = (p) => p.evaluate(() => {
     vSloupcich, sloupcu: g.querySelectorAll('.pvg-s').length,
     anim: st.animationName, prechod: st.transitionProperty };
 });
+pravda('našel se pozemek, který verdikt o ceně dostane', !!VYBER,
+  'žádná nabídka nedostane percentil — graf by se neměl na čem měřit');
 {
   const ctx = await kontext(false);
   const p = await ctx.newPage();

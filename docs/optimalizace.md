@@ -9249,3 +9249,12 @@ spočítá ze stejných dat (žádná „zakázaná věta" v kódu zkoušky nen�
 prohlédne všech 2 232 stránek a žádnou tam nesmí najít — a zároveň
 žádá, aby parcelní údaje zůstaly aspoň na tisíci stránkách. Sabotáž
 oběma směry: snížená mez (úklid začne jíst fakta) i vypnutý úklid.
+
+**A ještě jedna zkouška měla adresu napsanou rukou.** `test-pohyb`
+měřila graf rozdělení cen na pevné adrese („Valašská Senice, okres
+Vsetín") a po oddílu 135 tam graf zmizel — správně, protože ve Vsetíně
+drží ten velkoobchodník 86 % nabídek a verdikt se tam nevydá. CI 657
+spadlo na „graf se nenašel" a nebyla to vada grafu. Adresa se teď
+vybírá **měřením**: bere se první nabídka, které týž model verdikt dá,
+a kdyby žádná nebyla, zkouška to řekne zvláštní kontrolou (16 → 26
+kontrol, protože se teď graf opravdu měří).
