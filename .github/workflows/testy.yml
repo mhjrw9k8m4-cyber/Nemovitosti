@@ -415,6 +415,9 @@ jobs:
       - name: Na každé tajemství je majitel upozorněn
         run: node scripts/test-tajemstvi.mjs
 
+      - name: Práva v databázi (RLS a kdo smí volat funkce)
+        run: node scripts/test-sql-prava.mjs
+
       - name: Žádné volání ven nevisí donekonečna
         run: node scripts/test-casove-limity.mjs
 

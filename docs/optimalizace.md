@@ -7898,3 +7898,54 @@ zahozený (na rozdíl od karet, kde čištění ostré znaky maže).
 escapováním (přepíše se jen ta jedna funkce) a pak se nálož spustit
 musí. Bez toho by zkouška mohla být zelená proto, že se zpráva vůbec
 neodeslala — a ne proto, že web escapuje.
+
+---
+
+## 114. Kdo smí co v databázi — a čím si to musí zasloužit *23. 10.*
+
+Web mluví do Supabase **veřejným klíčem** (`anon`), takže všechno, co je
+povolené roli `anon` nebo `authenticated`, si může zavolat kdokoli —
+stačí curl. Změřeno, jak to na tom webu stojí:
+
+| co | naměřeno |
+|---|---|
+| tabulky | 17, **všech 17** má zapnuté RLS |
+| politiky | 19 |
+| nic povoleného roli `public` | 0 nálezů |
+| tabulka přímo přístupná veřejným klíčem | 0 — chodí se jen přes funkce |
+| funkce `security definer` | 64 definic, po započítání předefinování **39** |
+| z nich volatelných veřejným klíčem | **31** |
+
+`security definer` znamená „běž pod vlastníkem a RLS obejdi" — je to
+tedy jediná cesta, jak se dá k cizím datům dostat legálně. Proto se
+u každé takové funkce ptáme, **čím si volající přístup zasloužil**:
+
+* `auth.uid()` nebo `auth.jwt()` v těle — ověří, kdo volá (to je
+  většina),
+* **tajemství v argumentu** (`p_token`) — kdo zná token z e-mailu nebo
+  z odkazu na inzerát bez účtu, ten na to má právo,
+* napsaná výjimka s důvodem — dnes tři: `public_listings` (vrací jen
+  to, co je stejně vidět na webu), `subscribe_watch` (přihlášení
+  e-mailu, potvrzuje se odkazem s tokenem) a `zapis_navstevu` (zápis do
+  statistiky; nic nečte).
+
+**Nálezů: nula.** Žádná otevřená funkce ani tabulka bez RLS. To ovšem
+platí dnes, ne zítra — proto je z toho `scripts/test-sql-prava.mjs`.
+
+### Dvě věci, na kterých se dalo uklouznout
+
+**Devatenáct definic bez `auth.uid()` vypadalo jako devatenáct děr.**
+Nebyly: `00-vse.sql` se skládá z dílčích SQL a funkce v průběhu
+**předefinovává**, takže rozhoduje poslední podoba. `delete_listing` má
+starší podobu bez kontroly a konečnou
+`delete from listings where id=p_id and user_id=auth.uid()`. Zkouška
+proto čte jen poslední definici — jinak by hlásila poplach na kódu,
+který v databázi nikdy nevznikne.
+
+**Mrtvá výjimka je past.** Vypadá jako povolení pro funkci, která už
+neexistuje nebo už veřejná není — a tím krytí pro omyl, který teprve
+přijde. Zkouška proto hlásí i výjimku, kterou nikdo nepotřebuje.
+
+Doloženo sabotáží ve třech směrech: `security definer` funkce pro `anon`
+bez kontroly → poplach; tabulce vypnuté RLS → poplach; `grant … to
+public` → poplach.
