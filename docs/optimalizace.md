@@ -8640,3 +8640,60 @@ dojmem. Kdyby se měnil hosting (Vercel, CDN), patří `Referrer-Policy`
 do hlaviček serveru spolu s těmi, které `<meta>` neumí vůbec
 (`Strict-Transport-Security`, `X-Frame-Options`) — jak stojí
 v `docs/pred-vydanim.md`, bod 6.
+
+## 128. Clickjacking: stránky s účtem se daly vložit do cizího rámu *23. 10.*
+
+Útok se jmenuje clickjacking: cizí stránka vloží náš web do průhledného
+rámu, nad něj položí vlastní návnadu, a klepnutí, které člověk míní na
+ni, dopadne na naše tlačítko. Na webu, kde se dá **smazat inzerát,
+odhlásit se, zrušit hlídání nebo vymazat všechna uložená data**, je to
+opravdový úkon za cizí ruku.
+
+Správná obrana je hlavička (`X-Frame-Options`, nebo `frame-ancestors`
+v CSP) — a tu statický hosting nepošle; `<meta>` ji ignoruje. Změřeno:
+**0 z 2 368 stránek** bylo proti rámování chráněných.
+
+Hotovo: pojistka v prohlížeči na pěti stránkách, kde klepnutí mění účet
+nebo uložená data (`hlidani`, `muj-inzerat`, `pridat`, `zpravy`,
+`moje-data`). Pořadí v ní je to podstatné: **nejdřív se stránka skryje,
+teprve pak se zkusí z rámu vyskočit.**
+
+**A proč v tom pořadí, se změřilo.** Chromium 1194 vyskočení z cizího
+rámu bez gesta uživatele **zakáže**:
+
+```
+Unsafe attempt to initiate navigation for frame with URL 'http://…:8422/'
+from frame with URL 'http://…:8421/muj-inzerat.html'. The frame attempting
+navigation is targeting its top-level window, but is neither same-origin
+with its target nor has it received a user gesture.
+```
+
+Takže co doopravdy chrání, je **skrytí** — a vyskočení je druhý pokus,
+který se někdy povede. Kdybych napsal jen vyskakování (jak to radí
+většina starých návodů), nechrání to nic a adresní řádek by zůstal
+útočníkův s našimi tlačítky uvnitř.
+
+Hlídá to nová `scripts/test-ramovani.mjs` (8 kontrol). Cizí původ se
+napodobí druhým portem (jiný port = jiný původ), ten vloží naši stránku
+do rámu a zkouška uznává **obě** podoby ochrany: buď adresa nahoře je
+naše (vyskočilo se), nebo se v rámu nic nevykreslilo. K tomu dvě
+kontroly, bez kterých by to nic neváželo:
+
+* **rám se sandboxem** (`sandbox="allow-scripts"`), kde vyskočit nelze
+  vůbec — tam musí platit ta druhá polovina, prázdno;
+* **stránka bez pojistky** (`404.html`) se v rámu opravdu vykreslí —
+  jinak by zkouška procházela i tehdy, kdyby rám nefungoval.
+
+Do rámu jiného původu se přitom z JavaScriptu stránky nevidí (a je to
+tak správně); první pokus přes `iframe.contentDocument` vracel všude
+„null", tedy nic naměřeno. Playwright na rámy vidí sám —
+`page.frames()` dá objekt rámu a v něm jde vyhodnotit kód bez ohledu na
+původ.
+
+Sabotáž, dva směry, oba zachyceny: pojistka odstraněná z jedné stránky,
+a pojistka, která jen vyskakuje (bez skrytí a bez záchrany v `catch`) —
+ta padne právě v sandboxovaném rámu.
+
+Zůstává napsané v `docs/pred-vydanim.md` (bod 6): na serveru, který umí
+hlavičky, patří `X-Frame-Options`/`frame-ancestors` nasadit a tuhle
+pojistku nechat jako druhou obranu.

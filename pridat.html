@@ -2,7 +2,22 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <!-- CIZÍ RÁM: tahle stránka se v něm nemá ukázat.
+       Proti „clickjackingu" slouží hlavička (X-Frame-Options nebo
+       frame-ancestors v CSP) — tu ale statický hosting nepošle
+       a <meta> ji ignoruje (viz docs/pred-vydanim.md, bod 6). Zbývá
+       pojistka v prohlížeči, a to POŘADÍ JE TO PODSTATNÉ: nejdřív se
+       stránka skryje, teprve pak se zkusí z rámu vyskočit.
+       ZMĚŘENO (23. 10., Chromium 1194): vyskočení z cizího rámu
+       prohlížeč BEZ gesta uživatele zakáže — „Unsafe attempt to
+       initiate navigation… is neither same-origin with its target nor
+       has it received a user gesture". Co tedy doopravdy chrání, je to
+       skrytí; vyskočení je druhý pokus, který se někdy povede.
+       Cizímu rámu zůstane prázdno, ne klikatelné ovládání účtu.
+       Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
+       mají všechny; hlídá to scripts/test-ramovani.mjs. -->
+  <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- KDO JSEM, SE MUSÍ VĚDĚT PŘED PRVNÍM VYKRESLENÍM.
        Formulář i přihlašovací karta začínaly schované a teprve skript po
        načtení jednu z nich odkryl. Naměřeno na telefonu: karta naskočila

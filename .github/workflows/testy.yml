@@ -701,6 +701,9 @@ jobs:
       - name: CSP platí a zastaví podstrčený skript
         run: node scripts/test-csp.mjs
 
+      - name: Stránky s účtem nejde vložit do cizího rámu
+        run: node scripts/test-ramovani.mjs
+
       - name: Cizí text se vykreslí jako text, ne jako kód
         run: node scripts/test-escape-dom.mjs
 
