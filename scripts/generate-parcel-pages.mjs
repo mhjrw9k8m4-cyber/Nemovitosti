@@ -28,6 +28,7 @@ import { createRequire } from 'node:module';
 import { jsonVeStrance } from './json-do-stranky.mjs';
 import { bezKomentaruVHtml } from './text.mjs';
 import { presnostPodleDruhu } from './presnost-odhadu.mjs';
+import { pocetnostVet, bezReklamy } from './text-inzeratu.mjs';
 /* Historie ceny jedné nabídky — z archivu, ne z posledního běhu robota.
    `cena_drive` v datech má 21 nabídek z 2 004 (přepíše se při každém
    běhu), archiv ví o 129. Stránka pozemku je přitom jediné místo, kde
@@ -137,6 +138,15 @@ const POPISY = (() => {
   try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'popisy.json'), 'utf8')) || {}; }
   catch { return {}; }
 })();
+/* KOLIKRÁT KTERÁ VĚTA STOJÍ VE VŠECH POPISECH — počítá se jednou pro
+   celé sestavení. Věta v padesáti a více nabídkách není popis TOHOHO
+   pozemku, je to prodejní text inzerenta, a na stránku Parcelky
+   nepatří: naměřeno 23. 10., že 979 z 2 233 stránek (44 %) vypisovalo
+   „U nás nakupujete přímo od vlastníka…" — na naší stránce se „u nás"
+   čte jako my. Proč měřením a ne seznamem zakázaných vět, co přesně
+   z toho vypadne a co zůstane, stojí u bezReklamy
+   v scripts/text-inzeratu.mjs. */
+const POCTY_VET = pocetnostVet(Object.values(POPISY));
 const WEB = 'https://www.parcelaka.cz';
 
 /* Adresy stránek i únik do HTML drží jedno místo pro celý web
@@ -772,8 +782,49 @@ export function migrujUkoncenaData(h, den) {
     });
 }
 
+/* CIZÍ REKLAMA I ZE STRÁNEK, KTERÉ SE UŽ NESTAVÍ Z DAT.
+ *
+ * Ukončená nabídka v datech není, takže její stránka se nestaví znovu —
+ * bere se hotové HTML a jen se v něm přepne pár věcí. Popis v ní tedy
+ * zůstal v té podobě, v jaké byl naposled vygenerovaný: po zavedení
+ * úklidu reklamy jich 51 z 2 233 pořád vypisovalo „U nás nakupujete…".
+ * Jsou to `noindex` stránky, ale servírují se.
+ *
+ * Patří to proto mezi PŘEPISY, KTERÉ MUSÍ NA KAŽDOU STRÁNKU — stejně
+ * jako migrujUkoncenaData: stránky ukončené dřív, než se pravidlo
+ * zavedlo, chodí jedinou cestou (větev „už ukončená" v uklid()),
+ * a kdyby se úklid dělal jen při ukončování, zůstala by v nich reklama
+ * až do smazání.
+ *
+ * Pozor na pevné mezery: česká sazba v oprav.mjs je do textu vložila
+ * („U\u00a0nás"), takže se pro srovnání s popisy musí vrátit na
+ * obyčejné. Sazba si je po úklidu doplní zpátky. */
+export function migrujPopisBezReklamy(obsah) {
+  let h = obsah.replace(/(<p id="pz-popis-text">)([\s\S]*?)(<\/p>)/, (cele, pred, text, za) => {
+    const cisty = bezReklamy(text.replace(/\u00a0/g, ' '), POCTY_VET);
+    return cisty ? pred + cisty + za : '';
+  });
+  /* A TÉŽ VE STARÉM OSTRŮVKU DAT. Popis se kdysi do stránky přikládal
+     jako JSON (`pz-popis-data`) a js/pozemek.js ho odtud pořád umí
+     přečíst. Dnešní generátor ho nepíše — ale 24 ukončených stránek ho
+     v sobě má z doby, kdy se psal, a reklama tím prošla i po úklidu
+     odstavce. Ostrůvek se nemaže: jsou v něm i parcelní údaje, které
+     stránka jinde nemá. */
+  h = h.replace(/(<script type="application\/json" id="pz-popis-data">)([\s\S]*?)(<\/script>)/,
+    (cele, pred, telo, za) => {
+      let text = null;
+      try { text = JSON.parse(telo); } catch (e) { return cele; }
+      if (typeof text !== 'string') return cele;
+      const cisty = bezReklamy(text.replace(/\u00a0/g, ' '), POCTY_VET);
+      return cisty ? pred + jsonVeStrance(cisty) + za : '';
+    });
+  return h;
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
+
+  h = migrujPopisBezReklamy(h);
 
   // 1) Vyhledávačům: neindexovat, ale odkazy sledovat.
   if (/<meta name="robots"/.test(h)) {
@@ -1094,7 +1145,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const blok = blokPro(d);
   const srov = srovnaniPro(d);
   const kamDalSem = kamDal(d);
-  const popisInzerenta = POPISY[klicNabidky(d)];
+  const popisInzerenta = bezReklamy(POPISY[klicNabidky(d)] || '', POCTY_VET) || undefined;
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titul)}</h1>`
@@ -1660,8 +1711,8 @@ export function generuj() {
       /* Úklid komentářů patří mezi přepisy, které musí na KAŽDOU stránku:
          ukončené stránky se jinak nepřepisují, takže by si 221 z nich
          komentáře z předlohy neslo až do smazání. */
-      const migrovano = bezKomentaruVHtml(migrujPrebytecnyDiv(migrujUkoncenaData(
-        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1])));
+      const migrovano = bezKomentaruVHtml(migrujPopisBezReklamy(migrujPrebytecnyDiv(migrujUkoncenaData(
+        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1]))));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }

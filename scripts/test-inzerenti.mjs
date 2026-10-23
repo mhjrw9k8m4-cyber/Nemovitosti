@@ -26,7 +26,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { otiskInzerenta } from './text-inzeratu.mjs';
+import { otiskInzerenta, pocetnostVet, MEZ_OPAKOVANI } from './text-inzeratu.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -110,6 +110,41 @@ let bezPriznani = 0;
 for (const o of bezZnacky) { const p = M2.percentil(o); if (p && p.podilInz > 0) bezPriznani++; }
 pravda('a bez značky model žádné soustředění nehlásí (je to z dat, ne z kódu)',
   bezPriznani === 0, `${bezPriznani} verdiktů hlásí soustředění i bez značky`);
+
+/* ---- C2) CIZÍ REKLAMA NA STRÁNKÁCH POZEMKŮ ------------------------
+   Naměřeno 23. 10.: 979 z 2 233 stránek pozemků vypisovalo prodejní
+   text toho velkoobchodníka („U nás nakupujete přímo od vlastníka…").
+   Na stránce Parcelky se „u nás" čte jako Parcelka. Pravidlo je
+   měřené, ne vypsané: věta v padesáti a více nabídkách není popis
+   TOHOHO pozemku (viz bezReklamy v scripts/text-inzeratu.mjs).
+
+   Zkouška si ten seznam spočítá sama ze stejných dat a hledá ho na
+   stránkách — proto tu nestojí žádná „zakázaná věta". Pevné mezery se
+   srovnají, protože česká sazba je do stránek vložila. */
+const opakovane = [...pocetnostVet(Object.values(popisy))]
+  .filter(([, n]) => n >= MEZ_OPAKOVANI).map(([v]) => v);
+pravda(`opakovaných vět se našlo (${opakovane.length})`,
+  opakovane.length >= 2 && opakovane.length <= 50,
+  `${opakovane.length} — buď pravidlo nic nenajde, nebo začalo jíst i věcný text`);
+
+const stranky = fs.readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
+let sReklamou = 0, sFakty = 0;
+const kde = [];
+for (const f of stranky) {
+  const h = fs.readFileSync(path.join(KOREN, f), 'utf8').replace(/\u00a0/g, ' ');
+  if (/Parcela č\./.test(h)) sFakty++;
+  for (const v of opakovane) {
+    if (h.includes(v)) { sReklamou++; if (kde.length < 3) kde.push(f + ': ' + v.slice(0, 50)); break; }
+  }
+}
+pravda(`stránek pozemků se prohlédlo (${stranky.length})`, stranky.length >= 2000,
+  'málo stránek — zkouška nic neměří');
+pravda('žádná z nich nevypisuje opakovanou reklamu inzerenta',
+  sReklamou === 0, `${sReklamou} stránek:\n      ` + kde.join('\n      '));
+/* A DRUHÁ STRANA TÉHOŽ: úklid nesmí sebrat parcelní údaje, pro které
+   ten popis na stránce vůbec je. */
+pravda(`a parcelní údaje na stránkách zůstaly (${sFakty})`, sFakty >= 1000,
+  `jen ${sFakty} stránek má „Parcela č." — úklid vzal i fakta`);
 
 /* ---- D) ÚVODNÍ STRÁNKA TAKOVOU NABÍDKU NEDOPORUČÍ -----------------
    „Nejlepší příležitosti" je doporučení, ne jen číslo — a doporučovat

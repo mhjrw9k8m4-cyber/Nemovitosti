@@ -9188,3 +9188,64 @@ ze stránky pozemku.
 **Co tím zavřené NENÍ.** Pořád je to obvaz: 47 % dat od jednoho
 prodejce je vada zdroje, ne výpočtu. Druhý zdroj nabídek je první bod
 v `docs/pro-majitele.md` a tahle zkouška je důvod, proč.
+
+## 136. Devět set stránek vypisovalo reklamu konkurence *23. 10.*
+
+Na stránce pozemku je oddíl „Co o pozemku píše inzerent" — popis
+z cizího inzerátu. Naměřeno: **979 z 2 233 stránek (44 %)** v něm
+vypisovalo prodejní text jednoho velkoobchodníka:
+
+> U nás nakupujete přímo od vlastníka – bez prostředníků a bez
+> zbytečných výdajů navíc! … Pomáháme lidem bezpečně investovat do
+> pozemků … Přidejte se k těm, kteří vsadili na jistotu.
+
+Tři vady naráz. **„U nás" se na stránce Parcelky čte jako Parcelka** —
+web slibuje něco, co nikdo neslíbil. Devět set stránek má **totožný
+úvodní odstavec**, což je pro vyhledávač šablona, ne obsah. A je to
+reklama konkurenčního inzerenta na našem webu.
+
+**Pravidlo je z měření, ne ze seznamu zakázaných vět:** věta, která
+stojí v padesáti a více různých nabídkách, není popis TOHOTO pozemku.
+Na ostrých datech takových vět vyšlo **osm** a jsou to právě ty
+prodejní; nic věcného mezi nimi není. Seznam by zestaral, měření se
+přepočítá při každém sestavení.
+
+**Dělení na věty musí umět zkratky.** „k.ú. Horusice LV č. 26 o výměře
+3772 m²" má čtyři tečky a žádný konec věty. S obyčejným dělením podle
+tečky vyšly jako nejčastější „věty" úlomky **„Parcela č." (1 286×)**
+a **„k.ú." (1 118×)** — a pravidlo by zahodilo právě ta fakta, pro
+která ten popis na stránce je.
+
+**A reklamu nestačilo mazat po větách.** Po prvním kroku zůstala ve
+298 popisech, protože se k ní faktická část přilepila bez tečky:
+*„…Parcela č. 3619/57 - o výměře 4815 m² (Lesní pozemek) Pomáháme lidem
+bezpečně investovat…"*. Dělení podle vět to vzalo jako jednu větu a ta
+v padesáti nabídkách není. Naměřené věty se proto mažou i jako úryvek.
+
+**Dvě cesty, kudy se to na stránku dostávalo, a každá chtěla svou
+opravu:**
+
+1. **Živé stránky** — generátor čistí popis před zápisem. Hotovo jednou
+   změnou v `scripts/generate-parcel-pages.mjs`.
+2. **Ukončené stránky** (nabídka už v datech není) se z dat nestaví;
+   bere se hotové HTML a jen se v něm přepne pár věcí. Po první opravě
+   jich **51 reklamu dál vypisovalo**. Úklid proto patří mezi „přepisy,
+   které musí na KAŽDOU stránku" (`migrujPopisBezReklamy`), stejně jako
+   migrace strojových dat.
+3. A i pak zbývalo **24 stránek**: mají v sobě **starý ostrůvek dat**
+   `pz-popis-data`, který dnešní generátor už nepíše, ale `js/pozemek.js`
+   ho pořád umí přečíst. Maže se v něm reklama, ne ostrůvek: jsou v něm
+   parcelní údaje, které ta stránka jinde nemá.
+
+**Výsledek:** 979 → **0** stránek s tou reklamou. Medián popisu klesl
+ze 411 na 256 znaků (−38 %), **ani jeden popis nezmizel celý** a
+parcelní údaje („Parcela č.") má dál **všech 1 374 stránek**, které je
+měly. Jediná stránka si „Pomáháme lidem…" nechala a je to správně: ta
+věta je tam vlepená do unikátního textu o lesním hospodaření, který
+v datech stojí jednou — a jednou není šablona.
+
+Hlídá to `scripts/test-inzerenti.mjs`: seznam opakovaných vět si
+spočítá ze stejných dat (žádná „zakázaná věta" v kódu zkoušky není),
+prohlédne všech 2 232 stránek a žádnou tam nesmí najít — a zároveň
+žádá, aby parcelní údaje zůstaly aspoň na tisíci stránkách. Sabotáž
+oběma směry: snížená mez (úklid začne jíst fakta) i vypnutý úklid.

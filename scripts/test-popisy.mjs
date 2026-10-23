@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { cistyPopis } from './fetch-opportunities.mjs';
 import { stranka, klicNabidky } from './generate-parcel-pages.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { pocetnostVet, bezReklamy } from './text-inzeratu.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -142,10 +143,20 @@ if (popisProVzor) {
      stejně jako lomená závorka. */
   pravda('a ampersand je v něm jen jako entita',
     !!m && !/&(?!(amp|lt|gt|quot|#\d+|#x[0-9a-f]+);)/i.test(m[1]), m ? m[1].slice(0, 80) : '');
-  pravda('a stejný text je i v datech', !!m
+  /* TEXT V HTML SE ROVNÁ DATŮM — PO ÚKLIDU REKLAMY, ne surovým.
+     Od 23. 10. se z popisu zahazují věty, které stojí v padesáti a více
+     nabídkách (prodejní text inzerenta, oddíl 136 v
+     docs/optimalizace.md). Srovnávat se surovým souborem by tedy teď
+     bylo srovnávání se stavem před úklidem — a tahle kontrola je
+     o tom, že si stránka text NEVYMÝŠLÍ, ne o tom, že se neuklízí.
+     Čistí se stejnou funkcí, jakou použil generátor; kdyby se rozešly,
+     nesedělo by to. */
+  const pocty = pocetnostVet(Object.values(JSON.parse(fs.readFileSync(POPISY, 'utf8'))));
+  const ocekavany = bezReklamy(String(popisProVzor), pocty);
+  pravda('a stejný text je i v datech (po úklidu reklamy inzerenta)', !!m
     && m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/[\s\u00a0]+/g, ' ').trim()
-       === String(popisProVzor).replace(/[\s\u00a0]+/g, ' ').trim(),
-    'text v HTML se rozešel s data/popisy.json');
+       === ocekavany.replace(/[\s\u00a0]+/g, ' ').trim(),
+    'text v HTML se rozešel s data/popisy.json po úklidu');
 }
 const pz = fs.readFileSync(path.join(ROOT, 'js', 'pozemek.js'), 'utf8');
 pravda('stránka ten popis opravdu čte z HTML', pz.indexOf("getElementById('pz-popis-text')") !== -1);
