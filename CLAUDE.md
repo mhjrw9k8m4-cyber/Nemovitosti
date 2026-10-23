@@ -573,3 +573,26 @@ nepravdy a spadl by sám na sobě, takže se dnes vynechává řádek
 s uvozovkami, ne celá složka se zkouškami. Když se píše nová výjimka,
 patří k ní věta, co přesně kryje — a měření, co po ní zbyde
 nepokryté.
+
+### Nový vložený skript ve stránce znamená nový hash v CSP
+
+Od 23. 10. nese každá stránka `Content-Security-Policy` v `<meta>`
+a `script-src` je bez `'unsafe-inline'` — vložený skript se spustí
+jen tehdy, když je jeho hash v hlavičce. Hashe počítá
+`scripts/csp.mjs` jako krok `oprav.mjs`, takže **po každé změně
+vloženého skriptu (i o jeden znak) se musí pustit `node
+scripts/oprav.mjs`**, jinak si prohlížeč vlastní skript stránky
+zakáže. Hlídá to `scripts/test-csp.mjs` a doloženo je to sabotáží
+v obou směrech. Cizí původ (nový obrázkový server, nové API) patří
+do politiky v `scripts/csp.mjs`, a adresa Supabase se tam neopisuje
+— čte se z `js/config.js`.
+
+Dvě věci k tomu patří. **Generátor nesmí hlavičku dědit
+z předlohy** — předloha má jiné vložené skripty, takže zděděný hash
+stránku rozbije (naměřeno na 1 930 stránkách); kdo pouští generátor
+v živém adresáři, dohání si po něm `csp.mjs` stejně, jako si už
+dohání `sazba.mjs`. A **`'unsafe-eval'` nese jen `pridat.html`**, kde
+bez něj nepoběží kontrola fotek; je to odvozené pravidlem (bere
+`pridat.js`/`fototema.js` a má `<input type="file">`), ne seznamem,
+a zkouška hlídá oba směry i to, že si žádný skript v `js/`
+nepouští text jako kód.

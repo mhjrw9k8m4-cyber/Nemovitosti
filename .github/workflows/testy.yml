@@ -657,6 +657,9 @@ jobs:
       - name: Sazba v textu, který skládá prohlížeč
         run: node scripts/test-sazba-dom.mjs
 
+      - name: CSP platí a zastaví podstrčený skript
+        run: node scripts/test-csp.mjs
+
   v-prohlizeci-2:
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub

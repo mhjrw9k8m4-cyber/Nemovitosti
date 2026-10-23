@@ -7575,3 +7575,126 @@ konkrétnímu důvodu (vlastní text hlídače by sám na sebe spadl) a pak
 tiše kryla celou složku. Správná odpověď není výjimku smazat, ale
 zúžit ji na to, proč vznikla — tady z „celé `test-*.mjs`" na „řádek
 s uvozovkami".
+
+---
+
+## 112. Žádná stránka neměla CSP — a teď ji má i s hashi *23. 10.*
+
+Změřeno: **0 z 2 357 stránek** nesla `Content-Security-Policy`. Web
+běží staticky na GitHub Pages, takže hlavičku v HTTP odpovědi nastavit
+nejde — jedinou cestou je `<meta http-equiv>`.
+
+Proč to vůbec řešit, když se dírka v escapování nenašla: escape je na
+webu napsaný **v jedenácti kopiích** (deset v `js/*.js`, jedna přímo
+v `zpravy.html`) a nic nehlídá, že dvanáctá nezapomene. CSP je druhá
+pojistka — i kdyby se cizí text do HTML dostal, prohlížeč ho nespustí.
+
+### Politika se změřila, neuhádla
+
+Sedm typů stránek se otevřelo v Chromiu a zapsalo se, kam skutečně
+sahají:
+
+| druh zdroje | hosty (počet požadavků) |
+|---|---|
+| script, font, stylesheet | jen vlastní server (96 + 14 + 8) |
+| image | `server.arcgisonline.com` (29), `{a,b,c}.tile.openstreetmap.org` (27) |
+| fetch | vlastní server (3), Supabase (2) |
+
+K tomu z kódu to, co odhlášený návštěvník nevyvolá — poučení z oddílu
+108, kde hlídači vzhledu měřili jen odhlášený stav: fotky inzerátů ze
+Supabase Storage a geokodér `nominatim.openstreetmap.org`
+(`js/pridat.js`). Adresa Supabase se do politiky **neopisuje**, čte se
+z `js/config.js`, aby se nemohla rozejít s tím, kam aplikace mluví.
+
+### Co to stojí a co to neumí
+
+Vložených **spustitelných** skriptů je 4 767 (plus 9 149 datových
+bloků `application/json` a 2 351 JSON-LD, které prohlížeč nespouští,
+takže hash nepotřebují). Na stránku to dělá 1–7 hashů, tedy **54–378 B**
+navíc v HTML.
+
+Dvě poctivá omezení:
+
+* **`frame-ancestors`, `report-uri` a `sandbox` prohlížeč v `<meta>`
+  ignoruje.** Klikjacking tedy tahle cesta neuzavře a porušení se nikam
+  nehlásí; obojí chce hlavičku ze serveru. Zapsáno do
+  `docs/pred-vydanim.md`, aby se na to při přechodu z GitHub Pages
+  nezapomnělo.
+* **`style-src` má `'unsafe-inline'`.** Vložených atributů `style=` je
+  naměřeno 33 na okresní stránce a 15 na úvodní — počítaná geometrie
+  grafů. CSP hashuje obsah `<style>`, ne atribut; zbylo by
+  `'unsafe-hashes'` s hashem každé hodnoty, tedy nový hash při každém
+  běhu robota. Styl neumí spustit kód, zisk by byl nulový. U skriptů
+  `'unsafe-inline'` není a hlídá se, že nepřibude.
+
+### Doloženo sabotáží v obou směrech
+
+`scripts/test-csp.mjs` umí stránku na požádání napadnout: vloží do ní
+vložený skript a odkaz na cizí skript.
+
+* **se hlavičkou** → skript se nespustí a prohlížeč ohlásí porušení
+  `script-src` (i u cizího serveru),
+* **bez hlavičky** → skript se spustí.
+
+Ten druhý směr je v zkoušce schválně: bez něj by „zablokováno" mohlo
+znamenat jen to, že se podstrčení nepovedlo, a zkouška by prošla,
+i kdyby CSP nedělala vůbec nic. K tomu se měří, že se stránka opravdu
+vykreslila (počet uzlů v DOM) — politika, která zakáže vlastní skripty
+stránky, by jinak prošla jako „bez porušení" nad mrtvou stránkou.
+Jedenáct typů stránek, 0 porušení, 15 kontrol.
+
+### Jedna výjimka, změřená: kontrola fotek bez `eval` nepoběží
+
+Pod touhle politikou se kontrola fotek AI modelem (`vendor/tfjs`
++ `vendor/nsfwjs`) **nerozjede vůbec** — `tf.ready is not a function`
+a čtyři porušení (dvě „eval", dvě „wasm-eval"). Vyzkoušené varianty:
+
+| přidáno do `script-src` | výsledek |
+|---|---|
+| `'wasm-unsafe-eval'` | nestačí, zbydou dvě porušení „eval" |
+| `'unsafe-eval'` | projde, model klasifikuje |
+| `'unsafe-eval' 'wasm-unsafe-eval'` | projde taky — wasm navíc netřeba |
+
+Povolit `eval` celému webu by znamenalo vzdát se většiny toho, k čemu
+CSP je. Výjimku proto dostane jen stránka, která si model opravdu může
+načíst, a **pozná se pravidlem, ne ručním seznamem**: bere
+`js/pridat.js` nebo `js/fototema.js` (jediná dvě místa, odkud se tfjs
+stahuje) a má ve zdroji `<input type="file">`. Dnes to dělá **jedna
+stránka z 2 357**. Čtrnáct stránek ten skript bere, ale třináct z nich
+formulář s fotkou nemá — změřeno v prohlížeči, že na nich po doběhnutí
+JS žádné `input[type=file]` nevznikne a `PKKontrola` se ani nezaloží.
+
+Dvě pojistky, aby se z výjimky nestala tichá dírka: zkouška hlídá, že
+`'unsafe-eval'` nenese žádná jiná stránka (**a také že ho ta jedna
+nese** — jinak kontrola fotek tiše přestane fungovat), a že si žádný
+skript v `js/` nepouští text jako kód (`eval`, `new Function`).
+Krokům sestavení v `scripts/` se to nezakazuje: tak si
+`generate-parcel-pages.mjs` načítá `js/ceny.js`, aby počítal týmiž
+čísly jako web, a do prohlížeče se z toho nedostane nic.
+
+Zkouška navíc měří **oba směry**: s výjimkou model klasifikuje, bez ní
+padne na `script-src`. Povolení, o kterém se neví, jestli je k čemu, by
+jinak v politice zůstalo navždy.
+
+### Čeho jsem si málem nevšiml: hlavička zděděná z předlohy
+
+Stránky pozemků se generují z `pozemek.html` jako z předlohy — a tím se
+do nich dostala i **její** hlavička CSP. Předloha má svoje vložené
+skripty, vygenerovaná stránka k nim přidává datový blok
+`window.PK_POZEMEK`, takže hash předlohy pro ni neplatí. Naměřeno po
+samostatném běhu generátoru: **1 930 stránek** mělo hlavičku o jeden
+hash kratší, vlastní skript stránky padl na `script-src-elem` a ze
+stránky zbylo **157 uzlů místo 382** — tedy rozbitá stránka, ne jen
+nechráněná.
+
+Chytila to zkouška, a to ve všech třech vrstvách naráz (chybějící hash,
+ohlášené porušení, i podkročený počet uzlů). Opraveno dvakrát:
+
+* generátor hlavičku z předlohy **maže** — chybějící hlavička web jen
+  nechrání, kdežto chybná ho rozbije, a tohle zajistí, že vznikne
+  jedině ten první, zkouškou odhalitelný případ;
+* `scripts/test-ukonceno.mjs`, který generátor pouští v živém adresáři,
+  si po něm CSP **dohání zpátky** — přesně jak už si doháněl českou
+  sazbu. Ten komentář u sazby popisoval tenhle druh poruchy do detailu
+  („zkouška padne na vadu, kterou nezpůsobila") a o dva měsíce později
+  se stalo totéž s hlavičkou.

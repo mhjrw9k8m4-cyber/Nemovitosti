@@ -60,6 +60,12 @@ const KROKY = [
      ve stránkách přepisuje z css/styles.min.css, který vyrobí krok výš. */
   ['rozdel-styly.mjs', 'zkrácený stylopis pro stránky bez mapy'],
   ['orazitkuj-verze.mjs', 'razítka ?v= u skriptů a stylů'],
+  /* Až ZA razítkováním a za všemi generátory: hashe v CSP se počítají
+     z hotového obsahu vložených skriptů, a razítka ?v= ten obsah
+     mění (vložené skripty si samy dotahují další soubory). Kdyby
+     tenhle krok běžel dřív, hlavička by hashem nesouhlasila a
+     prohlížeč by vlastní skripty stránky zakázal. */
+  ['csp.mjs', 'hlavička CSP s hashi vložených skriptů'],
   ['build-sql.mjs', 'sloučené supabase/00-vse.sql'],
   /* Až na konci: tabulka stavu v roadmapě počítá stránky, zkoušky
      i funkce v databázi, takže musí vidět hotový výsledek. */

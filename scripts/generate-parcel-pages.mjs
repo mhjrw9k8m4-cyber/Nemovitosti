@@ -1550,7 +1550,18 @@ export function nabidky() {
 }
 
 export function generuj() {
-  const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8');
+  /* HLAVIČKA CSP SE Z PŘEDLOHY NEDĚDÍ. Předloha má svoje vložené
+     skripty, stránka pozemku k nim přidává datový blok window.PK_POZEMEK
+     — hash předlohy tedy pro vygenerovanou stránku NEPLATÍ a prohlížeč
+     by její vlastní skript zakázal. Naměřeno 23. 10.: po samostatném
+     běhu tohohle generátoru mělo 1 930 stránek hlavičku o jeden hash
+     kratší, vložený skript padl na script-src-elem a ze stránky zbylo
+     157 uzlů místo 382. Hlavičku proto osazuje až scripts/csp.mjs jako
+     poslední krok oprav.mjs; chybějící hlavička web jen nechrání,
+     kdežto CHYBNÁ ho rozbije — a tohle smazání zajistí, že vznikne
+     jedině ten první případ. */
+  const sablona = fs.readFileSync(path.join(ROOT, 'pozemek.html'), 'utf8')
+    .replace(/[ \t]*<meta http-equiv="Content-Security-Policy"[^>]*>\n?/, '');
   const hotove = [];
   /* Datum poslední změny jde VEDLE seznamu jmen, ne místo něj: `hotove`
      se níž používá jako `new Set(hotove)` k poznání, které stránky na

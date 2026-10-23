@@ -177,6 +177,14 @@ spouští a zatím je přidání zdarma.
 **Chybí:** IČO pro ostrý režim a klíče Stripe. Do té doby se nic
 neúčtuje a web nic neslibuje.
 
+**Až se platby zapnou, patří k tomu jeden řádek v CSP.** Stránka
+bude volat `api/create-checkout.js`; pokud ten koncový bod poběží na
+jiné adrese než web, musí se přidat do `connect-src`
+v `scripts/csp.mjs` (dnes tam je jen vlastní server, Supabase
+a geokodér). Samo přesměrování na Stripe Checkout je navigace, tu
+CSP neřeší. Hlídá to `scripts/test-csp.mjs`: kdyby se volalo nikam
+nepovolené, zkouška ohlásí porušení `connect-src`.
+
 ---
 
 ## 5. Upozornění do telefonu (push)
@@ -195,6 +203,17 @@ Hotové je všechno ostatní: migrace, service worker, strana prohlížeče,
 
 - `APIFY_TOKEN` + `APIFY_SREALITY_ACTOR` — přidá Sreality jako zdroj
   nabídek. Bez klíče se zdroj přeskočí, nic se nerozbije.
+
+- **Až kdyby web běžel jinde než na GitHub Pages: tři hlavičky,
+  které jde nastavit jen ze serveru.** Od 23. 10. nese každá stránka
+  CSP v `<meta>` (viz `docs/optimalizace.md`, oddíl 112), ale
+  prohlížeč v `<meta>` ignoruje `frame-ancestors`, `report-uri`
+  a `sandbox`. Na vlastním hostingu tedy přibude:
+  `Content-Security-Policy: frame-ancestors 'none'` (nebo
+  `X-Frame-Options: DENY`) proti vložení webu do cizího rámu,
+  `Referrer-Policy: strict-origin-when-cross-origin`
+  a `Strict-Transport-Security`. **Nic z toho nedrží vydání** — je to
+  zápis, aby se na to nezapomnělo, když se hosting změní.
 
 ---
 

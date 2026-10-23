@@ -72,6 +72,12 @@ function generuj() {
     { cwd: KOREN, stdio: 'ignore' });
   execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'sazba.mjs')],
     { cwd: KOREN, stdio: 'ignore' });
+  /* Totéž, co o sazbě výš, platí od 23. 10. o hlavičce CSP: hashe
+     vložených skriptů osazuje až scripts/csp.mjs, takže po tomhle běhu
+     by 1 930 stránek pozemků zůstalo bez hlavičky a test-csp by padl na
+     vadu, kterou nezpůsobil. Naměřeno — přesně to se stalo. */
+  execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'csp.mjs')],
+    { cwd: KOREN, stdio: 'ignore' });
 }
 
 function hotovo() {
