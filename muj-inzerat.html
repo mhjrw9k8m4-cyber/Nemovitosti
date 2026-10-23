@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-QZSqew5u3lP6RC6dKtV3n1HUy3ylFdqZD7RdpMvDTaM=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-vdbRFpBVwd1TQrgYPMJi0JydNCn9FgAxdqFils7bd70=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
   <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
@@ -643,6 +643,30 @@
         hl.textContent = fmt(res.data.length);
       }, function () {});
     }
+    /* Smaže fotky inzerátu z úložiště. Jedním dotazem, protože Storage API
+       bere seznam; mazat smí jen vlastník (politika „listing photos owner
+       delete"), takže cizí fotku tím nikdo nesmaže, i kdyby si seznam
+       podstrčil. Vrací slib, který se nikdy neodmítne — mazání inzerátu
+       na něm nesmí záviset. */
+    function smazFotky(seznam) {
+      var cesty = (seznam || []).map(function (u) {
+        var m = /\/object\/public\/listing-photos\/(.+)$/.exec(String(u || ''));
+        return m ? decodeURIComponent(m[1]) : '';
+      }).filter(Boolean);
+      var sbUrl = (window.PK_SUPABASE_URL || '').replace(/\/+$/, '');
+      var sbKey = window.PK_SUPABASE_KEY || '';
+      var tok = (A && A.token && A.token()) || '';
+      if (!cesty.length || !sbUrl || !sbKey || !tok) return Promise.resolve(false);
+      try {
+        return fetch(sbUrl + '/storage/v1/object/listing-photos', {
+          method: 'DELETE',
+          headers: { 'apikey': sbKey, 'Authorization': 'Bearer ' + tok,
+            'Content-Type': 'application/json' },
+          body: JSON.stringify({ prefixes: cesty })
+        }).then(function (r) { return !!r.ok; }, function () { return false; });
+      } catch (e) { return Promise.resolve(false); }
+    }
+
     function load(attempt) {
       attempt = attempt || 0;
       statusEl.hidden = false; statusEl.textContent = 'Načítám…'; listEl.innerHTML = '';
@@ -670,11 +694,16 @@
         var pv = q('pf-views'); if (pv) pv.textContent = fmt(totalViews);
         if (!rows.length) { statusEl.hidden = true; emptyEl.hidden = false; return; }
         statusEl.hidden = true;
+        /* Fotky si u každého inzerátu pamatujeme, aby je šlo při mazání
+           odklidit z úložiště. Tlačítka se obsluhují až po vykreslení,
+           kde už řádek z databáze k ruce není. */
+        var fotkyInzeratu = {};
         listEl.innerHTML = rows.map(function (r) {
           var ph = Array.isArray(r.photos) ? r.photos.filter(function (p) {
             return typeof p === 'string' && p.indexOf('"') === -1 &&
               /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/listing-photos\//.test(p);
           }) : [];
+          fotkyInzeratu[r.id] = ph;
           /* NÁHLED MÁ ŘÍCT, ČEHO JE. Prázdný alt je správně u ozdoby —
              u fotky vlastního inzerátu ale ne: je to jediná věc, podle
              které se v seznamu pozná, který inzerát je který, a odečítač
@@ -762,9 +791,21 @@
             var lid = btn.getAttribute('data-del');
             if (!confirm('Opravdu smazat tento inzerát? Zmizí z mapy a nepůjde vrátit.')) return;
             btn.disabled = true;
-            A.rpc('delete_listing', { p_id: lid }, true).then(function (r) {
-              if (r && r.ok && r.data === true) { load(); }
-              else { btn.disabled = false; alert('Smazání se teď nepovedlo, zkuste to prosím znovu.'); }
+            /* FOTKY NEJDŘÍV, INZERÁT POTOM. delete_listing maže jen
+               řádek v listings — fotky zůstanou ležet v úložišti a od
+               23. 10. se počítají do stropu na počet fotek na účet
+               (supabase/uloziste-strop.sql). Bez tohohle kroku by se
+               účet zasekl na fotkách po inzerátech, které už nemá.
+
+               Když se fotky smazat nepovedou, inzerát se smaže TAK ČI
+               TAK: člověk chtěl smazat inzerát, ne fotky, a o zbytek se
+               postará noční úklid (osirele_fotky v témže souboru). Proto
+               se tu nic nehlásí — selhání je samoopravné. */
+            smazFotky(fotkyInzeratu[lid]).then(function () {
+              A.rpc('delete_listing', { p_id: lid }, true).then(function (r) {
+                if (r && r.ok && r.data === true) { load(); }
+                else { btn.disabled = false; alert('Smazání se teď nepovedlo, zkuste to prosím znovu.'); }
+              });
             });
           });
         });

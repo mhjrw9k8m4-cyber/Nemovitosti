@@ -158,6 +158,76 @@ pravda('nezůstane viset „Načítám…"', !b.nacitam, 'stránka se zasekla na
   await ctx.close();
 }
 
+/* --- MAZÁNÍ INZERÁTU MUSÍ ODKLIDIT I FOTKY ------------------------
+   delete_listing v databázi maže JEN řádek v `listings`. Fotky
+   zůstávaly v úložišti navždy — dokud na počet nebyl strop, byla to
+   pomalu rostoucí faktura; od 23. 10. je strop 24 fotek na účet
+   (supabase/uloziste-strop.sql), takže se účet může zaseknout na
+   fotkách po inzerátech, které už nemá.
+
+   Měří se tři věci: že se jde mazat do ÚLOŽIŠTĚ (ne jen do tabulky),
+   že se pošlou cesty těch fotek, co inzerát měl, a že se inzerát smaže
+   i tehdy, když úložiště mazání odmítne — člověk chtěl smazat inzerát,
+   ne fotky, a o zbytek se postará noční úklid. */
+{
+  const UID = UID_MAJITEL;
+  const FOTKY = [
+    'https://projekt.supabase.co/storage/v1/object/public/listing-photos/' + UID + '/prvni.jpg',
+    'https://projekt.supabase.co/storage/v1/object/public/listing-photos/' + UID + '/druha.jpg',
+  ];
+  for (const uloziste of ['přijme', 'odmítne']) {
+    const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 390, height: 844 },
+      isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
+    const page = await ctx.newPage();
+    await page.addInitScript(([u]) => {
+      const t = 'tok-' + u;
+      localStorage.setItem('pk_auth', JSON.stringify({
+        access_token: t, refresh_token: t.replace('tok-', 'ref-'),
+        user: { id: u, email: u + '@test.cz' },
+      }));
+    }, [UID]);
+    page.on('dialog', (d) => d.accept().catch(() => {}));
+    const poradi = [];
+    let telo = '';
+    await page.route('**/rest/v1/rpc/my_listings*', (r) => r.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify([{ id: 'L-1', place: 'Kolín', okres: 'Kolín', area: 1000, price: 500000,
+        photos: FOTKY, views: 3, status: 'approved', created_at: new Date().toISOString() }]),
+    }));
+    await page.route('**/storage/v1/object/listing-photos*', (r) => {
+      poradi.push('uloziste');
+      telo = r.request().postData() || '';
+      return r.fulfill(uloziste === 'přijme'
+        ? { status: 200, contentType: 'application/json', body: '{}' }
+        : { status: 403, contentType: 'application/json', body: '{"message":"nope"}' });
+    });
+    await page.route('**/rest/v1/rpc/delete_listing*', (r) => {
+      poradi.push('inzerat');
+      return r.fulfill({ status: 200, contentType: 'application/json', body: 'true' });
+    });
+    await page.goto(`${BASE}/muj-inzerat.html`, { waitUntil: 'load' });
+    await page.waitForTimeout(2500);
+    const tlacitko = await page.$('[data-del]');
+    pravda(`mazání (${uloziste}): tlačítko Smazat je na kartě`, !!tlacitko,
+      'bez něj by se mazání neměřilo vůbec');
+    if (tlacitko) {
+      await tlacitko.click().catch(() => {});
+      await page.waitForTimeout(1800);
+    }
+    pravda(`mazání (${uloziste}): fotky se mažou v úložišti, ne jen v tabulce`,
+      poradi.indexOf('uloziste') >= 0, 'na úložiště se vůbec nešlo');
+    pravda(`mazání (${uloziste}): a dřív než se smaže inzerát`,
+      poradi.indexOf('uloziste') >= 0 && poradi.indexOf('uloziste') < poradi.indexOf('inzerat'),
+      'pořadí volání: ' + (poradi.join(' → ') || '(žádné)'));
+    pravda(`mazání (${uloziste}): pošlou se cesty obou fotek`,
+      /prvni\.jpg/.test(telo) && /druha\.jpg/.test(telo) && !/object\/public/.test(telo),
+      'tělo: ' + telo.slice(0, 160));
+    pravda(`mazání (${uloziste}): inzerát se smaže`, poradi.indexOf('inzerat') >= 0,
+      'delete_listing se nezavolal — fotky pryč a inzerát zůstal');
+    await ctx.close();
+  }
+}
+
 await browser.close();
 console.log('\nProfil při výpadku serveru');
 console.log(zpravy.join('\n'));

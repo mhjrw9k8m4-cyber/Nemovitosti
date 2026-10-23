@@ -862,6 +862,36 @@ try {
     pravda('a my_photo_space() mu hlásí zbytek, ne nulu', Number(zbyvaPlacenemu) > 0,
       `hlásí ${zbyvaPlacenemu}`);
     psql(['-d', 'zkouska', '-q', '-c', `delete from storage.objects where bucket_id = 'listing-photos'`]);
+
+    /* OSIŘELÉ FOTKY. delete_listing maže jen řádek v listings, fotky
+       zůstanou — a se stropem je to past: účet se zasekne na fotkách,
+       které už k ničemu nepatří. osirele_fotky() je vypíše (mazat je
+       musí Storage API, viz scripts/uklid-databaze.mjs). */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into listings(place, okres, druh, area, price, lat, lng, description, contact_phone, status, user_id, photos)
+         values ('Fotkova','Kolín','orná půda',1000,100000,50,15,'popis','777111222','approved','${F1}',
+                 '["https://x/storage/v1/object/public/listing-photos/${F1}/drzena.jpg"]'::jsonb);
+       insert into storage.objects(bucket_id, name, owner, created_at) values
+         ('listing-photos', '${F1}/drzena.jpg', '${F1}', now() - interval '3 days'),
+         ('listing-photos', '${F1}/osirela.jpg', '${F1}', now() - interval '3 days'),
+         ('listing-photos', '${F1}/vcerejsi.jpg', '${F1}', now() - interval '10 minutes');`]);
+    const osirele = psql(['-d', 'zkouska', '-tAc', `select name from osirele_fotky()`])
+      .trim().split('\n').map((x) => x.trim()).filter(Boolean);
+    pravda('osiřelá fotka se najde', osirele.indexOf(F1 + '/osirela.jpg') >= 0,
+      'vrátilo: ' + (osirele.join(', ') || '(nic)'));
+    pravda('a ta, na kterou inzerát odkazuje, se nenajde',
+      osirele.indexOf(F1 + '/drzena.jpg') < 0, 'úklid by smazal fotku živého inzerátu');
+    pravda('ani ta právě nahraná (ještě nemá k čemu patřit)',
+      osirele.indexOf(F1 + '/vcerejsi.jpg') < 0,
+      'úklid by smazal fotku, která čeká na založení inzerátu');
+    for (const role of ['anon', 'authenticated']) {
+      const r = psqlVse(['-d', 'zkouska', '-tAc', `set role ${role}; select name from osirele_fotky();`]);
+      pravda(`${role} si seznam fotek napříč účty vypsat nesmí`, /ERROR/i.test(r),
+        'prošlo: ' + r.replace(/\s+/g, ' ').slice(0, 90));
+    }
+    psql(['-d', 'zkouska', '-q', '-c',
+      `delete from storage.objects where bucket_id = 'listing-photos';
+       delete from listings where place = 'Fotkova';`]);
   }
 } finally {
   try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}

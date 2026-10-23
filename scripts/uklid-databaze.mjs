@@ -17,9 +17,17 @@
      starší půl roku nehlídá už nic. Index na čase u obou tabulek byl —
      založený pro úklid, který se nenapsal.
 
-   CO TENHLE SKRIPT NEDĚLÁ. Nemaže nic jiného a nic nepřepisuje. Volá
-   dvě funkce v databázi, obě smí spustit jen service_role, a vypíše,
-   kolik řádků ubylo.
+   · osiřelé fotky v úložišti — mazání inzerátu ruší jen řádek
+     v `listings`, takže fotky po smazaných inzerátech tam zůstávají
+     ležet. Od 23. 10. je na počet fotek na účet strop, takže je to
+     past: účet se zasekne na fotkách, které už k ničemu nepatří.
+     Jediný krok, který maže i SOUBOR, ne jen řádek — a musí, protože
+     smazaný řádek v `storage.objects` by soubor schoval před každým
+     dalším úklidem.
+
+   CO TENHLE SKRIPT NEPŘEPISUJE. Nic. Volá funkce v databázi (všechny
+   smí spustit jen service_role), u osiřelých fotek navíc smaže soubory
+   přes Storage API, a vypíše, kolik čeho ubylo.
 
    KDYŽ FUNKCE V DATABÁZI JEŠTĚ NEJSOU (majitel nepustil supabase/
    vykon.sql), skript to řekne a skončí v pořádku — úklid není důvod,
@@ -42,6 +50,29 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
    databáze neodpověděla, skript spadl uprostřed úklidu a volající se
    nedozvěděl, které kroky doběhly. Stav 0 znamená „nedošlo to tam" —
    volající ho umí odlišit od chyby, kterou databáze vrátila sama. */
+/* STEJNÉ VOLÁNÍ, ALE S CELOU ODPOVĚDÍ. rpc() níž krátí tělo na 200
+   znaků, aby se do výpisu nevylila půlka tabulky — u seznamu jmen fotek
+   by se tím ale seznam rozsekal a mazalo by se podle poloviny jména.
+   Tahle podoba tedy tělo nekrátí a používá se JEN tam, kde je odpověď
+   data, ne hláška. */
+async function rpcPlne(jmeno, parametry) {
+  let r;
+  try {
+    r = await fetchSLimitem(`${SUPABASE_URL}/rest/v1/rpc/${jmeno}`, {
+      method: 'POST',
+      headers: {
+        apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(parametry || {}),
+    });
+  } catch (e) {
+    return { stav: 0, telo: 'spojení selhalo: '
+      + ((e && (e.message || e.code)) || 'neznámá chyba').slice(0, 160) };
+  }
+  return { stav: r.status, telo: await r.text() };
+}
+
 async function rpc(jmeno, parametry) {
   let r;
   try {
@@ -88,7 +119,77 @@ for (const [jmeno, parametry, popis] of ukoly) {
   console.log(`• ${jmeno}(): smazáno ${Number.isFinite(kolik) ? kolik : '?'} řádků (${popis}).`);
 }
 
+/* OSIŘELÉ FOTKY V ÚLOŽIŠTI. Mazání inzerátu (delete_listing) ruší jen
+   řádek v `listings` — fotky zůstanou ležet v úložišti `listing-photos`.
+   Dokud úložiště nemělo strop, byla to pomalu rostoucí faktura; od
+   23. 10. má strop na počet fotek na účet (supabase/uloziste-strop.sql),
+   takže je to past: účet se zasekne na fotkách, které už k ničemu
+   nepatří, a sám je neuklidí.
+
+   JE TO DVOUKROK A MUSÍ BÝT. osirele_fotky() jen VYPÍŠE jména; mazat
+   se musí přes Storage API, protože smazat řádek v storage.objects by
+   soubor nechal v úložišti ležet navždy — a ještě by ho schoval před
+   každým dalším úklidem (osiřelý soubor bez řádku už nikdo nenajde).
+
+   Fotky mladší než den se nemažou: mezi nahráním a založením inzerátu
+   je chvíle, kdy na fotku ještě nic neodkazuje, a to je normální stav,
+   ne odpad. */
+const FOTKY_HODIN = Math.max(parseInt(process.env.UKLID_FOTKY_HODIN || '24', 10) || 24, 1);
+const FOTKY_MAX = Math.min(Math.max(parseInt(process.env.UKLID_FOTKY_MAX || '200', 10) || 200, 1), 1000);
+{
+  const { stav, telo } = await rpcPlne('osirele_fotky',
+    { p_starsi_nez_hodin: FOTKY_HODIN, p_limit: FOTKY_MAX });
+  if (stav === 404) {
+    console.log('• osirele_fotky(): v databázi není — pusťte supabase/00-vse.sql. Přeskakuji.');
+  } else if (stav < 200 || stav >= 300) {
+    console.log(`• osirele_fotky(): databáze odpověděla ${stav} — ${telo}`);
+    chyb++;
+  } else {
+    let jmena = [], rozbite = false;
+    try {
+      const d = JSON.parse(telo);
+      if (Array.isArray(d)) jmena = d.map((x) => (x && x.name) || '').filter(Boolean);
+      else rozbite = true;
+    } catch (e) { rozbite = true; }
+    /* NEROZPARSOVANÁ ODPOVĚĎ NENÍ „NIC K ZAHOZENÍ". Kdyby se obojí
+       slilo, vypadala by rozbitá odpověď jako uklizeno a nikdo by se
+       nedozvěděl, že úklid neběží. */
+    if (rozbite) {
+      console.log('• osirele_fotky(): odpověď se nepovedlo přečíst — ' + telo.slice(0, 160));
+      chyb++;
+    } else if (!jmena.length) {
+      console.log('• úklid fotek: nic k zahození.');
+    } else {
+      let r;
+      try {
+        r = await fetchSLimitem(`${SUPABASE_URL}/storage/v1/object/listing-photos`, {
+          method: 'DELETE',
+          headers: {
+            apikey: SERVICE_KEY, Authorization: 'Bearer ' + SERVICE_KEY,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prefixes: jmena }),
+        });
+      } catch (e) {
+        console.log('• úklid fotek: spojení s úložištěm selhalo — '
+          + ((e && (e.message || e.code)) || 'neznámá chyba').slice(0, 120));
+        chyb++;
+      }
+      if (r) {
+        if (r.status >= 200 && r.status < 300) {
+          console.log(`• úklid fotek: smazáno ${jmena.length} osiřelých fotek `
+            + `(starších ${FOTKY_HODIN} h, na které už žádný inzerát neodkazuje).`);
+        } else {
+          console.log(`• úklid fotek: úložiště odpovědělo ${r.status} — `
+            + (await r.text()).slice(0, 160));
+          chyb++;
+        }
+      }
+    }
+  }
+}
+
 if (chyb) {
-  console.log(`::warning::Úklid databáze: ${chyb} z ${ukoly.length} funkcí neproběhlo.`);
+  console.log(`::warning::Úklid databáze: ${chyb} krok${chyb === 1 ? '' : 'y'} neproběhl${chyb === 1 ? '' : 'y'}.`);
 }
 process.exit(0);

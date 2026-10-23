@@ -150,6 +150,7 @@
   var polohaHlaska = '';       // špendlík padl daleko od vybraného okresu
   var duplHlaska = '';         // tentýž pozemek už mezi vlastními inzeráty
   var serverHlaska = '';       // pravidlo, které odmítl server (create_listing)
+  var nahraniHlaska = '';      // fotka se nenahrála do úložiště (a proč)
   var duplPotvrzeno = false;   // člověk řekl „je to jiný pozemek" (druhé klepnutí)
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
@@ -309,8 +310,31 @@
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
       body: blob
     }).then(function (r) {
-      return r.ok ? (SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name)) : null;
-    }).catch(function () { return null; });
+      if (r.ok) return { url: SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name) };
+      /* PROČ SE TO NENAHRÁLO, SE MUSÍ POZNAT. Dřív tu stálo jen
+         `: null` a fotka z inzerátu tiše zmizela — člověk vybral pět
+         a zveřejnily se tři, bez jediného slova. Od 23. 10. má
+         úložiště strop na počet fotek na účet
+         (supabase/uloziste-strop.sql), takže k tichému zmizení je
+         teď i pravidelný důvod, ne jen vypadlá síť.
+         Text chyby čteme, protože jen z něj se strop pozná: spouštěč
+         hlásí „dosažen strop fotek na účet (24)", politika se ozve
+         obecným „row-level security". */
+      return r.text().then(function (t) {
+        var txt = String(t || '');
+        if (/strop fotek/i.test(txt)) {
+          var m = txt.match(/\((\d+)\)/);
+          return { chyba: 'plno', kolik: m ? Number(m[1]) : 0 };
+        }
+        /* Vypršelé přihlášení se taky ozve jako „nesmíš", a to je pro
+           člověka něco úplně jiného než plné úložiště: tam se má znovu
+           přihlásit, tady mazat. Rozhoduje se podle textu a stavu, ne
+           podle toho, co je pravděpodobnější. */
+        if (r.status === 401 || /jwt|expired|token/i.test(txt)) return { chyba: 'auth' };
+        if (/row.?level security/i.test(txt)) return { chyba: 'plno', kolik: 0 };
+        return { chyba: 'jina', stav: r.status };
+      }, function () { return { chyba: 'jina', stav: r.status }; });
+    }).catch(function () { return { chyba: 'sit' }; });
   }
   // Nejdřív zkontroluje VŠECHNY fotky. Když je nějaká zamítnutá, NIC se nenahraje
   // (žádné sirotčí soubory) a vrátí se seznam zamítnutých s důvodem. Až když
@@ -342,10 +366,15 @@
     }, Promise.resolve()).then(function () {
       if (photoRejects.length) return { urls: [], rejected: photoRejects };
       showToast('Nahrávám fotky…');
-      var urls = [];
+      var urls = [], selhani = [];
       return blobs.reduce(function (p, blob, i) {
-        return p.then(function () { return uploadOne(blob, i).then(function (u) { if (u) urls.push(u); }); });
-      }, Promise.resolve()).then(function () { return { urls: urls, rejected: [] }; });
+        return p.then(function () {
+          return uploadOne(blob, i).then(function (u) {
+            if (u && u.url) urls.push(u.url);
+            else if (u) selhani.push(u);
+          });
+        });
+      }, Promise.resolve()).then(function () { return { urls: urls, rejected: [], selhani: selhani }; });
     });
   }
 
@@ -400,6 +429,32 @@
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';   // zamítnuté fotky → hláška, nic se nezveřejní
+      /* Nenahrané fotky inzerát NEZVEŘEJNÍ. Zveřejnit ho bez nich by
+         znamenalo, že člověk uvidí svůj inzerát jinak, než jak ho
+         poslal — a nedozví se proč. */
+      if (pr.selhani && pr.selhani.length) {
+        if (pr.selhani.some(function (x) { return x.chyba === 'auth'; })) return 'auth';
+        var plno = pr.selhani.filter(function (x) { return x.chyba === 'plno'; })[0];
+        if (plno) {
+          /* RADA MUSÍ BÝT PRAVDIVÁ. Napsat „smažte starší inzerát"
+             by byla lež, dokud mazání inzerátu neodklízí i jeho fotky
+             z úložiště — smazal by inzerát a místo by se neuvolnilo.
+             Proto se tu radí jen to, co člověk opravdu může udělat sám:
+             poslat méně fotek. Odklízení řeší úkol o osiřelých fotkách
+             (viz docs/slaba-mista.md). */
+          nahraniHlaska = 'Úložiště fotek je u vašeho účtu plné'
+            + (plno.kolik ? ' (vejde se ' + plno.kolik + ' fotek na účet)' : '')
+            + '. Zkuste prosím přidat méně fotek — nebo nám dejte vědět přes '
+            + '<a href="kontakt.html">kontakt</a> a místo vám uvolníme.';
+        } else if (pr.selhani.some(function (x) { return x.chyba === 'sit'; })) {
+          nahraniHlaska = 'Fotky se nepodařilo nahrát — vypadá to na spojení. '
+            + 'Zkuste to prosím znovu.';
+        } else {
+          nahraniHlaska = 'Fotky se nepodařilo nahrát (' + pr.selhani.length + ' z '
+            + (pr.selhani.length + ((pr.urls && pr.urls.length) || 0)) + '). Zkuste to prosím znovu.';
+        }
+        return 'nahrani';
+      }
       // Fotky, které v sobě mají souřadnice, porovnáme s obcí z inzerátu.
       // Fotka z druhého konce republiky k pozemku nepatří.
       mistoHlaska = '';
@@ -1088,6 +1143,13 @@
         } else if (r === 'photos') {
           var names = (typeof photoRejects !== 'undefined' ? photoRejects : []).map(function (x) { return '„' + x.name + '" (' + x.reason + ')'; }).join(', ');
           ms.innerHTML = 'Některé fotky jsme nepřijali: ' + escHtml(names) + '. Odeberte je prosím a přidejte fotky pozemku.';
+          ms.classList.add('err');
+        } else if (r === 'nahrani') {
+          /* innerHTML, protože u plného úložiště je v hlášce odkaz na
+             kontakt. Do textu jde jedině číslo ze serveru (počet fotek),
+             takže není co escapovat — a kdyby přibylo cokoli dalšího,
+             musí projít escHtml. */
+          ms.innerHTML = nahraniHlaska;
           ms.classList.add('err');
         } else if (r === 'auth') {
           ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';

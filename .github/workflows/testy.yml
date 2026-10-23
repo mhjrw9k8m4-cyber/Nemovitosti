@@ -468,12 +468,353 @@ jobs:
   # dohlíží scripts/test-staticka.mjs (každá zkouška právě jednou)
   # a scripts/test-roadmap.mjs (počty v README).
 
+
   v-prohlizeci:
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
     # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
-    # té doby nespustí. Směna má naměřeno kolem 31 minut, strop je
-    # tedy skoro dvojnásobek — první směna (61 zkoušek).
+    # té doby nespustí. Směna má naměřeno kolem 20 minut, strop je
+    # tedy víc než dvojnásobek — 1. směna (43 zkoušek).
+    timeout-minutes: 50
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prohlížeč
+        run: |
+          # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
+          # verze, takže se instalovalo to, co bylo na npm nejnovější
+          # v minutě běhu — jednou to rozsvítilo CI při zelené zkoušce
+          # (oddíl 101: page.accessibility v 1.64 neexistuje). Zvednout
+          # verzi je od teď změna v repozitáři, kterou je vidět.
+          # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
+          # ne životním skriptem balíčku.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+          # Verze zůstává v logu: hádat se o příčině červené CI se nemá
+          # podle dojmu, ale podle čísla, které je vidět na první pohled.
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
+      - name: Co má hidden, nesmí být vidět
+        run: node scripts/test-skryte.mjs
+
+      - name: Vazby ARIA vedou na prvky, které existují
+        run: node scripts/test-aria-cile.mjs
+
+      - name: Tlačítko „nahoru" na dlouhých stránkách
+        run: node scripts/test-nahoru.mjs
+
+      - name: Ovládání mapy (klepání do plátna)
+        run: node scripts/test-mapa.mjs
+
+      - name: Parcelní číslo z inzerátu — a kdy se o něm mlčí
+        run: node scripts/test-parcely-z-textu.mjs
+
+
+      - name: Profil při výpadku netvrdí, že inzeráty nemáte
+        run: node scripts/test-profil-vypadek.mjs
+
+      - name: „Výhodná cena" jen tam, kde je čím ji podložit
+        run: node scripts/test-vyhodna-cena.mjs
+
+      - name: Offline režim (service worker, bez signálu i bez cizích serverů)
+        run: node scripts/test-offline.mjs
+
+
+      - name: Letecký snímek pozemku (měřítko a poctivost)
+        run: node scripts/test-snimek.mjs
+
+      - name: Patička (rozvržení na počítači i na telefonu)
+        run: node scripts/test-paticka.mjs
+
+      - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
+        run: node scripts/test-uvod.mjs
+
+      - name: Viditelnost okrajů (WCAG 1.4.11)
+        run: node scripts/test-okraje.mjs
+
+      - name: Funkční kontrola stránek a odkazů
+        run: node scripts/test-stranky.mjs
+
+      - name: Hlídání v aplikaci (celá cesta)
+        run: node scripts/test-hlidani-prohlizec.mjs
+
+      - name: Na co je vidět, na to se dá klepnout
+        run: node scripts/test-pod-hlavickou.mjs
+
+      - name: Mezera mezi číslem a slovem (text stránky, ne jen vzhled)
+        run: node scripts/test-cislo-a-slovo.mjs
+
+      - name: Hlavička vstupní stránky (nadpis vlevo, čísla vpravo)
+        run: node scripts/test-hlavicka-stranky.mjs
+
+      - name: Seznam nabídek (názvy obcí na jedné svislici)
+        run: node scripts/test-seznam-nabidek.mjs
+
+      - name: Přidání vlastního pozemku (celá cesta)
+        run: node scripts/test-pridat.mjs
+
+      - name: Nářadí výpisu je na dosah
+        run: node scripts/test-nastroje-v-dosahu.mjs
+
+      - name: Uložené pozemky v profilu
+        run: node scripts/test-profil-ulozene.mjs
+
+      - name: Zpráva od cizího člověka je text, ne kód
+        run: node scripts/test-escape-zpravy.mjs
+
+      - name: Projít chat v prohlížeči
+        run: node scripts/test-chat-prohlizec.mjs
+
+      - name: Odhlášení z e-mailů a přepínač posílání
+        run: node scripts/test-odhlaseni.mjs
+
+      - name: Přihlášení (web neodhlašuje sám od sebe)
+        run: node scripts/test-prihlaseni.mjs
+
+      - name: Vrstvení (co je nad čím)
+        run: node scripts/test-vrstveni.mjs
+
+      - name: Co se pod myší zvedne, na to musí jít kliknout
+        run: node scripts/test-zdvih.mjs
+
+      - name: Do posuvné oblasti se vejde aspoň jedna položka
+        run: node scripts/test-vmacknuto.mjs
+
+      - name: Našeptávač obcí a oprava překlepu
+        run: node scripts/test-naseptavac.mjs
+
+      - name: Historie ceny u pozemku sedí na archiv
+        run: node scripts/test-cenova-historie.mjs
+
+      - name: U verdiktu o ceně je vidět, z kolika nabídek vyšel
+        run: node scripts/test-vzorek-verdiktu.mjs
+
+      - name: Měření návštěvnosti (co se posílá a co ne)
+        run: node scripts/test-mereni.mjs
+
+      - name: Kreslení výběru na mapě (filtruje podle tvaru)
+        run: node scripts/test-kresleni.mjs
+
+      - name: Hlídané místo a pozemky v okolí
+        run: node scripts/test-okoli.mjs
+
+      - name: Barva u verdiktu o ceně
+        run: node scripts/test-verdikt.mjs
+
+      - name: Výpadek dat a mrtvé záznamy
+        run: node scripts/test-vypadky.mjs
+
+      - name: Odolnost proti vloženému kódu (XSS)
+        run: node scripts/test-xss.mjs
+
+      - name: JSON ve stránce (nejde rozbít cizím textem)
+        run: node scripts/test-json-ve-strance.mjs
+
+      - name: Rozbalovací seznam (myší i klávesou)
+        run: node scripts/test-rozbalovac.mjs
+
+      - name: Okno „Stáhnout výběr" (co slíbí, to stáhne)
+        run: node scripts/test-vyvoz-okno.mjs
+
+      - name: Graf vývoje cenové hladiny
+        run: node scripts/test-graf-cen.mjs
+
+      - name: Letecké náhledy se stahují až před očima
+        run: node scripts/test-line-dlazdice.mjs
+
+      - name: Soukromá poznámka k pozemku
+        run: node scripts/test-poznamky.mjs
+
+
+  v-prohlizeci-2:
+    runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
+    # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
+    # té doby nespustí. Směna má naměřeno kolem 20 minut, strop je
+    # tedy víc než dvojnásobek — 2. směna (43 zkoušek).
+    timeout-minutes: 50
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
+          # do .git/config a leží tam po celou úlohu — a tady se pak
+          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
+          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
+          # jediné volání gitu), takže je to práce, která nic nestojí.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prohlížeč
+        run: |
+          # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
+          # verze, takže se instalovalo to, co bylo na npm nejnovější
+          # v minutě běhu — jednou to rozsvítilo CI při zelené zkoušce
+          # (oddíl 101: page.accessibility v 1.64 neexistuje). Zvednout
+          # verzi je od teď změna v repozitáři, kterou je vidět.
+          # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
+          # ne životním skriptem balíčku.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+          # Verze zůstává v logu: hádat se o příčině červené CI se nemá
+          # podle dojmu, ale podle čísla, které je vidět na první pohled.
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
+      - name: První dotek mapu jen probudí, nehýbe s ní
+        run: node scripts/test-probuzeni.mjs
+
+      - name: Počet nepřečtených na záložce Zprávy
+        run: node scripts/test-odznak-zprav.mjs
+
+      - name: Data stránky pozemku (dva malé soubory místo velkého)
+        run: node scripts/test-data-stranky.mjs
+
+      - name: Předvyplnění inzerátu z odkazu
+        run: node scripts/test-predvyplneni.mjs
+
+      - name: Čerstvost dat a stav zdrojů
+        run: node scripts/test-cerstvost.mjs
+
+      - name: Ukončená stránka přežije i vykreslení
+        run: node scripts/test-ukoncena-v-prohlizeci.mjs
+
+      - name: Hlavička pozemku (snímek, odznak, nadpis, místo)
+        run: node scripts/test-hlavicka-pozemku.mjs
+
+      - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
+        run: node scripts/test-pohyb.mjs
+
+      - name: Stabilita rozvržení při načítání (CLS)
+        run: node scripts/test-stabilita.mjs
+
+      - name: Jeden vizuální jazyk (velikosti písma, přechody)
+        run: node scripts/test-jazyk.mjs
+
+      - name: Obrys pozemku (nekreslíme, co nevíme)
+        run: node scripts/test-obrys.mjs
+
+      - name: Sdílený odkaz na stav mapy (celá cesta)
+        run: node scripts/test-odkaz-prohlizec.mjs
+
+      - name: Stránkování seznamu nabídek
+        run: node scripts/test-strany.mjs
+
+      - name: Rychlý výběr v prohlížeči (celá cesta)
+        run: node scripts/test-rychly-prohlizec.mjs
+
+      - name: Tah ikon je jeden (1,5 px)
+        run: node scripts/test-tahy.mjs
+
+      - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
+        run: node scripts/test-parametry.mjs
+
+      - name: Spodní lišta s cenou a akcí
+        run: node scripts/test-lista-dole.mjs
+
+      - name: Sazba v textu, který skládá prohlížeč
+        run: node scripts/test-sazba-dom.mjs
+
+      - name: CSP platí a zastaví podstrčený skript
+        run: node scripts/test-csp.mjs
+
+      - name: Mobilní menu (jedno místo, funguje všude)
+        run: node scripts/test-menu.mjs
+
+      # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
+      # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
+      # celý běh. Patří sem, mezi ostatní testy v prohlížeči.
+      - name: Zaostření klávesnicí (vidí člověk, kde stojí)
+        run: node scripts/test-zaostreni.mjs
+
+      - name: Kalkulačka nákladů při koupi
+        run: node scripts/test-naklady.mjs
+
+
+      - name: Porovnání uložených pozemků
+        run: node scripts/test-porovnani.mjs
+
+      - name: Česká písmena a podřezané písmo
+        run: node scripts/test-ceska-pismena.mjs
+
+      - name: Dotykové terče na mobilu
+        run: node scripts/test-dotyk.mjs
+
+      - name: Odznaky shluků na mapě (barva nesmí lhát)
+        run: node scripts/test-shluky.mjs
+
+      - name: Mapa s vrstvami v detailu pozemku
+        run: node scripts/test-mapa-pozemku.mjs
+
+      - name: Mapa při tažení (rozhraní zmizí a vrátí se)
+        run: node scripts/test-mapa-tazeni.mjs
+
+      - name: Obarvení teček podle ceny (levnější je modřejší)
+        run: node scripts/test-barva-ceny.mjs
+
+      - name: Shoda cen mezi mapou a stránkou pozemku
+        run: node scripts/test-shoda.mjs
+
+      - name: Co se doporučuje a co se má ověřit
+        run: node scripts/test-doporuceni.mjs
+
+      - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
+        run: node scripts/test-barva-listy.mjs
+
+      - name: Zaoblení (co se ovládá, má jedno zaoblení)
+        run: node scripts/test-zaobleni.mjs
+
+      - name: Chyby skriptů a přetékání na všech druzích stránek
+        run: node scripts/test-konzole.mjs
+
+      - name: Druh příležitosti se pozná i bez barev
+        run: node scripts/test-tvary.mjs
+
+      - name: Tři moduly se stahují až při prvním použití
+        run: node scripts/test-odlozene-skripty.mjs
+
+      - name: Výpis nečeká na mapovou knihovnu
+        run: node scripts/test-vypis-bez-mapy.mjs
+
+      - name: Hierarchie tlačítek (co je tu hlavní?)
+        run: node scripts/test-hierarchie.mjs
+
+      - name: Pořadí na stránce pozemku (důležité nahoře)
+        run: node scripts/test-poradi-pozemku.mjs
+
+      - name: Vyhledávač cen podle lokality
+        run: node scripts/test-ceny-hledani.mjs
+
+      - name: Křížek na skrytí je na kartě vidět
+        run: node scripts/test-skryt-videt.mjs
+
+      - name: Uložené pozemky na účtu
+        run: node scripts/test-ulozene-ucet.mjs
+
+      - name: Moje data — co si web pamatuje
+        run: node scripts/test-ulozene.mjs
+
+
+  v-prohlizeci-3:
+    runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
+    # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
+    # té doby nespustí. Směna má naměřeno kolem 20 minut, strop je
+    # tedy víc než dvojnásobek — 3. směna (44 zkoušek).
     timeout-minutes: 50
     steps:
       - name: Checkout
@@ -508,23 +849,8 @@ jobs:
       - name: Kontrola fotek (že běží a odkud se bere)
         run: node scripts/test-kontrola-fotek.mjs
 
-      - name: Co má hidden, nesmí být vidět
-        run: node scripts/test-skryte.mjs
-
       - name: Barevné odznaky jsou čitelné v obou režimech
         run: node scripts/test-odznaky.mjs
-
-      - name: Vazby ARIA vedou na prvky, které existují
-        run: node scripts/test-aria-cile.mjs
-
-      - name: První dotek mapu jen probudí, nehýbe s ní
-        run: node scripts/test-probuzeni.mjs
-
-      - name: Tlačítko „nahoru" na dlouhých stránkách
-        run: node scripts/test-nahoru.mjs
-
-      - name: Ovládání mapy (klepání do plátna)
-        run: node scripts/test-mapa.mjs
 
       - name: Zkrácený stylopis vypadá jako plný (vypočtené styly)
         run: node scripts/test-rozdeleni-stylu.mjs
@@ -535,49 +861,14 @@ jobs:
       - name: Filtr „Zlevněné" ukazuje právě to, co zlevnilo
         run: node scripts/test-zlevnene-filtr.mjs
 
-      - name: Parcelní číslo z inzerátu — a kdy se o něm mlčí
-        run: node scripts/test-parcely-z-textu.mjs
-
-
       - name: Karta vede na svůj pozemek, ne na dvojče
         run: node scripts/test-karta-vede-spravne.mjs
-
-      - name: Profil při výpadku netvrdí, že inzeráty nemáte
-        run: node scripts/test-profil-vypadek.mjs
-
-      - name: Počet nepřečtených na záložce Zprávy
-        run: node scripts/test-odznak-zprav.mjs
-
-      - name: „Výhodná cena" jen tam, kde je čím ji podložit
-        run: node scripts/test-vyhodna-cena.mjs
-
-      - name: Data stránky pozemku (dva malé soubory místo velkého)
-        run: node scripts/test-data-stranky.mjs
-
-      - name: Offline režim (service worker, bez signálu i bez cizích serverů)
-        run: node scripts/test-offline.mjs
-
-
-      - name: Předvyplnění inzerátu z odkazu
-        run: node scripts/test-predvyplneni.mjs
-
-      - name: Čerstvost dat a stav zdrojů
-        run: node scripts/test-cerstvost.mjs
 
       - name: Řazení výpisu (každá volba dělá, co slibuje)
         run: node scripts/test-razeni.mjs
 
       - name: Rozvržení na všech šířkách a popisky stránek
         run: node scripts/test-rozvrzeni.mjs
-
-      - name: Ukončená stránka přežije i vykreslení
-        run: node scripts/test-ukoncena-v-prohlizeci.mjs
-
-      - name: Hlavička pozemku (snímek, odznak, nadpis, místo)
-        run: node scripts/test-hlavicka-pozemku.mjs
-
-      - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
-        run: node scripts/test-pohyb.mjs
 
       - name: Mapový podklad (tlumený, ale ne vybělený)
         run: node scripts/test-podklad.mjs
@@ -588,9 +879,6 @@ jobs:
       - name: Ikony (jedna sada, jedna tloušťka)
         run: node scripts/test-ikony.mjs
 
-      - name: Letecký snímek pozemku (měřítko a poctivost)
-        run: node scripts/test-snimek.mjs
-
       - name: Šipka zpět nad vrstvou (zavírá, neodchází ze stránky)
         run: node scripts/test-zpet.mjs
 
@@ -600,65 +888,17 @@ jobs:
       - name: Prázdno pod obsahem a kotvy pod hlavičkou
         run: node scripts/test-prazdno.mjs
 
-      - name: Patička (rozvržení na počítači i na telefonu)
-        run: node scripts/test-paticka.mjs
-
-      - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
-        run: node scripts/test-uvod.mjs
-
       - name: Paměť prohlížeče (nové od minule, skryté, filtr)
         run: node scripts/test-pamet.mjs
-
-      - name: Stabilita rozvržení při načítání (CLS)
-        run: node scripts/test-stabilita.mjs
-
-      - name: Jeden vizuální jazyk (velikosti písma, přechody)
-        run: node scripts/test-jazyk.mjs
-
-      - name: Viditelnost okrajů (WCAG 1.4.11)
-        run: node scripts/test-okraje.mjs
-
-      - name: Obrys pozemku (nekreslíme, co nevíme)
-        run: node scripts/test-obrys.mjs
-
-      - name: Funkční kontrola stránek a odkazů
-        run: node scripts/test-stranky.mjs
-
-      - name: Hlídání v aplikaci (celá cesta)
-        run: node scripts/test-hlidani-prohlizec.mjs
-
-      - name: Sdílený odkaz na stav mapy (celá cesta)
-        run: node scripts/test-odkaz-prohlizec.mjs
-
-      - name: Stránkování seznamu nabídek
-        run: node scripts/test-strany.mjs
 
       - name: Ztlumené okolí mapy
         run: node scripts/test-maska.mjs
 
-      - name: Rychlý výběr v prohlížeči (celá cesta)
-        run: node scripts/test-rychly-prohlizec.mjs
-
-      - name: Na co je vidět, na to se dá klepnout
-        run: node scripts/test-pod-hlavickou.mjs
-
-      - name: Mezera mezi číslem a slovem (text stránky, ne jen vzhled)
-        run: node scripts/test-cislo-a-slovo.mjs
-
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
         run: node scripts/test-prvni-obrazovka.mjs
 
-      - name: Hlavička vstupní stránky (nadpis vlevo, čísla vpravo)
-        run: node scripts/test-hlavicka-stranky.mjs
-
-      - name: Seznam nabídek (názvy obcí na jedné svislici)
-        run: node scripts/test-seznam-nabidek.mjs
-
       - name: Stránky účtu (obsah na středu, ne přilepený vlevo)
         run: node scripts/test-stranky-uctu.mjs
-
-      - name: Přidání vlastního pozemku (celá cesta)
-        run: node scripts/test-pridat.mjs
 
       - name: Podklad hlavní mapy
         run: node scripts/test-podklad-mapy.mjs
@@ -666,20 +906,11 @@ jobs:
       - name: Žádné překreslení výpisu navíc
         run: node scripts/test-jedno-vykresleni.mjs
 
-      - name: Nářadí výpisu je na dosah
-        run: node scripts/test-nastroje-v-dosahu.mjs
-
       - name: Ovládání nad výpisem má jednu velikost
         run: node scripts/test-ovladani-vypisu.mjs
 
-      - name: Tah ikon je jeden (1,5 px)
-        run: node scripts/test-tahy.mjs
-
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
-
-      - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
-        run: node scripts/test-parametry.mjs
 
       - name: Hlídání okruhu od místa
         run: node scripts/test-okruh-hlidani.mjs
@@ -692,185 +923,35 @@ jobs:
       # hlídá scripts/test-staticka.mjs. Ta zkouška chybu našla hned;
       # jen se k ní dva dny nikdo nedostal, protože moje místní sada
       # ji přeskakovala podle slova „playwright" v komentáři.
-      - name: Spodní lišta s cenou a akcí
-        run: node scripts/test-lista-dole.mjs
-
-      - name: Uložené pozemky v profilu
-        run: node scripts/test-profil-ulozene.mjs
-
-      - name: Sazba v textu, který skládá prohlížeč
-        run: node scripts/test-sazba-dom.mjs
-
-      - name: CSP platí a zastaví podstrčený skript
-        run: node scripts/test-csp.mjs
-
       - name: Stránky s účtem nejde vložit do cizího rámu
         run: node scripts/test-ramovani.mjs
 
       - name: Cizí text se vykreslí jako text, ne jako kód
         run: node scripts/test-escape-dom.mjs
 
-      - name: Zpráva od cizího člověka je text, ne kód
-        run: node scripts/test-escape-zpravy.mjs
-
-  v-prohlizeci-2:
-    runs-on: ubuntu-latest
-    # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
-    # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
-    # té doby nespustí. Směna má naměřeno kolem 31 minut, strop je
-    # tedy skoro dvojnásobek — druhá směna (60 zkoušek).
-    timeout-minutes: 50
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          # TOKEN NEZŮSTÁVÁ NA DISKU. actions/checkout si ho jinak zapíše
-          # do .git/config a leží tam po celou úlohu — a tady se pak
-          # instalují balíčky z npm a pouští se stovky skriptů. Žádný
-          # krok téhle úlohy s gitem nemluví (ověřeno: v scripts/ není
-          # jediné volání gitu), takže je to práce, která nic nestojí.
-          persist-credentials: false
-
-      - name: Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Prohlížeč
-        run: |
-          # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
-          # verze, takže se instalovalo to, co bylo na npm nejnovější
-          # v minutě běhu — jednou to rozsvítilo CI při zelené zkoušce
-          # (oddíl 101: page.accessibility v 1.64 neexistuje). Zvednout
-          # verzi je od teď změna v repozitáři, kterou je vidět.
-          # --ignore-scripts: prohlížeč se stahuje až příkazem pod tím,
-          # ne životním skriptem balíčku.
-          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
-          npx playwright install --with-deps chromium
-          # Verze zůstává v logu: hádat se o příčině červené CI se nemá
-          # podle dojmu, ale podle čísla, které je vidět na první pohled.
-          node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
-
-      - name: Projít chat v prohlížeči
-        run: node scripts/test-chat-prohlizec.mjs
-
-      - name: Odhlášení z e-mailů a přepínač posílání
-        run: node scripts/test-odhlaseni.mjs
-
-      - name: Mobilní menu (jedno místo, funguje všude)
-        run: node scripts/test-menu.mjs
-
-      # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
-      # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
-      # celý běh. Patří sem, mezi ostatní testy v prohlížeči.
-      - name: Přihlášení (web neodhlašuje sám od sebe)
-        run: node scripts/test-prihlaseni.mjs
-
-      - name: Vrstvení (co je nad čím)
-        run: node scripts/test-vrstveni.mjs
-
       - name: Kontrast textu (WCAG AA)
         run: node scripts/test-kontrast.mjs
-
-      - name: Zaostření klávesnicí (vidí člověk, kde stojí)
-        run: node scripts/test-zaostreni.mjs
-
-      - name: Co se pod myší zvedne, na to musí jít kliknout
-        run: node scripts/test-zdvih.mjs
-
-      - name: Do posuvné oblasti se vejde aspoň jedna položka
-        run: node scripts/test-vmacknuto.mjs
-
-      - name: Kalkulačka nákladů při koupi
-        run: node scripts/test-naklady.mjs
-
 
       - name: Kalkulačka hypotéky
         run: node scripts/test-hypoteka.mjs
 
-      - name: Porovnání uložených pozemků
-        run: node scripts/test-porovnani.mjs
-
       - name: Míra sazby (znaků na řádku)
         run: node scripts/test-mira.mjs
-
-      - name: Česká písmena a podřezané písmo
-        run: node scripts/test-ceska-pismena.mjs
-
-      - name: Dotykové terče na mobilu
-        run: node scripts/test-dotyk.mjs
-
-      - name: Našeptávač obcí a oprava překlepu
-        run: node scripts/test-naseptavac.mjs
-
-      - name: Odznaky shluků na mapě (barva nesmí lhát)
-        run: node scripts/test-shluky.mjs
-
-      - name: Mapa s vrstvami v detailu pozemku
-        run: node scripts/test-mapa-pozemku.mjs
 
       - name: Mapová knihovna se stahuje až na dohled
         run: node scripts/test-leaflet.mjs
 
-      - name: Historie ceny u pozemku sedí na archiv
-        run: node scripts/test-cenova-historie.mjs
-
       - name: Uložení jednoho pozemku neoznačí sousedy
         run: node scripts/test-klic-ulozenych.mjs
-
-      - name: U verdiktu o ceně je vidět, z kolika nabídek vyšel
-        run: node scripts/test-vzorek-verdiktu.mjs
-
-      - name: Měření návštěvnosti (co se posílá a co ne)
-        run: node scripts/test-mereni.mjs
-
-      - name: Mapa při tažení (rozhraní zmizí a vrátí se)
-        run: node scripts/test-mapa-tazeni.mjs
-
-      - name: Kreslení výběru na mapě (filtruje podle tvaru)
-        run: node scripts/test-kresleni.mjs
-
-      - name: Obarvení teček podle ceny (levnější je modřejší)
-        run: node scripts/test-barva-ceny.mjs
 
       - name: Vrstvy úřadů na hlavní mapě (až na vyžádání)
         run: node scripts/test-vrstvy-mapa.mjs
 
-      - name: Shoda cen mezi mapou a stránkou pozemku
-        run: node scripts/test-shoda.mjs
-
-      - name: Co se doporučuje a co se má ověřit
-        run: node scripts/test-doporuceni.mjs
-
-      - name: Hlídané místo a pozemky v okolí
-        run: node scripts/test-okoli.mjs
-
       - name: Barvy kategorií (jeden zdroj pro mapu i karty)
         run: node scripts/test-barvy.mjs
 
-      - name: Barva u verdiktu o ceně
-        run: node scripts/test-verdikt.mjs
-
       - name: Lepivá hlavička (drží nahoře, menu se otevře)
         run: node scripts/test-hlavicka.mjs
-
-      - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
-        run: node scripts/test-barva-listy.mjs
-
-      - name: Zaoblení (co se ovládá, má jedno zaoblení)
-        run: node scripts/test-zaobleni.mjs
-
-      - name: Výpadek dat a mrtvé záznamy
-        run: node scripts/test-vypadky.mjs
-
-      - name: Chyby skriptů a přetékání na všech druzích stránek
-        run: node scripts/test-konzole.mjs
-
-      - name: Druh příležitosti se pozná i bez barev
-        run: node scripts/test-tvary.mjs
-
-      - name: Tři moduly se stahují až při prvním použití
-        run: node scripts/test-odlozene-skripty.mjs
 
       - name: Jméno třídy je slib, že existuje pravidlo
         run: node scripts/test-mrtva-jmena.mjs
@@ -878,38 +959,14 @@ jobs:
       - name: Hláška se ohlásí — živá oblast je ve stromu dřív než text
         run: node scripts/test-ohlaseni.mjs
 
-      - name: Výpis nečeká na mapovou knihovnu
-        run: node scripts/test-vypis-bez-mapy.mjs
-
       - name: Obecní záměr — celá cesta od dat po detail
         run: node scripts/test-obec.mjs
 
       - name: Barvy po najetí myší
         run: node scripts/test-najeti.mjs
 
-      - name: Odolnost proti vloženému kódu (XSS)
-        run: node scripts/test-xss.mjs
-
-      - name: JSON ve stránce (nejde rozbít cizím textem)
-        run: node scripts/test-json-ve-strance.mjs
-
-      - name: Hierarchie tlačítek (co je tu hlavní?)
-        run: node scripts/test-hierarchie.mjs
-
-      - name: Rozbalovací seznam (myší i klávesou)
-        run: node scripts/test-rozbalovac.mjs
-
       - name: Na ovládání je vidět, že je ovládání
         run: node scripts/test-afordance.mjs
-
-      - name: Okno „Stáhnout výběr" (co slíbí, to stáhne)
-        run: node scripts/test-vyvoz-okno.mjs
-
-      - name: Pořadí na stránce pozemku (důležité nahoře)
-        run: node scripts/test-poradi-pozemku.mjs
-
-      - name: Vyhledávač cen podle lokality
-        run: node scripts/test-ceny-hledani.mjs
 
       - name: Sliby webu platí doopravdy
         run: node scripts/test-sliby.mjs
@@ -917,30 +974,12 @@ jobs:
       - name: Okno „Vyberte své okolí"
         run: node scripts/test-vyber-okoli.mjs
 
-      - name: Graf vývoje cenové hladiny
-        run: node scripts/test-graf-cen.mjs
-
-      - name: Letecké náhledy se stahují až před očima
-        run: node scripts/test-line-dlazdice.mjs
-
       - name: Pomalá databáze nedrží výpis
         run: node scripts/test-zive-strop.mjs
-
-      - name: Křížek na skrytí je na kartě vidět
-        run: node scripts/test-skryt-videt.mjs
 
       - name: Vyhledávání pozemků má jeden vzhled
         run: node scripts/test-hledani-vzhled.mjs
 
-
-      - name: Soukromá poznámka k pozemku
-        run: node scripts/test-poznamky.mjs
-
-      - name: Uložené pozemky na účtu
-        run: node scripts/test-ulozene-ucet.mjs
-
-      - name: Moje data — co si web pamatuje
-        run: node scripts/test-ulozene.mjs
 
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs

@@ -108,6 +108,7 @@
   var polohaHlaska = '';
   var duplHlaska = '';
   var serverHlaska = '';
+  var nahraniHlaska = '';
   var duplPotvrzeno = false;
   function isImage(t) { return /^image\/(jpe?g|png|webp)$/i.test(t || ''); }
 
@@ -248,8 +249,20 @@
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + tok, 'Content-Type': 'image/jpeg', 'x-upsert': 'false' },
       body: blob
     }).then(function (r) {
-      return r.ok ? (SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name)) : null;
-    }).catch(function () { return null; });
+      if (r.ok) return { url: SB_URL + '/storage/v1/object/public/listing-photos/' + encodeURI(name) };
+
+      return r.text().then(function (t) {
+        var txt = String(t || '');
+        if (/strop fotek/i.test(txt)) {
+          var m = txt.match(/\((\d+)\)/);
+          return { chyba: 'plno', kolik: m ? Number(m[1]) : 0 };
+        }
+
+        if (r.status === 401 || /jwt|expired|token/i.test(txt)) return { chyba: 'auth' };
+        if (/row.?level security/i.test(txt)) return { chyba: 'plno', kolik: 0 };
+        return { chyba: 'jina', stav: r.status };
+      }, function () { return { chyba: 'jina', stav: r.status }; });
+    }).catch(function () { return { chyba: 'sit' }; });
   }
 
   function uploadPhotos() {
@@ -277,10 +290,15 @@
     }, Promise.resolve()).then(function () {
       if (photoRejects.length) return { urls: [], rejected: photoRejects };
       showToast('Nahrávám fotky…');
-      var urls = [];
+      var urls = [], selhani = [];
       return blobs.reduce(function (p, blob, i) {
-        return p.then(function () { return uploadOne(blob, i).then(function (u) { if (u) urls.push(u); }); });
-      }, Promise.resolve()).then(function () { return { urls: urls, rejected: [] }; });
+        return p.then(function () {
+          return uploadOne(blob, i).then(function (u) {
+            if (u && u.url) urls.push(u.url);
+            else if (u) selhani.push(u);
+          });
+        });
+      }, Promise.resolve()).then(function () { return { urls: urls, rejected: [], selhani: selhani }; });
     });
   }
 
@@ -323,6 +341,25 @@
       var features = [].slice.call(document.querySelectorAll('input[name="site"]:checked')).map(function (x) { return x.value; });
       return uploadPhotos().then(function (pr) {
       if (pr.rejected && pr.rejected.length) return 'photos';
+
+      if (pr.selhani && pr.selhani.length) {
+        if (pr.selhani.some(function (x) { return x.chyba === 'auth'; })) return 'auth';
+        var plno = pr.selhani.filter(function (x) { return x.chyba === 'plno'; })[0];
+        if (plno) {
+
+          nahraniHlaska = 'Úložiště fotek je u vašeho účtu plné'
+            + (plno.kolik ? ' (vejde se ' + plno.kolik + ' fotek na účet)' : '')
+            + '. Zkuste prosím přidat méně fotek — nebo nám dejte vědět přes '
+            + '<a href="kontakt.html">kontakt</a> a místo vám uvolníme.';
+        } else if (pr.selhani.some(function (x) { return x.chyba === 'sit'; })) {
+          nahraniHlaska = 'Fotky se nepodařilo nahrát — vypadá to na spojení. '
+            + 'Zkuste to prosím znovu.';
+        } else {
+          nahraniHlaska = 'Fotky se nepodařilo nahrát (' + pr.selhani.length + ' z '
+            + (pr.selhani.length + ((pr.urls && pr.urls.length) || 0)) + '). Zkuste to prosím znovu.';
+        }
+        return 'nahrani';
+      }
 
       mistoHlaska = '';
       if (window.PKKontrola && window.PKExif && pos && fotkyGps.length) {
@@ -911,6 +948,10 @@
         } else if (r === 'photos') {
           var names = (typeof photoRejects !== 'undefined' ? photoRejects : []).map(function (x) { return '„' + x.name + '" (' + x.reason + ')'; }).join(', ');
           ms.innerHTML = 'Některé fotky jsme nepřijali: ' + escHtml(names) + '. Odeberte je prosím a přidejte fotky pozemku.';
+          ms.classList.add('err');
+        } else if (r === 'nahrani') {
+
+          ms.innerHTML = nahraniHlaska;
           ms.classList.add('err');
         } else if (r === 'auth') {
           ms.textContent = 'Přihlášení vypršelo — přihlaste se prosím znovu (nahoře).';

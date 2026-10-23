@@ -91,3 +91,45 @@ do $do$ begin
 exception when insufficient_privilege or undefined_table then
   raise notice 'Spouštěč stropu fotek se nevytvořil (%). Strop drží politika; viz supabase/uloziste-strop.sql.', sqlerrm;
 end $do$;
+
+-- ---------------------------------------------------------------------
+-- OSIŘELÉ FOTKY. `delete_listing` maže jen řádek v `listings` — fotky
+-- zůstanou v úložišti. Dokud strop nebyl, byla to jen pomalu rostoucí
+-- faktura; se stropem je to past: účet se zasekne na 24 fotkách, které
+-- už k ničemu nepatří, a sám je neuklidí.
+--
+-- Tahle funkce JEN VYPÍŠE, co je k zahození. Mazat musí volající přes
+-- Storage API (scripts/uklid-databaze.mjs se service klíčem), protože
+-- smazat řádek v `storage.objects` by soubor v úložišti nechal ležet
+-- navždy — a ještě by ho schoval před každým dalším úklidem.
+--
+-- Mladší fotky se nedotýká: mezi nahráním a založením inzerátu je
+-- chvíle, kdy na fotku ještě nic neodkazuje, a to je normální stav,
+-- ne odpad. Výchozí lhůta je proto celý den.
+--
+-- Smí ji spustit JEN service_role — vypisuje jména souborů napříč
+-- všemi účty.
+-- ---------------------------------------------------------------------
+create or replace function osirele_fotky(p_starsi_nez_hodin integer default 24,
+                                         p_limit integer default 500)
+returns table(name text)
+language sql security definer set search_path = public stable as $$
+  select o.name from storage.objects o
+  where o.bucket_id = 'listing-photos'
+    and o.created_at < now() - make_interval(hours => greatest(coalesce(p_starsi_nez_hodin, 24), 1))
+    /* `strpos`, ne `like`: ve jménu souboru by `%` nebo `_` byly
+       zástupné znaky a hledalo by se něco jiného, než co tam stojí.
+       Dnešní jména je neobsahují (`<uid>/<čas>-<poradi>-<náhoda>.jpg`),
+       ale jméno smí poslat i service klíč, a pak už to platit nemusí. */
+    and not exists (
+      select 1 from listings l where strpos(l.photos::text, o.name) > 0
+    )
+  order by o.created_at
+  limit greatest(least(coalesce(p_limit, 500), 1000), 1);
+$$;
+-- VŠECHNY ROLE JMENOVITĚ. „from public" zní jako „ode všech", ale
+-- PUBLIC je pseudorole: neodebere právo, které má role udělené PŘÍMO,
+-- a Supabase ho anonovi i přihlášenému na funkce ve schématu public
+-- rovnou dává. Hlídá to scripts/test-kontrola-databaze.mjs.
+revoke all on function osirele_fotky(integer, integer) from public, anon, authenticated;
+grant execute on function osirele_fotky(integer, integer) to service_role;

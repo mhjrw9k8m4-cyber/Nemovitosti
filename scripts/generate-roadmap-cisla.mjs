@@ -56,6 +56,9 @@ export function spocitej() {
     return j ? [...j.matchAll(/node (scripts\/test-[a-z0-9-]+\.mjs)/g)].length : 0;
   };
 
+  const smeny = joby.map((b) => (/^\s*(v-prohlizeci[\w-]*):/.exec(b) || [])[1])
+    .filter(Boolean).sort();
+
   return {
     tabulky: tabulky.size, funkce: funkce.size,
     nabidek: nab.length, bezDup,
@@ -66,15 +69,40 @@ export function spocitej() {
     pozemku: html.filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)).length,
     okresnich: html.filter((f) => f.startsWith('pozemky-okres-')).length,
     krajskych: html.filter((f) => /^pozemky-[a-z-]+-kraj\.html$/.test(f)).length,
-    /* Zkoušky v prohlížeči jedou ve DVOU směnách vedle sebe
-       (v-prohlizeci a v-prohlizeci-2), tak se sečtou — jinak by tabulka
-       v roadmapě tvrdila polovinu. Naměřeno: po rozdělení úlohy sem
-       oprav.mjs zapsal „116+61" a scripts/test-roadmap.mjs to vzápětí
-       shodil, protože ten už sčítat umí. */
+    /* Zkoušky v prohlížeči jedou v NĚKOLIKA směnách vedle sebe, tak se
+       sečtou — jinak by tabulka v roadmapě tvrdila zlomek. Naměřeno:
+       po rozdělení úlohy sem oprav.mjs zapsal „116+61" a
+       scripts/test-roadmap.mjs to vzápětí shodil, protože ten už
+       sčítat umí.
+       SMĚNY SE POČÍTAJÍ ZE SOUBORU, ne ručním seznamem. Stály tu dvě
+       jmenovitě, a když přibyla třetí (23. 10., oddíl 134
+       v docs/optimalizace.md), tabulka začala tvrdit dvě třetiny —
+       a nic to nehlásilo, protože součet dvou jmen pořád vycházel. */
     souboru, bezProhlizece: vJobu('testy'),
-    sProhlizecem: vJobu('v-prohlizeci') + vJobu('v-prohlizeci-2'),
+    smen: smeny.length,
+    sProhlizecem: smeny.reduce((s, jm) => s + vJobu(jm), 0),
     den: (opp.updated || '').split('T')[0],
   };
+}
+
+/* Počty se píšou slovem, jak to v tabulce stálo ručně — a ve správném
+   pádě: „čtyři úlohy", ale „ve třech směnách". Víc než šest směn nikdo
+   rozumně nespustí, takže dál se vypíše číslicí. */
+function slovy(n) {
+  return ['nula', 'jedna', 'dvě', 'tři', 'čtyři', 'pět', 'šest'][n] || String(n);
+}
+function vKolika(n) {
+  return ['v nule', 'v jedné', 've dvou', 've třech', 've čtyřech', 'v pěti', 'v šesti'][n]
+    || ('v ' + n);
+}
+/* Tvar slova „úloha" podle počtu, a VŠECHNY TŘI tvary zvlášť: jedna
+   úloha, dvě až čtyři úlohy, pět a víc (i nula) úloh. Zkratka na dvě
+   větve podle toho, jestli je počet menší než pět, by u nuly i jedničky
+   lhala — hlídá to scripts/test-mnozstvi.mjs a chytlo to hned.
+   (Ten hlídač čte i komentáře, takže se ta zkratka nedá ani citovat.) */
+function uloh(n) {
+  if (n === 1) return 'úloha';
+  return n >= 2 && n <= 4 ? 'úlohy' : 'úloh';
 }
 
 export function tabulka(c) {
@@ -88,7 +116,7 @@ export function tabulka(c) {
 | Databáze | Supabase, ${c.tabulky} tabulek a ${c.funkce} funkcí (RPC). Sloučený balík k nahrání je \`supabase/00-vse.sql\`. |
 | Data příležitostí | ${fmt(c.nabidek)} nabídek (${fmt(c.prodeju)} prodejů, ${fmt(c.drazeb)} dražeb, ${fmt(c.exekuci)} exekucí), ${fmt(c.popisy)} popisů od inzerentů. Na webu je z toho vidět ${fmt(c.bezDup)} — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (\`update-data.yml\`). |
 | Stránky | ${fmt(c.pozemku)} vlastních stránek pozemků, ${c.okresnich} okresních, ${c.krajskych} krajských — všechny generované, v \`sitemap.xml\`. |
-| Zkoušky | ${fmt(c.souboru)} souborů, v CI tři úlohy: ${c.bezProhlizece} bez prohlížeče, ${c.sProhlizecem} s prohlížečem ve dvou směnách. |`;
+| Zkoušky | ${fmt(c.souboru)} souborů, v CI ${slovy(1 + c.smen)} ${uloh(1 + c.smen)}: ${c.bezProhlizece} bez prohlížeče, ${c.sProhlizecem} s prohlížečem ${vKolika(c.smen)} směnách. |`;
 }
 
 export function prepis(text, c) {

@@ -98,14 +98,21 @@ function vJobu(jmeno) {
   const j = joby.find((b) => b.trimStart().startsWith(jmeno + ':'));
   return j ? [...j.matchAll(/node (scripts\/test-[a-z0-9-]+\.mjs)/g)].length : 0;
 }
-/* Zkoušky v prohlížeči jedou ve DVOU směnách vedle sebe (v-prohlizeci
-   a v-prohlizeci-2), tak se sečtou — jinak by README tvrdilo, že jich
-   je polovina. (Tahle oprava už tu jednou byla a zmizela: při úklidu
-   po sabotáži jsem soubor vrátil přes `git checkout --`, což smazalo
-   i ji. Proto se sabotáže vracejí ze ZÁLOHY souboru, ne z gitu.) */
-const bez = vJobu('testy'), sProhlizecem = vJobu('v-prohlizeci') + vJobu('v-prohlizeci-2');
-pravda(`úkoly v CI se našly (${bez} bez prohlížeče, ${sProhlizecem} s ním)`,
-  bez > 10 && sProhlizecem > 10, `${bez} / ${sProhlizecem}`);
+/* Zkoušky v prohlížeči jedou v několika směnách vedle sebe, tak se
+   sečtou — jinak by README tvrdilo, že jich je zlomek. (Tahle oprava
+   už tu jednou byla a zmizela: při úklidu po sabotáži jsem soubor
+   vrátil přes `git checkout --`, což smazalo i ji. Proto se sabotáže
+   vracejí ze ZÁLOHY souboru, ne z gitu.)
+
+   SMĚNY SE ČTOU ZE SOUBORU, ne ručním seznamem. Stály tu dvě
+   jmenovitě a 23. 10. přibyla třetí: součet dvou jmen pořád vycházel,
+   jen o 44 zkoušek méně — a kontrola pak vyžadovala v roadmapě číslo,
+   které nebyla pravda. Totéž místo v scripts/generate-roadmap-cisla.mjs
+   mělo tutéž vadu. */
+const smeny = joby.map((b) => (/^\s*(v-prohlizeci[\w-]*):/.exec(b) || [])[1]).filter(Boolean);
+const bez = vJobu('testy'), sProhlizecem = smeny.reduce((n, jm) => n + vJobu(jm), 0);
+pravda(`úkoly v CI se našly (${bez} bez prohlížeče, ${sProhlizecem} s ním ve ${smeny.length} směnách)`,
+  bez > 10 && sProhlizecem > 10 && smeny.length >= 2, `${bez} / ${sProhlizecem} / směn ${smeny.length}`);
 maCislo('| Zkoušky |', 'souborů se zkouškami', souboru);
 maCislo('| Zkoušky |', 'zkoušek bez prohlížeče', bez);
 maCislo('| Zkoušky |', 'zkoušek s prohlížečem', sProhlizecem);

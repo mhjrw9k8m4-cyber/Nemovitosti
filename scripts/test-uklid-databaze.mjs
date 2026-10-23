@@ -70,7 +70,12 @@ function spust(env) {
 
 // --- 2) Všechno v pořádku -------------------------------------------
 {
-  const s = await server((u) => ({ stav: 200, telo: /uklid_posty/.test(u) ? '7' : '3' }));
+  /* Osiřelé fotky odpovídají prázdným polem: tenhle případ měří úklid
+     ŘÁDKŮ, a kdyby se sem připletl i seznam fotek, měřily by se dvě
+     věci naráz. Fotky mají případ 5 jen pro sebe. */
+  const s = await server((u) => (/osirele_fotky/.test(u)
+    ? { stav: 200, telo: '[]' }
+    : { stav: 200, telo: /uklid_posty/.test(u) ? '7' : '3' }));
   const r = await spust({ SUPABASE_URL: s.url, SUPABASE_SERVICE_ROLE_KEY: KLIC, UKLID_DNI: '180' });
   s.zavri();
   /* SEZNAM FUNKCÍ SE ČTE ZE SKRIPTU, ne z paměti. Dřív tu stálo
@@ -80,10 +85,15 @@ function spust(env) {
      opravdu uklízí, a pořád hlásí, když se na některou zapomene. */
   const zdrojUklidu = (await import('node:fs')).readFileSync(
     new URL('./uklid-databaze.mjs', import.meta.url), 'utf8');
-  const cekane = [...zdrojUklidu.matchAll(/\['(uklid_[a-z_]+)'/g)].map((m) => m[1]);
+  /* A STEJNĚ TAK FUNKCE MIMO SEZNAM. osirele_fotky() se nevolá ze
+     `ukoly`, ale zvlášť (potřebuje celou odpověď, ne zkrácenou), takže
+     by ji kontrola podle seznamu minula — a to je zrovna ten krok,
+     který maže soubory. */
+  const cekane = [...zdrojUklidu.matchAll(/\['(uklid_[a-z_]+)'/g)].map((m) => m[1])
+    .concat([...zdrojUklidu.matchAll(/rpcPlne\('([a-z_]+)'/g)].map((m) => m[1]));
   const nezavolane = cekane.filter((jm) => !s.volani.some((v) => v.cesta.includes(jm)));
   pravda(`zavolá všechny úklidové funkce ze svého seznamu (${cekane.length})`,
-    cekane.length >= 2 && nezavolane.length === 0 && s.volani.length === cekane.length,
+    cekane.length >= 3 && nezavolane.length === 0 && s.volani.length === cekane.length,
     `v seznamu: ${cekane.join(', ')} · zavoláno: ${s.volani.map((v) => v.cesta.split('/').pop()).join(', ')}`);
   pravda('pošle, kolik dní se má nechat', /"p_dni":180/.test(s.volani.map((v) => v.telo).join(' ')),
     'těla: ' + s.volani.map((v) => v.telo).join(' '));
@@ -115,6 +125,66 @@ function spust(env) {
   pravda('selhání databáze noční úlohu neshodí', r.kod === 0, `návratový kód ${r.kod}`);
   pravda('ale je z toho varování, ne ticho', /::warning::/.test(r.vystup), r.vystup.slice(0, 200));
   pravda('a klíč ani tentokrát nikde', r.vystup.indexOf(KLIC) < 0, 'klíč prosákl do chybové hlášky');
+}
+
+/* --- 5) OSIŘELÉ FOTKY: najít, smazat soubor, říct kolik ------------
+   Mazání inzerátu ruší jen řádek v `listings`, takže fotky po
+   smazaných inzerátech zůstávají v úložišti — a se stropem na počet
+   fotek na účet je to past. Tady se měří celý dvoukrok: databáze
+   vypíše jména, skript smaže SOUBORY přes Storage API.
+
+   Proč soubory a ne řádky: smazaný řádek v `storage.objects` by soubor
+   nechal ležet navždy a ještě by ho schoval před každým dalším
+   úklidem. Zkouška proto trvá na tom, že se jde na /storage/v1/. */
+{
+  const fotky = ['uid-1/a.jpg', 'uid-1/b.jpg'];
+  const s = await server((u) => (/osirele_fotky/.test(u)
+    ? { stav: 200, telo: JSON.stringify(fotky.map((name) => ({ name }))) }
+    : { stav: 200, telo: '0' }));
+  const r = await spust({ SUPABASE_URL: s.url, SUPABASE_SERVICE_ROLE_KEY: KLIC });
+  s.zavri();
+  const smazani = s.volani.filter((v) => /^\/storage\/v1\//.test(v.cesta));
+  pravda('osiřelé fotky se mažou v úložišti, ne jen v tabulce',
+    smazani.length === 1 && /listing-photos/.test(smazani[0].cesta),
+    'volání na úložiště: ' + (smazani.map((v) => v.cesta).join(', ') || '(žádné)'));
+  pravda('a pošlou se všechna jména, která databáze vypsala',
+    smazani.length === 1 && fotky.every((f) => smazani[0].telo.includes(f)),
+    'tělo: ' + (smazani[0] || {}).telo);
+  pravda('a napíše, kolik jich ubylo', /smazáno 2 osiřelých fotek/.test(r.vystup),
+    r.vystup.slice(0, 240));
+  pravda('skončí v pořádku a bez varování', r.kod === 0 && !/::warning::/.test(r.vystup),
+    r.vystup.slice(0, 240));
+  pravda('a klíč ani tady nikde', r.vystup.indexOf(KLIC) < 0, 'klíč prosákl');
+}
+
+/* --- 6) Nic k zahození není chyba ----------------------------------- */
+{
+  const s = await server((u) => (/osirele_fotky/.test(u)
+    ? { stav: 200, telo: '[]' } : { stav: 200, telo: '0' }));
+  const r = await spust({ SUPABASE_URL: s.url, SUPABASE_SERVICE_ROLE_KEY: KLIC });
+  s.zavri();
+  pravda('bez osiřelých fotek se na úložiště vůbec nejde',
+    !s.volani.some((v) => /^\/storage\/v1\//.test(v.cesta)),
+    'šlo se mazat prázdný seznam');
+  pravda('a řekne, že nebylo co zahodit', /nic k zahození/.test(r.vystup), r.vystup.slice(0, 200));
+  pravda('a není z toho varování', !/::warning::/.test(r.vystup), r.vystup.slice(0, 200));
+}
+
+/* --- 7) Úložiště odmítne mazání → varování, ne pád ------------------
+   A hlavně: nesmí to vypadat jako úspěch. Kdyby se chyba spolkla,
+   fotky by se hromadily dál a ve výpisu by stálo „uklizeno". */
+{
+  const s = await server((u) => {
+    if (/osirele_fotky/.test(u)) return { stav: 200, telo: '[{"name":"uid-1/a.jpg"}]' };
+    if (/^\/storage\/v1\//.test(u)) return { stav: 403, telo: '{"message":"not allowed"}' };
+    return { stav: 200, telo: '0' };
+  });
+  const r = await spust({ SUPABASE_URL: s.url, SUPABASE_SERVICE_ROLE_KEY: KLIC });
+  s.zavri();
+  pravda('odmítnuté mazání fotek noční úlohu neshodí', r.kod === 0, `návratový kód ${r.kod}`);
+  pravda('ale je z toho varování', /::warning::/.test(r.vystup), r.vystup.slice(0, 240));
+  pravda('a netvrdí, že se uklidilo', !/smazáno 1 osiřelých/.test(r.vystup), r.vystup.slice(0, 240));
+  pravda('a klíč nikde', r.vystup.indexOf(KLIC) < 0, 'klíč prosákl');
 }
 
 console.log('\nNoční úklid databáze');

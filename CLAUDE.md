@@ -374,10 +374,11 @@ měření nepovede, musí to kontrola říct jako „nepovedlo se změřit".
 
 ## Testy
 
-240 zkoušek v CI (116 bez prohlížeče, 124 s ním) ve třech úlohách:
-rychlá `testy` a dvě směny v prohlížeči (`v-prohlizeci`,
-`v-prohlizeci-2`) — ty běží vedle sebe, každá kolem 31 minut. Místně
-jedna sada za druhou, dohromady kolem 50 minut:
+250 zkoušek v CI (120 bez prohlížeče, 130 s ním) ve čtyřech úlohách:
+rychlá `testy` a tři směny v prohlížeči (`v-prohlizeci`,
+`v-prohlizeci-2`, `v-prohlizeci-3`) — ty běží vedle sebe, každá kolem
+20 naměřených minut (v CI o pár víc, je pomalejší). Místně jedna sada
+za druhou, dohromady kolem 65 minut:
 
 ```
 bash /tmp/suite.sh        # potřebuje PW_CHROMIUM a PK_LEAFLET_DIR
@@ -425,9 +426,12 @@ ve `pozemek.html` — tam ho vkládá už očištěný
 `scripts/vloz-styl-pozemku.mjs` (a pak ho dědí i ~2 000 vygenerovaných
 stránek). Pravidlo dopsané rukou do `pozemek.html` zmizí při příštím
 sestavení; hlídá to `scripts/test-vlozeny-styl.mjs` znak po znaku. V CI proto
-jedou ve **dvou směnách** (`v-prohlizeci`, `v-prohlizeci-2`), každá ve
-vlastní úloze na vlastním stroji, kolem 31 minut; místně se pouští
-jedna sada za druhou.
+jedou ve **třech směnách** (`v-prohlizeci`, `v-prohlizeci-2`,
+`v-prohlizeci-3`), každá ve vlastní úloze na vlastním stroji, kolem
+20 minut; místně se pouští jedna sada za druhou. Rozdělené jsou podle
+NAMĚŘENÉHO času, ne podle počtu (oddíl 134 v `docs/optimalizace.md`) —
+kdo přidá zkoušku, nemusí nic přepočítávat, ale po větší změně se to
+má přeměřit.
 
 **Tři pasti, které udělají ze zelené zkoušky slepou** (první dvě naměřeny
 15. 10., třetí 19. 10.; popsané v `docs/optimalizace.md`, položky 7 a 37):

@@ -2628,7 +2628,9 @@ nic nevyřešilo.
 
 ### Dvě směny vedle sebe
 
-Sada je rozdělená na `v-prohlizeci` (61 zkoušek) a `v-prohlizeci-2`
+*(Platilo 22. 10.; od 23. 10. jsou směny tři — viz oddíl 134.)*
+
+Sada byla rozdělená na `v-prohlizeci` (61 zkoušek) a `v-prohlizeci-2`
 (60 zkoušek) — rozděleno hladovým algoritmem podle naměřených délek,
 takže na obě vyšlo **31,3 minuty**. Běží současně, strop je 50 minut
 (skoro dvojnásobek naměřeného času místo dnešních 126 %). Chromium se
@@ -8917,3 +8919,150 @@ hranice.
 **Dnes to nestojí nic** — tabulka inzerátů je prázdná. Právě proto je
 teď ta nejlevnější chvíle se rozhodnout: po prvním opravdovém inzerentovi
 už by změna znamenala měnit pravidla někomu, kdo na ně přistoupil.
+
+## 133. Nenahraná fotka tiše mizela — a smazaný inzerát ji nechal v úložišti navždy *23. 10.*
+
+Dvě vady, které vyšly najevo teprve tím, že úložiště dostalo strop
+(oddíl 131). Obě jsou o témže: web věděl něco, co člověku neřekl.
+
+**(a) Fotka, která se nenahrála, zmizela beze slova.** `uploadOne`
+v `js/pridat.js` vracelo při každém selhání `null`, adresa se prostě
+nepřidala do seznamu a inzerát se zveřejnil bez ní. Člověk vybral pět
+fotek, uvidí tři a nedozví se proč. Dokud šlo jen o vypadlou síť, byla
+to vzácnost; se stropem na počet fotek je to pravidelný stav.
+
+Nově se čte **text odpovědi**, protože jen z něj se důvod pozná, a každý
+důvod znamená pro člověka něco jiného:
+
+| co přišlo | co se ukáže |
+|---|---|
+| „dosažen strop fotek na účet (24)" (spouštěč) | úložiště je plné, i s číslem, a odkaz na kontakt |
+| „row-level security" (politika) | totéž, jen bez čísla |
+| stav 401 nebo „jwt expired" | přihlášení vypršelo — *jiná* rada: přihlásit se, ne mazat |
+| cokoli jiného / spadlé spojení | kolik fotek z kolika se nenahrálo |
+
+A hlavně: **inzerát se nezveřejní**. Zveřejnit ho bez fotek, které
+člověk poslal, by znamenalo ukázat mu něco jiného, než co odeslal.
+
+**Rada v hlášce musí být pravdivá** — a tady se to málem pokazilo.
+Nejdřív tam stálo „smažte starší inzerát v Moje inzeráty". To by byla
+lež, protože…
+
+**(b) …mazání inzerátu fotky neodklízelo.** `delete_listing` maže jen
+řádek v `listings`. Fotky zůstaly v úložišti, a se stropem je to past:
+účet se zasekne na 24 fotkách po inzerátech, které už nemá, a sám je
+neuklidí. Zavřeno **dvěma cestami**, protože ani jedna sama nestačí:
+
+* `muj-inzerat.html` při mazání inzerátu smaže **nejdřív jeho fotky**
+  přes Storage API (jedním dotazem; politika „listing photos owner
+  delete" pustí jen vlastníka, takže podstrčeným seznamem nejde smazat
+  cizí fotka) a **pak** inzerát. Když úložiště mazání odmítne, inzerát
+  se smaže **tak či tak** — člověk chtěl smazat inzerát, ne fotky.
+* Noční úklid (`scripts/uklid-databaze.mjs`) smete, co zbylo:
+  `osirele_fotky()` v databázi vypíše fotky starší jednoho dne, na které
+  neodkazuje žádný inzerát, a skript je smaže přes Storage API.
+
+**A proč dvoukrok, a ne jedno „delete from storage.objects":** smazaný
+řádek by nechal soubor v úložišti ležet navždy **a ještě ho schoval
+před každým dalším úklidem** — osiřelý soubor bez řádku už nikdo
+nenajde. Mazat se proto musí přes Storage API, které ruší obojí.
+
+Fotky mladší než den se nemažou: mezi nahráním a založením inzerátu je
+chvíle, kdy na fotku ještě nic neodkazuje, a to je normální stav, ne
+odpad. Hlídá to zkouška (fotka nahraná před deseti minutami se v soupisu
+osiřelých objevit nesmí).
+
+**Měří to 8 + 10 + 5 nových kontrol** v `test-pridat.mjs` (95),
+`test-uklid-databaze.mjs` (26) a `test-profil-vypadek.mjs` (24). Sabotáž
+**desetkrát**, všechny zachyceny: zahozené selhání nahrání, nerozpoznaný
+strop, zahozené číslo ze serveru, vypršelé přihlášení splývající se
+stropem, mazání řádků místo souborů, poslané jen první jméno, spolknutá
+chyba úložiště, vynechaný dotaz na osiřelé fotky, nemazané fotky při
+mazání inzerátu a poslaná veřejná adresa místo cesty.
+
+**Dvakrát se napoprvé měřilo něco jiného, než mělo:** zkušební fotka
+byla jednobarevná, takže ji zamítl posudek ještě před nahráním (šest
+kontrol padlo na „je skoro jednobarevná" a o nahrávání neřekly nic), a
+odeslání s fotkou trvá dél než 2 200 ms, takže se měřil mezistav
+„Zveřejňuji na mapě…". Fotka má teď pruhy a šum a čeká se, dokud se
+hláška neustálí.
+
+## 134. Zkoušky v prohlížeči: tři směny místo dvou, rozdělené podle naměřeného času *23. 10.*
+
+Sada v prohlížeči jela v CI ve **dvou** směnách — rozdělených 22. 10.
+taky podle naměřeného času (oddíl 111), tehdy 121 zkoušek a 31,3 minuty
+na směnu. Od té doby přibylo devět zkoušek a v CI každá směna trvala
+kolem pětatřiceti minut. Otázka tedy nebyla „rozdělit lépe", ale
+„rozdělit na víc dílů" — a k tomu je potřeba čerstvé měření, ne to
+staré.
+
+**Změřeno znovu.** Spouštěč sady zapisuje ke každé zkoušce její trvání.
+Celý průchod: **130 zkoušek, 3 681 s = 61 minut**, průměr 28 s na
+zkoušku. Deset nejdelších:
+
+| zkouška | s |
+|---|---|
+| `test-okoli` | 258 |
+| `test-konzole` | 234 |
+| `test-rozvrzeni` | 181 |
+| `test-rozdeleni-stylu` | 180 |
+| `test-stabilita` | 136 |
+| `test-naseptavac` | 114 |
+| `test-hlavicka` | 106 |
+| `test-mapa-pozemku` | 100 |
+| `test-pridat` | 93 |
+| `test-nahoru` | 90 |
+
+Prvních pět zkoušek tedy spolkne **16 minut z 61** — čtvrtinu času na
+necelých čtyřech procentech zkoušek. Rozdělovat je po počtu nemá smysl.
+
+**Udělané:** rozdělení na **tři směny podle naměřených sekund** —
+týmž hladovým algoritmem jako 22. 10. u dvou (nejdelší zkouška jde
+vždy do nejkratší směny). Vyšlo 43 + 43 + 44 zkoušek, a **každá směna
+20 minut**. Pořadí kroků
+v úloze zůstalo zachované, texty kroků se nepřepisovaly — jen se
+přeskládaly, a soupis zkoušek je před a po **doslova stejný** (porovnáno
+výpisem všech `scripts/test-*.mjs` ze souboru úlohy). Hlídá to
+`scripts/test-staticka.mjs` (každá zkouška je v CI zaregistrovaná právě
+jednou) a `scripts/test-ci-prava.mjs` (nová úloha má napsaná práva,
+nenechává si token na disku a instaluje připnuté verze).
+
+**A DVĚ POJISTKY O TŘETÍ SMĚNĚ NEVĚDĚLY** — obě měly směny vypsané
+ručně jako `v-prohlizeci` + `v-prohlizeci-2`:
+`scripts/generate-roadmap-cisla.mjs` (zapisuje čísla do
+`docs/roadmap.md`) a `scripts/test-roadmap.mjs` (hlídá, že tam sedí).
+Součet dvou jmen pořád vycházel, jen o 44 zkoušek míň, takže se do
+roadmapy zapsalo „86 s prohlížečem" a hlídač to **vyžadoval** — chtěl
+číslo, které nebylo pravda. Projevilo se to až červeným CI (běh 654
+spadl na „Čísla v roadmapě se rovnají repozitáři"). Obě místa teď
+směny **čtou ze souboru úlohy** podle vzorku `v-prohlizeci*`, takže
+čtvrtá směna už nikoho nepřekvapí, a počet směn se v tabulce píše
+slovem ve správném pádě (poprvé z toho vyšlo „v tři směnách").
+
+Je to potřetí, co ruční seznam směn někde zůstal pozadu: stejná vada
+byla v obou pojistkách i 22. 10. (oddíl 111) a tehdy se opravila
+jmenovitě — čímž se připravila přesně na tenhle pád.
+
+**A hlídač množného čísla si o tom nenechal lhát ani v komentáři.**
+Počet úloh se v tabulce píše slovem, takže k němu patří i správný tvar
+(„čtyři úlohy", ale „pět úloh"). Napsal jsem to nejdřív zkratkou na dvě
+větve podle toho, jestli je počet menší než pět —
+`scripts/test-mnozstvi.mjs` to okamžitě shodil, protože u nuly a
+jedničky by ta zkratka lhala. A když jsem ji pak v komentáři **ocitoval**
+jako to, co se dělat nemá, shodil to znovu: hlídač čte i komentáře.
+Popis se musel přepsat tak, aby zakázanou podobu neobsahoval ani jako
+příklad. Dnes už pátý případ téhož poučení (oddíly 120, 121, 129, 131):
+hlídač čte text po svém a musí se mu to dokázat.
+
+CI je pomalejší než tenhle stroj (4 jádra, 16 GB) — dvě směny po 31
+naměřených minutách tam trvaly 35 a víc. Tři směny po 20 minutách tedy
+vyjdou kolem 24–28 minut, a celý běh se zkracuje o deset až dvanáct
+minut, **aniž by se ubrala jediná kontrola**.
+
+**Co na tom měření není přesné, a říká se to rovnou:** zkoušky od
+`test-vypadky` dál běžely zároveň s mými vlastními běhy zkoušky databáze
+(PostgreSQL, `nice -n 19`, dvacet sekund na běh). U několika z nich je
+proto naměřený čas o pár sekund vyšší, než kdyby stroj stál jen jim.
+Na rozdělení to nemá vliv — rozhodují minuty, ne sekundy — ale je to
+důvod, proč se z těchhle čísel nemá dělat tabulka „zrychlili jsme
+zkoušku X".

@@ -173,6 +173,10 @@ zvenčí. `00-vse.sql` jde pustit opakovaně, takže stačí jeden běh.
   se pak objeví poznámka „Spouštěč stropu fotek se nevytvořil". Strop
   pak drží jen politika, což je proti dnešnímu webu dost (úložiště
   přijímá jeden soubor na jeden dotaz), ale je dobré o tom vědět.
+  V témže souboru je i `osirele_fotky()` — soupis fotek, na které už
+  žádný inzerát neodkazuje. Volá ho noční úklid
+  (`scripts/uklid-databaze.mjs`) a maže je přes Storage API; bez
+  spuštění SQL by úklid jen napsal, že funkce v databázi není.
 
 Hlídá to `scripts/test-sql-prava.mjs` a `scripts/test-sql-cista.mjs` —
 ale jen v repozitáři: **že to někdo pustil, pozná jen Supabase.**

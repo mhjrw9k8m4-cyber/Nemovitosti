@@ -375,6 +375,10 @@ zkoušku a sabotáž, podrobně `docs/optimalizace.md`, oddíly 112–123):
   placeného účtu 24 × povolený počet inzerátů). Velikost a typ souboru
   strop měly už dřív, počet ne — a nahrává se přímo z prohlížeče, ještě
   než inzerát vznikne, takže k tomu nebyl potřeba ani jeden inzerát.
+* **Fotka, která se nenahraje, už tiše nemizí** — inzerát se nezveřejní
+  a člověk se dozví důvod (plné úložiště, vypršelé přihlášení, spojení).
+  A **mazání inzerátu odklízí i jeho fotky**, takže strop se dá uvolnit;
+  co zbyde, smete noční úklid podle soupisu osiřelých fotek.
 
 Dvě měření, která **nic nenašla** (a je to taky výsledek): `npm audit
 --omit=dev` hlásí 0 zranitelností a v repozitáři není žádný tajný klíč —

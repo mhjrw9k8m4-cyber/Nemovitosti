@@ -379,6 +379,139 @@ async function odesli(p) {
   }
 }
 
+/* --- 3c) NENAHRANÁ FOTKA SE NESMÍ TIŠE ZTRATIT ----------------------
+   Fotky jdou z prohlížeče PŘÍMO do úložiště, až potom se zakládá
+   inzerát. Když nahrání selhalo, uploadOne vracel `null`, fotka se
+   prostě nepřidala do seznamu a inzerát se zveřejnil bez ní — člověk
+   vybral pět fotek, uvidí tři a nedozví se nic. Od 23. 10. má navíc
+   úložiště strop na POČET fotek na účet
+   (`supabase/uloziste-strop.sql`), takže k tichému zmizení je teď
+   i pravidelný důvod, ne jen vypadlá síť.
+
+   Měří se tři odpovědi úložiště, protože každá znamená pro člověka něco
+   jiného: strop od spouštěče (zná i číslo), odmítnutí politikou (číslo
+   nezná) a spadlé spojení. A měří se i to, že se inzerát NEZVEŘEJNÍ —
+   jinak by hláška byla jen ozdoba nad hotovou věcí. */
+{
+  const zlib = await import('node:zlib');
+  const os = await import('node:os');
+  const fsp = await import('node:fs');
+  const pathm = await import('node:path');
+  /* Fotka musí projít posudkem, který běží JEŠTĚ PŘED nahráním —
+     jinak by zkouška měřila jinou branku. Dvě podmínky z js/kontrola.js:
+     nejkratší strana aspoň 500 px a směrodatná odchylka jasu aspoň 12
+     (jednobarevná plocha není fotka pozemku). Napoprvé tu byla plocha
+     jedné barvy a šest kontrol padlo na „je skoro jednobarevná" —
+     o nahrávání neřekly nic. Tahle má pruhy a šum, takže odchylka je
+     daleko nad hranicí. */
+  function pngFotka() {
+    const w = 520, h = 520;
+    const raw = Buffer.alloc((w * 3 + 1) * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const o = y * (w * 3 + 1) + 1 + x * 3;
+        const pruh = ((x + y) % 64) < 32 ? 30 : 215;      // tmavé a světlé pruhy
+        const sum = ((x * 37 + y * 17) % 41) - 20;         // nepravidelnost, ne šachovnice
+        const v = Math.max(0, Math.min(255, pruh + sum));
+        raw[o] = v; raw[o + 1] = Math.max(0, Math.min(255, v - 20)); raw[o + 2] = Math.max(0, Math.min(255, 255 - v));
+      }
+    }
+    const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    const crc = (buf) => { let c = 0xFFFFFFFF; for (const x of buf) c = t[(c ^ x) & 0xff] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+    const chunk = (typ, d) => { const len = Buffer.alloc(4); len.writeUInt32BE(d.length);
+      const td = Buffer.concat([Buffer.from(typ), d]); const cc = Buffer.alloc(4); cc.writeUInt32BE(crc(td));
+      return Buffer.concat([len, td, cc]); };
+    const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4); ihdr[8] = 8; ihdr[9] = 2;
+    return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr),
+      chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
+  }
+  /* ODESLÁNÍ S FOTKOU TRVÁ DÉL. odesli() výš čeká 2 200 ms, což stačí
+     formuláři bez fotek; s fotkou se stihne jen hláška „Zveřejňuji na
+     mapě…" a zkouška by měřila mezistav (napoprvé přesně to udělala).
+     Tady se tedy čeká, dokud se hláška neustálí nebo se nezmění adresa
+     — nejdéle patnáct sekund. */
+  async function odesliSFotkou(p) {
+    const btn = await p.$('#form-prodej button[type="submit"]');
+    if (!btn) return { url: '(chyba)', hlaska: 'tlačítko odeslat ve formuláři nenalezeno' };
+    await btn.click().catch(() => {});
+    let v = { url: '', hlaska: '' };
+    for (let i = 0; i < 30; i++) {
+      await p.waitForTimeout(500);
+      v = await p.evaluate(() => ({
+        url: location.pathname,
+        hlaska: [...document.querySelectorAll('#msg-prodej, .add-msg, [role="alert"]')]
+          .map((e) => e.textContent.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | '),
+      }));
+      if (/muj-inzerat/.test(v.url)) break;
+      if (v.hlaska && !/Zveřejňuji|Kontroluji|Nahrávám/i.test(v.hlaska)) break;
+    }
+    return v;
+  }
+
+  const dir = fsp.mkdtempSync(pathm.join(os.tmpdir(), 'pk-nahrani-'));
+  const fotka = pathm.join(dir, 'pozemek.png');
+  fsp.writeFileSync(fotka, pngFotka());
+
+  // Odpověď úložiště → co má člověk číst, a smí se inzerát zveřejnit?
+  const pripady = [
+    ['strop od spouštěče', { status: 400, body: '{"statusCode":"500","error":"Internal","message":"dosažen strop fotek na účet (24)"}' },
+      /úložiště fotek je u vašeho účtu plné/i, /vejde se 24 fotek na účet/i],
+    ['odmítnutí politikou', { status: 403, body: '{"statusCode":"42501","error":"Unauthorized","message":"new row violates row-level security policy"}' },
+      /úložiště fotek je u vašeho účtu plné/i, null],
+    ['spadlé spojení', 'abort', /vypadá to na spojení/i, null],
+    /* A vypršelé přihlášení se taky ozve jako „nesmíš" — ale člověk
+       s ním má udělat něco jiného (přihlásit se, ne mazat fotky), tak
+       to nesmí splynout se stropem. */
+    ['vypršelé přihlášení', { status: 401, body: '{"statusCode":"401","error":"Unauthorized","message":"jwt expired"}' },
+      /přihlášení vypršelo/i, null],
+  ];
+  for (const [popis, odpoved, hlavni, cislo] of pripady) {
+    const { ctx, p } = await otevri(true);
+    await ctx.route('**/storage/v1/object/listing-photos/**', (r) => (odpoved === 'abort'
+      ? r.abort()
+      : r.fulfill({ status: odpoved.status, contentType: 'application/json', body: odpoved.body })));
+    await p.waitForTimeout(600);
+    await p.evaluate(() => { const c = document.getElementById('prodej-card'); if (c) c.hidden = false; });
+    await p.setInputFiles('#p-fotky', [fotka]);
+    await p.waitForTimeout(1500);
+    await vypln(p);
+    const v = await odesliSFotkou(p);
+    pravda(`nenahraná fotka inzerát nezveřejní: ${popis}`, !/muj-inzerat/.test(v.url),
+      `web přešel na ${v.url} — inzerát je venku bez fotek, které člověk poslal`);
+    pravda(`a řekne proč: ${popis}`, hlavni.test(v.hlaska),
+      `hláška byla „${v.hlaska}"`);
+    if (cislo) {
+      pravda(`a u stropu uvede i kolik se vejde: ${popis}`, cislo.test(v.hlaska),
+        `hláška byla „${v.hlaska}" — číslo ze serveru se zahodilo`);
+    }
+    await ctx.close();
+  }
+
+  /* A NAOPAK: když úložiště fotku přijme, inzerát se zveřejní. Bez téhle
+     kontroly by zkouška procházela i nad formulářem, který se s fotkou
+     neodešle NIKDY — a tvrdila by, že hlídá strop. */
+  {
+    const { ctx, p } = await otevri(true);
+    await ctx.route('**/storage/v1/object/listing-photos/**', (r) => r.fulfill({
+      status: 200, contentType: 'application/json', body: '{"Key":"listing-photos/x.jpg"}' }));
+    await p.waitForTimeout(600);
+    await p.evaluate(() => { const c = document.getElementById('prodej-card'); if (c) c.hidden = false; });
+    await p.setInputFiles('#p-fotky', [fotka]);
+    await p.waitForTimeout(1500);
+    /* JINÝ POZEMEK NEŽ V OSTATNÍCH PŘÍPADECH. Podstrčený Supabase si
+       mezi případy pamatuje, co se uložilo, a tenhle případ inzerát
+       OPRAVDU zveřejní — se stejnými hodnotami jako jinde by pak
+       pozdější blok narazil na hlídání duplicit („tentýž pozemek už
+       máte") a padal by na mé stopě, ne na své vadě. */
+    await vypln(p, { 'p-obec': 'Fotkovice', 'p-vymera': '1500', 'p-parcela': '909/9' });
+    const v = await odesliSFotkou(p);
+    pravda('a s přijatou fotkou se inzerát zveřejní', /muj-inzerat/.test(v.url),
+      `zůstali jsme na ${v.url}, hláška: „${v.hlaska}"`);
+    await ctx.close();
+  }
+  try { fsp.rmSync(dir, { recursive: true, force: true }); } catch (e) {}
+}
+
 /* --- OKRES SE VYBÍRÁ, NEPÍŠE SE Z HLAVY ----------------------------
  * Bylo to prázdné políčko s nápovědou „např. Kolín" a prošlo cokoli.
  * Přitom podle okresu se inzerát zařadí na krajskou i okresní stránku,
