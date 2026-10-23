@@ -376,9 +376,9 @@ měření nepovede, musí to kontrola říct jako „nepovedlo se změřit".
 
 250 zkoušek v CI (120 bez prohlížeče, 130 s ním) ve čtyřech úlohách:
 rychlá `testy` a tři směny v prohlížeči (`v-prohlizeci`,
-`v-prohlizeci-2`, `v-prohlizeci-3`) — ty běží vedle sebe, každá kolem
-20 naměřených minut (v CI o pár víc, je pomalejší). Místně jedna sada
-za druhou, dohromady kolem 65 minut:
+`v-prohlizeci-2`, `v-prohlizeci-3`) — ty běží vedle sebe, v CI 18 až
+22 minut samotných zkoušek (naměřeno v běhu 655). Místně jedna sada za
+druhou, dohromady kolem 65 minut:
 
 ```
 bash /tmp/suite.sh        # potřebuje PW_CHROMIUM a PK_LEAFLET_DIR

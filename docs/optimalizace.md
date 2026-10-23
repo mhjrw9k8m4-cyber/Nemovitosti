@@ -9054,10 +9054,31 @@ Popis se musel přepsat tak, aby zakázanou podobu neobsahoval ani jako
 příklad. Dnes už pátý případ téhož poučení (oddíly 120, 121, 129, 131):
 hlídač čte text po svém a musí se mu to dokázat.
 
-CI je pomalejší než tenhle stroj (4 jádra, 16 GB) — dvě směny po 31
-naměřených minutách tam trvaly 35 a víc. Tři směny po 20 minutách tedy
-vyjdou kolem 24–28 minut, a celý běh se zkracuje o deset až dvanáct
-minut, **aniž by se ubrala jediná kontrola**.
+**A POTOM SE TO ZMĚŘILO V CI, PROTOŽE ODHAD NESTAČÍ.** Běh 655
+(zelený) dal tohle:
+
+| směna | zkoušky | čas zkoušek | příprava | celkem |
+|---|---|---|---|---|
+| `v-prohlizeci` | 43 | 21,6 min | 29 s | 22,1 min |
+| `v-prohlizeci-2` | 43 | 18,1 min | 30 s | 18,6 min |
+| `v-prohlizeci-3` | 44 | 18,5 min | **11,3 min** | 29,9 min |
+
+Rozdělení tedy **vyšlo** — samotné zkoušky zaberou 18 až 22 minut,
+rozdíl tři a půl minuty. Těch jedenáct minut v třetí směně **nejsou
+zkoušky**: je to krok „Prohlížeč", a v něm `npx playwright install
+--with-deps chromium`. Z časů v logu: `npm install` 2 s, pak
+„Installing dependencies…" od 21:14:23 do 21:25:21, tedy **10 min 58 s
+čistého aptu** (fonty, `libnss3`, `xvfb`, `libglib`). Chromium se
+nestahovalo vůbec — na stroji už bylo. Ostatní dvě směny měly týž
+příkaz hotový za dvacet sekund.
+
+Celý běh tedy trvá tolik, kolik trvá **nejdelší** směna: 29,9 minuty
+místo dřívějších 35+. Zkrácení je tedy **pět až šest minut, ne deset
+až dvanáct** — a kdyby apt na žádném stroji neztrácel čas, bylo by to
+22 minut. Je to jediné místo, kde se dnes ještě dá ubrat, a žádná
+kontrola se tím nedotkne; zapsáno jako úkol, protože `--with-deps`
+vyndat **naslepo nejde**: v tom pomalém běhu se `libnss3` opravdu
+instalovalo, a bez něj by se Chromium nespustilo.
 
 **Co na tom měření není přesné, a říká se to rovnou:** zkoušky od
 `test-vypadky` dál běžely zároveň s mými vlastními běhy zkoušky databáze
