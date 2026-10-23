@@ -314,11 +314,22 @@
    * Vrací null, když vstup nemá tvar, jaký má mít — volající pak ví, že
    * má sáhnout po plných datech, místo aby postavil model z ničeho.
    */
+  /* Nad touhle mezí se k verdiktu píše, že většina srovnání je od
+     jednoho inzerenta, a úvodní stránka takovou nabídku nenabízí jako
+     nejlepší příležitost. Stojí tu, a ne v postav(), protože ji čte
+     i js/pozemek.js a js/main.js — jedno číslo, jedno místo. */
+  var MEZ_PRIZNAT_INZERENTA = 0.5;
+
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
     var la = j.la || [], lo = j.lo || [];
+    /* Otisk inzerenta: slovník jmen a sloupec indexů, −1 = neznámý.
+       Bez něj by stránka pozemku počítala srovnávací hladinu z jiných
+       podkladů než mapa (hladina slučuje nabídky jednoho inzerenta, viz
+       postav níž) — a o témž pozemku by tvrdily jiný verdikt. */
+    var inzerenti = j.inzerenti || [], si = j.s || [];
     var n = a.length;
     if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
     var ven = new Array(n);
@@ -331,6 +342,7 @@
         price: c[i],
         lat: la[i] ? la[i] / 1e4 : 0,
         lng: lo[i] ? lo[i] / 1e4 : 0,
+        inz: (si[i] >= 0 && inzerenti[si[i]]) || undefined,
         /* Příznak podílu ve vstupu není a nemá být: model ho čte vždy
            z nabídky, o které se rozhoduje, ne z uložených polí. */
       };
@@ -348,6 +360,42 @@
        rozmezí a nic se neumlčí. Radši žádné tvrzení o nejistotě než
        vymyšlené. */
     chybaDruhu = chybaDruhu || null;
+    /* KDY PŘIHRÁDKA PŘESTÁVÁ BÝT SROVNÁNÍM VŮBEC.
+     *
+     * Devět desetin nabídek od jednoho inzerenta už není trh, je to
+     * cenník — percentil by říkal „levnější než 78 % pozemků" o tom,
+     * co jeden prodejce nacenil sám proti sobě. Tam se verdikt nevydá.
+     *
+     * NIŽŠÍ MEZ BYLA ZMĚŘENÁ A ZAMÍTNUTÁ. Při polovině zbylo z 912
+     * verdiktů 313 a z celé republiky zůstaly u orné půdy JEN DVA
+     * okresy, které vůbec nějaký verdikt dají (Praha-východ
+     * a Praha-západ, a jejich hladiny se liší o devět procent) — tedy
+     * funkce, která se tváří, že existuje, a nefunguje nikde.
+     * Naměřeno (23. 10., 1 932 nabídek po odečtení duplicit):
+     *
+     *     mez    verdiktů   „Výhodná cena"   z toho velkoobchodníkových
+     *     bez         912             236                 130 (55 %)
+     *     0,9         876             231                 126
+     *     0,8         824             214                 110
+     *     0,7         621             183                  83
+     *     0,6         427             142                  48
+     *     0,5         313             107                  23
+     *
+     * Místo mlčení se proto PŘIZNÁ, s čím se srovnávalo: percentil vrací
+     * i `podilInz` — podíl největšího inzerenta v té přihrádce — a kde
+     * je nad polovinou, napíše se to pod verdikt. Úvodní stránka takové
+     * nabídky navíc nenabízí jako „nejlepší příležitosti": tvrdit
+     * „nejvýhodnější" o ceně, kterou nacenil jeden prodejce proti sobě,
+     * je horší než ji neukázat.
+     *
+     * Druhá zkoušená cesta — sloučit nabídky jednoho inzerenta na jeho
+     * medián („jeden inzerent, jeden hlas") — vyšla HŮŘ, a to měřením:
+     * z 912 verdiktů zbylo 740, odznak „Výhodná cena" naopak vyskočil
+     * z 193 na 289 a z toho 170 (59 %) by patřilo zrovna tomu
+     * velkoobchodníkovi. Je to pravda (jeho ceny JSOU pod trhem), ale
+     * jako „nejlepší příležitosti" by se na úvodní stránce vysypal
+     * cenník jednoho prodejce. Odmítnuto. */
+    var MEZ_JEDEN_INZERENT = 0.9;
     var podleTypu = {};     // type|druh  → ceny za m² (na věrohodnost)
     /* TÉŽ, ALE MÍSTNĚ. Percentil bral pozemky téhož druhu z CELÉ
        republiky. Odhad o kus níž to schválně nesmí — stojí u něj, že
@@ -389,9 +437,9 @@
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
         var ko = d.type + '|' + g + '|' + d.okres;
-        (typOkres[ko] = typOkres[ko] || []).push(m2);
+        pridejDoHladiny(typOkres, ko, m2, d.inz);
         var kk = okresKraj[d.okres];
-        if (kk) { var k2 = d.type + '|' + g + '|' + kk; (typKraj[k2] = typKraj[k2] || []).push(m2); }
+        if (kk) pridejDoHladiny(typKraj, d.type + '|' + g + '|' + kk, m2, d.inz);
       }
       // Do srovnávací hladiny patří jen běžné nabídky. Vyvolávací cena dražby
       // je pod trhem z podstaty věci — kdyby se počítala do průměru, srovnávali
@@ -480,8 +528,64 @@
 
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
-    serad(typOkres);
-    serad(typKraj);
+    /* JEDEN INZERENT, JEDEN HLAS — a jen v srovnávací hladině, ne v odhadu.
+     *
+     * Percentil tvrdí „levnější než X % srovnatelných nabídek". To má být
+     * výpověď o TRHU, tedy o rozhodnutích prodávajících — a jeden
+     * prodávající, který vypsal devět set parcel podle jednoho cenníku,
+     * udělal jedno rozhodnutí, ne devět set.
+     *
+     * Naměřeno 23. 10. na ostrých datech (1 932 nabídek po odečtení
+     * duplicit): 900 z nich (47 %) je od jednoho velkoobchodníka — druhý
+     * největší inzerent má šest nabídek a 594 inzerentů má jedinou.
+     * V 28 ze 47 přihrádek okres+druh s aspoň deseti nabídkami drží
+     * nadpoloviční většinu, místy 86 až 100 %. Když se jeho nabídky
+     * z hladiny vyndaly úplně, změnil se percentil u 209 ze 474 verdiktů
+     * (44 %), průměrně o 6,6 p.b., a 33 pozemků by získalo odznak
+     * „Výhodná cena", který dnes nemají — žádný by o něj nepřišel.
+     * Zkreslení má tedy jeden směr: ostatní vypadají dražší, než jsou.
+     *
+     * PROČ SLOUČIT, A NE VYHODIT. Vyhodit ho znamená zahodit polovinu
+     * srovnání a přihrádky spadnou pod mez deseti; slučování nechá
+     * od každého inzerenta jeho medián, takže vzorek zůstane a váha
+     * zmizí. Platí to pro všechny stejně, bez prahu, který by se musel
+     * ladit: inzerent s jedinou nabídkou se sloučením nezmění.
+     *
+     * A PROČ JEN TADY. Odhad ceny (nabidkyOkres/Kraj/CR o kus výš) je
+     * PŘEDPOVĚĎ, ne výpověď o trhu — a u předpovědi platí, co se měřilo
+     * dřív u podílů: víc pozorování je lepší, i když jsou pokřivená
+     * (viz „Vynechat je tedy odhad ZHORŠÍ" výš). Proto se v odhadu
+     * nic neslučuje a zůstává tam každá nabídka.
+     *
+     * Nabídka bez otisku (`inz`) se počítá sama za sebe. To je u nabídky
+     * od jednotlivce pravda a u nabídky bez popisu je to jediné, co se
+     * dá tvrdit — otisk se bere z textu inzerátu, viz
+     * scripts/text-inzeratu.mjs. */
+    function pridejDoHladiny(idx, k, m2, inz) {
+      var b = idx[k] || (idx[k] = { samostatne: [], podleInz: null });
+      if (!inz) { b.samostatne.push(m2); return; }
+      if (!b.podleInz) b.podleInz = {};
+      (b.podleInz[inz] = b.podleInz[inz] || []).push(m2);
+    }
+    var podilNejvetsiho = {};     // klíč přihrádky → podíl největšího inzerenta
+    function dokonciHladinu(idx) {
+      Object.keys(idx).forEach(function (k) {
+        var b = idx[k], ven = b.samostatne.slice(), nej = 0, celkem = b.samostatne.length;
+        if (b.podleInz) {
+          Object.keys(b.podleInz).forEach(function (i) {
+            var h = b.podleInz[i];
+            celkem += h.length;
+            if (h.length > nej) nej = h.length;
+            for (var j = 0; j < h.length; j++) ven.push(h[j]);
+          });
+        }
+        ven.sort(function (a, b2) { return a - b2; });
+        idx[k] = ven;
+        podilNejvetsiho[k] = celkem ? nej / celkem : 0;
+      });
+    }
+    dokonciHladinu(typOkres);
+    dokonciHladinu(typKraj);
     /* JAK RYCHLE KLESÁ CENA ZA METR S VELIKOSTÍ POZEMKU
      *
      * Dosud se srovnávalo jen s pozemky podobné výměry (třetina až
@@ -801,13 +905,17 @@
          — tenhle verdikt mu odporoval. */
       if (spravniCena(d)) return null;
       var g = druhGroup(d.druh);
+      var kOkres = d.type + '|' + g + '|' + d.okres;
+      var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
       var zdroje = [
-        { pole: typOkres[d.type + '|' + g + '|' + d.okres], uroven: 'okres', kde: d.okres },
-        { pole: typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
+        { pole: typOkres[kOkres], klic: kOkres, uroven: 'okres', kde: d.okres },
+        { pole: typKraj[kKraj], klic: kKraj, uroven: 'kraj', kde: okresKraj[d.okres] }
       ];
       for (var z = 0; z < zdroje.length; z++) {
         var arr = zdroje[z].pole;
         if (!arr || arr.length < 10) continue;
+        /* PŘIHRÁDKU, KTEROU DRŽÍ JEDINÝ INZERENT, NEPOUŽIJEME. */
+        if (podilNejvetsiho[zdroje[z].klic] > MEZ_JEDEN_INZERENT) continue;
         if (arr[arr.length - 1] <= arr[0] * 1.2) continue;
         var val = d.price / d.area, below = 0;
         for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
@@ -863,7 +971,11 @@
            NESMÍ do něj sahat. Kopírovat ho pro každou z 1 957 nabídek
            by bylo plýtvání pamětí za nic. */
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,
-          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr };
+          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr,
+          /* Kolik ze srovnávaných nabídek je od jednoho inzerenta.
+             Posílá se vždycky; co s tím stránka udělá, rozhoduje
+             MEZ_PRIZNAT_INZERENTA. */
+          podilInz: podilNejvetsiho[zdroje[z].klic] || 0 };
       }
       return null;
     }
@@ -1225,6 +1337,7 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
     zaMetrKratce: zaMetrKratce,

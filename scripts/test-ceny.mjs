@@ -829,7 +829,17 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
        13. 10.: Česká Lípa 82 % vs Brno-město 83 %, tedy opačně, než má
        vyjít — ne proto, že by model lhal, ale protože Brno-město má
        v tomhle druhu míň nabídek, než model potřebuje. */
+    /* A JEN OKRESY, KDE VERDIKT OPRAVDU VZNIKNE. Od 23. 10. se hladina,
+       kterou drží jediný inzerent, nepoužije (MEZ_JEDEN_INZERENT
+       v js/ceny.js) — a protože jeden velkoobchodník drží skoro polovinu
+       dat, nejlevnější a nejdražší okres podle `pom` může být zrovna
+       z těch mlčících. Pak se porovnávala dvě prázdna a kontrola padla
+       na vadu, která žádná nebyla. Vybírá se proto měřením: zkušební
+       pozemek musí v tom okrese dostat percentil. */
+    const maVerdikt = (okres) => !!M.percentil({ type: 'sale', druh: 'orná půda', area: 5000,
+      price: Math.round(((pom[okres].slice().sort((x, y) => x - y)[pom[okres].length >> 1]) || 0) * 5000), okres });
     const hladiny = Object.keys(pom).filter((o) => pom[o].length >= PK_CENY.DOST_NABIDEK)
+      .filter(maVerdikt)
       .map((o) => { const a2 = pom[o].slice().sort((x, y) => x - y); return { okres: o, med: a2[a2.length >> 1] }; })
       .sort((x, y) => x.med - y.med);
     if (hladiny.length >= 2) {

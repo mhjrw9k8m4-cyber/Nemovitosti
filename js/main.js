@@ -7756,9 +7756,23 @@
     // orná půda, ale pestrá ukázka (stavební, zahrada, louka…). Pestřejší =
     // uvěřitelnější a užitečnější.
     var byGroup = {};
+    /* NEJLEPŠÍ PŘÍLEŽITOST SE NEDĚLÁ Z CIZÍHO CENÍKU. Verdikt o ceně
+       srovnává s nabídkami téhož druhu v okrese — a naměřeno 23. 10.:
+       jeden velkoobchodník drží 900 z 1 932 nabídek (47 %), takže
+       ze 231 nabídek, které by se sem dostaly, je 126 jeho a jejich
+       „výhodnost" je měřená proti jeho vlastním cenám. Po vyřazení
+       těch, kde je nad polovinou srovnání od jednoho inzerenta, zbývá
+       107 nabídek a z toho 23 jeho — tedy přesně tolik, kolik vyjde
+       z poctivého srovnání.
+       Na stránce pozemku se verdikt ukáže dál, jen s přiznáním, s čím
+       se srovnával (js/pozemek.js). Tady ne: „nejlepší příležitost" je
+       doporučení, a doporučovat se nemá to, o čem víme, že se to
+       neporovnalo s trhem. */
+    var mezInz = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
     DATA.forEach(function (d) {
       var di = dealInfo(d);
       if (!di || di.cheaper < 65) return;
+      if (di.podilInz > mezInz) return;
       var g = druhGroup(d.druh);
       var cur = byGroup[g];
       if (!cur || di.cheaper > cur.di.cheaper || (di.cheaper === cur.di.cheaper && perM2Val(d) < perM2Val(cur.d))) {

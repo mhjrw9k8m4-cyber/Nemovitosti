@@ -377,9 +377,15 @@
     if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+
+    var mezPriznat = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
+    var odJednoho = (pc.podilInz > mezPriznat)
+      ? '<div class="pv-pozn">Z toho <b>' + Math.round(pc.podilInz * 100)
+        + ' %</b> nabídek je od jednoho inzerenta — spíš jeho cenník než celý trh.</div>'
+      : '';
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
-      '<div class="pv-text">' + text + '</div>' +
+      '<div class="pv-text">' + text + '</div>' + odJednoho +
 
       pvGrafHtml(pc, (window.PK_CENY && window.PK_CENY.zaMetr) ? window.PK_CENY.zaMetr(d) : null) +
       '</div>' + odhadHtml(d);

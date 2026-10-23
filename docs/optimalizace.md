@@ -9087,3 +9087,104 @@ proto naměřený čas o pár sekund vyšší, než kdyby stroj stál jen jim.
 Na rozdělení to nemá vliv — rozhodují minuty, ne sekundy — ale je to
 důvod, proč se z těchhle čísel nemá dělat tabulka „zrychlili jsme
 zkoušku X".
+
+## 135. Verdikt o ceně měřil jednoho velkoobchodníka proti sobě *23. 10.*
+
+Nejsilnější tvrzení webu o penězích je „**Výhodná cena** — levnější než
+78 % pozemků téhož druhu v okrese". Stojí na srovnání s ostatními
+nabídkami. A ty nabídky nejsou trh.
+
+**Naměřeno** (1 932 nabídek po odečtení duplicit): značka inzerenta se
+dá spočítat z jeho vlastního textu — velkoobchod posílá u všech nabídek
+tutéž úvodní větu. Vyšlo 594 inzerentů, a:
+
+| | |
+|---|---|
+| největší inzerent | **900 nabídek (47 %)** |
+| druhý největší | 6 |
+| inzerentů s jedinou nabídkou | 594 z 639 popisů |
+| přihrádek okres+druh (≥ 10 nabídek), kde drží většinu | **28 ze 47** |
+| nejhorší | Semily trvalý travní porost **10/10** |
+
+Ze **236 odznaků „Výhodná cena" patřilo 130 (55 %) jemu** — a jejich
+výhodnost byla měřená proti jeho vlastnímu cenníku. Jeho medián je
+42 Kč/m² proti 69 u všech ostatních, takže zkreslení má jeden směr:
+ostatní vypadají dražší, než jsou.
+
+**Tři možnosti, všechny změřené skutečným modelem** (ne odhadem —
+js/ceny.js se postavil dvakrát a verdikty se porovnaly nabídka po
+nabídce):
+
+| možnost | verdiktů | „Výhodná cena" | z toho velkoobchodníkových |
+|---|---|---|---|
+| **A** nechat, jak bylo | 912 | 236 | 130 (55 %) |
+| **B** jeden inzerent, jeden hlas | 740 | **289** | **170 (59 %)** |
+| **C** nevydat verdikt, kde drží > 50 % | 313 | 107 | 23 (21 %) |
+
+**B vyšla hůř, než jak to bylo.** Sloučení jeho devíti set nabídek na
+jeden hlas znamená, že se jeho ceny srovnávají s trhem, ve kterém má
+jediný hlas — takže mu odznak „Výhodná cena" naopak přidělí častěji.
+Je to pravda (jeho ceny JSOU pod trhem), ale na úvodní stránce by se
+místo „nejlepších příležitostí" vysypal cenník jednoho prodejce.
+Zamítnuto měřením, ne úvahou.
+
+**C je příliš tupá.** Při mezi 50 % zbylo z 912 verdiktů 313 a z celé
+republiky zůstaly u orné půdy **jen dva okresy**, které vůbec nějaký
+verdikt dají (Praha-východ a Praha-západ, a jejich hladiny se liší
+o devět procent). Funkce, která se tváří, že existuje, a nefunguje
+nikde, není oprava.
+
+**Co se udělalo — tři pravidla, každé na svém místě:**
+
+1. **Nad 90 % se verdikt nevydá vůbec.** Devět desetin od jednoho
+   inzerenta už není trh, je to cenník. Stojí to 36 z 912 verdiktů;
+   23 z nich spadne o úroveň výš (okres → kraj) a dostane poctivější
+   srovnání.
+2. **Nad 50 % se u verdiktu NAPÍŠE, s čím se srovnával:** „Z toho 86 %
+   nabídek je od jednoho inzerenta — spíš jeho cenník než celý trh."
+   Dotklo se to 563 z 876 verdiktů (64 %). Číslo model vracel už dřív
+   (`pc.podilInz`), stránka ho zahazovala.
+3. **Úvodní stránka takové nabídky nenabízí jako „nejlepší
+   příležitosti".** Ze 231 nabídek, které by se tam dostaly, je 126
+   jeho; po vyřazení zbývá 107 a z toho 23 jeho — tedy přesně tolik,
+   kolik vyjde z poctivého srovnání. Verdikt na stránce pozemku zůstává
+   (s přiznáním): *číslo* s kontextem je informace, *doporučení* bez
+   kontextu je reklama.
+
+**Jak se značka do dat dostane.** `otiskInzerenta` v
+`scripts/text-inzeratu.mjs` vezme prvních šedesát znaků popisu,
+srovná je do jedné podoby a zahašuje na šest znaků. Nasazuje ji robot
+při stahování (popis má po ruce), do `data/opportunities.json` jde jen
+otisk, ne text. Srovnání pomlček není kosmetika: týž velkoobchodník
+používá raz spojovník, raz pomlčku, a bez toho vyšel jako dva inzerenti
+(513 + 414 nabídek). Starší data doplní
+`node scripts/doplnit-inzerenty.mjs` z `data/popisy.json`.
+
+**Co to stálo:** `data/opportunities.json` +8 kB (648 → 656),
+`data/model.json` +11,7 kB surově a **+4,3 kB přes drát** (sloupec
+indexů a slovník 594 jmen). Bez toho sloupce by stránka pozemku
+počítala srovnávací hladinu z jiných podkladů než mapa a o témž pozemku
+by tvrdily jiný verdikt — hlídá to `scripts/test-model-vstup.mjs`.
+
+**A odhad ceny se nedotkl ničeho.** Je to předpověď, ne výpověď
+o trhu, a u předpovědi platí, co se měřilo dřív u podílů: víc
+pozorování je lepší, i když jsou pokřivená. Slučuje se jen srovnávací
+hladina.
+
+**Hlídá to `scripts/test-inzerenti.mjs` (14 kontrol):** značka v datech
+je a sedí s tím, co ji počítá; model se podle ní opravdu chová; bez
+značky žádné soustředění nehlásí (je to tedy z dat, ne z kódu);
+pravidlo na úvodní stránce v kódu existuje a na datech opravdu něco
+vyřazuje a něco nechává; a model v malém souboru nese týž slovník.
+Plus jedna kontrola **o trhu, ne o kódu**: největší inzerent drží 47 %,
+a kdyby to přešlo 60 %, zkouška spadne — to se nespraví v programu,
+chce to druhý zdroj dat.
+
+Sabotáž, **šest směrů, všechny zachyceny**: vypnuté mlčení nad 90 %,
+nepočítané soustředění, zrušené pravidlo na úvodní stránce, značka
+vypadlá z dat, značka v datech přepsaná na jinou, a smazané přiznání
+ze stránky pozemku.
+
+**Co tím zavřené NENÍ.** Pořád je to obvaz: 47 % dat od jednoho
+prodejce je vada zdroje, ne výpočtu. Druhý zdroj nabídek je první bod
+v `docs/pro-majitele.md` a tahle zkouška je důvod, proč.

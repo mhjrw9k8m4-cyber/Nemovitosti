@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 import { createRequire } from 'node:module';
-import { bezEmodzi } from './text-inzeratu.mjs';
+import { bezEmodzi, otiskInzerenta } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
@@ -2305,10 +2305,20 @@ async function main() {
   /* Ozdoby z cizího textu ven — jedno místo pro celý web, viz
      scripts/text-inzeratu.mjs. Prázdný popis se nezapisuje: po úklidu
      ze samých emodži nezbude nic. */
+  /* A OTISK INZERENTA ROVNOU DO DAT. Verdikt „Výhodná cena" znamená
+     „levnější než X % srovnatelných nabídek" — a ten výpočet musí vědět,
+     kdo nabídku napsal, jinak se jeden velkoobchodník s devíti sty
+     nabídkami počítá jako devět set nezávislých pozorování trhu
+     (naměřeno, viz otiskInzerenta v scripts/text-inzeratu.mjs).
+     Jméno v datech není, pozná se podle jeho vlastního textu — a protože
+     popis je právě tady po ruce, počítá se to tady. Do opportunities.json
+     jde jen šest znaků otisku, ne celý popis. */
   for (const o of fresh) {
     if (!o._popis) continue;
     const t = bezEmodzi(o._popis);
     if (t) popisy[klicNabidky(o)] = t;
+    const otisk = otiskInzerenta(t);
+    if (otisk) o.inz = otisk;
   }
   writeFileSync(POPISY, JSON.stringify(popisy) + '\n', 'utf8');
   console.log(`Popisů od inzerentů: ${Object.keys(popisy).length} z ${fresh.length}.`);

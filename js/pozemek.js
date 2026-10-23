@@ -618,9 +618,22 @@
     if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    /* A S ČÍM SE TO SROVNÁVALO. Naměřeno 23. 10.: jeden velkoobchodník
+       drží 900 z 1 932 nabídek (47 %) a u 563 z 876 verdiktů je nad
+       polovinou srovnávaných nabídek od něj — v některých okresech
+       i 86 až 100 %. Věta „levnější než 78 % pozemků v okrese" je pak
+       pravda o nabídkách, ale ne o trhu: je to jeho cenník. Číslo
+       model vrací (pc.podilInz) a kdo se podle verdiktu rozhoduje
+       o kupní ceně, má nárok to vědět. Nad devět desetin už se verdikt
+       nevydá vůbec (MEZ_JEDEN_INZERENT v js/ceny.js). */
+    var mezPriznat = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
+    var odJednoho = (pc.podilInz > mezPriznat)
+      ? '<div class="pv-pozn">Z toho <b>' + Math.round(pc.podilInz * 100)
+        + ' %</b> nabídek je od jednoho inzerenta — spíš jeho cenník než celý trh.</div>'
+      : '';
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
-      '<div class="pv-text">' + text + '</div>' +
+      '<div class="pv-text">' + text + '</div>' + odJednoho +
       /* Cena za metr SE TU NEPOČÍTÁ. Vlastní dělení cenou a výměrou
          lže u spoluvlastnických podílů (v ceně je zlomek, výměra celá)
          — proto ho hlídá scripts/test-ceny.mjs a proto se bere z modelu

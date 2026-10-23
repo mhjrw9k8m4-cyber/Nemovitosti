@@ -126,11 +126,15 @@
 
   var MEZ_CHYBA_DRUHU = 50;
 
+  var MEZ_PRIZNAT_INZERENTA = 0.5;
+
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
     var la = j.la || [], lo = j.lo || [];
+
+    var inzerenti = j.inzerenti || [], si = j.s || [];
     var n = a.length;
     if (!n || c.length !== n || o.length !== n || d.length !== n || t.length !== n) return null;
     var ven = new Array(n);
@@ -143,6 +147,7 @@
         price: c[i],
         lat: la[i] ? la[i] / 1e4 : 0,
         lng: lo[i] ? lo[i] / 1e4 : 0,
+        inz: (si[i] >= 0 && inzerenti[si[i]]) || undefined,
 
       };
     }
@@ -153,6 +158,8 @@
     okresKraj = okresKraj || OKRES_KRAJ;
 
     chybaDruhu = chybaDruhu || null;
+
+    var MEZ_JEDEN_INZERENT = 0.9;
     var podleTypu = {};
 
     var typOkres = {};
@@ -172,9 +179,9 @@
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
         var ko = d.type + '|' + g + '|' + d.okres;
-        (typOkres[ko] = typOkres[ko] || []).push(m2);
+        pridejDoHladiny(typOkres, ko, m2, d.inz);
         var kk = okresKraj[d.okres];
-        if (kk) { var k2 = d.type + '|' + g + '|' + kk; (typKraj[k2] = typKraj[k2] || []).push(m2); }
+        if (kk) pridejDoHladiny(typKraj, d.type + '|' + g + '|' + kk, m2, d.inz);
       }
 
       if (d.type !== 'sale') return;
@@ -201,8 +208,32 @@
 
     function serad(idx) { Object.keys(idx).forEach(function (k) { idx[k].sort(function (a, b) { return a - b; }); }); }
     serad(podleTypu);
-    serad(typOkres);
-    serad(typKraj);
+
+    function pridejDoHladiny(idx, k, m2, inz) {
+      var b = idx[k] || (idx[k] = { samostatne: [], podleInz: null });
+      if (!inz) { b.samostatne.push(m2); return; }
+      if (!b.podleInz) b.podleInz = {};
+      (b.podleInz[inz] = b.podleInz[inz] || []).push(m2);
+    }
+    var podilNejvetsiho = {};
+    function dokonciHladinu(idx) {
+      Object.keys(idx).forEach(function (k) {
+        var b = idx[k], ven = b.samostatne.slice(), nej = 0, celkem = b.samostatne.length;
+        if (b.podleInz) {
+          Object.keys(b.podleInz).forEach(function (i) {
+            var h = b.podleInz[i];
+            celkem += h.length;
+            if (h.length > nej) nej = h.length;
+            for (var j = 0; j < h.length; j++) ven.push(h[j]);
+          });
+        }
+        ven.sort(function (a, b2) { return a - b2; });
+        idx[k] = ven;
+        podilNejvetsiho[k] = celkem ? nej / celkem : 0;
+      });
+    }
+    dokonciHladinu(typOkres);
+    dokonciHladinu(typKraj);
 
     var R2_MEZ = 0.15;
     var SKLON = {};
@@ -337,13 +368,17 @@
 
       if (spravniCena(d)) return null;
       var g = druhGroup(d.druh);
+      var kOkres = d.type + '|' + g + '|' + d.okres;
+      var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
       var zdroje = [
-        { pole: typOkres[d.type + '|' + g + '|' + d.okres], uroven: 'okres', kde: d.okres },
-        { pole: typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
+        { pole: typOkres[kOkres], klic: kOkres, uroven: 'okres', kde: d.okres },
+        { pole: typKraj[kKraj], klic: kKraj, uroven: 'kraj', kde: okresKraj[d.okres] }
       ];
       for (var z = 0; z < zdroje.length; z++) {
         var arr = zdroje[z].pole;
         if (!arr || arr.length < 10) continue;
+
+        if (podilNejvetsiho[zdroje[z].klic] > MEZ_JEDEN_INZERENT) continue;
         if (arr[arr.length - 1] <= arr[0] * 1.2) continue;
         var val = d.price / d.area, below = 0;
         for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
@@ -356,7 +391,9 @@
         }
 
         return { pct: pct, cheaper: 100 - pct, sample: arr.length,
-          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr };
+          uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr,
+
+          podilInz: podilNejvetsiho[zdroje[z].klic] || 0 };
       }
       return null;
     }
@@ -540,6 +577,7 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,
     zaMetrKratce: zaMetrKratce,

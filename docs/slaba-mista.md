@@ -337,6 +337,38 @@ od sebe.
 
 ---
 
+## 12b. Data jsou z jednoho zdroje a ze čtyřiceti sedmi procent od jednoho prodejce *23. 10.*
+
+Tenhle dokument kritizoval produkt, ale nikdy **data, na kterých celý
+web stojí**. Naměřeno:
+
+| | |
+|---|---|
+| bezrealitky.cz | **1 635 z 1 953 nabídek (84 %)** |
+| SPÚ (bez odkazu) | 209 |
+| všechny dražební weby dohromady | 97 |
+| Sreality, realitní kanceláře | **0** |
+
+„Pozemky na jedné mapě" slibuje mapu trhu; je to **mapa jednoho
+portálu**. Kdyby bezrealitky změnily značkování nebo robota
+zablokovaly, zmizí 84 % obsahu i smysl 2 232 vygenerovaných stránek,
+na kterých stojí veškerá sázka na vyhledávač.
+
+A uvnitř toho: **900 z 1 932 nabídek (47 %) je od jednoho
+velkoobchodníka** (druhý největší inzerent má šest, 594 inzerentů má
+jedinou), **43 % jeho nabídek jsou spoluvlastnické podíly** a jeho
+medián je 42 Kč/m² proti 69 u všech ostatních. Co to dělalo s cenovým
+verdiktem a co se s tím udělalo, je v oddílu 135
+`docs/optimalizace.md`; **spravit se to v kódu nedá** — opravou je
+druhý zdroj dat (bod 1 v `docs/pro-majitele.md`).
+
+Dvě věci, kterými se web vrací a které jsou skoro prázdné: `first_seen`
+má 1 529 z 1 953 nabídek shodné (den, kdy se to pole zavedlo), takže
+„nové na trhu" nenese informaci, a zaznamenaná **změna ceny je
+u 56 nabídek z 1 953 (2,9 %)** za celou republiku.
+
+---
+
 ## 13. Zabezpečení: co je zavřené a co zavřít nejde *23. 10.*
 
 Tenhle dokument o zabezpečení dosud neměl ani řádek, a to byla mezera

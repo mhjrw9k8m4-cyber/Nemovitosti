@@ -105,6 +105,14 @@ const kandidati = [];
 for (let i = 0; i < vsechny.length && kandidati.length < STROP; i += krok) kandidati.push(vsechny[i]);
 
 let sVerdiktem = 0, bezPoctu = 0, nesedi = 0, podDeset = 0, jine = 0, porovnano = 0, nespojeno = 0, bezNabidky = 0;
+/* A DRUHÁ VĚC, KTERÁ MUSÍ BÝT U VERDIKTU VIDĚT: jak je ten vzorek
+   soustředěný. Naměřeno 23. 10.: jeden velkoobchodník drží 900 z 1 932
+   nabídek (47 %) a u 563 z 876 verdiktů je nad polovinou srovnání od
+   něj. Model to vrací (pc.podilInz) a stránka to má napsat — jinak se
+   „levnější než 78 % pozemků" čte jako výpověď o trhu, a je to výpověď
+   o jeho cenníku. Měří se obojí: že se to napíše, KDE má, a že se to
+   nepíše, kde nemá. */
+let mel = 0, nemel = 0, chybiPozn = 0, prebyvaPozn = 0, spatneCislo = 0;
 const ukazky = [];
 const stranky = [];
 for (const s of kandidati) {
@@ -118,7 +126,11 @@ for (const s of kandidati) {
     const odznak = ((document.querySelector('.pz-verdict .pv-badge') || {}).textContent || '').trim();
     const text = (el.textContent || '').replace(/\s+/g, ' ').trim();
     const m = /\((\d+)\s+nabíd/.exec(text);
-    return { text, odznak, vText: m ? Number(m[1]) : null };
+    const pozn = document.querySelector('.pz-verdict .pv-pozn');
+    const poznText = pozn ? (pozn.textContent || '').replace(/\s+/g, ' ').trim() : null;
+    const mp = poznText ? /(\d+)\s*%/.exec(poznText) : null;
+    return { text, odznak, vText: m ? Number(m[1]) : null,
+      pozn: poznText, poznPct: mp ? Number(mp[1]) : null };
   });
   if (!v) continue;
   /* TŘI VERDIKTY O CENĚ, NIC JINÉHO. Ve stejném rámečku se ukazuje
@@ -139,7 +151,31 @@ for (const s of kandidati) {
     nesedi++;
     if (ukazky.length < 4) ukazky.push(s + ': v textu ' + v.vText + ', ze zdroje vychází ' + ocekavany);
   }
+  /* Soustředění vzorku: porovnává se s číslem, které TADY v node
+     spočítá týž model, ne s jiným místem v textu. */
+  const pcMod = MODEL.percentil(nab) || {};
+  const maBytPozn = (pcMod.podilInz || 0) > CENY.MEZ_PRIZNAT_INZERENTA;
+  if (maBytPozn) {
+    mel++;
+    if (!v.pozn) { chybiPozn++; if (ukazky.length < 4) ukazky.push(s + ': chybí přiznání soustředění (' + Math.round(pcMod.podilInz * 100) + ' % od jednoho)'); }
+    else if (v.poznPct !== Math.round(pcMod.podilInz * 100)) {
+      spatneCislo++;
+      if (ukazky.length < 4) ukazky.push(s + ': v přiznání ' + v.poznPct + ' %, ze zdroje ' + Math.round(pcMod.podilInz * 100) + ' %');
+    }
+  } else {
+    nemel++;
+    if (v.pozn) { prebyvaPozn++; if (ukazky.length < 4) ukazky.push(s + ': přiznání tam být nemá (' + Math.round((pcMod.podilInz || 0) * 100) + ' %)'); }
+  }
 }
+
+pravda(`soustředěné vzorky se v tom vzorku stránek našly (${mel})`, mel >= 3,
+  `jen ${mel} — kontrola přiznání by neměřila nic`);
+pravda('a u každého takového verdiktu je napsané, kolik je od jednoho inzerenta',
+  chybiPozn === 0, `${chybiPozn} bez přiznání:\n      ` + ukazky.join('\n      '));
+pravda('a to číslo sedí s tím, co spočítá model',
+  spatneCislo === 0, `${spatneCislo} s jiným číslem:\n      ` + ukazky.join('\n      '));
+pravda(`a kde vzorek soustředěný není, přiznání se nepíše (${nemel} stránek)`,
+  prebyvaPozn === 0, `${prebyvaPozn} s přebytečným přiznáním:\n      ` + ukazky.join('\n      '));
 
 pravda(`verdikt o ceně se ukazuje (${sVerdiktem} z ${stranky.length} prohlédnutých stránek)`,
   sVerdiktem >= 8, `jen ${sVerdiktem} — zkouška by neměla co měřit`);

@@ -445,6 +445,9 @@ jobs:
       - name: Odkazy do nového okna mají noopener
         run: node scripts/test-nove-okno.mjs
 
+      - name: Značka inzerenta a soustředění trhu
+        run: node scripts/test-inzerenti.mjs
+
       - name: Nálož v datech neprojde generátory
         run: node scripts/test-escape-generatory.mjs
 

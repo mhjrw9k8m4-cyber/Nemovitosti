@@ -1565,6 +1565,8 @@ to{opacity:1;transform:none}
 .okr-item .okr-place{padding-top:2px}
 }
 :root{--vc:var(--znacka-svetla)}
+.pv-pozn{margin-top:4px;font-size:13px;line-height:1.5;color:var(--muted)}
+.pv-pozn b{color:var(--text)}
 .pvg{margin:12px 0 0}
 .pvg-plocha{display:flex;align-items:stretch;gap:8px}
 .pvg-osa-y{position:relative;flex:none;width:16px;height:96px;font-size:11px;line-height:1;color:var(--muted);font-variant-numeric:tabular-nums}

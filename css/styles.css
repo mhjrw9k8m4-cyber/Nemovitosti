@@ -5693,6 +5693,16 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    vykreslil bez té stránky. */
 :root{ --vc:var(--znacka-svetla); }
 
+/* PŘIZNÁNÍ, S ČÍM SE VERDIKT SROVNÁVAL.
+   Věta pod verdiktem o ceně: kolik srovnávaných nabídek je od jednoho
+   inzerenta. Píše ji js/pozemek.js, až když dopočítá cenu — tedy dávno
+   po tom, co stylopis dorazil, takže pravidlo patří sem a ne do
+   vloženého styl v 2 232 stránkách pozemků (týž důvod jako u grafu
+   níž). Drobnějším písmem než verdikt: je to upozornění k číslu, ne
+   druhé tvrzení. */
+.pv-pozn{margin-top:4px; font-size:13px; line-height:1.5; color:var(--muted);}
+.pv-pozn b{color:var(--text);}
+
 /* =====================================================================
    GRAF ROZDĚLENÍ CEN U POZEMKU
    =====================================================================

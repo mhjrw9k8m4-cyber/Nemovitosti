@@ -126,6 +126,11 @@
       "typ": "string",
       "vzdy": false,
       "popis": "Den změny ceny (YYYY-MM-DD)."
+    },
+    "inz": {
+      "typ": "string",
+      "vzdy": false,
+      "popis": "Otisk inzerenta — šest znaků spočítaných z jeho vlastního textu (prvních 60 znaků popisu, srovnaných do jedné podoby). Jméno inzerenta data nenesou, tohle je jen značka „tyhle nabídky napsal týž člověk\". Potřebuje ji cenový verdikt: jeden velkoobchodník drží skoro polovinu nabídek, a bez té značky by se jeho cenník počítal jako stovky nezávislých pozorování trhu. Nabídka bez popisu ji nemá a počítá se sama za sebe. Počítá to otiskInzerenta v scripts/text-inzeratu.mjs."
     }
   }
 }

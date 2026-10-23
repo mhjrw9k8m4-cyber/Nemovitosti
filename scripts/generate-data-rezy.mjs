@@ -234,10 +234,19 @@ export async function spust() {
     const iO = new Map(okresy.map((x, i) => [x, i]));
     const iD = new Map(druhy.map((x, i) => [x, i]));
     const iT = new Map(typy.map((x, i) => [x, i]));
-    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [];
+    /* OTISK INZERENTA TU BÝT MUSÍ, na rozdíl od příznaku podílu o kus
+       níž. Srovnávací hladina od 23. 10. slučuje nabídky jednoho
+       inzerenta na jeden hlas a přihrádku, kterou drží jediný, nepoužije
+       (js/ceny.js, MEZ_JEDEN_INZERENT) — bez tohohle sloupce by stránka
+       pozemku počítala z jiných podkladů než mapa a o témž pozemku by
+       tvrdily jiný verdikt. Hlídá to scripts/test-model-vstup.mjs. */
+    const inzerenti = [...new Set(proModel.map((x) => x.inz).filter(Boolean))].sort();
+    const iI = new Map(inzerenti.map((x, i) => [x, i]));
+    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [], si = [];
     for (const x of proModel) {
       o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
       a.push(x.area || 0); c.push(x.price || 0);
+      si.push(x.inz && iI.has(x.inz) ? iI.get(x.inz) : -1);
       /* SOUŘADNICE JAKO CELÁ ČÍSLA, ZAOKROUHLENÉ NA ČTYŘI DESETINNÁ
          MÍSTA (asi 11 m). Model je potřebuje: obvyklá cena se počítá
          z nejbližších nabídek v okolí, ne jen z okresu — naměřeno, že je
@@ -253,8 +262,9 @@ export async function spust() {
       chyba: chybaModelu,
       popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
         + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
-        + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla).',
-      okresy, druhy, typy, o, d, t, a, c, la, lo,
+        + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla), '
+        + 's je index do inzerenti (−1 = neznámý).',
+      okresy, druhy, typy, inzerenti, o, d, t, a, c, la, lo, s: si,
     });
   })();
   const bajtuModel = zapis('data/model.json', modelVstup);

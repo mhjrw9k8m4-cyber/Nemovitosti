@@ -4965,9 +4965,12 @@
     if (!grid || !sec) return;
 
     var byGroup = {};
+
+    var mezInz = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
     DATA.forEach(function (d) {
       var di = dealInfo(d);
       if (!di || di.cheaper < 65) return;
+      if (di.podilInz > mezInz) return;
       var g = druhGroup(d.druh);
       var cur = byGroup[g];
       if (!cur || di.cheaper > cur.di.cheaper || (di.cheaper === cur.di.cheaper && perM2Val(d) < perM2Val(cur.d))) {
