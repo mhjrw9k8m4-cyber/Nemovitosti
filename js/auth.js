@@ -107,19 +107,74 @@
      co držet úkon, který člověk právě udělal. Vrací se ale, jestli to
      server potvrdil, aby to stránka mohla PŘIZNAT (muj-inzerat.html
      a js/pridat.js) místo tiché polopravdy. */
+  /* CO PO ODHLÁŠENÍ NESMÍ ZŮSTAT V PROHLÍŽEČI.
+     Dvě věci z účtu se v prohlížeči drží jako MEZIPAMĚŤ, aby je šlo
+     číst okamžitě a bez sítě: uložené pozemky (js/ulozene-ucet.js)
+     a soukromé poznámky (js/poznamky.js). Odhlášení je dosud nechávalo
+     být, takže na sdíleném počítači si po „Odhlásit se" další člověk
+     otevřel kteroukoli stránku pozemku a číst cizí poznámky — a do
+     těch se píšou věty o lidech („majitel vypadal divně").
+     SMAŽE SE JEN TO, CO ÚČET ZNÁ. Poznámka si vede příznak `nahrano`
+     a u uložených pozemků je na to celý klíč `pk_fav_nahrano_v1`.
+     Co se na účet nikdy nedostalo, bylo by odhlášením nevratně pryč —
+     to zůstává, a stránka o tom řekne. Co na účtu je, se smaže: tam to
+     neztratíme, a tady to nemá co dělat.
+     Když se hodnota nedá přečíst, maže se celá. Lepší zahodit
+     mezipaměť, než ji nechat ležet pro dalšího člověka.
+     SEZNAM KLÍČŮ JE I V js/ulozene.js (stránka „Moje data", příznak
+     `zUctu`). Shodu obou kopií hlídá scripts/test-sliby-data.mjs —
+     bez toho by se rozešly v den, kdy přibude třetí taková věc. */
+  function ctiJson(klic) {
+    try { return JSON.parse(localStorage.getItem(klic) || 'null'); } catch (e) { return undefined; }
+  }
+  function uklidMistniKopie() {
+    var zbylo = { poznamek: 0, ulozenych: 0 };
+    /* Poznámky: { klíč: { text, kdy, nahrano } } */
+    var pozn = ctiJson('pk_poznamky_v1');
+    try {
+      if (pozn === undefined) localStorage.removeItem('pk_poznamky_v1');
+      else if (pozn && typeof pozn === 'object') {
+        var zustat = {};
+        Object.keys(pozn).forEach(function (k) {
+          var z = pozn[k];
+          if (z && z.nahrano !== true && z.text) { zustat[k] = z; zbylo.poznamek++; }
+        });
+        if (zbylo.poznamek) localStorage.setItem('pk_poznamky_v1', JSON.stringify(zustat));
+        else localStorage.removeItem('pk_poznamky_v1');
+      }
+    } catch (e) { try { localStorage.removeItem('pk_poznamky_v1'); } catch (e2) {} }
+    /* Uložené pozemky: pole klíčů + mapa toho, co z nich zná účet. */
+    var fav = ctiJson('pk_fav_v1');
+    var zna = ctiJson('pk_fav_nahrano_v1');
+    try {
+      if (fav === undefined) localStorage.removeItem('pk_fav_v1');
+      else if (Array.isArray(fav)) {
+        var m = (zna && typeof zna === 'object') ? zna : {};
+        var zbyl = fav.filter(function (k) { return !m[k]; });
+        zbylo.ulozenych = zbyl.length;
+        if (zbyl.length) localStorage.setItem('pk_fav_v1', JSON.stringify(zbyl));
+        else localStorage.removeItem('pk_fav_v1');
+      }
+      localStorage.removeItem('pk_fav_nahrano_v1');   // popisuje jen to, co ví účet
+    } catch (e) {}
+    return zbylo;
+  }
+
   function logout() {
     var s = getSession();
     var t = s && s.access_token;
     setSession(null);                       // tady a hned, bez ohledu na síť
-    if (!t) return Promise.resolve(true);   // nebylo co rušit
-    if (!URL || !KEY) return Promise.resolve(false);
+    var zbylo = uklidMistniKopie();         // mezipaměť z účtu pryč
+    if (!t) return Promise.resolve({ server: true, zbylo: zbylo });   // nebylo co rušit
+    if (!URL || !KEY) return Promise.resolve({ server: false, zbylo: zbylo });
     try {
       return fetch(URL + '/auth/v1/logout?scope=local', {
         method: 'POST',
         headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + t },
         keepalive: true
-      }).then(function (r) { return !!r.ok; }, function () { return false; });
-    } catch (e) { return Promise.resolve(false); }
+      }).then(function (r) { return { server: !!r.ok, zbylo: zbylo }; },
+        function () { return { server: false, zbylo: zbylo }; });
+    } catch (e) { return Promise.resolve({ server: false, zbylo: zbylo }); }
   }
 
   // Zapomenuté heslo — pošle na e-mail odkaz pro nastavení nového hesla.

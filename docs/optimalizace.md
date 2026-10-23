@@ -8269,3 +8269,85 @@ opravdu zneplatní. Měří se, že se pošle správná žádost se správným
 tokenem a rozsahem; zbytek je chování Supabase, a vyzkoušet to proti
 živému projektu by znamenalo přihlašovat se tam zkušebním účtem —
 to je práce pro majitele, ne pro CI.
+
+## 120. Co po odhlášení zůstalo v prohlížeči — a čtyři texty, které o tom lhaly *23. 10.*
+
+Oddíl 119 zrušil sezení i na serveru. Zbývala druhá polovina téže věci:
+**co po odhlášení zůstane v prohlížeči.** Změřeno 23. 10.:
+
+* `js/poznamky.js` drží poznámky z účtu v `localStorage`
+  (`pk_poznamky_v1`) jako mezipaměť — čtení musí být okamžité, uprostřed
+  vykreslování karty se na server čekat nedá;
+* `js/ulozene-ucet.js` tamtéž uložené pozemky (`pk_fav_v1`) a k nim
+  `pk_fav_nahrano_v1` (co z nich zná účet);
+* `logout()` mazal **jen `pk_auth`**.
+
+Na sdíleném počítači to znamenalo: člověk se odhlásí, další si otevře
+kteroukoli stránku pozemku — a čte cizí poznámky. Do nich se přitom
+píšou věty o lidech; v hlavičce `js/poznamky.js` stojí přesně ten
+příklad („majitel vypadal divně").
+
+**Maže se jen to, co účet zná.** Poznámka si vede příznak `nahrano`
+a u uložených pozemků je na to celý klíč, takže se to poznat dá. Co se
+na účet nikdy nedostalo, by bylo odhlášením nevratně pryč — to zůstává
+a `logout()` to vrací v `zbylo`, aby o tom stránka mohla říct. Rozbitá
+hodnota se maže celá: lepší zahodit mezipaměť, než ji nechat ležet
+pro dalšího člověka. A co s účtem nemá nic společného (skryté nabídky,
+filtry, naposledy prohlížené), se nemaže vůbec.
+
+Obě stránky s tlačítkem teď řeknou, co se stalo: „Odhlášeno. Uložené
+pozemky a poznámky zůstávají na účtu — kopii v tomhle prohlížeči jsme
+smazali." A pokud něco zůstalo, i to.
+
+### Čtyři místa, která o tom psala svět před účty
+
+Při měření se ukázalo něco horšího než mezipaměť. Okno se zásadami
+(`INFO.soukromi` v `js/main.js`) bylo poctivě přepsané — „Bez
+přihlášení… / S účtem…" — ale:
+
+| Kde | Co tam stálo |
+|---|---|
+| `ochrana-udaju.html` | uložené pozemky ani poznámky **nebyly v seznamu údajů vůbec**, a v oddílu o úložišti stálo „zůstávají u vás v zařízení a neodesílají se nám" |
+| `moje-data.html` | „Nic z toho se nikam neodesílá a nevidíme to ani my" |
+| `porovnani.html` | „Uložené pozemky leží jen v tomhle prohlížeči… a nikam se neodesílají" |
+| `index.html` | otázka o registraci, **dvakrát** (viditelný text i strukturovaná data pro vyhledávač): „Nic se neodesílá na server" |
+| `js/ulozene.js` | popis poznámek na „Mých datech": „Nikam se neodesílají." |
+
+U přihlášeného člověka to **není pravda** (`supabase/poznamky.sql`,
+`supabase/ulozene-na-uctu.sql`). V právním dokumentu je to ta nejdražší
+chyba, jakou web může mít — dražší než kterákoli vada vzhledu. Všech
+pět míst teď rozlišuje „bez přihlášení" a „s účtem", a v zásadách je
+k tomu vlastní odrážka i s právním základem a s tím, že odhlášením se
+kopie v prohlížeči smaže.
+
+### Proč to žádná zkouška nenašla
+
+`scripts/test-sliby-data.mjs` je napsaná právě na tuhle třídu vad — ale
+hlídala **jen text v `js/main.js`**. Doplněno: táž pravidla platí na
+všech 2 360 stránkách, v jejich strukturovaných datech i v polích
+s textem pro člověka ve skriptech, plus dvě pozitivní kontroly (zásady
+to musí jmenovat; popis každé takové mezipaměti na „Mých datech" musí
+rozlišovat účet) a jedna křížová: **co odhlášení maže, to musí být
+právě to, co je v `js/ulozene.js` označené příznakem `zUctu`.**
+
+Hlídači: `test-sliby-data.mjs` 16 kontrol, `test-prihlaseni.mjs` 45
+(12 nových, z toho osm nad mezipamětí v prohlížeči). Sabotáž dvanácti
+směrů, všechny zachyceny — pět vrácených starých vět, odstraněná
+odrážka v zásadách, zrušený příznak, odhlášení nemazající poznámky,
+mazající všechno (i nenahrané), mazající i skryté nabídky a nechávající
+ležet rozbitou hodnotu.
+
+**Dvakrát přitom moje kontrola nenašla to, co jsem jí schválně
+nastrčil**, a poučení z toho je pokaždé stejné jako v oddílu 115:
+
+1. **Jedna věta nestačí.** „Co jste si k pozemkům napsali. Nikam se
+   neodesílají." má věc v jedné větě a slib ve druhé. Měří se proto okno
+   až tří po sobě jdoucích vět.
+2. **Slovo „přihlášení" není rozlišení.** Odpověď „Žádná registrace ani
+   přihlášení — …" to slovo nese a přitom nerozlišuje nic. Platí jen
+   věta, která říká, KDY to platí („bez přihlášení", „s účtem").
+
+A jednou kontrola křičela vlka: skenovat **všechny** řetězce ve
+skriptech nejde — mezi dvěma nesouvisejícími uvozovkami leží kus kódu,
+a tak byl jako nepravda ohlášen úryvek z `js/pozemek.js`. Měří se proto
+jen pole s textem pro člověka (`popis`, `nazev`, `sub`, `veta`).

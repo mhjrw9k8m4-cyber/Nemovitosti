@@ -646,3 +646,21 @@ rozhoduje), a když to jinak nejde, s PŘIPNUTOU verzí
 `package-lock.json` — a rozdíl verzí playwrightu už jednou udělal
 červenou CI při zelené zkoušce. Cizí akce (co není `actions/*`) musí
 být připnutá na SHA. Hlídá to `scripts/test-ci-prava.mjs`.
+
+### Co z účtu leží i v prohlížeči, to odhlášení maže — a texty to musí rozlišovat
+
+Uložené pozemky a poznámky jsou u přihlášeného člověka na serveru
+a v prohlížeči jen jako mezipaměť. Platí pro ně dvě věci:
+
+1. **Odhlášení tu kopii maže** (`uklidMistniKopie()` v `js/auth.js`) —
+   ale jen to, co účet zná (`nahrano` u poznámky, `pk_fav_nahrano_v1`
+   u uložených). Co se nikdy nenahrálo, zůstává a `logout()` to vrátí
+   v `zbylo`. Přibude-li třetí taková mezipaměť, patří do téhož seznamu
+   a do `js/ulozene.js` s příznakem `zUctu: true` — shodu obou seznamů
+   hlídá `scripts/test-sliby-data.mjs`.
+2. **Žádný text nesmí tvrdit, že „nikam nejdou", bez rozlišení.** Platí
+   to jen bez přihlášení. Nestačí ve větě zmínit slovo „přihlášení"
+   (odpověď „Žádná registrace ani přihlášení…" ho nese a nerozlišuje
+   nic) — musí tam být „bez přihlášení" nebo „s účtem". Hlídá to táž
+   zkouška na všech stránkách, v jejich strukturovaných datech i v polích
+   `popis`/`nazev`/`sub`/`veta` ve skriptech.

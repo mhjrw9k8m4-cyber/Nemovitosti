@@ -397,7 +397,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
 {
   resetStav();
   const { ctx, p } = await sPrihlasenim(3600);
-  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  const r = await p.evaluate(() => window.PKAuth.logout());
   await p.waitForTimeout(200);
   pravda('odhlášení pošle serveru, že sezení končí', stav.odhlaseni.length === 1,
     `server dostal ${stav.odhlaseni.length} žádostí o odhlášení — obnovovací token tam zůstává platný`);
@@ -406,7 +406,7 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
     z.autorizace === 'Bearer a0', `Authorization: „${z.autorizace}"`);
   pravda('a ruší jen tohle zařízení (scope=local, ne telefon s ním)',
     /[?&]scope=local\b/.test(z.url || ''), `adresa: „${z.url}"`);
-  pravda('potvrzené zrušení ohlásí jako úspěch', zruseno === true, `logout() vrátil ${zruseno}`);
+  pravda('potvrzené zrušení ohlásí jako úspěch', r.server === true, `logout() vrátil ${JSON.stringify(r)}`);
   pravda('a ve schránce prohlížeče nezůstane nic',
     (await p.evaluate(() => localStorage.getItem('pk_auth'))) === null,
     'pk_auth ve schránce zůstal');
@@ -417,13 +417,13 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   stav.odhlaseniOdpoved = '500';
   const { ctx, p } = await sPrihlasenim(3600);
-  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  const r = await p.evaluate(() => window.PKAuth.logout());
   await p.waitForTimeout(200);
   pravda('je co měřit — server odhlášení odmítl', stav.odhlaseni.length === 1,
     `server dostal ${stav.odhlaseni.length} žádostí`);
   pravda('při chybě serveru je člověk odhlášený stejně', (await jePrihlasen(p)) === false,
     'odpověď serveru zdržela úkon, který člověk právě udělal');
-  pravda('ale logout() nelže, že se to zrušilo', zruseno === false, `logout() vrátil ${zruseno}`);
+  pravda('ale logout() nelže, že se to zrušilo', r.server === false, `logout() vrátil ${JSON.stringify(r)}`);
   await ctx.close();
 }
 /* Bez signálu — adresa, na které nikdo neposlouchá. */
@@ -441,13 +441,95 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
     window.PK_SUPABASE_KEY = 'anon';
   });
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
-  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  const r = await p.evaluate(() => window.PKAuth.logout());
   pravda('bez signálu je člověk odhlášený taky', (await jePrihlasen(p)) === false,
     'bez sítě se odhlášení neprovedlo ani lokálně');
-  pravda('a i tady se přizná, že server o tom neví', zruseno === false,
-    `logout() vrátil ${zruseno}`);
+  pravda('a i tady se přizná, že server o tom neví', r.server === false,
+    `logout() vrátil ${JSON.stringify(r)}`);
   await ctx.close();
 }
+/* --- CO PO ODHLÁŠENÍ NESMÍ ZŮSTAT V PROHLÍŽEČI -------------------
+   Uložené pozemky a poznámky se v prohlížeči drží jako mezipaměť toho,
+   co u přihlášeného člověka leží na účtu. Odhlášení je nechávalo být,
+   takže na sdíleném počítači si po „Odhlásit se" další člověk otevřel
+   kteroukoli stránku pozemku a čti cizí poznámky.
+   Maže se jen to, co účet zná: poznámka má příznak `nahrano`
+   a u uložených je na to klíč pk_fav_nahrano_v1. Co se nikdy nenahrálo,
+   by bylo odhlášením nevratně pryč — to zůstává a logout() to vrátí
+   v `zbylo`, aby o tom stránka mohla říct. */
+{
+  resetStav();
+  const { ctx, p } = await sPrihlasenim(3600);
+  await p.evaluate(() => {
+    localStorage.setItem('pk_poznamky_v1', JSON.stringify({
+      'na-uctu': { text: 'majitel vypadal divně', kdy: 2, nahrano: true },
+      'jen-tady': { text: 'tohle se nenahrálo', kdy: 3, nahrano: false }
+    }));
+    localStorage.setItem('pk_fav_v1', JSON.stringify(['uc-1', 'mistni-1']));
+    localStorage.setItem('pk_fav_nahrano_v1', JSON.stringify({ 'uc-1': 1 }));
+    localStorage.setItem('pk_skryte_v1', JSON.stringify(['x']));   // tohle na účtu není
+  });
+  const r = await p.evaluate(() => window.PKAuth.logout());
+  const po = await p.evaluate(() => ({
+    pozn: localStorage.getItem('pk_poznamky_v1'),
+    fav: localStorage.getItem('pk_fav_v1'),
+    zna: localStorage.getItem('pk_fav_nahrano_v1'),
+    skryte: localStorage.getItem('pk_skryte_v1')
+  }));
+  pravda('odhlášení smaže poznámku, kterou účet zná',
+    (po.pozn || '').indexOf('majitel vypadal divně') < 0,
+    `v prohlížeči zůstalo: ${po.pozn}`);
+  pravda('a nechá tu tu, která se na účet nikdy nenahrála',
+    (po.pozn || '').indexOf('tohle se nenahrálo') >= 0,
+    'nenahraná poznámka byla odhlášením nevratně pryč');
+  pravda('a řekne, kolik jich zůstalo', r.zbylo && r.zbylo.poznamek === 1,
+    `zbylo: ${JSON.stringify(r.zbylo)}`);
+  pravda('uložený pozemek, který účet zná, zmizí taky',
+    (po.fav || '').indexOf('uc-1') < 0, `zůstalo: ${po.fav}`);
+  pravda('a ten uložený bez přihlášení zůstává',
+    (po.fav || '').indexOf('mistni-1') >= 0, `zůstalo: ${po.fav}`);
+  pravda('seznam „co z uložených zná účet" se smaže celý', po.zna === null,
+    `zůstalo: ${po.zna}`);
+  pravda('a co s účtem nemá nic společného, se nemaže (skryté nabídky)',
+    po.skryte !== null, 'odhlášení smazalo i to, co na účet nikdy nešlo');
+  await ctx.close();
+}
+/* A když je v mezipaměti jen to, co účet zná, nezůstane ani klíč. */
+{
+  resetStav();
+  const { ctx, p } = await sPrihlasenim(3600);
+  await p.evaluate(() => {
+    localStorage.setItem('pk_poznamky_v1', JSON.stringify({
+      a: { text: 'jedna', kdy: 1, nahrano: true }, b: { text: 'dvě', kdy: 2, nahrano: true } }));
+    localStorage.setItem('pk_fav_v1', JSON.stringify(['k1']));
+    localStorage.setItem('pk_fav_nahrano_v1', JSON.stringify({ k1: 1 }));
+  });
+  const r = await p.evaluate(() => window.PKAuth.logout());
+  const po = await p.evaluate(() => ({
+    pozn: localStorage.getItem('pk_poznamky_v1'), fav: localStorage.getItem('pk_fav_v1') }));
+  pravda('po odhlášení nezůstane ani prázdná mezipaměť poznámek', po.pozn === null, `zůstalo: ${po.pozn}`);
+  pravda('ani prázdný seznam uložených', po.fav === null, `zůstalo: ${po.fav}`);
+  pravda('a nehlásí se nic nenahraného', r.zbylo.poznamek === 0 && r.zbylo.ulozenych === 0,
+    `zbylo: ${JSON.stringify(r.zbylo)}`);
+  await ctx.close();
+}
+/* Rozbitá hodnota v mezipaměti: maže se celá. Nechat ji ležet by
+   znamenalo, že stačí poznámky „pokazit" a odhlášení je nesmaže. */
+{
+  resetStav();
+  const { ctx, p } = await sPrihlasenim(3600);
+  await p.evaluate(() => {
+    localStorage.setItem('pk_poznamky_v1', '{tohle není JSON');
+    localStorage.setItem('pk_fav_v1', 'ani tohle');
+  });
+  await p.evaluate(() => window.PKAuth.logout());
+  const po = await p.evaluate(() => ({
+    pozn: localStorage.getItem('pk_poznamky_v1'), fav: localStorage.getItem('pk_fav_v1') }));
+  pravda('nepřečitatelná mezipaměť poznámek se smaže celá', po.pozn === null, `zůstalo: ${po.pozn}`);
+  pravda('a nepřečitatelný seznam uložených taky', po.fav === null, `zůstalo: ${po.fav}`);
+  await ctx.close();
+}
+
 /* A kdo přihlášený není, ten serveru nic posílat nemá. */
 {
   resetStav();
@@ -459,11 +541,11 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
     window.PK_SUPABASE_KEY = 'anon';
   });
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
-  const zruseno = await p.evaluate(() => window.PKAuth.logout());
+  const r = await p.evaluate(() => window.PKAuth.logout());
   await p.waitForTimeout(150);
   pravda('odhlášení bez přihlášení serveru nic neposílá', stav.odhlaseni.length === 0,
     `server dostal ${stav.odhlaseni.length} žádostí, a nebylo co rušit`);
-  pravda('a neplatí to za selhání', zruseno === true, `logout() vrátil ${zruseno}`);
+  pravda('a neplatí to za selhání', r.server === true, `logout() vrátil ${JSON.stringify(r)}`);
   await ctx.close();
 }
 

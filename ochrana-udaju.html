@@ -123,6 +123,7 @@
               vidět, od koho jsou, a odhlášení je na jedno kliknutí. Reklamu
               třetích stran v nich neposíláme a adresu nikomu nedáváme.</li>
             <li><b>Účet pro přidání inzerátu.</b> Při registraci ukládáme e-mail a (zašifrované) heslo, abyste mohli vkládat a spravovat vlastní inzeráty. Právní základ: <b>plnění služby</b>.</li>
+            <li><b>Uložené pozemky a poznámky k nim — jen s účtem.</b> Bez přihlášení zůstávají jen ve vašem prohlížeči a nikam se neodesílají. Když se přihlásíte, ukládáme je k vašemu účtu, abyste je našli i na druhém zařízení: klíč pozemku a text poznámky, který jste si k němu napsali. Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky. Odhlášením se kopie v prohlížeči smaže; na účtu zůstane, dokud si ji nesmažete. Právní základ: plnění služby.</li>
             <li><b>Údaje z inzerátu.</b> Co sami vyplníte u pozemku (obec, výměra, cena, případně kontakt na vás). Tyto údaje jsou <b>veřejné</b> — zobrazí se na mapě. Právní základ: <b>plnění služby</b>.</li>
             <li><b>Zpráva přes formulář.</b> Když nám napíšete zpětnou vazbu nebo dotaz, uložíme text a e-mail, který uvedete, abychom vám mohli odpovědět. Právní základ: <b>oprávněný zájem</b>.</li>
             <!-- TAHLE ODRÁŽKA DLOUHO POPISOVALA NĚCO, CO SE NEDĚLO.
@@ -196,7 +197,7 @@
           <h2>Cookies a úložiště v prohlížeči</h2>
           <ul class="rule-list">
             <li>Parcelka <b>nepoužívá reklamní ani sledovací cookies</b>.</li>
-            <li>Používáme jen <b>úložiště ve vašem prohlížeči</b> (localStorage a sessionStorage) pro věci jako uložené oblíbené pozemky nebo zavření beta lišty. Tyto informace <b>zůstávají u vás v zařízení</b> a neodesílají se nám.</li>
+            <li>Používáme jen <b>úložiště ve vašem prohlížeči</b> (localStorage a sessionStorage) pro věci jako uložené oblíbené pozemky, poznámky k nim, nastavení filtrů nebo zavření beta lišty. <b>Bez přihlášení to zůstává u vás v zařízení</b> a neodesílá se nám. S účtem je u dvou z nich — uložených pozemků a poznámek — kopie i na serveru, jak stojí výše; ostatní položky na server nejdou ani potom. Celý seznam toho, co si web v prohlížeči pamatuje, je na stránce <a href="moje-data.html">Moje data</a>, i s tlačítkem na smazání.</li>
             <li><b>Offline režim.</b> Aby web fungoval i bez signálu, ukládá si <b>service worker</b> ve vašem zařízení kopii stránek, stylů, skriptů a datových souborů, které jste si už jednou otevřeli. Zůstává to <b>u vás v zařízení</b> a neodesílá se nám. <b>Nic z cizích serverů se takto neukládá</b> — mapové podklady uvedené výše ani Supabase a Stripe tím neprocházejí — a stejně tak <b>žádná adresa s dotazem</b> (v těch chodí například jednorázový odkaz z e-mailu). Smazat to jde kdykoli: v nastavení prohlížeče u této stránky zvolte vymazání dat webu.</li>
             <li><b>Upozornění do telefonu.</b> Když si u uloženého hledání zapnete <b>upozornění do telefonu</b>, uložíme si k vašemu účtu <b>adresu, kterou k tomu vydá váš prohlížeč</b> (a dva klíče, kterými se zpráva zašifruje pro vaše zařízení). Je to identifikátor zařízení, nikomu ho nedáváme a používáme ho jen k poslání těch upozornění. <b>Obsah upozornění nevidí ani služba, která je doručuje</b> (Google, Mozilla, Apple) — šifruje se u nás pro vaše zařízení. Vypnutím přepínače u posledního hledání se záznam smaže; smaže se i sám, jakmile vaše zařízení přestane upozornění přijímat.</li>
           </ul>
@@ -268,7 +269,7 @@
 <script src="js/min/menu.js?v=e897102e" defer></script>
 
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=d6ba06aa" defer></script>
+<script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/obsah.js?v=6a8bca35" defer></script>
 <script src="js/min/hlavicka.js?v=52634b3e" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>

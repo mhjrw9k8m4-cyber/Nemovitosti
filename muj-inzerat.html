@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-fffAHNBC6LBq5g6miTBAdTR035GDXpPrDjnyHvJgYtQ=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-5X6yybRIO/ABAm4IIMjBMMGNuHSiVGWrPab+W+xon7w=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <!-- Stav přihlášení se musí vědět PŘED prvním vykreslením — viz tentýž
        řádek v pridat.html a důvod u něj. Tady bez toho uskočilo 0,55. -->
   <script>try{var t=JSON.parse(localStorage.getItem('pk_auth')||'null');
@@ -516,7 +516,7 @@
      aby web o téže dražbě netvrdil na dvou místech dvě různé věci. -->
 <script src="js/min/terminy.js?v=cf102557"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=d6ba06aa" defer></script>
+<script src="js/min/auth.js?v=113f2e09" defer></script>
 <script>
 (function () {
   function ready(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
@@ -764,8 +764,17 @@
       /* Odhlášení ruší sezení i na serveru. Když se to nepovede (bez
          signálu), musí to být vidět: tiše by to znamenalo, že token na
          serveru dál platí, a člověk by si myslel, že je pryč. */
-      A.logout().then(function (zruseno) {
-        if (!zruseno) say('Odhlášeno v tomhle prohlížeči. Serveru se to oznámit nepovedlo — udělejte to prosím znovu, až budete online.', true);
+      A.logout().then(function (r) {
+        /* ŘEKNE SE, CO SE STALO: odhlášení smaže i mezipaměť toho, co
+           patří účtu (uložené pozemky a poznámky), takže člověk má
+           vědět, že o ně nepřišel — jen je tady už nenajde. A co se na
+           účet nikdy nenahrálo, tu zůstává; o tom mlčet nelze vůbec. */
+        var t = 'Odhlášeno. Uložené pozemky a poznámky zůstávají na účtu — kopii v tomhle prohlížeči jsme smazali.';
+        if (r && r.zbylo && (r.zbylo.poznamek || r.zbylo.ulozenych)) {
+          t += ' V prohlížeči zůstalo to, co se na účet nikdy nenahrálo — najdete to na stránce Moje data.';
+        }
+        if (!r || !r.server) t += ' Serveru se odhlášení oznámit nepovedlo — udělejte to prosím znovu, až budete online.';
+        say(t, !(r && r.server));
       });
       show();
     });

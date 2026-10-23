@@ -1114,8 +1114,14 @@
 
       var slib = PKAuth.logout();
       refresh();
-      if (slib && slib.then) slib.then(function (zruseno) {
-        if (!zruseno) say('Odhlášeno v tomhle prohlížeči. Serveru se to oznámit nepovedlo — zkuste to prosím znovu, až budete online.', true);
+      if (slib && slib.then) slib.then(function (r) {
+
+        var t = 'Odhlášeno. Uložené pozemky a poznámky zůstávají na účtu — kopii v tomhle prohlížeči jsme smazali.';
+        if (r && r.zbylo && (r.zbylo.poznamek || r.zbylo.ulozenych)) {
+          t += ' V prohlížeči zůstalo to, co se na účet nikdy nenahrálo — najdete to na stránce Moje data.';
+        }
+        if (!r || !r.server) t += ' Serveru se odhlášení oznámit nepovedlo — zkuste to prosím znovu, až budete online.';
+        say(t, !(r && r.server));
       });
     });
   })();

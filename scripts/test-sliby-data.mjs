@@ -94,6 +94,139 @@ pravda('text říká, jak uplatnit práva podle GDPR',
   /GDPR/.test(text) && /(výmaz|opravu|přístup)/.test(text),
   'v zásadách chybí poučení o právech');
 
+/* ---- KDE LEŽÍ ULOŽENÉ POZEMKY A POZNÁMKY --------------------------
+
+   Tenhle test hlídal zásady soukromí JEN v js/main.js (okno s textem),
+   a právě na tom se to 23. 10. ukázalo: okno bylo poctivě přepsané
+   („Bez přihlášení… / S účtem…"), kdežto čtyři další místa mluvila
+   o světě před účty.
+
+     * ochrana-udaju.html — celý PRÁVNÍ dokument: v seznamu údajů
+       uložené pozemky ani poznámky vůbec nebyly a v oddílu o úložišti
+       stálo, že „zůstávají u vás v zařízení a neodesílají se nám";
+     * moje-data.html — „Nic z toho se nikam neodesílá";
+     * porovnani.html — „Uložené pozemky leží jen v tomhle prohlížeči…
+       a nikam se neodesílají";
+     * index.html, otázka o registraci (dvakrát: viditelný text
+       i strukturovaná data pro vyhledávač) — „Nic se neodesílá na
+       server";
+     * js/ulozene.js — popis poznámek na stránce „Moje data":
+       „Nikam se neodesílají."
+
+   Poznámky i uložené pozemky přitom u přihlášeného člověka leží na
+   serveru (supabase/poznamky.sql, supabase/ulozene-na-uctu.sql).
+   Pravidlo je proto: KDE SE O NICH ŘÍKÁ, ŽE NIKAM NEJDOU, TAM MUSÍ BÝT
+   ŘEČENO, ŽE TO PLATÍ BEZ ÚČTU. Text, který to nerozlišuje, je v právním
+   dokumentu nepravda — a nepravda v něm je dražší než kterákoli vada
+   vzhledu. */
+{
+  const JEN_TADY = /neodesíl|neposíl|nejde na server|nejdou na server|zůstáv\w*[\s ]+(?:jen[\s ]+)?(?:u[\s ]+vás|ve[\s ]+vašem|jen[\s ]+tady|jen[\s ]+v)|leží[\s ]+jen/i;
+  /* ROZLIŠENÍ, ne jen slovo „přihlášení". Sabotáž to ukázala na otázce
+     o registraci: „Žádná registrace ani přihlášení — …" to slovo nese,
+     a přitom nic nerozlišuje. Platí jen věta, která říká, KDY to platí. */
+  const ROZLISENI = /bez[\s\u00a0]přihlášení|bez[\s\u00a0]účtu|s[\s\u00a0]účtem|když[\s\u00a0]se[\s\u00a0]přihlásíte|když[\s\u00a0]účet[\s\u00a0]máte|po[\s\u00a0]přihlášení|nepřihlášen|účet[\s\u00a0]máte|máte[\s\u00a0]účet/i;
+  const VEC = /ulož|uložen|poznám/i;
+  /* Věta = úsek mezi tečkami — ale MĚŘÍ SE DVOJICE PO SOBĚ JDOUCÍCH VĚT.
+     Jedna věta nestačí a doložila to sabotáž: „Co jste si k pozemkům
+     napsali. Nikam se neodesílají." i „…uložené oblíbené pozemky…
+     Tyto informace zůstávají u vás v zařízení a neodesílají se nám."
+     mají věc v jedné větě a slib ve druhé, takže kontrola nad jednou
+     větou obě ty nepravdy přehlédla — vrátil jsem je do souboru a nic
+     se neozvalo. */
+  function dvojice(t) {
+    const v = t.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/);
+    const out = [];
+    /* OKNO AŽ TŘÍ VĚT. Dvě nestačily: v otázce o registraci stojí věc
+       v první větě („pozemek se uloží přímo ve vašem prohlížeči"),
+       mezivěta o historii uprostřed a slib ve třetí („Nic se neodesílá
+       na server"). Vrátil jsem starou odpověď a kontrola mlčela. */
+    for (let i = 0; i < v.length; i++) {
+      for (let d = 1; d <= 3 && i + d <= v.length; d++) out.push(v.slice(i, i + d).join(' '));
+    }
+    return out;
+  }
+  const nalezy = [];
+  /* a) ruční stránky. Vygenerované (pozemek-, okres-, kraj-) se berou
+     taky: kdyby se nepravda dostala do předlohy, je na nich 2 200×. */
+  for (const f of htmlSoubory) {
+    const text = readFileSync(path.join(KOREN, f), 'utf8')
+      .replace(/<script[\s\S]*?<\/script>/g, ' ')   // JSON-LD se měří zvlášť
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<[^>]*>/g, ' ');
+    for (const v of dvojice(text)) {
+      if (VEC.test(v) && JEN_TADY.test(v) && !ROZLISENI.test(v)) nalezy.push(`${f}: „${v.trim().slice(0, 120)}"`);
+    }
+  }
+  /* b) strukturovaná data pro vyhledávač — do nich se Google podívá
+     dřív než člověk na stránku, takže nepravda v nich platí stejně. */
+  for (const f of htmlSoubory) {
+    const zdroj = readFileSync(path.join(KOREN, f), 'utf8');
+    for (const m of zdroj.matchAll(/"(?:text|description)":"((?:[^"\\]|\\.)*)"/g)) {
+      const t = m[1].replace(/\\"/g, '"');
+      for (const v of dvojice(t)) {
+        if (VEC.test(v) && JEN_TADY.test(v) && !ROZLISENI.test(v)) nalezy.push(`${f} (data pro vyhledávač): „${v.trim().slice(0, 120)}"`);
+      }
+    }
+  }
+  /* c) texty ve skriptech. SKENOVAT VŠECHNY ŘETĚZCE V KÓDU NEJDE —
+     zkusil jsem to a kontrola ohlásila jako nepravdu kus kódu
+     z js/pozemek.js: mezi dvěma nesouvisejícími uvozovkami leží
+     všechno, co je mezi nimi, včetně dalších řetězců. Měří se proto
+     jen POLE S TEXTEM PRO ČLOVĚKA (popis, nazev, sub, veta), tedy to,
+     co se opravdu vypisuje na stránku. Okno se zásadami v js/main.js
+     má vlastní kontroly výš. */
+  for (const f of jsSoubory) {
+    const kodJs = readFileSync(path.join(KOREN, 'js', f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+    for (const m of kodJs.matchAll(/(?:popis|nazev|sub|veta)\s*:\s*'((?:[^'\\]|\\.)*)'/g)) {
+      const t = m[1].replace(/\\'/g, "'");
+      for (const v of dvojice(t)) {
+        if (VEC.test(v) && JEN_TADY.test(v) && !ROZLISENI.test(v)) nalezy.push(`js/${f}: „${v.trim().slice(0, 120)}"`);
+      }
+    }
+  }
+  pravda('nikde se netvrdí, že uložené pozemky a poznámky nikam nejdou, bez „bez přihlášení"',
+    nalezy.length === 0, nalezy.slice(0, 6).join('\n      '));
+
+  /* A pozitivně: právní dokument to musí říct. Chybějící věta není
+     vidět — proto se hlídá, že tam je. */
+  const zasady = readFileSync(path.join(KOREN, 'ochrana-udaju.html'), 'utf8');
+  pravda('zásady soukromí jmenují uložené pozemky a poznámky na účtu',
+    /Uložené pozemky a[\s ]poznámky/i.test(zasady)
+    && /k[\s ]vašemu účtu/i.test(zasady),
+    'v seznamu údajů o nich není ani slovo, a přitom leží na serveru');
+
+  /* ---- A CO ODHLÁŠENÍ MAŽE, TO MUSÍ BÝT TOTÉŽ, CO JE OZNAČENÉ -----
+     Dva seznamy téhož: příznak `zUctu` v js/ulozene.js (stránka „Moje
+     data") a klíče, které maže uklidMistniKopie() v js/auth.js. Kdyby
+     se rozešly, přibude třetí taková mezipaměť a odhlášení ji nechá
+     ležet — tedy přesně ta vada, kterou tohle opravovalo. */
+  const ulozeneJs = readFileSync(path.join(KOREN, 'js', 'ulozene.js'), 'utf8');
+  const oznacene = [...ulozeneJs.matchAll(/\{\s*klic:\s*'([a-z0-9_]+)'[^}]*zUctu:\s*true/g)].map((m) => m[1]).sort();
+  const authJs = readFileSync(path.join(KOREN, 'js', 'auth.js'), 'utf8');
+  const telo = (/function uklidMistniKopie\(\)[\s\S]*?\n  \}/.exec(authJs) || [''])[0];
+  const maze = [...new Set([...telo.matchAll(/'(pk_[a-z0-9_]+)'/g)].map((m) => m[1]))].sort();
+  /* A jejich POPIS na stránce „Moje data" to musí říct. Heuristika nad
+     větami to sama nepozná: v popisu poznámek se slovo „poznámka"
+     nevyskytuje („Co jste si k pozemkům napsali. Nikam se
+     neodesílají."), takže by taková nepravda prošla — ověřeno sabotáží,
+     než tahle kontrola vznikla. */
+  const bezRozliseni = [];
+  for (const m of ulozeneJs.matchAll(/\{\s*klic:\s*'([a-z0-9_]+)'[^}]*zUctu:\s*true[^}]*\}/g)) {
+    const popis = (/popis:\s*'((?:[^'\\]|\\.)*)'/.exec(m[0]) || ['', ''])[1];
+    if (/neodesíl|neposíl/i.test(popis) && !ROZLISENI.test(popis)) bezRozliseni.push(m[1] + ': ' + popis.slice(0, 80));
+    else if (!ROZLISENI.test(popis) && /jen tady|jen v tomhle|jen ve vašem/i.test(popis)) bezRozliseni.push(m[1] + ': ' + popis.slice(0, 80));
+  }
+  pravda('popis každé takové mezipaměti na „Mých datech" rozlišuje účet',
+    bezRozliseni.length === 0, bezRozliseni.join('\n      '));
+
+  pravda(`označených mezipamětí z účtu je víc než nula (${oznacene.length})`, oznacene.length >= 2,
+    'v js/ulozene.js nemá příznak zUctu nic — pak tahle kontrola nic neváží');
+  pravda('odhlášení maže právě ty mezipaměti, které jsou označené jako „i na účtu"',
+    oznacene.join(',') === maze.join(','),
+    `označené: ${oznacene.join(', ') || '(nic)'}\n      maže: ${maze.join(', ') || '(nic)'}`);
+}
+
 /* ---- POČTY NABÍDEK NA RŮZNÝCH STRÁNKÁCH SI NESMÍ ODPOROVAT ----
 
    Takhle to prasklo: stránka s daty psala „na stránkách najdete 1 939

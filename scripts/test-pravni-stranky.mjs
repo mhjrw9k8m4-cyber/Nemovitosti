@@ -53,7 +53,7 @@ const CEKANO = {
      (Předtím se 14. 10. přepočítávalo kvůli tvaru uvozovky, se stejným
      závěrem; tyhle dvě výjimky jsou důvod, proč otisk nemá brát ani
      sazbu, ani rám.) */
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '6d47377c69282f18' },
+  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '214950f595055afd' },
   /* 17. 10.: v bodě o zneužívání webu se „obcházení stránek robotem"
      změnilo na „procházení". „Obcházet" znamená česky především obejít
      něco (zákon, zabezpečení) — v odstavci, který vyjmenovává zakázané

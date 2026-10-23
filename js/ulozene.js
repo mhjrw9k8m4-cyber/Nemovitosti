@@ -32,11 +32,17 @@
      skupina: podle toho se to na stránce řadí.
      pocet: funkce, která z uložené hodnoty udělá počet (null = nepočítá se). */
   var KLICE = [
-    { klic: 'pk_fav_v1', kde: 'local', skupina: 'vyber', nazev: 'Uložené pozemky',
-      popis: 'Pozemky, které jste si uložili tlačítkem se záložkou.',
+    /* zUctu: tohle není jen záznam v prohlížeči, ale MEZIPAMĚŤ toho, co
+       u přihlášeného člověka leží i na účtu. Má to dva důsledky, a oba
+       jsou vidět: popis nesmí tvrdit „nikam se to neodesílá" (u účtu to
+       není pravda) a odhlášení tu kopii maže (js/auth.js, funkce
+       uklidMistniKopie). Shodu obou seznamů hlídá
+       scripts/test-sliby-data.mjs. */
+    { klic: 'pk_fav_v1', kde: 'local', skupina: 'vyber', nazev: 'Uložené pozemky', zUctu: true,
+      popis: 'Pozemky, které jste si uložili tlačítkem se záložkou. Bez přihlášení zůstávají jen tady; s účtem je jejich kopie i na serveru, abyste je našli na druhém zařízení.',
       pocet: poleDelka, jednotka: ['pozemek', 'pozemky', 'pozemků'] },
-    { klic: 'pk_poznamky_v1', kde: 'local', skupina: 'vyber', nazev: 'Soukromé poznámky',
-      popis: 'Co jste si k pozemkům napsali. Nikam se neodesílají.',
+    { klic: 'pk_poznamky_v1', kde: 'local', skupina: 'vyber', nazev: 'Soukromé poznámky', zUctu: true,
+      popis: 'Co jste si k pozemkům napsali. Bez přihlášení zůstávají jen tady; s účtem se ukládají i na server, aby je šlo číst na druhém zařízení. Čte je jen váš účet.',
       pocet: klicuObjektu, jednotka: ['poznámka', 'poznámky', 'poznámek'] },
     { klic: 'pk_skryte_v1', kde: 'local', skupina: 'vyber', nazev: 'Skryté nabídky',
       popis: 'Pozemky, které jste odklepli jako „tenhle mě nezajímá".',
@@ -65,7 +71,7 @@
     { klic: 'pk_rv_uvod_v1', kde: 'local', skupina: 'provoz', nazev: 'Viděný úvod rychlého výběru',
       popis: 'Jen příznak, že už jste vysvětlení četli — podruhé se neukáže.',
       pocet: jeNeco },
-    { klic: 'pk_fav_nahrano_v1', kde: 'local', skupina: 'provoz', nazev: 'Co z uložených zná účet',
+    { klic: 'pk_fav_nahrano_v1', kde: 'local', skupina: 'provoz', nazev: 'Co z uložených zná účet', zUctu: true,
       popis: 'Aby šlo poznat odebrání na jiném zařízení od pozemku uloženého bez přihlášení.',
       pocet: klicuObjektu, jednotka: ['pozemek', 'pozemky', 'pozemků'] },
     { klic: 'pk_device', kde: 'local', skupina: 'provoz', nazev: 'Označení zařízení',

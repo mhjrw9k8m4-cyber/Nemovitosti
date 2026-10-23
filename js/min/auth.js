@@ -76,19 +76,57 @@
     }).catch(function () { return { ok: false, data: { msg: 'Připojení selhalo.' } }; });
   }
 
+  function ctiJson(klic) {
+    try { return JSON.parse(localStorage.getItem(klic) || 'null'); } catch (e) { return undefined; }
+  }
+  function uklidMistniKopie() {
+    var zbylo = { poznamek: 0, ulozenych: 0 };
+
+    var pozn = ctiJson('pk_poznamky_v1');
+    try {
+      if (pozn === undefined) localStorage.removeItem('pk_poznamky_v1');
+      else if (pozn && typeof pozn === 'object') {
+        var zustat = {};
+        Object.keys(pozn).forEach(function (k) {
+          var z = pozn[k];
+          if (z && z.nahrano !== true && z.text) { zustat[k] = z; zbylo.poznamek++; }
+        });
+        if (zbylo.poznamek) localStorage.setItem('pk_poznamky_v1', JSON.stringify(zustat));
+        else localStorage.removeItem('pk_poznamky_v1');
+      }
+    } catch (e) { try { localStorage.removeItem('pk_poznamky_v1'); } catch (e2) {} }
+
+    var fav = ctiJson('pk_fav_v1');
+    var zna = ctiJson('pk_fav_nahrano_v1');
+    try {
+      if (fav === undefined) localStorage.removeItem('pk_fav_v1');
+      else if (Array.isArray(fav)) {
+        var m = (zna && typeof zna === 'object') ? zna : {};
+        var zbyl = fav.filter(function (k) { return !m[k]; });
+        zbylo.ulozenych = zbyl.length;
+        if (zbyl.length) localStorage.setItem('pk_fav_v1', JSON.stringify(zbyl));
+        else localStorage.removeItem('pk_fav_v1');
+      }
+      localStorage.removeItem('pk_fav_nahrano_v1');
+    } catch (e) {}
+    return zbylo;
+  }
+
   function logout() {
     var s = getSession();
     var t = s && s.access_token;
     setSession(null);
-    if (!t) return Promise.resolve(true);
-    if (!URL || !KEY) return Promise.resolve(false);
+    var zbylo = uklidMistniKopie();
+    if (!t) return Promise.resolve({ server: true, zbylo: zbylo });
+    if (!URL || !KEY) return Promise.resolve({ server: false, zbylo: zbylo });
     try {
       return fetch(URL + '/auth/v1/logout?scope=local', {
         method: 'POST',
         headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + t },
         keepalive: true
-      }).then(function (r) { return !!r.ok; }, function () { return false; });
-    } catch (e) { return Promise.resolve(false); }
+      }).then(function (r) { return { server: !!r.ok, zbylo: zbylo }; },
+        function () { return { server: false, zbylo: zbylo }; });
+    } catch (e) { return Promise.resolve({ server: false, zbylo: zbylo }); }
   }
 
   function recover(mail) {
