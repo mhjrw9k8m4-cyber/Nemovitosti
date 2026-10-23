@@ -144,6 +144,17 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**„Confirm email" musí být ZAPNUTÉ** (Supabase → Authentication →
+Sign In / Providers → Email). Bez potvrzeného e-mailu `create_listing`
+inzerát odmítne — a odmítne ho hláškou „nejdřív potvrďte e-mail,
+poslali jsme vám odkaz", takže s vypnutým potvrzováním čeká člověk na
+e-mail, který nikdy nepřijde. (V `supabase/listings-auth.sql` dlouho
+stála rada to pro hladký start vypnout; 23. 10. opravena, protože
+mezitím se potvrzení začalo vyžadovat.) Souvisí to s vlastním SMTP
+z bodu 1: dokud se nenastaví, posílá potvrzovací e-maily Supabase ze
+své adresy a s nízkým denním stropem — na zkoušení to stačí, na provoz
+ne.
+
 **A kvůli dvěma cestám, kterými databáze rostla zvenčí.** Měření
 návštěvnosti má od 23. 10. denní strop 5 000 řádků (se značkou
 `(strop)`, aby bylo vidět, že se sepnul) a hromadné nahrání uložených

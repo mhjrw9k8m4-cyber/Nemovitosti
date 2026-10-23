@@ -1250,9 +1250,18 @@ grant execute on function bump_view(uuid) to anon;
 -- (auth.users). Přidat/smazat smí jen přihlášený vlastník.
 --
 -- DŮLEŽITÉ nastavení Supabase (jednou):
---   Authentication → Sign In / Providers → Email → povolené,
---   a pro hladký start klidně VYPNOUT „Confirm email" (Authentication →
---   Providers → Email → Confirm email = OFF). Pak se lidé přihlásí hned.
+--   Authentication → Sign In / Providers → Email → povolené
+--   a „Confirm email" ZAPNUTÉ.
+--
+--   STÁLO TU PŘESNĚ NAOPAK: „pro hladký start klidně VYPNOUT Confirm
+--   email". Ta rada mezitím zestárla a stala se z ní past: create_listing
+--   (supabase/listings-prvni-kontrola.sql, v balíku pozdější, tedy ta
+--   platná podoba) bez potvrzeného e-mailu zakládání ODMÍTNE — a hláškou
+--   „nejdřív potvrďte e-mail — poslali jsme vám odkaz". Kdo radu
+--   poslechne, zlomí hlavní funkci webu a lidé budou čekat na e-mail,
+--   který nikdy nepřijde, protože potvrzování je vypnuté.
+--   Shodu obou míst hlídá scripts/test-sql-prava.mjs; nastavení samo
+--   stojí v docs/pred-vydanim.md, oddíl 3.
 -- =====================================================================
 
 alter table listings add column if not exists user_id uuid;   -- pro starší databáze; v schema.sql už je

@@ -8501,3 +8501,46 @@ tím dá získat, je navíc malé: `views` vidí jen majitel inzerátu na své
 stránce „Moje inzeráty", nikde se podle nich neřadí ani nic
 nezvýhodňuje, a čísla návštěvnosti nečte veřejná stránka vůbec.
 Zapsáno jako vědomá hranice, ne jako nedodělek.
+
+## 124. Repozitář si odporoval: jeden soubor radil vypnout to, co druhý vyžaduje *23. 10.*
+
+Při průchodu zabezpečením databáze vyšlo něco, co s databází nemá nic
+společného — **rada, která zlomí hlavní funkci webu.**
+
+`supabase/listings-auth.sql` měl v hlavičce radu, která se vrátit nesmí
+— „a pro hladký start klidně VYPNOUT „Confirm email" … Pak se lidé
+přihlásí hned." Jenže
+`create_listing` (v `supabase/listings-prvni-kontrola.sql`, v balíku
+pozdější, tedy ta platná podoba) bez potvrzeného e-mailu zakládání
+**odmítne** — a odmítne ho větou „nejdřív potvrďte e-mail — poslali jsme
+vám odkaz". Kdo tu radu poslechne:
+
+1. vypne potvrzování, takže Supabase žádný potvrzovací e-mail nepošle;
+2. `email_confirmed_at` zůstane prázdné navždy;
+3. každý pokus přidat inzerát skončí výzvou k potvrzení e-mailu, který
+   nikdy nepřijde.
+
+Tedy ne „menší bezpečnost za pohodlí", ale **rozbitá hlavní funkce**.
+A `docs/pred-vydanim.md` — jediný seznam, podle kterého se web spouští —
+o tom nastavení neměl ani řádek.
+
+Hotovo: rada opravená u zdroje (včetně toho, co tam stálo a proč to
+zestáralo), nastavení dopsané do seznamu před vydáním i se souvislostí
+s vlastním SMTP (dokud se nenastaví, posílá potvrzení Supabase ze své
+adresy a s nízkým stropem).
+
+**A hlídač našel druhé místo, o kterém jsem nevěděl.**
+`docs/oprava-hlidani-a-pridavani.md` nabízel tutéž „rychlou" cestu jako
+jednu ze dvou možností — s poctivě napsanou nevýhodou („nikdo neověří,
+že adresa existuje"), jenže ta nevýhoda dnes neplatí: ono to **nefunguje
+vůbec**. Zbyla jediná cesta, vlastní SMTP, a tak to tam teď stojí.
+
+Hlídá to `scripts/test-sql-prava.mjs` (3 kontroly): zakládání inzerátu
+potvrzení opravdu vyžaduje, nikde v `supabase/` ani `docs/` se neradí ho
+vypnout, a seznam před vydáním to nastavení jmenuje. Sabotáž tří směrů,
+všechny zachyceny.
+
+Poučení, které stojí za zapsání: **rada pro majitele je taky kód** —
+zestárne stejně jako komentář a může udělat větší škodu než vada
+v programu, protože ji nikdo neodladí. A hlídač na prózu se vyplatil
+podruhé v jednom dni (poprvé u slibů o datech, oddíl 120).

@@ -24,7 +24,7 @@
    nevzniknou: `delete_listing` má starší podobu bez kontroly a
    konečnou `delete from listings where id=p_id and user_id=auth.uid()`.
    ================================================================== */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -265,6 +265,50 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
   pravda('a je to týž strop jako u jednotlivého ukládání',
     !!sJedne && !!sHromady && sJedne[1] === sHromady[1],
     `jednotlivě ${sJedne ? sJedne[1] : '(nic)'}, hromadně ${sHromady ? sHromady[1] : '(nic)'}`);
+}
+
+/* ---- 9) rada v repozitáři si nesmí odporovat s kódem ----------- */
+/* Nalezeno 23. 10.: supabase/listings-auth.sql radil majiteli „pro
+   hladký start klidně VYPNOUT Confirm email", kdežto create_listing
+   (v balíku pozdější, tedy platná podoba) bez potvrzeného e-mailu
+   zakládání odmítne. Kdo tu radu poslechl, zlomil hlavní funkci webu —
+   a lidé čekali na e-mail, který nikdy nepřijde, protože potvrzování
+   bylo vypnuté. Hlídá se obojí: že se potvrzení opravdu vyžaduje, a že
+   to nikde v repozitáři neradíme vypnout. */
+{
+  const vyzaduje = /email_confirmed_at[\s\S]{0,80}is null[\s\S]{0,200}raise exception/i.test(SQL);
+  pravda('zakládání inzerátu vyžaduje potvrzený e-mail', vyzaduje,
+    'bez toho je potvrzování e-mailu jen doporučení');
+  const soubory = [...readdirSync(path.join(KOREN, 'supabase')).filter((f) => f.endsWith('.sql'))
+    .map((f) => ['supabase/' + f, readFileSync(path.join(KOREN, 'supabase', f), 'utf8')]),
+    ...readdirSync(path.join(KOREN, 'docs')).filter((f) => f.endsWith('.md'))
+      .map((f) => ['docs/' + f, readFileSync(path.join(KOREN, 'docs', f), 'utf8')])];
+  /* Hledá se RADA to vypnout, ne zmínka o tom, že se vypnout dá: na
+     větu, která sama vysvětluje, proč to nedělat, se nesmí padat. */
+  /* Měří se PO ŘÁDCÍCH, ale výjimka se hledá i v řádku nad a pod.
+     Jinak na kontrolu padne vlastní dokumentace: oddíl 124
+     v docs/optimalizace.md tu starou radu CITUJE a vysvětlení, proč
+     neplatí, leží o řádek dál. Stalo se mi to dvakrát za sebou —
+     nejdřív v docs/oprava-hlidani-a-pridavani.md, pak v tom oddílu. */
+  const VYJIMKA = /STÁLO TU|stála tu|zestárl|past|opraven|nesmí|neplatí|musí být ZAPNUT|neradíme|rozbije/i;
+  const radi = [];
+  for (const [jm, text] of soubory) {
+    const radky = text.split('\n');
+    for (let i = 0; i < radky.length; i++) {
+      const v = radky[i];
+      if (!/vypnout|vypněte|= ?OFF/i.test(v)) continue;
+      if (!/confirm email|potvrzování e-mailu|potvrzení e-mailu/i.test(v)) continue;
+      const okno = [radky[i - 1] || '', v, radky[i + 1] || ''].join(' ');
+      if (VYJIMKA.test(okno)) continue;
+      radi.push(`${jm}: „${v.replace(/\s+/g, ' ').trim().slice(0, 110)}"`);
+    }
+  }
+  pravda('a nikde v repozitáři se neradí potvrzování vypnout', radi.length === 0,
+    radi.join('\n      ') + ' — kdo to udělá, zlomí zakládání inzerátů');
+  const seznam = readFileSync(path.join(KOREN, 'docs', 'pred-vydanim.md'), 'utf8');
+  pravda('a seznam před vydáním to nastavení jmenuje',
+    /Confirm email/i.test(seznam) && /ZAPNUT/i.test(seznam),
+    'nastavení, bez kterého nejde inzerovat, v seznamu chybělo');
 }
 
 console.log('\nPráva v databázi');

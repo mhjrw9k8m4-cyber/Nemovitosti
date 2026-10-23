@@ -74,11 +74,15 @@ končí ve spamu. Bez potvrzení se člověk nepřihlásí a inzerát nepřidá.
 
 Na `/diagnostika.html` to pozná podle řádku „Účet čeká na potvrzovací e-mail".
 
-Dvě možnosti:
+**Zbyla jediná cesta, a je to ta správná.** Stála tu i „rychlá" rada
+*Confirm email* vypnout — ta už neplatí a vrátit se nesmí, protože `create_listing`
+dnes bez potvrzeného e-mailu inzerát odmítne (`supabase/listings-prvni-kontrola.sql`),
+takže vypnutím potvrzování se zakládání inzerátů **rozbije úplně**:
+člověk nedostane žádný e-mail a server ho přesto odmítne s větou
+„nejdřív potvrďte e-mail". Hlídá to `scripts/test-sql-prava.mjs`, aby
+se ta rada do repozitáře nevrátila.
 
-- **Rychlá:** Supabase → Authentication → Providers → Email → **Confirm email = OFF**.
-  Účet je hned použitelný. Nevýhoda: nikdo neověří, že adresa opravdu existuje.
-- **Správná:** Supabase → Project Settings → Authentication → **SMTP Settings** →
+- **Správná (a jediná):** Supabase → Project Settings → Authentication → **SMTP Settings** →
   nastavit vlastní SMTP (klidně přes Resend — hostitel `smtp.resend.com`, port 465,
   uživatel `resend`, heslo = API klíč). Vyžaduje hotový krok 2.
 
