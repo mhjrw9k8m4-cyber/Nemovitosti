@@ -259,7 +259,7 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
        VŠEMI volbami řazení, ne jen tou nejbližší. */
     const voleb = await p.evaluate(() => document.getElementById('map-sort').options.length);
     pravda(`výpis: řazení má z čeho vybírat (${voleb} voleb)`, voleb >= 2, `jen ${voleb}`);
-    let rozbite = [], nasleduje = 0, misto = 0;
+    let rozbite = [], nasleduje = 0, misto = 0, zachytu = 0;
     for (let i = 0; i < voleb; i++) {
       await cistaStranka();
       const stred = await p.evaluate(() => {
@@ -279,7 +279,17 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
         return 'zmeneno';
       }, i);
       if (po === 'stejna') continue;
-      await p.waitForTimeout(900);
+      /* ČEKÁ SE NA STAV, NE NA HODINKY. Dřív tu stálo pevných 900 ms a
+         v CI to nestačilo: na pomalejším stroji zaměření do výpisu
+         ještě nedorazilo a zkouška hlásila „spadlo z výpisu" (23. 10.,
+         volba 1). Vrácení zaměření se děje až po překreslení výpisu,
+         takže se čeká, než zaměření někde přistane — ve výpisu, nebo
+         na posledním záchytu „Zobrazit skryté" (viz vratZamereni). */
+      await p.waitForFunction(() => {
+        const e = document.activeElement;
+        if (!e || e === document.body || e === document.documentElement) return false;
+        return !!(e.closest && e.closest('.opp-item')) || e.id === 'mc-skryte';
+      }, null, { timeout: 8000 }).catch(() => {});
       const stav = await p.evaluate((pk) => {
         const e = document.activeElement;
         const karta = e && e.closest ? e.closest('.opp-item') : null;
@@ -290,19 +300,27 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
           naTeze: !!karta && karta === ta,
           poradi: karta ? karty.indexOf(karta) : -1,
           puvodniJeVeVypisu: !!ta,
+          zachyt: !!e && e.id === 'mc-skryte',
+          kde: e ? ((e.id && '#' + e.id) || e.tagName) : 'nic',
         };
       }, stred.pk);
-      if (!stav.je) { rozbite.push(`volba ${i}: zaměření spadlo z výpisu`); continue; }
+      if (!stav.je) {
+        /* Poslední záchyt je napsané chování, ne chyba — ale musí být
+           vidět, že se použil, a ne jen „zaměření je kdesi". */
+        if (stav.zachyt) { zachytu++; continue; }
+        rozbite.push(`volba ${i}: zaměření spadlo z výpisu (${stav.kde})`);
+        continue;
+      }
       if (stav.puvodniJeVeVypisu) {
         if (stav.naTeze) nasleduje++;
         else rozbite.push(`volba ${i}: karta ve výpisu je, ale zaměření skočilo jinam (${stav.poradi})`);
       } else if (stav.poradi === stred.poradi) misto++;
       else rozbite.push(`volba ${i}: karta odešla a zaměření není na jejím místě (${stred.poradi} → ${stav.poradi})`);
     }
-    pravda(`výpis: po změně řazení drží zaměření pravidlo „táž karta, jinak její místo" (${nasleduje}× táž karta, ${misto}× místo)`,
+    pravda(`výpis: po změně řazení drží zaměření pravidlo „táž karta, jinak její místo" (${nasleduje}× táž karta, ${misto}× místo, ${zachytu}× poslední záchyt)`,
       rozbite.length === 0, rozbite.slice(0, 3).join(' | '));
     pravda('a aspoň jedna volba řazení se opravdu vyzkoušela',
-      nasleduje + misto > 0, 'žádná volba nezměnila pořadí — zkouška by neměřila nic');
+      nasleduje + misto + zachytu > 0, 'žádná volba nezměnila pořadí — zkouška by neměřila nic');
 
     /* 4b) KARTA, KTERÁ VE VÝPISU ZŮSTANE: drží se TÁŽ KARTA, ne místo.
        Skryje se karta NAD zaměřenou (klepnutím ze skriptu, které

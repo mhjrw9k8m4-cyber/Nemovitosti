@@ -7875,6 +7875,15 @@ takže kontrola už nestojí na tom, která volba řazení je v seznamu
 nejblíž. Přidána i pojistka, že aspoň jedna volba pořadí opravdu
 změnila — jinak by zkouška mohla projít nad nezměněným výpisem.
 
+Hned nato ta kontrola spadla v CI ještě jednou — a znovu ne na webu:
+u jedné volby řazení zaměření do výpisu **nedorazilo do 900 ms**, které
+tam stály jako pevné čekání. Na pomalejším stroji se vrácení zaměření
+děje až po překreslení výpisu, takže se teď čeká **na stav** (až
+zaměření někde přistane), ne na hodinky — jak to v tomhle repozitáři
+platí od bodů 11 a 28. Rozlišuje se i „poslední záchyt" (`#mc-skryte`),
+který `vratZamereni` používá, když ve výpisu není kam se vrátit: je to
+napsané chování, ale musí být vidět, že se použilo.
+
 **Co z toho platí dál:** zelená zkouška, která měří jen jednu z dvou
 větví pravidla, je jen půl zkoušky — a to, která větev se spustí, se
 může změnit s daty. Taková kontrola nespadne, když se web rozbije; spadne,
