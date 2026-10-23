@@ -8873,3 +8873,47 @@ vlastník té tabulky, a tím `postgres` na hostovaném Supabase být nemusí.
 Je proto obalený v `do … exception`, takže skript nezastaví — jen
 napíše poznámku. Zapsáno v `docs/pred-vydanim.md` i jako hranice
 v `docs/slaba-mista.md`.
+
+## 132. Telefony inzerentů vydá jeden dotaz — a je to rozhodnutí, ne úklid *23. 10.*
+
+`public_listings()` vrací i `contact_phone` a smí ji zavolat **anon**.
+Jeden dotaz s veřejným klíčem tedy vydá telefony (nebo e-maily) **všech
+inzerentů naráz**, setříděné a připravené ke zpracování.
+
+**Co z toho vadí a co ne.** Že se telefon na stránce pozemku ukáže
+komukoli, je záměr: inzerent chce, aby se mu ozvali, a za tím účelem ho
+tam sám napsal. Vadná je ta **hromadnost** — rozdíl mezi „kdo se dívá na
+tenhle pozemek, uvidí tenhle kontakt" a „kdo má veřejný klíč, má celou
+kartotéku". Je to týž rozdíl, kvůli kterému v tomhle repozitáři
+**nevznikl** hlídač listů vlastnictví na prodej investorům (viz
+`docs/slaba-mista.md`): seznam kontaktů je něco jiného než jeden
+kontakt, i když se skládá z týchž údajů.
+
+**Změřeno, kudy ten údaj teče.** Kontakt má jen inzerát od majitele:
+ve stažených datech pole `contact` neexistuje ani jednou (0 z 1 953
+nabídek v `data/opportunities.json`, měřeno 23. 10.), plní ho
+`js/cisteni.js` jen u typu
+`majitel`, `js/main.js` ho předává přes `sessionStorage` a vypisuje
+`js/pozemek.js`. Hromadný výpis ho tedy k ničemu nepotřebuje — mapa ani
+karty telefon nezobrazují. Vyndat ho z `public_listings()` a přidat
+`listing_contact(uuid)` pro jeden inzerát je proveditelné a nic by to
+na webu nezměnilo kromě jednoho dotazu navíc při otevření detailu.
+
+**A přesto se to NEUDĚLALO**, protože by to bezpečnost nezvýšilo, jen
+zdražilo: `id` inzerátů dál vydá hromadný výpis, takže sklízení by
+stálo N dotazů místo jednoho — u desítek nebo stovek inzerátů je to
+pro skript bez rozdílu. Brzda podle volajícího nejde: **anonymní
+volající nemá, podle čeho se poznat** (a ukládat k dotazům IP nebo
+označení zařízení zásady soukromí slibují nedělat — viz čítače v oddílu
+13 `docs/slaba-mista.md`).
+
+**Co by opravdu pomohlo, je rozhodnutí o produktu**, ne úprava kódu:
+kontakt ukazovat **až po přihlášení** (jak to dělají velké realitní
+servery) a vydávat ho jednotlivě s brzdou na účet. To ale něco stojí
+na straně poptávky — zájemce, který se nechce registrovat, se neozve.
+Tahle volba patří vlastníkovi; je zapsaná v `docs/slaba-mista.md` jako
+hranice.
+
+**Dnes to nestojí nic** — tabulka inzerátů je prázdná. Právě proto je
+teď ta nejlevnější chvíle se rozhodnout: po prvním opravdovém inzerentovi
+už by změna znamenala měnit pravidla někomu, kdo na ně přistoupil.

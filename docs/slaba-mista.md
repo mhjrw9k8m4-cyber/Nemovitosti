@@ -402,7 +402,19 @@ Co zavřít **nejde odsud** a co je vědomá hranice:
 4. **Zkouška umí měřit jen repozitář.** Jestli někdo pustil
    `supabase/00-vse.sql` na běžícím projektu, pozná jen Supabase —
    a dokud se nepustí, platí všechny stropy výš jen na papíře.
-5. **Spouštěč stropu fotek se na hostovaném Supabase vytvořit nemusí.**
+5. **Telefony inzerentů vydá jeden dotaz.** `public_listings()` vrací
+   i kontakt a smí ji zavolat anon, takže veřejný klíč stačí na celou
+   kartotéku naráz. Že se kontakt ukáže na stránce pozemku, je záměr;
+   hromadnost ne. Vyndat kontakt z hromadného výpisu je proveditelné,
+   ale samo nic nezmění (`id` vydá týž výpis a anonymní volající nemá,
+   podle čeho se poznat, takže brzda nejde). **Rozhodnutí patří
+   vlastníkovi:** ukazovat kontakt až po přihlášení, s brzdou na účet —
+   bezpečné, ale zájemce, který se registrovat nechce, se neozve. Měřeno
+   a rozebráno v oddílu 132 `docs/optimalizace.md`. Dnes to nestojí nic
+   (tabulka inzerátů je prázdná) a proto je teď nejlevnější chvíle se
+   rozhodnout.
+
+6. **Spouštěč stropu fotek se na hostovaném Supabase vytvořit nemusí.**
    Strop na počet nahraných fotek drží ve dvou vrstvách; druhou z nich
    (spouštěč nad `storage.objects`) smí založit jen vlastník té tabulky,
    a tím na Supabase `postgres` být nemusí. Skript se kvůli tomu
