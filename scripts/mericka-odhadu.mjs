@@ -110,10 +110,11 @@ function otisk(d, posun) {
 }
 const dil = (i) => (POSUN ? otisk(VSE[i], POSUN) : i % 10);
 
-function krizove(odhadni) {
+function krizove(odhadni, uprav) {
   const chyby = [], podle = new Map();
   for (let f = 0; f < 10; f++) {
-    const trenink = VSE.filter((_, i) => dil(i) !== f);
+    let trenink = VSE.filter((_, i) => dil(i) !== f);
+    if (uprav) trenink = uprav(trenink);
     const model = CENY.postav(trenink);
     for (let i = 0; i < VZOREK.length; i++) {
       const d = VZOREK[i];
@@ -139,6 +140,48 @@ console.log(`dnešní model            medián chyby ${A.median.toFixed(1)} %   
    týž modul, ze kterého bere čísla generátor řezů do data/model.json:
    kdyby to byly dvě kopie, web by u čísla psal jinou nejistotu, než
    jakou naměří tohle měřidlo. */
+/* NÁPAD: VYHODIT SPOLUVLASTNICKÉ PODÍLY ZE SROVNÁVACÍHO VZORKU.
+   U podílu je v ceně zlomek pozemku, ale v inzerátu výměra celé parcely,
+   takže jeho cena za metr vyjde uměle nízko — a medián, ze kterého se
+   počítá obvyklá cena, to stahuje dolů. Podílů je 26 % nabídek, takže
+   to není okrajová věc. Rozhodne měření, ne úvaha: medián chyby
+   i znaménkový test. */
+if (process.argv.includes('--bez-podilu')) {
+  const B = krizove((model, d, trenink) => odhadDnesni(model, d), (trenink) => trenink.filter((x) => !x.podil));
+  let lepsi = 0, horsi = 0, stejne = 0;
+  for (const [d, chA] of A.podle) {
+    const chB = B.podle.get(d);
+    if (chB == null) continue;
+    if (chB < chA - 0.05) lepsi++; else if (chB > chA + 0.05) horsi++; else stejne++;
+  }
+  const rozdil = (B.median - A.median).toFixed(1);
+  console.log(`bez podílů ve vzorku    medián chyby ${B.median.toFixed(1)} % (${rozdil > 0 ? '+' : ''}${rozdil} p.b.)`
+    + `   odhadů ${B.kolik}   párově: lepší ${lepsi}, horší ${horsi}, stejně ${stejne}`);
+}
+
+/* A TŘETÍ MOŽNOST: podíl nevyhodit, ale PŘEPOČÍTAT. Web už umí spočítat
+   výměru, která kupujícímu doopravdy připadne (vymeraVCene v js/ceny.js
+   — u části podílů je uložená výměra už ta podílová, u části celá, a dá
+   se to z textu rozhodnout). Cena za metr z té výměry je poctivá, takže
+   by podíl mohl ve vzorku ZŮSTAT a nic nekřivit. */
+if (process.argv.includes('--podil-prepocet')) {
+  const B = krizove((model, d) => odhadDnesni(model, d), (trenink) => trenink.map((x) => {
+    if (!x.podil) return x;
+    const v = CENY.vymeraVCene(x);
+    if (!(v > 0) || v === x.area) return x;
+    return Object.assign({}, x, { area: v, podil: false });
+  }));
+  let lepsi = 0, horsi = 0, stejne = 0;
+  for (const [d, chA] of A.podle) {
+    const chB = B.podle.get(d);
+    if (chB == null) continue;
+    if (chB < chA - 0.05) lepsi++; else if (chB > chA + 0.05) horsi++; else stejne++;
+  }
+  const rozdil = (B.median - A.median).toFixed(1);
+  console.log(`podíl přepočtený        medián chyby ${B.median.toFixed(1)} % (${rozdil > 0 ? '+' : ''}${rozdil} p.b.)`
+    + `   odhadů ${B.kolik}   párově: lepší ${lepsi}, horší ${horsi}, stejně ${stejne}`);
+}
+
 if (process.argv.includes('--podle-druhu')) {
   const { presnostPodleDruhu } = await import('./presnost-odhadu.mjs');
   const podle = presnostPodleDruhu(VSE, CENY);

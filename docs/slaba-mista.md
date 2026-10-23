@@ -208,10 +208,23 @@ kupujících je to bezcenné a zároveň to vypadá jako trhák.
 
 Web to na každém místě pojmenovává (cena za metr se počítá z výměry,
 která kupujícímu připadne; hlídání umí „jen celé pozemky"; verdikt se
-u podílu nevydává). Zbývající slabina je jinde: **podíly ředí vzorek,
-ze kterého se počítá obvyklá cena**. Měřidlo přesnosti pracuje s 1 329
+u podílu nevydává). Zbývající slabina je jinde: ~~**podíly ředí vzorek,
+ze kterého se počítá obvyklá cena**~~ — **tohle měření 23. 10. vyvrátilo,
+viz níž**. Měřidlo přesnosti pracuje s 1 329
 nabídkami z 1 980 — jsou to celé pozemky na prodej, tedy bez podílů
 a bez dražeb, jejichž vyvolávací cena se s nabídkovou srovnávat nedá.
+
+**ZMĚŘENO 23. 10., A VYŠLO TO NAOPAK.** Že podíly vzorek křiví, zní
+samozřejmě — jejich cena za metr je uměle nízká. Jenže když se z něj
+vyhodí, odhad se ZHORŠÍ: medián chyby 29,8 → 31,8 % (+2,0 p.b.)
+a znaménkový test je proti (417 nabídek blíž, 484 dál). Druhá varianta,
+podíl přepočítaný na výměru, která kupujícímu připadne, je taky horší:
+31,1 % (+1,2 p.b.), párově 207 : 259. Vyhozením se navíc ztratí
+jedenadvacet odhadů, protože v řídkých okresech klesne vzorek pod mez.
+Mechanismus neznám a nebudu si ho vymýšlet; vím jen, že dnešní model je
+z těch tří variant nejlepší, takže se **nic nemění**. Obě varianty
+zůstávají v měřidle (`--bez-podilu`, `--podil-prepocet`), aby se ta
+otázka nemusela otevírat znovu od nuly.
 
 A druhá nerovnováha: **stavebních pozemků je jen 234 (12 %)**, zatímco
 orné půdy 571. Nabídka webu je zemědělská, zatímco poptávka na podobných

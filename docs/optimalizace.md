@@ -7478,3 +7478,41 @@ na datech, zestárne přesně tak rychle jako ta data — a konstanta v kódu
 o tom mlčí. A platí i obrácené: **dokud se nezměří, ať se nic netvrdí.**
 Když přesnost k modelu nedorazí, nenapíše se žádné rozmezí; vymyšlená
 nejistota je horší než žádná.
+
+
+## 110. Podíly ve vzorku: samozřejmá oprava, kterou měření zamítlo *23. 10.*
+
+V `docs/slaba-mista.md` stála jako zbývající slabina věta, že
+**spoluvlastnické podíly ředí vzorek, ze kterého se počítá obvyklá
+cena**. Zní to samozřejmě: u podílu je v ceně zlomek pozemku, ale
+v inzerátu výměra celé parcely, takže jeho cena za metr vyjde uměle
+nízko — a podílů je 523 z 1 980 nabídek (26 %). Do srovnávacího vzorku
+v `js/ceny.js` přitom opravdu jdou; loop je nefiltruje.
+
+Změřeno křížově (`scripts/mericka-odhadu.mjs`), tři varianty:
+
+| varianta | medián chyby | párově |
+|---|---:|---|
+| dnešní model | **29,8 %** | — |
+| bez podílů ve vzorku | 31,8 % (+2,0 p.b.) | lepší 417, **horší 484** |
+| podíl přepočtený na výměru v ceně | 31,1 % (+1,2 p.b.) | lepší 207, **horší 259** |
+
+**Obě „opravy" jsou horší, a znaménkový test to potvrzuje u obou.**
+Vyhozením se navíc ztratí jedenadvacet odhadů (1 087 → 1 066), protože
+v řídkých okresech klesne vzorek pod mez a odhad se nevydá vůbec.
+Přepočet se skoro ničeho nedotkne (620 nabídek beze změny) a ze zbytku
+pokazí víc, než spraví.
+
+Mechanismus neznám. Napsat sem domněnku („levné podíly nejspíš
+vyvažují…") by znamenalo vydávat dojem za zjištění — a zrovna tahle
+práce je o tom nedělat. **Model se tedy nemění**; obě varianty zůstávají
+v měřidle za přepínačem, aby se ta otázka nemusela otevírat od nuly.
+
+### Co z toho platí dál
+
+**Samozřejmá oprava je hypotéza jako každá jiná.** Tahle měla všechno
+pro sebe: popsaný mechanismus, velké číslo (26 %) a dokument, který ji
+tvrdil. Patnáct minut měření ukázalo, že by web zhoršila — a to je
+levnější než ji zavést a čekat, až se někdo zeptá, proč je odhad horší
+než loni. Stejně jako u bodu 48 (vynucené rozvržení) platí: **změřeno,
+NEUDĚLÁNO** je taky výsledek, a patří ho zapsat.
