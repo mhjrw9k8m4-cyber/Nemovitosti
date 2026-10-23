@@ -244,37 +244,65 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
     }
     /* 4) karta, která přežije, si zaměření drží (podle data-pk, ne podle
        pořadí — po změně řazení je karta jinde) */
-    /* 4a) KARTA, KTERÁ Z VÝPISU ODEJDE: drží se MÍSTO v seznamu.
-       Změna řazení kartu zprostřed odstěhuje na jinou stranu výpisu
-       (stránkuje se), takže ji podle klíče najít nejde — a pak je
-       správné zůstat na stejném místě seznamu, jako kdyby to člověk
-       viděl. Naměřeno: právě tohle se děje. */
-    await cistaStranka();
-    const stred = await p.evaluate(() => {
-      const karty = [...document.querySelectorAll('#opp-list .opp-item')];
-      const k = karty[Math.min(2, karty.length - 1)];
-      if (!k) return null;
-      k.focus();
-      return document.activeElement === k
-        ? { pk: k.getAttribute('data-pk') || '', poradi: karty.indexOf(k) } : null;
-    });
-    pravda('výpis: karta zprostřed se dá zaměřit', !!stred, 'kartu nejde zaměřit (tabindex?)');
-    if (stred) {
-      await p.evaluate(() => {
-        const s = document.getElementById('map-sort');
-        s.selectedIndex = (s.selectedIndex + 1) % s.options.length;
-        s.dispatchEvent(new Event('change', { bubbles: true }));
+    /* 4a) PO ZMĚNĚ ŘAZENÍ ZŮSTANE ZAMĚŘENÍ VE VÝPISU — a na tom, co
+       člověk čte, ne na prázdnu.
+       Tohle tvrzení tu dřív bylo užší: „drží se MÍSTO v seznamu",
+       protože změna řazení kartu zprostřed odstěhuje na jinou stranu
+       výpisu (stránkuje se) a podle klíče ji najít nejde. Jenže to
+       platí jen pro NĚKTERÁ řazení a NĚKTERÁ data: 23. 10. ta kontrola
+       prošla lokálně třikrát za sebou (2 → 2) a v CI spadla (2 → 14),
+       protože tam karta na stránce zůstala a zaměření ji správně
+       následovalo. Tedy zkouška měřila něco, co drží náhodou.
+       Pravidlo, které js/main.js opravdu dodržuje (vratZamereni):
+       **najdi tutéž kartu podle data-pk; a když ve výpisu není, vezmi
+       tu, co nastoupila na její místo.** Tak se to tu měří, a napříč
+       VŠEMI volbami řazení, ne jen tou nejbližší. */
+    const voleb = await p.evaluate(() => document.getElementById('map-sort').options.length);
+    pravda(`výpis: řazení má z čeho vybírat (${voleb} voleb)`, voleb >= 2, `jen ${voleb}`);
+    let rozbite = [], nasleduje = 0, misto = 0;
+    for (let i = 0; i < voleb; i++) {
+      await cistaStranka();
+      const stred = await p.evaluate(() => {
+        const karty = [...document.querySelectorAll('#opp-list .opp-item')];
+        const k = karty[Math.min(2, karty.length - 1)];
+        if (!k) return null;
+        k.focus();
+        return document.activeElement === k
+          ? { pk: k.getAttribute('data-pk') || '', poradi: karty.indexOf(k) } : null;
       });
+      if (!stred) { rozbite.push(`volba ${i}: kartu nejde zaměřit`); continue; }
+      const po = await p.evaluate((kam) => {
+        const s = document.getElementById('map-sort');
+        if (s.selectedIndex === kam) return 'stejna';
+        s.selectedIndex = kam;
+        s.dispatchEvent(new Event('change', { bubbles: true }));
+        return 'zmeneno';
+      }, i);
+      if (po === 'stejna') continue;
       await p.waitForTimeout(900);
-      const po = await p.evaluate(() => {
+      const stav = await p.evaluate((pk) => {
         const e = document.activeElement;
         const karta = e && e.closest ? e.closest('.opp-item') : null;
         const karty = [...document.querySelectorAll('#opp-list .opp-item')];
-        return { je: !!karta, poradi: karta ? karty.indexOf(karta) : -1 };
-      });
-      pravda(`výpis: po změně řazení zůstane zaměření ve výpisu, na stejném místě (${stred.poradi} → ${po.poradi})`,
-        po.je === true && po.poradi === stred.poradi, JSON.stringify(po));
+        const ta = karty.filter((k) => k.getAttribute('data-pk') === pk)[0] || null;
+        return {
+          je: !!karta,
+          naTeze: !!karta && karta === ta,
+          poradi: karta ? karty.indexOf(karta) : -1,
+          puvodniJeVeVypisu: !!ta,
+        };
+      }, stred.pk);
+      if (!stav.je) { rozbite.push(`volba ${i}: zaměření spadlo z výpisu`); continue; }
+      if (stav.puvodniJeVeVypisu) {
+        if (stav.naTeze) nasleduje++;
+        else rozbite.push(`volba ${i}: karta ve výpisu je, ale zaměření skočilo jinam (${stav.poradi})`);
+      } else if (stav.poradi === stred.poradi) misto++;
+      else rozbite.push(`volba ${i}: karta odešla a zaměření není na jejím místě (${stred.poradi} → ${stav.poradi})`);
     }
+    pravda(`výpis: po změně řazení drží zaměření pravidlo „táž karta, jinak její místo" (${nasleduje}× táž karta, ${misto}× místo)`,
+      rozbite.length === 0, rozbite.slice(0, 3).join(' | '));
+    pravda('a aspoň jedna volba řazení se opravdu vyzkoušela',
+      nasleduje + misto > 0, 'žádná volba nezměnila pořadí — zkouška by neměřila nic');
 
     /* 4b) KARTA, KTERÁ VE VÝPISU ZŮSTANE: drží se TÁŽ KARTA, ne místo.
        Skryje se karta NAD zaměřenou (klepnutím ze skriptu, které

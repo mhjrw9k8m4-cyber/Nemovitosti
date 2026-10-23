@@ -7848,3 +7848,34 @@ která nic neměří, je horší než červená.
 To je vlastní zkouška, ne přívěsek k téhle; zapsáno jako další bod.
 Stejně tak **escapování v generátorech**: okresní a krajské stránky
 skládá sestavení, ne prohlížeč, takže se jich tahle cesta netýká.
+
+### Zelená lokálně, červená v CI: tvrzení, které drželo náhodou
+
+Po nasazení CSP zbyla v CI jedna červená zkouška, kterou lokálně nešlo
+zopakovat: `test-zaostreni`, kontrola „po změně řazení zůstane zaměření
+ve výpisu, na stejném místě". Lokálně **2 → 2** třikrát za sebou,
+v CI **2 → 14**.
+
+Příčina nebyla v hlavičce ani v prohlížeči. Ta kontrola tvrdila něco
+užšího, než co web dělá. V `js/main.js` (`vratZamereni`) platí:
+
+> najdi tutéž kartu podle `data-pk`; a když už ve výpisu není, vezmi
+> tu, co nastoupila na její místo.
+
+Kontrola ale měřila jen tu druhou větev — protože autor naměřil, že
+změna řazení kartu zprostřed vždy odstěhuje mimo stránkovaný výpis.
+To ovšem platí jen pro **některá řazení a některá data**. V CI karta na
+stránce zůstala, zaměření ji správně následovalo na 14. místo — a
+zkouška to označila za chybu.
+
+Přepsáno na to pravidlo, a hned napříč **všemi jedenácti volbami
+řazení**: naměřeno 1× „karta zůstala a zaměření ji následovalo" a 9×
+„karta odešla a zaměření drží její místo". Obě větve jsou tím pokryté,
+takže kontrola už nestojí na tom, která volba řazení je v seznamu
+nejblíž. Přidána i pojistka, že aspoň jedna volba pořadí opravdu
+změnila — jinak by zkouška mohla projít nad nezměněným výpisem.
+
+**Co z toho platí dál:** zelená zkouška, která měří jen jednu z dvou
+větví pravidla, je jen půl zkoušky — a to, která větev se spustí, se
+může změnit s daty. Taková kontrola nespadne, když se web rozbije; spadne,
+až se změní vstupy. Proto se měří pravidlo, ne jeden jeho projev.
