@@ -163,6 +163,36 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
     && /grant execute on function uklid_hlidani\(integer\) to service_role/i.test(SQL));
 }
 
+/* ---- 6) co se zakládá na účet, to má strop --------------------- */
+/* Tabulky s řádky „na účet" rostou tím, co lidé napíšou. Strop má
+   `ulozeny_uloz` (500 řádků, 200 znaků na klíč) i `save_search` (20
+   hledání), ale `poznamka_uloz` hlídal jen délku TEXTU — počet řádků
+   ani délku klíče ne, takže kterýkoli registrovaný účet mohl psát bez
+   konce. Čísla se čtou ze zdroje, aby se strop v SQL a strop
+   v prohlížeči nerozešly. */
+{
+  const pozn = (SQL.match(/create\s+or\s+replace\s+function\s+poznamka_uloz[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('ukládání poznámky se v SQL najde', pozn.length > 0);
+  const vPlus = /count\(\*\)[\s\S]*from poznamky[\s\S]*>=\s*(\d+)/i.exec(pozn);
+  pravda('a má strop na počet poznámek na jeden účet', !!vPlus,
+    'bez stropu si účet může psát řádky bez konce (databáze je na 500 MB)');
+  const prohlizec = /var\s+STROP\s*=\s*(\d+)/.exec(readFileSync(path.join(KOREN, 'js', 'poznamky.js'), 'utf8'));
+  pravda('a je to týž strop jako v prohlížeči',
+    !!vPlus && !!prohlizec && vPlus[1] === prohlizec[1],
+    `v SQL ${vPlus ? vPlus[1] : '(nic)'}, v js/poznamky.js ${prohlizec ? prohlizec[1] : '(nic)'}`);
+  pravda('strop nebrání úpravě poznámky, která už existuje',
+    /not exists[\s\S]*from poznamky[\s\S]*klic\s*=\s*p_klic/i.test(pozn),
+    'u plného stropu by nešlo ani uklidit');
+  const dKlic = /length\(trim\(coalesce\(p_klic[^)]*\)\)\)\s*>\s*(\d+)/i.exec(pozn);
+  pravda('a klíč pozemku má strop na délku', !!dKlic,
+    'sloupec je text bez stropu — tudy projde megabajt');
+  const ulozene = readFileSync(path.join(KOREN, 'supabase', 'ulozene-na-uctu.sql'), 'utf8');
+  const dUloz = /length\(k\)\s*>\s*(\d+)/.exec(ulozene);
+  pravda('a je to týž strop jako u uložených pozemků',
+    !!dKlic && !!dUloz && dKlic[1] === dUloz[1],
+    `poznámky ${dKlic ? dKlic[1] : '(nic)'}, uložené ${dUloz ? dUloz[1] : '(nic)'}`);
+}
+
 console.log('\nPráva v databázi');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

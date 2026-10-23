@@ -2354,8 +2354,31 @@ begin
   if coalesce(trim(p_klic), '') = '' then
     raise exception 'chybí klíč pozemku';
   end if;
+  /* DÉLKA KLÍČE. Klíč pozemku je `PKKlic.pkey` — okres, obec a parcelní
+     číslo, tedy desítky znaků. Sloupec je ale `text` bez stropu, takže
+     tudy šlo poslat megabajt. Dvě stě znaků je týž strop, jaký má
+     `ulozeny_uloz` (supabase/ulozene-na-uctu.sql); schválně stejný, ať
+     se dva stropy na tutéž věc nerozejdou. */
+  if length(trim(coalesce(p_klic, ''))) > 200 then
+    raise exception 'klíč pozemku je příliš dlouhý';
+  end if;
   if length(coalesce(p_text, '')) > 2000 then
     raise exception 'poznámka je delší než 2000 znaků';
+  end if;
+  /* STROP NA POČET POZNÁMEK. Délku textu tahle funkce hlídala od
+     začátku, počet řádků NE — a prohlížeč (STROP v js/poznamky.js)
+     hlídá jen slušného člověka. Kterýkoli registrovaný účet tedy mohl
+     psát řádky bez konce; databáze je na bezplatném tarifu 500 MB.
+     Sourozenci strop mají: `ulozeny_uloz` 500 řádků, `save_search` 20
+     hledání. Číslo je tu schválně TOTÉŽ co v prohlížeči (300), ať si
+     člověk nenarazí na dva různé stropy.
+     Platí jen pro NOVÝ klíč: úprava nebo smazání existující poznámky
+     musí jít vždycky, i když je plno — jinak by se u stropu nedalo ani
+     uklidit. */
+  if coalesce(trim(p_text), '') <> ''
+     and (select count(*) from poznamky where user_id = auth.uid()) >= 300
+     and not exists (select 1 from poznamky where user_id = auth.uid() and klic = p_klic) then
+    raise exception 'poznámek je už 300 — nejdřív nějakou smažte';
   end if;
 
   if coalesce(trim(p_text), '') = '' then

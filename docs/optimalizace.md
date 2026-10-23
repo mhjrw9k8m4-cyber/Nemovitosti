@@ -8351,3 +8351,53 @@ A jednou kontrola křičela vlka: skenovat **všechny** řetězce ve
 skriptech nejde — mezi dvěma nesouvisejícími uvozovkami leží kus kódu,
 a tak byl jako nepravda ohlášen úryvek z `js/pozemek.js`. Měří se proto
 jen pole s textem pro člověka (`popis`, `nazev`, `sub`, `veta`).
+
+## 121. Poznámky na účtu neměly strop na počet ani na délku klíče *23. 10.*
+
+Oddíl 117 dal strop přihláškám k hlídání, které smí zakládat kdokoli
+s veřejným klíčem. Tohle je totéž o krok dál: **co smí zakládat
+kterýkoli registrovaný účet.** Změřeno 23. 10. nad `supabase/`:
+
+| Funkce | Strop na počet | Strop na délku |
+|---|---|---|
+| `save_search` | 20 hledání | — |
+| `ulozeny_uloz` | 500 řádků | klíč 200 znaků |
+| `poznamka_uloz` | **žádný** | text 2 000 znaků, **klíč žádný** |
+
+Prohlížeč strop má (`STROP = 300` v `js/poznamky.js`), ale ten platí jen
+pro slušného člověka: funkci jde zavolat přímo. Kterýkoli registrovaný
+účet tedy mohl do tabulky `poznamky` psát řádky **bez konce** — a `klic`
+je `text` bez stropu, takže jedním voláním šel poslat megabajt. Databáze
+je na bezplatném tarifu, 500 MB.
+
+Hotovo: strop **300 poznámek na účet** (schválně totéž číslo, co má
+prohlížeč — ať si člověk nenarazí na dva různé stropy) a **200 znaků na
+klíč** (schválně totéž, co má `ulozeny_uloz`). Strop platí jen pro NOVÝ
+klíč: úprava i smazání existující poznámky musí jít vždycky, jinak by se
+u plného stropu nedalo ani uklidit.
+
+Hlídači jsou dva a každý měří jinak:
+
+* `test-sql-prava.mjs` (6 nových kontrol) čte SQL **a porovnává čísla se
+  zdrojem**: strop v SQL se musí rovnat `STROP` v `js/poznamky.js`
+  a strop na klíč tomu v `supabase/ulozene-na-uctu.sql`. Dvě čísla na
+  tutéž věc se jinak rozejdou.
+* `test-sql-cista.mjs` (8 nových kontrol) to zkouší **na živém
+  PostgreSQL rolí přihlášeného člověka**: tři stě projde, tři sta první
+  spadne, u plného stropu jde existující poznámku upravit i smazat,
+  a po smazání se zas jedna vejde (strop není zámek).
+
+Sabotáž, pět směrů, všechny zachyceny: strop na počet pryč, strop
+brzdící i úpravu existující poznámky, strop na délku klíče pryč, strop
+na délku textu pryč, a strop v SQL jiný než v prohlížeči.
+
+**A jedna moje kontrola zprvu měřila něco jiného, než co tvrdila.**
+Délku klíče jsem zkoušel na účtu, který měl zrovna 300 poznámek —
+odmítnutí tedy přišlo od stropu na POČET, a zkouška prošla i tehdy, když
+jsem strop na délku z SQL vyhodil. Měří se proto na druhém, prázdném
+účtu, a před tím stojí kontrola, že tam krátký klíč projde. Potřetí
+v jednom dni totéž poučení: **u kontroly se musí doložit, že padá na to,
+na co je napsaná** (oddíly 115 a 120).
+
+V běžícím projektu to platí teprve po spuštění `supabase/00-vse.sql` —
+zapsáno v `docs/pred-vydanim.md`, oddíl 3.

@@ -144,6 +144,12 @@ nastaví i existujícímu úložišti, takže stačí jeden běh a nic se
 nerozbije. Hlídá to `scripts/test-sql-prava.mjs` (v repozitáři; že to
 někdo pustil, pozná jen Supabase).
 
+**A kvůli stropům na poznámky.** `poznamka_uloz` hlídal jen délku
+textu; od 23. 10. hlídá i počet poznámek na jeden účet (300, týž strop
+jako v prohlížeči) a délku klíče pozemku (200 znaků, týž jako
+u uložených). Bez spuštění může kterýkoli registrovaný účet psát řádky
+bez konce — databáze je na bezplatném tarifu 500 MB.
+
 **A kvůli přihláškám k hlídání.** Týmž během přijde strop dvanácti
 hlídaných míst na jednu e-mailovou adresu (`subscribe_watch` smí
 zavolat kdokoli s veřejným klíčem) a funkce `uklid_hlidani()`, která

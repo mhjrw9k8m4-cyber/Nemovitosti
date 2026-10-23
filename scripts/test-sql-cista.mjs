@@ -582,6 +582,52 @@ try {
       prihlas('dotera@priklad.cz', 'Benešov').ano,
       'oživení existující přihlášky narazilo na strop — člověk si pak nezmění typy');
 
+    /* 8) Poznámky na účtu: strop na počet a na délku klíče.
+       Zkouší se rolí přihlášeného člověka (pk.uid), tedy tou cestou,
+       kterou má kdokoli registrovaný. */
+    const JA = '11111111-1111-1111-1111-111111111111';
+    const jako = (sql) => psqlVse(['-d', 'zkouska', '-tAc', `set pk.uid = '${JA}'; ${sql}`]);
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into auth.users(id, email) values ('${JA}', 'ja@priklad.cz') on conflict (id) do nothing;
+       insert into poznamky(user_id, klic, text)
+         select '${JA}', 'klic-' || i, 'poznámka ' || i from generate_series(1, 299) i;`]);
+    const prvni = jako(`select poznamka_uloz('klic-300', 'tristá poznámka')`);
+    pravda('tři stě poznámek na účet databáze pustí', !/ERROR/i.test(prvni),
+      'prošlo jen ' + prvni.replace(/\s+/g, ' ').slice(0, 90));
+    const nadstrop = jako(`select poznamka_uloz('klic-301', 'o jednu víc')`);
+    pravda('a tři sta první už ne', /ERROR/i.test(nadstrop),
+      'účet si může psát řádky bez konce — databáze je na bezplatném tarifu');
+    const uprava = jako(`select poznamka_uloz('klic-5', 'upravený text u plného stropu')`);
+    pravda('u plného stropu jde upravit poznámka, která už existuje', !/ERROR/i.test(uprava),
+      'u stropu by nešlo ani uklidit: ' + uprava.replace(/\s+/g, ' ').slice(0, 90));
+    const smazani = jako(`select poznamka_uloz('klic-5', '')`);
+    pravda('a smazat taky', !/ERROR/i.test(smazani),
+      smazani.replace(/\s+/g, ' ').slice(0, 90));
+    const poSmazani = jako(`select poznamka_uloz('klic-302', 'teď je místo')`);
+    pravda('a po smazání se zas jedna vejde (strop není zámek)', !/ERROR/i.test(poSmazani),
+      poSmazani.replace(/\s+/g, ' ').slice(0, 90));
+    /* DÉLKA KLÍČE SE MĚŘÍ NA PRÁZDNÉM ÚČTU. Nejdřív to stálo tady,
+       u účtu plného poznámek — a zkouška prošla i tehdy, když jsem
+       strop na délku z SQL vyhodil: odmítnutí přišlo od stropu na
+       POČET, ne od délky. Kontrola tedy měřila něco jiného, než co
+       tvrdila. Druhý účet žádné poznámky nemá, takže o odmítnutí
+       rozhoduje jen délka. */
+    const DRUHY = '22222222-2222-2222-2222-222222222222';
+    const jakoDruhy = (sql) => psqlVse(['-d', 'zkouska', '-tAc', `set pk.uid = '${DRUHY}'; ${sql}`]);
+    psql(['-d', 'zkouska', '-q', '-c',
+      `insert into auth.users(id, email) values ('${DRUHY}', 'druhy@priklad.cz') on conflict (id) do nothing;`]);
+    pravda('je co měřit — na prázdném účtu krátký klíč projde',
+      !/ERROR/i.test(jakoDruhy(`select poznamka_uloz('kratky-klic', 'text')`)),
+      'ani krátký klíč neprošel — pak o délce nic neví ani kontrola pod tím');
+    const dlouhyKlic = jakoDruhy(`select poznamka_uloz(repeat('k', 300), 'dlouhý klíč')`);
+    pravda('dlouhý klíč pozemku databáze odmítne', /ERROR/i.test(dlouhyKlic),
+      'klíč je text bez stropu — tudy projde megabajt');
+    const dlouhyText = jakoDruhy(`select poznamka_uloz('klic-7', repeat('a', 2100))`);
+    pravda('a dlouhý text taky (to platilo už dřív)', /ERROR/i.test(dlouhyText),
+      'strop 2 000 znaků neplatí');
+    psql(['-d', 'zkouska', '-q', '-c', `delete from poznamky where user_id = '${DRUHY}'`]);
+    psql(['-d', 'zkouska', '-q', '-c', `delete from poznamky where user_id = '${JA}'`]);
+
     /* Úklid nepotvrzených. Bez něj v tabulce navždy leží řádky po někom,
        kdo si přihlášku nikdy nepotvrdil (třeba ji vypsal cizí skript). */
     psql(['-d', 'zkouska', '-q', '-c',
