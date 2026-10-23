@@ -7782,3 +7782,69 @@ každém vykreslení výpisu, takže se dožene sám.
 **Co z toho platí dál:** hlavička CSP se tu zachovala jako zátěžová
 zkouška načasování. Nic nerozbila — jen přestala schovávat dvě místa,
 kde web spoléhal na to, co se stihne načíst dřív.
+
+---
+
+## 113. Nepřátelský text do dat: co web doopravdy chrání *23. 10.*
+
+Escapování HTML je na webu napsané **ve třinácti kopiích** (deset
+v `js/*.js`, tři v ručně psaných stránkách) a nejsou doslova stejné —
+jedna escapuje i apostrof, ostatní ne. Nic přitom nehlídalo, že
+čtrnáctá nezapomene. `scripts/test-escape-dom.mjs` to měří tak, jak se
+to měřit má: **do dat se podstrčí nálož** (obrázek s `onerror`, `svg`
+s `onload`, značka `script`) a ptá se, co z ní na stránce vznikne.
+
+### Co měření ukázalo o pořadí obran
+
+| obrana | kde | co udělá s `<img src=x onerror=…>` |
+|---|---|---|
+| **čištění dat** | `text()` v `js/cisteni.js` | zahodí `<`, `>` a `"` úplně — na kartě zbyde `img src=x onerror=…` jako text |
+| escapování | třináct kopií v js a stránkách | druhá pojistka pro cesty, které čištěním neprojdou (zprávy mezi lidmi) |
+| CSP | hlavička na každé stránce (oddíl 112) | třetí pojistka: i kdyby se kód do HTML dostal, nespustí se |
+
+Na kartách výpisu je tedy první obranou **čištění, ne escapování** — a
+to se dalo poznat jen sabotáží. Když se z `text()` odebere zahazování
+ostrých znaků, naměří se tohle:
+
+| stav | nálož se spustila | `img[onerror]` v DOM | porušení CSP |
+|---|---|---|---|
+| čištění vypnuté, CSP obcházená | **ano** | 16 | 0 |
+| čištění vypnuté, CSP platná | **ne** | 17 | 17 |
+
+Tedy: escapování tu kartu nezachrání (na té cestě se nepoužije), ale
+**CSP ano**. To je přesně ten přínos, kvůli kterému se zaváděla —
+a je naměřený, ne tvrzený.
+
+### Proč ta zkouška CSP schválně obchází
+
+Kdyby ji neobcházela, prošla by i nad dírou v escapování: skript by
+zastavila hlavička a nebylo by poznat, že se cizí text dostal do HTML
+jako kód. Měří se tedy **první** obrana, a že funguje i ta třetí, je
+věcí `test-csp.mjs`.
+
+### Tři věci, které jsem si při psaní musel naměřit
+
+* **Nálož ve prvních třech záznamech dat se na obrazovku nedostane.**
+  Výpis ukazuje šedesát řádků v nějakém pořadí a spoluvlastnické podíly
+  skrývá; z 1 392 celých pozemků byly ty tři kdesi vprostřed. Zkouška
+  pak hlásila „nespustilo se nic" nad stránkou, kde žádná nálož nebyla.
+  Proto se otráví **všechny** vhodné nabídky.
+* **Stránka pozemku si jméno obce zkracuje**, takže z nálože zbyde
+  v seznamu srovnatelných jen slovo `Zkouskov`. Značka „dorazila data"
+  proto nemůže být celý text nálože.
+* **Po návštěvě úvodní stránky si stránka pozemku čerstvý řez okresu
+  nestáhla** a vzala, co měla v prohlížeči. Každá stránka se proto
+  otevírá ve vlastním kontextu — jinak by zkouška mlčela o stránce,
+  kterou vůbec neprověřila.
+
+Všechny tři by zkoušku nechaly projít **nad prázdnem**. Proto v ní
+stojí i kontrola „otrávená data na stránku dorazila": zelená zkouška,
+která nic neměří, je horší než červená.
+
+### Co tahle zkouška neměří
+
+**Zprávy mezi lidmi** (`zpravy.html`) — tam cizí text nejde přes
+čištění dat, nese ho vlastní kopie escapování a chodí přes Supabase.
+To je vlastní zkouška, ne přívěsek k téhle; zapsáno jako další bod.
+Stejně tak **escapování v generátorech**: okresní a krajské stránky
+skládá sestavení, ne prohlížeč, takže se jich tahle cesta netýká.

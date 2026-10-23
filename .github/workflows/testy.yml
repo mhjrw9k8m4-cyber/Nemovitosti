@@ -660,6 +660,9 @@ jobs:
       - name: CSP platí a zastaví podstrčený skript
         run: node scripts/test-csp.mjs
 
+      - name: Cizí text se vykreslí jako text, ne jako kód
+        run: node scripts/test-escape-dom.mjs
+
   v-prohlizeci-2:
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
