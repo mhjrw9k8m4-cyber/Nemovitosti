@@ -337,6 +337,50 @@ od sebe.
 
 ---
 
+## 13. Zabezpečení: co je zavřené a co zavřít nejde *23. 10.*
+
+Tenhle dokument o zabezpečení dosud neměl ani řádek, a to byla mezera
+sama o sobě. Co je po dnešním průchodu zavřené (každá položka má
+zkoušku a sabotáž, podrobně `docs/optimalizace.md`, oddíly 112–123):
+
+* **CSP na všech 2 360 stránkách** s hashi vložených skriptů; cizí
+  skript ani podstrčený `<script>` se nespustí.
+* **Cizí text se vykreslí jako text** — měřeno nepřátelskými daty na
+  třech frontách (vykreslení v prohlížeči, zprávy mezi lidmi,
+  generátory stránek).
+* **Práva v databázi**: RLS na všech tabulkách, u každé `security
+  definer` funkce volatelné veřejným klíčem je doloženo, čím si ověřuje
+  volajícího.
+* **Stropy na všechno, co jde zvenčí ZAPSAT**: přihlášky k hlídání,
+  poznámky, uložené pozemky (jednotlivě i hromadně), odběry upozornění,
+  inzeráty, zprávy, hledání — a denní strop na řádky měření
+  návštěvnosti.
+* **Odhlášení** ruší sezení i na serveru a maže v prohlížeči kopii toho,
+  co patří účtu.
+* **Úlohy v CI** mají napsaná nejmenší potřebná práva, nenechávají si
+  token na disku a balíčky instalují ze zámku bez životních skriptů.
+
+Co zavřít **nejde odsud** a co je vědomá hranice:
+
+1. **Hlavičky, které umí jen server.** `Strict-Transport-Security`,
+   `X-Frame-Options`/`frame-ancestors`, `Referrer-Policy`,
+   `Permissions-Policy`. GitHub Pages je statické hosting a `<meta>`
+   část z nich ignoruje. Je to v `docs/pred-vydanim.md` jako volitelný
+   bod 6 (až na Vercelu nebo za CDN).
+2. **Nastavení projektu v Supabase**: povolené adresy pro odkazy
+   z e-mailu, potvrzování e-mailu, vlastní SMTP. Z repozitáře se to
+   nedá ani nastavit, ani změřit — jen napsat do seznamu před vydáním.
+3. **Čítače se dají nafouknout** (`bump_view`, `zapis_navstevu`). Brzda
+   by potřebovala poznat, kdo volá, tedy ukládat IP nebo označení
+   zařízení ke každému zhlédnutí — to zásady soukromí slibují nedělat
+   a získalo by se tím málo (čísla vidí jen majitel, nikde se podle
+   nich neřadí). Zapsáno jako hranice, ne jako nedodělek.
+4. **Zkouška umí měřit jen repozitář.** Jestli někdo pustil
+   `supabase/00-vse.sql` na běžícím projektu, pozná jen Supabase —
+   a dokud se nepustí, platí všechny stropy výš jen na papíře.
+
+---
+
 ## Co bych dělal a v jakém pořadí
 
 Seřazeno podle poměru „co to přinese" ku „co to stojí". **První tři
