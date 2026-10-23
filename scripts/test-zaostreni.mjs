@@ -270,7 +270,7 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
        VŠEMI volbami řazení, ne jen tou nejbližší. */
     const voleb = await p.evaluate(() => document.getElementById('map-sort').options.length);
     pravda(`výpis: řazení má z čeho vybírat (${voleb} voleb)`, voleb >= 2, `jen ${voleb}`);
-    let rozbite = [], nasleduje = 0, misto = 0, zachytu = 0;
+    let rozbite = [], nasleduje = 0, misto = 0, zachytu = 0, oken = 0;
     for (let i = 0; i < voleb; i++) {
       await cistaStranka();
       const stred = await p.evaluate(() => {
@@ -299,7 +299,7 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       await p.waitForFunction(() => {
         const e = document.activeElement;
         if (!e || e === document.body || e === document.documentElement) return false;
-        return !!(e.closest && e.closest('.opp-item')) || e.id === 'mc-skryte';
+        return !!(e.closest && e.closest('.opp-item, .vm-ov, [role="dialog"]')) || e.id === 'mc-skryte';
       }, null, { timeout: 8000 }).catch(() => {});
       const stav = await p.evaluate((pk) => {
         const e = document.activeElement;
@@ -312,12 +312,37 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
           poradi: karta ? karty.indexOf(karta) : -1,
           puvodniJeVeVypisu: !!ta,
           zachyt: !!e && e.id === 'mc-skryte',
+          /* JEN OPRAVDU OTEVŘENÉ OKNO. Značky několika oken leží
+             v DOM pořád (skryté), takže samo `querySelector` by
+             „otevřené okno" hlásilo vždycky — a změřeno, že pak
+             zkouška obviní výpis z toho, že drží zaměření po právu. */
+          okno: [...document.querySelectorAll('.vm-ov, [role="dialog"][aria-modal="true"]')]
+            .some((d) => {
+              const cs = getComputedStyle(d);
+              return cs.display !== 'none' && cs.visibility !== 'hidden' && d.offsetParent !== null;
+            }),
+          vOkne: !!(e && e.closest && e.closest('.vm-ov, [role="dialog"]')),
           kde: e ? (e.tagName + (e.id ? '#' + e.id : '')
             + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/)[0] : '')
             + (e.closest && e.closest('#opp-list') ? ' (uvnitř výpisu)' : ' (mimo výpis)')) : 'nic',
           karet: karty.length,
         };
       }, stred.pk);
+      if (stav.okno) {
+        /* ŘAZENÍ „NEJBLÍŽ KE MNĚ" SI OTEVŘE OKNO „Vyberte své okolí" —
+           web musí vědět, odkud se počítá blízkost. Pak zaměření patří
+           TOMU OKNU, ne výpisu: je to past na zaměření, kterou si
+           okna drží schválně (viz kontroly oken níž). Pravidlo
+           o kartě a místě tu tedy neplatí a měří se, že zaměření
+           v okně opravdu je.
+           Naměřeno 23. 10.: právě tohle padalo v CI a lokálně ne
+           (BUTTON.vm-x, tedy křížek toho okna). Lokálně se okno
+           neotevřelo, protože okolí už bylo známé — a zkouška proto
+           tvrdila, že zaměření „spadlo z výpisu". */
+        if (stav.vOkne) { oken++; continue; }
+        rozbite.push(`volba ${i}: okno je otevřené, ale zaměření je mimo něj (${stav.kde})`);
+        continue;
+      }
       if (!stav.je) {
         /* Poslední záchyt je napsané chování, ne chyba — ale musí být
            vidět, že se použil, a ne jen „zaměření je kdesi". */
@@ -331,10 +356,10 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       } else if (stav.poradi === stred.poradi) misto++;
       else rozbite.push(`volba ${i}: karta odešla a zaměření není na jejím místě (${stred.poradi} → ${stav.poradi})`);
     }
-    pravda(`výpis: po změně řazení drží zaměření pravidlo „táž karta, jinak její místo" (${nasleduje}× táž karta, ${misto}× místo, ${zachytu}× poslední záchyt)`,
+    pravda(`výpis: po změně řazení drží zaměření pravidlo „táž karta, jinak její místo" (${nasleduje}× táž karta, ${misto}× místo, ${zachytu}× poslední záchyt, ${oken}× okno)`,
       rozbite.length === 0, rozbite.slice(0, 3).join(' | '));
     pravda('a aspoň jedna volba řazení se opravdu vyzkoušela',
-      nasleduje + misto + zachytu > 0, 'žádná volba nezměnila pořadí — zkouška by neměřila nic');
+      nasleduje + misto + zachytu + oken > 0, 'žádná volba nezměnila pořadí — zkouška by neměřila nic');
 
     /* 4b) KARTA, KTERÁ VE VÝPISU ZŮSTANE: drží se TÁŽ KARTA, ne místo.
        Skryje se karta NAD zaměřenou (klepnutím ze skriptu, které

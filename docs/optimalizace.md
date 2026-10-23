@@ -7884,6 +7884,35 @@ platí od bodů 11 a 28. Rozlišuje se i „poslední záchyt" (`#mc-skryte`),
 který `vratZamereni` používá, když ve výpisu není kam se vrátit: je to
 napsané chování, ale musí být vidět, že se použilo.
 
+### A příčina nakonec: řazení „nejblíž ke mně" si otevře okno
+
+Dvě další červené CI stály za to. První řekla, že zaměření skončí na
+`BUTTON` — z toho se nepoznalo nic, takže zkouška začala u pádu
+jmenovat prvek celý (značka, id, třída, jestli je uvnitř výpisu, kolik
+karet tam bylo). Další běh pak vydal odpověď: **`BUTTON.vm-x`**, tedy
+křížek okna „Vyberte své okolí".
+
+Volba řazení číslo 1 je **„Nejblíž ke mně"** a ta si to okno otevře —
+web musí vědět, odkud blízkost počítat. Pak zaměření patří **tomu
+oknu**, ne výpisu: je to past na zaměření, kterou si okna drží
+schválně (hlídají to kontroly oken v téže zkoušce). Pravidlo o kartě
+a místě tam tedy neplatí a správné je měřit, že zaměření v okně
+opravdu je. Lokálně se okno neotevřelo — proto tu kontrolu nešlo
+zopakovat ani se šestinásobně zpomaleným procesorem.
+
+Dvě věci, které se u toho musely naměřit:
+
+* **Okno se pozná jen jako OTEVŘENÉ.** Značky několika oken leží v DOM
+  pořád (skryté), takže `querySelector('[role=dialog]')` hlásí okno
+  vždycky — a zkouška pak obvinila výpis z toho, že drží zaměření
+  po právu (3 volby ze tří). Pozná se proto podle `display`,
+  `visibility` a `offsetParent`.
+* **Větev se musela vyzkoušet.** Okno se při zkoušce vynutilo
+  klepnutím a naměřilo se 10× „okno" — jinak by to byla napsaná
+  větev, o které nikdo neví, jestli se někdy spustí. Opačný směr
+  (okno otevřené, zaměření mimo) se ukázal sám při té široké
+  detekci a hlásí se jako nález.
+
 **Co z toho platí dál:** zelená zkouška, která měří jen jednu z dvou
 větví pravidla, je jen půl zkoušky — a to, která větev se spustí, se
 může změnit s daty. Taková kontrola nespadne, když se web rozbije; spadne,
