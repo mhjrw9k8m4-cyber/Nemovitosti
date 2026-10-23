@@ -7987,3 +7987,61 @@ přijde. Zkouška proto hlásí i výjimku, kterou nikdo nepotřebuje.
 Doloženo sabotáží ve třech směrech: `security definer` funkce pro `anon`
 bez kontroly → poplach; tabulce vypnuté RLS → poplach; `grant … to
 public` → poplach.
+
+---
+
+## 115. Nálož v datech neprojde generátory — a moje první tři kontroly křičely vlka *23. 10.*
+
+Okresní, krajské a pozemkové stránky skládá **sestavení**, ne prohlížeč:
+generátory vezmou táž data a napíšou z nich hotové HTML, které se pak
+servíruje jako soubor. Tam escapování v `js/` nepomůže a CSP nic
+nenapraví — co se do souboru zapíše, to prohlížeč dostane.
+
+Změřeno v dočasné kopii: **1 956 otrávených nabídek** → 1 932 stránek
+pozemků, 77 okresních a 14 krajských.
+
+| co se měřilo | výsledek |
+|---|---|
+| nálož v hotových stránkách | **3 415 z 4 290** souborů (je co měřit) |
+| nálož v hrubé podobě | **0 souborů** |
+| značky `<script>` vyvážené | ano (26 : 26 na stránce pozemku) |
+| obslužný atribut (`onerror`…) | **0** |
+| datové ostrůvky čitelné jako JSON | všechny |
+
+Ve skriptech se nálož zapisuje jako `<` a `>`, tedy tak, že
+blok `<script>` **nejde ukončit zvenčí** — to je ta nejpevnější cesta.
+V atributech jako `&lt;` a `&quot;`. V prohlížeči se nad tím buildem
+nespustilo nic (`window.__XSS` nedefinované, 0 nebezpečných prvků).
+
+### Tři falešné poplachy, než kontrola začala měřit to, co tvrdí
+
+Kontrola „nevznikl obslužný atribut" je ta nejcennější (právě takhle
+vypadá opravdová vada: escapované `<` a `>`, zapomenutá uvozovka) a
+hlásila poplach **třikrát za sebou, a ani jednou to nebyla vada**:
+
+1. hledala `onerror=` v celém souboru → našla ho **v JSON-LD**, kde
+   nálož stojí jako obsah řetězce (`<`), a blok se ukončit nedá;
+2. hledala mimo skripty → našla ho ve **viditelném textu**
+   (`&quot;&gt;&lt;svg onload=&quot;…`), tedy ve zneškodněné podobě,
+   kterou člověk na stránce prostě čte;
+3. hledala uvnitř značek → našla ho **v hodnotě atributu**
+   (`content="… &lt;img src=x onerror=&quot;…&quot;&gt; …"`), kde je
+   uvozovka escapovaná a z atributu se vyskočit nedá.
+
+Teprve čtvrtá podoba měří to, co tvrdí: ve značce, s vyprázdněnými
+hodnotami v uvozovkách. **Hrubá kontrola na XSS není opatrná, je
+nepoužitelná** — po třech falešných poplaších by si ji každý vypnul.
+
+### A dvě věci, které odhalila sabotáž
+
+* **Moje první sabotáž nic nedokazovala.** Vložila
+  `content="x&lt;img src=x onerror="window.__XSS=1"&gt;"` a čekala
+  poplach. Jenže uvozovka sama atribut nerozbije: prohlížeč z toho
+  udělá nesmyslná jména atributů a nespustí nic. Opravdová díra
+  vypadá jinak — uvozovka, **mezera**, obsluha.
+* **V seznamu náloží chyběla ta na atribut.** Tři původní míří na text
+  v HTML; do atributu se text dostane v popisku stránky, v `title`
+  a v `data-*`, a tam značku nepotřebuje. Bez čtvrté nálože
+  (`" onerror="window.__XSS=4`) se cesta „text v atributu"
+  nezkoušela vůbec — a zkouška byla přitom zelená. Teď je naměřeno,
+  že v atributech končí na **2 029 stránkách**, escapovaná.

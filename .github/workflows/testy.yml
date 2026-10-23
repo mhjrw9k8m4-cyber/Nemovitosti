@@ -418,6 +418,9 @@ jobs:
       - name: Práva v databázi (RLS a kdo smí volat funkce)
         run: node scripts/test-sql-prava.mjs
 
+      - name: Nálož v datech neprojde generátory
+        run: node scripts/test-escape-generatory.mjs
+
       - name: Žádné volání ven nevisí donekonečna
         run: node scripts/test-casove-limity.mjs
 
