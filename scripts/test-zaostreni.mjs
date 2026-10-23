@@ -116,6 +116,17 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
 {
   const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
   const p = await ctx.newPage();
+  /* ZPOMALENÍ NA ZAVOLÁNÍ: PK_ZPOMAL=6 přidá procesoru šestinásobnou
+     zátěž (CDP Emulation.setCPUThrottlingRate). V CI běží zkoušky na
+     pomalejším stroji a 23. 10. tam padla kontrola, kterou tady nešlo
+     zopakovat — tohle je nejkratší cesta, jak takový stav napodobit,
+     místo hádání. Ve výchozím běhu se nezpomaluje nic. */
+  if (process.env.PK_ZPOMAL) {
+    try {
+      const cdp = await ctx.newCDPSession(p);
+      await cdp.send('Emulation.setCPUThrottlingRate', { rate: Number(process.env.PK_ZPOMAL) || 4 });
+    } catch (e) { /* starší prohlížeč to neumí — běží se bez zpomalení */ }
+  }
   const chybyJs = [];
   p.on('pageerror', (e) => chybyJs.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
@@ -301,14 +312,17 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
           poradi: karta ? karty.indexOf(karta) : -1,
           puvodniJeVeVypisu: !!ta,
           zachyt: !!e && e.id === 'mc-skryte',
-          kde: e ? ((e.id && '#' + e.id) || e.tagName) : 'nic',
+          kde: e ? (e.tagName + (e.id ? '#' + e.id : '')
+            + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/)[0] : '')
+            + (e.closest && e.closest('#opp-list') ? ' (uvnitř výpisu)' : ' (mimo výpis)')) : 'nic',
+          karet: karty.length,
         };
       }, stred.pk);
       if (!stav.je) {
         /* Poslední záchyt je napsané chování, ne chyba — ale musí být
            vidět, že se použil, a ne jen „zaměření je kdesi". */
         if (stav.zachyt) { zachytu++; continue; }
-        rozbite.push(`volba ${i}: zaměření spadlo z výpisu (${stav.kde})`);
+        rozbite.push(`volba ${i}: zaměření spadlo z výpisu (${stav.kde}, karet ${stav.karet})`);
         continue;
       }
       if (stav.puvodniJeVeVypisu) {
