@@ -160,6 +160,25 @@ for (const [rezim, vzor, popis] of [
     out.split('\n').filter((l) => /✕/.test(l)).join(' | '));
 }
 
+/* ---- 6) živý režim: nezměřeno je VADA, ne „v pořádku" ---------- */
+{
+  const a = await pust('vse-dobre', ['--jen-zive']);
+  pravda('živý režim projde, když databáze odpovídá',
+    a.kod === 0 && /živá databáze odpovídá a drží/.test(a.out),
+    `kód ${a.kod}; ${a.out.split('\n').filter((l) => /VERDIKT/.test(l)).join(' | ')}`);
+  pravda('a nehlásí v něm to, co se pozná z repozitáře (to hlídá CI při pushi)',
+    !/js\/config\.js/.test(a.out), a.out.split('\n').filter((l) => /config/.test(l)).join(' | '));
+
+  const b = await pust('vse-dobre', ['--jen-zive', '--bez-site']);
+  pravda('ale „nezměřilo se nic" je v živém režimu VADA, ne klid',
+    b.kod === 1 && /nezměřilo se nic/.test(b.out),
+    `kód ${b.kod}; ${b.out.split('\n').filter((l) => /VERDIKT|nezměř/.test(l)).join(' | ')}`);
+
+  const c = await pust('databaze-mlci', ['--jen-zive']);
+  pravda('a nedostupná databáze taky',
+    c.kod === 1, `kód ${c.kod}; ${c.out.split('\n').filter((l) => /VERDIKT/.test(l)).join(' | ')}`);
+}
+
 server.close();
 console.log(zpravy.join('\n'));
 console.log(`\n  ${ok} v pořádku, ${chyb} chyb\n`);

@@ -3,6 +3,7 @@
    ====================================================================
    Spuštění:  node scripts/kontrola-spusteni.mjs
               node scripts/kontrola-spusteni.mjs --bez-site   (jen repozitář)
+             node scripts/kontrola-spusteni.mjs --jen-zive   (jen živá databáze)
 
    PROČ TO VZNIKLO. Kontrol má tenhle repozitář dost — 253 zkoušek,
    kontrola-databaze.mjs, kontrola-inzeratu.mjs, diagnostika.html —
@@ -36,6 +37,11 @@ import { ocekavaneZeSQL } from './kontrola-databaze.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BEZ_SITE = process.argv.includes('--bez-site');
+/* --jen-zive: jen to, co se měří PO SÍTI. Co se pozná z repozitáře,
+   hlídá CI při každém pushi — opakovat to podle hodin by znamenalo
+   hlásit totéž dvakrát a z úkolu by se stal šum. Tahle podoba se
+   pouští pravidelně na živý systém. */
+const JEN_ZIVE = process.argv.includes('--jen-zive');
 const cti = (p) => { try { return readFileSync(path.join(KOREN, p), 'utf8'); } catch (e) { return ''; } };
 
 const blokuje = [], ztrata = [], nezkouseno = [], hotovo = [];
@@ -133,6 +139,11 @@ if ((/window\.PK_PUSH_VEREJNY_KLIC\s*=\s*'([^']*)'/.exec(config) || [])[1]) ANO(
 else SKODA('upozornění do telefonu', 'PK_PUSH_VEREJNY_KLIC je prázdný — push se nikomu nenabídne');
 
 /* ---------- 3) ŽIVÁ DATABÁZE (jen veřejným klíčem, nic se nezapisuje) */
+/* Nálezy z repozitáře se v režimu --jen-zive zahodí tady, ne tím, že
+   se oddíly výš přeskočí: čtou jen soubory z disku (zlomek sekundy)
+   a kdyby se obcházely podmínkami, rozpadl by se tok skriptu na
+   větvení, které nikdo neudrží. */
+if (JEN_ZIVE) { hotovo.length = 0; blokuje.length = 0; ztrata.length = 0; nezkouseno.length = 0; }
 const zaklad = (process.env.SUPABASE_URL || adresa || '').replace(/\/+$/, '');
 async function zkus(popis, cesta, volby) {
   const r = await fetchSLimitem(zaklad + cesta, {
@@ -204,22 +215,35 @@ if (BEZ_SITE) {
     NEVIM('živá databáze', 'na databázi se nepodařilo dosáhnout — ' + String(e.message || e).slice(0, 90));
   }
 }
-NEVIM('hlubší prohlídka oprávnění', 'pustí ji node scripts/kontrola-databaze.mjs se servisním klíčem');
+if (!JEN_ZIVE) {
+  NEVIM('hlubší prohlídka oprávnění', 'pustí ji node scripts/kontrola-databaze.mjs se servisním klíčem');
 /* AŤ TO STOJÍ VE VERDIKTU, NE JEN V DOKUMENTACI. Zkoušky v prohlížeči
    běží jen v Chromiu, protože v prostředí jiný prohlížeč není. Zelená
    CI tedy o Safari neříká nic — a to je čtvrtina českých telefonů.
    Dokud to nestojí v hromádce „nezkoušeno", vypadá zelená jako
    „otestováno všude". */
-NEVIM('Safari a iPhone', 'ani jedna zkouška v prohlížeči tam neběžela — v prostředí je jen'
-  + ' Chromium. Projděte web na iPhonu (bod 0b) a po nasazení čtěte'
-  + ' node scripts/chyby.mjs, kde se Safari pozná podle prohlížeče');
-NEVIM('průchod naostro (registrace → inzerát s fotkou → zpráva → hlídání)',
-  'tohle neudělá žádný skript — musí to projít člověk; seznam pěti průchodů'
-  + ' je v docs/pro-majitele.md, bod 0b');
+  NEVIM('Safari a iPhone', 'ani jedna zkouška v prohlížeči tam neběžela — v prostředí je jen'
+    + ' Chromium. Projděte web na iPhonu (bod 0b) a po nasazení čtěte'
+    + ' node scripts/chyby.mjs, kde se Safari pozná podle prohlížeče');
+  NEVIM('průchod naostro (registrace → inzerát s fotkou → zpráva → hlídání)',
+    'tohle neudělá žádný skript — musí to projít člověk; seznam pěti průchodů'
+    + ' je v docs/pro-majitele.md, bod 0b');
+}
+
+/* V ŽIVÉM REŽIMU MUSÍ BÝT CO ZMĚŘENO. Napoprvé tu vyšlo „VERDIKT:
+   živá databáze odpovídá a drží, co má." ve chvíli, kdy se nezměřilo
+   NIC (spuštěno s --bez-site). To je přesně ten vzorec, proti kterému
+   je celý tenhle skript: tvrzení o nezměřeném. Nezměřeno v režimu,
+   který měří po síti, není „v pořádku" — je to vada. */
+if (JEN_ZIVE && hotovo.length === 0) {
+  NE('živá databáze', 'nezměřilo se nic — databáze je nedostupná, nebo běh dostal --bez-site;'
+    + ' web na té databázi stojí, takže ticho tady neznamená „v pořádku"');
+}
 
 /* ---------- VERDIKT -------------------------------------------- */
 const r = [];
-r.push('\nKONTROLA PŘIPRAVENOSTI KE SPUŠTĚNÍ\n');
+r.push(JEN_ZIVE ? '\nKONTROLA ŽIVÉHO SYSTÉMU (databáze po síti)\n'
+  : '\nKONTROLA PŘIPRAVENOSTI KE SPUŠTĚNÍ\n');
 r.push(`V pořádku (${hotovo.length}):`);
 for (const x of hotovo) r.push('  ✓ ' + x);
 if (blokuje.length) {
@@ -233,8 +257,12 @@ if (ztrata.length) {
 r.push(`\nNEZKOUŠENO — NEPLATÍ ZA „V POŘÁDKU" (${nezkouseno.length}):`);
 for (const x of nezkouseno) r.push(`  ? ${x.co}\n      ${x.proc}`);
 r.push('\n' + (blokuje.length
-  ? `VERDIKT: NESPOUŠTĚT. ${blokuje.length} ${blokuje.length === 1 ? 'věc blokuje' : 'věcí blokuje'}, viz výš.`
-  : 'VERDIKT: nic z toho, co umím změřit, spuštění nebrání.'
-    + '\n  Zbývá ta jedna věc, kterou neumí žádný skript: projít web naostro jako člověk.'));
+  ? (JEN_ZIVE
+    ? `VERDIKT: ŽIVÝ SYSTÉM MÁ VADY (${blokuje.length}). Web na té databázi stojí, viz výš.`
+    : `VERDIKT: NESPOUŠTĚT. ${blokuje.length} ${blokuje.length === 1 ? 'věc blokuje' : 'věcí blokuje'}, viz výš.`)
+  : (JEN_ZIVE
+    ? 'VERDIKT: živá databáze odpovídá a drží, co má.'
+    : 'VERDIKT: nic z toho, co umím změřit, spuštění nebrání.'
+      + '\n  Zbývá ta jedna věc, kterou neumí žádný skript: projít web naostro jako člověk.')));
 console.log(r.join('\n') + '\n');
 process.exit(blokuje.length ? 1 : 0);

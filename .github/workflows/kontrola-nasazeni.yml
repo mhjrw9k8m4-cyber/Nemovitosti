@@ -38,10 +38,19 @@ jobs:
       - name: Zkontrolovat, co je venku
         run: node scripts/kontrola-nasazeni.mjs
 
+      # Web stojí na Supabase, a ten se taky může rozejít s tím, co web
+      # čeká: funkce zmizí (když se pustí starší SQL), pravidlo se
+      # uvolní, klíč se vymění, projekt se uspí. Nic z toho statické
+      # soubory venku nepoznají. Čtou se jen veřejným klíčem a nic se
+      # nezapisuje; co se pozná z repozitáře, se v tomhle režimu
+      # schválně nehlásí (to už hlídá CI při každém pushi).
+      - name: Zkontrolovat živou databázi
+        run: node scripts/kontrola-spusteni.mjs --jen-zive
+
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani
         with:
           jmeno: Kontrola nasazeného webu
           co-to-znamena: >-
-            Na ostré doméně není to, co je v repozitáři — buď se nasazení nepropsalo, nebo jsou venku stará data. Podrobnosti (včetně obou razítek) jsou ve výpisu úlohy.
+            Živý systém se rozešel s tím, co web čeká — na ostré doméně není ta verze, co je v repozitáři, jsou venku stará data, nebo neodpovídá databáze. Podrobnosti (včetně obou razítek) jsou ve výpisu úlohy.

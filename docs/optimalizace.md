@@ -10038,3 +10038,31 @@ o nenalezení) a osekaná mapa webu. Sedmý případ je ten nejdůležitější:
 **nedostupný web musí být VADA, ne „nezměřeno"** — hlídač, který svítí
 zeleně na mrtvý web, je horší než žádný, protože tvrdí, že je po
 kontrole.
+
+### 149b. Živá databáze: nikdo ji nehlídal, a web na ní stojí *24. 10.*
+
+Kontrola nasazení z oddílu 149 se dívá na statické soubory. Web ale
+stojí na Supabase — a ten se umí rozejít s tím, co web čeká, úplně bez
+našeho přispění: funkce zmizí (když někdo pustí starší SQL), pravidlo se
+uvolní, klíč se vymění, projekt na bezplatném tarifu se uspí. Nic z toho
+by soubory venku nepoznaly.
+
+Ty čtyři živé kontroly v repozitáři **už byly** — v `kontrola-spusteni.mjs`,
+jako nástroj pro jedno rozhodnutí před spuštěním. Chybělo jen pustit je
+pravidelně, takže dostaly režim `--jen-zive` a běží ve stejné úloze jako
+kontrola nasazení, každých šest hodin. Čtou se **jen veřejným klíčem
+a nic se nezapisuje** (zápis chyby se ptá hláškou, kterou databáze sama
+odmítne — viz oddíl 147).
+
+V tom režimu se **schválně nehlásí nic, co se pozná z repozitáře**:
+to hlídá CI při každém pushi a opakovat to podle hodin by znamenalo
+posílat úkol o témže dvakrát. Z úkolu, který přijde dvakrát, se stane
+šum — a šum nikdo nečte.
+
+**A hned jsem si v tom nachytal vlastní vzorec, proti kterému je celý
+ten skript:** v živém režimu bez sítě vypsal „VERDIKT: živá databáze
+odpovídá a drží, co má." ve chvíli, kdy se nezměřilo **nic**. Tvrzení
+o nezměřeném. Teď platí pravidlo: v režimu, který měří po síti, je
+„nezměřilo se nic" **vada**, ne klid — a hlídají to tři nové kontroly
+(živý režim projde jen s odpovídající databází; `--bez-site` i mlčící
+databáze v něm končí nálezem).
