@@ -58,6 +58,18 @@ hodi('a v podobě HTML taky ne',
 hodi('prázdný e-mail nevznikne',
   () => sklad.text([{ label: 'A', celkem: 0, nove: [] }], 'tok'), 'prázdn');
 hodi('ani předmět pro prázdný e-mail', () => sklad.predmet([{ label: 'A', celkem: 0, nove: [] }]), 'prázdn');
+/* ČTVRTÉ PRAVIDLO MODULU: počet v záhlaví musí být číslo. Dvě pravidla
+   výš se vynucovala výjimkou, tohle se jen tisklo — a při zapomenutém
+   údaji by lidem přišlo „── Louky u Mělníka (undefined) ──". Rozesílač
+   počet posílá, takže to nehrozilo; jenže to je přesně ta vada, která
+   projde vším a pak odejde pěti stům lidí naráz. Nalezeno tím, že se
+   e-mail jednou vykreslil a přečetl. */
+hodi('e-mail bez počtu ve skupině nevznikne (textová podoba)',
+  () => sklad.text([{ label: 'A', nove: [nabidka()] }], 'tok'), 'počet');
+hodi('ani jeho HTML podoba — a to je ta, kterou lidé čtou',
+  () => sklad.html([{ label: 'A', nove: [nabidka()] }], 'tok'), 'počet');
+hodi('a počet, který není číslo, taky ne',
+  () => sklad.text([{ label: 'A', celkem: 'tři', nove: [nabidka()] }], 'tok'), 'počet');
 hodi('nabídka bez vlastní stránky se do e-mailu nedostane',
   () => sklad.text([{ label: 'A', celkem: 1, nove: [nabidka({ soubor: null })] }], 'tok'), 'nikam');
 

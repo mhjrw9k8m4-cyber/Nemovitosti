@@ -12,7 +12,14 @@
         nikdo nestojí.
      3. Víc než MAX_V_MAILU nabídek se nevypisuje. Kdo si uloží celý
         okres, dostane jinak sloupec o dvou stech řádcích, který
-        neotevře — a zbytek se dohledá na webu. */
+        neotevře — a zbytek se dohledá na webu.
+     4. Počet v záhlaví skupiny musí BÝT ČÍSLO. Dvě pravidla výš se
+        vynucovala výjimkou, tohle třetí se jen tisklo — a při
+        zapomenutém údaji by lidem přišlo „── Louky u Mělníka
+        (undefined) ──". Rozesílač ho posílá (celkem: nove.length),
+        takže to dnes nehrozilo; jenže přesně to je ta vada, která
+        projde všemi zkouškami a pak odejde pěti stům lidí naráz.
+        Nalezeno tím, že jsem si e-mail vykreslil a přečetl. */
 import { readFileSync } from 'node:fs';
 
 export const MAX_V_MAILU = 8;
@@ -146,9 +153,23 @@ export function predmet(skupiny) {
 
 /* Skupina = jedno uložené hledání: { label, nove: [nabídky], celkem }.
    celkem je počet VŠECH nových, i když se vypisuje jen část. */
+/* POČET, KTERÝ SE VYPÍŠE DO ZÁHLAVÍ — nebo výjimka. Prázdná hodnota se
+   nedoplňuje mlčky z `nove.length`: kdyby se počet ztratil, záhlaví by
+   tvrdilo „(3)" u skupiny, kde jich je dvě stě, a nikdo by to nepoznal.
+   Když chybí, je to vada volajícího a má se o ní vědět. */
+function pocetSkupiny(g) {
+  const c = g && g.celkem;
+  if (typeof c !== 'number' || !isFinite(c) || c < 0) {
+    throw new Error('skupina „' + ((g && g.label) || 'bez jména')
+      + '" nemá počet (celkem) — do záhlaví by se vypsalo „undefined"');
+  }
+  return c;
+}
+
 export function text(skupiny, token) {
   const odhl = odhlasitOdkaz(token);
   if (!skupiny.length || !skupiny.some((g) => g.nove.length)) throw new Error('prázdný e-mail se neposílá');
+  skupiny.forEach((g) => { if (g.nove.length) pocetSkupiny(g); });
   const r = ['Dobrý den,', '', 'v tom, co máte na Parcelce uložené, přibylo:'];
   for (const g of skupiny) {
     if (!g.nove.length) continue;
@@ -174,6 +195,10 @@ export function text(skupiny, token) {
 export function html(skupiny, token) {
   const odhl = odhlasitOdkaz(token);
   if (!skupiny.length || !skupiny.some((g) => g.nove.length)) throw new Error('prázdný e-mail se neposílá');
+  /* Táž pojistka jako v text(). Obě podoby e-mailu odcházejí spolu,
+     takže nestačí hlídat jednu — a HTML je ta, kterou lidé opravdu
+     čtou. */
+  skupiny.forEach((g) => { if (g.nove.length) pocetSkupiny(g); });
   const kusy = [
     '<div style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;'
     + 'font-size:15px;line-height:1.6;color:#14231C;max-width:600px">',

@@ -215,6 +215,30 @@ const VZOREK = {
 
   const bezCeny = zprava({ hledani_id: 'h3' }, [{ place: 'Lhota', price: 0, area: 0 }]);
   pravda('bez ceny se cena netvrdí', /Lhota/.test(bezCeny.text) && !/Kč/.test(bezCeny.text), bezCeny.text);
+
+  /* ---- PODÍL: TÝŽ POČET JAKO NA WEBU, A PŘIZNANÝ ------------------
+     Upozornění si cenu za metr počítalo samo (`price / area`), tedy
+     u spoluvlastnického podílu za metr CELÉ parcely, i když se platí
+     za zlomek. Naměřeno na 1 932 nabídkách: u 91 by poslalo jiné číslo
+     než stránka (nejhůř devadesátkrát) a u 11 by poslalo číslo, které
+     stránka schválně nevydá. Počítá se proto PKH.zaMetr() — to jedno
+     pravidlo, které drží i mapa, výpis a e-mail. */
+  const podil = zprava({ hledani_id: 'h4' },
+    [{ place: 'Lípa', price: 36000, area: 2376, podil: true, zlomek: '1/12' }]);
+  pravda('u podílu se cena počítá z výměry, která kupujícímu připadne',
+    / 182 Kč\/m²/.test(podil.text),
+    podil.text + '  (nahrubo by to bylo 15 Kč/m², tedy dvanáctkrát míň)');
+  pravda('a je u ní řečeno, že jde o podíl', /\(podíl\)/.test(podil.text), podil.text);
+
+  /* Podíl, u kterého cena za metr nejde určit (neznámý zlomek): cena
+     se nevypíše — a slovo „podíl" PŘESTO ano. Napoprvé jsem ho přilepil
+     k ceně, takže právě tam, kde se o nabídce říká nejmíň, se zamlčelo
+     i to, že je to podíl. */
+  const podilBezCeny = zprava({ hledani_id: 'h5' },
+    [{ place: 'Tovačov', price: 50000, area: 4000, podil: true }]);
+  pravda('podíl bez určitelné ceny se pozná i tak',
+    /Tovačov \(podíl\)/.test(podilBezCeny.text) && !/Kč/.test(podilBezCeny.text),
+    podilBezCeny.text);
 }
 
 console.log('Šifrování push zpráv (RFC 8291) a VAPID (RFC 8292)');

@@ -9636,3 +9636,59 @@ nejvýš u 15 % nabídek (naměřeno 6 %), odhad z okolí nesmí být
 zkreslený víc než o 5 p.b. a okolí musí nést víc odhadů než kraj.
 Když se vstupní filtr z varianty vypustí, rozdíl vyskočí na 30 %
 a zkouška padne; obě sabotáže chytí.
+
+## 144. Vykreslil jsem e-mail a upozornění a přečetl si je — poprvé *24. 10.*
+
+Pošta hlídání i upozornění do telefonu jsou **hotové a vypnuté**, takže
+je nikdo nikdy neviděl. Oba skladače se přitom dají zavolat bez sítě
+a bez klíčů — `mail-sklad.mjs` je odděleně právě proto („co se dá
+vyzkoušet bez odeslání jediného e-mailu, se tak vyzkoušet má"). Tak
+jsem to udělal, na opravdových nabídkách z dat. Tři nálezy, dva vážné.
+
+**1) Upozornění do telefonu počítalo cenu za metr samo, mimo pravidlo
+webu.** Stálo tam `d.price / d.area` — a to je u spoluvlastnického
+podílu cena za metr **celé parcely**, i když se platí za zlomek.
+Naměřeno na 1 932 nabídkách:
+
+| | |
+|---|---|
+| upozornění by poslalo jiné číslo než stránka | **91 nabídek** |
+| z toho nejhůř | Lípa, podíl 9/792: push **14 Kč/m²**, web **1 271** — devadesátkrát |
+| upozornění by poslalo číslo, které web schválně NEVYDÁ (nad stropem uvěřitelnosti) | **11 nabídek** |
+
+A je to zpráva, která má člověka přimět jednat **hned**. „14 Kč/m²" na
+uzamčené obrazovce je pozvánka k něčemu, co na webu vypadá úplně jinak.
+Teď se počítá `PKH.zaMetr()` — to jedno pravidlo, které drží mapa,
+výpis i e-mail — a `send-push.mjs` si ten modul **už dávno importoval**
+kvůli shodě hledání, jen tohle z něj nebral. Po opravě: **0 rozchodů
+s webem, 0 čísel tam, kde web mlčí.**
+
+**2) Upozornění zamlčovalo podíl, zatímco e-mail ho přiznává.** E-mail
+píše „34 000 Kč · 3 732 m² — spoluvlastnický podíl 1/66", push psal jen
+místo a cenu. Doplněno slovo `(podíl)` — a hned napoprvé špatně:
+přilepil jsem ho k ceně, takže u **20 podílů z 520**, u kterých se cena
+za metr určit nedá, by se zamlčelo i to, že jde o podíl. Právě tam, kde
+se o nabídce říká nejmíň. Teď visí na nabídce, ne na ceně:
+**520/520** podílů je označeno, a „Tovačov (podíl)" bez ceny je pořád
+poctivější než „Tovačov".
+
+**3) Skladač e-mailů vynucoval dvě pravidla ze tří.** V hlavičce má
+napsáno, že e-mail bez odhlašovacího odkazu a prázdný e-mail
+*nevzniknou* — a vynucuje to výjimkou. Počet v záhlaví skupiny se ale
+jen tisknul, takže při zapomenutém údaji by lidem přišlo
+`── Louky u Mělníka (undefined) ──`. Rozesílač ho posílá, takže to
+nehrozilo — jenže to je přesně ta vada, která projde všemi zkouškami
+a pak odejde pěti stům lidí naráz. Teď je to čtvrté vynucené pravidlo,
+a v **obou** podobách e-mailu: hlídat jen textovou by nestačilo, HTML
+je ta, kterou lidé čtou.
+
+**A co bylo v pořádku** (ať to nikdo nekontroluje podruhé): předmět,
+odkazy na stránky pozemků, odhlášení jedním klikem, poznámka
+o nabídkových cenách, termín dražby **před** cenou, tři nabídky a zbytek
+sečtený, nadpis v jednotném i množném čísle, hledání bez jména.
+
+Poučení je metodické a nelichotivé: tyhle tři vady nenašla žádná
+zkouška, protože všechny kontrolovaly, že se zpráva **vyrobí**. Stačilo
+si ji přečíst. Hlídají to teď `scripts/test-web-push.mjs` (4 nové
+kontroly) a `scripts/test-rozesilac.mjs` (3) — všech pět sabotáží
+chytí.

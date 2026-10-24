@@ -85,7 +85,30 @@ export function zprava(hledani, nove) {
   const prvni = nove.slice(0, MAX_V_UPOZORNENI);
   const kusy = prvni.map((d) => {
     const misto = d.place || d.okres || 'pozemek';
-    const cena = (d.price > 0 && d.area > 0) ? ` ${Math.round(d.price / d.area)} Kč/m²` : '';
+    /* CENA ZA METR SE POČÍTÁ TÝMŽ PRAVIDLEM JAKO NA WEBU, ne znovu.
+       Dřív tu stálo `d.price / d.area` — a to je u spoluvlastnického
+       podílu cena za metr CELÉ parcely, i když se platí za zlomek.
+       Naměřeno na 1 932 nabídkách: u 91 by upozornění poslalo jiné
+       číslo než stránka (Lípa, podíl 9/792: push 14 Kč/m², web 1 271 —
+       devadesátkrát) a u dalších 11 by poslalo číslo, které web
+       schválně NEVYDÁ, protože je nad stropem uvěřitelnosti.
+       PKH.zaMetr() je to jedno pravidlo (viz js/hlidani-logika.js);
+       tenhle soubor si ho stejně už importuje kvůli shodě hledání.
+       Když vrátí prázdno, upozornění cenu NEUVEDE — stejně jako
+       stránka. Radši žádné číslo než číslo, o kterém víme, že neplatí.
+       A PŘIZNAT PODÍL. E-mail to dělá („spoluvlastnický podíl 1/66"),
+       upozornění ne — a „515 Kč/m²" u jedné šedesátišestiny vypadá
+       jako jiná nabídka, než jaká to je. Na uzamčené obrazovce není
+       místo na celou větu, takže aspoň to slovo. */
+    const zm = PKH.zaMetr(d);
+    const cena = (zm != null && isFinite(zm)) ? ` ${Math.round(zm)} Kč/m²` : '';
+    /* Slovo „podíl" NESMÍ VISET NA CENĚ. Napoprvé jsem ho přilepil
+       k ceně za metr — a u dvaceti podílů z pěti set dvaceti se cena
+       neuvádí (je nad stropem uvěřitelnosti nebo zlomek neznáme),
+       takže právě tam, kde se o nabídce říká nejmíň, by se zamlčelo
+       i to, že jde o podíl. „Lípa (podíl)" je pořád poctivější než
+       „Lípa". */
+    const podil = d.podil ? ' (podíl)' : '';
     /* TERMÍN DRAŽBY JDE PŘED CENU. Naměřeno: ze 166 dražeb a exekucí je
        24 do týdne a 6 do dvou dnů. U dražby je termín ta jediná věc, která
        nutí jednat hned — cena se dá přečíst i za dva dny, dražba ne.
@@ -93,7 +116,7 @@ export function zprava(hledani, nove) {
        krátí, musí zůstat on. Odpočet („zítra") i datum: upozornění se čte
        i později a odpočet by pak lhal. */
     const termin = terminText(d);
-    return misto + (termin ? ` — ${termin}` : cena);
+    return misto + podil + (termin ? ` — ${termin}` : cena);
   });
   const zbytek = nove.length - prvni.length;
   return {
