@@ -134,6 +134,20 @@ na hodinu a nikomu nic nerozbije — jen do ní nemá smysl jít, dokud
 rozesílání vůbec neběží (bod 3). **Stačí říct slovo.** Do té doby je
 cena jedna zbytečně velká odpověď za noc.
 
+## 7d. Seznam obcí od ČSÚ (nepovinné, ale dořešilo by 25 nabídek)
+
+U inzerátů z města dává Bezrealitky do pole pro obec **ulici**. Šestnáct
+takových se podařilo opravit z adresy inzerátu (viz
+`docs/optimalizace.md`, část 141), ale asi **25 dalších** zůstává:
+jméno jejich obce se v našich datech nikde nevyskytuje, takže není
+odkud ho vzít s diakritikou — a vymýšlet ho z adresy („cesky-brod" →
+„Cesky Brod") by bylo na českém webu vidět.
+
+Dořešil by to **veřejný seznam obcí ČR** (ČSÚ ho vydává volně, jedno
+CSV). Je to jeden soubor do `data/` a pár řádků v robotovi. **Není to
+nutné** — těch 25 nabídek má správný okres i polohu, jen v nadpisu
+stojí ulice místo obce. Jestli to chcete, stačí říct.
+
 ## 7b. Co vadou NENÍ (ať se to nespravuje podruhé)
 
 Při kritice 23. 10. jsem si dvě věci napsal jako vadu a nejsou:

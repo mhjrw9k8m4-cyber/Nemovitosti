@@ -595,6 +595,96 @@ function nearestOkres(lat, lng) {
    podle názvu obce jako u ostatních.
    Tentýž pozemek podruhé (táž obec) je něco jiného a bodu se nedotkne:
    rozhoduje počet RŮZNÝCH jmen obcí. */
+/* ULICE V POLI PRO OBEC — DOKÁZANÁ Z ADRESY INZERÁTU A Z NAŠICH DAT.
+   ====================================================================
+   mistoZBezrealitky() výš umí opravit ty případy, kde adresa inzerátu
+   nese obec jako další část. Kde ji nenese, zůstala v poli pro obec
+   ULICE — a komentář u té funkce říkal rovnou, proč se s tím dál nic
+   nedělá: „Přeložit `cesky-brod` na `Český Brod` by znamenalo seznam
+   obcí, a ten tu není; napsat to bez diakritiky by na českém webu bylo
+   vidět."
+
+   Ten seznam ale po částech MÁME: jsou to jména obcí z našich vlastních
+   dat. Adresa inzerátu `…-nabidka-prodej-pozemku-muskatova-brno` nese
+   za jménem místa ještě `brno`, a „Brno" v datech stojí u čtrnácti
+   jiných nabídek — tedy i s diakritikou a velkým písmenem. Nic se
+   nevymýšlí; jméno se opisuje odtud.
+
+   DVĚ NEZÁVISLÉ OPORY, A OBĚ MUSÍ DRŽET:
+     1) zbytek adresy za jménem místa se CELÝ rovná jménu, které v datech
+        u nějaké nabídky stojí jako obec,
+     2) to, co dnes stojí v poli pro obec, vypadá na ulici — začíná
+        předložkou (Ke Korunce, V Dymáku), je to přídavné jméno
+        (Sadovská, Muškátová, Císařova) nebo v něm stojí slovo, které
+        v názvu obce nebývá (cesta, náměstí).
+
+   PROČ CELÝ ZBYTEK, A NE JEN POSLEDNÍ ÚSEK. Zkusil jsem brát poslední
+   úsek, když se celý zbytek nenajde, a hned to vyrobilo dvě chyby:
+   z adresy `…-ve-visnovce-vysoky-ujezd` vyšel „Újezd", což je JINÁ
+   obec než Vysoký Újezd, a z `…-v-dymaku-nove-jirny` vyšly „Jirny".
+   Zkracovat jméno obce je horší než ho neopravit, takže se zbytek bere
+   celý, nebo vůbec.
+
+   PROČ OBĚ OPORY. Bez první by se vymýšlela diakritika. Bez druhé by se
+   ořezávala složená jména obcí: adresa `…-pozemku-jesenice-rakovnik`
+   má za „Jesenice" ještě „rakovnik" a „Rakovník" v datech je — jenže
+   Jesenice je obec, ne ulice, a opravovat by se nemělo nic.
+
+   NAMĚŘENO na 1 953 nabídkách: opraví se 16 (Muškátová → Brno,
+   Ke Korunce → Praha, Jasanová → Ústí nad Labem, Okružní a Krátká →
+   Křenice, …). Dalších asi 25 je taky ulice, ale jméno jejich obce
+   v datech nestojí (Pardubická + chotec, Topolová + stenovice) —
+   a vymýšlet ho z adresy bez diakritiky je právě to, co se tu nedělá.
+   Teprve seznam obcí od ČSÚ by je dořešil; je to v docs/pro-majitele.md.
+
+   Zkouší to scripts/test-misto-inzeratu.mjs. */
+const ULICE_PREDLOZKA = /^(?:ke?|na|ve?|u|pod|za|nad|do|pri|před|pred|mezi)\s/i;
+const ULICE_PRIDAVNE = /(?:ská|cká|ová|ova|ní|rá|tá|lá|á|é)$/;
+const ULICE_SLOVO = /\b(?:cesta|ulice|náměstí|nábřeží|alej|sady|stezka)\b/i;
+/** Vypadá tenhle řetězec na jméno ulice, ne obce? */
+export function vypadaJakoUlice(s) {
+  const t = String(s || '').trim();
+  if (!t) return false;
+  return ULICE_PREDLOZKA.test(t) || ULICE_PRIDAVNE.test(t) || ULICE_SLOVO.test(t);
+}
+/** Vrací počet opravených. Mění `place` na místě. */
+export function opravUliceVObci(nabidky) {
+  const bezD = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  /* Jména obcí, jak je známe z dat — VŠECHNA, i ta, která vypadají na
+     ulici. Napoprvé jsem z tohohle seznamu jména podle téhož testu
+     vyhazoval, aby ulice jméno nepropůjčila — a seznam tím ztratil
+     Orlovou: končí na „-á", takže ji test na ulici označil za ulici.
+     Oprava „Bučinská → Orlová" pak nebyla z čeho udělat. Test na ulici
+     rozhoduje jen o tom, CO se opravuje; jméno, kterým se opravuje,
+     musí být k dispozici celé. */
+  const zname = new Map();
+  for (const o of nabidky || []) {
+    if (!o || !o.place) continue;
+    zname.set(bezD(o.place), String(o.place));
+  }
+  let kolik = 0;
+  for (const o of nabidky || []) {
+    if (!o || !o.place || !vypadaJakoUlice(o.place)) continue;
+    const m = /nabidka-prodej-pozemku-(.+?)$/.exec(String(o.url || ''));
+    if (!m) continue;
+    const ps = bezD(o.place);
+    if (!ps || !m[1].includes(ps)) continue;
+    const zbytek = m[1].slice(m[1].indexOf(ps) + ps.length).replace(/^-/, '');
+    if (!zbytek) continue;
+    const jmeno = zname.get(zbytek);
+    if (!jmeno || bezD(jmeno) === ps) continue;
+    /* Ulice se nikam neukládá. Stejně ji zahazuje i mistoZBezrealitky()
+       výš (volající bere jen `place`), web ji nikde neukazuje a nové
+       pole v datech hlídá data/pole.json — zavést ho jen proto, aby
+       leželo nepřečtené, by byl jen další sloupec k udržování. Z adresy
+       inzerátu, která u nabídky zůstává, se dá přečíst kdykoli. */
+    o.place = jmeno;
+    kolik++;
+  }
+  return kolik;
+}
+
 export function zahodZastupneGps(nabidky) {
   const podleBodu = new Map();
   for (const o of nabidky) {
@@ -2241,6 +2331,13 @@ async function main() {
     );
     process.exit(1);
   }
+
+  /* ULICE V POLI PRO OBEC — TEĎ, PŘED DOHLEDÁVÁNÍM POLOHY. Pořadí tu
+     není libovolné: podle `place` se o pár desítek řádků níž geokóduje
+     (`geocodeName(o.place, o.okres)`), takže dokud tam stojí ulice,
+     hledá se v mapě ulice. Oprava proto patří před to. */
+  const uliceVObci = opravUliceVObci(fresh);
+  if (uliceVObci) console.log(`Opraveno míst, kde v poli pro obec stála ulice: ${uliceVObci}.`);
 
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
   // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne

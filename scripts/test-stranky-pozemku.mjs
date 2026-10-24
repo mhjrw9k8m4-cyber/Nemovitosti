@@ -222,11 +222,20 @@ const vseNaDisku = fs.readdirSync(ROOT)
   .filter((f) => /^pozemek-.+\.html$/.test(f))
   .map((f) => ({ f, obsah: fs.readFileSync(path.join(ROOT, f), 'utf8') }))
   .filter((z) => z.obsah.includes('window.PK_POZEMEK='))
-  .map((z) => ({ f: z.f, ukonceno: /window\.PK_UKONCENO="\d{4}-\d{2}-\d{2}"/.test(z.obsah) }));
+  .map((z) => ({ f: z.f, ukonceno: /window\.PK_UKONCENO="\d{4}-\d{2}-\d{2}"/.test(z.obsah),
+    presunuto: /window\.PK_PRESUNUTO="\d{4}-\d{2}-\d{2}"/.test(z.obsah) }));
 const ukoncene = vseNaDisku.filter((z) => z.ukonceno);
-const navic = vseNaDisku.filter((z) => !z.ukonceno && !majiByt.has(z.f)).map((z) => z.f);
+/* ROZCESTÍ NA NOVOU ADRESU je třetí stav, ne stránka navíc. Vzniká,
+   když se opraví jméno obce: jméno souboru ho nese, takže stará adresa
+   z živých vypadne a přepíše se na odkaz k nové (prestehovanaStranka
+   v scripts/generate-parcel-pages.mjs). Živá není — indexovat se má
+   ta nová — ale „pro tentýž pozemek dvě stránky" to taky není: ta
+   stará nic neslibuje, jen ukazuje cestu. */
+const rozcesti = vseNaDisku.filter((z) => !z.ukonceno && z.presunuto);
+const navic = vseNaDisku.filter((z) => !z.ukonceno && !z.presunuto && !majiByt.has(z.f)).map((z) => z.f);
 pravda(`pro tentýž pozemek nevzniknou dvě stránky (${majiByt.size} živých`
-  + `${ukoncene.length ? `, ${ukoncene.length} ukončených` : ''})`,
+  + `${ukoncene.length ? `, ${ukoncene.length} ukončených` : ''}`
+  + `${rozcesti.length ? `, ${rozcesti.length} rozcestí` : ''})`,
   navic.length === 0,
   `${navic.length} stránek navíc proti tomu, co ukazuje mapa, a ani jedna není`
   + ` ukončená: ` + navic.slice(0, 4).join(', '));

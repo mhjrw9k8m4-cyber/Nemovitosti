@@ -44,9 +44,18 @@ const bezNbsp = (s) => String(s == null ? '' : s).replace(/ /g, ' ');
    přidává — ne podle toho, že nejsou v datech: tím by zkouška
    opisovala totéž pravidlo, které má hlídat. */
 const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
-const ukoncene = vsechny.filter((f) =>
-  /class="pz-konec"/.test(readFileSync(path.join(KOREN, f), 'utf8')));
-const zive = vsechny.filter((f) => !ukoncene.includes(f));
+/* TŘI STAVY, NE DVA. Pruh nahoře (`pz-konec` je jeho rozvržení) nosí
+   i stránka, jejíž pozemek se jen PŘESTĚHOVAL na jinou adresu —
+   opravilo se jméno obce, a to je součást jména souboru. Pozná se podle
+   druhé třídy `pz-presun`. Kdyby se tyhle dva stavy nerozlišily,
+   rozcestí by zkouška brala za živou stránku a čekala od ní vykreslený
+   detail; tenhle řádek s uzavírací uvozovkou (`pz-konec"`) je přitom
+   nerozlišoval ani náhodou — do ukončených by je nepustil. */
+const maTridu = (f, t) => new RegExp('class="[^"]*\\b' + t + '\\b')
+  .test(readFileSync(path.join(KOREN, f), 'utf8'));
+const rozcesti = vsechny.filter((f) => maTridu(f, 'pz-presun'));
+const ukoncene = vsechny.filter((f) => maTridu(f, 'pz-konec') && !rozcesti.includes(f));
+const zive = vsechny.filter((f) => !ukoncene.includes(f) && !rozcesti.includes(f));
 
 console.log(`Stránek pozemků: ${vsechny.length} (ukončených ${ukoncene.length}, živých ${zive.length})`);
 pravda('je co měřit — ukončené stránky na webu jsou', ukoncene.length >= 20,
@@ -177,6 +186,56 @@ pravda('a titulek stránky se nepřepíše na hlášku',
     /function render\(d\) \{\s*if \(strankaUkoncena\(\)\) return;/.test(pz));
   pravda('a hláška nepřepíše stránku, která statický obsah má',
     /function renderEmpty\(\)[\s\S]{0,1600}querySelector\('\.pz-staticky'\)\) return;/.test(pz));
+}
+
+// ---- 4) rozcestí na novou adresu v prohlížeči --------------------
+/* STEJNÁ PAST JAKO U UKONČENÝCH, JEN O STUPEŇ TIŠŠÍ. Rozcestí vzniká
+   při opravě jména obce: stará adresa dostane pruh s odkazem na novou,
+   `noindex` a canonical. Jenže #pz-detail přepisuje js/pozemek.js —
+   a nabídka v datech JE (jen pod jiným jménem obce), takže by ji mohl
+   vykreslit jako živou a pruh zahodit. Že se to nestane, drží na
+   strankaUkoncena(), která se dívá na `.pz-konec`; a to je přesně to,
+   co se měřit musí v prohlížeči, ne ve zdroji. */
+/* A KDYŽ ŽÁDNÉ ROZCESTÍ NENÍ, MUSÍ SE TO ŘÍCT. Rozcestí přirozeně
+   přicházejí a mizí (po DNI_ARCHIV dnech se maže), takže „aspoň jedno"
+   by zkoušku za tři měsíce rozbilo bez vady. Prázdno se ale nesmí
+   tvářit jako průchod: pravidlo se pak hlídá aspoň ve zdroji
+   generátoru. Sabotáž na JEDNÉ stránce tahle zkouška nechytí — seznam
+   rozcestí si vyrábí ze samotných cedulí, takže by si vzala jinou —
+   a právě proto je tu tenhle zdrojový háček: chytí to, co je
+   nebezpečné, totiž vypnuté pravidlo. */
+{
+  const gen = readFileSync(path.join(KOREN, 'scripts', 'generate-parcel-pages.mjs'), 'utf8');
+  pravda('generátor rozcestí umí (pruh, canonical i og:url na novou adresu)',
+    /class="pz-konec pz-presun"/.test(gen)
+    && /<link rel="canonical" href="\$\{novaAdresa\}">/.test(gen)
+    && /og:url" content="\)\[\^"\]\*\(">\)/.test(gen),
+    'scripts/generate-parcel-pages.mjs už rozcestí nestaví celé');
+  if (!rozcesti.length) console.log('Rozcestí na novou adresu: žádné (nic se nepřejmenovalo) — měří se jen zdroj.');
+}
+if (rozcesti.length) {
+  const f = rozcesti.slice().sort()[0];
+  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.waitForFunction(() => !!document.querySelector('#pz-detail'), null, { timeout: 15000 });
+  await page.waitForTimeout(1500);
+  const v = await page.evaluate(() => {
+    const pruh = document.querySelector('.pz-presun');
+    const a = pruh && pruh.querySelector('a[href^="pozemek-"]');
+    return {
+      videt: !!pruh && pruh.getBoundingClientRect().height > 10,
+      kam: a ? a.getAttribute('href') : '',
+      text: (pruh ? pruh.textContent : '').replace(/\s+/g, ' ').trim(),
+      prazdno: /Pozemek nenalezen/.test(document.body.innerText),
+    };
+  });
+  pravda(`rozcestí (${rozcesti.length}) je po vykreslení pořád vidět`, v.videt,
+    `pruh .pz-presun: ${v.videt ? 'vidět' : 'není vidět'} — skript ho přepsal`);
+  pravda('a říká, že se stránka přestěhovala', /přestěhovala/.test(v.text), v.text.slice(0, 80));
+  pravda('a odkazuje na stránku, která existuje',
+    !!v.kam && readdirSync(KOREN).includes(v.kam), `odkaz: ${v.kam || '(žádný)'}`);
+  pravda('a nevypíše „Pozemek nenalezen"', !v.prazdno);
+  pravda('a neindexuje se',
+    /noindex/.test(await page.$eval('meta[name="robots"]', (e) => e.content).catch(() => '')));
 }
 
 await prohlizec.close();

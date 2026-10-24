@@ -234,8 +234,20 @@ try {
     if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f)) continue;
     const h = readFileSync(path.join(KOREN, f), 'utf8');
     if (h.indexOf('window.PK_POZEMEK=') < 0) continue;
-    const konec = h.indexOf('class="pz-konec"') >= 0;
+    /* ROZLIŠUJE SE PODLE ZNAČKY, NE PODLE VZHLEDU. Dřív tu stálo
+       `class="pz-konec"` — jenže týž pruh nosí i stránka, jejíž
+       pozemek se jen přestěhoval na jinou adresu (opravilo se jméno
+       obce, viz prestehovanaStranka). Ta musí hlásit InStock, protože
+       pozemek je dál v nabídce; kontrola ji proto brala za ukončenou
+       a hlásila šestnáct chyb za správná data. */
+    const presun = /window\.PK_PRESUNUTO="\d{4}-\d{2}-\d{2}"/.test(h);
+    const konec = /window\.PK_UKONCENO="\d{4}-\d{2}-\d{2}"/.test(h);
     const nabidky = ldOffers(h);
+    if (presun && !konec) {
+      /* Přestěhovaná: pozemek platí dál, takže InStock je tu pravda. */
+      if (nabidky.some((o) => o.availability === 'https://schema.org/OutOfStock')) zleZive.push(f + ' (rozcestí)');
+      continue;
+    }
     if (konec) {
       ukoncenych++;
       if (nabidky.some((o) => o.availability && o.availability !== 'https://schema.org/OutOfStock')) {

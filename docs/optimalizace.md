@@ -9080,6 +9080,28 @@ kontrola se tím nedotkne; zapsáno jako úkol, protože `--with-deps`
 vyndat **naslepo nejde**: v tom pomalém běhu se `libnss3` opravdu
 instalovalo, a bez něj by se Chromium nespustilo.
 
+**A POTOM SE TO ZMĚŘILO JEŠTĚ DVAKRÁT, PROTOŽE JEDEN VZOREK NIC
+NEZNAMENÁ.** Krok „Prohlížeč" ve třech bězích, devět směn dohromady:
+
+| běh | `v-prohlizeci` | `-2` | `-3` |
+|---|---|---|---|
+| 655 | 0,4 min | 0,4 min | **11,2 min** |
+| 660 | 0,4 min | **3,0 min** | 0,4 min |
+| 661 | 0,4 min | 0,4 min | 0,4 min |
+
+Je to tedy **smůla stroje, ne vlastnost směny**: ze devíti směn byla
+jedna na jedenáct minut, jedna na tři, sedm na dvacet sekund. Žádná
+konkrétní směna „nemá" pomalý apt — příště padne jinam. Průměrná cena
+je asi 1,6 minuty na běh, ale znát je jen tehdy, když to padne na tu
+nejdelší směnu.
+
+**Nic se s tím proto nedělá, a tohle je ten důvod.** Vyndat
+`--with-deps` naslepo nejde: v tom pomalém běhu se `libnss3` opravdu
+instalovalo, a bez něj by se Chromium nespustilo. Chytřejší postup
+(zkusit spustit prohlížeč a doinstalovat závislosti jen když se
+nespustí) by za jedenáct minut raz za devět směn nestál za to, aby na
+něm viselo celé spouštění zkoušek. Zapsáno jako měření, ne jako úkol.
+
 **Co na tom měření není přesné, a říká se to rovnou:** zkoušky od
 `test-vypadky` dál běžely zároveň s mými vlastními běhy zkoušky databáze
 (PostgreSQL, `nice -n 19`, dvacet sekund na běh). U několika z nich je
@@ -9430,3 +9452,96 @@ jedna a je napsaná se jménem i důvodem (`create_listing` pouští i
 kontrolu fotek a první posouzení inzerátu, takže by se neměřila
 databáze); zkouška navíc hlásí i výjimku na funkci, která se už
 nevolá. Obě sabotáže chytí.
+
+## 141. V poli pro obec stála ulice — a seznam obcí máme ve vlastních datech *24. 10.*
+
+U Bezrealitky se obec bere z první části adresy inzerátu. U nabídek
+z města je ale první část **ulice**, takže na webu stálo jako obec
+„Muškátová", „Ke Korunce", „Jasanová" nebo „25935" (poštovní směrovací
+číslo). Vznikly z toho i adresy stránek —
+`pozemek-brno-mesto-muskatova-1mlpl4.html` — a nadpisy, titulky
+a řádky v sitemapě.
+
+Část se opravila už 5. října (`mistoZBezrealitky`), ale jen tam, kde
+adresa nesla obec jako další část. U ostatních se to dál nedělalo,
+a komentář u té funkce říkal rovnou proč: *„Přeložit `cesky-brod` na
+`Český Brod` by znamenalo seznam obcí, a ten tu není; napsat to bez
+diakritiky by na českém webu bylo vidět."*
+
+**Ten seznam ale po částech máme — jsou to jména obcí z našich
+vlastních dat.** Adresa `…-nabidka-prodej-pozemku-muskatova-brno` nese
+za jménem místa ještě `brno`, a „Brno" v datech stojí u čtrnácti jiných
+nabídek, tedy i s diakritikou a velkým písmenem. Nic se nevymýšlí,
+jméno se opisuje odtud.
+
+**Dvě nezávislé opory, a obě musí držet:**
+1. zbytek adresy za jménem místa se **celý** rovná jménu, které u jiné
+   nabídky stojí jako obec,
+2. to, co dnes v poli pro obec stojí, vypadá na ulici (předložka na
+   začátku, přídavné jméno, nebo slovo jako „cesta").
+
+**Obě si vysloužily krev.** Zkusil jsem, co bude, když se při neúspěchu
+vezme jen poslední úsek adresy: z `…-ve-visnovce-vysoky-ujezd` vyšel
+**„Újezd", což je jiná obec** než Vysoký Újezd, a z `…-v-dymaku-nove-jirny`
+vyšly „Jirny". Zkracovat jméno obce je horší než ho neopravit. A bez
+druhé opory by se přepsala i `…-pozemku-jesenice-rakovnik`: „Rakovník"
+v datech je, ale Jesenice je obec, ne ulice.
+
+**A ještě jedna, na vlastní test:** jména, kterými se opravuje, se
+nejdřív filtrovala tím samým testem na ulici, aby ulice jméno
+nepropůjčila. Tím ze seznamu vypadla **Orlová** — končí na „-á", takže
+ji test za ulici označil — a oprava „Bučinská → Orlová" nebyla z čeho
+udělat. Test na ulici rozhoduje jen o tom, CO se opravuje; jméno,
+kterým se opravuje, musí být k dispozici celé.
+
+**Naměřeno: opraví se 16 z 1 953 nabídek.** Dalších asi 25 je taky
+ulice, ale jméno jejich obce v datech nestojí (Pardubická + chotec,
+Topolová + stenovice) — ty by dořešil až seznam obcí od ČSÚ, a je to
+v `docs/pro-majitele.md`. Oprava běží v robotovi **před dohledáváním
+polohy**: podle `place` se geokóduje, takže dokud tam stála ulice,
+hledala se v mapě ulice.
+
+## 142. Opravené jméno obce změní adresu stránky — a cedule nesmí lhát *24. 10.*
+
+Jméno souboru stránky pozemku nese obec
+(`pozemek-<okres>-<obec>-<otisk>.html`), takže oprava z části 141
+vyrobila šestnáct **nových** adres a šestnáct starých vypadlo ze
+živých. Generátor na to měl jedinou odpověď: přepsat je na ukončené,
+tedy napsat jim na čelo *„Tato nabídka už není aktuální."* U pozemku,
+který je dál na prodej, je to lež — a držela by devadesát dní, než se
+stránka smaže.
+
+Vznikl proto **třetí stav stránky: rozcestí na novou adresu.** Pozemek
+se pozná podle klíče BEZ OBCE (parcelní číslo, okres a souřadnice se
+nemění), stránka dostane `noindex,follow`, `rel=canonical` na novou
+adresu a pruh s odkazem. Canonical je tu to hlavní: na statickém webu
+se přesměrovat (301) nedá, a canonical je jediný způsob, jak
+vyhledávači říct „tenhle obsah je teď tam". Na novou adresu se posouvá
+i `og:url`, protože Open Graph po něm chce kanonickou adresu — kdo
+nasdílí starý odkaz, dostane v náhledu ten platný.
+
+**První podoba vyrobila 37 rozcestí, i když se opravilo 16 míst.**
+Zbytek byly kolize: u dražeb je parcelní číslo často „—" a souřadnice
+na tři desetinná místa se potkají, takže dávno ukončená nabídka
+v Lovosicích „našla" jinou živou v témže okrese a tvrdila, že se
+přestěhovala. Odtud dvě podmínky, obě napsané v kódu: stránka nesmí
+být už ukončená, a jméno, které na ní stojí jako obec, nesmí být obcí
+žádné živé nabídky („Lovosice" a „Kalovice" obce jsou, takže se jich
+to netýká). Po nich je rozcestí **přesně šestnáct**.
+
+**A čtyři zkoušky měřily pravdu, která se tím změnila** — každá jinak:
+`test-vyhledavac` hlásilo „16 živých stránek bez index,follow",
+`test-stranky-pozemku` „16 stránek navíc", `test-ukonceno` „16
+ukončených tvrdí InStock" (a to je u přestěhované stránky **pravda**,
+pozemek platí dál) a `test-sdileni` „og:url a canonical se
+rozcházejí". Všechny čtyři teď třetí stav znají a hlídají o něj víc:
+rozcestí se nesmí indexovat a jeho canonical musí vést na stránku,
+která **existuje**. `test-ukonceno` navíc přestalo rozlišovat stavy
+podle vzhledu pruhu (`class="pz-konec"` nosí obojí) a rozlišuje podle
+značky v datech stránky.
+
+A `test-misto-prahy` měřilo předpoklad, který oprava zrušila: *„v datech
+jsou pražské nabídky s ulicí místo obce"*. Byla to pravda — Devonská,
+Ke Korunce, Na Chvalce, Chatová. Dnes hlídá opak: v okrese Praha už
+žádná nabídka ulici v poli pro obec nemá. Pravidlo `mistoFraze`
+zůstává pro případy, které se z adresy dokázat nedají.

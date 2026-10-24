@@ -821,6 +821,81 @@ export function migrujPopisBezReklamy(obsah) {
   return h;
 }
 
+/* STRÁNKA, JEJÍŽ POZEMEK SE JEN PŘESTĚHOVAL NA JINOU ADRESU.
+ * ====================================================================
+ * Jméno souboru nese obec (`pozemek-<okres>-<obec>-<otisk>.html`),
+ * takže OPRAVA JMÉNA OBCE vyrobí novou adresu a stará vypadne z živých.
+ * Dokud tohle místo neexistovalo, propadla do větve ukončených — a ta
+ * by na ni napsala „Tato nabídka už není aktuální", což by u pozemku,
+ * který je dál na prodej, byla lež. Stalo se to při opravě patnácti
+ * míst, kde v poli pro obec stála ulice (opravUliceVObci v robotovi).
+ *
+ * Pozemek se pozná podle klíče BEZ OBCE: parcelní číslo, okres
+ * a souřadnice zůstávají, mění se jen jméno obce. Když takový živý
+ * pozemek existuje, stránka se přepíše na rozcestí k nové adrese.
+ *
+ * `rel=canonical` na novou adresu je tu to hlavní: na statickém webu
+ * se přesměrovat (301) nedá, a canonical je jediný způsob, jak
+ * vyhledávači říct „tenhle obsah je teď tam". `noindex` by to samo
+ * nezvládlo — jen by stránku odstranilo, ne převedlo.
+ *
+ * Datum si stránka nese v sobě (PK_PRESUNUTO) a po DNI_ARCHIV dnech se
+ * smaže, stejně jako ukončené — jinak by rozcestí zůstala navždy.
+ */
+export function prestehovanaStranka(obsah, novySoubor, noveMisto, den) {
+  let h = obsah;
+  h = migrujPopisBezReklamy(h);
+  if (/<meta name="robots"/.test(h)) {
+    h = h.replace(/(<meta name="robots" content=")[^"]*(">)/, '$1noindex,follow$2');
+  } else {
+    h = h.replace(/(<\/title>)/, '$1\n  <meta name="robots" content="noindex,follow">');
+  }
+  const novaAdresa = `https://www.parcelaka.cz/${esc(novySoubor)}`;
+  const kan = `<link rel="canonical" href="${novaAdresa}">`;
+  if (/<link rel="canonical"[^>]*>/.test(h)) h = h.replace(/<link rel="canonical"[^>]*>/, kan);
+  else h = h.replace(/(<meta name="robots" content="[^"]*">)/, '$1\n  ' + kan);
+  /* A TÉŽ og:url. Specifikace Open Graphu po og:url chce „the canonical
+     URL", takže na přestěhované stránce patří na novou adresu — kdo
+     starý odkaz nasdílí, dostane v náhledu tu platnou. Drží to i obě
+     kontroly v scripts/test-sdileni.mjs: ta první („og:url ukazuje na
+     stránku samu") má výjimku právě pro stránky, jejichž canonical
+     míří jinam, a ta druhá chce, aby se og:url a canonical
+     nerozcházely. Bez tohohle řádku by si odporovaly. */
+  if (/<meta property="og:url" content="[^"]*">/.test(h)) {
+    h = h.replace(/(<meta property="og:url" content=")[^"]*(">)/, '$1' + novaAdresa + '$2');
+  }
+  h = migrujRezDat(migrujLeaflet(h));
+  if (!/window\.PK_PRESUNUTO=/.test(h)) {
+    h = h.replace(/(<script>window\.PK_POZEMEK=)/,
+      `<script>window.PK_PRESUNUTO=${JSON.stringify(den)};</scr` + `ipt>\n$1`);
+  }
+  /* Druhá třída `pz-presun` nemá v stylopisu nic — je to jmenovka pro
+     zkoušky a pro čtení kódu. Pruh vypadá stejně jako u ukončené
+     nabídky (`pz-konec` je rozvržení pruhu nahoře), ale NEŘÍKÁ totéž,
+     a zkouška scripts/test-ukonceno.mjs si tyhle dva stavy nesmí
+     splést: ukončená nabídka musí strojově hlásit OutOfStock,
+     přestěhovaná naopak InStock, protože pozemek je dál v nabídce. */
+  const pruh = `<div class="pz-konec pz-presun" role="status">`
+    + `<b>Tato stránka se přestěhovala.</b> `
+    + `<span>Pozemek je dál v nabídce, jen pod správným jménem obce `
+    + `(${esc(noveMisto)}) — tahle adresa měla v názvu ulici.</span>`
+    + `<p><a href="${esc(novySoubor)}">Otevřít pozemek na nové adrese</a></p>`
+    + `<p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p>`
+    + `</div>`;
+  /* PRUH SE PŘEPISUJE, NE JEN DOPLŇUJE. U ukončené stránky stačí
+     „když tam ještě není, přidej" — ta se víc nemění. Tady ne: pruh
+     nese ADRESU, kam se pozemek přestěhoval, a jméno obce. Kdyby se
+     jen doplňoval, stránka, která už jednou pruh dostala, by si ho
+     nechala i poté, co se cíl změnil — a odkazovala by na adresu,
+     která už neexistuje. Naměřeno: stránka z prvního běhu si nechala
+     pruh bez jmenovky `pz-presun`, protože podmínka „pruh už tam je"
+     nový text nepustila.
+     Vnořené <div> pruh neobsahuje, takže první `</div>` je jeho. */
+  h = h.replace(/<div class="pz-konec[^>]*>[\s\S]*?<\/div>/, '');
+  h = h.replace(/(<div id="pz-detail">)/, `$1${pruh}`);
+  return h;
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
 
@@ -858,7 +933,7 @@ export function ukoncenaStranka(obsah, den, podobne) {
     + (odkazy ? `<p>Podobné pozemky ve stejném okrese:</p><ul>${odkazy}</ul>` : '')
     + `<p><a href="index.html#mapa">Zpět na mapu všech pozemků</a></p>`
     + `</div>`;
-  if (!/class="pz-konec"/.test(h)) {
+  if (!/class="pz-konec/.test(h)) {
     h = h.replace(/(<div id="pz-detail">)/, `$1${pruh}`);
   }
 
@@ -1685,7 +1760,19 @@ export function generuj() {
     if (!podleOkresu.has(o)) podleOkresu.set(o, []);
     podleOkresu.get(o).push({ soubor, d });
   }
-  let smazano = 0, ukonceno = 0, prepsano = 0;
+  /* Živé pozemky podle klíče BEZ OBCE — pro poznání přestěhovaných.
+     Viz prestehovanaStranka(): když se opraví jméno obce, zbytek klíče
+     (parcela, okres, souřadnice) zůstane. */
+  const klicBezObce = (k) => String(k || '').split('|').slice(1).join('|');
+  const ziveBezObce = new Map();
+  const ziveObce = new Set();
+  for (const { d, soubor } of mapa.values()) {
+    if (poTerminu(d)) continue;
+    const bez = klicBezObce(pkey(d));
+    if (bez.replace(/\|/g, '')) ziveBezObce.set(bez, { soubor, place: d.place });
+    if (d.place) ziveObce.add(slug(d.place));
+  }
+  let smazano = 0, ukonceno = 0, prepsano = 0, prestehovano = 0;
   for (const f of fs.readdirSync(ROOT)) {
     if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f) || zive.has(f)) continue;
     /* Na název se nespoléhat. Ručně psané stránky se jmenují podobně
@@ -1717,6 +1804,35 @@ export function generuj() {
       continue;
     }
 
+    /* PŘESTĚHOVANÁ STRÁNKA — až TADY, za ukončenými, a s tvrdou
+       podmínkou. Napoprvé tahle větev stála před ukončenými a hledala
+       jen podle klíče bez obce — a vyrobila 37 rozcestí, i když se
+       opravilo 16 míst. Zbytek byly KOLIZE: u dražeb je parcelní číslo
+       často „—" a souřadnice na tři desetinná místa se potkají, takže
+       dávno ukončená nabídka v Lovosicích „našla" jinou živou v témže
+       okrese a tvrdila, že se přestěhovala. Odtud dvě podmínky:
+         · stránka ještě není ukončená (větev výš už skončila `continue`),
+         · jméno, které na stránce stojí jako obec, NENÍ obcí žádné živé
+           nabídky. Opravuje se totiž ulice v poli pro obec — a „Lovosice"
+           nebo „Kalovice" obec jsou, takže se jich tohle netýká.
+       Když některá nedrží, propadne stránka do ukončených jako dřív. */
+    const presun = /window\.PK_PRESUNUTO="(\d{4}-\d{2}-\d{2})"/.exec(obsah);
+    const mujKlic = (/window\.PK_POZEMEK=\{"k":"((?:[^"\\]|\\.)*)"/.exec(obsah) || [])[1];
+    const mojeObec = mujKlic ? mujKlic.replace(/\\"/g, '"').split('|')[0] : '';
+    const jinde = mujKlic && mojeObec && !ziveObce.has(slug(mojeObec))
+      ? ziveBezObce.get(klicBezObce(mujKlic.replace(/\\"/g, '"'))) : null;
+    if (jinde && jinde.soubor !== f) {
+      if (presun) {
+        const stari = (Date.parse(dnes) - Date.parse(presun[1])) / 86400000;
+        if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
+      }
+      const novy = bezKomentaruVHtml(prestehovanaStranka(
+        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))),
+        jinde.soubor, jinde.place, presun ? presun[1] : dnes));
+      if (novy !== obsah) { fs.writeFileSync(cesta, novy); prestehovano++; }
+      continue;
+    }
+
     const okres = (f.match(/^pozemek-([a-z0-9-]+?)-[a-z0-9-]+-[0-9a-z]{5,8}\.html$/) || [])[1] || '';
     const podobne = (podleOkresu.get(okres) || []).slice(0, 3);
     /* PŘEPISY, KTERÉ PATŘÍ NA KAŽDOU STRÁNKU, MUSÍ PROJÍT I TUDY.
@@ -1734,7 +1850,7 @@ export function generuj() {
       migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne)));
     ukonceno++;
   }
-  return { hotove, datumy, smazano, ukonceno, prepsano };
+  return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano };
 }
 
 /* Mapa webu. Sitemap staví generátor regionálních stránek a přepisuje ji
@@ -1768,9 +1884,10 @@ export function doMapyWebu(soubory) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const { hotove, datumy, smazano, prepsano } = generuj();
+  const { hotove, datumy, smazano, prepsano, prestehovano } = generuj();
   const vMape = doMapyWebu(hotove.map((f) => ({ soubor: f, lastmod: datumy.get(f) || null })));
   console.log(`Stránek pozemků: ${hotove.length}${smazano ? `, smazáno zrušených: ${smazano}` : ''}`
     + `, v mapě webu: ${vMape}`
-    + (prepsano ? `, přepsáno ukončených: ${prepsano}` : ''));
+    + (prepsano ? `, přepsáno ukončených: ${prepsano}` : '')
+    + (prestehovano ? `, rozcestí na novou adresu: ${prestehovano}` : ''));
 }

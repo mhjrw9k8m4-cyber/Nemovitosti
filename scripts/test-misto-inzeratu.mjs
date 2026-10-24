@@ -13,7 +13,7 @@
 // datech ji vyzkoušet nešlo. Jediný způsob je dát funkci adresu přímo —
 // přesně tak, jak to v tomhle repozitáři dopadlo u parsování dražeb
 // (viz nabidkyZDrazby a scripts/test-drazby-cevd.mjs).
-import { mistoZBezrealitky, jmenoObce } from './fetch-opportunities.mjs';
+import { mistoZBezrealitky, jmenoObce, opravUliceVObci, vypadaJakoUlice } from './fetch-opportunities.mjs';
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -124,6 +124,85 @@ je('jiná ulice v adrese nespustí přepis',
   const zdroj = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
   je('robot jméno obce očišťuje u všech zdrojů naráz',
     /for \(const o of fresh\) \{\s*\n\s*const lepsi = jmenoObce\(o\.place\);/.test(zdroj), true);
+}
+
+/* ---- ULICE DOKÁZANÁ Z ADRESY A Z NAŠICH DAT -----------------------
+   opravUliceVObci() opravuje jen tam, kde drží DVĚ opory: zbytek adresy
+   se celý rovná jménu obce, které v datech stojí, a to, co dnes stojí
+   v poli pro obec, vypadá na ulici. Zkouší se obojí — a hlavně to, co
+   se opravit NESMÍ. */
+{
+  const adr = (slug) => 'https://www.bezrealitky.cz/nemovitosti-byty-domy/1-nabidka-prodej-pozemku-' + slug;
+  const bezi = (nabidky) => { const k = JSON.parse(JSON.stringify(nabidky)); return { kolik: opravUliceVObci(k), data: k }; };
+
+  const r1 = bezi([
+    { place: 'Muškátová', okres: 'Brno-město', url: adr('muskatova-brno') },
+    { place: 'Brno', okres: 'Brno-město', url: adr('brno') },
+  ]);
+  je('ulice se opraví na obec, kterou známe z dat', r1.kolik + '|' + r1.data[0].place, '1|Brno');
+
+  const r2 = bezi([
+    { place: 'Jasanová', okres: 'Ústí nad Labem', url: adr('jasanova-usti-nad-labem') },
+    { place: 'Ústí nad Labem', okres: 'Ústí nad Labem', url: adr('usti-nad-labem') },
+  ]);
+  je('víceslovné jméno obce se bere celé', r2.data[0].place, 'Ústí nad Labem');
+
+  /* TOHLE JE TA DRAHÁ CHYBA: zkracování jména obce. Když se celý
+     zbytek adresy nenajde, NESMÍ se vzít jen jeho konec — „Vysoký
+     Újezd" by se tím změnil na „Újezd", což je jiná obec. */
+  const r3 = bezi([
+    { place: 'Ve Višňovce', okres: 'Beroun', url: adr('ve-visnovce-vysoky-ujezd') },
+    { place: 'Újezd', okres: 'Beroun', url: adr('ujezd') },
+  ]);
+  je('jméno obce se nezkracuje na poslední úsek adresy',
+    r3.kolik + '|' + r3.data[0].place, '0|Ve Višňovce');
+
+  /* A tohle je ta druhá: obec, za kterou v adrese stojí okres. */
+  const r4 = bezi([
+    { place: 'Jesenice', okres: 'Rakovník', url: adr('jesenice-rakovnik') },
+    { place: 'Rakovník', okres: 'Rakovník', url: adr('rakovnik') },
+  ]);
+  je('obec, po níž v adrese následuje okres, se nepřepisuje',
+    r4.kolik + '|' + r4.data[0].place, '0|Jesenice');
+
+  /* Jméno, kterým se opravuje, se bere ze VŠECH míst v datech. Orlová
+     končí na „-á", takže test na ulici ji za ulici považuje — a kdyby
+     se jména podle téhož testu ze seznamu vyhazovala, nebylo by čím
+     opravit. */
+  je('Orlová vypadá podle testu na ulici (a přesto musí být k dispozici)',
+    vypadaJakoUlice('Orlová'), true);
+  const r5 = bezi([
+    { place: 'Bučinská', okres: 'Karviná', url: adr('bucinska-orlova') },
+    { place: 'Orlová', okres: 'Karviná', url: adr('orlova') },
+  ]);
+  je('a opraví se podle ní', r5.data[0].place, 'Orlová');
+
+  je('obec bez pokračování v adrese zůstane', bezi([
+    { place: 'Křenice', okres: 'Praha-východ', url: adr('krenice') },
+  ]).kolik, 0);
+
+  /* Na ostrých datech: kolik se toho opraví a že se nic nerozbije. */
+  const ostraData = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  const ostra = bezi((ostraData.opportunities || []));
+  /* NA OSTRÝCH DATECH UŽ NENÍ CO OPRAVIT, a to je ten správný stav:
+     data v repozitáři prošla jednorázovým doplněním
+     (scripts/doplnit-obce.mjs) a robot pravidlo pouští při každém
+     stažení. Kdyby se tu čekalo „opraví se aspoň jedna", zkouška by
+     vyžadovala, aby v datech vada ZŮSTALA. Měří se tedy obojí:
+     že pravidlo na vzorcích výš funguje, a že v datech po něm nic
+     nezbylo. */
+  je('na ostrých datech už není co opravit', ostra.kolik, 0);
+  je('a žádná obec nezůstane prázdná',
+    ostra.data.every((o) => o.place && String(o.place).trim()), true);
+  je('a v poli pro obec po opravě nezůstane číslo bez písmene',
+    ostra.data.filter((o) => /^\d+$/.test(String(o.place))).length <= 1, true);
+
+  /* A je to zapojené PŘED dohledáváním polohy — jinak by se v mapě
+     hledala ulice. */
+  const zdroj2 = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  je('robot to pouští před geokódováním',
+    zdroj2.indexOf('opravUliceVObci(fresh)') > 0
+    && zdroj2.indexOf('opravUliceVObci(fresh)') < zdroj2.indexOf('await geocodeName(o.place'), true);
 }
 
 console.log('\nMísto nabídky (ulice vs. obec)');

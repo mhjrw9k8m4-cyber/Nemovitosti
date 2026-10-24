@@ -116,8 +116,26 @@ pravda('vzor pozemek.html se neindexuje, ale odkazy sleduje',
 
 const stranky = strany.filter((f) => /^pozemek-.+\.html$/.test(f) && f !== 'pozemek.html');
 const ukoncena = (f) => /Nabídka už není aktuální/.test(fs.readFileSync(path.join(KOREN, f), 'utf8'));
-const zive = stranky.filter((f) => !ukoncena(f));
+/* TŘETÍ STAV: STRÁNKA, JEJÍŽ POZEMEK SE PŘESTĚHOVAL NA JINOU ADRESU.
+   Vzniká, když se opraví jméno obce — jméno souboru ho nese, takže
+   adresa se změní (prestehovanaStranka v generate-parcel-pages.mjs).
+   Živá to není (indexovat se má nová adresa) a ukončená taky ne
+   (pozemek je dál v nabídce), takže se počítá zvlášť. Bez toho tahle
+   zkouška hlásila šestnáct „živých stránek bez index,follow". */
+const presunuta = (f) => /window\.PK_PRESUNUTO="/.test(fs.readFileSync(path.join(KOREN, f), 'utf8'));
+const rozcesti = stranky.filter((f) => !ukoncena(f) && presunuta(f));
+const zive = stranky.filter((f) => !ukoncena(f) && !presunuta(f));
 const konec = stranky.filter(ukoncena);
+if (rozcesti.length) {
+  const bezKanonu = rozcesti.filter((f) => {
+    const t = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    const m = /<link rel="canonical" href="https:\/\/www\.parcelaka\.cz\/([^"]+)"/.exec(t);
+    return !m || m[1] === f || !fs.existsSync(path.join(KOREN, m[1]));
+  });
+  pravda(`rozcestí (${rozcesti.length}) se neindexují a ukazují na existující novou adresu`,
+    bezKanonu.length === 0 && rozcesti.every((f) => /noindex/.test(robots(f) || '')),
+    bezKanonu.length ? 'bez platného canonical: ' + bezKanonu.slice(0, 3).join(', ') : 'chybí noindex');
+}
 pravda(`stránek pozemků je dost (${zive.length} živých, ${konec.length} ukončených)`,
   zive.length > 500 && konec.length > 0, `${zive.length}/${konec.length}`);
 const zivaBezIndexu = zive.filter((f) => !/index,follow/.test(robots(f) || '') || /noindex/.test(robots(f) || ''));

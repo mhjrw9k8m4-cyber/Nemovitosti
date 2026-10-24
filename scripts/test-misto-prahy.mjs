@@ -61,12 +61,23 @@ pravda('mimo Prahu zůstává „obec, okres okres"',
 const data = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
 const prazske = (data.opportunities || []).filter((o) => o.okres === 'Praha' && o.place && o.place !== 'Praha');
 
-/* PŘEDPOKLAD: pravidlo má na čem platit. Kdyby v datech žádná pražská
-   nabídka s ulicí nebyla, všechny kontroly níž by prošly naprázdno —
-   a zkouška by mlčela o tom, že se oprava rozpadla. */
-pravda('v datech jsou pražské nabídky s ulicí místo obce', prazske.length > 0,
+/* PŘEDPOKLAD SE ZMĚNIL, A TADY JE NAPSÁNO ČÍM. Dřív tu stálo „v datech
+   jsou pražské nabídky s ulicí místo obce" — a byla to pravda: v poli
+   pro obec stály Devonská, Ke Korunce, Na Chvalce, Chatová. Dnes
+   nestojí, protože je robot opravuje (opravUliceVObci v
+   scripts/fetch-opportunities.mjs: obec se vezme z adresy inzerátu,
+   když ji tam potvrzuje jméno, které známe z dat).
+   mistoFraze zůstává, a to schválně: oprava v robotovi platí jen tam,
+   kde se obec DOKÁZAT dá, a asi u pětadvaceti nabídek po republice se
+   nedá. Kdyby taková nabídka v Praze přišla zítra, tohle pravidlo ji
+   vysází správně — a kontroly níž na to čekají připravené.
+   Hlídá se proto to, co platí teď: v okrese Praha nestojí v poli pro
+   obec nic jiného než Praha. Kdyby se oprava rozpadla, tahle kontrola
+   padne. */
+pravda('v okrese Praha už žádná nabídka nemá v poli pro obec ulici', prazske.length === 0,
   `nabídek v okrese Praha: ${(data.opportunities || []).filter((o) => o.okres === 'Praha').length},`
-  + ' z toho s místem jiným než Praha: 0 — zkouška by neměla co měřit');
+  + ` z toho s místem jiným než Praha: ${prazske.length}`
+  + (prazske.length ? ' — ' + prazske.slice(0, 4).map((o) => o.place).join(', ') : ''));
 
 /* POZOR NA OKRESY, KTERÉ ZAČÍNAJÍ NA „Praha". Vzor `^pozemek-praha-`
    bere i Prahu-východ a Prahu-západ, a to jsou OPRAVDOVÉ okresy
