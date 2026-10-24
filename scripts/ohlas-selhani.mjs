@@ -46,6 +46,9 @@ const hlavicky = {
   'X-GitHub-Api-Version': '2022-11-28',
   'Content-Type': 'application/json',
 };
+/* Jak dlouho po posledním ozvání se mlčí. Přepsat jde proměnnou, ale
+   nikdy to není nula: hlášení bez stropu je šum. */
+const TICHO_HODIN = Math.max(1, parseInt(E.TICHO_HODIN || '24', 10) || 24);
 const slug = String(E.ZNACKA || E.JMENO).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const ZNACKA = `<!-- ohlas-selhani:${slug} -->`;
 
@@ -64,6 +67,23 @@ try {
   const uz = (Array.isArray(seznam.j) ? seznam.j : []).find((i) => String(i.body || '').includes(ZNACKA));
 
   if (uz) {
+    /* TICHO: úkol už existuje a říká, co je špatně. Když selhává něco,
+       co se bez člověka spravit nedá (chybí kbelík v Supabase, není
+       nasazené SQL), přidávat „selhalo znovu" čtyřikrát denně znamená
+       vyrobit šum — a šum nikdo nečte, takže by se tím zrušil celý
+       smysl hlášení. Jediná nová informace je „pořád to není spravené"
+       a na tu stačí jednou za den.
+       KDYŽ SE ČAS NEDÁ ZJISTIT, komentář SE PŘIDÁ: mlčet kvůli
+       nejistotě by znamenalo mlčet o selhání. */
+    const kom = await jdi(`/issues/${uz.number}/comments?per_page=100`);
+    const casy = [uz.created_at, ...(Array.isArray(kom.j) ? kom.j.map((c) => c.created_at) : [])]
+      .map((x) => Date.parse(x)).filter((n) => isFinite(n));
+    const stariH = casy.length ? (Date.now() - Math.max(...casy)) / 3600000 : Infinity;
+    if (stariH < TICHO_HODIN) {
+      console.log(`Úkol #${uz.number} je otevřený a ozval se před ${stariH.toFixed(1)} h —`
+        + ` komentář se nepřidává (ticho ${TICHO_HODIN} h, ať se z hlášení nestane šum).`);
+      process.exit(0);
+    }
     const r = await jdi(`/issues/${uz.number}/comments`, {
       method: 'POST',
       body: JSON.stringify({ body: 'Selhalo znovu: ' + E.BEH }),

@@ -10066,3 +10066,38 @@ o nezměřeném. Teď platí pravidlo: v režimu, který měří po síti, je
 „nezměřilo se nic" **vada**, ne klid — a hlídají to tři nové kontroly
 (živý režim projde jen s odpovídající databází; `--bez-site` i mlčící
 databáze v něm končí nálezem).
+
+### 149c. První běh naostro našel tři vady — a hned i past na sebe *24. 10.*
+
+Kontrola živého systému se pustila naostro a **nebyla to formalita**:
+chybí kbelík `listing-photos` (nahrání fotky k inzerátu by neprošlo),
+`mailer_autoconfirm = true` (e-mail se nepotvrzuje, takže účet vznikne
+na cizí adresu) a `zapis_chybu()` v databázi není (venku běží starší
+SQL, takže se pády v prohlížečích hlásí do prázdna). Všechno tři jsou
+věci, které **nemůže opravit nikdo z repozitáře** — jsou v nastavení
+Supabase — a byly na seznamu pro majitele jako „dotáhnout nastavení".
+Teď jsou tam **vyjmenované a změřené**, s větou, co každá z nich dnes
+znamená. Zároveň se potvrdilo, že databáze odpovídá a že uzavřená
+funkce je uzavřená i pro nepřihlášeného (401).
+
+**A tím vznikla past, do které jsem málem spadl:** úloha běží každých
+šest hodin, takže by k témuž úkolu připisovala „selhalo znovu"
+čtyřikrát denně. Z hlášení by se stal šum — a šum nikdo nečte, čímž by
+se zrušil celý smysl oddílu 146. Hlásič proto dostal **ticho**: pokud
+se úkol ozval v posledních 24 hodinách, komentář se nepřidá a napíše
+se, proč. Jediná nová informace je „pořád to není spravené" a na tu
+stačí jednou za den. Když se čas posledního ozvání **nedá zjistit**,
+komentář se přidá — mlčet kvůli nejistotě by znamenalo mlčet o selhání.
+
+**Paralelní běh si vyrobil další past a hlídač na ni už je:** dvě
+zkoušky si vzaly týž port 8413, takže při čtyřech naráz padala druhá na
+`EADDRINUSE` — tedy na vadě, kterou nezpůsobila. Nový hlídač
+v `test-zkousky-meri.mjs` čte seznam rychlých zkoušek **z běžce** (ten
+ho bere z CI) a vyžaduje, aby každý port patřil jen jedné. Zkoušky
+v prohlížeči se nepočítají: ty jedou jedna po druhé a 8310 si schválně
+podávají dál.
+
+**A běžec sám měl vadu, kterou odhalil ten nový hlídač:** při `import`
+se celý spustil (neměl podmínku „jen při přímém spuštění"), takže
+zkouška, která si od něj chtěla jen přečíst seznam, se zasekla na sto
+třiceti procesech.

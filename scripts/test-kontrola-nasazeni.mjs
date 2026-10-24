@@ -63,13 +63,13 @@ const server = http.createServer((req, res) => {
   }
   posli(200, telo, TYPY[path.extname(f)]);
 });
-await new Promise((r) => server.listen(8413, r));
+await new Promise((r) => server.listen(8414, r));
 
 function pust(m, dalsi) {
   rezim = m;
   return new Promise((hotovo) => {
     const p = spawn('node', [path.join(KOREN, 'scripts', 'kontrola-nasazeni.mjs'), ...(dalsi || [])],
-      { cwd: KOREN, env: { ...process.env, PK_WEB: 'http://127.0.0.1:8413' } });
+      { cwd: KOREN, env: { ...process.env, PK_WEB: 'http://127.0.0.1:8414' } });
     let out = '';
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });

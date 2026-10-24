@@ -41,9 +41,22 @@ const server = http.createServer((req, res) => {
       if (stav === 'ukol-otevreny') {
         return vrat(200, [{ number: 7, body: 'něco\n<!-- ohlas-selhani:robot-dat -->\ndál' }]);
       }
+      /* Úkol, který se ozval nedávno (nebo dávno) — na tom se měří
+         ticho. Datum vzniku je v obou případech staré, aby rozhodoval
+         opravdu poslední komentář. */
+      if (stav === 'cerstvy-komentar' || stav === 'stary-komentar') {
+        return vrat(200, [{ number: 9, created_at: new Date(Date.now() - 3600e3 * 100).toISOString(),
+          body: '<!-- ohlas-selhani:robot-dat -->' }]);
+      }
       /* „zavřený úkol" se mezi otevřenými neobjeví — přesně proto se
          hledá jen ve state=open. */
       return vrat(200, stav === 'jiny-ukol' ? [{ number: 3, body: 'cizí úkol bez značky' }] : []);
+    }
+    if (req.method === 'GET' && /\/issues\/\d+\/comments/.test(req.url)) {
+      const pred = stav === 'cerstvy-komentar' ? 1 : 100;
+      return vrat(200, stav === 'cerstvy-komentar' || stav === 'stary-komentar'
+        ? [{ created_at: new Date(Date.now() - 3600e3 * pred).toISOString(), body: 'Selhalo znovu' }]
+        : []);
     }
     if (req.method === 'POST' && /\/issues\/\d+\/comments$/.test(req.url)) {
       zapsano.push({ druh: 'komentar', url: req.url, telo });
@@ -95,6 +108,27 @@ console.log('\nHlásič selhání noční úlohy');
   pravda('a napíše, co to pro web znamená', /přestaly obnovovat/.test(j.body || ''));
   pravda('skončí nulou, aby nepřebil tu první chybu', kod === 0, 'kód ' + kod);
   pravda('a řekne, co udělal', /Založen úkol #42/.test(out), out.trim());
+}
+
+/* ---- 1b) ticho: šum není hlášení ------------------------------- */
+/* Když selhává něco, co se bez člověka spravit nedá (chybí kbelík
+   v Supabase, není nasazené SQL), přidávat „selhalo znovu" čtyřikrát
+   denně znamená vyrobit šum — a šum nikdo nečte, takže by se tím
+   zrušil smysl celého hlášení. Naměřeno v ostrém běhu: kontrola
+   živého systému selhává každých 6 h z téhož důvodu. */
+{
+  const d = await pust('cerstvy-komentar');
+  pravda('úkol, který se ozval před hodinou, komentář NEDOSTANE',
+    !d.zapsano.some((x) => x.druh === 'komentar') && /ticho/.test(d.out),
+    `zapsáno: ${JSON.stringify(d.zapsano.map((x) => x.druh))}; výpis: ${d.out.split('\n')[0]}`);
+  pravda('a je napsané, kolik hodin se mlčí i proč',
+    /ozval se před [\d.]+ h/.test(d.out) && /šum/.test(d.out), d.out.split('\n')[0]);
+  pravda('a skončí nulou (mlčení není selhání hlásiče)', d.kod === 0, 'kód ' + d.kod);
+
+  const e = await pust('stary-komentar');
+  pravda('úkol, který se neozval 100 h, komentář dostane',
+    e.zapsano.some((x) => x.druh === 'komentar'),
+    `zapsáno: ${JSON.stringify(e.zapsano.map((x) => x.druh))}; výpis: ${e.out.split('\n')[0]}`);
 }
 
 /* ---- 2) podruhé: doplní komentář, nezakládá další -------------- */

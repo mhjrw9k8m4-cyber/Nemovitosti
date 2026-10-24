@@ -207,6 +207,25 @@ A tři nastavení, která SQL neumí (oddíl 3b):
 *Confirm email* zapnout, *Minimum password length* na 8,
 *Redirect URLs* omezit na vlastní domény.
 
+### Co je k 24. 10. NAMĚŘENÉ na živé databázi (ne odhadnuté)
+
+Od 24. 10. se živá databáze kontroluje sama každých šest hodin
+(`node scripts/kontrola-spusteni.mjs --jen-zive`). První běh naostro
+našel tohle — a dokud to nespravíte, bude úkol přicházet dál:
+
+| Co | Co to dnes znamená |
+|---|---|
+| **Kbelík `listing-photos` v úložišti neexistuje** | Nahrání fotky k inzerátu neprojde. Inzerát bez fotky je polovina inzerátu. |
+| **`mailer_autoconfirm = true`** | E-mail se **nepotvrzuje**: účet vznikne na cizí adresu, kterou někdo jen opíše. Tohle je ta nejrizikovější ze tří. |
+| **`zapis_chybu()` v databázi není** | Pády v prohlížečích návštěvníků se hlásí **do prázdna** — venku běží starší SQL, než je v repozitáři. |
+
+Co se naopak potvrdilo: databáze odpovídá, `public_listings()` v ní je,
+a uzavřená funkce je opravdu uzavřená i pro nepřihlášeného (401).
+
+První dvě věci se spraví v Supabase (Storage → New bucket
+`listing-photos`, a Authentication → *Confirm email*), třetí tím, že
+pustíte `supabase/00-vse.sql` celý.
+
 ---
 
 ## 6. Rozhodnutí: ukazovat kontakt na inzerenta komukoli?

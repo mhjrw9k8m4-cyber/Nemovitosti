@@ -60,6 +60,12 @@ export function rychleZkousky() {
   return [...new Set(najdene)];
 }
 
+/* POUŠTÍ SE JEN PŘI PŘÍMÉM SPUŠTĚNÍ. Bez téhle podmínky by `import`
+   téhle hlavičky (kvůli funkci rychleZkousky, kterou si čte hlídač
+   portů) spustil celou sadu — a zkouška, která si chtěla jen přečíst
+   seznam, by se zasekla na sto třiceti procesech. Naměřeno. */
+if (import.meta.url === `file://${process.argv[1]}`) {
+
 const seznam = rychleZkousky();
 if (arg('--seznam')) {
   console.log(seznam.join('\n'));
@@ -154,4 +160,6 @@ if (padlo.length) {
   console.log(`\n::error::Rychlá sada: padlo ${padlo.length} z ${vysledky.length} — `
     + padlo.map((v) => v.soubor.replace('scripts/', '')).join(', '));
   process.exit(1);
+}
+
 }

@@ -143,6 +143,32 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
     mrtveApi.length === 0, mrtveApi.join(', ') + ' — čti strom přes CDP, viz test-pridat.mjs');
 }
 
+/* ---- 3) DVĚ ZKOUŠKY NA JEDNOM PORTU -------------------------------
+ * Od 24. 10. se rychlá sada pouští i paralelně (scripts/zkousky.mjs,
+ * čtyři naráz). Dvě zkoušky, které si otevřou server na témže portu,
+ * se pak perou o něj a padne ta druhá — na EADDRINUSE, tedy na vadě,
+ * kterou nezpůsobila. Naměřeno hned při zavedení: test-ohlas-selhani
+ * a test-kontrola-nasazeni si obě vzaly 8413.
+ * Zkoušky v prohlížeči se tu nepočítají: ty jedou v CI jedna po druhé
+ * ve svých směnách a 8310 si schválně podávají dál. */
+{
+  const { rychleZkousky } = await import('./zkousky.mjs');
+  const porty = new Map();
+  for (const f of rychleZkousky()) {
+    const t = fs.readFileSync(path.join(KOREN, f), 'utf8');
+    for (const m2 of t.matchAll(/listen\((\d{4})/g)) {
+      const p2 = m2[1];
+      if (!porty.has(p2)) porty.set(p2, []);
+      porty.get(p2).push(f.replace('scripts/', ''));
+    }
+  }
+  const kolize = [...porty.entries()].filter(([, kdo]) => kdo.length > 1);
+  pravda(`porty v rychlé sadě jsou každý jen jednou (${porty.size} portů)`,
+    kolize.length === 0,
+    kolize.map(([p2, kdo]) => `${p2}: ${kdo.join(' + ')}`).join('; ')
+      + ' — při běhu čtyř naráz padne druhá na EADDRINUSE, tedy na cizí vadě');
+}
+
 console.log('\nZkoušky měří to, co si myslí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
