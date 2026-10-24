@@ -30,6 +30,7 @@ function pravda(popis, vyslo, proc) {
 
 /* Falešná Supabase. `stav` říká, co má zrovna předstírat. */
 let stav = 'vse-dobre';
+const poslanoDoChyb = [];
 const server = http.createServer((req, res) => {
   const u = req.url.split('?')[0];
   const odpoved = (kod, telo) => { res.writeHead(kod, { 'content-type': 'application/json' }); res.end(telo); };
@@ -47,6 +48,19 @@ const server = http.createServer((req, res) => {
     return stav === 'chybi-kbelik'
       ? odpoved(400, '{"message":"Bucket not found"}')
       : odpoved(404, '{"message":"Object not found"}');
+  }
+  if (u === '/rest/v1/rpc/zapis_chybu') {
+    /* Co kontrola do té funkce pošle, si schováme: nesmí to být nic,
+       co by databáze zapsala. */
+    let telo = '';
+    req.on('data', (d) => { telo += d; });
+    return req.on('end', () => {
+      poslanoDoChyb.push(telo);
+      if (stav === 'chyby-nenasazene') {
+        return odpoved(404, JSON.stringify({ code: 'PGRST202', message: 'Could not find the function' }));
+      }
+      return odpoved(204, '');
+    });
   }
   if (u === '/auth/v1/settings') {
     return odpoved(200, JSON.stringify({ mailer_autoconfirm: stav === 'bez-potvrzovani' }));
@@ -74,10 +88,19 @@ console.log('\nKontrola připravenosti ke spuštění');
   const { out, kod } = await pust('vse-dobre');
   pravda('při zdravé databázi nehlásí nic, co blokuje',
     !/BLOKUJE SPUŠTĚNÍ/.test(out) && kod === 0, out.split('\n').filter((l) => /✕/.test(l)).join(' | '));
-  pravda('a potvrdí všechny čtyři živé kontroly',
+  pravda('a potvrdí všech pět živých kontrol',
     /public_listings\(\) v ní je/.test(out) && /uzavřená funkce je uzavřená/.test(out)
-    && /kbelík listing-photos existuje/.test(out) && /potvrzování e-mailu je zapnuté/.test(out),
+    && /kbelík listing-photos existuje/.test(out) && /potvrzování e-mailu je zapnuté/.test(out)
+    && /hlášení chyb z prohlížeče je nasazené/.test(out),
     out.split('\n').filter((l) => /✓/.test(l)).slice(-6).join(' | '));
+  /* A ta nejdůležitější vlastnost téhle kontroly: NIC NEZAPÍŠE.
+     Hláška „ab" je kratší než tři znaky, takže ji zapis_chybu()
+     odmítne ještě před insertem. Kdyby se tu jednou zkrátila cesta
+     a poslala se „opravdová" hláška, vznikl by při každé kontrole
+     připravenosti řádek v cizí databázi. */
+  pravda('a ptá se hláškou, kterou databáze zahodí (kontrola nic nezapíše)',
+    poslanoDoChyb.length >= 1 && poslanoDoChyb.every((t) => /"p_zprava":"ab"/.test(t)),
+    'posláno: ' + poslanoDoChyb.join(' | ').slice(0, 160));
 }
 
 /* ---- 2) každý rozbitý stav musí být NÁLEZ, který blokuje -------- */
@@ -115,6 +138,20 @@ for (const [rezim, vzor, popis] of [
     /průchod naostro/.test(out) && /musí to projít člověk/.test(out));
   pravda('i odkaz na hlubší prohlídku oprávnění se servisním klíčem',
     /kontrola-databaze\.mjs se servisním klíčem/.test(out));
+}
+
+/* ---- 5) nenasazené hlášení chyb: ztráta, ne blokace ------------ */
+{
+  const { out, kod } = await pust('chyby-nenasazene');
+  pravda('chybějící zapis_chybu() se pozná a řekne, co se tím ztrácí',
+    /zapis_chybu\(\) v databázi NENÍ/.test(out) && /do prázdna/.test(out),
+    out.split('\n').filter((l) => /chyb/.test(l)).slice(0, 3).join(' | '));
+  /* Spuštění to nebrání — web bez hlášení chyb funguje, jen slepý.
+     Kdyby to blokovalo, přestal by se verdikt dát použít na otázku
+     „můžu pustit?", a to je jeho jediná práce. */
+  pravda('a spuštění tím neblokuje (web bez hlásiče funguje, jen slepý)',
+    !/BLOKUJE SPUŠTĚNÍ/.test(out) && kod === 0,
+    out.split('\n').filter((l) => /✕/.test(l)).join(' | '));
 }
 
 server.close();

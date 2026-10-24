@@ -69,7 +69,7 @@ const ocek = sql ? ocekavaneZeSQL(sql) : { tabulky: [], funkce: [] };
    bez kterých web nefunguje: každé z nich odpovídá jedna věc, kterou
    člověk na webu dělá. */
 const MUSI_BYT = ['public_listings', 'create_listing', 'moje_poznamky', 'moje_ulozene',
-  'my_threads', 'my_searches', 'hlidani_k_odeslani', 'unsubscribe_mail'];
+  'my_threads', 'my_searches', 'hlidani_k_odeslani', 'unsubscribe_mail', 'zapis_chybu'];
 const chybiVSQL = MUSI_BYT.filter((f) => !ocek.funkce.includes(f));
 if (!sql) NE('balík supabase/00-vse.sql', 'chybí — spusťte node scripts/build-sql.mjs');
 else if (chybiVSQL.length) NE('balík supabase/00-vse.sql',
@@ -184,13 +184,30 @@ if (BEZ_SITE) {
         'mailer_autoconfirm = true, takže se adresa nepotvrzuje a účet vznikne na cizí e-mail');
       else ANO('potvrzování e-mailu je zapnuté');
     } else NEVIM('potvrzování e-mailu', `nastavení přihlašování odpovědělo ${d.stav}`);
+    /* e) Hlášení chyb z prohlížeče. Kdyby funkce v databázi nebyla,
+          web by hlásil do prázdna: PostgREST odpoví 404 a js/chyby.js
+          odpověď schválně ignoruje (hlásič nemá rozbít stránku). Byla
+          by to tedy tichá ztráta — přesně ten druh, kvůli kterému
+          tenhle skript existuje.
+          ZÁPIS SE TÍM NEDĚLÁ: hláška „ab" je kratší než tři znaky
+          a funkce ji odmítne ještě před insertem (hlídá to
+          scripts/test-chyby-klienta.mjs na opravdovém PostgreSQL).
+          Jde tedy jen o otázku „jsi tam?". */
+    const e2 = await zkus('chyby', '/rest/v1/rpc/zapis_chybu', { method: 'POST',
+      body: '{"p_stranka":"index.html","p_zprava":"ab","p_zdroj":"","p_prohlizec":"jine"}' });
+    if (e2.stav >= 200 && e2.stav < 300) ANO('hlášení chyb z prohlížeče je nasazené');
+    else if (/PGRST202|does not exist|Could not find/i.test(e2.telo)) {
+      SKODA('hlášení chyb z prohlížeče', 'zapis_chybu() v databázi NENÍ — pády v prohlížečích'
+        + ' návštěvníků by se hlásily do prázdna; pusťte supabase/00-vse.sql');
+    } else NEVIM('hlášení chyb z prohlížeče', `zapis_chybu() odpověděla ${e2.stav}`);
   } catch (e) {
     NEVIM('živá databáze', 'na databázi se nepodařilo dosáhnout — ' + String(e.message || e).slice(0, 90));
   }
 }
 NEVIM('hlubší prohlídka oprávnění', 'pustí ji node scripts/kontrola-databaze.mjs se servisním klíčem');
 NEVIM('průchod naostro (registrace → inzerát s fotkou → zpráva → hlídání)',
-  'tohle neudělá žádný skript — musí to projít člověk');
+  'tohle neudělá žádný skript — musí to projít člověk; seznam pěti průchodů'
+  + ' je v docs/pro-majitele.md, bod 0b');
 
 /* ---------- VERDIKT -------------------------------------------- */
 const r = [];
