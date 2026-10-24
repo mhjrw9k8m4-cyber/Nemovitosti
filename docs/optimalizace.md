@@ -10101,3 +10101,37 @@ podávají dál.
 se celý spustil (neměl podmínku „jen při přímém spuštění"), takže
 zkouška, která si od něj chtěla jen přečíst seznam, se zasekla na sto
 třiceti procesech.
+
+## 150. Dvě zkoušky si sahaly na živý adresář — a obešel jsem to místo opravil *24. 10.*
+
+V oddílu 148 jsem napsal, že běžec rychlé sady pozná „kolizi nad
+společným stromem" a pustí padlou zkoušku ještě jednou samu. To je
+správná pojistka, ale **byla to obezlička, ne oprava**: příčina trvala.
+`test-ukonceno.mjs` pouštěl generátor stránek pozemků **v živém
+adresáři** a na dvacet sekund tím nechával 2 116 stránek bez
+nezlomitelných mezer a bez hlavičky CSP. Zkouška si to dokonce sama
+dohánĕla (pouštěla po generátoru ještě sazbu a `csp.mjs`) — záplata na
+vlastní nepořádek.
+
+**Opraveno v příčině:** zkouška si teď celý repozitář zkopíruje do
+`/tmp` a pracuje jen tam. Dohánění sazby a CSP se tím stalo zbytečným:
+změřeno, že projde stejně (28 kontrol) a je o dva běhy generátorů
+kratší. Co se nemusí dohánět, se nemá dohánět. Paralelní běh pak
+poprvé vyšel **úplně bez kolizí**: 129/129 za 89 s.
+
+**A hned k tomu hlídač, aby se ta třída vad nemohla vrátit tiše.**
+Běžec si udělá otisk stromu před sadou a po ní. První podoba srovnávala
+`git status` — a sabotáž (vrácená stará zkouška) ji **neprobudila**,
+protože ta zkouška strom přepsala a vrátila do téhož obsahu. Hlídá se
+proto **čas změny, ne obsah**: přepsat soubor stejným obsahem je pořád
+sahání na živý adresář a pořád to shodí zkoušku, která ho zrovna čte.
+
+**A ten hlídač okamžitě našel druhou takovou zkoušku, o které jsem
+nevěděl:** `test-rss.mjs` pouštěl generátor kanálů v živém adresáři
+(porovnává `guid` mezi dvěma běhy, aby čtečky nehlásily staré pozemky
+jako nové) a přepisoval při tom 15 souborů. Obsah vyšel stejný, takže
+to nikdo nikdy neviděl. Druhý běh teď jde taky do kopie.
+
+Pořadí ani počet naráz běžících zkoušek už tedy nerozhoduje
+o výsledku — a kdyby někdo takovou zkoušku napsal znovu, sada to řekne
+hned a jmenovitě. Sabotáž ověřena na obou zkouškách.

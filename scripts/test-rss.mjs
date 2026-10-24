@@ -20,8 +20,9 @@
 //    výměra za celou parcelu — ve čtečce není nic, co by to vysvětlilo,
 //    a nabídka tam vypadá jako trhák.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, mkdtempSync, cpSync, rmSync } from 'node:fs';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -109,8 +110,25 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
   /* To hlavní: guid se nesmí měnit mezi běhy. Generátor se pustí
      dvakrát a porovná se — kdyby se guid odvozovalo od času nebo
      pořadí, hlásila by čtečka staré pozemky jako nové čtyřikrát denně. */
-  execFileSync('node', [path.join(KOREN, 'scripts', 'generate-rss.mjs')], { cwd: KOREN });
-  const znovu = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
+  /* DRUHÝ BĚH JDE DO KOPIE, NE DO ŽIVÉHO ADRESÁŘE. Dřív se pouštěl
+     tady a přepsal přitom 15 kanálů; obsah vyšel stejný, takže to
+     nikdo neviděl — jenže od chvíle, co se rychlá sada pouští
+     paralelně, shodí takový přepis zkoušku, která ten soubor zrovna
+     čte. Našel to hlídač v scripts/zkousky.mjs (čas změny, ne obsah),
+     ne člověk. */
+  const kopie = mkdtempSync(path.join(tmpdir(), 'parcelka-rss-'));
+  const VYNECHAT = new Set(['.git', 'node_modules',
+    path.join('assets', 'mobilenet'), path.join('assets', 'nsfw-model')]);
+  cpSync(KOREN, kopie, {
+    recursive: true,
+    filter: (zdroj) => {
+      const rel = path.relative(KOREN, zdroj);
+      return rel === '' || !VYNECHAT.has(rel);
+    },
+  });
+  execFileSync('node', [path.join(kopie, 'scripts', 'generate-rss.mjs')], { cwd: kopie });
+  const znovu = readFileSync(path.join(kopie, 'novinky.xml'), 'utf8');
+  rmSync(kopie, { recursive: true, force: true });
   const g2 = [...znovu.matchAll(/<guid[^>]*>([^<]+)<\/guid>/g)].map((m) => m[1]);
   pravda('a po dalším běhu robota zůstane stejné',
     g.length === g2.length && g.every((x, i) => x === g2[i]),

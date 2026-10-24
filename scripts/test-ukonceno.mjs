@@ -15,12 +15,46 @@
 // cyklus: přepsání na ukončenou, neindexování, odkazy na podobné
 // pozemky, a po uplynutí lhůty teprve smazání.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, unlinkSync, readdirSync,
+  mkdtempSync, cpSync, rmSync } from 'node:fs';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
-const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* PRACUJE SE V KOPII, NE V ŽIVÉM ADRESÁŘI.
+   ==================================================================
+   Tahle zkouška pouští generátor stránek pozemků, a ten přepíše všech
+   2 116 stránek. V živém adresáři to mělo dva následky, oba nepříjemné:
+
+     1. mezi generátorem a sazbou (sazba se v řetězu dělá AŽ POTOM)
+        stránky na dvacet sekund neměly nezlomitelné mezery a od
+        23. 10. ani hlavičku CSP. Dohánělo se to tím, že si zkouška
+        pustila sazbu i csp.mjs sama — záplata na vlastní nepořádek,
+        ne řešení;
+     2. jakmile se rychlá sada začala pouštět paralelně
+        (scripts/zkousky.mjs, čtyři naráz), padaly v tom okně
+        test-cestina a test-stranky-pozemku na vadě, kterou
+        nezpůsobily. Naměřeno hned při prvním paralelním běhu.
+
+   Kopie to ruší v příčině: zkouška si sahá jen na své. Stojí to pár
+   sekund na zkopírování 148 MB — a to je méně, než stálo vysvětlování,
+   proč „čeština" padá, když se nic nezměnilo. */
+const PRAVY_KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const VYNECHAT = new Set([
+  '.git', 'node_modules',
+  path.join('assets', 'mobilenet'),      // model na rozpoznávání fotek, 5 MB
+  path.join('assets', 'nsfw-model'),     // totéž, 2,7 MB
+]);
+const kopie = mkdtempSync(path.join(tmpdir(), 'parcelka-ukonceno-'));
+cpSync(PRAVY_KOREN, kopie, {
+  recursive: true,
+  filter: (zdroj) => {
+    const rel = path.relative(PRAVY_KOREN, zdroj);
+    return rel === '' || !VYNECHAT.has(rel);
+  },
+});
+const KOREN = kopie;
 let ok = 0, chyb = 0;
 const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -57,26 +91,24 @@ const vzor = readdirSync(KOREN).find((f) => /^pozemek-benesov-.+\.html$/.test(f)
 const ZKOUSKA = 'pozemek-benesov-zkouskatestu-9q7k2x.html';
 const cesta = path.join(KOREN, ZKOUSKA);
 
+/* DVĚ RŮZNÉ VĚCI, DVĚ FUNKCE. `uklid()` maže zkušební stránku a volá
+   se i NA ZAČÁTKU (ať po spadlém běhu nezůstane); kopie se maže až na
+   konci. Napoprvé jsem to slil do jedné funkce — a zkouška si tím
+   hned v prvním kroku smazala podklad pod rukama. */
 function uklid() { try { if (existsSync(cesta)) unlinkSync(cesta); } catch (e) {} }
-/* GENERÁTOR SE PUSTÍ V ŽIVÉM ADRESÁŘI a přepíše při tom všech 1 988
-   stránek pozemků. To samo o sobě nevadí — píše je ze stejných dat —
-   jenže česká sazba se v řetězci dělá TEPRVE PO generátorech, takže po
-   takovém běhu zůstanou stránky bez nezlomitelných mezer. Zkouška, která
-   běží později a sazbu kontroluje (test-cestina.mjs), pak padne na vadu,
-   kterou nezpůsobila: 1 988 stránek „není vysázeno". Naměřeno — a dosud
-   to nepraskalo jen proto, že běh skončil na jiné chybě dřív, než na
-   čeština vůbec došlo. Pořadí zkoušek nemá rozhodovat o výsledku, proto
-   se sazba po generátoru dohání zpátky (2 s). */
+/* Kopie je v /tmp, takže by ji systém uklidil sám, ale nechávat po
+   sobě 148 MB na každý běh je nepořádek, který se pozná teprve, až
+   disk nestačí. */
+function uklidKopii() { try { rmSync(kopie, { recursive: true, force: true }); } catch (e) {} }
+process.on('exit', uklidKopii);
+/* GENERÁTOR SE PUSTÍ V KOPII (viz hlavička souboru) a přepíše v ní
+   všech 2 116 stránek pozemků. Dřív běžel v živém adresáři a zkouška
+   si po něm musela sama dohánět sazbu i hlavičku CSP, aby na tom
+   nepadly jiné zkoušky. Po přechodu na kopii to není potřeba:
+   změřeno, že zkouška projde stejně (28 kontrol) a je o dva běhy
+   generátorů kratší. Co se nemusí dohánět, se nemá dohánět. */
 function generuj() {
   execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'generate-parcel-pages.mjs')],
-    { cwd: KOREN, stdio: 'ignore' });
-  execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'sazba.mjs')],
-    { cwd: KOREN, stdio: 'ignore' });
-  /* Totéž, co o sazbě výš, platí od 23. 10. o hlavičce CSP: hashe
-     vložených skriptů osazuje až scripts/csp.mjs, takže po tomhle běhu
-     by 1 930 stránek pozemků zůstalo bez hlavičky a test-csp by padl na
-     vadu, kterou nezpůsobil. Naměřeno — přesně to se stalo. */
-  execFileSync(process.execPath, [path.join(KOREN, 'scripts', 'csp.mjs')],
     { cwd: KOREN, stdio: 'ignore' });
 }
 

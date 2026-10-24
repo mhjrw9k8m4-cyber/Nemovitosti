@@ -36,10 +36,10 @@
    společným stromem (vypíše se a nic netajíme), když padne znovu, je
    to vada a sada končí chybou.
    ================================================================== */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (jm) => process.argv.includes(jm);
@@ -81,6 +81,41 @@ if (seznam.length < 50) {
 const VLAKEN = Math.max(1, Math.min(hodnota('--vlaken', 4), 8));
 const env = { ...process.env };
 if (arg('--sql-povinne')) env.PK_SQL_VYZADOVAN = '1';
+
+/* STAV STROMU PŘED a PO. Zkouška, která si sahá na živý adresář, je
+   vada — a hledá se zle: projeví se jako pád ÚPLNĚ JINÉ zkoušky, která
+   zrovna čte to, co ta první právě přepisuje. Přesně to se stalo
+   24. 10. (test-ukonceno pouštěl generátor v živém adresáři, takže
+   test-cestina a test-stranky-pozemku padaly na 2 116 nevysázených
+   stránkách). Příčina je opravená, tohle je pojistka, aby se ta třída
+   vad nemohla vrátit tiše. */
+/* OBSAH NESTAČÍ, HLÍDÁ SE DOTEK. Napoprvé tu stál jen `git status`
+   před a po — a sabotáž (vrácená stará podoba test-ukonceno) ho
+   neprobudila: ta zkouška strom přepsala a pak vrátila do téhož
+   obsahu, takže git neviděl nic. Proto se srovnávají ČASY ZMĚNY:
+   přepsat soubor stejným obsahem je pořád sahání na živý adresář
+   a pořád to shodí zkoušku, která ho zrovna čte. */
+const otiskStromu = () => {
+  const otisk = new Map();
+  const pridej = (adr, vzor) => {
+    let jmena = [];
+    try { jmena = readdirSync(path.join(KOREN, adr)); } catch (e) { return; }
+    for (const f of jmena) {
+      if (!vzor.test(f)) continue;
+      const rel = path.join(adr, f);
+      try { otisk.set(rel, statSync(path.join(KOREN, rel)).mtimeMs); } catch (e) {}
+    }
+  };
+  pridej('.', /\.(html|xml|txt)$/);
+  pridej('data', /\.json$/);
+  pridej(path.join('data', 'okres'), /\.json$/);
+  pridej('css', /\.css$/);
+  pridej(path.join('js', 'min'), /\.js$/);
+  pridej('docs', /\.md$/);
+  pridej('supabase', /\.sql$/);
+  return otisk;
+};
+const stromPred = otiskStromu();
 
 const zacatek = Date.now();
 const vysledky = [];
@@ -140,6 +175,13 @@ if (prvniPadlo.length) {
   }
 }
 
+/* Dřív než se vypíše výsledek: nechaly zkoušky strom, jak ho našly? */
+const stromPo = otiskStromu();
+const spinave = [...stromPo.entries()]
+  .filter(([f, t]) => !stromPred.has(f) || stromPred.get(f) !== t)
+  .map(([f]) => f)
+  .concat([...stromPred.keys()].filter((f) => !stromPo.has(f)).map((f) => f + ' (smazán)'));
+
 const padlo = vysledky.filter((v) => v.kod !== 0);
 const preskocene = vysledky.filter((v) => v.kod === 0 && v.preskoceno);
 console.log(`\nRychlá sada: ${vysledky.length - padlo.length}/${vysledky.length} prošlo`
@@ -151,6 +193,15 @@ if (kolize.length) {
   console.log(`Kolize nad společným stromem (paralelně padlo, samo prošlo): ${kolize.join(', ')}`
     + ' — nejde o vadu webu; v CI tyhle zkoušky běží jedna po druhé.');
 }
+if (spinave.length) {
+  console.log(`\nZkoušky po sobě nechaly změněný strom (${spinave.length}):`
+    + ` ${spinave.slice(0, 6).join(', ')}${spinave.length > 6 ? ' a další' : ''}`);
+  console.log('::error::Rychlá sada: některá zkouška si sahá na živý adresář místo na kopii'
+    + ' (soubory mají nový čas změny, i když obsah může být stejný).'
+    + ' To se projeví jako pád JINÉ zkoušky, která zrovna čte přepisovaný soubor —'
+    + ' viz docs/optimalizace.md, oddíl 150. Změněné: ' + spinave.slice(0, 6).join(', '));
+}
+
 if (padlo.length) {
   for (const v of padlo) {
     console.log(`\n--- ${v.soubor} ---`);
@@ -161,5 +212,6 @@ if (padlo.length) {
     + padlo.map((v) => v.soubor.replace('scripts/', '')).join(', '));
   process.exit(1);
 }
+if (spinave.length) process.exit(1);
 
 }
