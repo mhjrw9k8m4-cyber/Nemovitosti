@@ -24,11 +24,14 @@
 // Chyba proběhne uprostřed dlouhého výpisu a SQL Editor jede dál, takže
 // si jí nikdo nevšimne. Proto tenhle test: skript se pustí doopravdy
 // a nesmí ohlásit ŽÁDNOU chybu, kromě těch, které patří jen Supabase.
-import { execFileSync, execSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* PŘÍPRAVA DATABÁZE JE V JEDNOM MÍSTĚ pro tenhle test i pro
+   scripts/mericka-databaze.mjs a scripts/test-sql-vykon.mjs. Dřív ji
+   měl tenhle soubor vlastní — a dvě kopie téhle přípravy se rozejdou:
+   zkouška by pak hlídala jiné prostředí, než ve kterém se měří. */
+import { spustPostgres, podstrcSupabase, najdiPg } from './zkouska-postgres.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 let ok = 0, chyb = 0;
@@ -43,16 +46,7 @@ function pravda(popis, vyslo, proc) {
    jsou rozdíl prostředí. Všechno ostatní vada je. */
 const JEN_SUPABASE = /schema "storage" does not exist|relation "storage\.[a-z_]+" does not exist/;
 
-function najdiPg() {
-  for (const v of ['16', '15', '14', '17']) {
-    const bin = `/usr/lib/postgresql/${v}/bin`;
-    if (existsSync(path.join(bin, 'initdb'))) return bin;
-  }
-  return null;
-}
-
-const bin = najdiPg();
-if (!bin) {
+if (!najdiPg()) {
   console.log('\nZaložení databáze na čistém PostgreSQL');
   console.log('  ⚠ PostgreSQL tu není — test se přeskakuje.');
   /* A V CI SE NEPŘESKAKUJE. Instalace balíčku ve workflow končí
@@ -70,87 +64,10 @@ if (!bin) {
   process.exit(0);
 }
 
-const zaklad = mkdtempSync(path.join('/var/tmp', 'pk-sql-'));
-const data = path.join(zaklad, 'data');
-let bezi = false;
+const pg = spustPostgres('zkouska');
+const { psql, psqlVse, zavri } = pg;
 try {
-  /* PostgreSQL odmítá běžet pod rootem, a v CI i v sandboxu se běžně
-     jede jako root. Pustí se proto pod uživatelem `postgres`, kterého
-     balíček zakládá. */
-  const jsemRoot = (() => { try { return process.getuid() === 0; } catch (e) { return false; } })();
-  const jako = (cmd) => jsemRoot ? `su postgres -c ${JSON.stringify(cmd)}` : cmd;
-  if (jsemRoot) execSync(`chown -R postgres ${zaklad}`);
-  execSync(jako(`${bin}/initdb -D ${data} -U pg --auth=trust`), { stdio: 'ignore' });
-  execSync(jako(`${bin}/pg_ctl -D ${data} -o "-k ${zaklad} -h ''" -l ${zaklad}/log start`), { stdio: 'ignore' });
-  bezi = true;
-  execSync('sleep 2');
-
-  /* POZOR: psql píše chyby na STDERR, a bez -v ON_ERROR_STOP končí
-     s návratovým kódem 0. Kdo čte jen stdout, nevidí ani jednu chybu
-     a kontrola „projde bez chyb" pak nemůže selhat nikdy — přesně to se
-     stalo první verzi tohohle testu. Proto se oba proudy slévají. */
-  const psql = (args, vstup) => execFileSync('psql', ['-h', zaklad, '-U', 'pg', ...args],
-    { input: vstup, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-  const psqlVse = (args) => {
-    const r = spawnSync('psql', ['-h', zaklad, '-U', 'pg', ...args], { encoding: 'utf8' });
-    return String(r.stdout || '') + String(r.stderr || '');
-  };
-
-  psql(['-d', 'postgres', '-q', '-c', 'create database zkouska']);
-  /* Co na Supabase existuje samo od sebe a na holém PostgreSQL ne:
-     schéma `auth` s funkcí uid(), rozšíření pgcrypto a role, kterým se
-     přidělují práva. Bez nich by test hlásil chyby prostředí a hlásil
-     by je pořád — tedy by neřekl nic o skriptu samotném. */
-  psql(['-d', 'zkouska', '-q'], `
-    create schema if not exists auth;
-    /* Na Supabase je auth.uid() přihlášený člověk a auth.users tabulka
-       účtů. Tady se obojí podstrčí tak, aby se dal uživatel PŘEPÍNAT —
-       jinak by se průchod novým účtem nedal zahrát. */
-    /* Sloupec email tu musí být taky: rozesílač upozornění
-       (hlidani_k_odeslani v supabase/hlidani-mailem.sql) z auth.users
-       čte adresu, na kterou se píše. Bez něj hlásil tenhle test chybu
-       prostředí, ne skriptu — a protože se chyba tvářila jako vada
-       migrace, dala se snadno „opravit" tím, že by se funkce přestala
-       na adresu ptát. Na Supabase ten sloupec je. */
-    create table if not exists auth.users (id uuid primary key, email text,
-      email_confirmed_at timestamptz);
-    alter table auth.users add column if not exists email text;
-    create or replace function auth.uid() returns uuid language sql stable as $$
-      select nullif(current_setting('pk.uid', true), '')::uuid $$;
-    create extension if not exists pgcrypto;
-    /* A SCHÉMA „storage" (úložiště fotek). Na Supabase ho zakládá
-       samo úložiště, na holém PostgreSQL neexistuje — a dokud se
-       nepodstrčilo, PRÁVA ÚLOŽIŠTĚ SE TESTEM NIKDY NEPROHNALA:
-       tři politiky nad storage.objects padaly na „schema does not
-       exist" a ta chyba se schválně promíjela jako rozdíl prostředí
-       (JEN_SUPABASE výš). Stačí na to tolik, kolik 00-vse.sql
-       opravdu používá: dvě tabulky, vlastník a foldername().
-       Pozor na foldername: na Supabase vrací cestu BEZ jména
-       souboru, takže u „<uid>/a.jpg" je [1] to uid. Tady se to
-       napodobuje stejně, jinak by zkouška měřila jinou funkci, než
-       jaká poběží doopravdy. */
-    create schema if not exists storage;
-    create table if not exists storage.buckets (
-      id text primary key, name text, public boolean,
-      file_size_limit bigint, allowed_mime_types text[]);
-    create table if not exists storage.objects (
-      id uuid primary key default gen_random_uuid(),
-      bucket_id text references storage.buckets(id),
-      name text, owner uuid, created_at timestamptz not null default now());
-    alter table storage.objects enable row level security;
-    create or replace function storage.foldername(name text) returns text[]
-      language sql immutable as $fn$
-        select (string_to_array(name, '/'))[1:greatest(array_length(string_to_array(name, '/'), 1) - 1, 0)]
-      $fn$;
-    do $do$ begin
-      if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon; end if;
-      if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;
-      if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role; end if;
-    end $do$;
-    grant usage on schema storage to anon, authenticated, service_role;
-    grant select, insert, delete on storage.objects to anon, authenticated, service_role;
-    grant select on storage.buckets to anon, authenticated, service_role;
-  `);
+  podstrcSupabase(psql, 'zkouska');
 
   const vystup = psqlVse(['-d', 'zkouska', '-f', path.join(ROOT, 'supabase', '00-vse.sql')]);
   const chyby = vystup.split('\n').filter((r) => /ERROR:/.test(r))
@@ -894,8 +811,7 @@ try {
        delete from listings where place = 'Fotkova';`]);
   }
 } finally {
-  try { if (bezi) execSync(`su postgres -c ${JSON.stringify(`${bin}/pg_ctl -D ${data} stop -m immediate`)}`, { stdio: 'ignore' }); } catch (e) {}
-  try { rmSync(zaklad, { recursive: true, force: true }); } catch (e) {}
+  zavri();
 }
 
 console.log('\nZaložení databáze na čistém PostgreSQL');

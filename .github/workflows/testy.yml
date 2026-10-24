@@ -244,6 +244,18 @@ jobs:
           sudo apt-get install -y --no-install-recommends postgresql >/dev/null 2>&1 || true
           node scripts/test-sql-cista.mjs
 
+      # A nestačí, že se databáze založí — musí i snést objem. Měřeno
+      # scripts/mericka-databaze.mjs: jedna noční úloha trvala 23,8 s,
+      # protože se u každé fotky ptala napříč všemi inzeráty. Tahle
+      # zkouška vyrobí vedle živé podoby tu pomalou a porovná POMĚREM,
+      # takže na rychlejším ani pomalejším stroji nepláče zbytečně.
+      # Běží ve stejném kroku jako zkouška výš, aby se PostgreSQL
+      # instaloval jen jednou.
+      - name: Databáze snese objem
+        env:
+          PK_SQL_VYZADOVAN: '1'
+        run: node scripts/test-sql-vykon.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs

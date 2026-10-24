@@ -110,20 +110,47 @@ end $do$;
 -- Smí ji spustit JEN service_role — vypisuje jména souborů napříč
 -- všemi účty.
 -- ---------------------------------------------------------------------
+-- JAK SE HLEDÁ, A PROČ NE PŘÍMO. První verze se u KAŽDÉ fotky ptala
+-- „stojí moje jméno někde v `photos` některého inzerátu?" — tedy pro
+-- každou fotku projela všechny inzeráty. Změřeno na 5 000 fotkách
+-- a 20 000 inzerátech: 23,8 SEKUNDY, a roste to součinem obojího
+-- (desetina dat = 0,26 s, tedy ×92 za ×10 dat).
+-- Teď se jednou vybalí množina odkazovaných jmen a fotky se proti ní
+-- porovnají jedním průchodem: 0,23 s, tedy stokrát méně. Měřidlem je
+-- scripts/mericka-databaze.mjs, mez hlídá scripts/test-sql-vykon.mjs.
+--
+-- JMÉNO Z ADRESY. V `photos` jsou celé adresy
+-- (`https://…/object/public/listing-photos/<uid>/<soubor>`), v úložišti
+-- stojí jméno `<uid>/<soubor>` — tedy poslední dva úseky cesty. Bere se
+-- to odzadu, ne odpředu: tvar předku se může změnit (jiná doména, cesta
+-- na podepsanou adresu), poslední dva úseky jsou pořád totéž.
+--
+-- DVĚ POJISTKY, PROTOŽE CHYBA TADY MAŽE LIDEM FOTKY. Kdyby se tvar
+-- adresy změnil tak, že se jméno nevyloupne, vyšly by jako osiřelé
+-- VŠECHNY fotky — a volající je maže. Proto:
+--   1) nevyloupne-li se jméno z jediné adresy, funkce nevydá NIC
+--      (radši mlčí, než aby ukázala na živé fotky),
+--   2) vypisují se jen jména, která se v adrese píšou sama sebou;
+--      jméno s mezerou nebo diakritikou je v adrese zakódované
+--      (`%20`) a porovnání by ho minulo, takže se takového jména
+--      funkce nedotkne vůbec. Dnešní jména jsou
+--      `<uid>/<čas>-<poradi>-<náhoda>.jpg`, ale jméno smí poslat
+--      i service klíč, a pak už to platit nemusí.
+-- Obojí je zahrané sabotáží v scripts/test-sql-vykon.mjs.
 create or replace function osirele_fotky(p_starsi_nez_hodin integer default 24,
                                          p_limit integer default 500)
 returns table(name text)
 language sql security definer set search_path = public stable as $$
+  with odkazane as (
+    select distinct substring(split_part(p.url, '?', 1) from '([^/]+/[^/]+)$') as name
+      from listings l, jsonb_array_elements_text(coalesce(l.photos, '[]'::jsonb)) as p(url)
+  )
   select o.name from storage.objects o
   where o.bucket_id = 'listing-photos'
     and o.created_at < now() - make_interval(hours => greatest(coalesce(p_starsi_nez_hodin, 24), 1))
-    /* `strpos`, ne `like`: ve jménu souboru by `%` nebo `_` byly
-       zástupné znaky a hledalo by se něco jiného, než co tam stojí.
-       Dnešní jména je neobsahují (`<uid>/<čas>-<poradi>-<náhoda>.jpg`),
-       ale jméno smí poslat i service klíč, a pak už to platit nemusí. */
-    and not exists (
-      select 1 from listings l where strpos(l.photos::text, o.name) > 0
-    )
+    and o.name ~ '^[A-Za-z0-9/._~-]+$'
+    and not exists (select 1 from odkazane where name is null)
+    and not exists (select 1 from odkazane r where r.name = o.name)
   order by o.created_at
   limit greatest(least(coalesce(p_limit, 500), 1000), 1);
 $$;

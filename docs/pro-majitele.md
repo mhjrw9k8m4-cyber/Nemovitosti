@@ -118,6 +118,22 @@ mapě jich je hodně.
 
 ---
 
+## 7c. Rozhodnutí na potom: strop noční rozesílky
+
+Noční úloha si stahuje **všechna** zralá hledání (naměřeno 4 000 řádků
+při 20 000 uložených hledáních) a pošle z nich nejvýš dvě stě e-mailů;
+zbytek odpovědi zahodí. Stáhnout jen tolik, kolik se stihne, vypadá
+zřejmě — ale rozbilo by to spravedlnost: **komu hledání nic nenajde,
+tomu se čas odeslání nikdy nepřepíše**, takže by v okně stropu seděl
+každou noc znovu a lidé za ním by se na řadu nedostali. Proto se to
+NEUDĚLALO (podrobně v `docs/optimalizace.md`, část 138).
+
+Udělat se to dá, ale musí k tomu přijít záznam „kdy se tohle hledání
+naposled **zkoušelo**" (dnes se píše jen „kdy se poslalo"). To je práce
+na hodinu a nikomu nic nerozbije — jen do ní nemá smysl jít, dokud
+rozesílání vůbec neběží (bod 3). **Stačí říct slovo.** Do té doby je
+cena jedna zbytečně velká odpověď za noc.
+
 ## 7b. Co vadou NENÍ (ať se to nespravuje podruhé)
 
 Při kritice 23. 10. jsem si dvě věci napsal jako vadu a nejsou:

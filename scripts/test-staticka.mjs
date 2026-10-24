@@ -14,6 +14,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const JS = path.join(ROOT, 'js');
@@ -275,16 +276,33 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
  * u skriptů, které si nějaká zkouška opravdu importuje — stráž sama
  * o sobě povinná není.
  *
- * A JEN U TĚCH, KTERÉ NĚCO ZAPISUJÍ. Napoprvé tu stálo „chybí stráž"
- * na pěti dvojicích, a byly to samé knihovny bez vlastní práce
- * (okres-podle-gps.mjs, json-do-stranky.mjs, mail-sklad.mjs — jen
- * exporty, nic se při importu nestane). Takové hlášení by se naučilo
- * přeskakovat a s ním i to pravé. Nebezpečný je modul, který při
- * importu SÁHNE NA DISK; pozná se podle writeFileSync/mkdirSync.
+ * A NEHÁDÁ SE TO ZE ZDROJE, PUSTÍ SE TO. Napoprvé tu stálo „chybí
+ * stráž" u každého modulu, v němž se kdekoli vyskytlo `writeFileSync`.
+ * To hlásilo pět knihoven bez vlastní práce (okres-podle-gps.mjs,
+ * json-do-stranky.mjs, mail-sklad.mjs) a pak i zkouska-postgres.mjs,
+ * který dočasnou databázi zakládá a maže UVNITŘ vyvážených funkcí —
+ * tedy až když ho někdo zavolá. Hlášení, které se naučíte přeskakovat,
+ * přeskočíte i když je pravdivé.
+ *
+ * Vyškrtnout těla funkcí a hledat jen ve zbytku vypadalo jako oprava,
+ * ale bylo to HORŠÍ: ta původní vada (generátor řezů s `await spust()`
+ * na konci) nemá na nejvyšší úrovni žádné `writeFileSync`, jen volání
+ * funkce, která zapisuje — a takhle zbystřený hlídač by ji přestal
+ * vidět. Zbystření, které si koupí novou slepotu, není zbystření.
+ *
+ * Měří se proto doopravdy: modul se naimportuje v NOVÉM PROCESU, kde
+ * má Node zakázaný zápis na disk (`--permission --allow-fs-read=*`).
+ * Když při importu na disk sáhne, import skončí ERR_ACCESS_DENIED —
+ * ať je ten zápis napsaný přímo, nebo schovaný za třemi funkcemi.
+ * Formální stráž, která nic nehlídá, tomuhle nevyhoví.
+ *
+ * Pouštějí se jen moduly, které zápis někde v souboru vůbec mají;
+ * ostatní nemají čím padnout a stovky procesů by zkoušku jen zdržely.
  */
 {
   const testy = fs.readdirSync('scripts').filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f));
-  const bezStraze = [];
+  const sahaji = [];
+  const kdoImportuje = new Map();          // modul → zkoušky, které si ho berou
   let dvojic = 0;
   for (const t of testy) {
     const zdroj = fs.readFileSync(path.join('scripts', t), 'utf8');
@@ -292,16 +310,39 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
       const cil = m[1];
       if (/^test-/.test(cil) || !fs.existsSync(path.join('scripts', cil))) continue;
       dvojic++;
-      const kod = fs.readFileSync(path.join('scripts', cil), 'utf8');
-      const zapisuje = /\b(?:writeFileSync|mkdirSync|rmSync|unlinkSync)\s*\(/.test(kod);
-      if (zapisuje && !/import\.meta\.url === /.test(kod)) bezStraze.push(`${t} → ${cil}`);
+      if (!kdoImportuje.has(cil)) kdoImportuje.set(cil, []);
+      kdoImportuje.get(cil).push(t);
     }
   }
-  console.log(`Importy mezi skripty: ${dvojic} dvojic zkouška → skript`
-    + (bezStraze.length ? '' : ', žádný se importem nespustí.'));
+  let pustenych = 0;
+  for (const [cil, odkud] of kdoImportuje) {
+    const kod = fs.readFileSync(path.join('scripts', cil), 'utf8');
+    /* PŘEDFILTR PODLE „node:fs", NE PODLE JMEN FUNKCÍ. Napoprvé tu
+       stál seznam jmen (writeFileSync, mkdirSync…) — a ten se dá
+       obejít přejmenováním při importu (`writeFileSync as w`), což
+       jedna sabotáž ukázala. Kdo na disk nesahá vůbec, nemá čím
+       padnout; z 35 modulů, které si zkoušky berou, se tím pouští 21.
+       Celé moduly bez předfiltru pouštět nejde: mezi nimi jsou
+       i takové, jejichž import sám trvá dlouho. */
+    if (!/node:fs/.test(kod)) continue;
+    pustenych++;
+    const cesta = path.resolve('scripts', cil);
+    const r = spawnSync(process.execPath,
+      ['--permission', '--allow-fs-read=*', '-e',
+        `import(${JSON.stringify(cesta)}).then(() => {}, (e) => {`
+        + ` if (e && e.code === 'ERR_ACCESS_DENIED') console.log('SAHL_NA_DISK'); });`],
+      { encoding: 'utf8', timeout: 60000 });
+    if (/SAHL_NA_DISK/.test(String(r.stdout || '') + String(r.stderr || ''))) {
+      sahaji.push(`${odkud.join(', ')} → ${cil}`);
+    }
+  }
+  const bezStraze = sahaji;
+  console.log(`Importy mezi skripty: ${dvojic} dvojic zkouška → skript,`
+    + ` ${pustenych} modulů sahajících na disk zkoušeno importem`
+    + (bezStraze.length ? '' : ' — žádný se importem nespustí.'));
   if (bezStraze.length) {
-    console.error('::error::Zkouška importuje skript, který se importem SPUSTÍ '
-      + '(chybí stráž if (import.meta.url === …)): ' + bezStraze.join(', '));
+    console.error('::error::Zkouška importuje skript, který při importu SÁHNE NA DISK '
+      + '(práce modulu patří pod stráž if (import.meta.url === …)): ' + bezStraze.join(', '));
     process.exit(1);
   }
 }

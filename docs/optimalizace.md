@@ -9258,3 +9258,143 @@ spadlo na „graf se nenašel" a nebyla to vada grafu. Adresa se teď
 vybírá **měřením**: bere se první nabídka, které týž model verdikt dá,
 a kdyby žádná nebyla, zkouška to řekne zvláštní kontrolou (16 → 26
 kontrol, protože se teď graf opravdu měří).
+
+## 137. Noční úklid fotek trval 24 sekund a rostl součinem tabulek *24. 10.*
+
+Databáze se dosud měřila jen na tom, co v ní je — a dnes v ní nic není.
+Proto vzniklo **scripts/mericka-databaze.mjs**: založí prázdný
+PostgreSQL, pustí do něj celý `supabase/00-vse.sql`, nasype objem, jaký
+web unese za rok slušného provozu (2 000 účtů, 20 000 inzerátů,
+60 000 zpráv, 50 000 poznámek, 50 000 uložených, 20 000 hledání,
+10 000 přihlášek, 200 000 řádků návštěvnosti, 5 000 fotek) a změří
+**každou cestu, kterou web opravdu volá** — čas i plán.
+
+Výsledek je dobrá zpráva se dvěma dírami. Všechno, co dělá přihlášený
+člověk, je pod deseti milisekundami:
+
+| cesta | čas |
+|---|---|
+| `moje_poznamky()` | 1,3 ms |
+| `moje_ulozene()` | 1,3 ms |
+| `my_searches()` | 1,2 ms |
+| `my_listings()` | 2,2 ms |
+| `my_threads()` | 4,1 ms |
+| `unread_count()` | 2,8 ms |
+| `poznamka_uloz()` | 2,8 ms |
+| `my_photo_space()` | 5,7 ms |
+
+A dvě cesty, které rostly ošklivě:
+
+| cesta | před | po | poměr |
+|---|---|---|---|
+| `osirele_fotky(24, 500)` | **23 785 ms** | 238 ms | 100× |
+| `public_listings()` | 99,1 ms | 37,5 ms | 2,6× |
+
+**Osiřelé fotky: součin tabulek, a napsal jsem ho já včera.** Funkce se
+u KAŽDÉ fotky ptala, jestli její jméno stojí někde v `photos` některého
+inzerátu — tedy 5 000 fotek × 20 000 inzerátů. Na desetině dat to bylo
+257 ms, na celých 23 785: **×92 za ×10 dat**, tedy kvadraticky. Teď se
+jednou vybalí množina odkazovaných jmen a fotky se proti ní porovnají
+jedním průchodem.
+
+**A dvě pojistky, protože chyba tady nemaže řádky, ale lidem fotky.**
+Volající ta jména maže přes Storage API. Kdyby se tvar adresy fotky
+změnil tak, že se z ní jméno nevyloupne, vyšly by jako osiřelé
+**všechny**. Takže: nevyloupne-li se jméno z jediné adresy, funkce
+nevydá nic; a jména, která se v adrese kódují (`moje foto.jpg` →
+`moje%20foto.jpg`), se nevypisují vůbec, protože porovnání by je
+minulo. Obojí je zahrané sabotáží.
+
+**Veřejný seznam: funkce v podmínce se nedá vložit do dotazu.**
+`public_listings()` filtruje přes `listing_je_verejny(status,
+public_at)` — jedno místo, kde je napsané, co je na mapě vidět. Jenže
+ta funkce měla `set search_path = public`, a **funkce s SET klauzulí se
+nedá vložit do dotazu**: PostgreSQL ji pak počítá řádek po řádku.
+Rozpad 20 000 inzerátů: samotné volání **42 ms ze 49**, zbytek
+7 ms. Po vynechání SET klauzule je podmínka v plánu rozepsaná na
+operátory. Pravidlo zůstalo na jednom místě — nic se neopisovalo.
+
+Vynechat SET je bezpečné **jen u téhle funkce**: není `security
+definer` (běží s právy volajícího, takže není co získat) a v těle
+nesahá na žádnou tabulku — jen operátory a `now()`, a ty se hledají
+v `pg_catalog`, které je v cestě vždy první. U `security definer`
+funkcí SET zůstává.
+
+**Částečný index vyšel jako slepá ulička, a je to zapsané.** Zkoušel se
+`on listings(created_at desc) where status in ('approved','pending')` —
+přesně to, co veřejný seznam filtruje a čím řadí. Plánovač ho nezvolil
+**ani jednou**: na 20 000 inzerátech 21,8 ms s ním a 26,6 bez (což je
+šum mezi dvěma měřeními), na 60 000 76,2 proti 92,2, počitadlo použití
+nula. Veřejných je ~78 % inzerátů a tolik řádků se vyplatí přečíst
+celou tabulkou. Index se proto nepřidal: nepoužitý index zdržuje každý
+zápis.
+
+**Hlídá to scripts/test-sql-vykon.mjs, a hlídá POMĚREM.** Pomalá podoba
+obou funkcí se vyrobí v téže databázi vedle živé a porovná se s ní —
+pevná mez v milisekundách by na pomalejším stroji plakala zbytečně.
+Před rychlostí se vždy porovná ODPOVĚĎ: rychlejší funkce, která
+odpovídá jinak, není zlepšení. Devatenáct kontrol, všech pět sabotáží
+(vrácený SET, vrácený součin tabulek, obě odebrané pojistky, odebrané
+pořadí u pushe) zkouška chytí.
+
+## 138. Push rozesílač neřadil vůbec — a pořadí tam rozhoduje *24. 10.*
+
+Rozesílač upozornění do telefonu se po `PK_PUSH_LIMIT` (výchozí 200)
+zastaví a zbytek nechá na další běh. Jenže `hlidani_k_odeslani_push()`
+neměla **žádné `order by`** — tedy která hledání se v těch dvou stech
+objeví, rozhodovala databáze podle toho, jak se jí to zrovna hodilo.
+Nikoho to nevyřadilo natrvalo (komu se pošle, ten na dalších 20 hodin
+z výpisu vypadne), ale běh se nedal zopakovat ani vysvětlit — a u pošty
+to tak nikdy nebylo, ta řadí od toho, kdo čeká nejdéle. Teď platí
+stejné pravidlo na obou stranách.
+
+**A strop na lidi se zkoušel a NEUDĚLAL — byla by to vada.** Rozesílač
+si stahuje všechna zralá hledání (naměřeno 4 000 řádků) a použije z nich
+nejvýš dvě stě lidí; napsat `p_lidi` do SQL a stáhnout jen tolik, kolik
+se stihne, vypadalo jako zřejmé zlepšení (47,5 → 23,8 ms). Není:
+**komu hledání nic nenajde, tomu se čas odeslání nikdy nepřepíše**,
+takže by v okně stropu seděl každou noc znovu a lidi za ním by se na
+řadu nedostali nikdy. Dnes to nevadí, protože se strop uplatní až na
+počtu opravdu odeslaných zpráv.
+
+Udělat se to dá, ale ne tímhle pořadím: nejdřív musí vzniknout záznam
+„kdy se tohle hledání naposled ZKOUŠELO" (ne „kdy se poslalo"), a strop
+se pak řadí podle něj. Do té doby je jediná cena jedna odpověď navíc
+v noční úloze, a to je méně než tichá nespravedlnost. Pro majitele je
+to zapsané jako bod 7c v `docs/pro-majitele.md`.
+
+## 139. Hlídač „zkouška si nesmí spustit to, co zkouší" měl dvě slepá místa *24. 10.*
+
+Hlídač v `scripts/test-staticka.mjs` hlásil novou knihovnu
+`zkouska-postgres.mjs` (jedno místo, kde se zakládá zkušební
+PostgreSQL pro tři skripty) jako nebezpečnou: hledal `writeFileSync`
+**kdekoli v souboru**, a ta knihovna dočasnou databázi opravdu zakládá
+a maže — jenže uvnitř vyvážených funkcí, tedy až když ji někdo zavolá.
+Při importu se nestane nic.
+
+**První oprava byla horší než vada.** Vyškrtnout z kódu těla funkcí
+a hledat jen ve zbytku zní správně — a vypadalo to, že to funguje:
+falešné hlášení zmizelo. Jenže ta vada, pro kterou hlídač vznikl
+(generátor řezů s `await spust()` na konci, který si zkouška importem
+spustila a pak kontrolovala svůj vlastní výsledek), **na nejvyšší
+úrovni žádné `writeFileSync` nemá** — jen volání funkce, která
+zapisuje. Zbystřený hlídač ji přestal vidět. Ukázala to až sabotáž:
+po vrácení té původní vady zůstal hlídač zticha.
+
+**Druhá oprava nehádá ze zdroje, ale pustí to.** Modul se naimportuje
+v novém procesu, kde má Node zakázaný zápis na disk
+(`node --permission --allow-fs-read='*'`). Sáhne-li při importu na
+disk, import skončí `ERR_ACCESS_DENIED` — ať je ten zápis napsaný
+přímo, nebo schovaný za třemi funkcemi. Tomu se nedá vyhovět formální
+stráží, která nic nehlídá.
+
+**Předfiltr taky padl na sabotáž.** Nejdřív se pouštěly jen moduly,
+v nichž stálo jméno zapisující funkce — a `import { writeFileSync as w }`
+ten seznam obejde. Filtr je teď na `node:fs`: z 35 modulů, které si
+zkoušky berou, se pouští 21. Bez filtru to nejde, mezi moduly jsou
+i takové, jejichž samotný import trvá dlouho.
+
+Výsledek: hlídač chytí obě podoby vady (zápis na nejvyšší úrovni
+i volání funkce, která zapisuje), jméno viníka vypíše přímo, a na
+knihovnu bez vlastní práce už nesahá. Zkouška se tím prodloužila
+o 12 sekund.

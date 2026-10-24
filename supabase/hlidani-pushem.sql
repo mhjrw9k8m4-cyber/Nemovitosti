@@ -158,6 +158,14 @@ language sql security definer set search_path = public as $$
    where s.pushem = true
      and (s.push_odeslano_at is null
           or s.push_odeslano_at < now() - make_interval(hours => greatest(coalesce(p_odstup_hodin,20),1)))
+   -- POŘADÍ TU DŘÍV NEBYLO VŮBEC. Pošta řadí od toho, kdo čeká nejdél,
+   -- push nijak — dvě stejná volání tak mohla vydat řádky v jiném
+   -- pořadí a rozesílač, který se po PK_PUSH_LIMIT zastaví, bral
+   -- pokaždé jinou skupinu. Nikoho to nevyřadilo natrvalo (komu se
+   -- pošle, ten na dalších 20 hodin z výpisu vypadne), ale běh se
+   -- nedal zopakovat ani vysvětlit. Teď platí stejné pravidlo jako
+   -- u pošty: nejdřív ten, kdo čeká nejdéle.
+   order by s.push_odeslano_at nulls first, s.created_at
 $$;
 revoke all on function hlidani_k_odeslani_push(integer) from public, anon, authenticated;
 grant execute on function hlidani_k_odeslani_push(integer) to service_role;

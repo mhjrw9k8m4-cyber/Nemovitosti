@@ -42,11 +42,33 @@ alter table listings add column if not exists public_at timestamptz;
 -- napsané dvakrát, rozejde se to: inzerát by se zveřejnil, ale účet by
 -- se pořád tvářil jako nový a čekal by pokaždé znovu.
 -- 'rejected' nevydá nikdy, ani po čase.
+-- PROČ TADY NENÍ „set search_path". Funkce s SET klauzulí se nedá
+-- VLOŽIT do dotazu, který ji volá: PostgreSQL ji pak počítá řádek po
+-- řádku jako volání funkce a nemůže na ni použít index. Měřeno na
+-- 20 000 inzerátech: samo to volání stálo 42 ms z 49 ms celého
+-- veřejného seznamu, a ten se načítá každému, kdo otevře mapu.
+-- Vynechat SET je tady bezpečné, a jen tady: funkce NENÍ „security
+-- definer" (běží s právy toho, kdo ji volá, takže není co získat) a
+-- v těle se nesahá na žádnou tabulku ani vlastní funkci — jen
+-- operátory a now(), a ty se hledají ve „pg_catalog", které je
+-- v cestě vždy první a nedá se předběhnout. U „security definer"
+-- funkcí v tomhle balíku SET zůstává a zůstat musí.
 create or replace function listing_je_verejny(p_status text, p_public_at timestamptz)
-returns boolean language sql stable set search_path = public as $$
+returns boolean language sql stable as $$
   select p_status = 'approved'
       or (p_status = 'pending' and p_public_at is not null and p_public_at <= now()); $$;
 grant execute on function listing_je_verejny(text, timestamptz) to anon, authenticated;
+
+-- INDEX TU NENÍ, A JE TO VÝSLEDEK MĚŘENÍ, NE OPOMENUTÍ. Zkoušel se
+-- částečný index `on listings(created_at desc) where status in
+-- ('approved','pending')` — tedy přesně to, co veřejný seznam filtruje
+-- a čím řadí. Plánovač ho nezvolil ANI JEDNOU: na 20 000 inzerátech
+-- (21,8 ms s ním, 26,6 bez) ani na 60 000 (76,2 proti 92,2) — rozdíl
+-- je šum mezi dvěma měřeními, počitadlo použití zůstalo na nule.
+-- Veřejných je ~78 % inzerátů, a tolik řádků se vyplatí přečíst celou
+-- tabulkou. Index, který se nepoužije, není zdarma: zdržuje každý
+-- zápis a zabírá místo. Celé zrychlení je ve vynechaném `set
+-- search_path` výš. Viz docs/optimalizace.md, část 137.
 
 -- ---------------------------------------------------------------------
 -- 1) Zakládání inzerátu

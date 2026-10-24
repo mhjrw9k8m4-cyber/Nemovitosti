@@ -947,6 +947,14 @@ language sql security definer set search_path = public as $$
    where s.pushem = true
      and (s.push_odeslano_at is null
           or s.push_odeslano_at < now() - make_interval(hours => greatest(coalesce(p_odstup_hodin,20),1)))
+   -- POŘADÍ TU DŘÍV NEBYLO VŮBEC. Pošta řadí od toho, kdo čeká nejdél,
+   -- push nijak — dvě stejná volání tak mohla vydat řádky v jiném
+   -- pořadí a rozesílač, který se po PK_PUSH_LIMIT zastaví, bral
+   -- pokaždé jinou skupinu. Nikoho to nevyřadilo natrvalo (komu se
+   -- pošle, ten na dalších 20 hodin z výpisu vypadne), ale běh se
+   -- nedal zopakovat ani vysvětlit. Teď platí stejné pravidlo jako
+   -- u pošty: nejdřív ten, kdo čeká nejdéle.
+   order by s.push_odeslano_at nulls first, s.created_at
 $$;
 revoke all on function hlidani_k_odeslani_push(integer) from public, anon, authenticated;
 grant execute on function hlidani_k_odeslani_push(integer) to service_role;
@@ -1968,20 +1976,47 @@ end $do$;
 -- Smí ji spustit JEN service_role — vypisuje jména souborů napříč
 -- všemi účty.
 -- ---------------------------------------------------------------------
+-- JAK SE HLEDÁ, A PROČ NE PŘÍMO. První verze se u KAŽDÉ fotky ptala
+-- „stojí moje jméno někde v `photos` některého inzerátu?" — tedy pro
+-- každou fotku projela všechny inzeráty. Změřeno na 5 000 fotkách
+-- a 20 000 inzerátech: 23,8 SEKUNDY, a roste to součinem obojího
+-- (desetina dat = 0,26 s, tedy ×92 za ×10 dat).
+-- Teď se jednou vybalí množina odkazovaných jmen a fotky se proti ní
+-- porovnají jedním průchodem: 0,23 s, tedy stokrát méně. Měřidlem je
+-- scripts/mericka-databaze.mjs, mez hlídá scripts/test-sql-vykon.mjs.
+--
+-- JMÉNO Z ADRESY. V `photos` jsou celé adresy
+-- (`https://…/object/public/listing-photos/<uid>/<soubor>`), v úložišti
+-- stojí jméno `<uid>/<soubor>` — tedy poslední dva úseky cesty. Bere se
+-- to odzadu, ne odpředu: tvar předku se může změnit (jiná doména, cesta
+-- na podepsanou adresu), poslední dva úseky jsou pořád totéž.
+--
+-- DVĚ POJISTKY, PROTOŽE CHYBA TADY MAŽE LIDEM FOTKY. Kdyby se tvar
+-- adresy změnil tak, že se jméno nevyloupne, vyšly by jako osiřelé
+-- VŠECHNY fotky — a volající je maže. Proto:
+--   1) nevyloupne-li se jméno z jediné adresy, funkce nevydá NIC
+--      (radši mlčí, než aby ukázala na živé fotky),
+--   2) vypisují se jen jména, která se v adrese píšou sama sebou;
+--      jméno s mezerou nebo diakritikou je v adrese zakódované
+--      (`%20`) a porovnání by ho minulo, takže se takového jména
+--      funkce nedotkne vůbec. Dnešní jména jsou
+--      `<uid>/<čas>-<poradi>-<náhoda>.jpg`, ale jméno smí poslat
+--      i service klíč, a pak už to platit nemusí.
+-- Obojí je zahrané sabotáží v scripts/test-sql-vykon.mjs.
 create or replace function osirele_fotky(p_starsi_nez_hodin integer default 24,
                                          p_limit integer default 500)
 returns table(name text)
 language sql security definer set search_path = public stable as $$
+  with odkazane as (
+    select distinct substring(split_part(p.url, '?', 1) from '([^/]+/[^/]+)$') as name
+      from listings l, jsonb_array_elements_text(coalesce(l.photos, '[]'::jsonb)) as p(url)
+  )
   select o.name from storage.objects o
   where o.bucket_id = 'listing-photos'
     and o.created_at < now() - make_interval(hours => greatest(coalesce(p_starsi_nez_hodin, 24), 1))
-    /* `strpos`, ne `like`: ve jménu souboru by `%` nebo `_` byly
-       zástupné znaky a hledalo by se něco jiného, než co tam stojí.
-       Dnešní jména je neobsahují (`<uid>/<čas>-<poradi>-<náhoda>.jpg`),
-       ale jméno smí poslat i service klíč, a pak už to platit nemusí. */
-    and not exists (
-      select 1 from listings l where strpos(l.photos::text, o.name) > 0
-    )
+    and o.name ~ '^[A-Za-z0-9/._~-]+$'
+    and not exists (select 1 from odkazane where name is null)
+    and not exists (select 1 from odkazane r where r.name = o.name)
   order by o.created_at
   limit greatest(least(coalesce(p_limit, 500), 1000), 1);
 $$;
@@ -2224,11 +2259,33 @@ alter table listings add column if not exists public_at timestamptz;
 -- napsané dvakrát, rozejde se to: inzerát by se zveřejnil, ale účet by
 -- se pořád tvářil jako nový a čekal by pokaždé znovu.
 -- 'rejected' nevydá nikdy, ani po čase.
+-- PROČ TADY NENÍ „set search_path". Funkce s SET klauzulí se nedá
+-- VLOŽIT do dotazu, který ji volá: PostgreSQL ji pak počítá řádek po
+-- řádku jako volání funkce a nemůže na ni použít index. Měřeno na
+-- 20 000 inzerátech: samo to volání stálo 42 ms z 49 ms celého
+-- veřejného seznamu, a ten se načítá každému, kdo otevře mapu.
+-- Vynechat SET je tady bezpečné, a jen tady: funkce NENÍ „security
+-- definer" (běží s právy toho, kdo ji volá, takže není co získat) a
+-- v těle se nesahá na žádnou tabulku ani vlastní funkci — jen
+-- operátory a now(), a ty se hledají ve „pg_catalog", které je
+-- v cestě vždy první a nedá se předběhnout. U „security definer"
+-- funkcí v tomhle balíku SET zůstává a zůstat musí.
 create or replace function listing_je_verejny(p_status text, p_public_at timestamptz)
-returns boolean language sql stable set search_path = public as $$
+returns boolean language sql stable as $$
   select p_status = 'approved'
       or (p_status = 'pending' and p_public_at is not null and p_public_at <= now()); $$;
 grant execute on function listing_je_verejny(text, timestamptz) to anon, authenticated;
+
+-- INDEX TU NENÍ, A JE TO VÝSLEDEK MĚŘENÍ, NE OPOMENUTÍ. Zkoušel se
+-- částečný index `on listings(created_at desc) where status in
+-- ('approved','pending')` — tedy přesně to, co veřejný seznam filtruje
+-- a čím řadí. Plánovač ho nezvolil ANI JEDNOU: na 20 000 inzerátech
+-- (21,8 ms s ním, 26,6 bez) ani na 60 000 (76,2 proti 92,2) — rozdíl
+-- je šum mezi dvěma měřeními, počitadlo použití zůstalo na nule.
+-- Veřejných je ~78 % inzerátů, a tolik řádků se vyplatí přečíst celou
+-- tabulkou. Index, který se nepoužije, není zdarma: zdržuje každý
+-- zápis a zabírá místo. Celé zrychlení je ve vynechaném `set
+-- search_path` výš. Viz docs/optimalizace.md, část 137.
 
 -- ---------------------------------------------------------------------
 -- 1) Zakládání inzerátu
