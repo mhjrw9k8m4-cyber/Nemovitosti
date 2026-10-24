@@ -9876,3 +9876,77 @@ Dohromady 42 nových kontrol: 33 na hlásič a databázi (polovina v Node
 s podstrčeným oknem, polovina na opravdovém PostgreSQL — tam se zkouší,
 že hlášku s e-mailem odmítne sama databáze a že denní strop sepne),
 9 v prohlížeči. Čte se to příkazem `node scripts/chyby.mjs`.
+
+## 148. Sebeoprava: co umí stroj spočítat ze zdroje, ať si taky spraví *24. 10.*
+
+Nejčastější červená kontrola v tomhle repozitáři není vada webu, ale
+**rozchod**: někdo zasáhne do zdroje a zapomene pustit
+`node scripts/oprav.mjs`, takže odvozené soubory (stránky, razítka `?v=`,
+hashe CSP, sitemap, sloučené SQL, tabulka v roadmapě) nesedí se zdrojem.
+Jen 24. 10. se to stalo dvakrát — a oprava je přitom jediný příkaz,
+jehož výsledek je **daný**, ne odhadnutý. Takovou věc nemá řešit člověk.
+
+`.github/workflows/sebeoprava.yml` se pustí sama, když spadnou zkoušky,
+a zkusí přesně tohle. Rozhodování je ve `scripts/sebeoprava.mjs`
+oddělené od vykonání (čistá funkce `rozhodni`), aby se **každé pravidlo
+dalo vyzkoušet bez gitu, bez sítě a bez CI**.
+
+**Sedm pravidel, a ani jedno není navíc** — automat, který smí
+commitovat, je nebezpečný přesně tak, jak jsou slabá jeho pravidla:
+
+1. **Opravuje se jen to, co jde spočítat ze zdroje.** Výsledek je výstup
+   generátorů, nic se nehádá.
+2. **Každá oprava se dokazuje, než se nahraje.** Po opravě musí projít
+   celá rychlá sada; když neprojde, oprava jde do koše a místo ní jde
+   hlášení. Opravit a doufat není oprava.
+3. **Nikdy dvakrát za sebou.** Je-li poslední commit sám sebeoprava,
+   běh nedělá nic — jedna oprava na jeden lidský commit. Smyčka je tím
+   vyloučená, ne „nepravděpodobná"; druhá pojistka je ve workflow
+   (nespouští se po běhu, který založil robot).
+4. **Nikdy na ruční práci.** Smí se změnit jen to, co patří generátorům
+   (jeden seznam vzorů na pěti řádcích). Kdyby oprava sahala na `js/`,
+   `scripts/`, workflow nebo prózu v `docs/`, je to **nález na
+   generátorech**, ne důvod k commitu.
+5. **Jen na domácí větvi** — jméno se bere z prostředí, ne z kódu.
+6. **Vypínač je vždy k dispozici:** soubor `.github/SEBEOPRAVA-VYPNUTA`
+   zastaví všechno bez hledání v kódu.
+7. **Žádná tajná oprava.** Co se opravilo, stojí v commitu se značkou
+   `[sebeoprava]` a výčtem souborů; co se neopravilo a proč, se vypíše
+   jako `::warning::`, i když běh skončí úspěchem.
+
+**Co se vědomě NEDĚLÁ: automatické vracení (revert) cizího commitu.**
+Vrátit commit znamená rozhodnout, že je špatný celý — a to je soud, ne
+výpočet. Robotův datový commit, který rozsvítí červenou, bývá právě ten
+rozchod, a ten se spraví bez mazání čehokoli.
+
+**Aby se oprava mohla dokázat, musela vzniknout rychlá sada jedním
+příkazem** (`node scripts/zkousky.mjs`). Dosud se dala pustit jen po
+jedné ručně, nebo počkáním na CI. Seznam se v ní **nepíše ručně, čte se
+z `.github/workflows/testy.yml`** — ruční seznam by se rozešel a běžec
+by pak tvrdil „sada prošla", i kdyby pět zkoušek vynechal. Změřeno:
+**128 zkoušek za 93 s** při čtyřech naráz (proti ~2,5 min po jedné).
+
+**A hned při prvním paralelním běhu to našlo latentní vadu, kterou CI
+vidět nemohlo:** `test-ukonceno.mjs` pouští generátor stránek pozemků
+v živém adresáři a na dvacet sekund tím nechá 2 116 stránek
+nevysázených (sazba se v řetězu dělá až po generátorech). Kdo v tom
+okamžiku čte, právem padne na vadu, kterou nezpůsobil — a v CI to
+neprasklo, protože tam zkoušky běží jedna po druhé. Běžec na to
+**nemá ruční seznam výjimek** (ten by zastaral): co padne paralelně,
+pustí ještě jednou **samo**, a teprve to rozhodne — projde-li samo,
+byla to kolize nad společným stromem a vypíše se to; padne-li znovu, je
+to vada.
+
+**Hlídač práv v CI mě u toho chytil podruhé v jednom dni.** Sebeoprava
+pushuje z skriptu, ne z YAMLu, takže ji označil za „zápis bez pushe".
+Místo výjimky dostal lepší zrak: podívá se i do skriptu, který úloha
+spouští. Napoprvé jsem ten vzor napsal moc široce (`'push'`) a za
+pushující se prohlásila i úloha „testy", protože to slovo má v sobě
+zkouška — teď se hledá git volaný s příkazem push, a zkoušky se
+neprohlížejí vůbec (pushovat nemohou, úloha má `contents: read`).
+
+Hlídá to `scripts/test-sebeoprava.mjs` (27 kontrol): sedm pravidel
+zvlášť, jedenadvacet vzorků „patří generátorům / je ruční práce",
+dva živé běhy, které musí **nic neudělat** a říct to nahlas, a staticky
+pořadí „dokázat, pak commitnout". Tři sabotáže (propustit ruční práci,
+zrušit pojistku proti smyčce, obrátit pořadí) to chytne.

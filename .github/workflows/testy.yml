@@ -291,6 +291,12 @@ jobs:
       - name: Jedno pravidlo pro všechno, co web odesílá sám
         run: node scripts/test-neosobni.mjs
 
+      # Automat, který smí commitovat, je nebezpečný přesně tak, jak jsou
+      # slabá jeho pravidla. Tady se zkouší každé zvlášť — bez gitu
+      # a bez GitHubu, protože rozhodování je v čisté funkci.
+      - name: Sebeoprava opraví jen to, co opravit smí
+        run: node scripts/test-sebeoprava.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs

@@ -60,8 +60,36 @@ function kod(s) { return s.replace(/^\s*#.*$/gm, ' ').replace(/\s#[^\n]*/g, ' ')
 const K = {};
 for (const f of soubory) K[f] = kod(text[f]);
 
-/* Která úloha opravdu pushuje. Ne podle jména, podle příkazu. */
-const pushuje = soubory.filter((f) => /\bgit push\b/.test(K[f]));
+/* Která úloha opravdu pushuje. Ne podle jména, podle příkazu — a od
+   24. 10. i podle PŘÍKAZU VE SPOUŠTĚNÉM SKRIPTU. Sebeoprava pushuje
+   z scripts/sebeoprava.mjs (rozhodování se dá vyzkoušet bez GitHubu
+   jen tak, že je v skriptu, ne v YAMLu), takže ve workflow žádné
+   `git push` nestojí — a hlídač ji napoprvé označil za „zápis bez
+   pushe". Dívat se jen do YAMLu znamená věřit, že se v něm píše
+   všechno; tady se to nepíše. */
+function pushujeSkript(cestaSkriptu) {
+  /* ZKOUŠKY SE NEPROHLÍŽEJÍ, a má to důvod, ne pohodlí: zkouška
+     pushovat nemůže, protože úloha „testy" má `contents: read` —
+     kdyby to zkusila, padne. Zato jejich zdroj ta slova obsahuje
+     (zrovna tenhle hlídač má „git push" ve vzoru), takže by se za
+     pushující prohlásila úloha, která jen pouští zkoušky. Naměřeno:
+     napoprvé přesně to vyšlo. */
+  if (/\/test-[\w-]+\.mjs$/.test(cestaSkriptu)) return false;
+  try {
+    const t = readFileSync(path.join(KOREN, cestaSkriptu), 'utf8');
+    /* POZOR NA ŠIROKÝ VZOR. Napoprvé tu stálo jen „'push'" — a tím se
+       za pushující prohlásila i úloha „testy", protože některá zkouška
+       to slovo v uvozovkách má. Hledá se proto git volaný s příkazem
+       push, ne slovo push. */
+    return /git push/.test(t)
+      || /(?:spawnSync|execFileSync|execSync)\(\s*['"]git['"][\s\S]{0,200}?['"]push['"]/.test(t);
+  } catch (e) { return false; }
+}
+const pushuje = soubory.filter((f) => {
+  if (/\bgit push\b/.test(K[f])) return true;
+  const skripty = [...K[f].matchAll(/node\s+(scripts\/[\w-]+\.mjs)/g)].map((m) => m[1]);
+  return skripty.some(pushujeSkript);
+});
 pravda(`pushující úlohy se poznaly podle příkazu (${pushuje.length})`,
   pushuje.length >= 1 && pushuje.length < soubory.length,
   'našlo se ' + pushuje.length + ' z ' + soubory.length);

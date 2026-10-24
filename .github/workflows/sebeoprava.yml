@@ -1,0 +1,64 @@
+name: Sebeoprava odvozených souborů
+
+# Pustí se SAMA, když spadnou „Testy a kontrola kódu" — a zkusí jedinou
+# věc, kterou umí stroj spočítat ze zdroje: dorovnat odvozené soubory
+# (stránky, razítka ?v=, hashe CSP, sitemap, sloučené SQL, tabulka
+# v roadmapě) řetězem scripts/oprav.mjs.
+#
+# Rozhodování i stropy jsou ve scripts/sebeoprava.mjs, ne tady —
+# aby se dalo vyzkoušet bez GitHubu (scripts/test-sebeoprava.mjs).
+# Shrnutí pravidel: jen domácí větev, jen soubory patřící generátorům,
+# nikdy dvakrát za sebou, před nahráním musí projít celá rychlá sada,
+# vypínačem je soubor .github/SEBEOPRAVA-VYPNUTA.
+
+on:
+  workflow_run:
+    workflows: ["Testy a kontrola kódu"]
+    types: [completed]
+
+permissions:
+  contents: write
+  issues: write          # zakládá úkol, když selže sama oprava (poslední krok)
+
+jobs:
+  oprava:
+    # Jen po selhání, jen na domácí větvi a NIKDY po běhu, který spustila
+    # sama sebeoprava: to je druhá pojistka proti smyčce (první je
+    # v skriptu, kde se čte zpráva posledního commitu).
+    if: >-
+      github.event.workflow_run.conclusion == 'failure'
+      && github.event.workflow_run.head_branch == github.event.repository.default_branch
+      && github.event.workflow_run.actor.login != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          # Generátory čtou historii (časová řada cen si bere jeden bod
+          # na den), takže mělký klon o jeden commit nestačí.
+          fetch-depth: 50
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Závislosti
+        run: npm ci --no-audit --no-fund --omit=dev --ignore-scripts
+
+      - name: Zkusit sebeopravu
+        env:
+          SEBEOPRAVA_VETEV: ${{ github.event.repository.default_branch }}
+        run: node scripts/sebeoprava.mjs
+
+      # Když spadne sama oprava, ať to není tiché. Hlásič zakládá jeden
+      # úkol na úlohu a další selhání k němu připíše.
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Sebeoprava odvozených souborů
+          co-to-znamena: >-
+            Automatická oprava rozchodu odvozených souborů sama spadla. Červená kontrola zůstává a musí se spravit ručně příkazem node scripts/oprav.mjs.
