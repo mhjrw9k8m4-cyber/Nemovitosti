@@ -70,6 +70,14 @@ jobs:
 
       - name: Statistika cen (čísla odpovídají skutečnosti)
         run: node scripts/test-statistika.mjs
+
+      # Měřidlo, kterým se rozhoduje o jádru webu, tvrdilo nepravdu:
+      # varianta „okolí" vycházela o 2,6 p.b. lepší než živý model,
+      # protože do srovnání brala i ceny stanovené úředně (SPÚ). Zelené
+      # číslo ve prospěch nápadu je nejhorší druh vady — tahle zkouška
+      # hlídá, že měřidlo měří zeměpis, a ne vstupní filtr.
+      - name: Měřidlo přesnosti odhadu měří, co tvrdí
+        run: node scripts/test-mericka-odhadu.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
         run: node scripts/test-cisla-okresu.mjs
       - name: Změna ceny nesmí nabídce sebrat věk

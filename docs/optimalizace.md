@@ -9563,3 +9563,76 @@ jsou pražské nabídky s ulicí místo obce"*. Byla to pravda — Devonská,
 Ke Korunce, Na Chvalce, Chatová. Dnes hlídá opak: v okrese Praha už
 žádná nabídka ulici v poli pro obec nemá. Pravidlo `mistoFraze`
 zůstává pro případy, které se z adresy dokázat nedají.
+
+## 143. Měřidlo jádra webu tvrdilo nepravdu — a svítilo zeleně *24. 10.*
+
+`scripts/mericka-odhadu.mjs` je nástroj, kterým se rozhoduje o jádru
+webu: o odhadu ceny. Pustil jsem ho s variantou „okolí" (odhad
+z deseti nejbližších nabídek téhož druhu místo žebříku okres → kraj)
+a vyšlo:
+
+```
+dnešní model            medián chyby 30,7 %
+okolí K=10 R=25 km      medián chyby 28,0 %  (-2,6 p.b.)
+                        párově: lepší 193, horší 141
+```
+
+Vypadalo to na hotový nápad k zavedení — medián i znaménkový test pro,
+a stabilně ve **čtyřech různých rozděleních dat**. Jenže okolí je
+v `js/ceny.js` dávno a **jde první** („OKOLÍ JDE PRVNÍ" stojí v kódu).
+Tak co se tedy měřilo?
+
+**KDO se počítá do srovnání, ne kde to leží.** Živý model bere do
+srovnávací hladiny jen běžné nabídky (`if (d.type !== 'sale') return;`)
+a vynechává ceny stanovené úředně (`spravniCena`, tedy SPÚ a státní
+půda) — vyvolávací ani úřední cenu nestanovil trh. Moje varianta brala
+všechno. Na jedné konkrétní nabídce (Zákupy, orná půda) to bylo vidět
+naostro: hrubým počítáním **31 sousedů** do 25 km, a živá funkce našla
+**sedm** — zbytek byly nabídky SPÚ, které do hladiny nepatří.
+
+Po doplnění týchž vstupních pravidel do varianty:
+
+```
+okolí K=10 R=10 km +sklon   medián chyby 30,7 %  (+0,1 p.b.)   párově: lepší 3, horší 0, stejně 1 096
+okolí K=10 R=25 km          medián chyby 31,6 %  (+1,0 p.b.)   párově: lepší 36, horší 33
+```
+
+Tedy **totožné s živým modelem**. Celých 2,6 p.b. dělaly ceny mimo trh.
+A nejhorší na tom je, že to vypadalo jako dobrá zpráva: číslo ve
+prospěch nápadu, čtyřikrát stabilní, k zavedení — a kdo by ho neověřil,
+pustil by do srovnávací hladiny přesně to, o čem web na dvou místech
+výslovně píše, že do ní nepatří.
+
+**Dvě hypotézy po cestě byly špatné, a stálo za to je změřit.** Nejdřív
+jsem to přičítal dražbám: jejich vyvolávací cena je pod trhem, tak to
+bude ono. Nebylo — vynechání dražeb změnilo variantu o **0,1 p.b.**
+Pak jsem to přičítal přepočtu na výměru; taky ne (varianta se sklonem
+i bez něj byla pořád o 2,3 až 3,0 p.b. „lepší"). Teprve výpis zevnitř
+funkce ukázal `mam = 7`, a to už byla otázka „koho vlastně vidí".
+
+**Co měřidlo nemělo a teď má: znaménkovou odchylku.** Absolutní chyba
+neřekne, jestli model střílí vedle, nebo soustavně vysoko. Naměřeno
+křížově: **+1,4 % celkem**, z toho **okolí +0,4 %**, ústup na kraj
+**+8,0 %** a okres −9,0 % (21 odhadů). Odhad z okolí je tedy prakticky
+nezkreslený; posouvá se až ten krajský — a to je k užitku, protože
+`js/ceny.js` o krajském ústupu píše, že je „méně místní", a tohle to
+poprvé vyčísluje.
+
+I tady jsem si jedno číslo nejdřív spočítal špatně: **+4,8 %** —
+protože jsem to měřil na všech nabídkách na prodej, tedy i na
+spoluvlastnických podílech, kterým web odhad vůbec nevydává. Měřil
+jsem odchylku u čísel, která nikdo nikdy neuvidí.
+
+**Kalibrace se zkoušela a NEPŘIJALA.** Opravit ten posun je lákavé:
+na tréninkové části spočítat pro každou úroveň medián podílu
+odhad/cena a odhad tím podělit. Naměřeno ve třech rozděleních:
+−0,2 p.b., +0,3 p.b., +1,0 p.b., a znaménkový test **pokaždé proti**
+(536 : 553, 540 : 544, 533 : 558). Ten posun tedy není vada k opravě,
+ale vlastnost srovnání „místní medián proti jedné nabídce".
+
+Hlídá to nová `scripts/test-mericka-odhadu.mjs` — a hlídá CHOVÁNÍ, ne
+text: varianta se stejnými pravidly se musí od živého modelu lišit
+nejvýš u 15 % nabídek (naměřeno 6 %), odhad z okolí nesmí být
+zkreslený víc než o 5 p.b. a okolí musí nést víc odhadů než kraj.
+Když se vstupní filtr z varianty vypustí, rozdíl vyskočí na 30 %
+a zkouška padne; obě sabotáže chytí.
