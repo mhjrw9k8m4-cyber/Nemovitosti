@@ -373,13 +373,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-tachov.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-plzen-mesto.html</loc>
     <lastmod>2026-10-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-plzen-mesto.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-tachov.html</loc>
     <lastmod>2026-10-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -10003,6 +10003,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-plzen-mesto-plzen-qi1m1b.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-kolin-zahradni-h6p87k.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -10167,12 +10173,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-praha-zapad-ptice-12y73kn.html</loc>
     <lastmod>2026-09-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-usti-nad-orlici-madarska-2axtcg.html</loc>
-    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
