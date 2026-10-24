@@ -9998,3 +9998,43 @@ jediný soubor — ten, který se rozcházel.
    hlásil „1 okresů"), takže se přesunulo do `scripts/text.mjs` —
    a skloňuje se i sloveso: „Rozcházel se 1 soubor", „Rozcházely se
    2 soubory", „Rozcházelo se 5 souborů".
+
+## 149. Zelená CI a den starý web vedle sebe obstojí *24. 10.*
+
+Celý řetěz hlídačů v tomhle repozitáři kontroluje **repozitář**:
+zkoušky, generátory, sebeoprava. Nasazení ale dělá někdo jiný (GitHub
+Pages z větve) a **nikdo nekontroloval, co je doopravdy venku.** Stačí,
+aby selhalo nasazení, aby se nepropsala data nebo aby se stránky
+nasadily jen zpola — a web se tváří, že běží, jen je o den starší. To
+je ten nejhorší druh vady: nikomu nesvítí.
+
+`scripts/kontrola-nasazeni.mjs` měří na ostré doméně devět věcí.
+Nejcennější z nich: **je venku ta verze, co je v repozitáři?** Porovnají
+se razítka `?v=` u skriptů a stylů s těmi, která má `index.html` u nás —
+a razítko je hash obsahu, takže je to exaktní srovnání, ne odhad podle
+data. Když se nasazení nepropíše, hlášení řekne **obě** hodnoty
+(„venku `?v=deadbeef`, u nás `?v=443c7c43`"), ne jen „něco nesedí".
+Dál: odchytávač chyb v hlavičce (jinak by web mlčel o pádech právě tam,
+kde jsou lidé), hlavička CSP, stáří dat proti stropu, mapa webu
+a jedna **náhodně vybraná** generovaná stránka pozemku (první by se
+mohla nasadit shodou okolností a zbytek ne), absolutní adresy na jedné
+doméně, neznámá adresa s opravdovou 404 a `robots.txt`.
+
+**Co to vědomě neumí: vyvolat nasazení znovu.** To se z repozitáře
+nedá a „zkusit to u cizí služby ještě jednou" není oprava, ale hádání.
+Místo toho se řekne přesně, co je venku jinak.
+
+**Zkouška našla vadu v mé vlastní kontrole, a dobrou:** náhodnou
+stránku brala z mapy webu jako **absolutní adresu** — a v mapě stojí
+(správně) ostrá doména. Kontrola jiného prostředí by se tedy ptala
+ostrého webu a tvrdila o něm něco, co o něm neplatí. Teď se z adresy
+bere jen cesta a ptá se té domény, která se kontroluje.
+
+Hlídá to `scripts/test-kontrola-nasazeni.mjs` (14 kontrol) na
+podstrčeném webu, který servíruje skutečné soubory z repozitáře a šesti
+způsoby se schválně kazí: starší razítko, chybějící odchytávač,
+chybějící CSP, 90 h stará data, „měkká" 404 (stav 200 s textem
+o nenalezení) a osekaná mapa webu. Sedmý případ je ten nejdůležitější:
+**nedostupný web musí být VADA, ne „nezměřeno"** — hlídač, který svítí
+zeleně na mrtvý web, je horší než žádný, protože tvrdí, že je po
+kontrole.

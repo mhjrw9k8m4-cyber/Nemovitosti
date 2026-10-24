@@ -1,0 +1,47 @@
+name: Kontrola nasazeného webu
+
+# Celý ostatní řetěz hlídačů kontroluje REPOZITÁŘ. Nasazení ale dělá
+# GitHub Pages a nikdo nekontroloval, co je doopravdy VENKU — zelená CI
+# a den starý web vedle sebe obstojí.
+#
+# Běží 35 minut po robotovi (ten jede v 0 */6), tedy ve chvíli, kdy už
+# mají být nová data nasazená. Co se měří, je v scripts/kontrola-nasazeni.mjs.
+
+on:
+  schedule:
+    - cron: '35 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write          # zakládá úkol, když je venku něco jiného (poslední krok)
+
+jobs:
+  kontrola:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Tahle úloha nikam nepushuje, takže si token z checkoutu
+          # nenechává na disku. Hlídá to scripts/test-ci-prava.mjs.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Razítka ?v= se porovnávají s místním index.html, takže
+      # závislosti ani build nejsou potřeba — stačí repozitář.
+      - name: Zkontrolovat, co je venku
+        run: node scripts/kontrola-nasazeni.mjs
+
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Kontrola nasazeného webu
+          co-to-znamena: >-
+            Na ostré doméně není to, co je v repozitáři — buď se nasazení nepropsalo, nebo jsou venku stará data. Podrobnosti (včetně obou razítek) jsou ve výpisu úlohy.

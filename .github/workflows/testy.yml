@@ -297,6 +297,11 @@ jobs:
       - name: Sebeoprava opraví jen to, co opravit smí
         run: node scripts/test-sebeoprava.mjs
 
+      # Hlídač, který svítí zeleně na rozbitý web, je horší než žádný.
+      # Měří se na podstrčeném webu, který se schválně kazí.
+      - name: Kontrola nasazení pozná, že venku není to, co má být
+        run: node scripts/test-kontrola-nasazeni.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs

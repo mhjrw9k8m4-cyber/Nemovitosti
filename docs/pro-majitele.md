@@ -81,6 +81,29 @@ Když všech pět projde, je to web. Dokud ne, je to ověřený kód.
 
 ---
 
+## 0c. Jak poznáte, že je venku to, co má být
+
+Tohle běží samo každých šest hodin (35 minut po robotovi, tedy až mají
+být nová data nasazená) a **nic po vás nechce** — jen o tom vědět, až
+přijde úkol „Kontrola nasazeného webu".
+
+Kontroluje devět věcí na ostré doméně, mezi nimi tu nejdůležitější:
+**je venku ta verze, co je v repozitáři?** Pozná se to z razítek `?v=`
+u skriptů, což je hash obsahu, takže to není odhad podle data. Když se
+nasazení nepropíše, úkol napíše obě hodnoty — co je venku a co má být.
+Dál: stará data, chybějící hlavička CSP, chybějící odchytávač chyb,
+osekaná mapa webu, a jestli neznámá adresa vrací opravdu 404 (ne 200,
+které si vyhledávače zaindexují jako platnou stránku).
+
+Ručně kdykoli: `node scripts/kontrola-nasazeni.mjs`.
+
+**Co to neumí a vědomě neumí:** nasazení znovu vyvolat. To se
+z repozitáře nedá a „zkusit to znovu" u cizí služby není oprava, ale
+hádání. Když úkol přijde, je to na jedno kliknutí v záložce Actions
+(úloha „pages build and deployment").
+
+---
+
 ## 1. Druhý zdroj nabídek — `APIFY_TOKEN`
 
 **Proč je to první.** V datech je 1 932 nabídek a **900 z nich (47 %)
