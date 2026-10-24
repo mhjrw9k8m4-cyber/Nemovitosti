@@ -9858,6 +9858,20 @@ s jeho textem o jediný znak, prohlížeč ho zakáže a hlásič mlčí navždy
 Sabotáž (jedna mezera navíc ve vloženém skriptu jedné stránky) to
 chytla: místo pádu přišlo prázdno a politika skript odmítla.
 
+**Naměřeno na objemu, ne odhadnuto.** Měřidlo databáze teď sype do
+tabulky chyb i půl roku na denním stropu (300 různých hlášek × 180 dní
+= 54 000 řádků, tedy nejhorší stav, než ji úklid smete) a měří tři nové
+cesty: **zápis chyby 1,9 ms** (to je ta jediná, která běží návštěvníkovi
+v prohlížeči — má v sobě `count(*)` přes dnešní řádky kvůli stropu,
+takže na prázdné tabulce by se neměřilo nic), úklid 0,6 ms, přehled za
+týden 11,9 ms a za půl roku 99,4 ms. Poslední dva jsou nad hranicí 10 ms
+a **zůstávají tak**: čte je člověk z terminálu jednou za týden, ne
+stránka při každém otevření, takže zrychlovat je by znamenalo přidat
+index kvůli dotazu, který běží sedmkrát za rok. Při sypání objemu jsem
+si navíc chytil vlastní vadu, která by nic nerozbila, jen tiše měřila
+patnáctkrát menší tabulku: den i hláška se počítaly ze stejného `g`,
+takže si zbytky po dělení padly do sebe a z 54 000 řádků zbylo 3 600.
+
 Dohromady 42 nových kontrol: 33 na hlásič a databázi (polovina v Node
 s podstrčeným oknem, polovina na opravdovém PostgreSQL — tam se zkouší,
 že hlášku s e-mailem odmítne sama databáze a že denní strop sepne),

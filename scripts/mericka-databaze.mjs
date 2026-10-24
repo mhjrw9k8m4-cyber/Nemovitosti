@@ -86,6 +86,20 @@ try {
       select (current_date - (g%365)), 's'||(g%600)||'.html', 'z'||(g%7), case when g%2=0 then 'mobil' else 'stolni' end, 1+(g%40)
       from generate_series(1,${N(200000)}) g
       on conflict do nothing;
+    /* Hlášení chyb: půl roku na denním stropu, tedy to nejhorší, co
+       může v tabulce ležet, než ji úklid smete (300 různých hlášek
+       krát 180 dní). Zápis má v sobě count(*) přes dnešní řádky, takže
+       na prázdné tabulce by se neměřilo nic. */
+    insert into chyby_klienta (den, stranka, zprava, zdroj, prohlizec, pocet)
+      /* Den a hláška se MUSÍ kombinovat nezávisle, jinak si zbytky po
+         dělení z téhož „g" padnou do sebe a z 54 000 řádků zbyde
+         3 600: změřeno. Tahle vada by se neprojevila jako chyba, jen
+         by měřidlo tiše měřilo patnáctkrát menší tabulku. */
+      select (current_date - ((g/300)%180)), 's'||(g%600)||'.html', 'hlaska '||(g%300),
+             'js/min/m'||(g%40)||'.js:'||(g%900)||':'||(g%80),
+             (array['safari-17','chrome-141','firefox-130','jine'])[1+(g%4)], 1+(g%9)
+      from generate_series(1,${N(54000)}) g
+      on conflict do nothing;
     insert into storage.buckets (id, name, public) values ('listing-photos','listing-photos',true) on conflict do nothing;
     insert into storage.objects (bucket_id, name, owner, created_at)
       select 'listing-photos', u.id||'/f'||g||'.jpg', u.id, now()-(g||' hours')::interval
@@ -103,6 +117,7 @@ try {
       (select count(*) from saved_searches) || ' hledání, ' ||
       (select count(*) from watch_subscriptions) || ' přihlášek, ' ||
       (select count(*) from navstevnost) || ' řádků návštěvnosti, ' ||
+      (select count(*) from chyby_klienta) || ' nahlášených chyb, ' ||
       (select count(*) from storage.objects) || ' fotek'`]).trim();
   console.log('V databázi: ' + pocty + '\n');
 
@@ -185,6 +200,15 @@ try {
   zmer('uklid_hlidani(30)', 'select uklid_hlidani(30)');
   zmer('prehled_navstevnosti(30)', 'select * from prehled_navstevnosti(30)');
   zmer('prehled_chyb(7)', 'select * from prehled_chyb(7)');
+  zmer('prehled_chyb(180)', 'select * from prehled_chyb(180)');
+  /* ZMĚŘENO A NEOPTIMALIZOVÁNO, ať se to nespravuje podruhé:
+     prehled_navstevnosti a prehled_chyb vyšly nad hranicí 10 ms
+     (14,6 a 11,9 ms za týden, 99,4 ms za půl roku na 54 000 řádcích).
+     Obě ale čte ČLOVĚK Z TERMINÁLU jednou za týden, ne stránka při
+     každém otevření: strop 50 ms sem nepatří a zrychlovat to znamená
+     přidat index kvůli dotazu, který běží sedmkrát za rok. */
+  console.log('    (dva přehledy výš čte majitel z terminálu, ne web — hranice 10/50 ms'
+    + ' se na ně nevztahuje; zrychlovat je by znamenalo index kvůli dotazu 7× za rok)');
   /* Zápisy noční rozesílky. Volají se JEDNOU ZA HLEDÁNÍ, takže jejich
      cena se násobí počtem odeslaných zpráv — u tisíců hledání je
      i jediná milisekunda znát. */
