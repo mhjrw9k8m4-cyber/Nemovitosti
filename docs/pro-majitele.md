@@ -33,6 +33,54 @@ naostro jako člověk — registrace, potvrzení z e-mailu, inzerát s fotkou,
 zpráva, poznámka, hlídání, odhlášení jedním klikem. Dokud to jednou
 neproběhne, je ověřený kód, ne web.
 
+## 0b. Co proklikat naostro — pět průchodů, asi 20 minut
+
+Tohle je ta jedna věc, kterou nezkontroluje **žádná** zkouška: že web
+funguje člověku, a ne jen v Chromiu na serveru. Pět průchodů níž pokrývá
+každou cestu, kde se potkává web, databáze a pošta — tedy všechno, co se
+dá rozbít nastavením a ne kódem. **Projděte je na telefonu, ne na
+počítači** (víc než polovina lidí přijde z telefonu, a zkoušky
+v prohlížeči běží v šířce okna počítače).
+
+U každého kroku je napsané, **co se má stát** a **kde se pozná, že se to
+nestalo**. Když něco zhasne, podívejte se hned potom do
+`node scripts/chyby.mjs` (bod 2b) — pád skriptu tam bude i s místem
+v kódu.
+
+**1. Registrace a potvrzení e-mailu.** Založte si účet na nějakou svou
+adresu. Má přijít potvrzovací e-mail a odkaz v něm má účet otevřít.
+*Nepřijde-li nic:* Supabase → Authentication → Emails; výchozí
+rozesílač Supabase má tvrdý denní strop, proto je v bodu 5 vlastní SMTP.
+
+**2. Inzerát s fotkou.** Přihlášený, `pridat.html`: vyplňte pozemek,
+přiložte fotku z telefonu, odešlete. Fotka má jít nahrát (kontrola
+obsahu chvíli počítá, to je v pořádku) a inzerát se má objevit
+v `muj-inzerat.html` se stavem „čeká na kontrolu" — **první inzerát
+nového účtu se schválně nezveřejní hned**. *Nejde-li fotka nahrát:*
+chybí kbelík `listing-photos` (bod 0, kontrola 3).
+
+**3. Zpráva na inzerát.** Z jiného prohlížeče (nebo v anonymním okně)
+otevřete svůj inzerát a napište zájemce. V `zpravy.html` pod účtem má
+zpráva přijít. *Nic nepřijde:* je to nejčastěji chybějící migrace —
+pusťte `supabase/00-vse.sql` celý, ne po částech.
+
+**4. Hlídání e-mailem a odhlášení na JEDEN klik.** `hlidani.html`:
+nastavte si okolí a cenu, zadejte e-mail, potvrďte odkazem z pošty.
+Pak v tom e-mailu klikněte na odhlášení — **musí to stačit jedním
+kliknutím, bez přihlašování**. Tohle je jediný krok, který má i právní
+váhu. *Pozor:* dokud není `PK_MAIL_ZAPNUTO = true` (bod 3), potvrzení
+přijde, ale nabídky ne — a to je správně.
+
+**5. Poznámka, uložený pozemek a odhlášení.** U libovolného pozemku si
+napište poznámku a uložte si ho. Pak se odhlaste a stránku načtěte
+znovu: **poznámka ani uložený pozemek už nesmí být vidět** (v prohlížeči
+po odhlášeném účtu nic nezůstává). V `moje-data.html` má jít vše
+vyvézt a smazat.
+
+Když všech pět projde, je to web. Dokud ne, je to ověřený kód.
+
+---
+
 ## 1. Druhý zdroj nabídek — `APIFY_TOKEN`
 
 **Proč je to první.** V datech je 1 932 nabídek a **900 z nich (47 %)
