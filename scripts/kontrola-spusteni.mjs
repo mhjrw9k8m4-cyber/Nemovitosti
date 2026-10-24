@@ -180,8 +180,12 @@ if (BEZ_SITE) {
           vrátí 404, chybějící kbelík 400 „Bucket not found" — takhle
           se to pozná bez servisního klíče a bez zápisu. */
     const c = await zkus('kbelik', '/storage/v1/object/public/listing-photos/__neexistuje__.jpg', {});
+    let chybiKbelik = false;
     if (/bucket not found/i.test(c.telo) || c.stav === 400) {
-      NE('úložiště fotek', 'kbelík listing-photos neexistuje — bez něj neprojde nahrání fotky');
+      chybiKbelik = true;
+      NE('úložiště fotek', 'kbelík listing-photos neexistuje — bez něj neprojde nahrání fotky.'
+        + ' NEZAKLÁDEJTE ho ručně: balík supabase/00-vse.sql ho zakládá sám i se stropem 3 MB'
+        + ' a seznamem povolených typů, a ruční kbelík bývá bez stropů');
     } else ANO(`kbelík listing-photos existuje (odpověď ${c.stav})`);
 
     /* d) Potvrzování e-mailu. Supabase vydá nastavení přihlašování
@@ -211,6 +215,17 @@ if (BEZ_SITE) {
       SKODA('hlášení chyb z prohlížeče', 'zapis_chybu() v databázi NENÍ — pády v prohlížečích'
         + ' návštěvníků by se hlásily do prázdna; pusťte supabase/00-vse.sql');
     } else NEVIM('hlášení chyb z prohlížeče', `zapis_chybu() odpověděla ${e2.stav}`);
+
+    /* JEDNA PŘÍČINA, DVA NÁLEZY. Kbelík i zapis_chybu zakládá týž
+       balík, takže když chybí oba, není to dvojí práce — je to jedno
+       nepuštěné SQL. Bez té věty by se někdo pokusil spravit každý
+       nález zvlášť, a kbelík by vznikl ručně (tedy bez stropů). */
+    const chybiChybu = /PGRST202|does not exist|Could not find/i.test(e2.telo);
+    if (chybiKbelik && chybiChybu) {
+      SKODA('společná příčina obou nálezů výš',
+        'kbelík i zapis_chybu() zakládá TÝŽ balík supabase/00-vse.sql — chybí-li oba,'
+        + ' stačí ten balík pustit celý a obě vady zmizí najednou');
+    }
   } catch (e) {
     NEVIM('živá databáze', 'na databázi se nepodařilo dosáhnout — ' + String(e.message || e).slice(0, 90));
   }

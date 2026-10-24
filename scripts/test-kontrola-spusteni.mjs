@@ -45,6 +45,7 @@ const server = http.createServer((req, res) => {
     return stav === 'prehled-otevreny' ? odpoved(200, '{"dni":1}') : odpoved(401, '{"message":"no"}');
   }
   if (u.startsWith('/storage/v1/object/public/listing-photos/')) {
+    if (stav === 'balik-nebezel') return odpoved(400, '{"message":"Bucket not found"}');
     return stav === 'chybi-kbelik'
       ? odpoved(400, '{"message":"Bucket not found"}')
       : odpoved(404, '{"message":"Object not found"}');
@@ -56,7 +57,7 @@ const server = http.createServer((req, res) => {
     req.on('data', (d) => { telo += d; });
     return req.on('end', () => {
       poslanoDoChyb.push(telo);
-      if (stav === 'chyby-nenasazene') {
+      if (stav === 'chyby-nenasazene' || stav === 'balik-nebezel') {
         return odpoved(404, JSON.stringify({ code: 'PGRST202', message: 'Could not find the function' }));
       }
       return odpoved(204, '');
@@ -158,6 +159,20 @@ for (const [rezim, vzor, popis] of [
   pravda('a spuštění tím neblokuje (web bez hlásiče funguje, jen slepý)',
     !/BLOKUJE SPUŠTĚNÍ/.test(out) && kod === 0,
     out.split('\n').filter((l) => /✕/.test(l)).join(' | '));
+}
+
+/* ---- 5b) dva nálezy, jedna příčina ----------------------------- */
+/* Naměřeno na živé databázi 24. 10.: chyběl kbelík i zapis_chybu.
+   Bez věty o společné příčině by se každý nález spravoval zvlášť —
+   a kbelík by vznikl ručně, tedy bez stropu na velikost i typ. */
+{
+  const { out } = await pust('balik-nebezel');
+  pravda('když chybí kbelík i zapis_chybu, řekne se, že je to JEDNA příčina',
+    /společná příčina/.test(out) && /TÝŽ balík/.test(out),
+    out.split('\n').filter((l) => /příčina|balík/.test(l)).slice(0, 3).join(' | '));
+  pravda('a u kbelíku se varuje, aby se nezakládal ručně (byl by bez stropů)',
+    /NEZAKLÁDEJTE ho ručně/.test(out),
+    out.split('\n').filter((l) => /kbelík/.test(l)).slice(0, 2).join(' | '));
 }
 
 /* ---- 6) živý režim: nezměřeno je VADA, ne „v pořádku" ---------- */

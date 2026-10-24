@@ -10135,3 +10135,25 @@ to nikdo nikdy neviděl. Druhý běh teď jde taky do kopie.
 Pořadí ani počet naráz běžících zkoušek už tedy nerozhoduje
 o výsledku — a kdyby někdo takovou zkoušku napsal znovu, sada to řekne
 hned a jmenovitě. Sabotáž ověřena na obou zkouškách.
+
+### 150b. Tři nálezy, ale dvě mají jednu příčinu — a dokumentace lhala *24. 10.*
+
+Oddíl 149c vypsal tři vady na živé databázi a k nim do pokynů pro
+majitele napsal, že kbelík `listing-photos` se zakládá ručně ve Storage.
+**To byla chyba a hlídač ji nemohl najít, protože to byla chyba v textu,
+ne v kódu:** balík `supabase/00-vse.sql` ten kbelík zakládá sám —
+a navíc **hned se stropem 3 MB na soubor a seznamem povolených typů
+(jen JPEG)**. Ruční kbelík bývá bez stropů, takže rada „založte si ho
+ve Storage" byla horší než žádná: veřejné úložiště bez stropu unese
+cokoli a jak velké chce, a platili bychom to.
+
+Ze tří úkolů pro majitele tedy zbyly **dva**: pustit balík (spraví kbelík
+**i** `zapis_chybu`) a jedno kliknutí v nastavení (*Confirm email*).
+Tomu, aby se ten omyl nevrátil, brání dvě nové kontroly: balík **musí**
+zakládat `listing-photos`, a **musí** u toho mít `file_size_limit`
+i `allowed_mime_types`.
+
+A kontrola živého systému to teď umí říct sama: chybí-li kbelík
+i `zapis_chybu()`, přidá nález **„společná příčina obou nálezů výš"**
+s větou, že je zakládá týž balík. Bez ní by se každý nález spravoval
+zvlášť — a ten kbelík by vznikl ručně.

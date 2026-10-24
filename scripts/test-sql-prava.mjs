@@ -262,6 +262,19 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
      je volný text. Navíc se tu hlídá, že se ořez osobních údajů
      nespoléhá jen na prohlížeč — zavolat RPC umí kdokoli s veřejným
      klíčem, a ten ořez prostě vynechá. */
+  /* KBELÍK SI BALÍK ZAKLÁDÁ SÁM, a pokyny pro majitele se o to opírají
+     („ručně ho nezakládejte, ruční bývá bez stropů"). Kdyby ten zápis
+     z balíku vypadl, zůstal by v dokumentaci slib, který nikdo nedrží —
+     a fotky by se nahrávaly do kbelíku bez stropu na velikost i typ. */
+  {
+     const kbelik = (SQL.match(/insert\s+into\s+storage\.buckets[\s\S]{0,400}/i) || [''])[0];
+     pravda('balík zakládá úložiště listing-photos sám', /listing-photos/.test(kbelik),
+       'v balíku není insert into storage.buckets — pokyny pro majitele tvrdí, že ano');
+     pravda('a hned se stropem na velikost a seznamem typů',
+       /file_size_limit/.test(kbelik) && /allowed_mime_types/.test(kbelik),
+       'veřejné úložiště bez stropů unese cokoli a jak velké chce');
+  }
+
   const chyba = (SQL.match(/create\s+or\s+replace\s+function\s+zapis_chybu[\s\S]*?\$\$;/i) || [''])[0];
   pravda('hlášení chyb se v SQL najde', chyba.length > 0);
   pravda('a má denní strop na počet řádků',

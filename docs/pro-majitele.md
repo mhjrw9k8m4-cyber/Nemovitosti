@@ -213,18 +213,24 @@ Od 24. 10. se živá databáze kontroluje sama každých šest hodin
 (`node scripts/kontrola-spusteni.mjs --jen-zive`). První běh naostro
 našel tohle — a dokud to nespravíte, bude úkol přicházet dál:
 
-| Co | Co to dnes znamená |
-|---|---|
-| **Kbelík `listing-photos` v úložišti neexistuje** | Nahrání fotky k inzerátu neprojde. Inzerát bez fotky je polovina inzerátu. |
-| **`mailer_autoconfirm = true`** | E-mail se **nepotvrzuje**: účet vznikne na cizí adresu, kterou někdo jen opíše. Tohle je ta nejrizikovější ze tří. |
-| **`zapis_chybu()` v databázi není** | Pády v prohlížečích návštěvníků se hlásí **do prázdna** — venku běží starší SQL, než je v repozitáři. |
+| Co | Co to dnes znamená | Čím se to spraví |
+|---|---|---|
+| **Kbelík `listing-photos` v úložišti neexistuje** | Nahrání fotky k inzerátu neprojde. Inzerát bez fotky je polovina inzerátu. | pustit SQL balík |
+| **`zapis_chybu()` v databázi není** | Pády v prohlížečích návštěvníků se hlásí **do prázdna**. | pustit SQL balík |
+| **`mailer_autoconfirm = true`** | E-mail se **nepotvrzuje**: účet vznikne na cizí adresu, kterou někdo jen opíše. Tohle je ta nejrizikovější ze tří. | *Authentication → Confirm email* |
 
 Co se naopak potvrdilo: databáze odpovídá, `public_listings()` v ní je,
 a uzavřená funkce je opravdu uzavřená i pro nepřihlášeného (401).
 
-První dvě věci se spraví v Supabase (Storage → New bucket
-`listing-photos`, a Authentication → *Confirm email*), třetí tím, že
-pustíte `supabase/00-vse.sql` celý.
+**Dvě z těch tří věcí mají jedinou příčinu: balík `supabase/00-vse.sql`
+v téhle podobě ještě neběžel.** Kbelík si balík zakládá sám — i se
+stropem 3 MB na soubor a seznamem povolených typů (jen JPEG), takže ho
+v Supabase ručně **nezakládejte**: ruční kbelík bývá bez stropů, a to je
+horší než žádný. Zbývá tedy jediné kliknutí v nastavení: *Confirm
+email*.
+
+*(Dřív tu stálo, že se kbelík zakládá ručně ve Storage. Byla to chyba —
+balík ho zakládá od začátku a hlídá to zkouška.)*
 
 ---
 
