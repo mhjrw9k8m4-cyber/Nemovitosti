@@ -28,6 +28,17 @@ import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
+/* STRÁNKA, NA KTERÉ SE DETAIL NEVYKRESLÍ.
+   Pruh nahoře (třída `pz-konec`) nosí dva různé stavy: ukončenou
+   nabídku a rozcestí na novou adresu (`pz-konec pz-presun`, vzniká při
+   opravě jména obce — to je součást jména souboru). Na ani jedné
+   js/pozemek.js detail nekreslí, takže se na nich nedá měřit.
+   HLEDÁ SE TŘÍDA, NE PŘESNÝ ŘETĚZEC `class="pz-konec"`. Právě na tom
+   tahle zkouška spadla v CI: vybrala si rozcestí, protože uzavírací
+   uvozovka za `pz-konec` u dvou tříd nesedí — a pak čekala na dlaždice,
+   které nikdy nepřijdou. */
+const NEVYKRESLI = /class="[^"]*\bpz-konec\b/;
+
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = 8321;
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -78,7 +89,7 @@ const sParcelou = vsechny.find((f) => {
      a nevykreslí ani dlaždice, ani tabulku — na té se měřit nedá.
      Hledá se TŘÍDA v značce, ne slovo `pz-konec` kdekoli: pravidla pro
      tu hlášku stojí ve vloženém stylu každé stránky. */
-  return /"pc":/.test(h) && !/class="pz-konec"/.test(h);
+  return /"pc":/.test(h) && !NEVYKRESLI.test(h);
 });
 const stranka = sParcelou || vsechny[0];
 pravda('je na čem měřit — stránka pozemku s tabulkou parametrů', !!sParcelou,
@@ -187,7 +198,7 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   let bezVymery = null;
   for (const f of vsechny) {
     const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    if (/class="pz-konec"/.test(h)) continue;
+    if (NEVYKRESLI.test(h)) continue;
     const m = h.match(/PK_POZEMEK=(\{.*?\});/s);
     if (!m) continue;
     let o;

@@ -9529,7 +9529,7 @@ být už ukončená, a jméno, které na ní stojí jako obec, nesmí být obcí
 žádné živé nabídky („Lovosice" a „Kalovice" obce jsou, takže se jich
 to netýká). Po nich je rozcestí **přesně šestnáct**.
 
-**A čtyři zkoušky měřily pravdu, která se tím změnila** — každá jinak:
+**A pět zkoušek měřilo pravdu, která se tím změnila** — každá jinak:
 `test-vyhledavac` hlásilo „16 živých stránek bez index,follow",
 `test-stranky-pozemku` „16 stránek navíc", `test-ukonceno` „16
 ukončených tvrdí InStock" (a to je u přestěhované stránky **pravda**,
@@ -9539,6 +9539,24 @@ rozcestí se nesmí indexovat a jeho canonical musí vést na stránku,
 která **existuje**. `test-ukonceno` navíc přestalo rozlišovat stavy
 podle vzhledu pruhu (`class="pz-konec"` nosí obojí) a rozlišuje podle
 značky v datech stránky.
+
+**A pátá spadla až v CI, protože lokální rychlá sada ji nepouští.**
+`test-parametry` si vybírá stránku, na které se dlaždice opravdu
+vykreslí, a vylučovala ty s pruhem nahoře vzorkem `class="pz-konec"`
+— **s uzavírací uvozovkou**. Rozcestí má `class="pz-konec pz-presun"`,
+takže jím vzorek neprošel: zkouška si vybrala rozcestí (a zrovna to
+s nejdelší hodnotou v datech, 24 980 000 Kč), čekala na dlaždice, které
+se na něm nikdy nevykreslí, a padla hláškou o CSP — Playwright si na
+opakované zkoušení podmínky bere `eval`, a ten stránky webu zakazují.
+Tedy ne vada stránky, ale zkouška, která si vybrala stránku, na které
+se nedá měřit.
+
+Tentýž vzorek byl ještě na dvou dalších místech
+(`test-hlavicka-pozemku`, `test-klic-ulozenych`); obě si stránku
+vybírají stejně, jen se jim zatím vyhnula. Všechna tři místa teď hledají
+TŘÍDU `\bpz-konec\b` v seznamu tříd, ne přesný řetězec. Je to poučení
+na jedno pravidlo: *kdo porovnává `class="jmeno"` s uzavírací
+uvozovkou, uvidí jen prvek, který druhou třídu nikdy nedostane.*
 
 A `test-misto-prahy` měřilo předpoklad, který oprava zrušila: *„v datech
 jsou pražské nabídky s ulicí místo obce"*. Byla to pravda — Devonská,

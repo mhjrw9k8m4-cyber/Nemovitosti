@@ -32,6 +32,18 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
+/* STRÁNKA, NA KTERÉ SE DETAIL NEVYKRESLÍ.
+   Pruh nahoře (třída `pz-konec`) nosí dva různé stavy: ukončenou
+   nabídku a rozcestí na novou adresu (`pz-konec pz-presun`, vzniká při
+   opravě jména obce — to je součást jména souboru). Na ani jedné
+   js/pozemek.js detail nekreslí, takže se na nich nedá měřit.
+   HLEDÁ SE TŘÍDA, NE PŘESNÝ ŘETĚZEC `class="pz-konec"`. Na tom spadla
+   v CI scripts/test-parametry.mjs: uzavírací uvozovka za `pz-konec`
+   u dvou tříd nesedí, zkouška si proto vybrala rozcestí a čekala na
+   dlaždice, které nikdy nepřijdou. Tady se to spravilo zároveň,
+   protože stránku k měření vybírá stejným způsobem. */
+const NEVYKRESLI = /class="[^"]*\bpz-konec\b/;
+
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -50,7 +62,7 @@ const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.htm
 /* Ukončené stránky se sem nepočítají: nabídka v datech není, takže
    nemají co vykreslovat a statická část na nich zůstane celá i s
    nadpisem. Hlídá je scripts/test-ukoncena-v-prohlizeci.mjs. */
-const ukoncene = vsechny.filter((f) => /class="pz-konec"/.test(cti(f)));
+const ukoncene = vsechny.filter((f) => NEVYKRESLI.test(cti(f)));
 const stranky = vsechny.filter((f) => !ukoncene.includes(f));
 console.log(`Stránek pozemků: ${vsechny.length} (živých ${stranky.length}, ukončených ${ukoncene.length})`);
 pravda('je co měřit — živé stránky pozemků se našly', stranky.length >= 500,
@@ -246,7 +258,7 @@ pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
      o svém původu ví, bez otevírání v prohlížeči. */
   const zivaSe = (vzor) => vse.find((f) => {
     const h = readFileSync(path.join(KOREN, f), 'utf8');
-    return !/class="pz-konec"/.test(h) && vzor.test(h);
+    return !NEVYKRESLI.test(h) && vzor.test(h);
   });
   const sDrazbou = zivaSe(/<dt>Stav \/ zdroj<\/dt><dd>[^<]*dražba[^<]*\d{4}/);
   const sInzeratem = zivaSe(/<dt>Stav \/ zdroj<\/dt><dd>[^<]*inzerát/);

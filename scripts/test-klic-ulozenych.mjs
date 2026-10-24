@@ -29,6 +29,18 @@ import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
+/* STRÁNKA, NA KTERÉ SE DETAIL NEVYKRESLÍ.
+   Pruh nahoře (třída `pz-konec`) nosí dva různé stavy: ukončenou
+   nabídku a rozcestí na novou adresu (`pz-konec pz-presun`, vzniká při
+   opravě jména obce — to je součást jména souboru). Na ani jedné
+   js/pozemek.js detail nekreslí, takže se na nich nedá měřit.
+   HLEDÁ SE TŘÍDA, NE PŘESNÝ ŘETĚZEC `class="pz-konec"`. Na tom spadla
+   v CI scripts/test-parametry.mjs: uzavírací uvozovka za `pz-konec`
+   u dvou tříd nesedí, zkouška si proto vybrala rozcestí a čekala na
+   dlaždice, které nikdy nepřijdou. Tady se to spravilo zároveň,
+   protože stránku k měření vybírá stejným způsobem. */
+const NEVYKRESLI = /class="[^"]*\bpz-konec\b/;
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
 const K = req(path.join(ROOT, 'js', 'klic.js')).PKKlic;
@@ -281,7 +293,7 @@ async function sUlozenymi(klice) {
   const vse = readdirSync(ROOT).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
   /* Doběhlá nabídka ukáže hlášku „už není aktuální" a tlačítko „Uložit"
      vůbec nevykreslí — na té se měřit nedá. */
-  const stranka = vse.find((f) => !/class="pz-konec"/.test(readFileSync(path.join(ROOT, f), 'utf8')));
+  const stranka = vse.find((f) => !NEVYKRESLI.test(readFileSync(path.join(ROOT, f), 'utf8')));
   pravda('je co měřit — živá stránka pozemku', !!stranka,
     `ze ${vse.length} stránek pozemků žádná není živá`);
   if (stranka) {
