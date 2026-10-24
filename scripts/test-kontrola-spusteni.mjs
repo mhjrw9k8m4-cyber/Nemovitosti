@@ -138,6 +138,12 @@ for (const [rezim, vzor, popis] of [
     /průchod naostro/.test(out) && /musí to projít člověk/.test(out));
   pravda('i odkaz na hlubší prohlídku oprávnění se servisním klíčem',
     /kontrola-databaze\.mjs se servisním klíčem/.test(out));
+  /* Zkoušky v prohlížeči běží jen v Chromiu. Kdyby to verdikt
+     neříkal, zelená CI by vypadala jako „otestováno všude" —
+     a Safari je čtvrtina českých telefonů. */
+  pravda('a přiznané Safari, kde neběžela ani jedna zkouška',
+    /Safari a iPhone/.test(out) && /jen.{0,3}\n?.{0,30}Chromium/s.test(out),
+    out.split('\n').filter((l) => /Safari/.test(l)).join(' | '));
 }
 
 /* ---- 5) nenasazené hlášení chyb: ztráta, ne blokace ------------ */

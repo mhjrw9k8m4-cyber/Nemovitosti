@@ -205,6 +205,14 @@ if (BEZ_SITE) {
   }
 }
 NEVIM('hlubší prohlídka oprávnění', 'pustí ji node scripts/kontrola-databaze.mjs se servisním klíčem');
+/* AŤ TO STOJÍ VE VERDIKTU, NE JEN V DOKUMENTACI. Zkoušky v prohlížeči
+   běží jen v Chromiu, protože v prostředí jiný prohlížeč není. Zelená
+   CI tedy o Safari neříká nic — a to je čtvrtina českých telefonů.
+   Dokud to nestojí v hromádce „nezkoušeno", vypadá zelená jako
+   „otestováno všude". */
+NEVIM('Safari a iPhone', 'ani jedna zkouška v prohlížeči tam neběžela — v prostředí je jen'
+  + ' Chromium. Projděte web na iPhonu (bod 0b) a po nasazení čtěte'
+  + ' node scripts/chyby.mjs, kde se Safari pozná podle prohlížeče');
 NEVIM('průchod naostro (registrace → inzerát s fotkou → zpráva → hlídání)',
   'tohle neudělá žádný skript — musí to projít člověk; seznam pěti průchodů'
   + ' je v docs/pro-majitele.md, bod 0b');
