@@ -9,6 +9,30 @@ tohle je krátký seznam k odškrtávání.
 
 ---
 
+## 0. Nejdřív jeden příkaz, který řekne, co chybí
+
+```
+node scripts/kontrola-spusteni.mjs
+```
+
+Projde, co se dá změřit, a vydá **verdikt** ve třech hromádkách:
+co **blokuje** spuštění, co spuštění nebrání, ale **přijdete o to**,
+a co se **nezkoušelo** (a tedy neplatí za „v pořádku"). Servisní klíč
+k tomu není potřeba — čtyři nejdůležitější živé kontroly se dají udělat
+veřejným klíčem z `js/config.js` a žádná z nich nic nezapisuje:
+
+1. je SQL vůbec nasazené (odpoví `public_listings()`),
+2. je uzavřená funkce opravdu uzavřená i pro nepřihlášeného,
+3. existuje kbelík `listing-photos` pro fotky,
+4. potvrzuje se e-mail při registraci.
+
+Bez sítě (jen z repozitáře) to umí taky: `--bez-site`.
+
+**Jednu věc ale nezkontroluje nikdy** a je napsaná ve výpisu: projít web
+naostro jako člověk — registrace, potvrzení z e-mailu, inzerát s fotkou,
+zpráva, poznámka, hlídání, odhlášení jedním klikem. Dokud to jednou
+neproběhne, je ověřený kód, ne web.
+
 ## 1. Druhý zdroj nabídek — `APIFY_TOKEN`
 
 **Proč je to první.** V datech je 1 932 nabídek a **900 z nich (47 %)

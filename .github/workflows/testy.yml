@@ -78,6 +78,14 @@ jobs:
       # hlídá, že měřidlo měří zeměpis, a ne vstupní filtr.
       - name: Měřidlo přesnosti odhadu měří, co tvrdí
         run: node scripts/test-mericka-odhadu.mjs
+
+      # Nástroj, podle kterého se rozhodne „pustit, nebo nepustit".
+      # Zkouší se proti PŘEDSTÍRANÉ Supabase v šesti stavech — hlavně
+      # ten, kdy databáze neodpovídá: tehdy musí říct NEZKOUŠENO, ne
+      # „nic nebrání". Sám nástroj v CI neběží; mluvil by s ostrým
+      # projektem a červenal by podle toho, co ještě nikdo nenasadil.
+      - name: Kontrola připravenosti ke spuštění měří, co tvrdí
+        run: node scripts/test-kontrola-spusteni.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
         run: node scripts/test-cisla-okresu.mjs
       - name: Změna ceny nesmí nabídce sebrat věk

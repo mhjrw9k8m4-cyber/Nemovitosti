@@ -9692,3 +9692,54 @@ zkouška, protože všechny kontrolovaly, že se zpráva **vyrobí**. Stačilo
 si ji přečíst. Hlídají to teď `scripts/test-web-push.mjs` (4 nové
 kontroly) a `scripts/test-rozesilac.mjs` (3) — všech pět sabotáží
 chytí.
+
+## 145. Jeden příkaz s verdiktem „pustit, nebo nepustit" *24. 10.*
+
+Kontrol měl tenhle repozitář dost — 253 zkoušek, `kontrola-databaze.mjs`,
+`kontrola-inzeratu.mjs`, `diagnostika.html` — a ani jedna neodpovídala
+na otázku, kterou má majitel: **můžu to pustit?** Zkoušky navíc dokazují
+něco jiného, než se zdá: mluví s **falešnou Supabase** na místním
+serveru, takže ověřují, že se web ptá správně. Jestli na druhé straně
+někdo odpovídá, o tom nevědí nic — a celá půlka webu (účty, inzerce,
+zprávy, poznámky, hlídání) proti opravdovému projektu neběžela ani
+jednou.
+
+Nové `scripts/kontrola-spusteni.mjs` dělí nálezy na tři hromádky a na
+konci vydá verdikt: **blokuje** / **spustit jde, ale přijdete o to** /
+**nezkoušeno**. Ta třetí je tam ta nejdůležitější: kontrola, která neumí
+přiznat, co nezměřila, je horší než žádná — svítí zeleně a mlčí přesně
+o tom, na co se ptáte.
+
+**Servisní klíč nepotřebuje.** Čtyři rozhodující živé kontroly se dají
+udělat veřejným klíčem z `js/config.js`, protože se ptají na to, co
+uvidí každý návštěvník, a žádná nic nezapisuje:
+
+| co | jak se to pozná |
+|---|---|
+| je SQL nasazené | `public_listings()` odpoví 200, ne `PGRST202` |
+| uzavřená funkce je uzavřená | `prehled_navstevnosti()` musí nepřihlášenému odmítnout |
+| kbelík na fotky existuje | neexistující soubor dá 404, chybějící kbelík 400 „Bucket not found" |
+| potvrzuje se e-mail | `/auth/v1/settings` vydá `mailer_autoconfirm` veřejně |
+
+**Dvě vady ve vlastní kontrole, obě nalezené prvním spuštěním.**
+Hlásila „balík 00-vse.sql je osekaný" nad balíkem, který je v pořádku:
+měl jsem mez „aspoň 50 funkcí", jenže `ocekavaneZeSQL()` počítá RŮZNÉ
+funkce (46), ne jejich definice (71 — táž funkce se v migracích
+přepisuje víckrát). Mez na počtu by se navíc rozešla s každou přidanou
+funkcí, takže se místo počtu ptá na **jména** osmi funkcí, bez kterých
+web nefunguje. A druhá: hledal jsem `--opravdu` kdekoli v souboru
+workflow — a ono to tam je, dvakrát, **ve vysvětlujícím komentáři**.
+Kontrola prošla, aniž cokoli ověřila. Po opravě (hledá se v řádku
+`run:`) vyšlo něco užitečnějšího: přepínač v příkazu **je**, ale jen
+pro ruční spuštění, takže **noční rozesílání jede nasucho** — pošta
+nezačne odcházet sama tím, že se něco nasadí.
+
+Hlídá to `scripts/test-kontrola-spusteni.mjs`: předstírá Supabase
+v šesti stavech a u každého rozbitého vyžaduje nález, který blokuje
+a vrátí návratový kód 1. Nejdůležitější kontrola z dvanácti je ta
+předposlední — **když databáze neodpovídá, musí výpis říct NEZKOUŠENO**,
+ne „nic nebrání". Obě sabotáže (spolknutá výjimka, přijatý chybějící
+kbelík) zkouška chytí.
+
+Sám nástroj v CI **neběží**: mluvil by s ostrým projektem a červenal by
+podle toho, co ještě nikdo nenasadil. V CI běží jen jeho zkouška.
