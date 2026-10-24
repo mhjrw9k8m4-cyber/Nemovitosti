@@ -86,6 +86,12 @@ jobs:
       # projektem a červenal by podle toho, co ještě nikdo nenasadil.
       - name: Kontrola připravenosti ke spuštění měří, co tvrdí
         run: node scripts/test-kontrola-spusteni.mjs
+
+      # Hlásič selhání nočních úloh. Zkouší se proti PŘEDSTÍRANÉMU
+      # GitHubu: žádný opravdový úkol se nikde nezakládá. Nejdůležitější
+      # z kontrol je ta, že při nedostupném GitHubu hlásič nemlčí.
+      - name: Hlásič selhání nočních úloh
+        run: node scripts/test-ohlas-selhani.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
         run: node scripts/test-cisla-okresu.mjs
       - name: Změna ceny nesmí nabídce sebrat věk

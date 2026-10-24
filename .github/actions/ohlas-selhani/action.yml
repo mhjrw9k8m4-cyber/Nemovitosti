@@ -1,0 +1,28 @@
+name: Ohlásit selhání noční úlohy
+description: >
+  Při selhání založí (nebo doplní) jeden úkol v repozitáři, aby se o tom
+  majitel dozvěděl. Bez tohohle kroku skončí selhaná noční úloha jen
+  červenou tečkou v záložce Actions, kam se nikdo nedívá. Veškerá logika
+  je v scripts/ohlas-selhani.mjs, aby se dala vyzkoušet bez GitHubu.
+inputs:
+  jmeno:
+    description: Jméno úlohy, jak se má objevit v názvu úkolu.
+    required: true
+  co-to-znamena:
+    description: Jedna věta pro člověka — co se tím pokazilo a co to stojí.
+    required: true
+runs:
+  using: composite
+  steps:
+    # Všechno jde PŘES PROMĚNNÉ PROSTŘEDÍ, nic se nevkládá do příkazu.
+    # Hlídá to scripts/test-ci-prava.mjs a výjimka „tady je to bezpečné"
+    # je přesně to, čím takové pravidlo umírá.
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        JMENO: ${{ inputs.jmeno }}
+        VYZNAM: ${{ inputs.co-to-znamena }}
+        ZNACKA: ${{ github.workflow }}
+        BEH: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: node scripts/ohlas-selhani.mjs

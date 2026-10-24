@@ -9743,3 +9743,60 @@ kbelík) zkouška chytí.
 
 Sám nástroj v CI **neběží**: mluvil by s ostrým projektem a červenal by
 podle toho, co ještě nikdo nenasadil. V CI běží jen jeho zkouška.
+
+## 146. Tři noční úlohy mohly selhat a nikdo se to nedozvěděl *24. 10.*
+
+Audit automatizace. **Co je dobré** (a ať se to nehledá podruhé):
+robot má tři nezávislá síta proti tichému rozpadu zdrojů (proti minulému
+běhu, proti mediánu 30 dnů, „zahazuje víc, než bere"), všechna
+s naměřenými prahy; prázdný zdroj **běh zastaví** a nechá v repozitáři
+stará data místo rozbitých; zdraví každého zdroje (`stav`, `pocet`,
+`chyba`, `preskoceno`, `dotazu`, `selhalo`) se zapisuje do dat a **web
+to ukazuje**; stahování má lhůty, opakování a rozptyl; kontrola inzerátů
+odkaz zkouší víckrát, než ho odsoudí; 253 zkoušek hlásí `::error::`
+s příčinou; nasazovací skript bez `--opravdu` nic neudělá a rozesílače
+běží nasucho; po spadnuté zkoušce v prohlížeči se díky `zkouska-pad.mjs`
+pořád dozvíte, co prošlo.
+
+**Co chybělo, a je to ta nejhloupější možná mezera:** když noční úloha
+**selhala, nestalo se NIC.** Ani jedna z osmi úloh neměla krok
+`if: failure()`, nikde se nezakládal úkol, nikam nešlo upozornění.
+Zůstala po ní červená tečka v záložce Actions, kam se nikdo nedívá —
+a web dál ukazoval data, která se přestala obnovovat. Tři úlohy běží
+podle hodin (robot každých 6 h, kontrola inzerátů denně, rozesílání
+denně), takže to byly tři tiché cesty, jak se web rozpadne bez zprávy.
+
+Nové `.github/actions/ohlas-selhani` (logika v `scripts/ohlas-selhani.mjs`,
+aby se dala vyzkoušet bez GitHubu) při selhání založí **jeden úkol na
+úlohu** — další selhání k němu připíše komentář. Nový úkol při každém
+selhání by za týden znamenal sedm stejných a člověk by je přestal
+otevírat; úkol se poznává podle skryté značky v těle, ne podle názvu.
+A hlásič **sám nikdy nespadne**: běží ve chvíli, kdy už něco selhalo,
+takže jeho vlastní chyba nesmí tu první přebít — co se nepovede, napíše
+jako `::warning::`, ale **nikdy nemlčí**.
+
+**Hlídač práv v CI moje rozšíření zachytil** — a dostal ostřejší
+pravidlo místo výjimky. `issues: write` si smí vzít jen úloha, která
+hlásič doopravdy používá; právo bez použití je nález. (Sabotáž: přidat
+`issues: write` do `testy.yml` → zkouška padne.)
+
+**Co se vědomě NEUDĚLALO: automatické opakování selhaného běhu.**
+Znělo to jako samozřejmé zlepšení, ale u robota nemá cenu (další běh je
+za 6 hodin) a u denních úloh je cena rizika vyšší než užitek: běh, který
+se sám přespouští, se při špatně napsané podmínce přespouští navždy.
+Úkol v repozitáři dá majiteli tlačítko „Re-run" a rozhodnutí nechá na
+člověku.
+
+**A co pořád chybí, pojmenované:** web **nehlásí chyby z prohlížeče
+návštěvníka** — `window.onerror` ani `unhandledrejection` není v `js/`
+ani jednou (změřeno: 0 výskytů). Spolu s tím, že všech 130 zkoušek
+v prohlížeči běží jen v Chromiu, to znamená, že rozbité jablečné Safari
+by zůstalo neviditelné navždy. To je největší zbývající mezera
+v hlášení chyb.
+
+Hlídá to `scripts/test-ohlas-selhani.mjs` (24 kontrol): předstírá GitHub
+v šesti stavech a vyžaduje, aby hlásič poprvé úkol založil, podruhé jen
+připsal, cizí úkol bez značky nepřepsal a při nedostupném GitHubu
+**nemlčel**. Staticky pak kontroluje, že všechny tři úlohy podle hodin
+hlásič mají a že švík pro zkoušku (`GH_API`) není v žádném workflow.
+Obě sabotáže chytí.

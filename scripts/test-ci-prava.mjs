@@ -83,11 +83,24 @@ for (const f of soubory) {
   }
   rozsahy[f] = nalezene;
   for (const [jm, hod] of Object.entries(nalezene)) {
+    /* `issues: write` SMÍ JEN TEN, KDO HLÁSIČ OPRAVDU POUŽÍVÁ.
+       Tři úlohy podle hodin si to právo berou, aby při selhání založily
+       úkol v repozitáři (.github/actions/ohlas-selhani) — bez toho po
+       selhané noční úloze zůstala jen červená tečka v záložce Actions,
+       kam se nikdo nedívá. Je to rozšíření práv, a tak se o něj hlídač
+       nerozšiřuje slepou výjimkou: podmínkou je, že táž úloha hlásič
+       v sobě má. Právo bez použití je právo navíc — a to je nález. */
+    if (jm === 'issues' && hod === 'write') {
+      if (!/uses:\s*\.\/\.github\/actions\/ohlas-selhani/.test(K[f])) {
+        siroka.push(`${f} (issues: write bez hlásiče selhání)`);
+      }
+      continue;
+    }
     if (jm !== 'contents') siroka.push(`${f} (${jm}: ${hod})`);
     else if (!/^(read|write)$/.test(hod)) siroka.push(`${f} (contents: ${hod})`);
   }
 }
-pravda('a nikde si nebere víc než čtení nebo zápis zdroje', siroka.length === 0,
+pravda('a nikde si nebere víc práv, než na co má použití', siroka.length === 0,
   'navíc: ' + siroka.join(', '));
 
 /* --- B) zápis jen tam, kde se pushuje ----------------------------- */

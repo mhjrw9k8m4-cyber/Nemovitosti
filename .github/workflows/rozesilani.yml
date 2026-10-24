@@ -36,6 +36,7 @@ on:
 # jí stačí přečíst si zdroj. Hlídá to scripts/test-ci-prava.mjs.
 permissions:
   contents: read
+  issues: write          # zakládá úkol, když úloha selže (viz poslední krok)
 
 jobs:
   rozeslat:
@@ -88,3 +89,15 @@ jobs:
           PK_VAPID_PRIVATNI: ${{ secrets.PK_VAPID_PRIVATNI }}
           PK_VAPID_VEREJNY: ${{ secrets.PK_VAPID_VEREJNY }}
           PK_VAPID_SUBJECT: ${{ secrets.PK_VAPID_SUBJECT }}
+
+      # KDYŽ TO SPADNE, AŤ SE TO NĚKDO DOZVÍ. Bez tohohle kroku zůstane
+      # po selhané noční úloze červená tečka v záložce Actions, kam se
+      # nikdo nedívá. Zakládá jeden úkol na úlohu a další selhání k němu
+      # jen připíše; sám nikdy nespadne, aby nepřebil tu první chybu.
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Rozesílání upozornění (e-mail a telefon)
+          co-to-znamena: >-
+            Hlídání neodeslalo upozornění. Kdo si uložil hledání, o nových pozemcích neví.
