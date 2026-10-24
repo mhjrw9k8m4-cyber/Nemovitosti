@@ -9398,3 +9398,35 @@ Výsledek: hlídač chytí obě podoby vady (zápis na nejvyšší úrovni
 i volání funkce, která zapisuje), jméno viníka vypíše přímo, a na
 knihovnu bez vlastní práce už nesahá. Zkouška se tím prodloužila
 o 12 sekund.
+
+## 140. Měřidlo tvrdilo, že měří každou cestu — jedenáct jich neznalo *24. 10.*
+
+V hlavičce `scripts/mericka-databaze.mjs` stálo, že měří „KAŽDOU
+cestu, kterou web opravdu volá". Nestálo to tam pravdivě: ze zdrojů se
+přes `/rest/v1/rpc/` volá 22 funkcí a měřidlo znalo jedenáct. Chybělo
+mezi nimi **`bump_view()`, kterou volá každé otevření stránky
+pozemku** — tedy nejčastější zápis na webu — a `ulozene_nahraj()`,
+hromadné nahrání uložených pozemků, které je jednou ze dvou cest,
+kterými databáze roste zvenčí.
+
+Doměřeno; nic z toho nebylo pomalé (`bump_view` 1,5 ms,
+`ulozene_nahraj` s plným polem 500 klíčů 2,4 ms, `my_listing_quota`
+1,6 ms, `mail_odeslan` 2,3 ms, `unsubscribe_mail` 2,5 ms —
+odhlašovací token má index z `unique`, takže se nehledá průchodem).
+Negativní výsledek stejně stojí za zapsání: jinak se bude hledat
+podruhé.
+
+**Dvě měření přitom tiše selhala.** `push_odber_uloz` a
+`push_odber_smaz` jsou cesty přihlášeného člověka, ale měřily se bez
+přihlášení, takže dotaz skončil chybou — a výpis to ukázal jako
+„Infinity ms", tedy jako číslo. Měřidlo teď neúspěch přiznává
+(`? NEZMĚŘENO — <chyba>`), protože měřidlo, které mlčí o tom, co
+nezměřilo, je horší než žádné.
+
+**A ten rozpor mezi hlavičkou a skutečností teď hlídá zkouška.**
+`scripts/test-sql-vykon.mjs` si vyčte jména funkcí volaných z `js/`
+a z rozesílačů a porovná je s tím, co měřidlo měří. Výjimka je
+jedna a je napsaná se jménem i důvodem (`create_listing` pouští i
+kontrolu fotek a první posouzení inzerátu, takže by se neměřila
+databáze); zkouška navíc hlásí i výjimku na funkci, která se už
+nevolá. Obě sabotáže chytí.

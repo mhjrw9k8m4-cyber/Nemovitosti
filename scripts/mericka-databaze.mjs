@@ -22,6 +22,12 @@
    u malé tabulky je rychlejší než index. Vada je, když roste s počtem
    řádků a web ho volá při každém načtení stránky.
 
+   CO SE NEMĚŘÍ A PROČ. create_listing() ne: ta kromě zápisu pouští
+   i kontrolu fotek a první posouzení inzerátu, takže by se tu měřilo
+   něco jiného než databáze. Všechno ostatní, co web nebo noční úloha
+   volá přes /rest/v1/rpc/, tady je — hlídá to srovnání v
+   scripts/test-sql-vykon.mjs, aby se na novou funkci nedalo zapomenout.
+
    TOHLE NENÍ ZKOUŠKA. Nic netvrdí, jen měří; hlídá se to v
    scripts/test-sql-vykon.mjs, kde jsou mezní čísla naměřená tímhle.
    ================================================================== */
@@ -108,12 +114,21 @@ try {
   /* Každá cesta se měří TŘIKRÁT a bere se nejlepší čas: první průchod
      platí za zahřátí mezipaměti a měřil by disk, ne dotaz. */
   function zmer(popis, sql, kdo) {
-    let nej = Infinity, plan = '';
+    let nej = Infinity, plan = '', potvora = '';
     for (let i = 0; i < 3; i++) {
       const out = psqlVse(['-d', db, '-tAc',
         `${kdo ? `set pk.uid = '${kdo}'; ` : ''}explain (analyze, costs off) ${sql}`]);
       const m = /Execution Time: ([\d.]+) ms/.exec(out);
       if (m && Number(m[1]) < nej) { nej = Number(m[1]); plan = out; }
+      if (!m) potvora = (out.split('\n').find((r) => /ERROR|chyba/i.test(r)) || out).trim();
+    }
+    /* NEZMĚŘENO SE MUSÍ PŘIZNAT. Napoprvé se na dvě cesty vypsalo
+       „Infinity ms" — dotaz skončil chybou (volaly auth.uid(), a to
+       bez přihlášeného uživatele), ale výpis se tvářil jako měření.
+       Měřidlo, které mlčí o tom, co nezměřilo, je horší než žádné. */
+    if (!isFinite(nej)) {
+      console.log(`  ? ${popis.padEnd(44)}  NEZMĚŘENO — ${potvora.slice(0, 90)}`);
+      return { ms: null, seq: [] };
     }
     const seq = [...plan.matchAll(/Seq Scan on ([a-z_]+)/g)].map((x) => x[1]);
     const stav = nej > 50 ? '✕' : nej > 10 ? '!' : '·';
@@ -133,9 +148,28 @@ try {
   zmer('ulozeny_uloz() — nový', `select ulozeny_uloz('nk-${Date.now()}')`, kdoMaNejvic);
   zmer('my_photo_space()', 'select my_photo_space()', kdoMaNejvic);
 
+  zmer('my_listing_quota()', 'select my_listing_quota()', kdoMaNejvic);
+  /* HROMADNÉ NAHRÁNÍ ULOŽENÝCH. Tohle je cesta, kterou databáze roste
+     zvenčí (viz docs/slaba-mista.md), takže se měří plným polem až po
+     strop účtu — ne jedním klíčem. */
+  zmer('ulozene_nahraj() — 500 klíčů', `select ulozene_nahraj(
+    (select array_agg('hr-' || g) from generate_series(1,500) g))`, kdoMaNejvic);
+  zmer('ulozeny_smaz()', `select ulozeny_smaz('hr-1')`, kdoMaNejvic);
+  zmer('push_odber_uloz()',
+    `select push_odber_uloz('https://push.priklad.cz/nove','k','a')`, kdoMaNejvic);
+  zmer('push_odber_smaz()',
+    `select push_odber_smaz('https://push.priklad.cz/nove')`, kdoMaNejvic);
+
   console.log('\nCESTY, KTERÉ VOLÁ KDOKOLI (veřejné)');
   zmer('public_listings()', 'select * from public_listings()');
   zmer('zapis_navstevu()', `select zapis_navstevu('index.html','','mobil',false)`);
+  /* bump_view se volá při KAŽDÉM otevření inzerátu, tedy nejčastěji
+     ze všech zápisů. */
+  zmer('bump_view()', `select bump_view((select id from listings order by id limit 1))`);
+  /* Odhlášení z pošty jedním klikem: hledá se podle tokenu, bez
+     přihlášení. Měří se naposled ze všech cest s poštou — vypne
+     posílání u všech hledání toho účtu, takže by ostatní měření
+     pokazilo. */
 
   console.log('\nCESTY NOČNÍCH ÚLOH (service_role)');
   zmer('hlidani_k_odeslani(20)', 'select * from hlidani_k_odeslani(20)');
@@ -145,6 +179,23 @@ try {
   zmer('uklid_posty(180)', 'select uklid_posty(180)');
   zmer('uklid_hlidani(30)', 'select uklid_hlidani(30)');
   zmer('prehled_navstevnosti(30)', 'select * from prehled_navstevnosti(30)');
+  /* Zápisy noční rozesílky. Volají se JEDNOU ZA HLEDÁNÍ, takže jejich
+     cena se násobí počtem odeslaných zpráv — u tisíců hledání je
+     i jediná milisekunda znát. */
+  const hledaniId = psql(['-d', db, '-tAc', 'select id from saved_searches order by id limit 1']).trim();
+  zmer('mail_odeslan() — 20 klíčů', `select mail_odeslan('${hledaniId}',
+    (select array_agg('k-' || g) from generate_series(1,20) g))`);
+  zmer('push_odeslan() — 20 klíčů', `select push_odeslan('${hledaniId}',
+    (select array_agg('p-' || g) from generate_series(1,20) g))`);
+  /* push_odber_mrtvy volá rozesílač, když odběr v telefonu zanikl;
+     zakládání a rušení odběru patří k přihlášenému (viz výš). */
+  zmer('push_odber_mrtvy()', `select push_odber_mrtvy('https://push.priklad.cz/nove')`);
+  {
+    const tok = psql(['-d', db, '-tAc',
+      'select token from mail_nastaveni order by user_id limit 1']).trim();
+    zmer('unsubscribe_mail() — podle tokenu, bez přihlášení',
+      `select unsubscribe_mail('${tok}')`);
+  }
 
   console.log('\n  · = do 10 ms, ! = do 50 ms, ✕ = nad 50 ms\n');
 } finally {

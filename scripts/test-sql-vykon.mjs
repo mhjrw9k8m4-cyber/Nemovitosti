@@ -26,6 +26,7 @@
 // na pomalejším stroji hlásila planý poplach; poměr dvou dotazů na
 // témže stroji ne.
 import path from 'node:path';
+import fsx from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { spustPostgres, podstrcSupabase, najdiPg } from './zkouska-postgres.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -331,6 +332,38 @@ try {
         `různých lidí ve výpisu: ${new Set(kdo).size} — čekám 3`);
     }
   }
+  /* ---- 6) NA ŽÁDNOU CESTU SE NESMÍ ZAPOMENOUT ------------------
+     Měřidlo (scripts/mericka-databaze.mjs) má v hlavičce napsáno, že
+     měří KAŽDOU cestu, kterou web nebo noční úloha volá. To se dá
+     snadno přestat být pravda: přidá se funkce, zavolá se z js/,
+     a měřidlo o ní neví — tedy ani nikdo jiný. Zjistilo se to tak,
+     že jedenáct funkcí v měřidle chybělo (bump_view, kterou volá
+     každé otevření pozemku, mezi nimi).
+     Proto se seznam volaných funkcí vyčte ze zdrojů a porovná s tím,
+     co měřidlo měří. Výjimky musí být napsané TADY, se jménem. */
+  const VYJIMKY = new Map([
+    ['create_listing', 'pouští i kontrolu fotek a první posouzení — neměřila by se databáze'],
+  ]);
+  const zdrojeVolani = fsx.readdirSync(path.join(KOREN, 'js'))
+    .filter((f) => f.endsWith('.js')).map((f) => path.join(KOREN, 'js', f))
+    .concat(fsx.readdirSync(path.join(KOREN, 'scripts'))
+      .filter((f) => /^(?:send-|uklid-)[a-z-]+\.mjs$/.test(f))
+      .map((f) => path.join(KOREN, 'scripts', f)));
+  const volane = new Set();
+  for (const f of zdrojeVolani) {
+    const t = fsx.readFileSync(f, 'utf8');
+    for (const m of t.matchAll(/rpc\/([a-z_]{3,})/g)) volane.add(m[1]);
+    for (const m of t.matchAll(/rpc(?:Plne)?\(\s*'([a-z_]{3,})'/g)) volane.add(m[1]);
+  }
+  const mericka = fsx.readFileSync(path.join(KOREN, 'scripts', 'mericka-databaze.mjs'), 'utf8');
+  const chybi = [...volane].filter((f) => !new RegExp('\\b' + f + '\\(').test(mericka)
+    && !VYJIMKY.has(f)).sort();
+  pravda(`měřidlo zná všech ${volane.size} funkcí, které se opravdu volají`,
+    chybi.length === 0,
+    'v scripts/mericka-databaze.mjs chybí: ' + chybi.join(', '));
+  const zbytecne = [...VYJIMKY.keys()].filter((f) => !volane.has(f));
+  pravda('mezi výjimkami není nic, co se už nevolá', zbytecne.length === 0,
+    'zbytečná výjimka: ' + zbytecne.join(', '));
 } finally {
   zavri();
 }
