@@ -64,6 +64,10 @@
 
     { klic: 'pk_mereni_relace', kde: 'session', skupina: 'provoz', nazev: 'Započítaná návštěva',
       popis: 'Aby se jedna návštěva nepočítala do statistiky dvakrát.', pocet: jeNeco },
+
+    { klic: 'pk_chyby_poslano', kde: 'session', skupina: 'provoz', nazev: 'Počet nahlášených chyb',
+      popis: 'Kolik pádů webu se z téhle záložky nahlásilo, aby jich neodletělo sto za sebou.',
+      pocet: jeNeco },
     { klic: 'pk_pohled_v1', kde: 'session', skupina: 'provoz', nazev: 'Seznam, nebo mapa',
       popis: 'Který pohled jste si na telefonu vybrali. Příští návštěva začne zase mapou.',
       pocet: jeNeco }
