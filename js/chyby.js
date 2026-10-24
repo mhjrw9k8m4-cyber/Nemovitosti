@@ -11,7 +11,7 @@
    tedy až po zpracování stránky — a většina skriptů webu se spouští
    dřív, během ní. Posluchač založený tady by právě ty první pády
    propásl, a to jsou ty nejhorší (nespustí se vůbec nic). Odchytává
-   je proto tříslovný vložený skript v hlavičce KAŽDÉ stránky
+   je proto krátký vložený skript v hlavičce KAŽDÉ stránky
    (scripts/hlasic-chyb.mjs), který nic neposílá — jen si pády ukládá
    do pole `window.PK_CHYBY`. Tenhle modul je ODESÍLAČ: pole vybere
    a pak si jeho `push` převezme, takže od té chvíle každý další pád
