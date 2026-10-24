@@ -278,6 +278,19 @@ jobs:
           PK_SQL_VYZADOVAN: '1'
         run: node scripts/test-sql-vykon.mjs
 
+      # Hlášení chyb z prohlížečů návštěvníků: polovina zkoušky pustí
+      # js/chyby.js v Node s podstrčeným oknem, druhá polovina ověří na
+      # opravdovém PostgreSQL, že databáze sama odmítne hlášku
+      # s e-mailem a že denní strop sepne. Proto je ve stejném kroku
+      # jako zkoušky výš — PostgreSQL je už nainstalovaný.
+      - name: Hlášení chyb z prohlížeče (co se pošle a co databáze pustí)
+        env:
+          PK_SQL_VYZADOVAN: '1'
+        run: node scripts/test-chyby-klienta.mjs
+
+      - name: Jedno pravidlo pro všechno, co web odesílá sám
+        run: node scripts/test-neosobni.mjs
+
       - name: Souhrnné SQL odpovídá dílčím souborům
         run: |
           node scripts/build-sql.mjs
@@ -640,6 +653,13 @@ jobs:
 
       - name: Měření návštěvnosti (co se posílá a co ne)
         run: node scripts/test-mereni.mjs
+
+      # Jediná zkouška, která opravdu rozbije skript ve stránce a čeká,
+      # jestli hlášení odletí — a to pod VLASTNÍ politikou CSP, kterou
+      # schválně neobchází: kdyby se hash vloženého odchytávače rozešel
+      # s jeho textem o jediný znak, hlásič by mlčel navždy.
+      - name: Pád ve stránce se opravdu nahlásí
+        run: node scripts/test-chyby-v-prohlizeci.mjs
 
       - name: Kreslení výběru na mapě (filtruje podle tvaru)
         run: node scripts/test-kresleni.mjs

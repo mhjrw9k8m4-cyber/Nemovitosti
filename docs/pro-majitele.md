@@ -68,6 +68,35 @@ Co to chce: pustit `supabase/00-vse.sql` (viz bod 5) a nasadit web.
 
 ---
 
+## 2b. Po nasazení se jednou týdně podívat, co lidem padá
+
+Je **napsané, otestované a nenasazené** — jde to s bodem 5 ve stejném
+SQL balíku, nic navíc nastavovat netřeba.
+
+Web od téhle chvíle hlásí pády ve prohlížeči návštěvníka
+(`js/chyby.js` → tabulka `chyby_klienta`). Přečte se to příkazem:
+
+```
+SUPABASE_SERVICE_ROLE_KEY=… node scripts/chyby.mjs
+SUPABASE_SERVICE_ROLE_KEY=… node scripts/chyby.mjs --dni 30
+```
+
+**Na co se dívat nejdřív: na sloupec „prohlížeče".** Všechny zkoušky
+v prohlížeči běží jen v Chromiu, protože jiný prohlížeč v prostředí
+není. Jediná zpráva o Safari na iPhonu nebo o starém Androidu tedy
+přichází právě odtud — a dokud ji nikdo nepřečte, nepřišla.
+
+Hlásí se jen to, co se dá opravit: hláška, jméno našeho souboru a řádek,
+rodina prohlížeče. Žádné IP, žádné cookies, žádný celý user agent;
+adresy a e-maily se z hlášek vyhazují v prohlížeči i v databázi.
+„Script error." se nehlásí vůbec — tak se jeví chyba z cizího
+rozšíření a opravit se z ní nedá nic.
+
+Co to chce: nic. Jen si to **jednou týdně přečíst** (a všimnout si, když
+řádků je najednou hodně).
+
+---
+
 ## 3. Zapnout hlídání e-mailem
 
 Hotová funkce, která dnes **nedělá nic**. Mění web z „místa, kam se

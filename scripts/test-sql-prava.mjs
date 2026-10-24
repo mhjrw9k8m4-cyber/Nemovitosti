@@ -44,6 +44,7 @@ const VYJIMKY = {
   public_listings: 'vrací jen zveřejněné inzeráty, tedy to, co je stejně vidět na webu',
   subscribe_watch: 'přihlášení e-mailu k hlídání; samo nic neprozradí, potvrzuje se odkazem s tokenem (confirm_watch) a má strop na jeden e-mail',
   zapis_navstevu: 'zápis návštěvy do statistiky; nic nečte a nemá komu co vydat',
+  zapis_chybu: 'zápis pádu v prohlížeči do čítačů chyb; nic nečte a nemá komu co vydat',
 };
 
 const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
@@ -255,6 +256,25 @@ const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
   pravda('a strop nezahodí měření kombinace, která se dnes už počítala',
     /not exists[\s\S]*from navstevnost[\s\S]*stranka\s*=\s*s/i.test(navsteva),
     'nad stropem by se přestalo počítat i to, co se počítat má');
+
+  /* Hlášení chyb z prohlížeče je tentýž případ: řádek vzniká pro
+     každou kombinaci (den, stránka, hláška, místo, prohlížeč) a hláška
+     je volný text. Navíc se tu hlídá, že se ořez osobních údajů
+     nespoléhá jen na prohlížeč — zavolat RPC umí kdokoli s veřejným
+     klíčem, a ten ořez prostě vynechá. */
+  const chyba = (SQL.match(/create\s+or\s+replace\s+function\s+zapis_chybu[\s\S]*?\$\$;/i) || [''])[0];
+  pravda('hlášení chyb se v SQL najde', chyba.length > 0);
+  pravda('a má denní strop na počet řádků',
+    /count\(\*\)[\s\S]*from chyby_klienta[\s\S]*current_date[\s\S]*>=\s*\d+/i.test(chyba),
+    'kdokoli anonymně vyrobí libovolně mnoho hlášek, tedy řádků');
+  pravda('a sepnutý strop se pozná z dat, ne jen z kódu', /'\(strop\)'/.test(chyba),
+    'zahozená hlášení by zmizela a vypadalo by to, že se nic nestalo');
+  pravda('a hlášku s e-mailem odmítne sama databáze, ne až prohlížeč',
+    /@\[A-Za-z0-9\.-\]\+/.test(chyba) && /return;/.test(chyba),
+    'ořez v prohlížeči obejde kdokoli, kdo si RPC zavolá sám');
+  pravda('a adresu v hlášce nahradí značkou',
+    /regexp_replace\([\s\S]*https\?:\/\//.test(chyba),
+    'adresa umí nést token i e-mail v parametrech');
 
   const hromada = (SQL.match(/create\s+or\s+replace\s+function\s+ulozene_nahraj[\s\S]*?\$\$;/i) || [''])[0];
   const jeden = (SQL.match(/create\s+or\s+replace\s+function\s+ulozeny_uloz[\s\S]*?\$\$;/i) || [''])[0];

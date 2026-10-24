@@ -163,6 +163,10 @@ try {
   console.log('\nCESTY, KTERÉ VOLÁ KDOKOLI (veřejné)');
   zmer('public_listings()', 'select * from public_listings()');
   zmer('zapis_navstevu()', `select zapis_navstevu('index.html','','mobil',false)`);
+  /* Zápis chyby z prohlížeče. Volá se jen při pádu, ale PRÁVĚ TEHDY
+     nesmí stránku zdržet — a má v sobě count(*) přes dnešní řádky
+     (denní strop), takže to není jen insert. */
+  zmer('zapis_chybu()', `select zapis_chybu('index.html','x is not a function','js/min/klic.js:1:1','safari-17')`);
   /* bump_view se volá při KAŽDÉM otevření inzerátu, tedy nejčastěji
      ze všech zápisů. */
   zmer('bump_view()', `select bump_view((select id from listings order by id limit 1))`);
@@ -176,9 +180,11 @@ try {
   zmer('hlidani_k_odeslani_push(20)', 'select * from hlidani_k_odeslani_push(20)');
   zmer('osirele_fotky(24, 500)', 'select * from osirele_fotky(24, 500)');
   zmer('uklid_navstevnosti()', 'select uklid_navstevnosti()');
+  zmer('uklid_chyb_klienta()', 'select uklid_chyb_klienta()');
   zmer('uklid_posty(180)', 'select uklid_posty(180)');
   zmer('uklid_hlidani(30)', 'select uklid_hlidani(30)');
   zmer('prehled_navstevnosti(30)', 'select * from prehled_navstevnosti(30)');
+  zmer('prehled_chyb(7)', 'select * from prehled_chyb(7)');
   /* Zápisy noční rozesílky. Volají se JEDNOU ZA HLEDÁNÍ, takže jejich
      cena se násobí počtem odeslaných zpráv — u tisíců hledání je
      i jediná milisekunda znát. */

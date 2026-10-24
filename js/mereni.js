@@ -41,24 +41,17 @@
 
   var KLIC_RELACE = 'pk_mereni_relace';
 
+  /* Stráže, jméno stránky a cesta ven jsou v js/neosobni.js — stejné
+     pravidlo platí i pro hlášení chyb (js/chyby.js) a napsané dvakrát
+     by to jedno pravidlo nebylo. Který soubor je na stránce dřív,
+     hlídá scripts/test-neosobni.mjs. */
   function mamMerit() {
-    try {
-      var h = location.hostname;
-      if (h !== 'parcelaka.cz' && h !== 'www.parcelaka.cz') return false;
-      if (navigator.webdriver) return false;
-      if (navigator.doNotTrack === '1' || window.doNotTrack === '1'
-        || navigator.globalPrivacyControl === true) return false;
-      if (document.visibilityState === 'prerender') return false;
-      if (!window.PK_SUPABASE_URL || !window.PK_SUPABASE_KEY) return false;
-    } catch (e) { return false; }
+    var N = window.PKNeosobni;
+    if (!N || !N.smimePoslat()) return false;
+    /* Jen pro měření: stránka načtená na pozadí dopředu není návštěva.
+       U chyb je to naopak — pád při předběžném načtení je pád. */
+    try { if (document.visibilityState === 'prerender') return false; } catch (e) { return false; }
     return true;
-  }
-
-  /* „pozemek-benesov-benesov-rsg5bb.html". Kořen webu je index.html. */
-  function jmenoStranky() {
-    var c = (location.pathname || '/').split('/').pop();
-    if (!c) return 'index.html';
-    return c.toLowerCase().slice(0, 80);
   }
 
   /* Z odkazujícího jen doména, a jen cizí — proklik v rámci webu není
@@ -97,35 +90,14 @@
     var telo;
     try {
       telo = JSON.stringify({
-        p_stranka: jmenoStranky(),
+        p_stranka: window.PKNeosobni.jmenoStranky(),
         p_zdroj: zdroj(),
         p_zarizeni: zarizeni(),
         p_prvni: prvniVRelaci(),
       });
     } catch (e) { return; }
 
-    var adresa = window.PK_SUPABASE_URL + '/rest/v1/rpc/zapis_navstevu';
-    /* sendBeacon neumí vlastní hlavičky, a Supabase chce klíč. Jde
-       poslat v adrese — je to veřejný publishable klíč, přesně k tomu
-       určený. Když beacon není nebo odmítne, zkusí se fetch. */
-    var sKlicem = adresa + '?apikey=' + encodeURIComponent(window.PK_SUPABASE_KEY);
-    try {
-      if (navigator.sendBeacon) {
-        var b = new Blob([telo], { type: 'application/json' });
-        if (navigator.sendBeacon(sKlicem, b)) return;
-      }
-    } catch (e) {}
-    try {
-      fetch(adresa, {
-        method: 'POST', keepalive: true,
-        headers: {
-          'content-type': 'application/json',
-          apikey: window.PK_SUPABASE_KEY,
-          authorization: 'Bearer ' + window.PK_SUPABASE_KEY,
-        },
-        body: telo,
-      }).catch(function () {});
-    } catch (e) {}
+    window.PKNeosobni.posliRpc('zapis_navstevu', telo);
   }
 
   /* Až po načtení: měření se nemá prát s vykreslením o hlavní vlákno. */

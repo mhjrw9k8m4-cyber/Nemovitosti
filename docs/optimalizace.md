@@ -9800,3 +9800,65 @@ připsal, cizí úkol bez značky nepřepsal a při nedostupném GitHubu
 **nemlčel**. Staticky pak kontroluje, že všechny tři úlohy podle hodin
 hlásič mají a že švík pro zkoušku (`GH_API`) není v žádném workflow.
 Obě sabotáže chytí.
+
+## 147. Když web spadne návštěvníkovi v prohlížeči, nedozvěděl se to nikdo *24. 10.*
+
+Druhá polovina auditu z oddílu 146. Noční úlohy teď o svém selhání
+řeknou; **prohlížeč návštěvníka ne.** Změřeno: `window.onerror` ani
+`unhandledrejection` nebyl v `js/` ani jednou (0 výskytů). Rozbitý
+skript tedy znamenal poloprázdnou stránku, odchod a nulovou zpětnou
+vazbu — a protože všech 131 zkoušek v prohlížeči běží jen v Chromiu
+(jiný prohlížeč v prostředí není), rozbité Safari na iPhonu by zůstalo
+neviditelné navždy.
+
+**Jak se to odchytává, a proč ne jedním souborem.** Odložený skript
+(`defer`) se spustí teprve po zpracování stránky — ale stránka pozemku
+má patnáct NEODLOŽENÝCH skriptů, které běží během ní. Posluchač
+založený až v odloženém souboru by propásl právě ty pády, kdy se
+nespustí vůbec nic. Odchytává proto **vložený skript v hlavičce každé
+stránky** (320 B, na všech 2 393 stránkách totožný do bajtu, aby to byl
+jediný hash navíc v CSP): nic neposílá, jen si pády ukládá do pole.
+Odesílač `js/chyby.js` pak pole vybere a převezme si jeho `push` —
+jedno místo odchytu, jedno místo odeslání, nic dvakrát. Vkládá se **za**
+hlavičku CSP, protože politika z `<meta>` platí teprve na to, co
+prohlížeč zpracuje po ní.
+
+**Co se posílá:** jméno stránky, hláška, místo (`js/min/ceny.js:14:9`)
+a prohlížeč jako `safari-17`. **Celý user agent ne** — verze, jazyk
+a model telefonu dohromady zužují okruh lidí na jednotky. Z hlášky se
+vyhazují adresy a e-maily, a to **dvakrát**: v prohlížeči a znovu
+v databázi, protože RPC si zavolá kdokoli s veřejným klíčem a ořez
+v prohlížeči prostě vynechá. Hláška s e-mailem se nezapíše vůbec.
+Tabulka je stejná myšlenka jako u návštěvnosti: **čítače hlášek, žádní
+lidé.** Strop 300 různých hlášek za den, sepnutí vidět v řádku
+`(strop)`, úklid po půl roce. V prohlížeči stropy tři: táž hláška
+jednou za načtení, tři různé za načtení, osm za relaci.
+
+**Vědomá cena: při „nesledovat" se nehlásí nic.** Technicky bychom
+mohli — čítač nikoho nesleduje — ale stejnou stráž má měření
+návštěvnosti, a web o sobě tvrdí, že neposílá nic. Pády zpřísněných
+prohlížečů tedy neuvidíme. **A „Script error." se zahazuje:** tak se
+jeví chyba z cizího skriptu (rozšíření, blokovač), nenese jméno, řádek
+ani hlášku — opravit se z ní nedá nic a byla by to většina hlášení.
+
+**Hlídač dvojích kopií v repozitáři našel moji vlastní kopii.** Stráže
+(kdy se nesmí poslat nic), jméno stránky a cesta ven byly nejdřív
+dvakrát: v měření a v hlásiči. Na tom je zlé přesně to, co u stráží
+nejvíc bolí — zpřísnit jednu kopii a druhou ne znamená, že web dál
+posílá odtud, odkud nemá, a nikdo to nepozná. Vzniklo proto
+`js/neosobni.js`, které si berou obě strany, a `scripts/test-neosobni.mjs`
+hlídá, že stráž **není nikde jinde**, že si každá stránka sdílený modul
+bere, a bere ho **dřív** (odložené skripty běží v pořadí ze stránky).
+
+**Co by se nedalo ověřit bez prohlížeče.** `scripts/test-chyby-v-prohlizeci.mjs`
+pustí celý web v Chromiu, podstrčí jeden NEODLOŽENÝ skript stránky
+rozbitý — a čeká, jestli hlášení odletí. Politiku CSP přitom
+**schválně neobchází**: kdyby se hash vloženého odchytávače rozešel
+s jeho textem o jediný znak, prohlížeč ho zakáže a hlásič mlčí navždy.
+Sabotáž (jedna mezera navíc ve vloženém skriptu jedné stránky) to
+chytla: místo pádu přišlo prázdno a politika skript odmítla.
+
+Dohromady 42 nových kontrol: 33 na hlásič a databázi (polovina v Node
+s podstrčeným oknem, polovina na opravdovém PostgreSQL — tam se zkouší,
+že hlášku s e-mailem odmítne sama databáze a že denní strop sepne),
+9 v prohlížeči. Čte se to příkazem `node scripts/chyby.mjs`.

@@ -4,13 +4,18 @@
 
      SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/uklid-databaze.mjs
 
-   PROČ. Dvě tabulky rostou bez konce a žádná z nich nemá kdo zmenšit:
+   PROČ. Tyhle tabulky rostou bez konce a žádnou z nich nemá kdo
+   zmenšit (dvě položky níž nejsou tabulky, ale totéž jinde):
 
    · navstevnost — čítače po dnech. Funkce uklid_navstevnosti() v
      supabase/navstevnost.sql existuje od začátku a maže řádky starší
      dvou let. Nevolal ji NIKDO: v celém repozitáři na ni byl jediný
      odkaz, a ten v komentáři jiného testu. Úklid, který se nespouští,
      je jen slib.
+   · chyby_klienta — čítače nahlášených pádů z prohlížečů návštěvníků.
+     Hláška starší půl roku už nikoho neopraví: kód, na který ukazuje,
+     v té podobě dávno není. Zapisovat do té tabulky smí kdokoli
+     s veřejným klíčem, takže úklid tu není kosmetika.
    · mail_poslane a push_poslane — klíče nabídek, které už odešly, aby
      se neposlaly podruhé. Nabídka z dat zmizí nejpozději za pár měsíců
      (změřeno: 308 z 1 980 nabídek zmizelo za 17 dní), takže záznam
@@ -99,6 +104,7 @@ const DNI_HLIDANI = Math.max(parseInt(process.env.UKLID_HLIDANI_DNI || '30', 10)
 
 const ukoly = [
   ['uklid_navstevnosti', {}, 'čítače návštěvnosti starší dvou let'],
+  ['uklid_chyb_klienta', {}, 'nahlášené chyby z prohlížečů starší půl roku'],
   ['uklid_posty', { p_dni: DNI }, `záznamy o odeslané poště starší ${DNI} dní`],
   ['uklid_hlidani', { p_dni: DNI_HLIDANI }, `nepotvrzené přihlášky k hlídání starší ${DNI_HLIDANI} dní`],
 ];

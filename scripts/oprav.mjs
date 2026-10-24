@@ -53,6 +53,10 @@ const KROKY = [
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],
+  /* Až ZA sazbou (vkládá kód, ve kterém by nezlomitelná mezera byla
+     chyba) a PŘED očištěním i razítkováním: odkaz na js/chyby.js se
+     má přepsat na js/min/ a orazítkovat. */
+  ['sjednot-hlasic-chyb.mjs', 'odchytávač chyb v hlavičce každé stránky'],
   /* Očištění PŘED razítkem: mění odkazy ve stránkách (styles.css →
      styles.min.css), takže razítko se musí počítat až z výsledku. */
   ['minifikace.mjs', 'očištěný stylopis pro prohlížeč'],
