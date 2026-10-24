@@ -46,6 +46,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import { sklon } from './text.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const ZNACKA = '[sebeoprava]';
@@ -67,6 +68,23 @@ export const PATRI_GENERATORUM = [
 ];
 export function patriGeneratorum(soubor) {
   return PATRI_GENERATORUM.some((v) => v.test(soubor));
+}
+
+/* ZPRÁVA DO COMMITU. Je to jediná věta, kterou po sebeopravě někdo
+   přečte, takže se v ní POČÍTÁ i skloňování: první oprava v CI hlásila
+   „Rozcházelo se 1 souborů", a to je přesně ten druh chyby, který
+   tenhle repozitář hlídá zkouškou jinde (generátor stránek krajů ji
+   měl taky). Pravidlo je proto sdílené, v scripts/text.mjs. */
+export function zpravaOprav(zmenene) {
+  const n = (zmenene || []).length;
+  const vypis = n <= 6 ? (zmenene || []).join(', ')
+    : `${zmenene.slice(0, 5).join(', ')} a ${sklon(n - 5, 'další', 'další', 'dalších')} ${n - 5}`;
+  const rozchazel = sklon(n, 'Rozcházel', 'Rozcházely', 'Rozcházelo');
+  const soubor = sklon(n, 'soubor', 'soubory', 'souborů');
+  return `${ZNACKA} dorovnat odvozené soubory se zdrojem\n\n`
+    + `${rozchazel} se ${n} ${soubor}: ${vypis}.\n`
+    + 'Opravu udělal řetěz generátorů (node scripts/oprav.mjs), nic se nehádalo,'
+    + ' a před nahráním prošla celá rychlá sada.\n';
 }
 
 /* ROZHODNUTÍ ODDĚLENÉ OD VYKONÁNÍ. Takhle se dá každé pravidlo
@@ -164,12 +182,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   hlas((z.stdout || '').split('\n').filter((r) => /Rychlá sada:/.test(r)).join('\n'));
 
-  const vypis = zmenene.length <= 6 ? zmenene.join(', ')
-    : `${zmenene.slice(0, 5).join(', ')} a dalších ${zmenene.length - 5}`;
-  const zprava = `${ZNACKA} dorovnat odvozené soubory se zdrojem\n\n`
-    + `Rozcházelo se ${zmenene.length} souborů: ${vypis}.\n`
-    + 'Opravu udělal řetěz generátorů (node scripts/oprav.mjs), nic se nehádalo,'
-    + ' a před nahráním prošla celá rychlá sada.\n';
+  const zprava = zpravaOprav(zmenene);
 
   if (nasucho) {
     hlas('\n--nasucho: nic se nenahrává. Zpráva by byla:\n' + zprava);

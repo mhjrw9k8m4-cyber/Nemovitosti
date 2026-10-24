@@ -14,7 +14,7 @@ import { jsonVeStrance } from './json-do-stranky.mjs';
    tedy zůstávala s obyčejnou mezerou a na úzké obrazovce končila sama
    na konci řádku. Osazuje se proto rovnou při sestavení hodnoty. */
 import { osaz } from './sazba.mjs';
-import { bezKomentaruVHtml } from './text.mjs';
+import { bezKomentaruVHtml, sklon } from './text.mjs';
 /* Odkaz na vlastní stránku pozemku. Které nabídce patří která stránka
    rozhoduje generátor těch stránek — proto se to mapování odsud jen
    PŮJČUJE. Spočítat si ho tu podruhé by znamenalo dvě pravdy o jednom
@@ -185,11 +185,7 @@ function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('c
    (má jediný okres) hlásil „1 okresů" a okres s jednou dražbou
    „1 dražby". Vypadá to jako strojový překlad — a je to jediné místo,
    kde si člověk všimne, že ta čísla nikdo nečetl. */
-function sklon(n, jedna, dveAzCtyri, petAVic){
-  if(n === 1) return jedna;
-  if(n >= 2 && n <= 4) return dveAzCtyri;
-  return petAVic;
-}
+/* `sklon` je od 24. 10. v scripts/text.mjs — používá ho i sebeoprava. */
 function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
 /* PŘÍDAVNÉ JMÉNO SE MUSÍ SKLOŇOVAT S NÍM. Podstatné jméno se tu
    skloňovalo správně, ale „Zbývajících" stálo natvrdo ve druhém pádě,

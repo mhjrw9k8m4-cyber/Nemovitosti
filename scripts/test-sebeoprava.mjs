@@ -23,7 +23,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { rozhodni, patriGeneratorum, ZNACKA, VYPINAC } from './sebeoprava.mjs';
+import { rozhodni, patriGeneratorum, zpravaOprav, ZNACKA, VYPINAC } from './sebeoprava.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -66,6 +66,23 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
   p('ani na ručně psanou prózu v docs/', { zmenene: ['docs/optimalizace.md'] }, 'ruční práci');
   p('ani na zdrojový stylopis', { zmenene: ['css/styles.css'] }, 'ruční práci');
   p('ani na package.json', { zmenene: ['package.json'] }, 'ruční práci');
+}
+
+/* ---- 2b) zpráva do commitu umí česky ---------------------------- */
+/* První oprava v CI hlásila „Rozcházelo se 1 souborů". Je to jediná
+   věta, kterou po sebeopravě někdo přečte — a zrovna tenhle repozitář
+   má na skloňování počtů vlastní zkoušku jinde. */
+{
+  const veta = (n) => zpravaOprav(Array.from({ length: n }, (_, i) => `data/x${i}.json`))
+    .split('\n')[2];
+  pravda('zpráva: jeden soubor se „rozcházel"', /^Rozcházel se 1 soubor: /.test(veta(1)), veta(1));
+  pravda('dva se „rozcházely"', /^Rozcházely se 2 soubory: /.test(veta(2)), veta(2));
+  pravda('pět se „rozcházelo"', /^Rozcházelo se 5 souborů: /.test(veta(5)), veta(5));
+  const hodne = zpravaOprav(Array.from({ length: 2263 }, (_, i) => `p${i}.html`)).split('\n')[2];
+  pravda('a dlouhý výčet se zkrátí, taky vysklonovaně',
+    /a dalších 2258\.$/.test(hodne), hodne.slice(-40));
+  pravda('zpráva nese značku, podle které se pozná druhá oprava v řadě',
+    zpravaOprav(['a.html']).startsWith(ZNACKA));
 }
 
 /* ---- 3) co patří generátorům a co ne ----------------------------- */

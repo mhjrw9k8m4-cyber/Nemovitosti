@@ -110,3 +110,18 @@ export function bezKomentaruVHtml(html) {
   /* Po komentáři zůstane prázdný řádek; dva za sebou se slijí v jeden. */
   return out.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n');
 }
+
+/* SKLOŇOVÁNÍ POČTŮ — třetí převod, který si psal každý sám.
+ * Generátor stránek krajů ho měl u sebe („1 okresů" a „1 dražby" byly
+ * jeho nálezy) a sebeoprava si ho málem opsala počtvrté: její první
+ * commit hlásil „Rozcházelo se 1 souborů". Je to jediné místo, kde si
+ * člověk všimne, že ta čísla nikdo nečetl — takže patří na jedno místo.
+ *
+ * POZOR: skloňuje se i SLOVESO a přídavné jméno, ne jen podstatné
+ * jméno („Rozcházel se 1 soubor", „Rozcházely se 2 soubory",
+ * „Rozcházelo se 5 souborů"). Proto tři tvary, ne dva. */
+export function sklon(n, jedna, dveAzCtyri, petAVic) {
+  if (n === 1) return jedna;
+  if (n >= 2 && n <= 4) return dveAzCtyri;
+  return petAVic;
+}

@@ -9950,3 +9950,51 @@ zvlášť, jedenadvacet vzorků „patří generátorům / je ruční práce",
 dva živé běhy, které musí **nic neudělat** a říct to nahlas, a staticky
 pořadí „dokázat, pak commitnout". Tři sabotáže (propustit ruční práci,
 zrušit pojistku proti smyčce, obrátit pořadí) to chytne.
+
+### 148b. A pak se to vyzkoušelo naostro *24. 10.*
+
+Sebeoprava, která nikdy nic neopravila, je tvrzení, ne systém. Zkouška
+proběhla v CI nad ostrou větví a stála dva pokusy — oba něco naučily.
+
+**První pokus byl špatně navržený a zkoušky to ukázaly.** Vyrobil jsem
+„rozchod" tím, že jsem opravil formulaci v komentáři v `js/chyby.js`
+a schválně nepustil generátory. Běh ale prošel **zeleně** a sebeoprava
+se správně nespustila: očištěné kopie v `js/min/` se staví **bez
+komentářů**, takže se nezměnil ani jejich obsah, ani razítko `?v=`,
+ani hash v CSP. Žádný rozchod tedy nevznikl. Je to dobrá vlastnost
+řetězu (úprava komentáře nerozhýbe 2 393 stránek), jen jsem si ji
+nejdřív vzal za vadu.
+
+**Druhý pokus: zastaralé číslo v generované tabulce stavu** (120 místo
+128 zkoušek) — tedy přesně ta vada, která mi 24. 10. dvakrát rozsvítila
+červenou po sloučení s daty robota. Výsledek z běhu robota:
+
+```
+Pouštím generátory (node scripts/oprav.mjs)…
+Rozchod: 1 odvozených souborů nesedí se zdrojem.
+Dokazuju opravu celou rychlou sadou…
+Rychlá sada: 128/128 prošlo za 96 s (4 naráz).
+SEBEOPRAVA: opraveno a nahráno (1 souborů). Rychlá sada prošla.
+```
+
+Od pushe po opravený repozitář **necelé tři minuty, bez člověka.**
+Commit `[sebeoprava] dorovnat odvozené soubory se zdrojem` změnil
+jediný soubor — ten, který se rozcházel.
+
+**Tři věci, které se tím zjistily:**
+
+1. **Předtím se sebeoprava dvakrát správně PŘESKOČILA.** Reagovala na
+   běhy, které byly *zrušené* (nahradil je novější push), ne spadlé —
+   a podmínka `conclusion == 'failure'` ji nepustila dál. Přeskočení
+   není selhání; je to pravidlo, které drží.
+2. **Push od robota znovu nespustí CI** (vlastní ochrana GitHubu proti
+   smyčkám), takže poslední červený běh zůstane u starého commitu.
+   Je to vlastně třetí vrstva proti smyčce — a důkazem správnosti je ta
+   rychlá sada, kterou si oprava pustí **před** nahráním.
+3. **Vlastní zpráva do commitu neumila česky:** „Rozcházelo se
+   1 souborů". Je to jediná věta, kterou po sebeopravě někdo přečte,
+   a tenhle repozitář má na skloňování počtů zkoušku jinde. Pravidlo
+   `sklon()` bylo schované v generátoru stránek krajů (kde kdysi
+   hlásil „1 okresů"), takže se přesunulo do `scripts/text.mjs` —
+   a skloňuje se i sloveso: „Rozcházel se 1 soubor", „Rozcházely se
+   2 soubory", „Rozcházelo se 5 souborů".
