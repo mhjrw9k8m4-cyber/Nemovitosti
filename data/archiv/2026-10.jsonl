@@ -466,3 +466,7 @@
 {"k":"Píšťany|32/5|Litoměřice|50.519|14.069#1rqp5xw","m":"Píšťany","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1398,"c":114496,"od":"2026-09-30","do":"2026-10-23","proc":"zmizela"}
 {"k":"Lukavec u Lovosic|—|Litoměřice|50.502|14.087#1rqp62n","m":"Lukavec u Lovosic","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":14272,"c":1333578,"od":"2026-09-30","do":"2026-10-23","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-23","proc":"zmizela"}
+{"k":"Křelov|—|Olomouc|49.618|17.188#rgrt","m":"Křelov","o":"Olomouc","dr":"zemědělský pozemek","t":"sale","v":98208,"c":8347680,"od":"2026-09-14","do":"2026-10-24","proc":"zmizela"}
+{"k":"Hajany|—|Strakonice|49.445|13.834#rgr0","m":"Hajany","o":"Strakonice","dr":"stavební pozemek","t":"sale","v":1168,"c":1549000,"od":"2026-09-14","do":"2026-10-24","proc":"zmizela"}
+{"k":"Maďarská|—|Ústí nad Orlicí|49.919|16.608#rgsi","m":"Maďarská","o":"Ústí nad Orlicí","dr":"stavební pozemek","t":"sale","v":753,"c":4275000,"od":"2026-09-19","do":"2026-10-24","proc":"zmizela"}
+{"k":"Manželů Starých|—|Praha-východ|50.109|14.688#9rje7","m":"Manželů Starých","o":"Praha-východ","dr":"stavební pozemek","t":"sale","v":788,"c":10990000,"od":"2026-10-23","do":"2026-10-24","proc":"zmizela"}
