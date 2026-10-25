@@ -10851,3 +10851,58 @@ A zkouška se opravila taky: **prostředí si teď vyprazdňuje, ne dědí.**
 Dokud brala proměnné, jak přišly, měřila něco jiného, než říká — a to
 je v tomhle repozitáři pořád tentýž vzorec: *hlídač, který měří jiný
 stav, než si myslí.*
+
+## 160. Tři rodiny generovaných stránek, ne jedna — a první důkaz naostro *25. 10.*
+
+**Co bylo špatně.** Živá kontrola v prohlížeči (oddíly 154 a 156a)
+otevírala dvě stránky: úvodní a jednu stránku pozemku. Generované
+stránky jsou ale **tři rodiny** a každá se skládá jiným generátorem
+z jiného řezu dat: stránka pozemku, **okresní** a **krajská**. Jedna
+z nich může být rozbitá, zatímco druhé dvě běží — a na okresní
+a krajské lidé přicházejí z vyhledávačů, takže rozbitá okresní stránka
+je ztracený návštěvník i tehdy, když úvodní stránka funguje.
+
+**Čím se u nich pozná, že se opravdu dokreslily.** Ne kartami —
+ty tyhle stránky **nemají**, takže měřit je by znamenalo hlásit prázdno
+vždycky. Důkazem je u nich seznam míst (`.okr-item`). Naměřeno
+ručně předem, aby se neměřilo něco, co tam nemá být: okresní stránka
+33 míst, krajská 12, bez pádu.
+
+Kontrola tedy dělá **třináct** měření místo jedenácti, a falešný web ve
+zkoušce dostal okresní i krajskou stránku a novou vyrobenou vadu
+(stránka bez seznamu míst) — **19 kontrol, 19 správných odpovědí**.
+
+### 160a. A první běh naostro: web opravdu funguje člověku
+
+Kontrola nasazení běžela na ostré doméně a **živá kontrola v prohlížeči
+prošla 11 z 11** (tehdy ještě bez dvou nových bodů):
+
+| Co se měřilo venku | Výsledek |
+|---|---|
+| úvodní stránka je naše, výpis se dokreslil | ✓ 24 karet |
+| mapa se postavila (Leaflet má vrstvy) | ✓ |
+| hledání filtruje (nesmysl → 0, prázdné pole → zpět na 24) | ✓ |
+| na 390 px nic nepřetéká | ✓ přes okraj 0 px |
+| výjimka při načtení, zablokovaná CSP, požadavek 400+ | ✓ nic |
+| generovaná stránka pozemku ze sitemapy | ✓ bez výjimky |
+| dlaždice s klíčovými čísly na ní | ✓ 3 |
+
+To je **první důkaz tohohle druhu, jaký repozitář kdy měl**: dosud se
+vědělo jen to, že web *odpovídá přes HTTP*. Teď je naměřeno, že web
+opravdu **funguje člověku**.
+
+### 160b. A opravný krok se dal poprvé ozkoušet naostro
+
+Ve stejném běhu proběhl i opravný krok a přečetl stav robota ze
+**skutečného** API: *„robot: neběží, naposledy dojel 37 min (běhů
+v API: 10)"*, rozhodnutí *„nic — mezi nálezy není stará data"*. Tím je
+prokázané čtení přes `GITHUB_TOKEN` i celé zapojení kroku.
+
+Zbývající dva řádky tabulky se dokázat **nedají jinak než časem**,
+protože závisí na tom, jak dávno robot dojel: „právě dojel a data jsou
+PŘESTO stará" (= vada nasazení, ne robota) a samotné vyvolání robota.
+Ruční běh úlohy proto bere vstup `strop-stare-hodin` — posune strop na
+stáří dat tak nízko, že se nález „stará data" vyrobí, a opravný krok se
+provede naostro. **Při tom cvičení reportér mlčí**: nález je vyrobený,
+takže úkol pro člověka by lhal — a hlásič, který jednou zalže, se
+přestane čítat.

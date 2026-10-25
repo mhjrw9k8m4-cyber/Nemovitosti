@@ -81,6 +81,15 @@ ${pad}
 </body></html>`;
 };
 
+/* Okresní a krajská stránka: jiná rodina generovaných stránek, a
+   důkazem, že se dokreslily, je seznam míst (`.okr-item`) — karty
+   tyhle stránky nemají. */
+const mistniStranka = (v) => `<!doctype html><html lang="cs"><head><meta charset="utf-8">
+<title>Pozemky v okrese — Parcelaka</title></head><body><h1>Pozemky v okrese</h1>
+${v === 'bezmist' ? ''
+    : '<a class="okr-item">Benesov</a><a class="okr-item">Beroun</a>'}
+</body></html>`;
+
 const pozemek = (v) => `<!doctype html><html lang="cs"><head><meta charset="utf-8">
 <title>Pozemek — Parcelaka</title></head><body><h1>Pozemek</h1>
 ${v === 'ukonceny' ? '<div class="pz-konec">Nabídka skončila</div>' : ''}
@@ -98,8 +107,16 @@ const server = http.createServer((req, res) => {
   if (u === '/sitemap.xml') {
     if (varianta === 'bezSitemapy') { res.writeHead(404); res.end('ne'); return; }
     res.writeHead(200, { 'content-type': 'application/xml; charset=utf-8' });
-    res.end(`<?xml version="1.0" encoding="UTF-8"?><urlset><url><loc>${BASE}/pozemek-zkouska.html</loc></url></urlset>`);
+    res.end('<?xml version="1.0" encoding="UTF-8"?><urlset>'
+      + `<url><loc>${BASE}/pozemek-zkouska.html</loc></url>`
+      + `<url><loc>${BASE}/pozemky-okres-zkouska.html</loc></url>`
+      + `<url><loc>${BASE}/pozemky-zkousecky-kraj.html</loc></url>`
+      + '</urlset>');
     return;
+  }
+  if (u === '/pozemky-okres-zkouska.html' || u === '/pozemky-zkousecky-kraj.html') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(mistniStranka(varianta)); return;
   }
   if (u === '/pozemek-zkouska.html') {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
@@ -145,8 +162,8 @@ varianta = 'zdravy';
 const z = await spust();
 pravda('na zdravém webu kontrola projde', z.kod === 0,
   `vrátila ${z.kod}, výpis:\n` + z.text.split('\n').filter((r) => /✕|\?/.test(r)).join('\n'));
-pravda('na zdravém webu projde všech jedenáct kontrol',
-  (z.text.match(/✓/g) || []).length >= 11,
+pravda('na zdravém webu projde všech třináct kontrol',
+  (z.text.match(/✓/g) || []).length >= 13,
   `prošlo jen ${(z.text.match(/✓/g) || []).length}`);
 
 /* ---- 2.-8. jedna vyrobená vada po druhé ------------------------- */
@@ -164,6 +181,7 @@ const VADY = [
   ['mlciHledani', 'mlčí o tom', 'hledání, které nic nenajde a mlčí o tom'],
   ['nevratiSe', 'výpis nevrátil', 'hledání, které po vymazání dotazu výpis nevrátí'],
   ['bezdlazdic', 'dlaždice s klíčovými čísly se nedokreslily', 'detail pozemku bez klíčových čísel'],
+  ['bezmist', 'zůstala bez seznamu míst', 'okresní a krajská stránka bez seznamu míst'],
 ];
 for (const [klic, ocekavano, popis] of VADY) {
   varianta = klic;

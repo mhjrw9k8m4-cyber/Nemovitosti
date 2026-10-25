@@ -32,7 +32,11 @@
      8. HLEDÁNÍ OPRAVDU FILTRUJE — a když nenajde nic, řekne to,
      9. stránka pozemku ze sitemapy se otevře, taky bez výjimky a bez
         zablokované CSP — tedy nasadily se i generované stránky,
-    10. a na té stránce se dokreslí dlaždice s klíčovými čísly.
+    10. a na té stránce se dokreslí dlaždice s klíčovými čísly,
+    11. a totéž u OKRESNÍ a KRAJSKÉ stránky — to jsou tři různé rodiny
+        generovaných stránek a každá se skládá jinak. Na okresní
+        a krajské lidé přicházejí z vyhledávačů, takže rozbitá okresní
+        stránka je ztracený návštěvník, i když úvodní stránka běží.
 
    CO TENHLE SKRIPT NEDĚLÁ: neopravuje a nehádá. Nasazení se odsud
    vyvolat nedá; „zkusit to znovu" u cizí služby není oprava. Říká
@@ -227,6 +231,7 @@ if (prohlizec) {
 
   /* ---- 8: generovaná stránka pozemku ze sitemapy ----------------- */
   let cesta = null;
+  let adresySitemapy = [];
   try {
     const sm = await fetch(`${WEB}/sitemap.xml`, { signal: AbortSignal.timeout(LIMIT * 1000) });
     /* Rozdíl, na kterém záleží: nestažená sitemapa znamená „tohle jsem
@@ -235,7 +240,8 @@ if (prohlizec) {
        venku JE, hlídá kontrola nasazení, bod 6.) */
     const text = sm.ok ? await sm.text() : '';
     if (!sm.ok) NEVIM('stránka pozemku', `sitemap.xml vrátila ${sm.status}`);
-    const vse = [...text.matchAll(/<loc>([^<]*pozemek-[^<]*)<\/loc>/g)].map((m) => m[1]);
+    adresySitemapy = [...text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    const vse = adresySitemapy.filter((a) => /\/pozemek-/.test(a));
     if (vse.length) {
       /* Bere se CESTA, ne celá adresa: na živém webu je v sitemapě
          kanonická doména, ale měřit se může i jiná (--mistni, náhled). */
@@ -275,6 +281,40 @@ if (prohlizec) {
       await p.kontext.close();
     }
   }
+  /* ---- 11: okresní a krajská stránka ----------------------------- */
+  /* TŘI RODINY, NE JEDNA. Stránka pozemku, okresní a krajská se skládají
+     jiným generátorem a jiným řezem dat, takže jedna z nich může být
+     rozbitá, zatímco druhé dvě běží. Měří se na nich to, co je u nich
+     důkazem, že se opravdu něco dokreslilo: seznam míst (`.okr-item`).
+     Kdyby se měřily karty jako na úvodu, hlásilo by se prázdno vždycky
+     — tyhle stránky karty nemají. */
+  for (const [jmeno, vzor] of [
+    ['okresní stránka', /pozemky-okres-[^<]*/],
+    ['krajská stránka', /pozemky-[a-z-]+-kraj\.html/],
+  ]) {
+    const nalezene = adresySitemapy.filter((a) => vzor.test(a));
+    if (!nalezene.length) { NEVIM(jmeno, 'v sitemapě pro ni není ani jedna adresa'); continue; }
+    const cesta2 = nalezene[Math.floor(Math.random() * nalezene.length)]
+      .replace(/^https?:\/\/[^/]+/, '');
+    const o = await otevri(`${WEB}${cesta2}`);
+    if (o.selhalo) { NE(`${jmeno} ${cesta2} se neotevřela`, o.selhalo); continue; }
+    if (o.chyby.length) NE(`skript na ${jmeno} ${cesta2} spadl`, o.chyby.join(' | '));
+    const cspO = await cspZeStranky(o);
+    if (cspO.length) NE(`CSP zablokovala něco na ${jmeno} ${cesta2}`, cspO.join(' | '));
+    const mist = await o.strana.waitForFunction(
+      () => document.querySelectorAll('.okr-item').length,
+      null, { timeout: Math.min(20000, LIMIT * 1000) })
+      .then((h) => h.jsonValue()).catch(() => 0);
+    if (mist > 0 && !o.chyby.length && !cspO.length) {
+      ANO(`${jmeno} ${cesta2} se dokreslila (${mist} míst)`);
+    } else if (mist === 0) {
+      NE(`${jmeno} ${cesta2} zůstala bez seznamu míst`,
+        'nedokreslil se ani jeden odkaz na místo — řez dat se nenačetl,'
+        + ' nebo se na stránce zastavil skript');
+    }
+    await o.kontext.close();
+  }
+
   await prohlizec.close();
 }
 
