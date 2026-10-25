@@ -164,7 +164,21 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
   new Function(readFileSync(path.join(KOREN, 'js', 'terminy.js'), 'utf8'))();
   const T = globalThis.PK_TERMINY;
   let sDatem = 0, bezOdpoctu = 0, spatnyText = [], spatnaTrida = [], uProdeje = [];
-  const dnes = new Date(); dnes.setHours(0, 0, 0, 0);
+  /* ODPOČET SMÍ BÝT O JEDNO GENEROVÁNÍ STARÝ, A JE TO VĚDOMÉ.
+     Do stránek se zapisuje při generování (čtyřikrát denně) a vedle
+     něj stojí PŘESNÉ DATUM, které platí vždycky — tak je to rozhodnuté
+     a napsané v scripts/generate-region-pages.mjs. Po půlnoci je tedy
+     „za 2 dny" u zítřejší dražby správný výsledek VČEREJŠÍHO běhu,
+     ne vada; dokud se tu srovnávalo jen s dneškem, padala tahle
+     zkouška každou noc do prvního běhu robota (naměřeno 25. 10.).
+     Zkoušelo se brát den generování z dat (data/index.json), ale to
+     neplatí, když stránky přegeneruje člověk ručně — datum v datech
+     je pak starší než stránky. Platí proto obojí: text musí odpovídat
+     DNEŠKU, nebo VČEREJŠKU. Víc tolerance to nepotřebuje a že data
+     nejsou starší, hlídá kontrola nasazení, ne tahle zkouška. */
+  const kotvy = [0, 1].map((o) => {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - o); return d;
+  });
   for (const s of stranky) {
     /* Typ se pozná z odznaku, a kde odznak není (stránka s jediným
        typem), tak z věty nad výpisem. Na první pokus jsem hledal
@@ -184,9 +198,16 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
       sDatem++;
       if (!mo) { bezOdpoctu++; continue; }
       const cil = new Date(+md[3], +md[2] - 1, +md[1]);
-      const dni = Math.round((cil - dnes) / 86400000);
-      if (mo[2].trim() !== T.countdownText(dni)) spatnyText.push(`${s.f}: „${mo[2]}" vs. ${T.countdownText(dni)} (${dni} dní)`);
-      if (mo[1].trim() !== T.countdownClass(dni).trim()) spatnaTrida.push(`${s.f}: „${mo[1]}" vs. „${T.countdownClass(dni)}"`);
+      const dniKotev = kotvy.map((k) => Math.round((cil - k) / 86400000));
+      const dni = dniKotev[0];
+      const texty = dniKotev.map((d) => T.countdownText(d));
+      const tridy = dniKotev.map((d) => T.countdownClass(d).trim());
+      if (!texty.includes(mo[2].trim())) {
+        spatnyText.push(`${s.f}: „${mo[2]}" vs. ${texty.join(' nebo ')} (${dniKotev.join('/')} dní)`);
+      }
+      if (!tridy.includes(mo[1].trim())) {
+        spatnaTrida.push(`${s.f}: „${mo[1]}" vs. „${tridy.join('" nebo „')}"`);
+      }
     }
   }
   pravda(`je co měřit — dražeb s termínem ve výpisech: ${sDatem}`, sDatem >= 50, String(sDatem));

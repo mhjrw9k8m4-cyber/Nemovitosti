@@ -10208,3 +10208,35 @@ pět, které tam někdo napsal, když jich bylo pět, a nikdy to nikdo
 nepřepsal. Kdo spustil `npm run testy` a viděl zeleno, žil v tom, že
 sada prošla; prošlo 5 ze 129. Teď `npm run testy` pouští běžec (tedy
 celou sadu podle CI) a `npm run testy-v-prohlizeci` tu druhou.
+
+## 152. Zkouška odpočtu padala každou noc — a odpověď byla v kódu, který hlídala *25. 10.*
+
+Po přechodu na nový den padly dvě kontroly v `test-vypis-radku.mjs`:
+na stránce dražeb stálo u zítřejší dražby „za 2 dny". Vypadalo to na
+vadu webu. Není: odpočet se do statických stránek zapisuje **při
+generování** (čtyřikrát denně) a **vedle něj stojí přesné datum, které
+platí vždycky** — a přesně tak je to rozhodnuté a napsané
+v `scripts/generate-region-pages.mjs`. Ověřeno na skutečné kartě:
+„dražba 26. 10. 2026 · OK dražby · **zítra**". Odpověď na můj nález
+tedy byla v kódu, který ta zkouška hlídá.
+
+Vadná byla **zkouška**: srovnávala s dneškem, takže od půlnoci do
+prvního běhu robota hlásila vadu, kterou nikdo nezpůsobil. To je ten
+nejhorší druh hlídače — ten, co křičí podle hodin.
+
+**Dvě cesty, první se neujala.** Nejdřív jsem vzal den generování
+z dat (`data/index.json`, `updated_at`) — a hned to padlo znovu
+a opačně: když stránky přegeneruje člověk ručně, je datum v datech
+STARŠÍ než stránky. Platí proto obojí: text i barva musí odpovídat
+**dnešku, nebo včerejšku**. Víc tolerance to nepotřebuje a že data
+samotná nejsou starší, hlídá kontrola nasazení (oddíl 149), ne tahle
+zkouška.
+
+Sabotáž: změnit v `js/terminy.js` text pro „zítra" → zkouška padne
+(tedy tolerance nezakryla skutečnou vadu).
+
+**Co se tím NEUDĚLALO a proč:** odpočet se nepřepočítává v prohlížeči.
+Statické výpisy dražeb si `js/terminy.js` vůbec nenačítají, takže by to
+znamenalo přidat skript na stránky, které dnes žádný nepotřebují —
+a to kvůli textu, který je nejhůř o několik hodin pozadu a vedle kterého
+stojí platné datum.
