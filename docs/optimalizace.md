@@ -10157,3 +10157,27 @@ A kontrola živého systému to teď umí říct sama: chybí-li kbelík
 i `zapis_chybu()`, přidá nález **„společná příčina obou nálezů výš"**
 s větou, že je zakládá týž balík. Bez ní by se každý nález spravoval
 zvlášť — a ten kbelík by vznikl ručně.
+
+## 151. Celá sada jedním příkazem — a `npm run testy` pouštělo pět zkoušek ze sto třiceti *25. 10.*
+
+Rychlá sada šla po oddílu 148 pustit jedním příkazem. Zkoušky
+v prohlížeči ne: ty se daly pustit jen po jedné, nebo počkáním na CI —
+**a způsob, jak je pustit všechny, existoval jen v dočasném adresáři
+téhle session.** To je ten nejhorší druh znalosti: funguje, dokud se
+někdo nerestartuje.
+
+`node scripts/zkousky.mjs --v-prohlizeci` teď pustí i je. Seznam se
+**nepíše ručně, čte se z CI** (ze tří úloh `v-prohlizeci*`), takže se
+s ním nemůže rozejít. Dvě věci, které si člověk pokaždé musel
+vypisovat, si najde sám: cestu k prohlížeči (`PW_CHROMIUM`) a adresář
+s mapou (`PK_LEAFLET_DIR`) — kdo to musí psát ručně, zapomene, a dostane
+stovku pádů, které s webem nemají nic společného. Pouští se **jedna po
+druhé**: tři zkoušky si schválně podávají port 8310, takže paralelně by
+se o něj praly (v CI každá směna běží na svém stroji).
+
+**A při tom se našla hezká nesrovnalost:** `npm run testy` v
+`package.json` pouštělo **pět** zkoušek. Ne pět vybraných „rychlých" —
+pět, které tam někdo napsal, když jich bylo pět, a nikdy to nikdo
+nepřepsal. Kdo spustil `npm run testy` a viděl zeleno, žil v tom, že
+sada prošla; prošlo 5 ze 129. Teď `npm run testy` pouští běžec (tedy
+celou sadu podle CI) a `npm run testy-v-prohlizeci` tu druhou.

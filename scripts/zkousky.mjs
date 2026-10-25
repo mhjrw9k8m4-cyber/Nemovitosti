@@ -3,6 +3,7 @@
    ==================================================================
    Spuštění:
      node scripts/zkousky.mjs              rychlé zkoušky (bez prohlížeče)
+     node scripts/zkousky.mjs --v-prohlizeci   zkoušky v prohlížeči (jedna po druhé)
      node scripts/zkousky.mjs --seznam     jen vypíše, co by pustil
      node scripts/zkousky.mjs --sql-povinne  chybějící PostgreSQL = chyba
      node scripts/zkousky.mjs --vlaken 2   kolik naráz (výchozí 4)
@@ -48,17 +49,22 @@ const hodnota = (jm, vychozi) => {
   return i >= 0 ? (parseInt(process.argv[i + 1], 10) || vychozi) : vychozi;
 };
 
-/* Z workflow se berou jen zkoušky z úlohy „testy" — a jen ty, které
+/* Z workflow se berou jen zkoušky z vybraných úloh — a jen ty, které
    se opravdu spouštějí (řádky s `run:`), ne zmínky v komentářích. */
-export function rychleZkousky() {
+function zeWorkflow(vyberUlohy) {
   const wf = readFileSync(path.join(KOREN, '.github', 'workflows', 'testy.yml'), 'utf8');
   const bloky = wf.split(/\n  (?=[\w-]+:\n)/).slice(1);
   const klic = (b) => (b.match(/^\s*([\w-]+):/) || [])[1] || '';
-  const uloha = bloky.filter((b) => klic(b) === 'testy').join('\n');
+  const uloha = bloky.filter((b) => vyberUlohy(klic(b))).join('\n');
   const radky = uloha.split('\n').filter((r) => !/^\s*#/.test(r)).join('\n');
   const najdene = [...radky.matchAll(/node\s+(scripts\/test-[\w-]+\.mjs)/g)].map((m) => m[1]);
   return [...new Set(najdene)];
 }
+export function rychleZkousky() { return zeWorkflow((k) => k === 'testy'); }
+/* Tři směny v CI jedou každá na svém stroji. Tady se slijí do jednoho
+   seznamu; že se dvě zkoušky nikdy neperou o týž port, řeší plánovač
+   níž (tři z nich si schválně podávají 8310). */
+export function prohlizecoveZkousky() { return zeWorkflow((k) => /^v-prohlizeci/.test(k)); }
 
 /* POUŠTÍ SE JEN PŘI PŘÍMÉM SPUŠTĚNÍ. Bez téhle podmínky by `import`
    téhle hlavičky (kvůli funkci rychleZkousky, kterou si čte hlídač
@@ -66,10 +72,12 @@ export function rychleZkousky() {
    seznam, by se zasekla na sto třiceti procesech. Naměřeno. */
 if (import.meta.url === `file://${process.argv[1]}`) {
 
-const seznam = rychleZkousky();
+const V_PROHLIZECI = arg('--v-prohlizeci');
+const seznam = V_PROHLIZECI ? prohlizecoveZkousky() : rychleZkousky();
 if (arg('--seznam')) {
   console.log(seznam.join('\n'));
-  console.log(`\n${seznam.length} rychlých zkoušek (seznam je z .github/workflows/testy.yml).`);
+  console.log(`\n${seznam.length} ${V_PROHLIZECI ? 'zkoušek v prohlížeči' : 'rychlých zkoušek'}`
+    + ' (seznam je z .github/workflows/testy.yml).');
   process.exit(0);
 }
 if (seznam.length < 50) {
@@ -78,9 +86,37 @@ if (seznam.length < 50) {
   process.exit(1);
 }
 
+/* Čtyři naráz v obou sadách; o to, aby se dvě zkoušky nepraly o týž
+   port, se stará plánovač níž. Kdo chce jinak, řekne --vlaken. */
 const VLAKEN = Math.max(1, Math.min(hodnota('--vlaken', 4), 8));
 const env = { ...process.env };
 if (arg('--sql-povinne')) env.PK_SQL_VYZADOVAN = '1';
+
+/* PROHLÍŽEČ SE NAJDE SÁM. Zkoušky chtějí PW_CHROMIUM (jinak si
+   playwright-core hledá svůj vlastní, který tu není) a PK_LEAFLET_DIR
+   (mapa se v nich servíruje z disku). Kdo to musí vypisovat ručně,
+   zapomene — a dostane stovku pádů, které nemají s webem nic
+   společného. */
+if (V_PROHLIZECI && !env.PW_CHROMIUM) {
+  const kde = ['/opt/pw-browsers'];
+  for (const zaklad of kde) {
+    let adresare = [];
+    try { adresare = readdirSync(zaklad).filter((d) => /^chromium-\d+$/.test(d)).sort().reverse(); }
+    catch (e) { /* nic */ }
+    for (const d of adresare) {
+      const cesta = path.join(zaklad, d, 'chrome-linux', 'chrome');
+      try { statSync(cesta); env.PW_CHROMIUM = cesta; break; } catch (e) { /* dál */ }
+    }
+    if (env.PW_CHROMIUM) break;
+  }
+  if (env.PW_CHROMIUM) console.log(`Prohlížeč: ${env.PW_CHROMIUM} (našel se sám)`);
+  else console.log('::warning::PW_CHROMIUM není nastavené a prohlížeč se nenašel —'
+    + ' zkoušky si budou hledat svůj vlastní a většina padne na tom, že žádný není.');
+}
+if (V_PROHLIZECI && !env.PK_LEAFLET_DIR) {
+  const l = path.join(KOREN, 'vendor', 'leaflet');
+  try { statSync(l); env.PK_LEAFLET_DIR = l; } catch (e) { /* nic */ }
+}
 
 /* STAV STROMU PŘED a PO. Zkouška, která si sahá na živý adresář, je
    vada — a hledá se zle: projeví se jako pád ÚPLNĚ JINÉ zkoušky, která
@@ -119,7 +155,6 @@ const stromPred = otiskStromu();
 
 const zacatek = Date.now();
 const vysledky = [];
-let dalsi = 0;
 
 function pust(soubor) {
   return new Promise((hotovo) => {
@@ -141,10 +176,39 @@ function pust(soubor) {
   });
 }
 
+/* PLÁNOVAČ PODLE PORTŮ. Zkoušky v prohlížeči si tři z nich podávají
+   port 8310 (v CI jede každá směna na svém stroji, takže si tam
+   nevadí). Pustit celou sadu po jedné je ale drahé: naměřeno 19 zkoušek
+   za 6 minut, tedy ~40 minut na všech 131. Port se proto přečte
+   z jejich zdroje — stejně, jako ho hlídá test-zkousky-meri.mjs — a
+   paralelně se nikdy nepustí dvě, které by se o týž port praly.
+   Zkouška bez serveru nebrání nikomu. */
+const portTestu = (soubor) => {
+  try {
+    const m = readFileSync(path.join(KOREN, soubor), 'utf8').match(/listen\((\d{4})/);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+};
+const porty = new Map(seznam.map((f) => [f, portTestu(f)]));
+const cekajici = seznam.slice();
+const obsazene = new Set();
+
 async function vlakno() {
-  while (dalsi < seznam.length) {
-    const i = dalsi++;
-    await pust(seznam[i]);
+  for (;;) {
+    let i = -1;
+    for (let k = 0; k < cekajici.length; k++) {
+      const pt = porty.get(cekajici[k]);
+      if (!pt || !obsazene.has(pt)) { i = k; break; }
+    }
+    if (i < 0) {
+      if (!cekajici.length) return;                   /* nic nezbývá */
+      await new Promise((r) => setTimeout(r, 200));   /* port obsazený, počkat */
+      continue;
+    }
+    const soubor = cekajici.splice(i, 1)[0];
+    const pt = porty.get(soubor);
+    if (pt) obsazene.add(pt);
+    try { await pust(soubor); } finally { if (pt) obsazene.delete(pt); }
   }
 }
 await Promise.all(Array.from({ length: VLAKEN }, vlakno));
@@ -184,7 +248,8 @@ const spinave = [...stromPo.entries()]
 
 const padlo = vysledky.filter((v) => v.kod !== 0);
 const preskocene = vysledky.filter((v) => v.kod === 0 && v.preskoceno);
-console.log(`\nRychlá sada: ${vysledky.length - padlo.length}/${vysledky.length} prošlo`
+console.log(`\n${V_PROHLIZECI ? 'Sada v prohlížeči' : 'Rychlá sada'}:`
+  + ` ${vysledky.length - padlo.length}/${vysledky.length} prošlo`
   + ` za ${((Date.now() - zacatek) / 1000).toFixed(0)} s (${VLAKEN} naráz).`);
 if (preskocene.length) {
   console.log(`Přeskočeno (a tedy NEOVĚŘENO): ${preskocene.map((v) => v.soubor).join(', ')}`);
@@ -208,7 +273,8 @@ if (padlo.length) {
     console.log(v.out.split('\n').filter((r) => /✕|::error::/.test(r)).slice(0, 6).join('\n')
       || v.out.slice(-600));
   }
-  console.log(`\n::error::Rychlá sada: padlo ${padlo.length} z ${vysledky.length} — `
+  console.log(`\n::error::${V_PROHLIZECI ? 'Sada v prohlížeči' : 'Rychlá sada'}:`
+    + ` padlo ${padlo.length} z ${vysledky.length} — `
     + padlo.map((v) => v.soubor.replace('scripts/', '')).join(', '));
   process.exit(1);
 }
