@@ -22,6 +22,7 @@ on:
 permissions:
   contents: read
   issues: write          # zakládá úkol, když cvičení neprojde (poslední krok)
+  actions: read          # jen přečíst, jestli plánované úlohy ještě jedou
 
 jobs:
   cviceni:
@@ -63,6 +64,16 @@ jobs:
       - name: Změřit, kolik toho automat vůbec smí opravit
         if: always()
         run: node scripts/sebeoprava-pokryti.mjs
+
+      # Druhá polovina vzájemného krytí: tahle úloha jede denně,
+      # kontrola nasazení každých 6 h. Když jedna umře, druhá to při
+      # svém běhu nahlásí, protože v seznamu plánovaných úloh je i ta
+      # mrtvá. Obě naráz už nikdo nepozná — a je to napsané.
+      - name: Běží ještě ti hlídači (plánované úlohy)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/kontrola-uloh.mjs
 
       - name: Ohlásit selhání
         if: failure()

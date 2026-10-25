@@ -36,6 +36,7 @@
    nepushne, nesmaže, a bez `--opravdu` nepošle vůbec nic.
    ================================================================== */
 import { readFileSync, existsSync } from 'node:fs';
+import { ghx, REPO, TOKEN, VETEV } from './github-api.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -83,44 +84,9 @@ export function rozhodni(stav) {
 }
 
 /* ---- odsud dál to, co se opravdu dotýká světa -------------------- */
-/* API SE DÁ PŘESMĚROVAT, ALE JEN NA TENHLE STROJ. Ta jediná řádka, co
-   opravu doopravdy provede (POST na …/dispatches), se jinak nedá nijak
-   vyzkoušet — a byla by to jediná nevyzkoušená řádka v celém řetězu
-   sebeopravy. Proto `PK_GITHUB_API`: zkouška si postaví falešné API
-   a změří, že požadavek odchází správně (cesta, metoda, větev, hlavičky)
-   a že se nepovedené spuštění NEspolkne.
-   Omezení na 127.0.0.1/localhost není kosmetika: bez něj by se dala
-   proměnnou v prostředí odklonit hlavička s tokenem na cizí stroj.
-   Cokoli jiného než tenhle stroj se proto odmítne, a nahlas. */
-const API = (() => {
-  const vlastni = (process.env.PK_GITHUB_API || '').trim().replace(/\/+$/, '');
-  if (!vlastni) return 'https://api.github.com';
-  if (!/^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}$/.test(vlastni)) {
-    console.log('::error::Sebeoprava nasazení: PK_GITHUB_API smí ukazovat jen na'
-      + ` tenhle stroj (http://127.0.0.1:PORT), dostal jsem „${vlastni}".`
-      + ' Jinak by se dala hlavička s tokenem odklonit jinam.');
-    process.exit(1);
-  }
-  return vlastni;
-})();
-const REPO = process.env.GITHUB_REPOSITORY || '';
-const TOKEN = process.env.GITHUB_TOKEN || '';
-const VETEV = process.env.GITHUB_REF_NAME || '';
-
-async function ghx(cesta, nastaveni = {}) {
-  const r = await fetch(`${API}${cesta}`, {
-    ...nastaveni,
-    headers: {
-      accept: 'application/vnd.github+json',
-      authorization: `Bearer ${TOKEN}`,
-      'x-github-api-version': '2022-11-28',
-      'user-agent': 'parcelaka-sebeoprava',
-      ...(nastaveni.body ? { 'content-type': 'application/json' } : {}),
-    },
-    signal: AbortSignal.timeout(30000),
-  });
-  return r;
-}
+/* Adresa API, hlavičky s tokenem i pojistka na přesměrování stojí
+   v scripts/github-api.mjs — mluví s GitHubem víc skriptů a ta
+   pojistka se nesmí hlídat v každé kopii zvlášť. */
 
 /* Poslední běh robota: zajímá nás, jestli právě běží, a jak dávno
    dojel ten předchozí. Když se to nepodaří zjistit, vrací se null —

@@ -447,6 +447,9 @@ jobs:
       - name: Sebeoprava nasazení se rozhoduje podle tabulky, ne podle nálady
         run: node scripts/test-sebeoprava-nasazeni.mjs
 
+      - name: Kontrola plánovaných úloh pozná hlídače, co přestal chodit
+        run: node scripts/test-kontrola-uloh.mjs
+
       - name: Cesta ven z okresu
         run: node scripts/test-cesta-ven.mjs
 

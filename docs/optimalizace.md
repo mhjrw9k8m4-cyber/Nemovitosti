@@ -10942,3 +10942,62 @@ stáří dat tak nízko, že se nález „stará data" vyrobí, a opravný krok 
 provede naostro. **Při tom cvičení reportér mlčí**: nález je vyrobený,
 takže úkol pro člověka by lhal — a hlásič, který jednou zalže, se
 přestane čítat.
+
+## 161. Hlídač, který přestal chodit do práce, nehlásí vady — hlásí ticho *25. 10.*
+
+**Děravá úroveň, na kterou se nikdo nedíval.** Celý ten řetěz hlídačů
+visí na plánovaných úlohách: robot dat každých 6 h, kontrola nasazení
+každých 6 h, kontrola inzerátů a cvičení sebeopravy denně, rozesílání
+denně. Všech pět má jednu společnou tichou vadu, kterou **žádná z nich
+sama nepozná**:
+
+> **GitHub plánované úlohy po 60 dnech bez aktivity sám vypne.**
+
+A úloha se dá vypnout i jedním kliknutím v záložce Actions. Od té
+chvíle je všechno zelené — protože se nic neměří. Hlídač, který přestal
+chodit do práce, nehlásí vady; **hlásí ticho, a ticho se snadno splete
+s klidem.** Je to přesně to pravidlo, které tenhle repozitář používá
+uvnitř („kontrola, co se nedá provést, to musí říct nahlas"), jen
+o úroveň výš — a tam dosud nebylo.
+
+**Co `scripts/kontrola-uloh.mjs` měří** u každé plánované úlohy:
+
+1. je u GitHubu ve stavu `active` — ne vypnutá ručně, ne pro nečinnost
+   (u toho druhého se i **napíše proč**, aby to nikdo nehledal),
+2. její poslední běh není starší než **dvojnásobek** její periody. Jeden
+   vynechaný běh se promíjí (GitHub umí plán o desítky minut zdržet),
+   dva jsou nález.
+
+Perioda se **počítá z cronu**, seznam úloh se **čte z
+`.github/workflows/`** — takže nová plánovaná úloha je pokrytá v den,
+kdy vznikne, a nikdo ji nemusí nikam dopisovat.
+
+**Kdo hlídá hlídače.** Tahle kontrola se sama ze své podstaty ověřit
+nemůže. Běží proto ve **dvou úlohách s různou periodou**: v kontrole
+nasazení (6 h) a v cvičení sebeopravy (denně). Když umře jedna, druhá
+to při svém běhu nahlásí — protože v seznamu plánovaných úloh je i ta
+mrtvá. **Obě naráz už nikdo nepozná**, a je to napsané i v kódu; řetěz
+někde skončit musí a lepší je vědět kde, než si myslet, že nekončí.
+
+**Změřeno 17 kontrolami** (`scripts/test-kontrola-uloh.mjs`): devět na
+čistých funkcích (periody z devíti tvarů cronu, osmiřádková tabulka
+verdiktů), tři na tom, že se seznam úloh opravdu čte ze souborů, a pět
+spuštěním celého skriptu proti **falešnému API**, kde se vypnutá
+i zaspalá úloha vyrobí schválně. Mezi nimi dvě, na kterých záleží
+nejvíc: **bez tokenu se nezměří nic — a to je vada, ne klid**, a
+přesměrování API na cizí stroj se odmítne.
+
+**Jedno místo, kterým se mluví s GitHubem.** Adresa API, hlavičky
+s tokenem i ta pojistka na přesměrování šly do
+`scripts/github-api.mjs`. Mluví s GitHubem víc skriptů a pojistka,
+která se hlídá v každé kopii zvlášť, je pojistka, která jednou
+nebude — stejná úvaha jako u portu zkoušek (oddíl 156b).
+
+**A hlídač práv se musel naučit další pojem.** `actions: read` hlásil
+`scripts/test-ci-prava.mjs` jako právo navíc — správně, o čtení stavu
+úloh nic nevěděl. Povolení není jméno souboru, ale podmínka: právo smí
+mít jen úloha, která pouští skript čtoucí `…/actions/workflows`.
+Napoprvé byla sabotáž příliš slabá (přepsal jsem jen jeden z dvou
+výskytů, takže vzor pořád sedl) — a to je dobrá připomínka, že
+**sabotáž, která nic nerozbije, nedokazuje nic**. S oběma výskyty
+nález přišel.

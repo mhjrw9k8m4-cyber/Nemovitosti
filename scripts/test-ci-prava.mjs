@@ -132,6 +132,18 @@ for (const f of soubory) {
        jsou venku stará data). Hledá se v OBOU — ve znění úlohy i ve
        skriptech, které spouští — protože samotné workflow o dispatchi
        nic neví; stejná lekce jako u „zápisu bez pushe". */
+    /* `actions: read` SMÍ JEN TEN, KDO SE OPRAVDU PTÁ NA STAV ÚLOH.
+       Táž úvaha jako u dvou pravidel výš. Dnes jediné použití:
+       scripts/kontrola-uloh.mjs se ptá, jestli plánované úlohy ještě
+       jedou — GitHub je po 60 dnech bez aktivity sám vypne a od té
+       chvíle je všechno zelené, protože se nic neměří. */
+    if (jm === 'actions' && hod === 'read') {
+      const ctePlan = /actions\/workflows/.test(K[f])
+        || [...K[f].matchAll(/node\s+(scripts\/[\w-]+\.mjs)/g)]
+          .some((m) => { try { return /actions\/workflows/.test(readFileSync(m[1], 'utf8')); } catch (e) { return false; } });
+      if (!ctePlan) siroka.push(`${f} (actions: read bez čtení stavu úloh)`);
+      continue;
+    }
     if (jm === 'actions' && hod === 'write') {
       const vyvolava = /dispatches/.test(K[f])
         || [...K[f].matchAll(/node\s+(scripts\/[\w-]+\.mjs)/g)]

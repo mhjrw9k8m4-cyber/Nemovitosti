@@ -55,6 +55,18 @@ jobs:
 
       # Razítka ?v= se porovnávají s místním index.html, takže
       # závislosti ani build nejsou potřeba — stačí repozitář.
+      # NEJDŘÍV: BĚŽÍ VŮBEC JEŠTĚ TI HLÍDAČI? Všechny plánované úlohy
+      # mají jednu tichou vadu, kterou žádná z nich sama nepozná —
+      # GitHub plán po 60 dnech bez aktivity sám vypne, a od té chvíle
+      # je všechno zelené, protože se nic neměří. Tahle kontrola se
+      # sama ověřit nemůže, proto běží i v Cvičení sebeopravy: dvě
+      # úlohy s různou periodou se kryjí navzájem.
+      - name: Běží ještě ti hlídači (plánované úlohy)
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/kontrola-uloh.mjs
+
       # `--vystup` je strojově čitelný seznam nálezů (kódy). Čte ho
       # sebeoprava v předposledním kroku; text výpisu je pro člověka.
       - name: Zkontrolovat, co je venku
