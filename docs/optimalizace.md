@@ -10593,3 +10593,92 @@ Co se tedy spravilo, je ta skutečná vada: běžec teď výpis z paralelního
 pádu **uloží na disk** a první nálezy vypíše hned. Ověřeno dočasnou
 zkouškou, která poprvé padne a podruhé projde: v souhrnu se objevila
 cesta k souboru a v něm celý původní výpis. Příště nebude co hádat.
+
+## 157. Cvičení sebeopravy: rozbít to naschvál a koukat, jestli to spraví *25. 10.*
+
+**Co bylo špatně — a bylo to to nejdůležitější.** O sebeopravě
+(oddíly 148 a 155) věděl repozitář všechno kromě jedné věci: **jestli
+opravuje.** `scripts/test-sebeoprava.mjs` hlídá PRAVIDLA — kde nesmí,
+na co nesmí, kdy ne. Jediný důkaz, že automat umí opravit, byl jeden
+ruční běh naostro 24. 10. Pravidla přečtená z kódu ale nedokazují, že
+oprava proběhne; dokazuje to jen rozbití.
+
+**Nová metoda: cvičení, ne zkouška.** `scripts/cviceni-sebeopravy.mjs`
+si udělá **jednorázovou kopii repozitáře a vlastní prázdný „server"**,
+rozbije odvozené soubory naschvál a nechá celý automat doopravdy
+proběhnout — generátory, důkaz rychlou sadou, commit **i push**.
+Push míří do bare klonu v adresáři cvičení; kdyby mířil na origin,
+první cvičení by přepsalo ostrou větev. Běží to jednou denně
+(`.github/workflows/cviceni-sebeopravy.yml`), protože to trvá minuty;
+`--rychle` pustí jen tu část, která generátory nepotřebuje.
+
+**Pět cvičení, sedmnáct kontrol:**
+
+| | Co se vyrobí | Co se čeká |
+|---|---|---|
+| A | rozchod ve **čtyřech** odvozených souborech (číslo v roadmapě, razítko `?v=`, osekaná mapa webu, zmrzačený očištěný stylopis) | každý soubor zpátky **bit po bitu**, commit se značkou, výčet v commitu, a push došel |
+| B | vypínač v repozitáři | nestane se nic |
+| C | poslední commit je sám sebeoprava | nestane se nic (pojistka proti smyčce) |
+| D | cizí větev | nestane se nic |
+| E | špinavý strom | nestane se nic |
+
+Výsledek prvního úplného běhu: **17 z 17**. Automat opravil všechny
+čtyři druhy rozchodu bit po bitu, commitnul se značkou a pushnul.
+
+**Dvě pravidla se cvičit nedají a je to napsané**, aby se to nepletlo
+s mezerou: „generátory nic nezměnily" je stav **bez vady**, a „oprava
+by sahala na ruční práci" by znamenalo pokazit generátory natolik, aby
+zapsaly do `js/` — to by zkoušelo generátory, ne automat. Obě měří
+tabulka stavů na čisté funkci.
+
+**Aby cvičení neuhnilo**, hlídá `test-sebeoprava.mjs` nově pět věcí:
+že cvičení v repozitáři je, že ho **nějaká úloha opravdu pouští**, že
+pouští **opravdový automat** (ne svou kopii jeho pravidel), že si dělá
+vlastní kopii i vlastní server, a že zkouší aspoň čtyři zakázané stavy.
+Obě sabotáže (vyhodit cvičení z workflow, nechat ho klonovat bez
+vlastního serveru) nález vrátí.
+
+### Co cvičení našlo, než začalo svítit zeleně
+
+Čtyři pády, a **tři z nich byly v cvičení samotném**. Stojí tu všechny,
+protože každý je jiný druh omylu:
+
+1. **Rozbití, které nic nerozbilo.** Vzor na číslo v roadmapě nesedl na
+   formát tabulky, soubor se nezměnil, commit byl prázdný — a cvičení C
+   pak měřilo úplně jiný stav, než si myslelo, a *vypadalo to jako vada
+   automatu*. Od té doby se každé rozbití ověřuje a **rozbití, které
+   nic nezměnilo, je nález**. (Totéž pravidlo jako „nezměřilo se nic" —
+   oddíl 149b.)
+2. **`git clean -fd` smazal závislosti.** Kopie si `node_modules`
+   půjčuje odkazem; git je viděl jako neznámý soubor, takže automat
+   **správně** odmítl špinavý strom — a úklid mezi cvičeními ten odkaz
+   smazal. Rychlá sada pak běžela bez závislostí a padala na jediné
+   zkoušce, která jednu potřebuje. Dvě hodiny na tom, že cvičení
+   ukazovalo vadu, která nebyla automatova. Pomohl `.git/info/exclude`.
+3. **Výchozí bod se posouval.** Cvičení A nechá automat pushnout, takže
+   `origin/<větev>` se pohne — a další cvičení pak startovala z commitu
+   sebeopravy a narazila na pravidlo „nikdy dvakrát za sebou" místo na
+   to, co měla zkoušet. Výchozí commit se teď **pamatuje**, a vrací se
+   i server.
+4. **A jeden skutečný nález mimo cvičení:** `test-kontrola-e2e.mjs`
+   čekala na svůj zkušební server **pevných 1 200 ms**. Pevná čekání
+   tenhle repozitář vymetal dvakrát (oddíly 11 a 28) a tohle přežilo.
+   Je to navíc nejhorší možný případ: kdyby server nestihl naběhnout,
+   výpis je prázdný, a protože půlka kontrol je **záporná** („tohle se
+   hlásit nesmí"), tiše projdou, zatímco kladné padnou — zkouška pak
+   ukazuje pět vad, které neexistují. Teď se čeká na navázání spojení
+   (nejvýš 20 s) a nenaběhlý server se hlásí jako **vada prostředí**,
+   ne jako nález v kontrole inzerátů. **Poctivě: tohle NEBYLA příčina
+   toho pádu v cvičení** (tou byly chybějící závislosti) — našlo se to
+   při hledání a opraveno je to proto, že je to vada sama pro sebe.
+
+Port zkušebního serveru šel při tom do jednoho místa
+(`scripts/port-kontroly.mjs`), ze stejného důvodu jako u sdíleného
+portu zkoušek (oddíl 156b): zkouška, která na server čeká, si musí jeho
+port přečíst, **aniž by ten server spustila**.
+
+**A jedna věta, která mě stála nejvíc času:** cvičení, které padne,
+musí říct **proč**. Napoprvé zbylo jen jméno padlé zkoušky; teď cvičení
+přiloží výpis automatu a tu zkoušku ještě jednou pustí **samu v téže
+kopii** a přiloží i její výpis. Rozdíl mezi „padá i sama" a „padá jen
+pod automatem" je celá diagnóza.

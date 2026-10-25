@@ -1,0 +1,62 @@
+name: Cvičení sebeopravy
+
+# PROČ TO NENÍ MEZI ZKOUŠKAMI. scripts/test-sebeoprava.mjs hlídá
+# PRAVIDLA sebeopravy (kde nesmí, co nesmí, kdy ne). Co nehlídal nikdo,
+# je jediná otázka, na které záleží: KDYŽ SE TO ROZBIJE, SPRAVÍ TO?
+#
+# Na to se pravidla přečíst nedají — musí se rozbít odvozené soubory
+# naschvál a nechat celý automat doopravdy proběhnout: generátory, důkaz
+# rychlou sadou, commit i push. To trvá minuty, takže to nepatří do
+# každého pushe; běží to jednou denně. Celé cvičení se dělá nad
+# jednorázovou kopií repozitáře a nad vlastním prázdným „serverem",
+# takže se při něm nemůže nic stát opravdovému repozitáři ani ostré
+# větvi (scripts/cviceni-sebeopravy.mjs).
+
+on:
+  schedule:
+    # 4:19 UTC — po nočním běhu robota a mimo celou hodinu, kdy se na
+    # GitHubu tlačí všechno ostatní.
+    - cron: '19 4 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write          # zakládá úkol, když cvičení neprojde (poslední krok)
+
+jobs:
+  cviceni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          # Generátory čtou historii (časová řada cen si bere jeden bod
+          # na den), takže mělký klon o jeden commit nestačí.
+          fetch-depth: 50
+          # Cvičení nikam nepushuje (push míří do kopie v adresáři
+          # cvičení), takže token na disku není k čemu. Hlídá
+          # scripts/test-ci-prava.mjs.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Závislosti
+        run: npm ci --no-audit --no-fund --omit=dev --ignore-scripts
+
+      - name: Rozbít to naschvál a koukat, jestli to automat spraví
+        env:
+          CVICENI_VETEV: ${{ github.ref_name }}
+        run: node scripts/cviceni-sebeopravy.mjs
+
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Cvičení sebeopravy
+          co-to-znamena: >-
+            Automat na opravu odvozených souborů neprošel cvičením — buď přestal opravovat to, co opravovat umí, nebo se naopak přestal držet některé ze svých pojistek. Dokud se to nespraví, nelze se na sebeopravu spoléhat a rozchod odvozených souborů se musí řešit ručně příkazem node scripts/oprav.mjs.

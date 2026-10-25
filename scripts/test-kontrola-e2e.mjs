@@ -8,6 +8,8 @@
 //
 // Spuštění: node scripts/test-kontrola-e2e.mjs
 import { spawn } from 'node:child_process';
+import net from 'node:net';
+import { PORT as PORT_SERVERU } from './port-kontroly.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,7 +23,39 @@ function tvrdi(popis, podminka, detail) {
 }
 
 const server = spawn(process.execPath, [path.join(ROOT, 'scripts', 'falesny-server-kontroly.mjs')], { cwd: ROOT, stdio: 'ignore' });
-await spi(1200);
+
+/* NA SERVER SE ČEKÁ, DOKUD NEODPOVÍ — ne pevných 1 200 ms.
+   Pevné čekání tu přežilo úklid (oddíly 11 a 28) a pod zátěží prohrálo:
+   kdyby server nestihl naběhnout, `kontrola-inzeratu.mjs` nenajde nic,
+   výpis je prázdný — a protože půlka kontrol je ZÁPORNÁ („tohle se
+   hlásit nesmí"), tiše projde, zatímco kladné padnou. Zkouška pak
+   ukazuje pět vad, které neexistují. Naměřeno cvičením sebeopravy:
+   automat kvůli tomu zahodil opravu, která byla v pořádku.
+   Čeká se na navázání spojení, ne na konkrétní adresu — tím se čekání
+   neváže na to, jaké cesty falešný server právě umí. */
+async function pockejNaServer(port, limitMs = 20000) {
+  const doKdy = Date.now() + limitMs;
+  while (Date.now() < doKdy) {
+    const naslo = await new Promise((hotovo) => {
+      const s = net.createConnection({ host: '127.0.0.1', port });
+      const konec = (v) => { s.destroy(); hotovo(v); };
+      s.once('connect', () => konec(true));
+      s.once('error', () => konec(false));
+      setTimeout(() => konec(false), 500);
+    });
+    if (naslo) return true;
+    await spi(100);
+  }
+  return false;
+}
+const nabehl = await pockejNaServer(PORT_SERVERU);
+if (!nabehl) {
+  console.error(`::error::Zkušební server na portu ${PORT_SERVERU} nenaběhl do 20 s —`
+    + ' tohle NENÍ vada kontroly inzerátů, ale prostředí. Zkouška proto'
+    + ' nehlásí nálezy, které by byly vymyšlené.');
+  server.kill();
+  process.exit(1);
+}
 
 let vypis = '';
 try {

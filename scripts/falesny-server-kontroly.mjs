@@ -9,7 +9,7 @@
 import http from 'node:http';
 import jpeg from 'jpeg-js';
 
-const PORT = 8200;
+import { PORT } from './port-kontroly.mjs';
 let pokusuNaVypadek = 0;
 export const zapsano = [];
 

@@ -18,7 +18,7 @@
    smyčce) a že si oprava nejdřív DOKÁŽE výsledek rychlou sadou, než
    cokoli commitne.
    ================================================================== */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -154,6 +154,38 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
   pravda(`vypínač je jediný soubor (${VYPINAC}) a je napsaný v nápovědě`,
     skript.includes(VYPINAC) && /VYPÍNAČ/.test(skript));
   pravda('nikdy nepushuje silou', !/--force|-f\b.*push|push.*--force/.test(skript));
+}
+
+/* ---- a že se automat opravdu CVIČÍ, ne jen vykládá ------------- */
+/* Pravidla přečtená z kódu nedokazují, že automat opravuje. To dokazuje
+   jenom cvičení, které odvozené soubory rozbije naschvál a nechá celý
+   automat proběhnout (scripts/cviceni-sebeopravy.mjs). Tahle část hlídá,
+   že cvičení v repozitáři JE, že ho něco pouští a že si při tom nemůže
+   sáhnout na ostrou větev — tedy že neuhnilo. */
+{
+  const cv = path.join(KOREN, 'scripts', 'cviceni-sebeopravy.mjs');
+  pravda('cvičení sebeopravy je v repozitáři', existsSync(cv));
+  const t = existsSync(cv) ? readFileSync(cv, 'utf8') : '';
+  const wfy = readdirSync(path.join(KOREN, '.github', 'workflows'))
+    .map((f) => readFileSync(path.join(KOREN, '.github', 'workflows', f), 'utf8')).join('\n');
+  pravda('a pouští ho nějaká úloha v CI (jinak by to byl soubor, co nikdo nespustí)',
+    /node scripts\/cviceni-sebeopravy\.mjs/.test(wfy));
+  pravda('cvičení pouští OPRAVDOVÝ automat, ne svoji kopii jeho pravidel',
+    /'scripts', 'sebeoprava\.mjs'/.test(t));
+  pravda('cvičení si dělá vlastní kopii repozitáře i vlastní server',
+    /clone', '--bare/.test(t) && /SERVER/.test(t),
+    'bez vlastního serveru by první cvičení pushlo opravu na ostrou větev');
+  pravda('cvičení zkouší aspoň čtyři stavy, ve kterých se jednat NESMÍ',
+    (t.match(/^\s+\['[A-E]\)/gm) || []).length >= 4,
+    `našlo se ${(t.match(/^\s+\['[A-E]\)/gm) || []).length}`);
+  /* Dvě pravidla se cvičit nedají a je to napsané i tady, aby se to
+     nepletlo s mezerou v cvičení: „generátory nic nezměnily" je stav bez
+     vady (nic se neopravuje, protože není co), a „oprava by sahala na
+     ruční práci" by znamenalo pokazit generátory natolik, aby zapsaly do
+     js/ — to by zkoušelo generátory, ne automat. Obě pravidla měří
+     tabulka stavů výš, na čisté funkci. */
+  pravda('a obě pravidla, která se cvičit nedají, měří tabulka stavů',
+    /ruční práci/.test(readFileSync(path.join(KOREN, 'scripts', 'test-sebeoprava.mjs'), 'utf8')));
 }
 
 console.log('\nSebeoprava odvozených souborů');
