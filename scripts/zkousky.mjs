@@ -66,19 +66,36 @@ export function rychleZkousky() { return zeWorkflow((k) => k === 'testy'); }
    níž (tři z nich si schválně podávají 8310). */
 export function prohlizecoveZkousky() { return zeWorkflow((k) => /^v-prohlizeci/.test(k)); }
 
-/* NA KTERÉM PORTU ZKOUŠKA SEDÍ. Hledá se obojí: `listen(8412)` u těch,
-   co si server otevřou samy, a `127.0.0.1:8310` u zkoušek v prohlížeči,
-   které si ho berou ze společného pomocníka a v kódu mají jen adresu.
-   NAMĚŘENO TVRDĚ: nejdřív se hledalo jen `listen(`, takže z 131
-   prohlížečových zkoušek vyšly jako „bez portu" skoro všechny —
-   a paralelní běh jich 110 utopil v „EADDRINUSE 8310". Port 8310 má
-   v sobě 123 souborů. */
-export function portZkousky(soubor) {
-  try {
-    const t = readFileSync(path.join(KOREN, soubor), 'utf8');
-    const m = t.match(/(?:listen\(|127\.0\.0\.1:|localhost:)(\d{4})/);
-    return m ? m[1] : null;
-  } catch (e) { return null; }
+/* NA KTERÉM PORTU ZKOUŠKA SEDÍ. Hledá se ve třech podobách, protože
+   ve třech podobách to v repozitáři stojí:
+     · `listen(8412)`        — zkouška si server otevře sama,
+     · `127.0.0.1:8310`      — zkouška v prohlížeči zná jen adresu,
+     · `const PORT = 8310`   — a server si pustí POMOCNÍK, kterého
+                               zkouška jen importuje.
+   Ta třetí podoba mě naučila dvakrát: nejdřív jsem hledal jen
+   `listen(` (z 131 prohlížečových zkoušek vyšlo „bez portu" skoro
+   všechno a paralelní běh jich 110 utopil v EADDRINUSE), pak jen
+   v souboru zkoušky — a zkoušky, které port dědí z
+   `falesna-supabase-chat.mjs` (tam stojí `const PORT = 8310`), padaly
+   dál. Proto se nahlíží i do MÍSTNÍCH importů, jednu úroveň. */
+const VZOR_PORTU = /(?:listen\(|127\.0\.0\.1:|localhost:|PORT\s*=\s*)(\d{4})/;
+/* KOMENTÁŘE SE NEPOČÍTAJÍ. Potřetí v tomhle repozitáři: hlídač si
+   přečetl text po svém. Zrovna tahle hlavička má v sobě příklad
+   „listen(8412)" — a detekce ho vzala jako port téhle zkoušky, takže
+   hlídač portů ohlásil kolizi mezi test-zkousky-meri a
+   test-kontrola-spusteni, které se nikdy nepotkají. */
+const bezKomentaru = (k) => k.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+export function portZkousky(soubor, uroven = 0) {
+  let t = '';
+  try { t = bezKomentaru(readFileSync(path.join(KOREN, soubor), 'utf8')); } catch (e) { return null; }
+  const m = t.match(VZOR_PORTU);
+  if (m) return m[1];
+  if (uroven > 0) return null;
+  for (const imp of t.matchAll(/(?:from|import\()\s*['"]\.\/([\w.-]+\.mjs)['"]/g)) {
+    const port = portZkousky(path.join('scripts', imp[1]), 1);
+    if (port) return port;
+  }
+  return null;
 }
 
 /* POUŠTÍ SE JEN PŘI PŘÍMÉM SPUŠTĚNÍ. Bez téhle podmínky by `import`

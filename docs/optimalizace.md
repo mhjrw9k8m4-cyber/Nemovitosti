@@ -10185,8 +10185,18 @@ hledá v obou podobách a **týmž pravidlem, jakým ho hlídá
 `test-zkousky-meri.mjs`** — jinak by hlídač hlídal něco jiného, než
 podle čeho se zkoušky pouští.
 
-Změřeno, jak to doopravdy je: **112 ze 131** zkoušek v prohlížeči sedí
-na portu 8310, 17 nepotřebuje žádný a dvě mají vlastní. Lokálně tedy
+**A podruhé, a potřetí.** Hledat port v souboru zkoušky nestačilo:
+server si pouští POMOCNÍK (`falesna-supabase-chat.mjs`, kde stojí
+`const PORT = 8310`), takže zkouška, která ho jen importuje, v sobě
+žádné číslo nemá — a pět takových padalo dál. Detekce proto nahlíží
+i do místních importů, jednu úroveň. A pak hlídač portů ohlásil kolizi
+mezi dvěma zkouškami, které se nikdy nepotkají: vzala se mu **moje
+vlastní hlavička**, protože v ní stojí příklad `listen(8412)`. Potřetí
+týž vzorec („hlídač si čte text po svém"), takže se komentáře před
+hledáním odstraňují.
+
+Změřeno, jak to doopravdy je: **117 ze 131** zkoušek v prohlížeči sedí
+na portu 8310, devět má vlastní a pět nepotřebuje žádný. Lokálně tedy
 poběží těch 112 **po jedné** (zbytek se mezi ně vejde) — a to je dnešní
 pravda, ne cíl. Zrychlit to znamená naučit 123 souborů brát port
 z jednoho místa; zapsáno, neuděláno. CI svou rychlost nebere
