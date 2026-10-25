@@ -23,7 +23,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { rozhodni, patriGeneratorum, zpravaOprav, ZNACKA, VYPINAC } from './sebeoprava.mjs';
+import { rozhodni, patriGeneratorum, zpravaOprav, ZNACKA, VYPINAC, PATRI_GENERATORUM } from './sebeoprava.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -89,10 +89,29 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
 {
   const smi = ['index.html', 'pozemek-benesov-a-1x.html', 'data/index.json',
     'data/okres/tabor.json', 'css/styles.min.css', 'js/min/ceny.js', 'sitemap.xml',
-    'rss.xml', 'robots.txt', 'docs/roadmap.md', 'supabase/00-vse.sql'];
+    /* SKUTEČNÁ JMÉNA, ne vymyšlená. Dřív tu stálo `rss.xml`, které
+       v repozitáři není — vzorek tím potvrzoval vzor, který nesedí na
+       nic, a patnáct opravdových kanálů zůstalo mimo hranici
+       (viz oddíl 158). Vzorek musí být soubor, který existuje. */
+    'novinky.xml', 'novinky-praha.xml',
+    'robots.txt', 'docs/roadmap.md', 'supabase/00-vse.sql'];
   const nesmi = ['js/ceny.js', 'css/styles.css', 'scripts/oprav.mjs', 'package.json',
     'docs/optimalizace.md', 'docs/pro-majitele.md', '.github/workflows/testy.yml',
     'supabase/navstevnost.sql', 'CLAUDE.md', 'sw.js'];
+  /* ŽÁDNÉ MRTVÉ PRAVIDLO. Tohle je ta levná polovina měření pokrytí
+     (scripts/sebeoprava-pokryti.mjs): vzor, který nesedí ani na jeden
+     soubor v repozitáři, jen budí dojem, že je něco pokryté. Přesně
+     tak se patnáct kanálů `novinky-*.xml` ocitlo mimo hranici, zatímco
+     seznam povoloval `rss*.xml`, co v repozitáři nikdy nebylo.
+     Jde to do rychlé sady, protože na to stačí seznam souborů. */
+  const vsechny = spawnSync('git', ['-C', KOREN, 'ls-files'], { encoding: 'utf8' });
+  const verzovane = String(vsechny.stdout || '').split('\n').filter(Boolean);
+  const mrtve = PATRI_GENERATORUM.filter((v) => !verzovane.some((f) => v.test(f)));
+  pravda(`žádné pravidlo o odvozených souborech není mrtvé (${PATRI_GENERATORUM.length} pravidel, ${verzovane.length} souborů)`,
+    verzovane.length > 1000 && mrtve.length === 0,
+    verzovane.length <= 1000 ? `seznam souborů se nenačetl (${verzovane.length})`
+      : `nesedí na žádný soubor: ${mrtve.map(String).join(', ')}`);
+
   const spatne = smi.filter((f) => !patriGeneratorum(f));
   const propustne = nesmi.filter((f) => patriGeneratorum(f));
   pravda(`odvozené soubory se poznají (${smi.length} vzorků)`, spatne.length === 0,

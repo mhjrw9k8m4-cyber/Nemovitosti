@@ -10682,3 +10682,55 @@ musí říct **proč**. Napoprvé zbylo jen jméno padlé zkoušky; teď cvičen
 přiloží výpis automatu a tu zkoušku ještě jednou pustí **samu v téže
 kopii** a přiloží i její výpis. Rozdíl mezi „padá i sama" a „padá jen
 pod automatem" je celá diagnóza.
+
+## 158. Hranice, na kterou automat smí, se rozešla s tím, co generátory píšou *25. 10.*
+
+**Nejzajímavější nález celého dne, a nikdo ho nemohl vidět.**
+Sebeoprava má jediné místo, kde se rozhoduje, na co smí sáhnout:
+seznam `PATRI_GENERATORUM`. Je psaný **ručně** a je to tak správně —
+jde o bezpečnostní hranici, a ta má být k přečtení na pěti řádcích.
+Jenže ručně psaná hranice se rozejde s tím, co generátory doopravdy
+píšou, a nic na to nesvítí: pravidla jsou zelená, zkoušky zelené,
+hranice vedle.
+
+Seznam povoloval `rss[\w-]*\.xml`. **Kanály se ale jmenují
+`novinky-*.xml`.** Ten vzor tedy v celém repozitáři nesedí ani na
+jeden soubor — a **patnáct kanálů**, které generátory přepisují při
+každé změně dat, automat opravit **nesměl**. Kdyby se rozešly (a
+rozcházejí se právě při tom, co se v tomhle repozitáři děje nejčastěji
+— robot přinese data a někdo zapomene pustit generátory), automat by
+odmítl pracovat s hlášením „oprava by sahala na ruční práci" a červená
+by zůstala. Díra přesně tam, kde se nejvíc hýbe.
+
+**Nová metoda: pustit generátory a koukat, co přepsaly.**
+`scripts/sebeoprava-pokryti.mjs` nečte kód generátorů — ten by se dal
+vyložit jakkoli. Udělá si jednorázovou kopii, pustí generátory a
+porovná dvě strany:
+
+* **co generátory PÍŠOU** (měřeno časem změny, ne obsahem: generátor,
+  který zapíše tentýž text, soubor přesto *vlastní*),
+* **co automat SMÍ přepsat** (deklarováno v seznamu).
+
+Z toho tři nálezy: **díra** (píšou to, povolené to není), **mrtvé
+pravidlo** (vzor nesedí na nic) a **nezměřilo se nic**.
+
+První běh: 2 410 přepsaných souborů, z toho **15 nepokrytých**, a
+jedno mrtvé pravidlo. Po opravě hranice (`^novinky[\w-]*\.xml$`, na
+celostátní i krajské kanály) je to **2 410 z 2 410, tedy 100 %**.
+
+**Co to měření NEUMÍ, a je to napsané i ve výpisu.** Měří, co
+generátory přepsaly *v tom běhu*. Soubor, jehož výstup se nezměnil,
+generátor nepřepíše — a tím o něm měření nic neví. **Nenalezená díra
+tedy není důkaz, že díra není**; důkazem je jen nalezená. Proto se
+vypisuje, u kterých pravidel se nezměřilo nic (v prvním běhu čtyři:
+očištěné stylopisy, `js/min/`, `robots.txt`, tabulka v roadmapě).
+
+**A levná polovina téhož jde do rychlé sady.** Na „mrtvé pravidlo"
+stačí seznam souborů, žádná kopie a žádné generátory — takže to
+`scripts/test-sebeoprava.mjs` hlídá při každém pushi: každý vzor
+v seznamu musí sedět aspoň na jeden verzovaný soubor. Sabotáž (vrátit
+`rss*.xml`) nález vrátí okamžitě, a shodí s ním i druhou kontrolu,
+protože vzorky v ní jsou teď **skutečná jména souborů**. To byla totiž
+ta hlubší příčina: vzorek `rss.xml`, který v repozitáři nikdy nebyl,
+potvrzoval vzor, který nesedí na nic. **Zkouška psaná z vymyšlených
+jmen umí potvrdit cokoli.**

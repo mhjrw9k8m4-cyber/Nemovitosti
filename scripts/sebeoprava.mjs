@@ -62,7 +62,15 @@ export const PATRI_GENERATORUM = [
   /^data\//,                        // data a jejich řezy
   /^css\/[\w.-]+\.min\.css$/,       // očištěné stylopisy
   /^js\/min\//,                     // očištěné kopie skriptů
-  /^sitemap\.xml$/, /^rss[\w-]*\.xml$/, /^robots\.txt$/,
+  /^sitemap\.xml$/, /^robots\.txt$/,
+  /* KANÁLY SE JMENUJÍ `novinky-*`, ne `rss*`. Dřív tu stál vzor
+     `rss[\w-]*\.xml`, který v tomhle repozitáři nesedí ANI NA JEDEN
+     soubor — a patnáct kanálů, které generátory přepisují při každé
+     změně dat, tím automat opravit NESMĚL. Ručně psaná hranice se
+     rozešla s tím, co generátory píšou, a nikomu to nesvítilo: vzor
+     tam byl, takže to vypadalo pokryté. Od té doby to měří
+     scripts/sebeoprava-pokryti.mjs. */
+  /^novinky[\w-]*\.xml$/,   // celostátní (novinky.xml) i krajské (novinky-praha.xml)
   /^docs\/roadmap\.md$/,            // tabulka stavu (přepočítaná čísla)
   /^supabase\/00-vse\.sql$/,        // sloučený balík
 ];

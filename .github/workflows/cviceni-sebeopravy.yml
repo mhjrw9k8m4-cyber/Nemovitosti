@@ -53,6 +53,17 @@ jobs:
           CVICENI_VETEV: ${{ github.ref_name }}
         run: node scripts/cviceni-sebeopravy.mjs
 
+      # Druhá polovina téže otázky: cvičení výš dokazuje, že automat
+      # opravuje. Tohle měří, KOLIK toho vůbec smí opravit — pustí
+      # generátory nad jednorázovou kopií a porovná, co doopravdy
+      # přepsaly, s ručně psanou hranicí v scripts/sebeoprava.mjs.
+      # Takhle se našlo, že patnáct kanálů `novinky-*.xml` automat
+      # opravit nesměl, zatímco hranice povolovala `rss*.xml`, co
+      # v repozitáři nikdy nebylo.
+      - name: Změřit, kolik toho automat vůbec smí opravit
+        if: always()
+        run: node scripts/sebeoprava-pokryti.mjs
+
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani
