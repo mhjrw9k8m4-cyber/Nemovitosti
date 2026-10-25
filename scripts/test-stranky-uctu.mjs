@@ -18,10 +18,9 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const SIRKA = 1440;
 const UCET = ['muj-inzerat.html', 'zpravy.html', 'hlidani.html'];
 const SLOUPCOVE = ['pridat.html', 'inzerce.html'];

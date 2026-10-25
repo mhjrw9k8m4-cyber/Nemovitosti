@@ -120,9 +120,8 @@ for (const f of readdirSync(ROOT).filter((x) => x.startsWith('pozemek-') && x.en
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
-const BASE = 'http://127.0.0.1:8310';
 /* serviceWorkers: 'block' — bez toho stránku obsluhuje uložená kopie
    z offline režimu a zkouška čte staré HTML, aniž by to poznala. */
 const ctx = await prohlizec.newContext({ bypassCSP: true,  viewport: { width: 390, height: 844 },

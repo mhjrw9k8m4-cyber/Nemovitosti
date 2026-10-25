@@ -15,10 +15,9 @@ import { hlasPad } from './zkouska-pad.mjs';
 // Zkušební Supabase si test spustí sám — jedním příkazem a bez přípravy.
 // Spuštění: node scripts/test-chat-prohlizec.mjs
 //   (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=cesta/k/chrome)
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const LISTING = 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa';
 const UID_MAJITEL = '11111111-1111-4111-8111-111111111111';
 const UID_ZAJEMCE = '22222222-2222-4222-8222-222222222222';

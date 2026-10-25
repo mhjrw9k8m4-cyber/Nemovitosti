@@ -23,10 +23,9 @@ import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { adresaPozemku } from './adresa-pozemku.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.

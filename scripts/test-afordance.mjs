@@ -25,10 +25,9 @@ import { rozbalHledani } from './rozbal-hledani.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 /* ČEKÁ SE NA STAV — viz scripts/zkouska-pripraveno.mjs. */
 import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const STRANKY = ['zpravy.html', 'hlidani.html', 'index.html'];
 /* Prvky, u kterých to platí. Schválně vypsané: kdyby se tu vybíralo
    „všechno klikatelné", spadly by sem i odkazy v textu a v patičce —

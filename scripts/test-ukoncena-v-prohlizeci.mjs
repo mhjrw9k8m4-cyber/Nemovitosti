@@ -26,6 +26,7 @@ import http from 'node:http';
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE, PORT } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -75,14 +76,14 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': TYPY[path.extname(f)] || 'application/octet-stream' });
   res.end(telo);
 });
-await new Promise((r) => server.listen(8310, r));
+await new Promise((r) => server.listen(PORT, r));
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM });
 const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block' });
 const page = await ctx.newPage();
 
 async function otevri(adresa) {
-  await page.goto(`http://127.0.0.1:8310/${adresa}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${adresa}`, { waitUntil: 'load' });
   /* Počká se na skript, ne na pevný čas: skript si sahá pro řez dat
      okresu a na pomalém stroji by pevná pauza měřila prázdno. */
   await page.waitForFunction(() => !!document.querySelector('#pz-detail'), null, { timeout: 15000 });
@@ -215,7 +216,7 @@ pravda('a titulek stránky se nepřepíše na hlášku',
 }
 if (rozcesti.length) {
   const f = rozcesti.slice().sort()[0];
-  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForFunction(() => !!document.querySelector('#pz-detail'), null, { timeout: 15000 });
   await page.waitForTimeout(1500);
   const v = await page.evaluate(() => {

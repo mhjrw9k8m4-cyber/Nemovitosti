@@ -20,10 +20,9 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 /* Strop v js/main.js je 3 000 ms. Mez je 12 000: tenhle test běží
    s nezpomaleným procesorem, ale ve sdílené sadě vedle dalších
    prohlížečů, takže pevné „3 000 + chvilka" by padalo na zatížení

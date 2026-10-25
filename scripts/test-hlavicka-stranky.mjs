@@ -21,11 +21,10 @@ import { readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const KOREN = new URL('..', import.meta.url).pathname;
-const BASE = 'http://127.0.0.1:8310';
 /* Čtyři rodiny vstupních stránek: druh, okres, kraj, rozpočet. Kdyby se
    zkoušela jen jedna, přesun by se mohl rozbít na ostatních a nikdo by
    se to nedozvěděl. */

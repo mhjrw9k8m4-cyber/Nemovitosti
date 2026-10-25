@@ -87,6 +87,8 @@ function pust(rezim, prepis) {
       },
     });
     let out = '';
+    p.stdout.setEncoding('utf8');
+    p.stderr.setEncoding('utf8');
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
     p.on('close', (kod) => hotovo({ out, kod, zapsano: zapsano.slice() }));

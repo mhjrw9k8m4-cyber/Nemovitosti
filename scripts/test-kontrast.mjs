@@ -19,10 +19,9 @@ import { hlasPad } from './zkouska-pad.mjs';
    se u pádu nemá co vypsat — ale pojmenovaný titulek a MÍSTO ve zkoušce
    jsou pořád víc než nahá stopa výjimky. */
 hlasPad('Kontrast textu (WCAG AA)', []);
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 // Místní kopie Leafletu — viz poznámka u ctx.route níž.
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'cena-pozemku.html', 'pozemky-okres-tabor.html',

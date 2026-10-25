@@ -30,7 +30,32 @@ const uvod = (v) => {
     ? '<meta http-equiv="Content-Security-Policy" content="script-src \'sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\'">'
     : '';
   const titulek = v === 'cizi' ? 'Úplně jiný web' : 'Parcelaka — pozemky';
-  const karty = v === 'prazdno' ? '' : '<div class="opp-item">karta 1</div><div class="opp-item">karta 2</div>';
+  const karty = v === 'prazdno' ? ''
+    : '<div class="opp-item">karta Brno</div><div class="opp-item">karta Plzen</div>';
+  /* FALEŠNÉ HLEDÁNÍ. Musí se chovat jako to pravé: nesmyslný dotaz
+     vyprázdní výpis a stránka to ŘEKNE, prázdné pole ho vrátí. Každá
+     z těch tří věcí má svou vyrobenou vadu — jinak by se nedokázalo,
+     že se měří ona, a ne jen přítomnost vstupního pole. */
+  const polickoHledani = v === 'bezpole' ? '' : '<input type="text" id="map-search">';
+  const prazdnoHlaska = v === 'mlciHledani' ? '' : '<p id="prazdno" hidden>Nic nenalezeno</p>';
+  const skriptHledani = v === 'bezhledani' ? '' : `<script>
+    (function () {
+      var vypis = document.getElementById('vypis');
+      var pole = document.getElementById('map-search');
+      var hlaska = document.getElementById('prazdno');
+      if (!vypis || !pole) return;
+      var vse = [].slice.call(vypis.children).map(function (e) { return e.cloneNode(true); });
+      pole.addEventListener('input', function () {
+        var q = pole.value.trim().toLowerCase();
+        var vyber = q ? vse.filter(function (c) {
+          return c.textContent.toLowerCase().indexOf(q) >= 0;
+        }) : ${v === 'nevratiSe' ? '[]' : 'vse'};
+        vypis.innerHTML = '';
+        vyber.forEach(function (c) { vypis.appendChild(c.cloneNode(true)); });
+        if (hlaska) hlaska.hidden = vyber.length > 0;
+      });
+    }());
+  </script>`;
   /* Mapa se nepozná podle `#leaflet-map` (ten je v HTML vždycky), ale
      podle toho, že ji Leaflet opravdu postavil: kontejner dostane svou
      třídu a vznikne aspoň jedna vrstva. Falešný web to tedy musí
@@ -43,18 +68,24 @@ const uvod = (v) => {
   const pad = v === 'pad' ? '<script>window.neexistujiciFunkce();</script>' : '';
   return `<!doctype html><html lang="cs"><head><meta charset="utf-8">${csp}
 <title>${titulek}</title></head><body>
-<h1>Falešný web pro zkoušku</h1>
-${karty}
+<h1>Falesny web pro zkousku</h1>
+${polickoHledani}
+${prazdnoHlaska}
+<div id="vypis">${karty}</div>
 ${sirokyPrvek}
 ${chybejici}
 <section id="mapa">${mapa}</section>
 <script>window.__zdravy = 1;</script>
+${skriptHledani}
 ${pad}
 </body></html>`;
 };
 
 const pozemek = (v) => `<!doctype html><html lang="cs"><head><meta charset="utf-8">
 <title>Pozemek — Parcelaka</title></head><body><h1>Pozemek</h1>
+${v === 'ukonceny' ? '<div class="pz-konec">Nabídka skončila</div>' : ''}
+${v === 'bezdlazdic' || v === 'ukonceny' ? ''
+    : '<div class="pz-klic"><b>3 476 m²</b></div><div class="pz-klic"><b>35 Kč/m²</b></div>'}
 ${v === 'padPozemek' ? '<script>window.anoTohleTakyNeexistuje();</script>' : ''}
 </body></html>`;
 
@@ -100,6 +131,8 @@ function spust(prostredi = {}) {
       ['scripts/kontrola-ziva-prohlizecem.mjs', '--web', BASE, '--limit-s', '8'],
       { cwd: KOREN, env: { ...process.env, ...prostredi } });
     let text = '';
+    d.stdout.setEncoding('utf8');
+    d.stderr.setEncoding('utf8');
     d.stdout.on('data', (b) => { text += b; });
     d.stderr.on('data', (b) => { text += b; });
     const utni = setTimeout(() => d.kill('SIGKILL'), 120000);
@@ -112,8 +145,8 @@ varianta = 'zdravy';
 const z = await spust();
 pravda('na zdravém webu kontrola projde', z.kod === 0,
   `vrátila ${z.kod}, výpis:\n` + z.text.split('\n').filter((r) => /✕|\?/.test(r)).join('\n'));
-pravda('na zdravém webu projde všech osm kontrol',
-  (z.text.match(/✓/g) || []).length >= 8,
+pravda('na zdravém webu projde všech jedenáct kontrol',
+  (z.text.match(/✓/g) || []).length >= 11,
   `prošlo jen ${(z.text.match(/✓/g) || []).length}`);
 
 /* ---- 2.-8. jedna vyrobená vada po druhé ------------------------- */
@@ -126,6 +159,11 @@ const VADY = [
   ['bezmapy', 'mapa se nepostavila', 'mapa bez vrstev Leafletu'],
   ['cizi', 'není naše', 'cizí titulek stránky'],
   ['padPozemek', 'stránce pozemku', 'výjimka na generované stránce pozemku'],
+  ['bezpole', 'není pole #map-search', 'chybějící pole hledání'],
+  ['bezhledani', 'hledání nefiltruje', 'hledání, které nic nefiltruje'],
+  ['mlciHledani', 'mlčí o tom', 'hledání, které nic nenajde a mlčí o tom'],
+  ['nevratiSe', 'výpis nevrátil', 'hledání, které po vymazání dotazu výpis nevrátí'],
+  ['bezdlazdic', 'dlaždice s klíčovými čísly se nedokreslily', 'detail pozemku bez klíčových čísel'],
 ];
 for (const [klic, ocekavano, popis] of VADY) {
   varianta = klic;
@@ -144,6 +182,17 @@ const bs = await spust();
 pravda('chybějící sitemapa je nezměřeno, ne vada',
   bs.kod === 0 && /\?\s+stránka pozemku/.test(bs.text),
   `vrátila ${bs.kod}; řádky:\n      ` + bs.text.split('\n').filter((r) => /✕|\?/.test(r)).join('\n      '));
+
+/* ---- 9b. ukončená nabídka: dlaždice chybí PRÁVEM --------------- */
+/* Druhá polovina téhož pravidla: na ukončené nabídce a na rozcestí
+   (`pz-konec`) se detail nekreslí, takže chybějící dlaždice NENÍ vada.
+   Bez tohohle řádku by kontrola čtvrtinu generovaných stránek hlásila
+   jako rozbité — a člověk by ji přestal brát vážně. */
+varianta = 'ukonceny';
+const uk = await spust();
+pravda('na ukončené nabídce jsou chybějící dlaždice nezměřeno, ne vada',
+  uk.kod === 0 && /\?\s+dlaždice na stránce pozemku/.test(uk.text),
+  `vrátila ${uk.kod}; řádky:\n      ` + uk.text.split('\n').filter((r) => /✕|\?/.test(r)).join('\n      '));
 
 /* ---- 10. nespuštěný prohlížeč NESMÍ vypadat jako úspěch --------- */
 varianta = 'zdravy';

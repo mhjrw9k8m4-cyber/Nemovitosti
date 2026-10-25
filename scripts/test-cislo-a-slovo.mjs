@@ -34,6 +34,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE, PORT } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -56,7 +57,7 @@ const server = createServer((q, s) => {
   s.setHeader('content-type', TYPY[path.extname(f)] || 'application/octet-stream');
   s.end(readFileSync(f));
 });
-await new Promise((r) => server.listen(8310, '127.0.0.1', r));
+await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 
 const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 const kde = process.env.PW_CHROMIUM || '';
@@ -84,7 +85,7 @@ STRANKY.push(...regiony);
 let nalezy = [];
 for (const st of STRANKY) {
   const p = await ctx.newPage();
-  await p.goto(`http://127.0.0.1:8310/${st}`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
+  await p.goto(`${BASE}/${st}`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
   await p.waitForTimeout(2500);
   const v = await p.evaluate(() => {
     const ven = [];

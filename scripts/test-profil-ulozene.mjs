@@ -34,6 +34,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { PORT } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
@@ -46,7 +47,7 @@ const server = createServer((req, res) => {
   res.setHeader('content-type', TYPY[path.extname(f)] || 'application/octet-stream');
   res.end(readFileSync(f));
 });
-const PORT = 8310;
+
 await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 const BASE = `http://127.0.0.1:${PORT}`;
 

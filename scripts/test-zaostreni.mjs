@@ -25,10 +25,9 @@ import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const STRANKY = ['index.html', 'pridat.html', 'kontakt.html', 'hlidani.html',
   'pozemky-okres-benesov.html', 'hypoteka-na-pozemek.html', 'pozemek.html',

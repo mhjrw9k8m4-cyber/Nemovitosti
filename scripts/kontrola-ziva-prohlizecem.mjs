@@ -29,8 +29,10 @@
      5. výpis se dokreslil — karty jsou,
      6. mapa se opravdu postavila (Leaflet si vyrobí své vrstvy),
      7. na telefonní šířce nic nepřetéká do stran,
-     8. stránka pozemku ze sitemapy se otevře, taky bez výjimky a bez
-        zablokované CSP — tedy nasadily se i generované stránky.
+     8. HLEDÁNÍ OPRAVDU FILTRUJE — a když nenajde nic, řekne to,
+     9. stránka pozemku ze sitemapy se otevře, taky bez výjimky a bez
+        zablokované CSP — tedy nasadily se i generované stránky,
+    10. a na té stránce se dokreslí dlaždice s klíčovými čísly.
 
    CO TENHLE SKRIPT NEDĚLÁ: neopravuje a nehádá. Nasazení se odsud
    vyvolat nedá; „zkusit to znovu" u cizí služby není oprava. Říká
@@ -179,6 +181,39 @@ if (prohlizec) {
     else if (pretek <= 2) ANO(`na 390 px nic nepřetéká (přes okraj ${pretek} px)`);
     else NE('na 390 px stránka přetéká do stran', `o ${pretek} px — na telefonu se web posouvá do prázdna`);
 
+    /* HLEDÁNÍ: měří se tím, co je NEZÁVISLÉ NA DATECH — nesmyslný
+       dotaz. Kdyby se hledalo podle jména obce, zkouška by platila jen
+       do chvíle, kdy ta obec z nabídek vypadne. Nesmysl musí dát nulu
+       VŽDY; kdyby zůstal původní počet, hledání nefiltruje vůbec.
+       A pak se pole vyprázdní: výpis se musí vrátit. Hledání, které
+       seznam zničí, je horší než hledání, které nehledá. */
+    await u.strana.setViewportSize({ width: 1280, height: 900 }).catch(() => {});
+    const hledani = await u.strana.$('#map-search');
+    if (!hledani) NE('hledání', 'na stránce není pole #map-search');
+    else if (karet < 1) NEVIM('hledání', 'nebylo co filtrovat — výpis je prázdný');
+    else {
+      await hledani.fill('xyzxyz-tenhle-dotaz-nic-nenajde').catch(() => {});
+      const nula = await u.strana.waitForFunction(
+        () => document.querySelectorAll('.opp-item').length === 0,
+        null, { timeout: Math.min(15000, LIMIT * 1000) }).then(() => true).catch(() => false);
+      const rekloTo = await u.strana.evaluate(
+        () => /nenalezeno|nic jsme nenašli|žádn/i.test(document.body.innerText)).catch(() => false);
+      await hledani.fill('').catch(() => {});
+      const zpatky = await u.strana.waitForFunction(
+        (p) => document.querySelectorAll('.opp-item').length >= p,
+        karet, { timeout: Math.min(15000, LIMIT * 1000) }).then(() => true).catch(() => false);
+
+      if (!nula) {
+        const po = await u.strana.evaluate(() => document.querySelectorAll('.opp-item').length).catch(() => -1);
+        NE('hledání nefiltruje', `po nesmyslném dotazu zůstalo ${po} karet z ${karet}`);
+      } else if (!rekloTo) {
+        NE('hledání nenašlo nic a mlčí o tom', 'výpis je prázdný a na stránce není ani slovo o tom,'
+          + ' že se nic nenašlo — člověk neví, jestli hledá, nebo je web rozbitý');
+      } else if (!zpatky) {
+        NE('po vymazání dotazu se výpis nevrátil', `bylo ${karet} karet, po vyprázdnění pole se nevrátily`);
+      } else ANO(`hledání filtruje (nesmysl → 0, prázdné pole → zpět na ${karet})`);
+    }
+
     if (u.chyby.length === 0) ANO('při načtení úvodní stránky nevyletěla výjimka');
     else NE('skript na úvodní stránce spadl', u.chyby.join(' | '));
     const cspU = await cspZeStranky(u);
@@ -219,6 +254,24 @@ if (prohlizec) {
       const cspP = await cspZeStranky(p);
       if (cspP.length === 0) ANO('CSP na stránce pozemku nic nezablokovala');
       else NE('CSP zablokovala něco na stránce pozemku', cspP.join(' | '));
+
+      /* DLAŽDICE S KLÍČOVÝMI ČÍSLY se dokreslují z dat stránky, takže
+         jsou tím nejlepším důkazem, že se na detailu opravdu něco
+         stalo. Dvě stránky je ale NEMAJÍ PRÁVEM: ukončená nabídka a
+         rozcestí na novou adresu (třída `pz-konec`) detail nekreslí.
+         Na nich je to NEZMĚŘENO, ne vada — hlásit to stejně znamená
+         posílat člověka hledat vadu, která není. */
+      const konec = await p.strana.evaluate(() => !!document.querySelector('.pz-konec')).catch(() => false);
+      if (konec) NEVIM('dlaždice na stránce pozemku', 'stránka je ukončená nabídka nebo rozcestí — detail se na ní nekreslí');
+      else {
+        const dlazdic = await p.strana.waitForFunction(
+          () => document.querySelectorAll('.pz-klic b').length,
+          null, { timeout: Math.min(20000, LIMIT * 1000) })
+          .then((h) => h.jsonValue()).catch(() => 0);
+        if (dlazdic > 0) ANO(`dlaždice s klíčovými čísly se dokreslily (${dlazdic})`);
+        else NE('dlaždice s klíčovými čísly se nedokreslily', 'detail pozemku zůstal bez čísel,'
+          + ' podle kterých se člověk rozhoduje — data stránky se nenačetla, nebo se na nich skript zastavil');
+      }
       await p.kontext.close();
     }
   }

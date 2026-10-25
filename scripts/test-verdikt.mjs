@@ -36,9 +36,10 @@ import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { PORT } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8310;
+
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.

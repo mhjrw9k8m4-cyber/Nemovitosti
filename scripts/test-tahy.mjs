@@ -23,10 +23,9 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 /* PŘIBYLY DVĚ STRÁNKY S NEJVÍC IKONAMI — formulář „Přidat pozemek"
    a „Uložené". Vzorek měl deset stránek a 43 ikon; po smazání tří
    odznaků v „Jak to funguje" (byly display:none, viz 20. 10.) spadl

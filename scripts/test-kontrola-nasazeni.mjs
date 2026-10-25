@@ -72,6 +72,8 @@ function pust(m, dalsi) {
     const p = spawn('node', [path.join(KOREN, 'scripts', 'kontrola-nasazeni.mjs'), ...(dalsi || [])],
       { cwd: KOREN, env: { ...process.env, PK_WEB: 'http://127.0.0.1:8414' } });
     let out = '';
+    p.stdout.setEncoding('utf8');
+    p.stderr.setEncoding('utf8');
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
     p.on('close', (kod) => hotovo({ out, kod }));
@@ -118,6 +120,8 @@ function pust(m, dalsi) {
   const p = spawn('node', [path.join(KOREN, 'scripts', 'kontrola-nasazeni.mjs')],
     { cwd: KOREN, env: { ...process.env, PK_WEB: 'http://127.0.0.1:9' } });
   let out = '';
+  p.stdout.setEncoding('utf8');
+  p.stderr.setEncoding('utf8');
   p.stdout.on('data', (d) => { out += d; });
   const kod = await new Promise((h) => p.on('close', h));
   pravda('nedostupný web je VADA, ne „nezměřeno"',

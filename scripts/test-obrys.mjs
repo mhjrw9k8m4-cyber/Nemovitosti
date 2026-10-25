@@ -58,9 +58,8 @@ function pravda(popis, vyslo, proc) {
 }
 
 /* --- 2) A na mapě se opravdu žádný neobjeví ------------------------- */
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
-const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');

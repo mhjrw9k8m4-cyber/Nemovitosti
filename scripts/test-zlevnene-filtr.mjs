@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE } from './port-zkousky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -141,7 +142,7 @@ await ctx.route('**/*', (r) => {
   return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
 });
 const page = await ctx.newPage();
-await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
 await page.waitForFunction(() => {
   const el = document.getElementById('map-count');
   return el && /\d/.test(el.textContent);
@@ -240,7 +241,7 @@ if (tlacitko) {
    v prohlížeči, ne přítomnost řádku v kódu. */
 {
   const p2 = await ctx.newPage();
-  await p2.goto('http://127.0.0.1:8310/index.html?zlevnene=1#mapa', { waitUntil: 'load' });
+  await p2.goto(`${BASE}/index.html?zlevnene=1#mapa`, { waitUntil: 'load' });
   await p2.waitForTimeout(2600);
   const zapnuto = await p2.$eval('#map-zlevnene', (e) => e.getAttribute('aria-pressed')).catch(() => null);
   pravda('?zlevnene=1 z adresy filtr zapne', zapnuto === 'true',

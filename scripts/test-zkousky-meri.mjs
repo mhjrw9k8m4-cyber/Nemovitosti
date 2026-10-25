@@ -150,7 +150,8 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
  * kterou nezpůsobila. Naměřeno hned při zavedení: test-ohlas-selhani
  * a test-kontrola-nasazeni si obě vzaly 8413.
  * Zkoušky v prohlížeči se tu nepočítají: ty jedou v CI jedna po druhé
- * ve svých směnách a 8310 si schválně podávají dál. */
+ * ve svých směnách a sdílený port (scripts/port-zkousky.mjs) si
+ * schválně podávají dál. */
 {
   /* Port se čte TÝMŽ pravidlem, jakým ho čte plánovač v běžci
      (scripts/zkousky.mjs) — jinak by hlídač hlídal něco jiného, než
@@ -168,6 +169,44 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
     kolize.length === 0,
     kolize.map(([p2, kdo]) => `${p2}: ${kdo.join(' + ')}`).join('; ')
       + ' — při běhu čtyř naráz padne druhá na EADDRINUSE, tedy na cizí vadě');
+}
+
+/* ---- 4) kdo sbírá výstup podřízeného procesu, musí říct, v čem --- */
+/* LATENTNÍ VADA, a POCTIVĚ: nenaměřil jsem ji, našel jsem ji při
+   hledání jiné. `text += kus` převádí KAŽDÝ kus výstupu na text zvlášť.
+   Když mezi dva kusy padne víceznakové písmeno (á, ř, ž), rozpadne se
+   na zástupné znaky — a hledaný nález v textu „není", i když ho ve
+   výpisu vidíme. Pomáhá `setEncoding('utf8')`, který si nedokončené
+   písmeno podrží do dalšího kusu.
+   Co tenhle hlídač NETVRDÍ: že se to někdy stalo. Výstupy zkoušek jsou
+   krátké a do jednoho kusu se vejdou; vada čeká na den, kdy nějaká
+   zkouška začne psát víc. Přesto to stálo za opravu — byla v SEDMI
+   souborech, mezi nimi v běžci celé sady, a projevila by se jako pád
+   zkoušky na nálezu, který je na obrazovce vidět. Tedy přesně ten druh
+   pádu, u kterého se hledá hodinu na špatném místě. */
+{
+  const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  const spatne = [];
+  for (const f of fs.readdirSync(path.join(KOREN, 'scripts'))) {
+    if (!/\.mjs$/.test(f)) continue;
+    const t = bezKomentaru(fs.readFileSync(path.join(KOREN, 'scripts', f), 'utf8'));
+    /* Zajímají jen ta místa, kde se výstup SKLÁDÁ DO TEXTU. Kdo si
+       kusy ukládá jako Buffer a spojí je na konci, je v pořádku. */
+    for (const m of t.matchAll(/(\w+)\.(stdout|stderr)\.on\(\s*'data'\s*,\s*\(?(\w+)\)?\s*=>\s*[({]?\s*(\w+)\s*\+=/g)) {
+      const proud = m[1];
+      /* HLEDÁ SE V OKOLÍ, NE V CELÉM SOUBORU. Když se hledalo kdekoli
+         v souboru, stačilo mít kódování nastavené u JEDNOHO spawnu
+         a druhý zůstal bez něj — a hlídač byl zelený. Naměřeno
+         sabotáží: v běžci sady jsou dva takové bloky. */
+      const okoli = t.slice(Math.max(0, m.index - 400), m.index);
+      const maKodovani = new RegExp(`${proud}\\.(stdout|stderr)\\.setEncoding`).test(okoli);
+      if (!maKodovani) spatne.push(`${f} (${proud}.${m[2]})`);
+    }
+  }
+  pravda('kdo sbírá výstup procesu do textu, nastavil kódování',
+    spatne.length === 0,
+    spatne.join(', ') + ' — bez setEncoding(\'utf8\') se česká písmena na'
+    + ' hranici dvou kusů rozpadnou a hledaná hláška v textu „nebude"');
 }
 
 console.log('\nZkoušky měří to, co si myslí');

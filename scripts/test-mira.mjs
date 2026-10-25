@@ -28,10 +28,9 @@ import { hlasPad } from './zkouska-pad.mjs';
    se u pádu nemá co vypsat — ale pojmenovaný titulek a MÍSTO ve zkoušce
    jsou pořád víc než nahá stopa výjimky. */
 hlasPad('Míra sazby', []);
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 /* Mez je 90. Není to optimum (to je 75), je to strop, za kterým čtení
    měřitelně trpí. Mediány po opravě sedí na 80, takže mez má rezervu
    a nepadne na jednom slově navíc. */

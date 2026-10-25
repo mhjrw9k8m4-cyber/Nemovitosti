@@ -38,8 +38,9 @@
    společným stromem (vypíše se a nic netajíme), když padne znovu, je
    to vada a sada končí chybou.
    ================================================================== */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 
@@ -71,13 +72,14 @@ export function prohlizecoveZkousky() { return zeWorkflow((k) => /^v-prohlizeci/
    ve třech podobách to v repozitáři stojí:
      · `listen(8412)`        — zkouška si server otevře sama,
      · `127.0.0.1:8310`      — zkouška v prohlížeči zná jen adresu,
-     · `const PORT = 8310`   — a server si pustí POMOCNÍK, kterého
+     · `const PORT = 8310`   — číslo stojí v scripts/port-zkousky.mjs
+                             a server si pustí POMOCNÍK, kterého
                                zkouška jen importuje.
    Ta třetí podoba mě naučila dvakrát: nejdřív jsem hledal jen
    `listen(` (z 131 prohlížečových zkoušek vyšlo „bez portu" skoro
    všechno a paralelní běh jich 110 utopil v EADDRINUSE), pak jen
    v souboru zkoušky — a zkoušky, které port dědí z
-   `falesna-supabase-chat.mjs` (tam stojí `const PORT = 8310`), padaly
+   `falesna-supabase-chat.mjs` (ten si port bere z `port-zkousky.mjs`), padaly
    dál. Proto se nahlíží i do MÍSTNÍCH importů, jednu úroveň. */
 const VZOR_PORTU = /(?:listen\(|127\.0\.0\.1:|localhost:|PORT\s*=\s*)(\d{4})/;
 /* KOMENTÁŘE SE NEPOČÍTAJÍ. Potřetí v tomhle repozitáři: hlídač si
@@ -91,9 +93,14 @@ export function portZkousky(soubor, uroven = 0) {
   try { t = bezKomentaru(readFileSync(path.join(KOREN, soubor), 'utf8')); } catch (e) { return null; }
   const m = t.match(VZOR_PORTU);
   if (m) return m[1];
-  if (uroven > 0) return null;
+  /* DVĚ ÚROVNĚ, ne jedna. Od sjednocení portu (scripts/port-zkousky.mjs)
+     vede cesta zkouška → falesna-supabase-chat.mjs → port-zkousky.mjs,
+     takže při jedné úrovni by 100+ zkoušek vyšlo „bez portu" a běžec by
+     je pustil naráz. Změřeno: s jednou úrovní se port najde u 15 ze 132,
+     se dvěma u 123. */
+  if (uroven > 1) return null;
   for (const imp of t.matchAll(/(?:from|import\()\s*['"]\.\/([\w.-]+\.mjs)['"]/g)) {
-    const port = portZkousky(path.join('scripts', imp[1]), 1);
+    const port = portZkousky(path.join('scripts', imp[1]), uroven + 1);
     if (port) return port;
   }
   return null;
@@ -209,6 +216,8 @@ function pust(soubor) {
       out += `\n[běžec] zkouška běžela víc než ${LIMIT} s a byla utnuta.\n`;
       try { p.kill('SIGKILL'); } catch (e) { /* už skončila */ }
     }, LIMIT * 1000);
+    p.stdout.setEncoding('utf8');
+    p.stderr.setEncoding('utf8');
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
     p.on('close', (kod0) => {
@@ -269,6 +278,8 @@ if (prvniPadlo.length) {
     const znovu = await new Promise((hotovo) => {
       const p = spawn('node', [v.soubor], { cwd: KOREN, env });
       let out = '';
+      p.stdout.setEncoding('utf8');
+      p.stderr.setEncoding('utf8');
       p.stdout.on('data', (d) => { out += d; });
       p.stderr.on('data', (d) => { out += d; });
       p.on('close', (kod) => hotovo({ kod, out }));
@@ -277,7 +288,18 @@ if (prvniPadlo.length) {
       kolize.push(v.soubor);
       v.kod = 0;
       v.kolize = true;
-      console.log(`  ~ ${v.soubor} — samo prošlo (kolize)`);
+      /* DŮKAZ SE NEZAHAZUJE. Dřív tu zbylo jen slovo „kolize" a výpis
+         z paralelního pádu se ztratil — takže když se to příště stalo,
+         nebylo co číst a příčina se hádala. (Naměřeno na vlastní kůži:
+         test-parametry padla v sadě a sama prošla; pak se nedalo zjistit
+         PROČ, protože výpis už nebyl.) Teď se ukládá na disk a první
+         nálezy se vypíšou hned. */
+      const souborLogu = path.join(tmpdir(),
+        `kolize-${path.basename(v.soubor, '.mjs')}-${Date.now()}.log`);
+      try { writeFileSync(souborLogu, v.out || '(prázdný výpis)'); } catch (e) { /* disk plný? ať to neshodí celou sadu */ }
+      const nalezy = (v.out || '').split('\n').filter((r) => r.includes('✕')).slice(0, 2);
+      console.log(`  ~ ${v.soubor} — samo prošlo (kolize); výpis z paralelního pádu: ${souborLogu}`);
+      for (const r of nalezy) console.log(`      ${r.trim()}`);
     } else {
       v.out = znovu.out;
       console.log(`  CHYBA ${v.soubor} — padlo i samo`);

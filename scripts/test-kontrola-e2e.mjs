@@ -29,6 +29,8 @@ try {
     cwd: ROOT,
     env: { ...process.env, SUPABASE_URL: 'http://localhost:8200', SUPABASE_SERVICE_ROLE_KEY: 'test', NO_PROXY: 'localhost,127.0.0.1' },
   });
+  bezet.stdout.setEncoding('utf8');
+  bezet.stderr.setEncoding('utf8');
   bezet.stdout.on('data', (d) => (vypis += d));
   bezet.stderr.on('data', (d) => (vypis += d));
   await new Promise((res) => bezet.on('close', res));

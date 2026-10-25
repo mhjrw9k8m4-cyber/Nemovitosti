@@ -15,9 +15,8 @@ import { hlasPad } from './zkouska-pad.mjs';
 /* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
    scripts/zkouska-pripraveno.mjs (vykresleniPo). */
 import { vykresleniPo, pripravenoKdyz } from './zkouska-pripraveno.mjs';
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 
-const BASE = 'http://127.0.0.1:8310';
 let chyb = 0; const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
    Bez tohohle se při výjimce (chybějící prvek, timeout klepnutí) zahodí

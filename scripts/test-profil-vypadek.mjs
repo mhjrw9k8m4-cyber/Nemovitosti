@@ -25,12 +25,11 @@
    úplně a profil hlásil poruchu pořád.
    ================================================================== */
 import { chromium } from 'playwright-core';
-import { UID_MAJITEL } from './falesna-supabase-chat.mjs';
+import { UID_MAJITEL, BASE } from './falesna-supabase-chat.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
 await new Promise((r) => setTimeout(r, 300));
-const BASE = 'http://127.0.0.1:8310';
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.

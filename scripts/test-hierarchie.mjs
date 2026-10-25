@@ -20,7 +20,6 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -44,7 +43,7 @@ function pravda(popis, vyslo, proc) {
    potřeba rozhodnout, co je opravdu hlavní, ne zvednout tohle číslo. */
 const STROP = { 'index.html': 3, 'pozemek.html': 2, 'hlidani.html': 2, 'pridat.html': 2 };
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');

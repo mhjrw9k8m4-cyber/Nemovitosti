@@ -18,10 +18,9 @@ import { hlasPad } from './zkouska-pad.mjs';
    se u pádu nemá co vypsat — ale pojmenovaný titulek a MÍSTO ve zkoušce
    jsou pořád víc než nahá stopa výjimky. */
 hlasPad('Dotykové terče', []);
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const LEAFLET = process.env.PK_LEAFLET_DIR || '';
 /* hlidani.html je tu kvůli přepínači „Posílat e-mailem": vykresluje se
    jen přihlášenému a jen se zapnutou vlajkou, takže by se bez obojího

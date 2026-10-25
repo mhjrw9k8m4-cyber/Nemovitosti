@@ -31,10 +31,9 @@ import { hlasPad } from './zkouska-pad.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-const BASE = 'http://127.0.0.1:8310';
 const SIRKA = 390, VYSKA = 844;
 /* Mez se utáhla z 560 na 330 — naměřený stav je 289.
    Kudy se těch 198 px ubralo (vše naměřeno na 390×844):

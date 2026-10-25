@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE } from './port-zkousky.mjs';
 
 /* STRÁNKA, NA KTERÉ SE DETAIL NEVYKRESLÍ.
    Pruh nahoře (třída `pz-konec`) nosí dva různé stavy: ukončenou
@@ -122,7 +123,7 @@ async function sUlozenymi(klice) {
   });
   const page = await ctx.newPage();
   await page.addInitScript((kl) => { localStorage.setItem('pk_fav_v1', JSON.stringify(kl)); }, klice);
-  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await page.waitForFunction(() => {
     const e = document.getElementById('map-count');
     return e && /\d/.test(e.textContent);
@@ -185,7 +186,7 @@ async function sUlozenymi(klice) {
     return (u.hostname === '127.0.0.1' || u.hostname === 'localhost') ? r.continue() : r.abort();
   });
   const page = await ctx.newPage();
-  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await page.waitForFunction(() => {
     const e = document.getElementById('map-count');
     return e && /\d/.test(e.textContent);
@@ -251,7 +252,7 @@ async function sUlozenymi(klice) {
   const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
   const page = await ctx.newPage();
-  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await page.waitForSelector('#opp-list .opp-fav', { timeout: 20000 }).catch(() => {});
   const v = await page.evaluate(async () => {
     const b = document.querySelector('#opp-list .opp-fav');
@@ -300,7 +301,7 @@ async function sUlozenymi(klice) {
     const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
       viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
     const page = await ctx.newPage();
-    await page.goto(`http://127.0.0.1:8310/${stranka}`, { waitUntil: 'load' });
+    await page.goto(`${BASE}/${stranka}`, { waitUntil: 'load' });
     await page.waitForSelector('#pz-fav', { timeout: 20000 }).catch(() => {});
     const v = await page.evaluate(async () => {
       const b = document.getElementById('pz-fav');
@@ -351,7 +352,7 @@ async function sUlozenymi(klice) {
     localStorage.setItem('pk_misto_v1', JSON.stringify({
       lat: 50.087, lng: 14.421, km: 10, nazev: 'Praha' }));
   });
-  await page.goto('http://127.0.0.1:8310/index.html', { waitUntil: 'load' });
+  await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await page.waitForSelector('#misto-zapnout', { timeout: 20000 }).catch(() => {});
   const v = await page.evaluate(async () => {
     const b = document.getElementById('misto-zapnout');

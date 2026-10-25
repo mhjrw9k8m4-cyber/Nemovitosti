@@ -37,9 +37,10 @@ import { fileURLToPath } from 'node:url';
 import { zbyva } from './sazba.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { PORT } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8310;
+
 let ok = 0, chyb = 0;
 const zpravy = [];
 hlasPad('Sazba v prohlížeči', zpravy);

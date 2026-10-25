@@ -33,6 +33,7 @@ import { najdi, klicPopisu, STROP_POPISU, TOLERANCE,
   vymeraJePodilova, zlomekCislo } from './parcely-z-textu.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE } from './port-zkousky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const req = createRequire(import.meta.url);
@@ -152,7 +153,7 @@ await ctx.route('**/*', (r) => {
 });
 for (const { f, o } of sPc.slice(0, 3)) {
   const page = await ctx.newPage();
-  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForSelector('.pz-spec', { timeout: 10000 }).catch(() => {});
   const r = await page.evaluate(() => {
     const radky = [...document.querySelectorAll('.pz-spec')].map((e) => ({
@@ -181,7 +182,7 @@ for (const { f, o } of sPc.slice(0, 3)) {
     return !/"pc":/.test(s);
   });
   const page = await ctx.newPage();
-  await page.goto(`http://127.0.0.1:8310/${bez}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${bez}`, { waitUntil: 'load' });
   await page.waitForSelector('.pz-spec', { timeout: 10000 }).catch(() => {});
   const maPozn = await page.evaluate(() => {
     const r = [...document.querySelectorAll('.pz-spec')].find((e) =>
@@ -202,7 +203,7 @@ for (const { f, o } of sPc.slice(0, 3)) {
 {
   const { f, o } = sPc[0];
   const page = await ctx.newPage();
-  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForSelector('.pz-naklady a', { timeout: 10000 }).catch(() => {});
   const odkaz = await page.evaluate(() => {
     const a = [...document.querySelectorAll('.pz-naklady a')]
@@ -217,7 +218,7 @@ for (const { f, o } of sPc.slice(0, 3)) {
 
   if (odkaz) {
     const p2 = await ctx.newPage();
-    await p2.goto(`http://127.0.0.1:8310/${odkaz}`, { waitUntil: 'load' });
+    await p2.goto(`${BASE}/${odkaz}`, { waitUntil: 'load' });
     await p2.waitForSelector('#sml-parcela', { timeout: 10000 }).catch(() => {});
     await p2.waitForTimeout(400);
     const r = await p2.evaluate(() => {

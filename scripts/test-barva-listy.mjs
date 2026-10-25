@@ -23,9 +23,10 @@ import { readFileSync, existsSync, statSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { PORT } from './port-zkousky.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const PORT = 8310;
+
 const SVETLA = '#FFFFFF';
 let ok = 0, chyb = 0; const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.

@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8310;
+import { PORT, BASE } from './port-zkousky.mjs';
 
 const UID_MAJITEL = '11111111-1111-4111-8111-111111111111';
 const UID_ZAJEMCE = '22222222-2222-4222-8222-222222222222';
@@ -395,4 +395,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => console.log('chat server na ' + PORT));
-export { PORT, UID_MAJITEL, UID_ZAJEMCE, UID_ZAJEMCE2, LISTING };
+/* Adresa i port stojí v scripts/port-zkousky.mjs; tady se jen
+   přeposílají, aby si je zkoušky mohly vzít z jednoho importu
+   dohromady se spuštěným falešným serverem. */
+export { PORT, BASE, UID_MAJITEL, UID_ZAJEMCE, UID_ZAJEMCE2, LISTING };

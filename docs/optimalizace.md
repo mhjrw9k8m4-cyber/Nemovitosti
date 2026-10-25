@@ -10500,3 +10500,96 @@ vrátí.
 Dokud se nespravila stará data, nikdo se nedozvěděl ani o rozbité
 databázi, ani o mrtvém webu v prohlížeči. Teď má každé měření
 `if: always()` — krok pořád padá, jen už nemlčí za ostatní.
+
+## 156. Hledání, dlaždice, jeden port a důkaz, který se zahazoval *25. 10.*
+
+Čtyři věci ze seznamu „co udělám já", všechny dojeté.
+
+### 156a. Živá kontrola se dívá i na hledání a na dlaždice
+
+Osm měření (oddíl 154) nesahalo na dvě věci, kterými web vlastně je:
+hledání a čísla na detailu pozemku.
+
+**Hledání se měří tím, co je nezávislé na datech.** Nesmyslný dotaz
+musí dát nulu *vždycky*; kdyby se hledalo podle jména obce, zkouška by
+platila jen do chvíle, kdy ta obec z nabídek vypadne. Pak se pole
+vyprázdní a výpis se musí vrátit — hledání, které seznam zničí, je
+horší než hledání, které nehledá. A do třetice: když se nenajde nic,
+stránka to musí **říct**. Naměřeno na místní kopii: 24 karet → „Brno"
+15 → nesmysl 0 s hláškou „Nic nenalezeno" → prázdné pole zpět na 24.
+
+**Dlaždice s klíčovými čísly** se dokreslují z dat, takže jsou tím
+nejlepším důkazem, že se na detailu opravdu něco stalo. Dvě stránky je
+ale nemají **právem**: ukončená nabídka a rozcestí na novou adresu
+(třída `pz-konec`) detail nekreslí. Na nich je to **nezměřeno**, ne
+vada — bez toho by kontrola hlásila jako rozbité stránky, které
+rozbité nejsou, a člověk by ji přestal brát vážně.
+
+Falešný web ve zkoušce dostal pracující hledání a pět nových
+vyrobených vad (chybějící pole, hledání bez filtrování, hledání, které
+mlčí, hledání, které výpis nevrátí, detail bez čísel) a jeden stav,
+kde vada **být nesmí** (ukončená nabídka). **18 kontrol, 18 správných
+odpovědí.**
+
+**A jedna past, do které jsem si šlápl sám:** zkouška hlásila, že
+nález „v textu není", přitom stál na obrazovce. Hledal jsem to
+v kódování výstupu — a byl to **jiný slovosled** v hledaném úryvku
+(„výpis se nevrátil" proti „se výpis nevrátil"). Stojí to tu, protože
+jsem při tom hledání málem napsal do kódu nepravdu o naměřené vadě;
+dvě hodiny práce ušetří jediná věta: *než začneš hledat exotickou
+příčinu, porovnej oba řetězce znak po znaku.*
+
+Vedlejší nález z té slepé cesty je ale skutečný, jen **latentní**:
+sedm souborů (včetně běžce celé sady) skládalo výstup podřízeného
+procesu jako `text += kus`, což převádí každý kus na text zvlášť — a
+víceznakové písmeno na hranici dvou kusů se rozpadne. Nikdy jsem to
+nenaměřil (výstupy zkoušek se do jednoho kusu vejdou) a hlídač to
+netvrdí. Opraveno `setEncoding('utf8')` a hlídáno: hlídač hledá
+kódování **v okolí**, ne kdekoli v souboru — s hledáním po celém
+souboru stačilo mít ho u jednoho `spawn`u a druhý propadl, což odhalila
+teprve sabotáž.
+
+### 156b. Jeden port místo sta devíti kopií
+
+117 ze 132 prohlížečových zkoušek sdílí port 8310 schválně (běžec je
+proto pouští jednu po druhé, oddíl 151). Číslo si ale každá opisovala
+k sobě — nejčastěji jako celou adresu `http://127.0.0.1:8310`.
+
+Teď stojí v `scripts/port-zkousky.mjs`, který je **schválně prázdný na
+činnost**: dvě konstanty, žádný server, žádný import. Kdo chce i
+falešnou databázi, bere si `BASE` z `falesna-supabase-chat.mjs` (ten
+server opravdu spustí); kdo si server dělá sám, bere si `PORT` odsud a
+nic se mu tím nespustí. Upraveno 112 souborů.
+
+**Jedno místo opisuje port právem** a je to tam napsané:
+`test-offline.mjs` schválně používá `localhost:8310`, protože
+`localhost` a `127.0.0.1` jsou pro prohlížeč **dva různé původy** —
+vzít adresu z modulu (127.0.0.1) by znamenalo, že zkouška přestane
+měřit to, co měřit má. Málem jsem to přepsal; zachránil to komentář,
+který tam někdo napsal.
+
+**A běžec se musel naučit hledat hlouběji.** Cesta k portu teď vede
+zkouška → `falesna-supabase-chat.mjs` → `port-zkousky.mjs`, tedy dvě
+úrovně. S jednou by port našel u 15 zkoušek ze 132 a zbytek pustil
+naráz — tedy přesně ta vada, kterou oddíl 151 opravoval. Změřeno: se
+dvěma úrovněmi se port najde u 123 ze 132 a rozdělení zůstalo
+nezměněné (8310×117).
+
+### 156c. „Kolize" byla nálepka, teď je to důkaz
+
+Sada v prohlížeči dojela 131/131, ale `test-parametry` v ní padla a
+sama prošla. Běžec to označil za kolizi nad společným stromem — a
+**výpis z toho paralelního pádu zahodil**. Když jsem pak chtěl zjistit
+proč, nebylo co číst.
+
+Reprodukovat se to nepodařilo: ani pod třemi pálicími procesy, ani
+proti třem skutečným souběžným prohlížečovým zkouškám neselhala
+(33/33 v obou případech). Nejlepší vysvětlení, které mám, je, že jsem
+v té chvíli sám upravoval `css/styles.css` — hlášku o „změněném
+stromu" z toho běhu způsobily moje úpravy, ne zkouška. **Dokázané to
+není a nebudu se tvářit, že je.**
+
+Co se tedy spravilo, je ta skutečná vada: běžec teď výpis z paralelního
+pádu **uloží na disk** a první nálezy vypíše hned. Ověřeno dočasnou
+zkouškou, která poprvé padne a podruhé projde: v souhrnu se objevila
+cesta k souboru a v něm celý původní výpis. Příště nebude co hádat.

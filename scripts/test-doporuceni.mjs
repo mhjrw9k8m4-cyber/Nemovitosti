@@ -21,6 +21,7 @@
 import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE as PORT_BASE } from './port-zkousky.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -175,7 +176,7 @@ pravda('stránka pozemku bere blok s odhadem ze sdíleného modulu',
   const { chromium } = await import('playwright-core');
   await import('./falesna-supabase-chat.mjs');
   await new Promise((r) => setTimeout(r, 300));
-  const BASE = 'http://127.0.0.1:8310';
+  const BASE = PORT_BASE;
   const PRAZDNA = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
   const kde = process.env.PW_CHROMIUM || '';

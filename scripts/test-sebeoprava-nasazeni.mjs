@@ -72,6 +72,8 @@ function spust(args, prostredi = {}) {
     const d = spawn(process.execPath, ['scripts/sebeoprava-nasazeni.mjs', ...args],
       { cwd: KOREN, env: { ...process.env, ...prostredi } });
     let text = '';
+    d.stdout.setEncoding('utf8');
+    d.stderr.setEncoding('utf8');
     d.stdout.on('data', (b) => { text += b; });
     d.stderr.on('data', (b) => { text += b; });
     const utni = setTimeout(() => d.kill('SIGKILL'), 60000);

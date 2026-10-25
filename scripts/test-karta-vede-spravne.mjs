@@ -35,7 +35,6 @@ const req = createRequire(import.meta.url);
 const K = req(path.join(ROOT, 'js', 'klic.js')).PKKlic;
 const PKC = req(path.join(ROOT, 'js', 'cisteni.js'));
 const PKH = req(path.join(ROOT, 'js', 'hlidani-logika.js'));
-const BASE = 'http://127.0.0.1:8310';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -76,7 +75,7 @@ const adresa = (d) => `pozemek.html?p=${encodeURIComponent(K.pkey(d))}`
   + (isFinite(d.price) ? `&c=${Math.round(d.price)}` : '');
 
 const kde = process.env.PW_CHROMIUM || '';
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 /* serviceWorkers: 'block' — jinak stránku obsluhuje uložená kopie. */

@@ -31,6 +31,7 @@ import http from 'node:http';
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { BASE, PORT } from './port-zkousky.mjs';
 
 /* STRÁNKA, NA KTERÉ SE DETAIL NEVYKRESLÍ.
    Pruh nahoře (třída `pz-konec`) nosí dva různé stavy: ukončenou
@@ -129,7 +130,7 @@ const server = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': TYPY[path.extname(f)] || 'application/octet-stream' });
   res.end(telo);
 });
-await new Promise((r) => server.listen(8310, r));
+await new Promise((r) => server.listen(PORT, r));
 
 const prohlizec = await chromium.launch({ executablePath: process.env.PW_CHROMIUM });
 const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block' });
@@ -146,7 +147,7 @@ const rozesle = [];
 const dvakrat = [];
 let sOkresemVNadpisu = 0;
 for (const f of vzorek) {
-  await page.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/${f}`, { waitUntil: 'load' });
   await page.waitForFunction(() => {
     const el = document.querySelector('#pz-detail h1');
     return el && !document.querySelector('.pz-staticky');
@@ -192,7 +193,7 @@ pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
   await uzky.setViewportSize({ width: 390, height: 844 });
   const spatne = [];
   for (const f of vzorek.slice(0, 4)) {
-    await uzky.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+    await uzky.goto(`${BASE}/${f}`, { waitUntil: 'load' });
     await uzky.waitForTimeout(1200);
     const m = await uzky.evaluate(() => {
       const o = (e) => (e ? e.getBoundingClientRect() : null);
@@ -265,7 +266,7 @@ pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
   pravda('je co měřit — stránka s inzerátem i stránka s dražbou',
     !!sDrazbou && !!sInzeratem, `inzerát: ${sInzeratem || 'nenalezen'}, dražba: ${sDrazbou || 'nenalezen'}`);
   const zmer = async (f) => {
-    await siroky.goto(`http://127.0.0.1:8310/${f}`, { waitUntil: 'load' });
+    await siroky.goto(`${BASE}/${f}`, { waitUntil: 'load' });
     await siroky.waitForSelector('.pz-price', { timeout: 20000 }).catch(() => {});
     return siroky.evaluate(() => {
       const z = document.querySelector('.pz-zdroj');

@@ -113,6 +113,10 @@ try {
      test si toho nevšiml.
      localhost a 127.0.0.1 jsou pro prohlížeč dva RŮZNÉ původy, ačkoli
      je za nimi tentýž server. Cizí původ je tedy dosažitelný i tady.
+     POZOR: tady se adresa SCHVÁLNĚ nebere z scripts/port-zkousky.mjs.
+     Ta ukazuje na 127.0.0.1, tedy na VLASTNÍ původ — a tím by zkouška
+     přestala měřit to, co měřit má. Jediné místo v sadě, kde se číslo
+     portu opisuje právem.
      no-cors proto, aby to byl týž druh požadavku jako mapová dlaždice. */
   await p.evaluate(() => fetch('http://localhost:8310/data/model.json', { mode: 'no-cors' })
     .then(() => '').catch(() => ''));

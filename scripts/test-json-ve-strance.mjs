@@ -126,9 +126,8 @@ const h = stranka(sablona, jedovaty);
 }
 
 /* --- 4) A totéž prohlížečem ----------------------------------------- */
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
-const BASE = 'http://127.0.0.1:8310';
 const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 const kde = process.env.PW_CHROMIUM || '';

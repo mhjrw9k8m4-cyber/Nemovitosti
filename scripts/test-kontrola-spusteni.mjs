@@ -76,6 +76,8 @@ function pust(rezim, dalsi) {
     const p = spawn('node', [path.join(KOREN, 'scripts', 'kontrola-spusteni.mjs'), ...(dalsi || [])],
       { cwd: KOREN, env: { ...process.env, SUPABASE_URL: 'http://127.0.0.1:8412' } });
     let out = '';
+    p.stdout.setEncoding('utf8');
+    p.stderr.setEncoding('utf8');
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
     p.on('close', (kod) => hotovo({ out, kod }));

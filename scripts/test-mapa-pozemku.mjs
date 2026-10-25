@@ -34,7 +34,6 @@ import { readFileSync } from 'node:fs';
 import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-const BASE = 'http://127.0.0.1:8310';
 let chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs. */
@@ -124,7 +123,7 @@ if (!CIL) {
   process.exit(1);
 }
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const kde = process.env.PW_CHROMIUM || '';
