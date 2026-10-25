@@ -10934,9 +10934,40 @@ a vyšlo z ní víc, než jsem čekal:
    neodpovídá, jak má, protože `supabase/00-vse.sql` ještě neběžel.
    Na tři vady naměřené 24. 10. je teď živý doklad každých šest hodin.
 
+### 160e. A poslední řádek: robot opravdu naběhl
+
+Třetí ruční běh (17:04, robot dojel před 95 minutami, tedy 5 minut za
+stropem) dokázal to, co falešné API dokázat nemůže — že
+`GITHUB_TOKEN` s `actions: write` úlohu **doopravdy vyvolá**:
+
+```
+nálezy: stara-data
+robot: neběží, naposledy dojel 95 min (běhů v API: 10)
+rozhodnutí: pustit-robota — data venku jsou stará a robot neběžel 95 min
+            (strop 90 min) — pouští se jednou
+PUŠTĚNO: update-data.yml nad větví claude/web-design-sketch-ewjjrr.
+```
+
+A robot naběhl: *Aktualizace dat příležitostí*, běh 319, událost
+`workflow_dispatch`, spouštěč `github-actions[bot]` (tedy ten token),
+výsledek **success**. Celý řetěz je tím prokázaný od konce do konce:
+**nález → rozhodnutí → vyvolání → robot dojel.**
+
+Tím je u opravy nasazení prokázané všechno, co se prokázat dá:
+
+| Článek | Čím |
+|---|---|
+| rozhodovací tabulka (12 stavů) | čistá funkce + 4 sabotáže |
+| požadavek je správný (cesta, metoda, větev, hlavičky, nespolknutá 403) | falešné API + 4 sabotáže |
+| přesměrování API jinam se odmítne | zkouška |
+| čtení stavu robota z API | **naostro** (běhy 5 a 7) |
+| „právě dojel, a data jsou PŘESTO stará" | **naostro** (běh 6) |
+| reportér při cvičení mlčí | **naostro** (běh 6) |
+| vyvolání robota | **naostro** (běh 8 → robot 319) |
+
 Zbývající řádek tabulky se dokázat **nedá jinak než časem**,
-protože závisí na tom, jak dávno robot dojel: samotné vyvolání robota
-(strop je 90 minut, takže okno je mezi jeho běhy).
+protože závisí na tom, jak dávno robot dojel (strop je 90 minut, takže
+okno je mezi jeho běhy).
 Ruční běh úlohy proto bere vstup `strop-stare-hodin` — posune strop na
 stáří dat tak nízko, že se nález „stará data" vyrobí, a opravný krok se
 provede naostro. **Při tom cvičení reportér mlčí**: nález je vyrobený,
