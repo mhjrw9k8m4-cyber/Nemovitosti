@@ -31,12 +31,17 @@
         (to druhé vyhledávače indexují jako platnou stránku),
      9. robots.txt odpovídá.
 
-   CO TENHLE SKRIPT NEDĚLÁ: neopravuje. Nasazení se z repozitáře
-   vyvolat nedá a „zkusit to znovu" u cizí služby není oprava, ale
-   hádání. Místo toho říká PŘESNĚ, co je venku jinak — s oběma
-   razítky, ať je vidět, jestli je venku starší verze, nebo žádná.
+   CO TENHLE SKRIPT NEDĚLÁ: neopravuje. Říká PŘESNĚ, co je venku jinak
+   — s oběma razítky, ať je vidět, jestli je venku starší verze, nebo
+   žádná. Opravu zkouší samostatný krok, a jen u JEDNOHO nálezu:
+   `scripts/sebeoprava-nasazeni.mjs` umí při starých datech vyvolat
+   robota. U ostatních nálezů by „zkusit to znovu" bylo hádání, ne
+   oprava — nasazení ani cizí službu odsud nespravím.
+
+   Proto má každý nález kromě textu i KÓD (`--vystup soubor.json`):
+   text je pro člověka, kód pro ten opravný krok.
    ================================================================== */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VLOZENY } from './hlasic-chyb.mjs';
@@ -50,8 +55,13 @@ const WEB = String(arg('--web', process.env.PK_WEB || 'https://www.parcelaka.cz'
 const STARE_HODIN = Math.max(1, parseInt(arg('--data-stare-hodin', process.env.PK_DATA_STARE_HODIN || '24'), 10) || 24);
 
 const dobre = [], vady = [], nezmereno = [];
+/* KÓDY NÁLEZŮ. Text nálezu je pro člověka; kód je pro stroj, který se
+   na jeho základě může pokusit o opravu (scripts/sebeoprava-nasazeni.mjs).
+   Kód dostane jen nález, u kterého VÍME, co by opravou bylo — zbytek
+   zůstává bez kódu schválně, aby si ho nikdo nespletl s opravitelným. */
+const kody = new Set();
 const ANO = (t) => dobre.push(t);
-const NE = (co, proc) => vady.push(`${co} — ${proc}`);
+const NE = (co, proc, kod) => { vady.push(`${co} — ${proc}`); if (kod) kody.add(kod); };
 const NEVIM = (co, proc) => nezmereno.push(`${co} — ${proc}`);
 
 async function stahni(cesta) {
@@ -134,7 +144,8 @@ if (uvod.stav === 200) {
       const hodin = (Date.now() - t) / 3600000;
       if (hodin > STARE_HODIN) {
         NE('svěžest dat', `nasazená data jsou ${hodin.toFixed(0)} h stará (strop ${STARE_HODIN} h)`
-          + ' — robot je obnovuje každých 6 h, takže se buď zastavil, nebo se nenasazuje');
+          + ' — robot je obnovuje každých 6 h, takže se buď zastavil, nebo se nenasazuje',
+        'stara-data');
       } else ANO(`nasazená data jsou svěží (${hodin.toFixed(0)} h, strop ${STARE_HODIN} h)`);
     }
   }
@@ -216,6 +227,17 @@ out.push(vady.length
   : 'VERDIKT: venku je to, co má být.');
 out.push('');
 console.log(out.join('\n'));
+/* STROJOVĚ ČITELNÝ VÝSTUP (--vystup soubor.json). Čte ho sebeoprava
+   nasazení; bez něj by musela louskat text, který je psaný pro člověka
+   a mění se, kdykoli se zlepší formulace. */
+const VYSTUP = arg('--vystup', '');
+if (VYSTUP) {
+  writeFileSync(VYSTUP, JSON.stringify({
+    web: WEB, kdy: new Date().toISOString(),
+    dobre: dobre.length, vady, nezmereno, kody: [...kody],
+  }, null, 2) + '\n');
+  console.log(`Nálezy strojově: ${VYSTUP} (kódy: ${[...kody].join(', ') || 'žádné'})`);
+}
 if (vady.length) {
   console.log('::error::Nasazený web: ' + vady.length + ' vad. ' + vady.slice(0, 3).join(' | '));
   process.exit(1);

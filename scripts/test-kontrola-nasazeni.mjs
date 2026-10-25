@@ -13,7 +13,8 @@
    „měkká" 404, osekaná sitemap, nedostupný web.
    ================================================================== */
 import http from 'node:http';
-import { readFileSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, statSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
@@ -133,6 +134,31 @@ function pust(m, dalsi) {
   const b = await pust('stara-data', ['--data-stare-hodin', '0']);
   pravda('a nula se nebere jako „nekontrolovat" (strop je aspoň hodina)',
     b.kod === 1, `kód ${b.kod}`);
+}
+
+/* ---- 5) strojově čitelný výstup: kód, podle kterého se opravuje -- */
+/* Sebeoprava nasazení se rozhoduje podle KÓDU, ne podle textu. Kdyby
+   kód u starých dat zmizel (třeba při přepisu formulace), oprava by
+   tiše přestala fungovat a nikomu by nic nesvítilo. */
+{
+  const soubor = path.join(mkdtempSync(path.join(tmpdir(), 'nasazeni-')), 'nalezy.json');
+  const { kod } = await pust('stara-data', ['--vystup', soubor]);
+  let j = null;
+  try { j = JSON.parse(readFileSync(soubor, 'utf8')); } catch (e) { j = null; }
+  pravda('u starých dat napíše strojový kód stara-data',
+    kod === 1 && !!j && Array.isArray(j.kody) && j.kody.includes('stara-data'),
+    `kód ${kod}; kody=${j ? JSON.stringify(j.kody) : '(soubor se nepřečetl)'}`);
+
+  const soubor2 = path.join(mkdtempSync(path.join(tmpdir(), 'nasazeni-')), 'nalezy.json');
+  const b = await pust('bez-csp', ['--vystup', soubor2]);
+  let j2 = null;
+  try { j2 = JSON.parse(readFileSync(soubor2, 'utf8')); } catch (e) { j2 = null; }
+  /* A TOHLE JE TA DRUHÁ POLOVINA: nález, na který oprava NENÍ, kód
+     dostat nesmí — jinak by se stroj pokusil spravit něco, co spravit
+     neumí. Chybějící CSP je vada webu, ne práce pro robota dat. */
+  pravda('nález, na který oprava není, zůstane bez kódu',
+    b.kod === 1 && !!j2 && Array.isArray(j2.kody) && j2.kody.length === 0 && j2.vady.length > 0,
+    `kód ${b.kod}; kody=${j2 ? JSON.stringify(j2.kody) : '(soubor se nepřečetl)'}`);
 }
 
 server.close();

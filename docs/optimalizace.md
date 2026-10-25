@@ -10432,3 +10432,71 @@ hlášku.
 **Co se vědomě neměří:** cizí požadavky (Supabase, dlaždice mapy).
 Ty mohou vrátit 400 i při zdravém webu a hlídá je kontrola živé
 databáze (oddíl 149b). Hlídá se jen to, co je na naší doméně.
+
+## 155. Hlášení není oprava: stará data venku už robota pustí samy *25. 10.*
+
+**Co bylo špatně.** Sebeoprava (oddíl 148) umí jen to, co se dá
+spočítat ze zdroje: dopočítá odvozené soubory a pushne. Kontrola
+nasazení (oddíl 149) přitom umí poznat **„venku jsou stará data"** — a
+pak jen napsala úkol a čekala na člověka. Robot, který data obnovuje,
+se z repozitáře **vyvolat dá** (`update-data.yml` má
+`workflow_dispatch`). Chyběl ten krok od hlášení k opravě.
+
+**Proč to není „zkusit to znovu".** Slepý opakovaný pokus není oprava,
+je to hádání, které navíc zakryje skutečnou příčinu. Rozhodnutí je
+proto čistá funkce `rozhodni(stav)` v `scripts/sebeoprava-nasazeni.mjs`
+— nic nečte, nic nedělá, jde změřit tabulkou — a jedná **v jediném**
+případě:
+
+| Stav | Co udělá | Proč |
+|---|---|---|
+| leží `.github/SEBEOPRAVA-VYPNUTA` | nic | vypínač přebíjí vše |
+| mezi nálezy není `stara-data` | nic | na ostatní vady oprava odsud není |
+| robot právě běží | nic | druhé spuštění jen zdvojí práci |
+| nevíme, kdy běžel naposledy | **nic, a nahlas** | hlídač, který neví, nemá jednat |
+| **robot právě dojel a data venku jsou PŘESTO stará** | **nic** | tohle **není vada robota, ale nasazení** — další běh by ji nespravil, jen zakryl tím, že se něco dělo |
+| jinak | pustí robota, jednou | |
+
+Ten pátý řádek je celý rozdíl mezi opravou a tikem. Strop je 90 minut:
+perioda robota je 6 h, běh jde v desítkách minut a nasazení Pages
+v jednotkách.
+
+**Text je pro člověka, kód pro stroj.** Kontrola nasazení dostala
+`--vystup soubor.json` a každý nález kromě věty i **kód** — ale jen
+tam, kde víme, co by opravou bylo. Chybějící hlavička CSP kód
+nedostane, a zkouška to hlídá z obou stran: u starých dat kód **být
+musí**, u chybějící CSP **nesmí**. Bez té druhé poloviny by se stroj
+pokoušel spravit něco, co spravit neumí.
+
+**Čím je to pojištěné:**
+
+* bez `--opravdu` se neposílá nic (stejná úmluva jako u rozesílání),
+* nasimulovaný stav robota (`--zkouska-robot`, kvůli zkoušce) se
+  **odmítne** dohromady s `--opravdu`: na vymyšleném stavu se naostro
+  nejedná, ani kdyby to někdo napsal omylem,
+* vyvolat lze **jedině** `update-data.yml`; skript nepushuje, nemaže
+  a nic jiného nespouští,
+* nepovedené spuštění se nespolkne: skončí chybou, aby nevypadalo, že
+  se oprava provedla,
+* nepřečtené nebo rozbité nálezy se **přiznají** a nejedná se.
+
+**Sabotáž, čtyři pokusy, čtyři nálezy.** Odebrání každého jednoho
+řádku tabulky (vypínač, běžící robot, neznámý čas, strop) shodí
+zkoušku `scripts/test-sebeoprava-nasazeni.mjs` — 18 kontrol, z toho
+dvanáctiřádková tabulka stavů a čtyři měření spuštěním.
+
+**A hlídač práv se musel naučit nový pojem.** `actions: write` je
+rozšíření práv, takže `scripts/test-ci-prava.mjs` je hned nahlásil jako
+právo navíc — správně, protože o vyvolávání úloh nic nevěděl. Povolení
+se nepsalo jménem souboru, ale podmínkou: právo smí mít jen úloha,
+která opravdu pouští skript POSTující na `…/dispatches`. Hledá se
+v obou — ve znění úlohy i ve spouštěných skriptech —, protože samotné
+workflow o dispatchi nic neví. Sabotáž (přepsat cestu v API) nález
+vrátí.
+
+**Vedlejší nález, který byl horší než to, co jsem opravoval.** V úloze
+*Kontrola nasazeného webu* běžela měření bez `if: always()`, takže
+**první nález zakryl všechna ostatní**: GitHub další kroky přeskočí.
+Dokud se nespravila stará data, nikdo se nedozvěděl ani o rozbité
+databázi, ani o mrtvém webu v prohlížeči. Teď má každé měření
+`if: always()` — krok pořád padá, jen už nemlčí za ostatní.

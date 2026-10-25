@@ -444,6 +444,9 @@ jobs:
       - name: Safari a iOS (co by v nich nefungovalo — prohlížeč tu není)
         run: node scripts/test-safari.mjs
 
+      - name: Sebeoprava nasazení se rozhoduje podle tabulky, ne podle nálady
+        run: node scripts/test-sebeoprava-nasazeni.mjs
+
       - name: Cesta ven z okresu
         run: node scripts/test-cesta-ven.mjs
 

@@ -124,6 +124,21 @@ for (const f of soubory) {
       }
       continue;
     }
+    /* `actions: write` SMÍ JEN TEN, KDO OPRAVDU VYVOLÁVÁ ÚLOHU.
+       Stejná úvaha jako u `issues: write` výš: je to rozšíření práv,
+       takže se nepovoluje jménem souboru, ale tím, že táž úloha pouští
+       skript, který opravdu POSTuje na .../dispatches (dnes jediný:
+       scripts/sebeoprava-nasazeni.mjs, která vyvolá robota dat, když
+       jsou venku stará data). Hledá se v OBOU — ve znění úlohy i ve
+       skriptech, které spouští — protože samotné workflow o dispatchi
+       nic neví; stejná lekce jako u „zápisu bez pushe". */
+    if (jm === 'actions' && hod === 'write') {
+      const vyvolava = /dispatches/.test(K[f])
+        || [...K[f].matchAll(/node\s+(scripts\/[\w-]+\.mjs)/g)]
+          .some((m) => { try { return /dispatches/.test(readFileSync(m[1], 'utf8')); } catch (e) { return false; } });
+      if (!vyvolava) siroka.push(`${f} (actions: write bez vyvolání úlohy)`);
+      continue;
+    }
     if (jm !== 'contents') siroka.push(`${f} (${jm}: ${hod})`);
     else if (!/^(read|write)$/.test(hod)) siroka.push(`${f} (contents: ${hod})`);
   }

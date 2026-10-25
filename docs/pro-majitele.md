@@ -104,6 +104,14 @@ skript, nezablokovala něco CSP, stáhly se všechny soubory, dokreslil
 se výpis, postavila se mapa, nepřetéká to na telefonu — a totéž na
 jedné generované stránce pozemku.
 
+A od 25. 10. taky **jeden nález umí sám spravit**: když jsou venku
+stará data, úloha sama pustí robota — ale jen když to má smysl.
+Nepustí ho, když právě běží, když nevíme, kdy běžel naposledy, a hlavně
+**ne tehdy, když právě dojel a data venku jsou přesto stará** — to totiž
+není vada robota, ale nasazení, a další běh by ji jen zakryl. Celá
+tabulka je v `scripts/sebeoprava-nasazeni.mjs` a vypnete ji tím, že
+v repozitáři necháte ležet soubor `.github/SEBEOPRAVA-VYPNUTA`.
+
 Ručně kdykoli: `node scripts/kontrola-nasazeni.mjs`, a s prohlížečem
 `node scripts/kontrola-ziva-prohlizecem.mjs` (potřebuje nainstalovaný
 Chromium; místní kopii repozitáře změří `--mistni`).

@@ -17,3 +17,7 @@ dist/
 .env.*
 !.env.example
 .vercel/
+
+# Strojově čitelné nálezy kontroly nasazení (--vystup). Vzniká v CI,
+# čte ho scripts/sebeoprava-nasazeni.mjs a do repozitáře nepatří.
+nalezy.json

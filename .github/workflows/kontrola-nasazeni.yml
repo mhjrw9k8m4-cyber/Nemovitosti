@@ -21,6 +21,7 @@ on:
 permissions:
   contents: read
   issues: write          # zakládá úkol, když je venku něco jiného (poslední krok)
+  actions: write         # jen aby šlo vyvolat robota dat, viz scripts/sebeoprava-nasazeni.mjs
 
 jobs:
   kontrola:
@@ -41,8 +42,10 @@ jobs:
 
       # Razítka ?v= se porovnávají s místním index.html, takže
       # závislosti ani build nejsou potřeba — stačí repozitář.
+      # `--vystup` je strojově čitelný seznam nálezů (kódy). Čte ho
+      # sebeoprava v předposledním kroku; text výpisu je pro člověka.
       - name: Zkontrolovat, co je venku
-        run: node scripts/kontrola-nasazeni.mjs
+        run: node scripts/kontrola-nasazeni.mjs --vystup nalezy.json
 
       # Web stojí na Supabase, a ten se taky může rozejít s tím, co web
       # čeká: funkce zmizí (když se pustí starší SQL), pravidlo se
@@ -50,7 +53,13 @@ jobs:
       # soubory venku nepoznají. Čtou se jen veřejným klíčem a nic se
       # nezapisuje; co se pozná z repozitáře, se v tomhle režimu
       # schválně nehlásí (to už hlídá CI při každém pushi).
+      # `if: always()` u všech měření: bez něj první nález zakryje
+      # VŠECHNA ostatní měření (GitHub další kroky přeskočí), takže by
+      # se o rozbité databázi nebo o mrtvém webu v prohlížeči nedozvěděl
+      # nikdo, dokud se nespraví to první. Krok pořád padá, jen už
+      # nemlčí za ostatní.
       - name: Zkontrolovat živou databázi
+        if: always()
         run: node scripts/kontrola-spusteni.mjs --jen-zive
 
       # Až sem se web nikdy neotevřel v prohlížeči. Tenhle krok je
@@ -59,6 +68,7 @@ jobs:
       # nepostavenou mapu, přetečení na telefonu. Stojí za to i cena
       # instalace prohlížeče — mrtvý web se jinak nepozná vůbec.
       - name: Prohlížeč
+        if: always()
         run: |
           # Připnutá verze, stejně jako ve zkouškách: ať se CI nerozsvítí
           # tím, co se v tu minutu vydalo na npm.
@@ -67,7 +77,20 @@ jobs:
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)"
 
       - name: Otevřít živý web v prohlížeči
+        if: always()
         run: node scripts/kontrola-ziva-prohlizecem.mjs
+
+      # HLÁŠENÍ NENÍ OPRAVA. Ze všech nálezů je jediný, u kterého se dá
+      # z repozitáře něco UDĚLAT: stará data venku — robota dat jde
+      # vyvolat (`update-data.yml` má `workflow_dispatch`). Kdy se jedná
+      # a kdy ne, rozhoduje tabulka v scripts/sebeoprava-nasazeni.mjs;
+      # mezi „nejednat" patří i případ, kdy robot právě dojel a data jsou
+      # PŘESTO stará — to je vada nasazení, ne robota.
+      - name: Sebeoprava — stará data venku pustí robota
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/sebeoprava-nasazeni.mjs --nalezy nalezy.json --opravdu
 
       - name: Ohlásit selhání
         if: failure()
