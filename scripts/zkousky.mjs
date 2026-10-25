@@ -66,6 +66,21 @@ export function rychleZkousky() { return zeWorkflow((k) => k === 'testy'); }
    níž (tři z nich si schválně podávají 8310). */
 export function prohlizecoveZkousky() { return zeWorkflow((k) => /^v-prohlizeci/.test(k)); }
 
+/* NA KTERÉM PORTU ZKOUŠKA SEDÍ. Hledá se obojí: `listen(8412)` u těch,
+   co si server otevřou samy, a `127.0.0.1:8310` u zkoušek v prohlížeči,
+   které si ho berou ze společného pomocníka a v kódu mají jen adresu.
+   NAMĚŘENO TVRDĚ: nejdřív se hledalo jen `listen(`, takže z 131
+   prohlížečových zkoušek vyšly jako „bez portu" skoro všechny —
+   a paralelní běh jich 110 utopil v „EADDRINUSE 8310". Port 8310 má
+   v sobě 123 souborů. */
+export function portZkousky(soubor) {
+  try {
+    const t = readFileSync(path.join(KOREN, soubor), 'utf8');
+    const m = t.match(/(?:listen\(|127\.0\.0\.1:|localhost:)(\d{4})/);
+    return m ? m[1] : null;
+  } catch (e) { return null; }
+}
+
 /* POUŠTÍ SE JEN PŘI PŘÍMÉM SPUŠTĚNÍ. Bez téhle podmínky by `import`
    téhle hlavičky (kvůli funkci rychleZkousky, kterou si čte hlídač
    portů) spustil celou sadu — a zkouška, která si chtěla jen přečíst
@@ -183,13 +198,8 @@ function pust(soubor) {
    z jejich zdroje — stejně, jako ho hlídá test-zkousky-meri.mjs — a
    paralelně se nikdy nepustí dvě, které by se o týž port praly.
    Zkouška bez serveru nebrání nikomu. */
-const portTestu = (soubor) => {
-  try {
-    const m = readFileSync(path.join(KOREN, soubor), 'utf8').match(/listen\((\d{4})/);
-    return m ? m[1] : null;
-  } catch (e) { return null; }
-};
-const porty = new Map(seznam.map((f) => [f, portTestu(f)]));
+
+const porty = new Map(seznam.map((f) => [f, portZkousky(f)]));
 const cekajici = seznam.slice();
 const obsazene = new Set();
 

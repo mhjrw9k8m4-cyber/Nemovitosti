@@ -10175,6 +10175,23 @@ stovku pádů, které s webem nemají nic společného. Pouští se **jedna po
 druhé**: tři zkoušky si schválně podávají port 8310, takže paralelně by
 se o něj praly (v CI každá směna běží na svém stroji).
 
+**PLÁNOVAČ MĚ NEJDŘÍV NAUČIL, ŽE JSEM PORT HLEDAL ŠPATNĚ.** První
+podoba brala port z `listen(8412)`, protože tak ho mají zkoušky, které
+si server otevřou samy. Zkoušky v prohlížeči ho ale mají jen jako
+adresu (`const BASE = 'http://127.0.0.1:8310'`) a server si berou ze
+společného pomocníka — takže plánovači vyšly jako „bez portu" a pustil
+je čtyři naráz. Z 131 jich 110 utopilo `EADDRINUSE 8310`. Port se teď
+hledá v obou podobách a **týmž pravidlem, jakým ho hlídá
+`test-zkousky-meri.mjs`** — jinak by hlídač hlídal něco jiného, než
+podle čeho se zkoušky pouští.
+
+Změřeno, jak to doopravdy je: **112 ze 131** zkoušek v prohlížeči sedí
+na portu 8310, 17 nepotřebuje žádný a dvě mají vlastní. Lokálně tedy
+poběží těch 112 **po jedné** (zbytek se mezi ně vejde) — a to je dnešní
+pravda, ne cíl. Zrychlit to znamená naučit 123 souborů brát port
+z jednoho místa; zapsáno, neuděláno. CI svou rychlost nebere
+z paralelního běhu, ale ze tří strojů.
+
 **A při tom se našla hezká nesrovnalost:** `npm run testy` v
 `package.json` pouštělo **pět** zkoušek. Ne pět vybraných „rychlých" —
 pět, které tam někdo napsal, když jich bylo pět, a nikdy to nikdo

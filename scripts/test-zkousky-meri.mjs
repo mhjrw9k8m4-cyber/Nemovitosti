@@ -152,15 +152,16 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
  * Zkoušky v prohlížeči se tu nepočítají: ty jedou v CI jedna po druhé
  * ve svých směnách a 8310 si schválně podávají dál. */
 {
-  const { rychleZkousky } = await import('./zkousky.mjs');
+  /* Port se čte TÝMŽ pravidlem, jakým ho čte plánovač v běžci
+     (scripts/zkousky.mjs) — jinak by hlídač hlídal něco jiného, než
+     podle čeho se zkoušky pouští. */
+  const { rychleZkousky, portZkousky } = await import('./zkousky.mjs');
   const porty = new Map();
   for (const f of rychleZkousky()) {
-    const t = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    for (const m2 of t.matchAll(/listen\((\d{4})/g)) {
-      const p2 = m2[1];
-      if (!porty.has(p2)) porty.set(p2, []);
-      porty.get(p2).push(f.replace('scripts/', ''));
-    }
+    const p2 = portZkousky(f);
+    if (!p2) continue;
+    if (!porty.has(p2)) porty.set(p2, []);
+    porty.get(p2).push(f.replace('scripts/', ''));
   }
   const kolize = [...porty.entries()].filter(([, kdo]) => kdo.length > 1);
   pravda(`porty v rychlé sadě jsou každý jen jednou (${porty.size} portů)`,
