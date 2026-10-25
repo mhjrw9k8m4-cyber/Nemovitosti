@@ -72,7 +72,7 @@ h1 em::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:6px;
 }
 .vm-ov{position:fixed;inset:0;z-index:5000;background:var(--plocha-karta);display:flex;align-items:stretch;justify-content:center;padding:0}
 body.vm-otevreno{overflow:hidden}
-.vm-panel{position:relative;display:flex;flex-direction:column;width:100%;height:100dvh;background:var(--plocha-karta);overflow:hidden}
+.vm-panel{position:relative;display:flex;flex-direction:column;width:100%;height:100vh;height:100dvh;background:var(--plocha-karta);overflow:hidden}
 .vm-pata>*{max-width:100%}
 @media (min-width:1000px){.vm-hlava{max-width:var(--m-siroky);width:100%;margin-inline:auto}
 }
@@ -948,7 +948,7 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 .modal-backdrop{background:#0b1510}
 .loc-ov{background:#0b1510}
 @media (max-width:700px){.modal,.loc-ov{padding:0;align-items:stretch;justify-content:stretch}
-.modal-card,.loc-card{width:100%;max-width:none;min-height:100dvh;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:flex-start;padding:48px 20px calc(28px + env(safe-area-inset-bottom,0px))}
+.modal-card,.loc-card{width:100%;max-width:none;min-height:100vh;min-height:100dvh;border:0;border-radius:0;box-shadow:none;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;justify-content:flex-start;padding:48px 20px calc(28px + env(safe-area-inset-bottom,0px))}
 .loc-x{top:10px;right:10px;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 }
 .loc-btn.primary:hover{filter:brightness(1.06)}
@@ -974,7 +974,7 @@ to{opacity:1;transform:none}
 }
 @media (min-width:1041px){.map-app{position:relative}
 .hero-map .map-wide{max-width:none;padding:48px 0 0;margin-top:0;background:var(--plocha-karta)}
-.hero-map .map-app,.map-app{border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;grid-template-columns:min(34vw,460px) minmax(0,1fr);height:calc(100dvh - var(--vyska-hlavicky,85px) - 48px);max-height:none;min-height:620px}
+.hero-map .map-app,.map-app{border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;grid-template-columns:min(34vw,460px) minmax(0,1fr);height:calc(100vh - var(--vyska-hlavicky,85px) - 48px);height:calc(100dvh - var(--vyska-hlavicky,85px) - 48px);max-height:none;min-height:620px}
 @media (min-width:1600px){.hero-map .map-app,.map-app{grid-template-columns:min(46vw,900px) minmax(0,1fr)}
 .map-side .opp-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-content:start}
 .map-side .opp-list>.opp-item{margin-bottom:0}
@@ -1062,7 +1062,7 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .map-count .mc-pozn{display:block;margin-top:2px;white-space:normal}
 .hero-map .map-wide{padding:0}
 .map-app{border-left:0;border-right:0;border-radius:0}
-.map-side{padding:8px 8px 12px;min-height:calc(100dvh - var(--vyska-hlavicky,65px))}
+.map-side{padding:8px 8px 12px;min-height:calc(100vh - var(--vyska-hlavicky,65px));min-height:calc(100dvh - var(--vyska-hlavicky,65px))}
 .opp-item::after{display:none}
 #leaflet-map{position:absolute;inset:0}
 .status-grid{grid-template-columns:repeat(2,1fr)}

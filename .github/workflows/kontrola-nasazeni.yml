@@ -5,7 +5,13 @@ name: Kontrola nasazeného webu
 # a den starý web vedle sebe obstojí.
 #
 # Běží 35 minut po robotovi (ten jede v 0 */6), tedy ve chvíli, kdy už
-# mají být nová data nasazená. Co se měří, je v scripts/kontrola-nasazeni.mjs.
+# mají být nová data nasazená. Co se měří, je v scripts/kontrola-nasazeni.mjs,
+# scripts/kontrola-spusteni.mjs a scripts/kontrola-ziva-prohlizecem.mjs.
+#
+# Ty tři se ptají jinak a jedna druhou nenahradí: první přes HTTP (je
+# venku ta verze?), druhá do databáze (odpovídá?), třetí OTEVŘE WEB
+# V PROHLÍŽEČI — protože všech devět kontrol první z nich projde i na
+# webu, kde se skript při načtení zhroutí a člověk vidí prázdno.
 
 on:
   schedule:
@@ -19,7 +25,7 @@ permissions:
 jobs:
   kontrola:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25   # z toho většinu spolkne instalace prohlížeče
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,10 +53,26 @@ jobs:
       - name: Zkontrolovat živou databázi
         run: node scripts/kontrola-spusteni.mjs --jen-zive
 
+      # Až sem se web nikdy neotevřel v prohlížeči. Tenhle krok je
+      # jediný, který měří, CO OPRAVDU UVIDÍ ČLOVĚK: výjimky ze
+      # skriptů, zablokovanou CSP, nedotažené soubory, prázdný výpis,
+      # nepostavenou mapu, přetečení na telefonu. Stojí za to i cena
+      # instalace prohlížeče — mrtvý web se jinak nepozná vůbec.
+      - name: Prohlížeč
+        run: |
+          # Připnutá verze, stejně jako ve zkouškách: ať se CI nerozsvítí
+          # tím, co se v tu minutu vydalo na npm.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)"
+
+      - name: Otevřít živý web v prohlížeči
+        run: node scripts/kontrola-ziva-prohlizecem.mjs
+
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani
         with:
           jmeno: Kontrola nasazeného webu
           co-to-znamena: >-
-            Živý systém se rozešel s tím, co web čeká — na ostré doméně není ta verze, co je v repozitáři, jsou venku stará data, nebo neodpovídá databáze. Podrobnosti (včetně obou razítek) jsou ve výpisu úlohy.
+            Živý systém se rozešel s tím, co web čeká — na ostré doméně není ta verze, co je v repozitáři, jsou venku stará data, neodpovídá databáze, nebo se web v prohlížeči vůbec nesestaví (spadlý skript, zablokovaná CSP, prázdný výpis). Podrobnosti (včetně obou razítek a hlášky z prohlížeče) jsou ve výpisu úlohy.

@@ -214,9 +214,30 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
      zapomenout; proto se komentáře odstraňují, ne obchází. */
   const CHCE_PROHLIZEC = /(?:from|import)\s*\(?\s*['"]playwright-core['"]/;
   const bezKomentaru = (t) => t.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
-  const chceProhlizec = (cesta) => CHCE_PROHLIZEC.test(bezKomentaru(fs.readFileSync(cesta, 'utf8')));
+  /* POČÍTÁ SE I PROHLÍŽEČ, KTERÝ SI VEZME SPUŠTĚNÝ SKRIPT. Zkouška může
+     prohlížeč potřebovat, a přitom si ho sama neimportovat — pustí jako
+     podřízený proces skript, který ho importuje (test-kontrola-ziva.mjs
+     tak pouští kontrolu živého webu). Pro tenhle hlídač to vypadalo jako
+     zkouška bez prohlížeče a chtěl ji přestěhovat do rychlé úlohy, kde by
+     chromium nebylo a padla by. Jde se tedy O JEDNU ÚROVEŇ dovnitř —
+     stejná lekce jako u práv v CI (oddíl 118): hlídač se musí podívat i do
+     toho, co zkouška spouští, ne jen do toho, co importuje. */
+  const chceProhlizec = (cesta, uroven = 0) => {
+    const t = bezKomentaru(fs.readFileSync(cesta, 'utf8'));
+    if (CHCE_PROHLIZEC.test(t)) return true;
+    if (uroven > 0) return false;
+    for (const m of t.matchAll(/['"](scripts\/[\w.-]+\.mjs)['"]/g)) {
+      try { if (chceProhlizec(m[1], 1)) return true; } catch (e) { /* neexistuje — jiná kontrola */ }
+    }
+    return false;
+  };
 
-  const spatnaUloha = [...vBez].filter(chceProhlizec);
+  /* `filter((c) => …)`, ne `filter(chceProhlizec)`: filter předává
+     druhým argumentem INDEX, takže by se od druhého prvku dál posílal
+     jako „úroveň zanoření" a funkce by přestala chodit do spouštěných
+     skriptů. Naletěl jsem na to hned, jak `chceProhlizec` dostala druhý
+     parametr — a našla to sabotáž, ne čtení. */
+  const spatnaUloha = [...vBez].filter((c) => chceProhlizec(c));
   /* DRUHÁ STRANA TÉHOŽ. Zkouška, která prohlížeč nepotřebuje a přesto
      sedí v úloze s ním, nic nerozbije — jen čeká. Úloha „v-prohlizeci"
      nejdřív instaluje chromium (asi minuta) a pak jede jednu zkoušku po

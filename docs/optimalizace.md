@@ -10202,6 +10202,16 @@ pravda, ne cíl. Zrychlit to znamená naučit 123 souborů brát port
 z jednoho místa; zapsáno, neuděláno. CI svou rychlost nebere
 z paralelního běhu, ale ze tří strojů.
 
+**A ještě jedna mezera, kterou ukázal první dlouhý běh:** běžec neměl
+**strop na čas jedné zkoušky**. Výpis přestal přibývat a jedna zkouška
+běžela tři minuty — a protože drží i port, čekala na ni celá sada.
+Pozná se to jen tím, že se nic nedeje, což není hlášení, ale hádanka.
+(Ta zkouška nakonec doběhla sama, byla jen pomalá: `test-okoli` ~4 min.)
+Strop je teď 900 s na zkoušku — nejdelší poctivě běžící má naměřeno
+~105 s, takže je to rezerva pro pomalejší stroj, ne cíl — a utnutá
+zkouška se vypíše jako `ČAS`, ne jako obyčejná chyba, aby se nehledala
+vada tam, kde je čas.
+
 **A při tom se našla hezká nesrovnalost:** `npm run testy` v
 `package.json` pouštělo **pět** zkoušek. Ne pět vybraných „rychlých" —
 pět, které tam někdo napsal, když jich bylo pět, a nikdy to nikdo
@@ -10240,3 +10250,185 @@ Statické výpisy dražeb si `js/terminy.js` vůbec nenačítají, takže by to
 znamenalo přidat skript na stránky, které dnes žádný nepotřebují —
 a to kvůli textu, který je nejhůř o několik hodin pozadu a vedle kterého
 stojí platné datum.
+
+## 153. Safari se tu spustit nedá, tak se měří, co by v něm spadlo *25. 10.*
+
+**Co bylo špatně.** Všech 131 zkoušek v prohlížeči běží v Chromiu.
+Jiný prohlížeč v prostředí není a nejde doinstalovat. O Safari tedy
+zelená CI neříkala **nic** — a to je prohlížeč každého iPhonu, tedy
+řádově čtvrtina českých telefonů. Dosud to bylo napsané jako
+„neověřeno" a tím to skončilo. Napsaná výhrada ale nic nehlídá.
+
+**Spustit ho nejde, změřit, co z našeho kódu by v něm nefungovalo,
+jde.** `scripts/test-safari.mjs` prochází 2 476 zdrojů pro prohlížeč
+(`js/`, `css/`, ručně psané stránky, generátory) a hledá vlastnosti,
+které deklarovaná podlaha **iOS/Safari 15.4** nezná. Podlaha je
+jedno číslo na jednom místě: každé zařízení, které umí iOS 15, umí
+i 15.8, takže kdo je pod 15.4, neaktualizuje vůbec. Níž už to nejde
+táhnout — `:has()`, `dvh` ani `:focus-visible` by se pak nesměly
+používat a web na nich staví rozvržení.
+
+Každá mladší vlastnost smí být jen v jednom z tří stavů:
+nepoužívá se, používá se **se zálohou**, nebo je na seznamu výjimek
+**s napsaným důvodem, co se tím ztratí**. Čtvrtý stav se nepřipouští.
+
+**Co měření našlo.** Tři nálezy, z toho jeden pravdivě žádný:
+
+| Vlastnost | Od | Výsledek |
+|---|---|---|
+| pohled dozadu v regulárních výrazech `(?<=…)` | 16.4 | nikde — a to je ten nejdůležitější negativní nález, protože tohle shodí celý modul při načtení |
+| `backdrop-filter`, `color-mix()` | 18 / 16.2 | **jen v komentářích**, v kódu nikde |
+| `text-wrap: balance` | 17.5 | používá se (nadpisy, jméno místa) — na seznamu výjimek, jen hezčí zlom |
+| `dvh` | podlaha | **šest použití, záloha ve `vh` jen u dvou** |
+
+To poslední byla jediná skutečná vada. Doplnil jsem čtyři chybějící
+zálohy (`.vm-panel`, `.modal-card` v dotazu do 700 px, `.map-app`,
+`.map-side`). Živá vada to nebyla — u tří z nich výšku zachránilo
+okolní rozvržení —, ale u `.map-side` šlo o pojistku proti posunu
+rozvržení, který byl naměřen na 9 947 px (CLS 0,184). Na starém
+Safari by se ta pojistka zahodila a posun by se vrátil. A pravidlo
+provedené na dvou místech ze šesti není pravidlo; proto ten hlídač.
+
+**Dvě věci, na kterých zkouška sama nejdřív selhala** — obě stojí za
+zapsání, protože obě mlčely:
+
+1. `\bdvh` **nenajde `100dvh`**. Mezi `0` a `d` hranice slova není
+   (oba jsou znaky slova), takže hlídač hlásil „0 použití" a byl
+   zelený. Proto se teď počet použití porovnává i proti nule: *nic
+   nenaměřeno* je nález, ne úspěch (stejné pravidlo jako u kontroly
+   spuštění, oddíl 148b).
+2. Záloha se **nehledá v okně znaků před nálezem**, jak to dělala
+   první verze: u `calc(100dvh - var(--vyska-hlavicky, 85px) - 48px)`
+   je okno buď krátké, nebo přeteče do cizího pravidla. Hledá se
+   v nejvnitřnějším bloku `{…}` dřívější deklarace téže vlastnosti
+   **bez** `dvh` a **ve `vh`** — to je přesně to, co prohlížeč udělá:
+   druhé deklaraci nerozumí, zahodí ji a zůstane u první.
+
+**Komentář není kód.** Hlídač odstraňuje komentáře ještě před
+hledáním. Bez toho by stačilo o vlastnosti napsat, že se nepoužívá,
+a hlídač by ji nahlásil — a `backdrop-filter` i `color-mix()` jsou
+v tomhle repozitáři právě jen v komentářích. V téhle sadě je to
+**čtvrtý** hlídač, který na vlastní text naletěl (po portech
+v oddílu 151, právech v CI a mrtvých jménech tříd). Odstranění
+komentářů z CSS přitom ubralo 325 kB z 568 — víc než polovinu
+souboru. To není chyba vzoru, to je míra komentování.
+
+**Sabotáž — pět pokusů, pět správných odpovědí:**
+
+| Pokus | Čekalo se | Vyšlo |
+|---|---|---|
+| `Object.groupBy(` do `js/menu.js` | padne | padlo, se jménem souboru i s následkem („TypeError při prvním volání") |
+| totéž, ale **v komentáři** | neprojde-li, je hlídač k ničemu | nespadlo |
+| `height:50dvh` bez zálohy | padne | padlo |
+| `height:50vh; height:50dvh` | nespadne | nespadlo |
+| odebraná výjimka pro `text-wrap` | padne | padlo — výjimka tedy opravdu drží, není to díra ve vzoru |
+
+Seznam výjimek se **vypisuje vždy**, i když je všechno zelené:
+seznam, který nikdo nevidí, za rok nikdo nereviduje.
+
+**Co to nepozná a koho tím nesmím konejšit.** Statický rozbor najde
+použitou vlastnost, kterou daná verze nezná. Nenajde rozbité
+rozvržení, chybějící dotykovou událost ani jiné vykreslení písma.
+Tohle je **vědomá náhrada, ne rovnocenná** — zkouška to sama vypíše
+na posledním řádku. Na zbytek je potřeba opravdový iPhone, a to je
+položka pro majitele (`docs/pro-majitele.md`, bod 0b).
+
+## 154. Devět kontrol nasazení projde i na mrtvém webu — chyběl krok, který ho otevře *25. 10.*
+
+**Co bylo špatně.** `kontrola-nasazeni.mjs` (oddíl 149) se ptá přes
+HTTP: odpovídá úvodní stránka, je venku ta verze (razítka `?v=`), je
+venku odchytávač chyb, hlavička CSP, nejsou data stará, odpovídá
+sitemapa, náhodná stránka pozemku, 404, robots. Devět kontrol — a
+**všech devět projde i na webu, kde se skript při načtení zhroutí a
+člověk vidí prázdno.** HTML se stáhlo, razítka sedí, hotovo. Zelená
+CI, zelená kontrola nasazení, mrtvý web. Chyběl krok, který web
+**opravdu otevře**.
+
+A nejde o vymyšlené riziko. Dvě cesty, jak takhle umřít, jsou v tomhle
+repozitáři na dosah ruky:
+
+* **CSP se skládá z hashů vložených skriptů** (`scripts/csp.mjs`,
+  oddíl 69 — 2 396 stránek, 7 281 hashů). Nasadí-li se HTML a skripty
+  rozdílně, prohlížeč vložený skript **zablokuje**. Stránka se stáhne
+  celá a je nepoužitelná. Přes HTTP se to nepozná: hlavička CSP tam
+  je, zdánlivě v pořádku.
+* **výpis se dokresluje z dat.** Selže-li to načtení, stránka má
+  hlavičku, patu a mezi nimi nic.
+
+**Co se tedy přidalo.** `scripts/kontrola-ziva-prohlizecem.mjs` otevře
+web v Chromiu a měří to, co uvidí člověk — osm bodů: stránka je naše,
+při načtení nevyletí výjimka ze skriptu, CSP nic nezablokovala (měří
+se **v prohlížeči**, ne čtením hlavičky), žádný náš podřízený
+požadavek nevrátil 400 a víc, výpis se dokreslil (karty jsou), mapa se
+opravdu postavila, na 390 px nic nepřetéká do stran, a generovaná
+stránka pozemku ze sitemapy se otevře taky bez výjimky a bez
+zablokované CSP. Běží v úloze *Kontrola nasazeného webu*, tedy
+čtyřikrát denně po robotovi.
+
+Proti místní kopii repozitáře (`--mistni`) prošlo všech devět bodů.
+
+**Hlídač, u kterého nikdo nedokázal, že vadu POZNÁ, hlídá jen to, že
+se neozývá.** Protože se na cizí službě nedá nic rozbít na zkoušku,
+postaví `scripts/test-kontrola-ziva.mjs` **falešný web** a každou vadu
+na něm vyrobí schválně. Dvanáct kontrol, dvanáct správných odpovědí:
+
+| Vyrobeno | Čekalo se | Vyšlo |
+|---|---|---|
+| zdravý web | projde a nic nehlásí | prošlo, osm bodů zeleně |
+| výpis bez karet | „výpis zůstal prázdný" | ano |
+| `window.neexistujiciFunkce()` | „skript spadl" | ano |
+| CSP s cizím hashem | „CSP zablokovala" | ano |
+| obrázek, co není | „část stránky se nestáhla" | ano |
+| prvek širší než okno | „přetéká do stran" | ano |
+| mapa bez vrstev | „mapa se nepostavila" | ano |
+| cizí titulek | „není naše" | ano |
+| pád na stránce pozemku | nález i tam | ano |
+| sitemapa vrací 404 | **nezměřeno**, ne vada | ano |
+| prohlížeč, co se nespustí | **vada**, ne zelená | ano |
+
+Ty dva poslední řádky jsou ta důležitá část. Nestažená sitemapa
+znamená „tohle jsem nezměřil", ne „generované stránky jsou rozbité" —
+hlásit obojí stejně znamená posílat člověka hledat vadu, která není.
+A nespuštěný prohlížeč nesmí vypadat jako web v pořádku: když se
+nezměří NIC, je to nález (stejné pravidlo jako u kontroly spuštění,
+oddíl 149b).
+
+**Čtyři vady, které jsem při tom udělal sám** — všechny tři stojí za
+zapsání, protože všechny tři vypadaly jako nález na webu:
+
+1. **„Mapa se nepostavila" na mapě, která se postavila.** Čekalo se
+   `waitForSelector('#leaflet-map .leaflet-pane')`. Vrstvy Leafletu
+   mají `position:absolute` a **nulový rozměr**, takže je Playwright
+   považuje za neviditelné a čekání vypršelo i na správně postavené
+   mapě. Ptá se proto na to, co mapu opravdu popisuje: kontejner má
+   třídu od Leafletu a má aspoň jednu vrstvu. Naměřeno ručně
+   (`innerHTML` mapy) ještě než se to stihlo vydávat za nález.
+2. **Zkouška měřila sama sebe.** Falešný web běží v tomtéž procesu
+   jako zkouška, a ta pouštěla kontrolu `spawnSync`. To zablokuje
+   smyčku událostí, takže server neodpověděl na jediný dotaz a
+   kontrola vypršela na všem. Vypadalo to přesně jako „hlídač nic
+   nepozná" — jedenáct pádů z dvanácti. Teď se pouští asynchronně.
+3. **Devět minut na nic.** Každý pokus s úmyslně chybějícím prvkem
+   vyčkal celý limit. Limit se dá nastavit (`--limit-s`) a falešný web
+   odpovídá z paměti, takže osm sekund je tu mnohonásobek potřeby.
+4. **`filter(chceProhlizec)` místo `filter((c) => chceProhlizec(c))`.**
+   Zařazení zkoušek hlídá `scripts/test-staticka.mjs` — a hned mě
+   usvědčil: nová zkouška si prohlížeč neimportuje, bere ho skript,
+   který spouští, takže ji hlídač chtěl přestěhovat do rychlé úlohy,
+   kde by chromium nebylo. Rozšířil jsem tedy `chceProhlizec`, aby
+   šla o jednu úroveň dovnitř (stejná lekce jako u práv v CI, oddíl 118). Jenže
+   `Array.filter` předává druhým argumentem **index**, takže se od
+   druhého prvku dál posílal jako „úroveň zanoření" a funkce přestala
+   do spouštěných skriptů chodit vůbec. Tiše: hlídač hlásil „všechny
+   na svém místě". **Našla to sabotáž, ne čtení kódu** — a to je celý
+   důvod, proč se každý hlídač v tomhle repozitáři nejdřív rozbije
+   schválně.
+
+**Co tenhle krok NEDĚLÁ:** neopravuje. Nasazení se z repozitáře
+vyvolat nedá a „zkusit to znovu" u cizí služby není oprava, ale
+hádání. Říká přesně, co člověk uvidí jinak, a u pádu skriptu i jeho
+hlášku.
+
+**Co se vědomě neměří:** cizí požadavky (Supabase, dlaždice mapy).
+Ty mohou vrátit 400 i při zdravém webu a hlídá je kontrola živé
+databáze (oddíl 149b). Hlídá se jen to, co je na naší doméně.

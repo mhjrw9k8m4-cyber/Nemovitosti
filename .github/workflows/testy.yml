@@ -441,6 +441,9 @@ jobs:
       - name: Konec nabídky není konec adresy
         run: node scripts/test-ukonceno.mjs
 
+      - name: Safari a iOS (co by v nich nefungovalo — prohlížeč tu není)
+        run: node scripts/test-safari.mjs
+
       - name: Cesta ven z okresu
         run: node scripts/test-cesta-ven.mjs
 
@@ -1054,4 +1057,10 @@ jobs:
 
       - name: Rozbalené hledání se zase zavře
         run: node scripts/test-hledani-zavirani.mjs
+
+      # Pustí kontrolu živého webu proti FALEŠNÉMU webu, na kterém se
+      # každá vada vyrobí schválně. Bez toho by to byl hlídač, u kterého
+      # nikdo nedokázal, že vadu pozná.
+      - name: Kontrola živého webu pozná každou vadu, kvůli které vznikla
+        run: node scripts/test-kontrola-ziva.mjs
 

@@ -7,6 +7,7 @@
      node scripts/zkousky.mjs --seznam     jen vypíše, co by pustil
      node scripts/zkousky.mjs --sql-povinne  chybějící PostgreSQL = chyba
      node scripts/zkousky.mjs --vlaken 2   kolik naráz (výchozí 4)
+     node scripts/zkousky.mjs --limit 300  strop na jednu zkoušku (výchozí 900 s)
 
    PROČ TO VZNIKLO. Rychlých zkoušek je přes sto a dosud se daly pustit
    jen dvěma způsoby: po jedné ručně, nebo počkat na CI. Sebeoprava
@@ -121,6 +122,10 @@ if (seznam.length < 50) {
 /* Čtyři naráz v obou sadách; o to, aby se dvě zkoušky nepraly o týž
    port, se stará plánovač níž. Kdo chce jinak, řekne --vlaken. */
 const VLAKEN = Math.max(1, Math.min(hodnota('--vlaken', 4), 8));
+/* Strop na jednu zkoušku. Nejdelší naměřená poctivě běžící zkouška má
+   ~105 s (test-naseptavac v prohlížeči), takže 900 s je rezerva pro
+   pomalejší stroj, ne cíl. */
+const LIMIT = Math.max(30, hodnota('--limit', 900));
 const env = { ...process.env };
 if (arg('--sql-povinne')) env.PK_SQL_VYZADOVAN = '1';
 
@@ -188,21 +193,35 @@ const stromPred = otiskStromu();
 const zacatek = Date.now();
 const vysledky = [];
 
+/* STROP NA ČAS JEDNÉ ZKOUŠKY. Bez něj zasekne jedna zkouška celou
+   sadu — a protože drží i port, čeká se na ni se vším ostatním. Pozná
+   se to jen tím, že výpis přestane rostoucí, což není hlášení, ale
+   hádanka. Naměřeno na vlastním běhu: po `test-naseptavac` (104 s)
+   přestal výpis přibývat a běžela jedna zkouška tři minuty. */
 function pust(soubor) {
   return new Promise((hotovo) => {
     const t0 = Date.now();
     const p = spawn('node', [soubor], { cwd: KOREN, env });
     let out = '';
+    let utnuto = false;
+    const hlidac = setTimeout(() => {
+      utnuto = true;
+      out += `\n[běžec] zkouška běžela víc než ${LIMIT} s a byla utnuta.\n`;
+      try { p.kill('SIGKILL'); } catch (e) { /* už skončila */ }
+    }, LIMIT * 1000);
     p.stdout.on('data', (d) => { out += d; });
     p.stderr.on('data', (d) => { out += d; });
-    p.on('close', (kod) => {
+    p.on('close', (kod0) => {
+      clearTimeout(hlidac);
+      const kod = utnuto ? 1 : kod0;
       const s = ((Date.now() - t0) / 1000).toFixed(0);
+      if (utnuto) console.log(`ČAS   ${soubor}  ${s}s (strop ${LIMIT} s)`);
       /* Přeskočení se NESMÍ počítat za úspěch bez zmínky: zkoušky
          databáze se bez PostgreSQL přeskakují, a kdo si toho nevšimne,
          věří, že proběhly. */
       const preskoceno = /se přeskakuje|PostgreSQL tu není/.test(out);
-      vysledky.push({ soubor, kod, s, preskoceno, out });
-      console.log(`${kod === 0 ? (preskoceno ? '~ ' : 'OK') : 'CHYBA'}  ${soubor}  ${s}s`);
+      vysledky.push({ soubor, kod, s, preskoceno, out, utnuto });
+      if (!utnuto) console.log(`${kod === 0 ? (preskoceno ? '~ ' : 'OK') : 'CHYBA'}  ${soubor}  ${s}s`);
       hotovo();
     });
   });
@@ -288,7 +307,8 @@ if (kolize.length) {
 if (spinave.length) {
   console.log(`\nZkoušky po sobě nechaly změněný strom (${spinave.length}):`
     + ` ${spinave.slice(0, 6).join(', ')}${spinave.length > 6 ? ' a další' : ''}`);
-  console.log('::error::Rychlá sada: některá zkouška si sahá na živý adresář místo na kopii'
+  console.log(`::error::${V_PROHLIZECI ? 'Sada v prohlížeči' : 'Rychlá sada'}:`
+    + ' některá zkouška si sahá na živý adresář místo na kopii'
     + ' (soubory mají nový čas změny, i když obsah může být stejný).'
     + ' To se projeví jako pád JINÉ zkoušky, která zrovna čte přepisovaný soubor —'
     + ' viz docs/optimalizace.md, oddíl 150. Změněné: ' + spinave.slice(0, 6).join(', '));

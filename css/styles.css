@@ -1041,7 +1041,7 @@ h1 em::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height
   display:flex; align-items:stretch; justify-content:center; padding:0;}
 body.vm-otevreno{overflow:hidden;}
 .vm-panel{position:relative; display:flex; flex-direction:column; width:100%;
-  height:100dvh; background:var(--plocha-karta); overflow:hidden;}
+  height:100vh; height:100dvh; background:var(--plocha-karta); overflow:hidden;}
 /* Ovládací řádky se ale netáhnou přes celou šířku velkého displeje —
    pole široké metr a půl se špatně čte i vyplňuje. Mapa ano, ta má být
    co největší. */
@@ -3836,7 +3836,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 @media (max-width:700px){
   .modal, .loc-ov{padding:0; align-items:stretch; justify-content:stretch;}
   .modal-card, .loc-card{
-    width:100%; max-width:none; min-height:100dvh; border:0; border-radius:0;
+    width:100%; max-width:none; min-height:100vh; min-height:100dvh; border:0; border-radius:0;
     box-shadow:none; overflow-y:auto; overscroll-behavior:contain;
     /* Zarovnání nahoru, ne na střed: svislé středění v posuvném kontejneru
        uřízne horní část obsahu, jakmile je delší než obrazovka — a to je
@@ -3923,6 +3923,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .hero-map .map-app, .map-app{border-left:0; border-right:0; border-top:0;
     border-radius:0; box-shadow:none;
     grid-template-columns:min(34vw, 460px) minmax(0, 1fr);
+    height:calc(100vh - var(--vyska-hlavicky, 85px) - 48px);
     height:calc(100dvh - var(--vyska-hlavicky, 85px) - 48px);
     max-height:none; min-height:620px;}
   /* NA VELKÉM MONITORU DVA SLOUPCE NABÍDEK, NE JEDEN A PŮL MAPY NAVÍC.
@@ -4327,7 +4328,9 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Výpis si proto drží výšku obrazovky dopředu. Není to kosmetika:
      posun o deset tisíc pixelů pod prstem je přesně to, kvůli čemu
      se na telefonu kliká vedle. */
-  .map-side{padding:8px 8px 12px; min-height:calc(100dvh - var(--vyska-hlavicky, 65px));}
+  .map-side{padding:8px 8px 12px;
+     min-height:calc(100vh - var(--vyska-hlavicky, 65px));
+     min-height:calc(100dvh - var(--vyska-hlavicky, 65px));}
   .opp-item::after{display:none;}      /* rohová značka by se bila se srdíčkem */
   #leaflet-map{position:absolute; inset:0;}
   .status-grid{grid-template-columns:repeat(2,1fr);}

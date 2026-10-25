@@ -95,7 +95,18 @@ Dál: stará data, chybějící hlavička CSP, chybějící odchytávač chyb,
 osekaná mapa webu, a jestli neznámá adresa vrací opravdu 404 (ne 200,
 které si vyhledávače zaindexují jako platnou stránku).
 
-Ručně kdykoli: `node scripts/kontrola-nasazeni.mjs`.
+Od 25. 10. je v téže úloze ještě jeden krok, a ten je jiný než
+všechny ostatní: **web se opravdu otevře v prohlížeči**. Těch devět
+kontrol výš se totiž ptá přes HTTP a projde i na webu, kde se skript
+při načtení zhroutí a vy vidíte prázdnou stránku — HTML se stáhlo,
+razítka sedí. Nový krok se dívá na to, co uvidí člověk: nespadl
+skript, nezablokovala něco CSP, stáhly se všechny soubory, dokreslil
+se výpis, postavila se mapa, nepřetéká to na telefonu — a totéž na
+jedné generované stránce pozemku.
+
+Ručně kdykoli: `node scripts/kontrola-nasazeni.mjs`, a s prohlížečem
+`node scripts/kontrola-ziva-prohlizecem.mjs` (potřebuje nainstalovaný
+Chromium; místní kopii repozitáře změří `--mistni`).
 
 **Co to neumí a vědomě neumí:** nasazení znovu vyvolat. To se
 z repozitáře nedá a „zkusit to znovu" u cizí služby není oprava, ale
