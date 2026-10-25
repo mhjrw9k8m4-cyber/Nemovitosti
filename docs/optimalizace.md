@@ -10898,9 +10898,45 @@ Ve stejném běhu proběhl i opravný krok a přečetl stav robota ze
 v API: 10)"*, rozhodnutí *„nic — mezi nálezy není stará data"*. Tím je
 prokázané čtení přes `GITHUB_TOKEN` i celé zapojení kroku.
 
-Zbývající dva řádky tabulky se dokázat **nedají jinak než časem**,
-protože závisí na tom, jak dávno robot dojel: „právě dojel a data jsou
-PŘESTO stará" (= vada nasazení, ne robota) a samotné vyvolání robota.
+### 160c. Řádek, na kterém celá tabulka stojí, dokázán naostro
+
+Druhý ruční běh (strop 1 h, data venku 73 minut stará) vypsal tohle —
+a je to **ten jediný řádek tabulky, kvůli kterému není oprava jen tik**:
+
+```
+nálezy: stara-data
+robot: neběží, naposledy dojel 73 min (běhů v API: 10)
+rozhodnutí: nic — robot dojel před 73 min a data venku jsou PŘESTO stará
+            — to není vada robota, ale nasazení; další běh by ji nespravil,
+            jen zakryl
+```
+
+Reportér byl v tom běhu přeskočen, takže vyrobený nález nikomu
+nezaložil úkol.
+
+### 160d. A plánovaný běh ukázal čtyři věci naráz
+
+Ve 16:43 běžela úloha podle hodin (tedy **doopravdy**, ne jako cvičení)
+a vyšlo z ní víc, než jsem čekal:
+
+1. **živá kontrola 13 z 13** na ostré doméně, včetně obou nových rodin
+   (`/pozemky-okres-plzen-mesto.html` 9 míst,
+   `/pozemky-karlovarsky-kraj.html` 12 míst),
+2. **`if: always()` se zaplatilo hned a viditelně**: kontrola živé
+   databáze spadla v pátém kroku — a prohlížeč (sedmý) i opravný krok
+   (osmý) **přesto proběhly**. Před touhle úpravou by je GitHub
+   přeskočil a nikdo by se o nich nedozvěděl, dokud se nespraví to
+   první. Přesně ta vada z oddílu 155,
+3. **reportér mlčel správně**: *„Úkol #1 je otevřený a ozval se před
+   19.6 h — komentář se nepřidává (ticho 24 h, ať se z hlášení
+   nestane šum)."*,
+4. a ta červená je **skutečný nález, ne cvičení**: živá databáze
+   neodpovídá, jak má, protože `supabase/00-vse.sql` ještě neběžel.
+   Na tři vady naměřené 24. 10. je teď živý doklad každých šest hodin.
+
+Zbývající řádek tabulky se dokázat **nedá jinak než časem**,
+protože závisí na tom, jak dávno robot dojel: samotné vyvolání robota
+(strop je 90 minut, takže okno je mezi jeho běhy).
 Ruční běh úlohy proto bere vstup `strop-stare-hodin` — posune strop na
 stáří dat tak nízko, že se nález „stará data" vyrobí, a opravný krok se
 provede naostro. **Při tom cvičení reportér mlčí**: nález je vyrobený,

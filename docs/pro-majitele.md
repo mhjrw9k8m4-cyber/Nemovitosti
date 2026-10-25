@@ -228,6 +228,12 @@ patičky a do `ochrana-udaju.html`.
 
 ## 5. Pustit SQL a dotáhnout nastavení Supabase
 
+**A od 25. 10. je na to živý doklad každých šest hodin.** Úloha
+*Kontrola nasazeného webu* teď pouští i kontrolu živé databáze, a ta
+**padá** — ne protože by byl web rozbitý (ten je v pořádku, viz bod 0c),
+ale protože tohle SQL ještě neběželo. Je to tedy jediná červená, kterou
+v repozitáři máme, a odejde ve chvíli, kdy ten jeden příkaz pustíte.
+
 `supabase/00-vse.sql` jde pustit celý a opakovaně (SQL Editor → Run).
 **Sedm věcí** v něm běžící projekt bez nového spuštění nemá — mezi nimi
 stropy, které brání tomu, aby databáze rostla zvenčí, a strop na počet
