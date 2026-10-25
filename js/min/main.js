@@ -670,32 +670,38 @@
     mapaSeTaha = true;
     var zn = document.querySelector('meta[name="pk-leaflet"]');
     var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
-    var hotovo = function () {
+
+    var stylHotov = false, jsHotov = false, uzPostaveno = false;
+    var zkusPostavit = function () {
+      if (!stylHotov || !jsHotov || uzPostaveno) return;
+      uzPostaveno = true;
       if (typeof L !== 'undefined' && L.map) postavMapu();
       else mapaNedojela();
     };
     var knihovna = function () {
       var sc = document.createElement('script');
       sc.src = adresa;
-      sc.onload = hotovo;
+      sc.onload = function () { jsHotov = true; zkusPostavit(); };
       sc.onerror = function () { mapaNedojela(); };
       document.head.appendChild(sc);
     };
     var styl = document.querySelector('meta[name="pk-leaflet-css"]');
     var adresaStylu = styl && styl.getAttribute('data-src');
     if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+      stylHotov = true;
       knihovna();
       return;
     }
     var lk = document.createElement('link');
     lk.rel = 'stylesheet';
     lk.href = adresaStylu;
-    lk.onload = knihovna;
-    lk.onerror = knihovna;
+    lk.onload = function () { stylHotov = true; zkusPostavit(); };
+    lk.onerror = function () { stylHotov = true; zkusPostavit(); };
 
     var prvniStyl = document.head.querySelector('link[rel="stylesheet"], style');
     if (prvniStyl) document.head.insertBefore(lk, prvniStyl);
     else document.head.appendChild(lk);
+    knihovna();
   }
   try { window.PK_CHCI_MAPU = chciMapu; } catch (e) {}
 
@@ -1749,6 +1755,10 @@
     krajCounts = {};
     vis.forEach(function (d) { var k = d._gkraj; if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
     Object.keys(krajByName).forEach(function (k) {
+
+      if (k !== selectedKraj && krajByName[k] && krajByName[k].setStyle) {
+        krajByName[k].setStyle(styleKraj(k));
+      }
       var o = krajCounts[k];
       var parts = [];
       if (o) ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
@@ -3716,17 +3726,9 @@
 
   function demand(d) {
     if (d._demand != null) return d._demand;
-    var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 }[d.type] || 0;
-
-    var body = 0;
-    var o = MODEL ? MODEL.odhad(d) : null;
-
-    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA
-        && !(MODEL.spravniCena && MODEL.spravniCena(d))) {
-
-      body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
-    }
-    d._demand = Math.max(6, Math.round(9 + typeBonus + body));
+    if (typeof d.dm === 'number') { d._demand = d.dm; return d._demand; }
+    d._demand = MODEL ? MODEL.poptavka(d)
+      : (window.PK_CENY && window.PK_CENY.poptavka ? window.PK_CENY.poptavka(d, null) : 15);
     return d._demand;
   }
 
@@ -3942,12 +3944,16 @@
     var hotIds = {};
     if (vis.length >= 5) {
 
-      vis.slice()
-        .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && (o.pochybna || o.nejisty)); })
+      var hotPoradi = vis.slice().sort(function (a, b) { return demand(b) - demand(a); });
+      for (var hI = 0; hI < hotPoradi.length; hI++) {
+        var hD = hotPoradi[hI];
+        var hO = MODEL ? MODEL.odhad(hD) : null;
+        if (hO && (hO.pochybna || hO.nejisty)) continue;
 
-        .filter(function (d) { return !(MODEL && MODEL.spravniCena && MODEL.spravniCena(d)); })
-        .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
-        .forEach(function (d) { hotIds[d._id] = true; });
+        if (MODEL && MODEL.spravniCena && MODEL.spravniCena(hD)) continue;
+        hotIds[hD._id] = true;
+        break;
+      }
     }
 
     if (window.PKOdkaz) {
@@ -4926,12 +4932,21 @@
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);
     if (mk) {
       var kraj = ''; try { kraj = decodeURIComponent(mk[1]).trim(); } catch (e) { kraj = ''; }
-      if (kraj && krajByName) {
-        var hit = null, low = kraj.toLowerCase();
-        Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
-        if (hit) {
+      if (kraj) {
+
+        var vyber = function () {
+          var hit = null, low = kraj.toLowerCase();
+          Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
+          if (!hit) return false;
           selectKraj(hit);
           if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+          return true;
+        };
+        if (Object.keys(krajByName).length) {
+          if (vyber()) { cleanUrl(); return true; }
+        } else if (!mapaVzdana) {
+          chciMapu();
+          azBudeMapa(vyber);
           cleanUrl();
           return true;
         }
@@ -5663,10 +5678,11 @@
 
   await dechni();
 
-  for (var rozehrej = 0; rozehrej < DATA.length; rozehrej += 250) {
-    var konecDavky = Math.min(rozehrej + 250, DATA.length);
-    for (var vD = rozehrej; vD < konecDavky; vD++) demand(DATA[vD]);
-    if (konecDavky < DATA.length) await dechni();
+  var dopocitat = DATA.filter(function (d) { return typeof d.dm !== 'number'; });
+  for (var rozehrej = 0; rozehrej < dopocitat.length; rozehrej += 250) {
+    var konecDavky = Math.min(rozehrej + 250, dopocitat.length);
+    for (var vD = rozehrej; vD < konecDavky; vD++) demand(dopocitat[vD]);
+    if (konecDavky < dopocitat.length) await dechni();
   }
 
   obnovFiltr();

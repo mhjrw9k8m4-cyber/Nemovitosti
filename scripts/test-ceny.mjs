@@ -578,13 +578,24 @@ for (const f of ['../js/main.js', '../js/pozemek.js', '../js/radce.js']) {
 {
   const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
   const radce = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
-  /* Čte se JEN tělo funkce demand(). Když se hledalo v celém souboru,
+  /* Čte se JEN tělo té jedné funkce. Když se hledalo v celém souboru,
      výraz se trefil do řazení podle slevy o pár řádků výš a kontrola
-     prošla i s rozbitým skóre — přistiženo sabotáží. */
-  const teloSkore = main.slice(main.indexOf('function demand(d)'), main.indexOf('var LIST_LIMIT'));
+     prošla i s rozbitým skóre — přistiženo sabotáží.
+     FORMULE SE PŘESTĚHOVALA z js/main.js (demand) do cenového modelu
+     (js/ceny.js, poptavka), protože ji od té doby počítá sestavení do dat
+     — viz scripts/test-poptavka.mjs. Kontrola jde za ní: dokud měřila
+     main.js, měřila po přestěhování prázdno, a to je ta nejtišší vada,
+     jakou zkouška může mít. */
+  const cenyZdroj = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
+  const zacSkore = cenyZdroj.indexOf('function poptavka(d, o)');
+  const teloSkore = zacSkore >= 0 ? cenyZdroj.slice(zacSkore, zacSkore + 2600) : '';
   pravda('skóre pro doporučení nejistý odhad neodměňuje',
-    teloSkore.length > 100 && /!o\.nejisty/.test(teloSkore), 'v těle demand() se na nejistotu nekouká');
-  pravda('★ Doporučujeme nejistý odhad nevybere', /o\.pochybna \|\| o\.nejisty/.test(main));
+    teloSkore.length > 100 && /!o\.nejisty/.test(teloSkore),
+    'v těle poptavka() v js/ceny.js se na nejistotu nekouká');
+  /* A že si ho web opravdu bere odtud, ne z vlastní kopie. */
+  pravda('výpis si skóre bere z modelu nebo z dat, vlastní kopii nemá',
+    /MODEL\.poptavka\(d\)/.test(main) && /typeof d\.dm === 'number'/.test(main),
+    'js/main.js nikde nevolá MODEL.poptavka ani nečte předpočítané d.dm');
   pravda('filtr „pod obvyklou cenou" nejistý odhad nepustí', /!od\.nejisty/.test(main));
   /* Čte se TĚLO funkce, ne doslovný tvar podmínky. Dřív tu stál přesný
      opis zdrojového řádku — a rozbilo ho přidání další podmínky do téže
@@ -1146,16 +1157,25 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     if (i < 0) return '';
     return zdroj.slice(i, i + 2600);
   }
-  const teloDemand = telo(mn2, 'function demand(d) {');
-  pravda('tělo demand() se našlo', /podOdhadem >= MEZ_SLEVA/.test(teloDemand),
+  /* Skóre se počítá v js/ceny.js (poptavka), ne v js/main.js — viz
+     poznámka u první kontroly skóre výš. */
+  const ceny2 = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
+  const teloPoptavka = telo(ceny2, 'function poptavka(d, o) {');
+  pravda('tělo poptavka() se našlo', /podOdhadem >= MEZ_SLEVA/.test(teloPoptavka),
     'bez něj by kontrola níž měřila prázdno');
   pravda('body za slevu se úřední ceně nedávají',
-    /spravniCena\(d\)/.test(teloDemand.slice(0, teloDemand.indexOf('podOdhadem >= MEZ_SLEVA') + 200)),
+    /spravniCena\(d\)/.test(teloPoptavka.slice(0, teloPoptavka.indexOf('podOdhadem >= MEZ_SLEVA') + 200)),
     'bez té podmínky měly dvě takové nabídky plných 45 bodů, tedy mezi vším viditelným nejvíc');
+  /* Pojistka u štítku se od té doby čte jinak: místo filtrování celého
+     výpisu se pořadí seřadí podle skóre a hledá se první nabídka, která
+     projde (jinak si web sahal po odhadu ceny pro všech dva tisíce
+     nabídek, aby z nich vybral jednu). Obě podmínky tam ale zůstat musí,
+     proto se tu nehledá doslovný tvar, ale OBĚ JMÉNA vlastností v témže
+     těle — jak se jmenuje pomocná proměnná, je jedno. */
   const teloHot = telo(mn2, 'var hotIds = {};');
   pravda('a štítek „Doporučujeme" na ni nesedne ani přes pojistku',
-    /spravniCena\(d\)/.test(teloHot) && /pochybna \|\| o\.nejisty/.test(teloHot),
-    'pojistka u hotIds o úřední ceně nevěděla');
+    /spravniCena\(\w+\)/.test(teloHot) && /\.pochybna \|\| \w+\.nejisty/.test(teloHot),
+    'pojistka u hotIds o úřední ceně nebo o nejistotě nevěděla');
 }
 /* ---- VÝMĚRA, KTERÁ UŽ JE PODÍLOVÁ ------------------------------
  *
@@ -1365,6 +1385,92 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     'MEZ_CHYBA_DRUHU = ' + sPresnosti.MEZ_CHYBA_DRUHU);
 }
 
+/* ---- PAMĚŤ NA SKUPINU DRUHU ------------------------------------
+ *
+ * druhGroup() je čistá funkce jednoho textu a volá se nesrovnatelně
+ * častěji, než kolik má různých vstupů: naměřeno 3 954 volání na
+ * 13 různých hodnot `druh` při jednom načtení úvodní stránky. Od té
+ * doby si výsledek pamatuje — a paměť je přesně to místo, kde se dá
+ * potichu změnit odpověď.
+ *
+ * NAPOPRVÉ JSEM PAMĚŤ NAPSAL JAKO OBYČEJNÝ OBJEKT a druh „constructor"
+ * z ní vytáhl funkci Object, „__proto__" prototyp a „toString" funkci.
+ * Druhy přicházejí z dat, ne z našeho kódu, takže by takový text šel do
+ * stránky — a ne jako text. Proto se tu zkouší i tahle jména.
+ */
+{
+  /* Porovnává se s formulí OPSANOU V TÉHLE ZKOUŠCE, ne s funkcí samou —
+     kdyby se tu volal týž kód, neporovnávalo by se nic. */
+  const skupina = (s) => {
+    s = (s || '').toLowerCase();
+    if (s.indexOf('les') !== -1) return 'Lesní pozemek';
+    if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
+    if (s.indexOf('orná') !== -1) return 'Orná půda';
+    if (s.indexOf('zahrad') !== -1) return 'Zahrada';
+    if (s.indexOf('travní') !== -1 || s.indexOf('louk') !== -1 || s.indexOf('pastvin') !== -1) return 'Louka / travní porost';
+    if (s.indexOf('vinice') !== -1 || s.indexOf('sad') !== -1) return 'Vinice / sad';
+    if (s.indexOf('ostatní') !== -1) return 'Ostatní plocha';
+    return 'Jiný pozemek';
+  };
+  const ZRADNA = ['constructor', '__proto__', 'toString', 'hasOwnProperty', 'valueOf',
+    'undefined', 'null', '', 'LES', 'Orná Půda'];
+  const NAB = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
+  const zData = [...new Set(NAB.map((o) => o.druh))];
+  const vzorky = zData.concat(ZRADNA).concat([null, undefined]);
+  let lisi = [];
+  let neText = [];
+  const zkus = () => {
+    for (const v of vzorky) {
+      const vyslo = PK_CENY.druhGroup(v);
+      if (typeof vyslo !== 'string') neText.push(JSON.stringify(v) + ' → ' + typeof vyslo);
+      else if (vyslo !== skupina(v)) lisi.push(JSON.stringify(v) + ': ' + vyslo + ' místo ' + skupina(v));
+    }
+  };
+  zkus();
+  pravda(`skupina druhu vyjde u všech ${vzorky.length} vzorků jako dřív`,
+    lisi.length === 0, lisi.slice(0, 3).join(' | '));
+  pravda('a vždycky jako TEXT, i u jmen z prototypu (constructor, __proto__, toString)',
+    neText.length === 0, neText.slice(0, 3).join(' | ')
+    + ' — paměť na skupinu druhu dědí jména z prototypu; má to být Map, ne objekt');
+  /* A ZA STROPEM PAMĚTI — V ČISTÉ INSTANCI MODELU. Nad stropem se počítá
+     bez pamatování, a to je cesta, kterou nikdo nikdy nevyzkouší: druhů
+     je v datech třináct, stropu pět set.
+     NAPOPRVÉ JSEM TO NAPSAL ŠPATNĚ a přistihla to sabotáž. Přetekl jsem
+     strop a pak zkoušel TYTÉŽ vzorky jako výš — jenže ty už v paměti
+     ležely z prvního průchodu, takže se odpovídalo z ní a za stropem se
+     nikdy nic nespočítalo. Sabotáž „nad stropem vracej Zahradu" prošla.
+     Teď se model načte znovu do vlastního okna (čistá paměť), strop se
+     přeteče NEJDŘÍV a vzorky se zkoušejí teprve potom — tedy poprvé
+     a bez pamatování. */
+  {
+    const okno2 = {};
+    new Function('window', readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8'))(okno2);
+    const C2 = okno2.PK_CENY;
+    pravda('model se načetl i do vlastního okna (čistá paměť)',
+      !!(C2 && typeof C2.druhGroup === 'function'), 'bez něj se za stropem neměří nic');
+    if (C2 && C2.druhGroup) {
+      for (let i = 0; i < 600; i++) C2.druhGroup('vymyslene-' + i);
+      const lisi2 = [], neText2 = [];
+      for (const v of vzorky) {
+        const vyslo = C2.druhGroup(v);
+        if (typeof vyslo !== 'string') neText2.push(JSON.stringify(v) + ' → ' + typeof vyslo);
+        else if (vyslo !== skupina(v)) lisi2.push(JSON.stringify(v) + ': ' + vyslo + ' místo ' + skupina(v));
+      }
+      pravda(`a za přeteklým stropem taky, poprvé a bez pamatování (${vzorky.length} vzorků)`,
+        lisi2.length === 0 && neText2.length === 0,
+        (lisi2.concat(neText2)).slice(0, 3).join(' | '));
+      /* A ŽE TEN STROP VŮBEC JE. Bez téhle kontroly se dal zrušit a nic
+         by se nezměnilo — zkoušel jsem to sabotáží a prošla. Paměť má po
+         šesti stech vymyšlených druzích stát na stropu, ne nad ním. */
+      const kolik = typeof C2.druhPametKolik === 'function' ? C2.druhPametKolik() : null;
+      pravda('a paměť na skupinu druhu má strop, který drží (nejvýš 500 záznamů)',
+        kolik !== null && kolik <= 500 && kolik >= 100,
+        'v paměti je ' + kolik + ' záznamů po 600 vymyšlených druzích — '
+        + 'strop chybí nebo je jinde, než říká komentář v js/ceny.js');
+    }
+  }
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
@@ -1373,3 +1479,4 @@ if (chyb) {
   process.exit(1);
 }
 process.exit(0);
+

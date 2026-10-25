@@ -1122,28 +1122,48 @@
     mapaSeTaha = true;
     var zn = document.querySelector('meta[name="pk-leaflet"]');
     var adresa = (zn && zn.getAttribute('data-src')) || 'vendor/leaflet/leaflet.js';
-    var hotovo = function () {
+    /* STYL A KNIHOVNA SOUBĚŽNĚ, NE JEDNO PO DRUHÉM.
+       Dřív se skript objednával teprve v `onload` toho stylu. Mapa tím
+       čekala na celé jedno kolo po síti a navíc na to, až bude hlavní
+       vlákno volné, aby tu obsluhu vůbec spustilo — a to je přesně ve
+       chvíli, kdy se vykresluje výpis. Naměřeno na 1280 px (medián z pěti
+       běhů): jak výpis zrychlil z 697 na 482 ms, žádost o leaflet.js se
+       posunula z 435 na 482 ms, tedy o 47 ms POZDĚJI. Přistihla to
+       scripts/test-vypis-bez-mapy.mjs, která hlídá, že se o knihovnu
+       řekne dřív než o výpis — na monitoru je mapa polovina první
+       obrazovky, takže ji výpis nemá předbíhat.
+       Objednává se tedy obojí hned, a mapa se staví, až dojede OBOJÍ.
+       Souběh je bezpečný: mapa vzniká až v `postavMapu()`, a to se volá
+       teprve ve chvíli, kdy je styl i knihovna na místě — kdyby se mapa
+       postavila bez stylu, Leaflet by si spočítal rozměry z neoblečených
+       prvků. Chyba stylu se bere jako „styl je hotový": bez něj mapa
+       vypadá špatně, ale pořád funguje, kdežto bez knihovny není. */
+    var stylHotov = false, jsHotov = false, uzPostaveno = false;
+    var zkusPostavit = function () {
+      if (!stylHotov || !jsHotov || uzPostaveno) return;
+      uzPostaveno = true;
       if (typeof L !== 'undefined' && L.map) postavMapu();
       else mapaNedojela();
     };
     var knihovna = function () {
       var sc = document.createElement('script');
       sc.src = adresa;
-      sc.onload = hotovo;
+      sc.onload = function () { jsHotov = true; zkusPostavit(); };
       sc.onerror = function () { mapaNedojela(); };
       document.head.appendChild(sc);
     };
     var styl = document.querySelector('meta[name="pk-leaflet-css"]');
     var adresaStylu = styl && styl.getAttribute('data-src');
     if (!adresaStylu || document.querySelector('link[href^="vendor/leaflet/leaflet.css"]')) {
+      stylHotov = true;
       knihovna();
       return;
     }
     var lk = document.createElement('link');
     lk.rel = 'stylesheet';
     lk.href = adresaStylu;
-    lk.onload = knihovna;
-    lk.onerror = knihovna;
+    lk.onload = function () { stylHotov = true; zkusPostavit(); };
+    lk.onerror = function () { stylHotov = true; zkusPostavit(); };
     /* PŘED NAŠE STYLY, NE NA KONEC HLAVIČKY — jinak se obrátí kaskáda.
        V index.html stál <link> na leaflet.css PŘED css/uvod.min.css, takže
        naše pravidla přebíjela Leaflet. Když se tenhle <link> přidal na
@@ -1160,6 +1180,7 @@
     var prvniStyl = document.head.querySelector('link[rel="stylesheet"], style');
     if (prvniStyl) document.head.insertBefore(lk, prvniStyl);
     else document.head.appendChild(lk);
+    knihovna();   // souběžně se stylem, viz poznámka výš
   }
   try { window.PK_CHCI_MAPU = chciMapu; } catch (e) {}
   /* JE MAPA VIDĚT? Pak se o knihovnu řekne HNED, ne až na konci boot().
@@ -2872,6 +2893,24 @@
     krajCounts = {};
     vis.forEach(function (d) { var k = d._gkraj; if (!k) return; var o = krajCounts[k] || (krajCounts[k] = { total: 0 }); o.total++; o[d.type] = (o[d.type] || 0) + 1; });
     Object.keys(krajByName).forEach(function (k) {
+      /* SYTOST KRAJE SE MUSÍ PŘEBARVIT, NE JEN SPOČÍTAT.
+         Kraje se stylují v krajKrytí(k) ve chvíli, kdy vrstva vznikne —
+         tedy v postavMapu(). Jenže krajCounts plní teprve první
+         renderList(), takže záleželo na tom, co se stihne dřív: když
+         byla mapa postavená první, dostaly VŠECHNY kraje 0.015 (což
+         krajKrytí vrací pro „žádné nabídky") a nic je už nepřebarvilo.
+         Sytost podle počtu nabídek tím zmizela — a nepoznalo se to,
+         protože plochá mapa vypadá jako mapa.
+         Naměřeno: na mapě stálo u všech čtrnácti krajů krytí 0.015,
+         kdežto spočítané hodnoty jsou 0,082 až 0,168. Vyšlo to najevo
+         teprve ve chvíli, kdy předpočítané skóre pořadí (oddíl 162)
+         zrychlilo výpis a pořadí se obrátilo.
+         Teď se tedy nic na pořadí neopírá: s každým novým počtem se
+         kraje přebarví. Vybraný kraj se vynechává — ten má vlastní
+         styl (styleSelectedKraj) a přebarvení by ho smazalo. */
+      if (k !== selectedKraj && krajByName[k] && krajByName[k].setStyle) {
+        krajByName[k].setStyle(styleKraj(k));
+      }
       var o = krajCounts[k];
       var parts = [];
       if (o) ['sale', 'drazba', 'exekuce', 'obec', 'majitel'].forEach(function (tp) { if (o[tp]) parts.push(o[tp] + '× ' + TYPE[tp].label.toLowerCase()); });
@@ -5740,35 +5779,30 @@
   // Interní skóre pro řazení „Doporučené" a výběr špičky (★ Doporučujeme).
   // Čím výhodnější cena/m² a zajímavější typ, tím vyšší. Není to počet lidí —
   // slouží jen k pořadí, žádné vymyšlené „sledující" se nikde nezobrazují.
+  /* SKÓRE SE POČÍTÁ PŘI SESTAVENÍ, NE V TELEFONU.
+     Formule žije v cenovém modelu (js/ceny.js, poptavka) a sestavení ji
+     projede přes všechny nabídky do pole `dm` — viz
+     scripts/generate-data-rezy.mjs. Důvod: výchozí pořadí „Doporučené"
+     se řadí podle tohohle čísla, takže ho web potřeboval pro VŠECHNY
+     nabídky, kdežto na obrazovce jich je 24. Naměřeno v prohlížeči na
+     telefonu 390 px: na jedno vykreslení 3 899 volání odhadu ceny pro
+     1 925 různých pozemků, a odhad prohledává okolí — podle profilu to
+     byla nejdražší položka startu.
+     ZÁLOŽNÍ CESTA ZŮSTÁVÁ a je to tatáž formule, jen spočítaná tady:
+     kdo dostane data bez pole `dm` (náhradní data o pár set řádků výš,
+     starý soubor z mezipaměti prohlížeče), uvidí totéž pořadí, jen si
+     na něj počká. Když se nepostavil cenový model, spočítá se skóre bez
+     bodů za slevu — pořadí podle typu nabídky zůstane, jako zůstávalo
+     i dřív. A kdyby se nenačetl ani js/ceny.js, dostanou všechny
+     nabídky touž hodnotu a výpis zůstane v pořadí dat; dřív by v té
+     chvíli vyšlo pořadí podle typu. Je to tvrzení o stránce, která
+     v tu chvíli nemá ani odhady, ani percentily, ani verdikt o ceně,
+     takže pořadí výpisu je tam ta nejmenší ze škod. */
   function demand(d) {
     if (d._demand != null) return d._demand;
-    var typeBonus = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 }[d.type] || 0;
-    /* Dřív se tu počítalo (900 − cena za m²) / 18 — tedy ČÍM LEVNĚJŠÍ ZA METR,
-       TÍM VÝŠ, bez ohledu na druh pozemku a na okolí. Orná půda za 6 Kč/m²
-       tím porazila všechno ostatní a web ji vystrčil nahoru se štítkem
-       „Doporučujeme" — přitom je to skoro jistě spoluvlastnický podíl.
-       Doporučení se teď opírá o SLEVU PROTI SROVNATELNÝM POZEMKŮM, ne
-       o absolutní cenu, a odmění jen pásmo, kde je sleva uvěřitelná.
-       Nad hranicí uvěřitelnosti se body nedávají vůbec: co neumíme
-       vysvětlit, to nemůžeme doporučit. */
-    var body = 0;
-    var o = MODEL ? MODEL.odhad(d) : null;
-    /* Body jen za slevu, které věříme. „Nejistá" znamená, že se ceny
-       srovnávaných pozemků liší násobky — z jiné poloviny dat by vyšlo
-       jiné číslo, takže doporučovat podle něj nemůžeme. */
-    // Podíl body za slevu nedostane — viz podObvyklou. Bez toho bylo mezi
-    // bodovanými 110 podílů z 280 a web je sám doporučoval nahoru.
-    /* Státní půda podle § 12 body za slevu nedostane ze stejného důvodu
-       jako podíl: rozdíl proti trhu u ní nevznikl na trhu, cenu stanovil
-       úřad. Naměřeno: dvě takové nabídky měly plných 45 bodů, tedy mezi
-       vším viditelným nejvíc — „Doporučujeme" se dává jedné nabídce na
-       výřez, takže by to byly právě ony. */
-    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil && o.podOdhadem >= MEZ_SLEVA
-        && !(MODEL.spravniCena && MODEL.spravniCena(d))) {
-      // 15 % → 0 bodů, 50 % a výš → plných 45.
-      body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
-    }
-    d._demand = Math.max(6, Math.round(9 + typeBonus + body));
+    if (typeof d.dm === 'number') { d._demand = d.dm; return d._demand; }
+    d._demand = MODEL ? MODEL.poptavka(d)
+      : (window.PK_CENY && window.PK_CENY.poptavka ? window.PK_CENY.poptavka(d, null) : 15);
     return d._demand;
   }
 
@@ -6197,12 +6231,26 @@
       /* Pojistka navíc: i kdyby se skóre někdy počítalo jinak, štítek
          „Doporučujeme" nesmí nikdy sednout na nabídku, kterou sami
          označujeme za pochybnou. Doporučit a zároveň varovat nejde. */
-      vis.slice()
-        .filter(function (d) { var o = MODEL ? MODEL.odhad(d) : null; return !(o && (o.pochybna || o.nejisty)); })
-        /* A nikdy na úředně stanovenou cenu — viz demand(). */
-        .filter(function (d) { return !(MODEL && MODEL.spravniCena && MODEL.spravniCena(d)); })
-        .sort(function (a, b) { return demand(b) - demand(a); }).slice(0, 1)
-        .forEach(function (d) { hotIds[d._id] = true; });
+      /* NEJDŘÍV ŘADIT, POTOM HLEDAT — ne naopak.
+         Dokud se nejdřív filtrovalo, sáhlo se po odhadu ceny pro KAŽDOU
+         viditelnou nabídku: na čisté úvodní stránce je vidět celá
+         databáze, takže 1 926 odhadů na jedno vykreslení, a to jen proto,
+         aby se z nich vzala JEDNA. Teď se pořadí udělá podle skóre (to je
+         po předpočítání zdarma, viz demand()) a odhad se vytáhne až
+         u nabídek odshora, dokud jedna neprojde — obvykle u první.
+         Výsledek je týž prvek: oba způsoby berou nabídku s nejvyšším
+         skóre, která projde oběma podmínkami, a při shodě skóre tu
+         dřívější (řazení v JS je stabilní). */
+      var hotPoradi = vis.slice().sort(function (a, b) { return demand(b) - demand(a); });
+      for (var hI = 0; hI < hotPoradi.length; hI++) {
+        var hD = hotPoradi[hI];
+        var hO = MODEL ? MODEL.odhad(hD) : null;
+        if (hO && (hO.pochybna || hO.nejisty)) continue;
+        /* A nikdy na úředně stanovenou cenu — viz poptavka() v js/ceny.js. */
+        if (MODEL && MODEL.spravniCena && MODEL.spravniCena(hD)) continue;
+        hotIds[hD._id] = true;
+        break;
+      }
     }
     /* ZMĚNA FILTRU VRACÍ NA PRVNÍ STRANU.
      *
@@ -7714,12 +7762,35 @@
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);
     if (mk) {
       var kraj = ''; try { kraj = decodeURIComponent(mk[1]).trim(); } catch (e) { kraj = ''; }
-      if (kraj && krajByName) {
-        var hit = null, low = kraj.toLowerCase();
-        Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
-        if (hit) {
+      if (kraj) {
+        /* KRAJ POTŘEBUJE OBRYSY, A TY VZNIKAJÍ TEPRVE S MAPOU.
+           `krajByName` plní vrstva krajů (viz kolem řádku 2856), takže
+           dokud mapa nestojí, je ta tabulka PRÁZDNÁ a hledání jména
+           v ní nenajde nic. Dřív to vycházelo náhodou: boot() se cestou
+           k tomuhle místu osmkrát zastavil, aby předpočítal skóre
+           pořadí, a mapa se mezitím postavila. Jak se skóre začalo
+           počítat při sestavení, těch osm zastavení zmizelo —
+           a ?kraj=Jihomoravský se tiše zahodil. Naměřeno: 1 926 pozemků
+           ve výpisu místo kraje, bez odznaku, i po pěti sekundách.
+           Přistihla to scripts/test-uvod.mjs.
+           Teď se to neopírá o načasování: když obrysy ještě nejsou,
+           řekne se o mapu a výběr se zařadí do fronty, kterou mapa po
+           svém vzniku vyprázdní (azBudeMapa). Odkaz zvenčí na kraj si
+           mapu vyžádá tak jako tak — člověk, který přišel na kraj, ji
+           chce vidět. */
+        var vyber = function () {
+          var hit = null, low = kraj.toLowerCase();
+          Object.keys(krajByName).forEach(function (name) { if (name.toLowerCase() === low) hit = name; });
+          if (!hit) return false;
           selectKraj(hit);
           if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+          return true;
+        };
+        if (Object.keys(krajByName).length) {
+          if (vyber()) { cleanUrl(); return true; }
+        } else if (!mapaVzdana) {
+          chciMapu();
+          azBudeMapa(vyber);
           cleanUrl();
           return true;
         }
@@ -8635,16 +8706,21 @@
      výpisu — to je ta nejdražší část (naměřeno 865 ms, z toho 491 ms
      řazení dvou tisíc nabídek). */
   await dechni();
-  /* SKÓRE PO DÁVKÁCH. Pořadí výpisu se opírá o demand(), a to pro
-     každou nabídku sáhne po odhadu ceny z okolí — pro dva tisíce nabídek
-     to dělá okolo tří set milisekund v JEDNOM kuse uvnitř řazení.
-     Spočítá se to tedy předem po dávkách a mezi nimi se dýchá; výsledky
-     si demand() pamatuje, takže řazení pak jen čte hotová čísla a pořadí
-     vyjde do posledního místa stejné. */
-  for (var rozehrej = 0; rozehrej < DATA.length; rozehrej += 250) {
-    var konecDavky = Math.min(rozehrej + 250, DATA.length);
-    for (var vD = rozehrej; vD < konecDavky; vD++) demand(DATA[vD]);
-    if (konecDavky < DATA.length) await dechni();
+  /* SKÓRE PO DÁVKÁCH — UŽ JEN PRO DATA BEZ PŘEDPOČÍTANÉHO ČÍSLA.
+     Pořadí výpisu se opírá o demand(). Dokud se skóre počítalo v
+     prohlížeči, sáhlo pro každou nabídku po odhadu ceny z okolí — pro dva
+     tisíce nabídek okolo tří set milisekund, a uvnitř řazení v jednom
+     kuse. Dělalo se to proto předem po dávkách a mezi nimi se dýchalo.
+     Od té doby to počítá sestavení do pole `dm` (viz demand()), takže
+     tahle smyčka nemá co dělat — a osm oddechů mezi dávkami přitom
+     stálo osm vykreslení. Projede se tedy jen to, co předpočítané číslo
+     nemá: u čerstvých dat nic, u náhradních nebo starých z mezipaměti
+     všechno jako dřív. */
+  var dopocitat = DATA.filter(function (d) { return typeof d.dm !== 'number'; });
+  for (var rozehrej = 0; rozehrej < dopocitat.length; rozehrej += 250) {
+    var konecDavky = Math.min(rozehrej + 250, dopocitat.length);
+    for (var vD = rozehrej; vD < konecDavky; vD++) demand(dopocitat[vD]);
+    if (konecDavky < dopocitat.length) await dechni();
   }
   /* ULOŽENÝ FILTR SE DOSADÍ JEŠTĚ PŘED PRVNÍM VYKRESLENÍM.
      Dřív se obnovoval až o sto řádků níž, a protože ovládací prvky pak

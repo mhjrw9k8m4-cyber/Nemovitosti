@@ -57,8 +57,31 @@ if (o) {
 }
 
 /* --- TO PODSTATNÉ: je ten rozdíl vidět? --------------------------- */
-const png = await p.locator('.map-canvas').screenshot();
-const vzorky = await p.evaluate(async (src) => {
+/* MĚŘÍ SE PŘÍSPĚVEK ZÁVOJE, NE JAS DVOU MÍST.
+   Dřív se porovnal střed výřezu (Česko) s pravým dolním rohem (cizina)
+   a čekalo se, že Česko je aspoň o 10 jasnější. To ale měří dvě věci
+   naráz: závoj NAD cizinou a sytost krajů POD Českem. A právě ta sytost
+   se 25. 10. opravila (kraje se dřív stylovaly dřív, než se spočítaly
+   jejich počty, takže všechny dostaly krytí pro „žádné nabídky" a nikdo
+   je nepřebarvil — viz refreshKrajTips v js/main.js). Jak se kraje
+   začaly barvit doopravdy, Česko ztmavlo z 211 na 198 a rozdíl proti
+   cizině spadl na 3. Zkouška tím hlásila vadu u závoje, přestože závoj
+   byl v pořádku a opravila se jiná věc.
+
+   Měří se proto TÝŽ BOD se závojem a bez něj. To je přesně to, co
+   zkouška tvrdí — „závoj cizinu ztmaví" — a sytost krajů do toho
+   nemluví. Naměřeno na 1280 px: cizina 232 bez závoje, 195 se závojem,
+   tedy −37; Česko 198 v obou případech, tedy 0 (závoj má mít uprostřed
+   díru). Mez −10 leží třikrát pod naměřenou hodnotou.
+
+   A JEŠTĚ JEDNA VĚC, KTEROU JE TŘEBA VĚDĚT: v tomhle prostředí mapa
+   NEMÁ DLAŽDICE (podkladový server je ze zkoušek nedostupný, naměřeno
+   0 hotových dlaždic i po devíti sekundách). Absolutní jasy proto
+   popisují mapu bez podkladu a ladit podle nich krytí závoje by
+   znamenalo ladit web pro stav, který nikdo nevidí. Rozdíl „se závojem
+   proti bez závoje" je ale na podkladu nezávislý: závoj kreslí přes
+   všechno, co je pod ním. */
+const odber = async (src) => {
   const img = new Image(); img.src = src; await img.decode();
   const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
   const g = c.getContext('2d'); g.drawImage(img, 0, 0);
@@ -73,14 +96,30 @@ const vzorky = await p.evaluate(async (src) => {
      dolní roh v cizině (Rakousko / Slovensko). Projekce není potřeba. */
   return { uvnitr: vz(Math.round(W / 2 - s / 2), Math.round(H / 2 - s / 2), s, s),
     venku: vz(W - s - 4, H - s - 4, s, s), rozmer: W + '×' + H };
-}, 'data:image/png;base64,' + png.toString('base64'));
+};
+const mapaEl = p.locator('.map-canvas');
+const foto = async () => 'data:image/png;base64,' + (await mapaEl.screenshot()).toString('base64');
+const vzorky = await p.evaluate(odber, await foto());
+/* Závoj se schová a týž bod se vyfotí znovu. Vrací se zpátky, ať
+   kontroly níž měří web, a ne to, co jsem mu rozsvítil. */
+await p.evaluate(() => { const m = document.querySelector('.pk-maska'); if (m) m.style.display = 'none'; });
+await p.waitForTimeout(150);
+const bez = await p.evaluate(odber, await foto());
+await p.evaluate(() => { const m = document.querySelector('.pk-maska'); if (m) m.style.display = ''; });
+await p.waitForTimeout(150);
 
 pravda('mapa se vyfotila (jinak by se měřilo nic)', vzorky.uvnitr > 0 && vzorky.venku > 0, JSON.stringify(vzorky));
-/* Bez závoje je cizina SVĚTLEJŠÍ než Česko (219 proti 202) a splývá.
-   Se závojem musí být tmavší, a to znatelně — ne o pár jednotek. */
-pravda('cizina je znatelně tmavší než Česko',
-  vzorky.uvnitr - vzorky.venku >= 10,
-  `Česko ${vzorky.uvnitr}, cizina ${vzorky.venku} — rozdíl ${vzorky.uvnitr - vzorky.venku} (bez závoje je to −17)`);
+pravda('a schování závoje se na snímku projevilo (jinak se porovnávají dva totožné snímky)',
+  bez.venku !== vzorky.venku, `cizina se závojem ${vzorky.venku}, bez ${bez.venku}`);
+pravda('závoj cizinu znatelně ztmaví',
+  bez.venku - vzorky.venku >= 10,
+  `cizina bez závoje ${bez.venku}, se závojem ${vzorky.venku} — ubral ${bez.venku - vzorky.venku} (naměřeno −37)`);
+/* A DÍRA UPROSTŘED: závoj má Česko vynechat, ne ztmavit taky. Bez téhle
+   kontroly by prošel i závoj natažený přes celou mapu — ten by cizinu
+   ztmavil stejně a Česko s ní. */
+pravda('a Česka se nedotkne (závoj má uprostřed díru)',
+  Math.abs(bez.uvnitr - vzorky.uvnitr) <= 3,
+  `Česko bez závoje ${bez.uvnitr}, se závojem ${vzorky.uvnitr}`);
 
 /* --- a mapa pořád funguje ----------------------------------------- */
 await p.evaluate(() => document.querySelector('.map-canvas').scrollIntoView({ block: 'center' }));

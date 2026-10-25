@@ -188,10 +188,18 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
 /* 7) ŘEZ PRO ÚVODNÍ STRÁNKU: celek bez jediného pole
    ------------------------------------------------------------------
    Úvodní stránka stahuje data/mapa.json, což má být TÝŽ soubor jako
-   celek bez pole `url`. Kdyby se rozešel v čemkoli jiném — jiné pořadí,
-   chybějící nabídka, zaokrouhlená cena — vypadal by web normálně a jen
-   by ukazoval jiná data než zbytek. Srovnává se proto nabídka po
-   nabídce ZNAK ZA ZNAKEM, ne počty. */
+   celek bez pole `url` a navíc s polem `dm`. Kdyby se rozešel v čemkoli
+   jiném — jiné pořadí, chybějící nabídka, zaokrouhlená cena — vypadal by
+   web normálně a jen by ukazoval jiná data než zbytek. Srovnává se proto
+   nabídka po nabídce ZNAK ZA ZNAKEM, ne počty.
+
+   `dm` je skóre pro pořadí výpisu: úvodní stránka řadí podle něj a bez
+   předpočítaného čísla by si pro KAŽDOU nabídku musela spočítat odhad
+   ceny z okolí (naměřeno 1 925 odhadů na jedno vykreslení při 24 kartách).
+   Že se rovná tomu, co by spočítal prohlížeč, přeměřuje
+   scripts/test-poptavka.mjs; tady se jen hlídá, že je to JEDINÉ pole,
+   které řez přidává — jinak by tahle kontrola přestala být „znak za
+   znakem" a propustila by cokoli dalšího. */
 {
   const cesta = path.join(ROOT, 'data', 'mapa.json');
   const je = fs.existsSync(cesta);
@@ -206,11 +214,18 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
     pravda(`a má tytéž nabídky jako celek bez duplicit, v témže pořadí (${mapa.length})`,
       mapa.length === bezDuplicit.length, `řez ${mapa.length}, bez duplicit ${bezDuplicit.length}`);
     const bezUrl = (o) => { const c = Object.assign({}, o); delete c.url; return JSON.stringify(c); };
+    /* `dm` se před srovnáním odebere, ale NEJDŘÍV se spočítá, kolika
+       nabídkám chybí — jinak by se dalo projít tím, že se pole přestane
+       psát vůbec. */
+    const bezDm = (o) => { const c = Object.assign({}, o); delete c.dm; return JSON.stringify(c); };
+    const bezSkore = mapa.filter((o) => typeof o.dm !== 'number').length;
+    pravda(`a skóre pro pořadí výpisu nese každá nabídka (${mapa.length})`,
+      bezSkore === 0, bezSkore + ' nabídek je bez pole `dm` — spusťte node scripts/oprav.mjs');
     let rozdilny = null;
     for (let i = 0; i < Math.min(mapa.length, bezDuplicit.length); i++) {
-      if (JSON.stringify(mapa[i]) !== bezUrl(bezDuplicit[i])) { rozdilny = i; break; }
+      if (bezDm(mapa[i]) !== bezUrl(bezDuplicit[i])) { rozdilny = i; break; }
     }
-    pravda('a každá nabídka je znak za znakem tatáž, jen bez pole url',
+    pravda('a každá nabídka je znak za znakem tatáž, jen bez pole url a se skóre',
       rozdilny === null, rozdilny === null ? '' : `první rozdíl u nabídky ${rozdilny}: `
         + `řez ${JSON.stringify(mapa[rozdilny]).slice(0, 90)}`);
     /* A ŽE SE TÍM NIC NESLOUČÍ NAVÍC: pustit `bezDuplicit` na řez (tedy

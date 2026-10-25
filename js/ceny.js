@@ -159,7 +159,34 @@
     return !!d && /SPÚ|státní půd/i.test(d.extra || '');
   }
 
+  /* PAMĚŤ NA SKUPINU DRUHU. Funkce je čistá — z jednoho textu vyjde vždy
+     totéž — a volá se nesrovnatelně častěji, než kolik má různých vstupů:
+     naměřeno na jednom načtení úvodní stránky 3 954 volání na 13 různých
+     hodnot `druh`, tedy 304× tentýž výpočet. Přitom to pokaždé znamená
+     toLowerCase() a až deset hledání podřetězce; v profilu startu
+     (telefon 390 px, procesor ×4) to dělalo 29 ms.
+     STROP TU JE ZÁMĚRNĚ. Druhy přicházejí z dat, a kdyby se v nich někdy
+     objevily tisíce různých textů, neměla by paměť růst bez konce. Nad
+     stropem se počítá jako dřív — pomaleji, ale vždycky správně, a to je
+     ta důležitější vlastnost. Že se obě cesty shodují i za stropem,
+     přeměřuje scripts/test-ceny.mjs.
+
+     A PROČ Map A NE OBYČEJNÝ OBJEKT: napsal jsem to napoprvé jako `{}`
+     a hned to spadlo na vlastní kontrole. Druh „constructor" by z takové
+     paměti vytáhl funkci Object, „__proto__" prototyp a „toString"
+     funkci — tedy nikoli text, a ten by šel do stránky. Druhy přitom
+     přicházejí z dat, ne z našeho kódu. Map žádné jméno klíče nedědí
+     a navíc rozlišuje null, undefined i prázdný text bez toho, aby se
+     klíč musel kódovat. */
+  var DRUH_PAMET = new Map();
+  var DRUH_PAMET_STROP = 500;
   function druhGroup(s) {
+    if (DRUH_PAMET.has(s)) return DRUH_PAMET.get(s);
+    var vyslo = druhGroupSpocti(s);
+    if (DRUH_PAMET.size < DRUH_PAMET_STROP) DRUH_PAMET.set(s, vyslo);
+    return vyslo;
+  }
+  function druhGroupSpocti(s) {
     s = (s || '').toLowerCase();
     if (s.indexOf('les') !== -1) return 'Lesní pozemek';
     if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
@@ -249,6 +276,59 @@
      Jsou tady, a ne na třech místech v kódu, protože přesně takhle se už
      jednou rozešel cenový verdikt mezi mapou a stránkou. */
   var MEZ_SLEVA = 15;      // od kolika % pod obvyklou cenou se o slevě vůbec mluví
+
+  /* POPTÁVKA — skóre, podle kterého web řadí výchozí pořadí „Doporučené"
+     a podle kterého vybírá tu jedinou nabídku se štítkem „Doporučujeme".
+     Žila v js/main.js. Je tady ze dvou důvodů.
+
+     Ten první je výkon. Výchozí pořadí se řadí podle tohohle čísla, takže
+     ho web potřebuje pro VŠECHNY nabídky — na obrazovce jich je přitom 24.
+     Naměřeno v prohlížeči na telefonu 390 px: na jedno vykreslení úvodní
+     stránky 3 899 volání odhadu ceny pro 1 925 různých pozemků. Odhad
+     prohledává okolí, takže to byla podle profilu nejdražší položka
+     startu. Číslo je funkcí JEN DAT (model se staví jako postav(DATA,
+     null, PRESNOST), nic od uživatele do něj nejde), takže se dá spočítat
+     při sestavení a poslat hotové — pole `dm` v data/mapa.json.
+
+     Ten druhý je, proč to není opsané v generátoru: dvě kopie formule by
+     se rozešly, přesně jako kdysi celý cenový verdikt mezi mapou
+     a stránkou pozemku (viz hlavička souboru). Je proto jedna a tady;
+     sestavení i prohlížeč volají tuhle. Odhad se dává ARGUMENTEM, aby
+     funkce nemusela vědět, jak se k němu dojde — model má svou vlastní
+     poptavka(d), která si ho obstará sama, a prohlížeč má přes čeho se
+     dobrat skóre i ve chvíli, kdy se cenový model nepostavil vůbec.
+
+     Že se předpočítané číslo v datech rovná spočítanému, přeměřuje
+     scripts/test-poptavka.mjs. */
+  var POPTAVKA_TYP = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 };
+  function poptavka(d, o) {
+    var typeBonus = POPTAVKA_TYP[d.type] || 0;
+    /* Dřív se tu počítalo (900 − cena za m²) / 18 — tedy ČÍM LEVNĚJŠÍ ZA METR,
+       TÍM VÝŠ, bez ohledu na druh pozemku a na okolí. Orná půda za 6 Kč/m²
+       tím porazila všechno ostatní a web ji vystrčil nahoru se štítkem
+       „Doporučujeme" — přitom je to skoro jistě spoluvlastnický podíl.
+       Doporučení se teď opírá o SLEVU PROTI SROVNATELNÝM POZEMKŮM, ne
+       o absolutní cenu, a odmění jen pásmo, kde je sleva uvěřitelná.
+       Nad hranicí uvěřitelnosti se body nedávají vůbec: co neumíme
+       vysvětlit, to nemůžeme doporučit. */
+    var body = 0;
+    /* Body jen za slevu, které věříme. „Nejistá" znamená, že se ceny
+       srovnávaných pozemků liší násobky — z jiné poloviny dat by vyšlo
+       jiné číslo, takže doporučovat podle něj nemůžeme. */
+    // Podíl body za slevu nedostane — viz podObvyklou. Bez toho bylo mezi
+    // bodovanými 110 podílů z 280 a web je sám doporučoval nahoru.
+    /* Státní půda podle § 12 body za slevu nedostane ze stejného důvodu
+       jako podíl: rozdíl proti trhu u ní nevznikl na trhu, cenu stanovil
+       úřad. Naměřeno: dvě takové nabídky měly plných 45 bodů, tedy mezi
+       vším viditelným nejvíc — „Doporučujeme" se dává jedné nabídce na
+       výřez, takže by to byly právě ony. */
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil
+        && o.podOdhadem >= MEZ_SLEVA && !spravniCena(d)) {
+      // 15 % → 0 bodů, 50 % a výš → plných 45.
+      body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
+    }
+    return Math.max(6, Math.round(9 + typeBonus + body));
+  }
   var MEZ_POCHYBNA = 60;   // od kolika % už to není sleva, ale důvod k ověření
   /* KDY ODHADU SAMI NEVĚŘÍME.
    *
@@ -1159,6 +1239,9 @@
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
+      /* Skóre pro pořadí výpisu. Formule je na úrovni modulu (poptavka
+         výš), tohle je jen ta pohodlná cesta: obstarám si odhad sám. */
+      poptavka: function (d) { return poptavka(d, odhad(d)); },
       medianTypu: medianTypu,
       /* Ven kvůli scripts/mericka-odhadu.mjs: měřidlo porovnává varianty
          odhadu a potřebuje týž sklon, jaký používá model sám. */
@@ -1344,6 +1427,15 @@
     /* Ven kvůli generátoru stránek: kdo vydává „obvyklou cenu", musí
        úředně stanovenou cenu vynechat týmž pravidlem jako model. */
     spravniCena: spravniCena,
+    /* Ven kvůli scripts/test-ceny.mjs: strop paměti na skupinu druhu je
+       pojistka proti datům s tisíci různých textů, a pojistka, kterou
+       nikdo nezměří, se dá potichu zrušit. Zkouška si přes tohle ověří,
+       že paměť za stropem opravdu přestane růst. */
+    druhPametKolik: function () { return DRUH_PAMET.size; },
+    /* Ven kvůli sestavení (scripts/generate-data-rezy.mjs) a kvůli
+       prohlížeči ve chvíli, kdy se cenový model nepostavil — bez odhadu
+       se skóre spočítat dá, jen bez bodů za slevu. */
+    poptavka: poptavka,
     /* Ven kvůli scripts/test-strop-ceny.mjs: zkouška přeměřuje, jestli
        je mez pořád dost daleko od skutečných cen. */
     MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };

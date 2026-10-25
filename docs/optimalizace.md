@@ -11032,3 +11032,361 @@ Napoprvé byla sabotáž příliš slabá (přepsal jsem jen jeden z dvou
 výskytů, takže vzor pořád sedl) — a to je dobrá připomínka, že
 **sabotáž, která nic nerozbije, nedokazuje nic**. S oběma výskyty
 nález přišel.
+
+## 162. Úvodní stránka spočítala odhad ceny pro 1 925 pozemků, aby ukázala 24 karet *25. 10.*
+
+Šel jsem hledat „nejtěžší kus webu" a začal jsem u velikostí. Největší
+soubory, které si prohlížeč bere: `js/min/main.js` 244 kB,
+`css/styles.min.css` 224 kB, `css/uvod.min.css` 144 kB; ve zdrojích
+`css/styles.css` 8 767 řádek a `js/main.js` 9 189 řádek. Úvodní stránka
+stáhne **1 376 kB ve 37 souborech**, z toho `data/mapa.json` 492 kB,
+tedy 36 %.
+
+**První protiměření zrušilo první plán.** Chtěl jsem ten datový soubor
+překódovat na slovník — a pak jsem změřil, co z něj vyjde po gzipu:
+492 kB → **63 kB**, `main.js` 240 → 66 kB, `uvod.min.css` 140 → 26 kB.
+Přes drát je úvodní stránka asi 230 kB a přepsání formátu dat by byla
+riziková operace skoro za nic. **Zamítl jsem to.**
+
+Zbyl tedy hlavní procesor, a tam měření drželo: na telefonu 390 px se
+zpomalením ×4 trvalo do první karty 2 091 ms a nejdelší jedna úloha
+430 ms. Profil ukázal `js/min/ceny.js` 442 ms, z toho `okoliCeny` 68 ms
+a `kmVzdalenost` 31 ms — tedy počítání vzdáleností napříč celou
+databází, zatímco na obrazovce je 24 karet. To je přesně ten vzorec
+z oddílu 47.
+
+**Změřil jsem to počítadlem, ne dohadem.** Past na přiřazení
+`window.PK_CENY` nasazená ještě před spuštěním skriptů obalila
+`MODEL.odhad` a spočítala volání při jednom načtení:
+
+| | |
+|---|---|
+| volání odhadu ceny | **3 899** |
+| různých pozemků | **1 925** |
+| karet na obrazovce | **24** |
+
+Paměť modelu funguje, takže těch 1 925 je počet skutečných výpočtů.
+Viníky našlo přiřazení volání k řádkům: rozehřívací smyčka před prvním
+vykreslením (výchozí pořadí „Doporučené" se řadí podle skóre, které po
+odhadu sahá) a výběr štítku „Doporučujeme", který filtroval celý
+viditelný výpis, aby z něj vzal **jednu** nabídku.
+
+**Skóre je funkcí jen dat.** Model se staví jako
+`postav(DATA, null, PRESNOST)` — nic od uživatele do něj nejde, `DATA`
+je řez pro úvodní stránku a `PRESNOST` jede s ním. Dá se tedy spočítat
+při sestavení. Formule se přestěhovala z `js/main.js` do cenového
+modelu (`js/ceny.js`, `poptavka`) a sestavení ji projede do pole `dm`
+v `data/mapa.json`. Opsat ji do generátoru nešlo: dvě kopie se
+v tomhle repozitáři rozešly vždycky, a právě proto `js/ceny.js`
+existuje.
+
+**A druhé protiměření zrušilo druhý plán.** Těch 1 926 čísel přidá
+souboru 15,6 kB, takže jsem je chtěl posílat jen jako výjimky proti
+nejčastější hodnotě (17 má 1 704 nabídek z 1 926). Po gzipu: `dm`
+u všech stojí **673 B**, jen výjimky **557 B**. Sto šestnáct bajtů za
+hlavičkové pole a další větev v kódu — **zamítnuto**.
+
+**Štítek „Doporučujeme" se obrátil naruby.** Místo „filtruj celý výpis,
+pak seřaď, pak vezmi první" se teď řadí podle skóre (po předpočítání
+zdarma) a odhad se vytáhne u nabídek odshora, dokud jedna neprojde.
+Že je to **týž prvek**, je dokázané na celé databázi, na každém okresu,
+na každém druhu a na 300 náhodných výřezech: **388 výřezů, 388×
+stejná nabídka**. A že se čísla nezměnila, na staré formuli
+vytažené z gitu: **1 926 z 1 926 shoda**.
+
+**Co z toho vyšlo, měřeno A/B** (medián ze sedmi běhů, pevné okno 7 s od
+navigace, telefon 390 px, procesor ×4):
+
+| | před | po |
+|---|---|---|
+| do první karty | 1 757 ms | **1 556 ms** |
+| blokující čas | 1 152 ms | **1 068 ms** |
+| dlouhých úloh | 7 | 6 |
+| nejdelší úloha | 415 ms | 428 ms |
+| volání odhadu ceny | 3 899 | **49** |
+
+**První měření toho A/B jsem musel zahodit.** Měřil jsem souhrn
+dlouhých úloh v okně, které začínalo navigací a končilo 2,5 s **po
+první kartě** — a protože se karta v každé variantě objeví jinde, byla
+každá varianta měřená v jinak dlouhém okně. Vyšlo z toho, že souhrn
+vzrostl. V pevném okně vyšlo, že klesl. **Okno měření je součást
+měřidla**, ne detail.
+
+**A jedna věc se nepotvrdila.** Čekal jsem, že zmizí to 430 ms
+zamrznutí. Nezmizelo: 415 → 428 ms, tedy v šumu. Tři tisíce devět set
+volání odhadu ceny tedy **nebyla** příčina té nejdelší úlohy a hledá se
+dál. Ušetřilo se 201 ms do první karty a 84 ms blokujícího času —
+skutečné, ale menší, než jsem čekal, a říkám to takhle, protože obojí
+je naměřené.
+
+**Čtyři zkoušky to shodilo a každá měla pravdu.** `test-staticka`
+přistihla, že jsem novou zkoušku zařadil do úlohy s prohlížečem, kterou
+nepotřebuje; `test-roadmap`, že se změnil počet zkoušek;
+`test-data-rezy`, že řez už není „celek bez pole url"; a `test-ceny`,
+že si **tělo formule vytahoval z `js/main.js`** — kde po přestěhování
+nebylo. To je ta nejtišší vada, jakou zkouška může mít: měřila by
+prázdno a zelenala se dál. Kontroly šly za formulí do `js/ceny.js`
+a pět sabotáží doložilo, že na novém místě pořád kousnou.
+
+**Nová zkouška `scripts/test-poptavka.mjs`, 13 kontrol.** Hlídá tři
+cesty, kterými se to může rozejít: změněná formule bez přestavby dat,
+opsaná kopie formule (hledají se **kusy formule**, ne jméno funkce —
+kdo kopii udělá, zpravidla ji přejmenuje) a data od robota bez pole
+`dm`. Pět sabotáží: podvržené číslo, chybějící číslo, opsaná tabulka
+příplatků do `main.js`, změněná formule bez přestavby a `main.js`, který
+hotové číslo nečte. Všechny kously.
+
+**Záložní cesta zůstala.** Kdo dostane data bez `dm` — náhradní data
+v `js/main.js`, starý soubor z mezipaměti prohlížeče — spočítá si totéž
+pořadí jako dřív, jen si na něj počká. A kdyby se nepostavil ani cenový
+model, skóre se spočítá bez bodů za slevu a pořadí podle typu nabídky
+zůstane; i to je zkouškou pokryté.
+
+## 163. Třináct článků si stahovalo formulář pro vložení inzerátu *25. 10.*
+
+Šel jsem hledat nejtěžší stránky — ne nejtěžší soubory. Sečetl jsem
+u každé ručně psané stránky všechno, co si bere v CSS a skriptech, po
+gzipu:
+
+| stránka | přes drát |
+|---|---|
+| index.html | 196 kB |
+| pozemek.html | 125 kB |
+| pridat.html | 78 kB |
+| kupni-smlouva-pozemek.html | **54 kB** |
+| na-co-mam-pozemek.html | 48 kB |
+| …a dalších devět článků | 45–47 kB |
+
+Čtvrté místo je článek o kupní smlouvě. **Text.** A největší položkou
+v něm byl `js/min/pridat.js` — logika formuláře „Přidat pozemek na
+prodej", 16,7 kB po gzipu, tedy 36 % váhy té stránky. Bralo si ji
+**třináct** stránek, z nichž formulář má jediná.
+
+**Dvě měření, než jsem na to sáhl.** Projel jsem všech 45 selektorů,
+které ten skript v kódu hledá, proti každé stránce: na článcích najde
+**1 ze 47** — `#toast`, a ten se zvenčí volat nedá, protože modul je
+uzavřené IIFE a nevyváží nic. Pak pokrytím: **7 % vykonaných bajtů**
+z 57 kB. Zbytek se nikdy nespustí. Co se spustí, jsou čtyři poslechy
+na dokumentu (`pointerdown`, `pointermove`, `pointerup`, `keydown`),
+které hned vyskočí, protože mřížka fotek tam není. Stažení dat
+(`data/opportunities.json`, 656 kB) visí na tlačítku, které na článcích
+není — to se tedy nedělo.
+
+**A pak důkaz, ne úsudek.** Server stránku vydal s tím skriptem
+a bez něj a porovnal se výsledek: text, počet prvků, chování menu
+a konzole. Všech třináct: **shoda**. A kontrolní vzorek `pridat.html`,
+kde ten skript patří: **rozdíl**. Měřidlo tedy není slepé.
+
+**Hlavička toho souboru přitom tvrdila ještě jednu věc, která nebyla
+pravda:** že obsluhuje i stránku „Inzerce". `inzerce.html` nemá
+formulář vůbec — nula prvků, nula `<form>` — a ten skript si nebere.
+
+**Jedna stránka mi z měření vypadla a je to poučné.** `pozemek-od-obce.html`
+je ručně psaný rádce, ale můj filtr na generované stránky používal vzor
+`^pozemek-`, takže ji spolkl. Totéž se v tomhle repozitáře stalo už
+jednou (viz poznámka v `scripts/test-predloha.mjs`): **generovanou
+stránku nepoznáš podle jména.** Rozlišuje se podle obsahu — kopie
+šablony pozemku nesou třídu `pz-media`.
+
+**Druhý nález z téhož měření:** `js/porovnani.js` na `moje-data.html` —
+0 ze 3 prvků, 3 % bajtů.
+
+**A tady jsem si málem rozbil web.** `moje-data.html` je totiž ŠABLONA,
+ze které sestavení staví `data.html` (`scripts/generate-data-stranka.mjs`
+si z ní bere hlavičku a patu). Odebráním ze šablony jsem to vzal
+i stránce, která to potřebuje: tabulka polí na `data.html` přetéká
+a stín „pokračuje vpravo" dělá právě `porovnani.js`.
+
+Moje srovnání „s ním a bez něj" to **neodhalilo**, protože porovnávalo
+text a počet prvků — a stín je JEN PŘEPNUTÍ TŘÍDY. Shodilo to
+`scripts/test-skripty-na-strance.mjs`, hlídač, který už v repozitáři
+byl: hlásí stránku, která načte knihovnu, kterou nikdo nevolá, a po
+mém zásahu oznámil, že `PK_CENY` nevolá na obou stránkách nikdo
+(`porovnani.js` na něj sahá třikrát). **Hlídač, o kterém jsem nevěděl,
+zachytil vadu, kterou mé vlastní měřidlo propustilo.**
+
+Správné rozdělení tedy je: šablona oba skripty nenese a sestavení je
+vloží do `data.html`. Doloženo měřením TŘÍDY, ne textu, na pěti
+šířkách — a ukázalo ještě jednu věc: obaly tabulky jsou dva a první
+z nich na 390 px nepřetéká, takže kdybych měřil jen ten, usoudil bych
+znovu špatně.
+
+| šířka | obal 1 | obal 2 |
+|---|---|---|
+| 320 px | přetéká, `je-dal` | přetéká, `je-dal` |
+| 390 px | 348/348, bez stínu | **348/460, `je-dal`** |
+| 768 px a výš | bez stínu | bez stínu |
+
+**Co to ušetřilo** (po gzipu, na jedno otevření stránky):
+
+| stránka | před | po |
+|---|---|---|
+| kupni-smlouva-pozemek.html | 54,0 kB | **37,2 kB** |
+| na-co-mam-pozemek.html | 48,3 kB | **31,6 kB** |
+| hypoteka-na-pozemek.html | 47,1 kB | **30,4 kB** |
+| pozemek-od-obce.html | 38,7 kB | **21,9 kB** |
+| moje-data.html | 46,1 kB | **42,9 kB** |
+
+U článků je to 31–43 % váhy. Třináct stránek × 16,7 kB.
+
+**A úklid navíc, který si sestavení udělalo samo.** Čištění stylů bere
+„použitá jména" z HTML a skriptů té rodiny stránek — a `.auth-bar`,
+`#auth-gate`, `#prodej-card` i `.link-btn` psal právě `pridat.js`. Jak
+zmizel z článků, zmizela i ta pravidla:
+
+| rodina stylů | před | po |
+|---|---|---|
+| css/pozemek.min.css | 13 311 B gz | **12 284 B gz** |
+| css/region.min.css | 12 673 B gz | **11 620 B gz** |
+
+Ta první nese 2 264 stránek pozemků. Jména samotná zůstala
+v `css/zaklad.min.css`, který si bere `pridat.html` — ověřeno, že
+tam všechna čtyři jsou.
+
+**Nový hlídač `scripts/test-vaha-stranky.mjs`, 6 kontrol, bez
+prohlížeče.** Posbírá z kódu prvky, na které skript sahá, a hledá je ve
+statickém HTML každé stránky, která si ho bere. Tím se rozliší
+„připravený a čeká" od „nemá tu co dělat".
+
+**Proč se neměří pokrytí bajtů, když už ho umím změřit.** Zkusil jsem
+to a je to špatný nástroj: `js/auth.js` má na každé stránce 12 %,
+protože se rozběhne až při přihlášení, `js/exif.js` 10 %, až když někdo
+přiloží fotku. Ze 150 párů skript×stránka nad 5 kB by jich mez pod
+20 % označila **59** — a většina z nich je v pořádku. Nízké pokrytí při
+načtení znamená „čeká", ne „nemá co dělat".
+
+**A mez je naměřená, protože napoprvé jsem ji měl špatně.** Napsal jsem
+pravidlo „musí najít aspoň jeden prvek" a sabotáž ho prošla:
+`pridat.js` jeden prvek najde (`#toast`). Rozhoduje tedy podíl.
+Naměřeno u párů, které na svém místě jsou: 20 % (`graf-cen.js`, staví
+si prvky sám), 33 % (`porovnani.js`), 65 % (`main.js`), 75 % a výš
+zbytek. Vadný případ: **2 %**. Mez 10 % leží dvakrát pod nejnižším
+správným a pětkrát nad vadným. Předlohy (`pozemek.html`) jsou výjimka
+s napsaným důvodem — šablonu nelze soudit podle toho, co v ní ještě
+není; hlídá ji `test-predloha.mjs` srovnáním s hotovou stránkou.
+
+**Pět sabotáží.** Skript zpátky na článku (2 % → nález), `porovnani.js`
+zpátky na `moje-data.html` (0 % → nález), hlídač přestane sbírat `#id`
+(nezměřilo se nic → nález), všechny stránky prohlášené za generované
+(0 ručních → nález) a výjimka bez důvodu (→ nález). Šestá sabotáž
+„sniž mez na nulu" prošla, takže se hlídá i **rozsah mezi**: pod 5 %
+by hlídač nenašel nic, nad 20 % by hlásil skripty, které si prvky
+vyrábějí samy.
+
+## 164. druhGroup: 3 954 volání na 13 různých vstupů *25. 10.*
+
+Z téhož profilu startu jako oddíl 162: `druhGroup` 29 ms. Je to čistá
+funkce jednoho krátkého textu — `toLowerCase()` a až deset hledání
+podřetězce. Počítadlo na jedno načtení úvodní stránky: **3 954 volání,
+13 různých hodnot `druh`**, tedy 304× tentýž výpočet. Dostala tedy
+paměť.
+
+**A hned na ní spadla kontrola, kterou jsem k ní psal.** Napsal jsem
+paměť jako obyčejný objekt `{}` — a druh „constructor" z ní vytáhl
+**funkci Object**, „__proto__" prototyp a „toString" funkci. Tedy ne
+text, a ten by šel do stránky. Druhy přitom přicházejí z dat, ne
+z našeho kódu. Je to proto `Map`, která žádné jméno klíče nedědí
+a navíc rozlišuje `null`, `undefined` i prázdný text bez kódování
+klíče.
+
+Paměť má **strop 500 záznamů**: druhů je v datech třináct, ale kdyby se
+v nich někdy objevily tisíce textů, nemá paměť růst bez konce. Nad
+stropem se počítá jako dřív — pomaleji, ale vždycky správně.
+
+**Tři kontroly a čtyři sabotáže — a jedna sabotáž mě přistihla.**
+Kontrola „za stropem to vyjde taky" zkoušela po přetečení stropu
+TYTÉŽ vzorky jako výš. Ty už ale v paměti ležely z prvního průchodu,
+takže se odpovídalo z ní a cesta za stropem se nikdy nespustila:
+sabotáž „nad stropem vracej Zahradu" prošla. Teď se model načte do
+vlastního okna (čistá paměť), strop se přeteče NEJDŘÍV a vzorky se
+zkoušejí teprve potom — poprvé a bez pamatování. A protože sabotáž
+„zruš strop" taky prošla, vyváží model i velikost paměti, aby se dalo
+změřit, že strop drží.
+
+## 165. Zrychlení výpisu rozbilo tři věci, které se o něj opíraly *25. 10.*
+
+Předpočítané skóre pořadí (oddíl 162) zrušilo osm oddechů, které se
+v `boot()` dělaly mezi dávkami počítání. Sada v prohlížeči po tom
+shodila **čtyři zkoušky** a každá ukázala na něco jiného. Dvě z nich
+byly vady v tom, co vidí člověk, jedna vada v jiné části webu, o které
+nikdo nevěděl, a jedna vada v měřidle. Všechny čtyři padaly i na
+nezatíženém stroji, takže to nebyly kolize.
+
+### a) `?kraj=` přestalo fungovat — 91 stránek vede na odkaz, který se tiše zahodil
+
+`openFromUrl()` hledá jméno kraje v `krajByName`, a tu tabulku plní
+vrstva krajů, tedy teprve mapa. Dokud `boot()` cestou k tomu místu
+osmkrát zastavil, mapa se mezitím postavila. Jak zastavení zmizela,
+`?kraj=Jihomoravský` nenašel nic a **mlčky se zahodil**.
+
+Naměřeno pollingem: 1 926 pozemků ve výpisu místo kraje, bez odznaku,
+i po pěti sekundách. Po opravě 395 pozemků a odznak „Jihomoravský kraj".
+
+Oprava se neopírá o načasování: když obrysy ještě nejsou, řekne se
+o mapu a výběr se zařadí do fronty, kterou mapa po svém vzniku
+vyprázdní (`azBudeMapa`). Odkaz na kraj si mapu vyžádá tak jako tak —
+člověk, který přišel na kraj, ji chce vidět.
+
+### b) Sytost krajů na mapě se nikdy nezapnula
+
+Tohle je nález, který s mou změnou nemá co dělat — jen se díky ní
+ukázal. Kraje se stylují `krajKrytí(k)` ve chvíli, kdy vrstva vznikne,
+ale `krajCounts` plní až první `renderList()`. Když byla mapa první,
+dostaly **všechny kraje krytí 0,015** (hodnota pro „žádné nabídky")
+a nic je už nepřebarvilo.
+
+| | krytí |
+|---|---|
+| jak to bylo | 0,015 u všech čtrnácti krajů |
+| jak to má být | 0,082–0,168 podle počtu nabídek |
+
+Mapa, kterou měl odlišovat sytější kraj, byla plochá — a nepoznalo se
+to, protože plochá mapa vypadá jako mapa. Opraveno tím, že
+`refreshKrajTips()` kraje **přebarví**, ne jen přepočítá; vybraný kraj
+se vynechává, ten má vlastní styl.
+
+### c) Mapa se objednávala sériově: styl, a teprve v jeho `onload` knihovna
+
+`chciMapu()` vkládal `<link>` na leaflet.css a skript si objednal
+teprve v jeho `onload`. Mapa tím čekala na celé kolo po síti a navíc
+na to, až bude hlavní vlákno volné — tedy právě ve chvíli, kdy se
+vykresluje výpis. Naměřeno na 1280 px (medián z pěti běhů):
+
+| | před | po zrychlení výpisu | po opravě |
+|---|---|---|---|
+| první karta | 697 ms | 482 ms | 508 ms |
+| žádost o `leaflet.js` | 435 ms | **482 ms** | **378 ms** |
+
+Prostřední sloupec je ta vada: výpis zrychlil a mapa se tím o 47 ms
+zdržela. Po opravě se objednává obojí hned a mapa se staví, až dojede
+obojí — takže je mapa o 57 ms dřív než před celou touhle prací,
+a výpis zůstal rychlý. Chyba stylu se bere jako „styl je hotový": bez
+něj mapa vypadá špatně, ale funguje, kdežto bez knihovny není.
+
+### d) A čtvrtá zkouška měřila dvě věci naráz
+
+`test-maska` porovnávala jas středu výřezu (Česko) s pravým dolním
+rohem (cizina) a čekala rozdíl aspoň 10. To ale měří závoj NAD cizinou
+i sytost krajů POD Českem — a jak se sytost (bod b) opravila, Česko
+ztmavlo z 211 na 198 a rozdíl spadl na 3. Zkouška hlásila vadu u
+závoje, přestože závoj byl v pořádku a opravila se jiná věc.
+
+Teď se měří **týž bod se závojem a bez něj**, což je přesně to, co
+zkouška tvrdí. Naměřeno: cizina 232 → 195, tedy **−37**; Česko 198
+v obou případech, tedy 0 (závoj má uprostřed díru). Mez −10 leží
+třikrát pod naměřenou hodnotou a přibyla kontrola té díry — bez ní by
+prošel i závoj natažený přes celou mapu.
+
+**A jedna věc, kterou je u těchto čísel třeba vědět:** v prostředí
+zkoušek mapa **nemá dlaždice** — podkladový server je odsud
+nedostupný (naměřeno 0 hotových dlaždic i po devíti sekundách; proxy
+to potvrzuje odmítnutými spojeními na `tile.openstreetmap.org`
+a `server.arcgisonline.com`). Absolutní jasy proto popisují mapu bez
+podkladu a ladit podle nich krytí závoje by znamenalo ladit web pro
+stav, který nikdo nevidí. Rozdíl „se závojem proti bez závoje" je ale
+na podkladu nezávislý.
+
+**Poučení, které si beru dál:** zrychlení není neutrální změna.
+Všechno, co se opíralo o to, že něco trvá dlouho, se tím rozbije — a je
+to ta nejtišší kategorie vad, protože nic nespadne, jen přestane
+fungovat. Tři ze čtyř zkoušek, které to chytily, přitom neměřily výkon.

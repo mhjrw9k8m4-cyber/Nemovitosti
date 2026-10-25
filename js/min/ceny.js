@@ -54,7 +54,15 @@
     return !!d && /SPÚ|státní půd/i.test(d.extra || '');
   }
 
+  var DRUH_PAMET = new Map();
+  var DRUH_PAMET_STROP = 500;
   function druhGroup(s) {
+    if (DRUH_PAMET.has(s)) return DRUH_PAMET.get(s);
+    var vyslo = druhGroupSpocti(s);
+    if (DRUH_PAMET.size < DRUH_PAMET_STROP) DRUH_PAMET.set(s, vyslo);
+    return vyslo;
+  }
+  function druhGroupSpocti(s) {
     s = (s || '').toLowerCase();
     if (s.indexOf('les') !== -1) return 'Lesní pozemek';
     if (s.indexOf('stavební') !== -1 || s.indexOf('zastav') !== -1) return 'Stavební / zastavěná';
@@ -120,6 +128,20 @@
   }
 
   var MEZ_SLEVA = 15;
+
+  var POPTAVKA_TYP = { drazba: 22, exekuce: 18, obec: 12, sale: 8, majitel: 10 };
+  function poptavka(d, o) {
+    var typeBonus = POPTAVKA_TYP[d.type] || 0;
+
+    var body = 0;
+
+    if (o && o.podleVelikosti && !o.pochybna && !o.nejisty && !o.podil
+        && o.podOdhadem >= MEZ_SLEVA && !spravniCena(d)) {
+
+      body = Math.min(45, Math.round((o.podOdhadem - MEZ_SLEVA) * 45 / 35));
+    }
+    return Math.max(6, Math.round(9 + typeBonus + body));
+  }
   var MEZ_POCHYBNA = 60;
 
   var MEZ_ROZPTYL = 1.2;
@@ -491,6 +513,8 @@
       neduveryhodna: neduveryhodna,
       percentil: percentil,
       odhad: odhad,
+
+      poptavka: function (d) { return poptavka(d, odhad(d)); },
       medianTypu: medianTypu,
 
       sklon: SKLON
@@ -583,6 +607,10 @@
     zaMetrKratce: zaMetrKratce,
 
     spravniCena: spravniCena,
+
+    druhPametKolik: function () { return DRUH_PAMET.size; },
+
+    poptavka: poptavka,
 
     MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };
 }(typeof window !== 'undefined' ? window : globalThis));

@@ -98,7 +98,36 @@ export function spust() {
       '$1Všechny nabídky pozemků v jednom souboru — popsaná pole, bez klíče a bez registrace.$2')
     .replace(/(<meta property="og:url" content=")[^"]*(">)/, '$1https://www.parcelaka.cz/data.html$2')
     .replace(/(<meta name="twitter:title" content=")[^"]*(">)/, '$1Data Parcelky — Parcelka$2');
-  const pata = sablona.slice(sablona.indexOf('<footer'));
+  /* DVA SKRIPTY, KTERÉ POTŘEBUJE data.html A NE PŘEDLOHA.
+     Pata se bere z moje-data.html, a s ní i seznam skriptů. Jenže ty
+     dvě stránky nemají tytéž potřeby: tabulka polí na data.html přetéká
+     na telefonu do strany (460/348 px) a stín „pokračuje vpravo" u ní
+     dělá js/porovnani.js, kterému k tomu stačí .dt-tab-obal; ten
+     zároveň sahá na PK_CENY, takže si s sebou bere i js/ceny.js.
+     Na předloze (moje-data.html) není ani .dt-tab-obal, ani #porovnani —
+     naměřeno 0 ze 3 prvků a 3 % vykonaných bajtů — takže tam oba
+     skripty byly 28,7 kB po gzipu pro nic.
+     Z předlohy jsou proto zahozeny a data.html si je dostane tady.
+     Chtěl jsem je nejdřív vyhodit z obou a málem jsem rozbil ten stín:
+     moje srovnání „s ním a bez něj" porovnávalo text a počet prvků, ale
+     stín je JEN PŘEPNUTÍ TŘÍDY, takže o něm mlčelo. Shodilo to až
+     scripts/test-skripty-na-strance.mjs, které hlídá, že stránka
+     nenačítá knihovnu, kterou nikdo nevolá — a po mém zásahu ohlásilo,
+     že PK_CENY nevolá na obou stránkách nikdo. Razítka ?v= doplní
+     scripts/orazitkuj-verze.mjs, proto se tu nepíšou. */
+  const PRO_DATA = ['js/min/ceny.js', 'js/min/porovnani.js'];
+  const pata = (() => {
+    let p = sablona.slice(sablona.indexOf('<footer'));
+    const znacky = PRO_DATA
+      .filter((f) => !p.includes(f))
+      .map((f) => `<script src="${f}" defer></script>\n`).join('');
+    if (!znacky) return p;
+    if (!p.includes('</body>')) {
+      console.error('::error::pata z moje-data.html nemá </body> — skripty pro data.html se nemají kam vložit');
+      process.exit(1);
+    }
+    return p.replace('</body>', znacky + '</body>');
+  })();
 
   /* Kolik inzerátů od majitelů je ve statickém odrazu. Čte se, ne
      hádá: až jich nebude nula, musí to být na stránce vidět. */

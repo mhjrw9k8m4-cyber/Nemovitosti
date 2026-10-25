@@ -2128,8 +2128,11 @@ pět sabotáží, všechny chycené). Jedna z nich **neprošla hned**: kontrola
 na doporučení se ptala celého `js/main.js`, jestli v něm někde stojí
 `MODEL.spravniCena(d)` — a to je splněné i po vyřazení podmínky
 z bodování, protože výraz zůstal na tom druhém místě. Kontrola se teď
-dívá do **vyříznutého těla** `demand()` a zvlášť do výběru
+dívá do **vyříznutého těla** té bodovací funkce a zvlášť do výběru
 `hotIds`; po té opravě sabotáž padá na obou.
+(Od 25. 10. se ta funkce jmenuje `poptavka` a žije v `js/ceny.js` —
+skóre se počítá při sestavení, viz oddíl 162 v `docs/optimalizace.md`.
+Kontrola šla za ní; dokud mířila na `js/main.js`, měřila by prázdno.)
 
 Zkoušky navíc hlásí, kolik toho přečetly (204 nabídek, 365 řádků), a že
 **bez té výjimky by varovala nebo slevila většina** (151 z 204) — kdyby

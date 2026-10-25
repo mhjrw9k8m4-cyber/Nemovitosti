@@ -21,7 +21,17 @@
      telefonu přetéká 460/348 a o tom, že pokračuje, nedával znát nic.
      Třetí kopie těch deseti řádků kvůli tomu vznikat nemusí: stačí je
      spustit dřív, než se modul ukončí. (Druhá kopie je rsStin
-     v js/main.js a důvod, proč se opakuje, je popsaný níž.) */
+     v js/main.js a důvod, proč se opakuje, je popsaný níž.)
+
+     A PROTO JE TENHLE SOUBOR PRÁVĚ NA DVOU STRÁNKÁCH, ne na třech.
+     Brala si ho i moje-data.html, kde není ani #porovnani, ani
+     .dt-tab-obal — tedy ani jeden ze tří prvků, na které tenhle modul
+     sahá. Naměřeno 3 % vykonaných bajtů z 8,1 kB a vykreslení s ním
+     i bez něj dalo týž text a týž počet prvků; na porovnani.html se
+     rozdíl ukázal okamžitě (154 prvků proti 101 a stránka zůstala
+     stát na „Načítám uložené pozemky…"). Je proto odtamtud zahozen
+     a 3,2 kB po gzipu s ním.
+     Že se to nevrátí, hlídá scripts/test-vaha-stranky.mjs. */
   function stinPosuvu(el) {
     if (!el) return;
     var prepni = function () {

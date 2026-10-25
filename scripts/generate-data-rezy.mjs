@@ -15,6 +15,11 @@
    přečíst i řez: stejná hlavička, stejné pole „opportunities", stejná
    pole u nabídky (viz data/pole.json). Jediný rozdíl je „rez", kde
    stojí, čí výběr to je — aby se řez nedal splést s celkem.
+   Výjimku má jeden jediný řez: data/mapa.json, který stahuje úvodní
+   stránka. Ten pole `url` nenese (adresu inzerátu úvod nepoužívá)
+   a navíc nese `dm`, skóre pro pořadí výpisu. Oboje stojí u něj
+   napsané v jeho vlastním poli `popis` a oboje má svůj důvod o kus
+   níž; kdo čte řezy okresů, na ně nenarazí.
 
    ŘEZ JE TO, CO WEB UKAZUJE, NE DOSLOVNÝ VÝŘEZ SOUBORU. Z celku se
    odstraní duplicity — tentýž pozemek vypsaný dvakrát — a to TOUŽ
@@ -304,6 +309,26 @@ export async function spust() {
      v prohlížeči, a tenhle soubor leží na serveru i přes noc.
      Hlídá to scripts/test-data-rezy.mjs znak za znakem. */
   const proMapu = bezDuplicit;
+  /* SKÓRE PRO POŘADÍ VÝPISU SE POČÍTÁ TADY, NE V TELEFONU.
+     Úvodní stránka řadí výchozí pořadí „Doporučené" podle skóre, které
+     pro každou nabídku sahá po odhadu ceny z okolí. Naměřeno v prohlížeči
+     na telefonu 390 px: 3 899 volání odhadu pro 1 925 různých pozemků na
+     JEDNO vykreslení — a na obrazovce je 24 karet. Podle profilu to byla
+     nejdražší položka startu.
+     Jde to předpočítat, protože skóre je funkcí JEN DAT: prohlížeč staví
+     model jako postav(DATA, null, PRESNOST), kde DATA je tenhle řez po
+     odstranění duplicit (a ten už je bez nich) a PRESNOST je `chyba`
+     o pár řádků níž. Nic od uživatele do výpočtu nejde. Stavím tedy model
+     z týchž tří vstupů a projedu ho přes všechny nabídky.
+     FORMULE JE JEDNA, A V js/ceny.js (poptavka). Opsat ji sem by znamenalo
+     druhou kopii, a ty se v tomhle repozitáři rozešly vždycky — proto
+     existuje js/ceny.js. Že se číslo v datech rovná tomu, co spočítá
+     prohlížeč, přeměřuje scripts/test-poptavka.mjs. */
+  const modelMapy = CENY.postav(proMapu, null, chybaModelu);
+  if (!modelMapy || typeof modelMapy.poptavka !== 'function') {
+    console.error('::error::cenový model nedal poptavka() — úvodní stránka by si skóre musela počítat sama');
+    process.exit(1);
+  }
   const mapaVstup = Object.assign({}, hlavicka, {
     sources: celek.sources,
     rez: { uroven: 'mapa', nazev: null, soubor: 'data/mapa.json', pocet: proMapu.length },
@@ -314,10 +339,16 @@ export async function spust() {
     chyba: chybaModelu,
     popis: 'Co stahuje úvodní stránka: tytéž nabídky jako data/opportunities.json '
       + 'bez duplicit a bez pole url (adresu inzerátu úvod nepoužívá). Adresy jsou '
-      + 'v řezech okresů.',
+      + 'v řezech okresů. Navíc je u každé nabídky `dm` — skóre, podle kterého se '
+      + 'řadí výchozí pořadí výpisu; počítá ho js/ceny.js (poptavka) z týchž dat, '
+      + 'takže si ho lze přepočítat.',
     opportunities: proMapu.map((o) => {
       const c = Object.assign({}, o);
       delete c.url;
+      /* `dm` = skóre pro pořadí výpisu, viz výš. Je JEN v tomhle řezu:
+         jinde ho nikdo nečte a v řezech okresů by to byla data, která
+         nikomu nic neříkají. */
+      c.dm = modelMapy.poptavka(o);
       return c;
     }),
   });

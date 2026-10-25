@@ -77,11 +77,25 @@ if (doubravnik) {
 // Tohle je jádro té chyby. Skóre se čte přímo z kódu, ať test měří to,
 // co web opravdu dělá.
 const main = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
-const telo = main.slice(main.indexOf('function demand(d)'), main.indexOf('var LIST_LIMIT'));
+/* TĚLO SE ČTE Z js/ceny.js, NE Z js/main.js. Bodovací funkce se 25. 10.
+   přestěhovala do cenového modelu (poptavka), protože skóre počítá
+   sestavení do dat — viz docs/optimalizace.md, oddíl 162. Dokud tahle
+   kontrola mířila na main.js, vyřízla si PRÁZDNO: dvě ze tří podmínek
+   pak hlásily, že v kódu nejsou, a ta třetí („už se nepočítá čím
+   levnější za metr, tím výš") prošla naprázdno, protože hledá
+   NEPŘÍTOMNOST vzorce — a ta je v prázdném textu splněná vždycky.
+   Takhle se zkouška rozejde s kódem beze slova.
+   Že se tělo opravdu našlo, se proto hlídá zvlášť a jako první. */
+const ceny = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');
+const zacTelo = ceny.indexOf('function poptavka(d, o)');
+const telo = zacTelo >= 0 ? ceny.slice(zacTelo, zacTelo + 2600) : '';
+pravda('tělo bodovací funkce se v js/ceny.js našlo',
+  /podOdhadem >= MEZ_SLEVA/.test(telo),
+  'bez něj by kontroly níž měřily prázdno — přestěhovala se poptavka()?');
 pravda('skóre už nepočítá „čím levnější za metr, tím výš"',
-  !/\(900\s*-\s*perM2\)/.test(telo),
+  telo.length > 100 && !/\(900\s*-\s*perM2\)/.test(telo),
   'vrátil se vzorec (900 − cena za m²) / 18 — ten vystrkuje podíly nahoru');
-pravda('a opírá se o odhad proti srovnatelným pozemkům', /MODEL\.odhad\(d\)/.test(telo));
+pravda('a opírá se o odhad proti srovnatelným pozemkům', /\bo\.podleVelikosti\b/.test(telo));
 pravda('pochybné nabídky body nedostanou', /!o\.pochybna/.test(telo));
 
 // Spočítáme skóre stejně jako web a zkontrolujeme, co vyjde nahoru.
@@ -145,9 +159,19 @@ pravda('karta u pochybné ceny nenabízí slevu, ale ověření',
 /* Hlídá se PRAVIDLO, ne doslovné znění řádku. Dřív tu byl přesný opis
    a spadlo to ve chvíli, kdy se výběr ZPŘÍSNIL (přibyly i odhady, kterým
    sami nevěříme) — tedy když se web zlepšil. Test má chytat opak. */
-const filtrSpicky = (main.match(/filter\(function \(d\) \{ var o = MODEL \? MODEL\.odhad\(d\) : null; return ![^;]+; \}\)/) || [''])[0];
+/* VÝBĚR ŠPIČKY SE OD 25. 10. NEFILTRUJE, ALE PROHLEDÁVÁ. Dřív se
+   filtroval celý viditelný výpis a teprve pak se z něj bral první —
+   což znamenalo odhad ceny pro všech dva tisíce nabídek kvůli JEDNÉ.
+   Teď se řadí podle skóre a odhad se vytáhne odshora, dokud jedna
+   neprojde. Hlídá se tedy pořád PRAVIDLO, jen v těle toho hledání:
+   obě podmínky tam musí být, a jak se jmenuje pomocná proměnná, je
+   jedno (opis doslovného řádku už jednou spadl po správné změně). */
+const kotvaSpicky = main.indexOf('var hotIds = {};');
+const teloSpicky = kotvaSpicky >= 0 ? main.slice(kotvaSpicky, kotvaSpicky + 2000) : '';
+pravda('tělo výběru špičky se našlo', /hotIds\[/.test(teloSpicky),
+  'bez něj by kontrola níž měřila prázdno');
 pravda('a štítek „Doporučujeme" na pochybnou nabídku nesedne',
-  /o\.pochybna/.test(filtrSpicky),
+  /\.pochybna \|\| \w+\.nejisty/.test(teloSpicky) && /spravniCena\(\w+\)/.test(teloSpicky),
   'doporučit a zároveň varovat u téhož pozemku nejde');
 const radce = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
 pravda('rádce u pochybné ceny varuje, ne chválí',

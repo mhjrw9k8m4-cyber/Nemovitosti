@@ -426,6 +426,12 @@ jobs:
       - name: Vstup cenového modelu (malý soubor dá totéž co velký)
         run: node scripts/test-model-vstup.mjs
 
+      - name: Skóre pro pořadí výpisu (v datech je totéž, co spočítá prohlížeč)
+        run: node scripts/test-poptavka.mjs
+
+      - name: Váha stránky (skript, který na stránce nemá na co sáhnout)
+        run: node scripts/test-vaha-stranky.mjs
+
       - name: Jeden styl (nadpisy a textura z palety)
         run: node scripts/test-jeden-styl.mjs
 
