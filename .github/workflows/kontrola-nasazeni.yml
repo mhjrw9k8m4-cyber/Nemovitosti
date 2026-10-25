@@ -16,7 +16,20 @@ name: Kontrola nasazeného webu
 on:
   schedule:
     - cron: '35 */6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      # CVIČENÍ OPRAVNÉHO KROKU, jen pro ruční běh. Opravný krok níž se
+      # při běžném běhu nikdy nespustí (data venku jsou svěží), takže
+      # jediná věc, kterou falešné API dokázat nemůže, zůstávala
+      # neprokázaná: že GITHUB_TOKEN s actions: write robota opravdu
+      # vyvolá. Tímhle vstupem se strop na stáří dat posune tak nízko,
+      # že kontrola nález „stará data" vyrobí — a opravný krok se
+      # provede naostro. Robot dat jede čtyřikrát denně, takže jeho
+      # jedno spuštění navíc nic nerozbije.
+      strop-stare-hodin:
+        description: 'Cvičení opravy: strop na stáří dat v hodinách (prázdné = běžný běh)'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -45,6 +58,8 @@ jobs:
       # `--vystup` je strojově čitelný seznam nálezů (kódy). Čte ho
       # sebeoprava v předposledním kroku; text výpisu je pro člověka.
       - name: Zkontrolovat, co je venku
+        env:
+          PK_DATA_STARE_HODIN: ${{ inputs.strop-stare-hodin }}
         run: node scripts/kontrola-nasazeni.mjs --vystup nalezy.json
 
       # Web stojí na Supabase, a ten se taky může rozejít s tím, co web
@@ -92,8 +107,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/sebeoprava-nasazeni.mjs --nalezy nalezy.json --opravdu
 
+      # PŘI CVIČENÍ OPRAVY REPORTÉR MLČÍ. Nález „stará data" je v tom
+      # běhu VYROBENÝ, takže úkol pro člověka by lhal — a hlásič, který
+      # jednou zalže, se přestane čítat. Při běžném běhu (schedule i
+      # ruční bez vstupu) se hlásí jako dřív.
       - name: Ohlásit selhání
-        if: failure()
+        if: failure() && inputs.strop-stare-hodin == ''
         uses: ./.github/actions/ohlas-selhani
         with:
           jmeno: Kontrola nasazeného webu
