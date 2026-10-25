@@ -10734,3 +10734,120 @@ protože vzorky v ní jsou teď **skutečná jména souborů**. To byla totiž
 ta hlubší příčina: vzorek `rss.xml`, který v repozitáři nikdy nebyl,
 potvrzoval vzor, který nesedí na nic. **Zkouška psaná z vymyšlených
 jmen umí potvrdit cokoli.**
+
+## 159. Dvě měření místo jednoho dojmu — a ta jediná nevyzkoušená řádka *25. 10.*
+
+Dvě slabiny sebeopravy, obě naměřené při cvičení z oddílu 157.
+
+### 159a. „Po opravě neprošla sada" je dojem, ne diagnóza
+
+Pravidlo 2 říká: oprava se před nahráním dokazuje celou rychlou sadou.
+Když sada neprojde, oprava jde do koše. Jenže automat uměl říct jen
+`po opravě neprošla rychlá sada` — a to zní jako **„oprava je vadná"**.
+Dvakrát mě to poslalo hledat vadu do generátorů, kde žádná nebyla:
+jednou padala zkouška kvůli chybějícím závislostem v prostředí.
+
+Jsou to **dvě úplně jiné situace**:
+
+| Co se stalo | Co to znamená | Co má automat říct |
+|---|---|---|
+| po opravě padá něco, co **předtím** neprošlo | oprava je v pořádku, červenou dělá něco jiného | jmenovitě: *totéž padalo i PŘED opravou* |
+| po opravě padá něco **nového** | vada v generátorech | *oprava sama rozbila: …* |
+
+Automat proto teď pouští sadu **dvakrát**: před opravou a po ní, a
+porovná **jména** padlých zkoušek (vyčte je z běžce sady). Stojí to
+dvě minuty a dává diagnózu místo dojmu. Bonus: když byla sada červená
+před opravou a po ní zelená, napíše se to **do commitu** — oprava
+spravila i to, co padalo před ní.
+
+**Co se vědomě NEUDĚLALO:** automat v tom druhém případě opravu
+nenahraje, i když je dokazatelně v pořádku. Zvažoval jsem to (odstranil
+by to jeden ze dvou problémů a zmenšil diff pro člověka), ale pravidlo
+2 je bezpečnostní pravidlo: **nahrát lze jen dokázanou opravu.**
+Automat, který commituje do červeného, je o jedno pravidlo slabší — a
+cena je malá, protože červená tam zůstává tak jako tak.
+
+Cvičení F to měří: vyrobí se **obojí naráz** — rozchod v odvozeném
+souboru (umí opravit) a nepojmenovaná barva s odstupem mimo slovník
+v `css/styles.css` (ruční zdroj, neumí a nemá). Automat musí
+nenahrát, **poznat**, že totéž padalo už předtím, a **jmenovat**
+konkrétní zkoušky.
+
+### 159b. Řádka, která opravu provede, nebyla nikdy spuštěná
+
+Celý řetěz sebeopravy nasazení (oddíl 155) se dal změřit bez sítě — až
+na jedno místo: `POST …/actions/workflows/update-data.yml/dispatches`.
+Ta **jediná** řádka tedy byla jediná nevyzkoušená, a zrovna ona tu
+opravu dělá. Tabulka stavů dokazovala, KDY se má jednat; nic
+nedokazovalo, že se jedná **správně**.
+
+Proto `PK_GITHUB_API`: zkouška si postaví falešné API na tomhle stroji
+a změří pět věcí — že odejde POST na správnou cestu, že v těle jde
+správná větev, že požadavek nese token, verzi API i vlastní jméno, že
+se stav robota opravdu **čte z API** (dávný běh ⇒ „pustit"), a že se
+**nepovedené spuštění nespolkne** (403 ⇒ chyba, ne tiché „hotovo").
+
+**Omezení na `127.0.0.1`/`localhost` není kosmetika.** Bez něj by se
+dala proměnnou v prostředí odklonit hlavička s tokenem na cizí stroj.
+Cokoli jiného se odmítne, a nahlas — a zkouška to měří taky.
+
+Sabotáž, čtyři pokusy, čtyři různé nálezy: pevná větev v těle místo
+skutečné, překlep v cestě, spolknutí chyby 403, vypuštěná hlavička
+s verzí API. Každý padl na té kontrole, která ho má chytat.
+
+### 159c. A cvičení málem potvrdilo samo sebe
+
+Kopie pro cvičení se dělá klonem, takže vidí jen **commity**. Při
+vývoji to mate: změníš automat, pustíš cvičení a ono cvičí starou
+verzi. Stalo se to hned — cvičení F hlásilo, že automat neumí rozlišit
+„padalo to už předtím", přitom to umělo, jen to nebylo commitnuté.
+Rozpracované skripty se proto do kopie dokopírují a **je to vidět na
+prvním řádku** výpisu, aby nikdo nevydával cvičení pracovní verze za
+cvičení toho, co je v repozitáři. V CI je strom čistý, takže se
+nekopíruje nic a na prvním řádku stojí, který commit se cvičí.
+
+### 159d. A pak se automat pustil sám v sobě — 39× naráz
+
+**Tohle je nejdůležitější nález této dvojice, a způsobil jsem ho já
+tou opravou výš.**
+
+Řetěz, který nikdo neviděl, protože každý jeho krok je sám o sobě
+rozumný:
+
+1. automat při dokazování pouští **celou rychlou sadu**,
+2. v té sadě je `test-sebeoprava.mjs`, která pro svou práci pouští
+   **automat** (měří, že na cizí větvi nic neudělá),
+3. ta zkouška brala prostředí, jak přišlo — takže když běžela uvnitř
+   cvičení (kde `SEBEOPRAVA_VETEV` nastavená je), prošel i případ „bez
+   jména domácí větve" jako **platný běh**,
+4. vnitřní automat se tedy rozjel na plno: generátory, sada… a v té
+   sadě zase ta zkouška.
+
+**Proč to nikdy nevybuchlo dřív:** dokud se sada pouštěla teprve PO
+generátorech, zastavilo vnitřní běh pravidlo o **čistém stromu** —
+generátory už do stromu zapsaly, takže vnitřní automat se korektně
+vzdal. Byla to **náhodná pojistka**, ne pravidlo. Měření PŘED opravou
+(159a) běží nad čistým stromem, takže ta náhoda padla — a automatů
+běželo **39 naráz** (naměřeno `ps`). Nic nespadlo; jen to rostlo.
+
+**Oprava je pravidlo 8: NIKDY SAMA V SOBĚ.** Automat nese prostředím
+značku `SEBEOPRAVA_UVNITR` do **všech** podřízených procesů (generátory
+i obě měření), a je to **první** pravidlo rozhodovací tabulky — před
+větví, před vypínačem, před čímkoli. Musí být první, protože všechna
+ostatní mohou projít, a pak už se pustí generátory a sada, tedy právě
+to, co smyčku žene.
+
+Změřeno třemi způsoby:
+
+* spuštěním: se značkou automat **nedělá nic** a řekne proč,
+* ze kódu: značka jde do **všech** tří podřízených běhů (sabotáž
+  u jednoho z nich nález vrátí),
+* **časem**: cvičení si u každého běhu automatu pamatuje, jak dlouho
+  trval, a utnutý běh je **nález**, ne „pomalý stroj". Automat, který
+  se pustí sám v sobě, totiž neskončí chybou — **roste**, a to je
+  jediná vada, kterou nepozná nic jiného než hodiny.
+
+A zkouška se opravila taky: **prostředí si teď vyprazdňuje, ne dědí.**
+Dokud brala proměnné, jak přišly, měřila něco jiného, než říká — a to
+je v tomhle repozitáři pořád tentýž vzorec: *hlídač, který měří jiný
+stav, než si myslí.*

@@ -12,6 +12,7 @@
    nejedná) se měří spuštěním skriptu.
    ================================================================== */
 import { spawn } from 'node:child_process';
+import http from 'node:http';
 import { writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -118,6 +119,80 @@ writeFileSync(souborNalezu, JSON.stringify({ kody: ['stara-data'] }));
   pravda('rozbitý soubor nálezů se přizná a nejedná se',
     v.kod === 0 && /není platný JSON/.test(v.text) && v.text.includes('rozhodnutí: nic'),
     `kód ${v.kod}; výpis: ${v.text.trim().split('\n').slice(-3).join(' / ')}`);
+}
+
+/* ---- a TA JEDNA ŘÁDKA, KTERÁ OPRAVU OPRAVDU PROVEDE ------------- */
+/* Celý řetěz sebeopravy nasazení se dal změřit bez sítě — až na jedno
+   místo: POST na …/dispatches. Ta jediná řádka tedy byla jediná
+   nevyzkoušená, a zrovna ona tu opravu dělá. Měří se proti FALEŠNÉMU
+   API na tomhle stroji (PK_GITHUB_API); kam jinam než na tenhle stroj
+   to přesměrovat nejde, aby se nedala hlavička s tokenem odklonit. */
+{
+  const PORT = 8420;
+  const prijate = [];
+  let odpovedNaDispatch = 204;
+  const api = http.createServer((req, res) => {
+    let telo = '';
+    req.on('data', (k) => { telo += k; });
+    req.on('end', () => {
+      prijate.push({ metoda: req.method, cesta: req.url, hlavicky: req.headers, telo });
+      if (/\/runs\?/.test(req.url)) {
+        /* Robot dojel dávno → rozhodnutí musí být „pustit". */
+        const kdy = new Date(Date.now() - 400 * 60000).toISOString();
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ workflow_runs: [{ status: 'completed', updated_at: kdy }] }));
+        return;
+      }
+      if (/\/dispatches$/.test(req.url)) {
+        res.writeHead(odpovedNaDispatch, odpovedNaDispatch === 204 ? {} : { 'content-type': 'text/plain' });
+        res.end(odpovedNaDispatch === 204 ? undefined : 'nemáš právo');
+        return;
+      }
+      res.writeHead(404); res.end('ne');
+    });
+  });
+  await new Promise((r) => api.listen(PORT, '127.0.0.1', r));
+  const prostredi = {
+    PK_GITHUB_API: `http://127.0.0.1:${PORT}`,
+    GITHUB_REPOSITORY: 'nekdo/nemovitosti',
+    GITHUB_TOKEN: 'falesny-token',
+    GITHUB_REF_NAME: 'nejaka-vetev',
+  };
+
+  const v = await spust(['--nalezy', souborNalezu, '--opravdu'], prostredi);
+  const dispatch = prijate.find((p2) => /\/dispatches$/.test(p2.cesta));
+  pravda('oprava se opravdu odešle — a je to POST na dispatches robota dat',
+    !!dispatch && dispatch.metoda === 'POST'
+      && dispatch.cesta === `/repos/nekdo/nemovitosti/actions/workflows/${ROBOT}/dispatches`,
+    `přijato: ${JSON.stringify(prijate.map((p2) => p2.metoda + ' ' + p2.cesta))}`);
+  pravda('v těle jde větev, nad kterou se má robot pustit',
+    !!dispatch && JSON.parse(dispatch.telo || '{}').ref === 'nejaka-vetev',
+    `tělo: ${dispatch ? dispatch.telo : '(nic)'}`);
+  pravda('a požadavek nese token, verzi API i vlastní jméno',
+    !!dispatch && dispatch.hlavicky.authorization === 'Bearer falesny-token'
+      && dispatch.hlavicky['x-github-api-version'] === '2022-11-28'
+      && /parcelaka/.test(dispatch.hlavicky['user-agent'] || '')
+      && /application\/json/.test(dispatch.hlavicky['content-type'] || ''),
+    `hlavičky: ${dispatch ? JSON.stringify(dispatch.hlavicky) : '(nic)'}`);
+  pravda('stav robota se čte z API (a dávný běh znamená „pustit")',
+    v.kod === 0 && /PUŠTĚNO/.test(v.text) && /400 min/.test(v.text),
+    `kód ${v.kod}; ${v.text.trim().split('\n').slice(-3).join(' / ')}`);
+
+  /* A DRUHÁ POLOVINA: nepovedené spuštění se NESMÍ spolknout, jinak by
+     to vypadalo, že se oprava provedla — a úkol pro člověka by chyběl. */
+  prijate.length = 0;
+  odpovedNaDispatch = 403;
+  const z = await spust(['--nalezy', souborNalezu, '--opravdu'], prostredi);
+  pravda('nepovedené spuštění je chyba, ne tiché „hotovo"',
+    z.kod === 1 && /nepodařilo pustit/.test(z.text) && /403/.test(z.text),
+    `kód ${z.kod}; ${z.text.trim().split('\n').slice(-2).join(' / ')}`);
+
+  /* A pojistka na samotné přesměrování: cizí adresa se odmítne. */
+  const c = await spust(['--nalezy', souborNalezu], { ...prostredi, PK_GITHUB_API: 'https://zly.example' });
+  pravda('přesměrování API na cizí stroj se odmítne (token se nikam neodkloní)',
+    c.kod === 1 && /jen na.*tenhle stroj/s.test(c.text),
+    `kód ${c.kod}; ${c.text.trim().split('\n').slice(-2).join(' / ')}`);
+  api.close();
 }
 
 /* ---- a že se pouští opravdu jen robot dat ----------------------- */

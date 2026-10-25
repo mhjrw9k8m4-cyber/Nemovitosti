@@ -23,7 +23,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { rozhodni, patriGeneratorum, zpravaOprav, ZNACKA, VYPINAC, PATRI_GENERATORUM } from './sebeoprava.mjs';
+import { rozhodni, patriGeneratorum, zpravaOprav, padleZkousky, ZNACKA, VYPINAC, UVNITR, PATRI_GENERATORUM } from './sebeoprava.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -122,9 +122,19 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
 
 /* ---- 4) výkonná část: odmítnutí NEJDE do repozitáře -------------- */
 {
+  /* PROMĚNNÉ SE VYPRÁZDNÍ, NE DĚDÍ. Tahle zkouška pouští opravdový
+     automat, a dokud brala prostředí, jak přišlo, měřila něco jiného,
+     než říká: při běhu uvnitř cvičení (kde je SEBEOPRAVA_VETEV
+     nastavená) prošel i případ „bez jména domácí větve" jako platný
+     běh — a automat se rozjel na plno, včetně sady, v níž je tahle
+     zkouška. Tedy sám v sobě; naměřeno 39 běhů naráz. Značku UVNITR
+     posílá automat svým dětem sám, ale zkouška si to nesmí hlídat
+     cizí pojistkou: měří se zadaný stav, ne zdědený. */
   const pust = (env) => {
     const r = spawnSync('node', [path.join(KOREN, 'scripts', 'sebeoprava.mjs')],
-      { cwd: KOREN, encoding: 'utf8', env: { ...process.env, ...env } });
+      { cwd: KOREN,
+        encoding: 'utf8',
+        env: { ...process.env, SEBEOPRAVA_VETEV: '', SEBEOPRAVA_VETEV_AKTUALNI: '', [UVNITR]: '', ...env } });
     return { out: String(r.stdout || '') + String(r.stderr || ''), kod: r.status };
   };
   const stav = () => spawnSync('git', ['-C', KOREN, 'status', '--porcelain'],
@@ -141,6 +151,25 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
   const b = pust({});
   pravda('bez jména domácí větve taky nic a taky nahlas',
     b.kod === 0 && /::warning::/.test(b.out) && stav() === pred, b.out.slice(0, 160));
+
+  /* PRAVIDLO 8, ZMĚŘENÉ SPUŠTĚNÍM. Automat v dokazování pouští celou
+     sadu, a v sadě je tahle zkouška, která pouští automat. Bez značky
+     v prostředí se automat pustí sám v sobě a roste exponenciálně
+     (naměřeno 39 běhů naráz). Musí tedy stačit značka — a nic víc. */
+  const c = pust({ SEBEOPRAVA_VETEV: 'domaci', SEBEOPRAVA_VETEV_AKTUALNI: 'domaci', [UVNITR]: '1' });
+  pravda('se značkou „běžím uvnitř sebe" automat nedělá NIC (pravidlo 8)',
+    c.kod === 0 && /už běží výš v řetězu/.test(c.out) && stav() === pred,
+    `kód ${c.kod}; výpis: ${c.out.split('\n').filter(Boolean).slice(-2).join(' | ')}`);
+
+  /* A že tu značku opravdu posílá dál — jinak by pravidlo platilo jen
+     na papíře. Hledá se v kódu, protože podřízený proces to jinak
+     nezjistí, aniž by se celý běh pustil. */
+  const kod = readFileSync(path.join(KOREN, 'scripts', 'sebeoprava.mjs'), 'utf8');
+  const spusteni = [...kod.matchAll(/spawnSync\('node',[\s\S]{0,120}?\{[^}]*\}/g)].map((m) => m[0]);
+  const bezZnacky = spusteni.filter((u) => !/env:\s*prostrediDeti/.test(u));
+  pravda(`a značku posílá do VŠECH podřízených běhů (${spusteni.length})`,
+    spusteni.length >= 3 && bezZnacky.length === 0,
+    `bez značky: ${bezZnacky.length} z ${spusteni.length} — takový běh by se mohl pustit sám v sobě`);
 }
 
 /* ---- 5) co musí stát v workflow a ve skriptu --------------------- */
@@ -173,6 +202,31 @@ const se = (zmeny) => rozhodni({ ...zaklad, ...zmeny });
   pravda(`vypínač je jediný soubor (${VYPINAC}) a je napsaný v nápovědě`,
     skript.includes(VYPINAC) && /VYPÍNAČ/.test(skript));
   pravda('nikdy nepushuje silou', !/--force|-f\b.*push|push.*--force/.test(skript));
+}
+
+/* ---- vyčtení padlých zkoušek: parser SVÁZANÝ S TÍM, KDO TISKNE --- */
+/* Na tomhle jednom vzorku stojí rozdíl mezi „oprava to rozbila" a
+   „bylo to rozbité už předtím". Zrádné je, že při změně znění souhrnu
+   by parser tiše vracel prázdno a nic by nespadlo — automat by jen
+   mlčky přišel o diagnózu. Proto se měří OBOJE: že parser rozumí
+   skutečnému znění, a že běžec to znění pořád tiskne. */
+{
+  const vzorek = '\n::error::Rychlá sada: padlo 2 z 131 — test-oprav.mjs, test-verze.mjs';
+  const r = padleZkousky(vzorek);
+  pravda('z výpisu běžce se vyčtou jména padlých zkoušek',
+    r.length === 2 && r[0] === 'test-oprav.mjs' && r[1] === 'test-verze.mjs',
+    JSON.stringify(r));
+  pravda('zelený výpis nedá žádné jméno', padleZkousky('Rychlá sada: 131/131 prošlo').length === 0);
+  pravda('a prázdný vstup nespadne', padleZkousky(undefined).length === 0);
+
+  /* SVÁZÁNÍ S PRODUCENTEM: tenhle tvar tiskne scripts/zkousky.mjs.
+     Kdyby ho přepsal, parser přestane rozumět — a tohle to řekne. */
+  const bezec = readFileSync(path.join(KOREN, 'scripts', 'zkousky.mjs'), 'utf8');
+  pravda('běžec sady pořád tiskne souhrn ve tvaru, kterému parser rozumí',
+    /padlo \$\{[^}]+\} z \$\{[^}]+\} — /.test(bezec),
+    've scripts/zkousky.mjs se nenašlo „padlo N z M — " — parser padlých zkoušek'
+    + ' by tiše vracel prázdno a automat by přišel o rozdíl mezi'
+    + ' „oprava to rozbila" a „bylo to rozbité už předtím"');
 }
 
 /* ---- a že se automat opravdu CVIČÍ, ne jen vykládá ------------- */

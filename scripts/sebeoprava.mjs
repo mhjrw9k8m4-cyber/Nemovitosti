@@ -32,6 +32,14 @@
         z kódu; cizí větev ani pull request se neopravuje.
      6. VYPÍNAČ JE VŽDY K DISPOZICI. Soubor .github/SEBEOPRAVA-VYPNUTA
         v repozitáři zastaví všechno bez debaty a bez hledání v kódu.
+     8. NIKDY SAMA V SOBĚ. Automat při dokazování pouští celou rychlou
+        sadu — a v té sadě je zkouška, která pro svou práci pouští
+        AUTOMAT (měří, že na cizí větvi nic neudělá). Dokud se sada
+        pouštěla až po generátorech, zastavilo vnitřní běh pravidlo
+        o čistém stromu; jakmile se přidalo měření PŘED opravou (nad
+        čistým stromem), ta pojistka padla a automat se začal pouštět
+        sám v sobě — naměřeno 39 běhů naráz. Proto značka v prostředí:
+        každý podřízený proces ji dostane a automat s ní nic nedělá.
      7. ŽÁDNÁ TAJNÁ OPRAVA. Co se opravilo, stojí v commitu se značkou
         „[sebeoprava]" a s výčtem souborů. Co se neopravilo a proč, se
         vypíše jako `::warning::` — i když to skončí úspěchem.
@@ -50,6 +58,12 @@ import { sklon } from './text.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const ZNACKA = '[sebeoprava]';
+/* ZNAČKA „BĚŽÍM UVNITŘ SEBE". Nese se prostředím do všech podřízených
+   procesů (generátory i obě měření sadou). Jediný její úkol je, aby
+   automat, kterého si zkouška v sadě pustí, poznal, že je uvnitř
+   jiného běhu — a nedělal nic. Bez ní se automat pouští sám v sobě
+   a roste exponenciálně. */
+export const UVNITR = 'SEBEOPRAVA_UVNITR';
 export const VYPINAC = '.github/SEBEOPRAVA-VYPNUTA';
 
 /* KOMU PATŘÍ KTERÝ SOUBOR. Vlevo to, co generátory v řetězu
@@ -95,11 +109,29 @@ export function zpravaOprav(zmenene) {
     + ' a před nahráním prošla celá rychlá sada.\n';
 }
 
+/* KTERÉ ZKOUŠKY PADLY — vyčteno z výpisu běžce sady. Na tom stojí celý
+   rozdíl mezi „moje oprava to rozbila" a „bylo to rozbité už předtím",
+   takže to NESMÍ být schované uvnitř běhu: kdyby běžec změnil znění
+   svého souhrnu, parser by tiše vracel prázdno a automat by o ten
+   rozdíl přišel, aniž by cokoli spadlo. Je to tedy vyvedené ven a
+   změřené — i proti SKUTEČNÉMU znění, které běžec tiskne
+   (scripts/test-sebeoprava.mjs). */
+export function padleZkousky(vypis) {
+  const m = String(vypis || '').match(/padlo \d+ z \d+ — ([^\n]+)/);
+  return m ? m[1].split(',').map((t) => t.trim()).filter(Boolean) : [];
+}
+
 /* ROZHODNUTÍ ODDĚLENÉ OD VYKONÁNÍ. Takhle se dá každé pravidlo
    vyzkoušet bez gitu, bez sítě a bez CI — a zkouška pak nemusí věřit
    tomu, že „se to asi zachová správně". */
 export function rozhodni(stav) {
   const s = stav || {};
+  /* PRVNÍ ZE VŠECH pravidel: uvnitř jiného běhu se nedělá nic. Musí být
+     první, protože všechna ostatní pravidla mohou projít — a pak už by
+     se pustily generátory a sada, tedy právě to, co smyčku žene. */
+  if (s.uvnitr) {
+    return { opravit: false, duvod: `sebeoprava už běží výš v řetězu (${UVNITR}) — podřízený běh se nedělá` };
+  }
   if (!s.povolenaVetev) return { opravit: false, duvod: 'není řečeno, která větev je domácí (SEBEOPRAVA_VETEV)' };
   if (s.vetev !== s.povolenaVetev) {
     return { opravit: false, duvod: `větev „${s.vetev}" není domácí „${s.povolenaVetev}"` };
@@ -153,24 +185,40 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const povolena = process.env.SEBEOPRAVA_VETEV || '';
   const zpravaHEAD = git('log', '-1', '--pretty=%s%n%b');
   const vypinac = existsSync(path.join(KOREN, VYPINAC));
+  const uvnitr = !!process.env[UVNITR];
+  /* Prostředí pro VŠECHNY podřízené procesy: značka, že výš v řetězu
+     už jeden automat běží. */
+  const prostrediDeti = { ...process.env, [UVNITR]: '1' };
 
   /* Dřív než se pustí generátory: pravidla, která o nich nic nepotřebují. */
-  const predem = rozhodni({ vetev, povolenaVetev: povolena, vypinac, zpravaHEAD, zmenene: ['x.html'] });
+  const predem = rozhodni({ vetev, povolenaVetev: povolena, vypinac, uvnitr, zpravaHEAD, zmenene: ['x.html'] });
   if (!predem.opravit) vzdat(predem.duvod);
 
   /* Strom musí být čistý, jinak by se do opravy přibalilo cizí. */
   if (git('status', '--porcelain')) vzdat('pracovní strom není čistý, do opravy by se přibalilo cizí');
 
+  /* MĚŘENÍ PŘED OPRAVOU. Bez něj umí automat říct jen „po opravě
+     neprošla rychlá sada", což zní jako „oprava je vadná" — a dvakrát
+     to tak znělo, i když padalo něco, co s opravou nemělo nic
+     společného (chybějící závislosti v prostředí). Dvě měření stojí
+     dvě minuty a dávají diagnózu místo dojmu. */
+  hlas('Měřím, co padá PŘED opravou…');
+  const pred = spawnSync('node', [path.join(KOREN, 'scripts', 'zkousky.mjs')],
+    { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
+  const padlePred = pred.status === 0 ? [] : padleZkousky(pred.stdout);
+  if (pred.status === 0) hlas('  před opravou je sada zelená.');
+  else hlas(`  už před opravou padá ${padlePred.length || '?'}: ${padlePred.join(', ') || '(nepodařilo se vyčíst)'}`);
+
   hlas('Pouštím generátory (node scripts/oprav.mjs)…');
   const o = spawnSync('node', [path.join(KOREN, 'scripts', 'oprav.mjs')],
-    { cwd: KOREN, encoding: 'utf8' });
+    { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
   if (o.status !== 0) {
     hlas((o.stdout || '').split('\n').slice(-12).join('\n'));
     vzdat('generátory samy spadly — tohle není rozchod, ale vada v nich');
   }
 
   const zmenene = zmeneneSoubory();
-  const rozhodnuti = rozhodni({ vetev, povolenaVetev: povolena, vypinac, zpravaHEAD, zmenene });
+  const rozhodnuti = rozhodni({ vetev, povolenaVetev: povolena, vypinac, uvnitr, zpravaHEAD, zmenene });
   if (!rozhodnuti.opravit) {
     git('checkout', '--', '.');
     git('clean', '-fd');
@@ -181,16 +229,34 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   /* PRAVIDLO 2: dokázat, než nahraju. */
   hlas('Dokazuju opravu celou rychlou sadou…');
   const z = spawnSync('node', [path.join(KOREN, 'scripts', 'zkousky.mjs')],
-    { cwd: KOREN, encoding: 'utf8' });
+    { cwd: KOREN, encoding: 'utf8', env: prostrediDeti });
   if (z.status !== 0) {
     hlas((z.stdout || '').split('\n').slice(-20).join('\n'));
+    const padlePo = padleZkousky(z.stdout);
+    const nove = padlePo.filter((t) => !padlePred.includes(t));
     git('checkout', '--', '.');
     git('clean', '-fd');
-    vzdat('po opravě neprošla rychlá sada, takže oprava šla do koše (vada není jen v odvozených souborech)');
+    /* Dvě VELMI různé situace, a každá chce jiné slovo: */
+    if (nove.length) {
+      vzdat(`oprava sama rozbila ${nove.length}: ${nove.join(', ')}`
+        + ' — to není rozchod odvozených souborů, ale vada v generátorech;'
+        + ' oprava šla do koše');
+    }
+    vzdat(`po opravě padá ${padlePo.length}: ${padlePo.join(', ')}, ale TOTÉŽ padalo`
+      + ' i PŘED opravou — oprava tedy nic nerozbila, červenou dělá něco jiného.'
+      + ' Podle pravidla 2 se přesto nenahrává: nahrát lze jen dokázanou opravu.');
   }
   hlas((z.stdout || '').split('\n').filter((r) => /Rychlá sada:/.test(r)).join('\n'));
 
-  const zprava = zpravaOprav(zmenene);
+  let zprava = zpravaOprav(zmenene);
+  if (padlePred.length) {
+    /* Stalo se, že sada byla červená PŘED opravou a po ní zelená: pak
+       oprava spravila i to. Je to užitečná informace do historie, a
+       taky pojistka proti dojmu, že se „nic nedělo". */
+    zprava += `\nPřed opravou padalo ${padlePred.length} zkoušek`
+      + ` (${padlePred.slice(0, 5).join(', ')}); po ní je sada zelená.\n`;
+    hlas(`Oprava spravila i to, co padalo před ní: ${padlePred.join(', ')}`);
+  }
 
   if (nasucho) {
     hlas('\n--nasucho: nic se nenahrává. Zpráva by byla:\n' + zprava);

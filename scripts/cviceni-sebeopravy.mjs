@@ -34,7 +34,7 @@
    Cvičení A pustí generátory i celou rychlou sadu, takže trvá minuty.
    Ostatní čtyři jsou v sekundách — proto `--rychle`.
    ================================================================== */
-import { existsSync, readFileSync, writeFileSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdtempSync, rmSync, symlinkSync, copyFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -59,9 +59,9 @@ const SERVER = path.join(adr, 'server.git');   // kam automat pushuje
 const PRACE = path.join(adr, 'prace');         // kde automat pracuje
 process.on('exit', () => { try { rmSync(adr, { recursive: true, force: true }); } catch (e) { /* nic */ } });
 
-function spust(prikaz, args, kde, prostredi = {}) {
+function spust(prikaz, args, kde, prostredi = {}, limitMs = 1800000) {
   const r = spawnSync(prikaz, args, {
-    cwd: kde, encoding: 'utf8', timeout: 1800000,
+    cwd: kde, encoding: 'utf8', timeout: limitMs, maxBuffer: 64 * 1024 * 1024,
     env: { ...process.env, ...prostredi },
   });
   return { kod: r.status, out: String(r.stdout || '') + String(r.stderr || '') };
@@ -119,6 +119,32 @@ function zmen(soubor, uprav) {
   return true;
 }
 
+/* CVIČÍ SE TO, CO JE V GITU — a když se zrovna něco píše, tak to.
+   Kopie se dělá klonem, takže vidí jen COMMITY. Při vývoji to mate:
+   změníš automat, pustíš cvičení a ono cvičí starou verzi (stalo se
+   hned: cvičení F hlásilo, že automat neumí rozlišit „padalo to už
+   předtím", přitom to umělo, jen to nebylo commitnuté). Rozpracované
+   skripty se proto do kopie dokopírují a je to VIDĚT na prvním řádku —
+   aby nikdo nevydával cvičení pracovní verze za cvičení toho, co je
+   v repozitáři. V CI je strom čistý, takže se nic nekopíruje. */
+{
+  const zmenene = spust('git', ['status', '--porcelain', '--', 'scripts'], KOREN).out
+    .split('\n').filter(Boolean).map((r) => r.slice(3).replace(/^.* -> /, '').replace(/^"|"$/g, ''))
+    .filter((f) => f.endsWith('.mjs'));
+  if (zmenene.length) {
+    for (const f of zmenene) {
+      try { copyFileSync(path.join(KOREN, f), path.join(PRACE, f)); } catch (e) { /* smazaný */ }
+    }
+    git(['add', '-A']);
+    git(['commit', '-q', '-m', 'rozpracované skripty z pracovního stromu']);
+    zpravy.push(`  ! cvičí se PRACOVNÍ verze: dokopírováno ${zmenene.length} skriptů`
+      + ` (${zmenene.slice(0, 4).join(', ')}${zmenene.length > 4 ? ' a další' : ''})`);
+  } else {
+    zpravy.push(`  · cvičí se commit ${spust('git', ['rev-parse', '--short', 'HEAD'], KOREN).out.trim()}`
+      + ' (pracovní strom je čistý)');
+  }
+}
+
 /* VÝCHOZÍ BOD SE PAMATUJE, ne dohledává. `origin/<větev>` k tomu
    použít NELZE: cvičení A nechá automat doopravdy pushnout, takže se
    origin posune — a další cvičení by pak startovala z commitu
@@ -132,10 +158,20 @@ function uklid() {
   spust('git', ['update-ref', `refs/heads/${vetev}`, ZAKLAD], SERVER);
   git(['fetch', '--quiet', 'origin']);
 }
+/* ČAS JE TADY MĚŘENÁ VELIČINA, ne jen strop proti zaseknutí. Automat,
+   který se pustí sám v sobě, neskončí chybou — ROSTE. Přesně to se
+   stalo, když se přidalo měření sadou PŘED opravou: do té doby vnitřní
+   běh zastavilo pravidlo o čistém stromu, pak ta pojistka padla a
+   běželo 39 automatů naráz. Cvičení proto každý běh automatu omezuje
+   časem a čas si pamatuje: utnutý běh je nález, ne „pomalý stroj". */
+const LIMIT_AUTOMATU_S = 900;
 function pustAutomat(prostredi = {}) {
-  return spust('node', [path.join(PRACE, 'scripts', 'sebeoprava.mjs')], PRACE, {
+  const zacatek = Date.now();
+  const v = spust('node', [path.join(PRACE, 'scripts', 'sebeoprava.mjs')], PRACE, {
     SEBEOPRAVA_VETEV: vetev, SEBEOPRAVA_VETEV_AKTUALNI: vetev, ...prostredi,
-  });
+  }, LIMIT_AUTOMATU_S * 1000);
+  v.sekundy = Math.round((Date.now() - zacatek) / 1000);
+  return v;
 }
 const hlavaZprava = () => git(['log', '-1', '--pretty=%s']).out.trim();
 const hlavaSha = (kde = PRACE) => git(['rev-parse', 'HEAD'], kde).out.trim();
@@ -167,6 +203,10 @@ if (!RYCHLE) {
 
   const v = pustAutomat();
   pravda('A) automat skončil úspěchem', v.kod === 0, `kód ${v.kod}; ${v.out.slice(-400)}`);
+  pravda(`A) a dojel v rozumném čase (${v.sekundy} s, strop ${LIMIT_AUTOMATU_S} s)`,
+    v.kod !== null && v.sekundy < LIMIT_AUTOMATU_S,
+    'utnutý běh znamená, že automat neskončil — nejčastěji proto, že se pustil'
+    + ' sám v sobě a množí se (pravidlo 8)');
   /* VÝPIS AUTOMATU SE VŽDYCKY PŘILOŽÍ. Bez něj se u padlého cvičení
      nedá zjistit, na čem automat skončil — a celé cvičení pak končí
      tím, že se hádá. (Naměřeno hned při prvním ostrém běhu.) */
@@ -194,6 +234,52 @@ if (!RYCHLE) {
   pravda('A) a v commitu stojí, co se rozcházelo',
     /Rozcház/.test(git(['log', '-1', '--pretty=%b']).out),
     git(['log', '-1', '--pretty=%b']).out.slice(0, 200));
+}
+
+/* ---- F) červená, kterou oprava nezpůsobila ---------------------- */
+/* NEJDŮLEŽITĚJŠÍ ROZDÍL, KTERÝ AUTOMAT MUSÍ UMĚT ŘÍCT. Když je sada
+   červená i po opravě, jsou dvě úplně jiné možnosti: buď to rozbila
+   oprava (vada v generátorech), nebo to padalo už předtím (a oprava je
+   v pořádku, červenou dělá něco jiného). Dřív automat hlásil obojí
+   stejně — „po opravě neprošla rychlá sada" — a dvakrát mě to poslalo
+   hledat vadu do generátorů, kde žádná nebyla.
+   Vyrábí se proto obojí naráz: rozchod v ODVOZENÉM souboru (ten umí
+   opravit) a vada v RUČNÍM zdroji (tu neumí a nemá). */
+if (!RYCHLE) {
+  uklid();
+  const rozbito = zmen('docs/roadmap.md', ROZCHOD_ROADMAPY)
+    /* Nepojmenovaná barva a odstup mimo slovník: na tom padají dva
+       hlídači vzhledu, a je to vada v RUČNÍM zdroji, takže ji
+       generátory nespraví — přesně jak je potřeba.
+
+       SKLÁDÁ SE Z KOUSKŮ SCHVÁLNĚ. Hlídač odstupů kontroluje i
+       `scripts/`, takže napsaný naplno („margin dvojtečka sedm px")
+       byl tenhle řetězec sám porušením pravidla — a cvičení padalo na
+       vadě, kterou do repozitáře zaneslo ono samo. Je to dobrá zpráva
+       o hlídači (vidí i cvičení) a poučení o vyráběných vadách:
+       vyrobená vada nesmí být vada i tam, kde je zapsaná. */
+    && zmen('css/styles.css', (t) => t + '\n.pokus-cviceni{color:#1234'
+      + `56; ${'margin'}:${7}px;}\n`);
+  pravda('F) vyrobil se rozchod odvozeného souboru i vada v ručním zdroji', rozbito);
+  if (rozbito) {
+    git(['add', '-A']);
+    git(['commit', '-q', '-m', 'ruční commit s vadou, co generátory nespraví']);
+    const shaPred = hlavaSha();
+    const v = pustAutomat();
+    pravda(`F) a dojel v rozumném čase (${v.sekundy} s, strop ${LIMIT_AUTOMATU_S} s)`,
+      v.kod !== null && v.sekundy < LIMIT_AUTOMATU_S,
+      'utnutý běh znamená, že se automat pustil sám v sobě (pravidlo 8)');
+    pravda('F) automat nenahraje opravu, když je sada červená',
+      v.kod === 0 && hlavaSha() === shaPred,
+      `kód ${v.kod}; HEAD ${hlavaSha() === shaPred ? 'stejný' : 'ZMĚNĚNÝ — nahrál nedokázanou opravu!'}`);
+    pravda('F) a POZNÁ, že totéž padalo už PŘED opravou (ne že to rozbila ona)',
+      /padalo\s+i PŘED opravou/.test(v.out) && !/oprava sama rozbila/.test(v.out),
+      'výpis: ' + v.out.split('\n').filter((r) => /warning|SEBEOPRAVA|PŘED/.test(r))
+        .join(' | ').slice(0, 300));
+    pravda('F) a jmenuje konkrétní zkoušky, ne jen „sada neprošla"',
+      /test-tokeny|test-odstupy/.test(v.out),
+      'výpis: ' + v.out.split('\n').filter((r) => /padá|padalo/.test(r)).join(' | ').slice(0, 300));
+  }
 }
 
 /* ---- B-E) stavy, ve kterých se NESMÍ stát nic -------------------- */
@@ -237,7 +323,7 @@ for (const [popis, rozbij, prostredi, uryvek] of NESMI) {
 
 /* ---- a že se cvičení nepřestalo cvičit --------------------------- */
 pravda('cvičení opravdu zkoušelo i tu část, která pouští generátory',
-  RYCHLE || ok >= 13,
+  RYCHLE || ok >= 19,
   `prošlo jen ${ok} kontrol — s --rychle je to v pořádku, bez něj ne`);
 
 console.log('\nCVIČENÍ SEBEOPRAVY' + (RYCHLE ? ' (jen rychlá část)' : ''));

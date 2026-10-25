@@ -112,6 +112,17 @@ není vada robota, ale nasazení, a další běh by ji jen zakryl. Celá
 tabulka je v `scripts/sebeoprava-nasazeni.mjs` a vypnete ji tím, že
 v repozitáři necháte ležet soubor `.github/SEBEOPRAVA-VYPNUTA`.
 
+**A ty opravné automaty se jednou denně cvičí.** Automat, který smí
+sám commitovat, je nebezpečný přesně tak, jak jsou slabá jeho
+pravidla — a pravidla přečtená z kódu nedokazují, že oprava proběhne.
+Úloha *Cvičení sebeopravy* proto každý den vezme **jednorázovou kopii**
+repozitáře, rozbije v ní odvozené soubory naschvál a nechá automat
+doopravdy proběhnout: musí je opravit bit po bitu, a v pěti dalších
+situacích (vypínač, cizí větev, červená sada…) se naopak **nesmí stát
+nic**. Při vašem repozitáři se při tom nemůže stát nic — cvičení si
+dělá i vlastní prázdný „server", kam automat pushuje. Když cvičení
+neprojde, přijde úkol a na sebeopravu se do opravy nelze spoléhat.
+
 Ručně kdykoli: `node scripts/kontrola-nasazeni.mjs`, a s prohlížečem
 `node scripts/kontrola-ziva-prohlizecem.mjs` (potřebuje nainstalovaný
 Chromium; místní kopii repozitáře změří `--mistni`).

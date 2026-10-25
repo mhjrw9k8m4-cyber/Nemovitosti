@@ -83,7 +83,26 @@ export function rozhodni(stav) {
 }
 
 /* ---- odsud dál to, co se opravdu dotýká světa -------------------- */
-const API = 'https://api.github.com';
+/* API SE DÁ PŘESMĚROVAT, ALE JEN NA TENHLE STROJ. Ta jediná řádka, co
+   opravu doopravdy provede (POST na …/dispatches), se jinak nedá nijak
+   vyzkoušet — a byla by to jediná nevyzkoušená řádka v celém řetězu
+   sebeopravy. Proto `PK_GITHUB_API`: zkouška si postaví falešné API
+   a změří, že požadavek odchází správně (cesta, metoda, větev, hlavičky)
+   a že se nepovedené spuštění NEspolkne.
+   Omezení na 127.0.0.1/localhost není kosmetika: bez něj by se dala
+   proměnnou v prostředí odklonit hlavička s tokenem na cizí stroj.
+   Cokoli jiného než tenhle stroj se proto odmítne, a nahlas. */
+const API = (() => {
+  const vlastni = (process.env.PK_GITHUB_API || '').trim().replace(/\/+$/, '');
+  if (!vlastni) return 'https://api.github.com';
+  if (!/^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}$/.test(vlastni)) {
+    console.log('::error::Sebeoprava nasazení: PK_GITHUB_API smí ukazovat jen na'
+      + ` tenhle stroj (http://127.0.0.1:PORT), dostal jsem „${vlastni}".`
+      + ' Jinak by se dala hlavička s tokenem odklonit jinam.');
+    process.exit(1);
+  }
+  return vlastni;
+})();
 const REPO = process.env.GITHUB_REPOSITORY || '';
 const TOKEN = process.env.GITHUB_TOKEN || '';
 const VETEV = process.env.GITHUB_REF_NAME || '';
