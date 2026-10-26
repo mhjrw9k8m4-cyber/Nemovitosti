@@ -4004,7 +4004,6 @@
             + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
             + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
-        (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
 
         (function () {
           var od = userPos || mojeMisto;
@@ -4013,6 +4012,8 @@
           if (!isFinite(km)) return '';
           return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
         }());
+
+      var perM2Html = perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '';
 
       var chips = [];
       var kdeKarty = '';
@@ -4121,7 +4122,9 @@
             (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
           '</div>' +
 
-          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+          '<div class="opp-cenarad">' +
+            '<div class="opp-price">' + fmt(d.price) + ' Kč' + '</div>' + perM2Html +
+          '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
 

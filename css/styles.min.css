@@ -745,6 +745,8 @@ to{opacity:1;transform:none}
 .opp-meta>* + *::before{content:"·";margin-right:8px;color:var(--line-strong)}
 .opp-nadpis .opp-figures{display:inline-flex;margin:0}
 .opp-nadpis .opp-perm2{background:none;border:0;padding:0;font-weight:400}
+.opp-cenarad{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px}
+.opp-cenarad .opp-perm2{background:none;border:0;padding:0;font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted)}
 .opp-figures{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:8px;margin-bottom:2px}
 .opp-figures .m{font-size:14px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
 .opp-perm2{align-self:center;font-size:12px;font-weight:600;color:var(--muted);background:var(--plocha-jemna);border:1px solid var(--line);border-radius:var(--r-xs);padding:2px 8px;font-variant-numeric:tabular-nums;white-space:nowrap}

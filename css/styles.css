@@ -3259,6 +3259,13 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
    štítek vypadala jako druhé tlačítko hned vedle názvu druhu a táhla
    oko na sebe — přitom je to doplněk k výměře, ne samostatný údaj. */
 .opp-nadpis .opp-perm2{background:none; border:0; padding:0; font-weight:400;}
+/* Cena za metr stojí v řádku s cenou, na jejím účaří — ne jako rámeček
+   vedle výměry. Velké číslo vlevo, drobné za ním. Jsou to dva prvky,
+   ne jeden: viz komentář u .opp-cenarad v js/main.js (slepený
+   textContent). */
+.opp-cenarad{display:flex; align-items:baseline; flex-wrap:wrap; gap:0 8px;}
+.opp-cenarad .opp-perm2{background:none; border:0; padding:0; font-size:13px;
+  font-weight:500; letter-spacing:0; color:var(--muted);}
 /* Hodnotový řádek — cena, výměra, Kč/m² zarovnané na účaří */
 .opp-figures{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-top:8px; margin-bottom:2px;}
 .opp-figures .m{font-size:14px; font-weight:500; color:var(--muted); font-variant-numeric:tabular-nums;}
@@ -7683,15 +7690,23 @@ body > footer{flex:none;}
      mezi fotkou a textem. Stížnost zněla „klikám na pozemky a skrývají
      se mi a nevím proč" a byla oprávněná: destruktivní tlačítko leželo
      na terči pro otevření.
-     ZMĚŘENO, PROČ NEMŮŽE JÍT MIMO FOTKU: karta má při 390 px 306 px,
-     z toho fotka 116 a text 164 px. Na 44px tlačítko v textovém sloupci
-     není místo — cena „379 320 000 Kč" je 150 px široká a při 320 px má
-     text na všechno jen 94 px. Každé umístění mimo fotku by tedy
-     přepsalo cenu nebo rozlámalo řádky na všech kartách.
-     ZŮSTÁVÁ TEDY NA FOTCE, ALE V JEJÍM LEVÉM HORNÍM ROHU: nejdál od
-     srdíčka (pravý horní roh), mimo odznak kategorie (levý dolní roh)
-     a hlavně mimo střed fotky, kam prst míří. Na pravém dolním rohu,
-     kde stál napoprvé, ležel na odznaku „Na prodej" — 23×23 px průniku.
+     ZŮSTÁVÁ NA FOTCE, V JEJÍM LEVÉM HORNÍM ROHU: nejdál od srdíčka
+     (pravý horní roh), mimo odznak kategorie (levý dolní roh)
+     a hlavně mimo střed fotky, kam prst míří.
+
+     POZOR, DŮVOD POD TÍMHLE SE MEZITÍM ROZPADL. Stálo tu „karta má
+     při 390 px 306 px, z toho fotka 116 a text 164" — tedy vodorovný
+     řádek s miniaturou vedle textu, a z toho plynulo, že 44px
+     tlačítko se jinam než na fotku nevejde a že pravý dolní roh leží
+     na odznaku („Na prodej", 23×23 px průniku). Taková karta už
+     neexistuje. NAMĚŘENO 26. 10. na 390 px: karta je 374 px široká,
+     fotka je 372×233 px přes celou šířku a text leží POD ní. Na
+     372px fotce je od odznaku vlevo dole k pravému dolnímu rohu
+     místa dost.
+     Umístění se přesto nemění: horní levý roh je dál od srdíčka než
+     kterýkoli dolní a drží to pravidlo „dvě tlačítka s opačným
+     významem co nejdál od sebe". Mění se jen to, že důvod tu teď
+     stojí podle dnešní karty, ne podle té z roku, kdy to vzniklo.
      A protože omylem skrýt se pořád dá, hláška po skrytí nabízí
      „Vrátit" (js/main.js, showToast). */
 

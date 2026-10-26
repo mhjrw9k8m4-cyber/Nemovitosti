@@ -6415,7 +6415,6 @@
             + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
             + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
-        (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
         // řazení „podle okolí", takže si jí nikdo nevšiml.
         (function () {
@@ -6425,6 +6424,20 @@
           if (!isFinite(km)) return '';
           return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
         }());
+      /* CENA ZA METR PATŘÍ K CENĚ, NE K VÝMĚŘE.
+         Stála v prvním řádku jako rámeček vedle výměry, zatímco cena
+         měla řádek sama pro sebe. Dvě čísla, která se spolu porovnávají
+         („kolik to stojí" a „kolik to stojí za metr"), byla od sebe
+         nejdál, co na kartě šlo, a to za metr navíc vypadalo jako
+         odznak, ne jako cena.
+         VÝŠKU TO NEUŠETŘILO A NETVRDÍM TO. Naměřeno 26. 10. na 390 px:
+         text pod fotkou 143 px před i po. Řádky byly tři a zůstaly tři
+         — výměra a cena za metr se do prvního řádku vešly vedle sebe.
+         Je to změna čitelnosti, ne místa.
+         Je to zároveň to, co o kartě tvrdí komentář o kus níž od
+         samého začátku („cena a čísla stojí na účaří v jednom řádku") —
+         kód to dělal jinak a komentář o tom léta lhal. */
+      var perM2Html = perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '';
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
       var kdeKarty = '';
@@ -6634,12 +6647,19 @@
            sebou (cena / název / okres / druh / výměra) a každý jiné
            písmo i jiný odstup. Naměřeno na 390px displeji: 218 px textu
            pod 222px fotkou, z toho pět zalomení. Teď:
-           · název místa je NADPIS karty (oko po výpisu jede přes místo),
-           · okres a druh jsou jeden jemný řádek oddělený tečkou,
-           · cena a čísla (výměra, Kč/m², vzdálenost) stojí na účaří
-             v jednom řádku — velké číslo vlevo, drobná čísla za ním.
-           Cena přitom zůstává největším písmem na kartě, jen už není
-           první shora: nad ní je to, podle čeho se pozemek pozná. */
+           · 1. řádek: co se prodává a kolik toho je — druh tučně, za
+             ním výměra a vzdálenost jemně,
+           · 2. řádek: kde to je — obec · okres,
+           · 3. řádek: cena a za ní drobně cena za metr. Dvě čísla,
+             která se spolu porovnávají, patří na jedno účaří.
+           Cena je největším písmem na kartě, jen není první shora: nad
+           ní je to, podle čeho se pozemek pozná.
+           TENHLE KOMENTÁŘ DŘÍV LHAL. Sliboval rozvržení, kde je
+           nadpisem karty NÁZEV MÍSTA a druh s okresem tvoří jeden jemný
+           řádek — kód pod ním ale dělal pravý opak (nadpis = druh,
+           místo až druhé) a cena stála na řádku sama. Srovnáno 26. 10.
+           podle toho, co kód doopravdy skládá; ze slibu zbyla ta část
+           o číslech na jednom účaří a ta se tím zároveň splnila. */
         '<div class="opp-body">' +
           /* 1. ŘÁDEK — CO SE PRODÁVÁ A KOLIK TOHO JE. Druh tučně, za ním
              výměra, cena za metr a vzdálenost jemně. */
@@ -6663,7 +6683,17 @@
           '</div>' +
           /* 3. ŘÁDEK — CENA. Největší písmo na kartě a až pod tím, co se
              prodává a kde: podle ceny se rozhoduje, podle zbytku vybírá. */
-          '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+          /* CENA A CENA ZA METR NA JEDNOM ÚČAŘÍ, ALE VE DVOU PRVCÍCH.
+             Napoprvé jsem cenu za metr vložil DOVNITŘ .opp-price —
+             a zkouška klíče uložených to chytla: textContent toho
+             prvku začal vracet „7 700 000 Kč12 500 Kč/m²", tedy dvě
+             čísla slepená bez mezery. Nebyla to jen vada zkoušky:
+             takhle to přečte i odečítač obrazovky a takhle se to
+             zkopíruje. Pět zkoušek navíc z .opp-price počítá cenu.
+             Prvky jsou proto dva a drží je vedle sebe obal. */
+          '<div class="opp-cenarad">' +
+            '<div class="opp-price">' + fmt(d.price) + ' Kč' + '</div>' + perM2Html +
+          '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
         '</div>';
       // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
