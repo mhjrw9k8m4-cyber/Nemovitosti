@@ -93,14 +93,20 @@ for (const f of fs.readdirSync(KOREN).sort()) {
   if (!okres) { rozchody.push(`${f}: jméno okresu se z <h1> nepřečetlo`); continue; }
   const list = aktualni.filter((o) => o.okres === okres);
 
-  const m = h.match(/Aktuálně evidujeme <b>([\d\s]+) [^<]*<\/b>/);
-  if (!m) rozchody.push(`${f}: počet pozemků se z podnadpisu nepřečetl`);
+  /* ČÍSLA JSOU V HLAVIČCE, NE VE VĚTĚ. Do 26. 10. je stránka psala
+     dvakrát: jednou v odstavci „Aktuálně evidujeme N pozemků …" a hned
+     pod ním znovu jako dlaždice .okr-stat. Odstavec odešel (viz
+     hlavickaCisla v scripts/generate-region-pages.mjs) a zůstala jedna
+     sada čísel v tmavém pásu. Kontrola se ptá na totéž co dřív —
+     souhlasí čísla na stránce s daty? — jen je čte odtamtud, kde jsou. */
+  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>pozemk/);
+  if (!m) rozchody.push(`${f}: počet pozemků se z hlavičky nepřečetl`);
   else {
     pocty++;
     if (cislo(m[1]) !== list.length) rozchody.push(`${f}: tvrdí ${cislo(m[1])} pozemků, v datech ${list.length}`);
   }
 
-  const r = h.match(/Ceny od <b>([\d\s]+) Kč<\/b> do <b>([\d\s]+) Kč<\/b>/);
+  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b><span>rozp\u011bt\u00ed cen<\/span>/);
   const ceny = list.filter((o) => o.price > 0).map((o) => o.price).sort((a, b) => a - b);
   if (r) {
     meze += 2;
@@ -115,7 +121,7 @@ for (const f of fs.readdirSync(KOREN).sort()) {
     const druhy = new Set(list.map((o) => o.type));
     if (druhy.size > 1) ocekavanoDlazdic += DRUHY_DLAZDIC.filter((t) => druhy.has(t)).length;
   }
-  for (const mm of h.matchAll(/<div class="okr-stat"><b>([\d\s]+)<\/b>\s*<span>([^<]*)<\/span>/g)) {
+  for (const mm of h.matchAll(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>([^<]*)<\/span>/g)) {
     const slovo = mm[2];
     if (/^pozemk/.test(slovo)) continue;            // celkový počet se měří výš
     const typ = TYP[slovo];
@@ -135,7 +141,7 @@ for (const f of fs.readdirSync(KOREN).sort()) {
 pravda(`okresních stránek se našlo dost (${stranek})`, stranek >= 70, `jen ${stranek}`);
 pravda(`počet pozemků se přečetl skoro všude (${pocty} ze ${stranek})`, pocty >= stranek - 2,
   `přečteno ${pocty} — změnila se podoba podnadpisu?`);
-pravda(`rozsah cen se přečetl (${meze} mezí)`, meze >= 140, `jen ${meze} — změnil se zápis „Ceny od … do …"?`);
+pravda(`rozsah cen se přečetl (${meze} mezí)`, meze >= 140, `jen ${meze} — změnil se zápis „X–Y Kč / rozpětí cen"?`);
 /* TADY STÁL PRÁH „aspoň 60 dlaždic". Zestárl tiše: po dávce dat
    13. 10. jich bylo 55 a zkouška spadla, aniž by se na stránkách cokoli
    pokazilo — jen v okresech ubyly dražby a exekuce. Práh, který se hýbe
@@ -150,34 +156,43 @@ pravda('a je co měřit (aspoň jedna dlaždice)', dlazdic > 0, 'žádná dlažd
 pravda('a žádná dlaždice se nepřeskočila kvůli neznámému slovu', neznamych === 0,
   `přeskočeno ${neznamych} — doplňte slovo do tabulky TYP`);
 
-/* ===== TOTÉŽ ČÍSLO POTŘETÍ V JEDNÉ VĚTĚ =============================
-   Podnadpis zní „Aktuálně evidujeme 33 pozemků v okrese Benešov —
-   33× na prodej." Když je druh nabídek jediný, je ten rozpad jen
-   zopakovaný součet: číslo stojí ve větě dvakrát a (dokud se to
-   neopravilo) potřetí v dlaždici pod ní. Naměřeno: týkalo se to
+/* ===== TOTÉŽ ČÍSLO DVAKRÁT V HLAVIČCE ===============================
+   Podnadpis zněl „Aktuálně evidujeme 33 pozemků v okrese Benešov —
+   33× na prodej." a pod ním stály tytéž počty ještě jako dlaždice:
+   jedno číslo třikrát na jedné obrazovce. Naměřeno tehdy: týkalo se to
    43 z 91 okresních a krajských stránek.
-   Měří se ta věta, ne generátor: najde se celkový počet a všechny
-   počty v rozpadu, a když je v rozpadu JEDINÝ údaj a rovná se součtu,
-   je to ta zbytečná věta. (Víc druhů je v pořádku — „28× na prodej,
-   3× dražba" nese informaci navíc.) */
+   26. 10. ta věta i dlaždice zmizely — čísla jsou jednou, v tmavém
+   pásu (hlavickaCisla v scripts/generate-region-pages.mjs). Kontrola
+   proto hlídá novou podobu téhož: žádný ROZPAD nesmí jen zopakovat
+   CELEK. „23 pozemků" a vedle „23 na prodej" neříká nic navíc.
+   Dvě různé věci se stejným číslem („1 dražba" a „1 exekuce") v pořádku
+   jsou — při prvním spuštění tahle kontrola hlásila čtyři takové
+   případy jako chybu a chyba byla v ní, ne na stránkách. */
 {
   const vsechny = fs.readdirSync(KOREN).filter((f) => /^pozemky-.+\.html$/.test(f));
-  const VETA = /Aktuálně evidujeme <b>(\d[\d\u00a0 ]*)[^<]*<\/b>([^—]*)— ([^.]*)\./;
-  let vet = 0;
+  const HLAVICKA = /<div class="okr-cisla">([\s\S]*?)<\/div>\s*<\/div>/;
+  let hlavicek = 0;
   const opakuje = [];
   for (const f of vsechny) {
     const h = fs.readFileSync(path.join(KOREN, f), 'utf8');
-    const m = h.match(VETA);
+    const m = h.match(HLAVICKA);
     if (!m) continue;
-    vet++;
-    const celkem = m[1].replace(/[\u00a0 ]/g, '');
-    const kusy = [...m[3].matchAll(/(\d[\d\u00a0 ]*)×/g)].map((x) => x[1].replace(/[\u00a0 ]/g, ''));
-    if (kusy.length === 1 && kusy[0] === celkem) opakuje.push(`${f}: „${m[3]}" u ${celkem}`);
+    hlavicek++;
+    const cisla = [...m[1].matchAll(/<b>([^<]+)<\/b><span>([^<]*)<\/span>/g)]
+      .map((x) => [x[1].replace(/[\u00a0 ]/g, ''), x[2]]);
+    /* Celek je první položka („N pozemků"); rozpad jsou ty za ním. */
+    const celek = cisla.length && !/[^\d]/.test(cisla[0][0]) ? cisla[0] : null;
+    if (celek) {
+      for (const [hod, popis] of cisla.slice(1)) {
+        if (/[^\d]/.test(hod)) continue;     // rozpětí cen není počet
+        if (hod === celek[0]) opakuje.push(`${f}: „${celek[0]} ${celek[1]}" a vedle „${hod} ${popis}"`);
+      }
+    }
   }
-  // PŘEDPOKLAD: bez vět se nedá měřit nic
-  pravda(`podnadpis s počtem se přečetl (${vet} stránek)`, vet >= 70,
-    `přečteno ${vet} — změnila se podoba věty „Aktuálně evidujeme …"?`);
-  pravda('a nikde neopakuje týž počet ještě jednou jako „rozpad"',
+  // PŘEDPOKLAD: bez hlaviček se nedá měřit nic
+  pravda(`hlavička s čísly se přečetla (${hlavicek} stránek)`, hlavicek >= 70,
+    `přečteno ${hlavicek} — změnila se podoba .okr-cisla?`);
+  pravda('a nikde v ní nestojí táž hodnota dvakrát',
     opakuje.length === 0, opakuje.slice(0, 4).join('\n      '));
 }
 
@@ -196,11 +211,11 @@ for (const klic of Object.keys(META.KRAJ_META)) {
   if (!fs.existsSync(path.join(KOREN, f))) { rozchody.push(`${klic}: stránka ${f} chybí`); continue; }
   const h = fs.readFileSync(path.join(KOREN, f), 'utf8').replace(/\u00a0/g, ' ');
   const list = aktualni.filter((o) => OKRES_KRAJ[o.okres] === klic);
-  const m = h.match(/evidujeme <b>([\d\s]+) [^<]*<\/b>/);
+  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>pozemk/);
   if (!m) { rozchody.push(`${f}: počet pozemků se nepřečetl`); continue; }
   kraju++;
   if (cislo(m[1]) !== list.length) rozchody.push(`${f} (${klic}): tvrdí ${cislo(m[1])}, v datech ${list.length}`);
-  const r = h.match(/Ceny od <b>([\d\s]+) Kč<\/b> do <b>([\d\s]+) Kč<\/b>/);
+  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b><span>rozp\u011bt\u00ed cen<\/span>/);
   const ceny = list.filter((o) => o.price > 0).map((o) => o.price).sort((a, b) => a - b);
   if (r && ceny.length) {
     krajMez += 2;

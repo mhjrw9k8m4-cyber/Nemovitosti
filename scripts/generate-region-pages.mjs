@@ -187,6 +187,41 @@ function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('c
    kde si člověk všimne, že ta čísla nikdo nečetl. */
 /* `sklon` je od 24. 10. v scripts/text.mjs — používá ho i sebeoprava. */
 function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
+
+/* ČÍSLA DO HLAVIČKY MÍSTO VĚTY, KTERÁ JE OPISUJE.
+   ==================================================================
+   Naměřeno 26. 10. na okrese Tábor, telefon 390×844: tmavý pás měl
+   459 px a z toho 230 px zabíral odstavec „Aktuálně evidujeme 23
+   pozemků v okrese Tábor — 20× na prodej, 3× dražba. Vše z veřejných
+   zdrojů na jedné mapě, s prokliky na ověření v katastru. Ceny od
+   20 000 Kč do 13 199 000 Kč." Hned POD pásem pak stály tytéž počty
+   ještě jednou jako dlaždice: 23 pozemků / 20 na prodej / 3 dražby.
+   Jedna stránka, dvoje táž čísla, a to druhé navíc v mřížce, která
+   při třech dlaždicích nechávala vedle poslední díru přes půl řádku.
+
+   Majitel: „nech tam jen potřebné věci vypsané, ne že tam ke všemu
+   bude 500 vět." Reality.idnes i Sreality mají nad výpisem jediný
+   řádek s počtem a řazením — žádné povídání.
+
+   Čísla tedy jdou rovnou do pásu, kde dřív byla věta, a dlaždice pod
+   ním mizí. Co ta věta říkala navíc („z veřejných zdrojů", „prokliky
+   do katastru"), stojí beze změny v kartě s nabídkami o kus níž.
+   Rozpětí cen zůstává, jen z poloviny souvětí je z něj údaj.
+   ================================================================== */
+function hlavickaCisla(polozky) {
+  const platne = polozky.filter((x) => x && x[0] !== undefined && x[0] !== null && x[0] !== '' && x[0] !== 0);
+  if (!platne.length) return '';
+  /* Rozpětí cen je dlouhá hodnota („20 000–13 199 000 Kč" měří přes
+     300 px), takže v půlce řádku nezůstane — na telefonu vylezlo za
+     pravý okraj. Dostane proto celý řádek; pozná se podle toho, že
+     hodnota není jen číslo. */
+  return '<div class="okr-cisla">'
+    + platne.map(([h, p]) => {
+      const siroky = /[^\d\u00a0\s]/.test(String(h));
+      return `<div class="okr-cislo${siroky ? ' okr-cislo-siroky' : ''}"><b>${esc(String(h))}</b><span>${esc(p)}</span></div>`;
+    }).join('')
+    + '</div>';
+}
 /* PŘÍDAVNÉ JMÉNO SE MUSÍ SKLOŇOVAT S NÍM. Podstatné jméno se tu
    skloňovalo správně, ale „Zbývajících" stálo natvrdo ve druhém pádě,
    takže na stránce vinic a sadů (zbývaly dva pozemky) svítilo
@@ -1112,7 +1147,14 @@ for(const okres of eligibleOkres){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
-      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> v okrese ${esc(okres)} — ${esc(typeParts)}. Vše z <b>veřejných zdrojů</b> na jedné mapě, s prokliky na ověření v katastru. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
+      ${hlavickaCisla([
+        [count, pluralPozemek(count)],
+        ...(Object.keys(byType).length > 1 && byType.sale ? [[byType.sale, 'na prodej']] : []),
+        ...(Object.keys(byType).length > 1 && byType.drazba ? [[byType.drazba, sklon(byType.drazba,'dražba','dražby','dražeb')]] : []),
+        ...(Object.keys(byType).length > 1 && byType.exekuce ? [[byType.exekuce, sklon(byType.exekuce,'exekuce','exekuce','exekucí')]] : []),
+        ...(Object.keys(byType).length > 1 && byType.obec ? [[byType.obec, sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')]] : []),
+        ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
+      ])}
     </div>
     </div>
   </section>
@@ -1125,13 +1167,6 @@ for(const okres of eligibleOkres){
            dlaždice s týmž číslem: „28 pozemků" a „28 na prodej". Druhá
            neříkala nic, co by v té první nebylo — a v podnadpisu nad tím
            stojí „28× na prodej" ještě jednou. -->
-      <div class="okr-stats">
-        <div class="okr-stat"><b>${count}</b> <span>${pluralPozemek(count)}</span></div>
-        ${Object.keys(byType).length > 1 && byType.sale?`<div class="okr-stat"><b>${byType.sale}</b> <span>na prodej</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b> <span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b> <span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
-        ${Object.keys(byType).length > 1 && byType.obec?`<div class="okr-stat"><b>${byType.obec}</b> <span>${sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')}</span></div>`:''}
-      </div>
 
       <!-- CESTA VEN STOJÍ NAD VÝPISEM, i když výklad šel pod něj.
            Hlídá to scripts/test-cesta-ven.mjs a má pravdu: kdo sjede
@@ -1154,11 +1189,19 @@ for(const okres of eligibleOkres){
       <div class="add-card">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
-          <p class="rules-note">${tS.veta ? tS.veta + ' ' : ''}Seřazeno od nejnižší ceny. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
+          <!-- NAD VÝPISEM JEN TO, CO MĚNÍ ČTENÍ ŘÁDKŮ. Stál tu odstavec
+               na šest řádků (naměřeno 230 px na telefonu): řazení, výchozí
+               typ A celá věta o tom, odkud data jsou a že je třeba je
+               ověřit. Reality.idnes i Sreality mají nad výpisem jediný
+               řádek; výhrada o zdrojích patří pod výpis, kde ji čte ten,
+               koho nabídka zaujala. Rozděleno: tady zůstává řazení
+               a výchozí typ, výhrada je v .okr-vyhrada za výpisem. -->
+          <p class="rules-note">Seřazeno od nejnižší ceny.${tS.veta ? ' ' + tS.veta : ''}</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
+          <p class="okr-vyhrada">Data pocházejí z&nbsp;veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a&nbsp;mohou se v&nbsp;čase měnit — aktuální stav vždy ověřte u&nbsp;zdroje a&nbsp;v&nbsp;katastru nemovitostí.</p>
         </div>
       </div>
 
@@ -1286,7 +1329,13 @@ for(const kraj of eligibleKraj){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
-      <p class="sub">Aktuálně evidujeme <b>${count} ${pluralPozemek(count)}</b> ${esc(meta.loc)} — ${esc(typeParts)}. Vyberte okres, nebo si otevřete celý kraj na mapě. ${minP?('Ceny od <b>'+fmt(minP)+' Kč</b>'+(maxP&&maxP!==minP?' do <b>'+fmt(maxP)+' Kč</b>':'')+'.'):''}</p>
+      ${hlavickaCisla([
+        [count, pluralPozemek(count)],
+        [okresList.length, sklon(okresList.length,'okres','okresy','okresů')],
+        ...(byType.drazba ? [[byType.drazba, sklon(byType.drazba,'dražba','dražby','dražeb')]] : []),
+        ...(byType.exekuce ? [[byType.exekuce, sklon(byType.exekuce,'exekuce','exekuce','exekucí')]] : []),
+        ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
+      ])}
     </div>
     </div>
   </section>
@@ -1294,12 +1343,6 @@ for(const kraj of eligibleKraj){
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="okr-stats">
-        <div class="okr-stat"><b>${count}</b> <span>${pluralPozemek(count)}</span></div>
-        <div class="okr-stat"><b>${okresList.length}</b> <span>${sklon(okresList.length,'okres','okresy','okresů')}</span></div>
-        ${byType.drazba?`<div class="okr-stat"><b>${byType.drazba}</b> <span>${sklon(byType.drazba,'dražba','dražby','dražeb')}</span></div>`:''}
-        ${byType.exekuce?`<div class="okr-stat"><b>${byType.exekuce}</b> <span>${sklon(byType.exekuce,'exekuce','exekuce','exekucí')}</span></div>`:''}
-      </div>
 
       <p class="okr-more"><a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">Otevřít ${esc(meta.disp)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
@@ -1310,7 +1353,7 @@ for(const kraj of eligibleKraj){
       <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nejlevnější pozemky ${esc(meta.loc)}</h2>
-          <p class="rules-note">${tS.veta ? tS.veta + ' ' : ''}Ukázka nejnižších cen napříč krajem. Data z veřejných zdrojů se mohou měnit — aktuální stav ověřte u zdroje a v katastru.</p>
+          <p class="rules-note">Ukázka nejnižších cen napříč krajem.${tS.veta ? ' ' + tS.veta : ''}</p>
 ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}

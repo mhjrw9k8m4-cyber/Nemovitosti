@@ -734,6 +734,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 .okr-hero .sub b{color:var(--pas-text)}
 @media (max-width:880px){.okr-band{padding:40px 0 32px}
 }
+
 @media (min-width:1040px){.okr-hero .okr-wrap{display:grid;grid-template-columns:minmax(0,var(--m-text)) minmax(0,1fr);column-gap:56px;align-items:end}
 .okr-hero .okr-wrap>*{grid-column:1}
 }
