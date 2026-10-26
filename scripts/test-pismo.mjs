@@ -33,23 +33,22 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
 
 export const STUPNICE = new Set([11, 12, 13, 14, 16, 18, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96]);
 export const TLOUSTKY = new Set(['400', '500', '600', '700', 'inherit', 'normal', 'bold']);
-/* ČTVRTÝ TOKEN, A JE TO JEDINÝ, KTERÝ MÍŘÍ JINAM NEŽ NA INTER.
-   --font-ui, --font-display i --font-mono ukazují dodnes na totéž
-   (Inter), takže to nejsou tři hlasy, ale tři jména jednoho.
-   --font-nadpis je první skutečně jiný hlas: systémový serif na
-   VELKÉ nadpisy (h1, h1.uvod-nadpis, .section-head h2). Důvod je
-   v css/styles.css u jeho definice — stručně: serif na nadpisy
-   a grotesk na údaje je nejstarší typografický pár a úředním věcem
-   jako dražba a exekuce sedí; a protože je systémový, nestojí ani
-   bajt navíc a nemusí se podřezávat.
-   Pravidlo „rodina patří do tokenu, ne do pravidla" platí dál —
-   přibylo jedno jméno, ne možnost psát rodiny natvrdo. */
+/* VŠECHNY ČTYŘI TOKENY MÍŘÍ NA INTER.
+   --font-ui, --font-display, --font-mono i --font-nadpis ukazují na
+   totéž: to nejsou čtyři hlasy, ale čtyři jména jednoho. Jména
+   zůstávají, protože říkají ZÁMĚR (čím je ten text) a dovolují
+   jednou provždy vyměnit jen jedno z nich.
+   Systémový serif na nadpisech (19.–26. 10.) se vrátil: vycházel
+   jinak na každém zařízení a stránka pozemku ho stejně přebíjela
+   třídou z JavaScriptu, takže web mluvil dvěma hlasy. Důvod je
+   v css/styles.css u definice --font-nadpis.
+   Pravidlo „rodina patří do tokenu, ne do pravidla" platí dál. */
 /* A JEDNA STRÁNKA SI RODINU PSÁT MUSÍ. 404.html schválně nenačítá
    css/styles.css (má vyjít i tehdy, když ostatní soubory chybí), takže
-   v ní nejsou tokeny k mání: `var(--font-nadpis)` by byla nedefinovaná
-   proměnná a deklarace by se zahodila. Povolené jsou proto obě rodiny
-   vypsané přesně tak, jak stojí v paletce — ne libovolný serif. */
-const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*|Georgia,'Times New Roman','DejaVu Serif',serif)$/;
+   v ní nejsou tokeny k mání: `var(--font-ui)` by byla nedefinovaná
+   proměnná a deklarace by se zahodila. Povolená je proto rodina
+   vypsaná přesně tak, jak stojí v paletce. */
+const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*)$/;
 
 /* Komentáře se vybílí, ale délka zůstane — čísla řádků pak ukazují na
    opravdový řádek v souboru. Na rozdíl od odstupů se vnitřek var()

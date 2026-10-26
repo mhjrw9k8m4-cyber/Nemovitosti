@@ -102,22 +102,27 @@
      v Interu; to je přesně to, kvůli čemu se mono používalo, a nestojí to
      ani jeden stažený soubor. */
   --font-display:'Inter','Helvetica Neue',Arial,sans-serif;
-  /* VELKÉ NADPISY MLUVÍ JINÝM HLASEM NEŽ ÚDAJE.
-     Celý web byl v jednom písmu — Inter na nadpisy, popisky, čísla
-     i patičku. Je to čisté, ale bez charakteru: nadpis se od údaje
-     lišil jen velikostí a tloušťkou, ne hlasem.
-     Serif na nadpisy a Inter na všechno ostatní je nejstarší
-     typografický pár, jaký existuje, a pozemkům sedí: dražba
-     a exekuce jsou úřední věci, ne startupová aplikace.
-     PROČ SYSTÉMOVÝ, A NE STAŽENÝ. Druhý fontový soubor platí každý
-     návštěvník na každé z 2 159 stránek a musel by se podřezat na
-     naši sadu znaků (hlídá test-pisma). Georgia je na macOS,
-     Windows i iOS, Android dosadí Noto Serif, Linux DejaVu Serif —
-     efekt hned, nula bajtů, nula rizika. Když se neosvědčí, vrací
-     se to jedním řádkem.
-     POUZE VELKÉ NADPISY. --font-display zůstává Interu: je na
-     33 místech včetně 12px popisků a čísel, kam serif nepatří. */
-  --font-nadpis:Georgia,'Times New Roman','DejaVu Serif',serif;
+  /* JEDEN HLAS. VRÁCENO 26. 10. — A PROČ.
+     Od 19. 10. tu stál systémový serif (Georgia / Times New Roman /
+     DejaVu Serif) na velké nadpisy. Záměr byl dobrý: serif na nadpis
+     a grotesk na údaj je nejstarší typografický pár a úředním věcem
+     jako dražba a exekuce sedí. V provozu z toho ale vyšlo tohle,
+     naměřeno v prohlížeči na osmi typech stránek:
+       · Georgia na SEDMI typech, Inter na stránce POZEMKU — a těch
+         je 2 266, tedy nejčastější stránka webu. Dva hlasy, ne jeden.
+         Přebíjela to třída .pz-place, kterou h1 dostává z JavaScriptu;
+         hlídač test-pismo.mjs ji neviděl, protože prochází jen tenhle
+         soubor a hledá selektory obsahující „h1".
+       · Systémový znamená JINÝ NA KAŽDÉM ZAŘÍZENÍ. Nadpis vypadal
+         jinak na macOS, jinak na Androidu, jinak na Linuxu. To, co má
+         nést charakter značky, nebylo pod kontrolou.
+     Charakter proto nese TYPOGRAFICKÁ STUPNICE, ne druhé písmo: skok
+     mezi nadpisem a textem je vidět a drží ho jedna rodina. Viz oddíl
+     „Soustava stránky" na konci souboru.
+     Token zůstává (odkazuje se na něj test-pismo i 404.html) a ukazuje
+     na Inter. Kdyby se někdy měl vrátit serif, musí to být STAŽENÝ
+     řez, podřezaný na naši sadu znaků — ne systémový. */
+  --font-nadpis:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-ui:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-mono:'Inter','Helvetica Neue',Arial,sans-serif;
 
@@ -8765,3 +8770,100 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   body.ma-listu{padding-bottom:80px;}
   body.ma-listu .to-top{bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
 }
+
+/* =====================================================================
+   SOUSTAVA STRÁNKY — pás, karta, popisek, tlačítko  (prefix .st-)
+   ---------------------------------------------------------------------
+   PROČ TENHLE ODDÍL VZNIKL. Naměřeno 26. 10. na osmi typech stránek:
+   85 % všech deklarací font-size v tomhle souboru leželo v pásmu
+   12–16 px a na stránce pozemku bylo 119 ze 125 textových uzlů pod
+   17 px. Jediný prvek nad 24 px byla cena. Nadpis h1 měl 24–28 px,
+   tedy sotva víc než tučný odstavec — a protože typografie nevedla
+   oko, musel si každý blok pomáhat vlastním rámečkem. Odtud „krabice
+   vedle krabice" a plochý dojem.
+   Soustava proto stojí na třech věcech, ne na barvách:
+     1. SKOK. Nadpis stránky je 28–34 px na tmavém pásu, hodnota 20 px,
+        text 16 px, popisek 12 px. Mezi stupni je vidět rozdíl.
+     2. JEDNA ÚROVEŇ KARTY. Bílá karta s jedním stínem a jedním
+        poloměrem. Oddíly se neskládají do sebe.
+     3. TŘI ÚROVNĚ TLAČÍTKA a na jednu oblast obrazovky jedna hlavní.
+   Hodnoty jsou ze stupnice v CLAUDE.md (velikosti, odstupy po 4 px,
+   zaoblení z tokenů, barvy z tokenů) — hlídají to test-pismo,
+   test-odstupy, test-zaobleni a test-tokeny.
+   ===================================================================== */
+
+/* --- pás hlavičky stránky: tmavá plocha, bílé písmo ------------------
+   Tmavá plocha pod bílým textem je jediný povolený průsvitný směr
+   (CLAUDE.md, oddíl „zakázáno") — má spočitatelný strop kontrastu. */
+.st-hlava{background:var(--plocha-tmava); color:var(--text-ondeep);
+  padding:20px 0 28px; margin-bottom:16px;}
+.st-wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 16px;}
+.st-zpet{display:inline-flex; align-items:center; gap:8px; min-height:44px;
+  font-size:14px; color:var(--text-ondeep-mute); text-decoration:none;}
+.st-zpet:hover{color:var(--text-ondeep);}
+.st-odznak{display:inline-flex; align-items:center; gap:8px; height:28px;
+  padding:0 12px; border-radius:var(--r-pill);
+  background:rgba(var(--text-ondeep-mute-rgb),0.16);
+  font-size:12px; font-weight:600; letter-spacing:var(--odznak-proklad);
+  text-transform:uppercase; color:var(--text-ondeep);}
+.st-odznak::before{content:""; width:6px; height:6px; border-radius:var(--r-pill);
+  background:var(--znacka-svetla);}
+/* Rodinu tu nenastavujeme: h1 ji má z `h1{font-family:var(--font-nadpis)}`
+   a ten dnes míří na Inter. Kdyby se tu psala znovu, přebila by jediný
+   zdroj pravdy — a přesně to hlídá scripts/test-pismo.mjs. */
+.st-hlava h1,.st-h1{font-size:var(--h1-nastroj); line-height:1.2;
+  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--text-ondeep);}
+.st-meta{font-size:14px; line-height:1.5; color:var(--text-ondeep-mute); margin:0;}
+
+/* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */
+.st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
+  padding:20px; margin:0 0 12px; box-shadow:var(--e1);}
+.st-karta > :last-child{margin-bottom:0;}
+.st-nadpis{font-size:12px;
+  letter-spacing:var(--popisek-proklad); text-transform:uppercase;
+  font-weight:600; color:var(--muted); margin:0 0 16px;}
+.st-text{font-size:16px; line-height:1.6; margin:0 0 16px; color:var(--text);}
+.st-pozn{font-size:13px; line-height:1.5; color:var(--muted); margin:0;}
+
+/* --- seznam ano/ne: značka nese význam, barva ho jen podtrhuje ------ */
+.st-seznam{list-style:none; margin:0; padding:0;}
+.st-seznam li{display:grid; grid-template-columns:20px 1fr; gap:12px;
+  padding:8px 0; font-size:16px; line-height:1.5; align-items:start;}
+.st-znak{font-weight:700; line-height:1.5;}
+.st-ano .st-znak{color:var(--c-ok);}
+.st-ne .st-znak{color:var(--c-nalehave);}
+
+/* --- mřížka karet: jeden sloupec na telefonu, dva od 720 px --------- */
+.st-mrizka{display:grid; gap:12px; margin:0 0 12px;}
+@media (min-width:720px){.st-mrizka{grid-template-columns:1fr 1fr;}}
+
+/* --- pole formuláře: jedna podoba na celém webu --------------------- */
+.st-pole{margin:0 0 16px;}
+.st-pole label{display:block; font-size:13px; font-weight:600; margin:0 0 8px;
+  color:var(--text);}
+.st-nep{font-weight:400; color:var(--muted);}
+.st-pole input,.st-pole select,.st-pole textarea{
+  width:100%; min-height:44px; padding:12px 16px; font:inherit; font-size:16px;
+  background:var(--plocha-zapustena); color:var(--text);
+  border:1px solid var(--line-ui); border-radius:var(--r-ovladani);}
+.st-pole textarea{min-height:104px; resize:vertical;}
+.st-pole input:focus-visible,.st-pole select:focus-visible,
+.st-pole textarea:focus-visible{border-color:var(--znacka-svetla);
+  box-shadow:var(--prstenec-pole);}
+.st-pole input[aria-invalid="true"],.st-pole select[aria-invalid="true"],
+.st-pole textarea[aria-invalid="true"]{border-color:var(--c-nalehave);}
+
+/* --- tlačítko: tři úrovně, jedna hlavní na oblast ------------------- */
+.st-btn{display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:48px; padding:0 20px; border-radius:var(--r-ovladani);
+  font-family:var(--font-ui); font-size:16px; font-weight:600;
+  text-decoration:none; border:1px solid transparent; cursor:pointer;
+  transition:background var(--cas-rychly) var(--ease);}
+.st-btn-1{background:var(--znacka-hluboka); color:var(--text-ondeep); width:100%;}
+.st-btn-1:hover{background:var(--znacka);}
+.st-btn[disabled],.st-btn[aria-disabled="true"]{opacity:0.45; cursor:not-allowed;}
+
+/* --- hláška formuláře ----------------------------------------------- */
+.st-hlaska{font-size:14px; line-height:1.5; margin:12px 0 0; min-height:20px;}
+.st-hlaska.je-ok{color:var(--c-ok);}
+.st-hlaska.je-chyba{color:var(--c-nalehave);}

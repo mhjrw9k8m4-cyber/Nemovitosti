@@ -38,7 +38,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=da828f5f">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=99d68460">
   <style>
     .kt-mail{display:flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -95,50 +95,66 @@
 
 <main id="obsah">
 
-  <section class="add-hero">
-        <div class="wrap add-wrap">
-      <div class="eyebrow"><span class="live-dot"></span>Kontakt</div>
-      <h1>Ozvěte se nám.</h1>
-      <p class="sub">Máte dotaz, nápad na vylepšení, nebo je váš pozemek inzerovaný bez souhlasu? Napište — čteme všechno a snažíme se odpovídat rychle.</p>
+  <section class="st-hlava">
+    <div class="st-wrap">
+      <div><span class="st-odznak">Kontakt</span></div>
+      <h1>Napište nám.</h1>
+      <p class="st-meta">Čteme všechno. Odpovídá člověk, obvykle do&nbsp;pár dnů.</p>
     </div>
   </section>
 
-  <section class="section tesne-nahore">
-    <div class="wrap add-wrap">
+  <div class="st-wrap">
 
-      <div class="add-card">
-        <div class="rules-sect">
-          <h2>Napište nám e-mail</h2>
-          <a class="kt-mail" href="mailto:info@parcelaka.cz">
-            <span class="kt-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-            <span class="kt-txt"><small>E-mail</small><b>info@parcelaka.cz</b></span>
-          </a>
-          <p class="rules-note">Provozovatelem webu Parcelka je soukromá osoba. Píšeme z Česka, odpovídáme obvykle do pár dnů.</p>
+    <section class="st-karta">
+      <h2 class="st-nadpis">Zpráva</h2>
+      <form id="form-kontakt" novalidate data-pk-formular
+            data-pk-druh="kontakt" data-pk-hlaska="msg-kontakt">
+        <div class="st-pole">
+          <label for="k-tema">Čeho se to týká</label>
+          <select id="k-tema" name="tema" required>
+            <option value="">Vyberte…</option>
+            <option>Dotaz nebo nápad na vylepšení</option>
+            <option>Něco na webu nefunguje</option>
+            <option>Ochrana osobních údajů (GDPR)</option>
+            <option>Spolupráce — realitka nebo obec</option>
+          </select>
         </div>
-
-        <div class="rules-sect">
-          <h2>S čím vám můžeme pomoct</h2>
-          <ul class="rule-list">
-            <li><b>Dotaz nebo zpětná vazba</b> — co vám na webu chybí nebo nefunguje.</li>
-            <li><b>Nahlášení inzerátu</b> — pokud něco není v pořádku, použijte rovnou <a href="pravidla-inzerce.html#nahlasit">formulář pro nahlášení</a>.</li>
-            <li><b>Ochrana osobních údajů</b> — žádost o výmaz či opravu údajů podle <a href="ochrana-udaju.html">GDPR</a>.</li>
-            <li><b>Spolupráce</b> — jste realitka nebo obec a chcete se domluvit? Napište.</li>
-          </ul>
+        <div class="st-pole">
+          <label for="k-zprava">Zpráva</label>
+          <textarea id="k-zprava" name="zprava" required
+                    placeholder="S čím vám můžeme pomoct?"></textarea>
         </div>
-
-      </div>
-
-      <div class="add-cross">
-        <div class="acx-copy">
-          <h3>Prodáváte pozemek?</h3>
-          <p>Přidejte ho na mapu — zdarma a bez provize.</p>
+        <div class="st-pole">
+          <label for="k-jmeno">Jméno <span class="st-nep">— nepovinné</span></label>
+          <input id="k-jmeno" name="jmeno" type="text" autocomplete="name" placeholder="Jak vám máme říkat">
         </div>
-        <a href="pridat.html" class="btn-primary btn-glow">Přidat pozemek →</a>
-      </div>
+        <div class="st-pole">
+          <label for="k-kontakt">E-mail nebo telefon <span class="st-nep">— nepovinné, pro odpověď</span></label>
+          <input id="k-kontakt" name="kontakt" type="text" autocomplete="email" placeholder="vas@email.cz">
+        </div>
+        <button type="submit" class="st-btn st-btn-1">Odeslat zprávu</button>
+        <p class="st-hlaska" id="msg-kontakt" role="status" aria-live="polite"></p>
+      </form>
+    </section>
 
+    <div class="st-mrizka">
+      <section class="st-karta">
+        <h2 class="st-nadpis">Raději e-mailem?</h2>
+        <p class="st-text"><a href="mailto:info@parcelaka.cz">info@parcelaka.cz</a></p>
+        <p class="st-pozn">Provozovatelem Parcelky je soukromá osoba. Píšeme z&nbsp;Česka.</p>
+      </section>
+
+      <section class="st-karta">
+        <h2 class="st-nadpis">Rychlejší cesty</h2>
+        <ul class="st-seznam st-ano">
+          <li><span class="st-znak" aria-hidden="true">✓</span><span>Závadný inzerát → <a href="pravidla-inzerce.html#nahlasit">nahlásit</a></span></li>
+          <li><span class="st-znak" aria-hidden="true">✓</span><span>Výmaz údajů → <a href="ochrana-udaju.html">ochrana údajů</a></span></li>
+          <li><span class="st-znak" aria-hidden="true">✓</span><span>Prodáváte pozemek → <a href="pridat.html">přidat zdarma</a></span></li>
+        </ul>
+      </section>
     </div>
-  </section>
 
+  </div>
 </main>
 
 <footer>
@@ -164,6 +180,7 @@
 <script src="js/min/menu.js?v=e897102e" defer></script>
 
 <script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/formular.js?v=c5aaaa17" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/hlavicka.js?v=52634b3e" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
