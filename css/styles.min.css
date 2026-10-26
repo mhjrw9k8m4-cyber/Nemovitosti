@@ -1332,8 +1332,7 @@ to{opacity:1;transform:none}
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
 .add-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:32px;align-items:start}
-.add-card{position:relative;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:20px;box-shadow:var(--e3)}
-.add-card::before{content:"";position:absolute;top:0;left:24px;right:24px;height:1px;background:var(--znacka);opacity:0.75}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:20px;box-shadow:var(--e1)}
 .add-aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:96px}
 .aside-card{background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-md);padding:20px}
 .aside-card>h3{font-size:14px;margin-bottom:16px;letter-spacing:0.01em}

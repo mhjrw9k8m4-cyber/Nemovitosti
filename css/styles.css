@@ -5126,11 +5126,18 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-hero{position:relative; overflow:hidden;}
 .add-hero .wrap{position:relative; z-index:1;}
 .add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:32px; align-items:start;}
+/* JEDNA KARTA, NE DVĚ. Web měl dva recepty na bílou kartu: .st-karta
+   (poloměr --r-plocha, žádný rámeček, stín e1) a .add-card (poloměr
+   --r-obraz, rámeček --line-strong, stín e3 a k tomu zelená vlasovka přes
+   horní hranu). Vedle sebe — a na okresní stránce jsou vedle sebe — to
+   jsou dvě různé karty na touž práci. Rozhoduje .st-karta: --r-plocha je
+   ve slovníku zaoblení napsaný jako „karty, panely", kdežto --r-obraz
+   jako „mapa, fotky".
+   Zelená vlasovka padá úplně. Nad nadpisem v téže kartě stojí měděná
+   čárka (.rules-sect > h2::before), která oddíl značí — dvě značky na
+   jedné kartě si konkurují a ta přes celou hranu navíc nic neznačí. */
 .add-card{position:relative; background:var(--plocha-karta);
-  border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:20px;
-  box-shadow:var(--e3);}
-.add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
-  background:var(--znacka); opacity:0.75;}
+  border-radius:var(--r-plocha); padding:20px; box-shadow:var(--e1);}
 .add-aside{display:flex; flex-direction:column; gap:16px; position:sticky; top:96px;}
 .aside-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
 .aside-card > h3{font-size:14px; margin-bottom:16px; letter-spacing:0.01em;}
