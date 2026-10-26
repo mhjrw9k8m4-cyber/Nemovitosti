@@ -132,3 +132,10 @@ if (chyb) {
   console.log('::error::Jednotnost: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy));
   process.exit(1);
 }
+/* A DOJET TO NAČISTO. Bez tohohle řádku zkouška doměří, vypíše
+   výsledek a pak VISÍ: falešný server Supabase (scripts/falesna-
+   supabase-chat.mjs) drží smyčku událostí otevřenou. V sadě ji pak
+   sebere až časový strop a v logu po ní nezbyde nic — výpis se ztratí
+   v nevyprázdněné rouře. Naměřeno: proces běžel 20 minut po tom, co
+   měl hotovo. Ostatní zkoušky tenhle řádek mají, tahle ho zapomněla. */
+process.exit(0);

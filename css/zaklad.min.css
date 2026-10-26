@@ -1133,7 +1133,7 @@ main>.md-uvod{max-width:62ch;margin:20px auto 0;padding:0 20px}
 .st-odznak{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:rgba(var(--text-ondeep-mute-rgb),0.16);font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;color:var(--text-ondeep)}
 .st-odznak::before{content:"";width:6px;height:6px;border-radius:var(--r-pill);background:var(--znacka-svetla)}
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj);line-height:1.2;letter-spacing:-0.03em;font-weight:600;margin:12px 0 4px;color:var(--text-ondeep)}
-.st-meta{font-size:14px;line-height:1.5;color:var(--text-ondeep-mute);margin:0}
+.st-meta{font-size:14px;line-height:1.5;color:var(--text-ondeep-mute);margin:0;max-width:var(--m-text)}
 .st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:20px;margin:0 0 var(--mezera-bloku);box-shadow:var(--e1)}
 .st-karta>:last-child{margin-bottom:0}
 .st-nadpis{font-size:12px;letter-spacing:var(--popisek-proklad);text-transform:uppercase;font-weight:600;color:var(--muted);margin:0 0 16px}

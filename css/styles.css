@@ -8864,7 +8864,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    zdroj pravdy — a přesně to hlídá scripts/test-pismo.mjs. */
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj); line-height:1.2;
   letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--text-ondeep);}
-.st-meta{font-size:14px; line-height:1.5; color:var(--text-ondeep-mute); margin:0;}
+.st-meta{font-size:14px; line-height:1.5; color:var(--text-ondeep-mute);
+  margin:0; max-width:var(--m-text);}
 
 /* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */
 .st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
