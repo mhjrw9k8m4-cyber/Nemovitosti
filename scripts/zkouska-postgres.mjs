@@ -112,6 +112,43 @@ export function podstrcSupabase(psql, db) {
       language sql immutable as $fn$
         select (string_to_array(name, '/'))[1:greatest(array_length(string_to_array(name, '/'), 1) - 1, 0)]
       $fn$;
+    /* A SCHÉMATA „net" (pg_net) a „vault" (Supabase Vault). Obojí na
+       Supabase zakládá platforma, na holém PostgreSQL neexistuje —
+       a supabase/zprava-upozorneni.sql je obě potřebuje: posílá
+       upozornění na kontaktní formulář přes net.http_post() a klíč
+       k Resendu si bere z vault.decrypted_secrets. Bez podstrčení by
+       ten soubor padal na „schema does not exist" a chyba by se
+       promíjela jako rozdíl prostředí — přesně tak, jak se to dřív
+       stávalo u storage.
+       Podstrkuje se jen tolik, kolik 00-vse.sql opravdu volá. Jména
+       parametrů http_post musí sedět s pg_net, protože se volají
+       pojmenovaně (url :=, headers :=, body :=); kdyby se lišila,
+       zkouška by prošla a na Supabase by to spadlo. Odeslat se tu nic
+       nepokouší: funkce vrátí číslo jako pg_net a tím to končí. */
+    create schema if not exists net;
+    /* Zaslepení si volání ZAPISUJE. Napoprvé jen vracelo číslo jako
+       pg_net — jenže pak projde i funkce, které někdo vyndá pojistku
+       „bez příjemce neposílej": odeslání se stejně nestane, takže
+       zkouška nic nepozná. Takhle se dá měřit, co by doopravdy odešlo. */
+    create table if not exists net.volani (
+      id bigserial primary key, url text, headers jsonb, body jsonb,
+      kdy timestamptz not null default now());
+    create or replace function net.http_post(
+      url text,
+      body jsonb default '{}'::jsonb,
+      params jsonb default '{}'::jsonb,
+      headers jsonb default '{}'::jsonb,
+      timeout_milliseconds integer default 5000) returns bigint
+      language plpgsql as $fn$
+      declare n bigint;
+      begin
+        insert into net.volani(url, headers, body) values (url, headers, body)
+          returning id into n;
+        return n;
+      end $fn$;
+    create schema if not exists vault;
+    create table if not exists vault.decrypted_secrets (
+      name text primary key, decrypted_secret text);
     do $do$ begin
       if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon; end if;
       if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated; end if;

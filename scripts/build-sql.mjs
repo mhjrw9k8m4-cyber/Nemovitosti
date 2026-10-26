@@ -19,6 +19,10 @@ const SQL = path.join(ROOT, 'supabase');
 // poslední v řadě je ta verze create_listing, kterou web opravdu volá.
 const PORADI = [
   ['schema.sql', 'základní tabulky: listings, watch_subscriptions, payments, messages'],
+  // Hned za schema.sql: potřebuje jen tabulku messages, kterou zakládá.
+  // Dřív v repozitáři nebyl vůbec a v databázi přitom běžel — viz hlavička
+  // souboru.
+  ['zprava-upozorneni.sql', 'upozornění na novou zprávu z kontaktního formuláře'],
   ['messaging.sql', 'zprávy mezi zájemcem a majitelem'],
   ['messaging-fix.sql', 'oprava chatu a úklid'],
   ['saved-searches.sql', 'uložená hledání'],

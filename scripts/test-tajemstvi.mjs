@@ -22,6 +22,7 @@
  * GITHUB_TOKEN se nepočítá: ten dává GitHub sám a nastavovat se nemusí.
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -84,6 +85,47 @@ for (const jm of jmena) {
 pravda('a je vysvětlené tam, kde se používá',
   bezVysvetleni.length === 0,
   'jen vyjmenované, bez vysvětlení: ' + bezVysvetleni.join(', '));
+
+/* --- C) žádné tajemství zapsané natvrdo v repozitáři ------------- */
+/* PROČ TENHLE ODDÍL PŘIBYL. V Supabase běžela funkce
+   notify_new_message(), která posílá upozornění na kontaktní formulář
+   přes Resend — a klíč k němu měla napsaný přímo v těle SQL. Nikdo
+   o ní nevěděl, protože v repozitáři nebyla vůbec. Teď v něm je
+   (supabase/zprava-upozorneni.sql) a klíč si bere ze Supabase Vaultu;
+   tahle kontrola hlídá, aby se tam nevrátil — ani v ní, ani kdekoli
+   jinde.
+   Hlídají se tvary, které jsou tajné VŽDYCKY: klíč Resendu (re_…)
+   a servisní klíč Supabase (sb_secret_…). Veřejný klíč „anon" se
+   schválně nehlídá — ten v JS být musí a smí, je k tomu určený.
+   Délka 20 znaků je schválně nad délkou zkušebních hodnot v testech
+   ('re_zkouska'), aby zkoušky neshazovaly samy sebe. */
+const TVARY = [
+  ['klíč Resendu', /re_[A-Za-z0-9]{20,}/],
+  ['servisní klíč Supabase', /sb_secret_[A-Za-z0-9_-]{10,}/],
+];
+const vypsane = [];
+/* --cached --others --exclude-standard, ne holé `git ls-files`: to
+   vypisuje jen soubory, které git UŽ ZNÁ. Při psaní téhle kontroly to
+   znamenalo, že nově založený supabase/zprava-upozorneni.sql se
+   neprohledal vůbec — sabotáž (klíč vložený do něj naschvál) prošla
+   bez povšimnutí. Nový soubor s tajemstvím je přitom právě ten případ,
+   kvůli kterému tahle kontrola vznikla. */
+const prohledat = execSync('git ls-files --cached --others --exclude-standard',
+  { cwd: KOREN, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  .split('\n').filter(Boolean)
+  .filter((f) => !/^(data|dist)\//.test(f) && !/\.(png|jpg|jpeg|webp|ico|woff2?|zip|pdf)$/i.test(f));
+pravda(`seznam souborů k prohledání se načetl (${prohledat.length})`, prohledat.length > 100,
+  'git ls-files vrátil skoro nic — kontrola by prošla naprázdno');
+for (const f of prohledat) {
+  let text;
+  try { text = readFileSync(path.join(KOREN, f), 'utf8'); } catch { continue; }
+  for (const [popis, re] of TVARY) {
+    const m = text.match(re);
+    if (m) vypsane.push(`${f}: ${popis} (${m[0].slice(0, 6)}…)`);
+  }
+}
+pravda('žádný soubor v repozitáři neobsahuje tajemství napsané natvrdo',
+  vypsane.length === 0, 'nalezeno: ' + vypsane.join('; '));
 
 console.log('\nTajemství úloh a majitelův seznam');
 console.log(zpravy.join('\n'));

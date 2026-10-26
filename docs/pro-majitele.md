@@ -213,6 +213,28 @@ Potřebuje čtyři věci, v tomhle pořadí:
 
 Kroky 3 a 4 udělám na tvoje slovo; klíče ode mě nikdy nesmí projít.
 
+### Pozor: klíč k Resendu je na DVOU místech
+
+Kromě GitHub Secrets ho potřebuje i **databáze**. V Supabase běží
+spouštěč `trg_notify_new_message` nad tabulkou `messages` — ten posílá
+upozornění pokaždé, když někdo vyplní kontaktní formulář. Tahle cesta
+vznikla mimo repozitář a dlouho v něm nebyla vůbec; teď je
+v `supabase/zprava-upozorneni.sql`.
+
+Klíč měla do 26. 10. napsaný **přímo v těle funkce**. Přes veřejné API
+se k němu nikdo nedostal, ale nešel otočit z repozitáře a odcházel
+s každou zálohou databáze. Dnes se čte ze **Supabase Vaultu**, takže
+v souborech není.
+
+Co z toho plyne pro tebe: **při výměně klíče se mění dvě místa** —
+GitHub Secrets (`RESEND_API_KEY`) a Supabase Vault (záznam téhož
+jména). Když se změní jen jedno, druhá cesta tiše přestane posílat.
+
+A ještě jedno, až budeš měnit doménu: dokud je ve Vaultu jako
+`PK_MAIL_FROM` zkušební adresa Resendu `onboarding@resend.dev`, projde
+pošta **jen na tvoji vlastní adresu**; komukoli jinému ji Resend
+odmítne.
+
 ---
 
 ## 4. Identita provozovatele

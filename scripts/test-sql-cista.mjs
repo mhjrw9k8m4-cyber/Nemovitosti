@@ -810,6 +810,71 @@ try {
       `delete from storage.objects where bucket_id = 'listing-photos';
        delete from listings where place = 'Fotkova';`]);
   }
+
+  /* UPOZORNĚNÍ NA KONTAKTNÍ FORMULÁŘ. Funkce notify_new_message() a její
+     spouštěč v databázi běžely, ale v repozitáři nebyly — a klíč
+     k Resendu měly napsaný přímo v těle. Měří se tu obojí, co z toho
+     plyne: že spouštěč vznikl a že vložení zprávy přežije i stav, kdy
+     pošta nastavená NENÍ. To druhé je důležitější: kontaktní formulář
+     nesmí spadnout kvůli tomu, že se nemá kam poslat upozornění. */
+  /* psql bez -q připojí za výsledek ještě příkazovou značku („INSERT 0 1"),
+     takže se porovnává první řádek. Kdyby se tu porovnával celý výstup,
+     zkouška by hlásila pád tam, kde vložení prošlo — což se mi při psaní
+     taky stalo. */
+  const vlozeno = (v) => !/ERROR/i.test(v) && v.trim().split('\n')[0].trim() === '1';
+
+  const SPOUSTEC = psql(['-d', 'zkouska', '-tAc',
+    `select count(*) from pg_trigger where tgname = 'trg_notify_new_message'`]).trim();
+  pravda('spouštěč upozornění na zprávu vznikl', SPOUSTEC === '1',
+    'trg_notify_new_message v databázi není — upozornění na kontaktní formulář by nechodila');
+
+  const odeslano = () => Number(psql(['-d', 'zkouska', '-tAc',
+    'select count(*) from net.volani']).trim());
+
+  psql(['-d', 'zkouska', '-q', '-c',
+    'delete from vault.decrypted_secrets; delete from net.volani;']);
+  const bezPosty = psqlVse(['-d', 'zkouska', '-tAc',
+    `insert into messages(kind, name, email, okres, message)
+     values ('kontakt', 'Bez Posty', 'bez@priklad.cz', 'Brno-venkov', 'ahoj') returning 1;`]);
+  pravda('zpráva se uloží i bez nastavené pošty', vlozeno(bezPosty),
+    'vložení spadlo: ' + bezPosty.replace(/\s+/g, ' ').slice(0, 120));
+  pravda('a bez klíče se neodesílá nic', odeslano() === 0,
+    'funkce volala Resend, i když klíč ve Vaultu není');
+
+  psql(['-d', 'zkouska', '-q', '-c',
+    `insert into vault.decrypted_secrets(name, decrypted_secret) values
+       ('RESEND_API_KEY', 're_zkouska'), ('PK_MAIL_TO', 'majitel@priklad.cz'),
+       ('PK_MAIL_FROM', 'upozorneni@priklad.cz');`]);
+  const sPostou = psqlVse(['-d', 'zkouska', '-tAc',
+    `insert into messages(kind, name, email, okres, message)
+     values ('kontakt', 'S Postou', 's@priklad.cz', 'Brno-mesto', 'ahoj') returning 1;`]);
+  pravda('a uloží se i s ní (odeslání nic neblokuje)', vlozeno(sPostou),
+    'vložení spadlo: ' + sPostou.replace(/\s+/g, ' ').slice(0, 120));
+  pravda('s nastavenou poštou odešlo právě jedno volání', odeslano() === 1,
+    'volání Resendu: ' + odeslano());
+  const POSLANE = psql(['-d', 'zkouska', '-tAc',
+    `select (headers->>'Authorization') || ' | ' || (body->>'to') || ' | ' || (body->>'subject')
+       from net.volani order by id desc limit 1`]).trim();
+  pravda('klíč i příjemce se vzaly z Vaultu, ne z těla funkce',
+    POSLANE.startsWith('Bearer re_zkouska | majitel@priklad.cz |'),
+    'odešlo: ' + POSLANE);
+
+  /* SABOTÁŽ: kdyby v hlavičce chyběl příjemce, nesmí se poslat nic.
+     Bez téhle kontroly by stačilo, aby se Vault vyprázdnil, a funkce
+     by volala Resend s prázdnou adresou — tedy marně a při každé
+     zprávě. */
+  psql(['-d', 'zkouska', '-q', '-c',
+    `delete from vault.decrypted_secrets where name = 'PK_MAIL_TO';
+     delete from net.volani;`]);
+  const bezPrijemce = psqlVse(['-d', 'zkouska', '-tAc',
+    `insert into messages(kind, name, message) values ('kontakt', 'Bez Prijemce', 'ahoj') returning 1;`]);
+  pravda('bez příjemce se zpráva uloží', vlozeno(bezPrijemce),
+    'vložení spadlo: ' + bezPrijemce.replace(/\s+/g, ' ').slice(0, 120));
+  pravda('a bez příjemce se neodesílá nic', odeslano() === 0,
+    'funkce volala Resend s prázdnou adresou — marně a při každé zprávě');
+  psql(['-d', 'zkouska', '-q', '-c',
+    `delete from messages where email like '%@priklad.cz' or name = 'Bez Prijemce';
+     delete from vault.decrypted_secrets; delete from net.volani;`]);
 } finally {
   zavri();
 }
