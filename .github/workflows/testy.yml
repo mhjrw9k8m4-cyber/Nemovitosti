@@ -980,6 +980,13 @@ jobs:
       - name: Ztlumené okolí mapy
         run: node scripts/test-maska.mjs
 
+      # Jeden krok na celém webu. Měří VYKRESLENÉ stránky, ne zápis
+      # v souboru: hodnoty se slévají z tokenů, media queries a tří
+      # stylopisů naráz. Zrovna na tom pohořel test-pismo.mjs — hlídal
+      # čtením css/styles.css a 2 266 stránek pravidlo porušovalo.
+      - name: Jednotný krok webu (okraj, nadpis, karta)
+        run: node scripts/test-jednotnost.mjs
+
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
         run: node scripts/test-prvni-obrazovka.mjs
 

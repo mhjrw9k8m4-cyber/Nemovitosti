@@ -286,7 +286,13 @@
      dosah zkoušky, která stupně hlídá (ta se dívá na selektory
      s h1, ne na třídy). Stupeň teď znamená to, co na té stránce
      opravdu je: jedna věta, ne značka. */
-  --h1-domu:clamp(24px, 2.4vw, 28px);
+  /* SPODNÍ STUPEŇ JE U VŠECH TŘÍ ROLÍ STEJNÝ — 28 px.
+     Naměřeno 26. 10. na telefonu (390 px): h1 vycházelo 24 px na úvodu,
+     pozemku, hlídání a zprávách a 28 px na zbytku. Čtyři pixely nejsou
+     hierarchie, ale nesourodost: na jedné stránce je nadpis o kousek
+     menší a člověk neví proč. Role se liší nahoře (jak nadpis roste na
+     monitoru), ne dole. */
+  --h1-domu:clamp(28px, 2.4vw, 32px);
   --h1-nastroj:28px;
   /* MŘÍŽKOVÁ TEXTURA. Tutéž čtverečkovanou texturu nese šest ploch:
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
@@ -627,6 +633,22 @@
   --m-sloupec:720px;   /* sloupec článku i s kraji */
   --m-uzky:560px;      /* formuláře, boční panely */
   --m-karta:440px;     /* karty a okna */
+
+  /* JEDEN KROK NA CELÉM WEBU.
+     Naměřeno 26. 10. v prohlížeči na dvanácti typech stránek: svislé
+     odstupy oddílů měly DEVĚT různých hodnot (4, 12, 16, 20, 24, 28,
+     40, 48, 80 px), vodorovný okraj TŘI (12 px na stránce pozemku,
+     20 px na většině, 28 px na okresech, druzích a článcích) a karta
+     tři různá odsazení. Okraj obsahu tedy při přechodu z pozemku na
+     okres SKOČIL — a přesně to dělá z webu „sbírku stránek" místo
+     jedné věci.
+     Tyhle tři tokeny jsou jediný zdroj kroku. Kdo potřebuje jiný,
+     nepíše číslo — přidá si pojmenovaný stupeň a napíše proč.
+     Hlídá scripts/test-jednotnost.mjs: měří vykreslené stránky
+     v prohlížeči, ne zápis v souboru. */
+  --okraj-stranky:20px;   /* vodorovný okraj obsahu (telefon) */
+  --mezera-bloku:12px;    /* mezi kartami uvnitř oddílu */
+  --mezera-oddilu:32px;   /* mezi velkými oddíly stránky */
   /* IKONY NABÍDKY JEDNOU, NE DVAKRÁT. Kreslí je nadpisy oddílů ve
      výsuvném šuplíku na telefonu. (Ikony Zpráv a Hlídání tu byly taky,
      dokud měl rozbalovač na monitoru u každého řádku obrázek — od chvíle,
@@ -776,7 +798,10 @@ a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:foc
    a vypadalo to jako rozbitá grafika, protože to rozbitá grafika byla.
    Mez proto počítá s oběma okraji. */
 .opp-list{min-width:0; max-width:calc(100% + 12px);}
-.wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 32px;}
+.wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
+/* Na širším okně se okraj zvětší — ale pořád jedním místem, ne u každého
+   obalu zvlášť. Hodnoty jsou ze stupnice odstupů. */
+@media (min-width:640px){ :root{ --okraj-stranky:32px; } }
 /* Třída se jmenuje .mono po písmu, které tu bývalo. Jeho jediná práce,
    kvůli které se používalo, byla SVISLÁ ZÁVORA U ČÍSEL: v tabulce cen
    musí mít osmička stejnou šířku jako jednička, jinak sloupec jede
@@ -4631,7 +4656,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 @media (max-width:520px){
   /* Jen do stran. Zkratka „padding" by srazila i svislé odsazení, které si
      některé obaly nesou (patička) — a ta pak na telefonu splývala v jeden blok. */
-  .wrap{padding-left:20px; padding-right:20px;}
+  /* Okraj drží token --okraj-stranky, takže se tu už nedorovnává. */
   /* ZBYTEK PO PÁSU ODKAZŮ, A NAJELA NA NĚJ VLASTNÍ ZKOUŠKA MĚŘENÍM.
      Pás si tu dorovnával odsazení záporným okrajem (margin:0 -20px),
      aby šel od kraje ke kraji. S vysouvacím panelem je to škodlivé:
@@ -4739,7 +4764,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    zůstaly u levého okraje a stránka se rozpůlila. Tyhle tři bloky jsou
    na stránce ve třech různých oddílech (`.app-hero`, `.uc-taby`,
    `.app-section`), proto tři selektory a ne jeden. */
-@media (max-width:600px){ .add-hero.app-hero{padding:20px 0 2px;} .add-hero.app-hero h1{font-size:24px;} }
+@media (max-width:600px){ .add-hero.app-hero{padding:20px 0 2px;} }
 
 /* Pruh se záložkami účtu. Mezi těmi čtyřmi stránkami se dalo přecházet jen
    rozbalovací nabídkou „Moje" v hlavičce — dva klepnutí a člověk musel
@@ -5035,7 +5060,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-hero .wrap{position:relative; z-index:1;}
 .add-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:32px; align-items:start;}
 .add-card{position:relative; background:var(--plocha-karta);
-  border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:28px 28px;
+  border:1px solid var(--line-strong); border-radius:var(--r-lg); padding:20px;
   box-shadow:var(--e3);}
 .add-card::before{content:""; position:absolute; top:0; left:24px; right:24px; height:1px;
   background:var(--znacka); opacity:0.75;}
@@ -8796,8 +8821,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    Tmavá plocha pod bílým textem je jediný povolený průsvitný směr
    (CLAUDE.md, oddíl „zakázáno") — má spočitatelný strop kontrastu. */
 .st-hlava{background:var(--plocha-tmava); color:var(--text-ondeep);
-  padding:20px 0 28px; margin-bottom:16px;}
-.st-wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 16px;}
+  padding:20px 0 28px; margin-bottom:var(--mezera-bloku);}
+.st-wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
 .st-zpet{display:inline-flex; align-items:center; gap:8px; min-height:44px;
   font-size:14px; color:var(--text-ondeep-mute); text-decoration:none;}
 .st-zpet:hover{color:var(--text-ondeep);}
@@ -8817,7 +8842,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 
 /* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */
 .st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
-  padding:20px; margin:0 0 12px; box-shadow:var(--e1);}
+  padding:20px; margin:0 0 var(--mezera-bloku); box-shadow:var(--e1);}
 .st-karta > :last-child{margin-bottom:0;}
 .st-nadpis{font-size:12px;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;
@@ -8834,8 +8859,9 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .st-ne .st-znak{color:var(--c-nalehave);}
 
 /* --- mřížka karet: jeden sloupec na telefonu, dva od 720 px --------- */
-.st-mrizka{display:grid; gap:12px; margin:0 0 12px;}
+.st-mrizka{display:grid; gap:var(--mezera-bloku); margin:0 0 var(--mezera-bloku);}
 @media (min-width:720px){.st-mrizka{grid-template-columns:1fr 1fr;}}
+.st-oddil{padding-bottom:var(--mezera-oddilu);}
 
 /* --- pole formuláře: jedna podoba na celém webu --------------------- */
 .st-pole{margin:0 0 16px;}
