@@ -790,7 +790,9 @@
 
   azBudeMapa(function () {
     if (map.attributionControl) map.attributionControl.setPosition('bottomleft');
-    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+    var prst = false;
+    try { prst = window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+    if (!prst) L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
   });
 
   var PODKLADY = (window.PK_SNIMEK && window.PK_SNIMEK.podklady) || [];
@@ -1678,8 +1680,9 @@
     if (max <= 0) return 0.015;
     return 0.03 + 0.14 * Math.sqrt(n / max);
   }
+
   function styleKraj(k) {
-    return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
+    return { color: 'rgba(31,81,56,0.72)', weight: 1.7, fill: true,
       fillColor: '#0F5C3B', fillOpacity: krajKrytí(k) };
   }
 
@@ -1699,7 +1702,7 @@
     var svet = [[-89, -179.9], [-89, 179.9], [89, 179.9], [89, -179.9]];
     return L.polygon([svet].concat(diry), {
 
-      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.18,
+      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.22,
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
@@ -1890,8 +1893,9 @@
   }
 
   function krajUzka() { try { return map.getSize().x < 520; } catch (e) { return false; } }
+
   function krajVelikost(n) {
-    var z = n >= 200 ? 42 : (n >= 60 ? 38 : 33);
+    var z = n >= 300 ? 62 : (n >= 150 ? 54 : (n >= 60 ? 45 : (n >= 20 ? 38 : 33)));
     return krajUzka() ? Math.round(z * 0.82) : z;
   }
 

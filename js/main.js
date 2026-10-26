@@ -1321,11 +1321,23 @@
     }
   }) : null;
   });
-  // Ovládání zoomu +/− — jen na počítačích (na mobilu se přibližuje prsty). Umístěno
-  // vlevo (přes CSS na volný levý okraj), ať se nepere s ostatními tlačítky.
+  /* OVLÁDÁNÍ ZOOMU +/− JEN TAM, KDE NENÍ PRST.
+     Komentář tu léta tvrdil „jen na počítačích … umístěno vlevo" —
+     a lhal dvakrát: přidávalo se to vždycky a sedělo to vpravo dole
+     (css/styles.css: `margin:0 12px 80px 0`). Důsledek je na snímku,
+     který poslal majitel: na telefonu obsazené VŠECHNY ČTYŘI ROHY
+     mapy — „Klepněte na kraj" vlevo nahoře, tři tlačítka vpravo
+     nahoře, +/− vpravo dole, zdroj dlaždic vlevo dole. Přitom na
+     dotykové mapě se přibližuje prsty a +/− tam nikdo nemačká.
+     Teď se řídí UKAZOVÁTKEM, ne šířkou okna (pravidlo z CLAUDE.md):
+     hrubý ukazatel = prst = bez tlačítek. Na počítači zůstávají,
+     protože tam kolečko myši mapu záměrně nepřibližuje
+     (scrollWheelZoom:false, ať stránka pod kurzorem neuskakuje). */
   azBudeMapa(function () {
     if (map.attributionControl) map.attributionControl.setPosition('bottomleft'); // ať se nekryje s tlačítky
-    L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
+    var prst = false;
+    try { prst = window.matchMedia && window.matchMedia('(pointer: coarse)').matches; } catch (e) {}
+    if (!prst) L.control.zoom({ position: 'bottomright', zoomInTitle: 'Přiblížit', zoomOutTitle: 'Oddálit' }).addTo(map);
   });
   // Podklad: OpenStreetMap (zdarma, bez API klíče). CARTO začal vyžadovat klíč
   // (dlaždice ukazovaly „API KEY REQUIRED"). Jemný filtr (viz .pk-basemap v CSS)
@@ -2795,8 +2807,18 @@
     if (max <= 0) return 0.015;
     return 0.03 + 0.14 * Math.sqrt(n / max);
   }
+  /* OBRYS MUSÍ BÝT VIDĚT, JINAK ČESKO NENÍ TVAR, ALE SKVRNA.
+     Naměřeno 26. 10. na telefonu 390×844: republika zabírá 94 %
+     šířky rámce, ale jen 40 % výšky (367×210 px v rámci 390×531) —
+     nad ní i pod ní zůstává přes 160 px prázdna. To je dané tvarem:
+     Česko je na šířku 1,75:1, telefonní rámec 0,73:1, takže se fit
+     dělá podle šířky a svisle zbývá místo. Zúžit to nejde.
+     Co jde, je udělat z té skvrny TVAR: linka 1,4 px při krytí 0,5 se
+     na podkladu OSM ztrácela (majitel: „ta mapa prostě potřebuje
+     nějaký říz"). Silnější a sytější obrys drží republiku pohromadě
+     i v menšině záběru. */
   function styleKraj(k) {
-    return { color: 'rgba(31,81,56,0.5)', weight: 1.4, fill: true,
+    return { color: 'rgba(31,81,56,0.72)', weight: 1.7, fill: true,
       fillColor: '#0F5C3B', fillOpacity: krajKrytí(k) };
   }
   /* OKOLÍ SE ZTLUMÍ, ABY ČESKO VYSTOUPILO.
@@ -2841,11 +2863,17 @@
              bez masky   cizina 219, Česko 202  → cizina SVĚTLEJŠÍ, splývá
              bílá 0,55   cizina 232             → ještě horší
              tmavá 0,12  cizina 195             → rozdíl 7, málo
-             tmavá 0,18  cizina 184             → rozdíl 18  ← tahle
+             tmavá 0,18  cizina 184             → rozdíl 18
              tmavá 0,26  cizina 169             → rozdíl 33, už dusí kontext
 
+         26. 10. se závoj přitáhl z 0,18 na 0,22 (naměřeno v cizině
+         195–200, tedy víc, než tabulka výš slibovala — podklad OSM
+         se mezitím rozjasnil). Je to půl cesty k té mezi, za kterou
+         už kontext dusí, a jde ruku v ruce se silnějším obrysem
+         krajů: republika má být tvar, ne skvrna.
+
          Odstín je tmavý brandový tón, tentýž jako tmavý pás na stránce. */
-      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.18,
+      stroke: false, fill: true, fillColor: '#12241A', fillOpacity: 0.22,
       fillRule: 'evenodd', interactive: false, className: 'pk-maska'
     });
   }
@@ -3176,8 +3204,23 @@
      koleček po 42 px je přes sebe. Kolečko se proto zmenší — ale plocha
      na chytání zůstává 48 px, ta se zmenšit nesmí. */
   function krajUzka() { try { return map.getSize().x < 520; } catch (e) { return false; } }
+  /* KOLEČKO MÁ ŘÍCT, KOLIK TOHO TAM JE — a tři roky neříkalo.
+     Naměřeno 26. 10. na telefonu 390 px: Středočeský kraj se 406
+     nabídkami měl kolečko 34 px, Karlovarský s devatenácti 27 px.
+     Sedm pixelů rozdílu na dvacetinásobek nabídek: mapa vypadala jako
+     čtrnáct stejných puntíků a číslo v nich se muselo přečíst, aby
+     člověk poznal, kde se něco děje. Majitel: „ta mapa prostě
+     potřebuje nějaký říz."
+     Stupnice je teď pětistupňová a jde přes dvojnásobek (27 → 51 px
+     na telefonu). Plocha kolečka tím roste zhruba se čtvrtou odmocninou
+     počtu — poloměr přímo úměrný počtu by z Prahy udělal balón přes
+     půl republiky, a kdo kreslí bubliny plochou úměrnou hodnotě, dělá
+     přesně to, co se v grafech doporučuje. Tady stačí, že je rozdíl
+     VIDĚT; přesné číslo je v kolečku napsané.
+     Rozestrčení (rozestrcKraje níž) počítá s touhle velikostí, takže
+     větší kolečka se o sebe neopřou — hlídá to scripts/test-mapa.mjs. */
   function krajVelikost(n) {
-    var z = n >= 200 ? 42 : (n >= 60 ? 38 : 33);
+    var z = n >= 300 ? 62 : (n >= 150 ? 54 : (n >= 60 ? 45 : (n >= 20 ? 38 : 33)));
     return krajUzka() ? Math.round(z * 0.82) : z;
   }
 
