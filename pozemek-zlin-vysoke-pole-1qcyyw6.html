@@ -20,7 +20,7 @@
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=96f9b539"></script>
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
-<script src="js/min/pozemek.js?v=71b5899a"></script>
+<script src="js/min/pozemek.js?v=68d181dd"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/hlavicka.js?v=52634b3e" defer></script>
@@ -62,7 +62,7 @@
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=45e56a0b">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=da66b804">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -187,8 +187,8 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-btn.ulozit.on{color:var(--znacka-svetla);border-color:var(--znacka-svetla)}
 .pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 .pz-actions .pz-abtn{flex:1 1 0;min-width:0}
-.pz-actions .pz-abtn:first-child{flex-basis:100%;background:var(--plocha-znacka);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--e2)}
-.pz-actions .pz-abtn:first-child svg{color:#fff}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;border-color:var(--znacka);color:var(--znacka);font-weight:700}
+.pz-actions .pz-abtn:first-child svg{color:var(--znacka)}
 .pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-abtn:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
 .pz-abtn:active{transform:scale(.98)}

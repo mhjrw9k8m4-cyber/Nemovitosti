@@ -64,7 +64,7 @@
        stránek. Dotahuje je dotahniModul() v js/pozemek.js. -->
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=45e56a0b">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=da66b804">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -196,8 +196,8 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-btn.ulozit.on{color:var(--znacka-svetla);border-color:var(--znacka-svetla)}
 .pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
 .pz-actions .pz-abtn{flex:1 1 0;min-width:0}
-.pz-actions .pz-abtn:first-child{flex-basis:100%;background:var(--plocha-znacka);border-color:transparent;color:#fff;font-weight:700;box-shadow:var(--e2)}
-.pz-actions .pz-abtn:first-child svg{color:#fff}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;border-color:var(--znacka);color:var(--znacka);font-weight:700}
+.pz-actions .pz-abtn:first-child svg{color:var(--znacka)}
 .pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-abtn:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
 .pz-abtn:active{transform:scale(.98)}
@@ -377,7 +377,7 @@ body.pzm-cela-telo{overflow:hidden}
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
-<script src="js/min/pozemek.js?v=71b5899a"></script>
+<script src="js/min/pozemek.js?v=68d181dd"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

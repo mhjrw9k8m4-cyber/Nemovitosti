@@ -365,13 +365,20 @@
     .pz-btn.ulozit.on{color:var(--znacka-svetla); border-color:var(--znacka-svetla);}
     .pz-actions{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px;}
     .pz-actions .pz-abtn{flex:1 1 0; min-width:0;}
-    /* „Otevřít v katastru" působilo jako vypnuté: bledá výplň, tenká
-       linka a stejná váha písma jako u popisků. Je to přitom odkaz,
-       kterým se ověřuje vlastník — na téhle stránce jedna z mála věcí,
-       co má člověk opravdu udělat. */
-    .pz-actions .pz-abtn:first-child{flex-basis:100%; background:var(--plocha-znacka);
-      border-color:transparent; color:#fff; font-weight:700; box-shadow:var(--e2);}
-    .pz-actions .pz-abtn:first-child svg{color:#fff;}
+    /* DVĚ PLNÉ ZNAČKOVÉ PLOCHY = ŽÁDNÁ HLAVNÍ AKCE.
+       „Otevřít v katastru" dostalo plnou výplň proto, že vypadalo jako
+       vypnuté — a samo o sobě to byla správná oprava. Jenže o 1 126 px
+       výš už jedna plná zeleň je: tlačítko „Inzerát". Naměřeno 26. 10.:
+       dvě pozadí rgb(0,79,47) na jedné stránce, sedmnáct akcí v obsahu
+       a šest různých tříd tlačítek. Oko pak nemá podle čeho poznat, co
+       je ta jedna věc, kterou má udělat.
+       Pořadí je teď: INZERÁT je hlavní akce (kvůli němu sem člověk
+       přišel), katastr je ověření a zůstává výrazným obrysovým
+       tlačítkem přes celou šířku — tedy pořád nepřehlédnutelný, jen
+       o stupeň níž. Hlídá scripts/test-hierarchie.mjs. */
+    .pz-actions .pz-abtn:first-child{flex-basis:100%; border-color:var(--znacka);
+      color:var(--znacka); font-weight:700;}
+    .pz-actions .pz-abtn:first-child svg{color:var(--znacka);}
     /* 52 px jako .pz-btn nad ním. „Otevřít v katastru" (52) a „Sdílet"
        (48) stály pod sebou a lišily se o čtyři pixely — na snímku
        z telefonu to vypadá jako dvě různé sady tlačítek. */

@@ -61,8 +61,33 @@ const SIRKA = 390, VYSKA = 844;
    na 409 px.
    Mez je o 40 px volnější než naměřený stav: tolik unese delší nadpis
    i užší telefon, ale NEUNESE vrácení kteréhokoli z těch kusů —
-   ani návrat nářadí do dvouřádkového pruhu. */
+   ani návrat nářadí do dvouřádkového pruhu.
+
+   NADPIS ZHUBL, ROZCESTNÍK PŘIBYL: ČISTÝCH 9 px.
+   26. 10. se velký nadpis zkrátil ze tří řádků na jeden (ze 158 na
+   85 px) a místo nich přišel řádek šesti vstupů do kategorií (48 px
+   + 16 px mezera). Naměřeno: první nabídka 448 → 439 px. Mez 450
+   tedy drží, ale slack je jen 11 px — kdo sem přidá další pruh,
+   musí ubrat jinde. Kolik stojí zbytek první obrazovky (naměřeno
+   na 390 px): lišta 64, nadpis 85, vstupy 48, hledání s přepínačem
+   60, nadpis výpisu 42 a dvě řady ovladačů 96. Ty dvě řady ani
+   nadpis výpisu zúžit nejde: majitel si vyžádal, aby všechna
+   políčka měla jednu velikost (test-ovladani-vypisu) a aby nad
+   výpisem stál nadpis, ne holé číslo („suché a robotické"). */
 const MEZ_PRVNI = 450;
+/* A TOTÉŽ NA ÚZKÉM TELEFONU — MEZ, KTERÁ TU CHYBĚLA.
+   Měřilo se jen 390 px, a přesně v té slepé skulině se schoval vlastní
+   nález: na 360 px (Galaxy S a spol.) se ovladače nad výpisem skládaly
+   do JEDNOHO sloupce, pruh měl 242 px místo 138 a první nabídka
+   začínala na 595 px z 844 — tedy pod obrazovkou. Na širším telefonu
+   byla na 439. Čím užší displej, tím víc místa se plýtvalo.
+   Spravilo se to zkrácením nápisu (.mc-dl, viz js/main.js): naměřeno
+   491 px. Zbylých 52 px proti 390 px je pole hledání a přepínač
+   Seznam/Mapa, které se na 360 px nevejdou na jeden řádek — to je
+   v pořádku, cena se na obrazovku pořád vejde (798 z 844).
+   Mez 540 unese ten zlom i o něco delší nadpis, ale NEUNESE návrat
+   jednosloupcového nářadí. */
+const SIRKA_UZKA = 360, MEZ_PRVNI_UZKA = 540;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -269,6 +294,42 @@ try {
         r.kartaY !== null && r.kartaY < 580,
         `pruh je vysoký ${r.pruhH} px a první nabídka začíná na ${r.kartaY} px`);
     }
+  }
+
+  /* ---- A NA ÚZKÉM TELEFONU --------------------------------------
+     Měří se jen to podstatné: kde začíná první nabídka a jestli je
+     z ní vidět cena. Zbytek kontrol výš na šířce nezávisí. */
+  {
+    const cu = await prohlizec.newContext({ bypassCSP: true,
+      viewport: { width: SIRKA_UZKA, height: VYSKA }, isMobile: true, hasTouch: true,
+      serviceWorkers: 'block', locale: 'cs-CZ',
+    });
+    const pu = await cu.newPage();
+    await pu.goto(BASE + '/index.html', { waitUntil: 'load' });
+    await pu.waitForSelector('#opp-list .opp-item', { timeout: 25000 }).catch(() => {});
+    await pripravenoVypis(pu);
+    await domUtichlo(pu, 350);
+    await pu.evaluate(() => window.scrollTo(0, 0));
+    const u = await pu.evaluate(() => {
+      const karta = document.querySelector('#opp-list .opp-item');
+      const cena = karta ? karta.querySelector('.opp-price, .opp-cena, [class*="price"]') : null;
+      const cr = cena ? cena.getBoundingClientRect() : null;
+      const pruh = document.querySelector('.ms-vysledky');
+      return {
+        karta: karta ? Math.round(karta.getBoundingClientRect().top + window.scrollY) : null,
+        cenaSpodek: cr ? Math.round(cr.top + window.scrollY + cr.height) : null,
+        pruhH: pruh ? Math.round(pruh.getBoundingClientRect().height) : null,
+      };
+    });
+    await cu.close();
+    pravda(`na ${SIRKA_UZKA} px je co měřit — vykreslila se aspoň jedna nabídka`,
+      u.karta !== null, 'žádná .opp-item se nenašla');
+    pravda(`a první nabídka začíná nad ${MEZ_PRVNI_UZKA} px (${u.karta})`,
+      u.karta !== null && u.karta < MEZ_PRVNI_UZKA,
+      `začíná na ${u.karta} px z ${VYSKA}; pruh ovládání má ${u.pruhH} px`);
+    pravda(`a cena je i tam na první obrazovce`,
+      u.cenaSpodek !== null && u.cenaSpodek <= VYSKA,
+      `cena končí na ${u.cenaSpodek} px, obrazovka má ${VYSKA}`);
   }
 
   /* ---- A TOTÉŽ NA VELKÉM MONITORU --------------------------------

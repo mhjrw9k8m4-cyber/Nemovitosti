@@ -3279,6 +3279,26 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
    z pojmenovaného stupně, jenže hledá pravidla se SELEKTOREM h1.
    Dokud byl nadpis úvodní stránky jen třída, zkouška o něm nevěděla
    a mohl si (a taky si držel) opsaných 40 px mimo stupnici. */
+/* ROZCESTNÍK POD NADPISEM — vzor Sreality: to, co lidé hledají
+   nejčastěji, hned pod nadpisem. Na širokém displeji se skrývá:
+   tam je mapa přes půl obrazovky a rozcestník by jen odsouval to,
+   kvůli čemu sem člověk jde.
+   JEDEN POSUVNÝ ŘÁDEK, NE MŘÍŽKA DLAŽDIC. Napoprvé to byly dvě
+   řady dlaždic — naměřeno na 390×844: pruh 112 px a první nabídka
+   spadla ze 448 na 551 px, tedy HORŠÍ než stav před opravou.
+   Posuvný řádek pilulek má 48 px a první nabídka je na 439. */
+.uvod-vstupy{display:flex; gap:8px; overflow-x:auto; margin:0 0 16px;
+  padding:0 var(--okraj-stranky) 4px; scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;}
+.uvod-vstupy::-webkit-scrollbar{display:none;}
+.uvod-vstupy a{display:inline-flex; align-items:center; justify-content:center;
+  flex:0 0 auto; min-height:44px; padding:0 16px; border-radius:var(--r-pill);
+  background:var(--plocha-karta); border:1px solid var(--line-ui);
+  color:var(--text); font-size:14px; font-weight:600; text-decoration:none;
+  white-space:nowrap;}
+.uvod-vstupy a:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
+@media (min-width:900px){ .uvod-vstupy{display:none;} }
+
 h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-weight:700;
   letter-spacing:-0.01em; line-height:1.3; color:var(--text);
   max-width:var(--m-wrap); margin:0 auto; padding:16px 32px 0;}
@@ -3287,7 +3307,6 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    tišší šedi okolo. Teď je z ní <h1> a celá je plnou barvou, takže
    číslo nese jen <b>: v nadpisu psaném 700 už není kam přidat, a dva
    odstíny v jedné větě by z nadpisu udělaly dva nadpisy. */
-.uvod-pocet{font-weight:700;}
 
 .opp-chips{display:flex; flex-wrap:wrap; gap:4px;}
 /* JEDEN TVAR PRO VŠECHNY ODZNAKY, BARVA NESE VÝZNAM.
@@ -6877,14 +6896,22 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
      `display:inline-flex` z .mc-prep, takže se musí schovat výslovně. */
   .ms-vysledky .msv-ovladani > [hidden]{display:none;}
-  /* POD 360 px JEDEN SLOUPEC. Dva sloupce dají na 320px displeji
-     políčka po 146 px, kdežto „Procházet po jednom" potřebuje 160
-     a „Stáhnout výběr (1 942)" 167 — nápisy pak lezou přes rámeček
-     a málem do sebe (vyfoceno). Na celou šířku se vejdou oba a velikost
-     zůstává jednotná, jen pod sebou. */
+  /* POD 360 px SE ZKRACUJE NÁPIS, NE ŘADA.
+     Dřív tu stál JEDEN SLOUPEC: dva sloupce dají na 320px displeji
+     políčka po 136 px, kdežto „Procházet po jednom" potřebuje 160
+     a „Stáhnout výběr (1 942)" 167 — nápisy pak lezly přes rámeček
+     a málem do sebe (vyfoceno). Jeden sloupec to spravil, ale zaplatil
+     za to celou obrazovkou: NAMĚŘENO 26. 10. na 360 px — čtyři řádky
+     po 44 px, pruh nad výpisem 242 px (na 390 px jen 138) a první
+     nabídka až na 595 px z 844, tedy pod okrajem obrazovky. Na užším
+     telefonu, kde je místa nejmíň, se ho tedy plýtvalo nejvíc.
+     Zkracuje se proto nápis (.mc-dl v js/main.js): v ovladači zůstane
+     sloveso a zmizí doplněk, celé znění drží aria-label. Řada je pak
+     dvousloupcová i tady a políčka mají pořád jednu velikost.
+     Trojice a víc nástrojů zůstává na celou šířku (pravidlo o kus níž)
+     — „Schovat dražby po termínu" doplněk k odebrání nemá. */
   @media (max-width:360px){
-    .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
-      grid-template-columns:1fr;}
+    .mc-dl{display:none;}
   }
   /* TŘI NÁSTROJE SE DO DVOU SLOUPCŮ NEVEJDOU — a mřížka je pak zalomí
      pod sebe. NAMĚŘENO 20. 10. (den po dražbě, kdy k „Procházet po
@@ -8565,30 +8592,37 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    dvě na telefonu, čtyři od 680 px. A `:has` dorovná případy, kdy
    dlaždice nejsou čtyři (u nabídky bez ceny nebo bez výměry chybí
    „Cena za m²"), aby ani tam nezbyl prázdný sloupec. */
-.pz-klice{display:grid; grid-template-columns:minmax(0, 1fr);
-  gap:8px; margin:0 0 8px;}
-@media (min-width:360px){ .pz-klice{grid-template-columns:repeat(2, minmax(0, 1fr));} }
-@media (min-width:680px){
-  .pz-klice{grid-template-columns:repeat(4, minmax(0, 1fr));}
-  .pz-klice:has(> .pz-klic:nth-child(3):last-child){grid-template-columns:repeat(3, minmax(0, 1fr));}
-  .pz-klice:has(> .pz-klic:nth-child(2):last-child){grid-template-columns:repeat(2, minmax(0, 1fr));}
-}
-/* OSAMĚLÁ DLAŽDICE SE ROZTÁHNE. Na telefonu se vejdou dvě vedle sebe,
-   takže tři údaje nechávaly třetí samotný a vedle něj díru — naměřeno
-   184 px prázdna z 358, tedy přes polovinu řádku. Právě tohle dělalo
-   ze stránky „kostky". Pravidlo platí jen tam, kde jsou sloupce dva
-   (na širší obrazovce se tři vejdou na jeden řádek a není co řešit). */
-/* Mez je 680 px, tedy přesně tam, kde mřížka přepíná na čtyři sloupce:
-   dokud jsou sloupce dva, platí „lichá poslední dlaždice se roztáhne".
-   Dřív tu stálo 560 px — číslo z doby, kdy počet sloupců určoval
-   auto-fit, a mezi 560 a 680 px tím pravidlo přestalo platit, i když
-   sloupce byly pořád dva. */
-@media (max-width:679px){
-  .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
-}
-.pz-klic{position:relative; display:flex; flex-direction:column; gap:4px; padding:12px 16px;
+/* PARAMETRY JAKO TABULKA ŘÁDKŮ, NE JAKO DLAŽDICE.
+   Naměřeno 26. 10. na třech vzorcích: KAŽDÁ dlaždice opakovala něco,
+   co už na obrazovce nad ní stálo. „6 336 m²" a „Ostatní plocha" jsou
+   v nadpisu („Ostatní plocha 6 336 m² — Benešov"), „314 Kč/m²" stojí
+   hned u ceny, „Podíl 1/2" je taky v nadpisu. Tři až čtyři dlaždice
+   o výšce přes 80 px tedy zabíraly půl obrazovky trojím opakováním —
+   a řádková tabulka .pz-spec pod nimi byla na všech třech vzorcích
+   prázdná.
+   Řádek popisek-vlevo / hodnota-vpravo je to, co dělají velké realitní
+   weby (iDNES Reality, Sreality) u dvaceti údajů naráz: přečte se
+   shora dolů za pár vteřin a nezabere víc místa, než kolik má řádků.
+   ZNAČKOVÁNÍ SE NEMĚNÍ — pořád je to <b>hodnota</b><span>popisek</span>,
+   takže js/pozemek.js ani sedm zkoušek, které ho čtou, nepotřebují
+   sáhnout. Mění se jen rozvržení. */
+.pz-klice{margin:0 0 var(--mezera-bloku); padding:0 20px;
   background:var(--plocha-karta); border:1px solid var(--line-strong);
   border-radius:var(--r-plocha); box-shadow:var(--e1);}
+.pz-klic{position:relative; display:flex; flex-wrap:wrap;
+  align-items:baseline; gap:4px 16px; padding:12px 0;}
+.pz-klic + .pz-klic{border-top:1px solid var(--line-ui);}
+/* Popisek vlevo, hodnota vpravo — `order` proto, že ve značkování
+   stojí hodnota první (viz komentář u pz-klic v js/pozemek.js: dvě
+   zkoušky čtou popisek jako `querySelector('span')`). */
+.pz-klic > span:not(.pz-klic-ic){order:1; font-size:16px; color:var(--muted);}
+.pz-klic b{order:2; margin-left:auto; font-size:18px; font-weight:600;
+  line-height:1.4; color:var(--text); font-variant-numeric:tabular-nums;
+  text-align:right;}
+/* Vysvětlivka („váš podíl — celá parcela je větší") jde pod řádek,
+   celá šířka: patří k hodnotě, ale není to další údaj. */
+.pz-klic i{order:3; flex-basis:100%; font-style:normal;
+  font-size:13px; line-height:1.5; color:var(--muted); margin:0;}
 /* ZNAČKA V ROHU, NE PŘED ČÍSLEM. Dlaždice se čte odshora: velké číslo,
    pod ním co to je. Ikona před číslem by se do té cesty postavila a
    ještě by ukrojila z místa, kde stojí „1 630 m²". V rohu dělá to, co
@@ -8649,27 +8683,19 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    z toho u 19px ikony vyjde 1,43 px a u 22px 1,65 px. Rozdíl 0,22 px už
    oko pozná a scripts/test-ikony.mjs ho hlídá (strop 0,2); 20 px dává
    1,50 px, tedy sadu, která vypadá jako jedna. */
-.pz-klic > .pz-klic-ic{position:absolute; top:12px; right:12px; width:20px; height:20px;
+ /* Ozdobná značka patřila do rohu DLAŽDICE. V řádku by stála nad
+    hodnotou vpravo a překrývala ji; a protože je to ozdoba (co řádek
+    říká, stojí v něm slovem a ikona je aria-hidden), nemá cenu jí
+    v řádku místo brát. Pravidlo zůstává kvůli zkouškám, které ji
+    hledají — vrací „display:none", tedy jasnou odpověď „tady není". */
+.pz-klic > .pz-klic-ic{display:none; position:absolute; top:12px; right:12px; width:20px; height:20px;
   padding:0; color:var(--znacka-svetla); opacity:0.45; pointer-events:none;}
 .pz-klic > .pz-klic-ic > svg{display:block; width:20px; height:20px; fill:none; stroke:currentColor;
   stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
-/* Číslo se smí roztáhnout jen k ikoně, ne pod ni. */
-.pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
-.pz-klic b{font-size:24px; line-height:1.2; color:var(--text);
-  font-variant-numeric:tabular-nums;}
-/* DVA STUPNĚ DOLŮ PRO HODNOTU, KTERÁ SE NEVEJDE. Třídy přidává podle
-   NAMĚŘENÉ šířky pzVelikostHodnot v js/pozemek.js — proč se nedají
-   počítat znaky a odkud jsou ta čísla, stojí tam. Značka u prvního
-   stupně mizí: je to ozdoba s aria-hidden, kdežto uříznuté číslo je
-   údaj. 20 a 16 px jsou stupně téže stupnice jako 24 px. */
-.pz-klic.pz-dlouha > .pz-klic-ic{display:none;}
-.pz-klic.pz-dlouha b{font-size:20px; padding-right:0;}
-.pz-klic.pz-velmi-dlouha b{font-size:16px;}
-/* POPISEK DLAŽDICE JE ÚDAJ, NE POZNÁMKA POD ČAROU: 14 px a váha 500,
-   stejně jako doplňková čísla na kartě ve výpisu (.opp-figures .m).
-   Odstín zůstává tlumený schválně — viz níž, proč se nezvedal. */
-.pz-klic > span{font-size:14px; font-weight:500; color:var(--muted);}
-.pz-klic i{font-size:12px; line-height:1.5; font-style:italic; color:var(--muted);}/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
+/* Velikosti a barvy řádku drží oddíl „PARAMETRY JAKO TABULKA ŘÁDKŮ"
+   výš. Dřív tu stála druhá sada pro dlaždice (hodnota 24 px, popisek
+   14 px, vysvětlivka kurzívou) a protože ležela ZA ní, tiše ji
+   přebíjela — tedy dvě pravdy o témže řádku. Zbyla jedna. *//* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
    Řádky byly flex se space-between, takže se hodnota lepila na pravý
    okraj — na počítači 435 px od svého popisku. Mřížka je na .pz-specs
    (ne na řádku), aby sloupec popisků byl JEDEN pro všechny řádky
@@ -8861,7 +8887,6 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* --- mřížka karet: jeden sloupec na telefonu, dva od 720 px --------- */
 .st-mrizka{display:grid; gap:var(--mezera-bloku); margin:0 0 var(--mezera-bloku);}
 @media (min-width:720px){.st-mrizka{grid-template-columns:1fr 1fr;}}
-.st-oddil{padding-bottom:var(--mezera-oddilu);}
 
 /* --- pole formuláře: jedna podoba na celém webu --------------------- */
 .st-pole{margin:0 0 16px;}

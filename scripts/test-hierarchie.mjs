@@ -134,7 +134,17 @@ const MERENI = `(() => {
 })()`;
 
 for (const [stranka, strop] of Object.entries(STROP)) {
-  const adresa = stranka === 'pozemek.html' ? 'pozemek.html?ll=49.46,17.87' : stranka;
+  /* STRÁNKA POZEMKU SE MĚŘÍ NA OPRAVDOVÉ, NE NA PŘEDLOZE.
+     Do 26. 10. se tu otevíralo „pozemek.html?ll=49.46,17.87" — šablona
+     bez dat. Tlačítka, která se skládají z inzerátu („Inzerát",
+     „Otevřít v katastru"), se na ní vůbec nevykreslí, takže hlídač
+     hlavní akci NEVIDĚL. Dokázáno sabotáží: s DVĚMA plnými značkovými
+     plochami na opravdové stránce zkouška prošla jako by nic.
+     Teď se bere konkrétní vygenerovaná stránka. Když zmizí z dat,
+     spadne kontrola „značková plocha se dá změřit" — tedy nahlas,
+     ne tiše. */
+  const adresa = stranka === 'pozemek.html'
+    ? 'pozemek-benesov-benesov-1sjtz7b.html' : stranka;
   const p = await ctx.newPage();
   await p.goto(BASE + '/' + adresa, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(2800);

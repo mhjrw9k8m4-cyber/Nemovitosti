@@ -482,8 +482,6 @@
 
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
 
-    var un = document.getElementById('uvod-nabidka');
-    if (un) un.innerHTML = 'Nabízíme <b class="uvod-pocet">' + fmt(DATA.length) + '</b> ' + plPozemek(DATA.length);
   })();
 
   (function () {
@@ -4213,11 +4211,13 @@
       (ukazPodobne ? 'Jen přesný název'
                    : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
 
-    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">'
-      + ikonaNastroje('vyvoz') + 'Stáhnout výběr (' + fmt(matched) + ')</button>';
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
+      + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
+      + ikonaNastroje('vyvoz') + 'Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></button>';
 
-    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
-      + ikonaNastroje('rychly') + 'Procházet po jednom</button>' + tlacitka;
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
+      + ' aria-label="Procházet po jednom">'
+      + ikonaNastroje('rychly') + 'Procházet<span class="mc-dl"> po jednom</span></button>' + tlacitka;
 
     countEl.innerHTML = '<span>' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')

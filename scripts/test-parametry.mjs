@@ -225,7 +225,7 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   const p = await prohlizec.newPage({ viewport: { width: 390, height: 1000 } });
   const prilis = [];
   const velikosti = new Set();
-  let zmenseno = 0, dlazdic = 0;
+  let dlazdic = 0;
   for (const f of mereneStranky) {
     for (const sirka of SIRKY) {
       await p.setViewportSize({ width: sirka, height: 1000 });
@@ -252,7 +252,6 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
       for (const x of v) {
         dlazdic++;
         velikosti.add(x.px);
-        if (x.px < 24) zmenseno++;
         if (x.presah > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" vyteklo z dlaždice o ${x.presah} px`);
         else if (x.naZnacku != null && x.naZnacku > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" leze na značku o ${x.naZnacku} px`);
       }
@@ -266,17 +265,22 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
     `změřeno ${dlazdic}`);
   pravda('žádná hodnota nevyteče z dlaždice ani neleze na značku',
     prilis.length === 0, prilis.slice(0, 4).join('\n      '));
-  /* A DRUHÁ STRANA TÉŽE VĚCI: kdyby se zmenšování vypnulo, kontrola výš
-     by spadla — ale kdyby se zapnulo na všechno, taky by procházela.
-     Tohle hlídá, že se zmenšuje jen tam, kde je potřeba, a jen na
-     stupně stupnice. */
-  pravda('a aspoň jedna dlouhá hodnota se kvůli tomu zmenšila',
-    zmenseno > 0, 'žádná hodnota se nezmenšila — měří se tohle vůbec?');
-  pravda('zmenšuje se jen na stupně stupnice (24/20/16 px)',
-    [...velikosti].every((x) => [24, 20, 16].indexOf(x) !== -1),
+  /* ZMENŠOVÁNÍ SE UŽ NEMĚŘÍ — nemá se co zmenšovat. Dokud byly
+     parametry DLAŽDICE, muselo se dlouhé číslo zmenšit, aby nevyteklo
+     z pevné šířky sloupce; byla na to měřicí smyčka a ResizeObserver
+     (pzVelikostHodnot v js/pozemek.js). Parametry jsou od 26. 10.
+     tabulka řádků: hodnota stojí u pravého okraje a dlouhá se zalomí.
+     Naměřeno po přestavbě na pěti stránkách × šesti šířkách:
+     nezmenšila se ANI JEDNA hodnota, tedy ten kód už nic nedělal
+     a zmizel. Místo „zmenšilo se to" se proto hlídá to, oč šlo
+     doopravdy — že hodnota nevyteče (kontrola výš) a že všechny
+     řádky mluví jednou velikostí. */
+  pravda('hodnota má na všech řádcích jednu velikost',
+    velikosti.size === 1,
     `naměřené velikosti: ${[...velikosti].sort((a, b) => b - a).join(', ')} px`);
-  pravda('a nezmenšily se všechny', zmenseno < dlazdic,
-    `zmenšeno ${zmenseno} z ${dlazdic} — zmenšování se spouští i tam, kde není potřeba`);
+  pravda('a je to stupeň ze stupnice',
+    [...velikosti].every((x) => [24, 20, 18, 16].indexOf(x) !== -1),
+    `naměřené velikosti: ${[...velikosti].join(', ')} px`);
 }
 
 /* ===== RYTMUS STRÁNKY: ČTYŘI ODSTUPY, NE DESET ==================
@@ -342,7 +346,11 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   pravda('je co měřit — stránka pozemku má svoje bloky',
     !v.chyba && v.bloku >= 10, v.chyba || `bloků ${v.bloku}`);
   if (!v.chyba) {
-    const SLOVNIK = [8, 10, 20, 40];
+    /* 12 px přibylo s tokenem --mezera-bloku (css/styles.css): mezera
+       mezi kartami je od 26. 10. jedna na celém webu a blok parametrů
+       ji používá taky. Slovník není libovolný seznam — je to soupis
+       stupňů, které na téhle stránce smějí být. */
+    const SLOVNIK = [8, 10, 12, 20, 40];
     const mimo = v.ruzne.filter((x) => SLOVNIK.indexOf(x) === -1);
     pravda(`odstupy mezi bloky jsou ze slovníku ${SLOVNIK.join('/')} px`,
       mimo.length === 0, `navíc: ${mimo.join(', ')} px (všechny: ${v.ruzne.join(', ')})`);

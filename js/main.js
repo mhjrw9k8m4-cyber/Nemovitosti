@@ -771,8 +771,16 @@
        v HTML stojí „Pozemky na prodej, v dražbě a v exekuci — na jedné
        mapě." a přepisuje se jen první slovo. Kdyby se číslo vepsalo
        do stránky natvrdo, lhalo by den po sestavení. */
-    var un = document.getElementById('uvod-nabidka');
-    if (un) un.innerHTML = 'Nabízíme <b class="uvod-pocet">' + fmt(DATA.length) + '</b> ' + plPozemek(DATA.length);
+    /* POČET UŽ V NADPISU NENÍ — a není to opomenutí.
+       Nadpis zněl „Nabízíme 1 926 pozemků na prodej, v dražbě
+       a v exekuci — na jedné mapě." a na telefonu měřil 158 px, tedy
+       tři řádky. Dvě věci na něm byly špatně: web v něm mluvil sám
+       o sobě („Nabízíme"), což se odsud jednou už odstraňovalo
+       u uvítacího bloku, a totéž číslo stojí o kus níž nad výpisem,
+       kde se navíc mění s filtry. Dvakrát jedno číslo na jedné
+       obrazovce už jednou problém bylo (viz komentář v index.html).
+       Element #uvod-nabidka tím zmizel; kdyby se sem počet někdy
+       vracel, ať se vrací tam, kde se mění, ne do nadpisu. */
   })();
 
   // „Naposledy aktualizováno" — signál čerstvosti dat (z pole updated).
@@ -6766,8 +6774,22 @@
        stahuje se právě to, co je vyfiltrované, ne celá databáze. */
     /* „Stáhnout výběr", ne „tabulku": dá se stáhnout i jako body do
        navigace, takže by slovo tabulka slibovalo jen půlku. */
-    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz">'
-      + ikonaNastroje('vyvoz') + 'Stáhnout výběr (' + fmt(matched) + ')</button>';
+    /* DELŠÍ POLOVINA NÁPISU JE VE SPANU — A NA ÚZKÉM TELEFONU SE
+       SCHOVÁ. Naměřeno 26. 10. na 360 px: ovladače nad výpisem se tam
+       skládaly do JEDNOHO sloupce (čtyři řádky po 44 px) a první
+       nabídka začínala na 595 px z 844 — tedy pod obrazovkou, zatímco
+       na 390 px byla na 439. Jeden sloupec si vynutila délka nápisů:
+       „Procházet po jednom" měří 160 px a „Stáhnout výběr (1 926)"
+       167, kdežto dvousloupcová mřížka dává na 320px displeji 136.
+       Zkracuje se tedy NÁPIS, ne sloupec: v ovladači zůstane sloveso
+       („Stáhnout", „Procházet") a zmizí doplněk. Počet se tím
+       neztratí — stojí v nadpisu výpisu o řádek výš. Celé znění drží
+       aria-label, takže odečítač slyší pořád totéž.
+       Hlídá scripts/test-ovladani-vypisu.mjs (nápis nesmí lézt přes
+       rámeček na 320 i 390 px). */
+    if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
+      + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
+      + ikonaNastroje('vyvoz') + 'Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     /* RYCHLÝ VÝBĚR JE ZPÁTKY PILULKA — A TENTOKRÁT SPRÁVNĚ.
@@ -6783,8 +6805,9 @@
        říká, co se stane, a co znamená doprava a doleva, ukáže úvodní
        okénko hned po otevření (#rv-uvod v index.html) — tedy dřív, než
        člověk první nabídku odsvihne. */
-    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly">'
-      + ikonaNastroje('rychly') + 'Procházet po jednom</button>' + tlacitka;
+    if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
+      + ' aria-label="Procházet po jednom">'
+      + ikonaNastroje('rychly') + 'Procházet<span class="mc-dl"> po jednom</span></button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */
