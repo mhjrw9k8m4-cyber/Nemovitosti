@@ -5007,6 +5007,23 @@ o sobě nic neřeší.
 3. **Jeden běh profilu je jeden vzorek.** Než se na jeho čísle začne
    stavět, má se zopakovat.
 
+### Doplněno 26. 10.: otevřený úkol na totéž se zavírá
+
+V seznamu úkolů zůstávala položka „`nastrojeDoHlavicky` si vynutí
+rozvržení a hned ho zahodí (jedno čtení ze 47)". Je to tahle věc ještě
+jednou, jen jinými slovy — a odpověď na ni dal tenhle oddíl už 20. 10.
+
+Zbývá jediná cesta, která by těch **~70 ms zpomaleného procesoru
+(asi 17 ms skutečných)** opravdu získala: postavit stín „pokračuje
+vpravo" na `background-attachment:local` místo na čtení `scrollWidth`.
+Pak by z `rsStin()` zmizelo čtení geometrie, posluchač rolování
+i `ResizeObserver` — tedy i ten druhý pruh (naposledy prohlédnuté).
+
+Neuděláno, a tentokrát vědomě: sedmnáct milisekund na čtyřikrát
+zpomaleném telefonu nikdo nepozná, kdežto rozdíl ve VZHLEDU toho stínu
+pozná každý. Kdo se k tomu vrátí, ať nezačíná profilem — začíná
+obrázkem obou podob vedle sebe.
+
 ## 81. Modul, který se stáhl nepřihlášenému a hned se vrátil *21. 10.*
 
 Nález z vlastní revize diffu, ne z prohlížeče ani ze zkoušky — a právě
@@ -11471,3 +11488,92 @@ zkoušky, která CSP neobchází: otevře `pridat.html`, zavolá
 prohlížeč nehlásil porušení `script-src`. Sabotáž „dotahuj tabulku
 z cizího serveru" ji shodí a hláška pojmenuje i direktivu:
 `script-src-elem ← https://priklad.invalid/…`.
+
+## 167. Rozdělit main.js: změřeno ze dvou stran, NEUDĚLÁNO *26. 10.*
+
+Na seznamu úkolů stálo: „`main.js` je 68 kB gz dychtivé váhy úvodu
+a vykoná se 41 % — největší zbylý kus." První část čísla sedí,
+z druhé ale nevyplývá to, co to tvrzení naznačuje.
+
+### Co se naměřilo
+
+Pokrytí V8 na telefonu 390 px (`js/min/main.js`, 245 389 B):
+**vykonáno 99 633 B, tedy 41 %.** Největší nevykonané kusy:
+
+| kus | kolik | co to je |
+|---|---|---|
+| `otevriVyberMista` | 19 kB | okno „Vyberte své okolí" |
+| `showLocModal` + `enterNearAt` | 5 kB | zbytek okolí |
+| `rv*` (osm funkcí) | 8 kB | „Procházet po jednom" |
+| `navrhySlovnik`, `ukazNavrhy` | 3 kB | našeptávač |
+| `hromadky`, `vyrobShluk` | 3 kB | shlukování na mapě |
+
+Největší jediný kandidát je tedy výběr místa: 678 řádků, a — což je
+překvapivě dobrá zpráva — jen **19 závislostí** na okolí `main.js`.
+Vypadalo to na hotovou věc.
+
+### Strana první: procesor
+
+Tělo `otevriVyberMista` se v `js/min/main.js` nahradilo prázdným
+a měřilo se `Performance.getMetrics().ScriptDuration`, procesor 4×
+zpomalený, tři běhy:
+
+| podoba | běhy | průměr |
+|---|---|---|
+| jak to je | 0,690 / 0,663 / 0,657 s | 0,670 |
+| bez výběru místa (o 19 kB míň) | 0,642 / 0,635 / 0,615 s | **0,631** |
+
+Rozdíl **39 ms zpomaleného procesoru, tedy asi 10 ms skutečných.**
+V8 totiž těla funkcí kompiluje líně: za nevykonaných 59 % se platí
+předparsováním, ne kompilací.
+
+### Strana druhá: drát
+
+Čas do první nabídky, procesor 4× zpomalený a pomalá 4G (1,6 Mb/s,
+150 ms RTT), čtyři běhy, medián:
+
+| podoba | běhy | medián |
+|---|---|---|
+| jak to je | 7 860 / 7 893 / 7 906 / 8 154 ms | 7 906 |
+| o 19 kB míň | 7 862 / 7 864 / 7 886 / 7 888 ms | **7 886** |
+
+**20 ms z 7,9 sekundy, tedy 0,25 %** — a to při rozptylu ±150 ms.
+Navíc je to číslo nadsazené asi čtyřikrát: zkušební server neumí
+gzip, takže se těch 19 kB vleče nezabalených; naostro by to bylo
+kolem 5 kB.
+
+### Past, do které jsem málem spadl dvakrát
+
+Mezikrokem se zkoušelo odložit tři moduly, které se na úvodu skoro
+nevykonají (`dotaz.js` 33 %, `okruh.js` 39 %, `hledani.js` 9 %).
+Každý zvlášť vypadal jako úspora 38–52 ms. **Všechny tři naráz ale
+ušetřily 34 ms** — tedy míň než kterýkoli z nich sám. To není
+záhada, to je důkaz, že ta jednotlivá čísla byla šum: rozptyl
+základního měření je ±60 ms.
+
+A ještě před tím: první verze měření hlásila úsporu **558 ms**.
+Stránka se při ní ale vůbec nevykreslila (0 karet) — `hlidani-logika.js`
+je při startu potřeba. Kontrola „kolik karet se vykreslilo" se proto
+do měřicího skriptu přidala natrvalo. **Měření bez kontroly, že
+stránka pořád funguje, měří rychlost rozbité stránky.**
+
+### Rozhodnutí
+
+Neuděláno. Deset milisekund procesoru a dvacet milisekund na drátě
+nestojí za přesun 678 řádků s devatenácti závislostmi do modulu —
+a to v souboru, na kterém stojí celá úvodní stránka. Je to táž
+odpověď jako v oddílu 80, jen na jinou otázku.
+
+Co z toho zůstává jako poznatek: **„vykoná se jen 41 %" není samo
+o sobě nález.** U kódu, který čeká na klepnutí, je to normální stav;
+cena se platí za stažení a předparsování, a obojí se dá změřit.
+Dokud se nezměří, je to jen velké číslo.
+
+### Co se při tom našlo a změřit nešlo
+
+V časové ose vyšlo `data/mapa.json` jako největší stahovaný kus
+(509 kB nezabaleně, 66 kB gz) — jenže to nejsou mapová data, nýbrž
+řez nabídek pro výpis, takže odložit se nedá: právě z něj se staví
+první nabídka. Jestli ho server posílá zabalený, se odsud ověřit
+nedalo (odchozí spojení na vlastní doménu vrací 403 přes proxy).
+Kdyby ne, je to osmkrát větší věc než cokoli v tomhle oddílu.
