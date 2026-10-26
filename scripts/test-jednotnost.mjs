@@ -86,9 +86,20 @@ for (const [jmeno, cesta] of STRANKY) {
         const c = getComputedStyle(e);
         karty.add((parseFloat(c.paddingTop) || 0) + '/' + (parseFloat(c.paddingLeft) || 0));
       });
+      /* HLAVA STRÁNKY. Od 26. 10. začíná každá stránka s obsahem toutéž
+         tmavou deskou — .st-hlava, .okr-band nebo .add-hero podle toho,
+         ze které rodiny značek pochází, ale s JEDNÍM pozadím a jednou
+         barvou nadpisu. Hlídá se barva, ne jméno třídy: tři jména jsou
+         historie, jeden vzhled je pravidlo.
+         Stránka pozemku vrací null schválně — její hlava je fotka, ne
+         deska, a jednaHodnota() null přeskakuje. */
+      const deska = hlavni.querySelector('.st-hlava, .okr-band, .add-hero');
+      const dh = deska ? deska.querySelector('h1') : null;
       return {
         h1: h ? getComputedStyle(h).fontSize : null,
         okraje: [...okraje], karty: [...karty],
+        deska: deska ? getComputedStyle(deska).backgroundColor : null,
+        deskaText: dh ? getComputedStyle(dh).color : null,
       };
     });
     namereno.push([jmeno, m]);
@@ -120,6 +131,8 @@ function jednaHodnota(popis, vyber) {
     klice.map((k) => `${k} → ${mapa.get(k).join(' ')}`).join('; '));
 }
 
+jednaHodnota('pozadí hlavy stránky', (m) => m.deska);
+jednaHodnota('barva nadpisu v hlavě', (m) => m.deskaText);
 jednaHodnota('vodorovný okraj obsahu', (m) => m.okraje);
 jednaHodnota('velikost nadpisu h1', (m) => m.h1);
 jednaHodnota('odsazení karty', (m) => m.karty);

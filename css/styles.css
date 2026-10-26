@@ -4798,7 +4798,8 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    neměl ani to a začínal o devadesát pixelů níž. Čtyři stránky jednoho
    účtu mají vypadat jako jedna věc, tak je pravidlo jedno a na jednom
    místě. */
-.add-hero.app-hero{padding:28px 0 4px;}
+/* Odsazení nese pravidlo u „HLAVIČKA APLIKAČNÍCH STRÁNEK" níž (20/28 px
+   na desce). Tady zůstává jen to, co se desky netýká. */
 .add-hero.app-hero .eyebrow{margin-bottom:12px;}
 .add-hero.app-hero h1{font-size:var(--h1-nastroj); font-weight:600; max-width:var(--m-uzky);}
 .add-hero.app-hero .sub{font-size:16px; margin-top:8px; max-width:var(--m-uzky);}
@@ -7136,7 +7137,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    TOKENY A JEN V ROZSAHU PÁSU: všechna existující pravidla dál říkají
    var(--pas-text), jen jim vyjde bílá. Patička zůstává světlá, protože
    --pas-plocha-paticka se vyhodnocuje až u ní, a ta pod pásem neleží. */
-.add-hero:not(.app-hero), .okr-band, .st-hlava{
+.add-hero, .okr-band, .st-hlava{
   --pas-plocha:var(--plocha-tmava);
   --pas-text:var(--text-ondeep);
   --pas-text-mute:var(--text-ondeep-mute);
@@ -7319,21 +7320,31 @@ h1 em::after{content:none; animation:none;}
 
 /* =====================================================================
    HLAVIČKA APLIKAČNÍCH STRÁNEK (.app-hero)
-   Hlídání, Upozornění a Zprávy jsou nástroje, ne články — tmavá deska
-   by jim ubrala místo. Zůstávají světlé, ale bledý barevný mesh po nich
-   zmizel taky: nad nástrojem je to jen šmouha. Místo něj čistá plocha
-   a odstup, který odděluje hlavičku od práce pod ní.
+   Hlídání, Zprávy a Můj inzerát mívaly hlavu SVĚTLOU a stálo tu, proč:
+   jsou to nástroje, ne články, a tmavá deska by jim ubrala místo. To
+   rozhodnutí padlo ve chvíli, kdy tmavá deska byla výjimka pro tři
+   stránky. 26. 10. ji dostal celý web — a tyhle tři zůstaly jako
+   jediné světlé, takže z pravidla se stala výjimka a naopak. Kdo
+   přejde z Rádce na Hlídání, vidí jiný web.
+
+   Deska je proto i tady, se dvěma ústupky nástroji: je nižší než na
+   článku (20/28 px proti 16/40) a STŘEDÍ SE STEJNĚ JAKO SLOUPEC POD
+   NÍ. To druhé je důležité — sloupec účtu se středí schválně a je to
+   změřené (viz „CELÝ SLOUPEC ÚČTU NA STŘED" výš); deska zarovnaná
+   vlevo by proti němu postavila druhou svislici.
 
    VLASOVÁ LINKA TU BÝVALA, ALE ŠLA PŘES CELOU ŠÍŘKU OKNA — zatímco
    všechno ostatní na stránce stojí v sloupci s okraji. Čára od kraje ke
    kraji hned pod nadpisem a nad řadou pilulek dělá z osobní stránky
-   formulář k vyplnění. Oddělit to jde i bez ní: pod hlavičkou je mezera
-   a hned za ní karta s vlastním okrajem, což je přesně ten způsob,
-   jakým se oddělují věci na zbytku webu.
+   formulář k vyplnění. Dnes to dělí barva desky, takže linka není
+   potřeba vůbec.
    ------------------------------------------------------------------ */
-.add-hero.app-hero{background:none; background-image:none;
-  padding-bottom:4px; margin-bottom:24px;}
+.add-hero.app-hero{background:var(--pas-plocha); background-image:none;
+  padding:20px 0 28px; margin-bottom:24px;}
 .add-hero.app-hero::before, .add-hero.app-hero::after{content:none;}
+.add-hero.app-hero h1{color:var(--pas-text);}
+.add-hero.app-hero .sub{color:var(--pas-text-mute);}
+.add-hero.app-hero .sub b{color:var(--pas-text);}
 
 /* Na krátkých stránkách (přihlášení, prázdné stavy) končila patička
    uprostřed okna a pod ní zbýval pruh holého pozadí. Patička se drží dna.
@@ -8949,7 +8960,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    ne odznak stránky, a pilulka uprostřed bílé karty by byla tlačítko. */
 .st-odznak,
 .okr-band .eyebrow,
-.add-hero:not(.app-hero) .eyebrow{display:inline-flex; align-items:center; gap:8px; height:28px;
+.add-hero .eyebrow{display:inline-flex; align-items:center; gap:8px; height:28px;
   padding:0 12px; border-radius:var(--r-pill);
   background:var(--pas-dlazdice); margin-bottom:0;
   font-size:12px; font-weight:600; letter-spacing:var(--odznak-proklad);
@@ -8964,9 +8975,9 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* Čárka patří nadtitulu oddílu, ne odznaku: v pilulce by to byla druhá
    vodorovná čára hned vedle jejího vlastního obrysu. */
 .okr-band .eyebrow::before,
-.add-hero:not(.app-hero) .eyebrow::before{content:none;}
+.add-hero .eyebrow::before{content:none;}
 .okr-band .eyebrow .live-dot,
-.add-hero:not(.app-hero) .eyebrow .live-dot{width:6px; height:6px; flex:none;
+.add-hero .eyebrow .live-dot{width:6px; height:6px; flex:none;
   border-radius:var(--r-pill); background:var(--pas-akcent); animation:none;}
 /* Rodinu tu nenastavujeme: h1 ji má z `h1{font-family:var(--font-nadpis)}`
    a ten dnes míří na Inter. Kdyby se tu psala znovu, přebila by jediný
