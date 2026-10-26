@@ -79,8 +79,14 @@
     .pz-head{margin:20px 0 0;}
     /* Nadpis i cena bezpatkově: patkové písmo s pastelovými deskami
        dávalo časopis o přírodě, ne inzerát. Rozdíl dělá velikost
-       a tučnost, ne druhá rodina písma. */
-    .pz-place{font-family:var(--font-ui); font-size:28px; font-weight:700; letter-spacing:-0.02em; color:var(--text); line-height:1.2;}
+       a tučnost, ne druhá rodina písma.
+       RODINA JE --font-nadpis, NE --font-ui. Obojí dnes míří na Inter,
+       takže se rozdíl nevidí — ale .pz-place je <h1> na 2 268 stránkách
+       a sahalo si pro rodinu jinam než zbytek webu. Přesně tohle řešila
+       19. 10. oprava na 27 ručně psaných stránkách; stránka pozemku jí
+       unikla, protože její stylopis není css/styles.css a hlídač písma
+       do něj do 26. 10. vůbec nekoukal. */
+    .pz-place{font-family:var(--font-nadpis); font-size:28px; font-weight:700; letter-spacing:-0.02em; color:var(--text); line-height:1.2;}
     /* Dlouhý nadpis se na telefonu lámal mezi číslo a jednotku. */
     .pz-place{text-wrap:balance;}
     .pz-okres{display:flex; align-items:center; gap:4px; font-size:14px; color:var(--muted); margin-top:4px;}

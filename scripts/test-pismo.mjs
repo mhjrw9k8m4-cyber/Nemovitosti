@@ -104,7 +104,15 @@ export function mimoStupnici(text) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const JE_VYROBENA = /^(pozemek|pozemky)-/;
   const MIMO = new Set(['build-og.mjs']);
-  const soubory = ['css/styles.css'];
+  /* VŠECHNY ZDROJOVÉ STYLOPISY, NE JEN STYLES.CSS. Do 26. 10. tu stál
+     jeden název napsaný ručně — a css/pozemek-vlozeny.css (620 řádků,
+     62 velikostí písma), který se vkládá do 2 268 stránek pozemků, do
+     hlídače nikdy nespadl. Seznam se proto čte z adresáře; .min.css
+     jsou výrobky kroku rozdel-styly.mjs, ty se nehlídají (hlídá se to,
+     z čeho vznikly). Přibude-li třetí stylopis, chytí se sám. */
+  const soubory = readdirSync('css')
+    .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
+    .map((f) => 'css/' + f);
   for (const f of readdirSync('.')) if (f.endsWith('.html') && !JE_VYROBENA.test(f)) soubory.push(f);
   for (const f of readdirSync('scripts')) if (f.endsWith('.mjs') && !f.startsWith('test-') && !MIMO.has(f)) soubory.push('scripts/' + f);
 
@@ -121,21 +129,41 @@ if (import.meta.url === `file://${process.argv[1]}`) {
      používá.
      Čte se zápis, ne vykreslení: hledá se pravidlo, které cílí na h1
      a zároveň si nastavuje vlastní rodinu. Takové pravidlo je vždycky
-     specifičtější než holé `h1`, takže ho přebije — ať už je kdekoli. */
+     specifičtější než holé `h1`, takže ho přebije — ať už je kdekoli.
+
+     DVĚ SLEPÁ MÍSTA, ZALEPENÁ 26. 10.
+     1) Hledalo se jen v css/styles.css. Stránka pozemku má vlastní
+        vložený stylopis (css/pozemek-vlozeny.css) a ten se nečetl.
+     2) Hledal se SELEKTOR se slovem `h1`. Jenže nadpis stránky pozemku
+        vzniká až v prohlížeči: js/pozemek.js píše `<h1 class="pz-place">`,
+        takže pravidlo, které h1 přebíjí, se jmenuje `.pz-place` a slovo
+        „h1" v něm není. Našlo se tak 2 268 stránek s nadpisem, který si
+        rodinu bral z --font-ui. Třídy, které na h1 sází JavaScript nebo
+        značky, se proto nejdřív vyčtou ze zdrojů a berou se jako h1. */
   {
-    const css = readFileSync('css/styles.css', 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
+    const NA_H1 = new Set();
+    for (const f of ['index.html', ...readdirSync('js').filter((x) => x.endsWith('.js')).map((x) => 'js/' + x)]) {
+      let t; try { t = readFileSync(f, 'utf8'); } catch { continue; }
+      for (const m of t.matchAll(/<h1[^>]*class=["']([^"']+)["']/g))
+        for (const c of m[1].split(/\s+/)) if (c) NA_H1.add(c);
+    }
+    const jeH1 = (sel) => /(^|[\s>+~,])h1\b/.test(sel)
+      || [...NA_H1].some((c) => new RegExp('\\.' + c + '(?![\\w-])').test(sel));
     const prebiji = [];
+    for (const soubor of soubory.filter((f) => f.endsWith('.css'))) {
+    const css = readFileSync(soubor, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ');
     for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
       const sel = m[1].trim(), telo = m[2];
-      if (!/(^|[\s>+~,])h1\b/.test(sel)) continue;
+      if (!jeH1(sel)) continue;
       if (/^\s*h1\s*$/.test(sel)) continue;          // samotné `h1` je ten zdroj pravdy
       const ff = telo.match(/font-family\s*:\s*([^;}]+)/);
       if (!ff) continue;
       if (/--font-nadpis/.test(ff[1])) continue;
-      prebiji.push(`${sel.slice(0, 60)} → ${ff[1].trim().slice(0, 40)}`);
+      prebiji.push(`${soubor}: ${sel.slice(0, 60)} → ${ff[1].trim().slice(0, 40)}`);
+    }
     }
     if (prebiji.length) {
-      console.log(`✕ css/styles.css: ${prebiji.length}× se nadpisu h1 přebíjí rodina písma`);
+      console.log(`✕ ${prebiji.length}× se nadpisu h1 přebíjí rodina písma`);
       for (const x of prebiji) console.log('   ' + x);
       zpravy.push(`  ✕ rodinu h1 přebíjí: ${prebiji[0]}`);
       chyb += prebiji.length;
