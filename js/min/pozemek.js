@@ -1178,6 +1178,47 @@
     else if (siroko.addListener) siroko.addListener(uloz);
   }
 
+  function pzPresahujeHodnota(b) {
+    var vpravo = parseFloat(global.getComputedStyle(b).paddingRight) || 0;
+
+    var misto = b.clientWidth - vpravo;
+    var r = document.createRange();
+    r.selectNodeContents(b);
+
+    return r.getBoundingClientRect().width > misto + 0.5;
+  }
+
+  function pzVelikostHodnot(host) {
+    var dl = host.querySelectorAll('.pz-klic');
+    for (var i = 0; i < dl.length; i++) {
+      var b = dl[i].querySelector('b');
+      if (!b) continue;
+
+      dl[i].classList.remove('pz-dlouha', 'pz-velmi-dlouha');
+      if (!pzPresahujeHodnota(b)) continue;
+      dl[i].classList.add('pz-dlouha');
+      if (pzPresahujeHodnota(b)) dl[i].classList.add('pz-velmi-dlouha');
+    }
+  }
+
+  function pzHlidejVelikostHodnot(host) {
+    pzVelikostHodnot(host);
+    var mrizka = host.querySelector('.pz-klice');
+    if (!mrizka) return;
+
+    var posledni = Math.round(mrizka.getBoundingClientRect().width);
+    function znovu() {
+      var w = Math.round(mrizka.getBoundingClientRect().width);
+      if (w === posledni) return;
+      posledni = w;
+      pzVelikostHodnot(host);
+    }
+    if (global.ResizeObserver) {
+      try { new global.ResizeObserver(znovu).observe(mrizka); return; } catch (e) {}
+    }
+    global.addEventListener('resize', znovu);
+  }
+
   function render(d) {
     if (strankaUkoncena()) return;
     var t = TYPE[d.type];
@@ -1425,6 +1466,7 @@
     try { pripniAkce(host); } catch (e) {}
     try { pzListaDole(host, d, perM2); } catch (e) {}
 
+    try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

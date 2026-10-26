@@ -642,23 +642,34 @@ to{opacity:1;transform:none}
 
 @media (hover:none){header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease)}
 }
-.pz-klice{margin:0 0 var(--mezera-bloku);padding:0 20px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
-.pz-klic{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;padding:12px 0}
-.pz-klic + .pz-klic{border-top:1px solid var(--line-ui)}
-.pz-klic>span:not(.pz-klic-ic){order:1;font-size:16px;color:var(--muted)}
-.pz-klic b{order:2;margin-left:auto;font-size:18px;font-weight:600;line-height:1.4;color:var(--text);font-variant-numeric:tabular-nums;text-align:right}
-.pz-klic i{order:3;flex-basis:100%;font-style:normal;font-size:13px;line-height:1.5;color:var(--muted);margin:0}
+.pz-klice{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0 0 8px}
+@media (min-width:360px){.pz-klice{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:680px){.pz-klice{grid-template-columns:repeat(4,minmax(0,1fr))}
+.pz-klice:has(>.pz-klic:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}
+.pz-klice:has(>.pz-klic:nth-child(2):last-child){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:679px){.pz-klice>.pz-klic:last-child:nth-child(odd){grid-column:1 / -1}
+}
+.pz-klic{position:relative;display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-plocha);box-shadow:var(--e1)}
 .pz-head-radek{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
 .pz-head-radek>.pz-okres{margin:0;min-width:0}
-.pz-pozn-skok{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;margin-top:4px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-zapustena);color:var(--text);cursor:pointer;font:inherit;font-size:14px;font-weight:600;line-height:1.2;transition:border-color var(--cas-zakladni) var(--ease),background-color var(--cas-zakladni) var(--ease)}
+.pz-pozn-skok{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;margin-top:8px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-zapustena);color:var(--text);cursor:pointer;font:inherit;font-size:14px;font-weight:600;line-height:1.2;transition:border-color var(--cas-zakladni) var(--ease),background-color var(--cas-zakladni) var(--ease)}
 .pz-pozn-skok>svg{width:18px;height:18px;flex:0 0 auto;color:var(--znacka-svetla)}
 .pz-pozn-skok:hover{border-color:var(--znacka-svetla)}
 .pz-pozn-skok:active{background:var(--plocha-karta)}
 .pz-pozn-skok.ma-text{border-color:var(--znacka-svetla);background:var(--plocha-karta)}
 .pz-pozn-box{transition:border-color var(--cas-zakladni) var(--ease)}
 .pz-pozn-box.pz-pozn-sviti{border-color:var(--znacka-svetla);outline:3px solid rgba(var(--znacka-svetla-rgb),0.25);outline-offset:0}
-.pz-klic>.pz-klic-ic{display:none;position:absolute;top:12px;right:12px;width:20px;height:20px;padding:0;color:var(--znacka-svetla);opacity:0.45;pointer-events:none}
+.pz-klic>.pz-klic-ic{position:absolute;top:12px;right:12px;width:20px;height:20px;padding:0;color:var(--znacka-svetla);opacity:0.45;pointer-events:none}
 .pz-klic>.pz-klic-ic>svg{display:block;width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pz-klic b,.pz-klic>span:not(.pz-klic-ic){padding-right:28px}
+.pz-klic b{font-size:24px;line-height:1.2;color:var(--text);font-variant-numeric:tabular-nums}
+.pz-klic.pz-dlouha>.pz-klic-ic{display:none}
+.pz-klic.pz-dlouha b{font-size:20px;padding-right:0}
+.pz-klic.pz-velmi-dlouha b{font-size:16px}
+.pz-klic>span{font-size:14px;font-weight:500;color:var(--muted)}
+.pz-klic i{font-size:12px;line-height:1.5;font-style:italic;color:var(--muted)}
 .pz-specs{display:grid;grid-template-columns:max-content 1fr;align-items:start;border:1px solid var(--line-strong);border-radius:var(--r-plocha);overflow:hidden;background:var(--plocha-karta);box-shadow:var(--e1)}
 .pz-spec{display:contents}
 .pz-spec .k,.pz-spec .v{padding:12px 0;border-bottom:1px solid var(--line)}

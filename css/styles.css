@@ -8619,37 +8619,30 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    dvě na telefonu, čtyři od 680 px. A `:has` dorovná případy, kdy
    dlaždice nejsou čtyři (u nabídky bez ceny nebo bez výměry chybí
    „Cena za m²"), aby ani tam nezbyl prázdný sloupec. */
-/* PARAMETRY JAKO TABULKA ŘÁDKŮ, NE JAKO DLAŽDICE.
-   Naměřeno 26. 10. na třech vzorcích: KAŽDÁ dlaždice opakovala něco,
-   co už na obrazovce nad ní stálo. „6 336 m²" a „Ostatní plocha" jsou
-   v nadpisu („Ostatní plocha 6 336 m² — Benešov"), „314 Kč/m²" stojí
-   hned u ceny, „Podíl 1/2" je taky v nadpisu. Tři až čtyři dlaždice
-   o výšce přes 80 px tedy zabíraly půl obrazovky trojím opakováním —
-   a řádková tabulka .pz-spec pod nimi byla na všech třech vzorcích
-   prázdná.
-   Řádek popisek-vlevo / hodnota-vpravo je to, co dělají velké realitní
-   weby (iDNES Reality, Sreality) u dvaceti údajů naráz: přečte se
-   shora dolů za pár vteřin a nezabere víc místa, než kolik má řádků.
-   ZNAČKOVÁNÍ SE NEMĚNÍ — pořád je to <b>hodnota</b><span>popisek</span>,
-   takže js/pozemek.js ani sedm zkoušek, které ho čtou, nepotřebují
-   sáhnout. Mění se jen rozvržení. */
-.pz-klice{margin:0 0 var(--mezera-bloku); padding:0 20px;
+.pz-klice{display:grid; grid-template-columns:minmax(0, 1fr);
+  gap:8px; margin:0 0 8px;}
+@media (min-width:360px){ .pz-klice{grid-template-columns:repeat(2, minmax(0, 1fr));} }
+@media (min-width:680px){
+  .pz-klice{grid-template-columns:repeat(4, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(3):last-child){grid-template-columns:repeat(3, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(2):last-child){grid-template-columns:repeat(2, minmax(0, 1fr));}
+}
+/* OSAMĚLÁ DLAŽDICE SE ROZTÁHNE. Na telefonu se vejdou dvě vedle sebe,
+   takže tři údaje nechávaly třetí samotný a vedle něj díru — naměřeno
+   184 px prázdna z 358, tedy přes polovinu řádku. Právě tohle dělalo
+   ze stránky „kostky". Pravidlo platí jen tam, kde jsou sloupce dva
+   (na širší obrazovce se tři vejdou na jeden řádek a není co řešit). */
+/* Mez je 680 px, tedy přesně tam, kde mřížka přepíná na čtyři sloupce:
+   dokud jsou sloupce dva, platí „lichá poslední dlaždice se roztáhne".
+   Dřív tu stálo 560 px — číslo z doby, kdy počet sloupců určoval
+   auto-fit, a mezi 560 a 680 px tím pravidlo přestalo platit, i když
+   sloupce byly pořád dva. */
+@media (max-width:679px){
+  .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
+}
+.pz-klic{position:relative; display:flex; flex-direction:column; gap:4px; padding:12px 16px;
   background:var(--plocha-karta); border:1px solid var(--line-strong);
   border-radius:var(--r-plocha); box-shadow:var(--e1);}
-.pz-klic{position:relative; display:flex; flex-wrap:wrap;
-  align-items:baseline; gap:4px 16px; padding:12px 0;}
-.pz-klic + .pz-klic{border-top:1px solid var(--line-ui);}
-/* Popisek vlevo, hodnota vpravo — `order` proto, že ve značkování
-   stojí hodnota první (viz komentář u pz-klic v js/pozemek.js: dvě
-   zkoušky čtou popisek jako `querySelector('span')`). */
-.pz-klic > span:not(.pz-klic-ic){order:1; font-size:16px; color:var(--muted);}
-.pz-klic b{order:2; margin-left:auto; font-size:18px; font-weight:600;
-  line-height:1.4; color:var(--text); font-variant-numeric:tabular-nums;
-  text-align:right;}
-/* Vysvětlivka („váš podíl — celá parcela je větší") jde pod řádek,
-   celá šířka: patří k hodnotě, ale není to další údaj. */
-.pz-klic i{order:3; flex-basis:100%; font-style:normal;
-  font-size:13px; line-height:1.5; color:var(--muted); margin:0;}
 /* ZNAČKA V ROHU, NE PŘED ČÍSLEM. Dlaždice se čte odshora: velké číslo,
    pod ním co to je. Ikona před číslem by se do té cesty postavila a
    ještě by ukrojila z místa, kde stojí „1 630 m²". V rohu dělá to, co
@@ -8673,8 +8666,12 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .pz-head-radek{display:flex; align-items:center; justify-content:space-between;
   gap:12px; flex-wrap:wrap; margin-top:8px;}
 .pz-head-radek > .pz-okres{margin:0; min-width:0;}
+/* 8 px, ne 4: tlačítko se 26. 10. přestěhovalo z řádku hlavičky POD
+   cenu, takže jeho horní okraj přestal být mezerou uvnitř řádku a stal
+   se odstupem mezi dvěma bloky stránky. Čtyřka ve slovníku odstupů
+   stránky pozemku není — chytla to scripts/test-parametry.mjs. */
 .pz-pozn-skok{flex:0 0 auto; display:inline-flex; align-items:center; gap:8px;
-  min-height:44px; padding:8px 12px; margin-top:4px;
+  min-height:44px; padding:8px 12px; margin-top:8px;
   border:1px solid var(--line-strong); border-radius:var(--r-ovladani);
   background:var(--plocha-zapustena); color:var(--text); cursor:pointer;
   font:inherit; font-size:14px; font-weight:600; line-height:1.2;
@@ -8710,19 +8707,27 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    z toho u 19px ikony vyjde 1,43 px a u 22px 1,65 px. Rozdíl 0,22 px už
    oko pozná a scripts/test-ikony.mjs ho hlídá (strop 0,2); 20 px dává
    1,50 px, tedy sadu, která vypadá jako jedna. */
- /* Ozdobná značka patřila do rohu DLAŽDICE. V řádku by stála nad
-    hodnotou vpravo a překrývala ji; a protože je to ozdoba (co řádek
-    říká, stojí v něm slovem a ikona je aria-hidden), nemá cenu jí
-    v řádku místo brát. Pravidlo zůstává kvůli zkouškám, které ji
-    hledají — vrací „display:none", tedy jasnou odpověď „tady není". */
-.pz-klic > .pz-klic-ic{display:none; position:absolute; top:12px; right:12px; width:20px; height:20px;
+.pz-klic > .pz-klic-ic{position:absolute; top:12px; right:12px; width:20px; height:20px;
   padding:0; color:var(--znacka-svetla); opacity:0.45; pointer-events:none;}
 .pz-klic > .pz-klic-ic > svg{display:block; width:20px; height:20px; fill:none; stroke:currentColor;
   stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
-/* Velikosti a barvy řádku drží oddíl „PARAMETRY JAKO TABULKA ŘÁDKŮ"
-   výš. Dřív tu stála druhá sada pro dlaždice (hodnota 24 px, popisek
-   14 px, vysvětlivka kurzívou) a protože ležela ZA ní, tiše ji
-   přebíjela — tedy dvě pravdy o témže řádku. Zbyla jedna. *//* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
+/* Číslo se smí roztáhnout jen k ikoně, ne pod ni. */
+.pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
+.pz-klic b{font-size:24px; line-height:1.2; color:var(--text);
+  font-variant-numeric:tabular-nums;}
+/* DVA STUPNĚ DOLŮ PRO HODNOTU, KTERÁ SE NEVEJDE. Třídy přidává podle
+   NAMĚŘENÉ šířky pzVelikostHodnot v js/pozemek.js — proč se nedají
+   počítat znaky a odkud jsou ta čísla, stojí tam. Značka u prvního
+   stupně mizí: je to ozdoba s aria-hidden, kdežto uříznuté číslo je
+   údaj. 20 a 16 px jsou stupně téže stupnice jako 24 px. */
+.pz-klic.pz-dlouha > .pz-klic-ic{display:none;}
+.pz-klic.pz-dlouha b{font-size:20px; padding-right:0;}
+.pz-klic.pz-velmi-dlouha b{font-size:16px;}
+/* POPISEK DLAŽDICE JE ÚDAJ, NE POZNÁMKA POD ČAROU: 14 px a váha 500,
+   stejně jako doplňková čísla na kartě ve výpisu (.opp-figures .m).
+   Odstín zůstává tlumený schválně — viz níž, proč se nezvedal. */
+.pz-klic > span{font-size:14px; font-weight:500; color:var(--muted);}
+.pz-klic i{font-size:12px; line-height:1.5; font-style:italic; color:var(--muted);}/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
    Řádky byly flex se space-between, takže se hodnota lepila na pravý
    okraj — na počítači 435 px od svého popisku. Mřížka je na .pz-specs
    (ne na řádku), aby sloupec popisků byl JEDEN pro všechny řádky

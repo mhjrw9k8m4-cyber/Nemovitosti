@@ -85,7 +85,12 @@
     .pz-place{text-wrap:balance;}
     .pz-okres{display:flex; align-items:center; gap:4px; font-size:14px; color:var(--muted); margin-top:4px;}
     .pz-okres svg{width:16px; height:16px; stroke-width:2.25;}
-    .pz-dalky{font-size:12px; letter-spacing:0.02em; color:var(--muted); margin-top:4px; opacity:.85;}
+    /* 8 px, ne 4: řádek „kde to je" je od 26. 10. na stránce VŽDYCKY
+       (nadpis nese jen „co se prodává"), takže se tahle mezera stala
+       skutečným odstupem mezi dvěma bloky — a čtyřka ve slovníku
+       odstupů stránky pozemku není. Naměřeno a chyceno
+       scripts/test-parametry.mjs: „navíc 4 px (všechny: 4, 8, 20, 40)". */
+    .pz-dalky{font-size:12px; letter-spacing:0.02em; color:var(--muted); margin-top:8px; opacity:.85;}
     /* Výhrada „vzdušnou čarou" se čte jako poznámka pod čarou, ne jako
        součást údaje — proto závorka a ještě nižší důraz. */
     .pz-dalky-pozn::before{content:' (';}
