@@ -13,8 +13,15 @@
    zajímá do první vteřiny, bylo za zlomem.
 
    CO SE MĚŘÍ. Výsledek, ne zápis: že čísla leží UVNITŘ hlavičky,
-   napravo od úvodního odstavce, a že nejsou na stránce dvakrát.
-   Markup skládá scripts/generate-region-pages.mjs (dvousloupcovaHlavicka).
+   napravo od nadpisu, a že nejsou na stránce dvakrát.
+
+   26. 10. SE ZMĚNILO, ODKUD SE TAM BEROU. Dřív je generátor psal pod
+   hlavičku jako dlaždice .okr-stats a při zápisu stránky je do ní
+   vystřihla funkce dvousloupcovaHlavicka; vedle nich stál v pásu
+   odstavec, který tytéž počty říkal ještě větou. Odstavec i dlaždice
+   zmizely — čísla píše rovnou hlavickaCisla() do .okr-cisla a dvojici
+   sloupců dělá CSS. Měří se proto .okr-cisla a sousedí se s NADPISEM,
+   ne s odstavcem, který na těch stránkách už není.
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { readdirSync } from 'node:fs';
@@ -68,14 +75,14 @@ try {
     const h = readFileSync(path.join(KOREN, f), 'utf8');
     if (h.indexOf('okr-hero') < 0) continue;
     sHlavickou++;
-    if (h.indexOf('okr-panel') >= 0) sPanelem++;
+    if (h.indexOf('okr-cisla') >= 0) sPanelem++;
   }
   pravda('je co měřit — vstupních stránek s hlavičkou se našlo dost',
     sHlavickou >= 90, `našlo se ${sHlavickou}`);
   /* Devět šablon hlavičky, pět z nich čísla má. Stránky bez čísel
      (rozcestník dražeb a spol.) panel mít nemají — prázdný rámeček
      vpravo je horší než prázdné místo. Proto „většina", ne „všechny". */
-  pravda('a čísla se přesunula do hlavičky na většině z nich',
+  pravda('a čísla stojí v hlavičce na většině z nich',
     sPanelem >= sHlavickou * 0.8, `${sPanelem} ze ${sHlavickou}`);
 
   const ctx = await prohlizec.newContext({ bypassCSP: true, 
@@ -88,8 +95,9 @@ try {
     await p.waitForTimeout(600);
     const m = await p.evaluate(() => {
       const hero = document.querySelector('.okr-hero');
-      const panel = hero ? hero.querySelector('.okr-panel') : null;
-      const sub = hero ? hero.querySelector('.sub') : null;
+      const panel = hero ? hero.querySelector('.okr-cisla') : null;
+      /* Soused je NADPIS: úvodní odstavec z těchhle hlaviček odešel. */
+      const sub = hero ? hero.querySelector('h1') : null;
       const r = (e) => { const b = e.getBoundingClientRect();
         return { l: Math.round(b.left), r: Math.round(b.right), t: Math.round(b.top), b: Math.round(b.bottom) }; };
       return {
@@ -98,7 +106,7 @@ try {
         sub: sub ? r(sub) : null,
         /* Kolikrát jsou čísla na stránce. Přesun je stěhování, ne kopie:
            kdyby zůstala i dole, stála by tam dvakrát. */
-        kolikrat: document.querySelectorAll('.okr-stats').length,
+        kolikrat: document.querySelectorAll('.okr-cisla').length,
       };
     });
     if (!m.panelVHlavicce) { spatne.push(stranka); continue; }
@@ -112,28 +120,31 @@ try {
        Svislá podmínka je proto druhá: panel musí začínat dřív, než
        úvodní odstavec skončí. */
     if (!(m.sub && m.panel.l >= m.sub.r)) {
-      uzke.push(`${stranka}: úvod končí na x ${m.sub ? m.sub.r : '?'}, panel začíná na x ${m.panel.l}`);
+      uzke.push(`${stranka}: nadpis končí na x ${m.sub ? m.sub.r : '?'}, čísla začínají na x ${m.panel.l}`);
     } else if (!(m.panel.t < m.sub.b)) {
-      uzke.push(`${stranka}: panel je vpravo, ale až POD úvodem — úvod končí na y ${m.sub.b}, panel začíná na y ${m.panel.t}`);
+      uzke.push(`${stranka}: čísla jsou vpravo, ale až POD nadpisem — nadpis končí na y ${m.sub.b}, čísla začínají na y ${m.panel.t}`);
     }
   }
-  pravda('na všech čtyřech rodinách stránek je panel s čísly v hlavičce',
+  pravda('na všech čtyřech rodinách stránek jsou čísla v hlavičce',
     spatne.length === 0, 'chybí na: ' + spatne.join(', '));
-  pravda('a čísla stojí VEDLE úvodního odstavce — vpravo a v téže výšce',
+  pravda('a čísla stojí VEDLE nadpisu — vpravo a v téže výšce',
     uzke.length === 0, uzke.join('\n      '));
-  pravda('a jsou na stránce jen jednou — je to stěhování, ne kopie',
+  pravda('a jsou na stránce jen jednou',
     dvakrat.length === 0, dvakrat.join(', '));
   await ctx.close();
 
-  /* ===== A TOTÉŽ NA TELEFONU: SVISLICE PATŘÍ MEZI ČÍSLA V ŘÁDKU =====
+  /* ===== A TOTÉŽ NA TELEFONU: ŘÁDKY ZAČÍNAJÍ NA JEDNÉ SVISLICI =====
      Naměřeno na nove-pozemky.html: tři čísla (97 / 150 / 73) se vejdou
      do jednoho řádku od 430 px. Pod tím se třetí zalomilo — a vzalo si
      s sebou svislici i odsazení 32 px, takže na 390 px začínalo na
      53 px, kdežto první číslo na 20. Byl z toho osamělý údaj zavěšený
      na čáře, která nic neodděluje.
-     Měří se VÝSLEDEK: žádný údaj, který v okně začíná nový řádek, nesmí
-     mít svislici vlevo. Kdyby v datech narostla čísla a zalomila řádek
-     dřív, spadne to tady — a mez ve stylopisu se posune. */
+     Od 26. 10. je z té řady MŘÍŽKA o dvou sloupcích (.okr-cisla), takže
+     se nic „nezalamuje" — je dané, kde co stojí, a svislice mezi čísly
+     nejsou vůbec. Měří se proto to, co z té staré vady zbylo jako
+     pravidlo: každý řádek začíná na téže svislici a nic nevisí
+     odsazené o kus dál. Kontrola na svislici vlevo zůstává jako past:
+     kdyby se čára vrátila, chytne ji to hned. */
   {
     /* Dotyk se zapíná, i když se tu na nic neklepá: pravidla pro telefon
        visí na `@media (pointer: coarse)` a bez `hasTouch` by se měřila
@@ -151,7 +162,7 @@ try {
         await pt.setViewportSize({ width: sirka, height: 900 });
         await pt.goto(BASE + '/' + stranka, { waitUntil: 'load' });
         const m = await pt.evaluate(() => {
-          const r = document.querySelector('.okr-stats');
+          const r = document.querySelector('.okr-cisla');
           if (!r) return null;
           const deti = [...r.children].map((e) => {
             const q = e.getBoundingClientRect(), c = getComputedStyle(e);
@@ -178,10 +189,10 @@ try {
         if (rozptyl > 1) visici.push(`${stranka}@${sirka}: řádky začínají na ${m.okraje.join(' a ')} px`);
       }
     }
-    // PŘEDPOKLAD: bez zalomení by kontrola pod tím neměřila nic
-    pravda('na úzkém displeji se řada čísel opravdu zalomí (jinak není co měřit)',
-      zalomene.length > 0, 'ani na 320 px se řada nezalomila');
-    pravda('a žádné číslo, které začíná řádek, nevisí na svislici',
+    // PŘEDPOKLAD: s jedním řádkem by kontrola pod tím neměřila nic
+    pravda('na úzkém displeji stojí čísla ve dvou sloupcích, tedy na víc řádcích',
+      zalomene.length > 0, 'ani na 320 px nebyl víc než jeden řádek');
+    pravda('a všechny řádky začínají na téže svislici',
       visici.length === 0, visici.slice(0, 4).join('\n      '));
     await ctxT.close();
   }

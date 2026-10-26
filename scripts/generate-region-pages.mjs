@@ -249,33 +249,22 @@ function zbyvajici(n){ return sklon(n, 'Zbývající', 'Zbývající', 'Zbývaj�
    prázdný rámeček vpravo by byl horší než prázdné místo.
 
    Hlídá scripts/test-hlavicka-stranky.mjs. */
-/* Prázdné řádky mezi dlaždicemi jsou v pořádku: šablona má podmíněné
-   dlaždice (`${…?'<div…>':''}`), takže se v okresech, kde je jen jeden
-   druh nabídky, zapíše čtyřikrát prázdný řetězec a po něm odřádkování.
-   Vzor je proto propouští — bez toho se čísla přesunula jen na devíti
-   stránkách ze 107 a na okresech ne. */
-const VZOR_STATY = /^[ \t]*<div class="okr-stats">\n(?:[ \t]*(?:<div class="okr-stat">.*<\/div>)?\n)+[ \t]*<\/div>\n/m;
-/* Panel se vkládá na KONEC hlavičky, ne za první `</div>`, který najde —
-   tím byl uvnitř `.eyebrow` a čísla skončila v odstavci s kategorií. */
-const VZOR_HLAVICKA = /(<section class="okr-hero">[\s\S]*?)(\s*<\/div>\s*<\/div>\s*<\/section>)/;
-export function dvousloupcovaHlavicka(html) {
-  if (html.indexOf('okr-hero') < 0) return html;
-  const staty = html.match(VZOR_STATY);
-  if (!staty) return html;
-  const bezStatu = html.replace(VZOR_STATY, '');
-  const vysledek = bezStatu.replace(VZOR_HLAVICKA, (cele, hlavicka, zavirani) =>
-    hlavicka + '\n      <div class="okr-panel">\n' + staty[0] + '      </div>' + zavirani);
-  /* Když se hlavička nenašla, čísla by se ztratila úplně — to je horší
-     než nepřesunout nic. Radši se vrátí nezměněná stránka. */
-  return vysledek === bezStatu ? html : vysledek;
-}
+/* STĚHOVAČ ČÍSEL ZMIZEL — nemá co stěhovat.
+   Stála tu funkce dvousloupcovaHlavicka(): při zápisu stránky našla
+   blok .okr-stats pod hlavičkou, vystřihla ho a vložila do .okr-panel
+   uvnitř hlavičky, aby čísla nestála až za zlomem. Od 26. 10. je
+   generátor píše rovnou do hlavičky (hlavickaCisla výš), takže by
+   stěhovač hledal blok, který tam nikdy není. Dvousloupcovou podobu
+   na monitoru dělá CSS (.okr-band .okr-wrap v css/styles.css) — bez
+   přepisování hotového HTML.
+   Hlídá scripts/test-hlavicka-stranky.mjs. */
 
 /* KOMENTÁŘE SE DO HOTOVÝCH STRÁNEK NEZAPISUJÍ — stejné pravidlo jako
    u stránek pozemků, jedna funkce pro obojí (scripts/text.mjs).
    Naměřeno na 104 regionálních stránkách: 835 kB gzipem → 675 kB, tedy
    1,53 kB při každém otevření. Zdůvodnění je u té funkce. */
 function write(file, html){
-  fs.writeFileSync(path.join(ROOT, file), bezKomentaruVHtml(dvousloupcovaHlavicka(html)));
+  fs.writeFileSync(path.join(ROOT, file), bezKomentaruVHtml(html));
 }
 
 const data = JSON.parse(fs.readFileSync(path.join(ROOT,'data','opportunities.json'),'utf8'));
@@ -1553,7 +1542,11 @@ for (const d of DRUH_STRANKY) {
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(d.oznaceni)} · celá ČR</div>
       <h1>${esc(d.h1)}.</h1>
-      <p class="sub">Evidujeme <b>${fmt(count)} ${sklon(count, d.jm[0], d.jm[1], d.jm[2])}</b> z celé České republiky — z <b>veřejných zdrojů</b> na jedné mapě, s prokliky na ověření v katastru.${minP ? ` Ceny od <b>${fmt(minP)} Kč</b>${maxP && maxP !== minP ? ` do <b>${fmt(maxP)} Kč</b>` : ''}.` : ''}</p>
+      ${hlavickaCisla([
+        [fmt(count), sklon(count, d.jm[0], d.jm[1], d.jm[2])],
+        [Object.keys(poOkresu).length, sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')],
+        ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
+      ])}
     </div>
     </div>
   </section>
@@ -1561,10 +1554,6 @@ for (const d of DRUH_STRANKY) {
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(count)}</b> <span>${sklon(count, d.jm[0], d.jm[1], d.jm[2])}</span></div>
-        <div class="okr-stat"><b>${okresyNej.length ? Object.keys(poOkresu).length : 0}</b> <span>${sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')}</span></div>
-      </div>
 ${cenyRadka ? `      <p class="okr-more okr-tesne">${cenyRadka} — <a href="cena-pozemku.html">ceny pozemků v ČR</a></p>` : ''}
 ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu, 'je', 'jsou', 'je')} <b>${fmt(podilu)}</b> ${sklon(podilu, 'spoluvlastnický podíl', 'spoluvlastnické podíly', 'spoluvlastnických podílů')} — kupuje se zlomek pozemku.${podiluCele ? ` U ${podiluCele === 1 ? 'jednoho z nich' : (podiluCele === podilu ? 'všech' : `<b>${fmt(podiluCele)}</b> z nich`)} je v inzerátu výměra celé parcely, ale cena jen za ten zlomek.` : ''} <a href="list-vlastnictvi-katastr.html">Jak podíl poznat v katastru</a>.</p>` : ''}
 
@@ -1733,7 +1722,12 @@ for (const r of rozpocetVznikne) {
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
       <h1>Pozemky do ${esc(r.popis)}.</h1>
-      <p class="sub">Evidujeme <b>${fmt(count)} ${pluralPozemek(count)}</b> v téhle ceně — ve <b>${fmt(okresuCelkem)} ${sklon(okresuCelkem, 'okrese', 'okresech', 'okresech')}</b>, z veřejných zdrojů. Ceny od <b>${fmt(minP)} Kč</b>${maxP > minP ? ` do <b>${fmt(maxP)} Kč</b>` : ''}.</p>
+      ${hlavickaCisla([
+        [fmt(count), pluralPozemek(count)],
+        [fmt(okresuCelkem), sklon(okresuCelkem, 'okres', 'okresy', 'okresů')],
+        [fmt(medVymera) + ' m²', 'mediánová výměra'],
+        [fmt(minP) + '–' + fmt(maxP > minP ? maxP : minP) + ' Kč', 'rozpětí cen'],
+      ])}
     </div>
     </div>
   </section>
@@ -1741,11 +1735,6 @@ for (const r of rozpocetVznikne) {
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(count)}</b> <span>${pluralPozemek(count)}</span></div>
-        <div class="okr-stat"><b>${fmt(okresuCelkem)}</b> <span>${sklon(okresuCelkem, 'okres', 'okresy', 'okresů')}</span></div>
-        <div class="okr-stat"><b>${fmt(medVymera)} m²</b> <span>mediánová výměra</span></div>
-      </div>
       <p class="okr-more okr-tesne">Prostřední cena za metr v tomhle rozpočtu je <b>${fmt(medZaM)} Kč/m²</b> — <a href="cena-pozemku.html">ceny pozemků v ČR</a>.</p>
 
       <div class="add-card">
@@ -1923,7 +1912,11 @@ let novychZaTyden = 0;
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Pohyb na trhu · celá ČR</div>
       <h1>Co je na trhu nového.</h1>
-      <p class="sub">Za posledních sedm dní přišlo <b>${fmt(novych7)} ${pluralPozemek(novych7)}</b> a u <b>${fmt(zlevnene.length)} ${sklon(zlevnene.length, 'nabídky', 'nabídek', 'nabídek')}</b> klesla cena. Zdroje obcházíme čtyřikrát denně.</p>
+      ${hlavickaCisla([
+        [fmt(novych7), 'nových za 7 dní'],
+        [fmt(nove.length), 'nových za ' + DNU_NOVE + ' dní'],
+        [fmt(zlevnene.length), sklon(zlevnene.length, 'zlevnilo', 'zlevnily', 'zlevnilo')],
+      ])}
     </div>
     </div>
   </section>
@@ -1931,11 +1924,6 @@ let novychZaTyden = 0;
   <section class="section">
     <div class="wrap okr-wrap">
 
-      <div class="okr-stats">
-        <div class="okr-stat"><b>${fmt(novych7)}</b> <span>nových za 7 dní</span></div>
-        <div class="okr-stat"><b>${fmt(nove.length)}</b> <span>nových za ${DNU_NOVE} dní</span></div>
-        <div class="okr-stat"><b>${fmt(zlevnene.length)}</b> <span>${sklon(zlevnene.length, 'zlevnilo', 'zlevnily', 'zlevnilo')}</span></div>
-      </div>
 ${razitkoCerstvosti}
 
       <!-- PŘIZNÁNÍ PATŘÍ NAD SEZNAM, NE POD NĚJ. Je to jediné místo,

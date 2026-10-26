@@ -87,12 +87,15 @@ for (const s of STROPY) {
   pravda(`${s.soubor}: nadpis uvádí strop`,
     new RegExp('<h1>Pozemky do ' + s.popis.replace(/ /g, '\\s') + '\\sKč').test(h),
     'nadpis: ' + mezery((/<h1>([^<]*)<\/h1>/.exec(h) || [])[1] || '—'));
-  const sub = (/<p class="sub">([\s\S]*?)<\/p>/.exec(h) || [])[1] || '';
-  const subPocet = cislo((/<b>([\d\s ]+) pozem/.exec(mezery(sub)) || [])[1] || '-1');
-  pravda(`${s.soubor}: počet v podtitulku = ${moje.length}`, subPocet === moje.length,
+  /* Čísla jsou v hlavičce (.okr-cisla), ne v podtitulku: ten tytéž
+     počty jen opisoval a 26. 10. odešel — viz hlavickaCisla()
+     v scripts/generate-region-pages.mjs. */
+  const sub = (/<div class="okr-cisla">([\s\S]*?)<\/div>\s*<\/div>/.exec(h) || [])[1] || '';
+  const subPocet = cislo((/<b>([\d\s\u00a0]+)<\/b><span>pozem/.exec(mezery(sub)) || [])[1] || '-1');
+  pravda(`${s.soubor}: počet v hlavičce = ${moje.length}`, subPocet === moje.length,
     `na stránce ${subPocet}, přepočítáno ${moje.length}`);
-  const subOkresu = cislo((/<b>([\d\s ]+) okres/.exec(mezery(sub)) || [])[1] || '-1');
-  pravda(`${s.soubor}: počet okresů v podtitulku = ${okresy.size}`, subOkresu === okresy.size,
+  const subOkresu = cislo((/<b>([\d\s\u00a0]+)<\/b><span>okres/.exec(mezery(sub)) || [])[1] || '-1');
+  pravda(`${s.soubor}: počet okresů v hlavičce = ${okresy.size}`, subOkresu === okresy.size,
     `na stránce ${subOkresu}, přepočítáno ${okresy.size}`);
 
   // --- 2) Dlaždice: mediánová výměra ------------------------------

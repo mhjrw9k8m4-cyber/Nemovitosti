@@ -5372,10 +5372,6 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 @media (max-width:640px){ .add-steps{grid-template-columns:1fr; gap:8px; margin-top:20px;} }
 
 /* ---------- Krajské/okresní stránky (SEO rozcestník na reálná data) ---------- */
-.okr-stats{display:flex; flex-wrap:wrap; gap:8px; margin:0 0 20px;}
-.okr-stat{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); padding:12px 16px; min-width:96px; box-shadow:var(--e1);}
-.okr-stat b{display:block; font-size:24px; line-height:1.1; color:var(--znacka-svetla,#8CC3A4);}
-.okr-stat span{font-size:12px; color:var(--muted,#9db0a4); text-transform:uppercase; letter-spacing:0.04em;}
 .okr-list{display:flex; flex-direction:column; gap:8px; margin:12px 0 0;}
 /* DLOUHÝ OCAS VÝPISU. Okres Hodonín má 114 nabídek po 417 px, takže
    stránka měla 52 744 px a nadpisy pod výpisem stály na 50 468 px —
@@ -6442,8 +6438,10 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    Čísla („239 pozemků", „71 okresů") přitom ležela pod hlavičkou,
    v dalším oddíle — to jediné, co návštěvníka ze search enginu zajímá
    do první vteřiny, bylo až za zlomem.
-   Markup přesouvá scripts/generate-region-pages.mjs (dvousloupcovaHlavicka)
-   při zápisu stránky, aby to platilo i pro šablony, které vzniknou příště.
+   Čísla do hlavičky píše rovnou generátor (hlavickaCisla v
+   scripts/generate-region-pages.mjs). Do 26. 10. ležela pod ní a při
+   zápisu stránky se do ní vystřihávala funkcí dvousloupcovaHlavicka;
+   ta zmizela, protože neměla co stěhovat.
 
    Mez je 1040 px, ne 880: pod ní má obsah pod 700 px a dva sloupce by
    z nadpisu udělaly sloupeček o třech slovech na řádek. Do té šířky
@@ -6455,23 +6453,16 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   .okr-hero .okr-wrap{display:grid; grid-template-columns:minmax(0, var(--m-text)) minmax(0, 1fr);
     column-gap:56px; align-items:end;}
   .okr-hero .okr-wrap > *{grid-column:1;}
-  /* Panel zabírá druhý sloupec po celé výšce hlavičky. `span 9` je
+  /* Čísla zabírají druhý sloupec po celé výšce hlavičky. `span 9` je
      rozpětí přes řádky, které mřížka bez předepsaných řádků má —
-     `1 / -1` by v ní znamenalo jediný řádek. */
-  .okr-hero .okr-panel{grid-column:2; grid-row:1 / span 9; justify-self:end;
-    align-self:end; min-width:0;}
-  /* Čísla pod sebou, ne vedle sebe: vpravo je na ně sloupec, ne řádek,
-     a pod sebou se dají přečíst okem shora dolů jako tabulka. */
-  .okr-hero .okr-panel .okr-stats{flex-direction:column; align-items:flex-end;
-    gap:20px; margin:0; text-align:right;}
-  /* Svislice mezi čísly platila pro řádek. Ve sloupci dělí vodorovně. */
-  .okr-hero .okr-panel .okr-stat + .okr-stat{padding-left:0; padding-top:20px;
-    border-left:0; border-top:1px solid var(--line-strong); width:100%;}
+     `1 / -1` by v ní znamenalo jediný řádek.
+     Pod sebou, ne vedle sebe: vpravo je na ně sloupec, ne řádek, a pod
+     sebou se dají přečíst okem shora dolů jako tabulka. */
+  .okr-hero .okr-cisla{grid-column:2; grid-row:1 / span 9; justify-self:end;
+    align-self:end; min-width:0;
+    display:flex; flex-direction:column; align-items:flex-end;
+    gap:20px; margin:0; max-width:none; text-align:right;}
 }
-/* Pod 1040 px zůstává hlavička jednosloupcová, ale čísla jsou teď
-   UVNITŘ pásu — potřebují proto odstup od úvodního odstavce, který jim
-   dřív dával oddíl pod pásem. */
-.okr-hero .okr-panel .okr-stats{margin-top:24px;}
 /* ČÍM ZAČÍNÁ PRVNÍ OBRAZOVKA. Mezi posledním řádkem úvodního pásu
    a prvním číslem pod ním bylo 168 px prázdna na počítači a 136 px na
    telefonu — změřeno na stránkách okresu, kraje, druhu i rozpočtu,
@@ -6487,47 +6478,12 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 main .okr-hero + .section{padding-top:16px;}
 @media (max-width:880px){ main .okr-hero + .section{padding-top:12px;} }
 
-/* Čísla: velké číslice, ne čtyři malé krabičky. Stejný jazyk jako na
-   hlavní stránce — číslo je hodnota, ne odznak. */
-.okr-stats{gap:32px; margin:24px 0 16px;}
-.okr-stat{background:none; border:0; border-radius:0; box-shadow:none; padding:0; min-width:0;}
-.okr-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,3.6vw,40px); line-height:0.9; letter-spacing:-0.03em; color:var(--text);}
-/* VELKÉ ČÍSLO JE PRO JEDNO ČÍSLO. Dlaždice .okr-stat je dělaná tak, že
-   v ní stojí popisek a pod ním jeden údaj přes půl šířky. Na stránce cen
-   se do ní ale dávají TŘI okresy vedle sebe („Klatovy 39 Kč/m²") — a
-   každá z těch cen se pak vysází jako nadpis 30–44 px. Tři nadpisy v jedné
-   větě se zalomí přes tři řádky, názvy okresů se od svých cen oddělí a
-   z přehledu je plakát. Uvnitř odkazu je to pořád jen údaj: velikost
-   textu, tučně, čísla na stejnou šířku, ať jdou porovnat. */
-.okr-stat .okr-place b{font-family:inherit; font-size:inherit; font-weight:700;
-  line-height:inherit; letter-spacing:0; font-variant-numeric:tabular-nums;
-  color:var(--text);}
-.okr-stat span{color:var(--muted); text-transform:none; letter-spacing:0; font-size:13px;}
-/* Dvě čísla stejné velikosti vedle sebe oko slepí v jedno („20 20"). Mezi
-   ně patří svislice — stejně jako u čísel na hlavní stránce. */
-.okr-stat + .okr-stat{padding-left:32px; border-left:1px solid var(--line-strong);}
-/* JENŽE SVISLICE PATŘÍ MEZI ČÍSLA V ŘÁDKU, NE ZA KAŽDÉ DRUHÉ V POŘADÍ.
-   Naměřeno na nove-pozemky.html: tři čísla (97 / 150 / 73) se vejdou
-   do řádku od 430 px; pod tím se třetí zalomí — a vzalo si s sebou
-   svislici i odsazení 32 px, takže na 390 px začínalo na 53 px,
-   kdežto první číslo na 20. Vypadalo to jako osamělý údaj zavěšený na
-   čáře, která nic neodděluje.
-   Pod mezí se proto jede mřížkou o dvou sloupcích: kde co stojí, je
-   pak jisté, a svislici dostane jen to, co opravdu stojí v druhém
-   sloupci.
-   MEZ 559 px, NE 429 — a je to poučení z vlastní pojistky. Napoprvé tu
-   stálo 429 px, protože při Interu se čtyři čísla do řádku vejdou od
-   430 px. Jenže „vejdou" tam znamenalo o tři pixely: součet čísel
-   je 291 px, mezery 3 × 32 = 96, dohromady 387 proti 390 px obsahu.
-   V CI (běh 584) se na pozemky-stredocesky-kraj.html při 430 px
-   zalomilo — stačí svislý posuvník nebo zaokrouhlení a mez je pryč.
-   Při 560 px zbývá přes 130 px rezervy, takže se do ní vejde
-   i pětimístný počet. Hlídá scripts/test-hlavicka-stranky.mjs. */
-@media (max-width:559px){
-  .okr-stats{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:20px 32px;}
-  .okr-stat + .okr-stat{padding-left:0; border-left:0;}
-  .okr-stats > .okr-stat:nth-child(even){padding-left:32px; border-left:1px solid var(--line-strong);}
-}
+/* DLAŽDICE .okr-stat ZMIZELY. Byly to počty pod tmavým pásem, které
+   opakovaly tytéž údaje jako odstavec v pásu nad nimi; 26. 10. odešlo
+   obojí a zbyla jedna sada čísel přímo v pásu (.okr-cisla výš, skládá
+   je hlavickaCisla v scripts/generate-region-pages.mjs). Zbyla po nich
+   čtyři kila pravidel, která neměla na čem zabrat — našel je
+   scripts/test-mrtve-styly.mjs. */
 
 /* Ceny podle druhu — seznam sourozenců, ne stromeček.
    Nepoužívá .okr-stat schválně: ta dlaždice je dělaná na dvě krátká čísla
@@ -7965,7 +7921,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    takže se zalomí i s ní — a tečka skončí sama na dalším řádku stejně
    jako předtím. Ta lišta je přitom flex s mezerou 10 px: položky od sebe
    oddělené už jsou a oddělovač v ní nemá co dělat. */
-.okr-stat .okr-place:not(:last-child)::after{content:none;}
+
 
 /* =====================================================================
    PÍSMO V POLÍCH NA DOTYKOVÝCH ZAŘÍZENÍCH

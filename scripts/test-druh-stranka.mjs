@@ -70,8 +70,11 @@ for (const d of definice) {
   if (!existsSync(cesta)) { spatne.push(`${d.soubor}: chybí, přitom druh má ${list.length} nabídek`); continue; }
   stranek++;
   const html = cistyText(readFileSync(cesta, 'utf8'));
-  // 1) počet nabídek v úvodní větě
-  const mc = /Evidujeme <b>([\d\s]+) /.exec(html);
+  /* 1) počet nabídek. Do 26. 10. stál v úvodní větě („Evidujeme N …");
+     od té doby je to číslo v hlavičce stránky (.okr-cisla), protože
+     věta tytéž počty jen opisovala — viz hlavickaCisla()
+     v scripts/generate-region-pages.mjs. */
+  const mc = /<div class="okr-cislo"><b>([\d\s ]+)<\/b><span>/.exec(html);
   const psano = mc ? Number(mc[1].replace(/\s/g, '')) : null;
   if (psano !== list.length) spatne.push(`${d.soubor}: psáno ${psano}, v datech ${list.length}`);
   // 2) počet podílů

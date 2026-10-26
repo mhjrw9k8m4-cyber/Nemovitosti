@@ -113,11 +113,12 @@ const minusDni = (iso, n) => {
 const noveZa = (n) => aktualni.filter((o) => o.first_seen && o.first_seen > prvniDen
   && o.first_seen >= minusDni(dnesIso, n - 1));
 const n7 = noveZa(7).length, n14 = noveZa(14).length;
+/* Číslo stojí v hlavičce JEDNOU. Do 26. 10. bylo dvakrát: ve větě
+   („přišlo N pozemků") a hned pod ní v dlaždici. Věta i dlaždice
+   zmizely, zůstala hlavička (.okr-cisla). */
 pravda(`v hlavičce je ${n7} nových za 7 dní`,
-  new RegExp('<b>' + mez(n7) + ' pozem').test(h),
-  'podtitulek: ' + ((/<p class="sub">([\s\S]*?)<\/p>/.exec(h) || [])[1] || '—').replace(/<[^>]*>/g, ''));
-pravda(`dlaždice uvádí ${n7} nových za 7 dní`,
-  new RegExp('<b>' + mez(n7) + '</b>\\s*<span>nových za 7 dní').test(h));
+  new RegExp('<b>' + mez(n7) + '</b><span>nových za 7 dní').test(h),
+  'hlavička: ' + ((/<div class="okr-cisla">([\s\S]*?)<\/div>\s*<\/div>/.exec(h) || [])[1] || '—').replace(/<[^>]*>/g, ' '));
 pravda(`dlaždice uvádí ${n14} nových za 14 dní`,
   new RegExp('<b>' + mez(n14) + '</b>\\s*<span>nových za 14 dní').test(h));
 /* A kontrola, že okno není o den delší, než stránka tvrdí. Na dnešních
