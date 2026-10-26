@@ -98,6 +98,33 @@ try {
   pravda('a „Uložit" se neklonuje (id smí být v dokumentu jednou)',
     dole.idDvakrat <= 1, `#pz-fav je na stránce ${dole.idDvakrat}×`);
 
+  /* NESMÍ BLIKAT. Lišta se řídí tím, jestli je vidět cena nebo tlačítka,
+     a mezi nimi je na telefonu celá stránka. Naměřeno 26. 10. na
+     pozemek-benesov-benesov-1sjtz7b.html (390×844): cena končí na 626 px,
+     tlačítka začínají na 1566 — a protože se do okna (844 px) dostanou až
+     od 722, zbyla mezi nimi 96px skulina, kde nebylo vidět ani jedno.
+     Lišta se v ní vysunula na y=640 a na y=800 se zase schovala: jedno
+     bliknutí přes 160 px pomalého rolování, při kterém navíc poskočil
+     obsah (tělo se o lištu odsazuje).
+     Měří se počet PŘEPNUTÍ při cestě dolů, ne stav na jednom místě —
+     stav na jednom místě tuhle vadu ukázat nemůže. Správně je jedno
+     přepnutí: jednou se ukáže a zůstane. */
+  {
+    await p.evaluate(() => window.scrollTo(0, 0));
+    await p.waitForTimeout(600);
+    let minule = null;
+    const prepnuti = [];
+    for (let y = 0; y <= 2600; y += 80) {
+      await p.evaluate((yy) => window.scrollTo(0, yy), y);
+      await p.waitForTimeout(130);
+      const v = (await zmer(p)).videt;
+      if (minule !== null && v !== minule) prepnuti.push((v ? 'zap' : 'vyp') + '@' + y);
+      minule = v;
+    }
+    pravda('při rolování dolů se nepřepne víc než jednou (nebliká)',
+      prepnuti.length <= 1, 'přepnutí: ' + (prepnuti.join(' ') || 'žádné'));
+  }
+
   await p.evaluate(() => window.scrollTo(0, 0));
   await p.waitForTimeout(900);
   pravda('po návratu nahoru zase zmizí', !(await zmer(p)).videt, 'nahoře zůstala svítit');

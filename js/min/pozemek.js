@@ -1819,7 +1819,7 @@
       }
       lista.classList.toggle('je-videt', !vidi.cena && !vidi.akce);
       document.body.classList.toggle('ma-listu', !vidi.cena && !vidi.akce);
-    }, { rootMargin: '0px 0px -72px 0px' });
+    }, { rootMargin: '0px 0px 128px 0px' });
     hlidac.observe(cena);
     hlidac.observe(vzor.parentNode);
   }

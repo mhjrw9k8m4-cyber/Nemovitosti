@@ -3070,8 +3070,20 @@
     document.body.appendChild(lista);
 
     /* Dvě sledované věci, jeden stav: lišta svítí, jen když není vidět
-       ani cena, ani tlačítka. `rootMargin` zdola o výšku lišty, ať se
-       neukáže nad tlačítky, která sama zakrývá. */
+       ani cena, ani tlačítka.
+
+       ZDOLA SE PŘIDÁVÁ, NE UBÍRÁ. Do 26. 10. tu bylo -72px (o výšku
+       lišty, ať se neukáže nad tlačítky, která sama zakrývá). Jenže mezi
+       cenou a tlačítky je na telefonu celá stránka, a těsně pod cenou
+       zbyla úzká skulina, kde není vidět ani jedno: naměřeno na
+       pozemek-benesov-benesov-1sjtz7b.html (390×844) cena 558–626 a
+       tlačítka 1566–1618, takže lišta najela na y=640 a na y=800 zase
+       zmizela. Při pomalém rolování z ní bylo bliknutí přes 160 px —
+       pruh se vysune a hned zase schová.
+       Kladných 128 px říká „tlačítka jsou na dosah": počítají se za
+       viditelná, dokud jsou do 128 px pod okrajem. Skulina 96 px se tím
+       zavře s rezervou 32 px a původní účel zůstává (lišta se objeví
+       ještě později, ne dřív). */
     var vidi = { cena: true, akce: true };
     var hlidac = new IntersectionObserver(function (zaznamy) {
       for (var i = 0; i < zaznamy.length; i++) {
@@ -3080,7 +3092,7 @@
       }
       lista.classList.toggle('je-videt', !vidi.cena && !vidi.akce);
       document.body.classList.toggle('ma-listu', !vidi.cena && !vidi.akce);
-    }, { rootMargin: '0px 0px -72px 0px' });
+    }, { rootMargin: '0px 0px 128px 0px' });
     hlidac.observe(cena);
     hlidac.observe(vzor.parentNode);
   }
