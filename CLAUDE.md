@@ -509,7 +509,8 @@ pismo:
 barvy:
   znacka:        "#004F2F"   # plná plocha hlavní akce
   znacka-tmava:  "#0F5C3B"   # --znacka, text a linky
-  znacka-svetla: "#2B7652"   # --znacka-svetla
+  znacka-svetla: "#2B7652"   # --znacka-svetla (jen na bílém)
+  znacka-na-tmave: "#5CBC93" # --znacka-na-tmave, akcent na tmavé desce (7,01 : 1)
   text:          "#101513"
   plocha-stranky: "#F2F4F3"
   plocha-zapustena: "#EDEFEE"
@@ -521,6 +522,12 @@ barvy:
     exekuce: "#8C2F1E"
     obec:    "#277686"
   hlida:     scripts/test-odstiny.mjs, test-tokeny.mjs, test-okraje.mjs
+hlava-stranky:
+  pravidlo: "KAŽDÁ stránka s obsahem začíná TMAVOU DESKOU: zpětný odkaz, odznak-pilulka, h1, případně úvodní věta nebo čísla. Jsou na ni tři značky (.st-hlava, .add-hero:not(.app-hero), .okr-band), ale JEDNA sada tokenů --pas-* — kdo potřebuje na desce novou barvu, přepíše token v tom rozsahu, ne pravidlo."
+  vyjimka:  ".app-hero (Hlídání, Zprávy, Můj inzerát) zůstává světlá — tam se pracuje a deska by ubrala místo. Patička taky: --pas-plocha-paticka se vyhodnocuje až u ní."
+  odznak:   "pilulka (--r-pill). Ručně psané stránky nesou .st-odznak, vygenerované .eyebrow uvnitř desky; vzhled sdílejí jedním pravidlem. Obočí MIMO desku (.section-head) zůstává čárkou — to je nadtitul oddílu, ne odznak stránky."
+  akcent:   "na desce --znacka-na-tmave, NIKDY --znacka-svetla (ta má na #12241A 2,63 : 1)"
+  hlida:    scripts/test-kontrast.mjs, test-jeden-styl.mjs, test-hlavicka-stranky.mjs
 odstupy:
   stupnice: [0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
   pravidlo: "přísná čtyřková mříž; 1 a 2 px jsou vlásečnice a mezery v řádku, ne odstupy rozvržení"

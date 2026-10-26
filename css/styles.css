@@ -206,6 +206,11 @@
      vybledle. Ztmaveno v rámci stejného odstínu: 5,2 : 1 na nejtmavším
      světlém čipu, 7,0 : 1 na bílé kartě. Měří to scripts/test-kontrast.mjs. */
   --znacka:#0F5C3B; --znacka-svetla:#2B7652;
+  /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
+     desce #12241A má 2,63 : 1 — pilulky „Zdarma / Bez provize" na stránce
+     Přidat pozemek z ní byly tmavě zelené na tmavě zelené, tedy nečitelné.
+     Tohle je týž odstín (155°) jen světlejší a klidnější: 7,01 : 1. */
+  --znacka-na-tmave:#5CBC93;
   /* HLUBOKÁ ZNAČKOVÁ ZELEŇ — ta, která se používá JEN PRŮHLEDNĚ.
      Byla to nejčastější barva webu bez jména: 46 míst, a ani jedno ji
      nepoužívá naplno. Drží prstenec zaměření (--prstenec-pole), záři
@@ -311,9 +316,12 @@
      dosud měla 4 % místo 6 %, což nebylo rozhodnutí.
      Hlídá scripts/test-jeden-styl.mjs. */
   --mrizka-bunka:52px;
-  /* --mrizka-cara-tmava (bílá linka pro tmavé plochy) odstraněn: po
-     zrušení tmavého režimu ho nepoužívalo nic a obě mřížky dnes berou
-     --pas-mrizka, tedy barvu pro světlý povrch. */
+  /* --mrizka-cara-tmava se VRACÍ. Odstraněn byl právem: po zrušení tmavého
+     režimu ho nepoužívalo nic a dvě mřížky ho braly i na světlém pásu, kde
+     z nich nebylo vidět nic. Tmavá plocha na webu ale zase je — hlava
+     stránky — a mřížka na ní potřebuje světlou čáru, ne inkoustovou.
+     Inkoust na #12241A je rozdíl 0 úrovní jasu, tedy neviditelná mřížka. */
+  --mrizka-cara-tmava:rgba(var(--text-ondeep-mute-rgb),0.07);
   /* Mřížka při 4 % se na pásu neprojevila ani o jednu úroveň jasu.
      6,5 % je pořád jen náznak, ale je vidět — a je to ta textura, kvůli
      které tu kreslení polí nahradila síť poledníků a rovnoběžek. */
@@ -545,7 +553,11 @@
      téměř bílých a pět nejčastějších barev (#FAFAFA, #FBFBFB, #F9F9F9,
      #FCFCFC, #F8F8F8) mělo R=G=B — tedy ani stopu zeleně. Pás teď začíná
      zelenkavě a plynule přechází do plochy stránky; bílé karty na něm
-     pak samy vystoupí, místo aby s ním splývaly. */
+     pak samy vystoupí, místo aby s ním splývaly.
+     TOHLE JE DNES HODNOTA PRO PATIČKU. Hlava stránky si tutéž sadu tokenů
+     přepisuje na tmavou — hledej „TMAVÁ DESKA" níž v souboru. Nestojí to
+     tady, aby patička nemusela mít vlastní sadu: pás je jeden předpis,
+     jen se na dvou místech vyhodnotí jinak. */
   --pas-plocha:#EDF3EF;
   /* Patička má vlastní slot, aby se jednou mohla odlišit; dnes je to
      tatáž plocha, a říká se to odkazem, ne opisem hexu. */
@@ -6383,7 +6395,8 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    stránek — web tím drží pohromadě. Barvu i mřížku bere z tokenů pásu,
    takže se ve světlém režimu nerozejde se zbytkem stránky. */
 .okr-hero{position:relative; padding:0;}
-.okr-band{position:relative; padding:64px 0 48px;
+/* Odsazení jako u .add-hero: tmavá deska se ohlásí barvou, ne prázdnem. */
+.okr-band{position:relative; padding:20px 0 40px;
   background:var(--pas-plocha);}
 .okr-band::before{content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
   background-image:
@@ -6396,10 +6409,11 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
 .okr-hero .eyebrow{color:var(--pas-text);}
-.okr-hero h1{color:var(--pas-text); font-size:var(--h1-stranka); line-height:1.1; letter-spacing:-0.03em;}
+.okr-hero h1{color:var(--pas-text); font-size:var(--h1-stranka); line-height:1.1;
+  letter-spacing:-0.03em; margin:12px 0 12px;}
 .okr-hero .sub{color:var(--pas-text-mute); max-width:var(--m-text);}
 .okr-hero .sub b{color:var(--pas-text);}
-@media (max-width:880px){ .okr-band{padding:40px 0 32px;} }
+@media (max-width:880px){ .okr-band{padding:16px 0 32px;} }
 
 /* Výhrada o zdrojích dat: pod výpisem, drobně. Nad výpisem stála jako
    půlka šestiřádkového odstavce a odsouvala první nabídku. */
@@ -7087,8 +7101,38 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    světlé: tam člověk pracuje a plná tmavá deska nad nástrojem jen ubírá
    místo a křičí.
    ------------------------------------------------------------------ */
+/* TMAVÁ DESKA: JEDNA SADA TOKENŮ, NE DVACET PŘEPSANÝCH PRAVIDEL.
+   Pás byl světlý a bylo to tak napsáno u --pas-plocha nahoře. Jenže mezitím
+   dostaly tři stránky (Rádce, Kontakt, Pravidla inzerce) tmavou hlavu
+   .st-hlava — a web tím měl dvě různé hlavičky vedle sebe. Rozhoduje směr 2:
+   tmavá hlava, bílé karty, jedno písmo. Zbytek pásu se k ní přidává.
+
+   Nepřepisuje se tu ale barva v každém pravidle, které na pásu něco kreslí
+   (bylo by jich dvacet šest a dvacáté sedmé by se zapomnělo). PŘEPÍŠOU SE
+   TOKENY A JEN V ROZSAHU PÁSU: všechna existující pravidla dál říkají
+   var(--pas-text), jen jim vyjde bílá. Patička zůstává světlá, protože
+   --pas-plocha-paticka se vyhodnocuje až u ní, a ta pod pásem neleží. */
+.add-hero:not(.app-hero), .okr-band, .st-hlava{
+  --pas-plocha:var(--plocha-tmava);
+  --pas-text:var(--text-ondeep);
+  --pas-text-mute:var(--text-ondeep-mute);
+  --pas-akcent:var(--znacka-na-tmave);
+  --pas-nadpis:var(--znacka-na-tmave);
+  /* Co leží NA akcentu (číslo kroku v kolečku), musí být tmavé — bílá by
+     na světlé zeleni dala 2,3 : 1. Táž dvojice obráceně: 7,01 : 1. */
+  --pas-na-akcentu:var(--plocha-tmava);
+  --pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);
+  --pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);
+  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.45);
+  --pas-mrizka:var(--mrizka-cara-tmava);
+  color:var(--pas-text);}
+
+/* Odsazení shora bylo 96 px, z toho 72 px holého prázdna nad obočím —
+   počítalo se s tím, že deska je jen o odstín jiná než stránka. Tmavá
+   deska se ohlásí barvou, prázdno nad textem ji už jen natahuje.
+   Naměřeno na uzemni-plan-pozemek.html (1280): hlava 382 → 324 px. */
 .add-hero:not(.app-hero){position:relative; isolation:isolate; overflow:hidden;
-  padding:96px 0 56px;
+  padding:16px 0 40px;
   background:var(--pas-plocha);}
 .add-hero:not(.app-hero)::before{content:""; position:absolute; inset:0;
   pointer-events:none; z-index:0;
@@ -7107,7 +7151,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .add-hero:not(.app-hero) > .wrap{position:relative; z-index:1;}
 .add-hero:not(.app-hero) .eyebrow{color:var(--pas-text);}
 .add-hero:not(.app-hero) h1{color:var(--pas-text); font-size:var(--h1-stranka);
-  line-height:1.1; letter-spacing:-0.03em; max-width:var(--m-nadpis);}
+  line-height:1.1; letter-spacing:-0.03em; max-width:var(--m-nadpis);
+  margin:12px 0 12px;}
 /* Zvýraznění v nadpisu nese barva, ne kurzíva. */
 .add-hero:not(.app-hero) h1 em{font-style:normal; font-weight:700; color:var(--pas-akcent);}
 /* Měděné podtržení pod zvýrazněním je na tmavém nadbytečné — barva stačí
@@ -7129,13 +7174,11 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .add-hero:not(.app-hero) .as-txt b{color:var(--pas-text);}
 .add-hero:not(.app-hero) .as-txt > span{color:var(--pas-text-mute);}
 
-@media (max-width:880px){ .add-hero:not(.app-hero){padding:80px 0 40px;} }
-/* Na telefonu ještě míň. Změřeno: nad nadpisem bylo 84 px prázdna, kdežto
-   na úvodní stránce 18 a na hlídání 61 — a zrovna tady jde o to dostat
-   formulář co nejdřív pod prst. Musí to stát ZA pravidlem výš: má stejnou
-   váhu, takže rozhoduje pořadí (napoprvé jsem to dal před něj a nic to
-   neudělalo). */
-@media (max-width:640px){ .add-hero:not(.app-hero){padding-top:48px;} }
+/* Dvě úzká pravidla tu dřív vracela odsazení zpátky na 80 a 48 px shora —
+   byla psaná na světlou desku, kde nad nadpisem muselo být vidět, že pás
+   vůbec začal. Tmavá deska to řekne sama, takže zůstává jediná hodnota pro
+   všechny šířky a telefon dostane nadpis o 32 px dřív. */
+@media (max-width:880px){ .add-hero:not(.app-hero){padding:16px 0 32px;} }
 
 /* =====================================================================
    DLOUHÝ TEXT (.clanek)
@@ -8385,10 +8428,15 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    mačká prstem venku, ne myší u stolu. */
 @media (hover:none){ .map-podklad button{min-height:44px;} }
 
-/* STRÁNKA „MOJE DATA". Výpis toho, co si web pamatuje v prohlížeči.
+/* ODSTUP SHORA UŽ TŘI PRAVIDLA (.md-hlava, .dt-hlava, .om-hlava) NEMAJÍ.
+   Dávala 28 px prázdna nad nadpisem, protože nad ním nic nebylo. Dnes nad
+   ním stojí tmavá deska .st-hlava i s vlastním spodním odstupem; dvě
+   mezery za sebou dělají díru, ne členění.
+
+   STRÁNKA „MOJE DATA". Výpis toho, co si web pamatuje v prohlížeči.
    Vypadá jako seznam, ne jako nastavení: každý řádek říká co, kolik
    toho je, a má vedle sebe tlačítko, kterým to zmizí. */
-.md-hlava{padding-top:28px;}
+
 .md-uvod{max-width:var(--m-text); margin-top:8px; line-height:1.6;}
 /* ÚVODNÍ VĚTA, KTERÁ STOJÍ PŘÍMO V <main> (ochrana-udaju.html) — nad
    úvodním pásem a mimo jakýkoli `.wrap`, takže nemá od koho dostat
@@ -8446,7 +8494,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 
 /* STRÁNKA S POPISEM DAT (data.html). Je to dokumentace, ne marketing:
    tabulka polí, co v datech není, a za jakých podmínek. */
-.dt-hlava{padding-top:28px;}
+
 .dt-uvod{max-width:var(--m-text); margin-top:8px; line-height:1.6; font-size:16px;}
 .dt-adresa{margin:12px 0 0;}
 .dt-adresa code{display:inline-block; padding:8px 12px; border-radius:var(--r-sm);
@@ -8471,7 +8519,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* ODHLÁŠENÍ Z E-MAILŮ (odhlasit-maily.html). Stránka, kterou člověk
    otevře z e-mailu a po pěti sekundách zavře — proto jen text, žádné
    ovládání. */
-.om-hlava{padding-top:28px;}
+
 .om-uvod{max-width:var(--m-text); margin-top:8px; line-height:1.6; font-size:16px;}
 .om-uvod.om-hotovo{font-weight:600; color:var(--c-ok-ink);}
 .om-uvod.om-chyba{font-weight:600; color:var(--c-exekuce-ink);}
@@ -8861,25 +8909,47 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* --- pás hlavičky stránky: tmavá plocha, bílé písmo ------------------
    Tmavá plocha pod bílým textem je jediný povolený průsvitný směr
    (CLAUDE.md, oddíl „zakázáno") — má spočitatelný strop kontrastu. */
-.st-hlava{background:var(--plocha-tmava); color:var(--text-ondeep);
-  padding:20px 0 28px; margin-bottom:var(--mezera-bloku);}
+.st-hlava{background:var(--pas-plocha); padding:20px 0 28px;
+  margin-bottom:var(--mezera-bloku);}
 .st-wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
 .st-zpet{display:inline-flex; align-items:center; gap:8px; min-height:44px;
-  font-size:14px; color:var(--text-ondeep-mute); text-decoration:none;}
-.st-zpet:hover{color:var(--text-ondeep);}
-.st-odznak{display:inline-flex; align-items:center; gap:8px; height:28px;
+  font-size:14px; color:var(--pas-text-mute); text-decoration:none;}
+.st-zpet:hover{color:var(--pas-text);}
+/* JEDEN ODZNAK, DVĚ ZNAČKY. Ručně psané stránky dostaly <span class="st-odznak">,
+   jenže stovka vygenerovaných (okresy, kraje, druhy, rozpočty) nese od začátku
+   <div class="eyebrow"> — a přepisovat je kvůli vzhledu by znamenalo sáhnout do
+   generátoru i do čtyř hlídačů, které obočí čtou. Vzhled proto sdílejí: na pásu
+   je obočí TÁŽ pilulka. Čárka před textem se ruší, tečku dělá .live-dot, který
+   v těch značkách stejně už je.
+   Mimo pás (.section-head) zůstává obočí čárkou — tam je to nadtitul oddílu,
+   ne odznak stránky, a pilulka uprostřed bílé karty by byla tlačítko. */
+.st-odznak,
+.okr-band .eyebrow,
+.add-hero:not(.app-hero) .eyebrow{display:inline-flex; align-items:center; gap:8px; height:28px;
   padding:0 12px; border-radius:var(--r-pill);
-  background:rgba(var(--text-ondeep-mute-rgb),0.16);
+  background:var(--pas-dlazdice); margin-bottom:0;
   font-size:12px; font-weight:600; letter-spacing:var(--odznak-proklad);
-  text-transform:uppercase; color:var(--text-ondeep);}
+  text-transform:uppercase; color:var(--pas-text);
+  /* Hlavička okresu je na širokém mřížka o dvou sloupcích (text | čísla).
+     Obočí je tím pádem POLOŽKA MŘÍŽKY a inline-flex ji neuchrání: bez
+     tohohle se pilulka roztáhla na celý sloupec, naměřeno 565 px místo
+     277 na pozemky-okres-benesov.html. */
+  justify-self:start; align-self:start; width:max-content; max-width:100%;}
 .st-odznak::before{content:""; width:6px; height:6px; border-radius:var(--r-pill);
-  background:var(--znacka-svetla);}
+  background:var(--pas-akcent);}
+/* Čárka patří nadtitulu oddílu, ne odznaku: v pilulce by to byla druhá
+   vodorovná čára hned vedle jejího vlastního obrysu. */
+.okr-band .eyebrow::before,
+.add-hero:not(.app-hero) .eyebrow::before{content:none;}
+.okr-band .eyebrow .live-dot,
+.add-hero:not(.app-hero) .eyebrow .live-dot{width:6px; height:6px; flex:none;
+  border-radius:var(--r-pill); background:var(--pas-akcent); animation:none;}
 /* Rodinu tu nenastavujeme: h1 ji má z `h1{font-family:var(--font-nadpis)}`
    a ten dnes míří na Inter. Kdyby se tu psala znovu, přebila by jediný
    zdroj pravdy — a přesně to hlídá scripts/test-pismo.mjs. */
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj); line-height:1.2;
-  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--text-ondeep);}
-.st-meta{font-size:14px; line-height:1.5; color:var(--text-ondeep-mute);
+  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--pas-text);}
+.st-meta{font-size:14px; line-height:1.5; color:var(--pas-text-mute);
   margin:0; max-width:var(--m-text);}
 
 /* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */

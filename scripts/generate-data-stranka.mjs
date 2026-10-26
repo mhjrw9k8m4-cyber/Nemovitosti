@@ -150,8 +150,15 @@ export function spust() {
 
   const telo = `
 <main id="obsah">
+  <section class="st-hlava">
+    <div class="st-wrap">
+      <a href="index.html" class="st-zpet">‹ Pozemky na mapě</a>
+      <div><span class="st-odznak">Otevřená data</span></div>
+      <h1>Data Parcelky</h1>
+    </div>
+  </section>
+
   <section class="wrap dt-hlava">
-    <h1>Data Parcelky</h1>
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se ${esc(popis.obnova)}.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/${esc(popis.soubor)}</code></p>

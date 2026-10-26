@@ -37,7 +37,7 @@
 
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=3ded48d2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=3f8f02c5">
   <style>
     .kt-mail{display:flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -85,8 +85,15 @@
   </div>
 </header>
 <main id="obsah">
+  <section class="st-hlava">
+    <div class="st-wrap">
+      <a href="index.html" class="st-zpet">‹ Pozemky na mapě</a>
+      <div><span class="st-odznak">Otevřená data</span></div>
+      <h1>Data Parcelky</h1>
+    </div>
+  </section>
+
   <section class="wrap dt-hlava">
-    <h1>Data Parcelky</h1>
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>

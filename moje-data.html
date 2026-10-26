@@ -53,7 +53,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=3ded48d2">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=3f8f02c5">
   <style>
     .kt-mail{display:flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -102,13 +102,17 @@
   </div>
 </header>
 <main id="obsah">
-  <section class="wrap md-hlava">
-    <h1>Moje data</h1>
+  <section class="st-hlava">
+    <div class="st-wrap">
+      <a href="index.html" class="st-zpet">‹ Pozemky na mapě</a>
+      <div><span class="st-odznak">Soukromí</span></div>
+      <h1>Moje data</h1>
     <p class="md-uvod">Tohle si Parcelka pamatuje <b>ve vašem prohlížeči</b>. Bez přihlášení
       se nic z toho nikam neodesílá a nevidíme to ani my — je to tady proto, aby se nemuselo
       klikat pokaždé znovu. <b>S účtem</b> jsou dvě z těch věcí i na serveru: uložené
       pozemky a poznámky k nim (čte je jen váš účet, a u každé z nich to stojí níž).
       Odhlášením se jejich kopie z prohlížeče smaže. Cokoli z toho můžete smazat.</p>
+    </div>
   </section>
   <section class="wrap md-obsah" id="md-obsah">
     <p class="md-nacitam">Načítám…</p>

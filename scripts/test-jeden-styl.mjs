@@ -123,17 +123,18 @@ pravda('obsahový nadpis už velikost nemění přes @media',
 // jako jiná hrubost podkladu. Velikost i barva čáry je proto v paletě
 // a všechny ji berou odtud.
 //
-// BARVA JE DNES JEN JEDNA. Dokud web měl tmavý režim, byly dvě:
-// --mrizka-cara-svetla (inkoust pro světlé plochy) a --mrizka-cara-tmava
-// (bílá pro tmavé). Tmavý režim je pryč a ta bílá se mezitím ukázala
-// jako vada: dvě mřížky ji braly i na SVĚTLÉM pásu, kde z nich nebylo
-// vidět vůbec nic. Obě dnes berou --pas-mrizka, která ukazuje na
-// --mrizka-cara-svetla, a bílá varianta je odstraněná.
+// BARVY JSOU DVĚ A KAŽDÁ MÁ SVŮJ POVRCH. --mrizka-cara-svetla je inkoust
+// pro světlé plochy (patička), --mrizka-cara-tmava světlá čára pro tmavé
+// (hlava stránky). Bílá varianta tu jednu dobu nebyla, a bylo to správně:
+// po zrušení tmavého režimu ji dvě mřížky braly i na SVĚTLÉM pásu, kde
+// z nich nebylo vidět nic. Vrátila se, až když se vrátila tmavá plocha.
+// Obě se smí brát JEN přes --pas-mrizka, která podle plochy ukazuje na
+// jednu z nich — žádná mřížka si barvu nepíše sama.
 // =====================================================================
 /* --mrizka-bunka-panel (34 px pro panel mobilního menu) tu BÝVAL.
    Menu texturu dávno nemá, token zůstal viset nepoužitý a 20. 10. byl
    smazán — rozteč je dnes jedna. */
-const TEXTURA = ['--mrizka-bunka', '--mrizka-cara-svetla'];
+const TEXTURA = ['--mrizka-bunka', '--mrizka-cara-svetla', '--mrizka-cara-tmava'];
 pravda('mřížková textura má hodnoty v paletě',
   TEXTURA.every((t) => new RegExp(`${t}\\s*:`).test(css)),
   'chybí: ' + TEXTURA.filter((t) => !new RegExp(`${t}\\s*:`).test(css)).join(', '));
@@ -176,7 +177,7 @@ pravda('test našel všech pět ploch s mřížkovou texturou', mrizky.length ==
    Test si proto najde
    všechny tokeny, které se definují JEN odkazem na jednu z těch dvou
    čar, a uzná je. Token s vlastní barvou se neuzná ani náhodou. */
-const ZAKLADNI = ['--mrizka-cara-svetla'];
+const ZAKLADNI = ['--mrizka-cara-svetla', '--mrizka-cara-tmava'];
 const prezdivky = [];
 for (const m of css.matchAll(/(--[\w-]+)\s*:\s*var\((--mrizka-cara-[a-z]+)\)\s*;/g)) {
   if (ZAKLADNI.includes(m[2]) && !prezdivky.includes(m[1])) prezdivky.push(m[1]);

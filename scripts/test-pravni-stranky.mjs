@@ -53,13 +53,21 @@ const CEKANO = {
      (Předtím se 14. 10. přepočítávalo kvůli tvaru uvozovky, se stejným
      závěrem; tyhle dvě výjimky jsou důvod, proč otisk nemá brát ani
      sazbu, ani rám.) */
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '214950f595055afd' },
+  /* 26. 10. přepočítáno potřetí, opět BEZ ZMĚNY DATA: hlava stránky přešla
+     na tmavou desku a obočí „Ochrana osobních údajů" vystřídala pilulka
+     s týmž slovem plus odkaz „‹ Pozemky na mapě". Obojí teď z otisku
+     vypadává (viz viditelnyText), takže se otisk posunul o těch 23 znaků
+     obočí. Ověřeno proti commitu b2c2583d: jediný rozdíl v textu je ten
+     odstraněný popisek, zbytek znak po znaku souhlasí (9 171 → 9 148). */
+  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '097e249d43d3c9fe' },
   /* 17. 10.: v bodě o zneužívání webu se „obcházení stránek robotem"
      změnilo na „procházení". „Obcházet" znamená česky především obejít
      něco (zákon, zabezpečení) — v odstavci, který vyjmenovává zakázané
      jednání, je taková dvojznačnost vada. Měsíc zůstává („říjen 2026"),
      protože úprava padla do něj. */
-  'podminky.html': { datum: 'říjen 2026', otisk: 'a61e0b80907796c5' },
+  /* 26. 10. totéž co u zásad: ubylo obočí „Podmínky použití" (17 znaků),
+     znění zůstalo (2 864 → 2 847, jinak znak po znaku totožné). */
+  'podminky.html': { datum: 'říjen 2026', otisk: '5a387465eb8eb8fa' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */
@@ -77,6 +85,14 @@ export function viditelnyText(html) {
     .replace(/<header[\s\S]*?<\/header>/gi, ' ')
     .replace(/<footer[\s\S]*?<\/footer>/gi, ' ')
     .replace(/<nav[\s\S]*?<\/nav>/gi, ' ')
+    /* ODZNAK A ZPĚTNÝ ODKAZ V HLAVĚ JSOU TAKY RÁM. Nejsou uvnitř <nav>,
+       ale dělají totéž: říkají, kde na webu člověk je a kudy zpátky.
+       Když hlava stránky 26. 10. přešla na tmavou desku a obočí
+       „Ochrana osobních údajů" vystřídala pilulka s odkazem „‹ Pozemky
+       na mapě", otisk se rozešel a zkouška chtěla upravit „Poslední
+       úprava" — potřetí by to byla lež o právním znění. */
+    .replace(/<a[^>]*class="[^"]*\bst-zpet\b[^"]*"[\s\S]*?<\/a>/gi, ' ')
+    .replace(/<span[^>]*class="[^"]*\bst-odznak\b[^"]*"[\s\S]*?<\/span>/gi, ' ')
     .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')

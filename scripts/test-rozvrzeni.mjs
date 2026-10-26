@@ -369,33 +369,16 @@ async function otevri(soubor, sirka, vyska) {
    takže bylo pořád vidět, že za tím něco je. Na telefonu je proto okno celá
    obrazovka. Na velkém displeji karta zůstává (odstavec roztažený na metr
    a půl se nečte), ale pozadí musí být neprůhledné — web za ním nevykukuje. */
-/* ---- Dvě dlaždice s týmž číslem ------------------------------------
-   V okrese, kde jsou všechny nabídky jednoho druhu, stály vedle sebe
-   „28 pozemků" a „28 na prodej". Druhá neříká nic, co by v té první
-   nebylo — a v podnadpisu nad tím stojí „28× na prodej" ještě jednou.
-   Čte se to jako dva různé údaje, dokud si člověk nevšimne, že je to
-   totéž číslo. Kontrola je statická, aby prošla všech 77 stránek. */
-{
-  const KOREN = new URL('..', import.meta.url);
-  const soubory = readdirSync(KOREN).filter((f) => /^pozemky-(okres-|[a-z-]+-kraj)/.test(f));
-  const spatne = [];
-  let prohlednuto = 0;
-  for (const f of soubory) {
-    const h = readFileSync(new URL(f, KOREN), 'utf8');
-    const usek = h.slice(h.indexOf('<div class="okr-stats">'));
-    const dlazdice = [...usek.slice(0, usek.indexOf('</div>\n      </div>') + 6)
-      .matchAll(/<b>([\d\s\u00a0]+)<\/b>\s*<span>([^<]+)<\/span>/g)]
-      .map((m) => ({ n: Number(m[1].replace(/[\s\u00a0]/g, '')), co: m[2] }));
-    if (dlazdice.length < 2) continue;
-    prohlednuto++;
-    const celkem = dlazdice[0].n;
-    const stejne = dlazdice.slice(1).filter((d) => d.n === celkem && !/okres/.test(d.co));
-    if (stejne.length) spatne.push(`${f}: „${celkem} ${dlazdice[0].co}" a „${stejne[0].n} ${stejne[0].co}"`);
-  }
-  pravda('bylo co prohlížet', prohlednuto >= 10, `stránek s rozpadem: ${prohlednuto}`);
-  pravda('žádná stránka neukazuje dvě dlaždice s týmž číslem', spatne.length === 0,
-    spatne.slice(0, 3).join('; ') + (spatne.length > 3 ? ` … a dalších ${spatne.length - 3}` : ''));
-}
+/* ---- Dvě dlaždice s týmž číslem: PŘESTĚHOVÁNO -----------------------
+   Tady stála kontrola, že na okresní stránce nestojí vedle sebe
+   „28 pozemků" a „28 na prodej". Četla ale <div class="okr-stats">, a ten
+   blok zmizel v commitu b2c2583d58, když čísla přešla do hlavičky. Od té
+   chvíle neměřila nic: indexOf vrátil −1, výřez byl prázdný a kontrola
+   „bylo co prohlížet" sama hlásila 0 stránek — hlídač, jehož předmět se
+   odstěhoval, jen hlasitě nic nedělal. Na nové podobě (.okr-cisla) totéž
+   tvrzení hlídá scripts/test-cisla-okresu.mjs, a to přes 91 hlaviček
+   (77 okresů + 14 krajů), ne přes 10. Dvě kopie téhož pravidla nejsou
+   dvojitá pojistka, jen druhé místo, kde se zapomene. */
 
 /* ---- Oddělovač nesmí viset na konci řádku --------------------------
    Název obce ve výpisu nabídek dostával z CSS oddělovač „ · " za sebe.
