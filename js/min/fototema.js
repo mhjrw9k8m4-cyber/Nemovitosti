@@ -85,6 +85,22 @@
     });
   }
 
+  var _tridySlib = null;
+  function zdrojTrid() {
+    var zn = (typeof document !== 'undefined')
+      && document.querySelector('meta[name="pk-tridy"]');
+    return (zn && zn.getAttribute('data-src')) || 'js/min/tridy-imagenet.js';
+  }
+  function pripravTridy() {
+    if (typeof window === 'undefined') return Promise.resolve(null);
+    if (window.PKTridy) return Promise.resolve(window.PKTridy);
+    if (_tridySlib) return _tridySlib;
+    _tridySlib = nactiSkript(zdrojTrid())
+      .then(function () { return window.PKTridy || null; })
+      .catch(function () { return null; });
+    return _tridySlib;
+  }
+
   function pripravModel(zdrojTf) {
     if (_stav === 'ready') return Promise.resolve(_model);
     if (_stav === 'failed') return Promise.resolve(null);
@@ -132,7 +148,11 @@
   }
 
   function posud(imgEl, tridy, skupiny) {
-    return klasifikuj(imgEl, tridy, 6).then(function (p) { return vyhodnot(p, skupiny); });
+    var sk = skupiny || (typeof window !== 'undefined' ? window.PKSkupiny : null);
+    var hotovo = function (t) {
+      return klasifikuj(imgEl, t, 6).then(function (p) { return vyhodnot(p, sk); });
+    };
+    return tridy ? hotovo(tridy) : pripravTridy().then(hotovo);
   }
 
   return {
@@ -140,6 +160,7 @@
     klasifikuj: klasifikuj,
     posud: posud,
     pripravModel: pripravModel,
+    pripravTridy: pripravTridy,
     PRAHY: PRAHY,
     cesky: cesky
   };

@@ -11390,3 +11390,84 @@ na podkladu nezávislý.
 Všechno, co se opíralo o to, že něco trvá dlouho, se tím rozbije — a je
 to ta nejtišší kategorie vad, protože nic nespadne, jen přestane
 fungovat. Tři ze čtyř zkoušek, které to chytily, přitom neměřily výkon.
+
+## 166. Seznam tisíce jmen se stahoval každému, kdo chtěl přidat inzerát *25. 10.*
+
+`js/tridy-imagenet.js` je seznam jmen tisíce tříd, které rozpoznává
+MobileNet: 23,9 kB surově, **10,3 kB po gzipu**. Na `pridat.html` to byl
+po samotném formuláři druhý největší skript, tedy 13 % váhy té stránky
+přes drát. Smysl má ale výhradně spolu s modelem, který má **5,4 MB**
+a nahrává se teprve u první fotky — takže kdo si fotku nepřiloží,
+platil to pro nic. Pokrytí to potvrdilo: 100 % vykonaných bajtů už při
+načtení stránky, protože vykonat datové pole znamená ho celé vyhodnotit.
+
+Nahrává se proto stejnou cestou jako TF.js: na vyžádání, z vlastní
+kopie, adresa v `<meta name="pk-tridy">`, aby jí razítko `?v=` doplnilo
+sestavení (týž postup jako u Leafletu v `index.html`).
+
+| | před | po |
+|---|---|---|
+| pridat.html dychtivě | 77,8 kB gz z 19 souborů | **67,3 kB gz z 18** |
+
+**Odložit to šlo udělat tiše špatně, a málem jsem to tak udělal.**
+`js/pridat.js` měl pojistku
+`if (!window.PKFotoTema || !window.PKTridy) return { ok: true }` — tedy
+kontrolu fotky kvůli chybějícím JMÉNŮM úplně přeskočil. Samotné
+odložení by tím kontrolu vypnulo **všem**: fotka by prošla, web by
+napsal „v pořádku" a nic by nespadlo.
+
+Přitom `vyhodnot()` rozhoduje podle **čísel** tříd a skupin
+z `js/fotoskupiny.js`; jména jsou jen na text „vypadá jako…". Posudek
+se tedy udělá i tehdy, když se tabulka nenačte — jen se místo jména
+objeví číslo třídy. Ta pojistka byla zbytečně přísná už předtím.
+
+**Nová zkouška `scripts/test-foto-odlozeni.mjs`, 12 kontrol.** Model se
+v ní nestahuje: TF.js se podstrčí falešný, protože 5,4 MB v každém běhu
+by byla jiná vada. Falešný je ale **jen model**, ne rozhodování — čísla
+jdou skutečnou cestou `klasifikuj() → vyhodnot()`. Měří se, že se
+tabulka při načtení nestáhne, že `pripravTridy()` ji na vyžádání nahraje
+(1 000 jmen) a teprve tehdy po ní jde požadavek — a hlavně tři věci,
+které dokazují, že odložení kontrolu nevypnulo: posudek se udělá, dojde
+na skutečné sčítání skupiny „venku", a **jméno třídy je jméno, ne
+číslo** (tím se pozná, že tabulka došla až ke klasifikaci). Dvanáctá
+kontrola dokazuje opak téhož: táž čísla bez tabulky dají týž verdikt.
+
+**Tři sabotáže a tři chyby v mém vlastním měřidle.**
+Sabotáže: tabulka zpátky jako `<script>` (3 nálezy), mlčící pojistka
+zpátky (1 nález), `posud()` si tabulku neobstará (1 nález — jméno třídy
+je číslo).
+
+A ty tři chyby, které přistihly zkoušky:
+* Vzor na `<meta>` jsem napsal bez razítka `?v=`, takže na hotové
+  stránce nesedl.
+* Kontrola „pojistka `!window.PKTridy` už tam není" se trefila do **mé
+  vlastní prózy** — v `js/pridat.js` je u opravy napsané, že ta
+  podmínka tam dřív byla. Komentáře se teď odstraňují; rozhoduje kód.
+  Je to táž past, jakou má u sebe popsanou `scripts/test-predloha.mjs`.
+* Sabotáž „`posud()` si tabulku neobstará" napoprvé **prošla** —
+  protože stránka načítá minifikovanou kopii a já ji nepřestavěl.
+  V prohlížeči běžel pořád starý kód. **Sabotáž v prohlížeči se musí
+  dělat až po `node scripts/oprav.mjs`**, jinak nedokazuje nic.
+* A `scripts/test-zkousky-meri.mjs` mi vytkl, že okno 390 px otevírám
+  bez dotyku — 390 px s myší je stav, který nemá žádný návštěvník.
+* A `scripts/test-csp.mjs` mi vytkl, že si zkouška neobchází CSP.
+  Důvod toho pravidla je naměřený: Playwright ovládá stránku
+  vstřikovaným kódem, který si volá `eval`, takže pod přísným
+  `script-src` přestane fungovat `waitForFunction` i scrollování —
+  23. 10. tak spadlo 30 zkoušek a vypadalo to na rozbitý web. Moje
+  zkouška prošla i bez obcházení, ale spoléhat na to, do kterých
+  vnitřností Playwrightu kdy sáhne, je štěstí, ne pravidlo.
+
+**A tím se ukázalo, že jedna věc chyběla úplně.** Odložený skript se
+vkládá až za běhu, takže ho musí pustit `script-src` — a protože VŠECHNY
+prohlížečové zkoušky kromě `test-csp` si CSP obcházejí, dynamické
+vložení by jim prošlo i tehdy, kdyby ho hlavička zakázala. Přísnější
+politika by tedy posudek fotky (a stejně tak mapovou knihovnu na úvodu)
+tiše vypnula a nic by nespadlo.
+
+Kontrola proto přibyla do `scripts/test-csp.mjs`, tedy do té jediné
+zkoušky, která CSP neobchází: otevře `pridat.html`, zavolá
+`pripravTridy()` a ověří, že se tabulka nahrála (1 000 jmen) a že
+prohlížeč nehlásil porušení `script-src`. Sabotáž „dotahuj tabulku
+z cizího serveru" ji shodí a hláška pojmenuje i direktivu:
+`script-src-elem ← https://priklad.invalid/…`.

@@ -855,6 +855,9 @@ jobs:
       - name: Co se doporučuje a co se má ověřit
         run: node scripts/test-doporuceni.mjs
 
+      - name: Odložená tabulka tříd (posudek fotky se pořád udělá)
+        run: node scripts/test-foto-odlozeni.mjs
+
       - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
         run: node scripts/test-barva-listy.mjs
 

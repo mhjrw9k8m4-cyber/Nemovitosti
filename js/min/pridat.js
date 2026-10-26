@@ -179,8 +179,8 @@
   }
 
   function temaOk(imgEl) {
-    if (!window.PKFotoTema || !window.PKTridy) return Promise.resolve({ ok: true });
-    return PKFotoTema.posud(imgEl, window.PKTridy, window.PKSkupiny)
+    if (!window.PKFotoTema) return Promise.resolve({ ok: true });
+    return PKFotoTema.posud(imgEl)
       .catch(function () { return { ok: true }; });
   }
 
@@ -586,8 +586,9 @@
         if (!pv.ok) { hotovo('spatne', pv.msg); return; }
       }
       var kde = (exif && typeof exif.lat === 'number') ? ' · s místem pořízení' : '';
-      if (!window.PKFotoTema || !window.PKTridy) { hotovo('dobre', 'v pořádku' + kde); return; }
-      PKFotoTema.posud(img, window.PKTridy, window.PKSkupiny).then(function (r) {
+
+      if (!window.PKFotoTema) { hotovo('dobre', 'v pořádku' + kde); return; }
+      PKFotoTema.posud(img).then(function (r) {
         var d = r.detail || {};
         if (!r.ok) { hotovo('spatne', r.msg); return; }
         if (r.varovani) { hotovo('pozor', 'zkontrolujte — ' + ((d.nej && d.nej[0] && (d.nej[0].cesky || d.nej[0].trida.split(',')[0])) || 'nejisté')); return; }

@@ -267,6 +267,30 @@ try {
   pravda('zablokuje se i cizí skript z jiného serveru',
     sCsp.csp.some((x) => /priklad\.invalid/.test(x)), `hlášeno: ${sCsp.csp.slice(0, 3).join(' ; ') || '(nic)'}`);
 
+  /* ---- 4. CO SI WEB SÁM DOTAHUJE, MUSÍ POLITIKA PUSTIT ----------
+     Odložené skripty se vkládají až za běhu: tabulka jmen tříd na
+     pridat.html (js/fototema.js, pripravTridy) a mapová knihovna na
+     úvodu. Politika je zakazovat nesmí — a pozná se to jedině tady,
+     protože všechny ostatní zkoušky v prohlížeči CSP obcházejí
+     a dynamické vložení by jim prošlo i tehdy, kdyby ho hlavička
+     zakázala. Bez téhle kontroly by přísnější script-src funkci
+     vypnul a nic by nespadlo. */
+  await p.goto(`http://127.0.0.1:${PORT}/pridat.html`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
+  await p.waitForTimeout(800);
+  const odlozene = await p.evaluate(() => {
+    if (!window.PKFotoTema || typeof window.PKFotoTema.pripravTridy !== 'function') {
+      return { nelze: 'PKFotoTema.pripravTridy chybí' };
+    }
+    return window.PKFotoTema.pripravTridy().then((t) => ({
+      kolik: Array.isArray(t) ? t.length : 0,
+      csp: (window.__CSP || []).filter((x) => /script-src/.test(x)),
+    }));
+  });
+  pravda('politika pustí tabulku jmen tříd, kterou si pridat.html dotahuje sám',
+    !odlozene.nelze && odlozene.kolik === 1000 && (odlozene.csp || []).length === 0,
+    JSON.stringify(odlozene) + ' — script-src musí pustit vlastní původ, '
+    + 'jinak se posudek fotky tiše vypne');
+
   await ctx.close();
 } finally {
   await prohlizec.close();

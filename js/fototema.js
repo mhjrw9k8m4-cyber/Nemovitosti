@@ -121,6 +121,42 @@
     });
   }
 
+  /* TABULKA JMEN TŘÍD SE NAHRÁVÁ S MODELEM, NE SE STRÁNKOU.
+     js/tridy-imagenet.js je 23,9 kB surově a 10,3 kB po gzipu — po
+     samotném formuláři druhý největší skript na pridat.html, tedy 13 %
+     její váhy přes drát. Je to přitom JEN seznam jmen tisíce tříd
+     MobileNetu a smysl má výhradně se modelem, který má 5,4 MB
+     a nahrává se teprve u první fotky. Kdo si fotku nepřiloží — a to je
+     většina těch, kdo stránku otevřou — platil těch 10,3 kB pro nic.
+     Nahrává se proto stejnou cestou jako TF.js: na vyžádání, z vlastní
+     kopie, a adresa stojí v <meta name="pk-tridy">, aby jí razítko ?v=
+     doplnil scripts/orazitkuj-verze.mjs (týž postup jako u Leafletu
+     v index.html).
+
+     A JEDNA VĚC, KTEROU JSEM U TOHO ZJISTIL: bez té tabulky se posudek
+     dělat DÁ. vyhodnot() rozhoduje podle ČÍSEL tříd a skupin
+     z js/fotoskupiny.js; jména jsou jen na text „vypadá jako…".
+     js/pridat.js přitom měl `if (!window.PKTridy) return { ok: true }`,
+     tedy kontrolu fotky kvůli chybějícím JMÉNŮM úplně přeskočil. To je
+     pojistka, která mlčky propouští — a je horší než žádná. Posudek se
+     proto udělá i tehdy, když se tabulka nenačte; jen se v textu objeví
+     číslo třídy místo jména. */
+  var _tridySlib = null;
+  function zdrojTrid() {
+    var zn = (typeof document !== 'undefined')
+      && document.querySelector('meta[name="pk-tridy"]');
+    return (zn && zn.getAttribute('data-src')) || 'js/min/tridy-imagenet.js';
+  }
+  function pripravTridy() {
+    if (typeof window === 'undefined') return Promise.resolve(null);
+    if (window.PKTridy) return Promise.resolve(window.PKTridy);
+    if (_tridySlib) return _tridySlib;
+    _tridySlib = nactiSkript(zdrojTrid())
+      .then(function () { return window.PKTridy || null; })
+      .catch(function () { return null; });
+    return _tridySlib;
+  }
+
   function pripravModel(zdrojTf) {
     if (_stav === 'ready') return Promise.resolve(_model);
     if (_stav === 'failed') return Promise.resolve(null);
@@ -172,9 +208,16 @@
     });
   }
 
-  // Celý posudek jedné fotky: klasifikace + rozhodnutí.
+  /* Celý posudek jedné fotky: klasifikace + rozhodnutí.
+     Tabulku jmen a skupiny si obstará sám, když se mu nedají — viz
+     pripravTridy() výš. Kdo si je předá (zkoušky v Node), dostane
+     přesně to, co předal. */
   function posud(imgEl, tridy, skupiny) {
-    return klasifikuj(imgEl, tridy, 6).then(function (p) { return vyhodnot(p, skupiny); });
+    var sk = skupiny || (typeof window !== 'undefined' ? window.PKSkupiny : null);
+    var hotovo = function (t) {
+      return klasifikuj(imgEl, t, 6).then(function (p) { return vyhodnot(p, sk); });
+    };
+    return tridy ? hotovo(tridy) : pripravTridy().then(hotovo);
   }
 
   return {
@@ -182,6 +225,7 @@
     klasifikuj: klasifikuj,
     posud: posud,
     pripravModel: pripravModel,
+    pripravTridy: pripravTridy,
     PRAHY: PRAHY,
     cesky: cesky
   };
