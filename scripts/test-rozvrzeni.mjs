@@ -497,8 +497,16 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       vidnoZavrene: [...document.querySelectorAll('.nav-sk-panel a')].filter(vidno).length,
     };
   });
-  pravda(`lišta je rozdělená na skupiny (${v.skupin})`, v.skupin >= 4,
-    'v liště nejsou aspoň čtyři skupiny .nav-sk');
+  /* KOLIK SKUPIN — a proč už ne čtyři. Stálo tu `>= 4`, tedy Pozemky,
+     Příležitosti, Rádce a účet. Od 26. 10. jsou rádci jeden odkaz na
+     rozcestník radce.html: tři položky v nabídce slibovaly, že rádci
+     jsou tři, zatímco jich je devět, a v šuplíku na telefonu stály
+     104 px z 844 (viz scripts/hlavicka.mjs). Skupina zůstává tam, kde
+     je co seskupit — dvě a účet. Pod dvě by to znamenalo, že se lišta
+     zase slila do jednoho seznamu, a to je ta vada, kvůli které tahle
+     kontrola vznikla. */
+  pravda(`lišta je rozdělená na skupiny (${v.skupin})`, v.skupin >= 3,
+    'v liště nejsou aspoň tři skupiny .nav-sk (dvě obsahové a účet)');
   /* Účet je skupina sám o sobě: v jeho rozbalovači jsou tři činnosti a stav
      přihlášení nese rovnou její nadpis. Bývaly dvě a účet stál v liště
      samostatně — jenže z toho se dalo poznat jméno, ne co pod ním je.
@@ -626,7 +634,10 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
     const cta = document.querySelector('#nav a.btn-primary');
     const krizek = document.querySelector('#nav .nav-zavrit');
     const ostatni = [...document.querySelectorAll('#nav > *')]
-      .filter((e) => vidi(e) && e !== cta && e !== krizek && !e.classList.contains('nav-cta-note'))
+      /* `.nav-cta-note` se tu kdysi vyjímala — prodejní věta pod
+         tlačítkem. Od 26. 10. v nabídce není (stála 56 px z 844),
+         tak se nevyjímá nic, co by neexistovalo. */
+      .filter((e) => vidi(e) && e !== cta && e !== krizek)
       .map((e) => ({ co: e.className || e.tagName, y: y(e) }))
       .sort((a, b) => a.y - b.y);
     return { ctaVidet: !!cta && vidi(cta), ctaY: cta ? y(cta) : null,

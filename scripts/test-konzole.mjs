@@ -51,7 +51,7 @@ const STRANKY = [
   (adresaPozemku() || {}).url || 'pozemek.html',
   'pridat.html', 'hlidani.html', 'zpravy.html',
   'muj-inzerat.html', 'kontakt.html', 'cena-pozemku.html',
-  'hypoteka-na-pozemek.html', 'podminky.html', 'pravidla-inzerce.html',
+  'hypoteka-na-pozemek.html', 'podminky.html', 'pravidla-inzerce.html', 'radce.html',
   /* Nový druh stránky: velký formulář, který při každém stisku klávesy
      překresluje výstup. Je to jediné místo na webu, kde se text skládá
      průběžně z toho, co člověk píše — tedy i jediné, kde se chyba

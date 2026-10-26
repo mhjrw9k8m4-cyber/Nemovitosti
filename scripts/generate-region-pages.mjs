@@ -697,7 +697,6 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
       <details class="nav-sk"><summary id="nav-sk-ucet">Moje</summary><div class="nav-sk-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
-      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>
   </div>
 </header>
@@ -2538,6 +2537,7 @@ const staticUrls=[
   {loc:'uzemni-plan-pozemek.html',cf:'monthly',pr:'0.7'},
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'data.html',cf:'daily',pr:'0.5'},
+  {loc:'radce.html',cf:'monthly',pr:'0.7'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
   {loc:'podminky.html',cf:'yearly',pr:'0.3'},
   {loc:'ochrana-udaju.html',cf:'yearly',pr:'0.3'},

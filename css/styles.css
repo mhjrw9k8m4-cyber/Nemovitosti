@@ -1653,8 +1653,6 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    Naměřeno: první záložka měla ikonu a pod ní nic. Aktivní záložku tu
    pozná člověk podle plné barvy ikony i popisku. */
 
-/* Přihlášení / profil v hlavičce */
-.nav-cta-note{display:none;}
 /* Toast */
 .toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(16px); z-index:4000; max-width:calc(100% - 32px); background:var(--plocha-tlumena); border:1px solid var(--znacka); color:var(--text); font-size:14px; font-weight:500; padding:12px 20px; border-radius:var(--r-sm); box-shadow:var(--e2); opacity:0; transition:opacity var(--cas-pomaly) var(--ease), transform var(--cas-pomaly) var(--ease); pointer-events:none;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
@@ -4620,15 +4618,30 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      na #nav-ucet a dvouřádkový blok se stavem tím udělalo z „Mojich
      inzerátů" — naměřeno na snímku. */
 
-  /* POŘADÍ: kdo jsem, kde hledám, co je příležitost, čím to poměřím,
-     co si mám přečíst, komu zavolat, co tu můžu udělat. „Ceny pozemků"
-     a „Kontakt" jsou samostatné položky, ne oddíly. */
-  .nav-ucet-sk{order:0;}
+  /* POŘADÍ: kde hledám, co je příležitost, čím to poměřím, co si mám
+     přečíst, komu zavolat — a teprve pak účet. „Ceny pozemků",
+     „Rádce" a „Kontakt" jsou samostatné položky, ne oddíly.
+     ÚČET BYL PRVNÍ A TEĎ JE POSLEDNÍ. Naměřeno v šuplíku na 390×844:
+     tlačítko s prodejní větou a účet zabíraly prvních 458 px, pozemky
+     začínaly až na 436. Je to táž vada, kterou lišta na monitoru
+     vyřešila už dřív („Dřív stál Můj profil jako PRVNÍ položka mezi
+     obsahem" — scripts/hlavicka.mjs); v šuplíku zůstala. */
   .nav-sk-pozemky{order:1;}
   .nav-sk-sance{order:2;}
   #nav a[href$="cena-pozemku.html"]{order:3;}
-  .nav-sk-radce{order:4;}
+  #nav a[href$="radce.html"]{order:4;}
   #nav a[href$="kontakt.html"]{order:5;}
+  .nav-del{order:6;}
+  .nav-ucet-sk{order:7;}
+
+  /* NADPISY SKUPIN SE V ŠUPLÍKU NEUKAZUJÍ. Panely jsou tu rozbalené
+     pořád (viz `details` výš), takže nadpis nic nerozbaluje — jen
+     přidává řádek. Dva nadpisy = 100 px z 844, a nabídka se o ně
+     rolovala. Na monitoru zůstávají: tam `summary` je ten ovladač,
+     kterým se skupina otvírá.
+     ÚČET NADPIS MÁ: nese jméno a stav („Můj profil / Nepřihlášeno"),
+     tedy informaci, ne jen jmenovku skupiny. */
+  .nav-sk-pozemky > summary, .nav-sk-sance > summary{display:none;}
 
   /* IKONY PODLE CÍLE ODKAZU, bez zásahu do značky 2 248 stránek.
      Nejsou to ozdoby: ::before je v řádku vždycky (drží odsazení
@@ -4636,7 +4649,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      mezera — přesně to bylo na prvním snímku přestavěného panelu. */
   .nav-sk-pozemky > summary::before{background-image:var(--ikona-mapa);}
   .nav-sk-sance > summary::before{background-image:var(--ikona-sance);}
-  .nav-sk-radce > summary::before{background-image:var(--ikona-radce);}
+  #nav a[href$="radce.html"]::before{background-image:var(--ikona-radce);}
   #nav a[href$="cena-pozemku.html"]::before{background-image:var(--ikona-cena);}
   #nav a[href$="kontakt.html"]::before{background-image:var(--ikona-posta);}
 
@@ -4645,7 +4658,9 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      tohle je jediné místo, kde prodávající začne — a bylo až za
      čtrnácti odkazy, tedy po odrolování celé nabídky. Majitel webu:
      „a přidat pozemek bych dal nahoru". Jde tedy úplně na začátek,
-     i nad účet, a pod ním zůstává věta, proč to udělat.
+     i nad účet. Prodejní věta pod ním („Prodáváte pozemek? Přidejte
+     ho zdarma a bez provize.") je od 26. 10. pryč: stála 56 px z 844
+     a říkala to, co je na tlačítku.
      Pořadí se řídí `order`, ne značkou: tytéž odkazy jsou v liště na
      širokém displeji, a tam tlačítko patří doprava na konec. */
   /* FLEX:NONE NA VŠECHNO. Šuplík je svislý flex s pevnou výškou a obsah
@@ -4660,10 +4675,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      v nabídce nemá být ten nejhůř trefitelný cíl ze všech. */
   #nav a.btn-primary{order:-2; display:block; margin:16px 20px 8px; text-align:center;
     padding:16px; font-size:16px;}
-  /* Čára pod větou: bez ní se tlačítko s účtem pod ním slilo v jeden
-     blok a vypadalo, že ta věta patří k „Můj profil". */
-  .nav-cta-note{order:-1; display:block; padding:0 20px 16px; font-size:13px; line-height:1.5;
-    color:var(--muted); border-bottom:1px solid var(--line);}
+
   .steps{grid-template-columns:1fr;}
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */
@@ -8884,6 +8896,22 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .st-znak{font-weight:700; line-height:1.5;}
 .st-ano .st-znak{color:var(--c-ok);}
 .st-ne .st-znak{color:var(--c-nalehave);}
+
+/* --- rozcestník odkazů: nadpis a jedna věta, o čem to je -----------
+   Rádce měl v nabídce tři položky, takže to vypadalo, že rádci jsou
+   tři — jsou jich devět. Rozcestník (radce.html) je nese všechny,
+   a aby ten seznam nebyl holý sloupec modrých slov, každý odkaz říká
+   jednou větou, co v něm je. Celý řádek je chytací plocha.
+   ŠÍŘKA JE OMEZENÁ NA --m-text (62ch) i na monitoru: je to text ke
+   čtení, ne tabulka. Bez toho vyšlo na 1440px okně 150 znaků na
+   řádek proti stropu 90 (scripts/test-mira.mjs). */
+.st-odkazy{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
+.st-odkazy li + li{border-top:1px solid var(--line-ui);}
+.st-odkazy a{display:block; padding:12px 0; text-decoration:none; color:var(--text);}
+.st-odkazy b{display:block; font-size:16px; font-weight:600; line-height:1.4;}
+.st-odkazy span{display:block; margin-top:4px; font-size:13px; line-height:1.5;
+  color:var(--muted); max-width:var(--m-text);}
+.st-odkazy a:hover b{color:var(--znacka);}
 
 /* --- mřížka karet: jeden sloupec na telefonu, dva od 720 px --------- */
 .st-mrizka{display:grid; gap:var(--mezera-bloku); margin:0 0 var(--mezera-bloku);}

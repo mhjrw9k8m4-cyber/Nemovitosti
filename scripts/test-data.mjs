@@ -342,9 +342,21 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   ];
   const lzi = [];
   for (const f of readdirSync(new URL('..', import.meta.url)).filter((x) => x.endsWith('.html'))) {
+    /* LIŠTA A PATIČKA NEJSOU PRÓZA STRÁNKY — a stálo to jeden
+       falešný poplach. Text se tu slévá do jednoho proudu a dělí se
+       na věty podle `.!?`. V navigaci žádná tečka není, takže „Hledat
+       na mapě" splývalo s první větou obsahu: na pozemek-od-obce.html
+       z toho vyšlo, že stránka „slibuje na mapě obecní záměry".
+       Nesliboval to článek, slepila to zkouška. Do 26. 10. ji kryla
+       věta „Prodáváte pozemek? Přidejte ho zdarma a bez provize." na
+       konci nabídky — ta nesla otazník i tečku a proud rozdělila.
+       Jakmile z nabídky zmizela (viz scripts/hlavicka.mjs), vada se
+       ukázala. Hlídá se tedy OBSAH: hlavička, navigace a patička
+       se odstřihnou. */
     const text = readFileSync(new URL('../' + f, import.meta.url), 'utf8')
       .replace(/<!--[\s\S]*?-->/g, ' ')
       .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ')
+      .replace(/<(header|nav|footer)\b[\s\S]*?<\/\1>/g, ' ')
       .replace(/<[^>]+>/g, ' ');
     /* Jen věty, které o mapě opravdu mluví — ne každá zmínka o dražbě. */
     for (const veta of text.split(/[.!?]/)) {

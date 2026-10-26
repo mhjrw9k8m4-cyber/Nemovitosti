@@ -140,7 +140,12 @@ try {
     return { odd, vHlavicce: !!n.closest('header'), poz: s.position,
       viditelnost: s.visibility, x: Math.round(r.left), s: Math.round(r.width), oknoS: innerWidth,
       hlavicka: Math.round(h.height), v: Math.round(r.height), okno: innerHeight,
-      posuvny: n.scrollWidth > n.clientWidth + 1, radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
+      posuvny: n.scrollWidth > n.clientWidth + 1,
+      /* Kolik obsahu je za spodní hranou panelu. Tohle je ta vlastní
+         otázka: vejde se nabídka na obrazovku, nebo se musí rolovat? */
+      podHranou: Math.max(0, n.scrollHeight - n.clientHeight),
+      obsah: n.scrollHeight,
+      radku: new Set(a.map((x) => x.v && x.x >= 0 ? Math.round(x.v) : 0)).size,
       ySad: new Set(a.map((x) => Math.round(x.v))).size, a };
   });
 
@@ -194,14 +199,32 @@ try {
      znamenalo sedmnáct obrázků a každý nový odkaz by zkoušku shodil.
      Hlídá se proto to, kvůli čemu to pravidlo vzniklo: nikde nesmí
      zůstat prázdné místo po ikoně (::before, který nic nekreslí), a
-     každý oddíl musí mít u nadpisu obrázek — jinak je nadpis holý text
-     a nabídka se rozpadne na jednolitý seznam. */
+     oddíl, který nadpis UKAZUJE, musí mít u nadpisu obrázek.
+
+     POČET ODDÍLŮ SE UŽ NEŽÁDÁ — A JE TO ZMĚŘENÉ. Stálo tu
+     `l.odd.length >= 4`, tedy „v šuplíku jsou aspoň čtyři nadpisy
+     oddílů". Od 26. 10. jsou v šuplíku nadpisy skrývané: panely jsou
+     tam rozbalené pořád, takže nadpis nic neotvírá a jen přidává
+     řádek. Naměřeno: dva nadpisy stály 100 px z 844 a nabídka se
+     kvůli nim rolovala. Zůstává jediný, „Můj profil" — ten nese
+     stav, ne jen jmenovku. Pravidlo tedy zní: co je vidět, má ikonu;
+     kolik toho je, rozhoduje měření níž. */
   const diry = l.a.filter((x) => x.dira);
   pravda('žádný řádek nemá prázdné místo po ikoně', diry.length === 0,
     JSON.stringify(diry.map((x) => x.kam)));
-  pravda(`každý oddíl nabídky má u nadpisu ikonu (${l.odd.length} oddílů)`,
-    l.odd.length >= 4 && l.odd.every((x) => x.ikona),
+  pravda(`každý viditelný nadpis oddílu má ikonu (${l.odd.length} oddílů)`,
+    l.odd.length >= 1 && l.odd.every((x) => x.ikona),
     JSON.stringify(l.odd));
+  /* A TOHLE JE TA VLASTNÍ OTÁZKA — a chyběla tu.
+     NAMĚŘENO 26. 10. na 390×844: obsah šuplíku 1 206 px v 844px okně,
+     tedy 362 px za spodní hranou. Prvních 458 px zabíralo tlačítko
+     s prodejní větou a účet; pozemky začínaly na 436 px a „Kontakt"
+     byl až na 1 122. Majitel: „menu nemá mít tisíc kolonek ani tisíce
+     textů." Po úklidu (viz scripts/hlavicka.mjs) je obsah 844 px —
+     celá nabídka se vejde a neroluje se. Mez je 0: jakmile se sem
+     vrátí jediný řádek navíc, zkouška to řekne. */
+  pravda(`celá nabídka se vejde na obrazovku (obsah ${l.obsah} z ${l.okno} px)`,
+    l.podHranou === 0, `za spodní hranou zůstalo ${l.podHranou} px`);
   /* Mez 44 px si web klade sám (hlídá ji test-rozvrzeni i test-dotyk);
      v panelu je místa na víc, takže se čeká 52. */
   pravda('a dá se trefit prstem (52 px na výšku)', l.a.every((x) => x.v >= 52),

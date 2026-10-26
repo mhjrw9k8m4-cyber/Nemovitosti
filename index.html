@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-DFbMG6ZIStrMgKLddOGWQ7duItQ4N99qT5SZeNndRsg=' 'sha256-/AIgFL8jQ2QXX8+g1lFirR3xhG39VSfW2wfgRAxer+E=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-dHZ3MQoBQTHS/b2x3TjtPX5tYTX13OCducWkx3nt/DY=' 'sha256-/AIgFL8jQ2QXX8+g1lFirR3xhG39VSfW2wfgRAxer+E=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -144,7 +144,7 @@
        razítko ?v= jako každému jinému odkazu. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=67231341">
+  <link rel="stylesheet" href="css/uvod.min.css?v=41d22434">
 </head>
 <body>
 
@@ -170,7 +170,6 @@
         <nav id="nav" aria-label="Hlavní navigace">
       <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
         <a href="#mapa">Hledat na mapě</a>
-        <a href="pozemky-stavebni.html">Stavební</a>
         <a href="pozemky-podle-okresu.html">Podle okresu</a>
       </div></details>
       <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
@@ -179,11 +178,7 @@
         <a href="nove-pozemky.html">Nové na trhu</a>
       </div></details>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-sk nav-sk-radce"><summary>Rádce</summary><div class="nav-sk-panel">
-        <a href="uzemni-plan-pozemek.html">Územní plán</a>
-        <a href="kupni-smlouva-pozemek.html">Kupní smlouva</a>
-        <a href="kolik-stoji-koupe-pozemku.html">Náklady koupě</a>
-      </div></details>
+      <a href="radce.html">Rádce</a>
       <a href="kontakt.html">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
@@ -192,7 +187,6 @@
         <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       </div></details>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
-      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>
   </div>
 </header>

@@ -122,7 +122,6 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 #nav .nav-ucet-sk.prihlasen>summary::before{content:"";position:absolute;left:-11px;top:50%;width:6px;height:6px;transform:translateY(-50%);border-radius:50%;background:var(--znacka-svetla);background-image:none}
 }
 
-.nav-cta-note{display:none}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);z-index:4000;max-width:calc(100% - 32px);background:var(--plocha-tlumena);border:1px solid var(--znacka);color:var(--text);font-size:14px;font-weight:500;padding:12px 20px;border-radius:var(--r-sm);box-shadow:var(--e2);opacity:0;transition:opacity var(--cas-pomaly) var(--ease),transform var(--cas-pomaly) var(--ease);pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .btn-primary{background-color:var(--plocha-znacka);color:#fff;font-weight:700;font-size:14px;padding:8px 20px;border-radius:var(--r-ovladani);display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;border:1px solid rgba(var(--znacka-hluboka-rgb),0.55);box-shadow:var(--glow);transition:filter var(--cas-zakladni) var(--ease),transform var(--cas-rychly) var(--ease),box-shadow var(--cas-zakladni) var(--ease);white-space:nowrap;cursor:pointer}
@@ -283,20 +282,21 @@ body.nav-otevreno{overflow:hidden}
 .nav-ucet-sk>summary::before{grid-column:1;grid-row:1 / span 2;align-self:center;background-image:var(--ikona-profil)}
 .nav-ucet-sk>summary .nav-ucet-t{grid-column:2;grid-row:1}
 .nav-ucet-sk>summary .nav-stav{grid-column:2;grid-row:2;display:block;font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
-.nav-ucet-sk{order:0}
 .nav-sk-pozemky{order:1}
 .nav-sk-sance{order:2}
 #nav a[href$="cena-pozemku.html"]{order:3}
-.nav-sk-radce{order:4}
+#nav a[href$="radce.html"]{order:4}
 #nav a[href$="kontakt.html"]{order:5}
+.nav-del{order:6}
+.nav-ucet-sk{order:7}
+.nav-sk-pozemky>summary,.nav-sk-sance>summary{display:none}
 .nav-sk-pozemky>summary::before{background-image:var(--ikona-mapa)}
 .nav-sk-sance>summary::before{background-image:var(--ikona-sance)}
-.nav-sk-radce>summary::before{background-image:var(--ikona-radce)}
+#nav a[href$="radce.html"]::before{background-image:var(--ikona-radce)}
 #nav a[href$="cena-pozemku.html"]::before{background-image:var(--ikona-cena)}
 #nav a[href$="kontakt.html"]::before{background-image:var(--ikona-posta)}
 #nav>*{flex:none}
 #nav a.btn-primary{order:-2;display:block;margin:16px 20px 8px;text-align:center;padding:16px;font-size:16px}
-.nav-cta-note{order:-1;display:block;padding:0 20px 16px;font-size:13px;line-height:1.5;color:var(--muted);border-bottom:1px solid var(--line)}
 :root{--oddil-y:80px}
 footer .wrap:not(.foot-bottom){flex-direction:column;align-items:flex-start}
 }

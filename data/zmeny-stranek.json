@@ -1,58 +1,62 @@
 {
  "hypoteka-na-pozemek.html": {
-  "h": "b501db5489ca",
-  "d": "2026-10-25"
+  "h": "889f74d38967",
+  "d": "2026-10-26"
  },
  "kolik-stoji-koupe-pozemku.html": {
-  "h": "6aa912d0d249",
-  "d": "2026-10-25"
+  "h": "35b17860b33b",
+  "d": "2026-10-26"
  },
  "kontakt.html": {
-  "h": "081a883dd880",
+  "h": "3398c1489ff2",
   "d": "2026-10-26"
  },
  "kupni-smlouva-pozemek.html": {
-  "h": "9b70b6afb1ba",
-  "d": "2026-10-25"
+  "h": "7402f24bb83f",
+  "d": "2026-10-26"
  },
  "list-vlastnictvi-katastr.html": {
-  "h": "54400c39649b",
-  "d": "2026-10-25"
+  "h": "0245ea8ae07a",
+  "d": "2026-10-26"
  },
  "ochrana-udaju.html": {
-  "h": "990100bfbc08",
-  "d": "2026-10-24"
+  "h": "f9001167040c",
+  "d": "2026-10-26"
  },
  "podminky.html": {
-  "h": "095a77c6b3ee",
-  "d": "2026-10-24"
+  "h": "0a1e6eb3cb9e",
+  "d": "2026-10-26"
  },
  "pozemek-od-obce.html": {
-  "h": "22aff3506113",
-  "d": "2026-10-25"
+  "h": "d426bf952169",
+  "d": "2026-10-26"
  },
  "pravidla-inzerce.html": {
-  "h": "8b0557e49c25",
+  "h": "31be596b4d24",
   "d": "2026-10-26"
  },
  "pridat.html": {
-  "h": "91e3ca206bc6",
-  "d": "2026-10-25"
+  "h": "9ac2a59bce0f",
+  "d": "2026-10-26"
  },
  "pristupova-cesta-pozemek.html": {
-  "h": "6898006a748d",
-  "d": "2026-10-25"
+  "h": "09d91596d269",
+  "d": "2026-10-26"
+ },
+ "radce.html": {
+  "h": "53e618b4aa55",
+  "d": "2026-10-26"
  },
  "stavebni-vs-zemedelsky-pozemek.html": {
-  "h": "4759d95fa4c0",
-  "d": "2026-10-25"
+  "h": "20f875b43f33",
+  "d": "2026-10-26"
  },
  "uzemni-plan-pozemek.html": {
-  "h": "7fa8a93fbd21",
-  "d": "2026-10-25"
+  "h": "e81bd4c58838",
+  "d": "2026-10-26"
  },
  "vecne-bremeno-pozemek.html": {
-  "h": "6dda503223db",
-  "d": "2026-10-25"
+  "h": "cfbfd7f29786",
+  "d": "2026-10-26"
  }
 }

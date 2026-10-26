@@ -43,6 +43,7 @@ const STRANKY = ['cena-pozemku.html', 'data.html', 'drazby-pozemku.html',
   'list-vlastnictvi-katastr.html', 'moje-data.html', 'muj-inzerat.html',
   'na-co-mam-pozemek.html', 'nove-pozemky.html', 'ochrana-udaju.html',
   'odhlasit-maily.html', 'podminky.html', 'porovnani.html', 'pravidla-inzerce.html',
+  'radce.html',
   'pristupova-cesta-pozemek.html', 'stavebni-vs-zemedelsky-pozemek.html',
   'uzemni-plan-pozemek.html', 'vecne-bremeno-pozemek.html', 'index.html',
   'pozemky-okres-tabor.html', 'pozemky-stredocesky-kraj.html', 'pozemky-do-500-tisic.html'];

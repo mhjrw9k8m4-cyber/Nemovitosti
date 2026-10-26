@@ -13,26 +13,41 @@
    PRVNÍ položka mezi obsahem — účet se tím pletl do cesty každému,
    kdo přišel hledat pozemek.
 
-   KOLIK TOHO V NÍ JE: deset odkazů, ne dvacet pět. Majitel: „to menu
-   chce zredukovat, je tam toho moc, nech tam jen to důležité." Co z ní
-   odešlo, se neztratilo — bylo to změřené, ne odhadnuté. Počty
-   odkazů MIMO lištu a patičku:
+   KOLIK TOHO V NÍ JE: sedm odkazů a účet, ne dvacet pět. Majitel:
+   „to menu chce zredukovat, je tam toho moc, nech tam jen to
+   důležité." Co z ní odešlo, se neztratilo — bylo to změřené, ne
+   odhadnuté. Počty odkazů MIMO lištu a patičku:
 
      orná půda 920 · louky 421 · stavební 257 · lesní 100 · zahrady 79
      · vinice a sady 61 — druhy pozemků vedou z každé stránky pozemku
-       toho druhu, takže je lišta nosit nemusí (zůstává „Stavební"
-       jako nejhledanější a „Podle okresu" jako rozcestník),
+       toho druhu, takže je lišta nosit nemusí,
      na co mám? 106 · podle okresu 105 · nové na trhu 97 · ceny 68,
      rádci: náklady koupě 112 · list vlastnictví 92 · přístupová
        cesta 12 · stavební vs. zemědělský 9 · územní plán 8 ·
        hypotéka 4 · věcné břemeno 4 · kupní smlouva 1.
 
-   U RÁDCŮ TO BYLO NEJTĚSNĚJŠÍ, a proto zůstali tři, ne jeden: každý
-   rádce odkazuje na všech osm ostatních, takže jeden odkaz v liště
-   stačí, aby se k nim člověk dostal. Tři jsou tam proto, že pokrývají
-   tři otázky, které má kupující v tomhle pořadí: smím tu stavět
-   (územní plán), jak se to převádí (kupní smlouva), co to stojí nad
-   rámec ceny (náklady koupě).
+   PODRUHÉ A POŘÁDNĚ — A JE TO ZMĚŘENÉ. Při prvním úklidu zůstali
+   v nabídce tři rádci a „Stavební"; obojí tu bylo odůvodněné, ale
+   nabídka pořád nevycházela. NAMĚŘENO 26. 10. v šuplíku na 390×844:
+   obsah 1 206 px v 844px okně, tedy 362 px za okrajem — a prvních
+   230 px zabíralo tlačítko s prodejní větou pod ním, dalších 228 px
+   účet. Kdo nabídku otevřel, viděl nejdřív inzerci a svůj profil;
+   pozemky začínaly až na 436 px. Majitel: „menu nemá mít tisíc
+   kolonek ani tisíce textů, má to být čistě přehledné."
+   Ubralo se tedy ještě:
+     · PRODEJNÍ VĚTA pod tlačítkem (56 px) — tlačítko ji říká samo,
+     · „STAVEBNÍ" (52 px) — vede na ni 257 odkazů odjinud a od 26. 10.
+       je i v pilulkách pod nadpisem úvodní stránky,
+     · TŘI RÁDCI NA JEDEN ODKAZ (104 px) na nový rozcestník
+       radce.html, kde jsou všichni i s větou, o čem jsou. Důvod pro
+       tři padl: tři položky v nabídce slibovaly, že rádci jsou tři,
+       zatímco jich je devět.
+   Účet se přesunul POD obsah (css/styles.css, `order` v šuplíku) —
+   je to tentýž důvod, pro který nestojí první ani v liště na monitoru.
+   A nadpisy skupin se na telefonu neukazují: v šuplíku jsou panely
+   stejně rozbalené, takže nadpis jen přidával řádek navíc.
+   Výsledek naměřený v prohlížeči: 844 px obsahu v 844px okně —
+   nabídka se vejde celá a neroluje se. Hlídá scripts/test-menu.mjs.
 
    SKUPINY JSOU <details>, NE VLASTNÍ SKRIPT. Rozbalení umí prohlížeč
    sám, včetně klávesnice a čtečky, a funguje i bez JavaScriptu.
@@ -54,7 +69,6 @@ export const NAV_MAPA = '{{MAPA}}';
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
       <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
         <a href="${NAV_MAPA}">Hledat na mapě</a>
-        <a href="pozemky-stavebni.html">Stavební</a>
         <a href="pozemky-podle-okresu.html">Podle okresu</a>
       </div></details>
       <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
@@ -63,11 +77,7 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="nove-pozemky.html">Nové na trhu</a>
       </div></details>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <details class="nav-sk nav-sk-radce"><summary>Rádce</summary><div class="nav-sk-panel">
-        <a href="uzemni-plan-pozemek.html">Územní plán</a>
-        <a href="kupni-smlouva-pozemek.html">Kupní smlouva</a>
-        <a href="kolik-stoji-koupe-pozemku.html">Náklady koupě</a>
-      </div></details>
+      <a href="radce.html">Rádce</a>
       <a href="kontakt.html">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
@@ -76,7 +86,6 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       </div></details>
       <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
-      <span class="nav-cta-note">Prodáváte pozemek? Přidejte ho zdarma a bez provize.</span>
     </nav>`;
 
 const VZOR = /<nav id="nav"[\s\S]*?<\/nav>/;
