@@ -2466,13 +2466,19 @@ body.ma-listu .to-top{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 .st-ano .st-znak{color:var(--c-ok)}
 .st-ne .st-znak{color:var(--c-nalehave)}
 .st-odkazy{list-style:none;margin:0;padding:0;max-width:var(--m-text)}
-.st-odkazy li + li{border-top:1px solid var(--line-ui)}
+.st-odkazy li{border-top:1px solid var(--line-ui)}
 .st-odkazy a{display:block;padding:12px 0;text-decoration:none;color:var(--text)}
 .st-odkazy b{display:block;font-size:16px;font-weight:600;line-height:1.4}
 .st-odkazy span{display:block;margin-top:4px;font-size:13px;line-height:1.5;color:var(--muted);max-width:var(--m-text)}
 .st-odkazy a:hover b{color:var(--znacka)}
 .st-mrizka{display:grid;gap:var(--mezera-bloku);margin:0 0 var(--mezera-bloku)}
 @media (min-width:720px){.st-mrizka{grid-template-columns:1fr 1fr}
+}
+.st-pole input,.st-pole select,.st-pole textarea,.st-btn-1{max-width:var(--m-sloupec)}
+@media (min-width:1040px){.st-odkazy{max-width:none;columns:2;column-gap:40px}
+.st-odkazy li{break-inside:avoid}
+.st-dvojice{display:grid;grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,1fr);column-gap:var(--mezera-bloku);align-items:start}
+.st-dvojice>.st-mrizka{margin:0;grid-template-columns:minmax(0,1fr)}
 }
 .st-pole{margin:0 0 16px}
 .st-pole label{display:block;font-size:13px;font-weight:600;margin:0 0 8px;color:var(--text)}

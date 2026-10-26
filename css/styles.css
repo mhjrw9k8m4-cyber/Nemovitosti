@@ -8996,7 +8996,10 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    čtení, ne tabulka. Bez toho vyšlo na 1440px okně 150 znaků na
    řádek proti stropu 90 (scripts/test-mira.mjs). */
 .st-odkazy{list-style:none; margin:0; padding:0; max-width:var(--m-text);}
-.st-odkazy li + li{border-top:1px solid var(--line-ui);}
+/* Linka na KAŽDÉ položce, ne jen mezi nimi. Mezi nimi stačila, dokud byl
+   seznam jeden sloupec; ve dvou (viz níž) by první položka pravého sloupce
+   měla linku nahoře a levého ne — dva sloupce, které nezačínají stejně. */
+.st-odkazy li{border-top:1px solid var(--line-ui);}
 .st-odkazy a{display:block; padding:12px 0; text-decoration:none; color:var(--text);}
 .st-odkazy b{display:block; font-size:16px; font-weight:600; line-height:1.4;}
 .st-odkazy span{display:block; margin-top:4px; font-size:13px; line-height:1.5;
@@ -9006,6 +9009,38 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* --- mřížka karet: jeden sloupec na telefonu, dva od 720 px --------- */
 .st-mrizka{display:grid; gap:var(--mezera-bloku); margin:0 0 var(--mezera-bloku);}
 @media (min-width:720px){.st-mrizka{grid-template-columns:1fr 1fr;}}
+
+/* =====================================================================
+   PRÁZDNÁ PRAVÁ POLOVINA KARTY
+   Karta má na monitoru 1 136 px, ale text v ní čtecí míru — 560. Zbylých
+   576 px bylo prázdných na každé kartě soustavy .st-*, a u formuláře to
+   bylo ještě horší: pole se roztáhla na celou kartu, takže se do políčka
+   na jméno psalo přes metr obrazovky.
+   Řeší se to dvěma způsoby podle toho, co v kartě stojí: seznam odkazů
+   se rozdělí do dvou sloupců, formulář dostane strop a vedle něj se
+   přestěhuje to, co bylo pod ním.
+   ------------------------------------------------------------------ */
+/* Pole se čtou i vyplňují jako text, takže mají jeho míru. Naměřeno na
+   kontakt.html (1280): 1 095 → 720 px. */
+.st-pole input,.st-pole select,.st-pole textarea,.st-btn-1{max-width:var(--m-sloupec);}
+
+@media (min-width:1040px){
+  /* Dva sloupce, ne jeden dlouhý. Naměřeno na radce.html: stránka
+     1 805 → 1 415 px a devět odkazů je vidět naráz. Sloupec má
+     548 px, tedy pořád čtecí míru — není to zhuštění, je to využití
+     šířky, která tam stejně byla. */
+  .st-odkazy{max-width:none; columns:2; column-gap:40px;}
+  .st-odkazy li{break-inside:avoid;}
+  /* Formulář vlevo, vedlejší karty vpravo místo pod ním. Naměřeno na
+     kontakt.html: 1 342 → 1 123 px. Pod 1040 px se nic nemění — tam je
+     pod sebou správně. */
+  .st-dvojice{display:grid;
+    grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,1fr);
+    column-gap:var(--mezera-bloku); align-items:start;}
+  /* V užším pravém sloupci je mřížka o dvou sloupcích zbytečná: dvě
+     karty po 190 px lámaly „Závadný inzerát → nahlásit" na dva řádky. */
+  .st-dvojice > .st-mrizka{margin:0; grid-template-columns:minmax(0,1fr);}
+}
 
 /* --- pole formuláře: jedna podoba na celém webu --------------------- */
 .st-pole{margin:0 0 16px;}

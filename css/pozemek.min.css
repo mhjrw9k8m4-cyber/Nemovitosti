@@ -699,3 +699,4 @@ body.ma-listu .to-top{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 .st-odznak,.okr-band .eyebrow,.add-hero:not(.app-hero) .eyebrow{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--pas-dlazdice);margin-bottom:0;font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;color:var(--pas-text);justify-self:start;align-self:start;width:max-content;max-width:100%}
 .okr-band .eyebrow::before,.add-hero:not(.app-hero) .eyebrow::before{content:none}
 .okr-band .eyebrow .live-dot,.add-hero:not(.app-hero) .eyebrow .live-dot{width:6px;height:6px;flex:none;border-radius:var(--r-pill);background:var(--pas-akcent);animation:none}
+
