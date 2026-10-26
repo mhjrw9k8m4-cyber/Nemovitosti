@@ -3317,8 +3317,25 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
 @media (min-width:900px){ .uvod-vstupy{display:none;} }
 
 h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-weight:700;
-  letter-spacing:-0.01em; line-height:1.3; color:var(--text);
-  max-width:var(--m-wrap); margin:0 auto; padding:16px 32px 0;}
+  letter-spacing:-0.01em; line-height:1.3; color:var(--pas-text);
+  max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
+/* ÚVODNÍ DESKA. Bere tutéž sadu tokenů jako hlava ostatních stránek (viz
+   „TMAVÁ DESKA" níž), jen bez spodního odstupu: pod ní začíná rovnou
+   hledání a mezera mezi bloky by z první obrazovky ukrojila dalších
+   24 px. Naměřeno 390×844: deska 161 px, první nabídka se nehnula. */
+/* Dvě třídy, ne jedna: .st-hlava stojí v souboru o pět tisíc řádků níž
+   a při stejné váze by vyhrála i se svým 20/28 px odsazením. */
+/* 8/12 px, ne 12/16. Na telefonu je první nabídka strop, ne doporučení:
+   scripts/test-prvni-obrazovka.mjs ji chce nad 450 px z 844. S 12/16 px
+   vyšla na 457. Tahle čtyři a čtyři pixely jsou ten rozdíl. */
+.st-hlava.uvod-hlava{margin-bottom:0; padding:8px 0 12px;}
+.uvod-hlava .uvod-vstupy{margin:8px 0 0;}
+/* Pilulky rozcestníku stály na bílé kartě s inkoustovým obrysem. Na desce
+   by z nich byly bílé knoflíky — nesou proto tutéž tlumenou plochu jako
+   odznak a obrys z --pas-obrys, který má na desce 3,97 : 1. */
+.uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
+  border-color:var(--pas-obrys); color:var(--pas-text);}
+.uvod-hlava .uvod-vstupy a:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
 /* Počet nabídek je v té větě to jediné, co se mění — a jediné, co je
    slib. Dokud byla věta podtitulkem, odlišovala se plnou barvou od
    tišší šedi okolo. Teď je z ní <h1> a celá je plnou barvou, takže
@@ -6990,7 +7007,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Velký nadpis nahoře. Na telefonu sedí v pásmu pod lištou, které
      tam bylo prázdné. */
   /* Velikost drží stupeň (--h1-domu), tady se řeší jen okraje. */
-  h1.uvod-nadpis{margin:0; padding:12px 20px 0;}
+  h1.uvod-nadpis{margin:0; padding:0 var(--okraj-stranky);}
   /* Prázdné pásmo pod lištou už drží nadpis, ne odsazení. */
   .hero-map .map-wide{padding-top:12px;}
 
