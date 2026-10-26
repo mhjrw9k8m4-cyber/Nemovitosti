@@ -881,16 +881,19 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   await ctx.close();
 }
 
-/* ---- TLAČÍTKO „PŘIDAT POZNÁMKU" NESMÍ VISET SAMO VPRAVO ----
-   Stojí v řádku s okresem (`.pz-head-radek`, flex se `space-between`):
-   vlevo „okres Benešov", vpravo tlačítko. Jenže řádek s okresem na
-   stránce často NENÍ — titulek ho už obsahuje — a dřív se místo něj
-   vkládal prázdný <span> jako výplň, aby `space-between` tlačítko
-   odstrčilo doprava. Viselo pak samo u pravého okraje levého sloupce
-   (na 1280 px na x 610–776), s nadpisem nad ním vlevo a vzdáleností
-   pod ním vlevo — nemělo mezi čím být.
-   Měří se na VZORKU stránek, protože který případ nastane, určuje
-   titulek: ze vzorku 25 stránek nemělo řádek s okresem 15. */
+/* ---- TLAČÍTKO „PŘIDAT POZNÁMKU" STOJÍ POD CENOU, NE V HLAVIČCE ----
+   Dřív sedělo v řádku s okresem (`.pz-head-radek`, flex se
+   `space-between`) a celý tenhle blok hlídal, aby tam neviselo samo
+   u pravého okraje, když řádek s okresem na stránce není.
+   26. 10. se to změnilo: nadpis je „co se prodává", pod ním stojí
+   řádek „kde to je" a tlačítko odešlo AŽ POD CENU. Důvod je v
+   js/pozemek.js — trojice CO → KDE → ZA KOLIK se má dát přečíst
+   vcelku, tak to mají reality.idnes i Sreality, a nástroj doprostřed
+   ní nepatří. Hlídá se proto nová pravda:
+     · v hlavičce tlačítko není,
+     · řádek hlavičky nese místo (a žádnou prázdnou výplň),
+     · tlačítko leží POD cenou — a pořád je vidět bez rolování
+       (to měří kontrola o kus výš, na telefonu). */
 {
   const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1280, height: 1000 } });
@@ -898,7 +901,7 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
   const krok = Math.max(1, Math.floor(vsechny.length / 12));
   const vzorek = vsechny.filter((_, i) => i % krok === 0).slice(0, 12);
-  let sOkresem = 0, bezOkresu = 0;
+  let sMistem = 0;
   const rozpory = [];
   for (const f of vzorek) {
     await p.goto(`${BASE}/${f}`, { waitUntil: 'load' });
@@ -907,27 +910,24 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     const m = await p.evaluate(() => {
       const r = document.querySelector('.pz-head-radek');
       if (!r) return null;
-      const btn = r.querySelector('.pz-pozn-skok');
-      if (!btn) return null;
-      const rr = r.getBoundingClientRect(), br = btn.getBoundingClientRect();
-      return { okres: !!r.querySelector('.pz-okres'),
-        odOkraje: Math.round(br.left - rr.left),
-        prazdnaVypln: [...r.children].some((e) => !(e.textContent || '').trim() && e !== btn) };
+      const btn = document.querySelector('.pz-pozn-skok');
+      const cena = document.querySelector('.pz-priceblock');
+      if (!btn || !cena) return null;
+      return { vHlavicce: !!r.querySelector('.pz-pozn-skok'),
+        misto: !!r.querySelector('.pz-okres'),
+        prazdnaVypln: [...r.children].some((e) => !(e.textContent || '').trim()),
+        podCenou: btn.getBoundingClientRect().top >= cena.getBoundingClientRect().bottom - 1 };
     });
     if (!m) continue;
-    if (m.prazdnaVypln) { rozpory.push(`${f}: v řádku je prázdná výplň`); continue; }
-    if (m.okres) {
-      sOkresem++;
-      if (m.odOkraje < 50) rozpory.push(`${f}: řádek má okres, ale tlačítko stojí vlevo (${m.odOkraje} px)`);
-    } else {
-      bezOkresu++;
-      if (m.odOkraje > 1) rozpory.push(`${f}: v řádku je samo, a přesto visí ${m.odOkraje} px od okraje`);
-    }
+    if (m.misto) sMistem++;
+    if (m.vHlavicce) rozpory.push(`${f}: tlačítko je zpátky v řádku hlavičky`);
+    if (m.prazdnaVypln) rozpory.push(`${f}: v řádku hlavičky je prázdná výplň`);
+    if (!m.podCenou) rozpory.push(`${f}: tlačítko nestojí pod cenou`);
   }
-  // PŘEDPOKLAD: bez obou případů by kontrola měřila jen jednu větev
-  pravda(`ve vzorku jsou obě podoby řádku (s okresem ${sOkresem}, bez ${bezOkresu})`,
-    sOkresem > 0 && bezOkresu > 0, `s okresem ${sOkresem}, bez okresu ${bezOkresu} z ${vzorek.length}`);
-  pravda('tlačítko „Přidat poznámku" nevisí samo u pravého okraje',
+  // PŘEDPOKLAD: bez řádku s místem by se nedalo měřit, co se kde neopakuje
+  pravda(`ve vzorku stojí pod nadpisem řádek s místem (${sMistem} z ${vzorek.length})`,
+    sMistem >= Math.max(1, Math.floor(vzorek.length * 0.5)), `jen ${sMistem}`);
+  pravda('zkratka k poznámce stojí pod cenou, ne uprostřed hlavičky',
     rozpory.length === 0, rozpory.slice(0, 4).join('\n      '));
   await ctx.close();
 }

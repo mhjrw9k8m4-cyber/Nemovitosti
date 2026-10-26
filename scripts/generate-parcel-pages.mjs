@@ -1221,9 +1221,21 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const srov = srovnaniPro(d);
   const kamDalSem = kamDal(d);
   const popisInzerenta = bezReklamy(POPISY[klicNabidky(d)] || '', POCTY_VET) || undefined;
+  /* NADPIS JE „CO", POD NÍM ŘÁDEK „KDE" — a musí to tak být i tady,
+     ve statické podobě stránky. Titulek vzniká jako „Ostatní plocha
+     6 336 m² — Benešov, okres Benešov"; js/pozemek.js ho od 26. 10.
+     dělí na pomlčce (nadpis = co se prodává, tišší řádek = kde), jak
+     to mají reality.idnes i Sreality. Kdyby se tu dělit nezačalo,
+     viděl by robot a člověk bez JavaScriptu jiný nadpis než ostatní —
+     přesně to chytla scripts/test-hlavicka-pozemku.mjs.
+     <title> zůstává CELÝ: vyhledávač místo potřebuje. */
+  const tiPomlcka = titul.indexOf(' — ');
+  const titulCo = tiPomlcka < 0 ? titul : titul.slice(0, tiPomlcka);
+  const titulKde = tiPomlcka < 0 ? '' : titul.slice(tiPomlcka + 3);
   const staticky =
     `<article class="pz-staticky">`
-    + `<h1>${esc(titul)}</h1>`
+    + `<h1>${esc(titulCo)}</h1>`
+    + (titulKde ? `<p class="pz-staticky-kde">${esc(titulKde)}</p>` : '')
     + `<p><b>${esc(cena)}</b>${esc(zaM2)}${vym ? ' · ' + esc(vym) : ''} · ${esc(TYP[d.type] || d.type)}</p>`
     + `<dl>`
     + `<dt>Druh pozemku</dt><dd>${esc(druh)}</dd>`

@@ -91,11 +91,22 @@ for (const f of stranky) {
     nesedi.push(`${f}: h1=${!!h1} title=${!!titulek} ostrůvek=${typeof zOstruvku}`);
     continue;
   }
-  if (h1 !== zOstruvku || titulek !== `${h1} | Parcelka`) {
-    nesedi.push(`${f}: h1 „${h1}" / ostrůvek „${zOstruvku}" / title „${titulek}"`);
+  /* NADPIS JE „CO", TITULEK JE CELÝ. Od 26. 10. se titul dělí na
+     pomlčce: v <h1> zůstane, co se prodává („Ostatní plocha 6 336 m²"),
+     a místo jde do řádku pod ním (.pz-staticky-kde ve statické podobě,
+     .pz-okres ve vykreslené) — tak to mají reality.idnes i Sreality.
+     <title> a ostrůvek nesou CELÝ titul dál: vyhledávač místo
+     potřebuje a js/pozemek.js si z ostrůvku dělí sám.
+     Hlídá se tedy skládačka, ne rovnost: h1 + řádek místa = ostrůvek. */
+  const iP = zOstruvku.indexOf(' — ');
+  const ocekCo = iP < 0 ? zOstruvku : zOstruvku.slice(0, iP);
+  const ocekKde = iP < 0 ? '' : zOstruvku.slice(iP + 3);
+  const kde = (h.match(/<p class="pz-staticky-kde">(.*?)<\/p>/) || [])[1] || '';
+  if (h1 !== ocekCo || kde !== ocekKde || titulek !== `${zOstruvku} | Parcelka`) {
+    nesedi.push(`${f}: h1 „${h1}" / kde „${kde}" / ostrůvek „${zOstruvku}" / title „${titulek}"`);
     continue;
   }
-  nadpisy.set(f, h1);
+  nadpisy.set(f, zOstruvku);
 }
 pravda('servírovaný nadpis, titulek stránky a ostrůvek nesou týž text',
   nesedi.length === 0, `${nesedi.length}×, např. ${nesedi.slice(0, 2).join(' || ')}`);
@@ -154,28 +165,33 @@ for (const f of vzorek) {
   }, null, { timeout: 15000 }).catch(() => {});
   const vykresleny = bezNbsp(await page.$eval('#pz-detail h1', (e) => e.textContent).catch(() => ''));
   const titulek = bezNbsp(await page.title());
-  const ocekavany = nadpisy.get(f);
-  if (vykresleny !== ocekavany) rozesle.push(`${f}: vykresleno „${vykresleny}", servírováno „${ocekavany}"`);
+  const ocekavany = nadpisy.get(f);           // CELÝ titul z ostrůvku
+  const iP = ocekavany.indexOf(' — ');
+  const ocekCo = iP < 0 ? ocekavany : ocekavany.slice(0, iP);
+  const ocekKde = iP < 0 ? '' : ocekavany.slice(iP + 3);
+  if (vykresleny !== ocekCo) rozesle.push(`${f}: vykresleno „${vykresleny}", čekáno „${ocekCo}"`);
   else if (titulek !== `${ocekavany} | Parcelka`) rozesle.push(`${f}: titulek „${titulek}"`);
-  /* Okres stojí v nadpisu u tří čtvrtin stránek (rozlišení shodných
-     titulků ho tam přidá). Řádek pod nadpisem ho pak nesmí psát
-     podruhé — „… — Luhačovice, okres Zlín" a hned pod tím „okres
-     Zlín" je totéž dvakrát pod sebou. */
+  /* Místo se NESMÍ opakovat v nadpisu i pod ním. Dřív to hrozilo
+     obráceně (okres byl v nadpisu a řádek ho psal podruhé); teď je
+     dělba pevná, a tohle je past na to, aby se zpátky nesešly. */
   const podNadpisem = bezNbsp(
     await page.$eval('#pz-detail .pz-okres', (e) => e.textContent).catch(() => ''));
-  const okres = (ocekavany.match(/, okres (.+)$/) || [])[1];
-  if (okres && podNadpisem && podNadpisem.indexOf('okres ' + okres) >= 0) {
-    dvakrat.push(`${f}: nadpis „${ocekavany}", pod ním „${podNadpisem}"`);
+  if (ocekKde) {
+    if (podNadpisem.indexOf(ocekKde) < 0) {
+      dvakrat.push(`${f}: pod nadpisem chybí místo „${ocekKde}" (stojí tam „${podNadpisem}")`);
+    } else if (vykresleny.indexOf(ocekKde) >= 0) {
+      dvakrat.push(`${f}: místo „${ocekKde}" je i v nadpisu „${vykresleny}"`);
+    }
+    sOkresemVNadpisu++;
   }
-  if (okres) sOkresemVNadpisu++;
 }
 pravda('je co měřit — vzorek stránek se v prohlížeči otevřel', vzorek.length >= 10,
   `${vzorek.length} stránek`);
 pravda('vykreslený nadpis i titulek jsou tytéž jako servírované',
   rozesle.length === 0, `${rozesle.length}×, např. ${rozesle.slice(0, 2).join(' || ')}`);
-pravda('je co měřit — ve vzorku jsou nadpisy, které okres samy uvádějí',
+pravda('je co měřit — ve vzorku jsou tituly s místem za pomlčkou',
   sOkresemVNadpisu >= 3, `${sOkresemVNadpisu} z ${vzorek.length}`);
-pravda('a okres pod nadpisem se neopakuje, když už v nadpisu je',
+pravda('a místo stojí POD nadpisem, ne v něm',
   dvakrat.length === 0, `${dvakrat.length}×, např. ${dvakrat.slice(0, 2).join(' || ')}`);
 
 // ---- 4) odznak nad snímkem: chip, ne pruh přes celý náhled -------

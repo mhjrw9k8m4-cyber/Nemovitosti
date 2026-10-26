@@ -524,6 +524,24 @@
      druhá kopie pravidla, které navíc umí rozlišit shodné titulky.
      Když ostrůvek není (pozemek.html otevřený z mapy, inzerát od
      majitele), zůstává jméno obce — lepší to odsud nejde. */
+  /* NADPIS JE „CO", DRUHÝ ŘÁDEK JE „KDE" — tak to mají velké realitní
+     weby a má to důvod. Titulek stránky vzniká jako „Ostatní plocha
+     6 336 m² — Benešov, okres Benešov": jedna věta, která odpovídá
+     na dvě otázky najednou. V nadpisu se z ní na telefonu stanou dva
+     až tři řádky velkého písma a místo se v nich ztratí.
+     Reality.idnes i Sreality to dělí: tučný řádek říká, co se prodává
+     a jak je to velké („Prodej bytu 2+1 61 m²"), a hned pod ním tišší
+     řádek říká kde („Na Vyhlídce, Kaplice, okres Český Krumlov").
+     Dělí se na pomlčce, kterou tam dal generátor; když v titulku není,
+     zůstane všechno v nadpisu jako dřív. */
+  function titulCasti() {
+    var t = titulStranky();
+    if (!t) return { co: '', kde: '' };
+    var i = t.indexOf(' — ');
+    if (i < 0) return { co: t, kde: '' };
+    return { co: t.slice(0, i), kde: t.slice(i + 3) };
+  }
+
   function titulStranky() {
     var el = document.getElementById('pz-titul-data');
     if (!el) return '';
@@ -2129,13 +2147,11 @@
            zaostří ho a na chvíli ho zvýrazní, aby bylo vidět, kam
            člověk přistál. Vyrábí se skryté a odkryje ho až skript,
            který ví, že políčko na stránce opravdu je. */
-        '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
-        /* TLAČÍTKO SEDÍ U ŘÁDKU S OKRESEM, NE U NADPISU. Měřeno na
-           320–390 px: vedle nadpisu se nevejde (nadpis má 28px písmo
-           a 170px tlačítko by mu nechalo 190 px, tedy čtyři řádky),
-           kdežto řádek „okres Benešov" má kolem 130 px a zbude na něj
-           místo. Vedle nadpisu se tak ocitne jen na monitoru, kde je
-           šířky dost. */
+        '<h1 class="pz-place">' + esc(titulCasti().co || titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
+        /* ŘÁDEK „KDE TO JE". Tlačítko k poznámce odsud 26. 10. odešlo
+           pod cenu (viz komentář u .pz-priceblock níž), takže v řádku
+           zůstal jediný prvek. Obal zůstává: drží odsazení i ikonu
+           špendlíku a na monitoru z něj je táž řádka jako dřív. */
         /* PRÁZDNÝ <span> TU BÝVAL JAKO VÝPLŇ, aby `space-between`
            odstrčilo tlačítko doprava. Jenže řádek s okresem na stránce
            často NENÍ (titulek ho už obsahuje — ze vzorku 25 stránek
@@ -2146,9 +2162,13 @@
            položí doleva, pod nadpis — tam, kde začíná všechno ostatní.
            Hlídá to scripts/test-poznamky.mjs. */
         '<div class="pz-head-radek">' +
-          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
-          '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
-            + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
+          /* „Kde" se bere z titulku, protože tam je i obec; mistoRadek
+             umí jen čtvrť a okres a vznikl v době, kdy obec nesl nadpis.
+             Když titulek pomlčku nemá, platí dál původní cesta. */
+          (function () {
+            var kde = titulCasti().kde || mistoRadek(d, '');
+            return kde ? '<div class="pz-okres">' + PIN_SVG + esc(kde) + '</div>' : '';
+          }()) +
         '</div>' +
         /* NEJDŘÍV ÚDAJ, AŽ POTOM VÝHRADA. Řádek začínal slovy
            „vzdušnou čarou:" — dvojtečka a technická poznámka na prvním
@@ -2194,6 +2214,17 @@
         (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
       '</div>' +
       '</div>' +
+
+      /* ZKRATKA K POZNÁMCE AŽ POD CENOU — a je to změna, ne původní stav.
+         Tlačítko stálo mezi řádkem místa a cenou, tedy přesně uprostřed
+         té jediné trojice, kterou má návštěvník přečíst vcelku: CO se
+         prodává → KDE to je → ZA KOLIK. Reality.idnes i Sreality mají
+         tuhle trojici bez jediného přerušení a nástroje až za ní;
+         majitel poslal obojí vyfocené. Tlačítko je proto za cenou.
+         Pořád musí být vidět bez rolování — to hlídá
+         scripts/test-poznamky.mjs a je to důvod, proč nejde ještě níž. */
+      '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
+        + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
 
       /* HISTORIE POD CENOU, NE MEZI PORADAMI. Celá sekce se vynechá,
          když o pozemku známe jedinou cenu — a to je většina. */

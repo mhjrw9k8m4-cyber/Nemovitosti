@@ -83,6 +83,18 @@ pravda('v okrese Praha už žádná nabídka nemá v poli pro obec ulici', prazs
    bere i Prahu-východ a Prahu-západ, a to jsou OPRAVDOVÉ okresy
    s opravdovými obcemi (Jirny, Jevany, Hrusice). Při prvním spuštění
    si na nich zkouška vymyslela šest chyb, které na webu nejsou. */
+/* CELÝ TITUL, NE JEN NADPIS. Od 26. 10. je v <h1> jen „co se prodává"
+   a místo stojí v řádku pod ním (.pz-staticky-kde); dřív nesl obojí
+   nadpis. Tahle zkouška se ptá na MÍSTO („netvrdí ulici jako obec",
+   „jmenuje okres"), takže si celý titul složí zpátky — a kdyby se
+   generátor rozbil a řádek místa psát přestal, vyjde z toho prázdno
+   a kontroly spadnou, což je správně. */
+function titulZeStranky(t) {
+  const h1 = (/<h1[^>]*>([^<]*)/.exec(t) || [])[1] || '';
+  const kde = (/<p class="pz-staticky-kde">([^<]*)/.exec(t) || [])[1] || '';
+  return kde ? h1 + ' — ' + kde : h1;
+}
+
 const soubory = readdirSync(KOREN)
   .filter((f) => /^pozemek-praha-.+-[0-9a-z]{5,8}\.html$/.test(f))
   .filter((f) => !/^pozemek-praha-(vychod|zapad)-/.test(f));
@@ -91,7 +103,7 @@ let zmereno = 0;
 for (const f of soubory) {
   const t = readFileSync(path.join(KOREN, f), 'utf8');
   if (t.indexOf('PK_UKONCENO') >= 0) continue;        // archiv se nepředělává
-  const h1 = (/<h1[^>]*>([^<]*)/.exec(t) || [])[1] || '';
+  const h1 = titulZeStranky(t);
   const titul = (/<title>([^<]*)/.exec(t) || [])[1] || '';
   if (!h1) continue;
   zmereno++;
@@ -110,7 +122,7 @@ const jinde = readdirSync(KOREN)
   .filter((f) => /^pozemek-benesov-.+-[0-9a-z]{5,8}\.html$/.test(f))
   .map((f) => ({ f, t: readFileSync(path.join(KOREN, f), 'utf8') }))
   .filter((x) => x.t.indexOf('PK_UKONCENO') < 0);
-const nadpis = (x) => (/<h1[^>]*>([^<]*)/.exec(x.t) || [])[1] || '';
+const nadpis = (x) => titulZeStranky(x.t);
 const sOkresem = jinde.filter((x) => /,\s*okres Benešov/.test(nadpis(x)));
 /* OKRES V TITULKU USTUPUJE ZÁMĚRNĚ, když se nevejde do meze délky —
    proto se nečeká u všech, jen u většiny. Při prvním spuštění jsem
@@ -158,7 +170,7 @@ for (const o of ulicni) {
   for (const f of soub) {
     const t = readFileSync(path.join(KOREN, f), 'utf8');
     if (t.indexOf('PK_UKONCENO') >= 0) continue;
-    const h1 = (new RegExp(jm).exec(t) || [])[1] || '';
+    const h1 = titulZeStranky(t);
     const titul = (/<title>([^<]*)/.exec(t) || [])[1] || '';
     if (!h1) continue;
     ulicMereno++;

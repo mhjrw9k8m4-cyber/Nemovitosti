@@ -309,6 +309,14 @@
       + '</section>';
   }
 
+  function titulCasti() {
+    var t = titulStranky();
+    if (!t) return { co: '', kde: '' };
+    var i = t.indexOf(' — ');
+    if (i < 0) return { co: t, kde: '' };
+    return { co: t.slice(0, i), kde: t.slice(i + 3) };
+  }
+
   function titulStranky() {
     var el = document.getElementById('pz-titul-data');
     if (!el) return '';
@@ -1280,12 +1288,14 @@
 
       '<div class="pz-head">' +
 
-        '<h1 class="pz-place">' + esc(titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
+        '<h1 class="pz-place">' + esc(titulCasti().co || titulStranky() || d.place).replace(/(\d)\s+(m²|ha)\b/g, '$1\u00a0$2') + '</h1>' +
 
         '<div class="pz-head-radek">' +
-          (mistoRadek(d, titulStranky()) ? '<div class="pz-okres">' + PIN_SVG + mistoRadek(d, titulStranky()) + '</div>' : '') +
-          '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
-            + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
+
+          (function () {
+            var kde = titulCasti().kde || mistoRadek(d, '');
+            return kde ? '<div class="pz-okres">' + PIN_SVG + esc(kde) + '</div>' : '';
+          }()) +
         '</div>' +
 
         (dalkyText()
@@ -1307,6 +1317,9 @@
         (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
       '</div>' +
       '</div>' +
+
+      '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
+        + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +
 
       pzHistorieHtml() +
 
