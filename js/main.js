@@ -3233,11 +3233,22 @@
      vedle sebe jsou lepší než jedno přes druhé — ale kolečko Ústeckého
      kraje nad Prahou by byla lež. */
   var KRAJ_POSUN_MAX = 26;
+  /* ROZESTRKUJE SE CHYTACÍ PLOCHA, NE KOLEČKO.
+     Tohle počítalo s poloměrem VIDITELNÉHO kolečka (krajVelikost/2),
+     jenže klepá se do značky, a ta má vždycky aspoň 48 px
+     (`plocha = Math.max(48, velikost)` ve vyrobKrajovyShluk). Na
+     telefonu je většina koleček menší než 48, takže si rozestrkání
+     myslelo, že má odstup, zatímco chytací plochy ležely přes sebe.
+     Naměřeno 26. 10. na 390 px v režimu mapy: ŠEST dvojic přes sebe,
+     z toho Pardubický × Královéhradecký o 31 px a Středočeský × Praha
+     o 39 px. Prst pak mířil na jiný kraj, než na který ukazoval —
+     a hlídač to neviděl, protože měřil jen monitor (viz test-mapa). */
+  function krajChytaciR(n) { return Math.max(48, krajVelikost(n)) / 2 + 2; }
   function rozestrcKraje(zn) {
     if (zn.length < 2) return;
     var b = zn.map(function (k) {
       var p = map.latLngToContainerPoint([k.lat, k.lng]);
-      return { x: p.x, y: p.y, x0: p.x, y0: p.y, r: krajVelikost(k.cleny.length) / 2 + 2 };
+      return { x: p.x, y: p.y, x0: p.x, y0: p.y, r: krajChytaciR(k.cleny.length) };
     });
     for (var it = 0; it < 24; it++) {
       var hnulo = false;

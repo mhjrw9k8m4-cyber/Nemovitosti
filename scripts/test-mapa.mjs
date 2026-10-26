@@ -263,13 +263,18 @@ je('na přehledu není vybraný žádný kraj', s.kraj, '');
     const zn = [...document.querySelectorAll('.pk-shluk-kraj')];
     const kolecka = zn.map((e) => (e.querySelector('.pk-shluk') || e).getBoundingClientRect());
     let prekryv = 0;
+    const zakryto = kolecka.map(() => 0);
     for (let i = 0; i < kolecka.length; i++) {
       for (let j = i + 1; j < kolecka.length; j++) {
         const ox = Math.max(0, Math.min(kolecka[i].right, kolecka[j].right) - Math.max(kolecka[i].left, kolecka[j].left));
         const oy = Math.max(0, Math.min(kolecka[i].bottom, kolecka[j].bottom) - Math.max(kolecka[i].top, kolecka[j].top));
-        if (ox * oy > 0) prekryv++;
+        if (ox * oy > 0) { prekryv++; zakryto[i] += ox * oy; zakryto[j] += ox * oy; }
       }
     }
+    const podily = zn.map((e, i) => ({
+      t: (e.getAttribute('title') || '').split('—')[0].trim(),
+      p: Math.round(zakryto[i] / Math.max(1, kolecka[i].width * kolecka[i].height) * 100) }));
+    podily.sort((a, c) => c.p - a.p);
     let cizi = 0;
     zn.forEach((e, i) => {
       const r = kolecka[i];
@@ -280,6 +285,8 @@ je('na přehledu není vybraný žádný kraj', s.kraj, '');
     const tecek = (() => { let n = 0; window.PK_MAPA.eachLayer((l) => { if (l._d) n++; }); return n; })();
     return { znacek: zn.length, soucet: zn.reduce((a, e) => a + (parseInt(e.textContent, 10) || 0), 0),
       tecek: tecek, prekryv: prekryv, cizi: cizi,
+      nejZakryto: podily[0] || { t: '—', p: 0 },
+      prehledZakryti: podily.filter((x) => x.p > 0).map((x) => x.t + ' ' + x.p + ' %').join(', '),
       nejmensiPlocha: Math.min(...zn.map((e) => Math.min(e.getBoundingClientRect().width, e.getBoundingClientRect().height))),
       popis: (zn[0] && zn[0].getAttribute('title')) || '' };
   });
@@ -290,7 +297,23 @@ je('na přehledu není vybraný žádný kraj', s.kraj, '');
     /—.*pozemk/.test(z.popis), `popis: „${z.popis}"`);
   pravda(`žádná nabídka nezůstala mimo značky (${z.soucet} z ${z.tecek})`,
     z.soucet === z.tecek, `ve značkách ${z.soucet}, teček na mapě ${z.tecek}`);
-  pravda('kolečka značek si neleží přes sebe', z.prekryv === 0, `${z.prekryv} dvojic přes sebe`);
+  /* NA TELEFONU SE NEMĚŘÍ „ŽÁDNÝ PŘEKRYV", ALE KOLIK JE ZAKRYTO.
+     Kontext výš je široký 390 px a republika se do něj vejde na zhruba
+     350. Čtrnáct chytacích ploch po 48 px je 32 000 px² terčů na pruh
+     350×190 — bez doteku se to nevejde, ať se rozestrkají jakkoli
+     (ověřeno: zvednout strop posunu z 26 na 32, 38 ani 44 px nezmění
+     nic). Dokud to tu stálo jako „nula dvojic", procházelo to náhodou:
+     stačila nová dávka dat od robota a hlídač spadl na něčem, co se
+     opravit nedá.
+     Měří se tedy to, co prstu opravdu vadí: kolik procent značky
+     zakrývá soused. Naměřeno 26. 10., než se rozestrkání začalo počítat
+     s chytací plochou místo s kolečkem — Praha 34 %, Pardubický 27 %,
+     Královéhradecký 25 %, Ústecký 21 %. Po opravě je nejhorší 9 %.
+     Patnáct je strop: nad naměřeným stavem (takže hlídá), pod čtvrtinou
+     (od které už to není dotek rohů). Úplné rozestrčení se hlídá na
+     monitoru, kde na ně místo je — viz blok 3 dole. */
+  pravda(`žádnou značku nezakrývá soused víc než z 8 % (nejhorší ${z.nejZakryto.t} ${z.nejZakryto.p} %)`,
+    z.nejZakryto.p <= 8, z.prehledZakryti || 'nic');
   pravda('klepnutí doprostřed kolečka trefí svou značku', z.cizi === 0,
     `${z.cizi} značek má uprostřed cizí`);
   pravda('a plocha na chytání je aspoň 44 px', z.nejmensiPlocha >= 44, `nejmenší ${z.nejmensiPlocha} px`);
@@ -746,6 +769,66 @@ if (daleko) {
     je('a dá se tím vrátit zpátky na celou ČR', /celou ČR/.test(zpatky), true);
   }
   await ctx2.close();
+}
+
+/* ---------- 3. DVA STAVY, DVĚ MĚŘÍTKA ----------
+ *
+ * Kontroly nahoře měří stav, ve kterém telefon stránku OTEVŘE — tedy
+ * seznam, kde mapa běží vedle v malém. Tenhle blok dva další:
+ *
+ *   · TELEFON PO PŘEPNUTÍ NA MAPU. Republika má zhruba 350 px a čtrnáct
+ *     chytacích ploch po 48 px je 32 000 px² terčů — bez doteku se to
+ *     nevejde, ať se rozestrkají jakkoli (ověřeno: strop posunu 26, 32,
+ *     38 i 44 px dá týž výsledek). Měří se proto zakrytí, strop 15 %.
+ *   · MONITOR 1280 px, kde místa dost je a platí ŽÁDNÝ překryv.
+ *
+ * Naměřeno 26. 10., než se rozestrkání začalo počítat s chytací plochou
+ * místo s kolečkem: na telefonu byla Praha zakrytá z 34 %, Pardubický
+ * z 27 %, Královéhradecký z 25 %; na monitoru Praha ze 6 % a Středočeský
+ * ze 4 % (Praha leží uvnitř Středočeského, takže těžiště splývají).
+ * Po opravě 9 % a nula. */
+for (const [jm, sirka, vyska, mob, strop] of [
+  ['telefon v režimu mapy', 390, 844, true, 15],
+  ['monitor', 1280, 900, false, 0],
+]) {
+  const ctx3 = await prohlizec.newContext({ bypassCSP: true,
+    viewport: { width: sirka, height: vyska }, isMobile: mob, hasTouch: mob,
+    serviceWorkers: 'block', locale: 'cs-CZ' });
+  const p3 = await ctx3.newPage();
+  await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded', timeout: 40000 });
+  await p3.waitForTimeout(1500);
+  if (mob) await p3.click('.mvt-btn[data-mv="mapa"]').catch(() => {});
+  await p3.waitForSelector('.pk-shluk-kraj', { timeout: 30000 }).catch(() => {});
+  await p3.waitForTimeout(2500);
+  const t = await p3.evaluate(() => {
+    const zn = [...document.querySelectorAll('.pk-shluk-kraj')];
+    const r = zn.map((e) => e.getBoundingClientRect());
+    const zakryto = zn.map(() => 0);
+    for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) {
+      const ox = Math.min(r[i].right, r[j].right) - Math.max(r[i].left, r[j].left);
+      const oy = Math.min(r[i].bottom, r[j].bottom) - Math.max(r[i].top, r[j].top);
+      if (ox > 0 && oy > 0) { zakryto[i] += ox * oy; zakryto[j] += ox * oy; }
+    }
+    let cizi = 0;
+    zn.forEach((e, i) => {
+      const pod = document.elementFromPoint(r[i].left + r[i].width / 2, r[i].top + r[i].height / 2);
+      const cil = pod && pod.closest ? pod.closest('.pk-shluk-kraj') : null;
+      if (cil !== e) cizi++;
+    });
+    const podily = zn.map((e, i) => ({
+      t: (e.getAttribute('title') || '').split('—')[0].trim(),
+      p: Math.round(zakryto[i] / Math.max(1, r[i].width * r[i].height) * 100) }));
+    podily.sort((a, c) => c.p - a.p);
+    return { znacek: zn.length, cizi, nej: podily[0] || { t: '—', p: 0 },
+      prehled: podily.filter((x) => x.p > 0).map((x) => x.t + ' ' + x.p + ' %').join(', ') };
+  });
+  pravda(`${jm}: značka u každého kraje (${t.znacek})`, t.znacek >= 10,
+    `značek ${t.znacek}`);
+  pravda(`${jm}: nejvíc zakrytá značka je na ${t.nej.p} % (strop ${strop} %)`,
+    t.nej.p <= strop, t.prehled || 'nic');
+  pravda(`${jm}: klepnutí doprostřed značky trefí svou značku`, t.cizi === 0,
+    `${t.cizi} značek má uprostřed cizí`);
+  await ctx3.close();
 }
 
 je('stránka neshodila žádnou chybu', chybyStranky, []);

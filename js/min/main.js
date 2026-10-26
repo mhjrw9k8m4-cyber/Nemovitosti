@@ -1900,11 +1900,13 @@
   }
 
   var KRAJ_POSUN_MAX = 26;
+
+  function krajChytaciR(n) { return Math.max(48, krajVelikost(n)) / 2 + 2; }
   function rozestrcKraje(zn) {
     if (zn.length < 2) return;
     var b = zn.map(function (k) {
       var p = map.latLngToContainerPoint([k.lat, k.lng]);
-      return { x: p.x, y: p.y, x0: p.x, y0: p.y, r: krajVelikost(k.cleny.length) / 2 + 2 };
+      return { x: p.x, y: p.y, x0: p.x, y0: p.y, r: krajChytaciR(k.cleny.length) };
     });
     for (var it = 0; it < 24; it++) {
       var hnulo = false;
