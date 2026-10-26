@@ -269,7 +269,7 @@ button:disabled:hover,input:disabled:hover,select:disabled:hover,[aria-disabled=
 .hero-map::before{content:none}
 .hero-map .wrap{position:relative;z-index:1}
 .hero-map .map-wide{position:relative;z-index:1;max-width:var(--m-wrap);margin:0 auto;padding:0 32px}
-.hero-map .map-wide{margin-top:20px}
+.hero-map .map-wide{margin-top:0}
 .hero-map .map-app{box-shadow:var(--e3),inset 0 1px 0 rgba(255,255,255,0.95)}
 .hero-map .map-app{margin-top:0}
 @media (max-width:1200px){.hero-map .map-wide{max-width:100%}
@@ -277,7 +277,7 @@ button:disabled:hover,input:disabled:hover,select:disabled:hover,[aria-disabled=
 @media (max-width:520px){.hero-map .map-wide{padding:0 20px}
 }
 @media (max-width:880px){.hero-map{padding:0 0 40px}
-.hero-map .map-wide{margin-top:20px}
+.hero-map .map-wide{margin-top:0}
 }
 .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:var(--popisek-proklad);text-transform:uppercase;color:var(--znacka-svetla);margin-bottom:20px}
 .eyebrow::before{content:"";width:16px;height:1px;background:var(--znacka-svetla)}
@@ -307,7 +307,18 @@ h1 em{font-style:italic;font-weight:700;color:var(--znacka-svetla);background:no
 .filter-chip:active,.copy-btn:active{transform:translateY(1px)}
 .opp-item:active{transform:translateX(2px) scale(0.995)}
 .map-app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:auto 1fr;gap:0;height:min(76vh,820px);height:min(76dvh,820px);min-height:600px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-obraz);overflow:hidden;box-shadow:var(--e3)}
-.map-controls-panel{grid-column:1 / -1;grid-row:1;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px}
+.map-controls-panel{grid-column:1 / -1;grid-row:1;--pas-plocha:var(--plocha-tmava);--pas-text:var(--text-ondeep);--pas-text-mute:var(--text-ondeep-mute);--pas-akcent:var(--znacka-na-tmave);--pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);--pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);background:var(--pas-plocha);color:var(--pas-text);border:0;border-radius:0;padding:16px}
+.map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);color:var(--text);border-color:transparent}
+.map-controls-panel .ms-lupa{color:var(--text-zastupny)}
+.map-controls-panel .ms-filters{background:transparent;border-color:var(--pas-obrys)}
+.map-controls-panel .ms-filters .msf-summary{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
+.map-controls-panel .ms-filters[open] .msf-summary{background:var(--pas-dlazdice);border-color:var(--pas-akcent);color:var(--pas-text)}
+.map-controls-panel .ms-filters .msf-summary:hover{color:var(--pas-akcent)}
+.map-controls-panel .map-controls{color:var(--text)}
+.map-controls-panel .map-okoli button{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
+.map-controls-panel .map-okoli button svg,.map-controls-panel .msf-summary svg{color:var(--pas-akcent)}
+.map-controls-panel .filter-chip{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text-mute)}
+.map-controls-panel .filter-chip.active{background:var(--pas-akcent);border-color:var(--pas-akcent);color:var(--plocha-tmava)}
 .map-side{grid-column:1;grid-row:2;display:flex;flex-direction:column;background:transparent;border:0;border-right:1px solid var(--line);border-radius:0;padding:16px 16px;min-height:0}
 .map-holder{grid-column:2;grid-row:2}
 .map-controls-panel .map-search{margin-top:0}
@@ -1024,7 +1035,7 @@ to{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.loc-ov,.loc-card{animation-duration:.01ms}
 }
 @media (min-width:1041px){.map-app{position:relative}
-.hero-map .map-wide{max-width:none;padding:48px 0 0;margin-top:0;background:var(--plocha-karta)}
+.hero-map .map-wide{max-width:none;padding:0;margin-top:0;background:var(--plocha-karta)}
 .hero-map .map-app,.map-app{border-left:0;border-right:0;border-top:0;border-radius:0;box-shadow:none;grid-template-columns:min(34vw,460px) minmax(0,1fr);height:calc(100vh - var(--vyska-hlavicky,85px) - 48px);height:calc(100dvh - var(--vyska-hlavicky,85px) - 48px);max-height:none;min-height:620px}
 @media (min-width:1600px){.hero-map .map-app,.map-app{grid-template-columns:min(46vw,900px) minmax(0,1fr)}
 .map-side .opp-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-content:start}
@@ -1061,8 +1072,8 @@ to{opacity:1;transform:none}
 .mv-toggle .mvt-btn svg{width:16px;height:16px;stroke-width:2.25;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .mvt-n{font-size:12px;opacity:0.8}
 @media (max-width:1040px){.map-app{display:flex;flex-direction:column;grid-template-columns:1fr;height:auto;gap:0;border-radius:var(--r-lg)}
-.hero-map .map-wide{margin-top:48px}
-.map-controls-panel{order:0;border-right:0;border-bottom:0;background:var(--plocha-vypis)}
+.hero-map .map-wide{margin-top:0}
+.map-controls-panel{order:0;border-right:0;border-bottom:0;background:var(--pas-plocha)}
 .map-app{border-top:0}
 .ms-rozsirene{display:none}
 body.hledani-rozbalene .ms-rozsirene{display:block}
@@ -1861,7 +1872,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .hh-l b{font-weight:700}
 @media (max-width:880px){.hero-map{padding:0 0 24px}
 }
-@media (max-width:560px){.hero-map .map-wide{margin-top:0;padding-top:40px;background:var(--plocha-vypis)}
+@media (max-width:560px){.hero-map .map-wide{margin-top:0;padding-top:0;background:var(--plocha-vypis)}
 .ms-vysledky{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;margin-bottom:8px}
 .ms-vysledky .msv-ovladani{flex:0 1 auto;justify-content:flex-end}
 .ms-vysledky .msv-ovladani,.map-side .mc-akce,.ms-vysledky>.mc-akce{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;flex:1 1 100%}
@@ -1878,7 +1889,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .msv-razeni .map-select{max-width:none;width:100%}
 .mc-akce{width:100%}
 h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
-.hero-map .map-wide{padding-top:12px}
+.hero-map .map-wide{padding-top:0}
 .ms-vysledky .msv-ulozene,.ms-vysledky .map-select,.ms-vysledky .cdd-btn{min-height:44px;height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);font-size:13px;font-weight:600}
 .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka);border-color:transparent;color:#fff}
 .map-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -1905,7 +1916,7 @@ h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
 .rail .section-head{margin-bottom:28px;max-width:var(--m-sloupec)}
 .rail .section-head h2{font-size:clamp(32px,2.8vw,40px);max-width:var(--m-nadpis)}
 }
-.add-hero,.okr-band,.st-hlava{--pas-plocha:var(--plocha-tmava);--pas-text:var(--text-ondeep);--pas-text-mute:var(--text-ondeep-mute);--pas-akcent:var(--znacka-na-tmave);--pas-nadpis:var(--znacka-na-tmave);--pas-na-akcentu:var(--plocha-tmava);--pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);--pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);--pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.45);--pas-mrizka:var(--mrizka-cara-tmava);color:var(--pas-text)}
+.add-hero,.okr-band,.st-hlava{--pas-plocha:var(--plocha-tmava);--pas-text:var(--text-ondeep);--pas-text-mute:var(--text-ondeep-mute);--pas-akcent:var(--znacka-na-tmave);--pas-nadpis:var(--znacka-na-tmave);--pas-na-akcentu:var(--plocha-tmava);--pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);--pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);--pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);--pas-mrizka:var(--mrizka-cara-tmava);color:var(--pas-text)}
 .add-hero:not(.app-hero){position:relative;isolation:isolate;overflow:hidden;padding:16px 0 40px;background:var(--pas-plocha)}
 .add-hero:not(.app-hero)::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(to right,var(--pas-mrizka) 1px,transparent 1px),linear-gradient(to bottom,var(--pas-mrizka) 1px,transparent 1px);background-size:var(--mrizka-bunka) var(--mrizka-bunka);-webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%);mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%)}
 .add-hero:not(.app-hero)::after{content:none}

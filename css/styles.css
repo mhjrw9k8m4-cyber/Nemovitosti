@@ -1793,14 +1793,14 @@ button:disabled:hover, input:disabled:hover, select:disabled:hover,
    .map-wide na y=5 místo 85 a z ovládacího pruhu (y 6–111) bylo horních
    79 px schovaných za hlavičkou — hrany filtrů Vše/Prodej/Dražba/Exekuce
    rozpůlené a po 40 px posunutí docela nedosažitelné. */
-.hero-map .map-wide{margin-top:20px;}
+.hero-map .map-wide{margin-top:0;}
 .hero-map .map-app{box-shadow:var(--e3), inset 0 1px 0 rgba(255,255,255,0.95);}
 .hero-map .map-app{margin-top:0;}
 @media (max-width:1200px){ .hero-map .map-wide{max-width:100%;} }
 @media (max-width:520px){ .hero-map .map-wide{padding:0 20px;} }
 @media (max-width:880px){
   .hero-map{padding:0 0 40px;}
-  .hero-map .map-wide{margin-top:20px;}
+  .hero-map .map-wide{margin-top:0;}
   
 }
 
@@ -1887,7 +1887,64 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
 /* Jeden ucelený panel „aplikace" (jako velké realitní weby) — místo roztroušených
    boxů má vše společný rám, stín a oblé rohy; uvnitř dělí sekce jemné linky. */
 .map-app{display:grid; grid-template-columns:380px 1fr; grid-template-rows:auto 1fr; gap:0; height:min(76vh, 820px); height:min(76dvh, 820px); min-height:600px; background:var(--plocha-karta); border:1px solid var(--line-strong); border-radius:var(--r-obraz); overflow:hidden; box-shadow:var(--e3);}
-.map-controls-panel{grid-column:1 / -1; grid-row:1; background:transparent; border:0; border-bottom:1px solid var(--line); border-radius:0; padding:16px;}
+/* =====================================================================
+   HLEDÁNÍ JE SOUČÁST HLAVY, NE PRUH POD NÍ
+   Úvodní stránka měla tři vodorovné pruhy za sebou: tmavou desku
+   s nadpisem, pak 48 px prázdna, pak bílý pruh s hledáním, pilulkami
+   druhů a filtry, a teprve pak výpis s mapou. Tři pruhy, tři barvy,
+   a ten prostřední vypadal, jako by se na stránku připletl.
+   Velké inzertní weby to mají jinak: hledání sedí UVNITŘ tmavé hlavy,
+   takže z hlavy je nástroj, ne cedule. Panel proto bere tutéž sadu
+   tokenů --pas-* jako hlava nad ním a prázdno mezi nimi zmizelo
+   (čtyři pravidla s odsazením shora, viz .map-wide).
+   Naměřeno: první nabídka 457 → 405 px na monitoru a 445 → 429 px
+   na telefonu 390 px, tedy o 52 a 16 px dřív.
+   Spodní linka je pryč taky — mezi tmavou deskou a výpisem odděluje
+   barva, vlasovka by byla druhé oddělení téhož.
+   ------------------------------------------------------------------ */
+.map-controls-panel{grid-column:1 / -1; grid-row:1;
+  --pas-plocha:var(--plocha-tmava);
+  --pas-text:var(--text-ondeep);
+  --pas-text-mute:var(--text-ondeep-mute);
+  --pas-akcent:var(--znacka-na-tmave);
+  --pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);
+  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);
+  background:var(--pas-plocha); color:var(--pas-text);
+  border:0; border-radius:0; padding:16px;}
+/* POLE HLEDÁNÍ ZŮSTÁVÁ BÍLÉ. Do pole se píše, a bílá plocha je to
+   jediné znamení, které se nedá přečíst špatně — průsvitná výplň na
+   desce vypadá jako vypnutý ovladač. */
+.map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);
+  color:var(--text); border-color:transparent;}
+.map-controls-panel .ms-lupa{color:var(--text-zastupny);}
+/* Co stojí VEDLE pole, je ovladač na desce: tlumená výplň, světlý obrys
+   (--pas-obrys má na desce 3,97 : 1) a zelená značka na ikoně. */
+/* TŘI TŘÍDY, A JE TO ZMĚŘENÉ. „Druh, cena, výměra a další" je
+   <details> a nad 1040 px má bílou výplň <summary> z pravidla
+   `.ms-filters .msf-summary` — dvě třídy, a stojí v souboru NÍŽ než
+   tenhle oddíl. Dvoutřídní zápis tu tedy prohrál a v prohlížeči z toho
+   vyšel bílý obdélník s bílým textem (naměřeno: bg rgb(255,255,255),
+   color rgb(255,255,255) — tedy neviditelné tlačítko). Výplň proto nese
+   shrnutí, ne nádoba, a selektor má o třídu navíc. */
+.map-controls-panel .ms-filters{background:transparent; border-color:var(--pas-obrys);}
+.map-controls-panel .ms-filters .msf-summary{background:var(--pas-dlazdice);
+  border-color:var(--pas-obrys); color:var(--pas-text);}
+.map-controls-panel .ms-filters[open] .msf-summary{background:var(--pas-dlazdice);
+  border-color:var(--pas-akcent); color:var(--pas-text);}
+.map-controls-panel .ms-filters .msf-summary:hover{color:var(--pas-akcent);}
+/* Rozbalený panel filtrů je bílá karta — text v ní se nesmí nakazit
+   bílou barvou, kterou deska dává svým potomkům. */
+.map-controls-panel .map-controls{color:var(--text);}
+.map-controls-panel .map-okoli button{background:var(--pas-dlazdice);
+  border-color:var(--pas-obrys); color:var(--pas-text);}
+.map-controls-panel .map-okoli button svg,
+.map-controls-panel .msf-summary svg{color:var(--pas-akcent);}
+/* Druhové pilulky. Vybraná nese plnou zeleň a tmavý text — na desce je
+   to jediná dvojice, která dá 7 : 1 oběma směry. */
+.map-controls-panel .filter-chip{background:var(--pas-dlazdice);
+  border-color:var(--pas-obrys); color:var(--pas-text-mute);}
+.map-controls-panel .filter-chip.active{background:var(--pas-akcent);
+  border-color:var(--pas-akcent); color:var(--plocha-tmava);}
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; background:transparent; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
@@ -3998,7 +4055,9 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Zůstávají tedy na místě, jen jako ODSAZENÍ UVNITŘ bílé desky místo
      odstupu venku: stejné místo, ale vzduch nad hledáním, ne šedý pruh.
      (Totéž a ze stejného důvodu na telefonu, viz blok do 560 px.) */
-  .hero-map .map-wide{max-width:none; padding:48px 0 0; margin-top:0;
+  /* Odsazení 48 px shora je pryč: od 26. 10. nad hledáním není šedý
+     pruh, ale tmavá deska s nadpisem, a ta si vzduch nese sama. */
+  .hero-map .map-wide{max-width:none; padding:0; margin-top:0;
     background:var(--plocha-karta);}
   /* Horní rámeček taky pryč: deska navazuje na hlavičku a ta končí
      vlastní linkou — druhá hned pod ní by dělala dvojitou čáru.
@@ -4173,7 +4232,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      místo musí být nad hledáním.
      KDO TU HRABE: změní-li se výška hlavičky nebo odsazení panelu,
      musí se tohle číslo přepočítat — obě kontroly to hned ukážou. */
-  .hero-map .map-wide{margin-top:48px;}
+  .hero-map .map-wide{margin-top:0;}
 
   /* Panel: překryv odspodu, ne shora. Zespoda proto, že palec je dole
      a že nad ním zůstane vidět kus výpisu — je pak poznat, do čeho
@@ -4182,10 +4241,14 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Mezi hlavičkou a první nabídkou ležely tři vlasové linky na 220 px:
      pod hlavičkou, nad hledáním a pod hledáním — a mezi nimi se střídala
      bílá s tónovanou. Z dálky to byl žebřík proužků, ne stránka.
-     Panel s hledáním má teď týž podklad jako výpis pod ním a jedinou
-     bílou plochou v něm zůstává samo pole, kam se píše. Hranici dělá
-     barva, ne linka. */
-  .map-controls-panel{order:0; border-right:0; border-bottom:0; background:var(--plocha-vypis);}
+     Panel má proto jedinou plochu a jedinou bílou věc v sobě: pole, kam
+     se píše. Hranici dělá barva, ne linka.
+     OD 26. 10. JE TA PLOCHA TMAVÁ, ne tónovaná — panel je spodní částí
+     hlavy stránky (viz „HLEDÁNÍ JE SOUČÁST HLAVY" výš). Tohle pravidlo
+     mu tady podklad přepisovalo na --plocha-vypis, takže na telefonu
+     deska u hledání končila a pruhování se vrátilo. */
+  .map-controls-panel{order:0; border-right:0; border-bottom:0;
+    background:var(--pas-plocha);}
   /* A horní linka desky taky pryč: kreslila se na y=105, tedy přesně
      doprostřed toho prázdného pásma pod hlavičkou, a byla třetí
      vlasovou linkou v řadě. Pravidlo o kus výš ji sice ruší, jenže
@@ -6897,7 +6960,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      hranou hlavičky a klepnout na levou polovinu nešlo.
      Osm pixelů tedy ušetřeno, ne čtyřiatřicet — zbytek té úspory
      přinesl přepínač a nadpis. */
-  .hero-map .map-wide{margin-top:0; padding-top:40px; background:var(--plocha-vypis);}
+  /* Čtyřicítka shora pryč ze stejného důvodu jako na monitoru: nad
+     hledáním je deska. Důvod, proč tu kdysi musela být (střed pole pod
+     hranou lepivé hlavičky), platí dál — vzduch teď dává .map-controls-panel. */
+  .hero-map .map-wide{margin-top:0; padding-top:0; background:var(--plocha-vypis);}
 
   /* HLAVIČKA VÝSLEDKŮ NA JEDEN ŘÁDEK.
      Měla 88 px: nadpis „Doporučené příležitosti · 1 930 na mapě", pod
@@ -7016,8 +7082,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      tam bylo prázdné. */
   /* Velikost drží stupeň (--h1-domu), tady se řeší jen okraje. */
   h1.uvod-nadpis{margin:0; padding:0 var(--okraj-stranky);}
-  /* Prázdné pásmo pod lištou už drží nadpis, ne odsazení. */
-  .hero-map .map-wide{padding-top:12px;}
+  /* Prázdné pásmo pod lištou drží deska s nadpisem, ne odsazení. */
+  .hero-map .map-wide{padding-top:0;}
 
   .ms-vysledky .msv-ulozene,
   .ms-vysledky .map-select,
@@ -7148,7 +7214,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   --pas-na-akcentu:var(--plocha-tmava);
   --pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);
   --pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);
-  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.45);
+  /* 0,55, ne 0,45. Obrys se neměří proti desce, ale proti VÝPLNI
+     tlačítka (--pas-dlazdice), a ta je o něco světlejší než deska:
+     při 0,45 naměřil test-hierarchie na „Pozemky v okolí" 2,96 : 1,
+     tedy pod hranicí 3 : 1 z WCAG 1.4.11. Spočítáno pro 0,55:
+     3,31 : 1 proti výplni a 4,15 : 1 proti desce. */
+  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);
   --pas-mrizka:var(--mrizka-cara-tmava);
   color:var(--pas-text);}
 
