@@ -115,6 +115,7 @@ const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní st
    js/main.js svou kopii mít MUSÍ: hlidani.html a zpravy.html ho
    načítají bez js/ceny.js. Že se ty dvě nerozejdou, hlídá
    scripts/test-okres.mjs. */
+const CISTENI = require_(path.join(ROOT, 'js', 'cisteni.js'));
 const KRAJ_ORDER = META.KRAJ_ORDER;
 const KRAJ_META = META.KRAJ_META;
 const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec:'Záměr obce', majitel:'Od majitele' };
@@ -798,7 +799,14 @@ ${graf ? `<script src="js/graf-cen.js?${V.grafCen}" defer></script>
 /* `navic` je nepovinný údaj do podrobností — používá ho stránka
    „Co je nového" pro změnu ceny („z 199 000 Kč, −46 %"). Řádek se tím
    nerozbije: je to další kus mezi ostatní, ne nový sloupec. */
-function itemRow(o, skryjOkres, navic, skryjTyp){
+/* `jedenDruh` je totéž pro druhovou stránku, co `skryjOkres` pro
+   okresní: na stránce „Lesní pozemky" stojí „Prodej lesního pozemku"
+   v každém řádku, ačkoli to říká už titulek. Od 27. 10. je to navíc
+   delší text (viz jméno nabídky níž) a na 1 200 px se v dvousloupcovém
+   výpisu zalomil — naměřeno na pozemky-lesni.html: 5 řádků z 60.
+   Zůstane proto jen sloveso („Prodej", „Dražba"), které se mezi řádky
+   liší a nese informaci. */
+function itemRow(o, skryjOkres, navic, skryjTyp, jedenDruh){
   /* ODZNAK PATŘÍ VÝJIMCE, NE PRAVIDLU. Změřeno: na 48 stránkách bylo
      1 616 odznaků a 1 433 z nich jen opakovalo, co platí o většině
      řádků — v okrese Hodonín 114× „NA PRODEJ" a mezi tím čtyři
@@ -829,7 +837,18 @@ function itemRow(o, skryjOkres, navic, skryjTyp){
      do `extra` pod cenu, kde má karta výpisu odznaky. */
   const bits = [];
   const extra = [];
-  if(o.druh && o.druh!=='—') bits.push(esc(o.druh));
+  /* TÁŽ SLOVA JAKO NA STRÁNCE ZA ŘÁDKEM. Detail nabídky se od 27. 10.
+     jmenuje „Prodej orné půdy 5 482 m²" (předloha: reality.idnes,
+     Sreality). Kdyby tady zůstalo holé „Orná půda", četl by člověk
+     o téže nabídce dvě různá jména. Skládá to jediná funkce
+     v js/cisteni.js, odkud si ji bere i generátor stránek pozemků. */
+  if(o.druh && o.druh!=='—'){
+    const druhVelky = o.druh.charAt(0).toUpperCase() + o.druh.slice(1);
+    const jmeno = jedenDruh
+      ? CISTENI.akceNabidky(o.type)
+      : CISTENI.hlavaNabidky(druhVelky, o.type);
+    if (jmeno) bits.push(esc(jmeno));
+  }
   if(o.area) bits.push('<b>'+fmt(o.area)+' m²</b>');
   if(!skryjOkres && o.okres) bits.push('okres '+esc(o.okres));
   /* „inzerát – Bezrealitky" stálo v 29 řádcích z 30 na stránce, kde má
@@ -1517,7 +1536,7 @@ for (const d of DRUH_STRANKY) {
   const cenyRadka = priceLine(ceny);
   const vypsane = list.slice(0, STROP_RADKU);
   const tS = typStrankyVypisu(vypsane);
-  const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
+  const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt, true)).join('\n');
   const zbyva = Math.max(0, count - STROP_RADKU);
   const mapaOdkaz = `index.html?druh=${encodeURIComponent(d.oznaceni)}#mapa`;
   /* Kde je toho druhu nejvíc. Odkazuje se jen na okresy, které vlastní

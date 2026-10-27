@@ -12746,3 +12746,44 @@ nevrací — generátor spadl na `ReferenceError` a s ním sedm zkoušek
 naráz. Je to tatáž třída chyby jako ten řetězec volaný jako funkce
 o jednu položku výš: **velká změna v dlouhé funkci, kterou neodhalí
 nic než spuštění.**
+
+## 189. Karta a stránka za ní říkaly o téže nabídce dvě jména *27. 10.*
+
+Nadpis stránky pozemku začal §188 vést slovesem („Prodej vinice
+3 476 m²"), ale karta ve výpisu zůstala u holého druhu („Vinice
+3 476 m²"). Rozešel jsem je sám, o jeden krok dřív — a je to přesně ta
+vada, kterou tenhle repozitář zná od cenového verdiktu, termínů dražeb
+i adresy snímku: **web o jedné věci tvrdí dvě.**
+
+### Slovník má jedno místo, a není to ani jedna ze dvou stran
+
+Jméno nabídky skládají dvě různá prostředí: sestavení
+(`scripts/generate-parcel-pages.mjs`, nadpis stránky), prohlížeč
+(`js/main.js`, nadpis karty) a od téhle změny i generátor regionů
+(řádek výpisu). Tabulka druhého pádu a sloves proto leží
+v **`js/cisteni.js`** — v brance, kterou všechny tři stejně používají
+na českou sazbu — a sestavení i zkoušky si ji berou mostem
+`createRequire`. Je to tentýž postup, jakým si generátor regionů bere
+okres → kraj z `js/ceny.js`, a je tu ze stejného důvodu.
+
+### Na druhové stránce zůstane jen sloveso
+
+„Prodej lesního pozemku" v každém řádku stránky **Lesní pozemky**
+opakuje, co stojí v titulku — a navíc se delší text na 1 200 px
+v dvousloupcovém výpisu zalomil: naměřeno 5 řádků z 60 na
+`pozemky-lesni.html`. Řádek tam proto nese jen sloveso („Prodej",
+„Dražba", „Exekuční dražba"), které se mezi řádky liší a něco říká.
+Je to totéž pravidlo jako `skryjOkres` na okresní stránce.
+
+### Zkouška se musela přeložit do nových slov
+
+`test-odhad-regiony` páruje vykreslený řádek zpátky s nabídkou podle
+klíče `místo + druh + výměra + cena`, a druh četla z metařádku. Ten
+teď nese „Prodej orné půdy", ne „Orná půda", takže se nespárovalo
+**nic**: 0 řádků místo 2 111 a čtyři kontroly prošly naprázdno. Klíč
+se proto skládá z téhož tvaru, jaký se vypisuje — a sestavuje ho táž
+funkce z `js/cisteni.js`, aby se zkouška a web nemohly rozejít ani tady.
+
+Mimochodem: tohle je ta vzácná chvíle, kdy „zkouška spadla" znamená
+**zkouška udělala svou práci**. Kdyby klíč nepároval mlčky a jen
+o něco míň, nikdo by si toho nevšiml.

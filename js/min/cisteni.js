@@ -138,6 +138,37 @@
     return out;
   }
 
+  var DRUH_2P = {
+    'Orná půda': 'orné půdy',
+    'Trvalý travní porost': 'trvalého travního porostu',
+    'Stavební pozemek': 'stavebního pozemku',
+    'Ostatní plocha': 'ostatní plochy',
+    'Lesní pozemek': 'lesního pozemku',
+    'Zahrada': 'zahrady',
+    'Pozemek': 'pozemku',
+    'Vinice': 'vinice',
+    'Ovocný sad': 'ovocného sadu',
+    'Vodní plocha': 'vodní plochy',
+    'Zastavěná plocha a nádvoří': 'zastavěné plochy a nádvoří',
+    'Zemědělský pozemek': 'zemědělského pozemku',
+    'Louka': 'louky'
+  };
+
+  var AKCE = { sale: 'Prodej', drazba: 'Dražba', exekuce: 'Exekuční dražba',
+    obec: 'Prodej', majitel: 'Prodej' };
+
+  function akceNabidky(typ) {
+    return Object.prototype.hasOwnProperty.call(AKCE, typ) ? AKCE[typ] : '';
+  }
+
+  function hlavaNabidky(druh, typ) {
+    var d = String(druh == null ? '' : druh);
+    var ve2p = Object.prototype.hasOwnProperty.call(DRUH_2P, d) ? DRUH_2P[d] : '';
+    var akce = Object.prototype.hasOwnProperty.call(AKCE, typ) ? AKCE[typ] : '';
+    if (!ve2p || !akce) return d;
+    return akce + ' ' + ve2p;
+  }
+
   var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
   var VZOR_SAZBA = new RegExp(
     '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
@@ -145,5 +176,6 @@
 
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
     majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
-    kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY };
+    kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY,
+    hlavaNabidky: hlavaNabidky, akceNabidky: akceNabidky, DRUH_2P: DRUH_2P };
 });

@@ -55,7 +55,17 @@ const cislo = (x) => Number(String(x || '').replace(/[^\d]/g, '')) || 0;
 const klic = (place, druh, area, price) =>
   [String(place || '').trim(), String(druh || '').trim().toLowerCase(), area, price].join('|');
 const podleUdaju = new Map();
-for (const o of vsechny) podleUdaju.set(klic(o.place, o.druh, o.area || 0, o.price || 0), o);
+/* DRUH SE V ŘÁDKU PÍŠE JAKO JMÉNO NABÍDKY. Od 27. 10. stojí v metařádku
+   „Prodej orné půdy", ne „Orná půda" — předloha od majitele
+   (reality.idnes, Sreality) vede jménem toho, co se s nemovitostí děje,
+   a stránka za řádkem se jmenuje stejně. Klíč se proto skládá z téhož
+   tvaru, jaký se vypisuje; jinak by se řádek nespároval se záznamem
+   a zkouška by prošla naprázdno (naměřeno: 0 řádků místo 2 111).
+   Tvar skládá táž funkce, kterou používá web — js/cisteni.js. */
+const CISTENI = req(path.join(ROOT, 'js', 'cisteni.js'));
+const jmenoNabidky = (o) => CISTENI.hlavaNabidky(
+  o.druh ? o.druh.charAt(0).toUpperCase() + o.druh.slice(1) : '', o.type);
+for (const o of vsechny) podleUdaju.set(klic(o.place, jmenoNabidky(o), o.area || 0, o.price || 0), o);
 
 /* Co MÁ u nabídky stát — opsáno z js/main.js, ne z generátoru. Kdyby se
    to počítalo týmž kódem jako stránka, kontrola by jen opisovala sama

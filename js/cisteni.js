@@ -230,6 +230,66 @@
      porovnávala jméno z vygenerované stránky s textem odznaku.
      Plné pravidlo (i o číslech a jednotkách) je v scripts/sazba.mjs; tady
      je jen ta jeho část, kterou si prohlížeč musí udělat sám. */
+  /* =================================================================
+     JAK SE NABÍDKA JMENUJE — „Prodej orné půdy"
+     =================================================================
+     Majitel poslal 27. 10. jako předlohu detaily z reality.idnes
+     a Sreality: nadpis tam začíná tím, co se s nemovitostí děje
+     („Prodej bytu 2+1 61 m²"). Tenhle web začínal druhem, takže
+     z nadpisu nešlo poznat, jestli se prodává, nebo draží.
+
+     TABULKA JE TADY, A TO JE TO PODSTATNÉ. Jméno nabídky skládají DVĚ
+     různá místa: sestavení (scripts/generate-parcel-pages.mjs dělá
+     nadpis stránky pozemku) a prohlížeč (js/main.js dělá nadpis karty
+     ve výpisu). Kdyby měla každá strana svou kopii, dřív nebo později
+     by karta říkala „Vinice 3 476 m²" a stránka za ní „Prodej vinice
+     3 476 m²" — přesně ten rozpor, který tenhle repozitář zná od
+     cenového verdiktu i od termínů dražeb. Sestavení si proto tenhle
+     soubor načítá (viz require_ v generátoru), stejně jako si bere
+     okres → kraj z js/ceny.js.
+
+     DRUHÝ PÁD SE NEDÁ ODVODIT PRAVIDLEM: půda → půdy, porost →
+     porostu, nádvoří → nádvoří. Druhů je ale ve vygenerovaných
+     stránkách třináct (spočítáno), takže je to slovník. Co v něm
+     není, projde beze změny — radši jednou bez slovesa než dvakrát
+     špatně ohnuté slovo. */
+  var DRUH_2P = {
+    'Orná půda': 'orné půdy',
+    'Trvalý travní porost': 'trvalého travního porostu',
+    'Stavební pozemek': 'stavebního pozemku',
+    'Ostatní plocha': 'ostatní plochy',
+    'Lesní pozemek': 'lesního pozemku',
+    'Zahrada': 'zahrady',
+    'Pozemek': 'pozemku',
+    'Vinice': 'vinice',
+    'Ovocný sad': 'ovocného sadu',
+    'Vodní plocha': 'vodní plochy',
+    'Zastavěná plocha a nádvoří': 'zastavěné plochy a nádvoří',
+    'Zemědělský pozemek': 'zemědělského pozemku',
+    'Louka': 'louky'
+  };
+  /* „Exekuční dražba" je přesnější než holé „Exekuce": exekuce je
+     řízení, dražba ta událost, které se dá zúčastnit. U obecního
+     záměru i u nabídky přímo od majitele se pořád prodává. */
+  var AKCE = { sale: 'Prodej', drazba: 'Dražba', exekuce: 'Exekuční dražba',
+    obec: 'Prodej', majitel: 'Prodej' };
+
+  /* Samo sloveso, bez druhu. Potřebuje ho druhová stránka: na
+     „Lesních pozemcích" by „Prodej lesního pozemku" v každém řádku
+     jen opakoval titulek, kdežto „Prodej" nebo „Dražba" se mezi řádky
+     liší. */
+  function akceNabidky(typ) {
+    return Object.prototype.hasOwnProperty.call(AKCE, typ) ? AKCE[typ] : '';
+  }
+
+  function hlavaNabidky(druh, typ) {
+    var d = String(druh == null ? '' : druh);
+    var ve2p = Object.prototype.hasOwnProperty.call(DRUH_2P, d) ? DRUH_2P[d] : '';
+    var akce = Object.prototype.hasOwnProperty.call(AKCE, typ) ? AKCE[typ] : '';
+    if (!ve2p || !akce) return d;
+    return akce + ' ' + ve2p;
+  }
+
   var JEDNOPISMENNA = 'aiouvkszAIOUVKSZ';
   var VZOR_SAZBA = new RegExp(
     '(^|[\\s(\\[\u201e"])([' + JEDNOPISMENNA + '])[ \\t]+(?=[0-9A-Za-z\u00c1-\u017e])', 'g');
@@ -237,5 +297,6 @@
 
   return { text: text, odkaz: odkaz, pozemek: pozemek, pozemky: pozemky,
     majitel: majitel, majitele: majitele, OK_FEAT: OK_FEAT, sazba: sazba,
-    kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY };
+    kontaktOdkaz: kontaktOdkaz, jeEmail: jeEmail, DRUHY: DRUHY,
+    hlavaNabidky: hlavaNabidky, akceNabidky: akceNabidky, DRUH_2P: DRUH_2P };
 });

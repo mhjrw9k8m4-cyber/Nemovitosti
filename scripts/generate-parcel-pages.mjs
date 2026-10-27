@@ -309,56 +309,23 @@ export function mistoFraze(place, okres) {
   return { dlouhe: `${place}, okres ${okres}`, kratke: `${place}` };
 }
 
-/* NADPIS VEDE SLOVESEM — „Prodej orné půdy 5 482 m²".
-   Majitel poslal 27. 10. jako předlohu detaily nabídek z reality.idnes
-   a Sreality. Nadpis tam začíná tím, co se s nemovitostí děje:
-   „Prodej bytu 2+1 61 m²", „Pronájem bytu 2+kk 52 m²". Tahle stránka
-   začínala druhem („Ostatní plocha 6 336 m²"), takže z nadpisu nešlo
-   poznat, jestli se prodává, draží, nebo jde o exekuci — a člověk,
-   který ve vyhledávači píše „prodej pozemku Benešov", nenašel v titulku
-   ani jedno ze svých slov.
+/* NADPIS VEDE SLOVESEM. Majitel poslal 27. 10. jako předlohu detaily
+   nabídek z reality.idnes a Sreality; nadpis tam začíná tím, co se
+   s nemovitostí děje. Tahle stránka začínala druhem, takže z nadpisu
+   nešlo poznat, jestli se prodává, draží, nebo jde o exekuci — a kdo
+   ve vyhledávači píše „prodej pozemku Benešov", nenašel v titulku ani
+   jedno ze svých slov.
 
-   DRUH ZŮSTÁVÁ, JEN VE DRUHÉM PÁDĚ. Zahodit ho nešlo: odlišuje dvě
-   nabídky, které se jinak liší jen výměrou, a na tom stojí celé
-   rozlišování duplicitních titulků o kus níž. Druhý pád se nedá
-   odvodit pravidlem (půda → půdy, porost → porostu, nádvoří →
-   nádvoří), ale druhů je v datech třináct — spočítáno na vygenerovaných
-   stránkách — takže je to tabulka, ne algoritmus. Co v ní není,
-   projde beze změny: radši „Prodej Louka 2 000 m²" jednou než špatně
-   ohnuté slovo dvakrát. */
-const DRUH_2P = new Map([
-  ['Orná půda', 'orné půdy'],
-  ['Trvalý travní porost', 'trvalého travního porostu'],
-  ['Stavební pozemek', 'stavebního pozemku'],
-  ['Ostatní plocha', 'ostatní plochy'],
-  ['Lesní pozemek', 'lesního pozemku'],
-  ['Zahrada', 'zahrady'],
-  ['Pozemek', 'pozemku'],
-  ['Vinice', 'vinice'],
-  ['Ovocný sad', 'ovocného sadu'],
-  ['Vodní plocha', 'vodní plochy'],
-  ['Zastavěná plocha a nádvoří', 'zastavěné plochy a nádvoří'],
-  ['Zemědělský pozemek', 'zemědělského pozemku'],
-  ['Louka', 'louky'],
-]);
-
-/* Sloveso podle toho, co se s pozemkem děje. „Exekuční dražba" je
-   přesnější než holé „Exekuce": exekuce je řízení, dražba je ta
-   událost, které se dá zúčastnit. U obecního záměru a nabídky přímo
-   od majitele se pořád prodává. */
-const AKCE = new Map([
-  ['sale', 'Prodej'],
-  ['drazba', 'Dražba'],
-  ['exekuce', 'Exekuční dražba'],
-  ['obec', 'Prodej'],
-  ['majitel', 'Prodej'],
-]);
-
+   SLOVNÍK DRUHÉHO PÁDU TU NENÍ, A TO JE ZÁMĚR. Týž nadpis skládá ještě
+   prohlížeč (js/main.js u karty ve výpisu), takže kdyby měla každá
+   strana svou kopii, rozešly by se — karta „Vinice 3 476 m²" a stránka
+   za ní „Prodej vinice 3 476 m²". Tabulka proto leží v js/cisteni.js,
+   tedy v brance, kterou obě strany stejně používají na sazbu, a
+   sestavení si ji odsud bere mostem níž. Je to tentýž postup, jakým si
+   generátor regionů bere okres → kraj z js/ceny.js. */
+const CISTENI = createRequire(import.meta.url)(path.join(ROOT, 'js', 'cisteni.js'));
 export function hlavaTitulku(druh, typ) {
-  const akce = AKCE.get(typ);
-  const ve2p = DRUH_2P.get(druh);
-  if (!akce || !ve2p) return druh;
-  return `${akce} ${ve2p}`;
+  return CISTENI.hlavaNabidky(druh, typ);
 }
 
 function slozTitulek(hlava, druh, vym, place, okres, podil) {

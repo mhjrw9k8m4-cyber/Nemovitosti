@@ -6675,7 +6675,14 @@
           /* 1. ŘÁDEK — CO SE PRODÁVÁ A KOLIK TOHO JE. Druh tučně, za ním
              výměra, cena za metr a vzdálenost jemně. */
           '<div class="opp-nadpis">' +
-            '<b class="opp-druh">' + PKCisteni.sazba(esc(druhCap || 'Pozemek')) + '</b>' +
+            /* JMÉNO NABÍDKY VEDE SLOVESEM — „Prodej vinice", ne „Vinice".
+               Předloha od majitele (reality.idnes, Sreality) to tak má
+               na kartě i na detailu, a hlavně: stránka za touhle kartou
+               říká totéž. Skládá to jediná funkce v js/cisteni.js, ze
+               které si bere jméno i sestavení (scripts/generate-parcel-pages.mjs),
+               takže se karta a stránka nemůžou rozejít. */
+            '<b class="opp-druh">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
             '<span class="opp-figures">' + figs + '</span>' +
           '</div>' +
           /* 2. ŘÁDEK — KDE TO JE. „Už otevřeno" stojí u NÁZVU MÍSTA, ne

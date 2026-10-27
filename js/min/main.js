@@ -4111,7 +4111,9 @@
         '<div class="opp-body">' +
 
           '<div class="opp-nadpis">' +
-            '<b class="opp-druh">' + PKCisteni.sazba(esc(druhCap || 'Pozemek')) + '</b>' +
+
+            '<b class="opp-druh">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
             '<span class="opp-figures">' + figs + '</span>' +
           '</div>' +
 
