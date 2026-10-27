@@ -11813,3 +11813,67 @@ nástroje a podle toho žádá buď celou šířku (tři a víc), nebo tutéž
 naměřil, aby neprošel naprázdno. Poučení je obecnější než ta jedna
 řada: **kontrola rozměru, která si opíše naměřené číslo, platí jen
 pro data, na kterých se měřilo.**
+
+## 171. Obhlídka telefonu: co ještě drhne o hranu a co se nedá přečíst *27. 10.*
+
+Tři vady z majitelových fotek (§170) měly společného jmenovatele:
+jsou vidět jen na skutečné obrazovce. Dávalo proto smysl hledat další
+stejným způsobem — měřením v prohlížeči na 390 px, ne čtením CSS.
+Prošlo se patnáct typů stránek a měřily se čtyři věci: co přetéká
+z okna, co se dotýká hrany, co má chytací plochu menší než palec a kde
+je písmo pod dvanácti pixely.
+
+### Nález 1: snímek pozemku stál 4 px od kraje
+
+Hlavní fotka na stránce pozemku **má** jít od kraje ke kraji — tak to
+mají Rightmove i Zillow a v rámečku s odsazením vypadá jako ilustrace
+v článku. Dělá se to záporným okrajem:
+
+```css
+.pz-media{margin:0 -16px;}    /* „přesně odsazení .pz-wrap" */
+```
+
+Jenže odsazení obalu se 26. 10. přepnulo na token `--okraj-stranky`
+(20 px) a záporný okraj zůstal napsaný ručně. Fotka proto stála 4 px
+od hrany: ani u kraje, ani s okrajem. Je to **táž vada jako ta
+vyfocená** — jen o 4 px místo o 12.
+
+Nová zkouška `scripts/test-u-hrany.mjs` hlídá pravidlo, které z obou
+případů plyne: na telefonu jsou jen dvě správné polohy, 0 px a aspoň
+16 px. Měří se bloky s vlastní plochou nebo rámečkem (u průhledného
+obalu není hrana vidět) na dvanácti stránkách — 824 bloků. Sabotáží
+zpět na `-16px` spadne přesně na stránce pozemku.
+
+### Nález 2: jediná věta pod dvanácti pixely
+
+Jedenáctek je ve stylopisu patnáct, ale když se měřilo, kde stojí
+VĚTA (dvanáct znaků a víc), vyšlo jediné místo z devíti stránek:
+„pořadí se střídá každý den" pod řádkem s počtem nabídek. Zbylé
+jedenáctky nesou štítky, čísla os grafu a značku „↗" u odkazu ven —
+tam je drobné písmo záměr.
+
+Byl to zbytek doby, kdy ta poznámka stála v řádku a musela se do něj
+vejít. Od chvíle, kdy má `flex:1 1 100%`, tedy vlastní řádek, se
+zmenšovat nemá proč. Hlídá to nový blok 6a2 v `test-rozvrzeni.mjs`
+vedle meze 44 px — jedno je, co jde trefit prstem, druhé, co jde
+přečíst.
+
+### Dva nálezy, které nálezy nebyly
+
+Poctivě i to, co se neopravovalo:
+
+* `summary` na okresní stránce a v metodice cen hlásilo `scrollWidth`
+  o 2 px větší než `clientWidth`. Přetékání je ale `visible` a ty
+  dva pixely patří značce rozbalení — nic se neuřízne.
+* `th` v porovnání hlásilo 116 proti 106 px. Těch 10 px je šířka
+  `::after` se stínem, který **schválně** stojí za buňkou a říká, že
+  pod přilepeným sloupcem něco podjíždí.
+
+Obojí je poučení o měření: `scrollWidth > clientWidth` znamená
+„uříznuto" jen tam, kde se přetékání opravdu ořezává.
+
+### A jeden soubor navíc v kořeni
+
+Při tom se našlo `nahoru-kopie.mjs` — 218 řádků starší verze
+`scripts/test-nahoru.mjs`, která se kdysi omylem dostala do kořene
+repozitáře a zůstala tam. Kořen je přitom to, co se servíruje; smazáno.

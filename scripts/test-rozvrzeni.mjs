@@ -1074,6 +1074,57 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await ctx.close();
 }
 
+/* --- 6a2) CO JE VIDĚT, MUSÍ JÍT PŘEČÍST ------------------------------
+ *
+ * Mez 44 px výš hlídá, co jde trefit prstem. Druhá polovina téhož je,
+ * jestli se to dá přečíst. Na telefonu se 27. 10. měřilo, kde stojí
+ * VĚTA (dvanáct znaků a víc) pod dvanácti pixely — jedenáctky nesou
+ * po webu štítky, čísla os grafu a značku „↗" u odkazu ven, a tam je
+ * drobné písmo záměr, protože se to nečte, to se pozná.
+ *
+ * Nález byl jediný: „pořadí se střídá každý den" pod řádkem s počtem
+ * nabídek mělo 11 px. Byl to zbytek doby, kdy poznámka stála v řádku
+ * a musela se do něj vejít; dnes má vlastní řádek, takže se zmenšovat
+ * nemá proč. Kontrola drží, že další takové místo nevznikne.
+ */
+{
+  const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const p3 = await ctx.newPage();
+  const STRANKY = ['index.html', 'pozemky-okres-kolin.html', 'data.html', 'porovnani.html',
+    'cena-pozemku.html', 'nove-pozemky.html', 'kolik-stoji-koupe-pozemku.html', 'kontakt.html'];
+  const drobne = [];
+  let vetCelkem = 0;
+  for (const stranka of STRANKY) {
+    await p3.goto(`${BASE}/${stranka}`, { waitUntil: 'load' }).catch(() => {});
+    await domUtichlo(p3, 400);
+    const v = await p3.evaluate(() => {
+      const male = []; let vet = 0;
+      document.querySelectorAll('body *').forEach((e) => {
+        if (e.children.length) return;                 // měří se list, ne obal
+        const t = (e.textContent || '').replace(/\s+/g, ' ').trim();
+        if (t.length < 12) return;                     // štítek, číslo, značka — ne věta
+        const cs = getComputedStyle(e);
+        if (cs.display === 'none' || cs.visibility === 'hidden' || !e.getClientRects().length) return;
+        vet++;
+        const fs = parseFloat(cs.fontSize);
+        if (fs >= 12) return;
+        male.push(e.tagName.toLowerCase() + '.' + String(e.className || '').split(' ')[0]
+          + ' „' + t.slice(0, 24) + '" ' + fs + 'px');
+      });
+      return { male: [...new Set(male)], vet };
+    });
+    vetCelkem += v.vet;
+    v.male.forEach((m) => drobne.push(`${stranka}: ${m}`));
+  }
+  // PŘEDPOKLAD: bez vykreslených vět by kontrola níž prošla naprázdno
+  pravda('na procházených stránkách se našly věty k měření', vetCelkem > 100,
+    `vět: ${vetCelkem}`);
+  pravda(`žádná věta na telefonu není pod 12 px (${STRANKY.length} stránek)`,
+    drobne.length === 0, drobne.slice(0, 8).join(' | '));
+  await ctx.close();
+}
+
 /* --- 6b2) NAŠEPTÁVAČ U HLEDÁNÍ --------------------------------------
  *
  * Objeví se až při psaní, takže ho měření stránky minulo — a je to

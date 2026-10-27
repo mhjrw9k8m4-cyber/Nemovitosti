@@ -1002,6 +1002,9 @@ jobs:
       - name: Ovládání nad výpisem má jednu velikost
         run: node scripts/test-ovladani-vypisu.mjs
 
+      - name: Buď u kraje, nebo s okrajem
+        run: node scripts/test-u-hrany.mjs
+
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
 

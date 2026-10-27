@@ -1905,7 +1905,7 @@ h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
 .ms-vysledky .mc-sub{color:var(--muted);font-weight:600}
 .msv-ulozene{min-height:34px;padding:4px 8px}
 .msv-razeni .map-select{min-height:34px;max-width:none;width:100%;font-size:13px}
-.ms-vysledky .mc-pozn,.ms-vysledky .mc-nove{flex:1 1 100%;margin:0;font-size:11px}
+.ms-vysledky .mc-pozn,.ms-vysledky .mc-nove{flex:1 1 100%;margin:0;font-size:12px}
 }
 .rail-mark{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}
 .rail-mark .rm-n{font-family:var(--font-display);font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--accent-warm);font-variant-numeric:tabular-nums}

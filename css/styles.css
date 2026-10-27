@@ -7195,8 +7195,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      se tahle řada rovnala. */
   .msv-razeni .map-select{min-height:34px; max-width:none; width:100%; font-size:13px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
-     řádek, ne do něj — v řádku by ho rozlomily na dva. */
-  .ms-vysledky .mc-pozn, .ms-vysledky .mc-nove{flex:1 1 100%; margin:0; font-size:11px;}
+     řádek, ne do něj — v řádku by ho rozlomily na dva.
+     DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek
+     měřilo, kde na telefonu stojí VĚTA (12 znaků a víc) pod dvanácti
+     pixely. Vyšlo jediné místo — tohle. Jedenáctky jinde na webu nesou
+     štítky a čísla os, kde je to záměr; celá věta pod stupnicí byla
+     nehoda z doby, kdy poznámka stála v řádku a musela se vejít. Mít
+     vlastní řádek a zároveň se zmenšovat nedává smysl. */
+  .ms-vysledky .mc-pozn, .ms-vysledky .mc-nove{flex:1 1 100%; margin:0; font-size:12px;}
 }
 
 /* =====================================================================
