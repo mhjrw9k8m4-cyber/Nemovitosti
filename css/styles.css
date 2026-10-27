@@ -7095,10 +7095,16 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      níž (ř. ~6739) s `display:flex` a při stejné síle by vyhrálo
      pozdější pravidlo — obě tlačítka by pak seděla přes sebe na celou
      šířku. Naměřeno: obojí 370 px na téže řádce. */
-  .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
+  /* OBAL OVLÁDÁNÍ UŽ V TÉHLE DVOJICI NENÍ. Od bodu 4.3 předlohy mu
+     o kus níž stojí `display:contents`, takže žádnou mřížku nedělá
+     a jeho děti jsou položkami řádku výsledků. Dokud tu byl, jeho
+     `> *{width:100%}` bylo o stupeň silnější než pravidla, která
+     řazení a „Uložené" šířku teprve dávají — a tiše je přebíjelo:
+     naměřeno 390 px u obou, tedy čtyři prvky pod sebou místo řádku.
+     Zbývají tu jen dvě podoby řádku nástrojů, pro které to platí. */
+  .map-side .mc-akce, .ms-vysledky > .mc-akce{
     display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:8px; width:100%; flex:1 1 100%;}
-  .ms-vysledky .msv-ovladani > *:not([hidden]),
   .map-side .mc-akce > *:not([hidden]),
   .ms-vysledky > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
   /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
@@ -7185,9 +7191,9 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Prázdné pásmo pod lištou drží deska s nadpisem, ne odsazení. */
   .hero-map .map-wide{padding-top:0;}
 
-  .ms-vysledky .msv-ulozene,
-  .ms-vysledky .map-select,
-  .ms-vysledky .cdd-btn{
+  /* Řazení z téhle sestavy odešlo (viz „ŘAZENÍ NENÍ TLAČÍTKO" níž):
+     tvar ovladače dostávají jen ty prvky, které ovladače jsou. */
+  .ms-vysledky .msv-ulozene{
     min-height:44px; height:44px; padding:0 12px;
     border-radius:var(--r-ovladani);
     border:1px solid var(--line-ui);
@@ -7217,7 +7223,45 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      ušetřených osmadvacet pixelů za to nestojí. Nadpis se smí zalomit
      na dva řádky; první nabídka tím klesne z 289 na ~311 px, pořád
      hluboko pod mezí 330 v test-prvni-obrazovka. */
-  .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
+  /* POČET VLEVO, ŘAZENÍ VPRAVO, JEDEN ŘÁDEK — bod 4.3 předlohy.
+     iDNES má nad výpisem jeden šedý pruh: „107 572 inzerátů" vlevo,
+     „Nejnovější" se šipkou vpravo. U nás si nadpis bral celý řádek
+     (`flex:1 1 100%`) a pod ním stála mřížka čtyř tlačítek, ve které
+     řazení vypadalo jako jedno z nich — ačkoli výpis neovládá, jen
+     ho přerovnává.
+     Nadpis si teď bere, co zbyde, a smí se zalomit na dva řádky. */
+  /* `1 1 0`, NE `1 1 auto`: zalamovací řádek se nejdřív zalomí a až
+     potom smršťuje, takže při basis podle obsahu („Doporučené
+     příležitosti · 1 909 na mapě" je širší než 358 px) spadlo řazení
+     pod něj — naměřeno. S nulovým základem si nadpis vezme, co po
+     řazení zbyde, a smí se zalomit na dva řádky. */
+  .ms-vysledky .map-count{font-weight:700; flex:1 1 0;}
+  /* Řádek nástrojů až pod ně: bez pořadí by stál mezi nadpisem
+     a „Uloženými", protože ve značce leží dřív. */
+  .ms-vysledky > .mc-akce{order:4;}
+  /* Obal ovládání přestává být rámcem, aby si řazení a „Uložené"
+     mohly v řádku stát každý jinde. Ve značce i pro odečítač zůstává. */
+  .ms-vysledky .msv-ovladani{display:contents;}
+  /* Řazení se přitiskne k pravému okraji téhož řádku jako počet. */
+  .ms-vysledky .msv-razeni{order:1; margin-left:auto; flex:0 0 auto; width:auto;}
+  /* „Uložené" spadne pod ně a drží ŠÍŘKU POLÍČKA, ne celého řádku:
+     (100 % − mezera) / 2 je táž míra, jakou mají nástroje o řádek níž,
+     takže všechna políčka nad výpisem zůstávají stejně velká — to je
+     to, co majitel upevnil fotkou. Dopočítává se, nepíše se. */
+  /* ZÁKLAD 100 %, ŠÍŘKA PŮLKA. Samotné `width:50%` nestačilo: do
+     prvního řádku se vejde nadpis i řazení i „Uložené" (48 + 119 +
+     175 px) a nadpis se zmáčkl na 48 px na SEDM řádků — naměřeno.
+     Základ přes celou šířku zalomí řádek před ním, strop šířky mu
+     pak nechá přesně míru políčka nástroje o řádek níž. */
+  /* ZARÁŽKA ŘÁDKU. Samotný `flex-basis:100%` na „Uložených" zalomení
+     nevynutí — strop šířky se uplatní DŘÍV, než se řádky dělí, takže
+     prvek nabídne jen 175 px a vejde se k nadpisu. Naměřeno dvakrát
+     po sobě: nadpis 48 px na 207 px výšky, tedy sedm řádků v úzkém
+     sloupci. Řádek proto dělí prázdný prvek mezi řazením a „Uloženými",
+     který žádný strop nemá; kreslit nemá co (výška 0). */
+  .ms-vysledky::after{content:""; order:2; flex:0 0 100%; height:0;}
+  .ms-vysledky .msv-ulozene{order:3; flex:0 0 auto;
+    width:calc((100% - 8px) / 2); margin-right:auto;}
   .ms-vysledky .mc-sub{color:var(--muted); font-weight:600;}
   .msv-ulozene{min-height:34px; padding:4px 8px;}
   /* 13px jako sousedé. Dvanáctka tu byla jediná v celé řadě a dělala
@@ -7225,7 +7269,17 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      A ŽÁDNÝ STROP ŠÍŘKY: 150 px z něj dělalo užší políčko než
      „Uložené" vedle (193 px), tedy přesně tu nejednotnost, kvůli které
      se tahle řada rovnala. */
-  .msv-razeni .map-select{min-height:34px; max-width:none; width:100%; font-size:13px;}
+  /* ŘAZENÍ NENÍ TLAČÍTKO. Na předloze je to tichý text se šipkou
+     v pravém konci řádku, ne políčko — a je to tak správně: tlačítky
+     se výpis zužuje („Uložené") nebo se s ním něco dělá („Stáhnout
+     výběr"), kdežto řazením se jen přerovnává to, co už je vidět.
+     Dokud mělo plochu, rámeček a 44 px jako sousedé, četlo se jako
+     pátý ovladač v mřížce.
+     Tím zároveň přestává spadat pod pravidlo „všechna políčka mají
+     mít stejnou velikost": není políčko. Políčka — „Uložené"
+     a nástroje — si jednu velikost drží dál. */
+  .msv-razeni .map-select{min-height:34px; max-width:none; width:auto; font-size:13px;
+    background:none; border:0; padding:0 20px 0 0; color:var(--muted); font-weight:600;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva.
      DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek

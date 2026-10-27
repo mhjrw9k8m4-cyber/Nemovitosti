@@ -4183,8 +4183,6 @@
     if (favOnly) pripisky += ' <span class="mc-pozn">'
       + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
 
-    if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
-
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
       ikonaNastroje(ukazSkryte ? 'zakryt' : 'odkryt') +
       (ukazSkryte ? 'Schovat skryté' : 'Zobrazit skryté (' + skryte.length + ')') + '</button>';

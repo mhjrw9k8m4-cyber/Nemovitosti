@@ -6797,11 +6797,15 @@
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">'
       + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
-    /* „Doporučené" není žebříček, pořadí se každý den zamíchá. Stávalo
-       to v závorce u volby řazení, kde to přečetl jen ten, kdo rozbalil
-       seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
-       vidí každý, komu se tak právě řadí, a je to výchozí pořadí. */
-    if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
+    /* „Doporučené" není žebříček, pořadí se každý den zamíchá — a říct
+       se to má. Řádek pod počtem to ale být nemá: předloha od majitele
+       (bod 4.3) má nad výpisem JEDEN řádek, „107 572 inzerátů" vlevo
+       a řazení vpravo, a majitel k tomu řekl, že nechce příručku, ale
+       web na prodej. Tahle věta tam stála natrvalo a brala třetí řádek
+       hned nad první nabídkou.
+       Zůstává tam, kde o pořadí rozhoduje: jako vysvětlivka ovladače
+       řazení (title níž). Kdo si pořadí přepíná, ten se ptá; kdo
+       prochází nabídky, ten ne. */
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +

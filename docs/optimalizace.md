@@ -12900,3 +12900,50 @@ jedné fotky, na které byly tři. Měření na 24 kartách to nepotvrdilo:
 „Doporučujeme" je na **jedné kartě z 24**, ne na každé. Vyfotil jsem
 si náhodou jednu ze tří nejhustších a málem podle ní přestavěl něco,
 co není rozbité. Štítky proto zůstávají, mění se jen jejich kabát.
+
+## §192 Bod 4.3 předlohy: počet vlevo, řazení vpravo, jeden řádek
+
+iDNES má nad výpisem jeden pruh — „107 572 inzerátů" vlevo, řazení
+vpravo. U nás si nadpis bral celý řádek, pod ním stála poznámka
+„pořadí se střídá každý den" a pod ní mřížka čtyř stejných tlačítek,
+ve které řazení vypadalo jako jedno z nich.
+
+**Proč to dřív nešlo a teď jde.** Zkouška `test-ovladani-vypisu` drží,
+co majitel upevnil fotkou: „všechna políčka mají mít stejnou velikost".
+Vytáhnout řazení doprava by z něj udělalo políčko jiné šířky — a to
+jsem odmítal. Rozuzlení bylo v předloze samé: **řazení tam políčko
+není.** Je to tichý text se šipkou. Tlačítky se výpis zužuje („Uložené")
+nebo se s ním něco dělá („Stáhnout výběr"); řazením se jen přerovnává
+to, co už je vidět. Jakmile přestane být políčkem, pravidlo o stejné
+velikosti se ho netýká — a pro všechno, co políčko je, platí dál.
+
+Kontrola ve zkoušce se proto obrátila: místo „„Uložené" a řazení mají
+tutéž šířku" se ptá, že řazení **nemá plochu ani rámeček**. Sabotáž:
+po vrácení výplně a linky spadly na obou šířkách obě nové kontroly.
+
+### Tři pokusy, než to drželo — a každý na jiné pravidlo
+
+1. `.msv-ovladani{display:contents}` samo nestačilo: `.ms-vysledky
+   .msv-ovladani > *:not([hidden]){width:100%}` je o stupeň silnější
+   selektor a tiše vracel oběma dětem plnou šířku. Naměřeno 358 px
+   u obou, tedy čtyři prvky pod sebou místo řádku. To pravidlo patřilo
+   k mřížce, která tam už není — zbylo jen pro řádek nástrojů.
+2. `flex:1 1 auto` na nadpisu nestačilo: zalamovací řádek se **nejdřív
+   zalomí a až potom smršťuje**, a nadpis je širší než 358 px. S `1 1 0`
+   si vezme, co zbyde.
+3. `flex-basis:100%` na „Uložených" zalomení nevynutilo: **strop šířky
+   se uplatní dřív, než se řádky dělí**, takže prvek nabídl 175 px
+   a vešel se k nadpisu — naměřeno dvakrát po sobě nadpis 48 px na
+   207 px výšky, tedy sedm řádků v úzkém sloupci. Řádek dělí prázdná
+   zarážka mezi řazením a „Uloženými".
+
+### A jedna věta pryč
+
+„pořadí se střídá každý den" stálo natrvalo třetím řádkem hned nad
+první nabídkou. Je to pravda a říct se to má, ale předloha tam má
+jeden řádek a majitel k tomu řekl, že nechce příručku, ale web na
+prodej. Vysvětlivka se přestěhovala na ovladač řazení — kdo si pořadí
+přepíná, ten se ptá; kdo prochází nabídky, ten ne.
+
+Naměřeno po všem na 390 px: nadpis 231 px vlevo, řazení 119 px vpravo,
+jeden řádek; první nabídka na 440 px (před přestavbou 435).

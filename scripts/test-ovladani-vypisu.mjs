@@ -12,7 +12,9 @@
  *     jako 54px blok;
  *   · nářadí mělo šedou výplň, kdežto pilulky nad ním bílou;
  *   · řazení mělo 12px písmo a strop šířky 150 px, sousední „Uložené"
- *     mělo 13px a 194 px;
+ *     mělo 13px a 194 px;   (od 27. 10. řazení políčko NENÍ — stojí
+ *     v řádku s počtem jako tichý text, viz bod 4.3 v docs/predloha.md;
+ *     kontrola na něj se proto ptá naopak: že plochu a rámeček nemá)
  *   · šířky vycházely z délky nápisu (84, 103, 182, 167 px), takže
  *     pravý okraj byl roztřepený.
  *
@@ -88,6 +90,14 @@ try {
            (.map-search je jen pozicovací krabička pro lupu). */
         hledani: q('.mcp-hledani #map-search'), prepinac: q('.mcp-hledani .mv-toggle'),
         ulozene: q('#map-fav'), razeni: q('.ms-vysledky .msv-razeni'),
+        /* Vlastní ovladač řazení, ne obal kolem něj: na něm se pozná,
+           jestli je to políčko, nebo text (viz kontrola níž). */
+        razeniPole: (function () {
+          const e = document.querySelector('.ms-vysledky .msv-razeni .map-select');
+          if (!e) return null;
+          const cs = getComputedStyle(e);
+          return { plocha: cs.backgroundColor, ram: parseFloat(cs.borderTopWidth) || 0 };
+        }()),
         rychly: q('#mc-rychly'), vyvoz: q('#mc-vyvoz'),
         pretek: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       };
@@ -155,8 +165,23 @@ try {
        pamatovala jen první případ, padala na rozdílu, který je záměr —
        očekávání se proto bere z DOM, ne z paměti. */
     const stejne = (a, b) => Math.abs(a.w - b.w) <= 1;
-    pravda(`${sirka} px: „Uložené" a řazení mají tutéž šířku`, stejne(v.ulozene, v.razeni),
-      `${v.ulozene.w} px vs ${v.razeni.w} px`);
+    /* ŘAZENÍ UŽ POLÍČKO NENÍ, a tahle kontrola se proto ptá na něco
+       jiného než dřív. Stávalo tu „„Uložené" a řazení mají tutéž
+       šířku" — jenže podle předlohy od majitele (bod 4.3) stojí nad
+       výpisem JEDEN řádek: počet vlevo, řazení vpravo jako tichý text
+       se šipkou. Tlačítky se výpis zužuje nebo se s ním něco dělá;
+       řazením se jen přerovnává to, co už je vidět, takže plochu ani
+       rámeček nemá.
+       Pravidlo „všechna políčka mají mít stejnou velikost" tím
+       neodchází — platí dál pro všechno, co políčko JE, a kontroly
+       o kus níž ho měří. Tady se jen hlídá, že se řazení zase
+       nestane políčkem. */
+    pravda(`${sirka} px: řazení je text, ne políčko (bez plochy)`,
+      !!v.razeniPole && /^(transparent|rgba\(0, 0, 0, 0\))$/.test(v.razeniPole.plocha),
+      'plocha řazení: ' + (v.razeniPole ? v.razeniPole.plocha : 'ovladač se nenašel'));
+    pravda(`${sirka} px: a nemá ani rámeček`,
+      !!v.razeniPole && v.razeniPole.ram === 0,
+      'rámeček řazení: ' + (v.razeniPole ? v.razeniPole.ram + ' px' : 'ovladač se nenašel'));
     pravda(`${sirka} px: „Procházet po jednom" a „Stáhnout výběr" taky`, stejne(v.rychly, v.vyvoz),
       `${v.rychly.w} px vs ${v.vyvoz.w} px`);
     if (sirka >= 360) {
