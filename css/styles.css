@@ -1047,6 +1047,8 @@ html.pk-prihlasen #prodej-card[hidden], html.pk-prihlasen #mi-panel[hidden]{disp
 /* Rozmazané poletující skvrny na pozadí jsou to, co působí „futuristicky".
    Nemažou se — drží hloubku —, ale ztlumily se na polovinu a jedna z nich
    je teplá, aby pozadí nebylo jen studené. */
+@media (max-width:768px){
+}
 .hero{position:relative; overflow:hidden;}
 
 /* teplá záře shora — útulnost + šmrnc */
@@ -8972,6 +8974,49 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   padding:8px 8px; border-radius:var(--r-sm); cursor:pointer; text-align:left;
   transition:background var(--cas-zakladni) var(--ease), border-color var(--cas-zakladni) var(--ease);}
 .mv-v.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
+/* Zapnutý stav má teď .map-nastroj[aria-expanded="true"] výš — tlačítko
+   „Vrstvy" panel OTEVÍRÁ, nic nezapíná, takže se hlásí aria-expanded. */
+
+/* ===================================================================
+   NÁVRATNOST KOUPĚ POZEMKU (stránka pozemku)
+   Tyhle styly stály ve vloženém <style> stránky pozemku, kam nepatří:
+   ten se vkládá do 1 995 vygenerovaných stránek, takže každý jeho
+   kilobajt stojí skoro dva megabajty napříč webem. Kritické je na něm
+   to, co je vidět hned — kalkulačka je až za rádcem, hluboko pod
+   ohybem. Hlídá to scripts/test-vlozeny-styl.mjs (mez 240 pravidel).
+   ------------------------------------------------------------------ */
+
+/* ===================================================================
+   PARAMETRY POZEMKU — tři čísla nahoře a tabulka pod nimi
+   Přesunuto z vloženého <style> stránky pozemku. Ten se vkládá do
+   1 995 vygenerovaných stránek i s komentáři, takže každý jeho kilobajt
+   stojí skoro dva megabajty napříč webem; kritické je na něm jen to, co
+   je vidět hned, a parametry stojí až za cenou, posudkem a popisem.
+   Mez 36 kB hlídá scripts/test-vlozeny-styl.mjs — a hlídá i to, aby
+   tatáž vlastnost nebyla nastavená na obou místech, protože dvě místa
+   pro jednu věc se dřív nebo později rozejdou.
+   ------------------------------------------------------------------ */
+/* TŘI ČÍSLA, PODLE KTERÝCH SE ČLOVĚK ROZHODUJE. Velké číslo nahoře,
+   popisek pod ním — tak se to čte na jedno kouknutí, místo aby se
+   luštil řádek tabulky. Buňky se samy přeskládají: tři vedle sebe,
+   na úzkém displeji dvě a pak jedna. */
+/* POČET SLOUPCŮ SE URČUJE ŠÍŘKOU, NE `auto-fit`. S auto-fit se mezi
+   560 a 680 px vešly do řádku TŘI dlaždice ze čtyř a čtvrtá zůstala
+   sama — naměřeno 359 px prázdna z 528, tedy 68 % posledního řádku.
+   Přesně ten druh díry, kvůli kterému se tahle mřížka kdysi
+   předělávala; auto-fit o počtu dlaždic nic neví, takže ji neuměl
+   zahnat. Pevné stupně to řeší: jedna dlaždice na nejužším displeji,
+   dvě na telefonu, čtyři od 680 px. A `:has` dorovná případy, kdy
+   dlaždice nejsou čtyři (u nabídky bez ceny nebo bez výměry chybí
+   „Cena za m²"), aby ani tam nezbyl prázdný sloupec. */
+.pz-klice{display:grid; grid-template-columns:minmax(0, 1fr);
+  gap:8px; margin:0 0 8px;}
+@media (min-width:360px){ .pz-klice{grid-template-columns:repeat(2, minmax(0, 1fr));} }
+@media (min-width:680px){
+  .pz-klice{grid-template-columns:repeat(4, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(3):last-child){grid-template-columns:repeat(3, minmax(0, 1fr));}
+  .pz-klice:has(> .pz-klic:nth-child(2):last-child){grid-template-columns:repeat(2, minmax(0, 1fr));}
+}
 /* OSAMĚLÁ DLAŽDICE SE ROZTÁHNE. Na telefonu se vejdou dvě vedle sebe,
    takže tři údaje nechávaly třetí samotný a vedle něj díru — naměřeno
    184 px prázdna z 358, tedy přes polovinu řádku. Právě tohle dělalo
@@ -8982,6 +9027,20 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    Dřív tu stálo 560 px — číslo z doby, kdy počet sloupců určoval
    auto-fit, a mezi 560 a 680 px tím pravidlo přestalo platit, i když
    sloupce byly pořád dva. */
+@media (max-width:679px){
+  .pz-klice > .pz-klic:last-child:nth-child(odd){grid-column:1 / -1;}
+}
+.pz-klic{position:relative; display:flex; flex-direction:column; gap:4px; padding:12px 16px;
+  background:var(--plocha-karta); border:1px solid var(--line-strong);
+  border-radius:var(--r-plocha); box-shadow:var(--e1);}
+/* ZNAČKA V ROHU, NE PŘED ČÍSLEM. Dlaždice se čte odshora: velké číslo,
+   pod ním co to je. Ikona před číslem by se do té cesty postavila a
+   ještě by ukrojila z místa, kde stojí „1 630 m²". V rohu dělá to, co
+   má — dá dlaždici tvář a pomůže oku najít tu správnou, aniž by cokoli
+   odsunula. Je tlumená (ne plná barva): nemá soupeřit s číslem.
+   Ikony jsou ozdoba, ne informace — co dlaždice říká, stojí v ní
+   slovem, takže jdou z přístupného stromu ven (aria-hidden v
+   js/pozemek.js). */
 /* =====================================================================
    ZKRATKA K POZNÁMCE U NADPISU (stránka pozemku)
    =====================================================================
@@ -9027,31 +9086,55 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .pz-pozn-box.pz-pozn-sviti{border-color:var(--znacka-svetla);
   outline:3px solid rgba(var(--znacka-svetla-rgb),0.25); outline-offset:0;}
 
-/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
+/* SELEKTOR MUSÍ BÝT SILNĚJŠÍ NEŽ `.pz-klic > span` — jinak značku
+   přebarví popisek. Dlaždice má popisky stylované přes `.pz-klic >
+   span` (dvě třídy), kdežto `.pz-klic-ic` je jen jedna: značka tím
+   vyšla šedá jako popisek a výplň toho pravidla jí srazila šířku na
+   nulu. Naměřeno: svg 0 × 22 px a barva rgb(88,95,91) místo měděné.
+   Proto `.pz-klic > .pz-klic-ic` (taky dvě třídy, a stojí níž) a výplň
+   se popiskům dává bez značky. */
+/* 20 px, NE 22. Tah je na celém webu 1,8 v soustavě 24 — na obrazovce
+   z toho u 19px ikony vyjde 1,43 px a u 22px 1,65 px. Rozdíl 0,22 px už
+   oko pozná a scripts/test-ikony.mjs ho hlídá (strop 0,2); 20 px dává
+   1,50 px, tedy sadu, která vypadá jako jedna. */
+.pz-klic > .pz-klic-ic{position:absolute; top:12px; right:12px; width:20px; height:20px;
+  padding:0; color:var(--znacka-svetla); opacity:0.45; pointer-events:none;}
+.pz-klic > .pz-klic-ic > svg{display:block; width:20px; height:20px; fill:none; stroke:currentColor;
+  stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+/* Číslo se smí roztáhnout jen k ikoně, ne pod ni. */
+.pz-klic b, .pz-klic > span:not(.pz-klic-ic){padding-right:28px;}
+.pz-klic b{font-size:24px; line-height:1.2; color:var(--text);
+  font-variant-numeric:tabular-nums;}
+/* DVA STUPNĚ DOLŮ PRO HODNOTU, KTERÁ SE NEVEJDE. Třídy přidává podle
+   NAMĚŘENÉ šířky pzVelikostHodnot v js/pozemek.js — proč se nedají
+   počítat znaky a odkud jsou ta čísla, stojí tam. Značka u prvního
+   stupně mizí: je to ozdoba s aria-hidden, kdežto uříznuté číslo je
+   údaj. 20 a 16 px jsou stupně téže stupnice jako 24 px. */
+.pz-klic.pz-dlouha > .pz-klic-ic{display:none;}
+.pz-klic.pz-dlouha b{font-size:20px; padding-right:0;}
+.pz-klic.pz-velmi-dlouha b{font-size:16px;}
+/* POPISEK DLAŽDICE JE ÚDAJ, NE POZNÁMKA POD ČAROU: 14 px a váha 500,
+   stejně jako doplňková čísla na kartě ve výpisu (.opp-figures .m).
+   Odstín zůstává tlumený schválně — viz níž, proč se nezvedal. */
+.pz-klic > span{font-size:14px; font-weight:500; color:var(--muted);}
+.pz-klic i{font-size:12px; line-height:1.5; font-style:italic; color:var(--muted);}/* POPISEK A HODNOTA VEDLE SEBE, NE NA OPAČNÝCH KONCÍCH.
    Řádky byly flex se space-between, takže se hodnota lepila na pravý
    okraj — na počítači 435 px od svého popisku. Mřížka je na .pz-specs
    (ne na řádku), aby sloupec popisků byl JEDEN pro všechny řádky
    a hodnoty začínaly na stejné svislici; řádek se proto rozpouští
    přes display:contents. Čáry pak nese každá buňka zvlášť. */
-/* TABULKA PARAMETRŮ PODLE PŘEDLOHY. Majitel poslal 27. 10. stránky
-   nabídek z reality.idnes a Sreality: parametry tam stojí jako holá
-   dvojice sloupců — popisek vlevo šedě, hodnota vedle ním černě,
-   žádná karta, žádné linky, jen odstup mezi řádky. Tahle tabulka
-   byla naopak bílá karta s obrysem, stínem a vlásečnicí pod každým
-   řádkem, a písmo o dva stupně menší než okolní text (14 proti 16).
-   Karta je proto pryč. Zůstává mřížka, protože dva sloupce se jinak
-   nesrovnají, a popisek má svůj sloupec široký nejvýš na 40 %, aby
-   hodnoty začínaly všechny na jedné svislici i u dlouhého popisku
-   („Přístupová komunikace"). */
-.pz-specs{display:grid; grid-template-columns:minmax(0, 40%) 1fr; align-items:start;
-  margin-top:8px;}
+.pz-specs{display:grid; grid-template-columns:max-content 1fr; align-items:start;
+  border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden;
+  background:var(--plocha-karta); box-shadow:var(--e1);}
 .pz-spec{display:contents;}
-.pz-spec .k, .pz-spec .v{padding:8px 0;}
-.pz-spec .k{padding-right:20px;}
-.pz-spec .k{color:var(--muted); font-size:16px;}/* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
+.pz-spec .k, .pz-spec .v{padding:12px 0; border-bottom:1px solid var(--line);}
+.pz-spec .k{padding-left:12px; padding-right:20px;}
+.pz-spec .v{padding-right:12px;}
+.pz-spec:last-child .k, .pz-spec:last-child .v{border-bottom:none;}
+.pz-spec .k{color:var(--muted); font-size:14px;}/* Hodnota se smí zalomit. S nowrap + ellipsis se delší údaj uřízl
    třemi tečkami („inzerát mluví o spoluvlastnickém podíl…") — a byla
    to zrovna ta věta, kvůli které se na cenu nedá spoléhat. */
-.pz-spec .v{color:var(--text); font-weight:400; font-size:16px; text-align:left; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
+.pz-spec .v{color:var(--text); font-weight:600; font-size:14px; text-align:left; font-variant-numeric:tabular-nums; min-width:0; overflow-wrap:anywhere;
   /* Vyvažování řádků (text-wrap:balance) se sem nehodí: rozlomilo
      datum na „8. / 10. 2026". Radši nechat viset poslední slovo než
      přetrhnout číslo. */
@@ -9061,6 +9144,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    Pravidlo nikdy na nic nesedlo; všimla si toho až kontrola mrtvých
    stylů, když se ukončeným stránkám přestal posílat starý vložený styl,
    ve kterém se ten řetězec ještě vyskytoval. */
+@media (max-width:560px){
+}
 
 
 /* =====================================================================
@@ -9144,6 +9229,19 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
     border-top:1px solid var(--line); font-size:13px; font-weight:700;
     letter-spacing:0.02em; text-transform:uppercase; color:var(--popisek);}
   .pz-bok-sada .pz-bok-nadpis::before{content:none;}
+  .pz-bok-sada .pz-klice{display:block; margin:4px 0 0; max-width:none;}
+  .pz-bok-sada .pz-klic{display:grid; grid-template-columns:minmax(0,1fr) auto;
+    align-items:baseline; gap:4px 12px; padding:8px 0;
+    background:none; border:0; border-radius:0; box-shadow:none;}
+  .pz-bok-sada .pz-klic + .pz-klic{border-top:1px solid var(--line);}
+  .pz-bok-sada .pz-klic b{grid-column:2; grid-row:1; font-size:16px;
+    text-align:right; white-space:nowrap;}
+  .pz-bok-sada .pz-klic span{grid-column:1; grid-row:1; font-size:13px;
+    color:var(--popisek);}
+  .pz-bok-sada .pz-klic i{grid-column:1 / -1; grid-row:2;}
+  /* Značka v rohu je ozdoba dlaždice; v řádku by stála v cestě
+     hodnotě a nemá kam — řádek nemá roh. */
+  .pz-bok-sada .pz-klic-ic{display:none;}
 }
 
 /* =====================================================================

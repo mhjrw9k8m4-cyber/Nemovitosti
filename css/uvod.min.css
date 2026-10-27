@@ -62,6 +62,7 @@ button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"
 @keyframes livepulse{0%{transform:scale(1);opacity:0.7}
 100%{transform:scale(3);opacity:0}
 }
+
 h1 em{position:relative;z-index:0}
 h1 em::after{position:absolute;left:0;right:0;bottom:-1px;height:6px;border-radius:2px;background:var(--accent-warm);opacity:0.85;z-index:-1;transform:scaleX(0);transform-origin:left}
 @keyframes undersweep{to{transform:scaleX(1)}
@@ -1559,6 +1560,10 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .map-sheet .map-podklad button{flex:1 1 0;min-width:0}
 .mv-v{appearance:none;border:1px solid var(--line);background:transparent;color:inherit;font-family:inherit;font-size:13px;font-weight:600;padding:8px 8px;border-radius:var(--r-sm);cursor:pointer;text-align:left;transition:background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease)}
 .mv-v.on{background:var(--plocha-znacka);color:#fff;border-color:var(--plocha-znacka)}
+
+
+
+
 
 
 

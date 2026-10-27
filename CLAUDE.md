@@ -745,3 +745,14 @@ Měl jsem za to, že karty jsou zavalené barevnými štítky — viděl jsem
 kartu se třemi. Změřeno na všech 24: průměr 1,4, patnáct karet má
 jediný, „Doporučujeme" je na jedné z 24. Fotka ukazuje JEDEN vzorek;
 než podle ní něco přestavíš, spočítej, kolik vzorků se mu podobá.
+
+### Předloha neruší to, co je upevněné
+
+Když majitel pošle předlohu a zároveň platí „nesahej na to, co jsem
+upevnil", **vyhrává to druhé**. Předloha říká, jak má vypadat to, co
+se teprve dělá — ne povolení přepsat odsouhlasenou práci. Udělal jsem
+to obráceně u dlaždic parametrů (§193) a bylo to podruhé v jeden den.
+
+Praktické pravidlo: než podle předlohy přepíšeš hotový prvek, najdi
+v historii, kdo ho tam dal. Je-li to majitelovo rozhodnutí, napiš mu
+rozdíl a nech to být, dokud neřekne.

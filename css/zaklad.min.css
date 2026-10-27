@@ -60,6 +60,7 @@ html.pk-prihlasen #prodej-card[hidden],html.pk-prihlasen #mi-panel[hidden]{displ
 100%{transform:scale(3);opacity:0}
 }
 .btn-glow{box-shadow:var(--glow)}
+
 h1 em{position:relative;z-index:0}
 h1 em::after{position:absolute;left:0;right:0;bottom:-1px;height:6px;border-radius:2px;background:var(--accent-warm);opacity:0.85;z-index:-1;transform:scaleX(0);transform-origin:left}
 @keyframes undersweep{to{transform:scaleX(1)}
@@ -1121,6 +1122,10 @@ body:has(.dt-telo) .st-hlava .st-wrap>*{grid-column:2;min-width:0}
 .om-pozn{max-width:var(--m-text);margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--muted)}
 @media (hover:none){header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease)}
 }
+
+
+
+
 
 
 

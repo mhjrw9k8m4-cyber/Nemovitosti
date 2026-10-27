@@ -1179,7 +1179,7 @@
     var bok = host.querySelector('.pz-bok');
     if (!bok || !global.matchMedia) return;
 
-    var klice = host.querySelector('.pz-specs');
+    var klice = host.querySelector('.pz-klice');
     var nadpisKlicu = klice && klice.previousElementSibling
       && klice.previousElementSibling.classList
       && klice.previousElementSibling.classList.contains('pz-sect-h')
@@ -1210,6 +1210,47 @@
 
     if (siroko.addEventListener) siroko.addEventListener('change', uloz);
     else if (siroko.addListener) siroko.addListener(uloz);
+  }
+
+  function pzPresahujeHodnota(b) {
+    var vpravo = parseFloat(global.getComputedStyle(b).paddingRight) || 0;
+
+    var misto = b.clientWidth - vpravo;
+    var r = document.createRange();
+    r.selectNodeContents(b);
+
+    return r.getBoundingClientRect().width > misto + 0.5;
+  }
+
+  function pzVelikostHodnot(host) {
+    var dl = host.querySelectorAll('.pz-klic');
+    for (var i = 0; i < dl.length; i++) {
+      var b = dl[i].querySelector('b');
+      if (!b) continue;
+
+      dl[i].classList.remove('pz-dlouha', 'pz-velmi-dlouha');
+      if (!pzPresahujeHodnota(b)) continue;
+      dl[i].classList.add('pz-dlouha');
+      if (pzPresahujeHodnota(b)) dl[i].classList.add('pz-velmi-dlouha');
+    }
+  }
+
+  function pzHlidejVelikostHodnot(host) {
+    pzVelikostHodnot(host);
+    var mrizka = host.querySelector('.pz-klice');
+    if (!mrizka) return;
+
+    var posledni = Math.round(mrizka.getBoundingClientRect().width);
+    function znovu() {
+      var w = Math.round(mrizka.getBoundingClientRect().width);
+      if (w === posledni) return;
+      posledni = w;
+      pzVelikostHodnot(host);
+    }
+    if (global.ResizeObserver) {
+      try { new global.ResizeObserver(znovu).observe(mrizka); return; } catch (e) {}
+    }
+    global.addEventListener('resize', znovu);
   }
 
   function render(d) {
@@ -1301,11 +1342,6 @@
       }
     }
 
-    facts = klice.concat(facts);
-
-    if (dalkyText()) facts.push({ k: 'Vzdušnou čarou', v: esc(dalkyText()) });
-    if (zdrojRadek) facts.push({ k: 'Stav a zdroj', v: esc(zdrojRadek) });
-
     var hlavniAkce = (d.type === 'majitel'
       ? (d._lid
           ? '<a class="pz-btn primary" href="zpravy.html?l=' + encodeURIComponent(d._lid)
@@ -1337,6 +1373,10 @@
           }()) +
         '</div>' +
 
+        (dalkyText()
+          ? '<div class="pz-dalky">' + esc(dalkyText())
+            + '<span class="pz-dalky-pozn">vzdušnou čarou</span></div>'
+          : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
         blokHtml() +
       '</div>' +
@@ -1348,6 +1388,8 @@
           (perM2 ? '<span class="pm"' + (perM2Pozn ? ' title="' + esc(perM2Pozn) + '"' : '') + '>' + fmt(perM2) + ' Kč/m²</span>' : '') + '</div>' +
 
         pzZmenaCenyHtml(d) +
+
+        (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
 
         (function () {
           var st = cenovyStupen(d);
@@ -1367,8 +1409,20 @@
 
       pzDrazbaHtml(d, days) +
 
+      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+
+          return '<div class="pz-klic">'
+            + '<b>' + f.v + '</b><span>' + f.k + '</span>'
+            + (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '')
+            + (f.ikona && IKONY[f.ikona] ? '<span class="pz-klic-ic" aria-hidden="true">' + IKONY[f.ikona] + '</span>' : '')
+            + '</div>';
+        }).join('') +
+      '</div>' +
+
       (facts.length
-        ? '<h2 class="pz-sect-h">Parametry pozemku</h2><div class="pz-specs">' +
+        ? '<div class="pz-specs">' +
 
             facts.map(function (f) { return '<div class="pz-spec"><span class="k">' + f.k + '</span><span class="v">' + f.v
               + (f.pozn ? '<small class="pz-spec-pozn">' + esc(f.pozn) + '</small>' : '') + '</span></div>'; }).join('') +
@@ -1455,6 +1509,7 @@
     try { pripniAkce(host); } catch (e) {}
     try { pzListaDole(host, d, perM2); } catch (e) {}
 
+    try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

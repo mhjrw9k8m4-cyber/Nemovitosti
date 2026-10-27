@@ -12,7 +12,7 @@ Stav: `HOTOVO` / `CHYBÍ` / `JINAK` (máme to, ale jinak než předloha).
 
 | # | Co předloha má | Stav u nás |
 |---|---|---|
-| 1.1 | Tabulka parametrů: dva sloupce, štítek vlevo šedý, hodnota vpravo tmavá, bez karty, bez rámečku, bez zebry | HOTOVO (§187) |
+| 1.1 | Tabulka parametrů: dva sloupce, štítek vlevo šedý, hodnota vpravo tmavá, bez karty, bez rámečku, bez zebry | **NEDĚLÁ SE — majitel upevnil dlaždice** |
 | 1.2 | Řádek „Cena" nese v hodnotovém sloupci i akci („Spočítat hypotéku" s ikonou) | CHYBÍ |
 | 1.3 | Ano/ne parametry jsou zelené ✓, ne slovo „ano" | CHYBÍ |
 | 1.4 | Za tabulkou velký nadpis „Kontaktujte prodejce" + fotka, jméno, telefon | CHYBÍ |

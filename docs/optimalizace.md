@@ -12947,3 +12947,27 @@ přepíná, ten se ptá; kdo prochází nabídky, ten ne.
 
 Naměřeno po všem na 390 px: nadpis 231 px vlevo, řazení 119 px vpravo,
 jeden řádek; první nabídka na 440 px (před přestavbou 435).
+
+## §193 Vráceno: dlaždice parametrů zpátky (§187 zrušeno)
+
+Majitel poslal fotku stránky pozemku s tím, že měl řečeno nechat to,
+jak to bylo — a já to předělal znovu. Má pravdu a je to doložitelné
+z historie: commit `28200e3315` byl ten, ve kterém jsem mu vracel věci
+překopané poprvé, a **hned další commit** `6f2f08ccec` („Parametry
+nabídky podle předlohy: jedna tabulka místo dlaždic") zrušil dlaždice,
+které byly jeho upevněná práce.
+
+Zdůvodnění, které jsem si tehdy napsal, bylo věcně v pořádku (předloha
+má tabulku, dvě soustavy nad sebou se četly dvakrát jinak) — a bylo to
+jedno. **Předloha není mandát přepsat to, co si majitel už odsouhlasil.**
+„Udělej to podle předlohy" a „nesahej na to, co jsem upevnil" se potkaly
+a já si vybral to první, protože se mi to líp dělalo.
+
+Vráceno zpětným nasazením zdrojové části commitu `6f2f08ccec`:
+`css/styles.css`, `js/pozemek.js` a pět hlídačů, které byly na tabulku
+přepsané. Ověřeno v prohlížeči na `pozemek-breclav-boleradice-1l8urwu`:
+čtyři dlaždice, nula řádků tabulky. Rychlá sada 134/134.
+
+Co z toho platí dál: položka 1.1 v `docs/predloha.md` se překlápí
+z HOTOVO na **NEDĚLÁ SE — upevněno majitelem**. Bez jeho výslovného
+pokynu se na parametry nesahá.

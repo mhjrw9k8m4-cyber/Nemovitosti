@@ -133,7 +133,7 @@ try {
       cena: y('.pz-priceblock'), verdikt: y('#pz-verdict'),
       radce: y('details.pz-gtk-obal:not(.pz-nav-obal)'),
       akce: y('.pz-akce-hlavni'), hlavniBtn: y('.pz-akce-hlavni .pz-btn.primary'),
-      uloz: y('#pz-fav'), popis: y('.pz-popis-inzerent'), klice: y('.pz-specs'),
+      uloz: y('#pz-fav'), popis: y('.pz-popis-inzerent'), klice: y('.pz-klice'),
       /* Hledá se kalkulačka SAMA, ne obal, do kterého byla chvíli
          sbalená. Napsat sem obal znamená, že se po jeho zrušení
          nenajde nic a kontrola projde, i kdyby se formulář vrátil. */
@@ -192,12 +192,9 @@ try {
      co u dané nabídky rozhoduje nejvíc: u dražby termín, u ostatních
      vlastnictví (celý pozemek, nebo jen podíl — s podílem se nedá
      stavět bez ostatních spoluvlastníků). */
-  /* Od 27. 10. je to řádek tabulky, ne dlaždice: předloha od majitele
-     (reality.idnes, Sreality) má parametry v jedné tabulce
-     štítek–hodnota. Popisek je .k, hodnota .v; značky v rozích
-     odešly s dlaždicemi. */
-  const dlazdice = await p.evaluate(() => [...document.querySelectorAll('.pz-spec')]
-    .map((e) => ({ popisek: ((e.querySelector('.k') || {}).textContent || '').trim() })));
+  const dlazdice = await p.evaluate(() => [...document.querySelectorAll('.pz-klic')]
+    .map((e) => ({ popisek: (e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '',
+      maZnacku: !!e.querySelector('.pz-klic-ic svg') })));
   /* Čtvrtá dlaždice se ukazuje JEN TAM, KDE MÁ CO ŘÍCT: u dražby
      termín, u spoluvlastnického podílu podíl. Tahle stránka není ani
      jedno, takže tu čtvrtá dlaždice být NESMÍ — „Celý pozemek" by byla
@@ -211,19 +208,11 @@ try {
   if (jeDrazba || jePodil) {
     pravda('u dražby/podílu stojí mezi klíčovými údaji i to, co rozhoduje',
       dlazdice.some((x) => /Termín dražby|Vlastnictví/.test(x.popisek)),
-      'řádky: ' + dlazdice.map((x) => x.popisek).join(', '));
+      'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
   } else {
-    /* POČET ŘÁDKŮ SE UŽ NEHLÍDÁ, VÝPLŇ ANO. Do 27. 10. byly parametry
-       mřížka tří dlaždic a čtvrtá navíc by zabrala celý další řádek,
-       takže se žádalo „právě tři". Tabulka podle předlohy
-       (reality.idnes, Sreality) nese řádků tolik, kolik je o nabídce
-       známo — výměra, cena za metr, druh, vzdálenosti, stav a zdroj —
-       a další řádek nic nerozhází. Co platí dál: „Vlastnictví: celý
-       pozemek" je výplň, protože neříká nic, co by čtenář nepředpokládal;
-       ukazuje se jen u podílu. */
-    pravda('u běžné nabídky není v tabulce výplňový řádek o vlastnictví',
-      dlazdice.length >= 3 && !dlazdice.some((x) => /Vlastnictví/.test(x.popisek)),
-      'řádky: ' + dlazdice.map((x) => x.popisek).join(', '));
+    pravda('u běžné nabídky nejsou dlaždice dopl­ňované výplní',
+      dlazdice.length === 3 && !dlazdice.some((x) => /Vlastnictví/.test(x.popisek)),
+      'dlaždice: ' + dlazdice.map((x) => x.popisek).join(', '));
   }
 
   /* A TEĎ TA DRUHÁ STRANA: na skutečné dražební stránce dlaždice
@@ -253,24 +242,15 @@ try {
       const pd = await ctx.newPage();
       await pd.goto(BASE + '/' + drazba, { waitUntil: 'load' });
       await pd.waitForTimeout(2500);
-      const popisky = await pd.evaluate(() => [...document.querySelectorAll('.pz-spec')]
-        .map((e) => ((e.querySelector('.k') || {}).textContent || '').trim()));
+      const popisky = await pd.evaluate(() => [...document.querySelectorAll('.pz-klic')]
+        .map((e) => ((e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim()));
       pravda(`u dražby stojí mezi klíčovými údaji termín (${drazba})`,
-        popisky.some((x) => /Termín dražby/.test(x)), 'řádky: ' + popisky.join(', '));
+        popisky.some((x) => /Termín dražby/.test(x)), 'dlaždice: ' + popisky.join(', '));
       await pd.close();
     }
   }
-  /* „A každá dlaždice má svou značku" tu stálo do 27. 10. Značky byly
-     tlumené ikony v rozích dlaždic; s dlaždicemi odešly i ony a tabulka
-     podle předlohy žádné nemá. Místo nich se hlídá to, co je na tabulce
-     podstatné: každý řádek má popisek i hodnotu, tedy žádný nezůstal
-     poloprázdný. */
-  const uplne = await p.evaluate(() => [...document.querySelectorAll('.pz-spec')]
-    .filter((e) => !((e.querySelector('.k') || {}).textContent || '').trim()
-      || !((e.querySelector('.v') || {}).textContent || '').trim())
-    .map((e) => e.textContent.trim().slice(0, 24)));
-  pravda('a každý řádek tabulky má popisek i hodnotu',
-    dlazdice.length > 0 && uplne.length === 0, 'poloprázdné: ' + uplne.join(', '));
+  pravda('a každá dlaždice má svou značku', dlazdice.length > 0 && dlazdice.every((x) => x.maZnacku),
+    'bez značky: ' + dlazdice.filter((x) => !x.maZnacku).map((x) => x.popisek).join(', '));
 
   /* 3) KDE TO JE, PATŘÍ K TOMU, CO TO JE ---------------------------- */
   /* Mez je 55 %, ne 50: mapa dnes začíná na 52 % (1 637 z 3 154 px),

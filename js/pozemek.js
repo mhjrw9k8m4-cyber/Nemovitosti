@@ -1893,7 +1893,7 @@
        Na telefonu se neděje nic: `.pz-bok` má `display:contents`
        a kusy se do něj stěhují až od 1100 px, takže pořadí bloků
        (hlídá scripts/test-poradi-pozemku.mjs) zůstává beze změny. */
-    var klice = host.querySelector('.pz-specs');
+    var klice = host.querySelector('.pz-klice');
     var nadpisKlicu = klice && klice.previousElementSibling
       && klice.previousElementSibling.classList
       && klice.previousElementSibling.classList.contains('pz-sect-h')
@@ -1930,16 +1930,80 @@
     else if (siroko.addListener) siroko.addListener(uloz);
   }
 
-  /* ZMENŠOVÁNÍ VELKÝCH ČÍSEL ODEŠLO S DLAŽDICEMI. Parametry stávaly
-   v mřížce dlaždic, kde hodnota byla 24px číslo na jednom řádku —
-   a dlouhá hodnota („23 458 Kč/m²", „neuvedena") z dlaždice vytékala
-   nebo lezla na značku v rohu. Řešil to měřicí kód, který hodnotě
-   ubíral stupeň (24 → 20 → 16) a hlídal změnu šířky mřížky
-   ResizeObserverem. Od 27. 10. jsou parametry JEDNA tabulka podle
-   předlohy (reality.idnes, Sreality): všechny hodnoty mají touž
-   velikost jako okolní text a dlouhá se prostě zalomí, takže se nemá
-   co zmenšovat. Hlídá to scripts/test-parametry.mjs — „všechny
-   hodnoty mají touž velikost písma". */
+  /* DLOUHÉ ČÍSLO SE DO DLAŽDICE NEVEJDE — A NEMÁ, KDE SE ZLOMIT.
+     Naměřeno na 390 px na pozemek-praha-zapad-jesenice-17ku2kl.html:
+     „23 458 Kč/m²" je 164,1 px široké, dlaždice má vnitřních 141 px
+     a z toho 28 px drží značka v pravém horním rohu, takže na číslo
+     zbývá 113 px. Text tím přejel přes značku a „²" uřízl okraj karty
+     (přesah 22 px za dlaždici). Zlomit se nedá: mezery v číslech jsou
+     podle typografického pravidla nezlomitelné (U+00A0), takže celá
+     hodnota je jeden kus — a i kdyby nebyla, zlomené „23 458 / Kč/m²"
+     je horší než o dva stupně menší číslo.
+
+     POČÍTAT ZNAKY NESTAČÍ, a bylo to první, co jsem zkusil. Při devíti
+     znacích je „Podíl 1/2" 105,0 px (vejde se), „12 630 m²" 123,4 px
+     a „neuvedena" 130,8 px (nevejde se ani jedno): číslice jsou
+     tabulkové a stejně široké, písmena ne. Rozhoduje proto naměřená
+     šířka, ne délka řetězce.
+
+     DVA STUPNĚ DOLŮ, OBA ZE STUPNICE (24 → 20 → 16 px). První stupeň
+     zároveň schová značku — je to tlumená ozdoba s aria-hidden, kdežto
+     uříznuté číslo je ten údaj, kvůli kterému člověk na stránku přišel.
+     Po prvním stupni je „23 458 Kč/m²" 136,8 px a vejde se do 141 px
+     uvolněných po značce; druhý stupeň (109,4 px) drží i ceny
+     přes 100 000 Kč/m². Když ani ten nestačí, zůstane menší číslo
+     a text se aspoň nekreslí přes značku.
+
+     MĚŘÍ SE ZNOVU PŘI ZMĚNĚ ŠÍŘKY MŘÍŽKY, ne okna: sloupce jsou jeden,
+     dva, nebo čtyři (viz .pz-klice), takže o tom, co se vejde,
+     nerozhoduje jen šířka displeje. Hlídá to scripts/test-parametry.mjs. */
+  function pzPresahujeHodnota(b) {
+    var vpravo = parseFloat(global.getComputedStyle(b).paddingRight) || 0;
+    /* clientWidth je včetně výplně, vlevo žádná není. */
+    var misto = b.clientWidth - vpravo;
+    var r = document.createRange();
+    r.selectNodeContents(b);
+    /* Půl pixelu tolerance: šířky vycházejí ze zlomků a rovnost na
+       hranici by zmenšovala i hodnotu, která se přesně vejde. */
+    return r.getBoundingClientRect().width > misto + 0.5;
+  }
+
+  function pzVelikostHodnot(host) {
+    var dl = host.querySelectorAll('.pz-klic');
+    for (var i = 0; i < dl.length; i++) {
+      var b = dl[i].querySelector('b');
+      if (!b) continue;
+      /* Napřed zpátky na plnou velikost: po zvětšení okna se musí dát
+         zmenšení i vzít zpátky, jinak by na tabletu zůstalo 16px číslo
+         z telefonu. */
+      dl[i].classList.remove('pz-dlouha', 'pz-velmi-dlouha');
+      if (!pzPresahujeHodnota(b)) continue;
+      dl[i].classList.add('pz-dlouha');
+      if (pzPresahujeHodnota(b)) dl[i].classList.add('pz-velmi-dlouha');
+    }
+  }
+
+  function pzHlidejVelikostHodnot(host) {
+    pzVelikostHodnot(host);
+    var mrizka = host.querySelector('.pz-klice');
+    if (!mrizka) return;
+    /* PAMATUJE SI ŠÍŘKU, NE JEN TO, ŽE SE ROZMĚR ZMĚNIL. Zmenšení čísla
+       umí změnit VÝŠKU mřížky (hodnota se přestane lámat na dva řádky),
+       a to je zase změna rozměru: bez téhle podmínky se ResizeObserver
+       budí sám od sebe a v konzoli se objeví „loop completed with
+       undelivered notifications". */
+    var posledni = Math.round(mrizka.getBoundingClientRect().width);
+    function znovu() {
+      var w = Math.round(mrizka.getBoundingClientRect().width);
+      if (w === posledni) return;
+      posledni = w;
+      pzVelikostHodnot(host);
+    }
+    if (global.ResizeObserver) {
+      try { new global.ResizeObserver(znovu).observe(mrizka); return; } catch (e) {}
+    }
+    global.addEventListener('resize', znovu);
+  }
 
   function render(d) {
     if (strankaUkoncena()) return;
@@ -2169,22 +2233,6 @@
       }
     }
 
-    /* A TEĎ JE Z TOHO JEDNA TABULKA. `klice` nesl tři údaje, které
-       stávaly v dlaždicích (výměra, cena za metr, druh, u dražeb
-       termín), `facts` zbytek. Předloha od majitele (reality.idnes,
-       Sreality) má všechno v jedné tabulce štítek–hodnota, takže se
-       spojí — a `klice` jde dopředu, protože to jsou ty tři údaje,
-       podle kterých se člověk rozhoduje, jestli číst dál. */
-    facts = klice.concat(facts);
-    /* A DO TABULKY PATŘÍ I TO, CO STÁLO ROZSYPANÉ KOLEM NÍ.
-       V předloze je „Stav bytu" i „Přístupová komunikace" řádek
-       tabulky, ne poznámka u ceny nebo věta pod nadpisem. U nás byl
-       zdroj drobným písmem pod cenou a vzdálenosti řádkem pod
-       místem — dva údaje, které se čtou stejně jako výměra nebo druh,
-       jen stály jinde. Jdou na konec tabulky, za to, co rozhoduje. */
-    if (dalkyText()) facts.push({ k: 'Vzdušnou čarou', v: esc(dalkyText()) });
-    if (zdrojRadek) facts.push({ k: 'Stav a zdroj', v: esc(zdrojRadek) });
-
     /* HLAVNÍ AKCE PATŘÍ NAHORU, NE NA ČTVRTOU OBRAZOVKU. Odkaz na
        skutečnou nabídku (nebo na majitele) byl na telefonu 360×800 až
        na y 3 078 z 3 748 px a „Uložit" dokonce na 3 386 — tedy obojí
@@ -2257,7 +2305,10 @@
            ale zmizet nesmí: 2,3 km vzdušnou čarou může být autem
            klidně 6 km, a tvrdit jen „2,3 km" by byl slib, který
            stránka neumí držet. Jde tedy dozadu a potichu. */
-
+        (dalkyText()
+          ? '<div class="pz-dalky">' + esc(dalkyText())
+            + '<span class="pz-dalky-pozn">vzdušnou čarou</span></div>'
+          : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
         blokHtml() +
       '</div>' +
@@ -2289,7 +2340,7 @@
            OK dražby"). A kdyby po vyškrtnutí datumu zbylo jen slovo
            „dražba", neřekne řádek nic, co by nestálo v odznaku nad
            snímkem — pak se vynechá celý. */
-
+        (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
         /* ODZNAK S ODKAZEM, NE S VLASTNÍM TVRZENÍM. Nese jedno slovo
            („Výhodná cena") a vede na verdikt, kde stojí celá věta
            i to, z kolika nabídek a kde se srovnávalo. Kdyby celou tu
@@ -2335,22 +2386,29 @@
          snímek, cena, klíčové údaje, a teprve pak povídání.
          Mapa zůstává AŽ ZA NIMI (napřed co to je, pak kde to je) —
          hlídá to scripts/test-poradi-pozemku.mjs. */
-      /* JEDNA TABULKA, NE DLAŽDICE A K TOMU TABULKA.
-         Majitel poslal 27. 10. jako předlohu stránky nabídek
-         z reality.idnes a Sreality. Parametry tam stojí v JEDNÉ
-         tabulce štítek–hodnota: „Užitná plocha | 61 m²", „Podlaží |
-         3. patro (4. NP)", „Vlastnictví | osobní" a tak dál, jeden
-         sloupec popisků vlevo a hodnoty vedle nich. Tahle stránka
-         měla místo toho dvě soustavy nad sebou: tři velké dlaždice
-         (výměra, cena za metr, druh) a pod nimi tabulku se zbytkem.
-         Údaj z téže kategorie se tím četl dvakrát jinak podle toho,
-         do které půlky spadl. Dlaždice jsou proto pryč a jejich
-         obsah stojí v tabulce jako první tři řádky. */
+      '<h2 class="pz-sect-h">Parametry pozemku</h2>' +
+      '<div class="pz-klice">' +
+        klice.map(function (f) {
+          /* ZNAČKA JDE AŽ NAKONEC, i když leží v pravém horním rohu.
+             Umístění dělá CSS (position:absolute), takže na pořadí ve
+             stromu nezáleží pro vzhled — zato záleží pro čtení: hodnota
+             a popisek mají jít první. A ještě jedna věc, na kterou se
+             přišlo až měřením: dvě zkoušky čtou popisek dlaždice jako
+             `el.querySelector('span')`. Kdyby značka stála první, vrátil
+             by ten dotaz prázdný text a kontroly by přestaly měřit
+             výměru — tiše, protože by prostě nenašly žádnou dlaždici. */
+          return '<div class="pz-klic">'
+            + '<b>' + f.v + '</b><span>' + f.k + '</span>'
+            + (f.pozn ? '<i>' + esc(f.pozn) + '</i>' : '')
+            + (f.ikona && IKONY[f.ikona] ? '<span class="pz-klic-ic" aria-hidden="true">' + IKONY[f.ikona] + '</span>' : '')
+            + '</div>';
+        }).join('') +
+      '</div>' +
       /* Prázdný rámeček by vypadal jako chybějící obsah: když u pozemku
          není ani parcelní číslo, ani souřadnice, ani zdroj, nevykreslí
          se tabulka vůbec. */
       (facts.length
-        ? '<h2 class="pz-sect-h">Parametry pozemku</h2><div class="pz-specs">' +
+        ? '<div class="pz-specs">' +
             /* `pozn` je vysvětlivka k hodnotě, ne další údaj: u parcelního
                čísla z inzerátu u ní MUSÍ stát, odkud je. Dřív řádek nic
                takového neumožňoval a vysvětlivka by musela být v hodnotě,
@@ -2565,6 +2623,7 @@
     /* AŽ ZA PŘIPNUTÍM: pripniAkce na monitoru PŘESOUVÁ blok s cenou do
        pravého pruhu, takže se napřed musí ustálit rozvržení a teprve
        pak měřit, co se do dlaždice vejde. */
+    try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
 

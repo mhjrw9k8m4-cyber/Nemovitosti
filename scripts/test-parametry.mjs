@@ -106,6 +106,7 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   await p.waitForTimeout(2400);
 
   const v = await p.evaluate(() => {
+    const klic = [...document.querySelectorAll('.pz-klic')];
     const rows = [...document.querySelectorAll('.pz-spec')];
     const mezery = [], levyOkraj = [];
     for (const r of rows) {
@@ -137,13 +138,14 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
        `display:contents` a stěhovat se nesmí nic, jinak by se změnilo
        pořadí bloků na telefonu. */
     const bokEl = document.querySelector('.pz-bok');
-    const specsEl = document.querySelector('.pz-specs');
-    const vBoku = !!(bokEl && specsEl && bokEl.contains(specsEl));
+    const kliceEl = document.querySelector('.pz-klice');
+    const vBoku = !!(bokEl && kliceEl && bokEl.contains(kliceEl));
     const vel = (e) => parseFloat(getComputedStyle(e).fontSize);
     return {
-      popisky: rows.map((e) => ((e.querySelector('.k') || {}).textContent || '').trim()),
+      klicu: klic.length,
+      klicePopisky: klic.map((e) => (e.querySelector('span') || {}).textContent || ''),
+      klicVelikost: klic.length ? vel(klic[0].querySelector('b')) : 0,
       radekVelikost: rows.length ? vel(rows[0].querySelector('.v')) : 0,
-      popiskVelikost: rows.length ? vel(rows[0].querySelector('.k')) : 0,
       radku: mezery.length,
       nejvetsiMezera: mezery.length ? Math.max(...mezery.map((m) => m.mezera)) : 0,
       rozptylOkraju: levyOkraj.length ? Math.max(...levyOkraj) - Math.min(...levyOkraj) : 0,
@@ -155,21 +157,12 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
 
   zpravy.push(`\n  — ${popisSirky} (${sirka} px)`);
   // PŘEDPOKLAD: bez bloku není co měřit
-  /* JEDNA TABULKA, NE DLAŽDICE A K TOMU TABULKA. Do 27. 10. stály
-     nahoře tři dlaždice (.pz-klic) s velkým číslem a pod nimi tabulka
-     se zbytkem, takže se údaj téže povahy četl dvakrát jinak podle
-     toho, do které půlky spadl. Předloha od majitele (reality.idnes,
-     Sreality) má parametry v jedné tabulce štítek–hodnota; tahle
-     kontrola proto neměří velikost čísla v dlaždici, ale že tabulka
-     nese to, podle čeho se člověk rozhoduje, a že popisek a hodnota
-     mají touž velikost — tím se z nich stává jedna soustava. */
-  pravda('parametry stojí v tabulce', v.popisky.length >= 2, `řádků: ${v.popisky.length}`);
+  pravda('nahoře stojí buňky s klíčovými čísly', v.klicu >= 2, `buněk: ${v.klicu}`);
   pravda('a je mezi nimi výměra i cena za metr',
-    /Výměra/.test(v.popisky.join('|')) && /Cena za m/.test(v.popisky.join('|')),
-    `popisky: ${v.popisky.join(', ')}`);
-  pravda('popisek i hodnota mají touž velikost písma',
-    v.popiskVelikost === v.radekVelikost,
-    `popisek ${v.popiskVelikost} px, hodnota ${v.radekVelikost} px`);
+    /Výměra/.test(v.klicePopisky.join('|')) && /Cena za m/.test(v.klicePopisky.join('|')),
+    `popisky: ${v.klicePopisky.join(', ')}`);
+  pravda('to hlavní číslo je větší než údaj v řádku',
+    v.klicVelikost > v.radekVelikost, `${v.klicVelikost} px proti ${v.radekVelikost} px`);
   pravda('popisek a hodnota drží u sebe (nejvýš 60 px)',
     v.nejvetsiMezera <= 60, `největší mezera ${v.nejvetsiMezera} px`);
   /* KOLIK ŘÁDKŮ TABULKA MÁ, SE MUSÍ ŘÍCT. Od chvíle, kdy se zdroj
@@ -253,45 +246,51 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
     for (const sirka of SIRKY) {
       await p.setViewportSize({ width: sirka, height: 1000 });
       await p.goto(`${BASE}/${f}`, { waitUntil: 'load' });
-      /* NA VÝSLEDEK, NE NA ČAS: tabulku kreslí js/pozemek.js až po
+      /* NA VÝSLEDEK, NE NA ČAS: dlaždice kreslí js/pozemek.js až po
          dotažení dat okresu, takže pevné čekání by zkoušku buď
          zdržovalo, nebo ji nechalo měřit prázdno. */
-      await p.waitForFunction(() => document.querySelectorAll('.pz-spec .v').length > 0,
+      await p.waitForFunction(() => document.querySelectorAll('.pz-klic b').length > 0,
         null, { timeout: 30000 });
-      const v = await p.evaluate(() => [...document.querySelectorAll('.pz-spec')].map((e) => {
-        const val = e.querySelector('.v');
+      const v = await p.evaluate(() => [...document.querySelectorAll('.pz-klic')].map((e) => {
+        const b = e.querySelector('b');
         const r = document.createRange();
-        r.selectNodeContents(val);
+        r.selectNodeContents(b);
         const text = r.getBoundingClientRect();
-        const d = val.getBoundingClientRect();
-        return { t: ((e.querySelector('.k') || {}).textContent || '').trim(),
-          px: parseFloat(getComputedStyle(val).fontSize),
-          presah: Math.round((text.right - d.right) * 10) / 10 };
+        const cs = getComputedStyle(e), d = e.getBoundingClientRect();
+        const obsahR = d.right - parseFloat(cs.paddingRight) - parseFloat(cs.borderRightWidth);
+        const ic = e.querySelector('.pz-klic-ic');
+        const znacka = ic && getComputedStyle(ic).display !== 'none'
+          ? ic.getBoundingClientRect().left : null;
+        return { t: b.textContent.trim(), px: parseFloat(getComputedStyle(b).fontSize),
+          presah: Math.round((text.right - obsahR) * 10) / 10,
+          naZnacku: znacka == null ? null : Math.round((text.right - znacka) * 10) / 10 };
       }));
       for (const x of v) {
         dlazdic++;
         velikosti.add(x.px);
-        if (x.presah > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" vyteklo ze sloupce o ${x.presah} px`);
+        if (x.px < 24) zmenseno++;
+        if (x.presah > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" vyteklo z dlaždice o ${x.presah} px`);
+        else if (x.naZnacku != null && x.naZnacku > 0.5) prilis.push(`${f} @${sirka}: „${x.t}" leze na značku o ${x.naZnacku} px`);
       }
     }
   }
   await p.close();
 
-  zpravy.push(`\n  — tabulka parametrů na ${mereneStranky.length} stránkách × ${SIRKY.length} šířkách`);
-  // PŘEDPOKLAD: bez řádků by kontroly níž procházely naprázdno
-  pravda('řádky tabulky se změřily', dlazdic >= mereneStranky.length * SIRKY.length * 2,
+  zpravy.push(`\n  — dlaždice parametrů na ${mereneStranky.length} stránkách × ${SIRKY.length} šířkách`);
+  // PŘEDPOKLAD: bez dlaždic by kontroly níž procházely naprázdno
+  pravda('dlaždice se změřily', dlazdic >= mereneStranky.length * SIRKY.length * 2,
     `změřeno ${dlazdic}`);
-  /* PŘETEČENÍ, NE ZMENŠOVÁNÍ. Do 27. 10. tu stály dlaždice s velkým
-     číslem, které se u dlouhé hodnoty zmenšovalo na 20 a 16 px — a tahle
-     zkouška hlídala obojí: že nic nevyteče a že se zmenšuje jen na stupně
-     stupnice. V tabulce podle předlohy (reality.idnes, Sreality) mají
-     všechny hodnoty touž velikost a dlouhý text se prostě zalomí, takže
-     se zmenšovat nemá co. Zůstává to, co pořád platí: hodnota nesmí
-     vytéct ze svého sloupce. */
-  pravda('žádná hodnota nevyteče ze svého sloupce',
+  pravda('žádná hodnota nevyteče z dlaždice ani neleze na značku',
     prilis.length === 0, prilis.slice(0, 4).join('\n      '));
-  pravda('a všechny hodnoty mají touž velikost písma',
-    velikosti.size === 1, `naměřené velikosti: ${[...velikosti].sort((a, b) => b - a).join(', ')} px`);
+  /* A DRUHÁ STRANA TÉŽE VĚCI: kdyby se zmenšování vypnulo, kontrola výš
+     by spadla — ale kdyby se zapnulo na všechno, taky by procházela.
+     Tohle hlídá, že se zmenšuje jen tam, kde je potřeba, a jen na
+     stupně stupnice. */
+  pravda('a aspoň jedna dlouhá hodnota se kvůli tomu zmenšila',
+    zmenseno > 0, 'žádná hodnota se nezmenšila — měří se tohle vůbec?');
+  pravda('zmenšuje se jen na stupně stupnice (24/20/16 px)',
+    [...velikosti].every((x) => [24, 20, 16].indexOf(x) !== -1),
+    `naměřené velikosti: ${[...velikosti].sort((a, b) => b - a).join(', ')} px`);
   pravda('a nezmenšily se všechny', zmenseno < dlazdic,
     `zmenšeno ${zmenseno} z ${dlazdic} — zmenšování se spouští i tam, kde není potřeba`);
 }
@@ -338,13 +337,23 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
       const a = deti[i - 1].getBoundingClientRect(), c = deti[i].getBoundingClientRect();
       mez.push(Math.round(c.top - a.bottom));
     }
-    /* Díra vedle osamělé dlaždice se tu měřila do 27. 10., kdy byly
-       parametry mřížkou o dvou až čtyřech sloupcích a poslední dlaždice
-       v liché řadě nechávala vedle sebe prázdno. Tabulka řádků žádnou
-       takovou díru udělat neumí, tak se neměří. */
-    const tabulka = document.querySelector('.pz-specs');
+    // díra vedle osamělé dlaždice
+    const mrizka = document.querySelector('.pz-klice');
+    let dira = 0, dlazdic = 0;
+    if (mrizka) {
+      const dl = [...mrizka.querySelectorAll('.pz-klic')];
+      dlazdic = dl.length;
+      if (dl.length) {
+        const r0 = mrizka.getBoundingClientRect();
+        const posl = dl[dl.length - 1].getBoundingClientRect();
+        const vRadku = dl.filter((c) => Math.abs(c.getBoundingClientRect().top - posl.top) < 6);
+        const obsah = vRadku.reduce((a, c) => a + c.getBoundingClientRect().width, 0);
+        const mezera = (parseFloat(getComputedStyle(mrizka).columnGap) || 0) * (vRadku.length - 1);
+        dira = Math.round(r0.width - obsah - mezera);
+      }
+    }
     return { bloku: deti.length, mezery: mez, ruzne: [...new Set(mez)].sort((a, b) => a - b),
-      radku: tabulka ? tabulka.querySelectorAll('.pz-spec').length : 0 };
+      dlazdic, dira, sirkaMrizky: mrizka ? Math.round(mrizka.getBoundingClientRect().width) : 0 };
   });
   pravda('je co měřit — stránka pozemku má svoje bloky',
     !v.chyba && v.bloku >= 10, v.chyba || `bloků ${v.bloku}`);
@@ -355,8 +364,11 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
       mimo.length === 0, `navíc: ${mimo.join(', ')} px (všechny: ${v.ruzne.join(', ')})`);
     pravda('a není jich rozsypaných deset', v.ruzne.length <= 5,
       `různých odstupů ${v.ruzne.length}: ${v.ruzne.join(', ')}`);
-    // PŘEDPOKLAD: bez řádků tabulky by kontroly výš měřily jinou stránku
-    pravda('tabulka parametrů je na stránce', v.radku >= 2, `řádků ${v.radku}`);
+    // PŘEDPOKLAD: bez dlaždic by kontrola díry neměřila nic
+    pravda('dlaždice s čísly jsou na stránce', v.dlazdic >= 2, `dlaždic ${v.dlazdic}`);
+    pravda('a nenechávají vedle sebe díru přes půl řádku',
+      v.dira <= v.sirkaMrizky * 0.25,
+      `díra ${v.dira} px z ${v.sirkaMrizky} px`);
   }
   await p.close();
 }

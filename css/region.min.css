@@ -47,6 +47,7 @@ button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"
 100%{transform:scale(3);opacity:0}
 }
 .btn-glow{box-shadow:var(--glow)}
+
 h1 em{position:relative;z-index:0}
 h1 em::after{position:absolute;left:0;right:0;bottom:-1px;height:6px;border-radius:2px;background:var(--accent-warm);opacity:0.85;z-index:-1;transform:scaleX(0);transform-origin:left}
 @keyframes undersweep{to{transform:scaleX(1)}
@@ -653,6 +654,10 @@ to{opacity:1;transform:none}
 .dt-sekce h2{font-size:20px;margin:0 0 8px}
 @media (hover:none){header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease)}
 }
+
+
+
+
 
 
 

@@ -93,11 +93,10 @@ async function otevri(d) {
   const r = await page.evaluate(() => {
     const cis = (t) => Number(String(t || '').replace(/[^\d]/g, ''));
     let vym = 0;
-    /* Řádek tabulky parametrů: popisek v .k, hodnota v .v. (Do 27. 10.
-       to byly dlaždice .pz-klic — viz předloha v docs/optimalizace.md.) */
-    for (const e of document.querySelectorAll('.pz-spec')) {
-      if (((e.querySelector('.k') || {}).textContent || '').trim() !== 'Výměra') continue;
-      vym = cis((e.querySelector('.v') || {}).textContent); break;
+    for (const e of document.querySelectorAll('.pz-klic')) {
+      /* `span:not(.pz-klic-ic)` — ten druhý span v dlaždici je ozdobná značka. */
+      if (((e.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim() !== 'Výměra') continue;
+      vym = cis((e.querySelector('b') || {}).textContent); break;
     }
     /* Hlavní tlačítko na zdroj je <a class="pz-btn primary" target="_blank">.
        Nejdřív jsem ho hledal podle textu rovného „Inzerát" — a nenašel

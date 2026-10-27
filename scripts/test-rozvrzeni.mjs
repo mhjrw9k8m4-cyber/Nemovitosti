@@ -1970,25 +1970,23 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
         viewport: { width: sirka, height: 900 } });
       const p = await ctx.newPage();
       await p.goto(`${BASE}/${STRANKA}`, { waitUntil: 'load' }).catch(() => {});
-      /* Do 27. 10. tu stály dlaždice .pz-klice a vedle nich tabulka
-         .pz-specs. Předloha od majitele (reality.idnes, Sreality) má
-         parametry v JEDNÉ tabulce, takže se měří ta. */
-      await p.waitForSelector('.pz-specs', { timeout: 20000 }).catch(() => {});
+      await p.waitForSelector('.pz-klice', { timeout: 20000 }).catch(() => {});
       await p.waitForTimeout(600);
       const v = await p.evaluate(() => {
         const m = (sel) => { const e = document.querySelector(sel); if (!e) return null;
           return Math.round(e.getBoundingClientRect().width); };
-        return { specs: m('.pz-specs'), popis: m('.pz-popis-inzerent') };
+        return { klice: m('.pz-klice'), specs: m('.pz-specs'), popis: m('.pz-popis-inzerent') };
       });
-      // PŘEDPOKLAD: bez vykreslené tabulky by kontroly níž prošly naprázdno
-      pravda(`${sirka} px: tabulka parametrů se vykreslila`, !!v.specs,
-        'tabulka není — nic se neměří');
-      if (v.specs) {
+      // PŘEDPOKLAD: bez vykreslených dlaždic by kontroly níž prošly naprázdno
+      pravda(`${sirka} px: dlaždice parametrů se vykreslily`, !!v.klice,
+        'dlaždice nejsou — nic se neměří');
+      if (v.klice) {
         pravda(`${sirka} px: bloky nepřerostou míru sloupce (720 px)`,
-          v.specs <= 724, `tabulka ${v.specs} px`);
+          v.klice <= 724 && (v.specs == null || v.specs <= 724),
+          `dlaždice ${v.klice} px, tabulka ${v.specs} px`);
         pravda(`${sirka} px: a odstavec popisu drží čtecí míru, ne šířku bloku`,
           v.popis == null || v.popis <= 660,
-          `popis ${v.popis} px (blok ${v.specs} px)`);
+          `popis ${v.popis} px (blok ${v.klice} px)`);
       }
       await ctx.close();
     }
