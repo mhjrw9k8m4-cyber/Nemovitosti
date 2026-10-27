@@ -107,27 +107,36 @@ try {
         /* Kolikrát jsou čísla na stránce. Přesun je stěhování, ne kopie:
            kdyby zůstala i dole, stála by tam dvakrát. */
         kolikrat: document.querySelectorAll('.okr-cisla').length,
+        /* Kolik řad dlaždice zabraly: podle svislých poloh jejich
+           horních hran. Jedna řada = mřížka drží. */
+        radky: panel ? new Set([...panel.children]
+          .map((e) => Math.round(e.getBoundingClientRect().top))).size : 0,
       };
     });
     if (!m.panelVHlavicce) { spatne.push(stranka); continue; }
     if (m.kolikrat !== 1) dvakrat.push(`${stranka}: ${m.kolikrat}×`);
-    /* VEDLE úvodu, ne pod ním — a obojí se musí ptát zvlášť.
-       Napoprvé tu stála jen vodorovná podmínka (levý okraj panelu za
-       pravým okrajem odstavce) a sabotáž ji prošla: po zrušení mřížky
-       čísla spadla POD úvod, ale pořád u pravého okraje, protože se
-       zarovnávají doprava sama od sebe. Vodorovně to tedy sedělo,
-       vedle textu to nestálo a uprostřed hlavičky zela díra.
-       Svislá podmínka je proto druhá: panel musí začínat dřív, než
-       úvodní odstavec skončí. */
-    if (!(m.sub && m.panel.l >= m.sub.r)) {
-      uzke.push(`${stranka}: nadpis končí na x ${m.sub ? m.sub.r : '?'}, čísla začínají na x ${m.panel.l}`);
-    } else if (!(m.panel.t < m.sub.b)) {
-      uzke.push(`${stranka}: čísla jsou vpravo, ale až POD nadpisem — nadpis končí na y ${m.sub.b}, čísla začínají na y ${m.panel.t}`);
+    /* ČÍSLA STOJÍ POD NADPISEM, V JEDNÉ ŘADĚ — a je to změna oproti
+       prvnímu znění téhle kontroly, ne její změkčení.
+       Do 27. 10. se žádalo, aby panel s čísly stál VEDLE nadpisu,
+       vpravo. Vypadalo to dobře na dlouhém nadpisu, jenže na krátkém
+       („Pozemky v okrese Cheb") zbyla mezi nadpisem a čísly díra —
+       naměřeno na 74 ze 101 stránek (docs/optimalizace.md, položka
+       122). Čísla proto od té doby dostávají celou šířku a skládají
+       se do řady pod nadpis.
+       Co se tedy měří teď: čísla jsou POD nadpisem (ne vedle a ne nad
+       ním), stojí na jeho svislici a jsou v JEDNÉ řadě, ne pod sebou —
+       sloupec by znamenal, že se mřížka rozpadla. */
+    if (!(m.sub && m.panel.t >= m.sub.b - 2)) {
+      uzke.push(`${stranka}: čísla nestojí pod nadpisem — nadpis končí na y ${m.sub ? m.sub.b : '?'}, čísla začínají na y ${m.panel.t}`);
+    } else if (Math.abs(m.panel.l - m.sub.l) > 2) {
+      uzke.push(`${stranka}: čísla nestojí na svislici nadpisu — nadpis x ${m.sub.l}, čísla x ${m.panel.l}`);
+    } else if (m.radky > 1) {
+      uzke.push(`${stranka}: čísla se rozpadla do ${m.radky} řad místo jedné`);
     }
   }
   pravda('na všech čtyřech rodinách stránek jsou čísla v hlavičce',
     spatne.length === 0, 'chybí na: ' + spatne.join(', '));
-  pravda('a čísla stojí VEDLE nadpisu — vpravo a v téže výšce',
+  pravda('a čísla stojí pod nadpisem, na jeho svislici a v jedné řadě',
     uzke.length === 0, uzke.join('\n      '));
   pravda('a jsou na stránce jen jednou',
     dvakrat.length === 0, dvakrat.join(', '));

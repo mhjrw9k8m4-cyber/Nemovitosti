@@ -253,7 +253,7 @@ pravda('text říká, jak uplatnit práva podle GDPR',
 
   const dataHtml = readFileSync(path.join(KOREN, 'data.html'), 'utf8');
   pravda(`stránka s daty uvádí počet po odstranění duplicit (${bezDup.length})`,
-    new RegExp('najdete[\\s\u00a0]*<b>' + cis(bezDup.length) + '</b>').test(dataHtml),
+    new RegExp('najdete[\\s\u00a0]*<b>' + cis(bezDup.length) + '\\s*</b>').test(dataHtml),
     'na stránce stojí: ' + ((/najdete <b>[^<]*<\/b>/.exec(dataHtml) || ['(nic)'])[0]));
 
   const cenyHtml = readFileSync(path.join(KOREN, 'cena-pozemku.html'), 'utf8');

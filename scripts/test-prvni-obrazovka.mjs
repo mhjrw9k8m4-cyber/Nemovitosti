@@ -74,7 +74,22 @@ const SIRKA = 390, VYSKA = 844;
    nadpis výpisu zúžit nejde: majitel si vyžádal, aby všechna
    políčka měla jednu velikost (test-ovladani-vypisu) a aby nad
    výpisem stál nadpis, ne holé číslo („suché a robotické"). */
-const MEZ_PRVNI = 450;
+/* A 27. 10. SE MEZ POSUNULA POTŘETÍ — Z 450 NA 480.
+   Majitel: „brutální update, kreativita a marketing." Úvodní deska do
+   té chvíle nesla jednu větu o sortimentu („Pozemky na prodej,
+   v dražbě i v exekuci."), tedy popis, ne důvod zůstat. Teď nese
+   příslib („Pozemek, který jinde neuvidíte.") a pod ním větu, z čeho
+   se nabídka skládá.
+   CO TO STÁLO, NAMĚŘENO NA 390×844: deska vyrostla ze 161 na 188 px,
+   první nabídka klesla z 439 na 468. Cena první nabídky je přitom
+   pořád na obrazovce (757 z 844) — a to je ta věc, kvůli které mez
+   existuje: že se dá vidět NABÍDKA, ne jen značka.
+   Telefon je přitom nejstřídmější verze té desky: obočí ani druhá
+   polovina věty se pod 720 px nekreslí a tlačítka jsou tam až od
+   720 px. Bez toho by nabídka klesla na 571 px (naměřeno).
+   Mez 480 má proti naměřeným 468 dvanáct pixelů rezervy a NEUNESE
+   ani vrácení obočí, ani tlačítka na telefon. */
+const MEZ_PRVNI = 480;
 /* A TOTÉŽ NA ÚZKÉM TELEFONU — MEZ, KTERÁ TU CHYBĚLA.
    Měřilo se jen 390 px, a přesně v té slepé skulině se schoval vlastní
    nález: na 360 px (Galaxy S a spol.) se ovladače nad výpisem skládaly

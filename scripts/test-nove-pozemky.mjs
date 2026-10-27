@@ -117,10 +117,10 @@ const n7 = noveZa(7).length, n14 = noveZa(14).length;
    („přišlo N pozemků") a hned pod ní v dlaždici. Věta i dlaždice
    zmizely, zůstala hlavička (.okr-cisla). */
 pravda(`v hlavičce je ${n7} nových za 7 dní`,
-  new RegExp('<b>' + mez(n7) + '</b>\\s*<span>nových za 7 dní').test(h),
+  new RegExp('<b>' + mez(n7) + '\\s*</b>\\s*<span>nových za 7 dní').test(h),
   'hlavička: ' + ((/<div class="okr-cisla">([\s\S]*?)<\/div>\s*<\/div>/.exec(h) || [])[1] || '—').replace(/<[^>]*>/g, ' '));
 pravda(`dlaždice uvádí ${n14} nových za 14 dní`,
-  new RegExp('<b>' + mez(n14) + '</b>\\s*<span>nových za 14 dní').test(h));
+  new RegExp('<b>' + mez(n14) + '\\s*</b>\\s*<span>nových za 14 dní').test(h));
 /* A kontrola, že okno není o den delší, než stránka tvrdí. Na dnešních
    datech je v tom čtrnáct nabídek. */
 const dnyVOkne = new Set(noveZa(7).map((o) => o.first_seen));
@@ -182,7 +182,7 @@ for (const o of aktualni) {
 pravda('archiv zná změny cen, je co měřit', zmeny.dolu.length >= 5,
   `zlevnilo ${zmeny.dolu.length}, zdražilo ${zmeny.nahoru.length}, k ověření ${zmeny.pod.length}`);
 pravda(`dlaždice uvádí ${zmeny.dolu.length} zlevněných`,
-  new RegExp('<b>' + mez(zmeny.dolu.length) + '</b>\\s*<span>zlevn').test(h),
+  new RegExp('<b>' + mez(zmeny.dolu.length) + '\\s*</b>\\s*<span>zlevn').test(h),
   'na stránce: ' + ((/<b>([\d\s]+)<\/b>\s*<span>zlevn/.exec(h) || [])[1] || '—'));
 
 /* Řádky změn: „předtím <b>199 000 Kč</b> (−46 %, 29. 9. 2026)". */
@@ -231,7 +231,7 @@ pravda(`a žádné není nad ${PKZ.MEZ_PODEZRELA} % (to má vlastní oddíl)`,
   })();
   if (drazeb) {
     pravda(`mezi zlevněnými je ${drazeb} dražba — a stránka to říká`,
-      new RegExp('U <b>' + mez(drazeb) + '</b> z nich jde o <b>dražbu</b>').test(h)
+      new RegExp('U <b>' + mez(drazeb) + '\\s*</b> z nich jde o <b>dražbu</b>').test(h)
       && /nikdo nic nezlevnil/.test(sZlevneno),
       'u dražby cenu nesnižuje prodávající, ale vypisuje se nižší vyvolávací cena');
     pravda('a nad seznamem nestojí, že cenu snížil prodávající',

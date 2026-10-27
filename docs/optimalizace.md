@@ -12200,3 +12200,59 @@ Výjimky jsou tři a všechny mají důvod: fallback v témže bloku
 (`height:100vh; height:100dvh`), dřívější `!important` proti pozdější
 deklaraci bez něj, a vlastní vlastnosti (`--token`) — ty se čtou
 proměnnou, ne kaskádou.
+
+## 179. Úvodní deska přestala popisovat sortiment a začala slibovat *27. 10.*
+
+Majitel: „brutální update, kreativita a marketing." První obrazovka
+do té chvíle říkala **„Pozemky na prodej, v dražbě i v exekuci."** —
+popis zboží, ne důvod zůstat. Pod tím rovnou nástroje.
+
+Nová deska nese tři věci:
+
+1. **příslib** — „Pozemek, který jinde **neuvidíte**." (zvýrazněné
+   slovo je plná zelená plocha s tmavým písmem, 8,9 : 1, ne kurzíva —
+   ta se na tmavé desce ztratí),
+2. **jednu větu, z čeho se to skládá** — prodeje, dražby i exekuce
+   z veřejných zdrojů, s cenou za metr, odhadem proti okolí a odkazem
+   do katastru,
+3. **dvě akce a řádek důvěry** — „Prohlédnout mapu", „Co přibylo
+   tento týden", a pod nimi 77 okresů · kontrola zdrojů každých
+   6 hodin · prohlížení bez účtu.
+
+### Telefon je jiná verze téhož, a rozhoduje měření
+
+`scripts/test-prvni-obrazovka.mjs` hlídá, že na displeji 390×844
+začíná první NABÍDKA nad určitou hranicí — tedy že se na první
+obrazovku vejde i obsah, ne jen značka. Plná deska by ji poslala na
+571 px. Na telefonu se proto nekreslí obočí ani tlačítka a věta se
+zkracuje na první polovinu:
+
+| | deska | první nabídka | cena nabídky |
+|---|---|---|---|
+| dřív | 161 px | 439 px | vidět |
+| plná deska na telefonu | 291 px | 571 px | vidět |
+| **nasazeno** | **188 px** | **468 px** | **757 z 844** |
+
+Mez zkoušky šla ze 450 na 480 (potřetí v historii té zkoušky, vždy
+s naměřeným důvodem napsaným na místě) a má dvanáct pixelů rezervy.
+
+### Tři nálezy, které z toho vypadly
+
+* **Nadpis úvodu měl 28 px i na monitoru.** `--h1-domu` byl
+  `clamp(28px, 2.4vw, 32px)`, jenže pravidlo `.st-hlava h1`
+  (nástrojová osmadvacítka) stojí v souboru níž a má **tutéž váhu**
+  jako `h1.uvod-nadpis` — takže token stejně neplatil. Naměřeno
+  v prohlížeči: 28 px na 1 440 px šířky. Teď je `--h1-domu`
+  `clamp(28px, 5.6vw, 80px)` a hrdina si velikost říká sám, o třídu
+  silnějším pravidlem.
+* **Mezera mezi číslem a popiskem nesmí stát mezi značkami.**
+  Oprava z §177 (`</b> <span>`) rozbila hlavičku okresních stránek:
+  dlaždice je svislý flex a samostatný bílý znak se v něm stane
+  dalším PRVKEM — čísla spadla pod nadpis. Mezera proto leží uvnitř
+  `<b>`, kde dělá v textu totéž a v rozvržení nic.
+* **Hlídač hlavičky žádal rozvržení, které 26. 10. skončilo.**
+  `test-hlavicka-stranky.mjs` trval na tom, že čísla stojí VEDLE
+  nadpisu vpravo — jenže právě to dělalo tu díru na 74 ze 101
+  stránek (§122) a čísla jsou od té doby schválně pod nadpisem.
+  Kontrola se přepsala na dnešní stav: pod nadpisem, na jeho
+  svislici, v jedné řadě.

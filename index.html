@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-kAbYgUfDhVTHiVY0GHPg8wUC/YRCpBYCqL3k2BhAsNg=' 'sha256-HUwsDA2Fp8svPZ8nnX6p9uPVdoo5yYWp4dY0I1uKgAw=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-EzPmpR6RQ5J0oAEqMFo4CpMsPIjV4ivROnuh7R4nW5Q=' 'sha256-HUwsDA2Fp8svPZ8nnX6p9uPVdoo5yYWp4dY0I1uKgAw=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -144,7 +144,7 @@
        razítko ?v= jako každému jinému odkazu. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=66164b92">
+  <link rel="stylesheet" href="css/uvod.min.css?v=59e39ec4">
 </head>
 <body>
 
@@ -209,8 +209,31 @@
        a zrovna ta, ze které lidé vycházejí. Deska nese nadpis a hned pod
        ním rozcestník: na telefonu je z toho 161 px, které říkají, kde
        člověk je a kam může jít. Hledání, filtry ani mapa se nehnuly. -->
-  <section class="st-hlava uvod-hlava">
-  <h1 class="uvod-nadpis">Pozemky na prodej, v dražbě i v exekuci.</h1>
+  <section class="st-hlava uvod-hlava uvod-hrdina">
+  <div class="uh-wrap">
+  <!-- OBOČÍ: co tu je, jednou větou a bez mluvení o sobě. -->
+  <span class="uh-oko">Celé Česko na jedné mapě</span>
+  <h1 class="uvod-nadpis">Pozemek, který jinde <em>neuvidíte</em>.</h1>
+  <!-- Na telefonu zůstane jen první polovina věty: první obrazovka má
+       podle scripts/test-prvni-obrazovka.mjs ukázat i nabídku, ne jen
+       příslib. Druhá polovina se připojí od 720 px výš. -->
+  <p class="uh-veta">Prodeje, dražby i exekuce z veřejných zdrojů<span class="uh-vic"> —
+    pohromadě, s cenou za metr, odhadem proti okolí a odkazem do katastru</span>.</p>
+
+  <!-- DVĚ AKCE, NE ŠEST. Hlavní vede tam, kde je obsah (mapa hned pod
+       deskou), druhá na nejčerstvější část nabídky. -->
+  <div class="uh-akce">
+    <a class="uh-cta" href="#mapa">Prohlédnout mapu</a>
+    <a class="uh-cta2" href="nove-pozemky.html">Co přibylo tento týden</a>
+  </div>
+
+  <!-- ŘÁDEK DŮVĚRY. Schválně BEZ počtu nabídek: týž počet stojí o kus
+       níž v odznacích nad výpisem, kde se mění s filtry, a dvakrát
+       jedno číslo na jedné obrazovce už jednou problém bylo (viz
+       komentář v js/main.js u #uvod-nabidka). Okresy doplní skript
+       (#stat-okres), zbytek jsou trvalé pravdy. -->
+  <p class="uh-duvera"><b id="stat-okres">77</b> okresů · zdroje kontrolované
+    <b>každých 6 hodin</b> · prohlížení <b>bez účtu</b></p>
 
   <!-- ROZCESTNÍK, KTERÝ TENHLE KOMENTÁŘ POPISOVAL — A KTERÝ TU DO 26. 10.
        NEBYL. Komentář nad nadpisem sliboval „šest dlaždic podle Sreality";
@@ -232,6 +255,7 @@
     <a href="pozemky-orna-puda.html">Orná půda</a>
     <a href="pozemky-podle-okresu.html">Podle okresu</a>
   </nav>
+  </div>
   </section>
 
   <!-- ROZCESTNÍK NA ZAČÁTEK, JEN NA TELEFONU.

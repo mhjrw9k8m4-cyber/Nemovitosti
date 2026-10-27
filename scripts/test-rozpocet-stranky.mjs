@@ -101,11 +101,11 @@ for (const s of STROPY) {
   // --- 2) Dlaždice: mediánová výměra ------------------------------
   const medVym = Math.round(median(moje.map((o) => o.area)));
   pravda(`${s.soubor}: mediánová výměra = ${medVym} m²`,
-    new RegExp('<b>' + String(medVym).replace(/\B(?=(\d{3})+(?!\d))/g, '\\s') + '\\sm²</b>\\s*<span>mediánová výměra').test(h),
+    new RegExp('<b>' + String(medVym).replace(/\B(?=(\d{3})+(?!\d))/g, '\\s') + '\\sm²\\s*</b>\\s*<span>mediánová výměra').test(h),
     'v dlaždici: ' + mezery((/<b>([^<]*)<\/b>\s*<span>mediánová výměra/.exec(h) || [])[1] || '—'));
   const medZaM = Math.round(median(moje.map((o) => o.price / o.area)));
   pravda(`${s.soubor}: prostřední cena za metr = ${medZaM} Kč/m²`,
-    new RegExp('<b>' + String(medZaM).replace(/\B(?=(\d{3})+(?!\d))/g, '\\s') + '\\sKč/m²</b>').test(h),
+    new RegExp('<b>' + String(medZaM).replace(/\B(?=(\d{3})+(?!\d))/g, '\\s') + '\\sKč/m²\\s*</b>').test(h),
     'na stránce: ' + mezery((/metr v tomhle rozpočtu je <b>([^<]*)<\/b>/.exec(h) || [])[1] || '—'));
 
   // --- 3) VÝPIS: nic dražšího, než co je v nadpisu -----------------

@@ -297,7 +297,10 @@
      hierarchie, ale nesourodost: na jedné stránce je nadpis o kousek
      menší a člověk neví proč. Role se liší nahoře (jak nadpis roste na
      monitoru), ne dole. */
-  --h1-domu:clamp(28px, 2.4vw, 32px);
+  /* 27. 10.: úvodní deska nese příslib, ne popis sortimentu, a nadpis
+     je na ní plakát — od 28 px na telefonu po 80 px na širokém
+     displeji. Krajní hodnoty jsou obě ze stupnice písma. */
+  --h1-domu:clamp(28px, 5.6vw, 80px);
   --h1-nastroj:28px;
   /* MŘÍŽKOVÁ TEXTURA. Tutéž čtverečkovanou texturu nese šest ploch:
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
@@ -3402,6 +3405,87 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    odznak a obrys z --pas-obrys, který má na desce 3,97 : 1. */
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
   border-color:var(--pas-obrys); color:var(--pas-text);}
+
+/* =====================================================================
+   ÚVODNÍ DESKA JAKO PŘÍSLIB (.uvod-hrdina)
+   ---------------------------------------------------------------------
+   Majitel: „brutální update, kreativita a marketing." První obrazovka
+   do té doby říkala jen „Pozemky na prodej, v dražbě i v exekuci." —
+   popis sortimentu, ne důvod zůstat. Deska teď nese tři věci, které
+   dělají rozdíl mezi rozcestníkem a nabídkou: příslib (co tu najdu
+   a nikde jinde), jednu větu PROČ (z čeho se to skládá) a dvě akce.
+
+   TELEFON ZŮSTÁVÁ STŘÍDMÝ, A JE TO MĚŘENÍ, NE OPATRNOST.
+   scripts/test-prvni-obrazovka.mjs hlídá, že první NABÍDKA začíná nad
+   450 px z 844 — tedy že se na první obrazovku vejde i obsah, ne jen
+   značka. Velká tlačítka a řádek důvěry proto na úzkých displejích
+   nejsou: nadpis se zmenší, věta se zkrátí na dva řádky a pokračuje
+   se rozcestníkem, který tam byl dřív.
+
+   MŘÍŽKOVÁ TEXTURA, ne přeliv: ozdobné přelivy soustava zakazuje
+   (CLAUDE.md), mřížka je mezi povolenými. Kreslí se z --mrizka-cara-tmava
+   a dole se vytrácí maskou, aby nerušila text. */
+.uvod-hrdina{position:relative; overflow:hidden;}
+.uvod-hrdina::before{content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(var(--mrizka-cara-tmava) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mrizka-cara-tmava) 1px, transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:linear-gradient(180deg, rgba(0,0,0,1), transparent 80%);
+  mask-image:linear-gradient(180deg, rgba(0,0,0,1), transparent 80%);}
+.uh-wrap{position:relative; z-index:1; padding:0 var(--okraj-stranky);}
+.uh-oko{display:inline-flex; align-items:center; min-height:28px; padding:0 12px;
+  border-radius:var(--r-pill); background:var(--pas-dlazdice); border:1px solid var(--pas-obrys);
+  font-size:12px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase;
+  color:var(--pas-akcent);}
+/* VELIKOST SE TU ŘÍKÁ ZNOVU, A JE TO NÁLEZ, ne opakování: pravidlo
+   `.st-hlava h1` (velikost --h1-nastroj, 28 px) stojí v souboru NÍŽ
+   a má tutéž váhu jako `h1.uvod-nadpis`, takže úvodní nadpis nesl
+   nástrojovou osmadvacítku a --h1-domu se nikde neprojevilo.
+   Naměřeno 27. 10. v prohlížeči: na 1 440 px vycházelo 28 px, ačkoli
+   token dává 80. Tohle pravidlo je o třídu silnější, takže platí. */
+.uvod-hrdina h1.uvod-nadpis{max-width:none; margin:8px 0 0; padding:0;
+  font-size:var(--h1-domu); line-height:1.1; letter-spacing:-0.03em;}
+/* Zvýrazněné slovo je PLOCHA, ne kurzíva: na tmavé desce se kurzíva
+   ztratí, plná zelená plocha s tmavým písmem má 8,9 : 1 a je vidět
+   z druhého konce místnosti. (Obecné pravidlo pro h1 em výš dělá
+   kurzívu a světlou barvu — tady se přebíjí schválně.) */
+.uvod-hrdina h1.uvod-nadpis em{font-style:normal; color:var(--plocha-tmava);
+  background:var(--pas-akcent); padding:0 12px; border-radius:var(--r-plocha);
+  -webkit-text-fill-color:currentColor;}
+.uh-veta{margin:12px 0 0; max-width:var(--m-text); font-size:14px; line-height:1.6;
+  color:var(--pas-text-mute);}
+.uh-akce{display:none;}
+.uh-duvera{display:none;}
+/* Obočí a druhá polovina věty patří na širší displej: na telefonu jde
+   každých 40 px na úkor toho, co se z nabídky vejde na první obrazovku. */
+.uvod-hrdina .uh-oko{display:none;}
+.uh-vic{display:none;}
+.uvod-hrdina .uvod-vstupy{margin:16px 0 0; padding-left:0; padding-right:0;}
+
+@media (min-width:720px){
+  .st-hlava.uvod-hlava.uvod-hrdina{padding:56px 0 40px;}
+  .uvod-hrdina .uh-oko{display:inline-flex;}
+  .uh-vic{display:inline;}
+  .uvod-hrdina h1.uvod-nadpis{margin:20px 0 0; letter-spacing:-0.04em;}
+  .uh-veta{margin:20px 0 0; font-size:18px;}
+  /* Akce a řádek důvěry se ukazují tam, kde je na ně místo: na širokém
+     displeji stojí mapa vedle výpisu a první nabídka je vidět tak jako
+     tak, takže nic neodsouvají. */
+  .uh-akce{display:flex; flex-wrap:wrap; gap:12px; margin:28px 0 0;}
+  .uh-cta, .uh-cta2{display:inline-flex; align-items:center; min-height:48px;
+    padding:0 24px; border-radius:var(--r-ovladani); font-size:16px; font-weight:700;
+    text-decoration:none; transition:background var(--cas-zakladni) var(--ease),
+      border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  .uh-cta{background:var(--pas-akcent); color:var(--plocha-tmava);}
+  .uh-cta:hover{background:var(--pas-text); color:var(--plocha-tmava);}
+  .uh-cta2{border:1px solid var(--pas-obrys); color:var(--pas-text); font-weight:600;}
+  .uh-cta2:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
+  .uh-duvera{display:block; margin:28px 0 0; font-size:14px; color:var(--pas-text-mute);}
+  .uh-duvera b{color:var(--pas-text); font-weight:700;}
+}
+@media (min-width:1100px){
+  .uh-veta{font-size:20px;}
+}
 .uvod-hlava .uvod-vstupy a:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
 /* Počet nabídek je v té větě to jediné, co se mění — a jediné, co je
    slib. Dokud byla věta podtitulkem, odlišovala se plnou barvou od
