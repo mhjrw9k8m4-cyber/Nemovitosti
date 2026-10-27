@@ -64,7 +64,7 @@
        stránek. Dotahuje je dotahniModul() v js/pozemek.js. -->
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=47d011a3">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=6593bf15">
   <!-- Přednačítají se ty dva soubory, které stránka opravdu čte: řez
        svého okresu (sebe) a celostátní vstup cenového modelu. Dřív tu
        stál data/opportunities.json, tedy 638 kB (56,5 kB přes drát) —
@@ -335,6 +335,24 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><div class="pz-loading">Načítám pozemek…</div></div>
   </div>
+
+  <!-- ZÁVĚREČNÁ NABÍDKA. Stránka pozemku končila mapou a souřadnicemi —
+       tedy ničím pro toho, komu se zrovna tenhle pozemek nehodí.
+       Týž pás jako na úvodní a regionálních stránkách; důvod a barvy
+       stojí u .cta-pas v css/styles.css. -->
+  <section class="section cta-pas">
+    <div class="wrap cta-wrap">
+      <div>
+        <h2>Není to ono?</h2>
+        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
+          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
+      </div>
+      <div class="cta-akce">
+        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
+        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer>

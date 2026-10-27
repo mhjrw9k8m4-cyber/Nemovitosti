@@ -12338,3 +12338,72 @@ Zbytek té vzdálenosti nedělá nová věta, ale to, co bylo mezi
 hlavičkou a výpisem odjakživa: odkaz na mapu, čára, nadpis výpisu
 a dvě poznámky (řazení a čerstvost zdrojů). To je další práce, ne
 tahle.
+
+## 183. Číslo 1096 ve stylopisu lhalo a stálo za překryvem *27. 10.*
+
+Zkouška `test-nahoru` zčervenala hned po §182: na 1366 px hlásila,
+že plovoucí tlačítko „nahoru" leží na kartě výpisu. Nejdřív jsem to
+vzal jako hraniční případ zaokrouhlení a hranici posunul z 1366 na
+1400 px. **Zčervenalo znovu** — takže domněnka byla špatná a muselo
+se měřit.
+
+Změřeno na okresní stránce (1400×900, posun 1800 px):
+
+```
+okno 1400   karta výpisu končí na 1268   pilulka začíná na 1266
+```
+
+Dva pixely. Příčina není zaokrouhlení, ale jedno špatné číslo
+v komentáři i ve výpočtu: *„obsah má strop 1096 px"*. Strop je
+`--m-wrap` 1200 px a po odečtení okraje stránky (2 × 32) má text
+**1136 px**. Pruh vedle obsahu je tedy o 10 px na každé straně užší,
+než se s ním počítalo, a z toho čísla se odvozovaly obě hodnoty:
+
+* **hranice pro pilulku.** Pilulka je 110 px široká a stojí 24 px od
+  hrany, potřebuje tedy okno 1136 + 2 × 138 = **1412 px**. Hranice je
+  proto 1440 px (pruh 152, rezerva 18), ne 1364 ani 1400.
+* **odsazení kolečka.** `clamp(4px, calc(50% - 594px), 24px)` mířilo
+  o 20 px doleva, tedy na obsah. Správně je polovina obsahu (568) +
+  šířka kolečka (46) + 4 px rezervy = `50% - 618px`.
+
+### Zkouška tvrdila obojí zároveň
+
+Padlá kontrola stála vedle procházející, která říkala, že se
+tlačítko vedle obsahu vejde. Obě vycházely z jednoho měření, takže
+jedna z nich musela být napsaná špatně — a byla to ta druhá:
+
+```js
+const vejdeSe = v.pruh >= v.sirka + 4;   // 132 >= 114 → „vejde se"
+```
+
+Pruh 132 px se porovnával se **šířkou** tlačítka a na jeho odsazení
+od hrany se zapomnělo; 110 + 24 = 134 se do 132 nevejde. Dnes se
+ptá na to, co rozhoduje: vejde-li se do pruhu aspoň tvar tlačítka,
+musí platit, že nezakrývá nic. Teprve je-li pruh užší než tlačítko
+samo, je překryv nevyhnutelný a jediné, co lze žádat, je tisk
+k hraně.
+
+### Chyba kolečka přežila, protože se měřily jen kulaté šířky
+
+Odsazení kolečka bylo špatně celou dobu, ale `test-nahoru` měřila
+1100, 1280 a 1366 px — a na žádné z nich se to neprojeví. Naměřená
+tabulka (staré odsazení proti novému):
+
+| okno | pruh | staré `594` | nové `618` |
+|---|---|---|---|
+| 1180 | 32 px | zakrývá kartu i cenu | zakrývá (pruh < kolečko, nevyhnutelné) |
+| 1240 | 52 px | **zakrývá kartu i cenu** | nic |
+| 1260 | 62 px | **zakrývá kartu i cenu** | nic |
+| 1276 | 70 px | nic | nic |
+| 1440 | 152 px | nic (pilulka) | nic (pilulka) |
+
+V seznamu šířek je proto 1240 px z měření, ne z kulatosti, a 1400 px
+jako šířka, na níž se láme tvar. Obě sabotáže zčervenaly: vrácené
+`594` padne na 1240 px, vrácená hranice 1399 padne na 1400 px ve
+dvou kontrolách.
+
+Poučení není o pixelech: **odvozené číslo v komentáři zestárne tiše.**
+1096 px někdy platilo, pak se obsah rozšířil a komentář zůstal —
+a protože se z něj počítalo, rozšířil chybu do dvou pravidel a jedné
+zkoušky. Dnes je v komentáři napsané, z čeho se 1136 skládá, aby
+se příště přepočítalo, až se změní `--m-wrap` nebo okraj stránky.

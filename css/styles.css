@@ -4109,14 +4109,22 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      1280    1 text, 1 karta     nic
      1366    nic                 nic
 
-   Obsah má strop 1096 px, takže postranní pruh je (100vw − 1096)/2.
-   Pilulka potřebuje 110 + 24 px odstupu, tedy okno aspoň 1364 — od
-   1366 px výš se vedle obsahu vejde a nic nezakrývá. Pod tím je
-   kolečko, a jeho odsazení se počítá z téhož pruhu: `50% − 594px`
-   (polovina obsahu plus šířka kolečka) ho přisune přesně k okraji
-   sloupce, nejvýš ale na 24 px a nejmíň na 4. */
-@media (max-width:1365px){
-  .to-top{right:clamp(4px, calc(50% - 594px), 24px); height:46px; width:46px; padding:0;
+   ČÍSLO 1096 TU BYLO ŠPATNĚ A TÁHLO ZA SEBOU VŠECHNO OSTATNÍ.
+   Obsah má strop --m-wrap 1200 px a po odečtení okraje stránky
+   (2 × 32) má text 1136 px, ne 1096. Pruh vedle něj je tedy
+   (100vw − 1136)/2 a je o 10 px na každé straně užší, než se tu
+   počítalo. Důsledky, naměřené 27. 10. na okresní stránce:
+     • hranice pro pilulku vyšla na 1364 px, ale pilulka potřebuje
+       pruh 110 (šířka) + 24 (odsazení) + rezervu, tedy okno
+       1136 + 2 × 138 = 1412. Na 1400 px ležela pilulka 2 px na
+       kartě výpisu (karta končila na 1268, pilulka začínala na 1266).
+       Hranice je proto 1440 px: pruh 152, rezerva 18 px.
+     • odsazení kolečka `50% − 594px` mířilo o 20 px doleva, tedy na
+       obsah. Správně je polovina obsahu (568) + šířka kolečka (46)
+       + 4 px rezervy = `50% − 618px`; mezi 1236 a 1276 px tím
+       kolečko sedávalo na kartě. Nejvýš 24 px, nejmíň 4. */
+@media (max-width:1439px){
+  .to-top{right:clamp(4px, calc(50% - 618px), 24px); height:46px; width:46px; padding:0;
     justify-content:center; gap:0; border-radius:50%;}
   .to-top span{position:absolute; width:1px; height:1px; overflow:hidden;
     clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}

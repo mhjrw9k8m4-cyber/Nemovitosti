@@ -1032,7 +1032,7 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 }
 @media (prefers-reduced-motion:reduce){.to-top.show svg{animation:none}
 }
-@media (max-width:1365px){.to-top{right:clamp(4px,calc(50% - 594px),24px);height:46px;width:46px;padding:0;justify-content:center;gap:0;border-radius:50%}
+@media (max-width:1439px){.to-top{right:clamp(4px,calc(50% - 618px),24px);height:46px;width:46px;padding:0;justify-content:center;gap:0;border-radius:50%}
 .to-top span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .to-top svg{width:21px;height:21px}
 }

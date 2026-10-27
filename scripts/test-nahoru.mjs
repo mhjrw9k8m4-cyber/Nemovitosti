@@ -348,22 +348,47 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
 
 /* --- A na úzkém monitoru nesmí ležet na výpisu ------------------
    Táž vada o patro výš: pilulka „↑ Nahoru" je 110 px široká a stojí
-   24 px od hrany okna, kdežto obsah má strop 1096 px. Dokud je okno
-   užší než 1364 px, postranní pruh na pilulku nestačí a ta sedí na
-   výpisu — naměřeno 27. 10. na okresní stránce: na 1100 px zakrývala
-   dvě místa s textem a kartu, na 1280 px jedno místo a kartu.
+   24 px od hrany okna, kdežto text má 1136 px (strop 1200 minus
+   okraj stránky). Dokud je okno užší než 1412 px, postranní pruh na
+   pilulku nestačí a ta sedí na výpisu — naměřeno 27. 10. na okresní
+   stránce: na 1100 px zakrývala dvě místa s textem a kartu, na
+   1280 px jedno místo a kartu, na 1400 px kartu o 2 px.
 
-   Od 1366 px výš se pilulka vedle obsahu vejde a zůstává i se jménem.
-   Pod tím je z ní kolečko 46 px, jehož odsazení se počítá z šířky
-   pruhu — mezi 640 a 1365 px proto nezakrývá nic. Pod 640 px už je
-   obsah přes celou obrazovku a uhnout se nedá (tam platí ustupování
-   výš podle hlavní akce). */
+   Od 1440 px výš se pilulka vedle obsahu vejde a zůstává i se jménem
+   (pruh 152 px, rezerva 18). Pod tím je z ní kolečko 46 px, jehož
+   odsazení se počítá z šířky pruhu. Pod 640 px už je obsah přes celou
+   obrazovku a uhnout se nedá (tam platí ustupování výš podle hlavní
+   akce).
+
+   PRUH SE MĚŘÍ PROTI TLAČÍTKU, NE PROTI JEHO ŠÍŘCE. Tahle zkouška
+   tu nejdřív žádala jen `pruh ≥ šířka + 4` a na odsazení od hrany
+   zapomněla. Na 1400 px tím prošla s pruhem 132 a pilulkou 110,
+   ačkoli pilulka stojí 24 px od hrany a 134 px se do 132 nevejde:
+   zkouška hlásila překryv a zároveň tvrdila, že se tlačítko vedle
+   obsahu vejde. Ptá se proto na to, co rozhoduje — vejde-li se do
+   pruhu vůbec tvar tlačítka, musí platit, že nic nezakrývá; teprve
+   když je pruh užší než tlačítko samo, je překryv nevyhnutelný
+   a jediné, co se dá žádat, je tisk k hraně. */
 {
   const ctxM = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
     viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
   const pm = await ctxM.newPage();
   const VYPIS = 'pozemky-okres-benesov.html';
-  for (const W of [1100, 1280, 1366]) {
+  /* 1240 px je tu z měření, ne z kulatosti: právě tam leželo kolečko
+     s odsazením `50% − 594px` na kartě i na ceně, zatímco na 1100,
+     1280 a 1440 px prošlo. Dokud se měřily jen ty tři šířky, nemělo
+     to co zčervenat. Tabulka naměřená 27. 10. (zakrývá / nezakrývá,
+     staré odsazení proti novému):
+       1180  32 px pruh   zakrývá oboje (pruh < kolečko, nevyhnutelné)
+       1240  52 px pruh   staré zakrývá, nové nic
+       1260  62 px pruh   staré zakrývá, nové nic
+       1276  70 px pruh   obě nic
+       1440 152 px pruh   pilulka, obě nic
+     1400 px je v seznamu z druhého důvodu: na něm se lámala hranice
+     mezi kolečkem a pilulkou. S pilulkou tam pruh 132 px na 110 + 24
+     nestačí a kryje kartu o 2 px — šířka 1400 tedy drží, že se
+     pilulka pouští až od 1440. */
+  for (const W of [1100, 1240, 1280, 1400, 1440]) {
     await pm.setViewportSize({ width: W, height: 900 });
     await pm.goto(`${BASE}/${VYPIS}`, { waitUntil: 'load' });
     await pm.waitForTimeout(1400);
@@ -392,14 +417,14 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     pravda(`${W}px: výpis i tlačítko jsou na obrazovce`,
       !!v && v.vidno === '1' && v.polozek > 5, JSON.stringify(v));
     if (v) {
-      /* MÁ VŮBEC KAM UHNOUT? Obsah má strop 1 096 px, ale v užším okně
-         se o strop neopře a drží se okraje stránky (32 px). Pruh pak
+      /* MÁ VŮBEC KAM UHNOUT? Text má 1 136 px, ale v užším okně se
+         o strop neopře a drží se okraje stránky (32 px). Pruh pak
          měří 32 px a kolečko 46 — v takovém okně se vedle výpisu
          nevejde nic a jediné, co se dá žádat, je aby se tisklo
          k hraně. Naměřeno 27. 10. (po §175, kdy výpis přišel o vnější
          kartu a rozšířil se o 20 px): na 1 100 px pruh 32 px, na
-         1 200 px 52 px, na 1 280 px 92 px. */
-      const vejdeSe = v.pruh >= v.sirka + 4;
+         1 280 px 72 px, na 1 400 px 132 px, na 1 440 px 152 px. */
+      const vejdeSe = v.pruh >= v.sirka;
       if (vejdeSe) {
         pravda(`${W}px: tlačítko nahoru neleží na výpisu`, v.kryte.length === 0,
           'zakrývá: ' + v.kryte.join(', '));
@@ -408,7 +433,7 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
           v.zprava <= 8, `pruh ${v.pruh} px, tlačítko ${v.sirka} px, od hrany ${v.zprava} px`);
       }
       pravda(`${W}px: a má tvar, který se vedle obsahu vejde`,
-        W >= 1366 ? v.sirka > 90 : v.sirka <= 50, `šířka ${v.sirka} px`);
+        W >= 1440 ? v.sirka > 90 : v.sirka <= 50, `šířka ${v.sirka} px`);
     }
   }
   await ctxM.close();
