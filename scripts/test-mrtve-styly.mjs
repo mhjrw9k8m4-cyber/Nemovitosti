@@ -185,6 +185,82 @@ pravda('a každá výjimka má napsané, kdo tu třídu skládá',
     osirele.map((x) => `${x.f}: #${x.id}`).join(', ') + ' — smažte symbol, nebo ikonu někde použijte');
 }
 
+/* --- PŘEBITÉ DEKLARACE ----------------------------------------------
+   Druhý druh mrtvého kódu. Pravidlo má na čem zabrat, ale jeho
+   deklarace stejně nic neudělá: dál v souboru stojí TÝŽ selektor
+   v TÉMŽE mediálním kontextu a přebije ji. Pozdější vyhrává, dřívější
+   je řádek, který už jen mate čtenáře.
+
+   Naměřeno 27. 10.: 173 takových deklarací u 70 selektorů; 22 pravidel
+   bylo mrtvých celých (.kraj-item:hover, .sources, footer, .step…).
+   Jedno z nich mělo nad sebou komentář vysvětlující, proč má lišta nad
+   výpisem odsazení 20 px — lišta ho nikdy neměla, o dvě pravidla níž
+   stálo jiné číslo. Komentář popisoval úmysl, kód dělal něco jiného
+   a poznat se to dalo jen měřením v prohlížeči.
+
+   Že úklid nic nezměnil, se dokázalo otiskem vypočtených stylů:
+   25 825 prvků na osmnácti typech stránek ve čtyřech šířkách, před
+   úklidem a po něm, rozdílů nula. (Postup je v docs/optimalizace.md
+   u položky 178; šumem jsou jen úvodní stránka, která střídá nabídky,
+   a kolečko „čekám" s běžící animací.)
+
+   CO SE NEPOČÍTÁ ZA MRTVÉ:
+     · fallback v TÉMŽE bloku (height:100vh; height:100dvh),
+     · dřívější deklarace s !important proti pozdější bez něj,
+     · vlastní vlastnosti (--token) — ty se čtou proměnnou, ne kaskádou.
+   Porovnává se DOSLOVNÝ zápis selektoru, takže „.a,.b" a „.b,.a" jsou
+   dvě různé věci: kontrola chybuje jen směrem k přehlédnutí, nikdy
+   neohlásí planý poplach. */
+{
+  const css = fs.readFileSync(path.join(KOREN, 'css/styles.css'), 'utf8');
+  const bez = css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  const radky = []; let r = 1;
+  for (let i = 0; i < bez.length; i++) { radky[i] = r; if (bez[i] === '\n') r++; }
+  const bloky = [], stack = [], media = [];
+  let zacHlav = 0;
+  for (let i = 0; i < bez.length; i++) {
+    const ch = bez[i];
+    if (ch === '{') {
+      const hlav = bez.slice(zacHlav, i).trim().replace(/\s+/g, ' ');
+      if (hlav.startsWith('@')) { media.push(hlav); stack.push({ typ: 'media' }); }
+      else stack.push({ typ: 'sel', hlav, otev: i });
+      zacHlav = i + 1;
+    } else if (ch === '}') {
+      const t = stack.pop();
+      if (t && t.typ === 'media') media.pop();
+      else if (t) {
+        const deks = [];
+        bez.slice(t.otev + 1, i).split(';').forEach((d) => {
+          const dd = d.trim(), k = dd.indexOf(':');
+          if (k <= 0) return;
+          const prop = dd.slice(0, k).trim();
+          if (!prop || prop.startsWith('--') || /[{}]/.test(prop)) return;
+          deks.push({ prop, dulezite: dd.includes('!important') });
+        });
+        bloky.push({ media: media.join(' '), sel: t.hlav, radek: radky[t.otev], deks });
+      }
+      zacHlav = i + 1;
+    }
+  }
+  const posledni = new Map();
+  bloky.forEach((b, bi) => b.deks.forEach((d, di) =>
+    posledni.set(b.media + '||' + b.sel + '||' + d.prop, { bi, di, dulezite: d.dulezite })));
+  const prebite = [];
+  bloky.forEach((b, bi) => b.deks.forEach((d, di) => {
+    const p = posledni.get(b.media + '||' + b.sel + '||' + d.prop);
+    if (!p || p.bi === bi) return;
+    if (d.dulezite && !p.dulezite) return;
+    prebite.push(`${b.sel}${b.media ? ' ' + b.media : ''} — ${d.prop} z řádku ${b.radek}`
+      + ` přebíjí řádek ${bloky[p.bi].radek}`);
+  }));
+  // PŘEDPOKLAD: bez rozparsovaných bloků by kontrola níž prošla naprázdno
+  pravda(`stylopis se rozebral na deklarace (${bloky.length} bloků)`,
+    bloky.length > 1500, `jen ${bloky.length} bloků`);
+  pravda('žádná deklarace není přebitá týmž selektorem o kus níž',
+    prebite.length === 0,
+    prebite.slice(0, 8).join('\n      ') + (prebite.length > 8 ? `\n      … a dalších ${prebite.length - 8}` : ''));
+}
+
 console.log('\nMrtvá pravidla ve stylopisu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

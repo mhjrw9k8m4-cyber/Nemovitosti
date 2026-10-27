@@ -12138,3 +12138,65 @@ rozhraní.** Když se v generátoru změní, nestačí spustit tu jednu
 zkoušku, kvůli které se změna dělá — musí se najít všechny, které
 tentýž tvar opisují. Jednou to v repozitáři už bylo (§165) a tahle
 oprava to zopakovala v menším.
+
+## 178. Sto sedmdesát tři deklarací, které nemohly nic udělat *27. 10.*
+
+Při dnešních opravách se dvakrát ukázalo totéž: komentář ve stylopisu
+tvrdil jednu věc a web dělal druhou. U lišty nad výpisem stálo
+
+> Lišta ovládání je teď přes celé okno, takže si vezme okraj stránky
+
+a o dvě pravidla níž `padding:8px 16px`. Vypadá to jako nepozornost,
+ale je to **struktura**: `css/styles.css` má přes devět tisíc řádků
+a týž selektor se v něm objevuje na několika místech. Kdo přidá
+pravidlo na konec, přebije to dřívější — a dřívější tam zůstane
+viset i s komentářem, který už nic nepopisuje.
+
+### Kolik toho je
+
+Měřeno průchodem souboru: pro každou trojici (mediální kontext,
+doslovný selektor, vlastnost) platí poslední deklarace; dřívější jsou
+mrtvé.
+
+| | |
+|---|---|
+| mrtvých deklarací | **173** |
+| dotčených selektorů | 70 |
+| pravidel mrtvých CELÝCH | 22 |
+
+Mezi celými: `.kraj-item:hover`, `.sources`, `footer`, `.step`,
+`.status-card`, `.add-steps`, `.gl-item:hover`, `.okr-index-grid a:hover`
+a — příznačně — `.map-controls-panel` v `@media (min-width:1041px)`,
+tedy přesně to pravidlo s lživým komentářem.
+
+### Jak se dokázalo, že se nic nezměnilo
+
+Smazat 173 řádků z cizího stylopisu podle úvahy by byla sázka. Místo
+toho **otisk vypočtených stylů**: pro každý viditelný prvek se uloží
+třicet vlastností (display, barvy, odsazení, rámečky, písmo, stíny,
+mřížka…) na osmnácti typech stránek ve čtyřech šířkách — 25 825 prvků.
+
+Napřed se ale musel změřit ŠUM. Dva otisky téhož webu po sobě daly
+2 923 rozdílů, a všechny ležely ve třech místech:
+
+* `index.html` střídá nabídky při každém načtení (jiný obsah, jiné prvky),
+* `span.mnb-ceka` je kolečko „čekám" s běžící animací,
+* `width` a `height` závisí na textu, který se do nich zrovna vejde.
+
+Po vynechání těchto tří dala dvojice otisků **nula rozdílů** — teprve
+tím se z nich stal důkaz. Po úklidu: opět **nula rozdílů** z 25 825
+prvků. Úspora: `styles.min.css` −4,1 kB, `uvod.min.css` −3,3 kB,
+`zaklad.min.css` −1,1 kB; zdroj o 60 řádků kratší.
+
+### Hlídač, aby se to nevrátilo
+
+`scripts/test-mrtve-styly.mjs` dosud hlídal pravidla, která nemají na
+čem zabrat (třída nikde v repozitáři). Teď hlídá i tenhle druhý druh:
+žádná deklarace nesmí být přebitá týmž selektorem v témže mediálním
+kontextu. Sabotáž (přidat na konec `footer{padding:28px 0;}`) ho
+shodí a pojmenuje oba řádky.
+
+Výjimky jsou tři a všechny mají důvod: fallback v témže bloku
+(`height:100vh; height:100dvh`), dřívější `!important` proti pozdější
+deklaraci bez něj, a vlastní vlastnosti (`--token`) — ty se čtou
+proměnnou, ne kaskádou.
