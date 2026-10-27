@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=8e7532ac">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,10 +119,6 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
-.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
-.kd-hlidat .kd-t{color:var(--text-ondeep)}
-.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
-.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -277,18 +273,8 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
     
         <nav id="nav" aria-label="Hlavní navigace">
-      <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
-        <a href="index.html#mapa">Hledat na mapě</a>
-        <a href="pozemky-podle-okresu.html">Podle okresu</a>
-      </div></details>
-      <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
-        <a href="drazby-pozemku.html">Dražby</a>
-        <a href="exekuce-pozemku.html">Exekuce</a>
-        <a href="nove-pozemky.html">Nové na trhu</a>
-      </div></details>
+      <a href="index.html#mapa">Hledat na mapě</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="radce.html">Rádce</a>
-      <a href="kontakt.html">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
         <a href="muj-inzerat.html" id="nav-ucet">Moje inzeráty</a>
@@ -336,7 +322,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 935 m², podíl 1/10 — Mladá Vožice","description":"Na prodej · 31 930 Kč (34 Kč/m²) · 935 m², podíl 1/10 · Mladá Vožice, okres Tábor. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-tabor-mlada-vozice-bbzivn.html","address":{"@type":"PostalAddress","addressLocality":"Mladá Vožice","addressRegion":"Tábor","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.544733,"longitude":14.800976},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":935,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":31930,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-tabor-mlada-vozice-bbzivn.html","itemOffered":{"@type":"Place","name":"Orná půda 935 m², podíl 1/10 — Mladá Vožice"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra je ta podílová, celá parcela je větší."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihočeský kraj","item":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Tábor","item":"https://www.parcelaka.cz/pozemky-okres-tabor.html"},{"@type":"ListItem","position":5,"name":"Orná půda 935 m², podíl 1/10 — Mladá Vožice","item":"https://www.parcelaka.cz/pozemek-tabor-mlada-vozice-bbzivn.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Mladá Vožice|—|Tábor|49.545|14.801","ll":[49.544733,14.800976],"v":935,"c":31930,"r":"data/okres/tabor.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=24a059d6"></script>
+<script src="js/min/pozemek.js?v=79346422"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

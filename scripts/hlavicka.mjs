@@ -66,19 +66,24 @@
    na index.html, jinak by skočil do prázdna. Dosazuje se při sazbě. */
 export const NAV_MAPA = '{{MAPA}}';
 
+/* ŠEST POLOŽEK, NE ŠESTNÁCT. Nabídka měla dvě rozbalovátka na
+   procházení (Pozemky, Příležitosti), pět odkazů pod nimi a k tomu
+   Ceny, Rádce a Kontakt — dohromady třináct odkazů a tři nadpisy
+   skupin. Majitel: „zbav se těch věcí v menu a prokliků, nemá to být
+   příručka, ale web na prodej."
+   Zůstává to, čím se prodává: mapa (vlastní produkt), ceny a tlačítko
+   přidat pozemek; účet je zvlášť, protože to není procházení.
+   Co odešlo, nezmizelo z webu — jen z lišty:
+     · Dražby, Exekuce, Nové na trhu — vstupní odznaky na úvodní
+       stránce (.uvod-vstupy) vedou na tytéž stránky a stojí nad
+       výpisem, tedy tam, kde se vybírá;
+     · Podle okresu — rozcestník je na mapě i v patičce;
+     · Rádce a Kontakt — v patičce, kde se hledá výklad a spojení.
+   Stránky samy zůstávají (chodí na ně vyhledávač), jen si na ně
+   lišta nenárokuje místo. */
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
-      <details class="nav-sk nav-sk-pozemky"><summary>Pozemky</summary><div class="nav-sk-panel">
-        <a href="${NAV_MAPA}">Hledat na mapě</a>
-        <a href="pozemky-podle-okresu.html">Podle okresu</a>
-      </div></details>
-      <details class="nav-sk nav-sk-sance"><summary>Příležitosti</summary><div class="nav-sk-panel">
-        <a href="drazby-pozemku.html">Dražby</a>
-        <a href="exekuce-pozemku.html">Exekuce</a>
-        <a href="nove-pozemky.html">Nové na trhu</a>
-      </div></details>
+      <a href="${NAV_MAPA}">Hledat na mapě</a>
       <a href="cena-pozemku.html">Ceny pozemků</a>
-      <a href="radce.html">Rádce</a>
-      <a href="kontakt.html">Kontakt</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
         <a href="muj-inzerat.html" id="nav-ucet">Moje inzeráty</a>

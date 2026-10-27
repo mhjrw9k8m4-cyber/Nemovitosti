@@ -169,8 +169,12 @@ async function stranka(sirka, prihlasit) {
     return { bezIkony, oddilu: document.querySelectorAll('#nav .nav-sk > summary').length };
   });
   je('žádný oddíl nabídky není bez ikony', ikony.bezIkony, []);
-  /* A ať se nestane, že oddíly zmizí a kontrola projde na prázdnu. */
-  je('oddíly nabídky se vůbec našly', ikony.oddilu >= 3, true);
+  /* A ať se nestane, že oddíly zmizí a kontrola projde na prázdnu.
+     Oddíl je dnes JEDINÝ — účet. Obsahové skupiny (Pozemky,
+     Příležitosti) odešly 27. 10. z nabídky celé, viz
+     scripts/hlavicka.mjs; dokud se tu čekaly tři, padalo to na webu,
+     kde nebylo nic rozbitého. */
+  je('oddíl nabídky se vůbec našel', ikony.oddilu >= 1, true);
   await ctx.close();
 }
 

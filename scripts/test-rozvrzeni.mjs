@@ -488,8 +488,15 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      je co seskupit — dvě a účet. Pod dvě by to znamenalo, že se lišta
      zase slila do jednoho seznamu, a to je ta vada, kvůli které tahle
      kontrola vznikla. */
-  pravda(`lišta je rozdělená na skupiny (${v.skupin})`, v.skupin >= 3,
-    'v liště nejsou aspoň tři skupiny .nav-sk (dvě obsahové a účet)');
+  /* A PAK SE TO OTOČILO. 27. 10.: „zbav se těch věcí v menu a prokliků,
+     nemá to být příručka, ale web na prodej." Obsahové skupiny
+     (Pozemky, Příležitosti) jsou pryč celé — co bylo pod nimi, vede
+     z úvodní stránky, z mapy a z patičky. Zbyl účet, a ten skupina
+     být musí: nese tři osobní stránky a stav přihlášení.
+     Kontrola proto neříká „aspoň tři", ale „právě jedna" — jinými
+     slovy hlídá, že se rozbalovátka na procházení nevrátí. */
+  pravda(`v liště je jediná skupina, a to účet (${v.skupin})`, v.skupin === 1,
+    'skupiny .nav-sk na procházení se vrátily, nebo zmizel i účet');
   /* Účet je skupina sám o sobě: v jeho rozbalovači jsou tři činnosti a stav
      přihlášení nese rovnou její nadpis. Bývaly dvě a účet stál v liště
      samostatně — jenže z toho se dalo poznat jméno, ne co pod ním je.
@@ -579,13 +586,24 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      v hlavičce na telefonu žádné není a prodávající by k němu jinak
      musel odrolovat celou nabídku. Měří to zkouška hned pod touhle.
      Co je uvnitř po oddílech, měří test-menu.
-     PODLAHA SPADLA Z DVACETI NA DVANÁCT: 14. 10. se nabídka na přání
-     majitele zúžila z 25 odkazů na 14 („je tam toho moc, nech tam jen
-     to důležité"). Dvanáct je mez, pod kterou by z nabídky zmizelo
-     něco, co jinde na webu není — účet, mapa, ceny, kontakt a akce. */
-  pravda(`nabídka má všechny cíle a akci „Přidat pozemek" nakonec (${bezUctu.length})`,
-    bezUctu.length >= 12 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
+     Z PODLAHY JE STROP, a je to obrat, ne uvolnění. 14. 10. se nabídka
+     zúžila z 25 odkazů na 14 a mez zněla „aspoň dvanáct", aby
+     z nabídky nezmizelo něco, co jinde na webu není. 27. 10. majitel:
+     „zbav se těch věcí v menu a prokliků, nemá to být příručka, ale
+     web na prodej." Dražby, exekuce, nové na trhu, rozcestník okresů,
+     rádce a kontakt odešly — všechno to vede z úvodní stránky nebo
+     z patičky. Zůstalo šest: mapa, ceny, tři osobní stránky a akce.
+     Měří se proto opačně: ať nabídka zase nenaroste. Jmenovitě se
+     žádá jen to, co jinde v liště není (mapa, ceny, účet) a akce
+     nakonec; víc odkazů než osm by znamenalo, že se do ní zase něco
+     nastěhovalo. */
+  const MUSI = ['#mapa', 'cena-pozemku.html', 'muj-inzerat.html', 'zpravy.html', 'hlidani.html'];
+  pravda(`nabídka nenarostla a akce „Přidat pozemek" je nakonec (${bezUctu.length})`,
+    bezUctu.length <= 8 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
+  pravda('a pořád nese to, co jinde v liště není',
+    MUSI.every((c) => bezUctu.some((h) => (h || '').includes(c))),
+    `chybí z ${MUSI.join(', ')} — je tam: ${bezUctu.join(', ')}`);
   pravda('a přihlášení s nimi nehýbe', JSON.stringify(sUctem) === JSON.stringify(bezUctu),
     `nepřihlášený ${bezUctu.join(', ')} | přihlášený ${sUctem.join(', ')}`);
   pravda('Zprávy i Hlídání jsou v něm i bez přihlášení',

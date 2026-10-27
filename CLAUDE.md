@@ -540,10 +540,18 @@ vypis-nabidek:
 cenovy-stupen:
   pravidlo: "slovo o ceně stojí na dvou místech (odznak u ceny, verdikt níž) a rozhoduje o něm JEDNA funkce cenovyStupen() v js/pozemek.js. Odznak nese jen slovo a odkaz; větu, místo srovnání a počet nabídek nese verdikt."
   proc:     "verdikt začínal na telefonu průměrně na y=1157 px, cena na 580 — hlavní argument stránky byl pod ohybem. Odznak je na 673."
+  bez-barvy: "odznak nenese barevnou pilulku; rozlišuje slovo, ne odstín — a tím ho má i ten, kdo barvy nerozezná."
   hlida:    scripts/test-cenovy-stupen.mjs
-zaverecny-pas:
-  kde:      "úvodní a regionální stránky ano, stránka pozemku NE. Naměřeno 27. 10.: pás měřil 445 px (i po stažení 310) z 3 716 px stránky a přetáhl mez „vejde se do 4,4 obrazovky“. Hlídání je tam místo něj dlaždicí v rozcestníku „Kam dál“, která se vejde do existující mřížky."
-  pravidlo: "mez v scripts/test-poradi-pozemku.mjs se kvůli nové ozdobě nezvedá — její smysl je, že se stránka nevrátí k naměřeným 4,7 obrazovky."
+barvy:
+  pravidlo: "NEPŘIDÁVAT. 27. 10.: „nepotřebujeme barvy, ale čistotu." Nová plocha se dělá odstupem, vlásečnicí a pořadím, ne další barvou; barvu nese jen to, co ji na webu neslo předtím (značková zeleň v tlačítkách a hlavičce, stavy nabídky)."
+  priklady: "zelený závěrečný pás, barevná pilulka u ceny a zelená dlaždice v rozcestníku — všechno vzniklo 27. 10. a všechno šlo týž den pryč."
+co-je-upevnene:
+  pravidlo: "co majitel jednou schválil, se nepředělává — ani ve jménu marketingu. 27. 10.: „nemůžeš si dovolit překopat věci, které jsem já sám už upevnil; musíš dělat věci, které jsem ještě neupevnil.“ Platí hlavně pro úvodní desku, soustavu barev a rozvržení výpisu."
+  co-delat: "vady (překryv, nečitelnost, mrtvá pravidla, prázdná místa) ano; přepisování hotového vzhledu ne, dokud si o to neřekne."
+nabidka:
+  pravidlo: "lišta je cesta k prodeji, ne obsah. Šest odkazů: mapa, ceny, tři osobní stránky a „Přidat pozemek“. Jediná skupina je účet."
+  co-tam-neni: "dražby, exekuce, nové na trhu, rozcestník okresů, rádce a kontakt — vedou z úvodní stránky, z mapy a z patičky; stránky samy zůstávají kvůli vyhledávačům."
+  hlida:    scripts/test-rozvrzeni.mjs, test-vrstveni.mjs, test-menu.mjs
 vyrazena-nabidka:
   co:       "stránka pozemku, který zmizel ze zdroje. Generátor ji schválně nepřegeneruje, takže se nevykreslí detail a zůstane statická záloha (article.pz-staticky) — 327 z 2 271 stránek pozemků."
   pravidlo: "nejdřív rozcestí (kam místo toho), pak záznam. Záznam zůstává úplný, jen vypadá jako tabulka, ne jako výpis z databáze."

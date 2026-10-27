@@ -297,10 +297,7 @@
      hierarchie, ale nesourodost: na jedné stránce je nadpis o kousek
      menší a člověk neví proč. Role se liší nahoře (jak nadpis roste na
      monitoru), ne dole. */
-  /* 27. 10.: úvodní deska nese příslib, ne popis sortimentu, a nadpis
-     je na ní plakát — od 28 px na telefonu po 80 px na širokém
-     displeji. Krajní hodnoty jsou obě ze stupnice písma. */
-  --h1-domu:clamp(28px, 5.6vw, 80px);
+  --h1-domu:clamp(28px, 2.4vw, 32px);
   --h1-nastroj:28px;
   /* MŘÍŽKOVÁ TEXTURA. Tutéž čtverečkovanou texturu nese šest ploch:
      proužek na titulní, krajský pás, úvod návodů, úvod sekcí, pruh
@@ -3405,166 +3402,6 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    odznak a obrys z --pas-obrys, který má na desce 3,97 : 1. */
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
   border-color:var(--pas-obrys); color:var(--pas-text);}
-
-/* SLIB A AKCE V HLAVIČCE REGIONÁLNÍCH STRÁNEK.
-   Na 91 stránek, na které lidé chodí z vyhledávačů, vedla hlavička
-   s nadpisem a čísly — a pak rovnou výpis. Nikde se nedalo dozvědět,
-   co web s těmi nabídkami umí navíc, ani co si odsud člověk odnese,
-   když zrovna nic nekoupí. Věta to řekne jednou větou, tlačítko
-   nabídne hlídání (okres, cena, výměra → e-mail při nové nabídce).
-   Formulace „s cenou za metr" platí pro nabídky, které cenu mají;
-   část jich nese „cenu k ověření", a proto tam nestojí „u každé". */
-.okr-slib{margin:12px 0 0; max-width:var(--m-text); font-size:16px; line-height:1.6;
-  color:var(--pas-text-mute);}
-/* Tlačítko v hlavičce jen na širším displeji. Na telefonu posunulo
-   první nabídku z 834 na 904 px (naměřeno na okrese Benešov) a člověk
-   ho tam nepotřebuje: táž nabídka stojí v pásu na konci stránky, kam
-   dojede ten, kdo nic nenašel. */
-.okr-akce{display:none;}
-@media (min-width:720px){
-  .okr-slib{font-size:18px;}
-  .okr-akce{display:block; margin:20px 0 0;}
-}
-
-/* DVĚ TLAČÍTKA NA TMAVÉ DESCE — jeden recept pro úvodní desku
-   i závěrečný pás. Plná je značka na tmavém (8,9 : 1), obrysová nese
-   --pas-obrys, tedy tutéž linku jako ostatní ovládání na desce. */
-.uh-cta, .uh-cta2, .cta-pas .uh-cta, .cta-pas .uh-cta2{display:inline-flex;
-  align-items:center; min-height:48px; padding:0 24px; border-radius:var(--r-ovladani);
-  font-size:16px; font-weight:700; text-decoration:none;
-  transition:background var(--cas-zakladni) var(--ease),
-    border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-.uh-cta{background:var(--pas-akcent); color:var(--plocha-tmava);}
-.uh-cta:hover{background:var(--pas-text); color:var(--plocha-tmava);}
-.uh-cta2{border:1px solid var(--pas-obrys); color:var(--pas-text); font-weight:600;}
-.uh-cta2:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
-
-/* ZÁVĚREČNÝ PÁS: poslední věc před patičkou je nabídka, ne formulář.
-   Stránka končila kontaktním formulářem — tedy otázkou „napište nám",
-   kterou po přečtení celé úvodní stránky nemá kdo položit. Kdo dojel
-   až sem a nenašel svůj pozemek, má udělat jedno ze dvou: nechat si
-   hlídat, co přibude, nebo svůj pozemek přidat. Obojí je na webu
-   zdarma a obojí tu do 27. 10. nebylo nabídnuto. */
-/* ZELENÁ, NE TMAVÁ: hned pod pásem stojí kontaktní oddíl, který je
-   taky tmavý (#12241A), a dvě tmavé plochy za sebou vypadají jako
-   nedopatření. Plná značková plocha je od obojího odlišná a má na ní
-   bílé písmo 10,6 : 1.
-   SELEKTOR JE `section.cta-pas h2` schválně: pravidlo pro nadpis
-   oddílu stojí v souboru níž a při stejné váze by vyhrálo — naměřeno
-   27. 10., nadpis vyšel tmavý (#101513) na tmavém pásu. */
-.cta-pas{background:var(--plocha-znacka); color:var(--text-ondeep);
-  padding-top:var(--oddil-y); padding-bottom:var(--oddil-y);}
-section.cta-pas h2{color:var(--text-ondeep); margin:0;}
-section.cta-pas p{margin:12px 0 0; max-width:var(--m-text); font-size:16px;
-  line-height:1.6; color:var(--text-ondeep-mute);}
-section.cta-pas .uh-cta{background:var(--plocha-karta); color:var(--plocha-znacka);}
-section.cta-pas .uh-cta:hover{background:var(--text-ondeep-mute); color:var(--plocha-znacka);}
-section.cta-pas .uh-cta2{border-color:var(--text-ondeep-mute); color:var(--text-ondeep);}
-section.cta-pas .uh-cta2:hover{border-color:var(--text-ondeep); color:var(--text-ondeep);}
-.cta-wrap{display:grid; gap:24px; align-items:center;}
-.cta-akce{display:flex; flex-wrap:wrap; gap:12px;}
-@media (min-width:900px){
-  .cta-wrap{grid-template-columns:minmax(0,1fr) auto; gap:48px;}
-  .cta-pas p{font-size:18px;}
-}
-
-/* PROČ TADY — ČTYŘI KARTY POD MAPOU.
-   Tatáž karta jako všude jinde na webu (plocha, obrys, zaoblení
-   --r-plocha, stín --e1), jen s ikonou nahoře. Mřížka se láme podle
-   místa, ne podle zařízení: pod 640 px jeden sloupec, do 1040 dva,
-   výš čtyři — aby karta nikdy nebyla užší než 240 px, kde se nadpis
-   láme doprostřed slova. */
-.proc-grid{display:grid; grid-template-columns:1fr; gap:12px; margin:16px 0 0;
-  padding:0; list-style:none;}
-.proc-karta{display:flex; flex-direction:column; gap:8px; padding:20px;
-  background:var(--plocha-karta); border:1px solid var(--line);
-  border-radius:var(--r-plocha); box-shadow:var(--e1);}
-.proc-karta .ic{width:24px; height:24px; color:var(--znacka); fill:none;
-  stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
-.proc-karta h3{margin:0; font-size:18px; font-weight:700; letter-spacing:-0.01em;
-  color:var(--text);}
-.proc-karta p{margin:0; font-size:14px; line-height:1.6; color:var(--muted);
-  max-width:var(--m-text);}
-.proc-karta a{margin-top:4px; align-self:flex-start; min-height:44px;
-  display:inline-flex; align-items:center; font-size:14px; font-weight:600;
-  color:var(--znacka); text-decoration:none;}
-.proc-karta a::after{content:"\00a0→";}
-.proc-karta a:hover{color:var(--accent-warm); text-decoration:underline;}
-@media (min-width:640px){ .proc-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px;} }
-@media (min-width:1040px){ .proc-grid{grid-template-columns:repeat(4, minmax(0,1fr));} }
-
-/* =====================================================================
-   ÚVODNÍ DESKA JAKO PŘÍSLIB (.uvod-hrdina)
-   ---------------------------------------------------------------------
-   Majitel: „brutální update, kreativita a marketing." První obrazovka
-   do té doby říkala jen „Pozemky na prodej, v dražbě i v exekuci." —
-   popis sortimentu, ne důvod zůstat. Deska teď nese tři věci, které
-   dělají rozdíl mezi rozcestníkem a nabídkou: příslib (co tu najdu
-   a nikde jinde), jednu větu PROČ (z čeho se to skládá) a dvě akce.
-
-   TELEFON ZŮSTÁVÁ STŘÍDMÝ, A JE TO MĚŘENÍ, NE OPATRNOST.
-   scripts/test-prvni-obrazovka.mjs hlídá, že první NABÍDKA začíná nad
-   450 px z 844 — tedy že se na první obrazovku vejde i obsah, ne jen
-   značka. Velká tlačítka a řádek důvěry proto na úzkých displejích
-   nejsou: nadpis se zmenší, věta se zkrátí na dva řádky a pokračuje
-   se rozcestníkem, který tam byl dřív.
-
-   MŘÍŽKOVÁ TEXTURA, ne přeliv: ozdobné přelivy soustava zakazuje
-   (CLAUDE.md), mřížka je mezi povolenými. Kreslí se z --mrizka-cara-tmava
-   a dole se vytrácí maskou, aby nerušila text. */
-.uvod-hrdina{position:relative; overflow:hidden;}
-.uvod-hrdina::before{content:""; position:absolute; inset:0; pointer-events:none;
-  background-image:linear-gradient(var(--mrizka-cara-tmava) 1px, transparent 1px),
-    linear-gradient(90deg, var(--mrizka-cara-tmava) 1px, transparent 1px);
-  background-size:56px 56px;
-  -webkit-mask-image:linear-gradient(180deg, rgba(0,0,0,1), transparent 80%);
-  mask-image:linear-gradient(180deg, rgba(0,0,0,1), transparent 80%);}
-.uh-wrap{position:relative; z-index:1; padding:0 var(--okraj-stranky);}
-.uh-oko{display:inline-flex; align-items:center; min-height:28px; padding:0 12px;
-  border-radius:var(--r-pill); background:var(--pas-dlazdice); border:1px solid var(--pas-obrys);
-  font-size:12px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase;
-  color:var(--pas-akcent);}
-/* VELIKOST SE TU ŘÍKÁ ZNOVU, A JE TO NÁLEZ, ne opakování: pravidlo
-   `.st-hlava h1` (velikost --h1-nastroj, 28 px) stojí v souboru NÍŽ
-   a má tutéž váhu jako `h1.uvod-nadpis`, takže úvodní nadpis nesl
-   nástrojovou osmadvacítku a --h1-domu se nikde neprojevilo.
-   Naměřeno 27. 10. v prohlížeči: na 1 440 px vycházelo 28 px, ačkoli
-   token dává 80. Tohle pravidlo je o třídu silnější, takže platí. */
-.uvod-hrdina h1.uvod-nadpis{max-width:none; margin:8px 0 0; padding:0;
-  font-size:var(--h1-domu); line-height:1.1; letter-spacing:-0.03em;}
-/* Zvýrazněné slovo je PLOCHA, ne kurzíva: na tmavé desce se kurzíva
-   ztratí, plná zelená plocha s tmavým písmem má 8,9 : 1 a je vidět
-   z druhého konce místnosti. (Obecné pravidlo pro h1 em výš dělá
-   kurzívu a světlou barvu — tady se přebíjí schválně.) */
-.uvod-hrdina h1.uvod-nadpis em{font-style:normal; color:var(--plocha-tmava);
-  background:var(--pas-akcent); padding:0 12px; border-radius:var(--r-plocha);
-  -webkit-text-fill-color:currentColor;}
-.uh-veta{margin:12px 0 0; max-width:var(--m-text); font-size:14px; line-height:1.6;
-  color:var(--pas-text-mute);}
-.uh-akce{display:none;}
-.uh-duvera{display:none;}
-/* Obočí a druhá polovina věty patří na širší displej: na telefonu jde
-   každých 40 px na úkor toho, co se z nabídky vejde na první obrazovku. */
-.uvod-hrdina .uh-oko{display:none;}
-.uh-vic{display:none;}
-.uvod-hrdina .uvod-vstupy{margin:16px 0 0; padding-left:0; padding-right:0;}
-
-@media (min-width:720px){
-  .st-hlava.uvod-hlava.uvod-hrdina{padding:56px 0 40px;}
-  .uvod-hrdina .uh-oko{display:inline-flex;}
-  .uh-vic{display:inline;}
-  .uvod-hrdina h1.uvod-nadpis{margin:20px 0 0; letter-spacing:-0.04em;}
-  .uh-veta{margin:20px 0 0; font-size:18px;}
-  /* Akce a řádek důvěry se ukazují tam, kde je na ně místo: na širokém
-     displeji stojí mapa vedle výpisu a první nabídka je vidět tak jako
-     tak, takže nic neodsouvají. */
-  .uh-akce{display:flex; flex-wrap:wrap; gap:12px; margin:28px 0 0;}
-  .uh-duvera{display:block; margin:28px 0 0; font-size:14px; color:var(--pas-text-mute);}
-  .uh-duvera b{color:var(--pas-text); font-weight:700;}
-}
-@media (min-width:1100px){
-  .uh-veta{font-size:20px;}
-}
 .uvod-hlava .uvod-vstupy a:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
 /* Počet nabídek je v té větě to jediné, co se mění — a jediné, co je
    slib. Dokud byla věta podtitulkem, odlišovala se plnou barvou od
@@ -4926,32 +4763,23 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      začínaly až na 436. Je to táž vada, kterou lišta na monitoru
      vyřešila už dřív („Dřív stál Můj profil jako PRVNÍ položka mezi
      obsahem" — scripts/hlavicka.mjs); v šuplíku zůstala. */
-  .nav-sk-pozemky{order:1;}
-  .nav-sk-sance{order:2;}
-  #nav a[href$="cena-pozemku.html"]{order:3;}
-  #nav a[href$="radce.html"]{order:4;}
-  #nav a[href$="kontakt.html"]{order:5;}
+  /* Skupiny Pozemky a Příležitosti i odkazy na rádce a kontakt
+     odešly z nabídky (viz scripts/hlavicka.mjs) — zbylo pořadí toho,
+     co v ní zůstalo. */
+  #nav a[href$="#mapa"], #nav a[href$="index.html#mapa"]{order:1;}
+  #nav a[href$="cena-pozemku.html"]{order:2;}
   .nav-del{order:6;}
   .nav-ucet-sk{order:7;}
-
-  /* NADPISY SKUPIN SE V ŠUPLÍKU NEUKAZUJÍ. Panely jsou tu rozbalené
-     pořád (viz `details` výš), takže nadpis nic nerozbaluje — jen
-     přidává řádek. Dva nadpisy = 100 px z 844, a nabídka se o ně
-     rolovala. Na monitoru zůstávají: tam `summary` je ten ovladač,
-     kterým se skupina otvírá.
-     ÚČET NADPIS MÁ: nese jméno a stav („Můj profil / Nepřihlášeno"),
-     tedy informaci, ne jen jmenovku skupiny. */
-  .nav-sk-pozemky > summary, .nav-sk-sance > summary{display:none;}
 
   /* IKONY PODLE CÍLE ODKAZU, bez zásahu do značky 2 248 stránek.
      Nejsou to ozdoby: ::before je v řádku vždycky (drží odsazení
      textu), takže bez obrázku by to byla prázdná dvaadvacetipixelová
-     mezera — přesně to bylo na prvním snímku přestavěného panelu. */
-  .nav-sk-pozemky > summary::before{background-image:var(--ikona-mapa);}
-  .nav-sk-sance > summary::before{background-image:var(--ikona-sance);}
-  #nav a[href$="radce.html"]::before{background-image:var(--ikona-radce);}
+     mezera — přesně to bylo na prvním snímku přestavěného panelu.
+     Pravidla pro nadpisy skupin Pozemky a Příležitosti a pro ikony
+     rádce a kontaktu odsud zmizela spolu s těmi položkami; hlídač
+     scripts/test-mrtve-styly.mjs je našel hned. */
+  #nav a[href$="#mapa"]::before, #nav a[href$="index.html#mapa"]::before{background-image:var(--ikona-mapa);}
   #nav a[href$="cena-pozemku.html"]::before{background-image:var(--ikona-cena);}
-  #nav a[href$="kontakt.html"]::before{background-image:var(--ikona-posta);}
 
   /* „Přidat pozemek" STOJÍ NAHOŘE, ne až pod vším.
      V liště na telefonu tlačítko není (dvě stejná vedle sebe), takže
@@ -9515,6 +9343,10 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    stránky ho mají zamrzlý z doby, kdy nabídka platila. Tenhle soubor
    si naproti tomu berou přes <link rel="stylesheet"> znovu, takže se
    jím dá spravit všech 327 bez jediného přegenerování.
+   ŽÁDNÁ NOVÁ BARVA. První verze měla rozcestí na značkově zelené
+   ploše; majitel: „nepotřebujeme barvy, ale čistotu." Pořadí a čitelnost
+   dělají tutéž práci — plocha, vlásečnice a odstup — a barvu na webu
+   drží dál jen to, co ji nesl předtím.
    Selektory na pruh začínají `#pz-detail`, protože zamrzlá kopie
    `.pz-konec{…}` stojí v dokumentu NÍŽ než <link> a při stejné váze
    by vyhrála ona.
@@ -9527,42 +9359,39 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    pozemky z téhož okresu a mapa) ležela pod drobným odstavcem jako
    odrážkový seznam; teď je to první, co na stránce je. */
 #pz-detail > .pz-konec{order:1; margin:20px 0 0; padding:24px 20px 20px;
-  background:var(--plocha-znacka); color:var(--text-ondeep);
-  border:0; border-radius:var(--r-lg);}
+  background:var(--plocha-karta); color:var(--text);
+  border:1px solid var(--line); border-radius:var(--r-plocha);}
 #pz-detail > .pz-konec b{display:block; margin:0 0 8px;
-  font-size:clamp(20px, 4.2vw, 28px); line-height:1.2; letter-spacing:-0.02em;
-  color:var(--text-ondeep);}
+  font-size:20px; line-height:1.3; letter-spacing:0; color:var(--text);}
 #pz-detail > .pz-konec span{display:block; max-width:var(--m-text);
-  font-size:14px; line-height:1.5; color:var(--text-ondeep-mute);}
+  font-size:14px; line-height:1.5; color:var(--muted);}
 #pz-detail > .pz-konec > p{margin:24px 0 12px; font-size:13px; font-weight:700;
-  letter-spacing:0.07em; text-transform:uppercase; color:var(--znacka-na-tmave);}
+  letter-spacing:0.07em; text-transform:uppercase; color:var(--muted);}
 #pz-detail > .pz-konec ul{margin:0; padding:0; list-style:none; display:grid; gap:12px;}
 #pz-detail > .pz-konec li{margin:0;}
 #pz-detail > .pz-konec li a{display:flex; align-items:center; justify-content:space-between;
   gap:12px; min-height:56px; padding:0 20px; background:var(--plocha-karta);
-  border-radius:var(--r-md); font-size:16px; font-weight:700;
-  color:var(--plocha-znacka); text-decoration:none;}
-#pz-detail > .pz-konec li a::after{content:"→"; font-weight:700;}
+  border:1px solid var(--line); border-radius:var(--r-ovladani);
+  font-size:16px; font-weight:700; color:var(--text); text-decoration:none;}
+#pz-detail > .pz-konec li a::after{content:"→"; color:var(--muted); font-weight:700;}
 #pz-detail > .pz-konec p:last-child{margin:20px 0 0;
   text-transform:none; letter-spacing:0;}
 #pz-detail > .pz-konec p:last-child a{display:inline-flex; align-items:center;
-  min-height:48px; padding:0 20px; border:1.5px solid rgba(var(--text-ondeep-mute-rgb),0.55);
-  border-radius:var(--r-md); font-size:16px; font-weight:700;
-  color:var(--text-ondeep); text-decoration:none;}
+  min-height:48px; font-size:16px; font-weight:700; color:var(--znacka-hluboka);}
 
 /* ZÁZNAM. Zůstává úplný — kdo si odkaz uložil kvůli číslu parcely nebo
    dražebníkovi, tady to pořád najde. Jen to vypadá jako tabulka, a ne
    jako výpis z databáze. */
 .pz-staticky{order:2; margin:32px 0 0; padding:20px;
   background:var(--plocha-tlumena); border:1px solid var(--line);
-  border-radius:var(--r-md);}
+  border-radius:var(--r-plocha);}
 .pz-staticky h1{margin:0; font-size:var(--h1-nastroj); line-height:1.3; letter-spacing:0;}
 .pz-staticky h1::before{content:"ARCHIV ZÁZNAMU"; display:block; margin:0 0 8px;
   font-size:11px; font-weight:700; letter-spacing:0.1em; color:var(--muted);}
 .pz-staticky > p:first-of-type{margin:12px 0 0; font-size:16px; color:var(--muted);}
 .pz-staticky > p:first-of-type b{font-size:20px; color:var(--text);}
 /* JEDEN SLOUPEC, DOKUD NENÍ MÍSTO NA DVA. Dvousloupcová varianta
-   vyšla ve směru B hezky na monitoru a na 390 px se v ní popisek
+   vypadala na monitoru dobře a na 390 px se v ní popisek
    „Vlastnictví" překryl s hodnotou „spoluvlastnický podíl 2/24 —
    cena je za podíl…". Mřížka se proto zapíná až od 640 px. */
 .pz-staticky dl{margin:16px 0 0; display:grid; grid-template-columns:minmax(0,1fr);
@@ -9583,27 +9412,22 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   min-height:44px; font-size:16px; font-weight:600; color:var(--znacka-hluboka);}
 
 /* =====================================================================
-   ODZNAK S CENOVÝM STUPNĚM U CENY
+   CENOVÝ STUPEŇ U CENY
    Verdikt o ceně je to jediné, co web o nabídce ví a zdroj ne — a na
    telefonu začínal až na druhé obrazovce. Naměřeno 27. 10. na vzorku
    24 stránek pozemků (390×844): verdikt má 15 z nich a začíná
    průměrně na y = 1 157 px, kdežto cena stojí na 580.
    Odznak nese JEDNO SLOVO a odkaz; celou větu, místo srovnání
-   i počet nabídek nese dál verdikt. Slovo i barvu rozhoduje jediná
-   funkce cenovyStupen() v js/pozemek.js, kterou používá obojí.
-   Barvy jsou tytéž jako na verdiktu (--vc), aby se dvě místa o jedné
-   věci neřekla dvěma barvami.
+   i počet nabídek nese dál verdikt. Slovo rozhoduje jediná funkce
+   cenovyStupen() v js/pozemek.js, kterou používá obojí.
+   BARVU NENESE ŽÁDNOU. Čtyři stupně měly čtyři barevné pilulky; jenže
+   barevný odznak u ceny je pátá barva na obrazovce, kde už tři jsou,
+   a slovo „Vyšší cena" se čte stejně dobře bez podkladu. Rozlišení
+   nese slovo, ne barva — a tím pádem ho má i ten, kdo barvy nerozezná.
    ------------------------------------------------------------------ */
-.pz-stupen{--vc:var(--znacka-svetla); --vt:#fff;
-  display:flex; align-items:center; gap:8px; min-height:44px;
+.pz-stupen{display:flex; align-items:center; gap:8px; min-height:44px;
   margin:12px 0 0; text-decoration:none;}
-.pz-stupen.good{--vc:var(--c-ok-ink);}
-.pz-stupen.mid{--vc:var(--c-drazba-ink);}
-.pz-stupen.bad{--vc:var(--c-exekuce);}
-.pz-stupen.warn{--vc:var(--accent-warm);}
-.pz-stupen-t{padding:2px 8px; border-radius:var(--r-pill);
-  background:var(--vc); color:var(--vt); font-size:13px; font-weight:600;}
+.pz-stupen-t{font-size:16px; font-weight:700; color:var(--text);}
 .pz-stupen-vic{font-size:13px; font-weight:600; color:var(--znacka-hluboka);
   text-decoration:underline; text-underline-offset:3px;}
 .pz-stupen:hover .pz-stupen-vic{text-decoration:none;}
-

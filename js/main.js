@@ -6873,7 +6873,15 @@
        rámeček na 320 i 390 px). */
     if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
       + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
-      + ikonaNastroje('vyvoz') + 'Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></button>';
+      /* NÁPIS JE JEDEN CELEK, NE DVĚ SLOVA VEDLE SEBE. Tlačítko je
+         inline-flex s gap:8px, aby ikona nelepila na text — jenže
+         „Stáhnout" a <span> jsou dvě flexové položky, takže tatáž
+         mezera rozdělila i dvě slova jedné věty. Naměřeno 27. 10. na
+         390 px: mezera písma 3,1 px, díra mezi slovy 8 px, tedy
+         dvaapůlnásobek. Vypadalo to jako dvojitá mezera, protože to
+         dvojitá mezera byla. Obal .mc-popis z nápisu udělá jednu
+         položku a uvnitř platí běžná sazba. */
+      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></span></button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     /* RYCHLÝ VÝBĚR JE ZPÁTKY PILULKA — A TENTOKRÁT SPRÁVNĚ.
@@ -6891,7 +6899,7 @@
        člověk první nabídku odsvihne. */
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
       + ' aria-label="Procházet po jednom">'
-      + ikonaNastroje('rychly') + 'Procházet<span class="mc-dl"> po jednom</span></button>' + tlacitka;
+      + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;
     /* ODDĚLOVAČ PATŘÍ DOVNITŘ ZNAČKY. Na telefonu se tahle část
        schovává (číslo stojí v liště nad výpisem), a kdyby „ · " stálo
        venku, zbyla by za nadpisem osamocená tečka. */

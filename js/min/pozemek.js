@@ -338,7 +338,7 @@
     }).join('');
     if (!dlazdice) return '';
 
-    dlazdice += '<a class="kd-polozka kd-hlidat" href="hlidani.html">'
+    dlazdice += '<a class="kd-polozka" href="hlidani.html">'
       + '<span class="kd-t">Hlídat nové nabídky</span>'
       + '<span class="kd-p">e-mail, jakmile přibude</span></a>';
     return '<nav class="pz-kamdal" aria-labelledby="pz-kamdal-h">'
@@ -1394,7 +1394,8 @@
         (function () {
           var st = cenovyStupen(d);
           if (!st) return '';
-          return '<a class="pz-stupen ' + st.cls + '" href="#pz-verdict">'
+
+          return '<a class="pz-stupen" href="#pz-verdict">'
             + '<span class="pz-stupen-t">' + esc(st.badge) + '</span>'
             + '<span class="pz-stupen-vic">jak to víme</span></a>';
         }()) +

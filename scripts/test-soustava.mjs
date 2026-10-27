@@ -77,7 +77,6 @@ export const PRELIVY = {
   '.add-hero::after, .section.band::after': 'mříž na pásu a nad úvodní plochou',
   'footer::after': 'mříž v patičce — opakovaná 1px linka, tedy vzor, ne přeliv barev',
   '.okr-band::before': 'mříž na pásu stránky okresu',
-  '.uvod-hrdina::before': 'mříž na úvodní desce — opakovaná 1px linka, tedy vzor, ne přeliv barev; dole ji maska vytrácí, aby nerušila text',
   '.add-hero:not(.app-hero)::before': 'mříž nad úvodní plochou „Přidat pozemek"',
   '.vm-mapa-obal::after': 'stín při spodním kraji mapy ve výběru místa — říká, že mapa pokračuje pod ovládáním',
   '.por-tab tbody th::after, .por-tab thead th:first-child::after': 'maska u přimrzlého sloupce v porovnání — ukazuje, že tabulka pokračuje do strany',

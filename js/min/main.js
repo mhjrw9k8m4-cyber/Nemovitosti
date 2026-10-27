@@ -4222,11 +4222,12 @@
 
     if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
       + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
-      + ikonaNastroje('vyvoz') + 'Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></button>';
+
+      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></span></button>';
 
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
       + ' aria-label="Procházet po jednom">'
-      + ikonaNastroje('rychly') + 'Procházet<span class="mc-dl"> po jednom</span></button>' + tlacitka;
+      + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;
 
     countEl.innerHTML = '<span>' + headLabel + '</span>'
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')

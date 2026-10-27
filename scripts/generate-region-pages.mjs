@@ -208,9 +208,6 @@ function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
    do katastru"), stojí beze změny v kartě s nabídkami o kus níž.
    Rozpětí cen zůstává, jen z poloviny souvětí je z něj údaj.
    ================================================================== */
-/* SLIB A AKCE V HLAVIČCE REGIONÁLNÍCH STRÁNEK se vypisují přímo
-   v šablonách níž (<p class="okr-slib"> a <div class="okr-akce">).
-   Proč tam jsou, stojí v css/styles.css u .okr-slib. */
 function hlavickaCisla(polozky) {
   const platne = polozky.filter((x) => x && x[0] !== undefined && x[0] !== null && x[0] !== '' && x[0] !== 0);
   if (!platne.length) return '';
@@ -221,15 +218,12 @@ function hlavickaCisla(polozky) {
   return '<div class="okr-cisla">'
     + platne.map(([h, p]) => {
       const siroky = /[^\d\u00a0\s]/.test(String(h));
-      /* MEZERA JE TAM SCHVÁLNĚ — A LEŽÍ UVNITŘ <b>, ne mezi značkami.
-         Bez ní dává textContent „2pozemků": odečítač přečte
-         „dvapozemků" a kdo si text zkopíruje, dostane slepenec
-         (hlídá scripts/test-cislo-a-slovo.mjs). Mezi značkami ale
-         stát nemůže: dlaždice je svislý flex a samostatný bílý znak
-         by se v něm stal dalším PRVKEM — naměřeno 27. 10., čísla
-         hlavičky tím spadla pod nadpis a shodila
-         scripts/test-hlavicka-stranky.mjs. */
-      return `<div class="okr-cislo${siroky ? ' okr-cislo-siroky' : ''}"><b>${esc(String(h))} </b><span>${esc(p)}</span></div>`;
+      /* MEZERA MEZI <b> A <span> JE TAM SCHVÁLNĚ. Ve flexu se bílé
+         místo nevykreslí, ale bez něj dává textContent „2pozemků" —
+         odečítač přečte „dvapozemků" a kdo si text zkopíruje, dostane
+         slepenec. Hlídá scripts/test-cislo-a-slovo.mjs; tahle hlavička
+         ho 26. 10. shodila právě tímhle. */
+      return `<div class="okr-cislo${siroky ? ' okr-cislo-siroky' : ''}"><b>${esc(String(h))}</b> <span>${esc(p)}</span></div>`;
     }).join('')
     + '</div>';
 }
@@ -1151,7 +1145,6 @@ for(const okres of eligibleOkres){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
-      <p class="okr-slib">Prodeje, dražby i\u00a0exekuce z\u00a0okresu pohromadě — s\u00a0cenou za metr a\u00a0odkazem do katastru.</p>
       ${hlavickaCisla([
         [count, pluralPozemek(count)],
         ...(Object.keys(byType).length > 1 && byType.sale ? [[byType.sale, 'na prodej']] : []),
@@ -1160,7 +1153,6 @@ for(const okres of eligibleOkres){
         ...(Object.keys(byType).length > 1 && byType.obec ? [[byType.obec, sklon(byType.obec,'záměr obce','záměry obcí','záměrů obcí')]] : []),
         ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
       ])}
-      <div class="okr-akce"><a class="uh-cta" href="hlidani.html">Hlídat nové nabídky</a></div>
     </div>
     </div>
   </section>
@@ -1265,23 +1257,6 @@ ${sibLinks ? `
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer({ graf: true });   // graf cenové hladiny je jen tady
   write(file, html);
@@ -1352,7 +1327,6 @@ for(const kraj of eligibleKraj){
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
-      <p class="okr-slib">Prodeje, dražby i\u00a0exekuce z\u00a0celého kraje pohromadě — s\u00a0cenou za metr a\u00a0odkazem do katastru.</p>
       ${hlavickaCisla([
         [count, pluralPozemek(count)],
         [okresList.length, sklon(okresList.length,'okres','okresy','okresů')],
@@ -1360,7 +1334,6 @@ for(const kraj of eligibleKraj){
         ...(byType.exekuce ? [[byType.exekuce, sklon(byType.exekuce,'exekuce','exekuce','exekucí')]] : []),
         ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
       ])}
-      <div class="okr-akce"><a class="uh-cta" href="hlidani.html">Hlídat nové nabídky</a></div>
     </div>
     </div>
   </section>
@@ -1419,23 +1392,6 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more okr-mezi">${price
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer({ graf: true });   // graf cenové hladiny je jen tady
   write(file, html);
@@ -1516,23 +1472,6 @@ ${rows}
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
   write(file, html);
@@ -1612,13 +1551,11 @@ for (const d of DRUH_STRANKY) {
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>${esc(d.oznaceni)} · celá ČR</div>
       <h1>${esc(d.h1)}.</h1>
-      <p class="okr-slib">Nabídky z\u00a0celého Česka na jednom místě — s\u00a0cenou za metr a\u00a0odkazem do katastru.</p>
       ${hlavickaCisla([
         [fmt(count), sklon(count, d.jm[0], d.jm[1], d.jm[2])],
         [Object.keys(poOkresu).length, sklon(Object.keys(poOkresu).length, 'okres', 'okresy', 'okresů')],
         ...(minP ? [[fmt(minP) + '–' + fmt(maxP && maxP !== minP ? maxP : minP) + ' Kč', 'rozpětí cen']] : []),
       ])}
-      <div class="okr-akce"><a class="uh-cta" href="hlidani.html">Hlídat nové nabídky</a></div>
     </div>
     </div>
   </section>
@@ -1674,23 +1611,6 @@ ${okresLinks ? `
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
   write(d.soubor, html);
@@ -1811,14 +1731,12 @@ for (const r of rozpocetVznikne) {
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
       <h1>Pozemky do ${esc(r.popis)}.</h1>
-      <p class="okr-slib">Co se dá pořídit do ${esc(r.popis)} — s\u00a0cenou za metr a\u00a0odhadem proti okolí.</p>
       ${hlavickaCisla([
         [fmt(count), pluralPozemek(count)],
         [fmt(okresuCelkem), sklon(okresuCelkem, 'okres', 'okresy', 'okresů')],
         [fmt(medVymera) + ' m²', 'mediánová výměra'],
         [fmt(minP) + '–' + fmt(maxP > minP ? maxP : minP) + ' Kč', 'rozpětí cen'],
       ])}
-      <div class="okr-akce"><a class="uh-cta" href="hlidani.html">Hlídat nové nabídky</a></div>
     </div>
     </div>
   </section>
@@ -1887,23 +1805,6 @@ ${jineRozpocty ? `
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
   write(r.soubor, html);
@@ -2020,13 +1921,11 @@ let novychZaTyden = 0;
     <div class="wrap okr-wrap">
       <div class="eyebrow"><span class="live-dot"></span>Pohyb na trhu · celá ČR</div>
       <h1>Co je na trhu nového.</h1>
-      <p class="okr-slib">Co přibylo a\u00a0co zlevnilo. Zdroje procházíme každých 6\u00a0hodin.</p>
       ${hlavickaCisla([
         [fmt(novych7), 'nových za 7 dní'],
         [fmt(nove.length), 'nových za ' + DNU_NOVE + ' dní'],
         [fmt(zlevnene.length), sklon(zlevnene.length, 'zlevnilo', 'zlevnily', 'zlevnilo')],
       ])}
-      <div class="okr-akce"><a class="uh-cta" href="hlidani.html">Hlídat nové nabídky</a></div>
     </div>
     </div>
   </section>
@@ -2102,23 +2001,6 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
   write(soubor, html);
@@ -2427,23 +2309,6 @@ ${razitkoCerstvosti}
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer({ graf: true }) + `<script src="js/hledani.js?${V.hledani}" defer></scr` + `ipt>
 <script src="js/ceny-hledani.js?${V.cenyHledani}" defer></scr` + `ipt>
@@ -2572,23 +2437,6 @@ ${rozpocetGrid}          </div>
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
 write('pozemky-podle-okresu.html', idxHtml);
@@ -2699,23 +2547,6 @@ ${karty}
     </div>
   </section>
 
-  <!-- ZÁVĚREČNÁ NABÍDKA — táž jako na úvodní stránce. Kdo dojel na konec
-       výpisu a nenašel svůj pozemek, má odsud odejít s něčím: hlídáním,
-       nebo možností přidat vlastní. Důvod a barvy stojí u .cta-pas
-       v css/styles.css. -->
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Nenašli jste ten svůj?</h2>
-        <p>Nabídky přibývají a\u00a0mizí každý den. Řekněte, co hledáte — okres, cenu,
-          výměru — a\u00a0přijde e-mail, jakmile se objeví něco, co sedí.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 ` + footer();
   write('pozemky-pohromade.html', cHtml);

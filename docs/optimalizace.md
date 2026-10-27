@@ -12545,3 +12545,74 @@ bílá na `--plocha-znacka` dává 10,6 : 1.
 Na úvodní a okresních stránkách pás zůstává: tam je na konci dlouhého
 výpisu místo i důvod. Poučení je o tom, kde se co měří — **tentýž
 blok, který je na výpisu správně, je na detailu nabídky daň.**
+
+## 186. Vráceno: barvy pryč, nabídka na šest položek *27. 10.*
+
+Majitel k dnešní práci: *„zase přidáváš nějaké barvy, nepotřebujeme
+barvy, ale čistotu… nemůžeš si dovolit překopat věci, které jsem já
+sám už upevnil, musíš dělat věci, které jsem ještě neupevnil. A zbav
+se konečně těch věcí v menu a prokliků a nudných nesmyslných textů —
+nemá to být příručka, ale web na prodej."*
+
+To je rozhodnutí, ne diskuse. Co se vrátilo a co odešlo:
+
+### Vráceno do stavu, který platil
+
+Úvodní deska, čtyři karty „Co tu najdete a jinde ne", závěrečný
+zelený pás na úvodní i na 91 regionálních stránkách a věta pod
+nadpisem okresu — všechno z dnešního rána (§179–§182). Úvodní deska
+je zase ta, která byla schválená: *„Pozemky na prodej, v dražbě
+i v exekuci."*, vstupní odznaky, hledání. Stránka tím spadla
+z 19 040 px na 17 515.
+
+Zůstalo jen to, co opravovalo vadu, ne vzhled:
+
+| zůstává | proč |
+|---|---|
+| §183 tlačítko „nahoru" | leželo na kartě výpisu, špatně odvozené číslo |
+| §184 vyřazené nabídky | 327 stránek bez jediného pravidla |
+| §185 odznak u ceny | hlavní argument ležel pod ohybem |
+
+### Barvy pryč
+
+Tři věci z dneška měly novou barevnou plochu a všechny tři ji
+ztratily: zelené rozcestí na vyřazené stránce je bílá karta
+s vlásečnicí, barevná pilulka u ceny je obyčejné tučné slovo
+a dlaždice „Hlídat nové nabídky" vypadá jako ostatní dlaždice.
+U odznaku je to i věcně lepší: rozlišuje **slovo**, ne odstín,
+takže ho přečte i ten, kdo barvy nerozezná.
+
+### Nabídka: ze třinácti odkazů šest
+
+```
+bylo:  Pozemky ▸ (Hledat na mapě, Podle okresu)
+       Příležitosti ▸ (Dražby, Exekuce, Nové na trhu)
+       Ceny pozemků · Rádce · Kontakt
+       Můj profil ▸ (Moje inzeráty, Zprávy, Hlídání)
+       Přidat pozemek
+je:    Hledat na mapě · Ceny pozemků
+       Můj profil ▸ (Moje inzeráty, Zprávy, Hlídání)
+       Přidat pozemek
+```
+
+Třináct odkazů a tři nadpisy skupin → šest odkazů a jeden nadpis;
+šuplík na telefonu se přestal rolovat. **Žádná stránka nezmizela** —
+dražby, exekuce a nové na trhu vedou ze vstupních odznaků na úvodní
+desce, rozcestník okresů z mapy, rádce a kontakt z patičky. Lišta si
+na ně jen přestala nárokovat místo.
+
+Dvě zkoušky to zčervenaly a obě měly pravdu — popisovaly nabídku,
+která schválně zmizela. Nejsou uvolněné, jsou **obrácené**: místo
+„aspoň tři skupiny" se hlídá „právě jedna, a to účet", místo „aspoň
+dvanáct odkazů" se hlídá „nejvýš osm, a pořád mezi nimi mapa, ceny
+a účet". Z podlahy je strop.
+
+### A jedna skutečná nečistota
+
+Nápisy nad výpisem vypadaly jako překlep: „Stáhnout␣␣výběr",
+„Procházet␣␣po jednom". Změřeno na 390 px — mezera písma 3,1 px,
+díra mezi slovy 8 px. Tlačítko je `inline-flex` s `gap:8px`, aby
+ikona nelepila na text, jenže sloveso a `<span>` se zkráceným
+doplňkem jsou dvě flexové položky, takže tatáž mezera rozdělila
+i dvě slova jedné věty. Obal `.mc-popis` z nápisu dělá jednu
+položku; uvnitř platí běžná sazba a díra je 0.
