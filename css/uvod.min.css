@@ -742,6 +742,18 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .st-hlava.uvod-hlava{margin-bottom:0;padding:8px 0 12px}
 .uvod-hlava .uvod-vstupy{margin:8px 0 0}
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
+.proc-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0 0;padding:0;list-style:none}
+.proc-karta{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.proc-karta .ic{width:24px;height:24px;color:var(--znacka);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.proc-karta h3{margin:0;font-size:18px;font-weight:700;letter-spacing:-0.01em;color:var(--text)}
+.proc-karta p{margin:0;font-size:14px;line-height:1.6;color:var(--muted);max-width:var(--m-text)}
+.proc-karta a{margin-top:4px;align-self:flex-start;min-height:44px;display:inline-flex;align-items:center;font-size:14px;font-weight:600;color:var(--znacka);text-decoration:none}
+.proc-karta a::after{content:"\00a0→"}
+.proc-karta a:hover{color:var(--accent-warm);text-decoration:underline}
+@media (min-width:640px){.proc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+}
+@media (min-width:1040px){.proc-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 .uvod-hrdina{position:relative;overflow:hidden}
 .uvod-hrdina::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--mrizka-cara-tmava) 1px,transparent 1px),linear-gradient(90deg,var(--mrizka-cara-tmava) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,1),transparent 80%);mask-image:linear-gradient(180deg,rgba(0,0,0,1),transparent 80%)}
 .uh-wrap{position:relative;z-index:1;padding:0 var(--okraj-stranky)}

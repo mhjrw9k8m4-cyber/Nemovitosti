@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-EzPmpR6RQ5J0oAEqMFo4CpMsPIjV4ivROnuh7R4nW5Q=' 'sha256-HUwsDA2Fp8svPZ8nnX6p9uPVdoo5yYWp4dY0I1uKgAw=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-SZRWJCY4Fa3t3KOnR2Fqyph6sehUC6/uOIDnu8YY6Oc=' 'sha256-HUwsDA2Fp8svPZ8nnX6p9uPVdoo5yYWp4dY0I1uKgAw=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -144,7 +144,7 @@
        razítko ?v= jako každému jinému odkazu. -->
   <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
-  <link rel="stylesheet" href="css/uvod.min.css?v=59e39ec4">
+  <link rel="stylesheet" href="css/uvod.min.css?v=48b73b6f">
 </head>
 <body>
 
@@ -666,6 +666,49 @@
        Kotvy (#kraje, #zdroje, #realitky…) se nezměnily, takže odkazy
        zvenčí i z menu drží.
        =================================================================== -->
+  <!-- 0 · PROČ TADY — ČTYŘI VĚCI, KTERÉ JINDE POHROMADĚ NEJSOU.
+       Stránka šla z mapy rovnou na „Tipy na dobrou koupi", tedy na další
+       nabídky. Kdo přišel poprvé, neměl se kde dozvědět, co web umí
+       navíc proti inzertnímu portálu — a přitom je to to jediné, čím se
+       liší. Každá karta tvrdí JEDNU věc, kterou web opravdu dělá, a vede
+       na stránku, kde se to dá ověřit; žádný slib do budoucna. -->
+  <section class="section pt-0 rail" id="proc">
+    <div class="wrap">
+      <div class="rail-mark reveal"><span class="rm-n">4</span> <span class="rm-l">důvody</span></div>
+      <div class="section-head reveal"><h2>Co tu najdete a jinde ne.</h2></div>
+      <ul class="proc-grid">
+        <li class="proc-karta reveal">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tag"/></svg>
+          <h3>Cena za metr, ne jen cena</h3>
+          <p>U nabídek s cenou stojí i cena za m² a kolik je to proti okolí.
+            Nemusíte nic počítat na kalkulačce.</p>
+          <a href="cena-pozemku.html">Jak ceny počítáme</a>
+        </li>
+        <li class="proc-karta reveal">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gavel"/></svg>
+          <h3>Dražby a exekuce vedle prodejů</h3>
+          <p>Tři druhy příležitostí v jednom výpisu a na jedné mapě —
+            u dražeb i s termínem, do kdy se dá přihlásit.</p>
+          <a href="drazby-pozemku.html">Jak funguje dražba</a>
+        </li>
+        <li class="proc-karta reveal">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bell"/></svg>
+          <h3>Hlídání, ať vám nic neuteče</h3>
+          <p>Řeknete okres, cenu a výměru. Jakmile se objeví nabídka, která
+            sedí, přijde e-mail.</p>
+          <a href="hlidani.html">Nastavit hlídání</a>
+        </li>
+        <li class="proc-karta reveal">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg>
+          <h3>Zdroj i katastr na jedno klepnutí</h3>
+          <p>U každé nabídky je odkaz na zdroj, ze kterého je, a cesta do
+            katastru. Nemusíte nám věřit — můžete si to ověřit.</p>
+          <a href="list-vlastnictvi-katastr.html">Co najdete v katastru</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <!-- 1 · TIPY NA DOBROU KOUPI (konkrétní nabídky, schované když nejsou) -->
   <section class="section pt-0 deals-sec rail" id="vyhodne" hidden>
     <div class="wrap">

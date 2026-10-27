@@ -12256,3 +12256,30 @@ s naměřeným důvodem napsaným na místě) a má dvanáct pixelů rezervy.
   stránek (§122) a čísla jsou od té doby schválně pod nadpisem.
   Kontrola se přepsala na dnešní stav: pod nadpisem, na jeho
   svislici, v jedné řadě.
+
+## 180. „Co tu najdete a jinde ne" — čtyři důvody pod mapou *27. 10.*
+
+Úvodní stránka šla z mapy rovnou na další nabídky („Tipy na dobrou
+koupi"). Kdo přišel poprvé, neměl se kde dozvědět, čím se web liší od
+inzertního portálu — a přitom je to to jediné, co ho odlišuje.
+
+Nová sekce stojí hned pod nástrojem a nese čtyři karty. Každá tvrdí
+JEDNU věc, kterou web opravdu dělá, a vede na stránku, kde se to dá
+ověřit:
+
+| karta | co tvrdí | kam vede |
+|---|---|---|
+| Cena za metr, ne jen cena | u nabídek s cenou je i cena za m² a odhad proti okolí | cena-pozemku.html |
+| Dražby a exekuce vedle prodejů | tři druhy v jednom výpisu, u dražeb i termín | drazby-pozemku.html |
+| Hlídání, ať vám nic neuteče | okres, cena, výměra → e-mail při nové nabídce | hlidani.html |
+| Zdroj i katastr na jedno klepnutí | u každé nabídky odkaz na zdroj a cesta do katastru | list-vlastnictvi-katastr.html |
+
+**Žádný slib do budoucna a žádné kulaté číslo navíc.** Formulace
+„u nabídek s cenou" je tam schválně: část nabídek má cenu k ověření
+a u nich cena za metr není — „u každé nabídky" by bylo o chlup
+hezčí a nepravdivé.
+
+Mřížka se láme podle místa, ne podle zařízení: pod 640 px jeden
+sloupec, do 1040 dva, výš čtyři. Důvod je naměřený — užší karta než
+240 px láme nadpis „Zdroj i katastr na jedno klepnutí" doprostřed
+slova.
