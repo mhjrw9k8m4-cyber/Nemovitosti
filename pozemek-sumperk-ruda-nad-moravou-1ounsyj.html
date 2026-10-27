@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=1f2a6327">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,6 +119,10 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
+.kd-hlidat .kd-t{color:var(--text-ondeep)}
+.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
+.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -301,20 +305,6 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><article class="pz-staticky"><h1>Pozemek 4 372 m²</h1><p class="pz-staticky-kde">Ruda nad Moravou, okres Šumperk</p><p><b>449 000 Kč</b> (103 Kč/m²) · 4 372 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Pozemek</dd><dt>Výměra</dt><dd>4 372 m²</dd><dt>Obec</dt><dd>Ruda nad Moravou</dd><dt>Okres</dt><dd><a href="pozemky-okres-sumperk.html">Šumperk</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Šumperk 6,7 km · Olomouc 50 km</dd></dl><p><a href="pozemek.html?p=Ruda%20nad%20Moravou%7C%E2%80%94%7C%C5%A0umperk%7C49.978%7C16.879&amp;ll=49.977597,16.878947&amp;v=4372&amp;c=449000">Otevřít na mapě</a></p><h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">Vlastníka Vám nabízíme ke koupi atraktivní pozemek o výměře 4 372 m2 v obci Ruda nad Moravou. Jedná se o skvělou příležitost pro investory i nadšence, kteří hledají prostor pro vybudování sportovně-rekreačního areálu nebo zázemí pro volnočasové aktivity. Pozemek těží z výborné polohy v malebném podhůří Jeseníků přímo u vyhledávané cyklostezky Moravská stezka (EV9) a v blízkosti řeky Moravy, což zaručuje vysokou atraktivitu pro místní i turisty.</p><p><a href="index.html?obec=Ruda%20nad%20Moravou&amp;okres=%C5%A0umperk">V obci Ruda nad Moravou je v nabídce ještě jeden pozemek</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-sumperk.html">Okres Šumperk</a> — všechny pozemky v okrese</li><li><a href="pozemky-olomoucky-kraj.html">Olomoucký kraj</a> — přehled celého kraje</li><li><a href="pozemky-do-500-tisic.html">Pozemky do 500 tisíc</a> — podobná cenová hladina</li></ul></article></div>
   </div>
-
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Není to ono?</h2>
-        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
-          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -346,7 +336,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Pozemek 4 372 m² — Ruda nad Moravou, okres Šumperk","description":"Na prodej · 449 000 Kč (103 Kč/m²) · 4 372 m² · Ruda nad Moravou, okres Šumperk. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-sumperk-ruda-nad-moravou-1ounsyj.html","address":{"@type":"PostalAddress","addressLocality":"Ruda nad Moravou","addressRegion":"Šumperk","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.977597,"longitude":16.878947},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":4372,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":449000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-sumperk-ruda-nad-moravou-1ounsyj.html","itemOffered":{"@type":"Place","name":"Pozemek 4 372 m² — Ruda nad Moravou, okres Šumperk"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Olomoucký kraj","item":"https://www.parcelaka.cz/pozemky-olomoucky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Šumperk","item":"https://www.parcelaka.cz/pozemky-okres-sumperk.html"},{"@type":"ListItem","position":5,"name":"Pozemek 4 372 m² — Ruda nad Moravou, okres Šumperk","item":"https://www.parcelaka.cz/pozemek-sumperk-ruda-nad-moravou-1ounsyj.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Ruda nad Moravou|—|Šumperk|49.978|16.879","ll":[49.977597,16.878947],"v":4372,"c":449000,"r":"data/okres/sumperk.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=2aa90281"></script>
+<script src="js/min/pozemek.js?v=24a059d6"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

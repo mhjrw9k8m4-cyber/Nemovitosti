@@ -337,10 +337,25 @@
         + '</a>';
     }).join('');
     if (!dlazdice) return '';
+
+    dlazdice += '<a class="kd-polozka kd-hlidat" href="hlidani.html">'
+      + '<span class="kd-t">Hlídat nové nabídky</span>'
+      + '<span class="kd-p">e-mail, jakmile přibude</span></a>';
     return '<nav class="pz-kamdal" aria-labelledby="pz-kamdal-h">'
       + '<h2 class="pz-sect-h" id="pz-kamdal-h">Kam dál</h2>'
       + '<div class="kd-mriz">' + dlazdice + '</div>'
       + '</nav>';
+  }
+
+  function cenovyStupen(d, pc) {
+    if (!MODEL || !hasArea(d) || !d.price) return null;
+    if (d.podil) return { cls: 'warn', badge: 'Prodává se podíl' };
+    if (MODEL.neduveryhodna(d)) return { cls: 'warn', badge: 'Cena k ověření' };
+    var p = pc || MODEL.percentil(d);
+    if (!p) return null;
+    if (p.pct <= 35) return { cls: 'good', badge: 'Výhodná cena' };
+    if (p.pct >= 65) return { cls: 'bad', badge: 'Vyšší cena' };
+    return { cls: 'mid', badge: 'Průměrná cena' };
   }
 
   function pzVerdictHtml(d) {
@@ -382,9 +397,12 @@
       ? ' ' + window.PK_CENY.kdeText(pc.uroven, pc.kde) : '';
 
     var zKolika = (pc.sample > 0) ? ' (' + pc.sample + ' ' + (pc.sample >= 2 && pc.sample <= 4 ? 'nabídky' : 'nabídek') + ')' : '';
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+
+    var stupen = cenovyStupen(d, pc);
+    cls = stupen.cls; badge = stupen.badge;
+    if (pct <= 35) { text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else if (pct >= 65) { text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else { text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
 
     var mezPriznat = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
     var odJednoho = (pc.podilInz > mezPriznat)
@@ -1372,6 +1390,14 @@
         pzZmenaCenyHtml(d) +
 
         (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
+
+        (function () {
+          var st = cenovyStupen(d);
+          if (!st) return '';
+          return '<a class="pz-stupen ' + st.cls + '" href="#pz-verdict">'
+            + '<span class="pz-stupen-t">' + esc(st.badge) + '</span>'
+            + '<span class="pz-stupen-vic">jak to víme</span></a>';
+        }()) +
       '</div>' +
       '</div>' +
 

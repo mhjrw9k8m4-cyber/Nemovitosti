@@ -12481,3 +12481,67 @@ měří čtyři věci: rozcestí je nad záznamem, jeho odkazy jsou aspoň
 44 px vysoké, popisek a hodnota se nepřekrývají ani nepřetékají,
 a pruh, záznam i tabulka stojí na vlastní ploše. Po odebrání nových
 pravidel padne 9 kontrol z 43.
+
+## 185. Argument stránky ležel pod ohybem — a pás, který jsem přidal ráno, musel pryč *27. 10.*
+
+Verdikt o ceně („Levnější než 78 % pozemků téhož druhu v okrese
+Benešov") je jediné, co tenhle web o nabídce ví a zdroj ne. Naměřeno
+na telefonu 390×844 na vzorku 24 stránek pozemků:
+
+| | |
+|---|---|
+| verdikt má | 15 z 24 stránek |
+| začíná průměrně na | y = 1 157 px (nejdál 1 385) |
+| cena stojí na | y = 580 px |
+| obrazovka | 844 px |
+
+Pět set sedmdesát sedm pixelů pod cenou, tedy pod ohybem, je na
+hlavní argument stránky pozdě.
+
+### Jedno rozhodnutí, dvě místa
+
+U ceny je teď odznak s jedním slovem („Výhodná cena", „Vyšší cena",
+„Prodává se podíl") a odkazem na verdikt. **Není to druhý výpočet.**
+Slovo i barvu rozhoduje jediná funkce `cenovyStupen()` v
+`js/pozemek.js`, kterou používá odznak i verdikt; celou větu, místo
+srovnání a počet nabídek nese dál jen verdikt. Změřeno znovu: odznak
+začíná průměrně na **y = 673 px**, tedy o 484 px výš a na první
+obrazovce u všech patnácti. Celý verdikt se tím posunul z 1 157 na
+1 213 — jedno slovo o 484 px dřív za celou větu o 56 px později.
+
+Zkouška `scripts/test-cenovy-stupen.mjs` (38 kontrol, 12 stránek
+rozprostřených po abecedě) hlídá to, co se rozejít může: slovo na
+odznaku se musí **doslova** rovnat slovu na verdiktu, odznak musí být
+právě tam, kde je verdikt, odkaz musí někam vést a odznak musí zůstat
+na první obrazovce. Obě sabotáže zčervenaly — natvrdo zapsané slovo
+u ceny padne na čtrnácti stránkách, posun odznaku o 600 px na
+kontrole o první obrazovce.
+
+### A pak zčervenalo pořadí
+
+`test-poradi-pozemku` ohlásil **3 851 px = 4,81 obrazovky** proti mezi
+4,4. Viník nebyl odznak (44 px), ale závěrečný zelený pás „Není to
+ono?", který jsem na stránku pozemku přidal **dnes ráno** (§183).
+Změřeno na 360×800:
+
+```
+pás „Není to ono?"   445 px     (víc než celý verdikt, 345)
+celá stránka        3 851 px    = 11,5 % výšky nese ten pás
+```
+
+Těsnější varianta pásu ho stáhla na 310 px a stránku na 3 716 — pořád
+nad mezí. Zvednout mez by bylo nepoctivé: stojí u ní napsáno, že její
+smysl je „po předělání se stránka nesmí vrátit k naměřeným 4,7
+obrazovky", a 3 716 px je 4,65. Mez, kterou si upravím, aby prošla
+moje změna, nehlídá nic.
+
+**Pás je proto ze stránky pozemku pryč** a hlídání se přestěhovalo do
+rozcestníku „Kam dál", který na konci stránky už byl. Dlaždice se
+vešla do volného místa v existující mřížce, takže `pz-kamdal` zůstal
+na 156 px a **stránka klesla na 3 406 px (4,26 obrazovky)** — pod mez
+i proti stavu před dnešním ránem. Zeleň ji z řady šedých odliší;
+bílá na `--plocha-znacka` dává 10,6 : 1.
+
+Na úvodní a okresních stránkách pás zůstává: tam je na konci dlouhého
+výpisu místo i důvod. Poučení je o tom, kde se co měří — **tentýž
+blok, který je na výpisu správně, je na detailu nabídky daň.**

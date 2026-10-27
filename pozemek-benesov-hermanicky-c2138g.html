@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=1f2a6327">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,6 +119,10 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
+.kd-hlidat .kd-t{color:var(--text-ondeep)}
+.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
+.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -301,20 +305,6 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 14 014 m², podíl 3/4</h1><p class="pz-staticky-kde">Heřmaničky</p><p><b>815 000 Kč</b> (58 Kč/m²) · 14 014 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>14 014 m²</dd><dt>Obec</dt><dd>Heřmaničky</dd><dt>Okres</dt><dd><a href="pozemky-okres-benesov.html">Benešov</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 3/4 — výměra je ta podílová, celá parcela je větší</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Benešov 21 km · Praha 52 km</dd></dl><p><a href="pozemek.html?p=He%C5%99mani%C4%8Dky%7C%E2%80%94%7CBene%C5%A1ov%7C49.619%7C14.542&amp;ll=49.618628,14.542457&amp;v=14014&amp;c=815000">Otevřít na mapě</a></p><h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">k.ú. Velké Heřmanice a Bezmíř LV č. 107 o celkové výměře 8151 m², podíl 3/4 Parcela č. 114/17 - o výměře 8995 m² (Orná půda) Parcela č. 155/1 - o výměře 1873 m² (Orná půda) LV č. 342 o celkové výměře 5863 m², podíl 3/4 Parcela č. 1025/22 - o výměře 3272 m² (Trvalý travní porost) Parcela č. 1026/7 - o výměře 394 m² (Trvalý travní porost) Parcela č. 1181/1 - o výměře 125 m² (Ostatní plocha)…</p><h2>Srovnatelné spoluvlastnické podíly v okolí</h2><p>Z pěti nabídek do 21 km je tenhle 2. nejdražší. Ceny jsou za metr, který kupujícímu připadne — u podílu to není celá parcela.</p><ul><li>83 Kč/m² — <a href="pozemek-benesov-olbramovice-18c6e6e.html">Olbramovice</a>, 9 602 m², 8 km</li><li>58 Kč/m² — <b>tenhle pozemek</b>, 14 014 m²</li><li>33 Kč/m² — <a href="pozemek-tabor-slapsko-bdru7a.html">Slapsko</a>, 6 571 m², 15 km</li><li>33 Kč/m² — <a href="pozemek-pisek-hrazany-3cg8iy.html">Hrazany</a>, 11 585 m², 20 km</li><li>33 Kč/m² — <a href="pozemek-pisek-hrazany-1qk3apb.html">Hrazany</a>, 10 992 m², 21 km</li></ul><h2>Kam dál</h2><ul><li><a href="pozemky-okres-benesov.html">Okres Benešov</a> — všechny pozemky v okrese</li><li><a href="pozemky-stredocesky-kraj.html">Středočeský kraj</a> — přehled celého kraje</li><li><a href="pozemky-orna-puda.html">Orná půda</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-1-milionu.html">Pozemky do milion</a> — podobná cenová hladina</li></ul></article></div>
   </div>
-
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Není to ono?</h2>
-        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
-          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -346,7 +336,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 14 014 m², podíl 3/4 — Heřmaničky","description":"Na prodej · 815 000 Kč (58 Kč/m²) · 14 014 m², podíl 3/4 · Heřmaničky, okres Benešov. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-benesov-hermanicky-c2138g.html","address":{"@type":"PostalAddress","addressLocality":"Heřmaničky","addressRegion":"Benešov","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.618628,"longitude":14.542457},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":14014,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":815000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-benesov-hermanicky-c2138g.html","itemOffered":{"@type":"Place","name":"Orná půda 14 014 m², podíl 3/4 — Heřmaničky"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra je ta podílová, celá parcela je větší."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Benešov","item":"https://www.parcelaka.cz/pozemky-okres-benesov.html"},{"@type":"ListItem","position":5,"name":"Orná půda 14 014 m², podíl 3/4 — Heřmaničky","item":"https://www.parcelaka.cz/pozemek-benesov-hermanicky-c2138g.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Heřmaničky|—|Benešov|49.619|14.542","ll":[49.618628,14.542457],"v":14014,"c":815000,"r":"data/okres/benesov.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=2aa90281"></script>
+<script src="js/min/pozemek.js?v=24a059d6"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

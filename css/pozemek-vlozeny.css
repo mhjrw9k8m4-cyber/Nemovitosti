@@ -265,6 +265,15 @@
       text-decoration:none; box-shadow:var(--e1);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), box-shadow var(--cas-zakladni) var(--ease);}
     .kd-polozka:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena); box-shadow:var(--e2);}
+    /* JEDNA DLAŽDICE Z ŘADY VEN. Ostatní vedou na další výpis, tahle
+       jediná udělá něco pro příště — a kdyby vypadala stejně jako ony,
+       byla by to pátá šedá krabička v řadě. Zeleň je značková plocha,
+       tedy totéž, co nese hlavní tlačítko stránky; bílá na #004F2F
+       dává 10,6 : 1. */
+    .kd-hlidat{background:var(--plocha-znacka); border-color:var(--plocha-znacka);}
+    .kd-hlidat .kd-t{color:var(--text-ondeep);}
+    .kd-hlidat .kd-p{color:var(--text-ondeep-mute);}
+    .kd-hlidat:hover{background:var(--znacka-hluboka); border-color:var(--znacka-hluboka);}
     .kd-t{font-size:14px; font-weight:700; color:var(--text);}
     .kd-p{font-size:12px; line-height:1.4; color:var(--muted);}
     /* NA TELEFONU JEN JMÉNA. Podtitulky („všechny pozemky v okrese")

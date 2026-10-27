@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=1f2a6327">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,6 +119,10 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
+.kd-hlidat .kd-t{color:var(--text-ondeep)}
+.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
+.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -301,20 +305,6 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><article class="pz-staticky"><h1>Ostatní plocha 2 240 m², podíl 2/158</h1><p class="pz-staticky-kde">Karlovice</p><p><b>101 867 Kč</b> (3 593 Kč/m²) · 2 240 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Ostatní plocha</dd><dt>Výměra</dt><dd>2 240 m²</dd><dt>Obec</dt><dd>Karlovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-semily.html">Semily</a></dd><dt>Vlastnictví</dt><dd>spoluvlastnický podíl 2/158 — cena je za podíl, výměra za celou parcelu</dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Semily 11 km · Liberec 24 km</dd></dl><p><a href="pozemek.html?p=Karlovice%7C%E2%80%94%7CSemily%7C50.567%7C15.182&amp;ll=50.567128,15.182466&amp;v=2240&amp;c=101867">Otevřít na mapě</a></p><h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">k.ú. Karlovice LV č. 74 o výměře 0 m², podíl 2/158 Parcela č. 1792/9 - o výměře 13 m² (Vodní plocha) LV č. 319 o výměře 23 m², podíl 2/168 Parcela č. 1676/20 - o výměře 1535 m² (Trvalý travní porost) Parcela č. 1676/21 - o výměře 408 m² (Trvalý travní porost) LV č. 323 o výměře 0 m², podíl 2/168…</p><p><a href="index.html?obec=Karlovice&amp;okres=Semily">V obci Karlovice je v nabídce ještě jeden pozemek</a></p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-semily.html">Okres Semily</a> — všechny pozemky v okrese</li><li><a href="pozemky-liberecky-kraj.html">Liberecký kraj</a> — přehled celého kraje</li><li><a href="pozemky-do-200-tisic.html">Pozemky do 200 tisíc</a> — podobná cenová hladina</li></ul></article></div>
   </div>
-
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Není to ono?</h2>
-        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
-          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -346,7 +336,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Ostatní plocha 2 240 m², podíl 2/158 — Karlovice","description":"Na prodej · 101 867 Kč (3 593 Kč/m²) · 2 240 m², podíl 2/158 · Karlovice, okres Semily. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-semily-karlovice-yfldzu.html","address":{"@type":"PostalAddress","addressLocality":"Karlovice","addressRegion":"Semily","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.567128,"longitude":15.182466},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":2240,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":101867,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-semily-karlovice-yfldzu.html","itemOffered":{"@type":"Place","name":"Ostatní plocha 2 240 m², podíl 2/158 — Karlovice"},"availability":"https://schema.org/InStock","description":"Cena je za spoluvlastnický podíl; uvedená výměra patří celé parcele."}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Liberecký kraj","item":"https://www.parcelaka.cz/pozemky-liberecky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Semily","item":"https://www.parcelaka.cz/pozemky-okres-semily.html"},{"@type":"ListItem","position":5,"name":"Ostatní plocha 2 240 m², podíl 2/158 — Karlovice","item":"https://www.parcelaka.cz/pozemek-semily-karlovice-yfldzu.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Karlovice|—|Semily|50.567|15.182","ll":[50.567128,15.182466],"v":2240,"c":101867,"r":"data/okres/semily.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=2aa90281"></script>
+<script src="js/min/pozemek.js?v=24a059d6"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

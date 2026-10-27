@@ -9581,3 +9581,29 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .pz-staticky > p:not(:first-of-type){margin:12px 0 0;}
 .pz-staticky > p:not(:first-of-type) a{display:inline-flex; align-items:center;
   min-height:44px; font-size:16px; font-weight:600; color:var(--znacka-hluboka);}
+
+/* =====================================================================
+   ODZNAK S CENOVÝM STUPNĚM U CENY
+   Verdikt o ceně je to jediné, co web o nabídce ví a zdroj ne — a na
+   telefonu začínal až na druhé obrazovce. Naměřeno 27. 10. na vzorku
+   24 stránek pozemků (390×844): verdikt má 15 z nich a začíná
+   průměrně na y = 1 157 px, kdežto cena stojí na 580.
+   Odznak nese JEDNO SLOVO a odkaz; celou větu, místo srovnání
+   i počet nabídek nese dál verdikt. Slovo i barvu rozhoduje jediná
+   funkce cenovyStupen() v js/pozemek.js, kterou používá obojí.
+   Barvy jsou tytéž jako na verdiktu (--vc), aby se dvě místa o jedné
+   věci neřekla dvěma barvami.
+   ------------------------------------------------------------------ */
+.pz-stupen{--vc:var(--znacka-svetla); --vt:#fff;
+  display:flex; align-items:center; gap:8px; min-height:44px;
+  margin:12px 0 0; text-decoration:none;}
+.pz-stupen.good{--vc:var(--c-ok-ink);}
+.pz-stupen.mid{--vc:var(--c-drazba-ink);}
+.pz-stupen.bad{--vc:var(--c-exekuce);}
+.pz-stupen.warn{--vc:var(--accent-warm);}
+.pz-stupen-t{padding:2px 8px; border-radius:var(--r-pill);
+  background:var(--vc); color:var(--vt); font-size:13px; font-weight:600;}
+.pz-stupen-vic{font-size:13px; font-weight:600; color:var(--znacka-hluboka);
+  text-decoration:underline; text-underline-offset:3px;}
+.pz-stupen:hover .pz-stupen-vic{text-decoration:none;}
+

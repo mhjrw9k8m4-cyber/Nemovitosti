@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=1f2a6327">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,6 +119,10 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
+.kd-hlidat .kd-t{color:var(--text-ondeep)}
+.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
+.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -301,20 +305,6 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><article class="pz-staticky"><h1>Orná půda 7 991 m²</h1><p class="pz-staticky-kde">Mochov, okres Praha-východ</p><p><b>47 146 Kč</b> (6 Kč/m²) · 7 991 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Orná půda</dd><dt>Výměra</dt><dd>7 991 m²</dd><dt>Obec</dt><dd>Mochov</dd><dt>Okres</dt><dd><a href="pozemky-okres-praha-vychod.html">Praha-východ</a></dd><dt>Parcela</dt><dd>č. KN 1119</dd><dt>Stav / zdroj</dt><dd>prodej státní půdy (SPÚ, § 12)</dd><dt>Vzdušnou čarou</dt><dd>Praha 27 km</dd></dl><p><a href="pozemek.html?p=Mochov%7CKN%201119%7CPraha-v%C3%BDchod%7C50.147%7C14.792&amp;ll=50.14726,14.79188&amp;v=7991&amp;c=47146">Otevřít na mapě</a></p><p><a href="index.html?obec=Mochov&amp;okres=Praha-v%C3%BDchod">V obci Mochov je v nabídce ještě 11 pozemků</a></p><p>V okruhu 300 m se prodává ještě 7 dalších pozemků — dohromady 4,92 ha za 372 951 Kč.</p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-praha-vychod.html">Okres Praha-východ</a> — všechny pozemky v okrese</li><li><a href="pozemky-stredocesky-kraj.html">Středočeský kraj</a> — přehled celého kraje</li><li><a href="pozemky-orna-puda.html">Orná půda</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-200-tisic.html">Pozemky do 200 tisíc</a> — podobná cenová hladina</li></ul></article></div>
   </div>
-
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Není to ono?</h2>
-        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
-          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -346,7 +336,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Orná půda 7 991 m² — Mochov, okres Praha-východ","description":"Na prodej · 47 146 Kč (6 Kč/m²) · 7 991 m² · Mochov, okres Praha-východ. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-praha-vychod-mochov-ani2fu.html","address":{"@type":"PostalAddress","addressLocality":"Mochov","addressRegion":"Praha-východ","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":50.14726,"longitude":14.79188},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":7991,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":47146,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-praha-vychod-mochov-ani2fu.html","itemOffered":{"@type":"Place","name":"Orná půda 7 991 m² — Mochov, okres Praha-východ"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Středočeský kraj","item":"https://www.parcelaka.cz/pozemky-stredocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Praha-východ","item":"https://www.parcelaka.cz/pozemky-okres-praha-vychod.html"},{"@type":"ListItem","position":5,"name":"Orná půda 7 991 m² — Mochov, okres Praha-východ","item":"https://www.parcelaka.cz/pozemek-praha-vychod-mochov-ani2fu.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Mochov|KN 1119|Praha-východ|50.147|14.792","ll":[50.14726,14.79188],"v":7991,"c":47146,"r":"data/okres/praha-vychod.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=2aa90281"></script>
+<script src="js/min/pozemek.js?v=24a059d6"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

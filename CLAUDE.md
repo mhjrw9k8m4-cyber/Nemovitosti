@@ -537,6 +537,13 @@ vypis-nabidek:
   rám:      "karta je karta NABÍDKY, ne rám kolem seznamu karet — výpis stojí na ploše stránky (.okr-blok), ne v .add-card. Výkladové bloky kartou zůstávají."
   sloupce:  "od 1200 px dva sloupce; v užším sloupci se parametry nevejdou se zdrojem do jedné řady, takže mají celou šířku textu a zdroj je pod nimi"
   hlida:    scripts/test-seznam-nabidek.mjs
+cenovy-stupen:
+  pravidlo: "slovo o ceně stojí na dvou místech (odznak u ceny, verdikt níž) a rozhoduje o něm JEDNA funkce cenovyStupen() v js/pozemek.js. Odznak nese jen slovo a odkaz; větu, místo srovnání a počet nabídek nese verdikt."
+  proc:     "verdikt začínal na telefonu průměrně na y=1157 px, cena na 580 — hlavní argument stránky byl pod ohybem. Odznak je na 673."
+  hlida:    scripts/test-cenovy-stupen.mjs
+zaverecny-pas:
+  kde:      "úvodní a regionální stránky ano, stránka pozemku NE. Naměřeno 27. 10.: pás měřil 445 px (i po stažení 310) z 3 716 px stránky a přetáhl mez „vejde se do 4,4 obrazovky“. Hlídání je tam místo něj dlaždicí v rozcestníku „Kam dál“, která se vejde do existující mřížky."
+  pravidlo: "mez v scripts/test-poradi-pozemku.mjs se kvůli nové ozdobě nezvedá — její smysl je, že se stránka nevrátí k naměřeným 4,7 obrazovky."
 vyrazena-nabidka:
   co:       "stránka pozemku, který zmizel ze zdroje. Generátor ji schválně nepřegeneruje, takže se nevykreslí detail a zůstane statická záloha (article.pz-staticky) — 327 z 2 271 stránek pozemků."
   pravidlo: "nejdřív rozcestí (kam místo toho), pak záznam. Záznam zůstává úplný, jen vypadá jako tabulka, ne jako výpis z databáze."

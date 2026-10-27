@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=1f2a6327">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=e61e7e89">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -119,6 +119,10 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-hlidat{background:var(--plocha-znacka);border-color:var(--plocha-znacka)}
+.kd-hlidat .kd-t{color:var(--text-ondeep)}
+.kd-hlidat .kd-p{color:var(--text-ondeep-mute)}
+.kd-hlidat:hover{background:var(--znacka-hluboka);border-color:var(--znacka-hluboka)}
 .kd-t{font-size:14px;font-weight:700;color:var(--text)}
 .kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
 @media (max-width:560px){.kd-p{display:none}
@@ -301,20 +305,6 @@ body.pzm-cela-telo{overflow:hidden}
     <a class="pz-back" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Zpět na seznam</a>
     <div id="pz-detail"><article class="pz-staticky"><h1>Stavební pozemek 2 888 m²</h1><p class="pz-staticky-kde">Jílovice</p><p><b>5 050 000 Kč</b> (1 749 Kč/m²) · 2 888 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Stavební pozemek</dd><dt>Výměra</dt><dd>2 888 m²</dd><dt>Obec</dt><dd>Jílovice</dd><dt>Okres</dt><dd><a href="pozemky-okres-ceske-budejovice.html">České Budějovice</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>České Budějovice 19 km</dd></dl><p><a href="pozemek.html?p=J%C3%ADlovice%7C%E2%80%94%7C%C4%8Cesk%C3%A9%20Bud%C4%9Bjovice%7C48.910%7C14.716&amp;ll=48.9102416,14.715596&amp;v=2888&amp;c=5050000">Otevřít na mapě</a></p><h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">Nabízím k prodeji stavební parcelu v nádherném a klidném prostředí Vlachnovic u Jílovic. Jedná se o místo vhodné pro trvalé bydlení i rekreaci, obklopené malebnou přírodou, lesy, loukami a rybníčky. Okolí je ideální pro milovníky klidu, přírody i houbaření. Jílovice jsou vzdálené přibližně 2,5 km, v dosahu jsou také Trhové Sviny a Borovany, kde se nachází obchody, školy a další služby. Cena není pevně stanovena. Zájemci mohou předkládat své cenové nabídky.</p><h2>Kam dál</h2><ul><li><a href="pozemky-okres-ceske-budejovice.html">Okres České Budějovice</a> — všechny pozemky v okrese</li><li><a href="pozemky-jihocesky-kraj.html">Jihočeský kraj</a> — přehled celého kraje</li><li><a href="pozemky-stavebni.html">Stavební pozemky</a> — týž druh pozemku po celé ČR</li></ul></article></div>
   </div>
-
-  <section class="section cta-pas">
-    <div class="wrap cta-wrap">
-      <div>
-        <h2>Není to ono?</h2>
-        <p>Řekněte, co hledáte — okres, cenu, výměru — a přijde e-mail, jakmile
-          se objeví nabídka, která sedí. Nebo přidejte vlastní pozemek.</p>
-      </div>
-      <div class="cta-akce">
-        <a class="uh-cta" href="hlidani.html">Nastavit hlídání</a>
-        <a class="uh-cta2" href="pridat.html">Přidat svůj pozemek</a>
-      </div>
-    </div>
-  </section>
 </main>
 
 <footer>
@@ -346,7 +336,7 @@ body.pzm-cela-telo{overflow:hidden}
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
 <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Stavební pozemek 2 888 m² — Jílovice","description":"Na prodej · 5 050 000 Kč (1 749 Kč/m²) · 2 888 m² · Jílovice, okres České Budějovice. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-ceske-budejovice-jilovice-4hvdpd.html","address":{"@type":"PostalAddress","addressLocality":"Jílovice","addressRegion":"České Budějovice","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":48.9102416,"longitude":14.715596},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":2888,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":5050000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-ceske-budejovice-jilovice-4hvdpd.html","itemOffered":{"@type":"Place","name":"Stavební pozemek 2 888 m² — Jílovice"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Jihočeský kraj","item":"https://www.parcelaka.cz/pozemky-jihocesky-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres České Budějovice","item":"https://www.parcelaka.cz/pozemky-okres-ceske-budejovice.html"},{"@type":"ListItem","position":5,"name":"Stavební pozemek 2 888 m² — Jílovice","item":"https://www.parcelaka.cz/pozemek-ceske-budejovice-jilovice-4hvdpd.html"}]}]</script>
 <script>window.PK_POZEMEK={"k":"Jílovice|—|České Budějovice|48.910|14.716","ll":[48.9102416,14.715596],"v":2888,"c":5050000,"r":"data/okres/ceske-budejovice.json","ch":{"Lesní pozemek":{"ch":39,"z":30,"n":66},"Orná půda":{"ch":23,"z":541,"n":565},"Ostatní plocha":{"ch":74,"z":21,"n":61},"Louka / travní porost":{"ch":34,"z":259,"n":273},"Jiný pozemek":{"ch":429,"z":6,"n":38},"Vinice / sad":{"ch":44,"z":35,"n":45},"Stavební / zastavěná":{"ch":37,"z":201,"n":230}}};</script>
-<script src="js/min/pozemek.js?v=2aa90281"></script>
+<script src="js/min/pozemek.js?v=24a059d6"></script>
 
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

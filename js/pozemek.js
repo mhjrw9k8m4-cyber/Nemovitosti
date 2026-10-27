@@ -562,10 +562,45 @@
         + '</a>';
     }).join('');
     if (!dlazdice) return '';
+    /* A JEDNA DLAŽDICE NAVÍC, KTEROU GENERÁTOR POSLAT NEMŮŽE. Kdo si
+       tenhle pozemek nevybral, má odkud pokračovat — ale všechny
+       cesty vedou na další výpis. Chybělo to jediné, co ho přivede
+       zpátky, až se objeví něco jiného: hlídání. Stálo to 27. 10.
+       na konci stránky jako samostatný zelený pás, jenže ten měřil
+       310 px z 3 716 a stránka přetekla mez „vejde se do 4,4
+       obrazovky" (scripts/test-poradi-pozemku.mjs). Dlaždice v už
+       hotové mřížce stojí 56 px, a hlavně stojí přesně tam, kam se
+       dívá ten, kdo hledá, kam dál. Odkaz je pevný, ne z ostrůvku:
+       stránka hlidani.html existuje vždycky. */
+    dlazdice += '<a class="kd-polozka kd-hlidat" href="hlidani.html">'
+      + '<span class="kd-t">Hlídat nové nabídky</span>'
+      + '<span class="kd-p">e-mail, jakmile přibude</span></a>';
     return '<nav class="pz-kamdal" aria-labelledby="pz-kamdal-h">'
       + '<h2 class="pz-sect-h" id="pz-kamdal-h">Kam dál</h2>'
       + '<div class="kd-mriz">' + dlazdice + '</div>'
       + '</nav>';
+  }
+
+  /* JEDNO ROZHODNUTÍ O CENĚ, DVĚ MÍSTA, KDE SE UKÁŽE.
+     Verdikt o ceně je to jediné, co tenhle web o nabídce ví a zdroj
+     ne — a ležel až na druhé obrazovce. Naměřeno 27. 10. na telefonu
+     390×844 na vzorku 24 stránek pozemků: verdikt má 15 z nich
+     a začíná průměrně na y = 1 157 px (nejdál 1 385), kdežto cena
+     stojí na 580. Pět set sedmdesát sedm pixelů pod cenou, tedy pod
+     ohybem, je na hlavní argument stránky pozdě.
+     Řeší se to odznakem u ceny, který na verdikt odkazuje — NE druhým
+     výpočtem. Slovo na odznaku i barva se rozhodnou tady, jednou,
+     a berou si je obě místa; kdyby se rozhodovalo dvakrát, dřív nebo
+     později by u ceny stálo něco jiného než o dvě obrazovky níž. */
+  function cenovyStupen(d, pc) {
+    if (!MODEL || !hasArea(d) || !d.price) return null;
+    if (d.podil) return { cls: 'warn', badge: 'Prodává se podíl' };
+    if (MODEL.neduveryhodna(d)) return { cls: 'warn', badge: 'Cena k ověření' };
+    var p = pc || MODEL.percentil(d);
+    if (!p) return null;
+    if (p.pct <= 35) return { cls: 'good', badge: 'Výhodná cena' };
+    if (p.pct >= 65) return { cls: 'bad', badge: 'Vyšší cena' };
+    return { cls: 'mid', badge: 'Průměrná cena' };
   }
 
   function pzVerdictHtml(d) {
@@ -633,9 +668,13 @@
        stojí z téhož důvodu a dva řádky drobného písma pod verdiktem
        už nikdo nečte. */
     var zKolika = (pc.sample > 0) ? ' (' + pc.sample + ' ' + (pc.sample >= 2 && pc.sample <= 4 ? 'nabídky' : 'nabídek') + ')' : '';
-    if (pct <= 35) { cls = 'good'; badge = 'Výhodná cena'; text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
-    else if (pct >= 65) { cls = 'bad'; badge = 'Vyšší cena'; text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
-    else { cls = 'mid'; badge = 'Průměrná cena'; text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    /* Slovo a barva ze společné funkce — viz cenovyStupen výš. Tady
+       zůstává jen VĚTA, protože tu odznak u ceny nenese. */
+    var stupen = cenovyStupen(d, pc);
+    cls = stupen.cls; badge = stupen.badge;
+    if (pct <= 35) { text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else if (pct >= 65) { text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else { text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     /* A S ČÍM SE TO SROVNÁVALO. Naměřeno 23. 10.: jeden velkoobchodník
        drží 900 z 1 932 nabídek (47 %) a u 563 z 876 verdiktů je nad
        polovinou srovnávaných nabídek od něj — v některých okresech
@@ -2302,6 +2341,18 @@
            „dražba", neřekne řádek nic, co by nestálo v odznaku nad
            snímkem — pak se vynechá celý. */
         (zdrojRadek ? '<div class="pz-zdroj">Zdroj: ' + esc(zdrojRadek) + '</div>' : '') +
+        /* ODZNAK S ODKAZEM, NE S VLASTNÍM TVRZENÍM. Nese jedno slovo
+           („Výhodná cena") a vede na verdikt, kde stojí celá věta
+           i to, z kolika nabídek a kde se srovnávalo. Kdyby celou tu
+           větu nesl sám, měla by stránka dvě místa, která o ceně
+           mluví — a to druhé by se jednou rozešlo s modelem. */
+        (function () {
+          var st = cenovyStupen(d);
+          if (!st) return '';
+          return '<a class="pz-stupen ' + st.cls + '" href="#pz-verdict">'
+            + '<span class="pz-stupen-t">' + esc(st.badge) + '</span>'
+            + '<span class="pz-stupen-vic">jak to víme</span></a>';
+        }()) +
       '</div>' +
       '</div>' +
 

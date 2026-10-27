@@ -2597,3 +2597,11 @@ body.ma-listu .to-top{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 }
 .pz-staticky>p:not(:first-of-type){margin:12px 0 0}
 .pz-staticky>p:not(:first-of-type) a{display:inline-flex;align-items:center;min-height:44px;font-size:16px;font-weight:600;color:var(--znacka-hluboka)}
+.pz-stupen{--vc:var(--znacka-svetla);--vt:#fff;display:flex;align-items:center;gap:8px;min-height:44px;margin:12px 0 0;text-decoration:none}
+.pz-stupen.good{--vc:var(--c-ok-ink)}
+.pz-stupen.mid{--vc:var(--c-drazba-ink)}
+.pz-stupen.bad{--vc:var(--c-exekuce)}
+.pz-stupen.warn{--vc:var(--accent-warm)}
+.pz-stupen-t{padding:2px 8px;border-radius:var(--r-pill);background:var(--vc);color:var(--vt);font-size:13px;font-weight:600}
+.pz-stupen-vic{font-size:13px;font-weight:600;color:var(--znacka-hluboka);text-decoration:underline;text-underline-offset:3px}
+.pz-stupen:hover .pz-stupen-vic{text-decoration:none}
