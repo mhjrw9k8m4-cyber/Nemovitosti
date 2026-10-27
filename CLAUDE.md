@@ -504,6 +504,7 @@ pismo:
   vahy:      [400, 500, 600, 700]
   prokladani: [-0.04em, -0.03em, -0.02em, -0.01em, 0, .02em, .07em, .1em]
   radkovani: nejvyse 1.6
+  nejmensi-veta: "12 px. Jedenáctky nesou štítky, čísla os a značku odkazu ven — celá věta pod dvanáctkou je nehoda, ne záměr (hlídá blok 6a2 v scripts/test-rozvrzeni.mjs)."
   pozor:     "hodnota, která se nemá kde zlomit (číslo s jednotkou za nezlomitelnou mezerou), se zmenšuje podle NAMĚŘENÉ šířky, ne podle počtu znaků — při devíti znacích je „Podíl 1/2“ 105 px a „neuvedena“ 130,8 px. Dělá to pzVelikostHodnot v js/pozemek.js, hlídá scripts/test-parametry.mjs."
   hlida:     scripts/test-pismo.mjs, test-typografie.mjs, test-pisma.mjs
 barvy:
@@ -528,6 +529,14 @@ hlava-stranky:
   odznak:   "pilulka (--r-pill). Ručně psané stránky nesou .st-odznak, vygenerované .eyebrow uvnitř desky; vzhled sdílejí jedním pravidlem. Obočí MIMO desku (.section-head) zůstává čárkou — to je nadtitul oddílu, ne odznak stránky."
   akcent:   "na desce --znacka-na-tmave, NIKDY --znacka-svetla (ta má na #12241A 2,63 : 1)"
   hlida:    scripts/test-kontrast.mjs, test-jeden-styl.mjs, test-hlavicka-stranky.mjs
+u-hrany:
+  pravidlo: "na telefonu má blok s vlastní plochou jen dvě správné polohy: 0 px (schválně od kraje ke kraji) nebo aspoň 16 px. Cokoli mezi tím vzniká rozdílem dvou čísel, která se měla rovnat — záporný okraj se proto píše z tokenu (calc(-1 * var(--okraj-stranky))), ne ručně."
+  plovouci: "prvek přilepený k hraně okna se počítá z PRUHU vedle obsahu ((100vw − strop obsahu)/2), ne z okna. Pevné odsazení platí jen pro šířku, na které se zrovna dívalo."
+  hlida:    scripts/test-u-hrany.mjs, test-nahoru.mjs
+vypis-nabidek:
+  rám:      "karta je karta NABÍDKY, ne rám kolem seznamu karet — výpis stojí na ploše stránky (.okr-blok), ne v .add-card. Výkladové bloky kartou zůstávají."
+  sloupce:  "od 1200 px dva sloupce; v užším sloupci se parametry nevejdou se zdrojem do jedné řady, takže mají celou šířku textu a zdroj je pod nimi"
+  hlida:    scripts/test-seznam-nabidek.mjs
 odstupy:
   stupnice: [0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
   pravidlo: "přísná čtyřková mříž; 1 a 2 px jsou vlásečnice a mezery v řádku, ne odstupy rozvržení"
