@@ -310,6 +310,39 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     pravda('a jinde na téže stránce se vrátí', jinde && jinde.show === true
       && jinde.udalosti === 'auto', JSON.stringify(jinde));
   }
+
+  /* POJISTKA PROTI PŘEHNANÉMU USTUPOVÁNÍ. Knoflík uhýbá hlavní akci
+     (výš) a je lákavé to zobecnit na „ustup každému ovladači pod
+     sebou". Zkusil jsem to 27. 10. — ptát se po doznění posunu
+     prohlížeče, co pod kolečkem leží (elementsFromPoint v pěti
+     bodech). Na stránce pozemku to sedlo: kolečko přestalo ležet na
+     tlačítku „Navigovat" v kartě se souřadnicemi. Jenže na výpisu
+     dražeb má tlačítko „Uložit" každá karta, takže kolečko zmizelo
+     i tam, kde ho tahle zkouška vyžaduje — a zmizet nesmí, protože
+     ta stránka má 18 700 px a bez něj se z jejího konce nahoru
+     nedostane nikdo. Zobecnění je proto ZAHOZENÉ (viz §176) a tahle
+     kontrola drží, aby se nevrátilo oklikou: na dvaceti polohách
+     okresní stránky musí být knoflík vidět aspoň ve třech
+     čtvrtinách. */
+  const pv = await ctxP.newPage();
+  await pv.goto(`${BASE}/pozemky-okres-benesov.html`, { waitUntil: 'load' });
+  await pv.waitForTimeout(2000);
+  let videt = 0, poloh = 0;
+  for (let y = 900; y <= 4700; y += 200) {
+    /* `behavior:'instant'` schválně: stylopis má plynulé rolování
+       a po obyčejném scrollTo by stránka ještě stála na místě. */
+    await pv.evaluate((yy) => window.scrollTo({ top: yy, behavior: 'instant' }), y);
+    await pv.waitForTimeout(260);
+    const doslo = await pv.evaluate((yy) => Math.round(window.pageYOffset) >= yy - 5, y);
+    if (!doslo) break;
+    poloh++;
+    if (await pv.evaluate(() => getComputedStyle(document.querySelector('.to-top')).opacity === '1')) videt++;
+  }
+  // PŘEDPOKLAD: bez projitých poloh by kontrola níž prošla naprázdno
+  pravda('na výpisu se prošlo aspoň deset poloh', poloh >= 10, `poloh ${poloh}`);
+  pravda('a tlačítko je na výpisu vidět aspoň ve třech čtvrtinách z nich',
+    poloh >= 10 && videt >= poloh * 0.75, `vidět ${videt} z ${poloh}`);
+  await pv.close();
   await ctxP.close();
 }
 
@@ -346,15 +379,34 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
         if (g.right > r.left && g.left < r.right && g.bottom > r.top && g.top < r.bottom)
           kryte.push(String(e.className).split(' ')[0]);
       });
+      const W2 = document.documentElement.clientWidth;
+      const karty = [...document.querySelectorAll('.okr-item')]
+        .map((e) => W2 - e.getBoundingClientRect().right);
       return { vidno: getComputedStyle(t).opacity, sirka: Math.round(r.width),
+        zprava: Math.round(W2 - r.right),
+        /* pruh = kolik zbývá vpravo od nejpravější karty výpisu */
+        pruh: karty.length ? Math.round(Math.min(...karty)) : 0,
         polozek: document.querySelectorAll('.okr-item').length, kryte: [...new Set(kryte)] };
     });
     // PŘEDPOKLAD: bez vykresleného výpisu a svítícího tlačítka by kontrola prošla naprázdno
     pravda(`${W}px: výpis i tlačítko jsou na obrazovce`,
       !!v && v.vidno === '1' && v.polozek > 5, JSON.stringify(v));
     if (v) {
-      pravda(`${W}px: tlačítko nahoru neleží na výpisu`, v.kryte.length === 0,
-        'zakrývá: ' + v.kryte.join(', '));
+      /* MÁ VŮBEC KAM UHNOUT? Obsah má strop 1 096 px, ale v užším okně
+         se o strop neopře a drží se okraje stránky (32 px). Pruh pak
+         měří 32 px a kolečko 46 — v takovém okně se vedle výpisu
+         nevejde nic a jediné, co se dá žádat, je aby se tisklo
+         k hraně. Naměřeno 27. 10. (po §175, kdy výpis přišel o vnější
+         kartu a rozšířil se o 20 px): na 1 100 px pruh 32 px, na
+         1 200 px 52 px, na 1 280 px 92 px. */
+      const vejdeSe = v.pruh >= v.sirka + 4;
+      if (vejdeSe) {
+        pravda(`${W}px: tlačítko nahoru neleží na výpisu`, v.kryte.length === 0,
+          'zakrývá: ' + v.kryte.join(', '));
+      } else {
+        pravda(`${W}px: v úzkém okně se tlačítko aspoň tiskne k hraně`,
+          v.zprava <= 8, `pruh ${v.pruh} px, tlačítko ${v.sirka} px, od hrany ${v.zprava} px`);
+      }
       pravda(`${W}px: a má tvar, který se vedle obsahu vejde`,
         W >= 1366 ? v.sirka > 90 : v.sirka <= 50, `šířka ${v.sirka} px`);
     }

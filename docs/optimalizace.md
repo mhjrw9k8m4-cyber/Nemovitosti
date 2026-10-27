@@ -12059,3 +12059,47 @@ typech stránek: že je rám všude týž, že má nadpis nad výpisem tutéž
 velikost, že výpis stojí na svislici nadpisu stránky — a přímo i to,
 že `.add-card .okr-list` neexistuje nikde. Poslední kontrola je
 nejlevnější a nejpřesnější: ptá se na vnoření, ne na jeho následek.
+
+## 176. Zobecnění, které jsem zahodil: „ustup každému ovladači" *27. 10.*
+
+Knoflík „nahoru" uhýbá hlavní akci stránky (§170). Při obhlídce
+stránky pozemku na telefonu se našel druhý případ: kolečko sedělo na
+tlačítku **„Navigovat"** v kartě se souřadnicemi — tedy na ovladači,
+o kterém skript neví.
+
+Vyjmenovávat selektory nemá konce, tak jsem to zobecnil: po doznění
+posunu (ne při něm — dotaz na rozvržení při rolování stál kdysi
+259 ms procesoru) se skript zeptal prohlížeče, co pod kolečkem leží:
+`elementsFromPoint` v pěti bodech, a když to byl ovladač, kolečko
+ustoupilo. Na stránce pozemku to fungovalo přesně podle představy.
+
+**A pak to shodilo zkoušku na výpisu dražeb.** Tam má tlačítko
+„Uložit" každá karta, takže kolečko mizelo i tam, kde ho
+`scripts/test-nahoru.mjs` vyžaduje — a ta stránka má 18 700 px, tedy
+dvaadvacet obrazovek: bez knoflíku se z jejího konce nahoru nedostane
+nikdo. Měřeno na dvaceti polohách: na stránce pozemku kolečko
+ustoupilo 3× z 10, na výpisu by zmizelo tam, kde je nejvíc potřeba.
+
+Zobecnění je proto **zahozené**. Zůstává ustupování hlavní akci, kde
+je kolize trvalá, a v `test-nahoru.mjs` přibyla kontrola, která hlídá
+opačný směr: na dvaceti polohách okresní stránky musí být knoflík
+vidět aspoň ve třech čtvrtinách. Aby se zobecnění nevrátilo oklikou.
+
+### A druhá věc, kterou odhalila až tahle zkouška
+
+Sjednocení rámu výpisu (§175) rozšířilo výpis o 20 px — zmizelo
+odsazení vnější karty. Tím se ale zúžil pruh, do kterého se vejde
+plovoucí knoflík:
+
+| okno | pruh vpravo od výpisu | kolečko 46 px |
+|---|---|---|
+| 1 100 | 32 px | nevejde se |
+| 1 200 | 52 px | vejde |
+| 1 280 | 92 px | vejde |
+
+Do 1 160 px se obsah neopře o svůj strop (1 096 px) a drží se okraje
+stránky, takže pruh měří přesně `--okraj-stranky`. Na kolečko to
+nestačí a nic s tím nenadělá ani menší odsazení — muselo by být menší
+než terč 44 px. Zkouška proto napřed **změří pruh** a podle toho
+žádá buď „neleží na výpisu" (od 1 200 px), nebo aspoň „tiskne se
+k hraně". Je to přiznaný ústupek, ne tichý.
