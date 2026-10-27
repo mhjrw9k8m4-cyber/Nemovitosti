@@ -6521,24 +6521,39 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 
 /* ČÍSLA V TMAVÉM PÁSU — viz hlavickaCisla() v scripts/generate-region-pages.mjs,
    kde stojí, co tu dřív bylo (odstavec opisující tytéž počty) a proč to
-   odešlo. Dva sloupce na telefonu, na šířku se srovnají vedle sebe.
+   odešlo. Jeden řádek, který se zalamuje podle obsahu — na každé šířce.
    Velká hodnota drží stupeň 28 px jako ostatní velká čísla na webu,
    popisek 13 px jako doplňková čísla na kartě. */
-.okr-cisla{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
-  gap:16px 24px; margin:20px 0 0; max-width:var(--m-text);}
+.okr-cisla{display:flex; flex-wrap:wrap; gap:16px 24px;
+  margin:20px 0 0; max-width:var(--m-text);}
+.okr-cislo{min-width:0;}
 .okr-cislo b{display:block; font-size:28px; font-weight:700; line-height:1.2;
   letter-spacing:-0.02em; color:var(--pas-text); font-variant-numeric:tabular-nums;}
 .okr-cislo span{display:block; margin-top:4px; font-size:13px; line-height:1.5;
   color:var(--pas-text-mute);}
-/* Rozpětí cen je dlouhá hodnota („20 000–13 199 000 Kč"), tak si vezme
-   celý řádek — v půlce řádku vylezlo za pravý okraj telefonu.
-   Osamělé poslední číslo v lichém počtu taky: díra vedle něj je přesně
-   to, co u dlaždic pod pásem vadilo. */
-.okr-cislo-siroky{grid-column:1 / -1;}
+/* ŘÁDEK, KTERÝ SE SKLÁDÁ PODLE OBSAHU — NE DVA SLOUPCE S DĚROU.
+   ------------------------------------------------------------------
+   Do 27. 10. tu byla mřížka o dvou sloupcích a v ní se počítalo
+   s tím, že osamělé POSLEDNÍ číslo si vezme celý řádek. Jenže
+   poslední položka je vždy rozpětí cen, které celý řádek bere
+   už samo — takže pravidlo nikdy nevyšlo a díra zůstala o řádek
+   výš. Naměřeno na všech 101 stránkách s čísly: 74 z nich mělo
+   vedle některého čísla prázdnou půlku řádku (41× vedle třetího
+   čísla, 33× vedle jediného). Vedle toho je to táž vada, která
+   odsoudila dlaždice pod pásem.
+   Čísla se proto skládají jako řádek, který se zalamuje podle toho,
+   co se do šířky vešlo — stejně, jako to od začátku dělala široká
+   okna. Popisky jsou krátké („pozemků" 57, „na prodej" 58, „exekuce"
+   52 px), takže tři se vedle sebe vejdou i na 320 px — změřeno.
+   Dlouhé popisky z druhových stránek („louk a travních porostů")
+   si místo vezmou a zbytek se zalomí za ně; žádná pevná půlka
+   řádku už je nemá čim uříznout.
+   Rozpětí cen je dlouhá hodnota („440 000–379 320 000 Kč"), proto
+   si bere celý řádek pro sebe. */
+.okr-cislo-siroky{flex:1 0 100%;}
 .okr-cislo-siroky b{font-size:24px;}
-.okr-cisla > .okr-cislo:last-child:nth-child(odd){grid-column:1 / -1;}
 @media (min-width:720px){
-  .okr-cisla{display:flex; flex-wrap:wrap; gap:32px; max-width:none;}
+  .okr-cisla{gap:32px; max-width:none;}
 }
 
 /* =====================================================================

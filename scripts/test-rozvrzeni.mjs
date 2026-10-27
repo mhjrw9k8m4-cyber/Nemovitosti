@@ -1949,6 +1949,88 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     `stránek s obsahem jen ${merenych} z ${UZKE.length}`);
 }
 
+/* ---- ČÍSLA V TMAVÉM PÁSU: ŽÁDNÉ Z NICH NEMÁ VEDLE SEBE DÍRU ----
+   Do 27. 10. byla čísla v pásu dvousloupcová mřížka a poslední položkou
+   je vždy rozpětí cen, které si bere celý řádek. Třetí číslo („1 exekuce")
+   proto zbývalo samo a vedle něj zela prázdná půlka řádku — na 74 ze 101
+   stránek s čísly. Nic to neshodilo: nic nepřetékalo, jen to bylo ošklivé.
+   Měří se tedy přímo to, co vadilo: stojí-li některé číslo na řádku samo,
+   ačkoli by se vedle čísel na řádku NAD ním ještě vešlo, je to díra.
+   Rozpětí cen (široká položka) vlastní řádek mít smí — je na něj dlouhé. */
+{
+  const CISELNE = [
+    readdirSync(KOREN).filter((f) => /^pozemky-okres-.+\.html$/.test(f)).sort()[0],
+    readdirSync(KOREN).filter((f) => /^pozemky-.+-kraj\.html$/.test(f)).sort()[0],
+    'pozemky-louka.html',
+  ].filter((f) => f && existsSync(path.join(KOREN, f)));
+  let mereno = 0;
+  for (const s of CISELNE) {
+    for (const sirka of [320, 390, 1280]) {
+      const { ctx, p } = await otevri(s, sirka, 900);
+      const v = await p.evaluate(() => {
+        const g = document.querySelector('.okr-cisla');
+        if (!g) return null;
+        const sirkaG = g.getBoundingClientRect().width;
+        const mezera = parseFloat(getComputedStyle(g).columnGap) || 0;
+        /* ŠÍŘKA TEXTU, NE KRÁBICE — A TEXTOVÝCH UZLŮ, NE PRVKU.
+           V mřížce se krábice natáhne na celou buňku, takže sečtené šířky
+           vyjdou přesně na šířku řádku a žádná díra nevyjde najevo
+           (vyzkoušeno sabotáží: s původní mřížkou kontrola prošla).
+           Rozsah přes CELÝ prvek nepomůže: číslo i popisek jsou bloky,
+           takže jejich řádkové krábice jsou taky široké jako buňka
+           (naměřeno 163 px místo 57). Až rozsah nad TEXTOVÝM UZLEM dá
+           šířku písmen: 57 „32 pozemků", 58 „31 na prodej", 52 „1 exekuce". */
+        const sirkaTextu = (el) => {
+          const chodec = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          const rozsah = document.createRange();
+          let w = 0, uzel;
+          while ((uzel = chodec.nextNode())) {
+            rozsah.selectNodeContents(uzel);
+            w = Math.max(w, rozsah.getBoundingClientRect().width);
+          }
+          return Math.ceil(w);
+        };
+        const polozky = [...g.children].map((c) => {
+          const r = c.getBoundingClientRect();
+          return { top: Math.round(r.top), sirka: sirkaTextu(c) || r.width,
+            krabice: Math.round(r.width),
+            siroka: c.classList.contains('okr-cislo-siroky'),
+            text: c.textContent.trim().replace(/\s+/g, ' ') };
+        });
+        return { sirkaG, mezera, polozky, smer: getComputedStyle(g).flexDirection };
+      });
+      await ctx.close();
+      if (!v) continue;
+      /* Na širokém okně stojí čísla ve SLOUPCI u pravého okraje hlavičky —
+         jedno pod druhým je tam záměr, ne díra. */
+      if (/^column/.test(v.smer)) continue;
+      mereno++;
+      /* Obsahová šířka položky, ne natažená: v řádku se natahují, takže
+         sečtené šířky řádku dají přesně jeho využití. */
+      const radky = new Map();
+      for (const x of v.polozky) {
+        if (!radky.has(x.top)) radky.set(x.top, []);
+        radky.get(x.top).push(x);
+      }
+      const poradi = [...radky.keys()].sort((a, b) => a - b);
+      const dira = [];
+      for (let i = 1; i < poradi.length; i++) {
+        const r = radky.get(poradi[i]);
+        if (r.length !== 1 || r[0].siroka) continue;      // široká položka smí být sama
+        const nad = radky.get(poradi[i - 1]);
+        if (nad.some((x) => x.siroka)) continue;          // nad ní je široká — neměla kam
+        const zabrano = nad.reduce((a, x) => a + x.sirka, 0) + v.mezera * (nad.length - 1);
+        if (zabrano + v.mezera + r[0].sirka <= v.sirkaG + 1) dira.push(r[0].text);
+      }
+      pravda(`${s} @${sirka}: čísla v pásu se skládají bez díry vedle sebe`,
+        dira.length === 0, `samo na řádku, a přitom by se vešlo výš: ${dira.join(', ')}`);
+    }
+  }
+  // PŘEDPOKLAD: bez stránek s čísly by kontrola proběhla naprázdno
+  pravda(`a bylo co měřit — ${mereno} měření čísel v pásu`, mereno >= 6,
+    `měření jen ${mereno}`);
+}
+
 await prohlizec.close();
 console.log('\nRozvržení a popisky stránek');
 console.log(zpravy.join('\n'));
