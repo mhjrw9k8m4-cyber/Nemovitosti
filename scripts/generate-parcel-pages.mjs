@@ -309,7 +309,59 @@ export function mistoFraze(place, okres) {
   return { dlouhe: `${place}, okres ${okres}`, kratke: `${place}` };
 }
 
-function slozTitulek(druh, vym, place, okres, podil) {
+/* NADPIS VEDE SLOVESEM — „Prodej orné půdy 5 482 m²".
+   Majitel poslal 27. 10. jako předlohu detaily nabídek z reality.idnes
+   a Sreality. Nadpis tam začíná tím, co se s nemovitostí děje:
+   „Prodej bytu 2+1 61 m²", „Pronájem bytu 2+kk 52 m²". Tahle stránka
+   začínala druhem („Ostatní plocha 6 336 m²"), takže z nadpisu nešlo
+   poznat, jestli se prodává, draží, nebo jde o exekuci — a člověk,
+   který ve vyhledávači píše „prodej pozemku Benešov", nenašel v titulku
+   ani jedno ze svých slov.
+
+   DRUH ZŮSTÁVÁ, JEN VE DRUHÉM PÁDĚ. Zahodit ho nešlo: odlišuje dvě
+   nabídky, které se jinak liší jen výměrou, a na tom stojí celé
+   rozlišování duplicitních titulků o kus níž. Druhý pád se nedá
+   odvodit pravidlem (půda → půdy, porost → porostu, nádvoří →
+   nádvoří), ale druhů je v datech třináct — spočítáno na vygenerovaných
+   stránkách — takže je to tabulka, ne algoritmus. Co v ní není,
+   projde beze změny: radši „Prodej Louka 2 000 m²" jednou než špatně
+   ohnuté slovo dvakrát. */
+const DRUH_2P = new Map([
+  ['Orná půda', 'orné půdy'],
+  ['Trvalý travní porost', 'trvalého travního porostu'],
+  ['Stavební pozemek', 'stavebního pozemku'],
+  ['Ostatní plocha', 'ostatní plochy'],
+  ['Lesní pozemek', 'lesního pozemku'],
+  ['Zahrada', 'zahrady'],
+  ['Pozemek', 'pozemku'],
+  ['Vinice', 'vinice'],
+  ['Ovocný sad', 'ovocného sadu'],
+  ['Vodní plocha', 'vodní plochy'],
+  ['Zastavěná plocha a nádvoří', 'zastavěné plochy a nádvoří'],
+  ['Zemědělský pozemek', 'zemědělského pozemku'],
+  ['Louka', 'louky'],
+]);
+
+/* Sloveso podle toho, co se s pozemkem děje. „Exekuční dražba" je
+   přesnější než holé „Exekuce": exekuce je řízení, dražba je ta
+   událost, které se dá zúčastnit. U obecního záměru a nabídky přímo
+   od majitele se pořád prodává. */
+const AKCE = new Map([
+  ['sale', 'Prodej'],
+  ['drazba', 'Dražba'],
+  ['exekuce', 'Exekuční dražba'],
+  ['obec', 'Prodej'],
+  ['majitel', 'Prodej'],
+]);
+
+export function hlavaTitulku(druh, typ) {
+  const akce = AKCE.get(typ);
+  const ve2p = DRUH_2P.get(druh);
+  if (!akce || !ve2p) return druh;
+  return `${akce} ${ve2p}`;
+}
+
+function slozTitulek(hlava, druh, vym, place, okres, podil) {
   const konec = ' | Parcelka';
   const M = mistoFraze(place, okres);
   /* Podíl ustupuje až jako předposlední — dřív se vzdá okres i výměra.
@@ -326,24 +378,42 @@ function slozTitulek(druh, vym, place, okres, podil) {
      místo určuje, takže ustoupí radši výměra. Jinde krátký tvar
      zůstává — obec sama o sobě dává smysl. */
   const kratke = jeUlice(place) ? [] : [M.kratke];
-  const varianty = [
-    `${druh}${vym ? ' ' + vym : ''}${p} — ${M.dlouhe}`,
-    ...kratke.map((K) => `${druh}${vym ? ' ' + vym : ''}${p} — ${K}`),
-    ...(vym && pk ? [`${druh} ${vym}${pk} — ${M.dlouhe}`,
-      ...kratke.map((K) => `${druh} ${vym}${pk} — ${K}`)] : []),
-    `${druh}${p} — ${M.dlouhe}`,
-    ...kratke.map((K) => `${druh}${p} — ${K}`),
+  /* SLOVESO USTOUPÍ DŘÍV NEŽ OKRES A VÝMĚRA. Hlava „Prodej trvalého
+     travního porostu" je o jedenáct znaků delší než „Trvalý travní
+     porost" a do 65 znaků i se jménem webu se pak nevejde okres —
+     naměřeno 27. 10.: z 32 benešovských stránek jmenovalo okres jen
+     11 a dvě nabídky ve Strunkovicích dostaly týž titulek. Okres je
+     přitom to, podle čeho lidé hledají, a shodný titulek je vada.
+     Žebřík proto nabízí obě hlavy střídavě: nejdřív se slovesem,
+     a když se nevejde, totéž bez něj. Sloveso se tím neztratí tam,
+     kde na ně je místo, a nikde kvůli němu nezmizí údaj. */
+  const sHlavou = (h) => [
+    `${h}${vym ? ' ' + vym : ''}${p} — ${M.dlouhe}`,
+    ...kratke.map((K) => `${h}${vym ? ' ' + vym : ''}${p} — ${K}`),
+    ...(vym && pk ? [`${h} ${vym}${pk} — ${M.dlouhe}`,
+      ...kratke.map((K) => `${h} ${vym}${pk} — ${K}`)] : []),
+    `${h}${p} — ${M.dlouhe}`,
+    ...kratke.map((K) => `${h}${p} — ${K}`),
     ...(podil ? [`${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${M.dlouhe}`,
       ...kratke.map((K) => `${podil.charAt(0).toUpperCase() + podil.slice(1)} — ${K}`)] : []),
-    ...kratke.map((K) => `${druh} — ${K}`),
+    ...kratke.map((K) => `${h} — ${K}`),
     /* U ulice jde „místo, okres" PŘED „druh — okres": kdyby ustoupilo
        jako poslední, zbyl by nadpis „Stavební pozemek — okres Jablonec
        nad Nisou" a ulice by zmizela úplně. Přesně to se stalo
        u U Pískovny, než tohle pořadí vzniklo. */
     ...(jeUlice(place) ? [`${M.dlouhe}`] : []),
-    `${druh} — okres ${okres}`,
+    `${h} — okres ${okres}`,
     `${M.dlouhe}`,
   ];
+  /* Střídavě: každá podoba nejdřív se slovesem, pak bez něj. Když je
+     hlava táž (druh, pro který slovník druhého pádu nemá heslo),
+     je druhý tvar shodný a prostě se přeskočí. */
+  const sloveso = sHlavou(hlava), bez = sHlavou(druh);
+  const varianty = [];
+  for (let i = 0; i < sloveso.length; i++) {
+    varianty.push(sloveso[i]);
+    if (bez[i] !== sloveso[i]) varianty.push(bez[i]);
+  }
   for (const v of varianty) if ((v + konec).length <= MEZ_TITULKU) return v;
   return varianty[varianty.length - 1].slice(0, MEZ_TITULKU - konec.length - 1) + '…';
 }
@@ -448,7 +518,7 @@ export function pripravRozliseni(polozky) {
   for (const d of polozky) {
     const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
     const vym = d.area ? `${fmt(d.area)} m²` : '';
-    const t = slozTitulek(druh, vym, d.place, d.okres, textPodilu(d));
+    const t = slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));
     if (!podleTitulku.has(t)) podleTitulku.set(t, []);
     podleTitulku.get(t).push({ d, druh, vym });
   }
@@ -490,7 +560,21 @@ export function pripravRozliseni(polozky) {
 export function textyPro(d) {
   const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
   const vym = d.area ? `${fmt(d.area)} m²` : '';
-  const titul = ROZLISENI.get(klicNabidky(d)) || slozTitulek(druh, vym, d.place, d.okres, textPodilu(d));
+  const titul = ROZLISENI.get(klicNabidky(d))
+    || slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));
+  /* NADPIS STRÁNKY SE OD TITULKU PRO VYHLEDÁVAČ ODDĚLIL — a je to
+     rozdíl v omezeních, ne dvě pravdy o jedné věci.
+     Titulek musí do 65 znaků i se jménem webu, jinak ho Google usekne
+     uprostřed slova; proto se odstupňovaně zkracuje a sloveso v něm
+     ustupuje dřív než okres a výměra. Naměřeno 27. 10.: slovesem
+     začíná 1 003 titulků z 2 198, u zbytku by se za ně neveš­lo něco
+     důležitějšího.
+     Nadpis na stránce žádný takový strop nemá — čte ho člověk, ne
+     výpis výsledků — takže vede slovesem vždycky, jak to má předloha
+     („Prodej bytu 2+1 61 m²"). Místo za pomlčkou zůstává stejné: z něj
+     dělá js/pozemek.js druhý řádek pod nadpisem. */
+  const nadpis = `${hlavaTitulku(druh, d.type)}${vym ? ' ' + vym : ''}`
+    + `${textPodilu(d) ? ', ' + textPodilu(d) : ''} — ${mistoFraze(d.place, d.okres).dlouhe}`;
   const cena = d.price ? `${fmt(d.price)} Kč` : 'cena neuvedena';
   /* CENA ZA METR Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE. Titulek, popis pro
      vyhledávač i náhled v chatu se skládaly dělením celé výměry —
@@ -502,7 +586,7 @@ export function textyPro(d) {
   const zaM2Hodnota = (d.price && d.area) ? CENY.zaMetr(d) : null;
   const zaM2 = (zaM2Hodnota == null || !isFinite(zaM2Hodnota)) ? '' : ` (${fmt(zaM2Hodnota)} Kč/m²)`;
   const popis = slozPopis(d, cena, zaM2, vym, ROZLISENI_POPIS.get(klicNabidky(d)));
-  return { titul, popis, cena, zaM2, vym, druh };
+  return { titul, nadpis, popis, cena, zaM2, vym, druh };
 }
 
 /* SOUBOR se předává, nepočítá. Pozemky se shodným klíčem dostávají
@@ -1057,7 +1141,7 @@ function bezKomentaruVeStylu(html) {
 
 
 export function stranka(sablona, d, soubor = souborPro(d)) {
-  const { titul, popis, cena, zaM2, vym, druh } = textyPro(d);
+  const { titul, nadpis, popis, cena, zaM2, vym, druh } = textyPro(d);
   const url = `${WEB}/${soubor}`;
   const og = `${WEB}/assets/og/okres-${slug(d.okres)}.png`;
   let h = sablona;
@@ -1229,9 +1313,17 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      viděl by robot a člověk bez JavaScriptu jiný nadpis než ostatní —
      přesně to chytla scripts/test-hlavicka-pozemku.mjs.
      <title> zůstává CELÝ: vyhledávač místo potřebuje. */
-  const tiPomlcka = titul.indexOf(' — ');
-  const titulCo = tiPomlcka < 0 ? titul : titul.slice(0, tiPomlcka);
-  const titulKde = tiPomlcka < 0 ? '' : titul.slice(tiPomlcka + 3);
+  /* STATICKÝ NADPIS SE DĚLÍ Z `nadpis`, NE Z `titul`. Oba texty jsou
+     o téže nabídce, ale mají jiná omezení: titulek musí do 65 znaků
+     i se jménem webu, a sloveso v něm proto ustupuje dřív než okres.
+     Kdyby se statický nadpis dělil z něj, viděl by vyhledávač „Ostatní
+     plocha 6 336 m²" a člověk ve vykreslené stránce „Prodej ostatní
+     plochy 6 336 m²" — jedna stránka, dva nadpisy. Ostrůvek
+     #pz-titul-data nese tentýž `nadpis`, takže servírovaná i vykreslená
+     podoba jsou doslova totéž; hlídá to scripts/test-hlavicka-pozemku.mjs. */
+  const tiPomlcka = nadpis.indexOf(' — ');
+  const titulCo = tiPomlcka < 0 ? nadpis : nadpis.slice(0, tiPomlcka);
+  const titulKde = tiPomlcka < 0 ? '' : nadpis.slice(tiPomlcka + 3);
   const staticky =
     `<article class="pz-staticky">`
     + `<h1>${esc(titulCo)}</h1>`
@@ -1398,7 +1490,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
      Titul sem jde hotový, i s rozlišením shodných titulků
      (ROZLISENI) — prohlížeč by si ho z vlastního HTML neposkládal. */
   h = h.replace(/(<\/body>)/,
-    `<script type="application/json" id="pz-titul-data">${jsonVeStrance(titul)}</scr` + `ipt>\n$1`);
+    `<script type="application/json" id="pz-titul-data">${jsonVeStrance(nadpis)}</scr` + `ipt>\n$1`);
   if (kamDalSem.length) {
     h = h.replace(/(<\/body>)/,
       `<script type="application/json" id="pz-kamdal-data">${jsonVeStrance(kamDalSem)}</scr` + `ipt>\n$1`);

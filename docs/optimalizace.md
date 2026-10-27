@@ -12687,3 +12687,62 @@ se nenašel, protože česká sazba vkládá za jednopísmenné „a"
 nezlomitelnou mezeru (U+00A0) a předpis měl obyčejnou. Zkouška pak
 hlásila „null" na stránce, kde ten řádek je. Dnes se porovnává přes
 `\s+`.
+
+## 188. Nadpis vede slovesem, jak to má předloha *27. 10.*
+
+Na fotkách z reality.idnes a Sreality začíná nadpis tím, co se
+s nemovitostí děje: *Prodej bytu 2+1 61 m²*, *Pronájem bytu 2+kk
+52 m²*. Tahle stránka začínala druhem — *Ostatní plocha 6 336 m²* —
+takže z nadpisu nešlo poznat, jestli se prodává, draží, nebo jde
+o exekuci. A kdo ve vyhledávači píše „prodej pozemku Benešov",
+nenašel v titulku ani jedno ze svých slov.
+
+Dnes je tam *Prodej ostatní plochy 6 336 m²*.
+
+### Druh zůstal, jen ve druhém pádě
+
+Zahodit ho nešlo: odlišuje dvě nabídky, které se jinak liší jen
+výměrou, a na tom stojí celé rozlišování duplicitních titulků. Druhý
+pád se nedá odvodit pravidlem (půda → půdy, porost → porostu,
+nádvoří → nádvoří), ale **druhů je ve vygenerovaných stránkách
+třináct** — spočítáno — takže je to slovník, ne algoritmus. Co v něm
+není, projde beze změny; radši jednou bez slovesa než dvakrát špatně
+ohnuté slovo.
+
+Sloveso podle typu nabídky: *Prodej*, *Dražba*, *Exekuční dražba*
+(exekuce je řízení, dražba je ta událost, které se dá zúčastnit).
+
+### Kolize s 65 znaky — a proč se nadpis oddělil od titulku
+
+Hlava „Prodej trvalého travního porostu" je o jedenáct znaků delší
+než „Trvalý travní porost", takže se do titulku (65 znaků i se jménem
+webu, jinak ho Google usekne) přestalo vejít místo. Naměřeno hned po
+první verzi: **z 32 benešovských stránek jmenovalo okres jen 11**
+a dvě nabídky ve Strunkovicích dostaly týž titulek.
+
+Dvě opravy:
+
+1. **Žebřík zkracování nabízí obě hlavy střídavě** — nejdřív se
+   slovesem, a když se nevejde, totéž bez něj. Sloveso tím ustupuje
+   dřív než okres a výměra. Slovesem teď začíná 1 003 titulků
+   z 2 198 (46 %).
+2. **Nadpis na stránce se od titulku oddělil.** Není to dvojí pravda,
+   je to dvojí omezení: titulek čte výpis výsledků a má strop,
+   nadpis čte člověk a žádný nemá. Nadpis proto vede slovesem
+   **vždycky**.
+
+Statický `<h1>` pro vyhledávače se dělí z téhož `nadpis` jako ostrůvek
+`#pz-titul-data`, ze kterého skládá nadpis `js/pozemek.js` — obojí je
+doslova týž text. Kdyby se dělil z titulku, viděl by robot jiný nadpis
+než člověk; přesně to `test-hlavicka-pozemku` hlídá a přesně na tom
+spadl, než se to srovnalo. Jeho tvrzení se tím zúžilo: **nadpis
+a ostrůvek se musí rovnat doslova, titulek musí nést místo** — ne že
+jsou všechny tři týž řetězec.
+
+### Vlastní chyba po cestě
+
+`nadpis` jsem napsal do `textyPro()`, ale použil v `stranka()`, kam se
+nevrací — generátor spadl na `ReferenceError` a s ním sedm zkoušek
+naráz. Je to tatáž třída chyby jako ten řetězec volaný jako funkce
+o jednu položku výš: **velká změna v dlouhé funkci, kterou neodhalí
+nic než spuštění.**

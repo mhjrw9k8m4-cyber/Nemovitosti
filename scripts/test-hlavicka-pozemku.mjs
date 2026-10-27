@@ -102,7 +102,18 @@ for (const f of stranky) {
   const ocekCo = iP < 0 ? zOstruvku : zOstruvku.slice(0, iP);
   const ocekKde = iP < 0 ? '' : zOstruvku.slice(iP + 3);
   const kde = (h.match(/<p class="pz-staticky-kde">(.*?)<\/p>/) || [])[1] || '';
-  if (h1 !== ocekCo || kde !== ocekKde || titulek !== `${zOstruvku} | Parcelka`) {
+  /* TITULEK SE S OSTRŮVKEM ROVNAT NEMUSÍ, NADPIS ANO. Do 27. 10. byly
+     všechny tři texty týž řetězec. Od předlohy (reality.idnes,
+     Sreality) vede nadpis slovesem — „Prodej ostatní plochy 6 336 m²" —
+     jenže titulek pro vyhledávač se musí vejít do 65 znaků i se jménem
+     webu a sloveso v něm ustupuje dřív než okres a výměra (naměřeno:
+     slovesem začíná 1 003 titulků z 2 198). Co platí dál a hlídá se:
+     servírovaný <h1> a ostrůvek, ze kterého nadpis skládá js/pozemek.js,
+     musí být DOSLOVA totéž — jinak by vyhledávač viděl jiný nadpis než
+     člověk. A titulek musí pořád nést místo, jinak je k ničemu. */
+  const titulekMaMisto = titulek.indexOf(ocekKde) >= 0
+    || (ocekKde.indexOf(',') > 0 && titulek.indexOf(ocekKde.slice(0, ocekKde.indexOf(','))) >= 0);
+  if (h1 !== ocekCo || kde !== ocekKde || !titulekMaMisto) {
     nesedi.push(`${f}: h1 „${h1}" / kde „${kde}" / ostrůvek „${zOstruvku}" / title „${titulek}"`);
     continue;
   }
