@@ -11660,3 +11660,77 @@ takže sečtené šířky vyjdou přesně na šířku řádku a žádná díra s
 nenajde — sabotáž s původní mřížkou prošla. Teprve rozsah nad
 TEXTOVÝM uzlem dá šířku písmen (57 px místo 163).
 
+## 169. Dva sloupce, které na sebe čekaly prázdné *27. 10.*
+
+Dvě stránky, dvě prázdná místa, dvě různé příčiny — a obě se našly
+tím, že jsem si stránku otevřel v šířce 1280 a díval se, kde nic není.
+
+### a) Stránka pozemku: pruh vpravo nesl jen cenu
+
+Na širokém okně drží stránka pozemku vpravo připnutý pruh (340 px).
+Byla v něm karta s cenou a dvě tlačítka — 270 px na stránce, která
+měří přes tři tisíce. Zbytek sloupce byl prázdný na všech 2 268
+stránkách pozemků.
+
+Tři údaje pod cenou (výměra, cena za metr, druh) jsou přitom to,
+podle čeho se člověk rozhoduje, jestli má číst dál. Stěhují se proto
+do pruhu a je z něj celá sada: **cena → parametry → akce**.
+
+| | před | po |
+|---|---|---|
+| výška pruhu (Benešov, 1280 px) | 270 px | 443 px |
+| výška stránky | 3 041 px | 2 828 px |
+| nejvyšší pruh ze 14 měřených stránek | — | 516 px |
+
+V pruhu z parametrů nejsou dlaždice, ale řádky (popisek vlevo,
+hodnota vpravo). Dlaždice jsou dělané na šířku — čtyři vedle sebe
+v hlavním sloupci — a v 308px pruhu by z každé byla krabice přes
+celou šířku.
+
+Stěhuje se toutéž cestou, kterou už chodily akce (`pripniAkce`
+v js/pozemek.js): každý kus má svou kotvu a při zúžení okna se vrátí
+přesně tam, odkud odešel. Na telefonu se proto nemění nic — pořadí
+bloků je změřené a hlídá ho test-poradi-pozemku.
+
+### b) Stránka dat: rozcestník, který existoval, ale ne pro ni
+
+Web má v levém 172px sloupci dlouhých stránek rozcestník oddílů
+(„OBSAH"); staví ho js/obsah.js. Měřeno na sedmnácti stránkách:
+
+| stránka | oddílů | rozcestník |
+|---|---|---|
+| kolik-stoji-koupe-pozemku | 9 | ano |
+| ochrana-udaju | 7 | ano |
+| …dalších deset článků | 5–7 | ano |
+| **data.html** | **7** | **ne** |
+
+A byla to zrovna nejdelší stránka webu (4 850 px). Příčina: skript
+uměl jen stavbu článku (`.clanek .rules-sect`), kdežto stránka dat
+se skládá z `.dt-sekce` — a nebyl na ni ani přilinkovaný.
+
+Opačným směrem se při tom našlo, že tři stránky (na-co-mam-pozemek,
+pravidla-inzerce, radce) ho stahovaly, ačkoli mají oddílů míň než
+pět a skript se na nich sám vypne: 4,8 kB zdroje za nic.
+
+`scripts/test-skripty-na-strance.mjs` to teď hlídá POČTEM oddílů,
+ne jednou třídou: pět a víc = skript tam musí být, míň = nemá tam co
+dělat.
+
+### Past, která z toho vylezla
+
+Oddíly stránky dat byly každý sám `.wrap` a od obecného pravidla
+`.wrap > p` dostávaly čtecí míru. Jakmile jsem je dal do jednoho
+obalu (kvůli mřížce s rozcestníkem), pravidlo na ně přestalo
+dosáhnout a odstavec měl **127 znaků na řádek** proti dovoleným 90.
+Chytlo to scripts/test-mira.mjs — tedy hlídač, který tam byl dřív
+než ta změna.
+
+### A jedna věc, kterou jsem málem udělal dvakrát
+
+Než jsem si všiml, že rozcestník existuje, napsal jsem k němu druhý:
+build krok, který skládá obsah z `h2` a vkládá ho do pravého sloupce.
+Fungoval. Zahodil jsem ho, protože druhý rozcestník na tomtéž webu
+není funkce, ale vada — a protože ten už existující má navíc
+zvýraznění oddílu, ve kterém čtenář zrovna je. Stálo to dvacet minut
+a je to levnější než dvě verze téhož v repozitáři.
+
