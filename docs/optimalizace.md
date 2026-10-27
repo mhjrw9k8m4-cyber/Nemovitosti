@@ -12310,3 +12310,31 @@ se objeví nabídka) a **přidat vlastní pozemek**.
   úvodu (§179) a teď barva nadpisu v pásu. Hlídač z §178 zachytí jen
   přebití TÝMŽ selektorem; tohle je jeho slepé místo a stojí za
   zapsání.
+
+## 182. Devadesát jedna vstupních stránek bez jediné nabídky, co dál *27. 10.*
+
+Na okresní, krajské, druhové a cenové stránky chodí lidé
+z vyhledávačů. Hlavička na nich nesla nadpis a čísla, pak rovnou
+výpis — a na konci nic. Kdo nenašel svůj pozemek, odešel.
+
+Přibyly dvě věci:
+
+* **věta pod nadpisem** — co tu je a co s tím web umí („Prodeje,
+  dražby i exekuce z okresu pohromadě — s cenou za metr a odkazem
+  do katastru"). Formulace je opatrná schválně: část nabídek má
+  „cenu k ověření", takže „u každé" by nebyla pravda;
+* **závěrečný pás** — tentýž značkově zelený blok jako na úvodní
+  stránce: nastavit hlídání, nebo přidat vlastní pozemek.
+
+### Tlačítko v hlavičce jen na širokém displeji
+
+Nejdřív tam bylo i na telefonu. Naměřeno na okrese Benešov
+(390×844): hlavička vyrostla z 300 na 453 px a první nabídka klesla
+z 766 na 904. Tlačítko proto na telefonu není — táž nabídka stojí
+v pásu na konci stránky, kam dojede přesně ten, komu výpis nestačil.
+Po úpravě: hlavička 385 px, první nabídka 836.
+
+Zbytek té vzdálenosti nedělá nová věta, ale to, co bylo mezi
+hlavičkou a výpisem odjakživa: odkaz na mapu, čára, nadpis výpisu
+a dvě poznámky (řazení a čerstvost zdrojů). To je další práce, ne
+tahle.

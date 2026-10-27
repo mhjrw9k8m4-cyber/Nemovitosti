@@ -3406,6 +3406,26 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
   border-color:var(--pas-obrys); color:var(--pas-text);}
 
+/* SLIB A AKCE V HLAVIČCE REGIONÁLNÍCH STRÁNEK.
+   Na 91 stránek, na které lidé chodí z vyhledávačů, vedla hlavička
+   s nadpisem a čísly — a pak rovnou výpis. Nikde se nedalo dozvědět,
+   co web s těmi nabídkami umí navíc, ani co si odsud člověk odnese,
+   když zrovna nic nekoupí. Věta to řekne jednou větou, tlačítko
+   nabídne hlídání (okres, cena, výměra → e-mail při nové nabídce).
+   Formulace „s cenou za metr" platí pro nabídky, které cenu mají;
+   část jich nese „cenu k ověření", a proto tam nestojí „u každé". */
+.okr-slib{margin:12px 0 0; max-width:var(--m-text); font-size:16px; line-height:1.6;
+  color:var(--pas-text-mute);}
+/* Tlačítko v hlavičce jen na širším displeji. Na telefonu posunulo
+   první nabídku z 834 na 904 px (naměřeno na okrese Benešov) a člověk
+   ho tam nepotřebuje: táž nabídka stojí v pásu na konci stránky, kam
+   dojede ten, kdo nic nenašel. */
+.okr-akce{display:none;}
+@media (min-width:720px){
+  .okr-slib{font-size:18px;}
+  .okr-akce{display:block; margin:20px 0 0;}
+}
+
 /* DVĚ TLAČÍTKA NA TMAVÉ DESCE — jeden recept pro úvodní desku
    i závěrečný pás. Plná je značka na tmavém (8,9 : 1), obrysová nese
    --pas-obrys, tedy tutéž linku jako ostatní ovládání na desce. */

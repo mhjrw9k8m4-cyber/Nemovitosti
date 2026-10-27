@@ -742,6 +742,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .st-hlava.uvod-hlava{margin-bottom:0;padding:8px 0 12px}
 .uvod-hlava .uvod-vstupy{margin:8px 0 0}
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
+
 .uh-cta,.uh-cta2,.cta-pas .uh-cta,.cta-pas .uh-cta2{display:inline-flex;align-items:center;min-height:48px;padding:0 24px;border-radius:var(--r-ovladani);font-size:16px;font-weight:700;text-decoration:none;transition:background var(--cas-zakladni) var(--ease),border-color var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
 .uh-cta{background:var(--pas-akcent);color:var(--plocha-tmava)}
 .uh-cta:hover{background:var(--pas-text);color:var(--plocha-tmava)}

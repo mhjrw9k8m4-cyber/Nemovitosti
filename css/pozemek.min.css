@@ -217,6 +217,7 @@ to{opacity:1;transform:none}
 
 
 
+
 .md-gtk{margin-top:12px;border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.22);border-radius:var(--r-sm);background:rgba(var(--plocha-znacka-svetla-rgb),0.06);overflow:hidden;transition:border-color var(--cas-zakladni) var(--ease),background var(--cas-zakladni) var(--ease)}
 .md-gtk:hover{border-color:rgba(var(--plocha-znacka-svetla-rgb),0.4);background:rgba(var(--plocha-znacka-svetla-rgb),0.12)}
 .md-gtk summary{display:flex;align-items:center;gap:8px;padding:12px 12px;cursor:pointer;font-size:14px;font-weight:700;color:var(--text);list-style:none}
