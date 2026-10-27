@@ -1739,11 +1739,25 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
     'žádná kategorie nemá zkratka: — plný popisek se do úzkého náhledu nevejde');
 
   if (DRUHY.length >= 5) {
-    // Jeden pozemek od každé kategorie, ať se vykreslí všechny odznaky.
+    /* Jeden pozemek od každé kategorie, ať se vykreslí všechny odznaky.
+       A KAŽDÝ S VÍC FOTKAMI, ať je na náhledu i značka s jejich počtem.
+       Bez toho byla kontrola překryvů poloslepá: značka se kreslí jen
+       při `photos.length > 1` (js/main.js) a v živých datech ji 27. 10.
+       neměla ani jedna z 24 nabídek — takže průnik odznaku se značkou
+       nikdo nikdy nezměřil, ačkoli v seznamu prvků níž odjakživa je.
+       Byl tam: oba mají v tom rozvržení levý dolní roh, naměřeno na
+       390 px odznak 26,618 90×29 proti značce 27,623 24×23, průnik
+       552 px². Adresy musí projít brankou PKCisteni.pozemky, která
+       u fotek bere jen tvar z úložiště inzerátů (FOTKA v js/cisteni.js)
+       — napoprvé jsem sem dal „1.jpg", branka je zahodila a značka se
+       zase nevykreslila. Soubory samy nikam nevedou a obrázek se
+       nenačte; na to, kam se značka POSTAVÍ, to vliv nemá. */
     const DATA_O = { updated: '2026-01-01', opportunities: DRUHY.map((d, i) => ({
       place: 'Kolín', okres: 'Kolín', type: d.k, parcel: (i + 1) + '/1', druh: 'orná půda',
       area: 1200 + i, price: 400000 + i * 1000, lat: 50.02 + i * 0.01, lng: 15.20 + i * 0.01,
-      extra: 'inzerát', site: [] })) };
+      extra: 'inzerát', site: [],
+      photos: [1, 2, 3].map((n) =>
+        `https://zkouska.supabase.co/storage/v1/object/public/listing-photos/${n}.jpg`) })) };
     for (const sirka of [1400, 1040, 320]) {
       const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: sirka, height: 900 },
         locale: 'cs-CZ', permissions: [] });
@@ -1780,6 +1794,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
             if (re.width && re.height) ovladani.push({ jm: e.className.split(' ')[0], r: re });
           });
           out.push({
+            maPocet: ovladani.some((o) => o.jm === 'opp-count'),
             druh: (bg.className.match(/opp-badge\s+(\w+)/) || [])[1] || '?',
             videt: bg.innerText.trim(),
             presah: Math.round((rb.right - rm.right) * 10) / 10,
@@ -1805,6 +1820,11 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
          by prošla naprázdno — a přesně to je vada, kterou má chytat. */
       pravda(`${sirka} px: v náhledu je ovládání, které může odznak překrýt`,
         v.every((o) => o.ovladani > 0), 'žádné srdíčko ani křížek — není s čím kolidovat');
+      /* A druhá pojistka, na tu značku, kvůli které byla kontrola
+         poloslepá: kdyby se počet fotek přestal kreslit, průnik s ním
+         by zase nikdo neměřil — a vypadalo by to, že je vše v pořádku. */
+      pravda(`${sirka} px: a je mezi nimi i značka s počtem fotek`,
+        v.every((o) => o.maPocet), 'značka s počtem fotek se nevykreslila');
       const kolize = v.filter((o) => o.koliduje.length);
       pravda(`${sirka} px: a žádný odznak pod ně nezajíždí`, kolize.length === 0,
         kolize.map((o) => `${o.druh} „${o.videt}" leží pod ${o.koliduje.join(' a ')}`).join('; '));

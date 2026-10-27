@@ -4453,7 +4453,18 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      se nebije s ničím a je to i to, co na snímku z telefonu stojí. */
   .opp-badge{top:auto; bottom:9px; left:9px; font-size:13px; padding:4px 8px 4px 8px; gap:4px;}
   .opp-badge::before{width:7px; height:7px;}
-  .opp-count{display:inline-flex;}     /* počet fotek se do velkého náhledu vejde */
+  /* POČET FOTEK DO PROTILEHLÉHO ROHU. Značka s počtem má v základu
+     `left:10px; bottom:10px` — tedy týž roh, do kterého tady o dva
+     řádky výš sjíždí odznak druhu. NAMĚŘENO 27. 10. na 390 px (značku
+     s počtem jsem musel kartě vnutit, protože ani jedna z 24 dnešních
+     nabídek víc fotek nemá, takže na živých datech to vidět nebylo):
+       odznak  26,618  90×29
+       počet   27,623  24×23   → průnik 552 px²
+     Počet fotek ležel na odznaku druhu celou svou plochou. Jde o roh,
+     který odznak dostal teprve tady; v základním rozvržení sedí nahoře
+     vlevo a nebijí se. Proto se stěhuje počet, ne odznak — a doprava
+     dolů, kde je volno (nahoře vpravo je záložka pro uložení). */
+  .opp-count{left:auto; right:10px;}
   /* 38 px: dotykové minimum je 36, a na velké fotce smí být terč větší. */
   /* Tlačítko má od chvíle, kdy u ikony stojí slovo, šířku podle obsahu.
      Stálo tu width:38px — pilulka se do toho nevešla, text se ořízl
@@ -7870,16 +7881,29 @@ body > footer{flex:none;}
 .opp-skryt{position:absolute; top:52px; right:10px; left:auto;
   z-index:3; min-height:32px; padding:0 12px;
   display:inline-flex; align-items:center; gap:4px; border-radius:var(--r-pill);
-  /* Okraj z --line-strong vyšel proti výplni tlačítka na 1,87 : 1,
-     tedy pod mezí 3 : 1 (WCAG 1.4.11) — tlačítko se nad světlým
-     snímkem ztrácelo. Naměřila to zkouška test-okraje; --line-ui je
-     táž čára, jakou mají pilulky nářadí nad výpisem. */
-  background:var(--plocha-plovouci); border:1px solid var(--line-ui);
-  color:var(--text); font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
-  opacity:0; transition:opacity var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+  /* TÝŽ KABÁT JAKO SRDÍČKO A ODZNAK. Na jedné fotce stály tři
+     překryvné prvky ve dvou různých kabátech (naměřeno 27. 10. na
+     390 px):
+       - Skrýt   BÍLÁ výplň, tmavé písmo, rámeček rgba(16,21,19,.55)
+       - Uložit  rgba(16,21,19,.74), bílé písmo, bez rámečku
+       odznak    rgba(16,21,19,.74), bílé písmo, bez rámečku
+     Bílá pilulka byla nejhlasitější věc na celé kartě — a nese
+     akci, která nabídku odstraní. Předloha od majitele (reality.idnes
+     a sreality) má nad fotkou jen tiché překryvné značky jedné
+     rodiny, ne jednu křiklavou. Kabát se proto sjednocuje s oběma
+     sousedy; UMÍSTĚNÍ, VELIKOST ANI VIDITELNOST se nemění, to je
+     doměřené jinde (viz bloky výš a scripts/test-skryt-videt.mjs).
+     Dřívější rámeček z --line-ui tu byl kvůli meze 3 : 1 na obrys
+     (WCAG 1.4.11) u BÍLÉ výplně nad světlým snímkem. Tmavá výplň
+     .74 tu mez řeší sama a stejně jako u srdíčka, které vedle stojí. */
+  background:rgba(var(--text-rgb),0.74); border:0;
+  color:#fff; font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
+  opacity:0; transition:opacity var(--cas-zakladni) var(--ease), background-color var(--cas-zakladni) var(--ease);}
 .opp-skryt .os-ic{font-size:12px; line-height:1;}
 .opp-item:hover .opp-skryt, .opp-item:focus-within .opp-skryt{opacity:1;}
-.opp-skryt:hover{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
+/* Na tmavé pilulce se najetí pozná ztmavením, ne jinou barvou písma:
+   --c-exekuce-ink je tmavá a na výplni .74 by se ztratila. */
+.opp-skryt:hover{background:rgba(var(--text-rgb),0.88);}
 .opp-skryt:focus-visible{opacity:1; outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 /* PRST NENÍ MYŠ. Na dotykovém zařízení se obě tlačítka nad fotkou zvětší
    na 44×44 px a dostanou mezi sebe mezeru.
@@ -7943,7 +7967,10 @@ body > footer{flex:none;}
 /* Skrytý pozemek, když si ho člověk nechá zobrazit: ztlumený, ať je jasné,
    že do seznamu normálně nepatří. */
 .opp-item.je-skryty{opacity:0.55;}
-.opp-item.je-skryty .opp-skryt{opacity:1; color:var(--accent-warm); border-color:var(--accent-warm);}
+/* Skrytá nabídka: stav nese PLOCHA, ne písmo. --accent-warm (#8A5512)
+   je tmavá barva a jako písmo na tmavé pilulce by byla nečitelná;
+   jako výplň má proti bílému písmu 6,2 : 1. */
+.opp-item.je-skryty .opp-skryt{opacity:1; background:var(--accent-warm); color:#fff;}
 
 /* =====================================================================
    STAŽENÍ VÝBĚRU — okno s volbou, co a v jakém tvaru

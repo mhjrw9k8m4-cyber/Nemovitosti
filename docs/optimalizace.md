@@ -12787,3 +12787,56 @@ funkce z `js/cisteni.js`, aby se zkouška a web nemohly rozejít ani tady.
 Mimochodem: tohle je ta vzácná chvíle, kdy „zkouška spadla" znamená
 **zkouška udělala svou práci**. Kdyby klíč nepároval mlčky a jen
 o něco míň, nikdo by si toho nevšiml.
+
+## §190 Na fotce karty byly tři značky ve dvou kabátech
+
+Předloha od majitele (reality.idnes, sreality) má nad fotkou tiché
+překryvné značky jedné rodiny. U nás tam stály tři a byly ze dvou
+různých světů — naměřeno 27. 10. na 390 px:
+
+| značka | plocha | písmo | rámeček |
+|---|---|---|---|
+| Skrýt | **bílá** | tmavé | 1 px rgba(16,21,19,.55) |
+| Uložit | rgba(16,21,19,.74) | bílé | žádný |
+| odznak druhu | rgba(16,21,19,.74) | bílé | žádný |
+
+Bílá pilulka byla nejhlasitější věc na celé kartě — a nese akci, která
+nabídku odstraní. Je to táž nejednotnost, kterou majitel popsal jako
+„na všem jiný font, barva, přechod a velikost", jen na fotce.
+
+**Co se změnilo:** jen kabát. Umístění, velikost (44 px dotykový terč)
+ani viditelnost se nehnuly — ty jsou doměřené jinde a hlídá je
+`test-dotyk` a `test-skryt-videt`. Rámeček z `--line-ui` tam byl kvůli
+meze 3 : 1 na obrys u **bílé** výplně nad světlým snímkem; tmavá výplň
+`.74` tu mez řeší sama, stejně jako u srdíčka vedle. Ověřeno:
+`test-okraje` prošel beze změny (135 prvků).
+
+Stavy musely přebarvit s ní: `--c-exekuce-ink` při najetí a
+`--accent-warm` u skryté nabídky jsou obě tmavé a jako **písmo** na
+tmavé pilulce by se ztratily. Najetí proto jen ztmaví plochu; skrytá
+nabídka nese stav plochou (#8A5512 pod bílým písmem má 6,2 : 1).
+
+### Hlídač tu kolizi měl v seznamu a nikdy ji neviděl
+
+Při tom měření vyšlo najevo něco horšího. Značka s počtem fotek má
+`left:10px; bottom:10px` — tedy **týž roh**, do kterého pod 1 040 px
+sjíždí odznak druhu. Naměřeno na 390 px: odznak 26,618 90×29 proti
+značce 27,623 24×23, **průnik 552 px²**. Počet fotek ležel na odznaku
+celou svou plochou.
+
+`test-rozvrzeni` přitom `.opp-count` v seznamu překryvných prvků má
+odjakživa. Kontrola byla ale poloslepá: značka se kreslí jen při
+`photos.length > 1` a ani jedna z 24 dnešních nabídek víc fotek nemá —
+a přípravek té zkoušky si data skládá sám, bez fotek. Prvek, který se
+nevykreslí, nemůže s ničím kolidovat, takže kontrola **procházela
+tím, že neměla co měřit**.
+
+Opraveno na obou koncích: počet fotek jde v tom rozvržení do
+protilehlého rohu (odznak ten roh dostal teprve tam, tak se stěhuje
+počet), a přípravek zkoušky dostal fotky — plus pojistku navíc, která
+spadne, kdyby se značka přestala kreslit. Adresy musí projít brankou
+`PKCisteni.pozemky`; napoprvé jsem tam dal `1.jpg`, branka je zahodila
+a značka se zase nevykreslila — pojistka to ohlásila hned.
+
+Sabotáž: po vrácení značky do původního rohu zkouška spadla u všech
+pěti kategorií na 1 040 i 320 px. Po opravě 193 kontrol v pořádku.

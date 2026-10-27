@@ -704,3 +704,27 @@ a v prohlížeči jen jako mezipaměť. Platí pro ně dvě věci:
    nic) — musí tam být „bez přihlášení" nebo „s účtem". Hlídá to táž
    zkouška na všech stránkách, v jejich strukturovaných datech i v polích
    `popis`/`nazev`/`sub`/`veta` ve skriptech.
+
+### Co leží na fotce karty, patří do jedné rodiny
+
+Na náhledu nabídky se potkávají odznak druhu, „Uložit", „Skrýt"
+a počet fotek. Všechny nesou tentýž kabát — tmavá průsvitná plocha
+`rgba(var(--text-rgb),0.74)`, bílé písmo, žádný rámeček. Je to
+předloha od majitele: nad fotkou mají být tiché značky, ne ovladač,
+který překřičí celou kartu. Výjimka je jediná a je to STAV, ne
+výzdoba: skrytá nabídka má u „Vrátit" plochu `--accent-warm`.
+
+Barva se na takové pilulce nese PLOCHOU, ne písmem. Tmavý token
+(`--accent-warm`, `--c-exekuce-ink`) jako barva písma na výplni `.74`
+zmizí — obojí jsem tam měl a obojí se muselo přepsat.
+
+### Kontrola, která nemá co měřit, prochází
+
+Zkouška, jejíž prvek se v přípravku nikdy nevykreslí, hlásí „v pořádku"
+a nehlídá nic. `test-rozvrzeni` tak léta vozil `.opp-count` v seznamu
+překryvů, zatímco značka s počtem fotek ležela celou plochou na odznaku
+druhu (průnik 552 px²) — v datech totiž žádná nabídka víc fotek neměla.
+
+Proto: ke každé kontrole, která něco hledá v sadě prvků, patří pojistka,
+že se ta sada vůbec vykreslila. `pravda('a je mezi nimi i X', …)` stojí
+jeden řádek a je to rozdíl mezi hlídačem a ozdobou.

@@ -1055,7 +1055,7 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .opp-media{width:auto;aspect-ratio:16/10;min-height:0}
 .opp-badge{top:auto;bottom:9px;left:9px;font-size:13px;padding:4px 8px 4px 8px;gap:4px}
 .opp-badge::before{width:7px;height:7px}
-.opp-count{display:inline-flex}
+.opp-count{left:auto;right:10px}
 .opp-media .opp-fav{min-height:38px;top:10px;right:10px}
 .opp-media .opp-fav svg{width:18px;height:18px;stroke-width:2.1}
 .opp-body{padding:12px 12px 12px}
@@ -1411,17 +1411,17 @@ body>footer{flex:none}
 .vm-x{width:44px;height:44px}
 .leaflet-touch .leaflet-bar a{width:44px;height:44px;line-height:44px}
 }
-.opp-skryt{position:absolute;top:52px;right:10px;left:auto;z-index:3;min-height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--r-pill);background:var(--plocha-plovouci);border:1px solid var(--line-ui);color:var(--text);font:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;opacity:0;transition:opacity var(--cas-zakladni) var(--ease),color var(--cas-zakladni) var(--ease)}
+.opp-skryt{position:absolute;top:52px;right:10px;left:auto;z-index:3;min-height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--r-pill);background:rgba(var(--text-rgb),0.74);border:0;color:#fff;font:inherit;font-size:13px;font-weight:600;line-height:1;cursor:pointer;opacity:0;transition:opacity var(--cas-zakladni) var(--ease),background-color var(--cas-zakladni) var(--ease)}
 .opp-skryt .os-ic{font-size:12px;line-height:1}
 .opp-item:hover .opp-skryt,.opp-item:focus-within .opp-skryt{opacity:1}
-.opp-skryt:hover{color:var(--c-exekuce-ink);border-color:var(--c-exekuce-ink)}
+.opp-skryt:hover{background:rgba(var(--text-rgb),0.88)}
 .opp-skryt:focus-visible{opacity:1;outline:2px solid var(--znacka-svetla);outline-offset:2px}
 @media (hover:none){.opp-skryt{opacity:1}
 .opp-media .opp-fav{min-height:44px;padding:0 12px}
 .opp-skryt{min-height:44px;padding:0 12px;top:8px;left:8px;right:auto}
 }
 .opp-item.je-skryty{opacity:0.55}
-.opp-item.je-skryty .opp-skryt{opacity:1;color:var(--accent-warm);border-color:var(--accent-warm)}
+.opp-item.je-skryty .opp-skryt{opacity:1;background:var(--accent-warm);color:#fff}
 .vyv-vrstva{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(var(--text-rgb),0.5)}
 .vyv-vrstva[hidden]{display:none}
 .vyv-okno{width:100%;max-width:420px;max-height:90vh;overflow:auto;padding:20px;background:var(--plocha-plovouci);border:1px solid var(--line-strong);border-radius:var(--r-md);box-shadow:var(--e3)}
