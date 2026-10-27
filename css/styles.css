@@ -6792,43 +6792,51 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
    ta informace: za dva týdny nezmizí skoro nic.
    Pruh je ozdoba k číslu, které stojí hned vedle, proto aria-hidden. */
 /* ===== JAK RYCHLE NABÍDKY MIZÍ ======================================
-   Tři kohorty, tři dlaždice. Dřív to byly tři husté řádky, každý se
-   čtyřmi věcmi vedle sebe (popis · dráha · procento · „42 z 997") —
-   dohromady dvanáct údajů v mřížce, ze které se dalo těžko přečíst to
-   jediné důležité: podíl. Ten je teď velký a první, zbytek je pod ním.
-
-   DRÁHA ZŮSTÁVÁ, jen zeštíhlená na 6 px. Stojí na stupnici 0–100 %,
-   ne na nejdelším řádku: prázdná část dráhy je ta informace, protože
-   za dva týdny nezmizí skoro nic. Přepočet na nejdelší řádek by ze tří
-   malých čísel udělal tři skoro stejné pruhy a obrázek by říkal přesný
-   opak dat. Je to ozdoba k číslu hned nad ní, proto aria-hidden.
-
-   TŘI SLOUPCE I NA TELEFONU: na 390 px vyjde dlaždice asi na 105 px
-   a všechno nejdelší, co v ní stojí („do 14 dní", „120 z 708"), se do
-   toho vejde. Pod sebou by z toho byl zase svitek. */
-.trh-seznam{list-style:none; margin:16px 0 0; padding:0; max-width:560px;
-  display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px;}
-/* ČTYŘI ÚDAJE, ČTYŘI SLOUPCE. Ve třech sloupcích zbyl čtvrtý sám na
-   druhém řádku: tři velká čísla vedle sebe a jedno pod nimi vypadá jako
-   nedopsaný řádek, ne jako čtveřice. Na širokém displeji je karta dost
-   široká na všechny čtyři. */
-@media (min-width:900px){
-  .trh-seznam{max-width:none; grid-template-columns:repeat(4, minmax(0,1fr)); gap:16px;}
+   PĚT ÚDAJŮ, KTERÉ TVOŘÍ KŘIVKU — TAK AŤ JE TA KŘIVKA VIDĚT.
+   ------------------------------------------------------------------
+   Stálo tu „čtyři údaje, čtyři sloupce" a pravidlo mělo natvrdo čtyřku.
+   Údaje jsou mezitím PĚT (do 3, 7, 14, 21 a 30 dní), takže pátý zbyl sám
+   na druhém řádku — přesně ta vada, které měla ta čtyřka zabránit. Na
+   390 px to bylo 3 + 2, na 1280 px 4 + 1.
+   Čísla navíc nejsou pět nezávislých údajů, ale JEDNA ŘADA: 4 → 10 → 22
+   → 28 → 28 %. V dlaždicích vedle sebe se taková řada nečte — každé
+   číslo se musí přečíst zvlášť a tvar vznikne až v hlavě. Je z toho
+   proto malý sloupcový graf: jeden řádek na období, pruhy pod sebou od
+   téže svislice. Tvar je vidět na první pohled a vypadá stejně na
+   telefonu i na monitoru.
+   Změřeno: 1280 px 206 → 150 px výšky a žádný utržený řádek; 390 px
+   202 → 256 px, protože velikost kohorty („52 z 1 291") jde na vlastní
+   řádek. Těch 54 px je cena za to, že se dá číst — a kohorta se vypustit
+   nesmí, je to právě ta věc, která ten podíl dělá poctivým. */
+.trh-seznam{list-style:none; margin:16px 0 0; padding:0; max-width:720px;
+  display:grid; grid-template-columns:minmax(0,1fr); gap:8px;}
+/* Značky v HTML jsou číslo → popis → pruh → kohorta; pořadí na
+   obrazovce dělá mřížka, aby se nemusely přepisovat. */
+.trh-radek{display:grid; column-gap:12px; row-gap:2px; align-items:center; min-width:0;
+  grid-template-columns:76px minmax(48px,1fr) auto;
+  grid-template-areas:"popis pas cislo" "zkolika zkolika zkolika";}
+@media (min-width:600px){
+  .trh-radek{grid-template-columns:88px minmax(80px,1fr) 56px auto;
+    grid-template-areas:"popis pas cislo zkolika";}
 }
-.trh-radek{display:flex; flex-direction:column; gap:4px; min-width:0;}
-.trh-cislo{font-family:var(--font-display); font-weight:700; font-size:32px;
+.trh-cislo{grid-area:cislo; justify-self:end;
+  font-family:var(--font-display); font-weight:700; font-size:20px;
   line-height:1.1; letter-spacing:-0.03em; color:var(--text);
   font-variant-numeric:tabular-nums;}
-.trh-popis{font-size:13px; font-weight:600; color:var(--text);
+.trh-popis{grid-area:popis; font-size:13px; font-weight:600; color:var(--text);
   white-space:nowrap; font-variant-numeric:tabular-nums;}
-.trh-pas{position:relative; display:block; height:6px; border-radius:var(--r-pill);
+/* Pruh je teď hlavní sdělení řádku, ne ozdoba pod číslem: osm pixelů
+   místo šesti a sytější výplň. */
+.trh-pas{grid-area:pas; position:relative; display:block; height:8px;
+  border-radius:var(--r-pill);
   background:var(--plocha-jemna); box-shadow:inset 0 0 0 1px var(--line);}
 .trh-pas > i{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill);
-  background:var(--plocha-znacka); opacity:0.4;}
+  background:var(--plocha-znacka); opacity:0.55;}
 /* „42 z 997" je velikost kohorty — poznámka k číslu nad ní, a zároveň
    to, co ten podíl dělá poctivým (viz metodika na konci stránky). */
-.trh-zkolika{font-size:13px; color:var(--muted);
+.trh-zkolika{grid-area:zkolika; font-size:12px; color:var(--muted);
   font-variant-numeric:tabular-nums;}
+@media (min-width:600px){ .trh-zkolika{justify-self:end; min-width:96px; text-align:right;} }
 .trh-veta{margin:20px 0 0; font-size:16px; line-height:1.6; color:var(--text);}
 
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
