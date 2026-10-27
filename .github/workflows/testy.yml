@@ -1005,6 +1005,9 @@ jobs:
       - name: Buď u kraje, nebo s okrajem
         run: node scripts/test-u-hrany.mjs
 
+      - name: Stránka vyřazené nabídky je taky stránka
+        run: node scripts/test-vyrazena-nabidka.mjs
+
       - name: Souřadnice pozemku s sebou
         run: node scripts/test-souradnice.mjs
 

@@ -537,6 +537,11 @@ vypis-nabidek:
   rám:      "karta je karta NABÍDKY, ne rám kolem seznamu karet — výpis stojí na ploše stránky (.okr-blok), ne v .add-card. Výkladové bloky kartou zůstávají."
   sloupce:  "od 1200 px dva sloupce; v užším sloupci se parametry nevejdou se zdrojem do jedné řady, takže mají celou šířku textu a zdroj je pod nimi"
   hlida:    scripts/test-seznam-nabidek.mjs
+vyrazena-nabidka:
+  co:       "stránka pozemku, který zmizel ze zdroje. Generátor ji schválně nepřegeneruje, takže se nevykreslí detail a zůstane statická záloha (article.pz-staticky) — 327 z 2 271 stránek pozemků."
+  pravidlo: "nejdřív rozcestí (kam místo toho), pak záznam. Záznam zůstává úplný, jen vypadá jako tabulka, ne jako výpis z databáze."
+  kde:      "pravidla pro .pz-konec a .pz-staticky patří do css/styles.css, NE do css/pozemek-vlozeny.css: vložený stylopis mají vyřazené stránky zamrzlý z doby, kdy nabídka platila, a změna v něm se k nim nikdy nedostane."
+  hlida:    scripts/test-vyrazena-nabidka.mjs
 odstupy:
   stupnice: [0, 1, 2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 128]
   pravidlo: "přísná čtyřková mříž; 1 a 2 px jsou vlásečnice a mezery v řádku, ne odstupy rozvržení"

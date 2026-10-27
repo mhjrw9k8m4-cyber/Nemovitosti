@@ -12407,3 +12407,77 @@ Poučení není o pixelech: **odvozené číslo v komentáři zestárne tiše.**
 a protože se z něj počítalo, rozšířil chybu do dvou pravidel a jedné
 zkoušky. Dnes je v komentáři napsané, z čeho se 1136 skládá, aby
 se příště přepočítalo, až se změní `--m-wrap` nebo okraj stránky.
+
+## 184. Tři sta dvacet sedm stránek bez jediného pravidla *27. 10.*
+
+Při měření, jak hluboko na stránce pozemku leží cenový verdikt, se
+ve vzorku 24 stránek čtyři chovaly jinak: neměly `h1.pz-place` ani
+`.pz-price`. Vypadalo to na chybu vykreslování. Nebyla:
+
+```
+Tato nabídka už není aktuální. Zmizela ze zdroje 6. 10. 2026.
+```
+
+Když pozemek zmizí ze zdroje, generátor stránku schválně
+**nepřegeneruje** — uložený odkaz si má udržet podobu z doby, kdy
+nabídka platila — a jen jí nahoru dopíše pruh. Detail se pak
+nevykreslí, protože data nejsou, a na stránce zůstane **statická
+záloha**: `article.pz-staticky`, kterou `js/pozemek.js` jinak celou
+přepíše. Tedy ta část stránky, kterou do dneška nikdo neviděl.
+
+A neměla ve stylopisu **jediné pravidlo**. Nadpis, odstavec a osm
+dvojic `<dt>`/`<dd>` pod sebou v jednom sloupci — holý dokument.
+Spočítáno: **327 z 2 271 stránek pozemků (14,4 %)**. Nic nespadlo,
+nic nehlásilo chybu a žádná zkouška se tam nedívala, protože všechny
+braly stránku pozemku jako něco, co vykreslí skript.
+
+### Dvě podoby téhož pruhu
+
+Pravidla pro `.pz-konec` ležela v `css/pozemek-vlozeny.css` a dělala
+z pruhu oznámení v barvě upozornění. Nová pravidla v `css/styles.css`
+z něj dělají zelené rozcestí. Hlídač `test-vlozeny-styl` na ten
+rozpor právem spadl a donutil rozhodnout: pravidla jsou teď jen
+v `css/styles.css`. Důvod je věcný, ne estetický — **vložený stylopis
+se stránce zapíše při sestavení**, takže ho vyřazené stránky mají
+zamrzlý a žádná změna v něm se k nim nikdy nedostane. Sdílený soubor
+si přes `<link>` berou znovu všechny, takže jím šlo spravit všech 327
+bez jediného přegenerování.
+
+### Co se změnilo
+
+* **Rozcestí je nahoře a je to hlavní věc na stránce.** Tři podobné
+  pozemky z téhož okresu a odkaz na mapu v pruhu byly odjakživa — ale
+  jako odrážkový seznam pod drobným odstavcem. Kdo přijde z uloženého
+  odkazu, má jedinou užitečnou otázku: co místo toho.
+* **Záznam zůstává úplný.** Kdo si odkaz uložil kvůli číslu parcely
+  nebo dražebníkovi, najde to tam dál; jen to vypadá jako tabulka.
+  Na telefonu jeden sloupec, od 640 px dva.
+
+### Dvousloupcová tabulka na telefonu nešla
+
+Ve směru B (viz dva návrhy, které tomu předcházely) vypadala tabulka
+`popisek | hodnota` na monitoru dobře a na 390 px se popisek
+„Vlastnictví" překryl s hodnotou „spoluvlastnický podíl 2/24 — cena
+je za podíl…". Mřížka se proto zapíná až od 640 px; pod tím je
+hodnota pod popiskem. Hlídač to měří přímo — porovnává obdélníky
+`<dt>` a `<dd>`, ne šířku okna.
+
+### Šest hlídačů řeklo ne
+
+Zapsaná pravidla neprošla rychlou sadou: 7 odstupů mimo stupnici
+(10, 14, 18 px), 5 velikostí písma mimo stupnici (15, 22, 30 px),
+prostrkání 0,08 em, řádkování 1,15, velikost `h1` opsaná číslem
+místo pojmenovaného stupně a ten rozpor o dvou místech pro tutéž
+vlastnost. Všechno je opravené na hodnoty ze stupnic
+(`--h1-nastroj` pro nadpis záznamu — „nadpis, který nemá křičet").
+Za zapsání to stojí proto, že soustava zabrala přesně tak, jak má:
+nová plocha se bez boje nepřipsala.
+
+### Zkouška
+
+`scripts/test-vyrazena-nabidka.mjs` (43 kontrol, dvě šířky, tři
+stránky vybrané ze souborů, ne natvrdo). Netvrdí „vypadá hezky" —
+měří čtyři věci: rozcestí je nad záznamem, jeho odkazy jsou aspoň
+44 px vysoké, popisek a hodnota se nepřekrývají ani nepřetékají,
+a pruh, záznam i tabulka stojí na vlastní ploše. Po odebrání nových
+pravidel padne 9 kontrol z 43.

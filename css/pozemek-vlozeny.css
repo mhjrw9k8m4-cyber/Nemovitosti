@@ -330,24 +330,16 @@
     .pz-cas b{color:var(--text); font-weight:600;}
     .pz-cas.je-stara{color:var(--c-exekuce-ink);}
     .pz-cta{display:flex; gap:8px; margin:20px 0 0; flex-wrap:wrap;}
-    /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ.
-       Stránka se po zmizení nabídky nemaže, jen se přepíše — jinak by
-       každý uložený odkaz a každý výsledek ve vyhledávači skončil na 404.
-       Pruh musí být vidět na první pohled a nesmí jít přehlédnout, proto
-       stojí hned nahoře v obsahu a nese barvu z řady upozornění, ne
-       značkovou zelenou: tohle není nabídka, tohle je oznámení. */
-    .pz-konec{margin:0 0 24px; padding:16px 20px;
-      border:1px solid var(--c-drazba-ink, #7E3C18);
-      border-left-width:4px; border-radius:var(--r-md, 14px);
-      background:rgba(var(--c-drazba-rgb),0.08); font-size:16px; line-height:1.6;}
-    .pz-konec b{display:block; font-size:16px; margin-bottom:4px;}
-    .pz-konec p{margin:12px 0 4px; font-weight:700; font-size:14px;}
-    .pz-konec ul{margin:0; padding-left:20px;}
-    .pz-konec li{margin:2px 0;}
-    /* 44px terč i tady: odkazy v pruhu jsou často to jediné, kam se dá
-       z ukončené nabídky jít dál. */
-    .pz-konec a{display:inline-flex; align-items:center; min-height:44px;
-      color:var(--znacka); text-underline-offset:3px;}
+    /* PRUH U NABÍDKY, KTERÁ UŽ NENÍ AKTUÁLNÍ — pravidla jsou v
+       css/styles.css, ne tady, a je to rozhodnutí, ne nedopatření.
+       Vložený stylopis se stránce zapíše při sestavení a vyřazené
+       stránky se schválně nepřegenerovávají, takže si ho drží
+       zamrzlý z doby, kdy nabídka platila: cokoli se tu změní, se
+       na 327 existujících stránek nikdy nedostane. Sdílený
+       css/styles.css si přes <link> berou znovu všechny. Dokud
+       pravidla stála na obou místech, byly dvě podoby téhož pruhu
+       (tady oznámení v barvě upozornění, tam zelené rozcestí) —
+       a hlídač scripts/test-vlozeny-styl.mjs na to právem spadl. */
     /* LIŠTA S CENOU A AKCÍ U SPODNÍHO OKRAJE. Jen na úzké obrazovce:
        na stole jsou hlavní tlačítka vedle obsahu a lišta by jen ubírala
        místo. Naměřeno na telefonu 390×844: stránka je 3 106 px dlouhá,
