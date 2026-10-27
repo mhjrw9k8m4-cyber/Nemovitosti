@@ -11577,3 +11577,86 @@ V časové ose vyšlo `data/mapa.json` jako největší stahovaný kus
 první nabídka. Jestli ho server posílá zabalený, se odsud ověřit
 nedalo (odchozí spojení na vlastní doménu vrací 403 přes proxy).
 Kdyby ne, je to osmkrát větší věc než cokoli v tomhle oddílu.
+
+## 168. Dvě čísla, která web tvrdil o sobě, a jedno, které tvrdil o ceně *27. 10.*
+
+Tři nálezy z jednoho odpoledne; společné mají to, že se všechny
+daly přečíst přímo ze stránky — stačilo porovnat, co na ní stojí,
+s tím, co je vedle.
+
+### a) Osa grafu: v poznámce stálo rozpětí DAT
+
+Pod každým grafem vývoje ceny stálo „Svislá osa je v rozpětí
+45,7–46,6 Kč/m², ne od nuly". Jenže osa drží nejméně desetinu
+hladiny (aby z pohybu o procento neudělala schodiště přes celou
+výšku), takže ve skutečnosti šla od 43,8 do 48,5.
+
+Změřeno na všech 37 klidných řadách z `data/historie-cen.json`:
+
+| co | kolik |
+|---|---|
+| řad, které graf dostanou | 37 |
+| podíl výšky osy, který data zaberou — medián | 5 % |
+| nejvíc | 56 % |
+| řad, kde se min i max napíše stejně („v rozpětí 36,4–36,4") | 18 |
+
+Kdo by si polohu čáry proti té větě přečetl, mýlil by se až
+dvacetinásobně. Teď se píšou konce osy tak, jak jsou nakreslené,
+a za nimi pás, ve kterém data leží, včetně toho, jakou část výšky
+čára zabere. To poslední číslo jde změřit z nakreslené křivky —
+`scripts/test-graf-cen.mjs` to tak dělá: ze dvou bodů s různou cenou
+sestaví přepočet px → Kč a natáhne ho na okraje kreslicí plochy
+(y1 a y2 kříže, který se po grafu vodí pod prstem).
+
+### b) Percentil: nabídka se počítala sama k sobě
+
+„Dražší než 98 % pozemků téhož druhu v prodeji ve Středočeském kraji
+(13 nabídek)." Z třinácti nabídek 98 % nevyjde ani tehdy, když je ta
+nabídka dražší než všechny ostatní (12 ze 13 je 92 %). Příčina:
+model počítal `cena <= moje` a v srovnávací přihrádce leží i ta
+nabídka, o které se mluví.
+
+Změřeno na všech 1 276 verdiktech z `data/model.json`:
+
+| co | kolik |
+|---|---|
+| verdiktů, kde se nabídka srovnávala bez sebe samé | 0 |
+| rozdíl proti ostrému počítání — medián | 4 body |
+| nejvíc | 24 bodů |
+| verdiktů, kde se tím měnil i odznak (Výhodná/Průměrná/Vyšší) | 108 |
+| nabídek se shodnou cenou s jinou | 11 |
+
+Čím menší vzorek, tím víc: při deseti nabídkách, což je spodní mez
+modelu, je nabídka sama deset bodů. Strop „2 až 98 %" tím odpadl —
+byl to zálepek přes to, že `<=` umělo napsat sto procent.
+
+Mimochodem: `scripts/test-shoda.mjs` si dopočítával „dražší" jako
+100 − „levnější". Od téhle opravy to neplatí (shodně drahé nabídky
+nejsou ani na jedné straně), takže si bere obě čísla z modelu.
+
+### c) Díra vedle čísla v hlavičce — na 74 ze 101 stránek
+
+Čísla v tmavém pásu stála ve dvou sloupcích a počítalo se s tím, že
+osamělé POSLEDNÍ číslo si vezme celý řádek. Poslední položka je ale
+vždycky rozpětí cen, které celý řádek bere už samo, takže pravidlo
+nikdy nevyšlo a díra zůstala o řádek výš:
+
+| podoba | stránek |
+|---|---|
+| tři úzká čísla + rozpětí (díra vedle třetího) | 41 |
+| jedno úzké číslo + rozpětí (díra vedle něj) | 33 |
+| čtyři úzká čísla + rozpětí (bez díry) | 3 |
+
+Řádek, který se zalamuje podle obsahu, to spraví na obou stranách:
+popisky jsou krátké (57, 58 a 52 px), takže se tři vejdou vedle sebe
+i na 320 px. Tmavý pás na okrese Benešov: 369 → 296 px na telefonu,
+344 → 303 px na počítači (tam čísla přešla z pravého sloupce pod
+nadpis, protože výšku pásu určoval jejich počet — Jihomoravský kraj
+měl 421 px a pod nadpisem 215 px prázdna).
+
+Past, do které jsem při psaní hlídače spadl: šířku položky jsem měřil
+`getBoundingClientRect()`. V mřížce se krabice natáhne na celou buňku,
+takže sečtené šířky vyjdou přesně na šířku řádku a žádná díra se
+nenajde — sabotáž s původní mřížkou prošla. Teprve rozsah nad
+TEXTOVÝM uzlem dá šířku písmen (57 px místo 163).
+
