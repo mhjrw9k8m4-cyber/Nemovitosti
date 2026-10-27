@@ -14,9 +14,15 @@
    druhem nabídky to vidět nebylo (odznak mají všechny řádky nebo žádný);
    vylézalo to na přehledech, kde se druhy míchají.
 
-   CO SE MĚŘÍ. Jedna věc, a výsledek, ne zápis: v každém seznamu musí
-   mít všechny názvy TÝŽ levý okraj. Stránky se berou takové, kde se
-   druhy míchají — na jednodruhové by kontrola prošla i rozbitá.
+   CO SE MĚŘÍ. Výsledek, ne zápis: v každém SLOUPCI seznamu musí mít
+   všechny názvy týž levý okraj. Stránky se berou takové, kde se druhy
+   míchají — na jednodruhové by kontrola prošla i rozbitá.
+
+   A OD 27. 10. JEŠTĚ DRUHÁ VĚC: výpis stojí na širokém displeji ve
+   dvou sloupcích (§173 v docs/optimalizace.md). Sloupce se počítají
+   z mřížky a měří se, že se karta v užším sloupci nerozsype — tedy
+   že se parametry nezalomí na druhý řádek, což byl důvod, proč se
+   karta při té změně přeskládala.
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -67,6 +73,29 @@ try {
     const m = await p.evaluate(() => {
       const out = [];
       for (const seznam of document.querySelectorAll('.okr-list')) {
+        /* SVISLICE SE MĚŘÍ UVNITŘ SLOUPCE. Od 27. 10. stojí výpis na
+           širokém displeji ve DVOU sloupcích (§173), takže levých
+           okrajů jsou v jednom seznamu přirozeně dva — jeden na
+           sloupec. Řádky se proto rozdělí podle levého okraje KARTY
+           a svislice se žádá v každé skupině zvlášť; počet skupin se
+           pak porovná s počtem sloupců z mřížky, aby se za „sloupec"
+           nedalo vydávat rozsypané odsazení. */
+        /* Pod 1200 px je výpis `flex` v jednom sloupci; tam
+           gridTemplateColumns hlásí „none", a to je jeden sloupec,
+           ne nula. */
+        const csS = getComputedStyle(seznam);
+        const sloupcuVMrizce = csS.display === 'grid'
+          ? csS.gridTemplateColumns.split(' ').filter(Boolean).length : 1;
+        const skupiny = new Map();
+        for (const polozka of seznam.querySelectorAll('.okr-item')) {
+          const m = polozka.querySelector('.okr-place');
+          if (!m) continue;
+          const klic = Math.round(polozka.getBoundingClientRect().left);
+          if (!skupiny.has(klic)) skupiny.set(klic, []);
+          skupiny.get(klic).push(Math.round(m.getBoundingClientRect().left));
+        }
+        const ruznychVeSkupinach = Math.max(1, ...[...skupiny.values()]
+          .map((v) => [...new Set(v)].length));
         const mista = [...seznam.querySelectorAll('.okr-item .okr-place')]
           .map((e) => Math.round(e.getBoundingClientRect().left));
         /* Odznak se nesmí přelít do názvu. Sloupec je pevný, takže
@@ -82,7 +111,8 @@ try {
         }
         out.push({ pocet: mista.length, prekryv,
           odznaku: seznam.querySelectorAll('.okr-badge').length,
-          ruznych: [...new Set(mista)].length,
+          sloupcu: skupiny.size, sloupcuVMrizce,
+          ruznych: ruznychVeSkupinach,
           min: mista.length ? Math.min(...mista) : null,
           max: mista.length ? Math.max(...mista) : null });
       }
@@ -94,7 +124,13 @@ try {
       radkuCelkem += s.pocet;
       if (s.odznaku > 0) sOdznaky++;
       if (s.ruznych !== 1) {
-        krive.push(`${stranka}: ${s.ruznych} různých levých okrajů (${s.min}–${s.max} px) na ${s.pocet} řádcích`);
+        krive.push(`${stranka}: ${s.ruznych} různých levých okrajů uvnitř sloupce (${s.min}–${s.max} px) na ${s.pocet} řádcích`);
+      }
+      /* A sloupce musí být tolik, kolik jich mřížka deklaruje — jinak
+         by se kontrola výš dala uspokojit tím, že si každý řádek
+         udělá vlastní „sloupec". */
+      if (s.sloupcu !== s.sloupcuVMrizce) {
+        krive.push(`${stranka}: karty stojí v ${s.sloupcu} svislicích, mřížka má ${s.sloupcuVMrizce} sloupců`);
       }
       if (s.prekryv) {
         prelite.push(`${stranka}: ${s.prekryv} odznaků zasahuje do názvu`);
@@ -113,6 +149,44 @@ try {
     krive.length === 0, krive.join('\n      '));
   pravda('a odznak „Dražba" ani „Exekuce" do názvu nezasahuje',
     prelite.length === 0, prelite.join('\n      '));
+
+  /* --- DVA SLOUPCE NA ŠIROKÉM DISPLEJI ----------------------------
+     Měřeno 27. 10.: obsah má strop 1096 px a karta výpisu brala celou
+     jeho šířku, takže mezi parametry a cenou zůstávalo přes 600 px
+     prázdna. Dva sloupce zkrátily výpis okresu z 3 177 na 1 952 px
+     a lesních pozemků ze 7 564 na 4 573 px.
+     Hranice je 1200 px a je naměřená: na 1100 px se parametry zalomily
+     ve 12 řádcích z 32, na 1200 px v žádném. */
+  const SIRKY = [[1199, 1], [1200, 2], [1440, 2]];
+  const spatne = [];
+  let merenychKaret = 0;
+  for (const [W, cekano] of SIRKY) {
+    await p.setViewportSize({ width: W, height: 900 });
+    for (const stranka of ['pozemky-okres-benesov.html', 'pozemky-lesni.html']) {
+      await p.goto(BASE + '/' + stranka, { waitUntil: 'load' });
+      await p.waitForTimeout(600);
+      const v = await p.evaluate(() => {
+        const l = document.querySelector('.okr-list');
+        if (!l) return null;
+        const radky = (e) => Math.round(e.getBoundingClientRect().height
+          / parseFloat(getComputedStyle(e).lineHeight));
+        let zlomene = 0, vsech = 0;
+        l.querySelectorAll('.okr-meta').forEach((e) => { vsech++; if (radky(e) > 1) zlomene++; });
+        const cs = getComputedStyle(l);
+        return { sloupcu: cs.display === 'grid'
+          ? cs.gridTemplateColumns.split(' ').filter(Boolean).length : 1, zlomene, vsech };
+      });
+      if (!v) { spatne.push(`${W}px ${stranka}: výpis se nenašel`); continue; }
+      merenychKaret += v.vsech;
+      if (v.sloupcu !== cekano) spatne.push(`${W}px ${stranka}: ${v.sloupcu} sloupců místo ${cekano}`);
+      if (v.zlomene) spatne.push(`${W}px ${stranka}: ${v.zlomene} z ${v.vsech} parametrů se zalomilo`);
+    }
+  }
+  // PŘEDPOKLAD: bez vykreslených karet by kontrola níž prošla naprázdno
+  pravda('je co měřit i u sloupců (karty se vykreslily)', merenychKaret > 100,
+    `karet celkem ${merenychKaret}`);
+  pravda('výpis stojí od 1200 px ve dvou sloupcích a parametry se nezalomí',
+    spatne.length === 0, spatne.slice(0, 6).join('\n      '));
   await ctx.close();
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}

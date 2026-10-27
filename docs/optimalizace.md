@@ -11924,3 +11924,70 @@ shodila čtyři kontroly.
 Plovoucí prvek u hrany okna se musí počítat z **šířky postranního
 pruhu**, ne z okna. Dokud se odsazení píše jako pevné číslo, platí
 jen pro tu šířku, na které se zrovna dívalo.
+
+## 173. Šest set pixelů prázdna uprostřed každého řádku výpisu *27. 10.*
+
+Výpis na okresních, krajských a druhových stránkách — tedy na 91
+stránkách, na které lidé chodí z vyhledávačů — stál na monitoru
+v jednom sloupci přes celou šířku obsahu (1 096 px). Parametry
+(„orná půda · 4 263 m²") končily kolem 450 px, cena začínala na
+1 065. Mezi tím bylo přes **600 px ničeho** a na obrazovku se vešlo
+sedm nabídek — o dvě víc než na telefonu, kde je karta 350 px široká.
+
+### Dva směry, oba vyfocené
+
+Podle pravidla z CLAUDE.md šly majiteli nejdřív dva snímky:
+
+* **A — dva sloupce karet.** Díru zaplní obsah.
+* **B — bohatší řádek.** Do prázdna se přesunou štítky („příjezd",
+  „−37 % proti okolí"), které dnes stojí na třetím řádku.
+
+B vypadal dobře na nabídkách, které štítky mají — jenže jich má jen
+část, takže u zbytku díra zůstala a sloupec se štítky navíc začínal
+pokaždé jinde. Šlo se tedy cestou A.
+
+### Co ukázalo měření
+
+| stránka | výška výpisu dnes | dva sloupce | rozdíl |
+|---|---|---|---|
+| okres Benešov (32 nabídek) | 3 177 px | 1 952 px | −39 % |
+| Jihočeský kraj (12) | 1 605 px | 940 px | −41 % |
+| lesní pozemky (60) | 7 564 px | 4 573 px | −40 % |
+
+### A proč se karta musela přeskládat
+
+První pokus nechal kartu, jak byla (snímek, jméno, cena vpravo;
+parametry a zdroj v druhé řadě) a jen ji dal do dvou sloupců.
+V užším sloupci (542 px) se to ale rozpadlo: na stránce druhu, kde
+parametry nesou i okres („lesní pozemek · 662 m² · okres Hradec
+Králové"), se zalomilo **57 řádků z 60**. Na okresní stránce 0 z 32 —
+tedy vada, kterou by jedna zkoušená stránka minula.
+
+Parametry proto dostaly celou šířku textu a odkaz na zdroj se
+přesunul pod ně:
+
+```
+"foto misto cena"      ← jméno obce a cena v jedné řadě
+"foto meta  meta"      ← parametry přes celou šířku
+"foto extra extra"
+"foto zdroj zdroj"
+```
+
+Po přeskládání se nezalomí ani jeden řádek ze šedesáti.
+
+**Hranice je 1200 px, a je naměřená:** na 1100 px se při dvou
+sloupcích zalomilo 12 řádků z 32, na 1200 px žádný.
+
+### Hlídač, který to drží — a jeden, který na to doplatil
+
+`scripts/test-seznam-nabidek.mjs` dostal blok, který měří počet
+sloupců na 1199, 1200 a 1440 px a počítá zalomené řádky parametrů.
+Sabotáž (vrátit původní rozvržení karty) shodí kontrolu na 57 řádcích
+ze 60.
+
+Táž zkouška ale předtím hlídala, že všechna jména obcí v seznamu
+stojí na JEDNÉ svislici — a dva sloupce znamenají dvě. Nebyla to
+chyba hlídače, nýbrž změna významu: svislice se teď žádá uvnitř
+sloupce a navíc se ověřuje, že skupin je přesně tolik, kolik sloupců
+deklaruje mřížka (jinak by si kontrolu uspokojil i rozsypaný výpis,
+kde má každý řádek „svůj sloupec").

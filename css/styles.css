@@ -6943,6 +6943,37 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
    by jí uřízl roh, a hlavně: v kartě výpisu na úvodní stránce žádná
    není. Jedna karta znamená jedna, i v detailech. */
 .okr-item::after{content:none;}
+
+/* DVA SLOUPCE NA ŠIROKÉM DISPLEJI.
+   Měřeno 27. 10. na monitoru 1280 px: obsah má strop 1096 px a karta
+   výpisu je přes celou jeho šířku, takže mezi parametry („orná půda ·
+   4 263 m²") a cenou vpravo zůstávalo přes 600 px prázdna. Na
+   obrazovku se vešlo sedm nabídek, kdežto na telefonu, kde je karta
+   350 px široká, jich je vidět pět — širší displej tedy nepřidával
+   skoro nic.
+
+   Dva sloupce tu díru zaplní obsahem místo vzduchu: výpis okresu
+   spadl z 3 177 na 1 702 px (−46 %), lesních pozemků ze 7 564 na
+   4 573 px (−40 %) a na obrazovku se vejde dvakrát tolik nabídek.
+
+   KARTA SE PŘITOM MUSELA PŘESKLÁDAT, a je to měřený rozdíl, ne vkus:
+   v užším sloupci (542 px) se parametry se zdrojem v jedné řadě
+   nevešly. Na stránce druhu, kde je v parametrech i okres („lesní
+   pozemek · 662 m² · okres Hradec Králové“), se zalomilo 57 řádků
+   z 60; na okresní stránce 0 z 32. Parametry proto dostaly celou
+   šířku textu a odkaz na zdroj se přesunul pod ně — po přeskládání
+   se nezalomí ani jeden řádek ze šedesáti.
+
+   Hranice je 1200 px, ne 1100: na 1100 px se při dvou sloupcích
+   zalomilo 12 řádků z 32. */
+@media (min-width:1200px){
+  .okr-list{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); align-items:start;}
+  /* Popiska zdroje snímků je věta pod výpisem, ne třetí karta. */
+  .okr-list::after{grid-column:1 / -1;}
+  .okr-item{grid-template-areas:"foto misto cena" "foto meta meta"
+    "foto extra extra" "foto zdroj zdroj";}
+  .okr-item .okr-src{justify-self:start;}
+}
 /* Kdy se zdroje naposledy procházely — slib z častých dotazů, který na
    krajských a okresních stránkách nebylo čím podepřít. */
 .okr-cerstvost{margin-top:8px; font-size:13px; color:var(--muted); letter-spacing:0.01em;}

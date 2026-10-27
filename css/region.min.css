@@ -531,6 +531,11 @@ main .okr-hero + .section{padding-top:16px}
 .okr-item .okr-place{font-size:16px;font-weight:700;letter-spacing:-0.01em}
 .okr-item .okr-cena b{font-size:20px;letter-spacing:-0.02em;line-height:1.2}
 .okr-item::after{content:none}
+@media (min-width:1200px){.okr-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}
+.okr-list::after{grid-column:1 / -1}
+.okr-item{grid-template-areas:"foto misto cena" "foto meta meta" "foto extra extra" "foto zdroj zdroj"}
+.okr-item .okr-src{justify-self:start}
+}
 .okr-cerstvost{margin-top:8px;font-size:13px;color:var(--muted);letter-spacing:0.01em}
 .okr-src .ext-ikona,.ext-ikona{display:inline-block;margin-left:4px;font-size:0.9em;opacity:0.75}
 a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::after{content:"\2197";display:inline-block;margin-left:4px;font-size:0.9em;opacity:0.7;text-decoration:none}
