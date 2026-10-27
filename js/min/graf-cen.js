@@ -72,6 +72,7 @@
     var stred = (max + min) / 2;
     var rozsah = Math.max((max - min) * 1.7, stred * 0.10) || 1;
     var dolu = stred - rozsah / 2, nahoru = stred + rozsah / 2;
+    var podilOsy = (max - min) / rozsah * 100;
     var x = function (i) { return L + (W - L - P) * (body.length === 1 ? 0.5 : i / (body.length - 1)); };
     var y = function (v) { return P + (Hh - P - D) * (1 - (v - dolu) / (nahoru - dolu)); };
 
@@ -120,7 +121,13 @@
 
           'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
           'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
-          'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
+
+          'Svislá osa jde od ' + cislo(dolu) + ' do ' + cislo(nahoru) + ' Kč/m², ne od nuly. ' +
+          (cislo(min) === cislo(max)
+            ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
+            : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
+              (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.') +
+          '</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +
           '<thead><tr><th>Den</th><th>Medián</th><th>Z kolika nabídek</th></tr></thead>' +

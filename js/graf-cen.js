@@ -124,6 +124,7 @@
     var stred = (max + min) / 2;
     var rozsah = Math.max((max - min) * 1.7, stred * 0.10) || 1;
     var dolu = stred - rozsah / 2, nahoru = stred + rozsah / 2;
+    var podilOsy = (max - min) / rozsah * 100;   // jakou část výšky osy čára zabere
     var x = function (i) { return L + (W - L - P) * (body.length === 1 ? 0.5 : i / (body.length - 1)); };
     var y = function (v) { return P + (Hh - P - D) * (1 - (v - dolu) / (nahoru - dolu)); };
 
@@ -189,7 +190,26 @@
              stálo na 55 a čára na 8 Kč/m², je dnes 43 proti 35. */
           'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
           'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
-          'Svislá osa je v rozpětí ' + cislo(min) + '–' + cislo(max) + ' Kč/m², ne od nuly.</p>' +
+          /* CO TU STÁLO A PROČ TO BYLA NEPRAVDA.
+             „Svislá osa je v rozpětí 45,7–46,6 Kč/m²" — jenomže to je
+             rozpětí DAT, ne osy. Osa drží nejméně desetinu hladiny (viz
+             výpočet výš), takže ve skutečnosti šla od 43,8 do 48,5.
+             Změřeno na všech 37 řadách, které graf dostanou: data zabe-
+             rou mediánově 5 % výšky osy (nejvíc 56 %), takže kdo by si
+             polohu čáry proti té větě přečetl, mýlí se až dvacetinásobně.
+             Na osmnácti z nich — na těch, které se za celou dobu nepohnuly
+             ani o desátou korunu — z toho navíc vyšlo „v rozpětí 36,4–36,4
+             Kč/m²", což není rozpětí.
+             Teď se píše osa tak, jak je nakreslená, a pod ní pás, ve kterém
+             data leží — včetně toho, jakou část výšky čára zabere. To
+             poslední číslo se dá změřit přímo z nakreslené křivky, a tak
+             to taky scripts/test-graf-cen.mjs dělá. */
+          'Svislá osa jde od ' + cislo(dolu) + ' do ' + cislo(nahoru) + ' Kč/m², ne od nuly. ' +
+          (cislo(min) === cislo(max)
+            ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
+            : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
+              (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.') +
+          '</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +
           '<thead><tr><th>Den</th><th>Medián</th><th>Z kolika nabídek</th></tr></thead>' +

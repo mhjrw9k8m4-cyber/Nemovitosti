@@ -215,8 +215,14 @@ async function otevri(okres, sirka) {
     const ys = [...d.matchAll(/[ML]\s*[\d.]+\s+([\d.]+)/g)].map((m) => +m[1]);
     const ceny = [...f.querySelectorAll('.gc-tab tbody tr')]
       .map((tr) => parseFloat(tr.children[1].textContent.replace(/\s/g, '').replace(',', '.')));
+    /* Kříž odměřuje OSU: jeho y1 je horní okraj kreslicí plochy, y2 dolní.
+       Není to údaj vyrobený kvůli zkoušce — kreslený kříž se po něm vodí
+       pod prstem, zkouška si ho jen přečte. */
+    const kriz = f.querySelector('.gc-kriz');
     return { vyskaSvg: vb[3], rozsahY: Math.max(...ys) - Math.min(...ys),
-      minC: Math.min(...ceny), maxC: Math.max(...ceny) };
+      minC: Math.min(...ceny), maxC: Math.max(...ceny),
+      rada: f.getAttribute('data-rada'), pozn: f.querySelector('.gc-pozn').textContent,
+      ys: ys, krizNahore: +kriz.getAttribute('y1'), krizDole: +kriz.getAttribute('y2') };
   });
   // PŘEDPOKLAD: musí jít o řadu, která se opravdu hýbe málo
   const pohyb = (v.maxC - v.minC) / ((v.maxC + v.minC) / 2) * 100;
@@ -230,6 +236,52 @@ async function otevri(okres, sirka) {
   pravda('a čára proto nezabírá víc než pětinu výšky grafu',
     v.rozsahY <= v.vyskaSvg * 0.2,
     `čára zabírá ${Math.round(v.rozsahY)} z ${v.vyskaSvg} px (${Math.round(100 * v.rozsahY / v.vyskaSvg)} %)`);
+
+  /* A TEĎ TO, CO SE O OSE PÍŠE, PROTI TOMU, CO JE NAKRESLENÉ.
+     ------------------------------------------------------------------
+     Pod grafem stálo „Svislá osa je v rozpětí 45,7–46,6 Kč/m²" — a to
+     bylo rozpětí DAT, ne osy; osa šla od 43,8 do 48,5. Kontrola výš
+     tomu nebránila: ta hlídá jen to, že čára nezabere víc než pětinu.
+     Proto se tu osa ODMĚŘUJE z toho, co je na obrazovce: dva body
+     s různou cenou dají přepočet px → Kč a ten se natáhne na horní
+     a dolní okraj kreslicí plochy (y1 a y2 kříže).
+     Ceny se berou ze zdrojových dat, ne z tabulky pod grafem: ta je
+     zaokrouhlená na desetinu a při přepočtu přes dvacetinásobek by
+     z té desetiny byly celé koruny. */
+  const rr = H.rady[v.rada];
+  if (rr) {
+    const ceny = rr.cena.filter((x) => x !== null);
+    const iMin = ceny.indexOf(Math.min(...ceny)), iMax = ceny.indexOf(Math.max(...ceny));
+    // PŘEDPOKLAD: bez dvou různých cen nejde přepočet px → Kč sestavit
+    pravda('měří se řada, která má aspoň dvě různé ceny (jinak osa nejde odměřit)',
+      ceny[iMin] !== ceny[iMax] && v.ys.length === ceny.length,
+      `cen ${ceny.length}, bodů na čáře ${v.ys.length}`);
+    if (ceny[iMin] !== ceny[iMax] && v.ys.length === ceny.length) {
+      const hodnota = (yy) => ceny[iMax] +
+        (yy - v.ys[iMax]) * (ceny[iMin] - ceny[iMax]) / (v.ys[iMin] - v.ys[iMax]);
+      const nahoru = hodnota(v.krizNahore), dolu = hodnota(v.krizDole);
+      const cis = (t) => parseFloat(String(t).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+      const m = v.pozn.match(/Svisl\u00e1 osa jde od ([\d\s\u00a0,]+?) do ([\d\s\u00a0,]+?)\s*K\u010d/);
+      pravda('pod grafem stojí, odkud kam jde osa', !!m, v.pozn.slice(-160));
+      if (m) {
+        /* Mez 0,15 Kč: body na čáře jsou zaokrouhlené na desetinu pixelu
+           a při natažení na celou osu se ta chyba násobí. Na nepravdu,
+           kvůli které kontrola vznikla (osa opsaná z dat), je to málo
+           o řád: tam se oba konce mýlily o celé koruny. */
+        pravda('a jsou to konce osy, jak je graf opravdu nakreslil',
+          Math.abs(cis(m[1]) - dolu) <= 0.15 && Math.abs(cis(m[2]) - nahoru) <= 0.15,
+          `v poznámce ${m[1]}\u2013${m[2]}, nakresleno ${dolu.toFixed(2)}\u2013${nahoru.toFixed(2)} K\u010d/m\u00b2`);
+      }
+      const osaVyska = v.krizDole - v.krizNahore;
+      const pod = v.pozn.match(/\u010d\u00e1ra zab\u00edr\u00e1 (\d+)\s*%/);
+      if (pod) {
+        const kreslene = v.rozsahY / osaVyska * 100;
+        pravda('a kolik výšky osy čára podle poznámky zabírá, tolik zabírá i na obrazovce',
+          Math.abs(+pod[1] - kreslene) <= 1.5,
+          `poznámka ${pod[1]} %, nakresleno ${kreslene.toFixed(1)} % (${v.rozsahY.toFixed(1)} z ${osaVyska} px)`);
+      }
+    }
+  }
   await p.close();
 }
 
