@@ -10,13 +10,22 @@
 
   function postav() {
 
+    var obal = null, oddily = [];
     var sekce = document.querySelector('.section .clanek');
-    if (!sekce) return;
-    sekce = sekce.closest('.section');
-    var obal = sekce.querySelector('.add-wrap');
-    if (!obal || obal.querySelector('.obsah')) return;
+    if (sekce) {
+      sekce = sekce.closest('.section');
+      obal = sekce.querySelector('.add-wrap');
+      oddily = [].slice.call(sekce.querySelectorAll('.clanek .rules-sect'));
+    } else {
 
-    var oddily = [].slice.call(sekce.querySelectorAll('.clanek .rules-sect'));
+      var telo = document.querySelector('.dt-telo');
+      if (!telo) return;
+      obal = telo;
+      oddily = [].slice.call(telo.children).filter(function (e) {
+        return e.classList && e.classList.contains('dt-sekce');
+      });
+    }
+    if (!obal || obal.querySelector('.obsah')) return;
 
     if (oddily.length < 5) return;
 

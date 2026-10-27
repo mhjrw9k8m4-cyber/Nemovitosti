@@ -37,7 +37,7 @@
 
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=0310ae7e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=ed4618e9">
   <style>
     .kt-mail{display:flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -93,7 +93,8 @@
     </div>
   </section>
 
-  <section class="wrap dt-hlava">
+  <div class="wrap dt-telo">
+  <section class="dt-hlava">
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
@@ -101,7 +102,7 @@
       <b>656&nbsp;kB</b>. Z toho je <b>19</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 929</b> pozemků.</p>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Co v něm NENÍ</h2>
     <p>Tohle je potřeba vědět dřív, než na datech někdo něco postaví:</p>
     <ul class="dt-seznam">
@@ -131,7 +132,7 @@
     </ul>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Hlavička souboru</h2>
     <div class="dt-tab-obal"><table class="dt-tab">
       <thead><tr><th>Pole</th><th>Typ</th><th></th><th>Co to je</th></tr></thead>
@@ -145,7 +146,7 @@
     </table></div>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Jedna nabídka</h2>
     <div class="dt-tab-obal"><table class="dt-tab">
       <thead><tr><th>Pole</th><th>Typ</th><th>Přítomnost</th><th>Co to je</th></tr></thead>
@@ -174,7 +175,7 @@
     </table></div>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Kanály a mapa webu</h2>
     <p>Kdo chce jen sledovat, co přibylo, nemusí stahovat celý soubor:</p>
     <ul class="dt-seznam">
@@ -185,7 +186,7 @@
     </ul>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Jen jeden okres? Nemusíte brát všechno</h2>
     <p class="dt-uvod">Celý soubor má 656&nbsp;kB. Komu jde
       o jeden okres, tomu stačí jeho řez — a ten má 508&nbsp;kB
@@ -217,7 +218,7 @@
       bez limitu dotazů a bez aplikační vrstvy, která by mohla spadnout.</p>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Komu cena spadla — a kdy</h2>
     <p class="dt-uvod">Tohle je jediná část našich dat, která se nikde jinde nedá vzít:
       zapisujeme si nabídky den po dni, takže u 97 nabídek
@@ -246,7 +247,7 @@
       se slevuje — je na stránce <a href="cena-pozemku.html">ceny pozemků</a>.</p>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Za jakých podmínek</h2>
     <p>Data pocházejí z veřejných zdrojů a Parcelka je dává k dispozici tak, jak jsou.
       Platí pro ně <a href="podminky.html">podmínky použití</a>. Prosíme o uvedení zdroje
@@ -257,6 +258,7 @@
       tedy nejvýš několikrát denně.</p>
     <p class="dt-pozn">Něco chybí nebo je potřeba jiný tvar? <a href="kontakt.html">Napište nám</a>.</p>
   </section>
+  </div>
 </main>
 <footer>
   <div class="wrap foot-bottom">
@@ -290,5 +292,6 @@
 <script src="js/min/mereni.js?v=b64f8a44" defer></script>
 <script src="js/min/ceny.js?v=38ec5655" defer></script>
 <script src="js/min/porovnani.js?v=f610316e" defer></script>
+<script src="js/min/obsah.js?v=07b6b682" defer></script>
 </body>
 </html>

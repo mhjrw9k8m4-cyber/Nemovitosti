@@ -115,7 +115,11 @@ export function spust() {
      nenačítá knihovnu, kterou nikdo nevolá — a po mém zásahu ohlásilo,
      že PK_CENY nevolá na obou stránkách nikdo. Razítka ?v= doplní
      scripts/orazitkuj-verze.mjs, proto se tu nepíšou. */
-  const PRO_DATA = ['js/min/ceny.js', 'js/min/porovnani.js'];
+  /* `obsah.js` staví rozcestník oddílů do levého sloupce. Stránka
+     dat je nejdelší text na webu (4 850 px, sedm oddílů) a jako
+     jediná z dlouhých stránek ho neměla — říkala si o něj stavbou
+     (`.dt-sekce`), kterou skript do 27. 10. neznál. */
+  const PRO_DATA = ['js/min/ceny.js', 'js/min/porovnani.js', 'js/min/obsah.js'];
   const pata = (() => {
     let p = sablona.slice(sablona.indexOf('<footer'));
     const znacky = PRO_DATA
@@ -158,7 +162,10 @@ export function spust() {
     </div>
   </section>
 
-  <section class="wrap dt-hlava">
+  <!-- Oddíly i úvod v jednom obalu, aby měl rozcestník kam a aby úvod
+       stál na téže svislici jako text pod ním. -->
+  <div class="wrap dt-telo">
+  <section class="dt-hlava">
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se ${esc(popis.obnova)}.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/${esc(popis.soubor)}</code></p>
@@ -168,7 +175,7 @@ export function spust() {
       + ` takže na stránkách najdete <b>${fmt(nabidek - duplicit)}</b> pozemků.` : ''}</p>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Co v něm NENÍ</h2>
     <p>Tohle je potřeba vědět dřív, než na datech někdo něco postaví:</p>
     <ul class="dt-seznam">
@@ -205,7 +212,7 @@ export function spust() {
     </ul>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Hlavička souboru</h2>
     <div class="dt-tab-obal"><table class="dt-tab">
       <thead><tr><th>Pole</th><th>Typ</th><th></th><th>Co to je</th></tr></thead>
@@ -215,7 +222,7 @@ ${hlava}
     </table></div>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Jedna nabídka</h2>
     <div class="dt-tab-obal"><table class="dt-tab">
       <thead><tr><th>Pole</th><th>Typ</th><th>Přítomnost</th><th>Co to je</th></tr></thead>
@@ -225,7 +232,7 @@ ${pole}
     </table></div>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Kanály a mapa webu</h2>
     <p>Kdo chce jen sledovat, co přibylo, nemusí stahovat celý soubor:</p>
     <ul class="dt-seznam">
@@ -236,7 +243,7 @@ ${pole}
     </ul>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Jen jeden okres? Nemusíte brát všechno</h2>
     <p class="dt-uvod">Celý soubor má ${fmt(Math.round(velikostCelku / 1024))}&nbsp;kB. Komu jde
       o jeden okres, tomu stačí jeho řez — a ten má ${fmt(Math.round(nejvetsiRez / 1024))}&nbsp;kB
@@ -273,7 +280,7 @@ ${pole}
        a dosud o něm na téhle stránce nestálo nic — kdo si bere naše
        data, o něm nevěděl, přestože je to to nejcennější, co tu je.
        Čísla se dopočítávají při sestavení, ať se nerozejdou. -->
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Komu cena spadla — a kdy</h2>
     <p class="dt-uvod">Tohle je jediná část našich dat, která se nikde jinde nedá vzít:
       zapisujeme si nabídky den po dni, takže u ${fmt(zlevneniPocet)} ${zlevneniPocet === 1 ? 'nabídky' : 'nabídek'}
@@ -302,7 +309,7 @@ ${pole}
       se slevuje — je na stránce <a href="cena-pozemku.html">ceny pozemků</a>.</p>
   </section>
 
-  <section class="wrap dt-sekce">
+  <section class="dt-sekce">
     <h2>Za jakých podmínek</h2>
     <p>Data pocházejí z veřejných zdrojů a Parcelka je dává k dispozici tak, jak jsou.
       Platí pro ně <a href="podminky.html">podmínky použití</a>. Prosíme o uvedení zdroje
@@ -313,6 +320,7 @@ ${pole}
       tedy nejvýš několikrát denně.</p>
     <p class="dt-pozn">Něco chybí nebo je potřeba jiný tvar? <a href="kontakt.html">Napište nám</a>.</p>
   </section>
+  </div>
 </main>
 `;
   /* Komentáře do hotové stránky nezapisujeme — totéž pravidlo a tatáž

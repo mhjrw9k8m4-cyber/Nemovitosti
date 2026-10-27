@@ -639,6 +639,14 @@ to{opacity:1;transform:none}
 
 
 
+.dt-sekce{margin-top:32px}
+.dt-telo>.dt-sekce>p,.dt-telo>.dt-hlava>p{max-width:var(--m-text)}
+@media (min-width:1100px){.dt-telo{display:grid;grid-template-columns:var(--obsah-s) minmax(0,1fr);column-gap:var(--obsah-mezera);align-items:start}
+.dt-telo>*{grid-column:2;min-width:0}
+.dt-telo>.obsah{display:block;grid-column:1;grid-row:1 / span 99;position:sticky;top:109px;align-self:start}
+.dt-telo>.dt-sekce:first-of-type{margin-top:0}
+}
+.dt-sekce h2{font-size:20px;margin:0 0 8px}
 @media (hover:none){header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-zakladni) var(--ease)}
 }
 .pz-klice{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:0 0 8px}

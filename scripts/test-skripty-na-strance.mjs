@@ -67,6 +67,41 @@ for (const par of PARY) {
     `${navic.length} stránek ho stahuje pro nic: ` + navic.slice(0, 8).join(', '));
 }
 
+/* ===== ROZCESTNÍK ODDÍLŮ: PĚT A VÍC ODDÍLŮ ZNAMENÁ SKRIPT ======
+   js/obsah.js skládá obsah dlouhé stránky do levého sloupce a sám se
+   vypne, když má stránka méně než pět oddílů. Pár „prvek ↔ skript"
+   se tu tedy neříká jednou třídou, ale POČTEM — a měří se oba směry:
+     • pět a víc oddílů bez skriptu = prázdný levý sloupec. Tak to
+       27. 10. bylo na data.html, nejdelším textu webu (sedm oddílů,
+       4 850 px): rozcestník měla každá dlouhá stránka kromě téhle.
+     • méně než pět se skriptem = 4,8 kB zdroje za nic. Tak to bylo na
+       třech stránkách (na-co-mam-pozemek, pravidla-inzerce, radce).
+   Oddíly mají dvě stavby: karty článku (`.clanek .rules-sect`) a stránka
+   dat (`.dt-telo .dt-sekce`). Co skript hledá, to se počítá i tady. */
+{
+  const MEZ = 5;
+  const kolikrat = (h, re) => (h.match(re) || []).length;
+  const oddilu = (h) => (h.includes('add-card clanek') ? kolikrat(h, /class="rules-sect"/g)
+    : h.includes('dt-telo') ? kolikrat(h, /class="dt-sekce"/g) : 0);
+  const chybi = [], navic = [];
+  let dlouhych = 0;
+  for (const f of stranky) {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    const n = oddilu(h);
+    const maSkript = /js\/(min\/)?obsah\.js/.test(h);
+    if (n >= MEZ) dlouhych++;
+    if (n >= MEZ && !maSkript) chybi.push(`${f} (${n} oddílů)`);
+    if (n < MEZ && maSkript) navic.push(`${f} (${n} oddílů)`);
+  }
+  // PŘEDPOKLAD: bez dlouhých stránek by kontrola proběhla naprázdno
+  pravda(`rozcestník oddílů: je co měřit (${dlouhych} dlouhých stránek)`,
+    dlouhych >= 8, `dlouhých stránek jen ${dlouhych}`);
+  pravda('rozcestník oddílů: skript je na každé stránce s pěti a víc oddíly',
+    chybi.length === 0, chybi.join(', '));
+  pravda('rozcestník oddílů: a není tam, kde by se sám vypnul',
+    navic.length === 0, navic.join(', '));
+}
+
 /* ===== KNIHOVNY, KTERÉ SAMY NIC NEDĚLAJÍ =========================
    Druhý druh plýtvání. Modul, který jen vystaví globální jméno
    a čeká, až ho někdo zavolá, je na stránce, kde ho nikdo nezavolá,

@@ -1555,6 +1555,7 @@ to{opacity:1;transform:none}
 @media (hover:none){.map-podklad button{min-height:44px}
 }
 
+
 @media (hover:none){:root.mapa-tazeni header{transform:translateY(-100%)}
 :root.mapa-tazeni .map-legend,:root.mapa-tazeni .map-tools,:root.mapa-tazeni .kraj-hint{opacity:0}
 :root.mapa-tazeni .map-tools{pointer-events:none}

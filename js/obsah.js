@@ -31,13 +31,27 @@
   function postav() {
     /* Sekce, ve které běží číslování, je i tou, ve které má obsah smysl:
        článek bývá rozdělený do dvou karet a obsah musí pokrýt obě. */
+    var obal = null, oddily = [];
     var sekce = document.querySelector('.section .clanek');
-    if (!sekce) return;
-    sekce = sekce.closest('.section');
-    var obal = sekce.querySelector('.add-wrap');
+    if (sekce) {
+      sekce = sekce.closest('.section');
+      obal = sekce.querySelector('.add-wrap');
+      oddily = [].slice.call(sekce.querySelectorAll('.clanek .rules-sect'));
+    } else {
+      /* DRUHÁ STAVBA TÉHOŽ: STRÁNKA DAT.
+         data.html se neskládá z karet článku, ale z oddílů `.dt-sekce`
+         (píše ji scripts/generate-data-stranka.mjs). Je to nejdelší text
+         na webu — 4 850 px a sedm oddílů — a jako jediná z dlouhých
+         stránek rozcestník neměla, protože tahle funkce uměla jen
+         `.clanek .rules-sect`. Stavba je jiná, potřeba táž. */
+      var telo = document.querySelector('.dt-telo');
+      if (!telo) return;
+      obal = telo;
+      oddily = [].slice.call(telo.children).filter(function (e) {
+        return e.classList && e.classList.contains('dt-sekce');
+      });
+    }
     if (!obal || obal.querySelector('.obsah')) return;
-
-    var oddily = [].slice.call(sekce.querySelectorAll('.clanek .rules-sect'));
     /* Pod pět oddílů je obsah delší než užitek — čtenář je vidí všechny
        na jedné obrazovce a seznam by jen přidal práci. */
     if (oddily.length < 5) return;
