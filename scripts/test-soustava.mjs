@@ -264,48 +264,63 @@ const vlozeneStranky = readdirSync('.')
   const rozbal = (v, hloubka = 0) => (hloubka > 6 ? v
     : v.replace(/var\(\s*--([a-z0-9-]+)\s*\)/g, (_, jm) => rozbal(tabulka[jm] || '', hloubka + 1)));
   const zhustit = (v) => String(v).toLowerCase().replace(/\s+/g, '').replace(/;$/, '');
-  const [, css404] = vlozeneStranky.find(([f]) => f === '404.html') || [];
-  // PŘEDPOKLAD: bez vloženého stylu 404 by kontrola proběhla naprázdno
-  pravda('404.html má vlastní vložený styl (je co porovnávat)', !!css404);
-  if (css404) {
+  const styly = new Map(vlozeneStranky);
+  // PŘEDPOKLAD: bez vložených stylů by kontrola proběhla naprázdno
+  const chybi = ['404.html', 'inzerce.html', 'diagnostika.html'].filter((f) => !styly.has(f));
+  pravda('stránky s vlastním stylem mají co porovnávat', chybi.length === 0, chybi.join(', '));
+  {
     /* Hodnota jedné vlastnosti v jednom bloku. Bloky jsou v tom souboru
        ploché (žádné vnoření), takže stačí najít selektor a číst po `}`. */
-    const deklarace = (selektor, vlastnost) => {
+    const deklarace = (soubor, selektor, vlastnost) => {
+      const css = styly.get(soubor);
+      if (!css) return null;
       const re = new RegExp('(^|[};])\\s*' + selektor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}', 'm');
-      const blok = re.exec(css404);
+      const blok = re.exec(css);
       if (!blok) return null;
-      const v = new RegExp('(^|;)\\s*' + vlastnost + '\\s*:([^;]*)').exec(blok[2]);
+      const v = new RegExp('(^|;)\\s*' + vlastnost.replace(/[-]/g, '\\-') + '\\s*:([^;]*)').exec(blok[2]);
       return v ? v[2].trim() : null;
     };
     const OPSANE = [
-      ['body', 'background', 'bg', 'plocha stránky'],
-      ['body', 'color', 'text', 'barva textu'],
-      ['.card', 'background', 'plocha-karta', 'plocha karty'],
-      ['.card', 'border-radius', 'r-plocha', 'zaoblení karty'],
-      ['.card', 'box-shadow', 'e1', 'stín karty'],
-      ['p', 'color', 'muted', 'barva poznámky'],
-      ['a', 'background', 'plocha-znacka', 'plocha tlačítka'],
-      ['a', 'border-radius', 'r-md', 'zaoblení tlačítka'],
-      ['a', 'box-shadow', 'glow', 'stín tlačítka'],
-      ['a.sec', 'color', 'znacka', 'barva záložní akce'],
+      ['404.html', 'body', 'background', 'bg', 'plocha stránky'],
+      ['404.html', 'body', 'color', 'text', 'barva textu'],
+      ['404.html', '.card', 'background', 'plocha-karta', 'plocha karty'],
+      ['404.html', '.card', 'border-radius', 'r-plocha', 'zaoblení karty'],
+      ['404.html', '.card', 'box-shadow', 'e1', 'stín karty'],
+      ['404.html', 'p', 'color', 'muted', 'barva poznámky'],
+      ['404.html', 'a', 'background', 'plocha-znacka', 'plocha tlačítka'],
+      ['404.html', 'a', 'border-radius', 'r-md', 'zaoblení tlačítka'],
+      ['404.html', 'a', 'box-shadow', 'glow', 'stín tlačítka'],
+      ['404.html', 'a.sec', 'color', 'znacka', 'barva záložní akce'],
+      /* Přestupní stránka: vidí se na vteřinu, než přesměruje — ale ta
+         vteřina má být táž barva jako zbytek webu. */
+      ['inzerce.html', 'body', 'background', 'bg', 'plocha přestupní stránky'],
+      ['inzerce.html', 'body', 'color', 'text', 'barva textu na přestupní stránce'],
+      /* Diagnostika si drží vlastní malý soubor tokenů, protože stylopis
+         nenačítá; hodnoty v něm ale mají být tytéž. */
+      ['diagnostika.html', ':root', '--bg', 'bg', 'plocha diagnostiky'],
+      ['diagnostika.html', ':root', '--card', 'plocha-karta', 'plocha karty v diagnostice'],
+      ['diagnostika.html', ':root', '--text', 'text', 'barva textu v diagnostice'],
+      ['diagnostika.html', ':root', '--dim', 'muted', 'barva poznámky v diagnostice'],
+      ['diagnostika.html', ':root', '--line', 'line', 'obrys v diagnostice'],
     ];
     const rozesle = [];
-    for (const [sel, vl, token, popis] of OPSANE) {
-      const na404 = deklarace(sel, vl);
+    for (const [soubor, sel, vl, token, popis] of OPSANE) {
+      const naStrance = deklarace(soubor, sel, vl);
       const vTokenu = tabulka[token] === undefined ? null : rozbal(tabulka[token]);
-      if (na404 === null || vTokenu === null || zhustit(na404) !== zhustit(vTokenu)) {
-        rozesle.push(`${popis} (${sel} ${vl}): na 404 „${na404}", token --${token} „${vTokenu}"`);
+      if (naStrance === null || vTokenu === null || zhustit(naStrance) !== zhustit(vTokenu)) {
+        rozesle.push(`${popis} (${soubor} ${sel} ${vl}): „${naStrance}", token --${token} „${vTokenu}"`);
       }
     }
-    pravda(`404.html opisuje tokeny soustavy přesně (${OPSANE.length} hodnot)`,
+    pravda(`stránky s vlastním stylem opisují tokeny přesně (${OPSANE.length} hodnot)`,
       rozesle.length === 0, rozesle.join(' | '));
     /* Obrysy nesou kromě barvy i šířku, takže se porovnává jen ta barva. */
-    const obrysy = [['.card', 'line', 'obrys karty'], ['a.sec', 'line-strong', 'obrys záložní akce']];
-    const spatne = obrysy.filter(([sel, token]) => {
-      const d = deklarace(sel, 'border');
+    const obrysy = [['404.html', '.card', 'line', 'obrys karty'],
+      ['404.html', 'a.sec', 'line-strong', 'obrys záložní akce']];
+    const spatne = obrysy.filter(([soubor, sel, token]) => {
+      const d = deklarace(soubor, sel, 'border');
       return !d || zhustit(d).indexOf(zhustit(rozbal(tabulka[token] || ''))) < 0;
-    }).map(([sel, token, popis]) => `${popis}: ${sel} border „${deklarace(sel, 'border')}" nenese --${token}`);
-    pravda('a obrysy na ní jsou z týchž tokenů', spatne.length === 0, spatne.join(' | '));
+    }).map(([soubor, sel, token, popis]) => `${popis}: ${soubor} ${sel} border „${deklarace(soubor, sel, 'border')}" nenese --${token}`);
+    pravda('a obrysy na nich jsou z týchž tokenů', spatne.length === 0, spatne.join(' | '));
   }
 }
 
