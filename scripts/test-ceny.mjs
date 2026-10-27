@@ -252,7 +252,7 @@ pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.ch
    Obě věty mluví o témže kraji a témže druhu, a říkají opak.
 
    Zkouška je PÁROVÁ a liší se jedinou věcí: cenou podobně velkých
-   sousedů. Pozemek je v obou případech na 43. percentilu, takže kdyby
+   sousedů. Pozemek je v obou případech na 36. percentilu, takže kdyby
    verdikt zmizel kvůli datům (málo vzorku, malý rozptyl), zmizel by
    v obou — a to je přesně to, co by jinak nešlo rozpoznat. */
 {
@@ -280,7 +280,50 @@ pravda('nejlevnější nabídka je v dolní části žebříčku', !!pc && pc.ch
   pravda('a tentýž pozemek pak verdikt dostane — pojistka není plošná',
     !!pcD && pcD.pct > 35 && pcD.pct < 65,
     pcD ? `percentil ${pcD.pct} %` : 'verdikt zmizel i tam, kde si nic neodporuje');
-  je('a je to týž 43. percentil jako v případě A', pcD && pcD.pct, 43);
+  /* 36 %, ne 43: od opravy se počítá OSTŘE a nabídka se nepočítá
+     sama k sobě (viz percentil v js/ceny.js). Pod sebou má pět
+     ze čtrnácti. */
+  je('a je to týž 36. percentil jako v případě A', pcD && pcD.pct, 36);
+}
+
+/* --- 7b) Percentil se nepočítá sám k sobě ---------------------------
+   Přihrádka, se kterou se nabídka srovnává, OBSAHUJE TU NABÍDKU.
+   Dokud se počítalo `cena <= moje`, byla každá nabídka „dražší" i než
+   sama sebe — na ostrých datech to dělalo mediánově 4 body, nejvíc 24,
+   a u 108 z 1 276 verdiktů to měnilo i odznak nad cenou.
+   Měří se to na krajích, kde musí vyjít kulatá čísla: nejlevnější
+   z deseti není dražší než nikdo (0 %), nejdražší není levnější než
+   nikdo (0 %). Se starou podmínkou vyšlo 10 % a zkouška padá. */
+{
+  const PRIHRADKA = pole(8, (i) => ({ place: 'P' + i, okres: 'Cheb', type: 'sale',
+    druh: 'orn\u00e1 p\u016fda', area: 10000, price: (60 + i * 10) * 10000 }));
+  const NEJLEVNEJSI = { place: 'Nej', okres: 'Cheb', type: 'sale',
+    druh: 'orn\u00e1 p\u016fda', area: 10000, price: 50 * 10000 };
+  const NEJDRAZSI = { place: 'Dra', okres: 'Cheb', type: 'sale',
+    druh: 'orn\u00e1 p\u016fda', area: 10000, price: 200 * 10000 };
+  const m7b = PK_CENY.postav([...PRIHRADKA, NEJLEVNEJSI, NEJDRAZSI], OKRES_KRAJ);
+  const pcL = m7b.percentil(NEJLEVNEJSI), pcD2 = m7b.percentil(NEJDRAZSI);
+  // PŘEDPOKLAD: bez verdiktů by se neporovnávalo nic
+  pravda('obě krajní nabídky verdikt dostanou (jinak zkouška neměří nic)',
+    !!pcL && !!pcD2 && pcL.sample === 10 && pcD2.sample === 10,
+    `vzorek ${pcL && pcL.sample} a ${pcD2 && pcD2.sample}`);
+  je('nejlevnější z deseti není dražší než nikdo', pcL && pcL.pct, 0);
+  je('a je levnější než zbylých devět z deseti', pcL && pcL.cheaper, 90);
+  je('nejdražší z deseti není levnější než nikdo', pcD2 && pcD2.cheaper, 0);
+  je('a je dražší než zbylých devět z deseti', pcD2 && pcD2.pct, 90);
+
+  /* Shodně drahá nabídka není ani levnější, ani dražší. Dvě dvojčata
+     za tutéž cenu uprostřed řady: každé má pod sebou čtyři z deseti
+     a nad sebou čtyři, zbývá ono samo a jeho dvojče. */
+  const RADA = pole(8, (i) => ({ place: 'R' + i, okres: 'Cheb', type: 'sale',
+    druh: 'orn\u00e1 p\u016fda', area: 10000, price: (i < 4 ? 40 + i * 10 : 120 + i * 10) * 10000 }));
+  const DVOJ = { place: 'D1', okres: 'Cheb', type: 'sale', druh: 'orn\u00e1 p\u016fda',
+    area: 10000, price: 100 * 10000 };
+  const DVOJ2 = Object.assign({}, DVOJ, { place: 'D2' });
+  const m7c = PK_CENY.postav([...RADA, DVOJ, DVOJ2], OKRES_KRAJ);
+  const pcT = m7c.percentil(DVOJ);
+  je('shodně drahá nabídka se nepočítá ani k levějším, ani k dražším',
+    pcT && [pcT.pct, pcT.cheaper], [40, 40]);
 }
 
 // --- 8) Skloňování krajů ---------------------------------------------

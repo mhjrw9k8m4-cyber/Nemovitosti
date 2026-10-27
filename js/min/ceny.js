@@ -402,9 +402,14 @@
 
         if (podilNejvetsiho[zdroje[z].klic] > MEZ_JEDEN_INZERENT) continue;
         if (arr[arr.length - 1] <= arr[0] * 1.2) continue;
-        var val = d.price / d.area, below = 0;
-        for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-        var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+
+        var val = d.price / d.area, pod = 0, nad = 0;
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i] < val) pod++;
+          else if (arr[i] > val) nad++;
+        }
+        var pct = Math.round(pod / arr.length * 100);
+        var levnejsich = Math.round(nad / arr.length * 100);
 
         var od = odhad(d);
         if (od && od.podleVelikosti && !od.podil) {
@@ -412,7 +417,7 @@
           if (pct <= 35 && od.podOdhadem <= -15) return null;
         }
 
-        return { pct: pct, cheaper: 100 - pct, sample: arr.length,
+        return { pct: pct, cheaper: levnejsich, sample: arr.length,
           uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr,
 
           podilInz: podilNejvetsiho[zdroje[z].klic] || 0 };

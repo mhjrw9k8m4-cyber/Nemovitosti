@@ -365,13 +365,13 @@ if (podezrely) {
          uprostřed" bez čísla, a na takové stránce by kontrola prošla
          naprázdno — proto se dole nepočítá za změřenou. */
       const jinaUroven = !(a.uroven === b.uroven && a.kde === b.kde);
-      const jineCislo = a.cheaper !== b.cheaper;
+      const jineCislo = a.cheaper !== b.cheaper || a.pct !== b.pct;
       if (!jinaUroven && !jineCislo) continue;
       out.push({ jak: jinaUroven ? 'uroven' : 'cislo',
         place: d.place, parcel: d.parcel, okres: d.okres,
         lat: d.lat, lng: d.lng, area: d.area, price: d.price,
-        syroveKde: a.kde, syroveUroven: a.uroven, syrove: a.cheaper,
-        kde: b.kde, uroven: b.uroven, ciste: b.cheaper,
+        syroveKde: a.kde, syroveUroven: a.uroven, syrove: a.cheaper, syrovePct: a.pct,
+        kde: b.kde, uroven: b.uroven, ciste: b.cheaper, cistePct: b.pct,
         /* Jméno ve větě je SKLONĚNÉ („ve Zlínském kraji", ne „Zlínský“).
            Skloňování umí js/ceny.js, tak ať se tu nepíše podruhé: první
            podoba téhle kontroly hledala v textu „Zlínský" a hlásila
@@ -439,18 +439,23 @@ if (podezrely) {
        Když ho stránka nevypisuje („zhruba uprostřed"), není tu co měřit
        a vzorek se zahodí — jinak by kontrola prošla naprázdno. */
     if (v.jak === 'cislo' && !cislo) continue;   // stránka je už zavřená výš
-    /* DVĚ VĚTY, DVĚ ČÍSLA Z TÉHOŽ MODELU. Model vrací `cheaper`
-       (kolik procent je levnějších) a `pct = 100 − cheaper`. Stránka
-       u výhodné ceny píše „Levnější než cheaper %", u vyšší „Dražší než
-       pct %". Kontrola porovnávala vždycky s `cheaper`, takže na každé
-       stránce s větou „Dražší" hlásila rozdíl, který tam není — čehož
-       si nikdo nevšiml, dokud vzorky padaly jen na věty „Levnější".
-       Naměřeno: Dolní Týnec, stránka „Dražší než 72 %", model
-       cheaper 28 — tedy TOTÉŽ číslo, jen z druhé strany. */
+    /* DVĚ VĚTY, DVĚ ČÍSLA Z TÉHOŽ MODELU. Stránka u výhodné ceny píše
+       „Levnější než cheaper %", u vyšší „Dražší než pct %". Kontrola
+       porovnávala vždycky s `cheaper`, takže na každé stránce s větou
+       „Dražší" hlásila rozdíl, který tam není — čehož si nikdo nevšiml,
+       dokud vzorky padaly jen na věty „Levnější".
+       DRUHÁ PODOBA TÉHLE OPRAVY DOPOČÍTÁVALA `pct` JAKO `100 − cheaper`.
+       To platilo, dokud model počítal „levnější nebo stejně drahé"
+       — od opravy počítá obě strany OSTŘE a shodně drahé nabídky
+       (včetně té vlastní) nepatří ani k jedněm, takže součet sto
+       nedává. Naměřeno na Litoměřicích: stránka „Dražší než 71 %",
+       model cheaper 24 — a 100 − 24 je 76, ne 71. Obě čísla se proto
+       berou z modelu, žádné se nedopočítává. */
     const drazsi = /Dražší než/.test(text);
-    const cisloSedi = !cislo || +cislo[1] === (drazsi ? 100 - v.ciste : v.ciste);
+    const cisloSedi = !cislo || +cislo[1] === (drazsi ? v.cistePct : v.ciste);
     if (!maCiste || maSyrove || !cisloSedi) {
-      spatne.push(`${zapis.soubor}: čekáno srovnání „${v.fraze}" (${v.ciste} %), `
+      spatne.push(`${zapis.soubor}: čekáno srovnání „${v.fraze}" `
+        + `(levnějších ${v.ciste} %, dražších ${v.cistePct} %), `
         + `syrový model dává „${v.syroveFraze}" (${v.syrove} %); `
         + `na stránce: „${text.slice(0, 120)}"`);
     }

@@ -997,9 +997,33 @@
         /* PŘIHRÁDKU, KTEROU DRŽÍ JEDINÝ INZERENT, NEPOUŽIJEME. */
         if (podilNejvetsiho[zdroje[z].klic] > MEZ_JEDEN_INZERENT) continue;
         if (arr[arr.length - 1] <= arr[0] * 1.2) continue;
-        var val = d.price / d.area, below = 0;
-        for (var i = 0; i < arr.length; i++) { if (arr[i] <= val) below++; }
-        var pct = Math.max(2, Math.min(98, Math.round(below / arr.length * 100)));
+        /* „DRAŽŠÍ NEŽ" ZNAMENÁ DRAŽŠÍ, NE „DRAŽŠÍ NEBO STEJNĚ DRAHÝ".
+           ------------------------------------------------------------
+           Počítalo se `arr[i] <= val`, a v té přihrádce leží i nabídka,
+           o které se právě mluví — změřeno na všech 1 276 verdiktech
+           z data/model.json: není mezi nimi jediný, kde by se nabídka
+           srovnávala bez sebe samé. Každá tedy byla „dražší" i sama
+           než sebe a k tomu než všechny stejně drahé.
+           Kolik to dělá: medián 4 procentní body, nejvíc 24 — a u 108
+           verdiktů to měnilo i odznak („Výhodná / Průměrná / Vyšší cena").
+           Čím menší vzorek, tím víc: při deseti nabídkách, což je spodní
+           mez modelu, je nabídka sama deset bodů.
+           Teď se počítají obě strany zvlášť a OSTŘE: kolik je levnějších
+           a kolik dražších. Shodně drahé nabídky nepatří ani k jedněm
+           (bylo jich 11) — „dražší než" o nich není pravda.
+           STROP 2 AŽ 98 % TÍM ODPADL. Byl to zálepek přes to, že
+           `<=` umělo napsat „dražší než 100 % nabídek" — včetně sebe.
+           Ostrá nerovnost sto procent nikdy nevrátí: aspoň jedna nabídka
+           v přihrádce (ta vlastní) není ani pod, ani nad. A nula se
+           nepotká s nulou: přihrádky užší než 20 % se o řádek výš
+           přeskočí, takže vždycky je co srovnávat. */
+        var val = d.price / d.area, pod = 0, nad = 0;
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i] < val) pod++;
+          else if (arr[i] > val) nad++;
+        }
+        var pct = Math.round(pod / arr.length * 100);
+        var levnejsich = Math.round(nad / arr.length * 100);
         /* A CO KDYŽ SI TA DVĚ ČÍSLA ODPORUJÍ? Percentil srovnává cenu za
            metr s místními nabídkami; odhad navíc PŘEPOČÍTÁVÁ NA VELIKOST,
            protože cena za metr s rostoucí výměrou klesá. Malý pozemek
@@ -1050,7 +1074,7 @@
            a sdílí ho všechny nabídky v přihrádce, takže kdo ho dostane,
            NESMÍ do něj sahat. Kopírovat ho pro každou z 1 957 nabídek
            by bylo plýtvání pamětí za nic. */
-        return { pct: pct, cheaper: 100 - pct, sample: arr.length,
+        return { pct: pct, cheaper: levnejsich, sample: arr.length,
           uroven: zdroje[z].uroven, kde: zdroje[z].kde, hodnoty: arr,
           /* Kolik ze srovnávaných nabídek je od jednoho inzerenta.
              Posílá se vždycky; co s tím stránka udělá, rozhoduje
