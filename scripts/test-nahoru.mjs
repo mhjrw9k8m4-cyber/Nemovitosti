@@ -313,6 +313,55 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   await ctxP.close();
 }
 
+/* --- A na úzkém monitoru nesmí ležet na výpisu ------------------
+   Táž vada o patro výš: pilulka „↑ Nahoru" je 110 px široká a stojí
+   24 px od hrany okna, kdežto obsah má strop 1096 px. Dokud je okno
+   užší než 1364 px, postranní pruh na pilulku nestačí a ta sedí na
+   výpisu — naměřeno 27. 10. na okresní stránce: na 1100 px zakrývala
+   dvě místa s textem a kartu, na 1280 px jedno místo a kartu.
+
+   Od 1366 px výš se pilulka vedle obsahu vejde a zůstává i se jménem.
+   Pod tím je z ní kolečko 46 px, jehož odsazení se počítá z šířky
+   pruhu — mezi 640 a 1365 px proto nezakrývá nic. Pod 640 px už je
+   obsah přes celou obrazovku a uhnout se nedá (tam platí ustupování
+   výš podle hlavní akce). */
+{
+  const ctxM = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 1100, height: 900 }, locale: 'cs-CZ' });
+  const pm = await ctxM.newPage();
+  const VYPIS = 'pozemky-okres-benesov.html';
+  for (const W of [1100, 1280, 1366]) {
+    await pm.setViewportSize({ width: W, height: 900 });
+    await pm.goto(`${BASE}/${VYPIS}`, { waitUntil: 'load' });
+    await pm.waitForTimeout(1400);
+    await pm.evaluate(() => window.scrollTo(0, 1800));
+    await pm.waitForTimeout(700);
+    const v = await pm.evaluate(() => {
+      const t = document.querySelector('.to-top');
+      if (!t) return null;
+      const r = t.getBoundingClientRect();
+      const kryte = [];
+      document.querySelectorAll('.okr-cena, .okr-src, .okr-place, .okr-meta, .okr-item').forEach((e) => {
+        const g = e.getBoundingClientRect();
+        if (g.right > r.left && g.left < r.right && g.bottom > r.top && g.top < r.bottom)
+          kryte.push(String(e.className).split(' ')[0]);
+      });
+      return { vidno: getComputedStyle(t).opacity, sirka: Math.round(r.width),
+        polozek: document.querySelectorAll('.okr-item').length, kryte: [...new Set(kryte)] };
+    });
+    // PŘEDPOKLAD: bez vykresleného výpisu a svítícího tlačítka by kontrola prošla naprázdno
+    pravda(`${W}px: výpis i tlačítko jsou na obrazovce`,
+      !!v && v.vidno === '1' && v.polozek > 5, JSON.stringify(v));
+    if (v) {
+      pravda(`${W}px: tlačítko nahoru neleží na výpisu`, v.kryte.length === 0,
+        'zakrývá: ' + v.kryte.join(', '));
+      pravda(`${W}px: a má tvar, který se vedle obsahu vejde`,
+        W >= 1366 ? v.sirka > 90 : v.sirka <= 50, `šířka ${v.sirka} px`);
+    }
+  }
+  await ctxM.close();
+}
+
 await prohlizec.close();
 console.log('\nTlačítko „nahoru" na dlouhých stránkách');
 console.log(zpravy.join('\n'));

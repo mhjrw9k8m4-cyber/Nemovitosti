@@ -11874,6 +11874,53 @@ Obojí je poučení o měření: `scrollWidth > clientWidth` znamená
 
 ### A jeden soubor navíc v kořeni
 
-Při tom se našlo `nahoru-kopie.mjs` — 218 řádků starší verze
-`scripts/test-nahoru.mjs`, která se kdysi omylem dostala do kořene
-repozitáře a zůstala tam. Kořen je přitom to, co se servíruje; smazáno.
+Při tom se v kořeni repozitáře našel soubor `nahoru-kopie` (s příponou
+mjs) — 218 řádků starší verze `scripts/test-nahoru.mjs`, která se tam
+kdysi omylem dostala a zůstala. Kořen je přitom to, co se servíruje;
+smazáno. (Jméno je tu schválně rozdělené: `scripts/test-staticka.mjs`
+hlídá, že dokumentace nemluví o souborech, které neexistují, a po
+smazání by na ně ukázala právě tahle věta.)
+
+## 172. Táž vada o patro výš: „Nahoru" leželo na výpisu i na monitoru *27. 10.*
+
+Opravené kolečko z §170 je jen telefonní polovina věci. Na monitoru
+je z téhož tlačítka pilulka „↑ Nahoru" široká 110 px a stojí 24 px od
+hrany okna — jenže obsah má strop 1096 px, takže postranní pruh je
+`(100vw − 1096) / 2` a na pilulku s odstupem (134 px) stačí až od
+okna 1364 px. Pod tím pilulka sedí na výpisu. Naměřeno na okresní
+stránce, kolik prvků zakrývá:
+
+| okno | pilulka 110 px | kolečko 46 px |
+|---|---|---|
+| 900 | 1 text + karta | nic |
+| 1100 | 2 texty + karta | nic |
+| 1280 | 1 text + karta | nic |
+| 1366 | nic | nic |
+
+Na 1280 px — tedy na běžném notebooku — pilulka zakrývala pravý konec
+ceny: „276 040 K~". Oprava je táž jako na telefonu, jen s hranicí
+spočítanou z šířky pruhu:
+
+```css
+@media (max-width:1365px){
+  .to-top{right:clamp(4px, calc(50% - 594px), 24px);
+    width:46px; height:46px; border-radius:50%;}   /* jméno do aria-label */
+}
+```
+
+`50% − 594px` je polovina okna minus polovina obsahu a minus šířka
+kolečka: odsazení se tím přisune přesně k okraji sloupce, nejvýš na
+24 px a nejmíň na 4. Po nasazení naměřeno od 640 do 1366 px: kolečko
+nezakrývá **nic**. Pod 640 px obsah zabírá celou obrazovku a uhnout se
+nedá — tam platí ustupování podle hlavní akce z §170.
+
+Hlídá to nový blok v `scripts/test-nahoru.mjs`, který měří na třech
+šířkách překryv s prvky výpisu a zároveň tvar tlačítka (do 1365 px
+kolečko, od 1366 px pilulka). Sabotáž — vrátit mez na 560 px —
+shodila čtyři kontroly.
+
+### Co z toho plyne obecně
+
+Plovoucí prvek u hrany okna se musí počítat z **šířky postranního
+pruhu**, ne z okna. Dokud se odsazení píše jako pevné číslo, platí
+jen pro tu šířku, na které se zrovna dívalo.

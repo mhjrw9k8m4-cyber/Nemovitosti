@@ -3957,13 +3957,33 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    metr. Šířka obrazovky je tu celá zabraná kartami, takže není kam uhnout
    — zbývá zabrat co nejmíň. Kolečko se vejde vedle textu karty, kdežto
    pilulka ho překrývala. Název zůstává pro odečítače obrazovky
-   v aria-label, takže se o nic nepřichází. */
-@media (max-width:560px){
-  .to-top{bottom:18px; right:14px; height:46px; width:46px; padding:0;
+   v aria-label, takže se o nic nepřichází.
+
+   A TOTÉŽ PLATÍ NA ÚZKÉM MONITORU. 27. 10. se měřilo, kolik prvků
+   výpisu pilulka zakrývá na okresní stránce:
+
+     okno    pilulka 110 px      kolečko 46 px
+     900     1 text, 1 karta     nic
+     1100    2 texty, 1 karta    nic
+     1280    1 text, 1 karta     nic
+     1366    nic                 nic
+
+   Obsah má strop 1096 px, takže postranní pruh je (100vw − 1096)/2.
+   Pilulka potřebuje 110 + 24 px odstupu, tedy okno aspoň 1364 — od
+   1366 px výš se vedle obsahu vejde a nic nezakrývá. Pod tím je
+   kolečko, a jeho odsazení se počítá z téhož pruhu: `50% − 594px`
+   (polovina obsahu plus šířka kolečka) ho přisune přesně k okraji
+   sloupce, nejvýš ale na 24 px a nejmíň na 4. */
+@media (max-width:1365px){
+  .to-top{right:clamp(4px, calc(50% - 594px), 24px); height:46px; width:46px; padding:0;
     justify-content:center; gap:0; border-radius:50%;}
   .to-top span{position:absolute; width:1px; height:1px; overflow:hidden;
     clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
   .to-top svg{width:21px; height:21px;}
+}
+/* Na telefonu zůstává odsazení, se kterým se měřilo v test-nahoru. */
+@media (max-width:560px){
+  .to-top{bottom:18px; right:14px;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */

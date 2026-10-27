@@ -990,9 +990,11 @@ footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-
 }
 @media (prefers-reduced-motion:reduce){.to-top.show svg{animation:none}
 }
-@media (max-width:560px){.to-top{bottom:18px;right:14px;height:46px;width:46px;padding:0;justify-content:center;gap:0;border-radius:50%}
+@media (max-width:1365px){.to-top{right:clamp(4px,calc(50% - 594px),24px);height:46px;width:46px;padding:0;justify-content:center;gap:0;border-radius:50%}
 .to-top span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .to-top svg{width:21px;height:21px}
+}
+@media (max-width:560px){.to-top{bottom:18px;right:14px}
 }
 .loc-ov{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(var(--text-rgb),0.7)}
 .loc-card{position:relative;max-width:var(--m-karta);width:100%;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:28px 20px 20px;text-align:center;color:var(--text);box-shadow:var(--e3)}
