@@ -99,14 +99,14 @@ for (const f of fs.readdirSync(KOREN).sort()) {
      hlavickaCisla v scripts/generate-region-pages.mjs) a zůstala jedna
      sada čísel v tmavém pásu. Kontrola se ptá na totéž co dřív —
      souhlasí čísla na stránce s daty? — jen je čte odtamtud, kde jsou. */
-  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>pozemk/);
+  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b>\s*<span>pozemk/);
   if (!m) rozchody.push(`${f}: počet pozemků se z hlavičky nepřečetl`);
   else {
     pocty++;
     if (cislo(m[1]) !== list.length) rozchody.push(`${f}: tvrdí ${cislo(m[1])} pozemků, v datech ${list.length}`);
   }
 
-  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b><span>rozp\u011bt\u00ed cen<\/span>/);
+  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b>\s*<span>rozp\u011bt\u00ed cen<\/span>/);
   const ceny = list.filter((o) => o.price > 0).map((o) => o.price).sort((a, b) => a - b);
   if (r) {
     meze += 2;
@@ -121,7 +121,7 @@ for (const f of fs.readdirSync(KOREN).sort()) {
     const druhy = new Set(list.map((o) => o.type));
     if (druhy.size > 1) ocekavanoDlazdic += DRUHY_DLAZDIC.filter((t) => druhy.has(t)).length;
   }
-  for (const mm of h.matchAll(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>([^<]*)<\/span>/g)) {
+  for (const mm of h.matchAll(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b>\s*<span>([^<]*)<\/span>/g)) {
     const slovo = mm[2];
     if (/^pozemk/.test(slovo)) continue;            // celkový počet se měří výš
     const typ = TYP[slovo];
@@ -178,7 +178,7 @@ pravda('a žádná dlaždice se nepřeskočila kvůli neznámému slovu', neznam
     const m = h.match(HLAVICKA);
     if (!m) continue;
     hlavicek++;
-    const cisla = [...m[1].matchAll(/<b>([^<]+)<\/b><span>([^<]*)<\/span>/g)]
+    const cisla = [...m[1].matchAll(/<b>([^<]+)<\/b>\s*<span>([^<]*)<\/span>/g)]
       .map((x) => [x[1].replace(/[\u00a0 ]/g, ''), x[2]]);
     /* Celek je první položka („N pozemků"); rozpad jsou ty za ním. */
     const celek = cisla.length && !/[^\d]/.test(cisla[0][0]) ? cisla[0] : null;
@@ -211,11 +211,11 @@ for (const klic of Object.keys(META.KRAJ_META)) {
   if (!fs.existsSync(path.join(KOREN, f))) { rozchody.push(`${klic}: stránka ${f} chybí`); continue; }
   const h = fs.readFileSync(path.join(KOREN, f), 'utf8').replace(/\u00a0/g, ' ');
   const list = aktualni.filter((o) => OKRES_KRAJ[o.okres] === klic);
-  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b><span>pozemk/);
+  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)<\/b>\s*<span>pozemk/);
   if (!m) { rozchody.push(`${f}: počet pozemků se nepřečetl`); continue; }
   kraju++;
   if (cislo(m[1]) !== list.length) rozchody.push(`${f} (${klic}): tvrdí ${cislo(m[1])}, v datech ${list.length}`);
-  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b><span>rozp\u011bt\u00ed cen<\/span>/);
+  const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d<\/b>\s*<span>rozp\u011bt\u00ed cen<\/span>/);
   const ceny = list.filter((o) => o.price > 0).map((o) => o.price).sort((a, b) => a - b);
   if (r && ceny.length) {
     krajMez += 2;

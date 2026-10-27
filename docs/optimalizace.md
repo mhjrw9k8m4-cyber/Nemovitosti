@@ -12103,3 +12103,38 @@ nestačí a nic s tím nenadělá ani menší odsazení — muselo by být menš
 než terč 44 px. Zkouška proto napřed **změří pruh** a podle toho
 žádá buď „neleží na výpisu" (od 1 200 px), nebo aspoň „tiskne se
 k hraně". Je to přiznaný ústupek, ne tichý.
+
+## 177. „2pozemků": čísla v hlavičce okresu se slepila se slovem *27. 10.*
+
+Zkouška `scripts/test-cislo-a-slovo.mjs` vznikla kvůli přesně téhle
+vadě na úvodní stránce („14krajů", „5druhů"). Při kontrolním běhu
+všech zkoušek v prohlížeči se ukázalo, že od 26. 10. ji porušuje
+hlavička okresních, krajských a druhových stránek — tedy těch, které
+tentýž den čísla do hlavičky dostaly:
+
+```
+nove-pozemky.html          „3nových"
+pozemky-okres-benesov.html „2pozemků"
+pozemky-stredocesky-kraj   „7pozemků"
+```
+
+V mřížce je mezi číslem a popiskem mezera 16 px, takže okem je vše
+v pořádku. V TEXTU stránky ale mezera chyběla: odečítač přečte
+„dvapozemků", kdo si text zkopíruje, dostane slepenec, a vyhledávač
+indexuje totéž.
+
+Oprava je jedna mezera v generátoru (`</b> <span>`); ve flexu se
+nevykreslí, takže se vzhled nezměnil ani o pixel.
+
+### Co na tom bylo víc práce než ta mezera
+
+Čtyři jiné zkoušky si ten kus značky vybíraly regulárním výrazem
+`<\/b><span>` — tedy s předpokladem, že tam mezera NENÍ. Po opravě
+přestaly číst čísla (`0 ze 77 okresů`) a padaly, ačkoli stránky byly
+správně. Vzory teď počítají s bílým místem (`<\/b>\s*<span>`).
+
+Poučení, které stojí za zapsání: **značka, kterou čte zkouška, je
+rozhraní.** Když se v generátoru změní, nestačí spustit tu jednu
+zkoušku, kvůli které se změna dělá — musí se najít všechny, které
+tentýž tvar opisují. Jednou to v repozitáři už bylo (§165) a tahle
+oprava to zopakovala v menším.

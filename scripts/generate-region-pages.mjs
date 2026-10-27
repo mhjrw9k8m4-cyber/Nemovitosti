@@ -218,7 +218,12 @@ function hlavickaCisla(polozky) {
   return '<div class="okr-cisla">'
     + platne.map(([h, p]) => {
       const siroky = /[^\d\u00a0\s]/.test(String(h));
-      return `<div class="okr-cislo${siroky ? ' okr-cislo-siroky' : ''}"><b>${esc(String(h))}</b><span>${esc(p)}</span></div>`;
+      /* MEZERA MEZI <b> A <span> JE TAM SCHVÁLNĚ. Ve flexu se bílé
+         místo nevykreslí, ale bez něj dává textContent „2pozemků" —
+         odečítač přečte „dvapozemků" a kdo si text zkopíruje, dostane
+         slepenec. Hlídá scripts/test-cislo-a-slovo.mjs; tahle hlavička
+         ho 26. 10. shodila právě tímhle. */
+      return `<div class="okr-cislo${siroky ? ' okr-cislo-siroky' : ''}"><b>${esc(String(h))}</b> <span>${esc(p)}</span></div>`;
     }).join('')
     + '</div>';
 }

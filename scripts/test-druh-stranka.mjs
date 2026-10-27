@@ -74,7 +74,7 @@ for (const d of definice) {
      od té doby je to číslo v hlavičce stránky (.okr-cisla), protože
      věta tytéž počty jen opisovala — viz hlavickaCisla()
      v scripts/generate-region-pages.mjs. */
-  const mc = /<div class="okr-cislo"><b>([\d\s ]+)<\/b><span>/.exec(html);
+  const mc = /<div class="okr-cislo"><b>([\d\s ]+)<\/b>\s*<span>/.exec(html);
   const psano = mc ? Number(mc[1].replace(/\s/g, '')) : null;
   if (psano !== list.length) spatne.push(`${d.soubor}: psáno ${psano}, v datech ${list.length}`);
   // 2) počet podílů
