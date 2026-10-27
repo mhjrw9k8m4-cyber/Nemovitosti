@@ -12283,3 +12283,30 @@ Mřížka se láme podle místa, ne podle zařízení: pod 640 px jeden
 sloupec, do 1040 dva, výš čtyři. Důvod je naměřený — užší karta než
 240 px láme nadpis „Zdroj i katastr na jedno klepnutí" doprostřed
 slova.
+
+## 181. Poslední věc před patičkou byl formulář, ne nabídka *27. 10.*
+
+Úvodní stránka končila kontaktním oddílem „Ozvěte se nám." — tedy
+výzvou napsat e-mail, kterou po přečtení celé stránky nemá kdo
+položit. Kdo dojel až sem a svůj pozemek nenašel, odcházel bez
+nabídky, co dál.
+
+Před kontakt přibyl pás se dvěma akcemi, které web umí a nic za ně
+nechce: **nastavit hlídání** (okres, cena, výměra → e-mail, jakmile
+se objeví nabídka) a **přidat vlastní pozemek**.
+
+### Dvě měření, která to tvarovala
+
+* **Tmavá plocha nešla.** Kontaktní oddíl hned pod pásem je taky
+  tmavý (#12241A) a dvě tmavé plochy za sebou vypadají jako
+  nedopatření. Pás proto nese plnou značkovou zeleň (#004F2F), na
+  které má bílé písmo 10,6 : 1.
+* **Nadpis vyšel tmavý na tmavém.** `.cta-pas h2` prohrálo
+  s pravidlem pro nadpis oddílu, které stojí v souboru níž a má
+  tutéž váhu — naměřeno #101513 na #12241A. Dnes je selektor
+  `section.cta-pas h2`, tedy o třídu silnější. Je to **potřetí za
+  den**, co táž past (stejná váha, pozdější pravidlo vyhrává) něco
+  pokazila: nejdřív odsazení lišty (§174), pak velikost nadpisu
+  úvodu (§179) a teď barva nadpisu v pásu. Hlídač z §178 zachytí jen
+  přebití TÝMŽ selektorem; tohle je jeho slepé místo a stojí za
+  zapsání.

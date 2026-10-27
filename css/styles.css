@@ -3406,6 +3406,48 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
   border-color:var(--pas-obrys); color:var(--pas-text);}
 
+/* DVĚ TLAČÍTKA NA TMAVÉ DESCE — jeden recept pro úvodní desku
+   i závěrečný pás. Plná je značka na tmavém (8,9 : 1), obrysová nese
+   --pas-obrys, tedy tutéž linku jako ostatní ovládání na desce. */
+.uh-cta, .uh-cta2, .cta-pas .uh-cta, .cta-pas .uh-cta2{display:inline-flex;
+  align-items:center; min-height:48px; padding:0 24px; border-radius:var(--r-ovladani);
+  font-size:16px; font-weight:700; text-decoration:none;
+  transition:background var(--cas-zakladni) var(--ease),
+    border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
+.uh-cta{background:var(--pas-akcent); color:var(--plocha-tmava);}
+.uh-cta:hover{background:var(--pas-text); color:var(--plocha-tmava);}
+.uh-cta2{border:1px solid var(--pas-obrys); color:var(--pas-text); font-weight:600;}
+.uh-cta2:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
+
+/* ZÁVĚREČNÝ PÁS: poslední věc před patičkou je nabídka, ne formulář.
+   Stránka končila kontaktním formulářem — tedy otázkou „napište nám",
+   kterou po přečtení celé úvodní stránky nemá kdo položit. Kdo dojel
+   až sem a nenašel svůj pozemek, má udělat jedno ze dvou: nechat si
+   hlídat, co přibude, nebo svůj pozemek přidat. Obojí je na webu
+   zdarma a obojí tu do 27. 10. nebylo nabídnuto. */
+/* ZELENÁ, NE TMAVÁ: hned pod pásem stojí kontaktní oddíl, který je
+   taky tmavý (#12241A), a dvě tmavé plochy za sebou vypadají jako
+   nedopatření. Plná značková plocha je od obojího odlišná a má na ní
+   bílé písmo 10,6 : 1.
+   SELEKTOR JE `section.cta-pas h2` schválně: pravidlo pro nadpis
+   oddílu stojí v souboru níž a při stejné váze by vyhrálo — naměřeno
+   27. 10., nadpis vyšel tmavý (#101513) na tmavém pásu. */
+.cta-pas{background:var(--plocha-znacka); color:var(--text-ondeep);
+  padding-top:var(--oddil-y); padding-bottom:var(--oddil-y);}
+section.cta-pas h2{color:var(--text-ondeep); margin:0;}
+section.cta-pas p{margin:12px 0 0; max-width:var(--m-text); font-size:16px;
+  line-height:1.6; color:var(--text-ondeep-mute);}
+section.cta-pas .uh-cta{background:var(--plocha-karta); color:var(--plocha-znacka);}
+section.cta-pas .uh-cta:hover{background:var(--text-ondeep-mute); color:var(--plocha-znacka);}
+section.cta-pas .uh-cta2{border-color:var(--text-ondeep-mute); color:var(--text-ondeep);}
+section.cta-pas .uh-cta2:hover{border-color:var(--text-ondeep); color:var(--text-ondeep);}
+.cta-wrap{display:grid; gap:24px; align-items:center;}
+.cta-akce{display:flex; flex-wrap:wrap; gap:12px;}
+@media (min-width:900px){
+  .cta-wrap{grid-template-columns:minmax(0,1fr) auto; gap:48px;}
+  .cta-pas p{font-size:18px;}
+}
+
 /* PROČ TADY — ČTYŘI KARTY POD MAPOU.
    Tatáž karta jako všude jinde na webu (plocha, obrys, zaoblení
    --r-plocha, stín --e1), jen s ikonou nahoře. Mřížka se láme podle
@@ -3497,14 +3539,6 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
      displeji stojí mapa vedle výpisu a první nabídka je vidět tak jako
      tak, takže nic neodsouvají. */
   .uh-akce{display:flex; flex-wrap:wrap; gap:12px; margin:28px 0 0;}
-  .uh-cta, .uh-cta2{display:inline-flex; align-items:center; min-height:48px;
-    padding:0 24px; border-radius:var(--r-ovladani); font-size:16px; font-weight:700;
-    text-decoration:none; transition:background var(--cas-zakladni) var(--ease),
-      border-color var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
-  .uh-cta{background:var(--pas-akcent); color:var(--plocha-tmava);}
-  .uh-cta:hover{background:var(--pas-text); color:var(--plocha-tmava);}
-  .uh-cta2{border:1px solid var(--pas-obrys); color:var(--pas-text); font-weight:600;}
-  .uh-cta2:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
   .uh-duvera{display:block; margin:28px 0 0; font-size:14px; color:var(--pas-text-mute);}
   .uh-duvera b{color:var(--pas-text); font-weight:700;}
 }
