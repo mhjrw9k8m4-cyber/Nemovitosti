@@ -99,7 +99,15 @@ async function stranka(sirka, prihlasit) {
      text „Moje", tedy kus rozestavěného dokumentu. Zkouška pak
      spadla na webu, kde nebylo nic rozbitého.
      Čeká se proto na hamburger a potom na otevřený panel, ve kterém
-     jsou všechny jeho oddíly vidět. */
+     je vidět jeho obsah.
+
+     POČET ODDÍLŮ UŽ SE NEČEKÁ, a je to oprava stálé chyby, ne ústupek:
+     26. 10. se šuplík zúžil (z 1 206 px na 844) a nadpisy skupin
+     „Pozemky" a „Příležitosti" se na telefonu schovaly — panely jsou
+     tam rozbalené pořád, takže nadpis nic neotvírá a jen bral řádek.
+     Od té chvíle je v panelu vidět JEDEN `summary` (účet, který nese
+     stav přihlášení), ne tři, a tahle zkouška od té doby padala na
+     timeoutu. Čeká se tedy na to, co panel opravdu nese: odkazy. */
   await p.waitForSelector('.nav-burger', { timeout: 20000 });
   /* Zavřený panel je mimo obrazovku, takže by se měřilo prázdno. */
   await p.click('.nav-burger');
@@ -108,8 +116,8 @@ async function stranka(sirka, prihlasit) {
     if (!nav) return false;
     const r = nav.getBoundingClientRect();
     if (r.width < 10 || r.right <= 0) return false;      // panel je venku
-    if ([...nav.querySelectorAll('.nav-sk > summary')]
-      .filter((h) => h.getClientRects().length).length < 3) return false;
+    if ([...nav.querySelectorAll('a[href]')]
+      .filter((h) => h.getClientRects().length).length < 6) return false;
     /* A NAKONEC NA TO, CO SE OPRAVDU MĚŘÍ. Panel se vysouvá, takže
        „je na obrazovce" ještě neznamená „na tomhle bodě už leží".
        Dokud se na měřený bod netrefí, je výsledek stavem uprostřed
