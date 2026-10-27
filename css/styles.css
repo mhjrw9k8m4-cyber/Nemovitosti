@@ -485,7 +485,6 @@
   --plocha-tmava-rgb:18,36,26;
   --accent-warm-bright-rgb:224,184,120;
   --text-ondeep-mute-rgb:201,210,203;
-  --plocha-znacka-rgb:0,79,47;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -2700,7 +2699,6 @@ h1 em{ color:var(--znacka-svetla);
 .opp-fav:active{transform:scale(1.2);}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
-.opp-deal{display:inline-block; font-size:12px; font-weight:700; color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border:1px solid rgba(var(--c-ok-ink-rgb),0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
 /* NADPIS, ČÍSLO A POZNÁMKA JSOU TŘI DÍLKY V JEDNÉ MŘÍŽCE, ne jedna
    dlouhá věta. Dokud to byl plynulý text, lámal se, kde zrovna došla
    šířka, a 440px sloupec z něj udělal tři nestejně odsazené řádky.
@@ -8092,24 +8090,33 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    (dvanáct), takže tatáž věc křičela na dvou místech různě. Počítadla
    (.msf-badge, .chip-n) zůstávají na 700 — tam je to číslo, ne slovo,
    a při 12 px se tenčí číslice hůř čtou. */
-.opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
-  background:rgba(var(--accent-warm-bright-rgb),0.16); border:1px solid rgba(var(--accent-warm-rgb),0.3);
-  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+/* Taky jen barva. Tohle pravidlo stojí naopak ZA základem, takže se
+   jeho tvar prosadil — a odznak byl obdélník se zaoblením 6 px mezi
+   samými pilulkami (naměřeno 27. 10.: čtyři odznaky 999 px, tenhle
+   a „podíl" 6 px). Dva tvary v jedné řádce odznaků jsou přesně to,
+   co má pravidlo o kus výš zakázané. */
+.opp-overit{color:#7C5105; background:rgba(var(--accent-warm-bright-rgb),0.16);
+  border-color:rgba(var(--accent-warm-rgb),0.3);}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
 /* „Podíl" na kartě. Není to varování ani výhoda, je to FAKT o tom, co
-   se prodává — proto neutrální šedomodrá, ne jantar jako u „ceny
+   se prodává — proto neutrální plocha, ne jantar jako u „ceny
    k ověření". Musí být čitelný, ale nesmí přetahovat pozornost odznakům,
    které opravdu volají po pozornosti. */
 /* „Úřední cena (§ 12)" u státní půdy je týž druh údaje jako „podíl":
    ne varování, ne výhoda — fakt o tom, za co se prodává. Proto tentýž
    neutrální styl, ne jantar jako u „ceny k ověření". */
+/* A TEĎ UŽ NEUTRÁLNÍ DOOPRAVDY. Komentář nad tímhle pravidlem sliboval
+   „neutrální šedomodrou", ale plocha i linka braly --plocha-znacka-rgb,
+   tedy 0,79,47 — ZNAČKOVOU ZELEŇ, nejsilnější barvu webu. Štítek, který
+   podle vlastního popisu nemá přetahovat pozornost, ji tak nosil jako
+   jediný ze šesti. Neutrální plocha je --plocha-jemna a linka --line;
+   je to týž recept, jakým se kreslí „Doporučujeme", a je to správně:
+   tichý štítek má mít jeden tvar, ne dva. */
 .opp-podil,
-.opp-urad{display:inline-block; font-size:12px; font-weight:600;
-  color:var(--muted); background:rgba(var(--plocha-znacka-rgb),0.08);
-  border:1px solid rgba(var(--plocha-znacka-rgb),0.22);
-  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+.opp-urad{color:var(--muted); background:var(--plocha-jemna);
+  border-color:var(--line);}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
@@ -8405,8 +8412,42 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 /* Sleva proti okolí: zelená jako jediná „dobrá zpráva" na kartě.
    Obrys z currentColor byl plná zelená linka, kdežto ostatní odznaky
    mají linku jen naznačenou — odtud ten rozdíl v síle. */
-.opp-zlevneno{color:var(--c-ok-ink); background:var(--c-ok-plocha, rgba(var(--brand-live-rgb),0.10)); border-color:rgba(var(--brand-live-rgb),0.3);}
-.opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
+/* DVA ODZNAKY, JEDNA ZPRÁVA, JEDEN RECEPT — a proto stojí vedle sebe.
+   „−45 % proti okolí" i „Zlevněno" říkají, že s cenou je to dobrá
+   zpráva. Dřív byly od sebe přes pět tisíc řádků a každý si kreslil
+   vlastní zeleň; teď je vidět na jeden pohled, že jsou si rovny.
+   ZÁLEŽÍ, ŽE JSOU AŽ TADY, tedy ZA `.opp-chips > *`. Ten základ dává
+   odznakům tvar zkratkou `border:1px solid transparent`, a zkratka
+   přebije i barvu linky. Dokud `.opp-deal` stál nad ním, jeho obrys
+   se ztrácel: naměřeno 27. 10. `1px rgba(0,0,0,0)` — jediný odznak
+   ze šesti bez linky, ačkoli si ji v pravidle poctivě nastavoval.
+   Tabulkovou číslici základ nenastavuje, takže si ji „−45 %" nese
+   samo, aby se procenta mezi kartami nehoupala. */
+.opp-deal{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12);
+  border-color:rgba(var(--c-ok-ink-rgb),0.3); font-variant-numeric:tabular-nums;}
+/* JEDNA ZELENÁ NA JEDNU ZPRÁVU. „Zlevněno" a „−45 % proti okolí" říkají
+   obojí „s cenou je to dobrá zpráva", ale měly dva různé recepty
+   (naměřeno 27. 10. na kartách úvodu):
+     opp-deal      rgba(31,163,99,0.12)   okraj z --c-ok-ink-rgb
+     opp-zlevneno  rgba(44,113,80,0.10)   okraj z --brand-live-rgb
+   Stejný inkoust, jiná plocha i linka — táž nejednotnost, kterou už
+   jednou prošly čtyři různé červené.
+   A HLAVNĚ: `var(--c-ok-plocha, …)` sliboval token, který v celém
+   repozitáři NIKDE není definovaný (ověřeno hledáním — jediný výskyt
+   byl právě tady). Vždycky se tedy kreslila záloha a zápis jen
+   předstíral, že se řídí soustavou. */
+.opp-zlevneno{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border-color:rgba(var(--c-ok-ink-rgb),0.3);}
+/* A opačný směr téže zprávy. „Zdraženo" sedí v JEDNÉ PŘIHRÁDCE se
+   „Zlevněno" (js/main.js vybírá jedno z nich podle `_zm.dolu`), ale
+   kreslilo se jinak než cokoli jiného na kartě: linka `1px solid
+   currentColor`, tedy v PLNÉ síle, zatímco všech šest sousedů má
+   0,3 — a žádná plocha, zatímco všichni ji mají. Dva odznaky z téhož
+   rozhodnutí, dva recepty.
+   Teplou rodinu sdílí s odpočtem do dražby schválně: web má jednu
+   teplou řadu, ne dvě. Barva říká kategorii („pozor"), rozlišuje až
+   text v odznaku. */
+.opp-zdrazeno{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10);
+  border-color:rgba(var(--c-drazba-rgb),0.3);}
 .por-pozn{font-size:13px; line-height:1.6; color:var(--muted);
   margin:12px 0 0; max-width:var(--m-text);}
 .por-nacitam{font-size:14px; color:var(--muted);}

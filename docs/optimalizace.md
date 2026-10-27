@@ -12840,3 +12840,63 @@ a značka se zase nevykreslila — pojistka to ohlásila hned.
 
 Sabotáž: po vrácení značky do původního rohu zkouška spadla u všech
 pěti kategorií na 1 040 i 320 px. Po opravě 193 kontrol v pořádku.
+
+## §191 Odznaky na kartě: pravidlo, které o sobě tvrdilo, že platí
+
+Nad společným pravidlem odznaků stojí od přestavby karet věta:
+
+> Tvar je teď jeden a jednotlivé odznaky už určují JEN barvu.
+
+Neplatila pro polovinu z nich. Naměřeno 27. 10. na 390 px:
+
+| odznak | zaoblení | linka |
+|---|---|---|
+| opp-cd | 999 px | 1px rgba(204,107,51,.3) |
+| opp-deal | 999 px | **1px rgba(0,0,0,0)** |
+| opp-zlevneno | 999 px | 1px rgba(19,102,62,.3) |
+| opp-podil | **6 px** | 1px rgba(16,21,19,.14) |
+| opp-overit | **6 px** | 1px rgba(138,85,18,.3) |
+| opp-hot | 999 px | 1px rgba(16,21,19,.14) |
+
+Rozhoduje **pořadí v souboru**, ne úmysl: základ `.opp-chips > *` má
+tutéž sílu selektoru jako jednotlivé odznaky, takže vyhrává ten, kdo
+stojí níž. `.opp-deal` stál nad ním a přišel o všechno, co si
+nastavoval — včetně obrysu, ačkoli si ho v pravidle poctivě psal.
+`.opp-overit` a `.opp-podil` stojí pod ním a prosadily si obdélník.
+V jedné řádce tak mohla stát pilulka vedle obdélníku a vedle nich
+odznak bez linky.
+
+Opraveno tak, aby ta věta začala platit: každý odznak nastavuje jen
+barvu, tvar dává základ, a `.opp-deal` se přestěhoval pod základ
+k `.opp-zlevneno` — se kterým sdílí zprávu, a teď i recept.
+
+### Čtyři barevné nálezy k tomu
+
+**Dvě zelené na jednu zprávu.** „−45 % proti okolí" a „Zlevněno" říkají
+totéž (s cenou je to dobrá zpráva) a měly plochu `rgba(31,163,99,.12)`
+proti `rgba(44,113,80,.10)`. Teď jednu.
+
+**Token, který neexistuje.** `.opp-zlevneno` psal
+`var(--c-ok-plocha, …)` — `--c-ok-plocha` není v repozitáři definovaný
+NIKDE (jediný výskyt byl právě tahle zmínka). Vždycky se kreslila
+záloha; zápis jen předstíral, že se řídí soustavou.
+
+**Štítek „Podíl" nosil značkovou zeleň.** Komentář nad ním sliboval
+„neutrální šedomodrou", plocha i linka ale braly
+`--plocha-znacka-rgb` (0,79,47) — nejsilnější barvu webu na odznaku,
+který podle vlastního popisu nemá přetahovat pozornost. Po opravě
+zůstal `--plocha-znacka-rgb` bez odběratele a hlídač nepoužitých
+tokenů ho hned ohlásil; je smazaný.
+
+**„Zdraženo" se kreslilo jako nic jiného na webu.** Sedí v jedné
+přihrádce se „Zlevněno", ale mělo linku `1px solid currentColor`,
+tedy v plné síle (sousedé 0,3) a žádnou plochu (sousedé ji mají).
+
+### Co měření naopak vyvrátilo
+
+Šel jsem na to s tím, že karta je zavalená barevnými štítky — podle
+jedné fotky, na které byly tři. Měření na 24 kartách to nepotvrdilo:
+**průměr 1,4 na kartu**, patnáct karet má jediný, tři mají tři.
+„Doporučujeme" je na **jedné kartě z 24**, ne na každé. Vyfotil jsem
+si náhodou jednu ze tří nejhustších a málem podle ní přestavěl něco,
+co není rozbité. Štítky proto zůstávají, mění se jen jejich kabát.

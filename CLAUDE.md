@@ -728,3 +728,20 @@ druhu (průnik 552 px²) — v datech totiž žádná nabídka víc fotek neměl
 Proto: ke každé kontrole, která něco hledá v sadě prvků, patří pojistka,
 že se ta sada vůbec vykreslila. `pravda('a je mezi nimi i X', …)` stojí
 jeden řádek a je to rozdíl mezi hlídačem a ozdobou.
+
+### U stejně silných selektorů rozhoduje pořadí v souboru
+
+`.opp-chips > *` a `.opp-deal` mají obě sílu 0,1,0. Který vyhraje, se
+nepozná z úmyslu ani z komentáře — pozná se z toho, kdo stojí níž.
+Společný základ tvaru proto patří NAD jednotlivé varianty, a varianta,
+která si vedle barvy psala i tvar, byla buď zbytečná, nebo tiše mrtvá.
+Obojí se stalo: `.opp-deal` přišel o obrys, `.opp-overit` si prosadil
+obdélník mezi pilulkami. Obojí bylo v kódu napsané a ani jedno nebylo
+vidět tam, kde se to psalo.
+
+### Nepřestavuj podle jedné fotky
+
+Měl jsem za to, že karty jsou zavalené barevnými štítky — viděl jsem
+kartu se třemi. Změřeno na všech 24: průměr 1,4, patnáct karet má
+jediný, „Doporučujeme" je na jedné z 24. Fotka ukazuje JEDEN vzorek;
+než podle ní něco přestavíš, spočítej, kolik vzorků se mu podobá.
