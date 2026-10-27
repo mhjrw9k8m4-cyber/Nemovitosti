@@ -2227,6 +2227,18 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
    ten druhý kolem panelu filtrů nic nepřidává, a odsazení stačí menší. */
 @media (max-width:560px){
   .map-app{border-left:0; border-right:0; border-radius:0;}
+  /* OSM PIXELŮ, NE DVACET — A ZKOUŠENO, ŽE TO JINAK NEJDE.
+     Hlava stránky (nadpis, rychlé filtry) má --okraj-stranky, tedy
+     20 px, kdežto panel a výpis mají 8 — na 390 px je to schod
+     dvanácti pixelů přes celou úvodní stránku a vypadá to jako
+     nedodělek. 27. 10. jsem na obojí zkusil dát --okraj-stranky
+     a ZMĚŘIL, že to nejde: ovladačům uběhne 24 px a
+       • na 390 px přestává stát nápis „Stáhnout výběr" v tlačítku
+         (text 171 px do 169 široké buňky),
+       • na 320 px přestanou být dvojice ovladačů stejně široké
+         (136 proti 280 px),
+     a obojí hlídá scripts/test-ovladani-vypisu.mjs. Okraj panelu
+     tedy nese šířku ovladačů, ne vzhled; srovnat se dá až s nimi. */
   .map-controls-panel{padding:8px;}
   /* Menší základní mezera: vzduch mezi skupinami si přidává oddělovač
      (padding-top u .map-controls > * + *), takže by se jinak sčítaly. */

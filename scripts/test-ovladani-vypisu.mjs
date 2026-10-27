@@ -139,15 +139,38 @@ try {
     pravda(`${sirka} px: a má jedno zaoblení`, radiusy.length === 1,
       'zaoblení: ' + JSON.stringify(radiusy));
 
-    /* Dvojice v řadě si musí být rovné. Na 390 px stojí vedle sebe,
-       na 320 px pod sebou — a pak mají obě plnou šířku. */
+    /* Dvojice v řadě si musí být rovné.
+       A JAK TO JE MEZI DVOJICEMI: tahle kontrola žádala jednu šířku
+       i mezi nimi a opisovala k tomu „na 320 px stojí pod sebou — a pak
+       mají obě plnou šířku". To už 26. 10. neplatí: jeden sloupec
+       stál na 360 px celou obrazovku (pruh nad výpisem 242 px místo 138,
+       první nabídka až na 595 px z 844), takže se místo řady začal
+       zkracovat nápis a řada zůstala dvousloupcová. Trojice nástrojů
+       se přitom pod 360 px vrací k posuvnému řádku s buňkami přes celou
+       šířku — „Schovat dražby po termínu" nemá co zkracovat.
+       Naměřeno 27. 10. na 320 px: dvojice nahoře 148 px, nástroje 304.
+       Kontrola tedy padala na rozdílu, který je záměr. Žádá se proto
+       jedna šířka tam, kde obojí stojí v témže dvousloupcovém rastru,
+       a pod 360 px se místo toho měří, že nástroj opravdu bere celou
+       šířku řádku (jinak by tam zbyla díra). */
     const stejne = (a, b) => Math.abs(a.w - b.w) <= 1;
     pravda(`${sirka} px: „Uložené" a řazení mají tutéž šířku`, stejne(v.ulozene, v.razeni),
       `${v.ulozene.w} px vs ${v.razeni.w} px`);
     pravda(`${sirka} px: „Procházet po jednom" a „Stáhnout výběr" taky`, stejne(v.rychly, v.vyvoz),
       `${v.rychly.w} px vs ${v.vyvoz.w} px`);
-    pravda(`${sirka} px: a obě dvojice jsou stejně široké navzájem`, stejne(v.ulozene, v.rychly),
-      `${v.ulozene.w} px vs ${v.rychly.w} px`);
+    if (sirka >= 360) {
+      pravda(`${sirka} px: a obě dvojice jsou stejně široké navzájem`, stejne(v.ulozene, v.rychly),
+        `${v.ulozene.w} px vs ${v.rychly.w} px`);
+    } else {
+      const radek = await p.evaluate(() => {
+        const e = document.querySelector('#mc-rychly');
+        const r = e && e.closest('.mc-akce');
+        return r ? Math.round(r.clientWidth) : 0;
+      });
+      pravda(`${sirka} px: nástroj bere celou šířku řádku (dvojice nahoře půlku)`,
+        radek > 0 && Math.abs(v.rychly.w - radek) <= 1 && v.rychly.w > v.ulozene.w,
+        `nástroj ${v.rychly.w} px, řádek ${radek} px, dvojice ${v.ulozene.w} px`);
+    }
 
     /* Nápis se nesmí vysypat z rámečku — to byl důvod, proč se pod
        360 px skládá do jednoho sloupce. */
