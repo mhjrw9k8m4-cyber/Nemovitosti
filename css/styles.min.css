@@ -1045,7 +1045,8 @@ to{opacity:1;transform:none}
 .map-side .opp-list>.opp-skel{margin-bottom:0}
 }
 .map-controls-panel{padding:12px 20px}
-.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 8px;padding:8px 16px;grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli filtry ." "rychle rychle rychle rychle"}
+.map-side{padding-left:var(--okraj-stranky);padding-right:var(--okraj-stranky)}
+.map-controls-panel{position:relative;display:grid;align-items:center;gap:8px 8px;padding:8px var(--okraj-stranky);grid-template-columns:minmax(220px,520px) auto auto minmax(0,1fr);grid-template-areas:"hledani okoli filtry ." "rychle rychle rychle rychle"}
 .ms-rozsirene{display:contents}
 .map-controls-panel>.map-search{grid-area:hledani}
 .map-controls-panel .map-okoli{grid-area:okoli}

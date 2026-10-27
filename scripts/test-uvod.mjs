@@ -744,6 +744,46 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   await ctxZ.close();
 }
 
+/* --- JEDNA SVISLICE NA PRVNÍ OBRAZOVCE -------------------------------
+   Naměřeno 27. 10. na 1 440 px: nadpis úvodu začínal na 32 px
+   (--okraj-stranky), pole hledání pod ním a karty výpisu na 16 — schod
+   uprostřed toho, co člověk na webu uvidí první. Stylopis u lišty
+   přitom o dva odstavce výš tvrdil, že si bere okraj stránky; jen to
+   v kódu nebylo.
+
+   Měří se LEVÝ OKRAJ TEXTU nadpisu, ne jeho krabice: ta jde přes celou
+   šířku a o odsazení by neřekla nic. */
+{
+  const ctxS = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 1440, height: 900 }, locale: 'cs-CZ' });
+  const ps = await ctxS.newPage();
+  for (const W of [1100, 1440, 1920]) {
+    await ps.setViewportSize({ width: W, height: 900 });
+    await ps.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+    await ps.waitForTimeout(2200);
+    const v = await ps.evaluate(() => {
+      const textLeft = (s) => { const e = document.querySelector(s); if (!e) return null;
+        const r = document.createRange(); r.selectNodeContents(e);
+        const b = r.getBoundingClientRect(); return b.width ? Math.round(b.left) : null; };
+      const left = (s) => { const e = document.querySelector(s); if (!e) return null;
+        return Math.round(e.getBoundingClientRect().left); };
+      return { nadpis: textLeft('h1.uvod-nadpis'), hledani: left('.mcp-hledani'),
+        vysledky: left('.ms-vysledky'), karta: left('.opp-item'),
+        okraj: parseInt(getComputedStyle(document.documentElement)
+          .getPropertyValue('--okraj-stranky'), 10) };
+    });
+    const hodnoty = [v.nadpis, v.hledani, v.vysledky, v.karta];
+    // PŘEDPOKLAD: bez vykreslených prvků by kontrola níž prošla naprázdno
+    pravda(`${W}px: nadpis, hledání i karty se vykreslily`,
+      hodnoty.every((x) => typeof x === 'number'), JSON.stringify(v));
+    if (hodnoty.every((x) => typeof x === 'number')) {
+      pravda(`${W}px: a stojí na jedné svislici, na okraji stránky`,
+        new Set(hodnoty).size === 1 && hodnoty[0] === v.okraj, JSON.stringify(v));
+    }
+  }
+  await ctxS.close();
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

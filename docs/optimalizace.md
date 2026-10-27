@@ -11991,3 +11991,34 @@ chyba hlídače, nýbrž změna významu: svislice se teď žádá uvnitř
 sloupce a navíc se ověřuje, že skupin je přesně tolik, kolik sloupců
 deklaruje mřížka (jinak by si kontrolu uspokojil i rozsypaný výpis,
 kde má každý řádek „svůj sloupec").
+
+## 174. Schod 16 px uprostřed první obrazovky webu *27. 10.*
+
+Na úvodní stránce začínal nadpis „Pozemky na prodej, v dražbě
+i v exekuci." na **32 px** od kraje (`--okraj-stranky`), ale pole
+hledání přímo pod ním, odznaky druhů, nadpis výpisu i karty nabídek
+na **16 px**. Tedy schod uprostřed toho, co člověk na webu uvidí
+jako první — a přesně ten druh vady, která se nepozná při čtení CSS,
+protože každé z těch čísel je samo o sobě v pořádku.
+
+Zajímavé je, že stylopis u té lišty tvrdil pravý opak:
+
+> Lišta ovládání je teď přes celé okno, takže si vezme okraj stránky,
+> ne okraj desky: 16 px by na 1 920 px vypadalo jako překlep.
+
+O dvě pravidla níž ale stálo `padding:8px 16px`. Komentář popisoval
+úmysl, kód dělal něco jiného a nic mezi nimi nerozhodovalo.
+
+Po srovnání (`padding:8px var(--okraj-stranky)` na liště i na sloupci
+s výpisem) stojí nadpis, hledání, odznaky i karty na jedné svislici.
+Karta výpisu se tím zúžila o 32 px (427 → 395 px na 1 440 px) a nic
+se v ní nevysypalo — měřeno na 1 100, 1 280, 1 440 a 1 920 px.
+
+Hlídá to nový blok v `scripts/test-uvod.mjs`: na třech šířkách měří
+levý okraj nadpisu, hledání, výpisu a karty a žádá jedinou hodnotu,
+navíc rovnou tokenu. Sabotáž (vrátit šestnáctku) shodí všechny tři.
+
+**Měří se levý okraj TEXTU nadpisu, ne jeho krabice** — ta jde přes
+celou šířku okna a o odsazení by neřekla nic. Je to týž trik jako
+u díry v číslech hlavičky (§168): `getBoundingClientRect()` na prvku
+měří místo, které prvek dostal, ne místo, které zabral jeho obsah.

@@ -4161,6 +4161,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      (test-jazyk) a 24 px v něm žádný jiný prvek nepoužívá — bylo by to
      jedno číslo navíc za rozdíl, který nikdo nezměří. */
   .map-controls-panel{padding:12px 20px;}
+  /* Výpis pod lištou drží tutéž svislici — viz poznámka u mřížky níž. */
+  .map-side{padding-left:var(--okraj-stranky); padding-right:var(--okraj-stranky);}
   /* Lišta má dva řádky záměrně, a jsou vyskládané, ne zlomené. Těch pět
      prvků potřebuje na jeden řádek 1 425 px a lišta má 1 102. Při
      samovolném zlomu (flex-wrap) se dole octne jen pravý ostrůvek
@@ -4168,8 +4170,16 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      nahoře, kde se ořežou v půlce odznaku. Mřížka s pojmenovanými
      plochami řekne rovnou, co kde stojí: nahoře hledání, okolí
      a filtry, dole rychlé filtry vlevo a pohled na výsledky vpravo. */
+  /* OKRAJ JE OKRAJ STRÁNKY, ne vlastní šestnáctka. Naměřeno 27. 10. na
+     1 440 px: nadpis úvodu začínal na 32 px (--okraj-stranky), kdežto
+     pole hledání pod ním i karty výpisu na 16 — tedy schod uprostřed
+     první obrazovky webu. Komentář o dva odstavce výš přitom tvrdil
+     přesně tohle („lišta si vezme okraj stránky"); jen to v kódu
+     nebylo. Po srovnání stojí nadpis, hledání, odznaky i karty na
+     jedné svislici; karta výpisu se tím zúží o 32 px (427 → 395 na
+     1 440 px) a nic se v ní nevysype. */
   .map-controls-panel{position:relative; display:grid; align-items:center;
-    gap:8px 8px; padding:8px 16px;
+    gap:8px 8px; padding:8px var(--okraj-stranky);
     /* POLE HLEDÁNÍ SE NEROZTAHUJE PŘES CELÉ OKNO. Po přechodu na desku
        přes celou šířku z něj bylo na 1 440 px pole široké 1 340 px —
        jedna řádka na celou obrazovku, do které se píše jméno obce.
