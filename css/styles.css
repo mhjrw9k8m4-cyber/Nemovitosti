@@ -5833,22 +5833,33 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    tak, aby bod ležel v prostřední polovině dlaždice, a to je přesně
    ten pruh, který z ní 16:10 nechává vidět. */
 @media (max-width:560px){
-  /* POŘADÍ JAKO NA ÚVODNÍ STRÁNCE: co to je → kde to je → za kolik.
-     Značka se kvůli tomu nepřesouvá, stačí mřížka — odečítač čte dál
-     jméno obce první, což je pro něj to správné pořadí.
+  /* POŘADÍ: OBEC PRVNÍ, jako všude jinde na webu.
+     Stálo tu „co to je → kde to je → za kolik" s odkazem na úvodní
+     stránku. Ten odkaz ale neseděl: karta na úvodu má na prvním řádku
+     OBEC a vedle ní výměru („Vinice 3 476 m²"), teprve pak okres a cenu.
+     A řádek téhož výpisu na monitoru má taky obec první. Jediné místo,
+     kde se začínalo druhem, byl tenhle telefonní rozvrh — takže se
+     s oběma sousedy rozcházel.
+     Pro čtení seznamu je to navíc horší způsob: pětadvacet řádků, které
+     všechny začínají „ostatní plocha · …", se očima neprojíždí. Jméno
+     obce je to, čím se řádek od řádku liší.
+     Odečítač čte pořadí ze ZNAČEK, a to se nemění — jméno obce v nich
+     bylo první odjakživa.
      Mez 560, ne 420: telefony mají dnes 390 až 440 px a při 420 by
      iPhone 14 Pro Max (430) dostal řádkovou podobu pro monitory. */
   .okr-item{grid-template-columns:minmax(0,1fr);
     grid-template-rows:auto auto auto auto auto auto;
-    grid-template-areas:"foto" "meta" "misto" "cena" "extra" "zdroj";
+    grid-template-areas:"foto" "misto" "meta" "cena" "extra" "zdroj";
     column-gap:0; row-gap:2px;}
   .okr-item .okr-foto{width:100%; aspect-ratio:16/10; margin-bottom:8px;
     border-radius:0;}
   .okr-item .okr-cena{justify-self:start; text-align:left; padding-top:4px;}
   .okr-item .okr-src{justify-self:start; padding-top:8px;}
   .okr-item .okr-extra{padding-top:4px;}
-  .okr-item .okr-meta{padding-top:12px;}
-  .okr-item .okr-place{padding-top:2px;}
+  /* Odstupy si s pořadím prohodily místa: vzduch patří NAD první text
+     pod snímkem, ne doprostřed dvojice obec + druh. */
+  .okr-item .okr-meta{padding-top:2px;}
+  .okr-item .okr-place{padding-top:12px;}
 }
 
 /* Výchozí barva verdiktu o ceně. Skutečnou hodnotu nasazuje vložený

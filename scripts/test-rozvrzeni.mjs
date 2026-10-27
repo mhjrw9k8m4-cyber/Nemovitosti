@@ -1834,6 +1834,32 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
         : 'řádek výpisu se nenašel');
     await ctx.close();
   }
+
+  /* A OBEC JE PRVNÍ, NA KAŽDÉ ŠÍŘCE.
+     Do 27. 10. telefonní rozvrh řádku začínal druhem: pětadvacet řádků
+     pod sebou, všechny uvozené „ostatní plocha · …", a jméno obce —
+     jediné, čím se řádek od řádku liší — až pod tím. Na monitoru přitom
+     byla obec první, a na kartě na úvodní stránce taky. Rozcházel se
+     jen tenhle jeden rozvrh.
+     Měří se POLOHA, ne mřížka: `grid-template-areas` se dá přepsat
+     i jinde a vyjde z toho týž rozpor. Rozhoduje, co je na obrazovce
+     výš. */
+  for (const sirka of [320, 390, 1280]) {
+    const { ctx, p } = await otevri('pozemky-okres-hodonin.html', sirka, 900);
+    await rozbalHledani(p);
+    const v = await p.evaluate(() => {
+      const it = document.querySelector('.okr-item');
+      if (!it) return null;
+      const pl = it.querySelector('.okr-place'), me = it.querySelector('.okr-meta');
+      if (!pl || !me) return null;
+      return { obec: Math.round(pl.getBoundingClientRect().top),
+        druh: Math.round(me.getBoundingClientRect().top) };
+    });
+    pravda(`${sirka} px: jméno obce stojí nad druhem pozemku`,
+      !!v && v.obec < v.druh,
+      v ? `obec na ${v.obec} px, druh na ${v.druh} px` : 'řádek výpisu se nenašel');
+    await ctx.close();
+  }
 }
 
 /* --- Stránka pozemku se nerozpíná do šířky okna -------------------

@@ -1572,13 +1572,13 @@ to{opacity:1;transform:none}
 .okr-item .okr-cena{align-self:baseline;justify-self:start;text-align:left}
 .okr-item .okr-src{justify-self:start}
 }
-@media (max-width:560px){.okr-item{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto auto;grid-template-areas:"foto" "meta" "misto" "cena" "extra" "zdroj";column-gap:0;row-gap:2px}
+@media (max-width:560px){.okr-item{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto auto auto;grid-template-areas:"foto" "misto" "meta" "cena" "extra" "zdroj";column-gap:0;row-gap:2px}
 .okr-item .okr-foto{width:100%;aspect-ratio:16/10;margin-bottom:8px;border-radius:0}
 .okr-item .okr-cena{justify-self:start;text-align:left;padding-top:4px}
 .okr-item .okr-src{justify-self:start;padding-top:8px}
 .okr-item .okr-extra{padding-top:4px}
-.okr-item .okr-meta{padding-top:12px}
-.okr-item .okr-place{padding-top:2px}
+.okr-item .okr-meta{padding-top:2px}
+.okr-item .okr-place{padding-top:12px}
 }
 :root{--vc:var(--znacka-svetla)}
 .pv-pozn{margin-top:4px;font-size:13px;line-height:1.5;color:var(--muted)}
