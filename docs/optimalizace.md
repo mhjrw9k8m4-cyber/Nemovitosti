@@ -11734,3 +11734,82 @@ není funkce, ale vada — a protože ten už existující má navíc
 zvýraznění oddílu, ve kterém čtenář zrovna je. Stálo to dvacet minut
 a je to levnější než dvě verze téhož v repozitáři.
 
+
+## 170. Tři vady z majitelova telefonu — a jedna moje vlastní past *27. 10.*
+
+Majitel poslal čtyři fotky z iPhonu. Žádná z nich nešla přepsat do
+„nefunguje X" — všechny tři vady byly vidět jen na skutečné obrazovce
+při skutečném posouvání.
+
+### a) Hlavička strašila dvakrát
+
+Při posunu nahoru se tmavá hlava schovává a objevuje. Na fotce stál
+bílý pruh přes titulek: zhasnutá hlavička měla `opacity:0`, ale
+přechod na ní trval `--cas-pomaly`, takže v průběhu byla PRŮSVITNÁ —
+pod ní prosvítal obsah a nad ní pruh. Oprava rozdělila dvě věci,
+které se do té doby dělaly na jednom prvku:
+
+* `header.hl-zhasnuta` — zmizí okamžitě (`opacity:0`,
+  `pointer-events:none`, žádný přechod);
+* `header.hl-prijezd > .wrap` — příjezd se animuje na VNITŘKU, ne na
+  hlavičce samé.
+
+`scripts/test-hlavicka.mjs` k tomu dostal kontrolu „bílý pruh není
+ani jeden snímek průsvitný": animace se čte z `.wrap` a průhlednost
+z hlavičky, snímek po snímku.
+
+### b) Tlačítko „nahoru" sedělo na hlavní akci
+
+Na stránce pozemku je dole lepivá lišta s hlavní akcí
+(`.pz-akce-hlavni`). Plovoucí kolečko „nahoru" se vykresluje do
+téhož kouta — na fotce se obě plochy překrývaly a kolečko bylo přes
+půl tlačítka „Zavolat".
+
+`js/hlavicka.js` teď hlavní akci jednou změří (při `resize` a `load`,
+nikdy při posouvání — to by bylo vynucené rozvržení na každý snímek)
+a při kresbě se dívá, jestli se pruhy potkávají:
+
+```js
+var koliduje = akceY !== null && (akceY - y) < dolnihrana && (akceY + akceH - y) > hornihrana;
+b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !koliduje);
+```
+
+Kolečko tedy ustoupí a jak hlavní akce odjede, vrátí se. Hlídá to
+nový blok v `scripts/test-nahoru.mjs` — s kontrolou obojího, ustoupení
+i návratu, aby zkouška neprošla na trvale schovaném tlačítku.
+
+### c) Ovládání nad výpisem drhlo o hranu
+
+Pruh s hledáním a přepínačem Seznam/Mapa stál **8 px** od hrany
+obrazovky, kdežto zbytek stránky dýchá 20 px (`--okraj-stranky`).
+Na fotce to vypadá, jako by ovládání vypadávalo z webu.
+
+Rovnou na 20 px to ale nešlo. Naměřeno na třech výplních:
+
+| výplň | 320 px | 390 px |
+|---|---|---|
+| 8 px (původní) | pole 304, pilulka 148 | pilulka 183 |
+| **16 px** | **pole 288, pilulka 140** | **pilulka 175** |
+| 20 px | pole 280, pilulka 136 | pilulka 171 — **„Stáhnout výběr" se nevejde** (171 px textu v 169 px) |
+
+Takže 16 px: pruh přestane drhnout o hranu a všechny nápisy se pořád
+vejdou. `test-ovladani-vypisu.mjs` to drží od obou stran — měří
+vzdálenost ovládání od hrany okna (aspoň 16 px) a sabotáží zpět na
+8 px spadne na obou šířkách.
+
+### Past: hlídač, který si pamatoval stav dat
+
+Při tom spadla kontrola, kterou jsem napsal týž den ráno: „pod 360 px
+nástroj bere celou šířku řádku". Vypadalo to na následek změněné
+výplně. Nebylo. Kolik nástrojů v řadě stojí, **rozhodují data** —
+„Schovat dražby po termínu" se vykreslí jen tehdy, když v nabídce
+nějaké dražby po termínu jsou. Ráno tam byly tři (posuvný řádek,
+buňky přes celou šířku 304 px), po sloučení s daty robota dvě
+(dvousloupcový rastr, 148 px). Oba stavy jsou správné.
+
+Hlídač teď bere očekávání z DOM, ne z paměti: spočítá vykreslené
+nástroje a podle toho žádá buď celou šířku (tři a víc), nebo tutéž
+šířku jako dvojice nad ním (dva) — a předtím si ověří, že vůbec něco
+naměřil, aby neprošel naprázdno. Poučení je obecnější než ta jedna
+řada: **kontrola rozměru, která si opíše naměřené číslo, platí jen
+pro data, na kterých se měřilo.**

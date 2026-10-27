@@ -35,7 +35,7 @@
  * které ze dvou pravidel to zařídilo.
  */
 import { chromium } from 'playwright-core';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
@@ -270,6 +270,47 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     await p.close();
   }
   await ctx.close();
+}
+
+/* --- Knoflík nesmí ležet na hlavní akci stránky -----------------
+   Našlo se FOTKOU z iPhonu, ne zkouškou: plovoucí kolečko „nahoru"
+   sedělo přes pravý konec tlačítka „Uložit" na stránce pozemku.
+   Naměřeno na 390 px: kolečko x 330–376, řádek akcí končí na 370 —
+   překryv 40 px, a klepnutí do něj vyvolá rolování místo uložení.
+   Knoflík proto ustupuje: dokud je řádek s hlavní akcí v pásu u spodní
+   hrany, kde knoflík stojí, nekreslí se. Měří se obojí — že ustoupil,
+   i že se jinde vrátí (jinak by stačilo ho zrušit). */
+{
+  const ctxP = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  const KOREN = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+  const POZEMEK = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const p = await ctxP.newPage();
+  await p.goto(`${BASE}/${POZEMEK}`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2200);
+  const posun = (kam) => p.evaluate((k) => {
+    const a = document.querySelector('.pz-akce-hlavni');
+    if (!a) return false;
+    const r = a.getBoundingClientRect();
+    window.scrollTo(0, r.top + window.pageYOffset - (k === 'dno' ? (innerHeight - r.height - 40) : 220));
+    return true;
+  }, kam);
+  const jeAkce = await posun('dno');
+  // PŘEDPOKLAD: bez řádku akcí by se neporovnávalo nic
+  pravda(`stránka pozemku ${POZEMEK} má řádek s hlavní akcí`, jeAkce === true,
+    '.pz-akce-hlavni na stránce není');
+  if (jeAkce) {
+    await p.waitForTimeout(900);
+    const uDna = await stav(p);
+    pravda('tlačítko nahoru ustoupí, když je hlavní akce u spodní hrany',
+      uDna && uDna.show === false && uDna.udalosti === 'none', JSON.stringify(uDna));
+    await posun('nahore');
+    await p.waitForTimeout(900);
+    const jinde = await stav(p);
+    pravda('a jinde na téže stránce se vrátí', jinde && jinde.show === true
+      && jinde.udalosti === 'auto', JSON.stringify(jinde));
+  }
+  await ctxP.close();
 }
 
 await prohlizec.close();

@@ -177,12 +177,12 @@ body.vm-otevreno{overflow:hidden}
 100%{transform:scale(1.8);opacity:0}
 }
 header{border-bottom:1px solid var(--line);padding:20px 0;position:fixed;top:0;left:0;right:0;z-index:1100;background:var(--plocha-plovouci-plna);transition:padding var(--cas-zakladni) var(--ease)}
-header.hl-zhasnuta{opacity:0;pointer-events:none;transition:opacity var(--cas-rychly) ease-in}
+header.hl-zhasnuta{opacity:0;pointer-events:none}
 @keyframes hlPrijezd{from{opacity:0}
 to{opacity:1}
 }
-header.hl-prijezd{animation:hlPrijezd var(--cas-pomaly) ease-out}
-@media (prefers-reduced-motion:reduce){header.hl-prijezd{animation:hlPrijezd var(--cas-zakladni) ease-out !important}
+header.hl-prijezd>.wrap{animation:hlPrijezd var(--cas-pomaly) ease-out}
+@media (prefers-reduced-motion:reduce){header.hl-prijezd>.wrap{animation:hlPrijezd var(--cas-zakladni) ease-out !important}
 }
 header:focus-within{opacity:1 !important;pointer-events:auto !important}
 @media (prefers-reduced-motion:reduce){header{transition:none}
@@ -387,7 +387,7 @@ to{opacity:1;transform:none}
 }
 .map-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px 8px;padding:12px 12px 12px}
 @media (max-width:560px){.map-app{border-left:0;border-right:0;border-radius:0}
-.map-controls-panel{padding:8px}
+.map-controls-panel{padding:8px 16px}
 .map-controls{padding:12px 8px 12px;gap:4px 8px}
 }
 .mc-field{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -1085,7 +1085,7 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .map-count .mc-pozn{display:block;margin-top:2px;white-space:normal}
 .hero-map .map-wide{padding:0}
 .map-app{border-left:0;border-right:0;border-radius:0}
-.map-side{padding:8px 8px 12px;min-height:calc(100vh - var(--vyska-hlavicky,65px));min-height:calc(100dvh - var(--vyska-hlavicky,65px))}
+.map-side{padding:8px 16px 12px;min-height:calc(100vh - var(--vyska-hlavicky,65px));min-height:calc(100dvh - var(--vyska-hlavicky,65px))}
 .opp-item::after{display:none}
 #leaflet-map{position:absolute;inset:0}
 .status-grid{grid-template-columns:repeat(2,1fr)}

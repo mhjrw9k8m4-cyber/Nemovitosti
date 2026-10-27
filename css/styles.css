@@ -1403,10 +1403,20 @@ header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:
    Rozsvítí se jen ve chvíli, kdy stránka prokazatelně stojí (js/hlavicka.js
    to ověřuje dvěma snímky po sobě). Posun tu není žádný — ani na příjezdu:
    právě pohyb hlavičky za pohybu stránky se na iPhonu dřív lámal. */
-/* Zhasnutí má svůj vlastní (rychlý) přechod. Příjezd naopak NEMÁ žádný —
-   ten obstarává jen animace níž. Kdyby ho měl i základní stav, hlavička by
-   se objevila i bez animace a její vypnutí by nikdo nepoznal. */
-header.hl-zhasnuta{opacity:0; pointer-events:none; transition:opacity var(--cas-rychly) ease-in;}
+/* ZHASNUTÍ JE OKAMŽITÉ, NE PROLNUTÍ — A JE TO OPRAVA Z FOTKY.
+   ------------------------------------------------------------------
+   Majitel poslal snímek z iPhonu: přes nadpis „Parametry pozemku"
+   leží logo „Parcelka" a je vidět obojí přes sebe. Není to vada
+   rozvržení — je to přesně ten okamžik, kdy měla hlavička průhlednost
+   mezi nulou a jedničkou. Bílý pruh je tehdy průsvitný a text pod ním
+   prosvítá, takže se dvě různá slova kreslí přes sebe.
+   Stalo se to dvakrát za každé rolování: při zhasnutí (0,12 s)
+   a při příjezdu (0,4 s) — tedy po každém zastavení.
+   Zhasnutí proto žádný přechod nemá: „zmizet musí hned" stálo
+   v záměru už předtím, jen to přebíjelo prolnutí. A příjezd se přesunul
+   na OBSAH hlavičky (pravidlo níž), takže pruh je od prvního snímku
+   neprůhledný a pod ním už není nic vidět. Pohyb zůstává žádný. */
+header.hl-zhasnuta{opacity:0; pointer-events:none;}
 /* Příjezd je krátká animace, ne přechod mezi dvěma stavy — a to schválně.
    Kdyby se sundal, objevila by se hlavička i bez animace a jejího vypnutí
    by si nikdo nevšiml. Hlavička přitom nemá ŽÁDNOU transformaci, ani při
@@ -1421,7 +1431,11 @@ header.hl-zhasnuta{opacity:0; pointer-events:none; transition:opacity var(--cas-
    říká to, co je pravda: nic se nepřesunulo, jen se to vrátilo do
    viditelna. */
 @keyframes hlPrijezd{from{opacity:0;} to{opacity:1;}}
-header.hl-prijezd{animation:hlPrijezd var(--cas-pomaly) ease-out;}
+/* Prolíná se OBSAH, ne pruh. Kdyby se prolínal celý `header`, je bílá
+   plocha půl vteřiny průsvitná a text pod ní prosvítá — viz fotka
+   u zhasnutí výš. Takhle pruh překryje obsah hned a doplní se jen to,
+   co v něm stojí. */
+header.hl-prijezd > .wrap{animation:hlPrijezd var(--cas-pomaly) ease-out;}
 /* Komu vadí pohyb, tomu se nabídne KRATŠÍ prolnutí — ne přepnutí.
 
    Tohle je JEDINÁ výjimka z plošného pravidla nahoře (řádek s
@@ -1436,7 +1450,7 @@ header.hl-prijezd{animation:hlPrijezd var(--cas-pomaly) ease-out;}
    Náhradou za prolnutí tady navíc není klid, ale prvek, který se
    koutkem oka zjeví z ničeho nic; to je rušivější, ne klidnější.
    Zkrácené na dvě desetiny vteřiny, ať je to opravdu jen náznak. */
-@media (prefers-reduced-motion:reduce){ header.hl-prijezd{animation:hlPrijezd var(--cas-zakladni) ease-out !important;} }
+@media (prefers-reduced-motion:reduce){ header.hl-prijezd > .wrap{animation:hlPrijezd var(--cas-zakladni) ease-out !important;} }
 /* Kdo je v hlavičce klávesnicí, o ni nesmí přijít ani při rolování. */
 header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 @media (prefers-reduced-motion:reduce){ header{transition:none;} }
@@ -2239,7 +2253,7 @@ h1 em{font-style:italic; font-weight:700; color:var(--znacka-svetla);
          (136 proti 280 px),
      a obojí hlídá scripts/test-ovladani-vypisu.mjs. Okraj panelu
      tedy nese šířku ovladačů, ne vzhled; srovnat se dá až s nimi. */
-  .map-controls-panel{padding:8px;}
+  .map-controls-panel{padding:8px 16px;}
   /* Menší základní mezera: vzduch mezi skupinami si přidává oddělovač
      (padding-top u .map-controls > * + *), takže by se jinak sčítaly. */
   .map-controls{padding:12px 8px 12px; gap:4px 8px;}
@@ -4486,7 +4500,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Výpis si proto drží výšku obrazovky dopředu. Není to kosmetika:
      posun o deset tisíc pixelů pod prstem je přesně to, kvůli čemu
      se na telefonu kliká vedle. */
-  .map-side{padding:8px 8px 12px;
+  .map-side{padding:8px 16px 12px;
      min-height:calc(100vh - var(--vyska-hlavicky, 65px));
      min-height:calc(100dvh - var(--vyska-hlavicky, 65px));}
   .opp-item::after{display:none;}      /* rohová značka by se bila se srdíčkem */

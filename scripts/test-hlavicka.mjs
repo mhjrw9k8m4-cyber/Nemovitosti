@@ -526,7 +526,12 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     // Příjezd je animace (ne přechod mezi stavy), aby hlavička v klidu
     // neměla žádnou transformaci — čte se tedy doba animace.
     h.classList.add('hl-prijezd');
-    const ca = getComputedStyle(h);
+    /* Příjezd se od 27. 10. prolíná na OBSAHU hlavičky, ne na pruhu:
+       průsvitný bílý pruh nechal prosvítat text pod sebou a logo se
+       kreslilo přes nadpis (fotka z iPhonu od majitele). Čte se tedy
+       animace toho prvku, který ji opravdu nese. */
+    const obal = h.querySelector('.wrap') || h;
+    const ca = getComputedStyle(obal);
     const prichod = parseFloat(ca.animationDuration) || 0;
     const jmenoAnimace = ca.animationName;
     h.classList.remove('hl-prijezd');
@@ -537,11 +542,16 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
        hlavička jen přepne, žádný mezistav se nenajde. */
     window.scrollBy({ top: 300, behavior: 'instant' });
     await spi(40);
-    let mezistavu = 0, posunuta = 0;
+    let mezistavu = 0, posunuta = 0, pruhPrusvitny = 0;
     for (let i = 0; i < 45; i++) {
-      const c2 = getComputedStyle(h);
+      const c2 = getComputedStyle(obal);
       const o = parseFloat(c2.opacity);
       if (o > 0.05 && o < 0.95) mezistavu++;
+      /* A TEN BÍLÝ PRUH NESMÍ BÝT PRŮSVITNÝ ANI JEDEN SNÍMEK. Tohle je
+         ta vada z fotky: pod průsvitnou hlavičkou prosvítá text stránky
+         a dvě slova se kreslí přes sebe. */
+      const op = parseFloat(getComputedStyle(h).opacity);
+      if (op > 0.05 && op < 0.95) pruhPrusvitny++;
       /* A ani v půlce příjezdu se hlavička nesmí nikam posouvat: to je
          přesně to „naskočení", na které přišla stížnost. */
       if (c2.transform && c2.transform !== 'none') posunuta++;
@@ -558,7 +568,7 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     await spi(140);
     const pripohybuZnovu = parseFloat(getComputedStyle(h).opacity);
     await spi(900);
-    return { prichod, jmenoAnimace, odchod, mezistavu, posunuta, pripohybuZnovu,
+    return { prichod, jmenoAnimace, odchod, mezistavu, posunuta, pripohybuZnovu, pruhPrusvitny,
       transformVKlidu: getComputedStyle(h).transform,
       konec: parseFloat(getComputedStyle(h).opacity) };
   });
@@ -573,6 +583,14 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
      na led". Prolnutí na místě je teď POŽADAVEK, ne shoda náhod. */
   pravda('a je to prolnutí na místě — hlavička se při něm nikam neposouvá',
     v.posunuta === 0, `v ${v.posunuta} ze 45 vzorků měla transform`);
+  /* NAŠLO SE FOTKOU, NE ZKOUŠKOU: majitel poslal snímek z iPhonu, kde přes
+     nadpis „Parametry pozemku" leží logo „Parcelka". Byl to okamžik,
+     kdy měl bílý pruh průhlednost mezi nulou a jedničkou — dvakrát
+     za každé rolování (zhasnutí 0,12 s, příjezd 0,4 s). Prolíná se
+     proto obsah hlavičky, kdežto pruh je neprůhledný od prvního snímku. */
+  pravda('a bílý pruh u toho není ani jeden snímek průsvitný',
+    v.pruhPrusvitny === 0,
+    `v ${v.pruhPrusvitny} ze 45 vzorků prosvítal text pod hlavičkou`);
   pravda('v klidu taky žádnou transformaci nemá',
     v.transformVKlidu === 'none', `transform: ${v.transformVKlidu}`);
   pravda('odchod je naopak rychlý', v.odchod <= 0.2,
@@ -582,6 +600,8 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   pravda('rozjetý příjezd nepřebije zhasnutí při novém rolování',
     v.pripohybuZnovu < 0.5,
     `hlavička měla ${v.pripohybuZnovu} — doplouvá přes obsah, i když už se zase roluje`);
+  pravda('a ani tady není bílý pruh průsvitný', v.pruhPrusvitny === 0,
+    `v ${v.pruhPrusvitny} ze 40 vzorků prosvítal text pod hlavičkou`);
   pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
   await ctx.close();
 }
@@ -606,19 +626,26 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
     window.scrollBy({ top: 300, behavior: 'instant' });
     await spi(30);
     const priPohybu = parseFloat(getComputedStyle(h).opacity);
-    let mezistavu = 0;
+    /* Prolíná se OBSAH hlavičky, ne bílý pruh — viž oprava z fotky
+       v oddílu 6. Měří se tedy ten prvek, který animaci nese. */
+    const obal = h.querySelector('.wrap') || h;
+    let mezistavu = 0, pruhPrusvitny = 0;
     for (let i = 0; i < 40; i++) {
-      const o = parseFloat(getComputedStyle(h).opacity);
+      const o = parseFloat(getComputedStyle(obal).opacity);
       if (o > 0.05 && o < 0.95) mezistavu++;
+      const op = parseFloat(getComputedStyle(h).opacity);
+      if (op > 0.05 && op < 0.95) pruhPrusvitny++;
       await spi(20);
     }
     await spi(700);
-    return { priPohybu, mezistavu, konec: parseFloat(getComputedStyle(h).opacity) };
+    return { priPohybu, mezistavu, pruhPrusvitny, konec: parseFloat(getComputedStyle(h).opacity) };
   });
   pravda('s omezeným pohybem hlavička při rolování pořád zhasíná (jinak zkouška nic neměří)',
     v.priPohybu < 0.95, `průhlednost při pohybu ${v.priPohybu}`);
   pravda('a vrací se prolnutím, ne cvaknutím', v.mezistavu >= 3,
     `jen ${v.mezistavu} mezistavů ze 40 vzorků — hlavička se přepne naráz`);
+  pravda('a ani tady není bílý pruh průsvitný', v.pruhPrusvitny === 0,
+    `v ${v.pruhPrusvitny} ze 40 vzorků prosvítal text pod hlavičkou`);
   pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
   await ctx.close();
 }

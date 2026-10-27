@@ -145,14 +145,15 @@ try {
        mají obě plnou šířku". To už 26. 10. neplatí: jeden sloupec
        stál na 360 px celou obrazovku (pruh nad výpisem 242 px místo 138,
        první nabídka až na 595 px z 844), takže se místo řady začal
-       zkracovat nápis a řada zůstala dvousloupcová. Trojice nástrojů
-       se přitom pod 360 px vrací k posuvnému řádku s buňkami přes celou
-       šířku — „Schovat dražby po termínu" nemá co zkracovat.
-       Naměřeno 27. 10. na 320 px: dvojice nahoře 148 px, nástroje 304.
-       Kontrola tedy padala na rozdílu, který je záměr. Žádá se proto
-       jedna šířka tam, kde obojí stojí v témže dvousloupcovém rastru,
-       a pod 360 px se místo toho měří, že nástroj opravdu bere celou
-       šířku řádku (jinak by tam zbyla díra). */
+       zkracovat nápis a řada zůstala dvousloupcová. Kolik nástrojů v řadě
+       stojí, rozhodují DATA: „Schovat dražby po termínu" se vykreslí
+       jen tehdy, když v nabídce opravdu nějaké jsou. Jsou-li nástroje
+       tři, pod 360 px se z řady stane posuvný řádek s buňkami přes
+       celou šířku; jsou-li dvě, zůstane dvousloupcový rastr jako nad
+       ní. Naměřeno 27. 10. na 320 px: s dražbami dvojice 148 px proti
+       nástrojům 304, bez nich 148 proti 148. Kontrola, která si
+       pamatovala jen první případ, padala na rozdílu, který je záměr —
+       očekávání se proto bere z DOM, ne z paměti. */
     const stejne = (a, b) => Math.abs(a.w - b.w) <= 1;
     pravda(`${sirka} px: „Uložené" a řazení mají tutéž šířku`, stejne(v.ulozene, v.razeni),
       `${v.ulozene.w} px vs ${v.razeni.w} px`);
@@ -162,14 +163,25 @@ try {
       pravda(`${sirka} px: a obě dvojice jsou stejně široké navzájem`, stejne(v.ulozene, v.rychly),
         `${v.ulozene.w} px vs ${v.rychly.w} px`);
     } else {
-      const radek = await p.evaluate(() => {
+      const rada = await p.evaluate(() => {
         const e = document.querySelector('#mc-rychly');
         const r = e && e.closest('.mc-akce');
-        return r ? Math.round(r.clientWidth) : 0;
+        if (!r) return null;
+        return { w: Math.round(r.clientWidth),
+          pocet: [...r.children].filter((c) => c.getBoundingClientRect().width > 2).length };
       });
-      pravda(`${sirka} px: nástroj bere celou šířku řádku (dvojice nahoře půlku)`,
-        radek > 0 && Math.abs(v.rychly.w - radek) <= 1 && v.rychly.w > v.ulozene.w,
-        `nástroj ${v.rychly.w} px, řádek ${radek} px, dvojice ${v.ulozene.w} px`);
+      // PŘEDPOKLAD: bez naměřeného řádku by kontroly níž prošly naprázdno
+      pravda(`${sirka} px: řádek nástrojů se našel a stojí v něm aspoň dva`,
+        !!rada && rada.w > 0 && rada.pocet >= 2, JSON.stringify(rada));
+      if (rada && rada.pocet >= 3) {
+        pravda(`${sirka} px: posuvný řádek nástrojů bere celou šířku (dvojice nahoře půlku)`,
+          Math.abs(v.rychly.w - rada.w) <= 1 && v.rychly.w > v.ulozene.w,
+          `nástroj ${v.rychly.w} px, řádek ${rada.w} px, dvojice ${v.ulozene.w} px`);
+      } else if (rada) {
+        pravda(`${sirka} px: dvojice nástrojů je stejně široká jako dvojice nad ní`,
+          stejne(v.rychly, v.ulozene) && Math.abs(v.rychly.w * 2 - rada.w) <= 10,
+          `nástroj ${v.rychly.w} px, dvojice ${v.ulozene.w} px, řádek ${rada.w} px`);
+      }
     }
 
     /* Nápis se nesmí vysypat z rámečku — to byl důvod, proč se pod
@@ -184,6 +196,29 @@ try {
     });
     pravda(`${sirka} px: žádný nápis neleze přes rámeček`, vysyp.length === 0, vysyp.join('; '));
     pravda(`${sirka} px: a stránkou nejde pohnout do stran`, !v.pretek, 'obsah je širší než okno');
+
+    /* OKRAJ OD HRANY OBRAZOVKY. Vyfoceno 27. 10.: pruh s hledáním a
+       přepínačem Seznam/Mapa stál 8 px od hrany, kdežto zbytek stránky
+       dýchá 20 px (--okraj-stranky). Na fotce to vypadalo, jako by
+       ovládání vypadávalo z webu. Naměřeno při hledání správné míry:
+       na 20 px už se „Stáhnout výběr" na 390 px nevejde do rámečku
+       (171 px textu v 169 px), proto 16 px — dost na to, aby pruh
+       nedrhl o hranu, a pořád se vším, co se má vejít. */
+    const okraje = await p.evaluate(() => {
+      const out = {};
+      ['.mcp-hledani', '.ms-vysledky .msv-razeni'].forEach((sel) => {
+        const e = document.querySelector(sel); if (!e) return;
+        const r = e.getBoundingClientRect();
+        out[sel] = { vlevo: Math.round(r.left), vpravo: Math.round(document.documentElement.clientWidth - r.right) };
+      });
+      return out;
+    });
+    const klice = Object.keys(okraje);
+    // PŘEDPOKLAD: bez naměřených okrajů by kontrola níž prošla naprázdno
+    pravda(`${sirka} px: okraje ovládání se naměřily`, klice.length === 2, JSON.stringify(okraje));
+    const tesne = klice.filter((k) => okraje[k].vlevo < 16 || okraje[k].vpravo < 16);
+    pravda(`${sirka} px: ovládání nedrhne o hranu obrazovky (aspoň 16 px)`, tesne.length === 0,
+      tesne.map((k) => k + ' ' + JSON.stringify(okraje[k])).join('; '));
 
     /* 1. ZNAČKA U KAŽDÉHO. Nula se počítá jako „není“ — v CSS to tak
        dlouho vypadalo, že tam je, a na obrazovce nebylo nic. */

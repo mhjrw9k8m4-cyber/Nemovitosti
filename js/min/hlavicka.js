@@ -147,10 +147,19 @@
 
   var vyskaStranky = 0, vysKna = 0, cekaRam = false;
 
+  var AKCE_SEL = '.pz-akce-hlavni';
+  var akceY = null, akceH = 0;
+
   function premer() {
     cekaRam = false;
     vyskaStranky = document.documentElement.scrollHeight;
     vysKna = window.innerHeight;
+    var akce = document.querySelector(AKCE_SEL);
+    if (akce) {
+      var ra = akce.getBoundingClientRect();
+      akceY = ra.top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+      akceH = ra.height;
+    } else { akceY = null; akceH = 0; }
 
     prekresli();
   }
@@ -164,7 +173,10 @@
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
     var dlouha = vyskaStranky > vysKna * PRAH_OBRAZOVEK;
 
-    b.classList.toggle('show', dlouha && y > PRAH_POSUNU);
+    var hornihrana = vysKna - 70, dolnihrana = vysKna - 24;
+    var koliduje = akceY !== null
+      && (akceY - y) < dolnihrana && (akceY + akceH - y) > hornihrana;
+    b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !koliduje);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });

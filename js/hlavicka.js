@@ -269,11 +269,30 @@
      v dávkách, takže je sbírá requestAnimationFrame). Při rolování už
      zbývá jen porovnání dvou čísel. */
   var vyskaStranky = 0, vysKna = 0, cekaRam = false;
+  /* KDE LEŽÍ HLAVNÍ AKCE STRÁNKY — a proč to vůbec řešíme.
+     Majitel poslal fotku z iPhonu: plovoucí kolečko „nahoru" sedělo
+     přes pravý konec tlačítka „Uložit". Naměřeno na 390 px: kolečko
+     stojí na x 330–376, řádek akcí končí na 370, takže se překrývají
+     o 40 px — a klepnutí do toho místa vyvolá rolování nahoru místo
+     uložení pozemku. Plovoucí knoflík nesmí ležet na ovladači.
+     Řeší se to ústupem: dokud je řádek s hlavní akcí v tom pásu u spodní
+     hrany, kde knoflík stojí, knoflík se nekreslí. Poloha se BERE JEN
+     PŘI PŘEMĚŘENÍ (při změně velikosti a po načtení), ne při rolování —
+     dotaz na rozvržení při každém posunu stál kdysi 259 ms procesoru
+     a to se už opakovat nemá (viž poznámka výš). */
+  var AKCE_SEL = '.pz-akce-hlavni';
+  var akceY = null, akceH = 0;
 
   function premer() {
     cekaRam = false;
     vyskaStranky = document.documentElement.scrollHeight;
     vysKna = window.innerHeight;
+    var akce = document.querySelector(AKCE_SEL);
+    if (akce) {
+      var ra = akce.getBoundingClientRect();
+      akceY = ra.top + (window.pageYOffset || document.documentElement.scrollTop || 0);
+      akceH = ra.height;
+    } else { akceY = null; akceH = 0; }
     /* Poloha patičky se tu brala kvůli schovávání u ní; to je pryč,
        takže odpadl i jeden dotaz na rozvržení při každém přeměření. */
     prekresli();
@@ -299,7 +318,12 @@
        devíti případech — patička má odkazy ve sloupcích vlevo a pravý
        okraj volný. Důvod ke schovávání tedy nebyl žádný, jen se to nikdy
        nezměřilo. */
-    b.classList.toggle('show', dlouha && y > PRAH_POSUNU);
+    /* Pás, ve kterém knoflík stojí: od spodní hrany 24 px odsazení
+       a 46 px výšky, tedy 24 až 70 px nade dnem okna. */
+    var hornihrana = vysKna - 70, dolnihrana = vysKna - 24;
+    var koliduje = akceY !== null
+      && (akceY - y) < dolnihrana && (akceY + akceH - y) > hornihrana;
+    b.classList.toggle('show', dlouha && y > PRAH_POSUNU && !koliduje);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });
