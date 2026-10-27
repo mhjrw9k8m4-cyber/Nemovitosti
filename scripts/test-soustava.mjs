@@ -248,6 +248,67 @@ const vlozeneStranky = readdirSync('.')
     kratke.length === 0, kratke.join(', '));
 }
 
+/* ---- 404.html OPISUJE TOKENY, TAK AŤ OPISUJE SPRÁVNĚ ------------
+   Chybová stránka schválně nenačítá css/styles.css: má vyjít i tehdy,
+   když se stylopis nestáhne. Všechny barvy, zaoblení a stíny tam proto
+   stojí opsané číslem — a opsaná hodnota se tiše rozejde s tí, od které
+   byla opsaná. Do 27. 10. se taky rozešla: stránka měla mátovou plochu
+   a zaoblení 20 px z předchozí soustavy, kdežto web už měl #F2F4F3
+   a 10 px. Tady se porovnává deklarace po deklaraci s tokenem, ze
+   kterého pochází. */
+{
+  const tabulka = {};
+  for (const m of bez.matchAll(/--([a-z0-9-]+)\s*:\s*([^;}]+)[;}]/g)) {
+    if (!(m[1] in tabulka)) tabulka[m[1]] = m[2].trim();
+  }
+  const rozbal = (v, hloubka = 0) => (hloubka > 6 ? v
+    : v.replace(/var\(\s*--([a-z0-9-]+)\s*\)/g, (_, jm) => rozbal(tabulka[jm] || '', hloubka + 1)));
+  const zhustit = (v) => String(v).toLowerCase().replace(/\s+/g, '').replace(/;$/, '');
+  const [, css404] = vlozeneStranky.find(([f]) => f === '404.html') || [];
+  // PŘEDPOKLAD: bez vloženého stylu 404 by kontrola proběhla naprázdno
+  pravda('404.html má vlastní vložený styl (je co porovnávat)', !!css404);
+  if (css404) {
+    /* Hodnota jedné vlastnosti v jednom bloku. Bloky jsou v tom souboru
+       ploché (žádné vnoření), takže stačí najít selektor a číst po `}`. */
+    const deklarace = (selektor, vlastnost) => {
+      const re = new RegExp('(^|[};])\\s*' + selektor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*\\{([^}]*)\\}', 'm');
+      const blok = re.exec(css404);
+      if (!blok) return null;
+      const v = new RegExp('(^|;)\\s*' + vlastnost + '\\s*:([^;]*)').exec(blok[2]);
+      return v ? v[2].trim() : null;
+    };
+    const OPSANE = [
+      ['body', 'background', 'bg', 'plocha stránky'],
+      ['body', 'color', 'text', 'barva textu'],
+      ['.card', 'background', 'plocha-karta', 'plocha karty'],
+      ['.card', 'border-radius', 'r-plocha', 'zaoblení karty'],
+      ['.card', 'box-shadow', 'e1', 'stín karty'],
+      ['p', 'color', 'muted', 'barva poznámky'],
+      ['a', 'background', 'plocha-znacka', 'plocha tlačítka'],
+      ['a', 'border-radius', 'r-md', 'zaoblení tlačítka'],
+      ['a', 'box-shadow', 'glow', 'stín tlačítka'],
+      ['a.sec', 'color', 'znacka', 'barva záložní akce'],
+    ];
+    const rozesle = [];
+    for (const [sel, vl, token, popis] of OPSANE) {
+      const na404 = deklarace(sel, vl);
+      const vTokenu = tabulka[token] === undefined ? null : rozbal(tabulka[token]);
+      if (na404 === null || vTokenu === null || zhustit(na404) !== zhustit(vTokenu)) {
+        rozesle.push(`${popis} (${sel} ${vl}): na 404 „${na404}", token --${token} „${vTokenu}"`);
+      }
+    }
+    pravda(`404.html opisuje tokeny soustavy přesně (${OPSANE.length} hodnot)`,
+      rozesle.length === 0, rozesle.join(' | '));
+    /* Obrysy nesou kromě barvy i šířku, takže se porovnává jen ta barva. */
+    const obrysy = [['.card', 'line', 'obrys karty'], ['a.sec', 'line-strong', 'obrys záložní akce']];
+    const spatne = obrysy.filter(([sel, token]) => {
+      const d = deklarace(sel, 'border');
+      return !d || zhustit(d).indexOf(zhustit(rozbal(tabulka[token] || ''))) < 0;
+    }).map(([sel, token, popis]) => `${popis}: ${sel} border „${deklarace(sel, 'border')}" nenese --${token}`);
+    pravda('a obrysy na ní jsou z týchž tokenů', spatne.length === 0, spatne.join(' | '));
+  }
+}
+
 console.log('\nSoustava: průhlednost, linky, čas, poměr stran, přelivy');
 console.log(zpravy.join('\n'));
 console.log(`  (výjimek s vlastním časem ${Object.keys(VLASTNI_CAS).length}, každá s napsaným důvodem)`);

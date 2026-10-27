@@ -986,7 +986,11 @@ function typStrankyVypisu(list) {
   /* Mlčky se smí vynechat jen „na prodej" — viz itemRow. */
   if (hlavni !== 'sale') return { skryt: '', veta: '' };
   return { skryt: 'sale',
-    veta: 'Není-li u řádku uvedeno jinak, je nabídka <b>na prodej</b>.' };
+    /* „U ŘÁDKU" UŽ NENÍ PRAVDA. Výpis na okresních a krajských
+       stránkách jsou od přestavby KARTY (snímek, plocha, obrys) — na
+       telefonu pod sebou, na širokém okně na šířku. Věta zůstala ze
+       staré podoby a stála na 59 stránkách. „U nabídky" platí v obou. */
+    veta: 'Není-li u nabídky uvedeno jinak, je <b>na prodej</b>.' };
 }
 
 /* STŘEDY OKRESŮ — pro odkazy „Pozemky v okolí".

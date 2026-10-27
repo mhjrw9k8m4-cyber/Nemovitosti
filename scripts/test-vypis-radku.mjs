@@ -102,7 +102,9 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
        jsou jen prodeje — dražba má vyvolávací cenu, ne cenu…". Nutit
        jim obecnou větu by znamenalo napsat totéž dvakrát. */
     const jenProdeje = /V ceně jsou <b>jen prodeje<\/b>/.test(s.h);
-    const neniLiJinak = /Není-li u řádku uvedeno jinak, je nabídka <b>na prodej<\/b>/.test(s.h)
+    /* Věta se 27. 10. přestala odvolávat na řádek: výpis jsou karty.
+       Mezera je nezlomitelná (sazba), proto `u.nabídky`. */
+    const neniLiJinak = /Není-li u.nabídky uvedeno jinak, je <b>na prodej<\/b>/.test(s.h)
       || jenProdeje;
     if (vsechnyJeden || jenProdeje) sVetouVsechny++;
     if (neniLiJinak) sVetouJinak++;

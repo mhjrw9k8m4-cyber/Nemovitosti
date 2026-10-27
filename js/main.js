@@ -478,7 +478,7 @@
            kdy se synchronizují mezi zařízeními (js/ulozene-ucet.js,
            js/poznamky.js). Nechat tu starou větu „na server nejdou" by byla
            lež právě o tom, co o člověku víme nejvíc. */
-        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým údajům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
         /* „Žádné sledovací skripty“ tu stalo, zatímco 2 006 stránek
            načítalo /_vercel/insights/script.js. Na GitHub Pages ten soubor

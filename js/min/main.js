@@ -280,7 +280,7 @@
 
         '<li><b>Bez přihlášení:</b> uložené i skryté pozemky, vaše místo a okruh, nastavení filtrů a vrstev zůstávají jen ve vašem prohlížeči (localStorage). Na server nejdou.</li>' +
 
-        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým řádkům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
+        '<li><b>S účtem:</b> e-mail, hlídaná vyhledávání, uložené pozemky a poznámky k nim, vaše inzeráty a zprávy ukládáme na server (Supabase) — aby je člověk našel i na druhém zařízení. Ke svým údajům se dostanete jen vy — hlídá to databáze, ne jen kód stránky.</li>' +
         '<li><b>Data o pozemcích:</b> pocházejí z veřejných zdrojů (dražby, SPÚ, inzeráty, katastr). Nezveřejňujeme osobní údaje vlastníků.</li>' +
 
         '<li><b>Provoz:</b> web běží na GitHub Pages. Žádná reklama a žádné profilování návštěvníků. Nepoužíváme cookies třetích stran.</li>' +
