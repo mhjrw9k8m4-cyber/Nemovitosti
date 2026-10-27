@@ -1179,7 +1179,7 @@ for(const okres of eligibleOkres){
            výpis a text pod ním — a vyhledávačům to nevadí, obsah na
            stránce zůstává celý, jen se čte v pořadí, v jakém ho chce
            člověk. -->
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nabídky pozemků v okrese ${esc(okres)}</h2>
           <!-- NAD VÝPISEM JEN TO, CO MĚNÍ ČTENÍ ŘÁDKŮ. Stál tu odstavec
@@ -1451,7 +1451,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
         <a href="drazby-pozemku.html" class="btn-primary btn-glow">Jak koupit v dražbě →</a>
       </div>
 
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Pozemky v dražbě</h2>
           <p class="rules-note">${tS.veta ? tS.veta + ' ' : ''}Seřazeno <b>podle termínu</b> — nejdřív to, co se draží nejblíž. Údaje pocházejí z veřejné evidence dražeb a mohou se v čase měnit — konání, podmínky a aktuální stav vždy ověřte přímo v dražební vyhlášce a v katastru nemovitostí.</p>
@@ -1576,7 +1576,7 @@ ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu, 'je', 'js
         <a href="${mapaOdkaz}" class="btn-primary btn-glow">Otevřít na mapě →</a>
       </div>
 
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nabídky — ${esc(d.nom)}</h2>
           <p class="rules-note">${tS.veta ? tS.veta + ' ' : ''}Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_RADKU}` : ''}. Data pocházejí z veřejných zdrojů (inzertní portály, evidence dražeb, státní pozemkový úřad) a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
@@ -1751,7 +1751,7 @@ for (const r of rozpocetVznikne) {
         </div>
       </div>
 
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nabídky do ${esc(r.popis)}</h2>
           <p class="rules-note">Seřazeno od nejnižší ceny${zbyva ? `, vypsáno prvních ${STROP_ROZPOCET}` : ''}. V ceně jsou <b>jen prodeje</b> — dražba má vyvolávací cenu, ne cenu, a spoluvlastnický podíl má cenu za zlomek pozemku, o kterém se rozhoduje společně s dalšími vlastníky; ani jedno se s rozpočtem neporovnává. Vynechané jsou i ceny, které cenový model označí za nevěrohodné. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
@@ -1940,7 +1940,7 @@ ${razitkoCerstvosti}
       </div>
 
 ${noveBody ? `
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Nově přidané</h2>
           <p class="rules-note">${tNov.veta ? tNov.veta + ' ' : ''}Od nejnovějšího dne${zbyvaNovych ? `, vypsáno prvních ${STROP_NOVYCH}` : ''}. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
@@ -1950,7 +1950,7 @@ ${zbyvaNovych ? `          <p class="okr-more"><a href="index.html#mapa">${zbyva
       </div>` : ''}
 
 ${zlevnene.length ? `
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Zlevněné</h2>
           <p class="rules-note">Nabídky, u kterých cena od našeho prvního záznamu <b>klesla</b>. Porovnává se s cenou z archivu, ne s cenou odhadnutou — a změna pod <b>${PKZ.MEZ_PROCENT} %</b> se nehlásí, protože to bývá jen zaokrouhlení u zdroje.${drazebVZlevneni ? ` U <b>${fmt(drazebVZlevneni)}</b> z nich jde o <b>dražbu</b>: tam nikdo nic nezlevnil, jen soud nebo dražebník vypsal nižší vyvolávací cenu v opakované dražbě.` : ''}</p>
@@ -1962,7 +1962,7 @@ ${zlevnene.length > STROP_ZMEN ? `          <p class="okr-more"><a href="index.h
       </div>` : ''}
 
 ${zdrazene.length ? `
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Zdražené</h2>
           <p class="rules-note">Patří sem, i když to kupujícího netěší: kdybychom ukazovali jen zlevnění, vypadal by trh jako jednosměrka dolů.</p>
@@ -1973,7 +1973,7 @@ ${zdrazene.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
       </div>` : ''}
 
 ${kOvereni.length ? `
-      <div class="add-card">
+      <div class="okr-blok">
         <div class="rules-sect">
           <h2>Cena se změnila skokem — ověřte ji</h2>
           <p class="rules-note">Změna o <b>${PKZ.MEZ_PODEZRELA} %</b> a víc u pozemku za pár dnů bývá chyba ve zdroji, ne výprodej. Číslo neschováváme, ale nenazýváme ho příležitostí — ověřte cenu přímo v inzerátu.</p>

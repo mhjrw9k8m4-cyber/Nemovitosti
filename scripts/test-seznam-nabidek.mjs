@@ -187,6 +187,58 @@ try {
     `karet celkem ${merenychKaret}`);
   pravda('výpis stojí od 1200 px ve dvou sloupcích a parametry se nezalomí',
     spatne.length === 0, spatne.slice(0, 6).join('\n      '));
+
+  /* --- JEDEN RÁM NA VŠECH TYPECH REGIONÁLNÍCH STRÁNEK -------------
+     Naměřeno 27. 10. na 1 440 px: na krajských stránkách stál výpis
+     rovnou na ploše stránky (nadpis 24 px, karty na svislici nadpisu
+     stránky, 152 px), kdežto na okresních, druhových a cenových byl
+     navíc zabalený do BÍLÉ KARTY — tedy bílé karty v bílé kartě,
+     s obsahem odsazeným o 20 px a s menším nadpisem. Týž obsah ve
+     dvou různých rámech; majitel tenhle druh rozdílu popsal slovy
+     „věci mají různou velikost, celé to musíš sjednotit".
+     Sjednoceno na krajskou podobu: karta je karta nabídky, ne rám
+     kolem seznamu karet. */
+  await p.setViewportSize({ width: 1440, height: 900 });
+  const RAMY = ['pozemky-okres-benesov.html', 'pozemky-jihocesky-kraj.html',
+    'pozemky-lesni.html', 'pozemky-do-1-milionu.html', 'nove-pozemky.html'];
+  const ramy = [];
+  for (const stranka of RAMY) {
+    await p.goto(BASE + '/' + stranka, { waitUntil: 'load' });
+    await p.waitForTimeout(600);
+    const v = await p.evaluate(() => {
+      const l = document.querySelector('.okr-list');
+      const h1 = document.querySelector('h1');
+      if (!l || !h1) return null;
+      const tl = (e) => { const r = document.createRange(); r.selectNodeContents(e);
+        const b = r.getBoundingClientRect(); return b.width ? Math.round(b.left) : null; };
+      const obal = l.closest('.okr-blok, .add-card');
+      const h2 = obal && obal.querySelector('h2');
+      return { h1: tl(h1), seznam: Math.round(l.getBoundingClientRect().left),
+        ram: obal ? String(obal.className).split(' ')[0] : 'žádný',
+        /* Karta v kartě se dá najít i přímo, ne jen přes odsazení. */
+        vKarte: document.querySelectorAll('.add-card .okr-list').length,
+        nadpis: h2 ? getComputedStyle(h2).fontSize : null };
+    });
+    ramy.push({ stranka, v });
+  }
+  // PŘEDPOKLAD: bez naměřených stránek by kontroly níž prošly naprázdno
+  pravda(`rámy výpisu se změřily na ${RAMY.length} typech stránek`,
+    ramy.every((x) => x.v && x.v.nadpis), JSON.stringify(ramy.filter((x) => !x.v || !x.v.nadpis)));
+  if (ramy.every((x) => x.v && x.v.nadpis)) {
+    const ruzneRamy = [...new Set(ramy.map((x) => x.v.ram))];
+    const ruzneNadpisy = [...new Set(ramy.map((x) => x.v.nadpis))];
+    const posunute = ramy.filter((x) => x.v.seznam !== x.v.h1)
+      .map((x) => `${x.stranka}: nadpis ${x.v.h1}, výpis ${x.v.seznam}`);
+    pravda('výpis má na všech typech regionálních stránek týž rám',
+      ruzneRamy.length === 1, 'rámy: ' + ruzneRamy.join(', '));
+    pravda('a nadpis nad ním tutéž velikost', ruzneNadpisy.length === 1,
+      'velikosti: ' + ruzneNadpisy.join(', '));
+    pravda('a stojí na svislici nadpisu stránky', posunute.length === 0,
+      posunute.join(' | '));
+    const vKarte = ramy.filter((x) => x.v.vKarte > 0).map((x) => `${x.stranka}: ${x.v.vKarte}`);
+    pravda('žádný výpis karet nestojí uvnitř další karty', vKarte.length === 0,
+      vKarte.join(' | '));
+  }
   await ctx.close();
 } catch (e) {
   try { await prohlizec.close(); } catch (e2) {}

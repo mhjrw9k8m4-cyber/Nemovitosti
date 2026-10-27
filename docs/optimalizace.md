@@ -12022,3 +12022,40 @@ navíc rovnou tokenu. Sabotáž (vrátit šestnáctku) shodí všechny tři.
 celou šířku okna a o odsazení by neřekla nic. Je to týž trik jako
 u díry v číslech hlavičky (§168): `getBoundingClientRect()` na prvku
 měří místo, které prvek dostal, ne místo, které zabral jeho obsah.
+
+## 175. Bílá karta v bílé kartě — a dvě velikosti téhož nadpisu *27. 10.*
+
+Při hledání dalších schodů (§174) vyšlo najevo, že týž obsah má na
+sousedních typech stránek dva různé rámy:
+
+| stránka | rám kolem výpisu | nadpis | odsazení výpisu |
+|---|---|---|---|
+| krajská | žádný (`.okr-blok`) | 24 px | 152 px = svislice nadpisu |
+| okresní, druhová, cenová, nové | **bílá karta** (`.add-card`) | 20 px | 172 px |
+
+Na krajské stránce stojí karty nabídek rovnou na ploše stránky.
+Na okresní byly zabalené do další bílé karty — tedy **bílá karta
+v bílé kartě**, s obsahem odsazeným o 20 px a s menším nadpisem.
+Karty nabídek se v tom rámu skoro ztratily: bílá na bílé, rozdíl
+dělá jen vlasový obrys.
+
+Sjednoceno na krajskou podobu. Pravidlo, které z toho plyne:
+**karta je karta nabídky, ne rám kolem seznamu karet.** Výkladové
+bloky (co znamená druh v katastru, co se za rozpočet dá koupit,
+rozcestník okolních okresů) kartou zůstávají — tam žádná vnořená
+karta není.
+
+### Jak se to málem přehnalo
+
+Hledání bloků k převodu jsem napsal jako „od `add-card` k dalšímu
+`add-card`" a ono to chytlo i čtyři bloky, ve kterých žádný výpis
+není — rozcestník okresů, výklad o druhu, rozcestník rozpočtů.
+Převedly se a vypadalo to „taky dobře", jenže to nebyla změna, kterou
+by něco opíralo o měření. Vráceny; převedeno je jen těch osm bloků,
+které výpis opravdu obsahují.
+
+Hlídá to `scripts/test-seznam-nabidek.mjs`, a měří tři věci na pěti
+typech stránek: že je rám všude týž, že má nadpis nad výpisem tutéž
+velikost, že výpis stojí na svislici nadpisu stránky — a přímo i to,
+že `.add-card .okr-list` neexistuje nikde. Poslední kontrola je
+nejlevnější a nejpřesnější: ptá se na vnoření, ne na jeho následek.
