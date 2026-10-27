@@ -132,6 +132,14 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
        scripts/test-souradnice.mjs. Tady zůstává jen pojistka proti
        návratu — a proti tomu, aby stály na stránce dvakrát. */
     const sourVTabulce = !!document.querySelector('.pz-spec .pz-sour');
+    /* KDE PARAMETRY STOJÍ. Od 27. 10. se na širokém okně stěhují do
+       připnutého pruhu u ceny (js/pozemek.js, pripniAkce) — pruh do
+       té doby nesl jen cenu a dvě tlačítka. Na užším okně má `.pz-bok`
+       `display:contents` a stěhovat se nesmí nic, jinak by se změnilo
+       pořadí bloků na telefonu. */
+    const bokEl = document.querySelector('.pz-bok');
+    const kliceEl = document.querySelector('.pz-klice');
+    const vBoku = !!(bokEl && kliceEl && bokEl.contains(kliceEl));
     const vel = (e) => parseFloat(getComputedStyle(e).fontSize);
     return {
       klicu: klic.length,
@@ -142,6 +150,7 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
       nejvetsiMezera: mezery.length ? Math.max(...mezery.map((m) => m.mezera)) : 0,
       rozptylOkraju: levyOkraj.length ? Math.max(...levyOkraj) - Math.min(...levyOkraj) : 0,
       sourVTabulce: sourVTabulce,
+      vBoku: vBoku,
       preteka: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
@@ -167,6 +176,13 @@ for (const [sirka, popisSirky] of [[390, 'telefon'], [768, 'tablet'], [1280, 'po
   }
   pravda('souřadnice v tabulce parametrů nejsou (patří pod mapu)',
     v.sourVTabulce === false, 'řádek se souřadnicemi je zpátky v tabulce — zabere 230 px ze čtyř set');
+  if (sirka >= 1100) {
+    pravda('na širokém okně stojí parametry v připnutém pruhu u ceny', v.vBoku,
+      'zůstaly v hlavním sloupci a pruh nese jen cenu');
+  } else {
+    pravda('na užším okně zůstávají v hlavním sloupci', v.vBoku === false,
+      'přestěhovaly se do pruhu, který tu není — změnilo by to pořadí bloků');
+  }
   pravda('nic nepřetéká do stran', v.preteka <= 0, `přetéká o ${v.preteka} px`);
   pravda('a stránka u toho nespadne', padlo.length === 0, padlo.slice(0, 2).join(' | '));
   await p.close();

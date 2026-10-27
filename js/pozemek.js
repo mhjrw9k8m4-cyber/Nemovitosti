@@ -1831,7 +1831,7 @@
     return !!document.querySelector('.pz-konec');
   }
 
-  /* PŘESUN HLAVNÍCH AKCÍ DO PŘIPNUTÉHO PRUHU (jen ≥1100 px).
+  /* PŘESUN ROZHODOVACÍ SADY DO PŘIPNUTÉHO PRUHU (jen ≥1100 px).
      Proč skriptem a ne stylem: `.pz-akce-hlavni` a `.pz-bok` jsou dva
      různé uzly stromu a pruh vpravo zabírá `grid-row:1 / span 99` —
      mřížka do jednoho připnutého prvku dva sourozence z různých míst
@@ -1842,19 +1842,45 @@
      vykreslením obrazovky — nic se tím neposouvá a CLS se nemění
      (hlídá scripts/test-stabilita.mjs). */
   function pripniAkce(host) {
-    var akce = host.querySelector('.pz-akce-hlavni');
     var bok = host.querySelector('.pz-bok');
-    if (!akce || !bok || !global.matchMedia) return;
-    var kotva = document.createComment('akce');
-    akce.parentNode.insertBefore(kotva, akce);
+    if (!bok || !global.matchMedia) return;
+    /* DO PRUHU JDOU I PARAMETRY, NEJEN AKCE.
+       Pruh nesl jenom cenu a dvě tlačítka — karta vysoká 270 px
+       v 340px sloupci na stránce, která měří přes tři tisíce.
+       Přitom právě tři údaje pod cenou (výměra, cena za metr, druh)
+       jsou to, podle čeho se člověk rozhoduje, a v připnutém pruhu
+       zůstanou na očích i při rolování popisem. Z pruhu je tím celá
+       rozhodovací sada: cena → parametry → akce.
+       Na telefonu se neděje nic: `.pz-bok` má `display:contents`
+       a kusy se do něj stěhují až od 1100 px, takže pořadí bloků
+       (hlídá scripts/test-poradi-pozemku.mjs) zůstává beze změny. */
+    var klice = host.querySelector('.pz-klice');
+    var nadpisKlicu = klice && klice.previousElementSibling
+      && klice.previousElementSibling.classList
+      && klice.previousElementSibling.classList.contains('pz-sect-h')
+      ? klice.previousElementSibling : null;
+    var akce = host.querySelector('.pz-akce-hlavni');
+    /* Každý kus má svou kotvu, aby se při zužení okna vrátil přesně
+       tam, odkud odešel. Pořadí v poli je pořadí v pruhu. */
+    var kusy = [nadpisKlicu, klice, akce].filter(Boolean).map(function (el) {
+      var kotva = document.createComment('bok');
+      el.parentNode.insertBefore(kotva, el);
+      return { el: el, kotva: kotva };
+    });
+    if (!kusy.length) return;
     var siroko = global.matchMedia('(min-width:1100px)');
     function uloz() {
       var vpravo = !!siroko.matches;
-      if (vpravo) { if (akce.parentNode !== bok) bok.appendChild(akce); }
-      else if (akce.parentNode === bok && kotva.parentNode) {
-        kotva.parentNode.insertBefore(akce, kotva.nextSibling);
+      for (var i = 0; i < kusy.length; i++) {
+        var k = kusy[i];
+        if (vpravo) { if (k.el.parentNode !== bok) bok.appendChild(k.el); }
+        else if (k.el.parentNode === bok && k.kotva.parentNode) {
+          k.kotva.parentNode.insertBefore(k.el, k.kotva.nextSibling);
+        }
       }
-      akce.classList.toggle('pz-akce-v-boku', vpravo);
+      if (akce) akce.classList.toggle('pz-akce-v-boku', vpravo);
+      if (nadpisKlicu) nadpisKlicu.classList.toggle('pz-bok-nadpis', vpravo);
+      bok.classList.toggle('pz-bok-sada', vpravo);
     }
     uloz();
     /* Změna šířky okna (i otočení tabletu) musí blok vrátit zpátky do

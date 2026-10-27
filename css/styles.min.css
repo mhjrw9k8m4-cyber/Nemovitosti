@@ -2450,6 +2450,15 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 #pz-detail{display:grid;grid-template-columns:minmax(0,var(--m-sloupec)) minmax(0,340px);column-gap:40px;align-items:start}
 #pz-detail>*{grid-column:1;min-width:0}
 #pz-detail>.pz-bok{display:block;grid-column:2;grid-row:1 / span 99;position:sticky;top:calc(var(--vyska-hlavicky,85px) + 20px);background:var(--plocha-plovouci-plna);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--e1);padding:16px}
+.pz-bok-sada .pz-bok-nadpis{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:13px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:var(--popisek)}
+.pz-bok-sada .pz-bok-nadpis::before{content:none}
+.pz-bok-sada .pz-klice{display:block;margin:4px 0 0;max-width:none}
+.pz-bok-sada .pz-klic{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:4px 12px;padding:8px 0;background:none;border:0;border-radius:0;box-shadow:none}
+.pz-bok-sada .pz-klic + .pz-klic{border-top:1px solid var(--line)}
+.pz-bok-sada .pz-klic b{grid-column:2;grid-row:1;font-size:16px;text-align:right;white-space:nowrap}
+.pz-bok-sada .pz-klic span{grid-column:1;grid-row:1;font-size:13px;color:var(--popisek)}
+.pz-bok-sada .pz-klic i{grid-column:1 / -1;grid-row:2}
+.pz-bok-sada .pz-klic-ic{display:none}
 }
 .pz-lista{display:none}
 @media (hover:none){.pz-lista{position:fixed;left:0;right:0;bottom:0;z-index:40;align-items:center;gap:12px;padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:var(--plocha-plovouci-plna);border-top:1px solid var(--line);box-shadow:var(--e3-up)}

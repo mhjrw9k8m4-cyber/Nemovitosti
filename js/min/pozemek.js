@@ -1158,19 +1158,35 @@
   }
 
   function pripniAkce(host) {
-    var akce = host.querySelector('.pz-akce-hlavni');
     var bok = host.querySelector('.pz-bok');
-    if (!akce || !bok || !global.matchMedia) return;
-    var kotva = document.createComment('akce');
-    akce.parentNode.insertBefore(kotva, akce);
+    if (!bok || !global.matchMedia) return;
+
+    var klice = host.querySelector('.pz-klice');
+    var nadpisKlicu = klice && klice.previousElementSibling
+      && klice.previousElementSibling.classList
+      && klice.previousElementSibling.classList.contains('pz-sect-h')
+      ? klice.previousElementSibling : null;
+    var akce = host.querySelector('.pz-akce-hlavni');
+
+    var kusy = [nadpisKlicu, klice, akce].filter(Boolean).map(function (el) {
+      var kotva = document.createComment('bok');
+      el.parentNode.insertBefore(kotva, el);
+      return { el: el, kotva: kotva };
+    });
+    if (!kusy.length) return;
     var siroko = global.matchMedia('(min-width:1100px)');
     function uloz() {
       var vpravo = !!siroko.matches;
-      if (vpravo) { if (akce.parentNode !== bok) bok.appendChild(akce); }
-      else if (akce.parentNode === bok && kotva.parentNode) {
-        kotva.parentNode.insertBefore(akce, kotva.nextSibling);
+      for (var i = 0; i < kusy.length; i++) {
+        var k = kusy[i];
+        if (vpravo) { if (k.el.parentNode !== bok) bok.appendChild(k.el); }
+        else if (k.el.parentNode === bok && k.kotva.parentNode) {
+          k.kotva.parentNode.insertBefore(k.el, k.kotva.nextSibling);
+        }
       }
-      akce.classList.toggle('pz-akce-v-boku', vpravo);
+      if (akce) akce.classList.toggle('pz-akce-v-boku', vpravo);
+      if (nadpisKlicu) nadpisKlicu.classList.toggle('pz-bok-nadpis', vpravo);
+      bok.classList.toggle('pz-bok-sada', vpravo);
     }
     uloz();
 

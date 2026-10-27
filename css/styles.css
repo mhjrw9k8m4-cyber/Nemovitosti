@@ -9009,6 +9009,40 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
     position:sticky; top:calc(var(--vyska-hlavicky, 85px) + 20px);
     background:var(--plocha-plovouci-plna); border:1px solid var(--line);
     border-radius:var(--r-md); box-shadow:var(--e1); padding:16px;}
+
+  /* ROZHODOVACÍ SADA V PRUHU: CENA → PARAMETRY → AKCE.
+     ------------------------------------------------------------------
+     Parametry sem stěhuje js/pozemek.js (pripniAkce) a v pruhu z nich
+     nejsou dlaždice, ale ŘÁDKY: popisek vlevo, hodnota vpravo.
+     Dlaždice jsou dělané na šířku — čtyři vedle sebe v hlavním
+     sloupci — kdežto v 308 px širokém pruhu by z každé byla krabice
+     přes celou šířku a ze tří údajů sloupec krabic. Řádky se čtou
+     jedním pohledem shora dolů a hodnoty stojí na jedné svislici.
+     Číslo zůstává větší než popisek i než řádek tabulky níž
+     (hlídá scripts/test-parametry.mjs). */
+  /* Nadpis v pruhu NESE VLASTNÍ TŘÍDU, ne `.pz-sect-h`. Dvě místa pro
+     tutéž vlastnost se rozejdou a scripts/test-vlozeny-styl.mjs to
+     hlídá: `.pz-sect-h` si velikost, řez i prostrkání nastavuje ve
+     vloženém stylu stránky, takže by se tady psaly podruhé. Třídu
+     nasazuje js/pozemek.js při přesunu; dvě třídy v selektoru navíc
+     přebijí vložený styl, který stojí v souboru až za stylopisem. */
+  .pz-bok-sada .pz-bok-nadpis{margin:16px 0 0; padding-top:12px;
+    border-top:1px solid var(--line); font-size:13px; font-weight:700;
+    letter-spacing:0.02em; text-transform:uppercase; color:var(--popisek);}
+  .pz-bok-sada .pz-bok-nadpis::before{content:none;}
+  .pz-bok-sada .pz-klice{display:block; margin:4px 0 0; max-width:none;}
+  .pz-bok-sada .pz-klic{display:grid; grid-template-columns:minmax(0,1fr) auto;
+    align-items:baseline; gap:4px 12px; padding:8px 0;
+    background:none; border:0; border-radius:0; box-shadow:none;}
+  .pz-bok-sada .pz-klic + .pz-klic{border-top:1px solid var(--line);}
+  .pz-bok-sada .pz-klic b{grid-column:2; grid-row:1; font-size:16px;
+    text-align:right; white-space:nowrap;}
+  .pz-bok-sada .pz-klic span{grid-column:1; grid-row:1; font-size:13px;
+    color:var(--popisek);}
+  .pz-bok-sada .pz-klic i{grid-column:1 / -1; grid-row:2;}
+  /* Značka v rohu je ozdoba dlaždice; v řádku by stála v cestě
+     hodnotě a nemá kam — řádek nemá roh. */
+  .pz-bok-sada .pz-klic-ic{display:none;}
 }
 
 /* =====================================================================
