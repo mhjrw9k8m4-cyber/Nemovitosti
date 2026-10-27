@@ -490,3 +490,14 @@
 {"k":"Hořice na Šumavě|—|Český Krumlov|48.775|14.162#qs93","m":"Hořice na Šumavě","o":"Český Krumlov","dr":"stavební pozemek","t":"sale","v":1200,"c":3600000,"od":"2026-09-14","do":"2026-10-25","proc":"zmizela"}
 {"k":"Dobšice|958/2|Znojmo|48.851|16.085#1rqpujc","m":"Dobšice","o":"Znojmo","dr":"pozemek","t":"drazba","v":1010,"c":3383500,"od":"2026-10-24","do":"2026-10-25","proc":"zmizela"}
 {"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-25","proc":"zmizela"}
+{"k":"Otročiněves|—|Beroun|49.984|13.962#1c81a","m":"Otročiněves","o":"Beroun","dr":"orná půda","t":"sale","v":3903,"c":1599000,"od":"2026-10-17","do":"2026-10-26","proc":"cena"}
+{"k":"Vojkovice|—|Brno-venkov|49.056|16.599#4ztex","m":"Vojkovice","o":"Brno-venkov","dr":"stavební pozemek","t":"sale","v":2428,"c":14000000,"od":"2026-09-14","do":"2026-10-26","proc":"cena"}
+{"k":"Jesenice|—|Praha-západ|49.972|14.515#263d9","m":"Jesenice","o":"Praha-západ","dr":"stavební pozemek","t":"sale","v":506,"c":11870000,"od":"2026-10-19","do":"2026-10-26","proc":"cena"}
+{"k":"Černousy|—|Liberec|51.017|15.033#1dpja","m":"Černousy","o":"Liberec","dr":"stavební pozemek","t":"sale","v":12967,"c":690000,"od":"2026-10-08","do":"2026-10-26","proc":"zmizela"}
+{"k":"Přerov|—|Přerov|49.446|17.469#1fl7q0o","m":"Přerov","o":"Přerov","dr":"stavební pozemek","t":"sale","v":11457,"c":7447050,"od":"2026-09-14","do":"2026-10-26","proc":"zmizela"}
+{"k":"Vinné|—|Litoměřice|50.561|14.199#1rqp5xy","m":"Vinné","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1259,"c":30484,"od":"2026-09-30","do":"2026-10-26","proc":"zmizela"}
+{"k":"Pnětluky u Podsedic|—|Litoměřice|50.474|13.951#1rqp5xz","m":"Pnětluky u Podsedic","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":6782,"c":506428,"od":"2026-09-30","do":"2026-10-26","proc":"zmizela"}
+{"k":"Roudnice nad Labem|4015|Litoměřice|50.424|14.260#1rqp5xt","m":"Roudnice nad Labem","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":370,"c":36364,"od":"2026-10-13","do":"2026-10-26","proc":"zmizela"}
+{"k":"Račiněves|681/39|Litoměřice|50.373|14.219#1rqp5xs","m":"Račiněves","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":82,"c":38228,"od":"2026-09-30","do":"2026-10-26","proc":"zmizela"}
+{"k":"Komorní Lhotka|St. 36|Frýdek-Místek|49.654|18.530#1engjf3","m":"Komorní Lhotka","o":"Frýdek-Místek","dr":"zastavěná plocha a nádvoří","t":"drazba","v":4394,"c":10000000,"od":"2026-09-23","do":"2026-10-26","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.810|17.092#1rqp5yq","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-10-26","proc":"zmizela"}

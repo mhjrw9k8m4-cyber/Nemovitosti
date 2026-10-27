@@ -97,8 +97,8 @@
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
-    <p class="dt-cisla">Teď je v něm <b>1 948</b> nabídek a má
-      <b>656&nbsp;kB</b>. Z toho je <b>19</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 929</b> pozemků.</p>
+    <p class="dt-cisla">Teď je v něm <b>1 946</b> nabídek a má
+      <b>656&nbsp;kB</b>. Z toho je <b>19</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 927</b> pozemků.</p>
   </section>
 
   <section class="wrap dt-sekce">
@@ -108,10 +108,10 @@
       <li><b>Nejsou to prodejní ceny.</b> Jsou to ceny <b>nabídkové</b> — za kolik se pozemek
         nabízí, ne za kolik se prodal. Skutečné prodejní ceny ve veřejných zdrojích nejsou.</li>
       <li><b>Nejsou to všechny pozemky v ČR</b>, jen ty, které jsou právě někde nabízené.</li>
-      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 531 řádků v souboru, na webu 530 po odstranění duplicit)
+      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 532 řádků v souboru, na webu 531 po odstranění duplicit)
         je cena za zlomek pozemku. Výměra ale neznamená u všech totéž:
         kde inzerát dokazuje, že je to už výměra podílu, má řádek
-        <code>vymera_podilu: true</code> (415 z 531) — a dělit
+        <code>vymera_podilu: true</code> (415 z 532) — a dělit
         takovou výměru podílem ze <code>zlomek</code> znamená spočítat cenu za metr násobně
         vyšší. U zbytku je výměra celé parcely a dělit se musí. Kdo
         <code>vymera_podilu</code> přehlédne, dostane číslo, které neplatí pro nikoho — a to
@@ -220,7 +220,7 @@
   <section class="wrap dt-sekce">
     <h2>Komu cena spadla — a kdy</h2>
     <p class="dt-uvod">Tohle je jediná část našich dat, která se nikde jinde nedá vzít:
-      zapisujeme si nabídky den po dni, takže u 97 nabídek
+      zapisujeme si nabídky den po dni, takže u 98 nabídek
       víme, jak se u nich cena měnila.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/zlevneni.json</code></p>
     <ul class="dt-seznam">
