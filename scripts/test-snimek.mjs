@@ -106,7 +106,8 @@ const v = await p.evaluate(() => {
     popisText: pop ? pop.textContent.replace(/\s+/g, ' ').trim() : null,
     popisSkryty: pop ? pop.getAttribute('aria-hidden') === 'true' : false,
     nadpis: (document.querySelector('h1.pz-place') || {}).textContent || '',
-    vymera: [...document.querySelectorAll('.pz-klic')]
+    /* Tabulka parametrů; do 27. 10. to byly dlaždice .pz-klic. */
+    vymera: [...document.querySelectorAll('.pz-spec')]
       .map((e) => e.textContent).filter((t) => /Výměra/.test(t)).join(' '),
   };
 });
@@ -131,9 +132,9 @@ pravda('a nadpis stránky nese název místa toho pozemku',
 /* Výměra se hledá v parametrech, ne v nadpisu: na vlastní stránce
    pozemku ji nadpis nese („Ostatní plocha 6 336 m² — Benešov"),
    kdežto na obecné pozemek.html?p=… je nadpis jen jméno obce.
-   Dlaždice „Výměra" je na obou. */
+   Řádek „Výměra" je na obou. */
 pravda('a výměra stojí v parametrech hned pod cenou',
-  /ha|m²/.test(v.vymera || ''), `dlaždice: „${v.vymera}"`);
+  /ha|m²/.test(v.vymera || ''), `řádek: „${v.vymera}"`);
 pravda('a popisek přes snímek neopakuje, co je v nadpisu',
   (v.popisText || '').indexOf(POZEMEK ? POZEMEK.d.place : 'xxx') < 0,
   `popisek „${v.popisText}"`);

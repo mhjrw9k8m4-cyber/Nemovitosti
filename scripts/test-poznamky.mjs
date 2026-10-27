@@ -842,14 +842,15 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
          z ostrůvku window.PK_POZEMEK: na obecné stránce
          pozemek.html?p=… žádný ostrůvek není a vracelo to nulu. */
       const ulozeno = await p.evaluate(() => {
-        /* Dlaždice .pz-klic má hodnotu v <b> a popisek v <span>. */
+        /* Výměra se čte z tabulky parametrů (.pz-spec: popisek v .k,
+           hodnota v .v). Do 27. 10. to byly dlaždice .pz-klic; předloha
+           od majitele (reality.idnes, Sreality) má parametry v jedné
+           tabulce, tak je tu jedna tabulka. */
         let v = 0;
-        for (const el of document.querySelectorAll('.pz-klic')) {
-          /* `span:not(.pz-klic-ic)` — v dlaždici je od 17. 10. ještě
-             jeden span: ozdobná značka. Popisek je ten druhý. */
-          const popis = ((el.querySelector('span:not(.pz-klic-ic)') || {}).textContent || '').trim();
+        for (const el of document.querySelectorAll('.pz-spec')) {
+          const popis = ((el.querySelector('.k') || {}).textContent || '').trim();
           if (popis !== 'Výměra') continue;
-          const hodnota = ((el.querySelector('b') || {}).textContent || '').replace(/[\s\u00a0]/g, '');
+          const hodnota = ((el.querySelector('.v') || {}).textContent || '').replace(/[\s\u00a0]/g, '');
           const m = hodnota.match(/^(\d+)m²/);
           if (m) { v = Number(m[1]); break; }
         }

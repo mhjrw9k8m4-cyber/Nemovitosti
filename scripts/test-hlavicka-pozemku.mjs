@@ -284,35 +284,53 @@ pravda('a místo stojí POD nadpisem, ne v něm',
   const zmer = async (f) => {
     await siroky.goto(`${BASE}/${f}`, { waitUntil: 'load' });
     await siroky.waitForSelector('.pz-price', { timeout: 20000 }).catch(() => {});
+    /* NA ŘÁDEK, NE JEN NA CENU. Zdroj je od 27. 10. řádek tabulky
+       parametrů, a ta se na širokém okně ještě stěhuje do připnutého
+       pruhu u ceny (js/pozemek.js, pripniAkce). Čekat jen na cenu
+       znamenalo číst stav uprostřed toho přesunu — zkouška pak hlásila
+       „null" na stránce, kde ten řádek je. */
+    await siroky.waitForFunction(() => [...document.querySelectorAll('.pz-spec .k')]
+      .some((e) => /stav\s+a\s+zdroj/i.test(e.textContent || '')), null, { timeout: 20000 })
+      .catch(() => {});
     return siroky.evaluate(() => {
-      const z = document.querySelector('.pz-zdroj');
-      const c = document.querySelector('.pz-price');
-      const rz = z && z.getBoundingClientRect(), rc = c && c.getBoundingClientRect();
+      /* ZDROJ SE PŘESTĚHOVAL DO TABULKY. Do 27. 10. stál drobným
+         písmem pod cenou (.pz-zdroj) a tahle zkouška hlídala, že je
+         právě tam a že v tabulce není podruhé. Předloha od majitele
+         (reality.idnes, Sreality) má „Stav bytu" i „Přístupová
+         komunikace" jako řádky tabulky, ne poznámky u ceny — a tak
+         je tam teď i zdroj. Tvrzení se proto obrátilo: v tabulce je,
+         pod cenou není. Co nezměnilo smysl: zápis má jmenovat zdroj
+         a neopakovat datum, které už nese řádek „Termín dražby". */
+      const radek = [...document.querySelectorAll('.pz-spec')]
+        /* `\s+`, ne mezera: česká sazba vkládá za
+           jednopísmenné „a" nezlomitelnou mezeru (scripts/sazba.mjs), takže „Stav a zdroj"
+           má v DOM U+00A0. S obyčejnou mezerou v předpisu se řádek
+           nenašel a zkouška hlásila „null" na stránce, kde je. */
+        .find((e) => /stav\s+a\s+zdroj/i.test((e.querySelector('.k') || {}).textContent || ''));
+      const hodnota = radek ? radek.querySelector('.v') : null;
       return {
-        text: z ? z.textContent.replace(/\s+/g, ' ').trim() : null,
-        podCenou: !!(rz && rc) && rz.top >= rc.bottom - 2 && (rz.top - rc.bottom) <= 120,
-        odstup: (rz && rc) ? Math.round(rz.top - rc.bottom) : null,
-        vTabulce: [...document.querySelectorAll('.pz-spec .k')]
-          .some((e) => /zdroj/i.test(e.textContent || '')),
-        termin: [...document.querySelectorAll('.pz-klic')]
+        text: hodnota ? hodnota.textContent.replace(/\s+/g, ' ').trim() : null,
+        vTabulce: !!radek,
+        podCenou: !!document.querySelector('.pz-zdroj'),
+        termin: [...document.querySelectorAll('.pz-spec .k')]
           .some((e) => /Termín dražby/.test(e.textContent || '')),
       };
     });
   };
   if (sInzeratem) {
     const m = await zmer(sInzeratem);
-    pravda('u inzerátu stojí zdroj hned pod cenou',
-      !!m.text && m.podCenou, `„${m.text}", odstup od ceny ${m.odstup} px`);
+    pravda('u inzerátu stojí zdroj v tabulce parametrů',
+      !!m.text && m.vTabulce, `„${m.text}"`);
     pravda('a jmenuje ten web', /inzerát/i.test(m.text || '') && /[–·]/.test(m.text || ''), m.text);
-    pravda('v tabulce parametrů už podruhé není', m.vTabulce === false,
-      'řádek „Stav / zdroj" je zpátky v tabulce — týž údaj dvakrát');
+    pravda('a pod cenou už podruhé není', m.podCenou === false,
+      'řádek .pz-zdroj je zpátky pod cenou — týž údaj dvakrát');
   }
   if (sDrazbou) {
     const m = await zmer(sDrazbou);
-    pravda('u dražby stojí zdroj taky pod cenou a jmenuje dražebníka',
-      !!m.text && m.podCenou && /[–·]/.test(m.text || ''), `„${m.text}", odstup ${m.odstup} px`);
-    pravda('je co měřit — datum dražby nese dlaždice', m.termin === true,
-      'dlaždice „Termín dražby" na stránce není, takže se opakování datumu nedá poznat');
+    pravda('u dražby stojí zdroj taky v tabulce a jmenuje dražebníka',
+      !!m.text && m.vTabulce && /[–·]/.test(m.text || ''), `„${m.text}"`);
+    pravda('je co měřit — datum dražby nese vlastní řádek', m.termin === true,
+      'řádek „Termín dražby" v tabulce není, takže se opakování datumu nedá poznat');
     pravda('a zápis o zdroji datum neopakuje',
       !/\d{1,2}\.\s*\d{1,2}\.\s*\d{4}/.test(m.text || ''), m.text);
   }

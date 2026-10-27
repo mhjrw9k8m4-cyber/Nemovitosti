@@ -12616,3 +12616,74 @@ ikona nelepila na text, jenže sloveso a `<span>` se zkráceným
 doplňkem jsou dvě flexové položky, takže tatáž mezera rozdělila
 i dvě slova jedné věty. Obal `.mc-popis` z nápisu dělá jednu
 položku; uvnitř platí běžná sazba a díra je 0.
+
+## 187. Parametry podle předlohy: jedna tabulka místo dlaždic a tabulky *27. 10.*
+
+Majitel poslal sedm fotek z telefonu — detaily nabídek z reality.idnes
+a Sreality — se zadáním, že stránka má vypadat takhle. Co z nich platí
+pro parametry nabídky: **jedna tabulka štítek–hodnota**. Popisek vlevo
+šedě, hodnota vedle něj černě, žádná karta, žádné linky, jen odstup:
+
+```
+Konstrukce budovy    panelová
+Stav bytu            velmi dobrý stav
+Vlastnictví          osobní
+Přístupová komunikace  asfalt
+Užitná plocha        61 m²
+```
+
+Stránka pozemku měla místo toho **dvě soustavy nad sebou**: tři velké
+dlaždice (výměra, cena za metr, druh) s 24px číslem a ikonou v rohu,
+a pod nimi tabulku se zbytkem, písmem o dva stupně menším. Údaj téže
+povahy se tím četl dvakrát jinak podle toho, do které půlky spadl.
+
+Dlaždice jsou pryč. Jejich obsah stojí v tabulce jako první tři řádky
+a přibyly dva údaje, které v předloze do tabulky patří a u nás stály
+rozsypané kolem ní: **vzdálenosti** (byly řádkem pod místem)
+a **stav a zdroj** (byl drobným písmem pod cenou). Naměřeno na
+390×844: řádek měří 42 px, celá stránka 3 375 px.
+
+### Co s dlaždicemi odešlo
+
+Hodnota v dlaždici byla 24px číslo na jednom řádku, takže dlouhá
+hodnota („23 458 Kč/m²", „neuvedena") z dlaždice vytékala nebo lezla
+na ikonu v rohu. Řešil to měřicí kód, který hodnotě ubíral stupeň
+(24 → 20 → 16 px) a hlídal změnu šířky mřížky ResizeObserverem —
+dohromady 3,5 kB zdroje. V tabulce mají všechny hodnoty touž velikost
+jako okolní text a dlouhá se prostě zalomí, takže se nemá co
+zmenšovat: kód je smazaný, stejně jako 18 pravidel stylopisu rodiny
+`.pz-klic*`.
+
+### Deset zkoušek na tom viselo
+
+Sedm jich zčervenalo a všechny právem — měřily dlaždice. Šest z nich
+teď čte tabulku (`.pz-spec`: popisek `.k`, hodnota `.v`), u čtyř se
+přitom změnilo, **co** se tvrdí, ne jen kde se to hledá:
+
+* „to hlavní číslo je větší než údaj v řádku" → „popisek i hodnota
+  mají touž velikost písma" — z dvou soustav je jedna;
+* „žádná hodnota nevyteče z dlaždice ani neleze na značku" a
+  „zmenšuje se jen na stupně 24/20/16" → „nevyteče ze svého sloupce"
+  a „všechny hodnoty mají touž velikost";
+* „a každá dlaždice má svou značku" → „každý řádek má popisek
+  i hodnotu" (značky v rozích s dlaždicemi odešly);
+* „u běžné nabídky nejsou dlaždice doplňované výplní" už nežádá
+  **právě tři** řádky — tabulka jich nese tolik, kolik je o nabídce
+  známo; výplňový řádek „Vlastnictví: celý pozemek" se hlídá dál.
+
+Sedmá, `test-hlavicka-pozemku`, se obrátila celá: hlídala, že zdroj
+stojí pod cenou a v tabulce **není** podruhé. Dnes je to naopak.
+
+### Dvě vlastní chyby po cestě
+
+**Zavolal jsem řetězec jako funkci.** Po vyjmutí dlaždic zbylo v tom
+dlouhém zřetězení `''` a hned za ním `(facts.length ? …)`, takže
+z toho vzniklo volání: `TypeError: "" is not a function` a stránka
+spadla z 3 363 px na 1 739. Chytila to až prohlídka v prohlížeči —
+žádná rychlá zkouška JavaScript stránky nespouští.
+
+**Hlídač hledal mezeru, kterou tam sazba nedá.** Řádek „Stav a zdroj"
+se nenašel, protože česká sazba vkládá za jednopísmenné „a"
+nezlomitelnou mezeru (U+00A0) a předpis měl obyčejnou. Zkouška pak
+hlásila „null" na stránce, kde ten řádek je. Dnes se porovnává přes
+`\s+`.
