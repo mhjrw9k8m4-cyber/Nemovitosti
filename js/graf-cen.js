@@ -113,7 +113,15 @@
     var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
     var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
     var Hh = W < 560 ? 150 : 190;
-    var L = 8, P = 12, D = 30;
+    /* OSY MAJÍ ČÍSLA, NE JEN POZNÁMKU POD GRAFEM — podle předlohy ze
+       Sreality („Cenový přehled"), kterou poslal majitel 28. 10.:
+       vlevo horní a dolní mez osy, dole data. Dosud se rozpětí osy
+       psalo VĚTOU pod grafem, což je horší ze dvou důvodů: číst polohu
+       čáry ze souvislého textu nejde, a věta se o tom, co je
+       nakreslené, dá snadno rozejít (přesně to se stalo v §121).
+       Vlevo proto zbyde místo na nejširší popisek („1 234 Kč/m²"),
+       dole na jeden řádek dat. */
+    var L = W < 560 ? 56 : 68, P = 14, D = 28;
     var min = Infinity, max = -Infinity;
     body.forEach(function (b) { min = Math.min(min, b.cena); max = Math.max(max, b.cena); });
     /* Osa NEZAČÍNÁ nulou schválně: u řady, která se za tři týdny pohne
@@ -151,6 +159,27 @@
         '<circle class="gc-tec" cx="' + x(i).toFixed(1) + '" cy="' + y(b.cena).toFixed(1) + '" r="4.5"></circle></g>';
     }).join('');
 
+    /* POPISKY OSY. Vlevo mez osy nahoře a dole — ne nejvyšší a nejnižší
+       NAMĚŘENÁ hodnota: čára se nedotýká okraje a popisek u okraje by
+       tvrdil, že se dotýká. Dole čtyři data rozprostřená po řadě; víc
+       jich na telefon nejde čitelně dát, míň už neříká, jak je řada
+       dlouhá. Krajní dva se zarovnávají dovnitř, aby je neuřízl okraj. */
+    var osaY = '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (P + 4) + '" text-anchor="end">'
+        + cislo(nahoru) + ' Kč/m²</text>'
+      + '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (Hh - D + 4) + '" text-anchor="end">'
+        + cislo(dolu) + ' Kč/m²</text>';
+    /* Dvě vodicí linky u mezí osy. Mřížka to není — dvě čáry jen říkají,
+       kde ta dvě čísla vlevo platí. */
+    var linky = '<line class="gc-vodici" x1="' + L + '" y1="' + P + '" x2="' + (W - P) + '" y2="' + P + '"></line>'
+      + '<line class="gc-vodici" x1="' + L + '" y1="' + (Hh - D) + '" x2="' + (W - P) + '" y2="' + (Hh - D) + '"></line>';
+    var kdyIndexy = [0, Math.round((body.length - 1) / 3), Math.round((body.length - 1) * 2 / 3), body.length - 1]
+      .filter(function (v, i, p2) { return p2.indexOf(v) === i; });
+    var osaX = kdyIndexy.map(function (i, poradi) {
+      var kotva = poradi === 0 ? 'start' : (poradi === kdyIndexy.length - 1 ? 'end' : 'middle');
+      return '<text class="gc-popisek" x="' + x(i).toFixed(1) + '" y="' + (Hh - D + 18) + '" text-anchor="' + kotva + '">'
+        + esc(denKratce(body[i].den)) + '</text>';
+    }).join('');
+
     var radky = body.map(function (b) {
       return '<tr><td>' + esc(denKratce(b.den)) + '</td><td>' + cislo(b.cena) + ' Kč/m²</td><td>' + b.vzorek + '</td></tr>';
     }).join('');
@@ -172,14 +201,13 @@
                od nuly — jenže osa tady od nuly nezačíná, takže by ta
                plocha ukazovala množství, které graf vůbec neměří. Čára
                popisuje průběh a to je přesně to, o co jde. */
+            linky + osaY + osaX +
             '<path class="gc-cara" d="' + d + '"></path>' +
             '<line class="gc-kriz" x1="0" y1="' + P + '" x2="0" y2="' + (Hh - D) + '" hidden></line>' +
             terce +
           '</svg>' +
           '<div class="gc-bublina" hidden></div>' +
         '</div>' +
-        '<div class="gc-osa"><span>' + esc(denKratce(prvni.den)) + '</span>' +
-          '<span>' + esc(denKratce(posledni.den)) + '</span></div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
           maloVzorku(H, vyber.vzorek, vyber.uroven) +
@@ -211,8 +239,12 @@
              Teď se píše osa tak, jak je nakreslená, a pod ní pás, ve kterém
              data leží — včetně toho, jakou část výšky čára zabere. To
              poslední číslo se dá změřit přímo z nakreslené křivky, a tak
-             to taky scripts/test-graf-cen.mjs dělá. */
-          'Svislá osa jde od ' + cislo(dolu) + ' do ' + cislo(nahoru) + ' Kč/m², ne od nuly. ' +
+             to taky scripts/test-graf-cen.mjs dělá.
+             A OD 28. 10. SE MEZE OSY UŽ NEPÍŠOU VĚTOU: stojí u osy,
+             protože tam patří (viz předloha ze Sreality, kterou poslal
+             majitel). Větou zbývá jen to, co z obrázku přečíst nejde —
+             že osa nezačíná nulou a jakou část její výšky čára zabírá. */
+          'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
           (cislo(min) === cislo(max)
             ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
             : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
@@ -287,14 +319,38 @@
        Jméno se proto vyžaduje jen tam, kde ho klíč opravdu má. */
     var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || (uroven !== 'cr' && !nazev)) return Promise.resolve(false);
+
+    /* ZÁLOHY: KDYŽ OKRES ŘADU NEMÁ, UKÁŽE SE VĚTŠÍ ÚZEMÍ.
+       Klidnou řadu má 21 okresů ze 48, 9 krajů ze 14 a celá ČR vždycky.
+       Bez záloh tedy na většině nabídek nebyl graf žádný — a přesně to
+       majitel 28. 10. hlásil („ten graf v inzerátu"): na své stránce ho
+       neviděl, protože její okres mezi těmi dvaceti jedna nebyl.
+       Nelže se tím: nadpis i poznámka pod grafem pokaždé říkají, o jaké
+       území jde, takže „v celé ČR" se nikdy netváří jako „tady u vás".
+       Pořadí je od nejbližšího k nejobecnějšímu a zapisuje se do
+       `data-zalohy` jako „úroveň|název|kde", oddělené středníkem. */
+    var seznam = [];
+    if (uroven) seznam.push({ uroven: uroven, nazev: nazev, kde: kde });
+    (el.getAttribute('data-zalohy') || '').split(';').forEach(function (z) {
+      var c = z.split('|');
+      if (c[0]) seznam.push({ uroven: c[0], nazev: c[1] || '', kde: c[2] || c[1] || '' });
+    });
+    if (!seznam.length) return Promise.resolve(false);
+
     return nacti().then(function (H) {
       if (!H || !H.rady) return false;
-      var v = vyberRadu(H, uroven, nazev);
-      // Žádná klidná řada → nekreslí se nic, ani prázdný rámeček.
-      if (!v) return false;
-      try { return kresli(el, H, v, kde) === true; }
-      catch (e) { return false; /* graf navíc nesmí shodit stránku */ }
+      for (var i = 0; i < seznam.length; i++) {
+        var m = seznam[i];
+        /* Celá ČR jméno nemá (klíč `cr||Orná půda`); u ostatních úrovní
+           je jméno povinné, jinak by se hledala řada bez místa. */
+        if (m.uroven !== 'cr' && !m.nazev) continue;
+        var v = vyberRadu(H, m.uroven, m.nazev);
+        // Žádná klidná řada → zkusí se další záloha.
+        if (!v) continue;
+        try { if (kresli(el, H, v, m.kde) === true) return true; }
+        catch (e) { return false; /* graf navíc nesmí shodit stránku */ }
+      }
+      return false;
     });
   }
 

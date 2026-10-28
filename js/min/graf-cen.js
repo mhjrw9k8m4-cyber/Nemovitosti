@@ -67,7 +67,8 @@
     var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
     var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
     var Hh = W < 560 ? 150 : 190;
-    var L = 8, P = 12, D = 30;
+
+    var L = W < 560 ? 56 : 68, P = 14, D = 28;
     var min = Infinity, max = -Infinity;
     body.forEach(function (b) { min = Math.min(min, b.cena); max = Math.max(max, b.cena); });
 
@@ -91,6 +92,21 @@
         '<circle class="gc-tec" cx="' + x(i).toFixed(1) + '" cy="' + y(b.cena).toFixed(1) + '" r="4.5"></circle></g>';
     }).join('');
 
+    var osaY = '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (P + 4) + '" text-anchor="end">'
+        + cislo(nahoru) + ' Kč/m²</text>'
+      + '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (Hh - D + 4) + '" text-anchor="end">'
+        + cislo(dolu) + ' Kč/m²</text>';
+
+    var linky = '<line class="gc-vodici" x1="' + L + '" y1="' + P + '" x2="' + (W - P) + '" y2="' + P + '"></line>'
+      + '<line class="gc-vodici" x1="' + L + '" y1="' + (Hh - D) + '" x2="' + (W - P) + '" y2="' + (Hh - D) + '"></line>';
+    var kdyIndexy = [0, Math.round((body.length - 1) / 3), Math.round((body.length - 1) * 2 / 3), body.length - 1]
+      .filter(function (v, i, p2) { return p2.indexOf(v) === i; });
+    var osaX = kdyIndexy.map(function (i, poradi) {
+      var kotva = poradi === 0 ? 'start' : (poradi === kdyIndexy.length - 1 ? 'end' : 'middle');
+      return '<text class="gc-popisek" x="' + x(i).toFixed(1) + '" y="' + (Hh - D + 18) + '" text-anchor="' + kotva + '">'
+        + esc(denKratce(body[i].den)) + '</text>';
+    }).join('');
+
     var radky = body.map(function (b) {
       return '<tr><td>' + esc(denKratce(b.den)) + '</td><td>' + cislo(b.cena) + ' Kč/m²</td><td>' + b.vzorek + '</td></tr>';
     }).join('');
@@ -108,14 +124,13 @@
             '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" ' +
             'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + ' Kč za metr čtvereční') + '">' +
 
+            linky + osaY + osaX +
             '<path class="gc-cara" d="' + d + '"></path>' +
             '<line class="gc-kriz" x1="0" y1="' + P + '" x2="0" y2="' + (Hh - D) + '" hidden></line>' +
             terce +
           '</svg>' +
           '<div class="gc-bublina" hidden></div>' +
         '</div>' +
-        '<div class="gc-osa"><span>' + esc(denKratce(prvni.den)) + '</span>' +
-          '<span>' + esc(denKratce(posledni.den)) + '</span></div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
           maloVzorku(H, vyber.vzorek, vyber.uroven) +
@@ -124,7 +139,7 @@
           'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
           'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
 
-          'Svislá osa jde od ' + cislo(dolu) + ' do ' + cislo(nahoru) + ' Kč/m², ne od nuly. ' +
+          'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
           (cislo(min) === cislo(max)
             ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
             : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
@@ -184,14 +199,28 @@
 
     var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || (uroven !== 'cr' && !nazev)) return Promise.resolve(false);
+
+    var seznam = [];
+    if (uroven) seznam.push({ uroven: uroven, nazev: nazev, kde: kde });
+    (el.getAttribute('data-zalohy') || '').split(';').forEach(function (z) {
+      var c = z.split('|');
+      if (c[0]) seznam.push({ uroven: c[0], nazev: c[1] || '', kde: c[2] || c[1] || '' });
+    });
+    if (!seznam.length) return Promise.resolve(false);
+
     return nacti().then(function (H) {
       if (!H || !H.rady) return false;
-      var v = vyberRadu(H, uroven, nazev);
+      for (var i = 0; i < seznam.length; i++) {
+        var m = seznam[i];
 
-      if (!v) return false;
-      try { return kresli(el, H, v, kde) === true; }
-      catch (e) { return false;   }
+        if (m.uroven !== 'cr' && !m.nazev) continue;
+        var v = vyberRadu(H, m.uroven, m.nazev);
+
+        if (!v) continue;
+        try { if (kresli(el, H, v, m.kde) === true) return true; }
+        catch (e) { return false;   }
+      }
+      return false;
     });
   }
 

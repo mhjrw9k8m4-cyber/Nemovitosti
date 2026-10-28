@@ -222,6 +222,13 @@ async function otevri(okres, sirka) {
     return { vyskaSvg: vb[3], rozsahY: Math.max(...ys) - Math.min(...ys),
       minC: Math.min(...ceny), maxC: Math.max(...ceny),
       rada: f.getAttribute('data-rada'), pozn: f.querySelector('.gc-pozn').textContent,
+      /* POPISKY OSY SE ČTOU Z OBRÁZKU, NE Z VĚTY POD NÍM. Do 28. 10. se
+         meze osy psaly do poznámky a kontrola srovnávala tu větu
+         s geometrií. Od chvíle, kdy jsou meze nakreslené u osy (podle
+         předlohy ze Sreality), se srovnává rovnou popisek s čárou —
+         tedy to, co člověk doopravdy vidí. */
+      popisky: [...f.querySelectorAll('text.gc-popisek')].map((t) => ({
+        t: t.textContent, x: +t.getAttribute('x'), y: +t.getAttribute('y') })),
       ys: ys, krizNahore: +kriz.getAttribute('y1'), krizDole: +kriz.getAttribute('y2') };
   });
   // PŘEDPOKLAD: musí jít o řadu, která se opravdu hýbe málo
@@ -261,17 +268,30 @@ async function otevri(okres, sirka) {
         (yy - v.ys[iMax]) * (ceny[iMin] - ceny[iMax]) / (v.ys[iMin] - v.ys[iMax]);
       const nahoru = hodnota(v.krizNahore), dolu = hodnota(v.krizDole);
       const cis = (t) => parseFloat(String(t).replace(/[\s\u00a0]/g, '').replace(',', '.'));
-      const m = v.pozn.match(/Svisl\u00e1 osa jde od ([\d\s\u00a0,]+?) do ([\d\s\u00a0,]+?)\s*K\u010d/);
-      pravda('pod grafem stojí, odkud kam jde osa', !!m, v.pozn.slice(-160));
-      if (m) {
+      /* Popisky s korunou jsou ty u svislé osy; vodorovná osa nese data.
+         Horní je ten s menším y (SVG počítá odshora). */
+      const uOsy = (v.popisky || []).filter((t) => /K\u010d/.test(t.t)).sort((a, b) => a.y - b.y);
+      pravda('u svislé osy jsou její meze napsané', uOsy.length === 2,
+        `popisků s korunou ${uOsy.length}`);
+      if (uOsy.length === 2) {
         /* Mez 0,15 Kč: body na čáře jsou zaokrouhlené na desetinu pixelu
            a při natažení na celou osu se ta chyba násobí. Na nepravdu,
            kvůli které kontrola vznikla (osa opsaná z dat), je to málo
            o řád: tam se oba konce mýlily o celé koruny. */
         pravda('a jsou to konce osy, jak je graf opravdu nakreslil',
-          Math.abs(cis(m[1]) - dolu) <= 0.15 && Math.abs(cis(m[2]) - nahoru) <= 0.15,
-          `v poznámce ${m[1]}\u2013${m[2]}, nakresleno ${dolu.toFixed(2)}\u2013${nahoru.toFixed(2)} K\u010d/m\u00b2`);
+          Math.abs(cis(uOsy[1].t) - dolu) <= 0.15 && Math.abs(cis(uOsy[0].t) - nahoru) <= 0.15,
+          `u osy ${uOsy[1].t}\u2013${uOsy[0].t}, nakresleno ${dolu.toFixed(2)}\u2013${nahoru.toFixed(2)} K\u010d/m\u00b2`);
+        /* A stojí tam, kde ta mez je — popisek u špatného konce osy by
+           byl horší než žádný. */
+        pravda('a každý stojí u svého konce osy',
+          Math.abs(uOsy[0].y - v.krizNahore) <= 6 && Math.abs(uOsy[1].y - v.krizDole) <= 6,
+          `popisky na y ${uOsy[0].y}/${uOsy[1].y}, osa ${v.krizNahore}\u2013${v.krizDole}`);
       }
+      /* Vodorovná osa: aspoň tři data, a to první i poslední sedí
+         s krajními dny řady. */
+      const dny = (v.popisky || []).filter((t) => !/K\u010d/.test(t.t)).sort((a, b) => a.x - b.x);
+      pravda('a vodorovná osa nese data (aspoň tři)', dny.length >= 3,
+        `popisků s datem ${dny.length}`);
       const osaVyska = v.krizDole - v.krizNahore;
       const pod = v.pozn.match(/\u010d\u00e1ra zab\u00edr\u00e1 (\d+)\s*%/);
       if (pod) {
@@ -474,6 +494,7 @@ async function otevri(okres, sirka) {
       nadpisVidet: !!h2 && getComputedStyle(h2).display !== 'none',
       graf: !!f,
       rada: f ? f.getAttribute('data-rada') : null,
+      nadpis: f ? (f.querySelector('.gc-hlava b') || {}).textContent : null,
       tecek: f ? f.querySelectorAll('.gc-bod').length : 0,
       podOknem: (() => { const m = document.querySelector('[data-graf-cen]');
         return m ? Math.round(m.getBoundingClientRect().top - window.innerHeight) : null; })(),
@@ -541,7 +562,7 @@ async function otevri(okres, sirka) {
     if (st.sekce) { bezStranka = f; bezDrzak = o; bezStav = st; break; }
     await o.p.close();
   }
-  // PŘEDPOKLAD: druhý směr se dá měřit jen na živé stránce v okrese bez klidné řady
+  // PŘEDPOKLAD: záloha se dá měřit jen na živé stránce v okrese bez klidné řady
   pravda(`v okrese ${bezGrafu} (bez klidné řady) se našla vykreslená stránka`,
     !!bezStranka, `zkoušeno: ${kandidati(bezGrafu).join(', ') || 'nic'}`);
   if (bezStranka) {
@@ -549,10 +570,22 @@ async function otevri(okres, sirka) {
     if (m) await m.scrollIntoViewIfNeeded();
     await bezDrzak.p.waitForTimeout(2500);
     const po = await bezDrzak.p.evaluate(stavSekce);
-    pravda('nenakreslí se nic — ani prázdný rámeček', po.graf === false && !po.maGraf,
+    /* ZÁLOHA, NE MLČENÍ. Do 28. 10. se tu nekreslilo nic — a protože
+       klidnou řadu má jen 21 okresů ze 48, znamenalo to, že většina
+       nabídek graf neměla vůbec (majitel to hlásil tak, že ho „v
+       inzerátu nevidí"). Dnes se ukáže větší území: kraj, a když ani
+       ten řadu nemá, celá ČR. */
+    pravda('graf se ukáže ze zálohy (kraj nebo celá ČR)', po.graf === true && po.maGraf === true,
       JSON.stringify(po));
-    pravda('a po kartě nezbude ani místo ani nadpis',
-      po.vyska === 0 && po.nadpisVidet === false, `výška ${po.vyska}, nadpis ${po.nadpisVidet}`);
+    /* A TOHLE JE TA PODSTATNÁ ČÁST. Ukázat krajskou řadu je v pořádku
+       jen tehdy, když se netváří jako okresní — jinak by graf tvrdil
+       něco o místě, odkud data nemá. */
+    pravda('a NETVÁŘÍ se jako okres, ze kterého data nejsou',
+      !!po.rada && !String(po.rada).startsWith(`okres|${bezGrafu}|`)
+        && !new RegExp(`v okrese ${bezGrafu}`).test(String(po.nadpis || '')),
+      `data-rada = ${po.rada}, nadpis „${po.nadpis}"`);
+    pravda('a nadpis řekne, o jaké území jde', /v kraji|kraji|v celé ČR/i.test(String(po.nadpis || '')),
+      `nadpis „${po.nadpis}"`);
     pravda('a stránka při tom nehlásí chybu skriptu', bezDrzak.chybyJs.length === 0,
       bezDrzak.chybyJs.join(' | '));
     await bezDrzak.p.close();

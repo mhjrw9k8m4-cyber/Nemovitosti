@@ -358,13 +358,24 @@
     return { cls: 'mid', badge: 'Průměrná cena' };
   }
 
+  function pzZalohyGrafu(d) {
+    var C = global.PK_CENY;
+    var ven = [];
+    var kraj = C && C.OKRES_KRAJ ? C.OKRES_KRAJ[d.okres] : null;
+    if (kraj) ven.push('kraj|' + kraj + '|' + (C.kdeText ? C.kdeText('kraj', kraj) : 'v kraji ' + kraj));
+    ven.push('cr||v celé ČR');
+    return ven.join(';');
+  }
+
   function pzVyvojHtml(d) {
     if (!d || !d.okres) return '';
     return '<section class="pz-vyvoj" id="pz-vyvoj">'
       + '<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>'
 
       + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
-        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"></div>'
+        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"'
+
+        + ' data-zalohy="' + esc(pzZalohyGrafu(d)) + '"></div>'
 
       + '<p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p>'
       + '</section>';

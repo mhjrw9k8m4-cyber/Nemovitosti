@@ -645,7 +645,8 @@ to{opacity:1;transform:none}
 .gc-bublina{position:absolute;top:0;z-index:2;pointer-events:none;padding:8px 8px;border-radius:var(--r-sm);background:var(--plocha-karta);border:1px solid var(--line-strong);box-shadow:var(--e2);font-size:13px;line-height:1.4;white-space:nowrap}
 .gc-bublina b{display:block;font-variant-numeric:tabular-nums}
 .gc-bublina span{color:var(--muted)}
-.gc-osa{display:flex;justify-content:space-between;padding:4px 0 0;font-size:12px;color:var(--muted)}
+.gc-popisek{fill:var(--muted);font-size:11px;font-family:var(--font-ui);font-variant-numeric:tabular-nums}
+.gc-vodici{stroke:var(--line);stroke-width:1;vector-effect:non-scaling-stroke}
 .gc-pozn{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
 .gc-tab{margin-top:8px;font-size:13px}
 .gc-tab summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--znacka);font-weight:600}

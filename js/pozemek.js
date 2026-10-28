@@ -614,6 +614,18 @@
      většina stránek pozemků by nesla prázdnou kartu s nadpisem
      o ničem. Přidá je třída .ma-graf, kterou nasadí pzVyvojCeny()
      teprve po odpovědi z PKGrafCen.postav. */
+  /* Řetěz záloh pro graf vývoje ceny: kraj pozemku a celá ČR.
+     Vrací „úroveň|název|kde" oddělené středníkem — tvar, kterému
+     rozumí js/graf-cen.js. */
+  function pzZalohyGrafu(d) {
+    var C = global.PK_CENY;
+    var ven = [];
+    var kraj = C && C.OKRES_KRAJ ? C.OKRES_KRAJ[d.okres] : null;
+    if (kraj) ven.push('kraj|' + kraj + '|' + (C.kdeText ? C.kdeText('kraj', kraj) : 'v kraji ' + kraj));
+    ven.push('cr||v celé ČR');
+    return ven.join(';');
+  }
+
   function pzVyvojHtml(d) {
     if (!d || !d.okres) return '';
     return '<section class="pz-vyvoj" id="pz-vyvoj">'
@@ -625,7 +637,14 @@
            odsazení (výšku nula, žádný rámeček) a je vidět; rám, výplň
            i nadpis jí přidá třída .ma-graf, až čára opravdu vznikne. */
       + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
-        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"></div>'
+        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"'
+        /* ZÁLOHY: KRAJ, A KDYŽ ANI TEN, TAK CELÁ ČR. Klidnou řadu má
+           21 okresů ze 48, takže bez záloh neměla většina nabídek graf
+           vůbec — a právě to majitel hlásil. Kraj se bere z téže
+           tabulky, podle jaké se počítá cena (PK_CENY.OKRES_KRAJ), a
+           název území se skládá tímtéž kdeText(), jaký píše věty
+           o ceně; dvě tabulky krajů by se rozešly. */
+        + ' data-zalohy="' + esc(pzZalohyGrafu(d)) + '"></div>'
         /* ODKAZ JEN NA CELOSTÁTNÍ STRÁNKU. Na okresní se odsud
            neodkazuje: ta vzniká až od tří nabídek v okrese (MIN_OKRES
            v scripts/generate-region-pages.mjs), takže by si JS musel

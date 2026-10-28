@@ -13395,3 +13395,59 @@ konkrétní okres, počet nebo mez naladěnou na dnešní data znamená
 postavit si budík na to, až se data pohnou. Pravidlo je pokaždé stejné:
 **kontrola si má to, co potřebuje, v datech NAJÍT — a nahlas říct, když
 tam to nic není.**
+
+## §205 Graf podle předlohy: čísla u osy — a hlavně aby v inzerátu byl
+
+Majitel poslal fotku karty „Cenový přehled" ze Sreality a vedle ni
+fotku naší stránky s pokynem předělat graf v inzerátu na ten jejich.
+Vyšly z toho dvě věci, a ta druhá je důležitější.
+
+### 1. Osa má čísla, ne větu
+
+Předloha má vlevo horní a dolní mez osy a dole data. My jsme rozpětí
+osy psali **větou pod grafem** — a to je horší ze dvou důvodů: polohu
+čáry proti číslu v souvislém textu nikdo nepřečte, a věta se o tom, co
+je nakreslené, dá snadno rozejít. Přesně to se už jednou stalo (§121:
+věta vydávala rozpětí DAT za rozpětí OSY).
+
+Meze osy teď stojí u osy, dole jsou čtyři data rozprostřená po řadě
+a u obou mezí vede vodicí linka. Věta zůstala jen na to, co z obrázku
+přečíst nejde: že osa nezačíná nulou a jakou část její výšky čára
+zabírá.
+
+Kontrola se tím **zpřísnila**: dřív srovnávala větu s geometrií, teď
+čte popisky přímo z obrázku a ptá se i na to, jestli každý stojí u toho
+konce osy, ke kterému patří. Popisek u špatného konce by byl horší než
+žádný.
+
+### 2. Graf v inzerátu vůbec nebyl — a to byl ten hlavní nález
+
+Křivka se kreslila jen z **klidných** řad. Těch má: 21 okresů ze 48,
+9 krajů ze 14, celá ČR vždycky. Na stránce pozemku se zkoušel jen
+okres — takže **na většině nabídek nebyl graf žádný**. Majitel to
+hlásil tak, že ho v inzerátu nevidí, a měl pravdu: jeho okres mezi těmi
+dvaceti jedna nebyl.
+
+Nově má graf **řetěz záloh**: okres → kraj → celá ČR. Protože celá ČR
+klidnou řadu má vždycky, dostane křivku každá nabídka.
+
+**Nelže se tím.** Nadpis i poznámka pod grafem pokaždé říkají, o jaké
+území jde — „v okrese Zlín", „ve Zlínském kraji", „v celé ČR" — takže
+celostátní řada se nikdy netváří jako „tady u vás". Kraj se bere z téže
+tabulky, podle které se počítá cena (`PK_CENY.OKRES_KRAJ`), a jméno
+území skládá tentýž `kdeText()`, jaký píše věty o ceně; dvě tabulky
+krajů by se rozešly.
+
+Naměřeno po změně: Vsetín (okres bez klidné řady) ukáže řadu Zlínského
+kraje a v nadpisu stojí „ve Zlínském kraji".
+
+Prokázáno sabotážemi:
+
+| co jsem rozbil | co spadlo |
+|---|---|
+| prohozené meze u svislé osy | „jsou to konce osy, jak je graf nakreslil" |
+| záloha se tváří jako okres | „NETVÁŘÍ se jako okres, ze kterého data nejsou" |
+
+Po opravě: `test-graf-cen` 61/61 (dřív 58), `test-mrtve-styly`,
+`test-kontrast`, `test-vaha-stranky`, `test-stabilita` bez nálezu,
+rychlá sada 134/134.
