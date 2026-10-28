@@ -12871,3 +12871,91 @@ Po opravě: `test-okraje` 135 prvků bez nálezu, `test-kontrast`
 `test-hierarchie` 21/21, `test-soustava` 15/15, rychlá sada 134/134.
 
 Kdyby se měla tmavá deska někdy vrátit, je to týž řez obráceně.
+
+## §195 Křivka vývoje ceny na detailu nabídky
+
+Majitel poslal fotku detailu ze Sreality s kartou „Cenový přehled“
+a napsal, ať náš graf vypadá takhle. Web křivku vývoje cenové hladiny
+umí od začátku (`js/graf-cen.js`, data `data/historie-cen.json`,
+45 dnů × 151 řad) — a měla ji okresní stránka, krajská stránka
+i „Ceny pozemků“. **Chyběla přesně tam, kde ji Sreality má: na detailu
+jedné nabídky**, tedy v místě, kde se o koupi rozhoduje.
+
+Karta teď stojí hned pod verdiktem o ceně. Verdikt říká, jak je ta
+jedna nabídka na dnešní poměry; křivka, kam se poměry hýbou. Kreslí ji
+týž modul z téže řady, jakou o témž okrese ukazuje okresní stránka,
+takže se čísla o jednom místě nemůžou rozejít.
+
+### Tři věci, které se jinde neřešily
+
+**1. Místo pro graf v HTML vůbec není.** Detail nabídky skládá
+`js/pozemek.js` až v prohlížeči, kdežto `graf-cen.js` si svá místa
+hledá JEDNOU při startu stránky (`querySelectorAll` nad hotovým
+dokumentem). Prvek v té chvíli neexistoval, takže by se graf
+**nenakreslil vůbec** — žádná chyba, žádný prázdný rámeček, prostě
+nic. Modul proto vystavuje `postav` a stránka mu prvek podá sama.
+
+**2. Prázdná karta nesmí být vidět.** Klidnou řadu má 21 okresů ze 48,
+které vůbec nějakou řadu mají, a bez ní se nekreslí nic (to je
+rozhodnutí `graf-cen.js`: u malých okresů převáží výměna nabídek nad
+pohybem cen — naměřeno +132 % za tři týdny u Brna-venkova). Nadpis
+„Vývoj ceny v okolí“ nad prázdným rámečkem by tvrdil, že o vývoji něco
+víme. Karta se proto rodí bez nadpisu a bez rámu a odkryje ji až
+odpověď z `postav`, která nově vrací `true`/`false`.
+
+**3. Data až na dohled.** `historie-cen.json` má 69 kB a karta leží
+pod verdiktem. Stahovat ji hned na každé z 2 276 stránek pozemků by
+byl provoz za nic, takže se čeká na `IntersectionObserver` se
+záložkou 300 px — tutéž, jakou má modul u sebe na okresní stránce.
+Naměřeno: na telefonu před dorolováním **0 dotazů**, po dorolování
+právě jeden.
+
+### Co se při tom našlo a opravilo
+
+**Graf by se nenakreslil ani po podání.** První podoba volala
+`root.PKGrafCen.postav(...)`, jenže `js/pozemek.js` má svůj globál
+pojmenovaný `global`, ne `root` — a protože je volání v `try`, spadlo
+by to tiše. Vychytala to až kontrola v prohlížeči.
+
+**Graf se v odsazené kartě natahoval.** `kresli()` si šířku brala
+z `el.clientWidth`, což je šířka **i s vodorovným odsazením**, kdežto
+SVG se natáhne jen na vnitřek. V kartě s 16 px odsazením vyšel
+viewBox o 32 px širší, než na kolik se obrázek natáhl, a kolečka
+odečtu by se protáhla na elipsy. Odsazení se teď odečítá. Při měření
+vyšly najevo ještě 2 px navíc: rám přidaný až s kartou ubíral
+z vnitřku (`box-sizing:border-box`), takže vodorovný rám drží
+od začátku jako průhledný a s odkrytím se mu jen změní barva.
+Po opravě sedí viewBox s nakreslenou šířkou na pixel (622 = 622).
+
+### Hlídači
+
+Statické kontroly musely dostat výjimku, protože prvek `data-graf-cen`
+ve zdroji `pozemek.html` není a nikdy nebude: `test-vaha-stranky`
+a `test-skripty-na-strance` (ta druhá výjimku dosud neuměla vůbec —
+dostala pole `zJs` s povinným napsaným důvodem). Výměnou za ně měří
+pravdu `test-graf-cen` v prohlížeči na skutečné stránce pozemku:
+odložení, nakreslení, správnou řadu, žádné protažení, a v okrese bez
+klidné řady nulovou stopu.
+
+Sabotážemi prokázáno — každá shodí právě to, co má:
+
+| co jsem rozbil | co spadlo |
+|---|---|
+| podání grafu zrušeno | křivka se nenakreslí (6 kontrol) |
+| `IntersectionObserver` obejit | historie se stáhne před dorolováním |
+| odsazení se neodečítá | viewBox nesedí s nakreslenou šířkou |
+| karta je vidět vždycky | po kartě zbude místo i nadpis v okrese bez řady |
+
+Okno kontroly je úmyslně malé (390 × 400). Na okně vysokém 900 px leží
+karta na krátké nabídce jen asi 1 000 px pod hranou, takže ji záložka
+300 px chytne rovnou při vykreslení a odložení by se nedalo změřit —
+kontrola by procházela, i kdyby se nic neodkládalo. Že karta opravdu
+leží mimo dosah, se ověřuje jako PŘEDPOKLAD.
+
+Po opravě: `test-graf-cen` 58/58, rychlá sada 134/134.
+
+**Co se NEUDĚLALO a proč.** Sreality pod křivkou nemají nic; u nás
+pod ní stojí sedm řádků výhrad (že jsou to ceny nabídkové, že hladinou
+hýbe i výměna nabídek, že osa nezačíná nulou). Je to na úkor čistoty
+karty a vím o tom — ale je to přesně ta stránka, na které někdo řeší
+peníze, a tam se výhrady neškrtají kvůli vzhledu.

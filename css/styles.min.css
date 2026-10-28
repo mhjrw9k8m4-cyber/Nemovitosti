@@ -2307,6 +2307,12 @@ to{opacity:1;transform:none}
 @media (max-width:560px){.gc-ted{margin-left:0;width:100%}
 .gc-bublina{font-size:12px;padding:4px 8px}
 }
+.pz-vyvoj-karta{padding:0 16px;border:1px solid transparent;border-top-width:0;border-bottom-width:0;border-radius:var(--r-plocha)}
+.pz-vyvoj:not(.ma-graf)>.pz-sect-h,.pz-vyvoj:not(.ma-graf)>.pz-vyvoj-dal{display:none}
+.pz-vyvoj.ma-graf>.pz-vyvoj-karta{padding:16px;background:var(--plocha-karta);border-width:1px;border-color:var(--line);box-shadow:var(--e1)}
+.pz-vyvoj .gc{margin:0}
+.pz-vyvoj-dal{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.pz-vyvoj-dal a{color:var(--znacka-svetla);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 .opp-videne{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:var(--r-pill);border:1px solid var(--line);font-style:normal;font-size:11px;font-weight:600;line-height:1.6;letter-spacing:0.01em;color:var(--muted);vertical-align:middle;white-space:nowrap}
 .por-moje-pozn{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;padding-left:8px;border-left:2px solid var(--znacka);font-size:12px;line-height:1.5;font-weight:400;color:var(--muted);white-space:normal}
 .map-podklad{display:inline-flex;gap:2px;padding:2px;background:var(--plocha-plovouci);border:1px solid rgba(var(--znacka-hluboka-rgb),0.22);border-radius:var(--r-lg);box-shadow:var(--shadow)}

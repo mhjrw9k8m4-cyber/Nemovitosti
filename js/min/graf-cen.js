@@ -63,7 +63,9 @@
     }
     if (body.length < 5) return false;
 
-    var W = Math.max(280, Math.round(el.clientWidth || 900));
+    var st = root.getComputedStyle ? root.getComputedStyle(el) : null;
+    var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
+    var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
     var Hh = W < 560 ? 150 : 190;
     var L = 8, P = 12, D = 30;
     var min = Infinity, max = -Infinity;
@@ -182,13 +184,14 @@
 
     var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || (uroven !== 'cr' && !nazev)) return;
-    nacti().then(function (H) {
-      if (!H || !H.rady) return;
+    if (!uroven || (uroven !== 'cr' && !nazev)) return Promise.resolve(false);
+    return nacti().then(function (H) {
+      if (!H || !H.rady) return false;
       var v = vyberRadu(H, uroven, nazev);
 
-      if (!v) return;
-      try { kresli(el, H, v, kde); } catch (e) {   }
+      if (!v) return false;
+      try { return kresli(el, H, v, kde) === true; }
+      catch (e) { return false;   }
     });
   }
 

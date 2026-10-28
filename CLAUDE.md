@@ -705,6 +705,24 @@ a v prohlížeči jen jako mezipaměť. Platí pro ně dvě věci:
    zkouška na všech stránkách, v jejich strukturovaných datech i v polích
    `popis`/`nazev`/`sub`/`veta` ve skriptech.
 
+### Co vzniká z JS, statický hlídač nevidí — a výjimka se platí hlídačem
+
+Prvek, který na stránku dopisuje až prohlížeč, ve zdroji HTML není.
+Hlídači, kteří čtou soubory (`test-vaha-stranky`,
+`test-skripty-na-strance`), ho proto nenajdou a hlásí „skript na
+stránce nemá co dělat". Je to pravdivé čtení nepravdivého podkladu.
+
+Výjimku v takovém hlídači si **kupuješ hlídačem v prohlížeči**:
+napsaný důvod v seznamu výjimek a vedle něj kontrola, která na
+skutečné stránce změří, že ta věc opravdu vznikne. Bez druhé části je
+to jen vypnutá kontrola — a přesně tudy by se dalo tiše vypnout
+cokoli, co se kreslí z JS.
+
+A ještě jednou totéž z druhé strany: `querySelectorAll` nad hotovým
+dokumentem proběhne JEDNOU. Modul, který si takhle hledá svá místa,
+nikdy nenajde prvek, který vznikl později — a nehlásí to, protože
+žádná chyba nenastala. Nic se prostě nenakreslí.
+
 ### Rychlá sada není celá sada
 
 134 zkoušek v `scripts/zkousky.mjs` je zelených i tehdy, když web

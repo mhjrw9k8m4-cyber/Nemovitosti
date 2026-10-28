@@ -629,7 +629,37 @@ to{opacity:1;transform:none}
 
 @media print{header,footer,.add-hero,.sml-karta-form,.sml-upozorneni,.sml-akce,.clanek,.skip-link{display:none !important}
 }
-
+.gc{margin:20px 0 0;padding:0}
+.gc-hlava{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:0 0 8px;font-size:14px}
+.gc-hlava b{font-weight:700}
+.gc-ted{margin-left:auto;display:inline-flex;align-items:baseline;gap:8px;font-weight:700;font-variant-numeric:tabular-nums}
+.gc-zmena{font-style:normal;font-size:13px;font-weight:600;color:var(--muted)}
+.gc-plocha{position:relative;touch-action:pan-y}
+.gc-plocha svg{display:block;width:100%;height:auto;overflow:visible}
+.gc-cara{fill:none;stroke:var(--znacka);stroke-width:2;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.gc-kriz{stroke:var(--line-strong);stroke-width:1;vector-effect:non-scaling-stroke}
+.gc-hit{fill:transparent}
+.gc-tec{fill:var(--plocha-karta);stroke:var(--znacka);stroke-width:2;vector-effect:non-scaling-stroke;opacity:0;transition:opacity var(--cas-rychly) var(--ease)}
+.gc-bod.on .gc-tec{opacity:1}
+.gc-bublina{position:absolute;top:0;z-index:2;pointer-events:none;padding:8px 8px;border-radius:var(--r-sm);background:var(--plocha-karta);border:1px solid var(--line-strong);box-shadow:var(--e2);font-size:13px;line-height:1.4;white-space:nowrap}
+.gc-bublina b{display:block;font-variant-numeric:tabular-nums}
+.gc-bublina span{color:var(--muted)}
+.gc-osa{display:flex;justify-content:space-between;padding:4px 0 0;font-size:12px;color:var(--muted)}
+.gc-pozn{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.gc-tab{margin-top:8px;font-size:13px}
+.gc-tab summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--znacka);font-weight:600}
+.gc-tab table{width:100%;border-collapse:collapse;margin-top:4px}
+.gc-tab th,.gc-tab td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.gc-tab th{font-weight:700;color:var(--muted)}
+@media (max-width:560px){.gc-ted{margin-left:0;width:100%}
+.gc-bublina{font-size:12px;padding:4px 8px}
+}
+.pz-vyvoj-karta{padding:0 16px;border:1px solid transparent;border-top-width:0;border-bottom-width:0;border-radius:var(--r-plocha)}
+.pz-vyvoj:not(.ma-graf)>.pz-sect-h,.pz-vyvoj:not(.ma-graf)>.pz-vyvoj-dal{display:none}
+.pz-vyvoj.ma-graf>.pz-vyvoj-karta{padding:16px;background:var(--plocha-karta);border-width:1px;border-color:var(--line);box-shadow:var(--e1)}
+.pz-vyvoj .gc{margin:0}
+.pz-vyvoj-dal{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.pz-vyvoj-dal a{color:var(--znacka-svetla);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 
 
 

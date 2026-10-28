@@ -603,6 +603,39 @@
     return { cls: 'mid', badge: 'Průměrná cena' };
   }
 
+  /* KARTA S KŘIVKOU VÝVOJE CENY V OKRESE.
+     Jen obal — čáru kreslí js/graf-cen.js do prvku s data-graf-cen,
+     z téže řady, jakou o témž okrese ukazuje okresní stránka. Dva
+     výpočty hladiny na webu nejsou a nebudou; tahle karta je jen další
+     místo, kde se ten jeden ukazuje.
+     RODÍ SE BEZ NADPISU A BEZ RÁMU. Klidnou řadu má 23 okresů ze 77
+     a bez ní se nekreslí NIC (ani prázdný rámeček — tak to má
+     graf-cen.js rozhodnuté). Kdyby se nadpis a rám ukázaly hned,
+     většina stránek pozemků by nesla prázdnou kartu s nadpisem
+     o ničem. Přidá je třída .ma-graf, kterou nasadí pzVyvojCeny()
+     teprve po odpovědi z PKGrafCen.postav. */
+  function pzVyvojHtml(d) {
+    if (!d || !d.okres) return '';
+    return '<section class="pz-vyvoj" id="pz-vyvoj">'
+      + '<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>'
+        /* KARTA JE ZÁROVEŇ MÍSTO PRO GRAF, ne jeho obal. Kdyby graf
+           ležel uvnitř skryté karty, nešel by líně načíst:
+           IntersectionObserver prvek s display:none nikdy neohlásí —
+           nemá rozměr ani polohu. Prázdná karta má proto jen vodorovné
+           odsazení (výšku nula, žádný rámeček) a je vidět; rám, výplň
+           i nadpis jí přidá třída .ma-graf, až čára opravdu vznikne. */
+      + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
+        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"></div>'
+        /* ODKAZ JEN NA CELOSTÁTNÍ STRÁNKU. Na okresní se odsud
+           neodkazuje: ta vzniká až od tří nabídek v okrese (MIN_OKRES
+           v scripts/generate-region-pages.mjs), takže by si JS musel
+           tipovat, jestli cíl existuje — a vygenerovaná stránka ten
+           odkaz už jednou mít může a jednou nemusí. Právě tahle past
+           se tu 28. 10. opravovala u seznamu parametrů. */
+      + '<p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p>'
+      + '</section>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
     /* Známý podíl dostane VLASTNÍ verdikt, ne mlčení. Bez něj by se
@@ -1983,6 +2016,51 @@
     }
   }
 
+  /* KŘIVKU VÝVOJE CENY MU MUSÍME PODAT SAMI.
+     js/graf-cen.js si svá místa hledá JEDNOU při startu stránky
+     (querySelectorAll nad hotovým dokumentem) — jenže detail nabídky
+     vzniká až tady, z JS. Prvek tedy v té chvíli ještě neexistoval
+     a graf by se nenakreslil vůbec: žádná chyba, žádný prázdný rámeček,
+     prostě nic. Modul proto vystavuje `postav` a dostane prvek rovnou.
+
+     A PODÁ SE MU AŽ NA DOHLED. Soubor s historií má 69 kB a čára sedí
+     pod verdiktem, tedy mimo první obrazovku. Stahovat ji na všech
+     2 276 stránkách pozemků hned při vykreslení by byl datový provoz
+     za nic — přesně to si graf-cen.js na okresní stránce nedovolí.
+     Záložka 300 px je tatáž, jakou má modul u sebe: křivka je hotová
+     a karta odkrytá dřív, než na ni člověk dohlédne, takže se mu pod
+     rukama nic nepřeskládá.
+
+     Chybí-li modul (starší mezipaměť prohlížeče) nebo IntersectionObserver,
+     podá se mu prvek hned — graf je navíc, nesmí shodit stránku. */
+  function pzVyvojCeny(host) {
+    var misto = host.querySelector('[data-graf-cen]');
+    var sekce = host.querySelector('#pz-vyvoj');
+    if (!misto || !global.PKGrafCen || !global.PKGrafCen.postav) return;
+    function ted() {
+      var slib = global.PKGrafCen.postav(misto);
+      if (!slib || !slib.then) return;
+      slib.then(function (nakreslil) {
+        /* ODKRÝVÁ SE JEN PO ÚSPĚCHU. Nenakreslená karta zůstane
+           schovaná: nadpis „Vývoj ceny v okolí" nad prázdným rámečkem
+           by tvrdil, že o vývoji něco víme, a u 54 okresů ze 77 to
+           není pravda. */
+        if (nakreslil && sekce) sekce.classList.add('ma-graf');
+      });
+    }
+    if (!global.IntersectionObserver) { ted(); return; }
+    var io = new IntersectionObserver(function (zaznamy) {
+      if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
+      io.disconnect();
+      ted();
+    }, { rootMargin: '300px 0px' });
+    /* Hlídá se samo MÍSTO PRO GRAF. Dokud je prázdné, má nulovou
+       výšku — polohu v dokumentu ale ano, a to je k rozhodnutí „je na
+       dohled" dost. (Skrytý prvek by se hlídat nedal: display:none
+       IntersectionObserver neohlásí nikdy.) */
+    io.observe(misto);
+  }
+
   function pzHlidejVelikostHodnot(host) {
     pzVelikostHodnot(host);
     var mrizka = host.querySelector('.pz-klice');
@@ -2434,6 +2512,18 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
+      /* VÝVOJ CENY V OKOLÍ — hned pod verdiktem.
+         Majitel poslal jako předlohu Sreality: pod cenou karta
+         „Cenový přehled" s křivkou vývoje ceny v lokalitě a odkazem
+         dál. Křivku web umí od začátku (js/graf-cen.js, data
+         z historie-cen.json), jen stála na okresních a krajských
+         stránkách — tedy všude kromě místa, kde se o ceně rozhoduje.
+         Nic se nepřepočítává: zobrazí se TÁŽ řada, kterou o témž
+         okrese ukazuje okresní stránka, takže se čísla nemůžou
+         rozejít. Když pro okres klidná řada není, nenakreslí se nic
+         — ani prázdný rámeček (graf-cen.js to řeší sám). */
+      pzVyvojHtml(d) +
+
       /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
          čeho vzniklo, patří k sobě — kdo verdikt čte, má mít seznam
          na očích, ne o tři obrazovky níž. */
@@ -2626,6 +2716,8 @@
     try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
+
+    try { pzVyvojCeny(host); } catch (e) {}
 
     /* Mapa se staví až po vykreslení: potřebuje prvek v dokumentu a vlastní
        rozměr. Sama si pak počká, než se k ní člověk doroluje. */

@@ -358,6 +358,18 @@
     return { cls: 'mid', badge: 'Průměrná cena' };
   }
 
+  function pzVyvojHtml(d) {
+    if (!d || !d.okres) return '';
+    return '<section class="pz-vyvoj" id="pz-vyvoj">'
+      + '<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>'
+
+      + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
+        + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"></div>'
+
+      + '<p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p>'
+      + '</section>';
+  }
+
   function pzVerdictHtml(d) {
     if (!MODEL || !hasArea(d) || !d.price) return '';
 
@@ -1235,6 +1247,28 @@
     }
   }
 
+  function pzVyvojCeny(host) {
+    var misto = host.querySelector('[data-graf-cen]');
+    var sekce = host.querySelector('#pz-vyvoj');
+    if (!misto || !global.PKGrafCen || !global.PKGrafCen.postav) return;
+    function ted() {
+      var slib = global.PKGrafCen.postav(misto);
+      if (!slib || !slib.then) return;
+      slib.then(function (nakreslil) {
+
+        if (nakreslil && sekce) sekce.classList.add('ma-graf');
+      });
+    }
+    if (!global.IntersectionObserver) { ted(); return; }
+    var io = new IntersectionObserver(function (zaznamy) {
+      if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
+      io.disconnect();
+      ted();
+    }, { rootMargin: '300px 0px' });
+
+    io.observe(misto);
+  }
+
   function pzHlidejVelikostHodnot(host) {
     pzVelikostHodnot(host);
     var mrizka = host.querySelector('.pz-klice');
@@ -1433,6 +1467,8 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
+      pzVyvojHtml(d) +
+
       pzSrovnaniHtml() +
 
       '<details class="pz-gtk-obal">' +
@@ -1512,6 +1548,8 @@
     try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
     try { zapocitejZhlednuti(d); } catch (e) {}
+
+    try { pzVyvojCeny(host); } catch (e) {}
 
     try { pripravMapu(d); } catch (e) {}
 

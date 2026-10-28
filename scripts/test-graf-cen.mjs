@@ -19,7 +19,7 @@
 //     schodiště přes celou výšku grafu — poznámka pod grafem rozpětí
 //     uváděla, jenže oko čte tvar, ne poznámku.
 import { chromium } from 'playwright-core';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -402,6 +402,161 @@ async function otevri(okres, sirka) {
   }
   pravda('a stránka při tom nehlásí chybu skriptu', chybyJs.length === 0, chybyJs.join(' | '));
   await p.close();
+}
+
+/* ---- KŘIVKA NA DETAILU NABÍDKY (karta „Vývoj ceny v okolí") ------
+   Křivka byla dosud všude kromě místa, kde se o jednom pozemku
+   rozhoduje. Tady je, a stojí a padá se třemi věcmi, které se jinde
+   neřeší:
+    1. MÍSTO PRO GRAF VZNIKÁ AŽ V PROHLÍŽEČI. Detail nabídky skládá
+       js/pozemek.js, takže prvek `data-graf-cen` v HTML NENÍ — graf si
+       ho při startu nenajde a musí mu ho stránka podat (PKGrafCen.postav).
+       Statické hlídače ho proto na pozemek.html vidět nemůžou a mají
+       tam zapsanou výjimku; pravda o tom, že se čára opravdu nakreslí,
+       se dá změřit JEN tady.
+    2. PRÁZDNÁ KARTA NESMÍ BÝT VIDĚT. Klidnou řadu má menšina okresů,
+       takže na většině stránek se nenakreslí nic — a nadpis nad
+       prázdným rámečkem by tvrdil, že o vývoji něco víme.
+    3. DATA AŽ NA DOHLED. Soubor s historií má přes 60 kB a karta leží
+       pod verdiktem. Stahovat ho hned na každé stránce pozemku by byl
+       provoz za nic. */
+{
+  /* Kandidáti se berou z ŽIVÝCH nabídek okresu, ne z názvů souborů:
+     stránky vyřazených nabídek se nevykreslují z JS (zůstanou tak, jak
+     je uložil generátor), takže by na nich karta nebyla — a kontrola by
+     hlásila chybu tam, kde žádná není. I tak se zkouší víc souborů:
+     jedna obec může mít nabídek víc a hash v názvu se odsud nedopočítá. */
+  const souborySeznam = readdirSync(KOREN).filter((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
+  function kandidati(okres) {
+    let zivé = [];
+    try {
+      const j = JSON.parse(readFileSync(path.join(KOREN, 'data', 'okres', slug(okres) + '.json'), 'utf8'));
+      zivé = (j.opportunities || []).map((o) => o.place).filter(Boolean);
+    } catch (e) { /* okres bez vlastního souboru — zkusí se podle názvu */ }
+    const predpony = [...new Set(zivé)].map((m) => `pozemek-${slug(okres)}-${slug(m)}-`);
+    const nalez = [];
+    for (const pre of predpony) {
+      const f = souborySeznam.find((x) => x.startsWith(pre));
+      if (f) nalez.push(f);
+      if (nalez.length >= 4) break;
+    }
+    return nalez;
+  }
+
+  /* OKNO JE ÚMYSLNĚ MALÉ (390 × 400). Karta stojí hned pod verdiktem
+     o ceně, takže na krátké nabídce (bez fotek, s krátkým popisem) leží
+     jen asi 1 000 px pod hranou okna — a záložka 300 px, se kterou se
+     na ni čeká, ji na okně vysokém 900 px chytne rovnou při vykreslení.
+     Odložení by se pak nedalo změřit vůbec: kontrola by procházela
+     i tehdy, kdyby se historie stahovala dychtivě. V malém okně leží
+     karta prokazatelně mimo dosah, a že opravdu leží, se níž ověřuje
+     jako PŘEDPOKLAD. */
+  async function otevriPozemek(soubor) {
+    const p = await kontext.newPage();
+    await p.setViewportSize({ width: 390, height: 400 });
+    const chybyJs = [];
+    const dotazy = [];
+    p.on('pageerror', (e) => chybyJs.push(String(e)));
+    p.on('request', (r) => { if (/historie-cen\.json/.test(r.url())) dotazy.push(r.url()); });
+    await p.goto(`${BASE}/${soubor}`, { waitUntil: 'load' });
+    await p.waitForTimeout(1200);
+    return { p, chybyJs, dotazy };
+  }
+  const stavSekce = () => {
+    const s = document.querySelector('#pz-vyvoj');
+    if (!s) return { sekce: false };
+    const h2 = s.querySelector('.pz-sect-h');
+    const f = document.querySelector('figure.gc');
+    const svg = f && f.querySelector('svg');
+    return { sekce: true,
+      maGraf: s.classList.contains('ma-graf'),
+      vyska: Math.round(s.getBoundingClientRect().height),
+      nadpisVidet: !!h2 && getComputedStyle(h2).display !== 'none',
+      graf: !!f,
+      rada: f ? f.getAttribute('data-rada') : null,
+      tecek: f ? f.querySelectorAll('.gc-bod').length : 0,
+      podOknem: (() => { const m = document.querySelector('[data-graf-cen]');
+        return m ? Math.round(m.getBoundingClientRect().top - window.innerHeight) : null; })(),
+      viewBoxW: svg ? Number(String(svg.getAttribute('viewBox')).split(' ')[2]) : null,
+      svgW: svg ? Math.round(svg.getBoundingClientRect().width) : null,
+      pretejka: f ? f.getBoundingClientRect().right > document.documentElement.clientWidth + 1 : false };
+  };
+
+  /* --- okres, který křivku má --- */
+  let stranka = null, prvni = null, drzak = null;
+  for (const f of kandidati(sGrafem)) {
+    const o = await otevriPozemek(f);
+    const st = await o.p.evaluate(stavSekce);
+    if (st.sekce) { stranka = f; prvni = st; drzak = o; break; }
+    await o.p.close();
+  }
+  // PŘEDPOKLAD: bez živé stránky v tomhle okrese by kontroly níž neměly co měřit
+  pravda(`v okrese ${sGrafem} se našla vykreslená stránka pozemku`, !!stranka,
+    `zkoušeno: ${kandidati(sGrafem).join(', ') || 'nic'}`);
+
+  if (stranka) {
+    /* PŘEDPOKLAD: kdyby karta ležela do 300 px pod hranou okna, obě
+       kontroly odložení by prošly samy od sebe — i kdyby se nic
+       neodkládalo. */
+    pravda('místo pro graf leží víc než 300 px pod hranou okna (je co měřit)',
+      prvni.podOknem !== null && prvni.podOknem > 300, `pod oknem ${prvni.podOknem} px`);
+    pravda('karta se před dorolováním NEUKAZUJE (nulová výška, bez nadpisu)',
+      prvni.vyska === 0 && !prvni.maGraf && !prvni.nadpisVidet,
+      JSON.stringify(prvni));
+    pravda('a soubor s historií se do té doby nestahuje',
+      drzak.dotazy.length === 0, `dotazů ${drzak.dotazy.length}`);
+
+    const misto = await drzak.p.$('[data-graf-cen]');
+    if (misto) await misto.scrollIntoViewIfNeeded();
+    await drzak.p.waitForTimeout(2500);
+    const po = await drzak.p.evaluate(stavSekce);
+
+    pravda('po dorolování se křivka nakreslí', po.graf === true,
+      `stránka ${stranka}: figure.gc není`);
+    pravda('a je to řada tohohle okresu', String(po.rada || '').startsWith(`okres|${sGrafem}|`),
+      `data-rada = ${po.rada}`);
+    pravda('a karta dostane nadpis i rám (.ma-graf)',
+      po.maGraf === true && po.nadpisVidet === true, JSON.stringify(po));
+    pravda('a má nakreslenou čáru aspoň z pěti bodů', po.tecek >= 5, `bodů ${po.tecek}`);
+    /* ŠÍŘKA SE MĚŘÍ Z VNITŘKU PRVKU. Karta má 16 px odsazení z každé
+       strany a clientWidth je nese taky — kdo je neodečte, nakreslí
+       viewBox o 32 px širší, než na kolik se SVG natáhne, a kolečka
+       odečtu se protáhnou na elipsy. Naměřeno i na 2 px rámu. */
+    pravda('a soustava grafu sedí s tím, jak je široký (žádné protažení)',
+      po.viewBoxW !== null && Math.abs(po.viewBoxW - po.svgW) <= 1,
+      `viewBox ${po.viewBoxW}, nakresleno ${po.svgW}`);
+    pravda('a karta nepřetéká ze stránky', po.pretejka === false);
+    pravda('a historie se stáhla právě jednou', drzak.dotazy.length === 1,
+      `dotazů ${drzak.dotazy.length}`);
+    pravda('a nic se u toho v prohlížeči nerozbilo', drzak.chybyJs.length === 0,
+      drzak.chybyJs.join(' | '));
+    await drzak.p.close();
+  }
+
+  /* --- okres, který křivku nemá: po kartě nesmí zbýt ani místo --- */
+  let bezStranka = null, bezDrzak = null, bezStav = null;
+  for (const f of kandidati(bezGrafu)) {
+    const o = await otevriPozemek(f);
+    const st = await o.p.evaluate(stavSekce);
+    if (st.sekce) { bezStranka = f; bezDrzak = o; bezStav = st; break; }
+    await o.p.close();
+  }
+  // PŘEDPOKLAD: druhý směr se dá měřit jen na živé stránce v okrese bez klidné řady
+  pravda(`v okrese ${bezGrafu} (bez klidné řady) se našla vykreslená stránka`,
+    !!bezStranka, `zkoušeno: ${kandidati(bezGrafu).join(', ') || 'nic'}`);
+  if (bezStranka) {
+    const m = await bezDrzak.p.$('[data-graf-cen]');
+    if (m) await m.scrollIntoViewIfNeeded();
+    await bezDrzak.p.waitForTimeout(2500);
+    const po = await bezDrzak.p.evaluate(stavSekce);
+    pravda('nenakreslí se nic — ani prázdný rámeček', po.graf === false && !po.maGraf,
+      JSON.stringify(po));
+    pravda('a po kartě nezbude ani místo ani nadpis',
+      po.vyska === 0 && po.nadpisVidet === false, `výška ${po.vyska}, nadpis ${po.nadpisVidet}`);
+    pravda('a stránka při tom nehlásí chybu skriptu', bezDrzak.chybyJs.length === 0,
+      bezDrzak.chybyJs.join(' | '));
+    await bezDrzak.p.close();
+  }
 }
 
 await prohlizec.close();

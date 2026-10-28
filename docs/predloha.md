@@ -59,8 +59,8 @@ Stav: `HOTOVO` / `CHYBÍ` / `JINAK` (máme to, ale jinak než předloha).
 | 5.2 | Titulek dvouřádkový, oba řádky šedé | JINAK |
 | 5.3 | Štítek vedle ceny ve tvaru praporku | CHYBÍ |
 | 5.4 | Odkaz „Porovnat hypotéky" pod cenou | CHYBÍ |
-| 5.5 | **Karta „Cenový přehled" se sbalováním** | JINAK |
-| 5.6 | V ní graf vývoje ceny s popiskem min/max na ose | JINAK |
+| 5.5 | **Karta „Cenový přehled" se sbalováním** | HOTOVO (§195) — karta „Vývoj ceny v okolí"; sbalování NE, karta se místo toho vůbec neukáže, když křivka není |
+| 5.6 | V ní graf vývoje ceny s popiskem min/max na ose | HOTOVO (§195) — min/max nejsou na ose, ale větou pod grafem: osa nezačíná nulou a mez by lhala o poloze čáry (§121) |
 | 5.7 | Odkaz „Přejít na Cenovou mapu →" | HOTOVO |
 | 5.8 | Blok „Hlídání ceny" s otázkou a výzvou | CHYBÍ |
 

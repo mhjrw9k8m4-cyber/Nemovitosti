@@ -8582,6 +8582,44 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   .gc-bublina{font-size:12px; padding:4px 8px;}
 }
 
+/* TÝŽ GRAF NA DETAILU NABÍDKY — karta „Vývoj ceny v okolí"
+   (pzVyvojHtml v js/pozemek.js).
+   Dosud byla křivka jen na stránkách okresů, krajů a na „Cenách
+   pozemků" — tedy všude kromě místa, kde se člověk rozhoduje o jednom
+   konkrétním pozemku. Teď stojí pod verdiktem o ceně: verdikt říká,
+   jak je ta jedna nabídka na dnešní poměry, křivka to, kam se poměry
+   hýbou.
+   NENÍ TO VLOŽENÝ STYL. Stejně jako graf rozdělení cen se kreslí až
+   z JS, dlouho po tom, co dorazí stylopis — ve vloženém stylu by jeho
+   pravidla ležela na 2 276 stránkách a do prvního vykreslení by se
+   nepoužila. Rozdělovač stylů je do pozemek.min.css přiřadí sám: jméno
+   .pz-vyvoj stojí v js/min/pozemek.js.
+   PRÁZDNÁ KARTA NESMÍ BÝT VIDĚT. Křivku dostane 23 okresů ze 77 (jen
+   řady, které se nehýbou skokem — viz js/graf-cen.js), takže na většině
+   stránek se nenakreslí nic. Dokud se nenakreslí, nese prvek jen
+   vodorovné odsazení: je nulově vysoký, bez rámu, a nadpis ani odkaz
+   se nepíšou. Rám, výplň a nadpis přidá třída .ma-graf.
+   VODOROVNĚ SE ROZMĚR NESMÍ ZMĚNIT, a to schválně: graf si šířku
+   odměří v okamžiku kreslení a z vnitřku prvku, takže co přijde po
+   odkrytí, to by SVG natáhlo vedle a kolečka odečtu protáhlo na
+   elipsy. Vodorovné odsazení i SVISLICE RÁMU proto drží od začátku
+   (rám jen průhledný) — při box-sizing:border-box ubírá i rám
+   z vnitřku, a naměřeno, že právě o ty 2 px se graf natahoval.
+   Svisle se odsazuje a rámuje teprve s .ma-graf: na šířku to nemá
+   vliv a prázdná karta tak zůstane nulově vysoká. */
+.pz-vyvoj-karta{padding:0 16px; border:1px solid transparent;
+  border-top-width:0; border-bottom-width:0; border-radius:var(--r-plocha);}
+.pz-vyvoj:not(.ma-graf) > .pz-sect-h,
+.pz-vyvoj:not(.ma-graf) > .pz-vyvoj-dal{display:none;}
+.pz-vyvoj.ma-graf > .pz-vyvoj-karta{padding:16px;
+  background:var(--plocha-karta); border-width:1px; border-color:var(--line);
+  box-shadow:var(--e1);}
+/* Nadpis karty je první věc v ní, takže si horní odstup nese karta. */
+.pz-vyvoj .gc{margin:0;}
+.pz-vyvoj-dal{margin:8px 0 0; font-size:13px; line-height:1.5; color:var(--muted);}
+.pz-vyvoj-dal a{color:var(--znacka-svetla); font-weight:600;
+  text-decoration:underline; text-underline-offset:3px;}
+
 /* „UŽ OTEVŘENO" NA KARTĚ VÝPISU (js/videno.js).
    Potlačený štítek, ne varování: neznamená „prodáno" ani „nezajímavé",
    jen že tam ten člověk už byl. Karta se proto nestmavuje a pořadí se

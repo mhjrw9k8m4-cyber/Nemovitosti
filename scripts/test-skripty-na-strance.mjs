@@ -34,7 +34,15 @@ function pravda(popis, vyslo, proc) {
    takže se tu uvádí jen to, co je opravdu vázané na jeden prvek. */
 const PARY = [
   { skript: /js\/(min\/)?graf-cen\.js/, prvek: 'data-graf-cen',
-    co: 'graf cenové hladiny', velikost: 'js/min/graf-cen.js' },
+    co: 'graf cenové hladiny', velikost: 'js/min/graf-cen.js',
+    /* STRÁNKY, KDE PRVEK VZNIKÁ AŽ V PROHLÍŽEČI. Čtení zdroje takový
+       prvek nenajde, takže by druhý směr („skript a žádný prvek")
+       hlásil úsporu, která neexistuje — a kdo by ji „ušetřil", ten by
+       graf vypnul. Kdo se sem dostane, musí mít napsaný důvod a musí
+       mít v prohlížeči hlídače, že se graf opravdu nakreslí. */
+    zJs: { 'pozemek.html': 'místo pro graf staví pzVyvojHtml v js/pozemek.js'
+      + ' při vykreslení detailu a podává ho modulu přes PKGrafCen.postav;'
+      + ' že se čára opravdu nakreslí, měří scripts/test-graf-cen.mjs' } },
 ];
 
 /* Jen stránky v korenu — generované i ruční. Stránky pozemků
@@ -54,7 +62,8 @@ for (const par of PARY) {
     const maSkript = par.skript.test(h);
     if (maPrvek) sPrvkem.push(f);
     if (maSkript) sSkriptem.push(f);
-    if (maSkript && !maPrvek) navic.push(f);
+    var duvod = par.zJs && par.zJs[f];
+    if (maSkript && !maPrvek && !(duvod && duvod.length > 10)) navic.push(f);
     if (maPrvek && !maSkript) chybi.push(f);
   }
   const kB = existsSync(path.join(KOREN, par.velikost))

@@ -103,7 +103,15 @@
        při šířce 350 px pouhých 74 px výšky, do kterých se bublina
        s odečtem sotva vešla. Takhle má graf na každé šířce výšku, která
        se dá číst. */
-    var W = Math.max(280, Math.round(el.clientWidth || 900));
+    /* ŠÍŘKA SE MĚŘÍ BEZ ODSAZENÍ. clientWidth nese i vodorovné
+       odsazení prvku, kdežto SVG se natáhne jen na jeho vnitřek —
+       v odsazené kartě (detail nabídky má 16 px z každé strany) by
+       tedy viewBox vyšel o 32 px širší, než na kolik se obrázek
+       natáhne, a z koleček odečtu by se staly elipsy. Na stránce
+       okresu je odsazení nulové, takže se tam nic nemění. */
+    var st = root.getComputedStyle ? root.getComputedStyle(el) : null;
+    var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
+    var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
     var Hh = W < 560 ? 150 : 190;
     var L = 8, P = 12, D = 30;
     var min = Infinity, max = -Infinity;
@@ -262,6 +270,13 @@
     return true;
   }
 
+  /* VRACÍ SLIB: `true`, když se graf opravdu nakreslil, jinak `false`.
+     Stránce okresu je to jedno — tam je místo pro graf napsané ve zdroji
+     a prázdné místo nic nestojí. Detail nabídky to ale potřebuje: obal
+     grafu si tam staví js/pozemek.js a bez téhle odpovědi by nad
+     nenakresleným grafem zůstal nadpis a rámeček o ničem. A nebyl by to
+     okrajový případ: klidnou řadu má 23 okresů ze 77, takže většina
+     stránek pozemků graf nedostane. */
   function postav(el) {
     var uroven = el.getAttribute('data-uroven');
     /* CELÁ ČR NEMÁ JMÉNO. Klíč řady je „úroveň|název|druh" a u celostátní
@@ -272,13 +287,14 @@
        Jméno se proto vyžaduje jen tam, kde ho klíč opravdu má. */
     var nazev = el.getAttribute('data-nazev') || '';
     var kde = el.getAttribute('data-kde') || nazev;
-    if (!uroven || (uroven !== 'cr' && !nazev)) return;
-    nacti().then(function (H) {
-      if (!H || !H.rady) return;
+    if (!uroven || (uroven !== 'cr' && !nazev)) return Promise.resolve(false);
+    return nacti().then(function (H) {
+      if (!H || !H.rady) return false;
       var v = vyberRadu(H, uroven, nazev);
       // Žádná klidná řada → nekreslí se nic, ani prázdný rámeček.
-      if (!v) return;
-      try { kresli(el, H, v, kde); } catch (e) { /* graf navíc nesmí shodit stránku */ }
+      if (!v) return false;
+      try { return kresli(el, H, v, kde) === true; }
+      catch (e) { return false; /* graf navíc nesmí shodit stránku */ }
     });
   }
 

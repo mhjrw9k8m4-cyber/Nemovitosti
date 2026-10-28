@@ -79,6 +79,14 @@ const VYJIMKY = {
      ještě není. Hlídat je MÁ scripts/test-predloha.mjs, a ten to dělá
      tím, že je srovnává s hotovou stránkou. */
   'js/pozemek.js na pozemek.html': 'šablona generátoru stránek pozemku — prvky do ní dosazuje generátor, ne zdroj',
+  /* TÝŽ DŮVOD, JINÝ SKRIPT. Místo pro křivku vývoje ceny
+     (`data-graf-cen`) na stránce pozemku nevzniká ve zdroji vůbec:
+     staví ho pzVyvojHtml v js/pozemek.js při vykreslení detailu
+     a modulu ho pak podá sám přes PKGrafCen.postav. Statickým čtením
+     HTML se tedy nenajde ani na vygenerované stránce, natož v šabloně.
+     Že se graf opravdu nakreslí, měří scripts/test-graf-cen.mjs
+     v prohlížeči na skutečné stránce pozemku. */
+  'js/graf-cen.js na pozemek.html': 'místo pro graf staví js/pozemek.js až při vykreslení detailu — v prohlížeči to měří test-graf-cen',
 };
 
 /* Pod třemi zachytky se nesoudí. Skript, který sahá na jeden prvek,
