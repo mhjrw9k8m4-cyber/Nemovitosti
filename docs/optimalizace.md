@@ -13367,3 +13367,31 @@ Prokázáno dvěma sabotážemi:
 Po opravě: `test-zapomenute-heslo` 24/24, `test-mrtva-jmena`,
 `test-dotyk`, `test-stranky-uctu` bez nálezu, rychlá sada 134/134.
 Zkoušek s prohlížečem je nově 138.
+
+## §204 Čtvrtá zkouška přibitá na data, která se mění
+
+`test-rozesilac` spadl hned po sloučení s čerstvými daty robota —
+a nebylo to tím, co jsem ten den dělal.
+
+Zkouška má oddíl, který ověřuje, že odkaz v hlídacím e-mailu nevede na
+**cizí pozemek**. Aby ho ověřit šlo, potřebuje nabídku, která se
+o jméno stránky *sráží* s jinou — na obyčejné nabídce se ta vada
+neprojeví. Okres pro takovou nabídku byl napsaný napevno:
+`Brno-venkov`.
+
+Jenže data se obnovují čtyřikrát denně. 28. 10. v Brně-venkově žádná
+srážející se nabídka nezbyla, PŘEDPOKLAD spadl a s ním celá zkouška —
+aniž by se na webu cokoli pokazilo.
+
+Okres se proto hledá v datech: bere se ten, kde takových nabídek je
+nejvíc, při shodě první podle abecedy (ať je běh opakovatelný). Dnes to
+vyšlo na Prahu-východ se čtyřmi. Že nějaký takový okres vůbec existuje,
+zůstává PŘEDPOKLADEM — kdyby se srážky někdy odstranily úplně, má se to
+dozvědět, ne tiše přejít.
+
+**Je to čtvrtý případ téhož omylu za jediný den** (§197 mez barev,
+§198 vzorek verdiktů a mez u shody, teď tohle). Jmenovat v kontrole
+konkrétní okres, počet nebo mez naladěnou na dnešní data znamená
+postavit si budík na to, až se data pohnou. Pravidlo je pokaždé stejné:
+**kontrola si má to, co potřebuje, v datech NAJÍT — a nahlas říct, když
+tam to nic není.**

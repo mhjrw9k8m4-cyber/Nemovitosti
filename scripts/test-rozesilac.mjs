@@ -242,11 +242,38 @@ function spust(args, env) {
 
 await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 try {
+  /* OKRES SE NEJMENUJE, VYBÍRÁ SE MĚŘENÍM. Stálo tu napevno
+     „Brno-venkov", protože tam v té chvíli ležela nabídka, která se
+     o jméno stránky sráží s jinou — a právě na takové nabídce se dá
+     kontrola odkazů níž (oddíl cd) vůbec provést. Jenže data se
+     obnovují čtyřikrát denně: 28. 10. v Brně-venkově žádná srážející
+     se nabídka nezbyla, PŘEDPOKLAD spadl a s ním celá zkouška, aniž
+     se na webu cokoli pokazilo.
+     Okres se proto hledá v datech: bere se ten, kde takových nabídek
+     je nejvíc (při shodě první podle abecedy, ať je běh opakovatelný).
+     Že nějaký takový okres existuje, se o kus níž ověřuje jako
+     PŘEDPOKLAD — kdyby se srážky někdy odstranily úplně, má se to
+     dozvědět, ne tiše přejít. */
+  const okresSeSrazkou = (() => {
+    const vse = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
+    const ciste = PKH_T.bezDuplicit(vse);
+    const MAPA = mapaSouboru(ciste);
+    const pocty = new Map();
+    for (const d of ciste) {
+      const z = MAPA.get(klicNabidky(d));
+      if (!z) continue;
+      let sp = null; try { sp = souborPro(d); } catch (e) { continue; }
+      if (sp && sp !== z.soubor) pocty.set(d.okres, (pocty.get(d.okres) || 0) + 1);
+    }
+    const serazene = [...pocty.entries()].sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], 'cs'));
+    return serazene.length ? serazene[0][0] : 'Brno-venkov';
+  })();
+
   const radek = {
     hledani_id: '11111111-1111-1111-1111-111111111111',
     user_id: '22222222-2222-2222-2222-222222222222',
-    email: 'nekdo@example.com', label: 'Zahrady u Kuřimi', token: 'TOK-1',
-    okres: 'Brno-venkov', druh: '', ptype: '', max_price: null, min_area: null,
+    email: 'nekdo@example.com', label: 'Hlídání v okrese ' + okresSeSrazkou, token: 'TOK-1',
+    okres: okresSeSrazkou, druh: '', ptype: '', max_price: null, min_area: null,
     min_price: null, max_area: null, max_perm2: null, jen_celek: null, features: [],
     stred_lat: null, stred_lng: null, okruh_km: null, mail_odeslano_at: null,
   };
