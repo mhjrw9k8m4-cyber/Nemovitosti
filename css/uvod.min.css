@@ -280,8 +280,8 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .filter-chip:active,.copy-btn:active{transform:translateY(1px)}
 .opp-item:active{transform:translateX(2px) scale(0.995)}
 .map-app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:auto 1fr;gap:0;height:min(76vh,820px);height:min(76dvh,820px);min-height:600px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-obraz);overflow:hidden;box-shadow:var(--e3)}
-.map-controls-panel{grid-column:1 / -1;grid-row:1;--pas-plocha:var(--plocha-tmava);--pas-text:var(--text-ondeep);--pas-text-mute:var(--text-ondeep-mute);--pas-akcent:var(--znacka-na-tmave);--pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);--pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);background:var(--pas-plocha);color:var(--pas-text);border:0;border-radius:0;padding:16px}
-.map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);color:var(--text);border-color:transparent}
+.map-controls-panel{grid-column:1 / -1;grid-row:1;background:var(--pas-plocha);color:var(--pas-text);border:0;border-radius:0;padding:16px}
+.map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);color:var(--text);border-color:var(--line-ui)}
 .map-controls-panel .ms-lupa{color:var(--text-zastupny)}
 .map-controls-panel .ms-filters{background:transparent;border-color:var(--pas-obrys)}
 .map-controls-panel .ms-filters .msf-summary{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
@@ -1341,7 +1341,7 @@ h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
 .rail .section-head{margin-bottom:28px;max-width:var(--m-sloupec)}
 .rail .section-head h2{font-size:clamp(32px,2.8vw,40px);max-width:var(--m-nadpis)}
 }
-.add-hero,.okr-band,.st-hlava{--pas-plocha:var(--plocha-tmava);--pas-text:var(--text-ondeep);--pas-text-mute:var(--text-ondeep-mute);--pas-akcent:var(--znacka-na-tmave);--pas-nadpis:var(--znacka-na-tmave);--pas-na-akcentu:var(--plocha-tmava);--pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);--pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);--pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);--pas-mrizka:var(--mrizka-cara-tmava);color:var(--pas-text)}
+.add-hero,.okr-band,.st-hlava{color:var(--pas-text)}
 
 
 .obsah{display:none}

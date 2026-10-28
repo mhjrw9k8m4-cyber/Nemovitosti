@@ -12839,3 +12839,35 @@ než žádná — ta aspoň nikoho neuspí.
 
 Sabotáž u všech tří: po vrácení původního chování spadly přesně ty
 kontroly, které je mají chytat.
+
+## §194 Tmavě zelená deska pryč — deska je zase světlá
+
+Majitel poslal fotku úvodní stránky s tím, ať se ta zelená konečně
+vrátí, jak to bylo. Jde o desku pod lištou: nadpis, odznaky a pole
+hledání stály na `--plocha-tmava` (#12241A).
+
+**Byl to jeden řez.** Deska nevznikala barvami rozepsanými po
+pravidlech, ale přepisem tokenů `--pas-*` ve dvou rozsazích
+(`.add-hero, .okr-band, .st-hlava` a `.map-controls-panel`). Komentář
+u toho přepisu to říkal rovnou: „nepřepisuje se tu barva v každém
+pravidle, které na pásu něco kreslí (bylo by jich dvacet šest)".
+Díky tomu stačilo přepis sundat — žádné z těch dvaceti šesti pravidel
+se nezměnilo, všechna dál říkají `var(--pas-text)` a teď jim vyjde
+světlá sada z `:root`, tedy ta, která tu byla před směrem 2.
+
+Platí to pro celý pás najednou: úvodní deska, hlavy okresních
+a krajských stránek i panel nad výpisem.
+
+### Co ze zesvětlení spadlo
+
+Pole hledání bylo bílé a na tmavé desce se vymezovalo samo. Na světlé
+má proti ní **1,12 : 1** a bez linky je to bílá plocha v bílé ploše —
+naměřil to `test-okraje` na telefonu i na monitoru. Dostalo
+`--line-ui`, tedy tutéž čáru jako ovladače nad výpisem, která drží
+mez 3 : 1 z WCAG 1.4.11.
+
+Po opravě: `test-okraje` 135 prvků bez nálezu, `test-kontrast`
+2 652 prvků a 0 pádů, `test-uvod` 66/66, `test-barvy` 58/58,
+`test-hierarchie` 21/21, `test-soustava` 15/15, rychlá sada 134/134.
+
+Kdyby se měla tmavá deska někdy vrátit, je to týž řez obráceně.

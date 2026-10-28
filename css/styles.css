@@ -1903,20 +1903,21 @@ h1 em{ color:var(--znacka-svetla);
    Spodní linka je pryč taky — mezi tmavou deskou a výpisem odděluje
    barva, vlasovka by byla druhé oddělení téhož.
    ------------------------------------------------------------------ */
+/* Panel nad výpisem bere tutéž sadu jako hlava nad ním, takže se
+   světlá spolu s ní — viz „DESKA JE ZASE SVĚTLÁ" níž v souboru. */
 .map-controls-panel{grid-column:1 / -1; grid-row:1;
-  --pas-plocha:var(--plocha-tmava);
-  --pas-text:var(--text-ondeep);
-  --pas-text-mute:var(--text-ondeep-mute);
-  --pas-akcent:var(--znacka-na-tmave);
-  --pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);
-  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);
   background:var(--pas-plocha); color:var(--pas-text);
   border:0; border-radius:0; padding:16px;}
 /* POLE HLEDÁNÍ ZŮSTÁVÁ BÍLÉ. Do pole se píše, a bílá plocha je to
    jediné znamení, které se nedá přečíst špatně — průsvitná výplň na
-   desce vypadá jako vypnutý ovladač. */
+   desce vypadá jako vypnutý ovladač.
+   OBRYS UŽ ALE POTŘEBUJE. Na tmavé desce se bílé pole vymezovalo samo;
+   na světlé, kam se deska 28. 10. vrátila, má proti ní 1,12 : 1 a bez
+   linky z něj zbyde bílá plocha v bílé ploše — naměřil to test-okraje
+   na telefonu i na monitoru. --line-ui je táž čára, jakou mají ovladače
+   nad výpisem, a drží mez 3 : 1 z WCAG 1.4.11. */
 .map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);
-  color:var(--text); border-color:transparent;}
+  color:var(--text); border-color:var(--line-ui);}
 .map-controls-panel .ms-lupa{color:var(--text-zastupny);}
 /* Co stojí VEDLE pole, je ovladač na desce: tlumená výplň, světlý obrys
    (--pas-obrys má na desce 3,97 : 1) a zelená značka na ikoně. */
@@ -7302,24 +7303,17 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
    TOKENY A JEN V ROZSAHU PÁSU: všechna existující pravidla dál říkají
    var(--pas-text), jen jim vyjde bílá. Patička zůstává světlá, protože
    --pas-plocha-paticka se vyhodnocuje až u ní, a ta pod pásem neleží. */
+/* DESKA JE ZASE SVĚTLÁ — na majitelovu žádost (28. 10.: „ta vyjebaná
+   zelená", s fotkou úvodní stránky a pokynem vrátit to, jak to bylo).
+   Stál tu přepis tokenů na tmavou sadu a s ním celá tmavě zelená deska
+   pod lištou. Přepis odchází; pravidla, která na pásu něco kreslí,
+   se nemění ANI JEDNO — všechna dál říkají var(--pas-text) a teď jim
+   vyjde světlá sada z :root, tedy ta, která tu byla před směrem 2.
+   Právě proto tu ten přepis byl napsaný jako tokeny a ne jako barvy
+   v jednotlivých pravidlech: dá se sundat jedním řezem.
+   Kdyby se měla tmavá deska někdy vrátit, je to týž řez obráceně —
+   historie commitu to má celé. */
 .add-hero, .okr-band, .st-hlava{
-  --pas-plocha:var(--plocha-tmava);
-  --pas-text:var(--text-ondeep);
-  --pas-text-mute:var(--text-ondeep-mute);
-  --pas-akcent:var(--znacka-na-tmave);
-  --pas-nadpis:var(--znacka-na-tmave);
-  /* Co leží NA akcentu (číslo kroku v kolečku), musí být tmavé — bílá by
-     na světlé zeleni dala 2,3 : 1. Táž dvojice obráceně: 7,01 : 1. */
-  --pas-na-akcentu:var(--plocha-tmava);
-  --pas-dlazdice:rgba(var(--text-ondeep-mute-rgb),0.10);
-  --pas-linka:rgba(var(--text-ondeep-mute-rgb),0.22);
-  /* 0,55, ne 0,45. Obrys se neměří proti desce, ale proti VÝPLNI
-     tlačítka (--pas-dlazdice), a ta je o něco světlejší než deska:
-     při 0,45 naměřil test-hierarchie na „Pozemky v okolí" 2,96 : 1,
-     tedy pod hranicí 3 : 1 z WCAG 1.4.11. Spočítáno pro 0,55:
-     3,31 : 1 proti výplni a 4,15 : 1 proti desce. */
-  --pas-obrys:rgba(var(--text-ondeep-mute-rgb),0.55);
-  --pas-mrizka:var(--mrizka-cara-tmava);
   color:var(--pas-text);}
 
 /* Odsazení shora bylo 96 px, z toho 72 px holého prázdna nad obočím —
