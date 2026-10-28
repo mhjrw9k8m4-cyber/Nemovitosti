@@ -13007,3 +13007,58 @@ Po opravě: `test-ukoncena-v-prohlizeci` 18/18, `test-ovladani-vypisu`
 31/31, `test-vyvoz-okno` 31/31, `test-nastroje-v-dosahu` 15/15,
 `test-prvni-obrazovka` 22/22, `test-dotyk` bez nálezu, rychlá sada
 134/134.
+
+## §197 Zeleň jen na ozdoby — poslední dvě barevné plochy pryč
+
+Pokyn zněl: web co nejčistší, zeleň jen na malé ozdoby, ne celé barevné
+plochy. §194 sundal tmavě zelenou desku nad výpisem; tohle je zbytek.
+
+**Nejdřív měření, ne dojem.** Projel jsem sedm typů stránek a hledal
+prvky nad 30 000 px² s tmavým podkladem. Vyšly přesně dvě, obě na
+úvodní stránce:
+
+| oddíl | plocha | barva |
+|---|---|---|
+| `.sources` (čísla a zdroje) | 772 740 px² | #12241A |
+| `#realitky` (kontakt) | 448 740 px² | #12241A |
+
+Jinde už nic: patička je světlá (#EDF3EF), okresní, krajské, cenové,
+článkové ani stránky pozemků tmavou plochu nemají. Zeleň, která na nich
+zbývá, je značka, hlavní tlačítko a aktivní přepínač — tedy ozdoba
+o 6–17 tisících px², ne plocha.
+
+**Co ty dva oddíly odlišovalo, se neztratilo.** Odlišuje je TVAR, ne
+barva: čtyři obří číslice přes celou šířku u zdrojů, dvousloupcové
+„Ozvěte se nám." u kontaktu. Plocha je teď jemně šedá, takže se oddíl
+od bílého okolí pořád oddělí.
+
+### Co ze zesvětlení spadlo
+
+Zesvětlení pásu vždycky něco shodí — co bylo napsané pro tmu, na světle
+zmizí. Naměřeno a opraveno trojí:
+
+* **Stav zdroje** (`.src-stav`, „64×", „436×") byl světlý text
+  `--text-ondeep-mute` na průsvitu `rgba(255,255,255,0.12)`. Na bílé
+  dává **1,1 : 1** — nebyl vidět vůbec. Rozlišení barvou zůstává, jen
+  obráceně: tlumený podklad, tmavý text téže barvy.
+* **E-mailová adresa** v kontaktu byla `--text-ondeep`, tedy bílá na
+  bílé kartě (**1,0 : 1**). Čtyři řádky, které kvůli tmavému pásu
+  přebíjely světlou sadu, se zrušily; zůstal jediný — odkaz bere tmavou
+  hněď místo jasné.
+* **Karta s e-mailem** vzala `--plocha-jemna`, což je přesně ta barva,
+  na které leží — splynula by. Dostala bílou desku s linkou jako každá
+  jiná karta na webu.
+
+### A jedna mez, která se stáhla podruhé
+
+`test-odstiny` hlídá, že se stylopis vůbec přečetl, počtem nalezených
+barev. Mez byla 250 a **spadla úklidem**: se zesvětlením odešlo šest
+barev zapsaných napevno kvůli tmavému podkladu (245). Stejný pád už
+jednou byl, z meze 300. Mez je proto nově 150 — daleko od skutečného
+stavu. Hlídá nulu, ne trend; test naladěný na dnešek učí lidi uklízet
+míň.
+
+Po opravě: `test-kontrast` bez nálezu, `test-barvy` 58/58,
+`test-okraje` 135 prvků bez nálezu, `test-uvod` 66/66,
+`test-hierarchie` 21/21, `test-soustava` 15/15, `test-mrtve-styly`
+11/11, `test-cerstvost` 24/24, rychlá sada 134/134.

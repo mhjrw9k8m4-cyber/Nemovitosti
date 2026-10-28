@@ -3764,20 +3764,29 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    obsah má pevný, nezávisí na datech, a pozvání „ozvěte se" snese důraz.
    Karta uvnitř ztrácí rámeček: na pásu ohraničuje obsah pás sám.
    ===================================================================== */
-#realitky{background:var(--plocha-tmava); color:var(--text-ondeep); padding:var(--oddil-y) 0; margin-top:24px;}
+/* PÁS UŽ NENÍ TMAVĚ ZELENÝ — 28. 10., týž pokyn jako u desky nad
+   výpisem (§194) a u oddílu se zdroji: zeleň má být ozdoba, ne celá
+   barevná plocha. Naměřeno 448 740 px² tmavé zeleně #12241A na úvodní
+   stránce. Co oddíl odlišuje, zůstává: jemně šedá plocha a vlastní
+   TVAR (dvousloupcové „Ozvěte se nám." proti mřížkám nad ním). */
+#realitky{background:var(--plocha-jemna); color:var(--text); padding:var(--oddil-y) 0; margin-top:24px;}
 #realitky .realtor-contact{margin-top:0; background:none; border:0; padding:0;}
-#realitky .rct-copy h2{color:var(--text-ondeep);}
-#realitky .rct-copy p{color:var(--text-ondeep-mute);}
-/* Štítek oddílu je teď ve sloupci se značkou (.rail-mark), ne v nadřádku
-   nad nadpisem — a na tmavé ploše si musí vzít světlou barvu i světlou
-   linku, jinak je to tmavě šedý text na tmavě zelené. */
-#realitky .rail-mark .rm-l{color:var(--text-ondeep-mute); border-top-color:rgba(255,255,255,0.22);}
-#realitky .kt-mail{background:var(--plocha-jemna); border-color:var(--line);}
+#realitky .rct-copy h2{color:var(--text);}
+#realitky .rct-copy p{color:var(--muted);}
+/* Štítek oddílu je ve sloupci se značkou (.rail-mark), ne v nadřádku nad
+   nadpisem; na světlé ploše bere obyčejný tlumený inkoust a obyčejnou
+   linku — tytéž, jaké má kdekoli jinde na webě. */
+#realitky .rail-mark .rm-l{color:var(--muted); border-top-color:var(--line);}
+/* Karta s e-mailem musí z té plochy VYSTOUPIT, a na jemně šedé to
+   jemně šedá neudělá: je to tatáž barva. Bílá deska s linkou, jako
+   každá jiná karta na webu. */
+#realitky .kt-mail{background:var(--plocha-karta); border-color:var(--line);}
 #realitky .kt-mail:hover{background:var(--plocha-jemna-vic); border-color:var(--accent-warm-bright);}
-#realitky .kt-txt small{color:var(--text-ondeep-mute);}
-#realitky .kt-txt b{color:var(--text-ondeep);}
-#realitky .rules-note{color:var(--text-ondeep-mute);}
-#realitky .rules-note a{color:var(--accent-warm-bright);}
+/* Tyhle čtyři řádky přebíjely světlou sadu kvůli tmavému pásu. Pás je
+   od 28. 10. světlý, takže se přebíjet nemá co: adresa byla bílá na
+   bílé kartě a nebyla vidět vůbec (naměřeno 1,0 : 1). Zůstává jedině
+   odkaz — ten má na světlé ploše vzít tmavou hněď, ne jasnou. */
+#realitky .rules-note a{color:var(--accent-warm);}
 .copy-btn{position:absolute; top:10px; right:10px; background:var(--znacka); color:var(--plocha-zapustena); border:0; border-radius:3px; font-family:var(--font-mono); font-size:12px; font-weight:500; padding:4px 8px; cursor:pointer; transition:background var(--cas-zakladni) var(--ease);}
 .copy-btn:hover{background:var(--znacka-svetla);}
 /* BÍLÁ NA JASNÉ ZELENÉ JE 3,24 : 1 — POD NORMOU. Stav „zkopírováno"
@@ -6200,21 +6209,31 @@ body{background:var(--bg);}
    Oko pak má se čeho chytit a stránka má spád.
    ===================================================================== */
 
-/* ČÍSLA: tmavý pás přes celou šířku a obří číslice.
+/* ČÍSLA: obří číslice na SVĚTLÉ ploše.
    Byl to řádek drobných čísel s měděnou svislou čárkou — přesně ten druh
    prvku, který se v záplavě rámečků ztratí. Čísla jsou přitom to nejlepší,
-   co web o sobě může říct, tak ať jsou vidět. */
-.sources{background:var(--plocha-tmava); color:var(--text-ondeep); padding:var(--oddil-y) 0;}
+   co web o sobě může říct, tak ať jsou vidět.
+   PÁS UŽ NENÍ TMAVĚ ZELENÝ — 28. 10., týž pokyn jako u desky nad
+   výpisem (§194): web má zůstat čistý a zeleň má být jen ozdoba, ne
+   celá barevná plocha. Naměřeno: tenhle oddíl zabíral na monitoru
+   772 740 px² tmavé zeleně #12241A, tedy víc než celá první obrazovka.
+   Co ten oddíl odlišovalo, se tím neztrácí: odlišuje ho TVAR — čtyři
+   obří číslice přes celou šířku — ne barva. Plocha je proto jemně
+   šedá (--plocha-jemna), aby se oddíl od bílého okolí pořád oddělil,
+   a text je obyčejný tmavý inkoust. */
+.sources{background:var(--plocha-jemna); color:var(--text); padding:var(--oddil-y) 0;}
 .sources::before, .sources::after{display:none;}
 .src-stats{grid-template-columns:repeat(4,1fr); gap:28px; margin-bottom:40px;}
 .src-stat{border-left:0; padding:0; gap:8px;}
-.src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,64px); line-height:0.9; letter-spacing:-0.04em; color:var(--text-ondeep);}
-.src-stat span{font-size:13px; color:var(--text-ondeep-mute); max-width:var(--m-nadpis);}
-.sources-lead{color:var(--text-ondeep-mute);}
-.sources .sources-over{color:var(--text-ondeep-mute);}
-.sources .data-updated{color:var(--text-ondeep-mute);}
-.sources .source-chip{background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.3);
-  color:var(--text-ondeep);}
+.src-stat b{font-family:var(--font-display); font-weight:700; font-size:clamp(40px,5.4vw,64px); line-height:0.9; letter-spacing:-0.04em; color:var(--text);}
+.src-stat span{font-size:13px; color:var(--muted); max-width:var(--m-nadpis);}
+.sources-lead{color:var(--muted);}
+.sources .sources-over{color:var(--muted);}
+.sources .data-updated{color:var(--muted);}
+/* Odznak zdroje je na světlé ploše bílá dlaždice s linkou — tatáž
+   stavba jako ovladače nad výpisem, ne průsvit přes tmu. */
+.sources .source-chip{background:var(--plocha-karta); border-color:var(--line);
+  color:var(--text);}
 @media (max-width:880px){
   /* rytmus drží --oddil-y, ne vlastní číslo (bylo 40/40, tedy
      polovina proti ostatním oddílům na téže šířce) */
@@ -8091,13 +8110,18 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
+/* SVĚTLÁ SADA, PROTOŽE PÁS UŽ TMAVÝ NENÍ. Tyhle značky stojí jen
+   v oddílu se zdroji a ten se 28. 10. zesvětlil; průsvit přes bílou
+   (rgba(255,255,255,0.12)) na ní zmizel a světlý text --text-ondeep-mute
+   na ní dával 1,1 : 1 — naměřeno, nebyl vidět vůbec. Rozlišení BARVOU
+   zůstává, jen obráceně: tlumený podklad, tmavý text téže barvy. */
 .src-stav{margin-left:8px; padding:1px 4px; border-radius:var(--r-pill);
   font-family:var(--font-mono); font-size:12px; font-variant-numeric:tabular-nums;
-  background:rgba(255,255,255,0.12); color:var(--text-ondeep-mute);}
-.src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.4); color:#FBDCD4;}
+  background:var(--plocha-jemna-vic); color:var(--muted);}
+.src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.12); color:var(--c-exekuce);}
 /* Oslabený zdroj: odpověděl, ale přinesl výrazně méně. Není to
    červená (data jsou), ale ani normál — jinak se to přehlédne. */
-.src-stav.src-slabe{background:rgba(var(--accent-warm-rgb),0.45); color:#F7E3C3;}
+.src-stav.src-slabe{background:rgba(var(--accent-warm-rgb),0.14); color:var(--accent-warm);}
 
 /* SOUŘADNICE POD MAPOU — a proto NE ve vloženém stylu pozemek.html.
    Ten styl je kritický: nese to, co se kreslí na první obrazovce, a má
