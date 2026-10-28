@@ -55,7 +55,7 @@
     return 'Na cenu ' + kde + ' je to málo — berte to jako hrubé vodítko. ';
   }
 
-  function kresli(el, H, vyber, kde) {
+  function kresli(el, H, vyber, kde, strucne) {
     var dny = H.dny, r = vyber.r;
     var body = [];
     for (var i = 0; i < dny.length; i++) {
@@ -134,11 +134,11 @@
         '</div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          maloVzorku(H, vyber.vzorek, vyber.uroven) +
-          'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
+          (strucne ? '' : maloVzorku(H, vyber.vzorek, vyber.uroven) +
+          'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
 
-          'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
-          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
+          (strucne ? '' : 'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
+          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ') +
 
           'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
           (cislo(min) === cislo(max)
@@ -209,6 +209,8 @@
     });
     if (!seznam.length) return Promise.resolve(false);
 
+    var strucne = el.hasAttribute('data-strucne');
+
     return nacti().then(function (H) {
       if (!H || !H.rady) return false;
       for (var i = 0; i < seznam.length; i++) {
@@ -218,7 +220,7 @@
         var v = vyberRadu(H, m.uroven, m.nazev);
 
         if (!v) continue;
-        try { if (kresli(el, H, v, m.kde) === true) return true; }
+        try { if (kresli(el, H, v, m.kde, strucne) === true) return true; }
         catch (e) { return false;   }
       }
       return false;

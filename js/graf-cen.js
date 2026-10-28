@@ -89,7 +89,16 @@
     return 'Na cenu ' + kde + ' je to málo — berte to jako hrubé vodítko. ';
   }
 
-  function kresli(el, H, vyber, kde) {
+  /* STRUČNÁ POZNÁMKA PRO INZERÁT. Dlouhá metodika pod grafem je na
+     okresní stránce na místě — tam je graf hlavní obsah a vedle něj
+     stojí medián za celou skupinu druhů, se kterým se čára nerovná.
+     V inzerátu žádné takové číslo nad grafem NENÍ, takže by ten
+     odstavec vysvětloval rozpor, který tam nikdo nevidí — a stojí
+     přitom ~250 px z karty vysoké 558. Stránka pozemku má přitom
+     změřený rozpočet 4,4 obrazovky telefonu a zbývalo do něj 170 px.
+     Místo odstavce zůstane věta, co čára je, věta o ose (bez ní se
+     křivka čte špatně) a odkaz na podrobnosti. */
+  function kresli(el, H, vyber, kde, strucne) {
     var dny = H.dny, r = vyber.r;
     var body = [];
     for (var i = 0; i < dny.length; i++) {
@@ -216,8 +225,8 @@
         '</div>' +
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
           esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          maloVzorku(H, vyber.vzorek, vyber.uroven) +
-          'Hladina se mění i tím, že nabídky přibývají a mizí. ' +
+          (strucne ? '' : maloVzorku(H, vyber.vzorek, vyber.uroven) +
+          'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
           /* PROČ SE ČÁRA NESHODUJE S MEDIÁNEM NAD GRAFEM. Nejsou to dvě
              verze téhož čísla — a od opravy úředně stanovených cen už
              to není ani rozdíl ve VÝPOČTU: obě strany počítají z téže
@@ -230,8 +239,8 @@
              Naměřeno na 27 stránkách, kde stojí obojí: po opravě je
              největší rozdíl 2,8× (dřív 6,9×) a Česká Lípa, kde číslo
              stálo na 55 a čára na 8 Kč/m², je dnes 43 proti 35. */
-          'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
-          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ' +
+          (strucne ? '' : 'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
+          'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ') +
           /* CO TU STÁLO A PROČ TO BYLA NEPRAVDA.
              „Svislá osa je v rozpětí 45,7–46,6 Kč/m²" — jenomže to je
              rozpětí DAT, ne osy. Osa drží nejméně desetinu hladiny (viz
@@ -342,6 +351,9 @@
       if (c[0]) seznam.push({ uroven: c[0], nazev: c[1] || '', kde: c[2] || c[1] || '' });
     });
     if (!seznam.length) return Promise.resolve(false);
+    /* Stránka si řekne o stručnou poznámku sama (data-strucne);
+       okresní a krajské stránky ji nemají, takže tam zůstane celá. */
+    var strucne = el.hasAttribute('data-strucne');
 
     return nacti().then(function (H) {
       if (!H || !H.rady) return false;
@@ -353,7 +365,7 @@
         var v = vyberRadu(H, m.uroven, m.nazev);
         // Žádná klidná řada → zkusí se další záloha.
         if (!v) continue;
-        try { if (kresli(el, H, v, m.kde) === true) return true; }
+        try { if (kresli(el, H, v, m.kde, strucne) === true) return true; }
         catch (e) { return false; /* graf navíc nesmí shodit stránku */ }
       }
       return false;

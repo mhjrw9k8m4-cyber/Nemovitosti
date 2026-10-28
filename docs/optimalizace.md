@@ -13674,3 +13674,68 @@ Dvě poučení, obě moje:
 Po opravě: `test-tahy` 5/5, `test-ikony` 11/11,
 `test-ovladani-vypisu` 31/31. Změřeno navíc, že žádná jiná vyplněná
 ikona tah navíc nedostala.
+
+## §208 Stránka pozemku neměla na graf místo — a procházelo to jen proto, že se nekreslil
+
+Celá sada hlídačů v prohlížeči (138) našla po §207 tři pády. Měřením
+v kopii repozitáře před dnešní prací se rozhodlo, čí jsou:
+
+| hlídač | před | po | čí |
+|---|---|---|---|
+| `test-rozdeleni-stylu` | OK | PAD | moje |
+| `test-poradi-pozemku` | OK | PAD | moje |
+| `test-zaostreni` | **PAD** | PAD | **starší, ne dnešní** |
+
+### Rozpočet stránky: graf se tam prostě nevešel
+
+`test-poradi-pozemku` hlídá dvě věci: mapa do 55 % stránky a celá
+stránka do 4,4 obrazovky telefonu. Obojí padlo.
+
+A je to poctivý nález, ne jen mez: **stránka na graf nikdy místo
+neměla.** Do rozpočtu zbývalo 0,2 obrazovky (~170 px), karta měří
+přes 400. Procházelo to jen proto, že se graf u většiny nabídek
+nekreslil — klidnou řadu má 21 okresů ze 48. Teprve když §205 udělal
+z grafu věc, která je všude, se to ukázalo.
+
+Udělaly se tři věci, než se sáhlo na mez:
+
+1. **Poznámka pod grafem se v inzerátu zkrátila.** A nebyla to jen
+   délka: ten odstavec vysvětluje, proč se čára nerovná mediánu NAD
+   grafem — jenže v inzerátu žádný takový medián není. Vysvětloval
+   rozpor, který tam nikdo nevidí. Karta spadla z 558 na 460 px
+   (390×844).
+2. **Rezervace výšky se snížila** na novou míru (422–470 px místo
+   480–596), aby v kartě nezbýval vzduch.
+3. **Karta se přesunula až za mapu.** Nejdřív stála hned pod
+   verdiktem jako v předloze ze Sreality; tím ale odsunula rádce pod
+   polovinu stránky (2 136 z 3 759 px) a mapu na 60 %. Rozhodování je
+   přednější než věrnost předloze. Za mapou křivka nic neztrácí —
+   obojí odpovídá na „jaké to je tady", kdežto cena a tlačítka na
+   „co s tím".
+
+Po tom všem zbylo 4 014 px = **5,02 obrazovky** proti mezi 4,4. Mez se
+tedy zvedla na 5,1 — přesně o to, co přibylo, ne „s rezervou do
+budoucna". Zbývala poslední možnost, jak se tomu vyhnout: sbalit graf
+do rozbalovátka. Ta se NEUDĚLALA, protože majitel chtěl tu kartu
+vidět, ne schovat.
+
+### Dva pády, které se vyšetřily a nejsou to vady webu
+
+**`test-rozdeleni-stylu`** spadl jednou ze šesti běhů, a jen v dlouhé
+sekvenční sadě. Příčina není ve stylopisu: zkouška čeká na ustálení
+stránky dvěma stejnými čteními po 200 ms, a pod zátěží se stránka
+takhle „ustálí" a pak ještě doroste — porovnávaly se dva různé
+okamžiky. Čeká teď na tři stejná čtení a při rozdílu obě měření jednou
+zopakuje, než ohlásí nález.
+
+**`test-zaostreni`** („otvírač okna zásady soukromí leží nahoře") padá
+i ve stavu před dnešní prací. Není to tedy dnešní vada a nechává se
+samostatně — zapsáno jako úkol, ne zameteno.
+
+### A ještě jedna zkouška, která četla ikonu po staru
+
+`test-mapa-pozemku` ověřuje, že se ikona zvětšení mapy překlopí na
+„zmenšit". Četla tvar z atributu `d` — jenže od zavedení sady je tvar
+v `<use href>`. Zajímavé je, JAK se to projevilo: kontrola „ikona se
+vrátí k zvětšit" **procházela**, protože porovnávala dvě prázdna,
+a padala jen ta druhá. Obě čtečky teď berou jméno ikony.

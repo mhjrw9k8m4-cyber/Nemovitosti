@@ -661,12 +661,10 @@ to{opacity:1;transform:none}
 .pz-vyvoj-karta{padding:0 16px;border:1px solid transparent;border-top-width:0;border-bottom-width:0;border-radius:var(--r-plocha)}
 .pz-vyvoj:not(.ma-graf):not(.ceka)>.pz-sect-h,.pz-vyvoj:not(.ma-graf):not(.ceka)>.pz-vyvoj-dal{display:none}
 .pz-vyvoj.ceka>.pz-sect-h,.pz-vyvoj.ceka>.pz-vyvoj-dal{visibility:hidden}
-.pz-vyvoj-karta{min-height:480px}
-@media (max-width:479px){.pz-vyvoj-karta{min-height:520px}
+.pz-vyvoj-karta{min-height:422px}
+@media (max-width:479px){.pz-vyvoj-karta{min-height:450px}
 }
-@media (max-width:409px){.pz-vyvoj-karta{min-height:558px}
-}
-@media (max-width:374px){.pz-vyvoj-karta{min-height:596px}
+@media (max-width:409px){.pz-vyvoj-karta{min-height:470px}
 }
 .pz-vyvoj.ma-graf>.pz-vyvoj-karta{padding:16px;background:var(--plocha-karta);border-width:1px;border-color:var(--line);box-shadow:var(--e1)}
 .pz-vyvoj .gc{margin:0}

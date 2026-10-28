@@ -629,7 +629,7 @@
            nemá rozměr ani polohu. Prázdná karta má proto jen vodorovné
            odsazení (výšku nula, žádný rámeček) a je vidět; rám, výplň
            i nadpis jí přidá třída .ma-graf, až čára opravdu vznikne. */
-      + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
+      + '<div class="pz-vyvoj-karta" data-graf-cen data-strucne data-uroven="okres"'
         + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"'
         /* ZÁLOHY: KRAJ, A KDYŽ ANI TEN, TAK CELÁ ČR. Klidnou řadu má
            21 okresů ze 48, takže bez záloh neměla většina nabídek graf
@@ -2550,18 +2550,6 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
-      /* VÝVOJ CENY V OKOLÍ — hned pod verdiktem.
-         Majitel poslal jako předlohu Sreality: pod cenou karta
-         „Cenový přehled" s křivkou vývoje ceny v lokalitě a odkazem
-         dál. Křivku web umí od začátku (js/graf-cen.js, data
-         z historie-cen.json), jen stála na okresních a krajských
-         stránkách — tedy všude kromě místa, kde se o ceně rozhoduje.
-         Nic se nepřepočítává: zobrazí se TÁŽ řada, kterou o témž
-         okrese ukazuje okresní stránka, takže se čísla nemůžou
-         rozejít. Když pro okres klidná řada není, nenakreslí se nic
-         — ani prázdný rámeček (graf-cen.js to řeší sám). */
-      pzVyvojHtml(d) +
-
       /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
          čeho vzniklo, patří k sobě — kdo verdikt čte, má mít seznam
          na očích, ne o tři obrazovky níž. */
@@ -2613,6 +2601,26 @@
          čtvrté obrazovce. U pozemku je přitom poloha hned po ceně to
          první, co se člověk ptá: vede tam cesta? co je kolem? */
       pzMapaHtml(d) +
+
+      /* VÝVOJ CENY V OKOLÍ — AŽ ZA MAPOU.
+         Majitel poslal jako předlohu Sreality: pod cenou karta
+         „Cenový přehled" s křivkou vývoje ceny v lokalitě. Tam stála
+         první verze. Jenže karta měří 392–460 px a všechno pod ní
+         odsunula: rádce spadl pod polovinu stránky a mapa na 60 %
+         (zkoušky to shodily — „tam na něj nikdo neklepne"). Rozhodování
+         je přednější než věrnost předloze.
+
+         Za mapou křivka nic neztrácí: obojí odpovídá na „jaké to je
+         tady", kdežto cena a tlačítka na „co s tím". Nic se
+         nepřepočítává — zobrazí se TÁŽ řada, kterou o témž okrese
+         ukazuje okresní stránka.
+
+         Poznámka pod grafem je tu STRUČNÁ (data-strucne): dlouhá
+         metodika patří na okresní stránku, kde vedle grafu stojí
+         medián za celou skupinu druhů. V inzerátu takové číslo nad
+         grafem není, takže by vysvětlovala rozpor, který tam nikdo
+         nevidí. */
+      pzVyvojHtml(d) +
 
       /* RÁDCE: ZABALENÝ, ALE V INZERÁTU — NE AŽ POD PATIČKOU.
          Zabalený je proto, že je to zeď textu: změřeno na telefonu měl

@@ -368,7 +368,7 @@
     return '<section class="pz-vyvoj" id="pz-vyvoj">'
       + '<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>'
 
-      + '<div class="pz-vyvoj-karta" data-graf-cen data-uroven="okres"'
+      + '<div class="pz-vyvoj-karta" data-graf-cen data-strucne data-uroven="okres"'
         + ' data-nazev="' + esc(d.okres) + '" data-kde="v okrese ' + esc(d.okres) + '"'
 
         + ' data-zalohy="' + esc(pzZalohyGrafu(d)) + '"></div>'
@@ -1481,8 +1481,6 @@
 
       '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
 
-      pzVyvojHtml(d) +
-
       pzSrovnaniHtml() +
 
       '<details class="pz-gtk-obal">' +
@@ -1502,6 +1500,8 @@
       '</div>' +
 
       pzMapaHtml(d) +
+
+      pzVyvojHtml(d) +
 
       pzPopisHtml(d) +
 

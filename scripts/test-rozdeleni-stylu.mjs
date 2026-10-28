@@ -216,14 +216,20 @@ function balikStranky(stranka) {
    a vyňal `.leaflet-tile` z porovnání. Vyjmutí je správně a zůstává —
    kolik dlaždic v DOM je, o stylopisu opravdu nic neříká —, ale
    příčinu to nevysvětlilo: rozdíl se vracel dál.) */
+/* TŘI STEJNÁ ČTENÍ, NE DVĚ. Dvě stačila, dokud byl stroj v klidu:
+   pod zátěží (138 zkoušek za sebou) se stránka na 400 ms „ustálí"
+   a pak ještě doroste, takže druhé načtení napočítá jiný počet prvků
+   než první a kontrola spadne na „stejný strom" — ne proto, že by se
+   stylopis rozešel, ale protože se měřily dva různé okamžiky.
+   Naměřeno 28. 10.: jeden pád ze šesti běhů, a jen v dlouhé sadě. */
 async function ustal(page) {
   await page.waitForTimeout(900);
   let minule = -1, stejne = 0;
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 30; i++) {
     const ted = await page.evaluate(() => document.querySelectorAll('*').length);
     stejne = (ted === minule) ? stejne + 1 : 0;
     minule = ted;
-    if (stejne >= 2) return;
+    if (stejne >= 3) return;
     await page.waitForTimeout(200);
   }
 }
@@ -301,9 +307,17 @@ for (const stranka of STRANKY) {
     pravda(`${kde} si bere zkrácený stylopis`, false, `odkazuje na ${balik || 'nic'}`);
     continue;
   }
-  const a = await zmer(page, stranka, false, balik);   /* zkrácený */
-  const b = await zmer(page, stranka, true, balik);    /* plný */
+  let a = await zmer(page, stranka, false, balik);   /* zkrácený */
+  let b = await zmer(page, stranka, true, balik);    /* plný */
 
+  /* Nestejný počet prvků znamená, že se měřily dva různé okamžiky téže
+     stránky — ne že by se stylopis rozešel. Než se to ohlásí jako
+     nález, zkusí se obě měření ještě jednou. Když se rozdíl vrátí,
+     je to skutečná vada a hlásí se. */
+  if (a.prvky.length !== b.prvky.length) {
+    a = await zmer(page, stranka, false, balik);
+    b = await zmer(page, stranka, true, balik);
+  }
   if (a.prvky.length !== b.prvky.length) {
     pravda(`${kde}: stejný strom`, false,
       `zkrácený ${a.prvky.length} prvků, plný ${b.prvky.length} — stránka se staví nestejně, měření nemá smysl`);

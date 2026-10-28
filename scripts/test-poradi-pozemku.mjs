@@ -333,9 +333,32 @@ try {
          rozdíl 43 px v sazbě a mapovém rámu. Zkouška tím padala podle
          toho, KDE běží, ne co měří.
      Ani jedno není důvod stránku natahovat: smysl meze (po předělání se
-     nesmí vrátit k 4,7) platí dál a zbývá do ní 0,2 obrazovky. */
-  pravda('celá stránka se vejde do 4,4 obrazovky telefonu',
-    m.cela <= m.obrazovka * 4.4,
+     nesmí vrátit k 4,7) platí dál a zbývá do ní 0,2 obrazovky.
+
+     MEZ SE 28. 10. ZVEDLA ZE 4,4 NA 5,1 a je to zase úprava zkoušky,
+     takže zase patří říct proč — a tentokrát je to dražší než posledně.
+
+     Přibyla KARTA S VÝVOJEM CENY, o kterou si majitel řekl („predelat
+     ten graf v inzeratu na ten jak maji s reality"). Měří 392–460 px
+     podle šířky, tedy 0,46–0,55 obrazovky, a stránka z 3 554 px
+     (4,44) vyrostla na 4 014 px (5,02).
+
+     Co se zkusilo, aby se nemusela zvedat:
+       · poznámka pod grafem se v inzerátu ZKRÁTILA (karta spadla
+         z 558 na 460 px na 390 px šířky). Nebyla to jen délka: ten
+         odstavec vysvětluje, proč se čára nerovná mediánu NAD grafem —
+         jenže v inzerátu žádný takový medián není, takže vysvětloval
+         rozpor, který tam nikdo nevidí;
+       · karta se přesunula AŽ ZA MAPU, aby neodsouvala rádce ani
+         tlačítka. Mapa je díky tomu zpátky na 52 % stránky.
+     Dál už by se musel graf sbalit do rozbalovátka — a to je proti
+     tomu, oč majitel žádal: chtěl tu kartu VIDĚT.
+
+     Mez tedy roste přesně o to, co přibylo (0,55 + rezerva na
+     prostředí), ne „s rezervou do budoucna". Smysl zůstává: kdyby
+     stránka začala růst z jiných důvodů, mez to pozná. */
+  pravda('celá stránka se vejde do 5,1 obrazovky telefonu',
+    m.cela <= m.obrazovka * 5.1,
     `${m.cela} px = ${(m.cela / m.obrazovka).toFixed(2)} obrazovky`);
   /* Co po kalkulačce zbylo a zůstat má: odkaz na rozepsané náklady
      koupě. Ten počítá z vlastní ceny pozemku, ne z hádání. */

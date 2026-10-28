@@ -611,8 +611,12 @@ const HOST = {
   pravda('v mapě je tlačítko na zvětšení', await p.locator('#pzm-cela').count() === 1);
   const pred = await p.evaluate(() => window.PK_PZ_MAPA.getSize().y);
   const ikonaPred = await p.evaluate(() => {
-    const t = document.querySelector('#pzm-cela path');
-    return t ? t.getAttribute('d') : '';
+    /* Tvar ikony je od zavedení sady v <use href="#i-…">, ne
+       v atributu d. Přepínač proto mění JMÉNO ikony; kdo čte path,
+       dostane prázdno — a dvě prázdna si jsou rovna, takže kontrola
+       „vrátí se k zvětšit" procházela, zatímco „překlopí se" padala. */
+    const t = document.querySelector('#pzm-cela use');
+    return t ? (t.getAttribute('href') || '') : '';
   });
   await p.locator('#pzm-cela').click();
   await p.waitForTimeout(900);
@@ -626,8 +630,8 @@ const HOST = {
       return e ? Math.round(e.getBoundingClientRect().height) : 0; })(),
     prepinace: [...document.querySelectorAll('.pzm-cela-zap .pzm-v')]
       .filter(function (b) { return b.getBoundingClientRect().height > 0; }).length,
-    ikona: (function () { var t = document.querySelector('#pzm-cela path');
-      return t ? t.getAttribute('d') : ''; })(),
+    ikona: (function () { var t = document.querySelector('#pzm-cela use');
+      return t ? (t.getAttribute('href') || '') : ''; })(),
   }));
   /* Nestačí „vyšší než dřív": ve zvětšení musí mapa zabrat většinu
      okna. Jinak se pod ní nakupí panel, popis a vysvětlivky a zbude
@@ -650,8 +654,8 @@ const HOST = {
     cela: !!document.querySelector('.pzm-cela-zap'),
     mapa: window.PK_PZ_MAPA.getSize().y,
     telo: document.body.classList.contains('pzm-cela-telo'),
-    ikona: (function () { var t = document.querySelector('#pzm-cela path');
-      return t ? t.getAttribute('d') : ''; })(),
+    ikona: (function () { var t = document.querySelector('#pzm-cela use');
+      return t ? (t.getAttribute('href') || '') : ''; })(),
   }));
   pravda('Escape zvětšení zavře', !zavreno.cela && !zavreno.telo,
     'mapa přes celou obrazovku bez cesty ven je past');

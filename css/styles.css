@@ -8707,13 +8707,17 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    nejvyšší na dané šířce a uvnitř zbyde kousek vzduchu dole. Vzduchu
    si nikdo nevšimne, skoku pod prstem ano.
 
-   Čísla jsou maxima z měření (pět nabídek, 360–1280 px) a jsou
+   Čísla jsou maxima z měření (čtyři nabídky, 360–1280 px) a jsou
    o 10 px vyšší, aby se do nich vešel i delší nadpis, než jaký dnes
-   v datech je. Že žádný skok nezbyl, hlídá test-graf-cen. */
-.pz-vyvoj-karta{min-height:480px;}
-@media (max-width:479px){ .pz-vyvoj-karta{min-height:520px;} }
-@media (max-width:409px){ .pz-vyvoj-karta{min-height:558px;} }
-@media (max-width:374px){ .pz-vyvoj-karta{min-height:596px;} }
+   v datech je. Že žádný skok nezbyl, hlídá test-graf-cen.
+
+   SNÍŽENO 28. 10. ze 480–596 px: poznámka pod grafem se v inzerátu
+   zkrátila (viz kresli() v js/graf-cen.js), takže karta přirozeně
+   měří 392–460 px místo 412–586. Nechat starou rezervaci by nechalo
+   v kartě až 136 px vzduchu. */
+.pz-vyvoj-karta{min-height:422px;}
+@media (max-width:479px){ .pz-vyvoj-karta{min-height:450px;} }
+@media (max-width:409px){ .pz-vyvoj-karta{min-height:470px;} }
 .pz-vyvoj.ma-graf > .pz-vyvoj-karta{padding:16px;
   background:var(--plocha-karta); border-width:1px; border-color:var(--line);
   box-shadow:var(--e1);}
