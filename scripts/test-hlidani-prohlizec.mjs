@@ -704,49 +704,6 @@ if (smazat) {
   await ctxU.close();
 }
 
-/* ---------- Předvyplnění z adresy („Uložit hledání" nad výpisem) ----------
-   Bod 4.2 předlohy: nad výpisem přibylo tlačítko, které nese nastavené
-   filtry sem v adrese. Kdyby se tahle strana mostu rozešla s tou druhou
-   (js/main.js), člověk by dorazil na prázdný formulář a nepoznal proč —
-   tiše, bez chyby v konzoli. Proto se měří obě strany: že se políčka
-   opravdu nastavila, A že se o nepřeneseném mlčky nepřejde. */
-{
-  /* TÝŽ KONTEXT, ne nový: přihlášení i odchycené volání na Supabase
-     v něm už jsou. Vlastní kontext se nabízel, ale bez těch odchytů
-     se formulář nepostaví vůbec a zkouška spadne na čekání — což je
-     přesně to, co si tenhle soubor sám zakazuje (chybějící prvek patří
-     do pojmenované kontroly, ne do výjimky). */
-  const pp = await ctx.newPage();
-  await pp.goto(`${BASE}/hlidani.html?okres=Kol%C3%ADn&typ=obec&perm2=50&cena_do=800000&celek=1`,
-    { waitUntil: 'domcontentloaded' });
-  const jeFormular = await pp.waitForSelector('#ns-okres', { state: 'attached', timeout: 15000 })
-    .then(() => true).catch(() => false);
-  pravda('formulář hlídání se otevřel i s nastavením v adrese', jeFormular,
-    'políčko #ns-okres se do 15 s neobjevilo');
-  if (jeFormular) {
-    await pp.waitForTimeout(600);
-    const v = await pp.evaluate(() => ({
-      okres: (document.getElementById('ns-okres') || {}).value,
-      perm2: (document.getElementById('ns-perm2') || {}).value,
-      cena: (document.getElementById('ns-price') || {}).value,
-      celek: !!(document.getElementById('ns-celek') || {}).checked,
-      typ: (document.getElementById('ns-type') || {}).value,
-      hlaska: ((document.getElementById('ns-msg') || {}).textContent || ''),
-    }));
-    je('místo z adresy se předvyplnilo', v.okres, 'Kolín');
-    je('cena za metr taky', v.perm2, '50');
-    je('a horní mez ceny', v.cena, '800000');
-    pravda('zaškrtnutí „jen celé pozemky" se přeneslo', v.celek === true, JSON.stringify(v.celek));
-    /* PŘEDPOKLAD: kdyby „obec" rozbalovátko nabízelo, kontrola pod tím
-       by měřila něco jiného, než na co je psaná. */
-    pravda('typ, který hlídání nenabízí, zůstal na „vše"', v.typ === '', 'v rozbalovátku: ' + v.typ);
-    pravda('a stránka o něm řekla, že se nepřenesl',
-      /nep.enes/i.test(v.hlaska) && /typ nab.dky/i.test(v.hlaska),
-      'hláška: ' + (v.hlaska || '(prázdná)'));
-  }
-  await pp.close();
-}
-
 je('na žádné stránce nespadl skript', padlo, []);
 
 await prohlizec.close();

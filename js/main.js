@@ -289,8 +289,6 @@
     podobne: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M19.5 19.5l-4.1-4.1"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/>',
     // Oko: odkryjeme skryté nabídky.
     odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
-    // Zvoneček: dát vědět, až něco takového přibude.
-    hlidat: '<path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
     // Přeškrtnuté oko: zase je schováme.
     zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
   };
@@ -6799,15 +6797,11 @@
     // Když se zrovna listují uložené, řekneme rovnou, kde bydlí.
     if (favOnly) pripisky += ' <span class="mc-pozn">'
       + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
-    /* „Doporučené" není žebříček, pořadí se každý den zamíchá — a říct
-       se to má. Řádek pod počtem to ale být nemá: předloha od majitele
-       (bod 4.3) má nad výpisem JEDEN řádek, „107 572 inzerátů" vlevo
-       a řazení vpravo, a majitel k tomu řekl, že nechce příručku, ale
-       web na prodej. Tahle věta tam stála natrvalo a brala třetí řádek
-       hned nad první nabídkou.
-       Zůstává tam, kde o pořadí rozhoduje: jako vysvětlivka ovladače
-       řazení (title níž). Kdo si pořadí přepíná, ten se ptá; kdo
-       prochází nabídky, ten ne. */
+    /* „Doporučené" není žebříček, pořadí se každý den zamíchá. Stávalo
+       to v závorce u volby řazení, kde to přečetl jen ten, kdo rozbalil
+       seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
+       vidí každý, komu se tak právě řadí, a je to výchozí pořadí. */
+    if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
@@ -6910,37 +6904,6 @@
        říká, co se stane, a co znamená doprava a doleva, ukáže úvodní
        okénko hned po otevření (#rv-uvod v index.html) — tedy dřív, než
        člověk první nabídku odsvihne. */
-    /* ULOŽIT HLEDÁNÍ — bod 4.2 předlohy („Uložit hledání" nad výpisem
-       na reality.idnes). Kdo si výpis zúží a dnes nic nenajde, nemá jak
-       říct „dejte vědět, až něco přibude": hlídání sice máme, ale
-       formulář se otevře prázdný a člověk by musel ručně přepsat to,
-       co právě nastavil. Tlačítko nese filtry s sebou v adrese
-       a hlidani.html si je přečte.
-       UKAZUJE SE JEN SE ZÚŽENÝM VÝPISEM. Nad nezúženým by znamenalo
-       „hlídat celou ČR", což nabízí dlaždice „Hlídat nové nabídky" na
-       stránce pozemku — dvě cesty k témuž na jedné obrazovce matou.
-       A tím se zároveň drží rozpočet šířky řádku nástrojů, o kterém je
-       řeč o kus výš: tlačítko přibývá jen tam, kde si ho člověk
-       vysloužil nastavením filtru. */
-    var hlidaniQ = (function () {
-      var q = [];
-      var misto = (mistoFiltr && (mistoFiltr.place || mistoFiltr.okres))
-        || (searchEl && searchEl.value.trim()) || '';
-      if (misto) q.push('okres=' + encodeURIComponent(misto));
-      if (activeType !== 'all') q.push('typ=' + encodeURIComponent(activeType));
-      // Druh jde poslat jen jeden — hlídání má na druh jedno rozbalovátko.
-      if (druhVybrane && druhVybrane.length === 1) q.push('druh=' + encodeURIComponent(druhVybrane[0]));
-      if (minPrice) q.push('cena_od=' + minPrice);
-      if (maxPrice) q.push('cena_do=' + maxPrice);
-      if (minArea) q.push('vym_od=' + minArea);
-      if (maxArea) q.push('vym_do=' + maxArea);
-      if (maxPerM2) q.push('perm2=' + maxPerM2);
-      if (jenCelek) q.push('celek=1');
-      return q.join('&');
-    }());
-    if (hlidaniQ) tlacitka += '<a class="mc-nastroj" href="hlidani.html?' + esc(hlidaniQ) + '">'
-      + ikonaNastroje('hlidat')
-      + '<span class="mc-popis">Uložit<span class="mc-dl"> hledání</span></span></a>';
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
       + ' aria-label="Procházet po jednom">'
       + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;

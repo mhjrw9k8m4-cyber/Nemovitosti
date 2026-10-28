@@ -485,6 +485,7 @@
   --plocha-tmava-rgb:18,36,26;
   --accent-warm-bright-rgb:224,184,120;
   --text-ondeep-mute-rgb:201,210,203;
+  --plocha-znacka-rgb:0,79,47;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -2701,6 +2702,7 @@ h1 em{ color:var(--znacka-svetla);
 .opp-fav:active{transform:scale(1.2);}
 /* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
    tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
+.opp-deal{display:inline-block; font-size:12px; font-weight:700; color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border:1px solid rgba(var(--c-ok-ink-rgb),0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
 /* NADPIS, ČÍSLO A POZNÁMKA JSOU TŘI DÍLKY V JEDNÉ MŘÍŽCE, ne jedna
    dlouhá věta. Dokud to byl plynulý text, lámal se, kde zrovna došla
    šířka, a 440px sloupec z něj udělal tři nestejně odsazené řádky.
@@ -4453,18 +4455,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      se nebije s ničím a je to i to, co na snímku z telefonu stojí. */
   .opp-badge{top:auto; bottom:9px; left:9px; font-size:13px; padding:4px 8px 4px 8px; gap:4px;}
   .opp-badge::before{width:7px; height:7px;}
-  /* POČET FOTEK DO PROTILEHLÉHO ROHU. Značka s počtem má v základu
-     `left:10px; bottom:10px` — tedy týž roh, do kterého tady o dva
-     řádky výš sjíždí odznak druhu. NAMĚŘENO 27. 10. na 390 px (značku
-     s počtem jsem musel kartě vnutit, protože ani jedna z 24 dnešních
-     nabídek víc fotek nemá, takže na živých datech to vidět nebylo):
-       odznak  26,618  90×29
-       počet   27,623  24×23   → průnik 552 px²
-     Počet fotek ležel na odznaku druhu celou svou plochou. Jde o roh,
-     který odznak dostal teprve tady; v základním rozvržení sedí nahoře
-     vlevo a nebijí se. Proto se stěhuje počet, ne odznak — a doprava
-     dolů, kde je volno (nahoře vpravo je záložka pro uložení). */
-  .opp-count{left:auto; right:10px;}
+  .opp-count{display:inline-flex;}     /* počet fotek se do velkého náhledu vejde */
   /* 38 px: dotykové minimum je 36, a na velké fotce smí být terč větší. */
   /* Tlačítko má od chvíle, kdy u ikony stojí slovo, šířku podle obsahu.
      Stálo tu width:38px — pilulka se do toho nevešla, text se ořízl
@@ -7097,16 +7088,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      níž (ř. ~6739) s `display:flex` a při stejné síle by vyhrálo
      pozdější pravidlo — obě tlačítka by pak seděla přes sebe na celou
      šířku. Naměřeno: obojí 370 px na téže řádce. */
-  /* OBAL OVLÁDÁNÍ UŽ V TÉHLE DVOJICI NENÍ. Od bodu 4.3 předlohy mu
-     o kus níž stojí `display:contents`, takže žádnou mřížku nedělá
-     a jeho děti jsou položkami řádku výsledků. Dokud tu byl, jeho
-     `> *{width:100%}` bylo o stupeň silnější než pravidla, která
-     řazení a „Uložené" šířku teprve dávají — a tiše je přebíjelo:
-     naměřeno 390 px u obou, tedy čtyři prvky pod sebou místo řádku.
-     Zbývají tu jen dvě podoby řádku nástrojů, pro které to platí. */
-  .map-side .mc-akce, .ms-vysledky > .mc-akce{
+  .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
     display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:8px; width:100%; flex:1 1 100%;}
+  .ms-vysledky .msv-ovladani > *:not([hidden]),
   .map-side .mc-akce > *:not([hidden]),
   .ms-vysledky > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
   /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
@@ -7193,9 +7178,9 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Prázdné pásmo pod lištou drží deska s nadpisem, ne odsazení. */
   .hero-map .map-wide{padding-top:0;}
 
-  /* Řazení z téhle sestavy odešlo (viz „ŘAZENÍ NENÍ TLAČÍTKO" níž):
-     tvar ovladače dostávají jen ty prvky, které ovladače jsou. */
-  .ms-vysledky .msv-ulozene{
+  .ms-vysledky .msv-ulozene,
+  .ms-vysledky .map-select,
+  .ms-vysledky .cdd-btn{
     min-height:44px; height:44px; padding:0 12px;
     border-radius:var(--r-ovladani);
     border:1px solid var(--line-ui);
@@ -7225,45 +7210,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      ušetřených osmadvacet pixelů za to nestojí. Nadpis se smí zalomit
      na dva řádky; první nabídka tím klesne z 289 na ~311 px, pořád
      hluboko pod mezí 330 v test-prvni-obrazovka. */
-  /* POČET VLEVO, ŘAZENÍ VPRAVO, JEDEN ŘÁDEK — bod 4.3 předlohy.
-     iDNES má nad výpisem jeden šedý pruh: „107 572 inzerátů" vlevo,
-     „Nejnovější" se šipkou vpravo. U nás si nadpis bral celý řádek
-     (`flex:1 1 100%`) a pod ním stála mřížka čtyř tlačítek, ve které
-     řazení vypadalo jako jedno z nich — ačkoli výpis neovládá, jen
-     ho přerovnává.
-     Nadpis si teď bere, co zbyde, a smí se zalomit na dva řádky. */
-  /* `1 1 0`, NE `1 1 auto`: zalamovací řádek se nejdřív zalomí a až
-     potom smršťuje, takže při basis podle obsahu („Doporučené
-     příležitosti · 1 909 na mapě" je širší než 358 px) spadlo řazení
-     pod něj — naměřeno. S nulovým základem si nadpis vezme, co po
-     řazení zbyde, a smí se zalomit na dva řádky. */
-  .ms-vysledky .map-count{font-weight:700; flex:1 1 0;}
-  /* Řádek nástrojů až pod ně: bez pořadí by stál mezi nadpisem
-     a „Uloženými", protože ve značce leží dřív. */
-  .ms-vysledky > .mc-akce{order:4;}
-  /* Obal ovládání přestává být rámcem, aby si řazení a „Uložené"
-     mohly v řádku stát každý jinde. Ve značce i pro odečítač zůstává. */
-  .ms-vysledky .msv-ovladani{display:contents;}
-  /* Řazení se přitiskne k pravému okraji téhož řádku jako počet. */
-  .ms-vysledky .msv-razeni{order:1; margin-left:auto; flex:0 0 auto; width:auto;}
-  /* „Uložené" spadne pod ně a drží ŠÍŘKU POLÍČKA, ne celého řádku:
-     (100 % − mezera) / 2 je táž míra, jakou mají nástroje o řádek níž,
-     takže všechna políčka nad výpisem zůstávají stejně velká — to je
-     to, co majitel upevnil fotkou. Dopočítává se, nepíše se. */
-  /* ZÁKLAD 100 %, ŠÍŘKA PŮLKA. Samotné `width:50%` nestačilo: do
-     prvního řádku se vejde nadpis i řazení i „Uložené" (48 + 119 +
-     175 px) a nadpis se zmáčkl na 48 px na SEDM řádků — naměřeno.
-     Základ přes celou šířku zalomí řádek před ním, strop šířky mu
-     pak nechá přesně míru políčka nástroje o řádek níž. */
-  /* ZARÁŽKA ŘÁDKU. Samotný `flex-basis:100%` na „Uložených" zalomení
-     nevynutí — strop šířky se uplatní DŘÍV, než se řádky dělí, takže
-     prvek nabídne jen 175 px a vejde se k nadpisu. Naměřeno dvakrát
-     po sobě: nadpis 48 px na 207 px výšky, tedy sedm řádků v úzkém
-     sloupci. Řádek proto dělí prázdný prvek mezi řazením a „Uloženými",
-     který žádný strop nemá; kreslit nemá co (výška 0). */
-  .ms-vysledky::after{content:""; order:2; flex:0 0 100%; height:0;}
-  .ms-vysledky .msv-ulozene{order:3; flex:0 0 auto;
-    width:calc((100% - 8px) / 2); margin-right:auto;}
+  .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
   .ms-vysledky .mc-sub{color:var(--muted); font-weight:600;}
   .msv-ulozene{min-height:34px; padding:4px 8px;}
   /* 13px jako sousedé. Dvanáctka tu byla jediná v celé řadě a dělala
@@ -7271,17 +7218,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      A ŽÁDNÝ STROP ŠÍŘKY: 150 px z něj dělalo užší políčko než
      „Uložené" vedle (193 px), tedy přesně tu nejednotnost, kvůli které
      se tahle řada rovnala. */
-  /* ŘAZENÍ NENÍ TLAČÍTKO. Na předloze je to tichý text se šipkou
-     v pravém konci řádku, ne políčko — a je to tak správně: tlačítky
-     se výpis zužuje („Uložené") nebo se s ním něco dělá („Stáhnout
-     výběr"), kdežto řazením se jen přerovnává to, co už je vidět.
-     Dokud mělo plochu, rámeček a 44 px jako sousedé, četlo se jako
-     pátý ovladač v mřížce.
-     Tím zároveň přestává spadat pod pravidlo „všechna políčka mají
-     mít stejnou velikost": není políčko. Políčka — „Uložené"
-     a nástroje — si jednu velikost drží dál. */
-  .msv-razeni .map-select{min-height:34px; max-width:none; width:auto; font-size:13px;
-    background:none; border:0; padding:0 20px 0 0; color:var(--muted); font-weight:600;}
+  .msv-razeni .map-select{min-height:34px; max-width:none; width:100%; font-size:13px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva.
      DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek
@@ -7935,29 +7872,16 @@ body > footer{flex:none;}
 .opp-skryt{position:absolute; top:52px; right:10px; left:auto;
   z-index:3; min-height:32px; padding:0 12px;
   display:inline-flex; align-items:center; gap:4px; border-radius:var(--r-pill);
-  /* TÝŽ KABÁT JAKO SRDÍČKO A ODZNAK. Na jedné fotce stály tři
-     překryvné prvky ve dvou různých kabátech (naměřeno 27. 10. na
-     390 px):
-       - Skrýt   BÍLÁ výplň, tmavé písmo, rámeček rgba(16,21,19,.55)
-       - Uložit  rgba(16,21,19,.74), bílé písmo, bez rámečku
-       odznak    rgba(16,21,19,.74), bílé písmo, bez rámečku
-     Bílá pilulka byla nejhlasitější věc na celé kartě — a nese
-     akci, která nabídku odstraní. Předloha od majitele (reality.idnes
-     a sreality) má nad fotkou jen tiché překryvné značky jedné
-     rodiny, ne jednu křiklavou. Kabát se proto sjednocuje s oběma
-     sousedy; UMÍSTĚNÍ, VELIKOST ANI VIDITELNOST se nemění, to je
-     doměřené jinde (viz bloky výš a scripts/test-skryt-videt.mjs).
-     Dřívější rámeček z --line-ui tu byl kvůli meze 3 : 1 na obrys
-     (WCAG 1.4.11) u BÍLÉ výplně nad světlým snímkem. Tmavá výplň
-     .74 tu mez řeší sama a stejně jako u srdíčka, které vedle stojí. */
-  background:rgba(var(--text-rgb),0.74); border:0;
-  color:#fff; font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
-  opacity:0; transition:opacity var(--cas-zakladni) var(--ease), background-color var(--cas-zakladni) var(--ease);}
+  /* Okraj z --line-strong vyšel proti výplni tlačítka na 1,87 : 1,
+     tedy pod mezí 3 : 1 (WCAG 1.4.11) — tlačítko se nad světlým
+     snímkem ztrácelo. Naměřila to zkouška test-okraje; --line-ui je
+     táž čára, jakou mají pilulky nářadí nad výpisem. */
+  background:var(--plocha-plovouci); border:1px solid var(--line-ui);
+  color:var(--text); font:inherit; font-size:13px; font-weight:600; line-height:1; cursor:pointer;
+  opacity:0; transition:opacity var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
 .opp-skryt .os-ic{font-size:12px; line-height:1;}
 .opp-item:hover .opp-skryt, .opp-item:focus-within .opp-skryt{opacity:1;}
-/* Na tmavé pilulce se najetí pozná ztmavením, ne jinou barvou písma:
-   --c-exekuce-ink je tmavá a na výplni .74 by se ztratila. */
-.opp-skryt:hover{background:rgba(var(--text-rgb),0.88);}
+.opp-skryt:hover{color:var(--c-exekuce-ink); border-color:var(--c-exekuce-ink);}
 .opp-skryt:focus-visible{opacity:1; outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 /* PRST NENÍ MYŠ. Na dotykovém zařízení se obě tlačítka nad fotkou zvětší
    na 44×44 px a dostanou mezi sebe mezeru.
@@ -8021,10 +7945,7 @@ body > footer{flex:none;}
 /* Skrytý pozemek, když si ho člověk nechá zobrazit: ztlumený, ať je jasné,
    že do seznamu normálně nepatří. */
 .opp-item.je-skryty{opacity:0.55;}
-/* Skrytá nabídka: stav nese PLOCHA, ne písmo. --accent-warm (#8A5512)
-   je tmavá barva a jako písmo na tmavé pilulce by byla nečitelná;
-   jako výplň má proti bílému písmu 6,2 : 1. */
-.opp-item.je-skryty .opp-skryt{opacity:1; background:var(--accent-warm); color:#fff;}
+.opp-item.je-skryty .opp-skryt{opacity:1; color:var(--accent-warm); border-color:var(--accent-warm);}
 
 /* =====================================================================
    STAŽENÍ VÝBĚRU — okno s volbou, co a v jakém tvaru
@@ -8146,33 +8067,24 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    (dvanáct), takže tatáž věc křičela na dvou místech různě. Počítadla
    (.msf-badge, .chip-n) zůstávají na 700 — tam je to číslo, ne slovo,
    a při 12 px se tenčí číslice hůř čtou. */
-/* Taky jen barva. Tohle pravidlo stojí naopak ZA základem, takže se
-   jeho tvar prosadil — a odznak byl obdélník se zaoblením 6 px mezi
-   samými pilulkami (naměřeno 27. 10.: čtyři odznaky 999 px, tenhle
-   a „podíl" 6 px). Dva tvary v jedné řádce odznaků jsou přesně to,
-   co má pravidlo o kus výš zakázané. */
-.opp-overit{color:#7C5105; background:rgba(var(--accent-warm-bright-rgb),0.16);
-  border-color:rgba(var(--accent-warm-rgb),0.3);}
+.opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
+  background:rgba(var(--accent-warm-bright-rgb),0.16); border:1px solid rgba(var(--accent-warm-rgb),0.3);
+  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
 /* „Podíl" na kartě. Není to varování ani výhoda, je to FAKT o tom, co
-   se prodává — proto neutrální plocha, ne jantar jako u „ceny
+   se prodává — proto neutrální šedomodrá, ne jantar jako u „ceny
    k ověření". Musí být čitelný, ale nesmí přetahovat pozornost odznakům,
    které opravdu volají po pozornosti. */
 /* „Úřední cena (§ 12)" u státní půdy je týž druh údaje jako „podíl":
    ne varování, ne výhoda — fakt o tom, za co se prodává. Proto tentýž
    neutrální styl, ne jantar jako u „ceny k ověření". */
-/* A TEĎ UŽ NEUTRÁLNÍ DOOPRAVDY. Komentář nad tímhle pravidlem sliboval
-   „neutrální šedomodrou", ale plocha i linka braly --plocha-znacka-rgb,
-   tedy 0,79,47 — ZNAČKOVOU ZELEŇ, nejsilnější barvu webu. Štítek, který
-   podle vlastního popisu nemá přetahovat pozornost, ji tak nosil jako
-   jediný ze šesti. Neutrální plocha je --plocha-jemna a linka --line;
-   je to týž recept, jakým se kreslí „Doporučujeme", a je to správně:
-   tichý štítek má mít jeden tvar, ne dva. */
 .opp-podil,
-.opp-urad{color:var(--muted); background:var(--plocha-jemna);
-  border-color:var(--line);}
+.opp-urad{display:inline-block; font-size:12px; font-weight:600;
+  color:var(--muted); background:rgba(var(--plocha-znacka-rgb),0.08);
+  border:1px solid rgba(var(--plocha-znacka-rgb),0.22);
+  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
@@ -8468,42 +8380,8 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 /* Sleva proti okolí: zelená jako jediná „dobrá zpráva" na kartě.
    Obrys z currentColor byl plná zelená linka, kdežto ostatní odznaky
    mají linku jen naznačenou — odtud ten rozdíl v síle. */
-/* DVA ODZNAKY, JEDNA ZPRÁVA, JEDEN RECEPT — a proto stojí vedle sebe.
-   „−45 % proti okolí" i „Zlevněno" říkají, že s cenou je to dobrá
-   zpráva. Dřív byly od sebe přes pět tisíc řádků a každý si kreslil
-   vlastní zeleň; teď je vidět na jeden pohled, že jsou si rovny.
-   ZÁLEŽÍ, ŽE JSOU AŽ TADY, tedy ZA `.opp-chips > *`. Ten základ dává
-   odznakům tvar zkratkou `border:1px solid transparent`, a zkratka
-   přebije i barvu linky. Dokud `.opp-deal` stál nad ním, jeho obrys
-   se ztrácel: naměřeno 27. 10. `1px rgba(0,0,0,0)` — jediný odznak
-   ze šesti bez linky, ačkoli si ji v pravidle poctivě nastavoval.
-   Tabulkovou číslici základ nenastavuje, takže si ji „−45 %" nese
-   samo, aby se procenta mezi kartami nehoupala. */
-.opp-deal{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12);
-  border-color:rgba(var(--c-ok-ink-rgb),0.3); font-variant-numeric:tabular-nums;}
-/* JEDNA ZELENÁ NA JEDNU ZPRÁVU. „Zlevněno" a „−45 % proti okolí" říkají
-   obojí „s cenou je to dobrá zpráva", ale měly dva různé recepty
-   (naměřeno 27. 10. na kartách úvodu):
-     opp-deal      rgba(31,163,99,0.12)   okraj z --c-ok-ink-rgb
-     opp-zlevneno  rgba(44,113,80,0.10)   okraj z --brand-live-rgb
-   Stejný inkoust, jiná plocha i linka — táž nejednotnost, kterou už
-   jednou prošly čtyři různé červené.
-   A HLAVNĚ: `var(--c-ok-plocha, …)` sliboval token, který v celém
-   repozitáři NIKDE není definovaný (ověřeno hledáním — jediný výskyt
-   byl právě tady). Vždycky se tedy kreslila záloha a zápis jen
-   předstíral, že se řídí soustavou. */
-.opp-zlevneno{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border-color:rgba(var(--c-ok-ink-rgb),0.3);}
-/* A opačný směr téže zprávy. „Zdraženo" sedí v JEDNÉ PŘIHRÁDCE se
-   „Zlevněno" (js/main.js vybírá jedno z nich podle `_zm.dolu`), ale
-   kreslilo se jinak než cokoli jiného na kartě: linka `1px solid
-   currentColor`, tedy v PLNÉ síle, zatímco všech šest sousedů má
-   0,3 — a žádná plocha, zatímco všichni ji mají. Dva odznaky z téhož
-   rozhodnutí, dva recepty.
-   Teplou rodinu sdílí s odpočtem do dražby schválně: web má jednu
-   teplou řadu, ne dvě. Barva říká kategorii („pozor"), rozlišuje až
-   text v odznaku. */
-.opp-zdrazeno{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10);
-  border-color:rgba(var(--c-drazba-rgb),0.3);}
+.opp-zlevneno{color:var(--c-ok-ink); background:var(--c-ok-plocha, rgba(var(--brand-live-rgb),0.10)); border-color:rgba(var(--brand-live-rgb),0.3);}
+.opp-zdrazeno{color:var(--c-drazba-ink); border:1px solid currentColor;}
 .por-pozn{font-size:13px; line-height:1.6; color:var(--muted);
   margin:12px 0 0; max-width:var(--m-text);}
 .por-nacitam{font-size:14px; color:var(--muted);}
