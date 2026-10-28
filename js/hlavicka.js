@@ -248,8 +248,7 @@
     b.className = 'to-top';
     b.type = 'button';
     b.setAttribute('aria-label', 'Zpět nahoru');
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">'
-      + '<path d="M12 19V6M6 12l6-6 6 6"/></svg><span>Nahoru</span>';
+    b.innerHTML = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-nahoru"/></svg><span>Nahoru</span>';
     (document.body || document.documentElement).appendChild(b);
   }
 

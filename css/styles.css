@@ -666,12 +666,9 @@
      dokud měl rozbalovač na monitoru u každého řádku obrázek — od chvíle,
      kdy je v panelech sedmnáct odkazů a obrázek by měly dva, je
      v rozbalovači holý text a ty dva tokeny už nikdo nekreslil.) */
-  --ikona-profil:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
-  --ikona-mapa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
-  --ikona-sance:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 4 14h7l-1 8 9-12h-7z'/%3E%3C/svg%3E");
-  --ikona-radce:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E");
-  --ikona-cena:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z'/%3E%3Cline x1='7.5' y1='7.5' x2='7.51' y2='7.5'/%3E%3C/svg%3E");
-  --ikona-posta:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");
+  --ikona-profil:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 20.5a8 8 0 0 1 16 0'/%3E%3C/svg%3E");
+  --ikona-mapa:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20.5c4.3-5.1 6.5-8.7 6.5-11A6.5 6.5 0 0 0 5.5 9.5c0 2.3 2.2 5.9 6.5 11zM12 6.6 14.9 9.5 12 12.4 9.1 9.5z'/%3E%3C/svg%3E");
+  --ikona-cena:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23276646' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 13.9 13.9 20a2.2 2.2 0 0 1-3.1 0L4 13.2V4h9.2l6.8 6.8a2.2 2.2 0 0 1 0 3.1zM8 8h.01'/%3E%3C/svg%3E");
   /* Čtecí sloupec. 62ch dávalo 80 znaků v mediánu a 89 v nejhorším
      místě — pořád za hranicí 75, kde se text čte nejlépe, a na strop 90
      ve zkoušce to nechávalo jediný znak rezervy. Jeden znak není
@@ -762,6 +759,23 @@
 }
 
 /* Ikony */
+/* SADA IKON. Tvary stojí v scripts/ikony.mjs a sestavení je vkládá za
+   <body> každé stránky jako <symbol>; na stránce se pak ikona volá
+   jménem: <svg><use href="#i-spendlik"/></svg>. Zásobník sám nic
+   nekreslí — musí ale zůstat ve stromu, proto se odklízí z toku, a ne
+   přes display:none. */
+.ik-sada{position:absolute; width:0; height:0; overflow:hidden;}
+/* PERO SADY. Stojí tu, a ne u symbolů, schválně: na obsah symbolu
+   nedosáhne žádný selektor, takže atribut uvnitř by přebil všechno —
+   i tloušťku, kterou si každé místo počítá k velikosti ikony (36/šířka,
+   ať je stopa na obrazovce vždy 1,5 px). Takhle se pero dědí dovnitř
+   symbolu a podrobnější pravidlo ho kdykoli přebije: proto je tenhle
+   řádek NAHOŘE a má jen jednu třídu. */
+.ik{fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+/* Druhá cesta ikony (fajfka v kolečku, „i" v kruhu, plus u domu) kreslí
+   ve výchozím stavu stejnou barvou jako zbytek — rozsvítí se jen tam,
+   kde si o to místo řekne. */
+.auth-sent-ico .ik-duraz, .pf-empty-ico .ik-duraz{stroke:var(--znacka-svetla);}
 .ic{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 
 *{box-sizing:border-box; margin:0; padding:0;}
@@ -2098,7 +2112,7 @@ h1 em{ color:var(--znacka-svetla);
 @media (prefers-reduced-motion:reduce){ .mnb-ceka{animation:none; border-top-color:rgba(255,255,255,0.4);} }
 .map-near-btn:hover{border-color:var(--znacka-svetla); background:var(--surface-2);}
 .map-near-btn:active{transform:translateY(1px);}
-.map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none;}
+.map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2.12; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 .map-near-btn.on{background:var(--plocha-zapustena); color:var(--znacka-svetla); border-color:var(--znacka-svetla); box-shadow:none;}
 /* Skupiny ovládání v postranním panelu — čitelná hierarchie místo hromady prvků */
 .ms-group{margin-top:12px;}
@@ -5496,7 +5510,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-success h2{font-family:var(--font-display); font-weight:700; font-size:28px; letter-spacing:-0.02em; margin:16px 0 8px; color:var(--parchment);}
 .add-success p{font-size:16px; color:var(--muted); line-height:1.6; max-width:var(--m-karta); margin:0 auto 20px;}
 .asx-check{width:72px; height:72px; margin:0 auto; border-radius:50%; background:rgba(95,176,126,0.16); display:grid; place-items:center;}
-.asx-check svg{width:52px; height:52px; fill:none; stroke:#5FB07E; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round;}
+.asx-check svg{width:52px; height:52px; fill:none; stroke:#5FB07E; stroke-width:1.62; stroke-linecap:round; stroke-linejoin:round;}
 .asx-check circle{stroke:rgba(95,176,126,0.55); stroke-dasharray:151; stroke-dashoffset:151; animation:asxCircle var(--cas-pomaly) var(--ease) forwards;}
 .asx-check path{stroke-dasharray:44; stroke-dashoffset:44; animation:asxCheck var(--cas-pomaly) var(--ease) var(--cas-pomaly) forwards;}
 @keyframes asxCircle{to{stroke-dashoffset:0;}}
@@ -6693,7 +6707,7 @@ main .okr-hero + .section{padding-top:16px;}
    ===================================================================== */
 .cenh{position:relative; margin-top:12px;}
 .cenh-pole{position:relative; display:flex; align-items:center;}
-.cenh-lupa{position:absolute; left:14px; width:20px; height:20px; flex:none;
+.cenh-lupa{position:absolute; left:14px; width:20px; height:20px; stroke-width:1.8; flex:none;
   color:var(--popisek); pointer-events:none;}
 .cenh-pole input{width:100%; min-height:52px; padding:0 12px 0 40px;
   font:inherit; font-size:16px; color:var(--text);

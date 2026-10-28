@@ -634,7 +634,7 @@
         var im = document.createElement('img'); im.src = vybraneFotky[0].url; im.alt = '';
         lpThumb.appendChild(im);
       } else {
-        lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
+        lpThumb.innerHTML = '<span class="ph"><svg class="ik" viewBox="0 0 24 24"><use href="#i-spendlik"/></svg></span>';
       }
     }
   }
@@ -1026,7 +1026,7 @@
     var card = prodejForm && prodejForm.closest('.add-card');
     if (card) { card.hidden = false; try { card.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (x) {} }
     if (prodejForm) prodejForm.reset();
-    var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span>';
+    var lpThumb = document.getElementById('lp-thumb'); if (lpThumb) lpThumb.innerHTML = '<span class="ph"><svg class="ik" viewBox="0 0 24 24"><use href="#i-spendlik"/></svg></span>';
     vybraneFotky.forEach(function (x) { try { URL.revokeObjectURL(x.url); } catch (e) {} });
     vybraneFotky = [];
     var prev = document.getElementById('p-fotky-preview'); if (prev) prev.innerHTML = '';

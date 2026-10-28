@@ -570,6 +570,15 @@ zaobleni:
   r-pill: 999px # ODZNAK (zapínatelný filtr) a kulaté tlačítko s ikonou
   pravidlo: "co se ovládá, má --r-ovladani; pilulka patří odznaku"
   hlida:    scripts/test-zaobleni.mjs
+ikony:
+  zdroj:   scripts/ikony.mjs — JEDINÉ místo, kde se ikona kreslí
+  volani:  '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-jmeno"/></svg>'
+  pero:    "plátno 24, kresba v ploše 3,5–20,5, jen tahy, obdélníky rx 2,5"
+  stopa:   "tloušťka se počítá k velikosti: 36/šířka, aby stopa na obrazovce byla 1,5 px (16px → 2,25; 18 → 2; 20 → 1,8)"
+  ruka:    "co stojí na zemi, stojí na lince y=20 (obzor); uprostřed špendlíku, zaměřovače a mapy je otočený čtverec (hraniční kámen), ne kolečko"
+  pozor:   "pero NESMÍ na <symbol> jako atribut — na obsah symbolu nedosáhne žádný selektor, takže by přebilo i tloušťku z CSS. Drží ho třída .ik."
+  pozor2:  "odkaz se píše CELÝ ('#i-karty'), nikdy skládaný z proměnné — sestavení podle něj pozná, co má do stránky vložit"
+  hlida:   scripts/test-ikony.mjs
 casy:
   rychly: .12s   zakladni: .2s   pomaly: .4s
 stavy:

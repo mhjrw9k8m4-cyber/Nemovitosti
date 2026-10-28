@@ -2294,7 +2294,7 @@ ${sekceTrhu}
                tři řádky textu nad jedním polem. -->
           <div class="cenh">
             <div class="cenh-pole">
-              <svg class="cenh-lupa" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg>
+              <svg class="ik cenh-lupa" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa"/></svg>
               <input type="text" id="cenh-vstup" role="combobox" autocomplete="off"
                 aria-expanded="false" aria-autocomplete="list" aria-controls="cenh-navrhy"
                 aria-labelledby="ceny-hledat-nadpis" placeholder="Třeba Benešov nebo Zdice">

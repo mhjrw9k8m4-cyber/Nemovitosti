@@ -159,7 +159,14 @@ pravda('a každá výjimka má napsané, kdo tu třídu skládá',
    osiřelý `i-click`.
    Hledá se v ručně psaných stránkách a ve skriptech, protože `<use>`
    může dopsat i JavaScript; vygenerované stránky pozemků a okresů se
-   počítají jako výskyt taky (nesou týž sprite). */
+   počítají jako výskyt taky (nesou týž sprite).
+
+   ODKAZ SE NEHLEDÁ JAKO href="#id", ALE JAKO #id. Od chvíle, kdy sadu
+   skládá scripts/ikony.mjs, si část kódu odkaz drží v proměnné
+   (IKONY_NASTROJU v js/main.js) a do značkování ho vkládá až za běhu,
+   takže řetězec href="#i-karty" v žádném souboru nestojí. Užší vzor
+   hlásil pět živých ikon jako mrtvé. Jestli odkaz vede na tvar, který
+   v sadě není, hlídá scripts/test-ikony.mjs. */
 {
   const rucni = fs.readdirSync(KOREN)
     .filter((f) => f.endsWith('.html') && !/^(pozemek|pozemky)-/.test(f));
@@ -179,7 +186,7 @@ pravda('a každá výjimka má napsané, kdo tu třídu skládá',
   }
   pravda(`je co měřit — ikony ve spritu (${symboly.length})`, symboly.length >= 10,
     `nalezeno ${symboly.length} symbolů`);
-  const osirele = symboly.filter((x) => !new RegExp('href="#' + x.id + '"').test(vse));
+  const osirele = symboly.filter((x) => !new RegExp('#' + x.id + '(?![a-z0-9-])').test(vse));
   pravda('žádná ikona ve spritu není osiřelá (nikde se nekreslí)',
     osirele.length === 0,
     osirele.map((x) => `${x.f}: #${x.id}`).join(', ') + ' — smažte symbol, nebo ikonu někde použijte');

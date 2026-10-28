@@ -50,6 +50,10 @@ const KROKY = [
      které se razítkují. */
   ['sjednot-hlavicku.mjs', 'jedna lišta pro celý web'],
   ['sjednot-paticku.mjs', 'jedna patička pro celý web'],
+  /* Až ZA lištou a patičkou (ty do stránek ikony vkládají) a PŘED
+     minifikací: vkládá sadu ikon do stránek a přepisuje tři ikony
+     nabídky ve stylopisu, který se pak očišťuje. */
+  ['sjednot-ikony.mjs', 'sada ikon do každé stránky'],
   // Až po generátorech: česká sazba se dělá na HOTOVÉM textu, ať platí
   // stejně pro ručně psané stránky i pro 1 995 generovaných.
   ['sazba.mjs', 'nezlomitelné mezery (předložky, čísla s jednotkou)'],

@@ -3,10 +3,7 @@
   ready(function () {
     var opened = null, poradiPanelu = 0;
 
-    var IKONY = {
-
-      razeni: '<path d="M6 4v15"/><path d="M3 16l3 3 3-3"/><path d="M12 6h9M12 12h6.5M12 18h4"/>'
-    };
+    var IKONY = { razeni: '#i-razeni' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -66,7 +63,7 @@
       if (ikJm && IKONY[ikJm]) {
         var ik = document.createElement('span');
         ik.className = 'mcn-ic'; ik.setAttribute('aria-hidden', 'true');
-        ik.innerHTML = '<svg viewBox="0 0 24 24">' + IKONY[ikJm] + '</svg>';
+        ik.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[ikJm] + '"/></svg>';
         btn.appendChild(ik);
       }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);

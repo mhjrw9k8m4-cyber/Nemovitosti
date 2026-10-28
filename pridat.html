@@ -67,22 +67,18 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=af1be038">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=24db2c82">
   <!-- Seznam jmen tisíce tříd MobileNetu (10,3 kB po gzipu) se nahraje
        teprve s modelem u první fotky — viz pripravTridy v js/fototema.js.
        Adresa je tady, aby jí razítko ?v= doplnilo sestavení. -->
   <meta name="pk-tridy" data-src="js/min/tridy-imagenet.js?v=5fb1afff">
 </head>
 <body>
+<svg class="ik-sada" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="i-spendlik" viewBox="0 0 24 24"><path d="M12 20.5c4.3-5.1 6.5-8.7 6.5-11A6.5 6.5 0 0 0 5.5 9.5c0 2.3 2.2 5.9 6.5 11zM12 6.6 14.9 9.5 12 12.4 9.1 9.5z"/></symbol><symbol id="i-zavrit" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-nahoru" viewBox="0 0 24 24"><path d="M12 19.5V5M6 11l6-6 6 6"/></symbol><symbol id="i-hotovo" viewBox="0 0 24 24"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></symbol><symbol id="i-hotovo-kolecko" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17z"/><path class="ik-duraz" d="M8 12.2l2.8 2.8L16 9.5"/></symbol><symbol id="i-zvonek" viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4.5 2 6.5 2 6.5H4.5s2-2 2-6.5zM10.2 19.5a2 2 0 0 0 3.6 0"/></symbol><symbol id="i-stit" viewBox="0 0 24 24"><path d="M12 3.5 5.5 6v6c0 4 2.8 6.6 6.5 8.5 3.7-1.9 6.5-4.5 6.5-8.5V6z M9.3 11.8l2.2 2.2 3.5-3.5"/></symbol><symbol id="i-sance" viewBox="0 0 24 24"><path d="M12 3.5 14 9.5l6 2-6 2-2 6-2-6-6-2 6-2z"/></symbol><symbol id="i-obalka" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/></symbol><symbol id="i-zamek" viewBox="0 0 24 24"><path d="M5 10.5h14v10H5zM8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></symbol><symbol id="i-oko" viewBox="0 0 24 24"><path d="M2.5 12c2.5-4 5.7-6 9.5-6s7 2 9.5 6c-2.5 4-5.7 6-9.5 6s-7-2-9.5-6zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol></svg>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
 
-<svg width="0" height="0" aria-hidden="true" focusable="false">
-  <symbol id="i-map" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
-</svg>
 
 <header id="header">
   <div class="wrap">
@@ -158,16 +154,16 @@
               <div class="auth-field">
                 <label for="au-email">E-mail</label>
                 <div class="auth-inp">
-                  <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                  <svg class="ik auth-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka"/></svg>
                   <input id="au-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required>
                 </div>
               </div>
               <div class="auth-field">
                 <label for="au-pass">Heslo <span class="hint" id="au-pass-hint"></span></label>
                 <div class="auth-inp">
-                  <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                  <svg class="ik auth-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamek"/></svg>
                   <input id="au-pass" type="password" autocomplete="current-password" placeholder="••••••" required>
-                  <button type="button" class="auth-eye" data-pw-toggle="au-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button type="button" class="auth-eye" data-pw-toggle="au-pass" aria-label="Zobrazit heslo"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oko"/></svg></button>
                 </div>
               </div>
               <button type="submit" class="btn-primary auth-submit" id="au-submit">Přihlásit se</button>
@@ -175,9 +171,9 @@
               <p class="add-msg auth-msg" id="au-msg" role="status" aria-live="polite"></p>
             </form>
             <div class="auth-trust">
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Zabezpečené</span>
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
-              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Zdarma</span>
+              <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stit"/></svg>Zabezpečené</span>
+              <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hotovo-kolecko"/></svg>Žádný spam</span>
+              <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sance"/></svg>Zdarma</span>
             </div>
           </div>
 
@@ -372,7 +368,7 @@
             </form>
           </div>
           <div class="add-success" id="add-success" data-success-for="form-prodej" hidden>
-            <div class="asx-check"><svg viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></div>
+            <div class="asx-check"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hotovo-kolecko"/></svg></div>
             <h2>Hotovo! Nabídka je odeslaná.</h2>
             <p>Spravovat ji (stav, zhlédnutí, smazání) můžete ve svém <b>profilu</b> — přihlášeném stejným účtem. Tam taky uvidíte, jestli už je na mapě: první nabídku z nového účtu si napřed projdeme.</p>
             <div class="asx-actions">
@@ -388,14 +384,14 @@
             <div class="pc-eyebrow"><span class="live-dot"></span>Živý náhled</div>
             <p class="pc-explain">Takhle bude vaše nabídka vypadat na mapě a v seznamu. Mění se rovnou podle toho, co vyplníte výše — nic se zatím nikam neodesílá.</p>
             <div class="ul-card" id="live-preview">
-              <div class="ul-thumb" id="lp-thumb"><span class="ph"><svg viewBox="0 0 24 24"><use href="#i-map"/></svg></span></div>
+              <div class="ul-thumb" id="lp-thumb"><span class="ph"><svg class="ik" viewBox="0 0 24 24"><use href="#i-spendlik"/></svg></span></div>
               <span class="ul-badge" style="background:var(--c-sale)">Prodej</span>
               <h3 id="lp-place">Vaše obec</h3>
               <div class="ul-meta" id="lp-meta">výměra · okres</div>
               <div class="ul-topline"><span class="ul-price" id="lp-price">Cena</span><span class="ul-perm2" id="lp-perm2"></span></div>
               <p class="ul-desc" id="lp-desc" hidden></p>
               <div class="ul-tags" id="lp-tags"></div>
-              <div class="ul-topline"><span class="ul-verified"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg>Přímo od majitele</span></div>
+              <div class="ul-topline"><span class="ul-verified"><svg class="ik" viewBox="0 0 24 24"><use href="#i-hotovo"/></svg>Přímo od majitele</span></div>
             </div>
             <div class="pc-strength">
               <div class="pcs-top"><span>Síla inzerátu <span class="pcs-help" title="Ukazuje, jak úplný a lákavý je váš inzerát. Čím víc vyplníte (fotky, popis, sítě…), tím vyšší číslo — a tím víc zájemců obvykle přitáhne. Není to povinné, jen vodítko.">?</span></span><span class="pcs-right"><b id="pcs-tier" class="pcs-tier">Začínáme</b><b id="pcs-pct">0 %</b></span></div>
@@ -429,9 +425,9 @@
 
           <div class="aside-card">
             <h3>Proč přidat právě sem</h3>
-            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b> <span>Objeví se na mapě i ve výpisu mezi nabídkami z veřejných zdrojů.</span></span></div>
-            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg></span><span class="b-txt"><b>Rychle na mapě</b> <span>Nabídka se objeví mezi ostatními. První z nového účtu si projdeme, nejpozději do 24 hodin je venku.</span></span></div>
-            <div class="benefit"><span class="rc-ico"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></span><span class="b-txt"><b>Přímý kontakt</b> <span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ik ic" aria-hidden="true"><use href="#i-spendlik"/></svg></span><span class="b-txt"><b>Uvidí ji zájemci</b> <span>Objeví se na mapě i ve výpisu mezi nabídkami z veřejných zdrojů.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ik ic" aria-hidden="true"><use href="#i-hotovo"/></svg></span><span class="b-txt"><b>Rychle na mapě</b> <span>Nabídka se objeví mezi ostatními. První z nového účtu si projdeme, nejpozději do 24 hodin je venku.</span></span></div>
+            <div class="benefit"><span class="rc-ico"><svg class="ik ic" aria-hidden="true"><use href="#i-zvonek"/></svg></span><span class="b-txt"><b>Přímý kontakt</b> <span>Zájemci se ozvou přímo vám, bez provize.</span></span></div>
           </div>
         </aside>
 
@@ -467,7 +463,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="js/min/menu.js?v=e897102e" defer></script>
+<script src="js/min/menu.js?v=66ace7f4" defer></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/exif.js?v=0898cf9e" defer></script>
@@ -477,7 +473,7 @@
 <script src="js/min/vybaveni.js?v=8e3b34f9" defer></script>
 <script src="js/min/predvyplneni.js?v=6b11f275" defer></script>
 <script src="js/min/kontrola.js?v=c57c2aae" defer></script>
-<script src="js/min/pridat.js?v=d33dd820" defer></script>
+<script src="js/min/pridat.js?v=6f9c25de" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {
@@ -499,7 +495,7 @@ document.addEventListener('click', function (e) {
    na nasazení u Vercelu. */
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/min/hlidani-logika.js?v=9c26a424" defer></script>
-<script src="js/min/hlavicka.js?v=baa52706" defer></script>
+<script src="js/min/hlavicka.js?v=8bad9ba8" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b64f8a44" defer></script>
 </body>

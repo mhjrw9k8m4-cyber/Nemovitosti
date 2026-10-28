@@ -270,7 +270,7 @@
      vysvětlení bez kódu horší než žádné: kdo tu hledal „Název vlastní
      stránky pozemku", našel tabulku diakritiky. */
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
-  var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+  var BM_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>';
   /* ZNAČKY OVLADAČŮ NAD VÝPISEM.
      Majitel webu: „udělej speciální ikonky u všeho" — každé políčko
      v té řadě má svou značku, aby se od sousedů poznalo dřív, než se
@@ -278,26 +278,31 @@
      i barvu dává stylopis (.mcn-ic v css/styles.css), takže jsou
      všechny stejně tlusté a stejně velké.
      Značka NIKDY nestojí sama — nápis zůstává u každé z nich. */
+  /* Odkaz na ikonu se píše CELÝ, i když by stačilo jméno. Sestavení
+     skládá sadu do stránky podle toho, co v ní a v jejích skriptech
+     najde jako „#i-…"; kdyby tu stálo jen 'karty', nenašlo by nic
+     a tyhle tři ikony by na úvodu zmizely. (Naměřeno — stalo se.) */
   var IKONY_NASTROJU = {
     // Dvě karty za sebou: jedna nabídka přes celou obrazovku, pak další.
-    rychly: '<path d="M8 3h11a2 2 0 0 1 2 2v11"/><rect x="3" y="7" width="14" height="14" rx="2"/>',
-    // Šipka dolů do přihrádky — stahování souboru, jak to zná každý.
-    vyvoz: '<path d="M12 3v10"/><path d="M8 10l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+    rychly: '#i-karty',
+    // Šipka dolů na čáru — stahování souboru, jak to zná každý.
+    vyvoz: '#i-stahnout',
     // Hodiny: dražby po termínu, tedy věc, které vypršel čas.
-    prosle: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/>',
+    prosle: '#i-hodiny',
     // Lupa s plusem: ukázat i to, co je hledanému názvu jen podobné.
-    podobne: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M19.5 19.5l-4.1-4.1"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/>',
+    podobne: '#i-lupa-plus',
     // Oko: odkryjeme skryté nabídky.
-    odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+    odkryt: '#i-oko',
     // Přeškrtnuté oko: zase je schováme.
-    zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
+    zakryt: '#i-oko-skrt'
   };
   /* Značka se vrací jako hotový kus značkování, ať je na všech čtyřech
      místech stejná — i ten obal s aria-hidden. */
   function ikonaNastroje(jmeno) {
-    var d = IKONY_NASTROJU[jmeno];
-    if (!d) return '';
-    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' + d + '</svg></span>';
+    var ik = IKONY_NASTROJU[jmeno];
+    if (!ik) return '';
+    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' +
+      '<use href="' + ik + '"/></svg></span>';
   }
   // Stabilní klíč pozemku — pro oblíbené i sdílení odkazu.
   //
@@ -2451,7 +2456,7 @@
 
      Špendlíky na mapě zůstávají; ty nic o tvaru netvrdí. */
   // Ikonka „víc fotek" (počet fotek v rohu náhledu)
-  var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+  var GALLERY_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-fotky"/></svg>';
   // Náhled pozemku = SKUTEČNÝ letecký/satelitní snímek toho místa (Esri World
   // Imagery), vycentrovaný na pozemek se špendlíkem. Když se snímek nenačte,
   // pod ním prosvítá záložní plán parcely, takže karta není nikdy prázdná.
@@ -3916,7 +3921,7 @@
     // prvního přiblížení.
     if (zmena && typeof renderDots === 'function' && lastVis) renderDots(lastVis);
   }
-  var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
+  var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg></button>';
   function updateKrajHead() {
     if (krajHeadEl) {
       if (okoliAktivni()) {
@@ -4114,7 +4119,7 @@
     return null;
   }
 
-  var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var LOC_PIN = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>';
 
   /* ==================================================================
      VÝBĚR MÍSTA — vlastní mapa, ne jedno klepnutí
@@ -4178,16 +4183,14 @@
            název má 30 obcí až 309 km od sebe. */
         '<div class="vm-hledani">' +
           '<label class="vm-pole">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
-              '<path d="m20 20-3.5-3.5"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa"/></svg>' +
             '<span class="visually-hidden">Napište obec nebo okres</span>' +
             '<input type="search" id="vm-q" autocomplete="off" enterkeyhint="search"' +
               ' placeholder="Napište obec nebo okres" role="combobox"' +
               ' aria-expanded="false" aria-controls="vm-navrhy" aria-autocomplete="list">' +
           '</label>' +
           '<button class="vm-gps" id="vm-gps" type="button">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/>' +
-              '<circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamerit"/></svg>' +
             '<span>Moje poloha</span></button>' +
           '<ul class="vm-navrhy" id="vm-navrhy" role="listbox" hidden></ul>' +
         '</div>' +
@@ -4202,8 +4205,7 @@
              rozeznání. Jinak tam nic není — přes výhled nic viset
              nemá, to byla výtka k dřívějšímu tlačítku „Moje poloha". */
           '<button class="vm-zpet" id="vm-zpet" type="button" hidden>' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
-            '<path d="M20 20l-3.6-3.6M11 8.2v5.6M8.2 11h5.6"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa-plus"/></svg>' +
             'Ukázat okruh</button>' +
         '</div>' +
         '<div class="vm-pata">' +
@@ -8556,7 +8558,7 @@
          někam rozbalují, takže se to nemusí učit. */
       tlac.innerHTML = '<span class="mcs-txt"><span class="mcs-k">' + nadpis +
         '</span><span class="mcs-v">libovolná</span></span>' +
-        '<svg class="mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+        '<svg class="ik mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg>';
       rada.appendChild(tlac);
 
       var ov = document.createElement('div');

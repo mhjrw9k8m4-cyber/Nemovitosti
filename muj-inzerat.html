@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-vdbRFpBVwd1TQrgYPMJi0JydNCn9FgAxdqFils7bd70=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-uyVMLJSJYA5leM20wyEd0klkWEYsAkXAyXH5JF9GadU=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -58,7 +58,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=af1be038">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=24db2c82">
   <style>
     /* Karta profilu */
     /* Kotvu ani ořez karta nepotřebuje: position:relative a
@@ -243,6 +243,7 @@
 </style>
 </head>
 <body>
+<svg class="ik-sada" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.2 5.5-2.2V6.2L15 8.4zM9 4v13.3M15 8.4v11.1M12 9.5 14 11.5 12 13.5 10 11.5z"/></symbol><symbol id="i-dum" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v10h12V10M10 20v-6h4v6M3.5 20h17"/></symbol><symbol id="i-dum-plus" viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v10h12V10M3.5 20h17"/><path class="ik-duraz" d="M12 13.5v4M10 15.5h4"/></symbol><symbol id="i-zalozka" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-3.5-5.5 3.5z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-zavrit" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-nahoru" viewBox="0 0 24 24"><path d="M12 19.5V5M6 11l6-6 6 6"/></symbol><symbol id="i-hotovo-kolecko" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17z"/><path class="ik-duraz" d="M8 12.2l2.8 2.8L16 9.5"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17z"/><path class="ik-duraz" d="M12 11v5.5M12 7.8h.01"/></symbol><symbol id="i-zvonek" viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4.5 2 6.5 2 6.5H4.5s2-2 2-6.5zM10.2 19.5a2 2 0 0 0 3.6 0"/></symbol><symbol id="i-stit" viewBox="0 0 24 24"><path d="M12 3.5 5.5 6v6c0 4 2.8 6.6 6.5 8.5 3.7-1.9 6.5-4.5 6.5-8.5V6z M9.3 11.8l2.2 2.2 3.5-3.5"/></symbol><symbol id="i-sance" viewBox="0 0 24 24"><path d="M12 3.5 14 9.5l6 2-6 2-2 6-2-6-6-2 6-2z"/></symbol><symbol id="i-obalka" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/></symbol><symbol id="i-obalka-hotovo" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/><path class="ik-duraz" d="M8.5 13.5l2.5 2.5 4.5-4.5"/></symbol><symbol id="i-zamek" viewBox="0 0 24 24"><path d="M5 10.5h14v10H5zM8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3"/></symbol><symbol id="i-oko" viewBox="0 0 24 24"><path d="M2.5 12c2.5-4 5.7-6 9.5-6s7 2 9.5 6c-2.5 4-5.7 6-9.5 6s-7-2-9.5-6zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></symbol><symbol id="i-odhlasit" viewBox="0 0 24 24"><path d="M9.5 20.5H5a1.5 1.5 0 0 1-1.5-1.5v-14A1.5 1.5 0 0 1 5 3.5h4.5M15.5 7.5 20 12l-4.5 4.5M20 12H9"/></symbol><symbol id="i-bublina" viewBox="0 0 24 24"><path d="M20.5 15.5a2 2 0 0 1-2 2H7.5l-4 3.5V5.5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></symbol></svg>
 
 <a class="skip-link" href="#obsah">Přeskočit na obsah</a>
 
@@ -308,16 +309,16 @@
           <div class="auth-field">
             <label for="mi-email">E-mail</label>
             <div class="auth-inp">
-              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+              <svg class="ik auth-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka"/></svg>
               <input id="mi-email" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email" placeholder="vas@email.cz" required>
             </div>
           </div>
           <div class="auth-field">
             <label for="mi-pass">Heslo</label>
             <div class="auth-inp">
-              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <svg class="ik auth-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamek"/></svg>
               <input id="mi-pass" type="password" autocomplete="current-password" placeholder="••••••" required>
-              <button type="button" class="auth-eye" data-pw-toggle="mi-pass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button type="button" class="auth-eye" data-pw-toggle="mi-pass" aria-label="Zobrazit heslo"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oko"/></svg></button>
             </div>
           </div>
           <button type="submit" class="btn-primary auth-submit" id="mi-login">Přihlásit se</button>
@@ -327,16 +328,16 @@
         </form>
         <!-- Potvrzení po odeslání odkazu na reset hesla -->
         <div class="auth-sent" id="mi-sent" hidden>
-          <div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/><path d="m8.5 13.5 2 2 4.5-4.5" stroke="var(--znacka-svetla)"/></svg></div>
+          <div class="auth-sent-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka-hotovo"/></svg></div>
           <h3>Odkaz je na cestě</h3>
           <p>Pokud u nás účet s adresou <b id="mi-sent-email">—</b> existuje, dorazí na něj během chvilky e-mail s odkazem pro nastavení nového hesla. Klepněte na něj a rovnou si zvolíte nové heslo.</p>
           <p class="auth-sent-note">Nepřišlo to? Mrkněte do složky <b>Spam / Hromadné</b>. E-maily chodí s malým zpožděním.</p>
           <button type="button" class="lp-btn" id="mi-sent-back">Zpět na přihlášení</button>
         </div>
         <div class="auth-trust">
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>Zabezpečené</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Žádný spam</span>
-          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>Zdarma</span>
+          <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stit"/></svg>Zabezpečené</span>
+          <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hotovo-kolecko"/></svg>Žádný spam</span>
+          <span><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sance"/></svg>Zdarma</span>
         </div>
       </div>
 
@@ -350,9 +351,9 @@
           <div class="auth-field">
             <label for="mi-newpass">Nové heslo</label>
             <div class="auth-inp">
-              <svg class="auth-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <svg class="ik auth-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamek"/></svg>
               <input id="mi-newpass" type="password" autocomplete="new-password" minlength="8" placeholder="Aspoň 8 znaků" required>
-              <button type="button" class="auth-eye" data-pw-toggle="mi-newpass" aria-label="Zobrazit heslo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+              <button type="button" class="auth-eye" data-pw-toggle="mi-newpass" aria-label="Zobrazit heslo"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oko"/></svg></button>
             </div>
           </div>
           <button type="submit" class="btn-primary auth-submit" id="mi-savepw">Uložit nové heslo</button>
@@ -370,21 +371,21 @@
               <div class="pf-mail" id="pf-mail">—</div>
             </div>
             <button type="button" id="mi-logout" class="pf-logout" aria-label="Odhlásit se">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+              <svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-odhlasit"/></svg>
               <span>Odhlásit</span>
             </button>
           </div>
           <div class="pf-stats">
             <div class="pf-stat">
-              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+              <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dum"/></svg>
               <b id="pf-count">—</b> <span>Moje inzeráty</span>
             </div>
             <div class="pf-stat">
-              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oko"/></svg>
               <b id="pf-views">—</b> <span>Zhlédnutí celkem</span>
             </div>
             <div class="pf-stat">
-              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg>
+              <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>
               <b id="pf-fav">—</b> <span>Uložené pozemky</span>
             </div>
           </div>
@@ -399,17 +400,17 @@
                ať se nic neposune, až čísla dojdou. -->
           <div class="pf-stats pf-stats--2">
             <a class="pf-stat pf-stat--jde" href="zpravy.html">
-              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>
+              <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bublina"/></svg>
               <b id="pf-zpravy">—</b> <span>Nepřečtené zprávy</span>
             </a>
             <a class="pf-stat pf-stat--jde" href="hlidani.html">
-              <svg class="pf-stat-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zvonek"/></svg>
               <b id="pf-hlidani">—</b> <span>Moje hlídání</span>
             </a>
           </div>
           <div class="pf-actions">
             <a class="btn-primary pf-add" href="pridat.html">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>
               Přidat pozemek
             </a>
           </div>
@@ -439,7 +440,7 @@
              to říkají rovnou: „nepovedlo se načíst". Tady to chybělo. -->
         <div id="mi-chyba" hidden>
           <div class="pf-empty">
-            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6" stroke="var(--znacka-svetla)"/><path d="M12 16.5v.01" stroke="var(--znacka-svetla)"/></svg></div>
+            <div class="pf-empty-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg></div>
             <h3>Inzeráty se teď nepovedlo načíst</h3>
             <p>Spojení se serverem se nepodařilo navázat. Vaše inzeráty nikam nezmizely — zkuste to prosím za chvíli znovu.</p>
             <button type="button" class="btn-primary pf-add" id="mi-znovu">Zkusit znovu</button>
@@ -447,10 +448,10 @@
         </div>
         <div id="mi-empty" hidden>
           <div class="pf-empty">
-            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/><path d="M12 14v3M10.5 15.5h3" stroke="var(--znacka-svetla)"/></svg></div>
+            <div class="pf-empty-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dum-plus"/></svg></div>
             <h3>Zatím tu žádný inzerát nemáte</h3>
             <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
-            <a class="btn-primary pf-add" href="pridat.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Přidat pozemek zdarma</a>
+            <a class="btn-primary pf-add" href="pridat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek zdarma</a>
             <div class="mi-znovu"><button type="button" id="mi-reload" class="linklike">Už jste inzerát přidali? Načíst znovu</button></div>
           </div>
         </div>
@@ -479,10 +480,10 @@
         <div class="okr-list" id="mi-saved"></div>
         <div id="mi-saved-empty" hidden>
           <div class="pf-empty">
-            <div class="pf-empty-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></svg></div>
+            <div class="pf-empty-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg></div>
             <h3>Zatím nemáte uložený žádný pozemek</h3>
             <p>Na mapě klepněte u pozemku na <b>záložku</b> (ikonu uložení) a objeví se vám tady — ať se k němu snadno vrátíte.</p>
-            <a class="btn-primary pf-add" href="index.html#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 20 3 17V4l6 3 6-3 6 3v13l-6-3-6 3Z"/><path d="M9 7v13M15 4v13"/></svg>Otevřít mapu</a>
+            <a class="btn-primary pf-add" href="index.html#mapa"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>Otevřít mapu</a>
           </div>
         </div>
       </div>
@@ -581,7 +582,7 @@
             // Úspěch — přehledné potvrzení, pak rovnou do profilu
             // (adresu jsme uklidili hned na začátku, viz výš)
             nf.innerHTML = '<div class="auth-sent vnorena">' +
-              '<div class="auth-sent-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="var(--znacka-svetla)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></div>' +
+              '<div class="auth-sent-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" style="stroke:var(--znacka-svetla)" aria-hidden="true"><use href="#i-hotovo-kolecko"/></svg></div>' +
               '<h3>Heslo změněno</h3><p>Nové heslo je uložené. Za okamžik vás přihlásíme do profilu…</p></div>';
             setTimeout(function(){ show(); }, 1200);
           } else {
@@ -1002,9 +1003,9 @@ document.addEventListener('click', function (e) {
   b.setAttribute('aria-label', show ? 'Skrýt heslo' : 'Zobrazit heslo');
 });
 </script>
-<script src="js/min/menu.js?v=e897102e" defer></script>
+<script src="js/min/menu.js?v=66ace7f4" defer></script>
 <script src="js/min/ucet-taby.js?v=24ab9283" defer></script>
-<script src="js/min/hlavicka.js?v=baa52706" defer></script>
+<script src="js/min/hlavicka.js?v=8bad9ba8" defer></script>
 <script src="js/min/offline.js?v=16a48df3" defer></script>
 <script src="js/min/mereni.js?v=b64f8a44" defer></script>
 </body>

@@ -13451,3 +13451,100 @@ Prokázáno sabotážemi:
 Po opravě: `test-graf-cen` 61/61 (dřív 58), `test-mrtve-styly`,
 `test-kontrast`, `test-vaha-stranky`, `test-stabilita` bez nálezu,
 rychlá sada 134/134.
+
+## §206 Vlastní ikony: 79 kreseb na 105 místech → jedna sada 61 tvarů
+
+Majitel ke grafu připsal: „take udelej custom ikonky u vseho". Než jsem
+začal kreslit, spočítal jsem, co web má.
+
+### Co bylo
+
+| měřeno | nález |
+|---|---|
+| ikon ve zdrojích | 105 |
+| různých kreseb | 79 |
+| různých tlouštěk tahu | 20 hodnot (1 až 3,5) |
+
+Hlavní vada ale nebyla v počtu, nýbrž v tom, co se opakovalo:
+
+* **čtyři lupy** — `r=7` + `M20 20l-4.2-4.2`, pak `m20 20-3.5-3.5`, pak
+  táž s plusem, pak ještě jedna;
+* **dvě záložky** nakreslené úplně jinak (`M6 3h12…` proti `m19 21-7-4…`);
+* **dvě mapy**, **dva zvonky**, **dvě fajfky v kolečku**;
+* **dvě cesty** pro tutéž věc — `ACCESS_SVG` a vybavení „Příjezd";
+* a obráceně: **jeden blesk pro dvě různé věci** — „elektřina na
+  pozemku" a „příležitost".
+
+Většina tvarů byla navíc převzatá z cizí sady (Feather/Lucide), takže
+web neměl vlastní ruku. To je přesně to, co majitel viděl.
+
+### Co je teď
+
+Tvary stojí na jednom místě (`scripts/ikony.mjs`), sestavení z nich
+skládá `<symbol>` do stránky a kód si je volá jménem:
+`<use href="#i-spendlik">`. Dvě různé lupy nemají kde vzniknout —
+„lupa" je jméno, ne kresba.
+
+Pero: plátno 24, kresba v ploše 3,5–20,5, jen tahy, obdélníky rx 2,5.
+Ruka sady jsou dvě věci: **obzor** (co stojí na zemi — dům, plot,
+příjezd, strom — stojí na téže lince y=20) a **hraniční kámen**
+(otočený čtverec místo kolečka uprostřed špendlíku, zaměřovače a mapy;
+kolečko se v 16 px slije do tečky, kosočtverec drží).
+
+### Tři věci, které se při tom pokazily — a jak se našly
+
+**1. Černá kaňka místo lupy.** Když tvary odešly do sady, zmizel s nimi
+atribut `fill="none"`. Prohlížeč má výchozí výplň černou, takže kolečko
+lupy se vyplnilo. Našlo se to na snímku, ne úvahou.
+
+**2. Pero na symbolu by zabilo soustavu stopy.** První oprava dala pero
+jako atributy na `<symbol>`. Jenže na obsah symbolu nedosáhne žádný
+selektor, takže atribut uvnitř přebije VŠECHNO — i tloušťku, kterou si
+každé místo počítá k velikosti (36/šířka, aby stopa na obrazovce byla
+vždy 1,5 px). Naměřeno pokusem: čára, které CSS říká 6 jednotek, se se
+`stroke-width="2"` na symbolu nakreslila na třetinu. Pero proto drží
+stylopis — jedna třída `.ik` nahoře, kterou každé podrobnější pravidlo
+přebije.
+
+**3. Tři ikony nad výpisem zmizely.** Do stránky se vkládají jen ty
+symboly, které v ní a v jejích skriptech sestavení najde jako `#i-…`.
+Jenže `js/main.js` si odkaz skládal (`'#i-' + jmeno`), takže v žádném
+souboru nestál celý — a „Procházet po jednom", „Stáhnout výběr"
+a „Doporučené" přišly o ikonu. Odkaz se teď píše celý.
+
+### Co to váží
+
+Celá sada má po gzipu 2,5 kB. Vkládat ji celou všude by okresní stránce
+přidalo 28 % váhy (8,8 → 11,2 kB) za tři použité ikony. Vkládá se proto
+jen to, co si stránka zavolá:
+
+| stránka | symbolů | gz |
+|---|---|---|
+| okresní | 3 | +151 B |
+| úvod | 30 | +85 B (zároveň zmizely kresby ze značkování) |
+| profil | 19 | +243 B |
+| inzerát | 27 | +1 238 B |
+
+### Hlídač
+
+`scripts/test-ikony.mjs` (11 kontrol) hlídá: odkaz bez tvaru, tvar bez
+odkazu, kresbu mimo sadu, stránku, která volá ikonu, kterou nemá, a
+stopu na obrazovce. Prokázáno pěti sabotážemi:
+
+| co jsem rozbil | co spadlo |
+|---|---|
+| překlep `#i-infoo` | „každý odkaz má v sadě svůj tvar" |
+| tvar, na který se nikdo neodkazuje | „žádný tvar není navíc" |
+| ikona nakreslená přímo ve značkování | „nikde se nekreslí mimo sadu" |
+| odkaz skládaný z proměnné | „žádný tvar není navíc" (hlásí mrtvý symbol) |
+| symbol vyříznutý ze stránky | „žádná stránka nevolá ikonu, kterou nemá" |
+
+Při tom se opravily dvě ikony, jejichž tloušťka neseděla k velikosti:
+špendlík u „Pozemky v okolí" (17 px, tah 2 → stopa 1,42) a lupa
+v hledání cen (20 px, tah 2 → 1,67). Obě teď mají 1,5.
+
+### Co se NEUDĚLALO
+
+Nadpisy oddílů na stránce pozemku ikonu nedostaly. Už nad sebou mají
+vodorovnou linku jako oddělovač a zadání zní „co nejčistší web" —
+ikona u každého nadpisu by byla druhá ozdoba na témže místě.

@@ -21,22 +21,19 @@
   function hasParcel(d) { return d.parcel && d.parcel !== '—' && d.parcel !== ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
-  var SIPKY_VEN = 'M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3';
-  var SIPKY_DOVNITR = 'M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3';
+  var IK_VEN = '#i-cela-obrazovka';
+  var IK_DOVNITR = '#i-zmensit';
 
   function druhGroup(s) {
     return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
 
   var IKONY = {
-    plocha: '<svg viewBox="0 0 24 24"><path d="M3 8V3h5"/><path d="M21 8V3h-5"/>'
-      + '<path d="M3 16v5h5"/><path d="M21 16v5h-5"/><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>',
-    cena: '<svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-8-8V3h9.6l8.4 8.4a2 2 0 0 1 0 2.8z"/>'
-      + '<circle cx="7.5" cy="7.5" r="1.1"/></svg>',
-    druh: '<svg viewBox="0 0 24 24"><path d="M12 3 5 13h4l-3 5h12l-3-5h4z"/><path d="M12 18v3"/></svg>',
-    kalendar: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/>'
-      + '<path d="M8 3v4M16 3v4M3 11h18"/></svg>',
-    podil: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>',
+    plocha: '<svg class="ik" viewBox="0 0 24 24"><use href="#i-vymera"/></svg>',
+    cena: '<svg class="ik" viewBox="0 0 24 24"><use href="#i-cena"/></svg>',
+    druh: '<svg class="ik" viewBox="0 0 24 24"><use href="#i-druh"/></svg>',
+    kalendar: '<svg class="ik" viewBox="0 0 24 24"><use href="#i-kalendar"/></svg>',
+    podil: '<svg class="ik" viewBox="0 0 24 24"><use href="#i-podil"/></svg>',
   };
   var T = window.PK_TERMINY;
   function daysUntil(extra) { return T.daysUntil(extra); }
@@ -186,9 +183,9 @@
     setTimeout(function () { t.classList.remove('show'); t.hidden = true; }, 2200);
   }
 
-  var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
-  var PIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
-  var MAP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></svg>';
+  var GALLERY_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-fotky"/></svg>';
+  var PIN_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>';
+  var MAP_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>';
 
   var MESICE = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
     'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
@@ -259,11 +256,10 @@
       '</div>';
   }
 
-  var CLOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-  var HEART_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
-
-  var POZN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-  var SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>';
+  var CLOCK_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hodiny"/></svg>';
+  var HEART_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>';
+  var POZN_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-poznamka"/></svg>';
+  var SHARE_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sdilet"/></svg>';
 
   function pzPopisInzerentaHtml() {
     var t = '';
@@ -663,13 +659,13 @@
   }
 
   var FEAT_ICON = {
-    'Elektřina': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>',
-    'Voda': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6 6 11a6 6 0 0 1-12 0c0-5 6-11 6-11z"/></svg>',
-    'Kanalizace': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3C9.5 5.5 9.5 18.5 12 21"/></svg>',
-    'Plyn': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 3 5 6 5 9a5 5 0 0 1-10 0c0-1 .5-2 1-3 .5 2 2 2 2 2 0-2 1-6 2-8z"/></svg>',
-    'Oplocení': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10l2-3 2 3v9H4zM10 10l2-3 2 3v9h-4zM16 10l2-3 2 3v9h-4zM2 13h20"/></svg>',
+    'Elektřina': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-elektrina"/></svg>',
+    'Voda': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-voda"/></svg>',
+    'Kanalizace': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-kanalizace"/></svg>',
+    'Plyn': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plyn"/></svg>',
+    'Oplocení': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oploceni"/></svg>',
 
-    'Příjezd': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21 9 3M20 21 15 3M12 6v2M12 11v2M12 16v2"/></svg>'
+    'Příjezd': '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-prijezd"/></svg>'
   };
 
   function planHledatUrl(d) {
@@ -686,7 +682,8 @@
     if (d.okres && obec === d.okres) return 'najít územní plán v okrese ' + obec;
     return 'najít územní plán obce ' + PKCisteni.sazba(obec);
   }
-  var ACCESS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-16M20 20l-6-16M9 12h6"/></svg>';
+
+  var ACCESS_SVG = FEAT_ICON['Příjezd'];
 
   var ZAKLADY = (global.PK_SNIMEK && global.PK_SNIMEK.podklady) || [];
 
@@ -701,15 +698,10 @@
         '</span>' +
         '<span class="pz-sour-akce">' +
         '<button type="button" class="pz-sour-kop" id="pz-sour-kop" data-sour="' + esc(sour) + '">' +
-          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-            'stroke-linecap="round" stroke-linejoin="round">' +
-            '<rect x="9" y="9" width="11" height="11" rx="2"/>' +
-            '<path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>' +
+          '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-kopirovat"/></svg>' +
           '<span>Kopírovat</span></button>' +
         '<a class="pz-sour-nav" id="pz-sour-nav" href="#" rel="nofollow">' +
-          '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" ' +
-            'stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M3 11l19-9-9 19-2-8-8-2Z"/></svg>' +
+          '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-navigovat"/></svg>' +
           '<span>Navigovat</span></a>' +
         '</span>' +
       '</div>';
@@ -722,16 +714,14 @@
         '<div class="pzm-mapa" id="pzm-mapa" role="application" aria-label="Mapa pozemku, kterou lze posouvat a přibližovat">' +
 
           '<button type="button" class="pzm-cela-btn" id="pzm-cela" aria-label="Zvětšit mapu na celou obrazovku" title="Na celou obrazovku">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="' + SIPKY_VEN + '"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cela-obrazovka"/></svg>' +
           '</button>' +
         '</div>' +
         '<div class="pzm-panel">' +
 
           '<button type="button" class="pzm-zpet-btn" id="pzm-zpet" hidden ' +
             'aria-label="Vrátit mapu na pozemek" title="Zpátky na pozemek">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-            '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>' +
             '<span>Na pozemek</span>' +
           '</button>' +
           '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
@@ -1065,8 +1055,9 @@
       if (celaBtn) {
         celaBtn.setAttribute('aria-label', zap ? 'Zmenšit mapu zpět do stránky' : 'Zvětšit mapu na celou obrazovku');
         celaBtn.title = zap ? 'Zpět do stránky' : 'Na celou obrazovku';
-        var tah = celaBtn.querySelector('path');
-        if (tah) tah.setAttribute('d', zap ? SIPKY_DOVNITR : SIPKY_VEN);
+
+        var pouziti = celaBtn.querySelector('use');
+        if (pouziti) pouziti.setAttribute('href', zap ? IK_DOVNITR : IK_VEN);
       }
       setTimeout(premer, 60);
       setTimeout(premer, 320);

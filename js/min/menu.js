@@ -19,10 +19,8 @@
 
   }
 
-  var BURGER_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
-    ' stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
-  var KRIZEK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"' +
-    ' stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var BURGER_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-menu"/></svg>';
+  var KRIZEK_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>';
 
   function postavPanel(d, nav) {
     if (nav.getAttribute('data-panel') === 'ano') return;

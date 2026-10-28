@@ -13,10 +13,9 @@
        Proč vůbec: v řadě nad výpisem stojí čtyři políčka stejné
        velikosti a majitel webu chtěl, aby každé mělo svou značku.
        Řazení je mezi nimi a bez značky by bylo jediné holé. */
-    var IKONY = {
-      // Šipka dolů vedle tří čar od nejdelší k nejkratší — třídění.
-      razeni: '<path d="M6 4v15"/><path d="M3 16l3 3 3-3"/><path d="M12 6h9M12 12h6.5M12 18h4"/>'
-    };
+    /* Odkazy do sady (scripts/ikony.mjs), ne kresby — a celé, protože
+       podle nich sestavení pozná, co má do stránky vložit. */
+    var IKONY = { razeni: '#i-razeni' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -106,7 +105,7 @@
       if (ikJm && IKONY[ikJm]) {
         var ik = document.createElement('span');
         ik.className = 'mcn-ic'; ik.setAttribute('aria-hidden', 'true');
-        ik.innerHTML = '<svg viewBox="0 0 24 24">' + IKONY[ikJm] + '</svg>';
+        ik.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[ikJm] + '"/></svg>';
         btn.appendChild(ik);
       }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);

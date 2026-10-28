@@ -161,27 +161,28 @@
   };
   function krajOf(d){ return OKRES_KRAJ[(d.okres || '').trim()] || null; }
 
-  var BM_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/></svg>';
+  var BM_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>';
 
   var IKONY_NASTROJU = {
 
-    rychly: '<path d="M8 3h11a2 2 0 0 1 2 2v11"/><rect x="3" y="7" width="14" height="14" rx="2"/>',
+    rychly: '#i-karty',
 
-    vyvoz: '<path d="M12 3v10"/><path d="M8 10l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+    vyvoz: '#i-stahnout',
 
-    prosle: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5l3.5 2"/>',
+    prosle: '#i-hodiny',
 
-    podobne: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M19.5 19.5l-4.1-4.1"/><path d="M10.5 7.8v5.4M7.8 10.5h5.4"/>',
+    podobne: '#i-lupa-plus',
 
-    odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+    odkryt: '#i-oko',
 
-    zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
+    zakryt: '#i-oko-skrt'
   };
 
   function ikonaNastroje(jmeno) {
-    var d = IKONY_NASTROJU[jmeno];
-    if (!d) return '';
-    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' + d + '</svg></span>';
+    var ik = IKONY_NASTROJU[jmeno];
+    if (!ik) return '';
+    return '<span class="mcn-ic" aria-hidden="true"><svg viewBox="0 0 24 24">' +
+      '<use href="' + ik + '"/></svg></span>';
   }
 
   var pkey = window.PKKlic.pkey;
@@ -1438,7 +1439,7 @@
     };
   }
 
-  var GALLERY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+  var GALLERY_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-fotky"/></svg>';
 
   function mapThumb(d) {
     var col = TYPE[d.type].color;
@@ -2343,7 +2344,7 @@
 
     if (zmena && typeof renderDots === 'function' && lastVis) renderDots(lastVis);
   }
-  var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>';
+  var BACK_BTN = '<button class="kh-back" type="button" aria-label="Zpět"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg></button>';
   function updateKrajHead() {
     if (krajHeadEl) {
       if (okoliAktivni()) {
@@ -2498,7 +2499,7 @@
     return null;
   }
 
-  var LOC_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var LOC_PIN = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>';
 
   function otevriVyberMista(nast) {
     nast = nast || {};
@@ -2530,16 +2531,14 @@
 
         '<div class="vm-hledani">' +
           '<label class="vm-pole">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
-              '<path d="m20 20-3.5-3.5"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa"/></svg>' +
             '<span class="visually-hidden">Napište obec nebo okres</span>' +
             '<input type="search" id="vm-q" autocomplete="off" enterkeyhint="search"' +
               ' placeholder="Napište obec nebo okres" role="combobox"' +
               ' aria-expanded="false" aria-controls="vm-navrhy" aria-autocomplete="list">' +
           '</label>' +
           '<button class="vm-gps" id="vm-gps" type="button">' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/>' +
-              '<circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamerit"/></svg>' +
             '<span>Moje poloha</span></button>' +
           '<ul class="vm-navrhy" id="vm-navrhy" role="listbox" hidden></ul>' +
         '</div>' +
@@ -2548,8 +2547,7 @@
           '<div class="vm-mapa" id="vm-mapa"></div>' +
 
           '<button class="vm-zpet" id="vm-zpet" type="button" hidden>' +
-            '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/>' +
-            '<path d="M20 20l-3.6-3.6M11 8.2v5.6M8.2 11h5.6"/></svg>' +
+            '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lupa-plus"/></svg>' +
             'Ukázat okruh</button>' +
         '</div>' +
         '<div class="vm-pata">' +
@@ -5452,7 +5450,7 @@
 
       tlac.innerHTML = '<span class="mcs-txt"><span class="mcs-k">' + nadpis +
         '</span><span class="mcs-v">libovolná</span></span>' +
-        '<svg class="mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+        '<svg class="ik mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg>';
       rada.appendChild(tlac);
 
       var ov = document.createElement('div');
