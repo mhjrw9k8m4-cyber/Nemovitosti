@@ -516,21 +516,59 @@ async function otevri(okres, sirka) {
     `zkoušeno: ${kandidati(sGrafem).join(', ') || 'nic'}`);
 
   if (stranka) {
-    /* PŘEDPOKLAD: kdyby karta ležela do 300 px pod hranou okna, obě
-       kontroly odložení by prošly samy od sebe — i kdyby se nic
-       neodkládalo. */
+    /* PŘEDPOKLAD: kdyby karta ležela do 300 px pod hranou okna, kontrola
+       posunu níž by prošla sama od sebe — nebylo by co odsouvat. */
     pravda('místo pro graf leží víc než 300 px pod hranou okna (je co měřit)',
       prvni.podOknem !== null && prvni.podOknem > 300, `pod oknem ${prvni.podOknem} px`);
-    pravda('karta se před dorolováním NEUKAZUJE (nulová výška, bez nadpisu)',
-      prvni.vyska === 0 && !prvni.maGraf && !prvni.nadpisVidet,
-      JSON.stringify(prvni));
-    pravda('a soubor s historií se do té doby nestahuje',
-      drzak.dotazy.length === 0, `dotazů ${drzak.dotazy.length}`);
+
+    /* MÍSTO SE DRŽÍ DOPŘEDU, NE AŽ SE NAKRESLÍ.
+       Do 28. 10. tu stálo, že se karta před dorolováním NEUKAZUJE a že
+       se historie do té doby nestahuje — graf se kreslil až na dohled.
+       Naměřilo se, že ta úspora stojí posun: karta vyroste z nuly na
+       451–577 px a protože leží NAD řádkem s hlavní akcí, odsune ho
+       o tolikéž (zkouška test-nahoru na to spadla). Teď se kreslí hned
+       a místo má výšku rezervovanou ve stylopisu.
+       Měří se proto to, o co doopravdy jde: jestli se řádek s hlavní
+       akcí po dokreslení pohne. */
+    /* MĚŘÍ SE NA VLASTNÍ STRÁNCE SE ZDRŽENOU HISTORIÍ.
+       První pokus bral polohu akce na už hotové stránce — jenže graf se
+       kreslí hned, takže v té chvíli bylo po všem a kontrola měřila
+       nulu i bez rezervace (prokázáno sabotáží: zrušení rezervace jí
+       neuškodilo). Soubor s historií se proto úmyslně zdrží o 1,5 s:
+       mezi vykreslením detailu a dokreslením grafu tak vznikne okno,
+       ve kterém se posun dá změřit. */
+    const pSkok = await kontext.newPage();
+    await pSkok.setViewportSize({ width: 390, height: 844 });
+    await pSkok.route('**/historie-cen.json*', async (r) => {
+      await new Promise((d) => setTimeout(d, 1500));
+      await r.continue();
+    });
+    const kdeAkce = () => pSkok.evaluate(() => {
+      const e = document.querySelector('.pz-akce-hlavni');
+      return e ? Math.round(e.getBoundingClientRect().top + window.pageYOffset) : null;
+    });
+    await pSkok.goto(`${BASE}/${stranka}`, { waitUntil: 'domcontentloaded' });
+    await pSkok.waitForSelector('.pz-akce-hlavni', { timeout: 25000 });
+    const akcePred = await kdeAkce();
+    const grafPred = await pSkok.evaluate(() => !!document.querySelector('figure.gc'));
+    // PŘEDPOKLAD: bez okna, ve kterém graf ještě není, by kontrola měřila nic
+    pravda('je co měřit — detail je vykreslený dřív než graf',
+      akcePred !== null && grafPred === false,
+      `akce ${akcePred}, graf už nakreslený: ${grafPred}`);
 
     const misto = await drzak.p.$('[data-graf-cen]');
     if (misto) await misto.scrollIntoViewIfNeeded();
     await drzak.p.waitForTimeout(2500);
     const po = await drzak.p.evaluate(stavSekce);
+
+    await pSkok.waitForFunction(() => !!document.querySelector('figure.gc'), null, { timeout: 25000 })
+      .catch(() => {});
+    await pSkok.waitForTimeout(600);
+    const akcePo = await kdeAkce();
+    pravda('řádek s hlavní akcí se dokreslením grafu NEPOSUNE',
+      akcePred !== null && akcePo !== null && Math.abs(akcePo - akcePred) <= 2,
+      `z ${akcePred} na ${akcePo} px — pod prstem by utekla tlačítka`);
+    await pSkok.close();
 
     pravda('po dorolování se křivka nakreslí', po.graf === true,
       `stránka ${stranka}: figure.gc není`);

@@ -2059,24 +2059,36 @@
      a graf by se nenakreslil vůbec: žádná chyba, žádný prázdný rámeček,
      prostě nic. Modul proto vystavuje `postav` a dostane prvek rovnou.
 
-     A PODÁ SE MU AŽ NA DOHLED. Soubor s historií má 69 kB a čára sedí
-     pod verdiktem, tedy mimo první obrazovku. Stahovat ji na všech
-     2 276 stránkách pozemků hned při vykreslení by byl datový provoz
-     za nic — přesně to si graf-cen.js na okresní stránce nedovolí.
-     Záložka 300 px je tatáž, jakou má modul u sebe: křivka je hotová
-     a karta odkrytá dřív, než na ni člověk dohlédne, takže se mu pod
-     rukama nic nepřeskládá.
+     A KRESLÍ SE HNED, NE AŽ NA DOHLED. Do 28. 10. se čekalo, až bude
+     karta na dohled (IntersectionObserver se záložkou 300 px), a stálo
+     tu, že se tím „pod rukama nic nepřeskládá". NAMĚŘENO, ŽE TO BYLA
+     NEPRAVDA: karta vyroste z nuly na 496 px (390×844) a protože nad
+     řádkem s hlavní akcí, odsune ho o tolikéž. Tlačítko „nahoru", které
+     si polohu akce bere při přeměření, pak ustupovalo špatnému místu —
+     shodila to zkouška test-nahoru.
 
-     Chybí-li modul (starší mezipaměť prohlížeče) nebo IntersectionObserver,
-     podá se mu prvek hned — graf je navíc, nesmí shodit stránku. */
+     Teď se kreslí při vykreslení detailu a místo má výšku rezervovanou
+     ve stylopisu (.pz-vyvoj.ceka), takže se po dokreslení nic neposune.
+     Daň je stažení historie cen na každé stránce pozemku: 69 kB
+     v souboru, 8,4 kB po gzipu. Za to, že se pod prstem nehýbe
+     tlačítko, to stojí.
+
+     Chybí-li modul (starší mezipaměť prohlížeče), nestane se nic —
+     graf je navíc, nesmí shodit stránku. */
   function pzVyvojCeny(host) {
     var misto = host.querySelector('[data-graf-cen]');
     var sekce = host.querySelector('#pz-vyvoj');
     if (!misto || !global.PKGrafCen || !global.PKGrafCen.postav) return;
+    /* Rezervace výšky platí jen po dobu čekání. Kdyby se graf
+       nenakreslil (nedojde soubor s historií), zůstalo by po ní
+       prázdné místo — proto se třída v obou případech sundá. */
+    if (sekce) sekce.classList.add('ceka');
+    function hotovo() { if (sekce) sekce.classList.remove('ceka'); }
     function ted() {
       var slib = global.PKGrafCen.postav(misto);
-      if (!slib || !slib.then) return;
+      if (!slib || !slib.then) { hotovo(); return; }
       slib.then(function (nakreslil) {
+        hotovo();
         /* ODKRÝVÁ SE JEN PO ÚSPĚCHU. Nenakreslená karta zůstane
            schovaná: nadpis „Vývoj ceny v okolí" nad prázdným rámečkem
            by tvrdil, že o vývoji něco víme, a u 54 okresů ze 77 to
@@ -2084,17 +2096,7 @@
         if (nakreslil && sekce) sekce.classList.add('ma-graf');
       });
     }
-    if (!global.IntersectionObserver) { ted(); return; }
-    var io = new IntersectionObserver(function (zaznamy) {
-      if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
-      io.disconnect();
-      ted();
-    }, { rootMargin: '300px 0px' });
-    /* Hlídá se samo MÍSTO PRO GRAF. Dokud je prázdné, má nulovou
-       výšku — polohu v dokumentu ale ano, a to je k rozhodnutí „je na
-       dohled" dost. (Skrytý prvek by se hlídat nedal: display:none
-       IntersectionObserver neohlásí nikdy.) */
-    io.observe(misto);
+    ted();
   }
 
   function pzHlidejVelikostHodnot(host) {

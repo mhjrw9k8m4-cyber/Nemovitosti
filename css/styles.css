@@ -8678,8 +8678,38 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    vliv a prázdná karta tak zůstane nulově vysoká. */
 .pz-vyvoj-karta{padding:0 16px; border:1px solid transparent;
   border-top-width:0; border-bottom-width:0; border-radius:var(--r-plocha);}
-.pz-vyvoj:not(.ma-graf) > .pz-sect-h,
-.pz-vyvoj:not(.ma-graf) > .pz-vyvoj-dal{display:none;}
+.pz-vyvoj:not(.ma-graf):not(.ceka) > .pz-sect-h,
+.pz-vyvoj:not(.ma-graf):not(.ceka) > .pz-vyvoj-dal{display:none;}
+/* DOKUD SE ČEKÁ, nadpis a odkaz pod grafem místo DRŽÍ, jen nejsou
+   vidět. Když se schovaly přes display:none, přibyly při dokreslení
+   do toku a odsunuly řádek s hlavní akcí o 89 px (naměřeno 390×844) —
+   rezervace výšky karty na to sama nestačila. */
+.pz-vyvoj.ceka > .pz-sect-h,
+.pz-vyvoj.ceka > .pz-vyvoj-dal{visibility:hidden;}
+/* KARTA GRAFU MÁ PEVNOU VÝŠKU — A TO I POTOM, CO SE NAKRESLÍ.
+   Leží nad řádkem s hlavní akcí, takže každá změna její výšky odsune
+   tlačítka. Bez rezervace to bylo 496 px (naměřeno 390×844): karta
+   vyroste z nuly, tlačítka utečou pod prstem.
+
+   Rezervovat jen po dobu čekání NESTAČÍ. Vysoká je totiž u každé
+   nabídky jinak — podle toho, na kolik řádků se zalomí nadpis
+   a poznámka pod grafem (naměřeno na pěti nabídkách: 451 až 586 px
+   podle šířky). Rezervace na maximum by tedy krátkou kartu po
+   dokreslení o ten rozdíl SMRSKLA, a to je taky skok. Zkusil jsem
+   srovnat nadpis na pevný počet řádků, jenže rozpětí to nezavřelo —
+   bere se i z poznámky.
+
+   Proto platí minimální výška pořád: karta je vždy tak vysoká jako ta
+   nejvyšší na dané šířce a uvnitř zbyde kousek vzduchu dole. Vzduchu
+   si nikdo nevšimne, skoku pod prstem ano.
+
+   Čísla jsou maxima z měření (pět nabídek, 360–1280 px) a jsou
+   o 10 px vyšší, aby se do nich vešel i delší nadpis, než jaký dnes
+   v datech je. Že žádný skok nezbyl, hlídá test-graf-cen. */
+.pz-vyvoj-karta{min-height:480px;}
+@media (max-width:479px){ .pz-vyvoj-karta{min-height:520px;} }
+@media (max-width:409px){ .pz-vyvoj-karta{min-height:558px;} }
+@media (max-width:374px){ .pz-vyvoj-karta{min-height:596px;} }
 .pz-vyvoj.ma-graf > .pz-vyvoj-karta{padding:16px;
   background:var(--plocha-karta); border-width:1px; border-color:var(--line);
   box-shadow:var(--e1);}

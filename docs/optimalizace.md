@@ -13548,3 +13548,103 @@ v hledání cen (20 px, tah 2 → 1,67). Obě teď mají 1,5.
 Nadpisy oddílů na stránce pozemku ikonu nedostaly. Už nad sebou mají
 vodorovnou linku jako oddělovač a zadání zní „co nejčistší web" —
 ikona u každého nadpisu by byla druhá ozdoba na témže místě.
+
+## §207 Graf na každém inzerátu shodil tři hlídače — a dva z nich měly pravdu
+
+Commit §205 udělal z grafu věc, která je na KAŽDÉ nabídce. V CI pak
+spadly tři hlídače najednou. Nebyla to náhoda a nebylo to „prostě CI":
+s vypnutým grafem všechny tři projdou, se zapnutým všechny tři padnou.
+Jeden kořen, tři příznaky.
+
+### 1. Mrtvá jména `up` a `down` — hlídač měl pravdu
+
+Graf psal `<i class="gc-zmena up">` (nebo `down`) podle směru. Pravidlo
+pro ně ve stylopisu ale nikdy nevzniklo, takže ta jména nedělala nic.
+Dokud graf stál jen na okresních stránkách, hlídač mrtvých jmen na ně
+nenarazil; jakmile se objevil i v inzerátu, ozval se — správně.
+
+Směr navíc stojí ve znaménku rovnou v textu („+3 % za 45 dní"), takže
+barva by ho jen opakovala. Jména jsou pryč.
+
+### 2. Tlačítko „nahoru" ustupovalo špatnému místu — hlídač měl pravdu
+
+Karta s grafem vyroste z nuly na 451–577 px (podle šířky a délky
+nadpisu; naměřeno na pěti nabídkách od 360 do 1280 px). Leží NAD
+řádkem s hlavní akcí, takže ho o tolikéž odsune. Tlačítko „nahoru" si
+polohu akce bere při přeměření — a to proběhlo dřív, než graf dorostl.
+
+Komentář u odloženého kreslení přitom tvrdil, že „křivka je hotová
+dřív, než na ni člověk dohlédne, takže se mu pod rukama nic
+nepřeskládá". **To byla nepravda** a měření ji ukázalo: posun 496 px
+na 390×844.
+
+Opraveno dvakrát. Graf se kreslí hned při vykreslení detailu, ne až na
+dohled — daň je stažení historie cen na každé stránce pozemku (69 kB
+v souboru, 8,4 kB po gzipu). A karta má minimální výšku, takže se
+nemá jak hnout.
+
+**Rezervovat jen po dobu čekání nestačilo** a stálo to tři pokusy:
+
+1. Rezervace přes třídu `ceka`, která se po dokreslení sundá. Posun
+   klesl z 496 na 89 px — zbytek dělaly nadpis a odkaz pod grafem,
+   schované přes `display:none`: při dokreslení přibyly do toku.
+2. Nadpis i odkaz tedy místo DRŽÍ (`visibility:hidden`). Zbylo −7 px:
+   rezervace na maximum krátkou kartu po dokreslení o ten rozdíl
+   smrskla, a to je taky skok.
+3. Zkusil jsem srovnat nadpis na pevný počet řádků, aby byla výška
+   karty daná jen šířkou okna. Rozpětí se nezavřelo (pořád 19–39 px) —
+   bere se i z poznámky pod grafem.
+
+Platí proto minimální výška **pořád**, i po dokreslení: karta je vždy
+tak vysoká jako ta nejvyšší na dané šířce a uvnitř zbyde kousek
+vzduchu dole. Vzduchu si nikdo nevšimne, skoku pod prstem ano.
+
+Naměřeno po opravě — posun řádku s akcí po dokreslení grafu:
+
+| šířka | 360 | 390 | 430 | 768 | 1280 |
+|---|---|---|---|---|---|
+| posun | 0 px | 0 px | 0 px | 0 px | 0 px |
+
+(čtyři různé nabídky na každé šířce)
+
+Zkouška `test-graf-cen` měla dvě kontroly, které hlídaly staré
+odložené kreslení („karta se před dorolováním neukazuje", „historie se
+do té doby nestahuje"). Místo nich teď měří to, o co doopravdy jde:
+jestli se řádek s hlavní akcí po dokreslení pohne. A protože se graf
+kreslí hned, musí si zkouška okno pro měření vyrobit — zdrží soubor
+s historií o 1,5 s.
+
+**První verze té kontroly neměřila nic** a ukázala to až sabotáž:
+brala polohu na hotové stránce, kde už bylo po všem, takže prošla
+i bez rezervace. Po opravě sabotáž (rezervace pryč) hlásí posun
+546 px.
+
+### 3. „Lišta bliká" — tentokrát neměl pravdu hlídač
+
+Zkouška spodní lišty hlásila tři přepnutí při cestě dolů a žádala
+nejvýš jedno. Jenže naměřené polohy ukázaly, co se děje: graf 1494 až
+2054, tlačítka 2147–2199. Při cestě dolů se tlačítka dostanou do okna,
+lišta SPRÁVNĚ zhasne, a po jejich minutí se zase rozsvítí. Tři
+přepnutí, a všechna správná.
+
+Mez „nejvýš jedno přepnutí" platila, dokud řádek s tlačítky seděl
+vysoko. Vadou není přepnutí, ale KRÁTKÉ bliknutí: zhasnutí na 160 px
+je chyba (přesně to zkouška kdysi chytila), zhasnutí na 1 040 px je to,
+k čemu lišta je. Zkouška teď měří délku úseku a mez je 400 px.
+
+Zeslabení meze se platí důkazem. Sabotáž: okno pro „je vidět akce" se
+zúžilo na 44 px, čímž vzniklo bliknutí dlouhé **160 px** — tedy přesně
+tak dlouhé jako původní vada — a zkouška ho chytila:
+
+```
+✕ při rolování dolů nebliká (žádný úsek kratší než 400 px)
+    krátké úseky: vyp 640–720 (160 px)
+```
+
+### Co si z toho odnést
+
+Změna „ukaž to všude" není kosmetická. Tenhle commit zapnul na 2 276
+stránkách kus rozvržení, který tam nikdy nebyl, a tři hlídače to
+odhalily během jedné noci. Dva z nich měly pravdu a opravil se web;
+jeden měřil starou geometrii a opravila se zkouška — ale až potom, co
+sabotáž ukázala, že nová mez původní vadu pořád chytá.

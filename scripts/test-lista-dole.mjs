@@ -106,23 +106,43 @@ try {
      Lišta se v ní vysunula na y=640 a na y=800 se zase schovala: jedno
      bliknutí přes 160 px pomalého rolování, při kterém navíc poskočil
      obsah (tělo se o lištu odsazuje).
-     Měří se počet PŘEPNUTÍ při cestě dolů, ne stav na jednom místě —
-     stav na jednom místě tuhle vadu ukázat nemůže. Správně je jedno
-     přepnutí: jednou se ukáže a zůstane. */
+     Měří se průběh při cestě dolů, ne stav na jednom místě — stav na
+     jednom místě tuhle vadu ukázat nemůže.
+
+     MĚŘÍ SE DÉLKA ÚSEKU, NE POČET PŘEPNUTÍ. Do 28. 10. tu stálo
+     „nejvýš jedno přepnutí". To platilo, dokud řádek s tlačítky seděl
+     vysoko. Jakmile nad něj přibyl graf vývoje ceny, odsunul ho o 560 px
+     (naměřeno: graf 1494–2054, tlačítka 2147–2199), takže se při cestě
+     dolů tlačítka dostanou do okna a lišta SPRÁVNĚ zhasne — a po jejich
+     minutí se zas rozsvítí. Tři přepnutí, a všechna správná.
+     Vadou je krátké bliknutí, ne přepnutí samo: zhasnutí na 160 px je
+     chyba, zhasnutí na 1 040 px je přesně to, k čemu lišta je. Mez je
+     proto 400 px — nad dvojnásobkem naměřené vady a hluboko pod
+     naměřenou správnou mezerou. */
   {
     await p.evaluate(() => window.scrollTo(0, 0));
     await p.waitForTimeout(600);
-    let minule = null;
-    const prepnuti = [];
+    const MEZ = 400;
+    const prubeh = [];
     for (let y = 0; y <= 2600; y += 80) {
       await p.evaluate((yy) => window.scrollTo(0, yy), y);
       await p.waitForTimeout(130);
-      const v = (await zmer(p)).videt;
-      if (minule !== null && v !== minule) prepnuti.push((v ? 'zap' : 'vyp') + '@' + y);
-      minule = v;
+      prubeh.push({ y, v: (await zmer(p)).videt });
     }
-    pravda('při rolování dolů se nepřepne víc než jednou (nebliká)',
-      prepnuti.length <= 1, 'přepnutí: ' + (prepnuti.join(' ') || 'žádné'));
+    /* Úsek = souvislý kus cesty se stejným stavem. První a poslední se
+       nepočítají: ty mez neomezuje, protože jsou uříznuté koncem měření. */
+    const useky = [];
+    for (const k of prubeh) {
+      const p0 = useky[useky.length - 1];
+      if (p0 && p0.v === k.v) p0.do = k.y; else useky.push({ v: k.v, od: k.y, do: k.y });
+    }
+    const vnitrni = useky.slice(1, -1);
+    const kratke = vnitrni.filter((u) => (u.do - u.od) + 80 < MEZ);
+    pravda(`při rolování dolů nebliká (žádný úsek kratší než ${MEZ} px)`,
+      kratke.length === 0,
+      'krátké úseky: ' + kratke.map((u) => (u.v ? 'zap' : 'vyp') + ' ' + u.od + '–' + u.do +
+        ' (' + ((u.do - u.od) + 80) + ' px)').join(', ') +
+      '\n      celý průběh: ' + useky.map((u) => (u.v ? 'zap' : 'vyp') + ' ' + u.od + '–' + u.do).join(' | '));
   }
 
   await p.evaluate(() => window.scrollTo(0, 0));

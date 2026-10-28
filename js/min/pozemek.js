@@ -1268,22 +1268,19 @@
     var misto = host.querySelector('[data-graf-cen]');
     var sekce = host.querySelector('#pz-vyvoj');
     if (!misto || !global.PKGrafCen || !global.PKGrafCen.postav) return;
+
+    if (sekce) sekce.classList.add('ceka');
+    function hotovo() { if (sekce) sekce.classList.remove('ceka'); }
     function ted() {
       var slib = global.PKGrafCen.postav(misto);
-      if (!slib || !slib.then) return;
+      if (!slib || !slib.then) { hotovo(); return; }
       slib.then(function (nakreslil) {
+        hotovo();
 
         if (nakreslil && sekce) sekce.classList.add('ma-graf');
       });
     }
-    if (!global.IntersectionObserver) { ted(); return; }
-    var io = new IntersectionObserver(function (zaznamy) {
-      if (!zaznamy.some(function (z) { return z.isIntersecting; })) return;
-      io.disconnect();
-      ted();
-    }, { rootMargin: '300px 0px' });
-
-    io.observe(misto);
+    ted();
   }
 
   function pzHlidejVelikostHodnot(host) {

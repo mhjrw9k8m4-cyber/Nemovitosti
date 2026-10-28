@@ -116,7 +116,8 @@
         '<figcaption class="gc-hlava">' +
           '<b>' + esc(nadpis) + '</b>' +
           '<span class="gc-ted">' + cislo(posledni.cena) + ' Kč/m²' +
-            '<i class="gc-zmena' + (zmena > 0 ? ' up' : zmena < 0 ? ' down' : '') + '">' +
+
+            '<i class="gc-zmena">' +
               (zmena > 0 ? '+' : '') + cislo(zmena) + ' % za ' + body.length + ' dní</i></span>' +
         '</figcaption>' +
         '<div class="gc-plocha">' +
