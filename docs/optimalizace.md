@@ -13309,3 +13309,61 @@ samostatně ne. Vybrat směr podle jedné fotky je přesně ta chyba, která
 je v CLAUDE.md zapsaná jako „Nepřestavuj podle jedné fotky" — a sáhnout
 na upevněnou kartu s cenou je ta druhá, „Předloha neruší to, co je
 upevněné". Proto je to změřené, sepsané a čeká to na rozhodnutí.
+
+## §203 Ze čtyř přihlášení měla obnovu hesla jen dvě
+
+Obhlídka účtových stránek na telefonu (pridat, hlidani, zpravy,
+muj-inzerat) nenašla nic rozbitého na vzhledu — zato našla **díru
+v cestě ven**.
+
+Web má **čtyři místa, kde se člověk přihlašuje**, a každé si přihlášení
+kreslí samo:
+
+| stránka | kdo formulář staví | „Zapomněli jste heslo?" |
+|---|---|---|
+| `pridat.html` | `js/pridat.js` | ano |
+| `muj-inzerat.html` | `js/pridat.js` | ano |
+| `hlidani.html` | vlastní skript ve stránce | **ne** |
+| `zpravy.html` | vlastní skript ve stránce | **ne** |
+
+Hlídání i Zprávy jsou přitom **přímo v nabídce**. Kdo si je otevřel
+a heslo nepamatoval, neměl odsud kudy ven — musel sám uhodnout, že se
+má proklikat na Můj profil, kde ten odkaz je.
+
+**Nevzniklo to nedbalostí, ale tím, že jsou ty formuláře čtyři.** Čtyři
+příležitosti na něco zapomenout a žádná kontrola, která by je spočítala.
+
+### Oprava
+
+Obě chybějící místa dostala týž ovladač a volá se z něj **týž kus kódu**,
+jaký volá `js/pridat.js` — `PKAuth.recover(e-mail)`. Nic nového se
+nepsalo, jen se použilo to, co na webu bylo. Odkaz má tutéž podobu
+(`p.auth-forgot` > `button.auth-link`), takže nepřibylo ani nové jméno
+třídy, ani nové pravidlo ve stylopisu.
+
+Hláška jde do živé oblasti, která na těch stránkách už je (§94), takže
+o ní ví i odečítač obrazovky: bez e-mailu *„Napište nahoře svůj e-mail…"*,
+s e-mailem *„Poslali jsme vám na e-mail odkaz…"*.
+
+### A hlavně hlídač, aby se to nestalo popáté
+
+`scripts/test-zapomenute-heslo.mjs` projde všechna čtyři místa na
+telefonu a u každého měří čtyři věci: že tam přihlášení vůbec je
+(PŘEDPOKLAD), že je u něj obnova hesla, že se na ni dá trefit prstem
+(44 px) — **a že opravdu něco dělá.** To poslední je podstatné: nápis
+bez obsluhy vypadá na stránce úplně stejně jako hotová věc.
+
+Hledá se podle TEXTU, ne podle `id`: každá stránka si přihlášení kreslí
+po svém a ta id se jmenují jinak (`au-forgot`, `hforgot`, `zforgot`).
+Co má být stejné, je to, co z toho vidí člověk.
+
+Prokázáno dvěma sabotážemi:
+
+| co jsem rozbil | co spadlo |
+|---|---|
+| odkaz z `hlidani.html` pryč | „je u něj obnova zapomenutého hesla" |
+| odkaz zůstal, obsluha pryč | obě kontroly, že to něco dělá |
+
+Po opravě: `test-zapomenute-heslo` 24/24, `test-mrtva-jmena`,
+`test-dotyk`, `test-stranky-uctu` bez nálezu, rychlá sada 134/134.
+Zkoušek s prohlížečem je nově 138.

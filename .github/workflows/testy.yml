@@ -993,6 +993,9 @@ jobs:
       - name: Stránky účtu (obsah na středu, ne přilepený vlevo)
         run: node scripts/test-stranky-uctu.mjs
 
+      - name: Zapomenuté heslo je ze všech čtyř přihlášení
+        run: node scripts/test-zapomenute-heslo.mjs
+
       - name: Podklad hlavní mapy
         run: node scripts/test-podklad-mapy.mjs
 

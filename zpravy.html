@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-Vg5yhquVXRvq90S9cPbGmGzu+bLwk2yuzYsC4svV9Hc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-3iK5y22I0TPrbcfJX3Q24PcdL8dFcH2UeJlXTHr/xRU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -292,6 +292,10 @@
           '<input class="zp-in" id="zp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
           '<button class="zp-btn" type="submit" id="zlogin">Přihlásit se</button>' +
           '<button class="zp-btn sec" type="button" id="zsignup">Vytvořit účet</button>' +
+          /* ZAPOMENUTÉ HESLO — týž důvod jako na hlidani.html: ze čtyř míst,
+             kde se na webu přihlašuje, ho měla jen dvě. Volá se PKAuth.recover,
+             tedy tentýž kus kódu jako v pridat.js. */
+          '<p class="auth-forgot"><button class="auth-link" type="button" id="zforgot">Zapomněli jste heslo?</button></p>' +
         '</form>' +
         /* ŽIVÁ OBLAST, A PRÁZDNÁ — stejně jako na hlidani.html a ze
            stejného naměřeného důvodu (oddíl 94): po klepnutí na
@@ -319,6 +323,16 @@
       var c = creds(); if (!okPrihlaseni(c)) { mEl.textContent = 'Zadejte e-mail a heslo.'; mEl.className = 'zp-msg err'; return; }
       mEl.textContent = 'Přihlašuji…'; mEl.className = 'zp-msg';
       A.login(c.e, c.p).then(function (r) { if (r && r.ok) start(); else { mEl.textContent = 'Přihlášení se nepovedlo. Zkontrolujte e-mail a heslo.'; mEl.className = 'zp-msg err'; } });
+    });
+    /* Odkaz se posílá na e-mail napsaný nahoře — jinak by nebylo kam. */
+    document.getElementById('zforgot').addEventListener('click', function () {
+      var c = creds();
+      if (!jeEmail(c)) { mEl.textContent = 'Napište nahoře svůj e-mail a pak klepněte na „Zapomněli jste heslo".'; mEl.className = 'zp-msg err'; return; }
+      mEl.textContent = 'Posílám odkaz…'; mEl.className = 'zp-msg';
+      A.recover(c.e).then(function () {
+        mEl.textContent = 'Poslali jsme vám na e-mail odkaz pro nastavení nového hesla. Zkontrolujte i spam.';
+        mEl.className = 'zp-msg';
+      });
     });
     document.getElementById('zsignup').addEventListener('click', function () {
       var c = creds(); if (!okZalozeni(c)) { mEl.textContent = 'Zadejte e-mail a heslo (aspoň ' + hesloMin() + ' znaků).'; mEl.className = 'zp-msg err'; return; }
