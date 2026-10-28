@@ -13190,3 +13190,122 @@ Tři kontroly musely přestat předpokládat, že `<h1>` stojí hned za
 Po opravě: rychlá sada 134/134, `test-predloha`, `test-hlavicka-pozemku`
 18/18, `test-ukoncena-v-prohlizeci` 18/18, `test-vaha-stranky` 6/6,
 `test-stabilita` 50/50, `test-poradi-pozemku` 24/24.
+
+## §200 Předvykreslení celého detailu — ZMĚŘENO, NEUDĚLÁNO
+
+§199 skončil tím, že se poskakování stránky pozemku nedá opravit po
+kouskách: buď se servíruje celý detail, nebo nic. Tak jsem si spočítal,
+co ten „celý detail" stojí.
+
+**Naměřeno na třech stránkách** (vykreslený obsah `#pz-detail`):
+
+| stránka | stránka dnes | vykreslený detail |
+|---|---|---|
+| Nemyšl, Tábor | 34 207 B | 15 543 B |
+| Všemina, Zlín | 34 621 B | 27 498 B |
+| Benešov | 33 589 B | 16 551 B |
+
+Průměr vykresleného detailu je **19 864 B**. Stránka pozemku má dnes
+průměrně 34 kB, takže by předvykreslením narostla na **54 kB, tedy
+o 58 %**.
+
+**Co by to stálo:**
+
+* **+37,8 MB v repozitáři na každé sestavení.** Stránek pozemků je
+  1 902 a přepisují se při každém běhu (ceny se obnovují čtyřikrát
+  denně), takže git ukládá 1 902 nových objektů pokaždé. O 58 % větších.
+  Repozitář má dnes 1 GB a už teď hlásí „too many unreachable loose
+  objects".
+* **Zaplatí to i člověk, a dvakrát.** Prohlížeč si těch 20 kB stáhne
+  navíc — a pak stejně spustí `js/pozemek.js`, který detail vykreslí
+  znovu. Obejít se to dá jen „hydratací", tedy otiskem dat ve stránce,
+  podle kterého skript pozná, že servírovaná podoba je čerstvá a může
+  si vykreslování odpustit. To je další mechanismus, který se musí
+  trefit — a když se netrefí, ukáže stránka zastaralou cenu.
+* **Sestavení by potřebovalo prohlížeč.** Druhá cesta (nechat detail
+  vykreslit Chromiem při sestavení) nezdvojuje logiku, zato přidává
+  do každého běhu ~4 minuty a závislost na prohlížeči i tam, kde dnes
+  stačí Node.
+
+**A co ta vada stojí:** jeden skok v ~150 ms, tedy dřív, než si člověk
+stačí cokoli přečíst. Na telefonu je CLS nula. Servírovaná podoba už
+dnes nese titulek, nadpis, cenu, parametry i letecký náhled (§199),
+takže vyhledávač ani člověk bez JavaScriptu nepřijde o podstatné.
+
+**Rozhodnutí: nedělá se.** Třicet osm megabajtů na každé sestavení
+a dvojí platba za týž obsah je moc za skok, který nikdo nevidí.
+Zapsáno i jako třetí možnost, která se nabízí a taky se NEDĚLÁ:
+předsadit do stránky jen naměřenou výšku (`min-height`) místo obsahu.
+Stálo by to třicet bajtů na stránku, jenže rezerva, která se netrefí
+o padesát pixelů, vyrobí nový posun — a trefovat se musí zvlášť pro
+telefon a pro monitor, při každé změně dat. Mechanismus křehčí než
+vada, kterou má schovat.
+
+Mez v `test-stabilita` zůstává 0,13 pro monitor a stránky pozemku, aby
+se vada nemohla tiše zhoršit. Kdyby web někdy začal servírovat detail
+z jiného důvodu (třeba kvůli vyhledávačům), spadne tím i tohle.
+
+## §201 Ikona rozbitého obrázku v každém druhém řádku výpisu
+
+Náhled ve výpisu okresu je letecká dlaždice z Esri. Když se nestáhne —
+mizerná síť, výpadek jejich serveru — nakreslí Chromium do toho místa
+svou **ikonu rozbitého obrázku**, vlevo nahoře.
+
+**Naměřeno 28. 10.** s odstřiženým serverem dlaždic (tím se mizerná síť
+napodobí přesně): z 43 náhledů na stránce okresu Zlín se jich 21
+nenačetlo a v každém z nich ta ikona byla.
+
+Stylopis se o to pokoušel už dřív — `color:transparent` u obrázku —
+jenže ten schová jen **popisek**, ne ikonu. Komentář u toho pravidla
+tvrdil, že je čtverec „čistý", a to nebyla pravda; vzniklo to tím, že
+se stav nikdy nevyfotil.
+
+**Oprava stojí na vlastnosti, která je v pořádku a málo se využívá:**
+obrázek, který se nenačte, přestane být *nahrazeným prvkem* — a teprve
+tehdy se jeho pseudoprvek vykreslí. `::after` přes celou plochu tedy
+leží přes ikonu právě tehdy, když je co zakrýt; u načteného snímku se
+nenakreslí vůbec. Žádný skript, žádný další požadavek, dva řádky CSS.
+
+Mřížka pod snímkem tím v tom stavu zmizí a je to tak schválně: opsat
+tytéž tři deklarace podruhé jen kvůli stavu, který má žít do příští
+dlaždice, se nevyplatí — a čistý čtverec se špendlíkem je klidnější než
+mřížka, která nic neměří.
+
+Po opravě: rychlá sada 134/134, `test-mrtve-styly`, `test-okraje`,
+`test-kontrast` a `test-odstupy` bez nálezu.
+
+## §202 Karta se na webu kreslí čtyřmi recepty — ZMĚŘENO, ROZHODNUTÍ NA MAJITELI
+
+Při obhlídce podle zadání („celý web předělej do této podoby") jsem
+změřil **všechny světlé desky s rámem nebo stínem** na sedmi typech
+stránek: jméno, zaoblení, rám, stín a výplň.
+
+Stylopis má role napsané: `--r-plocha` (10 px) jsou karty a panely,
+`--r-ovladani` (14 px) je to, čím se ovládá, `--r-obraz` (20 px) jsou
+mapy a fotky. U tokenu to stojí černé na bílém: *„karta je pořád
+hranatější než tlačítko"*.
+
+**Měření říká, že se to drží jen z poloviny.** Obsahové karty na 10 px:
+`.opp-item`, `.okr-item`, `.pz-gtk`, `.dt-tab-obal`, `.add-card`,
+`.st-karta`, `.pz-pozn-box`, `.pz-vyvoj-karta`. Obsahové karty na
+14 px, tedy na zaoblení pro ovladače: `.deal-card`, `.odl-card`,
+`.realtor-contact`, `.add-boost`, `.kt-mail`, `.add-cross`,
+`.aside-card`, `.ul-card`, `.add-steps li`, `.status-card`, `.md-odhad`,
+`.pz-bok`, `.pz-gtk-sum`. K tomu tři různé rámy (0,14 / 0,28 / žádný)
+a čtyři stíny (žádný / `--e1` / `--e2` / `--e3`).
+
+**Proč to nepředělávám sám.** Mezi těmi čtrnácti kartami na 14 px je
+`.pz-bok` — tedy **přesně ta karta s cenou, kterou majitel poslal jako
+předlohu toho, jak má web vypadat**. Srovnat to jde dvěma směry a každý
+sahá na celý web:
+
+* **na 10 px** (podle pravidla v stylopisu) — pak se změní i ta karta,
+  která byla poslaná jako vzor;
+* **na 14 px** (podle vzoru) — pak přestane platit pravidlo, že karta je
+  hranatější než tlačítko, a změní se naopak výpis a okresní stránky.
+
+Rozdíl mezi 10 a 14 px je čtyři pixely zaoblení; vedle sebe je vidět,
+samostatně ne. Vybrat směr podle jedné fotky je přesně ta chyba, která
+je v CLAUDE.md zapsaná jako „Nepřestavuj podle jedné fotky" — a sáhnout
+na upevněnou kartu s cenou je ta druhá, „Předloha neruší to, co je
+upevněné". Proto je to změřené, sepsané a čeká to na rozhodnutí.
