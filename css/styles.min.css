@@ -449,7 +449,7 @@ to{opacity:1;transform:none}
 }
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
 .msv-ulozene{min-height:36px;padding:4px 12px;font-size:12px}
-.msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka)}
+.msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka);stroke:none}
 .msv-ulozene.on svg{fill:currentColor}
 .msv-ulozene{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
 .msv-razeni{display:flex;min-width:0}

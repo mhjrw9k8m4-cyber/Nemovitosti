@@ -19,6 +19,12 @@
 //      takhle zmizely. Tohle se nedá přečíst ze zdroje, musí se otevřít
 //      stránka a zeptat se prohlížeče.
 //
+//      (Přísnější sourozenec je scripts/test-tahy.mjs: ten měří KAŽDOU
+//      ikonu proti 1,5 px na dvanácti stránkách. Tenhle hlídá rozpětí
+//      v rámci jedné stránky. Po zavedení sady spadl test-tahy, ne
+//      tenhle — vyplněná záložka „Uložené" dostala od společného pera
+//      tah, který nikdy neměla.)
+//
 //   3. STOPA. Ikony jsou linkové ve čtyřiadvacítkové soustavě. Když se táž
 //      ikona vysází jednou na 16 px a jinde na 19 px se stejnou tloušťkou
 //      tahu, má na obrazovce pokaždé jinou stopu — 1,33 px proti 1,58 px.

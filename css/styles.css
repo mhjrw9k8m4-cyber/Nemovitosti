@@ -2463,7 +2463,11 @@ h1 em{ color:var(--znacka-svetla);
    větší důvod říct míru jednou a pro všechny šířky.)
    Šestnáct pixelů je táž míra, jakou mají ikony v přepínači
    Seznam/Mapa vedle. Hlídá scripts/test-ovladani-vypisu.mjs. */
-.msv-ulozene svg{flex:none; width:16px; height:16px; fill:var(--plocha-znacka);}
+/* BEZ TAHU: tahle značka je VYPLNĚNÁ, ne linková. Když sada ikon
+   dostala společné pero (.ik), obtáhlo i ji — a protože je sázená na
+   16 px, vyšla stopa 1,33 px místo 1,5 a zkouška test-tahy ji právem
+   shodila. Vyplněná záložka žádný obrys mít nemá. */
+.msv-ulozene svg{flex:none; width:16px; height:16px; fill:var(--plocha-znacka); stroke:none;}
 /* Zapnuté „Uložené" je zelené a značka v něm bílá — stav se pozná
    i podle ní, nejen podle plochy. */
 .msv-ulozene.on svg{fill:currentColor;}

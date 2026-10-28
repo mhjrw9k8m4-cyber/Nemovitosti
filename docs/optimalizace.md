@@ -13648,3 +13648,29 @@ stránkách kus rozvržení, který tam nikdy nebyl, a tři hlídače to
 odhalily během jedné noci. Dva z nich měly pravdu a opravil se web;
 jeden měřil starou geometrii a opravila se zkouška — ale až potom, co
 sabotáž ukázala, že nová mez původní vadu pořád chytá.
+
+### §206b Společné pero obtáhlo i značku, která je vyplněná
+
+Sada ikon dala všem `<svg>` s `<use>` společnou třídu `.ik`, a ta nese
+pero: `fill:none; stroke:currentColor; stroke-width:2`. U linkových
+ikon je to správně. Jenže tlačítko „Uložené" nad výpisem nese značku,
+která je **vyplněná** — záložka bez obrysu, bílá, když je zapnuto.
+Dostala tedy tah, který nikdy neměla, a protože je sázená na 16 px,
+vyšla stopa 1,33 px místo 1,5.
+
+Shodil to `scripts/test-tahy.mjs` — hlídač, který měří KAŽDOU ikonu
+proti 1,5 px na dvanácti stránkách, a kterého jsem si při výběru
+„nejrizikovějších dvaceti" nevšiml. Běžel až v CI.
+
+Dvě poučení, obě moje:
+
+* **Výběr zkoušek k puštění je taky rozhodnutí, a to se dá splést.**
+  Pustil jsem dvacet hlídačů vybraných podle toho, čeho se změna
+  dotýká. `test-tahy` tam patřil a chyběl — jmenuje se „Tah ikon".
+* **Společné pravidlo pro celou rodinu je i past.** Co platí pro
+  padesát linkových ikon, neplatí pro jednu vyplněnou. Opraveno
+  `stroke:none` na tom jednom místě, s napsaným důvodem.
+
+Po opravě: `test-tahy` 5/5, `test-ikony` 11/11,
+`test-ovladani-vypisu` 31/31. Změřeno navíc, že žádná jiná vyplněná
+ikona tah navíc nedostala.
