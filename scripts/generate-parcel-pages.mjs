@@ -131,6 +131,36 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
    pkey by tu nestačil: sedí na dva různé pozemky naráz a stránka by
    ukázala cizí historii ceny. */
 const _KLIC = createRequire(import.meta.url)(path.join(ROOT, 'js', 'klic.js')).PKKlic;
+/* LETECKÝ NÁHLED SKLÁDÁ TÝŽ SOUBOR, KTERÝ HO KRESLÍ V PROHLÍŽEČI.
+   js/snimek.js vznikl právě proto, že se snímek skládal na dvou
+   místech a výpočty se rozcházely; třetí kopie tady by byla třetí
+   rozcházení. Soubor je psaný pro prohlížeč (končí `})(window)`),
+   takže se mu `window` nastaví na globální objekt — stejně to dělá
+   scripts/generate-region-pages.mjs. */
+globalThis.window = globalThis;
+new Function(fs.readFileSync(path.join(ROOT, 'js', 'snimek.js'), 'utf8'))();
+const SNIMEK = globalThis.PK_SNIMEK;
+if (!SNIMEK || typeof SNIMEK.html !== 'function') {
+  console.error('::error::js/snimek.js nedalo html() — stránky pozemků by zůstaly bez náhledu');
+  process.exit(1);
+}
+
+/* BARVA ŠPENDLÍKU SE ČTE ZE STYLOPISU, NEOPISUJE SE.
+   js/pozemek.js si ji bere z tokenu (`tokenBarva('--c-sale', …)`),
+   takže napsat ji sem napevno by znamenalo dvě pravdy o jedné barvě —
+   přesně to, kvůli čemu se dělal úklid v §56. Tady se tytéž tokeny
+   vytáhnou z css/styles.css. */
+const BARVY_TYPU = (() => {
+  const css = fs.readFileSync(path.join(ROOT, 'css', 'styles.css'), 'utf8');
+  const vezmi = (jm) => (new RegExp('--' + jm + ':\\s*(#[0-9A-Fa-f]{3,8})').exec(css) || [])[1];
+  const m = { sale: vezmi('c-sale'), drazba: vezmi('c-drazba'), exekuce: vezmi('c-exekuce'),
+    obec: vezmi('c-obec'), majitel: vezmi('c-majitel') };
+  for (const k of Object.keys(m)) {
+    if (!m[k]) { console.error(`::error::ve stylopisu chybí token --c-${k} — špendlík by neměl barvu`); process.exit(1); }
+  }
+  return m;
+})();
+
 /* Popisy od inzerentů. Soubor vzniká při sběru dat; než robot poprvé
    doběhne, prostě není — a generátor tím nesmí spadnout, jinak by se
    kvůli chybějícímu popisu nevygenerovaly stránky vůbec. */
@@ -1373,8 +1403,31 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
   const tiPomlcka = nadpis.indexOf(' — ');
   const titulCo = tiPomlcka < 0 ? nadpis : nadpis.slice(0, tiPomlcka);
   const titulKde = tiPomlcka < 0 ? '' : nadpis.slice(tiPomlcka + 3);
+  /* LETECKÝ NÁHLED UŽ V SERVÍROVANÉ PODOBĚ.
+     Dosud ho stránka dostala až z JS, takže ho neviděl vyhledávač,
+     neviděl ho nikdo bez JavaScriptu — a hlavně: #pz-detail byl při
+     prvním vykreslení o těch 400 px nižší, než jaký bude, takže se
+     všechno pod ním při výměně posunulo. Naměřeno 28. 10. na monitoru:
+     1 007 px → 2 316 px, CLS 0,1228. Tohle je první ze dvou kusů, které
+     se dají předsadit (druhý je místo pro mapu); zbytek je text, jehož
+     výšku generátor dopředu nezná.
+     Skládá to týž js/snimek.js, jakým ho kreslí prohlížeč, se stejnými
+     rozměry — proto se při výměně nehne ani o pixel.
+     ODZNAK TYPU SE TU NEKRESLÍ schválně: v js/pozemek.js má jiná slova
+     („Obecní záměr" proti „Od obce") a dvě tabulky popisků v jednom
+     repozitáři se rozejdou. Údaj se neztrácí, stojí o řádek níž
+     v „· Na prodej". Na rozvržení odznak vliv nemá, leží přes snímek. */
+  const nahled = (typeof d.lat === 'number' && typeof d.lng === 'number')
+    ? `<div class="pz-media">`
+      + SNIMEK.html(d, { sirka: 384, vyska: 256, barva: BARVY_TYPU[d.type] || BARVY_TYPU.sale, id: 'hero' })
+      + `<span class="opp-mgrad"></span>`
+      + SNIMEK.popis(d)
+      + `</div>`
+    : '';
+
   const staticky =
     `<article class="pz-staticky">`
+    + nahled
     + `<h1>${esc(titulCo)}</h1>`
     + (titulKde ? `<p class="pz-staticky-kde">${esc(titulKde)}</p>` : '')
     + `<p><b>${esc(cena)}</b>${esc(zaM2)}${vym ? ' · ' + esc(vym) : ''} · ${esc(TYP[d.type] || d.type)}</p>`

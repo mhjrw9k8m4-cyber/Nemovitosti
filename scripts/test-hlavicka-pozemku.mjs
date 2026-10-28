@@ -82,7 +82,7 @@ const nadpisy = new Map();   // soubor → titul
 const nesedi = [];
 for (const f of stranky) {
   const h = cti(f);
-  const h1 = (h.match(/<article class="pz-staticky"><h1>(.*?)<\/h1>/) || [])[1];
+  const h1 = (h.match(/<article class="pz-staticky">[\s\S]*?<h1>(.*?)<\/h1>/) || [])[1];
   const titulek = (h.match(/<title>(.*?)<\/title>/) || [])[1];
   const ostruvek = (h.match(/<script type="application\/json" id="pz-titul-data">(.*?)<\/script>/) || [])[1];
   let zOstruvku = null;

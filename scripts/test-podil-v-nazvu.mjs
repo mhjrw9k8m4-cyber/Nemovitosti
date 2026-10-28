@@ -46,7 +46,13 @@ for (const { d, soubor } of mapa.values()) {
   stranky.push({
     d, soubor,
     titulek: (h.match(/<title>(.*?)<\/title>/) || [])[1] || '',
-    h1: (h.match(/<article class="pz-staticky"><h1>(.*?)<\/h1>/) || [])[1] || '',
+    /* MEZI <article> A <h1> UŽ NĚCO STOJÍ. Od 28. 10. se do statické
+       podoby servíruje i letecký náhled (div.pz-media), aby se stránka
+       při výměně za vykreslenou neposouvala. Výraz, který čekal nadpis
+       hned za značkou článku, vracel prázdno — a kontrola pak měřila
+       prázdné řetězce místo nadpisů. Totéž platí v
+       test-hlavicka-pozemku a test-ukoncena-v-prohlizeci. */
+    h1: (h.match(/<article class="pz-staticky">[\s\S]*?<h1>(.*?)<\/h1>/) || [])[1] || '',
     popis: (h.match(/<meta name="description" content="(.*?)">/) || [])[1] || '',
     ldName: (h.match(/"@type":"Place","name":"(.*?)"/) || [])[1] || '',
     telo: h,

@@ -13132,3 +13132,61 @@ nemůže tiše zhoršit a 0,05 dál platí pro celý zbytek webu.
 Po opravě: všech sedm prochází (`test-menu` 32/32, `test-mrtva-jmena`
 18/18, `test-cenovy-stupen` 61/61, `test-mapa-pozemku` 155/155,
 `test-sazba-dom` 22/22, `test-shoda` 27/27, `test-stabilita` 50/50).
+
+## §199 Letecký náhled se servíruje — a proč to na poskakování nestačilo
+
+Z §198 zůstala vada: stránka pozemku se servíruje v jedné podobě
+a `js/pozemek.js` ji hned nato nahradí jinou. Naměřeno 1 007 px → 2 316 px,
+CLS 0,1228.
+
+**První krok je hotový a stojí za to sám o sobě.** Generátor teď do
+servírované podoby skládá i letecký náhled. Skládá ho **týž
+`js/snimek.js`**, jakým ho kreslí prohlížeč (soubor je psaný pro
+prohlížeč, takže se mu v Node nastaví `window` na globální objekt —
+stejně to dělá `generate-region-pages.mjs`), se stejnými rozměry, takže
+se při výměně nehne ani o pixel. Barvu špendlíku si generátor čte
+z tokenů v `css/styles.css`, ne z opsaného hexu: dvě pravdy o jedné
+barvě jsou přesně to, co se uklízelo v §56.
+
+Co z toho má web hned, bez ohledu na poskakování: **servírovaná stránka
+poprvé ukazuje, jak ten pozemek vypadá.** Dosud to byl holý text —
+pro vyhledávač, pro náhled v odkazu i pro kohokoli bez JavaScriptu.
+
+### A teď to, co se nepovedlo
+
+Náhled ubral z rozdílu 384 px (1 007 → 1 391 px). **CLS se nezměnil
+ani o tisícinu: pořád 0,1228.**
+
+Není to chyba měření. CLS je součin dvou zlomků a ten druhý —
+`distance fraction`, tedy o kolik se obsah posunul proti výšce okna —
+je **zastropovaný jedničkou**. Posun byl 1 309 px při okně 900 px,
+tedy přes strop; po zkrácení o 384 px je 925 px, a to je **pořád nad
+strop**. Dokud rozdíl neklesne pod výšku okna, nemá dílčí předsazení
+na číslo žádný vliv, a aby se dostalo pod 0,05, musel by být rozdíl
+zhruba **padesátipixelový**.
+
+Jinak řečeno: tahle vada se nedá opravit po kouskách. Buď se servíruje
+celý detail, nebo se poskakuje dál.
+
+### Dvě cesty, kterými to jde dokončit
+
+1. **Přenést skládání detailu do generátoru.** Čisté, ale `pzDetailHtml`
+   a jeho okolí v `js/pozemek.js` sahají na dokument a na model; přepsat
+   je do Node znamená druhou kopii logiky, tedy přesně to, čemu se
+   `js/snimek.js` kdysi vyhnul.
+2. **Nechat ten detail vykreslit prohlížečem při sestavení** (Playwright
+   už v repozitáři je) a hotové HTML zapsat do stránky. Žádná druhá
+   kopie logiky, zato sestavení závisí na prohlížeči a 1 902 stránek
+   po ~120 ms je kolem čtyř minut navíc.
+
+Zapsáno jako samostatná úloha. Mez v `test-stabilita` zůstává 0,13 —
+jen pro monitor a jen pro stránky pozemku, s naměřenými čísly u sebe.
+
+Tři kontroly musely přestat předpokládat, že `<h1>` stojí hned za
+`<article class="pz-staticky">`: mezi nimi teď leží náhled.
+(`test-podil-v-nazvu`, `test-hlavicka-pozemku`, `test-ukoncena-v-prohlizeci`
+— první z nich na to spadla hned při první rychlé sadě.)
+
+Po opravě: rychlá sada 134/134, `test-predloha`, `test-hlavicka-pozemku`
+18/18, `test-ukoncena-v-prohlizeci` 18/18, `test-vaha-stranky` 6/6,
+`test-stabilita` 50/50, `test-poradi-pozemku` 24/24.

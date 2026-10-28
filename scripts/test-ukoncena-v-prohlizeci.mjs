@@ -134,7 +134,7 @@ const bezPruhu = [];
 const spatnyTitulek = [];
 for (const f of vzorek) {
   const zdroj = bezNbsp(readFileSync(path.join(KOREN, f), 'utf8'));
-  const h1 = (zdroj.match(/<article class="pz-staticky"><h1>(.*?)<\/h1>/) || [])[1] || '';
+  const h1 = (zdroj.match(/<article class="pz-staticky">[\s\S]*?<h1>(.*?)<\/h1>/) || [])[1] || '';
   const v = await otevri(f);
   if (/Pozemek nenalezen/.test(v.text)) vyprazdnene.push(f);
   if (!/není aktuální/.test(v.text)) bezPruhu.push(f);
