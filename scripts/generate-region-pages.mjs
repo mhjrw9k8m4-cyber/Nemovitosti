@@ -2336,7 +2336,20 @@ ${razitkoCerstvosti}
 }
 
 // ---------- ROZCESTNÍK ----------
-const totalListed = okresPages.reduce((s,p)=>s+p.count,0);
+/* KOLIK JICH JE NA MAPĚ, NE KOLIK JICH MÁ OKRESNÍ STRÁNKU.
+   Stálo tu `okresPages.reduce(...)`, tedy součet přes okresy, kterým
+   stránka vznikla — jenže ta vzniká až od tří nabídek (MIN_OKRES).
+   Nabídky z okresů pod tou mezí se tak do čísla nepočítaly, ačkoli
+   věta vedle nich říká „na jedné mapě" a na mapě jsou.
+   NAŠLO SE TO DATEM: 28. 10. vypršel termín dražbě na Mostecku, okres
+   spadl ze tří nabídek na dvě, jeho stránka zanikla — a rozcestník
+   začal hlásit 1 898 místo 1 900. Ohlásil to test-data, který drží
+   pásmo „nikdy víc, než kolik jich v datech je, a nikdy míň, než
+   kolik jich po odečtení prošlých dražeb zbývá".
+   Podhodnocovat vlastní nabídku je u webu na prodej ta horší ze dvou
+   možných chyb. Počet krajů a okresů vedle zůstává podle STRÁNEK —
+   ten o stránkách opravdu mluví. */
+const totalListed = Object.keys(byOkres).reduce((s,ok)=>s+byOkres[ok].length,0);
 let krajGrid = '';
 for(const k of eligibleKraj){
   const m=KRAJ_META[k];

@@ -12971,3 +12971,54 @@ přepsané. Ověřeno v prohlížeči na `pozemek-breclav-boleradice-1l8urwu`:
 Co z toho platí dál: položka 1.1 v `docs/predloha.md` se překlápí
 z HOTOVO na **NEDĚLÁ SE — upevněno majitelem**. Bez jeho výslovného
 pokynu se na parametry nesahá.
+
+## §194 Bod 4.2 předlohy: „Uložit hledání" — a tři vady, které to odkrylo
+
+iDNES má nad výpisem „Uložit hledání". U nás hlídání bylo, ale most
+mezi výpisem a hlídáním chyběl: kdo si výpis zúžil a dnes nic nenašel,
+musel na stránce hlídání ručně přepsat všechno, co právě nastavil.
+
+Nad výpisem proto přibyl nástroj, který nese filtry s sebou v adrese
+(`hlidani.html?okres=…&typ=…&perm2=…&cena_do=…&celek=1`), a formulář
+hlídání si je přečte. **Ukazuje se jen se zúženým výpisem** — nad
+nezúženým by znamenal „hlídat celou ČR", což nabízí dlaždice o kus níž.
+
+**Co se přenést nedá, se řekne nahlas.** Hlídání má na typ nabídky
+jedno rozbalovátko a obecní záměry v něm nejsou. Místo tichého
+nastavení „vše" se vypíše do živé oblasti, co nesedlo. Odhlášený
+člověk formulář vůbec nevidí (staví se až po přihlášení), takže mu
+u přihlášení stojí věta, že hledání máme s sebou.
+
+### Tři vady, které se našly cestou — a všechny přinesl kalendář
+
+Den přeskočil na 28. 10., jedné dražbě na Mostecku vypršel termín
+a spadlo šest zkoušek. Ani jedna kvůli změně kódu.
+
+**1. Mrtvé odkazy na zaniklý okres.** Okresní stránka vzniká od tří
+nabídek (MIN_OKRES). Most spadl ze tří na dvě, jeho stránka při
+sestavení zanikla — a stránky pozemků na ni odkazovaly dál. U živých
+se to opravilo podmínkou, kterou drobečky na témže místě už měly;
+u VYŘAZENÝCH to šlo jinak, protože ty se nepřegenerovávají, jen
+migrují. Odkaz přitom byl na stránce **ve třech podobách**: ve výpisu
+údajů (zůstane jméno, zmizí odkaz), v rozcestníku „Kam dál" (odejde
+celá položka — rozcestník, který nikam nevede, je horší než o položku
+kratší) a v drobečkách pro vyhledávače (odejde stupeň a zbylé se
+přečíslují, jinak má posloupnost díru).
+
+**2. A ještě čtvrtá podoba, kterou našla až zkouška.** Rozcestník
+„Kam dál" je na stránce DVAKRÁT: staticky pro vyhledávače a jako data
+v `#pz-kamdal-data`, ze kterých ho vykreslí js/pozemek.js pro člověka.
+Uklidit jen tu první znamená, že ve zdroji je čisto a čtenář přesto
+vidí dlaždici na 404. Ohlásil to `test-kam-dal` větou „statická [kraj]
+vs ostrůvek [okres, kraj]".
+
+**3. Rozcestník podhodnocoval vlastní nabídku.** „Přes N pozemků na
+jedné mapě" se počítalo jako součet přes okresy, které MAJÍ STRÁNKU —
+takže nabídky z okresů pod mezí se do čísla nepočítaly, ačkoli na mapě
+jsou. Po pádu Mostu hlásil web 1 898 místo 1 900. Počet krajů a okresů
+vedle zůstává podle stránek; ten o stránkách opravdu mluví.
+
+Hlídač na nové tlačítko i na předvyplnění přibyl do
+`test-hlidani-prohlizec` (nový soubor nebyl potřeba, přihlášení se
+tam předstírá už dnes). Sabotáž: po vypnutí předvyplnění spadlo pět
+kontrol z pěti.

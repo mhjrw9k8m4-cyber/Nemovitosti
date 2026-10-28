@@ -947,6 +947,88 @@ export function prestehovanaStranka(obsah, novySoubor, noveMisto, den) {
   return h;
 }
 
+/* ODKAZ NA OKRES, KTERÝ MEZITÍM ZANIKL.
+ *
+ * Okresní stránka vzniká až od tří nabídek (MIN_OKRES v
+ * generate-region-pages.mjs). Klesne-li okres pod tu mez, jeho stránka
+ * při nejbližším sestavení zmizí — a VYŘAZENÉ stránky pozemků po něm
+ * na ni odkazují dál, protože se nepřegenerovávají, jen migrují.
+ *
+ * NAŠLO SE TO DATEM, ne změnou kódu: 28. 10. ráno vypršel termín jedné
+ * dražbě na Mostecku, okres spadl ze tří nabídek na dvě a dvě vyřazené
+ * stránky po něm zůstaly se šesti mrtvými odkazy (tři na stránku: ve
+ * výpisu údajů, v rozcestníku „Kam dál" a v drobečkách pro vyhledávače).
+ * Ohlásil to test-vnitrni-odkazy.
+ *
+ * Co se s nimi dělá, se liší podle toho, co ten odkaz nesl:
+ *   · ve výpisu údajů zůstane jméno okresu, zmizí jen odkaz — údaj
+ *     platí dál, jen už není kam jít;
+ *   · v rozcestníku „Kam dál" odchází celá položka: rozcestník, který
+ *     nikam nevede, je horší než o jednu položku kratší;
+ *   · v drobečkách odejde ten stupeň a zbylé se přečíslují, jinak by
+ *     posloupnost pozic měla díru a vyhledávač by ji zahodil celou.
+ *
+ * Živých stránek se to netýká: ty se generují znovu a podmínku mají
+ * u sebe (maOkres ve stranka()).
+ */
+const _okresZije = new Map();
+function okresniStrankaZije(soubor) {
+  if (!_okresZije.has(soubor)) _okresZije.set(soubor, fs.existsSync(path.join(ROOT, soubor)));
+  return _okresZije.get(soubor);
+}
+export function migrujMrtvyOdkazOkresu(h) {
+  const mrtve = new Set();
+  for (const soubor of (h.match(/pozemky-okres-[a-z0-9-]+\.html/g) || [])) {
+    if (!okresniStrankaZije(soubor)) mrtve.add(soubor);
+  }
+  if (!mrtve.size) return h;
+  for (const soubor of mrtve) {
+    const vzor = soubor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    h = h.replace(new RegExp(`<li><a href="${vzor}">[^<]*</a>[^<]*</li>`, 'g'), '');
+    h = h.replace(new RegExp(`<a href="${vzor}">([^<]*)</a>`, 'g'), '$1');
+  }
+  /* OSTRŮVEK S ROZCESTNÍKEM. Rozcestník „Kam dál" je na stránce DVAKRÁT:
+     staticky pro vyhledávače a ještě jednou jako data v
+     `#pz-kamdal-data`, ze kterých ho js/pozemek.js vykreslí pro
+     člověka. Uklidit jen tu první podobu znamená, že čtenář uvidí
+     dlaždici vedoucí na 404, zatímco ve zdroji stránky je čisto —
+     a přesně to našla zkouška test-kam-dal („statická [kraj] vs
+     ostrůvek [okres, kraj]"). */
+  h = h.replace(/(<script type="application\/json" id="pz-kamdal-data">)([\s\S]*?)(<\/script>)/,
+    (cele, zac, telo, kon) => {
+      if (telo.indexOf('pozemky-okres-') < 0) return cele;
+      let pole;
+      try { pole = JSON.parse(telo); } catch (e) { return cele; }
+      if (!Array.isArray(pole)) return cele;
+      const zbytek = pole.filter((x) => {
+        const m = String((x && x.u) || '').match(/^pozemky-okres-[a-z0-9-]+\.html$/);
+        return !m || okresniStrankaZije(m[0]);
+      });
+      return zbytek.length === pole.length ? cele : zac + JSON.stringify(zbytek) + kon;
+    });
+  /* Drobečky jsou JSON, ne značkování — a tak se s nimi i zachází.
+     Ruční zásah vzorem by z nich při prvním nečekaném tvaru udělal
+     neplatný JSON, kterého by si nikdo nevšiml: stroje mlčí. */
+  return h.replace(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g, (cele, telo) => {
+    if (telo.indexOf('pozemky-okres-') < 0) return cele;
+    let j;
+    try { j = JSON.parse(telo); } catch (e) { return cele; }
+    let zmena = false;
+    for (const o of (Array.isArray(j) ? j : [j])) {
+      if (!o || o['@type'] !== 'BreadcrumbList' || !Array.isArray(o.itemListElement)) continue;
+      const puvodne = o.itemListElement.length;
+      o.itemListElement = o.itemListElement.filter((x) => {
+        const m = String((x && x.item) || '').match(/pozemky-okres-[a-z0-9-]+\.html$/);
+        return !m || okresniStrankaZije(m[0]);
+      });
+      if (o.itemListElement.length === puvodne) continue;
+      o.itemListElement.forEach((x, i) => { x.position = i + 1; });
+      zmena = true;
+    }
+    return zmena ? `<script type="application/ld+json">${JSON.stringify(j)}</script>` : cele;
+  });
+}
+
 export function ukoncenaStranka(obsah, den, podobne) {
   let h = obsah;
 
@@ -1300,7 +1382,17 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + `<dt>Druh pozemku</dt><dd>${esc(druh)}</dd>`
     + (vym ? `<dt>Výměra</dt><dd>${esc(vym)}</dd>` : '')
     + `<dt>Obec</dt><dd>${esc(d.place)}</dd>`
-    + `<dt>Okres</dt><dd><a href="pozemky-okres-${slug(d.okres)}.html">${esc(d.okres)}</a></dd>`
+    /* ODKAZ JEN TAM, KDE STRÁNKA JE. `maOkres` o kus výš se tou
+       otázkou zabývá kvůli drobečkům — tenhle řádek si ji nepoložil
+       a odkazoval vždycky. Okresní stránka přitom vzniká až od tří
+       nabídek (MIN_OKRES v generate-region-pages.mjs), takže okres,
+       kterému nabídky klesnou na dvě, nechá za sebou mrtvé odkazy na
+       všech svých stránkách pozemků.
+       NAŠLO SE TO SAMO A DATEM: 28. 10. ráno vypršel termín jedné
+       dražbě na Mostecku, okres spadl ze tří nabídek na dvě, jeho
+       stránka při sestavení zanikla — a osm stránek pozemků na ni
+       pořád odkazovalo. Ohlásil to test-vnitrni-odkazy. */
+    + `<dt>Okres</dt><dd>${maOkres ? `<a href="${okresSoubor}">${esc(d.okres)}</a>` : esc(d.okres)}</dd>`
     + (d.parcel && d.parcel !== '—' ? `<dt>Parcela</dt><dd>č. ${esc(d.parcel)}</dd>` : '')
     /* PODÍL PATŘÍ I DO STATICKÉHO VÝPISU. Tělo stránky ho hlásí
        (js/pozemek.js: „inzerát mluví o spoluvlastnickém podílu"), ale
@@ -1869,8 +1961,8 @@ export function generuj() {
       /* Úklid komentářů patří mezi přepisy, které musí na KAŽDOU stránku:
          ukončené stránky se jinak nepřepisují, takže by si 221 z nich
          komentáře z předlohy neslo až do smazání. */
-      const migrovano = bezKomentaruVHtml(migrujPopisBezReklamy(migrujPrebytecnyDiv(migrujUkoncenaData(
-        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1]))));
+      const migrovano = migrujMrtvyOdkazOkresu(bezKomentaruVHtml(migrujPopisBezReklamy(migrujPrebytecnyDiv(migrujUkoncenaData(
+        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1])))));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }
@@ -1897,9 +1989,9 @@ export function generuj() {
         const stari = (Date.parse(dnes) - Date.parse(presun[1])) / 86400000;
         if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
       }
-      const novy = bezKomentaruVHtml(prestehovanaStranka(
+      const novy = migrujMrtvyOdkazOkresu(bezKomentaruVHtml(prestehovanaStranka(
         migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))),
-        jinde.soubor, jinde.place, presun ? presun[1] : dnes));
+        jinde.soubor, jinde.place, presun ? presun[1] : dnes)));
       if (novy !== obsah) { fs.writeFileSync(cesta, novy); prestehovano++; }
       continue;
     }

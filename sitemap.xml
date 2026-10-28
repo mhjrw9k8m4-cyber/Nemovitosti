@@ -8,7 +8,7 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pridat.html</loc>
-    <lastmod>2026-10-27</lastmod>
+    <lastmod>2026-10-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -445,12 +445,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-most.html</loc>
-    <lastmod>2026-10-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemky-okres-ceska-lipa.html</loc>
     <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -673,13 +667,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-karvina.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
     <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-ostrava-mesto.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-karvina.html</loc>
     <lastmod>2026-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -11707,12 +11701,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-trebenice-19k0cfm.html</loc>
-    <lastmod>2026-09-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-litomerice-dremcice-17sb272.html</loc>
     <lastmod>2026-10-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -11737,12 +11725,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-trebenice-1f1f3ds.html</loc>
-    <lastmod>2026-09-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-litomerice-kalovice-3dhes2.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -11751,12 +11733,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-litomerice-kalovice-ci2zxx.html</loc>
     <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-litomerice-sulejovice-qj13k6.html</loc>
-    <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -11809,32 +11785,8 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-praha-vychod-ondrejov-11er8c.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-litomerice-dolni-tynec-168d45f.html</loc>
     <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-decin-rumburk-161ms89.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-decin-rumburk-14bxj67.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-decin-rumburk-i1bzgn.html</loc>
-    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -11877,12 +11829,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-karlovy-vary-jachymov-wjdbjz.html</loc>
     <lastmod>2026-10-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-most-most-pfag7v.html</loc>
-    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -11943,12 +11889,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-ceske-budejovice-ceske-budejovice-1p63guv.html</loc>
     <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-karvina-rychvald-10e39rs.html</loc>
-    <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>

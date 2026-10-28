@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-Gt99/fqxQZL2cmvCp8mauv6FdGQYllF+WsfF2NBZGTA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-SGpVesR/vt25zOufAIBVpOeQBN5wUdBivPYix6Etm8Q='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -578,6 +578,16 @@
       '<div class="hl-card hl-auth">' +
         '<h2>Přihlaste se</h2>' +
         '<p>Hlídání je vázané na váš účet, ať ho máte na všech zařízeních. Rychle se přihlaste, nebo si během chvilky založte účet.</p>' +
+        /* HLEDÁNÍ Z VÝPISU SE NESMÍ ZTRATIT MLČKY. Kdo klepne nad
+           výpisem na „Uložit hledání" (bod 4.2 předlohy), přijde sem
+           s nastavením v adrese — jenže odhlášenému se formulář vůbec
+           nepostaví, takže by viděl holé přihlášení a nevěděl, jestli
+           se jeho zadání někam dostalo. Formulář se po přihlášení staví
+           na TÉŽE adrese, takže se předvyplní; tahle věta to jen říká
+           dopředu. */
+        (location.search.length > 1
+          ? '<p class="hl-napoveda">Hledání z\u00a0výpisu máme s\u00a0sebou — po přihlášení se vám rovnou předvyplní.</p>'
+          : '') +
         '<form id="hauthf">' +
           '<input class="hl-in" id="he" type="email" inputmode="email" autocomplete="email" placeholder="Váš e-mail" aria-label="Váš e-mail">' +
           '<input class="hl-in" id="hp" type="password" autocomplete="current-password" placeholder="Heslo" aria-label="Heslo">' +
@@ -913,6 +923,48 @@
        celý okres."), a ta oblast živá je. */
     var okresIn = document.getElementById('ns-okres');
     if (okresIn) okresIn.addEventListener('input', obnovOkruhPozn);
+    /* PŘEDVYPLNĚNÍ Z ADRESY — protějšek tlačítka „Uložit hledání" nad
+       výpisem (bod 4.2 předlohy; skládá adresu js/main.js). Bez něj by
+       se formulář otevřel prázdný a člověk by ručně přepisoval to, co
+       právě nastavil na mapě.
+       Bere se jen to, čemu tenhle formulář rozumí. Co svoje políčko
+       nemá — víc druhů najednou, kraj, nakreslená oblast — se nepřenáší,
+       a MLČET SE O TOM NESMÍ: hlídání, které by se tvářilo, že hlídá
+       užší zadání, než jaké umí uložit, je horší než žádné. Co nesedlo,
+       se proto vypíše do #ns-msg, který je živá oblast. */
+    (function predvyplnZAdresy() {
+      var q;
+      try { q = new URLSearchParams(location.search); } catch (e) { return; }
+      if (!q || !q.toString()) return;
+      function dej(id, v) {
+        if (!v) return true;
+        var e = document.getElementById(id);
+        if (!e) return false;
+        /* U rozbalovátka se hodnota nastaví jen tehdy, když ji opravdu
+           nabízí. Jinak by zůstalo na „vše" a tvrdilo by něco jiného,
+           než co stálo v adrese — tiše a bez varování. */
+        if (e.tagName === 'SELECT' &&
+            ![].some.call(e.options, function (o) { return o.value === v; })) return false;
+        e.value = v;
+        return true;
+      }
+      var neslo = [];
+      dej('ns-okres', q.get('okres'));
+      if (!dej('ns-type', q.get('typ'))) neslo.push('typ nabídky');
+      if (!dej('ns-druh', q.get('druh'))) neslo.push('druh pozemku');
+      dej('ns-price-od', q.get('cena_od'));
+      dej('ns-price', q.get('cena_do'));
+      dej('ns-area', q.get('vym_od'));
+      dej('ns-area-do', q.get('vym_do'));
+      dej('ns-perm2', q.get('perm2'));
+      var celek = document.getElementById('ns-celek');
+      if (celek && q.get('celek') === '1') celek.checked = true;
+      if (neslo.length && msg) {
+        msg.className = 'hl-msg';
+        msg.textContent = 'Z výpisu se nepřeneslo: ' + neslo.join(', ')
+          + ' — tohle hlídání na to políčko nemá. Zbytek je vyplněný, doplňte si to ručně.';
+      }
+    }());
     obnovOkruhPozn();
     prepocti();
 

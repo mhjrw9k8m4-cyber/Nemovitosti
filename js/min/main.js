@@ -175,6 +175,8 @@
 
     odkryt: '<path d="M2.5 12S6 6.5 12 6.5 21.5 12 21.5 12 18 17.5 12 17.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
 
+    hlidat: '<path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
+
     zakryt: '<path d="M4 4l16 16"/><path d="M9.6 5.1A9.9 9.9 0 0 1 12 4.8c6 0 9.5 5.5 9.5 5.5a18 18 0 0 1-2.6 3"/><path d="M6.4 7.1A17.6 17.6 0 0 0 2.5 10.3S6 15.8 12 15.8c1 0 1.9-.1 2.7-.4"/>'
   };
 
@@ -4225,6 +4227,25 @@
 
       + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></span></button>';
 
+    var hlidaniQ = (function () {
+      var q = [];
+      var misto = (mistoFiltr && (mistoFiltr.place || mistoFiltr.okres))
+        || (searchEl && searchEl.value.trim()) || '';
+      if (misto) q.push('okres=' + encodeURIComponent(misto));
+      if (activeType !== 'all') q.push('typ=' + encodeURIComponent(activeType));
+
+      if (druhVybrane && druhVybrane.length === 1) q.push('druh=' + encodeURIComponent(druhVybrane[0]));
+      if (minPrice) q.push('cena_od=' + minPrice);
+      if (maxPrice) q.push('cena_do=' + maxPrice);
+      if (minArea) q.push('vym_od=' + minArea);
+      if (maxArea) q.push('vym_do=' + maxArea);
+      if (maxPerM2) q.push('perm2=' + maxPerM2);
+      if (jenCelek) q.push('celek=1');
+      return q.join('&');
+    }());
+    if (hlidaniQ) tlacitka += '<a class="mc-nastroj" href="hlidani.html?' + esc(hlidaniQ) + '">'
+      + ikonaNastroje('hlidat')
+      + '<span class="mc-popis">Uložit<span class="mc-dl"> hledání</span></span></a>';
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
       + ' aria-label="Procházet po jednom">'
       + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;

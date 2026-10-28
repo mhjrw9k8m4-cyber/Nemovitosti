@@ -46,7 +46,7 @@ Stav: `HOTOVO` / `CHYBÍ` / `JINAK` (máme to, ale jinak než předloha).
 | # | Co předloha má | Stav u nás |
 |---|---|---|
 | 4.1 | Nadpis výpisu na střed s čárkovaným podtržením | CHYBÍ |
-| 4.2 | Dvě tlačítka pod nadpisem: „Uložit hledání", „Upravit hledání" | CHYBÍ |
+| 4.2 | Dvě tlačítka pod nadpisem: „Uložit hledání", „Upravit hledání" | HOTOVO (uložit hledání; upravit = panel filtrů máme) |
 | 4.3 | **Pruh: počet inzerátů vlevo, řazení vpravo, jeden řádek** | HOTOVO |
 | 4.4 | Odznak na fotce VLEVO DOLE, srdce VPRAVO DOLE | JINAK |
 | 4.5 | Karta: nadpis, šedá lokalita, cena — tři řádky, nic víc | JINAK |
