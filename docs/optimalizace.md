@@ -12959,3 +12959,51 @@ pod ní stojí sedm řádků výhrad (že jsou to ceny nabídkové, že hladinou
 hýbe i výměna nabídek, že osa nezačíná nulou). Je to na úkor čistoty
 karty a vím o tom — ale je to přesně ta stránka, na které někdo řeší
 peníze, a tam se výhrady neškrtají kvůli vzhledu.
+
+## §196 Dvě červené v CI, které jsem si měl přečíst dřív
+
+Pravidlo „rychlá sada není celá sada" (§193) platí pořád: běh „Testy
+a kontrola kódu" k předchozímu commitu byl červený ve dvou úlohách
+a rychlá sada o ničem nevěděla.
+
+### 1. Kontrola měřila něco jiného, než jak se jmenovala
+
+`test-ukoncena-v-prohlizeci` padala na
+`pozemek-hodonin-hodonin-194gce1.html` v kontrole „a titulek stránky
+se nepřepíše na hlášku“. Jenže se neptala na hlášku — ptala se, jestli
+titulek obsahuje statický `<h1>`.
+
+**Ten vztah generátor nikdy nesliboval.** Nadpis a titulek jsou o téže
+nabídce, ale titulek se musí vejít do 65 znaků i se jménem webu, takže
+v něm sloveso ustupuje dřív než okres; stojí to černé na bílém
+v `scripts/generate-parcel-pages.mjs` („STATICKÝ NADPIS SE DĚLÍ
+Z `nadpis`, NE Z `titul`“). U exekuční dražby v Hodoníně to vyšlo
+najevo: `<h1>` „Exekuční dražba lesního pozemku 547 418 m², podíl
+1/88“, titulek „Lesní pozemek 547 418 m², podíl 1/88 — Hodonín“.
+Nic nebylo rozbité; červená byla ta kontrola.
+
+Teď měří to, co má, a je přísnější: na ukončené stránce se detail
+nevykresluje, takže titulek musí po vykreslení zůstat **doslova** ten,
+který přišel ze serveru. Chytne tím i hlášku „Pozemek nenalezen“,
+i jakýkoli jiný přepis. Prokázáno sabotáží (`document.title` přepsaný
+hned na začátku `js/pozemek.js` → kontrola spadne).
+
+### 2. Nápis, jehož šířku určovala data
+
+`test-ovladani-vypisu` hlásila na 390 px: `#mc-vyvoz`, text 175 px
+v rámečku 173 px. **Lokálně to procházelo, v CI ne** — a hledat rozdíl
+v sazbě by bylo hledání na špatném místě. Ta šířka totiž nezávisí na
+sazbě, ale na POČTU NABÍDEK: nápis zní „Stáhnout výběr (1 902)“
+a čtyřmístný počet by ho rozbil všude, pětimístný tím spíš. Že to
+dosud procházelo, byla shoda okolností — ostatně okraj pruhu je na
+16 px právě proto, že na 20 px se ten nápis nevešel (§ u `.mcp-hledani`).
+
+Mizí proto samo číslo (`.mc-pocet`, do 480 px), ne celý doplněk.
+Nápis „Stáhnout výběr“ má po změně na 390 px **35 px rezervy** a žádné
+obnovení dat s ním nehne. Počet se neztratí: je v `aria-label`
+i v nadpisu výpisu o řádek výš.
+
+Po opravě: `test-ukoncena-v-prohlizeci` 18/18, `test-ovladani-vypisu`
+31/31, `test-vyvoz-okno` 31/31, `test-nastroje-v-dosahu` 15/15,
+`test-prvni-obrazovka` 22/22, `test-dotyk` bez nálezu, rychlá sada
+134/134.

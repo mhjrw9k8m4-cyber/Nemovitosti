@@ -7115,6 +7115,15 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   @media (max-width:360px){
     .mc-dl{display:none;}
   }
+  /* A POČET MIZÍ UŽ DŘÍV, protože jeho šířku neurčuje sazba, ale DATA.
+     Na 390 px má políčko 173 px a „Stáhnout výběr (1 902)" potřebuje
+     175 — v CI to padalo, lokálně o chlup procházelo, a s pětimístným
+     počtem by to padalo všude. Nápis bez čísla je 127 px a žádné
+     obnovení dat s ním nehne. Číslo zůstává v aria-label a v nadpisu
+     výpisu o řádek výš. */
+  @media (max-width:480px){
+    .mc-pocet{display:none;}
+  }
   /* TŘI NÁSTROJE SE DO DVOU SLOUPCŮ NEVEJDOU — a mřížka je pak zalomí
      pod sebe. NAMĚŘENO 20. 10. (den po dražbě, kdy k „Procházet po
      jednom" a „Stáhnout výběr" přibyde „Dražby po termínu"): pruh

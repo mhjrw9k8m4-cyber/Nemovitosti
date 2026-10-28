@@ -40,6 +40,10 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 const bezNbsp = (s) => String(s == null ? '' : s).replace(/ /g, ' ');
+/* Titulek je ve zdroji escapovaný, kdežto document.title vrací text.
+   Bez rozkódování by se „Pole &amp; louka" nikdy nerovnalo samo sobě. */
+const rozkoduj = (s) => bezNbsp(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
 /* Ukončené stránky se poznají podle pruhu, který na ně generátor
    přidává — ne podle toho, že nejsou v datech: tím by zkouška
@@ -135,7 +139,23 @@ for (const f of vzorek) {
   if (/Pozemek nenalezen/.test(v.text)) vyprazdnene.push(f);
   if (!/není aktuální/.test(v.text)) bezPruhu.push(f);
   if (h1 && v.text.indexOf(h1) < 0) vyprazdnene.push(`${f} (chybí nadpis „${h1}")`);
-  if (h1 && v.titulek.indexOf(h1) < 0) spatnyTitulek.push(`${f}: „${v.titulek}"`);
+  /* TITULEK SE SROVNÁVÁ S TÍM, CO SERVÍRUJE SOUBOR, ne s nadpisem.
+     Dřív se ptalo, jestli titulek obsahuje statický <h1> — a to je
+     vztah, který generátor NIKDY nesliboval: nadpis a titulek jsou
+     o téže nabídce, ale titulek se musí vejít do 65 znaků i se jménem
+     webu, takže v něm sloveso ustupuje dřív než okres (viz komentář
+     „STATICKÝ NADPIS SE DĚLÍ Z `nadpis`, NE Z `titul`" v
+     scripts/generate-parcel-pages.mjs). Na exekuční dražbě v Hodoníně
+     to vyšlo najevo: <h1> „Exekuční dražba lesního pozemku…", titulek
+     „Lesní pozemek… — Hodonín". Nic nebylo rozbité, jen kontrola
+     měřila něco jiného, než jak se jmenovala.
+     Teď měří přesně to, co má: na ukončené stránce se detail
+     nevykresluje, takže titulek musí po vykreslení zůstat DOSLOVA
+     ten, který přišel ze serveru. To chytne i hlášku „Pozemek
+     nenalezen", i jakýkoli jiný přepis. */
+  const titulZdroje = rozkoduj((zdroj.match(/<title>(.*?)<\/title>/) || [])[1] || '');
+  if (titulZdroje && v.titulek.trim() !== titulZdroje.trim())
+    spatnyTitulek.push(`${f}: servírováno „${titulZdroje}", vykresleno „${v.titulek}"`);
 }
 pravda('ukončená stránka po vykreslení nehlásí „Pozemek nenalezen"',
   vyprazdnene.length === 0, `${vyprazdnene.length}×: ${vyprazdnene.slice(0, 3).join(', ')}`);

@@ -6897,7 +6897,16 @@
          dvaapůlnásobek. Vypadalo to jako dvojitá mezera, protože to
          dvojitá mezera byla. Obal .mc-popis z nápisu udělá jednu
          položku a uvnitř platí běžná sazba. */
-      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></span></button>';
+      /* POČET MÁ VLASTNÍ OBAL, PROTOŽE MIZÍ DŘÍV NEŽ DOPLNĚK.
+         Na 390 px dává dvousloupcová mřížka políčko 173 px a nápis
+         „Stáhnout výběr (1 902)" potřebuje 175 — v CI to padalo,
+         lokálně o chlup procházelo. Není to o pár pixelech sazby:
+         šířka závisí na POČTU NABÍDEK, takže čtyřmístné číslo to
+         rozbije vždycky a pětimístné tím spíš. Mizí proto samo číslo
+         (.mc-pocet, pravidlo v css/styles.css u .mc-dl) a nápis
+         zůstane „Stáhnout výběr", což je šířka, kterou data nemění.
+         Počet se neztratí: stojí v aria-label i v nadpisu výpisu. */
+      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr<span class="mc-pocet"> (' + fmt(matched) + ')</span></span></span></button>';
     /* RYCHLÝ VÝBĚR. Nabízí se jen tehdy, když je co třídit — pod pěti
        nabídkami je rychlejší projít seznam než pouštět vrstvu. */
     /* RYCHLÝ VÝBĚR JE ZPÁTKY PILULKA — A TENTOKRÁT SPRÁVNĚ.

@@ -4227,7 +4227,7 @@
     if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
       + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
 
-      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr (' + fmt(matched) + ')</span></span></button>';
+      + ikonaNastroje('vyvoz') + '<span class="mc-popis">Stáhnout<span class="mc-dl"> výběr<span class="mc-pocet"> (' + fmt(matched) + ')</span></span></span></button>';
 
     if (matched >= 5) tlacitka = '<button type="button" class="mc-nastroj mc-rychly" id="mc-rychly"'
       + ' aria-label="Procházet po jednom">'

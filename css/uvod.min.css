@@ -1306,6 +1306,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .ms-vysledky .msv-ovladani>[hidden]{display:none}
 @media (max-width:360px){.mc-dl{display:none}
 }
+@media (max-width:480px){.mc-pocet{display:none}
+}
 .map-side .mc-akce:has(>*:nth-child(3)),.ms-vysledky>.mc-akce:has(>*:nth-child(3)){grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:calc((100% - 8px) / 2);overflow-x:auto}
 @media (max-width:360px){.map-side .mc-akce:has(>*:nth-child(3)),.ms-vysledky>.mc-akce:has(>*:nth-child(3)){grid-auto-columns:100%}
 }
