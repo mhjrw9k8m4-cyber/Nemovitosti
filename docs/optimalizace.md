@@ -12787,3 +12787,55 @@ funkce z `js/cisteni.js`, aby se zkouška a web nemohly rozejít ani tady.
 Mimochodem: tohle je ta vzácná chvíle, kdy „zkouška spadla" znamená
 **zkouška udělala svou práci**. Kdyby klíč nepároval mlčky a jen
 o něco míň, nikdo by si toho nevšiml.
+
+## §193 Tři vady, které CI hlásilo a já je přehlédl
+
+Majitel napsal, že je stránka rozbitá a půlka věcí nefunguje. Měl
+pravdu a šlo to vidět: **„Testy a kontrola kódu" padaly na třech
+posledních pushích za sebou** — a nasazení na web proběhlo přesto,
+protože Pages se na výsledek zkoušek neptají. Na web tedy šel stav,
+o kterém CI vědělo, že je špatně. Rychlá sada (134 zkoušek) přitom
+byla zelená celou dobu; tyhle tři žijí v sadě, co běží v prohlížeči,
+a tu jsem po každé změně nepouštěl.
+
+### 1. Mapa skákala na první dotek
+
+Pravidlo je staré a popsané: první dotek mapu jen probudí, nevybere
+kraj. Tři místa se na to ptají (obrys kraje, špendlík, plocha mapy) —
+**krajská kolečka se shluky se neptala.** Přibyla později a pravidlo
+se k nim nedoplnilo. Naměřeno na 390×844: střed 49,838/15,484 →
+50,065/14,467 a přiblížení 6,25 → 7,75 hned napoprvé. Ťuknutí do
+kolečka tedy dělalo přesně to, čemu mělo probuzení zabránit.
+
+### 2. Prodávající z Mostu si neměl jak vybrat okres
+
+Nabídka okresů ve formuláři „Přidat pozemek" se stavěla z okresů,
+které mají vlastní stránku — a ta vzniká až od tří nabídek. Jenže kdo
+přidává pozemek, ten nabídku teprve NESE; čím prázdnější okres, tím
+spíš. Když Mostu vypršel termín dražbě a spadl na dvě nabídky, zmizel
+z nabídky 77 okresů a zbylo 76.
+
+Zdrojem je teď správní členění z `js/ceny.js`, které na počtu nabídek
+nezávisí — a táž tabulka rozhoduje i o zařazení inzerátu, takže se
+nemůže rozejít s tím, co formulář nabízí. Úřední tvar jména („Hlavní
+město Praha" vedle „Praha") se z nabídky vypouští obecným pravidlem,
+ne výjimkou na míru, a počet se kontroluje: nesedí-li 77, sestavení
+spadne.
+
+### 3. Hlídač křičel planý poplach a kryl tím ty dva skutečné
+
+`test-naseptavac` hlásil, že popisek „Druh, cena, výměra a další" má
+kontrast 1,55 : 1. Vyfoceno: je bílý na tmavě zeleném a čte se dobře.
+Chyba byla ve výpočtu — procházení nahoru se zastavilo na PRVNÍM
+pozadí, které není úplně průhledné, a tím je desetiprocentní světlý
+závoj nad tmavým pásem. Brát závoj jako hotovou barvu znamená počítat
+„bílá na skoro bílé". Vrstvy se teď skládají, dokud se nedojde
+k něčemu neprůhlednému.
+
+**A tohle je na tom to podstatné:** planý poplach není neškodný.
+Držel CI červené, a v červeném běhu zapadlo, že mapa skáče a že
+prodávající z Mostu nemůže inzerovat. Zkouška, která lže, je horší
+než žádná — ta aspoň nikoho neuspí.
+
+Sabotáž u všech tří: po vrácení původního chování spadly přesně ty
+kontroly, které je mají chytat.

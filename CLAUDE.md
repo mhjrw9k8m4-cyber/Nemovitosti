@@ -704,3 +704,14 @@ a v prohlížeči jen jako mezipaměť. Platí pro ně dvě věci:
    nic) — musí tam být „bez přihlášení" nebo „s účtem". Hlídá to táž
    zkouška na všech stránkách, v jejich strukturovaných datech i v polích
    `popis`/`nazev`/`sub`/`veta` ve skriptech.
+
+### Rychlá sada není celá sada
+
+134 zkoušek v `scripts/zkousky.mjs` je zelených i tehdy, když web
+nefunguje: mapa skákala na první dotek a prodávající z celého okresu
+nemohl inzerovat, a rychlá sada o tom nevěděla. Žije to v sadě, která
+běží v prohlížeči.
+
+Než něco pošleš, podívej se na výsledek „Testy a kontrola kódu"
+v CI — ne na svoji rychlou sadu. Nasazení na web se na zkoušky
+neptá, takže červené CI znamená, že na webu je rozbitý stav.

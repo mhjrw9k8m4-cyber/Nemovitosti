@@ -2777,17 +2777,48 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
     console.log('Seznam okresů v 404.html doplněn: ' + Object.keys(mapa).length + ' okresů.');
   }
 
-  /* TÝŽ SEZNAM DO FORMULÁŘE. Okres se v „Přidat pozemek" psal z hlavy
-     do prázdného políčka — a překlep v okrese je drahý: podle něj se
-     inzerát zařadí na krajskou i okresní stránku, najdou ho uložená
-     hlídání a poměří se jeho cena s okolím. Nabídka se doplní odsud,
-     ze stejného zdroje jako stránky okresů, aby se nemohla rozejít. */
+  /* SEZNAM OKRESŮ DO FORMULÁŘE — VŠECHNY, NE JEN TY S VLASTNÍ STRÁNKOU.
+     Okres se v „Přidat pozemek" psal z hlavy do prázdného políčka —
+     a překlep v okrese je drahý: podle něj se inzerát zařadí na
+     krajskou i okresní stránku, najdou ho uložená hlídání a poměří se
+     jeho cena s okolím. Nabídka se proto doplňuje sem.
+     BRALA SE ALE ZE ŠPATNÉHO ZDROJE: z `hasOkresPage`, tedy z okresů,
+     kterým se zrovna povedlo mít dost nabídek na vlastní stránku
+     (MIN_OKRES). Jenže kdo přidává pozemek, ten tam nabídku teprve
+     NESE — a čím prázdnější okres, tím spíš. Okres, který klesne pod
+     mez, tak z nabídky zmizí právě těm, kdo by ho zaplnili.
+     NAŠLO SE TO DATEM: 28. 10. vypršel termín dražbě na Mostecku,
+     okres spadl ze tří nabídek na dvě a v nabídce zbylo 76 okresů ze
+     77. Prodávající z Mostu si svůj okres neměl jak vybrat. Ohlásila
+     to scripts/test-pridat.mjs.
+     Zdrojem je proto tabulka okres → kraj z js/ceny.js: správní
+     členění státu, které na tom, kolik je kde zrovna nabídek, nezávisí.
+     Táž tabulka rozhoduje i o zařazení inzerátu, takže se nemůže
+     rozejít s tím, co formulář nabízí. */
   {
     const cestaP = path.join(ROOT, 'pridat.html');
     if (fs.existsSync(cestaP)) {
       let hp = fs.readFileSync(cestaP, 'utf8');
       const predP = hp;
-      const volby = [...hasOkresPage].sort((a2, b2) => a2.localeCompare(b2, 'cs'))
+      /* JEDEN OKRES = JEDNA VOLBA. Tabulka zná okres i pod úředním
+         jménem („Hlavní město Praha" vedle „Praha"), aby se dalo
+         spárovat, co přijde ze zdroje. V nabídce by z toho byl týž
+         okres dvakrát — a člověk by si vybral ten, pod kterým web
+         nic nevede. Delší jméno odchází tam, kde je kratší jeho
+         koncem: to je přesně vztah „úřední tvar × tvar, který web
+         píše", a nic jiného v tabulce takhle vedle sebe nestojí. */
+      const jmena = Object.keys(OKRES_KRAJ);
+      const kanonicke = jmena.filter((j) => !jmena.some((k) =>
+        k !== j && OKRES_KRAJ[k] === OKRES_KRAJ[j] && j.endsWith(' ' + k)));
+      /* Okresů je 76 a k tomu Praha. Kdyby se tabulka rozešla se
+         skutečností, ať to spadne tady, ne až v nabídce, kterou nikdo
+         nepřepočítá. Hlídá i scripts/test-pridat.mjs. */
+      if (kanonicke.length !== 77) {
+        console.error('Nabídka okresů má ' + kanonicke.length + ' položek místo 77 — '
+          + 'zkontrolujte OKRES_KRAJ v js/ceny.js.');
+        process.exit(1);
+      }
+      const volby = kanonicke.sort((a2, b2) => a2.localeCompare(b2, 'cs'))
         .map((o) => `<option value="${esc(o)}"></option>`).join('');
       hp = hp.replace(/\/\*ZACATEK-OKRESY-VOLBY\*\/[\s\S]*?\/\*KONEC-OKRESY-VOLBY\*\//,
         '/*ZACATEK-OKRESY-VOLBY*/' + volby + '/*KONEC-OKRESY-VOLBY*/');

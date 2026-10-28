@@ -824,13 +824,39 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     const t = document.querySelector('.msf-text');
     const ch = document.querySelector('.msf-chev');
     const barva = (e) => e ? getComputedStyle(e).color : null;
-    let pozadi = 'rgb(255, 255, 255)';
+    /* PRŮSVITNOU VRSTVU JE TŘEBA SLOŽIT, NE BRÁT JAKO NEPRŮHLEDNOU.
+       Procházení nahoru se zastavovalo na PRVNÍM pozadí, které není
+       úplně průhledné — a tím je u téhle pilulky `rgba(201,210,203,0.1)`,
+       tedy desetiprocentní světlý závoj NAD tmavým pásem hledání.
+       Brát ho jako hotovou barvu znamená počítat „bílá na skoro bílé"
+       a hlásit 1,55 : 1, zatímco na obrazovce je bílý text na tmavě
+       zeleném a čte se dobře (vyfoceno 28. 10. na 1280 px).
+       Planý poplach není neškodný: tahle zkouška kvůli němu držela CI
+       červené, a v červeném běhu se skutečný pád (mapa skákala na první
+       dotek) ztratil mezi ostatními.
+       Vrstvy se proto skládají shora dolů, dokud se nedojde k něčemu
+       neprůhlednému — teprve to je pozadí, které oko vidí. */
+    const slozit = (vrch, spod) => {
+      const a = vrch[3];
+      return [0, 1, 2].map((i) => Math.round(vrch[i] * a + spod[i] * (1 - a))).concat(1);
+    };
+    const rozloz = (c) => {
+      const d = (c || '').match(/[\d.]+/g);
+      if (!d) return null;
+      return [Number(d[0]), Number(d[1]), Number(d[2]), d.length > 3 ? Number(d[3]) : 1];
+    };
+    let vrstvy = [];
     let n = t;
     while (n && n !== document.documentElement) {
-      const c = getComputedStyle(n).backgroundColor;
-      if (c && c !== 'rgba(0, 0, 0, 0)') { pozadi = c; break; }
+      const c = rozloz(getComputedStyle(n).backgroundColor);
+      if (c && c[3] > 0) { vrstvy.push(c); if (c[3] >= 1) break; }
       n = n.parentElement;
     }
+    /* Pod vším je stránka. Když se po cestě nic neprůhledného nenajde,
+       je to bílá — ne poslední průsvitný závoj. */
+    let slozeno = [255, 255, 255, 1];
+    for (let i = vrstvy.length - 1; i >= 0; i--) slozeno = slozit(vrstvy[i], slozeno);
+    const pozadi = `rgb(${slozeno[0]}, ${slozeno[1]}, ${slozeno[2]})`;
     return {
       tlacitek: tl.length,
       sBezSipky: tl.filter((b) => !vidno(b.querySelector('.mcs-sip'))).length,

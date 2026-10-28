@@ -3296,6 +3296,15 @@
       riseOnHover: true, zIndexOffset: 400 });
     function vyber(e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+      /* PRVNÍ DOTEK MAPU JEN PROBUDÍ — i na krajském kolečku.
+         Tři místa výš (obrys kraje, špendlík, plocha mapy) se na to
+         ptají odjakživa, tohle ne: kolečka se shluky přibyla později
+         a pravidlo se k nim nedoplnilo. Zamčená mapa tím uměla přesně
+         to, čemu mělo probuzení zabránit — na první ťuknutí skočit na
+         kraj. NAMĚŘENO 28. 10. na 390×844: střed 49,838/15,484 →
+         50,065/14,467 a přiblížení 6,25 → 7,75 hned napoprvé.
+         Ohlásil to scripts/test-probuzeni.mjs. */
+      if (probudMapu()) return;
       selectKraj(nazev, false, true);   // shluk v mapě je taky jen mapa
     }
     mk.on('click', vyber);

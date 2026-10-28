@@ -1954,6 +1954,8 @@
       riseOnHover: true, zIndexOffset: 400 });
     function vyber(e) {
       if (e && e.originalEvent) L.DomEvent.stop(e.originalEvent);
+
+      if (probudMapu()) return;
       selectKraj(nazev, false, true);
     }
     mk.on('click', vyber);
