@@ -810,6 +810,21 @@
 
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(m);
 
+    var meritko = m.getContainer().querySelector('.leaflet-control-scale');
+    if (meritko && global.MutationObserver) {
+      var srovnejMeritko = function () {
+        [].forEach.call(meritko.querySelectorAll('.leaflet-control-scale-line'), function (e) {
+          var t = e.textContent;
+
+          var novy = t.replace(/(\d)[ \t]+(?=[a-zA-Z])/g, '$1\u00a0');
+          if (novy !== t) e.textContent = novy;
+        });
+      };
+      new global.MutationObserver(srovnejMeritko)
+        .observe(meritko, { childList: true, subtree: true, characterData: true });
+      srovnejMeritko();
+    }
+
     L.marker([d.lat, d.lng], {
       keyboard: false,
       icon: L.divIcon({ className: 'pzm-pin', iconSize: [26, 34], iconAnchor: [13, 34],

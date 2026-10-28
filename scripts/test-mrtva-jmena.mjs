@@ -59,6 +59,15 @@ const VYJIMKY = {
   'leaflet-dots-pane': 'jméno vlastní vrstvy, kterou si web v Leafletu zakládá na tečky pozemků; hledají si ji scripts/test-pohyb.mjs, test-obec.mjs a test-tvary.mjs',
   'leaflet-control-container': 'skládá si ho Leaflet sám (prefix + „-container") a svůj stylopis na něj nemá',
   'leaflet-proxy': 'vnitřnost Leafletu u animace přiblížení; stylopis na ni pravidlo nemá',
+  /* TŘETÍ DRUH VÝJIMKY: ani úchyt, ani mrtvé jméno — obal, jehož práce
+     je BÝT JEDNOU POLOŽKOU. Tlačítka nad výpisem jsou inline-flex
+     s gap:8px, takže „Stáhnout" a <span> vedle sebe byly dvě položky
+     a tatáž mezera rozdělila i dvě slova jedné věty (naměřeno na
+     390 px: mezera písma 3,1 px, díra mezi slovy 8 px). Obal to spraví
+     tím, že existuje; žádnou deklaraci k tomu nepotřebuje, a dopsat mu
+     ji jen kvůli téhle kontrole by bylo podvádění. Stavba je popsaná
+     v js/main.js u tlačítka #mc-vyvoz. */
+  'mc-popis': 'obal nápisu v tlačítku nad výpisem: jeho prací je být JEDNOU flexovou položkou, aby gap nerozdělil dvě slova jedné věty — to nepotřebuje žádnou deklaraci',
 };
 
 /* Stylopisy, které web opravdu servíruje. BEZ Leafletova by kontrola

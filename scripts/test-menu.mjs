@@ -190,7 +190,14 @@ try {
      okénko. Bylo to špatně: kdo hlídá pozemky, potřebuje se k nim
      dostat na jedno klepnutí, ne přes profil. */
   const kam = l.a.map((x) => x.kam);
-  for (const cil of ['#mapa', 'cena-pozemku.html', 'zpravy.html', 'hlidani.html', 'kontakt.html', 'muj-inzerat.html']) {
+  /* KONTAKT UŽ V LIŠTĚ NENÍ, A JE TO TAK ROZHODNUTÉ. Lišta se zúžila
+     z patnácti odkazů na pět (viz komentář v scripts/hlavicka.mjs:
+     „Rádce a Kontakt — v patičce, kde se hledá výklad a spojení").
+     Kontrola to nevěděla a CI padalo od té doby na vztahu, který nikdo
+     neslíbil. Nárok ale nemizí, jen se stěhuje: že se na Kontakt dá
+     odněkud dostat, se měří o kus níž na patičce — jinak by se dal
+     odkaz potichu ztratit úplně. */
+  for (const cil of ['#mapa', 'cena-pozemku.html', 'zpravy.html', 'hlidani.html', 'muj-inzerat.html']) {
     pravda(`v nabídce je ${cil}`, kam.some((h) => (h || '').endsWith(cil)), 'chybí: ' + kam.join(', '));
   }
   /* IKONY NESOU NADPISY ODDÍLŮ, NE KAŽDÝ ŘÁDEK. Dřív se tu žádalo
@@ -241,11 +248,20 @@ try {
     `visibility:${poEsc.viditelnost}, levý okraj ${poEsc.x}`);
   await p.click('.nav-burger');
   await p.waitForTimeout(450);
-  await p.click('#nav a[href$="kontakt.html"]');
+  await p.click('#nav a[href$="cena-pozemku.html"]');
   await p.waitForTimeout(600);
   const poOdkazu = await p.evaluate(() => document.body.classList.contains('nav-otevreno'));
   pravda('a klepnutí na odkaz taky (jinak zůstane přes novou stránku)',
     poOdkazu === false, 'na body zůstala třída nav-otevreno');
+
+  /* KONTAKT MUSÍ ZŮSTAT DOSAŽITELNÝ. Z lišty odešel schválně, z webu
+     odejít nesmí — a kdyby se odkaz ztratil i z patičky, nedostal by se
+     k nám nikdo, kdo nemá inzerát. Měří se na téže stránce, kde se
+     měřila lišta. */
+  const vPaticce = await p.evaluate(() =>
+    !!document.querySelector('footer a[href$="kontakt.html"]'));
+  pravda('Kontakt je místo lišty dosažitelný z patičky', vPaticce,
+    'v patičce není odkaz na kontakt.html — z webu by se vytratil úplně');
 
   pravda('a nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.slice(0, 2).join(' | '));
   await ctx.close();

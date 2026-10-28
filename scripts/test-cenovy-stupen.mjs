@@ -45,10 +45,22 @@ function pravda(popis, vyslo, proc) {
 
 /* Vzorek se rozprostře po abecedě, ne po prvních deseti souborech:
    stránky jsou pojmenované po okresech, takže prvních deset je deset
-   nabídek z Benešova a o zbytku republiky by zkouška nevěděla nic. */
+   nabídek z Benešova a o zbytku republiky by zkouška nevěděla nic.
+
+   DVACET, NE DVANÁCT — a není to z opatrnosti, je to z měření.
+   Verdikt o ceně nedostane každá nabídka: vyřazené stránky se
+   nevykreslují vůbec a u podílů bez výměry se verdikt nepíše. Na
+   třiceti stránkách rozprostřených po abecedě jich verdikt mělo 21,
+   tedy 70 %. Jenže krok vzorku (2 276 / 12 = 189) padal na shluky
+   vyřazených nabídek a z dvanácti stránek jich verdikt mělo jen čtyři
+   — PŘEDPOKLAD „aspoň pět" pak padal, i když na webu bylo všechno
+   v pořádku. Při dvaceti stránkách vychází při 70 % kolem čtrnácti,
+   takže mez pěti zůstává a přestává být loterií. Mez se nesnižuje:
+   snížit ji by znamenalo, že kontroly výš smějí měřit míň. */
 const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
-const krok = Math.max(1, Math.floor(vsechny.length / 12));
-const VZOREK = Array.from({ length: 12 }, (_, i) => vsechny[i * krok]).filter(Boolean);
+const POCET_VZORKU = 20;
+const krok = Math.max(1, Math.floor(vsechny.length / POCET_VZORKU));
+const VZOREK = Array.from({ length: POCET_VZORKU }, (_, i) => vsechny[i * krok]).filter(Boolean);
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },

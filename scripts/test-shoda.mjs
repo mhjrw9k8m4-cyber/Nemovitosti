@@ -134,9 +134,21 @@ if (!vysledek.chyba) {
      obvyklé ceny ani u jedné nabídky (naměřeno 0), zato percentil pořád
      u čtyřiceti. Odhad tu byl navíc od začátku zbytečný — tvrzení níž
      čtou ze stránky VĚTU O PERCENTILU, žádné z nich odhad neukazuje.
-     Číslo se dál vypisuje, jen se na něm kontrola nezastaví. */
+     Číslo se dál vypisuje, jen se na něm kontrola nezastaví.
+
+     A MEZ UŽ NENÍ DVACET, ALE NULA — protože tohle je PŘEDPOKLAD, ne
+     cíl. Ptá se na jedinou věc: mění ještě čištění duplicit výsledek?
+     Když ano (byť u jediné nabídky), má porovnávání proti očištěné
+     hromádce smysl; když ne, je celá kontrola níž k ničemu a tohle to
+     musí říct.
+     Čísla klesají právě proto, že se dvojníci slučují už u zdroje:
+     naměřeno 40 → 10 (28. 10.). Mez dvaceti by tedy trestala opravu
+     v datech — padala by tím víc, čím čistší data jsou. Týž omyl
+     a totéž ponaučení jako u meze barev v scripts/test-odstiny.mjs:
+     mez naladěná na dnešek učí lidi uklízet míň. Počet se dál vypisuje
+     v popisu, takže je vidět, kam se trend hýbe. */
   pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct} (odhad u ${vysledek.rozdilOdhad})`,
-    vysledek.rozdilPct > 20,
+    vysledek.rozdilPct > 0,
     'syrová a očištěná hromádka dávají týž percentil — pak ale tvrzení níž nic nehlídají');
   pravda('mapa i stránka pozemku dají u všech pozemků stejný výsledek',
     vysledek.neshody.length === 0,

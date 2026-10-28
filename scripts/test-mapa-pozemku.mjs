@@ -249,9 +249,24 @@ const HOST = {
 
 // --- A) Mapa se staví až na dohled a nekrade rolování ------------------
 {
-  const { ctx, p, padlo } = await detail({ zivi: [] });
+  /* OKNO JE TU NIŽŠÍ NEŽ JINDE (600 místo 860), a je to to podstatné
+     na celé téhle kontrole. Mapa se staví, až když je blíž než 300 px
+     pod hranou okna — a na téhle nabídce (podíl bez výměry, tedy bez
+     verdiktu o ceně) ležela v okně 860 px přesně 296 px pod hranou.
+     Mapa se tedy stavěla správně, jen kontrola tvrdila opak a CI na ní
+     padalo. Ve 600px okně leží 556 px pod hranou, takže se měří to, co
+     se měřit má. Že tam opravdu leží, se ověřuje jako PŘEDPOKLAD —
+     jinak by kontrola při jiných datech zase tiše změřila něco jiného. */
+  const { ctx, p, padlo } = await detail({ zivi: [], viewport: { width: 1280, height: 600 } });
   /* Kdyby se mapa stavěla hned při načtení, stáhla by dlaždice ještě
      předtím, než o ni kdokoli stál — na stránce, kde jde o cenu. */
+  const kdeJeMapa = await p.evaluate(() => {
+    const m = document.getElementById('pzm');
+    return m ? Math.round(m.getBoundingClientRect().top - window.innerHeight) : null;
+  });
+  // PŘEDPOKLAD: mapa musí ležet dál, než kam sahá záložka 300 px
+  pravda('mapa leží víc než 300 px pod hranou okna (je co měřit)',
+    kdeJeMapa !== null && kdeJeMapa > 300, `pod oknem ${kdeJeMapa} px`);
   const hnedPoNacteni = await p.evaluate(() => !!window.PK_PZ_MAPA);
   pravda('mapa se při načtení stránky nestaví', !hnedPoNacteni,
     'mapa vznikla, ještě než se k ní někdo dostal — dlaždice se stahují naprázdno');

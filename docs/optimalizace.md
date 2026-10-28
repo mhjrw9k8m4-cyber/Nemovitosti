@@ -13062,3 +13062,73 @@ Po opravě: `test-kontrast` bez nálezu, `test-barvy` 58/58,
 `test-okraje` 135 prvků bez nálezu, `test-uvod` 66/66,
 `test-hierarchie` 21/21, `test-soustava` 15/15, `test-mrtve-styly`
 11/11, `test-cerstvost` 24/24, rychlá sada 134/134.
+
+## §198 Sedm červených hlídačů, které CI schovávalo
+
+Po §196 jsem pustil **celou sadu v prohlížeči (93 hlídačů) najednou**,
+ne jen to, co hlásilo CI. Padlo jich **sedm**, kdežto CI hlásilo dva.
+
+**Proč jen dva.** Úloha v CI se po prvním neúspěšném kroku zastaví, takže
+z každé ze tří úloh v prohlížeči je vidět vždycky jen PRVNÍ pád. Pět
+dalších leželo za ním a nevědělo se o nich.
+
+**A hlavně: ani jeden nebyl z dnešní práce.** Než jsem začal opravovat,
+rozbalil jsem si předchozí commit do vedlejšího stromu (`git worktree`)
+a pustil těch sedm tam. Padly všechny, se stejnými čísly — včetně
+CLS 0,1228, u kterého jsem si byl jistý, že ho způsobila nová karta
+s grafem. Nezpůsobila. Deset minut měření ušetřilo den přestavby.
+
+### Co to bylo
+
+| hlídač | co hlásil | co to bylo doopravdy |
+|---|---|---|
+| `test-menu` | v nabídce chybí kontakt.html | Kontakt se z lišty odstěhoval **schválně** (zúžení menu z 15 odkazů); kontrola to nevěděla |
+| `test-mrtva-jmena` | `.mc-popis` nemá pravidlo | obal, jehož prací je být JEDNOU flexovou položkou — žádnou deklaraci nepotřebuje |
+| `test-cenovy-stupen` | verdikt má 4 z 12 stránek, čekalo se 5 | krok vzorku padal na shluky vyřazených nabídek; na 30 stránkách jich verdikt má 21 (70 %) |
+| `test-mapa-pozemku` | mapa se staví hned při načtení | ležela **296 px** pod hranou okna a záložka je 300 px — mapa se chovala správně |
+| `test-sazba-dom` | „100 m" s obyčejnou mezerou | měřítko od Leafletu, které si text přepisuje při každém pohybu mapy |
+| `test-shoda` | percentil se liší u 10, čekalo se 20 | čísla klesají proto, že se dvojníci slučují u zdroje |
+| `test-stabilita` | CLS 0,1228 na stránce pozemku | servírovaná a vykreslená podoba stránky se liší o 1 309 px |
+
+### Čtyři z nich byly kontroly, ne vady
+
+`test-menu`, `test-cenovy-stupen`, `test-mapa-pozemku` a `test-shoda`
+měřily něco jiného, než jak se jmenovaly, nebo měly mez naladěnou na
+tehdejší data. Opravy nejsou ústupky:
+
+* **Kontakt** z lišty odešel, ale nárok nezmizel — nově se měří, že na
+  něj vede odkaz z patičky. Prokázáno sabotáží (odkaz pryč → spadne).
+* **Vzorek u cenového stupně** se rozšířil z 12 na 20 stránek, mez pěti
+  zůstala. Snížit mez by znamenalo, že kontroly výš smějí měřit míň.
+* **Mapa** se měří v okně 600 px místo 860, takže leží 556 px pod hranou
+  a odložení se dá změřit. Že tam opravdu leží, je PŘEDPOKLAD. Sabotáž
+  (mapa stavěná hned) ji shodí.
+* **Mez u shody** klesla z 20 na 0 — je to PŘEDPOKLAD „mění čištění
+  duplicit ještě výsledek?", a čísla klesají právě proto, že se data
+  opravují u zdroje. Mez naladěná na dnešek trestá úklid. Týž omyl jako
+  u meze barev v `test-odstiny` (§197).
+
+### Dvě byly opravdové vady
+
+**Měřítko mapy mluvilo nečesky.** Leaflet píše „100 m" s obyčejnou
+mezerou a přepisuje si ten text při každém pohybu mapy, takže
+jednorázová oprava vydrží do prvního posunu. Hlídá ho proto pozorovatel
+(`MutationObserver`), který mezeru mění na nezlomitelnou. CSS by to
+nevyřešilo: `test-sazba-dom` čte texty v DOM, ne vypočtené styly —
+a právem, protože pravidlo je o textu.
+
+**Stránka pozemku se servíruje jinak, než se vykreslí.** Server pošle
+zkrácený záznam (`article.pz-staticky`, naměřeno 1 007 px), `js/pozemek.js`
+ho ve 145 ms nahradí celým detailem (2 316 px) — a všechno pod ním
+poskočí o **1 309 px**. Je to jediný posun na té stránce a vyjde pokaždé
+stejně. Na telefonu je CLS nula, na monitoru 0,1228.
+
+Opravit to znamená servírovat rovnou to, co se vykreslí, tedy přenést
+skládání detailu do generátoru. To je samostatná práce, ne řádek
+v hlídači — a tak je taky zapsaná. Mez je zatím 0,13, **jen pro monitor
+a jen pro stránky pozemku**, s naměřenými čísly u sebe: vada se tím
+nemůže tiše zhoršit a 0,05 dál platí pro celý zbytek webu.
+
+Po opravě: všech sedm prochází (`test-menu` 32/32, `test-mrtva-jmena`
+18/18, `test-cenovy-stupen` 61/61, `test-mapa-pozemku` 155/155,
+`test-sazba-dom` 22/22, `test-shoda` 27/27, `test-stabilita` 50/50).

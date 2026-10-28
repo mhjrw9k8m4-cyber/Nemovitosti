@@ -1327,6 +1327,31 @@
        poznat, jestli je ta parcela jako zahrádka, nebo jako pole. */
     L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(m);
 
+    /* A PÍŠE SE ČESKY. Leaflet do měřítka napíše „100 m" s obyčejnou
+       mezerou, takže se číslo může odtrhnout od jednotky — a to je
+       pravidlo, které web drží všude jinde (scripts/sazba.mjs při
+       sestavení, 20 840 nezlomitelných mezer). Tady se při sestavení
+       nedá udělat nic: ten text vzniká až v prohlížeči a Leaflet si ho
+       přepisuje při KAŽDÉM pohybu mapy, takže jednorázová oprava by
+       vydržela do prvního posunu. Hlídá se to proto pozorovatelem.
+       (CSS by to neřešilo: scripts/test-sazba-dom.mjs čte texty v DOM,
+       ne vypočtené styly — a právem, protože pravidlo je o textu.) */
+    var meritko = m.getContainer().querySelector('.leaflet-control-scale');
+    if (meritko && global.MutationObserver) {
+      var srovnejMeritko = function () {
+        [].forEach.call(meritko.querySelectorAll('.leaflet-control-scale-line'), function (e) {
+          var t = e.textContent;
+          /* Druhý průchod (ten, který si pozorovatel vyvolá sám) už
+             obyčejnou mezeru nenajde, takže se smyčka zastaví. */
+          var novy = t.replace(/(\d)[ \t]+(?=[a-zA-Z])/g, '$1\u00a0');
+          if (novy !== t) e.textContent = novy;
+        });
+      };
+      new global.MutationObserver(srovnejMeritko)
+        .observe(meritko, { childList: true, subtree: true, characterData: true });
+      srovnejMeritko();
+    }
+
     // špendlík na bodu z dat
     L.marker([d.lat, d.lng], {
       keyboard: false,
