@@ -552,7 +552,6 @@ to{opacity:1;transform:none}
 .opp-fav.on{color:var(--znacka-svetla)}
 .opp-fav.on svg{fill:currentColor}
 .opp-fav:active{transform:scale(1.2)}
-.opp-deal{display:inline-block;font-size:12px;font-weight:700;color:var(--c-ok-ink);background:rgba(var(--c-ok-rgb),0.12);border:1px solid rgba(var(--c-ok-ink-rgb),0.3);border-radius:var(--r-xs);padding:2px 8px;letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
 .map-count{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:baseline;column-gap:8px;row-gap:2px}
 .mc-sep{display:none}
 @media (min-width:561px){.ms-vysledky .map-count{flex:1 1 200px;min-width:0}
@@ -765,10 +764,12 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .opp-chips>*{display:inline-block;font-size:12px;font-weight:600;letter-spacing:0;padding:2px 8px;border-radius:var(--r-pill);border:1px solid transparent;white-space:nowrap}
 .opp-price + .opp-chips{margin-top:8px}
 .opp-hot{color:var(--popisek);background:var(--plocha-jemna);border-color:var(--line)}
+.opp-deal{color:var(--c-ok-ink);background:rgba(var(--c-ok-rgb),0.12);border-color:rgba(var(--c-ok-ink-rgb),0.3)}
 .opp-feat{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#fff;background:var(--plocha-znacka);border:0;border-radius:var(--r-sm);padding:2px 8px;letter-spacing:0.02em;text-transform:uppercase;box-shadow:var(--e1)}
 .opp-cd{background:var(--plocha-jemna);border-color:var(--line);color:var(--muted)}
 .opp-cd.soon{color:var(--c-drazba-ink);background:rgba(var(--c-drazba-rgb),0.10);border-color:rgba(var(--c-drazba-rgb),0.3)}
 .opp-cd.urg{color:var(--c-exekuce-ink);background:rgba(var(--c-nalehave-rgb),0.10);border-color:rgba(var(--c-nalehave-rgb),0.3)}
+.opp-chips>.opp-tich{background:var(--plocha-jemna);border-color:var(--line);color:var(--popisek)}
 .chip-n{display:inline-block;margin-left:4px;font-size:12px;font-weight:700;padding:0 4px;border-radius:var(--r-sm);background:var(--plocha-jemna-vic);color:var(--muted);min-width:16px;line-height:16px;text-align:center;vertical-align:middle}
 .filter-chip.active .chip-n{background:rgba(var(--plocha-tmava-2-rgb),0.3);color:inherit}
 .odl-wrap{margin-top:24px}
@@ -1484,7 +1485,7 @@ body.vybiram-misto .leaflet-container{cursor:crosshair}
 body.vybiram-misto .misto-pruh{border-style:solid;border-color:var(--znacka);background:rgba(var(--znacka-hluboka-rgb),0.08)}
 body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka)}
 .opp-overit{display:inline-block;font-size:12px;font-weight:600;color:#7C5105;background:rgba(var(--accent-warm-bright-rgb),0.16);border:1px solid rgba(var(--accent-warm-rgb),0.3);border-radius:var(--r-drobnost);padding:2px 8px;white-space:nowrap}
-.opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:rgba(var(--plocha-znacka-rgb),0.08);border:1px solid rgba(var(--plocha-znacka-rgb),0.22);border-radius:var(--r-drobnost);padding:2px 8px;white-space:nowrap}
+.opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:rgba(var(--plocha-znacka-rgb),0.08);border:1px solid rgba(var(--plocha-znacka-rgb),0.22);padding:2px 8px;white-space:nowrap}
 .src-stav{margin-left:8px;padding:1px 4px;border-radius:var(--r-pill);font-family:var(--font-popisek);font-size:12px;font-variant-numeric:tabular-nums;background:var(--plocha-jemna-vic);color:var(--muted)}
 .src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.12);color:var(--c-exekuce)}
 .src-stav.src-slabe{background:rgba(var(--accent-warm-rgb),0.14);color:var(--accent-warm)}

@@ -14992,3 +14992,53 @@ Rychlá sada 134/134. V prohlížeči bez nálezu: `test-pohyb` 12/12,
 `test-tokeny`, `test-hierarchie`, `test-rychly-prohlizec`,
 `test-mapa-pozemku`, `test-graf-cen`, `test-odkryte`, `test-deska`,
 `test-prvni-obrazovka`. Histogramů na stránce pozemku: **0**.
+
+## §227 Vršek úvodu pryč a řada odznaků ztišená — dvě přání z 29. 10.
+
+**Co o tom řekl majitel.** Dva snímky a dvě věty: „všechno, co je na
+prvním screenshotu nahoře, odebereš" (tmavá deska s nadpisem „Pozemky
+na prodej, v dražbě i v exekuci." a pod ním řádek šesti pilulek)
+a „pod těma inzerátama je tam ta sleva atd. — chce to udělat víc
+profesionálně, ale zároveň pořád držet tu útulnost".
+
+**Deska.** Odstraněna. Nadpis zůstal v dokumentu s `.visually-hidden`:
+je to jediný `<h1>` úvodní stránky, věta, na kterou se na ni chodí
+z vyhledávače, a první věta pro odečítač. Zmizet z obrazovky a zmizet
+ze stránky jsou dvě různé věci.
+
+**Rozcestník.** Nezrušen, přestěhován nad hlavičku výpisu. Grepem
+spočítáno, že čtyři z jeho šesti stránek (dražby, exekuce, stavební,
+orná půda) nemají z úvodu jiný odkaz — každá přesně jeden, právě
+tenhle. Nad 900 px se přitom schovával, takže z monitoru byly
+nedostupné úplně; pravidlo `display:none` zrušeno a doplněno
+`flex:0 0 auto` (rodič `.map-side` je flexbox a řádek se bez toho
+stlačil na 4 px — naměřeno 370×4 při 1280×900).
+
+Naměřeno 390×844: první nabídka 439 → 344 px. Na 1280×900 první
+nabídka 358 → 402 px; těch 44 px je cena za čtyři stránky, které
+odtud dosud nevedly.
+
+**Odznaky.** Tvar jednotný už byl — naměřeno na 22 kartách: sedm
+druhů, všechny 13 px / 600 / 4–8 px / 31 px vysoké. Jednotná nebyla
+BARVA: na 6 z 22 karet se potkaly dvě plné plošky (typicky měděná
+„Dražba za 1 měs." vedle zelené „−45 % proti okolí"). Nově si barvu
+nechá nejvýš jeden odznak, podle nároku: varování o ceně → termín do
+týdne → výhodná cena → termín do měsíce; ostatní dostanou tichou
+plochu (`js/main.js`, `jednaBarva`). Po zásahu: 0 z 22 karet se dvěma
+barvami, 19 z 22 má pořád jednu.
+
+Při tom se našly dvě starší odchylky, obě ve stylopisu a obě
+z pořadí pravidel: `.opp-deal` stál o 700 řádků VÝŠ než společný tvar
+odznaků, takže z něj platily jen barvy a 13 odznaků „−X % proti okolí"
+mělo průhledný obrys proti lince u všech ostatních; `.opp-podil`
+a `.opp-urad` stály naopak NÍŽ a prosadily zaoblení 10 px mezi šesti
+pilulkami. Obojí srovnáno, recept je teď jeden.
+
+**Hlídač.** `scripts/test-jedna-barva.mjs` (v CI). Neměří třídu
+`.opp-tich`, ale vypočtenou barvu podkladu — rozdíl není teoretický:
+pravidlo napoprvé stálo nad `.opp-cd.soon`, mělo stejnou váhu (0,2,0)
+a prohrálo, takže sedm odznaků třídu mělo a přesto zůstalo měděných.
+Ověřeno sabotáží dvakrát: posun pravidla nad barvy odpočtu + vrácené
+zaoblení podílu shodilo dvě kontroly (3 karty se dvěma barvami,
+2 recepty tvaru); odstranění volání `jednaBarva` shodilo kontrolu
+barvy na 8 z 22 karet.

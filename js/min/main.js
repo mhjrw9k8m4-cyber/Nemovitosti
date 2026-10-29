@@ -198,6 +198,29 @@
   function countdownText(days){ return T.countdownText(days); }
   function countdownClass(days){ return T.countdownClass(days); }
 
+  var NAROK = [
+    [/class="[^"]*\bopp-overit\b/, 4],
+    [/class="opp-cd[^"]*\burg\b/, 3],
+    [/class="[^"]*\bopp-(?:deal|zlevneno)\b/, 2],
+
+    [/class="opp-cd[^"]*\bsoon\b/, 1]
+  ];
+  function jednaBarva(chips) {
+    var vitez = -1, nej = 0;
+    for (var i = 0; i < chips.length; i++) {
+      for (var j = 0; j < NAROK.length; j++) {
+        if (NAROK[j][0].test(chips[i])) {
+          if (NAROK[j][1] > nej) { nej = NAROK[j][1]; vitez = i; }
+          break;
+        }
+      }
+    }
+    return chips.map(function (h, i) {
+      if (i === vitez || /class="[^"]*\bopp-feat\b/.test(h)) return h;
+      return h.replace('class="', 'class="opp-tich ');
+    });
+  }
+
   function auctionYMD(extra){ return T.auctionYMD(extra); }
 
   function zdrojText(extra){ return T.zdrojText(extra); }
@@ -4019,6 +4042,7 @@
       var perM2Html = perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '';
 
       var chips = [];
+
       var kdeKarty = '';
 
       var srovnaniModel = null;
@@ -4096,6 +4120,7 @@
       }
 
       if (chips.length > 3) chips = chips.slice(0, 3);
+      chips = jednaBarva(chips);
       if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
         '<div class="opp-media">' +

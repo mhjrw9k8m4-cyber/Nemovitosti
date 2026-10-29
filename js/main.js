@@ -335,6 +335,52 @@
   function jeProsle(d){ var n = daysUntil(d.extra); return n != null && n < 0; }
   function countdownText(days){ return T.countdownText(days); }
   function countdownClass(days){ return T.countdownClass(days); }
+  /* NEJVÝŠ JEDNA BARVA V ŘADĚ ODZNAKŮ POD CENOU.
+     ------------------------------------------------------------------
+     Odznaky mají od minula jeden tvar, jedno písmo i jedno odsazení
+     (naměřeno na 22 kartách úvodu: sedm druhů, všechny 13 px / 600 /
+     4–8 px / 31 px vysoké). Co jednotné nebylo, je barva: na jedné
+     kartě se potkala měď „Dražba za 1 měs.", zeleň „−45 % proti okolí"
+     a šeď „Doporučujeme". Tři plné plošky vedle sebe jsou tři stejně
+     hlasité výkřiky — a tím pádem žádný.
+     Barvu si tedy nechá jediný odznak, a to podle toho, co nejvíc
+     rozhoduje. Pořadí nároku je dole v NÁROK: varování o ceně
+     (člověk může přijít o peníze), pak termín do týdne (propadne),
+     pak výhodná cena (proč se na to vůbec dívat). Zbytek dostane
+     třídu .opp-tich a tichou plochu.
+     „Zvýrazněno" (.opp-feat) se neztišuje: je to placená služba, ne
+     náš soud o nabídce. V dnešních datech se na kartách neobjevuje
+     (změřeno: 0 z 22), takže dvě barvy v řadě jsou možnost, ne stav.
+     POZOR NA POŘADÍ PUSHŮ. Odznaky se do pole přidávají v pořadí,
+     v jakém vznikají (termín dřív než sleva), což není pořadí
+     důležitosti — proto se nehledá „první barevný", ale nejvyšší
+     nárok. Kdyby se to spletlo, ztichla by sleva kvůli dražbě
+     za měsíc. */
+  var NAROK = [
+    [/class="[^"]*\bopp-overit\b/, 4],
+    [/class="opp-cd[^"]*\burg\b/, 3],
+    [/class="[^"]*\bopp-(?:deal|zlevneno)\b/, 2],
+    /* Termín do měsíce má nárok nejnižší, ale MÁ ho: když na kartě
+       nic hlasitějšího není, ať si měď nechá. Bez tohohle řádku
+       ztichlo 5 z 22 karet úplně — jedinou jejich zprávou bylo
+       „Dražba za 1 měs." a nebyl důvod ji přebarvit našedo. */
+    [/class="opp-cd[^"]*\bsoon\b/, 1]
+  ];
+  function jednaBarva(chips) {
+    var vitez = -1, nej = 0;
+    for (var i = 0; i < chips.length; i++) {
+      for (var j = 0; j < NAROK.length; j++) {
+        if (NAROK[j][0].test(chips[i])) {
+          if (NAROK[j][1] > nej) { nej = NAROK[j][1]; vitez = i; }
+          break;
+        }
+      }
+    }
+    return chips.map(function (h, i) {
+      if (i === vitez || /class="[^"]*\bopp-feat\b/.test(h)) return h;
+      return h.replace('class="', 'class="opp-tich ');
+    });
+  }
   // Termín dražby jako YYYYMMDD (z reálného data v extra) — pro kalendář (.ics)
   function auctionYMD(extra){ return T.auctionYMD(extra); }
   /** Zápis zdroje pro čtení — syrové „2026-10-12" patří strojům, ne lidem. */
@@ -6463,6 +6509,7 @@
       var perM2Html = perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '';
       // Stavové odznaky pohromadě na jednom řádku
       var chips = [];
+      // (ztišení přebytečných barev řeší jednaBarva() na konci sestavení)
       var kdeKarty = '';
       /* Pro zkoušku se odkládá SUROVÝ výsledek modelu (úroveň a místo),
          ne hotová věta. Kdyby se odkládala věta, porovnávala by zkouška
@@ -6638,6 +6685,7 @@
        * Pořadí výš je zároveň pořadím důležitosti, takže se ořezává odzadu:
        * „Doporučujeme" ustoupí termínu dražby i slevě. */
       if (chips.length > 3) chips = chips.slice(0, 3);
+      chips = jednaBarva(chips);
       if (jeSkryty(d)) li.classList.add('je-skryty');
       li.innerHTML =
         '<div class="opp-media">' +

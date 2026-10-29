@@ -879,6 +879,9 @@ jobs:
       - name: Graf všude (křivka vývoje ceny na každém druhu stránky pozemku)
         run: node scripts/test-graf-vsude.mjs
 
+      - name: Jedna barva v řadě odznaků pod cenou na kartě
+        run: node scripts/test-jedna-barva.mjs
+
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs

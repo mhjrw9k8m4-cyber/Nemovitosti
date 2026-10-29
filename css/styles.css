@@ -2913,9 +2913,13 @@ h1 em{ color:var(--znacka-svetla);
    se o pixel stiskne, tohle se naopak na okamžik zvětší — dvě různá
    gesta, protože říkají dvě různé věci. */
 .opp-fav:active{transform:scale(1.2);}
-/* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
-   tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
-.opp-deal{display:inline-block; font-size:12px; font-weight:700; color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12); border:1px solid rgba(var(--c-ok-ink-rgb),0.3); border-radius:var(--r-xs); padding:2px 8px; letter-spacing:0; white-space:nowrap; font-variant-numeric:tabular-nums;}
+/* Odznak výhodné ceny (.opp-deal) měl pravidlo tady, PŘED společným
+   tvarem odznaků — a ten je o sedm set řádků níž, se stejnou vahou.
+   Platily z něj proto jen barvy; tvar, tloušťka i obrys prohrály.
+   Naměřeno na kartách úvodní stránky: 13 odznaků „−X % proti okolí"
+   mělo průhledný obrys, zatímco všech šest ostatních druhů mělo
+   linku. Pravidlo se tedy přestěhovalo ke zbytku rodiny (hledej
+   „JEDEN TVAR PRO VŠECHNY ODZNAKY"). */
 /* NADPIS, ČÍSLO A POZNÁMKA JSOU TŘI DÍLKY V JEDNÉ MŘÍŽCE, ne jedna
    dlouhá věta. Dokud to byl plynulý text, lámal se, kde zrovna došla
    šířka, a 440px sloupec z něj udělal tři nestejně odsazené řádky.
@@ -3647,6 +3651,10 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 /* Odznaky jsou poznámka pod inzerátem, ne řada tlačítek: pilulka
    místo obdélníku, tenčí linka, menší písmo. */
 .opp-hot{color:var(--popisek); background:var(--plocha-jemna); border-color:var(--line);}
+/* Zelená #2E8F5F dávala na vlastním světle zeleném podkladu jen 3,54 : 1,
+   tedy pod normou pro drobné písmo. Ztmaveno na 5,6 : 1; odstín zůstává. */
+.opp-deal{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12);
+  border-color:rgba(var(--c-ok-ink-rgb),0.3);}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
 .opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 /* Zvýrazněný inzerát pozná člověk podle odznaku .opp-feat, ne podle
@@ -3660,6 +3668,31 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    sebe byly jeden útvar ve dvou barvách, ne obrys vedle výplně. */
 .opp-cd.soon{color:var(--c-drazba-ink); background:rgba(var(--c-drazba-rgb),0.10); border-color:rgba(var(--c-drazba-rgb),0.3);}
 .opp-cd.urg{color:var(--c-exekuce-ink); background:rgba(var(--c-nalehave-rgb),0.10); border-color:rgba(var(--c-nalehave-rgb),0.3);}
+/* NEJVÝŠ JEDNA BARVA V ŘADĚ ODZNAKŮ.
+   ------------------------------------------------------------------
+   Majitel 29. 10. o řadě pod cenou: „udělej to profesionálněji, ale
+   ať to pořád drží tu útulnost."
+   CO BYLO ŠPATNĚ. Tvar a velikost odznaků jsou jednotné od minula
+   (naměřeno: všech sedm druhů 13 px / 600 / 4–8 px / 31 px vysoké),
+   jenže BARVY ne: na jedné kartě se potkala měď („Dražba za 1 měs."),
+   zeleň („−45 % proti okolí") a šeď („Doporučujeme"). Tři plné
+   plošky vedle sebe čte oko jako tři stejně hlasité výkřiky, takže
+   neříkají nic — a vypadají jako nalepené z různých webů.
+   CO PLATÍ TEĎ. Barvu v řadě nese nejvýš JEDEN odznak, ten
+   nejdůležitější (js/main.js, jednaBarva): varování o ceně, pak
+   termín do týdne, pak výhodná cena. Všechny ostatní dostanou
+   .opp-tich — tutéž tichou plochu jako „Doporučujeme".
+   KDE PRAVIDLO STOJÍ, JE ČÁST ZADÁNÍ. Napoprvé stálo o čtrnáct
+   řádků výš a nedělalo nic: .opp-cd.soon má stejnou váhu (0,2,0)
+   a je v souboru níž, takže měděný odpočet ztišení přebil.
+   Naměřeno na kartách: 7 odznaků „Dražba za 1 měs." zůstalo
+   měděných, přestože .opp-tich měly. Proto stojí ZA barvami
+   odpočtu — kdo sem dopíše další barvu odznaku, musí ji dát nad
+   tohle pravidlo.
+   Útulnost z toho nezmizí: plocha zůstává měkká (--plocha-jemna),
+   tvar pilulka a písmo 13 px. Ubyla jen křiklavost. */
+.opp-chips > .opp-tich{background:var(--plocha-jemna); border-color:var(--line);
+  color:var(--popisek);}
 /* Počet nabídek na filtračních tlačítkách */
 .chip-n{display:inline-block; margin-left:4px; font-size:12px; font-weight:700; padding:0 4px; border-radius:var(--r-sm); background:var(--plocha-jemna-vic); color:var(--muted); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
 .filter-chip.active .chip-n{background:rgba(var(--plocha-tmava-2-rgb),0.3); color:inherit;}
@@ -8306,12 +8339,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 .opp-urad{display:inline-block; font-size:12px; font-weight:600;
   color:var(--muted); background:rgba(var(--plocha-znacka-rgb),0.08);
   border:1px solid rgba(var(--plocha-znacka-rgb),0.22);
-  /* ODZNAK JE DROBNOST, TEDY 10 px. Šestka je `--r-xs`, a ten token má
-     ve stupnici jinou práci: prstence zaměření, palec posuvníku,
-     zaškrtávátko. Tři odznaky na kartě ji nesly jako zbytek ze starší
-     soustavy — viz jmenný seznam u tokenů (--r-drobnost: „odznaky,
-     štítky, náhledy"). */
-  border-radius:var(--r-drobnost); padding:2px 8px; white-space:nowrap;}
+  /* ZAOBLENÍ TU UŽ NESTOJÍ. Obě třídy žijí jen uvnitř .opp-chips
+     (ověřeno grepem: dvě místa v js/main.js a nikde jinde), takže
+     tvar jim dává společné pravidlo rodiny — pilulka. Tahle dvě
+     pravidla stojí v souboru ZA ním, takže svých 10 px prosadila
+     a „podíl 1/2" byl jediný obdélníček mezi šesti pilulkami. */
+  padding:2px 8px; white-space:nowrap;}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
