@@ -9500,11 +9500,23 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    přepínání aplikací. */
 .pz-lista{display:none;}
 @media (hover:none){
-  .pz-lista{position:fixed; left:0; right:0; bottom:0; z-index:40;
-    align-items:center; gap:12px;
-    padding:8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
-    background:var(--plocha-plovouci-plna); border-top:1px solid var(--line);
-    box-shadow:var(--e3-up);}
+  /* PLOVOUCÍ KARTA, NE PRUH PŘES CELOU ŠÍŘKU.
+     Majitel 29. 10. poslal snímek, kde bílý pruh leží přes mapu
+     a uřízne v půlce tlačítko „Hranice parcel": „vidíš, jak to blbne
+     dole, buguje se to přes všechno."
+     Pruh od kraje ke kraji s rovnou horní hranou vypadá jako vada
+     vykreslení — jako by se stránka rozpůlila. Odsazená karta se
+     zaoblením a stínem je naopak zjevně NAD obsahem; takhle vypadá
+     plovoucí ovládání na každé mapové aplikaci. Je to tentýž tvar,
+     jaký nese zbytek webu: --r-plocha a stín --e3.
+     Čísla: 12 px od krajů, zaoblení jako karty, stín shora i zespodu.
+     Odsazení stránky (body.ma-listu) na to musí počítat taky — proto
+     je o těch 12 px větší než výška lišty. */
+  .pz-lista{position:fixed; left:12px; right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:40;
+    align-items:center; gap:12px; padding:8px 12px 8px 16px;
+    background:var(--plocha-plovouci-plna); border:1px solid var(--line);
+    border-radius:var(--r-plocha); box-shadow:var(--e3);}
   .pz-lista.je-videt{display:flex;}
   .pzl-text{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;}
   .pzl-cena{font-size:18px; font-weight:700; letter-spacing:-0.02em;
@@ -9513,8 +9525,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   .pz-lista .pzl-btn{flex:none; margin:0; white-space:nowrap;}
   /* Ať lišta nestojí na patičce a ať na ní neseděl kulatý návrat
      nahoru — naměřeno na snímku, leželo přesně přes cenu. */
-  body.ma-listu{padding-bottom:80px;}
-  body.ma-listu .to-top{bottom:calc(80px + env(safe-area-inset-bottom, 0px));}
+  body.ma-listu{padding-bottom:96px;}
+  body.ma-listu .to-top{bottom:calc(96px + env(safe-area-inset-bottom, 0px));}
 }
 
 /* =====================================================================

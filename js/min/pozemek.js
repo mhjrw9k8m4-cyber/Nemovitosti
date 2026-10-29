@@ -1712,17 +1712,12 @@
     lista.appendChild(tl);
     document.body.appendChild(lista);
 
-    var vidi = { cena: true, akce: true };
     var hlidac = new IntersectionObserver(function (zaznamy) {
-      for (var i = 0; i < zaznamy.length; i++) {
-        var z = zaznamy[i];
-        vidi[z.target === cena ? 'cena' : 'akce'] = z.isIntersecting;
-      }
-      lista.classList.toggle('je-videt', !vidi.cena && !vidi.akce);
-      document.body.classList.toggle('ma-listu', !vidi.cena && !vidi.akce);
-    }, { rootMargin: '0px 0px 128px 0px' });
+      var vidiCenu = zaznamy[zaznamy.length - 1].isIntersecting;
+      lista.classList.toggle('je-videt', !vidiCenu);
+      document.body.classList.toggle('ma-listu', !vidiCenu);
+    });
     hlidac.observe(cena);
-    hlidac.observe(vzor.parentNode);
   }
 
   function fillVerdict(d) {

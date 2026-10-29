@@ -15042,3 +15042,47 @@ Ověřeno sabotáží dvakrát: posun pravidla nad barvy odpočtu + vrácené
 zaoblení podílu shodilo dvě kontroly (3 karty se dvěma barvami,
 2 recepty tvaru); odstranění volání `jednaBarva` shodilo kontrolu
 barvy na 8 z 22 karet.
+
+## §228 Spodní lišta na stránce pozemku: šest přepnutí a pruh přes mapu
+
+**Co o tom řekl majitel.** Snímek stránky dražby, kde bílý pruh u spodní
+hrany leží přes mapu a uřízne v půlce tlačítko „Hranice parcel":
+„vidíš, jak to blbne dole, tam je K dražbě a buguje se to přes všechno."
+
+**První nález — lišta se přepínala šestkrát.** Sledovaly se dvě věci:
+cena nahoře a řada hlavních akcí; lišta svítila, jen když nebylo vidět
+ani jedno. Jenže řada akcí nestojí na konci stránky — naměřeno na
+`pozemek-benesov-benesov-1sjtz7b.html` (390×844): cena 597–721, řada
+akcí 2 635–2 687, celá stránka 3 718. Průběh:
+
+| úsek | lišta |
+|---|---|
+| 0–721 | schovaná (je vidět cena) |
+| 721–1 663 | svítí |
+| 1 663–2 687 | schovaná (blíží se řada akcí) |
+| 2 687–konec | svítí |
+
+Naměřeno 6 přepnutí na jedno pomalé projetí tam a zpět. Protože se
+s lištou přepíná i odsazení stránky (80 px), skákala přitom i výška
+dokumentu: 3 743 ↔ 3 823. Sleduje se od teď jedna věc — cena —
+a z toho jsou 2 přepnutí. Platí se za to tím, že na úseku zhruba
+900 px je tlačítko vidět dvakrát: jednou ve stránce, jednou v liště.
+Je to totéž tlačítko a vede na totéž.
+
+**Druhý nález — tvar.** Pruh od kraje ke kraji s rovnou horní hranou
+vypadá jako vada vykreslení, jako by se stránka rozpůlila. Lišta je
+teď plovoucí karta: 12 px od krajů, zaoblení `--r-plocha` a stín
+`--e3`, tedy tentýž tvar jako zbytek webu. Naměřeno na 390×844:
+lišta 12–378, výška 70, od spodní hrany 12 px, kulatý návrat nahoru
+14 px nad ní, a na konci stránky pod ní neleží ani jeden prvek
+(odsazení stránky 80 → 96 px).
+
+**Hlídač.** `scripts/test-lista-dole.mjs` dostal dvě změny. Kontrola
+„drží se u spodní hrany" chtěla nulu — povoluje teď 1–24 px, aby
+plovoucí tvar prošel a zároveň lišta nemohla utéct doprostřed
+obrazovky. A přibyla kontrola POČTU přepnutí (nejvýš dvě); ta stará
+hlídala jen krátká bliknutí pod 400 px, a tahle vada měla mezery
+1 000 px, takže jí prošla. Průjezd se zároveň prodloužil z 2 600 px
+na celou stránku: do 2 600 px třetí přepnutí ještě nepadne a zkouška
+sabotáž (návrat starého pravidla) odkývala. Po prodloužení sabotáž
+spadla na „napočítáno 3".

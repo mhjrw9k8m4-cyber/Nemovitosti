@@ -85,7 +85,18 @@ try {
   await p.waitForTimeout(1200);
   const dole = await zmer(p);
   pravda('po odrolování se ukáže', dole.videt, 'po odrolování lišta nesvítí');
-  pravda('a drží se u spodní hrany okna', dole.dole === 0, `od spodní hrany ${dole.dole} px`);
+  /* DŘÍV SE TU CHTĚLA NULA, TEDY PRUH PŘILEPENÝ KE SPODNÍ HRANĚ.
+     Majitel 29. 10. poslal snímek, kde takový pruh leží přes mapu
+     a uřízne v půlce tlačítko „Hranice parcel": „buguje se to přes
+     všechno." Pruh od kraje ke kraji s rovnou horní hranou vypadá
+     jako vada vykreslení; odsazená karta se zaoblením a stínem
+     vypadá jako plovoucí ovládání, protože jím je.
+     Nula tedy padla, a nesmí se vrátit — ale ani se nesmí povolit
+     cokoli: lišta musí pořád sedět DOLE, ne uprostřed obrazovky.
+     Proto rozsah, ne rovnost. 24 px je dvojnásobek dnešních 12 a pod
+     tím je pořád spodní okraj. */
+  pravda('a drží se dole, odsazená jako plovoucí karta', dole.dole > 0 && dole.dole <= 24,
+    `od spodní hrany ${dole.dole} px (čeká se 1–24)`);
   pravda('vede na totéž co tlačítko nahoře',
     !!dole.cil && dole.cil === dole.cilHlavni, `lišta ${dole.cil}, nahoře ${dole.cilHlavni}`);
   pravda('a její tlačítko má aspoň 44 px na výšku', (dole.terc || 0) >= 44, `${dole.terc} px`);
@@ -124,7 +135,12 @@ try {
     await p.waitForTimeout(600);
     const MEZ = 400;
     const prubeh = [];
-    for (let y = 0; y <= 2600; y += 80) {
+    /* AŽ NA KONEC STRÁNKY, NE DO 2 600 px. Měřilo se do 2 600 a přesně
+       tam ta vada začínala: na téhle stránce stojí řada hlavních akcí
+       na 2 635 a třetí přepnutí přišlo až za ní. Zkouška sabotáž (návrat
+       starého pravidla) odkývala — proto se jede až na doraz. */
+    const konec = await p.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+    for (let y = 0; y <= konec; y += 80) {
       await p.evaluate((yy) => window.scrollTo(0, yy), y);
       await p.waitForTimeout(130);
       prubeh.push({ y, v: (await zmer(p)).videt });
@@ -143,6 +159,23 @@ try {
       'krátké úseky: ' + kratke.map((u) => (u.v ? 'zap' : 'vyp') + ' ' + u.od + '–' + u.do +
         ' (' + ((u.do - u.od) + 80) + ' px)').join(', ') +
       '\n      celý průběh: ' + useky.map((u) => (u.v ? 'zap' : 'vyp') + ' ' + u.od + '–' + u.do).join(' | '));
+
+    /* A DRUHÁ MEZ: KOLIKRÁT SE VŮBEC PŘEPNE.
+       Mez „žádný úsek kratší než 400 px" výš hlídá bliknutí, tedy
+       přepnutí tam a zpět na krátké cestě. Nehlídá ale přepnutí, která
+       jsou sice daleko od sebe, a přesto je jich moc — a přesně to
+       majitel 29. 10. popsal jako „buguje se to přes všechno".
+       Naměřeno tehdy na pozemek-benesov-benesov-1sjtz7b.html (390×844):
+       lišta se při jednom projetí dolů a zpátky přepnula ŠESTKRÁT,
+       protože se sledovala i řada hlavních akcí — a ta nestojí na
+       konci stránky, ale v jejích dvou třetinách (2 635 z 3 718).
+       Pruh se tedy vysunul, zase zalezl a znovu vysunul. Sleduje se
+       od té doby jedna věc (cena), a jsou z toho dvě přepnutí.
+       Mez je 2 na cestu dolů: rozsvítit se smí jednou. */
+    const prepnuti = useky.length - 1;
+    pravda(`a nepřepíná se víc než dvakrát (napočítáno ${prepnuti})`,
+      prepnuti <= 2,
+      'průběh: ' + useky.map((u) => (u.v ? 'zap' : 'vyp') + ' ' + u.od + '–' + u.do).join(' | '));
   }
 
   await p.evaluate(() => window.scrollTo(0, 0));

@@ -3025,32 +3025,42 @@
     lista.appendChild(tl);
     document.body.appendChild(lista);
 
-    /* Dvě sledované věci, jeden stav: lišta svítí, jen když není vidět
-       ani cena, ani tlačítka.
+    /* JEDNO PRAVIDLO: lišta svítí, jakmile sjede cena z obrazovky.
+       A pak už svítí pořád.
 
-       ZDOLA SE PŘIDÁVÁ, NE UBÍRÁ. Do 26. 10. tu bylo -72px (o výšku
-       lišty, ať se neukáže nad tlačítky, která sama zakrývá). Jenže mezi
-       cenou a tlačítky je na telefonu celá stránka, a těsně pod cenou
-       zbyla úzká skulina, kde není vidět ani jedno: naměřeno na
-       pozemek-benesov-benesov-1sjtz7b.html (390×844) cena 558–626 a
-       tlačítka 1566–1618, takže lišta najela na y=640 a na y=800 zase
-       zmizela. Při pomalém rolování z ní bylo bliknutí přes 160 px —
-       pruh se vysune a hned zase schová.
-       Kladných 128 px říká „tlačítka jsou na dosah": počítají se za
-       viditelná, dokud jsou do 128 px pod okrajem. Skulina 96 px se tím
-       zavře s rezervou 32 px a původní účel zůstává (lišta se objeví
-       ještě později, ne dřív). */
-    var vidi = { cena: true, akce: true };
+       CO TU BYLO DŘÍV A PROČ TO MAJITEL POPSAL JAKO „buguje se to".
+       Sledovaly se dvě věci — cena NAHOŘE a řada hlavních akcí — a lišta
+       svítila, jen když nebylo vidět ani jedno. Jenže řada akcí nestojí
+       na konci stránky, stojí v jejích dvou třetinách: naměřeno na
+       pozemek-benesov-benesov-1sjtz7b.html (390×844) cena 597–721,
+       řada akcí 2635–2687 a celá stránka 3718. Z toho vyšly ČTYŘI
+       přepnutí na jedno projetí stránky dolů a čtyři zpátky:
+         0–721     schovaná (je vidět cena)
+         721–1663  svítí
+         1663–2687 schovaná (blíží se řada akcí)
+         2687–konec svítí
+       Bílý pruh se tedy vysunul, zase zalezl a znovu vysunul. Naměřeno
+       přesně takhle: 6 přepnutí při jednom pomalém projetí tam a zpět.
+       A protože se s lištou přepíná i odsazení stránky (body.ma-listu,
+       80 px), skákala přitom i celková výška stránky: 3743 ↔ 3823.
+
+       CO SE TÍM KUPUJE A CO SE TÍM PLATÍ. Platí se tím, že na úseku
+       zhruba 900 px je tlačítko vidět dvakrát — jednou ve stránce,
+       jednou v liště. Je to totéž tlačítko a vede na totéž, takže se
+       nedá splést. Kupuje se tím jedno vysunutí a jedno zalezení na
+       celou stránku místo osmi, a odsazení, které se nastaví jednou
+       a pak drží.
+
+       ROZPĚTÍ UŽ SE NEPOTŘEBUJE. Stálo tu rootMargin 128 px zdola,
+       aby se zavřela úzká skulina mezi cenou a akcemi, ve které lišta
+       bliknula. Skulina byla důsledek toho druhého sledovaného prvku;
+       s ním zmizela i ona. */
     var hlidac = new IntersectionObserver(function (zaznamy) {
-      for (var i = 0; i < zaznamy.length; i++) {
-        var z = zaznamy[i];
-        vidi[z.target === cena ? 'cena' : 'akce'] = z.isIntersecting;
-      }
-      lista.classList.toggle('je-videt', !vidi.cena && !vidi.akce);
-      document.body.classList.toggle('ma-listu', !vidi.cena && !vidi.akce);
-    }, { rootMargin: '0px 0px 128px 0px' });
+      var vidiCenu = zaznamy[zaznamy.length - 1].isIntersecting;
+      lista.classList.toggle('je-videt', !vidiCenu);
+      document.body.classList.toggle('ma-listu', !vidiCenu);
+    });
     hlidac.observe(cena);
-    hlidac.observe(vzor.parentNode);
   }
 
   function fillVerdict(d) {
