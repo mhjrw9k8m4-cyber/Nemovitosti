@@ -825,7 +825,12 @@
     border-color var(--cas-zakladni) var(--ease),
     box-shadow var(--cas-zakladni) var(--ease),
     opacity var(--cas-zakladni) var(--ease),
-    filter var(--cas-zakladni) var(--ease);
+    filter var(--cas-zakladni) var(--ease),
+    /* KRESBA IKONY. Ikony se barví fill/stroke, a ty v receptu dřív
+       nebyly — „uložený" pozemek se proto zabarvil skokem, i když
+       tlačítko kolem něj přešlo měkce (§217). */
+    fill var(--cas-zakladni) var(--ease),
+    stroke var(--cas-zakladni) var(--ease);
   --prechod-pohyb:transform var(--cas-rychly) var(--ease);
   --prechod:var(--prechod-barvy), var(--prechod-pohyb);
 }
@@ -993,6 +998,36 @@ a, button, [role="button"], input, select, textarea, label, summary{ transition:
    posouvá. */
 a *, button *, [role="button"] *, summary *, label *,
 a::before, a::after, button::before, button::after{ transition:var(--prechod-barvy); }
+/* A LEHKÝ PŘECHOD NA ZBYTKU WEBU — TEXTY A IKONY.
+   Zadání: „udělej přechody úplně na všem, co se dá, ale jen
+   jednoduché". Změřeno 29. 10. na 13 typech stránek (mapa se
+   nepočítá): 4 023 viditelných prvků s textem nebo kresbou, z toho
+   1 821 (45 %) umělo změnit barvu měkce. Zbytek cukl — nadpis, cena,
+   buňka tabulky, ikona.
+   JEN BARVY. Posun ani rozměr se tu neanimuje: to by překreslovalo
+   rozvržení na každém snímku.
+   SELEKTOR JE V :where(), tedy se SPECIFICITOU NULA. Každé
+   konkrétnější pravidlo ho přebije — místa s vlastním časem
+   (odrolovací panel, toast) si svůj čas nechávají a nic se tím
+   nepřepisuje. */
+:where(p, span, b, strong, em, i, u, small, abbr, time, code, kbd, mark,
+  li, dt, dd, td, th, caption, figcaption, blockquote, address,
+  h1, h2, h3, h4, h5, h6, hr, img, picture,
+  /* a obaly, tedy krabice kolem toho textu — oddíl, seznam, řádek
+     tabulky, rozbalovací blok. `html` a `body` ne: na nich se nic
+     neměkčí, jen by se tím přechod dědil do míst, kde ho vypínáme. */
+  div, section, article, aside, nav, header, footer, main, form, fieldset,
+  ul, ol, dl, table, thead, tbody, tfoot, tr, details, summary, figure, label,
+  svg, use, path, circle, ellipse, rect, line, polyline, polygon, text, g, tspan){
+  transition:var(--prechod-barvy);
+}
+/* MAPA JE Z TOHO VEN. Leaflet si dlaždice, značky i obrysy překresluje
+   sám a přechod by za nimi táhl duchy; totéž platí pro naše vrstvy nad
+   mapou (jména krajů, maska). Pravidlo je taky v :where(), takže
+   konkrétnější pravidla našich ovladačů nad mapou platí dál. */
+:where(.leaflet-container, .leaflet-pane, .kraj-lock, .pzm-mapa, .vm-mapa, .opp-map) :where(*){
+  transition:none;
+}
 /* ŘÁDKY A POLOŽKY, KTERÉ OVLADAČEM NEJSOU, ale reagují na najetí:
    položka v našeptávači, řádek v souhrnu, dlaždice kraje, úchyt
    posuvníku. Ty do rodiny výš nepatří, a přitom se mění úplně stejně. */

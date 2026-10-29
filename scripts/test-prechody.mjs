@@ -37,7 +37,12 @@ function pravda(popis, vyslo, proc) {
 
 /* Seznam míst se čte ze stylopisu, ne opisuje do zkoušky: když někdo
    přidá nový stav při najetí, zkouška si ho najde sama. */
-const VLASTNOSTI = ['background-color', 'border-color', 'color', 'box-shadow', 'transform', 'opacity', 'filter'];
+/* KRESBA IKONY SE POČÍTÁ TAKY. Do 29. 10. tu fill ani stroke nebyly,
+   takže hlídač neviděl, že „uložený" pozemek zabarví ikonu skokem
+   (.opp-fav.on svg, .msv-ulozene.on svg). Měřeno bylo 27 pravidel pro
+   fill a 28 pro stroke, z toho jen po dvou s přechodem (§217). */
+const VLASTNOSTI = ['background-color', 'border-color', 'color', 'box-shadow', 'transform',
+  'opacity', 'filter', 'fill', 'stroke'];
 const css = ['../css/styles.css', '../css/pozemek-vlozeny.css']
   .map((f) => readFileSync(new URL(f, import.meta.url), 'utf8')).join('\n')
   .replace(/\/\*[\s\S]*?\*\//g, '');
@@ -47,9 +52,21 @@ for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   const telo = m[2];
   for (let sel of m[1].split(',')) {
     sel = sel.trim().split('\n').pop().trim();
-    if (!sel || sel.startsWith('@') || !/:(hover|focus-visible|active|checked)\b/.test(sel)) continue;
+    /* STAV SE NA WEBU PÍŠE DVĚMA ZPŮSOBY. Pseudotřídou (:hover) a TŘÍDOU,
+       kterou nasadí JavaScript (.on u uloženého pozemku, .active
+       u zapnutého filtru). Do 29. 10. tu byla jen první polovina —
+       a tím hlídači unikalo přesně to, co jsem chtěl nově hlídat:
+       „uložený" pozemek zabarvil ikonu skokem (.opp-fav.on svg).
+       Doloženo sabotáží: po vyjmutí fill/stroke z receptu zkouška
+       nejdřív NEPADLA, protože to místo vůbec neměřila (§217). */
+    const STAV = /:(hover|focus-visible|active|checked)\b|\.(on|active|sel|vybran|zapnut|otevren)\b|\[aria-(pressed|selected|expanded)="true"\]/;
+    if (!sel || sel.startsWith('@') || !STAV.test(sel)) continue;
     if (/::(before|after|-webkit-scrollbar)/.test(sel)) continue;   // pseudoprvek z DOM nevytáhneme
-    const zaklad = sel.replace(/:(hover|focus-visible|focus|active|checked)\b/g, '').trim();
+    const zaklad = sel
+      .replace(/:(hover|focus-visible|focus|active|checked)\b/g, '')
+      .replace(/\.(on|active|sel|vybran|zapnut|otevren)\b/g, '')
+      .replace(/\[aria-(pressed|selected|expanded)="true"\]/g, '')
+      .trim();
     if (!zaklad || zaklad.includes('*')) continue;
     for (const v of VLASTNOSTI) {
       const jm = v === 'background-color' ? 'background' : v;
@@ -82,6 +99,7 @@ await ctx.route('**/*', (r) => {
 const p = await ctx.newPage();
 const nalezeno = new Map();       // selektor → { chybi:[], kde }
 let zmereno = 0;
+let pokrytiCelkem = 0, pokrytiMeknou = 0;
 for (const s of STRANKY) {
   await p.goto(BASE + '/' + s, { waitUntil: 'load' }).catch(() => {});
   await p.waitForTimeout(1800);
@@ -99,11 +117,29 @@ for (const s of STRANKY) {
       const chybi = vlast.filter((v) => !umi(v));
       out.push({ sel, chybi, mereno: true });
     }
-    return out;
-  }, [...mista].map(([k, v]) => [k, [...v]])).catch(() => []);
-  for (const x of r) {
+    /* A POKRYTÍ CELÉ STRÁNKY, ne jen míst se stavem. Majitel: „udělej
+       přechody úplně na všem, co se dá, ale jen jednoduché." Měří se
+       proto, kolik viditelných prvků s textem nebo kresbou se vůbec
+       UMÍ změnit měkce. Mapa se nepočítá — knihovna si dlaždice
+       a značky překresluje sama (viz pravidlo v stylopisu). */
+    let celkem = 0, meknou = 0;
+    for (const e of document.querySelectorAll('*')) {
+      const rc = e.getBoundingClientRect();
+      if (!rc.width || !rc.height) continue;
+      if (e.closest('.leaflet-container, .leaflet-pane, .kraj-lock, .pzm-mapa, .vm-mapa, .opp-map')) continue;
+      const tg = e.tagName.toLowerCase();
+      if (tg === 'html' || tg === 'body' || tg === 'script' || tg === 'style') continue;
+      if (!e.textContent.trim() && !/^(svg|path|circle|rect|g|line|polygon|use|img|hr)$/.test(tg)) continue;
+      const cs2 = getComputedStyle(e);
+      celkem++;
+      if (cs2.transitionProperty !== 'none' && parseFloat(cs2.transitionDuration) > 0) meknou++;
+    }
+    return { out, pokryti: { celkem, meknou } };
+  }, [...mista].map(([k, v]) => [k, [...v]])).catch(() => ({ out: [], pokryti: { celkem: 0, meknou: 0 } }));
+  pokrytiCelkem += r.pokryti.celkem;
+  pokrytiMeknou += r.pokryti.meknou;
+  for (const x of r.out) {
     zmereno++;
-    if (x.chibi) continue;
     if (x.chybi.length && !nalezeno.has(x.sel)) nalezeno.set(x.sel, { chybi: x.chybi, kde: s });
     if (!x.chybi.length) nalezeno.delete(x.sel);
   }
@@ -117,6 +153,17 @@ const seznam = [...nalezeno].map(([sel, x]) => `${sel} — bez přechodu: ${x.ch
 pravda('co se při najetí nebo zaměření mění, mění se měkce',
   seznam.length === 0, seznam.slice(0, 20).join('\n      ') +
   (seznam.length > 20 ? `\n      … a dalších ${seznam.length - 20}` : ''));
+
+/* POKRYTÍ. Naměřeno 29. 10. PŘED nasazením lehkého přechodu na texty
+   a ikony: 4 023 viditelných prvků mimo mapu, z toho 1 821 (45 %)
+   se umělo změnit měkce. Po nasazení 3 987 ze 4 023, tedy 99 %
+   (zbytek jsou html, body a pár prvků uvnitř mapových vrstev).
+   Mez je 95 %: níž už to znamená, že se pravidlo ztratilo nebo že
+   ho někdo přebil, ne že se vzorek o kus posunul. */
+const podil = pokrytiCelkem ? Math.round(pokrytiMeknou / pokrytiCelkem * 100) : 0;
+pravda(`texty a ikony se mění měkce (${podil} % z ${pokrytiCelkem} prvků mimo mapu)`,
+  pokrytiCelkem >= 2000 && podil >= 95,
+  `změřeno ${pokrytiMeknou} z ${pokrytiCelkem}; čekáno aspoň 95 % a vzorek aspoň 2 000 prvků`);
 
 /* ---- STISK: jedno gesto na celý web ----
    Naměřeno 29. 10.: 31 pravidel pro :active a SEDM různých gest —

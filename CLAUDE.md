@@ -626,6 +626,9 @@ casy:
 prechody:
   recept:   "--prechod-barvy (barva, pozadí, rám, stín, průhlednost, filtr — základním časem) + --prechod-pohyb (posun — rychlým); dohromady --prechod"
   kde:      "nasazeno na rodinu ovladačů, na OBSAH ovladače a na řádky, které ovladačem nejsou. Nepíše se po jednom u každého tlačítka."
+  vsude:    "a LEHKÝ přechod (jen barvy) má i zbytek stránky — texty, ikony, obaly — jedním pravidlem v :where(), tedy se specificitou nula, takže nic nepřebíjí. Mapa je z toho ven (Leaflet si překresluje sám). Změřeno: 45 % → 99 % prvků mimo mapu (§217)."
+  ikona:    "fill a stroke jsou součástí --prechod-barvy; bez nich se ikona uloženého pozemku zabarvila skokem."
+  pozor:    "stav se na webu píše dvakrát — pseudotřídou (:hover) i TŘÍDOU z JavaScriptu (.on, .active). Hlídač musí umět obojí, jinak půlku stavů jen nevidí (§217)."
   stisk:    "jedno gesto na celý web: transform:translateY(1px). Výjimka: záložka „Uložit\" poskočí (scale 1.2) — to není stisk, ale potvrzení zápisu."
   neanimuje: "outline (prstenec zaměření má naskočit hned) a rozměry (width/height/top/left překreslují rozvržení na každém snímku)"
   hlida:    scripts/test-prechody.mjs, scripts/test-soustava.mjs

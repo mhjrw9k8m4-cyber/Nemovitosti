@@ -14398,3 +14398,90 @@ Aby se nečekalo na další běh, prošly se zbylé zkoušky třetí směny,
 ke kterým se CI kvůli pádu nedostalo (test-sliby, test-vyber-okoli,
 test-zive-strop, test-hledani-vzhled, test-videno,
 test-hledani-zavirani, test-kontrola-ziva) — všechny bez nálezu.
+
+## §217 Lehký přechod na všem, co se dá — texty, ikony, obaly
+
+Zadání majitele: *„měl bys udělat přechody i mezi texty, ikonkami atd.,
+tedy úplně na všem, co se dá — ale jen jednoduché, nemusí to být žádná
+sláva."* §214 dalo přechod rodině ovladačů a tomu, co je uvnitř nich.
+Tohle je zbytek stránky.
+
+### Měření před zásahem
+
+Dvě čísla, dvě různé otázky.
+
+**Uvnitř klikacích prvků** (13 typů stránek, vypočtený styl): 2 042
+prvků, z toho **1 876 s přechodem, tedy 92 %**. Zbylých 166 bylo skoro
+celé mapová knihovna — dlaždice, značky, obrysy — plus 69 jmen krajů ve
+vrstvě nad mapou. Tam přechod nepatří: Leaflet si to překresluje sám
+a měkký přechod by za tím táhl duchy. Uvnitř ovladačů tedy po §214
+nezbylo nic k opravě.
+
+**Celá stránka mimo mapu** (viditelné prvky s textem nebo kresbou):
+4 023 prvků, z toho **1 821 s přechodem, tedy 45 %**. Tohle je ta
+polovina webu, která cukla: nadpis, cena, buňka tabulky, položka
+seznamu, ikona.
+
+### Co se udělalo
+
+Jedno pravidlo, jen barvy, se specificitou NULA:
+
+```css
+:where(p, span, b, strong, …, h1…h6, img, svg, path, …,
+       div, section, ul, table, tr, details, …){
+  transition:var(--prechod-barvy);
+}
+:where(.leaflet-container, .leaflet-pane, .kraj-lock, .pzm-mapa,
+       .vm-mapa, .opp-map) :where(*){ transition:none; }
+```
+
+Tři rozhodnutí, která za tím stojí:
+
+1. **`:where()`, tedy specificita nula.** Každé konkrétnější pravidlo
+   ho přebije — místa s vlastním časem (odrolovací panel, toast) si
+   svůj čas nechávají a nic se nepřepisuje. Bez toho by se musel
+   kontrolovat každý z 54 dřívějších zápisů přechodu.
+2. **Jen barvy, žádný pohyb ani rozměr.** Posun uvnitř textu by
+   vypadal jako chyba a rozměry by překreslovaly rozvržení na každém
+   snímku.
+3. **Mapa je ven**, a to i naše vrstvy nad ní.
+
+A do receptu přibyla **kresba ikony**: `fill` a `stroke`. V
+`--prechod-barvy` dosud nebyly, takže „uložený" pozemek zabarvil ikonu
+skokem, i když tlačítko kolem ní přešlo měkce.
+
+**Po zásahu: 3 987 z 4 023 prvků, tedy 99 %** (zbytek je `html`,
+`body` a pár prvků uvnitř mapových vrstev).
+
+### A hlídač, který to měl hlídat, měřil jen půlku
+
+Při sabotáži se ukázalo, že `test-prechody` zná stav jen tehdy, když je
+napsaný pseudotřídou (`:hover`, `:focus-visible`, `:active`,
+`:checked`). Jenže půlka stavů na webu se píše **třídou, kterou nasadí
+JavaScript** — `.on` u uloženého pozemku, `.active` u zapnutého filtru.
+Sabotáž „vyjmi fill a stroke z receptu" proto NEPADLA: hlídač ta dvě
+místa vůbec neměřil.
+
+Opraveno — hlídač teď zná obojí a základní selektor si z třídy odvodí.
+Míst se stavem tím přibylo ze **147 na 175**. Po opravě táž sabotáž
+padá a jmenuje je: `.opp-fav svg` a `.msv-ulozene svg` bez přechodu na
+`fill`.
+
+### Hlídač pokrytí
+
+Do `test-prechody` přibyla pátá kontrola: změří podíl viditelných prvků
+mimo mapu, které se umí změnit měkce, a vyžaduje **aspoň 95 %** při
+vzorku aspoň 2 000 prvků. Doloženo sabotáží: s vypnutým lehkým
+přechodem spadne podíl na 46 % a kontrola padne — a to číslo zároveň
+potvrzuje stav před zásahem.
+
+### Co to NEROZBILO
+
+Přechod na skoro všem je přesně ta změna, po které hlídačům přestane
+fungovat měření (§215, §216: tři zkoušky četly vypočtený styl hned po
+změně stavu). Prošlo se proto 32 rizikových zkoušek ručně, než se
+cokoli posílalo do CI — včetně těch, které měří pohyb, poskok rozvržení
+a plynulost startu: test-pohyb 26/26, test-stabilita 58/58,
+test-plynulost 8/8, test-prvni-obrazovka 22/22, test-kontrast 2 672
+prvků bez nálezu, mapové zkoušky (shluky, podklad, maska, kreslení,
+vrstvy, tažení, okolí) všechny bez nálezu.
