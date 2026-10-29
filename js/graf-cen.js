@@ -121,7 +121,15 @@
     var st = root.getComputedStyle ? root.getComputedStyle(el) : null;
     var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
     var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
-    var Hh = W < 560 ? 150 : 190;
+    /* VÝŠKA KRESBY PODLE PŘEDLOHY. Majitel poslal 29. 10. snímek
+       Sreality znovu s tím, že tenhle graf na webu pořád nevidí —
+       a měření té předlohy ukázalo proč: jejich křivka je vysoká
+       54 CSS px, kdežto naše kresba měla 150 a celá sekce 534.
+       Na stránce pozemku (data-strucne) se proto kreslí nízká křivka:
+       vejde se pod cenu, kam ji předloha dává, místo aby odsunula
+       mapu i rádce o půl obrazovky. Na stránce okresu, kde je graf
+       hlavní obsah, zůstává velký. */
+    var Hh = W < 560 ? (strucne ? 104 : 150) : (strucne ? 128 : 190);
     /* OSY MAJÍ ČÍSLA, NE JEN POZNÁMKU POD GRAFEM — podle předlohy ze
        Sreality („Cenový přehled"), kterou poslal majitel 28. 10.:
        vlevo horní a dolní mez osy, dole data. Dosud se rozpětí osy
@@ -259,11 +267,19 @@
              protože tam patří (viz předloha ze Sreality, kterou poslal
              majitel). Větou zbývá jen to, co z obrázku přečíst nejde —
              že osa nezačíná nulou a jakou část její výšky čára zabírá. */
-          'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
-          (cislo(min) === cislo(max)
-            ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
-            : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
-              (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.') +
+          /* STRUČNĚ ZNAMENÁ JEDNU VĚTU. Poznámka běžela i ve „stručném"
+             režimu na pět vět a zabírala pod grafem 177 px — víc než
+             sama kresba (150). Na stránce pozemku se proto píše jen to,
+             co z obrázku přečíst NEJDE: že osa nezačíná nulou. Rozpětí
+             naměřených hodnot i poměr k výšce osy se dají přečíst
+             z čísel U OSY, a celá metodika stojí na stránce okresu,
+             kam vede odkaz pod grafem. */
+          (strucne ? 'Osa nezačíná nulou.' :
+            'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
+            (cislo(min) === cislo(max)
+              ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
+              : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
+                (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.')) +
           '</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +

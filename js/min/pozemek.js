@@ -1479,10 +1479,6 @@
 
       pzFeaturesHtml(d) +
 
-      '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
-
-      pzSrovnaniHtml() +
-
       '<details class="pz-gtk-obal">' +
         '<summary class="pz-gtk-sum">' +
           '<h2 class="pz-sect-h">Co byste měli vědět</h2>' +
@@ -1492,16 +1488,20 @@
         pzGtkHtml(d) +
       '</details>' +
 
+      pzVyvojHtml(d) +
+
+      '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
+
+      pzSrovnaniHtml() +
+
+      pzMapaHtml(d) +
+
       pzPopisInzerentaHtml() +
 
       '<div class="pz-akce-hlavni">' + hlavniAkce +
         '<button class="pz-btn ulozit' + (favOn ? ' on' : '') + '" type="button" id="pz-fav">'
           + HEART_SVG + '<span>' + (favOn ? 'Uloženo' : 'Uložit') + '</span></button>' +
       '</div>' +
-
-      pzMapaHtml(d) +
-
-      pzVyvojHtml(d) +
 
       pzPopisHtml(d) +
 

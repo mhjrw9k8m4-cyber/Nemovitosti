@@ -14891,3 +14891,67 @@ nedostane ani náhodou, takže stránka dražby dnes **nemá cenový verdikt
 vůbec**. Není to vada: web radši mlčí, než aby srovnával vyvolávací cenu
 s nabídkovými (důvod stojí u té kontroly v `js/ceny.js`). Je to ale
 rozhodnutí, které má vidět majitel — proto úkol, ne tichá oprava.
+
+## §225 Graf vývoje ceny byl hotový, ale zahrabaný — a sedmkrát větší než předloha
+
+Majitel poslal 29. 10. snímek Sreality znovu se slovy, že tenhle graf na
+webu pořád není. Byl — a měření ukázalo, proč ho nikdo nenajde.
+
+### Tři důvody, dva z nich moje vina
+
+1. **Umístění.** Časový graf začínal na 2 336 px z 3 731, tedy ve 2,8.
+   obrazovce. Histogram verdiktu byl na 1 263 px (1,5.). Kdo roluje,
+   potká napřed histogram — a graf už nehledá. Na předloze je cenový
+   přehled hned pod cenou.
+2. **Velikost.** Změřeno ze snímku předlohy (1290 px širokého, tedy
+   3,308× na 390 CSS): křivka na Sreality je vysoká **54 CSS px**. Naše
+   kresba měla **150** a celá sekce **534**. Sedmkrát větší graf se pod
+   cenu nevejde — proto musel dolů. Byl to kompromis, který jsem udělal
+   já, a byl špatně: správně se měl zmenšit graf, ne přesunout.
+3. **Obsah.** Osa pokrývá 46 dní, ne tři roky, protože
+   `data/historie-cen.json` začíná 14. 9. 2026 — tolik dní web historii
+   sbírá. A u téhle nabídky píše „v celé ČR" místo lokality, protože ze
+   151 řad je použitelných 42 (ostatní kolísají výměnou nabídek, ne
+   cenou) a okresních z nich 26. Tyhle dva body měřením nespraví nic;
+   jsou to data, ne vzhled.
+
+### Co se udělalo
+
+| | bylo | je |
+|---|---|---|
+| kresba na telefonu | 150 px | **104 px** |
+| poznámka pod grafem | 177 px (5 vět) | **59 px** (1 věta) |
+| celá sekce | 534 px | **430 px** |
+| kde graf začíná | 2 336 px (2,8. obr.) | **1 355 px (1,6. obr.)** |
+| celá stránka | 3 731 px | **3 650 px** |
+
+Rezervovaná výška karty klesla ze 422/450/470 px na 304/324/366 —
+čísla jsou deset pixelů nad naměřeným maximem každého pásma (291 při
+900 px, 294 při 560, 313 při 390–479, 355 při 360, 343 při 320).
+
+### Pořadí stránky, a proč se stěhovalo třikrát
+
+Přesun grafu nahoru odtlačil nejdřív **mapu** za polovinu stránky
+(1 944 z 3 591) a `test-mapa-pozemku` to shodil. Mapa šla tedy za graf —
+jenže tím spadl na třetí obrazovku **verdikt**, což je u verdiktu přesně
+ta vada, která se jednou opravovala. A když se mapa posunula až za
+verdikt, odtlačila **rádce** na 2 606 px, takže spadl tentýž hlídač
+znovu, jen na jiném prvku.
+
+Výsledné pořadí: parametry → sítě → **rádce** (sbalený, 53 px) →
+**vývoj ceny** → **verdikt** → **mapa** → akce → poznámka. Čte se jako
+rozhodování: co to je → na co si dát pozor → jak se tu vyvíjejí ceny →
+jak je na tom tahle nabídka → kde to je.
+
+### Chyba, kterou jsem u toho udělal
+
+Při přesunu mapy jsem vložil komentář, ale **ne samotné volání**
+`pzMapaHtml(d)` — mapa ze stránky úplně zmizela. Chytily to dvě zkoušky
+naráz (`test-mapa-pozemku`, `test-rozvrzeni`) tím, že hlásily „mapa se
+nepostavila, je co měřit → null". Bez nich by se to nasadilo.
+
+### Po zásahu
+
+Rychlá sada 134/134. V prohlížeči bez nálezu: `test-mapa-pozemku`
+155/155, `test-graf-cen`, `test-prvni-obrazovka`, `test-hierarchie`,
+`test-rozvrzeni`, `test-stranky-pozemku`, `test-odkryte`, `test-deska`.

@@ -8921,10 +8921,18 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    SNÍŽENO 28. 10. ze 480–596 px: poznámka pod grafem se v inzerátu
    zkrátila (viz kresli() v js/graf-cen.js), takže karta přirozeně
    měří 392–460 px místo 412–586. Nechat starou rezervaci by nechalo
-   v kartě až 136 px vzduchu. */
-.pz-vyvoj-karta{min-height:422px;}
-@media (max-width:479px){ .pz-vyvoj-karta{min-height:450px;} }
-@media (max-width:409px){ .pz-vyvoj-karta{min-height:470px;} }
+   v kartě až 136 px vzduchu.
+
+   SNÍŽENO ZNOVU 29. 10., tentokrát kvůli UMÍSTĚNÍ. Graf se přesunul
+   pod cenu, kam ho dává předloha ze Sreality — a aby se tam vešel,
+   zmenšila se kresba (104 px místo 150; předloha má 54) a poznámka
+   spadla na jednu větu. Naměřená vlastní výška karty je teď 291 px
+   (900), 294 (560), 313 (390–479), 355 (360) a 343 (320) — rezervace
+   drží deset pixelů nad maximem každého pásma. Na 360 px je karta
+   nejvyšší, protože se tam nadpis láme na tři řádky. */
+.pz-vyvoj-karta{min-height:304px;}
+@media (max-width:479px){ .pz-vyvoj-karta{min-height:324px;} }
+@media (max-width:409px){ .pz-vyvoj-karta{min-height:366px;} }
 .pz-vyvoj.ma-graf > .pz-vyvoj-karta{padding:16px;
   background:var(--plocha-karta); border-width:1px; border-color:var(--line);
   box-shadow:var(--e1);}

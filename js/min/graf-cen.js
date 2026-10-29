@@ -66,7 +66,8 @@
     var st = root.getComputedStyle ? root.getComputedStyle(el) : null;
     var odsad = st ? (parseFloat(st.paddingLeft) || 0) + (parseFloat(st.paddingRight) || 0) : 0;
     var W = Math.max(280, Math.round((el.clientWidth || 900) - odsad));
-    var Hh = W < 560 ? 150 : 190;
+
+    var Hh = W < 560 ? (strucne ? 104 : 150) : (strucne ? 128 : 190);
 
     var L = W < 560 ? 56 : 68, P = 14, D = 28;
     var min = Infinity, max = -Infinity;
@@ -140,11 +141,12 @@
           (strucne ? '' : 'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
           'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ') +
 
-          'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
-          (cislo(min) === cislo(max)
-            ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
-            : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
-              (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.') +
+          (strucne ? 'Osa nezačíná nulou.' :
+            'Čísla u svislé osy jsou meze, mezi kterými se čte; osa nezačíná nulou. ' +
+            (cislo(min) === cislo(max)
+              ? 'Po zaokrouhlení vyšly všechny naměřené dny na ' + cislo(min) + ' Kč/m², proto je čára plochá.'
+              : 'Naměřené hodnoty leží mezi ' + cislo(min) + ' a ' + cislo(max) + ' Kč/m², takže čára zabírá ' +
+                (podilOsy < 1 ? 'necelé procento' : Math.round(podilOsy) + ' %') + ' výšky osy.')) +
           '</p>' +
         '<details class="gc-tab"><summary>Čísla v tabulce</summary>' +
           '<table><caption class="visually-hidden">' + esc(nadpis) + '</caption>' +

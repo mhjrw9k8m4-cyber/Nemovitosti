@@ -2553,13 +2553,6 @@
          (viz pzFeaturesHtml). */
       pzFeaturesHtml(d) +
 
-      '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
-
-      /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
-         čeho vzniklo, patří k sobě — kdo verdikt čte, má mít seznam
-         na očích, ne o tři obrazovky níž. */
-      pzSrovnaniHtml() +
-
       /* RÁDCE JEŠTĚ PŘED TLAČÍTKEM. Vypisuje, co je u tohohle pozemku
          k ověření — a to se má člověk dozvědět DŘÍV, než odejde na
          inzerát, ne až se vrátí. Je sbalený, takže ho to stojí jeden
@@ -2572,6 +2565,40 @@
         '</summary>' +
         pzGtkHtml(d) +
       '</details>' +
+
+      /* VÝVOJ CENY HNED POD CENOU — PODLE PŘEDLOHY.
+         Majitel poslal 29. 10. snímek Sreality znovu s tím, že tenhle
+         graf na webu pořád nevidí. Měření ukázalo proč: graf byl AŽ ZA
+         MAPOU, tedy na 2 336 px z 3 731 (2,8. obrazovka), kdežto
+         histogram verdiktu na 1 263 (1,5.) — kdo roluje, potká napřed
+         histogram a graf už nehledá.
+         Dřív tu karta jednou stála a musela pryč, protože měřila
+         392–460 px a odsunula mapu i rádce pod polovinu stránky.
+         Teď se vejde: kresba je ve stručném režimu 104 px místo 150
+         (předloha má 54) a poznámka pod ní jedna věta místo pěti,
+         takže celá sekce klesla z 534 px na zhruba 250.
+         Pořadí je tím totožné s předlohou: cena → vývoj ceny →
+         verdikt o této konkrétní nabídce → zbytek. */
+      pzVyvojHtml(d) +
+
+
+      '<div id="pz-verdict">' + pzVerdictHtml(d) + '</div>' +
+
+      /* DŮKAZ HNED POD VERDIKT, ne na konec stránky. Tvrzení a to, z
+         čeho vzniklo, patří k sobě — kdo verdikt čte, má mít seznam
+         na očích, ne o tři obrazovky níž. */
+      pzSrovnaniHtml() +
+
+      /* A MAPA AŽ ZA CENOU. Graf vývoje a verdikt o nabídce patří
+         k sobě: obojí je o ceně a čte se jedním dechem. Mapa stála
+         chvíli mezi nimi a odsunula verdikt na třetí obrazovku —
+         což je přesně to, co se u verdiktu opravovat nemá.
+         Teď je pořadí: co to je → na co si dát pozor → jak se tu
+         vyvíjejí ceny → jak je na tom TAHLE nabídka → kde to je.
+         Rádce zůstává nad tím vším (sbalený, 53 px), aby byl v první
+         polovině stránky — hlídá to test-mapa-pozemku. */
+      pzMapaHtml(d) +
+
 
       /* POPIS OD INZERENTA. Dosud na stránce pozemku nestálo ani slovo od
          toho, kdo ho zná — jen čísla a věty, které si web poskládal sám.
@@ -2601,31 +2628,7 @@
       /* SOUKROMÁ POZNÁMKA. Kdo obchází deset pozemků, po týdnu si
          nepamatuje, který měl rozbitý plot. Web uměl jen „uložit",
          tedy ANO/NE bez jediného slova proč. */
-      /* KDE TO JE, PATŘÍ K TOMU, CO TO JE. Mapa stála až za poznámkou,
-         kalkulačkou i rádcem — na telefonu na y 2 543 z 3 748, tedy na
-         čtvrté obrazovce. U pozemku je přitom poloha hned po ceně to
-         první, co se člověk ptá: vede tam cesta? co je kolem? */
-      pzMapaHtml(d) +
 
-      /* VÝVOJ CENY V OKOLÍ — AŽ ZA MAPOU.
-         Majitel poslal jako předlohu Sreality: pod cenou karta
-         „Cenový přehled" s křivkou vývoje ceny v lokalitě. Tam stála
-         první verze. Jenže karta měří 392–460 px a všechno pod ní
-         odsunula: rádce spadl pod polovinu stránky a mapa na 60 %
-         (zkoušky to shodily — „tam na něj nikdo neklepne"). Rozhodování
-         je přednější než věrnost předloze.
-
-         Za mapou křivka nic neztrácí: obojí odpovídá na „jaké to je
-         tady", kdežto cena a tlačítka na „co s tím". Nic se
-         nepřepočítává — zobrazí se TÁŽ řada, kterou o témž okrese
-         ukazuje okresní stránka.
-
-         Poznámka pod grafem je tu STRUČNÁ (data-strucne): dlouhá
-         metodika patří na okresní stránku, kde vedle grafu stojí
-         medián za celou skupinu druhů. V inzerátu takové číslo nad
-         grafem není, takže by vysvětlovala rozpor, který tam nikdo
-         nevidí. */
-      pzVyvojHtml(d) +
 
       /* RÁDCE: ZABALENÝ, ALE V INZERÁTU — NE AŽ POD PATIČKOU.
          Zabalený je proto, že je to zeď textu: změřeno na telefonu měl
