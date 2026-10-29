@@ -2784,28 +2784,16 @@ h1 em{ color:var(--znacka-svetla);
 .rz-x:hover{background:var(--plocha-tlumena); color:var(--text);}
 .rz-telo{flex:1 1 auto; overflow-y:auto; padding:4px 12px 12px; display:flex; flex-direction:column; gap:16px;}
 @media (min-width:1000px){ .rz-hlava, .rz-telo, .rz-pata{max-width:var(--m-sloupec); width:100%; margin-inline:auto;} }
-/* Histogram. Sloupec není ozdoba, ale terč: klepnutím se vybere pásmo,
-   druhým klepnutím se rozsah roztáhne, prstem se dá přejet přes několik. */
-.rz-graf{display:flex; align-items:flex-end; gap:2px; height:150px; touch-action:none;}
-.rz-graf button{flex:1 1 0; min-width:0; padding:0; border:0; cursor:pointer; background:none;
-  display:flex; align-items:flex-end; height:100%;}
-/* Vybrané sloupce se liší barvou A ZÁROVEŇ podtržením. Jen barvou to nejde:
-   sloupec musí být vidět proti bílému pozadí (to chce tmavý odstín) a
-   zároveň se lišit od vybraného zeleného (to chce světlý) — spočítáno pro
-   pět odstínů šedé, žádný nesplní obojí. Podtržení je navíc rozlišení,
-   které funguje i pro barvoslepé a na slunci. */
-.rz-graf button{padding-bottom:4px; border-bottom:3px solid transparent;}
-.rz-graf button i{display:block; width:100%; border-radius:3px 3px 0 0; background:var(--line-strong);
-  opacity:0.45; transition:var(--prechod);}
-.rz-graf button.rz-uvnitr{border-bottom-color:var(--plocha-znacka);}
-.rz-graf button.rz-uvnitr i{background:var(--plocha-znacka); opacity:1;}
-.rz-graf button:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px; border-radius:var(--r-xs);}
-.rz-osa{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:-8px;}
+/* HISTOGRAM TU STÁL DO 29. 10. (.rz-graf, .rz-osa, .rz-napoveda a stav
+   .rz-uvnitr). Osmnáct sloupců přes celou šířku jako terče pro prst:
+   klepnutím se vybralo pásmo, druhým klepnutím se rozsah roztáhl, přes
+   několik se dalo přejet. Majitel ho nechal zrušit — „ten graf nad tím
+   dej pryč a nech tam jen to nastavení ceny" — a v okně zůstala políčka
+   od–do, souhrn a počet v tlačítku „Hotovo". */
 .rz-pole{ align-items:center;}
 .rz-pole label{flex:1 1 0; display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);}
 .rz-pole input{width:100%; font:inherit; font-size:16px; padding:12px 12px; border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);}
-.rz-napoveda{margin:0; font-size:13px; color:var(--muted); line-height:1.5;}
 .rz-pata{display:flex; align-items:center; gap:8px; padding:12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
   border-top:1px solid var(--line);}
 .rz-vymaz{font:inherit; font-size:14px; font-weight:600; cursor:pointer; background:none; border:0;
@@ -2814,7 +2802,6 @@ h1 em{ color:var(--znacka-svetla);
   cursor:pointer; color:#fff; background:var(--plocha-znacka); border:1px solid rgba(var(--znacka-hluboka-rgb),0.55);
   border-radius:var(--r-ovladani); box-shadow:var(--glow);}
 .rz-hotovo:hover{filter:brightness(1.05);}
-@media (prefers-reduced-motion:reduce){ .rz-graf button i{transition:none;} }
 @media (max-width:560px){
   .mc-rozsah{grid-column:1 / -1;}
   /* Rozbalovátka s dlouhými popisky („Všechny druhy pozemků") se ve dvou

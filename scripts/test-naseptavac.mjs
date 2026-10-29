@@ -438,11 +438,28 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p2.waitForTimeout(400);
   const okno = p2.locator('.rz-ov:not([hidden])');
   pravda('klepnutí na souhrn otevře výběr přes celou obrazovku', await okno.count() === 1);
-  const sloupcu = await okno.locator('.rz-graf button').count();
-  pravda('a je v něm histogram s aspoň deseti sloupci', sloupcu >= 10, `${sloupcu}`);
-  const terce = await okno.locator('.rz-graf button').evaluateAll((b) => b.map((x) => Math.round(x.getBoundingClientRect().height)));
-  pravda('sloupce jsou na dotyk dost vysoké (celá výška grafu)',
-    terce.length > 0 && Math.min(...terce) >= 36, 'nejnižší ' + Math.min(...terce) + ' px');
+  /* SLOUPCOVÝ GRAF TU UŽ NENÍ (29. 10.). Stál nad políčky od–do a dal
+     rozmezí vybrat klepnutím; majitel ho nechal zrušit („ten graf nad
+     tím dej pryč a nech tam jen to nastavení ceny"). Kontroly, které
+     měřily sloupce — kolik jich je, jak jsou vysoké a široké, co dělá
+     první a druhé klepnutí — tedy neměly co měřit. Místo nich se měří
+     to, co po grafu zbylo: dvě políčka a počet, který se při psaní mění.
+     A hlídá se, že se graf nevrátí zadní cestou. */
+  pravda('a žádný sloupcový graf v něm není',
+    await okno.locator('.rz-graf, .rz-osa, .rz-napoveda').count() === 0,
+    'majitel ho nechal zrušit, tak tam nemá co dělat');
+  const pole = await p2.evaluate(() => {
+    const ov = document.querySelector('.rz-ov:not([hidden])');
+    const vst = ov ? [...ov.querySelectorAll('input')] : [];
+    return vst.map((e) => ({ id: e.id,
+      pismo: parseFloat(getComputedStyle(e).fontSize),
+      vyska: Math.round(e.getBoundingClientRect().height) }));
+  });
+  pravda('zůstala v něm obě políčka od–do', pole.length === 2, JSON.stringify(pole));
+  /* 16 px, jinak iPhone při zaostření pole celou stránku přiblíží —
+     tutéž míru drží každé psací pole na webu. A 44 px na prst. */
+  pravda('a jsou to pořádná psací pole (16px písmo, 44 px na prst)',
+    pole.every((x) => x.pismo >= 16 && x.vyska >= 44), JSON.stringify(pole));
   const hotovo0 = await okno.locator('.rz-hotovo').innerText();
   pravda('tlačítko dole rovnou říká, kolik nabídek je vidět', /\d/.test(hotovo0), hotovo0);
   pravda('dokud není co mazat, „Vymazat" se nenabízí',
@@ -457,28 +474,26 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     prijezd.jmeno === 'rzPrijezd' && prijezd.doba >= 0.15 && prijezd.doba <= 0.6,
     `${prijezd.jmeno}, ${prijezd.doba} s`);
 
-  // Klepnutí vybere pásmo, druhé ho roztáhne.
-  await okno.locator('.rz-graf button').nth(3).click();
-  await p2.waitForTimeout(400);
+  // Napsané číslo musí platit hned: počet dole se mění při psaní.
+  await okno.locator('#map-cena-od').fill('200000');
+  await p2.waitForTimeout(600);
   const po1 = await p2.evaluate(() => ({
-    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
     hotovo: document.querySelector('.rz-ov:not([hidden]) .rz-hotovo').textContent,
     od: document.getElementById('map-cena-od').value,
   }));
-  pravda('klepnutí na sloupec vybere pásmo', po1.uvnitr === 1, `zvýrazněno ${po1.uvnitr}`);
+  pravda('napsané „od" se drží v políčku', po1.od === '200000', `„${po1.od}"`);
   pravda('a teprve teď se nabídne „Vymazat"', await okno.locator('.rz-vymaz').isVisible());
-  pravda('a propíše se do políčka „od"', /^\d+$/.test(po1.od), `„${po1.od}"`);
-  pravda('počet na tlačítku se změní', po1.hotovo !== hotovo0, `${hotovo0} → ${po1.hotovo}`);
+  pravda('počet na tlačítku se při psaní změní', po1.hotovo !== hotovo0, `${hotovo0} → ${po1.hotovo}`);
 
-  await okno.locator('.rz-graf button').nth(8).click();
-  await p2.waitForTimeout(400);
+  await okno.locator('#map-cena').fill('900000');
+  await p2.waitForTimeout(600);
   const po2 = await p2.evaluate(() => ({
-    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
+    hotovo: document.querySelector('.rz-ov:not([hidden]) .rz-hotovo').textContent,
     od: document.getElementById('map-cena-od').value, do: document.getElementById('map-cena').value,
   }));
-  pravda('druhé klepnutí rozsah ROZTÁHNE, nezačne znovu', po2.uvnitr > po1.uvnitr,
-    `po prvním ${po1.uvnitr}, po druhém ${po2.uvnitr} — druhé klepnutí výběr zahodilo`);
-  pravda('a naplní obě políčka', +po2.od > 0 && +po2.do > +po2.od, `${po2.od}–${po2.do}`);
+  pravda('druhé číslo rozsah uzavře, nezahodí první', +po2.od === 200000 && +po2.do === 900000,
+    `${po2.od}–${po2.do}`);
+  pravda('a počet se změní znovu', po2.hotovo !== po1.hotovo, `${po1.hotovo} → ${po2.hotovo}`);
 
   // Zavřít a zkontrolovat souhrn i výpis.
   await okno.locator('.rz-hotovo').click();
@@ -512,9 +527,6 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     if (!uvnitr) uteklo++;
   }
   pravda('tabulátor z okna neuteče', uteklo === 0, `${uteklo}× z 30 skončil mimo okno`);
-  const sirky = await p2.locator('.rz-ov:not([hidden]) .rz-graf button').evaluateAll((b) => b.map((x) => Math.round(x.getBoundingClientRect().width)));
-  pravda('sloupce jsou dost široké i na úzkém displeji (aspoň 20 px)',
-    sirky.length > 0 && Math.min(...sirky) >= 20, 'nejužší ' + Math.min(...sirky) + ' px při ' + sirky.length + ' sloupcích');
   await p2.keyboard.press('Escape');
   await p2.waitForTimeout(300);
   pravda('a po zavření to souhrn ohlásí zpátky',
@@ -530,11 +542,9 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p2.locator('.rz-ov:not([hidden]) .rz-vymaz').click({ timeout: 3000 });
   await p2.waitForTimeout(400);
   const poVymazani = await p2.evaluate(() => ({
-    uvnitr: document.querySelectorAll('.rz-ov:not([hidden]) .rz-graf button.rz-uvnitr').length,
     pole: document.getElementById('map-cena-od').value + ',' + document.getElementById('map-cena').value,
   }));
-  pravda('„Vymazat" výběr zruší', poVymazani.uvnitr === 0 && poVymazani.pole === ',',
-    `zvýrazněno ${poVymazani.uvnitr}, políčka „${poVymazani.pole}"`);
+  pravda('„Vymazat" výběr zruší', poVymazani.pole === ',', `políčka „${poVymazani.pole}"`);
   // Escape zavírá.
   await p2.keyboard.press('Escape');
   await p2.waitForTimeout(300);

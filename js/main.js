@@ -7284,7 +7284,7 @@
     }
     nastrojeDoHlavicky();   // nářadí patří do hlavičky výpisu, ne mezi nabídky
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
-    prekresliPosuvniky(); // sloupce a táhla u ceny a výměry podle ostatních filtrů
+    prekresliPosuvniky(); // souhrn ceny a výměry a počet v „Hotovo" podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     prekresliOvladani(); // políčka a přepínače podle toho, co opravdu platí
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
@@ -7352,7 +7352,7 @@
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
     // Rozsahy ceny a výměry se vymažou i tady — políčka jsou teď v okně
     // přes celou obrazovku, ale patří k témuž filtru.
-    POSUVNIKY.forEach(function (p) { p.poleOd.value = ''; p.poleDo.value = ''; p.prvni = -1; });
+    POSUVNIKY.forEach(function (p) { p.poleOd.value = ''; p.poleDo.value = ''; });
     zadaneVybaveni = []; jenCelek = false;
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
@@ -8729,10 +8729,23 @@
      společné to, že se snažily vejít do úzkého sloupce mezi ostatní filtry.
      Tam je na ně málo místa — pilulky se zalomí do čtyř řad, z posuvníku
      zbyde čtyřpixelová čárka se dvěma drobnými táhly. Proto je v panelu jen
-     souhrn a vlastní výběr dostane celou obrazovku: histogram přes celou
-     šířku, sloupce jako terče pro prst, a dole tlačítko, které průběžně
-     říká, kolik nabídek výběr znamená.
-     Zarážky (nerovnoměrná stupnice z kvantilů) počítá js/rozsah.js. */
+     souhrn a vlastní výběr dostane celou obrazovku.
+
+     SLOUPCOVÝ GRAF JE OD 29. 10. PRYČ. Nad políčky od–do stál histogram
+     přes celou šířku: osmnáct sloupců jako terče pro prst, klepnutím se
+     vybralo rozmezí a přejetím prstem víc sloupců naráz. Majitel se na
+     něj podíval a napsal: „ten graf nad tím dej pryč a nech tam jen to
+     nastavení ceny."
+
+     CO SE TÍM ZTRATILO, POCTIVĚ: graf uměl dvě věci, které políčka
+     neumějí. Ukazoval, kde nabídky vůbec jsou (že do 700 m² skoro nic
+     není, se z prázdného políčka nepozná), a dal rozmezí vybrat bez
+     psaní — na telefonu jedním tahem místo dvou čísel z klávesnice.
+     Zůstává počet v tlačítku „Hotovo · N nabídek", který se mění při
+     psaní, takže slepé to není; je to ale zpětná vazba AŽ po zadání,
+     ne nabídka předem.
+     Zarážky a histogram počítal js/rozsah.js; zůstal z něj jen `popis`,
+     který sází souhrn do panelu („do 500 tis"). */
   function postavPosuvniky() {
     if (!window.PKRozsah) return;   // bez modulu zůstanou v panelu políčka od–do
     var bloky = document.querySelectorAll('.map-controls .mc-rozsah');
@@ -8745,13 +8758,6 @@
       var klic = def[0], nadpis = def[1], jednotka = def[2], zkratka = def[3];
       var jeCena = klic === 'cena';
       var blok = bloky[poradi];
-      /* Kolik zarážek se vejde, rozhoduje šířka displeje, ne chuť. Na
-         320px mobilu je šestnáct sloupců po patnácti pixelech — prstem se
-         do nich netrefíte. Méně kroků znamená širší terče; přesnější
-         číslo se pak dá dopsat do políček od–do. */
-      var sirka = Math.min(window.innerWidth || 390, 760);
-      var kroku = sirka < 360 ? 11 : (sirka < 480 ? 14 : 18);
-      var zar = window.PKRozsah.zarazky(DATA.map(function (d) { return jeCena ? d.price : d.area; }), kroku);
 
       var tlac = document.createElement('button');
       tlac.type = 'button';
@@ -8776,11 +8782,7 @@
       ov.innerHTML =
         '<div class="rz-hlava"><span>' + nadpis + ' (' + zkratka + ')</span>' +
         '<button type="button" class="rz-x" aria-label="Zavřít">✕</button></div>' +
-        '<div class="rz-telo">' +
-          '<div class="rz-graf" role="group" aria-label="Rozsah podle počtu nabídek"></div>' +
-          '<div class="rz-osa"><span></span><span></span></div>' +
-          '<p class="rz-napoveda">Klepněte na sloupec, nebo přes několik přejeďte prstem. Sloupce ukazují, kolik nabídek v kterém rozmezí je.</p>' +
-        '</div>' +
+        '<div class="rz-telo"></div>' +
         '<div class="rz-pata"><button type="button" class="rz-vymaz">Vymazat</button>' +
         '<button type="button" class="rz-hotovo">Hotovo</button></div>';
       document.body.appendChild(ov);
@@ -8792,86 +8794,19 @@
       var pole = document.createElement('div');
       pole.className = 'rz-pole';
       pole.innerHTML = '<label>od<span class="rz-misto-od"></span></label><label>do<span class="rz-misto-do"></span></label>';
-      telo.insertBefore(pole, telo.querySelector('.rz-napoveda'));
+      telo.appendChild(pole);
       var vstupy = dvoj.querySelectorAll('input');
       pole.querySelector('.rz-misto-od').replaceWith(vstupy[0]);
       pole.querySelector('.rz-misto-do').replaceWith(vstupy[1]);
       blok.remove();
 
-      var grafEl = ov.querySelector('.rz-graf'), osaEl = ov.querySelector('.rz-osa');
       var poleOd = vstupy[0], poleDo = vstupy[1];
-      var sloupce = [];
-      for (var k = 0; k < zar.length - 1; k++) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.setAttribute('data-k', String(k));
-        b.appendChild(document.createElement('i'));
-        grafEl.appendChild(b);
-        sloupce.push(b);
-      }
-      osaEl.children[0].textContent = window.PKRozsah.popis(zar[1], jednotka) || '';
-      osaEl.children[1].textContent = (window.PKRozsah.popis(zar[zar.length - 2], jednotka) || '') + ' a výš';
 
-      var p = { klic: klic, jeCena: jeCena, zar: zar, jednotka: jednotka, nadpis: nadpis,
-        ov: ov, tlac: tlac, sloupce: sloupce, poleOd: poleOd, poleDo: poleDo,
+      var p = { klic: klic, jeCena: jeCena, jednotka: jednotka, nadpis: nadpis,
+        ov: ov, tlac: tlac, poleOd: poleOd, poleDo: poleDo,
         hotovoEl: ov.querySelector('.rz-hotovo'), hodnotaEl: tlac.querySelector('.mcs-v'),
-        vymazEl: ov.querySelector('.rz-vymaz'),
-        prvni: -1 };
+        vymazEl: ov.querySelector('.rz-vymaz') };
       POSUVNIKY.push(p);
-
-      /* Výběr dvěma klepnutími: první určí začátek, druhé konec. Prstem se
-         dá přes sloupce i přejet. Žádná drobná táhla — terč je celý sloupec. */
-      function nastav(od, doo) {
-        var a = Math.min(od, doo), b2 = Math.max(od, doo);
-        poleOd.value = a <= 0 ? '' : String(zar[a]);
-        poleDo.value = (b2 + 1) >= zar.length - 1 ? '' : String(zar[b2 + 1]);
-        prectiRozsahy();
-      }
-      /* Dvě cesty k témuž: klepnout dvakrát (od–do), nebo přejet prstem.
-         Musí se chovat stejně, jinak si člověk nikdy není jistý, co zrovna
-         dělá — první podoba tohohle kódu při druhém klepnutí výběr zahodila
-         a začala znovu, místo aby ho roztáhla. */
-      var tahne = false, tahlSe = false;
-      function kterySloupec(e) {
-        var cil = document.elementFromPoint(e.clientX, e.clientY);
-        var b2 = cil && cil.closest ? cil.closest('.rz-graf button') : null;
-        return b2 ? parseInt(b2.getAttribute('data-k'), 10) : -1;
-      }
-      grafEl.addEventListener('pointerdown', function (e) {
-        var k2 = kterySloupec(e);
-        if (k2 < 0) return;
-        e.preventDefault();
-        if (p.prvni < 0) {           // první klepnutí: začátek rozsahu
-          p.prvni = k2; tahne = true; tahlSe = false;
-          nastav(k2, k2);
-        } else {                     // druhé klepnutí: konec rozsahu
-          nastav(p.prvni, k2);
-          p.prvni = -1; tahne = false;
-        }
-      });
-      grafEl.addEventListener('pointermove', function (e) {
-        if (!tahne) return;
-        var k2 = kterySloupec(e);
-        if (k2 < 0 || k2 === p.prvni) return;
-        tahlSe = true;
-        nastav(p.prvni, k2);
-      });
-      function konecTahu() {
-        // Přejetí prstem je hotový výběr; osamocené klepnutí čeká na druhé.
-        if (tahne && tahlSe) p.prvni = -1;
-        tahne = false;
-      }
-      ov.addEventListener('pointerup', konecTahu);
-      ov.addEventListener('pointercancel', konecTahu);
-      // Klávesnice: Enter nebo mezera na sloupci dělá totéž co klepnutí.
-      grafEl.addEventListener('keydown', function (e) {
-        var b2 = e.target.closest ? e.target.closest('.rz-graf button') : null;
-        if (!b2 || (e.key !== 'Enter' && e.key !== ' ')) return;
-        e.preventDefault();
-        var k2 = parseInt(b2.getAttribute('data-k'), 10);
-        if (p.prvni < 0) { p.prvni = k2; nastav(k2, k2); }
-        else { nastav(p.prvni, k2); p.prvni = -1; }
-      });
 
       function otevri() {
         ov.hidden = false;
@@ -8888,7 +8823,6 @@
         ov.hidden = true;
         tlac.setAttribute('aria-expanded', 'false');
         document.body.classList.remove('vm-otevreno');
-        p.prvni = -1;
         tlac.focus();
       }
       /* Tabulátor z okna nesmí utéct — tentýž zámek jako u okna
@@ -8900,7 +8834,7 @@
       ov.querySelector('.rz-x').addEventListener('click', function () { zavri(); });
       p.hotovoEl.addEventListener('click', function () { zavri(); });
       ov.querySelector('.rz-vymaz').addEventListener('click', function () {
-        poleOd.value = ''; poleDo.value = ''; p.prvni = -1;
+        poleOd.value = ''; poleDo.value = '';
         prectiRozsahy();
       });
       /* Escape visí na celém dokumentu, ne na okně. Kdyby visel na okně,
@@ -8970,9 +8904,12 @@
     }
   }
 
-  /* Překreslení: sloupce podle toho, co projde OSTATNÍMI filtry (vlastní
-     omezení se na chvíli vypne, jinak by graf ukazoval jen vybraný úsek),
-     zvýraznění podle čísel v políčkách, souhrn v panelu lidsky. */
+  /* Překreslení: souhrn v panelu lidsky („do 500 tis") a počet, který
+     výběr znamená. Počítá se z toho, co projde OSTATNÍMI filtry — vlastní
+     omezení se na chvíli vypne, jinak by tlačítko hlásilo počet toho, co
+     už je vybrané, tedy vždycky sebe sama.
+     Do 29. 10. se počet bral ze sloupců histogramu; ten je pryč (viz
+     postavPosuvniky), takže se nabídky v rozmezí spočítají rovnou. */
   function prekresliPosuvniky() {
     if (!POSUVNIKY.length || !window.PKRozsah) return;
     var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
@@ -8987,22 +8924,17 @@
       } finally {
         if (p.jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
       }
-      var hist = window.PKRozsah.histogram(hodnoty, p.zar);
-      var nej = Math.max.apply(null, hist.concat([1]));
       var cOd = p.poleOd.value ? parseInt(p.poleOd.value, 10) : null;
       var cDo = p.poleDo.value ? parseInt(p.poleDo.value, 10) : null;
-      var vybranych = 0, nejakyVyber = cOd != null || cDo != null;
-      p.sloupce.forEach(function (b, k) {
-        var dolni = p.zar[k], horni = p.zar[k + 1];
-        var uvnitr = nejakyVyber && (cOd == null || horni > cOd) && (cDo == null || dolni < cDo);
-        b.classList.toggle('rz-uvnitr', !!uvnitr);
-        b.firstChild.style.height = Math.max(3, Math.round(hist[k] / nej * 100)) + '%';
-        b.setAttribute('aria-label', (window.PKRozsah.popis(dolni, p.jednotka) || '0') + ' až ' +
-          (window.PKRozsah.popis(horni, p.jednotka) || 'výš') + ', ' + fmt(hist[k]) + ' '
-          + (window.PKFeed ? window.PKFeed.mnozne(hist[k], ['nabídka', 'nabídky', 'nabídek']) : 'nabídek'));
-        b.setAttribute('aria-pressed', uvnitr ? 'true' : 'false');
-        if (uvnitr) vybranych += hist[k];
-      });
+      var nejakyVyber = cOd != null || cDo != null;
+      var vybranych = 0;
+      for (var j = 0; j < hodnoty.length; j++) {
+        var v = hodnoty[j];
+        if (!isFinite(v)) continue;
+        if (cOd != null && v < cOd) continue;
+        if (cDo != null && v > cDo) continue;
+        vybranych++;
+      }
       var popisOd = cOd != null ? window.PKRozsah.popis(cOd, p.jednotka) : null;
       var popisDo = cDo != null ? window.PKRozsah.popis(cDo, p.jednotka) : null;
       var souhrn;

@@ -238,88 +238,24 @@ await ctx.close();
 
 /* --- Výběr ceny a výměry zvlášť: sloupce histogramu -------------------
  *
- * Výběr rozsahu není políčko s rámečkem, ale graf: sloupce jsou zároveň
- * terče, do kterých se klepe. Obyčejná kontrola okrajů to nezachytí,
- * protože tlačítko samo nemá ani rámeček, ani výplň — má je až proužek
- * uvnitř.
- *
- * Měří se STAV, ne sloupec sám: musí být poznat, které sloupce jsou
- * vybrané. „Sloupec proti pozadí" se schválně neměří — nejde ho udělat
- * dost tmavý proti bílé A ZÁROVEŇ dost světlý proti zelenému vybranému
- * (spočítáno pro pět odstínů šedé, žádný nesplní obojí). Sloupce jsou
- * datová kresba; ovládací prvek poznáte podle nadpisu, os a nápovědy.
- *
- * A protože na barvu samotnou se spolehnout nedá (WCAG 1.4.1), hlídá se
- * navíc, že vybraný sloupec má i rozlišení, které barva není. */
-const rozsahNalezy = [];
-{
-  const ctx = await kontext(PROFILY[0]);
-  const p = await ctx.newPage();
-  await p.goto('file://' + process.cwd() + '/index.html', { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2500);
-  const v = await p.evaluate(() => {
-    const ov = document.querySelector('.rz-ov');
-    if (!ov) return null;
-    ov.hidden = false;
-    const sl = ov.querySelectorAll('.rz-graf button');
-    if (sl.length < 2) return { malo: true };
-    sl[0].classList.add('rz-uvnitr');            // jeden vybraný pro srovnání
-    const rgb = (t) => { const m = /rgba?\(([^)]+)\)/.exec(t || ''); if (!m) return null;
-      const c = m[1].split(',').map(parseFloat); return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };
-    const podklad = (el) => {
-      let n = el;
-      while (n && n !== document.documentElement) {
-        const c = rgb(getComputedStyle(n).backgroundColor);
-        if (c && c.a > 0.95) return c;
-        n = n.parentElement;
-      }
-      return { r: 255, g: 255, b: 255, a: 1 };
-    };
-    const slozit = (c, s2) => ({ r: c.r * c.a + s2.r * (1 - c.a), g: c.g * c.a + s2.g * (1 - c.a), b: c.b * c.a + s2.b * (1 - c.a) });
-    const pod = podklad(ov.querySelector('.rz-graf'));
-    const pruh = (el) => {
-      const c2 = getComputedStyle(el.firstChild);
-      const barva = rgb(c2.backgroundColor) || { r: 0, g: 0, b: 0, a: 0 };
-      barva.a *= parseFloat(c2.opacity || '1');
-      return slozit(barva, pod);
-    };
-    const vybrany = pruh(sl[0]), nevybrany = pruh(sl[1]);
-    /* Rozlišení, které není barva: jiná průhlednost nestačí (to je pořád
-       jen barva), ale rámeček, podtržení nebo obrys ano. */
-    const cv = getComputedStyle(sl[0]), cn = getComputedStyle(sl[1]);
-    const necoNezBarva = cv.borderBottomWidth !== cn.borderBottomWidth
-      || (parseFloat(cv.borderBottomWidth) > 0 && cv.borderBottomStyle !== 'none'
-          && cv.borderBottomColor !== cn.borderBottomColor)
-      || cv.outlineStyle !== cn.outlineStyle
-      || cv.textDecorationLine !== cn.textDecorationLine;
-    sl[0].classList.remove('rz-uvnitr');
-    ov.hidden = true;
-    return { pod: [pod.r, pod.g, pod.b], vybrany: [vybrany.r, vybrany.g, vybrany.b],
-      nevybrany: [nevybrany.r, nevybrany.g, nevybrany.b], necoNezBarva: necoNezBarva };
-  });
-  if (!v) rozsahNalezy.push('okno s výběrem rozsahu se vůbec nepostavilo');
-  else if (v.malo) rozsahNalezy.push('histogram nemá ani dva sloupce');
-  else {
-    if (pomer(v.vybrany, v.nevybrany) < MIN) rozsahNalezy.push(`vybrané sloupce nejsou poznat od nevybraných (${pomer(v.vybrany, v.nevybrany).toFixed(2)}:1)`);
-    if (!v.necoNezBarva) rozsahNalezy.push('vybraný sloupec se od ostatních liší jen barvou — kdo barvy nerozezná, nepozná výběr');
-    zmereno += 2;
-  }
-  await p.close();
-  await ctx.close();
-}
+ * SLOUPCOVÝ GRAF V OKNĚ ROZSAHU TU BYL MĚŘENÝ ZVLÁŠŤ a od 29. 10. není
+ * co měřit: majitel ho nechal zrušit („ten graf nad tím dej pryč a nech
+ * tam jen to nastavení ceny"). Měřilo se na něm, že vybrané sloupce jsou
+ * poznat od nevybraných a že se neliší jen barvou (WCAG 1.4.1) —
+ * obyčejná kontrola okrajů to nezachytila, protože tlačítko sloupce
+ * nemá ani rámeček, ani výplň; měl je až proužek uvnitř.
+ * V okně zůstala políčka od–do, a ta už tahle zkouška měří jako každý
+ * jiný ovladač: mají rámeček a stojí na ploše.
+ * ------------------------------------------------------------------ */
 
 await prohlizec.close();
 
 console.log(`\nViditelnost okrajů (WCAG 1.4.11, práh ${MIN}:1) — změřeno ${zmereno} prvků`
   + (preskoceno ? `, ${preskoceno} přeskočeno (leží na barevném přechodu)` : ''));
-if (rozsahNalezy.length) {
-  rozsahNalezy.forEach((t) => console.log('  ✕ výběr rozsahu: ' + t));
-}
-if (!nalezy.length && !rozsahNalezy.length) {
+if (!nalezy.length) {
   console.log('Každý ovládací prvek je od svého pozadí odlišený.');
   process.exit(0);
 }
-if (!nalezy.length) { console.log(`\n${rozsahNalezy.length} částí výběru rozsahu splývá.`); process.exit(1); }
 const videno = new Set();
 nalezy.forEach((n) => {
   const k = n.stranka + '|' + n.prvek;

@@ -15521,3 +15521,51 @@ taky, skupinu kreslí `.mc-field` a `.mcv-rada` jako u ostatních.
    (§235): „1 884" má 34,3 px, `4,5 ch` dává 35,1. Bylo tam 5 ch
    (39 px) — o 3,9 px víc, než je potřeba, a každý takový pixel si bere
    popisek, který se jinak láme o řádek víc.
+
+## §237 Sloupcový graf z okna ceny a výměry pryč
+
+**Co o tom řekl majitel.** „Ten graf nad tím dej pryč a nech tam jen to
+nastavení ceny."
+
+**Co tam bylo.** Nad políčky od–do stál histogram přes celou šířku:
+jedenáct až osmnáct sloupců podle šířky displeje, sloupec jako terč pro
+prst, osa („700 m²" … „7 ha a výš") a pod ní nápověda. Klepnutím se
+vybralo pásmo, druhým klepnutím se rozsah roztáhl, přes několik se dalo
+přejet prstem. Zůstala políčka, souhrn, „Vymazat" a „Hotovo · N
+nabídek".
+
+**Co se tím ztratilo, poctivě.** Graf uměl dvě věci, které políčka
+neumějí. Ukazoval, **kde nabídky vůbec jsou** — že do 700 m² skoro nic
+není, se z prázdného políčka nepozná — a dal rozmezí vybrat **bez
+psaní**, na telefonu jedním tahem místo dvou čísel z klávesnice.
+Zůstává počet v tlačítku „Hotovo", který se mění při psaní, takže slepé
+to není; je to ale zpětná vazba AŽ po zadání, ne nabídka předem.
+
+**Co se tím uklidilo.** Počet nabídek v tlačítku se bral ze sloupců
+histogramu; teď se spočítá rovnou. A `js/rozsah.js` spadl ze 120 řádků
+na 40: `zarazky` (nerovnoměrná stupnice z kvantilů), `histogram`,
+`hezke` (zaokrouhlení na 1-1,5-2-3-5-7) a `index` ztratily čtenáře.
+Zůstal `popis`, který sází souhrn do panelu („Cena · do 500 tis.").
+
+**A jeden starší nález.** `index` — dohledání nejbližší zarážky k ručně
+napsanému číslu — neměl volajícího **už předtím**. Zůstal po dřívějším
+táhle, které se mělo po napsání čísla postavit na správné místo, a nikdo
+si toho nevšiml, protože modul si nikdo nepročítal celý. Zkouška
+`test-rozsah` ho přitom testovala třemi kontrolami, takže vypadal živě.
+Nově hlídá, že **každý vyvezený výpočet má v `js/main.js` volajícího** —
+na tohle by to stačilo.
+
+**Tři zkoušky přepsané.**
+
+- `test-rozsah` spadl z 23 kontrol na 13: co hlídalo stupnici a
+  přihrádky (že nejsou prázdné, že výstřelek neroztáhne horní konec),
+  nemá co měřit. Zbyly popisky, nezlomitelná mezera před jednotkou
+  a zapojení — a přibyla kontrola, že se graf nevrátí zadní cestou.
+- `test-naseptavac` měřil sloupce: kolik jich je, jak jsou vysoké
+  a široké, co dělá první a druhé klepnutí. Místo toho se teď píše do
+  políček a měří se, že se počet dole při psaní mění, že se „Vymazat"
+  objeví až když je co mazat a že pole mají 16px písmo a 44 px na prst.
+- `test-okraje` měl na graf vlastní oddíl: vybraný sloupec musí být
+  poznat od nevybraného a nesmí se lišit jen barvou (WCAG 1.4.1).
+  Oddíl zmizel; políčka od–do měří tatáž zkouška jako každý jiný
+  ovladač, protože mají rámeček a stojí na ploše.

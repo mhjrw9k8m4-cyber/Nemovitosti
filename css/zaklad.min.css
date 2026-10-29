@@ -212,7 +212,6 @@ to{opacity:1;transform:none}
 .rz-pole{align-items:center}
 .rz-pole label{flex:1 1 0;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .rz-pole input{width:100%;font:inherit;font-size:16px;padding:12px 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text)}
-
 @media (max-width:560px){.mc-rozsah{grid-column:1 / -1}
 }
 
