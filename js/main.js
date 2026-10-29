@@ -2241,6 +2241,63 @@
       pozn.hidden = otevreno;
     });
   }());
+  /* ==================================================================
+     CO SE KLEPNE, NESMÍ SE HNOUT
+
+     Stížnost majitele: „když něco zakliknu, web se posune, působí to
+     strašně zaseknuté." Má pravdu a jde to změřit. Zapnutí filtru
+     přepíše počty u všech štítků — a s nimi i výšku panelu NAD
+     výhledem: mřížka druhů spadla z 302 na 230 px (popisky se přestaly
+     lámat na dva řádky) a nad panelem přibyla řádka odznaků, 44 px.
+     Rozdíl se promítne do polohy všeho, na co se člověk dívá.
+
+     Chrome si to srovná sám (overflow-anchor), Safari ne — a majitel je
+     na iPhonu. Naměřeno s vypnutým ukotvením, tedy tak, jak to vidí on:
+     po jednom zaškrtnutí se celá obrazovka posunula o 25 px.
+
+     Stálá šířka počtu (viz .mcv-n ve stylopisu) odstraní tu větší
+     polovinu příčiny. Tohle je ta druhá: po překreslení se srovná
+     posun tak, aby ovladač, na který se kleplo, zůstal přesně tam, kde
+     byl pod prstem. Běží v requestAnimationFrame, tedy po posluchačích
+     ovladače a ještě před vykreslením — člověk tedy nevidí mezistav.
+     ================================================================== */
+  function drzMisto(el) {
+    if (!el || !el.getBoundingClientRect) return function () {};
+    var klic = el.getAttribute('data-druh');
+    var rodic = el.parentElement;
+    var pred = el.getBoundingClientRect().top;
+    /* Který rámec se vlastně posouvá. Na širokém displeji roluje sloupec
+       s ovládáním (.map-side), na telefonu celá stránka. */
+    var skroler = null;
+    for (var n = el.parentElement; n; n = n.parentElement) {
+      var cs = window.getComputedStyle(n);
+      if (/auto|scroll/.test(cs.overflowY) && n.scrollHeight > n.clientHeight + 1) { skroler = n; break; }
+    }
+    return function () {
+      /* Mřížka druhů se překresluje celá (innerHTML), takže původní
+         prvek po překreslení neexistuje — najdeme jeho náhradu podle
+         druhu. Ostatní štítky se jen přepisují a přežijí. */
+      var novy = el.isConnected ? el
+        : (klic && rodic ? rodic.querySelector('[data-druh="' + klic.replace(/"/g, '\\"') + '"]') : null);
+      if (!novy) return;
+      var d = novy.getBoundingClientRect().top - pred;
+      if (Math.abs(d) < 1) return;
+      if (skroler) skroler.scrollTop += d;
+      /* `behavior:'instant'` schválně: stylopis má scroll-behavior:smooth
+         a srovnání o pár pixelů by se jinak plazilo přes celý obrázek. */
+      else window.scrollTo({ top: window.pageYOffset + d, behavior: 'instant' });
+    };
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var ovl = t.closest('.map-controls .mcv-btn, .map-controls .mc-prep, #map-filters .filter-chip');
+    if (!ovl) return;
+    var srovnej = drzMisto(ovl);
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(srovnej);
+    else setTimeout(srovnej, 0);
+  }, true);
+
   if (druhyEl) {
     druhyEl.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('.mcv-btn') : null;

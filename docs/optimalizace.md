@@ -15394,3 +15394,61 @@ zmenšený na nulu shodily přesně ty dvě kontroly, které je mají chytit.
 `test-pamet` a `test-klic-ulozenych` teď zapínají okolí tam, kde se
 zapíná doopravdy — ve výběru místa. `test-mnozstvi` hlídal tvar pro nulu
 na podnadpisu tabule („je tu 0 pozemky"); přesunut na hlášku o novinkách.
+
+## §235 Zakliknutí filtru posouvalo stránku pod rukou
+
+**Co o tom řekl majitel.** „Hlavně když si něco zakliknu, web se posune,
+působí to strašně zaseknuté — protože se to posouvá."
+
+**Má pravdu a jde to změřit.** Zapnutí filtru přepíše počty u všech
+štítků. Čísla se mění řádově („Příjezd 1 082" → „90") a popisek si
+bere zbylé místo, takže se s čísly mění i to, jestli se vejde na jeden
+řádek. Naměřeno na telefonu 390×844, zakliknutí „Elektřina":
+
+| | před | po |
+|---|---|---|
+| mřížka druhů `#mc-druhy` | 302 px | 230 px |
+| řádka odznaků `.ms-chipy` | 0 px | 44 px |
+
+Obojí leží NAD výhledem, takže se posune všechno, na co se člověk
+zrovna dívá.
+
+**Proč to vidí on a ne já.** Chrome si tohle srovná sám — jmenuje se to
+`overflow-anchor` a drží obsah na místě, když se nad ním něco změní.
+Safari tu vlastnost nemá a majitel je na iPhonu. Změřeno s vypnutým
+ukotvením, tedy tak, jak to vidí on: **celá obrazovka se po jednom
+zaškrtnutí posunula o 25 px**. Se zapnutým ukotvením vyjde 0 — proto si
+toho nikdo z nás dvou nevšiml dřív a proto to ani žádná zkouška
+nechytila.
+
+**Dvě opravy, dvě poloviny příčiny.**
+
+1. **Počet si drží stálou šířku.** `.mcv-n` dostal `min-width:5ch` (pět
+   znaků pokryje i „1 884", což je nejvyšší počet, jaký může kterýkoli
+   štítek ukázat) a `text-align:right`; `tabular-nums` tam byly už
+   dřív. Popisek má tím pádem vždycky stejné místo a láme se pořád
+   stejně. Mřížka druhů teď měří 302 px před i po.
+2. **Co se klepne, zůstane pod prstem.** Druhá polovina (odznaky nad
+   panelem, mizející štítky sítí) se vyrovná posunem: `drzMisto()` si
+   před překreslením zapamatuje, kde ovladač leží, a v
+   `requestAnimationFrame` — tedy po posluchačích ovladače a ještě před
+   vykreslením — rozdíl srovná. Mřížka druhů se překresluje celá
+   (`innerHTML`), takže se původní prvek hledá znovu podle `data-druh`.
+   Posouvá se `behavior:'instant'`: stylopis má `scroll-behavior:smooth`
+   a srovnání o pár pixelů by se jinak plazilo přes celý obrázek.
+
+**Po opravě.** Tytéž podmínky, vypnuté ukotvení: záchytné body
+(„Zlevněné", „Zobrazit N pozemků") se posunuly o 0 px.
+
+**Hlídač.** `scripts/test-bez-skoku.mjs` — zaklikne pět ovladačů (síť,
+„Jen celé pozemky", příležitost, druhový čip, štítek druhu) a u každého
+měří, že ovladač zůstal do dvou pixelů tam, kde byl, a že mřížka druhů
+nezměnila výšku. **Ukotvení si vypíná sám** — se zapnutým by mlčel i nad
+rozbitou stránkou. Ověřeno sabotáží: bez `min-width` a bez srovnání
+posunu padlo 7 kontrol z 16.
+
+**Co se schválně neměří.** Záchytné body kolem ovladače. Štítky sítí se
+při zúžení výběru legitimně schovávají („u dražeb nikdo neuvádí vodu")
+a panel pod nimi se tím posune právem; a když výpis spadne z 1 884 na
+20 nabídek, zkrátí se dokument natolik, že posun ořízne sám prohlížeč.
+Ani jedno není vada. Vada je, když odskočí to, čeho se člověk drží.

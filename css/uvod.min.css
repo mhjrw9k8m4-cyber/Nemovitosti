@@ -420,7 +420,7 @@ to{opacity:1;transform:none}
 .mcv-btn:hover,.mc-toggles .mc-prep:hover{border-color:var(--znacka);background:var(--plocha-zapustena)}
 .mcv-btn.on,.mc-toggles .mc-prep.on{background:var(--plocha-znacka);border-color:var(--plocha-znacka);color:#fff}
 .mcp-t{flex:1 1 auto;min-width:0;line-height:1.2}
-.mcv-n{margin-left:auto;padding-left:8px;flex:none;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.mcv-n{margin-left:auto;padding-left:8px;flex:none;font-size:12px;font-weight:700;min-width:5ch;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
 .mcv-btn.on .mcv-n{color:rgba(255,255,255,0.82)}
 .mcv-btn.mcv-nula{border-color:var(--line);background:none}
 .mcv-btn.mcv-nula .mcp-t{color:var(--muted)}

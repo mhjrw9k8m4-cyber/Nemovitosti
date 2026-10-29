@@ -1110,6 +1110,9 @@ jobs:
       - name: Vyhledávání pozemků má jeden vzhled
         run: node scripts/test-hledani-vzhled.mjs
 
+      - name: Zakliknutí filtru neposune stránku pod rukou
+        run: node scripts/test-bez-skoku.mjs
+
 
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs

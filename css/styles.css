@@ -2604,7 +2604,17 @@ h1 em{ color:var(--znacka-svetla);
 /* Mezera před počtem musí být vlastní, ne jen „zbylé místo": v úzké
    buňce mřížky popisek všechno místo vyplní a z „Kanalizace 150" se
    stane „Kanalizace150". */
+/* POČET MÁ STÁLOU ŠÍŘKU, JINAK SE PŘI KAŽDÉM KLEPNUTÍ PŘESKLÁDÁ PANEL.
+   Čísla se po zapnutí filtru mění řádově („Příjezd 1 082" → „90"),
+   a protože si popisek bere zbylé místo, mění se s nimi i to, jestli se
+   popisek vejde na jeden řádek. Naměřeno na telefonu: mřížka druhů
+   spadla z 302 na 230 px, tedy o 72 px — a to je nad výhledem, takže
+   se při každém zaškrtnutí posunulo všechno, na co se člověk zrovna
+   díval. Pět znaků pokryje i „1 884", což je nejvyšší počet, jaký může
+   kterýkoli štítek ukázat (všechny nabídky). S tabular-nums má každá
+   číslice stejnou šířku, takže se číslo nehýbe ani při přepočtu. */
 .mcv-n{margin-left:auto; padding-left:8px; flex:none; font-size:12px; font-weight:700;
+  min-width:5ch; text-align:right;
   color:var(--muted); font-variant-numeric:tabular-nums;}
 .mcv-btn.on .mcv-n{color:rgba(255,255,255,0.82);}
 /* Štítek, pod kterým při dnešním nastavení nic není. Neschovává se —
