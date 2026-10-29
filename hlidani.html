@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-5FjFAOmXaaeyM/FOpsTsN8vdDKmXWyYbANU3x1tmfvs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-oJZ3xUwo5y+WFCk9+UEvGJdO03kiZTKFuDtQnExsNz8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=d8f4910e">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=9f83445b">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -140,9 +140,42 @@
     .hlu-pozn{font-size:13px; line-height:1.6; color:var(--muted); margin:0;}
     .hl-auth h2{font-size:16px; font-weight:700; color:var(--text); margin-bottom:4px;}
     .hl-auth p{font-size:14px; color:var(--muted); margin-bottom:12px; line-height:1.5;}
-    .hl-in,.hl-sel{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-md); font-size:16px; background:var(--plocha-tlumena); color:var(--text); margin-bottom:8px; font-family:inherit;}
+    /* ===============================================================
+       FORMULÁŘ HLÍDÁNÍ MLUVÍ TOUŽ ŘEČÍ JAKO HLEDÁNÍ NA ÚVODU.
+       ---------------------------------------------------------------
+       Majitel 29. 10.: „předělej to tak, aby to vypadalo jako
+       vyhledávání v menu, které už máme hotové."
+       Naměřeno tehdy na 390×844, role vedle role:
+         popisek pole   hledání 12/600 verzálky · hlídání 13/700
+         textové pole   hledání bílá plocha, rám 1 px
+                        hlídání zapuštěná šeď, rám 1,5 px
+         rychlá volba   hledání 44 px · hlídání 38 px (pod mezí dotyku!)
+         hlavní tlačítko hledání 16/700, 46 px · hlídání 14/700, 48 px
+         pilulka „musí mít" hledání 13/600 · hlídání 13/400
+       Hodnoty níž jsou opsané z receptů hledání (css/styles.css:
+       .mc-cap, .map-num, .map-select, .filter-chip, .mcf-hotovo) a drží
+       je u sebe scripts/test-hlidani-jako-hledani.mjs, který obě
+       stránky načte a porovná VYPOČTENÉ hodnoty. Kdo změní jednu
+       stranu, dozví se o druhé.
+       JEDINÁ ÚMYSLNÁ ODCHYLKA: písmo v políčkách je 16 px, kdežto
+       .map-num má 14. Pod 16 px iPhone při klepnutí do pole zvětší
+       celou stránku. Hledání má tutéž vadu, ale tu je potřeba spravit
+       tam, ne ji sem opisovat. */
+    .hl-in,.hl-sel{width:100%; box-sizing:border-box; min-height:44px; padding:8px 12px;
+      border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px;
+      background:var(--plocha-karta); color:var(--text); margin-bottom:8px; font-family:inherit;}
+    /* Šipka u výběru: tatáž kresba i barva jako u .map-select v hledání
+       (zelená #0F5C3B, 10×7, 11 px od pravého okraje). Systémová šipka
+       vypadá na každém telefonu jinak — tahle všude stejně. */
+    .hl-sel{appearance:none; -webkit-appearance:none; padding-right:28px; cursor:pointer;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%230F5C3B' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 11px center;}
     .hl-in:focus,.hl-sel:focus{border-color:var(--znacka-svetla); box-shadow:var(--prstenec-pole);}
-    .hl-btn{width:100%; height:48px; border:0; border-radius:var(--r-md); font-weight:700; font-size:14px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
+    /* Recept tlačítka „Hotovo" z panelu filtrů (.mcf-hotovo): 46 px,
+       16/700, zaoblení ovládání. Mělo 48 px a 14/700 — o dva pixely
+       vyšší a o dva menším písmem, tedy skoro stejné, a právě proto to
+       vypadalo nedbale. */
+    .hl-btn{width:100%; min-height:46px; border:0; border-radius:var(--r-ovladani); font-weight:700; font-size:16px; cursor:pointer; background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow); transition:filter var(--cas-zakladni) var(--ease), transform var(--cas-rychly) var(--ease);}
     .hl-btn:hover{filter:brightness(1.05);} .hl-btn:active{transform:scale(.99);}
     /* Vedlejší tlačítko vypadalo jako další vstupní pole: mělo stejný
    podklad i obrys jako políčka nad ním, bajt po bajtu
@@ -171,7 +204,13 @@
        stejně malých popisků — oko se nemělo čeho chytit a celé to
        působilo nedodělaně. Ikona a o dva stupně větší nadpis dělí
        formulář na čtyři věci, které se dají přeletět pohledem. */
-    .hl-sekce-h{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+    /* ZALOMIT SE SMÍ POZNÁMKA, NE NADPIS. „Musí mít" + poznámka
+       „(podle toho, co stojí v popisu nabídky)" se do řádku nevešly
+       a lámal se NADPIS — na snímku od majitele stálo „Musí / mít".
+       flex:none na <b> a zalomení celé řady to obrací: nadpis drží
+       pohromadě a poznámka spadne na druhý řádek. */
+    .hl-sekce-h{display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-bottom:8px;}
+    .hl-sekce-h b{flex:none;}
     .hl-sekce-h svg{width:17px; height:17px; flex:none; fill:none; stroke:var(--znacka);
       stroke-width:2.1; stroke-linecap:round; stroke-linejoin:round;}
     .hl-sekce-h b{font-size:14px; font-weight:700; color:var(--text); letter-spacing:0.01em;}
@@ -180,16 +219,19 @@
        krabičky pod sebou a jednotka se opakovala v obou popiscích.
        Teď je mezi nimi pomlčka, jednotka stojí jednou v samotném
        políčku a popisky zůstaly jen „od" a „do". */
-    .hl-rozsah{display:flex; align-items:flex-end; gap:8px;}
+    /* align-items:center, ne flex-end: políčka už nemají nad sebou
+       vlastní popisky (jeden je nad celou dvojicí), takže není co
+       zarovnávat na spodní hranu — a pomlčka mezi nimi má sedět na
+       jejich středu. */
+    .hl-rozsah{display:flex; align-items:center; gap:8px;}
     .hl-rozsah > div{flex:1; min-width:0;}
-    .hl-mezi{flex:none; padding-bottom:12px; color:var(--muted); font-size:14px;}
-    .hl-pole{position:relative; margin-bottom:8px;}
-    .hl-pole .hl-in{margin-bottom:0; padding-right:48px;}
-    .hl-jednotka{position:absolute; right:14px; top:50%; transform:translateY(-50%);
-      font-size:13px; font-weight:600; color:var(--muted); pointer-events:none;}
-    /* Bez text-transform:uppercase — velká písmena z „Kč" udělají „KČ"
-       a z „m²" „M²", což jsou v češtině obojí chybné zápisy jednotek. */
-    .hl-lbl.jemny{font-weight:600; color:var(--muted); font-size:12px; letter-spacing:0.01em;}
+    .hl-mezi{flex:none; color:var(--muted); font-size:13px; padding-bottom:8px;}
+    /* Jednotka se přestěhovala do popisku nad políčkem („Cena (Kč)"),
+       jak to má hledání — a .hl-pole i .hl-jednotka tím ztratily práci.
+       Mrtvá pravidla hlídá scripts/test-mrtve-styly.mjs. */
+    /* Varianta .jemny zmizela: byla to druhá podoba téhož popisku
+       (12/600 tiše) a po srovnání s hledáním dělá .hl-lbl přesně to.
+       Jedna role, jeden recept. */
     .hl-pozn{font-weight:400; text-transform:none; letter-spacing:0; color:var(--muted); opacity:.85;}
     .hl-napoveda{margin:4px 0 0; font-size:12px; line-height:1.5; color:var(--muted);}
     /* Hlavička je lepivá; bez tohohle odsazení se nadpis karty schová pod ni,
@@ -198,9 +240,14 @@
     /* Rychlé volby jen vyplní políčka pod sebou — je tedy pořád vidět,
        co se nastavilo, a dá se to přepsat po svém. */
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
+    /* Recept pilulky z hledání (.filter-chip): 44 px, 13/600, bílá
+       plocha, rám 1 px, tišší text. Mělo 38 px — pod mezí 44 px, kterou
+       si web klade na dotyk, a hlídač dotyku to neviděl, protože tenhle
+       formulář je za záložkou a za přihlášením. */
     .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
-      min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
-      border:1.5px solid var(--line-ui); background:var(--plocha-tlumena); color:var(--text);
+      display:inline-flex; align-items:center; gap:8px;
+      min-height:44px; padding:4px 12px; border-radius:var(--r-pill);
+      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--muted);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -212,7 +259,11 @@
       border:1px solid rgba(var(--znacka-hluboka-rgb),.22);}
     .hl-souhrn b{font-weight:700;}
     .hl-souhrn.prazdno{background:rgba(var(--c-exekuce-rgb),.09); border-color:rgba(var(--c-exekuce-rgb),.24);}
-    .hl-lbl{font-size:13px; font-weight:700; color:var(--muted); margin:8px 2px 4px; display:block;}
+    /* Recept popisku pole z hledání (.mc-cap). Mělo 13/700 tišší
+       barvou; hledání má 12/600 verzálkami s prokladem. */
+    .hl-lbl{display:block; margin:8px 2px 4px; font-family:var(--font-popisek);
+      font-size:12px; font-weight:600; color:var(--popisek);
+      letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
     .hl-feats{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 4px;}
@@ -228,7 +279,10 @@
        ovládání odhlášenému nevykreslí. Zbytek webu už dávno používá
        --line-ui (0,55 → 4,01), jak ukazuje `.filter-chip` na úvodní
        stránce, který zkouškou prochází. Naměřeno 22. 10. */
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:4px; padding:8px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-pill); font-size:13px; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-tlumena);}
+    /* Táž pilulka jako rychlé volby o kus výš, tedy .filter-chip
+       z hledání. Lišila se tloušťkou písma (400 proti 600), rámem
+       (1,5 px proti 1) a plochou. */
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-pill); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; background:var(--plocha-karta);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}
@@ -663,14 +717,18 @@
       '<b>' + esc(popisek) + '</b>' +
       (pozn ? '<span class="hl-pozn">' + esc(pozn) + '</span>' : '') + '</div>';
   }
-  /* Políčko rozsahu i s jednotkou. Jednotka je vidět v poli, ne
-     v popisku — popisek pak nemusí být „od (Kč)", stačí „od". */
-  function poleRozsah(id, popisek, jednotka, drzitel, jmeno) {
-    return '<div><label class="hl-lbl jemny" for="' + id + '">' + esc(popisek) + '</label>' +
-      '<div class="hl-pole">' +
-        '<input class="hl-in" id="' + id + '" inputmode="numeric" placeholder="' + esc(drzitel) + '" aria-label="' + esc(jmeno) + '">' +
-        '<span class="hl-jednotka" aria-hidden="true">' + jednotka + '</span>' +
-      '</div></div>';
+  /* ROZSAH OD–DO PŘESNĚ JAKO V HLEDÁNÍ. Dřív tu byly nad každým
+     políčkem vlastní popisky „od" a „do" a jednotka seděla uvnitř
+     políčka; komentář u toho vysvětloval, proč. Jenže hledání na úvodu
+     (.mc-rozsah) to má jinak a majitel chtěl, ať to vypadá stejně:
+     JEDEN popisek i s jednotkou nad celou dvojicí („Cena (Kč)")
+     a v políčkách jen „od" a „do".
+     Vyšlo z toho i to, že se text přestal ořezávat: do políčka širokého
+     asi 150 px se „bez omezení" i s jednotkou nevešlo a na snímku od
+     majitele stálo „bez omeze… Kč". */
+  function poleRozsah(id, drzitel, jmeno) {
+    return '<div><input class="hl-in" id="' + id + '" inputmode="numeric" placeholder="'
+      + esc(drzitel) + '" aria-label="' + esc(jmeno) + '"></div>';
   }
 
   function newSearchCard() {
@@ -773,19 +831,17 @@
         '<div class="hl-sekce">' +
           sekceHlava('cena', 'Cena') +
           '<div class="hl-rychle-radek">' + cenaPresety + '</div>' +
+          '<span class="hl-lbl">Cena <span class="jednotka">(Kč)</span></span>' +
           '<div class="hl-rozsah">' +
-            poleRozsah('ns-price-od', 'od', 'Kč', 'bez omezení', 'Cena od, v korunách') +
+            poleRozsah('ns-price-od', 'od', 'Cena od, v korunách') +
             '<span class="hl-mezi" aria-hidden="true">\u2013</span>' +
-            poleRozsah('ns-price', 'do', 'Kč', 'bez omezení', 'Cena do, v korunách') +
+            poleRozsah('ns-price', 'do', 'Cena do, v korunách') +
           '</div>' +
           /* Cena za metr je kritérium CENY, ne výměry. Stála pod výměrou,
              takže se hledala tam, kde nedává smysl — a kdo ji našel, musel
              přepínat mezi dvěma sekcemi, aby nastavil jednu věc. */
-          '<label class="hl-lbl jemny" for="ns-perm2">Nejvýš za metr čtvereční</label>' +
-          '<div class="hl-pole">' +
-            '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50" aria-describedby="ns-perm2-pozn">' +
-            '<span class="hl-jednotka" aria-hidden="true">Kč/m\u00b2</span>' +
-          '</div>' +
+          '<label class="hl-lbl" for="ns-perm2">Nejvýš za metr <span class="jednotka">(Kč/m\u00b2)</span></label>' +
+          '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50" aria-describedby="ns-perm2-pozn">' +
           '<p class="hl-napoveda" id="ns-perm2-pozn">V Kč/m². Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
           /* Podíl patří k ceně, ne k výměře: je to jiná odpověď na otázku
              „co vlastně kupuju", a nejčastěji si ho člověk všimne právě
@@ -799,10 +855,11 @@
         '<div class="hl-sekce">' +
           sekceHlava('vymera', 'Výměra') +
           '<div class="hl-rychle-radek">' + vymeraPresety + '</div>' +
+          '<span class="hl-lbl">Výměra <span class="jednotka">(m\u00b2)</span></span>' +
           '<div class="hl-rozsah">' +
-            poleRozsah('ns-area', 'od', 'm\u00b2', 'bez omezení', 'Výměra od, v metrech čtverečních') +
+            poleRozsah('ns-area', 'od', 'Výměra od, v metrech čtverečních') +
             '<span class="hl-mezi" aria-hidden="true">\u2013</span>' +
-            poleRozsah('ns-area-do', 'do', 'm\u00b2', 'bez omezení', 'Výměra do, v metrech čtverečních') +
+            poleRozsah('ns-area-do', 'do', 'Výměra do, v metrech čtverečních') +
           '</div>' +
         '</div>' +
 
@@ -996,7 +1053,7 @@
            lomítky jako výpis z kódu. Jmenují se teď tak, jak jsou
            popsaná ve formuláři, a věta říká, co z jeho zadání platí. */
         var nepropsano = [];
-        if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('„cenu od", „výměru do" a „nejvýš za metr čtvereční"');
+        if (!jeSiroke && (k.min_price || k.max_area || k.max_perm2)) nepropsano.push('„cenu od", „výměru do" a „nejvýš za metr"');
         if (v.uroven !== 'celek' && v.uroven !== 'bezOkruhu' && k.jen_celek) nepropsano.push('volbu „jen celé pozemky"');
         /* NÁZEV POLÍČKA MUSÍ DO VĚTY ZAPADNOUT. Dřív se sem vkládalo
            „okolí vašeho místa — hlídá se celý okres", takže na obrazovce

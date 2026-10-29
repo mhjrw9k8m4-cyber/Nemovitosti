@@ -2464,6 +2464,15 @@ h1 em{ color:var(--znacka-svetla);
    barva): týž panel, týž jazyk, jen se konečně použije i tady. */
 .mc-cap{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek);
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
+/* JEDNOTKA SE NEPÍŠE VERZÁLKAMI. Popisek pole je verzálkami, jenže
+   „Cena (Kč)" se tím vysází jako „CENA (KČ)" a „Výměra (m²)" jako
+   „VÝMĚRA (M²)" — obojí je chybný zápis jednotky. Česká norma zná
+   „Kč" a „m²", ne „KČ" a „M²". Jednotka proto stojí ve vlastním
+   <span class="jednotka">, kde se přepis vypne.
+   (Výjimka pro „Cena za m²" existovala už dřív, ale přes jiné
+   pravidlo — .mc-hodnota-radek .mc-cap — tedy jen tam, kde popisek
+   shodou okolností stojí v řádku s rozbalovátkem.) */
+.mc-cap .jednotka, .hl-lbl .jednotka{text-transform:none; letter-spacing:normal;}
 /* Cena a výměra jako rozsah od–do. Dřív to byly rozbalovátka s pevnými
    stupni a jen jedním směrem („cena DO", „výměra OD"), takže se nedalo
    zadat „od 200 do 500 tisíc" ani „do jednoho hektaru" — a nejnižší stupeň
@@ -2471,8 +2480,12 @@ h1 em{ color:var(--znacka-svetla);
 .mc-rozsah{display:flex; flex-direction:column; gap:4px; min-width:0;}
 .mc-dvoj{display:flex; align-items:center; gap:4px; min-width:0;}
 .mc-pomlcka{flex:none; color:var(--muted); font-size:13px;}
+/* 44 px, ne 42. Web si mez dotyku klade na 44 (viz
+   scripts/test-dotyk.mjs) a tohle políčko ji o dva pixely nesplňovalo —
+   vyšlo to najevo, až když se k němu srovnávalo políčko hlídání:
+   vedle sebe byly 42 a 44 a nebylo poznat, která je ta správná. */
 .map-num{flex:1 1 0; min-width:0; width:100%; font:inherit; font-size:14px;
-  min-height:42px; padding:8px 8px; border-radius:var(--r-ovladani);
+  min-height:44px; padding:8px 8px; border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
   -moz-appearance:textfield;}
 .map-num::-webkit-outer-spin-button, .map-num::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}

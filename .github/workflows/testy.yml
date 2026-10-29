@@ -885,6 +885,9 @@ jobs:
       - name: Vzhled profilu (sedí „Můj profil" ke zbytku webu)
         run: node scripts/test-profil-vzhled.mjs
 
+      - name: Hlídání jako hledání (jeden recept na jednu roli)
+        run: node scripts/test-hlidani-jako-hledani.mjs
+
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs

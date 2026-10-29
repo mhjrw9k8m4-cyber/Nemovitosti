@@ -432,10 +432,11 @@ to{opacity:1;transform:none}
 .mc-hodnota-radek .map-select{flex:1 1 auto;width:auto;min-width:0;text-align:right;border:0;background-color:transparent;padding:8px 20px 8px 0;font-size:14px;font-weight:600;color:var(--muted);background-position:right 2px center}
 .mc-hodnota-radek .map-select:focus-visible{box-shadow:none;outline:2px solid var(--znacka-svetla);outline-offset:-2px;border-radius:var(--r-xs)}
 .mc-cap{font-family:var(--font-popisek);font-size:12px;font-weight:600;color:var(--popisek);letter-spacing:var(--popisek-proklad);text-transform:uppercase}
+.mc-cap .jednotka,.hl-lbl .jednotka{text-transform:none;letter-spacing:normal}
 .mc-rozsah{display:flex;flex-direction:column;gap:4px;min-width:0}
 .mc-dvoj{display:flex;align-items:center;gap:4px;min-width:0}
 .mc-pomlcka{flex:none;color:var(--muted);font-size:13px}
-.map-num{flex:1 1 0;min-width:0;width:100%;font:inherit;font-size:14px;min-height:42px;padding:8px 8px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);-moz-appearance:textfield}
+.map-num{flex:1 1 0;min-width:0;width:100%;font:inherit;font-size:14px;min-height:44px;padding:8px 8px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);-moz-appearance:textfield}
 .map-num::-webkit-outer-spin-button,.map-num::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .map-num:focus{outline:2px solid var(--znacka-svetla);outline-offset:2px;border-color:var(--znacka-svetla)}
 .mcv-rada,.mcv-rada.mcv-sloupec{display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr;gap:4px;margin-top:8px}

@@ -878,7 +878,7 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('hláška', 'a neobviňuje databázi', /databáze je ještě neumí/.test(kod), false);
   je('hláška', 'a říká, co z zadání platí dál',
     /Ostatní podmínky platí/.test(kod), true);
-  for (const policko of ['„cenu od"', '„výměru do"', '„nejvýš za metr čtvereční"',
+  for (const policko of ['„cenu od"', '„výměru do"', '„nejvýš za metr"',
     'volbu „jen celé pozemky"', '„okruh" kolem vašeho místa']) {
     je('hláška', `jmenuje políčko ${policko} lidsky`, kod.indexOf(policko) !== -1, true);
   }
@@ -891,8 +891,12 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('hláška', 'a žádné jméno políčka neveze pomlčku s vysvětlením',
     /nepropsano\.push\('[^']*—/.test(kod), false);
   /* A ty názvy musí odpovídat tomu, co je u políčka napsané. */
+  /* Popisek toho pole se 29. 10. zkrátil na „Nejvýš za metr (Kč/m²)",
+     protože jednotka se přestěhovala z políčka do popisku — stejně,
+     jako to má hledání na úvodu. Hláška se zkrátila s ním; tahle
+     kontrola je přesně proto, aby se ty dvě věci nerozešly. */
   for (const [vKod, vFormulari] of [['„cenu od"', 'Cena od'], ['„výměru do"', 'Výměra do'],
-    ['„nejvýš za metr čtvereční"', 'Nejvýš za metr čtvereční']]) {
+    ['„nejvýš za metr"', 'Nejvýš za metr']]) {
     je('hláška', `${vKod} se na obrazovce jmenuje „${vFormulari}"`,
       hl.indexOf(vFormulari) !== -1, true);
   }

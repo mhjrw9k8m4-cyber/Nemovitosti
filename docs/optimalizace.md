@@ -15178,3 +15178,59 @@ protože prohlížeč umí vrátit `normal`. Obojí srovnáno a zapsáno u toho.
 
 Ověřeno sabotáží dvakrát: verzálkové popisky + `overflow-wrap:anywhere`
 shodily dvě kontroly, zelená nula třetí.
+
+## §231 „Nové hlídání" mluví touž řečí jako hledání na úvodu
+
+**Co o tom řekl majitel.** „Toto předělej tak, aby to vypadalo jako
+vyhledávání v menu, které už máme hotové, a pohraj si s tím do detailu."
+
+**Naměřeno na 390×844, role vedle role.**
+
+| role | hledání (úvod) | hlídání (před) |
+|---|---|---|
+| popisek pole | 12/600 verzálky | 13/700 |
+| textové pole | bílá plocha, rám 1 px | zapuštěná šeď, rám 1,5 px |
+| výběr | bílá, vlastní zelená šipka | šeď, systémová šipka |
+| rychlá volba | 44 px | **38 px** (pod mezí dotyku) |
+| hlavní tlačítko | 16/700, 46 px | 14/700, 48 px |
+| pilulka „musí mít" | 13/600 | 13/400 |
+
+Hodnoty se srovnaly na recepty hledání (`.mc-cap`, `.map-num`,
+`.map-select`, `.filter-chip`, `.mcf-hotovo`). Kromě toho:
+
+- **Rozsah od–do** má teď jeden popisek i s jednotkou nad celou dvojicí
+  („Cena (Kč)") a v políčkách jen „od" a „do" — jako hledání. Do pole
+  širokého asi 150 px se dřív „bez omezení" i s jednotkou nevešlo
+  a na snímku stálo „bez omeze… Kč".
+- **Nadpis sekce se přestal lámat.** „Musí mít" a poznámka
+  „(podle toho, co stojí v popisu nabídky)" se do řádku nevešly a lámal
+  se nadpis — stálo tam „Musí / mít". Teď drží nadpis pohromadě
+  a zalomí se poznámka.
+- `.hl-pole` a `.hl-jednotka` tím ztratily práci a jsou pryč.
+
+**Dvě vady, které práce odkryla jinde.**
+
+1. `.map-num` v hledání mělo `min-height:42px`, tedy o dva pixely pod
+   mezí dotyku, kterou si web klade sám. Vyšlo to najevo až při
+   srovnávání: vedle sebe stály 42 a 44 a nebylo poznat, která je
+   správná. Obojí je teď 44.
+2. Popisek pole je verzálkami, takže „Cena (Kč)" se vysázelo jako
+   „CENA (KČ)" a „Výměra (m²)" jako „VÝMĚRA (M²)" — obojí chybný zápis
+   jednotky. Jednotka stojí nově ve vlastním `<span class="jednotka">`
+   s vypnutým přepisem, a to na OBOU stránkách. (Výjimka pro „Cena za
+   m²" existovala, ale přes jiné pravidlo, takže platila jen tam, kde
+   popisek shodou okolností stojí v řádku s rozbalovátkem.)
+
+**Hlídač.** `scripts/test-hlidani-jako-hledani.mjs` (v CI) neměří živé
+prvky — část ovládání hledání si skript stěhuje do překryvu, takže by
+se měřilo podle toho, co je zrovna otevřené. Měří RECEPT: na každé
+stránce vyrobí prvek s danou třídou, přečte vypočtený styl a zahodí
+ho. Jediná dovolená odchylka je velikost a řez písma v políčku
+a výběru (16/400 proti 14 a 13/600) — pod 16 px iPhone při klepnutí
+zvětší stránku a uvnitř jednoho formuláře má mít políčko a výběr tutéž
+velikost. Ověřeno sabotáží: návrat starého popisku a staré pilulky
+shodil dvě kontroly.
+
+Zkouška `test-hlidani` při tom chytla, že se zkrácený popisek
+„Nejvýš za metr" rozešel s chybovou hláškou, která políčko jmenuje —
+obojí srovnáno.
