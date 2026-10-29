@@ -2127,8 +2127,15 @@
        v css/styles.css). Kolik to stojí pixelů, hlídá zkouška
        v test-prvni-obrazovka — ta pruh naplní a změří, kde začne
        první nabídka s ním. */
-    var domov = document.querySelector('.map-side');
-    if (domov && domov.firstElementChild !== el) domov.insertBefore(el, domov.firstElementChild);
+    /* PRUH SE UŽ NESTĚHUJE NAHORU. Stálo tu `insertBefore` na začátek
+       sloupce, a to na výslovné přání majitele („mají být úplně
+       nahoře"). 29. 10. to otočil: „naposledy zhlédnuté takhle nahoře
+       nedává smysl, ať je co nejvíc dole." Má pravdu věcně — je to
+       historie, ne nabídka; kdo přijde na úvodní stránku, chce vidět,
+       co je nového, ne co už viděl. Ve značkování pruh stojí za
+       výpisem (index.html, #recent-strip), takže stačí ho nestěhovat.
+       Zkouška první obrazovky tím přestala měřit, o kolik pruh
+       odsouvá první nabídku — nově měří, že ji neodsouvá vůbec. */
     rsStin(el.querySelector('.rs-row'));
   }
   /* Náznak, že řádek pokračuje za hranou. CSS samo o přetečení neví,

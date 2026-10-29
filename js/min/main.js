@@ -1247,8 +1247,6 @@
     el.innerHTML = h;
     el.hidden = false;
 
-    var domov = document.querySelector('.map-side');
-    if (domov && domov.firstElementChild !== el) domov.insertBefore(el, domov.firstElementChild);
     rsStin(el.querySelector('.rs-row'));
   }
 

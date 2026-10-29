@@ -2619,7 +2619,11 @@ h1 em{ color:var(--znacka-svetla);
    („pořadí se střídá každý den"), takže je vyšší než ovládání — na
    střed se tím rozbalovač řazení posadil doprostřed dvouřádkového
    nadpisu a řádek vypadal rozsypaně. */
-.ms-vysledky{display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-bottom:8px;}
+/* ODSTUP POD HLAVIČKOU VÝPISU: 16 px, ne 8. Mezi posledním tlačítkem
+   („Stáhnout výběr") a první kartou bylo osm pixelů, takže nářadí
+   a nabídky splývaly v jeden chuchvalec — na snímku od majitele je to
+   ta nejhustší část stránky. */
+.ms-vysledky{display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px;}
 /* Zůstal v něm jen počet; jeho vlastní odsazení dolů by se s odsazením
    skupiny sčítalo na 22 px. */
 .ms-vysledky .map-count{margin-bottom:0;}
@@ -4640,8 +4644,20 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      ovladače. Teď jeden řádek. Pole si bere zbytek šířky a nesmí se
      scvrknout pod 150 px — tolik měří jeho vlastní nápis
      „Obec, druh, cena…" (naměřeno). */
-  .mcp-hledani{display:flex; align-items:center; gap:8px;}
-  .mcp-hledani .map-search{flex:1 1 auto; min-width:150px;}
+  /* PŘEPÍNAČ MÁ VLASTNÍ ŘÁDEK, NE KOUTEK VEDLE HLEDÁNÍ.
+     Majitel 29. 10. ho zakroužkoval červeně: „ta Mapa a Seznam jsou tak
+     divně působící, moc to nedává smysl — udělej to takto, ale větší
+     a ne tak naplácané."
+     Měl pravdu i v měření: na 390px displeji si pole hledání bralo
+     207 px a přepínač 143, tedy dva ovladače napěchované do jedné
+     řady, z nichž jeden má dvě polohy a vypadá spíš jako useknutý kus
+     pole. Tlačítko „Seznam" mělo 78 px šířky a 13px písmo.
+     Teď má přepínač celou šířku, 48 px výšky a 15px písmo — jsou to
+     dvě záložky nad výpisem a tak to i vypadá. Stojí to 56 px výšky;
+     zaplatil je pruh „naposledy prohlédnuté", který se touž změnou
+     přestěhoval pod výpis (js/main.js, renderRecent). */
+  .mcp-hledani{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+  .mcp-hledani .map-search{flex:1 1 100%; min-width:150px;}
   /* LUPA BLÍŽ KE KRAJI A MENŠÍ ODSAZENÍ ZPRAVA — kvůli nápisu v poli.
      Naměřeno na 390 px: „Obec, druh, cena…" měří 145 px a pole mu
      dávalo 135, takže se nápis ořízl uprostřed slova „cena" (vyfotil
@@ -4687,7 +4703,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      `outline` se vykresluje stejně jako okraj (s outline-offset:-1px
      uvnitř a po zaoblení), ale do rozměru se nepočítá — přepínač tak
      měří přesně tolik co jeho sousedé a dotykový terč zůstává 44. */
-  .mv-toggle{display:flex; flex:0 0 auto; gap:0; margin-top:0; background:var(--plocha-karta);
+  .mv-toggle{display:flex; flex:1 1 100%; gap:0; margin-top:0; background:var(--plocha-karta);
     border:0; outline:1px solid var(--line-ui); outline-offset:-1px;
     border-radius:var(--r-ovladani); padding:0; overflow:hidden;}
   .mv-toggle .mvt-btn + .mvt-btn{border-left:1px solid var(--line-ui);}
@@ -4696,7 +4712,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      S 13px písmem, odsazením 6 px, mezerou 4 px a 16px značkami měří
      155 px a poli zbývá 201, z toho 165 px vnitřku na 145px nápis.
      Výška 44 px (dotykový terč) zůstává, zúžila se jen šířka. */
-  .mvt-btn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:4px; min-height:42px; padding:0 4px; border:0; border-radius:0; background:none; color:var(--muted); font-weight:600; font-family:inherit; font-size:13px; cursor:pointer; white-space:nowrap; transition:var(--prechod);}
+  .mvt-btn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 12px; border:0; border-radius:0; background:none; color:var(--muted); font-weight:600; font-family:inherit; font-size:16px; cursor:pointer; white-space:nowrap; transition:var(--prechod);}
   /* ZNAČKY V PŘEPÍNAČI. Chvíli tu bylo `display:none` s odůvodněním,
      že popisek řekne všechno sám a značky stojí 40 px šířky, která
      chybí poli hledání. Platilo to jen potud, pokud se šířka brala
@@ -4704,7 +4720,13 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      a místo se našlo jinde: užší výplň, menší mezera a bližší lupa.
      Naměřeno po té změně — nápis v poli má 165 px místa na 145 px
      textu, tedy dvacet navíc i se značkami. */
-  .mv-toggle .mvt-btn svg{display:block; width:16px; height:16px; flex:none;}
+  .mv-toggle .mvt-btn svg{display:block; width:18px; height:18px; flex:none;}
+  /* 48 PX SE MUSÍ NAPSAT PŘES DVĚ TŘÍDY. Mez dotyku níž v souboru
+     (@media pointer:coarse) dává .mvt-btn min-height:44px a stojí
+     ZA tímhle pravidlem, takže by 48 přebila. Dvojice .mv-toggle
+     .mvt-btn má větší váhu a vyhraje; mez 44 px tím zůstává tam,
+     kde platí — jako podlaha pro všechno ostatní. */
+  .mv-toggle .mvt-btn{min-height:48px;}
   /* POČET JEN V POHLEDU NA MAPU. V seznamu stojí hned pod přepínačem
      v hlavičce výsledků, takže by tu byl podruhé a bral 50 px šířky,
      kterou potřebuje pole hledání. Na mapě žádná hlavička výsledků
@@ -4721,19 +4743,17 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      co to je: dvě záložky nad výpisem.
      Na první obrazovce to nic nestojí — zkoušky prvního dojmu měří
      390 px, kde řada zůstává jednořádková. */
-  @media (max-width:360px){
-    .mcp-hledani{flex-wrap:wrap;}
-    .mcp-hledani .map-search{flex:1 1 100%;}
-    .mv-toggle{flex:1 1 100%;}
-    /* Na dvou řádcích už řada není stejně vysoká jako pole, takže
-       „polovina řady" (top:50%) by lupu i našeptávač posunula mezi
-       pole a přepínač. Obojí se proto váže na VÝŠKU POLE, tedy 44 px:
-       lupa do jeho středu, seznam čtyři pixely pod jeho spodní hranu.
-       Že seznam překryje přepínač pod sebou, je správně — to dělá
-       každý našeptávač. */
-    .mcp-hledani .ms-lupa{top:22px; transform:none;}
-    .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:48px;}
-  }
+  /* NA DVOU ŘÁDCÍCH UŽ ŘADA NENÍ STEJNĚ VYSOKÁ JAKO POLE, takže
+     „polovina řady" (top:50%) by lupu i našeptávač posunula mezi pole
+     a přepínač. Obojí se proto váže na VÝŠKU POLE, tedy 44 px: lupa
+     do jeho středu, seznam čtyři pixely pod jeho spodní hranu.
+     Že seznam překryje přepínač pod sebou, je správně — to dělá každý
+     našeptávač.
+     Do 29. 10. tohle platilo jen pod 360 px, protože jen tam se řada
+     lámala. Teď se láme vždycky (přepínač má vlastní řádek), takže
+     pravidlo platí pro celou telefonní šířku. */
+  .mcp-hledani .ms-lupa{top:24px; transform:none;}
+  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:52px;}
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
@@ -4821,7 +4841,12 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Výpis si proto drží výšku obrazovky dopředu. Není to kosmetika:
      posun o deset tisíc pixelů pod prstem je přesně to, kvůli čemu
      se na telefonu kliká vedle. */
-  .map-side{padding:8px 16px 12px;
+  /* VÍC VZDUCHU NAHOŘE. Majitel 29. 10.: „je tam vše strašně
+     naplácané, web má působit volně a profesionálně." Osm pixelů pod
+     panelem hledání je mezera, kterou oko nevidí jako oddělení dvou
+     bloků, ale jako nedotažení. Šestnáct je tatáž hodnota, jakou má
+     sloupec po stranách — mřížka tím sedí na jednom čísle. */
+  .map-side{padding:16px 16px 12px;
      min-height:calc(100vh - var(--vyska-hlavicky, 65px));
      min-height:calc(100dvh - var(--vyska-hlavicky, 65px));}
   .opp-item::after{display:none;}      /* rohová značka by se bila se srdíčkem */
@@ -7381,7 +7406,10 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      šířku. Naměřeno: obojí 370 px na téže řádce. */
   .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
     display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:8px; width:100%; flex:1 1 100%;}
+    /* 12 px, ne 8. Čtyři tlačítka ve dvou řadách s osmipixelovou
+       mezerou drží pohromadě jako jeden blok — a protože každé dělá
+       něco jiného, má se poznat, že jsou čtyři. */
+    gap:12px; width:100%; flex:1 1 100%;}
   .ms-vysledky .msv-ovladani > *:not([hidden]),
   .map-side .mc-akce > *:not([hidden]),
   .ms-vysledky > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
@@ -7499,9 +7527,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      inline-flex), jen o to, jak si rozdělí řádek. */
   .map-filters{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;}
   .map-filters > .filter-chip{width:100%; min-width:0; justify-content:center;}
-  /* Pole hledání mělo 46 px proti 44 u všeho ostatního. */
-  .mcp-hledani .map-search input{min-height:44px; padding-top:0; padding-bottom:0;}
-  .mcp-hledani .map-search{height:44px;}
+  /* POLE A PŘEPÍNAČ POD NÍM MAJÍ TUTÉŽ VÝŠKU. Od 29. 10. stojí
+     přepínač na vlastním řádku pod polem a měl 48 px proti 44
+     u pole — dva ovladače nad sebou, každý jinak vysoký, je přesně
+     ta nedbalost, kterou nejde pojmenovat, ale je vidět. Obojí 48.
+     (Dřív mělo pole 46 proti 44 u všeho ostatního; tenhle řádek to
+     tehdy srovnával dolů.) */
+  .mcp-hledani .map-search input{min-height:48px; padding-top:0; padding-bottom:0;}
+  .mcp-hledani .map-search{height:48px;}
   .ms-vysledky .map-count{font-size:14px; letter-spacing:0; margin-bottom:0; min-width:0;}
   /* NADPIS SE VRACÍ I NA TELEFON.
      Chvíli tu byl schovaný, aby se ušetřilo 28 px — jenže pak nad

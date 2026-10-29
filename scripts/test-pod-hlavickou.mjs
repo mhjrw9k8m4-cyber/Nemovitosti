@@ -95,6 +95,20 @@ const ZAKRYTE = `() => {
     const pod = document.elementFromPoint(x, y);
     if (!pod) continue;
     if (pod === e || e.contains(pod) || pod.contains(e)) continue;
+    /* CO PROSTĚ PODJELO POD LEPIVOU HLAVIČKU, NENÍ VADA.
+       Vada, pro kterou tahle zkouška vznikla, byla jiná: pole hledání
+       leželo pod hlavičkou NATRVALO, už po načtení (naměřeno 45 ze
+       46 px) — klepnout se na ně nedalo nikdy. To tahle kontrola
+       chytá dál, protože při posunu 0 px platí beze změny.
+       Při posunu o 60 px ale pod hlavičku podjede všechno, co je
+       nahoře stránky, a je to tak správně: tak se stránka roluje.
+       Hlásit to jako „zakryté ovládání" znamená hlásit rolování.
+       Rozhoduje proto poloha V DOKUMENTU: když prvek v klidu leží POD
+       hlavičkou, je v pořádku a jen se kolem ní posouvá. Když leží
+       pod ní i v klidu, je to ta původní vada a hlásí se.
+       Jiné překryvy (okno, překryv mapy, vlastní rozbalovač) se tím
+       nemění — podmínka platí jen tehdy, když zakrývá sama hlavička. */
+    if (h && (pod === h || h.contains(pod)) && hb && (b.top + window.scrollY) >= hb.height) continue;
     /* Vlastní rozbalovač překrývá svůj původní <select> schválně —
        ten je zúžený na 1 px a slouží jen jako nosič hodnoty. */
     if (e.tagName === 'SELECT' && pod.closest && pod.closest('.cdd')) continue;

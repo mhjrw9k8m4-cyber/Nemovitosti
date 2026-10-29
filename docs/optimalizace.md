@@ -15234,3 +15234,48 @@ shodil dvě kontroly.
 Zkouška `test-hlidani` při tom chytla, že se zkrácený popisek
 „Nejvýš za metr" rozešel s chybovou hláškou, která políčko jmenuje —
 obojí srovnáno.
+
+## §232 Vršek úvodu: historie dolů, přepínač nahoru a víc vzduchu
+
+**Co o tom řekl majitel.** „Naposledy zhlédnuté takhle nahoře nedává
+smysl, ať je co nejvíc dole. Navíc je tam vše strašně naplácané, web má
+působit volně a profesionálně. A červeně jsem vyznačil to nejhorší: ta
+Mapa a Seznam jsou tak divně působící — udělej to takto, ale větší
+a ne tak naplácané."
+
+**Historie dolů.** Pruh „Naposledy prohlédnuté" stál ve značkování za
+výpisem a `js/main.js` (renderRecent) ho při vykreslení stěhoval na
+začátek sloupce — kdysi na výslovné přání majitele („mají být úplně
+nahoře"). Teď to otočil a má pravdu věcně: je to historie, ne nabídka.
+Stěhování je pryč, pruh zůstává tam, kde ho má značkování.
+
+**Přepínač.** Naměřeno na 390×844: pole hledání 207 px a přepínač
+143 px v jedné řadě, tlačítko „Seznam" 78 px široké s 13px písmem.
+Teď má přepínač celou šířku, 48 px výšky a 16px písmo — dvě záložky
+nad výpisem, a tak i vypadají. Pole hledání se srovnalo na týchž
+48 px (mělo 44, dva ovladače nad sebou mají být stejně vysoké).
+
+**Vzduch.** Odsazení sloupce nahoře 8 → 16 px, mezera mezi čtyřmi
+nástroji nad výpisem 8 → 12 px, odstup pod hlavičkou výpisu 8 → 16 px.
+Všechno ze stupnice odstupů.
+
+**Co to stojí a kdo to platí.** První nabídka se posunula ze 344 na
+412 px kvůli vyššímu přepínači a vzduchu. Zaplatil to ten pruh: když
+měl návštěvník historii, stál nahoře a odsouval první nabídku na
+530 px. Teď ji neodsouvá vůbec, a tak zkouška první obrazovky měří
+obráceně než dřív — pruh musí být POD první nabídkou a nabídka musí
+začínat nad 440 px.
+
+**A nález, který to odkrylo.** `test-pod-hlavickou` spadl na tom, že
+po posunu o 60 px je pole hledání celé pod lepivou hlavičkou. Vyšetřeno:
+není to vada vzhledu, ale vada zkoušky. Měřila střed prvku, takže při
+rolování hlásila jako „zakryté ovládání" všechno, co zrovna podjíždí
+pod hlavičku — tedy rolování samo. Původní vada, pro kterou vznikla,
+byla jiná: pole leželo pod hlavičkou NATRVALO, už po načtení (45 ze
+46 px). Rozhoduje proto nově poloha V DOKUMENTU: když prvek v klidu
+leží pod hlavičkou, je v pořádku; když pod ní leží i v klidu, hlásí se.
+Ověřeno sabotáží — vrácené `margin-top:-80px` na `.map-wide` (přesně
+ta původní vada) shodilo dvě kontroly.
+
+Zkouška písma při tom chytla, že přepínač dostal 15px písmo, které na
+stupnici není. Srovnáno na 16.

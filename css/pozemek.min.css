@@ -308,8 +308,7 @@ to{opacity:1;transform:none}
 
 @media (min-width:1041px){
 }
-@media (max-width:1040px){
-.opp-badge{top:auto;bottom:9px;left:9px;font-size:13px;padding:4px 8px 4px 8px;gap:4px}
+@media (max-width:1040px){.opp-badge{top:auto;bottom:9px;left:9px;font-size:13px;padding:4px 8px 4px 8px;gap:4px}
 .opp-badge::before{width:7px;height:7px}
 .opp-count{display:inline-flex}
 }

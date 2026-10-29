@@ -255,15 +255,16 @@ try {
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
   await ctx.close();
 
-  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" NAHOŘE -----------------
-     Pruh stojí nad výpisem, tedy odsouvá první nabídku — na výslovné
-     přání majitele webu („mají být úplně nahoře"). Aby to šlo, musel
-     zhubnout: z karet s velkým snímkem jsou řádky s náhledem 48 px.
-     Naměřeno: pruh 109 px, první nabídka klesla z 409 na 530 px.
-     Tahle zkouška je past na to, aby zase nevyrostl — v původní podobě
-     měl 235 px a první nabídka by spadla na 656. Mez je 580: unese
-     o 50 px delší pruh (třeba delší jméno obce na dvou řádcích),
-     ale NEUNESE návrat velkých karet.
+  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" POD VÝPISEM ------------
+     Pruh stál nad výpisem a odsouval první nabídku — na výslovné přání
+     majitele („mají být úplně nahoře"). 29. 10. to otočil: „naposledy
+     zhlédnuté takhle nahoře nedává smysl, ať je co nejvíc dole."
+     Je to historie, ne nabídka; kdo přijde na úvodní stránku, chce
+     vidět, co je nového. Ve značkování pruh za výpisem odjakživa
+     stojí, jen si ho js/main.js stěhoval nahoru (renderRecent) — a to
+     stěhování je pryč.
+     Zkouška měří obráceně než dřív: pruh musí být POD první nabídkou
+     a první nabídku nesmí odsunout vůbec.
      Prázdný prohlížeč žádnou historii nemá, takže se musí naplnit —
      jinak by kontrola prošla naprázdno nad schovaným pruhem. */
   {
@@ -302,11 +303,22 @@ try {
     pravda('pruh „Naposledy prohlédnuté" se naplnil (jinak není co měřit)',
       !!r && r.skryty === false && r.cipu >= 3, JSON.stringify(r));
     if (r && r.skryty === false) {
-      pravda('a stojí NAD první nabídkou, ne uprostřed výpisu',
-        r.pruhY !== null && r.kartaY !== null && r.pruhY < r.kartaY,
+      /* PRUH STOJÍ POD VÝPISEM, NE NAD NÍM — A JE TO OBRAT.
+         Do 29. 10. se tu chtěl opak („stojí NAD první nabídkou") a
+         v komentáři výš stálo, že to je na výslovné přání majitele
+         („mají být úplně nahoře"). Téhož dne to otočil: „naposledy
+         zhlédnuté takhle nahoře nedává smysl, ať je co nejvíc dole."
+         Má pravdu věcně — je to historie, ne nabídka.
+         Měří se proto obráceně: pruh musí být POD první nabídkou
+         a první nabídka se jím nesmí posunout vůbec. Druhá podmínka
+         je ta důležitější: dřív se hlídalo, že pruh první nabídku
+         neodsune o víc než na 580 px, teď nesmí odsunout ani o pixel
+         (mez 440 px je tatáž jako u stránky bez pruhu + rezerva). */
+      pravda('a stojí POD první nabídkou, ne nad výpisem',
+        r.pruhY !== null && r.kartaY !== null && r.pruhY > r.kartaY,
         `pruh na ${r.pruhY} px, první nabídka na ${r.kartaY} px`);
-      pravda(`a první nabídka i s ním začíná nad 580 px (${r.kartaY})`,
-        r.kartaY !== null && r.kartaY < 580,
+      pravda(`a první nabídku neodsouvá (${r.kartaY} px)`,
+        r.kartaY !== null && r.kartaY < 440,
         `pruh je vysoký ${r.pruhH} px a první nabídka začíná na ${r.kartaY} px`);
     }
   }
