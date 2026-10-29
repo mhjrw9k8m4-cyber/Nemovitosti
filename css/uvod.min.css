@@ -1460,7 +1460,7 @@ body>footer{flex:none}
 .mp-pod{font-size:12px;color:var(--muted);line-height:1.4}
 .mp-akce{display:flex;align-items:center;gap:12px;flex:none}
 .mp-okruh{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
-.mp-okruh select{font:inherit;font-size:12px;padding:4px 4px;border-radius:var(--r-xs);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text)}
+.mp-okruh select{font:inherit;font-size:13px;padding:4px 8px;min-height:36px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text)}
 .mp-zrus{font:inherit;font-size:12px;font-weight:600;color:var(--muted);background:none;border:0;border-bottom:1px solid var(--line-strong);padding:0 0 1px;cursor:pointer}
 .mp-zrus:hover{color:var(--c-exekuce-ink);border-bottom-color:var(--c-exekuce-ink)}
 .mp-zapnout{font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;min-height:36px;border-radius:var(--r-ovladani);border:1.5px solid var(--znacka);background:var(--plocha-karta);color:var(--znacka);transition:var(--prechod)}
@@ -1473,14 +1473,14 @@ body>footer{flex:none}
 }
 .misto-pruh.bez-mista{border-style:dashed;background:none}
 .misto-pruh.bez-mista .mp-hlavni{color:var(--muted);font-weight:600}
-.mp-vybrat{font:inherit;font-size:13px;font-weight:600;color:var(--znacka);background:var(--plocha-karta);border:1px solid var(--line-ui);border-radius:var(--r-sm);padding:8px 12px;min-height:38px;cursor:pointer;white-space:nowrap}
+.mp-vybrat{font:inherit;font-size:13px;font-weight:600;color:var(--znacka);background:var(--plocha-karta);border:1px solid var(--line-ui);border-radius:var(--r-ovladani);padding:8px 12px;min-height:38px;cursor:pointer;white-space:nowrap}
 .mp-vybrat:hover{border-color:var(--znacka);background:var(--plocha-tlumena)}
 .mp-vybrat:focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:2px}
 body.vybiram-misto .leaflet-container{cursor:crosshair}
 body.vybiram-misto .misto-pruh{border-style:solid;border-color:var(--znacka);background:rgba(var(--znacka-hluboka-rgb),0.08)}
 body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka)}
-.opp-overit{display:inline-block;font-size:12px;font-weight:600;color:#7C5105;background:rgba(var(--accent-warm-bright-rgb),0.16);border:1px solid rgba(var(--accent-warm-rgb),0.3);border-radius:var(--r-xs);padding:2px 8px;white-space:nowrap}
-.opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:rgba(var(--plocha-znacka-rgb),0.08);border:1px solid rgba(var(--plocha-znacka-rgb),0.22);border-radius:var(--r-xs);padding:2px 8px;white-space:nowrap}
+.opp-overit{display:inline-block;font-size:12px;font-weight:600;color:#7C5105;background:rgba(var(--accent-warm-bright-rgb),0.16);border:1px solid rgba(var(--accent-warm-rgb),0.3);border-radius:var(--r-drobnost);padding:2px 8px;white-space:nowrap}
+.opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:rgba(var(--plocha-znacka-rgb),0.08);border:1px solid rgba(var(--plocha-znacka-rgb),0.22);border-radius:var(--r-drobnost);padding:2px 8px;white-space:nowrap}
 .src-stav{margin-left:8px;padding:1px 4px;border-radius:var(--r-pill);font-family:var(--font-popisek);font-size:12px;font-variant-numeric:tabular-nums;background:var(--plocha-jemna-vic);color:var(--muted)}
 .src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.12);color:var(--c-exekuce)}
 .src-stav.src-slabe{background:rgba(var(--accent-warm-rgb),0.14);color:var(--accent-warm)}

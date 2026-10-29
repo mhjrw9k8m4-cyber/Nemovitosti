@@ -873,6 +873,10 @@ jobs:
       - name: Jeden ovladač (velikost a řez písma tlačítek na celém webu)
         run: node scripts/test-ovladace.mjs
 
+      - name: Odkryté stavy (zaoblení i tam, kam se hlídači nedostanou)
+        run: node scripts/test-odkryte.mjs
+
+
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs
 

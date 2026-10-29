@@ -14738,3 +14738,156 @@ nápis a červený obrys tlačítka v ní — ne o čtrnáct setin tmavší link
 dojet** (odpověď existuje a má stav 200), jinak zkouška padá a vypíše,
 která nedojela. Hlídač, který měří méně, než si myslí, je horší než
 žádný — vypadá jako pojistka a není.
+
+## §222 Textové pole mělo čtyři zaoblení — a skrytý panel je tatáž slepota jako mrtvé jméno stránky
+
+§221 ukázalo, že hlídač nevidí stránku, kterou nemá v seznamu. Hned
+potom vyšlo, že stejně nevidí ani to, co je při načtení SKRYTÉ — a že
+hlídači jedné soustavy nevidí celou obsahovou polovinu webu.
+
+### Pokrytí: co hlídači vzhledu nikdy neměřili
+
+Změřeno pro `test-deska`, `test-zaobleni`, `test-prechody` a
+`test-ovladace`. Měřily jen aplikační stránky. NEVIDĚLY: třináct
+článků, rozcestník rádce, čtyři stránky cenových pásem, osm druhových
+výpisů, tři právní texty, odhlašovací stránku a předlohu — u všech měly
+nejvýš `test-dotyk` nebo `test-rozvrzeni`.
+
+Do všech čtyř se přidal jeden představitel každé předlohy (`radce`,
+`hypoteka-na-pozemek`, `podminky`, `pozemky-do-500-tisic`,
+`pozemky-lesni`, `odhlasit-maily`). Výsledek je poctivě zveřejnitelný:
+**tři ze čtyř hlídačů prošly rovnou.** Obsahová polovina webu byla
+v lepším stavu, než jsem čekal. Jeden nález ale stačil, aby odkryl
+rozhodnutí, které nikdo neudělal.
+
+### Čtyři zaoblení na jedné věci
+
+Otisk 14 typů stránek, 59 textových polí:
+
+| zaoblení | počet | kde |
+|---|---|---|
+| 14 px | 28 | hledání, hlídání, zprávy, přihlášení |
+| 10 px | 28 | hlavní formulář `pridat`, hypoteční kalkulačka |
+| nula | 2 | odhlašovací stránka (kreslil prohlížeč) |
+| 6 px | 1 | výběr okruhu u hlídaného místa |
+
+Remíza 28 : 28 není nejednotnost z nedbalosti, ale **nerozhodnutá
+otázka**: je textové pole ovladač, nebo vlastní rodina? Rozhodnuto na
+14 px, protože tak je zaoblené všechno ostatní, čím se na webu ovládá —
+a tak je zaoblená i majitelova karta s cenou, ze které soustava vyšla.
+Po zásahu: **59 polí, jedno zaoblení.**
+
+### Dvě věci, které se u toho našly
+
+* **Pole na odhlašovací stránce nemělo žádný vzhled** — kreslil ho
+  prohlížeč. A je to stránka, kam web posílá lidi odkazem z e-mailu,
+  tedy často první, co z webu uvidí. Dostalo recept hlavního formuláře.
+* **Panel hlídaného místa je při načtení skrytý**, takže v něm ležela
+  čtyři zaoblení naráz (14 / 10 / 6 / 0) a žádný hlídač je neviděl.
+  Výběr okruhu měl navíc 26 px na výšku — pod mezí 38 px, kterou si web
+  sám klade na terč pro prst. Srovnáno na 36 px a 14 px.
+  („Zrušit" zůstává podtržená textová akce; ta rám ani zaoblení mít
+  nemá a je to jediný prvek řádky, který není tlačítko.)
+
+To je poučka k zapamatování: **hlídač vzhledu vidí jen vykreslený stav.**
+Co je skryté za `hidden`, za rozbalovačem nebo co teprve vznikne z JS,
+si rozchod dovolí bez povšimnutí.
+
+### Po zásahu
+
+Rychlá sada 134/134. V prohlížeči bez nálezu: `test-zaobleni`,
+`test-deska`, `test-prechody`, `test-ovladace`, `test-dotyk` — všechny
+už na rozšířeném seznamu stránek.
+
+## §223 Odkrytý otisk: šest odchylek ve stavech, které nikdo nevidí
+
+§222 skončilo poučkou, že hlídač vidí jen vykreslený stav. Tady je ta
+poučka dotažená na hlídače: `scripts/test-odkryte.mjs` odkryje všechno
+skryté, otevře každý rozbalovač a změří zaoblení v tom stavu.
+
+### Co odkrytý otisk našel
+
+Sedmnáct stránek, **959 prvků se zaoblením**, 64 otevřených rozbalovačů.
+Devět odchylek v prvním průchodu, šest dalších po rozšíření záběru na
+`span` a `figure`. Rozděleno poctivě:
+
+**Skutečné (spraveno):**
+
+| prvek | bylo | je | proč |
+|---|---|---|---|
+| `.btn-ghost` | 10 px | 14 px | pojmenovaná rodina tlačítek, jako `.btn-primary` |
+| `.pf-logout` | 10 px | 14 px | totéž; navíc dostalo společný `--prechod` místo ručně psaného |
+| `.ul-thumb` | 10 px | 14 px | fotka přes celou šířku karty — `--r-plocha` nese „fotky" |
+| `.opp-overit` | 6 px | 10 px | odznak je drobnost |
+| `.opp-podil`, `.opp-urad` | 6 px | 10 px | totéž |
+
+Šestka je `--r-xs` a ten token má ve stupnici jinou práci: prstence
+zaměření, palec posuvníku, zaškrtávátko. U odznaků to byl zbytek ze
+starší soustavy.
+
+**Plané, pojmenované ve hlídači s důvodem:**
+
+* Pět koleček (`border-radius:50 %`): „nahoru", otvírač nápovědy,
+  zaškrtnutí po úspěchu, odznak účtu, kolečko v potvrzení e-mailu, počet
+  nabídek ve shluku, znak u pobídky a číslo kroku na inzerci. Kolo je
+  tam význam, ne ozdoba.
+* Vnitřní odkazy leafletového zoomu (2 a 0 px): **nevidí se.**
+  `.leaflet-control-zoom` je ořezává (`--r-md` + `overflow:hidden`).
+* `.okr-item .okr-foto` 10 px: dlaždice 128 × 80 px v okresní řádce je
+  NÁHLED, a stupnice náhledy výslovně řadí k `--r-drobnost`. Fotka přes
+  celou kartu je naproti tomu `--r-plocha`. Dvě slova, dvě role.
+
+Prokázáno sabotáží: šestka vrácená odznaku hlídače shodí.
+
+### Chyba, kterou jsem u toho udělal
+
+Nový hlídač jsem zapsal jako `scripts/test-skryte.mjs` — a tím jsem
+PŘEPSAL hlídače, který už pod tím jménem existoval („co má atribut
+`hidden`, nesmí být vidět", s nálezem na 404.html, kam nedosáhne
+stylopis). Vyšlo to až z toho, že `test-staticka` ohlásila zkoušku
+zapsanou ve workflow dvakrát. Původní soubor byl v gitu, takže se nic
+neztratilo; nový hlídač se jmenuje `test-odkryte.mjs`.
+
+Poučka: před `cat > scripts/test-*.mjs` se to jméno ověřuje. Soubor,
+který se píše poprvé, se nemá psát přes něco, co už tam je.
+
+## §224 Dvě zkoušky se opíraly o náhodu v datech — a pod tím leží měřený nález
+
+Po noční aktualizaci robota (29. 10.) spadly dvě zkoušky v rychlé sadě:
+`test-hlidani` a `test-ceny`. Ani jedna neměla co do činění s tím, co
+jsem toho dne dělal, a ani jedna neukazovala na vadu webu.
+
+### Obě měly tutéž vadu: „hlídač hlídače" na náhodě
+
+* **`test-hlidani`** dokazoval, že odstraňovač duplicit vůbec něco dělá,
+  tím, že v OSTRÝCH datech nějaká duplicitní adresa je. Robot ten den
+  snížil počet duplicit **ze 14 na nulu** — a zkouška spadla, ačkoli
+  funkce je v pořádku. Opraveno: důkaz se staví (táž adresa dvakrát,
+  jednou s `www.` a lomítkem), počet duplicit v ostrých datech se
+  vypisuje jako údaj, ne jako podmínka.
+* **`test-ceny`** procházel ostrá data a čekal aspoň pět nabídek mimo
+  prodej, jejichž percentil vyjde na úrovni okresu. Dražeb ubylo **z 51
+  na 20** a žádná se nedostala na deset srovnání téhož typu v jedné
+  skupině druhu a okresu. Opraveno: vzorek se staví — vezme se skupina
+  druhu a okres s nejvíc prodeji a dvacet jich naklonuje jako dražbu.
+
+U druhé opravy stojí za zápis jedna odbočka: prvních deset klonů
+NEPROŠLO, protože zdědily inzerenta po originálu — a přihrádku drženou
+jediným inzerentem percentil odmítá (§89). Ta pojistka tedy funguje
+a odmítla i můj vzorek. Dvacet klonů rozprostřených mezi pět inzerentů
+projde a percentil vyjde u devíti.
+
+### Co se pod tím našlo (měřeno, k rozhodnutí)
+
+| | před aktualizací | po ní |
+|---|---|---|
+| nabídek mimo prodej | 91 | 60 |
+| z toho s percentilovým verdiktem | **16** (15 okres, 1 kraj) | **0** |
+| prodejů s verdiktem | 853 z 1 823 | 855 z 1 825 |
+
+Percentil chce v přihrádce aspoň deset nabídek TÉHOŽ TYPU v téže
+skupině druhu a okresu. Dvacet dražeb po 77 okresech se k desítce
+nedostane ani náhodou, takže stránka dražby dnes **nemá cenový verdikt
+vůbec**. Není to vada: web radši mlčí, než aby srovnával vyvolávací cenu
+s nabídkovými (důvod stojí u té kontroly v `js/ceny.js`). Je to ale
+rozhodnutí, které má vidět majitel — proto úkol, ne tichá oprava.

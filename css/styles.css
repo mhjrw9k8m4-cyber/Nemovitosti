@@ -5183,7 +5183,16 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-odjinud{margin:0 0 20px; padding:12px 16px; border:1px solid rgba(var(--znacka-hluboka-rgb),0.3); border-radius:var(--r-plocha); background:rgba(var(--znacka-hluboka-rgb),0.06);}
 .add-odjinud label{display:block; font-size:14px; line-height:1.6; color:var(--text); margin-bottom:8px;}
 .odj-radek{display:flex; gap:8px; flex-wrap:wrap;}
-.odj-radek input{flex:1 1 220px; min-width:0;}
+/* POLE NA ODHLAŠOVACÍ STRÁNCE NEMĚLO ŽÁDNÝ VZHLED — kreslil ho
+   prohlížeč (ostré hrany, cizí rám). A je to stránka, kam web posílá
+   lidi odkazem z e-mailu, tedy často první, co z webu uvidí. Dostává
+   týž recept jako pole v hlavním formuláři. */
+.odj-radek input{flex:1 1 220px; min-width:0;
+  min-height:48px; padding:12px; font:inherit; font-size:16px; color:var(--text);
+  background:var(--plocha-zapustena); border:1px solid var(--line);
+  border-radius:var(--r-ovladani); transition:var(--prechod);}
+.odj-radek input::placeholder{color:var(--text-zastupny);}
+.odj-radek input:focus-visible{border-color:var(--znacka-svetla);}
 .odj-radek .btn-ghost{flex:none; height:48px; padding:0 16px; white-space:nowrap;}
 .odj-stav{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--muted);}
 .odj-stav.ok{color:var(--c-ok-ink,#178a53); font-weight:600;}
@@ -5244,8 +5253,14 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    přihlášenému, kdežto zkouška chodila po stránce nepřihlášená
    a 320 px se neměřilo vůbec. Obojí je od 18. 10. jinak
    (scripts/test-konzole.mjs). */
+/* TEXTOVÉ POLE JE OVLADAČ, TEDY --r-ovladani. Změřeno na 14 typech
+   stránek: 59 textových polí ve ČTYŘECH zaobleních — 28× 14 px
+   (hledání, hlídání, zprávy, přihlášení), 28× 10 px (tenhle formulář
+   a hypoteční kalkulačka), 2× nula a 1× 6 px. Remíza 28:28 znamená, že
+   o tom nikdo nerozhodl; rozhoduje se to teď na 14, protože tak je
+   zaoblené všechno ostatní, čím se na webu ovládá. */
 .add-form input, .add-form select, .add-form textarea{
-  background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-sm); padding:12px 12px;
+  background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-ovladani); padding:12px 12px;
   font-size:16px; color:var(--text); font-family:inherit; width:100%; min-width:0;
 }
 .add-form textarea{resize:vertical; min-height:96px;}
@@ -5575,8 +5590,13 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .mp-stav{margin:8px 2px 0; font-size:13px; line-height:1.5; color:var(--muted);}
 .mp-stav.ok{color:var(--c-ok-ink);}
 .mp-stav.err{color:var(--c-exekuce-ink);}
-/* Rozšířené karty nabídek */
-.ul-thumb{aspect-ratio:16/10; border-radius:var(--r-sm); overflow:hidden; margin:-2px 0 4px; position:relative;
+/* Rozšířené karty nabídek.
+   NÁHLED PŘES CELOU ŠÍŘKU KARTY = --r-plocha, stejně jako .mp-ram sedm
+   řádků výš, který dělá přesně totéž (drží poměr stran, než se snímek
+   stáhne). Deset pixelů tu zůstalo ze starší soustavy. Malá dlaždice
+   v okresní řádce (.okr-item .okr-foto, 128 px na šířku) je naproti
+   tomu drobnost a deset jí patří. */
+.ul-thumb{aspect-ratio:16/10; border-radius:var(--r-plocha); overflow:hidden; margin:-2px 0 4px; position:relative;
   background:var(--plocha-zapustena);}
 .ul-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
 .ul-thumb .ph{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted);}
@@ -5686,7 +5706,10 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 @keyframes asxCircle{to{stroke-dashoffset:0;}}
 @keyframes asxCheck{to{stroke-dashoffset:0;}}
 .asx-actions{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
-.btn-ghost{background:none; border:1px solid var(--line-strong); color:var(--text); border-radius:var(--r-sm); padding:12px 16px; font-family:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:var(--prechod);}
+/* Pojmenovaná rodina tlačítek, tedy --r-ovladani jako .btn-primary
+   a .btn-secondary. Deset pixelů tu bylo jediné místo, kde se třetí
+   tlačítko webu lišilo od prvních dvou. */
+.btn-ghost{background:none; border:1px solid var(--line-strong); color:var(--text); border-radius:var(--r-ovladani); padding:12px 16px; font-family:inherit; font-weight:600; font-size:14px; cursor:pointer; transition:var(--prechod);}
 .btn-ghost:hover{border-color:var(--znacka-svetla);}
 @media (prefers-reduced-motion:reduce){ .asx-check circle,.asx-check path{animation:none; stroke-dashoffset:0;} }
 @media (max-width:640px){ .add-steps{grid-template-columns:1fr; gap:8px; margin-top:20px;} }
@@ -8219,7 +8242,17 @@ body > footer{flex:none;}
 .mp-pod{font-size:12px; color:var(--muted); line-height:1.4;}
 .mp-akce{display:flex; align-items:center; gap:12px; flex:none;}
 .mp-okruh{display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--muted);}
-.mp-okruh select{font:inherit; font-size:12px; padding:4px 4px; border-radius:var(--r-xs);
+/* PANEL HLÍDANÉHO MÍSTA JE PŘI NAČTENÍ SKRYTÝ — a proto v něm ležela
+   čtyři různá zaoblení naráz (14, 10, 6, 0) a nikdo si toho nevšiml:
+   hlídači vzhledu měří, co je vykreslené, a tenhle panel se objeví až
+   po vybrání místa na mapě. Je to tatáž slepota jako mrtvé jméno
+   stránky v seznamu (§221), jen místo chybějící stránky je skrytý stav.
+   Výběr okruhu dostává výšku i řez svých sousedů v řádce: byl 26 px
+   vysoký, tedy pod mezí 38 px, kterou si web sám klade na terč pro
+   prst. („Zrušit" zůstává podtržená textová akce — ta rám ani zaoblení
+   mít nemá, a je to jediný prvek řádky, který není tlačítko.) */
+.mp-okruh select{font:inherit; font-size:13px; padding:4px 8px; min-height:36px;
+  border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);}
 .mp-zrus{font:inherit; font-size:12px; font-weight:600; color:var(--muted);
   background:none; border:0; border-bottom:1px solid var(--line-strong); padding:0 0 1px; cursor:pointer;}
@@ -8247,7 +8280,7 @@ body > footer{flex:none;}
 .misto-pruh.bez-mista{border-style:dashed; background:none;}
 .misto-pruh.bez-mista .mp-hlavni{color:var(--muted); font-weight:600;}
 .mp-vybrat{font:inherit; font-size:13px; font-weight:600; color:var(--znacka);
-  background:var(--plocha-karta); border:1px solid var(--line-ui); border-radius:var(--r-sm);
+  background:var(--plocha-karta); border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
   /* Terč musí být na dotyk aspoň 38 px vysoký — při 7px odsazení vycházel
      přesně na hranici a test dotykových terčů ho zachytil. */
   padding:8px 12px; min-height:38px; cursor:pointer; white-space:nowrap;}
@@ -8292,7 +8325,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    a při 12 px se tenčí číslice hůř čtou. */
 .opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
   background:rgba(var(--accent-warm-bright-rgb),0.16); border:1px solid rgba(var(--accent-warm-rgb),0.3);
-  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+  border-radius:var(--r-drobnost); padding:2px 8px; white-space:nowrap;}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */
@@ -8307,7 +8340,12 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 .opp-urad{display:inline-block; font-size:12px; font-weight:600;
   color:var(--muted); background:rgba(var(--plocha-znacka-rgb),0.08);
   border:1px solid rgba(var(--plocha-znacka-rgb),0.22);
-  border-radius:var(--r-xs); padding:2px 8px; white-space:nowrap;}
+  /* ODZNAK JE DROBNOST, TEDY 10 px. Šestka je `--r-xs`, a ten token má
+     ve stupnici jinou práci: prstence zaměření, palec posuvníku,
+     zaškrtávátko. Tři odznaky na kartě ji nesly jako zbytek ze starší
+     soustavy — viz jmenný seznam u tokenů (--r-drobnost: „odznaky,
+     štítky, náhledy"). */
+  border-radius:var(--r-drobnost); padding:2px 8px; white-space:nowrap;}
 
 /* Stav zdroje vedle jeho jména. Když jeden zdroj tiše umře, je to vidět
    tady — ne až za měsíc, kdy si někdo všimne, že dražeb ubylo. */
@@ -8639,7 +8677,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 .nak-vstup{position:relative; display:inline-flex; align-items:center;}
 .nak-vstup input{font:inherit; font-variant-numeric:tabular-nums; text-align:right;
   width:140px; padding:8px 40px 8px 12px; border:1px solid var(--line-strong);
-  border-radius:var(--r-sm); background:var(--plocha-karta); color:var(--text);
+  border-radius:var(--r-ovladani); background:var(--plocha-karta); color:var(--text);
   min-height:44px;}
 .nak-vstup input:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 .nak-vstup i{position:absolute; right:12px; font-style:normal; font-size:13px;

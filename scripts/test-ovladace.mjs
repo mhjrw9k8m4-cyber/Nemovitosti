@@ -77,6 +77,14 @@ const STRANKY = ['index.html', 'pridat.html', 'cena-pozemku.html',
   'inzerce.html', 'drazby-pozemku.html', 'porovnani.html', 'kontakt.html',
   'pozemky-zahrada.html', 'pozemky-okres-zlin.html',
   'pozemky-jihomoravsky-kraj.html',
+  /* OBSAHOVÁ POLOVINA WEBU. Změřeno pokrytím 29. 10.: hlídači jedné
+     soustavy viděli jen aplikační stránky. Třináct článků, rozcestník
+     rádce, cenová pásma, druhové výpisy ani právní texty nevidělo ani
+     jedno z pravidel o desce, zaoblení, přechodu a ovladači — a co to
+     stojí, předvedla moje-data.html (§221). Po jednom představiteli
+     každé předlohy: */
+  'radce.html', 'hypoteka-na-pozemek.html', 'podminky.html',
+  'pozemky-do-500-tisic.html', 'pozemky-lesni.html', 'odhlasit-maily.html',
   (adresaPozemku() || {}).url || 'pozemek.html'];
 
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },

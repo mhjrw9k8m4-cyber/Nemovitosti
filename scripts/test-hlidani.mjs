@@ -825,8 +825,20 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   }
   je('dražby', 'po očištění nevede na jednu adresu víc nabídek', zbylo, 0);
 
-  /* Bez téhle podmínky by nula výš mohla platit i tehdy, kdyby v datech
-     žádná duplicita nebyla a funkce nedělala nic. */
+  /* Bez důkazu, že odstraňovač vůbec něco dělá, by nula výš platila
+     i tehdy, kdyby funkce byla prázdná. Dřív se ten důkaz bral ze
+     SUROVÝCH DAT — a to byla sázka na náhodu: 29. 10. po noční
+     aktualizaci robota klesl počet duplicitních adres ze 14 na NULU
+     (dražeb ubylo z 51 na 20) a zkouška spadla, ačkoli se na webu nic
+     nezměnilo. Vzorek se proto staví, ne hledá; počet duplicit v ostrých
+     datech se vypisuje jako údaj, ne jako podmínka. */
+  const dvojice = [
+    { place: 'A', okres: 'B', price: 1, area: 2, druh: 'x', url: 'https://e.cz/n/1' },
+    { place: 'A', okres: 'B', price: 1, area: 2, druh: 'x', url: 'http://www.e.cz/n/1/' },
+  ];
+  je('dražby', 'odstraňovač duplicit opravdu odstraňuje (táž adresa dvakrát)',
+    H.bezDuplicit(dvojice).length, 1);
+
   const videno2 = {};
   let predtim = 0;
   for (const x of DATA) {
@@ -835,7 +847,7 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     if (videno2[k]) predtim++;
     videno2[k] = 1;
   }
-  je('dražby', 'a v surových datech jich opravdu bylo (jinak se nic neměří)', predtim > 0, true);
+  console.log(`      (v ostrých datech je dnes ${predtim} duplicitních adres z ${DATA.length} nabídek)`);
 }
 
 /* ---- JAK HLÍDÁNÍ MLUVÍ, KDYŽ SE ULOŽÍ JEN PŮLKA ZADÁNÍ ----

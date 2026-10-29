@@ -1091,23 +1091,57 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
  * společným kusem kódu. */
 {
   const SYR = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  const M = PK_CENY.postav(SYR);
   const dg = PK_CENY.druhGroup;
+  /* VZOREK SE STAVÍ, NE HLEDÁ. Dřív tahle kontrola procházela ostrá
+     data a čekala aspoň pět nabídek mimo prodej, jejichž percentil
+     vyjde na úrovni okresu. Byla to sázka na náhodu: percentil chce
+     MIN_VZOREK (8) srovnání téhož TYPU v téže skupině druhu a okresu,
+     a 29. 10. po noční aktualizaci robota zbylo 20 dražeb na 77 okresů
+     — na osmičku v jedné skupině se nedostala ani jedna a zkouška
+     spadla, ačkoli se na webu ani v modelu nic nezměnilo (dřív jich
+     bylo 51).
+     Staví se tedy takto: vezme se skupina druhu a okres s nejvíc
+     prodeji, deset z nich se naklonuje jako dražba se stejnou cenou
+     a model se postaví nad rozšířenou sadou. Měří se pořád TÁŽ věc —
+     že percentil mimo prodej vyjde a že se vzorek bere jen z nabídek
+     téhož typu — jen už to nezávisí na tom, co zrovna visí na webu. */
+  const poSkupinach = new Map();
+  for (const x of SYR) {
+    if (x.type !== 'sale' || !(x.area > 0) || !x.price || !x.okres) continue;
+    const k = dg(x.druh) + '|' + x.okres;
+    if (!poSkupinach.has(k)) poSkupinach.set(k, []);
+    poSkupinach.get(k).push(x);
+  }
+  const nejvetsi = [...poSkupinach.values()].sort((a, b) => b.length - a.length)[0] || [];
+  /* DVACET, A KAŽDÝ OD JINÉHO INZERENTA. Percentil chce v přihrádce
+     aspoň deset nabídek, rozptyl cen (nejvyšší nad 1,2× nejnižší)
+     a žádného převládajícího inzerenta. Prvních deset klonů zdědilo
+     inzerenta po originálu, takže je ta poslední pojistka správně
+     odmítla — je to §89, přihrádka držená jedním velkoobchodníkem.
+     Dvacet klonů rozprostřených mezi pět inzerentů projde a percentil
+     vyjde u devíti z nich. */
+  const KLONU = 20;
+  const klony = nejvetsi.slice(0, KLONU).map((x, i) => Object.assign({}, x, {
+    type: 'drazba', url: 'https://zkouska.invalid/drazba/' + i,
+    inz: 'zkouska-inzerent-' + (i % 5),
+  }));
+  const M = PK_CENY.postav(SYR.concat(klony));
   let mimoProdej = 0, prvni = null;
-  for (const o of SYR) {
-    if (o.type === 'sale') continue;
+  for (const o of klony) {
     const pc = M.percentil(o);
     if (!pc || pc.uroven !== 'okres') continue;
     mimoProdej++;
     if (!prvni) prvni = { o, pc };
   }
-  pravda(`percentil mimo prodej se opravdu počítá (${mimoProdej} nabídek)`,
+  pravda(`percentil mimo prodej se opravdu počítá (${mimoProdej} z ${klony.length} postavených)`,
     mimoProdej >= 5,
-    'bez nich kontrola níž neměří nic — pak se musí vzorek najít jinde, ne zkouška smazat');
+    `skupina ${nejvetsi.length} prodejů, naklonováno ${klony.length} dražeb — `
+    + 'kdyby ani tak percentil nevyšel, je vada v modelu, ne v datech');
   if (prvni) {
+    const VSE = SYR.concat(klony);
     const { o, pc } = prvni;
     let tehoTypu = 0, vsechTypu = 0;
-    for (const x of SYR) {
+    for (const x of VSE) {
       if (!(x.area > 0) || !x.price) continue;
       if (dg(x.druh) !== dg(o.druh) || x.okres !== o.okres) continue;
       vsechTypu++;

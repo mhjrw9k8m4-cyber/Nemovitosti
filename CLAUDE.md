@@ -851,3 +851,39 @@ Každý z nich tedy měřil o stránku méně. Po opravě jména na
 Nový hlídač má proto kontrolu „všechny stránky ze seznamu dojely" a
 seznam se při psaní ověřuje proti `ls *.html`. Mapa mimochodem vlastní
 stránku nemá — je na `index.html`.
+
+### Hlídač vzhledu vidí jen VYKRESLENÝ stav
+
+Panel hlídaného místa na mapě je při načtení skrytý. Ležela v něm čtyři
+různá zaoblení naráz (14, 10, 6 a 0 px) a výběr okruhu byl 26 px vysoký,
+tedy pod mezí 38 px, kterou si web sám klade na terč pro prst — a žádný
+hlídač to neviděl, protože měří `getComputedStyle` vykreslených prvků.
+
+Co je za `hidden`, v zavřeném rozbalovači, v jiném kroku formuláře nebo
+co teprve vznikne z JS, si rozchod dovolí bez povšimnutí. Když se dělá
+obhlídka vzhledu, patří do ní i tyhle stavy — buď je hlídač otevře, nebo
+se to změří zvlášť a napíše se, že se to změřilo ručně.
+
+### Nový soubor se nepíše přes starý — jméno se ověřuje
+
+Hlídače odkrytých stavů jsem zapsal jako `scripts/test-skryte.mjs`
+a přepsal tím hlídače, který už to jméno měl („co má atribut `hidden`,
+nesmí být vidět"). Vyšlo to až z toho, že `test-staticka` ohlásila
+zkoušku zapsanou ve workflow dvakrát — kdyby ta kontrola nebyla, jedna
+pojistka by tiše zmizela a druhá by vypadala jako na jejím místě.
+
+Před zápisem nového souboru tedy `ls` nebo `git log -- <cesta>`. A platí
+to dvojnásob pro `scripts/test-*.mjs`: jména zkoušek jsou krátká a lehce
+se potkají.
+
+### „Hlídač hlídače" se nesmí opírat o náhodu v ostrých datech
+
+Kontrola, která ověřuje, že funkce vůbec něco dělá, se často píše jako
+„a v ostrých datech takový případ je". To je sázka na náhodu: 29. 10.
+robot přinesl data, kde duplicitních adres byla nula (ze 14) a dražeb
+dvacet (z 51) — a dvě zkoušky spadly, ačkoli se v kódu nezměnilo nic.
+
+Vzorek pro TAKOVOU kontrolu se tedy staví, ne hledá: vyrobí se vstup
+s vlastností, která se má prokázat. Kontrola nad ostrými daty zůstává
+tam, kde obstojí sama („po očištění nevede na jednu adresu víc nabídek"),
+a počet nalezených případů se vypisuje jako údaj, ne jako podmínka.
