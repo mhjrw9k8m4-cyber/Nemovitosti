@@ -766,7 +766,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .odl-figs{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px;font-variant-numeric:tabular-nums}
 .odl-figs b{font-size:16px;font-weight:700;color:var(--znacka-svetla)}
 .odl-figs span{font-size:13px;color:var(--muted)}
-.odl-empty{text-align:center;padding:40px 24px;border:1px dashed var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta)}
+.odl-empty{text-align:center;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta)}
 .odl-empty b{display:block;font-family:var(--font-ui);font-weight:600;font-size:20px;color:var(--text);margin-bottom:8px}
 .odl-empty span{color:var(--muted);font-size:14px;line-height:1.6;max-width:var(--m-popisek);display:block;margin-inline:auto}
 .odl-empty-btn{display:inline-block;margin-top:16px}
@@ -1010,7 +1010,7 @@ to{opacity:1;transform:none}
 .ms-filters{border:0;background:none;overflow:visible}
 .ms-filters .msf-summary{border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-karta);padding:12px 12px}
 .ms-filters[open] .msf-summary{border-color:var(--znacka-svetla);border-bottom-width:1px;background:var(--plocha-zapustena)}
-.ms-filters>.map-controls{position:absolute;top:calc(100% + 1px);left:16px;right:16px;z-index:45;max-height:min(60vh,520px);overflow-y:auto;overscroll-behavior:contain;padding:20px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e3);grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 20px}
+.ms-filters>.map-controls{position:absolute;top:calc(100% + 1px);left:16px;right:16px;z-index:45;max-height:min(60vh,520px);overflow-y:auto;overscroll-behavior:contain;padding:16px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e3);grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 20px}
 .map-side .opp-media{aspect-ratio:auto;height:150px}
 .map-controls .mcv-rada,.map-controls .mcv-rada.mcv-sloupec,.map-controls .mc-toggles{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 }
@@ -1246,7 +1246,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 .status-n{background:none;border:0;padding:0;color:var(--muted);font-family:var(--font-mono);font-size:12px;font-weight:500}
 .status-n.is-zero{background:none;border:0}
 @media (max-width:880px){.status-grid{grid-template-columns:1fr;gap:0}
-.status-card{padding-left:12px;margin-bottom:16px}
+.status-card{margin-bottom:16px}
 }
 .faq-item{background:none;background-image:none;border:0;border-radius:0;border-top:1px solid var(--line)}
 .faq-item summary{padding:16px 2px}

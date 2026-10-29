@@ -14041,3 +14041,58 @@ stylopis). Prokázáno sabotážemi:
 | jedna karta zpátky na 10 px | zaoblení desky |
 | jedna karta dostane silnější rám | rám desky |
 | třetí klidový stín | počet klidových stínů |
+
+## §213 Odsazení uvnitř desky: pět měr na jednu práci
+
+Pokračování §212. Když měly desky jedno zaoblení, jeden rám a dva
+stíny, zbyla poslední věc, která se na nich liší — kolik je uvnitř
+místa.
+
+### Měření (1280 px, 26 desek)
+
+| odsazení | kolik jmen | kdo |
+|---|---|---|
+| 20/20 | 7 | ovládání mapy, přidat pozemek, hlídání, zprávy, rádce, křížový odkaz |
+| **0/0** | **7** | kontejnery, jejichž děti si odsazení nesou samy (karta s fotkou, tabulky, mapa) |
+| 16/16 | 5 | **karta s cenou (předloha)**, verdikt, dlaždice, graf, stavová karta |
+| 12/12 | 2 | poznámka na inzerátu, krok v návodu |
+| 40/24, 32/28, 32/20, 8/12, 4/4 | po jednom | prázdné stavy, přihlášení, souřadnice, záložky |
+
+A je to stejný případ jako u zaoblení: **podle velikosti karty to
+není.** Šestnáct nese karta široká 340 px i 720 px, dvacet karta
+440 px i 1 136 px. Rozdíl není záměr, je to zapomenutí.
+
+### Rozhodnutí
+
+Deska má **16 px**, podle téže předlohy jako zaoblení — karty s cenou.
+Nula zůstává kontejnerům (to není chybějící odsazení, to ho nese
+obsah). Jednořádkový proužek (odznak zdroje, nápověda nad mapou) si
+odsazení řídí podle výšky; 16 px nahoře i dole by z něj udělalo desku
+dvakrát vyšší než text v ní.
+
+Tři výjimky mají jméno a důvod přímo v hlídači: prázdný stav 32/20
+(vzdušný schválně, ať je poznat, že tam nic není, a ne že se to
+nenačetlo), přihlašovací karta 32/28 (stojí sama uprostřed stránky
+místo obsahu) a pruh se záložkami 4 (to odsazení je lůžko pro zapnutou
+záložku, ne odsazení obsahu).
+
+### Po zásahu
+
+| odsazení | kolik jmen |
+|---|---|
+| **16/16** | **14** |
+| 0/0 (kontejnery) | 7 |
+| 32/20 (prázdné stavy) | 2 |
+| 32/28 (přihlášení) | 1 |
+| 4/4 (záložky) | 1 |
+
+### Dva nálezy od hlídače, ne ode mě
+
+Když se kontrola odsazení přidala do `test-deska`, spadla hned na dvou
+místech, která jsem při ruční obhlídce minul: odznak zdroje (8/16) a
+nápověda nad mapou (8/12). Obojí jsou jednořádkové proužky — pravidlo
+se o ně rozšířilo tak, aby to říkalo nahlas.
+
+A jedna deska se chovala na telefonu jinak než všechny ostatní:
+`.status-card` si pod 880 px zužovala odsazení na 12 px. Jediná na
+webu. Srovnáno.

@@ -314,7 +314,7 @@ to{opacity:1;transform:none}
 .acx-akce{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .acx-vse{font-size:14px;font-weight:600;color:var(--znacka);text-decoration:underline;text-underline-offset:3px;display:inline-flex;align-items:center;min-height:44px}
 .acx-vse:hover{color:var(--znacka-svetla)}
-.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:20px 20px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-md)}
+.add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
 .add-cross .acx-copy:is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
@@ -323,7 +323,7 @@ to{opacity:1;transform:none}
 }
 .add-hero{position:relative;overflow:hidden}
 .add-hero .wrap{position:relative;z-index:1}
-.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:20px;box-shadow:var(--e1)}
+.add-card{position:relative;background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;box-shadow:var(--e1)}
 @keyframes youpulse{0%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0.55)}
 70%{box-shadow:0 0 0 13px rgba(var(--znacka-hluboka-rgb),0)}
 100%{box-shadow:0 0 0 0 rgba(var(--znacka-hluboka-rgb),0)}

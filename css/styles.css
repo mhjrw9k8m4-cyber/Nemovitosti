@@ -3544,7 +3544,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .odl-figs{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-top:2px; font-variant-numeric:tabular-nums;}
 .odl-figs b{font-size:16px; font-weight:700; color:var(--znacka-svetla);}
 .odl-figs span{font-size:13px; color:var(--muted);}
-.odl-empty{text-align:center; padding:40px 24px; border:1px dashed var(--line); border-radius:var(--r-plocha); background:var(--plocha-karta);}
+.odl-empty{text-align:center; padding:32px 20px; border:1px dashed var(--line); border-radius:var(--r-plocha); background:var(--plocha-karta);}
 .odl-empty b{display:block; font-family:var(--font-ui); font-weight:600; font-size:20px; color:var(--text); margin-bottom:8px;}
 /* Text byl inline-block, tlačítko pod ním taky — takže se na širokém okně
    srovnaly vedle sebe a dotýkaly se (naměřeno: odstavec končil na 814 px,
@@ -4275,7 +4275,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     background:var(--plocha-zapustena);}
   .ms-filters > .map-controls{position:absolute; top:calc(100% + 1px); left:16px; right:16px;
     z-index:45; max-height:min(60vh, 520px); overflow-y:auto; overscroll-behavior:contain;
-    padding:20px; background:var(--plocha-karta); border:1px solid var(--line);
+    padding:16px; background:var(--plocha-karta); border:1px solid var(--line);
     border-radius:var(--r-plocha); box-shadow:var(--e3);
     grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:16px 20px;}
   /* NÁHLED V POSTRANNÍM SLOUPCI JE NIŽŠÍ. Karta měla 420 px (náhled 208,
@@ -5247,7 +5247,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   display:inline-flex; align-items:center; min-height:44px;}
 .acx-vse:hover{color:var(--znacka-svetla);}
 .add-cross{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  margin-top:28px; padding:20px 20px; background:var(--plocha-tlumena); border:1px solid var(--line); border-radius:var(--r-md);}
+  margin-top:28px; padding:16px; background:var(--plocha-tlumena); border:1px solid var(--line); border-radius:var(--r-plocha);}
 /* ÚROVEŇ URČUJE OSNOVA STRÁNKY, NE VZHLED. Nadpis v tomhle bloku byl
    vždycky h3 — i na stránkách, kde blok stojí hned za h1 a žádné h2
    nad ním není. Osnova tam pak šla h1 → h3 → h2, tedy přeskočená
@@ -5279,9 +5279,9 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    čárka (.rules-sect > h2::before), která oddíl značí — dvě značky na
    jedné kartě si konkurují a ta přes celou hranu navíc nic neznačí. */
 .add-card{position:relative; background:var(--plocha-karta);
-  border-radius:var(--r-plocha); padding:20px; box-shadow:var(--e1);}
+  border-radius:var(--r-plocha); padding:16px; box-shadow:var(--e1);}
 .add-aside{display:flex; flex-direction:column; gap:16px; position:sticky; top:96px;}
-.aside-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:20px;}
+.aside-card{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:16px;}
 .aside-card > h3{font-size:14px; margin-bottom:16px; letter-spacing:0.01em;}
 .benefit{display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;}
 .benefit:last-child{margin-bottom:0;}
@@ -5520,7 +5520,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 
 /* Hero — 3 kroky, jak přidání funguje */
 .add-steps{list-style:none; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:24px; max-width:var(--m-sloupec); padding:0;}
-.add-steps li{display:flex; gap:8px; align-items:flex-start; background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-md); padding:12px 12px;}
+.add-steps li{display:flex; gap:8px; align-items:flex-start; background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-plocha); padding:16px;}
 .as-num{flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:13px; color:var(--plocha-zapustena); background:var(--znacka); box-shadow:var(--glow);}
 .as-txt{display:flex; flex-direction:column;}
 .as-txt b{font-size:14px; color:var(--text); margin-bottom:2px;}
@@ -6532,7 +6532,10 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .status-n.is-zero{background:none; border:0;}
 @media (max-width:880px){
   .status-grid{grid-template-columns:1fr; gap:0;}
-  .status-card{padding-left:12px; margin-bottom:16px;}
+  /* Odsazení desky je 16 px i na telefonu. Tahle řádka ho zužovala na
+     12 a byla to jediná deska na webu, která se na úzké obrazovce
+     chovala jinak než ostatní (§213). */
+  .status-card{margin-bottom:16px;}
 }
 
 /* =====================================================================
@@ -8211,7 +8214,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   .pz-sour-kop, .pz-sour-nav{flex:1 1 0; justify-content:center;} }
 /* Karta pod mapou; údaj a akce jsou dvě skupiny, aby se lámaly jako
    celek (proč, viz sourHtml v js/pozemek.js). */
-.pz-sour{margin:8px 0 0; padding:8px 12px;
+.pz-sour{margin:8px 0 0; padding:16px;
   border:1px solid var(--line); border-radius:var(--r-plocha); background:var(--plocha-karta);}
 .pz-sour-radek{display:flex; align-items:baseline; gap:8px; margin-right:auto;}
 .pz-sour-akce{display:flex; gap:8px;}
@@ -9388,7 +9391,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 
 /* --- karta: jedna úroveň, jeden stín, jeden poloměr ----------------- */
 .st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
-  padding:20px; margin:0 0 var(--mezera-bloku); box-shadow:var(--e1);}
+  padding:16px; margin:0 0 var(--mezera-bloku); box-shadow:var(--e1);}
 .st-karta > :last-child{margin-bottom:0;}
 .st-nadpis{font-size:12px;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;

@@ -582,6 +582,8 @@ deska:
   zaobleni: 14px  # --r-plocha (= --r-ovladani = --r-obraz)
   ram:      "1px --line (0,14)"
   stin:     "--e1 na stránce, --e3 nad obsahem; --e2 JEN pro zvednutí při najetí"
+  odsazeni: "16 px. Kontejner, jehož děti nesou odsazení samy (karta s fotkou, tabulka, mapa), má nulu. Jednořádkový proužek si ho řídí podle výšky."
+  vyjimky:  "prázdný stav 32/20 (vzdušný schválně), přihlašovací karta 32/28 (stojí sama místo obsahu), pruh se záložkami 4 (lůžko pro zapnutou záložku) — každá je v test-deska.mjs jmenovitě a s důvodem"
   pravidlo: "deska je deska, ať je čehokoli — karta, panel i mapa"
   pozor:    "pruh UVNITŘ desky (legenda v mapě, panel pod mapou) má zaoblení 0 a jen border-top: rodič ho ořízne, vlastní zaoblení by nebylo vidět."
   hlida:    scripts/test-deska.mjs

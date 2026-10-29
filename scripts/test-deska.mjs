@@ -62,6 +62,18 @@ const JINY_RAM = new Set([
   /* Nápověda „vyberte kraj" sedí NAD mapou a zelený rám ji k mapě váže. */
   'kraj-hint',
 ]);
+/* ODSAZENÍ: deska má 16 px. Výjimky mají jméno a důvod. */
+const PAD_DESKA = 16;
+const JINY_PAD = new Map([
+  /* Prázdný stav je vycentrovaný a schválně vzdušný — ať je poznat, že
+     tam nic není, a ne že se to nenačetlo. Obě místa mají touž míru. */
+  ['odl-wrap', '32px 20px'], ['odl-empty', '32px 20px'], ['pf-empty', '32px 20px'],
+  /* Přihlašovací karta stojí sama uprostřed stránky místo obsahu. */
+  ['auth-card', '32px 28px'],
+  /* Pruh se záložkami: odsazení je lůžko pro zapnutou záložku, ne
+     odsazení obsahu. */
+  ['auth-tabs', '4px'],
+]);
 const MIMO = new Set([
   /* Leafletové prvky kreslí knihovna, ne náš stylopis. */
   'leaflet-popup-content-wrapper', 'leaflet-control-zoom', 'leaflet-tooltip',
@@ -114,6 +126,8 @@ for (const s of STRANKY) {
         z: Math.round(parseFloat(cs.borderTopLeftRadius) || 0),
         v: Math.round(rc.height),
         celyRam, prusvitna,
+        padT: Math.round(parseFloat(cs.paddingTop) || 0),
+        padL: Math.round(parseFloat(cs.paddingLeft) || 0),
         ram: maRam ? cs.borderTopColor : null,
         ramSila: ramy[0],
         stin: maStin ? cs.boxShadow : 'bez',
@@ -158,7 +172,29 @@ for (const [jm, d] of desky) {
 pravda(`rám desky má jednu sílu (${nejcastejsiRam[0]}, nese ji ${nejcastejsiRam[1]} desek)`,
   zleRam.length === 0, zleRam.join('\n      '));
 
-/* 3) STÍN. Měří se jen to, že se nemíchají DVA klidové stíny: na
+/* 3) ODSAZENÍ. Kontejner, jehož děti nesou odsazení samy (karta
+   s fotkou, tabulka, mapa), má nulu — to je v pořádku a pozná se tak,
+   že je nulové ze všech stran. */
+const zlePad = [];
+for (const [jm, d] of desky) {
+  if (MIMO.has(jm)) continue;
+  if (d.z === 999 || d.z >= d.v / 2) continue;
+  if (!d.celyRam && d.z === 0) continue;
+  if (d.padT === 0 && d.padL === 0) continue;
+  /* JEDNOŘÁDKOVÝ PROUŽEK NE. Odznak zdroje a nápověda nad mapou jsou
+     vysoké jeden řádek; 16 px nahoře i dole by z nich udělalo desku
+     dvakrát vyšší, než je text v nich. Odsazení se u nich řídí výškou,
+     ne touhle mírou — a že jsou to opravdu proužky, hlídá ta výška. */
+  if (d.v <= DROBNOST_V) continue;
+  const vyjimka = d.tridy.map((t) => JINY_PAD.get(t)).find(Boolean);
+  if (vyjimka) continue;
+  if (d.padT === PAD_DESKA && d.padL === PAD_DESKA) continue;
+  zlePad.push(`${jm} má ${d.padT}/${d.padL} px (${d.kde})`);
+}
+pravda(`odsazení uvnitř desky je ${PAD_DESKA} px (nebo nula u kontejneru)`,
+  zlePad.length === 0, zlePad.join('\n      '));
+
+/* 4) STÍN. Měří se jen to, že se nemíchají DVA klidové stíny: na
    stránce jeden, nad obsahem druhý. Který je který, se pozná podle
    rozostření — čím výš prvek plave, tím je stín větší. */
 const stiny = new Map();
