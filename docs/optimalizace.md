@@ -14485,3 +14485,64 @@ a plynulost startu: test-pohyb 26/26, test-stabilita 58/58,
 test-plynulost 8/8, test-prvni-obrazovka 22/22, test-kontrast 2 672
 prvků bez nálezu, mapové zkoušky (shluky, podklad, maska, kreslení,
 vrstvy, tažení, okolí) všechny bez nálezu.
+
+## §218 Minifikace mazala dědičný kombinátor — a hlídač toho byl slepý z konstrukce
+
+Tohle se našlo při kontrole vlastní práce z §217 a je to vážnější než
+všechno ostatní v tomhle vlákně: **web se vykresloval jinak, než jak je
+napsaný ve zdroji.**
+
+### Nález
+
+`css/styles.min.css` je to, co si opravdu stáhne návštěvník. Minifikace
+v něm mazala mezery kolem dvojtečky:
+
+```css
+/* zdroj */    .add-cross .acx-copy :is(h2, h3){font-size:16px}
+/* očištěné */ .add-cross .acx-copy:is(h2,h3){font-size:16px}
+```
+
+To nejsou dvě sazby téhož pravidla, ale **dvě různá pravidla**. První
+znamená „h2 nebo h3 uvnitř .acx-copy", druhé „prvek, který je zároveň
+.acx-copy a h2" — a to neodpovídá ničemu. Mezera před dvojtečkou je
+v selektoru dědičný kombinátor, ne ozdoba.
+
+Zkomolená byla **tři pravidla**:
+
+| pravidlo | důsledek |
+|---|---|
+| `.add-cross .acx-copy :is(h2, h3)` | nadpis „Najděte konkrétní pozemek" se sázel výchozí velikostí prohlížeče: **18,72 px**, tedy mimo naši stupnici |
+| `.leaflet-container :focus`, `… :focus-visible` | prstenec zaměření uvnitř mapy se neřídil stylopisem |
+| `:where(…mapa…) :where(*)` | moje čerstvé vyloučení mapy z lehkých přechodů bylo v ostrém stylopisu **mrtvé** — mapa by přechody dostala taky |
+
+První se našel měřením všech nadpisů proti stupnici: ze 108 viditelných
+stály mimo dva, a jeden z nich je plynulá velikost z `clamp()`, tedy
+záměr. Zbyl jediný — a ten vedl na příčinu.
+
+### Proč to nikdo nechytil
+
+`scripts/test-minifikace.mjs` existuje přesně na tohle: porovnává
+selektory zdroje a očištěné kopie jako množiny. Jenže jeho normalizace
+mazala mezery kolem dvojtečky taky — **obě strany si srovnal na týž
+tvar a mlčel**. Slepota z konstrukce: kontrola se nesmí opírat o touž
+záměnu, kterou má odhalit.
+
+### Oprava
+
+V minifikaci se dvojtečka řeší zvlášť a jen zprava (`color: red`
+v deklaraci se zkracuje dál, `.a :is(x)` v selektoru zůstává). Stejně
+v normalizaci hlídače.
+
+Cena: **5 bajtů** v css/styles.min.css (230 291 → 230 296 B).
+
+Doloženo sabotáží: vrácení minifikace do původního stavu shodí
+`test-minifikace` a vypíše všechna tři zkomolená pravidla jménem.
+Předtím táž sabotáž neudělala nic.
+
+### Co z toho plyne
+
+Pravidlo do CLAUDE.md: **artefakt, který se servíruje, se musí
+porovnávat se zdrojem tak, aby rozdíl, kterého se bojíme, normalizací
+nezmizel.** Totéž platí o měření obecně — hlídač najetí v §215 měřil
+0 prvků, hlídač přechodů v §217 znal jen půlku stavů, a tenhle si
+rozdíl umazal sám. Pokaždé to vypadalo jako „zeleno".

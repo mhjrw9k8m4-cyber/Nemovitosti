@@ -487,7 +487,7 @@ to{opacity:1;transform:none}
 .add-jak-sum::after{content:"";width:9px;height:9px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);transition:var(--prechod)}
 .add-jak[open] .add-jak-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
 .add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
-.add-cross .acx-copy:is(h2,h3){font-size:16px;margin-bottom:4px}
+.add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
 @media (max-width:640px){.add-hero{padding:96px 0 12px}

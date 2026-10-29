@@ -64,9 +64,18 @@ pravda('a nezůstal v ní ani jeden komentář', zbyle === 0, `zbylo ${zbyle} ko
    přítomnost pravidla, ne jeho sazba.
    Nepoužívá se k tomu funkce ocisti(): tohle je vlastní, mnohem hrubší
    srovnání, a to je záměr — kontrola se nesmí opírat o to, co kontroluje. */
+/* POZOR NA DVOJTEČKU — A JE TO DRAHO ZAPLACENÁ POZNÁMKA. Tahle
+   normalizace mazala mezery i PŘED dvojtečkou, jenže tam je v selektoru
+   dědičný kombinátor: `.acx-copy :is(h2,h3)` a `.acx-copy:is(h2,h3)`
+   jsou dvě různá pravidla a druhé neodpovídá ničemu. Minifikace tu
+   mezeru doopravdy mazala — a tahle kontrola, která přesně na tohle je,
+   si obě strany srovnala na týž tvar a mlčela. Slepota z konstrukce.
+   Naměřené důsledky viz §218. Zprava se mezera maže dál: tam je to
+   `color: red`. */
 function norm(sel) {
   return sel.replace(/\s+/g, ' ')
-    .replace(/\s*([:,>()])\s*/g, '$1')
+    .replace(/\s*([,>()])\s*/g, '$1')
+    .replace(/:\s+/g, ':')
     .trim();
 }
 function selektory(css) {

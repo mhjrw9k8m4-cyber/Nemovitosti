@@ -89,7 +89,18 @@ export function ocisti(css) {
     .replace(/\s+/g, ' ')
     /* Mezery okolo znaků, kde v CSS nic neznamenají. Kolem „+" a „~"
        se nesahá: jsou to i selektory (a + b), i znaménka v calc(). */
-    .replace(/\s*([{}:;,])\s*/g, '$1')
+    .replace(/\s*([{};,])\s*/g, '$1')
+    /* DVOJTEČKA ZVLÁŠŤ, A JEN ZPRAVA. Mezera PŘED dvojtečkou je
+       v selektoru dědičný kombinátor: `.acx-copy :is(h2,h3)` znamená
+       „h2 nebo h3 UVNITŘ .acx-copy". Když se smazala, vzniklo z toho
+       `.acx-copy:is(h2,h3)`, tedy „prvek, který je zároveň .acx-copy
+       a h2" — a to neodpovídá ničemu. Naměřené důsledky (§218):
+       nadpis „Najděte konkrétní pozemek" na cena-pozemku.html se
+       sázel výchozí velikostí prohlížeče (18,72 px, mimo stupnici)
+       a vyloučení mapy z lehkých přechodů bylo v minifikovaném
+       stylopisu mrtvé. V deklaraci (`color: red`) je mezera vpravo,
+       a ta se maže dál. */
+    .replace(/:\s+/g, ':')
     .replace(/\s*>\s*/g, '>')
     .replace(/;}/g, '}')
     /* Zlom řádku za každým pravidlem. Prohlížeči je to jedno a po

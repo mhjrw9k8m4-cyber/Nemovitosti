@@ -22,7 +22,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,[role="button"]:focus-
 a{color:inherit}
 .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:2px;border-radius:2px}
-.leaflet-container:focus,.leaflet-container:focus-visible,.leaflet-container:focus,.leaflet-container:focus-visible,.leaflet-interactive:focus,.leaflet-interactive:focus-visible,path.leaflet-interactive:focus,path.leaflet-interactive:focus-visible{outline:none !important}
+.leaflet-container:focus,.leaflet-container:focus-visible,.leaflet-container :focus,.leaflet-container :focus-visible,.leaflet-interactive:focus,.leaflet-interactive:focus-visible,path.leaflet-interactive:focus,path.leaflet-interactive:focus-visible{outline:none !important}
 .leaflet-zoom-box{display:none !important}
 
 ::selection{background:var(--znacka);color:var(--plocha-zapustena)}
@@ -39,7 +39,7 @@ a,button,[role="button"],input,select,textarea,label,summary{-webkit-tap-highlig
 a,button,[role="button"],input,select,textarea,label,summary{transition:var(--prechod)}
 a *,button *,[role="button"] *,summary *,label *,a::before,a::after,button::before,button::after{transition:var(--prechod-barvy)}
 :where(p,span,b,strong,em,i,u,small,abbr,time,code,kbd,mark,li,dt,dd,td,th,caption,figcaption,blockquote,address,h1,h2,h3,h4,h5,h6,hr,img,picture,div,section,article,aside,nav,header,footer,main,form,fieldset,ul,ol,dl,table,thead,tbody,tfoot,tr,details,summary,figure,label,svg,use,path,circle,ellipse,rect,line,polyline,polygon,text,g,tspan){transition:var(--prechod-barvy)}
-:where(.leaflet-container,.leaflet-pane,.kraj-lock,.pzm-mapa,.vm-mapa,.opp-map):where(*){transition:none}
+:where(.leaflet-container,.leaflet-pane,.kraj-lock,.pzm-mapa,.vm-mapa,.opp-map) :where(*){transition:none}
 .cdd-opt,.ms-navrhy li,.vm-navrhy li,.mc-hodnoty .mc-hodnota-radek,.opp-item::after,.okr-item::after,::-webkit-scrollbar-thumb{transition:var(--prechod-barvy)}
 button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"]{touch-action:manipulation}
 .btn-primary,.lp-btn,.nav-add,.pf-add,.pf-logout,.auth-submit,.map-nastroj,.okr-src{transition:var(--prechod)}
@@ -361,7 +361,7 @@ to{opacity:1;transform:none}
 }
 
 .add-cross{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:28px;padding:16px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
-.add-cross .acx-copy:is(h2,h3){font-size:16px;margin-bottom:4px}
+.add-cross .acx-copy :is(h2,h3){font-size:16px;margin-bottom:4px}
 .add-cross .acx-copy p{font-size:14px;color:var(--muted);line-height:1.5;max-width:var(--m-karta)}
 .add-cross .btn-primary{white-space:nowrap}
 @media (max-width:640px){.add-hero{padding:96px 0 12px}
