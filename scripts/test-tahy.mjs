@@ -26,15 +26,24 @@ import { hlasPad } from './zkouska-pad.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-/* PŘIBYLY DVĚ STRÁNKY S NEJVÍC IKONAMI — formulář „Přidat pozemek"
-   a „Uložené". Vzorek měl deset stránek a 43 ikon; po smazání tří
-   odznaků v „Jak to funguje" (byly display:none, viz 20. 10.) spadl
-   na 30 a předpoklad „je co měřit" (40) přestal platit. Snížit mez by
-   znamenalo měřit míň a tvářit se, že se nic nestalo; správně je
-   přibrat stránky, které ikony opravdu nesou. */
+/* PŘIBYLY STRÁNKY S NEJVÍC IKONAMI. Vzorek měl deset stránek a 43
+   ikon; po smazání tří odznaků v „Jak to funguje" (byly display:none,
+   viz 20. 10.) spadl na 30 a předpoklad „je co měřit" (40) přestal
+   platit. Snížit mez by znamenalo měřit míň a tvářit se, že se nic
+   nestalo; správně je přibrat stránky, které ikony opravdu nesou.
+
+   JEDNA Z NICH ALE NEEXISTOVALA. Přibralo se tehdy `/ulozene.html`
+   jako „Uložené" — jenže taková stránka na webu není (uložené pozemky
+   jsou na `porovnani.html`, které je v seznamu výš). Falešný server
+   posílá na neznámou adresu 404.html, takže se jeden z dvanácti
+   vzorků celou dobu měřil na chybové stránce. Projevilo se to až
+   v CI: tam se naměřilo 39 ikon proti meze 40 a zkouška spadla na
+   vlastní pojistce (běh 776). Místo ní je tu stránka pozemku, která
+   nese ikon nejvíc z celého webu, a pod tím kontrola, že žádná ze
+   stránek nevrací 404 — aby se tahle chyba nemohla vrátit mlčky. */
 const STRANKY = ['/index.html', '/hlidani.html', '/porovnani.html', '/kontakt.html',
   '/muj-inzerat.html', '/zpravy.html', '/cena-pozemku.html', '/drazby-pozemku.html',
-  '/podminky.html', '/ochrana-udaju.html', '/pridat.html', '/ulozene.html'];
+  '/podminky.html', '/ochrana-udaju.html', '/pridat.html', '/pozemek-benesov-benesov-1sjtz7b.html'];
 const CIL = 1.5;
 const TOLERANCE = 0.1;   // 1,40–1,60 px: pokryje zaokrouhlení stroke-width na dvě místa
 
@@ -54,15 +63,28 @@ const p = await prohlizec.newPage({ viewport: { width: 1280, height: 900 } });
 const vsechny = [];
 const nezmereno = [];
 
+const spatne = [];
 for (const url of STRANKY) {
-  await p.goto(BASE + url, { waitUntil: 'load' });
+  const odp = await p.goto(BASE + url, { waitUntil: 'load' });
+  if (!odp || odp.status() !== 200) spatne.push(`${url}: ${odp ? odp.status() : 'bez odpovědi'}`);
   /* POČKAT, AŽ SE STRÁNKA DOKRESLÍ, NE JEN ODTIKAT 1 800 ms.
      Výpisy se dopisují ze skriptu a stroj v CI je pomalejší než tenhle:
      naměřilo se tam 29 ikon proti 56 tady, tedy ani ne polovina, a
      zkouška spadla na vlastní pojistce „je co měřit". Plochý odpočet
      tvrdí, kolik to trvá; tohle se ptá, jestli už je hotovo — čeká, až
      se počet ikon mezi dvěma pohledy přestane měnit. */
+  /* A NEJDŘÍV AŤ KRESLENÍ VŮBEC ZAČNE. „Počet se mezi dvěma pohledy
+     nezměnil" se dá ukolébat tím, že se ještě nezačalo: v CI se takhle
+     na úvodní stránce naměřilo 11 ikon, zatímco tady jich je 39 —
+     výpis se nedokreslil a zkouška to brala jako hotový stav (běh 776,
+     celkem 39 proti vlastní meze 40). Kde stránka nese výpis nebo
+     detail pozemku, čeká se tedy nejdřív na jeho první prvek, a teprve
+     pak na ustálení počtu. */
   await p.waitForFunction(() => {
+    const vypis = document.querySelector('#opp-list');
+    if (vypis && !vypis.querySelector('.opp-item')) return false;
+    const detail = document.querySelector('#pz-detail');
+    if (detail && !detail.firstElementChild) return false;
     const n = document.querySelectorAll('svg').length;
     const stejne = window.__tahyPocet === n;
     window.__tahyPocet = n;
@@ -99,14 +121,26 @@ for (const url of STRANKY) {
 }
 await prohlizec.close();
 
+/* A ŽÁDNÁ Z NICH NESMÍ BÝT 404. Jedna adresa ze vzorku na webu
+   neexistovala a měřila se tedy chybová stránka — viz komentář
+   u seznamu. Tohle to příště řekne rovnou. */
+pravda('všechny stránky ve vzorku existují', spatne.length === 0,
+  'nevrátily 200: ' + spatne.join(', '));
+
 /* PŘEDPOKLAD: bez naměřených ikon by všechny kontroly prošly naprázdno.
-   Čtyřicet je bezpečně pod skutečností (naměřeno 47 na pěti stránkách)
-   a zároveň dost nad nulou, aby zachytilo rozbité načítání. */
+   Mez je ŠEDESÁT, dřív čtyřicet. Naměřeno 79 na dnešním vzorku (z toho
+   úvodní stránka 39, formulář 10, stránka pozemku 12, můj inzerát 9).
+   Čtyřicet bylo po opravě čekání i vzorku tak hluboko pod skutečností,
+   že by prošla i stránka, které se nedokreslila polovina — a přesně to
+   se v CI stalo (běh 776). Šedesát snese, že se v CI nedokreslí celá
+   stránka pozemku i celý formulář, a pořád pozná, že se nekreslí
+   výpis. Zvedat mez jde jen s měřením; snižovat ji znamená měřit míň
+   a tvářit se, že se nic nestalo. */
 /* Když jich je málo, musí být vidět KDE — jinak se hledá naslepo. */
 const poStrankach = STRANKY.map((u) => `${u}: ${vsechny.filter((x) => x.kde === u).length}`).join(', ');
-pravda(`je co měřit — ikon s tahem na ${STRANKY.length} stránkách`, vsechny.length >= 40,
+pravda(`je co měřit — ikon s tahem na ${STRANKY.length} stránkách`, vsechny.length >= 60,
   `naměřeno jen ${vsechny.length} ikon — kontroly níž by prošly naprázdno (${poStrankach})`);
-if (vsechny.length < 40) {
+if (vsechny.length < 60) {
   console.log('\nTah ikon');
   console.log(zpravy.join('\n'));
   console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

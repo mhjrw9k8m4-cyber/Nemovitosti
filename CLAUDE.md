@@ -465,6 +465,20 @@ má přeměřit.
    vršku. Zkrátit je na „DOM utichl" znamená, že zkouška projde, protože
    se nekoukala — nebo spadne na vadě, která v aplikaci není. U všech je
    to na místě napsané.
+   **A pozor, co se tím vlastně simuluje.** Zkouška, která vstup
+   napíše (`window.scrollTo`, `dispatchEvent`), nesimuluje jen
+   prohlížeč — simuluje i člověka, protože aplikace ty dva od sebe
+   nerozezná. `test-stabilita` takhle vyžadoval, aby stránka srovnala
+   nahoru „obnovenou polohu" zapsanou jako `scrollTo(0, 900)`, a držel
+   tím v kódu vadu: hlídka vršku srovnávala KAŽDÉ první zarolování, i to
+   lidské (§209). Kde se simuluje stav prohlížeče, musí se vyrobit
+   prohlížečem (obnovit stránku, zakrýt vlastnost init-skriptem), ne
+   zápisem, který umí i uživatel.
+   **A pozor, že stylopis má `scroll-behavior:smooth`:** každé
+   `scrollTo` ze zkoušky se tím ROZJEDE, takže kontrola měří cestu, ne
+   cíl. Tím prošla sabotáž „srovnávej plynule" — hlídka srovnávala
+   z 30 px, a to stihne i animace. Kde se měří poloha, roluje se
+   `behavior:'instant'`.
    **A pozor na ručně vyvolanou událost:** `page.click()` si playwright
    opakuje, dokud prvek nereaguje, ale `evaluate` s
    `dispatchEvent(new Event('input'))` se provede hned — když ještě

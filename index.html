@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-mKFUuBVHShvSf+DrmMUUfD72ByH3yE/GJjENkPw2tQY=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-Q14szWyZ0NkD4HuSSzd9/SLwCvq5hlx+rCbaFKBDBBY=' 'sha256-VbAw/BBdYmMcguSbz5exHde8W826XZGPCUZY83wqWP0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-Q14szWyZ0NkD4HuSSzd9/SLwCvq5hlx+rCbaFKBDBBY=' 'sha256-VbAw/BBdYmMcguSbz5exHde8W826XZGPCUZY83wqWP0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -28,17 +28,36 @@
      3) krátká pojistka po načtení, která ustoupí, jakmile uživatel sám scrolluje.
      Je to přímo v HTML, funguje hned a nezávisle na cache main.js. */
   (function(){
-    try{ if('scrollRestoration' in history) history.scrollRestoration='manual'; }catch(e){}
+    /* POZOR, TENHLE SKRIPT SE SERVÍRUJE. Komentáře v něm platí každý
+       návštěvník úvodní stránky (45 řádků = 1,5 kB gz), takže jsou tu
+       jen krátké důvody a celé zdůvodnění stojí v docs/optimalizace.md
+       §209 — včetně měření, tří pokusů o opravu a sabotáží.
+       Hlídka vršku srovnává polohu rolování nahoru. „manual" níž dělá
+       totéž a lépe; hlídka je pro případy, kam nedosáhne. */
+    var maManual = false;
+    try{ if('scrollRestoration' in history){ history.scrollRestoration='manual'; maManual = true; } }catch(e){}
     // Návrat z detailu pozemku (tlačítko „zpět") → nedržet vršek, mapa se sama vrátí na místo.
     try{ var _r=JSON.parse(sessionStorage.getItem('pk_map_return')||'null'); if(_r&&_r.t&&Date.now()-_r.t<60000) return; }catch(e){}
     if((location.hash && location.hash !== '#zpetna-vazba') || /[?&](p|lid|q|druh|maxc|mina)=/.test(location.search)) return; // respektuj sdílené odkazy a odkazy z Hlídání (ale #zpetna-vazba není sekce → drž vršek)
     var released=false, start=0;
-    function toTop(){ if(window.pageYOffset || document.documentElement.scrollTop){ window.scrollTo(0,0); } }
+    /* SKOKEM, NE PLYNULE: stylopis má scroll-behavior:smooth, takže
+       scrollTo(0,0) je ANIMACE — naměřeno 5 102 → 2 135 px za 400 ms
+       a pořád v letu, a po tu dobu se nikdo nedostane jinam (§209). */
+    var SKOKEM = 'scrollBehavior' in document.documentElement.style;
+    function toTop(){
+      if(!(window.pageYOffset || document.documentElement.scrollTop)) return;
+      if(SKOKEM) window.scrollTo({ top:0, left:0, behavior:'instant' });
+      else window.scrollTo(0,0);
+    }
     function softTop(){ if(!released) toTop(); }   // ustoupí, jakmile uživatel sám scrolluje
     function rel(){ released=true; }
     addEventListener('touchmove', rel, {passive:true});
     addEventListener('wheel', rel, {passive:true});
-    addEventListener('keydown', function(e){ if(['ArrowDown','PageDown','End',' ','ArrowUp','Home','PageUp'].indexOf(e.key)!==-1) released=true; });
+    /* I UKAZOVÁTKO A KTERÁKOLI KLÁVESA: posuvníkem, tabulátorem ani
+       Ctrl+F se neroluje kolečkem, a dřív se hlídka uvolňovala jen na
+       kolečko, dotyk a šest vyjmenovaných kláves. */
+    addEventListener('pointerdown', rel, {passive:true});
+    addEventListener('keydown', function(){ released=true; });
     /* HLÍDKA POSLOUCHÁ ROLOVÁNÍ, NEBĚŽÍ NA KAŽDÝ SNÍMEK.
        Dřív tu byla smyčka přes requestAnimationFrame, která 1,8 vteřiny
        volala toTop() na KAŽDÉM snímku. A toTop() čte pageYOffset —
@@ -52,9 +71,14 @@
        neděje, nestojí to nic. Okno je stejné (1,8 s) a ustupuje stejně
        (jakmile člověk sám roluje). */
     var doKdy = 0;
+    /* NEJVÝŠ JEDNO SROVNÁNÍ: prohlížeč obnoví polohu jednou, každé
+       další zarolování už je někdo jiný. Dřív se srovnávalo při každé
+       události scroll — naměřeno šest srovnání za sebou. */
     function priScrollu(){
       if(released || Date.now() > doKdy){ removeEventListener('scroll', priScrollu); return; }
       toTop();
+      released = true;
+      removeEventListener('scroll', priScrollu);
     }
     function hlidej(){
       doKdy = Date.now() + 1800;
@@ -63,11 +87,28 @@
       setTimeout(function(){ removeEventListener('scroll', priScrollu); }, 1900);
     }
     toTop();
-    hlidej();
-    addEventListener('DOMContentLoaded', softTop);
-    addEventListener('load', function(){ softTop(); setTimeout(softTop,60); setTimeout(softTop,200); setTimeout(softTop,500); });
+    /* NASADÍ SE JEN TAM, KDE JE CO OBNOVOVAT: při obnovení stránky,
+       při zpět/vpřed a v prohlížeči, který scrollRestoration neumí.
+       Kdo přišel na odkaz, žádnou dřívější polohu nemá — a hlídka by
+       mu sebrala první zarolování, které vyvolal sám (§209). */
+    var typNav = '';
+    try{
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      typNav = (nav && nav.type) || (performance.navigation && performance.navigation.type === 1 ? 'reload' : '');
+    }catch(e){}
+    if(!maManual || typNav === 'reload' || typNav === 'back_forward'){
+      hlidej();
+      addEventListener('DOMContentLoaded', softTop);
+      addEventListener('load', function(){ softTop(); setTimeout(softTop,60); setTimeout(softTop,200); setTimeout(softTop,500); });
+    }
     // Obnova z bfcache: znovu vynutit vršek (i kdyby byl guard dřív uvolněný)
-    addEventListener('pageshow', function(){ released=false; start=0; toTop(); setTimeout(softTop,0); setTimeout(softTop,120); hlidej(); });
+    /* JEN PŘI NÁVRATU ZE ZPĚTNÉ PAMĚTI (e.persisted) — na ni se
+       scrollRestoration nevztahuje. pageshow se jinak spustí pokaždé
+       a hlídka by se nasazovala i při běžném příchodu. */
+    addEventListener('pageshow', function(e){
+      if(!(e && e.persisted) && maManual) return;
+      released=false; start=0; toTop(); setTimeout(softTop,0); setTimeout(softTop,120); hlidej();
+    });
     // Před opuštěním stránky srolovat nahoru → co si prohlížeč uloží k obnovení, bude vršek
     addEventListener('pagehide', toTop);
     addEventListener('beforeunload', toTop);

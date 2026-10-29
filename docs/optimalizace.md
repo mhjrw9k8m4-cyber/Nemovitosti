@@ -13739,3 +13739,172 @@ samostatně — zapsáno jako úkol, ne zameteno.
 v `<use href>`. Zajímavé je, JAK se to projevilo: kontrola „ikona se
 vrátí k zvětšit" **procházela**, protože porovnávala dvě prázdna,
 a padala jen ta druhá. Obě čtečky teď berou jméno ikony.
+
+## §209 Hlídka vršku sebrala první zarolování — a „Zásady soukromí" se tím nedaly dostat do výhledu
+
+V §208 stojí, že `test-zaostreni` padá i ve stavu před 28. 10., takže to
+není dnešní vada. Zapsala se samostatně a tady je dojetá.
+
+Hlášení znělo: *okno „zásady soukromí": otvírač jde zaměřit a leží
+nahoře* → `{"nahore":false,"kde":"1618→1618","naBode":"nic"}`. Čte se
+to takhle: odkaz `[data-info]` je v patičce, `scrollIntoView` s ním
+nehnul (1 618 → 1 618) a na jeho středu neleží nic, protože je mimo
+okno.
+
+### Nejdřív se to nedalo reprodukovat — a to je samo o sobě nález
+
+| běh | výsledek |
+|---|---|
+| samostatně, dvakrát | 59/59 bez nálezu |
+| samostatně pod zátěží (6 smyček na 4 jádra), dvakrát | 59/59 bez nálezu |
+
+Zkouška totiž před měřením čeká, až se dokreslí výpis — a v klidu se
+tím dostane až ZA okno hlídky vršku (1,8 s od načtení). Padá tedy jen
+tam, kde se dočká dřív. Sonda, která měří schválně uvnitř toho okna,
+vadu vyrobí na první pokus:
+
+| pokus o dosažení odkazu | poloha | výsledek |
+|---|---|---|
+| ve 300. ms | y 3 923 → 3 923 | **nedosažitelný** |
+| v 800. ms | y 3 923 → 3 923 | **nedosažitelný** |
+| v 1 400. ms | y 4 122 → 4 122 | **nedosažitelný** |
+| ve 2 400. ms (po vypršení okna) | y 752 | dosažitelný |
+
+### Příčina: jedno srovnání trvá půldruhé sekundy
+
+Úvodní stránka má v `index.html` hlídku, která po načtení srovnává
+polohu rolování na vršek — kvůli prohlížečům, které si pamatují
+předchozí polohu. Instrumentovaný `window.scrollTo` (s výpisem, odkud
+se volá) ukázal celý průběh:
+
+```
+773ms scroll → 5102                      ← skok na patičku
+776ms scrollTo([0,0]) z toTop < priScrollu   ← hlídka ho srovnala
+804ms scroll → 5096
+...
+1171ms scroll → 2135                     ← a pořád je v letu
+```
+
+Stylopis má na `<html>` `scroll-behavior:smooth`, takže obyčejné
+`scrollTo(0,0)` není skok, ale ANIMACE. Jedno jediné srovnání tím na
+půldruhé sekundy obsadí rolování a zruší každý pokus dostat se jinam.
+Kdo v té době mířil na patičku, skončil uprostřed stránky.
+
+### Opravovalo se to na tři pokusy a první dva nestačily
+
+1. **Srovnávat nejvýš jednou.** Hlídka srovnávala při každé události
+   `scroll` po celou dobu okna — naměřeno šest srovnání za sebou. Po
+   opravě sonda hlásila dál **nedosažitelný**: to jedno srovnání je ta
+   půldruhé sekundy dlouhá animace.
+2. **Srovnávat skokem** (`behavior:'instant'`). Stránka tím skončí
+   čistě na nule místo uprostřed letu — ale skok na patičku je pořád
+   sebraný, takže odkaz je dál **nedosažitelný**.
+3. **Nasadit hlídku jen tam, kde je co obnovovat.** Obnovit polohu má
+   prohlížeč proč jen při obnovení stránky, při zpět/vpřed a při
+   návratu ze zpětné paměti; kdo přišel na odkaz, žádnou dřívější
+   polohu nemá. Typ navigace řekne prohlížeč sám
+   (`performance.getEntriesByType('navigation')[0].type`). Teprve tím
+   je odkaz **dosažitelný ve všech čtyřech okamžicích**.
+
+Zůstala i čtvrtá, menší oprava: hlídka se uvolňovala jen na kolečko,
+dotyk a šest vyjmenovaných kláves. Posuvníkem se roluje bez
+kterékoli z nich, stejně jako hledáním v textu (Ctrl+F) nebo
+tabulátorem. Uvolní se teď na stisk ukazovátka a na KTEROUKOLI klávesu.
+
+### Vadu držel v kódu hlídač, který měřil simulaci
+
+`test-stabilita` měl kontrolu „obnovenou polohu rolování stránka srovná
+na vršek" a obnovení simuloval zápisem `window.scrollTo(0, 900)`
+v dnešním prohlížeči. Od lidského zarolování se takový zápis nedá
+rozeznat — kontrola tedy vyžadovala přesně to chování, které člověku
+škodí. Proto taky hned po třetí opravě spadla.
+
+Měří se teď ve dvou prohlížečích:
+
+* **ve starém** — `scrollRestoration` se zakryje init-skriptem
+  (`delete History.prototype.scrollRestoration`), hlídka se nasadí
+  a musí obnovenou polohu srovnat, srovnat ji skokem, srovnat ji nejvýš
+  jednou, člověku ustoupit a po vypršení okna nedržet;
+* **v dnešním** — hlídka nasazená není, takže musí projít skok na
+  prvek ve 300. ms (to je ta dnešní vada), a obnovená stránka musí
+  stejně začít nahoře.
+
+Při tom se ukázalo, že i zarolování SAMÉ ZKOUŠKY se kvůli
+`scroll-behavior:smooth` rozjíždí, takže hlídka srovnávala z 30 px —
+a sabotáž „srovnávej plynule" kontrolou prošla. Zkouška proto roluje
+`behavior:'instant'` a měří z hlubokého konce stránky.
+
+### Sabotáže
+
+| co se vrátilo do starého stavu | co spadlo |
+|---|---|
+| hlídka nasazená i při běžném příchodu | skok na prvek v prvních 1,8 s |
+| hlídka jen podle `scrollRestoration`, bez typu navigace | po obnovení stránky hlídka nasazená je |
+| srovnávat plynule místo skokem | srovnává skokem **+** obnovenou polohu srovná |
+| bez uvolnění po prvním srovnání | druhé zarolování už hlídka nesebere |
+| odstranit jen naslouchání rolování | **nic** — a je to v pořádku, viz níž |
+| odstranit všechny tři cesty nasazení | obnovenou polohu srovná **+** srovnává skokem **+** po obnovení je nasazená |
+
+Ta pátá řádka je poučení sama pro sebe. Komentář u zkoušky dosud tvrdil,
+že „vypnout celou hlídku vršku a kontrola padá". Neplatí to: vršek po
+načtení drží TŘI nezávislé cesty — naslouchání rolování, záložní
+časovače po `load` a obsluha `pageshow` (ta se v prohlížeči bez
+`scrollRestoration` spustí při každém načtení, ne jen při návratu ze
+zpětné paměti). Vypnout jednu z nich výsledkem nepohne, protože ho
+zajistí druhá. Kontrola hlídá VÝSLEDEK, a to je u takhle zdvojené
+pojistky správně; spadne, až když se vypnou všechny.
+
+### Co tím prokázané NENÍ
+
+V bodě „ve starém prohlížeči" se nemluví se skutečným starým Safari,
+jen s prohlížečem, kterému se jedna vlastnost zakryla. Prokazuje se
+tedy, že hlídka funguje, když se nasadí — ne že se ve starém Safari
+nasadí. A původní hlášení majitele („stránka se otvírá uprostřed" na
+iPhonu) se tady reprodukovat nedá vůbec. Kdyby se vrátilo, správná
+oprava NENÍ nasadit hlídku zpátky na každý příchod — na to je teď
+kontrola, která padne — ale zjistit, o jaký typ navigace jde.
+
+## §210 Jeden ze dvanácti vzorků se měřil na chybové stránce
+
+`test-tahy` měří vykreslený tah KAŽDÉ ikony na dvanácti stránkách a
+`test-ikony` hlídá sadu tvarů. V CI (běh 776) spadl ten první na
+vlastní pojistce: **naměřeno 39 ikon proti meze 40.** Lokálně
+procházel. Padly přitom dvě různé věci a obě jsou starší než dnešní
+práce.
+
+### 1. Stránka, která nikdy neexistovala
+
+Ve vzorku stálo `/ulozene.html` jako „Uložené" — jenže taková stránka
+na webu není. Uložené pozemky jsou na `porovnani.html`, které je ve
+vzorku taky. Falešný server posílá na neznámou adresu `404.html`, takže
+se jeden z dvanácti vzorků celou dobu měřil na chybové stránce.
+
+Místo ní je ve vzorku stránka pozemku (nese 12 ikon) a přibyla
+kontrola, že žádná stránka ve vzorku nevrací jiný stav než 200.
+
+### 2. Čekání se dalo ukolébat tím, že kreslení nezačalo
+
+Zkouška čekala, až se počet `<svg>` mezi dvěma pohledy přestane
+měnit — tedy na „už je hotovo". Jenže totéž platí, než se vůbec začne:
+
+| stránka | tady | v CI |
+|---|---|---|
+| `/index.html` | **39** | **11** |
+| `/pridat.html` | 10 | 10 |
+| `/muj-inzerat.html` | 9 | 9 |
+
+Na úvodní stránce se v CI nedokreslil výpis a zkouška to vzala jako
+hotový stav. Ostatní stránky sedí přesně, takže to není pomalý stroj
+obecně — je to jeden konkrétní kus, který se dopisuje ze skriptu.
+Kde stránka nese výpis (`#opp-list`) nebo detail pozemku
+(`#pz-detail`), čeká se teď nejdřív na jeho první prvek a teprve pak
+na ustálení počtu.
+
+### A mez se tím zvedla, ne snížila
+
+Vzorek po obou opravách nese **79 ikon** (úvod 39, formulář 10, stránka
+pozemku 12, můj inzerát 9, zbytek po jedné až dvou). Mez 40 byla tak
+hluboko pod skutečností, že by prošla i stránka, které se nedokreslila
+polovina — přesně to se v CI stalo. Je proto **60**: snese, že se v CI
+nedokreslí celá stránka pozemku i celý formulář, a pořád pozná, že se
+nekreslí výpis.

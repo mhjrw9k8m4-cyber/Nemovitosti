@@ -291,74 +291,205 @@ for (const [sirka, vyska, jmeno, dotyk] of [[390, 844, 'telefon', true], [1280, 
  * nutí prohlížeč přepočítat rozvržení. Naměřeno profilerem (střídavě,
  * starý proti novému, aby se vyloučilo zatížení stroje): 184–205 ms
  * procesoru navíc. Teď se to ptá jen tehdy, když se opravdu roluje.
- * Hlídá se CHOVÁNÍ, ne zápis: obnovenou polohu srovnat, člověku ustoupit,
- * po vypršení okna nedržet.
  *
- * CO TAHLE KONTROLA NEUMÍ, a je lepší to mít napsané: chrání VÝSLEDEK
- * („stránka začíná nahoře"), ne konkrétní hlídku. Ověřeno sabotáží —
- * vypnout celou hlídku vršku a kontrola padá; vypnout jen naslouchání
- * rolování a projde, protože polohu v tu chvíli srovnají ještě záložní
- * časovače a srovnání mapy do zorného pole. Oddělit to od sebe chováním
- * nejde, těch mechanismů je tam víc a všechny táhnou nahoru. */
+ * HLÍDKA SE NASAZUJE JEN TAM, KAM NEDOSÁHNE history.scrollRestoration.
+ * Moderní prohlížeč polohu na „manual" nevrací vůbec, takže hlídka v něm
+ * nemá co srovnávat — a kdyby byla nasazená, sebrala by PRVNÍ zarolování
+ * po načtení tomu, kdo ho vyvolal: skoku na prvek, odkazu do patičky,
+ * hledání v textu. Přesně tím padal hlídač zaměření (oddíl 209).
+ *
+ * TOHLE SE PROTO MĚŘÍ VE DVOU PROHLÍŽEČÍCH:
+ *   1) ve starém — scrollRestoration se zakryje init-skriptem, hlídka se
+ *      nasadí a musí obnovenou polohu srovnat, člověku ustoupit a po
+ *      vypršení okna nedržet;
+ *   2) v dnešním — hlídka nasazená není, a tak musí projít skok na prvek
+ *      hned po načtení; a obnovení stránky stejně skončí nahoře, protože
+ *      to zařídí „manual".
+ *
+ * Dřív tu byla jen simulace „jako by polohu obnovil prohlížeč" zapsaná
+ * jako window.scrollTo(0,900) v dnešním prohlížeči. Od lidského
+ * zarolování se takový zápis nedá rozeznat, takže kontrola vyžadovala
+ * přesně to chování, které člověku škodí — a držela tak vadu v kódu.
+ *
+ * CO TAHLE SADA NEUMÍ, a je lepší to mít napsané: v bodě 1 se nemluví
+ * se skutečným starým Safari, jen s prohlížečem, kterému se jedna
+ * vlastnost zakryla. Prokazuje tedy, že hlídka funguje, když se nasadí —
+ * ne že se ve starém Safari nasadí. */
 {
-  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 } });
-  await ctx.route('**/*', (r) => {
-    const u = new URL(r.request().url());
-    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
-    if (r.request().resourceType() === 'image') {
-      return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA_DLAZDICE });
-    }
-    return LEAFLET ? r.abort() : r.continue();
-  });
-  await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
-    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
-  if (LEAFLET) {
-    await ctx.route('https://unpkg.com/leaflet@**', (r) => {
-      const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
-      if (!existsSync(f)) return r.abort();
-      return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript',
-        body: readFileSync(f) });
+  /* ZAROLOVÁNÍ ZKOUŠKY JE SKOK, NE ANIMACE. Stylopis má na <html>
+     scroll-behavior:smooth, takže i window.scrollTo(0, 900) ze zkoušky
+     se ROZJEDE a první událost scroll přijde po pár desítkách pixelů.
+     Sabotáž „srovnávej plynule" tím kontrolou prošla: hlídka srovnávala
+     z 30 px, a to stihne i animace. Obnovená poloha se přitom
+     neanimuje — prohlížeč ji nastaví skokem. Měří se tedy skokem. */
+  const SKOC = (p, kam) => p.evaluate((y) => window.scrollTo({ top: y, left: 0, behavior: 'instant' }), kam);
+  /* Prohlížeč, který scrollRestoration neumí: vlastnost se smaže
+     z History.prototype, takže `'scrollRestoration' in history` je
+     nepravda a stránka hlídku nasadí. */
+  const STARY = () => { try { delete History.prototype.scrollRestoration; } catch (e) { /* nic */ } };
+  const kontext = async (stary) => {
+    const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block', viewport: { width: 390, height: 844 } });
+    await ctx.route('**/*', (r) => {
+      const u = new URL(r.request().url());
+      if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+      if (r.request().resourceType() === 'image') {
+        return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA_DLAZDICE });
+      }
+      return LEAFLET ? r.abort() : r.continue();
     });
+    await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+      body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+    if (LEAFLET) {
+      await ctx.route('https://unpkg.com/leaflet@**', (r) => {
+        const f = path.join(LEAFLET, path.basename(new URL(r.request().url()).pathname));
+        if (!existsSync(f)) return r.abort();
+        return r.fulfill({ status: 200, contentType: f.endsWith('.css') ? 'text/css' : 'text/javascript',
+          body: readFileSync(f) });
+      });
+    }
+    if (stary) await ctx.addInitScript(STARY);
+    return ctx;
+  };
+
+  // ---- 1) prohlížeč bez scrollRestoration: hlídka je nasazená ----
+  const ctxS = await kontext(true);
+  {
+    const p = await ctxS.newPage();
+    await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    pravda('v prohlížeči bez scrollRestoration se hlídka opravdu nasadí (jinak zkouška nic neměří)',
+      await p.evaluate(() => !('scrollRestoration' in history)),
+      'vlastnost se zakrýt nepodařilo');
+    /* AŽ PO 900 ms, a to schválně. Vedle hlídky stojí ještě záložní
+       časovače (60, 200 a 500 ms po načtení). Napoprvé jsem měřil ve
+       400. ms — a kontrola prošla i po sabotáži, která hlídku vypnula,
+       protože polohu srovnal ten časovač na 500 ms. Měřila tedy něco
+       jiného, než co tvrdila. Po 900 ms už žádný časovač nezbývá a okno
+       hlídky (1,8 s) ještě běží. */
+    await p.waitForTimeout(900);
+    /* Pojistka: musí být kam rolovat, jinak níž nic neměříme. */
+    const kam = await p.evaluate(() => document.documentElement.scrollHeight - innerHeight);
+    pravda('stránka je delší než okno (jinak zkouška nic neměří)', kam > 900, `zbývá ${kam} px`);
+    await SKOC(p, 900);                                // jako by polohu obnovil prohlížeč
+    await p.waitForTimeout(500);
+    pravda('obnovenou polohu rolování stránka srovná na vršek',
+      (await p.evaluate(() => Math.round(scrollY))) === 0, 'zůstalo jinde než nahoře');
+    /* A SROVNÁ NEJVÝŠ JEDNOU. Prohlížeč obnoví polohu při načtení
+       jednou; každé další zarolování už je někdo jiný. Dřív hlídka
+       srovnávala při každé události scroll po celou dobu okna —
+       naměřeno šest srovnání za sebou — takže komu rolování nevyvolalo
+       kolečko ani dotyk (posuvník, Ctrl+F, skok na prvek), tomu
+       stránka skákala nahoru dokola. Druhé zarolování tedy musí
+       zůstat. */
+    await SKOC(p, 900);
+    await p.waitForTimeout(400);
+    pravda('druhé zarolování už hlídka nesebere (srovnává nejvýš jednou)',
+      (await p.evaluate(() => Math.round(scrollY))) > 300, 'srovnala i druhé zarolování');
+    /* A SROVNÁ JI SKOKEM, NE PLYNULE. Stylopis má na <html>
+       scroll-behavior:smooth, takže scrollTo(0,0) spustí animaci —
+       naměřeno 5 102 → 2 135 px za 400 ms a pořád v letu. Kdo mezitím
+       mířil jinam, přišel o to. Měří se tedy, že do 150 ms je stránka
+       na nule celá, ne na cestě.
+       MĚŘÍ SE Z DÁLKY, a to schválně: z 900 px prohlížeč tu animaci
+       stihne i do 150 ms, takže sabotáž (vrátit plynulé rolování)
+       kontrolou prošla. Obnovená poloha bývá kdekoli, a čím dál, tím
+       delší animace — bere se tedy hluboký konec stránky, kde se
+       plynulé rolování od skoku pozná. */
+    const p1b = await ctxS.newPage();
+    await p1b.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p1b.waitForTimeout(900);
+    const DALEKO = await p1b.evaluate(() => {
+      const kam = Math.min(4000, document.documentElement.scrollHeight - innerHeight);
+      window.scrollTo({ top: kam, left: 0, behavior: 'instant' });
+      return kam;
+    });
+    pravda('je kam zarolovat daleko (jinak zkouška nic neměří)', DALEKO >= 2000, `jen ${DALEKO} px`);
+    await p1b.waitForTimeout(150);
+    pravda('srovnává skokem, ne plynulou animací (do 150 ms je na nule)',
+      (await p1b.evaluate(() => Math.round(scrollY))) === 0, 'po 150 ms je ještě v letu');
+
+    const p2 = await ctxS.newPage();
+    await p2.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p2.waitForTimeout(300);
+    await p2.mouse.wheel(0, 700);
+    await p2.waitForTimeout(700);
+    pravda('ale když roluje člověk, hlídka ustoupí',
+      (await p2.evaluate(() => Math.round(scrollY))) > 300, 'člověka to vrátilo nahoru');
+
+    const p3 = await ctxS.newPage();
+    await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    /* A TOHLE ČEKÁNÍ JE MĚŘICÍ OKNO — tentokrát se čeká, až
+       aplikaci VYPRŠÍ LHŮTA. Hlídka drží vršek stránky 1,8 s po načtení;
+       kontrola pod tím ověřuje, že POTOM už nedrží. „DOM utichl" se
+       dočkal dřív, hlídka byla ještě živá a zkouška padla na vadě, která
+       v aplikaci není — naměřeno v sadě: „drží vršek i po 2,6 s".
+       Čeká se tedy pevně, a o chlup dýl než trvá ta lhůta. */
+    await p3.waitForTimeout(2600);
+    await SKOC(p3, 900);
+    await p3.waitForTimeout(400);
+    pravda('a po vypršení okna už nedrží vůbec',
+      (await p3.evaluate(() => Math.round(scrollY))) > 300, 'drží vršek i po 2,6 s');
+    await ctxS.close();
   }
-  const p = await ctx.newPage();
-  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  /* AŽ PO 900 ms, a to schválně. Vedle hlídky stojí ještě záložní
-     časovače (60, 200 a 500 ms po načtení). Napoprvé jsem měřil ve
-     400. ms — a kontrola prošla i po sabotáži, která hlídku vypnula,
-     protože polohu srovnal ten časovač na 500 ms. Měřila tedy něco
-     jiného, než co tvrdila. Po 900 ms už žádný časovač nezbývá a okno
-     hlídky (1,8 s) ještě běží. */
-  await p.waitForTimeout(900);
-  /* Pojistka: musí být kam rolovat, jinak níž nic neměříme. */
-  const kam = await p.evaluate(() => document.documentElement.scrollHeight - innerHeight);
-  pravda('stránka je delší než okno (jinak zkouška nic neměří)', kam > 900, `zbývá ${kam} px`);
-  await p.evaluate(() => window.scrollTo(0, 900));   // jako by polohu obnovil prohlížeč
-  await p.waitForTimeout(500);
-  pravda('obnovenou polohu rolování stránka srovná na vršek',
-    (await p.evaluate(() => Math.round(scrollY))) === 0, 'zůstalo jinde než nahoře');
 
-  const p2 = await ctx.newPage();
-  await p2.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  await p2.waitForTimeout(300);
-  await p2.mouse.wheel(0, 700);
-  await p2.waitForTimeout(700);
-  pravda('ale když roluje člověk, hlídka ustoupí',
-    (await p2.evaluate(() => Math.round(scrollY))) > 300, 'člověka to vrátilo nahoru');
+  // ---- 2) dnešní prohlížeč: hlídka nasazená není ----
+  const ctxN = await kontext(false);
+  {
+    /* SKOK NA PRVEK HNED PO NAČTENÍ MUSÍ PROJÍT. Tohle je vada
+       z oddílu 209: odkaz „Zásady soukromí" v patičce se v prvních
+       1,8 s nedal dostat do výhledu, protože hlídka to první zarolování
+       srovnala zpátky. Měří se uvnitř toho okna, ve 300. ms. */
+    const p4 = await ctxN.newPage();
+    await p4.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p4.waitForTimeout(300);
+    const cil = p4.locator('[data-info]').last();
+    await cil.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
+    await p4.waitForTimeout(400);
+    const dosah = await cil.evaluate((e) => {
+      const r = e.getBoundingClientRect();
+      const na = (r.width && r.height)
+        ? document.elementFromPoint(Math.round(r.x + r.width / 2), Math.round(r.y + r.height / 2)) : null;
+      return { nahore: !!(na && (na === e || e.contains(na))), y: Math.round(r.y), posun: Math.round(scrollY) };
+    });
+    pravda('skok na prvek v prvních 1,8 s stránka nesebere (odkaz v patičce je dosažitelný)',
+      dosah.nahore, `odkaz leží na y=${dosah.y}, posun ${dosah.posun} px`);
 
-  const p3 = await ctx.newPage();
-  await p3.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
-  /* A TOHLE ČEKÁNÍ JE TŘETÍ MĚŘICÍ OKNO — tentokrát se čeká, až
-     aplikaci VYPRŠÍ LHŮTA. Hlídka drží vršek stránky 2,5 s po načtení;
-     kontrola pod tím ověřuje, že POTOM už nedrží. „DOM utichl" se
-     dočkal dřív, hlídka byla ještě živá a zkouška padla na vadě, která
-     v aplikaci není — naměřeno v sadě: „drží vršek i po 2,6 s".
-     Čeká se tedy pevně, a o chlup dýl než trvá ta lhůta. */
-  await p3.waitForTimeout(2600);
-  await p3.evaluate(() => window.scrollTo(0, 900));
-  await p3.waitForTimeout(400);
-  pravda('a po vypršení okna už nedrží vůbec',
-    (await p3.evaluate(() => Math.round(scrollY))) > 300, 'drží vršek i po 2,6 s');
-  await ctx.close();
+    /* A OBNOVENÍ STRÁNKY STEJNĚ SKONČÍ NAHOŘE — tohle je ten důvod,
+       proč hlídka v dnešním prohlížeči nasazená být nemusí. Kdyby
+       „manual" přestal platit (třeba kdyby ta řádka z hlavičky zmizela),
+       padne tahle kontrola a ne hlídač zaměření. */
+    const p5 = await ctxN.newPage();
+    await p5.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p5.waitForTimeout(2600);          // až po vypršení okna, ať polohu drží jen prohlížeč
+    await SKOC(p5, 1200);
+    await p5.waitForTimeout(400);
+    pravda('před obnovením stránka opravdu stojí níž (jinak zkouška nic neměří)',
+      (await p5.evaluate(() => Math.round(scrollY))) > 600, 'nezarolovalo se');
+    await p5.reload({ waitUntil: 'domcontentloaded' });
+    await p5.waitForTimeout(900);
+    pravda('obnovená stránka začíná nahoře',
+      (await p5.evaluate(() => Math.round(scrollY))) === 0, 'obnovená stránka začala jinde než nahoře');
+    /* MĚŘENO SABOTÁŽÍ: tahle kontrola projde i bez
+       scrollRestoration='manual', protože vršek po obnovení drží ještě
+       třetí pojistka — pagehide a beforeunload srovnají stránku PŘED
+       odchodem, takže prohlížeč si ukládá nulu. Hlídá se tu výsledek,
+       ke kterému vedou tři cesty, ne jedna z nich. */
+
+    /* PŘI OBNOVENÍ STRÁNKY HLÍDKA NASAZENÁ BÝT MUSÍ, i v dnešním
+       prohlížeči. Tam je totiž co obnovovat — a kdyby se hlídka vázala
+       jen na „prohlížeč neumí scrollRestoration", na obnovení stránky
+       by nebyla vůbec. Měří se stejně jako u starého prohlížeče:
+       obnovit, uvnitř okna skočit jinam, a to se musí srovnat. */
+    const p6 = await ctxN.newPage();
+    await p6.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+    await p6.reload({ waitUntil: 'domcontentloaded' });
+    await p6.waitForTimeout(900);
+    await SKOC(p6, 900);
+    await p6.waitForTimeout(500);
+    pravda('a po obnovení stránky hlídka nasazená je (obnovenou polohu srovná)',
+      (await p6.evaluate(() => Math.round(scrollY))) === 0,
+      'po obnovení se poloha nesrovnala — hlídka se nenasadila');
+    await ctxN.close();
+  }
 }
 
 await prohlizec.close();
