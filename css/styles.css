@@ -1629,7 +1629,7 @@ header.shrink{padding:12px 0;}
   /* (Barvu i vypnuté rozmazání má hlavička nově v základním pravidle,
      takže tu nezbylo co přepisovat.) */
 }
-header .wrap{display:flex; align-items:center; justify-content:space-between;}
+header .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px;}
 /* ZNAČKA V LIŠTĚ JE NÁPIS, NE POPISEK.
    Bylo to 24 px na monitoru a 20 px na telefonu, váha 700, barva
    stejná jako běžný text — tedy slovo, které v liště splývalo s
@@ -1652,8 +1652,50 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
    a 1440 px: hlavička 65 / 65 / 65 / 65 / 85,4 / 85,4 px před i po.
    Dlaždice 29 → 32 px je navíc kresba v měřítku 1 : 1 — logo-mark.svg
    má plátno 32×32. */
+/* ZNAČKA JE TO PRVNÍ, CO Z WEBU ČLOVĚK VIDÍ — AŤ JE VIDĚT.
+   Majitel 29. 10.: „sem nahoru vlož velké logo, opravdu si s tím
+   vyhraj, i s těmi třemi čárkami, ať je tam prostor." Naměřeno před
+   zásahem na 390 px: značka 151×32 v řádce vysoké 44 px, tedy
+   drobnost vmáčknutá mezi hamburger a okraj.
+   Teď: terč 40 px (na monitoru 44), písmo 28 px (32), mezera mezi nimi
+   8 px (12) a kolem celé řádky 12 px odstupu. Čísla jsou ze stupnic,
+   ne od oka: 30/34 px a 10px mezera shodily test-pismo i test-odstupy
+   — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
+   na --r-ovladani, ať nevypadá jako nalepená nálepka. */
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:8px; text-decoration:none;}
-.logo-mark{width:32px; height:32px; border-radius:var(--r-sm); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
+.logo-mark{width:40px; height:40px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
+@media (min-width:1041px){
+  .logo{font-size:32px; gap:12px;}
+  .logo-mark{width:44px; height:44px;}
+}
+
+/* PROFIL VPRAVO NAHOŘE. Do 29. 10. byl účet jen uvnitř výsuvné
+   nabídky, tedy za třemi čárkami — kdo je přihlášený, neměl na
+   obrazovce nic, co by mu to řeklo.
+   JEN TAM, KDE JE NABÍDKA SCHOVANÁ. Na monitoru stojí „Můj profil"
+   v liště sám (nav-ucet-sk), takže druhá ikona vedle něj by říkala
+   totéž dvakrát; ukazuje se proto do 1040 px.
+   STAV KRESLÍ STYL, NE SKRIPT: třídu `pk-prihlasen` nasazuje na <html>
+   vložený skript v hlavičce ještě před vykreslením (js/hlavicka.js),
+   takže tečka nebliká a nepotřebuje vlastní kód. */
+.hdr-ucet{display:none;}
+@media (max-width:1040px){
+  .hdr-ucet{flex:none; display:inline-flex; align-items:center; justify-content:center;
+    position:relative; width:44px; height:44px; padding:0;
+    border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+    background:var(--plocha-karta); color:var(--text); text-decoration:none;
+    transition:var(--prechod);}
+  .hdr-ucet .ik{width:22px; height:22px; stroke-width:1.64;}
+  .hdr-ucet:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
+  .hdr-ucet:active{transform:translateY(1px);}
+  /* Tečka je stav, ne ozdoba: svítí jen přihlášenému. Obtah v barvě
+     plochy ji odděluje od ikony pod ní, ať nesplyne s tahem. */
+  .hdr-ucet::after{content:""; position:absolute; right:6px; top:6px;
+    width:9px; height:9px; border-radius:50%;
+    background:var(--znacka-svetla); border:2px solid var(--plocha-karta);
+    opacity:0; transition:var(--prechod-barvy);}
+  :root.pk-prihlasen .hdr-ucet::after{opacity:1;}
+}
 
 /* ROZCESTNÍK NA TELEFONU JE PRYČ — NA PŘÁNÍ MAJITELE.
    Stál nad hledáním na úvodní stránce: šest dlaždic (Stavební, Zahrady,
@@ -3527,27 +3569,30 @@ h1 em{ color:var(--znacka-svetla);
 /* Kč/m² jako jemný neutrální štítek — hodnotný, ale bez dalších barev */
 .opp-perm2{align-self:center; font-size:12px; font-weight:600; color:var(--muted); background:var(--plocha-jemna); border:1px solid var(--line); border-radius:var(--r-xs); padding:2px 8px; font-variant-numeric:tabular-nums; white-space:nowrap;}
 /* Řádek odznaků — všechny stavy pohromadě, stejný tvar */
-/* HLAVIČKA WEBU: značka a jedna věta, co tu je.
+/* NADPIS ÚVODNÍ STRÁNKY — V DOKUMENTU, NE NA OBRAZOVCE.
    ------------------------------------------------------------------
-   Majitel webu chtěl nahoře velký nadpis „Parcelka". Samotné zopakované
-   slovo pod lištou, která nese totéž, ale vypadá jako vada — proto pod
-   ním stojí i věta, co stránka nabízí. Tím je z toho hlavička webu,
-   ne druhá značka. Popis stránky pro odečítač a vyhledávač zůstává
-   uvnitř <h1> (viz index.html). */
+   Nejdřív tu stála značka „Parcelka", pak věta „Pozemky na prodej…"
+   na tmavé desce. Od 29. 10. nestojí nahoře ani jedno: značku nese
+   lišta (a od téhož dne je v ní velká), takže deska opakovala totéž
+   podruhé a odsouvala hledání. Nadpis si proto nese .visually-hidden
+   (viz index.html) — pravidla níž mu tedy nastavují vzhled, který
+   nikdo neuvidí, a jsou tu ze dvou důvodů: ať není mrtvý selektor
+   (test-mrtve-styly) a ať má <h1> velikost z pojmenovaného stupně
+   (test-jeden-styl, viz hned další odstavec). */
 /* Selektor je `h1.uvod-nadpis`, ne jen třída — a to schválně.
    scripts/test-jeden-styl.mjs hlídá, že velikost nadpisu pochází
    z pojmenovaného stupně, jenže hledá pravidla se SELEKTOREM h1.
    Dokud byl nadpis úvodní stránky jen třída, zkouška o něm nevěděla
    a mohl si (a taky si držel) opsaných 40 px mimo stupnici. */
-/* ROZCESTNÍK POD NADPISEM — vzor Sreality: to, co lidé hledají
-   nejčastěji, hned pod nadpisem. Na širokém displeji se skrývá:
-   tam je mapa přes půl obrazovky a rozcestník by jen odsouval to,
-   kvůli čemu sem člověk jde.
+/* ROZCESTNÍK NAD VÝPISEM — vzor Sreality: to, co lidé hledají
+   nejčastěji, u toho, v čem se vybírá. Do 29. 10. stál pod nadpisem
+   na desce; s deskou šel pryč i odtud, ale nezrušil se — jsou to
+   jediné odkazy na čtyři stránky webu (viz pravidlo o šířce níž).
    JEDEN POSUVNÝ ŘÁDEK, NE MŘÍŽKA DLAŽDIC. Napoprvé to byly dvě
    řady dlaždic — naměřeno na 390×844: pruh 112 px a první nabídka
    spadla ze 448 na 551 px, tedy HORŠÍ než stav před opravou.
    Posuvný řádek pilulek má 48 px a první nabídka je na 439. */
-.uvod-vstupy{display:flex; gap:8px; overflow-x:auto; margin:0 0 16px;
+.uvod-vstupy{display:flex; flex:0 0 auto; gap:8px; overflow-x:auto; margin:0 0 16px;
   padding:0 var(--okraj-stranky) 4px; scrollbar-width:none;
   -webkit-overflow-scrolling:touch;}
 .uvod-vstupy::-webkit-scrollbar{display:none;}
@@ -3557,7 +3602,12 @@ h1 em{ color:var(--znacka-svetla);
   color:var(--text); font-size:14px; font-weight:600; text-decoration:none;
   white-space:nowrap;}
 .uvod-vstupy a:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
-@media (min-width:900px){ .uvod-vstupy{display:none;} }
+/* ROZCESTNÍK SE UŽ NESKRÝVÁ NA ŠIROKÉM DISPLEJI. Skrýval se, dokud
+   stál nad mapou a jen ji odsouval. Mezitím se přestěhoval nad výpis
+   a ukázalo se, co to schování znamenalo: na dražby, exekuce, stavební
+   pozemky a ornou půdu nevede z úvodní stránky JINÝ odkaz než tenhle
+   (spočítáno grepem v index.html: jeden výskyt každé z nich). Nad
+   900 px tedy byly ty čtyři stránky z úvodu nedostupné. */
 
 h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-weight:700;
   letter-spacing:-0.01em; line-height:1.3; color:var(--pas-text);
@@ -3571,14 +3621,9 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 /* 8/12 px, ne 12/16. Na telefonu je první nabídka strop, ne doporučení:
    scripts/test-prvni-obrazovka.mjs ji chce nad 450 px z 844. S 12/16 px
    vyšla na 457. Tahle čtyři a čtyři pixely jsou ten rozdíl. */
-.st-hlava.uvod-hlava{margin-bottom:0; padding:8px 0 12px;}
-.uvod-hlava .uvod-vstupy{margin:8px 0 0;}
-/* Pilulky rozcestníku stály na bílé kartě s inkoustovým obrysem. Na desce
-   by z nich byly bílé knoflíky — nesou proto tutéž tlumenou plochu jako
-   odznak a obrys z --pas-obrys, který má na desce 3,97 : 1. */
-.uvod-hlava .uvod-vstupy a{background:var(--pas-dlazdice);
-  border-color:var(--pas-obrys); color:var(--pas-text);}
-.uvod-hlava .uvod-vstupy a:hover{border-color:var(--pas-akcent); color:var(--pas-akcent);}
+/* Deska .uvod-hlava a její tři pravidla jsou pryč (29. 10.): úvod
+   už deskou nezačíná, takže třída ve značkování není a pravidla by
+   byla mrtvá — hlídá scripts/test-mrtve-styly.mjs. */
 /* Počet nabídek je v té větě to jediné, co se mění — a jediné, co je
    slib. Dokud byla věta podtitulkem, odlišovala se plnou barvou od
    tišší šedi okolo. Teď je z ní <h1> a celá je plnou barvou, takže

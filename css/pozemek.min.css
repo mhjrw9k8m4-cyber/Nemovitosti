@@ -92,9 +92,20 @@ header:focus-within{opacity:1 !important;pointer-events:auto !important}
 }
 body{padding-top:var(--vyska-hlavicky,85px)}
 
-header .wrap{display:flex;align-items:center;justify-content:space-between}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:8px;text-decoration:none}
-.logo-mark{width:32px;height:32px;border-radius:var(--r-sm);background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat;box-shadow:var(--glow)}
+.logo-mark{width:40px;height:40px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat;box-shadow:var(--glow)}
+@media (min-width:1041px){.logo{font-size:32px;gap:12px}
+.logo-mark{width:44px;height:44px}
+}
+.hdr-ucet{display:none}
+@media (max-width:1040px){.hdr-ucet{flex:none;display:inline-flex;align-items:center;justify-content:center;position:relative;width:44px;height:44px;padding:0;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-karta);color:var(--text);text-decoration:none;transition:var(--prechod)}
+.hdr-ucet .ik{width:22px;height:22px;stroke-width:1.64}
+.hdr-ucet:hover{border-color:var(--znacka-svetla);color:var(--znacka)}
+.hdr-ucet:active{transform:translateY(1px)}
+.hdr-ucet::after{content:"";position:absolute;right:6px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--znacka-svetla);border:2px solid var(--plocha-karta);opacity:0;transition:var(--prechod-barvy)}
+:root.pk-prihlasen .hdr-ucet::after{opacity:1}
+}
 .nav-burger,.nav-stin,.nav-zavrit{display:none}
 #nav{display:flex;gap:24px;align-items:center}
 #nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:var(--prechod);position:relative}
@@ -219,7 +230,6 @@ to{opacity:1;transform:none}
 70%{transform:scale(0.92)}
 100%{transform:scale(1)}
 }
-
 
 
 .md-gtk{margin-top:12px;border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.22);border-radius:var(--r-plocha);background:rgba(var(--plocha-znacka-svetla-rgb),0.06);overflow:hidden;transition:var(--prechod)}

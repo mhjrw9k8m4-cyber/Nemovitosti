@@ -91,9 +91,22 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       </div></details>
       <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
-    </nav>`;
+    </nav>
+    <a class="hdr-ucet" href="muj-inzerat.html" aria-label="Můj profil"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg></a>`;
 
-const VZOR = /<nav id="nav"[\s\S]*?<\/nav>/;
+/* PROFIL PATŘÍ DO LIŠTY, NE JEN DO ŠUPLÍKU.
+   Majitel 29. 10.: „nahoru doprava přidej profil, ikonku profilu, aby
+   člověk viděl, že je přihlášený." Dosud byl účet jen uvnitř výsuvné
+   nabídky (`details.nav-ucet-sk`), tedy za třemi čárkami — kdo je
+   přihlášený, neměl na obrazovce nic, co by mu to řeklo.
+   Stav se kreslí STYLEM, ne skriptem: `html.pk-prihlasen` nasazuje
+   vložený skript v hlavičce ještě před vykreslením (viz js/hlavicka.js),
+   takže tečka u ikony nebliká a nepotřebuje vlastní kód.
+
+   VZOR BERE I TLAČÍTKO. Kdyby končil u `</nav>`, přidalo by se při
+   každém dalším sestavení znovu — tohle se v repozitáři už jednou
+   stalo s CTA v hlavičce (viz komentář níž). */
+const VZOR = /<nav id="nav"[\s\S]*?<\/nav>(?:\s*<a class="hdr-ucet"[\s\S]*?<\/a>)?/;
 
 /* CTA „Přidat pozemek" V LIŠTĚ SE VYNDÁVÁ, nevkládá.
    Mezi značkou a navigací stál na 2 311 stránkách odkaz
