@@ -99,7 +99,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 #nav{display:flex;gap:24px;align-items:center}
 #nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:var(--prechod);position:relative}
 #nav a:hover{color:var(--text)}
-#nav a.btn-primary{color:#fff}
+#nav a.btn-primary{color:#fff;font-weight:700}
 #nav a.btn-primary:hover{color:var(--plocha-zapustena)}
 .nav-sk{position:relative}
 .nav-sk>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:14px;font-weight:500;transition:var(--prechod)}

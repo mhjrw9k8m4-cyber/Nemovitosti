@@ -221,7 +221,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 #nav{display:flex;gap:24px;align-items:center}
 #nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:var(--prechod);position:relative}
 #nav a:hover{color:var(--text)}
-#nav a.btn-primary{color:#fff}
+#nav a.btn-primary{color:#fff;font-weight:700}
 #nav a.btn-primary:hover{color:var(--plocha-zapustena)}
 .nav-sk{position:relative}
 .nav-sk>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:14px;font-weight:500;transition:var(--prechod)}
@@ -459,7 +459,7 @@ to{opacity:1;transform:none}
 .map-side>.opp-list{order:4}
 }
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.msv-ulozene{min-height:36px;padding:4px 12px;font-size:12px}
+.msv-ulozene{min-height:36px;padding:4px 12px}
 .msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka);stroke:none}
 .msv-ulozene.on svg{fill:currentColor}
 .msv-ulozene{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
@@ -2353,17 +2353,17 @@ main>.md-uvod{max-width:62ch;margin:20px auto 0;padding:0 20px}
 .md-skup-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px}
 .md-skup-h h2{font-size:20px;margin:0}
 .md-skup-p{margin:4px 0 8px;max-width:var(--m-text);font-size:14px;color:var(--muted)}
-.md-smaz-skup{margin-left:auto;min-height:44px;padding:0 12px;border:1px solid var(--line-ui);border-radius:var(--r-pill);background:none;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:var(--prechod)}
+.md-smaz-skup{margin-left:auto;min-height:44px;padding:0 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:none;font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:var(--prechod)}
 .md-smaz-skup:hover{border-color:var(--c-exekuce);color:var(--c-exekuce)}
-.md-radek{display:flex;align-items:center;gap:12px;padding:12px 12px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);margin-top:8px}
+.md-radek{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);margin-top:8px}
 .md-r-text{min-width:0;flex:1 1 auto}
 .md-r-text b{display:block;font-size:14px}
 .md-r-text span{display:block;margin-top:2px;font-size:13px;line-height:1.5;color:var(--muted)}
 .md-r-kolik{display:block;margin-top:4px;font-style:normal;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.md-smaz{flex:none;min-height:44px;padding:0 12px;border-radius:var(--r-sm);border:1px solid var(--line-ui);background:var(--plocha-zapustena);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:var(--prechod)}
+.md-smaz{flex:none;min-height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-zapustena);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;transition:var(--prechod)}
 .md-smaz:hover{border-color:var(--c-exekuce);color:var(--c-exekuce)}
-.md-vse{margin-top:32px;padding:16px;border:1px solid var(--line-strong);border-radius:var(--r-plocha);background:var(--plocha-zapustena)}
-.md-smaz-vse{min-height:44px;margin-top:8px;padding:0 16px;border:1px solid var(--c-exekuce);border-radius:var(--r-sm);background:none;font:inherit;font-size:14px;font-weight:700;color:var(--c-exekuce);cursor:pointer}
+.md-vse{margin-top:32px;padding:16px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-zapustena)}
+.md-smaz-vse{min-height:44px;margin-top:8px;padding:0 16px;border:1px solid var(--c-exekuce);border-radius:var(--r-ovladani);background:none;font:inherit;font-size:14px;font-weight:700;color:var(--c-exekuce);cursor:pointer}
 .md-smaz-vse:hover{background:var(--c-exekuce);color:#fff}
 .md-pozn{margin:12px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
 .md-prazdno{margin-top:24px;padding:20px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta)}

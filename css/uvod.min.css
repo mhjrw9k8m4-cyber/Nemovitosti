@@ -203,7 +203,7 @@ header .wrap{display:flex;align-items:center;justify-content:space-between}
 #nav{display:flex;gap:24px;align-items:center}
 #nav a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:var(--prechod);position:relative}
 #nav a:hover{color:var(--text)}
-#nav a.btn-primary{color:#fff}
+#nav a.btn-primary{color:#fff;font-weight:700}
 #nav a.btn-primary:hover{color:var(--plocha-zapustena)}
 .nav-sk{position:relative}
 .nav-sk>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:14px;font-weight:500;transition:var(--prechod)}
@@ -438,7 +438,7 @@ to{opacity:1;transform:none}
 .map-side>.opp-list{order:4}
 }
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.msv-ulozene{min-height:36px;padding:4px 12px;font-size:12px}
+.msv-ulozene{min-height:36px;padding:4px 12px}
 .msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka);stroke:none}
 .msv-ulozene.on svg{fill:currentColor}
 .msv-ulozene{border-radius:var(--r-ovladani);background:var(--plocha-karta)}

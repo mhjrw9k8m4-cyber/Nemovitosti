@@ -14623,3 +14623,118 @@ Hlídači vzhledu bez nálezu: `test-ikony` 11/11, `test-tahy` 6/6,
 `test-rozvrzeni` 190/190, `test-dotyk`, `test-kontrast` (2 673 prvků),
 `test-vaha-stranky` 6/6, `test-prvni-obrazovka` 22/22,
 `test-prechody` 5/5, rychlá sada 134/134.
+
+## §220 Jeden ovladač: tlačítka byla v 35 receptech a lišta ubírala řez hlavní akci
+
+Desky už hlídá `test-deska`, zaoblení `test-zaobleni`, přechody
+`test-prechody`. TYPOGRAFII ovladačů nehlídal nikdo — a bez hlídače se
+to rozešlo.
+
+### Co otisk napočítal
+
+První otisk (1 280 px) napočítal **194 ovladačů s plochou nebo rámem
+ve 35 receptech**. Ten seznam měl šestnáct jmen, ale PĚT z nich na webu
+není (`pozemky`, `mapa`, `ucet`, `odhad`, `profil`) — otisk je mlčky
+přeskočil, takže čísla jsou z jedenácti stránek, ne ze šestnácti.
+Po srovnání seznamu na existující stránky: **258 ovladačů, 33 tříd,
+18 stránek**. Z nálezů stály za prohlédnutí tři:
+
+| třída | recepty | verdikt |
+|---|---|---|
+| `.btn-primary` | 14/500, 14/700, 16/700 | **vada** |
+| `.mcv-btn` | 52 px, 44 px | plané — dvě různé skupiny |
+| `.pz-abtn` | 14/600, 14/700 | plané — popsaná výjimka |
+
+### Vada: hlavní tlačítko webu bylo v liště nejlehčí
+
+`css/styles.css` nastavuje `.btn-primary{font-weight:700}` jednou
+třídou, kdežto `#nav a{font-weight:500}` jedním id a prvkem. Kaskáda
+tedy ubrala řez právě tomu jedinému tlačítku, které má být
+nejvýraznější: **deset „Přidat pozemek" v liště mělo 500**, zatímco
+čtyři hlavní tlačítka v obsahu 700 — a na `cena-pozemku.html` stála
+obě na jedné stránce, o dvě obrazovky od sebe.
+
+Spraveno v `#nav a.btn-primary`, kde už pravidlo pro barvu stálo ze
+stejného důvodu (lišta přebíjela i barvu). Dvanáct míst na 700.
+
+### Druhá vada, kterou našel až hlídač
+
+`.msv-ulozene{font-size:12px}` — nahá deklarace bez důvodu, vedle
+sourozence „Porovnat (0)" s 13 px a nad rozbalovátkem řazení s 13 px
+v téže liště. Pro telefon už to srovnané bylo a ve stylopisu k tomu
+stojí i proč („13px jako sousedé. Dvanáctka tu byla jediná v celé
+řadě"); na monitoru dvanáctka přežila. Dotaženo.
+
+### Plané nálezy, přiznané
+
+* `.mcv-btn` 52 vs 44 px: 52 nese sloupcová skupina s dvouřádkovými
+  nápisy („Louka / travní porost"), 44 řádková skupina připravenosti.
+  Každá je sama v sobě srovnaná — není co spravovat.
+* `.pz-abtn` 600 vs 700 a `.pz-btn.ulozit` s vodorovným odsazením:
+  obojí má ve stylopisu napsaný důvod.
+* Leafletové zoomy se zaoblením 2 a 0 px: hledal jsem je na stránce,
+  kterou jsem tušil pod jménem `mapa` — jenže ta neexistuje. Mapa je
+  na `index.html` a má vlastní ovládání, takže není co řešit.
+
+### Hlídač
+
+`scripts/test-ovladace.mjs`, čtyři kontroly: dost velký otisk (≥ 120
+ovladačů, aby zkouška neprošla na nule jako `test-najeti` v CI 781),
+řez hlavní akce, jeden recept na jméno (s výčtem dovolených receptů ve
+výjimkách) a **ovladač v liště má týž recept jako tentýž ovladač
+v obsahu** — to je pojmenovaná poučka z té vady: kaskáda nesmí měnit
+ovladač podle toho, KDE sedí.
+
+### Prokázáno sabotáží, včetně jednoho falešně negativního pokusu
+
+První sabotáž neprošla, a ne proto, že by hlídač byl slepý: zkrátil
+jsem si překlad na `node scripts/minifikace.mjs`, jenže stránky nesou
+`zaklad.min.css`, který skládá až celé `oprav.mjs`. Vada byla ve zdroji
+i v `styles.min.css`, a na web se nedostala. Po celém sestavení obě
+sabotáže padají správně:
+
+* řez odebrán → spadne kontrola 1 (dvanáct míst se 14/500) i kontrola 3
+  (lišta 14/500 proti obsahu 14/700);
+* dvanáctka vrácena → spadne kontrola 2, ačkoli `.mc-prep` výjimku má
+  (výjimka vyjmenovává dovolené recepty, ne jen třídu).
+
+### Po zásahu
+
+Rychlá sada 134/134 za 124 s. Hlídači v prohlížeči bez nálezu:
+`test-ovladace` 4/4, `test-pismo`, `test-uvod`, `test-naseptavac`,
+`test-deska`, `test-zaobleni`, `test-prechody`, `test-najeti`,
+`test-afordance`, `test-minifikace`.
+
+## §221 Mrtvé jméno stránky v hlídači je tichá slepota
+
+Při srovnávání seznamu stránek v `test-ovladace` vyšlo, že stránka
+jménem `profil` na webu není — profil je `muj-inzerat.html`. A to jméno
+měli v seznamu **tři hlídači vzhledu**: `test-deska`, `test-prechody`,
+`test-zaobleni`.
+Každý z nich tedy roky měřil o stránku méně a nikdo se to nedozvěděl:
+`page.goto` na neexistující soubor nic nevyhodí, zkouška jen nic
+nenajde a ohlásí „v pořádku".
+
+### Co se za tím skrývalo
+
+Jméno se opravilo na `moje-data.html` — stránku, kterou nepokrýval ani
+jeden z nich — a hlídači našli naráz **pět odchylek** proti pravidlům,
+která si web sám klade:
+
+| prvek | bylo | má být | pravidlo |
+|---|---|---|---|
+| `.md-smaz-skup` | pilulka 999 px | 14 px | pilulka patří odznakům |
+| `.md-smaz` | 10 px | 14 px | jedno zaoblení ovladače |
+| `.md-smaz-vse` | 10 px | 14 px | jedno zaoblení ovladače |
+| `.md-radek` | odsazení 12 px | 16 px | odsazení desky |
+| `.md-vse` | rám 0,28 | rám 0,14 | jedna síla rámu |
+
+Silnější rám u „Smazat všechno" nic neříkal: že je to vážná akce, nese
+nápis a červený obrys tlačítka v ní — ne o čtrnáct setin tmavší linka.
+
+### Pojistka
+
+`test-ovladace` dostal kontrolu 0: **každá stránka ze seznamu musí
+dojet** (odpověď existuje a má stav 200), jinak zkouška padá a vypíše,
+která nedojela. Hlídač, který měří méně, než si myslí, je horší než
+žádný — vypadá jako pojistka a není.

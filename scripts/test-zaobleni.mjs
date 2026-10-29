@@ -53,7 +53,7 @@ const css = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
    --r-ovladani (14). Adresa se bere z dat, ne napevno: natvrdo
    zapsaná nabídka se jednou ztratí a zkouška by měřila prázdno. */
 const STRANKY = ['index.html', 'cena-pozemku.html', 'hlidani.html', 'porovnani.html',
-  'pridat.html', 'profil.html', 'kontakt.html',
+  'pridat.html', 'moje-data.html', 'kontakt.html',
   (adresaPozemku() || {}).url || 'pozemek.html'];
 
 /* PILULKY, KTERÉ ODZNAKEM JSOU, ale nedají se tak poznat ze značky.

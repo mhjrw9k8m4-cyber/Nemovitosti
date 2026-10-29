@@ -80,7 +80,7 @@ const MIMO = new Set([
 ]);
 
 const STRANKY = ['index.html', 'cena-pozemku.html', 'hlidani.html', 'porovnani.html',
-  'pridat.html', 'profil.html', 'kontakt.html', 'data.html', 'drazby-pozemku.html',
+  'pridat.html', 'moje-data.html', 'kontakt.html', 'data.html', 'drazby-pozemku.html',
   'muj-inzerat.html', 'zpravy.html', 'nove-pozemky.html', 'pozemky-okres-zlin.html',
   'pozemky-jihomoravsky-kraj.html', 'inzerce.html', '404.html',
   (adresaPozemku() || {}).url || 'pozemek.html'];

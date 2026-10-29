@@ -812,3 +812,42 @@ běží v prohlížeči.
 Než něco pošleš, podívej se na výsledek „Testy a kontrola kódu"
 v CI — ne na svoji rychlou sadu. Nasazení na web se na zkoušky
 neptá, takže červené CI znamená, že na webu je rozbitý stav.
+
+### Stránky nenesou `styles.min.css` — jen celé `oprav.mjs` přeloží to, co se servíruje
+
+`node scripts/minifikace.mjs` přepíše `css/styles.min.css`, ale stránky
+si berou PODMNOŽINY, které z něj skládá až celé sestavení:
+`zaklad.min.css`, `uvod.min.css`, `region.min.css`, `pozemek.min.css`.
+Změřeno 29. 10. při sabotáži: do zdroje i do `styles.min.css` se vada
+zapsala, hlídač ji přesto neviděl, protože `cena-pozemku.html` nese
+`zaklad.min.css?v=7a435017` — soubor, kterého se zkrácený překlad
+nedotkl. Vyšlo z toho falešně NEGATIVNÍ prokázání: sabotáž, která
+„neprošla", protože se vůbec nedostala na web.
+
+Zkratka v překladu tedy neplatí ani při sabotáži. Platí pravidlo 1
+beze změny: po každé změně zdroje celé `node scripts/oprav.mjs`.
+
+### Výjimka v hlídači vyjmenuje DOVOLENÉ hodnoty, ne jen jméno třídy
+
+První verze `test-ovladace.mjs` měla výjimky zapsané jako `jméno →
+důvod`: třída, která má dvě napsané role, se prostě z kontroly
+vynechala. Jenže `.msv-ulozene` se jmenuje `mc-prep msv-ulozene`, takže
+by se za výjimku pro `.mc-prep` schoval i TŘETÍ recept, o kterém nikdo
+nerozhodl — a zrovna ten tam ten den byl (12 px vedle 13 px sousedů).
+
+Výjimka se proto píše jako `jméno → { recepty: [...], dovod }` a cokoli
+mimo ten výčet je nález. Prokázáno sabotáží: dvanáctka vrácená zpět
+hlídače shodí, i když `.mc-prep` výjimku má.
+
+### Jméno stránky v seznamu hlídače se ověřuje, ne hádá
+
+`page.goto` na soubor, který na webu není, nic nevyhodí: zkouška nic
+nenajde a ohlásí „v pořádku". Tři hlídači vzhledu (`test-deska`,
+`test-prechody`, `test-zaobleni`) měli v seznamu `profil.html` —
+stránku, která neexistuje, protože profil je `muj-inzerat.html`.
+Každý z nich tedy měřil o stránku méně. Po opravě jména na
+`moje-data.html` se našlo pět odchylek naráz (§221).
+
+Nový hlídač má proto kontrolu „všechny stránky ze seznamu dojely" a
+seznam se při psaní ověřuje proti `ls *.html`. Mapa mimochodem vlastní
+stránku nemá — je na `index.html`.

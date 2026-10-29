@@ -870,6 +870,9 @@ jobs:
       - name: Přechody (co se mění při najetí, mění se měkce; stisk je jedno gesto)
         run: node scripts/test-prechody.mjs
 
+      - name: Jeden ovladač (velikost a řez písma tlačítek na celém webu)
+        run: node scripts/test-ovladace.mjs
+
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs
 

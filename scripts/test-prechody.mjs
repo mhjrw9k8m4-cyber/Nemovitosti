@@ -79,7 +79,7 @@ for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
 }
 
 const STRANKY = ['index.html', 'cena-pozemku.html', 'hlidani.html', 'porovnani.html',
-  'pridat.html', 'profil.html', 'kontakt.html', 'drazby-pozemku.html', 'muj-inzerat.html',
+  'pridat.html', 'moje-data.html', 'kontakt.html', 'drazby-pozemku.html', 'muj-inzerat.html',
   'zpravy.html', 'pozemky-okres-zlin.html', 'inzerce.html',
   (adresaPozemku() || {}).url || 'pozemek.html'];
 

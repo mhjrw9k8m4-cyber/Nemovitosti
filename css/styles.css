@@ -1675,8 +1675,15 @@ header .wrap{display:flex; align-items:center; justify-content:space-between;}
 #nav a{color:var(--muted); text-decoration:none; font-size:14px; font-weight:500; transition:var(--prechod); position:relative;}
 #nav a:hover{color:var(--text);}
 /* CTA v hlavičce musí být tmavý text na teal HNED (ne až po najetí myší) —
-   #nav a jinak přebíjelo barvu tlačítka a text byl šedý a špatně čitelný. */
-#nav a.btn-primary{color:#fff;}
+   #nav a jinak přebíjelo barvu tlačítka a text byl šedý a špatně čitelný.
+   TOTÉŽ PLATÍ O ŘEZU, a dlouho to tu chybělo: `#nav a` výš nastavuje
+   font-weight:500 jedním id a prvkem, kdežto `.btn-primary` svých 700
+   jen jednou třídou. Kaskáda tedy ubrala řez právě tomu jedinému
+   tlačítku, které má být nejvýraznější. Naměřeno na 16 typech stránek:
+   deset „Přidat pozemek" v liště mělo 500, kdežto čtyři hlavní tlačítka
+   v obsahu 700 — a na cena-pozemku.html stála obě na jedné stránce.
+   Hlídá scripts/test-ovladace.mjs. */
+#nav a.btn-primary{color:#fff; font-weight:700;}
 #nav a.btn-primary:hover{color:var(--plocha-zapustena);}
 
 /* =====================================================================
@@ -2587,7 +2594,13 @@ h1 em{ color:var(--znacka-svetla);
   .map-side > .opp-list{order:4;}
 }
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
-.msv-ulozene{min-height:36px; padding:4px 12px; font-size:12px;}
+/* TÉŽ VELIKOST JAKO SOUSEDÉ V ŘADĚ. Dvanáctka tu stála nahá, bez
+   důvodu, kdežto „Porovnat" vedle i rozbalovátko řazení pod ní mají
+   13 px (viz .msv-razeni .map-select níž). Pro telefon už to srovnané
+   bylo a stojí tam i proč — na monitoru dvanáctka přežila. Naměřeno
+   na 1280 px: „Uložené" 12 px vedle „Porovnat (0)" 13 px v jedné
+   liště. Výšku 36 px nechávám: tu má i rozbalovátko řazení. */
+.msv-ulozene{min-height:36px; padding:4px 12px;}
 /* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST — A NA MONITORU TO BYLO
    NULA. Ikonu tam vkládá js/main.js (BM_SVG) a v její značce není ani
    width, ani height; velikost jí tedy musí dát stylopis. Dlouho ji
@@ -8952,12 +8965,19 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .md-skup-h h2{font-size:20px; margin:0;}
 .md-skup-p{margin:4px 0 8px; max-width:var(--m-text); font-size:14px;
   color:var(--muted);}
+/* STRÁNKA „MOJE DATA" NIKDY NEPROŠLA REVIZÍ VZHLEDU — a nebylo to
+   vidět, protože tři hlídači vzhledu měli v seznamu `profil.html`,
+   stránku, která na webu není. Jakmile se jméno opravilo na
+   moje-data.html, našly se tu čtyři odchylky naráz. Tahle je první:
+   pilulka na tlačítku, které není odznak. Pravidlo zní jedno zaoblení
+   (--r-ovladani) na všechno, čím se ovládá; pilulka patří odznakům. */
 .md-smaz-skup{margin-left:auto; min-height:44px; padding:0 12px;
-  border:1px solid var(--line-ui); border-radius:var(--r-pill); background:none;
+  border:1px solid var(--line-ui); border-radius:var(--r-ovladani); background:none;
   font:inherit; font-size:13px; font-weight:600; color:var(--muted);
   cursor:pointer; transition:var(--prechod);}
 .md-smaz-skup:hover{border-color:var(--c-exekuce); color:var(--c-exekuce);}
-.md-radek{display:flex; align-items:center; gap:12px; padding:12px 12px;
+/* Deska má 16 px odsazení jako všechny ostatní (viz test-deska). */
+.md-radek{display:flex; align-items:center; gap:12px; padding:16px;
   border:1px solid var(--line); border-radius:var(--r-plocha);
   background:var(--plocha-karta); margin-top:8px;}
 .md-r-text{min-width:0; flex:1 1 auto;}
@@ -8966,15 +8986,17 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   color:var(--muted);}
 .md-r-kolik{display:block; margin-top:4px; font-style:normal; font-size:12px;
   color:var(--muted); font-variant-numeric:tabular-nums;}
-.md-smaz{flex:none; min-height:44px; padding:0 12px; border-radius:var(--r-sm);
+.md-smaz{flex:none; min-height:44px; padding:0 12px; border-radius:var(--r-ovladani);
   border:1px solid var(--line-ui); background:var(--plocha-zapustena); font:inherit;
   font-size:13px; font-weight:600; color:var(--text); cursor:pointer;
   transition:var(--prechod);}
 .md-smaz:hover{border-color:var(--c-exekuce); color:var(--c-exekuce);}
-.md-vse{margin-top:32px; padding:16px; border:1px solid var(--line-strong);
+/* Rám desky má jednu sílu: --line. Silnější rám tu nic neříkal —
+   že je to vážná akce, nese nápis a červený obrys tlačítka v ní. */
+.md-vse{margin-top:32px; padding:16px; border:1px solid var(--line);
   border-radius:var(--r-plocha); background:var(--plocha-zapustena);}
 .md-smaz-vse{min-height:44px; margin-top:8px; padding:0 16px;
-  border:1px solid var(--c-exekuce); border-radius:var(--r-sm); background:none;
+  border:1px solid var(--c-exekuce); border-radius:var(--r-ovladani); background:none;
   font:inherit; font-size:14px; font-weight:700; color:var(--c-exekuce); cursor:pointer;}
 .md-smaz-vse:hover{background:var(--c-exekuce); color:#fff;}
 .md-pozn{margin:12px 0 0; font-size:13px; line-height:1.6; color:var(--muted);}
