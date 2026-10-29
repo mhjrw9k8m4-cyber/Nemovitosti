@@ -15328,3 +15328,69 @@ jen na legendě pod mapou (`.lg-dot`) — což je věcně lepší místo, stojí
 hned vedle značek, kterých se týká, ale kdo se na mapu nedívá, tvary se
 nedozví. Že legenda tvary opravdu kreslí, hlídá `scripts/test-tvary.mjs`
 čtením pixelů z plátna.
+
+## §234 Hlídané místo: pryč tabule, zbyl odznak s křížkem
+
+**Co o tom řekl majitel.** „Hlavně když dám pozemky v okolí, zobrazí se
+tam tato velká tabule, ta tam nemá být. Člověk si má vybrat a pak tam má
+být jen tlačítko s křížkem na zrušení."
+
+**Co tam stálo.** Proužek `.misto-pruh`: nadpis „Ve vašem okolí od minule
+nic nového", podnadpis „Hlídané místo: Pelhřimov · okolí do 50 km · je tu
+94 pozemků" a pět ovladačů — okruh, Ukázat jen okolí, Změnit místo,
+Zrušit místo, Vybrat na mapě. Naměřeno na 390×844: **236 px**. A hned pod
+ním odznak filtru, 44 px, s touž větou: „Do 50 km od Pelhřimov".
+
+**Kam se poděly jeho části.**
+
+| bylo v tabuli | je teď |
+|---|---|
+| okruh (rozbalovací seznam) | posuvník ve výběru místa — tam, kde se místo vybírá |
+| Ukázat jen okolí | tlačítko „Pozemky v okolí" |
+| Změnit místo | totéž tlačítko; výběr se otevře na uloženém místě |
+| Zrušit místo | křížek na odznaku |
+| „od minule přibylo…" | hláška s tlačítkem „Ukázat" |
+
+**Jeden křížek, ne dvě tlačítka.** Vypnout okolí a zapomenout místo byly
+dvě akce. Bez tabule by po té první zbyl stav, který není nikde vidět:
+místo uložené, okolí vypnuté, na obrazovce nic. Křížek proto dělá obojí.
+Odznak okolí se kvůli tomu kreslí zvlášť: ostatní odznaky ruší svou
+funkcí `vypni`, jenže tu volá i hledání viníka u prázdného výpisu
+(`nejvicOmezuje`) — a kdyby `vypni` u okolí zapomínala místo, zahodilo by
+ho pouhé přepočítání čísel.
+
+**Hláška místo tabule.** Co u místa přibylo, je celý smysl hlídání.
+Tabule to nesla pořád, i když nepřibylo nic („od minule nic nového" na
+236 px). Hláška se ozve, jen když je co říct, a má tlačítko, které rovnou
+zapne okolí. Běží až po prvním vykreslení — na první obrazovce má být
+výpis.
+
+**Tři nálezy, které z toho vypadly.**
+
+1. **Křížek na odznacích měl 0 × 0 px.** Kreslí se jako `<svg class="ik">`
+   a `.ik` nastavuje tah a výplň, ne rozměr; ten si každé místo na webu
+   určuje samo a tady si ho nikdo neurčil. Odznak tedy vypadal jako
+   nápis, přestože jeho přístupné jméno celou dobu slibovalo „Zrušit: …".
+   Platilo to o VŠECH odznacích hledání, ne jen o tomhle. Srovnáno na
+   16 px a tah 2,25 — táž míra jako ikony v pilulkách druhů.
+2. **Odznak porušoval vlastní pravidlo o pádech.** Stálo na něm „Do 50 km
+   od Pelhřimov"; po „od" patří druhý pád a skloňovat názvy obcí web
+   schválně neumí (Praha → Prahy, Loučeň → Loučně). Zkouška to pravidlo
+   hlídá odjakživa, jenže se dívala na podnadpis tabule. Když tabule
+   zmizela a zkouška se obrátila na odznak, který po ní tu větu zdědil,
+   vyšlo najevo, že ho porušuje. Teď je tam „Pelhřimov a okolí do 50 km"
+   — první pád.
+3. **Zrušení nechávalo na kartách vzdálenost.** Karty píšou vzdálenost
+   z `userPos || mojeMisto`; `vypniOkoli()` sundá značku z mapy, ale
+   `userPos` nechává — a to je u pouhého vypnutí správně. Při zrušení
+   celého místa ale zbyla vzdálenost od něčeho, co už není. Naměřeno: po
+   zrušení pořád pět karet se vzdáleností. `zrusMisto()` proto `userPos`
+   nuluje.
+
+**Hlídači.** `test-okoli` má nově čtyři kontroly téhle podoby (odznak
+místo tabule, žádný `#misto-pruh`, vidět křížek, 44 px na prst) a dvě
+o tom, co křížek udělá. Ověřeno sabotáží: vrácená tabule a křížek
+zmenšený na nulu shodily přesně ty dvě kontroly, které je mají chytit.
+`test-pamet` a `test-klic-ulozenych` teď zapínají okolí tam, kde se
+zapíná doopravdy — ve výběru místa. `test-mnozstvi` hlídal tvar pro nulu
+na podnadpisu tabule („je tu 0 pozemky"); přesunut na hlášku o novinkách.

@@ -112,6 +112,20 @@ async function otevriVybirac(p, spoustec) {
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
   await domUtichlo(p, 300);
 }
+/** Zapne okolí u JIŽ ULOŽENÉHO místa — a volitelně přepne okruh.
+ *  Do 29. 10. k tomu byla tabule nad výpisem s přepínačem „Ukázat jen
+ *  okolí" a rozbalovacím okruhem; majitel ji nechal zrušit („velká
+ *  tabule, ta tam nemá být"). Obojí dnes dělá výběr místa: otevře se
+ *  na uloženém místě, takže „Vybrat" jde potvrdit rovnou. */
+async function zapniOkoli(p, km) {
+  await otevriVybirac(p, '#map-near');
+  if (km) await p.check(`input[name="vm-km"][value="${km}"]`).catch(() => {});
+  await domUtichlo(p, 300);
+  const slo = await p.locator('#vm-ok').click({ timeout: 6000 }).then(() => true).catch(() => false);
+  await domUtichlo(p, 900);
+  return slo;
+}
+
 /** Posune mapu výběru na dané místo a MÍSTO UKÁŽE — bez hledání, jak to
     musí umět i člověk. Samotné posunutí mapy zvenčí je jen nastavení
     pohledu; dokud se do mapy neklepne (nebo se netáhne), výběr se
@@ -911,10 +925,10 @@ const stavVybiraku = (p) => p.evaluate(() => {
     `web hlásí ${celyPocet}, po odstranění duplicit a dražeb po termínu má být ${bezDupl.length}` +
     ` (v souboru ${surova.length}, z toho ${surova.length - zive.length} po termínu)`);
 
-  // Okruh se dá změnit a seznam na to zareaguje.
-  await rozbalHledani(p);
-  await p.locator('#misto-km').scrollIntoViewIfNeeded();
-  await p.selectOption('#misto-km', '50');
+  // Okruh se dá změnit a seznam na to zareaguje. Nastavuje se tam, kde
+  // se místo vybírá — vlastní rozbalovací seznam nad výpisem byl druhý
+  // ovladač na touž práci a zmizel i s tabulí (29. 10.).
+  await zapniOkoli(p, 50);
   await p.waitForTimeout(1600);
   const siroky = await p.evaluate(() => {
     const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/\d[\d\s\u00a0]*/);
@@ -925,10 +939,14 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('a hlavička se změní taky', /50[\s\u00a0]km/.test(siroky.pod), siroky.pod);
 
   // Místo se dá vybrat ZNOVU — ne že jednou klepnu a je konec.
-  const jdeZmenit = await p.locator('#misto-zmenit').isVisible().catch(() => false);
-  pravda('u uloženého místa je tlačítko „Změnit místo"', jdeZmenit,
-    'jediná cesta jinam vedla přes „Zrušit místo" a začít od nuly');
-  await otevriVybirac(p, '#misto-zmenit');
+  // Dřív na to bylo zvláštní tlačítko „Změnit místo" v tabuli nad
+  // výpisem; dnes to dělá totéž „Pozemky v okolí", které místo vybírá
+  // poprvé — výběr se otevře na tom uloženém.
+  await rozbalHledani(p);
+  const jdeZmenit = await p.locator('#map-near').isVisible().catch(() => false);
+  pravda('u uloženého místa jde výběr otevřít znovu', jdeZmenit,
+    'jediná cesta jinam vedla přes zrušení místa a začít od nuly');
+  await otevriVybirac(p, '#map-near');
   const znovu = await stavVybiraku(p);
   pravda('výběr místa se dá otevřít znovu', znovu.otevreno,
     'po jednom výběru už se nedá nic změnit — přesně na tohle si člověk stěžoval');
@@ -950,19 +968,47 @@ const stavVybiraku = (p) => p.evaluate(() => {
     pravda('a hlavička se přepíše s ním', false, 'výběr místa se podruhé vůbec neotevřel');
   }
 
-  // A dá se vrátit na celou republiku.
+  /* A DÁ SE VRÁTIT NA CELOU REPUBLIKU — KŘÍŽKEM NA ODZNAKU.
+     Tohle je celá nová podoba hlídaného místa (29. 10.): po výběru
+     nezbyde tabule, ale jeden odznak s křížkem. Majitel: „člověk si má
+     vybrat a pak tam má být jen tlačítko s křížkem na zrušení."
+     Křížek ruší OBOJÍ — zobrazení i uložené místo. Dřív to byla dvě
+     tlačítka („Zobrazit celou ČR" a „Zrušit místo"); bez tabule by po
+     tom prvním zbyl stav, který není nikde vidět. */
   await rozbalHledani(p);
-  await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
-  await rozbalHledani(p);
-  await p.locator('#misto-zapnout').click();
+  const odznak = await p.evaluate(() => {
+    const b = document.querySelector('#ms-chipy .msch[data-okoli]');
+    if (!b) return null;
+    const x = b.querySelector('.msch-x svg');
+    const r = x ? x.getBoundingClientRect() : null;
+    return { txt: b.textContent.trim(), jmeno: b.getAttribute('aria-label') || '',
+      kriz: r ? Math.round(r.width) : 0, vyska: Math.round(b.getBoundingClientRect().height) };
+  });
+  pravda('po výběru místa zbyl odznak, ne tabule', !!odznak,
+    'odznak #ms-chipy .msch[data-okoli] na stránce není');
+  pravda('a žádná tabule nad výpisem nezůstala',
+    await p.evaluate(() => !document.getElementById('misto-pruh')),
+    'proužek #misto-pruh je zpátky — měřeno 236 px a pět ovladačů');
+  if (odznak) {
+    pravda('odznak říká místo i okruh',
+      /50[\s\u00a0]km/.test(odznak.txt) && /okolí/i.test(odznak.txt), odznak.txt);
+    /* Křížek měl přesně 0 × 0 px: `.ik` nastavuje tah, ne rozměr, a ten
+       si tady nikdo nenastavil. Odznak tedy vypadal jako nápis, i když
+       přístupné jméno slibovalo „Zrušit". */
+    pravda('a je na něm VIDĚT křížek', odznak.kriz >= 12, `křížek má ${odznak.kriz} px`);
+    pravda('odznak unese prst (44 px)', odznak.vyska >= 44, `${odznak.vyska} px`);
+  }
+  await p.locator('#ms-chipy .msch[data-okoli]').click().catch(() => {});
   await p.waitForTimeout(1500);
   const zpet = await p.evaluate(() => {
     const m = String((document.getElementById('mvt-count') || {}).textContent || '').match(/\d[\d\s\u00a0]*/);
-    return { n: m ? +m[0].replace(/[\s\u00a0]/g, '') : null, ulozeno: !!localStorage.getItem('pk_misto_v1') };
+    return { n: m ? +m[0].replace(/[\s\u00a0]/g, '') : null, ulozeno: !!localStorage.getItem('pk_misto_v1'),
+      odznaku: document.querySelectorAll('#ms-chipy .msch[data-okoli]').length };
   });
-  pravda('přepínač vrátí celou republiku', zpet.n === +celyPocet, `${zpet.n} × ${celyPocet}`);
-  pravda('a místo přitom zůstane uložené', zpet.ulozeno,
-    'vypnutí zobrazení nesmí zahodit hlídané místo');
+  pravda('křížek vrátí celou republiku', zpet.n === +celyPocet, `${zpet.n} × ${celyPocet}`);
+  pravda('a hlídané místo zruší celé', !zpet.ulozeno,
+    'místo zůstalo uložené, ale není ho kde vidět ani zrušit');
+  pravda('a odznak zmizí s ním', zpet.odznaku === 0, `zbylo ${zpet.odznaku}`);
   pravda('při práci s okolím nespadl žádný skript', chyby.length === 0, chyby[0]);
   await ctx.close();
 }
@@ -976,10 +1022,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   });
   await p.reload({ waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
-  await rozbalHledani(p);
-  await p.locator('#misto-zapnout').scrollIntoViewIfNeeded();
-  await rozbalHledani(p);
-  await p.locator('#misto-zapnout').click();
+  await zapniOkoli(p);
   await p.waitForTimeout(1800);
   const v = await p.evaluate(() => ({
     zprava: (document.querySelector('.opp-list .map-count') || {}).textContent || '',
@@ -1004,7 +1047,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   // „v Vysočina kraji").
   const texty = await p.evaluate(() => [
     (document.querySelector('.kh-txt b') || {}).textContent,
-    (document.querySelector('.mp-pod') || {}).textContent,
+    (document.querySelector('#ms-chipy .msch[data-okoli]') || {}).textContent,
     (document.querySelector('.opp-list .map-count') || {}).textContent,
   ].join(' | '));
   pravda('nikde se neskloňuje název obce', !/\bod [A-ZŠČŘŽÝÁÍÉŮÚĎŤŇ][a-zěščřžýáíéúůďťň]+\b(?! \()/.test(texty),

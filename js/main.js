@@ -4112,7 +4112,7 @@
     nearMode = true;
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap' + (approx ? ' approx' : ''), html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
-    vykresliMisto();
+    vykresliMistoNaMape();
     lockDots(false);
     setPan(true);
     if (nearBtn) nearBtn.classList.add('on');
@@ -4123,11 +4123,14 @@
     else if (typeof scrollToMap === 'function') scrollToMap();   // ať je mapa s výsledkem opravdu vidět
     updateKrajHead();
     renderList();
-    /* Proužek s potvrzením („Hlídáme Loučeň a okolí do 10 km") ležel mimo
-       obraz, takže po klepnutí nebylo co číst. Posuneme ho k sobě — až po
-       vykreslení, ať se počítá se skutečnou výškou. */
-    if (mistoPruh && cil !== 'seznam') setTimeout(function () {
-      try { mistoPruh.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    /* Potvrzení („Do 10 km od Loučeň") leželo mimo obraz, takže po
+       klepnutí nebylo co číst. Posuneme ho k sobě — až po vykreslení,
+       ať se počítá se skutečnou výškou. Dřív to byl celý proužek nad
+       výpisem; dnes je to odznak filtru, tedy jediné, co po výběru
+       místa na stránce zbývá. */
+    if (cil !== 'seznam') setTimeout(function () {
+      var odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
+      if (odznak) { try { odznak.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
     }, 420);
     /* JEDNA HLÁŠKA, A TA DŮLEŽITĚJŠÍ. Když se místo nepovedlo uložit,
        nemá smysl hlásit počet pozemků v okolí: na tom se nic nezmění,
@@ -4147,7 +4150,7 @@
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
     sortMode = 'demand';
     if (sortEl) sortEl.value = 'demand';
-    vykresliMisto();
+    vykresliMistoNaMape();
     updateKrajHead();
     renderList();
   }
@@ -5648,7 +5651,18 @@
       'Jen uložené');
     pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
       function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()),
-      'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
+      /* POZOR NA PÁDY — a tenhle odznak je porušoval. Stálo na něm
+         „Do 50 km od Pelhřimov", což je stejná bota jako kdysi
+         „v Vysočina kraji": po „od" patří druhý pád a skloňovat názvy
+         obcí spolehlivě neumíme (Praha → Prahy, Loučeň → Loučně).
+         Zkouška to pravidlo hlídá od začátku, jenže se dívala na
+         podnadpis tabule; když tabule 29. 10. zmizela a zkouška se
+         obrátila na odznak, který po ní tu větu zdědil, vyšlo najevo,
+         že ji odznak porušuje. Věta je proto postavená tak, aby název
+         zůstal v prvním pádě. */
+      ((mojeMisto && mojeMisto.nazev)
+        ? PKCisteni.sazba(mojeMisto.nazev) + ' a okolí do '
+        : 'Vaše okolí do ') + ((mojeMisto && mojeMisto.km) || 10) + ' km');
     /* Okruh z věty je taky omezení — a bez téhle řádky by u prázdného
        výpisu nikdy nevyšel jako viník, takže by web radil zmírnit něco
        jiného. Odznak vlastní nedostává (`popis` je prázdný): ten má
@@ -7131,8 +7145,7 @@
         if (vb) vb.addEventListener('click', function () {
           mojeMisto.km = navrh.km;
           if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
-          if (mistoKmEl) mistoKmEl.value = String(navrh.km);
-          vykresliMisto(); ramujMisto(); updateKrajHead(); renderList();
+          vykresliMistoNaMape(); ramujMisto(); updateKrajHead(); renderList();
         });
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
@@ -8467,10 +8480,29 @@
        Text věty a vybrané místo mají odznaky vlastní, proto se sem
        neberou — poznají se podle toho, že nemají `popis`. */
     chipyNaklikane = omezeni().filter(function (o) { return o.popis; });
-    if (!casti.length && !mistoFiltr && !chipyNaklikane.length) {
+    /* OKOLÍ MÁ VLASTNÍ ODZNAK, PROTOŽE JEHO KŘÍŽEK DĚLÁ VÍC.
+       Ostatní odznaky ruší svou `vypni` — jenže tu volá i hledání
+       viníka u prázdného výpisu (nejvicOmezuje), vždycky s vrácením
+       zpátky. Kdyby `vypni` u okolí rovnou zapomněla hlídané místo,
+       zahodilo by ho pouhé přepočítání čísel. Odznak okolí proto
+       vypadne z té řady a kreslí se sám; jeho křížek volá zrusMisto(). */
+    var okoliOdznak = null;
+    chipyNaklikane = chipyNaklikane.filter(function (o) {
+      if (o.nazev !== 'okolí vašeho místa') return true;
+      okoliOdznak = o.popis; return false;
+    });
+    if (!casti.length && !mistoFiltr && !okoliOdznak && !chipyNaklikane.length) {
       chipyEl.hidden = true; chipyEl.innerHTML = ''; return;
     }
     var html = '';
+    /* Okolí stojí první: je to jediný filtr, který se nastavuje mimo
+       tenhle pruh (na mapě ve výběru místa), takže je zároveň jediná
+       stopa po tom, že je vůbec zapnutý. */
+    if (okoliOdznak) {
+      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit hlídané místo: ' +
+        esc(okoliOdznak) + '">' + esc(okoliOdznak) +
+        '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
+    }
     /* Vybrané místo stojí první: je to ze všech filtrů ten nejsilnější
        a musí jít zrušit jedním klepnutím, jako každý jiný odznak. */
     if (mistoFiltr) {
@@ -8498,6 +8530,11 @@
       searchEl.value = '';
       nastavHledani('');          // ruší i mistoFiltr
       renderList();
+      return;
+    }
+    if (b.hasAttribute('data-okoli')) {
+      /* Jediný křížek, který zruší celé hlídané místo — viz zrusMisto(). */
+      zrusMisto();
       return;
     }
     if (b.hasAttribute('data-omez')) {
@@ -9097,21 +9134,20 @@
   /* Obnova filtru se volá výš, PŘED prvním vykreslením — tady už by
      znamenala druhé překreslení celého výpisu (437 ms na telefonu). */
 
-  /* Proužek „u vašeho místa od minule přibylo". Tohle je celý smysl
-   * uloženého místa — jinak by si ho nikdo neukládal. */
-  var mistoPruh = document.getElementById('misto-pruh');
-  var mistoKmEl = document.getElementById('misto-km');
-  var mistoZrus = document.getElementById('misto-zrus');
-  var akceZadne = document.getElementById('mp-akce-zadne');
-  var akceMam = document.getElementById('mp-akce-mam');
-  var vybratBtn = document.getElementById('misto-vybrat');
-  /* Hlídané místo na MAPĚ. Tohle tu do teď vůbec nebylo: funkce vykresliMisto
-     přepisovala jen text v proužku, takže člověk klepl do mapy, proužek nahoře
-     se změnil — a na mapě se nestalo nic. Kdo se díval na mapu (a při volbě
-     „klepněte do mapy na své místo" se na ni dívá každý), viděl, že se nic
-     nestalo, a měl pravdu.
-     Teď je tam značka a kolem ní kruh s hlídaným okruhem, takže je vidět
-     přesně to, co se hlídá — a mění se to hned, jak se okruh přepne. */
+  /* HLÍDANÉ MÍSTO SE KRESLÍ NA MAPU — A JINDE NIKDE (29. 10.).
+   * Nad výpisem stála tabule: nadpis „od minule přibylo…", pod ním
+   * „Hlídané místo: Pelhřimov · okolí do 50 km · je tu 94 pozemků"
+   * a pět ovladačů. Naměřeno 236 px na telefonu — a odznak filtru
+   * hned pod ní nesl touž větu v 44 px („Do 50 km od
+   * Pelhřimov"). Majitel: „ta tam nemá být, člověk si má vybrat a pak
+   * tam má být jen tlačítko s křížkem na zrušení."
+   * Kam se poděly její části:
+   *   okruh            → posuvník ve výběru místa (tam se místo vybírá)
+   *   Ukázat jen okolí → tlačítko „Pozemky v okolí"
+   *   Změnit místo     → totéž tlačítko (výběr se otevře na uloženém místě)
+   *   Zrušit místo     → křížek na odznaku
+   *   „od minule přibylo" → hláška s tlačítkem „Ukázat", viz novinkyHlaska()
+   */
   /* OKRUH Z VĚTY NA MAPĚ. Bez tohohle by se stalo přesně to, co se
      u hlídaného místa už jednou stalo: text nad výpisem by řekl „do 30 km
      od Brna", seznam by se zkrátil — a na mapě by se nestalo nic, takže
@@ -9166,94 +9202,39 @@
   }
 
 
-  function vykresliMisto() {
-    vykresliMistoNaMape();
-    if (typeof obnovZapnout === 'function') obnovZapnout();
-    if (!mistoPruh) return;
-    var hl = mistoPruh.querySelector('.mp-hlavni');
-    var pod = mistoPruh.querySelector('.mp-pod');
-    var n = novinkyUMista();
-    if (!n) {
-      /* Dokud není místo uložené, proužek se NEUKAZUJE.
-         Dřív tu byla zvací skříňka „Hlídejte si okolí svého pozemku"
-         s vlastním tlačítkem „Vybrat na mapě". Zabírala nejcennější místo
-         nad výpisem a nabízela slabší kopii toho, co je hned pod ní:
-         výběr místa. Dneska je cesta k okolí jediná — tlačítko „Pozemky
-         v okolí" (.map-okoli) rovnou otevře mapu — takže proužek nemusí
-         nic vysvětlovat.
-         Jakmile místo uložené je, proužek se objeví a nese, co od minule
-         přibylo — tedy něco, co jinde není. */
-      mistoPruh.hidden = true;
-      mistoPruh.classList.remove('ma-novinky', 'bez-mista');
-      if (akceZadne) akceZadne.hidden = true;
-      if (akceMam) akceMam.hidden = true;
-      return;
-    }
-    mistoPruh.hidden = false;
-    mistoPruh.classList.remove('bez-mista');
-    if (akceZadne) akceZadne.hidden = true;
-    if (akceMam) akceMam.hidden = false;
-    if (n.nove > 0) {
-      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove >= 2 && n.nove <= 4 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
-      mistoPruh.classList.add('ma-novinky');
-    } else {
-      hl.textContent = 'Ve vašem okolí od minule nic nového';
-      mistoPruh.classList.remove('ma-novinky');
-    }
-    // Název obce zůstává v prvním pádě (viz pády výš) — „Hlídáme Praha
-    // a okolí" by bylo špatně, „Hlídané místo: Praha" je vždycky správně.
-    pod.textContent = (n.nazev !== 'vašeho místa' ? 'Hlídané místo: ' + n.nazev + ' · ' : 'Hlídané místo · ') +
-      'okolí do ' + n.okruh + ' km · je tu ' + n.celkem + ' ' +
-      (n.celkem === 1 ? 'pozemek' : (n.celkem >= 2 && n.celkem <= 4 ? 'pozemky' : 'pozemků'));
-    if (mistoKmEl) mistoKmEl.value = String(n.okruh);
-  }
-  if (mistoKmEl) mistoKmEl.addEventListener('change', function () {
-    if (!mojeMisto) return;
-    mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
-    if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
-    vykresliMisto();
-    ramujMisto();     // nový okruh musí být vidět celý, jinak se změna nepozná
-    updateKrajHead();
-    renderList();
-  });
-  if (mistoZrus) mistoZrus.addEventListener('click', function () {
+  /** Zrušit hlídané místo úplně — křížek na odznaku a nic jiného.
+   *  Vypnutí okolí a zapomenutí místa bývaly dvě tlačítka („Zobrazit
+   *  celou ČR" a „Zrušit místo"). Bez tabule by z toho zbyl stav, který
+   *  není nikde vidět: místo uložené, okolí vypnuté, na obrazovce nic.
+   *  Jeden křížek tedy dělá obojí. */
+  function zrusMisto() {
     ulozMisto(null);
-    okoliZap = false;
-    nearMode = false;
-    if (nearBtn) nearBtn.classList.remove('on');
-    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
-    sortMode = 'demand';
-    if (sortEl) sortEl.value = 'demand';
-    vykresliMisto();
-    updateKrajHead();
-    renderList();
-  });
-  /* Zapnout/vypnout „jen okolí". Dřív šlo místo jen uložit a zrušit — a
-     uložené místo přitom na seznam vůbec nesáhlo, takže z něj nikdo neměl
-     nic. Teď je to přepínač: buď se dívám na celou republiku, nebo na svoje
-     okolí, a je vidět, ve kterém stavu jsem. */
-  var zapnoutBtn = document.getElementById('misto-zapnout');
-  function obnovZapnout() {
-    if (!zapnoutBtn) return;
-    var zap = okoliAktivni();
-    zapnoutBtn.textContent = zap ? 'Zobrazit celou ČR' : 'Ukázat jen okolí';
-    zapnoutBtn.classList.toggle('on', zap);
-    zapnoutBtn.setAttribute('aria-pressed', String(zap));
+    /* A TAKY BOD, OD KTERÉHO SE MĚŘÍ. Karty píšou vzdálenost z
+       `userPos || mojeMisto`; vypniOkoli() sundá značku z mapy, ale
+       `userPos` nechává (a má — při pouhém vypnutí okolí místo dál
+       existuje a vzdálenost od něj dává smysl). Když se ale místo
+       ruší celé, zbyla by na kartách vzdálenost od něčeho, co už
+       není. Naměřeno: po zrušení pořád 5 karet se vzdáleností. */
+    userPos = null;
+    vypniOkoli();
   }
-  if (zapnoutBtn) zapnoutBtn.addEventListener('click', function () {
-    if (okoliAktivni()) { vypniOkoli(); }
-    else if (mojeMisto) { enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev); }
-    obnovZapnout();
-  });
 
-  /* Dřív se tu hlavní mapa přepnula do režimu „klepněte na své místo" —
-     jedno klepnutí a hotovo, bez možnosti couvnout a bez výběru kraje.
-     Teď se otevře vlastní mapa, ve které se dá libovolně hýbat. */
-  if (vybratBtn) vybratBtn.addEventListener('click', function () { otevriVyberMista(); });
-  /* Totéž tlačítko, jen na primárním místě vedle „Pozemky v okolí". */
-  var zmenitBtn = document.getElementById('misto-zmenit');
-  if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
-  vykresliMisto();
+  /* CO OD MINULE PŘIBYLO: HLÁŠKA, NE TABULE.
+     Tohle je celý smysl uloženého místa — jinak by si ho nikdo
+     neukládal. Tabule ho nesla pořád, i když nepřibylo nic (naměřeno:
+     „Ve vašem okolí od minule nic nového" na 236 px). Hláška se ozve
+     jen tehdy, když je co říct, a vede rovnou k tomu, co přibylo. */
+  function novinkyHlaska() {
+    var n = novinkyUMista();
+    if (!n || !n.nove || okoliAktivni()) return;
+    showToast('Ve vašem okolí ' + (n.nove === 1 ? 'přibyl 1 pozemek'
+      : (n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků'))
+      + ' od minule.', { text: 'Ukázat', fn: function () {
+        if (!mojeMisto) return;
+        enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev, 'seznam');
+      } });
+  }
+  vykresliMistoNaMape();
 
   renderHeroLegenda();
   /* OZDOBA A PÁSY POD MAPOU AŽ PO PRVNÍM VYKRESLENÍ.
@@ -9274,6 +9255,11 @@
   }(function () {
     renderDeals();
     renderUserListings();
+    /* Hláška o novinkách taky až tady: na první obrazovce má být výpis,
+       ne okénko přes něj. A hlavně — showToast() si vezme jedno místo
+       dole a hlášky se tam překrývají; tahle tedy nesmí přebít tu
+       o nepovedeném uložení, která se ozývá během startu. */
+    novinkyHlaska();
   }));
   /* Záznam o návratu z pozemku se čte JEDNOU a sáhnou si do něj oba:
      obnova výřezu mapy i obnova pozice ve stránce. Dřív si ho bral jen

@@ -71,12 +71,16 @@ pravda(`nikde v kódu není „n < 5 ?" (prohlédnuto ${soubory.length} souborů
    hlídají jmenovitě — jsou to ta, kde se nula na obrazovku dostane:
      · rychlý výběr („Hotovo · 0 nabídky") — rozsah, do kterého nic
        nespadne, je běžný: stačí „cena od sta milionů",
-     · hlídané místo („je tu 0 pozemky") — okolí bez nabídek,
+     · hlídané místo („přibyly 0 pozemky") — hláška o novinkách
+       v okolí. Do 29. 10. to byl podnadpis tabule nad výpisem („je tu
+       0 pozemky"); tabule je pryč a počet nese hláška. Nula se tam
+       dnes nedostane (hláška se ozve, jen když opravdu něco přibylo),
+       ale tvar se hlídá dál — podmínka se může kdykoli uvolnit,
      · popisek odznaku zpráv („0 nepřečtené zprávy") — ten se počítá
        i při nule, protože se zároveň nastavuje odznaku. */
 const JMENOVITE = [
   ['js/main.js', "(vybranych >= 2 && vybranych <= 4 ? 'nabídky' : 'nabídek')", 'rychlý výběr'],
-  ['js/main.js', "(n.celkem >= 2 && n.celkem <= 4 ? 'pozemky' : 'pozemků')", 'hlídané místo'],
+  ['js/main.js', "(n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků')", 'hlídané místo'],
   ['js/ucet-taby.js', "(n >= 2 && n <= 4 ? n + ' nepřečtené zprávy'", 'odznak zpráv'],
 ];
 for (const [rel, usek, kde] of JMENOVITE) {

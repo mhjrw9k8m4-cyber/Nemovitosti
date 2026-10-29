@@ -2473,7 +2473,7 @@
     nearMode = true;
     if (userMarker) map.removeLayer(userMarker);
     userMarker = L.marker([userPos.lat, userPos.lng], { icon: L.divIcon({ className: 'pk-me-wrap' + (approx ? ' approx' : ''), html: '<span class="pk-me"></span>', iconSize: [18, 18], iconAnchor: [9, 9] }), zIndexOffset: 1000, interactive: false }).addTo(map);
-    vykresliMisto();
+    vykresliMistoNaMape();
     lockDots(false);
     setPan(true);
     if (nearBtn) nearBtn.classList.add('on');
@@ -2485,8 +2485,9 @@
     updateKrajHead();
     renderList();
 
-    if (mistoPruh && cil !== 'seznam') setTimeout(function () {
-      try { mistoPruh.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    if (cil !== 'seznam') setTimeout(function () {
+      var odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
+      if (odznak) { try { odznak.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
     }, 420);
 
     if (!mistoUlozeno) { hlasNeulozeneMisto('Hlídané místo'); return; }
@@ -2503,7 +2504,7 @@
     if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
     sortMode = 'demand';
     if (sortEl) sortEl.value = 'demand';
-    vykresliMisto();
+    vykresliMistoNaMape();
     updateKrajHead();
     renderList();
   }
@@ -3558,7 +3559,10 @@
       'Jen uložené');
     pol('okolí vašeho místa', 'okolí vašeho místa', okoliZap,
       function () { okoliZap = false; }, (function () { return function () { okoliZap = true; }; }()),
-      'Do ' + ((mojeMisto && mojeMisto.km) || 10) + ' km od ' + ((mojeMisto && mojeMisto.nazev) || 'vašeho místa'));
+
+      ((mojeMisto && mojeMisto.nazev)
+        ? PKCisteni.sazba(mojeMisto.nazev) + ' a okolí do '
+        : 'Vaše okolí do ') + ((mojeMisto && mojeMisto.km) || 10) + ' km');
 
     pol('okruh od místa', 'okruh od místa', !!(d.okruh && okruhStred),
       function () { d.okruh = null; },
@@ -4329,8 +4333,7 @@
         if (vb) vb.addEventListener('click', function () {
           mojeMisto.km = navrh.km;
           if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
-          if (mistoKmEl) mistoKmEl.value = String(navrh.km);
-          vykresliMisto(); ramujMisto(); updateKrajHead(); renderList();
+          vykresliMistoNaMape(); ramujMisto(); updateKrajHead(); renderList();
         });
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
@@ -5330,10 +5333,22 @@
     var casti = (dotazFiltr && dotazFiltr.casti) || [];
 
     chipyNaklikane = omezeni().filter(function (o) { return o.popis; });
-    if (!casti.length && !mistoFiltr && !chipyNaklikane.length) {
+
+    var okoliOdznak = null;
+    chipyNaklikane = chipyNaklikane.filter(function (o) {
+      if (o.nazev !== 'okolí vašeho místa') return true;
+      okoliOdznak = o.popis; return false;
+    });
+    if (!casti.length && !mistoFiltr && !okoliOdznak && !chipyNaklikane.length) {
       chipyEl.hidden = true; chipyEl.innerHTML = ''; return;
     }
     var html = '';
+
+    if (okoliOdznak) {
+      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit hlídané místo: ' +
+        esc(okoliOdznak) + '">' + esc(okoliOdznak) +
+        '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
+    }
 
     if (mistoFiltr) {
       html += '<button type="button" class="msch" data-misto="1" aria-label="Zrušit: ' +
@@ -5360,6 +5375,11 @@
       searchEl.value = '';
       nastavHledani('');
       renderList();
+      return;
+    }
+    if (b.hasAttribute('data-okoli')) {
+
+      zrusMisto();
       return;
     }
     if (b.hasAttribute('data-omez')) {
@@ -5822,13 +5842,6 @@
     return true;
   }
 
-  var mistoPruh = document.getElementById('misto-pruh');
-  var mistoKmEl = document.getElementById('misto-km');
-  var mistoZrus = document.getElementById('misto-zrus');
-  var akceZadne = document.getElementById('mp-akce-zadne');
-  var akceMam = document.getElementById('mp-akce-mam');
-  var vybratBtn = document.getElementById('misto-vybrat');
-
   var okruhKruh = null, okruhPodpis = '';
   function vykresliOkruhNaMape() {
     if (typeof map === 'undefined' || !map || typeof L === 'undefined' || !L.circle) return;
@@ -5875,79 +5888,24 @@
     catch (e) { map.setView([mojeMisto.lat, mojeMisto.lng], 11, { animate: true }); }
   }
 
-  function vykresliMisto() {
-    vykresliMistoNaMape();
-    if (typeof obnovZapnout === 'function') obnovZapnout();
-    if (!mistoPruh) return;
-    var hl = mistoPruh.querySelector('.mp-hlavni');
-    var pod = mistoPruh.querySelector('.mp-pod');
-    var n = novinkyUMista();
-    if (!n) {
-
-      mistoPruh.hidden = true;
-      mistoPruh.classList.remove('ma-novinky', 'bez-mista');
-      if (akceZadne) akceZadne.hidden = true;
-      if (akceMam) akceMam.hidden = true;
-      return;
-    }
-    mistoPruh.hidden = false;
-    mistoPruh.classList.remove('bez-mista');
-    if (akceZadne) akceZadne.hidden = true;
-    if (akceMam) akceMam.hidden = false;
-    if (n.nove > 0) {
-      hl.textContent = 'Od minule přibyl' + (n.nove === 1 ? ' 1 pozemek' : (n.nove >= 2 && n.nove <= 4 ? 'y ' + n.nove + ' pozemky' : 'o ' + n.nove + ' pozemků')) + ' ve vašem okolí';
-      mistoPruh.classList.add('ma-novinky');
-    } else {
-      hl.textContent = 'Ve vašem okolí od minule nic nového';
-      mistoPruh.classList.remove('ma-novinky');
-    }
-
-    pod.textContent = (n.nazev !== 'vašeho místa' ? 'Hlídané místo: ' + n.nazev + ' · ' : 'Hlídané místo · ') +
-      'okolí do ' + n.okruh + ' km · je tu ' + n.celkem + ' ' +
-      (n.celkem === 1 ? 'pozemek' : (n.celkem >= 2 && n.celkem <= 4 ? 'pozemky' : 'pozemků'));
-    if (mistoKmEl) mistoKmEl.value = String(n.okruh);
-  }
-  if (mistoKmEl) mistoKmEl.addEventListener('change', function () {
-    if (!mojeMisto) return;
-    mojeMisto.km = parseInt(mistoKmEl.value, 10) || 10;
-    if (!ulozMisto(mojeMisto)) hlasNeulozeneMisto('Okruh');
-    vykresliMisto();
-    ramujMisto();
-    updateKrajHead();
-    renderList();
-  });
-  if (mistoZrus) mistoZrus.addEventListener('click', function () {
+  function zrusMisto() {
     ulozMisto(null);
-    okoliZap = false;
-    nearMode = false;
-    if (nearBtn) nearBtn.classList.remove('on');
-    if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
-    sortMode = 'demand';
-    if (sortEl) sortEl.value = 'demand';
-    vykresliMisto();
-    updateKrajHead();
-    renderList();
-  });
 
-  var zapnoutBtn = document.getElementById('misto-zapnout');
-  function obnovZapnout() {
-    if (!zapnoutBtn) return;
-    var zap = okoliAktivni();
-    zapnoutBtn.textContent = zap ? 'Zobrazit celou ČR' : 'Ukázat jen okolí';
-    zapnoutBtn.classList.toggle('on', zap);
-    zapnoutBtn.setAttribute('aria-pressed', String(zap));
+    userPos = null;
+    vypniOkoli();
   }
-  if (zapnoutBtn) zapnoutBtn.addEventListener('click', function () {
-    if (okoliAktivni()) { vypniOkoli(); }
-    else if (mojeMisto) { enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev); }
-    obnovZapnout();
-  });
 
-  if (vybratBtn) vybratBtn.addEventListener('click', function () { otevriVyberMista(); });
-
-  var zmenitBtn = document.getElementById('misto-zmenit');
-  if (zmenitBtn) zmenitBtn.addEventListener('click', function () { otevriVyberMista(); });
-  vykresliMisto();
+  function novinkyHlaska() {
+    var n = novinkyUMista();
+    if (!n || !n.nove || okoliAktivni()) return;
+    showToast('Ve vašem okolí ' + (n.nove === 1 ? 'přibyl 1 pozemek'
+      : (n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků'))
+      + ' od minule.', { text: 'Ukázat', fn: function () {
+        if (!mojeMisto) return;
+        enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev, 'seznam');
+      } });
+  }
+  vykresliMistoNaMape();
 
   renderHeroLegenda();
 
@@ -5957,6 +5915,8 @@
   }(function () {
     renderDeals();
     renderUserListings();
+
+    novinkyHlaska();
   }));
 
   var navratZPozemku = null;

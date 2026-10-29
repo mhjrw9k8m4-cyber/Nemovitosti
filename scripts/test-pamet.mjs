@@ -373,56 +373,69 @@ await p.evaluate(() => {
   } catch (e) {}
 });
 await p.reload({ waitUntil: 'domcontentloaded' });
-/* Nejdřív vykreslený výpis (ze stejných dat vzniká i proužek), pak
-   bounded čekání na proužek — ŽE se ukázal, měří kontrola pod tím, a
-   když se neukáže, čekání vyprší a ona to řekne jménem. */
+/* CO OD MINULE PŘIBYLO ŘEKNE HLÁŠKA, NE TABULE (29. 10.).
+   Nad výpisem stával proužek .misto-pruh: nadpis „od minule přibylo…",
+   podnadpis s okruhem a počtem a pět ovladačů — naměřeno 236 px.
+   Majitel ho nechal zrušit („velká tabule, ta tam nemá být, člověk si
+   má vybrat a pak tam má být jen tlačítko s křížkem na zrušení").
+   Novinky se proto hlásí hláškou s tlačítkem „Ukázat", a ta běží až po
+   prvním vykreslení — proto se čeká na výpis a teprve pak na ni. */
 await pripravenoVypis(p);
 await pripravenoKdyz(p, () => {
-  const el = document.getElementById('misto-pruh');
-  return !!el && !el.hidden;
-}, null, 8000);
-const misto = await p.evaluate(() => {
-  const el = document.getElementById('misto-pruh');
-  if (!el || el.hidden) return null;
+  const t = document.getElementById('toast');
+  return !!t && !t.hasAttribute('hidden') && /přiby/.test(t.textContent || '');
+}, null, 10000);
+const novinky = await p.evaluate(() => {
+  const t = document.getElementById('toast');
   return {
-    hlavni: el.querySelector('.mp-hlavni').textContent,
-    pod: el.querySelector('.mp-pod').textContent,
-    zvyrazneno: el.classList.contains('ma-novinky'),
-    okruh: document.getElementById('misto-km').value,
+    text: (t && t.textContent) || '',
+    akce: !!(t && t.querySelector('.toast-akce')),
+    tabule: !!document.getElementById('misto-pruh'),
   };
 });
-pravda('proužek hlídání okolí se ukázal', !!misto, 'proužek chybí nebo je schovaný');
-if (misto) {
-  pravda('říká, kolik pozemků u místa od minule přibylo', /přibyly 2 pozemky/.test(misto.hlavni),
-    `text: „${misto.hlavni}"`);
-  pravda('a je zvýrazněný, protože novinky jsou', misto.zvyrazneno === true);
-  pravda('pod tím je okruh i celkový počet', /do 20[\s\u00a0]km/.test(misto.pod) && /5 pozemků/.test(misto.pod),
-    `text: „${misto.pod}"`);
-  pravda('rozbalovací seznam ukazuje uložený okruh', misto.okruh === '20', `vybráno ${misto.okruh}`);
-}
+pravda('web řekne, kolik u místa od minule přibylo', /přibyly 2 pozemky/.test(novinky.text),
+  `hláška: „${novinky.text}"`);
+pravda('a vede rovnou k nim (tlačítko „Ukázat")', novinky.akce,
+  'hláška je jen oznámení, ze kterého se nikam nedostanu');
+pravda('a žádná tabule nad výpisem nezůstala', novinky.tabule === false,
+  'proužek #misto-pruh je zpátky');
 
-// Zmenšením okruhu musí novinky zmizet — Obec 4 i 5 jsou dál než 2 km.
-/* Čeká se na to, že se proužek PŘEPSAL — ne na to, co v něm stojí (to
-   měří kontroly pod tím) a ne na hodinky. Kdyby se nepřepsal, spadnou
-   kontroly se starým textem, což je poctivější než timeout. */
-const mistoPred = await p.evaluate(() => document.querySelector('.mp-hlavni').textContent);
+// Tlačítko „Ukázat" musí okolí opravdu zapnout a nechat po sobě odznak.
 await p.evaluate(() => {
-  const el = document.getElementById('misto-km');
-  el.value = '2';
-  el.dispatchEvent(new Event('change', { bubbles: true }));
+  const b = document.querySelector('#toast .toast-akce');
+  if (b) b.click();
 });
-await pripravenoKdyz(p, (t) => {
-  const e = document.querySelector('.mp-hlavni');
-  return !!e && e.textContent !== t;
-}, mistoPred, 10000);
+await pripravenoKdyz(p, () => !!document.querySelector('#ms-chipy .msch[data-okoli]'), null, 10000);
+const poUkazat = await p.evaluate(() => {
+  const b = document.querySelector('#ms-chipy .msch[data-okoli]');
+  return { odznak: b ? b.textContent.trim() : null,
+    polozek: document.querySelectorAll('.opp-item').length };
+});
+pravda('po „Ukázat" zbyl jediný odznak s místem', !!poUkazat.odznak, 'odznak okolí chybí');
+pravda('a je na něm uložený okruh', /20[\s\u00a0]km/.test(poUkazat.odznak || ''),
+  `odznak říká „${poUkazat.odznak}"`);
+
+/* Zmenšením okruhu musí seznam zhubnout — Obec 4 i 5 jsou dál než 2 km.
+   Okruh se nastavuje tam, kde se vybírá místo; rozbalovací seznam
+   v tabuli byl druhý ovladač na touž práci. */
+await p.evaluate(() => document.getElementById('map-near').click());
+await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+await p.waitForTimeout(600);
+await p.check('input[name="vm-km"][value="2"]').catch(() => {});
+await p.waitForTimeout(400);
+await p.evaluate(() => document.getElementById('vm-ok').click());
+await pripravenoKdyz(p, () => {
+  const b = document.querySelector('#ms-chipy .msch[data-okoli]');
+  return !!b && /2[\s\u00a0]km/.test(b.textContent || '');
+}, null, 10000);
 const uzsi = await p.evaluate(() => ({
-  hlavni: document.querySelector('.mp-hlavni').textContent,
-  zvyrazneno: document.getElementById('misto-pruh').classList.contains('ma-novinky'),
+  odznak: (document.querySelector('#ms-chipy .msch[data-okoli]') || {}).textContent || '',
+  polozek: document.querySelectorAll('.opp-item').length,
   ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
 }));
-pravda('po zúžení okruhu na 2 km už novinky nejsou', /nic nového/.test(uzsi.hlavni),
-  `text: „${uzsi.hlavni}"`);
-pravda('a proužek se přestal zvýrazňovat', uzsi.zvyrazneno === false);
+pravda('po zúžení okruhu na 2 km zbyde míň nabídek', uzsi.polozek < poUkazat.polozek,
+  `do 20 km ${poUkazat.polozek}, do 2 km ${uzsi.polozek}`);
+pravda('a odznak to říká', /2[\s\u00a0]km/.test(uzsi.odznak), `odznak říká „${uzsi.odznak.trim()}"`);
 pravda('nový okruh se uložil', uzsi.ulozeno && uzsi.ulozeno.km === 2, JSON.stringify(uzsi.ulozeno));
 
 // Na kartách musí být vzdálenost od místa, i když se neřadí podle okolí.
@@ -430,7 +443,21 @@ const kmNaKartach = await p.evaluate(() => document.querySelectorAll('.opp-item 
 pravda('karty ukazují vzdálenost od uloženého místa', kmNaKartach > 0,
   'ani jedna karta nemá vzdálenost');
 
-await p.evaluate(() => document.getElementById('misto-zrus').click());
+/* Zrušení: jediný křížek na odznaku. Dřív to byla dvě tlačítka v tabuli
+   („Zobrazit celou ČR" a „Zrušit místo"); bez ní by po tom prvním zbyl
+   stav, který není nikde vidět — místo uložené, okolí vypnuté, na
+   obrazovce nic. Křížek proto dělá obojí. */
+const krizVidet = await p.evaluate(() => {
+  const x = document.querySelector('#ms-chipy .msch[data-okoli] .msch-x svg');
+  return x ? Math.round(x.getBoundingClientRect().width) : 0;
+});
+pravda('na odznaku je VIDĚT křížek', krizVidet >= 12,
+  `křížek má ${krizVidet} px — `
+  + '`.ik` nastavuje tah, ne rozměr, a bez vlastního rozměru je 0 × 0');
+await p.evaluate(() => {
+  const b = document.querySelector('#ms-chipy .msch[data-okoli]');
+  if (b) b.click();
+});
 await p.waitForTimeout(400);
 const poZruseni = await p.evaluate(() => {
   const b = document.getElementById('map-near');
@@ -445,8 +472,7 @@ const poZruseni = await p.evaluate(() => {
    se nikdy nedozví. To je pořád totéž pravidlo jako dřív.
    Změnilo se JEN kde ta cesta je: nejdřív pozvánka s vlastním tlačítkem,
    pak dvě tlačítka vedle sebe, pak tlačítko a odkaz — a dneska jediné
-   tlačítko „Pozemky v okolí" (#map-near), které rovnou otevře mapu.
-   Proužek se ukazuje, jen když je místo opravdu uložené. */
+   tlačítko „Pozemky v okolí" (#map-near), které rovnou otevře mapu. */
 pravda('po zrušení jde místo vybrat znovu', poZruseni.jdeVybratZnovu === true,
   'tlačítko „Pozemky v okolí" v hlavním ovládání chybí — bez něj zbývá jen GPS');
 pravda('místo se smazalo i z prohlížeče', poZruseni.ulozeno === null, `v úložišti zůstalo ${poZruseni.ulozeno}`);
@@ -512,25 +538,28 @@ await p.waitForTimeout(2500);
 const poVyberu = await p.evaluate(() => ({
   otevreno: !!document.querySelector('.vm-ov'),
   ulozeno: (() => { try { return JSON.parse(localStorage.getItem('pk_misto_v1')); } catch (e) { return null; } })(),
-  pruhVidet: !document.getElementById('misto-pruh').hidden,
+  odznak: (document.querySelector('#ms-chipy .msch[data-okoli]') || {}).textContent || '',
   km: document.querySelectorAll('.opp-item .opp-km').length,
-  jdeZmenit: !!document.getElementById('misto-zmenit'),
+  jdeZmenit: !!document.getElementById('map-near'),
 }));
 pravda('potvrzení výběru místo uloží', !!(poVyberu.ulozeno && isFinite(poVyberu.ulozeno.lat)),
   JSON.stringify(poVyberu.ulozeno));
 pravda('výběr se přitom zavře', poVyberu.otevreno === false);
-/* Teprve s uloženým místem má proužek co říct („od minule přibylo…"),
-   takže se tehdy — a jen tehdy — ukazuje. */
-pravda('proužek se objeví, až když je místo uložené', poVyberu.pruhVidet === true);
+/* Po potvrzení výběru nezůstane tabule, ale jediný odznak s křížkem
+   (29. 10.) — a ten musí nést, co se vlastně vybralo. */
+pravda('po výběru zbyl odznak s místem a okruhem',
+  /okolí/i.test(poVyberu.odznak) && /\d+[\s\u00a0]km/.test(poVyberu.odznak),
+  `odznak říká „${poVyberu.odznak.trim()}"`);
 pravda('a na kartách se zase objeví vzdálenost', poVyberu.km > 0, `karet se vzdáleností: ${poVyberu.km}`);
 /* Výběr počítal jen z toho, co projde i zapnutými filtry — jinak sliboval
    „5 pozemků v okruhu" a seznam pod ním hlásil, že tam není nic. */
 pravda('a slíbený počet se opravdu vypsal', poVyberu.km === (parseInt(slib, 10) || -1),
   `výběr sliboval „${slib.trim()}", v seznamu je ${poVyberu.km} karet`);
-// Bez tohohle tlačítka se jednou vybrané místo nedalo změnit jinak než
-// zrušit a začít od nuly — přesně to lidi na téhle funkci štvalo.
+// Místo musí jít kdykoli změnit, jinak zbývá jen zrušit a začít od nuly
+// — přesně to lidi na téhle funkci štvalo. Dřív na to bylo zvláštní
+// tlačítko v tabuli; dnes otevře výběr znovu totéž „Pozemky v okolí".
 pravda('a místo jde kdykoli změnit', poVyberu.jdeZmenit,
-  'u uloženého místa chybí tlačítko „Změnit místo"');
+  'tlačítko „Pozemky v okolí" chybí, takže výběr nejde otevřít znovu');
 
 /* --- 5) „NAPOSLEDY PROHLÉDNUTÉ" MUSÍ JÍT NAPLNIT ---------------------
  *

@@ -353,29 +353,40 @@ async function sUlozenymi(klice) {
       lat: 50.087, lng: 14.421, km: 10, nazev: 'Praha' }));
   });
   await page.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-  await page.waitForSelector('#misto-zapnout', { timeout: 20000 }).catch(() => {});
+  /* ZAPÍNÁ SE TAM, KDE SE MÍSTO VYBÍRÁ. Do 29. 10. na to byl přepínač
+     „Ukázat jen okolí" v tabuli nad výpisem; majitel ji nechal zrušit
+     („velká tabule, ta tam nemá být"). Výběr se u uloženého místa
+     otevírá rovnou na něm, takže „Vybrat" jde potvrdit hned. */
+  /* Až po vykreslení výpisu: tlačítko je ve značkování od začátku, ale
+     posluchač mu přivěsí teprve start aplikace. Klepnutí dřív by se
+     tiše ztratilo a zkouška by hlásila „výběr se neotevřel". */
+  await page.waitForSelector('.opp-item', { timeout: 20000 }).catch(() => {});
+  await page.evaluate(() => {
+    const b = document.getElementById('map-near');
+    if (b) b.click();
+  });
+  await page.waitForSelector('.vm-ov #vm-ok', { timeout: 20000 }).catch(() => {});
   const v = await page.evaluate(async () => {
-    const b = document.getElementById('misto-zapnout');
-    if (!b) return { chyba: 'přepínač „Ukázat jen okolí" na stránce není' };
-    const pred = (b.textContent || '').trim();
+    const ok = document.querySelector('.vm-ov #vm-ok');
+    if (!ok) return { chyba: 'výběr místa se neotevřel (#vm-ok není)' };
+    if (ok.disabled) return { chyba: '„Vybrat" je u uloženého místa vypnuté' };
     const puv = localStorage.setItem.bind(localStorage);
     localStorage.setItem = (k, h) => {
       if (k === 'pk_misto_v1') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
       return puv(k, h);
     };
-    b.click();
-    await new Promise((r) => setTimeout(r, 500));
+    ok.click();
+    await new Promise((r) => setTimeout(r, 900));
     localStorage.setItem = puv;
     const t = document.getElementById('toast');
-    return { pred, po: (b.textContent || '').trim(),
-      hlaska: (t && t.textContent) || '',
-      zapnuto: b.getAttribute('aria-pressed') };
+    const odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
+    return { hlaska: (t && t.textContent) || '',
+      odznak: odznak ? odznak.textContent.trim() : '' };
   });
-  pravda('je co měřit — přepínač okolí stojí na „Ukázat jen okolí"',
-    !v.chyba && /jen okolí/i.test(v.pred), v.chyba || `stálo tam „${v.pred}"`);
+  pravda('je co měřit — výběr místa šel potvrdit', !v.chyba, v.chyba || '');
   if (!v.chyba) {
     pravda('okolí se při plné paměti stejně zapne (tuhle návštěvu platí)',
-      v.zapnuto === 'true', `aria-pressed="${v.zapnuto}", na tlačítku „${v.po}"`);
+      !!v.odznak, 'odznak okolí se neobjevil, takže se okolí vůbec nezapnulo');
     pravda('ale je řečeno, že se to po zavření karty zapomene',
       /zapomene/i.test(v.hlaska), `hláška: „${v.hlaska}"`);
   }
