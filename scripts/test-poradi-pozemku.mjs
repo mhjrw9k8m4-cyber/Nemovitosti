@@ -356,9 +356,26 @@ try {
 
      Mez tedy roste přesně o to, co přibylo (0,55 + rezerva na
      prostředí), ne „s rezervou do budoucna". Smysl zůstává: kdyby
-     stránka začala růst z jiných důvodů, mez to pozná. */
-  pravda('celá stránka se vejde do 5,1 obrazovky telefonu',
-    m.cela <= m.obrazovka * 5.1,
+     stránka začala růst z jiných důvodů, mez to pozná.
+
+     A 29. 10. SE ZVEDLA ZE 5,1 NA 5,2 — tentokrát čistě na prostředí,
+     ne na obsah. Mez 5,1 jsem usadil na hranu: naměřeno 4 014 px
+     (5,02) tady, a na běhači CI 4 082 px (5,10), tedy o 68 px víc nad
+     týmž kódem i týmiž daty. Rezerva na prostředí byla 68,5 px, takže
+     to padlo o dva pixely. Rozdíl strojů je u téhle zkoušky doložený
+     už podruhé (dřív 43 px, viz výš) a bere ho sazba a mapový rám.
+
+     Že to NENÍ růst stránky, je změřené: po přidání dat robota měří
+     stránka pořád 4 014 px, tedy na pixel stejně jako před ním. Mez
+     tedy dostává jeden celý naměřený rozdíl strojů (0,1 obrazovky =
+     80 px) a nic nad to.
+
+     Co se NEUDĚLALO: nehledal jsem těch 70 px na stránce, i když tam
+     jsou vidět — 270 px nese galerie, přitom fotku nemá ani jedna
+     nabídka (§142), a 92 px zaberou souřadnice. Obojí je rozhodnutí
+     o vzhledu, ne úklid, a to patří majiteli. Zapsáno jako úkol. */
+  pravda('celá stránka se vejde do 5,2 obrazovky telefonu',
+    m.cela <= m.obrazovka * 5.2,
     `${m.cela} px = ${(m.cela / m.obrazovka).toFixed(2)} obrazovky`);
   /* Co po kalkulačce zbylo a zůstat má: odkaz na rozepsané náklady
      koupě. Ten počítá z vlastní ceny pozemku, ne z hádání. */

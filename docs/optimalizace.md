@@ -13908,3 +13908,47 @@ hluboko pod skutečností, že by prošla i stránka, které se nedokreslila
 polovina — přesně to se v CI stalo. Je proto **60**: snese, že se v CI
 nedokreslí celá stránka pozemku i celý formulář, a pořád pozná, že se
 nekreslí výpis.
+
+## §211 Mez na délku stránky usazená na hranu spadla na rozdílu strojů
+
+Běh 777 (dnešní commit) spadl na jediné kontrole: `test-poradi-pozemku`
+hlásil **4 082 px = 5,10 obrazovky** proti meze 5,1. O dva pixely.
+
+Měřením se rozhodlo, čí to je:
+
+| kde | délka stránky | obrazovek |
+|---|---|---|
+| tady, 360×800 | 4 014 px | 5,02 |
+| běhač CI | 4 082 px | 5,10 |
+
+Stránka tedy **nevyrostla** — po přidání dat robota měří na pixel
+stejně jako před ním. Vyrostl rozdíl strojů: 68 px v sazbě a mapovém
+rámu. U téhle zkoušky je to doložené už podruhé (dřív 43 px) a já jí
+v §208 nechal rezervu 68,5 px, tedy přesně na hranu.
+
+Mez proto dostala jeden celý naměřený rozdíl strojů: **5,2** (0,1
+obrazovky = 80 px) a nic nad to. Že pořád pozná růst stránky, je
+doložené sabotáží: `min-height:400px` na oddíl „Kam dál" přidá 244 px,
+stránka vyjde na 5,32 a kontrola padá.
+
+### Co se NEUDĚLALO, i když to na stránce je vidět
+
+Těch 70 px by se na stránce našlo. Rozpad největších bloků (360×800):
+
+| blok | výška |
+|---|---|
+| karta s vývojem ceny | 534 px (z toho graf 426) |
+| mapa | 411 px |
+| cena + verdikt | 345 px |
+| **galerie** | **270 px** |
+| poznámka | 216 px |
+| kam dál | 156 px |
+| popis od inzerenta | 128 px |
+| akce | 112 px |
+| **souřadnice** | **92 px** |
+
+Dvě z nich jsou podezřelé: galerie drží 270 px na zástupný obrázek,
+přitom fotku nemá ani jedna nabídka (§142), a souřadnice zaberou 92 px
+na dva údaje a odkaz. Dohromady skoro půl obrazovky. Obojí je ale
+rozhodnutí o VZHLEDU, ne úklid — zapsáno jako úkol pro majitele, ne
+provedeno.
