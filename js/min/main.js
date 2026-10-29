@@ -5294,17 +5294,17 @@
     if (mistoFiltr) {
       html += '<button type="button" class="msch" data-misto="1" aria-label="Zrušit: ' +
         esc(popisMista()) + '">' + esc(popisMista()) +
-        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+        '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
     }
     for (var i = 0; i < casti.length; i++) {
       html += '<button type="button" class="msch" data-i="' + i + '" data-druh="' + esc(casti[i].druh) +
         '" aria-label="Zrušit: ' + esc(casti[i].popis) + '">' + esc(casti[i].popis) +
-        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+        '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
     }
     for (var j = 0; j < chipyNaklikane.length; j++) {
       html += '<button type="button" class="msch" data-omez="' + j + '" aria-label="Zrušit: ' +
         esc(chipyNaklikane[j].popis) + '">' + esc(chipyNaklikane[j].popis) +
-        '<span class="msch-x" aria-hidden="true">✕</span></button>';
+        '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
     }
     chipyEl.innerHTML = html;
     chipyEl.hidden = false;

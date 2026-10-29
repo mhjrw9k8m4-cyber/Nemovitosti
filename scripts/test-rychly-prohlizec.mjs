@@ -170,9 +170,18 @@ pravda('karta při uložení odletí doprava (vidět, že rozhodnutí zabralo)',
 pravda('a na kartě se při tom ukáže razítko „Uloženo"',
   videt.some((t) => /chystam-ano/.test(t)), JSON.stringify(videt));
 pravda('a srdíčko na tlačítku poskočí', videt.some((t) => /zabralo/.test(t)), JSON.stringify(videt));
-const bilance = await p.evaluate(() => (document.getElementById('rv-bilance') || {}).textContent || '');
-pravda('a v hlavičce je vidět, kolik toho člověk uložil', /♥\s*\d/.test(bilance),
-  `v hlavičce stojí „${bilance}"`);
+/* ZNAČKA ULOŽENÉHO JE ZÁLOŽKA, NE SRDCE. Do 29. 10. tahle kontrola
+   hledala v textu znak ♥ — jenže to byl znak z PÍSMA, a web mezitím
+   kreslí značky vlastní sadou (§219). Srdce navíc nebylo nikde jinde
+   na webu: uložené se všude značí záložkou. Měří se proto obojí:
+   že je vidět ČÍSLO a že u něj stojí ta správná ikona ze sady. */
+const bilance = await p.evaluate(() => ({
+  text: (document.getElementById('rv-bilance') || {}).textContent || '',
+  zalozka: !!document.querySelector('#rv-bilance .rvb-ano use[href="#i-zalozka"]'),
+}));
+pravda('a v hlavičce je vidět, kolik toho člověk uložil',
+  /\d/.test(bilance.text) && bilance.zalozka,
+  `v hlavičce stojí „${bilance.text}", ikona záložky: ${bilance.zalozka}`);
 
 /* --- DÁVKA MÁ KONEC NA DOHLED -------------------------------------
    Napoprvé se sypal celý výpis: v hlavičce stálo „Zbývá 1 955" a konec
