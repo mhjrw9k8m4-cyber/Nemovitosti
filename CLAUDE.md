@@ -513,6 +513,14 @@ má přeměřit.
    `:hover` může být silnější a dosazená barva se na obrazovku nikdy
    nedostane. `test-najeti` tím ohlásil kontrast 1,90:1 na zapnutém
    filtru „Vše", který bílý text má a nikdy ho neztratí (§215).
+   **A KDO POROVNÁVÁ ARTEFAKT SE ZDROJEM, NESMÍ SI ROZDÍL UMAZAT
+   NORMALIZACÍ.** `test-minifikace` porovnává selektory zdroje
+   a očištěné kopie — a jeho normalizace mazala mezery kolem
+   dvojtečky, tedy přesně ten rozdíl, který minifikace vyráběla:
+   `.a :is(x)` → `.a:is(x)` jsou dvě různá pravidla a druhé
+   neodpovídá ničemu. Obě strany si srovnal na týž tvar a mlčel, zatímco
+   na webu tři pravidla neplatila (§218). Než normalizaci rozšíříš,
+   zkus sabotáž: vyrob tu vadu, které se bojíš, a kontrola musí padnout.
    Pomůcky: `scripts/zkouska-pripraveno.mjs` (čekání na stav),
    `scripts/zkouska-pad.mjs` (při pádu vypíše, kam zkouška došla —
    jinak v CI zbyde jen stopa výjimky a ani jedna ✕).
