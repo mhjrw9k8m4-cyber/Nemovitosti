@@ -4839,10 +4839,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      oddíl zavřít). */
   .nav-sk > summary{display:flex; align-items:center; gap:12px; list-style:none;
     cursor:default; pointer-events:none; padding:20px 20px 8px;
-    /* Týž popisek verzálkami jako všude jinde (§216): neproporcionální
-       písmo, 12 px, řez 600. Dřív tu stálo 11 px / 700 proporcionálně —
-       nadpis oddílu v menu se tím sázel jinak než nadpis oddílu na
-       stránce, a přitom to komentář nad tím sám pojmenovává stejně. */
+    /* Týž popisek verzálkami jako všude jinde (§216): 12 px, řez 600,
+       prostrkání z tokenu. Dřív tu stálo 11 px / 700 a jiné písmo.
+       POZOR, CO TO DNES DĚLÁ: změřeno 29. 10. v prohlížeči (390 px,
+       přihlášený i nepřihlášený) — jediný `.nav-sk > summary`, který se
+       v menu vykreslí, je hlavička účtu, a tu přebíjí
+       `#nav .nav-ucet-sk > summary` (16 px, bez verzálek). Tahle sazba
+       je tedy připravená pro oddíl, který v menu zatím není; srovnaná
+       je proto, aby se při jeho přidání nezaložil další recept, ne
+       proto, že by na obrazovce něco měnila. */
     font-family:var(--font-popisek); font-size:12px; font-weight:600;
     letter-spacing:var(--popisek-proklad);
     text-transform:uppercase; color:var(--muted);}
