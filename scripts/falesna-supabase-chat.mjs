@@ -146,11 +146,20 @@ const server = http.createServer((req, res) => {
         if (!klic) return send(400, JSON.stringify({ message: 'chybí klíč pozemku' }));
         const t = String(args.p_text == null ? '' : args.p_text);
         if (t.length > 2000) return send(400, JSON.stringify({ message: 'poznámka je delší než 2000 znaků' }));
-        if (!poznamky.has(uid)) poznamky.set(uid, new Map());
-        const moje = poznamky.get(uid);
-        if (!t.trim()) moje.delete(klic);
-        else moje.set(klic, { text: t, zmeneno: new Date().toISOString() });
-        return send(200, JSON.stringify(null));
+        const zapis = () => {
+          if (!poznamky.has(uid)) poznamky.set(uid, new Map());
+          const moje = poznamky.get(uid);
+          if (!t.trim()) moje.delete(klic);
+          else moje.set(klic, { text: t, zmeneno: new Date().toISOString() });
+          return send(200, JSON.stringify(null));
+        };
+        /* PK_ZDRZ_ULOZ je sabotážní knoflík: účet potvrdí zápis o tolik
+           ms později. Jím se dokládá, že test-poznamky čeká na POTVRZENÍ
+           uložení, ne na odeslání požadavku (viz komentář tam a §215).
+           Nenastavený = žádné zdržení, takže na nic jiného nesahá. */
+        const zdrz = Number(process.env.PK_ZDRZ_ULOZ || 0);
+        if (zdrz > 0) { setTimeout(zapis, zdrz); return; }
+        return zapis();
       }
       if (fn === 'moje_poznamky') {
         const moje = poznamky.get(uid) || new Map();

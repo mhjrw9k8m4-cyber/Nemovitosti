@@ -100,10 +100,31 @@ function specificita(sel) {
    pravidlo, které mění jen pozadí, rozhoduje o tom, proti čemu se
    barva měří. */
 const najeti = [];
+/* A TAKY PRAVIDLA BEZ :hover, KTERÁ BARVU NASTAVUJÍ.
+   Bez nich zkouška lže v opačném směru než u specificity mezi pravidly
+   :hover (viz výš). Příklad, na kterém se to našlo: zapnutý filtr
+   „Vše" má .filter-chip.active[data-type="all"]{color:#fff}
+   (specificita 300) a vedle toho .filter-chip:hover{color:var(--text)}
+   (200). Při najetí vyhraje ta první, text zůstane bílý — jenže
+   zkouška dosadila tu druhou natvrdo a ohlásila tmavý text na tmavě
+   zelené, 1,90:1. Vada, která na obrazovce není.
+   Sbírají se proto VŠECHNA pravidla pro barvu a u každého prvku se
+   hledá vítěz mezi nimi. Měří se jen tehdy, když vyhraje to s :hover. */
+const barvy = [];
 let poradi = 0;
 for (const r of pravidla(css)) {
   poradi++;
-  if (!/:hover\b/.test(r.sel)) continue;
+  if (!/:hover\b/.test(r.sel)) {
+    const db = deklarace(r.telo);
+    if (!db.color) continue;
+    for (const cast of r.sel.split(',').map((x) => x.trim())) {
+      const z = cast.replace(/::?[a-z-]+\([^)]*\)/gi, '').trim();
+      if (!z || /::/.test(z)) continue;
+      barvy.push({ sel: z, spec: specificita(cast), poradi: poradi,
+        dulezite: /!important/i.test(db.color) });
+    }
+    continue;
+  }
   const d = deklarace(r.telo);
   const pozadi = d['background-color'] || d.background || null;
   if (!d.color && !pozadi) continue;
@@ -136,8 +157,19 @@ const PROFILY = [
   { jmeno: 'telefon', viewport: { width: 390, height: 900 }, dotyk: true },
   { jmeno: 'monitor', viewport: { width: 1280, height: 900 }, dotyk: false },
 ];
+/* MĚŘÍ SE S VYPNUTÝM POHYBEM, a je to nutnost, ne ohled.
+   Zkouška dosadí prvku barvu z :hover a HNED si vypočtenou barvu
+   přečte. Dokud se na webu nic neanimovalo, vracela se rovnou cílová
+   hodnota. Od sjednocení přechodů (§214) má ale `color` přechod na
+   celé rodině ovladačů, takže se po dosazení teprve rozjíždí — čtení
+   vrátí ještě STAROU barvu, zkouška usoudí „nic se nezměnilo"
+   a neměří nic. Naměřeno: 143 prvků před, 0 po.
+   Vypnutí pohybu není obcházení: stav :hover je cílová sada
+   deklarací a ta se tím nemění. A nedělá se to vlastním stylem, ale
+   přes prefers-reduced-motion, který si web vypíná sám. */
 async function kontext(profil) {
-  const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true,  serviceWorkers: 'block', viewport: profil.viewport },
+  const ctx = await prohlizec.newContext(Object.assign({ bypassCSP: true,  serviceWorkers: 'block',
+    viewport: profil.viewport, reducedMotion: 'reduce' },
     profil.dotyk ? { isMobile: true, hasTouch: true, locale: 'cs-CZ' } : {}));
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
   await ctx.route('**/*', (r) => {
@@ -162,7 +194,7 @@ for (const s of STRANKY) {
   await p.evaluate(() => { document.querySelectorAll('details').forEach((d) => { d.open = true; }); });
   await p.waitForTimeout(200);
 
-  const vysledek = await p.evaluate((seznam) => {
+  const vysledek = await p.evaluate(({ najeti: seznam, barvy: barvySeznam }) => {
     const rgb = (t) => { const m = /rgba?\(([^)]+)\)/.exec(t); if (!m) return null;
       const c = m[1].split(',').map(parseFloat);
       return { r: c[0], g: c[1], b: c[2], a: c.length > 3 ? c[3] : 1 }; };
@@ -259,6 +291,17 @@ for (const s of STRANKY) {
           if (x.pozadi) pozadi = x.pozadi;
         }
         if (!pr) continue;                   // mění se jen pozadí, text zůstává
+        /* Vyhrává to pravidlo s :hover, nebo ho přebíjí jiné, které
+           barvu nastavuje bez něj? (Viz komentář u sběru barev.) */
+        let silnejsi = false;
+        for (const b of barvySeznam) {
+          let sedi = false;
+          try { sedi = el.matches(b.sel); } catch (e) { continue; }
+          if (!sedi) continue;
+          if (b.dulezite) { silnejsi = true; break; }
+          if (b.spec > pr.spec || (b.spec === pr.spec && b.poradi > pr.poradi)) { silnejsi = true; break; }
+        }
+        if (silnejsi) continue;
         const r = el.getBoundingClientRect();
         if (r.width < 8 || r.height < 8) continue;
         const c = getComputedStyle(el);
@@ -302,7 +345,7 @@ for (const s of STRANKY) {
       }
     }
     return ven;
-  }, najeti);
+  }, { najeti, barvy });
 
   for (const v of vysledek) {
     zmereno++;

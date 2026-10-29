@@ -1850,8 +1850,13 @@
     if (zkus()) return;
     if (global.addEventListener) {
       global.addEventListener('load', function () { zkus(); }, { once: true });
-      /* A ještě jednou krátce po něm: `prihlasen()` si u prošlého tokenu
-         řekne o obnovu, a ta je asynchronní. */
+      /* A ještě jednou krátce po něm. POZOR NA DŮVOD: `prihlasen()` o žádnou obnovu neříká — je to
+         synchronní čtení schránky (js/auth.js:53 a 58). Tohle je
+         pojistka proti POŘADÍ SKRIPTŮ, ne proti prošlému tokenu.
+         Změřeno 29. 10.: config.js i auth.js mají `defer`, takže
+         v `DOMContentLoaded` je PKAuth už přihlášený a první pokus
+         uspěje; tahle cesta se dnes nepoužije. Zůstává proto, aby
+         změna pořadí skriptů nezabila doplnění z účtu mlčky. */
       global.setTimeout(zkus, 400);
     }
   }
@@ -2864,8 +2869,14 @@
       }
       if (!zUctuDopln() && global.addEventListener) {
         global.addEventListener('load', function () {
-          /* Ještě jednou krátce po 'load': `prihlasen()` si u prošlého
-             tokenu řekne o obnovu, a ta je asynchronní. */
+          /* Ještě jednou krátce po 'load'. POZOR NA DŮVOD:
+             `prihlasen()` o žádnou obnovu neříká — je to
+             synchronní čtení schránky (js/auth.js:53 a 58). Tohle je
+             pojistka proti POŘADÍ SKRIPTŮ, ne proti prošlému tokenu.
+             Změřeno 29. 10.: config.js i auth.js mají `defer`, takže
+             v `DOMContentLoaded` je PKAuth už přihlášený a první pokus
+             uspěje; tahle cesta se dnes nepoužije. Zůstává proto, aby
+             změna pořadí skriptů nezabila doplnění z účtu mlčky. */
           if (!zUctuDopln()) global.setTimeout(zUctuDopln, 400);
         }, { once: true });
       }

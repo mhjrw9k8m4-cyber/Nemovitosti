@@ -14195,3 +14195,103 @@ v prohlížeči na 13 typech stránek, stisk se čte ze zápisu (hodnota je
 doslovná). Hned při nasazení našel tři místa na inzerátu, která jsem
 při ruční obhlídce minul. Sabotáže: vypnutý přechod u karty ve výpisu
 shodí první kontrolu, vlastní gesto u jednoho tlačítka druhou.
+
+## §215 Dva pády CI po nasazení přechodů — a ani jeden nebyl vadou webu
+
+Běh 781 (commit přechodů) spadl na dvou hlídačích. Jeden z nich si můj
+zásah zlomil sám, druhý ležel ve zkoušce od začátku a jen čekal na
+pomalejší stroj. Ani jedna příčina nebyla na webu — a přesto se obě
+musely dohledat měřením, protože „to je flake" není příčina.
+
+### Pád 1: hlídač najetí přestal měřit (143 → 0 prvků)
+
+`scripts/test-najeti.mjs` hlídá, že po najetí myší zůstane text
+čitelný. Měří to tak, že barvu z pravidla `:hover` dosadí prvku
+natvrdo a vypočtený styl přečte **hned**. Jakmile web dostal přechody,
+vracelo to čtení ještě barvu PŘED přechodem — zkouška tedy měřila
+klidový stav proti klidovému pozadí a kontrast vycházel vždycky dobře.
+Hlásila to sama: *„Změřilo se jen 0 prvků, čekáno aspoň 70."* Ta
+pojistka proti měření naprázdno je jediný důvod, proč pád vůbec nastal
+místo tichého zeleného výsledku.
+
+Doloženo stromem na předchozím commitu: nad `HEAD~1` měřil týž hlídač
+143 prvků, nad novým 0. Opraveno `reducedMotion: 'reduce'` u obou
+prohlížečů hlídače — vypnutý pohyb je přesně to, co stylopis už ctí
+globálně, takže se měří koncový stav.
+
+### Pád 1b: a hned za tím planý poplach o kontrastu
+
+Po opravě hlídač ohlásil vadu:
+
+> `.filter-chip:hover` — „Vše" má po najetí kontrast 1,90:1 (potřeba
+> 4,5:1) — rgb(16, 21, 19) na rgb(0, 79, 47)
+
+Na obrazovce ale žádná taková vada není. Zapnutý filtr „Vše" má
+`.filter-chip.active[data-type="all"]{color:#fff}`, specificita 300;
+`.filter-chip:hover{color:var(--text)}` má 200. Při najetí vyhraje ta
+první a text zůstane bílý. Hlídač ale počítal specificitu **jen mezi
+pravidly `:hover`** a pravidla bez něj neznal, takže si dosadil tmavou
+barvu, která se tam nikdy nedostane.
+
+Opraveno: sbírají se VŠECHNA pravidla, která nastavují barvu textu,
+a u každého prvku se hledá vítěz mezi nimi; měří se jen tehdy, když
+vyhraje pravidlo s `:hover`. Po opravě **226 prvků** (dvojnásobek
+původních 143 — přibyly ty, které se dřív neměřily vůbec) a bez nálezu.
+
+### Pád 2: zkouška poznámek čekala na ODESLÁNÍ, ne na potvrzení
+
+Druhý pád byl tenhle výpis, a lokálně se neprojevil ani jednou:
+
+```
+✕ v DRUHÉM prohlížeči se poznámka stáhne z účtu
+    v poli: „"
+✕ a uloží se do něj, aby čtení bylo dál okamžité
+    klíčů ve schránce: 0
+```
+
+Zkouška píše poznámku v prvním prohlížeči, počká na požadavek
+`poznamka_uloz`, zavře prohlížeč a otevře druhý se prázdnou schránkou —
+co se v něm objeví, může přijít jen z účtu. Jenže čekala na
+`waitForRequest`, tedy na okamžik, kdy požadavek OPOUŠTÍ prohlížeč.
+Server v té chvíli ještě dočítá tělo a nemá zapsáno. Na mém stroji
+zápis stihl doběhnout, na běhači CI ne: druhý prohlížeč si stáhl
+prázdný seznam.
+
+Příčina se nedokazovala úsudkem. Nejdřív se zkoušelo zpomalení
+procesoru (CDP, 20×) — **závod nevyrobilo**, takže to nebyla rychlost
+vykreslování. Teprve sabotáž na straně účtu ho vyrobila na slovo
+přesně: s `PK_ZDRZ_ULOZ=800` (falešná Supabase potvrdí zápis o 800 ms
+později) padne zkouška na týchž dvou kontrolách a se stejným výpisem
+jako běh 781 — 70 v pořádku, 2 chyby. S čekáním na ODPOVĚĎ projde
+i s tím zpožděním, protože server v `poznamka_uloz` ukládá do mapy
+a teprve pak odpovídá. Knoflík v `scripts/falesna-supabase-chat.mjs`
+zůstal, aby se důkaz dal zopakovat.
+
+Pravidlo z toho (je i v CLAUDE.md): **kde zkouška zavírá prohlížeč nebo
+jde dál a spoléhá na to, že server něco má, musí čekat na POTVRZENÍ, ne
+na odeslání.** Prohledán zbytek zkoušek: `waitForRequest` je ještě na
+jednom místě, v `test-ceny-hledani` — tam je správně, protože tam je
+ten požadavek sám tím měřeným tvrzením („rejstřík se stáhne, až když se
+do pole klepne").
+
+### A jedno tvrzení v kódu, které měření vyvrátilo
+
+Při hledání příčiny se čtlo doplňování poznámky z účtu v
+`js/pozemek.js`. Na dvou místech tam stálo, že se zkouší ještě jednou
+po 400 ms, protože „`prihlasen()` si u prošlého tokenu řekne o obnovu,
+a ta je asynchronní". **Není to pravda.** `PKAuth.prihlasen()` je
+synchronní čtení schránky (`js/auth.js:53` a `58`) a o žádnou obnovu
+neříká. Změřeno 29. 10. na stránce pozemku: `config.js` i `auth.js`
+mají `defer`, takže v `DOMContentLoaded` je PKAuth **už přihlášený** —
+první pokus uspěje a cesta po 400 ms se nepoužije.
+
+| okamžik | PKAuth | prihlasen() |
+|---|---|---|
+| 10 ms po začátku | není | — |
+| DOMContentLoaded | je | ano |
+| load | je | ano |
+
+Opakování zůstalo, ale s napsaným pravým důvodem: je to pojistka proti
+změně POŘADÍ SKRIPTŮ, aby doplnění z účtu nezmizelo mlčky. Lež
+v komentáři je horší než chybějící komentář — podle ní by se příště
+hledala chyba v obnově tokenu, která se tu vůbec nedeje.

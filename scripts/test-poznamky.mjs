@@ -480,8 +480,20 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
 
   await p.fill('#pz-pozn-text', TEXT_UCET);
   /* Požadavek se nečeká na hodinky, ale na sebe samého — a když
-     nepřijde, řekne to kontrola pod tím, ne timeout. */
-  const odchod = p.waitForRequest((r) => /\/rpc\/poznamka_uloz/.test(r.url()),
+     nepřijde, řekne to kontrola pod tím, ne timeout.
+     A ČEKÁ SE NA ODPOVĚĎ, NE NA ODESLÁNÍ. Tím padl běh CI 781: čekalo
+     se na `waitForRequest`, tedy na okamžik, kdy požadavek OPOUŠTÍ
+     prohlížeč, a hned za tím se první prohlížeč zavřel a otevřel
+     druhý. Účet přitom ještě nemusel mít zápis zpracovaný — tělo
+     požadavku server teprve dočítá — takže druhý prohlížeč si stáhl
+     prázdný seznam a obě kontroly pod tím spadly: „v poli: „" |
+     klíčů ve schránce: 0". Tady to vyšlo, na běhači CI ne.
+     Doloženo sabotáží: když falešný účet ukládá o 800 ms později
+     (PK_ZDRZ_ULOZ), spadne tahle zkouška na týchž dvou kontrolách
+     a s týmž výpisem jako běh 781 — a s čekáním na odpověď projde
+     i s tím zpožděním. Odpověď je důkaz zápisu: server v
+     `poznamka_uloz` ukládá do mapy a teprve pak odpovídá. */
+  const odchod = p.waitForResponse((r) => /\/rpc\/poznamka_uloz/.test(r.url()),
     { timeout: 10000 }).catch(() => null);
   await p.evaluate(() => document.querySelector('#pz-pozn-text').blur());
   await odchod;

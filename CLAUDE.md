@@ -496,6 +496,23 @@ má přeměřit.
    ne delší čekání. Čekat naslepo na „něco se změnilo" nejde tam, kde se
    píše týž text jako posledně: pak se čeká na pořadí „zavřelo se →
    otevřelo se".
+   **A kde se spoléhá na SERVER, čeká se na potvrzení, ne na odeslání.**
+   `waitForRequest` říká jen „požadavek opustil prohlížeč" — server
+   v té chvíli ještě dočítá tělo a nemá zapsáno. Zkouška, která za tím
+   zavře prohlížeč nebo otevře druhý a ptá se účtu, tím měří závod:
+   `test-poznamky` takhle padal v CI 781 a lokálně nikdy (§215).
+   Čeká se na `waitForResponse`. Kde je ten požadavek SÁM tím měřeným
+   tvrzením (`test-ceny-hledani`: „rejstřík se stáhne, až když se do
+   pole klepne"), je `waitForRequest` naopak správně.
+   **A pozor, že web má přechody:** zkouška, která prvku dosadí barvu
+   a vypočtený styl přečte hned, dostane ještě tu PŘED přechodem.
+   `test-najeti` tím přestal měřit cokoli (143 → 0 prvků, §215). Na to
+   je `reducedMotion: 'reduce'`, ne čekání.
+   **A kdo si dosazuje stav z CSS, musí počítat celý kaskádový spor.**
+   Specificita jen mezi pravidly `:hover` nestačí — pravidlo bez
+   `:hover` může být silnější a dosazená barva se na obrazovku nikdy
+   nedostane. `test-najeti` tím ohlásil kontrast 1,90:1 na zapnutém
+   filtru „Vše", který bílý text má a nikdy ho neztratí (§215).
    Pomůcky: `scripts/zkouska-pripraveno.mjs` (čekání na stav),
    `scripts/zkouska-pad.mjs` (při pádu vypíše, kam zkouška došla —
    jinak v CI zbyde jen stopa výjimky a ani jedna ✕).
