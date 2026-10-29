@@ -629,6 +629,17 @@ prechody:
   stisk:    "jedno gesto na celý web: transform:translateY(1px). Výjimka: záložka „Uložit\" poskočí (scale 1.2) — to není stisk, ale potvrzení zápisu."
   neanimuje: "outline (prstenec zaměření má naskočit hned) a rozměry (width/height/top/left překreslují rozvržení na každém snímku)"
   hlida:    scripts/test-prechody.mjs, scripts/test-soustava.mjs
+popisek:
+  recept:  "popisek verzálkami nad obsahem desky má JEDEN recept: var(--font-popisek), 12px, řez 600, letter-spacing var(--popisek-proklad), barva var(--popisek)"
+  barva:   "tichý text nad deskou je --popisek, ne --muted. Zelená (--znacka-svetla) jen jako ozdoba na tmavém pásu."
+  pozor:   "--font-popisek se do 29. 10. jmenoval --font-mono, a žádné neproporcionální písmo v něm není — web má jedno písmo (Inter) ve čtyřech tokenech. Strojopis je na celém webu jediné místo: výpis kódu v diagnostika.html (§216)."
+  hlida:   scripts/test-pismo.mjs
+plochy:
+  karta:      "--plocha-karta (bílá). Změřeno: 30 z 38 desek."
+  zapustena:  "--plocha-zapustena — ovladač se zapuštěnou plochou (vstupy, pole, záložky, duchová tlačítka) a plocha mapy pod dlaždicemi"
+  tlumena:    "--plocha-tlumena — zvednutí při najetí/zapnutí; velká plocha, kde teprve něco bude (náhled bez fotky, plovoucí hláška); informace, která už neplatí"
+  pozor:      "jméno --plocha-tlumena říkalo jen „hover, aktivní\", ale polovina použití byla klidová (§216). Než ji někam napíšeš, podívej se, jestli to není zapuštěná plocha."
+  hlida:      scripts/test-deska.mjs
 stavy:
   vypnuto:    "opacity .45, cursor not-allowed, bez stínu a bez reakce na hover"
   pracuje-se: "aria-busy=true → opacity .7, cursor progress"

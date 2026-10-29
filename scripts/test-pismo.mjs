@@ -21,8 +21,10 @@
    (důraz), 700 (nadpis a tlačítko). Osmistovka vedle sedmistovky
    nevypadá jako jiný důraz, ale jako jiné písmo.
 
-   DRUH PÍSMA. Jeden — Inter, ve třech tokenech (--font-ui,
-   --font-display, --font-mono), které dnes ukazují na totéž. Natvrdo
+   DRUH PÍSMA. Jeden — Inter, ve čtyřech tokenech (--font-ui,
+   --font-display, --font-nadpis, --font-popisek), které ukazují na
+   totéž; čtvrtý se do 29. 10. jmenoval --font-mono, což bylo jméno
+   o písmu, jaké web nemá (§216). Natvrdo
    psaná rodina do pravidla nepatří: příště by se rozešly.
 
    Když nová velikost do stupnice nepatří, nepřidávej ji sem — vyber
@@ -48,7 +50,17 @@ export const TLOUSTKY = new Set(['400', '500', '600', '700', 'inherit', 'normal'
    v ní nejsou tokeny k mání: `var(--font-ui)` by byla nedefinovaná
    proměnná a deklarace by se zahodila. Povolená je proto rodina
    vypsaná přesně tak, jak stojí v paletce. */
-const RODINY = /^(var\(--font-(ui|display|mono|nadpis)\)|inherit|'Inter',?.*)$/;
+/* A JEDNO MÍSTO CHCE PÍSMO, KTERÉ WEB JINAK NEMÁ: výpis kódu
+   v diagnostika.html (`code` a `pre`). Strojopis je tam jediný důvod,
+   proč se ten text sází jinak než zbytek — ve sloupci znaků se pozná
+   mezera i nula. Stránka navíc paletku nenačítá (viz výš), takže by
+   jí token stejně nic nevrátil. Do 29. 10. tam stálo
+   `var(--font-mono)`: token, který se tak jmenoval, ale ukazoval na
+   Inter, a na téhle stránce nebyl definovaný vůbec — výpisy se tedy
+   kreslily obyčejným písmem. Dnes je tam strojopis vypsaný a token se
+   jmenuje --font-popisek, podle toho, co doopravdy dělá (§216). */
+const STROJOPIS = 'ui-monospace,SFMono-Regular,Menlo,Consolas,monospace';
+const RODINY = /^(var\(--font-(ui|display|popisek|nadpis)\)|inherit|'Inter',?.*)$/;
 
 /* Komentáře se vybílí, ale délka zůstane — čísla řádků pak ukazují na
    opravdový řádek v souboru. Na rozdíl od odstupů se vnitřek var()
@@ -58,7 +70,7 @@ function ocisti(text) {
   return text.replace(/\/\*[\s\S]*?\*\//g, s => s.replace(/[^\n]/g, ' '));
 }
 
-export function mimoStupnici(text) {
+export function mimoStupnici(text, soubor = '') {
   const bez = ocisti(text);
   const out = [];
   const radek = (i) => bez.slice(0, i).split('\n').length;
@@ -96,6 +108,7 @@ export function mimoStupnici(text) {
   for (const m of bez.matchAll(/(^|[;{\s])font-family\s*:\s*([^;}]+)/g)) {
     const h = m[2].trim();
     if (RODINY.test(h)) continue;
+    if (h === STROJOPIS && /diagnostika\.html$/.test(soubor)) continue;
     out.push({ radek: radek(m.index), co: `font-family: ${h.slice(0, 60)}`, proc: 'rodina patří do tokenu, ne do pravidla' });
   }
   return out;
@@ -175,7 +188,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   for (const f of soubory) {
     let text;
     try { text = readFileSync(f, 'utf8'); } catch { continue; }
-    const n = mimoStupnici(text);
+    const n = mimoStupnici(text, f);
     if (!n.length) continue;
     console.log(`✕ ${f}: ${n.length} mimo stupnici písma`);
     for (const x of n) console.log(`   ${f}:${x.radek}  ${x.co}   (${x.proc})`);

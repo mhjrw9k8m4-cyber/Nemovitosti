@@ -14295,3 +14295,106 @@ Opakování zůstalo, ale s napsaným pravým důvodem: je to pojistka proti
 změně POŘADÍ SKRIPTŮ, aby doplnění z účtu nezmizelo mlčky. Lež
 v komentáři je horší než chybějící komentář — podle ní by se příště
 hledala chyba v obnově tokenu, která se tu vůbec nedeje.
+
+## §216 Plochy a popisky: co na webu říká „tohle je tichá vrstva"
+
+Pokračování vizuálního propojení. Zaoblení (§212), rámy a stíny (§212),
+odsazení (§213) a přechody (§214) už mají jeden recept. Zbývalo to, co
+je na desce vidět jako první a poslední: ČÍM je vyplněná a JAK je nad
+ní napsané, o čem ta deska je.
+
+### Plochy: 38 desek, osm výplní — ale třicet z nich je bílých
+
+Otisk 17 typů stránek (týž vzorek jako test-deska): 38 desek, 8 různých
+výplní, a 30 z nich je čistě bílých. Karta sama tedy sjednocená je.
+Zbytek:
+
+| výplň | kolikrát | kdo |
+|---|---|---|
+| `#FFFFFF` | 30 | karty, panely, okna, mapy |
+| `#F7F8F8` (`--plocha-tlumena`) | 2 | náhled bez fotky, blok s odkazy |
+| `#F4F6F4` (`--plocha-vypis`) | 1 | pruh výpisu vedle mapy |
+| `#EDEFEE` (`--plocha-zapustena`) | 1 | lůžko záložek |
+| zelené a tmavé závoje | 4 | odznaky a prázdné stavy (ozdoba) |
+
+Vada nebyla v počtu, ale v ROLI. `--plocha-tlumena` má v komentáři
+„hover, aktivní" — a polovina jejích použití byla klidová: **15 ve
+stavu, 15 v klidu**. Dvě role se přitom malovaly oběma odstíny:
+
+* **vstupní pole**: `.loc-input` nosilo `--plocha-tlumena`, zatímco
+  všechna ostatní pole na webu (`.add-form input`, `.auth-inp input`,
+  `.rct-form input`, `.pz-pozn-pole`…) mají `--plocha-zapustena`;
+* **plocha mapy pod dlaždicemi**: `.vm-mapa` jeden odstín, `.pzm-mapa`
+  druhý.
+
+Srovnáno na roli: pole, duchové tlačítko a záložka účtu jsou ovladače
+se zapuštěnou plochou, mapa taky. Komentáře u obou tokenů teď říkají,
+co doopravdy dělají — `--plocha-tlumena` zůstává zvednutí při najetí,
+velké ploše „kde teprve něco bude" a informaci, která už neplatí.
+
+### Tmavý náhled na kartě: vypadal jako vada, měření ho obhájilo
+
+Při obhlídce výpisu bez leteckých dlaždic (pomalá síť, sandbox) je
+náhled na kartě tmavě zelený blok. To vypadalo jako přesně ta „tmavá
+deska", kterou řešil starší úkol. Otisk obou možností vedle sebe ale
+ukázal opak: se světlým podkladem se spodní závoj, který na fotce dělá
+odznak čitelným, změní v šedou šmouhu a karta vypadá hůř. Tmavý
+podklad je PLÁTNO MAPY, ne tmavá karta, a čte se správně. **Neměněno.**
+Zůstává jen technický nález: `#12241A` je napsaný natvrdo ve dvou
+místech JS (`js/snimek.js`, `js/main.js`), ačkoli token
+`--plocha-tmava` existuje.
+
+### Popisek verzálkami: devět receptů na jednu roli
+
+Nadpis uvnitř desky se měřil na 17 typech stránek: **10 desek, 8
+receptů** (dva z devíti byly šum mé sondy — obaly, ne nadpisy). Nejhůř
+na tom byl popisek verzálkami, tedy ta tichá řádka nad obsahem karty.
+Patnáct míst:
+
+| vlastnost | jak to bylo |
+|---|---|
+| písmo | `--font-mono` 9×, základní 5× |
+| velikost | 12 px 11×, 11 px 2×, 13 px 1× |
+| řez | 600 10×, 700 4× |
+| prostrkání | `.07em` 14×, `.02em` 1× |
+| barva | `--popisek` 6×, `--muted` 4×, zelená ozdoba 3× |
+
+Jediné místo, které stálo mimo celou řadu, byla PŘEDLOHA — majitelova
+karta s cenou (`.pz-bok-nadpis`: 13 px, 700, `.02em`, proporcionálně).
+U zaoblení i odsazení v tomhle vlákně předloha rozhodla; tady ne,
+a důvod je měřitelný: popisek verzálkami je na webu volba písma, a té
+se předloha neúčastnila. Srovnalo se proto jedno místo, ne devět.
+
+Po zásahu: **4 recepty místo 9**, a ty tři zbylé jsou táž sazba
+s jinou barvou — zelené „obočí" na tmavém pásu, které je ozdoba.
+
+### A token, který lhal o písmu
+
+Při tom se našlo tohle: **`--font-mono` není neproporcionální.** Všechny
+čtyři tokeny písma (`--font-ui`, `--font-display`, `--font-nadpis`,
+`--font-mono`) ukazovaly na týž Inter. Kdo ten název četl — já taky —
+myslel si, že popisky jsou „datový" strojopis, a podle toho se
+rozhodoval. Přejmenováno na `--font-popisek`, tedy podle role, kterou
+ta hodnota doopravdy má (32 míst ve dvou stylopisech, osm ručně psaných
+stránek a jedna zkouška).
+
+A hned se tím odhalila starší vada: `diagnostika.html` je samostatná
+stránka bez paletky, takže jí `var(--font-mono)` nikdy nic nevrátilo —
+výpisy kódu v `code` a `pre` se sázely obyčejným písmem. Dostaly
+skutečný strojopis napsaný natvrdo; v test-pismo je to jmenovitá
+výjimka s důvodem a sabotáží doložené, že totéž písmo jinde hlídač
+chytí.
+
+### A třetí hlídač, kterému přechody vzaly měření
+
+`test-afordance` měří, že vypnutý ovladač je průhlednější než zapnutý.
+Vypne ho a vypočtený styl přečte hned — jenže průhlednost je od §214
+v přechodu, takže to čtení vrátilo ještě hodnotu PŘED změnou: 1
+u všech šesti ovladačů. V běhu 781 se k téhle zkoušce CI vůbec
+nedostalo (úloha skončila na dřívějším pádu), takže se ukázala až
+v 782. Opraveno `reducedMotion: 'reduce'`, stejně jako u test-najeti.
+
+Aby se nečekalo na další běh, prošly se zbylé zkoušky třetí směny,
+ke kterým se CI kvůli pádu nedostalo (test-sliby, test-vyber-okoli,
+test-zive-strop, test-hledani-vzhled, test-videno,
+test-hledani-zavirani, test-kontrola-ziva) — všechny bez nálezu.

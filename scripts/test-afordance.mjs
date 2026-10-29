@@ -122,8 +122,15 @@ for (const s of STRANKY) {
    odlišuje atributem aria-busy. Měří se obojí, na doopravdy
    vykreslených prvcích. */
 {
+  /* VYPNUTÝ POHYB. Zkouška ovladač vypne a vypočtený styl přečte
+     HNED — jenže průhlednost se od commitu s přechody mění měkce
+     (--prechod-barvy), takže to čtení vrátí ještě hodnotu PŘED
+     změnou: naměřeno 1 u všech šesti ovladačů a dvě kontroly spadly
+     na vadě, která na obrazovce není (CI 782, §216). Ve zkoušce se
+     měří KONCOVÝ stav, a ten je s vypnutým pohybem hned; stylopis
+     to navíc globálně ctí sám (prefers-reduced-motion). */
   const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
-    viewport: { width: 1280, height: 900 }, locale: 'cs-CZ' });
+    viewport: { width: 1280, height: 900 }, locale: 'cs-CZ', reducedMotion: 'reduce' });
   const p2 = await ctx.newPage();
   await p2.goto(`${BASE}/index.html`, { waitUntil: 'load' });
   await p2.waitForTimeout(2200);

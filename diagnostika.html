@@ -47,7 +47,11 @@
     .txt{min-width:0;flex:1}
     .name{display:block;font-weight:600;font-size:14px}
     .det{display:block;color:var(--dim);font-size:14px;margin-top:2px;word-break:break-word}
-    .det code{font-family:var(--font-mono);font-size:13px;background:#EEF6F1;padding:2px 4px;border-radius:6px}
+    /* Strojopis NAPSANÝ NATVRDO: tahle stránka paletku nenačítá, takže
+       jí var(--…) nevrátí nic. Dřív tu stálo var(--font-mono) a výpisy
+       se kreslily obyčejným písmem — a zrovna u výpisu kódu je strojopis
+       to jediné, kvůli čemu se sází jinak. */
+    .det code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:#EEF6F1;padding:2px 4px;border-radius:6px}
     h2{font-size:14px;margin:20px 0 0;letter-spacing:0.02em;text-transform:uppercase;color:var(--dim)}
     button{font:inherit;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--text);
       padding:8px 16px;border-radius:10px;cursor:pointer}
@@ -60,7 +64,7 @@
        ne k další části. Stránka to měla v atributu style=. */
     .note.verze{margin:-12px 0 20px}
     pre{background:#12241A;color:#EEF6F1;border-radius:14px;padding:12px;overflow:auto;
-      font-family:var(--font-mono);font-size:13px;line-height:1.5;max-height:340px}
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;max-height:340px}
     a{color:#0F5C3B}
   </style>
 </head>

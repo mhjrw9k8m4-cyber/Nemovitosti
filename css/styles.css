@@ -124,7 +124,13 @@
      řez, podřezaný na naši sadu znaků — ne systémový. */
   --font-nadpis:'Inter','Helvetica Neue',Arial,sans-serif;
   --font-ui:'Inter','Helvetica Neue',Arial,sans-serif;
-  --font-mono:'Inter','Helvetica Neue',Arial,sans-serif;
+  /* JMÉNO, KTERÉ LHALO. Token se jmenoval --font-mono, ale žádné
+     neproporcionální písmo v něm není a nikdy nebylo — ukazuje na týž
+     Inter jako ostatní tři. Kdo ho četl (já 29. 10. taky), myslel si,
+     že popisky verzálkami jsou na webu „datovým" strojopisem, a podle
+     toho se rozhodoval. Jméno teď říká, k čemu ta hodnota je: je to
+     hlas POPISKU (§216). */
+  --font-popisek:'Inter','Helvetica Neue',Arial,sans-serif;
 
   /* Neutrály jsou TEPLÉ, ne studeně šedé. Studená šeď působí sterilně —
      teplá bílá dělá totéž, co v bytě denní světlo místo zářivky. Rozdíl
@@ -161,7 +167,9 @@
      protože nejvyšší plocha je nově čistá bílá.
      =================================================================== */
   --bg:#F2F4F3;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
-  --plocha-zapustena:#EDEFEE;                /* zapuštěná plocha: vstupy, pole — stejná rodina jako plocha, ne teplá */
+  /* Zapuštěná plocha: vstupy, pole, záložky, duchová tlačítka a plocha
+     mapy pod dlaždicemi. Stejná rodina jako plocha, ne teplá. */
+  --plocha-zapustena:#EDEFEE;
   /* ZVÝŠENÁ PLOCHA: karty a panely. Byla čistě bílá, a byla tím jediná
      v celé rodině ploch bez zeleně: --plocha-zapustena je #EEF6F1 a --plocha-tlumena
      #F5FAF7, obě zelenkavé. Přitom je ze všech největší — změřeno na
@@ -171,7 +179,18 @@
      Kontrast skoro beze změny: #12241A 15,9 : 1 (bylo 16,1),
      --muted 7,4 : 1 (7,58), zástupný text 5,3 : 1 (5,44). */
   --plocha-karta:#FFFFFF;
-  --plocha-tlumena:#F7F8F8;          /* nejvyšší plocha: hover, aktivní */
+  /* ZMĚŘENO 29. 10. (38 desek na 17 typech stránek): tahle plocha měla
+     v komentáři „hover, aktivní", ale POLOVINA jejích použití byla
+     klidová — 15 ve stavu, 15 v klidu. Komentář tím posílal každého
+     dalšího špatným směrem, tak tu stojí, co doopravdy dělá:
+     (1) zvednutí ovladače při najetí nebo zapnutí (její původní role),
+     (2) velká plocha, kde teprve něco BUDE: náhled bez fotky
+         (.opp-media, .pz-media, .rv-obraz), plovoucí hláška,
+     (3) informace, která už neplatí (prošlá dražba, proběhlá nabídka).
+     Co se z téhle plochy vystěhovalo: vstupní pole, duchové tlačítko,
+     záložka účtu a plocha mapy — ty jsou ovladač nebo zapuštěná plocha
+     a mají --plocha-zapustena, jako zbytek svého druhu (viz §216). */
+  --plocha-tlumena:#F7F8F8;
   /* Tmavý pás. Web byl celý světlý, takže neměl rytmus — jedna dlouhá
      plocha bez nádechu. Tmavá sekce je to, čím velké weby dělají předěl. */
   --plocha-tmava:#12241A;
@@ -708,6 +727,15 @@
      CENOU" se v úvodní kartě zalomil na dva řádky a tři kartičky vedle
      sebe přestaly být stejně vysoké (naměřeno 44 a 55 px). Zároveň to
      byla jedna z věcí, kvůli kterým web působil jako plakátovací plocha. */
+  /* Prostrkání popisku verzálkami. ZMĚŘENO 29. 10. na všech 15 místech
+     té role: písmo neproporcionální 9× proti 5×, velikost 12 px 11×,
+     řez 600 10×, prostrkání .07em 14×. Jediné místo, které stálo mimo
+     celou tu řadu, byla předloha (.pz-bok-nadpis: 13 px, 700, .02em,
+     proporcionálně) — u zaoblení i odsazení v tomhle vlákně předloha
+     rozhodla, tady ne. Důvod je měřitelný: popisek verzálkami je na
+     webu VOLBA PÍSMA (neproporcionální „datový" hlas), a toho se
+     předloha neúčastnila. Srovnalo se proto zbylé jedno místo, ne
+     devět. Viz §216. */
   --popisek-proklad:.07em;
   --odznak-proklad:.03em;
   /* Svislý rytmus oddílů — jedno číslo pro celý web. */
@@ -877,7 +905,7 @@ a:focus-visible, button:focus-visible, select:focus-visible, [role="button"]:foc
    musí mít osmička stejnou šířku jako jednička, jinak sloupec jede
    cikcak. To umí Inter taky — stačí si o to říct. Zbytek práce (dojem
    „tohle je údaj") obstará velikost a barva, ne třetí stažená rodina. */
-.mono{font-family:var(--font-mono); letter-spacing:0.02em; font-variant-numeric:tabular-nums;}
+.mono{font-family:var(--font-popisek); letter-spacing:0.02em; font-variant-numeric:tabular-nums;}
 .pt-0{padding-top:0;}
 a{color:inherit;}
 .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
@@ -1238,7 +1266,7 @@ body.vm-otevreno{overflow:hidden;}
    plátno zachytilo a výběr se nikdy neprovedl. Uvnitř obalu se poměry
    nemění — stín u patičky (600) je nad panely mapy dál. */
 .vm-mapa-obal{position:relative; z-index:0; flex:1 1 auto; min-height:180px; display:flex;}
-.vm-mapa{flex:1 1 auto; min-width:0; min-height:0; background:var(--plocha-tlumena);}
+.vm-mapa{flex:1 1 auto; min-width:0; min-height:0; background:var(--plocha-zapustena);}
 /* Značka uprostřed mapy — klikat se přes ni nesmí.
    Pozor: obal měl width:0 a display:flex, což značku stlačilo z dvaceti
    pixelů na šest. Proto je teď umístěná posunem, ne flexem. */
@@ -1324,7 +1352,7 @@ body.vm-otevreno{overflow:hidden;}
 .vm-meritko span{position:absolute; left:0; top:0; transform:translate(9px,-50%);
   display:inline-block; white-space:nowrap;
   padding:2px 8px; border-radius:var(--r-pill); background:var(--c-warn); color:#fff;
-  font-family:var(--font-mono); font-size:12px; font-weight:700; letter-spacing:0.02em;
+  font-family:var(--font-popisek); font-size:12px; font-weight:700; letter-spacing:0.02em;
   box-shadow:var(--e2);}
 /* Počet je to, kvůli čemu se na tenhle panel člověk dívá — má tedy vypadat
    jako údaj, ne jako poznámka pod čarou. Pod ním stojí ROZPAD podle druhu:
@@ -1352,7 +1380,7 @@ body.vm-otevreno{overflow:hidden;}
 /* Popisek okruhu byl jen pro odečítač obrazovky, takže z řady „2 5 10 20 50"
    byla na obrazovce hádanka. */
 .vm-okruh-p{font-size:12px; letter-spacing:0.1em; text-transform:uppercase;
-  color:var(--muted); font-family:var(--font-mono); margin-right:2px;}
+  color:var(--muted); font-family:var(--font-popisek); margin-right:2px;}
 .vm-ok{flex:0 0 auto; font:inherit; font-weight:700; cursor:pointer; padding:8px 16px; border:0;
   background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
 .vm-ok:hover{filter:brightness(1.06);}
@@ -1884,7 +1912,7 @@ button:disabled:hover, input:disabled:hover, select:disabled:hover,
 }
 
 /* Hero prvky (sdílené) */
-.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--znacka-svetla); margin-bottom:20px;}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-popisek); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--znacka-svetla); margin-bottom:20px;}
 .eyebrow::before{content:""; width:16px; height:1px; background:var(--znacka-svetla);}
 h1{font-family:var(--font-nadpis); font-weight:700; font-size:var(--h1-stranka); line-height:1.1; letter-spacing:-0.01em; margin-bottom:20px;}
 /* Dřív tu byl modro-fialový přechod obtisknutý do písmen. Vypadalo to jako
@@ -2340,7 +2368,7 @@ h1 em{ color:var(--znacka-svetla);
    splývalo s pilulkami pod ním — panel působil jako jedna slitá zeď.
    Recept je opsaný z .mcs-k o kus níž (verzálky, prostrkání, tlumená
    barva): týž panel, týž jazyk, jen se konečně použije i tady. */
-.mc-cap{font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--muted);
+.mc-cap{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek);
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
 /* Cena a výměra jako rozsah od–do. Dřív to byly rozbalovátka s pevnými
    stupni a jen jedním směrem („cena DO", „výměra OD"), takže se nedalo
@@ -3677,7 +3705,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
   font-size:14px; font-weight:600; color:var(--text);}
 .map-legend:empty{display:none;}
 /* Týž hlas, jakým mluví ostatní drobné popisky webu (viz --popisek-proklad). */
-.lg-nadpis{flex:1 1 100%; font-family:var(--font-mono); font-size:12px; font-weight:600;
+.lg-nadpis{flex:1 1 100%; font-family:var(--font-popisek); font-size:12px; font-weight:600;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek);}
 .lg-item{display:flex; align-items:center; gap:8px; white-space:nowrap;}
 .lg-dot{width:14px; height:14px; border-radius:50%; border:1.5px solid #fff; box-shadow:0 0 0 1px rgba(var(--plocha-tmava-rgb),0.16); flex:none;}
@@ -3871,7 +3899,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    bílé kartě a nebyla vidět vůbec (naměřeno 1,0 : 1). Zůstává jedině
    odkaz — ten má na světlé ploše vzít tmavou hněď, ne jasnou. */
 #realitky .rules-note a{color:var(--accent-warm);}
-.copy-btn{position:absolute; top:10px; right:10px; background:var(--znacka); color:var(--plocha-zapustena); border:0; border-radius:3px; font-family:var(--font-mono); font-size:12px; font-weight:500; padding:4px 8px; cursor:pointer; transition:var(--prechod);}
+.copy-btn{position:absolute; top:10px; right:10px; background:var(--znacka); color:var(--plocha-zapustena); border:0; border-radius:3px; font-family:var(--font-popisek); font-size:12px; font-weight:500; padding:4px 8px; cursor:pointer; transition:var(--prechod);}
 .copy-btn:hover{background:var(--znacka-svetla);}
 /* BÍLÁ NA JASNÉ ZELENÉ JE 3,24 : 1 — POD NORMOU. Stav „zkopírováno"
    se objeví na vteřinu po klepnutí, takže ho zkouška kontrastu na
@@ -3885,7 +3913,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .faq-item{ margin-bottom:0; overflow:hidden;}
 .faq-item summary{cursor:pointer; font-family:var(--font-ui); font-size:16px; font-weight:500; list-style:none; display:flex; justify-content:space-between; align-items:center;}
 .faq-item summary::-webkit-details-marker{display:none;}
-.faq-item summary::after{content:"+"; font-family:var(--font-mono); color:var(--znacka-svetla); font-size:20px; transition:var(--prechod);}
+.faq-item summary::after{content:"+"; font-family:var(--font-popisek); color:var(--znacka-svetla); font-size:20px; transition:var(--prechod);}
 .faq-item[open] summary::after{transform:rotate(45deg);}
 .faq-item p{padding:0 20px 20px; font-size:16px; color:var(--muted); max-width:var(--m-text);}/* CTA */
 
@@ -3923,7 +3951,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
    Na vzhled to nemá vliv — font:inherit bere písmo od <summary>. */
 .gl-item summary h3{margin:0; font:inherit; color:inherit;}
 .gl-item summary::-webkit-details-marker{display:none;}
-.gl-item summary::after{content:"+"; font-family:var(--font-mono); color:var(--znacka-svetla);
+.gl-item summary::after{content:"+"; font-family:var(--font-popisek); color:var(--znacka-svetla);
   font-size:16px; line-height:1; transition:var(--prechod);}
 .gl-item[open] summary::after{transform:rotate(45deg);}
 .gl-item p{font-size:14px; color:var(--muted); padding:0 16px 16px;}/* Srovnání */
@@ -4115,7 +4143,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     display:flex; align-items:center; justify-content:center;}
 }
 .loc-btn.primary:hover{filter:brightness(1.06);}
-.loc-btn.ghost{background:var(--plocha-tlumena); color:var(--text); border-color:var(--line-strong);}
+.loc-btn.ghost{background:var(--plocha-zapustena); color:var(--text); border-color:var(--line-strong);}
 .loc-btn.ghost:hover{border-color:var(--znacka-svetla);}
 /* Plynulý příchod okna + jemné vizuální doladění */
 @keyframes locOvIn{from{opacity:0}to{opacity:1}}
@@ -4126,7 +4154,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
 .loc-btn{transition:var(--prechod);}
 .loc-btn:active{transform:translateY(1px);}
 .loc-btn.primary{box-shadow:var(--e2);}
-.loc-input{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px; background:var(--plocha-tlumena); color:var(--text); transition:var(--prechod); -webkit-appearance:none; appearance:none;}
+.loc-input{width:100%; box-sizing:border-box; padding:12px 12px; border:1.5px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px; background:var(--plocha-zapustena); color:var(--text); transition:var(--prechod); -webkit-appearance:none; appearance:none;}
 .loc-input::placeholder{color:var(--text-zastupny);}
 .loc-input:focus{border-color:var(--znacka-svetla); background:var(--plocha-karta); box-shadow:var(--prstenec-pole);}
 .loc-err{color:var(--c-exekuce-ink); font-size:13px; margin:8px 2px 0; text-align:left;}
@@ -4806,7 +4834,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      oddíl zavřít). */
   .nav-sk > summary{display:flex; align-items:center; gap:12px; list-style:none;
     cursor:default; pointer-events:none; padding:20px 20px 8px;
-    font-family:var(--font-ui); font-size:11px; font-weight:700;
+    /* Týž popisek verzálkami jako všude jinde (§216): neproporcionální
+       písmo, 12 px, řez 600. Dřív tu stálo 11 px / 700 proporcionálně —
+       nadpis oddílu v menu se tím sázel jinak než nadpis oddílu na
+       stránce, a přitom to komentář nad tím sám pojmenovává stejně. */
+    font-family:var(--font-popisek); font-size:12px; font-weight:600;
     letter-spacing:var(--popisek-proklad);
     text-transform:uppercase; color:var(--muted);}
   .nav-sk > summary::after{content:none;}
@@ -5048,7 +5080,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
  * značkovou zelenou. Ty nikomu jako neklikatelné nepřišly. */
 .uc-taby a{flex:none; padding:8px 16px; font-size:14px; font-weight:600;
   color:var(--muted); text-decoration:none; white-space:nowrap;
-  background:var(--plocha-tlumena); border:1.5px solid var(--line-strong);
+  background:var(--plocha-zapustena); border:1.5px solid var(--line-strong);
   border-radius:var(--r-pill); min-height:44px;
   transition:var(--prechod);}
 .uc-taby a:hover{color:var(--text); background:var(--plocha-karta);}
@@ -5075,7 +5107,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .uc-tab-pocet{display:inline-flex; align-items:center; justify-content:center;
   min-width:20px; height:20px; padding:0 4px; border-radius:var(--r-pill);
   background:var(--plocha-znacka); color:#fff;
-  font-family:var(--font-mono); font-size:11px; font-weight:700; line-height:1;
+  font-family:var(--font-popisek); font-size:11px; font-weight:700; line-height:1;
   font-variant-numeric:tabular-nums;}
 /* MÁM INZERÁT JINDE. Stojí NAD formulářem, ne v rozbalovátku dole:
    je to zkratka k vyplnění, takže musí být vidět dřív, než se člověk
@@ -5115,7 +5147,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .add-sekce{display:flex; flex-direction:column; gap:12px; min-width:0;}
 .add-sekce + .add-sekce, .add-sekce + .add-more, .add-more + .add-sekce{
   padding-top:20px; border-top:1px solid var(--line);}
-.add-sekce-cap{margin:0; font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--muted);
+.add-sekce-cap{margin:0; font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek);
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
 /* Upřesnění u názvu oddílu („nepovinné · max 8"). Není to nadpis, tak
    není ani verzálkami — jinak by se z názvu stala dlouhá kapitálková
@@ -5247,7 +5279,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
 .kt-mail .kt-ico svg{width:23px; height:23px; stroke-width:1.57; color:#0b1510;}
 .kt-mail .kt-txt{min-width:0;}
-.kt-mail .kt-txt small{display:block; font-family:var(--font-mono); font-size:12px;
+.kt-mail .kt-txt small{display:block; font-family:var(--font-popisek); font-size:12px;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek); font-weight:600;}
 .kt-mail .kt-txt b{font-size:16px; color:var(--text); word-break:break-word;}
 .kt-mail:hover{border-color:var(--znacka-svetla); background:rgba(var(--plocha-znacka-svetla-rgb),0.12);}
@@ -5362,7 +5394,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .rule-list.kroky{counter-reset:krok;}
 .rule-list.kroky li::before{counter-increment:krok; content:counter(krok);
   background:var(--plocha-znacka); color:#fff; display:grid; place-items:center;
-  font-family:var(--font-mono); font-size:12px; font-weight:700; line-height:1;}
+  font-family:var(--font-popisek); font-size:12px; font-weight:700; line-height:1;}
 .rule-list.no li::before{background:var(--c-exekuce) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 7l10 10M17 7L7 17' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") center/11px 11px no-repeat;
   box-shadow:var(--e1);}
 /* =====================================================================
@@ -5500,7 +5532,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 @keyframes addfade{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:none;}}
 /* Karta živého náhledu */
 .preview-card{position:relative;}
-.pc-eyebrow{display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:12px;
+.pc-eyebrow{display:flex; align-items:center; gap:8px; font-family:var(--font-popisek); font-size:12px;
   font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--znacka-svetla);}
 .pc-eyebrow{margin-bottom:8px;}
 .pc-eyebrow .live-dot{margin:0;}
@@ -5823,7 +5855,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
 .okr-badge.t-sale{color:var(--c-sale-ink);} .okr-badge.t-drazba{color:var(--c-drazba-ink);} .okr-badge.t-exekuce{color:var(--c-exekuce-ink);} .okr-badge.t-obec{color:var(--c-obec-ink);} .okr-badge.t-majitel{color:var(--c-majitel-ink);}
 .okr-item .okr-meta{color:var(--muted,#9db0a4); font-size:14px;}
 .okr-item .okr-meta b{color:var(--text, #12241A); font-weight:600;}
-.okr-item .okr-src{font-size:13px; font-weight:600; color:var(--znacka-svetla,#8CC3A4); text-decoration:none; white-space:nowrap;}
+.okr-item .okr-src{font-size:13px; font-weight:600; color:var(--znacka-svetla); text-decoration:none; white-space:nowrap;}
 .okr-item .okr-src:hover{text-decoration:underline;}
 .okr-more{color:var(--muted,#9db0a4); font-size:14px; margin:12px 0 0;}
 /* SVISLÁ OSNOVA PŘEHLEDOVÝCH STRÁNEK PATŘÍ SEM, NE DO ATRIBUTŮ.
@@ -5877,7 +5909,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
   border:1px solid var(--obrys-tlacitka); background:var(--plocha-karta);
   color:var(--znacka); font-weight:700;
   font-variant-numeric:tabular-nums;}
-.okr-kraj-h{margin:24px 0 4px; font-family:var(--font-mono); font-size:12px; font-weight:600;
+.okr-kraj-h{margin:24px 0 4px; font-family:var(--font-popisek); font-size:12px; font-weight:600;
   text-transform:uppercase; letter-spacing:var(--popisek-proklad); color:var(--znacka-svetla,#8CC3A4);}
 
 /* ---------- Drobečková navigace na regionálních/rádcových stránkách ---------- */
@@ -6570,7 +6602,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 .status-card .status-top{font-size:16px;}
 .status-card .status-top .ic{display:none;}   /* barvu nese čára, ikonka je navíc */
 .status-n{background:none; border:0; padding:0; color:var(--muted);
-  font-family:var(--font-mono); font-size:12px; font-weight:500;}
+  font-family:var(--font-popisek); font-size:12px; font-weight:500;}
 .status-n.is-zero{background:none; border:0;}
 @media (max-width:880px){
   .status-grid{grid-template-columns:1fr; gap:0;}
@@ -6606,7 +6638,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
   box-shadow:none; color:var(--accent-warm);}
 .kraj-item:hover .kj-n{color:inherit;}
 .kj-n{font-size:16px;}
-.kj-c{font-family:var(--font-mono); font-size:12px;}
+.kj-c{font-family:var(--font-popisek); font-size:12px;}
 .kraj-vse{background:none; border-style:none; border-top:1px solid var(--line-strong);}
 .kraj-vse .kj-n{color:var(--accent-warm);}
 @media (max-width:880px){
@@ -7105,7 +7137,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .okr-index-grid a{background:none; border:0; border-top:1px solid var(--line);
   border-radius:0; padding:12px 2px; font-size:16px; align-items:baseline;}
 .okr-index-grid a:hover{border-color:var(--accent-warm); color:var(--accent-warm);}
-.okr-index-grid a span{font-family:var(--font-mono); font-size:12px; white-space:nowrap;}
+.okr-index-grid a span{font-family:var(--font-popisek); font-size:12px; white-space:nowrap;}
 @media (max-width:880px){ .okr-index-grid{grid-template-columns:1fr 1fr; gap:0 20px;} }
 @media (max-width:620px){ .okr-index-grid{grid-template-columns:1fr;} }
 @keyframes hhTep{
@@ -7375,7 +7407,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .rail-mark{display:flex; align-items:baseline; gap:8px; margin:0 0 12px;}
 .rail-mark .rm-n{font-family:var(--font-display); font-weight:700; font-size:16px;
   letter-spacing:-0.01em; color:var(--accent-warm); font-variant-numeric:tabular-nums;}
-.rail-mark .rm-l{font-family:var(--font-mono); font-size:12px; font-weight:600;
+.rail-mark .rm-l{font-family:var(--font-popisek); font-size:12px; font-weight:600;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek);}
 /* Měděná vlasovka nad nadpisem tu nemá co dělat — strukturu drží sloupec. */
 .rail .section-head::before{display:none;}
@@ -7582,7 +7614,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .section:has(.clanek) > .add-wrap > *:not(.obsah){grid-column:2; min-width:0;}
   .section:has(.clanek) > .add-wrap > .obsah{display:block; grid-column:1;
     grid-row:1 / span 99; position:sticky; top:109px; align-self:start;}
-  .obsah-nadpis{font-family:var(--font-mono); font-size:12px; font-weight:600;
+  .obsah-nadpis{font-family:var(--font-popisek); font-size:12px; font-weight:600;
     letter-spacing:0.1em; text-transform:uppercase; color:var(--accent-warm);
     margin:24px 0 12px;}
   .obsah ol{list-style:none; margin:0; padding:0; counter-reset:pk-obsah;
@@ -8181,7 +8213,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 .gtk-otazky .gtk-k{display:block; margin-bottom:8px;}
 .gtk-ol{margin:0; padding-left:1.35em; display:flex; flex-direction:column; gap:4px;}
 .gtk-ol li{font-size:14px; line-height:1.6; color:var(--text);}
-.gtk-ol li::marker{font-family:var(--font-mono); font-size:12px; color:var(--accent-warm);}
+.gtk-ol li::marker{font-family:var(--font-popisek); font-size:12px; color:var(--accent-warm);}
 
 /* „Cena k ověření" na kartě. Jantar, ne červená: je to upozornění, ať se
    člověk podívá, ne tvrzení, že je nabídka podvod. */
@@ -8217,7 +8249,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
    na ní dával 1,1 : 1 — naměřeno, nebyl vidět vůbec. Rozlišení BARVOU
    zůstává, jen obráceně: tlumený podklad, tmavý text téže barvy. */
 .src-stav{margin-left:8px; padding:1px 4px; border-radius:var(--r-pill);
-  font-family:var(--font-mono); font-size:12px; font-variant-numeric:tabular-nums;
+  font-family:var(--font-popisek); font-size:12px; font-variant-numeric:tabular-nums;
   background:var(--plocha-jemna-vic); color:var(--muted);}
 .src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.12); color:var(--c-exekuce);}
 /* Oslabený zdroj: odpověděl, ale přinesl výrazně méně. Není to
@@ -8233,7 +8265,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
 /* SOUŘADNICE: číslo ke zkopírování a odkaz do navigace.
    Číslo v <code> jde označit prstem i myší; tlačítka mají 44 px. */
 .pz-sour{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
-.pz-sour code{font-family:var(--font-mono);
+.pz-sour code{font-family:var(--font-popisek);
   font-size:14px; letter-spacing:-0.01em; user-select:all; -webkit-user-select:all;}
 /* --r-ovladani, ne --r-sm. Pravidlo webu zní: co se ovládá, má
    --r-ovladani (viz token výš). „Kopírovat" a „Navigovat" stály pod
@@ -8415,7 +8447,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   border:1px solid var(--line); border-radius:var(--r-plocha); background:var(--plocha-karta);}
 .por-tab{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; min-width:640px;}
 .por-tab th, .por-tab td{padding:12px 12px; text-align:right; white-space:nowrap; font-size:14px;}
-.por-tab thead th{text-align:right; font-size:12px; font-weight:700;
+.por-tab thead th{text-align:right; font-family:var(--font-popisek); font-size:12px; font-weight:600;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--popisek);
   border-bottom:1px solid var(--line-strong);}
 .por-tab thead th:first-child, .por-tab tbody th{text-align:left;}
@@ -8546,7 +8578,8 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   font-weight:600; color:var(--muted); pointer-events:none;}
 .nak-hlavni .nak-vstup input{width:180px; font-size:20px; font-weight:700;}
 .nak-volby{border:0; padding:0; margin:0 0 20px;}
-.nak-volby legend{font-size:12px; font-weight:700; letter-spacing:var(--popisek-proklad);
+.nak-volby legend{font-family:var(--font-popisek); font-size:12px; font-weight:600;
+  letter-spacing:var(--popisek-proklad);
   text-transform:uppercase; color:var(--popisek); padding:0; margin-bottom:8px;}
 .nak-volba{display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
   gap:12px; padding:8px 0; border-top:1px solid var(--line); min-height:44px; cursor:pointer;}
@@ -8596,8 +8629,9 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   border-radius:var(--r-ovladani); background:var(--surface-2); color:var(--muted);}
 .sml-blok{border:0; padding:0; margin:0 0 24px;}
 .sml-blok:last-child{margin-bottom:0;}
-.sml-blok legend{font-size:12px; font-weight:700; letter-spacing:var(--popisek-proklad);
-  text-transform:uppercase; color:var(--muted); padding:0; margin:0 0 12px;}
+.sml-blok legend{font-family:var(--font-popisek); font-size:12px; font-weight:600;
+  letter-spacing:var(--popisek-proklad);
+  text-transform:uppercase; color:var(--popisek); padding:0; margin:0 0 12px;}
 /* Dva sloupce na šířku, jeden na telefonu. Pole, které potřebuje celou
    řádku (adresa, výběr způsobu platby), si ji vezme přes .sml-siroke. */
 .sml-form{display:block;}
@@ -8630,7 +8664,7 @@ body.vybiram-misto .misto-pruh .mp-hlavni{color:var(--znacka);}
   margin:0 0 16px; max-width:var(--m-text);}
 /* Výpis podkladu: neproporcionální písmo a zachované konce řádků — je to
    text, který se bude kopírovat a tisknout, takže se nesmí přeskládat. */
-.sml-text{font-family:var(--font-mono);
+.sml-text{font-family:var(--font-popisek);
   font-size:13px; line-height:1.6; white-space:pre-wrap; word-break:break-word;
   margin:0; padding:16px; border-radius:var(--r-ovladani); border:1px solid var(--line);
   background:var(--surface-2); max-height:460px; overflow:auto;}
@@ -9048,7 +9082,7 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .map-sheet[hidden]{display:none;}
 .ms-rada{display:flex; flex-direction:column; gap:4px;}
 .ms-rada[hidden]{display:none;}
-.ms-popis{font-family:var(--font-mono); font-size:11px; text-transform:uppercase;
+.ms-popis{font-family:var(--font-popisek); font-size:12px; text-transform:uppercase;
   letter-spacing:var(--popisek-proklad); color:var(--popisek); font-weight:600;}
 .map-sheet .map-podklad{align-self:stretch;}
 .map-sheet .map-podklad button{flex:1 1 0; min-width:0;}
@@ -9308,8 +9342,9 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
      nasazuje js/pozemek.js při přesunu; dvě třídy v selektoru navíc
      přebijí vložený styl, který stojí v souboru až za stylopisem. */
   .pz-bok-sada .pz-bok-nadpis{margin:16px 0 0; padding-top:12px;
-    border-top:1px solid var(--line); font-size:13px; font-weight:700;
-    letter-spacing:0.02em; text-transform:uppercase; color:var(--popisek);}
+    border-top:1px solid var(--line); font-family:var(--font-popisek); font-size:12px;
+    font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase;
+    color:var(--popisek);}
   .pz-bok-sada .pz-bok-nadpis::before{content:none;}
   .pz-bok-sada .pz-klice{display:block; margin:4px 0 0; max-width:none;}
   .pz-bok-sada .pz-klic{display:grid; grid-template-columns:minmax(0,1fr) auto;
@@ -9431,9 +9466,9 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .st-karta{background:var(--plocha-karta); border-radius:var(--r-plocha);
   padding:16px; margin:0 0 var(--mezera-bloku); box-shadow:var(--e1);}
 .st-karta > :last-child{margin-bottom:0;}
-.st-nadpis{font-size:12px;
+.st-nadpis{font-family:var(--font-popisek); font-size:12px;
   letter-spacing:var(--popisek-proklad); text-transform:uppercase;
-  font-weight:600; color:var(--muted); margin:0 0 16px;}
+  font-weight:600; color:var(--popisek); margin:0 0 16px;}
 .st-text{font-size:16px; line-height:1.6; margin:0 0 16px; color:var(--text);}
 .st-pozn{font-size:13px; line-height:1.5; color:var(--muted); margin:0;}
 
