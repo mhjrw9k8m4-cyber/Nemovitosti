@@ -536,3 +536,11 @@
 {"k":"Kalovice|67|Litoměřice|50.584|14.343#1rqp60j","m":"Kalovice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":1375,"c":1153564,"od":"2026-10-17","do":"2026-10-27","proc":"zmizela"}
 {"k":"Most|1082/276|Most|50.509|13.637#v164","m":"Most","o":"Most","dr":"ostatní plocha","t":"drazba","v":164,"c":190000,"od":"2026-09-14","do":"2026-10-27","proc":"zmizela"}
 {"k":"Rychvald|3443/11|Karviná|49.865|18.381#1engk0x","m":"Rychvald","o":"Karviná","dr":"orná půda","t":"drazba","v":837,"c":6900000,"od":"2026-09-23","do":"2026-10-27","proc":"zmizela"}
+{"k":"Kluky|—|Písek|49.317|14.245#9qy7c","m":"Kluky","o":"Písek","dr":"stavební pozemek","t":"sale","v":1270,"c":1600000,"od":"2026-10-25","do":"2026-10-28","proc":"cena"}
+{"k":"Svinaře|—|Beroun|49.888|14.205#2plzi","m":"Svinaře","o":"Beroun","dr":"stavební pozemek","t":"sale","v":882,"c":4890000,"od":"2026-09-19","do":"2026-10-28","proc":"cena"}
+{"k":"Ráby|—|Pardubice|50.073|15.803#5fc6f","m":"Ráby","o":"Pardubice","dr":"stavební pozemek","t":"sale","v":1152,"c":6912000,"od":"2026-09-19","do":"2026-10-28","proc":"cena"}
+{"k":"Tišnov|—|Brno-venkov|49.340|16.417#2nfgr","m":"Tišnov","o":"Brno-venkov","dr":"stavební pozemek","t":"sale","v":853,"c":7300000,"od":"2026-10-05","do":"2026-10-28","proc":"cena"}
+{"k":"Měnín|—|Brno-venkov|49.082|16.694#2n8dm","m":"Měnín","o":"Brno-venkov","dr":"orná půda","t":"sale","v":9206,"c":874570,"od":"2026-10-22","do":"2026-10-28","proc":"zmizela"}
+{"k":"Samšina|—|Jičín|50.462|15.248#18e8f","m":"Samšina","o":"Jičín","dr":"stavební pozemek","t":"sale","v":1900,"c":3550000,"od":"2026-09-14","do":"2026-10-28","proc":"zmizela"}
+{"k":"Padlých hrdinů|—|Kladno|50.188|14.040#lc14","m":"Padlých hrdinů","o":"Kladno","dr":"zahrada","t":"sale","v":889,"c":2310000,"od":"2026-09-14","do":"2026-10-28","proc":"zmizela"}
+{"k":"Všechovice|—|Brno-venkov|49.357|16.493#2n7c4","m":"Všechovice","o":"Brno-venkov","dr":"stavební pozemek","t":"sale","v":1000,"c":3290000,"od":"2026-10-16","do":"2026-10-28","proc":"zmizela"}
