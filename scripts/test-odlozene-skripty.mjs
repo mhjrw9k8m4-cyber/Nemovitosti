@@ -275,12 +275,15 @@ await ctx.close();
   await p3.waitForFunction(() => document.querySelectorAll('#opp-list .opp-item').length > 0,
     null, { timeout: 60000 });
   /* Na výsledek, ne na čas: modul se dotahuje a výpis se pak překresluje. */
-  await p3.waitForFunction(() => document.querySelectorAll('.opp-pozn').length > 0,
+  await p3.waitForFunction(() => document.querySelectorAll('.opp-pozn-radek').length > 0,
     null, { timeout: 30000 }).catch(() => {});
   pravda('když je poznámka v prohlížeči, modul poznámek se dotáhne',
-    stazeno3.length > 0, 'nestáhl se — odznak „Poznámka" by na kartě nikdy nebyl');
-  pravda('a odznak „Poznámka" na kartě naskočí',
-    (await p3.$$('.opp-pozn')).length > 0,
+    stazeno3.length > 0, 'nestáhl se — poznámka by na kartě nikdy nebyla');
+  /* Od 29. 10. na kartě nestojí odznak se slovem „Poznámka", ale
+     rovnou její TEXT (.opp-pozn-radek). Zkouška se ptá na totéž:
+     dotáhl se modul a překreslil se po něm výpis? */
+  pravda('a poznámka na kartě naskočí',
+    (await p3.$$('.opp-pozn-radek')).length > 0,
     'modul se stáhl, ale výpis se po něm nepřekreslil');
   pravda('a stránka u toho nespadla', padlo3.length === 0, padlo3.slice(0, 2).join(' | '));
   await ctx3.close();

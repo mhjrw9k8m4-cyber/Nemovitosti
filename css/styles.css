@@ -3635,6 +3635,39 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
    odstíny v jedné větě by z nadpisu udělaly dva nadpisy. */
 
 .opp-chips{display:flex; flex-wrap:wrap; gap:4px;}
+/* MOJE POZNÁMKA NA KARTĚ VE VÝPISU.
+   ------------------------------------------------------------------
+   Majitel 29. 10.: „když napíšu poznámku, chci, aby mi šla vidět,
+   i když budu ven z inzerátu; a když je delší, ať se dá rozkliknout
+   rovnou ve výpisu." Do té doby tu visel odznak se slovem
+   „Poznámka" — ten řekl, že nějaká je, ne co v ní stojí.
+   ODLIŠUJE JI SVISLICE, NE BARVA. Je to jediný text na kartě, který
+   napsal člověk, a musí se poznat od našich údajů. Plná ploška by
+   z ní udělala sedmý odznak (viz pravidlo „nejvýš jedna barva"
+   o kus níž) — svislice v značkové zeleni je ta „drobná ozdoba",
+   o kterou majitel u zeleně stojí.
+   DVA ŘÁDKY, PAK TLAČÍTKO. Ořez drží -webkit-line-clamp, který
+   v obou prohlížečích na telefonu (Safari i Chrome) funguje
+   a jinde se chová jako obyčejný odstavec — tedy ukáže všechno,
+   což je horší vzhled, ale ne ztracený text. Tlačítko „víc" se
+   objeví jen tam, kde text opravdu přetekl; měří to js/main.js
+   v jednom průchodu po vykreslení. */
+.opp-pozn-radek{display:flex; align-items:flex-start; gap:8px; margin-top:8px;
+  padding-left:8px; border-left:2px solid var(--znacka-svetla);}
+.opp-pozn-txt{flex:1 1 auto; min-width:0; font-size:13px; line-height:1.4;
+  color:var(--popisek); overflow:hidden; display:-webkit-box;
+  -webkit-box-orient:vertical; -webkit-line-clamp:2;}
+.opp-pozn-radek.je-cele .opp-pozn-txt{-webkit-line-clamp:none; display:block;}
+/* Tlačítko se ukáže jen na kartě, kde se poznámka nevešla. Nestojí
+   na 44 px: není to hlavní cesta nikam, je to rozbalení textu hned
+   vedle, a celá karta pod ním je jeden velký cíl. 32 px je mez
+   pro vedlejší ovladač (viz scripts/test-dotyk.mjs). */
+.opp-pozn-vic{display:none; flex:none; min-height:32px; padding:0 8px;
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  background:var(--plocha-karta); color:var(--znacka); font-size:13px;
+  font-weight:600; cursor:pointer; transition:var(--prechod);}
+.opp-pozn-radek.ma-vic .opp-pozn-vic{display:inline-flex; align-items:center;}
+.opp-pozn-vic:hover{border-color:var(--znacka-svetla);}
 /* JEDEN TVAR PRO VŠECHNY ODZNAKY, BARVA NESE VÝZNAM.
    ------------------------------------------------------------------
    Odznaků na kartě je pět (termín, sleva, „Doporučujeme", „Nové",
@@ -7874,11 +7907,10 @@ body > footer{flex:none;}
    si, co ho nezajímá. Všechno běží v prohlížeči, bez účtu.
    ------------------------------------------------------------------ */
 .opp-nove{background:var(--accent-warm-soft); color:var(--accent-warm); border-color:rgba(var(--accent-warm-rgb),0.3);}
-/* MOJE POZNÁMKA. Jediný odznak, který napsal ČLOVĚK — ostatní říkají, co
-   o pozemku víme my. Proto má jinou barvu než „Nové": zelenou značkovou,
-   ne měď. Nová barva se tu nezavádí schválně; web stojí na dvou tónech
-   a třetí odstín na kartě plné odznaků by nic nerozlišil, jen přidal šum. */
-.opp-pozn{background:var(--plocha-jemna-vic); color:var(--znacka); border-color:var(--line-strong);}
+/* Odznak .opp-pozn (jen slovo „Poznámka") je od 29. 10. pryč i se
+   svým pravidlem: na kartě stojí rovnou TEXT poznámky, hledej
+   „MOJE POZNÁMKA NA KARTĚ VE VÝPISU" výš. Mrtvá pravidla hlídá
+   scripts/test-mrtve-styly.mjs. */
 .mc-nove{margin-left:8px; color:var(--accent-warm); font-weight:700;}
 /* OVLÁDÁNÍ NAD VÝPISEM („Zobrazit skryté", „Stáhnout tabulku",
    „Rychlý výběr").

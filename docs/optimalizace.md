@@ -15086,3 +15086,46 @@ hlídala jen krátká bliknutí pod 400 px, a tahle vada měla mezery
 na celou stránku: do 2 600 px třetí přepnutí ještě nepadne a zkouška
 sabotáž (návrat starého pravidla) odkývala. Po prodloužení sabotáž
 spadla na „napočítáno 3".
+
+## §229 Poznámka ve výpisu: text místo odznaku, a rozbalí se na místě
+
+**Co o tom řekl majitel.** „Když napíšu poznámku, chci, aby mi pak šla
+vidět, i když budu ven z inzerátu. Bude tam místo třeba na pár slov,
+a když to někdo přesáhne, může rozkliknout tu poznámku přímo venku,
+aby nemusel dovnitř do inzerátu."
+
+**Co bylo.** Na kartě visel odznak se slovem „Poznámka". Ten řekl, že
+nějaká je — ne co v ní stojí, a právě to je na ní celé cenné.
+
+**Co je.** Pod odznaky stojí její TEXT: svislice ve značkové zeleni,
+13 px, tišší barva, ořez na dva řádky. Tlačítko „víc" se objeví jen
+tam, kde se text opravdu nevešel, a rozbalí poznámku na místě —
+klepnutí na něj nevede na stránku pozemku (`stopPropagation`, stejně
+jako u „Uložit" a „Skrýt").
+
+Naměřeno na třech poznámkách (16, 88 a 420 znaků): 18 px / 36 px bez
+tlačítka, 36 px s tlačítkem, po rozbalení 146 px; po klepnutí zůstala
+adresa stránky táž.
+
+**Proč ne doprava vedle ceny, kam majitel ukázal.** Tam zbývá asi
+150 px, tedy tři až čtyři slova — a jen do chvíle, než se nadpis
+karty zalomí na dva řádky. Řádek pod odznaky má celou šířku karty
+a nikomu nepřekáží. Místo, kam ukazoval, je přímo nad ním.
+
+**Dvě věci okolo.** Odznak `.opp-pozn` i jeho pravidlo jsou pryč
+(mrtvá pravidla hlídá `test-mrtve-styly`). Tlačítko „víc" se nasazuje
+podle skutečného přetečení (`scrollHeight > clientHeight`), ne podle
+počtu znaků — „Příjezd je přes sousedův pozemek" a stejně dlouhý
+shluk písmen mají jiný počet řádků. Čtení rozměrů běží v JEDNOM
+průchodu po vykreslení, všechna čtení před všemi zápisy, takže
+přepočet rozvržení je jeden, ne jeden na kartu.
+
+**A jedna cizí oprava, na kterou se přišlo cestou.** `test-poznamky`
+hledal v ostrých datech „záznam, který vznikl složením dvou" (dražba
+hlášená dvěma zdroji, kde se k jedné přebere parcelní číslo z druhé).
+29. 10. v datech nebyl ANI JEDEN — 1 885 → 1 884 a žádné skládání —
+a zkouška spadla na vlastní předpoklad, ne na vadu webu. Dvojici si
+teď staví sama a podstrkuje ji do obou souborů, které web čte
+(`data/mapa.json` pro výpis, `data/opportunities.json` pro stránku
+pozemku); rozdíl mezi nimi je přesně to, na čem ta původní vada
+stála. Zkouška tím měří pořád, ne jen když má štěstí na data.

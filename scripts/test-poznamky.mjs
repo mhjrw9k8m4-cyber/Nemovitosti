@@ -26,7 +26,7 @@
    jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -579,10 +579,10 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
       /* ČEKÁ SE NA TO, CO SE ČEKÁ — ne dýl. Značka má přijít z účtu, tak
          se na ni počká (strop 10 s). Kontrola tím nezvětrá: když značka
          nepřijde, čekání vyprší a kontroly pod tím to řeknou jménem. */
-      await pripravenoKdyz(p3, () => !!document.querySelector('#opp-list .opp-pozn'), null, 10000);
+      await pripravenoKdyz(p3, () => !!document.querySelector('#opp-list .opp-pozn-radek'), null, 10000);
 
       const v = await p3.evaluate((k) => {
-        const znacky = [...document.querySelectorAll('#opp-list .opp-pozn')];
+        const znacky = [...document.querySelectorAll('#opp-list .opp-pozn-radek')];
         const z = znacky[0];
         const li = z ? z.closest('li') : null;
         const rodic = z ? z.parentNode : null;
@@ -600,10 +600,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
             return l ? l.getAttribute('data-pk') : null;
           }).filter((kl) => !kl
             || !JSON.parse(localStorage.getItem('pk_poznamky_v1') || '{}')[kl]),
-          text: z ? z.textContent.trim() : null,
+          text: z ? ((z.querySelector('.opp-pozn-txt') || {}).textContent || '').trim() : null,
           titulek: z ? z.getAttribute('title') : null,
           naSpravneKarte: li ? li.getAttribute('data-pk') === k : false,
           prvniVRade: rodic ? rodic.firstElementChild === z : false,
+          mimoOdznaky: z ? !z.closest('.opp-chips') : false,
           barva: z ? getComputedStyle(z).color : null,
           vidim: z ? (z.getBoundingClientRect().width > 0 && getComputedStyle(z).visibility !== 'hidden') : false,
         };
@@ -632,12 +633,21 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
         v.znackyBezPoznamky.length === 0,
         `cizí karty se značkou: ${JSON.stringify(v.znackyBezPoznamky)}`);
       pravda('a visí na SPRÁVNÉ kartě, ne na kterékoli', v.naSpravneKarte === true);
-      pravda('a nese slovo, ne jen ikonu, ať na kartě plné odznaků nezapadne',
-        /Poznámka/i.test(v.text || ''), `text: „${v.text}"`);
+      /* DŘÍV SE TU ČEKALO SLOVO „Poznámka". Od 29. 10. na kartě
+         nestojí odznak s tím slovem, ale rovnou TEXT poznámky —
+         majitel: „když napíšu poznámku, chci, aby mi šla vidět, i když
+         budu ven z inzerátu." Zkouška proto čeká ten text; je to
+         přísnější, protože odznak uměl svítit i nad prázdnou
+         poznámkou. */
+      pravda('a nese TEXT poznámky, ne jen značku, že nějaká je',
+        (v.text || '').indexOf(ZNACKA) !== -1, `text: „${v.text}"`);
       pravda('a po najetí se dozvím, co to je', /poznámk/i.test(v.titulek || ''),
         `title: „${v.titulek}"`);
-      pravda('stojí na kartě jako PRVNÍ odznak — je to jediný, co jsem napsal já',
-        v.prvniVRade === true);
+      /* Poznámka nestojí MEZI odznaky, ale pod nimi: odznaky říkají,
+         co o pozemku víme my, tohle je jediná věta, kterou napsal on.
+         Kdyby spadla do .opp-chips, byl by z ní sedmý odznak — a ten
+         by se navíc počítal do stropu tří. */
+      pravda('stojí pod odznaky, ne mezi nimi', v.mimoOdznaky === true);
       pravda('a má jinou barvu než „Nové" (není to měď)',
         v.barva && !/138,\s*85,\s*18/.test(v.barva), `barva: ${v.barva}`);
       pravda('a je doopravdy vidět, ne jen v DOM', v.vidim === true);
@@ -765,6 +775,52 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
     isMobile: true, hasTouch: true, locale: 'cs-CZ' });
   await ctx.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
     body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+
+  /* SLOŽENÝ ZÁZNAM SI ZKOUŠKA POSTAVÍ, NEČEKÁ NA NĚJ V DATECH.
+     Dřív se hledal v ostrých datech a komentář výš u toho hrdě psal
+     „20 z 1 955". 29. 10. jich tam bylo NULA (1 885 → 1 884 a žádné
+     skládání) a zkouška spadla na vlastní předpoklad — ne na vadu
+     webu. To je přesně ta „náhoda v datech", o které si tenhle
+     repozitář píše pravidlo: hlídač nesmí stát na tom, co zrovna
+     přinesl noční robot.
+     JAK SE SKLÁDÁ. js/hlidani-logika.js spojí dva záznamy jen tehdy,
+     když mají tutéž adresu zdroje (klicZdroje), tutéž výměru, jeden
+     parcelní číslo má a druhý ne — pak vznikne KOPIE toho novějšího
+     s parcelním číslem toho druhého. Aby měla jiný klíč než oba
+     zdroje, musí se ti dva lišit ještě v něčem, co do klíče patří:
+     posunutá šířka o 0,002° (klíč zaokrouhluje na tři desetinná
+     místa) je ten nejmenší možný rozdíl.
+     Dvojice se podstrčí do OBOU souborů, protože je čtou dvě různé
+     strany webu: výpis bere data/mapa.json (řez bez adres, už
+     pročištěný při sestavení), stránka pozemku data/opportunities.json
+     (syrovou podobu). Přesně na tomhle rozdílu ta vada stála. */
+  const syrovyJson = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  const mapaJson = JSON.parse(readFileSync(new URL('../data/mapa.json', import.meta.url), 'utf8'));
+  const vzorek = (syrovyJson.opportunities || []).find((x) => x && x.parcel && x.parcel !== '—'
+    && typeof x.area === 'number' && x.area > 0
+    && typeof x.lat === 'number' && typeof x.lng === 'number' && x.place && x.okres);
+  if (!vzorek) throw new Error('v datech není ani jeden záznam s parcelním číslem a souřadnicemi');
+  const ZDROJ = 'https://zkouska.neexistuje/slozeny-zaznam';
+  const prvniZdroj = Object.assign({}, vzorek, { url: ZDROJ });
+  const druhyZdroj = Object.assign({}, vzorek, {
+    url: ZDROJ, parcel: '', lat: Math.round((vzorek.lat + 0.002) * 1e6) / 1e6,
+    first_seen: '2099-01-01',
+  });
+  const slozenyZaznam = Object.assign({}, druhyZdroj, { parcel: vzorek.parcel });
+  delete slozenyZaznam.url;      // řez pro mapu adresy inzerátů nenese
+  syrovyJson.opportunities = (syrovyJson.opportunities || [])
+    .filter((x) => x !== vzorek).concat([prvniZdroj, druhyZdroj]);
+  const mapaPole = Array.isArray(mapaJson) ? mapaJson : (mapaJson.opportunities || []);
+  const mapaBez = mapaPole.filter((x) => !(x && x.place === vzorek.place && x.parcel === vzorek.parcel
+    && x.okres === vzorek.okres));
+  const mapaVen = mapaBez.concat([slozenyZaznam]);
+  const mapaTelo = Array.isArray(mapaJson) ? mapaVen
+    : Object.assign({}, mapaJson, { opportunities: mapaVen });
+  await ctx.route('**/data/opportunities.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(syrovyJson) }));
+  await ctx.route('**/data/mapa.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(mapaTelo) }));
+
   const p = await ctx.newPage();
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' }).catch(() => {});
   await p.waitForSelector('.opp-item', { timeout: 25000 }).catch(() => {});
@@ -882,11 +938,19 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
       await dohledej();
       const odznak = await p.evaluate((k) => {
         const e = [...document.querySelectorAll('.opp-item')].find((x) => x.getAttribute('data-pk') === k);
-        return { kartaJe: !!e, maOdznak: e ? !!e.querySelector('.opp-pozn') : null };
+        const r = e ? e.querySelector('.opp-pozn-radek') : null;
+        return { kartaJe: !!e, maOdznak: !!r,
+          /* Od 29. 10. se na kartě ukazuje TEXT poznámky, ne jen to,
+             že nějaká je. Zkouška proto čte i ten text — jinak by
+             prošla i prázdná svislice. */
+          text: r ? (r.querySelector('.opp-pozn-txt') || {}).textContent || '' : '' };
       }, slozena.klic);
       pravda('a ve výpisu je ta karta zase (jinak se odznak nemá kde ukázat)',
         odznak.kartaJe, JSON.stringify(odznak));
-      pravda('a nese odznak „Poznámka"', odznak.maOdznak === true, JSON.stringify(odznak));
+      pravda('a nese poznámku', odznak.maOdznak === true, JSON.stringify(odznak));
+      pravda('a je v ní vidět TEXT, ne jen značka, že nějaká je',
+        typeof odznak.text === 'string' && odznak.text.trim().length > 0,
+        JSON.stringify(odznak));
     }
     }
   }

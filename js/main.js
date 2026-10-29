@@ -6673,12 +6673,9 @@
          Je to zároveň jediný odznak, který napsal ON; ostatní říkají, co
          o pozemku víme my. Proto stojí před „Nové" a proto nese slovo,
          ne jen ikonu: ikona na kartě plné odznaků zapadne. */
+      var poznTxt = '';
       if (window.PKPoznamky && window.PKPoznamky.text) {
-        try {
-          if (window.PKPoznamky.text(d)) {
-            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
-          }
-        } catch (e) {}
+        try { poznTxt = window.PKPoznamky.text(d) || ''; } catch (e) { poznTxt = ''; }
       }
       /* Nejvýš tři odznaky. Karta jich uměla vyrobit pět a na mobilu pak
        * každý zabral vlastní řádek — místo přehledu vznikl sloupec štítků.
@@ -6773,6 +6770,28 @@
             '<div class="opp-price">' + fmt(d.price) + ' Kč' + '</div>' + perM2Html +
           '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
+          /* MOJE POZNÁMKA — TEXTEM, NE JEN ODZNAKEM.
+             Majitel 29. 10.: „když napíšu poznámku, chci, aby mi šla
+             vidět, i když budu ven z inzerátu — a když je delší, ať se
+             dá rozkliknout rovnou ve výpisu, abych nemusel dovnitř."
+             Do té doby tu visel odznak se slovem „Poznámka". Ten řekl,
+             že poznámka existuje, ne co v ní je — a právě to je na ní
+             celé cenné: po deseti pozemcích si nikdo nepamatuje, který
+             měl rozbitý plot.
+             Je to JEDINÝ text na kartě, který napsal člověk; ostatní
+             říkají, co o pozemku víme my. Proto stojí až pod odznaky
+             (nepřerušuje cenu) a odlišuje se svislicí, ne barvou.
+             Delší poznámka se sbalí na dva řádky a rozklikne se
+             tlačítkem vedle — viz pozn. o měření u poznOrez níž. */
+          (poznTxt ? '<div class="opp-pozn-radek" title="Moje poznámka k tomuhle pozemku">' +
+            /* ČTEČCE OBRAZOVKY SE MUSÍ ŘÍCT, ČÍ TEN TEXT JE. Vidící to
+               pozná podle svislice a tišší barvy; kdo poslouchá, slyší
+               mezi našimi údaji najednou „Plot je rozbitý" a nemá
+               podle čeho poznat, že to napsal sám. */
+            '<span class="visually-hidden">Moje poznámka: </span>' +
+            '<span class="opp-pozn-txt">' + esc(poznTxt) + '</span>' +
+            '<button type="button" class="opp-pozn-vic" aria-expanded="false">víc</button>' +
+          '</div>' : '') +
         '</div>';
       // Ťuknutí kamkoli na kartu (i na snímek) → samostatná stránka inzerátu.
       // Na mapu se dostaneš z inzerátu (snímek nebo tlačítko „Zobrazit na mapě").
@@ -6797,6 +6816,18 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
+      var poznVic = li.querySelector('.opp-pozn-vic');
+      if (poznVic) poznVic.addEventListener('click', function (e) {
+        /* Bez tohohle řádku by klepnutí probublalo na kartu a místo
+           rozbalení poznámky by odešlo na stránku pozemku — tedy přesně
+           tam, odkud majitel nechtěl chodit. Stejně to dělá „Uložit"
+           i „Skrýt" o kus níž. */
+        e.stopPropagation();
+        var radek = poznVic.parentNode;
+        var cele = radek.classList.toggle('je-cele');
+        poznVic.setAttribute('aria-expanded', cele ? 'true' : 'false');
+        poznVic.textContent = cele ? 'míň' : 'víc';
+      });
       var favBtn = li.querySelector('.opp-fav');
       if (favBtn) favBtn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -6835,6 +6866,29 @@
       listEl.appendChild(li);
     });
     try { window.PK_KARTY = karticky; } catch (e) {}
+
+    /* TLAČÍTKO „VÍC" JEN TAM, KDE SE POZNÁMKA OPRAVDU NEVEŠLA.
+       Odhadovat to podle počtu znaků nejde: „Příjezd je přes sousedův
+       pozemek" a „aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" mají stejnou délku
+       a jiný počet řádků. Ptáme se proto prohlížeče, jestli text
+       přetéká svůj dvouřádkový ořez (scrollHeight > clientHeight).
+       PROČ AŽ TADY A V JEDNOM PRŮCHODU. Čtení rozměru si vynutí
+       přepočet rozvržení. Kdyby se střídalo se zápisem uvnitř smyčky
+       nad kartami, vynutí se jednou za kartu — na 24 kartách tedy
+       24×. Proto nejdřív všechna ČTENÍ do pole a teprve pak všechny
+       ZÁPISY: přepočet je jeden. (Tutéž vadu jsem na tomhle webu už
+       jednou dělal, viz docs/optimalizace.md o nastrojeDoHlavicky.) */
+    var poznRadky = listEl.querySelectorAll('.opp-pozn-radek');
+    if (poznRadky.length) {
+      var prelevaSe = [];
+      for (var pi = 0; pi < poznRadky.length; pi++) {
+        var txt = poznRadky[pi].querySelector('.opp-pozn-txt');
+        prelevaSe.push(txt ? (txt.scrollHeight - txt.clientHeight > 1) : false);
+      }
+      for (var pj = 0; pj < poznRadky.length; pj++) {
+        poznRadky[pj].classList.toggle('ma-vic', prelevaSe[pj]);
+      }
+    }
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + fmt(matched) + ')' : '';
     /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené

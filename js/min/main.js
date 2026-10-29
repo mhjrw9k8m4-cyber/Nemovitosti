@@ -4111,12 +4111,9 @@
 
       if (jeNovy(d)) chips.unshift('<span class="opp-nove">Nové</span>');
 
+      var poznTxt = '';
       if (window.PKPoznamky && window.PKPoznamky.text) {
-        try {
-          if (window.PKPoznamky.text(d)) {
-            chips.unshift('<span class="opp-pozn" title="U tohohle pozemku máte svoji poznámku">Poznámka</span>');
-          }
-        } catch (e) {}
+        try { poznTxt = window.PKPoznamky.text(d) || ''; } catch (e) { poznTxt = ''; }
       }
 
       if (chips.length > 3) chips = chips.slice(0, 3);
@@ -4156,6 +4153,13 @@
             '<div class="opp-price">' + fmt(d.price) + ' Kč' + '</div>' + perM2Html +
           '</div>' +
           (chips.length ? '<div class="opp-chips">' + chips.join('') + '</div>' : '') +
+
+          (poznTxt ? '<div class="opp-pozn-radek" title="Moje poznámka k tomuhle pozemku">' +
+
+            '<span class="visually-hidden">Moje poznámka: </span>' +
+            '<span class="opp-pozn-txt">' + esc(poznTxt) + '</span>' +
+            '<button type="button" class="opp-pozn-vic" aria-expanded="false">víc</button>' +
+          '</div>' : '') +
         '</div>';
 
       function openInzerat() { gotoInzerat(d); }
@@ -4164,6 +4168,15 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
+      var poznVic = li.querySelector('.opp-pozn-vic');
+      if (poznVic) poznVic.addEventListener('click', function (e) {
+
+        e.stopPropagation();
+        var radek = poznVic.parentNode;
+        var cele = radek.classList.toggle('je-cele');
+        poznVic.setAttribute('aria-expanded', cele ? 'true' : 'false');
+        poznVic.textContent = cele ? 'míň' : 'víc';
+      });
       var favBtn = li.querySelector('.opp-fav');
       if (favBtn) favBtn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -4194,6 +4207,18 @@
       listEl.appendChild(li);
     });
     try { window.PK_KARTY = karticky; } catch (e) {}
+
+    var poznRadky = listEl.querySelectorAll('.opp-pozn-radek');
+    if (poznRadky.length) {
+      var prelevaSe = [];
+      for (var pi = 0; pi < poznRadky.length; pi++) {
+        var txt = poznRadky[pi].querySelector('.opp-pozn-txt');
+        prelevaSe.push(txt ? (txt.scrollHeight - txt.clientHeight > 1) : false);
+      }
+      for (var pj = 0; pj < poznRadky.length; pj++) {
+        poznRadky[pj].classList.toggle('ma-vic', prelevaSe[pj]);
+      }
+    }
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + fmt(matched) + ')' : '';
 
