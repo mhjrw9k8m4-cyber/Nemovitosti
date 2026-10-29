@@ -1343,10 +1343,6 @@
       var tp = b.getAttribute('data-type');
       if (tp && tp !== 'all' && !present[tp]) { b.style.display = 'none'; return; }
 
-      var tecka = b.querySelector('.c');
-      if (tecka && TVAR[tp]) {
-        tecka.className = tecka.className.replace(/\btv-\S+/g, '').trim() + ' tv-' + TVAR[tp];
-      }
       var badge = document.createElement('span');
       badge.className = 'chip-n';
       b.appendChild(badge);

@@ -54,6 +54,14 @@ const SKLADANE = {
   '.leaflet-popup-tip': 'vendor/leaflet/leaflet.js, totéž',
   '.leaflet-marker-pane': 'vendor/leaflet/leaflet.js skládá jména vrstev jako \'leaflet-\' + jmeno + \'-pane\'',
   '.leaflet-marker-icon': 'vendor/leaflet/leaflet.js: v souboru stojí jen \'leaflet-marker-\', zbytek se dolepuje',
+  /* TVARY DRUHŮ VE VYSVĚTLIVCE POD MAPOU. js/main.js je skládá jako
+     'lg-dot tv-' + TVAR[tp], takže v repozitáři celé jméno nikde
+     nestojí. Do 29. 10. to nevadilo: čtvereček a křížek byly napsané
+     v index.html u filtračních pilulek. Pilulky dostaly místo
+     barevných tvarů ikony (majitel: „odeber ty barvičky") a tím
+     zůstalo skládání jediným místem, kde ta dvě jména vznikají. */
+  '.tv-ctverec': "js/main.js: '<span class=\"lg-dot tv-' + TVAR[tp] + '\">' — vysvětlivka mapy, obec",
+  '.tv-kriz': "js/main.js: totéž, přímo od majitele",
 };
 
 /* ---- tokeny z celého repozitáře ------------------------------------ */

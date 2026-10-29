@@ -2261,13 +2261,12 @@
     filtersEl.querySelectorAll('.filter-chip').forEach(function (b) {
       var tp = b.getAttribute('data-type');
       if (tp && tp !== 'all' && !present[tp]) { b.style.display = 'none'; return; }
-      // Tvar štítku se bere z téže tabulky jako mapa. Kdyby byl napsaný
-      // natvrdo v HTML, mohl by se od mapy tiše rozejít — a člověk by se
-      // z legendy učil tvar, který na mapě není.
-      var tecka = b.querySelector('.c');
-      if (tecka && TVAR[tp]) {
-        tecka.className = tecka.className.replace(/\btv-\S+/g, '').trim() + ' tv-' + TVAR[tp];
-      }
+      /* TVAR SE SEM UŽ NEDOSAZUJE. Čip nesl barevný puntík ve tvaru
+         značky z mapy a tenhle řádek mu ten tvar bral z téže tabulky
+         jako mapa, aby se nerozešly. Od 29. 10. má čip místo puntíku
+         ikonu (majitel: „odeber ty barvičky a přidej tam ikonky"),
+         takže není co dosazovat. Tvary na mapě a jejich vysvětlivka
+         pod ní se nemění. */
       var badge = document.createElement('span');
       badge.className = 'chip-n';
       b.appendChild(badge);

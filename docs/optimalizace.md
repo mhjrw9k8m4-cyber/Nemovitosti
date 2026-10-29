@@ -15279,3 +15279,52 @@ ta původní vada) shodilo dvě kontroly.
 
 Zkouška písma při tom chytla, že přepínač dostal 15px písmo, které na
 stupnici není. Srovnáno na 16.
+
+## §233 Pilulky druhů: pryč barevné tvary, místo nich ikony
+
+**Co o tom řekl majitel.** „Zde odeber ty barvičky a přidej tam nějaké
+ikonky, a hlavně ty tlačítka udělej, aby působily více klikatelně."
+
+**Barvičky pryč.** Šest pilulek nad výpisem (Vše, Prodej, Dražba,
+Exekuce, Obec, Přímo od majitele) neslo barevný puntík s tvarem značky
+z mapy a zapnutá pilulka se barvila podle druhu — pět výplní
+(`--c-sale-ink`, `--c-drazba-ink`, …) na jednu jedinou práci: „tohle je
+zapnuté". Zapnutý stav je teď značková zeleň, ať je to kterýkoli druh,
+jako všude jinde na webu. Pět pravidel zmizelo a s nimi i výjimka
+s tmavým textem u dražby, která existovala jen proto, že ta jedna výplň
+byla světlejší než ostatní.
+
+**Ikonky.** Místo puntíku `<svg class="ik fc-ik">` ze sady, kterou web
+už má — vrstvy, cenovka, kladívko, výstraha, budova, uživatel. Ani
+jedna nová ikona: strop je 40 a `test-tahy` jich napočítal 39, takže
+nová by ho shodila. Vybíraly se z toho, co už někde na webu kreslí
+totéž.
+
+**Klikatelnost.** Pilulky měly vlasovou linku 1 px v `--line-ui`,
+tišší text (`--muted`) a žádný stín — vypadaly jako štítky, ne jako
+ovladače. Berou si proto recept vedlejšího tlačítka webu
+(`.btn-secondary`): linka 1,5 px v `--obrys-tlacitka`, text v plné
+barvě, stín `--e1` a stisk o pixel dolů. Pilulkový tvar a 13px písmo
+zůstávají, aby se šest druhů vešlo do dvou sloupců.
+
+**Co našli hlídači, a já ne.**
+
+1. `test-tahy`: ikona dostala tah 1,9 a na obrazovce z toho vyšlo
+   1,27 px místo 1,5. Web kompenzuje tah podle velikosti — 16 px při
+   viewBoxu 24 znamená 1,5 × 24 ÷ 16 = **2,25**.
+2. `test-hledani-vzhled`: v rozbaleném panelu filtrů zbělely čipy, ale
+   tlačítko „Pozemky v okolí" vedle nich zůstalo na tlumené dlaždici —
+   dva druhy ovladačů na jednom pásu. Zbělelo taky. (Tlumená dlaždice
+   tam přišla v době, kdy byl pás tmavý; pás se 28. 10. zesvětlil
+   a důvod zmizel.)
+3. `test-mrtve-styly`: `.tv-ctverec` a `.tv-kriz` se staly v repozitáři
+   mrtvými — po odebrání puntíku je nikdo nepíše doslova. Skládá je
+   `js/main.js:5046` jako `'lg-dot tv-' + TVAR[tp]` pro legendu pod
+   mapou, a proto jsou zapsány mezi SKLÁDANÉ, ne smazány.
+
+**Co to stojí a kdo to platí.** Pilulky byly zároveň vysvětlivkou
+k mapě: barva i tvar značky se daly naučit z nich. Ta role teď leží
+jen na legendě pod mapou (`.lg-dot`) — což je věcně lepší místo, stojí
+hned vedle značek, kterých se týká, ale kdo se na mapu nedívá, tvary se
+nedozví. Že legenda tvary opravdu kreslí, hlídá `scripts/test-tvary.mjs`
+čtením pixelů z plátna.

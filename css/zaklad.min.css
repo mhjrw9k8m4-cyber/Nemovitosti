@@ -910,6 +910,9 @@ h1 em::after{content:none;animation:none}
 body{display:flex;flex-direction:column;min-height:calc(100vh - var(--vyska-hlavicky,85px))}
 body>main{flex:1 0 auto}
 body>footer{flex:none}
+.tv-ctverec{clip-path:polygon(6% 6%,94% 6%,94% 94%,6% 94%)}
+.tv-kriz{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%)}
+.lg-dot.tv-kriz{transform:scale(1.1)}
 .md-odhad{margin:12px 0 12px;padding:12px 12px 12px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.04)}
 .mo-radek{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px;color:var(--text-ondeep-mute)}
 .mo-radek .mo-v{font-family:var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-0.01em}

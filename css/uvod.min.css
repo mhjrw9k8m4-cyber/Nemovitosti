@@ -311,9 +311,9 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .map-controls-panel .ms-filters[open] .msf-summary{background:var(--pas-dlazdice);border-color:var(--pas-akcent);color:var(--pas-text)}
 .map-controls-panel .ms-filters .msf-summary:hover{color:var(--pas-akcent)}
 .map-controls-panel .map-controls{color:var(--text)}
-.map-controls-panel .map-okoli button{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text)}
+.map-controls-panel .map-okoli button{background:var(--plocha-karta);border-color:var(--obrys-tlacitka);color:var(--text)}
 .map-controls-panel .map-okoli button svg,.map-controls-panel .msf-summary svg{color:var(--pas-akcent)}
-.map-controls-panel .filter-chip{background:var(--pas-dlazdice);border-color:var(--pas-obrys);color:var(--pas-text-mute)}
+.map-controls-panel .filter-chip{background:var(--plocha-karta);border-color:var(--obrys-tlacitka);color:var(--text)}
 .map-controls-panel .filter-chip.active{background:var(--pas-akcent);border-color:var(--pas-akcent);color:var(--plocha-tmava)}
 .map-side{grid-column:1;grid-row:2;display:flex;flex-direction:column;border:0;border-right:1px solid var(--line);border-radius:0;padding:16px 16px;min-height:0}
 .map-holder{grid-column:2;grid-row:2}
@@ -368,17 +368,10 @@ to{opacity:1;transform:none}
 .map-near-btn.on{background:var(--plocha-zapustena);color:var(--znacka-svetla);border-color:var(--znacka-svetla);box-shadow:none}
 .ms-group{margin-top:12px}
 .map-filters{display:flex;flex-wrap:wrap;gap:4px}
-.filter-chip{display:inline-flex;align-items:center;gap:8px;background:var(--plocha-karta);border:1px solid var(--line-ui);color:var(--muted);border-radius:var(--r-pill);padding:4px 12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:var(--prechod)}
-.filter-chip .c{width:12px;height:12px;border-radius:50%;flex:none}
+.filter-chip{display:inline-flex;align-items:center;gap:8px;background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);color:var(--text);border-radius:var(--r-pill);padding:4px 12px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;box-shadow:var(--e1);transition:var(--prechod)}
+.filter-chip .fc-ik{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round}
 .filter-chip:hover{color:var(--text);border-color:var(--znacka)}
-.filter-chip.active{color:#fff;border-color:transparent;box-shadow:var(--e1)}
-.filter-chip.active[data-type="all"]{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
-.filter-chip.active[data-type="sale"]{background:var(--c-sale-ink)}
-.filter-chip.active[data-type="drazba"]{background:var(--c-drazba-ink)}
-.filter-chip.active[data-type="exekuce"]{background:var(--c-exekuce-ink)}
-.filter-chip.active[data-type="obec"]{background:var(--c-obec-ink)}
-.filter-chip.active[data-type="majitel"]{background:var(--c-majitel-ink)}
-.filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55)}
+.filter-chip.active{background:var(--plocha-znacka);color:#fff;border-color:transparent;box-shadow:var(--glow)}
 .ms-filters{margin-top:12px;border:1px solid var(--line-strong);border-radius:var(--r-ovladani);background:var(--plocha-karta);overflow:hidden}
 .msf-summary{display:flex;align-items:center;gap:8px;padding:12px 12px;font-size:14px;font-weight:600;color:var(--text,#12241A);cursor:pointer;list-style:none;-webkit-tap-highlight-color:transparent;user-select:none}
 .msf-summary::-webkit-details-marker{display:none}
@@ -1384,9 +1377,9 @@ body>footer{flex:none}
 .tv-trojuhelnik{clip-path:polygon(50% 4%,100% 96%,0 96%)}
 .tv-ctverec{clip-path:polygon(6% 6%,94% 6%,94% 94%,6% 94%)}
 .tv-kriz{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%)}
-.lg-dot.tv-trojuhelnik,.filter-chip .c.tv-trojuhelnik{transform:scale(1.18)}
-.lg-dot.tv-kosoctverec,.filter-chip .c.tv-kosoctverec{transform:scale(1.14)}
-.lg-dot.tv-kriz,.filter-chip .c.tv-kriz{transform:scale(1.1)}
+.lg-dot.tv-trojuhelnik{transform:scale(1.18)}
+.lg-dot.tv-kosoctverec{transform:scale(1.14)}
+.lg-dot.tv-kriz{transform:scale(1.1)}
 .md-odhad{margin:12px 0 12px;padding:12px 12px 12px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.04)}
 .mo-radek{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:4px 0;font-size:14px;color:var(--text-ondeep-mute)}
 .mo-radek .mo-v{font-family:var(--font-display);font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:-0.01em}

@@ -612,6 +612,9 @@ h1 em::after{content:none;animation:none}
 body{display:flex;flex-direction:column;min-height:calc(100vh - var(--vyska-hlavicky,85px))}
 body>main{flex:1 0 auto}
 body>footer{flex:none}
+.tv-ctverec{clip-path:polygon(6% 6%,94% 6%,94% 94%,6% 94%)}
+.tv-kriz{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%)}
+.lg-dot.tv-kriz{transform:scale(1.1)}
 
 
 @media (pointer:coarse){.crumbs a{min-height:44px;display:inline-flex;align-items:center}

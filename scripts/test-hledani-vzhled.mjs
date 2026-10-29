@@ -114,7 +114,11 @@ try {
     return { sirky: chipy.map((c) => Math.round(c.getBoundingClientRect().width)),
       plocha: vypnute.length ? getComputedStyle(vypnute[0]).backgroundColor : null,
       plochaSouseda: soused ? getComputedStyle(soused).backgroundColor : null,
-      znacky: chipy.map((c) => { const m = c.querySelector('.c');
+      /* ZNAČKA DRUHU JE OD 29. 10. IKONA, NE BAREVNÝ PUNTÍK. Majitel:
+         „odeber ty barvičky a přidej tam nějaké ikonky." Měří se
+         tedy .fc-ik; smysl kontroly se nemění — značka musí být dost
+         velká, aby se dala přečíst. */
+      znacky: chipy.map((c) => { const m = c.querySelector('.fc-ik');
         return m ? Math.round(m.getBoundingClientRect().width) : null; }).filter((x) => x !== null) };
   });
   pravda('odznaky druhů se vykreslily', d.sirky.length >= 2, 'našly se jen ' + d.sirky.length);

@@ -2136,14 +2136,25 @@ h1 em{ color:var(--znacka-svetla);
 /* Rozbalený panel filtrů je bílá karta — text v ní se nesmí nakazit
    bílou barvou, kterou deska dává svým potomkům. */
 .map-controls-panel .map-controls{color:var(--text);}
-.map-controls-panel .map-okoli button{background:var(--pas-dlazdice);
-  border-color:var(--pas-obrys); color:var(--pas-text);}
+/* BÍLÉ JAKO ČIPY VEDLE. Tlačítko „Pozemky v okolí" neslo tutéž
+   tlumenou dlaždici jako čipy před 29. 10.; čipy zbělely, a kdyby
+   tohle zůstalo šedé, byly by na jednom pásu dva druhy ovladačů.
+   Hlídá to scripts/test-hledani-vzhled.mjs („tutéž plochu jako
+   ovladač nad nimi") — a chytil to dřív, než jsem si toho všiml. */
+.map-controls-panel .map-okoli button{background:var(--plocha-karta);
+  border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .map-okoli button svg,
 .map-controls-panel .msf-summary svg{color:var(--pas-akcent);}
 /* Druhové pilulky. Vybraná nese plnou zeleň a tmavý text — na desce je
    to jediná dvojice, která dá 7 : 1 oběma směry. */
-.map-controls-panel .filter-chip{background:var(--pas-dlazdice);
-  border-color:var(--pas-obrys); color:var(--pas-text-mute);}
+/* BÍLÁ PLOCHA, AŤ JE VIDĚT, ŽE SE NA TO KLEPE. Čipy měly na pásu
+   tlumenou dlaždici (--pas-dlazdice), tedy skoro tutéž barvu jako pás
+   sám — naměřeno rgba(18,36,26,0.04) proti pásu, což je rozdíl, který
+   oko nebere jako hranu ovladače. Bílá ano. (Tlumená dlaždice sem
+   přišla v době, kdy byl pás TMAVÝ a bílý čip by na něm byl bílý
+   knoflík; pás se 28. 10. zesvětlil a důvod zmizel.) */
+.map-controls-panel .filter-chip{background:var(--plocha-karta);
+  border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .filter-chip.active{background:var(--pas-akcent);
   border-color:var(--pas-akcent); color:var(--plocha-tmava);}
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
@@ -2308,26 +2319,40 @@ h1 em{ color:var(--znacka-svetla);
    které jsou bílé s linkou. Naměřeno: rgb(237,239,238) proti bílé
    u všech tří sousedů, takže odznaky vypadaly jako vypnuté ovládání.
    Zapnutý stav zůstává barevný — to není nejednotnost, to je stav. */
-.filter-chip{display:inline-flex; align-items:center; gap:8px; background:var(--plocha-karta); border:1px solid var(--line-ui); color:var(--muted); border-radius:var(--r-pill); padding:4px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer;
+/* AŤ JE VIDĚT, ŽE SE NA TO KLEPE (29. 10.).
+   Majitel: „ty tlačítka udělej, aby působily více klikatelně."
+   Měly vlasovou linku 1 px v --line-ui, tišší text a žádný stín —
+   vypadaly jako štítky, ne jako ovladače. Berou si proto recept
+   vedlejšího tlačítka webu (.btn-secondary): linka 1,5 px
+   v --obrys-tlacitka, stín --e1 a stisk o pixel dolů. Zůstává
+   pilulka a 13px písmo, aby se šest druhů vešlo do dvou sloupců. */
+.filter-chip{display:inline-flex; align-items:center; gap:8px; background:var(--plocha-karta); border:1.5px solid var(--obrys-tlacitka); color:var(--text); border-radius:var(--r-pill); padding:4px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; box-shadow:var(--e1);
   /* Jediné `transition:all` na webu bylo tady — a mělo následek: animoval
      se i OBRYS, takže prstenec po stisku tabulátoru nenaskočil, ale
      dojížděl. Kdo prochází web klávesnicí rychle, nevidí, kde stojí.
      Vlastnosti se proto jmenují, jako všude jinde; obrys mezi nimi není. */
   transition:var(--prechod);}
-/* ZNAČKA DRUHU MÁ BÝT VIDĚT. Osm pixelů stačí na puntík, ne na TVAR —
-   a tvar je tu to podstatné: kosočtverec je dražba, trojúhelník exekuce
-   (viz scripts/test-tvary.mjs, proč tvary vůbec jsou). Při osmi
-   pixelech splývaly a odznak se dal přečíst jen podle textu.
-   Dvanáct je táž míra, jakou mají značky ve vysvětlivkách pod mapou. */
-.filter-chip .c{width:12px; height:12px; border-radius:50%; flex:none;}
+/* IKONA MÍSTO BAREVNÉHO PUNTÍKU. Puntík (.filter-chip .c) nesl tvar
+   značky z mapy a byl tím zároveň její vysvětlivkou; vysvětlivka ale
+   zůstává pod mapou (.lg-dot) a tady šlo o ovládání. 16 px je táž
+   míra, jakou mají značky v ostatních ovladačích téhle řady. */
+/* TAH 2.25, NE 1.9. Web kreslí všechny ikony tahem 1,5 px na
+   obrazovce a kompenzuje to podle velikosti: 16 px při viewBoxu 24
+   znamená stroke-width 1,5 × 24 ÷ 16 = 2,25. S 1,9 vycházelo
+   1,27 px a scripts/test-tahy.mjs to spočítal dřív, než jsem si
+   toho všiml. */
+.filter-chip .fc-ik{width:16px; height:16px; flex:none; fill:none;
+  stroke:currentColor; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round;}
 /* NAJETÍ MYŠÍ OKRAJ ZTRÁCELO. border-color byla rgba(228,240,231,0.3),
    tedy téměř bílá z tmavého režimu — na světlém štítku se okraj při
    najetí prakticky rozpustil. Zvýrazní se, stejně jako u voleb v panelu
    filtrů. */
 .filter-chip:hover{color:var(--text); border-color:var(--znacka);}
+/* Stisk o pixel dolů má web na jednom místě výš (.filter-chip:active
+   spolu s .copy-btn) — tady by to byl druhý zápis téhož. */
 /* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
-.filter-chip.active{color:#fff; border-color:transparent; box-shadow:var(--e1);}
-.filter-chip.active[data-type="all"]{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
+
+.filter-chip.active{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
 /* ZAPNUTÝ ČIP MÁ PLNOU VÝPLŇ, NE PŘECHOD — a barvu, kterou paleta už má.
  *
  * Přechody si přitáhly pět barev navíc (#6C8AE6, #FFC24A, #FF6058,
@@ -2349,12 +2374,14 @@ h1 em{ color:var(--znacka-svetla);
  * jako jedna rodina. Puntíky na mapě si syté odstíny nechávají — tam
  * mají vyniknout proti leteckému snímku, ne nést text.
  * Měří to scripts/test-kontrast.mjs. */
-.filter-chip.active[data-type="sale"]{background:var(--c-sale-ink);}
-.filter-chip.active[data-type="drazba"]{background:var(--c-drazba-ink);}
-.filter-chip.active[data-type="exekuce"]{background:var(--c-exekuce-ink);}
-.filter-chip.active[data-type="obec"]{background:var(--c-obec-ink);}
-.filter-chip.active[data-type="majitel"]{background:var(--c-majitel-ink);}
-.filter-chip.active .c{box-shadow:0 0 0 2px rgba(255,255,255,0.55);}
+/* ZAPNUTÝ ČIP JE ZELENÝ, AŤ JE TO KTERÝKOLI. Každý druh měl vlastní
+   výplň (--c-sale-ink, --c-drazba-ink, …), tedy pět barev na jednu
+   práci: „tohle je zapnuté". Majitel 29. 10.: „odeber ty barvičky."
+   Zapnutý stav je na celém webu značková zeleň; barvy druhů zůstávají
+   tam, kde nesou význam — na mapě a v její vysvětlivce.
+   Pět pravidel je tím pryč a s nimi i výjimka s tmavým textem
+   u dražby, která existovala jen proto, že ta jedna výplň byla
+   světlejší než ostatní. */
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
 /* Filtry v jednom bloku. Dřív to byla šedá krabička uvnitř bílého panelu a
    v ní další bílé krabičky — každé políčko vypadalo jako samostatná věc.
@@ -7881,8 +7908,10 @@ body > footer{flex:none;}
    je nerozlišuje stejně — a zrovna červená proti oranžové (exekuce
    proti dražbě) je nejčastější případ, kdy dva body splynou v jeden.
    Barva zůstává, ale nese ji tvar. Platí všude, kde se druh ukazuje:
-   na mapě (kreslí se na plátno v js/main.js), v legendě i na štítcích
-   filtrů — jinak by se ten tvar nebylo kde naučit.
+   na mapě (kreslí se na plátno v js/main.js) i v její legendě.
+   NA ŠTÍTCÍCH FILTRŮ UŽ NE (29. 10.): majitel chtěl místo barevných
+   tvarů ikony a tvar se tedy učí z legendy pod mapou, kde stojí
+   hned vedle značek, kterých se týká.
    Ořez (clip-path) potřebuje čtvercový prvek, proto se u nekruhových
    tvarů ruší zaoblení i rámeček.
    ------------------------------------------------------------------ */
@@ -7894,9 +7923,9 @@ body > footer{flex:none;}
 .tv-kriz{clip-path:polygon(34% 0,66% 0,66% 34%,100% 34%,100% 66%,66% 66%,66% 100%,34% 100%,34% 66%,0 66%,0 34%,34% 34%);}
 /* Nekruhové tvary vypadají při stejném rozměru menší — trochu se zvětší,
    stejně jako na mapě. */
-.lg-dot.tv-trojuhelnik, .filter-chip .c.tv-trojuhelnik{transform:scale(1.18);}
-.lg-dot.tv-kosoctverec, .filter-chip .c.tv-kosoctverec{transform:scale(1.14);}
-.lg-dot.tv-kriz, .filter-chip .c.tv-kriz{transform:scale(1.1);}
+.lg-dot.tv-trojuhelnik{transform:scale(1.18);}
+.lg-dot.tv-kosoctverec{transform:scale(1.14);}
+.lg-dot.tv-kriz{transform:scale(1.1);}
 
 /* =====================================================================
    ODHAD OBVYKLÉ CENY
