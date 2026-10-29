@@ -576,14 +576,23 @@ odstupy:
   pravidlo: "přísná čtyřková mříž; 1 a 2 px jsou vlásečnice a mezery v řádku, ne odstupy rozvržení"
   pozor:    "klíčový rozměr se ŘÍKÁ, ne dopočítává z odsazení — dotykový terč min-height:44px, hlavička min-height:var(--vyska-hlavicky). Dvě místa na tom spadla, když mříž ubrala 2 px (viz docs/optimalizace.md, položka 41)."
   hlida:    scripts/test-odstupy.mjs, test-rozvrzeni.mjs, test-hlavicka.mjs
+deska:
+  # DESKA je cokoli s vlastní plochou a rámem nebo stínem: karta, panel,
+  # okno, mapa, fotka. Na celém webu se kreslí JEDNÍM receptem.
+  zaobleni: 14px  # --r-plocha (= --r-ovladani = --r-obraz)
+  ram:      "1px --line (0,14)"
+  stin:     "--e1 na stránce, --e3 nad obsahem; --e2 JEN pro zvednutí při najetí"
+  pravidlo: "deska je deska, ať je čehokoli — karta, panel i mapa"
+  pozor:    "pruh UVNITŘ desky (legenda v mapě, panel pod mapou) má zaoblení 0 a jen border-top: rodič ho ořízne, vlastní zaoblení by nebylo vidět."
+  hlida:    scripts/test-deska.mjs
 zaobleni:
-  r-xs: 6px     # drobnosti uvnitř tlačítek
-  r-sm: 10px    # --r-plocha: karty, panely
-  r-md: 14px    # --r-ovladani: tlačítka, pole, rozbalovátka
-  r-lg: 20px    # --r-obraz: mapa, fotky
-  r-pill: 999px # ODZNAK (zapínatelný filtr) a kulaté tlačítko s ikonou
-  pravidlo: "co se ovládá, má --r-ovladani; pilulka patří odznaku"
-  hlida:    scripts/test-zaobleni.mjs
+  r-xs: 6px      # prstenec zaměření u drobných ovladačů
+  r-sm: 10px     # --r-drobnost: odznak, štítek, náhled (do výšky 44 px)
+  r-md: 14px     # --r-plocha i --r-ovladani: desky, tlačítka, pole
+  r-pill: 999px  # ODZNAK (zapínatelný filtr) a kulaté tlačítko s ikonou
+  pravidlo: "deska i ovladač mají 14 px; 10 px je jen pro drobnost uvnitř desky; pilulka patří odznaku"
+  zrušeno:  "r-lg (20px) — po sjednocení 29. 10. ho nekreslilo nic. A padlo pravidlo „karta je hranatější než tlačítko\": platilo v stylopisu, ale ne na obrazovce (viz docs/optimalizace.md §212)."
+  hlida:    scripts/test-zaobleni.mjs, scripts/test-deska.mjs
 ikony:
   zdroj:   scripts/ikony.mjs — JEDINÉ místo, kde se ikona kreslí
   volani:  '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-jmeno"/></svg>'

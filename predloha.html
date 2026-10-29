@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-RR0tQmmTR4/CQ//ipbQcimtFpMJS+Rjxo5YAW60ExJ8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-ILNjz4uyE/QD6zdyuwjnw6I7sOcLbW4yAfPCylL4KsU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -17,7 +17,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=27453c1c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=8e958482">
   <style>
     /* Předloha je vzorník, ne stránka webu — má vlastní jednoduchou sazbu. */
     body{background:var(--bg);}
@@ -234,7 +234,11 @@
   }).join('');
 
   /* --- tvary --- */
-  var tvary = [['--r-xs','drobné'],['--r-sm','tlačítka'],['--r-md','karty'],['--r-lg','panely'],['--r-pill','štítky']];
+  /* Jména tady musí říkat, co ta hodnota na webu OPRAVDU dělá. Dřív
+     stálo u --r-sm „tlačítka" a u --r-lg „panely" — ani jedno už
+     neplatilo: tlačítka jsou na --r-md a 20 px nekreslí nic. */
+  var tvary = [['--r-drobnost','odznaky a náhledy'],['--r-plocha','desky: karty, panely, mapy'],
+    ['--r-ovladani','tlačítka a pole'],['--r-pill','pilulky']];
   document.getElementById('tvary').innerHTML = tvary.map(function (t) {
     return '<div><div class="tvar" style="border-radius:' + v(t[0]) + '">' + v(t[0]) + '</div>' +
       '<div class="kod pod-ukazkou na-stred">' + t[1] + '</div></div>';

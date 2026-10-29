@@ -337,11 +337,15 @@ for (const z of zdroje) {
   }
 }
 hlas('Zaoblení mimo paletku', tvary,
-  'Použijte var(--r-xs) … var(--r-lg), nebo var(--r-pill) pro štítky.');
+  'Použijte var(--r-plocha) pro desky, var(--r-ovladani) pro tlačítka a pole, var(--r-drobnost) pro odznaky, var(--r-pill) pro pilulky.');
 
 /* ---------- 3. paletka existuje ---------- */
+/* --r-lg (20 px) ze seznamu ODEŠLO 29. 10.: po sjednocení desek ho
+   nekreslilo nic a ze žebříku se smazal (§212). Seznam je tu proto,
+   aby paletka nezmizela po kouskách — ne aby držel při životě hodnotu,
+   kterou nikdo nepoužívá. */
 const chybi = ['--e0','--e1','--e2','--e3','--e3-up','--glow','--glow-lg',
-               '--r-xs','--r-sm','--r-md','--r-lg','--r-pill','--accent-warm']
+               '--r-xs','--r-sm','--r-md','--r-pill','--accent-warm']
   .filter((t) => !css.includes(t + ':'));
 hlas('Chybí proměnná z paletky', chybi, 'Doplňte ji v :root v css/styles.css.');
 

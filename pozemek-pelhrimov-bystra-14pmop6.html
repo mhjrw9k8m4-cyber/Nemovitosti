@@ -61,14 +61,14 @@
   <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=c45baa7a">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=4c34acdc">
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
 .pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px var(--okraj-stranky) 56px;color:var(--text);font-family:var(--font-ui)}
 .pz-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:16px}
 .pz-back:hover{color:var(--text)}
 .pz-back svg{width:16px;height:16px;stroke-width:2.25}
-.pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--plocha-tlumena);border:1px solid var(--line);box-shadow:var(--e2)}
+.pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--plocha-tlumena);border:1px solid var(--line);box-shadow:var(--e1)}
 .pz-media .opp-badge{top:13px;left:13px;bottom:auto;display:inline-flex}
 .pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
 .opp-badge.sale::before{background:var(--c-sale)}
@@ -187,7 +187,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-abtn.on{color:#fff;border-color:transparent;background:var(--plocha-znacka);box-shadow:var(--glow)}
 .pz-abtn svg{width:17px;height:17px;stroke-width:2.12;color:var(--znacka-svetla)}
 .pz-abtn.on svg{color:#fff}
-.pz-pozor{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-sm);font-size:13px;line-height:1.6;background:rgba(var(--accent-warm-bright-rgb),.14);border:1px solid rgba(var(--accent-warm-rgb),.34);color:var(--accent-warm)}
+.pz-pozor{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-drobnost);font-size:13px;line-height:1.6;background:rgba(var(--accent-warm-bright-rgb),.14);border:1px solid rgba(var(--accent-warm-rgb),.34);color:var(--accent-warm)}
 .pz-gtk-obal{margin:20px 0 0}
 .pz-gtk-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-ovladani);background:#fff;box-shadow:var(--e1);transition:border-color var(--cas-zakladni) var(--ease),box-shadow var(--cas-zakladni) var(--ease)}
 .pz-gtk-sum::-webkit-details-marker{display:none}
@@ -217,7 +217,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-gtk .g-ol li{font-size:14px;line-height:1.6;color:var(--text)}
 .pz-gtk .g-ol li::marker{font-family:var(--font-mono);font-size:12px;color:var(--accent-warm)}
 .pz-gtk .g-foot{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px;font-style:italic}
-.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;background:var(--plocha-karta);box-shadow:var(--e2)}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-obraz);overflow:hidden;background:var(--plocha-karta);box-shadow:var(--e1)}
 .pzm-mapa{height:390px;width:100%;background:var(--plocha-zapustena)}
 .pzm-mapa{position:relative}
 .pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(var(--plocha-tmava-2-rgb),.25);background:rgba(255,255,255,.93);color:var(--znacka-svetla);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
@@ -263,7 +263,7 @@ body.pzm-cela-telo{overflow:hidden}
 .pzm-kryti{width:100%}
 .pzm-kryti input{flex:1}
 }
-.pz-pozn-box{margin-top:20px;padding:12px;border:1px solid var(--line-strong);border-radius:var(--r-plocha);background:var(--plocha-karta);box-shadow:var(--e1)}
+.pz-pozn-box{margin-top:20px;padding:12px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);box-shadow:var(--e1)}
 .pz-pozn-hlava{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
 .pz-pozn-hlava h2{font-size:16px;margin:0}
 .pz-pozn-stav{margin-left:auto;font-size:12px;color:var(--muted)}

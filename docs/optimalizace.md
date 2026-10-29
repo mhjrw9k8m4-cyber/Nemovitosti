@@ -13276,6 +13276,10 @@ Po opravě: rychlá sada 134/134, `test-mrtve-styly`, `test-okraje`,
 
 ## §202 Karta se na webu kreslí čtyřmi recepty — ZMĚŘENO, ROZHODNUTÍ NA MAJITELI
 
+> **Dořešeno 29. 10. v §212.** Majitel řekl „pokračuj na vizuální
+> synchronizaci celého webu", takže se rozhodlo podle jeho předlohy:
+> deska je 14 px. Zbytek téhle položky je stav před tím rozhodnutím.
+
 Při obhlídce podle zadání („celý web předělej do této podoby") jsem
 změřil **všechny světlé desky s rámem nebo stínem** na sedmi typech
 stránek: jméno, zaoblení, rám, stín a výplň.
@@ -13952,3 +13956,88 @@ přitom fotku nemá ani jedna nabídka (§142), a souřadnice zaberou 92 px
 na dva údaje a odkaz. Dohromady skoro půl obrazovky. Obojí je ale
 rozhodnutí o VZHLEDU, ne úklid — zapsáno jako úkol pro majitele, ne
 provedeno.
+
+## §212 Deska se na webu kreslila čtyřmi zaobleními, třemi rámy a čtyřmi stíny
+
+Majitel řekl „pokračuj na vizuální synchronizaci celého webu". §202 to
+měla připravené jako otázku pro něj (10, nebo 14 px?); tohle je
+rozhodnutí a provedení.
+
+### Otisk před zásahem
+
+Měřeno v prohlížeči na 18 typech stránek (1280 px, odhlášený): každý
+prvek s vlastní plochou a rámem nebo stínem — 46 různých jmen.
+
+| co | kolik podob | jak |
+|---|---|---|
+| zaoblení desek | **4** | 0 px (15 jmen), 10 px (12), 14 px (5), 20 px (11) |
+| rám | **3** | 0,14 (27 jmen), 0,28 (12), 0,55 (2) |
+| stín | **4** | žádný (30 jmen), `--e1` (11), `--e2` (3), `--e3` (2) |
+
+A míchalo se to **v jedné roli na jedné stránce**: na inzerátu stála
+poznámka na 10 px hned pod kartou s cenou na 14, mapa nesla stín pro
+„zvednuté" a karta vedle ní stín pro „klidné", `.pz-sour` měla rám
+0,55 a `.pz-gtk` vedle ní 0,14.
+
+### Rozhodnutí: deska je 14 px podle karty, kterou poslal majitel
+
+§202 nabízela dva směry a nechala je na majiteli, protože mezi kartami
+na 14 px je `.pz-bok` — ta karta s cenou, kterou poslal jako předlohu
+toho, jak má web vypadat. Vyhrála předloha:
+
+* **deska (karta, panel, okno, mapa, fotka) = 14 px**, rám 0,14,
+  stín `--e1`;
+* **drobnost uvnitř desky** (odznak, štítek, náhled do výšky 44 px) =
+  10 px, a dostala vlastní jméno `--r-drobnost`, aby se poznala od
+  desky, která se jen zapomněla srovnat;
+* **deska nad obsahem** (okno, panel filtrů, našeptávač) = `--e3`;
+* **`--e2` zbyl jen na zvednutí při najetí myší**;
+* **pilulka** odznakům a kulatým tlačítkům.
+
+Tím **padlo pravidlo „karta je pořád hranatější než tlačítko"**, které
+u tokenu stálo černé na bílém. Platilo uvnitř stylopisu, ale ne na
+obrazovce: polovina karet ho nedodržovala. Hranatější karta je rozdíl,
+který vedle sebe stejně nikdo nepřečte jako záměr — přečte ho jako
+nedodělek.
+
+### Otisk po zásahu
+
+| co | před | po |
+|---|---|---|
+| zaoblení desek | 0 / 10 / 14 / 20 px | **14 px** (27 jmen), 0 u pruhů uvnitř mapy (15), 10 u jedné drobnosti, pilulka u tří odznaků |
+| rám | 0,14 / 0,28 / 0,55 | **0,14** (40 jmen) + dva zelené jako ozdoba |
+| stín | žádný / e1 / e2 / e3 | žádný (30) / **e1** (13) / **e3** (3) |
+
+### Tři nálezy, které z toho vypadly navíc
+
+1. **Výjimka, která netvrdila nic.** `.filter-chip` je v `test-zaobleni`
+   na seznamu pilulek — jenže se kreslil na 20 px. Být na seznamu ho
+   vyjmulo z kontroly ÚPLNĚ, takže se nehlídalo ani to, že je pilulka.
+   Teď pilulkou je.
+2. **Dva našeptávače, dva stíny.** `.vm-navrhy` (hledání na úvodu) měl
+   `--e3`, `.ms-navrhy` (hledání nad mapou) `--e2`. Tatáž práce, dva
+   recepty.
+3. **Token, který nekreslil nic.** Po sjednocení zbylo `--r-lg` (20 px)
+   bez jediného použití. Vyhozen ze žebříku; nechávat v něm hodnotu,
+   kterou nic nepoužívá, je pozvánka, aby se jí zase něco chytlo.
+
+### Co se NEZMĚNILO, i když to v soupisu vypadalo jako vada
+
+Legenda v mapě (`.map-legend`), panel pod mapou (`.pzm-panel`) a
+legenda na inzerátu (`.pzm-leg`) mají zaoblení 0. V prvním soupisu
+jsem je měl jako „bílé panely na nule". Měření ukázalo, že mají jen
+`border-top` a leží UVNITŘ mapy, která je ořezává — vlastní zaoblení
+by u nich nebylo vidět. Zůstaly, jak byly.
+
+### Hlídač
+
+`scripts/test-deska.mjs` projde desky na 17 typech stránek a vyžaduje
+jeden recept. Výjimky mají jméno a důvod (zelený rám odznaku „K dražbě"
+a nápovědy nad mapou; leafletové prvky kreslí knihovna, ne náš
+stylopis). Prokázáno sabotážemi:
+
+| sabotáž | co spadlo |
+|---|---|
+| jedna karta zpátky na 10 px | zaoblení desky |
+| jedna karta dostane silnější rám | rám desky |
+| třetí klidový stín | počet klidových stínů |

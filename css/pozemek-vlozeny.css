@@ -32,7 +32,7 @@
     .pz-back:hover{color:var(--text);}
     .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
 
-    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--plocha-tlumena); border:1px solid var(--line); box-shadow:var(--e2);}
+    .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--plocha-tlumena); border:1px solid var(--line); box-shadow:var(--e1);}
     /* NALEZENO MĚŘENÍM na telefonu: odznak byl 95 × 202 px místo
        95 × 31 a svým rozostřením rozmazal popisku pod sebou — jméno
        obce i výměra byly nečitelné. Příčina je v css/styles.css:
@@ -400,7 +400,7 @@
 
     /* Varování u nabídky od majitele — táž věta jako na mapě. Rámeček,
        ne kurzíva: musí být na první pohled jiné než údaje o pozemku. */
-    .pz-pozor{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-sm); font-size:13px; line-height:1.6;
+    .pz-pozor{margin:8px 0 0; padding:12px 12px; border-radius:var(--r-drobnost); font-size:13px; line-height:1.6;
       background:rgba(var(--accent-warm-bright-rgb),.14); border:1px solid rgba(var(--accent-warm-rgb),.34); color:var(--accent-warm);}
     /* Rádce je zabalený v <details>. Souhrn je celý řádek k poklepání:
        nadpis vlevo, kolik rad se pod ním skrývá vpravo, šipka na kraji.
@@ -465,7 +465,7 @@
     /* MAPA S VRSTVAMI. Rám drží mapu a ovládání pohromadě jako jednu věc:
        přepínače patří k té mapě, ne ke stránce. Ovládání je POD mapou, ne
        přes ni — přes mapu by zakrývalo právě to místo, o které jde. */
-    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-lg); overflow:hidden; background:var(--plocha-karta); box-shadow:var(--e2);}
+    .pzm{position:relative; border:1px solid var(--line); border-radius:var(--r-obraz); overflow:hidden; background:var(--plocha-karta); box-shadow:var(--e1);}
     .pzm-mapa{height:390px; width:100%; background:var(--plocha-zapustena);}
     /* Na celou obrazovku. Mapa se roztáhne přes okno, panel s přepínači
        zůstane pod ní — ovládání musí být po ruce i tam, jinak je
@@ -575,7 +575,7 @@
        je to poznámka k údaji, ne další údaj. */
     /* SOUKROMÁ POZNÁMKA (js/poznamky.js). Vypadá jako papír na stole,
        ne jako formulář: nic se neodesílá a není co potvrzovat. */
-    .pz-pozn-box{margin-top:20px; padding:12px; border:1px solid var(--line-strong);
+    .pz-pozn-box{margin-top:20px; padding:12px; border:1px solid var(--line);
       border-radius:var(--r-plocha); background:var(--plocha-karta); box-shadow:var(--e1);}
     .pz-pozn-hlava{display:flex; align-items:baseline; gap:8px; margin-bottom:8px;}
     .pz-pozn-hlava h2{font-size:16px; margin:0;}

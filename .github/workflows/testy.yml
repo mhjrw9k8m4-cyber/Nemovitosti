@@ -864,6 +864,9 @@ jobs:
       - name: Zaoblení (co se ovládá, má jedno zaoblení)
         run: node scripts/test-zaobleni.mjs
 
+      - name: Jedna deska (zaoblení, rám a stín karet na celém webu)
+        run: node scripts/test-deska.mjs
+
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs
 

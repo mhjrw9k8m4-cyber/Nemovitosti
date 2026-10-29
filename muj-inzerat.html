@@ -58,7 +58,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=27453c1c">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=8e958482">
   <style>
     /* Karta profilu */
     /* Kotvu ani ořez karta nepotřebuje: position:relative a
@@ -66,9 +66,9 @@
        nic jiného uvnitř není ani absolutně umístěné, ani přetékající.
        Změřeno snímkem ve dvou šířkách: po jejich vypnutí se liší
        59 pixelů z 657 336 (vyhlazení rohů), nic víc. */
-    .pf-card{border-radius:var(--r-lg); padding:24px 20px 20px;
+    .pf-card{border-radius:var(--r-plocha); padding:24px 20px 20px;
       background:var(--plocha-karta);
-      border:1px solid var(--line-strong); box-shadow:var(--e3);
+      border:1px solid var(--line); box-shadow:var(--e3);
       animation:authFade var(--cas-pomaly) var(--ease) both;}
     .pf-head{display:flex; align-items:center; gap:12px;}
     .pf-avatar{flex:none; width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -116,9 +116,9 @@
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
     .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
     /* Prázdný stav */
-    .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-lg); border:1px dashed var(--line-strong); background:var(--plocha-karta);}
-    .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-lg); display:flex; align-items:center; justify-content:center;
-      background:rgba(var(--plocha-znacka-svetla-rgb),.09); border:1px solid var(--line-strong);}
+    .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-plocha); border:1px dashed var(--line); background:var(--plocha-karta);}
+    .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-plocha); display:flex; align-items:center; justify-content:center;
+      background:rgba(var(--plocha-znacka-svetla-rgb),.09); border:1px solid var(--line);}
     .pf-empty-ico svg{width:32px; height:32px; color:var(--text);
       /* 1,125 proto, že 32 × 1,125 ÷ 24 = 1,5 px — tah jako u všech
          ostatních ikon. V HTML je u ikony atribut stroke-width="1.6",
@@ -148,7 +148,7 @@
     .sv-del:hover{color:var(--c-exekuce); border-color:var(--c-exekuce);}
     /* Moje inzeráty — čisté karty se statistikami */
     #mi-list{display:flex; flex-direction:column; gap:12px;}
-    .mi-lcard{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-lg); padding:12px; box-shadow:var(--e1);}
+    .mi-lcard{background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-plocha); padding:12px; box-shadow:var(--e1);}
     /* POMĚR, NE PEVNÁ VÝŠKA. Stálo tu `width:100%; height:160px`, což
        je jediné místo na webu, kde se poměr náhledu psal pixelem —
        a vycházel z něj pás: naměřeno 694×160 = 4,34 : 1 na monitoru
