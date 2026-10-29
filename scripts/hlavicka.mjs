@@ -74,11 +74,15 @@ export const NAV_MAPA = '{{MAPA}}';
    Zůstává to, čím se prodává: mapa (vlastní produkt), ceny a tlačítko
    přidat pozemek; účet je zvlášť, protože to není procházení.
    Co odešlo, nezmizelo z webu — jen z lišty:
-     · Dražby, Exekuce, Nové na trhu — vstupní odznaky na úvodní
-       stránce (.uvod-vstupy) vedou na tytéž stránky a stojí nad
-       výpisem, tedy tam, kde se vybírá;
      · Podle okresu — rozcestník je na mapě i v patičce;
      · Rádce a Kontakt — v patičce, kde se hledá výklad a spojení.
+   POZOR, TOHLE SE 29. 10. VEČER ZMĚNILO. Stávalo tu, že Dražby,
+   Exekuce a Nové na trhu mají odznaky na úvodní stránce
+   (.uvod-vstupy). Ty majitel nechal zrušit („tuhle řadu dej úplně
+   pryč"), takže z úvodu ani z lišty na dražby a exekuce dnes žádný
+   odkaz nevede — do webu se na ně dostane přes Rádce a pár článků
+   (naměřeno: 8 stránek odkazuje na dražby, 6 na exekuce). Jako FILTR
+   obojí zůstává: „Druh nabídky" v panelu nad výpisem.
    Stránky samy zůstávají (chodí na ně vyhledávač), jen si na ně
    lišta nenárokuje místo. */
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">

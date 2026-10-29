@@ -15614,3 +15614,28 @@ klepat do sloupců, zavřít, zkontrolovat souhrn). Měří teď, že políčka
 jsou v panelu, mají 16px písmo, 44 px na prst a číselnou klávesnici,
 že klepnutí do nich nic neotevře ani nezavře, že napsaná čísla zúží
 výpis a že „Zrušit filtry" je vyprázdní. `test-rozsah` zanikl s modulem.
+
+## §239 Rozcestník nad výpisem pryč
+
+**Co o tom řekl majitel.** „Tuhle řadu dej úplně pryč." Vyfotil šest
+pilulek nad hlavičkou výpisu: Nové na trhu · Dražby · Exekuce ·
+Stavební · Orná půda · Podle okresu.
+
+**Změřeno.** Řada měřila 48 px, s odstupem 64. První nabídka se po jejím
+zrušení posunula ze 412 na **348 px** od vršku stránky.
+
+**Co to stojí, poctivě.** Z úvodní stránky ani z lišty nevede na
+**dražby a exekuce** žádná jiná cesta. Do webu se na ně dostane přes
+Rádce a pár článků — naměřeno: na `drazby-pozemku.html` odkazuje
+8 stránek, na `exekuce-pozemku.html` 6. Stavební pozemky a orná půda
+jsou na tom jinak: odkazuje na ně 327 a 976 stránek pozemků. Hledat se
+obojí dá i bez rozcestníku, oba druhy jsou filtry v panelu („Druh
+nabídky", „Druh pozemku"), ale filtr a stránka nejsou totéž: stránka má
+vlastní text, vlastní adresu a chodí na ni vyhledávač.
+
+**A jedna lež v komentáři, která by jinak zůstala.** `scripts/hlavicka.mjs`
+vysvětluje, proč v liště nejsou Dražby a Exekuce, a odůvodňuje to větou
+„vstupní odznaky na úvodní stránce (.uvod-vstupy) vedou na tytéž
+stránky". Od zrušení té řady to neplatí a komentář by tvrdil opak
+skutečnosti. Přepsán: stojí v něm, co se změnilo a kam se na ty stránky
+dnes dá dostat.

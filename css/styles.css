@@ -3551,31 +3551,11 @@ h1 em{ color:var(--znacka-svetla);
    z pojmenovaného stupně, jenže hledá pravidla se SELEKTOREM h1.
    Dokud byl nadpis úvodní stránky jen třída, zkouška o něm nevěděla
    a mohl si (a taky si držel) opsaných 40 px mimo stupnici. */
-/* ROZCESTNÍK NAD VÝPISEM — vzor Sreality: to, co lidé hledají
-   nejčastěji, u toho, v čem se vybírá. Do 29. 10. stál pod nadpisem
-   na desce; s deskou šel pryč i odtud, ale nezrušil se — jsou to
-   jediné odkazy na čtyři stránky webu (viz pravidlo o šířce níž).
-   JEDEN POSUVNÝ ŘÁDEK, NE MŘÍŽKA DLAŽDIC. Napoprvé to byly dvě
-   řady dlaždic — naměřeno na 390×844: pruh 112 px a první nabídka
-   spadla ze 448 na 551 px, tedy HORŠÍ než stav před opravou.
-   Posuvný řádek pilulek má 48 px a první nabídka je na 439. */
-.uvod-vstupy{display:flex; flex:0 0 auto; gap:8px; overflow-x:auto; margin:0 0 16px;
-  padding:0 var(--okraj-stranky) 4px; scrollbar-width:none;
-  -webkit-overflow-scrolling:touch;}
-.uvod-vstupy::-webkit-scrollbar{display:none;}
-.uvod-vstupy a{display:inline-flex; align-items:center; justify-content:center;
-  flex:0 0 auto; min-height:44px; padding:0 16px; border-radius:var(--r-pill);
-  background:var(--plocha-karta); border:1px solid var(--line-ui);
-  color:var(--text); font-size:14px; font-weight:600; text-decoration:none;
-  white-space:nowrap;}
-.uvod-vstupy a:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
-/* ROZCESTNÍK SE UŽ NESKRÝVÁ NA ŠIROKÉM DISPLEJI. Skrýval se, dokud
-   stál nad mapou a jen ji odsouval. Mezitím se přestěhoval nad výpis
-   a ukázalo se, co to schování znamenalo: na dražby, exekuce, stavební
-   pozemky a ornou půdu nevede z úvodní stránky JINÝ odkaz než tenhle
-   (spočítáno grepem v index.html: jeden výskyt každé z nich). Nad
-   900 px tedy byly ty čtyři stránky z úvodu nedostupné. */
-
+/* ROZCESTNÍK NAD VÝPISEM (.uvod-vstupy) tu byl do 29. 10. večer —
+   šest pilulek „Nové na trhu · Dražby · Exekuce · Stavební · Orná
+   půda · Podle okresu". Majitel: „tuhle řadu dej úplně pryč." Brala
+   64 px i s odstupem. Stránky zůstávají, jen z úvodu na ně nevede
+   odkaz; co z toho plyne, stojí v index.html u toho místa. */
 h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-weight:700;
   letter-spacing:-0.01em; line-height:1.3; color:var(--pas-text);
   max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
