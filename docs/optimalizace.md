@@ -15452,3 +15452,72 @@ při zúžení výběru legitimně schovávají („u dražeb nikdo neuvádí vo
 a panel pod nimi se tím posune právem; a když výpis spadne z 1 884 na
 20 nabídek, zkrátí se dokument natolik, že posun ořízne sám prohlížeč.
 Ani jedno není vada. Vada je, když odskočí to, čeho se člověk drží.
+
+## §236 Druh nabídky a řazení do panelu, jednou řečí s ostatními
+
+**Co o tom řekl majitel.** Zakroužkoval červeně pilulky Vše / Prodej /
+Dražba / Exekuce spolu s celým panelem filtrů: „toto by mělo být spojené
+se zbytkem a řazení, tedy v té tabulce."
+
+**Měl pravdu a jde to vyjmenovat.** Druh nabídky byl jediný filtr na
+stránce, který stál MIMO panel — a mluvil jinou řečí než všechno, s čím
+dělá tutéž práci:
+
+| | druh nabídky (bylo) | druh pozemku, sítě |
+|---|---|---|
+| tvar | pilulka (`--r-pill`) | dlaždice (`--r-ovladani`) |
+| písmo | 13 px | 14 px |
+| počet | odznak s vlastní plochou uprostřed řádky | holý, vpravo ve sloupci |
+| místo | nad panelem | v panelu |
+
+Teď je to tatáž dlaždice: ikona, popisek, počet vpravo. Jediný rozdíl
+zůstává věcný — tady se vybírá JEDEN druh, ne několik, takže místo
+zaškrtávátka stojí ikona a mezi volbami je „Vše".
+
+**Řazení taky.** Stálo v hlavičce výpisu vedle „Uložené" a komentář
+u téhle řady tvrdil, že v panelu být NESMÍ, protože tam patří jen to, co
+ubírá nabídky. To pravidlo majitel zrušil vědomě: panel je pro něj „ta
+tabulka", kde se nabídka nastaví celá — čím se zúží i v jakém pořadí se
+ukáže. Co z toho plyne a co platí dál: odznak u „Druh, cena, výměra
+a další" počítá jen FILTRY, jinak by hlásil „1" komukoli, kdo si jen
+přehodil pořadí.
+
+**Co to udělalo s místem.** Lišta nad mapou na monitoru byla dvouřádková
+— druhý řádek nesl právě ty pilulky. Teď je jednořádková a měří 64 px;
+stylopis si u ní dřív poznamenal 111 px pro dvouřádkovou podobu, a ten
+rozdíl (jeden řádek dlaždic 44 px plus mezera 8) sedí. Na telefonu se
+nezměnilo nic: pilulky tam byly uvnitř sbalovaného hledání, takže místo
+nad výpisem nezabíraly tak jako tak — první nabídka začíná pořád na
+412 px.
+
+**Co se tím uklidilo.** `.ms-group` a celá oblast „rychle" v mřížce
+lišty, pravidla, která pilulky v liště držela na jednom řádku s vlastním
+posouváním, a `.msv-razeni` se dvěma pravidly, která řazení v hlavičce
+výpisu smršťovala. Všechno našel `test-mrtve-styly` a `test-mrtva-jmena`
+k tomu přidal tři jména tříd, která jsem v novém značkování nechal bez
+jediného pravidla (`.mc-nabidka`, `.map-filters`, `.mc-razeni`) — zmizela
+taky, skupinu kreslí `.mc-field` a `.mcv-rada` jako u ostatních.
+
+**Čtyři zkoušky to chytily dřív než já.**
+
+1. `test-barvy` měřil barvu odznaku tak, že klepal do pilulek druhu —
+   ve sbaleném panelu je ale nevidí a všech pět kategorií přeskočil.
+   Zachránila to pojistka „a změřily se aspoň tři kategorie (dnes 0)",
+   kterou tam kdysi někdo napsal právě pro tenhle případ. Panel se
+   v té zkoušce teď otevře.
+2. `test-hledani-zavirani` klepal na „první tlačítko v panelu", aby
+   ověřil, že klepnutí uvnitř hledání nezavře. Prvním tlačítkem se po
+   přestěhování stalo „Pozemky v okolí", které otevře výběr místa přes
+   celou obrazovku — a ten pak zachytával všechna další klepnutí.
+   Zkouška teď klepe na návěští filtrů.
+3. `test-okoli`, `test-razeni` a `test-vyhodna-cena` nastavovaly řazení
+   přes `selectOption('#map-sort')`. Web staví nad každým `<select>`
+   vlastní rozbalovač a původní prvek zmenší na 1 × 1 px; dokud řazení
+   stálo v hlavičce výpisu, vracelo mu pravidlo `.msv-razeni .map-select`
+   plnou krabici. S tím pravidlem zmizela i ta krabice a Playwright
+   čekal třicet sekund na neviditelný prvek. Nastavení řazení je proto
+   nově na jednom místě — `scripts/zkouska-razeni.mjs`.
+4. Při tom se změřilo, kolik místa si bere rezervovaná šířka počtu
+   (§235): „1 884" má 34,3 px, `4,5 ch` dává 35,1. Bylo tam 5 ch
+   (39 px) — o 3,9 px víc, než je potřeba, a každý takový pixel si bere
+   popisek, který se jinak láme o řádek víc.

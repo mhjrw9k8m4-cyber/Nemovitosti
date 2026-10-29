@@ -189,6 +189,17 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
   p.on('pageerror', (e) => chyby.push(String(e)));
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await domUtichlo(p, 350);   // bylo waitForTimeout(3800)
+  /* FILTR DRUHU JE OD 29. 10. V PANELU, NE NAD NÍM. Majitel ho tam
+     poslal („toto by mělo být spojené se zbytkem"), takže ve sbaleném
+     panelu není vidět a `isVisible()` by všech pět kategorií přeskočil
+     — zkouška by prošla naprázdno a pojistka „aspoň tři kategorie" to
+     právem shodila. Panel se proto otevře. */
+  await p.evaluate(() => {
+    document.body.classList.add('hledani-rozbalene');
+    const d = document.getElementById('ms-filters');
+    if (d) d.open = true;
+  });
+  await domUtichlo(p, 300);
   let mereno = 0;
   for (const k of KATEGORIE) {
     const btn = await p.$(`[data-type="${k}"]`);

@@ -108,7 +108,7 @@ try {
 
   /* --- 2) ODZNAKY DRUHŮ -------------------------------------------- */
   const d = await p.evaluate(() => {
-    const chipy = [...document.querySelectorAll('.map-filters .filter-chip')].filter((c) => c.offsetParent);
+    const chipy = [...document.querySelectorAll('#map-filters .filter-chip')].filter((c) => c.offsetParent);
     const vypnute = chipy.filter((c) => !c.classList.contains('active'));
     const soused = document.querySelector('.map-near-btn') || document.querySelector('.msf-summary');
     return { sirky: chipy.map((c) => Math.round(c.getBoundingClientRect().width)),

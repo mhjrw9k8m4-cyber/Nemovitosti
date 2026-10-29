@@ -72,7 +72,14 @@ try {
      nabídky, ani obec z našeptávače — klepnutí by zavřelo panel dřív,
      než by dopadlo. */
   await otevri();
-  const vnitrek = await p.$('#ms-rozsirene button, #ms-rozsirene a, #ms-rozsirene summary');
+  /* Klepe se na NÁVĚŠTÍ filtrů, ne na první tlačítko v panelu. Do
+     29. 10. tam první stály odznaky druhu („Vše", „Prodej"…); ty se
+     přestěhovaly dovnitř panelu a prvním tlačítkem se stalo „Pozemky
+     v okolí", které otevře výběr místa přes celou obrazovku — ten pak
+     zachytával všechna další klepnutí a zkouška spadla na timeoutu.
+     Návěští filtrů je ovladač uvnitř panelu stejně jako ony a nic
+     přes obrazovku neotevře. */
+  const vnitrek = await p.$('#ms-filters .msf-summary');
   if (vnitrek) {
     const r = await vnitrek.boundingBox();
     if (r) { await p.touchscreen.tap(r.x + Math.min(8, r.width / 2), r.y + Math.min(8, r.height / 2)); }

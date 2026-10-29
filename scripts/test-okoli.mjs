@@ -36,6 +36,7 @@ import { naSeznam } from './zkouska-pohled.mjs';
    takže se každé pevné čekání platí mnohokrát. */
 import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { nastavRazeni } from './zkouska-razeni.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -1259,7 +1260,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
   await p.waitForTimeout(500);
   const pred = await p.evaluate(() => (document.getElementById('map-sort') || {}).value);
-  await p.selectOption('#map-sort', 'near');
+  await nastavRazeni(p, 'near');
   await p.waitForTimeout(2600);
   const behem = await p.evaluate(() => ({
     vybirac: !!document.querySelector('.vm-ov'),
@@ -1289,7 +1290,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
   const { ctx, p } = await telefon(null);
   await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = true; }));
   await p.waitForTimeout(500);
-  await p.selectOption('#map-sort', 'near');
+  await nastavRazeni(p, 'near');
   await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
   await domUtichlo(p, 300);
   await jdiNaMisto(p, 50.028, 15.200);   // Kolín

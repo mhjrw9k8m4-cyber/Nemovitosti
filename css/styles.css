@@ -2145,18 +2145,9 @@ h1 em{ color:var(--znacka-svetla);
   border-color:var(--obrys-tlacitka); color:var(--text);}
 .map-controls-panel .map-okoli button svg,
 .map-controls-panel .msf-summary svg{color:var(--pas-akcent);}
-/* Druhové pilulky. Vybraná nese plnou zeleň a tmavý text — na desce je
-   to jediná dvojice, která dá 7 : 1 oběma směry. */
-/* BÍLÁ PLOCHA, AŤ JE VIDĚT, ŽE SE NA TO KLEPE. Čipy měly na pásu
-   tlumenou dlaždici (--pas-dlazdice), tedy skoro tutéž barvu jako pás
-   sám — naměřeno rgba(18,36,26,0.04) proti pásu, což je rozdíl, který
-   oko nebere jako hranu ovladače. Bílá ano. (Tlumená dlaždice sem
-   přišla v době, kdy byl pás TMAVÝ a bílý čip by na něm byl bílý
-   knoflík; pás se 28. 10. zesvětlil a důvod zmizel.) */
-.map-controls-panel .filter-chip{background:var(--plocha-karta);
-  border-color:var(--obrys-tlacitka); color:var(--text);}
-.map-controls-panel .filter-chip.active{background:var(--pas-akcent);
-  border-color:var(--pas-akcent); color:var(--plocha-tmava);}
+/* Druhové pilulky v pásu tu měly vlastní plochu a vlastní zelenou.
+   Od 29. 10. jsou uvnitř panelu mezi ostatními filtry a berou si
+   jejich recept (.filter-chip výš), takže pás do nich nemá co mluvit. */
 .map-side{grid-column:1; grid-row:2; display:flex; flex-direction:column; border:0; border-right:1px solid var(--line); border-radius:0; padding:16px 16px; min-height:0;}
 .map-holder{grid-column:2; grid-row:2;}
 .map-controls-panel .map-search{margin-top:0;}
@@ -2320,23 +2311,22 @@ h1 em{ color:var(--znacka-svetla);
 .map-near-btn:active{transform:translateY(1px);}
 .map-near-btn .mnb-pin{width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2.12; stroke-linecap:round; stroke-linejoin:round; flex:none;}
 .map-near-btn.on{background:var(--plocha-zapustena); color:var(--znacka-svetla); border-color:var(--znacka-svetla); box-shadow:none;}
-/* Skupiny ovládání v postranním panelu — čitelná hierarchie místo hromady prvků */
-.ms-group{margin-top:12px;}
-.map-filters{display:flex; flex-wrap:wrap; gap:4px;}
-/* BÍLÁ PLOCHA, NE ŠEDÁ. --plocha-zapustena je „zapuštěná plocha: vstupy, pole" —
-   jenže odznak druhu není pole, je to přepínač, a stojí v jedné sestavě
-   s polem hledání, „Pozemky v okolí" a „Druh, cena, výměra a další",
-   které jsou bílé s linkou. Naměřeno: rgb(237,239,238) proti bílé
-   u všech tří sousedů, takže odznaky vypadaly jako vypnuté ovládání.
-   Zapnutý stav zůstává barevný — to není nejednotnost, to je stav. */
-/* AŤ JE VIDĚT, ŽE SE NA TO KLEPE (29. 10.).
-   Majitel: „ty tlačítka udělej, aby působily více klikatelně."
-   Měly vlasovou linku 1 px v --line-ui, tišší text a žádný stín —
-   vypadaly jako štítky, ne jako ovladače. Berou si proto recept
-   vedlejšího tlačítka webu (.btn-secondary): linka 1,5 px
-   v --obrys-tlacitka, stín --e1 a stisk o pixel dolů. Zůstává
-   pilulka a 13px písmo, aby se šest druhů vešlo do dvou sloupců. */
-.filter-chip{display:inline-flex; align-items:center; gap:8px; background:var(--plocha-karta); border:1.5px solid var(--obrys-tlacitka); color:var(--text); border-radius:var(--r-pill); padding:4px 12px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; box-shadow:var(--e1);
+/* DRUH NABÍDKY JE TATÁŽ DLAŽDICE JAKO DRUH POZEMKU (29. 10.).
+   Majitel zakroužkoval pilulky Vše/Prodej/Dražba/Exekuce spolu s celým
+   panelem: „toto by mělo být spojené se zbytkem." Byl to jediný filtr
+   na stránce, který stál mimo panel a mluvil jinou řečí — pilulka
+   (--r-pill) proti dlaždici (--r-ovladani), 13px písmo proti 14,
+   odznak s počtem uprostřed řádky proti počtu ve sloupci vpravo.
+   Celý recept proto drží .mcv-btn o kus výš; tady zbývá jen to, čím se
+   druh nabídky liší, a liší se věcně: vybírá se JEDEN, ne několik.
+   Zaškrtávátko (.mcp-v) proto nemá a na jeho místě stojí ikona.
+   (Byla to taky jediná řádka ovládání na webu, kde šlo o zapnutí
+   stavu „jeden z" — a pilulka pro to není horší tvar. Horší je mít
+   na jedné obrazovce dva tvary na jednu práci.) */
+.filter-chip{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+  font:inherit; font-size:14px; font-weight:600;
+  cursor:pointer; min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
+  border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
   /* Jediné `transition:all` na webu bylo tady — a mělo následek: animoval
      se i OBRYS, takže prstenec po stisku tabulátoru nenaskočil, ale
      dojížděl. Kdo prochází web klávesnicí rychle, nevidí, kde stojí.
@@ -2344,54 +2334,20 @@ h1 em{ color:var(--znacka-svetla);
   transition:var(--prechod);}
 /* IKONA MÍSTO BAREVNÉHO PUNTÍKU. Puntík (.filter-chip .c) nesl tvar
    značky z mapy a byl tím zároveň její vysvětlivkou; vysvětlivka ale
-   zůstává pod mapou (.lg-dot) a tady šlo o ovládání. 16 px je táž
-   míra, jakou mají značky v ostatních ovladačích téhle řady. */
-/* TAH 2.25, NE 1.9. Web kreslí všechny ikony tahem 1,5 px na
-   obrazovce a kompenzuje to podle velikosti: 16 px při viewBoxu 24
-   znamená stroke-width 1,5 × 24 ÷ 16 = 2,25. S 1,9 vycházelo
-   1,27 px a scripts/test-tahy.mjs to spočítal dřív, než jsem si
-   toho všiml. */
+   zůstává pod mapou (.lg-dot) a tady šlo o ovládání.
+   TAH 2.25, NE 1.9. Web kreslí všechny ikony tahem 1,5 px na obrazovce
+   a kompenzuje to podle velikosti: 16 px při viewBoxu 24 znamená
+   stroke-width 1,5 × 24 ÷ 16 = 2,25. S 1,9 vycházelo 1,27 px
+   a scripts/test-tahy.mjs to spočítal dřív, než jsem si toho všiml. */
 .filter-chip .fc-ik{width:16px; height:16px; flex:none; fill:none;
   stroke:currentColor; stroke-width:2.25; stroke-linecap:round; stroke-linejoin:round;}
-/* NAJETÍ MYŠÍ OKRAJ ZTRÁCELO. border-color byla rgba(228,240,231,0.3),
-   tedy téměř bílá z tmavého režimu — na světlém štítku se okraj při
-   najetí prakticky rozpustil. Zvýrazní se, stejně jako u voleb v panelu
-   filtrů. */
-.filter-chip:hover{color:var(--text); border-color:var(--znacka);}
-/* Stisk o pixel dolů má web na jednom místě výš (.filter-chip:active
-   spolu s .copy-btn) — tady by to byl druhý zápis téhož. */
-/* Aktivní filtr „svítí" vlastní barvou kategorie — ať „Vše" a „Dražba" nesplývají */
-
-.filter-chip.active{background:var(--plocha-znacka); color:#fff; border-color:transparent; box-shadow:var(--glow);}
-/* ZAPNUTÝ ČIP MÁ PLNOU VÝPLŇ, NE PŘECHOD — a barvu, kterou paleta už má.
- *
- * Přechody si přitáhly pět barev navíc (#6C8AE6, #FFC24A, #FF6058,
- * #3FCBD8, #A46BEC), které nikde jinde na webu nejsou. Dvě z nich jely
- * na 100 % sytosti, a vedle tlumené zelené značky to byl ten důvod, proč
- * ovládání nevypadalo jako jedna věc, ale jako pět cizích.
- *
- * Nebyla to ale jen otázka vzhledu. Čip má bílý text a na světlejším
- * konci přechodu kontrast nevycházel ANI U JEDNOHO z pěti:
- *
- *     Prodej 3,27 · Dražba 3,71 · Exekuce 2,97 · Obec 1,95 · Majitel 3,56
- *
- * Norma WCAG AA žádá 4,5. U dražby to bylo vidět — má proto výjimku
- * s tmavým textem — ale u obce s 1,95 : 1 si toho nevšiml nikdo.
- *
- * Výplní jsou teď odstíny `--c-*-ink`, tedy ty, které paleta drží pro
- * text na světlém: 6,97 až 8,27 na bílé. Leží tím ve stejném pásmu jako
- * značková zelená na čipu „Vše" (7,96), takže řádka čipů konečně vypadá
- * jako jedna rodina. Puntíky na mapě si syté odstíny nechávají — tam
- * mají vyniknout proti leteckému snímku, ne nést text.
- * Měří to scripts/test-kontrast.mjs. */
-/* ZAPNUTÝ ČIP JE ZELENÝ, AŤ JE TO KTERÝKOLI. Každý druh měl vlastní
-   výplň (--c-sale-ink, --c-drazba-ink, …), tedy pět barev na jednu
-   práci: „tohle je zapnuté". Majitel 29. 10.: „odeber ty barvičky."
-   Zapnutý stav je na celém webu značková zeleň; barvy druhů zůstávají
-   tam, kde nesou význam — na mapě a v její vysvětlivce.
-   Pět pravidel je tím pryč a s nimi i výjimka s tmavým textem
-   u dražby, která existovala jen proto, že ta jedna výplň byla
-   světlejší než ostatní. */
+/* Popisek si bere místo, počet se drží vpravo — jako u všech ostatních
+   dlaždic v panelu. Stálá šířka počtu je tam schválně, viz .mcv-n. */
+.filter-chip > *:not(.fc-ik):not(.chip-n){flex:1 1 auto; min-width:0; line-height:1.2;}
+.filter-chip:hover{border-color:var(--znacka); background:var(--plocha-zapustena);}
+/* Vybraný druh nese plnou zeleň, stejně jako zapnutá dlaždice vedle.
+   Barvy druhů zůstávají tam, kde nesou význam — na mapě a v legendě. */
+.filter-chip.active{background:var(--plocha-znacka); border-color:var(--plocha-znacka); color:#fff;}
 /* Rozbalovací panel „Cena, výměra a řazení" — výchozí stav je klidný, detaily na klepnutí */
 /* Filtry v jednom bloku. Dřív to byla šedá krabička uvnitř bílého panelu a
    v ní další bílé krabičky — každé políčko vypadalo jako samostatná věc.
@@ -2610,11 +2566,13 @@ h1 em{ color:var(--znacka-svetla);
    popisek vejde na jeden řádek. Naměřeno na telefonu: mřížka druhů
    spadla z 302 na 230 px, tedy o 72 px — a to je nad výhledem, takže
    se při každém zaškrtnutí posunulo všechno, na co se člověk zrovna
-   díval. Pět znaků pokryje i „1 884", což je nejvyšší počet, jaký může
-   kterýkoli štítek ukázat (všechny nabídky). S tabular-nums má každá
+   díval. Rezervuje se nejširší počet, jaký může kterýkoli
+   štítek ukázat: všechny nabídky, dnes „1 884". Naměřeno 34,3 px,
+   4,5 ch dává 35,1 — taktak, a ani pixel navíc: co se ubere počtu,
+   bere si popisek, který se jinak láme o řádek víc. S tabular-nums má každá
    číslice stejnou šířku, takže se číslo nehýbe ani při přepočtu. */
 .mcv-n{margin-left:auto; padding-left:8px; flex:none; font-size:12px; font-weight:700;
-  min-width:5ch; text-align:right;
+  min-width:4.5ch; text-align:right;
   color:var(--muted); font-variant-numeric:tabular-nums;}
 .mcv-btn.on .mcv-n{color:rgba(255,255,255,0.82);}
 /* Štítek, pod kterým při dnešním nastavení nic není. Neschovává se —
@@ -2702,7 +2660,7 @@ h1 em{ color:var(--znacka-svetla);
 .msv-ovladani{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
 /* TÉŽ VELIKOST JAKO SOUSEDÉ V ŘADĚ. Dvanáctka tu stála nahá, bez
    důvodu, kdežto „Porovnat" vedle i rozbalovátko řazení pod ní mají
-   13 px (viz .msv-razeni .map-select níž). Pro telefon už to srovnané
+   13 px. Pro telefon už to srovnané
    bylo a stojí tam i proč — na monitoru dvanáctka přežila. Naměřeno
    na 1280 px: „Uložené" 12 px vedle „Porovnat (0)" 13 px v jedné
    liště. Výšku 36 px nechávám: tu má i rozbalovátko řazení. */
@@ -2734,19 +2692,13 @@ h1 em{ color:var(--znacka-svetla);
    srovnané už dřív (blok u 560 px); tady se totéž říká pro všechny
    šířky, ať se to nerozchází podle toho, kdo se zrovna dívá. */
 .msv-ulozene{border-radius:var(--r-ovladani); background:var(--plocha-karta);}
-.msv-razeni{display:flex; min-width:0;}
-.msv-razeni .map-select{width:auto; min-width:0; max-width:210px; min-height:36px; padding:4px 28px 4px 8px; font-size:13px;}
+/* ŘAZENÍ UŽ V TÉHLE ŘADĚ NESTOJÍ (29. 10.). Majitel ho poslal do
+   panelu filtrů („a řazení, tedy v té tabulce"), takže .msv-razeni
+   a dvě pravidla, která ho v téhle řadě smršťovala, neměla na čem
+   zabrat — našel to scripts/test-mrtve-styly.mjs. V řadě zůstalo
+   „Uložené" a nástroje výpisu, které si sem skládá js/main.js. */
 @media (max-width:560px){
-  .msv-ovladani{justify-content:space-between;}
-  /* Řazení se smrskne, aby se vedle něj vešlo „Uložené". S flex-basis
-     auto si bralo celých 288 px z 288 a osmdesátipixelové „Uložené"
-     odsunulo na vlastní řádek — čtyři ovládací prvky pod sebou a
-     250 px, než začne první nabídka.
-     A ŘÁDEK SE NELÁME. Se zalomením si šířky sedly na 79,6 + 8 + 200,4
-     = přesně 288 px z 288 — tedy o zlomek pixelu přes, a pruh naskočil
-     zpátky na dva řádky (96 px místo 44). Rozbalovač se radši zúží. */
-  .msv-ovladani{flex-wrap:nowrap;}
-  .msv-razeni{flex:1 1 120px; min-width:0;}
+  .msv-ovladani{justify-content:space-between; flex-wrap:nowrap;}
 }
 .mcv-pozn{margin:4px 0 0; font-size:12px; line-height:1.5; color:var(--muted);}
 .mcv-pozn[hidden]{display:none;}
@@ -2916,8 +2868,7 @@ h1 em{ color:var(--znacka-svetla);
 .cdd-native{position:absolute; width:1px; height:1px; padding:0; margin:0; overflow:hidden; clip:rect(0 0 0 0); border:0; opacity:0; pointer-events:none;}
 /* NAŠEPTANÁ VÝJIMKA, KTEROU PŘEBILA SPECIFIČNOST. Pravidlo o řádek výš
    zmenšuje původní <select> na 1×1 px, jenže .mc-hodnota-radek .map-select
-   a .msv-razeni .map-select jsou specifičtější a vracely mu šířku i výšku
-   zpátky. Naměřeno: #map-perm2 83×44 px, #map-sort 242×44 px — neviditelné
+   je specifičtější a vracela mu šířku i výšku zpátky. Naměřeno: #map-perm2 83×44 px, #map-sort 242×44 px — neviditelné
    a neklikací (opacity:0, pointer-events:none), ale s plnou krabicí přes
    vlastní tlačítko. Škodu to nedělalo, past ano: kdyby někdo
    pointer-events zrušil, byla by přes ovládání neviditelná vrstva.
@@ -3791,8 +3742,16 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .opp-chips > .opp-tich{background:var(--plocha-jemna); border-color:var(--line);
   color:var(--popisek);}
 /* Počet nabídek na filtračních tlačítkách */
-.chip-n{display:inline-block; margin-left:4px; font-size:12px; font-weight:700; padding:0 4px; border-radius:var(--r-sm); background:var(--plocha-jemna-vic); color:var(--muted); min-width:16px; line-height:16px; text-align:center; vertical-align:middle;}
-.filter-chip.active .chip-n{background:rgba(var(--plocha-tmava-2-rgb),0.3); color:inherit;}
+/* POČET JAKO U OSTATNÍCH DLAŽDIC. Byl to odznak s vlastní plochou
+   a zaoblením uprostřed řádky; u druhu pozemku i u sítí přitom počet
+   stojí holý vpravo ve sloupci, aby se daly porovnat očima. Dvě podoby
+   téhož údaje na jedné obrazovce. Zůstává jedna — ta druhá.
+   Stálá šířka je ze stejného důvodu jako u .mcv-n: bez ní se při
+   každém zaškrtnutí přeskládá panel. */
+.chip-n{margin-left:auto; padding-left:8px; flex:none; font-size:12px; font-weight:700;
+  min-width:4.5ch; text-align:right;
+  color:var(--muted); font-variant-numeric:tabular-nums;}
+.filter-chip.active .chip-n{color:rgba(255,255,255,0.82);}
 
 /* Zavírací lišta přes celou šířku nahoře */
 /* Výčet („elektřina, voda, kanalizace, příjezd") se do půlky mřížky
@@ -4529,9 +4488,12 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
        prázdný (čtvrtý, nepojmenovaný sloupec). Tak to má Idealista
        i Zillow — ovládání je vlevo, vpravo je vzduch, ne natažené pole. */
     grid-template-columns:minmax(220px, 520px) auto auto minmax(0, 1fr);
+    /* Druhý řádek („rychle") nesl odznaky druhů. Od 29. 10. jsou
+       v panelu mezi ostatními filtry, takže řádek zmizel a lišta je
+       o jeden nižší — na notebooku 1280×700 je to 52 px navíc pro
+       výpis. */
     grid-template-areas:
-      "hledani okoli  filtry ."
-      "rychle  rychle rychle rychle";}
+      "hledani okoli filtry .";}
   /* OBAL ROZBALOVÁNÍ TU NESMÍ BÝT VIDĚT. `.ms-rozsirene` přibylo kvůli
      telefonu (schová všechno kromě pole s lupou) a tiše rozbilo tuhle
      mřížku: okolí, rychlé filtry a „Druh, cena, výměra a další" přestaly
@@ -4546,7 +4508,6 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .map-controls-panel > .map-search{grid-area:hledani;}
   .map-controls-panel .map-okoli{grid-area:okoli;}
   .map-controls-panel .ms-filters{grid-area:filtry; justify-self:stretch;}
-  .map-controls-panel .ms-group{grid-area:rychle;}
   /* Tlačítko zavírání patří jen telefonu — na širokém displeji se nic
      neschovává, takže by to byl pátý prvek v liště bez práce. */
   .map-controls-panel .msr-hotovo{display:none;}
@@ -4567,14 +4528,13 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   .map-controls-panel .ms-rozsirene > *{margin-top:0;}
   .map-controls-panel > .map-search{min-width:0;}
   .map-controls-panel .map-near-btn{margin-top:0; width:auto; white-space:nowrap;}
-  .map-controls-panel .ms-group{min-width:0;}
-  /* Rozpoznané odznaky i rychlé filtry na jeden řádek: v liště nesmí
-     druhý řádek odznaků zvednout celou lištu a ukrojit ze seznamu. */
-  .map-controls-panel .map-filters, .map-controls-panel .ms-chipy{flex-wrap:nowrap;
+  /* Rozpoznané odznaky na jeden řádek: v liště nesmí druhý řádek
+     odznaků zvednout celou lištu a ukrojit ze seznamu. (Odznaky druhů
+     tu stávaly taky; od 29. 10. jsou v panelu a mřížku si řeší samy.) */
+  .map-controls-panel .ms-chipy{flex-wrap:nowrap;
     overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
-  .map-controls-panel .map-filters::-webkit-scrollbar,
   .map-controls-panel .ms-chipy::-webkit-scrollbar{display:none;}
-  .map-controls-panel .map-filters > *, .map-controls-panel .ms-chipy > *{flex:none;}
+  .map-controls-panel .ms-chipy > *{flex:none;}
   /* Filtry jako plovoucí panel. Rám i pozadí drží panel, ne <details>. */
   .ms-filters{border:0; background:none; overflow:visible;}
   .ms-filters .msf-summary{border:1px solid var(--line-strong); border-radius:var(--r-ovladani);
@@ -7564,16 +7524,12 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     font-size:13px; font-weight:600;}
   /* Zapnuté „Uložené" zůstává zelené — to není nejednotnost, to je stav. */
   .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
-  /* ODZNAKY DRUHŮ ROVNÝM DÍLEM, NE PODLE DÉLKY SLOVA.
-     Naměřeno na 390 px: „Vše" 89 px, „Prodej" 126, „Dražba" 122,
+  /* ODZNAKY DRUHŮ ROVNÝM DÍLEM — řeší se samo od 29. 10.
+     Naměřeno kdysi na 390 px: „Vše" 89 px, „Prodej" 126, „Dražba" 122,
      „Exekuce" 133 — čtyři různé šířky ve dvou řadách a roztřepený
-     pravý okraj. Je to táž nejednotnost, kterou majitel poslal
-     vyfocenou u ovládání nad výpisem, jen o pruh výš; řeší se stejně
-     a na tutéž míru (181 px na 390px displeji).
-     Mřížka, ne flex: tady nejde o vnitřek odznaku (ten zůstává
-     inline-flex), jen o to, jak si rozdělí řádek. */
-  .map-filters{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;}
-  .map-filters > .filter-chip{width:100%; min-width:0; justify-content:center;}
+     pravý okraj; tenhle blok je srovnával na jednu míru. Od stěhování
+     druhu nabídky do panelu nese #map-filters třídu .mcv-rada, tedy
+     tutéž mřížku jako druh pozemku a sítě, a dělá to za něj. */
   /* POLE A PŘEPÍNAČ POD NÍM MAJÍ TUTÉŽ VÝŠKU. Od 29. 10. stojí
      přepínač na vlastním řádku pod polem a měl 48 px proti 44
      u pole — dva ovladače nad sebou, každý jinak vysoký, je přesně
@@ -7593,12 +7549,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
   .ms-vysledky .mc-sub{color:var(--muted); font-weight:600;}
   .msv-ulozene{min-height:34px; padding:4px 8px;}
-  /* 13px jako sousedé. Dvanáctka tu byla jediná v celé řadě a dělala
-     z řazení „menší" ovladač, ačkoli je stejně důležitý jako „Uložené".
-     A ŽÁDNÝ STROP ŠÍŘKY: 150 px z něj dělalo užší políčko než
-     „Uložené" vedle (193 px), tedy přesně tu nejednotnost, kvůli které
-     se tahle řada rovnala. */
-  .msv-razeni .map-select{min-height:34px; max-width:none; width:100%; font-size:13px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva.
      DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek
@@ -8153,7 +8103,7 @@ body > footer{flex:none;}
    Platí to jen pro DOTYK (pointer: coarse) — myš tolik místa
    nepotřebuje a na monitoru by z toho byla jen řídká plocha. */
 @media (pointer: coarse) {
-  .mvt-btn, .mc-prep, .map-select, .msv-razeni .map-select,
+  .mvt-btn, .mc-prep, .map-select,
   /* „Zobrazit dražby po termínu" mělo 44 px jen náhodou: popisek se
      zalomil na dva řádky. Jakmile se mezi slova dostala nezlomitelná
      mezera (česká sazba), vešel se na jeden a tlačítko spadlo na 37 px.

@@ -16,6 +16,7 @@ import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
+import { nastavRazeni } from './zkouska-razeni.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -82,7 +83,7 @@ const karty = (p) => p.evaluate(() => [...document.querySelectorAll('.opp-item')
     vymera: m ? +m[1].replace(/ /g, '') : null,
   };
 }));
-const serad = async (p, mode) => { await p.selectOption('#map-sort', mode); await p.waitForTimeout(900); return karty(p); };
+const serad = async (p, mode) => { await nastavRazeni(p, mode); await p.waitForTimeout(900); return karty(p); };
 /* Prázdný seznam projde každou podmínkou na řazení, protože .every()
    nad ničím vrací true. Kdyby se tedy některé řazení rozbilo tak, že
    nevykreslí ani jednu kartu, test by to pochválil. Proto se nejdřív
@@ -125,7 +126,7 @@ const klesa = (x) => x.length > 0 && x.every((v, i) => i === 0 || x[i - 1] >= v)
   /* „Náhodně" musí zamíchat i podruhé. Kdo na to klepne znovu, čeká nové
      pořadí — ne to samé, co má před sebou. */
   const nahodne1 = await serad(p, 'nahodne');
-  await p.selectOption('#map-sort', 'demand');
+  await nastavRazeni(p, 'demand');
   await p.waitForTimeout(600);
   const nahodne2 = await serad(p, 'nahodne');
   pravda('„Náhodně" zamíchá pokaždé znovu',

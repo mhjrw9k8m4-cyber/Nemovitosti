@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
+import { nastavRazeni } from './zkouska-razeni.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -102,7 +103,7 @@ await page.waitForTimeout(3000);
    když jich je aspoň pět). Hledáním by se tedy vypnulo to, co se měří.
    Řazením „Nejlepší cena/m²" se obě sledované nabídky dostanou na
    první stranu a sada zůstane celá. */
-await page.selectOption('#map-sort', 'perm2_asc');
+await nastavRazeni(page, 'perm2_asc');
 await page.waitForTimeout(1200);
 
 async function karta(jmeno) {
