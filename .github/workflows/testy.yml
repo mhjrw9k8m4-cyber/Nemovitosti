@@ -876,6 +876,9 @@ jobs:
       - name: Odkryté stavy (zaoblení i tam, kam se hlídači nedostanou)
         run: node scripts/test-odkryte.mjs
 
+      - name: Graf všude (křivka vývoje ceny na každém druhu stránky pozemku)
+        run: node scripts/test-graf-vsude.mjs
+
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs

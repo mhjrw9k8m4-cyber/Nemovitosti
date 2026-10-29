@@ -759,6 +759,46 @@ export function migrujPredvykresleni(sablona, h) {
    vzorku dostala ukončená stránka.
    Pořadí se proto rovná i tudy: ostrůvek se přesune nad první skript
    z js/. */
+/* KŘIVKA VÝVOJE CENY DO UŽ VZNIKLÝCH STRÁNEK.
+ * Stránka ukončené nabídky se nepřegenerovává — jen se označí
+ * a zmigruje. Nese tedy značkování ze dne, kdy vznikla, a sekce
+ * grafu v něm není: naměřeno 29. 10. na vzorku 400 stránek, že ji
+ * má 343 ze 344 živých a NULA z 56 ukončených.
+ * Pozemek přitom nikam nezmizel a hladina cen v jeho okolí platí
+ * dál. Sekce se proto doplní před rozcestník „Kam dál", kde ji má
+ * i čerstvě vygenerovaná stránka.
+ * IDEMPOTENTNÍ: co už tam je, se nepřidává. A bez okresu se nedělá
+ * nic — bez něj nemá graf co hledat. */
+export function migrujGrafCeny(h, okresKraj) {
+  if (h.indexOf('data-graf-cen') >= 0) return h;
+  /* OKRES SE ČTE ZE STRÁNKY, NE Z DAT. Nabídka v datech logicky není
+     (proto je stránka ukončená), ale její statický článek okres nese:
+     `<dt>Okres</dt><dd>…`. Bere se z něj i tehdy, když je obalený
+     odkazem na okresní stránku. */
+  const m = h.match(/<dt>Okres<\/dt><dd>(?:<a[^>]*>)?([^<]+)/);
+  const okres = m ? m[1].trim() : '';
+  const kraj = okres && okresKraj ? (okresKraj[okres] || '') : '';
+  if (!okres) return h;
+  /* DVĚ KOTVY, NE JEDNA. Rozcestník „Kam dál" nemá každá stránka:
+     z 56 ukončených ho 11 postrádalo a ty by sekci nedostaly. Konec
+     statického článku má naproti tomu každá — tam se sekce vloží,
+     když rozcestník není. */
+  let kam = h.indexOf('<h2>Kam dál</h2>');
+  if (kam < 0) kam = h.indexOf('</article>');
+  if (kam < 0) return h;
+  const e = (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const zalohy = (kraj ? `kraj|${kraj}|v kraji ${kraj};` : '') + 'cr||v celé ČR';
+  const sekce = `<section class="pz-vyvoj" id="pz-vyvoj">`
+    + `<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>`
+    + `<div class="pz-vyvoj-karta" data-graf-cen data-strucne data-uroven="okres"`
+      + ` data-nazev="${e(okres)}" data-kde="v okrese ${e(okres)}"`
+      + ` data-zalohy="${e(zalohy)}"></div>`
+    + `<p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p>`
+    + `</section>`;
+  return h.slice(0, kam) + sekce + h.slice(kam);
+}
+
 export function migrujOstrovNahoru(h) {
   const ostrov = /<script>window\.PK_POZEMEK=\{[^<]*?\};<\/script>\n?/.exec(h);
   if (!ostrov) return h;
@@ -1425,6 +1465,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
       + `</div>`
     : '';
 
+  const krajGrafu = (CENY && CENY.OKRES_KRAJ) ? CENY.OKRES_KRAJ[d.okres] : null;
   const staticky =
     `<article class="pz-staticky">`
     + nahled
@@ -1511,6 +1552,26 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
        čtyři místa jako v plném detailu. Skládá se z TÉŽE tabulky, kterou
        dostane prohlížeč v ostrůvku — dvě různé nabídky odkazů na jedné
        stránce by si odporovaly. */
+    /* KŘIVKA VÝVOJE CENY I NA VYŘAZENÉ STRÁNCE.
+       Naměřeno 29. 10. na vzorku 140 stránek pozemků: ze 116 živých
+       nabídek mělo graf 114, kdežto ze 24 VYŘAZENÝCH ani jedna. Důvod
+       nebyl v datech — vyřazená stránka si js/min/graf-cen.js stahuje
+       stejně jako živá — ale v tom, že detail staví js/pozemek.js
+       a vyřazená stránka ho nestaví: má statický článek odsud. Chybělo
+       tedy jen místo, kam graf nakreslit.
+       Pozemek nikam nezmizel a hladina cen v jeho okolí platí dál, tak
+       ať ji ta stránka ukáže. Zápis je týž jako v pzVyvojHtml
+       (js/pozemek.js), včetně záloh kraj → celá ČR; třídu „nakresleno"
+       si od 29. 10. nasazuje kreslič sám, takže to funguje i tady. */
+    + (d.okres
+      ? `<section class="pz-vyvoj" id="pz-vyvoj">`
+        + `<h2 class="pz-sect-h">Vývoj ceny v okolí</h2>`
+        + `<div class="pz-vyvoj-karta" data-graf-cen data-strucne data-uroven="okres"`
+          + ` data-nazev="${esc(d.okres)}" data-kde="v okrese ${esc(d.okres)}"`
+          + ` data-zalohy="${esc((krajGrafu ? `kraj|${krajGrafu}|v kraji ${krajGrafu};` : '') + 'cr||v celé ČR')}"></div>`
+        + `<p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p>`
+        + `</section>`
+      : '')
     + (kamDalSem.length
       ? `<h2>Kam dál</h2><ul>`
         + kamDalSem.map((x) => `<li><a href="${esc(x.u)}">${esc(x.t)}</a>`
@@ -2015,7 +2076,9 @@ export function generuj() {
          ukončené stránky se jinak nepřepisují, takže by si 221 z nich
          komentáře z předlohy neslo až do smazání. */
       const migrovano = migrujMrtvyOdkazOkresu(bezKomentaruVHtml(migrujPopisBezReklamy(migrujPrebytecnyDiv(migrujUkoncenaData(
-        migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))), uz[1])))));
+        migrujGrafCeny(
+          migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))),
+          (CENY && CENY.OKRES_KRAJ) || null), uz[1])))));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
     }

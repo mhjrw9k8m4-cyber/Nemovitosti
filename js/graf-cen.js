@@ -381,7 +381,22 @@
         var v = vyberRadu(H, m.uroven, m.nazev);
         // Žádná klidná řada → zkusí se další záloha.
         if (!v) continue;
-        try { if (kresli(el, H, v, m.kde, strucne) === true) return true; }
+        try {
+          if (kresli(el, H, v, m.kde, strucne) === true) {
+            /* ZNAČKU „NAKRESLENO" SI NASAZUJE GRAF SÁM. Dřív ji dával
+               js/pozemek.js, který kartu montuje do detailu — jenže
+               VYŘAZENÉ nabídky detail z JS nestaví, mají statický
+               článek z generátoru. Graf tam tedy kreslit šel, ale sekce
+               zůstala schovaná (.pz-vyvoj bez .ma-graf má skrytý nadpis
+               i rám). Naměřeno 29. 10. na vzorku 140 stránek: ze 24
+               vyřazených neměla graf ANI JEDNA, kdežto ze 116 živých
+               ho mělo 114. Když si třídu nasadí sám kreslič, platí to
+               na obou druzích stránek stejně. */
+            var sekce = el.closest ? el.closest('.pz-vyvoj') : null;
+            if (sekce) { sekce.classList.add('ma-graf'); sekce.classList.remove('ceka'); }
+            return true;
+          }
+        }
         catch (e) { return false; /* graf navíc nesmí shodit stránku */ }
       }
       return false;

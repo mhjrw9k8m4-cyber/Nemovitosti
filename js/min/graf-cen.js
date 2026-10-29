@@ -222,7 +222,14 @@
         var v = vyberRadu(H, m.uroven, m.nazev);
 
         if (!v) continue;
-        try { if (kresli(el, H, v, m.kde, strucne) === true) return true; }
+        try {
+          if (kresli(el, H, v, m.kde, strucne) === true) {
+
+            var sekce = el.closest ? el.closest('.pz-vyvoj') : null;
+            if (sekce) { sekce.classList.add('ma-graf'); sekce.classList.remove('ceka'); }
+            return true;
+          }
+        }
         catch (e) { return false;   }
       }
       return false;
