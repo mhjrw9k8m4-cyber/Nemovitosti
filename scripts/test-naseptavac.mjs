@@ -395,14 +395,17 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   pravda('a klepnutím se oprava rovnou vyhledá', false, 'tlačítko s opravou se vůbec neukázalo');
 }
 
-/* --- 6) Cena a výměra: souhrn v panelu, výběr na celé obrazovce -------
+/* --- 6) Cena a výměra se nastavují V PANELU ---------------------------
  *
- * Tři podoby před touhle (pět pilulek → osm s počty → posuvník) měly
- * společné, že se snažily vejít do úzkého sloupce mezi ostatní filtry.
- * Tam je na ně málo místa a všechny působily stísněně. Teď je v panelu
- * jen souhrn a výběr dostane celou obrazovku. Test hlídá, že panel je
- * opravdu krátký, že se výběr dá ovládat klepáním do sloupců a že se to,
- * co se vybralo, propíše do výpisu i zpátky do souhrnu. */
+ * Čtyři podoby před touhle: pět pilulek → osm s počty → posuvník →
+ * souhrnná řada, která otevírala celou obrazovku s histogramem.
+ * 29. 10. majitel zrušil nejdřív graf a pak i to okno: „nechápu, proč
+ * mě to hází na tuhle stránku, proč mě to nenechá v menu. Prostě ať mi
+ * tam vyskočí klávesnice na psaní."
+ *
+ * Zkouška tedy měří tohle: políčka od–do jsou v panelu, klepnutí do
+ * nich jen zaostří (žádné okno přes obrazovku), napsané číslo zúží
+ * výpis a tlačítko v patě panelu průběžně hlásí, kolik toho zbylo. */
 {
   const { ctx: ctx2, p: p2 } = await otevri(TELEFON, 'index.html');
   await rozbalHledani(p2);
@@ -415,140 +418,79 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   });
   await p2.waitForTimeout(400);
 
-  const panel = await p2.evaluate(() => {
-    const r = document.querySelector('.mc-shrnuti');
-    return r ? {
-      vyska: Math.round(r.getBoundingClientRect().height),
-      tlacitek: r.querySelectorAll('.mcs-btn').length,
-      texty: [...r.querySelectorAll('.mcs-btn')].map((b) => b.textContent.trim().replace(/\s+/g, ' ')),
-      posuvniku: document.querySelectorAll('.map-controls .mc-posuv, .map-controls .mc-rychle').length,
-    } : null;
+  const vPanelu = await p2.evaluate(() => {
+    const pole = ['map-cena-od', 'map-cena', 'map-area', 'map-area-do']
+      .map((id) => document.getElementById(id));
+    if (pole.some((e) => !e)) return null;
+    const panel = document.querySelector('.map-controls');
+    return {
+      vsechnaVPanelu: pole.every((e) => panel && panel.contains(e)),
+      videt: pole.every((e) => e.getClientRects().length > 0),
+      pismo: pole.map((e) => parseFloat(getComputedStyle(e).fontSize)),
+      vyska: pole.map((e) => Math.round(e.getBoundingClientRect().height)),
+      klavesnice: pole.map((e) => e.getAttribute('inputmode')),
+      obrazovek: document.querySelectorAll('.rz-ov').length,
+      souhrnu: document.querySelectorAll('.mc-shrnuti, .mcs-btn').length,
+    };
   });
-  pravda('v panelu je souhrnná řada pro cenu i výměru',
-    !!panel && panel.tlacitek === 2, JSON.stringify(panel));
-  pravda('a zabere míň než sto pixelů (dřív to byly stovky)',
-    !!panel && panel.vyska < 100, panel ? panel.vyska + ' px' : '—');
-  pravda('v panelu už nezůstala ani pilulka, ani posuvník',
-    !!panel && panel.posuvniku === 0, panel ? String(panel.posuvniku) : '—');
-  pravda('dokud se nic nevybralo, souhrn říká „libovolná"',
-    !!panel && panel.texty.every((t) => /libovoln/i.test(t)), panel ? panel.texty.join(' | ') : '—');
-
-  // Otevřít cenu.
-  await p2.locator('.mcs-btn').first().click();
-  await p2.waitForTimeout(400);
-  const okno = p2.locator('.rz-ov:not([hidden])');
-  pravda('klepnutí na souhrn otevře výběr přes celou obrazovku', await okno.count() === 1);
-  /* SLOUPCOVÝ GRAF TU UŽ NENÍ (29. 10.). Stál nad políčky od–do a dal
-     rozmezí vybrat klepnutím; majitel ho nechal zrušit („ten graf nad
-     tím dej pryč a nech tam jen to nastavení ceny"). Kontroly, které
-     měřily sloupce — kolik jich je, jak jsou vysoké a široké, co dělá
-     první a druhé klepnutí — tedy neměly co měřit. Místo nich se měří
-     to, co po grafu zbylo: dvě políčka a počet, který se při psaní mění.
-     A hlídá se, že se graf nevrátí zadní cestou. */
-  pravda('a žádný sloupcový graf v něm není',
-    await okno.locator('.rz-graf, .rz-osa, .rz-napoveda').count() === 0,
-    'majitel ho nechal zrušit, tak tam nemá co dělat');
-  const pole = await p2.evaluate(() => {
-    const ov = document.querySelector('.rz-ov:not([hidden])');
-    const vst = ov ? [...ov.querySelectorAll('input')] : [];
-    return vst.map((e) => ({ id: e.id,
-      pismo: parseFloat(getComputedStyle(e).fontSize),
-      vyska: Math.round(e.getBoundingClientRect().height) }));
-  });
-  pravda('zůstala v něm obě políčka od–do', pole.length === 2, JSON.stringify(pole));
-  /* 16 px, jinak iPhone při zaostření pole celou stránku přiblíží —
-     tutéž míru drží každé psací pole na webu. A 44 px na prst. */
-  pravda('a jsou to pořádná psací pole (16px písmo, 44 px na prst)',
-    pole.every((x) => x.pismo >= 16 && x.vyska >= 44), JSON.stringify(pole));
-  const hotovo0 = await okno.locator('.rz-hotovo').innerText();
-  pravda('tlačítko dole rovnou říká, kolik nabídek je vidět', /\d/.test(hotovo0), hotovo0);
-  pravda('dokud není co mazat, „Vymazat" se nenabízí',
-    !(await okno.locator('.rz-vymaz').isVisible()),
-    'tlačítko, po kterém se nic nestane, se čte jako „web nereaguje"');
-  // Okno má přijet, ne se zjevit — stejné pravidlo jako u hlavičky.
-  const prijezd = await p2.evaluate(() => {
-    const c = getComputedStyle(document.querySelector('.rz-ov:not([hidden])'));
-    return { jmeno: c.animationName, doba: parseFloat(c.animationDuration) || 0 };
-  });
-  pravda('okno přijíždí krátkou animací, ne cvaknutím',
-    prijezd.jmeno === 'rzPrijezd' && prijezd.doba >= 0.15 && prijezd.doba <= 0.6,
-    `${prijezd.jmeno}, ${prijezd.doba} s`);
-
-  // Napsané číslo musí platit hned: počet dole se mění při psaní.
-  await okno.locator('#map-cena-od').fill('200000');
-  await p2.waitForTimeout(600);
-  const po1 = await p2.evaluate(() => ({
-    hotovo: document.querySelector('.rz-ov:not([hidden]) .rz-hotovo').textContent,
-    od: document.getElementById('map-cena-od').value,
-  }));
-  pravda('napsané „od" se drží v políčku', po1.od === '200000', `„${po1.od}"`);
-  pravda('a teprve teď se nabídne „Vymazat"', await okno.locator('.rz-vymaz').isVisible());
-  pravda('počet na tlačítku se při psaní změní', po1.hotovo !== hotovo0, `${hotovo0} → ${po1.hotovo}`);
-
-  await okno.locator('#map-cena').fill('900000');
-  await p2.waitForTimeout(600);
-  const po2 = await p2.evaluate(() => ({
-    hotovo: document.querySelector('.rz-ov:not([hidden]) .rz-hotovo').textContent,
-    od: document.getElementById('map-cena-od').value, do: document.getElementById('map-cena').value,
-  }));
-  pravda('druhé číslo rozsah uzavře, nezahodí první', +po2.od === 200000 && +po2.do === 900000,
-    `${po2.od}–${po2.do}`);
-  pravda('a počet se změní znovu', po2.hotovo !== po1.hotovo, `${po1.hotovo} → ${po2.hotovo}`);
-
-  // Zavřít a zkontrolovat souhrn i výpis.
-  await okno.locator('.rz-hotovo').click();
-  await p2.waitForTimeout(500);
-  const poZavreni = await p2.evaluate(() => ({
-    otevreno: !!document.querySelector('.rz-ov:not([hidden])'),
-    souhrn: document.querySelector('.mcs-btn').textContent.trim().replace(/\s+/g, ' '),
-    zvyrazneno: document.querySelector('.mcs-btn').classList.contains('mcs-aktivni'),
-    vypis: document.querySelectorAll('#opp-list li').length,
-  }));
-  pravda('okno se zavře', !poZavreni.otevreno);
-  pravda('souhrn v panelu ukazuje vybraný rozsah',
-    !/libovoln/i.test(poZavreni.souhrn), poZavreni.souhrn);
-  pravda('a souhrn je vidět, že je aktivní', poZavreni.zvyrazneno);
-  pravda('výpis něco ukazuje', poZavreni.vypis > 0, String(poZavreni.vypis));
-
-  /* Ovládání klávesnicí. Okno překrývá celou stránku, takže z něj
-     tabulátor nesmí utéct — jinak by se člověk ovládající web klávesnicí
-     ztratil v obsahu, který není vidět. */
-  await p2.locator('.mcs-btn').first().click();
-  await p2.waitForTimeout(300);
-  pravda('souhrn hlásí čtečce, že je okno otevřené',
-    (await p2.locator('.mcs-btn').first().getAttribute('aria-expanded')) === 'true');
-  let uteklo = 0;
-  for (let i = 0; i < 30; i++) {
-    await p2.keyboard.press('Tab');
-    const uvnitr = await p2.evaluate(() => {
-      const ov = document.querySelector('.rz-ov:not([hidden])');
-      return !!(ov && ov.contains(document.activeElement));
-    });
-    if (!uvnitr) uteklo++;
+  pravda('je co měřit — v panelu jsou všechna čtyři políčka', !!vPanelu, 'některé políčko chybí');
+  if (vPanelu) {
+    pravda('cena i výměra se nastavují přímo v panelu',
+      vPanelu.vsechnaVPanelu && vPanelu.videt, JSON.stringify(vPanelu));
+    pravda('a nic neotevírá vlastní obrazovku',
+      vPanelu.obrazovek === 0 && vPanelu.souhrnu === 0,
+      `oken ${vPanelu.obrazovek}, souhrnů ${vPanelu.souhrnu} — majitel je nechal zrušit`);
+    /* 16 px, jinak iPhone při zaostření pole celou stránku přiblíží;
+       44 px na prst; a číselná klávesnice, ať se nehledají číslice. */
+    pravda('políčka mají 16px písmo a 44 px na prst',
+      vPanelu.pismo.every((x) => x >= 16) && vPanelu.vyska.every((x) => x >= 44),
+      JSON.stringify({ pismo: vPanelu.pismo, vyska: vPanelu.vyska }));
+    pravda('a vyvolají číselnou klávesnici',
+      vPanelu.klavesnice.every((x) => x === 'numeric'), JSON.stringify(vPanelu.klavesnice));
   }
-  pravda('tabulátor z okna neuteče', uteklo === 0, `${uteklo}× z 30 skončil mimo okno`);
-  await p2.keyboard.press('Escape');
-  await p2.waitForTimeout(300);
-  pravda('a po zavření to souhrn ohlásí zpátky',
-    (await p2.locator('.mcs-btn').first().getAttribute('aria-expanded')) === 'false');
 
-  // Vymazat. (Nejdřív se ujistíme, že je zavřeno — otevřené okno by
-  // klepnutí spolklo a test by místo hlášky spadl výjimkou.)
-  const zavreno = (await p2.locator('.rz-ov:not([hidden])').count()) === 0;
-  pravda('před dalším krokem je okno opravdu zavřené', zavreno,
-    'zůstalo otevřené — další kroky by klepaly do něj');
-  if (zavreno) await p2.locator('.mcs-btn').first().click();
-  await p2.waitForTimeout(300);
-  await p2.locator('.rz-ov:not([hidden]) .rz-vymaz').click({ timeout: 3000 });
+  /* Klepnutí do políčka nesmí nic otevřít ani zavřít — jen zaostřit.
+     Přesně na tohle si majitel stěžoval: „proč mě to hází na tuhle
+     stránku, proč mě to nenechá v menu". */
+  await p2.locator('#map-cena-od').click();
   await p2.waitForTimeout(400);
-  const poVymazani = await p2.evaluate(() => ({
-    pole: document.getElementById('map-cena-od').value + ',' + document.getElementById('map-cena').value,
+  const poKlepnuti = await p2.evaluate(() => ({
+    zaostreno: document.activeElement && document.activeElement.id,
+    obrazovka: !!document.querySelector('.rz-ov:not([hidden])'),
+    panelOtevreny: !!(document.getElementById('ms-filters') || {}).open,
   }));
-  pravda('„Vymazat" výběr zruší', poVymazani.pole === ',', `políčka „${poVymazani.pole}"`);
-  // Escape zavírá.
-  await p2.keyboard.press('Escape');
-  await p2.waitForTimeout(300);
-  pravda('Escape okno zavře', await p2.locator('.rz-ov:not([hidden])').count() === 0);
+  pravda('klepnutí do políčka ho jen zaostří', poKlepnuti.zaostreno === 'map-cena-od',
+    `zaostřeno „${poKlepnuti.zaostreno}"`);
+  pravda('žádná obrazovka přes celý displej nevyskočí', !poKlepnuti.obrazovka,
+    'okno .rz-ov se vrátilo');
+  pravda('a člověk zůstane v panelu', poKlepnuti.panelOtevreny, 'panel filtrů se zavřel');
+
+  // Napsané číslo musí zúžit výpis a tlačítko v patě to musí říct.
+  const pred = await p2.locator('#mcf-hotovo-t').innerText();
+  await p2.locator('#map-cena-od').fill('200000');
+  await p2.locator('#map-cena').fill('900000');
+  await p2.waitForTimeout(900);
+  const po = await p2.evaluate(() => ({
+    hotovo: (document.getElementById('mcf-hotovo-t') || {}).textContent || '',
+    od: document.getElementById('map-cena-od').value,
+    do: document.getElementById('map-cena').value,
+    karet: document.querySelectorAll('.opp-item').length,
+  }));
+  pravda('napsaná čísla v políčkách zůstanou', po.od === '200000' && po.do === '900000',
+    `${po.od}–${po.do}`);
+  pravda('tlačítko v patě panelu hlásí, kolik toho zbylo', /\d/.test(po.hotovo) && po.hotovo !== pred,
+    `„${pred}" → „${po.hotovo}"`);
+  pravda('a výpis se opravdu zúžil', po.karet > 0, 'výpis je prázdný');
+
+  // „Zrušit filtry" políčka vyprázdní.
+  await p2.evaluate(() => {
+    const b = document.getElementById('mcf-zrusit');
+    if (b) b.click();
+  });
+  await p2.waitForTimeout(700);
+  const poZruseni = await p2.evaluate(() => document.getElementById('map-cena-od').value
+    + ',' + document.getElementById('map-cena').value);
+  pravda('„Zrušit filtry" políčka vyprázdní', poZruseni === ',', `zbylo „${poZruseni}"`);
   await ctx2.close();
 }
 
@@ -829,7 +771,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
   await p.waitForTimeout(700);
 
   const v = await p.evaluate(() => {
-    const tl = [...document.querySelectorAll('.mcs-btn')];
+    const rady = [...document.querySelectorAll('.map-controls .mc-rozsah')];
     const vidno = (e) => !!e && e.getClientRects().length > 0;
     const t = document.querySelector('.msf-text');
     const ch = document.querySelector('.msf-chev');
@@ -867,11 +809,13 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     let slozeno = [255, 255, 255, 1];
     for (let i = vrstvy.length - 1; i >= 0; i--) slozeno = slozit(vrstvy[i], slozeno);
     const pozadi = `rgb(${slozeno[0]}, ${slozeno[1]}, ${slozeno[2]})`;
+    const pole = rady.reduce((a, r) => a.concat([...r.querySelectorAll('input')]), []);
     return {
-      tlacitek: tl.length,
-      sBezSipky: tl.filter((b) => !vidno(b.querySelector('.mcs-sip'))).length,
-      sBezHodnoty: tl.filter((b) => !vidno(b.querySelector('.mcs-v'))).length,
-      nizka: tl.filter((b) => b.getBoundingClientRect().height < 44).length,
+      rad: rady.length,
+      bezNavesti: rady.filter((r) => !vidno(r.querySelector('.mc-cap'))).length,
+      poli: pole.length,
+      nizka: pole.filter((e) => e.getBoundingClientRect().height < 44).length,
+      malePismo: pole.filter((e) => parseFloat(getComputedStyle(e).fontSize) < 16).length,
       popisek: t ? t.textContent.trim() : '(chybí)',
       popisekVidno: vidno(t),
       sipkaVidno: vidno(ch),
@@ -879,11 +823,17 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     };
   });
 
-  pravda('cena i výměra jsou tlačítka', v.tlacitek === 2, `nalezeno ${v.tlacitek}`);
-  pravda('a je na nich vidět, že se dají otevřít (šipka)', v.sBezSipky === 0,
-    `${v.sBezSipky} tlačítek bez šipky — pak se čtou jako vypsaný údaj`);
-  pravda('a pořád je na nich vidět nastavená hodnota', v.sBezHodnoty === 0);
-  pravda('a dají se trefit prstem (≥ 44 px)', v.nizka === 0, `${v.nizka} tlačítek je nižších`);
+  /* Do 29. 10. tu stála dvě tlačítka („Cena · libovolná"), která otevírala
+     vlastní obrazovku. Majitel je nechal zrušit — „proč mě to nenechá
+     v menu, ať mi tam vyskočí klávesnice na psaní" — takže se měří to,
+     co je v panelu dnes: dvě řady od–do. */
+  pravda('cena i výměra se nastavují v panelu', v.rad === 2, `nalezeno ${v.rad} řad od–do`);
+  pravda('a obě řady mají návěští', v.bezNavesti === 0,
+    `${v.bezNavesti} řad bez popisku — pak se neví, co se do nich píše`);
+  pravda('jsou v nich čtyři políčka', v.poli === 4, `nalezeno ${v.poli}`);
+  pravda('a dají se trefit prstem (≥ 44 px)', v.nizka === 0, `${v.nizka} políček je nižších`);
+  pravda('a mají 16px písmo (jinak iPhone při psaní přiblíží stránku)',
+    v.malePismo === 0, `${v.malePismo} políček má menší písmo`);
 
   /* Popisek lišty filtrů: musí být vidět a musí být čitelný proti pozadí.
      Bílý text na bílém panelu je přesně to, co uživatel nafotil. */
@@ -1214,7 +1164,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       capBarva: cap ? getComputedStyle(cap).color : null,
       capVerzalky: cap ? getComputedStyle(cap).textTransform : null,
       textBarva: getComputedStyle(ov).color,
-      prazdnoUSouhrnu: prazdnoVpravo('.mc-shrnuti'),
+      prazdnoUSouhrnu: prazdnoVpravo('.mc-hodnoty'),
       prazdnoUAkci: prazdnoVpravo('.mcf-akce') };
   });
   pravda('panel filtrů se dá změřit', !!v, '.map-controls se nenašlo');
@@ -1239,7 +1189,7 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       `bez popisku: ${v.bezPopisku.join(', ')}`);
     /* MRTVÉ MÍSTO. Souhrny i hlavní tlačítko se držely v jednom sloupci
        mřížky a vedle nich zůstávalo prázdno. */
-    pravda(`souhrny ceny a výměry jdou přes celou šířku (vpravo zbývá ${v.prazdnoUSouhrnu} px)`,
+    pravda(`cena a výměra jdou přes celou šířku (vpravo zbývá ${v.prazdnoUSouhrnu} px)`,
       v.prazdnoUSouhrnu !== null && v.prazdnoUSouhrnu < 24,
       `vpravo od nich leží ${v.prazdnoUSouhrnu} px prázdna z ${v.sirka} px`);
     pravda(`a hlavní tlačítko taky (vpravo zbývá ${v.prazdnoUAkci} px)`,

@@ -476,44 +476,12 @@ to{opacity:1;transform:none}
 .mc-info:hover span{border-color:var(--znacka);color:var(--znacka)}
 .mc-info[aria-expanded="true"] span{background:var(--plocha-znacka);border-color:transparent;color:#fff}
 .mc-hodnoty{grid-column:1 / -1;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);overflow:hidden}
-.mc-shrnuti{display:flex;flex-direction:column}
-.mc-hodnoty .mcs-btn{border:0;border-radius:0;background:none;min-height:48px;padding:0 12px}
-.mc-hodnoty .mcs-btn:hover{background:var(--plocha-zapustena)}
+.mc-hodnoty .mc-rozsah{padding:8px 12px}
+.mc-hodnoty .mc-rozsah>.mc-cap{font-family:inherit;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text)}
 .mc-hodnoty .mc-hodnota-radek:hover{background:var(--plocha-zapustena)}
-.mc-hodnoty>* + *,.mc-shrnuti>* + *{border-top:1px solid var(--line)}
-.mc-hodnoty .mc-shrnuti + .mc-hodnota-radek{border-top:1px solid var(--line)}
-.mcs-btn{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;font:inherit;text-align:left;cursor:pointer;min-height:58px;padding:8px 8px 8px 12px;border:1.5px solid var(--line-ui);border-radius:var(--r-sm);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
-.mcs-txt{display:flex;flex-direction:row;align-items:baseline;justify-content:space-between;gap:12px;flex:1 1 auto;min-width:0}
-.mcs-sip{width:17px;height:17px;flex:none;fill:none;stroke:var(--znacka);stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-.mcs-btn:hover{border-color:var(--znacka)}
-.mcs-btn:active{transform:translateY(1px);background:var(--plocha-tlumena)}
-.mcs-btn.mcs-aktivni{box-shadow:none}
-.mcs-k{flex:none;font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text)}
-.mcs-v{min-width:0;text-align:right;font-size:14px;font-weight:600;color:var(--muted)}
-.mcs-btn.mcs-aktivni .mcs-v{color:var(--plocha-znacka)}
-.rz-ov{position:fixed;inset:0;z-index:5000;background:var(--plocha-karta);display:flex;flex-direction:column}
-@keyframes rzPrijezd{from{opacity:0;transform:translateY(14px)}
-to{opacity:1;transform:none}
-}
-.rz-ov:not([hidden]){animation:rzPrijezd var(--cas-zakladni) cubic-bezier(.22,.61,.36,1)}
-@media (prefers-reduced-motion:reduce){.rz-ov:not([hidden]){animation:none}
-}
-.rz-hlava{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 8px;font-family:var(--font-display);font-size:16px;color:var(--text)}
-.rz-x{width:38px;height:38px;flex:none;border:0;background:none;cursor:pointer;font-size:16px;color:var(--muted);border-radius:var(--r-ovladani)}
-.rz-x:hover{background:var(--plocha-tlumena);color:var(--text)}
-.rz-telo{flex:1 1 auto;overflow-y:auto;padding:4px 12px 12px;display:flex;flex-direction:column;gap:16px}
-@media (min-width:1000px){.rz-hlava,.rz-telo,.rz-pata{max-width:var(--m-sloupec);width:100%;margin-inline:auto}
-}
-.rz-pole{align-items:center}
-.rz-pole label{flex:1 1 0;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
-.rz-pole input{width:100%;font:inherit;font-size:16px;padding:12px 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text)}
-.rz-pata{display:flex;align-items:center;gap:8px;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
-.rz-vymaz{font:inherit;font-size:14px;font-weight:600;cursor:pointer;background:none;border:0;color:var(--muted);text-decoration:underline;min-height:44px;padding:0 8px}
-.rz-hotovo{margin-left:auto;flex:1 1 auto;max-width:60%;min-height:48px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;color:#fff;background:var(--plocha-znacka);border:1px solid rgba(var(--znacka-hluboka-rgb),0.55);border-radius:var(--r-ovladani);box-shadow:var(--glow)}
-.rz-hotovo:hover{filter:brightness(1.05)}
+.mc-hodnoty>* + *{border-top:1px solid var(--line)}
 @media (max-width:560px){.mc-rozsah{grid-column:1 / -1}
 .map-controls .mc-field{grid-column:1 / -1}
-.map-controls .mc-shrnuti{grid-column:1 / -1}
 .map-controls>* + *{position:relative;padding-top:16px}
 .map-controls>* + *::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--line)}
 .map-controls>.mcf-akce{grid-column:1 / -1;padding-top:4px}

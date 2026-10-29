@@ -999,8 +999,6 @@
 
   var okruhStred = null;
 
-  var POSUVNIKY = [];
-
   var zadaneVybaveni = [];
   var jenCelek = false;
 
@@ -1383,7 +1381,6 @@
     });
     prepocitejCipy();
 
-    postavPosuvniky();
     postavVybaveni();
   }
 
@@ -3825,7 +3822,7 @@
       try { pole.blur(); } catch (e) {}
     }
 
-    var NEZAVIRA = '.map-controls-panel, .rz-ov, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+    var NEZAVIRA = '.map-controls-panel, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
     document.addEventListener('click', function (e) {
       var cil = e.target;
       if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
@@ -4372,7 +4369,6 @@
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
         prepocitejCipy();
-        prekresliPosuvniky();
         prekresliVybaveni();
         return;
       }
@@ -4436,7 +4432,6 @@
     }
     nastrojeDoHlavicky();
     prepocitejCipy();
-    prekresliPosuvniky();
     prekresliVybaveni();
     prekresliOvladani();
     prekresliChipy();
@@ -4465,7 +4460,6 @@
     omezeni().forEach(function (o) { if (typeof o.vypni === 'function') o.vypni(); });
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
 
-    POSUVNIKY.forEach(function (p) { p.poleOd.value = ''; p.poleDo.value = ''; });
     zadaneVybaveni = []; jenCelek = false;
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
@@ -5525,97 +5519,6 @@
     vybaveniEl.hidden = !jeCo;
   }
 
-  function postavPosuvniky() {
-    if (!window.PKRozsah) return;
-    var bloky = document.querySelectorAll('.map-controls .mc-rozsah');
-    if (bloky.length < 2) return;
-    var rada = document.createElement('div');
-    rada.className = 'mc-shrnuti';
-    bloky[0].parentNode.insertBefore(rada, bloky[0]);
-
-    [['cena', 'Cena', 'kc', 'Kč'], ['plocha', 'Výměra', 'm2', 'm²']].forEach(function (def, poradi) {
-      var klic = def[0], nadpis = def[1], jednotka = def[2], zkratka = def[3];
-      var jeCena = klic === 'cena';
-      var blok = bloky[poradi];
-
-      var tlac = document.createElement('button');
-      tlac.type = 'button';
-      tlac.className = 'mcs-btn';
-      tlac.setAttribute('aria-haspopup', 'dialog');
-      tlac.setAttribute('aria-expanded', 'false');
-
-      tlac.innerHTML = '<span class="mcs-txt"><span class="mcs-k">' + nadpis +
-        '</span><span class="mcs-v">libovolná</span></span>' +
-        '<svg class="ik mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg>';
-      rada.appendChild(tlac);
-
-      var ov = document.createElement('div');
-      ov.className = 'rz-ov';
-      ov.setAttribute('role', 'dialog');
-      ov.setAttribute('aria-modal', 'true');
-      ov.setAttribute('aria-label', nadpis);
-      ov.hidden = true;
-      ov.innerHTML =
-        '<div class="rz-hlava"><span>' + nadpis + ' (' + zkratka + ')</span>' +
-        '<button type="button" class="rz-x" aria-label="Zavřít">✕</button></div>' +
-        '<div class="rz-telo"></div>' +
-        '<div class="rz-pata"><button type="button" class="rz-vymaz">Vymazat</button>' +
-        '<button type="button" class="rz-hotovo">Hotovo</button></div>';
-      document.body.appendChild(ov);
-
-      var telo = ov.querySelector('.rz-telo');
-      var dvoj = blok.querySelector('.mc-dvoj');
-      var pole = document.createElement('div');
-      pole.className = 'rz-pole';
-      pole.innerHTML = '<label>od<span class="rz-misto-od"></span></label><label>do<span class="rz-misto-do"></span></label>';
-      telo.appendChild(pole);
-      var vstupy = dvoj.querySelectorAll('input');
-      pole.querySelector('.rz-misto-od').replaceWith(vstupy[0]);
-      pole.querySelector('.rz-misto-do').replaceWith(vstupy[1]);
-      blok.remove();
-
-      var poleOd = vstupy[0], poleDo = vstupy[1];
-
-      var p = { klic: klic, jeCena: jeCena, jednotka: jednotka, nadpis: nadpis,
-        ov: ov, tlac: tlac, poleOd: poleOd, poleDo: poleDo,
-        hotovoEl: ov.querySelector('.rz-hotovo'), hodnotaEl: tlac.querySelector('.mcs-v'),
-        vymazEl: ov.querySelector('.rz-vymaz') };
-      POSUVNIKY.push(p);
-
-      function otevri() {
-        ov.hidden = false;
-        tlac.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('vm-otevreno');
-        prekresliPosuvniky();
-        var prvni = ov.querySelector('.rz-x');
-        if (prvni) prvni.focus();
-        vrstvaOtevrena('rozsah-' + zkratka, function () { zavri(true); });
-      }
-      function zavri(zHistorie) {
-        if (ov.hidden) return;
-        if (!zHistorie) { vrstvaZavrena('rozsah-' + zkratka); return; }
-        ov.hidden = true;
-        tlac.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('vm-otevreno');
-        tlac.focus();
-      }
-
-      zamkniTab(ov);
-      tlac.addEventListener('click', otevri);
-
-      ov.querySelector('.rz-x').addEventListener('click', function () { zavri(); });
-      p.hotovoEl.addEventListener('click', function () { zavri(); });
-      ov.querySelector('.rz-vymaz').addEventListener('click', function () {
-        poleOd.value = ''; poleDo.value = '';
-        prectiRozsahy();
-      });
-
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !ov.hidden) { e.preventDefault(); zavri(); }
-      });
-    });
-  }
-
   function polePodleModelu(el, hodnota) {
     if (!el || document.activeElement === el) return;
     if ((parseInt(el.value, 10) || 0) === (hodnota || 0)) return;
@@ -5646,48 +5549,6 @@
         b.classList.toggle('active', b.getAttribute('data-type') === activeType);
       });
     }
-  }
-
-  function prekresliPosuvniky() {
-    if (!POSUVNIKY.length || !window.PKRozsah) return;
-    var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
-    POSUVNIKY.forEach(function (p) {
-      if (p.jeCena) { minPrice = 0; maxPrice = 0; } else { minArea = 0; maxArea = 0; }
-      var hodnoty = [];
-      try {
-        for (var i = 0; i < DATA.length; i++) {
-          if (!visible(DATA[i])) continue;
-          hodnoty.push(p.jeCena ? DATA[i].price : DATA[i].area);
-        }
-      } finally {
-        if (p.jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
-      }
-      var cOd = p.poleOd.value ? parseInt(p.poleOd.value, 10) : null;
-      var cDo = p.poleDo.value ? parseInt(p.poleDo.value, 10) : null;
-      var nejakyVyber = cOd != null || cDo != null;
-      var vybranych = 0;
-      for (var j = 0; j < hodnoty.length; j++) {
-        var v = hodnoty[j];
-        if (!isFinite(v)) continue;
-        if (cOd != null && v < cOd) continue;
-        if (cDo != null && v > cDo) continue;
-        vybranych++;
-      }
-      var popisOd = cOd != null ? window.PKRozsah.popis(cOd, p.jednotka) : null;
-      var popisDo = cDo != null ? window.PKRozsah.popis(cDo, p.jednotka) : null;
-      var souhrn;
-      if (!popisOd && !popisDo) souhrn = 'libovolná';
-      else if (popisOd && popisDo) souhrn = popisOd + ' – ' + popisDo;
-      else if (popisOd) souhrn = 'od ' + popisOd;
-      else souhrn = 'do ' + popisDo;
-      p.hodnotaEl.textContent = souhrn;
-      p.tlac.classList.toggle('mcs-aktivni', nejakyVyber);
-
-      if (p.vymazEl) p.vymazEl.hidden = !nejakyVyber;
-      if (!nejakyVyber) vybranych = hodnoty.length;
-      p.hotovoEl.textContent = 'Hotovo · ' + fmt(vybranych) + ' ' +
-        (vybranych === 1 ? 'nabídka' : (vybranych >= 2 && vybranych <= 4 ? 'nabídky' : 'nabídek'));
-    });
   }
 
   if (urgentEl) {

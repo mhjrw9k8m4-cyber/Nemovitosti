@@ -1699,10 +1699,6 @@
      Když se místo nenajde, okruh se NEPOUŽIJE: vybrat podle okruhu kolem
      neznámého bodu by znamenalo ukázat náhodný výřez republiky. */
   var okruhStred = null;
-  /* Musí to stát TADY, ne až u obsluhy posuvníků dole: staví se hned po
-     sestavení filtrů, a „var" dole by v tu chvíli bylo ještě undefined.
-     (Chyceno až v prohlížeči — v konzoli to spadlo na „reading 'push'".) */
-  var POSUVNIKY = [];
   /* Co je u pozemku zavedené (elektřina, voda…) a jestli chceme jen celé
      pozemky, ne podíly. Vyčteno z popisů inzerátů — viz js/vybaveni.js. */
   var zadaneVybaveni = [];   // klíče, které musí pozemek mít
@@ -1711,7 +1707,8 @@
      se volá hned po sestavení filtrů — tedy o dva tisíce řádků VÝŠ, než
      kde ta funkce v souboru stojí. Deklarace „var" se sice vytáhne nahoru,
      ale přiřazení ne, takže dole by v tu chvíli bylo undefined. Naletěl
-     jsem na to v jedné relaci třikrát (POSUVNIKY, vybaveniEl, tohle pole),
+     jsem na to v jedné relaci třikrát (vybaveniEl, tohle pole a kdysi
+     i seznam posuvníků),
      pokaždé to spadlo až v prohlížeči na „reading 'push'". */
   var vybaveniEl = null;
   var VYBAVENI_PILULKY = [];
@@ -2331,7 +2328,6 @@
     prepocitejCipy();
     // Posuvníky ceny a výměry se staví jednou; zarážky se pak už nemění,
     // aby táhlo neposkakovalo pokaždé, když se zafiltruje něco jiného.
-    postavPosuvniky();
     postavVybaveni();
   }
   /* Čísla u kategorií se počítala jednou při startu a pak už se neměnila.
@@ -6118,7 +6114,7 @@
        tlačítko leží mimo panel, takže se po něm složil i panel pod
        ním. Člověk se po zavření okna neměl kam vrátit: „Druh, cena,
        výměra a další" už nebylo vidět. */
-    var NEZAVIRA = '.map-controls-panel, .rz-ov, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
+    var NEZAVIRA = '.map-controls-panel, .rv-vrstva, .vm-ov, .modal, [role="dialog"], #nav';
     document.addEventListener('click', function (e) {
       var cil = e.target;
       if (cil && cil.closest && cil.closest(NEZAVIRA)) return;
@@ -7207,7 +7203,6 @@
         var pb = listEl.querySelector('#okoli-pryc');
         if (pb) pb.addEventListener('click', vypniOkoli);
         prepocitejCipy();
-        prekresliPosuvniky();
         prekresliVybaveni();
         return;
       }
@@ -7284,7 +7279,6 @@
     }
     nastrojeDoHlavicky();   // nářadí patří do hlavičky výpisu, ne mezi nabídky
     prepocitejCipy();   // čísla u kategorií musí sedět s tím, co je vidět
-    prekresliPosuvniky(); // souhrn ceny a výměry a počet v „Hotovo" podle ostatních filtrů
     prekresliVybaveni(); // pilulky „co je u pozemku" a jejich počty
     prekresliOvladani(); // políčka a přepínače podle toho, co opravdu platí
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
@@ -7352,7 +7346,6 @@
     [cenaEl, cenaOdEl, areaEl, areaDoEl].forEach(function (el) { if (el) el.value = ''; });
     // Rozsahy ceny a výměry se vymažou i tady — políčka jsou teď v okně
     // přes celou obrazovku, ale patří k témuž filtru.
-    POSUVNIKY.forEach(function (p) { p.poleOd.value = ''; p.poleDo.value = ''; });
     zadaneVybaveni = []; jenCelek = false;
     if (cenaEl) cenaEl.dispatchEvent(new Event('pk-reset'));
     if (urgentEl) { urgentEl.classList.remove('on'); urgentEl.setAttribute('aria-pressed', 'false'); }
@@ -8724,127 +8717,26 @@
     vybaveniEl.hidden = !jeCo;
   }
 
-  /* ---------- Cena a výměra: souhrn v panelu, ovládání na celé obrazovce
-     Tři pokusy předtím (pět pilulek, osm pilulek s počty, posuvník) měly
-     společné to, že se snažily vejít do úzkého sloupce mezi ostatní filtry.
-     Tam je na ně málo místa — pilulky se zalomí do čtyř řad, z posuvníku
-     zbyde čtyřpixelová čárka se dvěma drobnými táhly. Proto je v panelu jen
-     souhrn a vlastní výběr dostane celou obrazovku.
+  /* ---------- Cena a výměra: v panelu, jako všechno ostatní
+     Políčka od–do stojí ve značkování panelu a od 29. 10. tam i zůstávají.
 
-     SLOUPCOVÝ GRAF JE OD 29. 10. PRYČ. Nad políčky od–do stál histogram
-     přes celou šířku: osmnáct sloupců jako terče pro prst, klepnutím se
-     vybralo rozmezí a přejetím prstem víc sloupců naráz. Majitel se na
-     něj podíval a napsal: „ten graf nad tím dej pryč a nech tam jen to
-     nastavení ceny."
+     Co tu bylo: souhrnná řada („Cena · libovolná") a za ní celoobrazovkové
+     okno, do kterého se políčka přestěhovala. Mělo to svůj důvod —
+     histogram, který v okně nabízel rozmezí ke klepnutí, potřeboval celou
+     šířku. Graf majitel zrušil o pár minut dřív a pak napsal tohle:
+     „nechápu, proč mě to hází na tuhle stránku, proč mě to nenechá
+     v menu. Prostě ať mi tam vyskočí klávesnice na psaní."
 
-     CO SE TÍM ZTRATILO, POCTIVĚ: graf uměl dvě věci, které políčka
-     neumějí. Ukazoval, kde nabídky vůbec jsou (že do 700 m² skoro nic
-     není, se z prázdného políčka nepozná), a dal rozmezí vybrat bez
-     psaní — na telefonu jedním tahem místo dvou čísel z klávesnice.
-     Zůstává počet v tlačítku „Hotovo · N nabídek", který se mění při
-     psaní, takže slepé to není; je to ale zpětná vazba AŽ po zadání,
-     ne nabídka předem.
-     Zarážky a histogram počítal js/rozsah.js; zůstal z něj jen `popis`,
-     který sází souhrn do panelu („do 500 tis"). */
-  function postavPosuvniky() {
-    if (!window.PKRozsah) return;   // bez modulu zůstanou v panelu políčka od–do
-    var bloky = document.querySelectorAll('.map-controls .mc-rozsah');
-    if (bloky.length < 2) return;
-    var rada = document.createElement('div');
-    rada.className = 'mc-shrnuti';
-    bloky[0].parentNode.insertBefore(rada, bloky[0]);
+     Má pravdu: bez grafu zbylo v okně přes celou obrazovku dvě políčka
+     a tlačítko. Dvě klepnutí navíc (otevřít, zavřít) a odchod z panelu,
+     ve kterém člověk zrovna nastavuje ostatní filtry — za nic.
+     Políčka tedy zůstávají v panelu, klepnutí do nich vyvolá klávesnici
+     a počet hlásí „Zobrazit N pozemků" dole v panelu, jako u všech
+     ostatních filtrů.
 
-    [['cena', 'Cena', 'kc', 'Kč'], ['plocha', 'Výměra', 'm2', 'm²']].forEach(function (def, poradi) {
-      var klic = def[0], nadpis = def[1], jednotka = def[2], zkratka = def[3];
-      var jeCena = klic === 'cena';
-      var blok = bloky[poradi];
-
-      var tlac = document.createElement('button');
-      tlac.type = 'button';
-      tlac.className = 'mcs-btn';
-      tlac.setAttribute('aria-haspopup', 'dialog');
-      tlac.setAttribute('aria-expanded', 'false');
-      /* Šipka vpravo. Bez ní to byla bílá krabička s tenkou linkou —
-         k nerozeznání od vypsaného údaje, takže na ni nikdo neklepl.
-         Text vlevo, šipka vpravo: stejná stavba jako u řádků, které se
-         někam rozbalují, takže se to nemusí učit. */
-      tlac.innerHTML = '<span class="mcs-txt"><span class="mcs-k">' + nadpis +
-        '</span><span class="mcs-v">libovolná</span></span>' +
-        '<svg class="ik mcs-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg>';
-      rada.appendChild(tlac);
-
-      var ov = document.createElement('div');
-      ov.className = 'rz-ov';
-      ov.setAttribute('role', 'dialog');
-      ov.setAttribute('aria-modal', 'true');
-      ov.setAttribute('aria-label', nadpis);
-      ov.hidden = true;
-      ov.innerHTML =
-        '<div class="rz-hlava"><span>' + nadpis + ' (' + zkratka + ')</span>' +
-        '<button type="button" class="rz-x" aria-label="Zavřít">✕</button></div>' +
-        '<div class="rz-telo"></div>' +
-        '<div class="rz-pata"><button type="button" class="rz-vymaz">Vymazat</button>' +
-        '<button type="button" class="rz-hotovo">Hotovo</button></div>';
-      document.body.appendChild(ov);
-      // Políčka od–do se PŘESTĚHUJÍ z panelu sem. Zůstávají to tytéž prvky,
-      // takže všechno, co na ně bylo navěšené, platí dál — a bez skriptu
-      // zůstanou v panelu, kde jsou.
-      var telo = ov.querySelector('.rz-telo');
-      var dvoj = blok.querySelector('.mc-dvoj');
-      var pole = document.createElement('div');
-      pole.className = 'rz-pole';
-      pole.innerHTML = '<label>od<span class="rz-misto-od"></span></label><label>do<span class="rz-misto-do"></span></label>';
-      telo.appendChild(pole);
-      var vstupy = dvoj.querySelectorAll('input');
-      pole.querySelector('.rz-misto-od').replaceWith(vstupy[0]);
-      pole.querySelector('.rz-misto-do').replaceWith(vstupy[1]);
-      blok.remove();
-
-      var poleOd = vstupy[0], poleDo = vstupy[1];
-
-      var p = { klic: klic, jeCena: jeCena, jednotka: jednotka, nadpis: nadpis,
-        ov: ov, tlac: tlac, poleOd: poleOd, poleDo: poleDo,
-        hotovoEl: ov.querySelector('.rz-hotovo'), hodnotaEl: tlac.querySelector('.mcs-v'),
-        vymazEl: ov.querySelector('.rz-vymaz') };
-      POSUVNIKY.push(p);
-
-      function otevri() {
-        ov.hidden = false;
-        tlac.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('vm-otevreno');
-        prekresliPosuvniky();
-        var prvni = ov.querySelector('.rz-x');
-        if (prvni) prvni.focus();
-        vrstvaOtevrena('rozsah-' + zkratka, function () { zavri(true); });
-      }
-      function zavri(zHistorie) {
-        if (ov.hidden) return;
-        if (!zHistorie) { vrstvaZavrena('rozsah-' + zkratka); return; }
-        ov.hidden = true;
-        tlac.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('vm-otevreno');
-        tlac.focus();
-      }
-      /* Tabulátor z okna nesmí utéct — tentýž zámek jako u okna
-         stahování, ať se slib `aria-modal` drží všude stejně. */
-      zamkniTab(ov);
-      tlac.addEventListener('click', otevri);
-      /* Obal kvůli události: bez něj by se kliknutí předalo jako příznak
-         „už couvnuto v historii" a záznam by v ní zůstal ležet. */
-      ov.querySelector('.rz-x').addEventListener('click', function () { zavri(); });
-      p.hotovoEl.addEventListener('click', function () { zavri(); });
-      ov.querySelector('.rz-vymaz').addEventListener('click', function () {
-        poleOd.value = ''; poleDo.value = '';
-        prectiRozsahy();
-      });
-      /* Escape visí na celém dokumentu, ne na okně. Kdyby visel na okně,
-         stačilo by, aby fokus jednou vyklouzl, a okno by se klávesnicí
-         nedalo zavřít vůbec. */
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && !ov.hidden) { e.preventDefault(); zavri(); }
-      });
-    });
-  }
+     Zmizel tím i poslední čtenář modulu js/rozsah.js — ten už tu není
+     (`popis` sázel souhrn „do 500 tis." do té souhrnné řady a nikdo
+     jiný si o něj neřekl). */
 
   /* OVLÁDÁNÍ PODLE MODELU — opačný směr než prectiRozsahy().
      Filtr se dá vypnout TŘEMI cestami: tlačítkem v panelu, křížkem na
@@ -8902,55 +8794,6 @@
         b.classList.toggle('active', b.getAttribute('data-type') === activeType);
       });
     }
-  }
-
-  /* Překreslení: souhrn v panelu lidsky („do 500 tis") a počet, který
-     výběr znamená. Počítá se z toho, co projde OSTATNÍMI filtry — vlastní
-     omezení se na chvíli vypne, jinak by tlačítko hlásilo počet toho, co
-     už je vybrané, tedy vždycky sebe sama.
-     Do 29. 10. se počet bral ze sloupců histogramu; ten je pryč (viz
-     postavPosuvniky), takže se nabídky v rozmezí spočítají rovnou. */
-  function prekresliPosuvniky() {
-    if (!POSUVNIKY.length || !window.PKRozsah) return;
-    var pMin = minPrice, pMax = maxPrice, aMin = minArea, aMax = maxArea;
-    POSUVNIKY.forEach(function (p) {
-      if (p.jeCena) { minPrice = 0; maxPrice = 0; } else { minArea = 0; maxArea = 0; }
-      var hodnoty = [];
-      try {
-        for (var i = 0; i < DATA.length; i++) {
-          if (!visible(DATA[i])) continue;
-          hodnoty.push(p.jeCena ? DATA[i].price : DATA[i].area);
-        }
-      } finally {
-        if (p.jeCena) { minPrice = pMin; maxPrice = pMax; } else { minArea = aMin; maxArea = aMax; }
-      }
-      var cOd = p.poleOd.value ? parseInt(p.poleOd.value, 10) : null;
-      var cDo = p.poleDo.value ? parseInt(p.poleDo.value, 10) : null;
-      var nejakyVyber = cOd != null || cDo != null;
-      var vybranych = 0;
-      for (var j = 0; j < hodnoty.length; j++) {
-        var v = hodnoty[j];
-        if (!isFinite(v)) continue;
-        if (cOd != null && v < cOd) continue;
-        if (cDo != null && v > cDo) continue;
-        vybranych++;
-      }
-      var popisOd = cOd != null ? window.PKRozsah.popis(cOd, p.jednotka) : null;
-      var popisDo = cDo != null ? window.PKRozsah.popis(cDo, p.jednotka) : null;
-      var souhrn;
-      if (!popisOd && !popisDo) souhrn = 'libovolná';
-      else if (popisOd && popisDo) souhrn = popisOd + ' – ' + popisDo;
-      else if (popisOd) souhrn = 'od ' + popisOd;
-      else souhrn = 'do ' + popisDo;
-      p.hodnotaEl.textContent = souhrn;
-      p.tlac.classList.toggle('mcs-aktivni', nejakyVyber);
-      // „Vymazat" nemá svítit, když není co mazat — tlačítko, po kterém se
-      // nic nestane, si člověk vyloží tak, že web nereaguje.
-      if (p.vymazEl) p.vymazEl.hidden = !nejakyVyber;
-      if (!nejakyVyber) vybranych = hodnoty.length;
-      p.hotovoEl.textContent = 'Hotovo · ' + fmt(vybranych) + ' ' +
-        (vybranych === 1 ? 'nabídka' : (vybranych >= 2 && vybranych <= 4 ? 'nabídky' : 'nabídek'));
-    });
   }
 
   /* Popisek tlačítka se píše z téže konstanty jako filtr. V HTML zůstává

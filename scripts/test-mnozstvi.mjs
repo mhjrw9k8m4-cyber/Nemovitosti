@@ -69,8 +69,11 @@ pravda(`nikde v kódu není „n < 5 ?" (prohlédnuto ${soubory.length} souborů
    nestačil: kdo tu podmínku smaže celou (třeba ji vytáhne do pomocné
    funkce, která bude špatná), zákazem projde. Proto se tahle tři místa
    hlídají jmenovitě — jsou to ta, kde se nula na obrazovku dostane:
-     · rychlý výběr („Hotovo · 0 nabídky") — rozsah, do kterého nic
-       nespadne, je běžný: stačí „cena od sta milionů",
+     · tlačítko v patě panelu („Zobrazit 0 pozemky") — výběr, do
+       kterého nic nespadne, je běžný: stačí „cena od sta milionů".
+       Do 29. 10. to bylo „Hotovo · 0 nabídky" v celoobrazovkovém okně
+       rozsahu; okno je pryč a počet hlásí tenhle knoflík. Tvar skládá
+       plPozemek(), takže se hlídá rovnou ona,
      · hlídané místo („přibyly 0 pozemky") — hláška o novinkách
        v okolí. Do 29. 10. to byl podnadpis tabule nad výpisem („je tu
        0 pozemky"); tabule je pryč a počet nese hláška. Nula se tam
@@ -79,7 +82,7 @@ pravda(`nikde v kódu není „n < 5 ?" (prohlédnuto ${soubory.length} souborů
      · popisek odznaku zpráv („0 nepřečtené zprávy") — ten se počítá
        i při nule, protože se zároveň nastavuje odznaku. */
 const JMENOVITE = [
-  ['js/main.js', "(vybranych >= 2 && vybranych <= 4 ? 'nabídky' : 'nabídek')", 'rychlý výběr'],
+  ['js/main.js', "function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }", 'počet v patě panelu'],
   ['js/main.js', "(n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků')", 'hlídané místo'],
   ['js/ucet-taby.js', "(n >= 2 && n <= 4 ? n + ' nepřečtené zprávy'", 'odznak zpráv'],
 ];

@@ -15542,7 +15542,8 @@ Zůstává počet v tlačítku „Hotovo", který se mění při psaní, takže 
 to není; je to ale zpětná vazba AŽ po zadání, ne nabídka předem.
 
 **Co se tím uklidilo.** Počet nabídek v tlačítku se bral ze sloupců
-histogramu; teď se spočítá rovnou. A `js/rozsah.js` spadl ze 120 řádků
+histogramu; teď se spočítá rovnou. A js/rozsah.js — dnes už tu není,
+viz §238 — spadl tehdy ze 120 řádků
 na 40: `zarazky` (nerovnoměrná stupnice z kvantilů), `histogram`,
 `hezke` (zaokrouhlení na 1-1,5-2-3-5-7) a `index` ztratily čtenáře.
 Zůstal `popis`, který sází souhrn do panelu („Cena · do 500 tis.").
@@ -15569,3 +15570,47 @@ na tohle by to stačilo.
   poznat od nevybraného a nesmí se lišit jen barvou (WCAG 1.4.1).
   Oddíl zmizel; políčka od–do měří tatáž zkouška jako každý jiný
   ovladač, protože mají rámeček a stojí na ploše.
+
+## §238 Cena a výměra zpátky do panelu — žádná vlastní obrazovka
+
+**Co o tom řekl majitel.** „Nechápu, proč mě to hází na tuhle stránku,
+proč mě to nenechá v menu. Prostě ať mi tam vyskočí klávesnice na psaní."
+
+**Má pravdu, a je to následek předchozí změny.** Celá obrazovka tu byla
+kvůli histogramu: ten potřeboval šířku, jakou mu panel dát nemohl, a
+políčka od–do se do okna stěhovala s ním. Graf padl o pár minut dřív
+(§237) a v okně zbyla dvě políčka a tlačítko. Dvě klepnutí navíc
+(otevřít, zavřít) a odchod z panelu, ve kterém člověk zrovna nastavuje
+ostatní filtry — za nic.
+
+**Teď to vypadá takhle.** V kartě „Cena a výměra" stojí tři řádky pod
+sebou: `Cena (Kč)` od–do, `Cena za m²` a `Výměra (m²)` od–do. Klepnutí
+do políčka ho jen zaostří a vyvolá číselnou klávesnici; panel zůstane
+otevřený. Kolik nabídek zbylo, hlásí tlačítko v patě panelu („Zobrazit
+1 884 pozemků"), které tam bylo celou dobu.
+
+**Co odešlo s tím.** Souhrnná řada (`.mc-shrnuti` a tlačítka
+`.mcs-btn` „Cena · libovolná"), celé okno (`.rz-ov` s hlavou, tělem,
+patou, vlastním „Hotovo · N nabídek" a „Vymazat") a funkce, která to
+všechno stavěla a překreslovala. A s nimi poslední čtenář modulu
+js/rozsah.js — ten už tu není celý, protože `popis` sázel právě ten
+souhrn. Modul měl včera 120 řádků, včera večer 40 a dnes nula.
+
+**Dva nálezy při úklidu.**
+
+1. `test-hledani-vzhled` hlídá, že hodnoty v kartě „Cena a výměra"
+   končí v jednom sloupci. Po přestěhování končily dvojice od–do na
+   364 px a „Cena za m²" na 352 — dvanáct pixelů, protože řádek
+   s rozbalovátkem má vnitřní okraj 12 px a řada od–do žádný.
+   Srovnáno. Při tom vyšlo najevo i druhé: návěští řady se sázelo
+   verzálkami (recept názvu SKUPINY), kdežto vedle něj stojí „Cena za
+   m²" obyčejně. V jedné kartě dvě podoby téhož. Taky srovnáno.
+2. `test-mnozstvi` hlídal jmenovitě tvar pro nulu v „Hotovo · 0
+   nabídky". To místo zmizelo s oknem; počet dnes hlásí tlačítko v patě
+   panelu a tvar skládá `plPozemek()`, takže se hlídá rovnou ona.
+
+**Zkoušky.** `test-naseptavac` měl na okno celý oddíl (otevřít souhrn,
+klepat do sloupců, zavřít, zkontrolovat souhrn). Měří teď, že políčka
+jsou v panelu, mají 16px písmo, 44 px na prst a číselnou klávesnici,
+že klepnutí do nich nic neotevře ani nezavře, že napsaná čísla zúží
+výpis a že „Zrušit filtry" je vyprázdní. `test-rozsah` zanikl s modulem.

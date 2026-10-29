@@ -192,10 +192,14 @@ try {
        prvek řádku, ať je to tlačítko rozbalovátka nebo span se
        slovem „libovolná" — měří se, kde končí, ne co to je. */
     const hodnoty = [];
-    document.querySelectorAll('.mc-hodnoty .mcs-btn').forEach((b) => {
-      if (!b.offsetParent) return;
-      const h = b.lastElementChild || b;
-      hodnoty.push(Math.round(h.getBoundingClientRect().right));
+    /* Do 29. 10. tu stála dvě tlačítka (.mcs-btn „Cena · libovolná"),
+       která otevírala vlastní obrazovku; majitel je nechal zrušit
+       („proč mě to nenechá v menu"). Cena i výměra se teď nastavují
+       dvojicí políček od–do rovnou v kartě, takže se měří jejich pravý
+       okraj — jde pořád o totéž: hodnoty v jednom sloupci. */
+    document.querySelectorAll('.mc-hodnoty .mc-rozsah .mc-dvoj').forEach((d) => {
+      if (!d.offsetParent) return;
+      hodnoty.push(Math.round(d.getBoundingClientRect().right));
     });
     document.querySelectorAll('.mc-hodnoty .mc-hodnota-radek').forEach((r) => {
       if (!r.offsetParent) return;
