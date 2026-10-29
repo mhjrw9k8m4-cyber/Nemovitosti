@@ -14086,6 +14086,28 @@ záložku, ne odsazení obsahu).
 | 32/28 (přihlášení) | 1 |
 | 4/4 (záložky) | 1 |
 
+### A jeden důsledek, který našlo až CI
+
+Zkrácení odsazení zkrátilo stránky — a krajská stránka tím spadla pod
+práh, který si drží tlačítko „nahoru" (3 obrazovky, `js/hlavicka.js`):
+
+| stránka | 1280 px | 390 px |
+|---|---|---|
+| Středočeský kraj | **2 695 px = 2,99** | 7 570 px = 8,97 |
+| Jihomoravský kraj | 2 688 px = 2,99 | 7 337 px = 8,69 |
+| okres Benešov | 4 131 px = 4,59 | 13 217 px = 15,66 |
+| data.html | 4 992 px = 5,55 | 9 762 px = 11,57 |
+
+`test-nahoru` používal krajskou stránku jako příklad „dlouhé" a spadl
+na vlastní pojistce (o pět pixelů). Práh se nesnižoval — je to pravidlo
+aplikace; vyměnil se vzorek za `data.html`, které má rezervu na obou
+šířkách. Komentář v té zkoušce přitom tenhle případ popisoval už
+jednou: ze stejného důvodu z ní dřív vypadla stránka cen.
+
+A poznámka k webu, ne ke zkoušce: na krajské stránce se tím pádem
+tlačítko „nahoru" na počítači neukáže. Je to důsledek sjednocení, ne
+vada — stránka na dvě a tři čtvrtě obrazovky se projde i bez něj.
+
 ### Dva nálezy od hlídače, ne ode mě
 
 Když se kontrola odsazení přidala do `test-deska`, spadla hned na dvou
@@ -14096,3 +14118,80 @@ se o ně rozšířilo tak, aby to říkalo nahlas.
 A jedna deska se chovala na telefonu jinak než všechny ostatní:
 `.status-card` si pod 880 px zužovala odsazení na 12 px. Jediná na
 webu. Srovnáno.
+
+## §214 Část webu reagovala měkce, část cukla — a stisk měl sedm gest
+
+Zadání znělo „pokračuj ve vizuálním propojení a přechodech, všude
+dodělej lehké detaily a přechody". Napřed se změřilo, co web dnes dělá.
+
+### Nález 1: 93 ze 150 míst se měnilo skokem
+
+Rozbor stylopisu hledal selektory, které v `:hover`, `:focus-visible`,
+`.active` nebo `:checked` mění barvu, pozadí, rám, stín, posun,
+průhlednost či filtr — a pak u nich hledal přechod na tu vlastnost.
+
+| | kolik |
+|---|---|
+| míst, která stavem mění vzhled | **150** |
+| z toho BEZ přechodu na tu změnu | **93** |
+
+Část webu tím reagovala měkce (karta ve výpisu, dlaždice, hlavní
+tlačítka), část cukla (pole formuláře, drobečky, odkazy v patičce,
+zavírací křížky, položky v našeptávači). To je přesně ten pocit „skoro
+hotové", který se nedá ukázat prstem.
+
+A nebylo to tím, že by chyběly časy: `--cas-rychly`, `--cas-zakladni`
+a `--cas-pomaly` v stylopisu jsou, `prefers-reduced-motion` se ctí
+globálně a `test-soustava` hlídá, že se čas bere z tokenu. Chybělo
+jediné: dát přechodu JMÉNO a nasadit ho jedním pravidlem.
+
+### Co se udělalo
+
+* `--prechod-barvy` (barva, pozadí, rám, stín, průhlednost, filtr,
+  základním časem) a `--prechod-pohyb` (posun, rychlým časem; posunu si
+  člověk všimne dřív a pomalý posun působí gumově);
+* nasazeno na rodinu ovladačů tam, kde už rodina v stylopisu stála, na
+  OBSAH ovladače (ikona nebo název, který se mění při najetí na rodiče)
+  a na řádky, které ovladačem nejsou (položka v našeptávači, řádek
+  souhrnu, dlaždice kraje, úchyt posuvníku);
+* **54 různých zápisů přechodu na 93 místech** se slilo do jednoho
+  receptu; vlastní čas si nechalo 14 míst, která animují rozměr nebo
+  mají delší náběh (odkrývání, mizející hlavička).
+
+Co se schválně NEanimuje: `outline` (prstenec zaměření musí naskočit
+hned — kdo jede tabulátorem, potřebuje vědět, KDE je, ne se dívat, jak
+to doplouvá) a rozměry (překreslovaly by rozvržení na každém snímku).
+
+### Nález 2: rozbor stylopisu lhal o padesáti místech
+
+Po nasazení hlásil rozbor pořád padesát míst bez přechodu — a nebyla
+to pravda. Ze zápisu se totiž nepozná, že `.auth-eye` je `<button>`
+a že na něj pravidlo pro rodinu ovladačů platí. Teprve měření
+VYPOČTENÉHO stylu v prohlížeči ukázalo skutečný stav: **dvě** mezery,
+dlaždice kraje a položka okresního výpisu, které se při najetí zvedaly
+skokem. Hlídač proto měří v prohlížeči, ne v zápisu.
+
+### Nález 3: stisk měl sedm gest
+
+| gesto | kolikrát |
+|---|---|
+| `translateY(1px)` | 9 |
+| `translateY(0) scale(.97)` | 6 |
+| jen změna pozadí | 5 |
+| `scale(.99)` | 2 |
+| `scale(.975)`, `scale(.94)`, `scale(1.2)`, posun do strany | po jednom |
+
+Web tedy reagoval na kliknutí pokaždé jinak. Teď je to jedno gesto:
+**o pixel dolů.** Jediná výjimka je záložka „Uložit", která naopak na
+okamžik poskočí — to není stisk, ale POTVRZENÍ, že se rozhodnutí
+zapsalo. Dvě různá gesta, protože říkají dvě různé věci; výjimka je
+v hlídači jmenovitě.
+
+### Hlídač
+
+`scripts/test-prechody.mjs`: seznam míst se čte ze stylopisu (přibude
+nový stav → zkouška si ho najde sama), měří se vypočtený styl
+v prohlížeči na 13 typech stránek, stisk se čte ze zápisu (hodnota je
+doslovná). Hned při nasazení našel tři místa na inzerátu, která jsem
+při ruční obhlídce minul. Sabotáže: vypnutý přechod u karty ve výpisu
+shodí první kontrolu, vlastní gesto u jednoho tlačítka druhou.

@@ -606,6 +606,12 @@ ikony:
   hlida:   scripts/test-ikony.mjs
 casy:
   rychly: .12s   zakladni: .2s   pomaly: .4s
+prechody:
+  recept:   "--prechod-barvy (barva, pozadí, rám, stín, průhlednost, filtr — základním časem) + --prechod-pohyb (posun — rychlým); dohromady --prechod"
+  kde:      "nasazeno na rodinu ovladačů, na OBSAH ovladače a na řádky, které ovladačem nejsou. Nepíše se po jednom u každého tlačítka."
+  stisk:    "jedno gesto na celý web: transform:translateY(1px). Výjimka: záložka „Uložit\" poskočí (scale 1.2) — to není stisk, ale potvrzení zápisu."
+  neanimuje: "outline (prstenec zaměření má naskočit hned) a rozměry (width/height/top/left překreslují rozvržení na každém snímku)"
+  hlida:    scripts/test-prechody.mjs, scripts/test-soustava.mjs
 stavy:
   vypnuto:    "opacity .45, cursor not-allowed, bez stínu a bez reakce na hover"
   pracuje-se: "aria-busy=true → opacity .7, cursor progress"

@@ -53,9 +53,26 @@ const PRAZDNA = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0l
    na ní nahradil vyhledávač, takže má 2 666 px — tedy 3,16 obrazovky
    proti prahu 3. Jako příklad „dlouhé stránky" by stála na hraně
    a zkouška by se lámala podle délky jedné věty; nahradila ji krajská
-   stránka, která seznam okresů pořád má. */
+   stránka, která seznam okresů pořád má.
+
+   A 29. 10. SE NA TÉŽE HRANĚ OCITLA I TA KRAJSKÁ. Sjednocení odsazení
+   desek (20 → 16 px, §213) stránky zkrátilo a Středočeský kraj spadl
+   na 2 695 px = 2,99 obrazovky — o pět pixelů pod práh. Naměřeno:
+
+     1280 px: Středočeský 2 695 (2,99), Jihomoravský 2 688 (2,99),
+              okres Benešov 4 131 (4,59), data 4 992 (5,55)
+      390 px: Středočeský 7 570 (8,97) — na telefonu je dlouhá dost
+
+   Práh 3 je pravidlo aplikace (js/hlavicka.js), takže se nesnižuje;
+   vyměnil se vzorek. Jako „dlouhá" stojí teď data.html: 5,55 obrazovky
+   na počítači a 11,57 na telefonu, tedy s rezervou na obou šířkách,
+   a je to jiný typ stránky než zbylé tři (dlouhý text místo výpisu).
+
+   POZNÁMKA K WEBU, ne ke zkoušce: na krajské stránce se tím pádem
+   tlačítko „nahoru" na počítači neukáže. Je to důsledek sjednocení,
+   ne vada — stránka na dvě a tři čtvrtě obrazovky se projde bez něj. */
 const DLOUHE = ['drazby-pozemku-nabidky.html', 'pozemky-okres-benesov.html',
-  'pozemky-stredocesky-kraj.html', 'index.html'];
+  'data.html', 'index.html'];
 const KRATKE = ['hlidani.html', 'zpravy.html', 'kontakt.html'];
 const PRAH_OBRAZOVEK = 3;   // stejný práh jako v js/hlavicka.js
 
