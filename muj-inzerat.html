@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-uyVMLJSJYA5leM20wyEd0klkWEYsAkXAyXH5JF9GadU=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-EDHZf8M+yrCMB6Q0HNRMC48uYCfDWzEzLGJfP81BzAA=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=443c7c43" defer></script>
@@ -75,13 +75,26 @@
       font-weight:700; font-size:20px; color:#fff; background:var(--plocha-znacka); letter-spacing:0.02em;
       box-shadow:0 0 0 4px rgba(var(--znacka-hluboka-rgb),0.16), var(--glow);}
     .pf-id{min-width:0; flex:1;}
-    .pf-id .pf-hello{display:flex; align-items:center; gap:4px; font-family:var(--font-popisek); font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:var(--popisek-proklad); font-weight:600;}
-    /* Tečka u „Přihlášeno jako" svítila --c-sale, což je modrá barva
-       PŮVODU INZERÁTU (od realitky). S přihlášením nemá nic společného
-       a na zeleném webu to byla jediná modrá na stránce. Zelená --c-ok
-       znamená „v pořádku, běží" — to je přesně, co ta tečka říká. */
-    .pf-dot{width:7px; height:7px; border-radius:50%; background:var(--c-ok); box-shadow:0 0 0 3px rgba(var(--c-ok-rgb),0.22);}
-    .pf-id .pf-mail{font-size:16px; font-weight:700; color:var(--text); overflow-wrap:anywhere; margin-top:2px; line-height:1.3;}
+    /* POZDRAV NAHLAS, ADRESA POTICHU — obráceně, než to bylo.
+       Verzálkový štítek „PŘIHLÁŠENO JAKO" a pod ním adresa v 16/700:
+       nejhlasitější věc na stránce byla informace, kterou o sobě
+       člověk ví. Navíc se ta adresa lámala uprostřed slova
+       („…seznam.c / z"), protože ji držel overflow-wrap:anywhere.
+       Teď: pozdrav 16/700 jako nadpis karty, adresa 13 px tišší barvou
+       a bez lámání uprostřed — na 390px displeji se vejde celá.
+       Zelená tečka u štítku zmizela i s ním: že je člověk přihlášený,
+       říká od 29. 10. tečka u panáčka v liště, a dvakrát to stačí
+       neříkat. */
+    .pf-id .pf-vita{font-size:16px; font-weight:700; color:var(--text); line-height:1.3; letter-spacing:-0.01em;}
+    /* ADRESA NA JEDEN ŘÁDEK, ZBYTEK TŘEMI TEČKAMI. E-mail je jedno
+       dlouhé slovo bez místa, kde by se dal rozumně zlomit — každé
+       zalomení padne doprostřed („…seznam.c / z"). Delší adresa se
+       proto ořízne a celá zůstane v `title` (a v textu stránky, takže
+       ji odečítač přečte celou). Naměřeno na 390px displeji:
+       22znaková adresa se vejde, 26znaková se dřív lámala na dva
+       řádky. */
+    .pf-id .pf-mail{font-size:13px; font-weight:600; color:var(--muted); margin-top:2px; line-height:1.4;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
     .pf-logout{flex:none; align-self:flex-start; display:inline-flex; align-items:center; gap:4px; background:var(--plocha-zapustena); border:1px solid var(--line-strong);
       color:var(--muted); border-radius:var(--r-ovladani); padding:8px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:var(--prechod);}
     .pf-logout svg{width:16px; height:16px; stroke-width:2.25;}
@@ -97,12 +110,32 @@
        ovládání i pro klávesnici a čtečku. */
     .pf-stat--jde{cursor:pointer;}
     .pf-stat--jde:hover{border-color:var(--line-strong); transform:translateY(-2px);}
-    /* A ať to jde poznat i bez myši (na telefonu žádný :hover není). */
-    .pf-stat--jde span{text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:3px;}
-    .pf-stat--jde:hover span{text-decoration-color:var(--znacka-svetla);}
+    /* PODTRŽENÍ POPISKU JE PRYČ. Mělo říct „klepni na mě" i tam, kde
+       není myš — jenže popisky jsou psané verzálkami a lámaly se na
+       dva řádky, takže z nich byly dva podtržené pahýly („NEPŘEČTENÉ /
+       ZPRÁVY") a vypadaly jako rozbitý odkaz. Afordanci nese plocha
+       a okraj, a to dlaždice má obojí; pravidlo zkoušky
+       (scripts/test-afordance.mjs) chce aspoň jedno z trojice
+       plocha / okraj / podtržení. */
     .pf-stat-ico{width:20px; height:20px; color:var(--muted); margin-bottom:4px;}
     .pf-stat b{display:block; font-size:28px; line-height:1; color:var(--znacka-svetla); font-variant-numeric:tabular-nums;}
-    .pf-stat span{display:block; font-family:var(--font-popisek); font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:var(--popisek-proklad); line-height:1.2; margin-top:4px;}
+    /* NULA SE NEKŘIČÍ ZELENĚ. Nový účet má pět dlaždic a v nich pět
+       nul — a protože číslo bylo 28px značkovou zelení, bylo pět nul
+       to nejvýraznější na celé stránce. Přitom neříkají nic.
+       Zeleň si nechá číslo, které něco znamená; nula a pomlčka
+       (ještě se načítá) jsou tiché. Třídu `je-nula` nasazuje skript
+       na jednom místě (cislo() níž ve stránce). */
+    .pf-stat.je-nula b{color:var(--muted);}
+    /* A POMLČKA JE TIŠŠÍ NEŽ NULA. „—" znamená „ještě nevím", nula
+       znamená „vím, a je to nula". Dokud byly obě stejně tmavé, byla
+       z 28px pomlčky na dlaždici tlustá čárka jako přeškrtnutí.
+       Třídu `je-ceka` nese dlaždice od začátku a cislo() ji sundá,
+       jakmile dosadí skutečnou hodnotu. */
+    .pf-stat.je-ceka b{color:var(--line-strong);}
+    /* POPISEK JE SLOVO, NE VERZÁLKY. 11px verzálky s prokladem se na
+       390px displeji lámaly na dva řádky („MOJE / INZERÁTY") a dlaždice
+       kvůli tomu rostly. 12px normální sazbou se vejdou na řádek. */
+    .pf-stat span{display:block; font-size:12px; font-weight:600; color:var(--muted); line-height:1.3; margin-top:4px;}
     /* DRUHÝ PÁS: ne statistika o mně, ale MÍSTA, kam se odsud jde.
        Proto vlastní řádek o dvou dlaždicích, a ne šest v mřížce po
        třech — pět dlaždic ve třech sloupcích nechá třetí místo
@@ -116,6 +149,18 @@
     .pf-add{display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;}
     .pf-add svg{width:18px; height:18px; stroke-width:2.0;}
     /* Prázdný stav */
+    /* ČÁRKOVANÝ RÁM TU ZŮSTÁVÁ, A JE TO OPRAVA MÉHO VLASTNÍHO NÁLEZU.
+       29. 10. jsem ho odsud vyhodil s odůvodněním, že je na celém webu
+       jediný. Nebyla to pravda — byl to špatně napsaný grep (filtr na
+       .html se vztáhl i na stylopis, takže se css/styles.css vůbec
+       nepročetl). Po pořádném měření: `dashed` je ve stylopisu na pěti
+       místech a všechna znamenají totéž co tady — „sem něco přijde,
+       zatím nic není": výzva k poznámce při třídění po jednom
+       (.rv-pozn-vyzva), plocha pro přetažení fotek (.photo-drop),
+       proužek bez uloženého místa (.misto-pruh.bez-mista) a druhý
+       prázdný stav webu (.odl-empty). Je to tedy zavedená řeč tohohle
+       webu, ne odchylka — a zrovna u „zatím tu nic nemáte" se hodí
+       nejvíc. */
     .pf-empty{text-align:center; padding:32px 20px; border-radius:var(--r-plocha); border:1px dashed var(--line); background:var(--plocha-karta);}
     .pf-empty-ico{width:66px; height:66px; margin:0 auto 16px; border-radius:var(--r-plocha); display:flex; align-items:center; justify-content:center;
       background:rgba(var(--plocha-znacka-svetla-rgb),.09); border:1px solid var(--line);}
@@ -367,8 +412,14 @@
         <div class="pf-card">
           <div class="pf-head">
             <div class="pf-avatar" id="pf-avatar" aria-hidden="true">?</div>
+            <!-- POZDRAV, NE ŠTÍTEK. Stálo tu verzálkami „PŘIHLÁŠENO
+                 JAKO" a pod tím adresa v 16/700 — tedy to nejhlasitější
+                 na stránce byla informace, kterou člověk o sobě ví.
+                 Majitel 29. 10.: „musí to být útulné a člověk tam musí
+                 být jak doma, prostě to musí být jeho část webu."
+                 Doma vás nikdo nevítá cedulí se svým jménem. -->
             <div class="pf-id">
-              <div class="pf-hello"><span class="pf-dot" aria-hidden="true"></span>Přihlášeno jako</div>
+              <div class="pf-vita">Vítejte zpátky</div>
               <div class="pf-mail" id="pf-mail">—</div>
             </div>
             <button type="button" id="mi-logout" class="pf-logout" aria-label="Odhlásit se">
@@ -377,17 +428,17 @@
             </button>
           </div>
           <div class="pf-stats">
-            <div class="pf-stat">
+            <div class="pf-stat je-nula je-ceka">
               <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dum"/></svg>
-              <b id="pf-count">—</b> <span>Moje inzeráty</span>
+              <b id="pf-count">—</b> <span>Inzeráty</span>
             </div>
-            <div class="pf-stat">
+            <div class="pf-stat je-nula je-ceka">
               <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-oko"/></svg>
-              <b id="pf-views">—</b> <span>Zhlédnutí celkem</span>
+              <b id="pf-views">—</b> <span>Zhlédnutí</span>
             </div>
-            <div class="pf-stat">
+            <div class="pf-stat je-nula je-ceka">
               <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>
-              <b id="pf-fav">—</b> <span>Uložené pozemky</span>
+              <b id="pf-fav">—</b> <span>Uložené</span>
             </div>
           </div>
           <!-- „VŠECHNO VAŠE NA JEDNOM MÍSTĚ" stálo v úvodu stránky,
@@ -400,13 +451,13 @@
                rozejít. Dlaždice stojí ve značce od začátku s pomlčkou,
                ať se nic neposune, až čísla dojdou. -->
           <div class="pf-stats pf-stats--2">
-            <a class="pf-stat pf-stat--jde" href="zpravy.html">
+            <a class="pf-stat je-nula je-ceka pf-stat--jde" href="zpravy.html" aria-label="Nepřečtené zprávy">
               <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bublina"/></svg>
-              <b id="pf-zpravy">—</b> <span>Nepřečtené zprávy</span>
+              <b id="pf-zpravy">—</b> <span>Zprávy</span>
             </a>
-            <a class="pf-stat pf-stat--jde" href="hlidani.html">
+            <a class="pf-stat je-nula je-ceka pf-stat--jde" href="hlidani.html" aria-label="Moje hlídání">
               <svg class="ik pf-stat-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zvonek"/></svg>
-              <b id="pf-hlidani">—</b> <span>Moje hlídání</span>
+              <b id="pf-hlidani">—</b> <span>Hlídání</span>
             </a>
           </div>
           <div class="pf-actions">
@@ -451,8 +502,17 @@
           <div class="pf-empty">
             <div class="pf-empty-ico" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-dum-plus"/></svg></div>
             <h3>Zatím tu žádný inzerát nemáte</h3>
-            <p>Přidejte svůj pozemek — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
-            <a class="btn-primary pf-add" href="pridat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek zdarma</a>
+            <!-- TLAČÍTKO ODSUD ZMIZELO, A JE TO ÚMYSL. Nad touhle kartou,
+                 asi 150 px vysoko, stojí v kartě profilu zelené „Přidat
+                 pozemek" — a tady stálo druhé zelené „Přidat pozemek
+                 zdarma". Dvě stejně vypadající tlačítka na jedné
+                 obrazovce, obě na tutéž stránku. Věta pod tím na ně
+                 ukazuje slovy, takže se nic neztratilo.
+                 Proč nezmizelo to nahoře a nezůstalo tohle: karta
+                 profilu se vykreslí hned, kdežto tenhle prázdný stav až
+                 po odpovědi serveru — tlačítko by tedy chvíli bylo,
+                 pak zmizelo a pak naskočilo jinde. -->
+            <p>Přidejte svůj pozemek tlačítkem <b>Přidat pozemek</b> nahoře — je to zdarma, bez provize a hned se objeví na mapě mezi ostatními.</p>
             <div class="mi-znovu"><button type="button" id="mi-reload" class="linklike">Už jste inzerát přidali? Načíst znovu</button></div>
           </div>
         </div>
@@ -606,11 +666,34 @@
       authBox.hidden = on; panel.hidden = !on;
       if (on) {
         var mail = A.email() || '';
-        var m = q('pf-mail'); if (m) m.textContent = mail;
+        /* Title s celou adresou: text se může oříznout třemi tečkami
+           (viz .pf-mail ve stylu), ale člověk se k ní musí dostat. */
+        var m = q('pf-mail'); if (m) { m.textContent = mail; m.title = mail; }
         var av = q('pf-avatar'); if (av) av.textContent = initials(mail);
-        var f = q('pf-fav'); if (f) f.textContent = fmt(favCount());
+        cislo('pf-fav', fmt(favCount()));
         if (!skipLoad) { load(); prehledJinych(); }   // seznam inzerátů načteme až s obnovenou session (bez chybového bliknutí)
       }
+    }
+    /* ČÍSLO DO DLAŽDICE — A JEDNO MÍSTO, KDE SE ROZHODNE, JESTLI KŘIČÍ.
+       Nový účet má v kartě pět dlaždic a v nich pět nul; dokud byly
+       všechny 28px značkovou zelení, bylo pět nul to nejvýraznější na
+       celé stránce — a neříkají nic. Zeleň si proto nechá číslo, které
+       něco znamená; nula a pomlčka (ještě se načítá) jsou tiché.
+       Čísla se dosazují na šesti místech, takže rozhodnutí nesmí být
+       opsané šestkrát: všechna jdou tudy. */
+    function cislo(id, hodnota) {
+      var e = q(id); if (!e) return;
+      e.textContent = hodnota;
+      var st = e.closest ? e.closest('.pf-stat') : null;
+      if (!st) return;
+      /* Tři stavy, ne dva: „ještě nevím" (pomlčka — dotaz neodpověděl),
+         „vím a je to nula" a „vím a je to číslo". Pomlčku dosazuje
+         i fmt(), když mu přijde něco, co není číslo — proto se tu
+         nerozhoduje podle toho, že funkce doběhla, ale podle toho,
+         jestli v hodnotě vůbec je číslice. */
+      var maCislici = /\d/.test(String(hodnota));
+      st.classList.toggle('je-ceka', !maCislici);
+      st.classList.toggle('je-nula', !(parseInt(String(hodnota).replace(/\D+/g, ''), 10) > 0));
     }
     /* ČÍSLA ZE ZPRÁV A HLÍDÁNÍ. Dva dotazy navíc, oba naráz a oba bez
        vlivu na zbytek stránky: když neodpovědí, zůstane pomlčka
@@ -625,11 +708,11 @@
          jednou a půjčí přes příslib — kdyby se tu volalo `my_threads`
          znovu, šly by ze stránky dva stejné dotazy za sebou. */
       if (zp && window.PKUcetTaby) PKUcetTaby.nepreCtene().then(function (n) {
-        if (typeof n === 'number') zp.textContent = fmt(n);
+        if (typeof n === 'number') cislo('pf-zpravy', fmt(n));
       }, function () {});
       if (hl) A.rpc('my_searches', {}, true).then(function (res) {
         if (!res || !res.ok || !Array.isArray(res.data)) return;
-        hl.textContent = fmt(res.data.length);
+        cislo('pf-hlidani', fmt(res.data.length));
       }, function () {});
     }
     /* Smaže fotky inzerátu z úložiště. Jedním dotazem, protože Storage API
@@ -679,8 +762,8 @@
         }
         var rows = Array.isArray(res.data) ? res.data : [];
         var totalViews = rows.reduce(function(s,r){ return s + (typeof r.views==='number'?r.views:0); }, 0);
-        var pc = q('pf-count'); if (pc) pc.textContent = fmt(rows.length);
-        var pv = q('pf-views'); if (pv) pv.textContent = fmt(totalViews);
+        cislo('pf-count', fmt(rows.length));
+        cislo('pf-views', fmt(totalViews));
         if (!rows.length) { statusEl.hidden = true; emptyEl.hidden = false; return; }
         statusEl.hidden = true;
         /* Fotky si u každého inzerátu pamatujeme, aby je šlo při mazání
@@ -885,7 +968,7 @@
 
     function renderSaved(){
       var keys = favKeys();
-      var favTile = q('pf-fav'); if (favTile) favTile.textContent = keys.length.toLocaleString('cs-CZ');
+      cislo('pf-fav', keys.length.toLocaleString('cs-CZ'));
       if (!keys.length){ if(savedEl) savedEl.innerHTML=''; if(savedEmpty) savedEmpty.hidden=false; return; }
       if (savedEmpty) savedEmpty.hidden = true;
       var render = function(){

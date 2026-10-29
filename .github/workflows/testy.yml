@@ -882,6 +882,9 @@ jobs:
       - name: Jedna barva v řadě odznaků pod cenou na kartě
         run: node scripts/test-jedna-barva.mjs
 
+      - name: Vzhled profilu (sedí „Můj profil" ke zbytku webu)
+        run: node scripts/test-profil-vzhled.mjs
+
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs

@@ -15129,3 +15129,52 @@ teď staví sama a podstrkuje ji do obou souborů, které web čte
 (`data/mapa.json` pro výpis, `data/opportunities.json` pro stránku
 pozemku); rozdíl mezi nimi je přesně to, na čem ta původní vada
 stála. Zkouška tím měří pořád, ne jen když má štěstí na data.
+
+## §230 Můj profil: pozdrav místo cedule a nula, která nekřičí
+
+**Co o tom řekl majitel.** „Můj profil potřebujeme předělat na víc
+profesionální a aby seděl ke zbytku webu; musí to být útulné a člověk
+tam musí být jak doma, prostě to musí být jeho část webu."
+
+**Co se naměřilo na 390×844 (přihlášený účet).**
+
+| nález | stav |
+|---|---|
+| adresa účtu se lámala uprostřed slova („…seznam.c / z") | 16 px, 700, `overflow-wrap:anywhere` |
+| pět dlaždic ukazovalo pět nul v 28px značkové zeleni | nejhlasitější věc na stránce neříkala nic |
+| verzálkové popisky dlaždic se lámaly na dva řádky | „MOJE / INZERÁTY", „NEPŘEČTENÉ / ZPRÁVY", a ještě podtržené |
+| „Přidat pozemek" na jedné obrazovce dvakrát | dvě stejně vypadající zelená tlačítka, obě na `pridat.html` |
+
+**Co se udělalo.** Hlava karty vítá („Vítejte zpátky") a adresa je pod
+tím tišeji, na jeden řádek, s oříznutím třemi tečkami a celou hodnotou
+v `title` — e-mail je jedno dlouhé slovo, takže každé zalomení padne
+doprostřed. Verzálkový štítek „PŘIHLÁŠENO JAKO" i zelená tečka u něj
+jsou pryč; že je člověk přihlášený, říká od téhož dne tečka u panáčka
+v liště. Popisky dlaždic jsou slova psaná normálně a vejdou se na
+řádek. Barvu si nechá jen číslo, které něco znamená: nula je tichá,
+pomlčka („ještě nevím") ještě tišší. Tlačítko z prázdného stavu
+zmizelo, věta na to nahoře ukazuje slovy.
+
+**Nález, který jsem si vyvrátil sám.** Čárkovaný rám prázdného stavu
+jsem vyhodil s tím, že je na webu jediný. Nebyla to pravda — byl to
+špatně napsaný grep (filtr `--include=*.html` se vztáhl i na stylopis,
+takže se `css/styles.css` vůbec nepročetl). Po pořádném měření je
+`dashed` ve stylopisu pětkrát a všude znamená totéž: „sem něco přijde,
+zatím nic není" (výzva k poznámce, plocha pro přetažení fotek, proužek
+bez uloženého místa, druhý prázdný stav webu). Je to tedy řeč webu,
+ne odchylka, a rám se vrátil.
+
+**Hlídač.** `scripts/test-profil-vzhled.mjs` (v CI) načte profil
+dvakrát — jednou se třemi uloženými pozemky, jednou bez nich — protože
+„nula nekřičí zeleně" se nedá změřit tam, kde žádná nula není, a „číslo
+něco znamená, proto je zelené" zase ne tam, kde jsou samé nuly. Počet
+uložených je jediné číslo, které si stránka bere z prohlížeče, takže
+jde nastavit přesně. Barvy se čtou vypočtené, ne z pravidel.
+
+Zkouška sama našla dvě vady v sobě: bez zablokování volání ven stránka
+po neúspěchu zahodí session a měří se ODHLÁŠENÝ profil (#pf-mail mělo
+výšku 0 px), a počítat řádky jako výška ÷ `line-height` nefunguje,
+protože prohlížeč umí vrátit `normal`. Obojí srovnáno a zapsáno u toho.
+
+Ověřeno sabotáží dvakrát: verzálkové popisky + `overflow-wrap:anywhere`
+shodily dvě kontroly, zelená nula třetí.
