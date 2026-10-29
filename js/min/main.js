@@ -2527,7 +2527,7 @@
           '<b>Vyberte své okolí' +
             (nast.duvod ? '<span class="vm-duvod">' + esc(nast.duvod) + '</span>' : '') +
           '</b>' +
-          '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
+          '<button class="vm-x" type="button" aria-label="Zavřít"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></button>' +
         '</div>' +
 
         '<div class="vm-hledani">' +
@@ -2981,7 +2981,7 @@
     var ov = document.createElement('div'); ov.className = 'loc-ov';
     ov.innerHTML =
       '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Kde hledat">' +
-        '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
+        '<button class="loc-x" type="button" aria-label="Zavřít"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
         '<h3>Kde hledat?</h3>' +
         '<div class="loc-pole">' +
@@ -4105,7 +4105,7 @@
           '<span class="os-t">' + (isFav(d) ? 'Uloženo' : 'Uložit') + '</span></button>' +
           '<button type="button" class="opp-skryt" aria-label="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '" title="' + (jeSkryty(d) ? 'Vrátit do seznamu' : 'Tenhle mě nezajímá') + '">' +
 
-          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '↩' : '✕') + '</span>' +
+          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vratit"/></svg>' : '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>') + '</span>' +
           '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
         '</div>' +
 
@@ -4556,8 +4556,9 @@
     var bil = rvPrvek('rv-bilance');
     if (bil) {
       bil.innerHTML = souh.celkem
-        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">♥ ' + souh.ulozeno + '</span>'
-          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">✕ ' + souh.skryto + '</span>')
+
+        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">' + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>' + souh.ulozeno + '</span>'
+          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">' + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>' + souh.skryto + '</span>')
         : '';
     }
     var zpetBtn = rvPrvek('rv-zpet');

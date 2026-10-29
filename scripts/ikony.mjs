@@ -80,6 +80,14 @@ export const IKONY = {
   poslat: 'M20.5 3.5 3.5 10.5l7 2.5 2.5 7z M20.5 3.5 10.5 13',
   stahnout: 'M12 4v11M8 11.5l4 4 4-4M4.5 19.5h15',
   plus: 'M12 5v14M5 12h14',
+  /* ODKAZ VEN. Doplněno 29. 10.: web na 162 místech kreslil „otevře se
+     v novém okně" textovým znakem ↗, tedy cizím perem — znak z písma
+     má jinou tloušťku i jiný sklon než naše kresba (§219). Rámeček
+     s chybějícím rohem a šipka ven z něj; souřadnice na půlkách. */
+  odkaz_ven: 'M13.5 3.5h7v7M20.5 3.5 11.5 12.5M17 12.5v8h-13.5v-13.5h8',
+  /* VRÁTIT ZPĚT. Tentýž případ: na kartě stál znak ↩. Šipka doleva
+     a oblouk pod ní, pata na obzoru nestojí — není to věc na zemi. */
+  vratit: 'M9 6.5 5 10.5l4 4M5 10.5h8.5a5 5 0 0 1 0 10H9',
   zavrit: 'M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5',
   menu: 'M4 7h16M4 12h16M4 17h16',
   sipka_vlevo: 'M14.5 5.5 8 12l6.5 6.5',

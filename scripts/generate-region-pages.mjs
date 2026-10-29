@@ -726,7 +726,7 @@ ${sMapou ? `  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?${V.le
       <a href="cena-pozemku.html">Ceny pozemků</a>
       <details class="nav-sk"><summary id="nav-sk-ucet">Moje</summary><div class="nav-sk-panel"><a href="zpravy.html" id="nav-zpravy">Zprávy</a><a href="hlidani.html" id="nav-hlidani">Hlídání</a></div></details>
       <a href="kontakt.html">Kontakt</a>
-      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
     </nav>
   </div>
 </header>
@@ -897,14 +897,14 @@ function itemRow(o, skryjOkres, navic, skryjTyp, jedenDruh){
   if (jeSPU) {
     src = `<a class="okr-src" href="https://spu.gov.cz/nabidky/prehled-cela-cr" target="_blank" rel="noopener nofollow"` +
       ` title="Otevře se v novém okně na spu.gov.cz">Nabídka SPÚ` +
-      `<span class="ext-ikona" aria-hidden="true">↗</span>` +
+      `<span class="ext-ikona" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-odkaz-ven"/></svg></span>` +
       `<span class="visually-hidden"> — spu.gov.cz, otevře se v novém okně</span></a>`;
   } else if (o.url && /^https?:\/\//.test(o.url)) {
     let domena = '';
     try { domena = new URL(o.url).hostname.replace(/^www\./, ''); } catch { /* ok */ }
     src = `<a class="okr-src" href="${attr(o.url)}" target="_blank" rel="noopener nofollow"` +
       ` title="Otevře se v novém okně na ${attr(domena)}">${esc(portal || 'Zdroj')}` +
-      `<span class="ext-ikona" aria-hidden="true">↗</span>` +
+      `<span class="ext-ikona" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-odkaz-ven"/></svg></span>` +
       `<span class="visually-hidden"> — ${esc(domena)}, otevře se v novém okně</span></a>`;
   }
   /* NÁZEV OBCE VEDE NA VLASTNÍ STRÁNKU POZEMKU.
@@ -944,9 +944,9 @@ function itemRow(o, skryjOkres, navic, skryjTyp, jedenDruh){
     : `<span class="okr-cena okr-bezceny">cena neuvedena</span>`;
   const strankaPozemku = STRANKY.get(klicNabidky(o));
   const misto = strankaPozemku
-    ? `<a class="okr-place" href="${attr(strankaPozemku.soubor)}">${esc(o.place)}` +
+    ? `<a class="okr-place" href="${attr(strankaPozemku.soubor)}"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>${esc(o.place)}` +
       `<span class="visually-hidden"> — detail pozemku</span></a>`
-    : `<span class="okr-place">${esc(o.place)}</span>`;
+    : `<span class="okr-place"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>${esc(o.place)}</span>`;
   /* NÁHLED: JEDNA DLAŽDICE LETECKÉHO SNÍMKU, ODLOŽENĚ.
      Dokud to byl holý řádek textu, vypadal výpis jako rejstřík —
      a přitom je to ta stránka, na kterou lidé chodí z vyhledávačů
@@ -1235,7 +1235,7 @@ ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu,'je','jsou
           <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
         </div>
         <div class="acx-akce">
-          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
         <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
@@ -1396,7 +1396,7 @@ ${priceLine(priceByKraj[kraj]||{}) ? `      <p class="okr-more okr-mezi">${price
           <p>Celý kraj na interaktivní mapě — filtrujte podle ceny, výměry i druhu pozemku a proklikněte se do katastru.</p>
         </div>
         <div class="acx-akce">
-          <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě →</a>
+          <a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
         <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
@@ -1472,7 +1472,7 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
           <h2>Nevíte, jak dražba funguje?</h2>
           <p>Dražební jistota, vyvolávací cena, příklep i lhůty — vysvětlujeme srozumitelně krok za krokem.</p>
         </div>
-        <a href="drazby-pozemku.html" class="btn-primary btn-glow">Jak koupit v dražbě →</a>
+        <a href="drazby-pozemku.html" class="btn-primary btn-glow">Jak koupit v dražbě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
       <div class="okr-blok">
@@ -1597,7 +1597,7 @@ ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu, 'je', 'js
           <h3>${esc(d.h1)} na mapě</h3>
           <p>Mapa s filtrem na tenhle druh — k tomu cena, výměra, sítě a odkazy do katastru na ověření.</p>
         </div>
-        <a href="${mapaOdkaz}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="${mapaOdkaz}" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
       <div class="okr-blok">
@@ -1815,7 +1815,7 @@ ${jineRozpocty ? `
           <h3>Všechno do ${esc(r.popis)} na mapě</h3>
           <p>Mapa s filtrem na tuhle cenu — a <b>i s dražbami a podíly</b>, které výpis výš vynechává. K tomu výměra, druh, sítě a odkazy do katastru na ověření.</p>
         </div>
-        <a href="${mapaOdkaz}" class="btn-primary btn-glow">Otevřít na mapě →</a>
+        <a href="${mapaOdkaz}" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
       <p class="okr-more okr-mezi">Nově přidané a zlevněné pozemky jsou na stránce <a href="nove-pozemky.html">co je na trhu nového</a>.</p>
@@ -2012,7 +2012,7 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
           <h3>Chcete to dostávat sami?</h3>
           <p>Hlídání vás upozorní na nové pozemky v okolí, které si vyberete — nebo si odeberte kanál RSS svého kraje ze stránky kraje.</p>
         </div>
-        <a href="hlidani.html" class="btn-primary btn-glow">Nastavit hlídání →</a>
+        <a href="hlidani.html" class="btn-primary btn-glow">Nastavit hlídání<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
       <p class="okr-more okr-mezi">Dál: <a href="pozemky-podle-okresu.html">pozemky podle regionu</a> · <a href="na-co-mam-pozemek.html">podle rozpočtu</a> · <a href="cena-pozemku.html">ceny pozemků v ČR</a>.</p>
@@ -2318,7 +2318,7 @@ ${metodika}
           <h3>Najděte konkrétní pozemek</h3>
           <p>Ceny přímo v místě, které vás zajímá — s prokliky do katastru.</p>
         </div>
-        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
+        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
 ${razitkoCerstvosti}
@@ -2405,7 +2405,7 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
           <h2>Nechcete vybírat region?</h2>
           <p>Otevřete celou mapu Česka a filtrujte podle ceny, výměry i druhu pozemku.</p>
         </div>
-        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
+        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
       <div class="add-card">
@@ -2573,7 +2573,7 @@ ${karty}
           <h3>Chcete vidět, kde přesně leží?</h3>
           <p>Na mapě jsou všechny nabídky pohromadě — můžete si kolem nich rovnou obkreslit výběr.</p>
         </div>
-        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu →</a>
+        <a href="index.html#mapa" class="btn-primary btn-glow">Otevřít mapu<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
       </div>
 
     </div>

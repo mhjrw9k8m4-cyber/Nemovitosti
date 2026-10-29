@@ -459,7 +459,12 @@ pravda('každý okres má náhledový obrázek pro sdílení', bezNahledu.length
          bez toho by vzor přestal sedět a kontrola by výměru a cenu tiše
          přeskakovala. */
       const bezNbsp = (s) => String(s).replace(/\u00a0/g, ' ');
-      const obec = bezNbsp((radek.match(/<a class="okr-place" href="[^"]+">([^<]*)/) || [])[1] || '');
+      /* PŘED NÁZVEM OBCE STOJÍ IKONA. Od 29. 10. začíná řádek výpisu
+         špendlíkem (§219), takže hned za „>" není text, ale <svg> —
+         a vzor, který bral „všechno až po první značku", vracel prázdno
+         u všech 2 065 řádků. Ikona se proto přeskočí; že tam je, hlídá
+         scripts/test-ikony.mjs, ne tahle zkouška. */
+      const obec = bezNbsp((radek.match(/<a class="okr-place" href="[^"]+">(?:<svg[\s\S]*?<\/svg>)?([^<]*)/) || [])[1] || '');
       const vym = radek.match(/<b>([\d\s\u00a0]+)[\s\u00a0]m²<\/b>/);
       const cen = radek.match(/<b>([\d\s\u00a0]+)[\s\u00a0]Kč<\/b>/);
       const cilObec = bezNbsp(String(d.k || '').split('|')[0]);

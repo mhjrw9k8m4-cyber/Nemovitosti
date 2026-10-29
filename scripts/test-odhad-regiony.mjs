@@ -115,7 +115,9 @@ for (const f of stranky) {
   for (const r of radky) {
     const m = /href="(pozemek-[^"]+\.html)"/.exec(r);
     if (!m) continue;
-    const place = (/class="okr-place"[^>]*>([^<]+)/.exec(r) || [, ''])[1].trim();
+    /* Za „>" stojí od 29. 10. nejdřív ikona místa (§219), teprve pak
+       název obce — vzor ji musí přeskočit, jinak nenajde ani řádek. */
+    const place = (/class="okr-place"[^>]*>(?:<svg[\s\S]*?<\/svg>)?([^<]+)/.exec(r) || [, ''])[1].trim();
     const meta = (/class="okr-meta"[^>]*>([\s\S]*?)<\/span>/.exec(r) || [, ''])[1];
     const druh = meta.split('·')[0].replace(/<[^>]*>/g, '').trim();
     const area = cislo((/<b>([\d\s\u00a0]+)\s*m²<\/b>/.exec(r) || [, ''])[1]);

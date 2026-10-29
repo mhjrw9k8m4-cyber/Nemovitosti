@@ -604,7 +604,7 @@
       var kriz = document.createElement('button');
       kriz.type = 'button'; kriz.className = 'pp-smaz';
       kriz.setAttribute('aria-label', 'Odebrat fotku ' + (i + 1));
-      kriz.innerHTML = '<span aria-hidden="true">✕</span>';
+      kriz.innerHTML = '<span aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span>';
       kriz.addEventListener('click', function (e) { e.stopPropagation(); smazFotku(i); });
       obr.appendChild(kriz);
       wrap.appendChild(obr); wrap.appendChild(stav);

@@ -4172,7 +4172,7 @@
           '<b>Vyberte své okolí' +
             (nast.duvod ? '<span class="vm-duvod">' + esc(nast.duvod) + '</span>' : '') +
           '</b>' +
-          '<button class="vm-x" type="button" aria-label="Zavřít">✕</button>' +
+          '<button class="vm-x" type="button" aria-label="Zavřít"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></button>' +
         '</div>' +
         /* HLEDÁNÍ OBCE. Komentář nad touhle funkcí hledání slibuje, ale
            v okně nebylo — a bez něj se místo ukazuje jen klepnutím do
@@ -4822,7 +4822,7 @@
     var ov = document.createElement('div'); ov.className = 'loc-ov';
     ov.innerHTML =
       '<div class="loc-card" role="dialog" aria-modal="true" aria-label="Kde hledat">' +
-        '<button class="loc-x" type="button" aria-label="Zavřít">✕</button>' +
+        '<button class="loc-x" type="button" aria-label="Zavřít"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></button>' +
         '<div class="loc-ic">' + LOC_PIN + '</div>' +
         '<h3>Kde hledat?</h3>' +
         '<div class="loc-pole">' +
@@ -6662,7 +6662,7 @@
              zavírá kartu, maže poznámku nebo odebírá z uložených.
              Majitel webu to řekl natvrdo: „jak mám vědět, co znamená
              křížek". Teď je u znaku slovo. */
-          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '↩' : '✕') + '</span>' +
+          '<span class="os-ic" aria-hidden="true">' + (jeSkryty(d) ? '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-vratit"/></svg>' : '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>') + '</span>' +
           '<span class="os-t">' + (jeSkryty(d) ? 'Vrátit' : 'Skrýt') + '</span></button>' +
         '</div>' +
         /* ROZVRŽENÍ TEXTU POD FOTKOU — TŘI ŘÁDKY, NE PĚT.
@@ -7420,8 +7420,11 @@
     var bil = rvPrvek('rv-bilance');
     if (bil) {
       bil.innerHTML = souh.celkem
-        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">♥ ' + souh.ulozeno + '</span>'
-          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">✕ ' + souh.skryto + '</span>')
+        /* ZNAČKA ULOŽENÉHO JE NA CELÉM WEBU ZÁLOŽKA, ne srdce. Tady
+           stálo ♥ a ✕ — dva znaky z písma místo dvou ikon ze sady,
+           a navíc srdce, které web nikde jinde nepoužívá (§219). */
+        ? ('<span class="rvb-ano' + (zmena === 'uloz' ? ' zmena' : '') + '">' + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>' + souh.ulozeno + '</span>'
+          + '<span class="rvb-ne' + (zmena === 'skryj' ? ' zmena' : '') + '">' + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg>' + souh.skryto + '</span>')
         : '';
     }
     var zpetBtn = rvPrvek('rv-zpet');

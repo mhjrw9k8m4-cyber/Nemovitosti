@@ -59,7 +59,13 @@ const CEKANO = {
      vypadává (viz viditelnyText), takže se otisk posunul o těch 23 znaků
      obočí. Ověřeno proti commitu b2c2583d: jediný rozdíl v textu je ten
      odstraněný popisek, zbytek znak po znaku souhlasí (9 171 → 9 148). */
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: '097e249d43d3c9fe' },
+  /* 29. 10. přepočítáno POČTVRTÉ, zase BEZ ZMĚNY DATA. Web přestal
+     kreslit šipky a křížky znaky z písma a kreslí je ikonami ze své
+     sady (§219); na téhle stránce tím z tlačítka „Kontakt →" zmizel
+     znak „ →" a zbyl „Kontakt". Ověřeno proti commitu 64ef6975: v celém
+     souboru se změnily čtyři věci — verze stylopisu, sprite ikon,
+     ikona v liště a tahle šipka. Žádné slovo právního znění. */
+  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: 'db5ab7381fc75e80' },
   /* 17. 10.: v bodě o zneužívání webu se „obcházení stránek robotem"
      změnilo na „procházení". „Obcházet" znamená česky především obejít
      něco (zákon, zabezpečení) — v odstavci, který vyjmenovává zakázané
@@ -67,7 +73,9 @@ const CEKANO = {
      protože úprava padla do něj. */
   /* 26. 10. totéž co u zásad: ubylo obočí „Podmínky použití" (17 znaků),
      znění zůstalo (2 864 → 2 847, jinak znak po znaku totožné). */
-  'podminky.html': { datum: 'říjen 2026', otisk: '5a387465eb8eb8fa' },
+  /* 29. 10. totéž co u zásad: šipka u tlačítka „Kontakt" je teď ikona,
+     ne znak z písma. */
+  'podminky.html': { datum: 'říjen 2026', otisk: '493559a6919a6608' },
 };
 
 /** Viditelný text stránky: bez skriptů, stylů, komentářů a značek. */

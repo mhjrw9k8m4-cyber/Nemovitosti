@@ -849,6 +849,16 @@
    symbolu a podrobnější pravidlo ho kdykoli přebije: proto je tenhle
    řádek NAHOŘE a má jen jednu třídu. */
 .ik{fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+/* IKONA V TLAČÍTKU A V ŘÁDKU TEXTU (§219). Velikost a k ní dopočítaná
+   tloušťka (36/šířka), aby stopa vyšla na 1,5 px jako u všech ostatních
+   ikon na webu — to hlídá scripts/test-tahy.mjs. */
+.btn-primary .ik{width:18px; height:18px; stroke-width:2; flex:none;}
+.okr-place .ik, .st-zpet .ik, .ext-ikona .ik,
+.rv-bilance .rvb-ano .ik, .rv-bilance .rvb-ne .ik,
+.os-ic .ik, .vm-x .ik, .loc-x .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
+.rv-bilance .rvb-ano, .rv-bilance .rvb-ne{display:inline-flex; align-items:center; gap:4px;}
+.okr-place, .st-zpet{display:inline-flex; align-items:center; gap:4px;}
+.btn-primary{gap:8px;}
 /* Druhá cesta ikony (fajfka v kolečku, „i" v kruhu, plus u domu) kreslí
    ve výchozím stavu stejnou barvou jako zbytek — rozsvítí se jen tam,
    kde si o to místo řekne. */

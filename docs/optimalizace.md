@@ -14546,3 +14546,80 @@ porovnávat se zdrojem tak, aby rozdíl, kterého se bojíme, normalizací
 nezmizel.** Totéž platí o měření obecně — hlídač najetí v §215 měřil
 0 prvků, hlídač přechodů v §217 znal jen půlku stavů, a tenhle si
 rozdíl umazal sám. Pokaždé to vypadalo jako „zeleno".
+
+## §219 Ikony všude — a hlavně tam, kde je dosud kreslilo písmo
+
+Zadání majitele: *„a taky hezky. Pečlivě udělej a přidej všude ty
+ikonky."* Nešlo tedy o to nasypat ikony na každý řádek, ale dát je tam,
+kde je soustava už předpokládá.
+
+### Měření před zásahem
+
+Na 18 typech stránek se vykreslilo **172 ikon**. Zajímavější než ten
+součet je, kde TÁŽ VĚC jednou ikonu má a podruhé ne:
+
+| místo | s ikonou | bez ikony |
+|---|---|---|
+| `.btn-primary` (hlavní tlačítko webu) | 1× | **26×** |
+| `.mc-prep` | 1× | 3× |
+| `.map-select`, `.pz-btn` | 1–3× | 1× |
+
+A druhý nález, který se objevil až při čtení zdrojů: **část značek
+kreslilo PÍSMO, ne naše sada.** Textové znaky stály na místě ikon na
+těchto místech:
+
+| znak | kde | kolikrát |
+|---|---|---|
+| `↗` | „otevře se v novém okně" u zdroje nabídky | 162 |
+| `→` | konec nápisu na hlavním tlačítku | ~116 |
+| `✕` | zavírací křížky (karta, okno výběru, nahrávání fotek) | 5 |
+| `‹` | odkaz zpět v hlavě právních a rádcovských stránek | 20 |
+| `♥` | „uložené" v bilanci rychlého výběru | 1 |
+
+Znak z písma má jinou tloušťku, jiný sklon i jinou výšku než naše
+kresba — vedle ikony ze sady je to vidět. A `♥` byl navíc nesoulad ve
+významu: „uložené" je na celém webu ZÁLOŽKA, srdce web nikde jinde
+nepoužívá.
+
+### Co se udělalo
+
+1. **Dvě nové ikony do sady** (`scripts/ikony.mjs`), kreslené týmž
+   perem: `odkaz_ven` (rámeček s chybějícím rohem a šipka ven) a
+   `vratit` (šipka doleva s obloukem). Plátno 24×24, kresba 3,5–20,5,
+   jen tahy, souřadnice na půlkách — jako zbytek sady.
+2. **Všechny znaky z tabulky výš nahradila ikona ze sady.**
+3. **Hlavní tlačítko dostalo svou ikonu**: „Přidat pozemek" + plus.
+   Je v liště na **2 409 stránkách**, takže je to nejviditelnější
+   jediná změna celého zásahu.
+4. **Řádek výpisu na krajských a okresních stránkách dostal špendlík**
+   u názvu obce — stejně jako ho má karta na úvodní stránce. Dvě
+   podoby téhož řádku se tím srovnaly.
+5. Velikosti a k nim dopočítané tloušťky (36/šířka) jsou v stylopisu
+   na jednom místě, takže stopa vychází všude na 1,5 px — hlídá
+   `test-tahy`.
+
+### Co to shodilo (a proč to byly dobré pády)
+
+Rychlá sada spadla na pěti zkouškách a každá ukazovala na něco jiného:
+
+* **`test-odstupy`** — můj `gap:5px` nebyl na stupnici odstupů.
+  Srovnáno na 4 px.
+* **`test-stranky-pozemku` a `test-odhad-regiony`** — obě čtou řádek
+  výpisu vzorem „všechno hned za `>` až po první značku", a protože
+  tam teď stojí ikona, vracely **prázdno u všech 2 065 řádků**. Vzory
+  ikonu přeskakují; že tam je, hlídá `test-ikony`.
+* **`test-pravni-stranky`** — otisk znění se rozešel, protože
+  z tlačítka „Kontakt →" zmizel znak „ →". Přepsáno BEZ změny data
+  „Poslední úprava", se zdůvodněním přímo u otisku: ověřeno, že
+  v celém souboru se změnily čtyři věci (verze stylopisu, sprite,
+  ikona v liště, ta šipka) a ani slovo právního znění. Tatáž zkouška
+  to dělá počtvrté a pokaždé s důkazem.
+* **`test-oprav`** — odvozené soubory nebyly přegenerované.
+
+### Po zásahu
+
+Hlídači vzhledu bez nálezu: `test-ikony` 11/11, `test-tahy` 6/6,
+`test-hlavicka` 85/85 (lišta se o ikonu rozšířila a nic se nerozbilo),
+`test-rozvrzeni` 190/190, `test-dotyk`, `test-kontrast` (2 673 prvků),
+`test-vaha-stranky` 6/6, `test-prvni-obrazovka` 22/22,
+`test-prechody` 5/5, rychlá sada 134/134.

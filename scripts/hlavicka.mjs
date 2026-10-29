@@ -90,7 +90,7 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
         <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
         <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
       </div></details>
-      <a href="pridat.html" class="btn-primary nav-add">Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
     </nav>`;
 
 const VZOR = /<nav id="nav"[\s\S]*?<\/nav>/;
