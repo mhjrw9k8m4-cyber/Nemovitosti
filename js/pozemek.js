@@ -736,316 +736,41 @@
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
       '<div class="pv-text">' + text + '</div>' + odJednoho +
-      /* Cena za metr SE TU NEPOČÍTÁ. Vlastní dělení cenou a výměrou
-         lže u spoluvlastnických podílů (v ceně je zlomek, výměra celá)
-         — proto ho hlídá scripts/test-ceny.mjs a proto se bere z modelu
-         stejně jako nad cenou v pruhu. */
-      pvGrafHtml(pc, (window.PK_CENY && window.PK_CENY.zaMetr) ? window.PK_CENY.zaMetr(d) : null) +
+      /* HISTOGRAM TU UŽ NENÍ. Majitel poslal 29. 10. potřetí snímek
+         Sreality a řekl to natvrdo: na stránce pozemku má být TEN graf,
+         co mají oni, a ten náš pryč. Byly tu totiž dva — křivka vývoje
+         ceny (předloha) a pod ní sloupcový histogram rozdělení cen,
+         který na předloze není. Dva grafy o ceně na jedné stránce si
+         berou pozornost navzájem a ten větší vyhrával, takže se čtenář
+         ke křivce vůbec nedostal.
+         Verdikt ZŮSTÁVÁ, jen jako věta: „Levnější než 79 % pozemků
+         téhož druhu…" plus cena za metr a medián. To, co histogram
+         kreslil, tedy v textu je — jen to nezabírá 60 px navíc
+         a karta klesla z 214 na 152 px.
+         KÓD HISTOGRAMU JE SMAZANÝ CELÝ (302 řádků), ne jen odpojený:
+         kreslil ho jen tenhle soubor a nikdo jiný. Napsal jsem sem
+         nejdřív, že ho „kreslí i rychlý prohlížeč na úvodní stránce" —
+         a to byla nepravda, ověřená grepem až potom. */
       '</div>' + odhadHtml(d);
   }
 
-  /* =====================================================================
-     GRAF ROZDĚLENÍ CEN — HISTOGRAM, JAKO NA REALITNÍCH WEBECH
-     =====================================================================
-     Předtím tu byla tečka na nabídku a vodorovná osa bylo POŘADÍ.
-     Majitel webu: „ten graf udělej jak na realitách, nic takového
-     nechci." Má v tom pravdu věcně: osa v pořadí odpovídá na „kolikátý
-     jsem", jenže kupující se ptá „kolik se tady běžně platí a kde
-     v tom jsem já". Na to odpovídá histogram — sloupec je počet
-     nabídek v cenovém pásmu a osa jsou koruny za metr.
+  /* HISTOGRAM ROZDĚLENÍ CEN TU BYL A JE PRYČ (29. 10.).
+     Majitel poslal potřetí snímek Sreality a řekl to natvrdo: na
+     stránce pozemku má být TEN graf, co mají oni, a ten náš pryč.
+     Byly tu totiž dva grafy o ceně — křivka vývoje (předloha) a pod
+     ní sloupcový histogram rozdělení cen, který na předloze není.
+     Větší z nich bral pozornost a ke křivce se čtenář nedostal.
 
-     DŮVOD, PROČ TU HISTOGRAM DŘÍV NEBYL, NEZMIZEL — JE OŠETŘENÝ.
-     Naměřeno na ostrých datech: u 15 ze 49 přihrádek je nejdražší
-     nabídka víc než trojnásobek devadesátého percentilu (dražby
-     ostatních ploch na Litoměřicku: medián 104 Kč/m², p90 1 077,
-     maximum 17 071). Kdyby osa šla až na maximum, slisovaly by se
-     všechny sloupce do levé desetiny grafu. Osa proto končí u 92.
-     percentilu a co je dražší, spadne do posledního sloupce — ten se
-     jmenuje „a víc". Totéž zdola. Krajní ceny se nezamlčují: nejnižší
-     a nejvyšší stojí pod grafem.
-     Naše nabídka se do osy vejde vždycky, i kdyby byla ta extrémní —
-     bez ní by graf nedával smysl právě tomu, kdo se na něj dívá.
-
-     HRANICE JSOU KULATÉ, ne „od 2 177 do 3 918": krok se vybírá z řady
-     1 · 2 · 2,5 · 5 · 10 (× mocnina deseti). Na ose tedy stojí čísla,
-     která si jde přečíst a zapamatovat.
-
-     KOLIK SLOUPCŮ. Cílem je osm; když by jich po zakulacení vyšlo přes
-     dvanáct, krok se zvětší. Při deseti nabídkách (což je minimum, pod
-     které model verdikt nedá) je sloupec klidně jedna nabídka — a to
-     je v pořádku, protože pod grafem stojí, z kolika nabídek to je.
-
-     PROČ HTML A NE SVG. Roztažené SVG (`preserveAspectRatio="none"`)
-     deformuje i písmo a rysky; sloupce ze <span>ů jsou ostré v každé
-     šířce a text zůstane textem.
-     ===================================================================== */
-  /* Co poslední graf nakreslil. Drží to uzávěr, ne atribut ve značce:
-     stránka pozemku je jedna a graf na ní taky jeden, kdežto `data-`
-     s osmdesáti čísly by se musel pokaždé poskládat do textu a zpátky
-     rozebrat. Čte to `pvGrafOziv` hned po vložení značky do stránky. */
-  var PVG = null;
-
-  /* Kulatý krok osy: 1, 2, 2,5, 5 nebo 10 × mocnina deseti. */
-  function pvgKrok(hruby) {
-    if (!(hruby > 0) || !isFinite(hruby)) return 1;
-    var rad = Math.pow(10, Math.floor(Math.log(hruby) / Math.LN10));
-    var p = hruby / rad;
-    var n = (p <= 1) ? 1 : (p <= 2) ? 2 : (p <= 2.5) ? 2.5 : (p <= 5) ? 5 : 10;
-    return n * rad;
-  }
-
-  function pvGrafHtml(pc, nase) {
-    var vals = pc && pc.hodnoty;
-    if (!vals || vals.length < 10 || !nase || !isFinite(nase)) return '';
-    /* Pole je sdílené a setříděné vzestupně — čte se, nesahá se do něj. */
-    var n = vals.length, i;
-    var kv = function (p) { return vals[Math.max(0, Math.min(n - 1, Math.round(p * (n - 1))))]; };
-    var min = vals[0], max = vals[n - 1], med = kv(0.5);
-    if (!(max > min)) return '';
-    /* KDE OSU USEKNOUT. Nejdřív to byl 2. a 92. percentil — a nestačilo
-       to. Naměřeno na ostrých datech (Vyškov, orná půda): i uvnitř
-       devadesáti dvou procent je rozptyl takový, že 167 ze 191 nabídek
-       spadlo do JEDNOHO sloupce a ze zbytku grafu byla rovina. Osa teď
-       končí tam, kde končí „obvyklé" ceny: p75 + 1,5 × mezikvartilové
-       rozpětí (a zdola p25 − 1,5 × IQR). Je to táž mez, jakou kreslí
-       vousy krabicového grafu, a dělá přesně to, co je tady potřeba —
-       odřízne ocas, ne data.
-       Co je za mezí, nemizí: spadne do krajního sloupce, ten se
-       jmenuje „a víc" (nebo „a méně") a skutečné minimum i maximum
-       stojí pod grafem. Platí to i pro TENHLE pozemek: když je sám
-       tím extrémem, stojí jeho značka na kraji osy a jeho cena je
-       v legendě pod grafem. Dřív se kvůli němu osa natahovala až
-       k jeho ceně a graf tím ztratil tvar — vedle sebe pak stál jeden
-       vysoký sloupec a pět prázdných. */
-    var p25 = kv(0.25), p75 = kv(0.75), iqr = p75 - p25;
-    var lo = (iqr > 0) ? Math.max(kv(0.02), p25 - 1.5 * iqr) : kv(0.02);
-    var hi = (iqr > 0) ? Math.min(kv(0.92), p75 + 1.5 * iqr) : kv(0.92);
-    if (!(hi > lo)) { lo = kv(0.02); hi = kv(0.92); }
-    if (!(hi > lo)) { lo = min; hi = max; }
-    if (!(hi > lo)) return '';
-    var krok = pvgKrok((hi - lo) / 8), zac = 0, konec = 0, pocet = 0, poj = 0;
-    while (poj++ < 10) {
-      zac = Math.floor(lo / krok) * krok;
-      konec = Math.ceil(hi / krok) * krok;
-      if (konec <= zac) konec = zac + krok;
-      pocet = Math.round((konec - zac) / krok);
-      if (pocet <= 12) break;
-      krok = pvgKrok(krok * 1.5);
-    }
-    if (!(pocet >= 3) || !isFinite(pocet)) return '';
-    /* Každá nabídka padne do některého sloupce — i ta mimo osu, ta do
-       krajního. Součet sloupců se tím rovná počtu nabídek ve větě nad
-       grafem a hlídá to zkouška (test-pohyb). */
-    var kose = [], podtece = 0, pretece = 0;
-    for (i = 0; i < pocet; i++) kose[i] = 0;
-    for (i = 0; i < n; i++) {
-      var k = Math.floor((vals[i] - zac) / krok);
-      if (k < 0) { k = 0; podtece++; }
-      else if (k > pocet - 1) { k = pocet - 1; pretece++; }
-      kose[k]++;
-    }
-    var nejvic = 0;
-    for (i = 0; i < pocet; i++) if (kose[i] > nejvic) nejvic = kose[i];
-    if (!nejvic) return '';
-    /* STROP OSY JE KULATÉ ČÍSLO, ne výška nejvyššího sloupce. Když se
-       měřítko bere z maxima, stojí na ose „17" — a ryska s číslem, co
-       se nedá zapamatovat, měřítko spíš kazí. Strop se proto vybírá
-       z téže řady jako krok osy x (1, 2, 2,5, 5, 10 × mocnina deseti),
-       takže na ose stojí 20 a půlka je rovných 10. */
-    var strop = pvgKrok(nejvic);
-    if (strop < nejvic) strop = nejvic;
-    var X = function (v) { return Math.max(0, Math.min(100, ((v - zac) / (konec - zac)) * 100)); };
-    var nasKos = Math.max(0, Math.min(pocet - 1, Math.floor((nase - zac) / krok)));
-    var sloupce = '';
-    for (i = 0; i < pocet; i++) {
-      /* Nenulový sloupec je vidět vždycky: při jedné nabídce proti
-         pětadvaceti by vyšel na 4 % výšky, tedy na 2 px, a vypadal by
-         jako prázdno. Mez je 8 %. */
-      var vyska = kose[i] ? Math.max(8, Math.round((kose[i] / strop) * 100)) : 0;
-      sloupce += '<span class="pvg-s' + (i === nasKos ? ' je-nase' : '') + '"'
-        + ' style="height:' + vyska + '%"'
-        + ' data-od="' + Math.round(zac + i * krok) + '"'
-        + ' data-do="' + Math.round(zac + (i + 1) * krok) + '"'
-        + ' data-n="' + kose[i] + '"></span>';
-    }
-    PVG = { kose: kose, pocet: pocet, zac: zac, krok: krok, n: n,
-      nasKos: nasKos, pretece: pretece, podtece: podtece };
-    var popisOsy = function (v, pr) { return fmt(Math.round(v)) + (pr ? ' ' + pr : ''); };
-    var stred = zac + Math.round(pocet / 2) * krok;
-    /* OSA Y MÁ DVĚ RYSKY, NE ŽÁDNOU. Sloupce bez měřítka říkají jen
-       „tenhle je vyšší"; s ryskou se dá přečíst KOLIK. Dvě stačí —
-       vrchol a půlka. Vodorovné čáry jsou vlasové a o stupeň ustupují,
-       jak se sluší na mřížku: nese měřítko, ne sdělení. */
-    var rysky = '';
-    var popisky = '';
-    /* Půlka se kreslí, jen když z ní vyjde kulaté číslo dost daleko od
-       vrcholu. Při vrcholu 3 vycházela „2" — ryska uprostřed s číslem,
-       které není polovina, mate víc, než pomůže. */
-    [1, 0.5].forEach(function (podil) {
-      var h = strop * podil;
-      if (!h || h !== Math.round(h)) return;
-      if (podil < 1 && strop < 4) return;
-      rysky += '<i class="pvg-mriz" style="bottom:' + (podil * 100) + '%"></i>';
-      popisky += '<span style="bottom:' + (podil * 100) + '%">' + h + '</span>';
-    });
-    /* PŘÍMÝ POPISEK U NAŠEHO SLOUPCE. Je to ten jediný údaj, kvůli
-       kterému se na graf člověk dívá — a dosud stál jen v legendě pod
-       ním, takže se musel párovat barvou. Popisek se u krajů zarovná
-       dovnitř, ať nevyleze z karty (dělá to pvGrafOziv po vložení). */
-    var xNase = X(nase);
-    return '<figure class="pvg">' +
-      '<div class="pvg-plocha">' +
-        '<div class="pvg-osa-y" aria-hidden="true">' + popisky + '</div>' +
-        '<div class="pvg-pas" role="img" aria-label="' + esc('Rozdělení ceny za m² u\u00a0'
-          + n + ' nabídek v\u00a0okolí: tento pozemek ' + fmt(Math.round(nase))
-          + ' Kč/m², medián ' + fmt(Math.round(med)) + ' Kč/m², nejlevnější '
-          + fmt(Math.round(min)) + ', nejdražší ' + fmt(Math.round(max)) + ' Kč/m².') + '">' +
-          rysky +
-          '<div class="pvg-sloupce">' + sloupce + '</div>' +
-          '<span class="pvg-med" style="left:' + X(med).toFixed(2) + '%"></span>' +
-          '<span class="pvg-nase" style="left:' + xNase.toFixed(2) + '%"></span>' +
-          '<span class="pvg-stitek" style="left:' + xNase.toFixed(2) + '%">tento pozemek <b>'
-            + fmt(Math.round(nase)) + '</b></span>' +
-          '<span class="pvg-bub" hidden></span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="pvg-osa">' +
-        '<span style="left:0">' + popisOsy(zac, podtece ? 'a méně' : '') + '</span>' +
-        '<span class="pvg-osa-stred" style="left:' + X(stred).toFixed(2) + '%">' + popisOsy(stred) + '</span>' +
-        '<span class="pvg-osa-konec" style="left:100%">' + popisOsy(konec, pretece ? 'a víc' : '') + '</span>' +
-      '</div>' +
-      '<p class="pvg-vys"><span class="pvg-klic nase"></span>tento pozemek <b>'
-        + fmt(Math.round(nase)) + ' Kč/m²</b>'
-        + '<span class="pvg-klic med"></span>medián <b>' + fmt(Math.round(med)) + ' Kč/m²</b></p>' +
-      '<p class="pvg-roz">' + n + ' nabídek v okolí, od <b>' + fmt(Math.round(min))
-        + '</b> do <b>' + fmt(Math.round(max)) + '</b> Kč/m²</p>' +
-      /* TABULKA PRO ODEČÍTAČ A PRO TOHO, KDO BARVY NEVIDÍ. Graf je
-         obrázek; tohle jsou tatáž čísla ve sloupcích, takže se z grafu
-         nic nedozví jen oko. Nekreslí se, čte se. */
-      /* OBAL, NE SAMOTNÁ TABULKA. `.visually-hidden` má width:1px
-         a overflow:hidden — jenže TABULKA overflow ignoruje a její
-         nejmenší možná šířka vyhraje nad width:1px. Absolutně
-         umístěný prvek tím pádem roztáhne posuvnou plochu dokumentu:
-         naměřeno na 320px displeji obsah 350 px v okně 320, tedy
-         stránka pozemku se dala posouvat do stran kvůli tabulce,
-         která není vidět. (Zkoušel to dřív `clip` — ten ale maluje,
-         ne měří.) Obal je obyčejný div: ten overflow dodrží a dovnitř
-         to zabalí. */
-      '<div class="visually-hidden">' +
-      '<table><caption>Rozdělení ceny za m² u\u00a0' + n + ' nabídek v\u00a0okolí</caption>' +
-        '<thead><tr><th scope="col">Cena za m²</th><th scope="col">Počet nabídek</th></tr></thead><tbody>' +
-        kose.map(function (kolik, i) {
-          var od = Math.round(zac + i * krok), doo = Math.round(zac + (i + 1) * krok);
-          var pasmo = (i === pocet - 1 && pretece) ? (fmt(od) + ' Kč/m² a víc')
-            : (i === 0 && podtece) ? (fmt(doo) + ' Kč/m² a méně')
-            : (fmt(od) + '–' + fmt(doo) + ' Kč/m²');
-          return '<tr><th scope="row">' + pasmo + '</th><td>' + kolik + '</td></tr>';
-        }).join('') +
-      '</tbody></table>' +
-      '</div>' +
-    '</figure>';
-  }
-
-  /* =====================================================================
-     DOTYK: GRAF SE DÁ PROJET PRSTEM
-     =====================================================================
-     Prst (nebo myš) jede po grafu, sloupec pod ním se zvýrazní a nad
-     ním vyskočí bublina: kolik nabídek v tom pásmu je a od kolika do
-     kolika korun za metr to je.
-
-     PÁS, NE SLOUPCE. Terč je celý graf a index sloupce si dopočítá ze
-     souřadnice — sloupec má 20 až 30 px, kdežto dotykový terč má mít
-     44. Dvanáct čtyřiačtyřicetipixelových terčů se na kartu nevejde.
-
-     `touch-action:pan-y` ve stylu je nutnost, ne ozdoba: bez něj by
-     prst jedoucí po grafu přestal rolovat stránku a člověk by měl
-     pocit, že se web zasekl.
-
-     NIC SE TÍM NESKRÝVÁ ZA GESTO. Celé sdělení (tento pozemek, medián,
-     rozpětí, počet nabídek) stojí v textu kolem grafu a v popisku pro
-     odečítač obrazovky; bublina je navíc, ne místo toho. Proto taky
-     nemá klávesovou obsluhu: nenese nic, co by se jinde nedalo přečíst.
-     ===================================================================== */
-  function pvGrafOziv(host) {
-    var pas = host && host.querySelector ? host.querySelector('.pvg-pas') : null;
-    var d = PVG;
-    if (!pas || !d || !d.pocet) return;
-    var bub = pas.querySelector('.pvg-bub');
-    var stitek = pas.querySelector('.pvg-stitek');
-    var sloupce = pas.querySelectorAll('.pvg-s');
-    if (!bub || !sloupce.length) return;
-    var vybrany = -1, odpocet = 0;
-    /* Přímý popisek se u krajů zarazí, ať nevyleze z karty. Měří se po
-       vložení do stránky: „tento pozemek 314" je jinak široké než
-       „tento pozemek 22 628". */
-    if (stitek) {
-      var rs = stitek.getBoundingClientRect(), rpas = pas.getBoundingClientRect();
-      var pos = (rs.left < rpas.left) ? (rpas.left - rs.left)
-        : (rs.right > rpas.right) ? (rpas.right - rs.right) : 0;
-      if (pos) stitek.style.transform = 'translateX(calc(-50% + ' + Math.round(pos) + 'px))';
-    }
-
-    function ukaz(i) {
-      var s = sloupce[i];
-      if (!s) return;
-      var x = ((i + 0.5) / d.pocet) * 100;
-      var od = s.getAttribute('data-od'), do_ = s.getAttribute('data-do');
-      var kolik = parseInt(s.getAttribute('data-n'), 10) || 0;
-      /* Poslední sloupec je i přihrádka na všechno dražší, první na
-         všechno levnější — bublina to musí říct, jinak by tvrdila
-         rozpětí, které neplatí. */
-      var pasmo = (i === d.pocet - 1 && d.pretece) ? (fmt(+od) + ' Kč/m² a víc')
-        : (i === 0 && d.podtece) ? (fmt(+do_) + ' Kč/m² a méně')
-        : (fmt(+od) + '–' + fmt(+do_) + ' Kč/m²');
-      bub.innerHTML = '<b>' + esc(String(kolik)) + ' ' + esc(kolik === 1 ? 'nabídka'
-        : (kolik >= 2 && kolik <= 4 ? 'nabídky' : 'nabídek')) + '</b><i>' + esc(pasmo) + '</i>';
-      bub.style.left = x.toFixed(2) + '%';
-      bub.hidden = false;
-      /* Bublina a přímý popisek sedí na témže místě — když naskočí
-         bublina, popisek na chvíli ustoupí, ať se nepřekrývají. */
-      if (stitek) stitek.style.visibility = 'hidden';
-      /* Bublina se u krajů zarazí, ať nevyleze z karty ven. Srovnává se
-         až PO vykreslení: její šířka se mění s obsahem („3 nabídky
-         2 000–4 000 Kč/m²" je o půlku užší než „12 nabídek 10 000 Kč/m²
-         a víc"), takže žádné pevné procento neplatí pro obě. */
-      var rb = bub.getBoundingClientRect(), rp = pas.getBoundingClientRect();
-      var posun = (rb.left < rp.left) ? (rp.left - rb.left)
-        : (rb.right > rp.right) ? (rp.right - rb.right) : 0;
-      if (posun) bub.style.left = 'calc(' + x.toFixed(2) + '% + ' + Math.round(posun) + 'px)';
-      if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
-      s.classList.add('je-vyb');
-      vybrany = i;
-    }
-    function schovej() {
-      bub.hidden = true;
-      if (stitek) stitek.style.visibility = '';
-      if (vybrany >= 0 && sloupce[vybrany]) sloupce[vybrany].classList.remove('je-vyb');
-      vybrany = -1;
-    }
-    function indexZ(e) {
-      var r = pas.getBoundingClientRect();
-      var podil = (e.clientX - r.left) / Math.max(1, r.width);
-      return Math.max(0, Math.min(d.pocet - 1, Math.floor(podil * d.pocet)));
-    }
-    pas.addEventListener('pointerdown', function (e) {
-      clearTimeout(odpocet);
-      try { pas.setPointerCapture(e.pointerId); } catch (x) {}
-      ukaz(indexZ(e));
-    });
-    pas.addEventListener('pointermove', function (e) {
-      /* Myš sleduje i bez stisku, prst jen když se opravdu dotýká. */
-      if (e.pointerType === 'mouse' || e.buttons) ukaz(indexZ(e));
-    });
-    pas.addEventListener('pointerup', function (e) {
-      /* Na dotyku bublina chvíli zůstane — prst ji při zvednutí
-         odkrývá a přečíst ji jde až potom. Na myši ji schová odchod. */
-      if (e.pointerType !== 'mouse') { clearTimeout(odpocet); odpocet = setTimeout(schovej, 2500); }
-    });
-    pas.addEventListener('pointerleave', function (e) {
-      if (e.pointerType === 'mouse') schovej();
-    });
-    pas.addEventListener('pointercancel', schovej);
-  }
+     Smazal se CELÝ, ne jen jeho volání: kreslil ho jen tenhle soubor
+     a nikdo jiný (ověřeno grepem přes js/). Nechat ho ležet by
+     znamenalo mrtvý kód a komentář, který o něm lže — obojí si tenhle
+     repozitář hlídá. Verdikt zůstává jako VĚTA („Levnější než 79 %
+     pozemků téhož druhu…" plus cena za metr a medián), takže to, co
+     histogram kreslil, na stránce pořád stojí — jen to nezabírá
+     60 px navíc. Karta verdiktu klesla z 214 na 152 px.
+     Pokud se histogram jednou bude hodit jinde (například v rychlém
+     prohlížeči na úvodní stránce, kde žádná křivka není), je celý
+     v historii gitu u tohohle commitu. */
   /* Kolik rad k tomuhle pozemku je — ať je ze souhrnu poznat, že se pod ním
      něco skrývá, a kolik toho je. */
   function pzGtkKolik(d) {
@@ -3332,11 +3057,6 @@
     var el = document.getElementById('pz-verdict');
     if (!el) return;
     el.innerHTML = pzVerdictHtml(d);
-    /* Obsluha se věší AŽ TEĎ, na čerstvou značku. Volá se to pokaždé
-       (rychlé vykreslení z úložiště i to pozdější z dat), a protože
-       innerHTML celý blok nahradí, staré posluchače to nedrží — nemá
-       se na čem nasčítat. */
-    pvGrafOziv(el);
   }
 
   // 1) OKAMŽITĚ vykresli z předaného pozemku (sessionStorage) — bez čekání na data.

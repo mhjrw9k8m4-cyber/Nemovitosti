@@ -157,15 +157,11 @@
     .pv-cmp{font-size:12px; color:var(--muted); font-weight:600;}
     .pv-text{font-size:14px; color:var(--muted); line-height:1.5;}
     .pv-text b{color:var(--text);}
-    /* GRAF ROZDĚLENÍ CEN SE PŘESTĚHOVAL DO css/styles.css.
-       Vložený styl je tu kvůli tomu, co je vidět HNED — aby se na
-       kostru stránky nečekalo na druhý soubor. Graf ale kreslí až
-       js/pozemek.js, když dopočítá cenu, tedy dlouho poté, co stylopis
-       dorazil; v každé z 1 995 stránek pozemků tedy leželo 1,6 kB
-       pravidel, která se do prvního vykreslení nepoužijou.
-       Rozdělovač stylopisu je v základním balíku nechá: k tokůnům
-       stránky se přičítají slova ze všech skriptů, které si stránka
-       táhne, a `pvg-*` stojí v js/min/pozemek.js. */
+    /* GRAF ROZDĚLENÍ CEN (histogram) ZE STRÁNKY ZMIZEL ÚPLNĚ, 29. 10.:
+       zůstává jen křivka vývoje ceny podle předlohy ze Sreality. Dřív
+       tu stála poznámka, že se jeho pravidla přestěhovala do
+       css/styles.css — teď tam nejsou ani ta, protože se smazal
+       i kód, který třídy `pvg-*` vypisoval. */
 
     /* Popisek sekce je NADPIS (h2), i když vypadá jako drobný štítek.
        Stránka pozemku měla jediný nadpis — ten hlavní — a zbytek byly

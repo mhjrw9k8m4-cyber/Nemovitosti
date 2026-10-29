@@ -280,141 +280,20 @@ const ADRESA = VYBER
   ? `${BASE}/pozemek.html?p=${encodeURIComponent(`${VYBER.place}|${VYBER.cast || '—'}|${VYBER.okres}`)}`
     + `&ll=${VYBER.lat},${VYBER.lng}`
   : `${BASE}/pozemek.html`;
-const kdeJeZnacka = (p) => p.evaluate(() => {
-  const g = document.querySelector('.pvg');
-  if (!g) return null;
-  const pas = g.querySelector('.pvg-pas'), z = g.querySelector('.pvg-nase');
-  if (!pas || !z) return null;
-  const t = pas.getBoundingClientRect(), r = z.getBoundingClientRect();
-  const st = getComputedStyle(z);
-  let vSloupcich = 0;
-  g.querySelectorAll('.pvg-s').forEach((e) => { vSloupcich += parseInt(e.getAttribute('data-n'), 10) || 0; });
-  return { posun: (r.left + r.width / 2) - t.left, stopa: t.width,
-    vSloupcich, sloupcu: g.querySelectorAll('.pvg-s').length,
-    anim: st.animationName, prechod: st.transitionProperty };
-});
-pravda('našel se pozemek, který verdikt o ceně dostane', !!VYBER,
-  'žádná nabídka nedostane percentil — graf by se neměl na čem měřit');
-{
-  const ctx = await kontext(false);
-  const p = await ctx.newPage();
-  await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
-  const hned = await kdeJeZnacka(p);
-  /* PEVNĚ SCHVÁLNĚ: mezi `hned` a měřením níž leží OKNO ANIMACE, ne
-     čekání na připravenost. Leaflet posouvá značku transformací, což
-     DOM nemění — „DOM utichl" by se tedy dočkal hned a zkouška by
-     změřila půl pohybu (nebo žádný). */
-  await p.waitForTimeout(1200);
-  const potom = await kdeJeZnacka(p);
-  pravda('graf rozdělení cen se na stránce vykreslí', !!potom, 'element .pvg-nase se nenašel');
-  if (potom) {
-    /* Ve sloupcích musí stát tolik nabídek, kolik věta nad grafem
-       slibuje. Bez tohohle by graf mohl ukázat tři nabídky z dvanácti
-       a nikdo by se to nedozvěděl. */
-    const kolikSlibuje = await p.evaluate(() => {
-      const m = /\((\d+)\s+nab/.exec(document.querySelector('.pv-text').textContent || '');
-      return m ? parseInt(m[1], 10) : null;
-    });
-    pravda('a ve sloupcích stojí tolik nabídek, kolik slibuje věta nad ním',
-      kolikSlibuje !== null && potom.vSloupcich === kolikSlibuje,
-      `ve sloupcích ${potom.vSloupcich}, věta slibuje ${kolikSlibuje}`);
-    pravda('a sloupců je aspoň tři, ne jeden na všechno',
-      potom.sloupcu >= 3, `sloupců ${potom.sloupcu}`);
-    pravda('značka naší nabídky stojí a nenajíždí',
-      Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
-      `hned ${hned.posun.toFixed(1)} px, potom ${potom.posun.toFixed(1)} px, animace ${potom.anim}`);
-    pravda('a leží uvnitř grafu, ne za jeho krajem',
-      potom.posun >= -1 && potom.posun <= potom.stopa + 1,
-      `${potom.posun.toFixed(1)} px ze stopy ${potom.stopa.toFixed(1)} px`);
-  }
-  await ctx.close();
-}
-
-// --- 2b) GRAF SE DÁ PROJET PRSTEM ----------------------------------
-// Celý graf je jeden terč: prst jede po ose a sloupec pod ním se
-// zvýrazní. Nad ním vyskočí bublina s tím, kolik nabídek v tom
-// cenovém pásmu je. Měří se čtyři věci, a každá je past na
-// jinou chybu:
-//   • terč má aspoň 44 px (jinak se do něj prstem nedá trefit),
-//   • klepnutí opravdu ukáže bublinu s číslem, ne prázdnou,
-//   • bublina zůstane uvnitř karty i u kraje osy,
-//   • `touch-action` nechá stránku rolovat — bez toho by prst na grafu
-//     přestal hýbat stránkou a web by působil zaseknutě.
-{
-  const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block', viewport: { width: 390, height: 844 },
-    hasTouch: true, isMobile: true });
-  const p = await ctx.newPage();
-  await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('.pvg-nase', { timeout: 12000 }).catch(() => {});
-  await p.waitForTimeout(2200);          // ať je po druhém vykreslení z dat
-  /* NEJDŘÍV K NĚMU DOROLOVAT. `touchscreen.tap` klepe na souřadnice
-     OKNA, ne stránky — a graf se mezitím posunul níž (parametry
-     pozemku šly nahoru pod cenu, viz js/pozemek.js). Bez odrolování
-     klepnutí dopadlo na y 1 206 v okně vysokém 844, tedy do prázdna,
-     a kontrola hlásila „bublina se neukázala", přestože graf fungoval.
-     Stálo to hodinu hledání v kódu, který byl v pořádku. */
-  await p.locator('.pvg-pas').scrollIntoViewIfNeeded().catch(() => {});
-  await p.waitForTimeout(400);
-  const pas = await p.evaluate(() => {
-    const e = document.querySelector('.pvg-pas');
-    if (!e) return null;
-    const r = e.getBoundingClientRect();
-    return { x: r.x, y: r.y, w: r.width, h: r.height, ta: getComputedStyle(e).touchAction };
-  });
-  pravda('graf na telefonu stojí', !!pas, 'element .pvg-pas se nenašel');
-  if (pas) {
-    pravda(`a jeho dotykový terč má aspoň 44 px na výšku (${Math.round(pas.h)})`,
-      pas.h >= 44, `${pas.h.toFixed(1)} px`);
-    pravda('stránka se dá přes graf dál rolovat', /pan-y/.test(pas.ta || ''),
-      `touch-action je „${pas.ta}"`);
-    /* Klepnutí u levého kraje: tam se pozná i to, jestli bublina
-       nevyleze z karty ven. */
-    await p.touchscreen.tap(pas.x + pas.w * 0.04, pas.y + pas.h / 2);
-    await p.waitForTimeout(200);
-    const v = await p.evaluate(() => {
-      const bub = document.querySelector('.pvg-bub');
-      const karta = document.querySelector('.pz-verdict');
-      if (!bub || !karta) return null;
-      const rb = bub.getBoundingClientRect(), rk = karta.getBoundingClientRect();
-      return { skryta: bub.hidden, txt: (bub.textContent || '').trim(),
-        vybranych: document.querySelectorAll('.pvg-s.je-vyb').length,
-        vlevo: Math.round(rb.left - rk.left), vpravo: Math.round(rk.right - rb.right) };
-    });
-    pravda('klepnutí na graf ukáže bublinu s cenou za metr',
-      !!v && !v.skryta && /\d/.test(v.txt) && /Kč\/m/.test(v.txt), JSON.stringify(v));
-    pravda('a zvýrazní právě jeden sloupec', !!v && v.vybranych === 1,
-      `zvýrazněných sloupců: ${v && v.vybranych}`);
-    pravda('bublina zůstane uvnitř karty i u kraje osy',
-      !!v && v.vlevo >= 0 && v.vpravo >= 0, JSON.stringify(v));
-  }
-  await ctx.close();
-}
-
-// --- 3) Kdo má vypnuté animace, vidí přesně totéž --------------------
-// U grafu je to snadné: nenajíždí ani s animacemi zapnutými. Kontrola
-// tu zůstává jako past — kdyby někdo graf „oživil", musí to projít
-// i přes vypnuté animace.
-{
-  const ctx = await kontext(true);
-  const p = await ctx.newPage();
-  await p.goto(ADRESA, { waitUntil: 'domcontentloaded' });
-  await p.waitForSelector('.pvg-nase', { timeout: 8000 }).catch(() => {});
-  const hned = await kdeJeZnacka(p);
-  /* PEVNĚ SCHVÁLNĚ: mezi `hned` a měřením níž leží OKNO ANIMACE, ne
-     čekání na připravenost. Leaflet posouvá značku transformací, což
-     DOM nemění — „DOM utichl" by se tedy dočkal hned a zkouška by
-     změřila půl pohybu (nebo žádný). */
-  await p.waitForTimeout(900);
-  const potom = await kdeJeZnacka(p);
-  pravda('s vypnutými animacemi se v grafu nic nehýbe',
-    hned && potom && Math.abs(hned.posun - potom.posun) < 1 && potom.anim === 'none',
-    `hned ${hned && hned.posun.toFixed(1)} px, potom ${potom && potom.posun.toFixed(1)} px (animace ${potom && potom.anim})`);
-  pravda('a graf je i tak celý vykreslený',
-    potom && potom.vSloupcich >= 10 && potom.sloupcu >= 3,
-    potom ? `nabídek ve sloupcích ${potom.vSloupcich}, sloupců ${potom.sloupcu}` : 'graf se nenašel');
-  await ctx.close();
-}
+/* HISTOGRAM ROZDĚLENÍ CEN TU MĚL TŘI KONTROLY — A SUBJEKT ZMIZEL.
+   Na stránce pozemku byly dva grafy o ceně; 29. 10. šel histogram
+   pryč na majitelovu žádost (zůstává křivka vývoje ceny podle
+   předlohy ze Sreality, důvod je u pzVerdictHtml v js/pozemek.js).
+   Kontroly měřily, že se značka „tento pozemek" v histogramu ani
+   s povolenými animacemi nehýbe. Měřit je na křivce by znamenalo
+   psát je znovu a na jiné značky — a křivku už hlídá test-graf-cen,
+   včetně toho, že se po dokreslení nic neposune.
+   Smazány tedy byly, ne přepsány naoko. Co po nich zůstává a pořád
+   platí: VYBER/ADRESA níž (vybírá se měřením nabídka, která verdikt
+   o ceně dostane) a obecný průchod celou stránkou pod tímhle
+   komentářem — ten měří stránku pozemku jako celek, tedy i křivku.
+   Hlídá se jím přesně to, co hlídaly ony: nekonečné animace
+   a přechody, které něčím posouvají. */
 
 /* ---- A NIC JINÉHO SE TAKY HÝBAT NESMÍ ----
    Kontroly výš měří dvě konkrétní odezvy, na kterých ten slib stojí.

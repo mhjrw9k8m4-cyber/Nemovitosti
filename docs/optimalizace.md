@@ -14955,3 +14955,40 @@ nepostavila, je co měřit → null". Bez nich by se to nasadilo.
 Rychlá sada 134/134. V prohlížeči bez nálezu: `test-mapa-pozemku`
 155/155, `test-graf-cen`, `test-prvni-obrazovka`, `test-hierarchie`,
 `test-rozvrzeni`, `test-stranky-pozemku`, `test-odkryte`, `test-deska`.
+
+## §226 Histogram pryč — na stránce pozemku zůstává jen graf z předlohy
+
+Po §225 (graf přesunutý pod cenu) poslal majitel vzkaz bez obalu:
+odstranit náš graf a nechat tam ten, co mají Sreality. Důvod, který za
+tím stojí, je vidět na obou snímcích vedle sebe: na stránce byly **dva
+grafy o ceně** — křivka vývoje (předloha) a pod ní sloupcový histogram
+rozdělení cen, který na předloze vůbec není. Větší z nich bral pozornost
+a ke křivce se čtenář nedostal.
+
+### Co se smazalo
+
+* volání `pvGrafHtml()` z verdiktu;
+* **celý kód histogramu**: `pvGrafHtml`, `pvGrafOziv`, `pvgKrok`, `PVG`
+  a komentářový blok — 302 řádků v `js/pozemek.js`;
+* jeho pravidla ve stylopisu: 30 selektorů `.pvg*`, 86 řádků;
+* tři kontroly v `test-pohyb`, kterým zmizel subjekt (136 řádků).
+
+Verdikt ZŮSTÁVÁ, jen jako věta: „Levnější než 79 % pozemků téhož druhu
+v prodeji…" plus cena za metr a medián. Karta verdiktu klesla
+z **214 na 152 px**.
+
+### Komentář, který jsem u toho napsal a který lhal
+
+Když jsem odpojil volání, napsal jsem k němu, že se kód nemaže, protože
+„histogram kreslí i rychlý prohlížeč na úvodní stránce". **Nebyla to
+pravda** — `grep` přes `js/` ji vyvrátil hned potom: kreslil ho jen
+`js/pozemek.js` a nikdo jiný. Kdyby ten komentář zůstal, leží
+v repozitáři 302 řádků mrtvého kódu a vedle nich věta, proč je to tak
+správně. Smazalo se proto obojí, kód i tvrzení.
+
+### Po zásahu
+
+Rychlá sada 134/134. V prohlížeči bez nálezu: `test-pohyb` 12/12,
+`test-tokeny`, `test-hierarchie`, `test-rychly-prohlizec`,
+`test-mapa-pozemku`, `test-graf-cen`, `test-odkryte`, `test-deska`,
+`test-prvni-obrazovka`. Histogramů na stránce pozemku: **0**.

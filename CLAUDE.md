@@ -887,3 +887,15 @@ Vzorek pro TAKOVOU kontrolu se tedy staví, ne hledá: vyrobí se vstup
 s vlastností, která se má prokázat. Kontrola nad ostrými daty zůstává
 tam, kde obstojí sama („po očištění nevede na jednu adresu víc nabídek"),
 a počet nalezených případů se vypisuje jako údaj, ne jako podmínka.
+
+### Když se něco odpojí, musí se i smazat — a komentář o tom se ověřuje
+
+Histogram rozdělení cen se 29. 10. odpojil ze stránky pozemku a já k tomu
+napsal, že se jeho kód nemaže, „protože ho kreslí i rychlý prohlížeč na
+úvodní stránce". `grep` přes `js/` to vyvrátil: kreslil ho jediný soubor.
+Zůstalo by 302 řádků mrtvého kódu a vedle nich věta, proč je to v pořádku.
+
+Pravidlo tedy zní: tvrzení „používá se to ještě jinde" se píše AŽ PO
+grepu, ne před ním. A když se ukáže, že se nepoužívá, maže se všechno —
+kód, pravidla ve stylopisu i kontroly ve zkouškách, kterým tím zmizel
+subjekt.
