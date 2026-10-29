@@ -2473,7 +2473,8 @@
          nahrává ho majitel z telefonu. Probudí ji tentýž hlídač, který
          si všímá `data-sn="ceka"`. */
       return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
-        '<rect width="384" height="240" fill="#12241A"/>' +
+        /* Týž podklad jako u leteckého snímku, táž třída (§216). */
+        '<rect class="opp-map-pod" width="384" height="240"/>' +
         '<image data-href="' + p0 + '" x="0" y="0" width="384" height="240" preserveAspectRatio="xMidYMid slice"/>' +
         '</svg>' +
         '<span class="opp-mgrad"></span>' +

@@ -3129,6 +3129,11 @@ h1 em{ color:var(--znacka-svetla);
 /* Fotka je horní část desky, ne samostatný obrázek: vlastní zaoblení
    ani stín už nemá — ty drží karta kolem ní. Dva zaoblené tvary v sobě
    (deska i fotka) dělaly dvojitý rám a právě ten „úřední" dojem. */
+/* PODKLAD NÁHLEDU, než dojdou letecké dlaždice. Byl napsaný natvrdo
+   v js/snimek.js i js/main.js jako #12241A, ačkoli token existuje;
+   dvě kopie jedné barvy se jednou rozejdou. Je to plátno mapy, ne
+   deska — proto tmavá, viz §216. */
+.opp-map-pod{fill:var(--plocha-tmava);}
 .opp-media{position:relative; width:100%; aspect-ratio:16/10; min-height:150px; overflow:hidden; border-radius:0; background:var(--plocha-tlumena) linear-gradient(135deg, rgba(110,150,130,0.12), rgba(110,150,130,0) 60%);}
 /* Vrstvy náhledu nechytají klik — ťuknutí projde na celou kartu (jinak na iOS obrázek „spolkne" klik) */
 /* Záložní plán parcely (prosvítá, když se nenačte satelit) */

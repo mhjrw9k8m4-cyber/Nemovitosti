@@ -625,6 +625,7 @@ to{opacity:1;transform:none}
 .opp-item:hover{box-shadow:var(--e2)}
 .opp-item:hover,.opp-item.hl{transform:translateY(-2px)}
 .opp-item.hl{box-shadow:var(--e3)}
+.opp-map-pod{fill:var(--plocha-tmava)}
 .opp-media{position:relative;width:100%;aspect-ratio:16/10;min-height:150px;overflow:hidden;border-radius:0;background:var(--plocha-tlumena) linear-gradient(135deg,rgba(110,150,130,0.12),rgba(110,150,130,0) 60%)}
 .opp-map{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;pointer-events:none}
 .opp-mgrad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--text-rgb),0.3) 0%,rgba(var(--text-rgb),0) 30%,rgba(var(--text-rgb),0) 56%,rgba(var(--text-rgb),0.55) 100%);pointer-events:none;z-index:1}

@@ -188,6 +188,7 @@ to{opacity:1;transform:none}
 }
 @media (prefers-reduced-motion:reduce){.sk{animation:none}
 }
+.opp-map-pod{fill:var(--plocha-tmava)}
 .opp-map{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;pointer-events:none}
 .opp-mgrad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--text-rgb),0.3) 0%,rgba(var(--text-rgb),0) 30%,rgba(var(--text-rgb),0) 56%,rgba(var(--text-rgb),0.55) 100%);pointer-events:none;z-index:1}
 .opp-badge{position:absolute;top:10px;left:10px;z-index:3;pointer-events:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;letter-spacing:0.02em;padding:4px 8px 4px 8px;border-radius:var(--r-sm);color:#fff;background:rgba(var(--text-rgb),0.74)}
