@@ -1673,7 +1673,34 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
    na --r-ovladani, ať nevypadá jako nalepená nálepka. */
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none;}
-.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
+/* ZNAČKA JE OD 30. 10. PLOCHÁ — A TADY JE PROČ.
+   Kresba (assets/logo-mark.svg) měla tři přelivy a vnitřní záři: dva
+   lineární (plocha dlaždice a špendlík) a jeden radiální. Web se
+   přitom přelivů zbavoval půl týdne (§18, §19, §42) — a tohle byl
+   poslední, co na něm zbyl. Stál navíc na tom nejvíc viditelném místě,
+   nahoře na každé z 2 400 stránek, takže hlavička vypadala jako ikona
+   aplikace nalepená na web. Majitel: „toto nahoře celé předělej do
+   našeho stylu, k našemu webu to nesedí."
+   Teď je to jedna plocha v barvě značky, bílý špendlík a domeček
+   vyříznutý plochou. Barva je v souboru napsaná napevno (#004F2F =
+   --plocha-znacka): do samostatného SVG se token nedostane, a proto
+   se při každé změně palety musí přepsat i tahle kresba.
+   A JE TO --plocha-znacka, NE --znacka. Dlaždice je PLNÁ PLOCHA,
+   a plné plochy mají na webu tenhle odstín — týž, jakým svítí
+   „Profil" na druhém konci téže řádky. S --znacka (#0F5C3B, což je
+   barva TEXTU) stály vedle sebe dvě zelené, které se o chlup míjely.
+   Nápis „Parcelka" zůstává --znacka, protože to text je.
+
+   A ŽÁDNÁ ZÁŘ POD NÍ. `box-shadow:var(--glow)` je zelený svit, který
+   na webu nosí JEN zapnutý ovladač (vrstva mapy, zapnutý filtr) — tedy
+   stav, ne ozdoba. Pod značkou říkal „jsem zapnutá", což je nesmysl.
+
+   POZOR NA KOMENTÁŘ V TOM SOUBORU: vysvětlení tam napsat NEJDE.
+   Zkusil jsem to a značka z celého webu zmizela — XML zakazuje dvě
+   pomlčky uvnitř komentáře a každé jméno tokenu je s nimi začíná,
+   takže se soubor přestal parsovat a `background-image` se prostě
+   nevykreslil. Výklad proto patří sem. */
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=12") center/contain no-repeat;}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
    JMÉNO ZŮSTÁVÁ NA 28 px, a je to měření, ne lenost: v liště stojí
@@ -4998,14 +5025,23 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      sebou, každý vysoký 56 px, s ikonou a popiskem. Tlačítko si staví
      js/menu.js (viz komentář tam) — proto tu na ně nejsou žádné
      požadavky ve značce. */
+  /* HAMBURGER JE OVLADAČ, TAK AŤ TAK VYPADÁ.
+     Do 30. 10. to byly holé čáry bez pole — zatímco na druhém konci
+     téže řádky stál profil v orámované pilulce. Dva ovladače vedle
+     sebe, každý jiným jazykem; majitel: „k našemu webu to nesedí."
+     Dostává proto týž recept jako profil naproti: 44 px, rám
+     --line-ui, zaoblení --r-ovladani, plocha karty. Hlavička je tím
+     souměrná — vlevo ovladač, uprostřed značka, vpravo ovladač.
+     (Stálo tu, že „hamburger nemá vlastní plochu" a proto pilulka.
+     To pravidlo padlo s tím, že plochu dostal.) */
   .nav-burger{order:0; flex:none; display:inline-flex; align-items:center; justify-content:center;
-    /* Pilulka, ne zaoblený čtverec: hamburger nemá vlastní plochu, ale
-       při stisku se podbarví — a kulatá odezva pod prstem je odezva
-       ikony, ne pole. Totéž pravidlo má „nahoru" i srdíčko na kartě. */
-    width:44px; height:44px; margin-right:4px; padding:0; border:0; border-radius:var(--r-pill);
-    background:none; color:var(--text); cursor:pointer;}
+    width:44px; height:44px; margin-right:4px; padding:0;
+    border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+    background:var(--plocha-karta); color:var(--text); cursor:pointer;
+    transition:var(--prechod);}
   .nav-burger svg{width:24px; height:24px;}
-  .nav-burger:active{background:rgba(var(--znacka-hluboka-rgb),0.12);}
+  .nav-burger:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
+  .nav-burger:active{transform:translateY(1px);}
 
   .nav-stin{display:block; position:fixed; inset:0; z-index:90; background:rgba(var(--text-rgb),0.5);}
 

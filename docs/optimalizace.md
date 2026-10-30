@@ -16336,3 +16336,49 @@ ovladače na obsahovou šířku padne na 390 i 320 px.
 **Zkoušky.** Rychlá sada 133/133, `test-ovladani-vypisu` (36), `test-uvod`
 (68), `test-rozvrzeni` (190), `test-prvni-obrazovka` (22), `test-dotyk`,
 `test-u-hrany`, `test-odstupy`, `test-kontrast`.
+
+
+## §254 Hlavička do jazyka zbytku webu
+
+**Zadání (30. 10.):** „Toto nahoře celé předělej do našeho stylu, k našemu
+webu to nesedí."
+
+**Co tam nesedělo, čtyři věci:**
+
+1. **Značka byla jediný přeliv na webu.** `assets/logo-mark.svg` měl tři —
+   dva lineární (plocha dlaždice, špendlík) a jeden radiální jako vnitřní
+   záři. Web se přitom přelivů zbavoval půl týdne (§18, §19, §42). Tenhle
+   zbyl, a stál na tom nejvíc viditelném místě: nahoře na každé z 2 400
+   stránek. Hlavička tím vypadala jako ikona aplikace nalepená na web.
+2. **A navíc pod sebou zelenou zář** (`box-shadow:var(--glow)`). Ten svit
+   na webu nosí JEN zapnutý ovladač — tedy stav, ne ozdoba. Pod značkou
+   říkal „jsem zapnutá".
+3. **Dva ovladače v jedné řádce, každý jiným jazykem.** Vlevo hamburger
+   jako holé čáry bez pole, vpravo profil v orámované pilulce.
+4. **Dvě zelené vedle sebe.** Dlaždice `#0F5C3B` (`--znacka`, barva TEXTU)
+   proti profilu `#004F2F` (`--plocha-znacka`, barva PLNÝCH PLOCH).
+
+**Co je teď.** Kresba je plochá: jedna plocha v `--plocha-znacka`, bílý
+špendlík, domeček vyříznutý plochou. Žádný přeliv, žádná zář. Hamburger
+dostal týž recept jako profil naproti — 44 px, rám `--line-ui`, zaoblení
+`--r-ovladani`, plocha karty. Hlavička je souměrná: **vlevo ovladač,
+uprostřed značka, vpravo ovladač**, a všechny tři mají totéž zaoblení
+(naměřeno 14 px u všech, stín u žádného). Nápis „Parcelka" zůstává
+`--znacka`, protože to text je.
+
+**Past, do které jsem cestou spadl.** Vysvětlení jsem napsal jako komentář
+dovnitř toho SVG — a **značka zmizela z celého webu**. XML zakazuje dvě
+pomlčky uvnitř komentáře a každé jméno tokenu (`--znacka`, `--r-ovladani`)
+jimi začíná; soubor se přestal parsovat a `background-image` se nevykreslil.
+Výklad proto bydlí v `css/styles.css` u pravidla `.logo-mark`, kde je
+i varování, ať to po mně nikdo nezkouší znovu.
+
+**Jedna věc, kterou tahle oprava NEDĚLÁ.** Barva dlaždice je v SVG napsaná
+napevno — do samostatného souboru se token nedostane. Při každé změně
+palety se musí přepsat i ta kresba. Stojí to v komentáři u pravidla.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-hlavicka` (91),
+`test-barvy` (58), `test-kontrast` (2 670 prvků, 0 propadlo), `test-dotyk`,
+`test-u-hrany`, `test-deska`, `test-zaobleni`, `test-rozvrzeni` (190),
+`test-uvod` (68), `test-menu` (32), `test-ikony`, `test-tahy`,
+`test-mrtve-styly`, `test-mrtva-jmena`, `test-prvni-obrazovka`.

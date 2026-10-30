@@ -96,7 +96,7 @@ body{padding-top:var(--vyska-hlavicky,85px)}
 
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none}
-.logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat;box-shadow:var(--glow)}
+.logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=12") center/contain no-repeat}
 @media (min-width:1041px){.logo{font-size:40px;gap:16px}
 .logo-mark{width:64px;height:64px}
 }
@@ -325,9 +325,10 @@ to{opacity:1;transform:none}
 @media (max-width:359px){:root{--vyska-hlavicky:64px}
 }
 header,header.shrink{padding:8px 0;min-height:var(--vyska-hlavicky);box-sizing:border-box}
-.nav-burger{order:0;flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-right:4px;padding:0;border:0;border-radius:var(--r-pill);background:none;color:var(--text);cursor:pointer}
+.nav-burger{order:0;flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin-right:4px;padding:0;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-karta);color:var(--text);cursor:pointer;transition:var(--prechod)}
 .nav-burger svg{width:24px;height:24px}
-.nav-burger:active{background:rgba(var(--znacka-hluboka-rgb),0.12)}
+.nav-burger:hover{border-color:var(--znacka-svetla);color:var(--znacka)}
+.nav-burger:active{transform:translateY(1px)}
 .nav-stin{display:block;position:fixed;inset:0;z-index:90;background:rgba(var(--text-rgb),0.5)}
 #nav{position:fixed;top:0;left:0;bottom:0;z-index:91;width:min(88vw,380px);max-height:none;margin:0;padding:20px 0 28px;display:flex;flex-direction:column;align-items:stretch;gap:0;background:var(--plocha-karta);border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:var(--e3);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;transform:translateX(-101%);visibility:hidden;transition:transform var(--cas-zakladni) var(--ease),visibility 0s linear var(--cas-zakladni)}
 body.nav-otevreno #nav{transform:none;visibility:visible;transition-delay:0s}
