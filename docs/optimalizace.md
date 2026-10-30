@@ -15639,3 +15639,62 @@ vysvětluje, proč v liště nejsou Dražby a Exekuce, a odůvodňuje to větou
 stránky". Od zrušení té řady to neplatí a komentář by tvrdil opak
 skutečnosti. Přepsán: stojí v něm, co se změnilo a kam se na ty stránky
 dnes dá dostat.
+
+## §240 Nadpis a cena na kartě: jeden recept na celém webu
+
+**Co o tom řekl majitel.** Stojí to v CLAUDE.md jeho vlastními slovy:
+„věci mají různou velikost, druh textu, celé to musíš sjednotit."
+
+**Změřeno v prohlížeči** (pět typů stránek, dvě šířky, vypočtené styly):
+
+| karta | nadpis | cena |
+|---|---|---|
+| úvod `.opp-item` | 16/600, na širokém 18/600 | 24/700 |
+| okres, kraj, druh `.okr-item` | 16/700 | 20/700 |
+
+Nadpis měl tedy dva řezy a cena dvě velikosti podle toho, na jaké
+stránce karta leží — na obsahu karty to nezáleželo, jen na tom, který
+stylopis ji potkal první.
+
+**Sjednoceno** na slabší řez u nadpisu (600) a na větší cenu (24), tedy
+na recept z úvodní stránky, protože ta má kartu nejpropracovanější:
+nadpis 16 px, nad 1041 px 18 px, cena 24/700. Rozdíl, který ZŮSTÁVÁ
+schválně: na úvodu vede kartu DRUH nabídky, na okresní MÍSTO. To není
+sazba, to je obsah — nadpis nese jinou informaci, ne jinou velikost.
+
+**Nová zkouška.** `scripts/test-karta-nabidky.mjs` měří nadpis a cenu
+na pěti typech stránek a dvou šířkách a trvá na jednom receptu na každou
+šířku. Prokázána sabotáží: cena zmenšená na 20 px → `✕ cena na kartě má
+jeden recept na celém webu (24/700, 20/700)`, čtyři v pořádku, jedna
+chyba. Zapsána do `.github/workflows/testy.yml`.
+
+## §241 Posuvný pruh nad výpisem a zkouška u hrany
+
+**Co spadlo.** `test-u-hrany` ohlásil na úvodní stránce
+`button#mc-prosle.mc-nastroj 203.0/12.0 px` — tlačítko „Prošlé dražby"
+stálo 12 px od pravé hrany, tedy ani u kraje, ani s okrajem.
+
+**Čí to je vada, poctivě: žádná.** `git stash` ukázal, že pád je starší
+než dnešní změna — přišel s daty. Dnes vypršely tři dražby
+z 29. 10. (`po_terminu` 0 → 3), takže se vedle hledání a filtrů
+vykreslil TŘETÍ nástroj. Geometrie: `#mc-akce` jde od 16 do 374 px,
+tlačítko končí na 378 — o 4 px dál. A tak to má být: pruh nářadí je
+schválně jeden řádek, který se posouvá prstem (`overflow-x:auto`,
+schovaná lišta, prolínačka `.mc-akce.je-dal`), a poslední tlačítko z
+kraje kouká právě proto, aby bylo vidět, že se pruh posouvá dál. Trvá
+na tom `scripts/test-nastroje-v-dosahu.mjs` větou „drží jeden řádek i
+při třech nástrojích (jen se posune do strany)". Dva hlídači si tedy
+odporovali — vadný byl ten obecnější.
+
+**Opraveno v hlídači, ne na webu.** `scripts/test-u-hrany.mjs` teď
+neměří prvek, jehož RODIČ je posuvný pruh, který právě přetéká.
+
+**Proč jen rodič.** Nejdřív to byla podmínka na celý rod nad prvkem
+(kterýkoli předek je posuvný) a sabotáž ukázala, že se tím zakryje
+skutečná vada: karta zatlačená na 8 px od kraje
+(`.opp-item{margin-left:-8px}`) zmizela taky, protože posuvný předek se
+nad kteroukoli kartou najde skoro vždycky. Se zúženou podmínkou sabotáž
+padne, jak má: `li.opp-item.exekuce 8.0/16.0 px | div.opp-media
+9.0/17.0 px | …`, a `#mc-prosle` projde. Po opravě: `test-u-hrany`
+třináct v pořádku, `test-nastroje-v-dosahu` patnáct v pořádku, rychlá
+sada 133 ze 133.

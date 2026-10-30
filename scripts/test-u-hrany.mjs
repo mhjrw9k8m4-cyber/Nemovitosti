@@ -78,6 +78,26 @@ try {
         /* Pevné prvky (plovoucí tlačítko, lišta) mají svoje pravidlo
            a měří je test-nastroje-v-dosahu. */
         if (cs.display === 'none' || cs.position === 'fixed' || !e.getClientRects().length) return;
+        /* PRUH, KTERÝ SE POSOUVÁ DO STRANY, SE NEMĚŘÍ. Nářadí nad
+           výpisem (.mc-akce) je schválně jeden řádek, který při třech
+           nástrojích přeteče a posouvá se prstem — poslední tlačítko
+           pak z kraje kouká a je to ZNAK, ne vada: pruh k tomu má
+           i prolínačku (.mc-akce.je-dal). Hlídá ho
+           scripts/test-nastroje-v-dosahu.mjs („drží jeden řádek i při
+           třech nástrojích, jen se posune do strany").
+           Našlo se to 30. 10., když v datech přibyly prošlé dražby a
+           s nimi třetí nástroj: tlačítko skončilo 12 px od kraje
+           a tahle zkouška ho právem hlásila — jen to nebyla vada.
+           Výjimka platí JEN pro přímé dítě pruhu. Nejdřív jsem ji
+           napsal na celý rod nad prvkem (kterýkoli předek je posuvný)
+           a sabotáž ukázala, proč to nejde: karta zatlačená na 8 px
+           od kraje se skryla taky, protože posuvný předek se nad ní
+           najde skoro vždycky. Takhle padne dál. */
+        const rodic = e.parentElement;
+        if (rodic && rodic !== document.body) {
+          const cr = getComputedStyle(rodic);
+          if (/auto|scroll/.test(cr.overflowX) && rodic.scrollWidth > rodic.clientWidth + 1) return;
+        }
         const r = e.getBoundingClientRect();
         if (r.width < 120 || r.height < 24) return;
         const maPlochu = cs.backgroundColor !== 'rgba(0, 0, 0, 0)' || cs.backgroundImage !== 'none'

@@ -7163,8 +7163,29 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
 /* Jméno obce je nadpis karty, ne odkaz v textu — podtržení patří do
    věty, ne na nadpis. Celá karta je klikatelná (.okr-place::after). */
 .okr-item a.okr-place{text-decoration:none;}
-.okr-item .okr-place{font-size:16px; font-weight:700; letter-spacing:-0.01em;}
-.okr-item .okr-cena b{font-size:20px; letter-spacing:-0.02em; line-height:1.2;}
+/* JEDNA KARTA ZNAMENÁ I JEDNU VELIKOST (30. 10.).
+   Karta na okresních, krajských a druhových stránkách si vzala plochu,
+   obrys, stín i snímek z karty na úvodní stránce — a přesto se vedle
+   sebe pořád četly jinak. Naměřeno na telefonu i na monitoru:
+
+     nadpis karty   úvod 16/600 (na monitoru 18/600)  ·  tady 16/700
+     cena           úvod 24/700                        ·  tady 20/700
+
+   Dva řezy na jeden nadpis a dvě velikosti na jednu cenu. Je to táž
+   nejednotnost, kterou majitel pojmenoval u celé karty („věci mají
+   různou velikost, druh textu, celé to musíš sjednotit"), jen o dvě
+   vrstvy hlouběji. Obojí se tedy srovnává na recept z úvodu — tam je
+   karta nejpoužívanější a podle ní se celá rodina stavěla.
+   Co se tím NEsjednocuje a je to vědomé: nadpisem je tu OBEC, kdežto
+   na úvodu DRUH. Výpis obce je seznam míst, úvodní výpis je seznam
+   nabídek; to je rozdíl obsahu, ne vzhledu. */
+.okr-item .okr-place{font-size:16px; font-weight:600; letter-spacing:-0.01em;}
+.okr-item .okr-cena b{font-size:24px; letter-spacing:-0.02em; line-height:1.1;}
+/* A roste stejně: nadpis karty na úvodu má na širokém displeji 18 px
+   (viz .opp-druh v bloku max-width:1040px), protože je na něj místo.
+   Tady je karta na širokém displeji dokonce řádková se snímkem vlevo,
+   takže místa je ještě víc. */
+@media (min-width:1041px){ .okr-item .okr-place{font-size:18px;} }
 /* Rohová značka patří ke KARTĚ a karta je zpátky — ale `overflow:hidden`
    by jí uřízl roh, a hlavně: v kartě výpisu na úvodní stránce žádná
    není. Jedna karta znamená jedna, i v detailech. */

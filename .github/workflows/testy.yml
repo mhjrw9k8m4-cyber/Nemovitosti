@@ -1111,6 +1111,9 @@ jobs:
       - name: Zakliknutí filtru neposune stránku pod rukou
         run: node scripts/test-bez-skoku.mjs
 
+      - name: Karta nabídky se čte stejně na všech typech stránek
+        run: node scripts/test-karta-nabidky.mjs
+
 
       - name: Značka „už otevřeno"
         run: node scripts/test-videno.mjs
