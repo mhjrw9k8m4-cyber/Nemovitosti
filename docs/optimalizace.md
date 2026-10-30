@@ -16141,3 +16141,50 @@ v šuplíku, bez počtů a bez těch tří odkazů — tedy stav mezi commity
 stránku; stejně tak u tlačítka „Historie" o zprávu dřív. Stojí za to to
 hlídat zvlášť — kdo soudí web podle sestavení z předvčerejška, soudí něco
 jiného, než co je nasazené.
+
+
+## §250 Proč majitel čtyřikrát za dopoledne viděl starou verzi webu
+
+**Jak se to projevilo.** Majitel čtyřikrát po sobě poslal snímek
+a stěžoval si na něco, co už bylo opravené a nasazené: tlačítko „Historie"
+(zrušené v 8:26), šuplík bez značky a bez počtů, a naposledy nadpis
+„Doporučené příležitosti" místo ovladače řazení. Pokaždé to vypadalo, že
+neplním zadání.
+
+**Měření, které to rozhodlo.** Nasazení verze s ovladačem řazení
+(`pages build and deployment`, běh 1682) skončilo úspěchem v **10:25:40**.
+Majitelův snímek téže stránky je z **10:32** a je na něm předchozí verze.
+Mezi tím neleží žádné selhání nasazení — leží tam ukládání v prohlížeči.
+
+**Proč.** Web běží na GitHub Pages. Pages posílá na HTML svoje vlastní
+`Cache-Control` s platností v řádu minut a **vlastní hlavičky neumí
+nastavit**. Repozitář si přitom na dvou místech myslí, že to přebíjí,
+a ani jedno neplatí:
+
+| Kde | Co tam stojí | Proč to neplatí |
+|---|---|---|
+| `vercel.json` | `Cache-Control: no-cache, no-store, must-revalidate, max-age=0` | web nejede na Vercelu, ale na GitHub Pages — ten soubor nikdo nečte |
+| `<meta http-equiv="Cache-Control">` ve všech stránkách | totéž | značka `meta` na HTTP ukládání vliv nemá, prohlížeče ji pro dokument ignorují |
+
+A do třetice to samé tvrdil komentář v `sw.js`: *„stránky mají v hlavičce
+Cache-Control: no-cache, must-revalidate — ten záměr se tady neobchází"*.
+Tři místa psala totéž a ani jedno to nedělalo.
+
+**Co z toho plynulo v kódu.** Servisní pracovník má pro navigace pravidlo
+„nejdřív ze sítě". Jenže `fetch(zadost)` prochází **úložištěm prohlížeče**,
+a dokud je uložená odpověď podle `Cache-Control` čerstvá, vrátí se z disku
+a na server se nejde vůbec. Obsluha si myslela, že byla na síti, a přitom
+vydala starou stránku.
+
+**Oprava.** `fetch(zadost.url, { cache: 'no-cache', … })` — prohlížeč se
+serveru zeptá vždycky, ale smí dostat `304` a vydat uložené tělo, takže to
+nestojí data navíc. Ne `no-store`: to by zahodilo i možnost 304. Adresa jde
+jako řetězec, ne jako `Request`, protože žádost o navigaci má
+`mode: 'navigate'` a `new Request(zadost, …)` by na ní spadla.
+
+**Co to neopravuje.** Už otevřenou kartu to nepřekreslí — ta se musí načíst
+znovu. A `vercel.json` i ty meta značky v repozitáři zůstávají; jsou
+neškodné, ale je to dokumentace, která lže, a proto to stojí tady.
+
+**Zkoušky.** `test-offline` (17), `test-pamet` (64), `test-konzole` (12),
+rychlá sada 133/133.

@@ -43,9 +43,16 @@
  *    kterou tenhle web nemá dělat. Proto se o síť pokusí VŽDYCKY a
  *    úložiště je jen záchrana pro chvíli bez signálu.
  *
- * C) STRÁNKY (navigace): taky nejdřív ze sítě. Stránky mají v hlavičce
- *    Cache-Control: no-cache, must-revalidate — ten záměr se tady
- *    neobchází, jen se k němu přidá záloha pro offline.
+ * C) STRÁNKY (navigace): taky nejdřív ze sítě, a to DOOPRAVDY — viz
+ *    poznámka u zeSiteNejdriv níž. Tady dřív stálo, že „stránky mají
+ *    v hlavičce Cache-Control: no-cache, must-revalidate". Nemají.
+ *    Ten záměr je v repozitáři zapsaný dvakrát a ani jednou neplatí:
+ *    ve vercel.json (web ale jede na GitHub Pages, ne na Vercelu)
+ *    a jako <meta http-equiv="Cache-Control"> v hlavičce stránek
+ *    (meta značka na HTTP ukládání nemá vliv, prohlížeče ji pro
+ *    dokument ignorují). GitHub Pages posílá svoje vlastní
+ *    Cache-Control a nedá se přenastavit — vlastní hlavičky Pages
+ *    neumí. Co s tím jde dělat, se dá dělat jen odsud.
  *
  * ---------------------------------------------------------------------
  * JAK TO VYPNOUT, kdyby se to pokazilo. Service worker je jediná část
@@ -107,10 +114,30 @@ async function zUlozisteNejdriv(zadost, jmeno) {
   return odpoved;
 }
 
+/* „NEJDŘÍV ZE SÍTĚ" SE MUSÍ ŘÍCT I PROHLÍŽEČI.
+   Prosté fetch(zadost) projde ÚLOŽIŠTĚM PROHLÍŽEČE (HTTP cache) —
+   a dokud je uložená odpověď podle Cache-Control „čerstvá", vrátí se
+   rovnou z disku a na server se nejde vůbec. Tahle obsluha si pak
+   myslí, že byla na síti, a přitom vydala starou stránku.
+
+   NAMĚŘENO NA PRODUKCI, A STÁLO TO ČTYŘI NEDOROZUMĚNÍ ZA DOPOLEDNE:
+   nasazení verze proběhlo v 10:25:40, majitelův snímek je z 10:32
+   a je na něm stránka z předchozí verze. GitHub Pages posílá na HTML
+   Cache-Control s desetiminutovou platností; obě místa, kde si
+   repozitář myslí, že to přebíjí (vercel.json a <meta http-equiv>),
+   na Pages neplatí — viz hlavička tohoto souboru.
+
+   `cache: 'no-cache'` to řeší správně: prohlížeč se serveru zeptá
+   VŽDYCKY, ale smí dostat 304 a vydat uložené tělo, takže to nestojí
+   data navíc. (Ne 'no-store' — to by zahodilo i možnost 304.)
+   Adresa se posílá jako řetězec, ne jako Request: žádost o navigaci
+   má mode 'navigate' a `new Request(zadost, …)` by na ní spadla. */
 async function zeSiteNejdriv(zadost, jmeno) {
   const c = await caches.open(jmeno);
   try {
-    const odpoved = await fetch(zadost);
+    const odpoved = await fetch(zadost.url, {
+      cache: 'no-cache', credentials: 'same-origin', redirect: 'follow',
+    });
     if (uloziltelna(odpoved)) { await c.put(zadost, odpoved.clone()); uklid(jmeno); }
     return odpoved;
   } catch (e) {
