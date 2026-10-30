@@ -2981,6 +2981,35 @@ h1 em{ color:var(--znacka-svetla);
    z nich 4 px (při remíze dolů, jak stupnice velí) — hláška se tím
    zúžila o 2 px z každé strany a to je celá změna. */
 .map-count.mc-prazdno{padding:20px 4px; text-transform:none; font-weight:400; line-height:1.6;}
+/* ŘAZENÍ JE VIDĚT NAD VÝPISEM, I KDYŽ SE NASTAVUJE V PANELU.
+   Nadpis „Doporučené příležitosti" nesl jméno zvoleného řazení, ale
+   vypadal jako cedule: majitel 30. 10. „kam jsi dal řazení, nebo-li
+   kolonku doporučené, k čemu tam je?". Je z něj tlačítko — vypadá jako
+   ovladač (rámeček, značka, šipka dolů), nese jméno volby a otevře
+   panel u rozbalovače. Velikost nadpisu si drží: je to pořád to první,
+   co se nad výpisem čte.
+   Terč 44 px kvůli prstu. ZÁPORNÉ ODSAZENÍ TU BÝVALO (−8 px, aby se
+   písmo nadpisu srovnalo s nabídkami pod ním) a hlídač u hrany ho
+   správně odmítl: rámeček tím stál 8 px od okraje obrazovky, tedy
+   v pásmu, kde deska buď má sedět na hraně (0), nebo mít aspoň 16 px.
+   Ovladač proto začíná tam, kde všechno ostatní, a text je o ty 4 px
+   odsazení dovnitř — to oko nepozná, uříznutý rámeček ano. */
+.mc-razeni{display:inline-flex; align-items:center; gap:8px;
+  min-height:44px; padding:4px 8px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+  background:none; color:var(--text); cursor:pointer;
+  font:inherit; font-size:16px; font-weight:700; letter-spacing:-0.01em;
+  -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+.mc-razeni:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
+.mc-razeni > .ik{width:18px; height:18px; stroke-width:2; flex:none; color:var(--znacka-svetla);}
+/* Slovo „Řazení" je popisek, hodnota je ta hlasitá — stejně jako
+   u dlaždic parametrů na stránce pozemku. */
+.mc-razeni-k{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek);
+  letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
+/* Hodnota je to hlasité — nese velikost a řez nadpisu z tlačítka.
+   Vlastní pravidlo má proto, aby se nedala omylem ztišit: je to jediný
+   text nad výpisem, který říká, podle čeho se to řadí. */
+.mc-razeni-v{color:var(--text); white-space:nowrap;}
+.mc-razeni-sip{width:16px; height:16px; stroke-width:2.25; flex:none; color:var(--muted);}
 /* Dlouhý popis nadpisu („Doporučené příležitosti") se na telefonu
    schovává v bloku do 560 px; zbyde samotný počet „1 930 na mapě".
    Počet se přitom nikam neopisuje — viz komentář v js/main.js. */

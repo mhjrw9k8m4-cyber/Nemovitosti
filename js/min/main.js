@@ -4263,8 +4263,11 @@
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + fmt(matched) + ')' : '';
 
-    var headLabel = matched === 0 ? 'Nic nenalezeno'
-      : (sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti');
+    var nazevRazeni = (function () {
+      if (!sortEl) return '';
+      var o = sortEl.options[sortEl.selectedIndex];
+      return o ? o.textContent.trim() : '';
+    })();
     var pripisky = '';
 
     var tlacitka = '';
@@ -4276,6 +4279,7 @@
       + (jePrihlasen() ? 'uloženo na vašem účtu' : 'uloženo jen v tomhle prohlížeči') + '</span>';
 
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
+    if (matched === 0) pripisky = '';
 
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
       ikonaNastroje(ukazSkryte ? 'zakryt' : 'odkryt') +
@@ -4323,9 +4327,35 @@
       + ' aria-label="Procházet po jednom">'
       + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;
 
-    countEl.innerHTML = '<span>' + headLabel + '</span>'
+    countEl.innerHTML = (matched === 0
+      ? '<span>Nic nenalezeno</span>'
+      : '<button type="button" class="mc-razeni" id="mc-razeni"'
+        + ' aria-label="Změnit řazení, teď ' + esc(nazevRazeni) + '">'
+        + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-razeni"/></svg>'
+        + '<span class="mc-razeni-k">Řazení</span>'
+        + '<span class="mc-razeni-v">' + esc(nazevRazeni) + '</span>'
+        + '<svg class="ik mc-razeni-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>'
+        + '</button>')
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
+
+    var razBtn = countEl.querySelector('#mc-razeni');
+    if (razBtn) razBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var panel = document.getElementById('ms-filters');
+      if (panel) panel.open = true;
+      if (!sortEl) return;
+
+      var obal = sortEl.closest ? sortEl.closest('.cdd') : null;
+      var spust = obal ? obal.querySelector('.cdd-btn') : null;
+
+      requestAnimationFrame(function () {
+        var cil = spust || sortEl;
+        try { cil.scrollIntoView({ block: 'center' }); } catch (chyba) {}
+        if (spust) spust.click();
+        else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
+      });
+    });
 
     var hotovoBtn = document.getElementById('msr-hotovo');
     if (hotovoBtn) {

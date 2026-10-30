@@ -191,6 +191,18 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       krajRozbalovatko: !!document.getElementById('map-kraj'),
       razeniMeziFiltry: !!document.querySelector('#ms-filters #map-sort'),
       razeniVidet: vidno(document.getElementById('map-sort')),
+      /* Ovladač nad výpisem: že je, a co na něm stojí. Čte se text,
+         který je opravdu vykreslený — ne značkování. */
+      razeniNadVypisem: vidno(document.getElementById('mc-razeni')),
+      razeniJmeno: (function () {
+        var e = document.querySelector('#mc-razeni .mc-razeni-v');
+        return e ? e.textContent.trim() : '';
+      })(),
+      razeniVybrano: (function () {
+        var se = document.getElementById('map-sort');
+        var o = se && se.options[se.selectedIndex];
+        return o ? o.textContent.trim() : '';
+      })(),
       ulozeneMeziFiltry: !!document.querySelector('#ms-filters #map-fav'),
       ulozeneVidet: vidno(document.getElementById('map-fav')),
       prepinaceJakoStitky: [...document.querySelectorAll('.mc-toggles button')]
@@ -204,17 +216,28 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     `s počtem ${v.druhSPoctem} z ${v.druhStitku}`);
   pravda('kraj už panel nezabírá — od toho je nahoře našeptávač',
     v.krajRozbalovatko === false);
-  /* PRAVIDLO, NE MÍSTO. Dřív tu stálo „musí být uvnitř .ms-vysledky",
-     což je jedno konkrétní místo v dokumentu, a to se změnilo: řazení
-     i „Uložené" se přestěhovaly do lišty nad mapou, napravo za dělicí
-     linku. Důvod byl měřený — ve sloupci širokém 380 px se počet,
-     „Uložené" a řazení nevešly na řádek, zlomily se na tři (102 px
-     z 684 px aplikace) a na výpis zbylo 271 px při kartě vysoké 420 px.
-     Pravidlo z recenze panelu ale zní jinak než ta poloha: řazení
-     a „Uložené" nepatří MEZI FILTRY, protože nic neubírají. To platí
-     dál a hlídá se dál — jen se ptáme na to pravidlo, ne na rodiče. */
-  pravda('řazení není mezi filtry a je vidět',
-    v.razeniVidet === true && v.razeniMeziFiltry === false, JSON.stringify(v));
+  /* ŘAZENÍ JE V PANELU — A MUSÍ BÝT POZNAT ZVENKU.
+     Tahle kontrola dlouho hlídala opak („řazení nepatří mezi filtry,
+     protože nic neubírá"). To pravidlo zrušil 29. 10. majitel sám:
+     „mělo by to být spojené se zbytkem, tedy v té tabulce." Řazení se
+     do panelu přestěhovalo, jenže hlídač zůstal u starého textu a od
+     té chvíle padal na stavu, který si majitel objednal — hlídal tedy
+     pravidlo, které už neplatí. To je horší než nehlídat nic.
+     Co platí dnes: volba bydlí v panelu, ale nad výpisem musí být
+     vidět, JAK je seřazeno, a musí se to dát změnit jedním klepnutím.
+     Bez toho vznikne přesně to, co majitel 30. 10. hlásil: „kam jsi dal
+     řazení, nebo-li kolonku doporučené, k čemu tam je?" */
+  pravda('řazení se nastavuje v panelu filtrů, jak si majitel vyžádal',
+    v.razeniMeziFiltry === true, JSON.stringify(v));
+  pravda('a nad výpisem je vidět, jak je seřazeno — jedním ovladačem',
+    v.razeniNadVypisem && /\S/.test(v.razeniJmeno),
+    `ovladač #mc-razeni: ${v.razeniNadVypisem ? 'je' : 'NENÍ'}, jméno volby: „${v.razeniJmeno}"`);
+  /* Jméno na ovladači se nesmí rozejít s tím, co je v rozbalovači
+     vybrané: dvě místa, jedna pravda. Sabotáž (napsat do ovladače pevný
+     text) tohle chytí, pouhá existence prvku ne. */
+  pravda('a to jméno je přesně ta zvolená položka, ne opsaný text',
+    v.razeniJmeno === v.razeniVybrano,
+    `ovladač „${v.razeniJmeno}" × rozbalovač „${v.razeniVybrano}"`);
   pravda('„Uložené" taky — není to vlastnost pozemku, ale můj výběr',
     v.ulozeneVidet === true && v.ulozeneMeziFiltry === false, JSON.stringify(v));
   pravda('přepínače v panelu vypadají jako štítky, ne jako rozbalovátka',
@@ -275,7 +298,12 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     const deti = mc ? [...mc.children] : [];
     return {
       je: !!g,
-      popisky: g ? [...g.querySelectorAll('.mcs-k')].map((e) => e.textContent.trim()) : [],
+      /* POPISEK JE .mc-cap, NE .mcs-k. Třída .mcs-k na úvodní stránce
+         není (ověřeno v DOM i ve stylopisu) — dotaz vracel prázdné pole,
+         kontrola níž hlásila „ve skupině: (nic)" a padala, přestože
+         cena, cena za m² i výměra v jedné skupině poctivě stály.
+         Hlídač, který měří podle neexistující třídy, neměří nic. */
+      popisky: g ? [...g.querySelectorAll('.mc-cap')].map((e) => e.textContent.trim()) : [],
       maPerM2: !!(g && g.querySelector('#map-perm2')),
       /* Skupina hodnot je zabalená v bloku s návěštím (.mc-hodnoty-blok),
          takže .mc-hodnoty NENÍ přímé dítě panelu — indexOf by vrátil -1.

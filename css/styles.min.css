@@ -538,6 +538,12 @@ to{opacity:1;transform:none}
 }
 .map-count{font-size:16px;color:var(--text);font-weight:700;letter-spacing:-0.01em;margin-bottom:12px}
 .map-count.mc-prazdno{padding:20px 4px;text-transform:none;font-weight:400;line-height:1.6}
+.mc-razeni{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:none;color:var(--text);cursor:pointer;font:inherit;font-size:16px;font-weight:700;letter-spacing:-0.01em;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.mc-razeni:hover{border-color:var(--znacka);background:var(--plocha-tlumena)}
+.mc-razeni>.ik{width:18px;height:18px;stroke-width:2;flex:none;color:var(--znacka-svetla)}
+.mc-razeni-k{font-family:var(--font-popisek);font-size:12px;font-weight:600;color:var(--popisek);letter-spacing:var(--popisek-proklad);text-transform:uppercase}
+.mc-razeni-v{color:var(--text);white-space:nowrap}
+.mc-razeni-sip{width:16px;height:16px;stroke-width:2.25;flex:none;color:var(--muted)}
 .deals-sec[hidden]{display:none}
 .deals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-top:24px}
 .deals-grid:has(>:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}

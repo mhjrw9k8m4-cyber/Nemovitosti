@@ -16020,3 +16020,70 @@ akce je vidět pořád v připnuté spodní liště; ta lišta je od 30. 10.
 zrušená (§245), takže zdůvodnění té meze už neplatí. Patří to
 k úkolu „stránka pozemku má 5 obrazovek" a je to rozhodnutí o rozvržení,
 ne úklid.
+
+## §248 Řazení je nad výpisem vidět — a nadpis přestal být cedule
+
+**Zadání od majitele (30. 10., se snímkem úvodní stránky):** „Kam jsi dal
+řazení, nebo-li kolonku doporučené, k čemu tam je?"
+
+**Co bylo špatně.** Řazení si majitel 29. 10. sám vyžádal do panelu filtrů
+(„mělo by to být spojené se zbytkem, tedy v té tabulce", §170) a tam
+zůstalo. Nad výpisem po něm ale zbyl nadpis **„Doporučené příležitosti"** —
+a to je JMÉNO té zvolené volby. Vypadal jako titulek: nedal se stisknout,
+nikam nevedl a nic neříkalo, že je to řazení. Člověk tedy viděl, JAK je to
+seřazené, a neměl jak to změnit. Majitelova otázka „k čemu tam ta kolonka
+je" je přesně ta správná otázka.
+
+**Co se změnilo.** Z nadpisu je ovladač: `ŘAZENÍ · Doporučené ▾`
+(222×44 px na telefonu 390). Jedním klepnutím otevře panel filtrů,
+odroluje k rozbalovači a rovnou vyjede seznam jedenácti voleb — změřeno:
+`{panelOtevren:true, razeniVidet:true, seznamOtevren:true, volby:11}`.
+
+Volba zůstává v panelu, jak si majitel přál. **Druhá kopie stavu
+nevzniká:** jméno na ovladači se čte z téhož `<select id="map-sort">`,
+takže se ty dva nemůžou rozejít.
+
+**Dvě věci, na které se přišlo až při psaní.**
+
+1. **Na `<select>` se nedá sáhnout přímo.** `js/dropdown.js` nahradí každý
+   rozbalovač vlastním tlačítkem a původnímu dá `tabindex="-1"` a
+   `aria-hidden` — `focus()` na něm tiše neudělá nic. Naměřeno třikrát za
+   sebou: `document.activeElement` zůstal `mc-razeni`, dokud se nepodíval
+   na `tabIndex` (−1). Klepne se proto na `.cdd-btn`, který dropdown
+   vyrobil.
+2. **Panel je `<details>`**; ve chvíli, kdy se mu nastaví `open`, jeho
+   obsah ještě nemá rozvržení, takže se celá akce odkládá o jeden snímek
+   (`requestAnimationFrame`) a posouvá se skokem, ne plynule — dokud
+   plynulé posouvání běží, mění se obdélník pod rukama a seznam voleb by
+   vyjel vedle.
+
+**Dva hlídače, které tiše padaly, a nikdo si jich nevšiml.** Oba padaly
+i před touhle změnou (ověřeno na předchozím commitu) — nejsou tedy jejím
+následkem, ale musely se spravit, protože hlídaly nepravdu:
+
+| Kontrola | Co hlásila | Co s tím |
+|---|---|---|
+| „řazení není mezi filtry a je vidět" | `razeniMeziFiltry: true` | Pravidlo zrušil 29. 10. majitel sám. Hlídač zůstal u starého textu a od té chvíle padal na stavu, který si majitel objednal. Nahrazeno třemi kontrolami dnešního pravidla: volba je v panelu, nad výpisem je ovladač, a jméno na něm se shoduje se zvolenou položkou. |
+| „cena, výměra i cena za metr jsou v jedné skupině" | „ve skupině: (nic)" | Četlo popisky přes třídu `.mcs-k`, která na úvodní stránce neexistuje (ověřeno v DOM i ve stylopisu). Dotaz vracel prázdné pole, takže kontrola neměřila nic. Čte se `.mc-cap`. |
+
+**Sabotáží prokázáno.** Pevný text na ovladači (`Nejlevnější` místo
+zvolené položky) → „a to jméno je přesně ta zvolená položka, ne opsaný
+text" padne. Ovladač schovaný a nadpis vrácený → „a nad výpisem je vidět,
+jak je seřazeno" padne.
+
+**A jedna vada vlastní výroby.** Ovladač měl `margin-left:-8px`, aby se
+písmo srovnalo s nabídkami pod ním — hlídač u hrany to odmítl: rámeček tím
+stál 8 px od okraje obrazovky (mez je 0, nebo aspoň 16). Odsazení je pryč.
+
+**Tlačítko „Historie" v té řadě není.** Bylo zrušené 30. 10. v commitu
+„Přepínač „Historie" pryč" a v repozitáři po něm nezbylo nic — změřeno
+v prohlížeči na dnešním sestavení: `document.getElementById('map-recent')`
+vrací `null`. Na snímku, který majitel poslal, je tedy starší sestavení
+z prohlížeče, ne dnešní stav webu.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči prošly `test-uvod` (68),
+`test-rozvrzeni` (190), `test-ovladani-vypisu` (30), `test-prvni-obrazovka`
+(22), `test-dotyk`, `test-deska`, `test-prechody`, `test-vypadky`,
+`test-odstupy`, `test-pismo`, `test-typografie`, `test-kontrast`,
+`test-zaobleni`, `test-ikony`, `test-tahy`, `test-mrtve-styly`,
+`test-mrtva-jmena` i `test-u-hrany`.

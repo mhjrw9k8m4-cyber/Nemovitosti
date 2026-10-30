@@ -6992,8 +6992,23 @@
     /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené
        příležitosti · 0 na mapě" a pod tím prázdno je protimluv —
        a ještě se to tváří, že web něco doporučil. */
-    var headLabel = matched === 0 ? 'Nic nenalezeno'
-      : (sortMode === 'demand' ? 'Doporučené příležitosti' : 'Vybrané příležitosti');
+    /* NADPIS JE OVLADAČ ŘAZENÍ, NE CEDULE.
+       Majitel 30. 10.: „kam jsi dal řazení, nebo-li kolonku doporučené,
+       k čemu tam je?" Ptal se právem. Řazení si 29. 10. sám vyžádal do
+       panelu filtrů („mělo by to být spojené, tedy v té tabulce") — jenže
+       nad výpisem pak zůstal nadpis „Doporučené příležitosti", který
+       JMÉNO toho řazení nese, ale vypadá jako titulek, nedá se na něj
+       klepnout a nikam nevede. Člověk tedy vidí, JAK je to seřazené,
+       a nemá jak to změnit.
+       Nadpis je proto tlačítko: vypíše „Řazení · <jméno volby>" a otevře
+       panel u rozbalovače řazení. Volba zůstává v panelu, jak si majitel
+       přál; druhá kopie stavu nevzniká — jméno se čte z téhož <select>,
+       takže se ty dva nemůžou rozejít. */
+    var nazevRazeni = (function () {
+      if (!sortEl) return '';
+      var o = sortEl.options[sortEl.selectedIndex];
+      return o ? o.textContent.trim() : '';
+    })();
     var pripisky = '';
     /* TLAČÍTKA MAJÍ VLASTNÍ ŘÁDEK, ne konec věty. Dokud visela na konci
        nadpisu jako podtržená slůvka, lámala se mezi sebe — a protože
@@ -7014,6 +7029,7 @@
        seznam — a v zavřeném rozbalovači se text ještě ořízl. Tady to
        vidí každý, komu se tak právě řadí, a je to výchozí pořadí. */
     if (sortMode === 'demand' && matched) pripisky += ' <span class="mc-pozn">pořadí se střídá každý den</span>';
+    if (matched === 0) pripisky = '';
     // Text je ve <span>, aby podtržení zůstalo u písmen — tlačítko samo je
     // vyšší kvůli dotyku (viz .mc-skryte v css/styles.css).
     if (skryte.length) tlacitka += '<button type="button" class="mc-nastroj" id="mc-skryte">' +
@@ -7151,9 +7167,47 @@
        v něm „N na mapě". Se schovanou .mc-sub jim vycházelo −1.
        Jedno číslo na jednom místě je i tak správně; dvě podoby téhož
        čísla by se dřív nebo později rozešly. */
-    countEl.innerHTML = '<span>' + headLabel + '</span>'
+    countEl.innerHTML = (matched === 0
+      ? '<span>Nic nenalezeno</span>'
+      : '<button type="button" class="mc-razeni" id="mc-razeni"'
+        + ' aria-label="Změnit řazení, teď ' + esc(nazevRazeni) + '">'
+        + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-razeni"/></svg>'
+        + '<span class="mc-razeni-k">Řazení</span>'
+        + '<span class="mc-razeni-v">' + esc(nazevRazeni) + '</span>'
+        + '<svg class="ik mc-razeni-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>'
+        + '</button>')
       + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
+    /* Klepnutí otevře panel a sjede k řazení. Zaměření se dává samotnému
+       <select>, aby na telefonu rovnou vyjel výběr — kdo na tlačítko sáhl,
+       chce měnit pořadí, ne si panel jen prohlédnout. */
+    var razBtn = countEl.querySelector('#mc-razeni');
+    if (razBtn) razBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var panel = document.getElementById('ms-filters');
+      if (panel) panel.open = true;
+      if (!sortEl) return;
+      /* NA ROZBALOVAČ SE NESAHÁ PŘÍMO. js/dropdown.js nahradí každý
+         <select> vlastním tlačítkem a tomu původnímu dá tabindex="-1"
+         a aria-hidden — takže focus() na něm tiše neudělá vůbec nic.
+         Naměřeno: document.activeElement zůstal „mc-razeni" i po třech
+         různých pokusech, dokud se nepodíval na tabIndex (−1).
+         Klepne se proto na tlačítko, které js/dropdown.js vyrobil;
+         když rozbalovač vylepšený není, zbývá původní <select>. */
+      var obal = sortEl.closest ? sortEl.closest('.cdd') : null;
+      var spust = obal ? obal.querySelector('.cdd-btn') : null;
+      /* AŽ V DALŠÍM SNÍMKU: panel je <details> a ve chvíli, kdy se mu
+         nastaví open, jeho obsah ještě nemá rozvržení — rozbalovač by
+         si svůj seznam umístil podle nulového obdélníku.
+         A posouvá se SKOKEM, ne plynule: dokud plynulé posouvání běží,
+         mění se obdélník pod rukama a seznam voleb by vyjel vedle. */
+      requestAnimationFrame(function () {
+        var cil = spust || sortEl;
+        try { cil.scrollIntoView({ block: 'center' }); } catch (chyba) {}
+        if (spust) spust.click();
+        else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
+      });
+    });
     /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
        Tlačítko pod filtry neslo slovo „Hotovo" — tedy nic o tom, co
        člověk právě nastavil. Majitel chtěl vidět, jak filtr mění počet
