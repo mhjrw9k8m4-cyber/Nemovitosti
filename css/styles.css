@@ -2212,7 +2212,10 @@ h1 em{ color:var(--znacka-svetla);
 .map-controls-panel{grid-column:1 / -1; grid-row:1; position:relative;
   background-color:var(--pas-plocha); color:var(--pas-text);
   background-image:linear-gradient(to bottom,
-    rgba(var(--znacka-hluboka-rgb),0.08), rgba(var(--znacka-hluboka-rgb),0) 78%);
+    rgba(var(--znacka-hluboka-rgb),0.13), rgba(var(--znacka-hluboka-rgb),0) 82%);
+  /* A pás je nad obsahem, ne vedle něj: stín `--e1` dolů. Bez něj
+     končil hranou barvy, která vypadala jako chyba vykreslení. */
+  box-shadow:var(--e1);
   border:0; border-radius:0; padding:16px;}
 .map-controls-panel::before{content:""; position:absolute; inset:0; pointer-events:none;
   background-image:linear-gradient(to right, var(--mrizka-cara-svetla) 1px, transparent 1px),
@@ -8399,10 +8402,26 @@ body > footer{flex:none;}
    a „hlavní akce" u tlačítka pod filtry. V řadě tak stojí jedno plné
    políčko a kolem něj obtažená — pořadí důležitosti je vidět bez
    čtení. */
-.mc-rychly{background:var(--plocha-znacka); border-color:transparent; color:#fff;
-  font-weight:700; box-shadow:var(--e1);}
+/* ŽIVOST OVLÁDÁNÍ NAD VÝPISEM (30. 10., na majitelovu druhou žádost:
+   „je to strašně suché oproti zbytku stránky").
+   Čím se to měřilo: o kus níž na téže stránce stojí karty nabídek —
+   syté zelené náhledy, tmavé pilulky odznaků, zelené odznaky slevy.
+   Ovládání nad nimi bylo bílá a šedá bez jediného stínu, takže se obě
+   poloviny obrazovky tvářily, že patří jinam. Ovládání si proto bere
+   totéž, co karty: PLOCHU SE SVĚTLEM SHORA a zvednutí nad podklad.
+   Přeliv je směr světla, ne ozdoba: stín pod tlačítkem říká „svítí
+   shora", a plochá výplň nad ním si s tím odporovala. */
+.mc-rychly{background-color:var(--plocha-znacka); border-color:transparent; color:#fff;
+  background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 38%, rgba(var(--plocha-tmava-2-rgb),0.26));
+  font-weight:700; box-shadow:var(--e1), var(--glow);}
+/* A vedlejší ovladače v téže sestavě jsou bílé klávesy, ne ploché
+   obrysy: týž přeliv o řád slabší a stín `--e1`. Zapnuté „Uložené"
+   (`.mc-prep.on`) se vynechává — to nese sytou značkovou plochu
+   a druhý přeliv přes ni by ji jen zašpinil. */
+.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .mc-razeni{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
 .mc-rychly .mcn-ic{color:#fff;}
-.mc-rychly:hover{background:var(--znacka); border-color:transparent; color:#fff;}
+.mc-rychly:hover{background-color:var(--znacka); border-color:transparent; color:#fff;
+  box-shadow:var(--e2), var(--glow-lg);}
 .mc-rychly:hover .mcn-ic{color:#fff;}
 
 /* NA ŠIROKÉM DISPLEJI JE VÝPIS V ÚZKÉM SLOUPCI VEDLE MAPY A LIŠTA NAD

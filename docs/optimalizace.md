@@ -16572,3 +16572,52 @@ prvků, 0 nálezů), `test-jeden-styl` (33), `test-soustava` (15),
 `test-dotyk`, `test-afordance`, `test-ovladani-vypisu` (48),
 `test-u-hrany`, `test-deska`, `test-barvy`, `test-mrtve-styly` — bez
 chyby.
+
+## §259 Ovládání nad výpisem: světlo shora místo ploché bílé
+
+**Zadání (30. 10., podruhé):** „Hraj si s tím dál, je to strašně suché
+oproti zbytku stránky. Tohle je vážně a potřebuje to udělat detaily,
+přechody a barvičky a živost a víc profesionality."
+
+**Čím se to dalo změřit — pohledem na tutéž stránku o kus níž.** Karty
+nabídek pod ovládáním mají syté zelené náhledy, tmavé pilulky odznaků
+a zelené odznaky slevy. Ovládání nad nimi bylo bílá a šedá bez jediného
+stínu, takže se obě poloviny obrazovky tvářily, že patří na jiný web.
+Ovládání si proto bere totéž, co karty: **plochu se světlem shora
+a zvednutí nad podklad**.
+
+**Co se změnilo.**
+
+1. **Hlavní akce „Procházet po jednom".** Plná zelená dostala přeliv
+   (světlo shora, tma dole) a k stínu `--e1` i značkovou záři `--glow`;
+   po najetí `--e2` a `--glow-lg`. Přeliv tu **není ozdoba, je to směr
+   světla**: stín pod tlačítkem říká „svítí shora" a plochá výplň nad
+   ním si s tím odporovala. To je i důvod zapsaný v `PRELIVY`.
+   (V §258 jsem tenhle přeliv ještě odmítl s tím, že zvednutí už
+   obstarává stín. Majitel to po mně chtěl znovu — a při psaní důvodu
+   se ukázalo, že jeden existuje a je věcný.)
+2. **Vedlejší ovladače v téže sestavě** („Uložené", „Stáhnout výběr",
+   řazení) jsou bílé klávesy, ne ploché obrysy: týž přeliv o řád
+   slabší a stín `--e1`. Zapnuté „Uložené" (`.mc-prep.on`) se
+   vynechává — nese sytou značkovou plochu a druhý přeliv přes ni by ji
+   jen zašpinil.
+3. **Pás s hledáním** má hlubší přeliv (0,08 → 0,13) a stín dolů, takže
+   je nad obsahem, ne vedle něj. Předtím končil hranou barvy, která
+   vypadala jako chyba vykreslení.
+
+**Pravidlo o přelivech drží.** Oba nové jsou v tabulce `PRELIVY`
+i s napsaným důvodem, jinak by je `test-soustava` neuznal. Celkem je
+teď na ploše 17 přelivů a žádný z nich není bez důvodu.
+
+**Co jsem ještě nezvedl.** Řádek „1 918 na mapě / pořadí se střídá
+každý den" zůstává tiše šedý. Nabízelo se udělat z počtu zelený odznak
+v jazyce karet, jenže ten prvek (`#map-count`) čte patnáct zkoušek jako
+zdroj čísla a přestavba jeho obsahu je samostatná práce, ne přílepek
+k barvám.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-soustava` (15),
+`test-kontrast`, `test-okraje` (143 prvků), `test-deska`,
+`test-hierarchie` (21), `test-afordance`, `test-najeti`, `test-dotyk`,
+`test-ovladani-vypisu` (48), `test-uvod` (68), `test-rozvrzeni` (190),
+`test-prvni-obrazovka`, `test-barvy`, `test-zaobleni`, `test-prechody`,
+`test-mrtve-styly`, `test-jeden-styl` (33) — bez chyby.
