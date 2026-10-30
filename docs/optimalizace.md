@@ -15943,3 +15943,80 @@ poznámka 13 px s řádkováním 1,6 (stupnice jde po desetinách, hlídá
 `test-odstupy`, `test-kontrast`, `test-deska`, `test-zaobleni`,
 `test-barvy`, `test-mrtve-styly` i `test-mrtva-jmena` — nové hodnoty
 jsou na stupnicích a nový podklad se nechová jako druhá deska.
+
+## §247 Nastavení mapy: tři pojmenované skupiny místo řady bezejmenných pilulek
+
+**Zadání od majitele:** „S tou mapou bys sis měl víc pohrát, s tím
+nastavením. Je suché to nastavení u mapy — chce to vylepšit, pusť se na
+brutální vylepšení."
+
+**Stav před.** Pruh pod mapou byl jedna zalomená řada ovladačů: dvě
+pilulky podkladu, pět stejných pilulek vrstev a posuvník. Změřeno na
+telefonu 390×844 se zapnutým katastrem a územním plánem — panel 267 px,
+a v něm nic, co by řeklo, co je co. „Letecká" a „Hranice parcel" dělají
+každá něco úplně jiného, ale měly týž tvar i tutéž velikost, takže se to
+dalo poznat jedině tak, že si to člověk zkusí.
+
+**Co se změnilo.**
+
+1. **Každá skupina má jméno.** „PODKLAD", „VRSTVY ÚŘADŮ",
+   „PRŮHLEDNOST VRSTVY" — verzálky 12/600 s prostrkáním z tokenu, tedy
+   týž popisek, jaký nese panel filtrů nad výpisem (`.mc-cap`).
+2. **Podklad je jeden ovladač se dvěma polohami.** Zapuštěná dráha,
+   v ní nadzvednutá poloha; obě poloviny se dělí o řádek rovným dílem.
+   Dvě samostatná tlačítka vedle sebe neříkala, že se vylučují.
+3. **Vrstvy jsou dlaždice se značkou.** Hranice parcel výměra, územní
+   plán budova, záplavy voda, BPEJ druh, ochrana přírody štít — tvar se
+   pozná dřív než text. Nápis se smí zalomit, nesmí se useknout:
+   napoprvé tu stálo `text-overflow:ellipsis` a z „Kvalita půdy (BPEJ)"
+   zbylo „Kvalita půdy (B…", tedy useknuté právě to slovo, kvůli kterému
+   si tu vrstvu někdo zapne.
+4. **Posuvník říká, na kolika stojí.** Číslo na konci popisku,
+   v tabulkových číslicích, aby při tažení neposkakovalo.
+
+**Mřížka, ne druhé @media.** Panel je `grid` s
+`repeat(auto-fit, minmax(200px, 1fr))`. Pod mapou je široký 366 px na
+telefonu (vyjde jeden sloupec, skupiny jdou pod sebe přes celou šířku)
+a 694 px na monitoru (tři sloupce); skupina vrstev si bere celý řádek,
+protože pět dlaždic do čtvrtiny šířky nejde. Staré pravidlo
+`@media (max-width:560px) .pzm-kryti{width:100%}` tím zmizelo — jen by
+opakovalo, co platí samo.
+
+**Ve zvětšení je panel jeden řádek.** Mřížka stavěla skupiny pod sebe
+i přes celou obrazovku a každý řádek ubíral mapě: naměřeno v okně
+1280×860 panel 279 px a mapa 448 px, tedy pod polovinu okna — přesně ten
+„jen jinak zarámovaný okénkový" stav, kvůli kterému zvětšení vzniklo.
+Hlídá to `scripts/test-mapa-pozemku.mjs` (mapa musí zabrat přes 55 %
+okna) a tahle kontrola to taky ohlásila. Vedle sebe zabere ovládání
+93 px a mapě zbude 591.
+
+**Značka, která nikde nebyla.** Napoprvé měly „Hranice parcel" ikonu
+a „Územní plán" prázdno. Důvod: sadu tvarů skládá
+`scripts/sjednot-ikony.mjs` tak, že hledá odkaz na symbol DOSLOVA
+v textu modulu, a v `js/pozemek.js` se skládal z kousků (předpona
+zvlášť, jméno zvlášť). Nenašlo se tedy nic a do stránky se vložily jen
+symboly použité jinde. Odkazy se proto píšou celé.
+
+**A hlídač na to.** Statická kontrola ikon to nechytí — ty odkazy ve
+zdroji stránky vůbec nejsou, píše je až skript v prohlížeči. Do
+`scripts/test-mapa-pozemku.mjs` proto přibyly čtyři kontroly měřené
+v DOMu: každá dlaždice má značku, ta značka je ve vložené sadě tvarů,
+opravdu se vykreslí (nenulové rozměry) a žádné dvě vrstvy nemají tutéž.
+Sabotáží ověřeno: po návratu ke skládanému odkazu hlásí
+„bez tvaru: uzemni-plan → #i-budova". Druhou sabotáží (návrat zvětšení
+k mřížce) hlásí „po zvětšení mapa zabere většinu okna — 390 px → 493 px
+z okna 860 px".
+
+**Co to stálo.** Vložený styl 19,5 kB z 24 (strop) a 227 pravidel z 240.
+Panel na telefonu vyrostl z 267 na 382 px a stránka pozemku z 4 041 na
+4 156 px, tedy o 115 px — za to, že se panel dá přečíst bez zkoušení.
+
+**Co to odhalilo (neopraveno).** `scripts/test-poradi-pozemku.mjs` padá
+na kontrole „odkaz na nabídku stojí v první polovině stránky": hlavní
+akce je na telefonu 360×800 na 2 734 px z 3 855 px. Padalo to i před
+touhle změnou (2 667 px z 3 789 px), takže to není její následek — ale
+je to dluh. Mez „polovina" se totiž kdysi uvolnila z „třetiny" s tím, že
+akce je vidět pořád v připnuté spodní liště; ta lišta je od 30. 10.
+zrušená (§245), takže zdůvodnění té meze už neplatí. Patří to
+k úkolu „stránka pozemku má 5 obrazovek" a je to rozhodnutí o rozvržení,
+ne úklid.

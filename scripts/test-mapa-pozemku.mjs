@@ -365,6 +365,39 @@ const HOST = {
   pravda('a žádná další vrstva se sama nezapne',
     jineZapnute.length === 1 && jineZapnute[0] === 'katastr', jineZapnute.join(', '));
 
+  /* ZNAČKA NA DLAŽDICI MUSÍ BÝT OPRAVDU VIDĚT, NE JEN ODKÁZANÁ.
+     Dlaždice vrstvy nese <use href="#i-…">, jenže sadu tvarů skládá
+     sestavení (scripts/sjednot-ikony.mjs) tak, že hledá ten odkaz
+     DOSLOVA v textu modulu. Když se v js/pozemek.js skládal z kousků
+     ('#i-' + jméno), nenašlo se nic, do stránky se vložily jen symboly
+     použité jinde — a „Územní plán" měl místo značky prázdno, zatímco
+     „Hranice parcel" značku měl (tvar se kreslí i v parametrech výš).
+     Statická kontrola ikon tohle nechytí: ty odkazy ve zdroji stránky
+     vůbec nejsou, píše je až skript v prohlížeči. Měří se proto
+     v DOMu: ke každému odkazu musí v dokumentu existovat symbol
+     a jeho obrázek musí mít nenulové rozměry. */
+  const znacky = await p.evaluate(() => [...document.querySelectorAll('#pzm-vr .pzm-v')].map((b) => {
+    const u = b.querySelector('use');
+    const odkaz = u ? (u.getAttribute('href') || u.getAttribute('xlink:href') || '') : '';
+    const r = u ? u.ownerSVGElement.getBoundingClientRect() : { width: 0, height: 0 };
+    return { id: b.getAttribute('data-id'), odkaz,
+      vSade: !!(odkaz && document.querySelector(odkaz)),
+      sirka: Math.round(r.width), vyska: Math.round(r.height) };
+  }));
+  pravda('každá dlaždice vrstvy má na sobě značku', znacky.length >= 3 && znacky.every((z) => z.odkaz),
+    JSON.stringify(znacky));
+  pravda('a ta značka je ve vložené sadě tvarů, ne jen odkázaná',
+    znacky.every((z) => z.vSade),
+    'bez tvaru: ' + znacky.filter((z) => !z.vSade).map((z) => z.id + ' → ' + z.odkaz).join(', '));
+  pravda('a opravdu se vykreslí (nenulové rozměry)',
+    znacky.every((z) => z.sirka >= 12 && z.vyska >= 12),
+    JSON.stringify(znacky.filter((z) => z.sirka < 12 || z.vyska < 12)));
+  /* Dva tvary na jednu práci jsou totéž co žádný: pět vrstev vedle sebe
+     se má rozlišit tvarem, a dvě stejné značky to znemožní. */
+  pravda('a žádné dvě vrstvy nemají tutéž značku',
+    new Set(znacky.map((z) => z.odkaz)).size === znacky.length,
+    znacky.map((z) => z.id + ' → ' + z.odkaz).join(', '));
+
   /* Dál se zkouší ruční přepínání, takže se hranice nejdřív vypnou.
      Ne slepým klepnutím: kdyby se výchozí zapnutí někdy ztratilo,
      klepnutí by vrstvu naopak ZAPNULO a test by pak spadl výjimkou

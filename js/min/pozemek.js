@@ -491,6 +491,11 @@
 
   var ACCESS_SVG = FEAT_ICON['Příjezd'];
 
+  var IKONY_VRSTEV = {
+    'katastr': '#i-vymera', 'uzemni-plan': '#i-budova', 'zaplavy': '#i-voda',
+    'bpej': '#i-druh', 'ochrana': '#i-stit'
+  };
+
   var ZAKLADY = (global.PK_SNIMEK && global.PK_SNIMEK.podklady) || [];
 
   function sourHtml(d) {
@@ -530,18 +535,29 @@
             '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spendlik"/></svg>' +
             '<span>Na pozemek</span>' +
           '</button>' +
-          '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
-            ZAKLADY.map(function (z, i) {
-              return '<button class="pzm-z' + (i === 0 ? ' on' : '') + '" type="button" data-zaklad="' + z.id +
-                '" aria-pressed="' + (i === 0) + '">' + esc(z.nazev) + '</button>';
-            }).join('') +
+
+          '<div class="pzm-grp">' +
+            '<span class="pzm-cap">Podklad</span>' +
+            '<div class="pzm-zaklad" role="group" aria-label="Podklad mapy">' +
+              ZAKLADY.map(function (z, i) {
+                return '<button class="pzm-z' + (i === 0 ? ' on' : '') + '" type="button" data-zaklad="' + z.id +
+                  '" aria-pressed="' + (i === 0) + '">' + esc(z.nazev) + '</button>';
+              }).join('') +
+            '</div>' +
           '</div>' +
 
-          '<div class="pzm-vr" id="pzm-vr" aria-live="polite">' +
-            '<span class="pzm-hleda"><span class="mnb-ceka" aria-hidden="true"></span>Zkouším mapové vrstvy úřadů…</span>' +
+          '<div class="pzm-grp pzm-grp-v">' +
+            '<span class="pzm-cap">Vrstvy úřadů</span>' +
+            '<div class="pzm-vr" id="pzm-vr" aria-live="polite">' +
+              '<span class="pzm-hleda"><span class="mnb-ceka" aria-hidden="true"></span>Zkouším mapové vrstvy úřadů…</span>' +
+            '</div>' +
           '</div>' +
-          '<label class="pzm-kryti" id="pzm-kryti" hidden>' +
-            '<span>Průhlednost vrstvy</span>' +
+
+          '<label class="pzm-kryti pzm-grp" id="pzm-kryti" hidden>' +
+            '<span class="pzm-kryti-hl">' +
+              '<span class="pzm-cap">Průhlednost vrstvy</span>' +
+              '<output class="pzm-kryti-v" id="pzm-kryti-v" for="pzm-kryti-r">65\u00a0%</output>' +
+            '</span>' +
             '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
           '</label>' +
         '</div>' +
@@ -644,6 +660,7 @@
     var popis = document.getElementById('pzm-popis');
     var kryti = document.getElementById('pzm-kryti');
     var posuvnik = document.getElementById('pzm-kryti-r');
+    var cislo = document.getElementById('pzm-kryti-v');
     var zive = {};
     var pridano = 0;
 
@@ -681,6 +698,8 @@
       if (posuvnik) {
         var v = (+posuvnik.value || 65) / 100;
         Object.keys(zive).forEach(function (k) { zive[k].setOpacity(v); });
+
+        if (cislo) cislo.textContent = Math.round(v * 100) + '\u00a0%';
       }
     }
     if (posuvnik) posuvnik.addEventListener('input', prepocitejKryti);
@@ -759,7 +778,10 @@
       b.className = 'pzm-v';
       b.setAttribute('data-id', def.id);
       b.setAttribute('aria-pressed', 'false');
-      b.textContent = def.nazev;
+
+      b.innerHTML = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="'
+        + (IKONY_VRSTEV[def.id] || '#i-vrstvy') + '"/></svg><span></span>';
+      b.lastChild.textContent = def.nazev;
       b.addEventListener('click', prepni);
       function prepni() {
         if (zive[def.id]) {

@@ -499,11 +499,26 @@
       -webkit-tap-highlight-color:transparent;
       transition:var(--prechod);}
     .pzm-zpet-btn svg{width:16px; height:16px; stroke-width:2; flex:none;}
+    /* V mřížce panelu má vlastní řádek (1/-1) a šířku podle nápisu
+       (justify-self:start) — roztažené přes 694 px monitoru by vypadalo
+       jako odesílací tlačítko formuláře, ne jako návrat na pozemek. */
+    .pzm-zpet-btn{grid-column:1/-1; justify-self:start;}
     .pzm-zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
     .pzm-zpet-btn[hidden]{display:none;}
     .pzm-cela-zap{position:fixed; inset:0; z-index:1200; border-radius:0; border:0; display:flex; flex-direction:column; background:var(--plocha-zapustena);}
     .pzm-cela-zap .pzm-mapa{flex:1 1 auto; height:auto; min-height:0;}
-    .pzm-cela-zap .pzm-panel{flex:none;}
+    /* VE ZVĚTŠENÍ JE OVLÁDÁNÍ JEDEN ŘÁDEK, NE TŘI.
+       Pod mapou staví mřížka skupiny pod sebe — na telefonu to jinak
+       nejde. Přes celou obrazovku je ale místa vodorovně dost a každý
+       další řádek ubírá právě mapě: naměřeno v okně 1280×860 panel
+       279 px a mapa 448 px, tedy pod polovinu okna. To je přesně ten
+       „jen jinak zarámovaný okénkový" stav, kvůli kterému zvětšení
+       vzniklo (hlídá scripts/test-mapa-pozemku.mjs: mapa musí zabrat
+       přes 55 % okna). Vedle sebe zabere ovládání 93 px. */
+    .pzm-cela-zap .pzm-panel{flex:none; display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px 24px;}
+    .pzm-cela-zap .pzm-grp-v{flex:1 1 320px;}
+    .pzm-cela-zap .pzm-vr{display:flex; flex-wrap:wrap;}
+    .pzm-cela-zap .pzm-kryti{flex:0 1 240px;}
     /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
        je i v malém zobrazení, takže tady jen ubírá místo; vysvětlivky
        barev zůstávají (bez nich je plán jen skvrna), ale jen na pruh. */
@@ -511,21 +526,69 @@
     .pzm-cela-zap .pzm-leg{max-height:17vh; overflow:auto; padding:8px 12px;}
     .pzm-cela-zap .pzm-leg-k img{max-height:11vh; width:auto;}
     body.pzm-cela-telo{overflow:hidden;}
-    .pzm-panel{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; border-top:1px solid var(--line); background:var(--plocha-karta);}
-    .pzm-zaklad{display:inline-flex; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-pill); padding:2px; flex:none;}
-    .pzm-z{height:31px; padding:0 12px; border:0; background:transparent; border-radius:var(--r-pill); font:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+    /* NASTAVENÍ MAPY MÁ TŘI SKUPINY A KAŽDÁ MÁ JMÉNO.
+       Pruh pod mapou byl jedna řada bezejmenných ovladačů: dvě pilulky
+       podkladu, pět stejných pilulek vrstev a posuvník, všechno vedle
+       sebe a nic neříkalo, co je co. Majitel na to poslal snímek se
+       slovy „s tím nastavením u mapy je to suché". Měl pravdu — a není
+       to jen o vzhledu: „Letecká" a „Hranice parcel" dělají každá něco
+       úplně jiného, ale vypadaly stejně, takže se to musí vyzkoušet,
+       aby se to poznalo.
+       Teď má každá skupina popisek (verzálky 12/600, týž hlas jako
+       .mc-cap nad výpisem), podklad je souvislý segmentový přepínač
+       (jedna věc se dvěma polohami, ne dvě nezávislá tlačítka) a vrstvy
+       jsou dlaždice se značkou, takže se tvar pozná dřív než text.
+
+       MŘÍŽKA, NE ZALAMOVANÁ ŘADA. Panel je pod mapou široký 366 px na
+       telefonu a 694 px na monitoru. Na auto-fit to stačí: na telefonu
+       vyjde jeden sloupec (skupiny jdou pod sebou přes celou šířku),
+       na monitoru tři (podklad a průhlednost vedle sebe) — a vrstvy
+       dostanou celý řádek, protože pět dlaždic do čtvrtiny šířky
+       nejde. Žádné @media na to není potřeba. */
+    .pzm-panel{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; align-items:start; padding:12px; border-top:1px solid var(--line); background:var(--plocha-karta);}
+    .pzm-grp{display:flex; flex-direction:column; gap:4px; min-width:0;}
+    .pzm-grp-v{grid-column:1/-1;}
+    .pzm-cap{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek); letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
+    /* Podklad je JEDEN ovladač se dvěma polohami — proto zapuštěná dráha
+       a v ní nadzvednutá poloha, ne dvě tlačítka vedle sebe. */
+    .pzm-zaklad{display:flex; gap:2px; background:var(--plocha-zapustena); border:1px solid var(--line); border-radius:var(--r-pill); padding:4px;}
+    .pzm-z{height:36px; display:inline-flex; align-items:center; justify-content:center; padding:0 12px; border:0; background:transparent; border-radius:var(--r-pill); font:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+    /* Jen v přepínači podkladu se obě poloviny dělí o řádek rovným dílem.
+       `pzm-z` nosí i drobné „Zkusit znovu" u spadlé vrstvy — to se roztáhnout nesmí. */
+    .pzm-zaklad > .pzm-z{flex:1 1 0;}
     .pzm-z.on{background:var(--plocha-karta); color:var(--znacka-svetla); box-shadow:var(--e1);}
-    .pzm-vr{display:flex; flex-wrap:wrap; gap:4px; align-items:center; min-height:34px;}
-    .pzm-v{height:34px; padding:0 12px; border-radius:var(--r-pill); border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26); background:var(--plocha-karta); font:inherit; font-size:13px; font-weight:600; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+    .pzm-vr{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; min-height:34px;}
+    .pzm-v{display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; text-align:left; border-radius:var(--r-ovladani); border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26); background:var(--plocha-karta); font:inherit; font-size:13px; font-weight:600; line-height:1.3; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+    /* 18 px a tah 2 — dopočteno k velikosti (36 ÷ 18), stejně jako
+       u ostatních značek na webu; hlídá scripts/test-tahy.mjs. */
+    .pzm-v > svg{width:18px; height:18px; stroke-width:2; flex:none;}
+    /* Odsazení 8 px na všechny strany, ne 12 po bocích: na telefonu
+       vychází dlaždice 158 px a „Záplavové území" je 106 px široké.
+       Se dvanácti zbylo na text přesně 106 px a nápis se zalamoval na
+       dva řádky kvůli zaokrouhlení; s osmi zbývá 116 px a drží se na
+       jednom. (Zalomí se tak jen „Kvalita půdy (BPEJ)" se 123 px —
+       ta se na jeden řádek nevejde při žádném rozumném odsazení.)
+
+    NÁPIS SE SMÍ ZALOMIT, NESMÍ SE USEKNOUT. Napoprvé tu stálo
+       text-overflow:ellipsis a z „Kvalita půdy (BPEJ)" zbylo
+       „Kvalita půdy (B…" — tedy useknuté právě to slovo, kvůli kterému
+       si tu vrstvu někdo zapne. Dlaždice proto roste do výšky; mřížka
+       je roztáhne na stejnou (align-items:stretch je výchozí). */
+    .pzm-v > span{min-width:0;}
     .pzm-v:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
     .pzm-v:active{transform:translateY(1px);}
     .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
-    .pzm-hleda, .pzm-nic{display:inline-flex; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
-    /* Posuvník se NEODTLAČUJE doprava (margin-left:auto). Když se přepínače
-       zalomí do druhého řádku, zůstal by viset sám v pravém rohu pod nimi
-       a vypadal by, že k nim nepatří. Takhle jde prostě za nimi. */
-    .pzm-kryti{display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; color:var(--muted);}
-    .pzm-kryti input{width:104px; accent-color:var(--plocha-znacka);}
+    /* Hláška o hledání i o spadlé službě patří přes celý řádek mřížky —
+       do jedné buňky vedle dlaždic by se zalomila na tři řádky. */
+    .pzm-hleda, .pzm-nic{grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
+    /* POSUVNÍK ŘÍKÁ, NA KOLIKA STOJÍ. Táhlo bez čísla je hádanka: vidět
+       je poloha, ne hodnota. Číslo stojí na konci popisku (tedy tam, kam
+       oko po přečtení „průhlednost vrstvy" dojede) a je v tabulkových
+       číslicích, aby při tažení neposkakovalo. */
+    .pzm-kryti{gap:4px;}
+    .pzm-kryti-hl{display:flex; align-items:baseline; justify-content:space-between; gap:8px;}
+    .pzm-kryti-v{font-family:var(--font-popisek); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
+    .pzm-kryti input{width:100%; accent-color:var(--plocha-znacka);}
     .pzm-popis{margin:0; padding:8px 12px; border-top:1px solid var(--line); background:var(--plocha-karta); font-size:13px; line-height:1.6; color:var(--muted);}
     /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
        nakreslil. Není to chyba, je to stav — proto ne červená, ale
@@ -561,10 +624,11 @@
     .pzm .leaflet-control-attribution{font-size:11px; max-width:70%;}
     @media (max-width:560px){
       .pzm-mapa{height:300px;}
-      /* Na úzkém displeji se posuvník nevejde do řádku s přepínači, a když
-         se zalomí doprava, visí v prázdnu. Ať zabere celý řádek. */
-      .pzm-kryti{width:100%;}
-      .pzm-kryti input{flex:1;}
+      /* Posuvník tu míval width:100% a flex:1, aby na úzkém displeji
+         nevisel sám v pravém rohu pod zalomenými přepínači. Od přestavby
+         panelu na mřížku je každá skupina vlastní buňka a na telefonu
+         vyjde jeden sloupec — tohle pravidlo by tedy jen opakovalo,
+         co platí samo. */
     }
 
     /* Vysvětlivka u přepočtené ceny za metr — kurzívou, menší, pod číslem:
@@ -603,7 +667,8 @@
        na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
        odkaz zpět na seznam 22 px, zvětšení mapy 36 px, přepínače
        podkladu 31 px a vrstev 34 px — a to jsou prvky, kterými se mapa
-       na telefonu jedině ovládá.
+       na telefonu jedině ovládá. (Vrstvy jsou od přestavby panelu
+       dlaždice vysoké 44 px pořád, podklad zůstává 36 px na monitoru.)
        Platí jen na dotykových displejích, aby se na počítači nic
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
@@ -614,7 +679,9 @@
          samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
       .pzm-kryti input{height:44px;}
       .pzm-cela-btn{width:44px; height:44px;}
-      /* Na dotyku terč 44 px — stejně jako přepínače vrstev vedle. */
+      /* Na dotyku terč 44 px — stejně jako dlaždice vrstev vedle. */
       .pzm-zpet-btn{height:44px; font-size:14px;}
-      .pzm-z, .pzm-v{height:44px;}
+      /* Dlaždice vrstev mají 44 px už ve výchozím stavu (jsou to terče
+         s ikonou, ne drobné pilulky), takže tu zbývá jen podklad. */
+      .pzm-z{height:44px;}
     }
