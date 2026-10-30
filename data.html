@@ -64,7 +64,7 @@
     
         <nav id="nav" aria-label="Hlavní navigace">
       <div class="nav-hlava"><span class="logo-mark" aria-hidden="true"></span><span class="nav-znacka">Parcelka</span></div>
-      <a href="index.html#mapa"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>Hledat na mapě<span class="nav-pocet">1 918</span></a>
+      <a href="index.html#mapa"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>Hledat na mapě<span class="nav-pocet">1 917</span></a>
       <a href="cena-pozemku.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cena"/></svg>Ceny pozemků</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
@@ -92,8 +92,8 @@
     <p class="dt-uvod">Všechny nabídky jsou v <b>jednom souboru</b>. Není k němu potřeba klíč,
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
-    <p class="dt-cisla">Teď je v něm <b>1 925</b> nabídek a má
-      <b>650&nbsp;kB</b>. Z toho je <b>7</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 918</b> pozemků.</p>
+    <p class="dt-cisla">Teď je v něm <b>1 924</b> nabídek a má
+      <b>650&nbsp;kB</b>. Z toho je <b>7</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 917</b> pozemků.</p>
   </section>
 
   <section class="dt-sekce">
@@ -103,10 +103,10 @@
       <li><b>Nejsou to prodejní ceny.</b> Jsou to ceny <b>nabídkové</b> — za kolik se pozemek
         nabízí, ne za kolik se prodal. Skutečné prodejní ceny ve veřejných zdrojích nejsou.</li>
       <li><b>Nejsou to všechny pozemky v ČR</b>, jen ty, které jsou právě někde nabízené.</li>
-      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 531 řádků v souboru, na webu 530 po odstranění duplicit)
+      <li><b>U spoluvlastnického podílu</b> (<code>podil: true</code>, 530 řádků v souboru, na webu 529 po odstranění duplicit)
         je cena za zlomek pozemku. Výměra ale neznamená u všech totéž:
         kde inzerát dokazuje, že je to už výměra podílu, má řádek
-        <code>vymera_podilu: true</code> (413 z 531) — a dělit
+        <code>vymera_podilu: true</code> (412 z 530) — a dělit
         takovou výměru podílem ze <code>zlomek</code> znamená spočítat cenu za metr násobně
         vyšší. U zbytku je výměra celé parcely a dělit se musí. Kdo
         <code>vymera_podilu</code> přehlédne, dostane číslo, které neplatí pro nikoho — a to
