@@ -96,16 +96,25 @@ export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
       </div></details>
       <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
     </nav>
-    <a class="hdr-ucet" href="muj-inzerat.html" aria-label="Můj profil"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg></a>`;
+    <a class="hdr-ucet" href="muj-inzerat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg><span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>`;
 
 /* PROFIL PATŘÍ DO LIŠTY, NE JEN DO ŠUPLÍKU.
    Majitel 29. 10.: „nahoru doprava přidej profil, ikonku profilu, aby
    člověk viděl, že je přihlášený." Dosud byl účet jen uvnitř výsuvné
    nabídky (`details.nav-ucet-sk`), tedy za třemi čárkami — kdo je
    přihlášený, neměl na obrazovce nic, co by mu to řeklo.
-   Stav se kreslí STYLEM, ne skriptem: `html.pk-prihlasen` nasazuje
-   vložený skript v hlavičce ještě před vykreslením (viz js/hlavicka.js),
-   takže tečka u ikony nebliká a nepotřebuje vlastní kód.
+   30. 10. k tomu dodal: „mělo by být jasné, zda je člověk přihlášený,
+   nebo tam necháš místo." Samotná ikona s tečkou to neřekne — tečka je
+   9 px a člověk neví, co znamená. Ovladač proto NESE SLOVO: odhlášený
+   čte „Přihlásit" (bílá dlaždice s obrysem), přihlášený „Můj profil"
+   (zelená plocha). Oba nápisy stojí ve značce a přepíná je styl.
+   Stav se kreslí STYLEM, ne skriptem: `html.pk-prihlasen` a
+   `html.pk-odhlasen` nasazuje vložený skript v hlavičce ještě před
+   vykreslením (viz js/hlavicka.js), takže nápis nebliká a nepotřebuje
+   vlastní kód. Jméno ovladače pro odečítač je ten nápis, proto tu není
+   aria-label: ten by oba stavy přebil jedním slovem. Pod 360 px se
+   nápis schová oku (clip-path), ne odečítači — jinak by z ovladače
+   zbyl odkaz bez jména.
 
    VZOR BERE I TLAČÍTKO. Kdyby končil u `</nav>`, přidalo by se při
    každém dalším sestavení znovu — tohle se v repozitáři už jednou

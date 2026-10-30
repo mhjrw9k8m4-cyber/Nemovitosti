@@ -1531,7 +1531,7 @@ body.vm-otevreno{overflow:hidden;}
    takže vysouvací nabídka uvnitř ní se umisťovala vůči hlavičce, ne
    vůči oknu. Na dotykových zařízeních se obojí vypínalo už dřív — teď
    to platí všude. Hlídá scripts/test-barva-listy.mjs. */
-header{border-bottom:1px solid var(--line); padding:20px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-plna); transition:padding var(--cas-zakladni) var(--ease);}
+header{border-bottom:1px solid var(--line); padding:12px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-plna); transition:padding var(--cas-zakladni) var(--ease);}
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
@@ -1604,7 +1604,17 @@ header:focus-within{opacity:1 !important; pointer-events:auto !important;}
 body{padding-top:var(--vyska-hlavicky, 85px);}
 /* Mobil: silnější podklad + slabší blur = plynulejší scroll na iPhonu */
 
+/* ODSAZENÍ HLAVIČKY: 12 px, ne 20. Se značkou 64 px (30. 10., „obří
+   logo") by při dvacítce měla lišta 105 px a zkouška hlídá 90 —
+   lepivá hlavička bere obsahu každý pixel. S dvanáctkou má 89 px
+   a značka zůstává velká. Zmenšení při rolování tím splynulo se
+   základem, takže `header.shrink` už jen drží tutéž míru. */
 header.shrink{padding:12px 0;}
+/* A ČÍSLO POD LIŠTOU SE MUSÍ SHODOVAT S JEJÍ VÝŠKOU. Na monitoru se
+   dosud brala náhradní hodnota 85 px z `var(--vyska-hlavicky, 85px)`,
+   protože proměnná byla jen v telefonním bloku — a to přestalo platit
+   ve chvíli, kdy značka vyrostla. Naměřeno: lišta 89 px. */
+@media (min-width:1041px){ :root{ --vyska-hlavicky:89px; } }
 /* ŽÁDNÉ ROZMAZÁNÍ POZADÍ — NIKDE NA WEBU.
    Lepivá hlavička ho mívala na monitoru a na dotykových zařízeních
    byla vypnutá, protože na iPhonu byla hlavní příčinou toho, že
@@ -1662,10 +1672,28 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    ne od oka: 30/34 px a 10px mezera shodily test-pismo i test-odstupy
    — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
    na --r-ovladani, ať nevypadá jako nalepená nálepka. */
-.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:8px; text-decoration:none;}
-.logo-mark{width:40px; height:40px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
+.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none;}
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=11") center/contain no-repeat; box-shadow:var(--glow);}
+/* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
+   logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
+   JMÉNO ZŮSTÁVÁ NA 28 px, a je to měření, ne lenost: v liště stojí
+   ještě hamburger (44) a profil s nápisem (100), takže na značku zbývá
+   182 px z 358. Se značkou 56 a jménem 32 px měřila 195 a ovladač
+   profilu vylezl 9 px za pravou hranu okna (naměřeno). S jménem 28 má
+   značka 179 px a vpravo zbude 11 px vůle. Na monitoru místo je, tam
+   jméno roste na 40. Čísla jsou ze stupnic (písmo 28 a 40, odstupy 12
+   a 16, terč 56 a 64), ne od oka. */
 @media (min-width:1041px){
-  .logo{font-size:32px; gap:12px;}
+  .logo{font-size:40px; gap:16px;}
+  .logo-mark{width:64px; height:64px;}
+}
+/* A NA NEJUŽŠÍM TELEFONU O STUPEŇ ZPÁTKY. Na 320 px má řádek 288 px:
+   hamburger 44, značka 179 a profil 44 se tam nevejdou (naměřeno:
+   ovladač skončil 5 px od hrany, tedy drhnul). Značka tam měří 151 px
+   (terč 44, jméno 24) a vpravo zbude 16 px jako všude jinde. Jméno
+   nemizí — to je to poslední, co se na webu smí schovat. */
+@media (max-width:359px){
+  .logo{font-size:24px; gap:8px;}
   .logo-mark{width:44px; height:44px;}
 }
 
@@ -1680,21 +1708,46 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    takže tečka nebliká a nepotřebuje vlastní kód. */
 .hdr-ucet{display:none;}
 @media (max-width:1040px){
-  .hdr-ucet{flex:none; display:inline-flex; align-items:center; justify-content:center;
-    position:relative; width:44px; height:44px; padding:0;
+  /* U PRAVÉHO KRAJE, NE HNED ZA JMÉNEM. Hlavička je na telefonu flex
+     zarovnaný doleva (header .wrap{justify-content:flex-start}), takže
+     profil stál těsně vedle značky a vpravo zůstávalo prázdno —
+     majitel to vyfotil: „dej ten profil úplně doprava". Mezera mezi
+     nimi se proto nepíše, nechá se dopočítat. */
+  .hdr-ucet{flex:none; margin-left:auto; display:inline-flex; align-items:center;
+    justify-content:center; gap:8px; min-height:44px; padding:0 8px;
     border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
     background:var(--plocha-karta); color:var(--text); text-decoration:none;
+    font-family:inherit; font-size:13px; font-weight:600; white-space:nowrap;
     transition:var(--prechod);}
-  .hdr-ucet .ik{width:22px; height:22px; stroke-width:1.64;}
+  /* 18 px a k tomu dopočítaná tloušťka (36/18 = 2), ať stopa vyjde na
+     1,5 px jako u všech ostatních ikon — hlídá scripts/test-tahy.mjs. */
+  .hdr-ucet .ik{flex:none; width:18px; height:18px; stroke-width:2;}
   .hdr-ucet:hover{border-color:var(--znacka-svetla); color:var(--znacka);}
   .hdr-ucet:active{transform:translateY(1px);}
-  /* Tečka je stav, ne ozdoba: svítí jen přihlášenému. Obtah v barvě
-     plochy ji odděluje od ikony pod ní, ať nesplyne s tahem. */
-  .hdr-ucet::after{content:""; position:absolute; right:6px; top:6px;
-    width:9px; height:9px; border-radius:50%;
-    background:var(--znacka-svetla); border:2px solid var(--plocha-karta);
-    opacity:0; transition:var(--prechod-barvy);}
-  :root.pk-prihlasen .hdr-ucet::after{opacity:1;}
+  /* STAV JE NAPSANÝ SLOVEM, NE TEČKOU. Devítipixelová tečka u ikony
+     říkala „přihlášen" jen tomu, kdo to už věděl; majitel 30. 10.:
+     „mělo by být jasné, zda je člověk přihlášený". Odhlášený tedy čte
+     „Přihlásit" na bílé dlaždici, přihlášený „Můj profil" na zelené.
+     Výchozí stav (než vložený skript v hlavičce nasadí třídu) je ten
+     odhlášený — slibovat přihlášení tomu, kdo přihlášený není, by byla
+     horší chyba než opačně. */
+  .hdr-ucet .hu-in{display:none;}
+  :root.pk-prihlasen .hdr-ucet .hu-in{display:inline;}
+  :root.pk-prihlasen .hdr-ucet .hu-out{display:none;}
+  :root.pk-prihlasen .hdr-ucet{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+  :root.pk-prihlasen .hdr-ucet:hover{color:#fff;}
+  /* NA NEJUŽŠÍM TELEFONU ZŮSTANE SAMA ZNAČKA. Pod 360 px má řádek na
+     značku, hamburger a profil dohromady 288 px a nápis by ho vytlačil
+     z lišty. Nápis se proto SCHOVÁ OKU, ne odečítači: display:none by
+     ovladači sebral jméno a zůstal by holý odkaz bez popisu (přesně to
+     byl případ „Uložené" bez značky). Clip-path ho vyřízne z obrazu,
+     v přístupnostním stromu zůstane. */
+  @media (max-width:359px){
+    .hdr-ucet{padding:0; width:44px;}
+    .hdr-ucet .hu-out,
+    :root.pk-prihlasen .hdr-ucet .hu-in{position:absolute; width:1px; height:1px;
+      overflow:hidden; clip-path:inset(50%); white-space:nowrap;}
+  }
 }
 
 /* ROZCESTNÍK NA TELEFONU JE PRYČ — NA PŘÁNÍ MAJITELE.
@@ -4888,7 +4941,10 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      drží sama přes min-height, takže nevisí na aritmetice odsazení.
      Proměnná a skutečná výška se musí shodovat — hlídá to
      test-hlavicka. */
-  :root{ --vyska-hlavicky:64px; }
+  :root{ --vyska-hlavicky:73px; }
+  /* Pod 360 px je značka o stupeň menší (terč 44), takže je nižší
+     i hlavička — a číslo pod ní se musí srovnat s ní. */
+  @media (max-width:359px){ :root{ --vyska-hlavicky:64px; } }
   /* A `header.shrink` TADY NESMÍ ZVĚTŠOVAT. Je to pravidlo pro
      zmenšení při rolování (20 → 12 px) a na počítači dává smysl.
      Na telefonu je ale základ 10 px, takže hlavičku o 4 px naopak

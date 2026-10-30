@@ -15747,3 +15747,43 @@ neodsouvá nic, otevřený stojí nad první nabídkou a odsune ji přesně
 o svou výšku. Otevírání je na jednom místě (`scripts/rozbal-hledani.mjs`,
 `otevriHistorii`) a používají ho i `test-rozvrzeni`, `test-pamet`
 a `test-nastroje-v-dosahu`.
+
+## §243 Obří značka, profil u pravého kraje a stav napsaný slovem
+
+**Co o tom řekl majitel.** „Navíc jsem chtěl, ať uděláš obří logo a dáš
+ten profil úplně doprava, a mělo by být jasné, zda je člověk přihlášený,
+nebo tam necháš místo."
+
+**Značka.** Terč vyrostl ze 40 na **56 px** (na monitoru ze 44 na 64),
+jméno zůstalo na 28 px — a to je měření, ne lenost: v liště stojí ještě
+hamburger (44 px) a ovladač profilu (95 px), takže na značku zbývá 182
+z 358 px. Se značkou 56 a jménem 32 px měřila 195 px a profil vylezl
+**9 px za pravou hranu okna**. Pod 360 px jde značka o stupeň zpátky
+(terč 44, jméno 24), jinak by se řádek nevešel — jméno ale nemizí, to je
+to poslední, co se na webu smí schovat.
+
+**Profil doprava.** Hlavička je na telefonu zarovnaná doleva, takže
+ovladač účtu seděl hned za značkou a vpravo zelo prázdno. Teď si mezeru
+dopočítá sám (`margin-left:auto`) a drží okraj stránky: naměřeno 20 px
+od pravé hrany na 390 px, 16 px pod 360 px.
+
+**Stav se čte, ne hádá.** Dosud to říkala devítipixelová tečka u ikony.
+Ovladač teď nese slovo: odhlášený **„Přihlásit"** na bílé dlaždici
+s obrysem, přihlášený **„Profil"** na zelené ploše. Oba nápisy stojí ve
+značkování a přepíná je styl podle `html.pk-prihlasen`, kterou nasazuje
+vložený skript v hlavičce ještě před vykreslením — nápis tedy nebliká.
+Pod 360 px se nápis schová oku (clip-path), ne odečítači.
+
+**Výška lišty.** Se značkou 56 px má hlavička 73 px (pod 360 px 64,
+na monitoru 89) a číslo, kterým si pod ni stránka dělá místo, se s tím
+muselo srovnat: `--vyska-hlavicky` bylo 64 px v telefonním bloku a na
+monitoru se brala náhradní hodnota 85. Dnes je proměnná pro všechny tři
+šířky. Odsazení hlavičky na monitoru šlo z 20 na 12 px — s dvacítkou by
+lišta měřila 105 px a zkouška hlídá 90, protože lepivá hlavička bere
+obsahu každý pixel.
+
+**Zkoušky.** `test-hlavicka` měří obě polohy ovladače (nápis, plocha,
+odstup od pravé hrany) — prokázáno sabotáží: zelená plocha vrácená na
+bílou shodí kontrolu „pozná se to i podle plochy". `span.hu-in` je
+v tabulce výjimek „schované na obou šířkách" s odůvodněním, protože se
+kreslí jedině přihlášenému, a právě to ten nový oddíl měří.

@@ -685,6 +685,7 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
 {
   const VYJIMKY_LISTA = {
     'div.nav-stin': 'závoj pod otevřeným šuplíkem — objeví se teprve po klepnutí na hamburger, bez doteku ho na žádné šířce vidět není',
+    'span.hu-in': 'nápis „Profil" v ovladači účtu — čte ho jen přihlášený, odhlášenému tam stojí „Přihlásit"; že se opravdu kreslí, měří oddíl „stav účtu je napsaný slovem" níž',
   };
   const skryteNa = async (opt) => {
     const { ctx, p } = await otevri(opt, 'index.html');
@@ -722,6 +723,41 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   pravda('nic v liště se neschovává na OBOU šířkách naráz',
     nikde.length === 0,
     nikde.join(', ') + ' — kreslí se to vůbec někde? Takhle tam viselo tlačítko .header-cta');
+  /* STAV ÚČTU JE NAPSANÝ SLOVEM, NE TEČKOU.
+     Majitel 30. 10.: „mělo by být jasné, zda je člověk přihlášený."
+     Do té doby se stav kreslil devítipixelovou tečkou u ikony — tedy
+     něčím, co řekne jen tomu, kdo to už ví. Teď ovladač nese nápis:
+     odhlášený „Přihlásit", přihlášený „Profil", a k tomu jinou plochu.
+     Měří se OBĚ polohy, jinak by půlka ovladače byla mrtvá značka
+     (proto je `span.hu-in` výš mezi výjimkami — kreslí se až tady). */
+  {
+    const { ctx, p } = await otevri(TELEFON, 'index.html');
+    const stav = async () => p.evaluate(() => {
+      const u = document.querySelector('.hdr-ucet');
+      if (!u) return null;
+      const vid = (s) => { const e = u.querySelector(s); return !!(e && e.getClientRects().length); };
+      const r = u.getBoundingClientRect();
+      return { napis: (u.innerText || '').trim(), prihlasen: vid('.hu-in'), odhlasen: vid('.hu-out'),
+        plocha: getComputedStyle(u).backgroundColor, vpravo: Math.round(innerWidth - r.right) };
+    });
+    const bez = await stav();
+    pravda('odhlášený čte v liště „Přihlásit"',
+      !!bez && bez.odhlasen && !bez.prihlasen && /Přihlásit/.test(bez.napis), JSON.stringify(bez));
+    await p.evaluate(() => document.documentElement.classList.add('pk-prihlasen'));
+    await p.waitForTimeout(400);
+    const s2 = await stav();
+    pravda('a přihlášený „Profil"',
+      !!s2 && s2.prihlasen && !s2.odhlasen && /Profil/.test(s2.napis), JSON.stringify(s2));
+    pravda('a pozná se to i podle plochy, nejen podle slova',
+      !!s2 && !!bez && s2.plocha !== bez.plocha, `odhlášený ${bez && bez.plocha}, přihlášený ${s2 && s2.plocha}`);
+    /* A STOJÍ U PRAVÉHO KRAJE. „Dej ten profil úplně doprava" (30. 10.)
+       — do té doby seděl hned za značkou a vpravo zelo prázdno. */
+    pravda(`ovladač účtu stojí u pravého kraje (${bez && bez.vpravo} px)`,
+      !!bez && bez.vpravo >= 16 && bez.vpravo <= 32,
+      'má držet okraj stránky, ne víc a ne míň');
+    await ctx.close();
+  }
+
   for (const [k, duvod] of Object.entries(VYJIMKY_LISTA)) {
     pravda(`výjimka ${k} má napsaný důvod`,
       typeof duvod === 'string' && duvod.length >= 30, 'bez důvodu tabulka tiše roste');
