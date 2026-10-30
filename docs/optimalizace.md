@@ -16457,3 +16457,65 @@ přestěhoval na telefon 390 px a měří, že přepínač dojede přes celý
 `test-vlozeny-styl`, `test-mrtve-styly`, `test-mrtva-jmena`, `test-deska`,
 `test-zaobleni`, `test-barvy`, `test-dotyk`, `test-u-hrany`,
 `test-kontrast`, `test-rozvrzeni` (190) — bez chyby.
+
+## §257 Přepínač Seznam/Mapa: jeden ovladač se dvěma polohami
+
+**Zadání (30. 10.):** „Tohle bych nějak upravil, aby to vypadalo líp,
+musím vymyslet něco speciálního a profesionálního." K tomu snímek
+přepínače nad výpisem.
+
+**Co na tom bylo vidět — tři vady jedné příčiny.** Zapnutá polovina se
+barvila sama za sebe, místo aby se po dráze posunul jezdec:
+
+1. **Šedá vlasová linka přetínala zelenou polovinu.** Rámeček dráhy byl
+   `outline`, a ten se kreslí NAD potomky. Výplň zapnuté poloviny ho
+   tedy nepřekryla a odshora i zdola jí vedla čára.
+2. **Dělicí linka mezi polovinami se zdvojovala** s okrajem té výplně —
+   seděla přesně na jejím švu.
+3. **Nic se nehýbalo.** Přepnutí byl skok barvy, ne pohyb.
+
+**Co je teď.** Zapuštěná dráha (`--plocha-zapustena`) s rámečkem
+napsaným jako `inset` stín — ten se kreslí do pozadí rodiče, tedy POD
+potomky, a zapnutá polovina ho přes sebe přejde. Do rozměru se
+nepočítá, takže výška 44 px (tedy tatáž jako u pole hledání vedle)
+zůstává. V dráze jezdí jezdec: značkový obdélník 3 px od okrajů, se
+září `--glow`, a přejíždí mezi polohami. Dělicí linka zmizela — mezeru
+dělá sama dráha. Je to týž recept jako u přepínače podkladu v mapě
+pozemku (`.pzm-zaklad`/`.pzm-z`), takže jsou na webu dvě místa a jedna
+řeč.
+
+**Dvě věci, které mi hlídači vrátili.**
+
+1. **`test-kontrast`:** napoprvé nesl plochu jen jezdec a zapnutá
+   polovina měla `background:none`. Bílý nápis se tím měřil proti
+   nejbližší nakreslené ploše — proti zapuštěné dráze — a vyšel
+   **1,15 : 1 místo nutných 4,5**. Hlídač měl pravdu věcně, ne jen
+   formálně: kdyby se jezdec z jakéhokoli důvodu nevykreslil, je
+   zapnutý nápis bílá na světlé. Plocha je proto na tlačítku a jezdec
+   jen přejíždí pod ní. Aby to nebylo poznat, je časování asymetrické:
+   vypínaná polovina ztratí plochu okamžitě (jezdec je v tu chvíli ještě
+   pod ní), zapínaná ji dostane až s doběhem jezdce.
+2. **`test-zaobleni`:** napoprvé byl tvar pilulka, podle mapy. Pilulka
+   na tomhle webu patří odznakům a kulatým tlačítkům se značkou,
+   ovladače mají jedno zaoblení 14 px. Tvar nese `--r-ovladani`.
+
+**A jednu vadu našel nový hlídač sám.** Do `test-ovladani-vypisu`
+přibylo měření, že jezdec leží přesně pod zapnutou polovinou — v obou
+polohách a na obou šířkách. Na 320 px to **padlo**: `jezdec 163–301 px,
+plocha 173–301 px`. Příčina: poloviny se dělí o řádek rovným dílem
+(`flex:1 1 0`), jenže flexbox nepustí položku pod šířku jejího obsahu —
+a „Seznam 1 918" se tam se značkou a šestnáctkou nevejde. Zapnutá
+mapa dostala 134 px, druhá polovina si vzala zbytek, a zpod jezdce
+(pevných 50 %) vykoukl o 10 px zelený proužek. Počet proto pod 360 px
+z přepínače mizí.
+
+**Co to stojí a kdo to platí.** Na telefonech užších než 360 px není
+počet nabídek v pohledu na mapu vidět (v seznamu zůstává v hlavičce
+výsledků). Je to menší cena než rozbitý ovladač, ale je to ztráta.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu`
+(48), `test-kontrast`, `test-zaobleni`, `test-prechody`, `test-dotyk`,
+`test-afordance`, `test-uvod` (68), `test-prvni-obrazovka`,
+`test-rozvrzeni` (190), `test-u-hrany`, `test-vrstveni`, `test-mapa`
+(57), `test-vypis-bez-mapy` (36), `test-barvy`, `test-mrtve-styly`,
+`test-mrtva-jmena` — bez chyby.

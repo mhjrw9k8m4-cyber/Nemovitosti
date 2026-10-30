@@ -4758,16 +4758,61 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      `outline` se vykresluje stejně jako okraj (s outline-offset:-1px
      uvnitř a po zaoblení), ale do rozměru se nepočítá — přepínač tak
      měří přesně tolik co jeho sousedé a dotykový terč zůstává 44. */
-  .mv-toggle{display:flex; flex:1 1 100%; gap:0; margin-top:0; background:var(--plocha-karta);
-    border:0; outline:1px solid var(--line-ui); outline-offset:-1px;
-    border-radius:var(--r-ovladani); padding:0; overflow:hidden;}
-  .mv-toggle .mvt-btn + .mvt-btn{border-left:1px solid var(--line-ui);}
+  /* JEDEN OVLADAČ SE DVĚMA POLOHAMI, NE DVĚ SLEPENÁ TLAČÍTKA.
+     Majitel poslal snímek: „tohle bych nějak upravil, aby to vypadalo
+     líp." Co na tom bylo vidět, byly tři vady jedné příčiny — zapnutá
+     polovina se barvila sama za sebe, místo aby se po dráze posunul
+     jezdec:
+       1. `outline` se kreslí NAD potomky, takže šedá vlasová linka
+          přetínala zelenou polovinu odshora i zdola. Inset stín se
+          kreslí do pozadí rodiče, tedy POD potomky — a zapnutá
+          polovina ho přes sebe přejde. Do rozměru se nepočítá ani
+          jeden, výška 44 px tím zůstává (viz níž, proč na ní záleží).
+       2. Dělicí linka mezi polovinami seděla přesně na hraně výplně,
+          takže se zdvojovala s jejím okrajem. Mezeru teď dělá sama
+          dráha: zapnutá poloha je o 3 px menší než rám.
+       3. Nic se nehýbalo. Přepnutí byl skok barvy; teď jezdec
+          přejede, a je vidět, že jsou to dvě polohy jedné věci.
+     Je to týž recept jako u přepínače podkladu v mapě pozemku
+     (`.pzm-zaklad`/`.pzm-z`): zapuštěná dráha a v ní nadzvednutá
+     poloha. Dvě místa na webu, jedna řeč.
+     JEN NE PILULKOVÝ TVAR. Napoprvé tu byl `--r-pill`, protože tak
+     vypadá přepínač podkladu v mapě — a `test-zaobleni` to shodil:
+     pilulka na webu patří odznakům a kulatým tlačítkům se značkou,
+     ovladače mají jedno zaoblení 14 px. Tvar nese `--r-ovladani`
+     a stejný i jezdec, aby se kryly přesně. */
+  .mv-toggle{display:flex; position:relative; flex:1 1 100%; gap:0; margin-top:0;
+    background:var(--plocha-zapustena);
+    border:0; box-shadow:inset 0 0 0 1px var(--line);
+    border-radius:var(--r-ovladani); padding:0; overflow:visible;}
+  /* Jezdec. Stojí 3 px od okrajů dráhy a v pravé poloze mu 3 px
+     zbydou i napravo — proto šířka `50% - 6px` a posun o vlastní
+     šířku plus těch 6 px. Je to přesně ten obdélník, který si pod
+     sebou kreslí i zapnutá polovina sama (viz `.mvt-btn` níž), takže
+     se přesně kryjí. */
+  .mv-toggle::before{content:''; position:absolute; z-index:0; top:3px; bottom:3px; left:3px;
+    width:calc(50% - 6px); border-radius:var(--r-ovladani);
+    background:var(--plocha-znacka); box-shadow:var(--glow);
+    transform:translateX(calc(100% + 6px)); transition:var(--prechod);}
+  /* Výchozí poloha je mapa (vpravo); seznam má na kořeni aplikace
+     třídu, a ta je i v servírovaném HTML, takže při startu nic
+     neposkočí. */
+  .map-app.mv-seznam .mv-toggle::before{transform:none;}
   /* PŘEPÍNAČ SE ZÚŽIL, ABY ZBYLO NA POLE HLEDÁNÍ. Naměřeno na 390 px:
      se 14px písmem a odsazením 11 px měřil 194 px a poli zbylo 168.
      S 13px písmem, odsazením 6 px, mezerou 4 px a 16px značkami měří
      155 px a poli zbývá 201, z toho 165 px vnitřku na 145px nápis.
      Výška 44 px (dotykový terč) zůstává, zúžila se jen šířka. */
-  .mvt-btn{flex:1 1 0; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 12px; border:0; border-radius:0; background:none; color:var(--muted); font-weight:600; font-family:inherit; font-size:16px; cursor:pointer; white-space:nowrap; transition:var(--prechod);}
+  /* Poloviny jsou průhledné a leží NAD jezdcem — proto `z-index`.
+     Celou výšku 44 px si drží obě, takže dotykový terč zůstává celý
+     (jezdec je o 3 px menší jen opticky, chytá se pořád tlačítko). */
+  /* Poloviny jsou průhledné a leží NAD jezdcem — proto `z-index`.
+     Celou výšku 44 px si drží obě, takže dotykový terč zůstává celý;
+     zapnutá si kreslí plochu jen dovnitř průhledného 3px rámu
+     (`background-clip:padding-box`), což je přesně obdélník jezdce. */
+  .mvt-btn{flex:1 1 0; position:relative; z-index:1; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:0 12px; border:3px solid transparent; background-clip:padding-box; border-radius:var(--r-ovladani); background-color:transparent; color:var(--muted); font-weight:600; font-family:inherit; font-size:16px; cursor:pointer; white-space:nowrap;
+    transition:var(--prechod), background-color 0s;}
+  .mv-toggle .mvt-btn:hover{color:var(--text);}
   /* ZNAČKY V PŘEPÍNAČI. Chvíli tu bylo `display:none` s odůvodněním,
      že popisek řekne všechno sám a značky stojí 40 px šířky, která
      chybí poli hledání. Platilo to jen potud, pokud se šířka brala
@@ -4796,7 +4841,33 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      není (.map-app:not(.mv-seznam) .map-side{display:none}), a tam je
      naopak jediné místo, kde se počet dá přečíst. */
   .map-app.mv-seznam .mvt-n{display:none;}
-  .mvt-btn.active{background:var(--plocha-znacka); color:#fff;}
+  /* A POD 360 px ANI NA MAPĚ. Poloviny přepínače se dělí o řádek
+     rovným dílem (`flex:1 1 0`), jenže flexbox nepustí položku pod
+     šířku jejího obsahu — a „Seznam 1 918" se tam se značkou
+     a šestnáctkou nevejde. Naměřeno na 320 px: polovina se zapnutou
+     mapou dostala 134 px a druhá si vzala zbytek, takže jezdec
+     (pevných 50 %) ležel o 10 px vedle zapnuté plochy a zpod něj
+     vykoukl zelený proužek. Ohlásil to `test-ovladani-vypisu`.
+     Počet proto na nejužších telefonech z přepínače mizí. Stojí to
+     ten údaj v pohledu na mapu na šířkách pod 360 px (v seznamu je
+     pořád v hlavičce výsledků) — a je to menší cena než rozbitý
+     ovladač. */
+  @media (max-width:360px){ .mvt-n{display:none;} }
+  /* ZAPNUTÁ POLOVINA NESE SVOU PLOCHU SAMA, I KDYŽ JI VEZE JEZDEC.
+     Napoprvé tu stálo `background:none` — plochu měl jen jezdec.
+     `test-kontrast` to shodil a měl pravdu: bílý nápis měřil proti
+     NEJBLIŽŠÍ NAKRESLENÉ PLOŠE, a tou byla zapuštěná dráha —
+     1,15 : 1 místo nutných 4,5. Pseudoprvek pod textem kontrast
+     nezachrání a hlavně: kdyby se jezdec z jakéhokoli důvodu
+     nevykreslil, je zapnutý nápis bílá na světlé a nepřečte se.
+     Plocha je proto na tlačítku a jezdec jen přejíždí pod ní.
+     ČASOVÁNÍ, ABY SE TO NEPROZRADILO: vypínaná polovina ztratí
+     plochu okamžitě (jezdec je v tu chvíli ještě pod ní, takže není
+     co ztratit), zapínaná ji dostane až s doběhem jezdce. Proto
+     `background-color 0s` výš a `0s var(--cas-rychly)` tady. */
+  .mvt-btn.active{background-color:var(--plocha-znacka); color:#fff; font-weight:700;
+    transition:var(--prechod), background-color 0s var(--cas-rychly);}
+  .mvt-btn.active:hover{color:#fff;}
   /* POD 360 px SE ŘADA ROZDĚLÍ NA DVĚ, PROTOŽE SE NEVEJDE.
      Naměřeno na 320 px: řada má 300 px, pole si drží svých 150
      (vlastní min-width) a přepínač 155 — dohromady 313, tedy o 13 px

@@ -280,6 +280,48 @@ try {
     /* 3. NÁPIS V POLI HLEDÁNÍ. */
     pravda(`${sirka} px: nápis v poli hledání se vejde celý`, z.napis > 0 && z.napis <= z.vnitrni,
       `nápis ${z.napis} px, místo ${z.vnitrni} px`);
+
+    /* 4. PŘEPÍNAČ SEZNAM/MAPA JE JEDEN OVLADAČ SE DVĚMA POLOHAMI.
+       Od 30. 10. jezdí po zapuštěné dráze jezdec (`.mv-toggle::before`)
+       a zapnutá polovina si TOTÉŽ pole kreslí i sama pod sebe — kvůli
+       kontrastu, aby byl bílý nápis čitelný i kdyby se jezdec
+       nevykreslil. Dvě plochy na jednom místě se ale musí krýt na
+       pixel, jinak zpod jezdce vykoukne zelený proužek. Měří se obojí,
+       a v OBOU polohách, protože jezdec se posouvá a plocha ne. */
+    const jezdec = async () => p.evaluate(() => {
+      const t = document.querySelector('.mv-toggle');
+      const a = document.querySelector('.mvt-btn.active');
+      if (!t || !a) return null;
+      const cs = getComputedStyle(t, '::before');
+      const as = getComputedStyle(a);
+      const tr = t.getBoundingClientRect(), ar = a.getBoundingClientRect();
+      const ram = parseFloat(as.borderLeftWidth) || 0;
+      const m = new DOMMatrixReadOnly(cs.transform === 'none' ? '' : cs.transform);
+      const l = tr.left + (parseFloat(cs.left) || 0) + m.m41;
+      return {
+        kdo: (a.getAttribute('data-mv') || ''),
+        jezdecL: Math.round(l), jezdecP: Math.round(l + (parseFloat(cs.width) || 0)),
+        plochaL: Math.round(ar.left + ram), plochaP: Math.round(ar.right - ram),
+        barva: as.backgroundColor,
+      };
+    });
+    for (const pohled of ['seznam', 'mapa']) {
+      if (pohled === 'mapa') {
+        await p.evaluate(() => { const e = document.querySelector('.mvt-btn[data-mv="mapa"]'); if (e) e.click(); });
+        await p.waitForTimeout(600);
+      }
+      const j = await jezdec();
+      pravda(`${sirka} px: přepínač má v poloze „${pohled}" co měřit`, !!j && j.kdo === pohled,
+        j ? `zapnuto je „${j.kdo}"` : 'přepínač ani jezdec se nenašly');
+      if (!j) continue;
+      pravda(`${sirka} px: jezdec leží přesně pod zapnutou polovinou („${pohled}")`,
+        Math.abs(j.jezdecL - j.plochaL) <= 1 && Math.abs(j.jezdecP - j.plochaP) <= 1,
+        `jezdec ${j.jezdecL}–${j.jezdecP} px, plocha ${j.plochaL}–${j.plochaP} px`);
+      /* Plná barva, ne průhledno: průhledná plocha by znamenala, že
+         bílý nápis stojí na zapuštěné dráze a nepřečte se. */
+      pravda(`${sirka} px: a zapnutá polovina nese plnou plochu („${pohled}")`,
+        /^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/.test(j.barva || ''), `plocha ${j.barva}`);
+    }
     await ctx.close();
   }
 } catch (e) {

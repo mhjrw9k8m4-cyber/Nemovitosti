@@ -277,7 +277,8 @@ to{opacity:1;transform:none}
 
 @media (min-width:1041px){
 }
-
+@media (max-width:1040px){
+}
 @media (max-width:1040px){header .wrap{justify-content:flex-start}
 :root{--vyska-hlavicky:73px}
 @media (max-width:359px){:root{--vyska-hlavicky:64px}
