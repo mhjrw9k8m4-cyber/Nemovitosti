@@ -16519,3 +16519,56 @@ výsledků). Je to menší cena než rozbitý ovladač, ale je to ztráta.
 `test-rozvrzeni` (190), `test-u-hrany`, `test-vrstveni`, `test-mapa`
 (57), `test-vypis-bez-mapy` (36), `test-barvy`, `test-mrtve-styly`,
 `test-mrtva-jmena` — bez chyby.
+
+## §258 Pás s hledáním byl obdélník barvy
+
+**Zadání (30. 10.):** „Rozložení je už super, ale je to takové suché,
+potřebujeme tam udělat nějaké barevné přechody, případně udělat jiné
+grafiky."
+
+**Dvě vrstvy, obě z toho, co web už má.**
+
+1. **Svislý přeliv hloubky.** Nahoře sedí hlavička, dole výpis — plochý
+   obdélník mezi nimi nemá žádný směr. Přeliv z průsvitné značkové
+   zeleně (tedy **žádná nová barva**, jen `--znacka-hluboka-rgb` s alfou
+   0,08 → 0) dává pásu shora dolů ubývající tíhu, takže se čte jako
+   plocha pod hlavičkou, ne jako samostatný blok.
+2. **Mříž.** Táž textura z 1px linek, jakou web nosí na pásech jinde
+   (`.s-mrizka::before`, `footer::after`, `.okr-band::before`). Tady
+   navíc dává smysl významem: pod hledáním se hledají parcely a parcely
+   jsou mříž.
+
+**Pravidlo o přelivech tím není porušené.** Web se ozdobných přelivů
+zbavoval půl týdne (§18, §19, §42) a `test-soustava` je hlídá — ale ne
+zákazem, nýbrž výčtem: každý přeliv na ploše musí být v tabulce
+`PRELIVY` i s napsaným důvodem, proč plnou barvou nejde. Oba nové tam
+jsou. **Co jsem NEUDĚLAL a proč:** přeliv na tlačítku „Procházet po
+jednom". Vypadalo by to draze, jenže na otázku „je to zvednuté?"
+odpovídá už stín `--e1` a záře `--glow`, takže bych pro ten přeliv
+žádný funkční důvod nenapsal — a do `PRELIVY` bez důvodu nepatří.
+
+**Maska stála dvě kola.** Napoprvé držela mříž do 72 % výšky v plné
+sytosti: na pásu vysokém 112 px z toho vyšly dvě řady linek skoro až
+k ovladačům a pás vypadal jako tabulka. Napodruhé svislý přeliv do 56 %
+linky uťal a zbyly z nich svislé čárky pod hlavičkou — ozdoba, která
+vypadá jako nedopatření. Teprve elipsa posazená nad pás je nechá ubývat
+do všech stran najednou, takže nikde nekončí hranou.
+
+**A jedna logická díra v hlídači.** `test-okraje` ohlásil, že vypnutá
+polovina přepínače Seznam/Mapa splývá s pozadím (`výplň 1,00:1, okraj
+1,00:1`). Četl totiž jen **šířku** rámečku, takže `border:3px solid
+transparent` mu počítalo jako „rámeček má" — a prvek pak padl na tom,
+že ten rámeček není vidět. Průhledná linka ale není vidět nikdy, ať je
+široká kolik chce; hlídač teď čte i její průhlednost, stejně jako už
+dřív pouštěl tlačítka úplně bez rámečku. Že se tím nic nezametlo pod
+koberec, je vidět na počtu: měřených prvků ubylo **ze 144 na 143**,
+tedy právě ten jeden.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-okraje` (143
+prvků, 0 nálezů), `test-jeden-styl` (33), `test-soustava` (15),
+`test-kontrast`, `test-vrstveni`, `test-naseptavac` (127), `test-uvod`
+(68), `test-prvni-obrazovka`, `test-rozvrzeni` (190), `test-najeti`,
+`test-odznaky`, `test-porovnani`, `test-tvary`, `test-prechody`,
+`test-dotyk`, `test-afordance`, `test-ovladani-vypisu` (48),
+`test-u-hrany`, `test-deska`, `test-barvy`, `test-mrtve-styly` — bez
+chyby.

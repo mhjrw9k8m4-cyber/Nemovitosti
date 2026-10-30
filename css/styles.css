@@ -2192,9 +2192,48 @@ h1 em{ color:var(--znacka-svetla);
    ------------------------------------------------------------------ */
 /* Panel nad výpisem bere tutéž sadu jako hlava nad ním, takže se
    světlá spolu s ní — viz „DESKA JE ZASE SVĚTLÁ" níž v souboru. */
-.map-controls-panel{grid-column:1 / -1; grid-row:1;
-  background:var(--pas-plocha); color:var(--pas-text);
+/* PÁS S HLEDÁNÍM NESMÍ BÝT JEN OBDÉLNÍK BARVY.
+   Majitel: „rozložení je už super, ale je to takové suché, potřebujeme
+   tam udělat nějaké barevné přechody, případně jiné grafiky."
+   Dvě vrstvy, obě z toho, co web už má:
+     1. Svislý přeliv hloubky. Nahoře sedí hlavička, dole výpis —
+        plochý obdélník mezi nimi nemá žádný směr. Přeliv z průsvitné
+        značkové zeleně (tedy ŽÁDNÁ nová barva, jen `--znacka-hluboka-rgb`
+        s alfou) dává pásu shora dolů ubývající tíhu, takže se čte
+        jako plocha pod hlavičkou, ne jako samostatný blok.
+     2. Mříž. Táž textura z 1px linek, jakou web nosí na pásech jinde
+        (`.s-mrizka::before`, `footer::after`, `.okr-band::before`) —
+        a tady navíc dává smysl významem: parcely jsou mříž.
+   Maska drží mříž u horního okraje a nechá ji zmizet dřív, než
+   dojde k ovladačům; pod nimi by linky rušily čtení.
+   PROČ ŽÁDNÝ `overflow:hidden`: v pásu bydlí našeptávač hledání
+   (`.ms-navrhy`), který schválně přetéká ven. Oříznutí by ho uťalo.
+   Pseudoprvek má `inset:0`, takže se do pásu vejde sám. */
+.map-controls-panel{grid-column:1 / -1; grid-row:1; position:relative;
+  background-color:var(--pas-plocha); color:var(--pas-text);
+  background-image:linear-gradient(to bottom,
+    rgba(var(--znacka-hluboka-rgb),0.08), rgba(var(--znacka-hluboka-rgb),0) 78%);
   border:0; border-radius:0; padding:16px;}
+.map-controls-panel::before{content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:linear-gradient(to right, var(--mrizka-cara-svetla) 1px, transparent 1px),
+                   linear-gradient(to bottom, var(--mrizka-cara-svetla) 1px, transparent 1px);
+  background-size:var(--mrizka-bunka) var(--mrizka-bunka);
+  /* MASKA JE ELIPSA, NE SVISLÝ PŘELIV — a stálo to dvě kola.
+     Napoprvé držela mříž do 72 % výšky v plné sytosti: na pásu
+     vysokém 112 px z toho vyšly dvě řady linek skoro až k ovladačům
+     a pás vypadal jako tabulka. Napodruhé svislý přeliv do 56 %
+     linky uťal a zbyly z nich svislé čárky pod hlavičkou — tedy
+     ozdoba, která vypadá jako nedopatření. Elipsa posazená NAD pás
+     je nechá ubývat do všech stran najednou, takže nikde nekončí
+     hranou. Je to týž tvar masky jako u mříže na sekcích
+     (`.s-mrizka::before`). */
+  opacity:0.7;
+  -webkit-mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 78%);
+          mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 78%);}
+/* Ovladače leží NAD texturou. Bez toho by mříž kreslila přes bílé pole
+   hledání — pseudoprvek je v pořadí malování za pozadím rodiče, ale
+   před nepozicovanými potomky. */
+.map-controls-panel > *{position:relative;}
 /* POLE HLEDÁNÍ ZŮSTÁVÁ BÍLÉ. Do pole se píše, a bílá plocha je to
    jediné znamení, které se nedá přečíst špatně — průsvitná výplň na
    desce vypadá jako vypnutý ovladač.

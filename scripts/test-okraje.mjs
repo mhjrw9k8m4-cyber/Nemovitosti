@@ -205,8 +205,19 @@ for (const s of STRANKY) {
       const poleCi = /^(input|textarea|select)$/.test(el.tagName.toLowerCase());
       // Mimo hru zůstane jen tlačítko/odkaz bez rámečku i bez výplně — tvar
       // mu dělá text nebo ikonka a ty hlídá kontrast textu.
+      /* PRŮHLEDNÝ RÁMEČEK JE TOTÉŽ CO ŽÁDNÝ. Do 30. 10. se tu četla jen
+         ŠÍŘKA rámečku, takže `border:3px solid transparent` počítalo
+         jako „rámeček má" — a prvek pak padl na tom, že ten rámeček
+         není vidět. Je to logická díra, ne vlastnost jednoho prvku:
+         průhledná linka není vidět nikdy, ať je široká kolik chce.
+         Vyplavalo to na vypnuté polovině přepínače Seznam/Mapa, která
+         průhledným rámečkem jen odsazuje svou plochu od dráhy
+         (`background-clip:padding-box`); tvar jí dělá dráha kolem
+         a zapnutá polovina vedle, přesně jako text dělá tvar tlačítku
+         bez rámečku. */
       const maPrechod = /gradient\(/.test(c.backgroundImage || '');
-      if (!poleCi && sirka === 0 && vypln.a < 0.05 && !maPrechod) return;
+      const okrajVidet = sirka > 0 && okraj && okraj.a >= 0.05;
+      if (!poleCi && !okrajVidet && vypln.a < 0.05 && !maPrechod) return;
       ven.push({
         popis: el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : ''),
         bg: [bg.r, bg.g, bg.b],

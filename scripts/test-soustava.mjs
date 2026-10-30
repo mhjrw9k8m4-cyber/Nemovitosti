@@ -68,6 +68,8 @@ export const POMER_VYJIMKY = {
    stojí ve stylopisu. */
 export const PRELIVY = {
   '.mcf-akce': 'maska na kraji vodorovného pásu akcí — říká, že je kam rolovat',
+  '.map-controls-panel': 'hloubka pásu s hledáním: shora dolů ubývající tíha, aby se četl jako plocha pod hlavičkou, ne jako samostatný blok',
+  '.map-controls-panel::before': 'mříž na pásu s hledáním — opakovaná 1px linka, tedy vzor, ne přeliv barev',
   '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
   '.opp-media': 'podklad náhledu, než se snímek stáhne — a vrstva pod závojem',
   '.opp-mgrad': 'závoj nad snímkem: bez něj není bílé písmo na fotce čitelné',

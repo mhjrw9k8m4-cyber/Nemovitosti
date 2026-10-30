@@ -159,14 +159,19 @@ const mrizky = bloky.filter((b) =>
    plocha, má to být rozhodnutí: zvedni číslo a dole ověř, že nová plocha
    bere rozteč i barvu z palety. Kdyby tu stálo „aspoň", přibyla by plocha
    s opsanými čísly a test by mlčel. */
-/* PĚT. Sedmá byla vysouvací nabídka na telefonu (#nav::before): mřížka
-   patří na plochy, které něco ukazují — mapa, karty, hlavička — a za
-   seznamem šesti řádků z ní pod horním okrajem zbyl šedý flek, takže
-   panel vypadal ušpiněný, ne značkový. Šestá byl .hero-band::before,
-   tedy pás pod uvítacím blokem titulní strany; ten blok je pryč a
-   .hero-band nezůstalo v žádném HTML ani skriptu. Obě odebrány záměrně. */
-pravda('test našel všech pět ploch s mřížkovou texturou', mrizky.length === 5,
-  `nalezeno ${mrizky.length}, čekám 5 — pokud texturu dostala další plocha, `
+/* ŠEST OD 30. 10. Přibyl pás s hledáním na úvodní stránce
+   (.map-controls-panel::before) — majitel na něj poslal snímek se
+   slovy „je to takové suché". Mřížka tam patří i významem: pod
+   hledáním se hledají parcely a parcely jsou mříž.
+   Dřív jich bylo pět. Sedmá byla vysouvací nabídka na telefonu
+   (#nav::before): mřížka patří na plochy, které něco ukazují — mapa,
+   karty, hlavička — a za seznamem šesti řádků z ní pod horním okrajem
+   zbyl šedý flek, takže panel vypadal ušpiněný, ne značkový. Další
+   byl .hero-band::before, tedy pás pod uvítacím blokem titulní
+   strany; ten blok je pryč a .hero-band nezůstalo v žádném HTML ani
+   skriptu. Obě odebrány záměrně. */
+pravda('test našel všech šest ploch s mřížkovou texturou', mrizky.length === 6,
+  `nalezeno ${mrizky.length}, čekám 6 — pokud texturu dostala další plocha, `
   + 'zvedni číslo v testu:\n      '
   + mrizky.map((b) => b.sel.trim().slice(0, 34)).join(' | '));
 

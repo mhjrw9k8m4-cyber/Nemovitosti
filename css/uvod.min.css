@@ -317,7 +317,9 @@ h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:current
 .filter-chip:active,.copy-btn:active{transform:translateY(1px)}
 .opp-item:active{transform:translateY(1px)}
 .map-app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:auto 1fr;gap:0;height:min(76vh,820px);height:min(76dvh,820px);min-height:600px;background:var(--plocha-karta);border:1px solid var(--line-strong);border-radius:var(--r-obraz);overflow:hidden;box-shadow:var(--e3)}
-.map-controls-panel{grid-column:1 / -1;grid-row:1;background:var(--pas-plocha);color:var(--pas-text);border:0;border-radius:0;padding:16px}
+.map-controls-panel{grid-column:1 / -1;grid-row:1;position:relative;background-color:var(--pas-plocha);color:var(--pas-text);background-image:linear-gradient(to bottom,rgba(var(--znacka-hluboka-rgb),0.08),rgba(var(--znacka-hluboka-rgb),0) 78%);border:0;border-radius:0;padding:16px}
+.map-controls-panel::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(to right,var(--mrizka-cara-svetla) 1px,transparent 1px),linear-gradient(to bottom,var(--mrizka-cara-svetla) 1px,transparent 1px);background-size:var(--mrizka-bunka) var(--mrizka-bunka);opacity:0.7;-webkit-mask-image:radial-gradient(ellipse 130% 170% at 50% -25%,#000 15%,transparent 78%);mask-image:radial-gradient(ellipse 130% 170% at 50% -25%,#000 15%,transparent 78%)}
+.map-controls-panel>*{position:relative}
 .map-controls-panel .map-search input{background:var(--plocha-plovouci-plna);color:var(--text);border-color:var(--line-ui)}
 .map-controls-panel .ms-lupa{color:var(--text-zastupny)}
 .map-controls-panel .ms-filters{background:transparent;border-color:var(--pas-obrys)}
