@@ -16382,3 +16382,38 @@ palety se musí přepsat i ta kresba. Stojí to v komentáři u pravidla.
 `test-u-hrany`, `test-deska`, `test-zaobleni`, `test-rozvrzeni` (190),
 `test-uvod` (68), `test-menu` (32), `test-ikony`, `test-tahy`,
 `test-mrtve-styly`, `test-mrtva-jmena`, `test-prvni-obrazovka`.
+
+## §255 Posuvník průhlednosti z panelu mapy pryč
+
+**Zadání (30. 10.):** „Ta průhlednost je zbytečná, odstraň ji."
+
+**Co tam bylo.** V panelu pod mapou na stránce pozemku seděl posuvník
+`<input type="range">` od 20 do 100 % s odečtem „65 %" a vlastním nadpisem
+skupiny. Přibyl o den dřív (§174) a zabíral celý řádek mřížky, protože
+táhlo se nedá rozumně zúžit — na telefonu 390 px tedy stál nad pěti
+přepínači vrstev jako šestý ovladač, který nikdo nehledá. Majitel má
+pravdu: krytí je věc, kterou člověk nastaví jednou a nikdy znovu.
+
+**Co je místo něj.** Jedna konstanta `KRYTI_VRSTVY = 0,65` v
+`js/pozemek.js`, kterou dostane každá zapnutá vrstva. Chování se tím
+nemění — plán přes letecký snímek pořád prosvítá přesně tak jako dřív,
+jen se to přestalo nabízet k přenastavení. Zmizela i tři pravidla
+stylopisu (`.pzm-kryti`, `.pzm-kryti-hl`, `.pzm-kryti-v`), výjimka pro
+celou obrazovku a zvětšení táhla na 44 px pro dotyk.
+
+**Hlídač se nesměl jen smazat.** Zkouška `test-mapa-pozemku` měřila tři
+věci přes ten posuvník: že se po zapnutí vrstvy objeví, že vrstva není
+neprůhledná, a že tažením se krytí opravdu mění. První a třetí ztratily
+předmět. Druhá ale hlídala to podstatné — a nově se měří přísněji: ne
+„někde mezi 0,1 a 1", ale **že je to právě 0,65**. Prokázáno sabotáží:
+s `KRYTI_VRSTVY = 1` sada hlásí `✕ vrstva přes podklad prosvítá pevným
+krytím 0,65 — krytí 1` a skončí červeně. Bez té změny by se dalo krytí
+cestou ztratit a nikdo by si toho nevšiml.
+
+**Zkoušky.** Rychlá sada 133/133 za 110 s. V prohlížeči
+`test-mapa-pozemku` (157), `test-vlozeny-styl` (14), `test-mrtve-styly`
+(11), `test-mrtva-jmena` (18), `test-dotyk` (0 pod mezí), `test-u-hrany`
+(13), `test-deska` (5), `test-rozvrzeni` (190), `test-barvy` (58),
+`test-zaobleni` (4), `test-odstupy` — všechny bez chyby. Jediná červená
+zůstává `test-poradi-pozemku` (hlavní akce na 2 734 px z 3 855), což je
+starší nález vedený zvlášť a s touhle změnou nesouvisí.

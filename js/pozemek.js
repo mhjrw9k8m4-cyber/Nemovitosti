@@ -978,18 +978,12 @@
               '<span class="pzm-hleda"><span class="mnb-ceka" aria-hidden="true"></span>Zkouším mapové vrstvy úřadů…</span>' +
             '</div>' +
           '</div>' +
-          /* POSUVNÍK ŘÍKÁ, NA KOLIKA JE. Táhlo bez čísla je hádanka:
-             člověk vidí polohu, ne hodnotu, a po puštění neví, co
-             nastavil. Číslo stojí na konci popisku, mění se s táhlem
-             (viz prepocitejKryti níž) a je v tabulkových číslicích,
-             aby se při tažení nekývalo ze strany na stranu. */
-          '<label class="pzm-kryti pzm-grp" id="pzm-kryti" hidden>' +
-            '<span class="pzm-kryti-hl">' +
-              '<span class="pzm-cap">Průhlednost vrstvy</span>' +
-              '<output class="pzm-kryti-v" id="pzm-kryti-v" for="pzm-kryti-r">65\u00a0%</output>' +
-            '</span>' +
-            '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
-          '</label>' +
+          /* POSUVNÍK PRŮHLEDNOSTI TU BYL 30. 10. DOPOLEDNE A ODPOLEDNE
+             UŽ NE. Majitel: „ta průhlednost je zbytečná, odstraň ji."
+             Vrstvy úřadů se kreslí s KRYTÍ_VRSTVY (viz níž) a nedá se
+             to měnit — což je i tak to, co s tím skoro každý udělal:
+             nechal, jak to je. Kdo chce vidět, co je pod vrstvou,
+             vypne ji jedním klepnutím na tutéž dlaždici. */
         '</div>' +
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
@@ -1130,15 +1124,18 @@
     // ——— vrstvy úřadů ———
     var vrstvy = document.getElementById('pzm-vr');
     var popis = document.getElementById('pzm-popis');
-    var kryti = document.getElementById('pzm-kryti');
-    var posuvnik = document.getElementById('pzm-kryti-r');
-    var cislo = document.getElementById('pzm-kryti-v');
+    /* JEDNO KRYTÍ PRO VŠECHNY VRSTVY, NEMĚNNÉ. Šedesát pět procent je
+       hodnota, se kterou se vrstva čte a zároveň je pod ní vidět
+       letecký snímek; byla to výchozí poloha zrušeného posuvníku. */
+    var KRYTI_VRSTVY = 0.65;
     var zive = {};          // id → Leaflet vrstva, jen ty zapnuté
     var pridano = 0;
 
+    /* JMÉNO ZŮSTÁVÁ, PRÁCE SE ZMĚNILA. Funkce se jmenovala podle
+       krytí, protože ho nastavovala podle posuvníku. Posuvník je
+       pryč (viz výš) a zbylo to podstatnější: hláška o vrstvě, která
+       je sice zapnutá, ale v tomhle přiblížení se nekreslí. */
     function prepocitejKryti() {
-      var kolik = Object.keys(zive).length;
-      if (kryti) kryti.hidden = kolik === 0;
       /* ZAPNUTÁ VRSTVA, KTEROU NENÍ VIDĚT. Katastr kreslí hranice parcel
          až od zoomu 16; nad tím je snímek prázdný. Přepínač přitom
          svítí, takže to vypadá, že vrstva nefunguje — a přesně tak to
@@ -1173,16 +1170,7 @@
           popis.appendChild(rada);
         }
       }
-      if (posuvnik) {
-        var v = (+posuvnik.value || 65) / 100;
-        Object.keys(zive).forEach(function (k) { zive[k].setOpacity(v); });
-        /* Číslo u popisku. Pevná mezera, aby „65" a „%" nikdy
-           nespadly na dva řádky — týž zápis jako u všech ostatních
-           jednotek na webu. */
-        if (cislo) cislo.textContent = Math.round(v * 100) + '\u00a0%';
-      }
     }
-    if (posuvnik) posuvnik.addEventListener('input', prepocitejKryti);
     /* Bez tohohle by se hláška objevila jen ve chvíli zapnutí vrstvy.
        Oddálení je ale právě ten okamžik, kdy hranice zmizí. */
     m.on('zoomend', prepocitejKryti);
@@ -1301,7 +1289,7 @@
           if (!v) return;
           v._pkPopis = def.popis || '';
           v._pkDef = def;
-          if (posuvnik) v.setOpacity((+posuvnik.value || 65) / 100);
+          v.setOpacity(KRYTI_VRSTVY);
           v.addTo(m);
           zive[def.id] = v;
           b.classList.add('on');

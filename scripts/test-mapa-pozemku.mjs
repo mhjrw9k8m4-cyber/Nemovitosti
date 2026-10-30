@@ -313,7 +313,6 @@ const HOST = {
   const stav = await p.evaluate(() => ({
     nic: (document.querySelector('.pzm-nic') || {}).textContent || '',
     hleda: !!document.querySelector('.pzm-hleda'),
-    kryti: !!(document.getElementById('pzm-kryti') || {}).hidden !== false,
     odkaz: [...document.querySelectorAll('.pzm-pod a')].some((a) => /územní plán/i.test(a.textContent || '')),
   }));
   pravda('a je napsané, co se stalo', /neodpovídají/i.test(stav.nic), `stojí tam „${stav.nic.trim()}"`);
@@ -432,7 +431,6 @@ const HOST = {
       .classList.contains('on'),
     rika: (document.querySelector('.pzm-v[data-id="katastr"]') || { getAttribute: () => null })
       .getAttribute('aria-pressed'),
-    kryti: !(document.getElementById('pzm-kryti') || { hidden: true }).hidden,
     popis: (document.getElementById('pzm-popis') || {}).textContent || '',
     uvedeni: (document.querySelector('#pzm .leaflet-control-attribution') || {}).textContent || '',
     zoom: window.PK_PZ_MAPA.getZoom(),
@@ -451,10 +449,12 @@ const HOST = {
      z výšky a nechat člověka koukat na nic je horší než ji nenabídnout. */
   pravda('mapa se sama přiblíží, aby bylo vrstvu vidět', po.zoom >= def.odPriblizeni,
     `zoom ${pred} → ${po.zoom}, vrstva potřebuje ${def.odPriblizeni}`);
-  pravda('objeví se posuvník průhlednosti', po.kryti,
-    'plán přes letecký snímek bez prosvítání zakryje právě to, co chci vidět');
-  pravda('a vrstva je od začátku částečně průhledná', po.pruhlednost > 0.1 && po.pruhlednost < 1,
-    `krytí ${po.pruhlednost}`);
+  /* Posuvník průhlednosti je pryč — krytí je pevné (KRYTI_VRSTVY v js/pozemek.js).
+     Hlídá se proto to, co z posuvníku mělo smysl: že plán přes letecký
+     snímek prosvítá, a to na té jedné správné hodnotě. Kdyby se krytí
+     cestou ztratilo, vrstva zakryje právě to, co chci vidět. */
+  pravda('vrstva přes podklad prosvítá pevným krytím 0,65',
+    po.pruhlednost > 0.6 && po.pruhlednost < 0.7, `krytí ${po.pruhlednost}`);
   const zadano = dotazy.filter((u) => u.indexOf(HOST.katastr) !== -1 && /LAYERS=/i.test(u));
   pravda('a její dlaždice se opravdu stahují', zadano.length > 0,
     'vrstva se zapnula, ale ze služby se nic nežádá');
@@ -523,15 +523,6 @@ const HOST = {
   pravda('a ukážou se pod mapou i s názvem vrstvy',
     leg.vidno && leg.kusu === 1 && leg.popisek === def.nazev, `vidno ${leg.vidno}, kusů ${leg.kusu}, „${leg.popisek}"`);
 
-  // posuvník
-  await p.locator('#pzm-kryti-r').fill('100');
-  await p.waitForTimeout(300);
-  const plne = await p.evaluate(() => {
-    const i = document.querySelector('#pzm-mapa .leaflet-layer:last-child');
-    return i ? +getComputedStyle(i).opacity : -1;
-  });
-  pravda('posuvník průhlednost opravdu mění', plne > po.pruhlednost, `${po.pruhlednost} → ${plne}`);
-
   // vypnutí
   // Totéž jako výš: strop a pojmenovaná chyba místo pádu na timeoutu.
   const lzeVypnout = await p.locator('.pzm-v[data-id="katastr"]')
@@ -540,13 +531,12 @@ const HOST = {
   const vypnuto = await p.evaluate(() => ({
     on: !!(document.querySelector('.pzm-v[data-id="katastr"]') || { classList: { contains: () => false } })
       .classList.contains('on'),
-    kryti: !(document.getElementById('pzm-kryti') || { hidden: true }).hidden,
     popis: !(document.getElementById('pzm-popis') || { hidden: true }).hidden,
   }));
   pravda('přepínač vrstvy je na mapě i podruhé', lzeVypnout,
     'tlačítko .pzm-v[data-id="katastr"] zmizelo');
   pravda('druhé klepnutí vrstvu vypne', !vypnuto.on);
-  pravda('a zmizí s ní i posuvník a popis', !vypnuto.kryti && !vypnuto.popis);
+  pravda('a zmizí s ní i popis', !vypnuto.popis);
   pravda('a vysvětlivky taky',
     await p.evaluate(() => document.getElementById('pzm-leg').hidden
       && document.querySelectorAll('.pzm-leg-k').length === 0),
@@ -1518,8 +1508,9 @@ if (DRAZBA) {
     pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44, `${pryc.sirka}×${pryc.vyska} px`);
     /* A HLAVNĚ: JE VIDĚT, KDYŽ SE ČLOVĚK DÍVÁ NA MAPU.
        „V pruhu pod mapou je pořád na dohled" byla nedoložená věta.
-       Tlačítko stálo v pruhu až ZA podkladem, vrstvami a posuvníkem
-       průhlednosti — naměřeno na telefonu 390×844 po popojetí mapou:
+       Tlačítko stálo v pruhu až ZA podkladem, vrstvami a tehdejším
+       posuvníkem průhlednosti (ten je dnes pryč, krytí je pevné)
+       — naměřeno na telefonu 390×844 po popojetí mapou:
        mapa končila na 555 px a tlačítko začínalo na 828 px, tedy
        v posledních šestnácti bodech obrazovky, a svou výškou 44 px
        přetékalo 28 px pod okraj. Kdo mapou popojel, neviděl ho.

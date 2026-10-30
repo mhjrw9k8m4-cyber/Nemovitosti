@@ -518,7 +518,8 @@
     .pzm-cela-zap .pzm-panel{flex:none; display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px 24px;}
     .pzm-cela-zap .pzm-grp-v{flex:1 1 320px;}
     .pzm-cela-zap .pzm-vr{display:flex; flex-wrap:wrap;}
-    .pzm-cela-zap .pzm-kryti{flex:0 1 240px;}
+    /* (Pravidlo pro posuvník průhlednosti tu bývalo. Posuvník je
+        od 30. 10. zrušený — viz komentář u .pzm-panel níž.) */
     /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
        je i v malém zobrazení, takže tady jen ubírá místo; vysvětlivky
        barev zůstávají (bez nich je plán jen skvrna), ale jen na pruh. */
@@ -581,14 +582,15 @@
     /* Hláška o hledání i o spadlé službě patří přes celý řádek mřížky —
        do jedné buňky vedle dlaždic by se zalomila na tři řádky. */
     .pzm-hleda, .pzm-nic{grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
-    /* POSUVNÍK ŘÍKÁ, NA KOLIKA STOJÍ. Táhlo bez čísla je hádanka: vidět
-       je poloha, ne hodnota. Číslo stojí na konci popisku (tedy tam, kam
-       oko po přečtení „průhlednost vrstvy" dojede) a je v tabulkových
-       číslicích, aby při tažení neposkakovalo. */
-    .pzm-kryti{gap:4px;}
-    .pzm-kryti-hl{display:flex; align-items:baseline; justify-content:space-between; gap:8px;}
-    .pzm-kryti-v{font-family:var(--font-popisek); font-size:13px; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums;}
-    .pzm-kryti input{width:100%; accent-color:var(--plocha-znacka);}
+    /* POSUVNÍK PRŮHLEDNOSTI JE PRYČ (30. 10. odpoledne).
+       Ráno dostal popisek, číslo s hodnotou a celý řádek; odpoledne ho
+       majitel zrušil: „ta průhlednost je zbytečná, odstraň ji." Má
+       pravdu v tom, že na otázku „co je pod vrstvou" odpovídá líp
+       vypnutí té vrstvy — jedno klepnutí na tutéž dlaždici — než
+       táhlo, se kterým se musí mířit. Vrstvy se kreslí s pevným
+       krytím (KRYTI_VRSTVY v js/pozemek.js).
+       Pravidla .pzm-kryti, .pzm-kryti-hl a .pzm-kryti-v tím zmizela
+       i se značkováním; mrtvý styl po nich nezbyl. */
     .pzm-popis{margin:0; padding:8px 12px; border-top:1px solid var(--line); background:var(--plocha-karta); font-size:13px; line-height:1.6; color:var(--muted);}
     /* Vrstva je zapnutá, ale mapa je moc daleko na to, aby ji úřad
        nakreslil. Není to chyba, je to stav — proto ne červená, ale
@@ -667,17 +669,15 @@
        na úvodní stránce — sem o ní nikdo nevěděl. Změřeno na 390×844:
        odkaz zpět na seznam 22 px, zvětšení mapy 36 px, přepínače
        podkladu 31 px a vrstev 34 px — a to jsou prvky, kterými se mapa
-       na telefonu jedině ovládá. (Vrstvy jsou od přestavby panelu
+       na telefonu jedině ovládá. (Posuvník průhlednosti byl v tom
+       seznamu taky; od 30. 10. na mapě není.) (Vrstvy jsou od přestavby panelu
        dlaždice vysoké 44 px pořád, podklad zůstává 36 px na monitoru.)
        Platí jen na dotykových displejích, aby se na počítači nic
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
       .pz-back{min-height:44px;}
-      /* Posuvník průhlednosti vrstvy měl 16 px. Prstem se do šestnácti
-         pixelů netrefí nikdo — a je to jediný způsob, jak si na telefonu
-         prohlédnout, co je pod úřední vrstvou. Vyšší plocha na chytání;
-         samotná dráha posuvníku zůstává tenká, prohlížeč ji vystředí. */
-      .pzm-kryti input{height:44px;}
+      /* (Posuvník průhlednosti tu míval svých 44 px na chytání prstem.
+         Je zrušený — viz komentář u panelu výš.) */
       .pzm-cela-btn{width:44px; height:44px;}
       /* Na dotyku terč 44 px — stejně jako dlaždice vrstev vedle. */
       .pzm-zpet-btn{height:44px; font-size:14px;}

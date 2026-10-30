@@ -553,13 +553,6 @@
             '</div>' +
           '</div>' +
 
-          '<label class="pzm-kryti pzm-grp" id="pzm-kryti" hidden>' +
-            '<span class="pzm-kryti-hl">' +
-              '<span class="pzm-cap">Průhlednost vrstvy</span>' +
-              '<output class="pzm-kryti-v" id="pzm-kryti-v" for="pzm-kryti-r">65\u00a0%</output>' +
-            '</span>' +
-            '<input type="range" id="pzm-kryti-r" min="20" max="100" step="5" value="65" aria-label="Průhlednost zapnuté vrstvy">' +
-          '</label>' +
         '</div>' +
         '<p class="pzm-popis" id="pzm-popis" hidden></p>' +
         '<div class="pzm-leg" id="pzm-leg" hidden></div>' +
@@ -658,15 +651,12 @@
 
     var vrstvy = document.getElementById('pzm-vr');
     var popis = document.getElementById('pzm-popis');
-    var kryti = document.getElementById('pzm-kryti');
-    var posuvnik = document.getElementById('pzm-kryti-r');
-    var cislo = document.getElementById('pzm-kryti-v');
+
+    var KRYTI_VRSTVY = 0.65;
     var zive = {};
     var pridano = 0;
 
     function prepocitejKryti() {
-      var kolik = Object.keys(zive).length;
-      if (kryti) kryti.hidden = kolik === 0;
 
       if (popis) {
         var texty = [], daleko = [];
@@ -695,14 +685,7 @@
           popis.appendChild(rada);
         }
       }
-      if (posuvnik) {
-        var v = (+posuvnik.value || 65) / 100;
-        Object.keys(zive).forEach(function (k) { zive[k].setOpacity(v); });
-
-        if (cislo) cislo.textContent = Math.round(v * 100) + '\u00a0%';
-      }
     }
-    if (posuvnik) posuvnik.addEventListener('input', prepocitejKryti);
 
     m.on('zoomend', prepocitejKryti);
 
@@ -795,7 +778,7 @@
           if (!v) return;
           v._pkPopis = def.popis || '';
           v._pkDef = def;
-          if (posuvnik) v.setOpacity((+posuvnik.value || 65) / 100);
+          v.setOpacity(KRYTI_VRSTVY);
           v.addTo(m);
           zive[def.id] = v;
           b.classList.add('on');

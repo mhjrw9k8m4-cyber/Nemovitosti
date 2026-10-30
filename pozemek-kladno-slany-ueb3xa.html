@@ -21,7 +21,7 @@
 <script src="js/min/videno.js?v=e21d5bf3"></script>
 <script src="js/min/poznamky.js?v=96f9b539"></script>
 <script src="js/min/hlidani-logika.js?v=9c26a424"></script>
-<script src="js/min/pozemek.js?v=522c3fb5"></script>
+<script src="js/min/pozemek.js?v=e5ab230d"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/hlavicka.js?v=8bad9ba8" defer></script>
@@ -233,7 +233,6 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pzm-cela-zap .pzm-panel{flex:none;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px}
 .pzm-cela-zap .pzm-grp-v{flex:1 1 320px}
 .pzm-cela-zap .pzm-vr{display:flex;flex-wrap:wrap}
-.pzm-cela-zap .pzm-kryti{flex:0 1 240px}
 .pzm-cela-zap .pzm-popis{display:none}
 .pzm-cela-zap .pzm-leg{max-height:17vh;overflow:auto;padding:8px 12px}
 .pzm-cela-zap .pzm-leg-k img{max-height:11vh;width:auto}
@@ -254,10 +253,6 @@ body.pzm-cela-telo{overflow:hidden}
 .pzm-v:active{transform:translateY(1px)}
 .pzm-v.on{background:var(--plocha-znacka);border-color:transparent;color:#fff;box-shadow:var(--glow)}
 .pzm-hleda,.pzm-nic{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;line-height:1.5;color:var(--muted)}
-.pzm-kryti{gap:4px}
-.pzm-kryti-hl{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-.pzm-kryti-v{font-family:var(--font-popisek);font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
-.pzm-kryti input{width:100%;accent-color:var(--plocha-znacka)}
 .pzm-popis{margin:0;padding:8px 12px;border-top:1px solid var(--line);background:var(--plocha-karta);font-size:13px;line-height:1.6;color:var(--muted)}
 .pzm-daleko{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;color:var(--text)}
 .pzm-priblizit{flex:none;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;min-height:34px;border-radius:var(--r-ovladani);border:1.5px solid var(--znacka);background:var(--plocha-karta);color:var(--znacka);transition:var(--prechod)}
@@ -285,7 +280,6 @@ body.pzm-cela-telo{overflow:hidden}
 #pz-detail{min-height:100vh}
 .pz-empty a{color:var(--znacka-svetla);font-weight:600}
 @media (pointer:coarse){.pz-back{min-height:44px}
-.pzm-kryti input{height:44px}
 .pzm-cela-btn{width:44px;height:44px}
 .pzm-zpet-btn{height:44px;font-size:14px}
 .pzm-z{height:44px}
