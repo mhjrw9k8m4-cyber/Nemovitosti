@@ -517,7 +517,8 @@
        přes 55 % okna). Vedle sebe zabere ovládání 93 px. */
     .pzm-cela-zap .pzm-panel{flex:none; display:flex; flex-wrap:wrap; align-items:flex-start; gap:12px 24px;}
     .pzm-cela-zap .pzm-grp-v{flex:1 1 320px;}
-    .pzm-cela-zap .pzm-vr{display:flex; flex-wrap:wrap;}
+    /* (Tady bývalo `.pzm-cela-zap .pzm-vr{display:flex}`. Od 30. 10. je
+        zalamovaná řada i v malém zobrazení, takže výjimka neměla co přebít.) */
     /* (Pravidlo pro posuvník průhlednosti tu bývalo. Posuvník je
         od 30. 10. zrušený — viz komentář u .pzm-panel níž.) */
     /* Ve zvětšení má být vidět hlavně MAPA. Vysvětlující věta k vrstvě
@@ -540,12 +541,12 @@
        (jedna věc se dvěma polohami, ne dvě nezávislá tlačítka) a vrstvy
        jsou dlaždice se značkou, takže se tvar pozná dřív než text.
 
-       MŘÍŽKA, NE ZALAMOVANÁ ŘADA. Panel je pod mapou široký 366 px na
+       MŘÍŽKA, NE ZALAMOVANÁ ŘADA (tady, u skupin — uvnitř řady vrstev
+       je to naopak, viz .pzm-vr). Panel je pod mapou široký 366 px na
        telefonu a 694 px na monitoru. Na auto-fit to stačí: na telefonu
        vyjde jeden sloupec (skupiny jdou pod sebou přes celou šířku),
-       na monitoru tři (podklad a průhlednost vedle sebe) — a vrstvy
-       dostanou celý řádek, protože pět dlaždic do čtvrtiny šířky
-       nejde. Žádné @media na to není potřeba. */
+       na monitoru víc — a vrstvy dostanou celý řádek, protože pět
+       dlaždic do čtvrtiny šířky nejde. Žádné @media není potřeba. */
     .pzm-panel{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; align-items:start; padding:12px; border-top:1px solid var(--line); background:var(--plocha-karta);}
     .pzm-grp{display:flex; flex-direction:column; gap:4px; min-width:0;}
     .pzm-grp-v{grid-column:1/-1;}
@@ -558,8 +559,23 @@
        `pzm-z` nosí i drobné „Zkusit znovu" u spadlé vrstvy — to se roztáhnout nesmí. */
     .pzm-zaklad > .pzm-z{flex:1 1 0;}
     .pzm-z.on{background:var(--plocha-karta); color:var(--znacka-svetla); box-shadow:var(--e1);}
-    .pzm-vr{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; min-height:34px;}
-    .pzm-v{display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; text-align:left; border-radius:var(--r-ovladani); border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26); background:var(--plocha-karta); font:inherit; font-size:13px; font-weight:600; line-height:1.3; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
+    /* ZALAMOVANÁ ŘADA, NE MŘÍŽKA — a proč to tu nejdřív bylo špatně.
+       Mřížka `repeat(auto-fit,minmax(150px,1fr))` měla prázdné sloupce
+       srazit, jenže ve stejné mřížce bydlí i hláška o spadlých službách
+       přes celý řádek (`.pzm-nic{grid-column:1/-1}`) — a sloupec, přes
+       který se někdo táhne, `auto-fit` nesrazí. Naměřeno na telefonu
+       390 px ve stavu „jede jen katastr": řada 324 px, sloupce
+       `158px 158px`, a jediný přepínač „Hranice parcel" seděl na 158 px,
+       tedy pod polovinou řádku, s dírou vedle sebe. Majitel na to poslal
+       snímek. Zalamovaná řada tenhle případ řeší bez výjimky: `flex-grow`
+       dojede poslední řádek do konce, ať je na něm přepínačů kolik chce. */
+    .pzm-vr{display:flex; flex-wrap:wrap; gap:8px; min-height:34px;}
+    /* KLIKATELNOST PODLE RECEPTU VEDLEJŠÍHO TLAČÍTKA WEBU (.btn-secondary,
+       viz §233): linka 1,5 px v `--obrys-tlacitka`, stín `--e1` a řez 700.
+       Předtím měly dlaždice linku v rgba(…,.26) a žádný stín — na bílé
+       ploše panelu z toho byl obrys sotva znát a vypadaly jako štítky
+       s názvem vrstvy, ne jako něco, co se dá zapnout. */
+    .pzm-v{flex:1 1 150px; display:flex; align-items:center; gap:8px; min-height:44px; padding:8px; text-align:left; border-radius:var(--r-ovladani); border:1.5px solid var(--obrys-tlacitka); background:var(--plocha-karta); box-shadow:var(--e1); font:inherit; font-size:13px; font-weight:700; line-height:1.3; color:var(--text); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
     /* 18 px a tah 2 — dopočteno k velikosti (36 ÷ 18), stejně jako
        u ostatních značek na webu; hlídá scripts/test-tahy.mjs. */
     .pzm-v > svg{width:18px; height:18px; stroke-width:2; flex:none;}
@@ -576,12 +592,12 @@
        si tu vrstvu někdo zapne. Dlaždice proto roste do výšky; mřížka
        je roztáhne na stejnou (align-items:stretch je výchozí). */
     .pzm-v > span{min-width:0;}
-    .pzm-v:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}
+    .pzm-v:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena); box-shadow:var(--e2);}
     .pzm-v:active{transform:translateY(1px);}
     .pzm-v.on{background:var(--plocha-znacka); border-color:transparent; color:#fff; box-shadow:var(--glow);}
-    /* Hláška o hledání i o spadlé službě patří přes celý řádek mřížky —
-       do jedné buňky vedle dlaždic by se zalomila na tři řádky. */
-    .pzm-hleda, .pzm-nic{grid-column:1/-1; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
+    /* Hláška o hledání i o spadlé službě patří přes celý řádek —
+       vedle dlaždic by se zalomila na tři řádky. */
+    .pzm-hleda, .pzm-nic{flex:1 1 100%; display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:13px; line-height:1.5; color:var(--muted);}
     /* POSUVNÍK PRŮHLEDNOSTI JE PRYČ (30. 10. odpoledne).
        Ráno dostal popisek, číslo s hodnotou a celý řádek; odpoledne ho
        majitel zrušil: „ta průhlednost je zbytečná, odstraň ji." Má

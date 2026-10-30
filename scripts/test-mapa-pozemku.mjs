@@ -324,14 +324,32 @@ const HOST = {
 }
 
 // --- C) Odpovídá jen jedna služba → jen její přepínač -----------------
+/* NA TELEFONU, protože právě tam se ukázala druhá vada tohohle stavu:
+   jediný přepínač seděl na 158 px z 324 px a vedle něj byla díra. */
 {
-  const { ctx, p } = await detail({ zivi: [HOST.zaplavy] });
+  const { ctx, p } = await detail({ zivi: [HOST.zaplavy], dotyk: true,
+    viewport: { width: 390, height: 844 } });
   await domapy(p);
   await domUtichlo(p, 400);
   const v = await prepinace(p);
   const def = (NAST.vrstvy || []).find((x) => x.id === 'zaplavy');
   pravda('nabídne se právě ta jedna vrstva, která odpověděla',
     v.length === 1 && v[0] === def.nazev, `nabízí se: ${v.join(', ') || '(nic)'}`);
+  /* A DOJEDE PŘES CELÝ ŘÁDEK. Mřížka `repeat(auto-fit,minmax(150px,1fr))`
+     měla prázdný sloupec srazit, jenže ve stejné mřížce bydlí i hláška
+     o spadlých službách přes celý řádek — a sloupec, přes který se
+     někdo táhne, `auto-fit` nesrazí. Naměřeno: 158 px z 324 px, tedy
+     pod polovinou, a majitel na to poslal snímek. */
+  const sirky = await p.evaluate(() => {
+    const r = document.getElementById('pzm-vr');
+    const b = document.querySelector('.pzm-v');
+    if (!r || !b) return null;
+    return { radek: Math.round(r.getBoundingClientRect().width),
+      tlacitko: Math.round(b.getBoundingClientRect().width) };
+  });
+  pravda('a dojede přes celý řádek, ne do poloviny',
+    !!sirky && sirky.tlacitko >= sirky.radek - 1,
+    sirky ? `${sirky.tlacitko} px z ${sirky.radek} px` : 'řada vrstev se nenašla');
   await ctx.close();
 }
 

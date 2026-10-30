@@ -16417,3 +16417,43 @@ cestou ztratit a nikdo by si toho nevšiml.
 `test-zaobleni` (4), `test-odstupy` — všechny bez chyby. Jediná červená
 zůstává `test-poradi-pozemku` (hlavní akce na 2 734 px z 3 855), což je
 starší nález vedený zvlášť a s touhle změnou nesouvisí.
+
+## §256 Jediný přepínač vrstvy seděl na půlce řádku
+
+**Zadání (30. 10.):** „A tlačítko Hranice parcel bych roztáhl a uzpůsobil
+ho tak, aby působilo více klikatelně." Na majitelově snímku jela jediná
+vrstva (ČÚZK), ostatní čtyři úřady mlčely — a ten jeden přepínač stál
+sám v levé polovině řádku s dírou vedle sebe.
+
+**Proč se neroztáhl, ačkoli měl.** Řada vrstev byla mřížka
+`repeat(auto-fit, minmax(150px, 1fr))`. Takový zápis má prázdné sloupce
+srazit a jediné dlaždici dát celý řádek — jenže `auto-fit` nesrazí
+sloupec, přes který se něco táhne, a ve stejné mřížce bydlí i hláška
+„Vrstvy … teď neodpovídají" s `grid-column:1/-1`. Dokud je co hlásit,
+mřížka drží dva sloupce. Naměřeno na telefonu 390 px: řada 324 px,
+sloupce `158px 158px`, přepínač 158 px — **pod polovinou řádku**.
+
+**Co je teď.** Zalamovaná řada (`flex-wrap`) a dlaždice `flex:1 1 150px`.
+Poslední řádek se vždycky dojede do konce, ať je na něm přepínačů kolik
+chce: jeden zabere celých 324 px (na monitoru 694), pět se složí 2 + 2 + 1
+a ten poslední vyplní zbytek. Výjimka `.pzm-cela-zap .pzm-vr{display:flex}`
+pro zvětšení na celou obrazovku tím zmizela — neměla už co přebíjet.
+
+**Klikatelnost podle receptu, který web má.** Dlaždice nesly linku
+1,5 px v `rgba(…, .26)` a žádný stín; na bílé ploše panelu z toho byl
+obrys sotva znát a vypadaly jako štítky s názvem vrstvy. Berou si proto
+týž recept jako vedlejší tlačítko webu a jako pilulky druhů nad výpisem
+(§233, stejné zadání od majitele): linka 1,5 px v `--obrys-tlacitka`,
+stín `--e1`, řez 700. Najetí navíc zvedne na `--e2`. Velikost písma
+zůstává 13 px — na čtrnácti by se „Záplavové území" na telefonu
+zalamovalo na dva řádky (viz propočet u `.pzm-v`).
+
+**Hlídač.** Scénář „odpovídá jen jedna služba" v `test-mapa-pozemku` se
+přestěhoval na telefon 390 px a měří, že přepínač dojede přes celý
+řádek. Prokázáno sabotáží: s vrácenou mřížkou hlásí
+`✕ a dojede přes celý řádek, ne do poloviny — 158 px z 324 px`.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-mapa-pozemku` (158),
+`test-vlozeny-styl`, `test-mrtve-styly`, `test-mrtva-jmena`, `test-deska`,
+`test-zaobleni`, `test-barvy`, `test-dotyk`, `test-u-hrany`,
+`test-kontrast`, `test-rozvrzeni` (190) — bez chyby.

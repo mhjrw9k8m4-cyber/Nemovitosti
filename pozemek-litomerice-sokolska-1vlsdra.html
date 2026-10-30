@@ -234,7 +234,6 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pzm-cela-zap .pzm-mapa{flex:1 1 auto;height:auto;min-height:0}
 .pzm-cela-zap .pzm-panel{flex:none;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px}
 .pzm-cela-zap .pzm-grp-v{flex:1 1 320px}
-.pzm-cela-zap .pzm-vr{display:flex;flex-wrap:wrap}
 .pzm-cela-zap .pzm-popis{display:none}
 .pzm-cela-zap .pzm-leg{max-height:17vh;overflow:auto;padding:8px 12px}
 .pzm-cela-zap .pzm-leg-k img{max-height:11vh;width:auto}
@@ -247,14 +246,14 @@ body.pzm-cela-telo{overflow:hidden}
 .pzm-z{height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border:0;background:transparent;border-radius:var(--r-pill);font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
 .pzm-zaklad>.pzm-z{flex:1 1 0}
 .pzm-z.on{background:var(--plocha-karta);color:var(--znacka-svetla);box-shadow:var(--e1)}
-.pzm-vr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;min-height:34px}
-.pzm-v{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px;text-align:left;border-radius:var(--r-ovladani);border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26);background:var(--plocha-karta);font:inherit;font-size:13px;font-weight:600;line-height:1.3;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.pzm-vr{display:flex;flex-wrap:wrap;gap:8px;min-height:34px}
+.pzm-v{flex:1 1 150px;display:flex;align-items:center;gap:8px;min-height:44px;padding:8px;text-align:left;border-radius:var(--r-ovladani);border:1.5px solid var(--obrys-tlacitka);background:var(--plocha-karta);box-shadow:var(--e1);font:inherit;font-size:13px;font-weight:700;line-height:1.3;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
 .pzm-v>svg{width:18px;height:18px;stroke-width:2;flex:none}
 .pzm-v>span{min-width:0}
-.pzm-v:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
+.pzm-v:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
 .pzm-v:active{transform:translateY(1px)}
 .pzm-v.on{background:var(--plocha-znacka);border-color:transparent;color:#fff;box-shadow:var(--glow)}
-.pzm-hleda,.pzm-nic{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;line-height:1.5;color:var(--muted)}
+.pzm-hleda,.pzm-nic{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;line-height:1.5;color:var(--muted)}
 .pzm-popis{margin:0;padding:8px 12px;border-top:1px solid var(--line);background:var(--plocha-karta);font-size:13px;line-height:1.6;color:var(--muted)}
 .pzm-daleko{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;color:var(--text)}
 .pzm-priblizit{flex:none;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;min-height:34px;border-radius:var(--r-ovladani);border:1.5px solid var(--znacka);background:var(--plocha-karta);color:var(--znacka);transition:var(--prechod)}
