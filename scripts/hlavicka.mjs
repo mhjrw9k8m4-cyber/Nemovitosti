@@ -88,17 +88,13 @@ function poctyZDat() {
     const d = JSON.parse(readFileSync(path.join(koren, 'data', 'mapa.json'), 'utf8'));
     const o = Array.isArray(d.opportunities) ? d.opportunities : [];
     if (!o.length) return null;
-    /* „Nové" je týden, ne den: za jediný den přibyde i nula a odkaz
-       by sliboval prázdnou stránku. Práh je týž, jaký má
-       nove-pozemky.html. */
-    const tyden = new Date(Date.parse(d.updated + 'T00:00:00Z') - 6 * 864e5)
-      .toISOString().slice(0, 10);
+    /* POČÍTÁ SE JEN TO, CO SE VYPISUJE. Byly tu i počty nových, dražeb
+       a exekucí — pro tři odkazy, které 30. 10. z nabídky zase odešly
+       („nemáš tam přidávat další věci"). Počítat je dál by znamenalo
+       třikrát projít dva tisíce záznamů pro číslo, které nikdo neuvidí. */
     const n = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
     return {
       vse: n(o.length),
-      nove: n(o.filter((x) => (x.first_seen || '') >= tyden).length),
-      drazby: n(o.filter((x) => x.type === 'drazba').length),
-      exekuce: n(o.filter((x) => x.type === 'exekuce').length),
       /* Kdy robot naposledy obešel zdroje — „30. 10." česky, bez roku:
          v patičce šuplíku jde o čerstvost, ne o datum do kalendáře. */
       kdy: (() => { const [, m, den] = d.updated.split('-'); return `${Number(den)}.\u00a0${Number(m)}.`; })(),
@@ -129,6 +125,17 @@ const ikona = (jm) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><u
    obojí zůstává: „Druh nabídky" v panelu nad výpisem.
    Stránky samy zůstávají (chodí na ně vyhledávač), jen si na ně
    lišta nenárokuje místo. */
+/* DO NABÍDKY SE NEPŘIDÁVAJÍ POLOŽKY. 30. 10. tu na jeden den stály
+   tři odkazy navíc („Nové za týden", „Dražby", „Exekuce") s počty
+   a nad nimi nadpis oddílu — přibyly jako odpověď na „dodej tomu
+   život, je to suché". Byla to špatná odpověď a majitel ji vrátil
+   jedinou větou: „nemáš tam přidávat další věci, jen to menu
+   vykrášlit." Prázdné místo v šuplíku se vyplňuje VZHLEDEM — větší
+   řádky, vzduch, značka nahoře, stav účtu — ne delším seznamem.
+   Ty tři stránky nezmizely a vyhledávač na ně chodí dál; z nabídky
+   si jen neberou místo (týž důvod jako u řady .uvod-vstupy výš).
+   Počet u „Hledat na mapě" zůstává: to není nová položka, to je údaj
+   na položce, která tam stejně byla. */
 /* POŘADÍ VE ZNAČCE JE TO SPRÁVNÉ PRO MONITOR, ne pro šuplík: první je
    hledání, poslední tlačítko „Přidat pozemek" — tak to patří do lišty
    a tak to čte i scripts/test-data.mjs („nahoře je hledání pozemků").
@@ -136,11 +143,7 @@ const ikona = (jm) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><u
    jedna značka, dvě podoby. */
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
       <div class="nav-hlava"><span class="logo-mark" aria-hidden="true"></span><span class="nav-znacka">Parcelka</span></div>
-      <p class="nav-oddil nav-mobil">Co je na trhu</p>
       <a href="${NAV_MAPA}">${ikona('mapa')}Hledat na mapě${pocet('vse')}</a>
-      <a class="nav-mobil" href="nove-pozemky.html">${ikona('sance')}Nové za týden${pocet('nove')}</a>
-      <a class="nav-mobil" href="drazby-pozemku-nabidky.html">${ikona('kladivko')}Dražby${pocet('drazby')}</a>
-      <a class="nav-mobil" href="index.html#t=exekuce">${ikona('stit')}Exekuce${pocet('exekuce')}</a>
       <a href="cena-pozemku.html">${ikona('cena')}Ceny pozemků</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">

@@ -5195,17 +5195,24 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     padding:16px; font-size:16px;}
 
   /* =================================================================
-     HLAVIČKA ŠUPLÍKU, ODDÍLY, POČTY A PATIČKA (30. 10.)
+     HLAVIČKA ŠUPLÍKU, POČET A PATIČKA (30. 10.)
      =================================================================
      Majitel: „tuhle část kompletně předělej, dodej tomu život, je to
      suché." Naměřeno na jeho snímku (390×844): obsah nabídky končil
      na 525 px, tedy 319 px panelu bylo prázdných, a křížek visel sám
      na vlastním řádku nad vším ostatním.
-     Co s tím prostorem: značka nahoře (ať je poznat, čí nabídka to
-     je), nadpis oddílu, POČTY u položek ze skutečných dat
-     (scripts/hlavicka.mjs je bere z data/mapa.json při sestavení —
-     stránka kvůli nim nestahuje ani bajt) a dole věta o čerstvosti.
-     Čísla jsou ten život: člověk hned vidí, že dražeb je 33, ne tři.
+
+     NAPOPRVÉ JSEM TO VYPLNIL ŠPATNĚ — třemi odkazy navíc („Nové za
+     týden", „Dražby", „Exekuce") a nadpisem oddílu nad nimi. Majitel
+     to vrátil jednou větou: „nemáš tam přidávat další věci, jen to
+     menu vykrášlit." Má pravdu: delší seznam není bohatší nabídka,
+     je to jen delší seznam.
+     Prázdné místo vyplňuje ROZVRŽENÍ: značka nahoře (ať je poznat,
+     čí nabídka to je), procházení nahoře, účet a patička dole — mezera
+     mezi nimi je pak oddělení dvou světů, ne díra. Počet u „Hledat na
+     mapě" zůstává jako jediné číslo: je to údaj na položce, která tam
+     stejně byla, a bere se z data/mapa.json při sestavení, takže kvůli
+     němu stránka nestahuje ani bajt.
      Vejde se to celé: hlídá scripts/test-menu.mjs („celá nabídka se
      vejde na obrazovku"). */
   .nav-hlava{display:flex; align-items:center; gap:12px; order:-4;
@@ -5216,11 +5223,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Křížek sedí v té hlavičce vpravo (js/menu.js ho tam vkládá), takže
      už nemá vlastní řádek ani vlastní `order`. */
   .nav-hlava .nav-zavrit{order:0; margin:0 0 0 auto; align-self:center;}
-  /* Popisek oddílu: verzálky jako všude jinde (§216). Nic se pod ním
-     nerozbaluje, je to jen jmenovka skupiny. */
-  .nav-oddil{order:-1; margin:0; padding:16px 20px 4px;
-    font-family:var(--font-popisek); font-size:12px; font-weight:600;
-    letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--muted);}
+  /* (Pravidlo pro .nav-oddil tu bývalo. Nadpis oddílu zmizel i se
+     třemi odkazy, které měl v hlavě — viz výš.) */
   /* POČET U POLOŽKY. Vpravo, tabulkovými číslicemi, ať stojí pod sebou
      v jednom sloupci — totéž pravidlo jako u čipů nad výpisem. */
   .nav-pocet{margin-left:auto; flex:none; min-width:4.5ch; text-align:center;
@@ -5230,8 +5234,26 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Patička šuplíku: věta o čerstvosti dat, žádné odkazy. Odkazy by
      musely mít 52 px na prst (hlídá test-menu) a tři takové řádky by
      snědly 156 px na to, co stojí v patičce stránky. */
-  .nav-pata{order:9; margin:auto 0 0; padding:16px 20px 0;
+  .nav-pata{order:9; margin:0; padding:16px 20px 0;
     font-size:12px; font-weight:500; color:var(--muted);}
+  /* ÚČET SE DRŽÍ U DNA, PROCHÁZENÍ NAHOŘE. Tohle je ta „výplň" místo
+     tří odkazů navíc: nabídka má nahoře to, čím se web prochází, dole
+     to, co patří mně, a mezi nimi vzduch. Bez toho zbyla pod dvěma
+     řádky jenom díra — naměřeno 390×844: obsah končil na 490 px
+     a 354 px panelu bylo prázdných.
+     margin-top:auto sebere všechno zbylé místo nad skupinou účtu;
+     patička ho už sbírat nesmí, jinak by si ho ty dva vzaly napůl. */
+  /* A DOLNÍ BLOK MUSÍ VYPADAT JAKO DNO, ne jako poslední řádek, za
+     kterým něco chybí. Dostane proto vlastní plochu a linku nahoře:
+     mezera nad ním je pak předěl mezi „co prochází web" a „co je moje",
+     ne díra po smazané položce. (Napoprvé měl blok jen margin-top:auto
+     a prázdných 276 px nad ním četlo pořád jako chybějící obsah.) */
+  #nav .nav-ucet-sk{margin-top:auto; border-top:1px solid var(--line);
+    background:var(--plocha-zapustena);}
+  .nav-pata{background:var(--plocha-zapustena);}
+  /* Dělicí čára mezi procházením a účtem je od téhle chvíle ta linka
+     nad dolním blokem — druhá by byla čára přes prázdno. */
+  #nav .nav-del{display:none;}
 
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */

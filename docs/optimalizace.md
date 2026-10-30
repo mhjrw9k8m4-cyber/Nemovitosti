@@ -16087,3 +16087,57 @@ z prohlížeče, ne dnešní stav webu.
 `test-odstupy`, `test-pismo`, `test-typografie`, `test-kontrast`,
 `test-zaobleni`, `test-ikony`, `test-tahy`, `test-mrtve-styly`,
 `test-mrtva-jmena` i `test-u-hrany`.
+
+
+## §249 Nabídka: tři odkazy navíc zase pryč, místo vyplní rozvržení
+
+**Zadání od majitele (30. 10.):** „Chápeš, že tam nemáš přidávat další věci,
+jen to menu vykrášlit?"
+
+**Co jsem udělal špatně.** Den předtím znělo zadání „tuhle část kompletně
+předělej, dodej tomu život, je to suché" (§244). Naměřil jsem, že v panelu
+844 px zbývá 319 px prázdna, a vyplnil jsem je **třemi novými odkazy**
+(„Nové za týden", „Dražby", „Exekuce") s počty a nadpisem oddílu nad nimi.
+To byla špatná odpověď: delší seznam není bohatší nabídka, je to jen delší
+seznam. A navíc to bylo v rozporu s vlastním pravidlem téhle nabídky,
+které je v `scripts/hlavicka.mjs` napsané od 29. 10. — „zbav se těch věcí
+v menu a prokliků, nemá to být příručka".
+
+**Co je teď.** Tři odkazy i nadpis oddílu jsou pryč; nabídka má zase šest
+odkazů. Prázdné místo vyplňuje **rozvržení, ne obsah**:
+
+| | |
+|---|---|
+| nahoře | značka (ať je poznat, čí nabídka to je), hlavní tlačítko, dva řádky procházení |
+| dole | blok účtu s vlastní plochou a linkou nahoře, pod ním věta o čerstvosti dat |
+| mezi nimi | vzduch — předěl mezi „čím se web prochází" a „co je moje" |
+
+Měřeno na 390×844 (přihlášený): obsah končí na 816 px z 844, tedy pod ním
+zbývá 28 px místo dřívějších 319. Mezi oběma zónami je 276 px vzduchu —
+a protože dolní blok má vlastní plochu a linku, čte se ta mezera jako
+předěl, ne jako díra po smazané položce. Napoprvé měl blok jen
+`margin-top:auto` bez plochy a 276 px nad ním pořád vypadalo jako chybějící
+obsah; plocha to rozhodla.
+
+**Co zůstalo z „vykrášlení".** Značka v hlavičce šuplíku, ikona u každého
+řádku (ze sady, ne obrázek v CSS), stav účtu napsaný slovem, a jediné
+číslo — počet u „Hledat na mapě". To není nová položka, to je údaj na
+položce, která tam stejně byla.
+
+**Úklid, který k tomu patří.** `poctyZDat()` počítalo i nové, dražby
+a exekuce — tedy tři průchody dvěma tisíci záznamy pro čísla, která už
+nikdo neuvidí. Zbyl počet všech nabídek a datum poslední aktualizace.
+Pravidlo `.nav-oddil` ve stylopisu zmizelo s nadpisem, který obsluhovalo.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-menu` (32, včetně
+„celá nabídka se vejde na obrazovku"), `test-uvod` (68), `test-rozvrzeni`
+(190), `test-stranky`, `test-dotyk`, `test-kontrast`, `test-deska`,
+`test-pismo`, `test-zaobleni`, `test-ikony`, `test-tahy`, `test-odstupy`,
+`test-u-hrany`, `test-mrtve-styly`, `test-mrtva-jmena`.
+
+**Poznámka ke snímku, který majitel poslal.** Byl na něm build bez značky
+v šuplíku, bez počtů a bez těch tří odkazů — tedy stav mezi commity
+„Obří značka…" a „Šuplík nabídky předělaný". Telefon mu drží starší
+stránku; stejně tak u tlačítka „Historie" o zprávu dřív. Stojí za to to
+hlídat zvlášť — kdo soudí web podle sestavení z předvčerejška, soudí něco
+jiného, než co je nasazené.
