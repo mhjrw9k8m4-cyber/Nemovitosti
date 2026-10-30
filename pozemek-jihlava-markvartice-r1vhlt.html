@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-TTV5ostcpDF9Up3uhKKtFulafSWJZe+l1VIBjiPLEFQ=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
+  <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
+  <script src="js/min/chyby.js?v=443c7c43" defer></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <title>Trvalý travní porost 15 046 m² — Markvartice | Parcelka</title>
+  <meta name="description" content="Na prodej · 550 000 Kč (37 Kč/m²) · 15 046 m² · Markvartice, okres Jihlava. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="theme-color" content="#FFFFFF">
+  
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://www.parcelaka.cz/pozemek-jihlava-markvartice-r1vhlt.html">
+  <link rel="alternate" type="application/rss+xml" title="Parcelka — nové pozemky" href="novinky.xml">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Trvalý travní porost 15 046 m² — Markvartice">
+  <meta property="og:description" content="Na prodej · 550 000 Kč (37 Kč/m²) · 15 046 m² · Markvartice, okres Jihlava. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta property="og:locale" content="cs_CZ">
+  <meta property="og:site_name" content="Parcelka">
+  <meta property="og:url" content="https://www.parcelaka.cz/pozemek-jihlava-markvartice-r1vhlt.html">
+  <meta property="og:image" content="https://www.parcelaka.cz/assets/og/okres-jihlava.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Trvalý travní porost 15 046 m² — Markvartice">
+  <meta name="twitter:description" content="Na prodej · 550 000 Kč (37 Kč/m²) · 15 046 m² · Markvartice, okres Jihlava. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.">
+  <meta name="twitter:image" content="https://www.parcelaka.cz/assets/og/okres-jihlava.png">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
+  
+  <meta name="pk-leaflet" data-src="vendor/leaflet/leaflet.js?v=5a640ff8">
+  <meta name="pk-leaflet-css" data-src="vendor/leaflet/leaflet.css?v=ec929f11">
+  
+  <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
+  <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=8dd97a01">
+  
+  <link rel="preload" as="fetch" href="data/model.json" crossorigin>
+  <style>#obsah{background:var(--bg)}
+.pz-wrap{max-width:var(--m-wrap);margin:0 auto;padding:20px var(--okraj-stranky) 56px;color:var(--text);font-family:var(--font-ui)}
+.pz-back{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;margin-bottom:16px}
+.pz-back:hover{color:var(--text)}
+.pz-back svg{width:16px;height:16px;stroke-width:2.25}
+.pz-media{position:relative;width:100%;aspect-ratio:16/10;max-height:400px;border-radius:var(--r-obraz);overflow:hidden;background:var(--plocha-tlumena);border:1px solid var(--line);box-shadow:var(--e1)}
+.pz-media .opp-badge{top:13px;left:13px;bottom:auto;display:inline-flex}
+.pz-media .opp-badge::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
+.opp-badge.sale::before{background:var(--c-sale)}
+.opp-badge.drazba::before{background:var(--c-drazba)}
+.opp-badge.exekuce::before{background:var(--c-exekuce)}
+.opp-badge.obec::before{background:var(--c-obec)}
+.opp-badge.majitel::before{background:var(--c-majitel)}
+.pz-gallery{position:absolute;inset:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;z-index:1}
+.pz-gallery::-webkit-scrollbar{display:none}
+.pz-shot{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:center;scroll-snap-stop:always;display:block;user-select:none}
+.pz-media .opp-count{position:absolute;right:13px;bottom:13px;left:auto;z-index:3;display:inline-flex}
+@media (max-width:560px){.pz-media{margin:0 calc(-1 * var(--okraj-stranky));width:auto;aspect-ratio:4/3;max-height:none;border-radius:0;border-left:0;border-right:0;box-shadow:none}
+.pz-back{margin-bottom:12px}
+}
+.pz-sect-h{font-size:18px;font-weight:700;letter-spacing:-0.01em;text-transform:none;color:var(--text);margin:40px 0 8px;position:relative}
+.pz-sect-h::before{content:"";position:absolute;left:0;top:-14px;width:52px;height:2px;border-radius:2px;background:var(--accent-warm);opacity:.85}
+.pz-head{margin:20px 0 0}
+.pz-place{font-family:var(--font-nadpis);font-size:28px;font-weight:700;letter-spacing:-0.02em;color:var(--text);line-height:1.2}
+.pz-place{text-wrap:balance}
+.pz-okres{display:flex;align-items:center;gap:4px;font-size:14px;color:var(--muted);margin-top:4px}
+.pz-okres svg{width:16px;height:16px;stroke-width:2.25}
+.pz-dalky{font-size:12px;letter-spacing:0.02em;color:var(--muted);margin-top:8px;opacity:.85}
+.pz-dalky-pozn::before{content:' ('}
+.pz-dalky-pozn::after{content:')'}
+.pz-dalky-pozn{opacity:.8}
+.pz-vobci{font-size:12px;letter-spacing:0.02em;margin-top:4px}
+.pz-vobci a{color:var(--text);text-decoration:underline;text-underline-offset:2px}
+.pz-priceblock{margin:8px 0 0}
+.pz-pl{font-size:13px;font-weight:600;letter-spacing:0;color:var(--popisek);margin-bottom:2px}
+.pz-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pz-price .pv{font-family:var(--font-ui);font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--text);font-variant-numeric:tabular-nums;line-height:1}
+.pz-price .pm{font-size:14px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.pz-zdroj{margin-top:8px;font-size:13px;line-height:1.5;color:var(--muted)}
+.pz-verdict{--vc:var(--znacka-svetla);--vt:#fff;margin:20px 0 0;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--vc);box-shadow:var(--e1)}
+.pz-verdict.good{--vc:var(--c-ok-ink)}
+.pz-verdict.mid{--vc:var(--c-drazba-ink)}
+.pz-verdict.bad{--vc:var(--c-exekuce)}
+.pz-verdict.warn{--vc:var(--accent-warm)}
+.pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.pv-badge{font-size:13px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);background:var(--vc);color:var(--vt)}
+.pv-cmp{font-size:12px;color:var(--muted);font-weight:600}
+.pv-text{font-size:14px;color:var(--muted);line-height:1.5}
+.pv-text b{color:var(--text)}
+.pz-blok{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-plocha);font-size:14px;line-height:1.6;background:var(--plocha-karta);border:1px solid var(--line);color:var(--text)}
+.pz-blok b{color:var(--znacka-svetla)}
+.pz-blok-pozn{display:block;margin-top:4px;font-size:13px;color:var(--muted)}
+.pz-naklady{margin:20px 0 0;font-size:14px;color:var(--muted)}
+.pz-naklady a{font-weight:600;color:var(--znacka-svetla);text-decoration:underline;text-underline-offset:3px}
+.pz-popis-inzerent{max-width:var(--m-text);margin:0 0 4px;font-size:16px;line-height:1.6;color:var(--text)}
+@media (min-width:900px){.pz-popis-inzerent{font-size:18px}
+}
+.srv{margin:0}
+.srv-veta{max-width:var(--m-text);margin:0 0 12px;font-size:16px;line-height:1.6;color:var(--text)}
+.srv-seznam{list-style:none;margin:0;padding:0;max-width:var(--m-text)}
+.srv-radek{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:16px;row-gap:0;padding:8px 12px;border-top:1px solid var(--line);min-height:44px}
+.srv-radek:first-child{border-top:0}
+.srv-kde{grid-column:1;grid-row:1;font-size:14px;font-weight:600;color:var(--text);text-decoration:none}
+a.srv-kde{text-decoration:underline;text-underline-offset:3px}
+a.srv-kde:hover{color:var(--znacka-svetla)}
+.srv-detail{grid-column:1;grid-row:2;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.srv-c{grid-column:2;grid-row:1 / span 2;justify-self:end;font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.srv-ja{background:rgba(var(--brand-live-rgb),0.10);border-radius:var(--r-plocha);box-shadow:inset 3px 0 0 var(--plocha-znacka)}
+.srv-ja .srv-kde{font-weight:700}
+.srv-pozn{max-width:var(--m-text);margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+.kd-mriz{display:grid;gap:8px;max-width:var(--m-text);grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kd-polozka{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:56px;padding:8px 12px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);text-decoration:none;box-shadow:var(--e1);transition:var(--prechod)}
+.kd-polozka:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.kd-t{font-size:14px;font-weight:700;color:var(--text)}
+.kd-p{font-size:12px;line-height:1.4;color:var(--muted)}
+@media (max-width:560px){.kd-p{display:none}
+.kd-polozka{min-height:48px;padding:8px 12px}
+.pz-kamdal .pz-sect-h{margin-top:20px}
+}
+.pz-feats{display:flex;flex-wrap:wrap;gap:8px}
+.pz-feat{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:600;color:var(--text);background:var(--plocha-karta);border:1px solid var(--line-strong);padding:8px 12px;border-radius:var(--r-plocha)}
+.pz-feat svg{width:17px;height:17px;stroke-width:2.12;color:var(--znacka-svetla)}
+.pz-feat-acc svg{color:var(--muted)}
+.pz-feat-zdroj{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.pz-popis{padding:16px;background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);box-shadow:var(--e1)}
+.pz-popis p{margin:0 0 8px;font-size:16px;line-height:1.6;color:var(--text)}
+.pz-popis p:last-child{margin-bottom:0}
+.pz-drazba{margin:20px 0 2px;padding:16px;border-radius:var(--r-plocha);background:#fff;border:1px solid var(--line);border-left:3px solid var(--c-drazba-ink);box-shadow:var(--e1)}
+.pz-drazba.blizko{border-left-width:5px}
+.pz-drazba.prosle{border-left-color:var(--line-ui);background:var(--plocha-tlumena);box-shadow:none}
+.pzd-hlava{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;color:var(--c-drazba-ink)}
+.pz-drazba.prosle .pzd-hlava{color:var(--muted)}
+.pzd-hlava svg{width:17px;height:17px;stroke-width:2.1;flex:none}
+.pzd-hlava b{font-size:14px;font-weight:700}
+.pzd-kdy{font-size:13px;font-weight:600;color:var(--muted)}
+.pzd-pozn{margin:4px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+.pzd-pozn b{color:var(--text)}
+.pzd-odkaz{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin-top:12px;padding:0 16px;border-radius:var(--r-ovladani);background:#fff;border:1px solid var(--obrys-tlacitka);color:var(--text);font-size:14px;font-weight:700;text-decoration:none}
+.pzd-odkaz:hover{border-color:var(--znacka-svetla);color:var(--znacka)}
+.pz-cas{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--muted)}
+.pz-cas b{color:var(--text);font-weight:600}
+.pz-cas.je-stara{color:var(--c-exekuce-ink)}
+.pz-cta{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.pz-btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid transparent}
+.pz-btn svg{width:19px;height:19px;stroke-width:1.89;flex:none}
+.pz-btn.primary{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
+.pz-btn.primary:hover{filter:brightness(1.06)}
+.pz-btn.ghost{background:var(--plocha-karta);color:var(--znacka-svetla);border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1)}
+.pz-btn.ghost:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
+.pz-btn.ghost:active{transform:translateY(1px)}
+.pz-akce-hlavni{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
+.pz-akce-v-boku{display:grid;gap:8px;margin:12px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.pz-btn.ulozit{flex:0 1 auto;padding:0 20px;background:var(--plocha-karta);color:var(--text);border:1.5px solid var(--obrys-tlacitka)}
+.pz-btn.ulozit.on{color:var(--znacka-svetla);border-color:var(--znacka-svetla)}
+.pz-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.pz-actions .pz-abtn{flex:1 1 0;min-width:0}
+.pz-actions .pz-abtn:first-child{flex-basis:100%;border-color:var(--znacka);color:var(--znacka);font-weight:700}
+.pz-actions .pz-abtn:first-child svg{color:var(--znacka)}
+.pz-abtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 16px;border-radius:var(--r-ovladani);background:var(--plocha-karta);border:1.5px solid var(--obrys-tlacitka);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:var(--e1);transition:var(--prechod)}
+.pz-abtn:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena);box-shadow:var(--e2)}
+.pz-abtn:active{transform:translateY(1px)}
+.pz-abtn.on{color:#fff;border-color:transparent;background:var(--plocha-znacka);box-shadow:var(--glow)}
+.pz-abtn svg{width:17px;height:17px;stroke-width:2.12;color:var(--znacka-svetla)}
+.pz-abtn.on svg{color:#fff}
+.pz-pozor{margin:8px 0 0;padding:12px 12px;border-radius:var(--r-drobnost);font-size:13px;line-height:1.6;background:rgba(var(--accent-warm-bright-rgb),.14);border:1px solid rgba(var(--accent-warm-rgb),.34);color:var(--accent-warm)}
+.pz-gtk-obal{margin:20px 0 0}
+.pz-gtk-sum{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;padding:12px 16px;border:1px solid var(--line);border-radius:var(--r-ovladani);background:#fff;box-shadow:var(--e1);transition:var(--prechod)}
+.pz-gtk-sum::-webkit-details-marker{display:none}
+.pz-gtk-sum:hover{border-color:var(--znacka-svetla);box-shadow:var(--e2)}
+.pz-gtk-sum .pz-sect-h{margin:0;border:0;padding:0;font-size:14px;letter-spacing:0;text-transform:none;color:var(--znacka-svetla)}
+.pz-gtk-sum .pz-sect-h::before{display:none}
+.pz-gtk-kolik{margin-left:auto;font-size:13px;font-weight:700;white-space:nowrap;color:var(--znacka-svetla);background:var(--plocha-karta);border:1px solid var(--line);padding:2px 8px;border-radius:var(--r-pill)}
+.pz-gtk-kolik:empty{display:none}
+.pz-gtk-akce{font-size:13px;font-weight:700;color:var(--znacka-svetla);white-space:nowrap}
+.pz-gtk-akce .otv{display:none}
+.pz-gtk-obal[open] .pz-gtk-akce .zav{display:none}
+.pz-gtk-obal[open] .pz-gtk-akce .otv{display:inline}
+.pz-gtk-sum::after{content:"";flex:none;width:9px;height:9px;margin-left:1px;border-right:2px solid var(--znacka-svetla);border-bottom:2px solid var(--znacka-svetla);transform:rotate(45deg) translate(-2px,-2px);transition:var(--prechod)}
+.pz-gtk-obal[open] .pz-gtk-sum{border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:none}
+.pz-gtk-obal[open] .pz-gtk-sum::after{transform:rotate(-135deg) translate(-3px,-3px)}
+.pz-gtk-obal[open] .pz-gtk{border-top-left-radius:0;border-top-right-radius:0;border-top:0}
+.pz-gtk{background:#fff;border:1px solid var(--line);border-radius:var(--r-plocha);padding:16px}
+.pz-gtk .g-row{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-bottom:1px solid var(--line)}
+.pz-gtk .g-row:first-child{padding-top:0}
+.pz-gtk .g-row:last-of-type{border-bottom:none}
+.pz-gtk .g-k{font-size:12px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase;color:var(--muted)}
+.pz-gtk .g-v{font-size:14px;color:var(--muted);line-height:1.6}
+.pz-gtk .g-v b{color:var(--text)}
+.pz-gtk .g-otazky{padding-top:12px;margin-top:2px;border-top:1px solid var(--line)}
+.pz-gtk .g-otazky .g-k{display:block;margin-bottom:8px}
+.pz-gtk .g-ol{margin:0;padding-left:1.35em;display:flex;flex-direction:column;gap:8px}
+.pz-gtk .g-ol li{font-size:14px;line-height:1.6;color:var(--text)}
+.pz-gtk .g-ol li::marker{font-family:var(--font-popisek);font-size:12px;color:var(--accent-warm)}
+.pz-gtk .g-foot{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px;font-style:italic}
+.pzm{position:relative;border:1px solid var(--line);border-radius:var(--r-obraz);overflow:hidden;background:var(--plocha-karta);box-shadow:var(--e1)}
+.pzm-mapa{height:390px;width:100%;background:var(--plocha-zapustena)}
+.pzm-mapa{position:relative}
+.pzm-cela-btn{position:absolute;z-index:500;right:10px;top:10px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-ovladani);border:1px solid rgba(var(--plocha-tmava-2-rgb),.25);background:rgba(255,255,255,.93);color:var(--znacka-svetla);cursor:pointer;padding:0;box-shadow:var(--e1);-webkit-tap-highlight-color:transparent}
+.pzm-cela-btn svg{width:19px;height:19px;stroke-width:1.8}
+.pzm-cela-btn:hover{background:var(--plocha-karta)}
+.pzm-zpet-btn{height:34px;display:inline-flex;align-items:center;gap:4px;padding:0 12px 0 12px;border-radius:var(--r-pill);border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26);background:var(--plocha-karta);color:var(--znacka-svetla);cursor:pointer;font:inherit;font-size:13px;font-weight:600;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.pzm-zpet-btn svg{width:16px;height:16px;stroke-width:2;flex:none}
+.pzm-zpet-btn{grid-column:1/-1;justify-self:start}
+.pzm-zpet-btn:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
+.pzm-zpet-btn[hidden]{display:none}
+.pzm-cela-zap{position:fixed;inset:0;z-index:1200;border-radius:0;border:0;display:flex;flex-direction:column;background:var(--plocha-zapustena)}
+.pzm-cela-zap .pzm-mapa{flex:1 1 auto;height:auto;min-height:0}
+.pzm-cela-zap .pzm-panel{flex:none;display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px 24px}
+.pzm-cela-zap .pzm-grp-v{flex:1 1 320px}
+.pzm-cela-zap .pzm-vr{display:flex;flex-wrap:wrap}
+.pzm-cela-zap .pzm-kryti{flex:0 1 240px}
+.pzm-cela-zap .pzm-popis{display:none}
+.pzm-cela-zap .pzm-leg{max-height:17vh;overflow:auto;padding:8px 12px}
+.pzm-cela-zap .pzm-leg-k img{max-height:11vh;width:auto}
+body.pzm-cela-telo{overflow:hidden}
+.pzm-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;align-items:start;padding:12px;border-top:1px solid var(--line);background:var(--plocha-karta)}
+.pzm-grp{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pzm-grp-v{grid-column:1/-1}
+.pzm-cap{font-family:var(--font-popisek);font-size:12px;font-weight:600;color:var(--popisek);letter-spacing:var(--popisek-proklad);text-transform:uppercase}
+.pzm-zaklad{display:flex;gap:2px;background:var(--plocha-zapustena);border:1px solid var(--line);border-radius:var(--r-pill);padding:4px}
+.pzm-z{height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border:0;background:transparent;border-radius:var(--r-pill);font:inherit;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.pzm-zaklad>.pzm-z{flex:1 1 0}
+.pzm-z.on{background:var(--plocha-karta);color:var(--znacka-svetla);box-shadow:var(--e1)}
+.pzm-vr{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;min-height:34px}
+.pzm-v{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px;text-align:left;border-radius:var(--r-ovladani);border:1.5px solid rgba(var(--znacka-hluboka-rgb),.26);background:var(--plocha-karta);font:inherit;font-size:13px;font-weight:600;line-height:1.3;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
+.pzm-v>svg{width:18px;height:18px;stroke-width:2;flex:none}
+.pzm-v>span{min-width:0}
+.pzm-v:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
+.pzm-v:active{transform:translateY(1px)}
+.pzm-v.on{background:var(--plocha-znacka);border-color:transparent;color:#fff;box-shadow:var(--glow)}
+.pzm-hleda,.pzm-nic{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:13px;line-height:1.5;color:var(--muted)}
+.pzm-kryti{gap:4px}
+.pzm-kryti-hl{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pzm-kryti-v{font-family:var(--font-popisek);font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.pzm-kryti input{width:100%;accent-color:var(--plocha-znacka)}
+.pzm-popis{margin:0;padding:8px 12px;border-top:1px solid var(--line);background:var(--plocha-karta);font-size:13px;line-height:1.6;color:var(--muted)}
+.pzm-daleko{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;color:var(--text)}
+.pzm-priblizit{flex:none;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;min-height:34px;border-radius:var(--r-ovladani);border:1.5px solid var(--znacka);background:var(--plocha-karta);color:var(--znacka);transition:var(--prechod)}
+.pzm-priblizit:hover{background:var(--plocha-znacka);color:#fff}
+.pzm-leg{display:flex;flex-wrap:wrap;gap:12px;padding:12px 12px;border-top:1px solid var(--line);background:var(--plocha-karta)}
+.pzm-leg-k{margin:0;display:flex;flex-direction:column;gap:4px;max-width:100%}
+.pzm-leg-k figcaption{font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)}
+.pzm-leg-k img{max-width:100%;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px}
+.pzm-pod{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+.pzm-pod a{color:var(--znacka-svetla);font-weight:600}
+.pzm-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.pzm-nahrada{height:390px}
+.pzm .leaflet-control-attribution{font-size:11px;max-width:70%}
+@media (max-width:560px){.pzm-mapa{height:300px}
+}
+.pz-pozn-box{margin-top:20px;padding:16px;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);box-shadow:var(--e1)}
+.pz-pozn-hlava{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
+.pz-pozn-hlava h2{font-size:16px;margin:0}
+.pz-pozn-stav{margin-left:auto;font-size:12px;color:var(--muted)}
+.pz-pozn-stav.chyba{color:var(--c-exekuce)}
+.pz-pozn-pole{display:block;width:100%;min-height:88px;padding:8px 12px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:var(--plocha-zapustena);color:var(--text);font:inherit;font-size:16px;line-height:1.6;resize:vertical;transition:var(--prechod)}
+.pz-pozn-pole:focus{border-color:var(--znacka-svetla)}
+.pz-pozn-kde{margin:8px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
+.pz-loading,.pz-empty{padding:64px 16px;text-align:center;color:var(--muted)}
+#pz-detail{min-height:100vh}
+.pz-empty a{color:var(--znacka-svetla);font-weight:600}
+@media (pointer:coarse){.pz-back{min-height:44px}
+.pzm-kryti input{height:44px}
+.pzm-cela-btn{width:44px;height:44px}
+.pzm-zpet-btn{height:44px;font-size:14px}
+.pzm-z{height:44px}
+}</style>
+</head>
+<body>
+<svg class="ik-sada" width="0" height="0" aria-hidden="true" focusable="false"><symbol id="i-spendlik" viewBox="0 0 24 24"><path d="M12 20.5c4.3-5.1 6.5-8.7 6.5-11A6.5 6.5 0 0 0 5.5 9.5c0 2.3 2.2 5.9 6.5 11zM12 6.6 14.9 9.5 12 12.4 9.1 9.5z"/></symbol><symbol id="i-mapa" viewBox="0 0 24 24"><path d="M9 4 3.5 6.2v13.3L9 17.3l6 2.2 5.5-2.2V6.2L15 8.4zM9 4v13.3M15 8.4v11.1M12 9.5 14 11.5 12 13.5 10 11.5z"/></symbol><symbol id="i-vrstvy" viewBox="0 0 24 24"><path d="M12 3.5 3.5 8 12 12.5 20.5 8zM3.5 12.5 12 17l8.5-4.5M3.5 17 12 21.5l8.5-4.5"/></symbol><symbol id="i-vymera" viewBox="0 0 24 24"><path d="M3.5 8.5v-5h5M20.5 8.5v-5h-5M3.5 15.5v5h5M20.5 15.5v5h-5M8.5 8.5h7v7h-7z"/></symbol><symbol id="i-druh" viewBox="0 0 24 24"><path d="M12 3.5 6.5 13h4l-3.5 5.5h10L13.5 13h4zM12 16.5V20M3.5 20h17"/></symbol><symbol id="i-podil" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5h-8.5z M12 3.5v8.5h8.5A8.5 8.5 0 0 0 12 3.5z"/></symbol><symbol id="i-cena" viewBox="0 0 24 24"><path d="M20 13.9 13.9 20a2.2 2.2 0 0 1-3.1 0L4 13.2V4h9.2l6.8 6.8a2.2 2.2 0 0 1 0 3.1zM8 8h.01"/></symbol><symbol id="i-kalendar" viewBox="0 0 24 24"><path d="M4 6.5h16v14H4zM8.5 3.5v5M15.5 3.5v5M4 11.5h16"/></symbol><symbol id="i-hodiny" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 7.5V12l3 2"/></symbol><symbol id="i-budova" viewBox="0 0 24 24"><path d="M7 20V4h10v16M10.5 7.5h3M10.5 11h3M10.5 14.5h3M3.5 20h17"/></symbol><symbol id="i-elektrina" viewBox="0 0 24 24"><path d="M12.5 3.5 7 12h4l-1 8.5 7-10h-4l1.5-7z"/></symbol><symbol id="i-voda" viewBox="0 0 24 24"><path d="M12 3.5c3.6 3.9 5.5 7 5.5 9.3a5.5 5.5 0 0 1-11 0c0-2.3 1.9-5.4 5.5-9.3zM9.5 13.5a2.5 2.5 0 0 0 2.5 2.5"/></symbol><symbol id="i-kanalizace" viewBox="0 0 24 24"><path d="M12 4.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15zM8.8 10h6.4M8.8 14h6.4"/></symbol><symbol id="i-plyn" viewBox="0 0 24 24"><path d="M12 3.5c2.8 2.9 4.5 5.7 4.5 8.4a4.5 4.5 0 0 1-9 0c0-1 .4-2 1-2.9.5 1.9 1.9 2 1.9 2 0-2 .6-5 1.6-7.5z"/></symbol><symbol id="i-oploceni" viewBox="0 0 24 24"><path d="M5 20V9.5l2-2.5 2 2.5V20M15 20V9.5l2-2.5 2 2.5V20M3.5 12.5h17M3.5 16h17M3.5 20h17"/></symbol><symbol id="i-prijezd" viewBox="0 0 24 24"><path d="M9 20 11 4M15 20 13 4M12 7.5v1.5M12 12v1.5M12 16.5V18M3.5 20h17"/></symbol><symbol id="i-zalozka" viewBox="0 0 24 24"><path d="M6.5 3.5h11v17l-5.5-3.5-5.5 3.5z"/></symbol><symbol id="i-poznamka" viewBox="0 0 24 24"><path d="M12.5 20.5h8M16.8 4.2a2.2 2.2 0 0 1 3 3L7.5 19.5l-4 1 1-4z"/></symbol><symbol id="i-sdilet" viewBox="0 0 24 24"><path d="M17.5 3.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM6.5 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM17.5 15.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM9 10.7l6-2.9M9 13.3l6 2.9"/></symbol><symbol id="i-kopirovat" viewBox="0 0 24 24"><path d="M9.5 9.5h10v10h-10zM5.5 14.5h-1V4.5h10v1"/></symbol><symbol id="i-navigovat" viewBox="0 0 24 24"><path d="M12 3.5 19.5 20.5 12 16.5 4.5 20.5z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-zavrit" viewBox="0 0 24 24"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol><symbol id="i-sipka-vlevo" viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></symbol><symbol id="i-nahoru" viewBox="0 0 24 24"><path d="M12 19.5V5M6 11l6-6 6 6"/></symbol><symbol id="i-fotky" viewBox="0 0 24 24"><path d="M3.5 4.5h17v15h-17zM8 9.5h.01M20.5 15.5 15 10 6.5 18.5"/></symbol><symbol id="i-seznam" viewBox="0 0 24 24"><path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12M4 6.5h.01M4 12h.01M4 17.5h.01"/></symbol><symbol id="i-cela-obrazovka" viewBox="0 0 24 24"><path d="M3.5 9V3.5H9M20.5 9V3.5H15M3.5 15v5.5H9M20.5 15v5.5H15M3.5 3.5 9 9M20.5 3.5 15 9M3.5 20.5 9 15M20.5 20.5 15 15"/></symbol><symbol id="i-zmensit" viewBox="0 0 24 24"><path d="M9 3.5V9H3.5M15 3.5V9h5.5M9 20.5V15H3.5M15 20.5V15h5.5"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17z"/><path class="ik-duraz" d="M12 11v5.5M12 7.8h.01"/></symbol><symbol id="i-zvonek" viewBox="0 0 24 24"><path d="M6.5 10a5.5 5.5 0 0 1 11 0c0 4.5 2 6.5 2 6.5H4.5s2-2 2-6.5zM10.2 19.5a2 2 0 0 0 3.6 0"/></symbol><symbol id="i-stit" viewBox="0 0 24 24"><path d="M12 3.5 5.5 6v6c0 4 2.8 6.6 6.5 8.5 3.7-1.9 6.5-4.5 6.5-8.5V6z M9.3 11.8l2.2 2.2 3.5-3.5"/></symbol><symbol id="i-obalka" viewBox="0 0 24 24"><path d="M3.5 5.5h17v13h-17zM3.5 7.5 12 13.5l8.5-6"/></symbol><symbol id="i-uzivatel" viewBox="0 0 24 24"><path d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 20.5a8 8 0 0 1 16 0"/></symbol></svg>
+
+<a class="skip-link" href="#obsah">Přeskočit na obsah</a>
+
+<header id="header">
+  <div class="wrap">
+    <a class="logo" href="index.html" aria-label="Parcelka — domů"><span class="logo-mark" aria-hidden="true"></span>Parcelka</a>
+    
+        <nav id="nav" aria-label="Hlavní navigace">
+      <div class="nav-hlava"><span class="logo-mark" aria-hidden="true"></span><span class="nav-znacka">Parcelka</span></div>
+      <a href="index.html#mapa"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>Hledat na mapě<span class="nav-pocet">1 918</span></a>
+      <a href="cena-pozemku.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cena"/></svg>Ceny pozemků</a>
+      <span class="nav-del" aria-hidden="true"></span>
+      <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
+        <a href="muj-inzerat.html" id="nav-ucet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-seznam"/></svg>Moje inzeráty</a>
+        <a href="zpravy.html" id="nav-zpravy"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka"/></svg>Zprávy</a>
+        <a href="hlidani.html" id="nav-hlidani"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zvonek"/></svg>Hlídání</a>
+      </div></details>
+      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
+      <p class="nav-pata nav-mobil">Data z veřejných zdrojů, naposledy 30. 10.</p>
+    </nav>
+    <a class="hdr-ucet" href="muj-inzerat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg><span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>
+  </div>
+</header>
+
+<main id="obsah">
+  <div class="pz-wrap">
+    <a class="pz-back" href="index.html#mapa"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na seznam</a>
+    <div id="pz-detail"><article class="pz-staticky"><div class="pz-media"><svg class="opp-map" data-sn="ceka" viewBox="0 0 384 256" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"><defs><filter id="snhero" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="1.5" stdDeviation="1.6" flood-color="rgba(0,0,0,0.5)"/></filter></defs><rect class="opp-map-pod" width="384" height="256"/><g stroke="rgba(206,228,212,0.06)" stroke-width="1"><path d="M64 0V256M128 0V256M192 0V256M256 0V256M320 0V256M0 60H384M0 120H384M0 180H384"/></g><image data-href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22458/35613" x="-43.2" y="-3.1" width="256" height="256" preserveAspectRatio="none"/><image data-href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22459/35613" x="-43.2" y="252.9" width="256" height="256" preserveAspectRatio="none"/><image data-href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22458/35614" x="212.8" y="-3.1" width="256" height="256" preserveAspectRatio="none"/><image data-href="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/22459/35614" x="212.8" y="252.9" width="256" height="256" preserveAspectRatio="none"/><g transform="translate(192,128)" filter="url(#snhero)"><path d="M0 0C-7 -12 -12 -18 -12 -25 A12 12 0 1 1 12 -25 C12 -18 7 -12 0 0Z" fill="#4361B8" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/><circle cx="0" cy="-25" r="4.6" fill="#fff"/></g></svg><span class="opp-mgrad"></span><span class="sn-popis" aria-hidden="true"><u>přesný obrys pozemku najdete v katastru</u></span></div><h1>Prodej trvalého travního porostu 15 046 m²</h1><p class="pz-staticky-kde">Markvartice, okres Jihlava</p><p><b>550 000 Kč</b> (37 Kč/m²) · 15 046 m² · Na prodej</p><dl><dt>Druh pozemku</dt><dd>Trvalý travní porost</dd><dt>Výměra</dt><dd>15 046 m²</dd><dt>Obec</dt><dd>Markvartice</dd><dt>Okres</dt><dd><a href="pozemky-okres-jihlava.html">Jihlava</a></dd><dt>Stav / zdroj</dt><dd>inzerát – Bezrealitky</dd><dt>Vzdušnou čarou</dt><dd>Jihlava 25 km · Brno 71 km</dd></dl><p><a href="pozemek.html?p=Markvartice%7C%E2%80%94%7CJihlava%7C49.173%7C15.633&amp;ll=49.172682,15.633099&amp;v=15046&amp;c=550000">Otevřít na mapě</a></p><h2>Co o pozemku píše inzerent</h2><p id="pz-popis-text">k.ú. Markvartice LV č. 283 o celkové výměře 15046 m² Parcela č. 3367/1 - o výměře 12409 m² (Trvalý travní porost) Parcela č. 3368 - o výměře 1155 m² (Ostatní plocha) Parcela č. 3369 - o výměře 1482 m² (Trvalý travní porost) Přístupová cesta je zajištěna přes pozemky obce a České republiky.</p><section class="pz-vyvoj" id="pz-vyvoj"><h2 class="pz-sect-h">Vývoj ceny v okolí</h2><div class="pz-vyvoj-karta" data-graf-cen data-strucne data-uroven="okres" data-nazev="Jihlava" data-kde="v okrese Jihlava" data-zalohy="kraj|Vysočina|v kraji Vysočina;cr||v celé ČR"></div><p class="pz-vyvoj-dal"><a href="cena-pozemku.html">Ceny pozemků v celé ČR</a></p></section><h2>Kam dál</h2><ul><li><a href="pozemky-okres-jihlava.html">Okres Jihlava</a> — všechny pozemky v okrese</li><li><a href="pozemky-vysocina-kraj.html">Kraj Vysočina</a> — přehled celého kraje</li><li><a href="pozemky-louka.html">Louky a travní porosty</a> — týž druh pozemku po celé ČR</li><li><a href="pozemky-do-1-milionu.html">Pozemky do milion</a> — podobná cenová hladina</li></ul></article></div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-bottom">
+    <span class="mono">© 2026 Parcelka · data z veřejných zdrojů</span>
+    <span class="foot-pravni">
+      <a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a>
+      <a href="podminky.html" data-info="podminky">Podmínky použití</a>
+      <a href="kontakt.html">Kontakt</a>
+    </span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/min/menu.js?v=8274c66b" defer></script>
+<script src="js/min/cisteni.js?v=8b7c7e5b"></script>
+<script src="js/min/snimek.js?v=9e632238"></script>
+<script src="js/min/terminy.js?v=cf102557"></script>
+<script src="js/min/ceny.js?v=d0a92169"></script>
+  <script src="js/min/zlevneni.js?v=7451f19a" defer></script>
+  
+  <script src="js/min/graf-cen.js?v=15e4e753" defer></script>
+<script src="js/min/vybaveni.js?v=8e3b34f9"></script>
+<script src="js/min/radce.js?v=52472e47"></script>
+<script src="js/min/klic.js?v=85f3251f"></script>
+<script src="js/min/ulozene-ucet.js?v=35e316ad"></script>
+<script src="js/min/videno.js?v=e21d5bf3"></script>
+<script src="js/min/poznamky.js?v=96f9b539"></script>
+
+<script src="js/min/hlidani-logika.js?v=9c26a424"></script>
+<script type="application/ld+json">[{"@context":"https://schema.org","@type":"Place","name":"Trvalý travní porost 15 046 m² — Markvartice","description":"Na prodej · 550 000 Kč (37 Kč/m²) · 15 046 m² · Markvartice, okres Jihlava. Poloha na mapě, srovnání s obvyklou cenou a odkaz do katastru.","url":"https://www.parcelaka.cz/pozemek-jihlava-markvartice-r1vhlt.html","address":{"@type":"PostalAddress","addressLocality":"Markvartice","addressRegion":"Jihlava","addressCountry":"CZ"},"geo":{"@type":"GeoCoordinates","latitude":49.172682,"longitude":15.633099},"additionalProperty":{"@type":"QuantitativeValue","name":"Výměra","value":15046,"unitCode":"MTK"},"makesOffer":{"@type":"Offer","price":550000,"priceCurrency":"CZK","url":"https://www.parcelaka.cz/pozemek-jihlava-markvartice-r1vhlt.html","itemOffered":{"@type":"Place","name":"Trvalý travní porost 15 046 m² — Markvartice"},"availability":"https://schema.org/InStock"}},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Pozemky podle okresů","item":"https://www.parcelaka.cz/pozemky-podle-okresu.html"},{"@type":"ListItem","position":3,"name":"Kraj Vysočina","item":"https://www.parcelaka.cz/pozemky-vysocina-kraj.html"},{"@type":"ListItem","position":4,"name":"Okres Jihlava","item":"https://www.parcelaka.cz/pozemky-okres-jihlava.html"},{"@type":"ListItem","position":5,"name":"Trvalý travní porost 15 046 m² — Markvartice","item":"https://www.parcelaka.cz/pozemek-jihlava-markvartice-r1vhlt.html"}]}]</script>
+<script>window.PK_POZEMEK={"k":"Markvartice|—|Jihlava|49.173|15.633","ll":[49.172682,15.633099],"v":15046,"c":550000,"r":"data/okres/jihlava.json","ch":{"Lesní pozemek":{"ch":40,"z":32,"n":67},"Orná půda":{"ch":23,"z":535,"n":560},"Ostatní plocha":{"ch":64,"z":24,"n":60},"Louka / travní porost":{"ch":29,"z":262,"n":277},"Jiný pozemek":{"ch":427,"z":6,"n":39},"Vinice / sad":{"ch":36,"z":35,"n":44},"Stavební / zastavěná":{"ch":33,"z":199,"n":230}}};</script>
+<script src="js/min/pozemek.js?v=522c3fb5"></script>
+
+<script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
+   chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný
+   web běží na GitHub Pages pod vlastní doménou, takže si o neexistující soubor
+   říkal při každém načtení. Vkládá se proto jen tam, kde ho má kdo obsloužit:
+   na nasazení u Vercelu. */
+(function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
+<script src="js/min/config.js?v=8ba36013" defer></script>
+<script src="js/min/auth.js?v=113f2e09" defer></script>
+<script src="js/min/hlavicka.js?v=8bad9ba8" defer></script>
+<script src="js/min/offline.js?v=3759e5ca" defer></script>
+<script src="js/min/mereni.js?v=b64f8a44" defer></script>
+<script type="application/json" id="pz-okoli-data">"Jihlava 25 km · Brno 71 km"</script>
+<script type="application/json" id="pz-titul-data">"Prodej trvalého travního porostu 15 046 m² — Markvartice, okres Jihlava"</script>
+<script type="application/json" id="pz-kamdal-data">[{"t":"Okres Jihlava","u":"pozemky-okres-jihlava.html","p":"všechny pozemky v okrese"},{"t":"Kraj Vysočina","u":"pozemky-vysocina-kraj.html","p":"přehled celého kraje"},{"t":"Louky a travní porosty","u":"pozemky-louka.html","p":"týž druh pozemku po celé ČR"},{"t":"Pozemky do milion","u":"pozemky-do-1-milionu.html","p":"podobná cenová hladina"}]</script>
+</body>
+</html>
