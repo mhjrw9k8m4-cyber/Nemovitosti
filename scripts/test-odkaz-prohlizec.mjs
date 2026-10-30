@@ -15,6 +15,7 @@ import { hlasPad } from './zkouska-pad.mjs';
 /* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
    scripts/zkouska-pripraveno.mjs (vykresleniPo). */
 import { vykresleniPo, pripravenoKdyz } from './zkouska-pripraveno.mjs';
+import { otevriPanel } from './rozbal-hledani.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 
 let chyb = 0; const zpravy = [];
@@ -68,6 +69,11 @@ pravda('a modul na adresy je na stránce',
    vyhodil jako zbytečné a šest kontrol spadlo: v hashi zůstal jen
    stav mapy.) */
 const hashPredFiltry = await p.evaluate(() => location.hash);
+/* DRUH NABÍDKY JE OD 29. 10. V PANELU, ne nad výpisem — otevírání má
+   vysvětlené scripts/rozbal-hledani.mjs. Bez něj klepnutí do čipu tiše
+   neudělá nic, do adresy se druh nedostane a kontrola „a stojí v ní
+   druh nabídky" padne; přesně tak to spadlo v CI (běh 810). */
+await otevriPanel(p);
 await vykresleniPo(p, () => p.click('[data-type="exekuce"]').catch(() => {}));
 // Cena do: je to číselné pole, ne rozbalovátko.
 await vykresleniPo(p, () => p.evaluate(() => {

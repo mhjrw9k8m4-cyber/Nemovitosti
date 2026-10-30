@@ -15,6 +15,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { otevriPanel } from './rozbal-hledani.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -430,14 +431,14 @@ async function host(inzeraty, prilezitosti) {
   await p.waitForTimeout(900);
 
   /* ---- 9) „Můžu hledat jen pozemky do určité ceny" ---- */
-  /* Políčko „cena do" sedí v okně, které se otevře přes celou obrazovku —
-     projde se tedy touž cestou jako člověk: rozbalit filtry, otevřít cenu,
-     vyplnit, zavřít. Vyplňovat skryté políčko rovnou by sice bylo kratší,
-     ale netestovalo by to, že se k němu jde dostat. */
-  await p.evaluate(() => { const d = document.getElementById('ms-filters'); if (d) d.open = true; });
+  /* Políčko „cena do" sedí od 29. 10. ROVNOU V PANELU filtrů — majitel
+     zrušil celoobrazovkové okno („nechápu, proč mě to hází na tuhle
+     stránku. Prostě mi tam nevyskočí klávesnice na psaní, jen"). Jde se
+     tedy touž cestou jako člověk: rozbalit filtry a psát. Do té doby se
+     tu klepalo do `.mcs-btn`, který už v HTML není, a zkouška padala na
+     třicetisekundový timeout. */
+  await otevriPanel(p);
   await p.waitForTimeout(300);
-  await p.locator('.mcs-btn').first().click();
-  await p.waitForTimeout(400);
   await p.fill('#map-cena', '300000');
   await p.waitForTimeout(1200);
   const ceny = await p.evaluate(() => [...document.querySelectorAll('.opp-item .opp-price')]
@@ -446,8 +447,6 @@ async function host(inzeraty, prilezitosti) {
     ceny.length > 0 && ceny.every((c) => c <= 300000),
     ceny.length ? `nejdražší ve výpisu: ${Math.max(...ceny)} Kč` : 'výpis je prázdný');
   await p.fill('#map-cena', '');
-  await p.waitForTimeout(400);
-  await p.locator('.rz-ov:not([hidden]) .rz-hotovo').click();
   await p.waitForTimeout(900);
 
   /* ---- 10) „Uložíte bez registrace a zůstane vám to" ---- */

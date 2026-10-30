@@ -4,9 +4,14 @@
      (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=…/chrome)
 
    CO SE STALO. „Když dávám šipku z mapy pryč, hodí mě to na předchozí
-   stránku úplně." Na mapě se otevírá šest celoobrazovkových vrstev
+   stránku úplně." Na mapě se otevíralo šest celoobrazovkových vrstev
    (výběr místa, rychlý výběr, stahování tabulky, rozsah ceny i výměry,
    „kde hledat", zdroje dat) a ani jedna nedělala záznam v historii.
+   DNES JICH JE PĚT: vrstvu rozsahu ceny a výměry majitel 29. 10.
+   zrušil („nechápu, proč mě to hází na tuhle stránku"), políčka od–do
+   jsou rovnou v panelu filtrů a žádnou obrazovku neotevírají — není
+   tedy co zavírat a zkouška na ni přestala sahat (do té doby hledala
+   `.mcs-btn`, který už v HTML není, a padala na null).
    Systémová šipka zpět tedy neměla co zavřít a odvedla člověka z celé
    index.html — i s výřezem mapy, filtry a kresbou, které si nastavil.
 
@@ -71,8 +76,6 @@ const VRSTVY = [
     () => document.getElementById('rv-zavrit').click()],
   ['stahování tabulky', '#vyv-vrstva', () => document.getElementById('mc-vyvoz').click(),
     () => document.getElementById('vyv-zrus').click()],
-  ['rozsah ceny', '.rz-ov', () => document.querySelector('.mcs-btn').click(),
-    () => document.querySelector('.rz-ov .rz-x').click()],
   ['zdroje dat', '#info-modal', () => document.querySelector('[data-info]').click(),
     () => document.querySelector('#info-modal [data-close]').click()],
 ];

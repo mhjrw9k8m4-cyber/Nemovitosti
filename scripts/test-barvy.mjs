@@ -17,6 +17,7 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { otevriPanel } from './rozbal-hledani.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY: po goto se tu spalo pevně, než se
    rozběhne JS stránky. Viz scripts/zkouska-pripraveno.mjs. */
 import { domUtichlo } from './zkouska-pripraveno.mjs';
@@ -194,11 +195,7 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
      panelu není vidět a `isVisible()` by všech pět kategorií přeskočil
      — zkouška by prošla naprázdno a pojistka „aspoň tři kategorie" to
      právem shodila. Panel se proto otevře. */
-  await p.evaluate(() => {
-    document.body.classList.add('hledani-rozbalene');
-    const d = document.getElementById('ms-filters');
-    if (d) d.open = true;
-  });
+  await otevriPanel(p);
   await domUtichlo(p, 300);
   let mereno = 0;
   for (const k of KATEGORIE) {

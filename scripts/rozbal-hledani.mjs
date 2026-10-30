@@ -22,3 +22,28 @@ export async function rozbalHledani(p, cekani = 350) {
   await p.waitForTimeout(cekani);
   return true;
 }
+
+/* A OTEVŘI I PANEL FILTRŮ („Druh, cena, výměra a další").
+   ====================================================================
+   Od 29. 10. leží V PANELU i druh nabídky a řazení — majitel je tam
+   poslal („toto by mělo být spojené se zbytkem a řazení tedy v té
+   tabulce"). Ve sbaleném panelu nejsou vidět, takže klepnutí do nich
+   tiše neudělá nic a zkouška pak měří výchozí stav, ne nastavený. Stalo
+   se to třem zkouškám naráz (test-barvy, test-odkaz-prohlizec,
+   test-sliby), tak ať je otevírání na jednom místě.
+
+   Nejdřív se rozbalí hledání jako člověk (klepnutím do pole), pak se
+   otevře `<details id="ms-filters">`. Souhrn `.msf-summary` se
+   nekliká: na telefonu ho ve sbaleném stavu překrývá mapa a Playwright
+   by místo srozumitelné hlášky spadl na třicetisekundový timeout. */
+export async function otevriPanel(p, cekani = 300) {
+  await rozbalHledani(p, cekani);
+  const je = await p.evaluate(() => {
+    const d = document.getElementById('ms-filters');
+    if (!d) return false;
+    d.open = true;
+    return true;
+  });
+  await p.waitForTimeout(cekani);
+  return je;
+}

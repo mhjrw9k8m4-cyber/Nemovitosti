@@ -93,9 +93,10 @@
   /* =====================================================================
      ŠIPKA ZPĚT MÁ ZAVÍRAT, NE ODCHÁZET
      =====================================================================
-     Na mapě se otevírá šest celoobrazovkových vrstev — výběr místa,
-     rychlý výběr, stahování tabulky, rozsah ceny a výměry, „kde hledat"
-     a zdroje dat. Ani jedna z nich nedělala záznam v historii, takže
+     Na mapě se otevírá pět celoobrazovkových vrstev — výběr místa,
+     rychlý výběr, stahování tabulky, „kde hledat" a zdroje dat. (Šestá,
+     rozsah ceny a výměry, se 29. 10. zrušila: políčka od–do jsou rovnou
+     v panelu filtrů.) Ani jedna z nich nedělala záznam v historii, takže
      systémová šipka zpět neměla co zavřít a odvedla člověka z celé
      index.html. Změřeno: otevřu vrstvu, zmáčknu zpět — a jsem na
      předchozí stránce, sám stav mapy (výřez, filtry, kresba) je pryč.
