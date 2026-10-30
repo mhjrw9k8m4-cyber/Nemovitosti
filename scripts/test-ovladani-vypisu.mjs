@@ -3,11 +3,12 @@
  * Spuštění: node scripts/test-ovladani-vypisu.mjs
  *   (potřebuje playwright-core; v sandboxu navíc PW_CHROMIUM=cesta)
  *
- * PROČ. Nad výpisem stojí na telefonu šest ovladačů ve třech řadách:
- * hledání a přepínač Seznam/Mapa, pod nimi „Uložené" a „Historie", pod
- * nimi „Procházet po jednom" a „Stáhnout výběr". (Řazení tu stálo do
- * 29. 10., pak si ho majitel vyžádal do panelu filtrů; jeho místo
- * zabral 30. 10. přepínač historie — viz §242.) Dělají příbuzné věci, ale
+ * PROČ. Nad výpisem stojí na telefonu pět ovladačů ve třech řadách:
+ * hledání a přepínač Seznam/Mapa, pod nimi „Uložené" (samotné, přes
+ * celou šířku), pod nimi „Procházet po jednom" a „Stáhnout výběr".
+ * (Řazení tu stálo do 29. 10., pak si ho majitel vyžádal do panelu
+ * filtrů. 30. 10. tu na chvíli byl přepínač „Historie" a týž den ho
+ * majitel zrušil: „to nikdo nechtěl.") Dělají příbuzné věci, ale
  * každý si nesl vlastní velikost:
  *
  *   · přepínač měl vlastní rámeček a výplň, takže vedle 44px pole stál
@@ -43,8 +44,6 @@
  *      „cena" (vyfoceno). Měří se šířka textu proti vnitřní šířce pole.
  */
 import { chromium } from 'playwright-core';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
@@ -52,16 +51,6 @@ import { hlasPad } from './zkouska-pad.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
-/* HISTORIE SE MUSÍ NASYPAT. Přepínač „Historie" se ukáže jedině tomu,
-   kdo už nějaký pozemek otevřel — v prázdném prohlížeči by se měřilo
-   pět ovladačů místo šesti a kontrola „každý má svou značku" by jednu
-   přeskočila. Klíče se skládají stejně jako v js/pozemek.js
-   (zapisNaposledy): obec|parcela|okres|lat|lng na tři desetinná místa. */
-const KOREN = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-const HISTORIE = (JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [])
-  .filter((x) => typeof x.lat === 'number' && typeof x.lng === 'number' && x.price > 0)
-  .slice(0, 3)
-  .map((x) => [x.place || '', x.parcel || '', x.okres || '', x.lat.toFixed(3), x.lng.toFixed(3)].join('|'));
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -89,8 +78,6 @@ try {
       viewport: { width: sirka, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
     const p = await ctx.newPage();
     await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
-    await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, HISTORIE);
-    await p.reload({ waitUntil: 'load' });
     await naSeznam(p);
     await p.waitForSelector('#mc-vyvoz', { timeout: 25000 }).catch(() => {});
     await p.waitForTimeout(1200);
@@ -104,7 +91,7 @@ try {
         /* Rámeček i zaoblení nese samo POLE, ne obal kolem něj
            (.map-search je jen pozicovací krabička pro lupu). */
         hledani: q('.mcp-hledani #map-search'), prepinac: q('.mcp-hledani .mv-toggle'),
-        ulozene: q('#map-fav'), historie: q('#map-recent'),
+        ulozene: q('#map-fav'),
         rychly: q('#mc-rychly'), vyvoz: q('#mc-vyvoz'),
         pretek: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       };
@@ -132,7 +119,6 @@ try {
           hledání: ik('.mcp-hledani .ms-lupa'),
           'přepínač': ik('.mv-toggle .mvt-btn.active svg'),
           'Uložené': ik('#map-fav svg'),
-          'Historie': ik('#map-recent svg'),
           'Procházet po jednom': ik('#mc-rychly .mcn-ic svg'),
           'Stáhnout výběr': ik('#mc-vyvoz .mcn-ic svg'),
         },
@@ -141,13 +127,13 @@ try {
       };
     });
 
-    const jsou = ['hledani', 'prepinac', 'ulozene', 'historie', 'rychly', 'vyvoz'].filter((k) => v[k]);
+    const jsou = ['hledani', 'prepinac', 'ulozene', 'rychly', 'vyvoz'].filter((k) => v[k]);
     // PŘEDPOKLAD: bez vykreslených ovladačů by kontroly níž prošly naprázdno
-    pravda(`${sirka} px: všech šest ovladačů se vykreslilo`, jsou.length === 6,
+    pravda(`${sirka} px: všech pět ovladačů se vykreslilo`, jsou.length === 5,
       'našly se jen: ' + jsou.join(', '));
-    if (jsou.length !== 6) { await ctx.close(); continue; }
+    if (jsou.length !== 5) { await ctx.close(); continue; }
 
-    const vse = [v.hledani, v.prepinac, v.ulozene, v.historie, v.rychly, v.vyvoz];
+    const vse = [v.hledani, v.prepinac, v.ulozene, v.rychly, v.vyvoz];
     const vysky = [...new Set(vse.map((x) => x.h))];
     pravda(`${sirka} px: všechno v té sestavě je stejně vysoké`, vysky.length === 1 && vysky[0] === 44,
       'výšky: ' + JSON.stringify(vse.map((x) => x.h)));
@@ -172,13 +158,19 @@ try {
        pamatovala jen první případ, padala na rozdílu, který je záměr —
        očekávání se proto bere z DOM, ne z paměti. */
     const stejne = (a, b) => Math.abs(a.w - b.w) <= 1;
-    pravda(`${sirka} px: „Uložené" a „Historie" mají tutéž šířku`, stejne(v.ulozene, v.historie),
-      `${v.ulozene.w} px vs ${v.historie.w} px`);
+    /* „Uložené" stojí v řadě samo (dokud nejsou dva uložené pozemky,
+       „Porovnat" se neukazuje), takže si bere celý řádek — a to je ta
+       oprava z 30. 10.: prázdné políčko vedle něj vypadalo jako vada.
+       Měří se proti řádku nástrojů pod ním. */
+    pravda(`${sirka} px: „Uložené" bere celou šířku, ne půlku`,
+      v.ulozene.w > v.rychly.w + 20,
+      `„Uložené" ${v.ulozene.w} px, nástroj ${v.rychly.w} px`);
     pravda(`${sirka} px: „Procházet po jednom" a „Stáhnout výběr" taky`, stejne(v.rychly, v.vyvoz),
       `${v.rychly.w} px vs ${v.vyvoz.w} px`);
     if (sirka >= 360) {
-      pravda(`${sirka} px: a obě dvojice jsou stejně široké navzájem`, stejne(v.ulozene, v.rychly),
-        `${v.ulozene.w} px vs ${v.rychly.w} px`);
+      /* (Dřív se tu žádala shoda šířky mezi dvojicemi. „Uložené" dnes
+         stojí samo a bere celý řádek, takže by to byla nesmyslná
+         podmínka — co se místo toho měří, stojí o řádek výš.) */
     } else {
       const rada = await p.evaluate(() => {
         const e = document.querySelector('#mc-rychly');
@@ -200,9 +192,13 @@ try {
           Math.abs(v.rychly.w - rada.w) <= 1 && v.rychly.w > v.ulozene.w,
           `nástroj ${v.rychly.w} px, řádek ${rada.w} px, dvojice ${v.ulozene.w} px`);
       } else if (rada) {
-        pravda(`${sirka} px: dvojice nástrojů je stejně široká jako dvojice nad ní`,
-          stejne(v.rychly, v.ulozene) && Math.abs(v.rychly.w * 2 + rada.mezera - rada.w) <= 2,
-          `nástroj ${v.rychly.w} px, dvojice ${v.ulozene.w} px, řádek ${rada.w} px, mezera ${rada.mezera} px`);
+        /* Dva nástroje si řádek dělí napůl; „Uložené" nad nimi stojí
+           samo a bere ho celý (viz kontrola výš). Shodu mezi řadami
+           by tu tedy nešlo žádat — měří se, že se dvojice do řádku
+           vejde beze zbytku. */
+        pravda(`${sirka} px: dvojice nástrojů vyplní řádek beze zbytku`,
+          stejne(v.rychly, v.vyvoz) && Math.abs(v.rychly.w * 2 + rada.mezera - rada.w) <= 2,
+          `nástroj ${v.rychly.w} px, řádek ${rada.w} px, mezera ${rada.mezera} px`);
       }
     }
 

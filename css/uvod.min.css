@@ -455,11 +455,10 @@ to{opacity:1;transform:none}
 .map-side>.opp-list{order:4}
 }
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.msv-ulozene,.msv-historie{min-height:36px;padding:4px 12px}
+.msv-ulozene{min-height:36px;padding:4px 12px}
 .msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka);stroke:none}
 .msv-ulozene.on svg{fill:currentColor}
-.msv-ulozene,.msv-historie{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
-.msv-historie svg{flex:none;width:16px;height:16px;stroke-width:2.25}
+.msv-ulozene{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
 @media (max-width:560px){.msv-ovladani{justify-content:space-between;flex-wrap:nowrap}
 }
 .mcv-pozn{margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
@@ -1300,14 +1299,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .mc-akce{width:100%}
 h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
 .hero-map .map-wide{padding-top:0}
-.ms-vysledky .msv-ulozene,.ms-vysledky .msv-historie,.ms-vysledky .map-select,.ms-vysledky .cdd-btn{min-height:44px;height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);font-size:13px;font-weight:600}
-.ms-vysledky .msv-ulozene.on,.ms-vysledky .msv-historie.on{background:var(--plocha-znacka);border-color:transparent;color:#fff}
+.ms-vysledky .msv-ulozene,.ms-vysledky .map-select,.ms-vysledky .cdd-btn{min-height:44px;height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);font-size:13px;font-weight:600}
+.ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka);border-color:transparent;color:#fff}
 .mcp-hledani .map-search input{min-height:44px;padding-top:0;padding-bottom:0}
 .mcp-hledani .map-search{height:44px}
 .ms-vysledky .map-count{font-size:14px;letter-spacing:0;margin-bottom:0;min-width:0}
 .ms-vysledky .map-count{font-weight:700;flex:1 1 100%}
 .ms-vysledky .mc-sub{color:var(--muted);font-weight:600}
-.msv-ulozene,.msv-historie{min-height:34px;padding:4px 8px}
+.msv-ulozene{min-height:34px;padding:4px 8px}
 .ms-vysledky .mc-pozn,.ms-vysledky .mc-nove{flex:1 1 100%;margin:0;font-size:12px}
 }
 .rail-mark{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}

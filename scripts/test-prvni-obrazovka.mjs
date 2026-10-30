@@ -255,16 +255,13 @@ try {
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
   await ctx.close();
 
-  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" -----------------------
-     Dvakrát se stěhoval: napřed nahoru („mají být úplně nahoře"), pak
-     29. 10. pod výpis („ať je co nejvíc dole"). Naměřeno 30. 10. na
-     390 px: pod výpisem skončil 9 473 px od vršku, tedy za všemi 24
-     kartami — a majitel se právem ptal, kde ta historie je. Od té doby
-     je ZAVŘENÝ a otevírá ho přepínač „Historie" v řadě nad výpisem.
-     Měří se obojí:
-       · zavřený pruh první nabídku neodsune ani o pixel,
-       · po klepnutí na „Historie" se ukáže, a to hned pod ovladači
-         (tedy nad první nabídkou — otevřel si ho člověk sám).
+  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" POD VÝPISEM ------------
+     Stěhoval se dvakrát: napřed nahoru („mají být úplně nahoře"), pak
+     29. 10. pod výpis („ať je co nejvíc dole"). 30. 10. z něj byl na
+     chvíli přepínač v řadě nad výpisem — a hned zase ne: „proč tam
+     dáváš tlačítko na historii, to nikdo nechtěl." Platí tedy zase
+     pravidlo z 29. 10.: pruh se ukazuje sám a stojí POD výpisem, první
+     nabídku neodsouvá ani o pixel.
      Prázdný prohlížeč žádnou historii nemá, takže se musí naplnit —
      jinak by kontrola prošla naprázdno nad schovaným pruhem. */
   {
@@ -281,7 +278,7 @@ try {
     await p2.goto(BASE + '/index.html', { waitUntil: 'load' });
     await p2.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, klice);
     await p2.reload({ waitUntil: 'load' });
-    await p2.waitForSelector('#map-recent', { timeout: 25000, state: 'attached' }).catch(() => {});
+    await p2.waitForSelector('#recent-strip .rs-chip', { timeout: 25000 }).catch(() => {});
     /* Po načtení je na telefonu vidět MAPA, takže se musí přepnout na
        seznam — jinak se měří karta, která není vykreslená, a vyjde
        y = 0. (Přesně to se stalo při přepisu téhle zkoušky.) */
@@ -295,37 +292,26 @@ try {
       const el = document.getElementById('recent-strip');
       const karta = document.querySelector('#opp-list .opp-item');
       const y = (e) => e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
-      const btn = document.getElementById('map-recent');
       return { pruhY: y(el), pruhH: el ? Math.round(el.getBoundingClientRect().height) : null,
         kartaY: y(karta), cipu: document.querySelectorAll('.rs-chip').length,
-        skryty: el ? el.hidden : null,
-        prepinac: btn ? !btn.hidden : null, napis: btn ? (btn.textContent || '').trim() : null };
+        skryty: el ? el.hidden : null };
     });
-    const zavreno = await mer();
-    pravda('přepínač „Historie" se nabídne tomu, kdo už něco prohlížel',
-      !!zavreno && zavreno.prepinac === true && /Historie \(\d+\)/.test(zavreno.napis || ''),
-      JSON.stringify(zavreno));
-    pravda('a zavřený pruh první nabídku neodsouvá',
-      !!zavreno && zavreno.skryty === true && zavreno.kartaY !== null && zavreno.kartaY < 440,
-      JSON.stringify(zavreno));
-    await p2.evaluate(() => { const b = document.getElementById('map-recent'); if (b) b.click(); });
-    await p2.waitForTimeout(900);
     const r = await mer();
     await c2.close();
-    pravda('po klepnutí na „Historie" se pruh naplnil (jinak není co měřit)',
+    pravda('pruh „Naposledy prohlédnuté" se naplnil sám (jinak není co měřit)',
       !!r && r.skryty === false && r.cipu >= 3, JSON.stringify(r));
     if (r && r.skryty === false) {
-      /* OTEVŘENÝ PRUH STOJÍ HNED POD OVLADAČI, tedy nad první
-         nabídkou — ale jen proto, že si ho člověk sám otevřel. Mezi
-         ovladači a ním nesmí nic být, jinak by to nebyla odpověď na
-         klepnutí, ale další zastávka někde ve výpisu. */
-      pravda('a stojí hned pod ovladači, nad první nabídkou',
-        r.pruhY !== null && r.kartaY !== null && r.pruhY < r.kartaY,
+      /* PRUH STOJÍ POD VÝPISEM, NE NAD NÍM. Je to historie, ne
+         nabídka: kdo přijde na úvodní stránku, chce vidět, co je
+         nového. Druhá podmínka je ta důležitější — první nabídku
+         nesmí odsunout ani o pixel (mez 440 px je tatáž jako
+         u stránky bez pruhu i s rezervou). */
+      pravda('a stojí POD první nabídkou, ne nad výpisem',
+        r.pruhY !== null && r.kartaY !== null && r.pruhY > r.kartaY,
         `pruh na ${r.pruhY} px, první nabídka na ${r.kartaY} px`);
-      pravda(`a odsune první nabídku jen o svou výšku (${r.pruhH} px)`,
-        r.kartaY !== null && zavreno.kartaY !== null
-        && Math.abs((r.kartaY - zavreno.kartaY) - r.pruhH) <= 24,
-        `zavřeno ${zavreno.kartaY} px, otevřeno ${r.kartaY} px, pruh ${r.pruhH} px`);
+      pravda(`a první nabídku neodsouvá (${r.kartaY} px)`,
+        r.kartaY !== null && r.kartaY < 440,
+        `pruh je vysoký ${r.pruhH} px a první nabídka začíná na ${r.kartaY} px`);
     }
   }
 

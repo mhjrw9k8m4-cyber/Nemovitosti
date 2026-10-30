@@ -272,11 +272,6 @@
      stránky pozemku", našel tabulku diakritiky. */
   // Ikona záložky (uložení pozemku) — výplň řídí CSS podle stavu .on
   var BM_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>';
-  /* Hodiny se zpětným rohem — „co už jsem viděl". Vlastní tvar, ne
-     tytéž hodiny jako u prošlých dražeb: jeden tvar nesmí nést dvě
-     věci (viz scripts/ikony.mjs). Odkaz se píše celý („#i-historie"),
-     jinak by ho sestavení v sadě nenašlo a ikona by ze stránky zmizela. */
-  var HIST_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-historie"/></svg>';
   /* ZNAČKY OVLADAČŮ NAD VÝPISEM.
      Majitel webu: „udělej speciální ikonky u všeho" — každé políčko
      v té řadě má svou značku, aby se od sousedů poznalo dřív, než se
@@ -2085,35 +2080,18 @@
       e.classList.toggle('msv-siroky', videt.length % 2 === 1 && i === videt.length - 1);
     });
   }
-  /* HISTORIE JE ZAVŘENÁ, DOKUD O NI NĚKDO NEŘEKNE. Pruh stál na konci
-     výpisu (naměřeno 30. 10. na 390 px: 9 473 px od vršku, za všemi 24
-     kartami) — tedy tam, kde ho nikdo nenajde: „kde je kurva ta
-     historie". Nahoru ale nepatří, to majitel řekl 29. 10. („ať je co
-     nejvíc dole"). Otevírá se proto přepínačem vedle „Uložené" a sám od
-     sebe neodsune ani pixel. */
-  var ukazHistorii = false;
+  /* PŘEPÍNAČ „HISTORIE" BYL ZRUŠENÝ V DEN, KDY VZNIKL (30. 10.).
+     Majitel se ptal „kde je kurva ta historie" a já z toho udělal
+     ovladač v řadě nad výpisem. Jeho odpověď: „proč tam dáváš tlačítko
+     na historii, to nikdo nechtěl." Pruh se tedy ukazuje zase sám,
+     stojí za výpisem (29. 10.: „ať je co nejvíc dole") a od DVOU
+     položek — s jednou prohlédnutou nabídkou není co srovnávat. */
   function renderRecent(){
     var el = document.getElementById('recent-strip');
     if (!el) return;
-    var btn = document.getElementById('map-recent');
     var idx = keyIndex();
     var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
-    if (btn) {
-      /* „Historie" je majitelovo slovo pro ten pruh; celé znění nese
-         aria-label, protože v půlce řádku se „Naposledy prohlédnuté"
-         nevejde (políčko má na 390 px 173 px). */
-      btn.innerHTML = HIST_SVG + 'Historie'
-        + (items.length ? ' (' + items.length + ')' : '');
-      btn.setAttribute('aria-label', 'Naposledy prohlédnuté pozemky (' + items.length + ')');
-      btn.setAttribute('aria-pressed', String(ukazHistorii && items.length > 0));
-      btn.classList.toggle('on', ukazHistorii && items.length > 0);
-      btn.hidden = items.length === 0;
-    }
-    srovnejOvladani();
-    /* Ukazuje se od JEDNÉ položky: s jedním prohlédnutým pozemkem je to
-       pořád historie a přepínač o ní říká počtem. Dřív to bylo od dvou,
-       z doby, kdy pruh visel nahoře sám od sebe. */
-    if (!items.length || !ukazHistorii) { el.hidden = true; el.innerHTML = ''; return; }
+    if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
     /* POČET PATŘÍ DO NADPISU. Řádek se posouvá do strany a posuvník je
        schovaný, takže ze čtyř prohlédnutých byly na telefonu vidět dvě
        (naměřeno: 438 px za pravou hranou) a nic neříkalo, že tam další
@@ -2195,14 +2173,6 @@
     row.addEventListener('scroll', prepni, { passive: true });
     if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(row); } catch (e) {} }
   }
-  (function () {
-    var btn = document.getElementById('map-recent');
-    if (btn) btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      ukazHistorii = !ukazHistorii;
-      renderRecent();
-    });
-  })();
   (function () {
     var el = document.getElementById('recent-strip');
     if (!el) return;

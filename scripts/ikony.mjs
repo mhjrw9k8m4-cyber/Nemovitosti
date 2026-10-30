@@ -57,12 +57,6 @@ export const IKONY = {
     'M8 8h.01',
   kalendar: 'M4 6.5h16v14H4zM8.5 3.5v5M15.5 3.5v5M4 11.5h16',
   hodiny: 'M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17zM12 7.5V12l3 2',
-  /* HISTORIE: tytéž hodiny, ale ciferník se v levém horním rohu otevře
-     a zahne zpátky. Hodiny samotné už znamenají něco jiného („dražby po
-     termínu", tedy čas, který vypršel) a jeden tvar nesmí nést dvě věci
-     — proto ten zpětný roh. Zkoušeno ve 16, 24 i 48 px; roh posazený
-     přesně na konec oblouku se neplete s ručičkami. */
-  historie: 'M12 3.5a8.5 8.5 0 1 1-6.01 2.49M3.5 5.5h3.5v3.5M12 7.5V12l3 2',
   dum: `M4 11.5 12 4l8 7.5M6 10v10h12V10M10 20v-6h4v6${OBZOR}`,
   dum_plus: [`M4 11.5 12 4l8 7.5M6 10v10h12V10${OBZOR}`, 'M12 13.5v4M10 15.5h4'],
   budova: `M7 20V4h10v16M10.5 7.5h3M10.5 11h3M10.5 14.5h3${OBZOR}`,

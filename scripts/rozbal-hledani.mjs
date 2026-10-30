@@ -48,20 +48,3 @@ export async function otevriPanel(p, cekani = 300) {
   return je;
 }
 
-/* A OTEVŘI HISTORII („Naposledy prohlédnuté").
-   ====================================================================
-   Pruh je od 30. 10. ZAVŘENÝ a otevírá ho přepínač „Historie" v řadě
-   nad výpisem (viz §242): pod výpisem ho nikdo nenašel — 9 473 px od
-   vršku stránky — a nahoru nepatří. Zkoušky, které ten pruh měří, musí
-   udělat totéž co člověk: klepnout. Vrací false, když přepínač není
-   (prázdná historie), takže se dá rovnou použít jako podmínka. */
-export async function otevriHistorii(p, cekani = 700) {
-  const slo = await p.evaluate(() => {
-    const b = document.getElementById('map-recent');
-    if (!b || b.hidden) return false;
-    b.click();
-    return true;
-  });
-  if (slo) await p.waitForTimeout(cekani);
-  return slo;
-}

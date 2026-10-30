@@ -2725,7 +2725,7 @@ h1 em{ color:var(--znacka-svetla);
    bylo a stojí tam i proč — na monitoru dvanáctka přežila. Naměřeno
    na 1280 px: „Uložené" 12 px vedle „Porovnat (0)" 13 px v jedné
    liště. Výšku 36 px nechávám: tu má i rozbalovátko řazení. */
-.msv-ulozene, .msv-historie{min-height:36px; padding:4px 12px;}
+.msv-ulozene{min-height:36px; padding:4px 12px;}
 /* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST — A NA MONITORU TO BYLO
    NULA. Ikonu tam vkládá js/main.js (BM_SVG) a v její značce není ani
    width, ani height; velikost jí tedy musí dát stylopis. Dlouho ji
@@ -2752,13 +2752,7 @@ h1 em{ color:var(--znacka-svetla);
    obdélníku 14 px, jedna bez plochy a druhá bílá. Telefon to měl
    srovnané už dřív (blok u 560 px); tady se totéž říká pro všechny
    šířky, ať se to nerozchází podle toho, kdo se zrovna dívá. */
-.msv-ulozene, .msv-historie{border-radius:var(--r-ovladani); background:var(--plocha-karta);}
-/* HISTORIE MÁ TAHOVOU ZNAČKU, ne vyplněnou jako záložka. Šestnáct
-   pixelů jako soused v řadě a k tomu dopočítaná tloušťka 36/16 = 2,25,
-   ať stopa na obrazovce vyjde na 1,5 px jako u všech ostatních ikon
-   (hlídá scripts/test-tahy.mjs). Bez téhle míry ikona nemá velikost
-   vůbec a vykreslí se přes půl tlačítka — vyfoceno. */
-.msv-historie svg{flex:none; width:16px; height:16px; stroke-width:2.25;}
+.msv-ulozene{border-radius:var(--r-ovladani); background:var(--plocha-karta);}
 /* ŘAZENÍ UŽ V TÉHLE ŘADĚ NESTOJÍ (29. 10.). Majitel ho poslal do
    panelu filtrů („a řazení, tedy v té tabulce"), takže .msv-razeni
    a dvě pravidla, která ho v téhle řadě smršťovala, neměla na čem
@@ -7598,7 +7592,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .hero-map .map-wide{padding-top:0;}
 
   .ms-vysledky .msv-ulozene,
-  .ms-vysledky .msv-historie,
   .ms-vysledky .map-select,
   .ms-vysledky .cdd-btn{
     min-height:44px; height:44px; padding:0 12px;
@@ -7608,8 +7601,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     color:var(--text);
     font-size:13px; font-weight:600;}
   /* Zapnuté „Uložené" zůstává zelené — to není nejednotnost, to je stav. */
-  .ms-vysledky .msv-ulozene.on,
-  .ms-vysledky .msv-historie.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+  .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
   /* ODZNAKY DRUHŮ ROVNÝM DÍLEM — řeší se samo od 29. 10.
      Naměřeno kdysi na 390 px: „Vše" 89 px, „Prodej" 126, „Dražba" 122,
      „Exekuce" 133 — čtyři různé šířky ve dvou řadách a roztřepený
@@ -7634,7 +7626,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      hluboko pod mezí 330 v test-prvni-obrazovka. */
   .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
   .ms-vysledky .mc-sub{color:var(--muted); font-weight:600;}
-  .msv-ulozene, .msv-historie{min-height:34px; padding:4px 8px;}
+  .msv-ulozene{min-height:34px; padding:4px 8px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva.
      DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek

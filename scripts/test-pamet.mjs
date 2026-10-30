@@ -27,7 +27,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
-import { otevriHistorii } from './rozbal-hledani.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs. */
 import { pripravenoVypis, pripravenoKdyz, vykresleniPo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
@@ -590,11 +589,6 @@ pravda('a místo jde kdykoli změnit', poVyberu.jdeZmenit,
 
   await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
   await p.waitForTimeout(4200);
-  /* Historie se od 30. 10. otevírá přepínačem „Historie" — pod výpisem
-     ji nikdo nenašel (viz §242). Zkouška udělá totéž co člověk. */
-  const slo = await otevriHistorii(p);
-  pravda('přepínač „Historie" se po dvou prohlédnutých nabídne', slo === true,
-    'přepínač na stránce není nebo je schovaný — pruh by se nedal otevřít');
   const pruh = await p.evaluate(() => {
     const el = document.getElementById('recent-strip');
     if (!el) return null;

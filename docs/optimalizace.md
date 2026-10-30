@@ -15722,6 +15722,14 @@ dívá, když si ho otevřel. Zavřený neodsouvá první nabídku ani o pixel
 (změřeno: 348 px zavřeno, 458 px otevřeno, pruh měří 99 px). Nabízí se
 od JEDNÉ položky, ne od dvou.
 
+> **A TOTÉŽ ODPOLEDNE ZRUŠENO.** Majitel: „proč tam dáváš tlačítko na
+> historii, to nikdo nechtěl." Měl pravdu v tom, co řekl: ptal se, kde
+> ta historie je, ne o nový ovladač. Přepínač, jeho styly i ikona
+> `historie` ze sady jsou pryč; pruh se zase ukazuje sám, stojí POD
+> výpisem a od dvou položek, tedy přesně jak to bylo zadané 29. 10.
+> („ať je co nejvíc dole"). Zůstala jen oprava díry v řadě níž — ta se
+> týkala jeho vlastní stížnosti („necháš tam místo").
+
 **Druhý nález: díra v řadě.** Ovladače drží dvousloupcová mřížka a
 „Porovnat" se ukazuje až od dvou uložených pozemků — kdo měl jeden a
 žádnou historii, viděl „Uložené" a vedle něj prázdné políčko. Lichý
