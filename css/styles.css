@@ -7516,8 +7516,32 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      taky vypadalo: počet i obě tlačítka odsazené od levého kraje
      o 67 px, jako by patřily někam jinam. Proto se tu řada vrací
      výslovně. */
-  .ms-vysledky{flex-direction:row; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 8px; margin-bottom:8px;}
-  .ms-vysledky .msv-ovladani{flex:0 1 auto; justify-content:flex-end;}
+  /* POŘADÍ NAD VÝPISEM PODLE MAJITELE (30. 10., vyznačil barvami):
+     ======================================================
+       1. „Procházet po jednom" — úplně nahoře, celý řádek
+       2. „Uložené" a „Stáhnout výběr" — uprostřed, vedle sebe
+       3. řazení („Doporučené") a počet — úplně dole
+     Ve stromu ty tři věci bydlí ve třech různých obalech
+     (.map-count, .msv-ovladani, #mc-akce) a dva z nich se překreslují
+     při každé změně výpisu — přestavět strom by znamenalo, že si
+     tlačítka při překreslení navzájem mažou místo. Proto MŘÍŽKA
+     a display:contents: oba obaly zmizí z rozvržení a jejich tlačítka
+     padnou rovnou do společné mřížky, kde se pořadí určí `order`em.
+     Strom zůstává, jak byl; mění se jen to, co je vidět. */
+  .ms-vysledky{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+    align-items:stretch; gap:12px; margin-bottom:8px;}
+  /* TŘI TŘÍDY V SELEKTORU, A JE TO ZMĚŘENÉ. `.map-side .mc-akce`
+     o kus níž má taky dvě třídy — a `.ms-vysledky` leží UVNITŘ
+     `.map-side`, takže při stejné síle vyhrálo pozdější pravidlo
+     a `#mc-akce` zůstal vlastní mřížkou: naměřeno display=grid
+     a sloupce 80,5 px, „Stáhnout výběr" široké 81 px místo 173
+     a „Procházet po jednom" uprostřed místo nahoře. */
+  .ms-vysledky > .msv-ovladani,
+  .map-side .ms-vysledky > .mc-akce, .ms-vysledky > .mc-akce{display:contents;}
+  /* 1. nahoře, přes celou šířku */
+  .ms-vysledky #mc-rychly{grid-column:1 / -1; order:-1;}
+  /* 3. dole: řazení i počet. `order` o stupeň výš než všechno ostatní. */
+  .ms-vysledky > .map-count{grid-column:1 / -1; order:9; margin-bottom:0;}
 
   /* STEJNÁ POLÍČKA, NE ČTYŘI RŮZNĚ ŠIROKÉ. Nad výpisem stojí dvě
      dvojice ovladačů pod sebou — „Uložené / Doporučené" a „Procházet
@@ -7533,15 +7557,18 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      níž (ř. ~6739) s `display:flex` a při stejné síle by vyhrálo
      pozdější pravidlo — obě tlačítka by pak seděla přes sebe na celou
      šířku. Naměřeno: obojí 370 px na téže řádce. */
-  .ms-vysledky .msv-ovladani, .map-side .mc-akce, .ms-vysledky > .mc-akce{
+  /* Mřížku drží .ms-vysledky výš; tady zbývá jen sloupec s mapou,
+     kde #mc-akce stojí sám (12 px mezera jako v té společné mřížce). */
+  .map-side .mc-akce{
     display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
-    /* 12 px, ne 8. Čtyři tlačítka ve dvou řadách s osmipixelovou
-       mezerou drží pohromadě jako jeden blok — a protože každé dělá
-       něco jiného, má se poznat, že jsou čtyři. */
     gap:12px; width:100%; flex:1 1 100%;}
   .ms-vysledky .msv-ovladani > *:not([hidden]),
   .map-side .mc-akce > *:not([hidden]),
   .ms-vysledky > .mc-akce > *:not([hidden]){width:100%; min-width:0;}
+  /* Lichý poslední ovladač bere celý řádek i tady — třídu nasazuje
+     srovnejOvladani() a počítá přitom OBA obaly, protože mřížka je
+     společná. */
+  .ms-vysledky > .mc-akce > .msv-siroky{grid-column:1 / -1;}
   /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
      `display:inline-flex` z .mc-prep, takže se musí schovat výslovně. */
   .ms-vysledky .msv-ovladani > [hidden]{display:none;}

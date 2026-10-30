@@ -2074,8 +2074,23 @@
      „Porovnat" i „Historie" v značkování stojí pořád, jen schované. */
   function srovnejOvladani(){
     var ov = document.querySelector('.msv-ovladani');
+    var ak = document.getElementById('mc-akce');
     if (!ov) return;
+    /* POČÍTAJÍ SE OBA OBALY DOHROMADY, protože na telefonu tvoří
+       JEDNU mřížku: `.msv-ovladani` i `#mc-akce` tam mají
+       display:contents, takže „Uložené" a „Stáhnout výběr" leží
+       v témže řádku, i když každé bydlí jinde ve stromu (viz
+       css/styles.css, blok do 560 px). Kdyby se počítal jen první
+       obal, vyšlo by „jedno políčko, tedy liché" — a „Uložené" by si
+       vzalo celý řádek, přestože vedle něj něco stojí. Přesně tohle
+       majitel 30. 10. vyfotil jako prázdné místo v řadě.
+       „Procházet po jednom" se do počtu NEPOČÍTÁ: má vlastní řádek
+       úplně nahoře (majitel barvami: „pozemky po jednom buď úplně
+       nahoře"), takže o sudost dvojic nezavadí. */
     var videt = [].filter.call(ov.children, function (e) { return !e.hidden; });
+    if (ak) videt = videt.concat([].filter.call(ak.children, function (e) {
+      return !e.hidden && e.id !== 'mc-rychly';
+    }));
     videt.forEach(function (e, i) {
       e.classList.toggle('msv-siroky', videt.length % 2 === 1 && i === videt.length - 1);
     });
@@ -7241,6 +7256,15 @@
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
     var qb = akceEl.querySelector('#mc-podobne');
     if (qb) qb.addEventListener('click', function (e) { e.stopPropagation(); ukazPodobne = !ukazPodobne; renderList(); });
+    /* AŽ TEĎ, KDYŽ JE ŘADA HOTOVÁ. srovnejOvladani() se dlouho volalo
+       jediným místem — při změně uložených — a to je jen jedna ze dvou
+       příčin, proč se počet políček mění. Tou druhou je právě tohle
+       překreslení: „Stáhnout výběr", „Zobrazit skryté" i „Dražby po
+       termínu" se objevují a mizí podle toho, co je ve výpisu.
+       Naměřeno: „Uložené" drželo celý řádek (16–374 px), přestože
+       vedle něj „Stáhnout výběr" stálo — třída `msv-siroky` na něm
+       zbyla z okamžiku, kdy bylo samo. */
+    srovnejOvladani();
     if (matched === 0) {
       /* Dřív to byl vlastní výčet, který neznal kraj, cenu za metr,
          vybavení ani nic z toho, co se pochopí z věty — takže na

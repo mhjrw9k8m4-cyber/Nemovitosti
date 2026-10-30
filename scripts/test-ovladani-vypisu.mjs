@@ -93,6 +93,17 @@ try {
         hledani: q('.mcp-hledani #map-search'), prepinac: q('.mcp-hledani .mv-toggle'),
         ulozene: q('#map-fav'),
         rychly: q('#mc-rychly'), vyvoz: q('#mc-vyvoz'),
+        /* Ovladač řazení nad výpisem — ten, ze kterého se 30. 10. stal
+           nadpis „Doporučené" (§248). Hlídá se jeho poloha: majitel ho
+           chce úplně dole. */
+        razeni: q('#mc-razeni'),
+        /* Mezera mezi sloupci se ČTE z té mřížky, která řádek opravdu
+           skládá — od 30. 10. je to .ms-vysledky, ne #mc-akce (ten má
+           display:contents a žádné sloupce nemá). */
+        mezera: (function () {
+          const g = document.querySelector('.ms-vysledky');
+          return g ? Math.round(parseFloat(getComputedStyle(g).columnGap) || 0) : 0;
+        })(),
         pretek: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       };
     });
@@ -127,11 +138,11 @@ try {
       };
     });
 
-    const jsou = ['hledani', 'prepinac', 'ulozene', 'rychly', 'vyvoz'].filter((k) => v[k]);
+    const jsou = ['hledani', 'prepinac', 'ulozene', 'rychly', 'vyvoz', 'razeni'].filter((k) => v[k]);
     // PŘEDPOKLAD: bez vykreslených ovladačů by kontroly níž prošly naprázdno
-    pravda(`${sirka} px: všech pět ovladačů se vykreslilo`, jsou.length === 5,
+    pravda(`${sirka} px: všech šest ovladačů se vykreslilo`, jsou.length === 6,
       'našly se jen: ' + jsou.join(', '));
-    if (jsou.length !== 5) { await ctx.close(); continue; }
+    if (jsou.length !== 6) { await ctx.close(); continue; }
 
     const vse = [v.hledani, v.prepinac, v.ulozene, v.rychly, v.vyvoz];
     const vysky = [...new Set(vse.map((x) => x.h))];
@@ -158,49 +169,33 @@ try {
        pamatovala jen první případ, padala na rozdílu, který je záměr —
        očekávání se proto bere z DOM, ne z paměti. */
     const stejne = (a, b) => Math.abs(a.w - b.w) <= 1;
-    /* „Uložené" stojí v řadě samo (dokud nejsou dva uložené pozemky,
-       „Porovnat" se neukazuje), takže si bere celý řádek — a to je ta
-       oprava z 30. 10.: prázdné políčko vedle něj vypadalo jako vada.
-       Měří se proti řádku nástrojů pod ním. */
-    pravda(`${sirka} px: „Uložené" bere celou šířku, ne půlku`,
-      v.ulozene.w > v.rychly.w + 20,
-      `„Uložené" ${v.ulozene.w} px, nástroj ${v.rychly.w} px`);
-    pravda(`${sirka} px: „Procházet po jednom" a „Stáhnout výběr" taky`, stejne(v.rychly, v.vyvoz),
-      `${v.rychly.w} px vs ${v.vyvoz.w} px`);
-    if (sirka >= 360) {
-      /* (Dřív se tu žádala shoda šířky mezi dvojicemi. „Uložené" dnes
-         stojí samo a bere celý řádek, takže by to byla nesmyslná
-         podmínka — co se místo toho měří, stojí o řádek výš.) */
-    } else {
-      const rada = await p.evaluate(() => {
-        const e = document.querySelector('#mc-rychly');
-        const r = e && e.closest('.mc-akce');
-        if (!r) return null;
-        return { w: Math.round(r.clientWidth),
-          /* Mezera se ČTE, nepíše se. Rastr má 12 px (css/styles.css:
-             „12 px, ne 8"), kdežto tahle kontrola si kdysi pamatovala
-             osmičku a při dvou nástrojích pak padala na rozdílu čtyř
-             pixelů, který je záměr. */
-          mezera: Math.round(parseFloat(getComputedStyle(r).columnGap) || 0),
-          pocet: [...r.children].filter((c) => c.getBoundingClientRect().width > 2).length };
-      });
-      // PŘEDPOKLAD: bez naměřeného řádku by kontroly níž prošly naprázdno
-      pravda(`${sirka} px: řádek nástrojů se našel a stojí v něm aspoň dva`,
-        !!rada && rada.w > 0 && rada.pocet >= 2, JSON.stringify(rada));
-      if (rada && rada.pocet >= 3) {
-        pravda(`${sirka} px: posuvný řádek nástrojů bere celou šířku (dvojice nahoře půlku)`,
-          Math.abs(v.rychly.w - rada.w) <= 1 && v.rychly.w > v.ulozene.w,
-          `nástroj ${v.rychly.w} px, řádek ${rada.w} px, dvojice ${v.ulozene.w} px`);
-      } else if (rada) {
-        /* Dva nástroje si řádek dělí napůl; „Uložené" nad nimi stojí
-           samo a bere ho celý (viz kontrola výš). Shodu mezi řadami
-           by tu tedy nešlo žádat — měří se, že se dvojice do řádku
-           vejde beze zbytku. */
-        pravda(`${sirka} px: dvojice nástrojů vyplní řádek beze zbytku`,
-          stejne(v.rychly, v.vyvoz) && Math.abs(v.rychly.w * 2 + rada.mezera - rada.w) <= 2,
-          `nástroj ${v.rychly.w} px, řádek ${rada.w} px, mezera ${rada.mezera} px`);
-      }
-    }
+
+    /* POŘADÍ A ŠÍŘKY PODLE MAJITELE (30. 10., vyznačil je barvami do
+       snímku a napsal k tomu: „doporučené buď úplně dole, pozemky po
+       jednom buď úplně nahoře, uložené a stáhnout výběr bude
+       uprostřed").
+       Co tahle kontrola hlídala do té chvíle: že „Uložené" bere celý
+       řádek samo a nástroje pod ním jsou půlky. To rozhodnutí majitel
+       tímhle zrušil — „Uložené" má odteď řádek sdílet se „Stáhnout
+       výběr". Pravidlo se proto přepsalo celé; staré znění by hlídalo
+       stav, který si nikdo nepřeje.
+       Měří se POLOHA, ne třídy: pořadí dělá `order` v mřížce, takže
+       strom o něm nic neříká a číst z něj by nic nedokazovalo. */
+    pravda(`${sirka} px: „Procházet po jednom" je úplně nahoře`,
+      v.rychly.y < v.ulozene.y && v.rychly.y < v.vyvoz.y && v.rychly.y < v.razeni.y,
+      `rychlý ${v.rychly.y} px, uložené ${v.ulozene.y} px, vývoz ${v.vyvoz.y} px, řazení ${v.razeni.y} px`);
+    pravda(`${sirka} px: a bere celý řádek`,
+      v.rychly.w > v.ulozene.w + 20,
+      `„Procházet po jednom" ${v.rychly.w} px, „Uložené" ${v.ulozene.w} px`);
+    pravda(`${sirka} px: „Uložené" a „Stáhnout výběr" stojí uprostřed vedle sebe`,
+      Math.abs(v.ulozene.y - v.vyvoz.y) <= 2 && stejne(v.ulozene, v.vyvoz),
+      `uložené ${v.ulozene.y} px / ${v.ulozene.w} px, vývoz ${v.vyvoz.y} px / ${v.vyvoz.w} px`);
+    pravda(`${sirka} px: a dělí se o řádek beze zbytku`,
+      Math.abs(v.ulozene.w + v.vyvoz.w + v.mezera - v.rychly.w) <= 2,
+      `${v.ulozene.w} + ${v.vyvoz.w} + mezera ${v.mezera} proti řádku ${v.rychly.w} px`);
+    pravda(`${sirka} px: řazení („Doporučené") je úplně dole`,
+      v.razeni.y > v.ulozene.y && v.razeni.y > v.vyvoz.y,
+      `řazení ${v.razeni.y} px, dvojice na ${v.ulozene.y} px`);
 
     /* Nápis se nesmí vysypat z rámečku — to byl důvod, proč se pod
        360 px skládá do jednoho sloupce. */
@@ -222,19 +217,36 @@ try {
        na 20 px už se „Stáhnout výběr" na 390 px nevejde do rámečku
        (171 px textu v 169 px), proto 16 px — dost na to, aby pruh
        nedrhl o hranu, a pořád se vším, co se má vejít. */
+    /* MĚŘÍ SE TLAČÍTKA, NE OBAL KOLEM NICH. Stálo tu
+       `.ms-vysledky .msv-ovladani` — jenže ten obal má od 30. 10.
+       `display:contents`, tedy žádnou vlastní krabici, a prohlížeč
+       u něj vrací obdélník přes celou šířku okna: naměřeno
+       {vlevo: 0, vpravo: 390}, takže kontrola hlásila „drhne o hranu"
+       o prvku, který se nekreslí. Ptá se proto na to, co je opravdu
+       vidět — na krajní tlačítka v té řadě. */
     const okraje = await p.evaluate(() => {
       const out = {};
-      ['.mcp-hledani', '.ms-vysledky .msv-ovladani'].forEach((sel) => {
+      [['hledání', '.mcp-hledani'], ['Procházet po jednom', '#mc-rychly'],
+       ['Uložené', '#map-fav'], ['Stáhnout výběr', '#mc-vyvoz'],
+       ['řazení', '#mc-razeni']].forEach(([jm, sel]) => {
         const e = document.querySelector(sel); if (!e) return;
         const r = e.getBoundingClientRect();
-        out[sel] = { vlevo: Math.round(r.left), vpravo: Math.round(document.documentElement.clientWidth - r.right) };
+        out[jm] = { vlevo: Math.round(r.left), vpravo: Math.round(document.documentElement.clientWidth - r.right) };
       });
       return out;
     });
     const klice = Object.keys(okraje);
     // PŘEDPOKLAD: bez naměřených okrajů by kontrola níž prošla naprázdno
-    pravda(`${sirka} px: okraje ovládání se naměřily`, klice.length === 2, JSON.stringify(okraje));
-    const tesne = klice.filter((k) => okraje[k].vlevo < 16 || okraje[k].vpravo < 16);
+    pravda(`${sirka} px: okraje ovládání se naměřily`, klice.length === 5, JSON.stringify(okraje));
+    /* U dvojice uprostřed se měří jen ta hrana, která k okraji
+       obrazovky opravdu míří: „Uložené" má vlevo kraj řádku a vpravo
+       mezeru k sousedovi, „Stáhnout výběr" obráceně. Žádat 16 px na
+       obou stranách by znamenalo žádat, ať se ty dvě nedotýkají ani
+       uprostřed — a to je ten rastr, který si majitel přál. */
+    const jenVlevo = { 'Uložené': 1 };
+    const jenVpravo = { 'Stáhnout výběr': 1 };
+    const tesne = klice.filter((k) => (!jenVpravo[k] && okraje[k].vlevo < 16)
+      || (!jenVlevo[k] && okraje[k].vpravo < 16));
     pravda(`${sirka} px: ovládání nedrhne o hranu obrazovky (aspoň 16 px)`, tesne.length === 0,
       tesne.map((k) => k + ' ' + JSON.stringify(okraje[k])).join('; '));
 

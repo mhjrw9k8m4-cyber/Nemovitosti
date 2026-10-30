@@ -1824,10 +1824,13 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 @media (max-width:880px){.hero-map{padding:0 0 24px}
 }
 @media (max-width:560px){.hero-map .map-wide{margin-top:0;background:var(--plocha-vypis)}
-.ms-vysledky{flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;margin-bottom:8px}
-.ms-vysledky .msv-ovladani{flex:0 1 auto;justify-content:flex-end}
-.ms-vysledky .msv-ovladani,.map-side .mc-akce,.ms-vysledky>.mc-akce{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;flex:1 1 100%}
+.ms-vysledky{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:12px;margin-bottom:8px}
+.ms-vysledky>.msv-ovladani,.map-side .ms-vysledky>.mc-akce,.ms-vysledky>.mc-akce{display:contents}
+.ms-vysledky #mc-rychly{grid-column:1 / -1;order:-1}
+.ms-vysledky>.map-count{grid-column:1 / -1;order:9;margin-bottom:0}
+.map-side .mc-akce{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;flex:1 1 100%}
 .ms-vysledky .msv-ovladani>*:not([hidden]),.map-side .mc-akce>*:not([hidden]),.ms-vysledky>.mc-akce>*:not([hidden]){width:100%;min-width:0}
+.ms-vysledky>.mc-akce>.msv-siroky{grid-column:1 / -1}
 .ms-vysledky .msv-ovladani>[hidden]{display:none}
 .ms-vysledky .msv-ovladani>.msv-siroky{grid-column:1 / -1}
 @media (max-width:360px){.mc-dl{display:none}

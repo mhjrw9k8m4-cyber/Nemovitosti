@@ -1216,8 +1216,13 @@
 
   function srovnejOvladani(){
     var ov = document.querySelector('.msv-ovladani');
+    var ak = document.getElementById('mc-akce');
     if (!ov) return;
+
     var videt = [].filter.call(ov.children, function (e) { return !e.hidden; });
+    if (ak) videt = videt.concat([].filter.call(ak.children, function (e) {
+      return !e.hidden && e.id !== 'mc-rychly';
+    }));
     videt.forEach(function (e, i) {
       e.classList.toggle('msv-siroky', videt.length % 2 === 1 && i === videt.length - 1);
     });
@@ -4380,6 +4385,8 @@
     if (pb) pb.addEventListener('click', function (e) { e.stopPropagation(); ukazProsle = !ukazProsle; renderList(); });
     var qb = akceEl.querySelector('#mc-podobne');
     if (qb) qb.addEventListener('click', function (e) { e.stopPropagation(); ukazPodobne = !ukazPodobne; renderList(); });
+
+    srovnejOvladani();
     if (matched === 0) {
 
       var anyFilter = jeNecoZapnute();

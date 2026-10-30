@@ -16246,3 +16246,71 @@ nový. Nebezpečná je opačná chyba — překreslovat, když se nic nezměnilo
 
 **Zkoušky.** `test-nova-verze` (4), `test-offline` (17), `test-konzole`
 (12), `test-pamet` (64), rychlá sada 133/133.
+
+
+## §252 Pořadí ovladačů nad výpisem podle majitele
+
+**Zadání (30. 10.).** Majitel vyznačil barvami do snímku, co kde má být, a
+napsal: „doporučené buď úplně dole, pozemky po jednom buď úplně nahoře,
+uložené a stáhnout výběr bude uprostřed."
+
+**Jak to teď vypadá na telefonu (390 px), změřeno:**
+
+| Řádek | Co | y | šířka |
+|---|---|---|---|
+| 1 | Procházet po jednom | 201 px | 358 px (celý řádek) |
+| 2 | Uložené · Stáhnout výběr | 257 px | 173 + 173 px |
+| 3 | ŘAZENÍ · Doporučené + počet | 313 px | celý řádek |
+
+**Proč mřížka a `display:contents`, a ne přestavba stromu.** Ty tři věci
+bydlí ve třech různých obalech (`.map-count`, `.msv-ovladani`, `#mc-akce`)
+a dva z nich se překreslují při každé změně výpisu — proto `#mc-akce` vůbec
+vznikl (aby přepsání hlavičky nesmazalo ovladač řazení). Přestavět strom by
+znamenalo, že si tlačítka při překreslení navzájem mažou místo. Oba obaly
+tedy dostaly `display:contents`: z rozvržení zmizí a jejich tlačítka padnou
+rovnou do společné mřížky `.ms-vysledky`, kde pořadí určí `order`. **Strom
+zůstává, jak byl; mění se jen to, co je vidět.** Na monitoru se nemění nic
+— celý ten blok je uvnitř `@media (max-width:560px)` (ověřeno měřením na
+1280: `display:flex`, počet vlevo, „Uložené" vpravo).
+
+**Dvě chyby po cestě, obě naměřené.**
+
+1. **Specificita.** `.map-side .mc-akce` o kus níž má taky dvě třídy — a
+   `.ms-vysledky` leží UVNITŘ `.map-side`, takže při stejné síle vyhrálo
+   pozdější pravidlo a `#mc-akce` zůstal vlastní mřížkou: naměřeno
+   `display=grid`, sloupce 80,5 px, „Stáhnout výběr" 81 px místo 173 a
+   „Procházet po jednom" uprostřed místo nahoře.
+2. **`srovnejOvladani()` se volalo z jediného místa** — při změně uložených.
+   Jenže počet políček mění i překreslení výpisu („Stáhnout výběr",
+   „Zobrazit skryté", „Dražby po termínu" se objevují podle dat). „Uložené"
+   proto drželo celý řádek (16–374 px), přestože vedle něj „Stáhnout výběr"
+   stálo — třída `msv-siroky` na něm zbyla z okamžiku, kdy bylo samo.
+   Volá se teď i na konci `renderList()` a počítá OBA obaly dohromady,
+   protože mřížka je společná.
+
+**Hlídač přepsaný, ne obejitý.** `scripts/test-ovladani-vypisu.mjs` do téhle
+chvíle hlídal pravidlo z 30. 10. dopoledne — „Uložené" bere celý řádek samo,
+nástroje pod ním jsou půlky. To majitel tímhle zrušil. Staré znění by tedy
+hlídalo stav, který si nikdo nepřeje. Nové kontroly měří POLOHU, ne třídy
+(pořadí dělá `order`, strom o něm nic neříká): rychlý je nahoře a bere celý
+řádek, dvojice stojí vedle sebe a dělí se o řádek beze zbytku, řazení je
+dole.
+
+**A jedna oprava v samotném měření.** Kontrola okrajů se ptala obalu
+`.ms-vysledky .msv-ovladani` — ten má ale teď `display:contents`, tedy
+žádnou vlastní krabici, a prohlížeč u něj vrací obdélník přes celé okno
+(`{vlevo: 0, vpravo: 390}`). Hlásila tím „drhne o hranu" o prvku, který se
+nekreslí. Ptá se proto na krajní tlačítka.
+
+**Sabotáží prokázáno trojmo:**
+
+| Co jsem rozbil | Co to ohlásilo |
+|---|---|
+| „Procházet po jednom" dolů (`order:5`) | „je úplně nahoře" padne |
+| řazení nahoru (`order:-9`) | „je úplně nahoře" i „řazení je úplně dole" padnou |
+| `#mc-akce` zpátky na vlastní mřížku | „stojí uprostřed vedle sebe" i „bere celý řádek" padnou |
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu` (34),
+`test-uvod` (68), `test-rozvrzeni` (190), `test-prvni-obrazovka` (22),
+`test-dotyk`, `test-u-hrany`, `test-odstupy`, `test-kontrast`, `test-deska`,
+`test-mrtve-styly`, `test-mrtva-jmena`, `test-vypadky`.
