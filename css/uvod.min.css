@@ -1012,10 +1012,11 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .map-side{order:2;border-right:0;max-height:none}
 .map-holder{order:3;height:74vh;height:74dvh;max-height:640px;min-height:460px}
 .map-canvas{flex:1;min-height:0}
-.mcp-hledani{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.mcp-hledani{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-ovladani);box-shadow:var(--e1)}
 .mcp-hledani .map-search{flex:1 1 100%;min-width:150px}
 .mcp-hledani .ms-lupa{left:12px}
 .mcp-hledani .map-search input{padding-left:32px;padding-right:8px}
+.mcp-hledani .map-search input{background:var(--plocha-zapustena);border-color:var(--line-ui);box-shadow:none}
 .mcp-hledani{position:relative}
 .mcp-hledani .map-search{position:static}
 .mv-toggle{display:flex;position:relative;flex:1 1 100%;gap:0;margin-top:0;background:var(--plocha-zapustena);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-ovladani);padding:0;overflow:visible}
@@ -1030,8 +1031,8 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 }
 .mvt-btn.active{background-color:var(--plocha-znacka);color:#fff;font-weight:700;transition:var(--prechod),background-color 0s var(--cas-rychly)}
 .mvt-btn.active:hover{color:#fff}
-.mcp-hledani .ms-lupa{top:24px;transform:none}
-.mcp-hledani .ms-navrhy,.mcp-hledani .msn-oprava{top:52px}
+.mcp-hledani .ms-lupa{top:30px;transform:none}
+.mcp-hledani .ms-navrhy,.mcp-hledani .msn-oprava{top:60px}
 .map-app.mv-seznam .map-holder{display:none}
 .map-app:not(.mv-seznam) .map-side{display:none}
 .map-app.mv-seznam .map-side{border-top:0}

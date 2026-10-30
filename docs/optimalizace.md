@@ -16753,3 +16753,41 @@ místo toho, abych původní pravidla opravil. Obojí přepsáno.
 (143 prvků), `test-zaobleni`, `test-deska`, `test-barvy`,
 `test-mrtva-jmena`, `test-uvod` (68), `test-rozvrzeni` (190),
 `test-vrstveni`, `test-prechody` — bez chyby.
+
+## §263 Pět obdélníků pod sebou: hledání a přepínač do jedné desky
+
+**Zadání (30. 10. večer):** „Působí to strašně roboticky a nestylově,
+předělej to."
+
+**Dalo se to pojmenovat, a to je na tom to podstatné.** Nad výpisem
+stálo pět obdélníků **stejné šířky a stejného zaoblení** pod sebou:
+pole hledání, přepínač Seznam/Mapa, „Procházet po jednom", dvojice
+„Uložené / Stáhnout výběr" a řazení. Pětkrát týž tvar oko nečte jako
+sestavu, ale jako formulář — a to je přesně ten „robotický" dojem.
+Barvy a stíny z §258–§260 na tom nic nezměnily, protože vada nebyla
+v barvě, ale v rytmu.
+
+**Co se s tím udělalo.** Pole a přepínač spolu souvisejí (čím hledám
+a kde se to ukáže), takže jsou teď v **jedné bílé desce** a oba v ní
+sedí zapuštěné. Z pěti obdélníků jsou čtyři a ten první má jiný
+charakter než ostatní — tím vznikne začátek, ne další řádek. Deska
+plave na zeleném pásu, takže vršek stránky má jeden předmět, na který
+se dívá.
+
+**Jedna past cestou.** Zapuštěná plocha má proti bílé desce 1,07 : 1,
+takže tvar pole nese jedině obrys — a ten musí projít mezí 3 : 1
+(WCAG 1.4.11). Napoprvé jsem mu dal `--line` a `test-okraje` by to
+shodil; linka zůstává `--line-ui`. Odsazení desky 8 px navíc posunulo
+lupu i našeptávač, takže se jejich ukotvení přepočítalo (30 px na
+střed pole, 60 px pod jeho hranu).
+
+**Co zůstává robotické a vím o tom.** Tři obdélníky pod deskou mají
+pořád týž tvar; hierarchii mezi nimi dělá jen barva a stín. Jestli má
+jít i ta řada od sebe tvarem, je to další krok, ne tenhle.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-okraje` (143
+prvků), `test-kontrast`, `test-ovladani-vypisu` (52), `test-naseptavac`
+(127), `test-deska`, `test-zaobleni`, `test-uvod` (68),
+`test-rozvrzeni` (190), `test-dotyk`, `test-soustava` (15),
+`test-mrtve-styly`, `test-barvy`, `test-prvni-obrazovka`,
+`test-vrstveni`, `test-u-hrany` — bez chyby.

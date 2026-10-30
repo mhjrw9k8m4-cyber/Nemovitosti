@@ -4780,7 +4780,19 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      dvě záložky nad výpisem a tak to i vypadá. Stojí to 56 px výšky;
      zaplatil je pruh „naposledy prohlédnuté", který se touž změnou
      přestěhoval pod výpis (js/main.js, renderRecent). */
-  .mcp-hledani{display:flex; flex-wrap:wrap; align-items:center; gap:8px;}
+  /* HLEDÁNÍ A PŘEPÍNAČ JSOU JEDEN PŘEDMĚT, NE DVA ŠPALKY POD SEBOU.
+     Majitel 30. 10. večer: „působí to strašně roboticky a nestylově."
+     Měl pravdu a dalo se to pojmenovat: nad výpisem stálo pět
+     obdélníků stejné šířky a stejného zaoblení pod sebou — pole,
+     přepínač, tlačítko, dvojice, řazení. Stejný tvar pětkrát za sebou
+     nečte oko jako sestavu, ale jako formulář.
+     Pole a přepínač spolu souvisejí (čím hledám a kde se to ukáže),
+     tak jsou teď v JEDNÉ bílé desce a oba v ní sedí zapuštěné. Z pěti
+     obdélníků jsou čtyři a první z nich má jiný charakter než ty pod
+     ním — tím vznikne začátek, ne další řádek. */
+  .mcp-hledani{display:flex; flex-wrap:wrap; align-items:center; gap:8px;
+    padding:8px; background:var(--plocha-karta); border:1px solid var(--line);
+    border-radius:var(--r-ovladani); box-shadow:var(--e1);}
   .mcp-hledani .map-search{flex:1 1 100%; min-width:150px;}
   /* LUPA BLÍŽ KE KRAJI A MENŠÍ ODSAZENÍ ZPRAVA — kvůli nápisu v poli.
      Naměřeno na 390 px: „Obec, druh, cena…" měří 145 px a pole mu
@@ -4807,6 +4819,14 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      jejím levém kraji) a top:50% taky, protože řada je na jeden
      řádek stejně vysoká jako pole. Pro dvouřádkovou podobu pod 360 px
      se to doopraví níž. */
+  /* Pole uvnitř desky nesmí být bílé na bílé — zapuštěná plocha mu
+     vrací tvar, který by jinak nesl jen stín (ten uvnitř desky nemá
+     co dělat, deska ho nese sama). */
+  /* Linka zůstává `--line-ui`, ne `--line`: zapuštěná plocha má proti
+     bílé desce 1,07 : 1, takže tvar pole nese obrys a ten musí projít
+     mezí 3 : 1 (WCAG 1.4.11, hlídá scripts/test-okraje.mjs). */
+  .mcp-hledani .map-search input{background:var(--plocha-zapustena);
+    border-color:var(--line-ui); box-shadow:none;}
   .mcp-hledani{position:relative;}
   .mcp-hledani .map-search{position:static;}
   /* PŘEPÍNAČ VYPADÁ JAKO POLE VEDLE NĚJ, NE JAKO ZELENÝ ŠPALEK.
@@ -4955,8 +4975,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Do 29. 10. tohle platilo jen pod 360 px, protože jen tam se řada
      lámala. Teď se láme vždycky (přepínač má vlastní řádek), takže
      pravidlo platí pro celou telefonní šířku. */
-  .mcp-hledani .ms-lupa{top:24px; transform:none;}
-  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:52px;}
+  /* +8 px proti dřívějšku: deska kolem má odsazení 8, takže se o ně
+     posunulo i pole, a lupa se váže na jeho střed (8 + 44/2 = 30),
+     našeptávač čtyři pixely pod jeho spodní hranu (8 + 44 + 8). */
+  .mcp-hledani .ms-lupa{top:30px; transform:none;}
+  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:60px;}
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
