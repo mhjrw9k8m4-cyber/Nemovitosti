@@ -894,7 +894,9 @@ Hlídá `scripts/test-mapa-pozemku.mjs`, taky ověřeno sabotáží.
 
 ### A hlavně: rychlá úloha v CI padala na chybějícím balíčku
 
-`scripts/test-hledani-zavirani.mjs` a `scripts/test-lista-dole.mjs`
+`scripts/test-hledani-zavirani.mjs` a zkouška spodní lišty (soubor
+scripts/test-lista-dole.mjs už v repozitáři není, zanikl 30. 10. se
+samotnou lištou — viz §245)
 vznikly s histogramem cen a zapsaly se do úlohy `testy`, kde se
 Playwright **neinstaluje**. Obě si ho berou importem hned v hlavičce,
 takže v CI nemohly udělat nic než padnout na `Cannot find package
@@ -15077,7 +15079,8 @@ lišta 12–378, výška 70, od spodní hrany 12 px, kulatý návrat nahoru
 14 px nad ní, a na konci stránky pod ní neleží ani jeden prvek
 (odsazení stránky 80 → 96 px).
 
-**Hlídač.** `scripts/test-lista-dole.mjs` dostal dvě změny. Kontrola
+**Hlídač.** Zkouška spodní lišty (scripts/test-lista-dole.mjs tu není,
+zanikl 30. 10. se samotnou lištou — viz §245) dostala dvě změny. Kontrola
 „drží se u spodní hrany" chtěla nulu — povoluje teď 1–24 px, aby
 plovoucí tvar prošel a zároveň lišta nemohla utéct doprostřed
 obrazovky. A přibyla kontrola POČTU přepnutí (nejvýš dvě); ta stará
@@ -15849,3 +15852,40 @@ je z něj devět a důvod je zapsaný. `test-vnitrni-odkazy` nehledá `id`
 pro kotvu s rovnítkem (stav mapy žádné nemá). `test-naseptavac` žádal
 po zkráceném seznamu rolování i tehdy, když se do něj vejde celý obsah
 — padlo to na jednom pixelu (strop 273 px proti 274 px podle CSS).
+
+## §245 Spodní lišta s cenou a akcí na stránce pozemku — zrušená
+
+**Co o tom řekl majitel.** „Pořád tam dole bliká ta kravina ‚K dražbě',
+vidíš." Vyfotil stránku pozemku, kde ta karta ležela přes řádek
+„Obvyklá cena v okolí do 25 km".
+
+**Co to bylo.** Připnutá karta u spodní hrany s cenou a hlavním
+tlačítkem, okoukaná od Rightmove a Zillow. 29. 10. už ji jednou popsal
+(„vidíš, jak to blbne dole, buguje se to přes všechno") a tehdy
+se z pruhu přes celou šířku stala plovoucí karta a z osmi přepnutí na
+jedno projetí stránky dvě. Nestačilo to.
+
+**Proč mizí celá, ne jen její chování:**
+
+1. **Objevuje se a mizí z podstaty.** Svítí, jakmile sjede cena nahoře
+   z obrazovky, a zhasíná, když se k ní člověk vrátí. Naměřeno na
+   390×844: jedno projetí stránky tam a zpět = **dvě přepnutí**, a s nimi
+   skok výšky stránky **3 727 ↔ 3 823 px** (odsazení `body.ma-listu`).
+   Kdo listuje nahoru a dolů, kouká na blikání.
+2. **Na iPhonu se k tomu přidá prohlížeč.** Safari při rolování vysouvá
+   a zasouvá svoje lišty, takže připnutá karta u spodní hrany poskakuje
+   s nimi. To se z webu opravit nedá.
+3. **Leží přes obsah.** Na majitelově snímku kryla řádek s obvyklou
+   cenou v okolí.
+
+**Co se tím neztrácí.** Hlavní akce zůstává ve stránce (řada
+`.pz-akce-hlavni`), kulatý návrat nahoru taky — kdo dočte, má se čím
+vrátit. Na širokém displeji je pořád připnutý pruh s cenou vpravo
+(`.pz-bok`), ten nikam nemizí a nic nepřekrývá.
+
+**Hlídač.** Zkouška spodní lišty zanikla s ní a místo ní přibyla
+kontrola v `scripts/test-nahoru.mjs`: u spodní hrany stránky pozemku
+nesmí stát NIC připnutého přes půl šířky (kulatý návrat nahoru je
+vyjmutý). Měří se to geometrií, ne hledáním třídy — ať se to nevrátí
+pod jiným jménem. Prokázáno sabotáží: vložená karta 366×64 u spodní
+hrany kontrolu shodí.

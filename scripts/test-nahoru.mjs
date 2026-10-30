@@ -366,6 +366,31 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
       && jinde.udalosti === 'auto', JSON.stringify(jinde));
   }
 
+  /* A U SPODNÍ HRANY NESTOJÍ ŽÁDNÁ PŘIPNUTÁ LIŠTA.
+     Do 30. 10. tam byla karta s cenou a tlačítkem (#pz-lista). Majitel
+     ji nechal zrušit: „pořád tam dole bliká ta kravina ‚K dražbě'" —
+     objevovala se a mizela podle toho, jestli je vidět cena nahoře, na
+     iPhonu k tomu poskakovala s lištami Safari a ležela přes obsah.
+     Hlídá se to měřením, ne hledáním třídy: cokoli PŘIPNUTÉHO u spodní
+     hrany přes půl šířky je zpátky táž vada, ať se to jmenuje jakkoli.
+     Kulatý návrat nahoru je z toho vyjmutý — ten tam patří a je malý. */
+  const dole = await p.evaluate(() => {
+    const out = [];
+    document.querySelectorAll('body *').forEach((e) => {
+      const cs = getComputedStyle(e);
+      if (cs.position !== 'fixed' && cs.position !== 'sticky') return;
+      if (cs.display === 'none' || cs.visibility === 'hidden' || !e.getClientRects().length) return;
+      if (e.id === 'to-top' || e.closest('#to-top')) return;
+      const r = e.getBoundingClientRect();
+      if (r.bottom < innerHeight - 120 || r.width < innerWidth / 2) return;
+      out.push((e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (e.className ? '.' + String(e.className).trim().split(/\s+/).join('.') : ''))
+        + ' ' + Math.round(r.width) + '×' + Math.round(r.height));
+    });
+    return [...new Set(out)];
+  });
+  pravda('u spodní hrany nestojí připnutá lišta', dole.length === 0,
+    'našlo se: ' + dole.join(', ') + ' — spodní lišta je od 30. 10. zrušená');
+
   /* POJISTKA PROTI PŘEHNANÉMU USTUPOVÁNÍ. Knoflík uhýbá hlavní akci
      (výš) a je lákavé to zobecnit na „ustup každému ovladači pod
      sebou". Zkusil jsem to 27. 10. — ptát se po doznění posunu

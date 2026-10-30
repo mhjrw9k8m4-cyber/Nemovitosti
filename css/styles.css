@@ -9592,51 +9592,11 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   .pz-bok-sada .pz-klic-ic{display:none;}
 }
 
-/* =====================================================================
-   SPODNÍ LIŠTA S CENOU A AKCÍ (stránka pozemku, telefon)
-   =====================================================================
-   NENÍ TO KRITICKÝ STYL, a proto to není ve vloženém stylu v pozemek.html:
-   lištu staví až js/pozemek.js po vykreslení (pzListaDole, kde je i celé
-   zdůvodnění), tedy dávno potom, co vložený styl odvedl svoje. Ve
-   vloženém stylu to navíc přetáhlo mez 41 kB, kterou si šablona drží —
-   a posílala by se do všech 2 129 stránek pozemků kvůli pruhu, který se
-   na většině z nich nikdy neukáže.
-   ===================================================================== */
-/* Spodní lišta s cenou a akcí; proč a kdy svítí, stojí u pzListaDole
-   v js/pozemek.js. `hover:none`, ne šířka — telefonní rozvržení
-   tohohle webu stojí na druhu ukazovátka. `env(safe-area-inset-bottom)`
-   je kvůli iPhonu: bez něj by tlačítko leželo pod čárou pro
-   přepínání aplikací. */
-.pz-lista{display:none;}
-@media (hover:none){
-  /* PLOVOUCÍ KARTA, NE PRUH PŘES CELOU ŠÍŘKU.
-     Majitel 29. 10. poslal snímek, kde bílý pruh leží přes mapu
-     a uřízne v půlce tlačítko „Hranice parcel": „vidíš, jak to blbne
-     dole, buguje se to přes všechno."
-     Pruh od kraje ke kraji s rovnou horní hranou vypadá jako vada
-     vykreslení — jako by se stránka rozpůlila. Odsazená karta se
-     zaoblením a stínem je naopak zjevně NAD obsahem; takhle vypadá
-     plovoucí ovládání na každé mapové aplikaci. Je to tentýž tvar,
-     jaký nese zbytek webu: --r-plocha a stín --e3.
-     Čísla: 12 px od krajů, zaoblení jako karty, stín shora i zespodu.
-     Odsazení stránky (body.ma-listu) na to musí počítat taky — proto
-     je o těch 12 px větší než výška lišty. */
-  .pz-lista{position:fixed; left:12px; right:12px;
-    bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:40;
-    align-items:center; gap:12px; padding:8px 12px 8px 16px;
-    background:var(--plocha-plovouci-plna); border:1px solid var(--line);
-    border-radius:var(--r-plocha); box-shadow:var(--e3);}
-  .pz-lista.je-videt{display:flex;}
-  .pzl-text{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;}
-  .pzl-cena{font-size:18px; font-weight:700; letter-spacing:-0.02em;
-    color:var(--text); line-height:1.2; font-variant-numeric:tabular-nums;}
-  .pzl-m2{font-size:12px; color:var(--popisek); line-height:1.2;}
-  .pz-lista .pzl-btn{flex:none; margin:0; white-space:nowrap;}
-  /* Ať lišta nestojí na patičce a ať na ní neseděl kulatý návrat
-     nahoru — naměřeno na snímku, leželo přesně přes cenu. */
-  body.ma-listu{padding-bottom:96px;}
-  body.ma-listu .to-top{bottom:calc(96px + env(safe-area-inset-bottom, 0px));}
-}
+/* SPODNÍ LIŠTA S CENOU A AKCÍ JE PRYČ (30. 10.) — i s odsazením
+   body.ma-listu a s pravidlem, které nad ni zvedalo kulatý návrat
+   nahoru. Důvod stojí v js/pozemek.js u komentáře „SPODNÍ LIŠTA …
+   JE PRYČ": majitel ji nechal zrušit, protože se při listování
+   objevovala a mizela („pořád tam dole bliká ta kravina"). */
 
 /* =====================================================================
    SOUSTAVA STRÁNKY — pás, karta, popisek, tlačítko  (prefix .st-)

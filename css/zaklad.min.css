@@ -1178,7 +1178,6 @@ body:has(.dt-telo) .st-hlava .st-wrap>*{grid-column:2;min-width:0}
 
 
 
-
 .st-hlava{background:var(--pas-plocha);padding:20px 0 28px;margin-bottom:var(--mezera-bloku)}
 .st-wrap{max-width:var(--m-wrap);margin:0 auto;padding:0 var(--okraj-stranky)}
 .st-zpet{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--pas-text-mute);text-decoration:none}

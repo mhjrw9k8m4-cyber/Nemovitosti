@@ -2488,7 +2488,6 @@
        Na telefonu se nedělá nic — blok zůstane přesně tam, kde byl, a
        pořadí bloků hlídá scripts/test-poradi-pozemku.mjs na 360 px. */
     try { pripniAkce(host); } catch (e) {}
-    try { pzListaDole(host, d, perM2); } catch (e) {}
     /* AŽ ZA PŘIPNUTÍM: pripniAkce na monitoru PŘESOUVÁ blok s cenou do
        pravého pruhu, takže se napřed musí ustálit rozvržení a teprve
        pak měřit, co se do dlaždice vejde. */
@@ -2982,86 +2981,31 @@
     try { global.PKAuth.rpc('bump_view', { p_id: d._lid }, false); } catch (e) {}
   }
 
-  /* =====================================================================
-     SPODNÍ LIŠTA S CENOU A AKCÍ — TELEFON
+  /* SPODNÍ LIŠTA S CENOU A AKCÍ JE PRYČ (30. 10.).
      =====================================================================
-     Okoukáno tam, kde to dělají všichni: Rightmove, Zillow i Idealista
-     mají na telefonu u nabídky připnutý spodní pruh s cenou a hlavním
-     tlačítkem. Má to jednoduchý důvod — stránka pozemku je dlouhá
-     (verdikt, graf, srovnatelné, rádce, mapa, popis, kalkulačka) a
-     tlačítko „na inzerát" leží nahoře. Kdo si celou stránku přečte,
-     musí se kvůli němu vracet o několik obrazovek zpátky. Na širokém
-     displeji to řeší připnutý pravý pruh (#pz-detail > .pz-bok výš);
-     na telefonu žádný pruh není, a tak tam dosud nebylo nic.
+     Byla to připnutá karta u spodní hrany s cenou a tlačítkem, okoukaná
+     od Rightmove a Zillow. Majitel ji nechal zrušit: „pořád tam dole
+     bliká ta kravina ‚K dražbě‘." Před tím ji 29. 10. popsal jako
+     „vidíš, jak to blbne dole, buguje se to přes všechno" a tehdy jsem
+     ji jen předělal na plovoucí kartu a zjednodušil přepínání na jedno
+     pravidlo. Nestačilo to a má pravdu i věcně:
 
-     NEDUPLIKUJE SE. Dokud je vidět cena nahoře nebo opravdová
-     tlačítka, lišta je schovaná — ukáže se, teprve když obojí zmizí
-     z obrazovky. Dvě stejná tlačítka přes sebe jsou horší než žádné.
+       · POŘÁD SE OBJEVUJE A MIZÍ. Svítí, jakmile sjede cena z obrazovky,
+         a zhasíná, když se k ní člověk vrátí — kdo listuje nahoru
+         a dolů, kouká na blikání. Naměřeno na 390×844: jedno projetí
+         stránky tam a zpět = dvě přepnutí, a s nimi i skok výšky
+         stránky 3 727 ↔ 3 823 px (odsazení body.ma-listu 96 px).
+       · NA iPHONU SE K TOMU PŘIDÁ PROHLÍŽEČ. Safari při rolování
+         vysouvá a zasouvá svoje lišty, takže připnutá karta u spodní
+         hrany poskakuje s nimi; to se z webu opravit nedá.
+       · LEŽÍ PŘES OBSAH. Na majitelově snímku kryla řádek „Obvyklá cena
+         v okolí do 25 km".
 
-     JEDEN A TÝŽ ODKAZ, ne druhý ručně složený: tlačítko se klonuje
-     z toho nahoře, takže na něm nemůže stát jiný popisek ani jiná
-     adresa. „Uložit" se neklonuje — nese id a dvakrát v dokumentu být
-     nesmí.
-     ===================================================================== */
-  function pzListaDole(host, d, perM2) {
-    if (!host || !global.IntersectionObserver) return;
-    var vzor = host.querySelector('.pz-akce-hlavni .pz-btn.primary');
-    var cena = host.querySelector('.pz-priceblock');
-    if (!vzor || !cena) return;
-    var stara = document.getElementById('pz-lista');
-    if (stara && stara.parentNode) stara.parentNode.removeChild(stara);
-
-    var lista = document.createElement('div');
-    lista.id = 'pz-lista';
-    lista.className = 'pz-lista';
-    var txt = document.createElement('div');
-    txt.className = 'pzl-text';
-    txt.innerHTML = '<b class="pzl-cena">' + esc(fmt(d.price)) + ' Kč</b>'
-      + (perM2 ? '<span class="pzl-m2">' + esc(fmt(perM2)) + ' Kč/m²</span>' : '');
-    var tl = vzor.cloneNode(true);
-    tl.removeAttribute('id');
-    tl.classList.add('pzl-btn');
-    lista.appendChild(txt);
-    lista.appendChild(tl);
-    document.body.appendChild(lista);
-
-    /* JEDNO PRAVIDLO: lišta svítí, jakmile sjede cena z obrazovky.
-       A pak už svítí pořád.
-
-       CO TU BYLO DŘÍV A PROČ TO MAJITEL POPSAL JAKO „buguje se to".
-       Sledovaly se dvě věci — cena NAHOŘE a řada hlavních akcí — a lišta
-       svítila, jen když nebylo vidět ani jedno. Jenže řada akcí nestojí
-       na konci stránky, stojí v jejích dvou třetinách: naměřeno na
-       pozemek-benesov-benesov-1sjtz7b.html (390×844) cena 597–721,
-       řada akcí 2635–2687 a celá stránka 3718. Z toho vyšly ČTYŘI
-       přepnutí na jedno projetí stránky dolů a čtyři zpátky:
-         0–721     schovaná (je vidět cena)
-         721–1663  svítí
-         1663–2687 schovaná (blíží se řada akcí)
-         2687–konec svítí
-       Bílý pruh se tedy vysunul, zase zalezl a znovu vysunul. Naměřeno
-       přesně takhle: 6 přepnutí při jednom pomalém projetí tam a zpět.
-       A protože se s lištou přepíná i odsazení stránky (body.ma-listu,
-       80 px), skákala přitom i celková výška stránky: 3743 ↔ 3823.
-
-       CO SE TÍM KUPUJE A CO SE TÍM PLATÍ. Platí se tím, že na úseku
-       zhruba 900 px je tlačítko vidět dvakrát — jednou ve stránce,
-       jednou v liště. Je to totéž tlačítko a vede na totéž, takže se
-       nedá splést. Kupuje se tím jedno vysunutí a jedno zalezení na
-       celou stránku místo osmi, a odsazení, které se nastaví jednou
-       a pak drží.
-
-       ROZPĚTÍ UŽ SE NEPOTŘEBUJE. Stálo tu rootMargin 128 px zdola,
-       aby se zavřela úzká skulina mezi cenou a akcemi, ve které lišta
-       bliknula. Skulina byla důsledek toho druhého sledovaného prvku;
-       s ním zmizela i ona. */
-    var hlidac = new IntersectionObserver(function (zaznamy) {
-      var vidiCenu = zaznamy[zaznamy.length - 1].isIntersecting;
-      lista.classList.toggle('je-videt', !vidiCenu);
-      document.body.classList.toggle('ma-listu', !vidiCenu);
-    });
-    hlidac.observe(cena);
-  }
+     Co se tím neztrácí: hlavní akce je ve stránce (řada .pz-akce-hlavni)
+     a kulatý návrat nahoru zůstal — kdo dočte, má se čím vrátit. Na
+     širokém displeji je pořád připnutý pruh s cenou vpravo (.pz-bok).
+     Hlídá scripts/test-nahoru.mjs („u spodní hrany nestojí připnutá
+     lišta"), ať se nevrátí oklikou. */
 
   function fillVerdict(d) {
     var el = document.getElementById('pz-verdict');

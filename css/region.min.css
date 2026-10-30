@@ -709,7 +709,6 @@ to{opacity:1;transform:none}
 
 
 
-
 .st-zpet{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--pas-text-mute);text-decoration:none}
 .st-zpet:hover{color:var(--pas-text)}
 .st-odznak,.okr-band .eyebrow,.add-hero .eyebrow{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--pas-dlazdice);margin-bottom:0;font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;color:var(--pas-text);justify-self:start;align-self:start;width:max-content;max-width:100%}

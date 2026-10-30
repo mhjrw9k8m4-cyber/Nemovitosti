@@ -804,9 +804,6 @@ jobs:
       - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
         run: node scripts/test-parametry.mjs
 
-      - name: Spodní lišta s cenou a akcí
-        run: node scripts/test-lista-dole.mjs
-
       - name: Sazba v textu, který skládá prohlížeč
         run: node scripts/test-sazba-dom.mjs
 

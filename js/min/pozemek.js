@@ -1363,7 +1363,6 @@
     host.innerHTML = html;
 
     try { pripniAkce(host); } catch (e) {}
-    try { pzListaDole(host, d, perM2); } catch (e) {}
 
     try { pzHlidejVelikostHodnot(host); } catch (e) {}
     try { zapisNaposledy(d); } catch (e) {}
@@ -1688,36 +1687,6 @@
     videne[d._lid] = 1;
     try { sessionStorage.setItem(KLIC_ZHLEDNUTI, JSON.stringify(videne)); } catch (e) {}
     try { global.PKAuth.rpc('bump_view', { p_id: d._lid }, false); } catch (e) {}
-  }
-
-  function pzListaDole(host, d, perM2) {
-    if (!host || !global.IntersectionObserver) return;
-    var vzor = host.querySelector('.pz-akce-hlavni .pz-btn.primary');
-    var cena = host.querySelector('.pz-priceblock');
-    if (!vzor || !cena) return;
-    var stara = document.getElementById('pz-lista');
-    if (stara && stara.parentNode) stara.parentNode.removeChild(stara);
-
-    var lista = document.createElement('div');
-    lista.id = 'pz-lista';
-    lista.className = 'pz-lista';
-    var txt = document.createElement('div');
-    txt.className = 'pzl-text';
-    txt.innerHTML = '<b class="pzl-cena">' + esc(fmt(d.price)) + ' Kč</b>'
-      + (perM2 ? '<span class="pzl-m2">' + esc(fmt(perM2)) + ' Kč/m²</span>' : '');
-    var tl = vzor.cloneNode(true);
-    tl.removeAttribute('id');
-    tl.classList.add('pzl-btn');
-    lista.appendChild(txt);
-    lista.appendChild(tl);
-    document.body.appendChild(lista);
-
-    var hlidac = new IntersectionObserver(function (zaznamy) {
-      var vidiCenu = zaznamy[zaznamy.length - 1].isIntersecting;
-      lista.classList.toggle('je-videt', !vidiCenu);
-      document.body.classList.toggle('ma-listu', !vidiCenu);
-    });
-    hlidac.observe(cena);
   }
 
   function fillVerdict(d) {
