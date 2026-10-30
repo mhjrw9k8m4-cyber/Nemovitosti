@@ -1380,7 +1380,12 @@
          pozemku zůstává: ten se neopírá o model, ale o seřazené ceny.
          Kontext se nezatajuje — medián i vzorek stojí o kus níž, jen bez
          částky a bez rozdílu v procentech. */
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">'
+      /* KDE PLATÍ, STOJÍ NA DRUHÉM ŘÁDKU. „Obvyklá cena v okolí do
+         25 km" se na telefonu zalomilo tak, že vedle velkého čísla
+         zbylo osamocené „25 km" (vyfoceno 30. 10.). Rozsah je navíc
+         upřesnění, ne jméno údaje — patří tedy pod něj, menším
+         písmem, jako druhý řádek popisku. */
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena<span class="mo-kde">' + kde + '</span></span><span class="mo-v">'
         + (mlciOCastce ? 'neuvádíme' : fmt(o.castka) + '\u00a0Kč') + '</span></div>' +
       // U pochybného rozdílu se nesmí jásat: tentýž údaj, jiné čtení.
       /* Podíl patří mezi důvody k tlumenému podání stejně jako pochybná

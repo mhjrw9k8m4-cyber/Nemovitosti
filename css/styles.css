@@ -7983,23 +7983,45 @@ body > footer{flex:none;}
    Poznámka pod tím je stejně důležitá: jsou to ceny NABÍDKOVÉ, ne za
    kolik se pozemky opravdu prodaly. Kdo si to splete, přeplatí.
    ------------------------------------------------------------------ */
-.md-odhad{margin:12px 0 12px; padding:12px 12px 12px; border-radius:var(--r-md);
+.md-odhad{margin:12px 0 12px; padding:16px; border-radius:var(--r-md);
   border:1px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.04);}
 .mo-radek{display:flex; align-items:baseline; justify-content:space-between; gap:12px;
-  padding:4px 0; font-size:14px; color:var(--text-ondeep-mute);}
+  padding:4px 0; font-size:14px; font-weight:600; letter-spacing:-0.01em;
+  color:var(--text-ondeep-mute);}
+/* ŘEZ A PROSTRKÁNÍ JAKO ZBYTEK WEBU. Karta stála na 400 a prostrkání
+   „normal", kdežto popisky i hodnoty jinde na webu mají 600 a −0.01em
+   (karta ve výpisu, dlaždice parametrů, ovladače nad výpisem). Při
+   témže písmu to vypadá jako jiné písmo — majitel: „chce to použít
+   stejný druh písma jako má celý web". Rodina byla Inter i předtím,
+   naměřeno; rozcházel se řez. */
 /* Obě čísla v kartě patří k sobě — jsou to dvě ceny, které se mají
    porovnat. Horní bylo v mono, dolní v patkovém, takže vedle sebe
    vypadala, jako by každé pocházelo z jiné tabulky. Rodina je jedna
    a rozdíl dělá velikost a tloušťka, ne typ písma. */
 .mo-radek .mo-v{font-family:var(--font-display); font-variant-numeric:tabular-nums;
-  white-space:nowrap; letter-spacing:-0.01em;}
+  white-space:nowrap; letter-spacing:-0.01em; font-weight:600;}
 .mo-radek.mo-hlavni{border-top:1px solid rgba(255,255,255,0.12); margin-top:4px; padding-top:8px;}
 .mo-radek.mo-hlavni .mo-k{color:var(--text-ondeep);}
-.mo-radek.mo-hlavni .mo-v{font-family:var(--font-display); font-size:20px; font-weight:700;
-  color:var(--text-ondeep); letter-spacing:-0.01em;}
-.mo-rozdil{margin-top:8px; font-size:14px; color:#9ADDB8;}
-.mo-rozdil b{color:#9ADDB8;}
-.mo-pozn{margin:8px 0 0; font-size:12px; line-height:1.5; color:var(--text-ondeep-mute);}
+/* HLAVNÍ ČÍSLO MÁ TÝŽ RECEPT JAKO CENA NA KARTĚ VE VÝPISU: 24/700
+   a −0.02em (§240). Dvacítka tu stála proti čtyřiadvacítce všude
+   jinde — právě ten rozdíl dělá dojem „jiného písma". */
+.mo-radek.mo-hlavni .mo-v{font-family:var(--font-display); font-size:24px; font-weight:700;
+  color:var(--text-ondeep); letter-spacing:-0.02em; line-height:1.1;}
+/* ZÁVĚR KARTY STOJÍ NA VLASTNÍ PLOŠE. „O 18 % níž, tedy zhruba
+   o 152 618 Kč" je to, kvůli čemu se celá karta čte — mezi dvěma
+   řádky čísel a odstavcem drobného textu se ale ztrácel jako další
+   věta. Tenký podklad v barvě toho sdělení z něj udělá závěr, aniž
+   by vznikla druhá karta v kartě: zaoblení --r-sm, žádný rám, žádný
+   stín. */
+.mo-rozdil{margin-top:12px; padding:8px 12px; border-radius:var(--r-sm);
+  background:rgba(154,221,184,0.10);
+  font-size:14px; font-weight:500; letter-spacing:-0.01em; color:#9ADDB8;}
+.mo-rozdil b{color:#9ADDB8; font-weight:700;}
+/* Poznámka 13 px, ne 12: dvanáctka je na tomhle webu stupeň POPISKU
+   (verzálky nad polem), ne stupeň věty. Tady jsou to tři řádky textu,
+   které se mají číst. Řádkování 1,6 — stupnice jde po desetinách
+   (hlídá scripts/test-typografie.mjs) a 1,55 na ní není. */
+.mo-pozn{margin:8px 0 0; font-size:13px; line-height:1.6; color:var(--text-ondeep-mute);}
 .mo-pozn b{color:var(--text-ondeep);}
 /* Světlá varianta odhadu — stránka pozemku má bílý papír, ne tmavý panel. */
 /* Karta s odhadem byla béžová na béžové — změřeno 1,02 : 1, tedy prakticky
@@ -8010,6 +8032,25 @@ body > footer{flex:none;}
 .pz-odhad .mo-radek.mo-hlavni{border-top-color:var(--line-strong);}
 .pz-odhad .mo-radek.mo-hlavni .mo-k, .pz-odhad .mo-radek.mo-hlavni .mo-v{color:var(--text);}
 .pz-odhad .mo-rozdil, .pz-odhad .mo-rozdil b{color:var(--accent-warm);}
+.pz-odhad .mo-rozdil{background:rgba(var(--accent-warm-rgb),0.10);}
+/* Světlá karta má víc místa než panel nad mapou, tak dýchá: 16 px
+   kolem dokola (stupnice), ne dvanáct. */
+.pz-odhad{padding:16px;}
+/* PRVNÍ ŘÁDEK JE POPISEK, NE DRUHÁ CENA. Nad hlavním číslem stojí
+   cena z inzerátu — a dokud měla týž stupeň jako ono, četly se obě
+   jako rovnocenné údaje a oko nevědělo, kde začít. Verzálky 12/600
+   s prostrkáním z tokenu jsou týž popisek, jaký má panel filtrů
+   i dlaždice parametrů; hodnota u něj zůstává čitelná (14/600). */
+.pz-odhad .mo-radek:not(.mo-hlavni) .mo-k{font-family:var(--font-popisek); font-size:12px;
+  font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase;
+  color:var(--popisek);}
+.pz-odhad .mo-radek:not(.mo-hlavni) .mo-v{font-size:14px; color:var(--popisek);}
+/* Hlavní řádek: popisek v barvě textu a číslo pod ním nesmí „viset"
+   — 12 px nad linkou a 4 px pod ní drží dvojici pohromadě. */
+.pz-odhad .mo-radek.mo-hlavni{margin-top:8px; padding-top:12px;}
+/* Dvouřádkový popisek: jméno údaje a pod ním, kde platí. */
+.mo-k .mo-kde{display:block; font-size:12px; font-weight:500; letter-spacing:0;
+  text-transform:none; opacity:0.75; margin-top:2px;}
 /* Pochybný rozdíl je varování, ne radostná zpráva — má barvu exekuce, ne mosaz.
    Obarvený ale zůstává jen ten ÚDAJ, ne celé vysvětlení pod ním: tři řádky
    syté červené pod sebou už nejsou důraz, ale křik, a oko pak nemá kam

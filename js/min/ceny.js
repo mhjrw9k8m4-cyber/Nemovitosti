@@ -572,7 +572,7 @@
     return '<div class="md-odhad' + (volby.trida || '') + '">' +
       '<div class="mo-radek"><span class="mo-k">' + coJe + '</span><span class="mo-v">' + fmt(d.price) + ' Kč</span></div>' +
 
-      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena ' + kde + '</span><span class="mo-v">'
+      '<div class="mo-radek mo-hlavni"><span class="mo-k">Obvyklá cena<span class="mo-kde">' + kde + '</span></span><span class="mo-v">'
         + (mlciOCastce ? 'neuvádíme' : fmt(o.castka) + '\u00a0Kč') + '</span></div>' +
 
       (mlciOCastce ? '' :

@@ -15897,3 +15897,49 @@ nesmí stát NIC připnutého přes půl šířky (kulatý návrat nahoru je
 vyjmutý). Měří se to geometrií, ne hledáním třídy — ať se to nevrátí
 pod jiným jménem. Prokázáno sabotáží: vložená karta 366×64 u spodní
 hrany kontrolu shodí.
+
+## §246 Karta s odhadem ceny: týž řez písma jako zbytek webu
+
+**Co o tom řekl majitel.** „Tyto texty v inzerátech jsou super, jen to
+chce použít stejný druh písma jako má celý web. A chce to trochu
+vylepšit ten vizuál té karty."
+
+**Nejdřív měření, protože dojem klamal.** Rodina písma se nelišila —
+celá karta běžela v Interu, jako zbytek webu (naměřeno v prohlížeči:
+`Inter` na všech sedmi místech karty). Co se rozcházelo, byl ŘEZ
+a stupeň:
+
+| | karta před | zbytek webu |
+|---|---|---|
+| popisek řádku | 14 px / **400** / prostrkání normal | 14 px / 600 / −0.01em |
+| hlavní číslo | 20 px / 700 | **24** px / 700 / −0.02em (§240) |
+| poznámka pod kartou | 12 px, řádkování 1,5 | 13 px je stupeň věty, 12 je stupeň popisku |
+
+Při témže písmu dělá ten rozdíl dojem jiného písma — slabší řez a
+rozvolněné prostrkání vypadají vedle zbytku stránky jako jiná rodina.
+
+**Srovnáno na recepty, které web už má:** popisky 600/−0.01em, hlavní
+číslo 24/700/−0.02em (týž recept jako cena na kartě ve výpisu),
+poznámka 13 px s řádkováním 1,6 (stupnice jde po desetinách, hlídá
+`scripts/test-typografie.mjs` — 1,55 na ní není).
+
+**A vizuál karty:**
+
+1. **První řádek je popisek, ne druhá cena.** „Nabídková cena" má teď
+   verzálky 12/600 s prostrkáním z tokenu — týž popisek, jaký nese
+   panel filtrů i dlaždice parametrů. Oko tím ví, kde začít: nahoře
+   je údaj z inzerátu, pod ním to hlavní.
+2. **Závěr stojí na vlastní ploše.** „O 18 % níž, tedy zhruba
+   o 152 618 Kč" je to, kvůli čemu se karta čte, a ztrácelo se mezi
+   čísly a odstavcem. Má tenký podklad v barvě toho sdělení
+   (`rgba(--accent-warm-rgb, 0.10)`, zaoblení `--r-sm`, bez rámu
+   a bez stínu — aby nevznikla karta v kartě).
+3. **Kde ta cena platí, stojí na druhém řádku popisku.** „Obvyklá cena
+   v okolí do 25 km" se na telefonu zalomilo tak, že vedle velkého
+   čísla zbylo osamocené „25 km". Rozsah je upřesnění, ne jméno údaje.
+4. **Karta dýchá**: odsazení 16 px místo 12 (stupnice).
+
+**Zkoušky.** Beze změny prošly `test-pismo`, `test-typografie`,
+`test-odstupy`, `test-kontrast`, `test-deska`, `test-zaobleni`,
+`test-barvy`, `test-mrtve-styly` i `test-mrtva-jmena` — nové hodnoty
+jsou na stupnicích a nový podklad se nechová jako druhá deska.
