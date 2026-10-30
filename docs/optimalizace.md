@@ -16314,3 +16314,25 @@ nekreslí. Ptá se proto na krajní tlačítka.
 `test-uvod` (68), `test-rozvrzeni` (190), `test-prvni-obrazovka` (22),
 `test-dotyk`, `test-u-hrany`, `test-odstupy`, `test-kontrast`, `test-deska`,
 `test-mrtve-styly`, `test-mrtva-jmena`, `test-vypadky`.
+
+
+## §253 Řazení je stejně velké jako „Procházet po jednom"
+
+**Zadání (30. 10.):** „To řazení udělej stejně velké jako pozemky po
+jednom."
+
+Ovladač řazení měl 222 px z 358 a vedle něj stál počet. Teď jsou to dva
+terče přes celý řádek na opačných koncích toho bloku — **358×44 px oba** —
+a liší se jen barvou, protože „Procházet po jednom" je akce a řazení je
+nastavení. Počet („1 918 na mapě") se tím odsunul pod ovladač.
+
+**Šipka se posunula k pravému kraji.** Nalepená za hodnotou by v řádku
+širokém 358 px visela uprostřed prázdna.
+
+**Nová kontrola v `test-ovladani-vypisu`:** „a je stejně velké jako
+„Procházet po jednom"" (šířka i výška). Sabotáží ověřeno — po vrácení
+ovladače na obsahovou šířku padne na 390 i 320 px.
+
+**Zkoušky.** Rychlá sada 133/133, `test-ovladani-vypisu` (36), `test-uvod`
+(68), `test-rozvrzeni` (190), `test-prvni-obrazovka` (22), `test-dotyk`,
+`test-u-hrany`, `test-odstupy`, `test-kontrast`.

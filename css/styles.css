@@ -3009,7 +3009,10 @@ h1 em{ color:var(--znacka-svetla);
    Vlastní pravidlo má proto, aby se nedala omylem ztišit: je to jediný
    text nad výpisem, který říká, podle čeho se to řadí. */
 .mc-razeni-v{color:var(--text); white-space:nowrap;}
-.mc-razeni-sip{width:16px; height:16px; stroke-width:2.25; flex:none; color:var(--muted);}
+/* Šipka u pravého kraje, ne hned za hodnotou: ovladač bere na telefonu
+   celý řádek (viz blok do 560 px) a šipka nalepená na text by v tom
+   řádku visela uprostřed prázdna. */
+.mc-razeni-sip{width:16px; height:16px; stroke-width:2.25; flex:none; color:var(--muted); margin-left:auto;}
 /* Dlouhý popis nadpisu („Doporučené příležitosti") se na telefonu
    schovává v bloku do 560 px; zbyde samotný počet „1 930 na mapě".
    Počet se přitom nikam neopisuje — viz komentář v js/main.js. */
@@ -7542,6 +7545,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .ms-vysledky #mc-rychly{grid-column:1 / -1; order:-1;}
   /* 3. dole: řazení i počet. `order` o stupeň výš než všechno ostatní. */
   .ms-vysledky > .map-count{grid-column:1 / -1; order:9; margin-bottom:0;}
+  /* A ŘAZENÍ JE STEJNĚ VELKÉ JAKO „PROCHÁZET PO JEDNOM" — majitel
+     30. 10.: „to řazení udělej stejně velké jako pozemky po jednom."
+     Obojí je od téhle chvíle terč přes celý řádek (358 px na telefonu
+     390 px) a stejně vysoký (44 px); liší se jen barvou, protože
+     „Procházet po jednom" je akce a řazení je nastavení.
+     Počet („1 897 na mapě") se tím odsune pod něj — .map-count je
+     zalamovaná řada, takže mu stačí říct, že bere celou šířku. */
+  .mc-razeni{flex:1 1 100%;}
 
   /* STEJNÁ POLÍČKA, NE ČTYŘI RŮZNĚ ŠIROKÉ. Nad výpisem stojí dvě
      dvojice ovladačů pod sebou — „Uložené / Doporučené" a „Procházet

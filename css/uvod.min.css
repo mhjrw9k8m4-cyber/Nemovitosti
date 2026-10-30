@@ -522,7 +522,7 @@ to{opacity:1;transform:none}
 .mc-razeni>.ik{width:18px;height:18px;stroke-width:2;flex:none;color:var(--znacka-svetla)}
 .mc-razeni-k{font-family:var(--font-popisek);font-size:12px;font-weight:600;color:var(--popisek);letter-spacing:var(--popisek-proklad);text-transform:uppercase}
 .mc-razeni-v{color:var(--text);white-space:nowrap}
-.mc-razeni-sip{width:16px;height:16px;stroke-width:2.25;flex:none;color:var(--muted)}
+.mc-razeni-sip{width:16px;height:16px;stroke-width:2.25;flex:none;color:var(--muted);margin-left:auto}
 .deals-sec[hidden]{display:none}
 .deals-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;margin-top:24px}
 .deals-grid:has(>:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1292,6 +1292,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .ms-vysledky>.msv-ovladani,.map-side .ms-vysledky>.mc-akce,.ms-vysledky>.mc-akce{display:contents}
 .ms-vysledky #mc-rychly{grid-column:1 / -1;order:-1}
 .ms-vysledky>.map-count{grid-column:1 / -1;order:9;margin-bottom:0}
+.mc-razeni{flex:1 1 100%}
 .map-side .mc-akce{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;flex:1 1 100%}
 .ms-vysledky .msv-ovladani>*:not([hidden]),.map-side .mc-akce>*:not([hidden]),.ms-vysledky>.mc-akce>*:not([hidden]){width:100%;min-width:0}
 .ms-vysledky>.mc-akce>.msv-siroky{grid-column:1 / -1}

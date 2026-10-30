@@ -196,6 +196,13 @@ try {
     pravda(`${sirka} px: řazení („Doporučené") je úplně dole`,
       v.razeni.y > v.ulozene.y && v.razeni.y > v.vyvoz.y,
       `řazení ${v.razeni.y} px, dvojice na ${v.ulozene.y} px`);
+    /* Majitel 30. 10.: „to řazení udělej stejně velké jako pozemky po
+       jednom." Jsou to dva terče přes celý řádek na opačných koncích
+       toho bloku; kdyby se jeden z nich zúžil, přestal by ten blok
+       držet pohromadě. */
+    pravda(`${sirka} px: a je stejně velké jako „Procházet po jednom"`,
+      stejne(v.razeni, v.rychly) && Math.abs(v.razeni.h - v.rychly.h) <= 1,
+      `řazení ${v.razeni.w}×${v.razeni.h} px, procházet ${v.rychly.w}×${v.rychly.h} px`);
 
     /* Nápis se nesmí vysypat z rámečku — to byl důvod, proč se pod
        360 px skládá do jednoho sloupce. */
