@@ -605,6 +605,9 @@ jobs:
       - name: Offline režim (service worker, bez signálu i bez cizích serverů)
         run: node scripts/test-offline.mjs
 
+      - name: Otevřená karta se dozví o nové verzi (a netočí se dokola)
+        run: node scripts/test-nova-verze.mjs
+
 
       - name: Letecký snímek pozemku (měřítko a poctivost)
         run: node scripts/test-snimek.mjs

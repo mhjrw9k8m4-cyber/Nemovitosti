@@ -16188,3 +16188,61 @@ neškodné, ale je to dokumentace, která lže, a proto to stojí tady.
 
 **Zkoušky.** `test-offline` (17), `test-pamet` (64), `test-konzole` (12),
 rychlá sada 133/133.
+
+
+## §251 Otevřená karta se dozví o nové verzi sama
+
+**Co na to řekl majitel:** „To není normální." Má pravdu. §250 opravilo
+jednu polovinu příčiny — ukládání v prohlížeči — a nechalo na něm, aby
+stránku natáhl ručně. To není oprava, to je návod.
+
+**Druhá polovina.** Kdo má stránku OTEVŘENOU a jen se k ní vrátí z jiné
+aplikace, žádné nové načtení nedělá. Prohlížeč se po `sw.js` sám ptá při
+navigaci a zhruba jednou za den — v odložené kartě tedy prakticky nikdy.
+Přesně tohle majitel celé dopoledne dělal: přepnul do Safari, podíval se
+na kartu, vyfotil ji.
+
+**Co se děje teď** (`js/offline.js`, u funkce `hlidejNovouVerzi`):
+
+1. jakmile je karta zase vidět, zeptá se stránka na novou podobu `sw.js`
+   (`registration.update()`) — jeden dotaz, většinou `304`;
+2. když se opravdu vymění obsluha (`sw.js` dělá `skipWaiting` a
+   `clients.claim`, takže se vymění hned), karta se **jednou** načte znovu.
+
+**Tři události, ne jedna.** „Člověk se vrátil ke kartě" hlásí každý systém
+jinak: `visibilitychange` při přepnutí mezi kartami, `pageshow` při návratu
+z paměti zpátky/vpřed (tudy chodí iOS Safari, když se vrátíte z jiné
+aplikace) a `focus` při návratu do okna. Poslouchá se všechno a sejde se to
+v jednom dotazu, nejvýš jednou za půl minuty.
+
+**Dvě pojistky.**
+· Překreslení nejvýš jednou za život stránky — web, který se přelévá pořád
+dokola, je horší než stará stránka.
+· Nic se neděje při PRVNÍ instalaci (tehdy `controllerchange` přijde taky,
+ale stránka je už ta nejnovější, jakou prohlížeč má).
+
+**Nový hlídač `scripts/test-nova-verze.mjs`** (v CI v úloze „v prohlížeči").
+Běží proti vlastnímu serveru, který posílá **tutéž hlavičku jako GitHub
+Pages** (`Cache-Control: max-age=600`), a „nasazení" vyrábí tak, že pod
+běžící kartou změní, co server vydává. Čtyři kontroly: obsluha řídí kartu,
+karta drží svou verzi, po návratu se sama překreslí na novou — a dokud nová
+verze není, nepřekresluje se.
+
+**Sabotáží prokázané obě poloviny:**
+
+| Co jsem rozbil | Co to ohlásilo |
+|---|---|
+| hlídání nové verze se nezapne | „po návratu ke kartě se stránka sama překreslí na novou verzi — karta zůstala na STARA" |
+| překreslení při každém návratu (bez pojistky) | „a dokud nová verze není, karta se nepřekresluje — načtení navíc: 1" |
+
+**Dvě věci, které mě ten hlídač naučil o sobě samém.**
+· `waitForFunction` vyhodnocuje svůj výraz UVNITŘ karty — jenže právě ta se
+pod ním překresluje, takže mu zmizí kontext a ohlásí chybu místo úspěchu.
+Řetěz proběhl správně a zkouška přesto hlásila „karta zůstala na STARA".
+Čeká se proto na načtení zvenčí.
+· Druhé nasazení kartu překreslí ZNOVU, a je to správně: pojistka proti
+smyčce platí na jeden život stránky a po každém překreslení začíná život
+nový. Nebezpečná je opačná chyba — překreslovat, když se nic nezměnilo.
+
+**Zkoušky.** `test-nova-verze` (4), `test-offline` (17), `test-konzole`
+(12), `test-pamet` (64), rychlá sada 133/133.
