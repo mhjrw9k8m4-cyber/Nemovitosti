@@ -281,6 +281,28 @@ try {
     pravda(`${sirka} px: nápis v poli hledání se vejde celý`, z.napis > 0 && z.napis <= z.vnitrni,
       `nápis ${z.napis} px, místo ${z.vnitrni} px`);
 
+    /* 3b. PŘELIV, KTERÝ JE V CSS, MUSÍ BÝT I NA OBRAZOVCE.
+       Tohle je hlídač jedné konkrétní, draze zaplacené chyby. Pás
+       s hledáním dostal 30. 10. přeliv hloubky a já ho třikrát za
+       sebou zesiloval (0,08 → 0,13 → 0,30), protože majitel po
+       každém kole napsal „vypadá to úplně stejně". Měl pokaždé
+       doslova pravdu: o dva a půl tisíce řádků níž stálo
+       `.map-controls-panel{…background:var(--pas-plocha)}` a zkratka
+       `background` přepisuje i `background-image` na `none`. Přeliv
+       se tedy nevykreslil ANI JEDNOU a já pořád měnil hodnotu, kterou
+       prohlížeč zahazoval. Číst jen stylopis na to nestačí — tam ten
+       přeliv celou dobu BYL. Měří se proto vypočtený styl v prohlížeči. */
+    const prelivy = await p.evaluate(() => ['.map-controls-panel', '.mc-rychly'].map((sel) => {
+      const e = document.querySelector(sel);
+      return { sel, je: !!e, obraz: e ? (getComputedStyle(e).backgroundImage || 'none') : 'nenašel se' };
+    }));
+    for (const x of prelivy) {
+      pravda(`${sirka} px: přeliv na „${x.sel}" se opravdu vykresluje`,
+        x.je && /gradient\(/.test(x.obraz),
+        x.je ? `background-image je „${x.obraz.slice(0, 60)}" — přebila ho zkratka background někde níž v souboru`
+             : 'prvek se na stránce nenašel');
+    }
+
     /* 4. PŘEPÍNAČ SEZNAM/MAPA JE JEDEN OVLADAČ SE DVĚMA POLOHAMI.
        Od 30. 10. jezdí po zapuštěné dráze jezdec (`.mv-toggle::before`)
        a zapnutá polovina si TOTÉŽ pole kreslí i sama pod sebe — kvůli

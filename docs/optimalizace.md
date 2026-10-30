@@ -16621,3 +16621,52 @@ k barvám.
 `test-ovladani-vypisu` (48), `test-uvod` (68), `test-rozvrzeni` (190),
 `test-prvni-obrazovka`, `test-barvy`, `test-zaobleni`, `test-prechody`,
 `test-mrtve-styly`, `test-jeden-styl` (33) — bez chyby.
+
+## §260 Tři kola přelivu, který prohlížeč pokaždé zahodil
+
+**Zadání (30. 10., potřetí):** „Kámo, haló, můžeš to už udělat
+a nastavit ty změny? Vypadá to úplně stejně."
+
+**Měl pravdu doslova — a já to měl najít po prvním kole.** Pás
+s hledáním dostal přeliv hloubky v §258 (alfa 0,08), v §259 jsem ho
+zesílil na 0,13 a potřetí na 0,30. **Nevykreslil se ani jednou.** Dva
+a půl tisíce řádků pod základním pravidlem stojí v `@media` bloku pro
+telefon:
+
+```
+.map-controls-panel{order:0; border-right:0; border-bottom:0;
+  background:var(--pas-plocha);}
+```
+
+Zkratka `background` nepřepisuje jen barvu — resetuje celou skupinu
+včetně `background-image`. Přeliv tedy prohlížeč pokaždé zahodil
+a já pořád zvedal číslo, které se nikam nedostalo. Opraveno na
+`background-color`.
+
+**Proč mě to nezarazilo dřív, a to je ta nepříjemná část.** Mříž
+(`::before`) a stín (`box-shadow`) se nasadily, protože bydlí jinde —
+takže na snímcích *nějaká* změna vidět byla a já ji vzal jako důkaz,
+že se vše projevilo. Ověřoval jsem navíc nasazení (Pages 16:22 UTC
+proti majitelovu snímku v 17:15), což vyloučilo starou verzi — ale
+nevyloučilo to, co se opravdu dělo. **Hledal jsem chybu v doručení,
+ne v tom, co jsem napsal.**
+
+**Hlídač.** Do `test-ovladani-vypisu` přibylo měření, že přelivy na
+`.map-controls-panel` a `.mc-rychly` opravdu **vycházejí ve vypočteném
+stylu v prohlížeči**, ne jen ve stylopisu. Čtení CSS na to nestačilo —
+tam ten přeliv celou dobu byl. Prokázáno sabotáží: s vrácenou zkratkou
+`background` hlásí `✕ přeliv na „.map-controls-panel" se opravdu
+vykresluje — background-image je „none"` na obou šířkách.
+
+**Jak to teď vypadá.** Pás je zelený, ne nazelenalý: značková zeleň
+s alfou 0,30 nahoře → 0,12 dole, tedy zhruba #AFC2B8 → #D6E2DB. Pořád
+žádná nová barva. Bílé pole hledání na něm vynikne víc než na skoro
+bílé a přepínač má vlastní světlou dráhu, takže na pásu neleží ani
+jeden text přímo — kontrast se tím nehýbe (`test-kontrast` projde).
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu`
+(52), `test-kontrast`, `test-okraje` (143 prvků), `test-soustava` (15),
+`test-uvod` (68), `test-prvni-obrazovka`, `test-rozvrzeni` (190),
+`test-barvy`, `test-deska`, `test-najeti`, `test-dotyk`,
+`test-naseptavac` (127), `test-vrstveni`, `test-jeden-styl` (33),
+`test-hierarchie` (21) — bez chyby.

@@ -2211,8 +2211,21 @@ h1 em{ color:var(--znacka-svetla);
    Pseudoprvek má `inset:0`, takže se do pásu vejde sám. */
 .map-controls-panel{grid-column:1 / -1; grid-row:1; position:relative;
   background-color:var(--pas-plocha); color:var(--pas-text);
+  /* TŘETÍ KOLO, A TENTOKRÁT ZNATELNĚ. Napoprvé alfa 0,08, napodruhé
+     0,13 — majitel obojí okomentoval „vypadá to úplně stejně" a měl
+     pravdu: osm setin zeleně přes #EDF3EF je rozdíl, který se změří,
+     ale neuvidí. Nasazení přitom proběhlo (Pages 16:22 UTC, jeho
+     snímek 17:15), takže to nebyla stará verze, ale slabá změna.
+     Pás je proto ZELENÝ, ne nazelenalý: 0,30 nahoře → 0,12 dole, což
+     na #EDF3EF dělá zhruba #AFC2B8 → #D6E2DB. Pořád to není nová
+     barva — je to značková zeleň s alfou — ale je vidět na první
+     pohled, a hlavně dělá z vršku stránky barevné místo, ne třetí
+     bílý obdélník pod sebou.
+     Co to NEROZBÍJÍ: pole hledání je bílé (na zeleni vynikne víc než
+     na skoro bílé), přepínač má vlastní světlou dráhu, takže na pásu
+     neleží ani jeden text přímo. */
   background-image:linear-gradient(to bottom,
-    rgba(var(--znacka-hluboka-rgb),0.13), rgba(var(--znacka-hluboka-rgb),0) 82%);
+    rgba(var(--znacka-hluboka-rgb),0.30), rgba(var(--znacka-hluboka-rgb),0.12));
   /* A pás je nad obsahem, ne vedle něj: stín `--e1` dolů. Bez něj
      končil hranou barvy, která vypadala jako chyba vykreslení. */
   box-shadow:var(--e1);
@@ -2230,9 +2243,9 @@ h1 em{ color:var(--znacka-svetla);
      je nechá ubývat do všech stran najednou, takže nikde nekončí
      hranou. Je to týž tvar masky jako u mříže na sekcích
      (`.s-mrizka::before`). */
-  opacity:0.7;
-  -webkit-mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 78%);
-          mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 78%);}
+  opacity:0.55;
+  -webkit-mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 86%);
+          mask-image:radial-gradient(ellipse 130% 170% at 50% -25%, #000 15%, transparent 86%);}
 /* Ovladače leží NAD texturou. Bez toho by mříž kreslila přes bílé pole
    hledání — pseudoprvek je v pořadí malování za pozadím rodiče, ale
    před nepozicovanými potomky. */
@@ -4695,8 +4708,18 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      hlavy stránky (viz „HLEDÁNÍ JE SOUČÁST HLAVY" výš). Tohle pravidlo
      mu tady podklad přepisovalo na --plocha-vypis, takže na telefonu
      deska u hledání končila a pruhování se vrátilo. */
+  /* ZKRATKA `background:` TADY TŘIKRÁT ZAHODILA PŘELIV.
+     Tohle pravidlo stojí v souboru ZA základním `.map-controls-panel`
+     a zkratka `background` přepisuje i `background-image` na `none`.
+     Přeliv hloubky na pásu se proto 30. 10. nevykreslil ani jednou —
+     ani s alfou 0,08, ani 0,13, ani 0,30. Majitel po každém kole
+     napsal „vypadá to úplně stejně" a měl pokaždé doslova pravdu:
+     měnil jsem hodnotu, kterou prohlížeč zahodil. (Mříž a stín
+     přitom nasadily, protože bydlí jinde — v `::before` a v
+     `box-shadow` — což mě utvrdilo, že se změna projevila.)
+     Píše se tu proto `background-color`, ne `background`. */
   .map-controls-panel{order:0; border-right:0; border-bottom:0;
-    background:var(--pas-plocha);}
+    background-color:var(--pas-plocha);}
   /* A horní linka desky taky pryč: kreslila se na y=105, tedy přesně
      doprostřed toho prázdného pásma pod hlavičkou, a byla třetí
      vlasovou linkou v řadě. Pravidlo o kus výš ji sice ruší, jenže
