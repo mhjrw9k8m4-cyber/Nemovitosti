@@ -159,7 +159,12 @@ const mrizky = bloky.filter((b) =>
    plocha, má to být rozhodnutí: zvedni číslo a dole ověř, že nová plocha
    bere rozteč i barvu z palety. Kdyby tu stálo „aspoň", přibyla by plocha
    s opsanými čísly a test by mlčel. */
-/* ŠEST OD 30. 10. Přibyl pás s hledáním na úvodní stránce
+/* ŠEST, I KDYŽ PLOCH JE SEDM. Hlavička šuplíku (.nav-hlava::before)
+   dostala 30. 10. večer touž mříž jako pás s hledáním — a je zapsaná
+   v TOMTÉŽ pravidle, ne ve vlastním. Počítají se recepty, ne plochy;
+   kdyby si hlavička zápis opsala, přibyl by sedmý blok a tahle
+   kontrola by na to upozornila. Přesně proto tu je.
+   ŠEST OD 30. 10. Přibyl pás s hledáním na úvodní stránce
    (.map-controls-panel::before) — majitel na něj poslal snímek se
    slovy „je to takové suché". Mřížka tam patří i významem: pod
    hledáním se hledají parcely a parcely jsou mříž.
@@ -170,8 +175,8 @@ const mrizky = bloky.filter((b) =>
    byl .hero-band::before, tedy pás pod uvítacím blokem titulní
    strany; ten blok je pryč a .hero-band nezůstalo v žádném HTML ani
    skriptu. Obě odebrány záměrně. */
-pravda('test našel všech šest ploch s mřížkovou texturou', mrizky.length === 6,
-  `nalezeno ${mrizky.length}, čekám 6 — pokud texturu dostala další plocha, `
+pravda('test našel všech šest pravidel s mřížkovou texturou', mrizky.length === 6,
+  `nalezeno ${mrizky.length}, čekám 6 — pokud texturu dostalo další pravidlo, `
   + 'zvedni číslo v testu:\n      '
   + mrizky.map((b) => b.sel.trim().slice(0, 34)).join(' | '));
 

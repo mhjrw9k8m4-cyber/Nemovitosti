@@ -16704,3 +16704,52 @@ protože příště to bude vypadat jako chyba nástroje, a není.
 v tomhle repozitáři neměl co dělat. Je to záznam poruchy, který sem
 podle vlastních pravidel projektu patří tak jako tak — jen je napsaný
 teď, a ne za hodinu.
+
+## §262 Šuplík: 450 px bílého nic, které jsem si tam udělal sám
+
+**Zadání (30. 10. večer):** „Najdi si předlohu a to menu vyšperkuj."
+Ke snímku nabídky na telefonu.
+
+**Co na tom snímku bylo.** Dvě položky nahoře („Hledat na mapě", „Ceny
+pozemků"), blok účtu přilepený ke dnu — a mezi nimi **450 px bílého
+nic**. K tomu plochý seznam dělený linkami přes celou šířku.
+
+**Tu díru jsem tam udělal já, a ještě jsem ji obhajoval.** Když majitel
+zrušil tři odkazy, které jsem do nabídky přidal (§249), zbyly dvě
+položky. Volné místo jsem „vyplnil rozvržením": účtu jsem dal
+`margin-top:auto`, aby držel u dna, a napsal si k tomu do stylopisu,
+že mezera mezi nimi je *„oddělení dvou světů, ne díra"*. Na obrazovce
+to díra byla. Dvě položky, blok dole a mezi tím nic nevypadá jako
+záměr, ale jako chyba načtení.
+
+**Co se s tím dělá bez přidávání položek.** Neteče ke dnu nic: obsah
+jde shora dolů za sebou a volné místo zůstane v jednom kuse **úplně
+dole**, kde se čte jako „seznam skončil". Mezitímní pokus přendat
+`margin-top:auto` jen na poznámku o datech dal 215 px prázdna mezi
+poslední deskou a tou poznámkou — touž díru o kus níž. Naměřeno,
+zahozeno. Naměřeno teď: obsah končí na 609 px z 844 a **největší
+mezera mezi dvěma prvky je 16 px**.
+
+**Předloha je ta, kterou web používá všude jinde.** Zapuštěný podklad
+a na něm bílé desky: zaoblení `--r-ovladani`, linka `--line`, stín
+`--e1` — stejně jako karty ve výpisu, dlaždice vrstev v mapě
+i ovladače nad seznamem. Skupina účtu je jedna deska s několika řádky
+(`summary` je její hlava, odkazy uvnitř zůstávají ploché a dělí je
+vlasová linka) — deska v desce by byla rám v rámu. Hlavička šuplíku
+dostala týž přeliv i mříž jako pás s hledáním, takže nabídka a stránka
+za ní mluví stejně. Počet u „Hledat na mapě" nese značkový tón místo
+šedi.
+
+**Jedno pravidlo, ne dvě kopie.** Mříž v hlavičce je zapsaná v tomtéž
+pravidle jako mříž pásu (`.map-controls-panel::before, .nav-hlava::before`).
+Napoprvé jsem ji opsal zvlášť a `test-jeden-styl` to okamžitě ohlásil —
+počítá totiž recepty, ne plochy. A `test-mrtve-styly` zase ohlásil, že
+jsem celý blok napsal jako přebíjející přídavek pod původní pravidla
+místo toho, abych původní pravidla opravil. Obojí přepsáno.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-menu` (32),
+`test-mrtve-styly`, `test-jeden-styl` (33), `test-soustava` (15),
+`test-hlavicka` (91), `test-dotyk`, `test-kontrast`, `test-okraje`
+(143 prvků), `test-zaobleni`, `test-deska`, `test-barvy`,
+`test-mrtva-jmena`, `test-uvod` (68), `test-rozvrzeni` (190),
+`test-vrstveni`, `test-prechody` — bez chyby.
