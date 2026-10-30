@@ -4916,9 +4916,10 @@
 
   var ADRESA_PRI_OTEVRENI = (function () { try { return location.hash || ''; } catch (e) { return ''; } })();
 
-  function obnovZAdresy() {
-    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(ADRESA_PRI_OTEVRENI)) return false;
-    var st = PKOdkaz.cti(ADRESA_PRI_OTEVRENI);
+  function obnovZAdresy(adresa) {
+    var zdroj = adresa || ADRESA_PRI_OTEVRENI;
+    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(zdroj)) return false;
+    var st = PKOdkaz.cti(zdroj);
     var neco = false;
 
     adresaDrzi = true;
@@ -4989,6 +4990,14 @@
     if (neco) { try { if (typeof postavVybaveni === 'function') postavVybaveni(); renderList(); } catch (e) {} }
     return neco;
   }
+
+  window.addEventListener('hashchange', function () {
+    if (adresaDrzi) return;
+    try {
+      if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+      obnovZAdresy(location.hash);
+    } catch (e) {}
+  });
   function openFromUrl() {
 
     if (/[?&](q|druh|maxc|mina|zlevnene)=/.test(location.search)) {

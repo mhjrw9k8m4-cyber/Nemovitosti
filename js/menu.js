@@ -65,6 +65,14 @@
     for (var i = 0; i < odkazy.length; i++) {
       var h = odkazy[i].getAttribute('href') || '';
       if (h.charAt(0) === '#') continue;                    // kotva řeší scroll-spy
+      /* ODKAZ NA STAV NENÍ ODKAZ NA STRÁNKU. „Exekuce" v nabídce vede
+         na index.html#t=exekuce, tedy na TUTÉŽ stránku s nastaveným
+         filtrem. Bez téhle podmínky se na úvodní stránce rozsvítila
+         jako „tady jsem" vedle „Hledat na mapě" — dvě svítící záložky
+         naráz (vyfoceno 30. 10.). Kotva s rovnítkem je stav, kotva bez
+         něj je místo v textu. */
+      var kotva = h.indexOf('#') >= 0 ? h.slice(h.indexOf('#') + 1) : '';
+      if (kotva.indexOf('=') >= 0) continue;
       var cil = h.split('#')[0].split('?')[0].split('/').pop();
       if (cil && cil === oznac) odkazy[i].setAttribute('aria-current', 'page');
     }
@@ -111,7 +119,14 @@
     zavrit.className = 'nav-zavrit';
     zavrit.setAttribute('aria-label', 'Zavřít nabídku');
     zavrit.innerHTML = KRIZEK_SVG;
-    nav.insertBefore(zavrit, nav.firstChild);
+    /* KŘÍŽEK PATŘÍ DO HLAVIČKY ŠUPLÍKU, vedle značky. Dřív visel sám
+       na vlastním řádku nad vším ostatním a bral 48 px — na snímku
+       z telefonu z toho byl prázdný pruh s křížkem v rohu. Hlavička
+       `.nav-hlava` přišla 30. 10.; když ji stránka ještě nemá (stará
+       podoba v mezipaměti), vrátí se křížek na začátek panelu. */
+    var hlava = nav.querySelector('.nav-hlava');
+    if (hlava) hlava.appendChild(zavrit);
+    else nav.insertBefore(zavrit, nav.firstChild);
 
     function otevreno() { return d.body.classList.contains('nav-otevreno'); }
     function prepni(na) {

@@ -15787,3 +15787,65 @@ odstup od pravé hrany) — prokázáno sabotáží: zelená plocha vrácená na
 bílou shodí kontrolu „pozná se to i podle plochy". `span.hu-in` je
 v tabulce výjimek „schované na obou šířkách" s odůvodněním, protože se
 kreslí jedině přihlášenému, a právě to ten nový oddíl měří.
+
+## §244 Šuplík nabídky: značka, oddíly, živá čísla
+
+**Co o tom řekl majitel.** Vyfotil otevřenou nabídku: „tuhle část
+kompletně předělej, dodej tomu život, je to suché."
+
+**Změřeno na jeho snímku** (390×844): obsah nabídky končil na 525 px,
+tedy **319 px panelu bylo prázdných**, a křížek visel sám na vlastním
+řádku nad vším ostatním. Šest holých slov pod sebou a nic, co by
+řeklo, co za nimi je.
+
+**Co v ní je teď.**
+
+| | |
+|---|---|
+| hlavička | značka (terč 40 px) a v ní vpravo křížek — křížek už nemá vlastní řádek |
+| akce | „Přidat pozemek" hned pod ní, jako dřív |
+| oddíl | popisek „CO JE NA TRHU" verzálkami |
+| cesty | Hledat na mapě **1 897**, Nové za týden **57**, Dražby **33**, Exekuce **37**, Ceny pozemků |
+| účet | „Můj profil" se stavem (e-mail, nebo „Nepřihlášeno") a tři řádky pod ním |
+| patička | „Data z veřejných zdrojů, naposledy 30. 10." |
+
+**Čísla jsou ze skutečných dat, ne od oka.** Skládá je
+`scripts/hlavicka.mjs` při sestavení z `data/mapa.json` — z téhož řezu,
+který kreslí mapa (bez duplicit a bez dražeb po termínu). Stránka kvůli
+nim nestahuje ani bajt navíc a čerstvé jsou podle posledního běhu
+robota. „Nové" je za TÝDEN, ne za den: za jediný den přibyde i nula a
+odkaz by sliboval prázdnou stránku.
+
+**Vrátily se tři cesty, které z webu vypadly.** Nové na trhu, dražby a
+exekuce zmizely 29. 10. s řadou pilulek nad výpisem („tuhle řadu dej
+úplně pryč") a od té doby na ně z úvodu nevedlo nic. V šuplíku jsou
+zpátky — jako nabídky s počtem, ne jako příručka: rádci ani rozcestníky
+se nevrátily. Na monitoru se nekreslí (třída `.nav-mobil`), tam lišta
+zůstává dvouodkazová.
+
+**Dvě vady, které se při tom našly a opravily:**
+
+1. **„Exekuce" se tvářila jako místo, kde právě jsem.** Odkaz vede na
+   `index.html#t=exekuce`, a označovač stránky v `js/menu.js` z adresy
+   utíná hash — takže na úvodní stránce svítily dvě záložky naráz.
+   Kotva s rovnítkem je STAV, kotva bez něj je místo v textu; označuje
+   se jen to druhé.
+2. **Odkaz na stav nedělal na otevřené stránce nic.** Stav se bral jen
+   z adresy při startu, takže kdo už na úvodní stránce byl, tomu se jen
+   změnil hash (naměřeno: „#t=exekuce", vybraný druh pořád „Vše", počet
+   1 897 beze změny). `js/main.js` teď na `hashchange` stav obnoví —
+   po opravě: druh „Exekuce", počet **37**. Vlastní zápis adresy sem
+   nepřijde, ten jde přes `history.replaceState`.
+
+**Ikony ze sady, ne z CSS.** Řádky nabídky měly ikonu jako
+`background-image` v `::before`, tedy tvar opsaný do stylopisu podruhé.
+Teď nesou `<svg><use>` ze sady (`scripts/ikony.mjs`), jako zbytek webu
+— a prázdné místo po `::before` zmizelo úplně.
+
+**Zkoušky.** `test-menu` dál trvá na tom podstatném: celá nabídka se
+musí vejít na obrazovku (naměřeno 844 z 844 px, nic pod hranou) a každý
+řádek má 52 px na prst. `test-rozvrzeni` měl strop osmi odkazů —
+je z něj devět a důvod je zapsaný. `test-vnitrni-odkazy` nehledá `id`
+pro kotvu s rovnítkem (stav mapy žádné nemá). `test-naseptavac` žádal
+po zkráceném seznamu rolování i tehdy, když se do něj vejde celý obsah
+— padlo to na jednom pixelu (strop 273 px proti 274 px podle CSS).

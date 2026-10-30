@@ -7964,9 +7964,10 @@
   /* Obnova z adresy. Vrací true, když se z ní něco vzalo — volající pak
      nesmí mapu srovnat na celou ČR, jinak by sdílený výřez zmizel dřív,
      než si ho člověk stihne prohlédnout. */
-  function obnovZAdresy() {
-    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(ADRESA_PRI_OTEVRENI)) return false;
-    var st = PKOdkaz.cti(ADRESA_PRI_OTEVRENI);
+  function obnovZAdresy(adresa) {
+    var zdroj = adresa || ADRESA_PRI_OTEVRENI;
+    if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(zdroj)) return false;
+    var st = PKOdkaz.cti(zdroj);
     var neco = false;
     /* Po dobu obnovy se do adresy nepíše: každý `change` níž spustí
        renderList() a ten by adresu přepsal rozpracovaným stavem. */
@@ -8045,6 +8046,23 @@
     if (neco) { try { if (typeof postavVybaveni === 'function') postavVybaveni(); renderList(); } catch (e) {} }
     return neco;
   }
+  /* ODKAZ NA STAV FUNGUJE I NA UŽ OTEVŘENÉ STRÁNCE.
+     ------------------------------------------------------------------
+     V nabídce vede „Exekuce" na index.html#t=exekuce. Kdo přijde
+     odjinud, tomu se stránka načte a stav se vezme z adresy při startu.
+     Kdo ale UŽ NA ÚVODNÍ STRÁNCE JE, tomu se jen změnila adresa —
+     a bez tohohle se nestalo vůbec nic: filtr se nenastavil a odkaz
+     vypadal rozbitě (naměřeno 30. 10.: hash „#t=exekuce", vybraný druh
+     pořád „Vše", počet 1 897 beze změny).
+     Vlastní zápis adresy sem nepřijde: ten jde přes
+     history.replaceState, a ten událost hashchange nevyvolá. */
+  window.addEventListener('hashchange', function () {
+    if (adresaDrzi) return;
+    try {
+      if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+      obnovZAdresy(location.hash);
+    } catch (e) {}
+  });
   function openFromUrl() {
     /* ?q=&druh=&maxc=&mina=&zlevnene= — použij uložené hledání (odkaz ze
        stránky „Hlídání") nebo odkaz z některé statické stránky.

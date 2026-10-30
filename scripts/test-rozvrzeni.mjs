@@ -595,11 +595,21 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
      z patičky. Zůstalo šest: mapa, ceny, tři osobní stránky a akce.
      Měří se proto opačně: ať nabídka zase nenaroste. Jmenovitě se
      žádá jen to, co jinde v liště není (mapa, ceny, účet) a akce
-     nakonec; víc odkazů než osm by znamenalo, že se do ní zase něco
-     nastěhovalo. */
+     nakonec.
+     STROP SE 30. 10. ZVEDL Z OSMI NA DEVĚT, a taky na majitelovo
+     slovo: „tuhle část kompletně předělej, dodej tomu život, je to
+     suché." Do šuplíku se vrátily tři cesty, které z webu vypadly,
+     když zmizela řada pilulek nad výpisem — nové na trhu, dražby,
+     exekuce — a každá nese počet ze skutečných dat. Jsou to nabídky,
+     ne příručka, takže pravidlo z 27. 10. („nemá to být příručka")
+     drží dál: rádci ani rozcestníky se nevrátily.
+     Co z toho je VIDĚT na širokém displeji, zůstalo beze změny: tyhle
+     tři nesou třídu .nav-mobil a v liště na monitoru se nekreslí.
+     A ta vlastní otázka — vejde se nabídka na obrazovku? — se měří
+     v test-menu, ne počtem řádků. */
   const MUSI = ['#mapa', 'cena-pozemku.html', 'muj-inzerat.html', 'zpravy.html', 'hlidani.html'];
   pravda(`nabídka nenarostla a akce „Přidat pozemek" je nakonec (${bezUctu.length})`,
-    bezUctu.length <= 8 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
+    bezUctu.length <= 9 && bezUctu[bezUctu.length - 1].endsWith('pridat.html'),
     `je jich ${bezUctu.length}: ${bezUctu.join(', ')}`);
   pravda('a pořád nese to, co jinde v liště není',
     MUSI.every((c) => bezUctu.some((h) => (h || '').includes(c))),
@@ -623,7 +633,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
  * Značka se kvůli tomu nepřesouvá (v liště na širokém displeji patří
  * tlačítko na konec) — dělá to `order`. Proto se to taky měří v pixelech
  * a ne ve značce: pořadí ve značce by o tomhle nevypovědělo nic.
- * Nad tlačítkem smí být jediná věc: křížek, kterým se panel zavírá. */
+ * Nad tlačítkem smí být jediná věc: hlavička šuplíku se značkou
+ * a křížkem (.nav-hlava, od 30. 10. — do té doby visel křížek sám). */
 {
   const { ctx, p } = await otevri('kontakt.html', 390, 844);
   await p.waitForTimeout(400);
@@ -638,7 +649,9 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
       /* `.nav-cta-note` se tu kdysi vyjímala — prodejní věta pod
          tlačítkem. Od 26. 10. v nabídce není (stála 56 px z 844),
          tak se nevyjímá nic, co by neexistovalo. */
-      .filter((e) => vidi(e) && e !== cta && e !== krizek)
+      /* Hlavička šuplíku (značka + křížek) stojí nad vším schválně —
+         je to jeho záhlaví, ne položka nabídky. */
+      .filter((e) => vidi(e) && e !== cta && e !== krizek && !e.classList.contains('nav-hlava'))
       .map((e) => ({ co: e.className || e.tagName, y: y(e) }))
       .sort((a, b) => a.y - b.y);
     return { ctaVidet: !!cta && vidi(cta), ctaY: cta ? y(cta) : null,
@@ -649,7 +662,7 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   pravda('v šuplíku na telefonu stojí „Přidat pozemek" hned pod křížkem, ne až na konci',
     !!m.ctaVidet && m.prvniJiny != null && m.ctaY < m.prvniJiny.y,
     JSON.stringify(m));
-  pravda('a křížek na zavření zůstává nad ním',
+  pravda('a hlavička se značkou a křížkem zůstává nad ním',
     m.krizekY != null && m.ctaY != null && m.krizekY < m.ctaY, JSON.stringify(m));
 }
 

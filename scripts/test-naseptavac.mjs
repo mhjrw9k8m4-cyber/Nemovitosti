@@ -1270,7 +1270,10 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
     const sb = n.getBoundingClientRect();
     const pred = { presah: Math.round(Math.max(0, sb.bottom - dno)), vyska: Math.round(sb.height) };
     n.style.maxHeight = ulozeno;
-    return { po, pred, dovnitr, polozek: li.length, skryty: n.hidden,
+    /* Kolik obsahu v seznamu je a kolik se ho vejde — bez toho se
+       nedá rozhodnout, jestli „zkrácený" seznam opravdu něco ukrajuje. */
+    const vejdeSe = n.scrollHeight <= n.clientHeight + 1;
+    return { po, pred, dovnitr, vejdeSe, polozek: li.length, skryty: n.hidden,
       top: Math.round(nb.top), dno: Math.round(dno), maxh: ulozeno,
       oprava: o && !o.hidden ? o.textContent.trim() : null,
       opravaDno: o && !o.hidden ? Math.round(o.getBoundingClientRect().bottom) : null,
@@ -1315,7 +1318,16 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       r.po.presah === 0,
       `seznam y ${r.top}–${r.top + r.po.vyska}, vidět je po ${r.dno} → přesáhá ${r.po.presah} px`);
     if (r.po.vyska < r.pred.vyska) {
-      pravda(`a zkrácený seznam se dá posouvat (${volno} px)`, r.dovnitr,
+      /* ZKRÁCENÝ NEZNAMENÁ UŘÍZNUTÝ. Strop výšky se počítá z místa nad
+         klávesnicí, takže seznam může po zkrácení pořád ukazovat
+         všechny návrhy — a pak není co posouvat. Naměřeno 30. 10. při
+         volné výšce 414 px: strop 273 px, seznam podle CSS 274 px,
+         tedy o PIXEL víc, a po zkrácení se do boxu vejde celý obsah
+         (scrollHeight = clientHeight). Žádá se proto to, oč tu jde:
+         buď se vejde celý, nebo se v něm dá rolovat. (Do té doby
+         stálo „zkrátil se → musí jít rolovat" a po zvýšení lišty
+         o 9 px to padlo přesně na tomhle jednom pixelu.) */
+      pravda(`a zkrácený seznam se dá posouvat (${volno} px)`, r.dovnitr || r.vejdeSe,
         'je uříznutý a nejde v něm rolovat — spodní návrhy by byly nedostupné');
     }
   }

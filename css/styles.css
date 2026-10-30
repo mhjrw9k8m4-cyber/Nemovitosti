@@ -1706,6 +1706,14 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    STAV KRESLÍ STYL, NE SKRIPT: třídu `pk-prihlasen` nasazuje na <html>
    vložený skript v hlavičce ještě před vykreslením (js/hlavicka.js),
    takže tečka nebliká a nepotřebuje vlastní kód. */
+/* ŠUPLÍKOVÉ KUSY NABÍDKY NA MONITORU NEJSOU. Značka, nadpis oddílu,
+   počty, patička a tři odkazy navíc (nové, dražby, exekuce) jsou věci
+   PANELU na telefonu; v liště na monitoru stojí ty dva odkazy, účet
+   a tlačítko, jak to bylo rozhodnuté (viz scripts/hlavicka.mjs). */
+@media (min-width:1041px){
+  #nav .nav-hlava, #nav .nav-oddil, #nav .nav-pata, #nav .nav-mobil, #nav .nav-pocet{display:none;}
+  #nav a:not(.btn-primary) > .ik{display:none;}
+}
 .hdr-ucet{display:none;}
 @media (max-width:1040px){
   /* U PRAVÉHO KRAJE, NE HNED ZA JMÉNEM. Hlavička je na telefonu flex
@@ -5008,9 +5016,17 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     font-family:var(--font-ui); font-size:16px; font-weight:600; letter-spacing:-0.01em;
     color:var(--text); background:none;
     transition:var(--prechod);}
-  #nav a:not(.btn-primary)::before{content:""; flex:none; width:22px; height:22px;
-    background-repeat:no-repeat; background-position:center; background-size:22px 22px; opacity:0.8;}
+  /* ZNAČKA JE ZE SADY, NE OBRÁZEK V CSS. Řádky nabídky měly ikonu jako
+     `background-image` v ::before — tedy tvar opsaný do stylopisu
+     podruhé, vedle sady v scripts/ikony.mjs. Pravidlo webu zní „jedna
+     sada, jedno pero" (§145), takže si řádek nese <svg><use> jako
+     všechno ostatní a prázdné místo po ::before mizí úplně. */
+  #nav a:not(.btn-primary)::before{content:none;}
   #nav a:not(.btn-primary)::after{content:none;}
+  /* 22 px a k tomu dopočítaná tloušťka (36/22 = 1,64), ať stopa vyjde
+     na 1,5 px jako u všech ostatních ikon — hlídá test-tahy. */
+  #nav a:not(.btn-primary) > .ik{flex:none; width:22px; height:22px; stroke-width:1.64;
+    color:var(--plocha-znacka);}
   #nav a:not(.btn-primary):active{background:rgba(var(--znacka-hluboka-rgb),0.08);}
 
   /* AKTIVNÍ ŘÁDEK: svislý proužek vlevo a značková barva textu.
@@ -5078,7 +5094,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      (#nav v selektoru není ozdoba: `#nav a:not(.btn-primary)` výš má
      identifikátor, takže by samotné třídy prohrály — naměřeno, řádky
      zůstaly vysoké 56 px a prázdné místo po ikoně v nich bylo.) */
-  #nav .nav-sk > .nav-sk-panel > a{min-height:52px; padding:0 20px 0 56px;
+  #nav .nav-sk > .nav-sk-panel > a{min-height:52px; padding:0 20px;
     font-size:16px; font-weight:500;}
   #nav .nav-sk > .nav-sk-panel > a::before{content:none;}
 
@@ -5115,7 +5131,10 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      odešly z nabídky (viz scripts/hlavicka.mjs) — zbylo pořadí toho,
      co v ní zůstalo. */
   #nav a[href$="#mapa"], #nav a[href$="index.html#mapa"]{order:1;}
-  #nav a[href$="cena-pozemku.html"]{order:2;}
+  #nav a[href$="nove-pozemky.html"]{order:2;}
+  #nav a[href$="drazby-pozemku-nabidky.html"]{order:3;}
+  #nav a[href$="#t=exekuce"]{order:4;}
+  #nav a[href$="cena-pozemku.html"]{order:5;}
   .nav-del{order:6;}
   .nav-ucet-sk{order:7;}
 
@@ -5126,8 +5145,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Pravidla pro nadpisy skupin Pozemky a Příležitosti a pro ikony
      rádce a kontaktu odsud zmizela spolu s těmi položkami; hlídač
      scripts/test-mrtve-styly.mjs je našel hned. */
-  #nav a[href$="#mapa"]::before, #nav a[href$="index.html#mapa"]::before{background-image:var(--ikona-mapa);}
-  #nav a[href$="cena-pozemku.html"]::before{background-image:var(--ikona-cena);}
+  /* (Obrázky v ::before u odkazů jsou pryč — řádky nesou <svg><use>
+     ze sady, viz pravidlo výš.) */
 
   /* „Přidat pozemek" STOJÍ NAHOŘE, ne až pod vším.
      V liště na telefonu tlačítko není (dvě stejná vedle sebe), takže
@@ -5151,6 +5170,45 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      v nabídce nemá být ten nejhůř trefitelný cíl ze všech. */
   #nav a.btn-primary{order:-2; display:block; margin:16px 20px 8px; text-align:center;
     padding:16px; font-size:16px;}
+
+  /* =================================================================
+     HLAVIČKA ŠUPLÍKU, ODDÍLY, POČTY A PATIČKA (30. 10.)
+     =================================================================
+     Majitel: „tuhle část kompletně předělej, dodej tomu život, je to
+     suché." Naměřeno na jeho snímku (390×844): obsah nabídky končil
+     na 525 px, tedy 319 px panelu bylo prázdných, a křížek visel sám
+     na vlastním řádku nad vším ostatním.
+     Co s tím prostorem: značka nahoře (ať je poznat, čí nabídka to
+     je), nadpis oddílu, POČTY u položek ze skutečných dat
+     (scripts/hlavicka.mjs je bere z data/mapa.json při sestavení —
+     stránka kvůli nim nestahuje ani bajt) a dole věta o čerstvosti.
+     Čísla jsou ten život: člověk hned vidí, že dražeb je 33, ne tři.
+     Vejde se to celé: hlídá scripts/test-menu.mjs („celá nabídka se
+     vejde na obrazovku"). */
+  .nav-hlava{display:flex; align-items:center; gap:12px; order:-4;
+    padding:0 12px 16px 20px; border-bottom:1px solid var(--line);}
+  .nav-hlava .logo-mark{width:40px; height:40px;}
+  .nav-znacka{font-family:var(--font-ui); font-size:20px; font-weight:700;
+    letter-spacing:-0.03em; color:var(--znacka);}
+  /* Křížek sedí v té hlavičce vpravo (js/menu.js ho tam vkládá), takže
+     už nemá vlastní řádek ani vlastní `order`. */
+  .nav-hlava .nav-zavrit{order:0; margin:0 0 0 auto; align-self:center;}
+  /* Popisek oddílu: verzálky jako všude jinde (§216). Nic se pod ním
+     nerozbaluje, je to jen jmenovka skupiny. */
+  .nav-oddil{order:-1; margin:0; padding:16px 20px 4px;
+    font-family:var(--font-popisek); font-size:12px; font-weight:600;
+    letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--muted);}
+  /* POČET U POLOŽKY. Vpravo, tabulkovými číslicemi, ať stojí pod sebou
+     v jednom sloupci — totéž pravidlo jako u čipů nad výpisem. */
+  .nav-pocet{margin-left:auto; flex:none; min-width:4.5ch; text-align:center;
+    padding:2px 8px; border-radius:var(--r-pill);
+    background:var(--plocha-jemna); color:var(--muted);
+    font-size:13px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums;}
+  /* Patička šuplíku: věta o čerstvosti dat, žádné odkazy. Odkazy by
+     musely mít 52 px na prst (hlídá test-menu) a tři takové řádky by
+     snědly 156 px na to, co stojí v patičce stránky. */
+  .nav-pata{order:9; margin:auto 0 0; padding:16px 20px 0;
+    font-size:12px; font-weight:500; color:var(--muted);}
 
   :root{ --oddil-y:80px; }     /* o stupeň míň, ale pořád víc než dřívějších 64 */
   /* h1 už velikost nemění skokem, nese ji --h1-stranka. */

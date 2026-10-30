@@ -13,6 +13,9 @@
     for (var i = 0; i < odkazy.length; i++) {
       var h = odkazy[i].getAttribute('href') || '';
       if (h.charAt(0) === '#') continue;
+
+      var kotva = h.indexOf('#') >= 0 ? h.slice(h.indexOf('#') + 1) : '';
+      if (kotva.indexOf('=') >= 0) continue;
       var cil = h.split('#')[0].split('?')[0].split('/').pop();
       if (cil && cil === oznac) odkazy[i].setAttribute('aria-current', 'page');
     }
@@ -48,7 +51,10 @@
     zavrit.className = 'nav-zavrit';
     zavrit.setAttribute('aria-label', 'Zavřít nabídku');
     zavrit.innerHTML = KRIZEK_SVG;
-    nav.insertBefore(zavrit, nav.firstChild);
+
+    var hlava = nav.querySelector('.nav-hlava');
+    if (hlava) hlava.appendChild(zavrit);
+    else nav.insertBefore(zavrit, nav.firstChild);
 
     function otevreno() { return d.body.classList.contains('nav-otevreno'); }
     function prepni(na) {

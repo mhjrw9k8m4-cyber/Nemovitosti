@@ -64,7 +64,51 @@
 
 /* Odkaz na mapu je „#mapa" jen na úvodní stránce; odjinud musí vést
    na index.html, jinak by skočil do prázdna. Dosazuje se při sazbě. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 export const NAV_MAPA = '{{MAPA}}';
+
+/* ŽIVÁ ČÍSLA DO NABÍDKY — ZE SKUTEČNÝCH DAT, NE OD OKA.
+   ==================================================================
+   Majitel 30. 10. o šuplíku: „předělej to kompletně, dodej tomu život,
+   je to suché." Suché bylo hlavně to, že nabídka nic neříkala: šest
+   holých slov pod sebou a půl obrazovky prázdné. Čísla u položek jsou
+   ta nejlevnější odpověď — člověk hned vidí, že dražeb je 33 a ne tři.
+   Berou se z data/mapa.json, tedy z TÉHOŽ řezu, který kreslí mapa:
+   bez duplicit a bez dražeb po termínu. Počítají se při sestavení,
+   takže stránka nestahuje kvůli nabídce ani bajt navíc; čerstvá jsou
+   podle posledního běhu robota (data/mapa.json „updated").
+   Když soubor chybí (čerstvý klon bez dat), čísla se vynechají —
+   nabídka musí fungovat i bez nich. */
+function poctyZDat() {
+  try {
+    const koren = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+    const d = JSON.parse(readFileSync(path.join(koren, 'data', 'mapa.json'), 'utf8'));
+    const o = Array.isArray(d.opportunities) ? d.opportunities : [];
+    if (!o.length) return null;
+    /* „Nové" je týden, ne den: za jediný den přibyde i nula a odkaz
+       by sliboval prázdnou stránku. Práh je týž, jaký má
+       nove-pozemky.html. */
+    const tyden = new Date(Date.parse(d.updated + 'T00:00:00Z') - 6 * 864e5)
+      .toISOString().slice(0, 10);
+    const n = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+    return {
+      vse: n(o.length),
+      nove: n(o.filter((x) => (x.first_seen || '') >= tyden).length),
+      drazby: n(o.filter((x) => x.type === 'drazba').length),
+      exekuce: n(o.filter((x) => x.type === 'exekuce').length),
+      /* Kdy robot naposledy obešel zdroje — „30. 10." česky, bez roku:
+         v patičce šuplíku jde o čerstvost, ne o datum do kalendáře. */
+      kdy: (() => { const [, m, den] = d.updated.split('-'); return `${Number(den)}.\u00a0${Number(m)}.`; })(),
+    };
+  } catch (e) { return null; }
+}
+const POCTY = poctyZDat();
+/* Odznak s počtem se vykreslí jen tam, kde číslo opravdu je. */
+const pocet = (k) => (POCTY && POCTY[k] ? `<span class="nav-pocet">${POCTY[k]}</span>` : '');
+const ikona = (jm) => `<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${jm}"/></svg>`;
 
 /* ŠEST POLOŽEK, NE ŠESTNÁCT. Nabídka měla dvě rozbalovátka na
    procházení (Pozemky, Příležitosti), pět odkazů pod nimi a k tomu
@@ -85,18 +129,29 @@ export const NAV_MAPA = '{{MAPA}}';
    obojí zůstává: „Druh nabídky" v panelu nad výpisem.
    Stránky samy zůstávají (chodí na ně vyhledávač), jen si na ně
    lišta nenárokuje místo. */
+/* POŘADÍ VE ZNAČCE JE TO SPRÁVNÉ PRO MONITOR, ne pro šuplík: první je
+   hledání, poslední tlačítko „Přidat pozemek" — tak to patří do lišty
+   a tak to čte i scripts/test-data.mjs („nahoře je hledání pozemků").
+   V šuplíku na telefonu tlačítko vyskočí nahoru přes `order` v CSS;
+   jedna značka, dvě podoby. */
 export const NAV_HTML = `<nav id="nav" aria-label="Hlavní navigace">
-      <a href="${NAV_MAPA}">Hledat na mapě</a>
-      <a href="cena-pozemku.html">Ceny pozemků</a>
+      <div class="nav-hlava"><span class="logo-mark" aria-hidden="true"></span><span class="nav-znacka">Parcelka</span></div>
+      <p class="nav-oddil nav-mobil">Co je na trhu</p>
+      <a href="${NAV_MAPA}">${ikona('mapa')}Hledat na mapě${pocet('vse')}</a>
+      <a class="nav-mobil" href="nove-pozemky.html">${ikona('sance')}Nové za týden${pocet('nove')}</a>
+      <a class="nav-mobil" href="drazby-pozemku-nabidky.html">${ikona('kladivko')}Dražby${pocet('drazby')}</a>
+      <a class="nav-mobil" href="index.html#t=exekuce">${ikona('stit')}Exekuce${pocet('exekuce')}</a>
+      <a href="cena-pozemku.html">${ikona('cena')}Ceny pozemků</a>
       <span class="nav-del" aria-hidden="true"></span>
       <details class="nav-sk nav-ucet-sk"><summary id="nav-sk-ucet"><span class="nav-ucet-t">Můj profil</span><span class="nav-stav" id="nav-stav">Nepřihlášeno</span></summary><div class="nav-sk-panel">
-        <a href="muj-inzerat.html" id="nav-ucet">Moje inzeráty</a>
-        <a href="zpravy.html" id="nav-zpravy">Zprávy</a>
-        <a href="hlidani.html" id="nav-hlidani">Hlídání</a>
+        <a href="muj-inzerat.html" id="nav-ucet">${ikona('seznam')}Moje inzeráty</a>
+        <a href="zpravy.html" id="nav-zpravy">${ikona('obalka')}Zprávy</a>
+        <a href="hlidani.html" id="nav-hlidani">${ikona('zvonek')}Hlídání</a>
       </div></details>
-      <a href="pridat.html" class="btn-primary nav-add"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg>Přidat pozemek</a>
+      <a href="pridat.html" class="btn-primary nav-add">${ikona('plus')}Přidat pozemek</a>
+      <p class="nav-pata nav-mobil">${POCTY ? 'Data z veřejných zdrojů, naposledy ' + POCTY.kdy : 'Data z veřejných zdrojů'}</p>
     </nav>
-    <a class="hdr-ucet" href="muj-inzerat.html"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg><span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>`;
+    <a class="hdr-ucet" href="muj-inzerat.html">${ikona('uzivatel')}<span class="hu-out">Přihlásit</span><span class="hu-in">Profil</span></a>`;
 
 /* PROFIL PATŘÍ DO LIŠTY, NE JEN DO ŠUPLÍKU.
    Majitel 29. 10.: „nahoru doprava přidej profil, ikonku profilu, aby

@@ -76,6 +76,12 @@ for (const f of stranky) {
     if (CIZI.test(m[1])) continue;
     const cil = (m[1].split('?')[0] || '').replace(/^\.\//, '');
     const soubor = cil || f;          // prázdný cíl = táž stránka
+    /* KOTVA S ROVNÍTKEM NENÍ KOTVA, ALE STAV. Web si do adresy ukládá
+       výřez mapy a filtry (`#m=…`, `#t=exekuce`, `#cd=…` — viz
+       js/odkaz.js) a od 30. 10. na jeden takový odkaz vede i nabídka
+       („Exekuce"). Hledat pro něj `id` na cílové stránce nemá smysl:
+       žádné takové není a nikdy nebude. */
+    if (m[2].indexOf('=') >= 0) continue;
     if (!idy.has(soubor)) continue;   // neexistující cíl hlásí kontrola výš
     kotev++;
     if (!idy.get(soubor).has(m[2])) {
