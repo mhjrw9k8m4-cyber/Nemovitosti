@@ -16670,3 +16670,37 @@ jeden text přímo — kontrast se tím nehýbe (`test-kontrast` projde).
 `test-barvy`, `test-deska`, `test-najeti`, `test-dotyk`,
 `test-naseptavac` (127), `test-vrstveni`, `test-jeden-styl` (33),
 `test-hierarchie` (21) — bez chyby.
+
+## §261 Nasazení uvázlo ve frontě GitHubu a zvenčí se s ním nedá hnout
+
+**Co se stalo.** Oprava z §260 byla odeslána 30. 10. v 17:35 UTC.
+Sestavení stránek doběhlo v pořádku v 17:37:18, ale úloha `deploy`
+zůstala od téže vteřiny ve stavu `waiting` — čeká na prostředí
+`github-pages`, ne na kód. Dnešní předchozí nasazení trvala 85 a 90
+sekund (15:52 → 15:53, 16:20 → 16:22), tohle stálo přes čtvrt hodiny.
+
+**Co jsem zkusil a co na to GitHub.** Majitel požádal o opakované
+spuštění. API ho odmítlo v obou směrech:
+
+```
+rerun:  403 This workflow is already running
+cancel: 409 Cannot cancel a workflow run that is not in progress
+```
+
+Je to past: pro spuštění znovu je ten běh „už běžící", pro zrušení
+zase „neběží". **Běh ve stavu `waiting` se tedy přes API ovládat
+nedá** — ani zrušit, ani restartovat. To stojí za zapamatování,
+protože příště to bude vypadat jako chyba nástroje, a není.
+
+**Co s tím jde dělat.** Dvě cesty, obě mimo API toho běhu:
+
+1. Schválit nebo restartovat běh ručně na stránce běhu (jen majitel).
+2. **Poslat na větev další commit.** GitHub tím založí úplně nový běh
+   nasazení a ten ponese i čekající opravu. Tohle je cesta, která
+   nepotřebuje nikoho u počítače — a je to důvod, proč tenhle oddíl
+   vzniká jako samostatný commit.
+
+**Co to NENÍ.** Není to prázdný commit na rozhýbání CI; takový by
+v tomhle repozitáři neměl co dělat. Je to záznam poruchy, který sem
+podle vlastních pravidel projektu patří tak jako tak — jen je napsaný
+teď, a ne za hodinu.
