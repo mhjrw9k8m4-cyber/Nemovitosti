@@ -2664,7 +2664,7 @@ h1 em{ color:var(--znacka-svetla);
    bylo a stojí tam i proč — na monitoru dvanáctka přežila. Naměřeno
    na 1280 px: „Uložené" 12 px vedle „Porovnat (0)" 13 px v jedné
    liště. Výšku 36 px nechávám: tu má i rozbalovátko řazení. */
-.msv-ulozene{min-height:36px; padding:4px 12px;}
+.msv-ulozene, .msv-historie{min-height:36px; padding:4px 12px;}
 /* ZÁLOŽKA V „ULOŽENÉ" NEMĚLA ŽÁDNOU VELIKOST — A NA MONITORU TO BYLO
    NULA. Ikonu tam vkládá js/main.js (BM_SVG) a v její značce není ani
    width, ani height; velikost jí tedy musí dát stylopis. Dlouho ji
@@ -2691,7 +2691,13 @@ h1 em{ color:var(--znacka-svetla);
    obdélníku 14 px, jedna bez plochy a druhá bílá. Telefon to měl
    srovnané už dřív (blok u 560 px); tady se totéž říká pro všechny
    šířky, ať se to nerozchází podle toho, kdo se zrovna dívá. */
-.msv-ulozene{border-radius:var(--r-ovladani); background:var(--plocha-karta);}
+.msv-ulozene, .msv-historie{border-radius:var(--r-ovladani); background:var(--plocha-karta);}
+/* HISTORIE MÁ TAHOVOU ZNAČKU, ne vyplněnou jako záložka. Šestnáct
+   pixelů jako soused v řadě a k tomu dopočítaná tloušťka 36/16 = 2,25,
+   ať stopa na obrazovce vyjde na 1,5 px jako u všech ostatních ikon
+   (hlídá scripts/test-tahy.mjs). Bez téhle míry ikona nemá velikost
+   vůbec a vykreslí se přes půl tlačítka — vyfoceno. */
+.msv-historie svg{flex:none; width:16px; height:16px; stroke-width:2.25;}
 /* ŘAZENÍ UŽ V TÉHLE ŘADĚ NESTOJÍ (29. 10.). Majitel ho poslal do
    panelu filtrů („a řazení, tedy v té tabulce"), takže .msv-razeni
    a dvě pravidla, která ho v téhle řadě smršťovala, neměla na čem
@@ -4655,13 +4661,21 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      a místo se našlo jinde: užší výplň, menší mezera a bližší lupa.
      Naměřeno po té změně — nápis v poli má 165 px místa na 145 px
      textu, tedy dvacet navíc i se značkami. */
-  .mv-toggle .mvt-btn svg{display:block; width:18px; height:18px; flex:none;}
-  /* 48 PX SE MUSÍ NAPSAT PŘES DVĚ TŘÍDY. Mez dotyku níž v souboru
-     (@media pointer:coarse) dává .mvt-btn min-height:44px a stojí
-     ZA tímhle pravidlem, takže by 48 přebila. Dvojice .mv-toggle
-     .mvt-btn má větší váhu a vyhraje; mez 44 px tím zůstává tam,
-     kde platí — jako podlaha pro všechno ostatní. */
-  .mv-toggle .mvt-btn{min-height:48px;}
+  /* ŠESTNÁCT, NE OSMNÁCT. Všechny značky v téhle sestavě měří 16 px
+     (lupa, záložka, historie, nářadí) a tahle jediná měla 18 — navíc
+     s tloušťkou 2,25 dopočítanou k šestnáctce, takže její stopa vyšla
+     na 1,69 px místo 1,5. Naměřeno 30. 10., když se zkouška ovládání
+     po přesunu řazení konečně zase rozběhla. */
+  .mv-toggle .mvt-btn svg{display:block; width:16px; height:16px; flex:none;}
+  /* ČTYŘICET ČTYŘI, JAKO VŠECHNO OSTATNÍ NAD VÝPISEM. Pole i přepínač
+     tu měly 48 a ovladače pod nimi 44 — dvě výšky v jedné sestavě,
+     tedy přesně ta nejednotnost, kterou majitel vytýká („celé to
+     musíš sjednotit"). Čtyřiačtyřicítka je zároveň mez dotyku, takže
+     se nic nezmenšuje pod ruku, a první nabídka se tím posune o 8 px
+     výš. Přes dvě třídy je to napsané schválně: mez dotyku níž
+     v souboru (@media pointer:coarse) dává .mvt-btn min-height:44px
+     a stojí ZA tímhle pravidlem. */
+  .mv-toggle .mvt-btn{min-height:44px;}
   /* POČET JEN V POHLEDU NA MAPU. V seznamu stojí hned pod přepínačem
      v hlavičce výsledků, takže by tu byl podruhé a bral 50 px šířky,
      kterou potřebuje pole hledání. Na mapě žádná hlavička výsledků
@@ -7372,6 +7386,13 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Skryté „Porovnat" nesmí v mřížce držet sloupec: [hidden] přebíjí
      `display:inline-flex` z .mc-prep, takže se musí schovat výslovně. */
   .ms-vysledky .msv-ovladani > [hidden]{display:none;}
+  /* A LICHÝ POSLEDNÍ OVLADAČ DOSTANE CELÝ ŘÁDEK. Dvousloupcová mřížka
+     nechávala u lichého počtu prázdné políčko — s jedním uloženým
+     pozemkem a bez historie zbylo vedle „Uložené" prázdno a vypadalo
+     to jako chyba vykreslení (vyfoceno 30. 10.). Třídu nasazuje
+     srovnejOvladani() v js/main.js podle toho, kolik políček je
+     VIDĚT; v CSS se to spočítat nedá. */
+  .ms-vysledky .msv-ovladani > .msv-siroky{grid-column:1 / -1;}
   /* POD 360 px SE ZKRACUJE NÁPIS, NE ŘADA.
      Dřív tu stál JEDEN SLOUPEC: dva sloupce dají na 320px displeji
      políčka po 136 px, kdežto „Procházet po jednom" potřebuje 160
@@ -7463,6 +7484,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   .hero-map .map-wide{padding-top:0;}
 
   .ms-vysledky .msv-ulozene,
+  .ms-vysledky .msv-historie,
   .ms-vysledky .map-select,
   .ms-vysledky .cdd-btn{
     min-height:44px; height:44px; padding:0 12px;
@@ -7472,7 +7494,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
     color:var(--text);
     font-size:13px; font-weight:600;}
   /* Zapnuté „Uložené" zůstává zelené — to není nejednotnost, to je stav. */
-  .ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+  .ms-vysledky .msv-ulozene.on,
+  .ms-vysledky .msv-historie.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
   /* ODZNAKY DRUHŮ ROVNÝM DÍLEM — řeší se samo od 29. 10.
      Naměřeno kdysi na 390 px: „Vše" 89 px, „Prodej" 126, „Dražba" 122,
      „Exekuce" 133 — čtyři různé šířky ve dvou řadách a roztřepený
@@ -7485,8 +7508,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      ta nedbalost, kterou nejde pojmenovat, ale je vidět. Obojí 48.
      (Dřív mělo pole 46 proti 44 u všeho ostatního; tenhle řádek to
      tehdy srovnával dolů.) */
-  .mcp-hledani .map-search input{min-height:48px; padding-top:0; padding-bottom:0;}
-  .mcp-hledani .map-search{height:48px;}
+  .mcp-hledani .map-search input{min-height:44px; padding-top:0; padding-bottom:0;}
+  .mcp-hledani .map-search{height:44px;}
   .ms-vysledky .map-count{font-size:14px; letter-spacing:0; margin-bottom:0; min-width:0;}
   /* NADPIS SE VRACÍ I NA TELEFON.
      Chvíli tu byl schovaný, aby se ušetřilo 28 px — jenže pak nad
@@ -7497,7 +7520,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      hluboko pod mezí 330 v test-prvni-obrazovka. */
   .ms-vysledky .map-count{font-weight:700; flex:1 1 100%;}
   .ms-vysledky .mc-sub{color:var(--muted); font-weight:600;}
-  .msv-ulozene{min-height:34px; padding:4px 8px;}
+  .msv-ulozene, .msv-historie{min-height:34px; padding:4px 8px;}
   /* Poznámky („pořadí se střídá", „n nových od minule") patří pod
      řádek, ne do něj — v řádku by ho rozlomily na dva.
      DVANÁCTKA, NE JEDENÁCTKA: 27. 10. se na devíti typech stránek

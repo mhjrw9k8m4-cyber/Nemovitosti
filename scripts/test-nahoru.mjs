@@ -39,6 +39,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { domUtichlo } from './zkouska-pripraveno.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -111,6 +112,22 @@ function stav(p) {
       kryti: Number(st.opacity), udalosti: st.pointerEvents,
       navrchu: kdo === e || e.contains(kdo), popis: e.getAttribute('aria-label') || '' };
   });
+}
+
+/* ČEKÁ SE NA STAV, NE NA HODINKY. Knoflík se objevuje a mizí
+   přechodem (§154), takže pevné čekání měří jednou hotový stav a jednou
+   půlku přechodu — v CI se naměřilo krytí 0,92, tedy přesně prostředek.
+   Vrací první stav, který podmínce odpovídá, a když nepřijde, ten
+   poslední — ať má hláška co ukázat. */
+async function dokud(p, podminka, strop = 2500) {
+  const do_ = Date.now() + strop;
+  let s = await stav(p);
+  while (Date.now() < do_) {
+    if (s && podminka(s)) return s;
+    await p.waitForTimeout(100);
+    s = await stav(p);
+  }
+  return s;
 }
 
 for (const [W, H] of [[390, 844], [1280, 900]]) {
@@ -304,7 +321,15 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   const POZEMEK = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
   const p = await ctxP.newPage();
   await p.goto(`${BASE}/${POZEMEK}`, { waitUntil: 'domcontentloaded' });
-  await p.waitForTimeout(2200);
+  /* STRÁNKA POZEMKU SE DOKRESLUJE Z JS, TAKŽE SE ČEKÁ NA TICHO, NE NA
+     HODINKY. Do 30. 10. tu stálo waitForTimeout(2200) a v CI (běh 811)
+     to shodilo kontrolu ústupu: naměřilo se {"show":true,"kryti":0.92}.
+     Posun se totiž počítá z polohy řádku akcí — a když se mezitím nad
+     něj vloží další obsah (graf, mapa), řádek se posune dolů, v pásu u
+     spodní hrany už není, knoflík SPRÁVNĚ zůstane vidět a zkouška hlásí
+     vadu webu, která tam není. Na mém stroji to prošlo 198 kontrol bez
+     chyby, protože se stihlo dokreslit dřív. */
+  await domUtichlo(p, 400);
   const posun = (kam) => p.evaluate((k) => {
     const a = document.querySelector('.pz-akce-hlavni');
     if (!a) return false;
@@ -312,18 +337,31 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
     window.scrollTo(0, r.top + window.pageYOffset - (k === 'dno' ? (innerHeight - r.height - 40) : 220));
     return true;
   }, kam);
+  /* V jakém pásu řádek akcí po posunu OPRAVDU leží. Pás knoflíku je
+     24 až 70 px nade dnem okna (js/hlavicka.js), takže tohle je přesně
+     ta podmínka, na kterou web reaguje — a zkouška ji musí umět ověřit,
+     ne jen předpokládat. */
+  const vPasu = () => p.evaluate(() => {
+    const a = document.querySelector('.pz-akce-hlavni');
+    if (!a) return null;
+    const r = a.getBoundingClientRect();
+    return r.top < innerHeight - 24 && r.bottom > innerHeight - 70;
+  });
   const jeAkce = await posun('dno');
   // PŘEDPOKLAD: bez řádku akcí by se neporovnávalo nic
   pravda(`stránka pozemku ${POZEMEK} má řádek s hlavní akcí`, jeAkce === true,
     '.pz-akce-hlavni na stránce není');
   if (jeAkce) {
-    await p.waitForTimeout(900);
-    const uDna = await stav(p);
+    /* Kdyby se stránka protáhla ještě po posunu, posune se znovu —
+       jinak by se měřil jiný stav, než o kterém zkouška mluví. */
+    for (let i = 0; i < 3 && !(await vPasu()); i++) { await posun('dno'); await p.waitForTimeout(400); }
+    pravda('řádek s hlavní akcí se posunem opravdu dostal do pásu knoflíku',
+      (await vPasu()) === true, 'posun se nepovedl — kontrola níž by neměřila ústup');
+    const uDna = await dokud(p, (s) => s.show === false, 2500);
     pravda('tlačítko nahoru ustoupí, když je hlavní akce u spodní hrany',
       uDna && uDna.show === false && uDna.udalosti === 'none', JSON.stringify(uDna));
     await posun('nahore');
-    await p.waitForTimeout(900);
-    const jinde = await stav(p);
+    const jinde = await dokud(p, (s) => s.show === true, 2500);
     pravda('a jinde na téže stránce se vrátí', jinde && jinde.show === true
       && jinde.udalosti === 'auto', JSON.stringify(jinde));
   }

@@ -15698,3 +15698,52 @@ padne, jak má: `li.opp-item.exekuce 8.0/16.0 px | div.opp-media
 9.0/17.0 px | …`, a `#mc-prosle` projde. Po opravě: `test-u-hrany`
 třináct v pořádku, `test-nastroje-v-dosahu` patnáct v pořádku, rychlá
 sada 133 ze 133.
+
+## §242 Historie se dá otevřít — a v řadě ovladačů není díra
+
+**Co o tom řekl majitel.** Vyfotil vršek úvodní stránky: „kde je kurva
+ta historie" a „necháš tam místo, co to jako je".
+
+**První nález: pruh byl tam, kde ho nikdo nenajde.** 29. 10. si majitel
+vyžádal, ať „naposledy prohlédnuté" nestojí nahoře, „ať je co nejvíc
+dole". Pruh se tedy přestal stěhovat a zůstal za výpisem. Změřeno
+30. 10. na 390 px: stál **9 473 px od vršku stránky**, za všemi 24
+kartami, při výšce okna 844 px tedy jedenáct obrazovek dolů. Ukazoval se
+navíc až od dvou prohlédnutých pozemků, takže po první prohlídce nebyl
+nikde vůbec.
+
+**Opraveno přepínačem, ne dalším stěhováním.** V řadě nad výpisem
+přibyl ovladač **„Historie (n)"** vedle „Uložené". Pruh je zavřený a
+otevře se jedině po klepnutí — hned pod ovladači, tedy tam, kam se člověk
+dívá, když si ho otevřel. Zavřený neodsouvá první nabídku ani o pixel
+(změřeno: 348 px zavřeno, 458 px otevřeno, pruh měří 99 px). Nabízí se
+od JEDNÉ položky, ne od dvou.
+
+**Druhý nález: díra v řadě.** Ovladače drží dvousloupcová mřížka a
+„Porovnat" se ukazuje až od dvou uložených pozemků — kdo měl jeden a
+žádnou historii, viděl „Uložené" a vedle něj prázdné políčko. Lichý
+poslední ovladač teď dostane celý řádek (`.msv-siroky`, nasazuje
+`srovnejOvladani()` v `js/main.js`; v CSS se počet VIDITELNÝCH dětí
+spočítat nedá). Naměřeno po opravě: sám 358 px, ve dvojici 173 + 173 px.
+
+**A do třetice, co se našlo až při měření:** v téže sestavě stálo pole
+hledání a přepínač Seznam/Mapa 48 px vysoké proti 44 u všech ostatních
+ovladačů, a značka v přepínači měřila 18 px proti 16 u lupy, záložky
+i nářadí (při tloušťce dopočítané k šestnáctce jí stopa vycházela
+1,69 px místo 1,5). Obojí srovnáno dolů na 44 a 16; první nabídka se tím
+posunula o 8 px výš.
+
+**Vlastní značka.** „Historie" dostala svůj tvar — hodiny, jejichž
+ciferník se v levém horním rohu otevře a zahne zpátky. Hodiny samotné už
+na webu znamenají „dražby po termínu" a jeden tvar nesmí nést dvě věci
+(pravidlo z `scripts/ikony.mjs`). Zkoušeno v 16, 24 i 48 px.
+
+**Zkoušky.** `test-ovladani-vypisu` měřil šest ovladačů včetně řazení,
+které ale 29. 10. odešlo do panelu filtrů — od té doby padal a v CI se
+to neukázalo, protože úloha skončila dřív na jiném pádu. Měří teď
+„Historii" na jeho místě a mezeru mřížky si čte z DOM, místo aby si
+pamatovala osmičku. `test-prvni-obrazovka` měří obojí: zavřený pruh
+neodsouvá nic, otevřený stojí nad první nabídkou a odsune ji přesně
+o svou výšku. Otevírání je na jednom místě (`scripts/rozbal-hledani.mjs`,
+`otevriHistorii`) a používají ho i `test-rozvrzeni`, `test-pamet`
+a `test-nastroje-v-dosahu`.

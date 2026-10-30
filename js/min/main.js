@@ -163,6 +163,8 @@
 
   var BM_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zalozka"/></svg>';
 
+  var HIST_SVG = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-historie"/></svg>';
+
   var IKONY_NASTROJU = {
 
     rychly: '#i-karty',
@@ -1205,18 +1207,43 @@
     }
     por.textContent = 'Porovnat (' + n + ')';
     por.hidden = n < 2;
+
+    srovnejOvladani();
   }
 
   var RECENT_KEY = 'pk_recent_v1';
   var _keyIdx = null;
   function keyIndex(){ if (_keyIdx) return _keyIdx; _keyIdx = {}; DATA.forEach(function (d) { _keyIdx[pkey(d)] = d; }); return _keyIdx; }
   function recentKeys(){ try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { return []; } }
+
+  function srovnejOvladani(){
+    var ov = document.querySelector('.msv-ovladani');
+    if (!ov) return;
+    var videt = [].filter.call(ov.children, function (e) { return !e.hidden; });
+    videt.forEach(function (e, i) {
+      e.classList.toggle('msv-siroky', videt.length % 2 === 1 && i === videt.length - 1);
+    });
+  }
+
+  var ukazHistorii = false;
   function renderRecent(){
     var el = document.getElementById('recent-strip');
     if (!el) return;
+    var btn = document.getElementById('map-recent');
     var idx = keyIndex();
     var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
-    if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
+    if (btn) {
+
+      btn.innerHTML = HIST_SVG + 'Historie'
+        + (items.length ? ' (' + items.length + ')' : '');
+      btn.setAttribute('aria-label', 'Naposledy prohlédnuté pozemky (' + items.length + ')');
+      btn.setAttribute('aria-pressed', String(ukazHistorii && items.length > 0));
+      btn.classList.toggle('on', ukazHistorii && items.length > 0);
+      btn.hidden = items.length === 0;
+    }
+    srovnejOvladani();
+
+    if (!items.length || !ukazHistorii) { el.hidden = true; el.innerHTML = ''; return; }
 
     var h = '<div class="rs-head">Naposledy prohlédnuté'
       + '<span class="rs-pocet">' + items.length + '</span></div><div class="rs-row">';
@@ -1258,6 +1285,14 @@
     row.addEventListener('scroll', prepni, { passive: true });
     if (window.ResizeObserver) { try { new ResizeObserver(prepni).observe(row); } catch (e) {} }
   }
+  (function () {
+    var btn = document.getElementById('map-recent');
+    if (btn) btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      ukazHistorii = !ukazHistorii;
+      renderRecent();
+    });
+  })();
   (function () {
     var el = document.getElementById('recent-strip');
     if (!el) return;

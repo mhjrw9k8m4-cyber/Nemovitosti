@@ -462,10 +462,11 @@ to{opacity:1;transform:none}
 .map-side>.opp-list{order:4}
 }
 .msv-ovladani{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
-.msv-ulozene{min-height:36px;padding:4px 12px}
+.msv-ulozene,.msv-historie{min-height:36px;padding:4px 12px}
 .msv-ulozene svg{flex:none;width:16px;height:16px;fill:var(--plocha-znacka);stroke:none}
 .msv-ulozene.on svg{fill:currentColor}
-.msv-ulozene{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
+.msv-ulozene,.msv-historie{border-radius:var(--r-ovladani);background:var(--plocha-karta)}
+.msv-historie svg{flex:none;width:16px;height:16px;stroke-width:2.25}
 @media (max-width:560px){.msv-ovladani{justify-content:space-between;flex-wrap:nowrap}
 }
 .mcv-pozn{margin:4px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
@@ -1040,8 +1041,8 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .mv-toggle{display:flex;flex:1 1 100%;gap:0;margin-top:0;background:var(--plocha-karta);border:0;outline:1px solid var(--line-ui);outline-offset:-1px;border-radius:var(--r-ovladani);padding:0;overflow:hidden}
 .mv-toggle .mvt-btn + .mvt-btn{border-left:1px solid var(--line-ui)}
 .mvt-btn{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 12px;border:0;border-radius:0;background:none;color:var(--muted);font-weight:600;font-family:inherit;font-size:16px;cursor:pointer;white-space:nowrap;transition:var(--prechod)}
-.mv-toggle .mvt-btn svg{display:block;width:18px;height:18px;flex:none}
-.mv-toggle .mvt-btn{min-height:48px}
+.mv-toggle .mvt-btn svg{display:block;width:16px;height:16px;flex:none}
+.mv-toggle .mvt-btn{min-height:44px}
 .map-app.mv-seznam .mvt-n{display:none}
 .mvt-btn.active{background:var(--plocha-znacka);color:#fff}
 .mcp-hledani .ms-lupa{top:24px;transform:none}
@@ -1796,6 +1797,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .ms-vysledky .msv-ovladani,.map-side .mc-akce,.ms-vysledky>.mc-akce{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;flex:1 1 100%}
 .ms-vysledky .msv-ovladani>*:not([hidden]),.map-side .mc-akce>*:not([hidden]),.ms-vysledky>.mc-akce>*:not([hidden]){width:100%;min-width:0}
 .ms-vysledky .msv-ovladani>[hidden]{display:none}
+.ms-vysledky .msv-ovladani>.msv-siroky{grid-column:1 / -1}
 @media (max-width:360px){.mc-dl{display:none}
 }
 @media (max-width:480px){.mc-pocet{display:none}
@@ -1809,14 +1811,14 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .mc-akce{width:100%}
 h1.uvod-nadpis{margin:0;padding:0 var(--okraj-stranky)}
 .hero-map .map-wide{padding-top:0}
-.ms-vysledky .msv-ulozene,.ms-vysledky .map-select,.ms-vysledky .cdd-btn{min-height:44px;height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);font-size:13px;font-weight:600}
-.ms-vysledky .msv-ulozene.on{background:var(--plocha-znacka);border-color:transparent;color:#fff}
-.mcp-hledani .map-search input{min-height:48px;padding-top:0;padding-bottom:0}
-.mcp-hledani .map-search{height:48px}
+.ms-vysledky .msv-ulozene,.ms-vysledky .msv-historie,.ms-vysledky .map-select,.ms-vysledky .cdd-btn{min-height:44px;height:44px;padding:0 12px;border-radius:var(--r-ovladani);border:1px solid var(--line-ui);background:var(--plocha-karta);color:var(--text);font-size:13px;font-weight:600}
+.ms-vysledky .msv-ulozene.on,.ms-vysledky .msv-historie.on{background:var(--plocha-znacka);border-color:transparent;color:#fff}
+.mcp-hledani .map-search input{min-height:44px;padding-top:0;padding-bottom:0}
+.mcp-hledani .map-search{height:44px}
 .ms-vysledky .map-count{font-size:14px;letter-spacing:0;margin-bottom:0;min-width:0}
 .ms-vysledky .map-count{font-weight:700;flex:1 1 100%}
 .ms-vysledky .mc-sub{color:var(--muted);font-weight:600}
-.msv-ulozene{min-height:34px;padding:4px 8px}
+.msv-ulozene,.msv-historie{min-height:34px;padding:4px 8px}
 .ms-vysledky .mc-pozn,.ms-vysledky .mc-nove{flex:1 1 100%;margin:0;font-size:12px}
 }
 .rail-mark{display:flex;align-items:baseline;gap:8px;margin:0 0 12px}

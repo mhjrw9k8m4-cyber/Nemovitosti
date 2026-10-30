@@ -28,6 +28,7 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { otevriHistorii } from './rozbal-hledani.mjs';
 /* ČEKÁ SE NA PŘEKRESLENÍ VÝPISU, ne na hodinky — viz
    scripts/zkouska-pripraveno.mjs (vykresleniPo). */
 import { pripravenoKdyz, vykresleniPo } from './zkouska-pripraveno.mjs';
@@ -172,6 +173,11 @@ async function zmerPruh() {
     localStorage.setItem('pk_recent_v1', JSON.stringify(k));
   });
   await p.reload({ waitUntil: 'load' });
+  /* Po obnovení je zase vidět mapa, takže se pohled žádá znovu — ve
+     výpisu teprve stojí řada ovladačů s „Historií". */
+  await naSeznam(p);
+  /* Historie se od 30. 10. otevírá přepínačem (viz scripts/rozbal-hledani.mjs). */
+  await otevriHistorii(p);
   await p.waitForSelector('#recent-strip .rs-chip', { timeout: 60000 });
   await p.waitForTimeout(1200);
   const v = await p.evaluate(() => {

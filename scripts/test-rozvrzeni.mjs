@@ -24,7 +24,7 @@
 // 4) TITULKY DELŠÍ NEŽ VÝPIS GOOGLU. Osmnáct stránek mělo titulek přes
 //    65 znaků a osmnáct popisek přes 165 — ve výsledcích z nich zbyl cár.
 import { chromium } from 'playwright-core';
-import { rozbalHledani } from './rozbal-hledani.mjs';
+import { rozbalHledani, otevriHistorii } from './rozbal-hledani.mjs';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -681,6 +681,9 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, dvaKlice);
   await p.reload({ waitUntil: 'domcontentloaded' });
   await pripravenoVypis(p); await domUtichlo(p, 300);
+  /* Pruh je od 30. 10. zavřený, dokud se neklepne na „Historii"
+     (viz scripts/rozbal-hledani.mjs a §242). */
+  await otevriHistorii(p);
   pravda('pruh „Naposledy prohlédnuté" se v měření objevil (jinak se jeho odznaky nezměří)',
     await p.evaluate(() => !document.getElementById('recent-strip').hidden),
     'pruh se neukázal — kontrola níž by o jeho odznacích nic neřekla');
@@ -916,6 +919,8 @@ for (const [w, h, telefon] of [[390, 844, true], [1280, 860, false]]) {
   })();
   await p.evaluate((k) => { try { localStorage.setItem('pk_recent_v1', JSON.stringify(k)); } catch (e) {} }, klice);
   await p.reload({ waitUntil: 'domcontentloaded' });
+  await p.waitForSelector('#map-recent', { timeout: 20000, state: 'attached' }).catch(() => {});
+  await otevriHistorii(p);
   await p.waitForSelector('#recent-strip .rs-chip', { timeout: 20000 }).catch(() => {});
   await p.waitForTimeout(900);
   const pruh = await p.evaluate(() => {
