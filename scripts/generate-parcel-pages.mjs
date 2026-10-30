@@ -522,6 +522,17 @@ export function pripravRozliseni(polozky) {
   const konec = ' | Parcelka';
   for (const skupina of podleTitulku.values()) {
     if (skupina.length < 2) continue;
+    /* ROZLIŠENÍ MUSÍ ROZLIŠIT, NE JEN PŘEPSAT.
+       Varianta se vybírala jako první, která se vejde do meze — a to
+       u skupiny, kde se nabídky liší jen tím údajem, který v první
+       variantě NENÍ, vyrobí tutéž větu znovu. Naměřeno na datech
+       z 30. 10.: tři dražby v Semilech bez výměry, týž druh i termín,
+       dostaly všechny „Orná půda — Semily, dražba 8. 12. 2026".
+       Tři stránky se shodným titulkem jsou přesně ta vada, kvůli které
+       tohle rozlišení vzniklo. Co se v téhle skupině už použilo, se
+       proto pamatuje a podruhé se nebere: žebřík jde dál — na číslo
+       parcely a na cenu, a ty se u těch tří liší. */
+    const uzPouzite = new Set();
     for (const { d, druh, vym } of skupina) {
       const pod = textPodilu(d) ? ', ' + textPodilu(d) : '';
       const dat = datumDrazby(d), par = cisloParcely(d);
@@ -544,11 +555,14 @@ export function pripravRozliseni(polozky) {
         ...(pv ? [`${pv} — ${d.place}, ${cena}`] : []),
         `${druh} — ${d.place}, ${cena}`, `${d.place}, ${cena}`);
       for (const v of varianty) {
-        if ((v + konec).length <= MEZ_TITULKU) { ROZLISENI.set(klicNabidky(d), v); break; }
+        if ((v + konec).length > MEZ_TITULKU || uzPouzite.has(v)) continue;
+        ROZLISENI.set(klicNabidky(d), v);
+        uzPouzite.add(v);
+        break;
       }
-      /* Když se nevejde nic, zůstane původní titulek. Dvě stránky se
-         shodným titulkem jsou menší zlo než titulek useknutý uprostřed
-         data — a kontrola v testu to nahlásí. */
+      /* Když se nevejde (nebo nezbude) nic, zůstane původní titulek.
+         Dvě stránky se shodným titulkem jsou menší zlo než titulek
+         useknutý uprostřed data — a kontrola v testu to nahlásí. */
     }
   }
   return ROZLISENI;
