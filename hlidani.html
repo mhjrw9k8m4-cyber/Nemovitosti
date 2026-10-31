@@ -240,14 +240,21 @@
     /* Rychlé volby jen vyplní políčka pod sebou — je tedy pořád vidět,
        co se nastavilo, a dá se to přepsat po svém. */
     .hl-rychle-radek{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 8px;}
-    /* Recept pilulky z hledání (.filter-chip): 44 px, 13/600, bílá
-       plocha, rám 1 px, tišší text. Mělo 38 px — pod mezí 44 px, kterou
-       si web klade na dotyk, a hlídač dotyku to neviděl, protože tenhle
-       formulář je za záložkou a za přihlášením. */
-    .hl-rychle{font:inherit; font-size:13px; font-weight:600; cursor:pointer;
+    /* Recept volby z hledání (.filter-chip): 44 px, 14/600, bílá plocha,
+       rám 1 px, plný text, zaoblení --r-ovladani. Mělo 38 px — pod mezí
+       44 px, kterou si web klade na dotyk, a hlídač dotyku to neviděl,
+       protože tenhle formulář je za záložkou a za přihlášením.
+       A 31. 10. SE RECEPT ZMĚNIL, TADY UŽ NE. Pilulky druhů nabídky se
+       na přání majitele spojily se zbytkem panelu filtrů: z pilulky
+       (--r-pill) se stala dlaždice (--r-ovladani), písmo vyrostlo na
+       14 px a text ztmavl z --muted na --text. Tyhle dvě třídy zůstaly
+       ve staré podobě a komentář nad nimi tvrdil, že jsou podle
+       hledání — naměřeno 999px/13px/rgb(88,95,91) proti
+       14px/14px/rgb(16,21,19). Hlídá scripts/test-hlidani-jako-hledani.mjs. */
+    .hl-rychle{font:inherit; font-size:14px; font-weight:600; cursor:pointer;
       display:inline-flex; align-items:center; gap:8px;
-      min-height:44px; padding:4px 12px; border-radius:var(--r-pill);
-      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--muted);
+      min-height:44px; padding:4px 12px; border-radius:var(--r-ovladani);
+      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
       transition:border-color var(--cas-zakladni) var(--ease), background var(--cas-zakladni) var(--ease), color var(--cas-zakladni) var(--ease);}
     .hl-rychle:hover{border-color:var(--znacka-svetla);}
     .hl-rychle.on{border-color:var(--plocha-znacka); background:var(--plocha-znacka); color:#fff;}
@@ -282,7 +289,9 @@
     /* Táž pilulka jako rychlé volby o kus výš, tedy .filter-chip
        z hledání. Lišila se tloušťkou písma (400 proti 600), rámem
        (1,5 px proti 1) a plochou. */
-    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-pill); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; user-select:none; background:var(--plocha-karta);}
+    /* Týž recept jako .hl-rychle výš, a ze stejného důvodu — viz
+       poznámka u ní o změně z pilulky na dlaždici. */
+    .hl-chip{font:inherit; text-align:left; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:4px 12px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:14px; font-weight:600; color:var(--text); cursor:pointer; user-select:none; background:var(--plocha-karta);}
     .hl-chip.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12); color:var(--znacka-svetla); font-weight:700;}
     /* Seznam hledání */
     .hl-item{padding:12px 16px; border-bottom:1px solid var(--line);}

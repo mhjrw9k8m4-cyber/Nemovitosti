@@ -133,7 +133,8 @@ try {
       cena: y('.pz-priceblock'), verdikt: y('#pz-verdict'),
       radce: y('details.pz-gtk-obal:not(.pz-nav-obal)'),
       akce: y('.pz-akce-hlavni'), hlavniBtn: y('.pz-akce-hlavni .pz-btn.primary'),
-      uloz: y('#pz-fav'), popis: y('.pz-popis-inzerent'), klice: y('.pz-klice'),
+      uloz: y('#pz-fav'), popis: y('.pz-popis-inzerent'), popisH: v('.pz-popis-inzerent'),
+      klice: y('.pz-klice'),
       /* Hledá se kalkulačka SAMA, ne obal, do kterého byla chvíli
          sbalená. Napsat sem obal znamená, že se po jeho zrušení
          nenajde nic a kontrola projde, i kdyby se formulář vrátil. */
@@ -148,20 +149,43 @@ try {
   /* 1) HLAVNÍ AKCE NAHOŘE ------------------------------------------- */
   pravda('hlavní akce je na stránce', je(m.akce) && je(m.hlavniBtn) && je(m.uloz),
     JSON.stringify({ akce: m.akce, btn: m.hlavniBtn, uloz: m.uloz }));
-  /* TŘETINA SE ZMĚNILA NA POLOVINU, A MÁ TO DŮVOD.
+  /* TŘETINA → POLOVINA → A OD 31. 10. NĚCO JINÉHO NEŽ PODÍL STRÁNKY.
      Mez „první třetina stránky" vznikla v době, kdy tohle tlačítko bylo
      JEDINÁ cesta na inzerát: kdo ho minul, musel rolovat na konec.
      Dnes je akce vidět pořád — na telefonu v připnuté spodní liště
      (test-lista-dole), na monitoru v připnutém pruhu u ceny (kontrola
-     o kus níž v tomhle souboru). Co mez chránila, tedy drží jinde
-     a změřitelně.
-     Uvolnění bylo potřeba kvůli parametrům pozemku: výměra, cena za
-     metr a druh se přesunuly pod cenu, kam patří („key facts"), a
-     odsunuly akci o 360 px. Polovina je pořád tvrdá mez — na konci
-     stránky ani v její druhé půlce tlačítko být nesmí. */
-  pravda('odkaz na nabídku stojí v první polovině stránky, ne na konci',
-    je(m.akce) && je(m.verdikt) && m.akce > m.verdikt && m.akce < m.cela / 2,
-    `akce na ${m.akce} px z ${m.cela} px (polovina je ${Math.round(m.cela / 2)})`);
+     o kus níž v tomhle souboru). Co mez chránila, drží tedy jinde
+     a změřitelně. Pak se povolila na polovinu, protože parametry
+     pozemku odsunuly akci o 360 px.
+     TEĎ SI DVĚ PRAVIDLA V TOMHLE SOUBORU ODPOROVALA. O pár řádků níž
+     stojí, že popis od inzerenta se musí dát přečíst DŘÍV, než se
+     odejde na inzerát — a to je pořadí rozhodování, na kterém se
+     stránka stavěla: co to je → za kolik → co o tom říká ten, kdo to
+     zná → co s tím chci dělat. Jenže nad popisem leží verdikt o ceně
+     a mapa, takže popis sám začíná až za polovinou stránky.
+     NAMĚŘENO (390×844, pozemek-benesov-benesov-1sjtz7b.html): cena 606,
+     parametry 859, rádce 1049, verdikt 1592, mapa 1821 (vysoká 477),
+     popis 2562 (vysoký 128), AKCE 2710, poznámka 2919, sdílení 3198,
+     celá stránka 3794. Akce tedy stojí 20 px za koncem popisu — dřív
+     být nemůže, aniž by se porušilo pravidlo o popisu — a vychází na
+     71 % stránky. „Polovina" je při téhle skladbě nesplnitelná mez,
+     ne hlídač; splnit by se dala jen tak, že by se akce předsunula
+     před popis, tedy porušením druhého pravidla.
+     CO SE MĚŘÍ MÍSTO TOHO. Dvě věci, které dohromady říkají totéž, co
+     „polovina" říkat měla, ale dají se splnit:
+       1. akce stojí HNED ZA POPISEM (do 200 px), ne o obrazovky níž —
+          tedy přesně tam, kde pořadí rozhodování končí;
+       2. a nespadne do poslední pětiny stránky, takže za ní pořád
+          zbývá jen to, co rozhodnutí nemění (poznámka a sdílení).
+     Mez 80 % má proti naměřeným 71 % rezervu 325 px. Kdo za akci
+     přidá další oddíl, dozví se to. */
+  pravda('odkaz na nabídku stojí hned za popisem, ne o obrazovky níž',
+    je(m.akce) && je(m.verdikt) && m.akce > m.verdikt
+      && (!je(m.popis) || (m.akce >= m.popis && m.akce - (m.popis + (m.popisH || 0)) <= 200)),
+    `akce ${m.akce} px, popis ${m.popis} px (+${m.popisH} px výšky), verdikt ${m.verdikt} px`);
+  pravda('a nespadne do poslední pětiny stránky',
+    je(m.akce) && m.akce < m.cela * 0.8,
+    `akce na ${m.akce} px z ${m.cela} px (${Math.round(m.akce / m.cela * 100)} %, mez 80 %)`);
   pravda('a „Uložit" je u něj, ne o tři obrazovky níž',
     je(m.uloz) && je(m.akce) && Math.abs(m.uloz - m.akce) < 120,
     `akce ${m.akce} px, Uložit ${m.uloz} px`);

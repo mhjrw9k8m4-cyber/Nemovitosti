@@ -17838,3 +17838,74 @@ databázi"**, ne na webu: prohlížečová část prošla 15 z 15 bez vady.
 Je to otevřený úkol o živé Supabase (chybějící kbelík `listing-photos`
 a nepotvrzované e-maily), na který čekám na majitelův pokyn; hlášení
 o něm už v úkolu #1 je.
+
+## §285 Běh 857: hlídání zůstalo u pilulek, které hledání už nemá
+
+Oprava z §284 zabrala a směna `v-prohlizeci-2` doběhla dál — a hned za
+místem, kde dosud padala, našla další rozpor. `test-hlidani-jako-hledani`
+hlásil, že rychlé volby a pilulky „musí mít" ve formuláři hlídání nemají
+týž recept jako volby v hledání:
+
+| | hledání (`.filter-chip`) | hlídání (`.hl-rychle`, `.hl-chip`) |
+|---|---|---|
+| tvar | 14 px (`--r-ovladani`) | 999 px (`--r-pill`) |
+| text | `rgb(16, 21, 19)` (`--text`) | `rgb(88, 95, 91)` (`--muted`) |
+| písmo | 14/600 | 13/600 |
+
+**Není to nová vada, je to nedojetá změna.** Když se na přání majitele
+pilulky druhu nabídky spojily s panelem filtrů („toto by mělo být
+spojené se zbytkem"), změnil se recept volby z pilulky na dlaždici:
+zaoblení, velikost písma i barva textu. Formulář hlídání si tu starou
+podobu nechal — a komentář nad ním přitom tvrdil „recept pilulky
+z hledání (.filter-chip): 13/600", takže v souboru stála věta, která
+už nebyla pravda. Obojí je teď srovnané a u pravidla je napsáno, co se
+kdy změnilo.
+
+**Proč to CI neukázalo dřív.** Je to v téže směně jako `test-jedna-barva`
+a stojí ZA ním; shell v úloze běží s `-e`, takže první pád směnu ukončí
+a zbytek se nespustí. Dokud padal tvar odznaků, tohle nikdo neměřil.
+Ze stejného důvodu jsem po opravě pustil lokálně i všech deset zkoušek,
+které v té směně stojí ještě za ní — ne abych čekal, co ukáže příští běh.
+
+## §286 Hlavní akce na stránce pozemku: dvě pravidla v jednom souboru si odporovala (úkol #175)
+
+Za opravou z §285 čekal ve stejné směně další pád, který CI dnes taky
+ani jednou nespustilo: `test-poradi-pozemku` — „odkaz na nabídku stojí
+v první polovině stránky, ne na konci: akce na 2 734 px z 3 855".
+Je to otevřený úkol #175 („mez „polovina" ztratila zdůvodnění"), tak
+ho zavírám měřením.
+
+**Naměřeno** (390×844, `pozemek-benesov-benesov-1sjtz7b.html`):
+cena 606, parametry 859, rádce 1 049, verdikt 1 592, mapa 1 821
+(vysoká 477), popis od inzerenta 2 562 (vysoký 128), **akce 2 710**,
+poznámka 2 919, sdílení 3 198, celá stránka 3 794. Akce tedy stojí
+20 px za koncem popisu a vychází na 71 % stránky.
+
+**Proč je „polovina" nesplnitelná.** O pár řádků níž v témže souboru
+stojí pravidlo, že popis od inzerenta se musí dát přečíst DŘÍV, než se
+odejde na inzerát — pořadí rozhodování, na kterém se stránka stavěla
+(co to je → za kolik → co o tom říká ten, kdo to zná → co s tím chci
+dělat). Nad popisem ale leží verdikt o ceně a mapa, takže popis sám
+začíná za polovinou. Splnit obě pravidla najednou by šlo jen tak, že
+by se akce předsunula před popis — tedy porušením toho druhého. Mez
+„polovina" tedy nehlídala, jen zakazovala stav, do kterého se stránka
+nemohla dostat jinak než porušením sebe sama.
+
+**Co se měří místo toho.** Dvě věci, které dohromady říkají totéž, co
+„polovina" říkat měla, ale jdou splnit:
+
+1. akce stojí **hned za popisem** (do 200 px) — tedy přesně tam, kde
+   pořadí rozhodování končí, ne o obrazovky níž;
+2. a **nespadne do poslední pětiny** stránky, takže za ní zůstává jen
+   to, co rozhodnutí nemění (poznámka a sdílení). Mez 80 % má proti
+   naměřeným 71 % rezervu 325 px.
+
+To, co původní mez hlídala doopravdy — že se dá odejít na inzerát bez
+rolování na konec — drží jinde a taky změřitelně: na telefonu připnutá
+spodní lišta (`test-lista-dole`), na monitoru připnutý pruh u ceny
+(kontrola v témže souboru).
+
+**Prokázáno sabotáží, každé pravidlo zvlášť:** `.pz-akce-hlavni` s
+odsazením 400 px shodí první (akce 3 114, popis 2 586 + 128) a druhé
+nechá projít; popis vytažený na 2 500 px shodí druhé (akce 5 106
+z 6 227 = 82 %) a první nechá projít.
