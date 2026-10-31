@@ -324,13 +324,6 @@
      --znacka-svetla 9,78 · --brand-live 10,22 · --znacka-hluboka 13,69.
      Nejbližší z nich je mimo pásmo, kde se barvy pletou. */
   --plocha-znacka-svetla:#B8E1CC;
-/* TMAVÁ HLAVIČKA (31. 10., §277). Lišta byla bílá na skoro bílé ploše
-   a od stránky ji dělila jen vlásečnice — web tím začínal ničím.
-   Hluboká zeleň je krok 800 téže stupnice (--znacka-hluboka), tedy
-   nejtmavší plocha, kterou značka má; bílý nápis na ní má 11,6 : 1.
-   Vlastní token proto, že --plocha-plovouci-plna nosí i okna a
-   plovoucí lišty, a ty bílé zůstávají. */
-  --plocha-hlavicka:var(--znacka-hluboka);
   /* ZÁSTUPNÝ TEXT V POLÍCH. Pět polí na webu ho mělo ve třech různých
      barvách: #74857A (formuláře), var(--muted) (pole polohy)
      a #8A93A3 v políčku hledání na mapě — a to je modrošedá, 218°, na
@@ -1616,23 +1609,7 @@ body.vm-otevreno{overflow:hidden;}
    takže vysouvací nabídka uvnitř ní se umisťovala vůči hlavičce, ne
    vůči oknu. Na dotykových zařízeních se obojí vypínalo už dřív — teď
    to platí všude. Hlídá scripts/test-barva-listy.mjs. */
-header{border-bottom:1px solid rgba(255,255,255,0.14); padding:12px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-hlavicka); transition:padding var(--cas-zakladni) var(--ease);}
-/* Co v tmavé liště stojí, mluví bílou. Značka má svou obrácenou
-   kresbu (assets/logo-mark-svetla.svg) — zelená dlaždice by se
-   v zelené liště ztratila. */
-header .logo{color:#fff;}
-header .logo-mark{background-image:url("../assets/logo-mark-svetla.svg?v=1"); box-shadow:none;}
-header .hdr-ucet{background:transparent; border-color:rgba(255,255,255,0.4); color:#fff;}
-header .hdr-ucet > .ik{color:#fff;}
-header .hdr-ucet:hover{border-color:#fff; color:#fff; background:rgba(255,255,255,0.08);}
-/* Přihlášený má dlaždici obráceně: bílá plocha, zelený text. Zelená
-   plocha na zelené liště by nebyla vidět vůbec. */
-:root.pk-prihlasen header .hdr-ucet{background:#fff; border-color:#fff; color:var(--znacka);}
-:root.pk-prihlasen header .hdr-ucet > .ik{color:var(--znacka);}
-header .nav-burger{background:transparent; border-color:rgba(255,255,255,0.4); color:#fff;}
-header .nav-burger:hover{border-color:#fff; color:#fff; background:rgba(255,255,255,0.08);}
-/* Přeskakovací odkaz vyjíždí z lišty, takže na ní musí být čitelný. */
-header .skip-link:focus{color:var(--znacka);}
+header{border-bottom:1px solid var(--line); padding:12px 0; position:fixed; top:0; left:0; right:0; z-index:1100; background:var(--plocha-plovouci-plna); transition:padding var(--cas-zakladni) var(--ease);}
 /* PŘICHÁZÍ POMALU, ODCHÁZÍ RYCHLE — každý směr má svůj vlastní čas.
    Objevit se z ničeho nic za desetinu vteřiny působí jako cvaknutí:
    hlavička „připlave rychlostí světla" a člověk nestihne pochopit, odkud.
@@ -2160,16 +2137,6 @@ button:disabled:hover, input:disabled:hover, select:disabled:hover,
 .eyebrow{display:inline-flex; align-items:center; gap:8px; font-family:var(--font-popisek); font-size:12px; font-weight:600; letter-spacing:var(--popisek-proklad); text-transform:uppercase; color:var(--znacka-svetla); margin-bottom:20px;}
 .eyebrow::before{content:""; width:16px; height:1px; background:var(--znacka-svetla);}
 h1{font-family:var(--font-nadpis); font-weight:700; font-size:var(--h1-stranka); line-height:1.1; letter-spacing:-0.01em; margin-bottom:20px;}
-/* NADPISY NESOU ZNAČKU (31. 10., §277). Na webu byla zeleň jen
-   v ovladačích a v logu, takže obsah — to, kvůli čemu sem člověk jde —
-   mluvil samou černou. Nadpis je první, co se čte; když má barvu
-   značky, pozná se stránka dřív, než se přečte jedno slovo.
-   Zeleň na bílé kartě má 7,6 : 1, na teplém papíru 7,0 : 1, takže
-   i velký nadpis bezpečně nad mezí AA.
-   `:where()` schválně: nepřidává sílu, takže každé pravidlo, které
-   nadpisu barvu už dává (tmavé pásy, bílý text v deskách), vyhraje
-   i nadále bez výjimky. */
-:where(h1, h2){color:var(--znacka);}
 /* Dřív tu byl modro-fialový přechod obtisknutý do písmen. Vypadalo to jako
    každá druhá technologická stránka a odstín uprostřed navíc vybledal.
    Teď plná hluboká modř a pod ní měděné podtržení — jeden akcent, který si
@@ -2233,8 +2200,7 @@ h1 em{ color:var(--znacka-svetla);
    Poměr je teď 5 : 1 a předěl je znát, aniž by stránka narostla. */
 .section-head{max-width:var(--m-sloupec); margin:0 0 28px; text-align:left;}
 .section-head .eyebrow{margin-bottom:16px;}
-/* Nadpis oddílu nese značku jako každý jiný nadpis (§277). */
-.section-head h2{font-family:var(--font-nadpis); font-weight:700; font-size:32px; line-height:1.2; letter-spacing:-0.03em; color:var(--znacka);}/* Srdce značky — proč to děláme */
+.section-head h2{font-family:var(--font-nadpis); font-weight:700; font-size:32px; line-height:1.2; letter-spacing:-0.03em; color:var(--text);}/* Srdce značky — proč to děláme */
 /* Náš slib — čtyři lidské závazky, kompozice barev značky */
 /* Druhy pozemků */
 
@@ -6076,7 +6042,7 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    což je týž odstup napsaný o prvek vedle, a sléval se s okrajem
    oddílu. Odstup patří mezi oddíl a formulář. */
 .add-card > .rules-sect + .add-form{margin-top:16px;}
-.rules-sect h2{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; color:var(--znacka); margin-bottom:12px;}
+.rules-sect h2{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:-0.01em; color:var(--text); margin-bottom:12px;}
 .rule-list{list-style:none; display:flex; flex-direction:column; gap:8px;}
 .rule-list li{position:relative; padding-left:28px; font-size:16px;}
 .rule-list li b{color:var(--text);}
@@ -7308,7 +7274,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
    čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
 .okr-hero .eyebrow{color:var(--pas-text);}
-.okr-hero h1{color:var(--znacka); font-size:var(--h1-stranka); line-height:1.1;
+.okr-hero h1{color:var(--pas-text); font-size:var(--h1-stranka); line-height:1.1;
   letter-spacing:-0.03em; margin:12px 0 12px;}
 .okr-hero .sub{color:var(--pas-text-mute); max-width:var(--m-text);}
 .okr-hero .sub b{color:var(--pas-text);}
@@ -8188,7 +8154,7 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
 .add-hero:not(.app-hero)::after{content:none;}
 .add-hero:not(.app-hero) > .wrap{position:relative; z-index:1;}
 .add-hero:not(.app-hero) .eyebrow{color:var(--pas-text);}
-.add-hero:not(.app-hero) h1{color:var(--znacka); font-size:var(--h1-stranka);
+.add-hero:not(.app-hero) h1{color:var(--pas-text); font-size:var(--h1-stranka);
   line-height:1.1; letter-spacing:-0.03em; max-width:var(--m-nadpis);
   margin:12px 0 12px;}
 /* Zvýraznění v nadpisu nese barva, ne kurzíva. */
@@ -8354,7 +8320,7 @@ h1 em::after{content:none; animation:none;}
 .add-hero.app-hero{background:var(--pas-plocha); background-image:none;
   padding:20px 0 28px; margin-bottom:24px;}
 .add-hero.app-hero::before, .add-hero.app-hero::after{content:none;}
-.add-hero.app-hero h1{color:var(--znacka);}
+.add-hero.app-hero h1{color:var(--pas-text);}
 .add-hero.app-hero .sub{color:var(--pas-text-mute);}
 .add-hero.app-hero .sub b{color:var(--pas-text);}
 
@@ -10179,14 +10145,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* Rodinu tu nenastavujeme: h1 ji má z `h1{font-family:var(--font-nadpis)}`
    a ten dnes míří na Inter. Kdyby se tu psala znovu, přebila by jediný
    zdroj pravdy — a přesně to hlídá scripts/test-pismo.mjs. */
-/* ZNAČKOU, JAKO VŠECHNY NADPISY (§277). Tahle hlava je na deseti
-   ručně psaných stránkách (data, kontakt, pravidla a spol.) a držela
-   si inkoust --pas-text, takže po obarvení nadpisů byl web rozdělený
-   na dvě party: sedm typů stránek mělo nadpis zelený, tři černý.
-   Našel to scripts/test-jednotnost.mjs („barva nadpisu v hlavě je na
-   celém webu jeden") — přesně na to tam je. */
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj); line-height:1.2;
-  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--znacka);}
+  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--pas-text);}
 .st-meta{font-size:14px; line-height:1.5; color:var(--pas-text-mute);
   margin:0; max-width:var(--m-text);}
 

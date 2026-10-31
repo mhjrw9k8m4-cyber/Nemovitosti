@@ -462,13 +462,9 @@ const STEJNA_BARVA = {
    proto porovnají obě místa: kresba smí mít jen bílou a tu zeleň,
    kterou říká token --plocha-znacka. */
 {
-  /* OD 31. 10. JSOU KRESBY DVĚ. Hlavička je tmavě zelená (§277), takže
-     v ní zelená dlaždice splývala — v ní je obrácená kresba (bílá
-     dlaždice, zelený špendlík). Obě si musí držet tutéž zeleň, jinak
-     se značka v liště a v šuplíku rozejde. */
   const m = /--plocha-znacka\s*:\s*([^;]+);/.exec(STYL);
   const plocha = (m ? m[1] : '').trim().toLowerCase();
-  for (const soubor of ['logo-mark.svg', 'logo-mark-svetla.svg']) {
+  for (const soubor of ['logo-mark.svg']) {
     const znak = readFileSync(path.join(ROOT, 'assets', soubor), 'utf8');
     const barvy = [...znak.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((x) => x[1].toLowerCase());
     const cizi = barvy.filter((x) => x !== plocha && x !== '#ffffff' && x !== '#fff');

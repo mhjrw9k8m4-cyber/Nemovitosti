@@ -17677,3 +17677,34 @@ text hlavičky výpisu (`test-mapa`) a barvy napříč typy stránek
 
 **Zkoušky.** `test-mapa` 57, `test-shoda` 19, `test-jednotnost` 6,
 rychlá sada 133/133 — bez chyby.
+
+## §281 Barvy jsou zpátky tam, kde byly před přestavbou
+
+**Zadání (31. 10.):** „Prostě to změň na původní barvy, než jsi to
+předělával."
+
+Vráceno tedy i to, co zbývalo z §277 — tedy všechno barevné, co jsem
+dnes udělal:
+
+* **lišta je zase bílá** (`--plocha-plovouci-plna`, linka `--line`);
+  token `--plocha-hlavicka` a všechna pravidla tmavé podoby (bílý
+  nápis, obrysy u profilu a hamburgeru, obrácená dlaždice přihlášeného)
+  jsou pryč,
+* **značka má zase jednu kresbu** — `assets/logo-mark-svetla.svg` je
+  smazaná a hlídač v `test-tokeny` se zase ptá jen na `logo-mark.svg`,
+* **nadpisy jsou zase inkoustové**: `:where(h1, h2)`, hero okresních
+  a nástrojových stránek, nadpis oddílu, `.rules-sect h2` i hlava
+  ručně psaných stránek (`.st-hlava h1`).
+
+Spolu s §279 je tím vzhled barevně přesně tam, kde byl před §276.
+
+**Co z dnešní práce zůstává, protože to není barva:** jediné řazení
+nad výpisem místo atrapy a druhé kopie v panelu (§275), vyhledávací
+pás bez desky a nabídka jako jeden seznam místo hromady dlaždic
+(§278), a tři opravené hlídače (§277, §280).
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-jednotnost` (6),
+`test-tokeny` (22), `test-kontrast` (2 689 prvků), `test-hlavicka`
+(65), `test-menu` (32), `test-okraje` (143), `test-soustava` (15),
+`test-uvod` (68), `test-deska` (5), `test-prvni-obrazovka` (22)
+a `test-ovladani-vypisu` (75) — bez chyby.
