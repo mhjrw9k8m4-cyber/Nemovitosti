@@ -552,14 +552,13 @@ barvy:
   znacka:        "#175A40"   # --znacka i --plocha-znacka: plocha hlavní akce, text, linky
   znacka-svetla: "#247052"   # --znacka-svetla (jen na bílém)
   znacka-na-tmave: "#8ECAAD" # --znacka-na-tmave, akcent na tmavé desce
-  # DRUHÁ BARVA (31. 10., §276). Zeleň = nabídka a hlavní akce,
-  # bronz = moje nářadí: uložené, stažení výběru, řazení, a v nabídce
-  # profil, inzeráty, zprávy, hlídání. Táž stupnice, odstín 73°, krok
-  # 600 — na bílé 6,33 : 1. Hlídá scripts/test-ovladani-vypisu.mjs.
-  akcent-bronz:  "#7C5927"
-  text:          "#101513"   # inkoust zůstává zelenočerný: závoje a stíny se z něj počítají
-  plocha-stranky: "#F4F0EA"  # teplý papír, ne studená šeď (§276)
-  plocha-zapustena: "#EFEBE5"
+  # JEN ZELEŇ. 31. 10. tu na pár hodin přibyl teplý papír a bronzová
+  # druhá barva (§276) — majitel to zamítl: „nechtěl jsem měnit bílou
+  # ani ostatní barvy, měl ses soustředit jen na tu zelenou." Plochy
+  # jsou zpátky studené a barva webu je jedna.
+  text:          "#101513"
+  plocha-stranky: "#F2F4F3"
+  plocha-zapustena: "#EDEFEE"
   panel:         "#ffffff"   # i --plocha-plovouci: plná, nikdy průsvitná
   linka:         "rgba(16,21,19,0.55)"
   druhy:

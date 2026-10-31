@@ -412,41 +412,6 @@ try {
         && (pas.pole.obrys === pas.prep.obrys || pas.prepVnitrni),
       `pole ${pas.pole && pas.pole.plocha} / ${pas.pole && pas.pole.obrys}, přepínač ${pas.prep && pas.prep.plocha} / ${pas.prep && pas.prep.stin}`);
 
-    /* 3b2. DVĚ BARVY, KAŽDÁ SE SVOU PRACÍ (§276).
-       Majitel 31. 10. s fotkou výpisu i nabídky: „líbí se mi to
-       poskládání, ale ne jak to vypadá — sprostě, jen ta jedna barva,
-       úplně bez duše, nemá to co říct." Měřitelně měl pravdu: všechny
-       značky nad výpisem nesly TUTÉŽ zeleň, takže z barvy nešlo poznat,
-       co je nabídka a co nářadí.
-       Od té doby platí: zeleň = nabídka a hlavní akce, bronz = nářadí
-       k výpisu (uložené, stažení, řazení). Hlídá se obojí, protože obojí
-       se dá omylem zrušit — stačí jedno `color:` navíc. A hlídá se
-       ROZDÍL mezi nimi, ne jen hodnoty: dvě barvy, které se od sebe
-       nedají rozeznat, jsou pořád jedna barva. */
-    const barvy = await p.evaluate(() => {
-      const c = (s) => { const e = document.querySelector(s); return e ? getComputedStyle(e).color : null; };
-      const rgb = (t) => { const m = (t || '').match(/(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/); return m ? [+m[1], +m[2], +m[3]] : null; };
-      const styl = getComputedStyle(document.documentElement);
-      return {
-        bronz: (styl.getPropertyValue('--akcent-bronz') || '').trim(),
-        vyvoz: rgb(c('#mc-vyvoz .mcn-ic')),
-        razeni: rgb(c('.ms-vysledky > .cdd > .cdd-btn .mcn-ic')),
-        rychly: rgb(c('#mc-rychly .mcn-ic')),
-        prepinac: rgb(c('.mvt-btn.active')),
-      };
-    });
-    const naRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-    const bronzRgb = /^#[0-9a-fA-F]{6}$/.test(barvy.bronz) ? naRgb(barvy.bronz) : null;
-    const tazBarva = (a, b) => !!a && !!b && a.every((x, i) => Math.abs(x - b[i]) <= 2);
-    const dalekoOd = (a, b) => !!a && !!b &&
-      Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) >= 60;
-    pravda(`${sirka} px: nářadí nad výpisem má bronzovou značku`,
-      !!bronzRgb && tazBarva(barvy.vyvoz, bronzRgb) && tazBarva(barvy.razeni, bronzRgb),
-      `token ${barvy.bronz}, stažení ${barvy.vyvoz}, řazení ${barvy.razeni}`);
-    pravda(`${sirka} px: a hlavní akce zůstává zelená, ne bronzová`,
-      dalekoOd(barvy.rychly, bronzRgb) && dalekoOd(barvy.prepinac, bronzRgb),
-      `„Procházet po jednom" ${barvy.rychly}, přepínač ${barvy.prepinac}, bronz ${bronzRgb}`);
-
     /* 3c. ŘAZENÍ SE OTEVŘE NA MÍSTĚ — A NIC JINÉHO SE NEHNE.
        Tahle kontrola měla starší podobu a hlídala OBCHÁZKU: volba
        bydlela v panelu filtrů a tlačítko nad výpisem byla jen atrapa,

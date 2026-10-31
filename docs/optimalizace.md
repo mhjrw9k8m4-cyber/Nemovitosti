@@ -17602,3 +17602,33 @@ trefuje pod pole), `test-uvod` (68), `test-menu` (32),
 `test-hlavicka` (65), `test-kontrast` (2 689 prvků), `test-okraje`
 (143), `test-deska` (5), `test-soustava` (15),
 `test-prvni-obrazovka` (22) a `test-ovladani-vypisu` (79) — bez chyby.
+
+## §279 Teplý papír a bronz zpátky pryč — mělo se sahat jen na zeleň
+
+**Zadání (31. 10.):** „Nechtěl jsem po tobě ani změnit tu bílou
+a ostatní barvy, měl ses soustředit jen na tu zelenou. Vrať to zpátky
+a znovu."
+
+Měl pravdu a je to moje chyba v rozsahu, ne v provedení: na „celý web
+je bez duše, jen jedna barva" jsem odpověděl tím, že jsem sáhl na
+plochy (teplý papír) i přidal druhou barvu (bronz) — tedy na dvě
+věci, o které nikdo nežádal.
+
+**Vráceno do původního stavu:** `--bg` #F2F4F3, `--plocha-vypis`
+#F4F6F4, `--plocha-zapustena` #EDEFEE, `--plocha-tlumena` #F7F8F8,
+`--muted` #585F5B; token `--akcent-bronz` i všechna čtyři jeho místa
+(značky nářadí nad výpisem, záložka „Uložené", řazení, účet v nabídce)
+jsou zpátky zelené, stejně jako kresba profilu v šuplíku. Srovnané
+jsou i tři stránky s vlastním stylem (404, přestupní, diagnostika),
+designový blok v CLAUDE.md a hlídač v `test-ovladani-vypisu`, který
+dvě barvy vyžadoval (75 kontrol místo 79 — zbyly ty o pásu
+s hledáním, které s barvou nesouvisí).
+
+**Co ZŮSTÁVÁ, protože to je práce se zelení a s tvarem, ne s paletou:**
+tmavá lišta (§277), nadpisy v barvě značky (§277), jediné řazení nad
+výpisem (§275) a vršek bez krabice v krabici (§278).
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-kontrast`
+(2 689 prvků), `test-okraje` (143), `test-tokeny` (23),
+`test-soustava` (15), `test-uvod` (68), `test-menu` (32)
+a `test-ovladani-vypisu` (75) — bez chyby.
