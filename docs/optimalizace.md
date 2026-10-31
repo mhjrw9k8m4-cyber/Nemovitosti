@@ -17632,3 +17632,48 @@ výpisem (§275) a vršek bez krabice v krabici (§278).
 (2 689 prvků), `test-okraje` (143), `test-tokeny` (23),
 `test-soustava` (15), `test-uvod` (68), `test-menu` (32)
 a `test-ovladani-vypisu` (75) — bez chyby.
+
+## §280 Tři pády v CI, o kterých jsem nevěděl, protože jsem je lokálně nepustil
+
+Běhy 848, 849 i 850 skončily červeně a já o tom psal majiteli „lokálně
+všechno zelené". Lokálně ano — jenže jsem pustil patnáct hlídačů
+z pětaosmdesáti. Tohle padalo:
+
+**1. Mapa: „výpis má co ukazovat" (a druhá kontrola za ní).**
+Moje chyba z §275. `test-mapa` čte počet nabídek z hlavičky výpisu
+vzorkem `/·\s*([\d\s]+)\s*na mapě/` — tedy VČETNĚ oddělovače „ · ",
+který před počtem stával, dokud mu předcházelo jméno řazení. Řazení
+se přestěhovalo do vlastního ovladače, tečka neměla co oddělovat
+a zmizela; vzorek přestal sedět, počet vycházel −1 a hlídač hlásil,
+že výpis nemá co ukazovat — ačkoli měl 1 912 nabídek. Oddělovač je
+nepovinný. Prokázáno sabotáží: když hlavička napíše „1 912 nabídek"
+místo „1 912 na mapě", obě kontroly zase spadnou.
+
+**2. Jednotnost: „barva nadpisu v hlavě je na celém webu jeden".**
+Moje chyba z §277. Nadpisy dostaly barvu značky, jenže hlava ručně
+psaných stránek (`.st-hlava h1`) si držela inkoust — takže sedm typů
+stránek mělo nadpis zelený a tři (data, kontakt, pravidla) černý.
+Přesně na tohle ten hlídač je. Hlava je zelená taky.
+
+**3. Shoda cen: tři kontroly o vzorku, který v datech není.**
+Tenhle pád není z dneška a není to vada webu. Zkouška porovnává
+syrovou a očištěnou hromádku dat a potřebuje aspoň jednu nabídku,
+u které se percentil liší. Dvojníci se slučují čím dál dřív u zdroje
+— naměřeno 40 (21. 10.) → 10 (28. 10.) → **0** (31. 10.) — takže
+předpoklad přestal platit a s ním spadly i dvě kontroly, které z něj
+vybíraly vzorky stránek. Je to přesně ten omyl, před kterým varuje
+komentář přímo v tom souboru: mez naladěná na dnešek trestá úklid
+v datech. Rozdíl se proto jen vypíše a části, které bez něj nemají
+co měřit, se přeskočí — stejně jako se tam už přeskakuje podíl nebo
+nevěrohodná nabídka, když dnes v datech nejsou. Co zůstává: že se
+mapa a stránka pozemku v ničem nerozejdou, a dalších devatenáct
+kontrol.
+
+**Ponaučení, které si zapisuju sem a ne do hlavy:** „lokálně zelené"
+znamená jen to, co jsem opravdu pustil. Po změně, která sahá na
+tokeny nebo na hlavičku stránky, patří k ověření i hlídači, co čtou
+text hlavičky výpisu (`test-mapa`) a barvy napříč typy stránek
+(`test-jednotnost`).
+
+**Zkoušky.** `test-mapa` 57, `test-shoda` 19, `test-jednotnost` 6,
+rychlá sada 133/133 — bez chyby.

@@ -733,7 +733,14 @@ if (daleko) {
   await p2.waitForTimeout(2500);
   const pocet = () => p2.evaluate(() => {
     const t = (document.querySelector('.map-count') || { textContent: '' }).textContent;
-    const m = /·\s*([\d\s\u00a0]+)\s*na mapě/.exec(t);
+    /* ODDĚLOVAČ UŽ PŘED POČTEM NESTOJÍ (§275). Do 31. 10. začínala
+       hlavička výpisu jménem řazení a za ním „ · " — a tahle zkouška
+       si tu tečku psala do vzorku. Jenže řazení se přestěhovalo nad
+       hlavičku do vlastního ovladače, tečka neměla co oddělovat
+       a zmizela; vzorek tím přestal sedět, počet vycházel −1 a dvě
+       kontroly padaly na tom, že „výpis nemá co ukazovat" — ačkoli
+       měl 1 912 nabídek. Oddělovač je proto nepovinný. */
+    const m = /(?:·\s*)?([\d\s\u00a0]+)\s*na mapě/.exec(t);
     return m ? parseInt(m[1].replace(/[\s\u00a0]/g, ''), 10) : -1;
   });
   const predKlepnutim = await pocet();

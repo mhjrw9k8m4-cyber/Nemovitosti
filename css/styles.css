@@ -10179,8 +10179,14 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 /* Rodinu tu nenastavujeme: h1 ji má z `h1{font-family:var(--font-nadpis)}`
    a ten dnes míří na Inter. Kdyby se tu psala znovu, přebila by jediný
    zdroj pravdy — a přesně to hlídá scripts/test-pismo.mjs. */
+/* ZNAČKOU, JAKO VŠECHNY NADPISY (§277). Tahle hlava je na deseti
+   ručně psaných stránkách (data, kontakt, pravidla a spol.) a držela
+   si inkoust --pas-text, takže po obarvení nadpisů byl web rozdělený
+   na dvě party: sedm typů stránek mělo nadpis zelený, tři černý.
+   Našel to scripts/test-jednotnost.mjs („barva nadpisu v hlavě je na
+   celém webu jeden") — přesně na to tam je. */
 .st-hlava h1,.st-h1{font-size:var(--h1-nastroj); line-height:1.2;
-  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--pas-text);}
+  letter-spacing:-0.03em; font-weight:600; margin:12px 0 4px; color:var(--znacka);}
 .st-meta{font-size:14px; line-height:1.5; color:var(--pas-text-mute);
   margin:0; max-width:var(--m-text);}
 

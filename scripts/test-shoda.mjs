@@ -147,9 +147,27 @@ if (!vysledek.chyba) {
      a totéž ponaučení jako u meze barev v scripts/test-odstiny.mjs:
      mez naladěná na dnešek učí lidi uklízet míň. Počet se dál vypisuje
      v popisu, takže je vidět, kam se trend hýbe. */
-  pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct} (odhad u ${vysledek.rozdilOdhad})`,
-    vysledek.rozdilPct > 0,
-    'syrová a očištěná hromádka dávají týž percentil — pak ale tvrzení níž nic nehlídají');
+  /* KDYŽ ČIŠTĚNÍ UŽ NIC NEMĚNÍ, JE TO ZPRÁVA, NE PÁD (31. 10.).
+     Tahle věta je PŘEDPOKLAD pro porovnání syrové a očištěné hromádky:
+     dokud se aspoň u jedné nabídky lišil percentil, mělo smysl ptát se,
+     jestli mapa a stránka pozemku říkají totéž. Dvojníci se ale slučují
+     čím dál dřív u zdroje — naměřeno 40 (21. 10.) → 10 (28. 10.) → 0
+     (31. 10.) — a hlídač začal hlásit chybu právě proto, že jsou data
+     čistá. To je přesně ten omyl, před kterým varuje komentář o kus
+     výš: mez naladěná na dnešek trestá úklid v datech.
+     Rozdíl se proto jen VYPÍŠE a části, které bez něj nemají co měřit,
+     se přeskočí — stejně jako se v téhle zkoušce přeskakuje podíl nebo
+     nevěrohodná nabídka, když dnes v datech není. Co zůstává i tak:
+     že se mapa a stránka v ničem nerozejdou (kontrola hned pod tímhle)
+     a celý zbytek zkoušky. */
+  const jeCoSrovnavat = vysledek.rozdilPct > 0;
+  if (jeCoSrovnavat) {
+    pravda(`a na modelu je to vidět: percentil jinak u ${vysledek.rozdilPct} (odhad u ${vysledek.rozdilOdhad})`,
+      true);
+  } else {
+    zpravy.push('  — čištění duplicit dnes nemění percentil ani u jedné nabídky'
+      + ` (duplicit ${vysledek.syrovych - vysledek.pocet}), porovnání syrové a očištěné hromádky se přeskočilo`);
+  }
   pravda('mapa i stránka pozemku dají u všech pozemků stejný výsledek',
     vysledek.neshody.length === 0,
     `neshod: ${vysledek.neshody.length}, první: ${JSON.stringify(vysledek.neshody[0])}`);
@@ -396,6 +414,17 @@ if (podezrely) {
     out.sort((x, y) => (x.jak === y.jak ? y.rozdil - x.rozdil : (x.jak === 'uroven' ? -1 : 1)));
     return out;
   }, { ciste: CISTA, syrove: DATA });
+  /* ŽÁDNÝ ROZDÍL = NENÍ CO OTEVÍRAT (31. 10.). Vzorky se vybírají
+     z pozemků, kde se syrový a očištěný model rozcházejí. Když se
+     dvojníci slučují už u zdroje a rozdíl je nulový, nemá tahle část
+     co měřit — a to není vada webu, ale výsledek úklidu v datech.
+     Stejně jako výš u modelu se proto přeskočí a napíše proč; kdyby
+     rozdíl byl, ale vzorků bylo míň než tři, je to pořád chyba (málo
+     dat na měření), takže mez zůstává. */
+  if (vzorky.length === 0) {
+    zpravy.push('  — syrový a očištěný model se dnes nerozcházejí ani u jedné nabídky,'
+      + ' otevírání skutečných stránek pozemku se přeskočilo');
+  } else {
   pravda(`našly se pozemky, u kterých se srovnání liší (${vzorky.length}: `
     + `${vzorky.filter((v) => v.jak === 'uroven').length} úrovní, `
     + `${vzorky.filter((v) => v.jak === 'cislo').length} procentem)`,
@@ -479,6 +508,7 @@ if (podezrely) {
     + 'nebo jsou všechny vzorky po termínu');
   pravda('a na každé stojí číslo z modelu BEZ duplicit, tedy totéž co na mapě',
     spatne.length === 0, spatne.join('\n      '));
+  }
 }
 
 // --- Cena za metr u spoluvlastnického podílu: co je OPRAVDU na kartě ---

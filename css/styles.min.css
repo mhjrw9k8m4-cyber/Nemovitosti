@@ -2437,7 +2437,7 @@ header{transition:padding var(--cas-zakladni) var(--ease),transform var(--cas-za
 .st-odznak::before{content:"";width:6px;height:6px;border-radius:var(--r-pill);background:var(--pas-akcent)}
 .okr-band .eyebrow::before,.add-hero .eyebrow::before{content:none}
 .okr-band .eyebrow .live-dot,.add-hero .eyebrow .live-dot{width:6px;height:6px;flex:none;border-radius:var(--r-pill);background:var(--pas-akcent);animation:none}
-.st-hlava h1,.st-h1{font-size:var(--h1-nastroj);line-height:1.2;letter-spacing:-0.03em;font-weight:600;margin:12px 0 4px;color:var(--pas-text)}
+.st-hlava h1,.st-h1{font-size:var(--h1-nastroj);line-height:1.2;letter-spacing:-0.03em;font-weight:600;margin:12px 0 4px;color:var(--znacka)}
 .st-meta{font-size:14px;line-height:1.5;color:var(--pas-text-mute);margin:0;max-width:var(--m-text)}
 .st-karta{background:var(--plocha-karta);border-radius:var(--r-plocha);padding:16px;margin:0 0 var(--mezera-bloku);box-shadow:var(--e1)}
 .st-karta>:last-child{margin-bottom:0}
