@@ -940,6 +940,7 @@ body>footer{flex:none}
 .mo-rozdil.mo-pochybna{color:var(--text-ondeep-mute)}
 
 
+
 @media (pointer:coarse){.crumbs a{min-height:44px;display:inline-flex;align-items:center}
 .chip-check{min-height:44px}
 .auth-eye{min-width:44px;min-height:44px}

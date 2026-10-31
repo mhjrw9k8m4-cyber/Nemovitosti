@@ -17090,3 +17090,50 @@ Safari hláškou v textu nálezu. Běží čtyřikrát denně.
 **Zkoušky.** Rychlá sada 133/133; `test-offline` 19 kontrol,
 `test-nova-verze` 4 a `kontrola-ziva-prohlizecem --mistni` 15 — bez
 chyby.
+
+## §269 Ovládání nad výpisem mluví týmž hlasem jako zbytek webu
+
+**Zadání (31. 10.):** tři snímky vedle sebe — karta ve výpisu, stránka
+pozemku, a vršek úvodu. „Slaď to, co je na začátku webu jako řazení, se
+zbytkem webu; koukni, jak vypadá zbytek webu oproti tomu začátku, musíš
+to sladit."
+
+**Co se opravdu lišilo.** Ne barvy a ne tvary — ty sedí (bílá deska,
+zaoblení 14 px, stín `--e1` má ovládání i karta). Lišila se **velikost
+písma a hlas popisku**:
+
+| | začátek webu (před) | zbytek webu |
+|---|---|---|
+| tlačítka | 13 px | `.btn-primary` 16 px |
+| „Uložené" | 13 px / 600 / šedá | sousedé 700 / tmavá |
+| popisek | „ŘAZENÍ" 12 px / 600 / **verzálky + proklad** | popisek dlaždice 14 px / 500, bez verzálek |
+
+Tlačítka nad výpisem tedy byla jediný drobnopis na stránce a „ŘAZENÍ"
+jediný text psaný verzálkami. Teď mluví všechna 16 px a popisek zní
+„Řazení" — 14 px / 500 / `--muted`, přesně jako popisky dlaždic na
+stránce pozemku a doplňková čísla na kartě.
+
+**Co se NEZMĚNILO, a schválně.** Zkusil jsem dát hlavní akci
+(„Procházet po jednom") 52 px, jako má `.btn-primary` jinde 60 — a je
+to proti dřívějšímu zadání („to řazení udělej stejně velké jako
+pozemky po jednom"), které hlídá `test-ovladani-vypisu`: všech pět
+ovladačů v téhle sestavě má 44 px. Vráceno. Stejně dopadly ikony: 18 px
+by sedělo ke zbytku webu, jenže v téhle řadě musí mít všechny ovladače
+značku stejnou a sousedé mají 16. Sladit se tu tedy dá **písmo
+a popisek**, ne rozměr.
+
+**Hranice 360 px.** Pod ní zůstává 13 px: půl řádku měří jen 140 px
+a „Stáhnout výběr" by se zalomilo. Naměřeno na čtyřech šířkách —
+320, 360, 390 a 430 px: nikde nic nepřetéká a nápisy drží na jednom
+řádku (390 px: tlačítko 173 px, nápis se vejde).
+
+**Hlídač.** `test-ovladani-vypisu` má tři nové kontroly (63 celkem):
+ovladače mluví 16 px nad 360 px šířky, popisek řazení není psaný
+verzálkami a má 14 px / 500. Prokázáno sabotáží — vrácení 13 px
+a verzálek shodí pět kontrol na dvou šířkách.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu`
+(63), `test-pismo`, `test-dotyk`, `test-tahy`, `test-rozvrzeni` (190),
+`test-okraje` (143 prvků), `test-kontrast`, `test-uvod` (68),
+`test-jeden-styl` (33), `test-soustava` (15) a `test-mrtve-styly` —
+bez chyby.

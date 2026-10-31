@@ -2992,8 +2992,14 @@ h1 em{ color:var(--znacka-svetla);
 .mc-razeni > .ik{width:18px; height:18px; stroke-width:2; flex:none; color:var(--znacka-svetla);}
 /* Slovo „Řazení" je popisek, hodnota je ta hlasitá — stejně jako
    u dlaždic parametrů na stránce pozemku. */
-.mc-razeni-k{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--popisek);
-  letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
+/* SLADĚNO SE ZBYTKEM WEBU (31. 10.). Stálo tu 12 px, váha 600, verzálky
+   a proklad — a byl to JEDINÝ takový popisek na celé úvodní stránce:
+   dlaždice na stránce pozemku i doplňková čísla na kartě ve výpisu
+   píšou popisek 14 px / 500 / --muted, bez verzálek. Majitel poslal
+   oba snímky vedle sebe: „koukni, jak vypadá zbytek webu oproti tomu
+   začátku, musíš to sladit." Verzálky z ovládání nad výpisem proto
+   mizí a popisek mluví týmž hlasem jako popisky všude jinde. */
+.mc-razeni-k{font-size:14px; font-weight:500; color:var(--muted);}
 /* Hodnota je to hlasité — nese velikost a řez nadpisu z tlačítka.
    Vlastní pravidlo má proto, aby se nedala omylem ztišit: je to jediný
    text nad výpisem, který říká, podle čeho se to řadí. */
@@ -8386,6 +8392,10 @@ body > footer{flex:none;}
    šířka × stroke-width ÷ 24. U 16px ikony to dělá 1,5 ÷ 16 × 24 = 2,25 —
    táž míra i týž tah jako v přepínači Seznam/Mapa a u záložky
    v „Uložené", aby v jedné řadě nestály tři různě velké značky. */
+/* ZKOUŠENO 18 px A VRÁCENO ZPĚT. Zbytek webu kreslí ikony 18 px, jenže
+   v téhle řadě musí mít VŠECHNY ovladače značku stejně velkou (hlídá
+   scripts/test-ovladani-vypisu.mjs) — a sousedé v ní mají 16. Buď
+   všechny, nebo žádná; na 16 px je jich víc. */
 .mcn-ic svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2.25;
   stroke-linecap:round; stroke-linejoin:round;}
 
@@ -8457,7 +8467,31 @@ body > footer{flex:none;}
    ===================================================================== */
 @media (max-width:720px){
   .mc-akce{gap:4px; margin-top:8px;}
-  .mc-nastroj{min-height:36px; padding:0 8px; font-size:13px;}
+  /* 16 px, ne 13. Tlačítka na zbytku webu mluví 16 px (.btn-primary),
+     hodnota řazení o řádek výš taky — 13 px z téhle řady dělalo
+     drobnopis, který k ničemu jinému na stránce nepasoval. Mezistupeň
+     15 px na webu není: stupnice písma zná 14 a 16 (scripts/test-pismo.mjs),
+     a 14 by bylo jen o chlup od původního drobnopisu. Pod 360 px se
+     vrací 13 px blokem níž — tam je půl řádku jen 140 px. */
+  .mc-nastroj{min-height:36px; padding:0 12px; font-size:16px;}
+  /* VÝŠKU NEZVYŠOVAT. Zkusil jsem dát hlavní akci 52 px, jako má
+     .btn-primary jinde na webu 60 — a je to proti dřívějšímu zadání
+     majitele („to řazení udělej stejně velké jako pozemky po jednom"),
+     které hlídá scripts/test-ovladani-vypisu.mjs: všech pět ovladačů
+     v téhle sestavě má 44 px. Sladit se tedy má PÍSMO a popisek, ne
+     rozměr. */
+  /* „Uložené" stojí v téže řadě jako „Stáhnout výběr" a mluvilo
+     o dva stupně tišeji (13 px, váha 600, šedá). V panelu filtrů
+     zůstává štítkem, jakým bylo — tohle platí jen pro řadu nad
+     výpisem. */
+  .ms-vysledky .mc-prep{font-size:16px; font-weight:700; color:var(--text);}
+}
+/* Nejužší telefony: půl řádku je jen ~140 px a „Stáhnout výběr"
+   by se v 15 px zalomilo. Drobnopis je tu menší zlo než dva řádky.
+   Mez je 360 px, ne 400: na 390 px (iPhone majitele) je půl řádku
+   173 px a 15px nápis s ikonou měří 158 px — vejde se. */
+@media (max-width:360px){
+  .mc-nastroj, .ms-vysledky .mc-prep{font-size:13px; padding:0 8px;}
 }
 
 /* =====================================================================

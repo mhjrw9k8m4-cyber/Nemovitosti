@@ -296,6 +296,37 @@ try {
        (§266) — a tak se u něj hlídá opak: plná bílá a žádný obrázek.
        Hlídač té chyby to drží dál, jen z druhé strany: pokud se do
        pásu přeliv vrátí, padne to tady. */
+    /* 3a2. JEDNÍM HLASEM SE ZBYTKEM WEBU.
+       Majitel 31. 10. poslal vedle sebe snímek výpisu, stránky pozemku
+       a vršku úvodu: „koukni, jak vypadá zbytek webu oproti tomu
+       začátku, musíš to sladit." Měřitelně se to lišilo ve dvou
+       věcech — tlačítka nad výpisem mluvila 13 px, kdežto tlačítka
+       jinde na webu 16 px, a popisek řazení byl jediný text na celé
+       stránce psaný verzálkami s prokladem (dlaždice na stránce
+       pozemku i doplňková čísla na kartě píšou popisek 14 px / 500).
+       Pod 360 px smí drobnopis zůstat: půl řádku tam měří 140 px. */
+    const hlas = await p.evaluate(() => {
+      const c = (s) => { const e = document.querySelector(s); if (!e) return null;
+        const st = getComputedStyle(e);
+        return { px: Math.round(parseFloat(st.fontSize)), vaha: st.fontWeight,
+          verzalky: st.textTransform, barva: st.color }; };
+      return { rychly: c('#mc-rychly'), vyvoz: c('#mc-vyvoz'), ulozene: c('#map-fav'),
+        hodnota: c('.mc-razeni-v'), popisek: c('.mc-razeni-k') };
+    });
+    if (sirka > 360) {
+      const velikosti = [hlas.rychly, hlas.vyvoz, hlas.ulozene, hlas.hodnota]
+        .filter(Boolean).map((x) => x.px);
+      pravda(`${sirka} px: ovladače mluví 16 px jako tlačítka jinde na webu`,
+        velikosti.length === 4 && velikosti.every((x) => x === 16),
+        'naměřeno: ' + velikosti.join(', '));
+    }
+    pravda(`${sirka} px: popisek řazení není psaný verzálkami`,
+      !!hlas.popisek && hlas.popisek.verzalky !== 'uppercase',
+      hlas.popisek ? `text-transform: ${hlas.popisek.verzalky}` : 'popisek se nenašel');
+    pravda(`${sirka} px: a je to popisek téže váhy jako u dlaždic (14 px / 500)`,
+      !!hlas.popisek && hlas.popisek.px === 14 && hlas.popisek.vaha === '500',
+      hlas.popisek ? `${hlas.popisek.px} px / ${hlas.popisek.vaha}` : 'popisek se nenašel');
+
     const prelivy = await p.evaluate(() => ['.mc-rychly'].map((sel) => {
       const e = document.querySelector(sel);
       return { sel, je: !!e, obraz: e ? (getComputedStyle(e).backgroundImage || 'none') : 'nenašel se' };

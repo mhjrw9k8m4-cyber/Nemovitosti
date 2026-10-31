@@ -533,7 +533,7 @@ to{opacity:1;transform:none}
 .mc-razeni{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:4px 8px;border:1px solid var(--line-ui);border-radius:var(--r-ovladani);background:none;color:var(--text);cursor:pointer;font:inherit;font-size:16px;font-weight:700;letter-spacing:-0.01em;-webkit-tap-highlight-color:transparent;transition:var(--prechod)}
 .mc-razeni:hover{border-color:var(--znacka);background:var(--plocha-tlumena)}
 .mc-razeni>.ik{width:18px;height:18px;stroke-width:2;flex:none;color:var(--znacka-svetla)}
-.mc-razeni-k{font-family:var(--font-popisek);font-size:12px;font-weight:600;color:var(--popisek);letter-spacing:var(--popisek-proklad);text-transform:uppercase}
+.mc-razeni-k{font-size:14px;font-weight:500;color:var(--muted)}
 .mc-razeni-v{color:var(--text);white-space:nowrap}
 .mc-razeni-sip{width:16px;height:16px;stroke-width:2.25;flex:none;color:var(--muted);margin-left:auto}
 .deals-sec[hidden]{display:none}
@@ -1979,7 +1979,10 @@ body>footer{flex:none}
 .mc-nastroj{min-height:32px;padding:0 8px;font-size:13px}
 }
 @media (max-width:720px){.mc-akce{gap:4px;margin-top:8px}
-.mc-nastroj{min-height:36px;padding:0 8px;font-size:13px}
+.mc-nastroj{min-height:36px;padding:0 12px;font-size:16px}
+.ms-vysledky .mc-prep{font-size:16px;font-weight:700;color:var(--text)}
+}
+@media (max-width:360px){.mc-nastroj,.ms-vysledky .mc-prep{font-size:13px;padding:0 8px}
 }
 @media (pointer:coarse){.mvt-btn,.mc-prep,.map-select,.filter-chip,.map-near-btn,.mc-nastroj,.msch{min-height:44px}
 .crumbs a{min-height:44px;display:inline-flex;align-items:center}
