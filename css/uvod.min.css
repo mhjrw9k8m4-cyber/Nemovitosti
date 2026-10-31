@@ -1026,8 +1026,6 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 }
 .mvt-btn.active{background-color:var(--plocha-znacka);color:#fff;font-weight:700;transition:var(--prechod),background-color 0s var(--cas-rychly)}
 .mvt-btn.active:hover{color:#fff}
-.mcp-hledani .ms-lupa{top:50%;transform:translateY(-50%)}
-.mcp-hledani .ms-navrhy,.mcp-hledani .msn-oprava{top:60px;left:8px;right:8px}
 .map-app.mv-seznam .map-holder{display:none}
 .map-app:not(.mv-seznam) .map-side{display:none}
 .map-app.mv-seznam .map-side{border-top:0}

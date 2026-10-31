@@ -5023,14 +5023,14 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Do 29. 10. tohle platilo jen pod 360 px, protože jen tam se řada
      lámala. Teď se láme vždycky (přepínač má vlastní řádek), takže
      pravidlo platí pro celou telefonní šířku. */
-  /* +8 px proti dřívějšku: deska kolem má odsazení 8, takže se o ně
-     posunulo i pole, a lupa se váže na jeho střed (8 + 44/2 = 30),
-     našeptávač čtyři pixely pod jeho spodní hranu (8 + 44 + 8).
-     A SROVNÁ SE S POLEM, ne s deskou: návrhy patří k poli, pod kterým
-     visí, takže mají mít jeho šířku i jeho svislice. Dřív se kryly
-     s celou řadou, protože řada a pole byly totéž. */
-  .mcp-hledani .ms-lupa{top:50%; transform:translateY(-50%);}
-  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:60px; left:8px; right:8px;}
+  /* DESKA KOLEM HLEDÁNÍ UŽ NENÍ, TAKŽE TU NENÍ CO DOPOČÍTÁVAT (31. 10.).
+     Stálo tu `top:60px; left:8px; right:8px` — osmičky byly odsazení té
+     desky a šedesátka 8 + 44 + 8, tedy spodní hrana pole uvnitř ní.
+     Od §278 leží pole rovnou na pásu a je samo svou souřadnicovou
+     soustavou, takže základní pravidlo (`top:calc(100% + 4px)`,
+     `left:0`, `right:0`) trefí přesně jeho šířku i spodní hranu.
+     S těmi osmičkami byl seznam o šestnáct pixelů užší než pole —
+     naměřeno 342 z 358 px a hlídač vzhledu hledání na to spadl. */
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
