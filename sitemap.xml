@@ -5827,6 +5827,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-znojmo-kucharovice-1344qca.html</loc>
+    <lastmod>2026-10-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-semily-vysker-14b5tlq.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -5895,6 +5901,12 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-liberec-pertoltice-w7i8z3.html</loc>
     <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-liberec-cernousy-w5pvgk.html</loc>
+    <lastmod>2026-10-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9145,12 +9157,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-havlickuv-brod-rybnicek-1jbp2lq.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-vyskov-bucovice-1bqm0mh.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -9261,12 +9267,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-louny-blsany-11u4pib.html</loc>
     <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-ceske-budejovice-jilovice-4hvdpd.html</loc>
-    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -12061,18 +12061,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-semily-semily-1pcz5e4.html</loc>
-    <lastmod>2026-10-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-liberec-liberec-9e3ocv.html</loc>
-    <lastmod>2026-10-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-mlada-boleslav-1g0y8st.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -12080,6 +12068,18 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-semily-semily-1e33cj1.html</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-semily-semily-1pcz5e4.html</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-liberec-liberec-9e3ocv.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
