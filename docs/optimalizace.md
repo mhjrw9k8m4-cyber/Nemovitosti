@@ -16961,3 +16961,58 @@ přeliv zůstat má, platí dál.
 (32), `test-deska`, `test-dotyk`, `test-mrtve-styly`,
 `test-mrtva-jmena`, `test-barvy`, `test-soustava` (15),
 `test-jeden-styl` (33) — bez chyby.
+
+## §267 Tři pády v CI, tři různé příčiny
+
+Běh 836 (`Testy a kontrola kódu`) skončil červeně ve všech třech
+směnách v prohlížeči. Žádný z pádů nesouvisel s tím, co majitel toho
+rána zadal — dva byly starší a jeden byl vada zkoušky, která ji
+schovávala sama před sebou. Nálezy jsou tři a každý se chová jinak.
+
+**1. Dlaždice účtu odváděla ze stránky, kde se dá přihlásit.**
+`test-hlidani-prohlizec` hlídá psané pravidlo: na `hlidani.html`
+a `zpravy.html` se nepřihlášený přihlásí **tam, kde stojí** — stránka
+ho nikam neposílá. Od 30. 10. 07:02 ale sedí v liště dlaždice účtu
+s nápisem „Přihlásit" a odkazem `muj-inzerat.html`, takže ho posílala:
+na jinou stránku a k jinému formuláři, než který měl pod rukou.
+Zkouška to hlásila od té chvíle, tedy celý den a půl. Dlaždice teď na
+těch třech stránkách (včetně profilu) vede odhlášenému na formulář
+**na téhle stránce** — `js/hlavicka.js` jí po zjištění stavu přepne
+odkaz na kotvu, `#prihlaseni` u hlídání a zpráv, `#mi-auth` u profilu.
+V HTML zůstává `muj-inzerat.html`, aby i bez skriptu vedla někam, kde
+se přihlásit dá. Přihlášenému se nemění nic: dlaždice mu říká „Profil"
+a vede na profil. Naměřeno na 390 px: hlídání `#prihlaseni`, zprávy
+`#prihlaseni`, profil `#mi-auth`, úvod `muj-inzerat.html`; po klepnutí
+je karta s formulářem 87 až 167 px pod horní hranou, tedy pod
+hlavičkou a v obraze.
+
+**2. Zkouška stránkování klepala na čip zavřený v panelu.**
+`test-strany` po dojití na poslední stranu klepne na druh nabídky
+a čeká, že se výpis vrátí na první stranu. Klepnutí se ale nedělo
+vůbec — a zkouška si tu chybu **zahazovala** (`.catch(() => {})`),
+takže hlásila vadu webu: „strana 80 z 80". Dvě příčiny za sebou:
+`[data-type="drazba"]` dnes sedí na dvou prvcích (filtrační čip
+a odznak v řádku stavu), což Playwright odmítne; a od 30. 10. je druh
+nabídky v panelu filtrů, který je zavřený — obal má nulovou výšku
+a `overflow:hidden`, takže čip sice má obdélník 230×44 px na
+(762, 195), ale na obrazovce není a klepnutí do jeho středu trefí
+mapu (naměřeno: `elementFromPoint` vrací `path` z
+`.leaflet-overlay-pane`). Zkouška teď panel otevře klepnutím na jeho
+hlavičku, cílí na `.filter-chip` a **chybu klepnutí hlásí**, ne
+zahazuje. Stránkování samo bylo celou dobu v pořádku: 16 kontrol
+prochází.
+
+**3. Hlídač čipu měřil tvar, který majitel nechal odebrat.**
+`test-obec` tvrdil, že čip „Obecní záměr" nese tvar značky z mapy
+(`span.c.tv-ctverec`), aby se čip a mapa nerozešly. 29. 10. ale
+zaznělo „odeber ty barvičky a přidej tam ikonky" a puntík z čipů
+zmizel — zkouška od té doby měřila `null` a hlásila to jako vadu.
+Tvar jako rozlišení (pro toho, kdo barvy nerozezná) zůstal tam, kde
+na barvu spoléhat nelze: ve vysvětlivce mapy, a to se hlídá dál.
+Čip se teď měří po novém — musí nést ikonu, a tu konkrétní
+(`#i-budova`). Prokázáno sabotáží: bez ikony zkouška padá.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-hlidani-prohlizec`
+(66), `test-strany` (16), `test-obec` (15), `test-hlavicka` (65),
+`test-menu` (32), `test-mrtve-styly`, `test-mrtva-jmena`
+a `test-zpravy` — bez chyby.

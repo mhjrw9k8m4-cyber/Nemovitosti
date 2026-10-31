@@ -50,6 +50,7 @@ button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"
 }
 .skip-link{position:absolute;left:0;top:0;z-index:100;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;background:var(--znacka);color:var(--plocha-zapustena);padding:8px 16px;font-weight:600;border-radius:0 0 var(--r-xs) 0}
 .skip-link:focus{width:auto;height:auto;overflow:visible;clip:auto;clip-path:none}
+html.pk-odhlasen #auth-gate[hidden],html.pk-odhlasen #mi-auth[hidden]{display:block !important}
 
 .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent-warm);margin-right:4px;position:relative;vertical-align:middle}
 .live-dot::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--accent-warm);animation:livepulse 1.8s ease-out infinite}

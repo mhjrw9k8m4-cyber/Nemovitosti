@@ -40,6 +40,22 @@
  * V HTML je proto „Nepřihlášeno" jako výchozí, aby i bez skriptu stálo
  * něco pravdivého — nepřihlášený je totiž výchozí stav.
  */
+/* KAM VEDE OVLADAČ ÚČTU, KDYŽ SE ČLOVĚK PŘIHLAŠUJE PŘÍMO NA STRÁNCE.
+   Hlídání, Zprávy a Můj profil nepřihlášeného nikam neposílají — mají
+   svůj vlastní formulář přihlášení v těle stránky (je to psané
+   pravidlo, hlídá ho scripts/test-hlidani-prohlizec.mjs). Dlaždice
+   účtu v liště ale od 30. 10. nese nápis „Přihlásit" a odkaz
+   `muj-inzerat.html`, takže na těch stránkách odváděla člověka na
+   jinou stránku, než na které stál, a k jinému formuláři, než který
+   měl pod rukou. Na těch třech stránkách proto vede odhlášenému na
+   formulář TADY; přihlášenému zůstává na profil, protože tomu se
+   dlaždice přepne na „Profil". */
+var KOTVA_PRIHLASENI = {
+  'hlidani.html': '#prihlaseni',
+  'zpravy.html': '#prihlaseni',
+  'muj-inzerat.html': '#mi-auth',
+};
+
 (function () {
   'use strict';
   function vypln() {
@@ -63,6 +79,13 @@
     } catch (e) {}
     var skupina = odkaz.closest ? odkaz.closest('.nav-sk') : null;
     if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
+    /* Viz KOTVA_PRIHLASENI výš. V HTML stojí `muj-inzerat.html`, aby
+       i bez skriptu vedla dlaždice někam, kde se přihlásit dá. */
+    var dlazdice = document.querySelector('.hdr-ucet');
+    if (dlazdice) {
+      var kotva = KOTVA_PRIHLASENI[(window.location.pathname.split('/').pop() || 'index.html')];
+      dlazdice.setAttribute('href', (!prihlasen && kotva) ? kotva : 'muj-inzerat.html');
+    }
     if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }
     var mail = (A.email && A.email()) || '';
     /* Dlouhý e-mail by řádek rozbil; zkrátí se jméno, ne doména —

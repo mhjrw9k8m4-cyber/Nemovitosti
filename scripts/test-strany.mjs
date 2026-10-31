@@ -100,7 +100,27 @@ pravda('„Předchozí" vrátí zpět', (await stav()).strana === 1);
 
 /* --- změna filtru vrací na první stranu ---------------------------- */
 {
-  await p.click('[data-type="drazba"]').catch(() => {});
+  /* ČIP, NE ODZNAK. `[data-type="drazba"]` dnes sedí na DVOU prvcích:
+     na filtračním čipu a na odznaku v řádku stavu (ten přibyl s druhem
+     nabídky v panelu). Playwright na dva prvky klepnout odmítne a tohle
+     místo si chybu zahazovalo přes `.catch(() => {})` — klepnutí se tedy
+     nestalo, výpis zůstal na 80. straně a kontrola pod tím hlásila vadu
+     webu, která žádnou vadou webu nebyla. Měřeno: čip je BUTTON
+     230×44 px v `.mcv-rada`, druhý nález je SPAN `.status-n`.
+     Chyba klepnutí se teď hlásí, nezahazuje. */
+  /* A NEJDŘÍV PANEL OTEVŘÍT. Druh nabídky se od 30. 10. nastavuje
+     v panelu filtrů (`details#ms-filters`), a ten je zavřený — jeho
+     obal má nulovou výšku a `overflow:hidden`, takže čipy mají sice
+     obdélník, ale na obrazovce nejsou a klepnutí do jejich středu
+     trefí mapu. Naměřeno: čip 230×44 px na (762, 195), v jeho středu
+     sedí `path` z `.leaflet-overlay-pane`. Panel se proto otevírá
+     klepnutím na jeho vlastní hlavičku, jako to udělá člověk. */
+  await p.click('#ms-filters > summary').catch(() => {});
+  await p.waitForTimeout(600);
+  await p.click('.filter-chip[data-type="drazba"]').catch((chyba) => {
+    zpravy.push('  ✕ na čip „Dražba" se nedalo klepnout\n      ' + String(chyba).split('\n')[0]);
+    chyb++;
+  });
   await p.waitForTimeout(1500);
   const f = await stav();
   pravda('po změně filtru je člověk zase na první straně', f.strana === 1 || f.stran === null,

@@ -103,16 +103,24 @@ const chip = await p.evaluate(() => {
   const b = document.querySelector('.filter-chip[data-type="obec"]');
   if (!b) return null;
   const s = getComputedStyle(b);
-  const tecka = b.querySelector('.c');
+  /* TVAR UŽ ČIP NENESE. Do 29. 10. měl čip barevný puntík ve tvaru
+     značky z mapy (`span.c.tv-ctverec`) a tahle zkouška hlídala, že se
+     tvar z mapy opravdu dostal i na čip. Majitel ten den řekl „odeber
+     ty barvičky a přidej tam ikonky" (viz js/main.js, komentář
+     u `filter-chip`), takže puntík zmizel a na čipu je ikona. Tvar
+     JAKO ROZLIŠENÍ zůstal tam, kde na barvu nelze spoléhat — ve
+     vysvětlivce mapy; to měří kontroly pod tímhle blokem. Čip se tedy
+     měří po novém: musí nést ikonu, a tu konkrétní. */
+  const ik = b.querySelector('svg.ik use');
   return {
     videt: s.display !== 'none' && s.visibility !== 'hidden' && b.offsetParent !== null,
-    tvar: tecka ? [...tecka.classList].find((c) => c.startsWith('tv-')) : null,
+    ikona: ik ? (ik.getAttribute('href') || ik.getAttribute('xlink:href')) : null,
   };
 });
 pravda('štítek filtru „Obecní záměr" se po příchodu dat objevil', !!(chip && chip.videt),
   chip ? 'štítek existuje, ale není vidět' : 'štítek v HTML vůbec není');
-pravda('štítek nese tvar, ne jen barvu', chip && chip.tvar === 'tv-ctverec',
-  `tvar štítku je ${chip && chip.tvar}`);
+pravda('štítek nese ikonu, ne jen barvu', !!(chip && chip.ikona === '#i-budova'),
+  `ikona štítku je ${chip ? chip.ikona : 'bez štítku'}`);
 
 // --- 3) Legenda na mapě zná obecní záměr ------------------------------
 await p.evaluate(() => document.querySelector('.mvt-btn[data-mv="mapa"]')?.click());

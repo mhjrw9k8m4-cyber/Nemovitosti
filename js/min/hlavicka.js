@@ -1,3 +1,9 @@
+var KOTVA_PRIHLASENI = {
+  'hlidani.html': '#prihlaseni',
+  'zpravy.html': '#prihlaseni',
+  'muj-inzerat.html': '#mi-auth',
+};
+
 (function () {
   'use strict';
   function vypln() {
@@ -15,6 +21,12 @@
     } catch (e) {}
     var skupina = odkaz.closest ? odkaz.closest('.nav-sk') : null;
     if (skupina) skupina.classList.toggle('prihlasen', prihlasen);
+
+    var dlazdice = document.querySelector('.hdr-ucet');
+    if (dlazdice) {
+      var kotva = KOTVA_PRIHLASENI[(window.location.pathname.split('/').pop() || 'index.html')];
+      dlazdice.setAttribute('href', (!prihlasen && kotva) ? kotva : 'muj-inzerat.html');
+    }
     if (!prihlasen) { stav.textContent = 'Nepřihlášeno'; return; }
     var mail = (A.email && A.email()) || '';
 
