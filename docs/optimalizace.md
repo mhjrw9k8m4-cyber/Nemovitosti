@@ -17708,3 +17708,34 @@ pás bez desky a nabídka jako jeden seznam místo hromady dlaždic
 (65), `test-menu` (32), `test-okraje` (143), `test-soustava` (15),
 `test-uvod` (68), `test-deska` (5), `test-prvni-obrazovka` (22)
 a `test-ovladani-vypisu` (75) — bez chyby.
+
+## §282 Dva zbylé pády: zúžený našeptávač a rozcestí počítané jako nabídka
+
+Běh 854 (vrácení barev) už neměl ty tři pády z §280, ale ukázal dva
+další.
+
+**1. Našeptávač byl o šestnáct pixelů užší než pole.** Moje chyba
+z §278. V bloku pro telefon stálo `top:60px; left:8px; right:8px` —
+čísla dopočítaná z desky, která kolem hledání stávala (8 + 44 + 8).
+Deska je pryč a pole je samo svou souřadnicovou soustavou, takže ta
+osmička seznam zúžila: naměřeno 342 z 358 px a `test-hledani-vzhled`
+na to spadl. Základní pravidlo (`top:calc(100% + 4px)`, `left:0`,
+`right:0`) trefí šířku i spodní hranu pole přesně.
+
+**2. Rozcestí na novou adresu se počítalo jako živá nabídka.**
+Tohle není vada webu. Když se u nabídky opraví jméno obce (často tam
+stála ulice), nechá generátor na staré adrese ukazatel „Nabídka se
+přestěhovala" a odkaz na novou stránku. Sama nabídka tam UŽ NENÍ —
+v datech žije pod novým klíčem — takže graf vývoje ceny nemá o čem
+být a mít ho nemá. `test-graf-vsude` takovou stránku ale počítal mezi
+živé a hlásil nález: `pozemek-praha-devonska-sdemdt.html`
+(`PK_PRESUNUTO="2026-10-24"`, ulice Devónská opravená na obec).
+Ověřeno v datech: nabídka v dnešních 1 919 záznamech není a soubor
+nese značku přesunu i text „Nabídka se přestěhovala".
+Zkouška proto rozcestí přeskakuje — stejně jako už přeskakuje
+stránky bez statického článku — a kolik jich bylo, vypíše.
+Prokázáno sabotáží: když se značka `PK_PRESUNUTO` ze stránky
+odstraní, kontrola zase spadne.
+
+**Zkoušky.** `test-hledani-vzhled` 14, `test-graf-vsude` 4,
+`test-naseptavac` 127 — bez chyby.

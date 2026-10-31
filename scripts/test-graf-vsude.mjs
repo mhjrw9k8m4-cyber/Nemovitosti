@@ -60,7 +60,7 @@ await ctx.route('**/*', (r) => {
   return r.abort();
 });
 const p = await ctx.newPage();
-let zive = 0, ziveGraf = 0, vyr = 0, vyrGraf = 0, nedojelo = 0;
+let zive = 0, ziveGraf = 0, vyr = 0, vyrGraf = 0, nedojelo = 0, presunutych = 0;
 const bez = [];
 for (const u of vzorek) {
   const odp = await p.goto(BASE + '/' + u, { waitUntil: 'load' }).catch(() => null);
@@ -77,6 +77,18 @@ for (const u of vzorek) {
     return {
       ma: !!(s && s.classList.contains('ma-graf')),
       vyrazena: /Nabídka už není aktuální/.test(document.body.textContent || ''),
+      /* ROZCESTÍ NA NOVOU ADRESU NENÍ STRÁNKA NABÍDKY.
+         Když se u nabídky opraví jméno obce (často tam stála ulice),
+         nechá generátor na staré adrese ukazatel: „Nabídka se
+         přestěhovala" a odkaz na novou stránku. Sama nabídka tam UŽ
+         NENÍ — v datech žije pod novým klíčem — takže graf nemá o čem
+         být a mít ho nemá.
+         Naměřeno 31. 10.: pozemek-praha-devonska-sdemdt.html
+         (PK_PRESUNUTO=2026-10-24, ulice Devonská opravená na obec)
+         se počítal mezi ŽIVÉ a shodil kontrolu „graf vyšel na všech
+         živých" — tedy nález o stránce, která žádnou nabídku nenese.
+         Pozná se podle značky od generátoru, ne podle textu. */
+      presunuta: /PK_PRESUNUTO/.test(document.documentElement.innerHTML || ''),
       prazdna: !!document.querySelector('.pz-empty'),
     };
   }).catch(() => ({ ma: false, vyrazena: false, prazdna: false }));
@@ -86,12 +98,14 @@ for (const u of vzorek) {
      vada generátoru, ne grafu — tahle zkouška ji tedy nepočítá, ale
      hlásí, kolik jich bylo, aby se jejich počet nemohl tiše zvednout. */
   if (v.prazdna) { nedojelo++; continue; }
+  if (v.presunuta) { presunutych++; continue; }
   if (v.vyrazena) { vyr++; if (v.ma) vyrGraf++; else bez.push('vyřazená ' + u); }
   else { zive++; if (v.ma) ziveGraf++; else bez.push('živá ' + u); }
 }
 await prohlizec.close();
 
-pravda(`vzorek je dost velký (${zive} živých, ${vyr} vyřazených)`,
+pravda(`vzorek je dost velký (${zive} živých, ${vyr} vyřazených`
+  + `${presunutych ? `, ${presunutych} rozcestí přeskočeno` : ''})`,
   zive >= 10 && vyr >= 3,
   `živých ${zive}, vyřazených ${vyr} — na tomhle se nedá nic tvrdit`);
 pravda(`graf vyšel na všech ŽIVÝCH nabídkách (${ziveGraf} z ${zive})`,
