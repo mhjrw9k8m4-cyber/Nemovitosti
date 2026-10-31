@@ -224,7 +224,13 @@
      (4,5 pro běžný text). Na mobilu na slunci se to nepřečte a web působí
      vybledle. Ztmaveno v rámci stejného odstínu: 5,2 : 1 na nejtmavším
      světlém čipu, 7,0 : 1 na bílé kartě. Měří to scripts/test-kontrast.mjs. */
-  --znacka:#0F5C3B; --znacka-svetla:#2B7652;
+  /* 31. 10. zesvětleno s plochou (viz --plocha-znacka níž): #0F5C3B
+     → #0C6342, týž odstín o stupeň výš (OKLab L 0,421 → 0,452,
+     161°). Je to barva TEXTU, takže se hlídá kontrast: na bílé
+     7,30 : 1 (bylo 8,03), na nejtmavším světlém čipu měří
+     scripts/test-kontrast.mjs — mez je 4,5. Dál než sem se jít nedá;
+     plochy ano, text ne. */
+  --znacka:#0C6342; --znacka-svetla:#2B7652;
   /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
      desce #12241A má 2,63 : 1 — pilulky „Zdarma / Bez provize" na stránce
      Přidat pozemek z ní byly tmavě zelené na tmavě zelené, tedy nečitelné.
@@ -419,7 +425,16 @@
      působí současně a hlavně klidněji. Přechod zůstává jen tam, kde má
      plocha na co se přelévat: velký pruh s výzvou, logo, hlavička.
      Bílý text na ní drží 8,0 : 1. */
-  --plocha-znacka:#004F2F;
+  /* SVĚTLEJŠÍ A ČISTŠÍ ZELEŇ (31. 10.). Majitel: „celý web je takový
+     brčálový, stáhl bych to na trochu světlejší, stylovější zelenou —
+     pořád tmavá, ale světlejší než teď." Z #004F2F (OKLab L 0,377,
+     odstín 158°) je #0E6A47 (L 0,465, odstín 161°): o stupeň světlejší,
+     o chlup víc do smaragdu a o něco sytější, takže plocha nevypadá
+     jako zašlá lahev. Bílý text na ní drží 6,62 : 1, tedy pořád daleko
+     nad normou (4,5). Barva TEXTU (--znacka) se nehýbe: ta sedí na
+     světlých plochách a tam by zesvětlení ubralo kontrast tam, kde ho
+     je nejmíň. */
+  --plocha-znacka:#0E6A47;
   /* ---------------------------------------------------------------
      KATEGORIE. Dřív to byla duha: chladná modř, sytá zlatá a semaforová
      červená. Na zeleno-béžovém webu to nepůsobilo jako systém, ale jako tři
@@ -504,7 +519,7 @@
   --plocha-tmava-rgb:18,36,26;
   --accent-warm-bright-rgb:224,184,120;
   --text-ondeep-mute-rgb:201,210,203;
-  --plocha-znacka-rgb:0,79,47;
+  --plocha-znacka-rgb:14,106,71;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -1653,7 +1668,15 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    pomlčky uvnitř komentáře a každé jméno tokenu je s nimi začíná,
    takže se soubor přestal parsovat a `background-image` se prostě
    nevykreslil. Výklad proto patří sem. */
-.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=12") center/contain no-repeat;}
+/* HLOUBKA, NE ZÁŘ (31. 10.). Majitel: „ten začátek stránky a logo je
+   strašně jednotvárné a jednoduché, nemá to hloubku ani prostor."
+   Značka byla plochý zelený čtverec položený na bílou — nic ji
+   nezvedalo. Dostává proto TÝŽ recept, jakým se na tomhle webu zvedá
+   deska: stín `--e1` a 1px světlou hranu nahoře (`inset 0 1px 0`),
+   přesně jako `.map-app`. Zelená zář (--glow) tu zůstává zakázaná
+   z důvodu o pár řádek výš: ta na webu znamená „zapnuto". */
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=13") center/contain no-repeat;
+  box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18);}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
    JMÉNO ZŮSTÁVÁ NA 28 px, a je to měření, ne lenost: v liště stojí
@@ -2153,10 +2176,14 @@ h1 em{ color:var(--znacka-svetla);
    plochy z ní dělaly dva pruhy. Co pás odlišuje, je deska s hledáním
    a přepínačem, která na něm leží (viz .mcp-hledani), ne jeho barva.
    Stín dolů zůstává: říká, že hlava je NAD obsahem. */
+/* VÍC VZDUCHU V HLAVĚ STRÁNKY (31. 10.). Pás měl kolem dokola 16 px
+   a deska s hledáním v něm seděla natěsno pod lištou. Dole 24 px:
+   mezi hlavou a prvním ovladačem výpisu tím vznikne dýchací mezera,
+   která tam dosud nebyla. Čísla jsou ze stupnice odstupů. */
 .map-controls-panel{grid-column:1 / -1; grid-row:1; position:relative;
   background-color:var(--plocha-karta); color:var(--pas-text);
   box-shadow:var(--e1);
-  border:0; border-radius:0; padding:16px;}
+  border:0; border-radius:0; padding:20px 16px 24px;}
 /* POLE HLEDÁNÍ ZŮSTÁVÁ BÍLÉ. Do pole se píše, a bílá plocha je to
    jediné znamení, které se nedá přečíst špatně — průsvitná výplň na
    desce vypadá jako vypnutý ovladač.
@@ -4699,9 +4726,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      tak jsou teď v JEDNÉ bílé desce a oba v ní sedí zapuštěné. Z pěti
      obdélníků jsou čtyři a první z nich má jiný charakter než ty pod
      ním — tím vznikne začátek, ne další řádek. */
+  /* VÍC MÍSTA A VÝŠ NAD PODKLADEM (31. 10., „nemá to hloubku ani
+     prostor"). Deska s hledáním měla 8 px vnitřní mezery a stín karty
+     — ležela na stránce jako cokoli jiného. Teď má 12 px a stín
+     `--e2`, tedy ten, kterým web zvedá to, co leží NAD obsahem.
+     Je to jediná deska v hlavě stránky, takže se tím nic neztratí
+     v davu. */
   .mcp-hledani{display:flex; flex-wrap:wrap; align-items:center; gap:8px;
-    padding:8px; background:var(--plocha-karta); border:1px solid var(--line);
-    border-radius:var(--r-ovladani); box-shadow:var(--e1);}
+    padding:12px; background:var(--plocha-karta); border:1px solid var(--line);
+    border-radius:var(--r-ovladani); box-shadow:var(--e2);}
   .mcp-hledani .map-search{flex:1 1 100%; min-width:150px;}
   /* LUPA BLÍŽ KE KRAJI A MENŠÍ ODSAZENÍ ZPRAVA — kvůli nápisu v poli.
      Naměřeno na 390 px: „Obec, druh, cena…" měří 145 px a pole mu

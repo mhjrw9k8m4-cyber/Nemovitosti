@@ -395,6 +395,24 @@ const STEJNA_BARVA = {
     mrtveDuvody.length === 0, mrtveDuvody.join(', '));
 }
 
+/* --- ZNAČKA V OBRÁZKU SE MUSÍ SHODOVAT S TOKENEM -------------------
+   Dlaždice loga není CSS plocha, ale obrázek (assets/logo-mark.svg),
+   takže na změnu tokenu nereaguje. 31. 10. se značková zeleň
+   zesvětlila (#004F2F → #0E6A47) a logo zůstalo o stupeň tmavší, než
+   všechno kolem — na snímku je to vidět hned, v kódu vůbec. Tady se
+   proto porovnají obě místa: kresba smí mít jen bílou a tu zeleň,
+   kterou říká token --plocha-znacka. */
+{
+  const znak = readFileSync(path.join(ROOT, 'assets', 'logo-mark.svg'), 'utf8');
+  const barvy = [...znak.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((m) => m[1].toLowerCase());
+  const m = /--plocha-znacka\s*:\s*([^;]+);/.exec(STYL);
+  const plocha = (m ? m[1] : '').trim().toLowerCase();
+  const cizi = barvy.filter((b) => b !== plocha && b !== '#ffffff' && b !== '#fff');
+  pravda('kresba značky má touž zeleň jako token --plocha-znacka',
+    !!plocha && barvy.length > 0 && cizi.length === 0,
+    `token ${plocha || '(není)'}, v kresbě ${[...new Set(barvy)].join(', ') || '(žádná)'}`);
+}
+
 console.log('\nTokeny stylu (barvy, míry, stíny)');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

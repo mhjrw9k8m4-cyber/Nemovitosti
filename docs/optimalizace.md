@@ -17137,3 +17137,54 @@ a verzálek shodí pět kontrol na dvou šířkách.
 `test-okraje` (143 prvků), `test-kontrast`, `test-uvod` (68),
 `test-jeden-styl` (33), `test-soustava` (15) a `test-mrtve-styly` —
 bez chyby.
+
+## §270 Světlejší značková zeleň a hloubka v hlavě stránky
+
+**Zadání (31. 10.):** „Celý web je takový brčálový, stáhl bych to na
+trochu světlejší, stylovější zelenou — pořád tmavá, ale světlejší než
+teď. A ten začátek stránky a logo je strašně jednotvárné a jednoduché,
+nemá to hloubku ani prostor."
+
+**Zeleň o stupeň výš, ne o kýbl.** Plná značková plocha (logo,
+tlačítka, přepínač, odznaky) byla `#004F2F` — v OKLabu L 0,377,
+odstín 158°. Je z ní **`#0E6A47`**: L 0,465, odstín 161°, o chlup víc
+sytosti. Jeden stupeň světlejší a kousek do smaragdu, takže plocha
+nevypadá jako zašlá lahev. Bílý text na ní drží **6,62 : 1** (bylo
+9,72), tedy pořád daleko nad normou 4,5. S ní se posunula i barva
+TEXTU `--znacka` (`#0F5C3B` → `#0C6342`, 8,03 → 7,30 : 1), ať nestojí
+vedle plochy jako cizí odstín. Dál už ne: text sedí na světlých
+plochách a tam ubírá zesvětlení kontrast tam, kde ho je nejmíň —
+`test-kontrast` měří 2 684 prvků a prochází.
+
+**Logo je obrázek, token na něj nedosáhne.** `assets/logo-mark.svg`
+má barvu zadrátovanou, takže by po změně tokenu zůstalo o stupeň
+tmavší než všechno kolem — na snímku je to vidět hned, v kódu vůbec.
+Kresba je přebarvená, adresa dostala `?v=13` (ať se nevydá uložená
+kopie) a **přibyl hlídač**: `test-tokeny` porovná barvy v kresbě
+s tokenem `--plocha-znacka` a pustí jen bílou a tu jednu zeleň.
+Prokázáno sabotáží: vrácení staré barvy do kresby zkoušku shodí.
+Přebarvené jsou i dvě místa, kam token nedosáhne: `404.html`
+(vlastní stylopis) a šipka rozbalovátka v `hlidani.html`, která je
+vepsaná jako `data:` obrázek.
+
+**Hloubka a prostor, ne další barva.** Vršek je od včerejška bílý
+(§266) a tak má zůstat — hloubka se proto udělala vrstvením, ne
+tónem:
+
+- **značka** dostala týž recept, jakým se na webu zvedá deska: stín
+  `--e1` a 1px světlou hranu nahoře. Zelená zář (`--glow`) zůstává
+  zakázaná: ta na tomhle webu znamená „zapnuto", ne ozdobu;
+- **deska s hledáním** má místo 8 px vnitřní mezery 12 a místo stínu
+  karty stín `--e2`, tedy ten, kterým web zvedá to, co leží *nad*
+  obsahem. Je to jediná deska v hlavě stránky, takže se v davu
+  neztratí;
+- **pás kolem ní** má nahoře 20 px a dole 24 px místo plošných 16 —
+  mezi hlavou a prvním ovladačem výpisu tím vznikla dýchací mezera,
+  která tam dosud nebyla. Čísla jsou ze stupnice odstupů.
+
+**Zkoušky.** Rychlá sada 133/133 (včetně `test-tokeny`, nově 20).
+V prohlížeči `test-kontrast` (2 684 prvků), `test-barvy` (58),
+`test-okraje` (143), `test-vrstveni`, `test-prvni-obrazovka` (22),
+`test-uvod` (68), `test-rozvrzeni` (190), `test-ovladani-vypisu` (63),
+`test-hledani-vzhled` (14), `test-menu` (32) a `test-soustava` (15) —
+bez chyby.
