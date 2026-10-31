@@ -17498,3 +17498,55 @@ kontroly.
 (2 689 prvků, 0 pádů), `test-okraje` (143 prvků), `test-barvy` (58),
 `test-tokeny` (22), `test-soustava` (15), `test-uvod` (68),
 `test-deska` (5) a `test-ovladani-vypisu` (75) — bez chyby.
+
+## §277 Tmavá hlavička a nadpisy se značkou — vizuální přestavba
+
+**Zadání (31. 10.):** „Kompletně to překopat vizuálně, ne kompozičně,
+ale vizuálně." Rozvržení tedy zůstává do pixelu, mění se jazyk.
+
+**Co se změnilo.**
+
+1. **Lišta je hluboká zeleň** (`--plocha-hlavicka`, odkazuje na
+   `--znacka-hluboka` #124632 — krok 800 téže stupnice). Byla bílá na
+   skoro bílé ploše a od stránky ji dělila jen vlásečnice, takže web
+   začínal ničím. Bílý nápis na ní má 11,6 : 1.
+2. **Značka má v liště obrácenou kresbu** — `assets/logo-mark-svetla.svg`
+   (bílá dlaždice, zelený špendlík). Zelená dlaždice v zelené liště
+   mizela; v šuplíku, kde je plocha bílá, zůstává původní kresba.
+   Dlaždice profilu („Přihlásit"/„Profil") a hamburger mají na tmavém
+   bílý obrys; přihlášený dostane dlaždici obráceně — bílá plocha,
+   zelený text, protože zelená na zelené není vidět.
+3. **Nadpisy nesou značku.** `:where(h1, h2)` dostalo
+   `color:var(--znacka)`, k tomu hero okresních a nástrojových stránek
+   a nadpisy oddílů. `:where()` schválně: nepřidává sílu, takže
+   pravidla, která nadpisu barvu už dávají (tmavé desky, bílý text),
+   vyhrávají dál bez výjimek. Zeleň na bílé kartě 7,6 : 1, na teplém
+   papíru 7,0 : 1 — `test-kontrast` změřil 2 689 prvků a nepadl ani
+   jeden.
+
+**A dva hlídače, které v CI padaly ještě před touhle prací.**
+
+* `test-prvni-obrazovka` žádal, aby s pruhem „Naposledy prohlédnuté"
+  začínala první nabídka pod 440 px — a vedle toho má společný strop
+  `MEZ_PRVNI` 480 px. Komentář u té meze přitom tvrdil, že je to „tatáž
+  mez". Čísla se rozešla a 31. 10. vyšla nabídka na 445 px: pruh ji
+  neodsouval ani o pixel (bez pruhu začíná na témže místě), hlídač ale
+  padal. Otázka zní „odsouvá pruh první nabídku?" — a tak se teď taky
+  ptá: porovná s TÝMŽ měřením bez pruhu a nechá jediný společný strop.
+* `test-zdvih` měl pojistku „aspoň 20 dlaždic, jinak seznam tříd nic
+  nenašel". Jenže počet dlaždic visí na tom, kolik má která stránka
+  řádků; stránka cen se změnila ve vyhledávač a vzorek klesl na 18.
+  Hlídač tedy hlásil „nic jsem nenašel" o seznamu, který našel dvanáct
+  tříd z dvanácti. Počítá se nově to, co má: kolik JMEN ze seznamu má
+  na webu ještě viditelný vzorek (aspoň šest) a že se pod myší
+  doopravdy něco hýbe.
+
+Obě opravy prokázány sabotáží: pruh přesunutý nad výpis shodí
+kontrolu odsunutí, schované dlaždice shodí pojistku vzorku.
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-kontrast`
+(2 689 prvků), `test-okraje` (143), `test-hlavicka` (65), `test-menu`
+(32), `test-soustava` (15), `test-tokeny` (23), `test-uvod` (68),
+`test-ovladani-vypisu` (75), `test-hierarchie` (21), `test-deska` (5),
+`test-barvy` (58), `test-vrstveni`, `test-predloha`,
+`test-prvni-obrazovka` (22) a `test-zdvih` (7) — bez chyby.

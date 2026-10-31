@@ -64,6 +64,8 @@ function pravda(popis, podm, detail) {
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 let zmerenych = 0, hybajicich = 0;
+/* Kolik jmen ze seznamu ZDVIHANE opravdu něco našlo (napříč stránkami). */
+const trydyWeVzorku = new Set();
 
 /* Co se o prvku měří. Jedna funkce pro stav před, kontrolu i stav po —
    kdyby to byly tři opisy, stačí jeden překlep a porovnává se nesmysl. */
@@ -110,15 +112,22 @@ for (const s of STRANKY) {
   ])).catch(() => {});
   await p.waitForTimeout(200);
 
+  /* Dvojice [jméno třídy, prvek]: podle jména se pak pozná, které
+     třídy ze seznamu mají na webu ještě vzorek. Do počtu se jméno
+     započítá až u prvku, který je OPRAVDU vidět — jinak by pojistka
+     prošla i nad stránkou, kde je všechno display:none. */
   const prvky = [];
-  for (const sel of ZDVIHANE) prvky.push(...(await p.$$(sel)).slice(0, Z_KAZDE));
+  for (const sel of ZDVIHANE) {
+    for (const el of (await p.$$(sel)).slice(0, Z_KAZDE)) prvky.push([sel, el]);
+  }
   const lzi = [];
-  for (const el of prvky) {
+  for (const [sel, el] of prvky) {
     const vidno = await el.isVisible().catch(() => false);
     if (!vidno) continue;
     const box = await el.boundingBox().catch(() => null);
     if (!box || box.width < 8 || box.height < 8) continue;
     zmerenych++;
+    trydyWeVzorku.add(sel);
 
     await el.scrollIntoViewIfNeeded().catch(() => {});
     await p.waitForTimeout(120);
@@ -165,8 +174,16 @@ for (const s of STRANKY) {
 /* Pojistka proti měření prázdna. Bez ní by stačilo přejmenovat třídu
    a test by „prošel" s nulou nalezených dlaždic — přesně ta chyba, na
    kterou jsem už jednou naletěl u kontroly prázdných míst. */
-pravda('a bylo vůbec co měřit', zmerenych >= 20 && hybajicich >= 6,
-  `nalezeno ${zmerenych} dlaždic, z nich se pod myší mění ${hybajicich} — seznam tříd nic nenašel`);
+/* POČÍTÁ SE, KOLIK TŘÍD ZE SEZNAMU NĚCO NAŠLO — NE KOLIK JE DLAŽDIC.
+   Mez „aspoň 20 dlaždic" byla pojistka proti měření prázdna, jenže
+   visela na tom, kolik řádků zrovna která stránka má. Stránka cen se
+   změnila ve vyhledávač (to předvídá i poznámka nahoře) a vzorek
+   spadl na 18 — hlídač pak hlásil „seznam tříd nic nenašel" o seznamu,
+   který našel dvanáct tříd z dvanácti. Hlídá se proto to, co má: že
+   jména tříd pořád platí (aspoň šest jich něco najde) a že se pod myší
+   doopravdy něco hýbe. */
+pravda('a bylo vůbec co měřit', trydyWeVzorku.size >= 6 && hybajicich >= 6,
+  `jmen tříd se vzorkem ${trydyWeVzorku.size} z ${ZDVIHANE.length}, dlaždic ${zmerenych}, pod myší se mění ${hybajicich}`);
 
 await prohlizec.close();
 console.log('=== zdvih ===');

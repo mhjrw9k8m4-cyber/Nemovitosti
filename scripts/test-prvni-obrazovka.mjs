@@ -309,9 +309,19 @@ try {
       pravda('a stojí POD první nabídkou, ne nad výpisem',
         r.pruhY !== null && r.kartaY !== null && r.pruhY > r.kartaY,
         `pruh na ${r.pruhY} px, první nabídka na ${r.kartaY} px`);
-      pravda(`a první nabídku neodsouvá (${r.kartaY} px)`,
-        r.kartaY !== null && r.kartaY < 440,
-        `pruh je vysoký ${r.pruhH} px a první nabídka začíná na ${r.kartaY} px`);
+      /* MĚŘÍ SE PROTI STRÁNCE BEZ PRUHU, NE PROTI PEVNÉMU ČÍSLU.
+         Stálo tu `< 440` a komentář o řádek výš tvrdil, že je to
+         „tatáž mez jako u stránky bez pruhu i s rezervou" — jenže ta
+         je MEZ_PRVNI, tedy 480. Dvě čísla se rozešla a 31. 10. se to
+         projevilo: první nabídka vyšla na 445 px, pruh ji přitom
+         neodsouval ani o pixel (bez pruhu začíná na témže místě).
+         Hlídač tedy padal na něčem, co vůbec neměřil.
+         Otázka zní „odsouvá pruh první nabídku?", a ta se dá položit
+         přesně: porovnat s TÝMŽ měřením bez pruhu (m.karta). Strop
+         zůstává taky, ale jen jeden — ten společný. */
+      pravda(`a první nabídku neodsouvá (${r.kartaY} px proti ${m.karta} px bez pruhu)`,
+        r.kartaY !== null && je(m.karta) && r.kartaY <= m.karta + 1 && r.kartaY < MEZ_PRVNI,
+        `pruh je vysoký ${r.pruhH} px, s pruhem ${r.kartaY} px, bez pruhu ${m.karta} px, strop ${MEZ_PRVNI}`);
     }
   }
 

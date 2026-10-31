@@ -462,14 +462,20 @@ const STEJNA_BARVA = {
    proto porovnají obě místa: kresba smí mít jen bílou a tu zeleň,
    kterou říká token --plocha-znacka. */
 {
-  const znak = readFileSync(path.join(ROOT, 'assets', 'logo-mark.svg'), 'utf8');
-  const barvy = [...znak.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((m) => m[1].toLowerCase());
+  /* OD 31. 10. JSOU KRESBY DVĚ. Hlavička je tmavě zelená (§277), takže
+     v ní zelená dlaždice splývala — v ní je obrácená kresba (bílá
+     dlaždice, zelený špendlík). Obě si musí držet tutéž zeleň, jinak
+     se značka v liště a v šuplíku rozejde. */
   const m = /--plocha-znacka\s*:\s*([^;]+);/.exec(STYL);
   const plocha = (m ? m[1] : '').trim().toLowerCase();
-  const cizi = barvy.filter((b) => b !== plocha && b !== '#ffffff' && b !== '#fff');
-  pravda('kresba značky má touž zeleň jako token --plocha-znacka',
-    !!plocha && barvy.length > 0 && cizi.length === 0,
-    `token ${plocha || '(není)'}, v kresbě ${[...new Set(barvy)].join(', ') || '(žádná)'}`);
+  for (const soubor of ['logo-mark.svg', 'logo-mark-svetla.svg']) {
+    const znak = readFileSync(path.join(ROOT, 'assets', soubor), 'utf8');
+    const barvy = [...znak.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((x) => x[1].toLowerCase());
+    const cizi = barvy.filter((x) => x !== plocha && x !== '#ffffff' && x !== '#fff');
+    pravda(`kresba značky (${soubor}) má touž zeleň jako token --plocha-znacka`,
+      !!plocha && barvy.length > 0 && cizi.length === 0,
+      `token ${plocha || '(není)'}, v kresbě ${[...new Set(barvy)].join(', ') || '(žádná)'}`);
+  }
 }
 
 console.log('\nTokeny stylu (barvy, míry, stíny)');
