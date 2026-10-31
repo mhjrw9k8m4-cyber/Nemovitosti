@@ -17297,3 +17297,48 @@ neprojde, je taky výsledek: ukazuje, kudy vada přijít nemůže.
 
 **Zkoušky.** `test-csp` 24, `test-nova-verze` 4,
 `test-nastroje-v-dosahu` 15 — bez chyby.
+
+## §273 Druhé kolo barvy: tmavší a tlumenější — a generátor, ať je to příště jeden příkaz
+
+**Zadání (31. 10. odpoledne):** „Tato barva vypadá neprofesionálně
+bych řekl."
+
+**Co na té první stupnici bylo špatně, měřitelně.** Značka stála na
+světlosti 0,465 a sytosti 0,098. Sytá zeleň na velké ploše čte jako
+obecná „eko" barva z šablon — a čím větší plocha, tím víc. Profesionální
+dojem v téhle kategorii nedělá světlost, ale **utlumení**: míň sytosti
+a o stupeň níž.
+
+**Co se vybíralo.** Pět variant postavených na téže sestavě (značka,
+hlavní tlačítko, odznak), ne jeden hex v hlavě:
+
+| | hex | sytost | bílý text |
+|---|---|---|---|
+| A — dosavadní smaragd | `#106A47` | 0,098 | 6,61 : 1 |
+| **B — tmavší smaragd** | **`#175A40`** | **0,080** | **8,16 : 1** |
+| C — hluboká borovice | `#21513E` | 0,062 | 9,09 : 1 |
+| D — tlumený les | `#345944` | 0,055 | 7,90 : 1 |
+| E — petrolejová | `#205A57` | 0,060 | 7,89 : 1 |
+
+Vybráno **B**. C a D už ztrácejí barvu (na obrazovce vypadají spíš
+šedozeleně), E je jiná rodina — do modra, tedy jiná značka. B je
+o stupeň tmavší a o pětinu míň sytá než A, a pořád je **světlejší než
+původní lahvová** `#004F2F` (0,420 proti 0,377), takže zadání z rána
+drží dál.
+
+**Celá stupnice se přepočítala s ní**, ne jen jeden krok: odstín 163°,
+sytost kroku 700 = 0,080, žebřík světlosti posunutý o stupeň dolů.
+Všech deset kroků je uvnitř gamutu sRGB.
+
+**A hlavně: přibyl generátor.** `node scripts/paletka.mjs 163 0.080`
+spočítá a vypíše celou tabulku i s kontrastem bílého textu na každém
+kroku a s varováním, když by krok vypadl z gamutu. Důvod je praktický:
+tohle bylo druhé kolo barvy za jedno dopoledne a obě kola znamenala
+přepočítat deset hodnot. Teď je to jeden příkaz — a hlavně se tím
+nedá „trochu poopravit jeden odstín od oka", což je přesně způsob,
+jakým se rodina rozejde.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-kontrast`
+(bez vady), `test-barvy` (58), `test-okraje` (143), `test-soustava`
+(15), `test-uvod` (68), `test-prvni-obrazovka` (22), `test-menu` (32),
+`test-vrstveni` a `test-predloha` — bez chyby.

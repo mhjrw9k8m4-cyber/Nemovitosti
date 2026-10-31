@@ -251,14 +251,24 @@
      Norma WCAG AA žádá 4,5, takže plná plocha začíná u 600
      a značková je 700.
 
-     STUPNICE (krok · hex · OKLab L · bílý text):
-       z-50  #ECF9F2  0,970  ·  z-100 #D6F1E2  0,935
-       z-200 #B4E5CA  0,880  ·  z-300 #88D0AB  0,800
-       z-400 #58B488  0,700  ·  z-500 #319A6D  0,615  3,52 : 1
-       z-600 #097750  0,505  5,58 : 1   ← světlejší akcent (i text)
-       z-700 #106A47  0,465  6,61 : 1   ← značka (plochy i text)
-       z-800 #105338  0,395  9,07 : 1
-       z-900 #0D3C28  0,320  12,40 : 1
+     STUPNICE (krok · hex · OKLab L · bílý text) — odstín 163°,
+     sytost kroku 700 = 0,080; spočítá ji `node scripts/paletka.mjs`:
+       z-50  #EDF8F2  0,970  ·  z-100 #D8F0E4  0,935
+       z-200 #B8E1CC  0,875  ·  z-300 #8ECAAD  0,790
+       z-400 #60AC89  0,685  ·  z-500 #3D8F6C  0,590  3,93 : 1
+       z-600 #247052  0,490  5,98 : 1   ← světlejší akcent (i text)
+       z-700 #175A40  0,420  8,16 : 1   ← značka (plochy i text)
+       z-800 #124632  0,355  10,78 : 1
+       z-900 #0F3324  0,290  13,82 : 1
+
+     DRUHÉ KOLO (31. 10. odpoledne). První stupnice měla značku na
+     L 0,465 a sytosti 0,098 — majitel: „tato barva vypadá
+     neprofesionálně." Má pravdu v tom, co se dá změřit: sytá zeleň
+     na velké ploše čte jako obecná „eko" barva z šablon. Značka je
+     proto o stupeň TMAVŠÍ a o pětinu MÍŇ SYTÁ (0,420 / 0,080) —
+     a pořád je světlejší než ta původní lahvová (#004F2F, L 0,377).
+     Vybíralo se z pěti variant postavených na téže sestavě (značka,
+     hlavní tlačítko, odznak), ne z jednoho hexu.
 
      KROKY SE PÍŠOU HODNOTOU, NE ODKAZEM NA DALŠÍ TOKEN. Zkusil jsem
      to a shodilo to čtyři statické zkoušky naráz (předloha, tokeny,
@@ -283,12 +293,12 @@
      tu byly do dneška (#0F5C3B text vedle #004F2F plochy). Na bílé
      má 6,61 : 1, na nejtmavším světlém čipu to měří
      scripts/test-kontrast.mjs; mez je 4,5. */
-  --znacka:#106A47; --znacka-svetla:#097750;
+  --znacka:#175A40; --znacka-svetla:#247052;
   /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
      desce #12241A má 2,63 : 1 — pilulky „Zdarma / Bez provize" na stránce
      Přidat pozemek z ní byly tmavě zelené na tmavě zelené, tedy nečitelné.
      Tohle je týž odstín (155°) jen světlejší a klidnější: 7,01 : 1. */
-  --znacka-na-tmave:#88D0AB;
+  --znacka-na-tmave:#8ECAAD;
   /* HLUBOKÁ ZNAČKOVÁ ZELEŇ — ta, která se používá JEN PRŮHLEDNĚ.
      Byla to nejčastější barva webu bez jména: 46 míst, a ani jedno ji
      nepoužívá naplno. Drží prstenec zaměření (--prstenec-pole), záři
@@ -302,7 +312,7 @@
      k tokenům přimklo právě proto, že u nich složením vyšlo do 1,42;
      tahle ne. Sloučit ji s --plocha-znacka je rozhodnutí o vzhledu,
      ne úklid — a to se tímhle neudělalo. */
-  --znacka-hluboka:#105338;
+  --znacka-hluboka:#124632;
   /* SVĚTLÁ ZNAČKOVÁ PLOCHA — druhá barva, která se používá jen
      průhledně, a druhá nejčastější bez jména: 21 míst. Dělá tónovanou
      plochu a okraj u panelů, které zvou k akci — rozbalovací rada
@@ -313,7 +323,7 @@
      (0,06–0,4): --c-ok 6,60 · --text-ondeep-mute 4,92 ·
      --znacka-svetla 9,78 · --brand-live 10,22 · --znacka-hluboka 13,69.
      Nejbližší z nich je mimo pásmo, kde se barvy pletou. */
-  --plocha-znacka-svetla:#B4E5CA;
+  --plocha-znacka-svetla:#B8E1CC;
   /* ZÁSTUPNÝ TEXT V POLÍCH. Pět polí na webu ho mělo ve třech různých
      barvách: #74857A (formuláře), var(--muted) (pole polohy)
      a #8A93A3 v políčku hledání na mapě — a to je modrošedá, 218°, na
@@ -487,7 +497,7 @@
      nad normou (4,5). Barva TEXTU (--znacka) se nehýbe: ta sedí na
      světlých plochách a tam by zesvětlení ubralo kontrast tam, kde ho
      je nejmíň. */
-  --plocha-znacka:#106A47;
+  --plocha-znacka:#175A40;
   /* ---------------------------------------------------------------
      KATEGORIE. Dřív to byla duha: chladná modř, sytá zlatá a semaforová
      červená. Na zeleno-béžovém webu to nepůsobilo jako systém, ale jako tři
@@ -559,7 +569,7 @@
      `rgb(31,163,99)`, a to čtou čtyři zkoušky. */
   --plocha-tmava-2-rgb:24,45,34;
   --text-rgb:16,21,19;
-  --znacka-svetla-rgb:9,119,80;
+  --znacka-svetla-rgb:36,112,82;
   --brand-live-rgb:44,113,80;
   --accent-warm-rgb:138,85,18;
   --c-drazba-rgb:204,107,51;
@@ -567,12 +577,12 @@
   --c-nalehave-rgb:228,72,61;
   --c-ok-rgb:31,163,99;
   --c-ok-ink-rgb:19,102,62;
-  --znacka-hluboka-rgb:16,83,56;
-  --plocha-znacka-svetla-rgb:180,229,202;
+  --znacka-hluboka-rgb:18,70,50;
+  --plocha-znacka-svetla-rgb:184,225,204;
   --plocha-tmava-rgb:18,36,26;
   --accent-warm-bright-rgb:224,184,120;
   --text-ondeep-mute-rgb:201,210,203;
-  --plocha-znacka-rgb:16,106,71;
+  --plocha-znacka-rgb:23,90,64;
   --surface-2:#EEF6F1;
   /* JEMNÁ PLOCHA. Třináct míst na webu mělo rgba(228,240,231, 0.04–0.12),
      což je #E4F0E7 — téměř bílá barva z odstraněného tmavého režimu.
@@ -1728,7 +1738,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    deska: stín `--e1` a 1px světlou hranu nahoře (`inset 0 1px 0`),
    přesně jako `.map-app`. Zelená zář (--glow) tu zůstává zakázaná
    z důvodu o pár řádek výš: ta na webu znamená „zapnuto". */
-.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=14") center/contain no-repeat;
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=15") center/contain no-repeat;
   box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18);}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.

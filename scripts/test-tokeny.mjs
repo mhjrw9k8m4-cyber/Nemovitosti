@@ -416,12 +416,12 @@ const STEJNA_BARVA = {
    stav, ze kterého se web dostával. */
 {
   const STUPNICE = {
-    '--plocha-znacka-svetla': '#B4E5CA',  // z-200
-    '--znacka-na-tmave': '#88D0AB',       // z-300
-    '--znacka-svetla': '#097750',         // z-600
-    '--znacka': '#106A47',                // z-700 — značka
-    '--plocha-znacka': '#106A47',         // z-700 — táž barva, jiná role
-    '--znacka-hluboka': '#105338',        // z-800
+    '--plocha-znacka-svetla': '#B8E1CC',  // z-200
+    '--znacka-na-tmave': '#8ECAAD',       // z-300
+    '--znacka-svetla': '#247052',         // z-600
+    '--znacka': '#175A40',                // z-700 — značka
+    '--plocha-znacka': '#175A40',         // z-700 — táž barva, jiná role
+    '--znacka-hluboka': '#124632',        // z-800
   };
   const spatne = [];
   for (const [k, cekam] of Object.entries(STUPNICE)) {
