@@ -4266,11 +4266,6 @@
 
     var mvCount = document.getElementById('mvt-count'); if (mvCount) mvCount.textContent = matched ? '(' + fmt(matched) + ')' : '';
 
-    var nazevRazeni = (function () {
-      if (!sortEl) return '';
-      var o = sortEl.options[sortEl.selectedIndex];
-      return o ? o.textContent.trim() : '';
-    })();
     var pripisky = '';
 
     var tlacitka = '';
@@ -4330,41 +4325,12 @@
       + ' aria-label="Procházet po jednom">'
       + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;
 
-    countEl.innerHTML = (matched === 0
-      ? '<span>Nic nenalezeno</span>'
-      : '<button type="button" class="mc-razeni" id="mc-razeni"'
-        + ' aria-label="Změnit řazení, teď ' + esc(nazevRazeni) + '">'
-        + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-razeni"/></svg>'
-        + '<span class="mc-razeni-k">Řazení</span>'
-        + '<span class="mc-razeni-v">' + esc(nazevRazeni) + '</span>'
-        + '<svg class="ik mc-razeni-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>'
-        + '</button>')
-      + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
+    countEl.innerHTML = (matched === 0 ? '<span>Nic nenalezeno</span>' : '')
+      + (matched ? '<span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
 
-    var razBtn = countEl.querySelector('#mc-razeni');
-    if (razBtn) razBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-
-      document.body.classList.add('hledani-rozbalene');
-      var poleHledani = document.getElementById('map-search');
-      if (poleHledani) poleHledani.setAttribute('aria-expanded', 'true');
-      var panel = document.getElementById('ms-filters');
-      if (panel) panel.open = true;
-      if (!sortEl) return;
-
-      var obal = sortEl.closest ? sortEl.closest('.cdd') : null;
-      var spust = obal ? obal.querySelector('.cdd-btn') : null;
-
-      requestAnimationFrame(function () { requestAnimationFrame(function () {
-        var cil = spust || sortEl;
-
-        try { cil.scrollIntoView({ block: 'center', behavior: 'instant' }); }
-        catch (chyba) { try { cil.scrollIntoView(); } catch (chyba2) {} }
-        if (spust) spust.click();
-        else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
-      }); });
-    });
+    var obalRazeni = sortEl && ((sortEl.closest && sortEl.closest('.cdd')) || sortEl);
+    if (obalRazeni) obalRazeni.hidden = (matched === 0);
 
     var hotovoBtn = document.getElementById('msr-hotovo');
     if (hotovoBtn) {

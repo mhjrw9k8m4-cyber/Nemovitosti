@@ -15,7 +15,13 @@
        Řazení je mezi nimi a bez značky by bylo jediné holé. */
     /* Odkazy do sady (scripts/ikony.mjs), ne kresby — a celé, protože
        podle nich sestavení pozná, co má do stránky vložit. */
-    var IKONY = { razeni: '#i-razeni' };
+    /* A ŠIPKA NA KONCI. Rozbalovátka v panelu filtrů mají šipku
+       z pozadí (.map-select, obrázek v adrese), jenže ta je malá
+       a tmavě zelená — v řadě nad výpisem, kde ovladač bere celý
+       řádek, musí stát u pravého kraje a mluvit tiše (--muted).
+       Kreslí se proto stejnou rukou jako ostatní značky, a kdo ji
+       chce, řekne si o ni atributem data-sipka na <select>. */
+    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -108,7 +114,24 @@
         ik.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[ikJm] + '"/></svg>';
         btn.appendChild(ik);
       }
+      /* POPISEK PŘED HODNOTOU. „Řazení" říká, ČEHO se volba týká;
+         samotné „Doporučené" na tlačítku nad výpisem nikdo nepřečte
+         jako řazení — majitel 30. 10.: „kam jsi dal řazení,
+         nebo-li kolonku doporučené, k čemu tam je?" V panelu filtrů
+         popisek nese <label> vedle rozbalovátka, tam se nezadává. */
+      var pop = sel.getAttribute('data-popisek');
+      if (pop) {
+        var pe = document.createElement('span');
+        pe.className = 'cdd-k'; pe.textContent = pop; btn.appendChild(pe);
+      }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);
+      var sipJm = sel.getAttribute('data-sipka');
+      if (sipJm && IKONY[sipJm]) {
+        var sip = document.createElement('span');
+        sip.className = 'cdd-sip'; sip.setAttribute('aria-hidden', 'true');
+        sip.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[sipJm] + '"/></svg>';
+        btn.appendChild(sip);
+      }
       root.appendChild(btn);
 
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');

@@ -3,7 +3,7 @@
   ready(function () {
     var opened = null, poradiPanelu = 0;
 
-    var IKONY = { razeni: '#i-razeni' };
+    var IKONY = { razeni: '#i-razeni', 'sipka-dolu': '#i-sipka-dolu' };
     function close(vratFokus) {
       if (!opened) return;
       var btn = opened.btn;
@@ -66,7 +66,20 @@
         ik.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[ikJm] + '"/></svg>';
         btn.appendChild(ik);
       }
+
+      var pop = sel.getAttribute('data-popisek');
+      if (pop) {
+        var pe = document.createElement('span');
+        pe.className = 'cdd-k'; pe.textContent = pop; btn.appendChild(pe);
+      }
       var lbl = document.createElement('span'); lbl.className = 'cdd-lbl'; btn.appendChild(lbl);
+      var sipJm = sel.getAttribute('data-sipka');
+      if (sipJm && IKONY[sipJm]) {
+        var sip = document.createElement('span');
+        sip.className = 'cdd-sip'; sip.setAttribute('aria-hidden', 'true');
+        sip.innerHTML = '<svg class="ik" viewBox="0 0 24 24"><use href="' + IKONY[sipJm] + '"/></svg>';
+        btn.appendChild(sip);
+      }
       root.appendChild(btn);
 
       var panel = document.createElement('div'); panel.className = 'cdd-panel'; panel.setAttribute('role', 'listbox');

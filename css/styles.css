@@ -3033,7 +3033,6 @@ h1 em{ color:var(--znacka-svetla);
    v jedno slovo. */
 .map-count{display:flex; flex-wrap:wrap; align-content:flex-start; align-items:baseline;
   column-gap:8px; row-gap:2px;}
-.mc-sep{display:none;}
 /* Nadpis se smí zúžit, aby se vedle něj vešlo řazení. Bez toho si bral
    celou šířku sloupce a ovládání padalo na vlastní řádek — pět stejně
    hlasitých řádků, než začne první nabídka.
@@ -3060,26 +3059,45 @@ h1 em{ color:var(--znacka-svetla);
    z nich 4 px (při remíze dolů, jak stupnice velí) — hláška se tím
    zúžila o 2 px z každé strany a to je celá změna. */
 .map-count.mc-prazdno{padding:20px 4px; text-transform:none; font-weight:400; line-height:1.6;}
-/* ŘAZENÍ JE VIDĚT NAD VÝPISEM, I KDYŽ SE NASTAVUJE V PANELU.
+/* ŘAZENÍ JE VIDĚT NAD VÝPISEM A TAM SE TAKY NASTAVÍ.
    Nadpis „Doporučené příležitosti" nesl jméno zvoleného řazení, ale
    vypadal jako cedule: majitel 30. 10. „kam jsi dal řazení, nebo-li
-   kolonku doporučené, k čemu tam je?". Je z něj tlačítko — vypadá jako
-   ovladač (rámeček, značka, šipka dolů), nese jméno volby a otevře
-   panel u rozbalovače. Velikost nadpisu si drží: je to pořád to první,
-   co se nad výpisem čte.
+   kolonku doporučené, k čemu tam je?". Je z něj ovladač — rámeček,
+   značka, šipka dolů — a nese jméno volby. Velikost nadpisu si drží:
+   je to pořád to první, co se nad výpisem čte.
    Terč 44 px kvůli prstu. ZÁPORNÉ ODSAZENÍ TU BÝVALO (−8 px, aby se
    písmo nadpisu srovnalo s nabídkami pod ním) a hlídač u hrany ho
    správně odmítl: rámeček tím stál 8 px od okraje obrazovky, tedy
    v pásmu, kde deska buď má sedět na hraně (0), nebo mít aspoň 16 px.
    Ovladač proto začíná tam, kde všechno ostatní, a text je o ty 4 px
    odsazení dovnitř — to oko nepozná, uříznutý rámeček ano. */
-.mc-razeni{display:inline-flex; align-items:center; gap:8px;
-  min-height:44px; padding:4px 8px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
+/* OD 31. 10. TO NENÍ ATRAPA, ALE SÁM ROZBALOVAČ.
+   Tenhle vzhled měl do té doby <button class="mc-razeni">, který si
+   kreslil js/main.js — a volba přitom bydlela v panelu filtrů, takže
+   klepnutí na něj panel otevřelo a kleplo v něm na pravý ovladač.
+   Řazení tím stálo na stránce dvakrát (naměřeno na 390 px
+   s otevřeným panelem: 1 497 a 1 833 px) a jedno klepnutí hýbalo
+   třemi věcmi naráz. Vzhled zůstal, atrapa zmizela: pravidla teď
+   platí pro tlačítko, které k <select id="map-sort"> postaví
+   js/dropdown.js, a seznam se otevře tam, kde ovladač stojí.
+   TŘI TŘÍDY V SELEKTORU SCHVÁLNĚ: tatáž značka nese i .map-select
+   (dropdown.js ji dává svému tlačítku, aby vypadalo jako políčko),
+   takže pravidla o dvou třídách níž — třeba společná výška ovladačů
+   v bloku do 560 px — by jinak přebila tahle. */
+.ms-vysledky > .cdd > .cdd-btn{display:inline-flex; align-items:center; gap:8px;
+  min-height:44px; height:auto; padding:4px 8px; border:1px solid var(--line-ui); border-radius:var(--r-ovladani);
   background:none; color:var(--text); cursor:pointer;
   font:inherit; font-size:16px; font-weight:700; letter-spacing:-0.01em;
   -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
-.mc-razeni:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
-.mc-razeni > .ik{width:18px; height:18px; stroke-width:2; flex:none; color:var(--znacka-svetla);}
+.ms-vysledky > .cdd > .cdd-btn:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
+.ms-vysledky > .cdd > .cdd-btn .mcn-ic{display:inline-flex; flex:none; color:var(--znacka-svetla);}
+.ms-vysledky > .cdd > .cdd-btn .mcn-ic .ik{width:18px; height:18px; stroke-width:2;}
+/* Obal rozbalovače je v hlavičce jen průchozí prvek: šířku si bere
+   podle tlačítka, aby na širokém displeji stálo vedle počtu tak, jak
+   tam stávala atrapa (naměřeno 216 px), a ne přes celý řádek. */
+.ms-vysledky > .cdd{width:auto; flex:0 0 auto;}
+/* Když se nic nenašlo, není co řadit — schovává js/main.js. */
+.ms-vysledky > .cdd[hidden]{display:none;}
 /* Slovo „Řazení" je popisek, hodnota je ta hlasitá — stejně jako
    u dlaždic parametrů na stránce pozemku. */
 /* SLADĚNO SE ZBYTKEM WEBU (31. 10.). Stálo tu 12 px, váha 600, verzálky
@@ -3089,15 +3107,16 @@ h1 em{ color:var(--znacka-svetla);
    oba snímky vedle sebe: „koukni, jak vypadá zbytek webu oproti tomu
    začátku, musíš to sladit." Verzálky z ovládání nad výpisem proto
    mizí a popisek mluví týmž hlasem jako popisky všude jinde. */
-.mc-razeni-k{font-size:14px; font-weight:500; color:var(--muted);}
+.ms-vysledky > .cdd > .cdd-btn .cdd-k{font-size:14px; font-weight:500; color:var(--muted);}
 /* Hodnota je to hlasité — nese velikost a řez nadpisu z tlačítka.
    Vlastní pravidlo má proto, aby se nedala omylem ztišit: je to jediný
    text nad výpisem, který říká, podle čeho se to řadí. */
-.mc-razeni-v{color:var(--text); white-space:nowrap;}
+.ms-vysledky > .cdd > .cdd-btn .cdd-lbl{flex:0 1 auto; color:var(--text); white-space:nowrap;}
 /* Šipka u pravého kraje, ne hned za hodnotou: ovladač bere na telefonu
    celý řádek (viz blok do 560 px) a šipka nalepená na text by v tom
    řádku visela uprostřed prázdna. */
-.mc-razeni-sip{width:16px; height:16px; stroke-width:2.25; flex:none; color:var(--muted); margin-left:auto;}
+.ms-vysledky > .cdd > .cdd-btn .cdd-sip{display:inline-flex; flex:none; color:var(--muted); margin-left:auto;}
+.ms-vysledky > .cdd > .cdd-btn .cdd-sip .ik{width:16px; height:16px; stroke-width:2.25;}
 /* Dlouhý popis nadpisu („Doporučené příležitosti") se na telefonu
    schovává v bloku do 560 px; zbyde samotný počet „1 930 na mapě".
    Počet se přitom nikam neopisuje — viz komentář v js/main.js. */
@@ -7804,7 +7823,11 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      „Procházet po jednom" je akce a řazení je nastavení.
      Počet („1 897 na mapě") se tím odsune pod něj — .map-count je
      zalamovaná řada, takže mu stačí říct, že bere celou šířku. */
-  .mc-razeni{flex:1 1 100%;}
+  .ms-vysledky > .cdd{grid-column:1 / -1; order:8; width:auto;}
+  .ms-vysledky > .cdd > .cdd-btn{width:100%;}
+  /* Bez skriptu zůstane v hlavičce holý <select> — ať stojí tam, kde
+     by stál rozbalovač, a ne mezi tlačítky. */
+  .ms-vysledky > .map-select{grid-column:1 / -1; order:8;}
 
   /* STEJNÁ POLÍČKA, NE ČTYŘI RŮZNĚ ŠIROKÉ. Nad výpisem stojí dvě
      dvojice ovladačů pod sebou — „Uložené / Doporučené" a „Procházet
@@ -7901,11 +7924,6 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
      Hlídá scripts/test-ovladani-vypisu.mjs (ovladače mají jednu
      velikost) a scripts/test-nastroje-v-dosahu.mjs (jeden řádek). */
   .ms-vysledky .msv-ovladani .mc-prep, .mc-akce .mc-nastroj{justify-content:center;}
-  /* Řazení je v téže řadě jako ostatní — tedy taky na střed. Vlastní
-     rozbalovací seznam má nápis zarovnaný vlevo (.cdd-btn), což v řadě
-     čtyř políček vyčnívalo jako jediné. */
-  .ms-vysledky .msv-ovladani .cdd-btn{justify-content:center;}
-  .ms-vysledky .msv-ovladani .cdd-btn .cdd-lbl{flex:0 1 auto; text-align:center;}
   .mc-akce{width:100%;}
 
   /* JEDEN TVAR PRO CELÝ PRUH NAD VÝPISEM.
@@ -7932,9 +7950,11 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   /* Prázdné pásmo pod lištou drží deska s nadpisem, ne odsazení. */
   .hero-map .map-wide{padding-top:0;}
 
+  /* Řazení v téhle řadě není: má vlastní řádek a vlastní předpis
+     (.ms-vysledky > .cdd > .cdd-btn o kus výš). Zbyl tu kvůli
+     prohlížeči bez skriptu holý <select>. */
   .ms-vysledky .msv-ulozene,
-  .ms-vysledky .map-select,
-  .ms-vysledky .cdd-btn{
+  .ms-vysledky > .map-select{
     min-height:44px; height:44px; padding:0 12px;
     border-radius:var(--r-ovladani);
     border:1px solid var(--line-ui);
@@ -8525,7 +8545,7 @@ body > footer{flex:none;}
    obrysy: týž přeliv o řád slabší a stín `--e1`. Zapnuté „Uložené"
    (`.mc-prep.on`) se vynechává — to nese sytou značkovou plochu
    a druhý přeliv přes ni by ji jen zašpinil. */
-.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .mc-razeni{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
+.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
 .mc-rychly .mcn-ic{color:#fff;}
 .mc-rychly:hover{background-color:var(--znacka); border-color:transparent; color:#fff;
   box-shadow:var(--e2), var(--glow-lg);}

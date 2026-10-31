@@ -17376,3 +17376,69 @@ shodí čtyři kontroly na dvou šířkách.
 **Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-ovladani-vypisu`
 (67), `test-mapa` (57), `test-uvod` (68), `test-rozvrzeni` (190)
 a `test-prvni-obrazovka` (22) — bez chyby.
+
+## §275 Řazení bylo na stránce dvakrát — a to druhé byla atrapa
+
+**Zadání (31. 10.), s fotkou řádku „Řazení — Doporučené" uvnitř
+otevřeného panelu filtrů:** „Proč tam toto zůstává, když rozkliknu
+filtr? Ať je to pryč. A navíc se to seká a rozklikává dvě tabulky."
+
+**Co se naměřilo.** Na 390×844 s otevřeným panelem stálo řazení na
+stránce **dvakrát**: skutečný rozbalovač v panelu filtrů na 1 497 px
+a nad výpisem ovladač `#mc-razeni` na 1 833 px. Ten druhý byl
+**atrapa** — tlačítko, které si js/main.js kreslil sám při každém
+překreslení výpisu, vypadalo jako rozbalovač (značka, popisek,
+hodnota, šipka), ale žádný seznam neotevíralo. Klepnutí na něj muselo:
+
+1. přidat `hledani-rozbalene` na `<body>` (jinak je blok filtrů
+   `display:none` a nedá se na něj klepnout),
+2. otevřít `<details id="ms-filters">`,
+3. počkat **dva snímky**, než má panel spočítané rozvržení,
+4. skočit scrollem k rozbalovači — naměřeno **493 px**,
+5. a teprve pak klepnout na tlačítko, které k `<select>` postavil
+   js/dropdown.js.
+
+Pět kroků a tři pohyby na obrazovce po jednom klepnutí. To je přesně
+to „seká se a rozklikává dvě tabulky".
+
+**Oprava: jeden ovladač, a ten skutečný.** `<select id="map-sort">`
+se přestěhoval z panelu filtrů do hlavičky výpisu (statické HTML
+v `.ms-vysledky`, ne do `#map-count` — ten renderList přepisuje při
+každé změně výběru a rozbalovač by se pokaždé rozebral). Atrapa,
+její obsluha i celý ten pětikrokový řetěz jsou pryč; z js/main.js
+zmizelo 60 řádků včetně tří komentářů, které vysvětlovaly, proč je
+obchůzka nutná.
+
+**Vzhled se nemění.** Aby ten pravý ovladač vypadal jako atrapa,
+dostal js/dropdown.js dva nepovinné atributy: `data-popisek` (tiché
+slovo „Řazení" před hodnotou) a `data-sipka` (šipka ze sady značek
+u pravého kraje, místo malé tmavé šipky z pozadí `.map-select`).
+Naměřeno před změnou a po ní: telefon 358×44 px, 16 px / 700,
+monitor 216 → 214 px. Na širokém displeji je hlavička o 25 px vyšší
+(111 → 136), protože počet se už nevejde vedle ovladače na týž řádek
+— to je cena za to, že ovladač je skutečný a ne atrapa.
+
+**Co se tím ještě spravilo.** Řazení teď jde změnit, aniž se
+rozklikne cokoli jiného: seznam se otevře na místě, stránka se
+neposune (scrollY 0 → 0) a ovladač zůstane na svém pixelu. Když se
+nic nenajde, ovladač se schová — dřív mizel jen proto, že byl
+součástí hlavičky, kterou prázdný výběr celou přepsal.
+
+**Hlídač.** `test-ovladani-vypisu` (nově 71 kontrol) žádá na dvou
+šířkách opak toho, co hlídal dosud: že `#map-sort` je na stránce
+právě jednou a NENÍ v panelu filtrů, že klepnutí otevře seznam
+voleb, že se při tom nehne stránka ani ovladač a že panel filtrů
+zůstane zavřený. Prokázáno dvěma sabotážemi: vrácení druhého řazení
+do panelu shodí 8 kontrol, vrácení starého chování (klepnutí otevře
+panel a odroluje) shodí 6.
+
+**Dvě pravidla ve zkouškách se tím obrátila.** `test-uvod` žádal
+„řazení se nastavuje v panelu filtrů, jak si majitel vyžádal"
+(§170) — dnes žádá, že v panelu není a na stránce je jedno.
+`test-mrtve-styly` správně našel, co po stěhování osiřelo:
+`.mc-sep` (oddělovač „ · ", který stával mezi jménem řazení
+a počtem) už nemá co oddělovat a je smazaný.
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-ovladani-vypisu`
+(71), `test-rozbalovac` (17), `test-uvod` (68), `test-soustava` (15)
+a `test-nastroje-v-dosahu` (15) — bez chyby.

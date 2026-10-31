@@ -190,12 +190,15 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       druhRozbalovatko: !!document.getElementById('map-druh'),
       krajRozbalovatko: !!document.getElementById('map-kraj'),
       razeniMeziFiltry: !!document.querySelector('#ms-filters #map-sort'),
-      razeniVidet: vidno(document.getElementById('map-sort')),
+      razeniPocet: document.querySelectorAll('#map-sort').length,
       /* Ovladač nad výpisem: že je, a co na něm stojí. Čte se text,
-         který je opravdu vykreslený — ne značkování. */
-      razeniNadVypisem: vidno(document.getElementById('mc-razeni')),
+         který je opravdu vykreslený — ne značkování. Vykresluje ho
+         js/dropdown.js vedle <select id="map-sort">; samotný select
+         je po vylepšení 1x1 px, takže se na jeho viditelnost ptát
+         nejde. */
+      razeniNadVypisem: vidno(document.querySelector('.ms-vysledky > .cdd > .cdd-btn')),
       razeniJmeno: (function () {
-        var e = document.querySelector('#mc-razeni .mc-razeni-v');
+        var e = document.querySelector('.ms-vysledky > .cdd > .cdd-btn .cdd-lbl');
         return e ? e.textContent.trim() : '';
       })(),
       razeniVybrano: (function () {
@@ -216,22 +219,24 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
     `s počtem ${v.druhSPoctem} z ${v.druhStitku}`);
   pravda('kraj už panel nezabírá — od toho je nahoře našeptávač',
     v.krajRozbalovatko === false);
-  /* ŘAZENÍ JE V PANELU — A MUSÍ BÝT POZNAT ZVENKU.
-     Tahle kontrola dlouho hlídala opak („řazení nepatří mezi filtry,
-     protože nic neubírá"). To pravidlo zrušil 29. 10. majitel sám:
-     „mělo by to být spojené se zbytkem, tedy v té tabulce." Řazení se
-     do panelu přestěhovalo, jenže hlídač zůstal u starého textu a od
-     té chvíle padal na stavu, který si majitel objednal — hlídal tedy
-     pravidlo, které už neplatí. To je horší než nehlídat nic.
-     Co platí dnes: volba bydlí v panelu, ale nad výpisem musí být
-     vidět, JAK je seřazeno, a musí se to dát změnit jedním klepnutím.
-     Bez toho vznikne přesně to, co majitel 30. 10. hlásil: „kam jsi dal
-     řazení, nebo-li kolonku doporučené, k čemu tam je?" */
-  pravda('řazení se nastavuje v panelu filtrů, jak si majitel vyžádal',
-    v.razeniMeziFiltry === true, JSON.stringify(v));
+  /* ŘAZENÍ JE NAD VÝPISEM, A JE TAM JEN JEDNOU.
+     Tahle kontrola už hlídala obě strany sporu: nejdřív „řazení
+     nepatří mezi filtry, protože nic neubírá", pak (od 29. 10., na
+     majitelovu žádost „mělo by to být spojené se zbytkem, tedy v té
+     tabulce") opak. Obojí byla půlka pravdy, protože po tom stěhování
+     zůstala nad výpisem ATRAPA, která panel jen otevírala — volba tedy
+     byla na stránce dvakrát. Majitel 31. 10. s fotkou: „proč tam toto
+     zůstává, když rozkliknu filtr, ať je to pryč, a navíc se to seká
+     a rozklikává dvě tabulky."
+     Co platí dnes: JEDEN ovladač, a stojí nad výpisem, kde je vidět
+     bez rozklikávání panelu. V panelu filtrů řazení není — tam patří
+     jen to, co ubírá nabídky, a odznak u „Druh, cena, výměra a další"
+     tak dál počítá jen filtry. */
+  pravda('řazení v panelu filtrů není — a na stránce je jen jedno',
+    v.razeniMeziFiltry === false && v.razeniPocet === 1, JSON.stringify(v));
   pravda('a nad výpisem je vidět, jak je seřazeno — jedním ovladačem',
     v.razeniNadVypisem && /\S/.test(v.razeniJmeno),
-    `ovladač #mc-razeni: ${v.razeniNadVypisem ? 'je' : 'NENÍ'}, jméno volby: „${v.razeniJmeno}"`);
+    `ovladač řazení: ${v.razeniNadVypisem ? 'je' : 'NENÍ'}, jméno volby: „${v.razeniJmeno}"`);
   /* Jméno na ovladači se nesmí rozejít s tím, co je v rozbalovači
      vybrané: dvě místa, jedna pravda. Sabotáž (napsat do ovladače pevný
      text) tohle chytí, pouhá existence prvku ne. */

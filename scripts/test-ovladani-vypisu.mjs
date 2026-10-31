@@ -95,8 +95,13 @@ try {
         rychly: q('#mc-rychly'), vyvoz: q('#mc-vyvoz'),
         /* Ovladač řazení nad výpisem — ten, ze kterého se 30. 10. stal
            nadpis „Doporučené" (§248). Hlídá se jeho poloha: majitel ho
-           chce úplně dole. */
-        razeni: q('#mc-razeni'),
+           chce úplně dole.
+           OD 31. 10. SE PTÁ NA SKUTEČNÝ ROZBALOVAČ, NE NA ATRAPU.
+           Do té doby to bylo tlačítko #mc-razeni, které jen otevíralo
+           panel filtrů, kde teprve bydlela volba (§275). Vzhled zůstal
+           týž, selektor se změnil: tlačítko, které k <select id="map-sort">
+           staví js/dropdown.js. */
+        razeni: q('.ms-vysledky > .cdd > .cdd-btn'),
         /* Mezera mezi sloupci se ČTE z té mřížky, která řádek opravdu
            skládá — od 30. 10. je to .ms-vysledky, ne #mc-akce (ten má
            display:contents a žádné sloupce nemá). */
@@ -235,7 +240,7 @@ try {
       const out = {};
       [['hledání', '.mcp-hledani'], ['Procházet po jednom', '#mc-rychly'],
        ['Uložené', '#map-fav'], ['Stáhnout výběr', '#mc-vyvoz'],
-       ['řazení', '#mc-razeni']].forEach(([jm, sel]) => {
+       ['řazení', '.ms-vysledky > .cdd > .cdd-btn']].forEach(([jm, sel]) => {
         const e = document.querySelector(sel); if (!e) return;
         const r = e.getBoundingClientRect();
         out[jm] = { vlevo: Math.round(r.left), vpravo: Math.round(document.documentElement.clientWidth - r.right) };
@@ -311,7 +316,7 @@ try {
         return { px: Math.round(parseFloat(st.fontSize)), vaha: st.fontWeight,
           verzalky: st.textTransform, barva: st.color }; };
       return { rychly: c('#mc-rychly'), vyvoz: c('#mc-vyvoz'), ulozene: c('#map-fav'),
-        hodnota: c('.mc-razeni-v'), popisek: c('.mc-razeni-k') };
+        hodnota: c('.ms-vysledky > .cdd > .cdd-btn .cdd-lbl'), popisek: c('.ms-vysledky > .cdd > .cdd-btn .cdd-k') };
     });
     if (sirka > 360) {
       const velikosti = [hlas.rychly, hlas.vyvoz, hlas.ulozene, hlas.hodnota]
@@ -377,21 +382,39 @@ try {
       !!pasBily && pasBily.barva === 'rgb(255, 255, 255)' && pasBily.obraz === 'none',
       pasBily ? `barva ${pasBily.barva}, obrázek ${pasBily.obraz.slice(0, 60)}` : 'pás se nenašel');
 
-    /* 3c. „DOPORUČENÉ" MUSÍ OPRAVDU OTEVŘÍT VÝBĚR ŘAZENÍ.
-       Majitel 31. 10.: „když zmáčknu Doporučené, zobrazí se mi nějaká
-       čárka nalevo, ale nic to nedělá." Byly to dvě vady za sebou
-       a ani jedna nebyla vidět ze stylopisu:
-         1. Blok filtrů je na telefonu `display:none` a ukáže se až
-            s třídou `hledani-rozbalene` na <body>; tu nastavovalo jen
-            pole hledání. `<details>` se tedy otevřel UVNITŘ skrytého
-            obalu a na skrytý prvek se nedá klepnout.
-         2. Po opravě se rozbalovač otevřel, ale 660 px pod spodním
-            okrajem okna: `scrollIntoView` dědil
-            `html{scroll-behavior:smooth}`, plynulý posun se cestou
-            přerušil překreslením výpisu a `window.scrollY` zůstalo
-            na nule.
-       Měří se proto obojí: že se seznam voleb otevřel A že je vidět. */
-    await p.evaluate(() => { const e = document.querySelector('.mc-razeni'); if (e) e.click(); });
+    /* 3c. ŘAZENÍ SE OTEVŘE NA MÍSTĚ — A NIC JINÉHO SE NEHNE.
+       Tahle kontrola měla starší podobu a hlídala OBCHÁZKU: volba
+       bydlela v panelu filtrů a tlačítko nad výpisem byla jen atrapa,
+       která ten panel otevírala. Žádalo se tedy, aby klepnutí
+       rozbalilo blok filtrů (třída `hledani-rozbalene`) a aby se
+       seznam po skoku scrollem vešel do okna.
+       31. 10. to majitel poslal vyfocené z druhé strany: „proč tam
+       toto zůstává, když rozkliknu filtr, ať je to pryč, a navíc se to
+       seká a rozklikává dvě tabulky." Naměřeno na 390 px s otevřeným
+       panelem: řazení stálo dvakrát (v panelu na 1 497 px, atrapa na
+       1 833 px) a jedno klepnutí hýbalo třemi věcmi — rozbalilo
+       hledání, otevřelo blok filtrů a skočilo scrollem o 493 px.
+       Ovladač je od té doby jediný a skutečný, takže se žádá OPAK:
+         1. v panelu filtrů řazení NENÍ (jediný #map-sort na stránce),
+         2. klepnutí otevře seznam voleb,
+         3. stránka se při tom neposune a ovladač nezůstane stát jinde,
+         4. blok filtrů se neotevře,
+         5. seznam je celý vidět v okně.
+       Body 3 a 4 jsou to, co majitel popsal jako „seká se a rozklikává
+       dvě tabulky"; bez nich by prošla i ta stará obchůzka. */
+    const razPred = await p.evaluate(() => {
+      const b = document.querySelector('.ms-vysledky > .cdd > .cdd-btn');
+      return { y: Math.round(window.scrollY),
+        t: b ? Math.round(b.getBoundingClientRect().top) : null,
+        kolik: document.querySelectorAll('#map-sort').length,
+        vPanelu: !!document.querySelector('#ms-filters #map-sort') };
+    });
+    pravda(`${sirka} px: řazení je na stránce jen jednou, a ne v panelu filtrů`,
+      razPred.kolik === 1 && !razPred.vPanelu,
+      `#map-sort ${razPred.kolik}x, v panelu filtrů: ${razPred.vPanelu ? 'ANO' : 'ne'}`);
+    await p.evaluate(() => {
+      const e = document.querySelector('.ms-vysledky > .cdd > .cdd-btn'); if (e) e.click();
+    });
     await p.waitForTimeout(900);
     const raz = await p.evaluate(() => {
       const sel = document.getElementById('map-sort');
@@ -402,19 +425,28 @@ try {
       const r = pan ? pan.getBoundingClientRect() : null;
       return {
         rozbaleno: document.body.classList.contains('hledani-rozbalene'),
+        filtrOtevren: !!(document.getElementById('ms-filters') || {}).open,
         otevreno: !!pan && getComputedStyle(pan).display !== 'none',
         voleb: pan ? pan.querySelectorAll('.cdd-opt').length : 0,
+        y: Math.round(window.scrollY),
+        t: btn ? Math.round(btn.getBoundingClientRect().top) : null,
         vOkne: !!r && r.height > 40 && r.top >= -1 && r.bottom <= window.innerHeight + 1,
-        kde: r ? `${Math.round(r.top)}–${Math.round(r.bottom)} px v okně ${window.innerHeight}` : 'bez panelu',
+        kde: r ? `${Math.round(r.top)}-${Math.round(r.bottom)} px v okně ${window.innerHeight}` : 'bez panelu',
       };
     });
-    pravda(`${sirka} px: „Doporučené" rozbalí panel filtrů`, raz.rozbaleno,
-      'třída hledani-rozbalene na <body> nepřibyla — blok filtrů zůstal display:none');
-    pravda(`${sirka} px: a otevře seznam voleb řazení`, raz.otevreno && raz.voleb >= 5,
+    pravda(`${sirka} px: klepnutí na řazení otevře seznam voleb`,
+      raz.otevreno && raz.voleb >= 5,
       `panel ${raz.otevreno ? 'otevřen' : 'zavřený'}, voleb ${raz.voleb}`);
+    pravda(`${sirka} px: a stránka ani ovladač se při tom nehnou`,
+      raz.y === razPred.y && raz.t !== null && Math.abs(raz.t - razPred.t) <= 1,
+      `scrollY ${razPred.y} na ${raz.y}, ovladač ${razPred.t} na ${raz.t} px`);
+    pravda(`${sirka} px: a panel filtrů zůstane zavřený`,
+      !raz.filtrOtevren && !raz.rozbaleno,
+      `filtr ${raz.filtrOtevren ? 'otevřen' : 'zavřený'}, hledani-rozbalene: ${raz.rozbaleno ? 'ANO' : 'ne'}`);
     pravda(`${sirka} px: a ten seznam je celý vidět v okně`, raz.vOkne, raz.kde);
-    /* Zavřít, ať následující měření nekoukají do rozbaleného panelu. */
+    /* Zavřít, ať následující měření nekoukají do rozbaleného seznamu. */
     await p.evaluate(() => {
+      document.body.click();
       const h = document.getElementById('msr-hotovo'); if (h) h.click();
       document.body.classList.remove('hledani-rozbalene');
       window.scrollTo(0, 0);

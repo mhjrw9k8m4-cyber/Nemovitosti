@@ -7018,23 +7018,6 @@
     /* Nadpis nad prázdným seznamem nesmí nic slibovat. „Doporučené
        příležitosti · 0 na mapě" a pod tím prázdno je protimluv —
        a ještě se to tváří, že web něco doporučil. */
-    /* NADPIS JE OVLADAČ ŘAZENÍ, NE CEDULE.
-       Majitel 30. 10.: „kam jsi dal řazení, nebo-li kolonku doporučené,
-       k čemu tam je?" Ptal se právem. Řazení si 29. 10. sám vyžádal do
-       panelu filtrů („mělo by to být spojené, tedy v té tabulce") — jenže
-       nad výpisem pak zůstal nadpis „Doporučené příležitosti", který
-       JMÉNO toho řazení nese, ale vypadá jako titulek, nedá se na něj
-       klepnout a nikam nevede. Člověk tedy vidí, JAK je to seřazené,
-       a nemá jak to změnit.
-       Nadpis je proto tlačítko: vypíše „Řazení · <jméno volby>" a otevře
-       panel u rozbalovače řazení. Volba zůstává v panelu, jak si majitel
-       přál; druhá kopie stavu nevzniká — jméno se čte z téhož <select>,
-       takže se ty dva nemůžou rozejít. */
-    var nazevRazeni = (function () {
-      if (!sortEl) return '';
-      var o = sortEl.options[sortEl.selectedIndex];
-      return o ? o.textContent.trim() : '';
-    })();
     var pripisky = '';
     /* TLAČÍTKA MAJÍ VLASTNÍ ŘÁDEK, ne konec věty. Dokud visela na konci
        nadpisu jako podtržená slůvka, lámala se mezi sebe — a protože
@@ -7193,73 +7176,33 @@
        v něm „N na mapě". Se schovanou .mc-sub jim vycházelo −1.
        Jedno číslo na jednom místě je i tak správně; dvě podoby téhož
        čísla by se dřív nebo později rozešly. */
-    countEl.innerHTML = (matched === 0
-      ? '<span>Nic nenalezeno</span>'
-      : '<button type="button" class="mc-razeni" id="mc-razeni"'
-        + ' aria-label="Změnit řazení, teď ' + esc(nazevRazeni) + '">'
-        + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-razeni"/></svg>'
-        + '<span class="mc-razeni-k">Řazení</span>'
-        + '<span class="mc-razeni-v">' + esc(nazevRazeni) + '</span>'
-        + '<svg class="ik mc-razeni-sip" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-dolu"/></svg>'
-        + '</button>')
-      + (matched ? '<span class="mc-sub"><span class="mc-sep"> · </span>' + fmt(matched) + ' na mapě</span>' : '')
+    /* ŘAZENÍ SE TU UŽ NEKRESLÍ — A TO JE CELÁ OPRAVA Z 31. 10.
+       Do téhle chvíle tu vznikalo tlačítko .mc-razeni: atrapa
+       rozbalovače, protože skutečná volba stála v panelu filtrů.
+       Klepnutí na ni tedy muselo panel otevřít a teprve v něm klepnout
+       na pravý ovladač — dvě místa pro jednu volbu a tři pohyby na
+       obrazovce po jednom klepnutí. Majitel to poslal vyfocené:
+       „proč tam toto zůstává, když rozkliknu filtr, ať je to pryč,
+       a navíc se to seká a rozklikává dvě tabulky."
+       Pravý rozbalovač se přestěhoval sem nad výpis (#map-sort
+       v index.html) a kreslí ho js/dropdown.js JEDNOU při startu.
+       Překreslení výpisu se ho proto nesmí dotknout — tenhle prvek
+       nese už jen počet a přípisky.
+       ODDĚLOVAČ " · " TÍM TAKY ZMIZEL: stál před počtem, aby ho oddělil
+       od jména řazení, které tu bývalo. Před prvním slovem v řádku
+       nemá co oddělovat. (Vidět nebyl — .mc-sep měl display:none —
+       ale v textu prvku byl, a patnáct zkoušek čte počet právě odtud.) */
+    countEl.innerHTML = (matched === 0 ? '<span>Nic nenalezeno</span>' : '')
+      + (matched ? '<span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
       + pripisky;
-    /* Klepnutí otevře panel a sjede k řazení. Zaměření se dává samotnému
-       <select>, aby na telefonu rovnou vyjel výběr — kdo na tlačítko sáhl,
-       chce měnit pořadí, ne si panel jen prohlédnout. */
-    var razBtn = countEl.querySelector('#mc-razeni');
-    if (razBtn) razBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      /* NEJDŘÍV ROZBALIT, TEPRVE POTOM OTEVŘÍT — jinak se neděje nic.
-         Na telefonu je celý blok filtrů schovaný
-         (`.ms-rozsirene{display:none}`) a ukáže se teprve s třídou
-         `hledani-rozbalene` na <body>; tu dosud nastavovalo jen pole
-         hledání. Tlačítko řazení ji nenastavovalo, takže `<details>`
-         se sice otevřel, ale UVNITŘ skrytého obalu — a na skrytý
-         prvek se nedá klepnout, takže se rozbalovač řazení nikdy
-         neukázal. Majitel: „když zmáčknu Doporučené, zobrazí se mi
-         nějaká čárka nalevo, ale nic to nedělá." Ta čárka je kus
-         rozbalovače, který se umístil podle nulového obdélníku. */
-      document.body.classList.add('hledani-rozbalene');
-      var poleHledani = document.getElementById('map-search');
-      if (poleHledani) poleHledani.setAttribute('aria-expanded', 'true');
-      var panel = document.getElementById('ms-filters');
-      if (panel) panel.open = true;
-      if (!sortEl) return;
-      /* NA ROZBALOVAČ SE NESAHÁ PŘÍMO. js/dropdown.js nahradí každý
-         <select> vlastním tlačítkem a tomu původnímu dá tabindex="-1"
-         a aria-hidden — takže focus() na něm tiše neudělá vůbec nic.
-         Naměřeno: document.activeElement zůstal „mc-razeni" i po třech
-         různých pokusech, dokud se nepodíval na tabIndex (−1).
-         Klepne se proto na tlačítko, které js/dropdown.js vyrobil;
-         když rozbalovač vylepšený není, zbývá původní <select>. */
-      var obal = sortEl.closest ? sortEl.closest('.cdd') : null;
-      var spust = obal ? obal.querySelector('.cdd-btn') : null;
-      /* AŽ V DALŠÍM SNÍMKU: panel je <details> a ve chvíli, kdy se mu
-         nastaví open, jeho obsah ještě nemá rozvržení — rozbalovač by
-         si svůj seznam umístil podle nulového obdélníku.
-         A posouvá se SKOKEM, ne plynule: dokud plynulé posouvání běží,
-         mění se obdélník pod rukama a seznam voleb by vyjel vedle. */
-      /* DVA SNÍMKY, NE JEDEN. Blok filtrů se právě přepnul z
-         `display:none` na `block`; v prvním snímku po té změně ještě
-         nemá spočítané rozvržení a `scrollIntoView` by mířil na
-         nulový obdélník. */
-      requestAnimationFrame(function () { requestAnimationFrame(function () {
-        var cil = spust || sortEl;
-        /* SKOKEM, NE PLYNULE — a tentokrát to tak opravdu je.
-           Komentář tu tohle tvrdil už dřív, jenže `behavior` se
-           nepředával a `html{scroll-behavior:smooth}` z toho udělal
-           plynulý posun. Naměřeno 31. 10.: po klepnutí na „Doporučené"
-           zůstalo `window.scrollY` na 0 a tlačítko řazení viselo na
-           1 506 px, tedy 660 px pod spodním okrajem okna — rozbalovač
-           se otevřel mimo obrazovku a vypadalo to, že se nestalo nic.
-           Plynulý posun se navíc cestou přerušil překreslením výpisu. */
-        try { cil.scrollIntoView({ block: 'center', behavior: 'instant' }); }
-        catch (chyba) { try { cil.scrollIntoView(); } catch (chyba2) {} }
-        if (spust) spust.click();
-        else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
-      }); });
-    });
+    /* A KDYŽ NENÍ CO ŘADIT, ŘAZENÍ SE SCHOVÁ. Dřív mizelo samo —
+       bylo součástí téhle hlavičky, a ta se při nulovém výběru celá
+       přepsala na „Nic nenalezeno". Teď stojí vedle ní, takže se o to
+       musí říct. Schovává se OBAL (.cdd), ne samotný <select>: ten je
+       po vylepšení 1×1 px a vidět je tlačítko, které mu dropdown.js
+       postavil vedle. */
+    var obalRazeni = sortEl && ((sortEl.closest && sortEl.closest('.cdd')) || sortEl);
+    if (obalRazeni) obalRazeni.hidden = (matched === 0);
     /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
        Tlačítko pod filtry neslo slovo „Hotovo" — tedy nic o tom, co
        člověk právě nastavil. Majitel chtěl vidět, jak filtr mění počet
