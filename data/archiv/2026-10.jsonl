@@ -565,3 +565,23 @@
 {"k":"Dobšice u Znojma|958/2|Znojmo|48.851|16.075#1rqpujc","m":"Dobšice u Znojma","o":"Znojmo","dr":"stavební pozemek","t":"drazba","v":1010,"c":3383500,"od":"2026-10-25","do":"2026-10-29","proc":"zmizela"}
 {"k":"Lázně Libverda|344/1|Liberec|50.891|15.204#1rqu98x","m":"Lázně Libverda","o":"Liberec","dr":"zahrada","t":"exekuce","v":710,"c":910000,"od":"2026-09-16","do":"2026-10-29","proc":"zmizela"}
 {"k":"Žeravice u Kyjova|2000/24|Hodonín|49.023|17.253#1rquk3i","m":"Žeravice u Kyjova","o":"Hodonín","dr":"orná půda","t":"exekuce","v":0,"c":29500,"od":"2026-09-14","do":"2026-10-29","proc":"zmizela"}
+{"k":"Držková|—|Zlín|49.332|17.794#268it","m":"Držková","o":"Zlín","dr":"stavební pozemek","t":"sale","v":4173,"c":6689300,"od":"2026-10-17","do":"2026-10-30","proc":"cena"}
+{"k":"Slapsko|—|Tábor|49.583|14.750#i0fyii","m":"Slapsko","o":"Tábor","dr":"orná půda","t":"sale","v":6571,"c":215000,"od":"2026-09-14","do":"2026-10-30","proc":"zmizela"}
+{"k":"Tojice|—|Plzeň-jih|49.494|13.624#3ke27","m":"Tojice","o":"Plzeň-jih","dr":"orná půda","t":"sale","v":12944,"c":550000,"od":"2026-09-14","do":"2026-10-30","proc":"zmizela"}
+{"k":"Mirovice|—|Písek|49.502|13.998#2pluv","m":"Mirovice","o":"Písek","dr":"orná půda","t":"sale","v":1903,"c":87550,"od":"2026-09-19","do":"2026-10-30","proc":"zmizela"}
+{"k":"Chotoviny|—|Tábor|49.468|14.674#hzqiji","m":"Chotoviny","o":"Tábor","dr":"orná půda","t":"sale","v":2583,"c":130000,"od":"2026-09-14","do":"2026-10-30","proc":"zmizela"}
+{"k":"Kuchařovice|—|Znojmo|48.883|16.083#1xusl","m":"Kuchařovice","o":"Znojmo","dr":"orná půda","t":"sale","v":68811,"c":3659000,"od":"2026-09-29","do":"2026-10-30","proc":"zmizela"}
+{"k":"Černousy|—|Liberec|51.017|15.033#1dpja","m":"Černousy","o":"Liberec","dr":"stavební pozemek","t":"sale","v":12967,"c":690000,"od":"2026-10-27","do":"2026-10-30","proc":"zmizela"}
+{"k":"Bratronice|—|Kladno|50.066|14.000#3l0z3","m":"Bratronice","o":"Kladno","dr":"orná půda","t":"sale","v":27730,"c":2700000,"od":"2026-09-19","do":"2026-10-30","proc":"zmizela"}
+{"k":"Cítov|—|Mělník|50.392|14.396#2q6w5","m":"Cítov","o":"Mělník","dr":"ovocný sad","t":"sale","v":10028,"c":1500000,"od":"2026-09-14","do":"2026-10-30","proc":"zmizela"}
+{"k":"Benecko|—|Semily|50.666|15.548#b46is3","m":"Benecko","o":"Semily","dr":"lesní pozemek","t":"sale","v":2342,"c":2270000,"od":"2026-10-16","do":"2026-10-30","proc":"zmizela"}
+{"k":"Ledečko|—|Kutná Hora|49.846|14.919#nkj1","m":"Ledečko","o":"Kutná Hora","dr":"stavební pozemek","t":"sale","v":1885,"c":4390000,"od":"2026-10-04","do":"2026-10-30","proc":"zmizela"}
+{"k":"Hradištko|—|Praha-západ|49.870|14.399#2plzj","m":"Hradištko","o":"Praha-západ","dr":"stavební pozemek","t":"sale","v":2498,"c":6200000,"od":"2026-10-18","do":"2026-10-30","proc":"zmizela"}
+{"k":"Zaječov|—|Beroun|49.764|13.837#2pip8","m":"Zaječov","o":"Beroun","dr":"stavební pozemek","t":"sale","v":2232,"c":5577000,"od":"2026-09-19","do":"2026-10-30","proc":"zmizela"}
+{"k":"Topolová|—|Plzeň-jih|49.671|13.408#i01we1","m":"Topolová","o":"Plzeň-jih","dr":"stavební pozemek","t":"sale","v":691,"c":4999000,"od":"2026-09-19","do":"2026-10-30","proc":"zmizela"}
+{"k":"Kalovice|—|Litoměřice|50.584|14.343#1rqp60s","m":"Kalovice","o":"Litoměřice","dr":"orná půda","t":"drazba","v":5773,"c":207765,"od":"2026-10-17","do":"2026-10-30","proc":"zmizela"}
+{"k":"Velké Žernoseky|—|Litoměřice|50.539|14.064#1rqp5w3","m":"Velké Žernoseky","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":7947,"c":650860,"od":"2026-10-17","do":"2026-10-30","proc":"zmizela"}
+{"k":"Úštěk|849|Litoměřice|50.583|14.342#1rqp60t","m":"Úštěk","o":"Litoměřice","dr":"zahrada","t":"drazba","v":94,"c":9644,"od":"2026-10-29","do":"2026-10-30","proc":"zmizela"}
+{"k":"Velemín|926/5|Litoměřice|50.538|13.973#1rqp5w2","m":"Velemín","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":3876,"c":3077544,"od":"2026-10-29","do":"2026-10-30","proc":"zmizela"}
+{"k":"Úštěk|847/12|Litoměřice|50.581|14.339#1rqp60i","m":"Úštěk","o":"Litoměřice","dr":"trvalý travní porost","t":"drazba","v":570,"c":905160,"od":"2026-10-29","do":"2026-10-30","proc":"zmizela"}
+{"k":"Příbram|—|Příbram|49.816|14.207#1rqpsvz","m":"Příbram","o":"Příbram","dr":"trvalý travní porost","t":"exekuce","v":1132,"c":72000,"od":"2026-10-22","do":"2026-10-30","proc":"zmizela"}
