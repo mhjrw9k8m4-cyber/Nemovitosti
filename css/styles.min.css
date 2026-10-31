@@ -1059,14 +1059,14 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .map-side{order:2;border-right:0;max-height:none}
 .map-holder{order:3;margin-top:16px;height:74vh;height:74dvh;max-height:640px;min-height:460px}
 .map-canvas{flex:1;min-height:0}
-.mcp-hledani{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-ovladani);box-shadow:var(--e2)}
+.mcp-hledani{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
 .mcp-hledani .map-search{flex:1 1 100%;min-width:150px}
 .mcp-hledani .ms-lupa{left:12px}
 .mcp-hledani .map-search input{padding-left:32px;padding-right:8px}
-.mcp-hledani .map-search input{background:var(--plocha-zapustena);border-color:var(--line-ui);box-shadow:none}
+.mcp-hledani .map-search input{background:var(--plocha-karta);border-color:var(--line-ui);box-shadow:var(--e1)}
 .mcp-hledani{position:relative}
-.mcp-hledani .map-search{position:static}
-.mv-toggle{display:flex;position:relative;flex:1 1 100%;gap:0;margin-top:0;background:var(--plocha-zapustena);border:0;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-ovladani);padding:0;overflow:visible}
+.mcp-hledani .map-search{position:relative}
+.mv-toggle{display:flex;position:relative;flex:1 1 100%;gap:0;margin-top:0;background:var(--plocha-karta);border:0;box-shadow:inset 0 0 0 1px var(--line-ui),var(--e1);border-radius:var(--r-ovladani);padding:0;overflow:visible}
 .mv-toggle::before{content:'';position:absolute;z-index:0;top:3px;bottom:3px;left:3px;width:calc(50% - 6px);border-radius:var(--r-ovladani);background:var(--plocha-znacka);box-shadow:var(--glow);transform:translateX(calc(100% + 6px));transition:var(--prechod)}
 .map-app.mv-seznam .mv-toggle::before{transform:none}
 .mvt-btn{flex:1 1 0;position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 12px;border:3px solid transparent;background-clip:padding-box;border-radius:var(--r-ovladani);background-color:transparent;color:var(--muted);font-weight:600;font-family:inherit;font-size:16px;cursor:pointer;white-space:nowrap;transition:var(--prechod),background-color 0s}
@@ -1078,7 +1078,7 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 }
 .mvt-btn.active{background-color:var(--plocha-znacka);color:#fff;font-weight:700;transition:var(--prechod),background-color 0s var(--cas-rychly)}
 .mvt-btn.active:hover{color:#fff}
-.mcp-hledani .ms-lupa{top:30px;transform:none}
+.mcp-hledani .ms-lupa{top:50%;transform:translateY(-50%)}
 .mcp-hledani .ms-navrhy,.mcp-hledani .msn-oprava{top:60px;left:8px;right:8px}
 .map-app.mv-seznam .map-holder{display:none}
 .map-app:not(.mv-seznam) .map-side{display:none}
@@ -1128,12 +1128,14 @@ body.nav-otevreno{overflow:hidden}
 }
 .nav-zavrit{order:-3;align-self:flex-end;flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:0 12px 4px 0;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);cursor:pointer}
 .nav-zavrit svg{width:22px;height:22px}
-#nav a:not(.btn-primary){flex:none;display:flex;align-items:center;gap:12px;white-space:nowrap;min-height:56px;padding:0 16px;margin:0 16px 8px;border:0;border-radius:var(--r-ovladani);font-family:var(--font-ui);font-size:16px;font-weight:600;letter-spacing:-0.01em;color:var(--text);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
+#nav a:not(.btn-primary){flex:none;display:flex;align-items:center;gap:12px;white-space:nowrap;min-height:56px;padding:0 16px;margin:0 16px;border:0;border-radius:var(--r-ovladani);font-family:var(--font-ui);font-size:16px;font-weight:600;letter-spacing:-0.01em;color:var(--text);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
+#nav a:not(.btn-primary) + a:not(.btn-primary){border-top-left-radius:0;border-top-right-radius:0;box-shadow:var(--e1),inset 0 1px 0 var(--line)}
+#nav a:not(.btn-primary):has(+ a:not(.btn-primary)){border-bottom-left-radius:0;border-bottom-right-radius:0}
 #nav a:not(.btn-primary)::before{content:none}
 #nav a:not(.btn-primary)::after{content:none}
 #nav a:not(.btn-primary)>.ik{flex:none;width:22px;height:22px;stroke-width:1.64;color:var(--plocha-znacka)}
 #nav a:not(.btn-primary):active{background:var(--plocha-tlumena)}
-#nav a:not(.btn-primary).active,#nav a:not(.btn-primary)[aria-current="page"]{color:var(--plocha-znacka);background:rgba(var(--znacka-hluboka-rgb),0.07);box-shadow:var(--e1)}
+#nav a:not(.btn-primary).active,#nav a:not(.btn-primary)[aria-current="page"]{color:var(--plocha-znacka);background:var(--plocha-karta);box-shadow:var(--e1)}
 .nav-sk{display:flex;flex-direction:column;min-width:0}
 .nav-sk-panel,.nav-sk:not([open])>.nav-sk-panel{display:flex;flex-direction:column;position:static;min-width:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
 .nav-sk::details-content{content-visibility:visible;block-size:auto}
@@ -1156,11 +1158,11 @@ body.nav-otevreno{overflow:hidden}
 .nav-ucet-sk{order:7}
 #nav>*{flex:none}
 #nav a.btn-primary{order:-2;display:block;margin:16px 20px 8px;text-align:center;padding:16px;font-size:16px}
-.nav-hlava{display:flex;align-items:center;gap:12px;order:-4;padding:16px 12px 16px 20px;background:var(--plocha-karta);border-bottom:1px solid var(--line)}
+.nav-hlava{display:flex;align-items:center;gap:12px;order:-4;padding:16px 12px 16px 20px;background:none;border-bottom:1px solid var(--line)}
 .nav-hlava .logo-mark{width:40px;height:40px}
 .nav-znacka{font-family:var(--font-ui);font-size:20px;font-weight:700;letter-spacing:-0.03em;color:var(--znacka)}
 .nav-hlava .nav-zavrit{order:0;margin:0 0 0 auto;align-self:center}
-.nav-pocet{margin-left:auto;flex:none;min-width:4.5ch;text-align:center;padding:2px 8px;border-radius:var(--r-pill);background:rgba(var(--znacka-hluboka-rgb),0.10);color:var(--plocha-znacka);font-size:13px;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
+.nav-pocet{margin-left:auto;flex:none;text-align:right;padding:0;background:none;color:var(--muted);font-size:14px;font-weight:500;letter-spacing:0;font-variant-numeric:tabular-nums}
 .nav-pata{order:9;margin:0;padding:16px 20px 20px;font-size:12px;font-weight:500;color:var(--muted)}
 #nav .nav-ucet-sk{margin:8px 16px;border:0;border-radius:var(--r-ovladani);background:var(--plocha-karta);box-shadow:var(--e1);overflow:hidden}
 #nav .nav-del{display:none}

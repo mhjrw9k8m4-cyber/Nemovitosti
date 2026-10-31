@@ -382,6 +382,36 @@ try {
       !!pasBily && pasBily.barva === 'rgb(255, 255, 255)' && pasBily.obraz === 'none',
       pasBily ? `barva ${pasBily.barva}, obrázek ${pasBily.obraz.slice(0, 60)}` : 'pás se nenašel');
 
+    /* 3b1. PÁS S HLEDÁNÍM NENÍ KRABICE V KRABICI (§278).
+       Majitel 31. 10. s fotkou vršku stránky: „to vyhledávání má být
+       úplně na jiném levelu, začátek vypadá jak aplikace z GTA."
+       Měřitelně to byly TŘI plochy na sobě: bílý pás, v něm bílá
+       deska se stínem a v ní dvě zapuštěná šedá koryta (pole
+       a přepínač). Zůstaly dva ovladače z téhož materiálu položené
+       rovnou na pás — a tohle je hlídá:
+         1. sám pás žádnou desku nenese (bez výplně, bez rámu, bez stínu),
+         2. pole a přepínač mají TUTÉŽ plochu i tutéž linku.
+       Druhý bod je ten důležitější: dva ovladače vedle sebe, každý
+       z jiného materiálu, jsou přesně to, co vypadalo lacině. */
+    const pas = await p.evaluate(() => {
+      const st = (sel) => { const e = document.querySelector(sel); if (!e) return null;
+        const c = getComputedStyle(e);
+        return { plocha: c.backgroundColor, obrys: c.borderTopColor, siraObrysu: c.borderTopWidth,
+          stin: c.boxShadow === 'none' ? '' : c.boxShadow, obrazek: c.backgroundImage };
+      };
+      const vnitrni = (x) => (x.stin || '').indexOf('inset') >= 0;
+      const o = st('.mcp-hledani'), pole = st('.mcp-hledani #map-search'), prep = st('.mcp-hledani .mv-toggle');
+      return { obal: o, pole, prep, prepVnitrni: prep ? vnitrni(prep) : false };
+    });
+    const bezVyplne = (x) => !!x && (x.plocha === 'rgba(0, 0, 0, 0)' || x.plocha === 'transparent');
+    pravda(`${sirka} px: pás s hledáním sám není deska`,
+      bezVyplne(pas.obal) && pas.obal.siraObrysu === '0px' && !pas.obal.stin,
+      `plocha ${pas.obal && pas.obal.plocha}, rám ${pas.obal && pas.obal.siraObrysu}, stín ${(pas.obal && pas.obal.stin) || 'žádný'}`);
+    pravda(`${sirka} px: a pole s přepínačem jsou z téhož materiálu`,
+      !!pas.pole && !!pas.prep && pas.pole.plocha === pas.prep.plocha
+        && (pas.pole.obrys === pas.prep.obrys || pas.prepVnitrni),
+      `pole ${pas.pole && pas.pole.plocha} / ${pas.pole && pas.pole.obrys}, přepínač ${pas.prep && pas.prep.plocha} / ${pas.prep && pas.prep.stin}`);
+
     /* 3b2. DVĚ BARVY, KAŽDÁ SE SVOU PRACÍ (§276).
        Majitel 31. 10. s fotkou výpisu i nabídky: „líbí se mi to
        poskládání, ale ne jak to vypadá — sprostě, jen ta jedna barva,

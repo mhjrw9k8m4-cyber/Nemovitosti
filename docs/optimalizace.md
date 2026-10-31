@@ -17550,3 +17550,55 @@ kontrolu odsunutí, schované dlaždice shodí pojistku vzorku.
 `test-ovladani-vypisu` (75), `test-hierarchie` (21), `test-deska` (5),
 `test-barvy` (58), `test-vrstveni`, `test-predloha`,
 `test-prvni-obrazovka` (22) a `test-zdvih` (7) — bez chyby.
+
+## §278 Vršek webu: krabice v krabici pryč, menu z hromady dlaždic jeden seznam
+
+**Zadání (31. 10.), se snímkem vršku stránky a rozbalené nabídky:**
+„Tohle a to vyhledávání má být úplně na jiném levelu. Celá stránka je
+dokonalá, a začátek jak aplikace z GTA."
+
+**Co to bylo měřitelně.** Obojí byla KRABICE V KRABICI.
+
+* **Hledání:** bílý pás → v něm bílá deska se stínem `--e2` → v ní dvě
+  ZAPUŠTĚNÁ šedá koryta (pole a přepínač). Tři plochy na sobě, dvě
+  z nich bílé. Tak vypadá ovládání ve hře, ne na realitním webu.
+* **Nabídka:** šest řádků, z nichž každý měl VLASTNÍ desku se stínem
+  a mezi nimi 8 px — tedy hromada volně ležících kachlíků. Jeden
+  z nich byl navíc zabarvený („Hledat na mapě") a vypadal jako
+  zapnutá záložka, a počet u něj nesl zelenou pilulku, která
+  přitahovala víc pozornosti než sama položka.
+
+**Co je místo toho.**
+
+1. **Deska kolem hledání je pryč.** Zůstaly dva ovladače z téhož
+   materiálu položené rovnou na bílý pás: pole a přepínač, obojí
+   bílé, s vlásečnicí `--line-ui` (kvůli 3 : 1, WCAG 1.4.11) a stínem
+   `--e1`. Přesně tak to má Hemnet i Idealista — jedno pole, jeden
+   přepínač, žádná deska kolem.
+2. **Souřadnicovou soustavou je zase samo pole.** Když deska zmizela,
+   lupa se `top:50 %` trefila mezi dva řádky řady a seděla pod polem
+   (vyfoceno). Pole je proto zase `position:relative`; dřív bylo
+   statické schválně, aby se našeptávač roztáhl přes celou řadu —
+   jenže řada i pole mají dnes touž šířku, takže ten důvod odpadl.
+3. **Z šesti dlaždic v nabídce je jeden seznam.** Řádky tvoří jeden
+   blok: zaoblí se jen první a poslední v řadě, mezi nimi je
+   vlásečnice. Dělá to sourozenecký selektor (`a + a` = není první)
+   a `:has(+ a)` (= není poslední), takže skupinu rozezná i tehdy,
+   když ji přepíše skript — žádný obal ve značce není potřeba.
+4. **Aktivní řádek už není zabarvený** (zbyl značkový text a značková
+   ikona) a **počet není pilulka**, ale tichý údaj u pravého kraje.
+   Svislý proužek jsem u aktivního řádku zkusil taky a v zaobleném
+   rohu z něj byl výčnělek — není tam.
+
+**Hlídač.** `test-ovladani-vypisu` (nově 79 kontrol) měří na dvou
+šířkách, že pás s hledáním sám nenese desku (bez výplně, bez rámu,
+bez stínu) a že pole s přepínačem mají tutéž plochu i tutéž linku —
+dva ovladače vedle sebe, každý z jiného materiálu, jsou přesně to, co
+vypadalo lacině. Prokázáno sabotáží: vrácení desky shodí dvě kontroly.
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-naseptavac`
+(127 — ten hlídá, že se našeptávač po té změně pozicování pořád
+trefuje pod pole), `test-uvod` (68), `test-menu` (32),
+`test-hlavicka` (65), `test-kontrast` (2 689 prvků), `test-okraje`
+(143), `test-deska` (5), `test-soustava` (15),
+`test-prvni-obrazovka` (22) a `test-ovladani-vypisu` (79) — bez chyby.

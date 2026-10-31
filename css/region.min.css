@@ -303,12 +303,14 @@ body.nav-otevreno{overflow:hidden}
 }
 .nav-zavrit{order:-3;align-self:flex-end;flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;margin:0 12px 4px 0;padding:0;border:0;border-radius:var(--r-sm);background:none;color:var(--muted);cursor:pointer}
 .nav-zavrit svg{width:22px;height:22px}
-#nav a:not(.btn-primary){flex:none;display:flex;align-items:center;gap:12px;white-space:nowrap;min-height:56px;padding:0 16px;margin:0 16px 8px;border:0;border-radius:var(--r-ovladani);font-family:var(--font-ui);font-size:16px;font-weight:600;letter-spacing:-0.01em;color:var(--text);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
+#nav a:not(.btn-primary){flex:none;display:flex;align-items:center;gap:12px;white-space:nowrap;min-height:56px;padding:0 16px;margin:0 16px;border:0;border-radius:var(--r-ovladani);font-family:var(--font-ui);font-size:16px;font-weight:600;letter-spacing:-0.01em;color:var(--text);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
+#nav a:not(.btn-primary) + a:not(.btn-primary){border-top-left-radius:0;border-top-right-radius:0;box-shadow:var(--e1),inset 0 1px 0 var(--line)}
+#nav a:not(.btn-primary):has(+ a:not(.btn-primary)){border-bottom-left-radius:0;border-bottom-right-radius:0}
 #nav a:not(.btn-primary)::before{content:none}
 #nav a:not(.btn-primary)::after{content:none}
 #nav a:not(.btn-primary)>.ik{flex:none;width:22px;height:22px;stroke-width:1.64;color:var(--plocha-znacka)}
 #nav a:not(.btn-primary):active{background:var(--plocha-tlumena)}
-#nav a:not(.btn-primary).active,#nav a:not(.btn-primary)[aria-current="page"]{color:var(--plocha-znacka);background:rgba(var(--znacka-hluboka-rgb),0.07);box-shadow:var(--e1)}
+#nav a:not(.btn-primary).active,#nav a:not(.btn-primary)[aria-current="page"]{color:var(--plocha-znacka);background:var(--plocha-karta);box-shadow:var(--e1)}
 .nav-sk{display:flex;flex-direction:column;min-width:0}
 .nav-sk-panel,.nav-sk:not([open])>.nav-sk-panel{display:flex;flex-direction:column;position:static;min-width:0;padding:0;background:none;border:0;border-radius:0;box-shadow:none}
 .nav-sk::details-content{content-visibility:visible;block-size:auto}
@@ -331,11 +333,11 @@ body.nav-otevreno{overflow:hidden}
 .nav-ucet-sk{order:7}
 #nav>*{flex:none}
 #nav a.btn-primary{order:-2;display:block;margin:16px 20px 8px;text-align:center;padding:16px;font-size:16px}
-.nav-hlava{display:flex;align-items:center;gap:12px;order:-4;padding:16px 12px 16px 20px;background:var(--plocha-karta);border-bottom:1px solid var(--line)}
+.nav-hlava{display:flex;align-items:center;gap:12px;order:-4;padding:16px 12px 16px 20px;background:none;border-bottom:1px solid var(--line)}
 .nav-hlava .logo-mark{width:40px;height:40px}
 .nav-znacka{font-family:var(--font-ui);font-size:20px;font-weight:700;letter-spacing:-0.03em;color:var(--znacka)}
 .nav-hlava .nav-zavrit{order:0;margin:0 0 0 auto;align-self:center}
-.nav-pocet{margin-left:auto;flex:none;min-width:4.5ch;text-align:center;padding:2px 8px;border-radius:var(--r-pill);background:rgba(var(--znacka-hluboka-rgb),0.10);color:var(--plocha-znacka);font-size:13px;font-weight:600;letter-spacing:0;font-variant-numeric:tabular-nums}
+.nav-pocet{margin-left:auto;flex:none;text-align:right;padding:0;background:none;color:var(--muted);font-size:14px;font-weight:500;letter-spacing:0;font-variant-numeric:tabular-nums}
 .nav-pata{order:9;margin:0;padding:16px 20px 20px;font-size:12px;font-weight:500;color:var(--muted)}
 #nav .nav-ucet-sk{margin:8px 16px;border:0;border-radius:var(--r-ovladani);background:var(--plocha-karta);box-shadow:var(--e1);overflow:hidden}
 #nav .nav-del{display:none}

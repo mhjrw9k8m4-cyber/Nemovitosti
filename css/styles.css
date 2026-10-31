@@ -4879,9 +4879,17 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      `--e2`, tedy ten, kterým web zvedá to, co leží NAD obsahem.
      Je to jediná deska v hlavě stránky, takže se tím nic neztratí
      v davu. */
+  /* DESKA KOLEM HLEDÁNÍ JE PRYČ (31. 10., §278).
+     Byla to bílá karta se stínem a v ní dvě ZAPUŠTĚNÁ šedá pole —
+     tedy tři plochy na sobě: bílý pás, bílá deska, v ní šedé koryto.
+     Majitel: „to vyhledávání má být úplně na jiném levelu, začátek
+     vypadá jak aplikace z GTA." Přesně tak krabice v krabici vypadá.
+     Zůstávají DVA ovladače z téhož materiálu, položené rovnou na
+     bílý pás: pole a přepínač, obojí bílé s vlásečnicí a stínem
+     `--e1`. Velké realitní weby (Hemnet, Idealista) mají přesně tohle
+     — jedno pole, jeden přepínač, žádná deska kolem. */
   .mcp-hledani{display:flex; flex-wrap:wrap; align-items:center; gap:8px;
-    padding:12px; background:var(--plocha-karta); border:1px solid var(--line);
-    border-radius:var(--r-ovladani); box-shadow:var(--e2);}
+    padding:0; background:none; border:0; border-radius:0; box-shadow:none;}
   .mcp-hledani .map-search{flex:1 1 100%; min-width:150px;}
   /* LUPA BLÍŽ KE KRAJI A MENŠÍ ODSAZENÍ ZPRAVA — kvůli nápisu v poli.
      Naměřeno na 390 px: „Obec, druh, cena…" měří 145 px a pole mu
@@ -4914,10 +4922,21 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
   /* Linka zůstává `--line-ui`, ne `--line`: zapuštěná plocha má proti
      bílé desce 1,07 : 1, takže tvar pole nese obrys a ten musí projít
      mezí 3 : 1 (WCAG 1.4.11, hlídá scripts/test-okraje.mjs). */
-  .mcp-hledani .map-search input{background:var(--plocha-zapustena);
-    border-color:var(--line-ui); box-shadow:none;}
+  /* Pole už neleží v desce, takže nemusí být zapuštěné: bílé jako
+     karta, tvar nese vlásečnice (--line-ui kvůli 3 : 1, WCAG 1.4.11)
+     a stín --e1, tedy týž recept jako přepínač vedle. */
+  .mcp-hledani .map-search input{background:var(--plocha-karta);
+    border-color:var(--line-ui); box-shadow:var(--e1);}
+  /* SOUŘADNICOVOU SOUSTAVOU JE ZASE SAMO POLE (31. 10.).
+     Když kolem hledání stála deska, bylo pole jen částí jednoho řádku
+     (207 z 370 px) a našeptávač by z něj vyjel úzký — proto se pole
+     dávalo do statického toku a relativní byla celá řada. Deska je
+     pryč a pole i přepínač berou celou šířku, takže řada žádnou šířku
+     navíc nemá. Zato má dva řádky: lupa se `top:50 %` trefila mezi ně
+     a seděla pod polem u jeho spodního kraje (vyfoceno). Relativní je
+     tedy zase pole — lupa i našeptávač se počítají proti němu. */
   .mcp-hledani{position:relative;}
-  .mcp-hledani .map-search{position:static;}
+  .mcp-hledani .map-search{position:relative;}
   /* PŘEPÍNAČ VYPADÁ JAKO POLE VEDLE NĚJ, NE JAKO ZELENÝ ŠPALEK.
      Nejdřív měl vlastní rámeček a výplň 4 px, takže vedle 44px pole
      stál jako 54px blok. Pak to byla šedá dráha se zelenou pilulkou —
@@ -4960,8 +4979,8 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      ovladače mají jedno zaoblení 14 px. Tvar nese `--r-ovladani`
      a stejný i jezdec, aby se kryly přesně. */
   .mv-toggle{display:flex; position:relative; flex:1 1 100%; gap:0; margin-top:0;
-    background:var(--plocha-zapustena);
-    border:0; box-shadow:inset 0 0 0 1px var(--line);
+    background:var(--plocha-karta);
+    border:0; box-shadow:inset 0 0 0 1px var(--line-ui), var(--e1);
     border-radius:var(--r-ovladani); padding:0; overflow:visible;}
   /* Jezdec. Stojí 3 px od okrajů dráhy a v pravé poloze mu 3 px
      zbydou i napravo — proto šířka `50% - 6px` a posun o vlastní
@@ -5070,7 +5089,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      A SROVNÁ SE S POLEM, ne s deskou: návrhy patří k poli, pod kterým
      visí, takže mají mít jeho šířku i jeho svislice. Dřív se kryly
      s celou řadou, protože řada a pole byly totéž. */
-  .mcp-hledani .ms-lupa{top:30px; transform:none;}
+  .mcp-hledani .ms-lupa{top:50%; transform:translateY(-50%);}
   .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:60px; left:8px; right:8px;}
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
@@ -5342,13 +5361,27 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      zahladil, působí to zvakle." Tvar nese stín `--e1`, který je na
      zapuštěném podkladu dost vidět (a `scripts/test-okraje.mjs`
      stín jako záměrné odlišení uznává). */
+  /* JEDNA DESKA NA SKUPINU, NE DLAŽDICE POD SEBOU (31. 10., §278).
+     Každý řádek měl vlastní desku a mezi nimi 8 px — na snímku z toho
+     byla hromada volně ležících kachlíků, z nichž jeden byl navíc
+     zabarvený. Majitel: „má to být úplně na jiném levelu."
+     Řádky teď tvoří JEDEN blok: zaoblí se jen první a poslední
+     v řadě a mezi nimi je vlásečnice. Dělá to sourozenecký selektor
+     (`a + a` = není první) a `:has(+ a)` (= není poslední), takže
+     skupinu rozezná i tehdy, když ji přepíše skript — žádný obal
+     ve značce k tomu není potřeba. */
   #nav a:not(.btn-primary){
     flex:none; display:flex; align-items:center; gap:12px; white-space:nowrap;
-    min-height:56px; padding:0 16px; margin:0 16px 8px;
+    min-height:56px; padding:0 16px; margin:0 16px;
     border:0; border-radius:var(--r-ovladani);
     font-family:var(--font-ui); font-size:16px; font-weight:600; letter-spacing:-0.01em;
     color:var(--text); background:var(--plocha-karta); box-shadow:var(--e1);
     transition:var(--prechod);}
+  #nav a:not(.btn-primary) + a:not(.btn-primary){
+    border-top-left-radius:0; border-top-right-radius:0;
+    box-shadow:var(--e1), inset 0 1px 0 var(--line);}
+  #nav a:not(.btn-primary):has(+ a:not(.btn-primary)){
+    border-bottom-left-radius:0; border-bottom-right-radius:0;}
   /* ZNAČKA JE ZE SADY, NE OBRÁZEK V CSS. Řádky nabídky měly ikonu jako
      `background-image` v ::before — tedy tvar opsaný do stylopisu
      podruhé, vedle sady v scripts/ikony.mjs. Pravidlo webu zní „jedna
@@ -5366,8 +5399,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      Svislý proužek vlevo tu byl do 31. 10. — na ploché liště dával
      smysl, na zaoblené desce z něj byl kus zeleně přilepený k jejímu
      kraji a vypadal jako vada vykreslení. Deska drží tvar sama. */
+  /* AKTIVNÍ ŘÁDEK: značkový text, nic víc.
+     Tlumená zelená plocha přes celý řádek tu byla do 31. 10. a dělala
+     z položky vybranou záložku — na snímku vypadalo menu, jako by
+     v něm něco bylo zapnuté. Zbyl značkový text a značková ikona,
+     tedy totéž, čím se na webu značí „tady jsi" i jinde. Svislý
+     proužek jsem zkusil taky a v zaobleném rohu z něj byl výčnělek
+     (vyfoceno), takže tu není. */
   #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
-    color:var(--plocha-znacka); background:rgba(var(--znacka-hluboka-rgb),0.07);
+    color:var(--plocha-znacka); background:var(--plocha-karta);
     box-shadow:var(--e1);}
 
   /* =================================================================
@@ -5540,8 +5580,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      šuplík je překryv nad stránkou — ten má ustoupit obsahu, ne
      přidat druhou barevnou plochu přes tu, která je pod ním.
      Zbývá bílá plocha, značka a vlasová linka dolů. */
+  /* Hlavička šuplíku leží na téže ploše jako zbytek, jen ji od něj
+     dělí vlásečnice. Bílý pruh nad zapuštěnou plochou z ní dělal
+     třetí desku v jednom panelu. */
   .nav-hlava{display:flex; align-items:center; gap:12px; order:-4;
-    padding:16px 12px 16px 20px; background:var(--plocha-karta);
+    padding:16px 12px 16px 20px; background:none;
     border-bottom:1px solid var(--line);}
   .nav-hlava .logo-mark{width:40px; height:40px;}
   .nav-znacka{font-family:var(--font-ui); font-size:20px; font-weight:700;
@@ -5553,10 +5596,13 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      třemi odkazy, které měl v hlavě — viz výš.) */
   /* POČET U POLOŽKY. Vpravo, tabulkovými číslicemi, ať stojí pod sebou
      v jednom sloupci — totéž pravidlo jako u čipů nad výpisem. */
-  .nav-pocet{margin-left:auto; flex:none; min-width:4.5ch; text-align:center;
-    padding:2px 8px; border-radius:var(--r-pill);
-    background:rgba(var(--znacka-hluboka-rgb),0.10); color:var(--plocha-znacka);
-    font-size:13px; font-weight:600; letter-spacing:0; font-variant-numeric:tabular-nums;}
+  /* POČET JE ÚDAJ, NE ODZNAK. Zelená pilulka u „Hledat na mapě"
+     přitahovala v menu víc pozornosti než samotná položka — a nic
+     neznamenala, je to prostě počet nabídek. Tichý text u pravého
+     kraje říká totéž a nic nekřičí. */
+  .nav-pocet{margin-left:auto; flex:none; text-align:right;
+    padding:0; background:none; color:var(--muted);
+    font-size:14px; font-weight:500; letter-spacing:0; font-variant-numeric:tabular-nums;}
   /* Patička šuplíku: věta o čerstvosti dat, žádné odkazy. Odkazy by
      musely mít 52 px na prst (hlídá test-menu) a tři takové řádky by
      snědly 156 px na to, co stojí v patičce stránky. */
