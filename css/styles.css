@@ -2230,11 +2230,10 @@ h1 em{ color:var(--znacka-svetla);
      končil hranou barvy, která vypadala jako chyba vykreslení. */
   box-shadow:var(--e1);
   border:0; border-radius:0; padding:16px;}
-/* TÝŽ RECEPT NESE I HLAVIČKA ŠUPLÍKU (.nav-hlava, jen na telefonu —
-   na monitoru je `display:none`). Zapsané jedním pravidlem schválně:
-   mřížka má na webu jednu rozteč a jednu barvu čáry, a dvě kopie téhož
-   zápisu jsou přesně to, co hlídá scripts/test-jeden-styl.mjs. */
-.map-controls-panel::before, .nav-hlava::before{content:""; position:absolute; inset:0; pointer-events:none;
+/* (Hlavička šuplíku tenhle recept chvíli sdílela. Od 31. 10. ne —
+   majitel: „ta barva nahoře je moc, má to být čisté." Překryv nad
+   stránkou má ustoupit, ne přidat druhou texturu.) */
+.map-controls-panel::before{content:""; position:absolute; inset:0; pointer-events:none;
   background-image:linear-gradient(to right, var(--mrizka-cara-svetla) 1px, transparent 1px),
                    linear-gradient(to bottom, var(--mrizka-cara-svetla) 1px, transparent 1px);
   background-size:var(--mrizka-bunka) var(--mrizka-bunka);
@@ -5245,10 +5244,15 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      a na ní desky (karty ve výpisu, dlaždice vrstev v mapě, ovladače
      nad seznamem): zaoblení `--r-ovladani`, linka `--line`, stín
      `--e1`. Žádný nový recept, jen ten, co už platí. */
+  /* BEZ LINKY, JEN STÍN. Napoprvé měla deska obojí a při sobě to
+     vypadalo obtažené dvakrát — majitel: „celé bych to nějak
+     zahladil, působí to zvakle." Tvar nese stín `--e1`, který je na
+     zapuštěném podkladu dost vidět (a `scripts/test-okraje.mjs`
+     stín jako záměrné odlišení uznává). */
   #nav a:not(.btn-primary){
     flex:none; display:flex; align-items:center; gap:12px; white-space:nowrap;
     min-height:56px; padding:0 16px; margin:0 16px 8px;
-    border:1px solid var(--line); border-radius:var(--r-ovladani);
+    border:0; border-radius:var(--r-ovladani);
     font-family:var(--font-ui); font-size:16px; font-weight:600; letter-spacing:-0.01em;
     color:var(--text); background:var(--plocha-karta); box-shadow:var(--e1);
     transition:var(--prechod);}
@@ -5265,11 +5269,13 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     color:var(--plocha-znacka);}
   #nav a:not(.btn-primary):active{background:var(--plocha-tlumena);}
 
-  /* AKTIVNÍ ŘÁDEK: svislý proužek vlevo a značková barva textu.
-     Plná zelená plocha přes celou šířku panelu by byla pruh, který
-     přebije všechno ostatní — v pásu pilulek dávala smysl, tady ne. */
+  /* AKTIVNÍ ŘÁDEK: tlumená značková plocha a značkový text, nic víc.
+     Svislý proužek vlevo tu byl do 31. 10. — na ploché liště dával
+     smysl, na zaoblené desce z něj byl kus zeleně přilepený k jejímu
+     kraji a vypadal jako vada vykreslení. Deska drží tvar sama. */
   #nav a:not(.btn-primary).active, #nav a:not(.btn-primary)[aria-current="page"]{
-    color:var(--plocha-znacka); background:rgba(var(--znacka-hluboka-rgb),0.07); box-shadow:inset 3px 0 0 var(--znacka-svetla);}
+    color:var(--plocha-znacka); background:rgba(var(--znacka-hluboka-rgb),0.07);
+    box-shadow:var(--e1);}
 
   /* =================================================================
      ŠUPLÍK JE ROZDĚLENÝ NA ODDÍLY, NE JEDEN SEZNAM SEDMNÁCTI ŘÁDKŮ.
@@ -5433,17 +5439,17 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      němu stránka nestahuje ani bajt.
      Vejde se to celé: hlídá scripts/test-menu.mjs („celá nabídka se
      vejde na obrazovku"). */
-  /* HLAVIČKA ŠUPLÍKU MLUVÍ BARVOU ZNAČKY. Týž přeliv i táž mříž jako
-     pás s hledáním na úvodní stránce (recept je u .map-controls-panel
-     výš), takže nabídka a stránka za ní vypadají jako jeden web.
-     `position:relative` je nutné: mříž je `::before` s `inset:0`. */
-  .nav-hlava{display:flex; align-items:center; gap:12px; order:-4; position:relative;
-    padding:16px 12px 16px 20px; border-bottom:0;
-    background-color:var(--pas-plocha);
-    background-image:linear-gradient(to bottom,
-      rgba(var(--znacka-hluboka-rgb),0.30), rgba(var(--znacka-hluboka-rgb),0.12));
-    box-shadow:var(--e1);}
-  .nav-hlava > *{position:relative;}
+  /* HLAVIČKA ŠUPLÍKU JE ČISTÁ, NE ZELENÁ.
+     Večer 30. 10. dostala týž zelený přeliv a mříž jako pás s hledáním
+     na úvodní stránce. Majitel na to: „ta barva nahoře je moc, má to
+     být čisté." Má pravdu a je to jiná úloha než u pásu: pás je
+     součást stránky a barvou říká „tady začíná hledání", kdežto
+     šuplík je překryv nad stránkou — ten má ustoupit obsahu, ne
+     přidat druhou barevnou plochu přes tu, která je pod ním.
+     Zbývá bílá plocha, značka a vlasová linka dolů. */
+  .nav-hlava{display:flex; align-items:center; gap:12px; order:-4;
+    padding:16px 12px 16px 20px; background:var(--plocha-karta);
+    border-bottom:1px solid var(--line);}
   .nav-hlava .logo-mark{width:40px; height:40px;}
   .nav-znacka{font-family:var(--font-ui); font-size:20px; font-weight:700;
     letter-spacing:-0.03em; color:var(--znacka);}
@@ -5484,7 +5490,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      poznámkou — touž díru o kus níž. Naměřeno, zahozeno.)
      Skupina účtu je JEDNA deska s několika řádky: summary je její
      hlava, odkazy uvnitř zůstávají ploché. */
-  #nav .nav-ucet-sk{margin:8px 16px; border:1px solid var(--line);
+  #nav .nav-ucet-sk{margin:8px 16px; border:0;
     border-radius:var(--r-ovladani); background:var(--plocha-karta);
     box-shadow:var(--e1); overflow:hidden;}
   /* Dělicí čára mezi procházením a účtem je od téhle chvíle ta linka

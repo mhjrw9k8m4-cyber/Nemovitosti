@@ -16791,3 +16791,51 @@ prvků), `test-kontrast`, `test-ovladani-vypisu` (52), `test-naseptavac`
 `test-rozvrzeni` (190), `test-dotyk`, `test-soustava` (15),
 `test-mrtve-styly`, `test-barvy`, `test-prvni-obrazovka`,
 `test-vrstveni`, `test-u-hrany` — bez chyby.
+
+## §264 Šuplík načisto: bílá hlavička, jedno obtažení, žádný proužek
+
+**Zadání (31. 10.):** „Uspořádání je super, ale celé bych to ještě
+zahladil, působí to zvakle. A ta barva nahoře je moc, má to být čisté."
+
+**Tři věci, každá jiného druhu.**
+
+1. **Barva nahoře.** Hlavička šuplíku dostala večer předtím týž zelený
+   přeliv a mříž jako pás s hledáním. Majitel má pravdu a je to jiná
+   úloha než u pásu: pás je součástí stránky a barvou říká „tady
+   začíná hledání", kdežto **šuplík je překryv NAD stránkou** — ten má
+   ustoupit obsahu, ne přidat druhou barevnou plochu přes tu, která
+   leží pod ním. Zbyla bílá plocha, značka a vlasová linka dolů.
+2. **Dvojí obtažení.** Desky měly linku `--line` **i** stín `--e1`;
+   vedle sebe to vypadalo obtažené dvakrát a právě to dělalo ten
+   „zvaklý" dojem. Tvar nese jen stín — a `test-okraje` ho jako
+   záměrné odlišení uznává, takže se nic nerozvolnilo.
+3. **Proužek, který koukal z desky.** Aktivní řádek měl
+   `box-shadow:inset 3px 0 0` — svislou zelenou linku u levého kraje.
+   Na ploché liště to fungovalo; na zaoblené desce z toho byl kus
+   zeleně přilepený k jejímu okraji, který vypadal jako vada
+   vykreslení. Aktivní řádek teď nese jen tlumenou značkovou plochu
+   a značkový text; tvar drží deska sama.
+
+**Mříž zůstala tam, kam patří** — jen na pásu s hledáním. Pravidlo,
+které ji chvíli sdílelo s hlavičkou šuplíku, se vrátilo k jednomu
+selektoru a `.nav-hlava` zmizela i z výčtu `PRELIVY`.
+
+**Dva nálezy, které s touhle prací nesouvisejí.**
+
+- `test-oprav` hlásil pět rozcházejících se stránek (Ústek, Veltrusy,
+  Velké Žernoseky). Byla to noční obměna dat robotem, ne můj zásah —
+  `node scripts/oprav.mjs` to srovnal.
+- `test-rozvrzeni` hlásí, že plovoucí tlačítko „Nahoru" **sedí na
+  „Uložit"** v kartě. Ověřeno, že to není z dnešních úprav vzhledu:
+  týž nález vyjde i na čistém `3286597d93` po odložení rozdělaných
+  změn. Přišlo to s tou obměnou dat (1 918 → 1 912), která posunula
+  karty. Vedeno zvlášť — plovoucí tlačítko má pevný roh a karta má
+  akční pilulku taky vpravo, takže to chce deterministické řešení,
+  ne doufání v rozložení.
+
+**Zkoušky.** Rychlá sada 133/133 (po přepočtu odvozených souborů).
+V prohlížeči `test-okraje` (143 prvků), `test-kontrast`, `test-menu`
+(32), `test-soustava` (15), `test-jeden-styl` (33), `test-mrtve-styly`,
+`test-deska`, `test-dotyk`, `test-zaobleni`, `test-hlavicka` (91),
+`test-barvy`, `test-afordance`, `test-uvod` (68), `test-vrstveni` — bez
+chyby. Červený zůstává `test-rozvrzeni` kvůli nálezu výš.
