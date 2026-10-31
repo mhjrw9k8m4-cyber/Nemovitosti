@@ -1,145 +1,32 @@
-/* Hlavička: při pohybu zhasne, po zastavení se rozsvítí úplně nahoře.
+/* Hlavička stojí nahoře pořád. Žádné zhasínání při pohybu.
  *
- * Dřív byla lepivá (position:sticky). Na iPhonu se při rolování zastavovala
- * kousek pod horním okrajem, nad ní prosvítal pruh stránky a přes nadpis
- * v úvodu ležela její polovina. Následovaly tři pokusy o opravu a žádný to
- * neodstranil — na počítači se ta chyba neprojeví, takže se ani nedala
- * ověřit jinak než na telefonu.
+ * DO 31. 10. ZHASÍNALA. Mělo to dobrý důvod: `position:fixed` na
+ * iPhonu při setrvačném dojezdu a při sbalování lišty Safari vykreslí
+ * pruh tam, kde okno bylo před chvílí — přes nadpis pak ležela půlka
+ * hlavičky a obojí bylo vidět přes sebe (majitel to tehdy vyfotil).
+ * Obejít se to dalo tím, že se hlavička při jakémkoli pohybu schová
+ * a vrátí se, až se poloha stránky i okna nezmění ve dvou po sobě
+ * jdoucích překresleních.
  *
- * ČTVRTÝ POKUS UŽ NENÍ ZÁPLATA, ALE JINÝ PŘEDPOKLAD.
+ * Majitel 31. 10.: „to úplně nahoře udělej pevné, štve mě, jak to mizí
+ * při hýbání." Mizení bylo lék, ne nemoc — a lék, který je vidět
+ * pokaždé, když člověk hne prstem. Hlavička proto zůstává vidět
+ * nepřetržitě; `position:fixed; top:0` v css/styles.css ji drží
+ * nahoře a nic ji neschovává.
  *
- * Předtím se tu věřilo, že „skončily scroll události = obraz stojí".
- * Na iPhonu to neplatí, a to ze dvou důvodů:
- *   • při setrvačném dojezdu události na chvíli přestanou chodit, i když
- *     se stránka pořád hýbe,
- *   • při sbalování a rozbalování lišty Safari se posouvá celé okno, což
- *     scroll událost nevyvolá vůbec — mění se jenom visualViewport.
- * Hlavička se tedy rozsvítila uprostřed pohybu a Safari ji nakreslilo tam,
- * kde okno bylo před chvílí. Odtud ten pruh obsahu nad ní.
+ * CO SE TÍM VRACÍ DO HRY: na starším iOS může pruh při rychlém
+ * rolování na okamžik zaostávat za obsahem. Je to jeho vykreslování,
+ * ne chyba rozvržení, a na dnešních verzích se to chová podstatně líp
+ * než v době, kdy tenhle modul vznikl. Kdyby se to vrátilo, dalším
+ * krokem NENÍ zhasínat při každém pohybu, ale schovat pruh jen při
+ * rolování DOLŮ a vrátit ho při prvním pohybu nahoru.
  *
- * Teď se nečeká na ticho v událostech, ale ověřuje se SKUTEČNÁ POLOHA:
- * rozsvítí se, až se poloha stránky i okna nezmění ve dvou po sobě
- * jdoucích překresleních. Dokud se cokoli hýbe, hlavička je zhasnutá — a
- * co není vidět, nemůže ležet na špatném místě.
- *
- * Vždycky svítí: u horního okraje stránky, při otevřeném menu a když je
- * v ní kurzor (ovládání klávesnicí).
+ * Co odsud zmizelo i se jmény: třídy pro zhasnutí a příjezd, jejich
+ * animace ve stylopisu a výjimka pro „omezený pohyb". Jména tu
+ * schválně nestojí, protože zkoušky hledají jména tříd i ve
+ * skriptech — zmínka v komentáři by je držela naživu a hlídač
+ * mrtvých stylů by je viděl jako používané.
  */
-(function () {
-  'use strict';
-  var h = document.querySelector('header');
-  if (!h) return;
-
-  var PRAH = 40;        // do 40 px od začátku stránky nezhasínáme
-  var PAUZA = 180;      // po téhle době bez pohybu se teprve začne ověřovat
-  var casovac = null, ramecek = null;
-  var zhasnuta = false;
-  var vv = window.visualViewport || null;
-
-  // Kde jsme — stránka i okno dohromady. Na iPhonu se umí hýbat jen to
-  // druhé (lišta Safari), a to je zrovna ta chvíle, kdy se to lámalo.
-  function poloha() {
-    return [
-      Math.round(window.pageYOffset || document.documentElement.scrollTop || 0),
-      vv ? Math.round(vv.offsetTop) : 0,
-      vv ? Math.round(vv.height) : 0,
-      vv ? Math.round(vv.pageTop || 0) : 0
-    ].join('|');
-  }
-  function uVrcholu() {
-    return (window.pageYOffset || document.documentElement.scrollTop || 0) <= PRAH;
-  }
-  function musiSvitit() {
-    return document.body.classList.contains('nav-open') || h.contains(document.activeElement);
-  }
-
-  /* Příjezd. Rozsvítit se za desetinu vteřiny vypadá, že se hlavička
-     zjevila — „připlave rychlostí světla". Krátká animace (necelá půl
-     vteřiny, pár pixelů shora) ukáže, odkud přišla. Třída se po dojetí
-     zase sundá, aby hlavička v klidu neměla žádnou transformaci: pevně
-     umístěný prvek ji nepotřebuje a na Safari je historicky zdroj potíží. */
-  function rozsvit() {
-    if (!zhasnuta) return;
-    zhasnuta = false;
-    h.classList.remove('hl-zhasnuta');
-    h.classList.remove('hl-prijezd');
-    // Vynucené přepočítání, jinak by se animace nespustila znovu.
-    void h.offsetWidth;
-    h.classList.add('hl-prijezd');
-  }
-  h.addEventListener('animationend', function (e) {
-    if (e.animationName === 'hlPrijezd') h.classList.remove('hl-prijezd');
-  });
-  function zhasni() {
-    if (zhasnuta || musiSvitit()) return;
-    zhasnuta = true;
-    /* Běžící animace příjezdu si drží průhlednost sama a zhasnutí by
-       přebila — hlavička by ještě půl vteřiny svítila přes obsah. Proto
-       se animace nejdřív sundá. (Chyceno testem, ne odhadem.) */
-    h.classList.remove('hl-prijezd');
-    h.classList.add('hl-zhasnuta');
-  }
-
-  /* Rozsvítit se smí, až se dvakrát po sobě nic nezměnilo. Jedno měření
-     nestačí: mezi dvěma snímky setrvačného dojezdu bývá poloha náhodou
-     stejná, a přesně na takovém falešném klidu to dřív padalo. */
-  function azPoKlidu() {
-    if (ramecek) cancelAnimationFrame(ramecek);
-    var minula = poloha(), stejne = 0;
-    (function krok() {
-      var ted = poloha();
-      if (ted === minula) {
-        stejne++;
-        if (stejne >= 2) { rozsvit(); ramecek = null; return; }
-      } else {
-        stejne = 0;
-        minula = ted;
-      }
-      ramecek = requestAnimationFrame(krok);
-    }());
-  }
-
-  /* TŘÍDA PRO SCHOVANÝ PÁS NAVIGACE TU BYLA A JE PRYČ i se jménem.
-     (Jméno tu schválně nestojí: zkoušky hledají jména tříd i ve
-     skriptech, takže zmínka v komentáři by tu třídu držela „živou"
-     a kontrola mrtvých stylů by si jí všimla jako existující.)
-     Schovávala při rolování
-     vodorovný pás odkazů v hlavičce, protože s ním měla hlavička
-     119 px místo 85 a přebíjela obsah pod sebou (naměřeno: při posunu
-     o 60 px zakryla vyhledávací pole o 29 px). Pás nahradil vysouvací
-     panel — ten je position:fixed mimo hlavičku, hlavička je zase
-     jednořádková, a není tedy co schovávat. Zůstat by tu smělo jen
-     jako mrtvý přepínač třídy, kterou nic nekreslí. */
-
-  function pohyb() {
-    if (uVrcholu()) {
-      // Úplně nahoře nemá co překážet a nemá co ujet — svítí hned.
-      clearTimeout(casovac);
-      if (ramecek) { cancelAnimationFrame(ramecek); ramecek = null; }
-      rozsvit();
-      return;
-    }
-    zhasni();
-    clearTimeout(casovac);
-    if (ramecek) { cancelAnimationFrame(ramecek); ramecek = null; }
-    casovac = setTimeout(azPoKlidu, PAUZA);
-  }
-
-  window.addEventListener('scroll', pohyb, { passive: true });
-  /* Lišta Safari se sbaluje bez scroll události — tohle je ta část, která
-     tu dřív chyběla úplně. */
-  if (vv) {
-    vv.addEventListener('scroll', pohyb, { passive: true });
-    vv.addEventListener('resize', pohyb, { passive: true });
-  }
-  window.addEventListener('orientationchange', pohyb, { passive: true });
-
-  // Klepnutí, tah nebo klávesa uvnitř hlavičky ji vrátí okamžitě.
-  h.addEventListener('focusin', rozsvit);
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' || e.key === 'Tab') rozsvit();
-  });
-})();
 
 /* Stav přihlášení v menu.
  *

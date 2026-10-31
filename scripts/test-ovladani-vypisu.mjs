@@ -291,8 +291,12 @@ try {
        `background` přepisuje i `background-image` na `none`. Přeliv
        se tedy nevykreslil ANI JEDNOU a já pořád měnil hodnotu, kterou
        prohlížeč zahazoval. Číst jen stylopis na to nestačí — tam ten
-       přeliv celou dobu BYL. Měří se proto vypočtený styl v prohlížeči. */
-    const prelivy = await p.evaluate(() => ['.map-controls-panel', '.mc-rychly'].map((sel) => {
+       přeliv celou dobu BYL. Měří se proto vypočtený styl v prohlížeči.
+       Sám pás přeliv 31. 10. ztratil — majitel chtěl vršek celý bílý
+       (§266) — a tak se u něj hlídá opak: plná bílá a žádný obrázek.
+       Hlídač té chyby to drží dál, jen z druhé strany: pokud se do
+       pásu přeliv vrátí, padne to tady. */
+    const prelivy = await p.evaluate(() => ['.mc-rychly'].map((sel) => {
       const e = document.querySelector(sel);
       return { sel, je: !!e, obraz: e ? (getComputedStyle(e).backgroundImage || 'none') : 'nenašel se' };
     }));
@@ -302,6 +306,14 @@ try {
         x.je ? `background-image je „${x.obraz.slice(0, 60)}" — přebila ho zkratka background někde níž v souboru`
              : 'prvek se na stránce nenašel');
     }
+    const pasBily = await p.evaluate(() => {
+      const e = document.querySelector('.map-controls-panel'); if (!e) return null;
+      const s = getComputedStyle(e);
+      return { barva: s.backgroundColor, obraz: s.backgroundImage || 'none' };
+    });
+    pravda(`${sirka} px: pás s hledáním je celý bílý`,
+      !!pasBily && pasBily.barva === 'rgb(255, 255, 255)' && pasBily.obraz === 'none',
+      pasBily ? `barva ${pasBily.barva}, obrázek ${pasBily.obraz.slice(0, 60)}` : 'pás se nenašel');
 
     /* 3c. „DOPORUČENÉ" MUSÍ OPRAVDU OTEVŘÍT VÝBĚR ŘAZENÍ.
        Majitel 31. 10.: „když zmáčknu Doporučené, zobrazí se mi nějaká

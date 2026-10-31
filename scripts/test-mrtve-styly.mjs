@@ -122,8 +122,14 @@ function chod(dir) {
 chod(KOREN);
 pravda(`prohledal se repozitář (${souboru} souborů, ${tokeny.slova.size} slov)`,
   souboru > 2000 && tokeny.slova.size > 20000, `${souboru} souborů, ${tokeny.slova.size} slov`);
-pravda('a vidí i třídy, které přidává JavaScript (hl-zhasnuta)',
-  tokeny.slova.has('hl-zhasnuta'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
+/* KANÁREK: třída, kterou NIKDE nepíše HTML, jen skript. Když ji
+   kontrola nevidí, nenačetla skripty — a pak by jako mrtvé označila
+   skoro všechno. Do 31. 10. to byla `hl-zhasnuta` (hlavička zhasínala
+   při rolování); ta třída zmizela i s tím chováním, takže kanárek
+   ukazoval na nic. Teď je to `hledani-rozbalene`, kterou nasazuje
+   js/main.js při rozbalení filtrů. */
+pravda('a vidí i třídy, které přidává JavaScript (hledani-rozbalene)',
+  tokeny.slova.has('hledani-rozbalene'), 'skripty se nenačetly — kontrola by hlásila mrtvé všechno');
 pravda('i třídy cizí knihovny (leaflet-container z vendor/)',
   tokeny.slova.has('leaflet-container'), 'vendor/ se nenačetl');
 

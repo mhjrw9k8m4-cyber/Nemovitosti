@@ -12,9 +12,9 @@
      2. NEGACE. `#nav a:not(.btn-primary)` nevyžaduje `.btn-primary`.
         Kdyby se obsah :not() počítal jako potřebný token, zmizelo by
         pravidlo, které na stránce platí.
-     3. SLOVO VE SKRIPTU. Třídu `hl-zhasnuta` nemá v HTML nikdo —
-        přidává ji js/hlavicka.js. Kdyby se koukalo jen do HTML,
-        přestala by se hlavička při posouvání chovat.
+     3. SLOVO VE SKRIPTU. Třídu `je-prihlasen` nemá v HTML nikdo —
+        přidává ji js/hlavicka.js podle stavu přihlášení. Kdyby se
+        koukalo jen do HTML, zmizela by pravidla pro přihlášený stav.
      4. SLOVO V KOMENTÁŘI. Bod 3 má druhou stranu: slovo je slovo
         i ve VYSVĚTLENÍ. Naměřeno — 15 pravidel (3 030 B zdroje)
         drželo ve zkráceném stylopisu pro 2 202 stránek jedině to, že
@@ -70,15 +70,17 @@ pravda('atribut se pozná: `[data-type]` nezabere, když ho nikdo nemá',
 
 /* ---- 2) tokeny stránky berou i skripty ------------------------ */
 const hlavicka = fs.readFileSync(path.join(KOREN, 'js', 'hlavicka.js'), 'utf8');
-/* Příkladem je `hl-zhasnuta` (hlavička zhasne při rolování). Dřív to
-   byla `hl-bez-pasu`, jenže ta zanikla s vodorovným pásem odkazů —
-   příklad v kontrole musí být třída, kterou skript OPRAVDU nasazuje,
-   jinak by kontrola tvrdila něco o prázdnu. */
-pravda('js/hlavicka.js opravdu zmiňuje hl-zhasnuta (jinak měří následující prázdno)',
-  hlavicka.includes('hl-zhasnuta'), 'třída se přejmenovala — uprav test');
+/* Příkladem je `je-prihlasen` (odkaz na účet v nabídce podle stavu
+   přihlášení). Dřív to byla `hl-bez-pasu`, pak `hl-zhasnuta` — první
+   zanikla s vodorovným pásem odkazů, druhá 31. 10. s tím, že hlavička
+   přestala při rolování zhasínat. Příklad v kontrole musí být třída,
+   kterou skript OPRAVDU nasazuje, jinak by kontrola tvrdila něco
+   o prázdnu; dvakrát se to už stalo. */
+pravda('js/hlavicka.js opravdu zmiňuje je-prihlasen (jinak měří následující prázdno)',
+  hlavicka.includes('je-prihlasen'), 'třída se přejmenovala — uprav test');
 const kontakt = tokenyStranky(fs.readFileSync(path.join(KOREN, 'kontakt.html'), 'utf8'));
-pravda('slovo ze skriptu stránky se počítá (.hl-zhasnuta na kontakt.html)',
-  muzeZabrat(castiSelektoru('header.hl-zhasnuta'), kontakt),
+pravda('slovo ze skriptu stránky se počítá (.je-prihlasen na kontakt.html)',
+  muzeZabrat(castiSelektoru('#nav a.je-prihlasen'), kontakt),
   'tokeny se berou jen z HTML — pravidla pro stavy ze skriptů by zmizela');
 const pozemek = tokenyStranky(fs.readFileSync(path.join(KOREN, 'pozemek.html'), 'utf8'));
 pravda('a slovo z vendor/leaflet (.leaflet-control-zoom na stránce pozemku)',

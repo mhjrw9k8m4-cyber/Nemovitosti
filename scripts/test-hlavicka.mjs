@@ -107,7 +107,6 @@ for (const [jm, opt, stranka] of [['telefon', TELEFON, 'index.html'], ['monitor'
     await p.waitForFunction(() => {
       const h = document.getElementById('header');
       if (!h) return true;
-      if (h.classList.contains('hl-prijezd')) return false;
       if (!h.getAnimations) return true;
       return h.getAnimations().every((a) => a.playState !== 'running');
     }, null, { timeout: 4000 }).catch(() => {});
@@ -177,7 +176,15 @@ pravda('hlavička drží pevně u okraje (position:fixed)', /header\{[^}]*positi
   'sticky se na iPhonu zastavovala kousek pod okrajem a nad ní prosvítal pruh stránky');
 pravda('stránka si pod hlavičkou dělá místo sama', /body\{padding-top:var\(--vyska-hlavicky/.test(css),
   'hlavička je vyňatá z toku — bez odsazení by ležela přes první řádek obsahu');
-pravda('při rolování hlavička zhasne', /header\.hl-zhasnuta\{opacity:0/.test(css));
+/* OD 31. 10. SE HLAVIČKA NESCHOVÁVÁ. Dřív při jakémkoli pohybu
+   zhasla a po zastavení se vrátila — obcházelo to to, že iPhone
+   vykresluje `position:fixed` při setrvačném dojezdu o kus vedle.
+   Majitel: „to úplně nahoře udělej pevné, štve mě, jak to mizí při
+   hýbání." Hlídá se proto, že ve stylopisu ŽÁDNÉ takové pravidlo
+   není — jinak by se chování vrátilo zadními vrátky. */
+pravda('hlavička se při rolování neschovává',
+  !/header\.[a-z-]*\{[^}]*opacity:0/.test(css),
+  've stylopisu je pravidlo, které hlavičce nastavuje opacity:0');
 /* Hlavička NESMÍ mít transform. Pevně umístěná hlavička ho nepotřebuje
    a na Safari je transform u hlavičky historicky zdroj potíží (dokud byla
    sticky, kvůli němu se zastavovala pod okrajem). */
@@ -265,48 +272,37 @@ pravda('<body> ani <html> neořezávají do stran',
   await ctx.close();
 }
 
-/* --- 5) Při pohybu zhasne, po zastavení svítí úplně nahoře ----------
-   Tohle je zadání, ne technický detail: kdo roluje, čte obsah, ne
-   navigaci — a co není vidět, nemůže přes obsah ležet. Zároveň to obchází
-   chybu, kterou na iPhonu dělala lepivá hlavička: půlka nadpisu v úvodu
-   byla schovaná pod ní. */
-for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
-  const { ctx, p } = await otevri(opt, 'index.html');
-  const v = await p.evaluate(async () => {
+/* --- 5) HLAVIČKA JE VIDĚT POŘÁD -------------------------------------
+   Tenhle oddíl měl do 31. 10. přesně opačné zadání: ověřoval, že se
+   hlavička při pohybu schová a po zastavení vrátí. Majitel to zrušil
+   („štve mě, jak to mizí při hýbání"), takže se teď měří opak —
+   a měří se na obou šířkách a ve třech okamžicích: za pohybu, hned
+   po něm a po doběhu. Průhlednost musí být pořád 1 a horní hrana
+   pořád na nule. */
+for (const [jm, profil] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
+  const { ctx, p } = await otevri(profil, 'index.html');
+  await p.waitForTimeout(600);
+  const stav = () => p.evaluate(() => {
     const h = document.querySelector('header');
-    const pruh = () => +getComputedStyle(h).opacity;
-    const naZacatku = { pruhlednost: pruh(), top: Math.round(h.getBoundingClientRect().top) };
-    // Nic z obsahu nesmí na začátku stránky ležet pod hlavičkou.
-    const prvni = document.querySelector('main');
-    const prvniTop = prvni ? Math.round(prvni.getBoundingClientRect().top) : null;
-    // Rolujeme skokem a sledujeme, jestli hlavička zhasíná.
-    let nejnizsi = 1;
-    for (let i = 0; i < 10; i++) {
-      window.scrollTo({ top: 300 + i * 130, behavior: 'instant' });
-      await new Promise((r) => requestAnimationFrame(r));
-      await new Promise((r) => setTimeout(r, 25));
-      nejnizsi = Math.min(nejnizsi, pruh());
-    }
-    await new Promise((r) => setTimeout(r, 900));
-    const poKlidu = { pruhlednost: pruh(), top: Math.round(h.getBoundingClientRect().top),
-      vyska: Math.round(h.getBoundingClientRect().height) };
-    // A u horního okraje stránky musí svítit vždycky.
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    await new Promise((r) => setTimeout(r, 300));
-    const nahore = pruh();
-    return { naZacatku, prvniTop, nejnizsi, poKlidu, nahore };
+    const c = getComputedStyle(h), r = h.getBoundingClientRect();
+    return { pruhlednost: +c.opacity, top: Math.round(r.top), pozice: c.position };
   });
-  pravda(`${jm}: na začátku stránky hlavička svítí`, v.naZacatku.pruhlednost === 1 && v.naZacatku.top === 0,
-    JSON.stringify(v.naZacatku));
-  pravda(`${jm}: a nic pod ní neleží`, v.prvniTop >= v.poKlidu.vyska - 2,
-    `obsah začíná na ${v.prvniTop} px, hlavička je vysoká ${v.poKlidu.vyska} px — půlka nadpisu by byla schovaná`);
-  pravda(`${jm}: při rolování zhasne`, v.nejnizsi < 0.9,
-    `nejnižší průhlednost při pohybu byla ${v.nejnizsi} — hlavička zůstala svítit a leží přes obsah`);
-  pravda(`${jm}: po zastavení se hned rozsvítí`, v.poKlidu.pruhlednost === 1,
-    `po 900 ms klidu měla průhlednost ${v.poKlidu.pruhlednost}`);
-  pravda(`${jm}: a to úplně nahoře`, v.poKlidu.top === 0,
-    `stála na ${v.poKlidu.top} px od okraje`);
-  pravda(`${jm}: u horního okraje svítí vždy`, v.nahore === 1, `průhlednost ${v.nahore}`);
+  const nahore = await stav();
+  const beh = [];
+  for (const y of [300, 900, 1800, 2600]) {
+    await p.evaluate((yy) => window.scrollTo(0, yy), y);
+    await p.waitForTimeout(60);
+    beh.push(await stav());
+  }
+  await p.waitForTimeout(900);
+  const poKlidu = await stav();
+  const vse = [nahore, ...beh, poKlidu];
+  pravda(`${jm}: hlavička je u horního okraje i za pohybu`,
+    vse.every((v) => v.top === 0), vse.map((v) => v.top).join(', ') + ' px');
+  pravda(`${jm}: a nikdy nezprůhlední`,
+    vse.every((v) => v.pruhlednost === 1), vse.map((v) => v.pruhlednost).join(', '));
+  pravda(`${jm}: a drží se pevně (position:fixed)`,
+    vse.every((v) => v.pozice === 'fixed'), vse.map((v) => v.pozice).join(', '));
   await ctx.close();
 }
 
@@ -436,219 +432,12 @@ for (const [jm, opt] of [['telefon', TELEFON], ['monitor', MONITOR]]) {
   await ctx.close();
 }
 
-/* --- 5) Sbalování lišty Safari: pohyb BEZ scroll události -------------
- *
- * Tohle je jádro čtvrté opravy. Dřív se čekalo jen na ticho ve scroll
- * událostech a věřilo se, že ticho = obraz stojí. Na iPhonu to neplatí:
- * když se sbaluje nebo rozbaluje lišta Safari, posune se celé okno a
- * scroll událost nevznikne vůbec — mění se jenom visualViewport. Hlavička
- * tedy zůstala rozsvícená a Safari ji nakreslilo tam, kde okno bývalo.
- * Odtud ten pruh obsahu nad ní.
- *
- * V Chromu se to nedá vyvolat doopravdy, ale dá se poslat TÁŽ UDÁLOST,
- * jakou by poslal Safari. Stará hlavička ji neposlouchala vůbec — tenhle
- * test na ní spolehlivě padá. */
-{
-  const { ctx, p } = await otevri(TELEFON, 'index.html');
-  const v = await p.evaluate(async () => {
-    const h = document.querySelector('header');
-    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
-    const svit = () => parseFloat(getComputedStyle(h).opacity);
-
-    window.scrollTo({ top: 1400, behavior: 'instant' });
-    await spi(800);
-    const poUsazeni = svit();
-
-    // Lišta prohlížeče se pohnula — žádná scroll událost, jen visualViewport.
-    let poListe = null;
-    if (window.visualViewport) {
-      window.visualViewport.dispatchEvent(new Event('resize'));
-      await spi(60);
-      poListe = svit();
-    }
-
-    // Plynulý pohyb: dokud se hýbe, musí být zhasnutá.
-    /* První snímky se nepočítají: v tu chvíli hlavička teprve DOhasíná
-       (má na to jedenáct setin vteřiny) a je poctivé jí to nechat. Měří se
-       až ustálený pohyb — tedy jestli se během rolování zase nerozsvítí.
-       Bez toho kontrola padala, když byl stroj pod zátěží a snímky se
-       protáhly. */
-    let svitilaPriPohybu = 0, snimku = 0;
-    await new Promise((hotovo) => {
-      let n = 0;
-      const zacatek = Date.now();
-      (function krok() {
-        window.scrollBy({ top: 24, behavior: 'instant' });
-        if (Date.now() - zacatek > 200) {
-          snimku++;
-          if (svit() > 0.5) svitilaPriPohybu++;
-        }
-        if (++n < 40) requestAnimationFrame(krok); else hotovo();
-      }());
-    });
-
-    await spi(900);
-    return { poUsazeni, poListe, svitilaPriPohybu, snimku,
-      poKlidu: svit(), top: h.getBoundingClientRect().top };
-  });
-  pravda('po usazení hlavička svítí', v.poUsazeni === 1, `průhlednost ${v.poUsazeni}`);
-  pravda('pohyb lišty prohlížeče (bez scroll události) ji zhasne',
-    v.poListe === null || v.poListe < 0.9,
-    `po pohybu okna měla průhlednost ${v.poListe} — hlavička o posunu okna vůbec neví`);
-  pravda('při plynulém pohybu zůstává zhasnutá', v.svitilaPriPohybu === 0,
-    `svítila v ${v.svitilaPriPohybu} z ${v.snimku} snímků ustáleného pohybu`);
-  pravda('po skutečném zastavení se rozsvítí', v.poKlidu === 1, `průhlednost ${v.poKlidu}`);
-  pravda('a stojí úplně nahoře', Math.abs(v.top) < 2, `${v.top} px od okraje`);
-  await ctx.close();
-}
-
-/* --- 6) Příjezd se musí dát stihnout okem ----------------------------
- *
- * Hlavička se vracela za čtrnáct setin vteřiny, což na telefonu vypadá,
- * že se zjevila — „připlave rychlostí světla a působí to zvláštně".
- * Návrat má být krátká lehká animace (kolem půl vteřiny), odchod naopak
- * okamžitý, jinak hlavička při rolování leží přes obsah. Jsou to dvě
- * různá čísla pro dva různé směry, a test hlídá obě. */
-{
-  const { ctx, p } = await otevri(TELEFON, 'index.html');
-  const v = await p.evaluate(async () => {
-    const h = document.querySelector('header');
-    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
-    const cas = (el, vlastnost) => {
-      const c = getComputedStyle(el);
-      const jm = c.transitionProperty.split(',').map((x) => x.trim());
-      const d = c.transitionDuration.split(',').map((x) => parseFloat(x) || 0);
-      const i = jm.indexOf(vlastnost);
-      return i >= 0 ? d[i] : (jm.indexOf('all') >= 0 ? d[jm.indexOf('all')] : 0);
-    };
-    window.scrollTo({ top: 1400, behavior: 'instant' });
-    await spi(900);
-    // Příjezd je animace (ne přechod mezi stavy), aby hlavička v klidu
-    // neměla žádnou transformaci — čte se tedy doba animace.
-    h.classList.add('hl-prijezd');
-    /* Příjezd se od 27. 10. prolíná na OBSAHU hlavičky, ne na pruhu:
-       průsvitný bílý pruh nechal prosvítat text pod sebou a logo se
-       kreslilo přes nadpis (fotka z iPhonu od majitele). Čte se tedy
-       animace toho prvku, který ji opravdu nese. */
-    const obal = h.querySelector('.wrap') || h;
-    const ca = getComputedStyle(obal);
-    const prichod = parseFloat(ca.animationDuration) || 0;
-    const jmenoAnimace = ca.animationName;
-    h.classList.remove('hl-prijezd');
-    const odchod = cas(h, 'opacity');
-    /* A hlavně: příjezd se musí opravdu VYKRESLIT postupně, ne jen mít
-       hezkou hodnotu v CSS. Projde se to skutečnou cestou — zarolovat,
-       zastavit — a sleduje se průhlednost po malých krocích. Když se
-       hlavička jen přepne, žádný mezistav se nenajde. */
-    window.scrollBy({ top: 300, behavior: 'instant' });
-    await spi(40);
-    let mezistavu = 0, posunuta = 0, pruhPrusvitny = 0;
-    for (let i = 0; i < 45; i++) {
-      const c2 = getComputedStyle(obal);
-      const o = parseFloat(c2.opacity);
-      if (o > 0.05 && o < 0.95) mezistavu++;
-      /* A TEN BÍLÝ PRUH NESMÍ BÝT PRŮSVITNÝ ANI JEDEN SNÍMEK. Tohle je
-         ta vada z fotky: pod průsvitnou hlavičkou prosvítá text stránky
-         a dvě slova se kreslí přes sebe. */
-      const op = parseFloat(getComputedStyle(h).opacity);
-      if (op > 0.05 && op < 0.95) pruhPrusvitny++;
-      /* A ani v půlce příjezdu se hlavička nesmí nikam posouvat: to je
-         přesně to „naskočení", na které přišla stížnost. */
-      if (c2.transform && c2.transform !== 'none') posunuta++;
-      await spi(30);
-    }
-    /* A ještě jedna past, na kterou jsem sám naletěl: běžící animace
-       příjezdu si drží průhlednost sama, takže by přebila zhasnutí a
-       hlavička by při novém rolování ještě půl vteřiny svítila přes
-       obsah. Zastavit — nechat příjezd rozběhnout — a hned zas rolovat. */
-    await spi(900);
-    window.scrollBy({ top: 200, behavior: 'instant' });
-    await spi(250);                       // příjezd se zrovna rozjel
-    window.scrollBy({ top: 200, behavior: 'instant' });
-    await spi(140);
-    const pripohybuZnovu = parseFloat(getComputedStyle(h).opacity);
-    await spi(900);
-    return { prichod, jmenoAnimace, odchod, mezistavu, posunuta, pripohybuZnovu, pruhPrusvitny,
-      transformVKlidu: getComputedStyle(h).transform,
-      konec: parseFloat(getComputedStyle(h).opacity) };
-  });
-  pravda('příjezd hlavičky trvá aspoň třetinu vteřiny', v.prichod >= 0.3,
-    `${v.prichod} s — to je pro oko cvaknutí, ne animace`);
-  pravda('ale ne víc než vteřinu', v.prichod <= 1, `${v.prichod} s`);
-  pravda('příjezd je vlastní animace, ne holé přepnutí stavu',
-    v.jmenoAnimace === 'hlPrijezd', `animace se jmenuje „${v.jmenoAnimace}"`);
-  /* Dřív tu stálo „a doprovází ho posun": hlavička přijížděla o sedm
-     pixelů shora. Ukázalo se to jako chyba — hlavička nikam neodjela,
-     jen zhasla, takže posun na návratu vypadal, že „naskočí jak hokejista
-     na led". Prolnutí na místě je teď POŽADAVEK, ne shoda náhod. */
-  pravda('a je to prolnutí na místě — hlavička se při něm nikam neposouvá',
-    v.posunuta === 0, `v ${v.posunuta} ze 45 vzorků měla transform`);
-  /* NAŠLO SE FOTKOU, NE ZKOUŠKOU: majitel poslal snímek z iPhonu, kde přes
-     nadpis „Parametry pozemku" leží logo „Parcelka". Byl to okamžik,
-     kdy měl bílý pruh průhlednost mezi nulou a jedničkou — dvakrát
-     za každé rolování (zhasnutí 0,12 s, příjezd 0,4 s). Prolíná se
-     proto obsah hlavičky, kdežto pruh je neprůhledný od prvního snímku. */
-  pravda('a bílý pruh u toho není ani jeden snímek průsvitný',
-    v.pruhPrusvitny === 0,
-    `v ${v.pruhPrusvitny} ze 45 vzorků prosvítal text pod hlavičkou`);
-  pravda('v klidu taky žádnou transformaci nemá',
-    v.transformVKlidu === 'none', `transform: ${v.transformVKlidu}`);
-  pravda('odchod je naopak rychlý', v.odchod <= 0.2,
-    `${v.odchod} s — hlavička by při rolování doplouvala přes obsah`);
-  pravda('a příjezd se opravdu vykresluje postupně, ne přepnutím',
-    v.mezistavu >= 6, `jen ${v.mezistavu} mezistavů z 45 vzorků — hlavička se přepne (nebo plyne moc krátce)`);
-  pravda('rozjetý příjezd nepřebije zhasnutí při novém rolování',
-    v.pripohybuZnovu < 0.5,
-    `hlavička měla ${v.pripohybuZnovu} — doplouvá přes obsah, i když už se zase roluje`);
-  pravda('a ani tady není bílý pruh průsvitný', v.pruhPrusvitny === 0,
-    `v ${v.pruhPrusvitny} ze 40 vzorků prosvítal text pod hlavičkou`);
-  pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
-  await ctx.close();
-}
-
-/* --- 7) „Omezit pohyb" neznamená „cvakat" -----------------------------
- *
- * Kdo má na telefonu zapnuté omezení pohybu, dostával hlavičku
- * z rámce na rámec: pravidlo znělo animation:none. Jenže omezení pohybu
- * má nahradit POSUNY a zvětšování prolínáním — samo prolnutí pohyb není
- * a systém ho používá právě jako náhradu. Návrat proto zůstává prolnutím,
- * jen kratším. Bez téhle kontroly by se to dalo kdykoli vrátit zpět na
- * animation:none a nikdo by to nepoznal. */
-{
-  const { ctx, p } = await otevri({ ...TELEFON, reducedMotion: 'reduce' }, 'index.html');
-  const v = await p.evaluate(async () => {
-    const h = document.querySelector('header');
-    const spi = (ms) => new Promise((r) => setTimeout(r, ms));
-    window.scrollTo({ top: 1400, behavior: 'instant' });
-    await spi(900);
-    /* Pojistka: kdyby hlavička po zastavení vůbec nezhasínala, měřilo by
-       se prázdno a kontrola by prošla, ať je v CSS cokoli. */
-    window.scrollBy({ top: 300, behavior: 'instant' });
-    await spi(30);
-    const priPohybu = parseFloat(getComputedStyle(h).opacity);
-    /* Prolíná se OBSAH hlavičky, ne bílý pruh — viž oprava z fotky
-       v oddílu 6. Měří se tedy ten prvek, který animaci nese. */
-    const obal = h.querySelector('.wrap') || h;
-    let mezistavu = 0, pruhPrusvitny = 0;
-    for (let i = 0; i < 40; i++) {
-      const o = parseFloat(getComputedStyle(obal).opacity);
-      if (o > 0.05 && o < 0.95) mezistavu++;
-      const op = parseFloat(getComputedStyle(h).opacity);
-      if (op > 0.05 && op < 0.95) pruhPrusvitny++;
-      await spi(20);
-    }
-    await spi(700);
-    return { priPohybu, mezistavu, pruhPrusvitny, konec: parseFloat(getComputedStyle(h).opacity) };
-  });
-  pravda('s omezeným pohybem hlavička při rolování pořád zhasíná (jinak zkouška nic neměří)',
-    v.priPohybu < 0.95, `průhlednost při pohybu ${v.priPohybu}`);
-  pravda('a vrací se prolnutím, ne cvaknutím', v.mezistavu >= 3,
-    `jen ${v.mezistavu} mezistavů ze 40 vzorků — hlavička se přepne naráz`);
-  pravda('a ani tady není bílý pruh průsvitný', v.pruhPrusvitny === 0,
-    `v ${v.pruhPrusvitny} ze 40 vzorků prosvítal text pod hlavičkou`);
-  pravda('a nakonec je úplně vidět', v.konec === 1, `${v.konec}`);
-  await ctx.close();
-}
+/* --- 6) ODEBRÁNO: sbalování lišty Safari, příjezd a „omezit pohyb" ---
+   Tři oddíly (pohyb okna bez scroll události, doba příjezdu zpět
+   a výjimka pro omezený pohyb) měřily chování, které 31. 10. zaniklo
+   i s kódem: hlavička se už neschovává, takže se nemá odkud vracet
+   a není co časovat. Co z nich zůstalo užitečné — „hlavička je vidět
+   a stojí na nule, ať se děje cokoli" — je v oddílu 5 výš. */
 
 /* --- 8) ODEBRÁNO: jméno značky dvakrát na jedné stránce --------------
  *

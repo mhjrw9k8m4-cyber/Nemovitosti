@@ -16620,7 +16620,7 @@ k barvám.
 `test-hierarchie` (21), `test-afordance`, `test-najeti`, `test-dotyk`,
 `test-ovladani-vypisu` (48), `test-uvod` (68), `test-rozvrzeni` (190),
 `test-prvni-obrazovka`, `test-barvy`, `test-zaobleni`, `test-prechody`,
-`test-mrtve-styly`, `test-jeden-styl` (33) — bez chyby.
+`test-mrtve-styly`, `test-jeden-styl` (33) a `test-ovladani-vypisu` (58) — bez chyby.
 
 ## §260 Tři kola přelivu, který prohlížeč pokaždé zahodil
 
@@ -16894,3 +16894,70 @@ nevyrobím. Hlídá se tedy **výsledek** (seznam je v okně), ne příčina.
 **Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu`
 (58), `test-hledani-vzhled` (14), `test-naseptavac` (127), `test-uvod`
 (68), `test-rozvrzeni` (190) — bez chyby.
+
+## §266 Bílý vršek a hlavička, která nemizí
+
+**Zadání (31. 10.):** „Ta zelená je špatně, udělej to bílé, ať sedí celé
+pozadí. A to úplně nahoře udělej pevné, štve mě, jak to mizí při
+hýbání." Ke druhé větě snímek se zakroužkovanou hranicí mezi bílou
+hlavičkou a zeleným pásem pod ní.
+
+**Zelená pryč.** Pás s hledáním nesl od 30. 10. večer značkový přeliv
+a mříž (§258, §260). Majitel zakroužkoval přesně tu hranici — a má
+pravdu: hlavička a pás pod ní jsou **jedna hlava stránky** a dvě různé
+plochy z ní dělaly dva pruhy. Pás je teď bílý jako hlavička; co ho
+odlišuje, je deska s hledáním a přepínačem, která na něm leží, ne jeho
+barva. Stín dolů zůstává — říká, že hlava je nad obsahem. Mříž tím
+zmizela i z posledního místa, kam přibyla; drží se dál jen tam, kde
+byla předtím (sekce, patička, pásy okresů), a `test-jeden-styl` hlídá
+pět pravidel místo šesti.
+
+**Hlavička se přestala schovávat.** Do dneška při jakémkoli pohybu
+zhasla a vrátila se, až se poloha stránky i okna nezměnila ve dvou po
+sobě jdoucích překresleních. Mělo to dobrý důvod: iPhone vykresluje
+`position:fixed` při setrvačném dojezdu a při sbalování lišty Safari
+tam, kde okno bylo před chvílí — přes nadpis pak ležela půlka hlavičky
+(majitel to kdysi vyfotil). **Jenže mizení bylo lék, ne nemoc, a je
+vidět pokaždé, když člověk hne prstem.** Hlavička teď zůstává vidět
+nepřetržitě; `position:fixed; top:0` ji drží nahoře a nic ji
+neschovává. Naměřeno na 390 i 1280: při posunu na 300, 900, 1800
+a 2600 px i po doběhu má horní hranu na **0 px**, průhlednost **1**
+a pozici `fixed`.
+
+**Co se tím vrací do hry, a říkám to předem.** Na starším iOS může pruh
+při rychlém rolování na okamžik zaostávat za obsahem. Je to jeho
+vykreslování, ne chyba rozvržení. Kdyby se to objevilo, dalším krokem
+**není** zhasínat při každém pohybu, ale schovat pruh jen při rolování
+dolů a vrátit ho při prvním pohybu nahoru.
+
+**Hlídač se obrátil.** `test-hlavicka` měl celé tři oddíly na to, že
+hlavička zhasne, vrátí se a jak dlouho jí to trvá. Měřily chování,
+které zaniklo i s kódem, takže jsou pryč — a místo nich stojí jeden
+oddíl s opačným tvrzením: *hlavička je vidět pořád*, na obou šířkách
+a ve třech okamžicích. Ve stylopisu se navíc hlídá, že na hlavičku
+nesmí sáhnout **žádné** pravidlo s `opacity:0`, aby se to chování
+nevrátilo zadními vrátky.
+
+**Dva kanárci, kteří přestali zpívat.** `test-mrtve-styly`
+a `test-rozdel-styly` si ověřují, že vůbec vidí třídy přidávané
+skriptem — a obě si k tomu braly `hl-zhasnuta`. Ta třída zmizela,
+takže kanárek ukazoval na nic a zkoušky to hlásily jako svou vlastní
+chybu (správně: kdyby to přehlédly, označily by jako mrtvé skoro
+všechno). Ukazují teď na `hledani-rozbalene`, respektive
+`je-prihlasen`.
+
+**Obrácený hlídač přelivu.** `test-ovladani-vypisu` měl od 30. 10.
+kontrolu, že přeliv na pásu se *opravdu* vykresluje — hlídač té
+nejdražší chyby dne (zkratka `background` zahodila `background-image`).
+Pás teď přeliv mít nemá, takže se tatáž věc hlídá z druhé strany:
+vypočtená barva musí být přesně `rgb(255, 255, 255)` a obrázek `none`.
+Prokázáno sabotáží — s přelivem vráceným do pásu zkouška padá na 390
+i 320 px a vypíše, co přesně naměřila. Kontrola u `.mc-rychly`, kde
+přeliv zůstat má, platí dál.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-hlavicka` (65),
+`test-prvni-obrazovka`, `test-kontrast`, `test-okraje` (143 prvků),
+`test-vrstveni`, `test-uvod` (68), `test-rozvrzeni` (190), `test-menu`
+(32), `test-deska`, `test-dotyk`, `test-mrtve-styly`,
+`test-mrtva-jmena`, `test-barvy`, `test-soustava` (15),
+`test-jeden-styl` (33) — bez chyby.

@@ -68,8 +68,6 @@ export const POMER_VYJIMKY = {
    stojí ve stylopisu. */
 export const PRELIVY = {
   '.mcf-akce': 'maska na kraji vodorovného pásu akcí — říká, že je kam rolovat',
-  '.map-controls-panel': 'hloubka pásu s hledáním: shora dolů ubývající tíha, aby se četl jako plocha pod hlavičkou, ne jako samostatný blok',
-  '.map-controls-panel::before': 'mříž na pásu s hledáním — opakovaná 1px linka, tedy vzor, ne přeliv barev',
   '.mc-rychly': 'hlavní akce výpisu: světlo shora v ploše, aby neodporovala stínu pod tlačítkem — plochá výplň se zvednutým stínem si protiřečily',
   '.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .mc-razeni': 'vedlejší ovladače v téže sestavě: týž směr světla o řád slabší, aby byly klávesy, ne ploché obrysy',
   '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
