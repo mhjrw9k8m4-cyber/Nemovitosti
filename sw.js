@@ -181,7 +181,13 @@ async function zeSiteNejdriv(zadost, jmeno) {
     return odpoved;
   } catch (e) {
     const mam = await c.match(zadost);
-    if (mam) return mam;
+    /* ULOŽENÁ ODPOVĚĎ MŮŽE BÝT TAKY PŘESMĚROVANÁ — a na navigaci platí
+       týž zákaz jako u té ze sítě (viz bezPresmerovani výš). Uložit se
+       taková mohla jen starší verzí tohoto souboru; úložiště se sice
+       při aktivaci přejmenovalo, ale pojistka je levnější než další
+       bílá stránka. Bez signálu je pak lepší říct „nejde to" než vydat
+       odpověď, kterou prohlížeč odmítne. */
+    if (mam && !(navigace && mam.redirected)) return mam;
     throw e;
   }
 }
