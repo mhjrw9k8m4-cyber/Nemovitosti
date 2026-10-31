@@ -88,7 +88,7 @@ body{padding-top:var(--vyska-hlavicky,85px)}
 }
 
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none;transition:var(--prechod)}
 .logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=15") center/contain no-repeat;box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18)}
 @media (min-width:1041px){.logo{font-size:40px;gap:16px}
 .logo-mark{width:64px;height:64px}
@@ -96,6 +96,14 @@ header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1
 @media (max-width:359px){.logo{font-size:24px;gap:8px}
 .logo-mark{width:44px;height:44px}
 }
+.zn-pas{display:none}
+@media (max-width:1040px){body:has(#zn-pas) header{border-bottom-color:transparent}
+body:has(#zn-pas) header .logo{opacity:0;pointer-events:none}
+html.pk-odrolovano body:has(#zn-pas) header{border-bottom-color:var(--line)}
+html.pk-odrolovano body:has(#zn-pas) header .logo{opacity:1;pointer-events:auto}
+.zn-pas{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 var(--okraj-stranky) 12px;background:var(--plocha-plovouci-plna);border-bottom:1px solid var(--line);text-align:center}
+}
+
 @media (min-width:1041px){#nav .nav-hlava,#nav .nav-oddil,#nav .nav-pata,#nav .nav-mobil,#nav .nav-pocet{display:none}
 #nav a:not(.btn-primary)>.ik{display:none}
 }

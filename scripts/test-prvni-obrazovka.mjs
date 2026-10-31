@@ -89,7 +89,27 @@ const SIRKA = 390, VYSKA = 844;
    720 px. Bez toho by nabídka klesla na 571 px (naměřeno).
    Mez 480 má proti naměřeným 468 dvanáct pixelů rezervy a NEUNESE
    ani vrácení obočí, ani tlačítka na telefon. */
-const MEZ_PRVNI = 480;
+/* A 31. 10. POČTVRTÉ — Z 480 NA 540, ZA PÁS SE ZNAČKOU PODLE SREALITY.
+   Majitel poslal dva snímky mobilní Sreality se slovy „udělej naši
+   stránku podle Sreality — tento začátek": nahoře tenká lišta bez
+   značky, pod ní velká značka uprostřed a věta „Vyberte si z 109 155
+   nabídek realit". Pás je tedy přání, ne nápad odsud.
+   NAMĚŘENO NA 390×844: pás má 95 px (značka 56, věta 19, odsazení 14,
+   mezera 4 — a nahoře nic, protože lišta má svých 12 px vespod).
+   První nabídka klesla ze 418 na 513 px, tedy přesně o výšku pásu;
+   pod ním není žádný vzduch, který by se dal uvolnit (.map-wide má
+   na telefonu padding-top 0 a hledání začíná 8 px pod pásem).
+   CENA PRVNÍ NABÍDKY JE POŘÁD VIDĚT — a to je ta věc, kvůli které mez
+   existuje: že je vidět NABÍDKA, ne jen značka. Naměřeno: spodek ceny
+   829 px z 844 na 390 px, 811 na 360 px a 763 na 320 px. Na nejširším
+   telefonu tedy zbývá 15 px; kdo sem přidá cokoli dalšího, cenu
+   z obrazovky vytlačí a MUSÍ nejdřív něco ubrat.
+   MEZ 540 má proti naměřeným 513 dvacet sedm pixelů rezervy a neunese
+   ani druhý řádek věty pod značkou, ani vyšší značku.
+   JE TO TOTÉŽ ČÍSLO JAKO NA ÚZKÉM TELEFONU, a schválně: pás stojí na
+   obou šířkách stejně vysoký (95 px) a nabídka vyšla na 513 px v obou
+   případech, takže dvě různá čísla by tu už nic neříkala. */
+const MEZ_PRVNI = 540;
 /* A TOTÉŽ NA ÚZKÉM TELEFONU — MEZ, KTERÁ TU CHYBĚLA.
    Měřilo se jen 390 px, a přesně v té slepé skulině se schoval vlastní
    nález: na 360 px (Galaxy S a spol.) se ovladače nad výpisem skládaly
@@ -102,7 +122,7 @@ const MEZ_PRVNI = 480;
    v pořádku, cena se na obrazovku pořád vejde (798 z 844).
    Mez 540 unese ten zlom i o něco delší nadpis, ale NEUNESE návrat
    jednosloupcového nářadí. */
-const SIRKA_UZKA = 360, MEZ_PRVNI_UZKA = 540;
+const SIRKA_UZKA = 360, MEZ_PRVNI_UZKA = MEZ_PRVNI;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -197,11 +217,30 @@ try {
       hlavicka: hlavicka ? Math.round(hlavicka.getBoundingClientRect().height) : null,
       cenaSpodek: cr ? Math.round(cr.top + window.scrollY + cr.height) : null,
       cenaText: cena ? cena.textContent.replace(/\s+/g, ' ').trim().slice(0, 30) : null,
-      /* Značka smí být na stránce jednou — v liště. Rozcestník, který ji
-         nosil podruhé, je na přání majitele celý pryč; kontrola zůstává
-         jako past, aby se druhá značka nevrátila odjinud. */
-      znacek: Array.from(document.querySelectorAll('.logo, .uvod-logo'))
-        .filter((e) => e.getBoundingClientRect().height > 4).length,
+      /* Značka smí být na obrazovce jednou. Rozcestník, který ji nosil
+         podruhé, je na přání majitele celý pryč; kontrola zůstává jako
+         past, aby se druhá značka nevrátila odjinud.
+         OD 31. 10. SE POČÍTAJÍ VIDITELNÉ, NE PŘÍTOMNÉ. Úvodní stránka
+         má podle Sreality pás s velkou značkou pod lištou a lišta svoje
+         logo nenese, dokud je ten pás vidět — jenže neschovává ho přes
+         display:none (to by rozhodilo výšku lišty i polohu hamburgeru,
+         viz stylopis), takže v DOM je a rozměr má. Měřit samotnou
+         přítomnost by od téhle chvíle měřilo něco jiného, než co člověk
+         vidí; proto se ptáme i na opacity a visibility a na to, jestli
+         prvek vůbec zasahuje do okna.
+         .zn-logo je v seznamu schválně: past má platit i pro tu novou
+         značku, ne jen pro dvě staré. */
+      znacek: Array.from(document.querySelectorAll('.logo, .uvod-logo, .zn-logo'))
+        .filter((e) => {
+          const r = e.getBoundingClientRect();
+          if (!(r.height > 4) || r.bottom <= 0 || r.top >= innerHeight) return false;
+          for (let x = e; x && x.nodeType === 1; x = x.parentElement) {
+            const cs = getComputedStyle(x);
+            if (cs.visibility === 'hidden' || cs.display === 'none'
+              || parseFloat(cs.opacity) < 0.05) return false;
+          }
+          return true;
+        }).length,
       /* Pruh nástrojů („Projít … po jednom", „Stáhnout výběr") a pruh
          naposledy prohlédnutých. Na telefonu musí stát AŽ ZA první
          nabídkou — měří se proto jejich začátek, ne výška. Výška by

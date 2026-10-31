@@ -506,6 +506,9 @@
 
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
 
+    var zp = document.getElementById('zn-pocet');
+    if (zp) zp.textContent = fmt(DATA.length) + '\u00a0' + tvarPozemku(DATA.length);
+
   })();
 
   (function () {

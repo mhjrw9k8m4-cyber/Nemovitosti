@@ -813,6 +813,16 @@
     var so = document.getElementById('stat-okres'); if (so) so.textContent = String(okresN);
     // Živá čísla v hero proužku (sociální důkaz hned nahoře).
     var hc = document.getElementById('hero-n-count'); if (hc) hc.textContent = fmt(DATA.length);
+    /* VELIKOST NABÍDKY V PÁSU SE ZNAČKOU („Vyberte si z 1 912 pozemků").
+       V HTML je číslo ze sestavení, aby věta dávala smysl i bez
+       JavaScriptu; tady se přepíše podle dat, která stránka doopravdy
+       nese. Den po sestavení už to v HTML nemusí být pravda — robot
+       běží každou noc. Tvar slova se skloňuje, i když v praxi vyjde
+       pořád „pozemků": web měl 1 912 nabídek a nikdy méně než pět.
+       Je to JINÉ ČÍSLO než to nad výpisem: tam stojí počet po filtru
+       a mění se s každým posunem mapy, tady celá nabídka. */
+    var zp = document.getElementById('zn-pocet');
+    if (zp) zp.textContent = fmt(DATA.length) + '\u00a0' + tvarPozemku(DATA.length);
     /* KOLIK TOHO NABÍZÍME — HNED POD ZNAČKOU.
        Majitel webu si vyžádal, aby velikost nabídky stála nahoře,
        pod nadpisem „Parcelka", ne až v liště nad výpisem.

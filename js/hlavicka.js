@@ -274,3 +274,52 @@ var KOTVA_PRIHLASENI = {
     if (cil) { try { cil.focus({ preventScroll: true }); } catch (x) { cil.focus(); } }
   });
 })();
+
+/* ---------------------------------------------------------------------
+   ZNAČKA: NAHOŘE V PÁSU, PO ODROLOVÁNÍ V LIŠTĚ
+   Úvodní stránka má pod lištou pás s velkou značkou a větou „Vyberte
+   si z…" (podle Sreality, viz index.html). Dokud je ten pás vidět,
+   lišta svoje logo nenese — jinak by značka na jedné obrazovce stála
+   dvakrát pod sebou. Tenhle kousek jen nasadí nebo sundá třídu
+   `pk-odrolovano` na <html>; co s ní, rozhoduje stylopis.
+   MĚŘÍ SE JEDNOU, NE PŘI KAŽDÉM POSUNU. Pás má pevnou výšku, takže
+   hranice (jeho spodek minus výška lišty) se spočítá při startu a při
+   změně velikosti okna; při rolování se pak porovnávají dvě čísla.
+   Totéž pravidlo jako u tlačítka „nahoru" nad tím: za rolování se na
+   rozvržení nesmí sahat, jinak prohlížeč přepočítává stránku
+   několikrát za vteřinu.
+   PŘEPÍNÁ SE, AŽ KDYŽ PÁS DOOPRAVDY ZMIZEL pod lištou, ne po prvním
+   pixelu: dokud je z velké značky něco vidět, malá v liště se
+   nerozsvěcí. A jen jedním směrem to být nesmí — kdo se vrátí nahoru,
+   má zpátky velkou značku. */
+(function () {
+  var pas = document.getElementById('zn-pas');
+  if (!pas) return;
+  var h = document.querySelector('header');
+  var ko = document.documentElement.classList;
+  var hranice = 0, ceka = false;
+
+  function premer() {
+    ceka = false;
+    var r = pas.getBoundingClientRect();
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    /* Pás je na monitoru schovaný (display:none) — pak má nulovou výšku,
+       hranice vyjde záporná a značka zůstane v liště, jak tam patří. */
+    hranice = r.top + y + r.height - (h ? h.getBoundingClientRect().height : 0);
+    prekresli();
+  }
+  function premerPozdeji() {
+    if (ceka) return;
+    ceka = true;
+    (window.requestAnimationFrame || setTimeout)(premer);
+  }
+  function prekresli() {
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    ko.toggle('pk-odrolovano', y >= hranice);
+  }
+
+  window.addEventListener('scroll', prekresli, { passive: true });
+  window.addEventListener('resize', premerPozdeji, { passive: true });
+  window.addEventListener('load', premerPozdeji);
+  premer();
+})();

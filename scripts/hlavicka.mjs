@@ -95,6 +95,8 @@ function poctyZDat() {
     const n = (x) => String(x).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
     return {
       vse: n(o.length),
+      /* Totéž číslo bez sazby — pro skloňování slova za ním. */
+      vseCislo: o.length,
       /* Kdy robot naposledy obešel zdroje — „30. 10." česky, bez roku:
          v patičce šuplíku jde o čerstvost, ne o datum do kalendáře. */
       kdy: (() => { const [, m, den] = d.updated.split('-'); return `${Number(den)}.\u00a0${Number(m)}.`; })(),
@@ -199,5 +201,18 @@ export function sjednotHlavicku(html, soubor) {
      relativní „#mapa" by jinde skočil na místo, které tam není. */
   const naMape = /(^|\/)index\.html$/.test(String(soubor || ''));
   const bezCta = html.replace(CTA_PRYC, '');
-  return bezCta.replace(VZOR, NAV_HTML.replace(NAV_MAPA, naMape ? '#mapa' : 'index.html#mapa'));
+  const sListou = bezCta.replace(VZOR, NAV_HTML.replace(NAV_MAPA, naMape ? '#mapa' : 'index.html#mapa'));
+  /* A JEŠTĚ VELIKOST NABÍDKY V PÁSU SE ZNAČKOU (jen úvodní stránka).
+     Věta „Vyberte si z 1 912 pozemků" má číslo přímo v HTML, aby dávala
+     smysl i bez JavaScriptu — a právě proto se nesmí psát ručně: den po
+     sestavení by lhala. Prohlížeč si ho sice přepíše z dat (js/main.js),
+     ale zdroj stránky je taky něco, co se čte: hlídá to pravidlo o próze
+     s počty (docs/optimalizace.md §68).
+     Sestavení ho přepíše ze STEJNÝCH dat, z jakých bere počty do lišty,
+     takže obě čísla na stránce vycházejí z jednoho zdroje. */
+  if (!POCTY || !POCTY.vse) return sListou;
+  const n = POCTY.vseCislo;
+  const tvar = n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');
+  return sListou.replace(/(<b id="zn-pocet">)[^<]*(<\/b>)/,
+    `$1${POCTY.vse}\u00a0${tvar}$2`);
 }

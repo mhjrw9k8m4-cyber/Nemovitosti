@@ -118,3 +118,34 @@ var KOTVA_PRIHLASENI = {
     if (cil) { try { cil.focus({ preventScroll: true }); } catch (x) { cil.focus(); } }
   });
 })();
+
+(function () {
+  var pas = document.getElementById('zn-pas');
+  if (!pas) return;
+  var h = document.querySelector('header');
+  var ko = document.documentElement.classList;
+  var hranice = 0, ceka = false;
+
+  function premer() {
+    ceka = false;
+    var r = pas.getBoundingClientRect();
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+
+    hranice = r.top + y + r.height - (h ? h.getBoundingClientRect().height : 0);
+    prekresli();
+  }
+  function premerPozdeji() {
+    if (ceka) return;
+    ceka = true;
+    (window.requestAnimationFrame || setTimeout)(premer);
+  }
+  function prekresli() {
+    var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    ko.toggle('pk-odrolovano', y >= hranice);
+  }
+
+  window.addEventListener('scroll', prekresli, { passive: true });
+  window.addEventListener('resize', premerPozdeji, { passive: true });
+  window.addEventListener('load', premerPozdeji);
+  premer();
+})();

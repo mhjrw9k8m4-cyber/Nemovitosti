@@ -1703,7 +1703,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    ne od oka: 30/34 px a 10px mezera shodily test-pismo i test-odstupy
    — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
    na --r-ovladani, ať nevypadá jako nalepená nálepka. */
-.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none;}
+.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none; transition:var(--prechod);}
 /* ZNAČKA JE OD 30. 10. PLOCHÁ — A TADY JE PROČ.
    Kresba (assets/logo-mark.svg) měla tři přelivy a vnitřní záři: dva
    lineární (plocha dlaždice a špendlík) a jeden radiální. Web se
@@ -1761,6 +1761,55 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
 @media (max-width:359px){
   .logo{font-size:24px; gap:8px;}
   .logo-mark{width:44px; height:44px;}
+}
+
+/* =====================================================================
+   PÁS SE ZNAČKOU NA ZAČÁTKU ÚVODU — PODLE SREALITY
+   Proč tu je a co se tím mění, stojí u markupu v index.html.
+   Tady jen to, co by z kódu nebylo vidět:
+   LIŠTA SVOJE LOGO NESCHOVÁVÁ PŘES display:none, ALE PŘES opacity.
+   Dva důvody. Hamburger musí zůstat vlevo HNED VEDLE JMÉNA (hlídá to
+   scripts/test-hlavicka.mjs měřením vzdálenosti mezi nimi) — a kdyby
+   jméno z toku zmizelo, nebylo by vedle čeho stát a zkouška by měřila
+   nulu. A druhý: výška lišty se tím nemění, takže --vyska-hlavicky dál
+   sedí na skutečnou výšku (hlídá táž zkouška) a při odrolování nic
+   neposkočí. Lišta má 73 px (na 320 px 64) a má je i nahoře; pás pod ní má tutéž
+   plochu a nahoře mezi nimi není svislá hrana, takže to je jeden blok
+   se značkou uprostřed — tak, jak to má Sreality.
+   TŘÍDU `pk-odrolovano` nasazuje js/hlavicka.js, a to AŽ KDYŽ pás
+   doopravdy odjel pod lištu, ne po prvním pixelu: dokud je z velké
+   značky něco vidět, nemá se ta malá v liště rozsvěcet.
+   BEZ JAVASCRIPTU to vyjde taky: výchozí stav je „stránka je nahoře",
+   tedy velká značka v pásu a lišta bez loga. To je přesně ten stav,
+   který člověk uvidí první. */
+.zn-pas{display:none;}
+@media (max-width:1040px){
+  body:has(#zn-pas) header{border-bottom-color:transparent;}
+  body:has(#zn-pas) header .logo{opacity:0; pointer-events:none;}
+  html.pk-odrolovano body:has(#zn-pas) header{border-bottom-color:var(--line);}
+  html.pk-odrolovano body:has(#zn-pas) header .logo{opacity:1; pointer-events:auto;}
+  /* ODSAZENÍ NAHOŘE ŽÁDNÉ, DOLE DVANÁCT. Lišta nad pásem má svých 12 px
+     vespod, takže značka nad sebou vzduch má; naměřeno 105 px výšky pásu
+     při odsazení 4/18 a 95 px při 0/12, a každý pixel tady se promítne do toho,
+     jestli je cena první nabídky ještě na obrazovce (viz měření v
+     scripts/test-prvni-obrazovka.mjs). */
+  .zn-pas{display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:0 var(--okraj-stranky) 12px; background:var(--plocha-plovouci-plna);
+    border-bottom:1px solid var(--line); text-align:center;}
+  .zn-logo{display:inline-flex; align-items:center; gap:12px; color:var(--znacka);}
+  /* Jméno má stejné písmo i řez jako v liště — jedna značka, jedno
+     písmo (viz poznámka „JMÉNO ZNAČKY MÁ JEDNO PÍSMO" níž). */
+  .zn-jm{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em;
+    font-size:32px; line-height:1;}
+  .zn-logo .logo-mark{width:56px; height:56px;}
+  .zn-pod{margin:0; font-size:16px; line-height:1.3; color:var(--muted);}
+  .zn-pod b{color:var(--text); font-weight:700;}
+}
+/* Na nejužším telefonu o stupeň zpátky, jako značka v liště. */
+@media (max-width:359px){
+  .zn-jm{font-size:24px;}
+  .zn-logo .logo-mark{width:44px; height:44px;}
+  .zn-pod{font-size:14px;}
 }
 
 /* PROFIL VPRAVO NAHOŘE. Do 29. 10. byl účet jen uvnitř výsuvné
@@ -3830,7 +3879,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .opp-deal{color:var(--c-ok-ink); background:rgba(var(--c-ok-rgb),0.12);
   border-color:rgba(var(--c-ok-ink-rgb),0.3);}
 /* Zvýrazněný (placený) inzerát — prémiový plný odznak + jemné orámování karty */
-.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; border-radius:var(--r-sm); padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
+.opp-feat{display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:var(--plocha-znacka); border:0; padding:2px 8px; letter-spacing:0.02em; text-transform:uppercase; box-shadow:var(--e1);}
 /* Zvýrazněný inzerát pozná člověk podle odznaku .opp-feat, ne podle
    rámečku: rámeček karta po vzoru Sreality nemá. */
 /* Odpočet do termínu dražby (reálné datum) */
@@ -8918,7 +8967,12 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
    a při 12 px se tenčí číslice hůř čtou. */
 .opp-overit{display:inline-block; font-size:12px; font-weight:600; color:#7C5105;
   background:rgba(var(--accent-warm-bright-rgb),0.16); border:1px solid rgba(var(--accent-warm-rgb),0.3);
-  border-radius:var(--r-drobnost); padding:2px 8px; white-space:nowrap;}
+  /* ZAOBLENÍ TU NESTOJÍ, a je to totéž poučení jako o pár řádků níž
+     u .opp-podil a .opp-urad: třída žije jen uvnitř .opp-chips, kde
+     tvar dává společné pravidlo rodiny (pilulka). Tohle pravidlo je
+     v souboru ZA ním a stejně specifické, takže svých 10 px prosadilo
+     a „cena k ověření" byla obdélníček mezi pilulkami. */
+  padding:2px 8px; white-space:nowrap;}
 
 /* Nápověda pod vyhledávacím políčkem. Drobná — je to pobídka, ne
    pokyn — ale příklad musí být poznat, že se do něj dá klepnout. */

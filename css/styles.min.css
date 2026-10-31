@@ -209,13 +209,29 @@ header.shrink{padding:12px 0}
 }
 @media (hover:none){}
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none;transition:var(--prechod)}
 .logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=15") center/contain no-repeat;box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18)}
 @media (min-width:1041px){.logo{font-size:40px;gap:16px}
 .logo-mark{width:64px;height:64px}
 }
 @media (max-width:359px){.logo{font-size:24px;gap:8px}
 .logo-mark{width:44px;height:44px}
+}
+.zn-pas{display:none}
+@media (max-width:1040px){body:has(#zn-pas) header{border-bottom-color:transparent}
+body:has(#zn-pas) header .logo{opacity:0;pointer-events:none}
+html.pk-odrolovano body:has(#zn-pas) header{border-bottom-color:var(--line)}
+html.pk-odrolovano body:has(#zn-pas) header .logo{opacity:1;pointer-events:auto}
+.zn-pas{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 var(--okraj-stranky) 12px;background:var(--plocha-plovouci-plna);border-bottom:1px solid var(--line);text-align:center}
+.zn-logo{display:inline-flex;align-items:center;gap:12px;color:var(--znacka)}
+.zn-jm{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.03em;font-size:32px;line-height:1}
+.zn-logo .logo-mark{width:56px;height:56px}
+.zn-pod{margin:0;font-size:16px;line-height:1.3;color:var(--muted)}
+.zn-pod b{color:var(--text);font-weight:700}
+}
+@media (max-width:359px){.zn-jm{font-size:24px}
+.zn-logo .logo-mark{width:44px;height:44px}
+.zn-pod{font-size:14px}
 }
 @media (min-width:1041px){#nav .nav-hlava,#nav .nav-oddil,#nav .nav-pata,#nav .nav-mobil,#nav .nav-pocet{display:none}
 #nav a:not(.btn-primary)>.ik{display:none}
@@ -749,7 +765,7 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .opp-price + .opp-chips{margin-top:8px}
 .opp-hot{color:var(--popisek);background:var(--plocha-jemna);border-color:var(--line)}
 .opp-deal{color:var(--c-ok-ink);background:rgba(var(--c-ok-rgb),0.12);border-color:rgba(var(--c-ok-ink-rgb),0.3)}
-.opp-feat{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#fff;background:var(--plocha-znacka);border:0;border-radius:var(--r-sm);padding:2px 8px;letter-spacing:0.02em;text-transform:uppercase;box-shadow:var(--e1)}
+.opp-feat{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#fff;background:var(--plocha-znacka);border:0;padding:2px 8px;letter-spacing:0.02em;text-transform:uppercase;box-shadow:var(--e1)}
 .opp-cd{background:var(--plocha-jemna);border-color:var(--line);color:var(--muted)}
 .opp-cd.soon{color:var(--c-drazba-ink);background:rgba(var(--c-drazba-rgb),0.10);border-color:rgba(var(--c-drazba-rgb),0.3)}
 .opp-cd.urg{color:var(--c-exekuce-ink);background:rgba(var(--c-nalehave-rgb),0.10);border-color:rgba(var(--c-nalehave-rgb),0.3)}
@@ -2038,7 +2054,7 @@ body.vybiram-misto .leaflet-container{cursor:crosshair}
 .gtk-ol{margin:0;padding-left:1.35em;display:flex;flex-direction:column;gap:4px}
 .gtk-ol li{font-size:14px;line-height:1.6;color:var(--text)}
 .gtk-ol li::marker{font-family:var(--font-popisek);font-size:12px;color:var(--accent-warm)}
-.opp-overit{display:inline-block;font-size:12px;font-weight:600;color:#7C5105;background:rgba(var(--accent-warm-bright-rgb),0.16);border:1px solid rgba(var(--accent-warm-rgb),0.3);border-radius:var(--r-drobnost);padding:2px 8px;white-space:nowrap}
+.opp-overit{display:inline-block;font-size:12px;font-weight:600;color:#7C5105;background:rgba(var(--accent-warm-bright-rgb),0.16);border:1px solid rgba(var(--accent-warm-rgb),0.3);padding:2px 8px;white-space:nowrap}
 .opp-podil,.opp-urad{display:inline-block;font-size:12px;font-weight:600;color:var(--muted);background:rgba(var(--plocha-znacka-rgb),0.08);border:1px solid rgba(var(--plocha-znacka-rgb),0.22);padding:2px 8px;white-space:nowrap}
 .src-stav{margin-left:8px;padding:1px 4px;border-radius:var(--r-pill);font-family:var(--font-popisek);font-size:12px;font-variant-numeric:tabular-nums;background:var(--plocha-jemna-vic);color:var(--muted)}
 .src-stav.src-zle{background:rgba(var(--c-exekuce-rgb),0.12);color:var(--c-exekuce)}

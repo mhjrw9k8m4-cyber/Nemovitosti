@@ -17739,3 +17739,102 @@ odstraní, kontrola zase spadne.
 
 **Zkoušky.** `test-hledani-vzhled` 14, `test-graf-vsude` 4,
 `test-naseptavac` 127 — bez chyby.
+
+## §283 Začátek podle Sreality: velká značka v pásu, lišta se jí vzdá
+
+Majitel poslal dva snímky mobilní Sreality: „udělej naši stránku podle
+Sreality — tento začátek." Na prvním je nahoře tenká lišta (hamburger
+vlevo, účet vpravo) a **bez značky**, pod ní velká značka uprostřed
+a jedna věta: „Vyberte si z 109 155 nabídek realit." Na druhém, už
+odrolovaném, je značka v liště a věta pryč.
+
+**Co se udělalo.** Pod lištu úvodní stránky přibyl pás `#zn-pas`:
+značka 56 px, jméno 32 px a pod tím „Vyberte si z **1 912 pozemků**
+po celé ČR". Lišta svoje logo nenese, dokud je pás vidět; jakmile
+pás odjede pod ni, logo se v ní rozsvítí a při návratu nahoru zase
+zhasne. Přepíná to třída `pk-odrolovano` na `<html>` z js/hlavicka.js.
+
+**Značka je přesto jen jedna.** To byl hlavní důvod, proč uvítací
+blok s velkou značkou odsud dvakrát odcházel: nad ním stála táž
+značka v liště. Tady v jednu chvíli svítí vždycky jen jedna.
+
+**Logo v liště se schovává přes `opacity`, ne `display:none`** — a je
+to rozhodnutí, ne lenost. Hamburger musí stát hned vedle jména
+(`test-hlavicka` měří vzdálenost mezi nimi) a výška lišty musí sedět
+na `--vyska-hlavicky` (měří táž zkouška). Kdyby jméno zmizelo z toku,
+rozpadlo by se obojí a navíc by lišta při odrolování vyrostla, tedy
+by pod ní vše poskočilo. Takhle má lišta pořád 73 px, pás má tutéž
+plochu a mezi nimi není hrana — je to jeden blok se značkou uprostřed.
+
+**Past na druhou značku se tím musela předělat.**
+`test-prvni-obrazovka` počítala prvky `.logo, .uvod-logo` s výškou
+nad 4 px — tedy PŘÍTOMNÉ. Od téhle chvíle by to měřilo něco jiného než
+to, co člověk vidí: logo v liště v DOM je a rozměr má, jen není vidět.
+Počítají se proto viditelné (opacity, visibility, display po celé
+cestě k předkům a průnik s oknem) a do seznamu přibyla `.zn-logo`.
+Prokázáno sabotáží: když se `opacity:0` na logu v liště přepíše na
+`opacity:1`, zkouška hlásí „viditelných značek: 2" a padá.
+
+**Číslo v pásu píše sestavení, ne ruka.** Ve zdroji stránky číslo je,
+aby věta dávala smysl i bez JavaScriptu — a proto se nesmí psát ručně:
+den po sestavení by lhalo. `scripts/hlavicka.mjs` ho při každém
+sestavení přepíše ze stejných dat, z jakých bere počty do lišty,
+a `js/main.js` ho v prohlížeči srovná na data, která stránka opravdu
+nese. Prokázáno sabotáží: text se v HTML nahradil slovem „nesmysl“
+a `node scripts/sjednot-hlavicku.mjs` vrátil „1 912 pozemků“.
+Není to totéž číslo jako nad výpisem: tam je počet PO FILTRU, který
+se mění s každým posunem mapy.
+
+**Co to stálo (naměřeno na 390×844).** Pás má 95 px a první nabídka
+klesla ze 418 na 513 px. Uvolnit se pod ním nedá nic: `.map-wide` má
+na telefonu `padding-top:0` a hledání začíná 8 px pod pásem. Mez
+`MEZ_PRVNI` proto šla z 480 na 540 — počtvrté, a jako pokaždé za něco,
+co si majitel vyžádal. **Cena první nabídky je pořád na první
+obrazovce**, a to je ta věc, kvůli které mez existuje: 829 px z 844 na
+390 px, 811 na 360 px, 763 na 320 px. Na nejširším telefonu tedy
+zbývá 15 px — kdo sem přidá cokoli dalšího, cenu z obrazovky vytlačí
+a musí nejdřív něco ubrat. Mez na úzkém telefonu je od teď totéž
+číslo (`MEZ_PRVNI_UZKA = MEZ_PRVNI`): pás je na obou šířkách stejně
+vysoký a nabídka vyšla v obou případech na 513 px.
+
+**Na monitoru pás není.** Tam je mapa přes půl obrazovky a značka
+v liště má 64 px; pás by ji jen odsouval. Totéž rozhodnutí tu padlo
+u rozcestníku.
+
+**Zkoušky.** Rychlá sada 133/133. Dvě hodnoty napoprvé minuly
+stupnice (`font-size:15px`, `padding:14px`) — `test-pismo`
+a `test-odstupy` je chytily a srovnaly se na 16 a 12.
+
+## §284 Běh 856: „cena k ověření" byla obdélníček mezi pilulkami
+
+Kontrola běhu 856 (commit 21e3a388bb). Tři pády z §280 i oba z §282 jsou
+pryč, zbyl jeden nový: `test-jedna-barva` hlásil, že odznaky pod cenou
+na kartě mají **dva tvary** — `13px/600/4px 8px/999px` a `…/10px`.
+
+**Příčina.** Rodina odznaků má jedno pravidlo tvaru
+(`.opp-chips > *{… border-radius:var(--r-pill)}`, pilulka) a jednotlivé
+třídy mají určovat JEN barvu. Dvě z nich si ale svoje zaoblení nechaly
+a obě stojí v souboru ZA rodinou se stejnou specificitou (0,1,0), takže
+ho prosadily: `.opp-overit` („cena k ověření", `--r-drobnost` = 10 px)
+a `.opp-feat` („Zvýrazněno", `--r-sm` = 10 px).
+
+Je to **přesně to poučení, které v souboru u sousedních tříd už
+napsané je** — `.opp-podil` a `.opp-urad` se takhle opravovaly dřív
+a komentář u nich o tom mluví. Tenkrát se prošly dvě třídy ze čtyř.
+
+**Proč to CI chytilo až teď.** Odznak „cena k ověření" se kreslí jen
+u nabídek s podezřelou cenou za m² a pořadí doporučených se každý den
+střídá; do měřených 23 karet se prostě musel trefit. Po stažení
+dnešních dat padá i lokálně — prokázáno sabotáží: s vráceným
+`border-radius` hlásí zkouška „2 recepty", bez něj „1 recept".
+
+**Bez důkazu zůstává `.opp-feat`:** „Zvýrazněno" se v dnešních datech
+nevykresluje (žádná nabídka není placeně zvýrazněná), takže ten tvar
+zkouška nezměřila ani před opravou, ani po ní. Zaoblení mu bylo sebráno
+ze stejného důvodu jako ostatním třem — tvar patří rodině.
+
+**Kontrola nasazeného webu (běh 27) padá na kroku „Zkontrolovat živou
+databázi"**, ne na webu: prohlížečová část prošla 15 z 15 bez vady.
+Je to otevřený úkol o živé Supabase (chybějící kbelík `listing-photos`
+a nepotvrzované e-maily), na který čekám na majitelův pokyn; hlášení
+o něm už v úkolu #1 je.
