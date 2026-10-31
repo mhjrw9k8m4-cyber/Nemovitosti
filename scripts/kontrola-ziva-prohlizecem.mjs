@@ -315,6 +315,57 @@ if (prohlizec) {
     await o.kontext.close();
   }
 
+  /* ---- 12: SE ZAPNUTÝM SERVICE WORKEREM MUSÍ JÍT NAVIGACE ---------
+     31. 10. ráno majitel klepl na webu na cokoli a Safari odpovědělo
+     „Response served by service worker has redirections" — bílá
+     stránka místo celého webu (viz docs/optimalizace.md, §268).
+     Žádná z kontrol výš to zachytit nemohla: každá otevírá ČISTÝ
+     kontext, kde service worker ještě neřídí, takže měřily web, jak
+     vypadá pro návštěvníka poprvé — ne pro toho, kdo už tu byl.
+     Tady se proto nejdřív počká, až worker převezme řízení, a teprve
+     POTOM se kliká dál. Běží to na ostré doméně, protože tenhle druh
+     vady se v repozitáři nepozná. */
+  {
+    const s = await otevri(`${WEB}/`);
+    if (s.selhalo) NE('service worker: úvodní stránka se neotevřela', s.selhalo);
+    else {
+      const pripraven = await s.strana.evaluate(() => {
+        if (!('serviceWorker' in navigator)) return 'bez podpory';
+        return Promise.race([
+          navigator.serviceWorker.ready.then(() => 'ano'),
+          new Promise((r) => setTimeout(() => r('nedočkal se'), 20000)),
+        ]);
+      }).catch((e) => 'chyba: ' + String(e.message || e).slice(0, 80));
+      if (pripraven !== 'ano') {
+        NEVIM('service worker se nepřihlásil', String(pripraven));
+      } else {
+        /* Druhé načtení: teprve teď worker požadavky opravdu řídí. */
+        await s.strana.goto(`${WEB}/`, { waitUntil: 'load', timeout: LIMIT * 1000 }).catch(() => {});
+        const ridi = await s.strana.evaluate(() => !!navigator.serviceWorker.controller).catch(() => false);
+        if (!ridi) NEVIM('service worker neřídí ani po druhém načtení', 'navigace pod workerem se nezměřila');
+        else {
+          ANO('service worker řídí stránku (navigace se měří pod ním)');
+          let spadlo = null, stav = 0, titulek = '';
+          try {
+            const r = await s.strana.goto(`${WEB}/cena-pozemku.html`, { waitUntil: 'domcontentloaded', timeout: LIMIT * 1000 });
+            stav = r ? r.status() : 0;
+            titulek = await s.strana.title().catch(() => '');
+          } catch (e) { spadlo = String(e.message || e).slice(0, 160); }
+          if (spadlo) {
+            NE('pod service workerem se stránka neotevře', spadlo
+              + ' — přesně takhle vypadá vada, kdy worker vrací na navigaci přesměrovanou odpověď'
+              + ' (Safari: „Response served by service worker has redirections")');
+          } else if (stav >= 400 || !/parcel|cen/i.test(titulek)) {
+            NE('pod service workerem se stránka otevřela špatně', `stav ${stav}, titulek „${titulek.slice(0, 60)}"`);
+          } else {
+            ANO(`pod service workerem se další stránka otevře (${stav}, „${titulek.slice(0, 30)}")`);
+          }
+        }
+      }
+      await s.kontext.close();
+    }
+  }
+
   await prohlizec.close();
 }
 

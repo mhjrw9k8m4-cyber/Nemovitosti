@@ -17069,5 +17069,24 @@ padnou.
 mění pravidla, co se smí vrátit. Když se příště bude sahat na způsob,
 jakým worker chodí na síť, musí u toho být zkouška s přesměrováním.
 
-**Zkoušky.** Rychlá sada 133/133; `test-offline` 19 kontrol
-a `test-nova-verze` 4 — bez chyby.
+**Jak se z toho dostane telefon, který už rozbitou obsluhu má.**
+Změřeno nasimulováním celé cesty: nainstaluje se stará obsluha,
+navigace přes přesměrování padá (`net::ERR_FAILED`), pak se „nasadí"
+oprava a **stačí jedno obyčejné načtení libovolné stránky, která jde
+otevřít**. Do čtyř sekund se nová obsluha nainstaluje, převezme řízení
+a smaže stará úložiště (naměřeno: `pk-stranky-v1` → `pk-stranky-v2`);
+navigace přes přesměrování pak vrací 200. Nic se nemusí mazat ručně.
+Pozor na vlastní netrpělivost: po 2,5 sekundy to ještě vyměněné není
+a vypadá to, že oprava nezabrala.
+
+**A hlídač tam, kde se to stalo: na ostré doméně.** Žádná z dosavadních
+kontrol živého webu to zachytit nemohla — každá otevírá čistý kontext,
+kde service worker ještě neřídí, takže měřily web, jak vypadá pro
+návštěvníka **poprvé**, ne pro toho, kdo už tu byl. `kontrola-ziva-
+prohlizecem` proto nově počká, až obsluha převezme řízení, a **teprve
+potom** klikne na další stránku; když se neotevře, hlásí to i s tou
+Safari hláškou v textu nálezu. Běží čtyřikrát denně.
+
+**Zkoušky.** Rychlá sada 133/133; `test-offline` 19 kontrol,
+`test-nova-verze` 4 a `kontrola-ziva-prohlizecem --mistni` 15 — bez
+chyby.
