@@ -1041,7 +1041,7 @@ body.hledani-rozbalene .ms-rozsirene{display:block}
 .msr-hotovo{display:block;width:100%;margin-top:12px;padding:12px;border:1px solid var(--plocha-znacka);border-radius:var(--r-ovladani);background:var(--plocha-znacka);color:#fff;font-family:var(--font-ui);font-size:16px;font-weight:700;cursor:pointer;box-shadow:var(--e1);transition:var(--prechod)}
 .msr-hotovo:active{background:var(--znacka);transform:translateY(1px)}
 .map-side{order:2;border-right:0;max-height:none}
-.map-holder{order:3;height:74vh;height:74dvh;max-height:640px;min-height:460px}
+.map-holder{order:3;margin-top:16px;height:74vh;height:74dvh;max-height:640px;min-height:460px}
 .map-canvas{flex:1;min-height:0}
 .mcp-hledani{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-ovladani);box-shadow:var(--e2)}
 .mcp-hledani .map-search{flex:1 1 100%;min-width:150px}

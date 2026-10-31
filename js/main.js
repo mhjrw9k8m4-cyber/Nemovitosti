@@ -1014,10 +1014,21 @@
       // zobrazení i znovu vystředit na ČR (fit z inicializace proběhl naprázdno).
       // Mapa nemusí existovat — když se nenačte Leaflet, přepínač má pořád
       // fungovat, ať člověk nezůstane zamčený na jedné polovině.
-      // Po přepnutí na mapu k ní rovnou odrolovat. Ovládání nad ní zabere
-      // půl obrazovky, takže bez toho je z mapy vidět jen horní okraj a
-      // člověk má dojem, že klepnutí nic neudělalo.
-      if (!seznam && !prvni && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
+      /* PŘEPNUTÍ STRÁNKOU NEHÝBE (31. 10.). Stávalo se tu, že se po
+         klepnutí na „Mapa" odrolovalo k mapě. Mělo to tehdy důvod,
+         který zapsal komentář o řádek výš: ovládání nad výpisem
+         zabíralo půl obrazovky a z mapy by byl vidět jen horní okraj.
+         Ten důvod zmizel — v mapovém pohledu se dnes řada ovladačů
+         vůbec nekreslí, takže mapa začíná hned pod pásem s hledáním
+         a je jí na telefonu vidět 633 px z 844.
+         Co zbylo, byla jen škoda: naměřeno na 390×844, stránka se
+         při přepnutí posunula o 128 px, takže zmizel i přepínač, na
+         který člověk zrovna klepl. Majitel: „když přepínám mezi
+         seznamem a mapou, mapa se hne dolů, ať zůstane na stejném
+         levelu jako seznam."
+         scrollToMap() zůstává pro případy, kde je posun na místě —
+         hledání v okolí a výsledek hledání, kde se mapa mění pod
+         rukou a člověk se na ni potřebuje podívat. */
       // Dvakrát schválně: napoprvé už po 70 ms, ať to není vidět, a znovu po
       // ustálení rozměrů. Jedno srovnání nestačilo — mapa se rozbalovala ještě
       // po něm a republika pak seděla nakřivo, u spodního okraje.

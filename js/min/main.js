@@ -618,8 +618,6 @@
         b.setAttribute('aria-selected', String(on));
       });
 
-      if (!seznam && !prvni && typeof scrollToMap === 'function') setTimeout(scrollToMap, 60);
-
       if (!seznam) {
 
         azBudeMapa(function () {

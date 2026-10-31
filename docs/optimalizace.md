@@ -17342,3 +17342,37 @@ jakým se rodina rozejde.
 (bez vady), `test-barvy` (58), `test-okraje` (143), `test-soustava`
 (15), `test-uvod` (68), `test-prvni-obrazovka` (22), `test-menu` (32),
 `test-vrstveni` a `test-predloha` — bez chyby.
+
+## §274 Přepnutí Seznam/Mapa stránkou nehýbe
+
+**Zadání (31. 10.):** „Když přepínám mezi seznamem a mapou, mapa se
+hne dolů — ať zůstane na stejném levelu jako seznam."
+
+**Byly to dvě věci naráz, obě změřené na 390×844.**
+
+1. **Stránka se po klepnutí odrolovala o 128 px.** Dělal to záměrný
+   `scrollToMap()` a měl kdysi dobrý důvod — zapsaný rovnou
+   v komentáři: *„ovládání nad ní zabere půl obrazovky, takže bez
+   toho je z mapy vidět jen horní okraj."* Ten důvod ale mezitím
+   zmizel: v mapovém pohledu se řada ovladačů (Procházet po jednom,
+   Uložené, řazení) vůbec nekreslí, takže mapa začíná hned pod pásem
+   s hledáním a je jí na telefonu vidět **633 px z 844**. Co zbylo,
+   byla jen škoda: posunem zmizel i přepínač, na který člověk zrovna
+   klepl. Posun je pryč.
+2. **Mapa začínala o 16 px výš než výpis.** V seznamu stojí první
+   ovladač 16 px pod pásem, mapa seděla rovnou na něm — naměřeno
+   227 proti 211. Teď obojí **227**.
+
+**scrollToMap() zůstává**, a to schválně: u „Pozemků v okolí" a u
+výsledku hledání se mapa mění pod rukou a člověk se na ni potřebuje
+podívat. Odstranilo se jen to volání z přepínače.
+
+**Hlídač.** `test-ovladani-vypisu` (nově 67 kontrol) přepne na mapu
+a zpět a měří dvě věci: mapa začíná tam, kde začínal výpis (do 2 px),
+a scrollY je před přepnutím, na mapě i po návratu totéž. Prokázáno
+sabotáží — vrácení `scrollToMap()` do přepínače a odebrání těch 16 px
+shodí čtyři kontroly na dvou šířkách.
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-ovladani-vypisu`
+(67), `test-mapa` (57), `test-uvod` (68), `test-rozvrzeni` (190)
+a `test-prvni-obrazovka` (22) — bez chyby.

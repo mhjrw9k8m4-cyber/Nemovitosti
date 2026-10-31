@@ -4760,7 +4760,11 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     transition:var(--prechod);}
   .msr-hotovo:active{background:var(--znacka); transform:translateY(1px);}
   .map-side{order:2; border-right:0; max-height:none;}
-  .map-holder{order:3; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
+  /* STEJNÁ ÚROVEŇ JAKO VÝPIS (31. 10.). V seznamu začíná první
+     ovladač 16 px pod pásem s hledáním, mapa začínala rovnou na něm —
+     při přepnutí tedy obsah o těch 16 px poskočil. Naměřeno na
+     390 px: seznam 227, mapa 211. Teď obojí 227. */
+  .map-holder{order:3; margin-top:16px; height:74vh; height:74dvh; max-height:640px; min-height:460px;}
   .map-canvas{flex:1; min-height:0;}
   /* HLEDÁNÍ A PŘEPÍNAČ VEDLE SEBE, NE POD SEBOU.
      Dřív: pole 46 px a pod ním pruh přepínače 54 px = 100 px na dva

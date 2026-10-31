@@ -327,6 +327,37 @@ try {
       !!hlas.popisek && hlas.popisek.px === 14 && hlas.popisek.vaha === '500',
       hlas.popisek ? `${hlas.popisek.px} px / ${hlas.popisek.vaha}` : 'popisek se nenašel');
 
+    /* 3a3. PŘEPNUTÍ SEZNAM/MAPA STRÁNKOU NEHÝBE.
+       Majitel 31. 10.: „když přepínám mezi seznamem a mapou, mapa se
+       hne dolů, ať zůstane na stejném levelu jako seznam." Byly to
+       dvě věci naráz: po klepnutí se k mapě odrolovalo (naměřeno
+       posunutí o 128 px, takže zmizel i přepínač, na který člověk
+       zrovna klepl) a mapa navíc začínala o 16 px výš než první
+       ovladač výpisu. Obojí je pryč; tady se měří výsledek. */
+    const prep = await p.evaluate(async () => {
+      const y = (sel) => { const e = document.querySelector(sel);
+        return e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null; };
+      window.scrollTo(0, 0);
+      await new Promise((r) => setTimeout(r, 120));
+      const predY = y('.ms-vysledky'), predScroll = Math.round(window.scrollY);
+      const naMapu = document.querySelector('.mvt-btn[data-mv="mapa"]');
+      if (!naMapu) return null;
+      naMapu.click();
+      await new Promise((r) => setTimeout(r, 900));
+      const mapaY = y('.map-holder'), poScroll = Math.round(window.scrollY);
+      const zpet = document.querySelector('.mvt-btn[data-mv="seznam"]');
+      if (zpet) zpet.click();
+      await new Promise((r) => setTimeout(r, 500));
+      return { predY, mapaY, predScroll, poScroll, zpetScroll: Math.round(window.scrollY) };
+    });
+    pravda(`${sirka} px: mapa začíná tam, kde začínal výpis`,
+      !!prep && prep.predY !== null && prep.mapaY !== null
+        && Math.abs(prep.mapaY - prep.predY) <= 2,
+      prep ? `výpis začínal na ${prep.predY} px, mapa na ${prep.mapaY} px` : 'přepínač se nenašel');
+    pravda(`${sirka} px: a přepnutí stránkou neposune`,
+      !!prep && prep.poScroll === prep.predScroll && prep.zpetScroll === prep.predScroll,
+      prep ? `před ${prep.predScroll}, na mapě ${prep.poScroll}, zpět ${prep.zpetScroll}` : '');
+
     const prelivy = await p.evaluate(() => ['.mc-rychly'].map((sel) => {
       const e = document.querySelector(sel);
       return { sel, je: !!e, obraz: e ? (getComputedStyle(e).backgroundImage || 'none') : 'nenašel se' };
