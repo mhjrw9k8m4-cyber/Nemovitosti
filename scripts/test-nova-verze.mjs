@@ -78,7 +78,12 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
    má tenhle web za `@media (pointer: coarse)`, ne za šířkou — bez
    emulace dotyku by se měřilo něco, co na žádném telefonu neexistuje
    (hlídá scripts/test-zkousky-meri.mjs). */
-const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+/* bypassCSP jako v ostatních zkouškách v prohlížeči: stránky webu mají
+   vlastní CSP a zkouška do nich vkládá svůj kód. Hlídá to
+   scripts/test-csp.mjs — chybělo to tu od začátku a vyplavalo to až
+   31. 10., kdy před touhle zkouškou přestaly padat jiné (do té doby
+   se směna zastavila dřív, než se sem došlo). */
+const ctx = await prohlizec.newContext({ bypassCSP: true, viewport: { width: 390, height: 844 },
   isMobile: true, hasTouch: true, locale: 'cs-CZ' });
 const p = await ctx.newPage();
 await p.goto(BASE + '/index.html', { waitUntil: 'load' });

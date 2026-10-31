@@ -17264,3 +17264,36 @@ V prohlížeči `test-kontrast` (2 684 prvků, 0 vad), `test-barvy` (58),
 `test-okraje` (143), `test-vrstveni`, `test-uvod` (68),
 `test-prvni-obrazovka` (22), `test-menu` (32),
 `test-ovladani-vypisu` (63) a `test-soustava` (15) — bez chyby.
+
+## §272 Dva pády, které CI schovávala za jiné pády
+
+Běh 843 byl první kompletní za dvě hodiny: běhy 838–842 pokaždé
+zrušil další push (větev má na zkoušky jednu frontu). Vyplavaly tím
+dva nálezy, které s ranní prací nesouvisí a jen se čekalo, až se
+k nim směna vůbec dostane.
+
+**1. Zkouška nové verze obcházela CSP — a nikdo si toho nevšiml.**
+Pravidlo webu zní: každá zkouška v prohlížeči si zapíná `bypassCSP`,
+protože stránky nesou vlastní CSP a zkoušky do nich vkládají svůj
+kód. `test-nova-verze` ho nemá od chvíle, kdy vznikla. Hlídač
+`test-csp` to hlásí správně; jen se k němu směna nikdy nedostala,
+protože před ním padalo něco jiného. Doplněno.
+
+**2. Hlídač nářadí měřil rozvržení, které už rok… tedy den neplatí.**
+`test-nastroje-v-dosahu` přidával do řady nástrojů třetí tlačítko
+a měřil, že `#mc-akce` zůstal vysoký jeden řádek a dá se posouvat do
+strany. Jenže ten obal má na telefonu od 30. 10. `display:contents`
+(§170: druh nabídky a řazení se přestěhovaly do panelu a ovladače
+skládá mřížka `.ms-vysledky`), takže **nemá vlastní obdélník**:
+vracel 0 px a „posouvat nejde". Vypadalo to jako vada webu a vada to
+nebyla — mřížka ovladače rovná do dvou sloupců schválně.
+
+Zkouška teď měří to, na čem záleží: ani s třetím nástrojem se žádné
+tlačítko nerozroste přes 56 px a stránka nepřeteče do strany.
+Prokázáno sabotáží (výplň 40 px na tlačítku zkoušku shodí) — a stojí
+za zapsání, že první dva pokusy o sabotáž neuspěly: `min-width:420px`
+na ovladači přebilo pozdější `min-width:0` z mřížky. Sabotáž, která
+neprojde, je taky výsledek: ukazuje, kudy vada přijít nemůže.
+
+**Zkoušky.** `test-csp` 24, `test-nova-verze` 4,
+`test-nastroje-v-dosahu` 15 — bez chyby.

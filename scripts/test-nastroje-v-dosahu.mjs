@@ -103,10 +103,22 @@ async function zmer(nast) {
           akce.appendChild(k);
           pridane.push(k);
         }
-        const v = Math.round(akce.getBoundingClientRect().height);
-        const posuvny = akce.scrollWidth - akce.clientWidth > 8;
+        /* MĚŘÍ SE TLAČÍTKA, NE JEJICH OBAL. Do 30. 10. byl `#mc-akce`
+           posuvná řada a měřila se jeho výška a scrollWidth. Od té doby
+           má na telefonu `display:contents` (viz §170: druh nabídky
+           a řazení se přestěhovaly do panelu a ovladače skládá mřížka
+           `.ms-vysledky`), takže obal nemá vlastní obdélník — vracel
+           0 px a „posouvat nejde", což vypadalo jako vada webu. Vadou
+           to nebylo: mřížka ovladače rovná do dvou sloupců schválně.
+           Měří se proto to, na čem záleží: ani s třetím nástrojem se
+           žádné tlačítko nerozroste do dvou řádků a stránka nepřeteče
+           do strany. */
+        const tl = [...akce.children].map((e) => Math.round(e.getBoundingClientRect().height));
+        const v = Math.max(0, ...tl);
+        const prete = Math.max(0, document.documentElement.scrollWidth
+          - document.documentElement.clientWidth);
         pridane.forEach((k) => k.remove());
-        return { v, posuvny };
+        return { v, tl, prete };
       })(),
       akceVeVypisu: !!(akce && akce.closest('#opp-list')),
       rsVeVypisu: !!(rs && rs.closest('#opp-list')),
@@ -224,10 +236,10 @@ try {
     !t.akceVeVypisu, 'nářadí sedí uvnitř #opp-list, tedy mezi nabídkami');
   pravda('a drží se na JEDNOM řádku (zalomené na dva stálo 94 px)',
     t.akceH !== null && t.akceH <= 56, `řádek nářadí je vysoký ${t.akceH} px`);
-  pravda('a drží jeden řádek i při třech nástrojích (jen se posune do strany)',
-    !!t.akceH3 && t.akceH3.v <= 56 && t.akceH3.posuvny === true,
-    t.akceH3 ? `se třemi nástroji je řádek ${t.akceH3.v} px a posouvat `
-      + (t.akceH3.posuvny ? 'jde' : 'NEJDE') : 'nářadí nemá co klonovat');
+  pravda('a ani třetí nástroj nerozhodí řádek ovladačů',
+    !!t.akceH3 && t.akceH3.v <= 56 && t.akceH3.prete === 0,
+    t.akceH3 ? `se třemi nástroji měří tlačítka ${t.akceH3.tl.join(', ')} px`
+      + ` a stránka přetéká o ${t.akceH3.prete} px` : 'nářadí nemá co klonovat');
   pravda('naposledy prohlédnuté nejsou mezi kartami, ale nad výpisem',
     !t.rsVeVypisu, 'pruh naposledy prohlédnutých sedí uvnitř #opp-list');
 
