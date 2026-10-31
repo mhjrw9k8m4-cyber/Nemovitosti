@@ -70,8 +70,8 @@
  * se tahle náhrada rozšíří při první navigaci. Nic jiného se měnit nemusí.
  * ==================================================================== */
 const TRVALE = 'pk-trvale-v1';   // soubory s otiskem v adrese
-const DATA = 'pk-data-v1';       // data/*.json
-const STRANKY = 'pk-stranky-v1'; // HTML
+const DATA = 'pk-data-v2';       // data/*.json
+const STRANKY = 'pk-stranky-v2'; // HTML
 
 /* Strop, aby úložiště nerostlo donekonečna. Stránek jsou přes dva tisíce
    a nabídky se obnovují čtyřikrát denně, takže bez stropu by to u někoho,
@@ -105,6 +105,33 @@ function uloziltelna(odpoved) {
   return !!odpoved && odpoved.ok && odpoved.type === 'basic';
 }
 
+/* PŘESMĚROVANOU ODPOVĚĎ NELZE VRÁTIT NA NAVIGACI.
+   Když obsluha sáhne na síť přes `fetch(adresa)` a server odpoví
+   přesměrováním, prohlížeč ho poslušně následuje a výsledná odpověď
+   má příznak `redirected`. Takovou odpověď ale service worker na
+   NAVIGACI vrátit nesmí — zakazuje to specifikace a prohlížeče to
+   opravdu vynucují: Safari ukáže „Response served by service worker
+   has redirections" a stránka se neotevře vůbec, Chrome hlásí
+   ERR_FAILED. Pro člověka to vypadá, že je rozbitý celý web.
+
+   Vzniklo to 30. 10. spolu s `cache: 'no-cache'` (viz zeSiteNejdriv
+   níž): do té doby šla na síť původní žádost o navigaci, u které
+   prohlížeč přesměrování řeší sám a worker je nevidí. S fetchem na
+   ADRESU se z toho stal obyčejný požadavek — a jeho přesměrovanou
+   odpověď už vrátit nejde.
+
+   Řeší se to opsáním: tělo i hlavičky se přebalí do nové odpovědi,
+   která příznak `redirected` nenese. Obsah je týž, jen se zapomene,
+   kudy se k němu došlo. Děje se to jen u odpovědí, které opravdu
+   přesměrováním prošly, takže běžnou cestu to nic nestojí. */
+async function bezPresmerovani(odpoved) {
+  if (!odpoved || !odpoved.redirected) return odpoved;
+  const telo = await odpoved.blob();
+  return new Response(telo, {
+    status: odpoved.status, statusText: odpoved.statusText, headers: odpoved.headers,
+  });
+}
+
 async function zUlozisteNejdriv(zadost, jmeno) {
   const c = await caches.open(jmeno);
   const mam = await c.match(zadost);
@@ -134,10 +161,22 @@ async function zUlozisteNejdriv(zadost, jmeno) {
    má mode 'navigate' a `new Request(zadost, …)` by na ní spadla. */
 async function zeSiteNejdriv(zadost, jmeno) {
   const c = await caches.open(jmeno);
+  const navigace = zadost.mode === 'navigate';
   try {
-    const odpoved = await fetch(zadost.url, {
-      cache: 'no-cache', credentials: 'same-origin', redirect: 'follow',
-    });
+    /* `redirect: 'manual'` JEN U NAVIGACE, a je to to podstatné z opravy
+       31. 10. (viz bezPresmerovani výš). Prohlížeč pak vrátí odpověď
+       typu „opaqueredirect", kterou service worker na navigaci vrátit
+       SMÍ — a přesměrování si provede sám, takže člověk skončí na té
+       adrese, kam se mířilo. Kdyby se místo toho přesměrování
+       následovalo tady, musela by se odpověď opisovat a člověk by
+       zůstal na staré adrese. U dat (pravidlo B) se naopak následuje,
+       tam žádná navigace není a opaqueredirect by se nedal přečíst. */
+    const odpoved = await bezPresmerovani(await fetch(zadost.url, {
+      cache: 'no-cache', credentials: 'same-origin',
+      redirect: navigace ? 'manual' : 'follow',
+    }));
+    /* Do úložiště jde až opsaná odpověď: uložená přesměrovaná odpověď
+       by tutéž vadu vytáhla znovu při prvním výpadku signálu. */
     if (uloziltelna(odpoved)) { await c.put(zadost, odpoved.clone()); uklid(jmeno); }
     return odpoved;
   } catch (e) {

@@ -100,6 +100,34 @@ try {
   pravda('service worker se přihlásil a je aktivní', stav === 'ready', `stav: ${stav}`);
   if (stav !== 'ready') hotovo();
 
+  /* ---------- PŘESMĚROVÁNÍ: NEJDRAŽŠÍ CHYBA WORKERU ----------
+     31. 10. ráno majitel klepl na webu na cokoli a Safari odpovědělo
+     „Response served by service worker has redirections" — bílá
+     stránka místo celého webu. Příčina: obsluha navigace chodila na
+     síť přes `fetch(adresa, { redirect: 'follow' })`, takže když
+     server odpověděl přesměrováním, prohlížeč ho následoval a worker
+     vracel odpověď s příznakem `redirected`. Tu ale na NAVIGACI
+     vrátit nesmí — specifikace to zakazuje a prohlížeče to vynucují
+     (Chrome hlásí ERR_FAILED). Vznikalo to den předtím spolu
+     s `cache: 'no-cache'`: do té doby šla na síť původní žádost
+     o navigaci, u které přesměrování řeší prohlížeč sám.
+     Měří se to na adrese, která se opravdu přesměruje
+     (/zkouska/presmeruj → /index.html, viz falešný server). */
+  {
+    let padlo = null, konecna = '', titulek = '';
+    try {
+      const r = await p.goto(`${BASE}/zkouska/presmeruj`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      konecna = p.url();
+      titulek = await p.title().catch(() => '');
+      if (!r || !r.ok()) padlo = `odpověď ${r && r.status()}`;
+    } catch (e) { padlo = String(e).split('\n')[0]; }
+    pravda('navigace přes přesměrování projde i se zapnutým workerem', !padlo,
+      padlo || '');
+    pravda('a skončí tam, kam přesměrování mířilo', /\/index\.html$/.test(konecna) && /Parcelka/i.test(titulek),
+      `adresa ${konecna}, titulek ${titulek.slice(0, 40)}`);
+    await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  }
+
   /* Druhé načtení: teď už worker požadavky vidí a ukládá. Pak ještě
      stránka pozemku a okresu, ať je v úložišti i něco jiného než úvod. */
   await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });

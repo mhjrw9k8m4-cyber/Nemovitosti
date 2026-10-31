@@ -92,6 +92,15 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  /* Jen pro testy: adresa, která se PŘESMĚRUJE. Potřebuje ji
+     scripts/test-offline.mjs: service worker nesmí vrátit přesměrovanou
+     odpověď na navigaci (Safari i Chrome to odmítnou), a bez adresy,
+     která se opravdu přesměruje, se to nedá změřit. */
+  if (u.pathname === '/zkouska/presmeruj') {
+    res.writeHead(302, { location: '/index.html' });
+    return res.end();
+  }
+
   /* Jen pro testy: co které hledání už má za viděné. Zkouška tím ověří,
      že se nové pozemky neoznačí dřív, než je někdo uvidí. */
   if (u.pathname === '/zkouska/videno') {

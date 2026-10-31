@@ -17016,3 +17016,58 @@ na barvu spoléhat nelze: ve vysvětlivce mapy, a to se hlídá dál.
 (66), `test-strany` (16), `test-obec` (15), `test-hlavicka` (65),
 `test-menu` (32), `test-mrtve-styly`, `test-mrtva-jmena`
 a `test-zpravy` — bez chyby.
+
+## §268 Bílá stránka na iPhonu: worker vracel přesměrovanou odpověď
+
+**Zadání (31. 10., 5:43):** snímek ze Safari — „Safari nemůže stránku
+otevřít. Chyba: »Response served by service worker has redirections«"
+a věta „když kliknu na jakoukoli funkci, zobrazí se toto". Tohle není
+kosmetika: web byl pro něj **celý nepoužitelný**.
+
+**Co se stalo.** 30. 10. v 10:56 dostala obsluha navigace ve
+`sw.js` `cache: 'no-cache'` (§ o tom, že „nejdřív ze sítě" se musí říct
+i prohlížeči). Spolu s tím se změnilo něco, co tehdy vypadalo
+nevinně: místo původní žádosti se na síť posílala **adresa** —
+`fetch(zadost.url, { … redirect: 'follow' })`. Rozdíl je zásadní.
+Původní žádost o navigaci si přesměrování řeší prohlížeč sám a worker
+je vůbec nevidí. Obyčejný `fetch` na adresu přesměrování **následuje**,
+a výsledná odpověď nese příznak `redirected`. A takovou odpověď
+service worker na navigaci vrátit **nesmí** — zakazuje to specifikace
+a prohlížeče to vynucují: Safari onou hláškou, Chrome `ERR_FAILED`.
+Jakmile tedy na cestě stálo jediné přesměrování, nenačetlo se nic.
+
+**Změřeno, ne odhadnuto.** Falešný server dostal adresu, která se
+opravdu přesměruje (`/zkouska/presmeruj` → `/index.html`). Se zapnutým
+workerem a stavem z 30. 10.: `net::ERR_FAILED`, stránka se neotevře.
+Po opravě: odpověď 200, konečná adresa `/index.html`, titulek
+„Parcelka…". Bez workeru táž navigace projde vždy — to je ten rozdíl,
+který ukazuje, že vadu dělal worker, ne server.
+
+**Oprava.** U navigace se jde na síť s `redirect: 'manual'`. Prohlížeč
+pak vrátí odpověď typu „opaqueredirect", kterou worker na navigaci
+vrátit smí, a **přesměrování si provede sám** — člověk skončí tam, kam
+se mířilo, ne na staré adrese. U dat (pravidlo B) se přesměrování dál
+následuje; tam žádná navigace není. Jako pojistka přibyla
+`bezPresmerovani()`: kdyby se někdy přesto objevila odpověď
+s příznakem `redirected`, opíše se tělo i hlavičky do nové odpovědi,
+která ten příznak nenese. Do úložiště jde až tahle opsaná odpověď —
+uložená přesměrovaná odpověď by tutéž vadu vytáhla znovu při prvním
+výpadku signálu.
+
+**Úložiště se přejmenovalo** (`pk-data-v2`, `pk-stranky-v2`). Komu se
+přesměrovaná odpověď stihla uložit, tomu se stará úložiště při
+aktivaci nového workeru smažou — jinak by si vadu nosil s sebou.
+
+**Hlídač.** `test-offline` má dvě nové kontroly: navigace přes
+přesměrování se zapnutým workerem projde, a skončí tam, kam mířila.
+Prokázáno sabotáží — s `redirect: 'follow'` a vyřazenou pojistkou obě
+padnou.
+
+**Poučení, které stojí za zapsání.** `fetch(zadost)` a
+`fetch(zadost.url)` nejsou totéž. První zachová druh požadavku
+(navigace), druhý z něj udělá obyčejné stažení — a u navigace se tím
+mění pravidla, co se smí vrátit. Když se příště bude sahat na způsob,
+jakým worker chodí na síť, musí u toho být zkouška s přesměrováním.
+
+**Zkoušky.** Rychlá sada 133/133; `test-offline` 19 kontrol
+a `test-nova-verze` 4 — bez chyby.
