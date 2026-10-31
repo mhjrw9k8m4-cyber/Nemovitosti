@@ -4347,6 +4347,10 @@
     var razBtn = countEl.querySelector('#mc-razeni');
     if (razBtn) razBtn.addEventListener('click', function (e) {
       e.stopPropagation();
+
+      document.body.classList.add('hledani-rozbalene');
+      var poleHledani = document.getElementById('map-search');
+      if (poleHledani) poleHledani.setAttribute('aria-expanded', 'true');
       var panel = document.getElementById('ms-filters');
       if (panel) panel.open = true;
       if (!sortEl) return;
@@ -4354,12 +4358,14 @@
       var obal = sortEl.closest ? sortEl.closest('.cdd') : null;
       var spust = obal ? obal.querySelector('.cdd-btn') : null;
 
-      requestAnimationFrame(function () {
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
         var cil = spust || sortEl;
-        try { cil.scrollIntoView({ block: 'center' }); } catch (chyba) {}
+
+        try { cil.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+        catch (chyba) { try { cil.scrollIntoView(); } catch (chyba2) {} }
         if (spust) spust.click();
         else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
-      });
+      }); });
     });
 
     var hotovoBtn = document.getElementById('msr-hotovo');

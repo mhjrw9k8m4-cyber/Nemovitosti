@@ -78,7 +78,12 @@ try {
   await p.waitForSelector('#map-search-navrhy li', { timeout: 10000 });
   const n = await p.evaluate(() => {
     const ul = document.getElementById('map-search-navrhy');
-    const rada = document.querySelector('.mcp-hledani');
+    /* MĚŘÍ SE PROTI POLI, NE PROTI ŘADĚ. Od 31. 10. sedí pole
+       i přepínač v jedné desce, takže řada je o její odsazení širší
+       než pole. Návrhy patří k poli, pod kterým visí, a mají mít jeho
+       šířku — tak to taky hlídáme. (Dřív to vyšlo nastejno, protože
+       řada a pole byly totéž.) */
+    const rada = document.getElementById('map-search') || document.querySelector('.mcp-hledani');
     if (!ul || ul.hidden || !rada) return null;
     const li = [...ul.querySelectorAll('li')];
     return { sirka: Math.round(ul.getBoundingClientRect().width),
@@ -97,7 +102,7 @@ try {
   pravda('našeptávač obcí se po napsání „Brno" ukázal', !!(n && n.vysky.length),
     'seznam návrhů je prázdný nebo schovaný');
   if (n) {
-    pravda('a roztáhl se přes celou řadu hledání', n.sirka >= n.rada - 1,
+    pravda('a roztáhl se přes celé pole hledání', n.sirka >= n.rada - 1,
       `${n.sirka} px z ${n.rada} px`);
     pravda('a každý návrh se vejde na jeden řádek', n.radku.every((r) => r <= 1),
       'řádků na položku: ' + JSON.stringify(n.radku) + ', výšky: ' + JSON.stringify(n.vysky));

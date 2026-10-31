@@ -303,6 +303,50 @@ try {
              : 'prvek se na stránce nenašel');
     }
 
+    /* 3c. „DOPORUČENÉ" MUSÍ OPRAVDU OTEVŘÍT VÝBĚR ŘAZENÍ.
+       Majitel 31. 10.: „když zmáčknu Doporučené, zobrazí se mi nějaká
+       čárka nalevo, ale nic to nedělá." Byly to dvě vady za sebou
+       a ani jedna nebyla vidět ze stylopisu:
+         1. Blok filtrů je na telefonu `display:none` a ukáže se až
+            s třídou `hledani-rozbalene` na <body>; tu nastavovalo jen
+            pole hledání. `<details>` se tedy otevřel UVNITŘ skrytého
+            obalu a na skrytý prvek se nedá klepnout.
+         2. Po opravě se rozbalovač otevřel, ale 660 px pod spodním
+            okrajem okna: `scrollIntoView` dědil
+            `html{scroll-behavior:smooth}`, plynulý posun se cestou
+            přerušil překreslením výpisu a `window.scrollY` zůstalo
+            na nule.
+       Měří se proto obojí: že se seznam voleb otevřel A že je vidět. */
+    await p.evaluate(() => { const e = document.querySelector('.mc-razeni'); if (e) e.click(); });
+    await p.waitForTimeout(900);
+    const raz = await p.evaluate(() => {
+      const sel = document.getElementById('map-sort');
+      const obal = sel && sel.closest ? sel.closest('.cdd') : null;
+      const btn = obal ? obal.querySelector('.cdd-btn') : null;
+      const pid = btn ? (btn.getAttribute('aria-controls') || '') : '';
+      const pan = pid ? document.getElementById(pid) : null;
+      const r = pan ? pan.getBoundingClientRect() : null;
+      return {
+        rozbaleno: document.body.classList.contains('hledani-rozbalene'),
+        otevreno: !!pan && getComputedStyle(pan).display !== 'none',
+        voleb: pan ? pan.querySelectorAll('.cdd-opt').length : 0,
+        vOkne: !!r && r.height > 40 && r.top >= -1 && r.bottom <= window.innerHeight + 1,
+        kde: r ? `${Math.round(r.top)}–${Math.round(r.bottom)} px v okně ${window.innerHeight}` : 'bez panelu',
+      };
+    });
+    pravda(`${sirka} px: „Doporučené" rozbalí panel filtrů`, raz.rozbaleno,
+      'třída hledani-rozbalene na <body> nepřibyla — blok filtrů zůstal display:none');
+    pravda(`${sirka} px: a otevře seznam voleb řazení`, raz.otevreno && raz.voleb >= 5,
+      `panel ${raz.otevreno ? 'otevřen' : 'zavřený'}, voleb ${raz.voleb}`);
+    pravda(`${sirka} px: a ten seznam je celý vidět v okně`, raz.vOkne, raz.kde);
+    /* Zavřít, ať následující měření nekoukají do rozbaleného panelu. */
+    await p.evaluate(() => {
+      const h = document.getElementById('msr-hotovo'); if (h) h.click();
+      document.body.classList.remove('hledani-rozbalene');
+      window.scrollTo(0, 0);
+    });
+    await p.waitForTimeout(500);
+
     /* 4. PŘEPÍNAČ SEZNAM/MAPA JE JEDEN OVLADAČ SE DVĚMA POLOHAMI.
        Od 30. 10. jezdí po zapuštěné dráze jezdec (`.mv-toggle::before`)
        a zapnutá polovina si TOTÉŽ pole kreslí i sama pod sebe — kvůli

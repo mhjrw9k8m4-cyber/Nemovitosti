@@ -7199,6 +7199,19 @@
     var razBtn = countEl.querySelector('#mc-razeni');
     if (razBtn) razBtn.addEventListener('click', function (e) {
       e.stopPropagation();
+      /* NEJDŘÍV ROZBALIT, TEPRVE POTOM OTEVŘÍT — jinak se neděje nic.
+         Na telefonu je celý blok filtrů schovaný
+         (`.ms-rozsirene{display:none}`) a ukáže se teprve s třídou
+         `hledani-rozbalene` na <body>; tu dosud nastavovalo jen pole
+         hledání. Tlačítko řazení ji nenastavovalo, takže `<details>`
+         se sice otevřel, ale UVNITŘ skrytého obalu — a na skrytý
+         prvek se nedá klepnout, takže se rozbalovač řazení nikdy
+         neukázal. Majitel: „když zmáčknu Doporučené, zobrazí se mi
+         nějaká čárka nalevo, ale nic to nedělá." Ta čárka je kus
+         rozbalovače, který se umístil podle nulového obdélníku. */
+      document.body.classList.add('hledani-rozbalene');
+      var poleHledani = document.getElementById('map-search');
+      if (poleHledani) poleHledani.setAttribute('aria-expanded', 'true');
       var panel = document.getElementById('ms-filters');
       if (panel) panel.open = true;
       if (!sortEl) return;
@@ -7216,12 +7229,25 @@
          si svůj seznam umístil podle nulového obdélníku.
          A posouvá se SKOKEM, ne plynule: dokud plynulé posouvání běží,
          mění se obdélník pod rukama a seznam voleb by vyjel vedle. */
-      requestAnimationFrame(function () {
+      /* DVA SNÍMKY, NE JEDEN. Blok filtrů se právě přepnul z
+         `display:none` na `block`; v prvním snímku po té změně ještě
+         nemá spočítané rozvržení a `scrollIntoView` by mířil na
+         nulový obdélník. */
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
         var cil = spust || sortEl;
-        try { cil.scrollIntoView({ block: 'center' }); } catch (chyba) {}
+        /* SKOKEM, NE PLYNULE — a tentokrát to tak opravdu je.
+           Komentář tu tohle tvrdil už dřív, jenže `behavior` se
+           nepředával a `html{scroll-behavior:smooth}` z toho udělal
+           plynulý posun. Naměřeno 31. 10.: po klepnutí na „Doporučené"
+           zůstalo `window.scrollY` na 0 a tlačítko řazení viselo na
+           1 506 px, tedy 660 px pod spodním okrajem okna — rozbalovač
+           se otevřel mimo obrazovku a vypadalo to, že se nestalo nic.
+           Plynulý posun se navíc cestou přerušil překreslením výpisu. */
+        try { cil.scrollIntoView({ block: 'center', behavior: 'instant' }); }
+        catch (chyba) { try { cil.scrollIntoView(); } catch (chyba2) {} }
         if (spust) spust.click();
         else { try { sortEl.focus({ preventScroll: true }); } catch (chyba) { sortEl.focus(); } }
-      });
+      }); });
     });
     /* HLAVNÍ AKCE V PANELU FILTRŮ ŘÍKÁ, KOLIK JICH ZBYLO.
        Tlačítko pod filtry neslo slovo „Hotovo" — tedy nic o tom, co

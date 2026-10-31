@@ -16839,3 +16839,58 @@ V prohlížeči `test-okraje` (143 prvků), `test-kontrast`, `test-menu`
 `test-deska`, `test-dotyk`, `test-zaobleni`, `test-hlavicka` (91),
 `test-barvy`, `test-afordance`, `test-uvod` (68), `test-vrstveni` — bez
 chyby. Červený zůstává `test-rozvrzeni` kvůli nálezu výš.
+
+## §265 „Doporučené" nedělalo nic — dvě vady za sebou
+
+**Hlášení (31. 10.):** „Když zmáčknu Doporučené, zobrazí se mi nějaká
+čárka nalevo, ale nic to nedělá."
+
+**Ta čárka byl rozbalovač, který se neměl kde umístit.** Vady byly dvě
+a ani jedna nejde vidět ze stylopisu.
+
+1. **Panel filtrů je na telefonu schovaný.** `.ms-rozsirene` má
+   `display:none` a ukáže se teprve s třídou `hledani-rozbalene` na
+   `<body>` — tu dosud nastavovalo **jen pole hledání**. Tlačítko
+   řazení ji nenastavovalo, takže se `<details>` sice otevřel, ale
+   uvnitř skrytého obalu. Klepnutí na rozbalovač uvnitř pak proběhlo
+   (je programové, takže na skrytý prvek dosáhne), jenže panel se
+   umístil podle **nulového obdélníku** svého tlačítka — a vyjel do
+   levého horního rohu jako úzký proužek. Přesně ta „čárka".
+2. **Po opravě se otevřel mimo obrazovku.** Komentář v kódu tvrdil, že
+   se k řazení posouvá „skokem, ne plynule" — jenže `behavior` se
+   nepředával a `html{scroll-behavior:smooth}` z toho udělal plynulý
+   posun, který se cestou přerušil překreslením výpisu. Naměřeno:
+   `window.scrollY` zůstalo na **0** a tlačítko řazení viselo na
+   **1 506 px**, tedy 660 px pod spodním okrajem okna. Teď se posouvá
+   `behavior:'instant'` a ve dvou snímcích (blok se právě přepnul
+   z `display:none`, v prvním snímku ještě nemá rozvržení). Po opravě:
+   `scrollY 1 062`, tlačítko na 444 px a seznam voleb na 490–770 px,
+   tedy celý v okně.
+
+**Hlídač.** `test-ovladani-vypisu` nově klepne na „Doporučené" a měří
+tři věci: že přibyla třída `hledani-rozbalene`, že se otevřel seznam
+voleb (≥ 5 položek) a že je **celý vidět v okně**. Na obou šířkách.
+Prokázáno sabotáží: bez řádku, který tu třídu přidává, hlásí
+`✕ „Doporučené" rozbalí panel filtrů — třída hledani-rozbalene na
+<body> nepřibyla`.
+
+**Co ten hlídač NEPROKÁŽE, a říkám to rovnou.** Druhou vadu
+(plynulý posun) sabotáží zachytit neumí: když se `behavior` vrátí na
+`smooth`, zkouška počká 900 ms, posun v klidu doběhne a kontrola
+projde. Na telefonu ho přeruší překreslení výpisu, které si v sondě
+nevyrobím. Hlídá se tedy **výsledek** (seznam je v okně), ne příčina.
+
+**Dva vedlejší nálezy.**
+
+- `test-hledani-vzhled` začal padat na tom, že našeptávač měří 356 px
+  z 358. Je to důsledek desky z §263: řada je o její odsazení širší
+  než pole. Návrhy patří k poli, pod kterým visí, takže se s ním
+  srovnaly (`left/right:8px`) a zkouška měří proti poli, ne proti řadě.
+- `test-rozvrzeni` je zase zelený (190/190) — překryv „Nahoru" přes
+  „Uložit" z §264 se s další obměnou dat rozešel. Potvrzuje to, že je
+  to rozložením dat, ne pravidlem; vedeno dál jako samostatná položka,
+  protože deterministické to pořád není.
+
+**Zkoušky.** Rychlá sada 133/133. V prohlížeči `test-ovladani-vypisu`
+(58), `test-hledani-vzhled` (14), `test-naseptavac` (127), `test-uvod`
+(68), `test-rozvrzeni` (190) — bez chyby.

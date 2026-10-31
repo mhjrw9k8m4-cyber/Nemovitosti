@@ -4976,9 +4976,12 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      pravidlo platí pro celou telefonní šířku. */
   /* +8 px proti dřívějšku: deska kolem má odsazení 8, takže se o ně
      posunulo i pole, a lupa se váže na jeho střed (8 + 44/2 = 30),
-     našeptávač čtyři pixely pod jeho spodní hranu (8 + 44 + 8). */
+     našeptávač čtyři pixely pod jeho spodní hranu (8 + 44 + 8).
+     A SROVNÁ SE S POLEM, ne s deskou: návrhy patří k poli, pod kterým
+     visí, takže mají mít jeho šířku i jeho svislice. Dřív se kryly
+     s celou řadou, protože řada a pole byly totéž. */
   .mcp-hledani .ms-lupa{top:30px; transform:none;}
-  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:60px;}
+  .mcp-hledani .ms-navrhy, .mcp-hledani .msn-oprava{top:60px; left:8px; right:8px;}
   /* Vždy jen jedno: se třídou .mv-seznam seznam, bez ní mapa. */
   .map-app.mv-seznam .map-holder{display:none;}
   .map-app:not(.mv-seznam) .map-side{display:none;}
