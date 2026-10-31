@@ -17188,3 +17188,79 @@ V prohlížeči `test-kontrast` (2 684 prvků), `test-barvy` (58),
 `test-uvod` (68), `test-rozvrzeni` (190), `test-ovladani-vypisu` (63),
 `test-hledani-vzhled` (14), `test-menu` (32) a `test-soustava` (15) —
 bez chyby.
+
+## §271 Stupnice místo šesti zelených, které si byly podobné
+
+**Zadání (31. 10.):** „Ta barva musí být dokonalá, chápeš — najdi si
+nějakou paletu a grafické designéry, jak pracují s barvami."
+
+**Jak se to dnes dělá.** Vážné systémy (Material 3, Radix, Tailwind v4)
+nevybírají jeden odstín od oka; postaví **stupnici v percepčním
+prostoru**. Důvod je měřitelný: sRGB neodpovídá tomu, co oko vidí —
+`#008000` a `#0000FF` mají v něm srovnatelná čísla a přitom jedna je
+podstatně světlejší. V OKLabu se počítá to, co člověk opravdu vnímá,
+takže se dá říct „o krok světlejší" a znamená to všude totéž.
+Hledal jsem i hotové palety (Radix, Tailwind); žádnou jsem neopsal —
+sloužily jako kontrola, že se ta naše pohybuje v téže krajině
+(značka 700 vyšla prakticky na Tailwind emerald 700–800).
+
+**Co měl web předtím.** Šest zelených, každou jinou: odstíny
+**158,2 · 158,9 · 159,1 · 159,2 · 163,5°** a sytosti od sebe bez
+pravidla. Rozdíly, které se jednotlivě neztratí, ale vedle sebe dělají
+přesně to, co majitel popsal jako „brčálové": skoro stejné, a přece ne.
+
+**Co má teď.** Jednu stupnici, jeden odstín **161°**, deset kroků:
+
+| krok | hex | OKLab L | bílý text | role |
+|---|---|---|---|---|
+| 50 | `#ECF9F2` | 0,970 | — | |
+| 100 | `#D6F1E2` | 0,935 | — | |
+| 200 | `#B4E5CA` | 0,880 | — | světlá značková plocha |
+| 300 | `#88D0AB` | 0,800 | — | značka na tmavé desce |
+| 400 | `#58B488` | 0,700 | — | |
+| 500 | `#319A6D` | 0,615 | 3,52 | |
+| 600 | `#097750` | 0,505 | 5,58 | světlejší akcent, i text |
+| **700** | **`#106A47`** | **0,465** | **6,61** | **značka — plochy i text** |
+| 800 | `#105338` | 0,395 | 9,07 | hluboká (jen průhledně) |
+| 900 | `#0D3C28` | 0,320 | 12,40 | |
+
+Sytost jde po křivce (0,016 → 0,118 → 0,062): na krajích, kde se barva
+blíží bílé a černé, vysoká sytost vypadá uměle. **Žádný krok není mimo
+gamut sRGB** — spočítáno, ne odhadnuto.
+
+**Jedna značka místo dvou skoro stejných.** Text i plné plochy jsou
+teď týž krok 700. Do dneška to byly dvě barvy (`#0F5C3B` text vedle
+`#004F2F` plochy, 2,48 odchylky v OKLabu), které vedle sebe vypadaly
+jako omyl. Jména zůstávají dvě, protože role jsou dvě — kdyby se někdy
+měnila barva textu kvůli kontrastu, nesmí se tím hnout s plochami.
+
+**Kde stupnice narazila na normu, vyhrála norma.** Krok 600 měl podle
+rovnoměrného dělení vyjít na L 0,540. V tu chvíli měl akcent na šedých
+plochách webu 4,28–4,40 : 1 — **pod** normou 4,5, a zkouška kontrastu
+to ohlásila na 37 prvcích. Krok je proto na 0,505 (5,0–5,6 : 1) a kroky
+600/700 jsou tím pádem blíž u sebe než zbytek. Je to záměr: z obou se
+píše text a tam nevelí estetika, ale čitelnost. Totéž dělá Radix —
+jeho kroky 11 a 12 jsou textové a leží blízko sebe.
+
+**Jedna hodina, dvě poučení navíc.**
+
+1. **Krok stupnice se do tokenu píše hodnotou, ne odkazem.** Zkusil
+   jsem `var(--z-700)` a shodilo to čtyři statické zkoušky naráz:
+   čtou stylopis jako text a odkaz na jiný token rozložit neumí.
+   Vazbu proto hlídá `test-tokeny`: každá značková zeleň se musí
+   rovnat svému kroku a všechny musí mít týž odstín (rozptyl do 2°).
+   Prokázáno sabotáží.
+2. **Komentář, který se nechtěně zavřel uprostřed.** Tabulku stupnice
+   jsem vložil za `*/`, takže se z ní stal text uvnitř `:root` —
+   a prohlížeč zahodil VŠECHNY deklarace za ní, tedy celou značkovou
+   rodinu. Na stránce to vypadalo nevinně (zelená zmizela jen tam, kde
+   se bere z tokenu), ale zkouška kontrastu si toho všimla: přeskakovací
+   odkaz měl najednou 1,05 : 1, protože jeho plocha `var(--znacka)`
+   přestala existovat. Z jednoho čísla v hlášení se dal najít rozbitý
+   komentář o 1 500 řádek jinde.
+
+**Zkoušky.** Rychlá sada 133/133 (`test-tokeny` nově 22).
+V prohlížeči `test-kontrast` (2 684 prvků, 0 vad), `test-barvy` (58),
+`test-okraje` (143), `test-vrstveni`, `test-uvod` (68),
+`test-prvni-obrazovka` (22), `test-menu` (32),
+`test-ovladani-vypisu` (63) a `test-soustava` (15) — bez chyby.

@@ -363,6 +363,15 @@ const STEJNA_BARVA = {
   '--text-ondeep': 'bílý TEXT na tmavém pásu; kdyby pás zesvětlal, mění se text, ne plocha',
   '--plocha-plovouci': 'plovoucí pruh (lepivá hlavička) — má svou tlumenou dvojici --plocha-plovouci-tlum',
   '--plocha-plovouci-plna': 'neprůhledná varianta pro dotyk; MUSÍ se rovnat <meta name="theme-color"> (dnes #FFFFFF), jinak je nahoře na telefonu vidět šev',
+  /* 31. 10.: obě jsou krok z-700 téže stupnice, a je to tak správně —
+     JEDNA značková zeleň pro text i pro plné plochy. Do té doby to byly
+     dvě barvy, které vypadaly stejně a stejné nebyly (#0F5C3B text vedle
+     #004F2F plochy, 2,48 odchylky v OKLabu); kdo je viděl vedle sebe,
+     nepoznal proč. Jména zůstávají dvě, protože role jsou dvě: kdyby se
+     někdy měnila barva TEXTU kvůli kontrastu, nesmí se tím hnout
+     s plochami, a naopak. */
+  '--znacka': 'barva značkového TEXTU a akcentů (krok z-700)',
+  '--plocha-znacka': 'táž zeleň jako PLNÁ PLOCHA pod bílým textem (týž krok z-700, jiná role)',
 };
 {
   const koren = /:root\s*\{([\s\S]*?)\n\}/.exec(STYL);
@@ -393,6 +402,56 @@ const STEJNA_BARVA = {
   const mrtveDuvody = Object.keys(STEJNA_BARVA).filter((k) => !tok[k]);
   pravda('a žádný vypsaný důvod není mrtvý (ten token existuje)',
     mrtveDuvody.length === 0, mrtveDuvody.join(', '));
+}
+
+/* --- ZNAČKOVÉ ZELENÉ JSOU KROKY JEDNÉ STUPNICE ---------------------
+   31. 10. („ta barva musí být dokonalá, najdi si nějakou paletu
+   a jak grafičtí designéři pracují s barvami") dostal web stupnici
+   postavenou v OKLabu: jeden odstín 161°, rovnoměrné kroky světlosti,
+   sytost po křivce. Celá tabulka i důvody jsou v css/styles.css nad
+   tokenem --znacka. Kroky se do tokenů píšou hodnotou (odkaz na jiný
+   token statické zkoušky neumí rozložit), takže vazbu musí hlídat
+   někdo jiný — tady. Bez toho by stačilo jedno „trochu to zesvětlím"
+   a ze stupnice je zase šest nepříbuzných zelených, což je přesně
+   stav, ze kterého se web dostával. */
+{
+  const STUPNICE = {
+    '--plocha-znacka-svetla': '#B4E5CA',  // z-200
+    '--znacka-na-tmave': '#88D0AB',       // z-300
+    '--znacka-svetla': '#097750',         // z-600
+    '--znacka': '#106A47',                // z-700 — značka
+    '--plocha-znacka': '#106A47',         // z-700 — táž barva, jiná role
+    '--znacka-hluboka': '#105338',        // z-800
+  };
+  const spatne = [];
+  for (const [k, cekam] of Object.entries(STUPNICE)) {
+    const m = new RegExp(k + '\\s*:\\s*([^;]+);').exec(STYL);
+    const je = (m ? m[1] : '').trim().toUpperCase();
+    if (je !== cekam.toUpperCase()) spatne.push(`${k} = ${je || '(není)'}, stupnice říká ${cekam}`);
+  }
+  pravda('značkové zelené jsou kroky stupnice (viz tabulka v stylopisu)',
+    spatne.length === 0, spatne.join(' | '));
+
+  /* A JEDEN ODSTÍN. Tohle je ta vlastnost, kvůli které se stupnice
+     stavěla: dřív měly zelené webu odstíny 158,2 · 158,9 · 159,1 ·
+     159,2 · 163,5 — rozdíly, které se jednotlivě neztratí, ale vedle
+     sebe dělají „skoro stejné, a přece ne". Mez 2° je těsná schválně:
+     krok stupnice se počítá, neodhaduje. */
+  const odstin = (hex) => {
+    const n = hex.replace('#', '');
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16) / 255)
+      .map((v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+    const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+    const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+    return ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360;
+  };
+  const odstiny = [...new Set(Object.values(STUPNICE))].map((h) => ({ h, o: odstin(h) }));
+  const rozptyl = Math.max(...odstiny.map((x) => x.o)) - Math.min(...odstiny.map((x) => x.o));
+  pravda('a všechny mají týž odstín (rozptyl do 2°)', rozptyl <= 2,
+    odstiny.map((x) => `${x.h} ${x.o.toFixed(1)}°`).join(', ') + ` — rozptyl ${rozptyl.toFixed(1)}°`);
 }
 
 /* --- ZNAČKA V OBRÁZKU SE MUSÍ SHODOVAT S TOKENEM -------------------
