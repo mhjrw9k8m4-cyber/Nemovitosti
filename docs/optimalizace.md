@@ -17442,3 +17442,59 @@ a počtem) už nemá co oddělovat a je smazaný.
 **Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-ovladani-vypisu`
 (71), `test-rozbalovac` (17), `test-uvod` (68), `test-soustava` (15)
 a `test-nastroje-v-dosahu` (15) — bez chyby.
+
+## §276 Jedna barva na celý web nestačí: teplý papír a druhá barva s prací
+
+**Zadání (31. 10.), se dvěma fotkami — výpisu a rozbalené nabídky:**
+„Už se mi líbí to poskládání, ale ne jak to vypadá: sprostě, jen ta
+jedna barva, úplně bez duše, nemá to co říct — a kazí ti to vizuál
+celého webu."
+
+**Co se naměřilo.** Nad výpisem stálo pět ovladačů a VŠECHNY značky
+v nich nesly tutéž zeleň `--znacka-svetla`; v šuplíku to bylo šest
+řádků a šest stejných zelených značek. Z barvy tedy nešlo poznat nic:
+„Hledat na mapě" vypadalo jako „Zprávy", „Procházet po jednom" jako
+„Stáhnout výběr". K tomu studená šedá plocha `#F2F4F3` — a web, který
+má mluvit o půdě, vypadal jako tabulka.
+
+**Dvě změny, obě v tokenech, takže platí na všech 2 461 stránkách.**
+
+1. **Teplý papír místo studené šedi.** `--bg` `#F2F4F3` → `#F4F0EA`,
+   `--plocha-vypis` → `#F6F2ED`, `--plocha-zapustena` → `#EFEBE5`,
+   `--plocha-tlumena` → `#F9F6F2`, `--muted` → `#615C56`. Všechno
+   spočítané v OKLCH na TÉŽE světlosti jako dosud (odstín 75°,
+   sytost 0,006–0,012), takže se nemění žebříček ploch ani kontrast —
+   jen teplota. Bílé karty se tím od plochy konečně oddělí.
+2. **Druhá barva, a má práci.** `--akcent-bronz:#7C5927` — táž
+   stupnice v OKLCH jako zeleň, jen odstín 73° a krok 600, tedy stejná
+   světlost jako `--znacka-svetla`. Pravidlo: **zeleň = nabídka,
+   značka a hlavní akce; bronz = moje nářadí** (uložené, stažení
+   výběru, řazení; v nabídce profil, inzeráty, zprávy, hlídání).
+   Kontrast na kartě 6,33 : 1, na ploše stránky 5,68 : 1 — unese
+   i text, natož značku.
+
+**Co se NEUDĚLALO, a proč.** Měkčí vlásečnice kolem políček by
+vypadaly jemněji, ale `--line-ui` je `rgba(text,0.55)` schválně:
+WCAG 1.4.11 žádá u hranice ovladače 3 : 1 a `scripts/test-okraje.mjs`
+to měří na 143 prvcích. Bílé políčko na skoro bílé ploše se bez
+obrysu od podkladu neodliší, takže tvrdý obrys zůstává.
+
+**A inkoust zůstal zelenočerný.** Nejdřív zteplal i on
+(`--text-rgb` 16,21,19 → 23,19,14) — a `test-odstiny` to hned
+zachytil: z téhož tokenu se počítají závoje nad fotkami karet
+a stíny, a ten hlídač správně žádá, aby téměř černé byly
+zelenočerné, ne cizí. Teplo tedy nese PAPÍR, ne inkoust. Tři
+samostatné stránky (404, přestupní, diagnostika) si tokeny opisují
+do vlastního stylu — `test-soustava` je našel a jsou srovnané.
+
+**Hlídač.** `test-ovladani-vypisu` (nově 75 kontrol) měří na dvou
+šířkách, že nářadí má bronzovou značku shodnou s tokenem a že hlavní
+akce i přepínač od bronzu zůstávají daleko (součet rozdílu složek
+aspoň 60) — dvě barvy, které se od sebe nedají rozeznat, jsou pořád
+jedna barva. Prokázáno sabotáží: vrácení nářadí na zeleň shodí dvě
+kontroly.
+
+**Zkoušky.** Rychlá sada 133/133; v prohlížeči `test-kontrast`
+(2 689 prvků, 0 pádů), `test-okraje` (143 prvků), `test-barvy` (58),
+`test-tokeny` (22), `test-soustava` (15), `test-uvod` (68),
+`test-deska` (5) a `test-ovladani-vypisu` (75) — bez chyby.

@@ -166,10 +166,10 @@
      kartě, tlumený 6,8 : 1, značková zeleň 7,6 : 1. Všechny stouply,
      protože nejvyšší plocha je nově čistá bílá.
      =================================================================== */
-  --bg:#F2F4F3;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
+  --bg:#F4F0EA;                 /* plocha stránky — jedna barva, ta, kterou přechod ukazoval nejvíc */
   /* Zapuštěná plocha: vstupy, pole, záložky, duchová tlačítka a plocha
      mapy pod dlaždicemi. Stejná rodina jako plocha, ne teplá. */
-  --plocha-zapustena:#EDEFEE;
+  --plocha-zapustena:#EFEBE5;
   /* ZVÝŠENÁ PLOCHA: karty a panely. Byla čistě bílá, a byla tím jediná
      v celé rodině ploch bez zeleně: --plocha-zapustena je #EEF6F1 a --plocha-tlumena
      #F5FAF7, obě zelenkavé. Přitom je ze všech největší — změřeno na
@@ -190,7 +190,7 @@
      Co se z téhle plochy vystěhovalo: vstupní pole, duchové tlačítko,
      záložka účtu a plocha mapy — ty jsou ovladač nebo zapuštěná plocha
      a mají --plocha-zapustena, jako zbytek svého druhu (viz §216). */
-  --plocha-tlumena:#F7F8F8;
+  --plocha-tlumena:#F9F6F2;
   /* Tmavý pás. Web byl celý světlý, takže neměl rytmus — jedna dlouhá
      plocha bez nádechu. Tmavá sekce je to, čím velké weby dělají předěl. */
   --plocha-tmava:#12241A;
@@ -212,7 +212,7 @@
      navíc tvrdilo opak toho, co ta barva je — #101513 je TMAVÝ text na
      SVĚTLOU plochu, ne text na tmavý podklad. (Text na tmavý pás má
      vlastní rodinu --text-ondeep a ta je v pořádku.) */
-  --muted:#585F5B;
+  --muted:#615C56;
   /* =================================================================
      ZNAČKOVÁ STUPNICE ZELENÉ (31. 10.)
      =================================================================
@@ -324,6 +324,21 @@
      --znacka-svetla 9,78 · --brand-live 10,22 · --znacka-hluboka 13,69.
      Nejbližší z nich je mimo pásmo, kde se barvy pletou. */
   --plocha-znacka-svetla:#B8E1CC;
+/* DRUHÁ BARVA: BRONZ NA NÁŘADÍ (31. 10.)
+   Majitel s fotkou výpisu a nabídky: „líbí se mi to poskládání, ale ne
+   jak to vypadá — sprostě, jen ta jedna barva, úplně bez duše, nemá to
+   co říct." Měl pravdu měřitelně: na úvodní stránce nesly VŠECHNY
+   značky jednu zeleň, takže se z ní nedalo nic vyčíst — hlavní akce,
+   nářadí i moje věci mluvily stejně.
+   Zeleň proto zůstává tomu, co je NABÍDKA a ZNAČKA (logo, hlavní akce,
+   přepínač, odznaky u ceny), a bronz dostává to, co je MOJE NÁŘADÍ:
+   uložené, stažení výběru, řazení, a v nabídce profil, inzeráty,
+   zprávy a hlídání. Není to ozdoba, je to druhý význam.
+   Odkud se vzala: táž stupnice v OKLCH jako zeleň (scripts/paletka.mjs,
+   `node scripts/paletka.mjs 73 0.072`), krok 600 — tedy stejná
+   světlost jako --znacka-svetla, jen o 90° jinde. Na bílé kartě má
+   6,33 : 1, na ploše stránky 5,68 : 1, takže unese i text. */
+  --akcent-bronz:#7C5927;
   /* ZÁSTUPNÝ TEXT V POLÍCH. Pět polí na webu ho mělo ve třech různých
      barvách: #74857A (formuláře), var(--muted) (pole polohy)
      a #8A93A3 v políčku hledání na mapě — a to je modrošedá, 218°, na
@@ -612,7 +627,7 @@
      jemně tónovaný podklad; karta pak je vidět jako karta, aniž by se
      musela obtáhnout tlustou linkou. Odstín je z téže rodiny jako
      zbytek webu (zelenošedá), ne neutrální šeď. */
-  --plocha-vypis:#F4F6F4;
+  --plocha-vypis:#F6F2ED;
   /* PLOVOUCÍ PANEL nad mapou a záhlaví. Psalo se to jako
      rgba(255,255,255,0.95) na deseti místech — a právě tahle bílá
      v tmavém režimu zůstala svítit uprostřed tmavé stránky, protože
@@ -1894,6 +1909,18 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
   border-radius:var(--r-md); box-shadow:var(--e3);}
 .nav-sk-panel a{padding:8px 8px; border-radius:var(--r-ovladani); white-space:nowrap;}
 .nav-sk-panel a:hover{background:var(--plocha-tlumena); color:var(--text);}
+/* MOJE VĚCI V NABÍDCE JSOU BRONZOVÉ, NABÍDKY ZELENÉ (§276).
+   V šuplíku na telefonu stálo šest řádků a všech šest mělo zelenou
+   značku — „Hledat na mapě" i „Zprávy" vypadaly jako totéž. Teď se
+   z barvy pozná, co je nabídka (mapa, ceny) a co je moje (profil,
+   inzeráty, zprávy, hlídání). */
+/* TŘI TŘÍDY SCHVÁLNĚ: barvu značek v šuplíku dává
+   `#nav a:not(.btn-primary) > .ik` o kus níž (blok pro telefon) a má
+   tutéž sílu jako selektor o dvě třídy — při remíze vyhrává to
+   pozdější, takže by tahle věta neplatila vůbec. Naměřeno: řádek
+   Zprávy zůstal zelený (23, 90, 64). */
+#nav .nav-sk-panel a:not(.btn-primary) > .ik, .hdr-ucet > .ik{color:var(--akcent-bronz);}
+:root.pk-prihlasen .hdr-ucet .ik{color:#fff;}
 /* Odznak s počtem visí u odkazu vpravo, ne hned za textem — v panelu pod
    sebou by jinak skákal podle délky slova. */
 .nav-sk-panel a{display:flex; align-items:center; gap:8px;}
@@ -2819,7 +2846,7 @@ h1 em{ color:var(--znacka-svetla);
    dostala společné pero (.ik), obtáhlo i ji — a protože je sázená na
    16 px, vyšla stopa 1,33 px místo 1,5 a zkouška test-tahy ji právem
    shodila. Vyplněná záložka žádný obrys mít nemá. */
-.msv-ulozene svg{flex:none; width:16px; height:16px; fill:var(--plocha-znacka); stroke:none;}
+.msv-ulozene svg{flex:none; width:16px; height:16px; fill:var(--akcent-bronz); stroke:none;}
 /* Zapnuté „Uložené" je zelené a značka v něm bílá — stav se pozná
    i podle ní, nejen podle plochy. */
 .msv-ulozene.on svg{fill:currentColor;}
@@ -3090,7 +3117,7 @@ h1 em{ color:var(--znacka-svetla);
   font:inherit; font-size:16px; font-weight:700; letter-spacing:-0.01em;
   -webkit-tap-highlight-color:transparent; transition:var(--prechod);}
 .ms-vysledky > .cdd > .cdd-btn:hover{border-color:var(--znacka); background:var(--plocha-tlumena);}
-.ms-vysledky > .cdd > .cdd-btn .mcn-ic{display:inline-flex; flex:none; color:var(--znacka-svetla);}
+.ms-vysledky > .cdd > .cdd-btn .mcn-ic{display:inline-flex; flex:none; color:var(--akcent-bronz);}
 .ms-vysledky > .cdd > .cdd-btn .mcn-ic .ik{width:18px; height:18px; stroke-width:2;}
 /* Obal rozbalovače je v hlavičce jen průchozí prvek: šířku si bere
    podle tlačítka, aby na širokém displeji stálo vedle počtu tak, jak
@@ -8546,6 +8573,11 @@ body > footer{flex:none;}
    (`.mc-prep.on`) se vynechává — to nese sytou značkovou plochu
    a druhý přeliv přes ni by ji jen zašpinil. */
 .ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn{background-color:var(--plocha-karta); background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 52%, rgba(var(--plocha-tmava-2-rgb),0.055)); box-shadow:var(--e1);}
+/* NÁŘADÍ MLUVÍ BRONZEM, HLAVNÍ AKCE ZELENÍ (§276). Viz --akcent-bronz
+   v tokenech: „Stáhnout výběr", „Zobrazit skryté" i „Dražby po termínu"
+   jsou nářadí k výpisu, ne nabídka. `:not(.mc-rychly)` schválně —
+   „Procházet po jednom" je hlavní akce a má bílou značku na zelené. */
+.ms-vysledky .mc-nastroj:not(.mc-rychly) .mcn-ic{color:var(--akcent-bronz);}
 .mc-rychly .mcn-ic{color:#fff;}
 .mc-rychly:hover{background-color:var(--znacka); border-color:transparent; color:#fff;
   box-shadow:var(--e2), var(--glow-lg);}

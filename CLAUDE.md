@@ -547,13 +547,19 @@ pismo:
   pozor:     "hodnota, která se nemá kde zlomit (číslo s jednotkou za nezlomitelnou mezerou), se zmenšuje podle NAMĚŘENÉ šířky, ne podle počtu znaků — při devíti znacích je „Podíl 1/2“ 105 px a „neuvedena“ 130,8 px. Dělá to pzVelikostHodnot v js/pozemek.js, hlídá scripts/test-parametry.mjs."
   hlida:     scripts/test-pismo.mjs, test-typografie.mjs, test-pisma.mjs
 barvy:
-  znacka:        "#004F2F"   # plná plocha hlavní akce
-  znacka-tmava:  "#0F5C3B"   # --znacka, text a linky
-  znacka-svetla: "#2B7652"   # --znacka-svetla (jen na bílém)
-  znacka-na-tmave: "#5CBC93" # --znacka-na-tmave, akcent na tmavé desce (7,01 : 1)
-  text:          "#101513"
-  plocha-stranky: "#F2F4F3"
-  plocha-zapustena: "#EDEFEE"
+  # Zeleně jsou kroky jedné stupnice v OKLCH (odstín 163°), viz
+  # scripts/paletka.mjs a hlídač scripts/test-tokeny.mjs.
+  znacka:        "#175A40"   # --znacka i --plocha-znacka: plocha hlavní akce, text, linky
+  znacka-svetla: "#247052"   # --znacka-svetla (jen na bílém)
+  znacka-na-tmave: "#8ECAAD" # --znacka-na-tmave, akcent na tmavé desce
+  # DRUHÁ BARVA (31. 10., §276). Zeleň = nabídka a hlavní akce,
+  # bronz = moje nářadí: uložené, stažení výběru, řazení, a v nabídce
+  # profil, inzeráty, zprávy, hlídání. Táž stupnice, odstín 73°, krok
+  # 600 — na bílé 6,33 : 1. Hlídá scripts/test-ovladani-vypisu.mjs.
+  akcent-bronz:  "#7C5927"
+  text:          "#101513"   # inkoust zůstává zelenočerný: závoje a stíny se z něj počítají
+  plocha-stranky: "#F4F0EA"  # teplý papír, ne studená šeď (§276)
+  plocha-zapustena: "#EFEBE5"
   panel:         "#ffffff"   # i --plocha-plovouci: plná, nikdy průsvitná
   linka:         "rgba(16,21,19,0.55)"
   druhy:
