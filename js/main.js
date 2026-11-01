@@ -1793,6 +1793,12 @@
        hledání, vysypalo by se na člověka devadesát šest karet něčeho
        jiného, než si právě napsal. */
     stranka = 0;   // jiný výběr = zpátky na první stranu
+    /* Křížek v poli se přepíná TADY, ne u psaní. Text se do pole
+       dostane šesti cestami (psaní, našeptávač, obnovený filtr po
+       návratu, adresa s ?q=, oprava překlepu, zrušení odznaku)
+       a každá z nich volá tuhle funkci. Kdyby se přepínal u psaní,
+       zůstal by po vybrání obce z našeptávače schovaný. */
+    prepniHledaniX();
   }
   var favOnly = false;
   var ukazSkryte = false;   // „Zobrazit skryté" — dočasně, neukládá se
@@ -7133,10 +7139,27 @@
         }
       } finally { ukazPodobne = false; }
     }
-    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
-      ikonaNastroje('podobne') +
-      (ukazPodobne ? 'Jen přesný název'
-                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
+    /* NÁPIS LEZL Z TLAČÍTKA VEN. Majitel poslal snímek z iPhonu po
+       hledání „Praha": „Zobrazit i podobné názvy (11" a konec za hranou
+       obrazovky. Naměřeno: políčko má na 390 px 173 px, nápis potřebuje
+       219 — tedy 46 px přes. Na 430 px 36 px přes, na 320 px nejvíc.
+       Je to táž vada, kterou už jednou dostaly dražby po termínu
+       i „Stáhnout výběr" — a tenhle ovladač u toho jen nebyl, protože
+       se ukazuje jen po hledání obce, které zkoušky nedělaly.
+       Léčí se stejným receptem: sloveso „Zobrazit i" pryč (číslo
+       v závorce říká, že se něco skrývá), doplněk do .mc-dl (mizí do
+       360 px) a počet do .mc-pocet (mizí do 480 px, protože jeho
+       šířku neurčuje sazba, ale DATA — v Praze je podobných 110,
+       jinde jedna). Celé znění drží aria-label. */
+    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne"'
+      + ' aria-label="' + (ukazPodobne ? 'Jen přesný název'
+          : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '">'
+      + ikonaNastroje('podobne')
+      + (ukazPodobne
+          ? '<span class="mc-popis">Jen přesný<span class="mc-dl"> název</span></span>'
+          : '<span class="mc-popis">Podobné<span class="mc-dl"> názvy</span>'
+            + '<span class="mc-pocet"> (' + podobnychStranou + ')</span></span>')
+      + '</button>';
     /* ČÍSLA SE PÍŠOU JEDNÍM ZPŮSOBEM. V hlavičce stránky stálo
        „1 996 pozemků", o kus níž „1996 na mapě" a v přepínači pohledů
        „Seznam (1996)" — tři různé zápisy téhož čísla na jedné obrazovce.
@@ -8759,11 +8782,41 @@
     nastavHledani(searchEl.value);
     renderList();
   });
+  /* KŘÍŽEK V POLI. Dosud se napsané hledání rušilo jedině tím, že
+     člověk smazal písmenko po písmenku: odznaky pod polem ruší jen to,
+     co web z věty rozpoznal jako FILTR, a samotný text pod ně nespadá.
+     Na „Praha" je to vidět nejlíp — výpis je zúžený, a není čím to
+     vzít zpátky.
+     Dělá TOTÉŽ co prázdné pole, ne víc: volá tytéž tři funkce jako
+     psaní. Kdyby si to dělal po svém, rozešly by se dvě cesty k témuž
+     stavu a jedna z nich by jednou zapomněla třeba na mistoFiltr.
+     ZAMĚŘENÍ SE VRACÍ DO POLE. Po klepnutí na tlačítko, které se hned
+     schová, by zaměření spadlo na <body> — a kdo píše na klávesnici,
+     by začínal od začátku stránky. */
+  function prepniHledaniX() {
+    /* Prvek se hledá při každém volání, ne jednou do proměnné:
+       nastavHledani() se volá i při obnově filtru, což je dřív, než se
+       tenhle kus souboru vykoná. Jedno getElementById za úhoz. */
+    var x = document.getElementById('map-search-x');
+    if (x) x.hidden = !String((searchEl && searchEl.value) || '').length;
+  }
+  var hledaniX = document.getElementById('map-search-x');
+  if (hledaniX) hledaniX.addEventListener('click', function () {
+    searchEl.value = '';
+    nastavHledani('');
+    ukazNavrhy();
+    renderList();
+    prepniHledaniX();
+    try { searchEl.focus(); } catch (e) {}
+  });
   searchEl.addEventListener('input', function () {
     nastavHledani(searchEl.value);
     ukazNavrhy();
     renderList();
   });
+  /* Po startu jednou: pole může být vyplněné z uloženého filtru nebo
+     z adresy ještě dřív, než se tenhle kus kódu vůbec vykoná. */
+  prepniHledaniX();
 
   if (sortEl) sortEl.addEventListener('change', function () {
     if (sortEl.value === 'near') {

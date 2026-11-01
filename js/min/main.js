@@ -1044,6 +1044,8 @@
     ukazPodobne = false;
 
     stranka = 0;
+
+    prepniHledaniX();
   }
   var favOnly = false;
   var ukazSkryte = false;
@@ -4324,10 +4326,16 @@
         }
       } finally { ukazPodobne = false; }
     }
-    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne">' +
-      ikonaNastroje('podobne') +
-      (ukazPodobne ? 'Jen přesný název'
-                   : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '</button>';
+
+    if (podobnychStranou || ukazPodobne) tlacitka += '<button type="button" class="mc-nastroj" id="mc-podobne"'
+      + ' aria-label="' + (ukazPodobne ? 'Jen přesný název'
+          : 'Zobrazit i podobné názvy (' + podobnychStranou + ')') + '">'
+      + ikonaNastroje('podobne')
+      + (ukazPodobne
+          ? '<span class="mc-popis">Jen přesný<span class="mc-dl"> název</span></span>'
+          : '<span class="mc-popis">Podobné<span class="mc-dl"> názvy</span>'
+            + '<span class="mc-pocet"> (' + podobnychStranou + ')</span></span>')
+      + '</button>';
 
     if (matched) tlacitka += '<button type="button" class="mc-nastroj" id="mc-vyvoz"'
       + ' aria-label="Stáhnout výběr (' + fmt(matched) + ')">'
@@ -5470,11 +5478,28 @@
     nastavHledani(searchEl.value);
     renderList();
   });
+
+  function prepniHledaniX() {
+
+    var x = document.getElementById('map-search-x');
+    if (x) x.hidden = !String((searchEl && searchEl.value) || '').length;
+  }
+  var hledaniX = document.getElementById('map-search-x');
+  if (hledaniX) hledaniX.addEventListener('click', function () {
+    searchEl.value = '';
+    nastavHledani('');
+    ukazNavrhy();
+    renderList();
+    prepniHledaniX();
+    try { searchEl.focus(); } catch (e) {}
+  });
   searchEl.addEventListener('input', function () {
     nastavHledani(searchEl.value);
     ukazNavrhy();
     renderList();
   });
+
+  prepniHledaniX();
 
   if (sortEl) sortEl.addEventListener('change', function () {
     if (sortEl.value === 'near') {

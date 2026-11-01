@@ -18838,3 +18838,86 @@ toho, co doopravdy ověřuje:
 * `test-smlouva` a `test-dotaz`: čekaný text je přesný naschvál (je to
   text smlouvy a text odznaku), takže se do něj nezlomitelná mezera
   dopsala, ne obešla.
+
+## §305 — Nápis lezl z tlačítka ven a hledání nešlo zrušit
+
+Dvě věci z jednoho snímku: majitel napsal do hledání „Praha" a poslal
+fotku, na které „Zobrazit i podobné názvy (11" mizí za pravou hranou
+obrazovky.
+
+### 1. Nápis přes rámeček
+
+NAMĚŘENO: políčko má na 390 px 173 px, nápis potřebuje 219 — tedy
+**46 px přes**. Na 430 px 36 px přes, na 320 px nejvíc.
+
+Je to **potřetí táž vada**: stejně dopadly „Dražby po termínu" (tam
+se zahodilo slovo „Zobrazit") i „Stáhnout výběr" (tam se zkrátil
+doplněk). Tenhle ovladač u obou oprav nebyl, protože se ukazuje JEN po
+hledání obce — a žádná zkouška obec nehledala, takže ho hlídač
+přetečení nikdy neviděl na stránce.
+
+OPRAVENO týmž receptem: „Zobrazit i" pryč, „ názvy" do `.mc-dl`,
+počet do `.mc-pocet`, celé znění do `aria-label`.
+
+A MEZE SE U TOHOHLE TLAČÍTKA PROHODILY, protože se prohodily role.
+U „Stáhnout výběr" je doplněk pevný a číslo kolísá s daty, takže mizí
+dřív číslo. Tady je informace naopak TO ČÍSLO („stranou zůstává 110
+nabídek") a slovo „názvy" nepřidá nic. Proto:
+
+| šířka | vidět | box | přetečení |
+|---|---|---|---|
+| 1280 px | Podobné názvy (110) | 173 px | 0 |
+| 480 px | Podobné (110) | 218 px | 0 |
+| 390 px | Podobné (110) | 173 px | 0 |
+| 361 px | Podobné (110) | 159 px | 0 |
+| 360 px | Podobné | 158 px | 0 |
+| 320 px | Podobné | 138 px | 0 |
+
+Měřeno i s nejhorším možným počtem (`1 930`, čtyřmístný): na 361 px
+pořád nula. Pod 361 px mizí i číslo — čtyřmístné se do 158 px nevejde.
+
+### 2. Hledání nešlo zrušit
+
+Napsané hledání se dosud rušilo **jedině mazáním písmenko po
+písmenku**. Odznaky pod polem ruší jen to, co web z věty rozpoznal jako
+FILTR; samotný text obce pod ně nespadá. Majitel: „rušení filtrů
+a vyhledávání by mělo být lepší a více odstupné."
+
+PŘIDÁNO: křížek v poli (44 × 44 px, kresba 18 px). Dělá TOTÉŽ co
+prázdné pole, ne víc — volá tytéž tři funkce jako psaní, aby se dvě
+cesty k témuž stavu nerozešly. Zaměření se vrací do pole, jinak by po
+klepnutí na tlačítko, které se hned schová, spadlo na `<body>`.
+
+Přepíná se v `nastavHledani()`, ne u psaní: text se do pole dostane
+šesti cestami (psaní, našeptávač, obnovený filtr, adresa s `?q=`,
+oprava překlepu, zrušení odznaku) a každá z nich volá tu funkci.
+
+VYCPÁVKA VPRAVO JEN KDYŽ JE KŘÍŽEK VIDĚT. Natvrdo by ukrojila 36 px
+z pole, kterému na 390 px zbývá 165 px vnitřku — a zástupný text
+„Obec, druh, cena…" měří 145 px, takže by se ořezával na prázdném poli,
+tedy přesně tam, kde je nejpotřebnější.
+
+### 3. Víc vzduchu kolem rušení
+
+Odznaky stály v řádku po 4 px a 4 px od pole, písmo 12 px, výška 30 px
+— nalepené na sobě i na hledání, a přitom jsou to jediná tlačítka,
+kterými se filtr ruší. Teď: mezera 8 px, odsazení 8 px, písmo 13 px,
+výška 32 px, mezera mezi textem a křížkem 8 px. Osmička je tatáž
+mezera, jakou mají mezi sebou ovladače nad výpisem.
+
+### Hlídač
+
+`scripts/test-ovladani-vypisu.mjs` (85 kontrol, bylo 75) nově na každé
+měřené šířce **napíše do hledání „Praha"** (největší počet podobných
+názvů v datech, tedy nejdelší možný nápis) a teprve pak měří: že se
+ovladač vůbec objevil, že žádný nápis neleze přes rámeček, že stránkou
+nejde pohnout do stran, a že je v poli křížek, který unese prst.
+Prokázáno sabotáží: vrácení dlouhého nápisu a schování křížku shodí
+čtyři kontroly (dvě na každé šířce).
+
+PŘI TOM CHYCENA VLASTNÍ CHYBA: klepnutí do pole hledání na telefonu
+rozbalí panel, což je o **118 px** vyšší stránka. První verze bloku po
+sobě neuklidila a následující kontrola „řazení se při otevření nehne"
+to pak naměřila jako skok o 118 px — padala na nepořádku, který po
+sobě nechala zkouška, ne na vadě webu. Blok teď vrací stránku do
+stavu, ve kterém ji našel, a sám si to ověřuje.

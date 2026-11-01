@@ -946,7 +946,7 @@
 /* IKONA V TLAČÍTKU A V ŘÁDKU TEXTU (§219). Velikost a k ní dopočítaná
    tloušťka (36/šířka), aby stopa vyšla na 1,5 px jako u všech ostatních
    ikon na webu — to hlídá scripts/test-tahy.mjs. */
-.btn-primary .ik{width:18px; height:18px; stroke-width:2; flex:none;}
+.btn-primary .ik, .ms-x .ik{width:18px; height:18px; stroke-width:2; flex:none;}
 .okr-place .ik, .st-zpet .ik, .uc-zpet-a .ik, .ext-ikona .ik,
 .rv-bilance .rvb-ano .ik, .rv-bilance .rvb-ne .ik,
 .os-ic .ik, .vm-x .ik, .loc-x .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
@@ -2401,6 +2401,26 @@ h1 em{ color:var(--znacka-svetla);
    která jmenuje v katastru („Dobšice u Znojma"). Ať si člověk vybere
    z nabídky místo hádání — i s tím, kolik tam čeho je. */
 .map-search{position:relative;}
+/* KŘÍŽEK V POLI HLEDÁNÍ. Napsané hledání se dosud rušilo jedině
+   ručním mazáním písmenek — pole nemělo čím se vyprázdnit a odznaky
+   pod ním ruší jen to, co web z věty rozpoznal jako FILTR, ne samotný
+   text. Majitel: „rušení filtrů a vyhledávání by mělo být lepší."
+   44 px plocha, jak chce dotyk, ale kresba 18 px, ať to vedle lupy
+   (15 px) nevypadá jako druhé stejně velké tlačítko.
+   VYCPÁVKA VPRAVO SE PŘIDÁVÁ JEN TEHDY, KDYŽ JE KŘÍŽEK VIDĚT.
+   Natvrdo by ukrojila 36 px z pole, kterému na 390 px zbývá 165 px
+   vnitřku — a zástupný text „Obec, druh, cena…" měří 145 px, takže by
+   se začal ořezávat na prázdném poli, tedy přesně tam, kde je
+   nejpotřebnější. Když je v poli text, zástupný text nikoho nezajímá. */
+.ms-x{position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0; border:0; background:transparent;
+  color:var(--muted); cursor:pointer; border-radius:var(--r-pill);
+  transition:var(--prechod);}
+.ms-x[hidden]{display:none;}
+.ms-x:hover{color:var(--text); background:var(--plocha-tlumena);}
+.ms-x:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:-2px;}
+.map-search:has(.ms-x:not([hidden])) input{padding-right:48px;}
 .ms-navrhy{position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:40; margin:0; padding:4px; list-style:none;
   background:var(--plocha-karta); border:1px solid var(--line-ui); border-radius:var(--r-plocha); box-shadow:var(--e3);
   max-height:min(46vh,320px); overflow-y:auto; overscroll-behavior:contain;}
@@ -2434,7 +2454,12 @@ h1 em{ color:var(--znacka-svetla);
    probíhalo potají: člověk napíše „stavební beroun do 1 mil" a najednou
    vidí devět nabídek místo dvou tisíc, aniž by tušil proč. Každý odznak
    proto říká, co se z věty vzalo — a klepnutím se to zase zruší. */
-.ms-chipy{display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;}
+/* VÍC VZDUCHU (1. 11.). Odznaky jsou jediná cesta, jak filtr zrušit,
+   a stály v řádku po 4 px s odsazením 4 px od pole — tedy nalepené na
+   sobě i na hledání. Majitel: „rušení filtrů a vyhledávání by mělo být
+   lepší a více odstupné." Osmička je tatáž mezera, jakou mají mezi
+   sebou ovladače nad výpisem, takže se řádek srovnal se sousedy. */
+.ms-chipy{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
 /* JEDNA BARVA PRO VŠECHNY ROZPOZNANÉ ODZNAKY.
    Byly tři: místo a druh zelené, cena a výměra hnědé (--accent-warm
    #8A5512), sítě světle zelené. Vypadalo to jako náhoda — a hůř:
@@ -2445,8 +2470,8 @@ h1 em{ color:var(--znacka-svetla);
    barva — barva by ho musela nejdřív někde vysvětlit, a nikde se
    nevysvětluje. Všechny odznaky říkají totéž: „tohle jsem si z vaší
    věty vzal", a mají proto jednu plochu. */
-.msch{display:inline-flex; align-items:center; gap:4px; font:inherit; font-size:12px; font-weight:600;
-  cursor:pointer; min-height:30px; padding:4px 8px 4px 8px; border-radius:var(--r-pill);
+.msch{display:inline-flex; align-items:center; gap:8px; font:inherit; font-size:13px; font-weight:600;
+  cursor:pointer; min-height:32px; padding:4px 8px 4px 12px; border-radius:var(--r-pill);
   border:1px solid transparent; background:var(--plocha-znacka); color:#fff;}
 .msch:hover{filter:brightness(1.08);}
 /* KŘÍŽEK BYL NEVIDITELNÝ — 0 × 0 px (29. 10.).
@@ -8016,6 +8041,23 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   @media (max-width:360px){
     .mc-dl{display:none;}
   }
+  /* A U „PODOBNÝCH NÁZVŮ" SE TY DVĚ MEZE PROHODÍ, protože se prohodily
+     role. U „Stáhnout výběr" je doplněk pevný a číslo kolísá s daty,
+     takže mizí dřív číslo. Tady je to naopak: informace JE to číslo
+     („stranou zůstává 110 nabídek"), kdežto slovo „názvy" k ničemu
+     nepřidá — „Podobné (110)" se pozná stejně dobře. Číslo tedy mizí
+     až úplně nakonec, a to jen proto, že se čtyřmístné („1 930")
+     do políčka 158 px nevejde ani bez něj. */
+  @media (max-width:480px){
+    #mc-podobne .mc-dl{display:none;}
+    /* A počet se musí VRÁTIT: obecné pravidlo o kus níž ho na téhle
+       šířce schovává všem, jenže tady je to ta informace, pro kterou
+       tlačítko existuje. */
+    #mc-podobne .mc-pocet{display:inline;}
+  }
+  @media (max-width:360px){
+    #mc-podobne .mc-pocet{display:none;}
+  }
   /* A POČET MIZÍ UŽ DŘÍV, protože jeho šířku neurčuje sazba, ale DATA.
      Na 390 px má políčko 173 px a „Stáhnout výběr (1 902)" potřebuje
      175 — v CI to padalo, lokálně o chlup procházelo, a s pětimístným
@@ -8025,6 +8067,8 @@ a[target="_blank"]:not(.okr-src):not(.btn-primary):not(.pz-btn):not(.no-ext)::af
   @media (max-width:480px){
     .mc-pocet{display:none;}
   }
+  /* Výjimka výš je silnější jen díky #id; kdyby se tahle dvojice
+     pravidel někdy slila do jednoho, pořadí v souboru rozhoduje. */
   /* TŘI NÁSTROJE SE DO DVOU SLOUPCŮ NEVEJDOU — a mřížka je pak zalomí
      pod sebe. NAMĚŘENO 20. 10. (den po dražbě, kdy k „Procházet po
      jednom" a „Stáhnout výběr" přibyde „Dražby po termínu"): pruh

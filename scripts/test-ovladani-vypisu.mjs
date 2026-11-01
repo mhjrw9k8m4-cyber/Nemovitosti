@@ -222,6 +222,69 @@ try {
     pravda(`${sirka} px: žádný nápis neleze přes rámeček`, vysyp.length === 0, vysyp.join('; '));
     pravda(`${sirka} px: a stránkou nejde pohnout do stran`, !v.pretek, 'obsah je širší než okno');
 
+    /* A TOTÉŽ PO HLEDÁNÍ OBCE — tam se objeví ovladač, který tahle
+       kontrola do 1. 11. nikdy neviděla.
+       Majitel poslal snímek z iPhonu po napsání „Praha": nápis
+       „Zobrazit i podobné názvy (11" a konec za hranou obrazovky.
+       Naměřeno 46 px přes rámeček na 390 px. Kontrola výš ho minula,
+       protože se #mc-podobne ukazuje JEN po hledání obce, a ta se tu
+       nedělala — ovladač prostě na stránce nebyl. Hledá se proto
+       „Praha": je to největší počet podobných názvů v datech (110,
+       tedy tříciferný), takže se měří nejdelší možný nápis. */
+    await p.fill('#map-search', 'Praha');
+    await p.waitForTimeout(1500);
+    const poHledani = await p.evaluate(() => {
+      const out = { chybi: [], vysyp: [], pretek: false, krizek: null };
+      ['#mc-podobne', '#map-fav', '#mc-rychly', '#mc-vyvoz'].forEach((sel) => {
+        const e = document.querySelector(sel);
+        if (!e) { out.chybi.push(sel); return; }
+        if (e.scrollWidth > e.clientWidth + 1) out.vysyp.push(sel + ': text ' + e.scrollWidth + ' px v ' + e.clientWidth + ' px');
+      });
+      out.pretek = document.documentElement.scrollWidth > document.documentElement.clientWidth + 1;
+      const x = document.getElementById('map-search-x');
+      if (x && !x.hidden) {
+        const r = x.getBoundingClientRect();
+        out.krizek = { w: Math.round(r.width), h: Math.round(r.height) };
+      }
+      return out;
+    });
+    /* Bez tohohle by kontrola níž mohla projít nad stránkou, na které
+       ten ovladač vůbec není — a hlásila by nula vysypaných nápisů. */
+    pravda(`${sirka} px: po hledání „Praha" se objeví i „Podobné názvy"`,
+      poHledani.chybi.indexOf('#mc-podobne') === -1, 'chybí: ' + poHledani.chybi.join(', '));
+    pravda(`${sirka} px: a ani po hledání nelze nápis přes rámeček`,
+      poHledani.vysyp.length === 0, poHledani.vysyp.join('; '));
+    pravda(`${sirka} px: a stránkou pořád nejde pohnout do stran`, !poHledani.pretek,
+      'obsah je po hledání širší než okno');
+    /* Křížek, kterým se hledání ruší. Bez něj se napsaný text mazal
+       písmenko po písmenku — odznaky pod polem ruší jen rozpoznané
+       FILTRY, ne samotný text. */
+    pravda(`${sirka} px: v poli hledání je křížek a unese prst (44 px)`,
+      !!poHledani.krizek && poHledani.krizek.w >= 44 && poHledani.krizek.h >= 44,
+      JSON.stringify(poHledani.krizek));
+    /* A UKLIDIT PO SOBĚ. Klepnutí do pole hledání na telefonu rozbalí
+       panel (body.hledani-rozbalene), což je o 118 px vyšší stránka —
+       a následující kontrola „řazení se při otevření nehne" to pak
+       měřila jako skok o 118 px, protože panel zavřelo až to klepnutí
+       na řazení. Vrací se proto všechno do stavu, ve kterém to tenhle
+       blok našel: prázdné pole, zavřený panel, zaměření pryč. */
+    await p.fill('#map-search', '');
+    await p.evaluate(() => {
+      const i = document.getElementById('map-search');
+      if (i && i.blur) i.blur();
+      document.body.classList.remove('hledani-rozbalene');
+      window.scrollTo(0, 0);
+    });
+    await p.waitForTimeout(1200);
+    const poUklidu = await p.evaluate(() => ({
+      rozbaleno: document.body.classList.contains('hledani-rozbalene'),
+      podobne: !!document.getElementById('mc-podobne'),
+      hodnota: (document.getElementById('map-search') || {}).value,
+    }));
+    pravda(`${sirka} px: a po vymazání je stránka zpátky v původním stavu`,
+      poUklidu.rozbaleno === false && poUklidu.podobne === false && !poUklidu.hodnota,
+      JSON.stringify(poUklidu));
+
     /* OKRAJ OD HRANY OBRAZOVKY. Vyfoceno 27. 10.: pruh s hledáním a
        přepínačem Seznam/Mapa stál 8 px od hrany, kdežto zbytek stránky
        dýchá 20 px (--okraj-stranky). Na fotce to vypadalo, jako by
