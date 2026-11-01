@@ -231,10 +231,33 @@
           '</svg>' +
           '<div class="gc-bublina" hidden></div>' +
         '</div>' +
+        /* NA INZERÁTU JE PRVNÍ VĚTA KRATŠÍ, A JE TO VÝMĚNA, NE ÚKLID.
+           Výhrada o malém vzorku (pod tím) tam dřív nebyla a přidat ji
+           stálo výšku: naměřeno na ostrých datech při 390 px, že karta
+           s výhradou kreslí 375–397 px proti rezervě 366 — a hlídač
+           posunu hlavní akce to správně shodil. Zvednout rezervu by
+           znamenalo až 460 px prázdna na úzkém telefonu, než se graf
+           dokreslí, a rozpočet stránky je napnutý už teď.
+           Místo toho jde pryč „; ty ve veřejných zdrojích nejsou" —
+           to je metodika, kdežto „na cenu okresu je to málo" je
+           tvrzení o TOMHLE grafu. Na okresní stránce, kde je graf
+           hlavní obsah, zůstává věta celá. */
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
-          esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          (strucne ? '' : maloVzorku(H, vyber.vzorek, vyber.uroven) +
-          'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
+          esc(kde) + (strucne ? ' — ne ceny, za které se prodaly. '
+            : ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ') +
+          /* VÝHRADA O MALÉM VZORKU PLATÍ I NA INZERÁTU. Stručný režim
+             zahazoval celý tenhle blok, a tím i jedinou větu, která se
+             tam zahodit nesměla. Naměřeno 1. 11. na ostrých datech:
+             graf má dnes KAŽDÁ z 1 910 nabídek, ale z vlastního okresu
+             jen 603 (32 %) — 1 041 z kraje a 266 z celé ČR — a vzorek
+             pod mezí (`dost`, dnes 25) má 830 nabídek, tedy 43 %. Na
+             těch 43 % stránek tedy čára vypadala stejně průkazně jako
+             kdekoli jinde a nic neřeklo, že stojí na deseti nabídkách.
+             Dlouhá metodika zůstává jen na okresní stránce (stála
+             ~250 px z karty), ale tahle věta je sedmdesát znaků a nese
+             význam, ne vysvětlení. */
+          maloVzorku(H, vyber.vzorek, vyber.uroven) +
+          (strucne ? '' : 'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
           /* PROČ SE ČÁRA NESHODUJE S MEDIÁNEM NAD GRAFEM. Nejsou to dvě
              verze téhož čísla — a od opravy úředně stanovených cen už
              to není ani rozdíl ve VÝPOČTU: obě strany počítají z téže

@@ -18372,3 +18372,56 @@ OBSAH JE V PORÁDKU a ověřený proti větvi na originu: dvě adresy
 obchodů a dva přepínače, nic jiného. Do webu nezasahuje — `.claude/`
 nečte ani nepřepisuje žádný generátor a rychlá sada po jeho přidání
 prošla celá.
+
+## §296 — Graf na inzerátu mlčel o malém vzorku. A výhrada se vešla výměnou, ne přirostla
+
+ODKUD TO VYPLYNULO. Z položky #160: „graf říká ‚v této lokalitě' jen
+u 13 % nabídek a u 30 % není vůbec". To znění už na webu není a chybějící
+grafy vyřešil §161. Měření ale našlo něco jiného a horšího.
+
+CO SE ZMĚŘILO (1. 11., ostrá data, 1 910 nabídek, modelem i v prohlížeči):
+
+| odkud graf na inzerátu bere čáru | nabídek | podíl |
+|----------------------------------|---------|-------|
+| z vlastního okresu | 603 | 32 % |
+| z kraje | 1 041 | 55 % |
+| z celé ČR | 266 | 14 % |
+| žádný graf | 0 | 0 % |
+
+Území se **pojmenuje poctivě** — popisek píše „v okrese Blansko",
+„ve Středočeském kraji", „v celé ČR", takže záloha se nevydává za
+okres. Vada byla jinde: **830 nabídek (43 %) stojí na vzorku pod mezí
+`dost` (25)** a stránka pozemku to NEŘEKLA. Značka `data-strucne`
+zahazovala celý blok poznámek, a v něm i jedinou větu, která se zahodit
+nesměla: „Na cenu celého okresu je to málo — berte to jako hrubé
+vodítko." Na 43 % inzerátů tedy čára vypadala stejně průkazně jako
+kdekoli jinde, i když stála na deseti nabídkách. Oko přitom čte TVAR
+čáry, ne poznámku — tedy méně doložené tvrzení působilo silněji.
+
+OPRAVA, KTERÁ NESTÁLA ANI PIXEL. Výhrada se teď vypisuje i ve stručném
+režimu. Hlídač posunu hlavní akce to okamžitě shodil, a měl pravdu:
+karta s výhradou kreslila při 390 px 375–397 px proti rezervě 366.
+Zvednout rezervu by znamenalo až 460 px prázdna na úzkém telefonu, než
+se graf dokreslí — a rozpočet stránky je napnutý už kvůli #150.
+
+Místo toho přišla VÝMĚNA: na inzerátu jde z první věty pryč
+„; ty ve veřejných zdrojích nejsou". To je metodika, kdežto „na cenu
+okresu je to málo" je tvrzení o TOMHLE grafu. Po výměně kreslí karta
+366 px, tedy přesně rezervu — žádný posun. Na okresní stránce, kde je
+graf hlavní obsah, zůstává věta celá.
+
+HLÍDAČE v `scripts/test-graf-cen.mjs` (65 kontrol, bylo 61): na
+SKUTEČNÉ stránce pozemku musí výhrada být, musí nést počet nabídek
+i území, u dostatečného vzorku být nesmí — a dlouhá metodika se tam
+vrátit nesmí. Ověřeno i tím, že bez opravy ty kontroly padnou.
+
+CO SE NEOPRAVILO A JE ZAPSANÉ JAKO #189. Rezerva karty nestačí i jinde,
+a je to starší vada než dnešní změna: nad 480 px je rezerva 304 a kreslí
+se 311–324; v pásu 410–479 je 324 a kreslí se až 375; při 320 px je 366
+a kreslí se až 433. Hlídač měří jen 390 px, kde to po zkrácení sedí
+přesně, takže zbytek nikdo nehlídá.
+
+DVAKRÁT JSEM SI TU ROZBIL ZKOUŠKU VLASTNÍ PŘEDLOŽKOU. Hledal jsem
+„v kraji", web píše „VE Středočeském kraji" a „NA Vysočině". Kontrola
+teď hledá podstatné jméno (okrese, kraji, Vysočin, celé ČR) a je u ní
+napsané proč.

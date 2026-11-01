@@ -338,7 +338,7 @@ async function otevri(okres, sirka) {
    a přitom nic nebrání tomu, aby se sešly po dalším obnovení dat. */
 {
   const puvodni = JSON.parse(JSON.stringify(H));
-  async function sVzorkem(kolik) {
+  async function sVzorkem(kolik, stranka) {
     const kopie = JSON.parse(JSON.stringify(puvodni));
     for (const k of Object.keys(kopie.rady)) {
       kopie.rady[k].vzorek = kopie.rady[k].vzorek.map((x) => (x === null ? null : kolik));
@@ -347,7 +347,7 @@ async function otevri(okres, sirka) {
     await p.setViewportSize({ width: 1100, height: 900 });
     await p.route('**/data/historie-cen.json*', (r) => r.fulfill({
       status: 200, contentType: 'application/json', body: JSON.stringify(kopie) }));
-    await p.goto(`${BASE}/pozemky-okres-${slug(sGrafem)}.html`, { waitUntil: 'load' });
+    await p.goto(`${BASE}/${stranka || ('pozemky-okres-' + slug(sGrafem) + '.html')}`, { waitUntil: 'load' });
     const misto = await p.$('[data-graf-cen]');
     if (misto) await misto.scrollIntoViewIfNeeded();
     await p.waitForTimeout(2500);
@@ -372,6 +372,39 @@ async function otevri(okres, sirka) {
   pravda('a počet nabídek se v poznámce opravdu mění (podstrčení zabralo)',
     !!male && !!velke && male !== velke,
     'poznámka je v obou případech stejná — podstrčený soubor se nepoužil');
+
+  /* A TOTÉŽ NA INZERÁTU, kde se člověk rozhoduje o konkrétním pozemku.
+     Tady výhrada CHYBĚLA: stránka pozemku si graf žádá se značkou
+     `data-strucne` a ta zahazovala celý blok s poznámkami — tedy i tu
+     jedinou větu, která se zahodit nesměla. Dlouhá metodika zůstává
+     jen na okresní stránce (stála ~250 px z karty), tahle věta má
+     sedmdesát znaků.
+     Naměřeno 1. 11. na ostrých datech: graf má dnes každá z 1 910
+     nabídek, ale z vlastního okresu jen 603 (32 %) — 1 041 z kraje
+     a 266 z celé ČR — a vzorek pod mezí má 830 nabídek, tedy 43 %.
+     Na těch 43 % stránek tedy čára vypadala stejně průkazně jako
+     kdekoli jinde a nic neřeklo, že stojí na deseti nabídkách. */
+  const nejakyPozemek = readdirSync(KOREN)
+    .filter((f) => /^pozemek-.*[.]html$/.test(f)).sort()[0];
+  const inzMale = await sVzorkem(Math.max(1, dost - 10), nejakyPozemek);
+  pravda(`i na inzerátu graf výhradu napíše (${nejakyPozemek})`,
+    !!inzMale && /je to málo/.test(inzMale) && /hrubé vodítko/.test(inzMale),
+    'stručný režim ji zahazoval: ' + String(inzMale).slice(0, 220));
+  pravda('a nese počet nabídek i území, ze kterého čára je',
+    !!inzMale && /z \d+ nabídek/.test(inzMale)
+      /* Území se hledá podle PODSTATNÉHO JMÉNA, ne podle předložky:
+         kdeText píše „v okrese Tábor", ale „VE Středočeském kraji"
+         a „NA Vysočině". Dvakrát jsem si tu rozbil zkoušku vlastní
+         předložkou, tak ať je to napsané. */
+      && /(okrese |kraji|Vysočin|celé ČR)/.test(inzMale),
+    String(inzMale).slice(0, 220));
+  const inzVelke = await sVzorkem(dost + 40, nejakyPozemek);
+  pravda('a u dostatečného vzorku ji na inzerátu nepíše',
+    !!inzVelke && !/je to málo/.test(inzVelke), String(inzVelke).slice(0, 220));
+  /* Dlouhá metodika se na inzerát vrátit NESMÍ — kvůli ní stručný
+     režim vznikl. */
+  pravda('ale dlouhá metodika na inzerátu nezůstává',
+    !!inzMale && !/Hladina se mění/.test(inzMale), String(inzMale).slice(0, 220));
 }
 
 /* ---- CELOSTÁTNÍ GRAF NA STRÁNCE „CENY POZEMKŮ" -------------------

@@ -133,10 +133,13 @@
           '</svg>' +
           '<div class="gc-bublina" hidden></div>' +
         '</div>' +
+
         '<p class="gc-pozn">Medián <b>nabídkové</b> ceny z <b>' + vyber.vzorek + '</b> nabídek ' +
-          esc(kde) + ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ' +
-          (strucne ? '' : maloVzorku(H, vyber.vzorek, vyber.uroven) +
-          'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
+          esc(kde) + (strucne ? ' — ne ceny, za které se prodaly. '
+            : ' — ne ceny, za které se pozemky prodaly; ty ve veřejných zdrojích nejsou. ') +
+
+          maloVzorku(H, vyber.vzorek, vyber.uroven) +
+          (strucne ? '' : 'Hladina se mění i tím, že nabídky přibývají a mizí. ') +
 
           (strucne ? '' : 'Nad grafem stojí medián za celou skupinu druhů, kdežto čára je ' +
           'za ten jeden druh, který je v nadpisu — proto se čísla nerovnají. ') +
