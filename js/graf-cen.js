@@ -182,9 +182,9 @@
        jich na telefon nejde čitelně dát, míň už neříká, jak je řada
        dlouhá. Krajní dva se zarovnávají dovnitř, aby je neuřízl okraj. */
     var osaY = '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (P + 4) + '" text-anchor="end">'
-        + cislo(nahoru) + ' Kč/m²</text>'
+        + cislo(nahoru) + '\u00a0Kč/m²</text>'
       + '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (Hh - D + 4) + '" text-anchor="end">'
-        + cislo(dolu) + ' Kč/m²</text>';
+        + cislo(dolu) + '\u00a0Kč/m²</text>';
     /* Dvě vodicí linky u mezí osy. Mřížka to není — dvě čáry jen říkají,
        kde ta dvě čísla vlevo platí. */
     var linky = '<line class="gc-vodici" x1="' + L + '" y1="' + P + '" x2="' + (W - P) + '" y2="' + P + '"></line>'
@@ -219,7 +219,7 @@
           /* ŽÁDNÉ preserveAspectRatio="none": při natažení na šířku okna by
                se z koleček odečtu staly elipsy. */
             '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" ' +
-            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + ' Kč za metr čtvereční') + '">' +
+            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + '\u00a0Kč za metr čtvereční') + '">' +
             /* ŽÁDNÁ VÝPLŇ POD ČAROU. Plocha se čte jako velikost měřená
                od nuly — jenže osa tady od nuly nezačíná, takže by ta
                plocha ukazovala množství, které graf vůbec neměří. Čára

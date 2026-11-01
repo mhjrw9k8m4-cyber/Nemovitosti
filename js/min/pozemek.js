@@ -213,9 +213,9 @@
       if (k) zmen++;
       radky.push('<li class="pz-hist-radek' + (i === h.length - 1 ? ' ted' : '') + '">'
         + '<span class="pz-hist-den">' + esc(Z.lidsky(den)) + '</span>'
-        + '<b class="pz-hist-cena">' + fmt(c) + ' Kč</b>'
+        + '<b class="pz-hist-cena">' + fmt(c) + '\u00a0Kč</b>'
         + (k ? '<span class="pz-hist-zmena ' + (k.podezrela ? 'overit' : (k.dolu ? 'dolu' : 'nahoru'))
-          + '">' + (k.podezrela ? '' : (k.dolu ? '−' : '+')) + k.procent + ' %</span>' : '')
+          + '">' + (k.podezrela ? '' : (k.dolu ? '−' : '+')) + k.procent + '\u00a0%</span>' : '')
         + '</li>');
     }
 
@@ -284,11 +284,11 @@
     try { s = JSON.parse(el.textContent || 'null'); } catch (e) { return ''; }
     if (!s || typeof s.v !== 'string' || !s.r || !s.r.length) return '';
     var radky = s.r.map(function (x) {
-      var cena = '<b class="srv-c">' + fmt(x.m) + ' Kč/m²</b>';
+      var cena = '<b class="srv-c">' + fmt(x.m) + '\u00a0Kč/m²</b>';
       var kde = x.ja
         ? '<span class="srv-kde">tenhle pozemek</span>'
         : '<a class="srv-kde" href="' + esc(x.s) + '">' + esc(x.o) + '</a>';
-      var detail = fmt(x.vym) + ' m²' + (x.km ? ' · ' + x.km + '\u00a0km' : '');
+      var detail = fmt(x.vym) + '\u00a0m²' + (x.km ? ' · ' + x.km + '\u00a0km' : '');
       return '<li class="srv-radek' + (x.ja ? ' srv-ja' : '') + '">'
         + kde + cena + '<span class="srv-detail">' + detail + '</span></li>';
     }).join('');
@@ -438,14 +438,14 @@
 
     var stupen = cenovyStupen(d, pc);
     cls = stupen.cls; badge = stupen.badge;
-    if (pct <= 35) { text = 'Levnější než <b>' + pc.cheaper + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
-    else if (pct >= 65) { text = 'Dražší než <b>' + pct + ' %</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    if (pct <= 35) { text = 'Levnější než <b>' + pc.cheaper + '\u00a0%</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
+    else if (pct >= 65) { text = 'Dražší než <b>' + pct + '\u00a0%</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
     else { text = 'Cena za m² je zhruba <b>uprostřed</b> pozemků téhož druhu ' + typeWord + kdeTxt + zKolika + '.'; }
 
     var mezPriznat = (window.PK_CENY && window.PK_CENY.MEZ_PRIZNAT_INZERENTA) || 0.5;
     var odJednoho = (pc.podilInz > mezPriznat)
       ? '<div class="pv-pozn">Z toho <b>' + Math.round(pc.podilInz * 100)
-        + ' %</b> nabídek je od jednoho inzerenta — spíš jeho cenník než celý trh.</div>'
+        + '\u00a0%</b> nabídek je od jednoho inzerenta — spíš jeho cenník než celý trh.</div>'
       : '';
     return '<div class="pz-verdict ' + cls + '">' +
       '<div class="pv-top"><span class="pv-badge">' + badge + '</span><span class="pv-cmp">Cena za m²</span></div>' +
@@ -1158,7 +1158,7 @@
 
     var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
       ? global.PK_CENY.zaMetrKratce(d) : '';
-    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + ' Kč/m²', ikona: 'cena',
+    if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + '\u00a0Kč/m²', ikona: 'cena',
       pozn: perM2Kratce || perM2Pozn || '' });
 
     klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });

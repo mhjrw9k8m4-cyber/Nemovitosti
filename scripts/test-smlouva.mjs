@@ -122,7 +122,7 @@ je('nejmenší úplné označení',
 je('úplné označení',
   S.oznaceniPozemku({ parcela: '123/4', druh: 'orná půda', vymera: '1250',
     katastr: 'Bystřice', kodKatastru: '616453', obec: 'Bystřice', lv: '1234' }),
-  'pozemek parc. č. 123/4, (orná půda), o výměře 1 250 m², '
+  'pozemek parc. č. 123/4, (orná půda), o výměře 1 250 m², '
   + 'v katastrálním území Bystřice (kód 616453), obec Bystřice, '
   + 'zapsaný na listu vlastnictví č. 1234');
 
@@ -251,7 +251,7 @@ if (f) {
   const m = new Map(f.map((x) => [x.kolonka, x.hodnota]));
   pravda('je v něm katastrální území', (m.get('Katastrální území') || '').includes('Bystřice'));
   pravda('je v něm parcela', (m.get('Parcela') || '').includes('123/4'));
-  pravda('je v něm výměra', (m.get('Parcela') || '').includes('1 250 m²'));
+  pravda('je v něm výměra', (m.get('Parcela') || '').includes('1 250 m²'));
   pravda('převodce i nabyvatel',
     f.some((x) => /převodce/.test(x.kolonka) && x.hodnota.includes('Jan Novák'))
     && f.some((x) => /nabyvatel/.test(x.kolonka) && x.hodnota.includes('Eva Dvořáková')));

@@ -267,7 +267,10 @@ for (const f of ['../js/main.js', '../js/pozemek.js']) {
      a hned „50 Kč/m² proti obvyklým 42 Kč/m²", tedy nad. Ať se větve
      rádce přeuspořádají jakkoli, tohle se stát nesmí. */
   {
-    const PROC = /<b>o (\d+) % (pod|nad)<\/b>/;
+    /* [\s\u00a0], ne obyčejná mezera: jednotka se od 1. 11. sází
+       nezlomitelnou (viz test-sazba, blok o skládání v prohlížeči),
+       a KORUNY o pár řádků níž to tak měly odjakživa. */
+    const PROC = /<b>o (\d+)[\s\u00a0]% (pod|nad)<\/b>/;
     /* Mezera před jednotkou je od zavedení české sazby nezlomitelná
        (scripts/sazba.mjs), ale vzor musí snést obojí — jinak by kontrola
        po změně formátu tiše přestala cokoli nacházet. */
@@ -372,7 +375,7 @@ console.log('\nRádce u pozemku — rady podle skutečných údajů');
   pravda('ani na stavebním pozemku', !radek(velkeStavebni), 'řádek vznikl');
 
   const t = radek(velkeOrna) ? radek(velkeOrna).txt : '';
-  pravda('je v tom výměra TOHO pozemku', /7,26 ha/.test(t), t.slice(0, 120));
+  pravda('je v tom výměra TOHO pozemku', /7,26[\s\u00a0]ha/.test(t), t.slice(0, 120));
   pravda('jmenuje všechny tři rozhodující věci', /územní plán/.test(t) && /třídu ochrany/.test(t)
     && /kapacita pro připojení/.test(t), t.replace(/<[^>]+>/g, '').slice(0, 200));
   /* Tohle je ta hlavní: žádný výnos, žádné kWh, žádné „vydělá". */

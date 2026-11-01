@@ -34,7 +34,7 @@
     }
     if (zapnuto('nak-realitka')) {
       var pct = cislo('nak-provize-pct');
-      polozky.push({ k: 'Provize realitní kanceláři', v: cena * pct / 100, pozn: pct + ' % z kupní ceny' });
+      polozky.push({ k: 'Provize realitní kanceláři', v: cena * pct / 100, pozn: pct + '\u00a0% z kupní ceny' });
     }
     if (zapnuto('nak-geoplan')) {
       polozky.push({ k: 'Geometrický plán', v: cislo('nak-geoplan-kc'), pozn: 'když se pozemek dělí nebo zaměřuje' });

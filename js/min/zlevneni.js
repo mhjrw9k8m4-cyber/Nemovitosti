@@ -37,9 +37,9 @@
 
   function text(z) {
     if (!z) return '';
-    if (z.podezrela) return 'Cena se změnila o ' + z.procent + ' % — ověřit';
+    if (z.podezrela) return 'Cena se změnila o ' + z.procent + '\u00a0% — ověřit';
 
-    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + ' %';
+    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + '\u00a0%';
 
     return (z.dolu ? 'Zlevněno o\u00a0' : 'Zdraženo o\u00a0') + z.procent + '\u00a0%';
   }
@@ -47,7 +47,7 @@
   function popis(z, fmt) {
     if (!z) return '';
     var f = fmt || function (n) { return String(n); };
-    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + ' Kč'
+    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + '\u00a0Kč'
       + (z.kdy ? ', změněno ' + lidsky(z.kdy) : '') + '.'
       + (z.podezrela ? ' Takový skok u pozemku bývá chyba zdroje — ověřte cenu v inzerátu.' : '')
       + (!z.podezrela && jeDrazba(z) && z.dolu

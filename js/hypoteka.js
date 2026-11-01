@@ -58,9 +58,9 @@
 
     var radky =
       '<tr><th scope="row">Vlastní peníze<span>akontace</span></th><td>' + fmt(vlastni) + ' Kč</td></tr>' +
-      '<tr><th scope="row">Půjčíte si<span>' + (ltv ? ltv.toFixed(0) + ' % z ceny (LTV)' : '') + '</span></th><td>' + fmt(pujcka) + ' Kč</td></tr>' +
+      '<tr><th scope="row">Půjčíte si<span>' + (ltv ? ltv.toFixed(0) + '\u00a0% z ceny (LTV)' : '') + '</span></th><td>' + fmt(pujcka) + ' Kč</td></tr>' +
       (pujcka && roky
-        ? '<tr class="hypo-mes"><th scope="row">Měsíční splátka<span>' + (urok ? urok + ' % p. a., ' + roky + ' let' : roky + ' let bez úroku') + '</span></th><td>' + fmt(mes) + ' Kč</td></tr>'
+        ? '<tr class="hypo-mes"><th scope="row">Měsíční splátka<span>' + (urok ? urok + '\u00a0% p. a., ' + roky + ' let' : roky + ' let bez úroku') + '</span></th><td>' + fmt(mes) + ' Kč</td></tr>'
           + '<tr><th scope="row">Zaplatíte navíc na úrocích<span>za celou dobu</span></th><td>' + fmt(preplatek) + ' Kč</td></tr>'
         : '');
 

@@ -167,7 +167,7 @@
     var d = ['pozemek parc. č. ' + parc];
     if (p.druh) d.push('(' + String(p.druh).trim() + ')');
     var v = cislo(p.vymera);
-    if (v) d.push('o výměře ' + mezery(v) + ' m²');
+    if (v) d.push('o výměře ' + mezery(v) + '\u00a0m²');
     d.push('v katastrálním území ' + ku);
     if (p.kodKatastru) d[d.length - 1] += ' (kód ' + String(p.kodKatastru).trim() + ')';
     if (p.obec) d.push('obec ' + String(p.obec).trim());
@@ -358,7 +358,7 @@
     r.push({ kolonka: 'Katastrální pracoviště', hodnota: p.pracoviste ? String(p.pracoviste).trim() : '— doplňte podle polohy pozemku' });
     r.push({ kolonka: 'Obec', hodnota: p.obec ? String(p.obec).trim() : '—' });
     r.push({ kolonka: 'Katastrální území', hodnota: String(p.katastr).trim() + (p.kodKatastru ? ' (kód ' + String(p.kodKatastru).trim() + ')' : '') });
-    r.push({ kolonka: 'Parcela', hodnota: 'parc. č. ' + String(p.parcela).trim() + (cislo(p.vymera) ? ', výměra ' + mezery(cislo(p.vymera)) + ' m²' : '') });
+    r.push({ kolonka: 'Parcela', hodnota: 'parc. č. ' + String(p.parcela).trim() + (cislo(p.vymera) ? ', výměra ' + mezery(cislo(p.vymera)) + '\u00a0m²' : '') });
     if (p.lv) r.push({ kolonka: 'List vlastnictví', hodnota: 'č. ' + String(p.lv).trim() });
     if (String(p.podil || '').trim()) r.push({ kolonka: 'Převáděný podíl', hodnota: String(p.podil).trim() });
     (d.prodavajici || []).forEach(function (o, i) {

@@ -138,6 +138,48 @@ pravda('a za § ani za zkratkou čísla nestojí obyčejná mezera',
   paragrafSpatne.length === 0 && cisloSpatne.length === 0,
   [...paragrafSpatne.slice(0, 3), ...cisloSpatne.slice(0, 3)].join('\n      '));
 
+/* ---- JEDNOTKA SKLÁDANÁ AŽ V PROHLÍŽEČI -----------------------------
+   Krok sazby v oprav.mjs jede přes HOTOVÉ HTML, takže vidí jen text,
+   který na stránce stojí napsaný. Text, který vzniká až v prohlížeči
+   (`fmt(d.price) + ' Kč'`), mu projde pod rukama — a přesně tak se na
+   web vrátilo 45 míst, kde se číslo může odlomit od jednotky: ceny
+   v grafu, procenta v rádci, hektary, „39 km" na kartě. Nejde o teorii,
+   na úzkém telefonu se to láme doopravdy.
+   Hlídá se ZDROJ, ne výstup: v prohlížeči by se to muselo nejdřív
+   vykreslit, a kontrola by platila jen pro ty stavy, které zkouška
+   náhodou navštíví. Ve zdroji je to jedno hledání přes všechny soubory.
+
+   VYVOZ.JS JE VÝJIMKA S DŮVODEM, ne zapomenuté místo. Skládá CSV a GPX
+   ke stažení — tedy text pro jiný program (Excel, navigace), ne pro
+   oko. Nezlomitelná mezera tam nepatří: v CSV se protáhne do buňky,
+   kde ji pak nikdo nevyhledá, a v názvu bodu v GPX ji starší navigace
+   vykreslí jako otazník. `smlouva.js` naopak výjimka NENÍ, i když taky
+   skládá soubor: je to text smlouvy pro člověka a čísla v něm už
+   nezlomitelnou mezeru po tisících mají (viz mezery() tamtéž), takže
+   obyčejná mezera před „m²" by byla nedůslednost uvnitř jedné věty. */
+const JS_VYJIMKY = new Set(['vyvoz.js']);
+const JEDNOTKA_PO_HODNOTE = /(?:\+\s*['"`]|\})\u0020(Kč|m²|m|ha|km|%|×)(?![\wÁ-Žá-ž²])/g;
+{
+  const sazena = [];
+  let sKontrolou = 0;
+  for (const f of readdirSync(path.join(ROOT, 'js')).filter((x) => x.endsWith('.js')).sort()) {
+    const t = readFileSync(path.join(ROOT, 'js', f), 'utf8');
+    sKontrolou += (t.match(/\\u00a0(Kč|m²|m|ha|km|%|×)/g) || []).length;
+    if (JS_VYJIMKY.has(f)) continue;
+    for (const m of t.matchAll(JEDNOTKA_PO_HODNOTE)) {
+      const radek = t.slice(0, m.index).split('\n').length;
+      sazena.push(`js/${f}:${radek}: …${t.slice(Math.max(0, m.index - 42), m.index + m[0].length).replace(/\s+/g, ' ').trim()}…`);
+    }
+  }
+  /* Bez téhle kontroly by stačilo smazat regulární výraz výš a zkouška
+     by mlčela jako hrob: nula nálezů vypadá stejně jako nula vad. */
+  pravda(`a nezlomitelných mezer před jednotkou je v js/ z čeho brát (${sKontrolou})`,
+    sKontrolou >= 30, `nalezeno jen ${sKontrolou} — hledání je rozbité`);
+  pravda('žádná jednotka skládaná v prohlížeči nestojí za obyčejnou mezerou',
+    sazena.length === 0,
+    sazena.slice(0, 8).join('\n      ') + (sazena.length > 8 ? `\n      … a dalších ${sazena.length - 8}` : ''));
+}
+
 console.log('\nSazba — zlom řádku na špatném místě a uvozovky');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

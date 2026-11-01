@@ -94,9 +94,9 @@
     }).join('');
 
     var osaY = '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (P + 4) + '" text-anchor="end">'
-        + cislo(nahoru) + ' Kč/m²</text>'
+        + cislo(nahoru) + '\u00a0Kč/m²</text>'
       + '<text class="gc-popisek" x="' + (L - 8) + '" y="' + (Hh - D + 4) + '" text-anchor="end">'
-        + cislo(dolu) + ' Kč/m²</text>';
+        + cislo(dolu) + '\u00a0Kč/m²</text>';
 
     var linky = '<line class="gc-vodici" x1="' + L + '" y1="' + P + '" x2="' + (W - P) + '" y2="' + P + '"></line>'
       + '<line class="gc-vodici" x1="' + L + '" y1="' + (Hh - D) + '" x2="' + (W - P) + '" y2="' + (Hh - D) + '"></line>';
@@ -124,7 +124,7 @@
         '<div class="gc-plocha">' +
 
             '<svg viewBox="0 0 ' + W + ' ' + Hh + '" role="img" ' +
-            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + ' Kč za metr čtvereční') + '">' +
+            'aria-label="' + esc(nadpis + ': od ' + cislo(prvni.cena) + ' do ' + cislo(posledni.cena) + '\u00a0Kč za metr čtvereční') + '">' +
 
             linky + osaY + osaX +
             '<path class="gc-cara" d="' + d + '"></path>' +

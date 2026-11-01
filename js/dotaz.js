@@ -458,7 +458,7 @@
       /* Bez jednotky si ji web domyslel, takže ji k odznaku dopíše;
          jinak se vezme přesně ten úsek věty, který odznak zabral. */
       zaber(i, delka, { druh: kde, smer: smer, hodnota: hodnota,
-        popis: delka === 2 && !delkaJedZapsana ? usek(i, 2) + ' Kč' : usek(i, delka) });
+        popis: delka === 2 && !delkaJedZapsana ? usek(i, 2) + '\u00a0Kč' : usek(i, delka) });
     }
 
     /* --- 1b) Číslo s jednotkou BEZ „do" a „nad" ------------------------

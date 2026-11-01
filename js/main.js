@@ -6747,13 +6747,13 @@
          nabídky zelený odznak se slevou a sedávaly úplně nahoře. */
       if (_od && _od.podleVelikosti && _od.pochybna) {
         chips.push('<span class="opp-overit" title="Cena je o ' + _od.podOdhadem +
-          ' % pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
+          '\u00a0% pod obvyklou cenou podobných pozemků — to už nebývá sleva, ale spoluvlastnický podíl, jiná výměra v dražbě nebo chyba v inzerátu. Ověřte si podklady.">' +
           'ověřit cenu</span>');
       } else if (_od && _od.podleVelikosti && _od.nejisty && _od.podOdhadem >= 25 && !_od.podil) {
         /* Odhad, kterému sami nevěříme (ceny srovnávaných pozemků se liší
            násobky). Zelený odznak by tvrdil jistotu, kterou nemáme. */
         chips.push('<span class="opp-overit" title="Cena vychází o ' + _od.podOdhadem +
-          ' % pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
+          '\u00a0% pod obvyklou, jenže ceny podobných pozemků v okolí se mezi sebou liší násobky — odhad je proto jen hrubý. Ověřte si podklady.">' +
           'cena k ověření</span>');
       } else if (_od && _od.podleVelikosti && _od.podOdhadem >= 25 && !_od.podil) {
         /* U známého podílu se o slevě nemluví: cena za metr je nízká
@@ -6770,7 +6770,7 @@
         srovnaniModel = { uroven: _od.uroven, kde: _od.kde };
         kdeKarty = kdeSrovnani(_od);
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="Cena je o ' + _od.podOdhadem +
-          ' % pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + ' % proti okolí</span>');
+          '\u00a0% pod obvyklou cenou podobných pozemků ' + esc(kdeKarty || 'v okolí') + '">−' + _od.podOdhadem + '\u00a0% proti okolí</span>');
       } else if (perM2 && dealMax && perM2 <= dealMax && !varujemeOCene && !_uredni) {
         /* `!_uredni`: u státní půdy podle § 12 je cena za metr nejnižší
            na webu z podstaty věci, takže by tahle větev („patří k těm
@@ -6821,9 +6821,9 @@
           ? ' ' + window.PK_CENY.skupinaText(d.type) : '';
         chips.push('<span class="opp-deal" data-kde="' + esc(kdeKarty) + '" title="' +
           (_di && _di.cheaper >= 70
-            ? 'Levnější než ' + _di.cheaper + ' % pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
+            ? 'Levnější než ' + _di.cheaper + '\u00a0% pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí') + _zKolika
             : 'Cena za m² patří k nejnižším u pozemků téhož druhu' + _skup + ' ' + esc(kdeKarty || 'v okolí')) + '">' +
-          (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + ' %' : 'výhodná cena') + '</span>');
+          (_di && _di.cheaper >= 70 ? 'levnější než ' + _di.cheaper + '\u00a0%' : 'výhodná cena') + '</span>');
       }
       /* Podíl patří na kartu, ne až do detailu. Bez něj vypadá cena za
          metr jako trhák — přitom se kupuje zlomek pozemku, ne pozemek.
@@ -7768,13 +7768,13 @@
         + '<span class="rv-razitko ano" aria-hidden="true">Uloženo</span>'
         + '<span class="rv-razitko ne" aria-hidden="true">Tenhle ne</span></div>'
       + '<div class="rv-telo">'
-        + '<div class="rv-cena">' + fmt(d.price) + ' Kč</div>'
+        + '<div class="rv-cena">' + fmt(d.price) + '\u00a0Kč</div>'
         + '<div class="rv-misto">' + esc(d.place || '') + '</div>'
         + (d.okres && d.okres !== d.place ? '<div class="rv-okres">okres ' + esc(d.okres) + '</div>' : '')
         + '<div class="rv-druh">' + esc(d.druh || '') + '</div>'
         + '<div class="rv-cisla">'
-          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + ' m²</span>' : '')
-          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + ' Kč/m²</span>' : '')
+          + (d.area > 0 ? '<span class="rv-cislo">' + fmt(d.area) + '\u00a0m²</span>' : '')
+          + (zaM2 != null ? '<span class="rv-cislo">' + fmt(Math.round(zaM2)) + '\u00a0Kč/m²</span>' : '')
         + '</div>'
         /* POZNÁMKA ROVNOU NA KARTĚ. Při třídění po jedné je právě ta
            chvíle, kdy člověk ví, proč si pozemek nechává — a dosud to
@@ -8351,7 +8351,7 @@
            Mezi tipy se dražba dostat může (dnes tam není ani jedna, ale
            nic ji nebrání), a pak by „levnější než 92 % podobných"
            znamenalo něco jiného, než co si člověk přečte. */
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + ' % pozemků'
+        '<div class="deal-badge">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
           + (window.PK_CENY && window.PK_CENY.skupinaText
             ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
           + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +

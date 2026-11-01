@@ -240,7 +240,7 @@ function pravda(popis, vyslo, proc) {
   pravda('„les do 100000" je cena', t('les do 100000').cenaDo === 100000 && t('les do 100000').text === '');
   pravda('„nad 250000" je spodní cena', t('nad 250000').cenaOd === 250000);
   pravda('a v odznaku stojí, jak se to přečetlo',
-    (t('do 100000').casti[0] || {}).popis === 'do 100000 Kč',
+    (t('do 100000').casti[0] || {}).popis === 'do 100000\u00a0Kč',
     'vyšlo ' + JSON.stringify((t('do 100000').casti[0] || {}).popis));
   pravda('malé číslo se za cenu nevydává', t('do 5').cenaDo === null);
   pravda('jednotka má přednost', t('do 2 ha').plochaDo === 20000 && t('do 2 ha').cenaDo === null);
@@ -545,7 +545,7 @@ function pravda(popis, vyslo, proc) {
 
   /* Bez jednotky si korunu domyslel web, ne člověk — tam se dopsat musí. */
   pravda('„les do 800000" dostane dopsané Kč (jednotku nikdo nenapsal)',
-    popisy('les do 800000').indexOf('do 800000 Kč') !== -1,
+    popisy('les do 800000').indexOf('do 800000\u00a0Kč') !== -1,
     JSON.stringify(popisy('les do 800000')));
 }
 

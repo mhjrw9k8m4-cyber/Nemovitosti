@@ -865,7 +865,7 @@
     if (val('p-druh')) pct += 8; if (hasPristup) pct += 7; if (hasSite) pct += 8; if (hasPopis) pct += 7;
     var fill = document.getElementById('pcs-fill'), pctEl = document.getElementById('pcs-pct'), hint = document.getElementById('pcs-hint'), tierEl = document.getElementById('pcs-tier');
     if (fill) { fill.style.width = pct + '%'; fill.classList.toggle('full', pct >= 100); }
-    if (pctEl) pctEl.textContent = pct + ' %';
+    if (pctEl) pctEl.textContent = pct + '\u00a0%';
     // Úroveň inzerátu — motivace vyplnit víc (1 = začátek … 5 = špička)
     var lvl = pct >= 100 ? 5 : pct >= 75 ? 4 : pct >= 50 ? 3 : pct >= 25 ? 2 : 1;
     var tier = ['', 'Začínáme', 'Dobrý základ', 'Silný inzerát', 'Skvělý inzerát', 'Špičkový inzerát'][lvl];

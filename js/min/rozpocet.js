@@ -84,7 +84,7 @@
       : '<span class="rz-okres">' + jmeno + '</span>';
     return '<li class="rz-radek">' + kde
       + '<b class="rz-pocet">' + x.pocet + '</b>'
-      + '<span class="rz-detail">od ' + fmt(x.nejlevnejsi) + ' Kč</span></li>';
+      + '<span class="rz-detail">od ' + fmt(x.nejlevnejsi) + '\u00a0Kč</span></li>';
   }
 
   function vykresli() {

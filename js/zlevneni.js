@@ -95,7 +95,7 @@
      vezme i odečítač obrazovky. */
   function text(z) {
     if (!z) return '';
-    if (z.podezrela) return 'Cena se změnila o ' + z.procent + ' % — ověřit';
+    if (z.podezrela) return 'Cena se změnila o ' + z.procent + '\u00a0% — ověřit';
     /* Delší než „Zlevněno o 30 %" (21 proti 15 znakům), a odznak se
        NELÁME zakázaně: `.opp-zlevneno` nowrap nemá, takže se text zlomí.
        Změřeno v prohlížeči na té jedné dražbě, kterou to dnes potkává
@@ -103,7 +103,7 @@
        nevyčuhuje z karty a karta vyroste jen při 360 px, z 226 na 245 px
        (jedna řádka odznaků navíc). Kratší „Vyvolávací −30 %" by těch
        19 px ušetřilo, ale za cenu věty, která nic neříká. */
-    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + ' %';
+    if (jeDrazba(z)) return cenaSlovo(z) + (z.dolu ? ' −' : ' +') + z.procent + '\u00a0%';
     /* „o 4 %" drží pohromadě celé: jednopísmenná předložka i jednotka. */
     return (z.dolu ? 'Zlevněno o\u00a0' : 'Zdraženo o\u00a0') + z.procent + '\u00a0%';
   }
@@ -111,7 +111,7 @@
   function popis(z, fmt) {
     if (!z) return '';
     var f = fmt || function (n) { return String(n); };
-    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + ' Kč'
+    return (z.podezrela ? 'U zdroje bylo ' : (z.dolu ? 'Předtím ' : 'Původně ')) + f(z.drive) + '\u00a0Kč'
       + (z.kdy ? ', změněno ' + lidsky(z.kdy) : '') + '.'
       + (z.podezrela ? ' Takový skok u pozemku bývá chyba zdroje — ověřte cenu v inzerátu.' : '')
       + (!z.podezrela && jeDrazba(z) && z.dolu

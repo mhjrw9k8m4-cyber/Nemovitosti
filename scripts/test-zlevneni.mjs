@@ -17,6 +17,11 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    porovnávaly tak, jak jsou, zkouška by hlásila rozdíl tam, kde je týž
    text jen jinak vysázený. (Přesně tahle past 22. 10. složila CI;
    podrobně v docs/optimalizace.md, oddíl 106.) */
+/* Srovnává se OBSAH, ne sazba: `\s` v JS zahrnuje i nezlomitelnou
+   mezeru, takže „−30 %" projde se zlomitelnou i nezlomitelnou. Že se
+   jednotka sází nezlomitelnou, hlídá test-sazba nad zdrojem a
+   test-sazba-dom nad vykreslenou stránkou — dvakrát to tu být nemusí
+   a tahle zkouška by na tom jen tiše padala při každé úpravě sazby. */
 const mez = (t) => String(t == null ? '' : t).replace(/\s+/g, ' ');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const Z = createRequire(import.meta.url)(path.join(ROOT, 'js', 'zlevneni.js'));
@@ -121,13 +126,13 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
   pravda('u dražby se slovo „Zlevněno" nepoužije',
     !/[Zz]levněno/.test(Z.text(drazba)), Z.text(drazba));
   pravda('a stojí tam, že jde o vyvolávací cenu',
-    Z.text(drazba) === 'Vyvolávací cena −30 %', Z.text(drazba));
+    mez(Z.text(drazba)) === 'Vyvolávací cena −30 %', Z.text(drazba));
   pravda('popisek vysvětlí, že to není sleva od prodávajícího',
     /Není to sleva od prodávajícího/.test(Z.popis(drazba, fmt))
     && /přihazuje/.test(Z.popis(drazba, fmt)), Z.popis(drazba, fmt));
   const exekuce = dole('exekuce');
   pravda('u exekuce se jmenuje „Uváděná cena"',
-    Z.text(exekuce) === 'Uváděná cena −30 %', Z.text(exekuce));
+    mez(Z.text(exekuce)) === 'Uváděná cena −30 %', Z.text(exekuce));
   pravda('a vysvětlení mluví o exekutorovi, ne o dražbě',
     /exekutor/.test(Z.popis(exekuce, fmt)) && !/přihazuje/.test(Z.popis(exekuce, fmt)),
     Z.popis(exekuce, fmt));
@@ -135,7 +140,7 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
      neplatila (vyvolávací cena se v dalším kole nezvedá). */
   const nahoru = Z.zmena({ price: 1300000, cena_drive: 1000000, cena_zmena: '2026-10-05', type: 'drazba' });
   pravda('u dražby směrem nahoru se o opakované dražbě nemluví',
-    Z.text(nahoru) === 'Vyvolávací cena +30 %' && !/přihazuje/.test(Z.popis(nahoru, fmt)),
+    mez(Z.text(nahoru)) === 'Vyvolávací cena +30 %' && !/přihazuje/.test(Z.popis(nahoru, fmt)),
     Z.text(nahoru) + ' | ' + Z.popis(nahoru, fmt));
   /* A podezřelý skok si drží svou vlastní větu — ta má přednost, protože
      tam se netvrdí sleva vůbec. */
@@ -146,7 +151,7 @@ pravda('a prázdný vstup nespadne', Z.zmena(null) === null && Z.text(null) === 
      z `cena_drive` — na stránce pozemku se bere právě odtud. */
   const zH = Z.zmena({ price: 700000, type: 'drazba', h: [['2026-09-01', 1000000], ['2026-10-05', 700000]] });
   pravda('typ se nese i u změny dopočítané z archivu',
-    zH && Z.text(zH) === 'Vyvolávací cena −30 %', zH ? Z.text(zH) : 'null');
+    zH && mez(Z.text(zH)) === 'Vyvolávací cena −30 %', zH ? Z.text(zH) : 'null');
 }
 
 console.log('\nZměna ceny proti minulému běhu');

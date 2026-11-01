@@ -18790,3 +18790,51 @@ na všech třech stránkách tři věci: že odkaz existuje, že vede na
 — pod nimi by splynul se třemi odkazy, které vedou dovnitř. Prokázáno
 dvěma sabotážemi: přesun odkazu pod záložky a přesměrování na
 `muj-inzerat.html` shodí každý svou kontrolu.
+
+## §304 — Jednotky skládané v prohlížeči: 42 míst opraveno, 3 zůstala schválně
+
+Dokončení toho, co §300 jen vypsalo. Krok sazby v `oprav.mjs` jede přes
+**hotové HTML**, takže vidí jen text, který na stránce stojí napsaný.
+Text, který vzniká až v prohlížeči (`fmt(d.price) + ' Kč'`), mu projde
+pod rukama — a tak se na web vrátilo 45 míst, kde se číslo může odlomit
+od jednotky na konci řádku. Je to táž díra jako §65, jen o patro níž:
+tam ji měly generátory, tady prohlížeč.
+
+OPRAVENO 42 MÍST ve dvanácti souborech: `ceny.js` 5, `dotaz.js` 1,
+`graf-cen.js` 3, `hypoteka.js` 2, `main.js` 10, `naklady.js` 1,
+`pozemek.js` 8, `pridat.js` 1, `radce.js` 5, `rozpocet.js` 1,
+`smlouva.js` 2, `zlevneni.js` 3.
+
+TŘI ZŮSTALA, A NENÍ TO OPOMENUTÍ. `js/vyvoz.js` skládá CSV a GPX ke
+stažení — text pro jiný program (Excel, navigace), ne pro oko.
+Nezlomitelná mezera tam nepatří: v CSV se protáhne do buňky, kde ji pak
+nikdo nevyhledá, a v názvu bodu v GPX ji starší navigace vykreslí jako
+otazník.
+`js/smlouva.js` naopak výjimka NENÍ, přestože taky skládá soubor
+(`podklad-kupni-smlouva.txt`): je to text pro člověka a čísla v něm už
+nezlomitelnou mezeru po tisících mají (`mezery()` tamtéž), takže
+obyčejná mezera před „m²" by byla nedůslednost uvnitř jedné věty.
+
+HLÍDAČ v `scripts/test-sazba.mjs` (13 kontrol, bylo 11) čte ZDROJ, ne
+výstup. V prohlížeči by se text musel nejdřív vykreslit a kontrola by
+platila jen pro ty stavy, které zkouška náhodou navštíví; ve zdroji je
+to jedno hledání přes všechny soubory. Výjimka je pojmenovaná
+(`JS_VYJIMKY`) a má u sebe napsaný důvod. Druhá kontrola počítá, kolik
+nezlomitelných mezer před jednotkou v `js/` vůbec je (73) — bez ní by
+stačilo rozbít regulární výraz a zkouška by mlčela, protože nula nálezů
+vypadá stejně jako nula vad. Prokázáno sabotáží: vrácení jediného místa
+v `radce.js` na obyčejnou mezeru kontrolu shodí a vypíše `js/radce.js:246`.
+
+PĚT ZKOUŠEK SE O TO OPŘELO a musely se srovnat — každá jinak, podle
+toho, co doopravdy ověřuje:
+* `test-radce`: vzor `<b>o (\d+) %` → `[\s ]`. Vedlejší vzor
+  `KORUNY` o čtyři řádky níž to tak měl odjakživa, takže se tím dva
+  vzory v jedné funkci přestaly rozcházet.
+* `test-zlevneni`: čtyři porovnání šla přes `Z.text(...)` naholo, ostatní
+  přes `mez()`. Teď všechna přes `mez()` — `\s` v JS zahrnuje i
+  nezlomitelnou mezeru, takže se srovnává OBSAH. Sazbu hlídá
+  `test-sazba` nad zdrojem a `test-sazba-dom` nad stránkou; dvakrát to
+  být nemusí a tahle zkouška by na tom jen tiše padala.
+* `test-smlouva` a `test-dotaz`: čekaný text je přesný naschvál (je to
+  text smlouvy a text odznaku), takže se do něj nezlomitelná mezera
+  dopsala, ne obešla.
