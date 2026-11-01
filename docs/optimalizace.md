@@ -18652,3 +18652,49 @@ v prohlížeči. Není to jedno hromadné `sed`: `js/vyvoz.js` skládá CSV
 k vývozu, kam nezlomitelná mezera nepatří, a `js/smlouva.js` text
 smlouvy, kam naopak patří. Chce to vlastní průchod se zkouškou, která
 rozlišuje text pro obrazovku od textu pro soubor.
+
+## §301 — „Pozemky v okolí" nebylo na telefonu vidět vůbec
+
+Majitel poslal snímek s červeně zakroužkovanou mezerou mezi přepínačem
+Seznam/Mapa a „Procházet po jednom": „tam kde to je červené vlož
+pozemky v okolí."
+
+CO TAM BYLO: nic. Tlačítko `#map-near` v repozitáři celou dobu je,
+jenže leželo uvnitř `.ms-rozsirene` — obalu, který se **do 1040 px
+rozbalí až po klepnutí do pole hledání** (`.ms-rozsirene{display:none}`
+a `body.hledani-rozbalene .ms-rozsirene{display:block}`). Kdo do
+hledání neklepl, o tlačítku se nedozvěděl. A je to přitom jediná cesta,
+jak si na webu vybrat místo, od kterého se počítá okolí i ty
+vzdálenosti na kartách (viz §300, kde se majitel ptal, co znamená
+„39 km" — teď je vidět i to, čím se to místo nastaví).
+
+OPRAVENO přesunem v `index.html`: `.map-okoli` je teď přímé dítě
+`.map-controls-panel`, hned za `#ms-chipy` a před `.ms-rozsirene`.
+Na širokém displeji se nemění nic — tam má obal `display:contents`
+a tlačítko sedí v mřížce v oblasti `okoli` jako dřív.
+
+CENA, ZMĚŘENÁ S REVERZÍ (vypnutí `.map-okoli` vrátí výpis na pixel):
+
+| šířka | první nabídka s tlačítkem | bez něj | cena |
+|---|---|---|---|
+| 1040 px | 390 px | 339 px | +51 px |
+| 430 px | 471 px | 419 px | +52 px |
+| 390 px | 471 px | 419 px | +52 px |
+| 360 px | 471 px | 419 px | +52 px |
+| 320 px | 462 px | 410 px | +52 px |
+
+Je to vědomý ústupek z úspory, kterou rozbalování dělá (naměřených
+365 px z 844). Mez `MEZ_PRVNI = 540` v `scripts/test-prvni-obrazovka.mjs`
+to unese: první nabídka je na 471 px na 390 i na 360 px a cena je
+z ní na první obrazovce vidět. **Rezerva je teď 69 px** — kdo sem
+přidá další pruh, musí nejdřív něco ubrat.
+
+HLÍDAČ tamtéž (26 kontrol, bylo 22) měří čtyři věci, a žádná neplyne
+z ostatních: že je tlačítko vidět bez rozbalení, že **není zpátky
+uvnitř** `.ms-rozsirene`, že stojí přesně v té mezeře (pod přepínačem,
+nad `.ms-vysledky`) a že unese prst. Prokázáno sabotáží: po vrácení
+tlačítka do obalu padnou všechny čtyři.
+
+MĚŘENO NE PODLE `#mc-akce`: ten má `display:contents`, takže nemá
+vlastní obdélník a první verze kontroly se o něj tiše opřela a
+přeskočila se. Řada nářadí je `.ms-vysledky`.

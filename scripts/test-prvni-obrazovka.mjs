@@ -293,6 +293,51 @@ try {
     !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY < m.karta),
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
 
+  /* „POZEMKY V OKOLÍ" MUSÍ BÝT VIDĚT BEZ ROZBALENÍ.
+     Majitel poslal snímek s červeně zakroužkovanou mezerou mezi
+     přepínačem Seznam/Mapa a „Procházet po jednom": „tam kde to je
+     červené vlož pozemky v okolí." Tlačítko tam do 1. 11. nebylo —
+     leželo uvnitř `.ms-rozsirene`, který se na telefonu rozbaluje až
+     po klepnutí do hledání, takže jediná cesta, jak si vybrat místo,
+     byla schovaná za krokem, který nikdo nemusel udělat.
+     Hlídá se trojí: že je vidět BEZ rozbalení (tedy že se nevrátilo
+     dovnitř obalu), že stojí v té mezeře (pod přepínačem, nad
+     nářadím) a že unese prst. Nic z toho neplyne z toho druhého:
+     tlačítko může být vidět a stát jinde, nebo stát správně a být
+     schované. */
+  const ok = await p.evaluate(() => {
+    const vid = (e) => {
+      if (!e) return null;
+      const r = e.getBoundingClientRect(); const st = getComputedStyle(e);
+      if (!r.width || !r.height || st.visibility === 'hidden' || st.display === 'none') return null;
+      return { top: Math.round(r.top + window.scrollY), dolu: Math.round(r.bottom + window.scrollY), v: Math.round(r.height) };
+    };
+    return {
+      near: vid(document.getElementById('map-near')),
+      prepinac: vid(document.querySelector('.mv-toggle')),
+      /* NE #mc-akce: ten má display:contents, takže nemá vlastní
+         obdélník a měření by tiše vyšlo na nulu. Řada nářadí je
+         .ms-vysledky. */
+      nastroje: vid(document.querySelector('.ms-vysledky')),
+      rozbaleno: document.body.classList.contains('hledani-rozbalene'),
+      vObalu: !!(document.getElementById('map-near') || {}).closest
+        && !!document.getElementById('map-near').closest('.ms-rozsirene'),
+    };
+  });
+  pravda('„Pozemky v okolí" je vidět hned, bez klepnutí do hledání',
+    !!ok.near && ok.rozbaleno === false,
+    ok.rozbaleno ? 'hledání je rozbalené, takže se neměří ten stav' : 'tlačítko není vidět');
+  pravda('a není zpátky uvnitř rozbalovacího obalu', ok.vObalu === false,
+    '#map-near leží v .ms-rozsirene, takže se na telefonu schová');
+  /* Bez podmínky: kdyby se některý ze tří prvků nenašel, kontrola by
+     se tiše přeskočila a hlídala by nic. Ať radši spadne. */
+  pravda('a stojí v té mezeře: pod přepínačem Seznam/Mapa a nad nářadím výpisu',
+    !!ok.near && !!ok.prepinac && !!ok.nastroje
+      && ok.near.top >= ok.prepinac.dolu && ok.near.dolu <= ok.nastroje.top,
+    `přepínač ${JSON.stringify(ok.prepinac)}, tlačítko ${JSON.stringify(ok.near)}, nářadí ${JSON.stringify(ok.nastroje)}`);
+  pravda('a unese prst (44 px)', !!ok.near && ok.near.v >= 44,
+    ok.near ? `${ok.near.v} px` : 'tlačítko není vidět');
+
   /* (Zde stálo osm kontrol předávky značky z pásu do lišty. Pás se
      značkou na úvodu 1. 11. zrušil majitel — „odeber to a nech to jen
      takto" — takže se nemá co předávat: lišta nese značku od začátku

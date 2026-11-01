@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-yFItlk10F2CRajnWKYhQWJAdnwSWECT76adicEofVGs=' 'sha256-zQWbuVfusrfTi6dlkVikoFmQT8mGhj+IMG5mkxAdbH4=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-taJCbT2kYBUGueATnzjDZOPoSmhlG3iEfNZ6x+WEG1Q=' 'sha256-zQWbuVfusrfTi6dlkVikoFmQT8mGhj+IMG5mkxAdbH4=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -279,13 +279,36 @@
           </div>
           <!-- Co web z napsané věty pochopil jako filtr; každý odznak jde zrušit. -->
           <div class="ms-chipy" id="ms-chipy" hidden aria-label="Rozpoznáno z hledání"></div>
-          <!-- Hlídání okolí vlastního pozemku. Objeví se, až si člověk místo
-               uloží; skript ho vyplní podle toho, co u něj od minule přibylo. -->
-          <!-- VŠECHNO KROMĚ HLEDÁNÍ SE NA TELEFONU ROZBALUJE AŽ NA KLEPNUTÍ.
-               Pole s lupou a odznaky rozpoznaných filtrů zůstávají vidět;
-               okolí, druhy nabídek a „Druh, cena, výměra a další" se
-               ukážou, až se klepne do hledání. Na širokém displeji je
-               tenhle obal obyčejný blok a nic se neschovává.
+          <!-- „POZEMKY V OKOLÍ" STOJÍ VENKU Z ROZBALOVÁNÍ (1. 11.).
+               Majitel ukázal na mezeru mezi přepínačem Seznam/Mapa
+               a „Procházet po jednom": „tam kde to je červené vlož
+               pozemky v okolí." Tlačítko tam do té doby vidět nebylo —
+               leželo uvnitř `.ms-rozsirene`, který se do 1040 px
+               rozbaluje až po klepnutí do hledání. Kdo do hledání
+               neklepl, o tlačítku se nedozvěděl, a je to přitom jediná
+               cesta, jak si místo vybrat.
+               JE TO VĚDOMÝ ÚSTUPEK Z ÚSPORY, kterou rozbalování dělá:
+               tlačítko si nad výpisem bere svou výšku pokaždé. Kolik
+               přesně, je změřeno a zapsáno v docs/optimalizace.md §301.
+               Stojí hned pod přepínačem a nad odznaky, protože „kde
+               hledat" je volba přede vším ostatním. -->
+          <div class="map-okoli">
+            <!-- Dvě rovnocenné cesty k témuž: podle polohy telefonu,
+                 nebo ukázáním na mapě — ale JEDNA hlavní akce, ne dvě.
+                 Chvíli tu vedle sebe stála dvě stejně velká tlačítka
+                 („Pozemky v okolí" a „Vybrat na mapě") a nebylo z nich
+                 poznat, proč si vybrat zrovna jedno; panel tím ztěžkl
+                 a volba byla zbytečná, protože tlačítko samo otevře
+                 výběr na mapě, když se polohu nepodaří zjistit. -->
+            <button type="button" class="map-near-btn" id="map-near"><svg class="ik mnb-pin" aria-hidden="true"><use href="#i-okoli"/></svg>Pozemky v okolí</button>
+          </div>
+          <!-- VŠECHNO KROMĚ HLEDÁNÍ, ODZNAKŮ A OKOLÍ SE NA TELEFONU
+               ROZBALUJE AŽ NA KLEPNUTÍ.
+               Pole s lupou, odznaky rozpoznaných filtrů a „Pozemky
+               v okolí" zůstávají vidět; druhy nabídek a „Druh, cena,
+               výměra a další" se ukážou, až se klepne do hledání.
+               Na širokém displeji je tenhle obal obyčejný blok
+               a nic se neschovává.
                ROZBALUJE SE V TOKU, NE PŘES OBRAZOVKU. Dřívější pokus byl
                překryv a stálo to tři dny: panel zakrýval výpis, zatmívací
                plocha skončila nad ním, Escape zavíral víc, než měl.
@@ -301,22 +324,9 @@
                a odznak hned pod ní říkal přesně totéž, co její
                podnadpis: „Do 50 km od Pelhřimov". Zbyl ten odznak
                (#ms-chipy) a jeho křížek; okruh se nastavuje tam, kde se
-               místo vybírá, a „Pozemky v okolí" níž otevře výběr znovu.
+               místo vybírá, a „Pozemky v okolí" výš otevře výběr znovu.
                Co od minule přibylo, řekne hláška s tlačítkem „Ukázat" —
                viz js/main.js, novinkyHlaska(). -->
-          <!-- Dvě rovnocenné cesty k témuž: podle polohy telefonu, nebo
-               ukázáním na mapě. Výběr na mapě byl dřív schovaný ve zvací
-               skříňce nad tímhle tlačítkem — tedy ve slabší kopii toho,
-               co je primární. Skříňka zmizela a zbylo tohle. -->
-          <!-- JEDNA hlavní akce, ne dvě. Chvíli tu vedle sebe stála dvě stejně
-               velká tlačítka („Pozemky v okolí" a „Vybrat na mapě") a nebylo
-               z nich poznat, proč si vybrat zrovna jedno — panel tím ztěžkl
-               a volba byla zbytečná: tlačítko samo otevře výběr na mapě,
-               když se polohu nepodaří zjistit. Ruční výběr tedy zůstává,
-               ale jako tichý odkaz pod tlačítkem, ne jako soupeř. -->
-          <div class="map-okoli">
-            <button type="button" class="map-near-btn" id="map-near"><svg class="ik mnb-pin" aria-hidden="true"><use href="#i-okoli"/></svg>Pozemky v okolí</button>
-          </div>
           <details class="ms-filters" id="ms-filters">
             <summary class="msf-summary">
               <svg class="ik msf-ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-filtr"/></svg>
