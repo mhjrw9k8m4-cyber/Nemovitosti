@@ -276,36 +276,52 @@ var KOTVA_PRIHLASENI = {
 })();
 
 /* ---------------------------------------------------------------------
-   ZNAČKA: NAHOŘE V PÁSU, PO ODROLOVÁNÍ V LIŠTĚ
+   ZNAČKA: NAHOŘE V PÁSU, PO ODROLOVÁNÍ V LIŠTĚ — PROLNUTÍM, NE SKOKEM
    Úvodní stránka má pod lištou pás s velkou značkou a větou „Vyberte
-   si z…" (podle Sreality, viz index.html). Dokud je ten pás vidět,
-   lišta svoje logo nenese — jinak by značka na jedné obrazovce stála
-   dvakrát pod sebou. Tenhle kousek jen nasadí nebo sundá třídu
-   `pk-odrolovano` na <html>; co s ní, rozhoduje stylopis.
-   MĚŘÍ SE JEDNOU, NE PŘI KAŽDÉM POSUNU. Pás má pevnou výšku, takže
-   hranice (jeho spodek minus výška lišty) se spočítá při startu a při
-   změně velikosti okna; při rolování se pak porovnávají dvě čísla.
-   Totéž pravidlo jako u tlačítka „nahoru" nad tím: za rolování se na
-   rozvržení nesmí sahat, jinak prohlížeč přepočítává stránku
-   několikrát za vteřinu.
-   PŘEPÍNÁ SE, AŽ KDYŽ PÁS DOOPRAVDY ZMIZEL pod lištou, ne po prvním
-   pixelu: dokud je z velké značky něco vidět, malá v liště se
-   nerozsvěcí. A jen jedním směrem to být nesmí — kdo se vrátí nahoru,
-   má zpátky velkou značku. */
+   si z…" (podle Sreality, viz index.html). Dokud je pás nahoře, lišta
+   svoje logo nenese — jinak by značka na jedné obrazovce stála dvakrát.
+   NAPOPRVÉ TO BYL PŘEPÍNAČ A MAJITEL HO VYFOTIL: „ten přechod blbě,
+   mělo by se to objevovat dřív a být to o hodně plynulejší." Měl
+   pravdu dvakrát. Logo se rozsvěcelo až ve chvíli, kdy pás CELÝ zmizel
+   pod lištou (naměřeno 105 px rolování), a rozsvěcelo se přechodem —
+   tedy animací, která běží po svém a s pohybem prstu nemá nic
+   společného. Při pomalém posunu se objevila až dávno po tom, co velká
+   značka odjela; při rychlém naopak doběhla, až když už se stránka
+   dávno nehýbala.
+   TEĎ TO ŘÍDÍ ROLOVÁNÍ, NE ČASOVAČ. Skript počítá podíl 0–1, jak
+   daleko je velká značka na cestě pod lištu, a zapíše ho do proměnné
+   `--zn-podil` na <html>; stylopis z ní dělá obě průhlednosti naráz.
+   Malá v liště tedy přibývá přesně tak, jak velká ubývá — prolnutí,
+   které sleduje prst a dá se zastavit uprostřed.
+   DRÁHA JE KRATŠÍ: ne celý pás (105 px), ale jen velká značka
+   (naměřeno 56 px). Je to ta vzdálenost, po které velká značka zmizí
+   pod lištou — tedy přesně okamžik, kdy má malá dosvítit.
+   MĚŘÍ SE JEDNOU, NE PŘI KAŽDÉM POSUNU. Dráha se spočítá při startu,
+   po načtení a při změně velikosti okna; při rolování se jen dělí dvě
+   čísla a zapisuje proměnná. Na rozvržení se za pohybu nesahá — totéž
+   pravidlo jako u tlačítka „nahoru" nad tím.
+   BEZ JAVASCRIPTU je proměnná nenastavená a stylopis bere náhradní
+   nulu: velká značka v pásu, lišta bez loga. To je přesně ten stav,
+   který člověk uvidí první. */
 (function () {
   var pas = document.getElementById('zn-pas');
   if (!pas) return;
+  var znacka = pas.querySelector('.zn-logo') || pas;
   var h = document.querySelector('header');
   var ko = document.documentElement.classList;
-  var hranice = 0, ceka = false;
+  var styl = document.documentElement.style;
+  var draha = 1, ceka = false, posledni = -1;
 
   function premer() {
     ceka = false;
-    var r = pas.getBoundingClientRect();
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    /* Pás je na monitoru schovaný (display:none) — pak má nulovou výšku,
-       hranice vyjde záporná a značka zůstane v liště, jak tam patří. */
-    hranice = r.top + y + r.height - (h ? h.getBoundingClientRect().height : 0);
+    var r = znacka.getBoundingClientRect();
+    /* Na monitoru je pás schovaný (display:none) a značka má nulový
+       rozměr — dráha pak vyjde nejvýš 1 px, podíl je hned 1 a logo
+       zůstane v liště, jak tam patří. */
+    draha = Math.max(1, r.top + y + r.height
+      - (h ? h.getBoundingClientRect().height : 0));
+    posledni = -1;
     prekresli();
   }
   function premerPozdeji() {
@@ -315,7 +331,18 @@ var KOTVA_PRIHLASENI = {
   }
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    ko.toggle('pk-odrolovano', y >= hranice);
+    var podil = y / draha;
+    if (podil < 0) podil = 0;
+    if (podil > 1) podil = 1;
+    /* Setina podílu je na 56px dráze půl pixelu — pod tím se nemá co
+       překreslovat. Krajní hodnoty se zapisují vždycky, jinak by na
+       konci cesty zůstalo 0,995 a značka by nikdy nedosvítila. */
+    if (podil !== 0 && podil !== 1 && Math.abs(podil - posledni) < 0.01) return;
+    posledni = podil;
+    styl.setProperty('--zn-podil', podil.toFixed(3));
+    /* Třída rozhoduje jen o tom, co se nedá mít napůl: jestli je logo
+       v liště klikací a jestli je pod ní linka. */
+    ko.toggle('pk-odrolovano', podil > 0.5);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });

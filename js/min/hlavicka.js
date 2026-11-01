@@ -122,16 +122,20 @@ var KOTVA_PRIHLASENI = {
 (function () {
   var pas = document.getElementById('zn-pas');
   if (!pas) return;
+  var znacka = pas.querySelector('.zn-logo') || pas;
   var h = document.querySelector('header');
   var ko = document.documentElement.classList;
-  var hranice = 0, ceka = false;
+  var styl = document.documentElement.style;
+  var draha = 1, ceka = false, posledni = -1;
 
   function premer() {
     ceka = false;
-    var r = pas.getBoundingClientRect();
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var r = znacka.getBoundingClientRect();
 
-    hranice = r.top + y + r.height - (h ? h.getBoundingClientRect().height : 0);
+    draha = Math.max(1, r.top + y + r.height
+      - (h ? h.getBoundingClientRect().height : 0));
+    posledni = -1;
     prekresli();
   }
   function premerPozdeji() {
@@ -141,7 +145,15 @@ var KOTVA_PRIHLASENI = {
   }
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
-    ko.toggle('pk-odrolovano', y >= hranice);
+    var podil = y / draha;
+    if (podil < 0) podil = 0;
+    if (podil > 1) podil = 1;
+
+    if (podil !== 0 && podil !== 1 && Math.abs(podil - posledni) < 0.01) return;
+    posledni = podil;
+    styl.setProperty('--zn-podil', podil.toFixed(3));
+
+    ko.toggle('pk-odrolovano', podil > 0.5);
   }
 
   window.addEventListener('scroll', prekresli, { passive: true });

@@ -1784,10 +1784,38 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    který člověk uvidí první. */
 .zn-pas{display:none;}
 @media (max-width:1040px){
+  /* PROLNUTÍ ŘÍDÍ ROLOVÁNÍ, NE ČASOVAČ. Proměnnou --zn-podil (0–1)
+     zapisuje js/hlavicka.js podle toho, jak daleko je velká značka na
+     cestě pod lištu; tady z ní vychází obojí průhlednost naráz, takže
+     malá v liště přibývá přesně tak, jak velká v pásu ubývá.
+     PŘECHOD TU BÝT NESMÍ. Hodnota se mění s každým snímkem rolování
+     a přechod by ji rozmazal o svou vlastní délku — právě to vypadalo
+     „blbě": značka doháněla prst se zpožděním. Plynulost tu nedělá
+     animace, ale to, že hodnota sleduje posun.
+     PŘEDÁVKA, NE PŘEKRYV. Napoprvé obě průhlednosti stoupaly a klesaly
+     rovnoměrně a uprostřed cesty (naměřeno na 28 px rolování) svítila
+     malá na 75 % a velká na 80 % — tedy dvě značky pod sebou naráz,
+     přesně to, čemu se celý tenhle pás vyhýbá. Křivky se proto míjejí:
+     velká mizí dřív (plná do 30 % cesty, pryč v 75 %) a malá nabíhá
+     až za ní (od 55 %, plná v 97 %, tedy na 54 px z 56). V překryvu
+     jsou obě sotva znát a to, co se dole ještě svítí, stejně z větší
+     části zakrývá lišta.
+     NÁHRADNÍ NULA je pro případ, že skript neběží: velká značka
+     v pásu, lišta bez loga — stav, který člověk vidí první. */
   body:has(#zn-pas) header{border-bottom-color:transparent;}
-  body:has(#zn-pas) header .logo{opacity:0; pointer-events:none;}
+  body:has(#zn-pas) header .logo{transition:none; pointer-events:none;
+    opacity:clamp(0, calc((var(--zn-podil, 0) - 0.55) * 2.4), 1);
+    transform:translateY(calc((1 - clamp(0, calc((var(--zn-podil, 0) - 0.55) * 2.4), 1)) * 6px));}
   html.pk-odrolovano body:has(#zn-pas) header{border-bottom-color:var(--line);}
-  html.pk-odrolovano body:has(#zn-pas) header .logo{opacity:1; pointer-events:auto;}
+  html.pk-odrolovano body:has(#zn-pas) header .logo{pointer-events:auto;}
+  /* I TADY PŘECHOD PRYČ, A JE TO TEN DRUHÝ KONEC TÉŽE VADY: obecné
+     pravidlo webu dává všemu prolnutí barev a průhlednosti 0,2 s, takže
+     velká značka za posunem zaostávala o dvě desetiny vteřiny. Naměřeno
+     na návratu nahoru: podíl už byl 0, ale značka stála na 0,23 a
+     teprve dojížděla. Hodnotu řídí rolování, dohánět ji nemá co. */
+  body:has(#zn-pas) .zn-logo,
+  body:has(#zn-pas) .zn-pod{transition:none;
+    opacity:clamp(0, calc((0.75 - var(--zn-podil, 0)) * 2.2), 1);}
   /* ODSAZENÍ NAHOŘE ŽÁDNÉ, DOLE DVANÁCT. Lišta nad pásem má svých 12 px
      vespod, takže značka nad sebou vzduch má; naměřeno 105 px výšky pásu
      při odsazení 4/18 a 95 px při 0/12, a každý pixel tady se promítne do toho,

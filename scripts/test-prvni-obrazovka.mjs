@@ -292,6 +292,81 @@ try {
   pravda('nářadí výpisu stojí v jeho hlavičce, ne mezi nabídkami',
     !je(m.nastrojeY) || (je(m.karta) && m.nastrojeY < m.karta),
     `nástroje začínají na ${m.nastrojeY} px, první nabídka na ${m.karta} px`);
+
+  /* ---- PŘEDÁVKA ZNAČKY Z PÁSU DO LIŠTY ----------------------------
+   *
+   * Majitel poslal snímek rozpracovaného přechodu: „ten přechod blbě,
+   * mělo by se to objevovat dřív a být to o hodně plynulejší." Obojí
+   * mělo svou příčinu a obě se dají změřit, takže se měří.
+   *   1. POZDĚ. Logo v liště se rozsvěcelo, až když pás CELÝ zmizel pod
+   *      lištou (105 px rolování). Dráha je teď jen velká značka —
+   *      naměřeno 56 px — a do jejího konce musí být logo plně vidět.
+   *   2. SKOKEM. Rozsvěcelo se přechodem 0,2 s, tedy animací, která
+   *      běží po svém a s prstem nemá nic společného. Teď obě
+   *      průhlednosti řídí rolování přes proměnnou --zn-podil; přechod
+   *      na nich být NESMÍ, jinak hodnota za posunem zaostává.
+   *   3. A DVĚ ZNAČKY NARÁZ. Když obě průhlednosti stoupaly rovnoměrně,
+   *      svítila uprostřed cesty malá na 75 % a velká na 80 % — přesně
+   *      ta dvojitá značka, kvůli které se lišta svého loga vzdává.
+   *      Projde se celá dráha po 4 px a hlídá se, že slabší z dvojice
+   *      nikde nepřeleze 0,5.
+   * Všechno jen na telefonu; na monitoru pás není (display:none) a tam
+   * logo v liště svítí pořád. */
+  {
+    const pas = await p.$('#zn-pas');
+    pravda('úvodní stránka má pás se značkou', !!pas, 'element #zn-pas se nenašel');
+    if (pas) {
+      const prubeh = await p.evaluate(async () => {
+        const stav = () => ({
+          lista: parseFloat(getComputedStyle(document.querySelector('header .logo')).opacity),
+          pas: parseFloat(getComputedStyle(document.querySelector('.zn-logo')).opacity),
+        });
+        const znacka = document.querySelector('.zn-logo');
+        const vysL = document.querySelector('header').getBoundingClientRect().height;
+        const r = znacka.getBoundingClientRect();
+        const draha = Math.round(r.top + scrollY + r.height - vysL);
+        const puvodni = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = 'auto';
+        const vzorky = [];
+        for (let y = 0; y <= draha + 8; y += 4) {
+          scrollTo(0, y);
+          await new Promise((r2) => requestAnimationFrame(() => requestAnimationFrame(r2)));
+          vzorky.push({ y, ...stav() });
+        }
+        scrollTo(0, 0);
+        await new Promise((r2) => requestAnimationFrame(() => requestAnimationFrame(r2)));
+        const zpatky = stav();
+        document.documentElement.style.scrollBehavior = puvodni;
+        const cs = getComputedStyle(document.querySelector('header .logo'));
+        const cz = getComputedStyle(znacka);
+        return { draha, vzorky, zpatky,
+          casy: [cs.transitionDuration, cz.transitionDuration] };
+      });
+      const v = prubeh.vzorky;
+      const prvni = v[0], posledni = v[v.length - 1];
+      pravda(`nahoře svítí jen velká značka (dráha ${prubeh.draha} px)`,
+        prvni.lista < 0.02 && prvni.pas > 0.98,
+        `lišta ${prvni.lista}, pás ${prvni.pas}`);
+      pravda('na konci dráhy je logo v liště plně vidět a pás zhasl',
+        posledni.lista > 0.98 && posledni.pas < 0.02,
+        `na ${posledni.y} px: lišta ${posledni.lista}, pás ${posledni.pas}`);
+      /* Dřív než předtím: do 60 px rolování musí být předávka hotová.
+         Mez je o 4 px nad naměřenou dráhou 56 px — kdo pás zvětší,
+         ať to ví. */
+      const hotovoNa = (v.find((x) => x.lista > 0.98) || {}).y;
+      pravda('a je hotová do 60 px rolování, ne až pod lištou',
+        hotovoNa !== undefined && hotovoNa <= 60, `plné logo až na ${hotovoNa} px`);
+      const nejhorsi = v.reduce((a, x) => Math.max(a, Math.min(x.lista, x.pas)), 0);
+      pravda('po celé dráze nestojí dvě značky naráz',
+        nejhorsi < 0.5, `nejhorší překryv: slabší z dvojice ${nejhorsi.toFixed(2)}`);
+      pravda('a návrat nahoru vrátí velkou značku hned, bez dojíždění',
+        prubeh.zpatky.pas > 0.98 && prubeh.zpatky.lista < 0.02,
+        `po návratu: lišta ${prubeh.zpatky.lista}, pás ${prubeh.zpatky.pas}`);
+      pravda('průhlednost řídí rolování, ne časovač (žádný přechod)',
+        prubeh.casy.every((c) => /^0s(,|$)/.test(c) || c === '0s'),
+        `doby přechodu: ${prubeh.casy.join(' · ')}`);
+    }
+  }
   await ctx.close();
 
   /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" POD VÝPISEM ------------

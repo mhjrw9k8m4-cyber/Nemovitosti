@@ -17909,3 +17909,51 @@ spodní lišta (`test-lista-dole`), na monitoru připnutý pruh u ceny
 odsazením 400 px shodí první (akce 3 114, popis 2 586 + 128) a druhé
 nechá projít; popis vytažený na 2 500 px shodí druhé (akce 5 106
 z 6 227 = 82 %) a první nechá projít.
+
+## §287 Předávka značky z pásu do lišty: řídí ji prst, ne časovač
+
+Majitel poslal snímek rozpracovaného přechodu: „ten přechod blbě, mělo
+by se to objevovat dřív a být to o hodně plynulejší." Obě výtky sedí
+a každá měla svou příčinu.
+
+**1. Pozdě.** Logo v liště se rozsvěcelo, až když pás ZCELA zmizel pod
+lištou — naměřeno 105 px rolování. Dráha je teď jen velká značka,
+tedy vzdálenost, po které zajede pod lištu: **56 px**. Plné logo je
+v liště na 54 px.
+
+**2. Skokem, ne plynule.** Byl to přepínač třídy a rozsvícení obstarával
+přechod 0,2 s — animace, která si běží po svém a s pohybem prstu nemá
+nic společného. Při pomalém posunu doběhla dávno po tom, co velká
+značka odjela; při rychlém naopak dojížděla, když stránka už stála.
+Teď to řídí rolování: js/hlavicka.js počítá podíl 0–1 a zapisuje ho do
+proměnné `--zn-podil` na `<html>`, stylopis z ní dělá obě průhlednosti
+naráz. Dá se to zastavit uprostřed a stejně plynule to jde zpátky.
+
+**A při tom druhý konec téže vady.** Obecné pravidlo webu dává všemu
+prolnutí barev a průhlednosti 0,2 s, takže i velká značka v pásu za
+posunem zaostávala. Naměřeno na návratu nahoru: podíl už byl 0, ale
+značka stála na 0,23 a teprve dojížděla. Přechod je na obou místech
+vypnutý — plynulost tu nedělá animace, ale to, že hodnota sleduje posun.
+
+**A třetí věc, kterou měření ukázalo samo.** Když obě průhlednosti
+stoupaly a klesaly rovnoměrně, svítila uprostřed cesty (28 px) malá
+značka na 75 % a velká na 80 % — dvě značky pod sebou naráz, přesně to,
+čemu se celý pás vyhýbá. Křivky se proto míjejí: velká je plná do 30 %
+cesty a mizí v 75 %, malá nabíhá od 55 % a je plná v 97 %.
+
+**Hlídá to sedm kontrol** v `scripts/test-prvni-obrazovka.mjs`: nahoře
+svítí jen velká, na konci dráhy jen malá, předávka je hotová do 60 px
+rolování, po celé dráze (po 4 px) nestojí dvě značky naráz, návrat
+nahoru vrátí velkou hned a ani jedna ze dvou průhledností nemá přechod.
+Prokázáno třemi sabotážemi, každá shodí právě to své:
+  · vrácený přechod 0,2 s → padá kontrola časovače a s ní i „návrat
+    nahoru bez dojíždění" (naměřeno: po návratu lišta ještě na 0,56),
+    tedy přesně to, co majitel viděl;
+  · rovnoměrné křivky → padá dvojitá značka (slabší z dvojice 0,75);
+  · dráha vrácená na celý pás → padá mez 60 px i plné dosvícení.
+
+**Tokeny.** `var(--zn-podil, 0)` je odvolávka na nedefinovaný token,
+a ta se podle pravidla z §68 musí vypsat s důvodem — `test-tokeny` to
+chytil hned. Záloha 0 je stav „stránka je nahoře": velká značka svítí,
+lišta je bez loga. Tedy přesně to, co člověk uvidí první, takže když
+skript neběží, nekreslí se nic špatně.
