@@ -4,7 +4,7 @@
 .ik-sada{position:absolute;width:0;height:0;overflow:hidden}
 .ik{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn-primary .ik{width:18px;height:18px;stroke-width:2;flex:none}
-.okr-place .ik,.st-zpet .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
+.okr-place .ik,.st-zpet .ik,.uc-zpet-a .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
 .rv-bilance .rvb-ano,.rv-bilance .rvb-ne{display:inline-flex;align-items:center;gap:4px}
 .okr-place,.st-zpet{display:inline-flex;align-items:center;gap:4px}
 .btn-primary{gap:8px}
@@ -1177,6 +1177,11 @@ html.pk-prihlasen .app-hero{padding-bottom:4px}
 .uc-taby .wrap{justify-content:safe center}
 @media (max-width:600px){.add-hero.app-hero{padding:20px 0 2px}
 }
+.uc-zpet{padding:8px 0 0}
+.uc-zpet .wrap{display:flex}
+.uc-zpet-a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px 8px 8px;margin-left:-8px;font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;border-radius:var(--r-xs);transition:var(--prechod)}
+.uc-zpet-a:hover{color:var(--znacka);background:var(--plocha-karta)}
+.uc-zpet-a:focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:-2px}
 .uc-taby{padding:8px 0 2px}
 .uc-taby .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 .uc-taby .wrap::-webkit-scrollbar{display:none}

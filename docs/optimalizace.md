@@ -18755,3 +18755,38 @@ dvě kontroly, vyřazení `favOnly` z `recentViditelnost()` třetí.
 DŘÍVĚJŠÍ KONTROLA „pruh první nabídku neodsouvá ani o pixel" byla
 smazaná, ne obejitá: po přesunu nahoru přestala platit a nechat ji
 projít jinak by byla lež.
+
+## §303 — Ze stránek účtu nevedla cesta ven napsaná slovem
+
+Majitel zakroužkoval místo mezi nadpisem „Můj profil" a záložkami:
+„do skutečného označení přidáš tlačítko na vracení do menu."
+
+Měl pravdu. Ze tří stránek účtu (Zprávy, Hlídání, Můj profil) se do
+zbytku webu dalo jen přes značku v liště, přes hamburger, nebo přes
+rozbalovací nabídku „Můj profil" — nikde to nebylo **napsané slovem**.
+Záložky tu cestu nenahradí: všechny tři vedou zase dovnitř účtu.
+
+PŘIDÁNO: `<a href="index.html" class="uc-zpet-a">‹ Zpět na pozemky</a>`
+ve vlastním řádku nad záložkami, na všech třech stránkách.
+
+VLASTNÍ ŘÁDEK, NE ČTVRTÁ ZÁLOŽKA. Dva důvody, oba věcné:
+1. Záložky odpovídají na „kde jsem uvnitř účtu". Tohle vede ven
+   a splynout s nimi nemá.
+2. Řada záložek se na telefonu posouvá do strany
+   (`.uc-taby .wrap{overflow-x:auto}`). Čtvrtá položka by odjela za
+   hranu, takže by odkaz ven byl schovaný zrovna tam, kde ho člověk
+   hledá.
+
+SVISLICE SEDÍ: odkaz má `margin-left:-8px`, což ruší jeho levou
+vycpávku, takže **šipka stojí na 20 px od kraje — na téže svislici
+jako nadpis stránky** (naměřeno na 390 px). Chytací plocha je 44 px
+vysoká a sahá i do toho osmipixelového okraje, kam prst stejně míří.
+Ikona se připojila k existujícímu receptu `15px / stroke 2.4`, aby
+stopa vyšla na 1,5 px jako u všech ostatních (hlídá `test-tahy`).
+
+HLÍDAČ v `scripts/test-stranky.mjs` (statický, v rychlé sadě) ověřuje
+na všech třech stránkách tři věci: že odkaz existuje, že vede na
+`index.html`, a že stojí **NAD** záložkami. To poslední je to podstatné
+— pod nimi by splynul se třemi odkazy, které vedou dovnitř. Prokázáno
+dvěma sabotážemi: přesun odkazu pod záložky a přesměrování na
+`muj-inzerat.html` shodí každý svou kontrolu.

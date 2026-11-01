@@ -119,6 +119,35 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
   if (!potize.length) zpravy.push('  ✓ tři stránky účtu mají pruh se záložkami a vědí, na které z nich člověk stojí');
 }
 
+/* ---------- 1c2. a cestu VEN z účtu ----------
+   Majitel zakroužkoval místo nad záložkami: „do skutečného označení
+   přidáš tlačítko na vracení do menu." Ze stránek účtu se do zbytku
+   webu dalo jen přes značku v liště nebo přes rozbalovací nabídku —
+   nikde to nebylo napsané slovem. Záložky tu cestu nenahradí: všechny
+   tři vedou zase do účtu.
+   Hlídá se i POŘADÍ: odkaz ven musí stát NAD záložkami. Pod nimi by
+   splynul se čtveřicí odkazů, které vedou dovnitř, a přesně to se
+   kontroluje — ne jen že ten odkaz někde na stránce je. */
+{
+  const UCET = ['zpravy.html', 'hlidani.html', 'muj-inzerat.html'];
+  const potize = [];
+  for (const f of UCET) {
+    const h = readFileSync(f, 'utf8');
+    const i = h.indexOf('class="uc-zpet-a"');
+    if (i === -1) { potize.push(`${f} nemá odkaz zpátky na pozemky (.uc-zpet-a)`); continue; }
+    const zacatek = h.lastIndexOf('<a ', i);
+    const odkaz = h.slice(zacatek, h.indexOf('</a>', i) + 4);
+    if (!/href="index\.html"/.test(odkaz)) potize.push(`${f}: odkaz ven nevede na index.html — ${odkaz.slice(0, 80)}`);
+    if (!/>\s*Zpět/.test(odkaz.replace(/<[^>]+>/g, (m) => (m.startsWith('</') ? '>' : '')))) {
+      potize.push(`${f}: odkaz ven není pojmenovaný slovem „Zpět" — ${odkaz.slice(0, 120)}`);
+    }
+    const taby = h.indexOf('<nav class="uc-taby"');
+    if (taby !== -1 && zacatek > taby) potize.push(`${f}: odkaz ven stojí AŽ POD záložkami účtu`);
+  }
+  for (const t of potize) chyba(t);
+  if (!potize.length) zpravy.push('  ✓ a nad záložkami stojí cesta ven z účtu (zpátky na pozemky)');
+}
+
 /* ---------- 1d. seznam okresů v 404.html ----------
    Dopisuje ho robot. Kdyby se rozešel se skutečnými stránkami okresů,
    posílala by stránka 404 lidi na další 404 — což je horší než nic. */

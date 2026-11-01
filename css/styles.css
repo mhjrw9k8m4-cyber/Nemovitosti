@@ -947,7 +947,7 @@
    tloušťka (36/šířka), aby stopa vyšla na 1,5 px jako u všech ostatních
    ikon na webu — to hlídá scripts/test-tahy.mjs. */
 .btn-primary .ik{width:18px; height:18px; stroke-width:2; flex:none;}
-.okr-place .ik, .st-zpet .ik, .ext-ikona .ik,
+.okr-place .ik, .st-zpet .ik, .uc-zpet-a .ik, .ext-ikona .ik,
 .rv-bilance .rvb-ano .ik, .rv-bilance .rvb-ne .ik,
 .os-ic .ik, .vm-x .ik, .loc-x .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
 .rv-bilance .rvb-ano, .rv-bilance .rvb-ne{display:inline-flex; align-items:center; gap:4px;}
@@ -5775,6 +5775,23 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    prstem a aby jich šlo poznat pořadí. */
 /* Spodní linka patřila k podtrhávaným záložkám; u pilulek by to byla
    čára pod ničím. Pruh od obsahu odděluje odsazení. */
+/* ZPÁTKY VEN Z ÚČTU. Vlastní řádek nad záložkami, ne čtvrtá záložka:
+   záložky odpovídají na „kde jsem uvnitř účtu", tohle vede ven a splynout
+   to nemá. Do řady záložek se to navíc nevejde — ta se na telefonu
+   posouvá do strany (overflow-x:auto), takže čtvrtá položka by odjela
+   za hranu a odkaz ven by byl schovaný zrovna tam, kde ho člověk hledá.
+   Odsazení doleva o 8 px ruší levou vycpávku odkazu, takže ŠIPKA stojí
+   na téže svislici jako nadpis stránky (naměřeno: obojí 20 px od kraje
+   na telefonu). Chytací plocha přitom zůstane 44 px vysoká a sahá
+   i do toho osmipixelového okraje, kam prst stejně míří. */
+.uc-zpet{padding:8px 0 0;}
+.uc-zpet .wrap{display:flex;}
+.uc-zpet-a{display:inline-flex; align-items:center; gap:8px; min-height:44px;
+  padding:8px 12px 8px 8px; margin-left:-8px; font-size:14px; font-weight:600;
+  color:var(--muted); text-decoration:none; border-radius:var(--r-xs);
+  transition:var(--prechod);}
+.uc-zpet-a:hover{color:var(--znacka); background:var(--plocha-karta);}
+.uc-zpet-a:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:-2px;}
 .uc-taby{padding:8px 0 2px;}
 .uc-taby .wrap{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;}
 .uc-taby .wrap::-webkit-scrollbar{display:none;}
