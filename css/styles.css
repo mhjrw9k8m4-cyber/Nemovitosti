@@ -9602,9 +9602,35 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
    (900), 294 (560), 313 (390–479), 355 (360) a 343 (320) — rezervace
    drží deset pixelů nad maximem každého pásma. Na 360 px je karta
    nejvyšší, protože se tam nadpis láme na tři řádky. */
-.pz-vyvoj-karta{min-height:304px;}
-@media (max-width:479px){ .pz-vyvoj-karta{min-height:324px;} }
-@media (max-width:409px){ .pz-vyvoj-karta{min-height:366px;} }
+/* PŘEMĚŘENO 1. 11. a SROVNÁNO — čísla výš byla z 29. 10. a od té doby
+   karta vyrostla (výhrada o malém vzorku, §296). Naměřeno na 14
+   stránkách napříč daty × 11 šířkách, vždy nejvyšší nalezená kresba
+   proti tehdejší rezervě:
+
+     1280 a 900 px  337 proti 304  → chybělo 33
+      600 px       313 proti 304  → chybělo  9
+      480 px       355 proti 304  → chybělo 51
+      479 px       355 proti 324  → chybělo 31
+      440 px       375 proti 324  → chybělo 51
+      410 px       365 proti 324  → chybělo 41
+      409 a 390    366 proti 366  → sedělo
+      360 px       375 proti 366  → chybělo  9
+      320 px       433 proti 366  → chybělo 67
+
+   Rozdíl znamená, že po dokreslení grafu obsah pod kartou poskočí —
+   hlídač v test-graf-cen to měřil jen při 390 px, kde to po §296 sedí
+   přesně, takže zbytek nikdo nehlídal.
+
+   ZLOM BYL NAVÍC O JEDEN PIXEL VEDLE: při 480 px už platí úzké
+   rozvržení karty, ale rezerva ještě široká (proto tam chybělo 51 px,
+   nejvíc z celého rozsahu). Hranice je teď 480, ne 479.
+
+   TŘI PÁSMA MÍSTO TŘÍ, ale podle naměřených maxim (337 / 375 / 433)
+   a s rezervou 7–11 px, protože vzorek je 14 stránek z 1 910 a nejdelší
+   jména okresů a krajů lámou nadpis o řádek víc. */
+.pz-vyvoj-karta{min-height:348px;}
+@media (max-width:480px){ .pz-vyvoj-karta{min-height:384px;} }
+@media (max-width:359px){ .pz-vyvoj-karta{min-height:444px;} }
 .pz-vyvoj.ma-graf > .pz-vyvoj-karta{padding:16px;
   background:var(--plocha-karta); border-width:1px; border-color:var(--line);
   box-shadow:var(--e1);}

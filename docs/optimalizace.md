@@ -18536,3 +18536,58 @@ CO TEDY ZBÝVÁ. Zkrátit stránku jde už jen rozhodnutím o obsahu (co
 sbalit, co přesunout, co vypustit), ne úklidem. To je majitelova volba
 a nemá se udělat potichu, takže je položka zavřená jako změřená
 a neprovedená — stejně jako §48 a §125.
+
+## §299 — Rezerva karty s grafem nestačila na čtyřech z pěti šířek
+
+ODKUD TO VYPLYNULO. Z položky #189, kterou jsem si sám zapsal při §296:
+tam jsem si všiml, že rezerva karty sedí jen při 390 px, a nechal to
+otevřené místo odhadu.
+
+ZMĚŘENO (1. 11., 14 stránek napříč daty × 11 šířek, vždy NEJVYŠŠÍ
+nalezená kresba proti tehdejší rezervě):
+
+| šířka | rezerva | nejvyšší kresba | chybělo |
+|-------|---------|-----------------|---------|
+| 1280 a 900 | 304 | 337 | 33 |
+| 600 | 304 | 313 | 9 |
+| **480** | 304 | 355 | **51** |
+| 479 | 324 | 355 | 31 |
+| 440 | 324 | 375 | 51 |
+| 410 | 324 | 365 | 41 |
+| 409 a 390 | 366 | 366 | **0** |
+| 360 | 366 | 375 | 9 |
+| **320** | 366 | 433 | **67** |
+
+Graf se kreslí líně; než dojde, drží místo `min-height` karty. Je-li
+rezerva menší než kresba, obsah pod kartou po dokreslení poskočí — a to
+je přesně to, před čím stojí hlídač posunu hlavní akce. Ten ale měřil
+JEN při 390 px, tedy v jediném pásmu, kde to sedělo.
+
+ZLOM BYL NAVÍC O PIXEL VEDLE. Při 480 px už platí úzké rozvržení karty,
+ale rezerva ještě široká — proto tam chybělo 51 px, nejvíc z celého
+rozsahu. Hranice je teď 480, ne 479.
+
+SROVNÁNO podle naměřených maxim (337 / 375 / 433) s rezervou 7–11 px,
+protože vzorek je 14 stránek z 1 910 a nejdelší jména okresů a krajů
+lámou nadpis o řádek víc:
+
+```
+.pz-vyvoj-karta{min-height:348px;}
+@media (max-width:480px){ … 384px; }
+@media (max-width:359px){ … 444px; }
+```
+
+Po změně kreslí karta na všech jedenácti měřených šířkách **přesně
+rezervu, přetečení nula**.
+
+CENA: na úzkém telefonu je prázdné místo před dokreslením o 18 px vyšší
+(366 → 384), při 320 px o 78 px a na monitoru o 44 px. To je cena za to,
+že obsah pod kartou nepoposkočí — a posun je to, co ruší prst
+nad tlačítkem.
+
+HLÍDAČ v `scripts/test-graf-cen.mjs` (70 kontrol, bylo 65): při pěti
+šířkách (1280, 480, 440, 390, 320) se měří kresba proti VYPOČTENÉ
+rezervě, ne proti číslu opsanému do zkoušky — změní-li se rezerva,
+změní se kontrola s ní. Prokázáno sabotáží: po snížení rezerv na 300 px
+padnou tři nové kontroly i hlídač posunu, a každá vypíše, o kolik
+pixelů by obsah poskočil.

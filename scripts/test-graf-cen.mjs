@@ -405,6 +405,36 @@ async function otevri(okres, sirka) {
      režim vznikl. */
   pravda('ale dlouhá metodika na inzerátu nezůstává',
     !!inzMale && !/Hladina se mění/.test(inzMale), String(inzMale).slice(0, 220));
+
+  /* --- REZERVA KARTY MUSÍ STAČIT NA KAŽDÉ ŠÍŘCE ---------------------
+     Graf se kreslí líně, takže než dojde, drží místo min-height karty.
+     Je-li rezerva menší než kresba, obsah pod kartou po dokreslení
+     poskočí. Hlídač posunu výš to měří JEN při 390 px — a naměřeno
+     1. 11. na 14 stránkách × 11 šířkách, že právě jen tam to sedělo:
+     při 1280 chybělo 33 px, při 480 celých 51 (tam byl navíc zlom
+     o pixel vedle: úzké rozvržení, široká rezerva) a při 320 px 67.
+     Proto se měří napříč šířkami a proti VYPOČTENÉ rezervě, ne proti
+     číslu opsanému do zkoušky — kdyby se rezerva změnila, kontrola se
+     změní s ní. */
+  for (const W of [1280, 480, 440, 390, 320]) {
+    const pw = await kontext.newPage();
+    await pw.setViewportSize({ width: W, height: 900 });
+    await pw.goto(`${BASE}/${nejakyPozemek}`, { waitUntil: 'load' });
+    await pw.waitForTimeout(1200);
+    await pw.evaluate(() => { const e = document.querySelector('#pz-vyvoj'); if (e) e.scrollIntoView(); });
+    await pw.waitForTimeout(1200);
+    const v = await pw.evaluate(() => {
+      const k = document.querySelector('.pz-vyvoj-karta');
+      if (!k || !document.querySelector('figure.gc')) return null;
+      return { h: Math.round(k.getBoundingClientRect().height),
+        rez: Math.round(parseFloat(getComputedStyle(k).minHeight) || 0) };
+    });
+    await pw.close();
+    pravda(`${W}px: rezerva karty s grafem stačí na kresbu`,
+      !!v && v.rez > 0 && v.h <= v.rez + 2,
+      v ? `kresba ${v.h} px proti rezervě ${v.rez} px — obsah pod kartou po dokreslení poskočí o ${v.h - v.rez} px`
+        : 'graf se při téhle šířce nenakreslil, takže se nedá nic měřit');
+  }
 }
 
 /* ---- CELOSTÁTNÍ GRAF NA STRÁNCE „CENY POZEMKŮ" -------------------
