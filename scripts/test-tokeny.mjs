@@ -175,8 +175,6 @@ pravda('každý token, na který se styl odvolává, je určený', chybi.length 
    * stejnou mezí jako každý jiný text. */
   const NAHRADY = {
     '--vyska-hlavicky': 'pojmenovaná konstanta výšky hlavičky; schválně ji nikdo nenastavuje a body má stejné odsazení (viz vysvětlivka u body{padding-top})',
-    '--zn-velka': 'průhlednost velké značky v pásu úvodu (1 = plně vidět); za rolování ji počítá js/hlavicka.js. Záloha 1 je stav „stránka je nahoře" — tedy to, co člověk uvidí první, takže když skript neběží, nekreslí se nic špatně.',
-    '--zn-mala': 'průhlednost malé značky v liště na stránce s pásem (0 = není vidět); protějšek --zn-velka, počítá ji táž funkce. Záloha 0 je týž výchozí stav: nahoře svítí velká a lišta je bez loga.',
     '--cen-kroku': 'počet řádů na ose cen; nastavuje ho generátor na seznamu (cena-pozemku.html) podle skutečných dat. Záloha 3 je tam proto, že čáry řádů v pruhu jsou kresba: bez proměnné se nakreslí tři a pruh zůstane čitelný, místo aby zmizel celý.',
   };
   const PLOCHY = [['bílá karta', [255, 255, 255]],

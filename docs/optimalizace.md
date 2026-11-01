@@ -18106,3 +18106,124 @@ zaoblení v jednom souboru i přebarvení shodily právě svou kontrolu.
 že jsem kreslil dřív, než jsem se zeptal. Značka je to, co má majitel
 upevněné nejvíc; příště návrh slovy a obrázek napřed. Zapsáno do
 CLAUDE.md (`znacka: pravidlo`).
+
+## §291 — Pás se značkou na úvodu zrušen; přeliv značky na všechny zelené plochy
+
+Tři zásahy z jednoho odpoledne, všechny na majitelovo slovo.
+
+**1 · PÁS SE ZNAČKOU JE PRYČ.** Postavil se 1. 11. podle mobilní
+Sreality (§284) a týž den se k němu dvakrát dolaďovala předávka značky
+do lišty za rolování (§287, §288). Majitel poslal snímek s kroužkem
+kolem celého pásu a „odeber to a nech to jen takto". Úvodní stránka
+proto začíná lištou jako každá jiná stránka webu — se značkou v ní.
+Odešlo s tím:
+`.zn-pas`, `.zn-logo`, `.zn-jm`, `.zn-pod` ze stylopisu, proměnné
+`--zn-velka` a `--zn-mala`, obslužný skript v `js/hlavicka.js`,
+dopsání počtu v `js/main.js` i v `scripts/hlavicka.mjs` a osm kontrol
+předávky v `scripts/test-prvni-obrazovka.mjs`. Kontrola „na obrazovce
+je vidět právě jedna značka" zůstala — platí dál, jen teď triviálně.
+Počet nabídek se tím ze začátku stránky neztratil docela: stojí nad
+výpisem, kde je po filtru.
+
+**2 · PŘELIV ZNAČKY MAJÍ VŠECHNY ZELENÉ PLOCHY.** Majitel: „u toho
+loga, jak máme takový ten lehký přechod z bílé na zelenou — udělej to
+po celém webu, na všem." Změřeno v prohlížeči na osmi typech stránek
+ve dvou šířkách: zelenou plochu nese **17 tříd**. Místo sedmnácti
+záplat je to jeden token `--preliv-znacka` a jeden výčet selektorů.
+
+- **Světlý konec je o stupeň tmavší než ve značce.** V kresbě začíná
+  přeliv na `#4FA57A`, jenže na tom má bílý text **2,9 : 1** a norma
+  žádá 4,5. Plochy s textem proto začínají na `--znacka-svetla`
+  (`#247052`) → **5,9 : 1**. Značka text nenese a svůj světlejší
+  začátek si nechává.
+- **Pravidlo musí stát na KONCI stylopisu.** Většina těch tříd si
+  barvu nastavuje zkratkou `background`, která vynuluje
+  `background-image`. Když pravidlo stálo uprostřed souboru, osm ploch
+  z dvaadvaceti přeliv nedostalo — na `.filter-chip.active` bylo
+  naměřeno `background-image:none`. Našlo to měření, ne čtení kódu.
+- **Dvě zelená tlačítka bydlí mimo hlavní stylopis** (`.hl-btn`
+  v hlidani.html, `.pz-btn.primary` v css/pozemek-vlozeny.css) — ta
+  mají vlastní zápis, protože jejich styl se do stránky vkládá až za
+  stylopisem.
+- **Přeliv vědomě nedostaly** tečky a špendlíky na mapě (6–20 px, na
+  mapě jich je naráz 120), pruh síly hesla (8 px) a kolečko s číslem
+  kroku. Na ploše pod ~26 px není ze tří zarážek vidět nic než šum.
+
+**Nález v hlídači.** `scripts/test-soustava.mjs` vyžaduje u každého
+přelivu na ploše napsaný důvod — ale hledal jen literál `gradient(`,
+takže přeliv schovaný za tokenem (`background-image:var(--preliv-znacka)`)
+mu proklouzl bez jediného slova. Teď si nejdřív najde tokeny, jejichž
+hodnota přeliv je, a hledá i odkazy na ně. Prokázáno dvěma sabotážemi.
+
+**3 · VĚTA POD ZNAČKOU (ještě než pás zmizel).** Bylo to 16 px šedé
+s ČERNÝM tučným číslem — tvrdý skok z tlumené šedi do plné černi, který
+větu rozsekl na tři kusy. Číslo dostalo barvu značky, písmo o stupeň
+výš (16 → 18 px) a těsnější sazbu. Zrušením pásu to padlo s ním;
+zůstává to tu zapsané proto, že totéž rozhodnutí platí pro každou
+podobnou větu s číslem.
+
+**Co si z toho odnést.** Pás, předávka a doladění věty stály tři kola
+práce a skončily smazáním. Dvě z nich byly na výslovné přání, třetí
+moje iniciativa — a právě ta neměla vzniknout dřív, než bude jisté, že
+pás na webu zůstane.
+
+## §292 — Odmítnutý slib se hlásil bez místa: „něco se stalo" místo jména souboru
+
+ODKUD TO VYPLYNULO. CI 862 shodila dvě zkoušky. První byla moje chyba
+v předchozím oddílu (`.logo:active` se nehýbala, tedy stisk značky na
+dotyku nedělal vůbec nic) a je opravená. Druhá byla zajímavější:
+`test-chyby-v-prohlizeci` padla na kontrole „a nese jméno našeho
+souboru s řádkem", a v hlášení bylo místo prázdné. Lokálně ta samá
+zkouška procházela, a to opakovaně.
+
+CO SE ZMĚŘILO. Rozbije-li se stránce pozemku `js/min/cisteni.js`,
+neodletí jedno hlášení, ale **dvě**:
+
+| # | zpráva | místo (před opravou) |
+|---|--------|----------------------|
+| 1 | `Uncaught SyntaxError: Unexpected token ';'` | `js/min/cisteni.js:1:21` |
+| 2 | `PKCisteni is not defined` | *prázdné* |
+
+To druhé je odmítnutý slib (`unhandledrejection`) z pozdějšího skriptu,
+který na rozbitém souboru stojí. A prohlížeč u odmítnutého slibu žádný
+soubor ani řádek nedává — na rozdíl od `error`. Odchytávač tedy do
+místa psal prázdno a hlášení dorazilo do databáze jako „něco se stalo".
+
+PROČ TO PADALO JEN V CI. Pořadí těch dvou hlášení není mezi verzemi
+prohlížeče stejné. CI si instaluje vlastní prohlížeč (`npx playwright
+install chromium`, dnes **Chrome 156**), zdejší prostředí má
+předinstalovaný **Chrome 141** a jiný se do něj nedá stáhnout (CDN
+Playwrightu je mimo povolené adresy — vyzkoušeno, `Download failure`).
+V 141 jde první syntaktická chyba, v 156 ten odmítnutý slib. Zkouška
+přitom čítala `poslano[0]`, tedy „co přišlo první", ne „to, o čem
+mluvím". Dvě vady v jednom pádu: jedna ve webu, jedna ve zkoušce.
+
+CO SE OPRAVILO VE WEBU. Místo odmítnutého slibu leží v zásobníku té
+chyby (`reason.stack`). Vložený odchytávač v hlavičce ho teď ukládá na
+místo jména souboru (`(d&&d.stack)||''`, +14 B na stránku, celkem 398 B)
+a vyčte ho až odesílač `js/chyby.js` funkcí `zeStopy()`: vezme první
+rámec, který ukazuje na náš soubor, a prožene ho týmž `misto()` jako
+dřív — tedy pořád jen vlastní soubory, bez domény a bez razítka `?v=`.
+Čtení zásobníku je osmnáct řádků a do vloženého skriptu na 2 461
+stránkách nepatří; do hlavičky jde jen to, co se jinde dohnat nedá.
+
+Po opravě má druhé hlášení místo `js/min/pozemek.js:1752:16`. Tím
+přestává být jedno, které z těch dvou přijde první — a to je ta
+skutečná oprava, ne obejití.
+
+CO SE OPRAVILO VE ZKOUŠCE. Dvě věci:
+
+* hlášení se **hledá** podle souboru, o kterém zkouška mluví, místo aby
+  se bralo první, co doletí,
+* přidána kontrola **„ani jedno z hlášení z té stránky není bez
+  místa"** — právě ta, která vadu ukáže i tady, kde Chrome 156 není.
+
+PROKÁZÁNO SABOTÁŽÍ. Vrácení `zeStopy()` v odesílači → nová kontrola
+padne a vypíše „bez místa odletělo 1 z 2: „PKCisteni is not defined"".
+Obrácené pořadí hlášení (tak, jak přijde v CI) → staré čtení vybere
+`js/min/pozemek.js`, nové `js/min/cisteni.js`.
+
+CO SE Z TOHO BERE DÁL. Rozdíl verzí prohlížeče mezi CI a zdejším
+prostředím je trvalý (141 proti 156) a nedá se tady srovnat. Zkoušky
+proto nesmějí stát na pořadí, v jakém prohlížeč doručí dvě nezávislé
+události — a kde na něm stát musejí, má to být napsané.

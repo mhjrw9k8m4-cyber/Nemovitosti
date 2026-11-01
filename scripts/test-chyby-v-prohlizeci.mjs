@@ -96,7 +96,21 @@ const POZEMEK = fs.readdirSync(KOREN).filter((f) => /^pozemek-.*\.html$/.test(f)
   const { poslano, odmitnute } = await otevri(POZEMEK, { rozbij: 'js/min/cisteni.js' });
   pravda('pád skriptu, který běží PŘED odesílačem, se nahlásí', poslano.length >= 1,
     'neodletělo nic — a právě tyhle pády jsou důvod, proč je odchytávač vložený v hlavičce');
-  const t = poslano[0] || {};
+  /* HLÁŠENÍ JE VÍC NEŽ JEDNO, A NE VŽDY V TOMTÉŽ POŘADÍ. Rozbitý
+     cisteni.js vyrobí dvě chyby: svou syntaktickou a za ní odmítnutý
+     slib „PKCisteni is not defined" odjinud. Která z nich odletí
+     první, se mezi verzemi prohlížeče liší — v Chrome 141 syntaktická,
+     v Chrome 156 (ten běží v CI) ta druhá. Zkouška proto hledá to
+     hlášení, o kterém mluví, místo aby brala první, co přišlo; na
+     tomhle padala CI 862. */
+  const t = poslano.find((x) => /^js\/min\/cisteni\.js:/.test(String(x && x.p_zdroj)))
+    || poslano[0] || {};
+  const bezMista = poslano.filter((x) => !String((x && x.p_zdroj) || '').trim());
+  pravda('a ani jedno z hlášení z té stránky není bez místa',
+    bezMista.length === 0,
+    'bez místa odletělo ' + bezMista.length + ' z ' + poslano.length + ': '
+      + bezMista.map((x) => JSON.stringify(x && x.p_zprava)).join(', ')
+      + ' — odmítnutý slib místo nenese, musí se vyčíst z reason.stack');
   pravda(`a nese jméno našeho souboru s řádkem („${t.p_zdroj}")`,
     /^js\/min\/cisteni\.js:\d+:\d+$/.test(String(t.p_zdroj)),
     'bez místa je z hlášení jen zpráva „něco se stalo"');

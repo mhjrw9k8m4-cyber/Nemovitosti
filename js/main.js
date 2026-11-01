@@ -821,8 +821,6 @@
        pořád „pozemků": web měl 1 912 nabídek a nikdy méně než pět.
        Je to JINÉ ČÍSLO než to nad výpisem: tam stojí počet po filtru
        a mění se s každým posunem mapy, tady celá nabídka. */
-    var zp = document.getElementById('zn-pocet');
-    if (zp) zp.textContent = fmt(DATA.length) + '\u00a0' + tvarPozemku(DATA.length);
     /* KOLIK TOHO NABÍZÍME — HNED POD ZNAČKOU.
        Majitel webu si vyžádal, aby velikost nabídky stála nahoře,
        pod nadpisem „Parcelka", ne až v liště nad výpisem.

@@ -12,7 +12,14 @@
    neodložených. Posluchač založený až v odloženém souboru by tedy
    propásl právě ty pády, kdy se nespustí vůbec nic. Neodložený
    <script src> v hlavičce by to řešil taky, ale za jedno kolečko po
-   síti před prvním vykreslením; vložených 320 B kolečko nestojí.
+   síti před prvním vykreslením; vložených 398 B kolečko nestojí.
+
+   PROČ SE U ODMÍTNUTÉHO SLIBU UKLÁDÁ CELÝ ZÁSOBNÍK. Chyba z „error"
+   nese soubor, řádek i sloupec zvlášť; odmítnutý slib nenese nic
+   z toho — místo je jen v `reason.stack`. Odchytávač ho tedy strčí
+   na místo jména souboru a vyčte ho až odesílač (js/chyby.js,
+   funkce zeStopy): sem patří jen to, co se jinde dohnat nedá, kdežto
+   čtení zásobníku je osmnáct řádků, a ty na 2 461 stránek nepatří.
 
    PROČ JE TEXT NA VŠECH STRÁNKÁCH TOTOŽNÝ. CSP hashuje obsah
    vložených skriptů. Jedno jediné znění znamená jeden hash navíc
@@ -34,7 +41,7 @@ export const VLOZENY = `<script ${ZNACKA}>window.PK_CHYBY=[];(function(){var q=w
   + `function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}`
   + `window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});`
   + `window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;`
-  + `u((d&&d.message)||String(d||''),'',0,0);});}());</script>`;
+  + `u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>`;
 
 /* DVA ODKAZY, A POŘADÍ NENÍ JEDNO. Odložené skripty se spouštějí
    v pořadí, v jakém jsou ve stránce, a js/chyby.js i js/mereni.js

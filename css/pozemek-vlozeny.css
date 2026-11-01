@@ -355,7 +355,10 @@
        z nich měla sloupec plný pilulek. Při 140 px se dvě vejdou. */
     .pz-btn{flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:8px; height:52px; border-radius:var(--r-ovladani); font-weight:700; font-size:14px; text-decoration:none; cursor:pointer; border:1px solid transparent;}
     .pz-btn svg{width:19px; height:19px; stroke-width:1.89; flex:none;}
-    .pz-btn.primary{background:var(--plocha-znacka); color:#fff; box-shadow:var(--glow);}
+    /* Hlavní akce inzerátu má týž značkový přeliv jako zelené plochy
+       ve stylopisu webu; tenhle soubor se vkládá do stránky až ZA ním,
+       takže by jinak zkratkou `background` přeliv shodil. */
+    .pz-btn.primary{background:var(--plocha-znacka); background-image:var(--preliv-znacka); color:#fff; box-shadow:var(--glow);}
     .pz-btn.primary:hover{filter:brightness(1.06);}
     .pz-btn.ghost{background:var(--plocha-karta); color:var(--znacka-svetla); border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);}
     .pz-btn.ghost:hover{border-color:var(--znacka-svetla); background:var(--plocha-tlumena);}

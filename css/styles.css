@@ -294,6 +294,20 @@
      má 6,61 : 1, na nejtmavším světlém čipu to měří
      scripts/test-kontrast.mjs; mez je 4,5. */
   --znacka:#175A40; --znacka-svetla:#247052;
+  /* PŘELIV ZELENÉ PLOCHY — jeden recept pro celý web.
+     Majitel 1. 11.: „u toho loga, jak máme takový ten lehký přechod
+     z bílé na zelenou — udělej to po celém webu, na všem." Značka ho
+     má (světlá zeleň vlevo nahoře do hluboké vpravo dole), od téhož
+     dne ho má i každá zelená plocha: tlačítka, zapnuté přepínače,
+     aktivní štítky.
+     SVĚTLÝ KONEC JE --znacka-svetla, NE ZELEŇ ZE ZNAČKY. V kresbě
+     začíná přeliv na #4FA57A, jenže na tom bílý text vychází 2,9 : 1
+     a norma žádá 4,5 (u velkého 3). Na plochách, kde je text, proto
+     začíná o stupeň tmavší: #247052 dává bílé 5,9 : 1. Značka text
+     nenese, a smí si tedy nechat svůj světlejší začátek.
+     SMĚR 135° je týž jako v kresbě — světlo přichází zleva shora,
+     odkud na webu svítí i hrany desek a stíny padají doprava dolů. */
+  --preliv-znacka:linear-gradient(135deg, var(--znacka-svetla) 0%, var(--plocha-znacka) 55%, var(--znacka-hluboka) 100%);
 
   
   /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
@@ -1766,7 +1780,13 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    řídí posun .logo rolování (předávka značky z pásu do lišty). */
 .logo:hover .logo-mark{transform:translateY(-1px);
   box-shadow:var(--e2), inset 0 1px 0 rgba(255,255,255,0.18);}
-.logo:active .logo-mark{transform:translateY(0);
+/* STISK JE translateY(1px) JAKO VŠUDE JINDE, NE NÁVRAT NA NULU.
+   Napsal jsem tu nulu s úvahou „z najetí (−1 px) na nulu je to pohyb
+   o pixel dolů" — jenže na telefonu žádné najetí není, takže stisk
+   nedělal vůbec nic. Shodil to hlídač test-prechody.mjs, a měl pravdu
+   z obou stran: gesto má být na celém webu jedno a tady nebylo ani
+   vidět. */
+.logo:active .logo-mark{transform:translateY(1px);
   box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18);}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
@@ -1791,102 +1811,13 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
   .logo-mark{width:44px; height:44px;}
 }
 
-/* =====================================================================
-   PÁS SE ZNAČKOU NA ZAČÁTKU ÚVODU — PODLE SREALITY
-   Proč tu je a co se tím mění, stojí u markupu v index.html.
-   Tady jen to, co by z kódu nebylo vidět:
-   LIŠTA SVOJE LOGO NESCHOVÁVÁ PŘES display:none, ALE PŘES opacity.
-   Dva důvody. Hamburger musí zůstat vlevo HNED VEDLE JMÉNA (hlídá to
-   scripts/test-hlavicka.mjs měřením vzdálenosti mezi nimi) — a kdyby
-   jméno z toku zmizelo, nebylo by vedle čeho stát a zkouška by měřila
-   nulu. A druhý: výška lišty se tím nemění, takže --vyska-hlavicky dál
-   sedí na skutečnou výšku (hlídá táž zkouška) a při odrolování nic
-   neposkočí. Lišta má 73 px (na 320 px 64) a má je i nahoře; pás pod ní má tutéž
-   plochu a nahoře mezi nimi není svislá hrana, takže to je jeden blok
-   se značkou uprostřed — tak, jak to má Sreality.
-   TŘÍDU `pk-odrolovano` nasazuje js/hlavicka.js, a to AŽ KDYŽ pás
-   doopravdy odjel pod lištu, ne po prvním pixelu: dokud je z velké
-   značky něco vidět, nemá se ta malá v liště rozsvěcet.
-   BEZ JAVASCRIPTU to vyjde taky: výchozí stav je „stránka je nahoře",
-   tedy velká značka v pásu a lišta bez loga. To je přesně ten stav,
-   který člověk uvidí první. */
-.zn-pas{display:none;}
-@media (max-width:1040px){
-  /* PROLNUTÍ ŘÍDÍ ROLOVÁNÍ, NE ČASOVAČ. Hodnoty --zn-velka a --zn-mala
-     (0–1) počítá js/hlavicka.js podle toho, jak daleko je velká značka
-     na cestě pod lištu. Křivka měkkého rozjezdu i dojezdu je tam,
-     protože v CSS se z jedné proměnné nic plynulejšího než přímka
-     udělat nedá — a právě přímka byla na oko vidět.
-     PŘECHOD TU BÝT NESMÍ. Hodnota se mění s každým snímkem rolování
-     a přechod by ji rozmazal o svou vlastní délku — přesně to vypadalo
-     „blbě": značka doháněla prst se zpožděním. Plynulost tu nedělá
-     animace, ale to, že hodnota sleduje posun.
-     POHYB, NE JEN PRŮHLEDNOST. Samotné prolnutí vypadá jako bliknutí
-     dvou obrázků přes sebe. Malá značka proto zároveň dojede o 8 px
-     nahoru a doroste z 94 %, velká o kousek povyroste nahoru a zmenší
-     se — dohromady to čte jako jedna značka, která přelétá do lišty.
-     Počítá se jen opacity a transform, tedy to, co prohlížeč zvládne
-     bez přepočtu rozvržení.
-     NÁHRADNÍ HODNOTY (1 a 0) jsou pro případ, že skript neběží: velká
-     značka v pásu, lišta bez loga — stav, který člověk vidí první. */
-  body:has(#zn-pas) header{border-bottom-color:transparent;}
-  body:has(#zn-pas) header .logo{transition:none; pointer-events:none;
-    transform-origin:left center; will-change:opacity, transform;
-    opacity:var(--zn-mala, 0);
-    transform:translateY(calc((1 - var(--zn-mala, 0)) * 8px))
-      scale(calc(0.94 + var(--zn-mala, 0) * 0.06));}
-  html.pk-odrolovano body:has(#zn-pas) header{border-bottom-color:var(--line);}
-  html.pk-odrolovano body:has(#zn-pas) header .logo{pointer-events:auto;}
-  /* I TADY PŘECHOD PRYČ, A JE TO TEN DRUHÝ KONEC TÉŽE VADY: obecné
-     pravidlo webu dává všemu prolnutí barev a průhlednosti 0,2 s, takže
-     velká značka za posunem zaostávala o dvě desetiny vteřiny. Naměřeno
-     na návratu nahoru: podíl už byl 0, ale značka stála na 0,23 a
-     teprve dojížděla. Hodnotu řídí rolování, dohánět ji nemá co. */
-  body:has(#zn-pas) .zn-logo,
-  body:has(#zn-pas) .zn-pod{transition:none; opacity:var(--zn-velka, 1);}
-  /* VELKÁ ZNAČKA PŘI MIZENÍ ZRYCHLÍ POD LIŠTU, A JE TO TA VĚC, KTERÁ
-     DĚLÁ PŘECHOD PLYNULÝM. Samotné křížení průhledností nestačí: pás
-     stojí hned pod lištou, takže velká značka je na obrazovce po celou
-     dobu cesty a uprostřed byly obě slabě vidět přes sebe (naměřeno
-     0,26 a 0,26 na 28 px rolování — na snímku dvě bledé „Parcelky").
-     Posun o 48 px nahoru to řeší geometrií, ne průhledností: v půlce
-     cesty je velká značka UŽ CELÁ pod lištou (spočteno: horní hrana
-     73 − 28 − 35 = 10 px, spodní 66 px, lišta kryje do 73 px), takže
-     se obě značky nikdy nepotkají na obrazovce. A protože se posun
-     odvíjí od téže změkčené křivky, čte se to jako jeden pohyb:
-     značka vzlétne do lišty a tam se rozsvítí.
-     JE TO POSUN UVNITŘ PÁSU, pás si výšku drží — nic pod ním
-     neposkočí. */
-  body:has(#zn-pas) .zn-logo{will-change:opacity, transform;
-    transform:translateY(calc((1 - var(--zn-velka, 1)) * -48px))
-      scale(calc(1 - (1 - var(--zn-velka, 1)) * 0.10));}
-  /* ODSAZENÍ NAHOŘE ŽÁDNÉ, DOLE DVANÁCT. Lišta nad pásem má svých 12 px
-     vespod, takže značka nad sebou vzduch má; naměřeno 105 px výšky pásu
-     při odsazení 4/18 a 95 px při 0/12, a každý pixel tady se promítne do toho,
-     jestli je cena první nabídky ještě na obrazovce (viz měření v
-     scripts/test-prvni-obrazovka.mjs). */
-  .zn-pas{display:flex; flex-direction:column; align-items:center; gap:4px;
-    padding:0 var(--okraj-stranky) 12px; background:var(--plocha-plovouci-plna);
-    border-bottom:1px solid var(--line); text-align:center;}
-  .zn-logo{display:inline-flex; align-items:center; gap:12px; color:var(--znacka);}
-  /* ŽÁDNÝ STÍN POD ZNAČKOU V PÁSU. 1. 11. tu nakrátko byl (dvojitý
-     drop-shadow z tokenu --e1), ale značka má od téhož dne zase svou
-     původní podobu — dlaždici s přelivem, která stín nese sama přes
-     box-shadow v .logo-mark. Druhý stín navíc by ji jen rozmazal. */
-  /* Jméno má stejné písmo i řez jako v liště — jedna značka, jedno
-     písmo (viz poznámka „JMÉNO ZNAČKY MÁ JEDNO PÍSMO" níž). */
-  .zn-jm{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.04em;
-    font-size:32px; line-height:1;}
-  .zn-logo .logo-mark{width:56px; height:56px;}
-  .zn-pod{margin:0; font-size:16px; line-height:1.3; color:var(--muted);}
-  .zn-pod b{color:var(--text); font-weight:700;}
-}
-/* Na nejužším telefonu o stupeň zpátky, jako značka v liště. */
-@media (max-width:359px){
-  .zn-jm{font-size:24px;}
-  .zn-logo .logo-mark{width:44px; height:44px;}
-  .zn-pod{font-size:14px;}
-}
+/* ZDE BYL PÁS SE ZNAČKOU NA ZAČÁTKU ÚVODU (podle mobilní Sreality)
+   a k němu předávka značky z pásu do lišty řízená rolováním. Majitel
+   ho 1. 11. zrušil: poslal snímek s kroužkem kolem celého pásu a „odeber
+   to a nech to jen takto". Úvodní stránka tedy začíná lištou jako každá
+   jiná stránka webu — se značkou v ní. Odešly s tím i třídy .zn-pas,
+   .zn-logo, .zn-jm a .zn-pod, proměnné --zn-velka a --zn-mala
+   a obslužný skript v js/hlavicka.js. */
 
 /* PROFIL VPRAVO NAHOŘE. Do 29. 10. byl účet jen uvnitř výsuvné
    nabídky, tedy za třemi čárkami — kdo je přihlášený, neměl na
@@ -2149,6 +2080,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
 .btn-primary{background-color:var(--plocha-znacka); color:#fff; font-weight:700; font-size:14px; padding:8px 20px; border-radius:var(--r-ovladani);
   display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; border:1px solid rgba(var(--znacka-hluboka-rgb),0.55); box-shadow:var(--glow); transition:var(--prechod); white-space:nowrap; cursor:pointer;}
 .btn-primary:hover{filter:brightness(1.06); box-shadow:var(--glow-lg);}
+
 /* Obrysy ovládacích prvků drží alfu 0,6. Při 0,4 vyjde proti bílé kontrast
    2,07:1 a při 0,28 dokonce 1,66:1 — a u tlačítka, které je bílé na bílém,
    je obrys to JEDINÉ, podle čeho se pozná, že tam tlačítko je. WCAG na to
@@ -8711,7 +8643,7 @@ body > footer{flex:none;}
    Přeliv je směr světla, ne ozdoba: stín pod tlačítkem říká „svítí
    shora", a plochá výplň nad ním si s tím odporovala. */
 .mc-rychly{background-color:var(--plocha-znacka); border-color:transparent; color:#fff;
-  background-image:linear-gradient(to bottom, rgba(var(--plocha-tmava-2-rgb),0) 38%, rgba(var(--plocha-tmava-2-rgb),0.26));
+  background-image:var(--preliv-znacka);
   font-weight:700; box-shadow:var(--e1), var(--glow);}
 /* A vedlejší ovladače v téže sestavě jsou bílé klávesy, ne ploché
    obrysy: týž přeliv o řád slabší a stín `--e1`. Zapnuté „Uložené"
@@ -10488,3 +10420,35 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .pz-stupen-vic{font-size:13px; font-weight:600; color:var(--znacka-hluboka);
   text-decoration:underline; text-underline-offset:3px;}
 .pz-stupen:hover .pz-stupen-vic{text-decoration:none;}
+
+/* ZELENÁ PLOCHA MÁ PŘELIV — A JE TO JEDNO PRAVIDLO, NE ČTYŘICET.
+   ===================================================================
+   Majitel 1. 11.: „u toho loga, jak máme takový ten lehký přechod
+   z bílé na zelenou — udělej to po celém webu, na všem." Zelenou
+   plochu nese 17 tříd (změřeno v prohlížeči na osmi typech stránek,
+   ve dvou šířkách); kdyby každá dostala vlastní zápis, rozejdou se
+   během týdne. Je tu proto JEDEN výčet a jeden token --preliv-znacka.
+
+   PROČ background-image A NE background. Většina těch pravidel si
+   barvu nastavuje sama (background-color nebo zkratka background);
+   kdyby tu stála zkratka, přepsala by jim i barvu a každá změna
+   palety by se musela dělat dvakrát. Takhle zůstává plná barva jako
+   podklad — a kde prohlížeč přelivy neumí, je pořád správně zelená.
+
+   CO PŘELIV NEDOSTALO, a proč: tečky a špendlíky na mapě (.okr-pin
+   20×20, .s-dot 8×8, .live-dot 6×6, .kh-pin 9×9) a pruh síly hesla
+   (.i, vysoký 8 px). Na ploše menší než zhruba 26 px není ze tří
+   zarážek vidět nic než šum — a špendlíků je na mapě naráz 120.
+   Výběr textu (::selection) je taky vynechaný: tam zeleň není plocha,
+   ale podklad písmene. A .as-num (kolečko s číslem kroku, 26×26) taky
+   ne: v úvodní ploše „Přidat pozemek" ho přebíjí pravidlo s vyšší
+   specificitou, které mu dává barvu té desky — přeliv by se tedy
+   nasadil jen na půlce míst, kde to kolečko stojí.
+
+   A PROČ STOJÍ TOHLE PRAVIDLO AŽ ÚPLNĚ NA KONCI STYLOPISU. Většina
+   těch tříd si barvu nastavuje ZKRATKOU `background`, a ta vynuluje
+   i background-image. Když pravidlo stálo uprostřed souboru, osm
+   z dvaadvaceti ploch přeliv nedostalo — na .filter-chip.active bylo
+   změřeno background-image:none. Shoda specificity rozhoduje pořadím,
+   takže tohle pravidlo musí být poslední. */
+.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet{background-image:var(--preliv-znacka);}

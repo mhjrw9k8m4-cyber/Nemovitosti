@@ -134,6 +134,25 @@
     return c + ':' + r + ':' + s;
   }
 
+  /* ODMÍTNUTÝ SLIB MÍSTO NENESE. U „unhandledrejection" prohlížeč
+     žádný soubor ani řádek nedává — je jen v zásobníku té chyby
+     (`reason.stack`). Čte se tedy odtud: první rámec, který ukazuje
+     na náš soubor. Bez tohohle odletí hlášení s prázdným místem,
+     tedy to nejslabší „něco se stalo" — a přesně na tom padala
+     CI 862: na stránce s rozbitým js/min/cisteni.js jdou ven DVĚ
+     hlášení, syntaktická chyba s místem a za ní odmítnutý slib
+     „PKCisteni is not defined" bez něj. */
+  function zeStopy(stopa) {
+    var n = String(stopa || '').match(/https?:\/\/[^\s()'"]+?:\d+:\d+/g);
+    if (!n) return '';
+    for (var i = 0; i < n.length; i++) {
+      var m = /^(.*):(\d+):(\d+)$/.exec(n[i]);
+      var kde = m ? misto(m[1], m[2], m[3]) : '';
+      if (kde) return kde;
+    }
+    return '';
+  }
+
   function vRelaciJeste() {
     try {
       var n = parseInt(sessionStorage.getItem(KLIC_RELACE) || '0', 10) || 0;
@@ -161,7 +180,7 @@
       if (hlaska.length < 3) return;
       /* Cizí skript bez podrobností — nic, co by se dalo opravit. */
       if (/^script error/i.test(hlaska)) return;
-      var kde = misto(z && z[1], z && z[2], z && z[3]);
+      var kde = misto(z && z[1], z && z[2], z && z[3]) || zeStopy(z && z[1]);
       var klic = hlaska + '|' + kde;
       if (videne[klic]) return;
       videne[klic] = 1;
@@ -207,7 +226,7 @@
     });
     window.addEventListener('unhandledrejection', function (e) {
       var d = e && e.reason;
-      nahlas([(d && d.message) || String(d || ''), '', 0, 0]);
+      nahlas([(d && d.message) || String(d || ''), (d && d.stack) || '', 0, 0]);
     });
   }
 }());

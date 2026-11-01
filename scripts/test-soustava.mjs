@@ -67,8 +67,17 @@ export const POMER_VYJIMKY = {
    Měří se `background` a `background-image`; klíč je selektor tak, jak
    stojí ve stylopisu. */
 export const PRELIVY = {
+  /* ZELENÁ PLOCHA CELÉHO WEBU — jedno pravidlo, jeden token. Majitel
+     1. 11.: „u toho loga, jak máme takový ten lehký přechod z bílé na
+     zelenou, udělej to po celém webu na všem." Je to tedy rozhodnutí
+     o vzhledu, ne ozdoba, která by se dala zploštit: značka přeliv má
+     a plochy ho mají mít po ní. Výčet je jeden schválně — kdyby si ho
+     každá třída psala sama, rozejdou se. */
+  '.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet': 'zelené plochy celého webu (tlačítka, zapnuté přepínače, aktivní štítky): týž přeliv, jaký má značka — světlo zleva shora. Na plochu menší než ~26 px se nedává, tam by ze tří zarážek byl jen šum.',
   '.mcf-akce': 'maska na kraji vodorovného pásu akcí — říká, že je kam rolovat',
-  '.mc-rychly': 'hlavní akce výpisu: světlo shora v ploše, aby neodporovala stínu pod tlačítkem — plochá výplň se zvednutým stínem si protiřečily',
+  '.pz-btn.primary': 'hlavní akce inzerátu: týž značkový přeliv jako zelené plochy ve stylopisu webu. Vlastní zápis proto, že se tenhle soubor vkládá do stránky AŽ ZA stylopisem a zkratkou background by přeliv jinak shodil',
+  '.hl-btn': 'tlačítka hlídání: totéž — vlastní zápis, protože vložený styl stránky stojí za stylopisem a přebil by ho',
+  '.mc-rychly': 'hlavní akce výpisu: týž značkový přeliv jako ostatní zelené plochy. Do 1. 11. tu bylo vlastní světlo shora; dvě různá světla na dvou zelených tlačítkách vedle sebe se tloukla, tak zůstal jeden recept',
   '.ms-vysledky .mc-nastroj:not(.mc-rychly), .ms-vysledky .mc-prep:not(.on), .ms-vysledky > .cdd > .cdd-btn': 'vedlejší ovladače v téže sestavě: týž směr světla o řád slabší, aby byly klávesy, ne ploché obrysy',
   '.sk': 'kostra načítání: přejezd třpytu, který říká „ještě se to nese"',
   '.opp-media': 'podklad náhledu, než se snímek stáhne — a vrstva pod závojem',
@@ -230,7 +239,17 @@ const vlozeneStranky = readdirSync('.')
   const nalezy = [];
   for (const [jmeno, text] of [['css/styles.css', bez], ['css/pozemek-vlozeny.css', vlozenyCisty],
     ...vlozeneStranky]) {
-    const re = /(background|background-image)\s*:\s*[^;}]*gradient\(/g;
+    /* PŘELIV SCHOVANÝ ZA TOKENEM SE TU TAKY POČÍTÁ. Do 1. 11. hledal
+       výraz jen literál „gradient(" — jenže `background-image:
+       var(--preliv-znacka)` ho neobsahuje, takže zelený přeliv na
+       dvaadvaceti plochách proklouzl bez jediného slova odůvodnění.
+       Najdou se proto nejdřív tokeny, jejichž hodnota přeliv je, a pak
+       se hledá i odkaz na ně. */
+    const prelivoveTokeny = [...bez.matchAll(/(--[A-Za-z0-9_-]+)\s*:\s*[^;]*gradient\(/g)]
+      .map((x) => x[1]);
+    const varSkupina = prelivoveTokeny.length
+      ? '|var\\(\\s*(?:' + prelivoveTokeny.map((t) => t.replace(/-/g, '\\-')).join('|') + ')' : '';
+    const re = new RegExp('(background|background-image)\\s*:\\s*[^;}]*(?:gradient\\(' + varSkupina + ')', 'g');
     let m;
     while ((m = re.exec(text))) {
       nalezy.push({ kde: jmeno, sel: selektor(text, m.index),

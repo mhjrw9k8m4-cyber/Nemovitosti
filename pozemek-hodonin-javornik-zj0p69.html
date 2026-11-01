@@ -2,10 +2,10 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-R178xoDF+YO9cTWVl8gEwrmr8/v/hxrObtm3HapDDYs=' 'sha256-fciZ7qYQDFSZXUT7mJDap4SNH8pIN8IUOBB61s/aJ1Q=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
-  <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),'',0,0);});}());</script>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-fciZ7qYQDFSZXUT7mJDap4SNH8pIN8IUOBB61s/aJ1Q=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
-  <script src="js/min/chyby.js?v=443c7c43" defer></script>
+  <script src="js/min/chyby.js?v=8c582bb3" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
@@ -43,7 +43,7 @@
   
   <meta name="pk-odlozeny" data-klic="vrstvy" data-src="js/min/mapove-vrstvy.js?v=3aa2d8b2">
   <meta name="pk-odlozeny" data-klic="bpej" data-src="js/min/bpej.js?v=6050e644">
-  <link rel="stylesheet" href="css/pozemek.min.css?v=df8d17a3">
+  <link rel="stylesheet" href="css/pozemek.min.css?v=90ae50fa">
   
   <link rel="preload" as="fetch" href="data/model.json" crossorigin>
   <style>#obsah{background:var(--bg)}
@@ -151,7 +151,7 @@ a.srv-kde:hover{color:var(--znacka-svetla)}
 .pz-cta{display:flex;gap:8px;margin:20px 0 0;flex-wrap:wrap}
 .pz-btn{flex:1 1 140px;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:var(--r-ovladani);font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:1px solid transparent}
 .pz-btn svg{width:19px;height:19px;stroke-width:1.89;flex:none}
-.pz-btn.primary{background:var(--plocha-znacka);color:#fff;box-shadow:var(--glow)}
+.pz-btn.primary{background:var(--plocha-znacka);background-image:var(--preliv-znacka);color:#fff;box-shadow:var(--glow)}
 .pz-btn.primary:hover{filter:brightness(1.06)}
 .pz-btn.ghost{background:var(--plocha-karta);color:var(--znacka-svetla);border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1)}
 .pz-btn.ghost:hover{border-color:var(--znacka-svetla);background:var(--plocha-tlumena)}
@@ -341,7 +341,7 @@ body.pzm-cela-telo{overflow:hidden}
 (function(){var h=location.hostname;if(!/(^|\.)vercel\.app$/.test(h))return;var s=document.createElement("script");s.defer=true;s.src="/_vercel/insights/script.js";(document.head||document.body).appendChild(s);})();</script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
-<script src="js/min/hlavicka.js?v=76ee162f" defer></script>
+<script src="js/min/hlavicka.js?v=97b4d2e8" defer></script>
 <script src="js/min/offline.js?v=3759e5ca" defer></script>
 <script src="js/min/mereni.js?v=b64f8a44" defer></script>
 <script type="application/json" id="pz-okoli-data">"Hodonín 28 km · Brno 78 km"</script>

@@ -202,27 +202,16 @@ export function sjednotHlavicku(html, soubor) {
   const naMape = /(^|\/)index\.html$/.test(String(soubor || ''));
   const bezCta = html.replace(CTA_PRYC, '');
   const sListou = bezCta.replace(VZOR, NAV_HTML.replace(NAV_MAPA, naMape ? '#mapa' : 'index.html#mapa'));
-  /* A JEŠTĚ VELIKOST NABÍDKY V PÁSU SE ZNAČKOU (jen úvodní stránka).
-     Věta „Vyberte si z 1 912 pozemků" má číslo přímo v HTML, aby dávala
-     smysl i bez JavaScriptu — a právě proto se nesmí psát ručně: den po
-     sestavení by lhala. Prohlížeč si ho sice přepíše z dat (js/main.js),
-     ale zdroj stránky je taky něco, co se čte: hlídá to pravidlo o próze
-     s počty (docs/optimalizace.md §68).
-     Sestavení ho přepíše ze STEJNÝCH dat, z jakých bere počty do lišty,
-     takže obě čísla na stránce vycházejí z jednoho zdroje. */
-  /* JMÉNO ZNAČKY V LIŠTĚ DO VLASTNÍHO <span> (od 1. 11.).
+  /* JMÉNO ZNAČKY V LIŠTĚ DO VLASTNÍHO <span>.
      V odkazu .logo leželo slovo „Parcelka" jako holý textový uzel ve
      2 460 stránkách, takže mu nešlo nastavit velikost ani nic jiného
      nezávisle na odkazu. Obalí se tedy při sestavení, stejně jako se
      vkládá lišta sama. Je to idempotentní: po přepsání už „Parcelka"
      před </a> nestojí, takže druhý průchod nic nenajde. Text zůstává
-     textem — sází se Interem jako celý web. */
-  const sJmenem = sListou.replace(
+     textem — sází se Interem jako celý web.
+     (Tady se taky dopisoval počet nabídek do věty v pásu se značkou
+     na úvodu. Pás 1. 11. zrušil majitel, takže se nemá kam psát.) */
+  return sListou.replace(
     /(<a class="logo"[^>]*>(?:<span class="logo-mark"[^>]*><\/span>)?)Parcelka(<\/a>)/g,
     '$1<span class="logo-jm">Parcelka</span>$2');
-  if (!POCTY || !POCTY.vse) return sJmenem;
-  const n = POCTY.vseCislo;
-  const tvar = n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');
-  return sJmenem.replace(/(<b id="zn-pocet">)[^<]*(<\/b>)/,
-    `$1${POCTY.vse}\u00a0${tvar}$2`);
 }
