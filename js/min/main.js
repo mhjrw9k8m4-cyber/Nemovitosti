@@ -4080,7 +4080,10 @@
           if (!od) return '';
           var km = kmOd(od, d);
           if (!isFinite(km)) return '';
-          return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
+          var nazev = (mojeMisto && mojeMisto.nazev) ? mojeMisto.nazev : '';
+          var popis = 'Vzdušnou čarou od vašeho místa' + (nazev ? ' (' + nazev + ')' : '');
+          return '<span class="opp-km" title="' + esc(popis) + '">'
+            + (km < 1 ? '<1' : Math.round(km)) + ' km od vás</span>';
         }());
 
       var perM2Html = perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '';

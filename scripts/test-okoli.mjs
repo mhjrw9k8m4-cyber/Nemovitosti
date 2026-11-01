@@ -1391,6 +1391,56 @@ const stavVybiraku = (p) => p.evaluate(() => {
   }
 }
 
+// --- 7) Vzdálenost na kartě říká, od ČEHO se měří ---------------------
+/* Majitel poslal snímek karty s „39 km" a zeptal se, co to znamená —
+   a z obrazovky se to poznat nedalo. Uložené místo se po návratu na web
+   obnoví, ale okolí se schválně NEZAPNE, takže odznak s hlídaným místem
+   nad výpisem není a číslo visí ve vzduchu. Tenhle stav tu proto má
+   vlastní hlídače: ne „okolí zapnuté", ale „vrátil jsem se na web". */
+{
+  const { ctx, p } = await telefon(null);
+  await p.evaluate(() => {
+    localStorage.setItem('pk_misto_v1', JSON.stringify({ lat: 50.75, lng: 15.05, km: 10, nazev: 'Liberec' }));
+  });
+  await p.reload({ waitUntil: 'domcontentloaded' });
+  await pripravenoVypis(p).catch(() => {});
+  await p.waitForTimeout(1200);
+  const v = await p.evaluate(() => {
+    const kmy = Array.from(document.querySelectorAll('#opp-list .opp-km'));
+    const list = document.getElementById('opp-list');
+    // Co nad výpisem opravdu stojí — kdyby tam jméno místa bylo, stačil
+    // by na kartě holý počet a tenhle hlídač by byl zbytečný.
+    let nad = '';
+    for (let n = list && list.previousElementSibling; n; n = n.previousElementSibling) nad = (n.innerText || '') + ' ' + nad;
+    return {
+      pocet: kmy.length,
+      texty: kmy.map((x) => (x.textContent || '').trim()),
+      titulky: kmy.map((x) => x.getAttribute('title') || ''),
+      okoliZap: !!document.querySelector('#ms-chipy .msch[data-okoli]'),
+      nadVypisem: nad.replace(/\s+/g, ' ').trim().slice(0, 300),
+    };
+  });
+  pravda('po návratu na web se vzdálenosti na kartách počítají', v.pocet > 0,
+    `${v.pocet} karet se vzdáleností`);
+  /* Bez tohohle by hlídač níž hlídal jiný stav, než o který jde:
+     se zapnutým okolím je jméno místa v odznaku nad výpisem. */
+  pravda('a okolí přitom zapnuté NENÍ (odznak s místem nad výpisem chybí)',
+    v.okoliZap === false && !/Liberec/.test(v.nadVypisem),
+    `odznak: ${v.okoliZap}, nad výpisem: „${v.nadVypisem}"`);
+  if (v.pocet > 0) {
+    const bezUkotveni = v.texty.filter((t) => !/od vás/.test(t));
+    pravda('každá vzdálenost na kartě říká, od čeho se měří', bezUkotveni.length === 0,
+      bezUkotveni.length ? `${bezUkotveni.length}× holé číslo, např. „${bezUkotveni[0]}"` : v.texty[0]);
+    const bezCisla = v.texty.filter((t) => !/(\d|<1)[\s\u00a0]km od vás$/.test(t));
+    pravda('a pořád je to počet kilometrů, ne jen věta', bezCisla.length === 0,
+      bezCisla.length ? `např. „${bezCisla[0]}"` : v.texty[0]);
+    const bezTitulku = v.titulky.filter((t) => !/vzdušnou čarou/i.test(t) || !/Liberec/.test(t));
+    pravda('titulek dodá celé vysvětlení včetně jména místa', bezTitulku.length === 0,
+      bezTitulku.length ? `${bezTitulku.length}× chybí, např. „${bezTitulku[0]}"` : v.titulky[0]);
+  }
+  await ctx.close();
+}
+
 await prohlizec.close();
 console.log('\nHlídané místo a pozemky v okolí');
 console.log(zpravy.join('\n'));

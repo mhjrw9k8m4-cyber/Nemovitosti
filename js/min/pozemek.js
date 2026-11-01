@@ -288,7 +288,7 @@
       var kde = x.ja
         ? '<span class="srv-kde">tenhle pozemek</span>'
         : '<a class="srv-kde" href="' + esc(x.s) + '">' + esc(x.o) + '</a>';
-      var detail = fmt(x.vym) + ' m²' + (x.km ? ' · ' + x.km + ' km' : '');
+      var detail = fmt(x.vym) + ' m²' + (x.km ? ' · ' + x.km + '\u00a0km' : '');
       return '<li class="srv-radek' + (x.ja ? ' srv-ja' : '') + '">'
         + kde + cena + '<span class="srv-detail">' + detail + '</span></li>';
     }).join('');

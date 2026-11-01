@@ -6618,12 +6618,29 @@
           : '<span class="m">výměra neuvedena</span>') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
         // řazení „podle okolí", takže si jí nikdo nevšiml.
+        /* A ŘÍKÁ, OD ČEHO SE MĚŘÍ. Štítek psal holé „39 km" a nikde na
+           obrazovce nestálo, od čeho: uložené místo se po návratu na web
+           obnoví, ale okolí se schválně NEZAPNE (viz okoliZap), takže
+           odznak s hlídaným místem nad výpisem není. Číslo tedy viselo
+           ve vzduchu — majitel se musel zeptat, co těch 39 km znamená,
+           a měl pravdu, že se to z karty poznat nedalo.
+           Titulek sám by nestačil: na telefonu se nemá kde ukázat,
+           takže to musí být vidět v textu.
+           CENU TOHO ZNÁM. Měřeno na 24 kartách s reverzí (vrácení textu
+           srovná výpis zpátky na pixel): „od vás" stojí +298 px z 9 899
+           na 430 px, +244 z 9 490 na 390 px, +80 na 360 px a +25 na
+           320 px — nejvíc 3 % výpisu za to, že číslo jde přečíst.
+           Delší „vzdušnou čarou ode mě" by stálo +590 px, tedy obrazovku
+           a půl, a je proto jen v titulku. */
         (function () {
           var od = userPos || mojeMisto;
           if (!od) return '';
           var km = kmOd(od, d);
           if (!isFinite(km)) return '';
-          return '<span class="opp-km">' + (km < 1 ? '<1' : Math.round(km)) + ' km</span>';
+          var nazev = (mojeMisto && mojeMisto.nazev) ? mojeMisto.nazev : '';
+          var popis = 'Vzdušnou čarou od vašeho místa' + (nazev ? ' (' + nazev + ')' : '');
+          return '<span class="opp-km" title="' + esc(popis) + '">'
+            + (km < 1 ? '<1' : Math.round(km)) + ' km od vás</span>';
         }());
       /* CENA ZA METR PATŘÍ K CENĚ, NE K VÝMĚŘE.
          Stála v prvním řádku jako rámeček vedle výměry, zatímco cena

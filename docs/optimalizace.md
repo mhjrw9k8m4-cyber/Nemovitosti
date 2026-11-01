@@ -18591,3 +18591,64 @@ rezervě, ne proti číslu opsanému do zkoušky — změní-li se rezerva,
 změní se kontrola s ní. Prokázáno sabotáží: po snížení rezerv na 300 px
 padnou tři nové kontroly i hlídač posunu, a každá vypíše, o kolik
 pixelů by obsah poskočil.
+
+## §300 — „39 km" na kartě neřeklo, od čeho se měří
+
+Majitel poslal snímek karty z telefonu — „Prodej pozemku 1 017 m²
+**39 km**, Dubí · okres Teplice" — a zeptal se, co těch 39 km znamená.
+Měl pravdu, že se to poznat nedalo.
+
+CO TO JE: vzdušná čára od **uloženého hlídaného místa** (nebo od polohy
+telefonu, když ji člověk právě povolil) k pozemku. Haversine
+v `js/okruh.js`, jeden pro celou mapu, filtr i řazení; na kartě ho volá
+`kmOd(userPos || mojeMisto, d)`.
+
+PROČ TO VISELO VE VZDUCHU: štítek psal holé číslo a nikde na obrazovce
+k němu nebyl zdroj. Uložené místo se po návratu na web obnoví, ale
+okolí se schválně NEZAPNE (viz `okoliZap` — kdo se vrátí, má vidět celou
+republiku), takže odznak s hlídaným místem nad výpisem není. Změřeno
+v prohlížeči: nad výpisem v tom stavu stojí jen nabídka řazení, jméno
+místa tam není ani jednou.
+
+OPRAVENO V TEXTU, NE V TITULKU. `title` se na telefonu nemá kde ukázat,
+a právě na telefonu se ta otázka vzala. Štítek teď říká
+„**39 km od vás**" a `title` dodá celou věc i s jménem místa
+(„Vzdušnou čarou od vašeho místa (Liberec)").
+
+CENU TOHO ZNÁM — měřeno na 24 kartách s reverzí (vrácení textu srovná
+výpis zpátky na pixel):
+
+| šířka | výpis před | „od vás" | „vzdušnou čarou ode mě" |
+|---|---|---|---|
+| 430 px | 9 899 px | +298 px | +590 px |
+| 390 px | 9 490 px | +244 px | +432 px |
+| 360 px | 9 364 px | +80 px | +591 px |
+| 320 px | 8 927 px | +25 px | +671 px |
+
+Nejvíc tedy 3 % výšky výpisu za to, že číslo jde přečíst. Delší věta
+by stála obrazovku a půl, a je proto jen v titulku.
+
+HLÍDAČ v `scripts/test-okoli.mjs` (136 kontrol, bylo 132) staví přesně
+ten stav, ve kterém to majitel viděl — uložené místo, okolí vypnuté —
+a ověřuje čtyři věci: že se vzdálenosti vůbec počítají, že odznak
+s místem nad výpisem **opravdu chybí** (jinak by hlídač hlídal jiný
+stav), že každý štítek říká, od čeho se měří, a že v něm pořád je počet
+kilometrů. Prokázáno sabotáží: po vrácení štítku na holé „39 km" padnou
+právě tři nové kontroly.
+
+PŘI TOM NAJDENO A OPRAVENO: `js/pozemek.js` sázel vzdálenost
+u srovnatelných pozemků s obyčejnou mezerou (`x.km + ' km'`), takže se
+„12 km" mohlo lámat mezi číslo a jednotku. Generátor téhož seznamu to
+má správně — jenže ne proto, že by to bylo napsané správně, ale protože
+krok sazby v `oprav.mjs` jede přes hotové HTML a opraví to tam.
+
+ZBÝVÁ (změřeno, NEUDĚLÁNO): týž problém je v prohlížečovém JS ještě na
+**45 místech** (`' Kč'` 16×, `' %'` 22×, `' m²'` 5×, `' ha'` a `' km'` po jednom — jednotka skládaná za hodnotu) —
+`js/ceny.js`, `js/radce.js`, `js/pozemek.js`, `js/main.js`,
+`js/zlevneni.js`, `js/hypoteka.js`, `js/graf-cen.js`, `js/naklady.js`,
+`js/rozpocet.js`, `js/smlouva.js`, `js/dotaz.js`, `js/pridat.js`,
+`js/vyvoz.js`. Krok sazby je nevidí, protože text vzniká až
+v prohlížeči. Není to jedno hromadné `sed`: `js/vyvoz.js` skládá CSV
+k vývozu, kam nezlomitelná mezera nepatří, a `js/smlouva.js` text
+smlouvy, kam naopak patří. Chce to vlastní průchod se zkouškou, která
+rozlišuje text pro obrazovku od textu pro soubor.
