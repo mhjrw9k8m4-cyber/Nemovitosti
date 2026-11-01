@@ -18959,3 +18959,80 @@ HLÍDAČ v `scripts/test-pridat.mjs` (96 kontrol, bylo 95):
   zabaleného „Jak to funguje" — tam kroky vysvětlovat smějí.
 
 Prokázáno sabotáží: vrácení odstavce shodí obě kontroly.
+
+## §307 — Tlačítko „Zpět na pozemky": všude a všude stejné
+
+Majitel: „Zpět na pozemky by mělo být všude a více viditelné, a věci
+normálně — z toho udělej tlačítko, neboj se toho."
+
+Měl pravdu dvakrát.
+
+NEBYLO TO VŠUDE. Naměřeno před opravou:
+
+| rodina stránek | počet | co tam bylo |
+|---|---|---|
+| stránky pozemků | 2 328 | `.pz-back` — tichý šedý odkaz „Zpět na seznam" |
+| ručně psané | 20 | `.st-zpet` — jiný tichý odkaz na pásu |
+| stránky účtu | 3 | `.uc-zpet-a` — třetí tichý odkaz (přidaný téhož dne) |
+| **okresy, kraje, druhy, rozpočty** | **103** | **NIC** |
+
+Na okresní ani krajské stránce tedy nevedla zpátky **žádná** cesta
+napsaná slovem — jen značka v liště a hamburger.
+
+A NEBYLO TO VIDĚT. Tři různé tiché odkazy šedým písmem, nic, co by na
+telefonu vypadalo jako ovladač.
+
+JEDEN RECEPT `.zpet-btn` pro celý web: bílá plocha, obrys 1,5 px
+v barvě značky, stín e1, 44 px na prst. Je to týž recept jako
+`.map-near-btn`, tedy zavedená vedlejší akce webu — obrys má proti
+bílé 4,10 : 1, s rezervou nad mezí 3 : 1 (WCAG 1.4.11).
+PLNÁ ZELEŇ TU BÝT NESMÍ: pravidlo webu zní jedna hlavní akce na
+obrazovku, a tou je na každé z těch stránek něco jiného.
+
+POPISEK ŘÍKÁ, KAM TO VEDE, a vždycky začíná slovem „Zpět": „Zpět na
+pozemky" (2 435 stránek), „Zpět na rádce" (10 článků), „Zpět na
+hlídání", „Zpět na přidání". Poslat čtenáře článku na výpis místo na
+rozcestník rádce by bylo horší, než jak to bylo.
+
+**Výsledek: 2 458 stránek, 0 bez tlačítka.** Výjimek je šest a každá má
+důvod: `index.html` je ten cíl, `pozemek.html` a `predloha.html` jsou
+předlohy, `404.html` nenačítá stylopis a nese vlastní rozcestník
+okresů, `inzerce.html` a `pozemky-od-lidi.html` jsou přesměrovací
+útržky o jedné větě.
+
+NA 416 STRÁNEK BY SE ZAPOMNĚLO. Ukončené a vyřazené nabídky se
+nepřegenerovávají celé — aktualizují se cílenými migracemi
+v `generate-parcel-pages.mjs`. Bez nové `migrujZpet()` by na nich
+zůstal starý šedý odkaz, tedy tlačítko na dvou třetinách webu. Chytil
+to až statický průchod všech souborů v novém hlídači; v prohlížeči by
+se kontrola konala nad hrstkou stránek a díru by minula.
+
+HLÍDAČ `scripts/test-zpet-tlacitko.mjs` (16 kontrol, nový) měří dvě
+věci, a ani jedna neplyne z té druhé:
+1. **že tam je** — staticky nad zdrojem všech 2 458 stránek;
+2. **že vypadá jako tlačítko a všude stejně** — v prohlížeči na jedné
+   stránce z každé rodiny, která má vlastní cestu ke stylu. Stránka
+   pozemku si nenačítá `styles.css`, ale vlastní `pozemek-vlozeny.css`,
+   takže recept je ve dvou souborech a může se rozejít. Porovnává se
+   VYKRESLENÝ tvar (výška, rám, plocha, barva, řez, zaoblení, stín,
+   ikona), ne zdrojový text.
+
+Prokázáno dvěma sabotážemi: vrácení jedné stránky na starý odkaz shodí
+tři kontroly, rozejití receptu v `pozemek-vlozeny.css` čtvrtou.
+
+DVĚ ZKOUŠKY SE O PŘEJMENOVÁNÍ OPŘELY a obě měly pravdu, že se něco
+změnilo:
+* `test-pravni-stranky` hlídá otisk VIDITELNÉHO TEXTU právních stránek
+  a chtěl upravit „Poslední úprava". Byla by to lež **počtvrté** — ten
+  odkaz je rám, ne znění. Ze zpracování otisku vypadávala jen stará
+  třída `.st-zpet`; teď obě. Důkaz, že šlo opravdu o rám: po doplnění
+  se otisk vrátil **přesně** na uloženou hodnotu, znak po znaku.
+* `test-stranky` hledal `.uc-zpet-a` na stránkách účtu. Přepsán na nové
+  jméno; dál si hlídá jen to svoje (že odkaz vede ven a stojí nad
+  záložkami), vzhled má na starosti nový hlídač.
+
+MOJE CHYBA PŘI PSANÍ HLÍDAČE: první verze žádala rám „1.5px solid"
+a padala na všech čtyřech rodinách, přestože web byl v pořádku —
+prohlížeč vrací POUŽITOU hodnotu zaokrouhlenou na pixel obrazovky,
+tedy „1px" při dpr 1. Měří se proto „aspoň 1 px solid" a že se ty
+rodiny shodují mezi sebou.

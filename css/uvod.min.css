@@ -4,7 +4,7 @@
 .ik-sada{position:absolute;width:0;height:0;overflow:hidden}
 .ik{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn-primary .ik,.ms-x .ik{width:18px;height:18px;stroke-width:2;flex:none}
-.okr-place .ik,.st-zpet .ik,.uc-zpet-a .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
+.okr-place .ik,.zpet-btn .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
 .rv-bilance .rvb-ano,.rv-bilance .rvb-ne{display:inline-flex;align-items:center;gap:4px}
 .btn-primary{gap:8px}
 .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}

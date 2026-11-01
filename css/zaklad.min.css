@@ -4,8 +4,7 @@
 .ik-sada{position:absolute;width:0;height:0;overflow:hidden}
 .ik{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn-primary .ik,.ms-x .ik{width:18px;height:18px;stroke-width:2;flex:none}
-.okr-place .ik,.st-zpet .ik,.uc-zpet-a .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
-.okr-place,.st-zpet{display:inline-flex;align-items:center;gap:4px}
+.okr-place .ik,.zpet-btn .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
 .btn-primary{gap:8px}
 .auth-sent-ico .ik-duraz,.pf-empty-ico .ik-duraz{stroke:var(--znacka-svetla)}
 .ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -397,9 +396,10 @@ html.pk-prihlasen .app-hero{padding-bottom:4px}
 }
 .uc-zpet{padding:8px 0 0}
 .uc-zpet .wrap{display:flex}
-.uc-zpet-a{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px 8px 8px;margin-left:-8px;font-size:14px;font-weight:600;color:var(--muted);text-decoration:none;border-radius:var(--r-xs);transition:var(--prechod)}
-.uc-zpet-a:hover{color:var(--znacka);background:var(--plocha-karta)}
-.uc-zpet-a:focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:-2px}
+.zpet-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 16px 8px 12px;border-radius:var(--r-ovladani);font-size:14px;font-weight:700;color:var(--znacka-svetla);text-decoration:none;background:#fff;border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1);transition:var(--prechod)}
+.zpet-btn:hover{border-color:var(--znacka-svetla);background:var(--surface-2)}
+.zpet-btn:active{transform:translateY(1px)}
+.zpet-btn:focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:2px}
 .uc-taby{padding:8px 0 2px}
 .uc-taby .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 .uc-taby .wrap::-webkit-scrollbar{display:none}
@@ -764,6 +764,7 @@ footer a:focus-visible{outline-color:var(--pas-nadpis)}
 .okr-band{position:relative;padding:20px 0 40px;background:var(--pas-plocha)}
 .okr-band::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(to right,var(--pas-mrizka) 1px,transparent 1px),linear-gradient(to bottom,var(--pas-mrizka) 1px,transparent 1px);background-size:var(--mrizka-bunka) var(--mrizka-bunka);-webkit-mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%);mask-image:radial-gradient(ellipse 76% 80% at 50% 44%,#000 16%,transparent 100%)}
 .okr-band>.wrap{position:relative;z-index:1}
+.okr-zpet{margin-bottom:16px}
 .okr-hero .eyebrow{color:var(--pas-text)}
 .okr-hero h1{color:var(--pas-text);font-size:var(--h1-stranka);line-height:1.1;letter-spacing:-0.03em;margin:12px 0 12px}
 .okr-hero .sub{color:var(--pas-text-mute);max-width:var(--m-text)}
@@ -1190,8 +1191,6 @@ body:has(.dt-telo) .st-hlava .st-wrap>*{grid-column:2;min-width:0}
 
 .st-hlava{background:var(--pas-plocha);padding:20px 0 28px;margin-bottom:var(--mezera-bloku)}
 .st-wrap{max-width:var(--m-wrap);margin:0 auto;padding:0 var(--okraj-stranky)}
-.st-zpet{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--pas-text-mute);text-decoration:none}
-.st-zpet:hover{color:var(--pas-text)}
 .st-odznak,.okr-band .eyebrow,.add-hero .eyebrow{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--pas-dlazdice);margin-bottom:0;font-size:12px;font-weight:600;letter-spacing:var(--odznak-proklad);text-transform:uppercase;color:var(--pas-text);justify-self:start;align-self:start;width:max-content;max-width:100%}
 .st-odznak::before{content:"";width:6px;height:6px;border-radius:var(--r-pill);background:var(--pas-akcent)}
 .okr-band .eyebrow::before,.add-hero .eyebrow::before{content:none}

@@ -947,11 +947,11 @@
    tloušťka (36/šířka), aby stopa vyšla na 1,5 px jako u všech ostatních
    ikon na webu — to hlídá scripts/test-tahy.mjs. */
 .btn-primary .ik, .ms-x .ik{width:18px; height:18px; stroke-width:2; flex:none;}
-.okr-place .ik, .st-zpet .ik, .uc-zpet-a .ik, .ext-ikona .ik,
+.okr-place .ik, .zpet-btn .ik, .ext-ikona .ik,
 .rv-bilance .rvb-ano .ik, .rv-bilance .rvb-ne .ik,
 .os-ic .ik, .vm-x .ik, .loc-x .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
 .rv-bilance .rvb-ano, .rv-bilance .rvb-ne{display:inline-flex; align-items:center; gap:4px;}
-.okr-place, .st-zpet{display:inline-flex; align-items:center; gap:4px;}
+.okr-place{display:inline-flex; align-items:center; gap:4px;}
 .btn-primary{gap:8px;}
 /* Druhá cesta ikony (fajfka v kolečku, „i" v kruhu, plus u domu) kreslí
    ve výchozím stavu stejnou barvou jako zbytek — rozsvítí se jen tam,
@@ -5811,12 +5811,32 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    i do toho osmipixelového okraje, kam prst stejně míří. */
 .uc-zpet{padding:8px 0 0;}
 .uc-zpet .wrap{display:flex;}
-.uc-zpet-a{display:inline-flex; align-items:center; gap:8px; min-height:44px;
-  padding:8px 12px 8px 8px; margin-left:-8px; font-size:14px; font-weight:600;
-  color:var(--muted); text-decoration:none; border-radius:var(--r-xs);
+/* ===================================================================
+   TLAČÍTKO ZPĚT — JEDEN RECEPT PRO CELÝ WEB (1. 11.)
+   ===================================================================
+   Majitel: „Zpět na pozemky by mělo být všude a více viditelné,
+   a věci normálně — z toho udělej tlačítko, neboj se toho."
+   Měl pravdu dvakrát. Za prvé to nebylo všude: naměřeno 2 328 stránek
+   pozemků (.pz-back), 20 ručně psaných (.st-zpet), 3 stránky účtu
+   (.uc-zpet-a) — a 103 krajských, okresních a druhových stránek
+   NEMĚLO cestu zpátky žádnou. Za druhé to byly tři různé tiché odkazy
+   šedým písmem, tedy nic, co by na telefonu vypadalo jako ovladač.
+   Je to TÝŽ recept jako .map-near-btn (vedlejší akce webu): bílá
+   plocha, obrys 1,5 px v barvě značky, stín e1, 44 px na prst.
+   Obrys má proti bílé 4,10 : 1, tedy s rezervou nad mezí 3 : 1
+   (WCAG 1.4.11) — důvod stojí u .map-near-btn.
+   PLNÁ ZELEŇ TU BÝT NESMÍ: pravidlo webu zní jedna hlavní akce na
+   obrazovku, a tou je na každé z těch stránek něco jiného (přidat
+   pozemek, uložit, odeslat). Návrat je vedlejší akce — ale vedlejší
+   akce, která vypadá jako tlačítko. */
+.zpet-btn{display:inline-flex; align-items:center; gap:8px; min-height:44px;
+  padding:8px 16px 8px 12px; border-radius:var(--r-ovladani);
+  font-size:14px; font-weight:700; color:var(--znacka-svetla); text-decoration:none;
+  background:#fff; border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);
   transition:var(--prechod);}
-.uc-zpet-a:hover{color:var(--znacka); background:var(--plocha-karta);}
-.uc-zpet-a:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:-2px;}
+.zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--surface-2);}
+.zpet-btn:active{transform:translateY(1px);}
+.zpet-btn:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
 .uc-taby{padding:8px 0 2px;}
 .uc-taby .wrap{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;}
 .uc-taby .wrap::-webkit-scrollbar{display:none;}
@@ -7385,6 +7405,9 @@ footer a:focus-visible{outline-color:var(--pas-nadpis);}
 /* Ostrá hrana, žádné vytrácení. Světlý přechod přes tmavý pás dělá na
    čtvrtině jeho výšky šedou mlhu a text úvodu do ní zasahoval. */
 .okr-band > .wrap{position:relative; z-index:1;}
+/* Odstup pod tlačítkem zpět je vlastnost pásu, ne tlačítka — stejně
+   jako na stránce pozemku (.pz-back v css/pozemek-vlozeny.css). */
+.okr-zpet{margin-bottom:16px;}
 .okr-hero .eyebrow{color:var(--pas-text);}
 .okr-hero h1{color:var(--pas-text); font-size:var(--h1-stranka); line-height:1.1;
   letter-spacing:-0.03em; margin:12px 0 12px;}
@@ -10276,9 +10299,8 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 .st-hlava{background:var(--pas-plocha); padding:20px 0 28px;
   margin-bottom:var(--mezera-bloku);}
 .st-wrap{max-width:var(--m-wrap); margin:0 auto; padding:0 var(--okraj-stranky);}
-.st-zpet{display:inline-flex; align-items:center; gap:8px; min-height:44px;
-  font-size:14px; color:var(--pas-text-mute); text-decoration:none;}
-.st-zpet:hover{color:var(--pas-text);}
+/* (.st-zpet zrušeno 1. 11. — tichý šedý odkaz na pásu nahradilo
+   tlačítko .zpet-btn, jeden recept pro celý web, viz výš.) */
 /* JEDEN ODZNAK, DVĚ ZNAČKY. Ručně psané stránky dostaly <span class="st-odznak">,
    jenže stovka vygenerovaných (okresy, kraje, druhy, rozpočty) nese od začátku
    <div class="eyebrow"> — a přepisovat je kvůli vzhledu by znamenalo sáhnout do

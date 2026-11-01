@@ -99,7 +99,13 @@ export function viditelnyText(html) {
        „Ochrana osobních údajů" vystřídala pilulka s odkazem „‹ Pozemky
        na mapě", otisk se rozešel a zkouška chtěla upravit „Poslední
        úprava" — potřetí by to byla lež o právním znění. */
-    .replace(/<a[^>]*class="[^"]*\bst-zpet\b[^"]*"[\s\S]*?<\/a>/gi, ' ')
+    /* POČTVRTÉ TOTÉŽ (1. 11.): z tichého odkazu .st-zpet se stalo
+       tlačítko .zpet-btn (jeden recept pro celý web) a otisk se zase
+       rozešel. Vypadávají proto obě jména — staré kvůli archivu
+       a nové kvůli dnešku. Důkaz, že to je rám a ne znění: po
+       doplnění se otisk vrátil PŘESNĚ na uloženou hodnotu, tedy
+       db5ab7381fc75e80 a 493559a6919a6608, znak po znaku. */
+    .replace(/<a[^>]*class="[^"]*\b(st-zpet|zpet-btn)\b[^"]*"[\s\S]*?<\/a>/gi, ' ')
     .replace(/<span[^>]*class="[^"]*\bst-odznak\b[^"]*"[\s\S]*?<\/span>/gi, ' ')
     .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')

@@ -133,8 +133,12 @@ zpravy.push(`  · prošlo se ${odkazu} odkazů ve ${soubory.length} souborech`);
   const potize = [];
   for (const f of UCET) {
     const h = readFileSync(f, 'utf8');
-    const i = h.indexOf('class="uc-zpet-a"');
-    if (i === -1) { potize.push(`${f} nemá odkaz zpátky na pozemky (.uc-zpet-a)`); continue; }
+    /* Třída se 1. 11. přejmenovala na .zpet-btn — jeden recept pro
+       celý web, viz scripts/test-zpet-tlacitko.mjs. Tahle zkouška si
+       dál hlídá jen to SVOJE: že odkaz ven vede z účtu na pozemky
+       a stojí NAD záložkami. Vzhled hlídá ta druhá. */
+    const i = h.indexOf('class="zpet-btn"');
+    if (i === -1) { potize.push(`${f} nemá odkaz zpátky na pozemky (.zpet-btn)`); continue; }
     const zacatek = h.lastIndexOf('<a ', i);
     const odkaz = h.slice(zacatek, h.indexOf('</a>', i) + 4);
     if (!/href="index\.html"/.test(odkaz)) potize.push(`${f}: odkaz ven nevede na index.html — ${odkaz.slice(0, 80)}`);

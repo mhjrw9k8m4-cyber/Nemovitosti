@@ -1162,6 +1162,14 @@ for(const okres of eligibleOkres){
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
       ${hlavickaCisla([
@@ -1344,6 +1352,14 @@ for(const kraj of eligibleKraj){
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
       ${hlavickaCisla([
@@ -1457,6 +1473,14 @@ const drazby = aktualni.filter(o=>o.type==='drazba').sort((a,b)=>{
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Dražby pozemků · celá ČR</div>
       <h1>Dražby pozemků — aktuální nabídky.</h1>
       <p class="sub">Evidujeme <b>${count} ${sklon(count,'dražbu','dražby','dražeb')}</b> pozemků z celé České republiky, z <b>veřejné evidence dražeb</b>. ${minP?('Vyvolávací ceny od <b>'+fmt(minP)+' Kč</b>. '):''}V dražbě jde často pořídit pozemek pod tržní cenou — ale je potřeba znát pravidla.</p>
@@ -1568,6 +1592,14 @@ for (const d of DRUH_STRANKY) {
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>${esc(d.oznaceni)} · celá ČR</div>
       <h1>${esc(d.h1)}.</h1>
       ${hlavickaCisla([
@@ -1748,6 +1780,14 @@ for (const r of rozpocetVznikne) {
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
       <h1>Pozemky do ${esc(r.popis)}.</h1>
       ${hlavickaCisla([
@@ -1938,6 +1978,14 @@ let novychZaTyden = 0;
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Pohyb na trhu · celá ČR</div>
       <h1>Co je na trhu nového.</h1>
       ${hlavickaCisla([
@@ -2253,6 +2301,14 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
       <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
@@ -2388,6 +2444,14 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Pozemky podle regionu</div>
       <h1>Pozemky podle krajů a okresů.</h1>
       <p class="sub">Vyberte kraj nebo okres a prohlédněte si aktuální nabídky pozemků — prodeje, dražby i exekuce z veřejných zdrojů. Pokryto <b>${krajPages.length} krajů</b> a <b>${okresPages.length} okresů</b>, přes <b>${fmt(totalListed)} ${pluralPozemek(totalListed)}</b> na jedné mapě.</p>
@@ -2548,6 +2612,14 @@ ${radky}
   <section class="okr-hero">
     <div class="okr-band">
     <div class="wrap okr-wrap">
+      <!-- CESTA ZPÁTKY NA VÝPIS. Do 1. 11. ji 103 krajských,
+           okresních a druhových stránek nemělo ŽÁDNOU: ven vedla jen
+           značka v liště a hamburger, tedy nic, co by bylo napsané
+           slovem. Majitel: „Zpět na pozemky by mělo být všude a více
+           viditelné, udělej z toho tlačítko."
+           Stojí nad obočím, ne pod nadpisem: první věc v pásu je
+           „kde jsem", a hned za ní „kudy ven". -->
+      <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Celky, ne jednotlivé parcely</div>
       <h1>Víc pozemků pohromadě.</h1>
       <p class="sub">Pět hektarů v jednom kuse je něco jiného než pět hektarů roztroušených po okrese. Tady jsou místa, kde je zrovna na prodej <b>několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe</b> — ${fmt(celky.length)} ${sklon(celky.length, 'lokalita', 'lokality', 'lokalit')}, ${fmt(celkemNabidek)} ${pluralPozemek(celkemNabidek)}, dohromady <b>${celkemHa.toFixed(0)} ha</b>.</p>

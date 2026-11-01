@@ -1016,6 +1016,9 @@ jobs:
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
         run: node scripts/test-prvni-obrazovka.mjs
 
+      - name: Tlačítko „Zpět na pozemky" (je všude a všude stejné)
+        run: node scripts/test-zpet-tlacitko.mjs
+
       - name: Stránky účtu (obsah na středu, ne přilepený vlevo)
         run: node scripts/test-stranky-uctu.mjs
 

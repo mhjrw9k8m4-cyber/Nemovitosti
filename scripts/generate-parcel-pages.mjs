@@ -813,6 +813,22 @@ export function migrujGrafCeny(h, okresKraj) {
   return h.slice(0, kam) + sekce + h.slice(kam);
 }
 
+/* TLAČÍTKO ZPĚT I NA UŽ VYROBENÝCH STRÁNKÁCH (1. 11.).
+ * Stránky, které se nepřegenerovávají celé (ukončené a vyřazené
+ * nabídky — naměřeno 416 z 2 458), se aktualizují těmihle migracemi,
+ * ne přestavbou. Bez téhle by na nich zůstal starý tichý odkaz
+ * „Zpět na seznam" šedým písmem, zatímco zbytek webu má tlačítko.
+ * Majitel chtěl jedno tlačítko všude, ne na dvou třetinách.
+ * Idempotentní: co už je přepsané, se nepřepisuje podruhé. */
+export function migrujZpet(h) {
+  if (/class="zpet-btn/.test(h)) return h;
+  return h.replace(
+    /<a class="pz-back" href="([^"]+)">[\s\S]*?<\/a>/,
+    (_, kam) => '<a class="zpet-btn pz-back" href="' + kam + '">'
+      + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>'
+      + 'Zpět na pozemky</a>');
+}
+
 export function migrujOstrovNahoru(h) {
   const ostrov = /<script>window\.PK_POZEMEK=\{[^<]*?\};<\/script>\n?/.exec(h);
   if (!ostrov) return h;
@@ -2091,7 +2107,7 @@ export function generuj() {
          komentáře z předlohy neslo až do smazání. */
       const migrovano = migrujMrtvyOdkazOkresu(bezKomentaruVHtml(migrujPopisBezReklamy(migrujPrebytecnyDiv(migrujUkoncenaData(
         migrujGrafCeny(
-          migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah))))))),
+          migrujZpet(migrujOstrovNahoru(migrujOdlozene(sablona, migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, migrujRezDat(migrujLeaflet(obsah)))))))),
           (CENY && CENY.OKRES_KRAJ) || null), uz[1])))));
       if (migrovano !== obsah) { fs.writeFileSync(cesta, migrovano); prepsano++; }
       continue;
@@ -2120,7 +2136,7 @@ export function generuj() {
         if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
       }
       const novy = migrujMrtvyOdkazOkresu(bezKomentaruVHtml(prestehovanaStranka(
-        migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))),
+        migrujZpet(migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah))))),
         jinde.soubor, jinde.place, presun ? presun[1] : dnes)));
       if (novy !== obsah) { fs.writeFileSync(cesta, novy); prestehovano++; }
       continue;
@@ -2140,7 +2156,7 @@ export function generuj() {
        větev výš srovnala sama. Je to tedy tiché, opakované rozcházení,
        ne rozbitá stránka. */
     fs.writeFileSync(cesta, bezKomentaruVHtml(ukoncenaStranka(
-      migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah)))), dnes, podobne)));
+      migrujZpet(migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah))))), dnes, podobne)));
     ukonceno++;
   }
   return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano };

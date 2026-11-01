@@ -28,9 +28,27 @@
          20 px na zbytku webu, takže obsah při přechodu z okresu na
          pozemek skočil. */
       padding:20px var(--okraj-stranky) 56px; color:var(--text); font-family:var(--font-ui);}
-    .pz-back{display:inline-flex; align-items:center; gap:4px; font-size:14px; font-weight:600; color:var(--muted); text-decoration:none; margin-bottom:16px;}
-    .pz-back:hover{color:var(--text);}
-    .pz-back svg{width:16px; height:16px; stroke-width:2.25;}
+    /* TLAČÍTKO ZPĚT — TÝŽ RECEPT JAKO VE ZBYTKU WEBU (1. 11.).
+       Stránka pozemku si nenačítá styles.css, jen tenhle stylopis,
+       takže se recept musí napsat i sem. Že se ty dvě kopie
+       nerozešly, hlídá scripts/test-zpet-tlacitko.mjs měřením
+       v prohlížeči — porovnává vykreslené tlačítko na stránce
+       pozemku s tlačítkem na okrese, ručně psané stránce a na účtu.
+       Srovnává se TVAR, ne zdrojový text: kdyby se jeden z těch dvou
+       souborů změnil, srovnání textu by to nepoznalo.
+       Důvod, proč je z tichého odkazu tlačítko, stojí u .zpet-btn
+       v css/styles.css. */
+    .zpet-btn{display:inline-flex; align-items:center; gap:8px; min-height:44px;
+      padding:8px 16px 8px 12px; border-radius:var(--r-ovladani);
+      font-size:14px; font-weight:700; color:var(--znacka-svetla); text-decoration:none;
+      background:#fff; border:1.5px solid var(--obrys-tlacitka); box-shadow:var(--e1);
+      transition:var(--prechod);}
+    .zpet-btn:hover{border-color:var(--znacka-svetla); background:var(--surface-2);}
+    .zpet-btn:active{transform:translateY(1px);}
+    .zpet-btn:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+    .zpet-btn .ik{width:15px; height:15px; stroke-width:2.4; flex:none;}
+    /* Odstup pod tlačítkem je vlastnost TÉHLE stránky, ne tlačítka. */
+    .pz-back{margin-bottom:16px;}
 
     .pz-media{position:relative; width:100%; aspect-ratio:16/10; max-height:400px; border-radius:var(--r-obraz); overflow:hidden; background:var(--plocha-tlumena); border:1px solid var(--line); box-shadow:var(--e1);}
     /* NALEZENO MĚŘENÍM na telefonu: odznak byl 95 × 202 px místo
@@ -700,7 +718,8 @@
        Platí jen na dotykových displejích, aby se na počítači nic
        nezvětšovalo zbytečně. */
     @media (pointer: coarse) {
-      .pz-back{min-height:44px;}
+      /* (.pz-back tu mívalo min-height:44px — tlačítko .zpet-btn ho
+         má 44 px na všech displejích, takže už to není potřeba.) */
       /* (Posuvník průhlednosti tu míval svých 44 px na chytání prstem.
          Je zrušený — viz komentář u panelu výš.) */
       .pzm-cela-btn{width:44px; height:44px;}
