@@ -63,6 +63,7 @@ var KOTVA_PRIHLASENI = {
     b.type = 'button';
     b.setAttribute('aria-label', 'Zpět nahoru');
     b.innerHTML = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-nahoru"/></svg><span>Nahoru</span>';
+
     (document.body || document.documentElement).appendChild(b);
   }
 

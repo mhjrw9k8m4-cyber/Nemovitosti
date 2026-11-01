@@ -159,6 +159,16 @@ var KOTVA_PRIHLASENI = {
     b.type = 'button';
     b.setAttribute('aria-label', 'Zpět nahoru');
     b.innerHTML = '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-nahoru"/></svg><span>Nahoru</span>';
+    /* VE ROHU OKNA KRADL DOTEK TLAČÍTKU V KARTĚ, PROTO JE NA TELEFONU
+       DOLE NA STŘEDU. Naměřeno na 390×844 v osmi polohách rolování:
+       ve čtyřech z nich ležel na „Uložit" (až 36 % jeho plochy) a v zásahu
+       vyhrával on. Na monitoru 1280 ani jednou.
+       Zkoušeny byly čtyři rohy a vyhrál střed, protože karta má ovladače
+       u OBOU okrajů: vlevo dole by zakrýval „Skrýt" (taky 8 kolizí),
+       vpravo „Uložit", a jen uprostřed není v kartě co zakrýt.
+       Do lišty to nešlo: řádek lišty je na 390 px plný (burger 44
+       + logo 177 + panel 343 + účet 95) a knoflík se vytlačil na x=380,
+       tedy mimo obrazovku. Umístění řeší stylopis, tady zůstává body. */
     (document.body || document.documentElement).appendChild(b);
   }
 

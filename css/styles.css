@@ -4469,9 +4469,22 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
   .to-top svg{width:21px; height:21px;}
 }
-/* Na telefonu zůstává odsazení, se kterým se měřilo v test-nahoru. */
+/* NA TELEFONU DOLE NA STŘEDU, NE V ROHU. Důvod je naměřený a stojí
+   v js/hlavicka.js: v pravém rohu knoflík kradl dotek tlačítku „Uložit"
+   v kartě, v levém „Skrýt" — karta má ovladače u obou okrajů. Uprostřed
+   karty žádný ovladač není, takže tam knoflík leží jen na fotce a textu
+   a nic nepřebíjí.
+   Posouvá se přes left a margin-left, NE přes translateX: transform si
+   drží animace příchodu (.show) a stisk, a dvě věci o jednu vlastnost
+   se vždycky poperou. Dole 10 px, aby byl co nejdál od řádku
+   s „Kopírovat / Navigovat" na stránce pozemku.
+   PRŮMĚR JE TU 48, NE 46 PX — a je to kvůli stupnici odstupů. Polovina
+   ze 46 je 23 a 23 na stupnici není (…20, 24, 28…), takže by se
+   odsazení psalo číslem mimo soustavu; test-odstupy to správně shodil.
+   48 je na stupnici, polovina 24 taky, a chytací ploše to prospěje
+   (mez na dotyk je 44). */
 @media (max-width:560px){
-  .to-top{bottom:18px; right:14px;}
+  .to-top{bottom:10px; left:50%; right:auto; width:48px; height:48px; margin-left:-24px;}
 }
 
 /* Obrazovka „Zapněte polohu" (modal při selhání geolokace) */

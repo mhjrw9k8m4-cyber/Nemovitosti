@@ -426,6 +426,68 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   await ctxP.close();
 }
 
+/* --- A NESMÍ LEŽET ANI NA OVLADAČI V KARTĚ VE VÝPISU ---------------
+   Tohle oddíl výš NEHLÍDAL, a vada tam přitom byla celou dobu: na
+   telefonu 390×844 leželo kolečko v pravém rohu na tlačítku „Uložit"
+   v kartě. Naměřeno v osmi polohách rolování — ve čtyřech z nich
+   překryv až 36 % plochy toho tlačítka, a v zásahu vyhrávalo kolečko,
+   takže klepnutí na „Uložit" odrolovalo nahoru.
+   Ustoupit tu nešlo: karet je v jednom okně několik a ovladače mají
+   u obou okrajů, takže by se knoflík skrýval půlku času a blikal.
+   Řešením je poloha — dole na středu, kde v kartě žádný ovladač není.
+   Měří se proto překryv s OVLADAČI v kartě, ne s kartou samou: ta je
+   na telefonu přes celou šířku a knoflík na ní leží vždycky. */
+{
+  const ctxV = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await ctxV.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    if (r.request().resourceType() === 'image') return r.fulfill({ status: 200, contentType: 'image/png', body: PRAZDNA });
+    return r.abort();
+  });
+  const p = await ctxV.newPage();
+  /* MĚŘÍ SE NA ÚVODNÍ STRÁNCE, protože tam vada byla naměřená.
+     Napoprvé tu stál výpis okresu a sabotáž (vrácení knoflíku do rohu)
+     zkoušku NESHODILA: karty okresu mají jinou stavbu (.okr-item) a v osmi
+     polohách po 400 px se překryv prostě netrefil. Proto obě stránky,
+     krok 120 px a ovladače ve VŠECH druzích karet. */
+  await p.goto(`${BASE}/index.html`, { waitUntil: 'domcontentloaded' });
+  await p.waitForTimeout(2600);
+  await domUtichlo(p, 400);
+  let mereno = 0, nalezy = [];
+  for (let y = 2600; y <= 3560; y += 120) {
+    await p.evaluate((yy) => window.scrollTo(0, yy), y);
+    await p.waitForTimeout(260);
+    const v = await p.evaluate(() => {
+      const t = document.getElementById('to-top');
+      if (!t || t.className.indexOf('show') === -1) return null;
+      const g = t.getBoundingClientRect();
+      const out = [];
+      const KARTY = '.opp-item, .okr-item, .deal-card, .ul-card, .odl-card';
+      const sel = KARTY.split(', ').map((k) => k + ' a, ' + k + ' button, ' + k + ' [role="button"], ' + k + ' label').join(', ');
+      for (const e of document.querySelectorAll(sel)) {
+        const q = e.getBoundingClientRect();
+        if (!q.width || !q.height || q.bottom < 0 || q.top > innerHeight) continue;
+        const x = Math.min(g.right, q.right) - Math.max(g.left, q.left);
+        const yy = Math.min(g.bottom, q.bottom) - Math.max(g.top, q.top);
+        if (x > 0 && yy > 0) out.push(((e.className && String(e.className)) || e.tagName)
+          + ' (' + Math.round(x) + '×' + Math.round(yy) + ' px, '
+          + Math.round(100 * x * yy / (q.width * q.height)) + ' % prvku)');
+      }
+      return out;
+    });
+    if (v === null) continue;
+    mereno++;
+    for (const x of v) if (nalezy.indexOf(x) < 0) nalezy.push(x);
+  }
+  pravda(`je z čeho měřit — knoflík byl vidět v ${mereno} polohách rolování`, mereno >= 6,
+    'na úvodní stránce se knoflík skoro neukázal, takže kontrola pod tím nic nedokazuje');
+  pravda('knoflík nahoru neleží na žádném ovladači v kartě', nalezy.length === 0,
+    'zakrývá: ' + nalezy.slice(0, 4).join('; ') + ' — klepnutí na ně odroluje nahoru místo své akce');
+  await ctxV.close();
+}
+
 /* --- A na úzkém monitoru nesmí ležet na výpisu ------------------
    Táž vada o patro výš: pilulka „↑ Nahoru" je 110 px široká a stojí
    24 px od hrany okna, kdežto text má 1136 px (strop 1200 minus
