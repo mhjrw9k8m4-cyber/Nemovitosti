@@ -1262,6 +1262,27 @@
       presnostDruhu: function (g) { return (chybaDruhu && chybaDruhu[g]) || null; },
       neduveryhodna: neduveryhodna,
       percentil: percentil,
+      /* KOLIK SROVNATELNÝCH NABÍDEK V PŘIHRÁDCE VŮBEC JE — i když je
+         jich málo. `percentil` pod deseti kusy vrátí null a NEŘEKNE
+         proč; stránka pak o ceně mlčela úplně. U dražeb a exekucí to
+         není okrajový případ, ale pravidlo: přihrádka je dělená podle
+         typu nabídky (viz kOkres níž), a vyvolávacích cen téhož druhu
+         v jednom okrese je nejvýš pár. Naměřeno 1. 11. na ostrých
+         datech: 0 z 26 dražeb a 0 z 22 exekucí s cenou a výměrou
+         dostane verdikt, největší přihrádka má 4 kusy. Aby stránka
+         mohla místo mlčení říct, s čím by se srovnávalo a kolik toho
+         je, vrací se počet i bez té desítky. */
+      vzorekPrihradky: function (d) {
+        if (!d || !d.okres) return null;
+        var g = druhGroup(d.druh);
+        var ko = typOkres[d.type + '|' + g + '|' + d.okres];
+        var kk = typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]];
+        var no = (ko && ko.length) || 0, nk = (kk && kk.length) || 0;
+        if (!no && !nk) return null;
+        return nk > no
+          ? { n: nk, uroven: 'kraj', kde: okresKraj[d.okres] }
+          : { n: no, uroven: 'okres', kde: d.okres };
+      },
       odhad: odhad,
       /* Skóre pro pořadí výpisu. Formule je na úrovni modulu (poptavka
          výš), tohle je jen ta pohodlná cesta: obstarám si odhad sám. */

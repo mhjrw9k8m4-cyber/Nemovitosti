@@ -517,6 +517,18 @@
       presnostDruhu: function (g) { return (chybaDruhu && chybaDruhu[g]) || null; },
       neduveryhodna: neduveryhodna,
       percentil: percentil,
+
+      vzorekPrihradky: function (d) {
+        if (!d || !d.okres) return null;
+        var g = druhGroup(d.druh);
+        var ko = typOkres[d.type + '|' + g + '|' + d.okres];
+        var kk = typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]];
+        var no = (ko && ko.length) || 0, nk = (kk && kk.length) || 0;
+        if (!no && !nk) return null;
+        return nk > no
+          ? { n: nk, uroven: 'kraj', kde: okresKraj[d.okres] }
+          : { n: no, uroven: 'okres', kde: d.okres };
+      },
       odhad: odhad,
 
       poptavka: function (d) { return poptavka(d, odhad(d)); },

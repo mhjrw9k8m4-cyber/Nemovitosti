@@ -149,6 +149,12 @@
        tmavé na tmavém. Jméno --text svádí: znamená text, který
        se píše tam, kde je plocha světlá, ne text na tmavý podklad. */
     .pz-verdict.warn{--vc:var(--accent-warm);}
+    /* BEZ POŘADÍ NENÍ VERDIKT, TAKŽE NENÍ BAREVNÝ. Dražba a exekuce
+       pořadí mezi nabídkami nedostanou (vyvolávací cena není nabídková
+       — viz js/pozemek.js) a stránka to teď říká nahlas místo mlčení.
+       Zelená by to vydávala za dobrou zprávu, oranžová za výstrahu;
+       obojí by lhalo. Šedá --muted drží bílý text na 6,7 : 1. */
+    .pz-verdict.info{--vc:var(--muted);}
     .pv-top{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;}
     /* Slovo na odznaku má váhu 600 jako všechna ostatní slova na
        odznacích; 700 je vyhrazená číslům (.msf-badge, .chip-n). */

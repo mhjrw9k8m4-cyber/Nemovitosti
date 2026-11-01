@@ -96,7 +96,8 @@ const znama = await p.evaluate(() => {
 });
 pravda(`prohlížeč načetl styly (${znama.length} pravidel — jinak zkouška nic neměří)`,
   znama.length > 500, `pravidel ${znama.length}`);
-for (const sel of ['.pz-verdict', '.pz-verdict.good', '.pz-verdict.mid', '.pz-verdict.bad', '.pz-verdict.warn']) {
+for (const sel of ['.pz-verdict', '.pz-verdict.good', '.pz-verdict.mid', '.pz-verdict.bad', '.pz-verdict.warn',
+  '.pz-verdict.info']) {
   pravda(`pravidlo ${sel} se opravdu načetlo`, znama.indexOf(sel) !== -1,
     'v CSS je napsané, ale prohlížeč ho nezná — nejspíš ho spolkl rozbitý komentář nad ním');
 }
@@ -104,7 +105,7 @@ for (const sel of ['.pz-verdict', '.pz-verdict.good', '.pz-verdict.mid', '.pz-ve
 /* --- 2) Jakou barvu z nich prohlížeč spočítá? ----------------------- */
 const barvy = await p.evaluate(() => {
   const out = {};
-  for (const cls of ['good', 'mid', 'bad', 'warn']) {
+  for (const cls of ['good', 'mid', 'bad', 'warn', 'info']) {
     const d = document.createElement('div');
     d.className = 'pz-verdict ' + cls;
     d.innerHTML = '<div class="pv-top"><span class="pv-badge">X</span></div>';
@@ -186,16 +187,76 @@ const zaklad = await p.evaluate(() => {
 });
 /* Deska musí zůstat u všech stejná a neutrální — kdyby se někomu
    vrátila barevná výplň, je ze stránky zase skládanka. */
-for (const cls of ['good', 'mid', 'bad', 'warn']) {
+for (const cls of ['good', 'mid', 'bad', 'warn', 'info']) {
   pravda(`deska „${cls}" zůstává neutrální jako výchozí`, barvy[cls].panel === zaklad.panel,
     `podklad ${barvy[cls].panel}, výchozí ${zaklad.panel}`);
   pravda(`a proužek „${cls}" je dost silný, aby šel vidět`, barvy[cls].pruhSirka >= 3,
     `šířka ${barvy[cls].pruhSirka} px`);
 }
-for (const cls of ['good', 'mid', 'bad', 'warn']) {
+for (const cls of ['good', 'mid', 'bad', 'warn', 'info']) {
   pravda(`karta „${cls}" má vlastní proužek, ne výchozí`, barvy[cls].pruh !== zaklad.pruh,
     `proužek ${barvy[cls].pruh} je stejný jako výchozí ${zaklad.pruh} — pravidlo se neuplatnilo`);
 }
+
+/* --- 3) DRAŽBA A EXEKUCE: MÍSTO MLČENÍ VYSVĚTLENÍ --------------------
+   Percentilový verdikt se u nich nepočítá schválně: přihrádka je
+   dělená podle typu nabídky a vyvolávacích cen téhož druhu je v jednom
+   okrese nejvýš pár (naměřeno 1. 11.: největší přihrádka 4 kusy, tedy
+   0 z 26 dražeb a 0 z 22 exekucí dostalo pořadí). To je správně —
+   srovnat vyvolávací cenu s nabídkovými by u skoro každé dražby vydalo
+   „levnější než 95 %", což nic neříká. Špatně bylo, že stránka pak
+   o ceně nenapsala VŮBEC NIC.
+   Hlídá se obojí, protože obojí se umí potichu překlopit: že pořadí
+   u dražeb nevzniká (kdyby se přihrádky zase slily) a že na jeho místě
+   stojí vysvětlení (kdyby ho někdo „uklidil"). */
+const dataNabidky = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities;
+const souboryPozemku = (await import('node:fs')).readdirSync(KOREN).filter((f) => /^pozemek-.*\.html$/.test(f));
+function strankaPro(x) {
+  for (const f of souboryPozemku) {
+    const h = readFileSync(path.join(KOREN, f), 'utf8');
+    if (h.includes('"c":' + x.price) && h.includes('"v":' + x.area)) return f;
+  }
+  return null;
+}
+let overeno = 0;
+for (const typ of ['drazba', 'exekuce']) {
+  const slovo = typ === 'drazba' ? 'Dražby' : 'Exekuce';
+  const jedna = typ === 'drazba' ? 'dražba' : 'exekuce';
+  /* Podíl má svou vlastní, přísnější výstrahu a ta má přednost —
+     hledá se tedy nabídka, která podíl NENÍ. */
+  const kandidati = dataNabidky.filter((x) => x.type === typ && x.price > 0 && x.area > 0 && !x.podil);
+  let hotovo = false, videno = [];
+  for (const x of kandidati.slice(0, 6)) {
+    const f = strankaPro(x);
+    if (!f) continue;
+    videno.push(f);
+    await p.goto(`http://127.0.0.1:${PORT}/${f}`, { waitUntil: 'load' });
+    await p.waitForTimeout(1800);
+    const v = await p.evaluate(() => {
+      const e = document.querySelector('.pz-verdict');
+      if (!e || e.offsetParent === null) return null;
+      return { cls: e.className, txt: (e.innerText || '').replace(/\s+/g, ' ') };
+    });
+    if (!v || /Prodává se podíl/.test(v.txt)) continue;
+    pravda(`${jedna} dostane místo mlčení vysvětlení (${f})`,
+      /pz-verdict info/.test(v.cls) && v.txt.indexOf(slovo + ' neřadíme mezi nabídky') !== -1,
+      `vyšlo: [${v.cls}] ${v.txt.slice(0, 160)}`);
+    pravda('a řekne, kolik srovnatelných nabídek vůbec je',
+      /jen \d+ — na pořadí je to málo/.test(v.txt),
+      `bez počtu je z toho jen tvrzení: ${v.txt.slice(0, 160)}`);
+    pravda('a pořadí mezi nabídkami si NEVYMYSLÍ',
+      !/(levnějš|dražš)\w* než/.test(v.txt),
+      `vyvolávací cena se nesmí řadit mezi nabídkové: ${v.txt.slice(0, 160)}`);
+    overeno++; hotovo = true; break;
+  }
+  if (!hotovo) pravda(`${jedna} dostane místo mlčení vysvětlení`, false,
+    videno.length
+      ? 'prošlo se ' + videno.length + ' stránek (' + videno.slice(0, 3).join(', ')
+        + ') a ani na jedné nestál blok o ceně — buď se vysvětlení přestalo vykreslovat, '
+        + 'nebo byly všechny spoluvlastnický podíl'
+      : 'v datech nebyla ani jedna taková nabídka, nebo se k ní nenašla stránka');
+}
+pravda('ověřeny oba typy (dražba i exekuce)', overeno === 2, 'ověřeno jen ' + overeno);
 
 await prohlizec.close();
 server.close();

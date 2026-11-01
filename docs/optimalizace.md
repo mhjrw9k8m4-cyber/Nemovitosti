@@ -18227,3 +18227,64 @@ CO SE Z TOHO BERE DÁL. Rozdíl verzí prohlížeče mezi CI a zdejším
 prostředím je trvalý (141 proti 156) a nedá se tady srovnat. Zkoušky
 proto nesmějí stát na pořadí, v jakém prohlížeč doručí dvě nezávislé
 události — a kde na něm stát musejí, má to být napsané.
+
+## §293 — Dražba o ceně mlčela: verdikt nezmizel, byl odebraný. Teď se to řekne
+
+ODKUD TO VYPLYNULO. Z otevřené položky: „percentilový verdikt zmizel ze
+všech dražeb a exekucí (bylo 16 z 91, teď 0 z 60)". Znělo to jako
+regrese, kterou je třeba vrátit. Měření ukázalo něco jiného.
+
+CO SE ZMĚŘILO (1. 11., ostrá data, modelem z `js/ceny.js`):
+
+| typ | nabídek | s cenou i výměrou | percentil | odhad |
+|-----|---------|-------------------|-----------|-------|
+| prodej | 1 833 | 1 833 | 863 | 1 368 |
+| exekuce | 48 | 22 | **0** | 3 |
+| dražba | 29 | 26 | **0** | 6 |
+
+A proč nula: přihrádka percentilu je `typ|druh|okres` (nebo kraj).
+Dražeb téhož druhu v jednom okrese je nejvíc **4**; celostátně, bez
+okresu, nejvíc 9 — a model žádá deset. Těch dřívějších „16 z 91"
+vzniklo tehdy, kdy `typ` v klíči NEBYL: dražby se řadily mezi nabídky
+k prodeji. Přepočítáno: kdyby přihrádku zase sdílely, dostalo by verdikt
+17 ze 77. Čísla tedy souhlasí a vysvětlují se.
+
+ROZDĚLENÍ PŘIHRÁDEK JE SPRÁVNĚ A ZŮSTÁVÁ. Vyvolávací cena je pod trhem
+z podstaty věci — stanoví se z posudku se srážkou, ne tím, co si řekl
+prodávající. Srovnat ji s nabídkovými cenami by u skoro každé dražby
+vydalo „levnější než 95 % pozemků", tedy tvrzení, které nic neříká a jen
+vypadá jako nález. Je to tatáž chyba, kterou web odmítá u úředně
+stanovené ceny podle § 12 (viz `spravniCena` v `js/ceny.js`).
+
+ŠPATNĚ BYLO, ŽE STRÁNKA PAK O CENĚ NENAPSALA NIC. 26 dražeb a 22 exekucí
+má cenu i výměru a návštěvník nedostal ani vodítko, ani vysvětlení —
+blok o ceně se prostě nevykreslil. Web si přitom jinde sám ukládá:
+„místo mlčení se PŘIZNÁ, s čím se srovnávalo."
+
+CO SE UDĚLALO. Na místo chybějícího pořadí přišel šedý blok **„Bez
+pořadí"**:
+
+> Dražby neřadíme mezi nabídky: vyvolávací cena není cena, kterou si
+> řekl prodávající, a bývá pod trhem. Srovnatelných dražeb téhož druhu
+> je v Ústeckém kraji jen 4 — na pořadí je to málo.
+
+Počet nese nová funkce `vzorekPrihradky(d)` v `js/ceny.js`: tytéž klíče
+jako `percentil`, jen bez té desítky, takže věta může říct kolik a odkud
+a jde to ověřit i zpochybnit. Odhad obvyklé ceny pod blokem zůstává —
+ten u dražby smysl má, protože srovnává cenu za metr s hladinou, ne
+pořadí mezi nabídkami. Barva je šedá `--muted` (bílý text 6,7 : 1):
+zelená by absenci verdiktu vydávala za dobrou zprávu, oranžová za
+výstrahu. Spoluvlastnický podíl má svou vlastní, přísnější výstrahu
+a ta má přednost dál.
+
+HLÍDÁ TO `scripts/test-verdikt.mjs` (43 kontrol, bylo 34). Nově:
+pravidlo `.pz-verdict.info` se opravdu načte, jeho odznak je čitelný,
+deska zůstává neutrální — a na SKUTEČNÉ stránce dražby i exekuce stojí
+ten blok, řekne počet a **nevymyslí si pořadí** (hledá se, že tam není
+„levnější/dražší než"). Prokázáno sabotáží: po vypnutí bloku padnou tři
+kontroly.
+
+ODNÁŠÍM SI Z TOHO JEDNU VĚC. „Zmizelo to" nebyla diagnóza, ale dojem.
+Kdyby se verdikt vracel podle té věty, přidal by se zpátky špatný
+výpočet. Ta položka měla pravdu v tom, že je někde díra — jen ta díra
+byla ve vysvětlení, ne ve výpočtu.

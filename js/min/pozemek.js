@@ -405,6 +405,25 @@
         '</div>' + odhadHtml(d);
     }
     var pc = MODEL.percentil(d);
+
+    if (!pc && d && d.type && d.type !== 'sale') {
+      var vz = MODEL.vzorekPrihradky ? MODEL.vzorekPrihradky(d) : null;
+      var coTo = d.type === 'drazba' ? 'Dražby' : 'Exekuce';
+      var cena = d.type === 'drazba' ? 'Vyvolávací cena' : 'Uváděná cena';
+      var kolik = vz
+        ? ' Srovnatelných' + (d.type === 'drazba' ? ' dražeb' : ' exekucí')
+          + ' téhož druhu je ' + (window.PK_CENY && window.PK_CENY.kdeText
+            ? window.PK_CENY.kdeText(vz.uroven, vz.kde) : 'v okolí')
+          + ' jen ' + vz.n + ' — na pořadí je to málo.'
+        : '';
+      return '<div class="pz-verdict info">'
+        + '<div class="pv-top"><span class="pv-badge">Bez pořadí</span>'
+        + '<span class="pv-cmp">' + cena + '</span></div>'
+        + '<div class="pv-text">' + coTo + ' <b>neřadíme mezi nabídky</b>: '
+        + cena.toLowerCase() + ' není cena, kterou si řekl prodávající, '
+        + 'a bývá pod trhem.' + kolik + '</div>'
+        + '</div>' + odhadHtml(d);
+    }
     if (!pc) return odhadHtml(d);
     var pct = pc.pct;
 

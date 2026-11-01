@@ -687,6 +687,38 @@
         '</div>' + odhadHtml(d);
     }
     var pc = MODEL.percentil(d);
+    /* DRAŽBA A EXEKUCE: MÍSTO MLČENÍ SE ŘEKNE, PROČ POŘADÍ NENÍ.
+       Přihrádka percentilu je dělená podle typu nabídky, a to je
+       správně: vyvolávací cena je z podstaty věci pod trhem, takže
+       srovnat ji s nabídkovými cenami by u skoro každé dražby vydalo
+       „levnější než 95 %" — tvrzení, které nic neříká. Jenže dražeb
+       téhož druhu v jednom okrese je nejvýš pár (naměřeno 1. 11.:
+       největší přihrádka 4 kusy, verdikt tedy 0 z 26 dražeb a 0 z 22
+       exekucí), takže stránka o ceně nenapsala VŮBEC NIC a člověk
+       neměl žádné vodítko ani vysvětlení.
+       Web přitom sám jinde říká: „místo mlčení se přizná, s čím se
+       srovnávalo" (js/ceny.js, blok odhadu). Tady se to tedy přizná
+       taky — včetně počtu, aby to šlo ověřit i zpochybnit. Odhad
+       obvyklé ceny pod tím zůstává, ten u dražby smysl má: srovnává
+       cenu za metr s hladinou, ne pořadí mezi nabídkami. */
+    if (!pc && d && d.type && d.type !== 'sale') {
+      var vz = MODEL.vzorekPrihradky ? MODEL.vzorekPrihradky(d) : null;
+      var coTo = d.type === 'drazba' ? 'Dražby' : 'Exekuce';
+      var cena = d.type === 'drazba' ? 'Vyvolávací cena' : 'Uváděná cena';
+      var kolik = vz
+        ? ' Srovnatelných' + (d.type === 'drazba' ? ' dražeb' : ' exekucí')
+          + ' téhož druhu je ' + (window.PK_CENY && window.PK_CENY.kdeText
+            ? window.PK_CENY.kdeText(vz.uroven, vz.kde) : 'v okolí')
+          + ' jen ' + vz.n + ' — na pořadí je to málo.'
+        : '';
+      return '<div class="pz-verdict info">'
+        + '<div class="pv-top"><span class="pv-badge">Bez pořadí</span>'
+        + '<span class="pv-cmp">' + cena + '</span></div>'
+        + '<div class="pv-text">' + coTo + ' <b>neřadíme mezi nabídky</b>: '
+        + cena.toLowerCase() + ' není cena, kterou si řekl prodávající, '
+        + 'a bývá pod trhem.' + kolik + '</div>'
+        + '</div>' + odhadHtml(d);
+    }
     if (!pc) return odhadHtml(d);
     var pct = pc.pct;
     /* Jedno místo pro všechny tři výpisy — viz skupinaText v js/ceny.js. */
