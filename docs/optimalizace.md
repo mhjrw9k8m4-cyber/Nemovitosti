@@ -18425,3 +18425,51 @@ DVAKRÁT JSEM SI TU ROZBIL ZKOUŠKU VLASTNÍ PŘEDLOŽKOU. Hledal jsem
 „v kraji", web píše „VE Středočeském kraji" a „NA Vysočině". Kontrola
 teď hledá podstatné jméno (okrese, kraji, Vysočin, celé ČR) a je u ní
 napsané proč.
+
+## §297 — Přeliv značky na VŠECH zelených plochách. A dva ho nedostaly, i když byly vypsané
+
+MAJITELOVO ZADÁNÍ (1. 11.): „všechny zelené věci jako má naše ikonka ten
+přechod… prosím udělej to na všech tlačítkách."
+
+NEHÁDALO SE, MĚŘILO SE. Oddíl §291 dal přeliv dvaceti selektorům. Sonda
+v prohlížeči (čtrnáct typů stránek, vykreslený stav) našla **17 druhů
+zelených ploch, z nichž čtyři přeliv neměly**: `.skip-link`, `.as-num`,
+`.zp-btn`, `.st-btn-1`. Statický sken stylopisu k tomu přidal dalších
+35 selektorů se zelenou plochou mimo ten seznam.
+
+ROZDĚLENO PODLE ROLE, NE HROMADNĚ. Přeliv dostaly ovladače a odznaky
+(23 selektorů navíc, celkem 43). Ploché zůstávají tečky (`.pk-me`,
+`.s-dot`), špendlíky (`.kh-pin`, `.okr-pin`) a jednopixelové pruhy
+(`.pcs-bar i`, `.trh-pas > i`, `.rv-pruh > i`) — ze tří zarážek by na
+osmi pixelech byl jen šum. Důvod je zapsaný v PRELIVY.
+
+DVA SE NEDALY SPRAVIT VYPSÁNÍM, A TO JE TEN NÁLEZ. Po přidání do
+seznamu zůstaly `.as-num` a `.zp-btn` **dál ploché** — oba kvůli
+shorthandu `background:`, který shazuje i `background-image`:
+
+* `.as-num` v `.add-hero` má pravidlo s vyšší specifičností; změněno na
+  `background-color:` (barva je táž, `--pas-akcent` je `var(--znacka)`),
+* `.zp-btn` je ve VLOŽENÉM stylu `zpravy.html`, který stojí za
+  stylopisem; přeliv se dopsal tam, k deklaraci, která vyhrává.
+
+Právě proto se to měří v prohlížeči a ne grepem: **v souboru to vypsané
+bylo, na obrazovce ne.**
+
+A JEDEN NAJEL AŽ HLÍDAČ. Nová kontrola našla pátou plochu, kterou moje
+první sonda minula: tlačítko na `404.html`. Ta stránka schválně
+NESTAHUJE žádný stylopis (musí vyjít i tehdy, když se CSS nedonese),
+takže token tam použít nejde a tři zarážky jsou opsané barvami
+(#247052 → #175A40 → #124632). Starý komentář „plná barva, ne přeliv"
+tam přestal platit a je přepsaný.
+
+HLÍDAČ (scripts/test-deska.mjs, 7 kontrol, bylo 5): při témž průchodu
+čtrnácti typy stránek se sbírá každá viditelná plocha v brandové zeleni
+od 26 px a měří se, jestli nese přeliv. Po dnešní opravě: **321 ploch
+ve 17 druzích, všechny s přelivem, nula bez.** Prokázáno sabotáží —
+vypnutí přelivu ve stylopisech kontrolu shodí a vypíše konkrétní plochy
+i stránky, na kterých jsou.
+
+MOJE CHYBA CESTOU: první sabotáž minula, protože jsem z minifikovaného
+stylopisu vyhodil první výskyt „.skip-link," — a ten byl v jiném
+pravidle než v tom seznamu. Platí to, co jsem si zapsal u §294: hlídač
+je prokázaný teprve tehdy, když sabotáž shodí JEHO kontrolu.

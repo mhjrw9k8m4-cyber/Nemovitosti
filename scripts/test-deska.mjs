@@ -108,9 +108,38 @@ await ctx.route('**/*', (r) => {
 });
 const p = await ctx.newPage();
 const desky = new Map();
+/* ZELENÁ PLOCHA MÁ PŘELIV ZNAČKY — sbírá se při témž průchodu.
+   Majitel 1. 11.: „všechny zelené věci jako má naše ikonka ten přechod,
+   udělej to na všech tlačítkách." Naměřeno tehdy 17 druhů zelených
+   ploch, z nichž 4 přeliv neměly (.skip-link, .as-num, .zp-btn,
+   .st-btn-1) — a dvě z nich ho nedostaly ani po vypsání do seznamu
+   selektorů, protože je přebíjel shorthand `background:` (u .as-num
+   pravidlo s vyšší specifičností, u .zp-btn vložený styl zpravy.html,
+   který stojí za stylopisem). Právě proto se to měří v PROHLÍŽEČI
+   a ne grepem: v souboru to vypsané bylo, na obrazovce ne.
+   Plochy menší než 26 px se nepočítají — tečky, špendlíky a 1px pruhy
+   zůstávají ploché schválně (ze tří zarážek by na nich byl šum). */
+const zelenePlochy = [];
 for (const s of STRANKY) {
   await p.goto(BASE + '/' + s, { waitUntil: 'load' }).catch(() => {});
   await p.waitForTimeout(2000);
+  for (const z of await p.evaluate(() => {
+    const brand = (c) => { const m = String(c).match(/\d+/g); if (!m || m.length < 3) return false;
+      if (m.length > 3 && Number(m[3]) === 0) return false;
+      const [r, g, b] = m.map(Number);
+      return g > r + 12 && g > b + 4 && g < 160 && r < 120; };
+    const out = [];
+    for (const e of document.querySelectorAll('*')) {
+      if (e.offsetParent === null) continue;
+      const rc = e.getBoundingClientRect();
+      if (rc.width < 26 || rc.height < 26) continue;
+      const cs = getComputedStyle(e);
+      if (!brand(cs.backgroundColor)) continue;
+      out.push({ kdo: (e.tagName + '.' + String(e.className || '').trim().split(/\s+/).slice(0, 2).join('.')).slice(0, 44),
+        preliv: /gradient/.test(cs.backgroundImage) });
+    }
+    return out;
+  })) zelenePlochy.push(Object.assign({ stranka: s }, z));
   const nalez = await p.evaluate(() => {
     const out = [];
     for (const e of document.querySelectorAll('div,section,article,aside,li,form,details,header,footer,nav,table')) {
@@ -152,6 +181,18 @@ await prohlizec.close();
 const sily = new Map();
 for (const [, d] of desky) if (d.ram && d.celyRam) sily.set(d.ram, (sily.get(d.ram) || 0) + 1);
 const nejcastejsiRam = [...sily].sort((a, b) => b[1] - a[1])[0];
+
+/* --- zelené plochy: přeliv značky na všech ------------------------- */
+{
+  const bez = zelenePlochy.filter((x) => !x.preliv);
+  const druhy = new Set(zelenePlochy.map((x) => x.kdo));
+  pravda(`je co měřit — zelených ploch: ${zelenePlochy.length} v ${druhy.size} druzích`,
+    druhy.size >= 8, 'zelených ploch se našlo málo, kontrola pod tím nic nedokazuje');
+  const seznam = [...new Set(bez.map((x) => x.kdo + ' (' + x.stranka + ')'))];
+  pravda('každá zelená plocha nese přeliv značky', bez.length === 0,
+    'bez přelivu: ' + seznam.slice(0, 6).join('; ')
+      + ' — pozor na shorthand `background:`, ten přeliv shodí');
+}
 
 pravda('je co měřit — desky na všech typech stránek',
   desky.size >= 30, `naměřeno jen ${desky.size} desek`);
