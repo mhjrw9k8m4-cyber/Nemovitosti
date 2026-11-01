@@ -317,14 +317,20 @@ try {
     pravda('úvodní stránka má pás se značkou', !!pas, 'element #zn-pas se nenašel');
     if (pas) {
       const prubeh = await p.evaluate(async () => {
-        const stav = () => ({
-          lista: parseFloat(getComputedStyle(document.querySelector('header .logo')).opacity),
-          pas: parseFloat(getComputedStyle(document.querySelector('.zn-logo')).opacity),
-        });
+        const vysL = () => document.querySelector('header').getBoundingClientRect().height;
+        const stav = () => {
+          const z = document.querySelector('.zn-logo').getBoundingClientRect();
+          return {
+            lista: parseFloat(getComputedStyle(document.querySelector('header .logo')).opacity),
+            pas: parseFloat(getComputedStyle(document.querySelector('.zn-logo')).opacity),
+            /* Kolik z velké značky ještě VYČNÍVÁ zpod lišty. Jen tahle
+               část je na obrazovce; co je nad ní, kryje lišta. */
+            videt: Math.max(0, Math.round(z.bottom - Math.max(vysL(), z.top))),
+          };
+        };
         const znacka = document.querySelector('.zn-logo');
-        const vysL = document.querySelector('header').getBoundingClientRect().height;
         const r = znacka.getBoundingClientRect();
-        const draha = Math.round(r.top + scrollY + r.height - vysL);
+        const draha = Math.round(r.top + scrollY + r.height - vysL());
         const puvodni = document.documentElement.style.scrollBehavior;
         document.documentElement.style.scrollBehavior = 'auto';
         const vzorky = [];
@@ -356,9 +362,36 @@ try {
       const hotovoNa = (v.find((x) => x.lista > 0.98) || {}).y;
       pravda('a je hotová do 60 px rolování, ne až pod lištou',
         hotovoNa !== undefined && hotovoNa <= 60, `plné logo až na ${hotovoNa} px`);
-      const nejhorsi = v.reduce((a, x) => Math.max(a, Math.min(x.lista, x.pas)), 0);
+      /* DVĚ ZNAČKY NARÁZ SE MĚŘÍ GEOMETRIÍ, NE JEN PRŮHLEDNOSTÍ.
+         Pás stojí hned pod lištou, takže velká značka je na obrazovce
+         skoro celou cestu — kdyby se počítaly jen průhlednosti, prošel
+         by i stav, kdy jsou obě bledé, ale obě vidět. Velká se proto
+         při mizení ZRYCHLÍ pod lištu a kontrola se ptá, kolik z ní
+         ještě vyčnívá: dvě značky naráz je až to, kde z velké kus
+         kouká (přes 4 px) a obě jsou zároveň znát (přes 0,15). */
+      const souber = v.filter((x) => x.videt > 4 && x.pas > 0.15 && x.lista > 0.15);
       pravda('po celé dráze nestojí dvě značky naráz',
-        nejhorsi < 0.5, `nejhorší překryv: slabší z dvojice ${nejhorsi.toFixed(2)}`);
+        souber.length === 0,
+        souber.map((x) => `${x.y} px: z velké kouká ${x.videt} px na ${x.pas.toFixed(2)}, malá ${x.lista.toFixed(2)}`).join(' | '));
+      /* MĚKKÝ ROZJEZD I DOJEZD SE DÁ ZMĚŘIT, TAK SE MĚŘÍ. Sabotáž
+         ukázala díru: když se změkčená křivka vymění za rovnoměrnou,
+         nic nespadlo — a přitom právě rovnoměrná změna je ta, na které
+         je vidět, že značka „vyrazí" a „zastaví" naráz.
+         Měří se přírůstky mezi vzorky po 4 px: u rovnoměrné křivky
+         jsou všechny stejné, u změkčené je ten první a poslední jen
+         zlomkem toho největšího uprostřed. Mez 0,55 je mezi oběma
+         případy s rezervou (naměřeno: změkčená 0,25, rovnoměrná 1,00). */
+      const kroky = [];
+      for (let i = 1; i < v.length; i++) {
+        const a = v[i - 1].lista, b2 = v[i].lista;
+        if (b2 > a && a < 0.999) kroky.push(b2 - a);
+      }
+      const nej = Math.max(...kroky, 0);
+      const pomer = nej > 0
+        ? Math.max(kroky[0], kroky[kroky.length - 1]) / nej : 1;
+      pravda('a náběh má měkký rozjezd i dojezd, ne rovnoměrný',
+        kroky.length >= 4 && pomer < 0.55,
+        `krajní přírůstek je ${(pomer * 100).toFixed(0)} % největšího (kroků: ${kroky.length})`);
       pravda('a návrat nahoru vrátí velkou značku hned, bez dojíždění',
         prubeh.zpatky.pas > 0.98 && prubeh.zpatky.lista < 0.02,
         `po návratu: lišta ${prubeh.zpatky.lista}, pás ${prubeh.zpatky.pas}`);

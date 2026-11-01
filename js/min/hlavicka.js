@@ -143,6 +143,14 @@ var KOTVA_PRIHLASENI = {
     ceka = true;
     (window.requestAnimationFrame || setTimeout)(premer);
   }
+
+  function usek(podil, od, do_) {
+    var t = (podil - od) / (do_ - od);
+    return t < 0 ? 0 : (t > 1 ? 1 : t);
+  }
+
+  function hladce(t) { return t * t * (3 - 2 * t); }
+
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
     var podil = y / draha;
@@ -151,7 +159,9 @@ var KOTVA_PRIHLASENI = {
 
     if (podil !== 0 && podil !== 1 && Math.abs(podil - posledni) < 0.01) return;
     posledni = podil;
-    styl.setProperty('--zn-podil', podil.toFixed(3));
+
+    styl.setProperty('--zn-velka', (1 - hladce(usek(podil, 0, 0.75))).toFixed(3));
+    styl.setProperty('--zn-mala', hladce(usek(podil, 0.25, 1)).toFixed(3));
 
     ko.toggle('pk-odrolovano', podil > 0.5);
   }

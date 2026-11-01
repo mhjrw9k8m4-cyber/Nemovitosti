@@ -17957,3 +17957,46 @@ a ta se podle pravidla z §68 musí vypsat s důvodem — `test-tokeny` to
 chytil hned. Záloha 0 je stav „stránka je nahoře": velká značka svítí,
 lišta je bez loga. Tedy přesně to, co člověk uvidí první, takže když
 skript neběží, nekreslí se nic špatně.
+
+## §288 „Ještě plynulejší": měkká křivka a let značky pod lištu
+
+Majitel k předávce z §287: „ten přechod udělej víc plynulejší." Tři
+věci, každá změřená.
+
+**1. Měkký rozjezd i dojezd místo rovnoměrné změny.** Rovnoměrná změna
+je na oko vidět: značka „vyrazí" a „zastaví" naráz. Křivka t²·(3−2t)
+začíná i končí s nulovou rychlostí, takže oba konce jsou neznatelné
+a největší změna je uprostřed, kde se na ni nikdo nedívá. Počítá se
+v js/hlavicka.js, protože v CSS se z jedné proměnné nic plynulejšího
+než přímka udělat nedá; stylopis dostává rovnou obě hotové hodnoty
+(`--zn-velka`, `--zn-mala`) místo dřívějšího holého podílu.
+
+**2. Delší náběh.** Každá značka se přelévá přes tři čtvrtiny cesty
+místo necelé poloviny — ze 24 px rolování je 42 px. Dráha zůstala
+56 px, takže předávka pořád končí tam, kde dřív.
+
+**3. Pohyb, ne jen prolnutí — a ten zároveň vyřešil dvojitou značku.**
+Samotné křížení průhledností vypadá jako bliknutí dvou obrázků přes
+sebe, a hlavně: pás stojí hned pod lištou, takže velká značka je na
+obrazovce skoro celou cestu. Naměřeno uprostřed cesty (28 px): obě na
+0,26 a obě vidět — na snímku dvě bledé „Parcelky". Velká se proto při
+mizení posune o 48 px nahoru (a zmenší o desetinu), takže v půlce cesty
+je UŽ CELÁ pod lištou: horní hrana 73 − 28 − 35 = 10 px, spodní 66 px,
+lišta kryje do 73 px. Obě značky se tím nikdy nepotkají na obrazovce —
+ne proto, že jsou bledé, ale protože jedna tam fyzicky není. Malá
+zároveň dojede o 8 px zdola a doroste z 94 %. Čte se to jako jedna
+značka, která přelétne do lišty.
+
+**Hlídač se tím musel zpřísnit, a jedna díra v něm byla vidět až po
+sabotáži.** „Dvě značky naráz" se měří geometrií: kolik z velké ještě
+vyčnívá zpod lišty (přes 4 px) při obou průhlednostech nad 0,15 —
+pouhé porovnání průhledností by nový stav neodlišilo od starého.
+A hlavně: sabotáž „rovnoměrná křivka místo změkčené" **neshodila nic**,
+protože měkkost nikdo neměřil. Přibyla tedy kontrola přírůstků mezi
+vzorky po 4 px: u rovnoměrné křivky jsou všechny stejné, u změkčené je
+krajní jen zlomkem největšího. Naměřeno: změkčená 25 %, rovnoměrná
+99 %, mez 55 %.
+
+**Prokázáno sabotážemi:** zrušený let (48 → 6 px) shodí dvojitou
+značku („28 px: z velké kouká 21 px na 0,26, malá 0,26"), rovnoměrná
+křivka shodí měkkost („krajní přírůstek je 99 % největšího").

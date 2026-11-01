@@ -288,9 +288,9 @@ var KOTVA_PRIHLASENI = {
    společného. Při pomalém posunu se objevila až dávno po tom, co velká
    značka odjela; při rychlém naopak doběhla, až když už se stránka
    dávno nehýbala.
-   TEĎ TO ŘÍDÍ ROLOVÁNÍ, NE ČASOVAČ. Skript počítá podíl 0–1, jak
-   daleko je velká značka na cestě pod lištu, a zapíše ho do proměnné
-   `--zn-podil` na <html>; stylopis z ní dělá obě průhlednosti naráz.
+   TEĎ TO ŘÍDÍ ROLOVÁNÍ, NE ČASOVAČ. Skript počítá, jak daleko je velká
+   značka na cestě pod lištu, a z toho rovnou obě průhlednosti —
+   `--zn-velka` a `--zn-mala` na <html>; stylopis je jen použije.
    Malá v liště tedy přibývá přesně tak, jak velká ubývá — prolnutí,
    které sleduje prst a dá se zastavit uprostřed.
    DRÁHA JE KRATŠÍ: ne celý pás (105 px), ale jen velká značka
@@ -329,6 +329,19 @@ var KOTVA_PRIHLASENI = {
     ceka = true;
     (window.requestAnimationFrame || setTimeout)(premer);
   }
+  /* ÚSEK CESTY: kolik z něj je za sebou, když je celá cesta 0–1.
+     Obě značky se nepřelévají přes stejný úsek — kdyby ano, byly by
+     uprostřed obě na polovině (viz poznámka o dvou značkách naráz). */
+  function usek(podil, od, do_) {
+    var t = (podil - od) / (do_ - od);
+    return t < 0 ? 0 : (t > 1 ? 1 : t);
+  }
+  /* MĚKKÝ ROZJEZD I DOJEZD. Rovnoměrná změna je na oko vidět: značka
+     „vyrazí" i „zastaví" naráz. Tahle křivka (t²·(3−2t)) začíná i končí
+     s nulovou rychlostí, takže oba konce jsou neznatelné a největší
+     změna je uprostřed, kde se na ni nikdo nedívá. */
+  function hladce(t) { return t * t * (3 - 2 * t); }
+
   function prekresli() {
     var y = window.pageYOffset || document.documentElement.scrollTop || 0;
     var podil = y / draha;
@@ -339,7 +352,19 @@ var KOTVA_PRIHLASENI = {
        konci cesty zůstalo 0,995 a značka by nikdy nedosvítila. */
     if (podil !== 0 && podil !== 1 && Math.abs(podil - posledni) < 0.01) return;
     posledni = podil;
-    styl.setProperty('--zn-podil', podil.toFixed(3));
+    /* DVĚ HODNOTY, NE JEDNA. Dřív se zapisoval holý podíl a křivky si
+       z něj dopočítával stylopis přes clamp/calc — jenže pak se dvě
+       rozhodnutí o vzhledu (kdy která značka náběhne a jak měkce)
+       četla ze dvou míst a v CSS se nedá udělat nic plynulejšího než
+       přímka. Teď se tady spočítá rovnou, co má být vidět, a stylopis
+       to jen použije.
+       VELKÁ slábne přes první tři čtvrtiny cesty, MALÁ nabíhá od
+       čtvrtiny do konce. Překrývají se tedy v prostřední polovině, ale
+       protože obě křivky jsou v tu chvíli nízko (naměřeno 0,26 a 0,26
+       uprostřed) a velké značce zbývá nad lištou jen proužek, nečte se
+       to jako dvě značky — spíš jako jedna, která přelétá. */
+    styl.setProperty('--zn-velka', (1 - hladce(usek(podil, 0, 0.75))).toFixed(3));
+    styl.setProperty('--zn-mala', hladce(usek(podil, 0.25, 1)).toFixed(3));
     /* Třída rozhoduje jen o tom, co se nedá mít napůl: jestli je logo
        v liště klikací a jestli je pod ní linka. */
     ko.toggle('pk-odrolovano', podil > 0.5);
