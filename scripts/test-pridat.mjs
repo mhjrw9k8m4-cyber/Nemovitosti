@@ -752,13 +752,36 @@ async function odesli(p) {
       zavreno: jak ? !jak.hasAttribute('open') : null,
       vyskaSouhrnu: sum ? Math.round(sum.getBoundingClientRect().height) : 0,
       oUctuVUvodu: /účet|e-mail a heslo/i.test((hero && hero.textContent) || ''),
+      /* Odstavce PŘÍMO v úvodu, ne ty uvnitř „Jak to funguje" — tam
+         kroky vysvětlovat smějí, protože jsou zabalené a zavřené. */
+      odstavcuPodNadpisem: hero ? hero.querySelectorAll(':scope > .wrap > p, :scope > p').length : -1,
+      textPodNadpisem: hero
+        ? Array.prototype.map.call(hero.querySelectorAll(':scope > .wrap > p, :scope > p'),
+            function (e) { return (e.textContent || '').trim().slice(0, 60); }).join(' | ')
+        : '',
     };
   });
   pravda('na telefonu je první ovládací prvek vidět bez rolování (do 844 px)',
     v.prvniAkceY != null && v.prvniAkceY <= 844,
     'začíná až na ' + v.prvniAkceY + ' px — člověk musí rolovat, než vůbec něco udělá');
-  pravda(`úvod stránky je krátký (${v.heroH} px)`, v.heroH != null && v.heroH <= 560,
+  /* MEZ UTAŽENÁ Z 560 NA 340 (1. 11.). Majitel zakroužkoval odstavec
+     pod nadpisem: „texty ve žlutém nikoho nezajímají, dej je pryč."
+     Naměřeno s reverzí (vrácení odstavce do stránky posune formulář
+     zpátky na pixel): odstavec stál 102 px na 390, 360 i 320 px, 77 px
+     na 430 px a 51 px na monitoru — a přihlašovací karta se tím
+     posunula z 496 px na 377.
+     Úvod má teď 284 px. Mez 340 nechává 56 px, což unese delší nadpis
+     nebo pátou pilulku, ale NEUNESE vrácení odstavce — a o to jde:
+     mez 560 by ho pustila zpátky a nikdo by si toho nevšiml. */
+  pravda(`úvod stránky je krátký (${v.heroH} px)`, v.heroH != null && v.heroH <= 340,
     'úvod má ' + v.heroH + ' px; rozhodnutého člověka už není proč přesvědčovat');
+  /* A POD NADPISEM UŽ NESTOJÍ ODSTAVEC. Mez výš by se dala splnit
+     i tak, že se odstavec zkrátí na jeden řádek — jenže ta věta tam
+     nemá co dělat celá, ne jen zčásti: všechno, co říkala, stojí na
+     téže stránce ještě dvakrát (krok 1 a 3 v „Jak to funguje",
+     přihlašovací karta hned pod tím, text nad formulářem). */
+  pravda('a pod nadpisem nestojí žádný odstavec', v.odstavcuPodNadpisem === 0,
+    `je jich ${v.odstavcuPodNadpisem}: ${v.textPodNadpisem}`);
   pravda('„Jak to funguje" je zabalené a zavřené', v.jeJak && v.zavreno === true,
     v.jeJak ? 'je otevřené rovnou' : 'blok .add-jak na stránce není');
   pravda('a má co ukázat (jinak zkouška nic neměří)', v.krokuUvnitr >= 3,

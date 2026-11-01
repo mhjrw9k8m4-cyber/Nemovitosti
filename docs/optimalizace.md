@@ -18921,3 +18921,41 @@ sobě neuklidila a následující kontrola „řazení se při otevření nehne"
 to pak naměřila jako skok o 118 px — padala na nepořádku, který po
 sobě nechala zkouška, ne na vadě webu. Blok teď vrací stránku do
 stavu, ve kterém ji našel, a sám si to ověřuje.
+
+## §306 — Odstavec pod nadpisem na „Přidat pozemek" (a tři tvrzení navíc)
+
+Majitel zakroužkoval text pod nadpisem: „texty ve žlutém nikoho
+nezajímají, dej je pryč."
+
+ODSTRANĚN `<p class="sub">` z úvodu `pridat.html`. Nebyla to jen
+nezajímavá věta — bylo to **potřetí totéž na jedné obrazovce**:
+
+| co věta říkala | kde to stojí znovu |
+|---|---|
+| „nejdřív je potřeba účet, stačí e-mail a heslo" | krok 1 v „Jak to funguje" + přihlašovací karta o dva prsty níž |
+| „první nabídku si projdeme do 24 hodin" | krok 3 v „Jak to funguje" + text nad formulářem |
+
+CENA ZMĚŘENA S REVERZÍ (vrácení odstavce posune formulář zpátky na
+pixel): odstavec měl **102 px na 390, 360 i 320 px**, 77 px na 430 px
+a 51 px na monitoru. Přihlašovací karta se posunula z 496 px na **377**.
+
+A U TOHO SE ZKRÁTIL I TEXT NAD FORMULÁŘEM. Odstavec `.add-lead` nesl
+čtyři tvrzení a tři z nich stála na téže obrazovce ještě jednou:
+„Zdarma a bez provize" je v pilulkách, „Spravovat v Mém profilu" je
+odkaz v liště hned nad ním, „objeví se na mapě mezi ostatními" je
+krok 3. Zbyly dvě věci, které se jinde nedozví ten, kdo právě odesílá:
+co je povinné a že první nabídka jde přes kontrolu. Lhůta 24 hodin
+zůstala **tady a ne v nadpisu stránky** schválně — patří k odeslání,
+ne k rozhodnutí sem vůbec přijít.
+
+HLÍDAČ v `scripts/test-pridat.mjs` (96 kontrol, bylo 95):
+* mez na výšku úvodu **utažená z 560 na 340 px** (naměřeno 284).
+  Rezerva 56 px unese delší nadpis nebo pátou pilulku, ale NEUNESE
+  vrácení odstavce — a o to jde: mez 560 by ho pustila zpátky a nikdo
+  by si toho nevšiml.
+* nová kontrola „pod nadpisem nestojí žádný odstavec". Samotná mez by
+  se dala splnit i zkrácením věty na jeden řádek, jenže ta věta tam
+  nemá co dělat celá. Počítají se odstavce PŘÍMO v úvodu, ne ty uvnitř
+  zabaleného „Jak to funguje" — tam kroky vysvětlovat smějí.
+
+Prokázáno sabotáží: vrácení odstavce shodí obě kontroly.
