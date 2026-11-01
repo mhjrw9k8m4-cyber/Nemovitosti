@@ -283,13 +283,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-kutna-hora.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-pribram.html</loc>
     <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemky-okres-pribram.html</loc>
+    <loc>https://www.parcelaka.cz/pozemky-okres-kutna-hora.html</loc>
     <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
@@ -8389,6 +8389,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-prachatice-zablati-1srfy02.html</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-prostejov-konice-136t3m.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -8983,6 +8989,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-sumperk-moravicany-x59fa3.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-benesov-ostredek-11554m3.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -8991,6 +9003,12 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-ceske-budejovice-dolni-bukovsko-14rxm8y.html</loc>
     <lastmod>2026-09-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-svitavy-sklene-uurue1.html</loc>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9055,12 +9073,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-sumperk-moravicany-x59fa3.html</loc>
-    <lastmod>2026-10-18</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-ceske-budejovice-petrikov-u9h6yn.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -9105,12 +9117,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-ostrava-mesto-ostrava-uk2h6x.html</loc>
     <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-svitavy-sklene-uurue1.html</loc>
-    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9763,12 +9769,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-frydek-mistek-bahno-b4eyv1.html</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-pisek-protivin-1em6xki.html</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -9831,6 +9831,12 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-praha-vychod-zdiby-ufrxh3.html</loc>
     <lastmod>2026-10-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-pribram-obory-11wn52m.html</loc>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -9921,12 +9927,6 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-bruntal-krnov-18ov0zo.html</loc>
     <lastmod>2026-09-29</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-vyskov-drazovice-1h5zx95.html</loc>
-    <lastmod>2026-09-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -10077,6 +10077,12 @@
   <url>
     <loc>https://www.parcelaka.cz/pozemek-brno-venkov-kuparovice-1giz2hv.html</loc>
     <lastmod>2026-09-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-brno-venkov-zbysov-ryr793.html</loc>
+    <lastmod>2026-11-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -12049,25 +12055,13 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-mlada-boleslav-1g0y8st.html</loc>
-    <lastmod>2026-10-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-semily-semily-1pcz5e4.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-liberec-liberec-9e3ocv.html</loc>
-    <lastmod>2026-10-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-semily-semily-ftk3in.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-mlada-boleslav-mlada-boleslav-1g0y8st.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -12079,13 +12073,25 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-semily-semily-1hri41a.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-liberec-liberec-9e3ocv.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-semily-semily-wokamm.html</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-semily-semily-ftk3in.html</loc>
+    <lastmod>2026-10-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.parcelaka.cz/pozemek-semily-semily-1hri41a.html</loc>
     <lastmod>2026-10-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -12103,14 +12109,20 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-kutna-hora-kutna-hora-1xsd3u8.html</loc>
+    <lastmod>2026-10-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-nymburk-vrbova-lhota-kj2pv0.html</loc>
     <lastmod>2026-10-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-kutna-hora-kutna-hora-1xsd3u8.html</loc>
-    <lastmod>2026-10-24</lastmod>
+    <loc>https://www.parcelaka.cz/pozemek-rakovnik-rakovnik-uw8p8w.html</loc>
+    <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -12127,25 +12139,19 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-rakovnik-rakovnik-uw8p8w.html</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.parcelaka.cz/pozemek-frydek-mistek-hradek-jqpa1q.html</loc>
     <lastmod>2026-10-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-ostrava-mesto-hrabova-h5fp45.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-hodonin-hroznova-lhota-1f4hm0q.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.parcelaka.cz/pozemek-hodonin-hroznova-lhota-1f4hm0q.html</loc>
+    <loc>https://www.parcelaka.cz/pozemek-ostrava-mesto-hrabova-h5fp45.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
@@ -12169,6 +12175,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://www.parcelaka.cz/pozemek-znojmo-znojmo-123erjs.html</loc>
+    <lastmod>2026-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://www.parcelaka.cz/pozemek-kolin-prisimasy-1bwxxh3.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -12176,12 +12188,6 @@
   </url>
   <url>
     <loc>https://www.parcelaka.cz/pozemek-hodonin-hodonin-6c7y1d.html</loc>
-    <lastmod>2026-10-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.parcelaka.cz/pozemek-znojmo-znojmo-123erjs.html</loc>
     <lastmod>2026-10-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
