@@ -18473,3 +18473,66 @@ MOJE CHYBA CESTOU: první sabotáž minula, protože jsem z minifikovaného
 stylopisu vyhodil první výskyt „.skip-link," — a ten byl v jiném
 pravidle než v tom seznamu. Platí to, co jsem si zapsal u §294: hlídač
 je prokázaný teprve tehdy, když sabotáž shodí JEHO kontrolu.
+
+## §298 — Rozpočet stránky pozemku: změřeno, NEUDĚLÁNO (a dvakrát jsem měřil špatně)
+
+ODKUD TO VYPLYNULO. Z položky #150: „stránka pozemku má 5 obrazovek:
+270 px nese galerie bez fotek a 92 px souřadnice." Měření ukázalo, že
+obě jmenovaná čísla už neplatí — a že na stránce není co ubrat, aniž by
+se ubral obsah.
+
+ZMĚŘENO (1. 11., telefon 390×844, osm stránek napříč daty, přímé bloky
+`#pz-detail`; průměr tam, kde je blok přítomen):
+
+| blok | px | na kolika z 8 |
+|------|----|---------------|
+| `#pzm` mapa | 534 | 7 |
+| `#pz-vyvoj` graf vývoje ceny | 430 | 7 |
+| `#pz-verdict` verdikt o ceně | 373 | 6 |
+| `.pz-media` snímek pozemku | 293 | 7 |
+| `.pz-pozn-box` poznámka | 224 | 7 |
+| `.pz-klice` klíčové údaje | 196 | 7 |
+| `.pz-kamdal` kam dál | 196 | 7 |
+| `.pz-head` nadpis | 139 | 7 |
+| `.pz-actions` | 112 | 7 |
+| `.pz-sour` souřadnice | 108 | 7 |
+| `.pz-gtk-obal` rádce (SBALENÝ) | 53 | 7 |
+
+Celek: 2 780–5 046 px, tedy **3,3–6,0 obrazovky**. Hlavní akce leží na
+69–77 % stránky, verdikt o ceně na 1,8.–2,3. obrazovce.
+
+PROČ SE NIC NEUBRALO. Čtyři největší bloky (mapa, graf, verdikt, snímek)
+nejsou vata, ale to, proč na stránku někdo chodí. A obě věci, které
+položka jmenovala, mezitím změnily povahu:
+
+* **„270 px galerie bez fotek"** už není galerie. Když fotky nejsou
+  (a nemá je ani jedna nabídka, viz §142), kreslí se do `.pz-media`
+  **vygenerovaný snímek pozemku** 384×256 — jediný obrázek na stránce
+  a nese informaci o tvaru parcely. Ubrat ho by nebylo zkrácení, ale
+  odebrání obsahu.
+* **„92 px souřadnice"** je dnes 108 px a jsou v nich dva řádky:
+  souřadnice s `<code>` a řádek s „Kopírovat / Navigovat". Složit to do
+  jednoho řádku ušetří ~50 px ze čtyř tisíc, tedy 1,2 %, a sáhne to na
+  dotykové mezy i na uspořádání, které §181 zrovna urovnalo. Nestojí to
+  za to.
+
+DVAKRÁT JSEM SI VYROBIL NÁLEZ METODOU, NE MĚŘENÍM — a to je na tomhle
+oddílu nejdůležitější:
+
+1. Napoprvé jsem hledal galerii selektorem `.pz-galerie`, který na
+   stránce není, a vyšlo „galerie 0 px". Vypadalo to, že vada zmizela.
+   Opravdový blok se jmenuje `.pz-media` a má 293 px.
+2. Napodruhé jsem sčítal i vnořené prvky a vyšel mi „největší blok
+   `.pz-gtk` se 710 px". Jenže to je obsah ZAVŘENÉHO `<details>`
+   (rádce) — Chrome u něj pořád vrací rozměry, i když na stránce
+   nezabírá nic. Na stránce stojí 53 px, jak komentář v `js/pozemek.js`
+   celou dobu tvrdil. Kód měl pravdu, měření ne.
+
+Pravidlo, které si z toho beru: rozpočet se smí sčítat jen z PŘÍMÝCH
+dětí jednoho kořene a jen z toho, co má nenulovou plochu na stránce;
+jinak se počítá dvakrát nebo se počítá skryté.
+
+CO TEDY ZBÝVÁ. Zkrátit stránku jde už jen rozhodnutím o obsahu (co
+sbalit, co přesunout, co vypustit), ne úklidem. To je majitelova volba
+a nemá se udělat potichu, takže je položka zavřená jako změřená
+a neprovedená — stejně jako §48 a §125.
