@@ -18000,3 +18000,47 @@ krajní jen zlomkem největšího. Naměřeno: změkčená 25 %, rovnoměrná
 **Prokázáno sabotážemi:** zrušený let (48 → 6 px) shodí dvojitou
 značku („28 px: z velké kouká 21 px na 0,26, malá 0,26"), rovnoměrná
 křivka shodí měkkost („krajní přírůstek je 99 % největšího").
+
+## §289 Celá značka, ne jen ikonka: kresba, sazba, hloubka
+
+Majitel: „udělej celkové logo — název, stínování, font atd." Nejdřív
+vznikla jen nová kresba; tohle je zbytek, tedy značka jako soustava.
+
+**1. Kresba: parcela s vytyčeným bodem.** Stará značka byla špendlík
+s domem — tedy nejobvyklejší realitní klišé, a hlavně říkala „domy",
+zatímco web prodává pozemky. Nová je pětiúhelník v půdorysu (tak se
+parcela kreslí v katastru) s bodem uprostřed: tvar říká, CO se prodává,
+bod to, co web umí — najít konkrétní parcelu. Prošlo se třemi koly
+a osmnácti návrhy; mozaika se četla jako krabice, brázdy jako lomítka,
+monogram „P" je jen písmeno v rámečku. Rozhodovala čitelnost v 16 px.
+
+**2. Sazba jména.** Logo není věta: čte se jako jeden obrazec, takže se
+sází těsněji než text. Rozhraní má −0,03 em, značka −0,04 em — nejtěsnější
+krok, který stupnice typografie zná (`-0.045em` by ji shodil, což se při
+zkoušení stalo). Jméno stálo na TŘECH místech s vlastním zápisem (lišta,
+pás na úvodu, hlava šuplíku); teď je to jedno rozhodnutí a u něj seznam,
+kde platí.
+
+**3. Hloubka a stín.** Parcela je nad dlaždicí nadzvednutá: spodní hrana
+je v `--znacka-hluboka`, tedy v barvě, kterou soustava už má — ne ve
+čtvrté zeleni. Stín je jen v pásu na úvodu, kde značka doopravdy leží
+nad papírem; čísla jsou z tokenu `--e1`, zapsaná jako `drop-shadow`,
+protože `box-shadow` by obkreslil čtverec obrázku, ne tvar dlaždice.
+V liště stín není — tam je značka součástí plochy.
+
+**4. Tři nálezy, které se našly cestou.**
+  · `favicon.svg` si vezl PŮVODNÍ kresbu se třemi přelivy a vnitřní září,
+    přestože se značka 30. 10. zplošťovala. A protože se z něj kreslí
+    PNG ikony, měl web v záložce a na ploše telefonu JINOU značku než
+    v liště. Hlídač koukal jen na `logo-mark.svg`; teď čte obě kresby
+    a kromě výplně i obtah.
+  · Podklad pod ikonou pro iOS byl `#1B4A34` — třetí zeleň, která
+    neodpovídala ani značce, ani ploše pod ní.
+  · Náhledový obrázek pro sítě kreslil místo značky zelený čtvereček
+    s bílým kolečkem (a čtvrtou zelení `#256443`) — sdílený odkaz tedy
+    nesl jinou značku než web. Teď se do něj vkládá táž kresba.
+
+**Co se vědomě NEUDĚLALO.** Podtitul „Pozemky na jedné mapě" je nakreslený
+a na desce značky je vidět, ale nikde nasazený není: v pásu na úvodu by
+se tloukl s větou o počtu nabídek a v patičce značka vůbec nestojí.
+Dokud pro něj nebude místo, nemá v kódu co dělat.

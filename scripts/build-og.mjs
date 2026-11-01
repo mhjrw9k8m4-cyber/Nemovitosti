@@ -54,10 +54,11 @@ function sablona(nadpis, nadtitul, pod) {
     font-family:'Source Serif 4','Charter','Bitstream Charter','DejaVu Serif',Georgia,serif;
   }
   .znacka{display:flex; align-items:center; gap:14px;}
-  .mark{width:44px; height:44px; border-radius:13px; flex:none;
-    background:#256443;
-    display:flex; align-items:center; justify-content:center;}
-  .mark span{width:14px; height:14px; border-radius:50%; background:#EAE6DD;}
+  /* SKUTEČNÁ ZNAČKA, NE NÁHRAŽKA. Stával tu zelený čtvereček s bílým
+     kolečkem uprostřed — tedy obrázek, který se sdílel na sítích, nesl
+     jinou značku než web. Kresba se teď vkládá z assets (jedna
+     předloha) a čtvereček zmizel i se čtvrtým odstínem zelené. */
+  .mark{width:44px; height:44px; flex:none; display:block;}
   .znacka b{font-size:31px; font-weight:700; letter-spacing:-.01em;}
   .nadtitul{font-family:'IBM Plex Mono',ui-monospace,'DejaVu Sans Mono',monospace;
     font-size:17px; letter-spacing:.17em; text-transform:uppercase; color:#C99A5B;}
@@ -67,7 +68,7 @@ function sablona(nadpis, nadtitul, pod) {
   .pata{display:flex; align-items:center; gap:14px; font-size:21px; color:rgba(234,230,221,.6);}
   .tecka{width:7px; height:7px; border-radius:50%; background:#C99A5B; flex:none;}
 </style></head><body>
-  <div class="znacka"><span class="mark"><span></span></span><b>Parcelka</b></div>
+  <div class="znacka">${ZNACKA_SVG}<b>Parcelka</b></div>
   <div>
     <div class="nadtitul">${nadtitul}</div>
     <h1>${nadpis}</h1>
@@ -128,11 +129,19 @@ const ukoly = [
    aby existovala JEDNA předloha a tahle situace se nemohla vrátit.
    U apple-touch-icon je pod ikonou plná zelená: iOS si kulaté rohy
    ořezává sám a průhledné rohy by na něm zčernaly. */
-const ZNACKOVA_ZELEN = '#1B4A34';
+/* Táž zeleň jako token --plocha-znacka a jako dlaždice v kresbě. Byla
+   tu #1B4A34, tedy třetí odstín, který neodpovídal ani značce, ani
+   ploše pod ní — na iPhonu se to projevilo tmavším lemem kolem ikony. */
+const ZNACKOVA_ZELEN = '#175A40';
 const favicon = fs.readFileSync(path.join(ROOT, 'assets', 'favicon.svg'), 'utf8')
   /* Jen na KOŘENOVÉM <svg>. Plošné hledání width/height vzalo rozměry
      i vnitřním <rect>ům — ikona pak byla prázdná bílá plocha. */
   .replace(/<svg\b[^>]*>/, (t) => t.replace(/\s(width|height)="[^"]*"/g, ''));
+/* Táž kresba i do náhledového obrázku. Z favicon.svg, protože ten už
+   je tady načtený a je to jedna a táž předloha; jen dostane třídu,
+   kterou si stylopis šablony bere na rozměr. */
+const ZNACKA_SVG = favicon.replace(/<svg\b/, '<svg class="mark"');
+
 function sablonaIkony(podklad) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     *{margin:0;padding:0;box-sizing:border-box;}

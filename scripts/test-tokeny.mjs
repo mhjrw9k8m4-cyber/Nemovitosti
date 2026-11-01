@@ -466,10 +466,25 @@ const STEJNA_BARVA = {
 {
   const m = /--plocha-znacka\s*:\s*([^;]+);/.exec(STYL);
   const plocha = (m ? m[1] : '').trim().toLowerCase();
-  for (const soubor of ['logo-mark.svg']) {
+  /* OBĚ KRESBY, NE JEN JEDNA — A STÁLO TO JEDEN NÁLEZ. Hlídal se jen
+     logo-mark.svg, takže favicon.svg si až do 1. 11. vezl PŮVODNÍ
+     podobu značky se třemi přelivy a vnitřní září, přestože se kresba
+     30. 10. zplošťovala. A protože se z favicon.svg kreslí i PNG ikony
+     (scripts/build-og.mjs), měl web v záložce a na ploše telefonu jinou
+     značku než v liště. Čte se i obtah, ne jen výplň: nová kresba jím
+     zaobluje rohy parcely. */
+  for (const soubor of ['logo-mark.svg', 'favicon.svg']) {
     const znak = readFileSync(path.join(ROOT, 'assets', soubor), 'utf8');
-    const barvy = [...znak.matchAll(/fill="(#[0-9a-fA-F]{3,8})"/g)].map((x) => x[1].toLowerCase());
-    const cizi = barvy.filter((x) => x !== plocha && x !== '#ffffff' && x !== '#fff');
+    const barvy = [...znak.matchAll(/(?:fill|stroke)="(#[0-9a-fA-F]{3,8})"/g)].map((x) => x[1].toLowerCase());
+    /* HLUBOKÁ ZELEŇ JE TŘETÍ DOVOLENÁ BARVA, a je to rozhodnutí o vzhledu:
+       parcela v kresbě je nad dlaždicí nadzvednutá a její spodní hrana
+       musí být tmavší než plocha pod ní, jinak hloubka není vidět.
+       Není to nová barva — je to token --znacka-hluboka, tedy tatáž,
+       kterou má tmavý pás na webu. Čtvrtá by tu být neměla. */
+    const m2 = /--znacka-hluboka\s*:\s*([^;]+);/.exec(STYL);
+    const hluboka = (m2 ? m2[1] : '').trim().toLowerCase();
+    const cizi = barvy.filter((x) => x !== plocha && x !== hluboka
+      && x !== '#ffffff' && x !== '#fff');
     pravda(`kresba značky (${soubor}) má touž zeleň jako token --plocha-znacka`,
       !!plocha && barvy.length > 0 && cizi.length === 0,
       `token ${plocha || '(není)'}, v kresbě ${[...new Set(barvy)].join(', ') || '(žádná)'}`);

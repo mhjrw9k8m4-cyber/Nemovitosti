@@ -1703,8 +1703,19 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    ne od oka: 30/34 px a 10px mezera shodily test-pismo i test-odstupy
    — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
    na --r-ovladani, ať nevypadá jako nalepená nálepka. */
-.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none; transition:var(--prechod);}
-/* ZNAČKA JE OD 30. 10. PLOCHÁ — A TADY JE PROČ.
+.logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.04em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none; transition:var(--prechod);}
+/* JMÉNO ZNAČKY SE SÁZÍ TĚSNĚJI NEŽ TEXT, a je to to jediné místo na
+   webu, kde se tak sází. Logo není věta: čte se jako jeden obrazec,
+   takže mezery mezi písmeny mají být menší než v textu. Rozhraní má
+   -0.03em, značka -0.04em — nejtěsnější krok, který stupnice
+   typografie zná (scripts/test-typografie.mjs). Platí to na všech
+   třech místech, kde jméno stojí: v liště (.logo), v pásu na úvodu
+   (.zn-jm) a v hlavě šuplíku (.nav-znacka). Kdo přidá čtvrté, ať sem
+   připíše i jeho.
+   DLAŽDICE A JMÉNO JSOU JEDEN CELEK: odstup mezi nimi je 12 px při
+   dlaždici 56 px (a 16 při 64, 8 při 44) — vždy zhruba pětina
+   dlaždice, aby se poměr nerozpadl, když značka roste.
+   /* ZNAČKA JE OD 30. 10. PLOCHÁ — A TADY JE PROČ.
    Kresba (assets/logo-mark.svg) měla tři přelivy a vnitřní záři: dva
    lineární (plocha dlaždice a špendlík) a jeden radiální. Web se
    přitom přelivů zbavoval půl týdne (§18, §19, §42) — a tohle byl
@@ -1738,7 +1749,7 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    deska: stín `--e1` a 1px světlou hranu nahoře (`inset 0 1px 0`),
    přesně jako `.map-app`. Zelená zář (--glow) tu zůstává zakázaná
    z důvodu o pár řádek výš: ta na webu znamená „zapnuto". */
-.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=15") center/contain no-repeat;
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=16") center/contain no-repeat;
   box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18);}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
@@ -1840,10 +1851,18 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
   .zn-pas{display:flex; flex-direction:column; align-items:center; gap:4px;
     padding:0 var(--okraj-stranky) 12px; background:var(--plocha-plovouci-plna);
     border-bottom:1px solid var(--line); text-align:center;}
+  /* V PÁSU JE ZNAČKA HRDINA, TAK MÁ STÍN. Majitel chtěl „stínování";
+     na webu ho nese to, co leží nad plochou (karty, lišta), a tady
+     značka doopravdy leží nad papírem. Čísla jsou tatáž jako u stínu
+     --e1, jen zapsaná jako filtr, protože box-shadow by obkreslil
+     čtverec obrázku, ne tvar dlaždice. V liště stín NENÍ: tam je
+     značka součástí plochy, ne věc na ní. */
   .zn-logo{display:inline-flex; align-items:center; gap:12px; color:var(--znacka);}
+  .zn-logo .logo-mark{filter:drop-shadow(0 1px 2px rgba(var(--text-rgb),0.10))
+    drop-shadow(0 2px 6px rgba(var(--text-rgb),0.08));}
   /* Jméno má stejné písmo i řez jako v liště — jedna značka, jedno
      písmo (viz poznámka „JMÉNO ZNAČKY MÁ JEDNO PÍSMO" níž). */
-  .zn-jm{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.03em;
+  .zn-jm{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.04em;
     font-size:32px; line-height:1;}
   .zn-logo .logo-mark{width:56px; height:56px;}
   .zn-pod{margin:0; font-size:16px; line-height:1.3; color:var(--muted);}
@@ -5621,7 +5640,7 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     border-bottom:1px solid var(--line);}
   .nav-hlava .logo-mark{width:40px; height:40px;}
   .nav-znacka{font-family:var(--font-ui); font-size:20px; font-weight:700;
-    letter-spacing:-0.03em; color:var(--znacka);}
+    letter-spacing:-0.04em; color:var(--znacka);}
   /* Křížek sedí v té hlavičce vpravo (js/menu.js ho tam vkládá), takže
      už nemá vlastní řádek ani vlastní `order`. */
   .nav-hlava .nav-zavrit{order:0; margin:0 0 0 auto; align-self:center;}
