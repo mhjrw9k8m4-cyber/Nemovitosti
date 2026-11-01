@@ -18698,3 +18698,60 @@ tlačítka do obalu padnou všechny čtyři.
 MĚŘENO NE PODLE `#mc-akce`: ten má `display:contents`, takže nemá
 vlastní obdélník a první verze kontroly se o něj tiše opřela a
 přeskočila se. Řada nářadí je `.ms-vysledky`.
+
+## §302 — Historie pozemků zmizela pod 24 karet
+
+Majitel: „nevím, kam zmizelo historie pozemků. Normálně to historii dej
+předtím, jak byla. A v uložených to ukáže jen uložené, ale musíš
+vymyslet, aby to nějak vypadalo."
+
+KDE BYLA: pruh „Naposledy prohlédnuté" (`#recent-strip`) nikam nezmizel
+— od 29. 10. stál **za výpisem**, taky na jeho přání („ať je co nejvíc
+dole"). Jenže za výpisem je na telefonu až za 24 kartami, tedy přes
+devět tisíc pixelů od vršku. Prakticky to je totéž jako kdyby tam nebyl.
+
+Je to potřetí, co se stěhuje: nahoru (28. 10.) → dolů (29. 10.) →
+na chvíli přepínač v řadě (30. 10., hned zrušený) → nahoru (1. 11.).
+Tahle poznámka je tu proto, aby se při čtvrtém stěhování vědělo, co
+které umístění stojí.
+
+CO SE ZMĚNILO:
+1. `.recent-strip` je v `index.html` nad `#opp-list` (dřív za ním).
+2. V pohledu „Uložené" se pruh **neukazuje**: tam výpis sám nese uložené
+   pozemky a historie nad ním by byla druhý, skoro stejný seznam hned
+   nad prvním. Přepíná se jen `hidden`, pruh se nepřestavuje — přestavba
+   při každém překreslení výpisu by zahodila posun řádku do strany.
+
+CO TO STOJÍ, A NEBUDU TVRDIT NIC JINÉHO. Měřeno na 390×844 s reverzí
+(vypnutí pruhu vrátí nabídku na pixel tam, kde je bez historie):
+
+| | bez historie | s historií |
+|---|---|---|
+| první nabídka | 471 px | 582 px (+111) |
+| spodek ceny první nabídky | 787 px | 898 px |
+
+Obrazovka má 844 px, takže **cena první nabídky je pro vracejícího se
+návštěvníka 54 px pod hranou**. Totéž na 430 px (923) a na 360 px (879);
+na 320 px 845, tedy o jediný pixel. Pro návštěvníka BEZ historie se
+nemění nic a přísná mez `MEZ_PRVNI = 540` i kontrola ceny platí dál.
+
+ZKOUŠEL JSEM TO ZLEVNIT A NEJDE TO ROZUMNĚ. Pruh má 99 px: nadpis 21,
+čip 54, vycpávka 16, plus 12 px odsazení. Čip nejde zmenšit — náhled má
+44 px proto, že při 48 px se nejdražší pozemek v datech („379 320 000
+Kč") krájel o 2 px (viz komentář u `.rs-foto`). Na mez 540 px by pruh
+musel mít 49 px, tedy bez nadpisu a s náhledem pod 37 px; to už není
+police s tím, co jsem viděl, ale řádek barevných čtverečků. Volnější
+mez pro stav s historií je proto poctivější než předstírat, že to nic
+nestojí.
+
+HLÍDAČ v `scripts/test-prvni-obrazovka.mjs` (29 kontrol, bylo 26) měří
+pět věcí: že se pruh naplnil, že stojí NAD první nabídkou, o kolik ji
+odsouvá (proti vlastní mezi `MEZ_PRVNI_HISTORIE = 600`, naměřeno 582),
+že ten posun je **opravdu jen pruh** (po jeho vypnutí nabídka sedí jako
+na stránce bez historie), a že se v „Uložené" neukazuje a po vypnutí
+zase ukáže. Prokázáno dvěma sabotážemi: vrácení pruhu pod výpis shodí
+dvě kontroly, vyřazení `favOnly` z `recentViditelnost()` třetí.
+
+DŘÍVĚJŠÍ KONTROLA „pruh první nabídku neodsouvá ani o pixel" byla
+smazaná, ne obejitá: po přesunu nahoru přestala platit a nechat ji
+projít jinak by byla lež.

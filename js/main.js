@@ -2052,6 +2052,7 @@
     favEl.innerHTML = BM_SVG + '<span>Uložené' + (n ? ' (' + n + ')' : '') + '</span>';
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
+    recentViditelnost();
     /* Věta se mění podle toho, jestli je kam ukládat. Slibovat
        „uvidíte je i jinde" nepřihlášenému by byla lež; tvrdit
        „zůstávají jen tady" přihlášenému taky, od chvíle, kdy se
@@ -2120,12 +2121,26 @@
      na historii, to nikdo nechtěl." Pruh se tedy ukazuje zase sám,
      stojí za výpisem (29. 10.: „ať je co nejvíc dole") a od DVOU
      položek — s jednou prohlédnutou nabídkou není co srovnávat. */
+  /* PRUH SE STAVÍ JEDNOU, ALE SCHOVÁVÁ SE PODLE POHLEDU.
+     V „Uložené" nese výpis sám uložené pozemky a historie nad ním by
+     byla druhý, skoro stejný seznam hned nad prvním. Majitel: „a
+     v uložených to ukáže jen uložené."
+     Přestavovat pruh při každém překreslení výpisu nejde: zahodilo by
+     to posun řádku do strany (kdo si odroluje na pátou položku, vrátí
+     se mu to na začátek při každé změně řazení). Proto se jen
+     přepíná `hidden`. */
+  var recentMaCo = false;
+  function recentViditelnost(){
+    var el = document.getElementById('recent-strip');
+    if (!el) return;
+    el.hidden = !recentMaCo || !!favOnly;
+  }
   function renderRecent(){
     var el = document.getElementById('recent-strip');
     if (!el) return;
     var idx = keyIndex();
     var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
-    if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
+    if (items.length < 2) { recentMaCo = false; el.hidden = true; el.innerHTML = ''; return; }
     /* POČET PATŘÍ DO NADPISU. Řádek se posouvá do strany a posuvník je
        schovaný, takže ze čtyř prohlédnutých byly na telefonu vidět dvě
        (naměřeno: 438 px za pravou hranou) a nic neříkalo, že tam další
@@ -2170,7 +2185,8 @@
     });
     h += '</div>';
     el.innerHTML = h;
-    el.hidden = false;
+    recentMaCo = true;
+    recentViditelnost();
     /* ÚPLNĚ NAHOŘE, NE MEZI NABÍDKAMI.
        Pruh se vkládal až ZA první kartu — aby neodsouval první nabídku
        pod obrazovku. Jenže pak stál uprostřed výpisu a vypadal, že do
@@ -6427,6 +6443,10 @@
        — jen stojí telefon skoro sekundu práce. Změřit to zvenčí jinak
        nejde; viz scripts/test-jedno-vykresleni.mjs. */
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
+    /* I odsud, ne jen z refreshFavBtn(): do „jen uložené" se dá dostat
+       i hlasem (viz pol('„jen uložené"', …)), a ta cesta tlačítko
+       nepřekresluje. Je to jedno přiřazení, ne přestavba. */
+    recentViditelnost();
     var zamereni = zapamatujZamereni();
     stahniPoznamky();
     stahniUlozene();

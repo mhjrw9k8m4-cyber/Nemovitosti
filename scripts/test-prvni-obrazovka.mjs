@@ -345,15 +345,24 @@ try {
      jedna značka" zůstala výš a platí dál.) */
   await ctx.close();
 
-  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" POD VÝPISEM ------------
-     Stěhoval se dvakrát: napřed nahoru („mají být úplně nahoře"), pak
-     29. 10. pod výpis („ať je co nejvíc dole"). 30. 10. z něj byl na
-     chvíli přepínač v řadě nad výpisem — a hned zase ne: „proč tam
-     dáváš tlačítko na historii, to nikdo nechtěl." Platí tedy zase
-     pravidlo z 29. 10.: pruh se ukazuje sám a stojí POD výpisem, první
-     nabídku neodsouvá ani o pixel.
+  /* ---- A S PRUHEM „NAPOSLEDY PROHLÉDNUTÉ" NAD VÝPISEM ------------
+     Stěhoval se potřetí. Napřed nahoru („mají být úplně nahoře"),
+     29. 10. pod výpis („ať je co nejvíc dole"), 30. 10. z něj byl na
+     chvíli přepínač v řadě nad výpisem a hned zase ne („to nikdo
+     nechtěl") — a 1. 11. zpátky nahoru: „nevím, kam zmizela historie
+     pozemků, normálně to dej, jak bylo." Pod výpisem je totiž na
+     telefonu až za 24 kartami, tedy přes devět tisíc pixelů od vršku.
+     TOHLE STOJÍ MÍSTO NA PRVNÍ OBRAZOVCE A NETVRDÍM NIC JINÉHO.
+     Naměřeno na 390×844: pruh je vysoký 99 px a s odsazením stojí
+     111 px, takže první nabídka klesne ze 471 na 582 px a spodek její
+     ceny z 787 na 898 px — tedy 54 px pod hranu obrazovky. Pro
+     NÁVŠTĚVNÍKA BEZ HISTORIE se nemění nic a přísná mez MEZ_PRVNI
+     i kontrola ceny výš platí dál; tohle je cena, kterou platí ten,
+     kdo se vrací a historii má. Má proto vlastní, volnější mez —
+     a ta je tu od toho, aby se nehnula zase o kus dál.
      Prázdný prohlížeč žádnou historii nemá, takže se musí naplnit —
      jinak by kontrola prošla naprázdno nad schovaným pruhem. */
+  const MEZ_PRVNI_HISTORIE = 600;
   {
     const nabidky = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities || [];
     const klice = nabidky
@@ -382,36 +391,61 @@ try {
       const el = document.getElementById('recent-strip');
       const karta = document.querySelector('#opp-list .opp-item');
       const y = (e) => e ? Math.round(e.getBoundingClientRect().top + window.scrollY) : null;
-      return { pruhY: y(el), pruhH: el ? Math.round(el.getBoundingClientRect().height) : null,
+      const out = { pruhY: y(el), pruhH: el ? Math.round(el.getBoundingClientRect().height) : null,
         kartaY: y(karta), cipu: document.querySelectorAll('.rs-chip').length,
-        skryty: el ? el.hidden : null };
+        skryty: el ? el.hidden : null, kartaBezPruhu: null,
+        poUlozenych: null, zpetPoUlozenych: null };
+      /* Kolik z posunu je pruh: vypnout ho a změřit znovu. Vrací se
+         hned zpátky, ať další měření neběží na jiné stránce. */
+      const st = document.createElement('style');
+      st.textContent = '#recent-strip{display:none !important;}';
+      document.head.appendChild(st);
+      out.kartaBezPruhu = y(document.querySelector('#opp-list .opp-item'));
+      st.remove();
+      /* A pohled „Uložené": pruh se tam nemá ukazovat. */
+      const fav = document.getElementById('map-fav');
+      if (fav) {
+        fav.click();
+        out.poUlozenych = el ? el.hidden : null;
+        fav.click();
+        out.zpetPoUlozenych = el ? el.hidden : null;
+      }
+      return out;
     });
     const r = await mer();
     await c2.close();
     pravda('pruh „Naposledy prohlédnuté" se naplnil sám (jinak není co měřit)',
       !!r && r.skryty === false && r.cipu >= 3, JSON.stringify(r));
     if (r && r.skryty === false) {
-      /* PRUH STOJÍ POD VÝPISEM, NE NAD NÍM. Je to historie, ne
-         nabídka: kdo přijde na úvodní stránku, chce vidět, co je
-         nového. Druhá podmínka je ta důležitější — první nabídku
-         nesmí odsunout ani o pixel (mez 440 px je tatáž jako
-         u stránky bez pruhu i s rezervou). */
-      pravda('a stojí POD první nabídkou, ne nad výpisem',
-        r.pruhY !== null && r.kartaY !== null && r.pruhY > r.kartaY,
+      /* PRUH STOJÍ NAD VÝPISEM. Je to návrat k tomu, co jsem už viděl,
+         tedy něco, co se dělá NEŽ začnu listovat. Pod výpisem to
+         majitel nenašel. */
+      pravda('a stojí NAD první nabídkou, ne až za výpisem',
+        r.pruhY !== null && r.kartaY !== null && r.pruhY < r.kartaY,
         `pruh na ${r.pruhY} px, první nabídka na ${r.kartaY} px`);
-      /* MĚŘÍ SE PROTI STRÁNCE BEZ PRUHU, NE PROTI PEVNÉMU ČÍSLU.
-         Stálo tu `< 440` a komentář o řádek výš tvrdil, že je to
-         „tatáž mez jako u stránky bez pruhu i s rezervou" — jenže ta
-         je MEZ_PRVNI, tedy 480. Dvě čísla se rozešla a 31. 10. se to
-         projevilo: první nabídka vyšla na 445 px, pruh ji přitom
-         neodsouval ani o pixel (bez pruhu začíná na témže místě).
-         Hlídač tedy padal na něčem, co vůbec neměřil.
-         Otázka zní „odsouvá pruh první nabídku?", a ta se dá položit
-         přesně: porovnat s TÝMŽ měřením bez pruhu (m.karta). Strop
-         zůstává taky, ale jen jeden — ten společný. */
-      pravda(`a první nabídku neodsouvá (${r.kartaY} px proti ${m.karta} px bez pruhu)`,
-        r.kartaY !== null && je(m.karta) && r.kartaY <= m.karta + 1 && r.kartaY < MEZ_PRVNI,
-        `pruh je vysoký ${r.pruhH} px, s pruhem ${r.kartaY} px, bez pruhu ${m.karta} px, strop ${MEZ_PRVNI}`);
+      /* O KOLIK ODSOUVÁ, SE MĚŘÍ, NEZAMLČUJE SE.
+         Dřív tu stálo „neodsouvá ani o pixel" — to po přesunu nahoru
+         přestalo platit a tvářit se jinak by byla lež. Porovnává se
+         s TÝMŽ měřením bez pruhu (m.karta), takže se čte skutečný
+         rozdíl, ne rozdíl dvou různých stránek. Strop je vlastní
+         a volnější: první obrazovku bez historie hlídá MEZ_PRVNI výš. */
+      const posun = (r.kartaY !== null && je(m.karta)) ? r.kartaY - m.karta : null;
+      pravda(`a odsouvá první nabídku o ${posun} px, ne víc (strop ${MEZ_PRVNI_HISTORIE} px)`,
+        posun !== null && posun > 0 && r.kartaY < MEZ_PRVNI_HISTORIE,
+        `pruh je vysoký ${r.pruhH} px, s pruhem ${r.kartaY} px, bez pruhu ${m.karta} px`);
+      /* A TEN POSUN JE OPRAVDU JEN PRUH, nic jiného se nepřestěhovalo:
+         vypnutí pruhu musí vrátit nabídku přesně tam, kde je na
+         stránce bez historie. */
+      pravda('a je to opravdu jen pruh (po jeho vypnutí nabídka sedí jako bez historie)',
+        r.kartaBezPruhu !== null && je(m.karta) && Math.abs(r.kartaBezPruhu - m.karta) <= 1,
+        `bez pruhu na téže stránce ${r.kartaBezPruhu} px, na stránce bez historie ${m.karta} px`);
+      /* V POHLEDU „ULOŽENÉ" SE PRUH NEUKAZUJE. Tam výpis sám nese
+         uložené pozemky a historie nad ním by byla druhý, skoro
+         stejný seznam. Majitel: „a v uložených to ukáže jen uložené." */
+      pravda('a v pohledu „Uložené" se neukazuje', r.poUlozenych === true,
+        `po zapnutí „Uložené" hidden = ${r.poUlozenych}`);
+      pravda('a po vypnutí „Uložené" je zase vidět', r.zpetPoUlozenych === false,
+        `hidden = ${r.zpetPoUlozenych}`);
     }
   }
 

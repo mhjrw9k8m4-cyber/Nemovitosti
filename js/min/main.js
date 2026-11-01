@@ -1188,6 +1188,7 @@
     favEl.innerHTML = BM_SVG + '<span>Uložené' + (n ? ' (' + n + ')' : '') + '</span>';
     favEl.classList.toggle('on', favOnly);
     favEl.setAttribute('aria-pressed', String(favOnly));
+    recentViditelnost();
 
     favEl.title = jePrihlasen()
       ? 'Uložené pozemky se ukládají k vašemu účtu — uvidíte je i na jiném zařízení.'
@@ -1226,12 +1227,18 @@
     });
   }
 
+  var recentMaCo = false;
+  function recentViditelnost(){
+    var el = document.getElementById('recent-strip');
+    if (!el) return;
+    el.hidden = !recentMaCo || !!favOnly;
+  }
   function renderRecent(){
     var el = document.getElementById('recent-strip');
     if (!el) return;
     var idx = keyIndex();
     var items = recentKeys().map(function (k) { return idx[k]; }).filter(Boolean).slice(0, 8);
-    if (items.length < 2) { el.hidden = true; el.innerHTML = ''; return; }
+    if (items.length < 2) { recentMaCo = false; el.hidden = true; el.innerHTML = ''; return; }
 
     var h = '<div class="rs-head">Naposledy prohlédnuté'
       + '<span class="rs-pocet">' + items.length + '</span></div><div class="rs-row">';
@@ -1258,7 +1265,8 @@
     });
     h += '</div>';
     el.innerHTML = h;
-    el.hidden = false;
+    recentMaCo = true;
+    recentViditelnost();
 
     rsStin(el.querySelector('.rs-row'));
   }
@@ -3984,6 +3992,8 @@
   function renderList() {
 
     try { window.PK_VYKRESLENI = (window.PK_VYKRESLENI || 0) + 1; } catch (e) {}
+
+    recentViditelnost();
     var zamereni = zapamatujZamereni();
     stahniPoznamky();
     stahniUlozene();
