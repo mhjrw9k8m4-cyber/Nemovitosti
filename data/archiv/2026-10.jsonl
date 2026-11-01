@@ -585,3 +585,8 @@
 {"k":"Velemín|926/5|Litoměřice|50.538|13.973#1rqp5w2","m":"Velemín","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":3876,"c":3077544,"od":"2026-10-29","do":"2026-10-30","proc":"zmizela"}
 {"k":"Úštěk|847/12|Litoměřice|50.581|14.339#1rqp60i","m":"Úštěk","o":"Litoměřice","dr":"trvalý travní porost","t":"drazba","v":570,"c":905160,"od":"2026-10-29","do":"2026-10-30","proc":"zmizela"}
 {"k":"Příbram|—|Příbram|49.816|14.207#1rqpsvz","m":"Příbram","o":"Příbram","dr":"trvalý travní porost","t":"exekuce","v":1132,"c":72000,"od":"2026-10-22","do":"2026-10-30","proc":"zmizela"}
+{"k":"Rudoltice|—|Ústí nad Orlicí|49.901|16.564#hxpc53","m":"Rudoltice","o":"Ústí nad Orlicí","dr":"pozemek","t":"sale","v":2598,"c":3490000,"od":"2026-09-19","do":"2026-10-31","proc":"cena"}
+{"k":"Jesenice|—|Praha-západ|49.951|14.539#5cbqd","m":"Jesenice","o":"Praha-západ","dr":"stavební pozemek","t":"sale","v":900,"c":8290000,"od":"2026-10-18","do":"2026-10-31","proc":"cena"}
+{"k":"Čistá|—|Rakovník|50.032|13.565#hzx7f5","m":"Čistá","o":"Rakovník","dr":"orná půda","t":"sale","v":7183,"c":305000,"od":"2026-09-14","do":"2026-10-31","proc":"zmizela"}
+{"k":"Rybníček|—|Havlíčkův Brod|49.771|15.510#428zo","m":"Rybníček","o":"Havlíčkův Brod","dr":"stavební pozemek","t":"sale","v":910,"c":1290000,"od":"2026-09-14","do":"2026-10-31","proc":"zmizela"}
+{"k":"Jílovice|—|České Budějovice|48.910|14.716#2pg07","m":"Jílovice","o":"České Budějovice","dr":"stavební pozemek","t":"sale","v":2888,"c":5050000,"od":"2026-09-14","do":"2026-10-31","proc":"zmizela"}
