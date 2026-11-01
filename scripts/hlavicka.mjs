@@ -210,9 +210,19 @@ export function sjednotHlavicku(html, soubor) {
      s počty (docs/optimalizace.md §68).
      Sestavení ho přepíše ze STEJNÝCH dat, z jakých bere počty do lišty,
      takže obě čísla na stránce vycházejí z jednoho zdroje. */
-  if (!POCTY || !POCTY.vse) return sListou;
+  /* JMÉNO ZNAČKY V LIŠTĚ DO VLASTNÍHO <span> (od 1. 11.).
+     V odkazu .logo leželo slovo „Parcelka" jako holý textový uzel ve
+     2 460 stránkách, takže mu nešlo nastavit velikost ani nic jiného
+     nezávisle na odkazu. Obalí se tedy při sestavení, stejně jako se
+     vkládá lišta sama. Je to idempotentní: po přepsání už „Parcelka"
+     před </a> nestojí, takže druhý průchod nic nenajde. Text zůstává
+     textem — sází se Interem jako celý web. */
+  const sJmenem = sListou.replace(
+    /(<a class="logo"[^>]*>(?:<span class="logo-mark"[^>]*><\/span>)?)Parcelka(<\/a>)/g,
+    '$1<span class="logo-jm">Parcelka</span>$2');
+  if (!POCTY || !POCTY.vse) return sJmenem;
   const n = POCTY.vseCislo;
   const tvar = n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');
-  return sListou.replace(/(<b id="zn-pocet">)[^<]*(<\/b>)/,
+  return sJmenem.replace(/(<b id="zn-pocet">)[^<]*(<\/b>)/,
     `$1${POCTY.vse}\u00a0${tvar}$2`);
 }

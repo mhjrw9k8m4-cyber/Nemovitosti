@@ -456,41 +456,18 @@ const STEJNA_BARVA = {
     odstiny.map((x) => `${x.h} ${x.o.toFixed(1)}°`).join(', ') + ` — rozptyl ${rozptyl.toFixed(1)}°`);
 }
 
-/* --- ZNAČKA V OBRÁZKU SE MUSÍ SHODOVAT S TOKENEM -------------------
-   Dlaždice loga není CSS plocha, ale obrázek (assets/logo-mark.svg),
-   takže na změnu tokenu nereaguje. 31. 10. se značková zeleň
-   zesvětlila (#004F2F → #0E6A47) a logo zůstalo o stupeň tmavší, než
-   všechno kolem — na snímku je to vidět hned, v kódu vůbec. Tady se
-   proto porovnají obě místa: kresba smí mít jen bílou a tu zeleň,
-   kterou říká token --plocha-znacka. */
-{
-  const m = /--plocha-znacka\s*:\s*([^;]+);/.exec(STYL);
-  const plocha = (m ? m[1] : '').trim().toLowerCase();
-  /* OBĚ KRESBY, NE JEN JEDNA — A STÁLO TO JEDEN NÁLEZ. Hlídal se jen
-     logo-mark.svg, takže favicon.svg si až do 1. 11. vezl PŮVODNÍ
-     podobu značky se třemi přelivy a vnitřní září, přestože se kresba
-     30. 10. zplošťovala. A protože se z favicon.svg kreslí i PNG ikony
-     (scripts/build-og.mjs), měl web v záložce a na ploše telefonu jinou
-     značku než v liště. Čte se i obtah, ne jen výplň: nová kresba jím
-     zaobluje rohy parcely. */
-  for (const soubor of ['logo-mark.svg', 'favicon.svg']) {
-    const znak = readFileSync(path.join(ROOT, 'assets', soubor), 'utf8');
-    const barvy = [...znak.matchAll(/(?:fill|stroke)="(#[0-9a-fA-F]{3,8})"/g)].map((x) => x[1].toLowerCase());
-    /* HLUBOKÁ ZELEŇ JE TŘETÍ DOVOLENÁ BARVA, a je to rozhodnutí o vzhledu:
-       parcela v kresbě je nad dlaždicí nadzvednutá a její spodní hrana
-       musí být tmavší než plocha pod ní, jinak hloubka není vidět.
-       Není to nová barva — je to token --znacka-hluboka, tedy tatáž,
-       kterou má tmavý pás na webu. Čtvrtá by tu být neměla. */
-    const m2 = /--znacka-hluboka\s*:\s*([^;]+);/.exec(STYL);
-    const hluboka = (m2 ? m2[1] : '').trim().toLowerCase();
-    const cizi = barvy.filter((x) => x !== plocha && x !== hluboka
-      && x !== '#ffffff' && x !== '#fff');
-    pravda(`kresba značky (${soubor}) má touž zeleň jako token --plocha-znacka`,
-      !!plocha && barvy.length > 0 && cizi.length === 0,
-      `token ${plocha || '(není)'}, v kresbě ${[...new Set(barvy)].join(', ') || '(žádná)'}`);
-  }
-}
-
+/* --- ZNAČKA SE TU UŽ NEMĚŘÍ, A JE TO ROZHODNUTÍ MAJITELE ---------
+   Tady stávala kontrola „kresba značky smí mít jen bílou a tu zeleň,
+   kterou říká token --plocha-znacka". Dávala smysl, dokud byla značka
+   plochá dlaždice v barvě webu. 1. 11. si ale majitel vyžádal zpátky
+   PŮVODNÍ kresbu s přelivem a leskem („dej tam to původní logo, ten
+   domeček"), a ta má vlastní tři odstíny, které vznikly dřív než
+   paleta. Vázat ji na token by znamenalo buď kresbu zase zploštit,
+   nebo si tu zkoušku odbýt výjimkou.
+   Co zůstalo hlídané, se přestěhovalo do scripts/test-znacka.mjs:
+   obě kresby (logo-mark.svg a favicon.svg) musí nést TÝŽ tvar i TYTÉŽ
+   barvy. To byla ta skutečná vada — rozešly se a web měl v záložce
+   jinou značku než v liště. */
 console.log('\nTokeny stylu (barvy, míry, stíny)');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

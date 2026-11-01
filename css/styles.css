@@ -294,6 +294,8 @@
      má 6,61 : 1, na nejtmavším světlém čipu to měří
      scripts/test-kontrast.mjs; mez je 4,5. */
   --znacka:#175A40; --znacka-svetla:#247052;
+
+  
   /* ZNAČKA NA TMAVÉ DESCE. --znacka-svetla je psaná pro bílý podklad a na
      desce #12241A má 2,63 : 1 — pilulky „Zdarma / Bez provize" na stránce
      Přidat pozemek z ní byly tmavě zelené na tmavě zelené, tedy nečitelné.
@@ -1704,6 +1706,19 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    — a měly, stupnice písma zná 28 a 32, odstupů 8 a 12. Zaoblení terče roste s ním
    na --r-ovladani, ať nevypadá jako nalepená nálepka. */
 .logo{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.04em; font-size:28px; line-height:1; color:var(--znacka); display:flex; align-items:center; gap:12px; text-decoration:none; transition:var(--prechod);}
+/* JMÉNO ZNAČKY SE SÁZÍ TÍMTÉŽ PÍSMEM JAKO CELÝ WEB.
+   ===================================================================
+   1. 11. tu chvíli stál nápis kreslený na míru (vlastní písmo vložené
+   maskou). Majitel ho zamítl: „ten font se tam vůbec nehodí, přece má
+   být jak na celém webu." Má pravdu — web má JEDNO písmo (Inter)
+   a vlastní řez u jediného slova z něj dělal cizí prvek. Jméno je
+   proto zase obyčejný text v --font-ui; odlišuje ho jen tučnost,
+   barva a těsnější prostrkání (viz pravidlo o -0.04em výš).
+   Vlastní <span class="logo-jm"> kolem jména zůstal: dává jménu prvek,
+   kterému jde nastavit velikost nezávisle na odkazu, a vkládá ho
+   sestavení (scripts/hlavicka.mjs). */
+.logo-jm{font:inherit; letter-spacing:inherit;}
+
 /* JMÉNO ZNAČKY SE SÁZÍ TĚSNĚJI NEŽ TEXT, a je to to jediné místo na
    webu, kde se tak sází. Logo není věta: čte se jako jeden obrazec,
    takže mezery mezi písmeny mají být menší než v textu. Rozhraní má
@@ -1715,33 +1730,25 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    DLAŽDICE A JMÉNO JSOU JEDEN CELEK: odstup mezi nimi je 12 px při
    dlaždici 56 px (a 16 při 64, 8 při 44) — vždy zhruba pětina
    dlaždice, aby se poměr nerozpadl, když značka roste.
-   /* ZNAČKA JE OD 30. 10. PLOCHÁ — A TADY JE PROČ.
-   Kresba (assets/logo-mark.svg) měla tři přelivy a vnitřní záři: dva
-   lineární (plocha dlaždice a špendlík) a jeden radiální. Web se
-   přitom přelivů zbavoval půl týdne (§18, §19, §42) — a tohle byl
-   poslední, co na něm zbyl. Stál navíc na tom nejvíc viditelném místě,
-   nahoře na každé z 2 400 stránek, takže hlavička vypadala jako ikona
-   aplikace nalepená na web. Majitel: „toto nahoře celé předělej do
-   našeho stylu, k našemu webu to nesedí."
-   Teď je to jedna plocha v barvě značky, bílý špendlík a domeček
-   vyříznutý plochou. Barva je v souboru napsaná napevno (#004F2F =
-   --plocha-znacka): do samostatného SVG se token nedostane, a proto
-   se při každé změně palety musí přepsat i tahle kresba.
-   A JE TO --plocha-znacka, NE --znacka. Dlaždice je PLNÁ PLOCHA,
-   a plné plochy mají na webu tenhle odstín — týž, jakým svítí
-   „Profil" na druhém konci téže řádky. S --znacka (#0F5C3B, což je
-   barva TEXTU) stály vedle sebe dvě zelené, které se o chlup míjely.
-   Nápis „Parcelka" zůstává --znacka, protože to text je.
-
-   A ŽÁDNÁ ZÁŘ POD NÍ. `box-shadow:var(--glow)` je zelený svit, který
-   na webu nosí JEN zapnutý ovladač (vrstva mapy, zapnutý filtr) — tedy
-   stav, ne ozdoba. Pod značkou říkal „jsem zapnutá", což je nesmysl.
-
+   /* ZNAČKA JE ZASE TA PŮVODNÍ — S PŘELIVEM A LESKEM.
+   30. 10. byla kresba zploštěná do jedné barvy: web se půl týdne
+   přelivů zbavoval (§18, §19, §42) a tenhle byl poslední, navíc na
+   nejvíc viditelném místě. 1. 11. ji majitel vrátil: „dej tam to
+   původní logo, co jsme měli — ten domeček." Platí tedy, co měl rád:
+   dlaždice s přelivem přes tři odstíny, radiální lesk v levém horním
+   rohu a bílý špendlík s domečkem.
+   TA KRESBA SE NEVÁŽE NA PALETU, a je to vědomé. Odstíny v ní
+   (#4FA57A, #26694A, #1B4A34, #DCEFE2) vznikly dřív než soustava
+   tokenů; svázat je s --plocha-znacka by znamenalo kresbu zase
+   zploštit. Hlídá se proto to podstatné: že logo-mark.svg
+   a favicon.svg nesou týž tvar i tytéž barvy (scripts/test-znacka.mjs)
+   — rozejít se už jednou stihly a web měl pak v záložce jinou značku
+   než v liště.
    POZOR NA KOMENTÁŘ V TOM SOUBORU: vysvětlení tam napsat NEJDE.
    Zkusil jsem to a značka z celého webu zmizela — XML zakazuje dvě
-   pomlčky uvnitř komentáře a každé jméno tokenu je s nimi začíná,
-   takže se soubor přestal parsovat a `background-image` se prostě
-   nevykreslil. Výklad proto patří sem. */
+   pomlčky uvnitř komentáře a každé jméno tokenu jimi začíná, takže se
+   soubor přestal parsovat a background-image se nevykreslil.
+   Výklad proto patří sem. */
 /* HLOUBKA, NE ZÁŘ (31. 10.). Majitel: „ten začátek stránky a logo je
    strašně jednotvárné a jednoduché, nemá to hloubku ani prostor."
    Značka byla plochý zelený čtverec položený na bílou — nic ji
@@ -1749,7 +1756,17 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
    deska: stín `--e1` a 1px světlou hranu nahoře (`inset 0 1px 0`),
    přesně jako `.map-app`. Zelená zář (--glow) tu zůstává zakázaná
    z důvodu o pár řádek výš: ta na webu znamená „zapnuto". */
-.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=16") center/contain no-repeat;
+.logo-mark{width:56px; height:56px; border-radius:var(--r-ovladani); background:url("../assets/logo-mark.svg?v=20") center/contain no-repeat;
+  box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18); transition:var(--prechod);}
+/* ZNAČKA JE ODKAZ DOMŮ, AŤ TO JE POZNAT. Do 1. 11. měla .logo zapsaný
+   `transition`, ale nic se na ní neměnilo — přechod bez změny je mrtvý
+   zápis. Teď se při najetí dlaždice o pixel zvedne a prohloubí se jí
+   stín (--e1 → --e2, týž recept, jakým se na webu zvedá karta), při
+   stisku sedne zpátky. Hýbe se dlaždice, ne odkaz: na úvodní stránce
+   řídí posun .logo rolování (předávka značky z pásu do lišty). */
+.logo:hover .logo-mark{transform:translateY(-1px);
+  box-shadow:var(--e2), inset 0 1px 0 rgba(255,255,255,0.18);}
+.logo:active .logo-mark{transform:translateY(0);
   box-shadow:var(--e1), inset 0 1px 0 rgba(255,255,255,0.18);}
 /* JEŠTĚ VĚTŠÍ, PODRUHÉ NA ŽÁDOST. „Navíc jsem chtěl, ať uděláš obří
    logo" (30. 10.) — terč ze 40 na 56 px, na monitoru ze 44 na 64.
@@ -1851,15 +1868,11 @@ header .wrap{display:flex; align-items:center; justify-content:space-between; ga
   .zn-pas{display:flex; flex-direction:column; align-items:center; gap:4px;
     padding:0 var(--okraj-stranky) 12px; background:var(--plocha-plovouci-plna);
     border-bottom:1px solid var(--line); text-align:center;}
-  /* V PÁSU JE ZNAČKA HRDINA, TAK MÁ STÍN. Majitel chtěl „stínování";
-     na webu ho nese to, co leží nad plochou (karty, lišta), a tady
-     značka doopravdy leží nad papírem. Čísla jsou tatáž jako u stínu
-     --e1, jen zapsaná jako filtr, protože box-shadow by obkreslil
-     čtverec obrázku, ne tvar dlaždice. V liště stín NENÍ: tam je
-     značka součástí plochy, ne věc na ní. */
   .zn-logo{display:inline-flex; align-items:center; gap:12px; color:var(--znacka);}
-  .zn-logo .logo-mark{filter:drop-shadow(0 1px 2px rgba(var(--text-rgb),0.10))
-    drop-shadow(0 2px 6px rgba(var(--text-rgb),0.08));}
+  /* ŽÁDNÝ STÍN POD ZNAČKOU V PÁSU. 1. 11. tu nakrátko byl (dvojitý
+     drop-shadow z tokenu --e1), ale značka má od téhož dne zase svou
+     původní podobu — dlaždici s přelivem, která stín nese sama přes
+     box-shadow v .logo-mark. Druhý stín navíc by ji jen rozmazal. */
   /* Jméno má stejné písmo i řez jako v liště — jedna značka, jedno
      písmo (viz poznámka „JMÉNO ZNAČKY MÁ JEDNO PÍSMO" níž). */
   .zn-jm{font-family:var(--font-ui); font-weight:700; letter-spacing:-0.04em;

@@ -586,6 +586,11 @@ cenovy-stupen:
   proc:     "verdikt začínal na telefonu průměrně na y=1157 px, cena na 580 — hlavní argument stránky byl pod ohybem. Odznak je na 673."
   bez-barvy: "odznak nenese barevnou pilulku; rozlišuje slovo, ne odstín — a tím ho má i ten, kdo barvy nerozezná."
   hlida:    scripts/test-cenovy-stupen.mjs
+znacka:
+  pravidlo: "ZNAČKA JE UPEVNĚNÁ A JE TO TA PŮVODNÍ: špendlík s domečkem na dlaždici s přelivem a leskem (assets/logo-mark.svg). 1. 11. byla třikrát překreslena — parcela s vytyčeným bodem, plochý špendlík s mřížkou parcel, k tomu vlastní písmo — a majitel všechno vrátil: „dej tam to původní logo, co jsme měli, ten domeček.“ NEPŘEDĚLÁVAT. Když bude přesto potřeba, napřed NÁVRH slovy a obrázek, kresba až po jeho slovu."
+  nevaze-se-na-paletu: "odstíny v kresbě (#4FA57A, #26694A, #1B4A34, #DCEFE2) vznikly dřív než tokeny a zůstávají vlastní. Svázat je s --plocha-znacka by znamenalo kresbu zase zploštit, což majitel odmítl. Pravidlo „jedna zeleň“ tedy na značku neplatí — a jen na ni."
+  dva-soubory: "táž kresba je v assets/logo-mark.svg (web) a assets/favicon.svg (záložka + PNG ikony z build-og.mjs). Mění se VŽDY obě najednou; shodu tvaru i barev hlídá scripts/test-znacka.mjs. Rozejít se už jednou stihly a web měl v záložce jinou značku než v liště."
+  jmeno: "nápis „Parcelka“ je obyčejný text v --font-ui, jako celý web. Vlastní kreslené písmo bylo vyzkoušené a zamítnuté: „ten font se tam vůbec nehodí, přece má být jak na celém webu.“"
 barvy:
   pravidlo: "NEPŘIDÁVAT. 27. 10.: „nepotřebujeme barvy, ale čistotu." Nová plocha se dělá odstupem, vlásečnicí a pořadím, ne další barvou; barvu nese jen to, co ji na webu neslo předtím (značková zeleň v tlačítkách a hlavičce, stavy nabídky)."
   priklady: "zelený závěrečný pás, barevná pilulka u ceny a zelená dlaždice v rozcestníku — všechno vzniklo 27. 10. a všechno šlo týž den pryč."

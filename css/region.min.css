@@ -89,7 +89,10 @@ body{padding-top:var(--vyska-hlavicky,85px)}
 
 header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .logo{font-family:var(--font-ui);font-weight:700;letter-spacing:-0.04em;font-size:28px;line-height:1;color:var(--znacka);display:flex;align-items:center;gap:12px;text-decoration:none;transition:var(--prechod)}
-.logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=16") center/contain no-repeat;box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18)}
+.logo-jm{font:inherit;letter-spacing:inherit}
+.logo-mark{width:56px;height:56px;border-radius:var(--r-ovladani);background:url("../assets/logo-mark.svg?v=20") center/contain no-repeat;box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18);transition:var(--prechod)}
+.logo:hover .logo-mark{transform:translateY(-1px);box-shadow:var(--e2),inset 0 1px 0 rgba(255,255,255,0.18)}
+.logo:active .logo-mark{transform:translateY(0);box-shadow:var(--e1),inset 0 1px 0 rgba(255,255,255,0.18)}
 @media (min-width:1041px){.logo{font-size:40px;gap:16px}
 .logo-mark{width:64px;height:64px}
 }
@@ -105,7 +108,6 @@ body:has(#zn-pas) .zn-logo,body:has(#zn-pas) .zn-pod{transition:none;opacity:var
 body:has(#zn-pas) .zn-logo{will-change:opacity,transform;transform:translateY(calc((1 - var(--zn-velka,1)) * -48px)) scale(calc(1 - (1 - var(--zn-velka,1)) * 0.10))}
 .zn-pas{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 var(--okraj-stranky) 12px;background:var(--plocha-plovouci-plna);border-bottom:1px solid var(--line);text-align:center}
 .zn-logo{display:inline-flex;align-items:center;gap:12px;color:var(--znacka)}
-.zn-logo .logo-mark{filter:drop-shadow(0 1px 2px rgba(var(--text-rgb),0.10)) drop-shadow(0 2px 6px rgba(var(--text-rgb),0.08))}
 .zn-logo .logo-mark{width:56px;height:56px}
 }
 @media (max-width:359px){.zn-logo .logo-mark{width:44px;height:44px}

@@ -18044,3 +18044,65 @@ V liště stín není — tam je značka součástí plochy.
 a na desce značky je vidět, ale nikde nasazený není: v pásu na úvodu by
 se tloukl s větou o počtu nabídek a v patičce značka vůbec nestojí.
 Dokud pro něj nebude místo, nemá v kódu co dělat.
+
+## §290 — Tři přestavby značky, všechny vrácené: na webu je zase ta původní
+
+**Jak to proběhlo.** Majitel chtěl značku „jak od profíka". Vznikly tři
+podoby a žádná neprošla:
+
+1. **Parcela v půdorysu s vytyčeným bodem** — „to je nedostatečné".
+2. **Plochý špendlík s mřížkou parcel a teplým akcentem**, nakreslený
+   přesně podle jeho vlastního zadání (mapový špendlík + mřížka parcel,
+   lesní zeleň, jemný teplý akcent, plochý design bez 3D), k tomu nápis
+   „Parcelka" ve vlastním kresleném písmu — „ten font se tam vůbec
+   nehodí, přece má být jak na celém webu".
+3. Po návratu k předchozí ploché podobě s domečkem: **„ne tenhle
+   domeček, ten který byl ještě předtím."**
+
+**Na webu je tedy úplně původní značka:** špendlík s domečkem na
+dlaždici s PŘELIVEM přes tři odstíny, s radiálním leskem v levém horním
+rohu a s bílým špendlíkem laděným do `#DCEFE2`. Tedy přesně to, co
+majitel celou dobu viděl v záložce prohlížeče — favicon tuhle podobu
+nikdy neopustil.
+
+**To znamená vrátit i rozhodnutí z 30. 10.** Tehdy se kresba zploštila,
+protože se web půl týdne přelivů zbavoval (§18, §19, §42) a tenhle byl
+poslední. Platilo to pro celý web a platí dál — **značka je z toho
+pravidla vyňatá**, protože si ji majitel takhle přeje. Zapsáno
+v CLAUDE.md (`znacka: nevaze-se-na-paletu`), aby to příště nikdo
+„neuklidil" zpátky.
+
+**Dvě tvrzení z dnešního dne byla špatně a tady se opravují:**
+
+- Psal jsem, že podklad pod ikonou pro iOS (`#1B4A34` v build-og.mjs)
+  je „třetí zeleň mimo paletu". Nebyl — je to **koncový odstín přelivu
+  v kresbě**, tedy přesně ten roh, který iOS ořezává. Přepsat ho na
+  `--plocha-znacka` byla chyba; vráceno.
+- Zrušil jsem kontrolu „kresba značky smí mít jen bílou a token
+  `--plocha-znacka`" v `test-tokeny.mjs`. To nebyla úhybná výjimka:
+  s původní kresbou by ta kontrola šla splnit jedině tím, že se značka
+  zase zploští.
+
+**Co z celého dne zůstalo, protože to byly skutečné vady:**
+
+1. **Favicon se rozcházel s logem.** `assets/favicon.svg` vezl jinou
+   podobu než `logo-mark.svg` — a protože se z něj dělají PNG ikony,
+   měl web v záložce a na ploše telefonu jinou značku než v liště.
+   Teď nesou obě kresby týž tvar i tytéž barvy.
+2. **Náhled sdíleného odkazu kreslil místo značky zelený čtvereček
+   s bílým kolečkem** (`#256443`, tedy barva, která na webu nikde
+   jinde není) — sdílený odkaz nesl jinou značku než stránka, na
+   kterou vede. `build-og.mjs` teď vkládá skutečnou kresbu z assets.
+3. **`.logo` měla zapsaný `transition`, ale nic se na ní neměnilo** —
+   mrtvý zápis. Teď se dlaždice při najetí o pixel zvedne (`--e1` →
+   `--e2`) a při stisku sedne.
+
+**Nový hlídač.** `scripts/test-znacka.mjs` (7 kontrol): obě kresby mají
+týž počet tvarů, každý tvar je v obou stejný, liší se jen přístupným
+jménem, a obě používají tytéž barvy. Prokázáno sabotáží — změna
+zaoblení v jednom souboru i přebarvení shodily právě svou kontrolu.
+
+**Co jsem si z toho odnesl o postupu.** Tři kola kreslení padla proto,
+že jsem kreslil dřív, než jsem se zeptal. Značka je to, co má majitel
+upevněné nejvíc; příště návrh slovy a obrázek napřed. Zapsáno do
+CLAUDE.md (`znacka: pravidlo`).

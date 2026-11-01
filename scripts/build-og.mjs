@@ -129,10 +129,14 @@ const ukoly = [
    aby existovala JEDNA předloha a tahle situace se nemohla vrátit.
    U apple-touch-icon je pod ikonou plná zelená: iOS si kulaté rohy
    ořezává sám a průhledné rohy by na něm zčernaly. */
-/* Táž zeleň jako token --plocha-znacka a jako dlaždice v kresbě. Byla
-   tu #1B4A34, tedy třetí odstín, který neodpovídal ani značce, ani
-   ploše pod ní — na iPhonu se to projevilo tmavším lemem kolem ikony. */
-const ZNACKOVA_ZELEN = '#175A40';
+/* PODKLAD POD IKONOU = TMAVÝ KONEC PŘELIVU V KRESBĚ. Značka má od
+   1. 11. zase svou původní podobu s přelivem (majitel: „dej tam to
+   původní logo, ten domeček") a ten končí v #1B4A34 — tedy právě
+   v rohu, který iOS ořezává. Jiná zeleň by kolem ikony udělala lem.
+   POZNÁMKA K DŘÍVĚJŠÍ „OPRAVĚ": tohle číslo tu 1. 11. bylo nakrátko
+   přepsáno na --plocha-znacka s odůvodněním, že je to třetí odstín
+   mimo paletu. Nebylo — bylo vzaté z kresby a patří k ní. */
+const ZNACKOVA_ZELEN = '#1B4A34';
 const favicon = fs.readFileSync(path.join(ROOT, 'assets', 'favicon.svg'), 'utf8')
   /* Jen na KOŘENOVÉM <svg>. Plošné hledání width/height vzalo rozměry
      i vnitřním <rect>ům — ikona pak byla prázdná bílá plocha. */
@@ -141,6 +145,7 @@ const favicon = fs.readFileSync(path.join(ROOT, 'assets', 'favicon.svg'), 'utf8'
    je tady načtený a je to jedna a táž předloha; jen dostane třídu,
    kterou si stylopis šablony bere na rozměr. */
 const ZNACKA_SVG = favicon.replace(/<svg\b/, '<svg class="mark"');
+
 
 function sablonaIkony(podklad) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>

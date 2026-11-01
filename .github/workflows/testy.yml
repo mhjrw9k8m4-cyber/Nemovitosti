@@ -352,6 +352,9 @@ jobs:
       - name: Tokeny stylu (žádná odvolávka na nic)
         run: node scripts/test-tokeny.mjs
 
+      - name: Značka (kresba a nápis se rovnají generátoru)
+        run: node scripts/test-znacka.mjs
+
       - name: Typografická stupnice
         run: node scripts/test-typografie.mjs
 
