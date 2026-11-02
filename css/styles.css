@@ -9973,17 +9973,6 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
   }
 }
 
-/* ---------- KRESLENÍ VÝBĚRU NA MAPĚ ----------------------------------
-   Zapíná js/main.js třídou .kresli na rámu mapy.
-   touch-action:none je tu nutnost, ne ozdoba: bez něj by prohlížeč bral
-   tah prstem jako rolování stránky a kreslení by se nedalo dokončit.
-   Kurzor křížku říká na počítači totéž co zvýrazněné tlačítko. */
-#leaflet-map.kresli{touch-action:none; cursor:crosshair;}
-#leaflet-map.kresli .leaflet-grab{cursor:crosshair;}
-/* Zapnuté kreslítko musí být poznat — jinak člověk táhne mapou a diví se,
-   že se nehýbe. */
-#map-kresli.on{background:var(--plocha-znacka); color:#fff; border-color:var(--plocha-znacka);}
-
 /* ---------- VRSTVY ÚŘADŮ NA HLAVNÍ MAPĚ ------------------------------
    Panel se rozbaluje pod tlačítkem „Vrstvy" v nástrojích mapy.
    Barvy se nenastavují: dědí se z karty, takže mají zaručeně tentýž
@@ -10605,4 +10594,4 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    z dvaadvaceti ploch přeliv nedostalo — na .filter-chip.active bylo
    změřeno background-image:none. Shoda specificity rozhoduje pořadím,
    takže tohle pravidlo musí být poslední. */
-.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-zpet, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, #map-kresli.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}
+.btn-primary, .nav-add, .lp-btn, .pf-add, .auth-submit, .auth-tab.active, .hl-btn, .mcf-hotovo, .filter-chip.active, .mvt-btn.active, .mcv-btn.on, .mc-prep.on, .map-nastroj[aria-pressed="true"], .map-nastroj[aria-expanded="true"], .loc-btn.primary, .msr-hotovo, .opp-feat, .boost-price, .kt-mail .kt-ico, :root.pk-prihlasen .hdr-ucet, .skip-link, .vm-zpet, .vm-vetsi, .vm-ok, .reset-btn, .copy-btn, .rv-uvod-ok, .vyv-ok, .st-btn-1, .zp-btn, .mc-toggles .mc-prep.on, .mcv-btn.mcv-nula.on, .mc-info[aria-expanded="true"] span, .map-podklad button.on, .mv-v.on, .ms-vysledky .msv-ulozene.on, .vm-km input:checked + span, .as-num, .uc-tab-pocet, .msch, .pp-titulka, .msf-badge{background-image:var(--preliv-znacka);}

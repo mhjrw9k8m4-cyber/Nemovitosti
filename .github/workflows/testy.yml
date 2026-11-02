@@ -691,8 +691,6 @@ jobs:
       - name: Pád ve stránce se opravdu nahlásí
         run: node scripts/test-chyby-v-prohlizeci.mjs
 
-      - name: Kreslení výběru na mapě (filtruje podle tvaru)
-        run: node scripts/test-kresleni.mjs
 
       - name: Hlídané místo a pozemky v okolí
         run: node scripts/test-okoli.mjs

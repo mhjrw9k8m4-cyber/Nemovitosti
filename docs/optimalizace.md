@@ -19407,3 +19407,61 @@ všechny tutéž barvu, a bílé číslo je na nich čitelné (≥ 4,5).
 Prokázáno třemi sabotážemi: vrácení bledé zeleně, vrácení bublin
 na druh a vzetí barvy tečky do bubliny rovnou — každá shodí právě
 tu kontrolu, která o tom je.
+
+## §312 — Kreslení prstem nahradil výběr okolí
+
+Majitel, s obrázkem rozsypaného tvaru: *„tohle by se nemělo dít,
+když kliknu na kreslení a přiblížení, je to úplně k ničemu. Radši to
+nahradíme tlačítkama. Funkci, kterou používáme u Pozemky v okolí."*
+
+Měl pravdu a vada byla v samém principu nástroje. Kreslení sbíralo
+body prstu **v pixelech obrazovky** a až hotový tvar překládalo na
+zeměpisné souřadnice. Dokud se mapou nehýbalo, vycházelo to. Jakmile
+se při kreslení přiblížilo nebo posunulo (a na telefonu stačí druhý
+prst nebo setrvalost tahu), začátek tvaru byl vztažený k jinému
+záběru než konec. Výsledek je ten vějíř z obrázku: čáry vybíhající
+ze středu, protože první body si drží staré měřítko a poslední nové.
+
+Spravit to uvnitř šlo dvěma způsoby a ani jeden nebyl dobrý. Buď
+zakázat pohyb mapy po celou dobu tahu — pak se nedá kreslit nic
+většího než jedna obrazovka. Nebo přepočítávat už sebrané body při
+každém pohybu — to je přesně ta úloha, u které se chyba nasčítá a tvar
+se rozjede jinak, ne líp.
+
+Místo toho nastoupila funkce, kterou web **už má a která je
+odzkoušená**: výběr místa a okruhu z „Pozemky v okolí". V nástrojích
+mapy je teď tlačítko „Okolí" (56 × 44 px) a otevírá **týž** panel —
+ne kopii. Hlídač to neověřuje tím, že se „něco stalo", ale tím, že
+seznam otevřených oken je po klepnutí na tlačítko v mapě totožný se
+seznamem po klepnutí na „Pozemky v okolí"; dvě různá okna by
+znamenala dvě funkce na jednu práci.
+
+**Co se tím ztratilo, a přiznává se to:** kruh odpovídá na „kolem
+čeho", ne na „podél téhle řeky" nebo „mezi dálnicí a lesem". To
+kreslení umělo a okruh to neumí. Vymění se za to tvar, který na
+přiblížené mapě nevyjde vůbec.
+
+Pryč šel i mrtvý kód: `#map-kresli`, sdílený stav tvaru v odkazu
+(`js/odkaz.js`), filtrační člen, odznak „nakreslený výběr", třída
+`.kresli` ve stylopisu, mrtvý selektor v `test-soustava` a celá
+zkouška, která kreslení hlídala, i se svým krokem v CI. (Její jméno
+tady schválně nestojí: hlídač statické kontroly ověřuje, že se
+dokumentace neodvolává na soubory, které neexistují, a smazaná zkouška
+je přesně takový soubor. Chytil to na téhle větě.)
+
+Hlídá to šest kontrol v `scripts/test-mapa.mjs` (66 celkem) plus
+statické prohledání zdrojů na `map-kresli`, `vyberTvar` a `PK_VYBER`:
+prvek se dá smazat ze stránky a kód k němu nechat ležet, což je pak
+web, který o sobě tvrdí, že něco umí. Prokázáno třemi sabotážemi:
+přejmenování tlačítka, vrácení kreslítka do stránky a odebrání
+obsluhy klepnutí — každá shodí právě ty kontroly, které o tom jsou.
+Statické prohledání se prokázalo samo: shodilo se na komentáři, ve
+kterém jsem zrušené jméno zmínil, a tak v tom komentáři dnes není.
+
+První sabotáž našla i vadu v hlídači samotném. Klepací kontroly byly
+zabalené do `if (m.jeOkruh)`, takže při chybějícím tlačítku **zmizely**
+místo aby spadly: z 66 kontrol zbylo 63 a nic ten součet nehlídá.
+Přeskočená kontrola je zelená zkouška, která neměří nic. Teď se klepnutí
+zkouší vždy a neúspěch je chyba; k porovnání obou oken přibyla pojistka
+proti „oba prázdné" (shoda dvou prázdných seznamů by jinak prošla,
+i kdyby se neotevřelo vůbec nic).

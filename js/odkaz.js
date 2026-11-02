@@ -82,14 +82,17 @@
     { stav: 'searchToks',   proc: 'odvozeno z hledaného textu (q)' },
     { stav: 'userPos',      proc: 'moje poloha — a s ní i řazení „nejblíž ke mně", které z ní vychází' },
     { stav: 'kmFromUser',   proc: 'počítá vzdálenost od mojí polohy' },
-    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' },
-    /* Nakreslený tvar by se do adresy zakódovat DAL — je to jen geometrie,
-       nic osobního. Nesdílí se z jiného důvodu: hlídání i uložená hledání
-       umí OKRUH (střed a poloměr), ne mnohoúhelník. Odkaz s nakresleným
-       tvarem by tedy vedl k výběru, který si příjemce nemůže uložit ani
-       hlídat — a první, o co se pokusí, je právě to. Kreslení je rychlé
-       zúžení na místě; co má přetrvat, patří do hlídání jako okruh. */
-    { stav: 'vyberTvar',    proc: 'nakreslený tvar je zúžení na místě; hlídání umí okruh, ne mnohoúhelník' }
+    { stav: 'dotazFiltr',   proc: 'odvozeno z hledaného textu (q)' }
+    /* Byl tu ještě jeden stav navíc: mnohoúhelník nakreslený prstem po
+       mapě. Kreslení skončilo 2. 11. (na přiblížené mapě se tvar
+       rozsypal, viz docs/optimalizace.md §312) a nahradil ho výběr
+       okolí, tedy střed a poloměr. Ten se do adresy zakódovat UMÍ
+       a taky se zakóduje — zmizel s tím i důvod, proč se jeden druh
+       výběru sdílet nedal.
+       Jméno toho stavu tu schválně není ani v komentáři: hlídač
+       v test-mapa hledá pozůstatky po kreslení ve zdrojích a nemá jak
+       poznat komentář od živého kódu. Výjimka „tohle je jen poznámka"
+       by ho oslabila u všech ostatních souborů. */
   ];
 
   function cislo(x) { var n = Number(x); return isFinite(n) && n > 0 ? Math.round(n) : 0; }

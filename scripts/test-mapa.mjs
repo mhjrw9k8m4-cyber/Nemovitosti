@@ -838,6 +838,97 @@ for (const [jm, sirka, vyska, mob, strop] of [
   await ctx3.close();
 }
 
+/* --- VÝBĚR OKOLÍ Z MAPY (nahradil kreslení) -------------------------
+ * Majitel 2. 11.: „když kliknu na kreslení a přiblížení, je to úplně
+ * k ničemu — radši to nahradíme tlačítky, funkcí, kterou používáme
+ * u Pozemky v okolí."
+ *
+ * Kreslení prstem tedy skončilo i se svou zkouškou (test-kresleni).
+ * Tyhle kontroly hlídají, co nastoupilo místo něj: tlačítko v mapě
+ * otevírá TÝŽ výběr místa a okruhu jako „Pozemky v okolí" nad mapou.
+ * A zároveň že se kreslítko nevrátí potichu zpátky — smazaná funkce
+ * bez hlídače se umí vloudit při první větší úpravě.
+ */
+{
+  const ctxO = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 900 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const po = await ctxO.newPage();
+  await po.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  await po.waitForTimeout(1500);
+  const { naMapu } = await import('./zkouska-pohled.mjs');
+  await naMapu(po);
+  await po.waitForTimeout(1800);
+
+  const m = await po.evaluate(() => {
+    const o = document.getElementById('map-okruh');
+    const r = o ? o.getBoundingClientRect() : null;
+    return {
+      jeOkruh: !!o,
+      sirka: r ? Math.round(r.width) : 0, vyska: r ? Math.round(r.height) : 0,
+      popisek: o ? (o.textContent || '').trim() : '',
+      /* Kreslítko nesmí zůstat ani ve stromu: schované tlačítko by se
+         dalo zmáčknout klávesnicí a vrátilo by přesně tu vadu, kvůli
+         které šlo pryč. */
+      jeKreslitko: !!document.getElementById('map-kresli'),
+      maKresliTridu: !!document.querySelector('.kresli'),
+    };
+  });
+  pravda('v nástrojích mapy je tlačítko pro výběr okolí', m.jeOkruh, 'chybí #map-okruh');
+  pravda('a dá se na něj trefit prstem (44 px)', m.vyska >= 44 && m.sirka >= 44,
+    `${m.sirka}×${m.vyska} px`);
+  pravda('a je na něm napsané, co dělá', /okol/i.test(m.popisek), `stojí tam „${m.popisek}"`);
+  pravda('kreslítko na stránce není', !m.jeKreslitko, '#map-kresli tam pořád je');
+  pravda('a nezůstala po něm ani třída na mapě', !m.maKresliTridu, '.kresli na stránce je');
+
+  /* To hlavní: otevře se TÁŽ věc jako u „Pozemky v okolí". Porovnává
+     se, co se objeví, ne jen že se něco stalo — dvě různá okna by
+     znamenala dvě funkce na jednu práci, přesně to, čemu se tahle
+     změna vyhýbá. */
+  const coJeOtevrene = () => po.evaluate(() => [...document.querySelectorAll('[role="dialog"], .vm-panel')]
+    .filter((e) => !e.hidden && e.getBoundingClientRect().height > 50)
+    .map((e) => e.id || e.className).sort());
+  /* Schválně BEZ `if (m.jeOkruh)`: kdyby tlačítko chybělo, musí tyhle
+     kontroly SPADNOUT, ne se přeskočit. Přeskočená kontrola je zelená
+     zkouška, která neměří nic. Sabotáž (přejmenované tlačítko) na to
+     přišla: z 65 kontrol zbylo 63 a součet nikdo nehlídá. */
+  const kliknuto = await po.click('#map-okruh', { timeout: 3000 }).then(() => true, () => false);
+  await po.waitForTimeout(1200);
+  const zMapy = kliknuto ? await coJeOtevrene() : [];
+  pravda('a po klepnutí se opravdu něco otevře', zMapy.length > 0,
+    kliknuto ? 'nic se neotevřelo' : 'na tlačítko se nedalo ani kliknout');
+  await po.keyboard.press('Escape');
+  await po.waitForTimeout(900);
+  await po.click('#map-near').catch(() => {});
+  await po.waitForTimeout(1200);
+  const zVypisu = await coJeOtevrene();
+  /* Pojistka proti „oba prázdné": shoda dvou prázdných seznamů by
+     prošla, i kdyby se neotevřelo vůbec nic. */
+  pravda('a „Pozemky v okolí" něco otevřou (kontrola měřidla)', zVypisu.length > 0,
+    'nic se neotevřelo ani z výpisu');
+  je('a je to TÁŽ věc jako „Pozemky v okolí"', zMapy, zVypisu);
+  await ctxO.close();
+}
+
+/* A ještě staticky: po kreslení nesmí zbýt nic ani ve zdrojích. Prvek
+   se dá smazat ze stránky a kód k němu nechat ležet — mrtvý kód, který
+   tvrdí, že web něco umí. */
+{
+  const zdroje = ['index.html', 'js/main.js', 'css/styles.css', 'js/odkaz.js'];
+  const KOREN = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+  const zbytky = [];
+  for (const f of zdroje) {
+    const c = path.join(KOREN, f);
+    if (!existsSync(c)) continue;
+    const t = readFileSync(c, 'utf8');
+    /* Hledá se jméno prvku a jméno stavu, ne slovo „kreslit“: to se
+       ve zdrojích vyskytuje i v komentářích o vykreslování mapy. */
+    for (const jm of ['map-kresli', 'vyberTvar', 'PK_VYBER']) {
+      if (t.indexOf(jm) >= 0) zbytky.push(`${f}: ${jm}`);
+    }
+  }
+  je('po kreslení nezbyl ve zdrojích živý kód', zbytky, []);
+}
+
 je('stránka neshodila žádnou chybu', chybyStranky, []);
 
 await prohlizec.close();
