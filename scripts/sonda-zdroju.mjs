@@ -166,6 +166,36 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
    v textu odkazu i v adrese — každý web si to pojmenuje jinak. */
 export const SLOVA_VYPIS = /nab[íi]dk|prodej|pozemk|pozemek|parcel|majetk|majetku|dra[žz]b|v[ýy]pis|seznam|inzer|realit|ko?upit/i;
 
+/* Slova, která ukazují, že se prodává NĚCO JINÉHO než pozemek.
+   NALEZENO MĚŘENÍM: u Lesů ČR si sonda vybrala
+   `/o-nas/prodej-drivi-verejnosti/` — prodej DŘÍVÍ. Slovo „prodej"
+   samo o pozemku nic neříká a tři dotazy se utratily na něco, co
+   nás nezajímá. */
+export const SLOVA_JINE_ZBOZI = /d[řr][íi]v|d[řr]evo|paliv|uhl[íi]|štipan|sazenic|osiv|semen|vozidl|technik|n[áa]bytek|stroj[ei]/i;
+
+/**
+ * Jak moc odkaz mluví o POZEMKU, ne jen o „prodeji".
+ *
+ * Pořadí podle dokumentu nestačí: u Lesů ČR stál „Prodej dříví"
+ * na stránce před „Nabídkou pozemků", takže se tři povolené dotazy
+ * utratily na dříví. Skoře se proto sčítá podle toho, co v adrese
+ * a v nápisu stojí — a jiné zboží se odebírá.
+ */
+export function skorOdkazu(url, popis) {
+  const t = `${url || ''} ${popis || ''}`;
+  let s = 0;
+  if (/pozemk|pozemek|parcel/i.test(t)) s += 3;
+  /* „majetk" NESEDÍ NA „majetek" — mezi t a k je e. Táž past, na
+     kterou v tomhle souboru už stojí varování u `vyteznost`
+     („pozemk" vs. „pozemek") — a stejně jsem do ní spadl podruhé.
+     Našla to zkouška: `/majetek` měl skóre 0, tedy míně než holý
+     „prodej". */
+  if (/nemovit|majetk|majetek/i.test(t)) s += 2;
+  if (/nab[íi]dk|prodej|dra[žz]b|v[ýy]pis|seznam|inzer/i.test(t)) s += 1;
+  if (SLOVA_JINE_ZBOZI.test(t)) s -= 3;
+  return s;
+}
+
 /** Nejvýš tolik dalších adres se u jednoho zdroje zkusí. */
 export const DALSICH_ADRES = 3;
 
@@ -197,9 +227,16 @@ export function odkazyNaVypis(html, base) {
     if (domaci && host !== domaci) continue;
     if (videne.has(abs)) continue;
     videne.add(abs);
-    ven.push({ url: abs, popis: popis.slice(0, 80) });
+    ven.push({ url: abs, popis: popis.slice(0, 80), skore: skorOdkazu(abs, popis) });
   }
-  return ven;
+  /* POŘADÍ PODLE SKÓRE, NE PODLE DOKUMENTU. Dotazy jsou tři, tak ať
+     padnou na ty tři nejnadějnější. Při shodě zůstává pořadí ze
+     stránky — řazení je stabilní, ať je nález každý týden stejný
+     a dají se srovnávat. */
+  return ven
+    .map((o, i) => ({ o, i }))
+    .sort((a, b) => (b.o.skore - a.o.skore) || (a.i - b.i))
+    .map((x) => x.o);
 }
 
 /** Která výtěžnost je lepší? Podle verdiktu, při shodě podle počtu

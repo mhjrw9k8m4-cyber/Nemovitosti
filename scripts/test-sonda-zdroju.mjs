@@ -288,6 +288,35 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('robots.txt se čte i u té další adresy',
     volane.filter((u) => /robots\.txt$/.test(u)).length >= 1, JSON.stringify(volane));
 
+  /* ---- POŘADÍ ODKAZŮ PODLE SKÓRE, NE PODLE DOKUMENTU ----------- */
+  /* NALEZENO MĚŘENÍM naostro: u Lesů ČR si sonda vybrala
+     `/o-nas/prodej-drivi-verejnosti/` — prodej DŘÍVÍ. Slovo „prodej"
+     samo o pozemku nic neříká a tři povolené dotazy se utratily na
+     něco, co nás nezajímá, zatímco „Nabídka pozemků" stála na stránce
+     až za tím. */
+  {
+    const html = '<a href="/o-nas/prodej-drivi-verejnosti/">Prodej dříví veřejnosti</a>'
+      + '<a href="/nabidka-nemovitosti/pozemky">Nabídka pozemků</a>'
+      + '<a href="/prodej-majetku">Prodej majetku</a>';
+    const o = S.odkazyNaVypis(html, 'https://l.test/');
+    pravda('nejvýš stojí odkaz, který mluví o POZEMCÍCH',
+      /pozemky$/.test(o[0].url), JSON.stringify(o.map((x) => [x.skore, x.url])));
+    pravda('a prodej dříví je až poslední — není to pozemek',
+      /drivi/.test(o[o.length - 1].url), JSON.stringify(o.map((x) => [x.skore, x.url])));
+    pravda('skóre: pozemek víc než majetek, majetek víc než holý prodej',
+      S.skorOdkazu('/pozemky', '') > S.skorOdkazu('/majetek', '')
+      && S.skorOdkazu('/majetek', '') > S.skorOdkazu('/prodej', ''));
+    pravda('a jiné zboží jde do minusu',
+      S.skorOdkazu('/prodej-driví', 'Prodej dříví') < 0
+      && S.skorOdkazu('/prodej-sazenic', '') < 0);
+    /* Řazení musí být STABILNÍ, ať je nález každý týden stejný a dá se
+       srovnávat. Dva odkazy se stejným skóre si pořadí nemění. */
+    const stejne = '<a href="/nabidka-a">Nabídka A</a><a href="/nabidka-b">Nabídka B</a>';
+    const s1 = S.odkazyNaVypis(stejne, 'https://l.test/').map((x) => x.url).join();
+    const s2 = S.odkazyNaVypis(stejne, 'https://l.test/').map((x) => x.url).join();
+    pravda('řazení je stabilní (dvakrát totéž pořadí)', s1 === s2 && /nabidka-a.*nabidka-b/.test(s1), s1);
+  }
+
   /* KDO UŽ VÝPIS MÁ, SE ZNOVU NESTAHUJE. Jinak bychom cizí web
      zatěžovali kvůli ničemu. */
   const volane2 = [];

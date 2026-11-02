@@ -21274,3 +21274,35 @@ nehlídá. Měří se teď, že se ta adresa **vůbec nevyžádala**.
 
 `test-cteni-zdroje` 72 (dřív 63), `test-vypadek-zdroje` 42 (dřív 33),
 `test-sonda-zdroju` 66 (dřív 56).
+
+**BĚH NAOSTRO: JEDEN ZÍSK, JEDEN POUČNÝ OMYL.** Po té změně (3. 11.,
+16 cílů, 13 dostupných, 2 zakázané, 1 s neznámým robots.txt):
+
+| zdroj | dřív | teď |
+|---|---|---|
+| **SPÚ** | obsah slabé | **slibné** — sonda si našla `spu.gov.cz/nabidky` (pozemek ×69, Kč ×10) |
+| **Lesy ČR** | nic nenasvědčuje | slabé — našla `o-nas/prodej-drivi-verejnosti/`, tedy **prodej dříví** |
+| ÚZSVM, eDesky, Portál dražeb | slabé | slabé i po třech dalších adresách |
+
+**Ten omyl u Lesů ČR je nález, ne nehoda.** Pořadí odkazů bylo podle
+dokumentu, takže „Prodej dříví veřejnosti" stál před „Nabídkou pozemků"
+a tři povolené dotazy se utratily na dříví. Odkazy proto dostaly
+**skóre**: pozemek +3, nemovitost nebo majetek +2, holá nabídka nebo
+prodej +1, a **jiné zboží −3** (dříví, palivo, sazenice, osivo, vozidla,
+technika). Řazení je stabilní, ať je nález každý týden srovnatelný.
+
+A při tom spadla **táž past, na kterou v tomtéž souboru už stojí
+varování:** `majetk` **nesedí na `majetek`** — mezi t a k je e, stejně
+jako u `pozemk`/`pozemek` z §333. `/majetek` měl skóre 0, tedy méně
+než holý „prodej". Našla to zkouška, ne já — podruhé táž chyba, takže
+to tu stojí i s přiznáním.
+
+**Prokázáno sabotáží (další tři):** pořadí zpátky podle dokumentu
+→ 3 pády; jiné zboží se přestane odebírat → 2; `majetek` zpátky na
+`majetk` → 1. `test-sonda-zdroju` **71 kontrol**.
+
+**Co z toho plyne pro rozhodování:** jediný zdroj, u kterého měření
+samo našlo lepší adresu a verdikt se tím zlepšil, je **SPÚ** — a ten
+už zapojený máme. U ÚZSVM, eDesky a Portálu dražeb tři adresy nestačily;
+to je příští krok (víc adres, nebo rozcestník výpisu hledat hlouběji),
+ne nový zdroj naslepo.
