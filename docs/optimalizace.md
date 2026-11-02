@@ -21202,3 +21202,75 @@ začátku odstavce → slovo na konci dlouhého odstavce se do něj nevejde
 
 `test-sonda-podminky`: **43 kontrol, patnáct sabotáží.** A u sedmi z nich
 jsem byl ten, koho opravila zkouška.
+
+## 341. Systém zdrojů byl slabý na dvou místech. Obě změřená
+
+Majitel: „náš systém na vyhledávání zdrojů a řešení v případě změny
+u našeho zdroje musí být silnější." Prošel jsem ho a našel dvě místa,
+kde byl slabý — a ani jedno nebyl dohad.
+
+### A) Druhá cesta se nezkoušela tam, kde je změna nejčastější
+
+**Díra přesně tam, kde měla §334 pomoct nejvíc.** Když cizí web změní
+podobu stránky nebo přejmenuje pole v API, dotaz **nespadne**: vrátí
+200 a stahovač z něj prostě nepřečte nic. Stav pak není „chyba", ale
+**„prazdno"** (nic) nebo **„propad"** (zlomek) — a druhá cesta se
+zkoušela **jen u „chyba"**. Nejčastější podoba změny cizího webu tedy
+byla právě ta, na kterou náhradní čtení nedosáhlo.
+
+A bylo to horší: pojistka na prázdný zdroj stála **před** druhou cestou,
+takže takový zdroj běh **zabil ještě předtím**, než se náhradní čtení
+vůbec zkusilo — a s ním se zahodila i čerstvá data všech zdravých
+zdrojů, tedy přesně to, čemu §332 předchází.
+
+| | dřív | teď |
+|---|---|---|
+| druhá cesta se zkouší u | `chyba` | `chyba`, `prazdno`, `propad`, `zahazuje` |
+| držení nabídek kryje | `chyba` | `chyba`, `prazdno` |
+| pojistka na prázdno stojí | **před** druhou cestou | **za** druhou cestou i držením |
+
+`pokles` v tom seznamu **není**: třicetiprocentní úbytek může být
+pravda (vydražilo se) a stahovat kvůli tomu celý výpis znovu by
+znamenalo zatěžovat cizí web kvůli normální změně nabídky.
+
+A pojistka se teď dívá na **stav po těch dvou krocích**, ne na nález
+z porovnání: zdroj zachráněný druhou cestou už prázdný není a zdroj,
+jehož nabídky držíme, nedrží web prázdný ani on. Když ale zdroj
+prázdný zůstane **a nedá se po něm nic podržet**, běh skončí chybou
+jako dřív. A když se drží, běh pokračuje — ale **nahlas**, ať se na
+rozbitý parser nepřijde až za týden, když držení vyprší.
+
+### B) Hledání zdrojů se dívalo na špatnou adresu
+
+První nález sondy ohlásil u **ÚZSVM, eDesky a Lesů ČR „obsah slabé"** —
+jenže se ptala na **úvodní stránku**. Na úvodní stránce výpis pozemků
+není ani u webu, který jich má tisíce, takže ten verdikt neříkal nic
+o zdroji, jen o tom, kam jsme se podívali. **Hledání zdrojů, které se
+dívá na špatnou adresu, nehledá nic.**
+
+Sonda si proto **výpis najde sama**: z té stránky posbírá odkazy,
+jejichž text nebo adresa mluví o nabídce, prodeji, pozemcích, majetku
+nebo dražbách, a změří nejvýš tři z nich — **u každé čte robots.txt**
+a mezi dotazy čeká. Lepší se pozná **podle verdiktu**, ne podle
+velikosti stránky (jinak by vyhrál web s velkou patičkou). Adresa,
+ze které verdikt nakonec je, se **zapisuje do nálezu** a diagnostika
+ji ukáže — bez ní by nebylo poznat, co se vlastně měřilo. A zdroj,
+který je slibný hned na zadané adrese, se dál neprochází: zatěžovat
+cizí web kvůli ničemu nemá smysl.
+
+**PROKÁZÁNO SABOTÁŽÍ, devět kusů.** Druhá cesta zpátky jen na „chyba"
+→ 3 pády; „pokles" přidaný do seznamu → 2; držení zpátky jen na
+„chyba" → 1; pojistka zpátky před druhou cestu → 1; hledání výpisu
+vypnuté → 2; robots.txt u další adresy nekontrolovaný → 2; lepší
+adresa se nezapíše → 2; lepší podle velikosti stránky → 1; cizí web
+se začne brát → 2.
+
+**A jedna sabotáž mi ukázala slabou zkoušku.** „Zakázanou další adresu
+sonda nestáhne" jsem napsal tak, že podstrčení na té adrese vyhodilo
+chybu — takže sabotáž, která kontrolu robots.txt **úplně odstranila**,
+prošla zeleně: výsledek vypadal stejně. Zkouška, která nerozliší
+**„nestáhlo se"** od **„stáhlo a spadlo"**, tu nejdůležitější věc
+nehlídá. Měří se teď, že se ta adresa **vůbec nevyžádala**.
+
+`test-cteni-zdroje` 72 (dřív 63), `test-vypadek-zdroje` 42 (dřív 33),
+`test-sonda-zdroju` 66 (dřív 56).

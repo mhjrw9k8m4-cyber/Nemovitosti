@@ -31,7 +31,7 @@
  */
 import { writeFileSync, readFileSync } from 'node:fs';
 import { BOT_UA } from './bot-ua.mjs';
-import { smimeCist } from './robots.mjs';
+import { smimeCist, telo } from './robots.mjs';
 import { ZAPOJENE, KANDIDATI, kandidatiZDat } from './zdroje-kandidati.mjs';
 
 export const PAUZA_MS = 2000;          // mezi hostiteli, ať sonda nebuší
@@ -109,20 +109,107 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
   }
   if (r.delay) await spi(Math.min(r.delay, 30) * 1000);
   const zacatek = Date.now();
+  let html = '';
   try {
     const odp = await stahni(cil.url, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
     zapis.odpoved = odp.status;
-    const text = await odp.text();
+    html = await telo(odp);
     zapis.ms = Date.now() - zacatek;
-    zapis.vyteznost = vyteznost(text);
+    zapis.vyteznost = vyteznost(html);
     zapis.verdikt = odp.ok ? 'dostupné' : 'neodpovídá';
     zapis.slibuje = odp.ok ? slibuje(zapis.vyteznost) : 'nevíme';
   } catch (e) {
     zapis.ms = Date.now() - zacatek;
     zapis.verdikt = 'neodpovídá';
     zapis.chyba = String(e && e.message ? e.message : e).slice(0, 160);
+    return zapis;
+  }
+
+  /* HLEDÁNÍ VÝPISU, KDYŽ NA ZADANÉ ADRESE NIC NENÍ.
+     První nález sondy ohlásil u ÚZSVM, eDesky a Lesů ČR „obsah slabé"
+     — jenže se ptala na ÚVODNÍ STRÁNKU. Na úvodní stránce výpis
+     pozemků není ani u webu, který jich má tisíce, takže ten verdikt
+     neříkal nic o zdroji — jen o tom, kam jsme se podívali. Hledání
+     zdrojů, které se dívá na špatnou adresu, nehledá nic.
+     Zkouší se nejvýš `DALSICH_ADRES` odkazů, u každého se čte
+     robots.txt a mezi dotazy se čeká. A jen tam, kde se nenašlo nic
+     slibného — kdo už výpis má, se znovu nestahuje. */
+  if (zapis.verdikt === 'dostupné' && zapis.slibuje !== 'slibné') {
+    const kandidati = odkazyNaVypis(html, cil.url).slice(0, DALSICH_ADRES);
+    zapis.zkusenoDalsich = kandidati.length;
+    for (const k of kandidati) {
+      await spi(PAUZA_MS);
+      let r2 = null;
+      try { r2 = await smimeCist(k.url, { stahni, ua: jmeno, mezipamet }); }
+      catch { r2 = { dovoleno: false }; }
+      if (!r2.dovoleno) continue;
+      if (r2.delay) await spi(Math.min(r2.delay, 30) * 1000);
+      try {
+        const odp2 = await stahni(k.url, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
+        if (!odp2.ok) continue;
+        const v2 = vyteznost(await telo(odp2));
+        if (lepsiVyteznost(v2, zapis.vyteznost) === v2 && slibuje(v2) !== slibuje(zapis.vyteznost)) {
+          /* Adresa, na kterou se zdroj opravdu měří, se do nálezu
+             ZAPISUJE — bez ní by se nevědělo, odkud ten verdikt je. */
+          zapis.lepsiAdresa = { url: k.url, popis: k.popis, slibuje: slibuje(v2) };
+          zapis.vyteznost = v2;
+          zapis.slibuje = slibuje(v2);
+        }
+      } catch { /* jedna adresa z několika — běh to nezastavuje */ }
+      if (zapis.slibuje === 'slibné') break;
+    }
   }
   return zapis;
+}
+
+/* Slova, podle kterých se pozná odkaz na VÝPIS NABÍDEK. Hledá se
+   v textu odkazu i v adrese — každý web si to pojmenuje jinak. */
+export const SLOVA_VYPIS = /nab[íi]dk|prodej|pozemk|pozemek|parcel|majetk|majetku|dra[žz]b|v[ýy]pis|seznam|inzer|realit|ko?upit/i;
+
+/** Nejvýš tolik dalších adres se u jednoho zdroje zkusí. */
+export const DALSICH_ADRES = 3;
+
+/**
+ * Odkazy, které vypadají na výpis nabídek — na témže webu.
+ *
+ * PROČ TO VZNIKLO. První nález sondy ohlásil u ÚZSVM, eDesky a Lesů ČR
+ * „obsah slabé" — jenže sonda se ptala na ÚVODNÍ STRÁNKU. Na úvodní
+ * stránce výpis pozemků není ani u webu, který jich má tisíce, takže
+ * ten verdikt neříkal nic o zdroji, jen o tom, kam jsme se podívali.
+ * Hledání zdrojů, které se dívá na špatnou adresu, nehledá nic.
+ */
+export function odkazyNaVypis(html, base) {
+  let domaci = '';
+  try { domaci = new URL(base).hostname.toLowerCase(); } catch { domaci = ''; }
+  const ven = [];
+  const videne = new Set([String(base).split('#')[0]]);
+  const re = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(String(html || '')))) {
+    const href = m[1];
+    const popis = String(m[2]).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!SLOVA_VYPIS.test(href) && !SLOVA_VYPIS.test(popis)) continue;
+    let abs;
+    try { abs = new URL(href, base).href.split('#')[0]; } catch { continue; }
+    if (!/^https?:/.test(abs)) continue;
+    let host = '';
+    try { host = new URL(abs).hostname.toLowerCase(); } catch { continue; }
+    if (domaci && host !== domaci) continue;
+    if (videne.has(abs)) continue;
+    videne.add(abs);
+    ven.push({ url: abs, popis: popis.slice(0, 80) });
+  }
+  return ven;
+}
+
+/** Která výtěžnost je lepší? Podle verdiktu, při shodě podle počtu
+ *  zmínek pozemku — ne podle velikosti stránky, aby nevyhrál web
+ *  s velkou patičkou. */
+export function lepsiVyteznost(a, b) {
+  const rad = { 'slibné': 3, 'slabé': 2, 'nic nenasvědčuje': 1, 'nevíme': 0 };
+  const ra = rad[slibuje(a)] || 0, rb = rad[slibuje(b)] || 0;
+  if (ra !== rb) return ra > rb ? a : b;
+  return ((a && a.slovoPozemek) || 0) >= ((b && b.slovoPozemek) || 0) ? a : b;
 }
 
 /**

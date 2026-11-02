@@ -250,6 +250,43 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
     JSON.stringify({ jmena: F.ZDROJ_JMENA.length, vse: F.ZDROJ_JMENA_VSE.length }));
 }
 
+/* ---- 10) POJISTKA NA PRÁZDNÝ ZDROJ STOJÍ ZA DRUHOU CESTOU ------- */
+/* Do 3. 11. stála PŘED ní: zdroj, který změnil podobu stránky
+   a přestal se číst, zabil běh ještě předtím, než se vůbec zkusilo
+   náhradní čtení — takže §334 neměla šanci pomoct právě v tom
+   případě, pro který vznikla. A zároveň se zahodila čerstvá data
+   všech zdravých zdrojů, tedy přesně to, čemu §332 předchází. */
+{
+  const kod = readFileSync(U('scripts/fetch-opportunities.mjs'), 'utf8');
+  const iDruha = kod.indexOf('await zalozniCestou(zdroje');
+  const iDrzeni = kod.indexOf('podrzNabidkyVypadlych(zdroje, raw, dnesISO)');
+  const iBrzda = kod.indexOf("zdroje.filter((z) => z.stav === 'prazdno' && !z.podrzeno)");
+  pravda('v robotovi stojí pojistka na prázdný zdroj ZA druhou cestou i za držením',
+    iDruha > 0 && iDrzeni > iDruha && iBrzda > iDrzeni,
+    JSON.stringify({ druhaCesta: iDruha, drzeni: iDrzeni, pojistka: iBrzda }));
+  pravda('a dívá se na stav PO nich, ne na nález z porovnání',
+    !/const prazdne = nalezy\.filter/.test(kod));
+
+  /* Držení krom „chyba" kryje i „prazdno": zdroj odpověděl, ale nedalo
+     se z něj přečíst nic — a to pravda být nemůže. Nabídky na cizím
+     webu nejspíš pořád jsou, jen je neumíme přečíst. */
+  const drive = [{
+    place: 'Zkušební', okres: 'Benešov', zdroj: 'Rozbitý', url: 'https://r.test/n/1',
+    price: 500000, area: 1000, den: '2026-11-01',
+  }];
+  const v = F.podrzNabidkyVypadlych([{ nazev: 'Rozbitý', stav: 'prazdno', pocet: 0 }],
+    [], '2026-11-02', drive);
+  pravda('nabídky zdroje ve stavu „prazdno" se podrží',
+    v.nabidky.length === 1 && v.podleZdroje.get('Rozbitý') === 1,
+    JSON.stringify({ pocet: v.nabidky.length, podle: [...v.podleZdroje] }));
+  /* Ale stavy, kde zdroj odpověděl a řekl, co má, se nedrží dál. */
+  for (const stav of ['ok', 'pokles', 'propad', 'zahazuje', 'vypnuto', 'druhá cesta']) {
+    const w = F.podrzNabidkyVypadlych([{ nazev: 'Rozbitý', stav, pocet: 1 }], [], '2026-11-02', drive);
+    pravda(`a ve stavu „${stav}" se nedrží nic`, w.nabidky.length === 0,
+      JSON.stringify(w.nabidky.length));
+  }
+}
+
 console.log('Výpadek zdroje:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

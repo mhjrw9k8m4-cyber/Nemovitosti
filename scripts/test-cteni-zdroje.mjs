@@ -347,6 +347,50 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
       iJinak > 0 && iDrzeni > iJinak,
       `druhá cesta ${iJinak}, držení ${iDrzeni} — opačně by se míchal dnešní a včerejší obraz`);
   }
+  /* ---- g) ZMĚNA WEBU ČASTĚJI NEZNAMENÁ CHYBU, ALE PRÁZDNO ------- */
+  /* TOHLE BYLA DÍRA PŘESNĚ TAM, KDE MĚLA §334 POMOCT NEJVÍC. Když cizí
+     web změní podobu stránky nebo přejmenuje pole v API, dotaz
+     NESPADNE: vrátí 200 a stahovač z něj nepřečte nic. Stav pak není
+     „chyba", ale „prazdno" nebo „propad" — a druhá cesta se do 3. 11.
+     zkoušela JEN u „chyba". Nejčastější podoba změny cizího webu tedy
+     byla právě ta, na kterou náhradní čtení nedosáhlo. */
+  {
+    const stahni = async (u) => {
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+      return odpoved(stranka);
+    };
+    for (const stav of ['prazdno', 'propad', 'zahazuje']) {
+      const zdroje = [{ nazev: 'Zkušební prodej', stav, pocet: 0 }];
+      const ven = await F.zalozniCestou(zdroje, CILE, nastroje(stahni));
+      pravda(`zdroj ve stavu „${stav}" se zkusí přečíst druhou cestou`,
+        ven.length === 2 && zdroje[0].stav === 'druhá cesta',
+        JSON.stringify({ stav: zdroje[0].stav, nabidek: ven.length }));
+    }
+    /* A NAOPAK: stavy, u kterých zdroj ODPOVĚDĚL a řekl, co má, se
+       znovu nestahují. „pokles" může být pravda (vydražilo se)
+       a stahovat kvůli tomu celý výpis znovu by znamenalo zatěžovat
+       cizí web kvůli normální změně nabídky. */
+    for (const stav of ['ok', 'pokles', 'vypnuto', 'druhá cesta']) {
+      const volane = [];
+      const pocitej = async (u) => { volane.push(u); return stahni(u); };
+      const zdroje = [{ nazev: 'Zkušební prodej', stav, pocet: 5 }];
+      const ven = await F.zalozniCestou(zdroje, CILE, nastroje(pocitej));
+      pravda(`zdroj ve stavu „${stav}" se druhou cestou NEstahuje`,
+        ven.length === 0 && volane.length === 0 && zdroje[0].stav === stav,
+        JSON.stringify({ stav: zdroje[0].stav, dotazu: volane.length }));
+    }
+    pravda('a ten seznam stavů je v kódu pojmenovaný, ne rozsypaný v podmínkách',
+      F.ZKUSIT_DRUHOU instanceof Set && F.ZKUSIT_DRUHOU.has('prazdno')
+      && F.ZKUSIT_DRUHOU.has('propad') && !F.ZKUSIT_DRUHOU.has('pokles')
+      && !F.ZKUSIT_DRUHOU.has('ok'), JSON.stringify([...(F.ZKUSIT_DRUHOU || [])]));
+    /* A V ROBOTOVI SE PODLE NĚHO OPRAVDU ROZHODUJE. Kdyby tam zůstalo
+       `stav === 'chyba'`, byl by seznam k ničemu. */
+    const kodF = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
+    pravda('robot vybírá zdroje k druhé cestě podle toho seznamu',
+      /ZKUSIT_DRUHOU\.has\(z\.stav\)/.test(kodF)
+      && !/filter\(\(z\) => z\.stav === 'chyba'\)\.length/.test(kodF));
+  }
+
   /* ---- f) ZDROJ JAKO ŘÁDEK V REGISTRU, BEZ VLASTNÍHO STAHOVAČE --- */
   /* To je ten majitelův požadavek dotažený do konce: „aby náš výběr
      nezáležel na páru webů". Obecná cesta žádný tvar odpovědi nezná,

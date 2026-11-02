@@ -247,6 +247,96 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     vD.text && vD.text.length === 2000, String(vD.text && vD.text.length));
 }
 
+/* ---- 2e) SONDA NAJDE VÝPIS, KDYŽ NA ZADANÉ ADRESE NIC NENÍ ------ */
+/* PRVNÍ NÁLEZ SONDY OHLÁSIL u ÚZSVM, eDesky a Lesů ČR „obsah slabé" —
+   jenže se ptala na ÚVODNÍ STRÁNKU. Na úvodní stránce výpis pozemků
+   není ani u webu, který jich má tisíce, takže ten verdikt neříkal nic
+   o zdroji, jen o tom, kam jsme se podívali. Hledání zdrojů, které se
+   dívá na špatnou adresu, nehledá nic. */
+{
+  const UVOD = '<html><body><h1>Vítejte</h1>'
+    + '<a href="/o-nas">O nás</a>'
+    + '<a href="/nabidka-majetku">Nabídka majetku</a>'
+    + '<a href="/kontakt">Kontakt</a>'
+    + '<a href="https://jinde.test/nabidka">Nabídka na cizím webu</a>'
+    + '</body></html>';
+  const VYPIS = '<html><body>'
+    + '<a href="/detail/1">Pozemek Lhota</a> 1 200 m² za 900 000 Kč '
+    + '<a href="/detail/2">Pozemek Dolní</a> 2 400 m² za 1 500 000 Kč '
+    + '<a href="/detail/3">Parcela Horní</a> 800 m² za 600 000 Kč'
+    + '</body></html>';
+  const o = S.odkazyNaVypis(UVOD, 'https://u.test/');
+  pravda('odkaz na výpis se pozná z nápisu i z adresy',
+    o.length === 1 && /nabidka-majetku/.test(o[0].url), JSON.stringify(o));
+  pravda('cizí web se nebere — odvedl by nás jinam',
+    !o.some((x) => /jinde\.test/.test(x.url)), JSON.stringify(o));
+
+  const volane = [];
+  const stahni = async (u) => {
+    volane.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/nabidka-majetku/.test(u)) return { ok: true, status: 200, text: async () => VYPIS };
+    return { ok: true, status: 200, text: async () => UVOD };
+  };
+  const z = await S.sondujZdroj({ jmeno: 'Úřad', host: 'u.test', url: 'https://u.test/', typ: 'sale' },
+    { stahni, ua: UA, mezipamet: new Map() });
+  pravda('sonda si najde výpis a verdikt je podle NĚHO, ne podle úvodní stránky',
+    z.slibuje === 'slibné' && z.lepsiAdresa && /nabidka-majetku/.test(z.lepsiAdresa.url),
+    JSON.stringify({ slibuje: z.slibuje, lepsi: z.lepsiAdresa }));
+  pravda('a ta adresa je v nálezu — bez ní by se nevědělo, odkud verdikt je',
+    z.lepsiAdresa && z.lepsiAdresa.popis === 'Nabídka majetku', JSON.stringify(z.lepsiAdresa));
+  pravda('robots.txt se čte i u té další adresy',
+    volane.filter((u) => /robots\.txt$/.test(u)).length >= 1, JSON.stringify(volane));
+
+  /* KDO UŽ VÝPIS MÁ, SE ZNOVU NESTAHUJE. Jinak bychom cizí web
+     zatěžovali kvůli ničemu. */
+  const volane2 = [];
+  const stahni2 = async (u) => {
+    volane2.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => VYPIS };
+  };
+  const z2 = await S.sondujZdroj({ jmeno: 'Hned výpis', host: 'v.test', url: 'https://v.test/vypis', typ: 'sale' },
+    { stahni: stahni2, ua: UA, mezipamet: new Map() });
+  pravda('zdroj, který je slibný hned, se dál neprochází',
+    z2.slibuje === 'slibné' && !z2.lepsiAdresa && z2.zkusenoDalsich === undefined,
+    JSON.stringify({ slibuje: z2.slibuje, zkuseno: z2.zkusenoDalsich }));
+
+  /* A ZÁKAZ PLATÍ I NA TU DALŠÍ ADRESU. */
+  /* MĚŘÍ SE, ŽE SE TA ADRESA VŮBEC NEVYŽÁDALA — ne že se nepovedla.
+     Napoprvé tu stálo jen `!z3.lepsiAdresa` a podstrčení na zakázané
+     adrese vyhodilo chybu: sabotáž, která kontrolu robots.txt ÚPLNĚ
+     ODSTRANILA, prošla zeleně, protože výsledek vypadal stejně.
+     Zkouška, která nerozliší „nestáhlo se" od „stáhlo a spadlo",
+     tu nejdůležitější věc nehlídá. */
+  const volane3 = [];
+  const stahni3 = async (u) => {
+    volane3.push(u);
+    if (/v\.test\/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /nabidka' };
+    if (/nabidka-majetku/.test(u)) return { ok: true, status: 200, text: async () => VYPIS };
+    return { ok: true, status: 200, text: async () => UVOD };
+  };
+  const z3 = await S.sondujZdroj({ jmeno: 'Zakazuje výpis', host: 'u.test', url: 'https://u.test/', typ: 'sale' },
+    { stahni: stahni3, ua: UA, mezipamet: new Map() });
+  pravda('zakázaná další adresa se VŮBEC NEVYŽÁDÁ',
+    !volane3.some((u) => /nabidka-majetku/.test(u)), JSON.stringify(volane3));
+  pravda('a verdikt zůstane z té první adresy',
+    !z3.lepsiAdresa && z3.slibuje !== 'slibné', JSON.stringify({ lepsi: z3.lepsiAdresa, slibuje: z3.slibuje }));
+
+  /* Strop: nejvýš DALSICH_ADRES adres, ať se nestahuje půl webu. */
+  const hodne = Array.from({ length: 20 }, (_, i) => `<a href="/nabidka-${i}">Nabídka ${i}</a>`).join('');
+  pravda('najde se nejvýš DALSICH_ADRES dalších adres',
+    S.odkazyNaVypis(hodne, 'https://u.test/').slice(0, S.DALSICH_ADRES).length === S.DALSICH_ADRES
+    && S.DALSICH_ADRES <= 5);
+  /* A lepší se pozná podle verdiktu, ne podle velikosti stránky —
+     jinak by vyhrál web s velkou patičkou. */
+  const slabe = { slovoPozemek: 1, korun: 1, metru: 0, odkazu: 0, bajtu: 900000 };
+  const slibne = { slovoPozemek: 9, korun: 9, metru: 9, odkazu: 9, bajtu: 1000 };
+  pravda('lepší je slibnější stránka, ne větší',
+    S.lepsiVyteznost(slabe, slibne) === slibne && S.lepsiVyteznost(slibne, slabe) === slibne);
+}
+
 /* ---- 3) ZAKÁZANOU STRÁNKU SONDA NESTÁHNE ------------------------- */
 {
   const volane = [];

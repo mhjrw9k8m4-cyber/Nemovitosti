@@ -1220,6 +1220,23 @@ export const PRAH_PROPADU = 0.5;
    robots.txt nedá přečíst, druhá cesta se nezkouší vůbec. */
 export const ZALOZNI_STROP = 400;        // nabídek z jednoho zdroje za běh
 
+/* KDY SE DRUHÁ CESTA ZKOUŠÍ.
+ *
+ * Do 3. 11. jen u stavu „chyba" — a to byla díra přesně tam, kde měla
+ * §334 pomoct nejvíc. Když cizi web změní podobu stránky nebo přejmenuje
+ * pole v API, dotaz NESPADNE: vrátí 200 a stahovač z něj prostě
+ * nepřečte nic. Stav pak není „chyba", ale „prazdno" (nic) nebo
+ * „propad" (zlomek) — a druhá cesta se nezkusila. Tedy: nejčastější
+ * podoba změny cizi ho webu byla právě ta, na kterou náhradní čtení
+ * nedosáhlo.
+ *
+ * „zahazuje" je tu taky: zdroj, který víc nabídek zahodí než přinese,
+ * je rozbitý, i když něco vrátil.
+ * „pokles" tu NENÍ: třicetiprocentní úbytek může být pravda (vydražilo
+ * se) a stáhnout kvůli tomu celý výpis znovu by znamenalo zatěžovat
+ * cizi web kvůli normální změně nabídky. */
+export const ZKUSIT_DRUHOU = new Set(['chyba', 'prazdno', 'propad', 'zahazuje']);
+
 /**
  * Přečte JEDEN cíl obecnou cestou: robots.txt → stránka → nabídky.
  *
@@ -1297,7 +1314,7 @@ export async function zalozniCestou(zdroje, cile, nastroje) {
      web; mezi běhy se čte znovu. */
   const robotsMezipamet = new Map();
   for (const z of (zdroje || [])) {
-    if (!z || z.stav !== 'chyba') continue;
+    if (!z || !ZKUSIT_DRUHOU.has(z.stav)) continue;
     const cil = (cile || []).find((c) => c.jmeno === z.nazev);
     if (!cil || !cil.url) continue;
     const { nabidky, zalozni } = await prectiCil(cil, { ...nastroje, robotsMezipamet, jmeno: z.nazev });
@@ -1490,7 +1507,14 @@ export function podrzNabidkyVypadlych(zdroje, cerstve, dnes, drive) {
      odpověděl, by znamenalo postavit se proti jeho vlastní odpovědi
      a týden ukazovat nabídky, které on sám už nevede. „vypnuto" se
      nedrží z druhé strany: chybějící klíč není výpadek, ale rozhodnutí. */
-  const padle = new Set((zdroje || []).filter((z) => z && z.stav === 'chyba').map((z) => z.nazev));
+  /* DRŽÍ SE „chyba" I „prazdno". „prazdno" znamená, že zdroj
+     odpověděl, ale nedalo se z něj přečíst NIC — a to pravda být
+     nemůže (proto na to je pojistka). Je to tedy týž případ jako
+     výpadek: nabídky na cizim webu nejspíš pořád jsou, jen je neumíme
+     přečíst. Ostatní stavy ze seznamu ODPOVEDEL se nedrží: tam zdroj
+     řekl, co má. */
+  const padle = new Set((zdroje || []).filter((z) => z
+    && (z.stav === 'chyba' || z.stav === 'prazdno')).map((z) => z.nazev));
   if (!padle.size) return vysledek;
   /* Jména, která v tomhle běhu existují — včetně zdrojů přidaných
      řádkem v registru, které v zadrátovaném seznamu nejsou. */
@@ -2519,13 +2543,11 @@ async function main() {
     writeFileSync(HIST_ZDROJU, JSON.stringify(zapisDoHistorie(historie, zdroje, DNES)));
   } catch (e) { console.error('Historii zdrojů nešlo zapsat: ' + e.message); }
 
-  const prazdne = nalezy.filter((n) => n.druh === 'prazdno');
-  if (prazdne.length) {
-    console.error('CHYBA: ' + prazdne.map((n) => `zdroj ${n.nazev} nevrátil nic (minule ${n.drive})`).join('; ')
-      + '. Nejspíš se změnila podoba stránky a parser přestal cokoli najít.'
-      + ' Ponechávám stará data a končím s chybou, ať přijde upozornění.');
-    process.exit(1);
-  }
+  /* POJISTKA NA PRÁZDNÝ ZDROJ STOJÍ DÁL — až za druhou cestou
+     a držením, viz níž. Do 3. 11. stála TADY, tedy před nimi: zdroj,
+     který změnil podobu stránky a přestal se číst, běh zabil ještě
+     předtím, než se vůbec zkusilo náhradní čtení. §334 tak neměla
+     šanci pomoct právě v tom případě, pro který vznikla. */
   for (const n of nalezy) {
     if (n.druh === 'zahazuje') {
       console.error(`POZOR: zdroj ${n.nazev} přinesl ${n.ted} záznamů a ${n.preskoceno} jich zahodil`
@@ -2593,10 +2615,15 @@ async function main() {
       zdroje.push(...ob.zdroje);
       if (ob.nabidky.length) raw.push(...ob.nabidky.map((o) => geocode(o)));
     }
-    const padlych = zdroje.filter((z) => z.stav === 'chyba').length;
-    if (padlych) {
-      console.error(`Zdrojů bez odpovědi: ${padlych}. Zkouším druhou cestu`
-        + ` (JSON-LD, mikrodata, signály) — robots.txt se čte první.`);
+    /* Zdroje, u kterých má smysl zkusit druhou cestu: nejen ty, co
+       spadly, ale i ty, co odpověděly a nepřinesly nic nebo zlomek —
+       to je totiž ta častější podoba změny cizi ho webu (viz
+       ZKUSIT_DRUHOU výš). */
+    const kandidatiNaDruhou = zdroje.filter((z) => ZKUSIT_DRUHOU.has(z.stav));
+    if (kandidatiNaDruhou.length) {
+      console.error(`Zdrojů k druhé cestě: ${kandidatiNaDruhou.length}`
+        + ` (${kandidatiNaDruhou.map((z) => `${z.nazev}: ${z.stav}`).join(', ')}).`
+        + ` Zkouším JSON-LD, mikrodata a signály — robots.txt se čte první.`);
       const jinak = await zalozniCestou(zdroje, ZAPOJENE, {
         stahni, smimeCist, prectiJakkoli, copakTamJe, mistoZTextu,
         slovnik, okresy, ua: BOT_UA,
@@ -2619,6 +2646,38 @@ async function main() {
   if (podrzeno.pustene) {
     console.error(`POZOR: ${podrzeno.pustene} nabídek se pustilo — jejich zdroj mlčí`
       + ` déle než ${DRZENI_DNU} dnů. To už není výpadek.`);
+  }
+
+  /* ---------- POJISTKA NA PRÁZDNÝ ZDROJ ---------------------------- */
+  /* Zdroj, který minule něco měl a dnes nevrátil NIC, není pravda —
+     je to rozbité čtení. Dokud se nezšiklo, běh se tu zastavil a data
+     zůstala stará.
+     TEĎ STOJÍ AŽ TADY, tedy po druhé cestě a po držení, a dívá se na
+     STAV PO NICH — ne na nález z porovnání. Důvod: zdroj zachráněný
+     druhou cestou už prázdný není (má stav „druhá cesta") a zdroj,
+     jehož nabídky držíme z minulého běhu, nedrží web prázdný ani on.
+     Zastavit běh v obou případech by znamenalo zahodit i čerstvá data
+     všech zdravych zdrojů — tedy právě to, čemu §332 předchází. */
+  const poradDoluPrazdne = zdroje.filter((z) => z.stav === 'prazdno' && !z.podrzeno);
+  if (poradDoluPrazdne.length) {
+    const drive = (nazev) => {
+      const n = nalezy.find((x) => x.nazev === nazev);
+      return n ? n.drive : '?';
+    };
+    console.error('CHYBA: ' + poradDoluPrazdne.map((z) => `zdroj ${z.nazev} nevrátil nic`
+      + ` (minule ${drive(z.nazev)}) a nedalo se po něm nic podržet`).join('; ')
+      + '. Nejspíš se změnila podoba stránky, parser přestal cokoli najít'
+      + ' a ani náhradní čtení nepomohlo. Ponechávám stará data a končím'
+      + ' s chybou, ať přijde upozornění.');
+    process.exit(1);
+  }
+  /* A zdroj, který je prázdný, ale držíme po něm nabídky: běh
+     pokračuje, ale nahlas. Ticho by znamenalo, že se na rozbitý parser
+     přijde až za týden, když držení vyprší. */
+  for (const z of zdroje.filter((x) => x.stav === 'prazdno' && x.podrzeno)) {
+    console.error(`POZOR: zdroj ${z.nazev} nevrátil nic a náhradní čtení nepomohlo;`
+      + ` držím jeho ${z.podrzeno} nabídek z minulého běhu (strop ${DRZENI_DNU} dnů).`
+      + ' Parser patří opravit, než ten strop vyprší.');
   }
   raw.push(...podrzeno.nabidky);
 
