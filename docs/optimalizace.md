@@ -19532,3 +19532,58 @@ i bez hlídání (1 ✕) a úplným umlčením hlášky (6 ✕).
 Jedna vada byla i v hlídači samotném: čekal na prvek `.toast`, který na
 stránce leží od začátku prázdný, takže se `waitForSelector` vracel hned
 a ve všech třech stavech se naměřilo prázdno. Teď se čeká na text.
+
+## §314 — Poznámka pozemek uloží mezi vaše
+
+Majitel: *„pokud si někdo napíše poznámky, automaticky by se měl pozemek
+uložit do oblíbených."*
+
+Kdo si k pozemku napíše, proč si ho nechává, o něj zjevně stojí — a
+dosud mu takový pozemek zůstal jen uvnitř inzerátu: ve výpisu,
+v porovnání ani v „Uložených" nebyl. Poznámka ho teď uloží, a to na obou
+místech, kde se píše: na stránce pozemku a na kartě rychlého výběru.
+Uloží se týmž klíčem (`PKKlic.klicPozemku`), takže jde opravdu o jeden
+pozemek, ne o dva záznamy.
+
+**Jen jedním směrem.** Smazání poznámky pozemek z uložených
+**neodebírá** (podmínka `t.trim()`) a odebrání z uložených nemaže
+poznámku. Obojí by bylo rušení něčeho, o co člověk nežádal.
+
+**A je to vidět.** Tlačítko na stránce pozemku přepne na „Uloženo"
+a políčko napíše „uloženo · pozemek přidán k uloženým"; na kartě stojí
+„uloženo · i mezi vaše pozemky". Tiché uložení by byla změna za zády.
+
+**Rozpor, který si web vyrobil sám.** V rychlém výběru se kartami
+prochází a odmítá se tahem vlevo („Tenhle ne"). Kdo napíše poznámku
+a kartu pak odmítne, měl by pozemek schovaný z výpisu **a zároveň**
+uložený mezi svými — dva protikladné stavy z jednoho sezení.
+Rozhodnutí vyhrává: odvolá se to, co přidala poznámka. Napsaná poznámka
+zůstane, protože je to text člověka, ne náš.
+
+**Negativní výsledek, a stojí za zápis.** Napoprvé si kód pamatoval
+KLÍČ pozemku, který poznámka uložila, a odvolání ho ještě porovnávalo —
+aby rozhodnutí u jedné karty nesáhlo na pozemek uložený dřív a vědomě.
+Sabotáž (odvolání bez porovnání) ale **prošla 17/0**. Důvod je dvojí
+a oba se daly najít jen v kódu:
+
+* balíček rychlého výběru už uložené nabídky vynechává
+  (`js/rychlovyber.js`: `if (jeSkryty(d) || jeUlozeny(d)) continue;`),
+  takže vědomě uložená karta se v něm neobjeví;
+* a i ve dvou záložkách to selže, protože `js/main.js` drží seznam
+  uložených v paměti od načtení stránky — druhá záložka o uložení
+  v první neví, takže `isFav` vrátí „ne" a mazat nemá co.
+
+Porovnání klíče tedy nehlídalo nic, co by šlo vyvolat. Šlo pryč a zbyl
+jeden příznak („uložila to poznámka na téhle kartě"), který se nuluje
+u každé karty i po každém rozhodnutí. Méně kódu za týž výsledek.
+
+Hlídá to `scripts/test-pozn-oblibene.mjs` (17 kontrol) na obou místech,
+včetně toho, že smazání poznámky uložení nezruší. Prokázáno třemi
+sabotážemi: vypnutím uložení na stránce pozemku (5 ✕), odebráním
+z uložených při smazání poznámky (1 ✕) a vypnutím odvolání v rychlém
+výběru (3 ✕).
+
+Jedna kontrola byla přitom napsaná slabě a první sabotáž to ukázala:
+na text políčka se ptala výrazy `/ulož/` a `/uložen/`, kterými projde
+i samotné „uloženo" — takže o tom uložení neověřovala nic. Teď se ptá
+na slovo, které je tam navíc.

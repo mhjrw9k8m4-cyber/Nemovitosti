@@ -921,6 +921,9 @@ jobs:
       - name: Hláška o hlídání jen tomu, kdo si ho nastavil
         run: node scripts/test-hlaska-hlidani.mjs
 
+      - name: Poznámka pozemek uloží mezi vaše
+        run: node scripts/test-pozn-oblibene.mjs
+
       - name: Moje data — co si web pamatuje
         run: node scripts/test-ulozene.mjs
 

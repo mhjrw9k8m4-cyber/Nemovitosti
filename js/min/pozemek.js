@@ -1476,13 +1476,27 @@
         stavEl.classList.toggle('chyba', !!chyba);
       }
       if (puvodni) rekni('uloženo');
+
       function ulozTed() {
         var t = poznEl.value;
         if (t === puvodni) return;
         var ok = global.PKPoznamky.uloz(d, t);
+        var pridano = false;
+        if (ok && t.trim() && !isFav(d)) {
+          pridano = toggleFav(d) === true;
+
+          if (pridano) {
+            var fb = document.getElementById('pz-fav');
+            if (fb) {
+              fb.classList.add('on');
+              var sp = fb.querySelector('span');
+              if (sp) sp.textContent = 'Uloženo';
+            }
+          }
+        }
         puvodni = t;
 
-        rekni(ok ? (t.trim() ? 'uloženo' : 'smazáno')
+        rekni(ok ? (t.trim() ? (pridano ? 'uloženo · pozemek přidán k uloženým' : 'uloženo') : 'smazáno')
           : 'nepovedlo se uložit — plná paměť prohlížeče', !ok);
       }
 

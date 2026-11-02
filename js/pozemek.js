@@ -2680,14 +2680,38 @@
         stavEl.classList.toggle('chyba', !!chyba);
       }
       if (puvodni) rekni('uloženo');
+      /* POZNÁMKA ZNAMENÁ ZÁJEM — A ZÁJEM PATŘÍ K ULOŽENÝM (2. 11.).
+         Majitel: „pokud si někdo napíše poznámku, automaticky by se měl
+         pozemek uložit do oblíbených." Kdo si k pozemku píše, proč si ho
+         nechává, o něj stojí — a dosud mu zůstal jen uvnitř inzerátu:
+         ve výpisu, v porovnání ani v „Uložených" nebyl.
+         JEN JEDNÍM SMĚREM. Smazání poznámky pozemek z uložených
+         NEODEBÍRÁ (podmínka `t.trim()`) a odebrání z uložených nemaže
+         poznámku: obojí by bylo rušení něčeho, o co člověk nežádal. */
       function ulozTed() {
         var t = poznEl.value;
         if (t === puvodni) return;
         var ok = global.PKPoznamky.uloz(d, t);
+        var pridano = false;
+        if (ok && t.trim() && !isFav(d)) {
+          pridano = toggleFav(d) === true;
+          /* Tlačítko se musí přepnout taky, jinak na něm dál stojí
+             „Uložit" u pozemku, který uložený je. */
+          if (pridano) {
+            var fb = document.getElementById('pz-fav');
+            if (fb) {
+              fb.classList.add('on');
+              var sp = fb.querySelector('span');
+              if (sp) sp.textContent = 'Uloženo';
+            }
+          }
+        }
         puvodni = t;
         /* Prázdná poznámka se SMAŽE, a říká se to — „uloženo" u prázdného
-           pole by znamenalo, že se někam uložilo prázdno. */
-        rekni(ok ? (t.trim() ? 'uloženo' : 'smazáno')
+           pole by znamenalo, že se někam uložilo prázdno. A když poznámka
+           pozemek zároveň uložila, musí to být vidět: tiché uložení by
+           byla změna za zády. */
+        rekni(ok ? (t.trim() ? (pridano ? 'uloženo · pozemek přidán k uloženým' : 'uloženo') : 'smazáno')
           : 'nepovedlo se uložit — plná paměť prohlížeče', !ok);
       }
       /* Ukládá se po chvíli klidu, ne po každém písmenu: zápis do

@@ -4624,6 +4624,8 @@
   function cleanUrl() { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
 
   var rvStav = null, rvVrstva = null, rvOdlet = null;
+
+  var rvFavZPoznamky = false;
   function rvPrvek(id) { return document.getElementById(id); }
 
   function rvBezPohybu() {
@@ -4815,12 +4817,25 @@
       try { pole.focus(); } catch (e) {}
     });
     var puvodni = pole.value, cas = null;
+
+    rvFavZPoznamky = false;
+
     function uloz() {
       var t = pole.value;
       if (t === puvodni) return;
       var ok = window.PKPoznamky.uloz(d, t);
+      var pridano = false;
+      if (ok && t.trim() && !isFav(d)) {
+        toggleFav(d);
+        pridano = isFav(d);
+        if (pridano) rvFavZPoznamky = true;
+      }
       puvodni = t;
-      if (stav) stav.textContent = ok ? (t.trim() ? 'uloženo' : 'smazáno') : 'nepovedlo se uložit';
+      if (stav) {
+        stav.textContent = ok
+          ? (t.trim() ? (pridano ? 'uloženo · i mezi vaše pozemky' : 'uloženo') : 'smazáno')
+          : 'nepovedlo se uložit';
+      }
     }
     pole.addEventListener('input', function () {
       if (stav) stav.textContent = '…';
@@ -4892,7 +4907,12 @@
     var v = PKRychly.rozhodni(rvStav, smer);
     if (!v) return;
     if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
-    else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+    else {
+      if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+
+      if (rvFavZPoznamky && isFav(v.pozemek)) toggleFav(v.pozemek);
+    }
+    rvFavZPoznamky = false;
     rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
       v.akce === 'uloz' ? 'uloz' : 'skryj');
     if (v.akce === 'uloz') {

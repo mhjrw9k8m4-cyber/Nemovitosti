@@ -7749,6 +7749,15 @@
    * stejném pořadí jako seznam. Kdo si nastavil „Jižní Morava do tří
    * milionů", má třídit přesně to. */
   var rvStav = null, rvVrstva = null, rvOdlet = null;
+  /* Přidala pozemek mezi uložené POZNÁMKA na právě zobrazené kartě?
+     Jen tehdy se to dá odvolat, když kartu člověk potom odmítne; viz
+     rvRozhodni(). Nuluje se u každé karty i po každém rozhodnutí,
+     takže se nemůže vztahovat k jiné nabídce než k té na obrazovce.
+     Napoprvé tu stál KLÍČ pozemku a odvolání ho ještě porovnávalo —
+     jenže se nepodařilo vymyslet, jak to porovnání vyvolat: balíček
+     rychlého výběru už uložené nabídky vynechává. Porovnání tedy nic
+     nehlídalo a šlo pryč, viz docs/optimalizace.md §314. */
+  var rvFavZPoznamky = false;
   function rvPrvek(id) { return document.getElementById(id); }
   /* Kdo si vypnul pohyb v nastavení systému, nemá na co čekat — karta se
      vymění rovnou. Stejné pravidlo drží i css (prefers-reduced-motion),
@@ -7986,12 +7995,31 @@
       try { pole.focus(); } catch (e) {}
     });
     var puvodni = pole.value, cas = null;
+    /* Nová karta, nový list: co přidala poznámka u předchozího pozemku,
+       se k tomuhle nevztahuje. */
+    rvFavZPoznamky = false;
+    /* POZNÁMKA ZNAMENÁ ZÁJEM — A ZÁJEM PATŘÍ K ULOŽENÝM (2. 11.).
+       Majitel: „pokud si někdo napíše poznámku, automaticky by se měl
+       pozemek uložit do oblíbených." Totéž dělá stránka pozemku
+       (js/pozemek.js), jen tam není co odvolávat; tady ano, viz
+       rvFavZPoznamky u rvRozhodni(). JEN JEDNÍM SMĚREM: smazání
+       poznámky pozemek z uložených neodebírá. */
     function uloz() {
       var t = pole.value;
       if (t === puvodni) return;
       var ok = window.PKPoznamky.uloz(d, t);
+      var pridano = false;
+      if (ok && t.trim() && !isFav(d)) {
+        toggleFav(d);
+        pridano = isFav(d);
+        if (pridano) rvFavZPoznamky = true;
+      }
       puvodni = t;
-      if (stav) stav.textContent = ok ? (t.trim() ? 'uloženo' : 'smazáno') : 'nepovedlo se uložit';
+      if (stav) {
+        stav.textContent = ok
+          ? (t.trim() ? (pridano ? 'uloženo · i mezi vaše pozemky' : 'uloženo') : 'smazáno')
+          : 'nepovedlo se uložit';
+      }
     }
     pole.addEventListener('input', function () {
       if (stav) stav.textContent = '…';
@@ -8071,7 +8099,17 @@
     var v = PKRychly.rozhodni(rvStav, smer);
     if (!v) return;
     if (v.akce === 'uloz') { if (!isFav(v.pozemek)) toggleFav(v.pozemek); }
-    else if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+    else {
+      if (!jeSkryty(v.pozemek)) prepniSkryty(v.pozemek);
+      /* ROZPOR, KTERÝ BY SI WEB VYROBIL SÁM. Poznámka na kartě pozemek
+         uloží (viz rvPoznamka). Kdo potom kartu odmítne, měl by mít
+         pozemek schovaný z výpisu A ZÁROVEŇ uložený mezi svými — dva
+         protikladné stavy z jednoho sezení. „Tenhle ne" je rozhodnutí
+         a vyhrává; odvolává se ale JEN to, co přidala poznámka na téhle
+         kartě, ne pozemek uložený dřív a vědomě. */
+      if (rvFavZPoznamky && isFav(v.pozemek)) toggleFav(v.pozemek);
+    }
+    rvFavZPoznamky = false;
     rvHlaska(v.akce === 'uloz' ? 'Uloženo mezi vaše pozemky' : 'Schováno z výpisu',
       v.akce === 'uloz' ? 'uloz' : 'skryj');
     if (v.akce === 'uloz') {
