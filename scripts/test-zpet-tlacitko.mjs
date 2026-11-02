@@ -86,7 +86,7 @@ const VZORKY = [
 ];
 const tvary = [];
 for (const [jmeno, soubor] of VZORKY) {
-  const ctx = await prohlizec.newContext({ viewport: { width: 390, height: 844 },
+  const ctx = await prohlizec.newContext({ bypassCSP: true, viewport: { width: 390, height: 844 },
     isMobile: true, hasTouch: true, locale: 'cs-CZ', serviceWorkers: 'block' });
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${soubor}`, { waitUntil: 'load' });
@@ -127,6 +127,80 @@ for (const [jmeno, soubor] of VZORKY) {
   }
   await ctx.close();
 }
+/* --- 3) NA STRÁNKÁCH ÚČTU STOJÍ V ŘÁDKU S NADPISEM ------------------
+   Majitel 2. 11. zakroužkoval prázdno vpravo vedle nadpisu „Můj
+   profil": „zpět na pozemky by mělo být tam, kde jsem to označil."
+   Tlačítko mělo vlastní pruh pod zeleným pásem (.uc-zpet) — naměřeno
+   52 px řádku, ve kterém stálo samo u levého okraje.
+   Měří se TŘI věci, a ani jedna neplyne z druhé:
+     a) že pruh .uc-zpet zmizel ze VŠECH stránek (staticky),
+     b) že tlačítko je u PRAVÉHO okraje sloupce — i tam, kde se
+        na řádek nevejde a spadne pod nadpis („Hlídání pozemků"),
+     c) že tam, kde se vejde, skutečně STOJÍ V TOM ŘÁDKU, tedy že má
+        s nadpisem společný svislý střed. Kdyby `align-items` vypadlo,
+        bod b) by prošel dál a vypadalo by to pořád špatně.
+   Šířka 768 px je ta, na které se nápis vejde vedle každého ze tří
+   nadpisů; na 390 px se u „Hlídání pozemků" (215 px + 171 px tlačítko
+   proti 350 px sloupce) zalomí vždy, proto se řádek měří na 768. */
+{
+  const UCET = ['muj-inzerat.html', 'hlidani.html', 'zpravy.html'];
+  const vsechny = readdirSync(ROOT).filter((f) => f.endsWith('.html'));
+  const sPruhem = vsechny.filter((f) => /class="uc-zpet"/.test(readFileSync(path.join(ROOT, f), 'utf8')));
+  pravda('starý pruh pod pásem (.uc-zpet) zmizel ze všech stránek',
+    sPruhem.length === 0, 'ještě ho má: ' + sPruhem.slice(0, 6).join(', '));
+
+  let zmereno = 0;
+  for (const soubor of UCET) {
+    for (const sirka of [390, 768]) {
+      const ctx = await prohlizec.newContext({ bypassCSP: true, viewport: { width: sirka, height: 900 },
+        isMobile: sirka < 500, hasTouch: sirka < 500, locale: 'cs-CZ', serviceWorkers: 'block' });
+      const p2 = await ctx.newPage();
+      await p2.goto(`${BASE}/${soubor}`, { waitUntil: 'load' });
+      await p2.waitForTimeout(900);
+      const m = await p2.evaluate(() => {
+        const hlava = document.querySelector('.uc-hlava');
+        const b = document.querySelector('.uc-hlava > .zpet-btn');
+        const h1 = hlava && hlava.querySelector('h1');
+        const sloupec = document.querySelector('.add-wrap');
+        if (!hlava || !b || !h1 || !sloupec) {
+          return { chyba: `hlava=${!!hlava} tlacitko=${!!b} h1=${!!h1} sloupec=${!!sloupec}` };
+        }
+        const rb = b.getBoundingClientRect(), rh = h1.getBoundingClientRect();
+        /* Pravý okraj OBSAHU, ne rámečku sloupce: .add-wrap nese
+           odsazení (20 px na telefonu, 32 na 768), takže proti
+           `rect.right` by i správně zarovnané tlačítko vycházelo
+           o to odsazení dovnitř. Změřeno: 20 a 32 px. */
+        const rs = sloupec.getBoundingClientRect();
+        const odsazeniVpravo = parseFloat(getComputedStyle(sloupec).paddingRight) || 0;
+        const pod = hlava.nextElementSibling;
+        return {
+          odPrava: Math.round((rs.right - odsazeniVpravo) - rb.right),
+          stredTlacitka: Math.round(rb.top + rb.height / 2),
+          stredNadpisu: Math.round(rh.top + rh.height / 2),
+          naRadku: rb.top < rh.bottom && rh.top < rb.bottom,
+          nadTextem: !pod || rb.bottom <= pod.getBoundingClientRect().top + 1,
+          nadpis: (h1.textContent || '').trim(),
+        };
+      });
+      await ctx.close();
+      if (m.chyba) { pravda(`${soubor} @${sirka}: nadpis a tlačítko jsou v jednom bloku`, false, m.chyba); continue; }
+      zmereno++;
+      pravda(`${soubor} @${sirka} („${m.nadpis}"): tlačítko je u pravého okraje sloupce`,
+        Math.abs(m.odPrava) <= 2, `od pravého okraje ${m.odPrava} px`);
+      pravda(`${soubor} @${sirka}: tlačítko stojí nad textem, ne v pruhu pod ním`,
+        m.nadTextem, 'tlačítko přesahuje pod následující blok');
+      if (sirka === 768) {
+        pravda(`${soubor} @768: stojí v TÉMŽ ŘÁDKU jako nadpis, svisle na střed`,
+          m.naRadku && Math.abs(m.stredTlacitka - m.stredNadpisu) <= 2,
+          `střed tlačítka ${m.stredTlacitka}, střed nadpisu ${m.stredNadpisu}, na řádku ${m.naRadku}`);
+      }
+    }
+  }
+  /* Bez tohohle by celá sekce „prošla" i tehdy, kdyby se nezměřilo nic. */
+  pravda('a změřily se všechny tři stránky účtu na obou šířkách',
+    zmereno === UCET.length * 2, `změřeno ${zmereno} z ${UCET.length * 2}`);
+}
+
 await prohlizec.close();
 
 /* A TEĎ TO HLAVNÍ: shodují se ty čtyři rodiny? Recept je ve dvou

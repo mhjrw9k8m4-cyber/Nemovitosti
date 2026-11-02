@@ -343,6 +343,7 @@ footer .wrap:not(.foot-bottom){flex-direction:column;align-items:flex-start}
 .add-wrap>*{max-width:var(--m-sloupec)}
 .add-wrap>.add-card:has(+ .add-card){margin-bottom:20px}
 
+.add-hero .zpet-btn{color:rgb(var(--znacka-svetla-rgb))}
 .zpet-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 16px 8px 12px;border-radius:var(--r-ovladani);font-size:14px;font-weight:700;color:var(--znacka-svetla);text-decoration:none;background:#fff;border:1.5px solid var(--obrys-tlacitka);box-shadow:var(--e1);transition:var(--prechod)}
 .zpet-btn:hover{border-color:var(--znacka-svetla);background:var(--surface-2)}
 .zpet-btn:active{transform:translateY(1px)}

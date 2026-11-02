@@ -28,6 +28,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hlasPad } from './zkouska-pad.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let chyb = 0;
@@ -42,7 +43,7 @@ function pravda(popis, podm, detail) {
 /* Vlastní server: jde přesně o hlavičky, takže ten obvyklý statický
    server nestačí. Port je jiný než sdílená 8310 (scripts/port-zkousky.mjs),
    aby tahle zkouška mohla běžet i vedle ostatních. */
-const PORT = 8399;
+const PORT = await volnyPort();  // dřív natvrdo 8399
 let VERZE = 'STARA';
 const TYPY = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript',
   '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml',

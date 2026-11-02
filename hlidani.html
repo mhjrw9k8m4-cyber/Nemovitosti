@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=9ca6e377">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=6b54a582">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -508,23 +508,25 @@
 <main id="obsah">
   <section class="add-hero app-hero">
         <div class="wrap add-wrap">
-      <h1>Hlídání pozemků</h1>
+      <div class="uc-hlava">
+        <h1>Hlídání pozemků</h1>
+        <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
+      </div>
       <p class="sub"><b>Hlídejte si nové pozemky.</b> Uložte si, co hledáte — a uvidíte, kolik <b>nových pozemků</b> vám sedí. Vše přehledně v aplikaci, i s detaily jako elektřina nebo přístupová cesta.</p>
     </div>
   </section>
 
-  <!-- ZPÁTKY VEN Z ÚČTU (1. 11.). Majitel zakroužkoval místo nad
-       záložkami: „do skutečného označení přidáš tlačítko na vracení do
-       menu." Ze stránek účtu se do zbytku webu dalo jen přes záložky
-       (ty vedou zase do účtu), přes značku v liště, nebo přes
-       rozbalovací nabídku — tedy nikde to nebylo napsané slovem.
-       Vlastní řádek, ne čtvrtá záložka: záložky říkají „kde jsem
-       uvnitř účtu", tohle vede VEN, a splynout to nemá. -->
-  <div class="uc-zpet">
-    <div class="wrap">
-      <a href="index.html" class="zpet-btn"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
-    </div>
-  </div>
+  <!-- CESTA VEN Z ÚČTU STOJÍ V ŘÁDKU S NADPISEM (2. 11.).
+       Majitel zakroužkoval prázdno vpravo vedle nadpisu: „zpět na
+       pozemky by mělo být tam, kde jsem to označil, a tlačítko by
+       mělo vypadat líp." Mělo vlastní pruh pod zeleným pásem —
+       naměřeno 52 px řádku, ve kterém stálo samo vlevo, zatímco
+       vedle nadpisu zelo prázdno. Teď je v témž řádku jako nadpis,
+       u pravého okraje; řádek navíc tím zmizel.
+       RECEPT TLAČÍTKA SE NEMĚNÍ a je to schválně: změřeno, že týž
+       rám rgba(18,70,50,0.7) nesou i „Pozemky v okolí" a „Okolí"
+       na mapě, takže to není výjimka, ale řeč webu. Slabé bylo
+       umístění, ne vzhled. Viz docs/optimalizace.md §318. -->
 
   <!-- Kde jsem a kam odsud. Bez tohohle pruhu vedla cesta mezi čtyřmi
        stránkami jednoho účtu jen přes rozbalovací nabídku v hlavičce. -->

@@ -19,6 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { rozhodni, TICHO_MINUT, VYPINAC, ROBOT } from './sebeoprava-nasazeni.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -128,7 +129,7 @@ writeFileSync(souborNalezu, JSON.stringify({ kody: ['stara-data'] }));
    API na tomhle stroji (PK_GITHUB_API); kam jinam než na tenhle stroj
    to přesměrovat nejde, aby se nedala hlavička s tokenem odklonit. */
 {
-  const PORT = 8420;
+  const PORT = await volnyPort();  // dřív natvrdo 8420
   const prijate = [];
   let odpovedNaDispatch = 204;
   const api = http.createServer((req, res) => {

@@ -14,6 +14,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { periodaHodin, nalezUlohy, planovaneUlohy, NASOBEK } from './kontrola-uloh.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -80,7 +81,7 @@ function pravda(popis, vyslo, proc) {
 
 /* ---- 4) a celý skript proti falešnému API ---------------------- */
 {
-  const PORT = 8422;
+  const PORT = await volnyPort();  // dřív natvrdo 8422
   /* Falešné API vrací tolik úloh, kolik jich v repozitáři je, aby se
      měřilo na skutečném seznamu — ne na vymyšleném. */
   const skutecne = planovaneUlohy(path.join(KOREN, '.github', 'workflows'));

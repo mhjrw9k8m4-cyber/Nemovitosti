@@ -84,6 +84,23 @@ for (const s of STRANKY) {
   const p = await ctx.newPage();
   await p.goto(`${BASE}/${s}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await p.waitForTimeout(1200);
+  /* SLOŽENÉ ODDÍLY SE NEJPRV ROZBALÍ.
+     §315 složila čtyři oddíly pod výpisem do `<details>` („Dobré
+     vědět"), a tím se dvě jména ze seznamu — `.gl-item` (hesla
+     slovníčku) a `.status-card` (pět druhů příležitostí) — dostala
+     dovnitř složeného oddílu. Vzorek tříd spadl ze šesti na čtyři
+     a pojistka „bylo vůbec co měřit" začala v CI padat, přestože web
+     byl v pořádku.
+     Rozbalit je je správnější než mez snížit nebo ta jména vyřadit:
+     karty nikam nezmizely a jsou od člověka jedno klepnutí daleko,
+     takže jejich chování pod myší má pořád cenu hlídat. Rozbaluje se
+     všechno složené, ne jen „Dobré vědět" — jinak by totéž vyskočilo
+     u příštího oddílu, který se složí. */
+  await p.evaluate(() => {
+    document.querySelectorAll('details:not([open])').forEach((d) => { d.open = true; });
+  });
+  await p.waitForTimeout(200);
+
   /* ANIMACE PŘÍCHODU MUSÍ DOBĚHNOUT DŘÍV, NEŽ SE ZAČNE MĚŘIT.
      Karty na úvodu připlouvají (.reveal) a spouští je teprve to, že se
      dostanou do zorného pole — a do zorného pole je dostane až samo

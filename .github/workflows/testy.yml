@@ -32,6 +32,16 @@ permissions:
 
 jobs:
   testy:
+    # KAŽDÁ ZKOUŠKA DOBĚHNE, I KDYŽ SPADLA NĚKTERÁ PŘED NÍ.
+    # GitHub Actions ruší po prvním neúspěšném kroku všechny za ním.
+    # CI 888 mělo v každé směně jeden pád — a tři další zkoušky stály
+    # až za nimi, takže se nespustily vůbec a objevily se teprve při
+    # prvním souběžném běhu na stroji (viz docs/optimalizace.md §321).
+    # Červené CI tím říkalo „tři vady", a pravda byla „šest".
+    # `!cancelled()` pustí zkoušku i po cizím pádu; podmínka na
+    # `priprava` ji naopak PŘESKOČÍ, když selhala příprava úlohy —
+    # tam by stovky pádů nic neřekly, protože by chyběl prohlížeč
+    # nebo by neprošla syntaxe.
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj
     # GitHub úlohu zastaví až po šesti hodinách a další
@@ -54,6 +64,7 @@ jobs:
           node-version: '22'
 
       - name: Syntaxe všech skriptů
+        id: priprava
         run: |
           set -e
           for f in js/*.js scripts/*.mjs api/*.js; do
@@ -63,12 +74,15 @@ jobs:
           done
 
       - name: Odvozené soubory sedí se zdrojem (spraví je node scripts/oprav.mjs)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-oprav.mjs
 
       - name: Dotazy do databáze proti schématu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sloupce.mjs
 
       - name: Statistika cen (čísla odpovídají skutečnosti)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-statistika.mjs
 
       # Měřidlo, kterým se rozhoduje o jádru webu, tvrdilo nepravdu:
@@ -77,6 +91,7 @@ jobs:
       # číslo ve prospěch nápadu je nejhorší druh vady — tahle zkouška
       # hlídá, že měřidlo měří zeměpis, a ne vstupní filtr.
       - name: Měřidlo přesnosti odhadu měří, co tvrdí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mericka-odhadu.mjs
 
       # Nástroj, podle kterého se rozhodne „pustit, nebo nepustit".
@@ -85,124 +100,167 @@ jobs:
       # „nic nebrání". Sám nástroj v CI neběží; mluvil by s ostrým
       # projektem a červenal by podle toho, co ještě nikdo nenasadil.
       - name: Kontrola připravenosti ke spuštění měří, co tvrdí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-spusteni.mjs
 
       # Hlásič selhání nočních úloh. Zkouší se proti PŘEDSTÍRANÉMU
       # GitHubu: žádný opravdový úkol se nikde nezakládá. Nejdůležitější
       # z kontrol je ta, že při nedostupném GitHubu hlásič nemlčí.
       - name: Hlásič selhání nočních úloh
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ohlas-selhani.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cisla-okresu.mjs
       - name: Změna ceny nesmí nabídce sebrat věk
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prvni-videno.mjs
       - name: Víc pozemků na jednom místě (shluky nabídek)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-bloky.mjs
       - name: Co o webu ví vyhledávač (sirotci, indexovatelnost)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyhledavac.mjs
       - name: Srovnatelné pozemky — pořadí sedí na vypsaný seznam
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-srovnatelne.mjs
 
       - name: Kontrola databáze opravdu kontroluje (nad předstíranou Supabase)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-databaze.mjs
 
       - name: Cena ve strukturovaných datech sedí a nelže o dražbě
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nabidka-pro-stroje.mjs
 
       - name: „Na co mám?" — počty sedí na skutečné nabídky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozpocet.mjs
       - name: Stránky „Pozemky do X Kč" vypisují to, co tvrdí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozpocet-stranky.mjs
       - name: „Co je nového" nevydává starou nabídku za novou
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nove-pozemky.mjs
       - name: Stránka si nestahuje skript, který na ní nemá co dělat
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-skripty-na-strance.mjs
       - name: Řádek výpisu neopakuje, co už jinde stojí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vypis-radku.mjs
       - name: „Pozemky v okolí" opravdu vedou do okolí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okoli-okresu.mjs
       - name: Rozcestník „Kam dál" na stránce pozemku
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kam-dal.mjs
       - name: U spoluvlastnického podílu to stojí v názvu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-podil-v-nazvu.mjs
 
       - name: Pořadí nabídek (nic nezapadne)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-poradi.mjs
 
       - name: Hledání (háčky, pořadí slov, druh pozemku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hledani.mjs
 
       - name: Rozbitá data (náhodné zatěžkávání výpočtů)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nahodne.mjs
 
 
       - name: Co je u pozemku (čtení sítí a podílu z popisu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vybaveni.mjs
 
       - name: Výměra přečtená z textu inzerátu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vymera-z-textu.mjs
 
       - name: Druh pozemku z textu inzerátu (kus slova, zápor, název obce)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh.mjs
 
       - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dotaz.mjs
 
       - name: Hlídač jednotlivých zdrojů (tiše spadlý zdroj)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlidac-zdroju.mjs
 
       - name: Stahování ze zdrojů (opakování, Retry-After, časový limit)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stahovani.mjs
 
       - name: Dvojí kopie téže funkce na jedné stránce
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kopie-funkci.mjs
 
       - name: Noční úklid databáze (nespadne a nevyzradí klíč)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-uklid-databaze.mjs
 
       - name: Dražby z otevřených dat CEVD (výměra celé položky)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-drazby-cevd.mjs
 
       - name: Odhad ceny na regionálních stránkách
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odhad-regiony.mjs
 
       - name: Historie ceny nabídky (zlevnil majitel?)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ceny-historie.mjs
 
       - name: Časová řada cenových hladin
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-historie-cen.mjs
 
       - name: Věta o změně ceny
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zlevneni.mjs
 
       - name: Okruh kolem místa (do 30 km od Brna)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okruh.mjs
 
       - name: Kraj podle polohy (obálka nesmí změnit odpověď)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kraje-geometrie.mjs
 
       - name: Čísla na stránce okresu (podíly, kde je nabídek nejvíc)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okres-stranka.mjs
 
       - name: Bonita půdy (BPEJ) — dotaz na bod a čtení odpovědi
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-bpej.mjs
 
       - name: Místem nabídky je obec, ne ulice
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-misto-inzeratu.mjs
 
       - name: Cena za metr nad stropem uvěřitelnosti se netvrdí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-strop-ceny.mjs
 
       - name: Podklad pro kupní smlouvu (částka slovy, označení pozemku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-smlouva.mjs
 
       - name: Odkazy na zdroj nabídky slibují, kam vedou
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zdroje-odkazu.mjs
 
       - name: Stránky podle druhu pozemku (les, orná, stavební…)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh-stranka.mjs
 
       - name: Razítka verzí (aby lidem nechodila stará kopie)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-verze.mjs
 
       - name: Platnost datových souborů
@@ -214,31 +272,40 @@ jobs:
           done
 
       - name: Kontroly zadaných údajů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola.mjs
 
       - name: Meze platí v prohlížeči i na serveru
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-meze.mjs
 
       - name: Placené zvýraznění (za peníze se musí něco stát)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-platba.mjs
 
       - name: Čtení EXIFu a původ fotek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-exif.mjs
 
       - name: Rozpoznání obsahu fotek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-fototema.mjs
 
       - name: Opakovaná kontrola odkazů a fotek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-opakovana.mjs
 
       - name: Psaní v aplikaci (logika schránky a odznaku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zpravy.mjs
 
       - name: Hlídání lokality (co je nový pozemek)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlidani.mjs
 
 
       - name: Celá kontrola inzerátů (proti zkušebnímu serveru)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: |
           # PODLE ZÁMKU A BEZ INSTALAČNÍCH SKRIPTŮ. `npm install jpeg-js`
           # jmenuje balíček, takže si verzi vybere znovu podle ^0.4.4 —
@@ -258,6 +325,7 @@ jobs:
       # kontrola databáze by tiše nehlídala nic. S touhle proměnnou
       # chybějící PostgreSQL úlohu shodí.
       - name: Databáze jde založit na čistém PostgreSQL
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         env:
           PK_SQL_VYZADOVAN: '1'
         run: |
@@ -272,6 +340,7 @@ jobs:
       # Běží ve stejném kroku jako zkouška výš, aby se PostgreSQL
       # instaloval jen jednou.
       - name: Databáze snese objem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         env:
           PK_SQL_VYZADOVAN: '1'
         run: node scripts/test-sql-vykon.mjs
@@ -282,22 +351,26 @@ jobs:
       # s e-mailem a že denní strop sepne. Proto je ve stejném kroku
       # jako zkoušky výš — PostgreSQL je už nainstalovaný.
       - name: Hlášení chyb z prohlížeče (co se pošle a co databáze pustí)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         env:
           PK_SQL_VYZADOVAN: '1'
         run: node scripts/test-chyby-klienta.mjs
 
       - name: Jedno pravidlo pro všechno, co web odesílá sám
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-neosobni.mjs
 
       # Automat, který smí commitovat, je nebezpečný přesně tak, jak jsou
       # slabá jeho pravidla. Tady se zkouší každé zvlášť — bez gitu
       # a bez GitHubu, protože rozhodování je v čisté funkci.
       - name: Sebeoprava opraví jen to, co opravit smí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sebeoprava.mjs
 
       # Hlídač, který svítí zeleně na rozbitý web, je horší než žádný.
       # Měří se na podstrčeném webu, který se schválně kazí.
       - name: Kontrola nasazení pozná, že venku není to, co má být
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-nasazeni.mjs
 
       - name: Souhrnné SQL odpovídá dílčím souborům
@@ -311,221 +384,293 @@ jobs:
           echo "ok  supabase/00-vse.sql je aktuální"
 
       - name: Statická kontrola skriptů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-staticka.mjs
 
       - name: Nastavení zkoušek (měří to, co si myslí)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zkousky-meri.mjs
 
       - name: Chybová hláška pro CI (jmenuje, co padlo)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-chybova-hlaska.mjs
 
       - name: Dvojníci (týž pozemek pod dvěma inzeráty)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dvojnici.mjs
 
       - name: Zápis do databáze s veřejným klíčem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-anon-zapis.mjs
 
       - name: Sazba (jednoznaková slova na konci řádku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sazba.mjs
 
       - name: Vizuální jazyk (hloubka a tvary z předlohy)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-predloha.mjs
 
       - name: Mlčky přebité třídy ve stylopisu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prebiti.mjs
 
       - name: Popisy od inzerentů (úklid a doručení na stránku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-popisy.mjs
 
       - name: Vývoz nabídek do tabulky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyvoz.mjs
 
       - name: Stav mapy v adrese (sdílené odkazy)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odkaz.mjs
 
       - name: Skloňování podle počtu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sklonovani.mjs
 
       - name: Jedna barevná teplota (závoje a stíny)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odstiny.mjs
 
       - name: Tokeny stylu (žádná odvolávka na nic)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-tokeny.mjs
 
       - name: Značka (kresba a nápis se rovnají generátoru)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-znacka.mjs
 
       - name: Typografická stupnice
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-typografie.mjs
 
       - name: Jedna stupnice odstupů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odstupy.mjs
 
       - name: Jedna stupnice písma
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pismo.mjs
 
       - name: Osnova nadpisů (jeden h1, žádný přeskok)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-osnova.mjs
 
       - name: Mapa webu — datum u každé adresy, a pravdivé
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mapa-webu.mjs
 
       - name: Místo u pražských nabídek (ulice není obec)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-misto-prahy.mjs
 
       - name: Náhledy ve výpisu — jedna dlaždice, odloženě, s atribucí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nahledy-vypisu.mjs
 
       - name: Vnitřní odkazy a kotvy vedou, kam slibují
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vnitrni-odkazy.mjs
 
       - name: Vrstvy (z-index) mají vypsaný pořádek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vrstvy.mjs
 
       - name: Soustava — průhlednost, linky, čas nájezdu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-soustava.mjs
 
       - name: Vložený styl na stránce pozemku
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vlozeny-styl.mjs
 
       - name: Kanál s novými pozemky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rss.mjs
 
       - name: Popis dat odpovídá datům
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-data-rozhrani.mjs
 
       - name: Náhled odkazu patří k vlastní stránce
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sdileni.mjs
 
       - name: Rozesílač upozornění e-mailem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozesilac.mjs
 
       - name: Archiv nabídek (co se nabízelo a jak dlouho)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-archiv.mjs
 
       - name: Statistika z archivu nelže o krátkém okně
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-archiv-statistiky.mjs
 
       - name: Cizí servery proti zásadám soukromí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cizi-servery.mjs
 
       - name: Očištěný stylopis odpovídá zdroji
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-minifikace.mjs
 
       - name: Zkrácený stylopis pro stránky bez mapy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozdel-styly.mjs
 
       - name: Čísla v roadmapě se rovnají repozitáři
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-roadmap.mjs
 
       - name: Ve stylopisu nezbyla mrtvá pravidla
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mrtve-styly.mjs
 
       - name: Řezy dat dávají dohromady celek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-data-rezy.mjs
 
       - name: Vstup cenového modelu (malý soubor dá totéž co velký)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-model-vstup.mjs
 
       - name: Skóre pro pořadí výpisu (v datech je totéž, co spočítá prohlížeč)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-poptavka.mjs
 
       - name: Váha stránky (skript, který na stránce nemá na co sáhnout)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vaha-stranky.mjs
 
       - name: Jeden styl (nadpisy a textura z palety)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-jeden-styl.mjs
 
       - name: Sliby o datech odpovídají tomu, co web dělá
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sliby-data.mjs
 
       - name: Právní stránky (datum poslední úpravy a co v nich být musí)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pravni-stranky.mjs
 
       - name: České množné číslo u počtů (nula se chová jako pět)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mnozstvi.mjs
 
       - name: Konec nabídky není konec adresy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ukonceno.mjs
 
       - name: Safari a iOS (co by v nich nefungovalo — prohlížeč tu není)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-safari.mjs
 
       - name: Sebeoprava nasazení se rozhoduje podle tabulky, ne podle nálady
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sebeoprava-nasazeni.mjs
 
       - name: Kontrola plánovaných úloh pozná hlídače, co přestal chodit
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-uloh.mjs
 
       - name: Cesta ven z okresu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cesta-ven.mjs
 
       - name: Rychlý výběr (logika balíčku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rychlovyber.mjs
 
       - name: Čtvrť u nabídek, kde je místo jen celá obec
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ctvrt.mjs
 
       - name: Cenový model (odhad obvyklé ceny)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ceny.mjs
 
 
       - name: Nasazení databáze jedním tlačítkem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nasad-sql.mjs
 
       - name: Rádce u pozemku (rady podle skutečných údajů)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-radce.mjs
 
       - name: Integrita datového souboru
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-data.mjs
 
       - name: Čeština ve viditelném textu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cestina.mjs
 
       - name: Podřezaná písma pokrývají, co web ukazuje
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pisma.mjs
 
       - name: Poloha vs okres (patří k sobě?)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okres-poloha.mjs
 
       - name: Vlastní stránka pro každý pozemek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stranky-pozemku.mjs
 
 
       - name: Šifrování push zpráv (proti vzorku referenční implementace)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-web-push.mjs
 
       - name: Zařazení pozemku do okresu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okres.mjs
 
       - name: Vyváženost značek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-znackovani.mjs
 
       - name: Dlouhý výpis okresu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dlouhy-vypis.mjs
 
       - name: Komentáře v hotových stránkách
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-komentare-v-strankach.mjs
 
       - name: Na každé tajemství je majitel upozorněn
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-tajemstvi.mjs
 
       - name: Práva v databázi (RLS a kdo smí volat funkce)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sql-prava.mjs
 
       - name: Práva úloh v CI a odkud se berou balíčky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ci-prava.mjs
 
       - name: Odkazy do nového okna mají noopener
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nove-okno.mjs
 
       - name: Značka inzerenta a soustředění trhu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-inzerenti.mjs
 
       - name: Nálož v datech neprojde generátory
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-escape-generatory.mjs
 
       - name: Žádné volání ven nevisí donekonečna
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-casove-limity.mjs
 
   # Všechno, co potřebuje opravdový prohlížeč: chat, mapa, hlavička,
@@ -547,6 +692,16 @@ jobs:
 
 
   v-prohlizeci:
+    # KAŽDÁ ZKOUŠKA DOBĚHNE, I KDYŽ SPADLA NĚKTERÁ PŘED NÍ.
+    # GitHub Actions ruší po prvním neúspěšném kroku všechny za ním.
+    # CI 888 mělo v každé směně jeden pád — a tři další zkoušky stály
+    # až za nimi, takže se nespustily vůbec a objevily se teprve při
+    # prvním souběžném běhu na stroji (viz docs/optimalizace.md §321).
+    # Červené CI tím říkalo „tři vady", a pravda byla „šest".
+    # `!cancelled()` pustí zkoušku i po cizím pádu; podmínka na
+    # `priprava` ji naopak PŘESKOČÍ, když selhala příprava úlohy —
+    # tam by stovky pádů nic neřekly, protože by chyběl prohlížeč
+    # nebo by neprošla syntaxe.
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
     # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
@@ -570,6 +725,7 @@ jobs:
           node-version: '22'
 
       - name: Prohlížeč
+        id: priprava
         run: |
           # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
           # verze, takže se instalovalo to, co bylo na npm nejnovější
@@ -584,104 +740,137 @@ jobs:
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
       - name: Co má hidden, nesmí být vidět
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-skryte.mjs
 
       - name: Vazby ARIA vedou na prvky, které existují
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-aria-cile.mjs
 
       - name: Tlačítko „nahoru" na dlouhých stránkách
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nahoru.mjs
 
       - name: Ovládání mapy (klepání do plátna)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mapa.mjs
 
       - name: Parcelní číslo z inzerátu — a kdy se o něm mlčí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-parcely-z-textu.mjs
 
 
       - name: Profil při výpadku netvrdí, že inzeráty nemáte
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-profil-vypadek.mjs
 
       - name: „Výhodná cena" jen tam, kde je čím ji podložit
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyhodna-cena.mjs
 
       - name: Offline režim (service worker, bez signálu i bez cizích serverů)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-offline.mjs
 
       - name: Otevřená karta se dozví o nové verzi (a netočí se dokola)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nova-verze.mjs
 
 
       - name: Letecký snímek pozemku (měřítko a poctivost)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-snimek.mjs
 
       - name: Patička (rozvržení na počítači i na telefonu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-paticka.mjs
 
       - name: Úvodní obrazovka (živá čísla, věrohodnost cen)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-uvod.mjs
 
       - name: Viditelnost okrajů (WCAG 1.4.11)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okraje.mjs
 
       - name: Funkční kontrola stránek a odkazů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stranky.mjs
 
       - name: Hlídání v aplikaci (celá cesta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlidani-prohlizec.mjs
 
       - name: Na co je vidět, na to se dá klepnout
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pod-hlavickou.mjs
 
       - name: Mezera mezi číslem a slovem (text stránky, ne jen vzhled)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cislo-a-slovo.mjs
 
       - name: Hlavička vstupní stránky (nadpis vlevo, čísla vpravo)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlavicka-stranky.mjs
 
       - name: Seznam nabídek (názvy obcí na jedné svislici)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-seznam-nabidek.mjs
 
       - name: Přidání vlastního pozemku (celá cesta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pridat.mjs
 
       - name: Nářadí výpisu je na dosah
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nastroje-v-dosahu.mjs
 
       - name: Uložené pozemky v profilu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-profil-ulozene.mjs
 
       - name: Zpráva od cizího člověka je text, ne kód
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-escape-zpravy.mjs
 
       - name: Projít chat v prohlížeči
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-chat-prohlizec.mjs
 
       - name: Odhlášení z e-mailů a přepínač posílání
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odhlaseni.mjs
 
       - name: Přihlášení (web neodhlašuje sám od sebe)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prihlaseni.mjs
 
       - name: Vrstvení (co je nad čím)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vrstveni.mjs
 
       - name: Co se pod myší zvedne, na to musí jít kliknout
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zdvih.mjs
 
       - name: Do posuvné oblasti se vejde aspoň jedna položka
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vmacknuto.mjs
 
       - name: Našeptávač obcí a oprava překlepu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naseptavac.mjs
 
       - name: Historie ceny u pozemku sedí na archiv
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cenova-historie.mjs
 
       - name: U verdiktu o ceně je vidět, z kolika nabídek vyšel
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vzorek-verdiktu.mjs
 
       - name: Měření návštěvnosti (co se posílá a co ne)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mereni.mjs
 
       # Jediná zkouška, která opravdu rozbije skript ve stránce a čeká,
@@ -689,41 +878,62 @@ jobs:
       # schválně neobchází: kdyby se hash vloženého odchytávače rozešel
       # s jeho textem o jediný znak, hlásič by mlčel navždy.
       - name: Pád ve stránce se opravdu nahlásí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-chyby-v-prohlizeci.mjs
 
 
       - name: Hlídané místo a pozemky v okolí
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okoli.mjs
 
       - name: Barva u verdiktu o ceně
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-verdikt.mjs
 
       - name: Výpadek dat a mrtvé záznamy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vypadky.mjs
 
       - name: Odolnost proti vloženému kódu (XSS)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-xss.mjs
 
       - name: JSON ve stránce (nejde rozbít cizím textem)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-json-ve-strance.mjs
 
       - name: Rozbalovací seznam (myší i klávesou)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozbalovac.mjs
 
       - name: Okno „Stáhnout výběr" (co slíbí, to stáhne)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyvoz-okno.mjs
 
       - name: Graf vývoje cenové hladiny
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-graf-cen.mjs
 
       - name: Letecké náhledy se stahují až před očima
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-line-dlazdice.mjs
 
       - name: Soukromá poznámka k pozemku
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-poznamky.mjs
 
 
   v-prohlizeci-2:
+    # KAŽDÁ ZKOUŠKA DOBĚHNE, I KDYŽ SPADLA NĚKTERÁ PŘED NÍ.
+    # GitHub Actions ruší po prvním neúspěšném kroku všechny za ním.
+    # CI 888 mělo v každé směně jeden pád — a tři další zkoušky stály
+    # až za nimi, takže se nespustily vůbec a objevily se teprve při
+    # prvním souběžném běhu na stroji (viz docs/optimalizace.md §321).
+    # Červené CI tím říkalo „tři vady", a pravda byla „šest".
+    # `!cancelled()` pustí zkoušku i po cizím pádu; podmínka na
+    # `priprava` ji naopak PŘESKOČÍ, když selhala příprava úlohy —
+    # tam by stovky pádů nic neřekly, protože by chyběl prohlížeč
+    # nebo by neprošla syntaxe.
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
     # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
@@ -747,6 +957,7 @@ jobs:
           node-version: '22'
 
       - name: Prohlížeč
+        id: priprava
         run: |
           # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
           # verze, takže se instalovalo to, co bylo na npm nejnovější
@@ -761,180 +972,250 @@ jobs:
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
       - name: První dotek mapu jen probudí, nehýbe s ní
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-probuzeni.mjs
 
       - name: Počet nepřečtených na záložce Zprávy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odznak-zprav.mjs
 
       - name: Data stránky pozemku (dva malé soubory místo velkého)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-data-stranky.mjs
 
       - name: Předvyplnění inzerátu z odkazu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-predvyplneni.mjs
 
       - name: Čerstvost dat a stav zdrojů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cerstvost.mjs
 
       - name: Ukončená stránka přežije i vykreslení
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ukoncena-v-prohlizeci.mjs
 
       - name: Hlavička pozemku (snímek, odznak, nadpis, místo)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlavicka-pozemku.mjs
 
       - name: Pohyb (odezva mapy a měřítka, i s vypnutými animacemi)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pohyb.mjs
 
       - name: Stabilita rozvržení při načítání (CLS)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stabilita.mjs
 
       - name: Jeden vizuální jazyk (velikosti písma, přechody)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-jazyk.mjs
 
       - name: Obrys pozemku (nekreslíme, co nevíme)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-obrys.mjs
 
       - name: Sdílený odkaz na stav mapy (celá cesta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odkaz-prohlizec.mjs
 
       - name: Stránkování seznamu nabídek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-strany.mjs
 
       - name: Rychlý výběr v prohlížeči (celá cesta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rychly-prohlizec.mjs
 
       - name: Tah ikon je jeden (1,5 px)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-tahy.mjs
 
       - name: Parametry pozemku — tři čísla nahoře, popisek u hodnoty
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-parametry.mjs
 
       - name: Sazba v textu, který skládá prohlížeč
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sazba-dom.mjs
 
       - name: CSP platí a zastaví podstrčený skript
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-csp.mjs
 
       - name: Mobilní menu (jedno místo, funguje všude)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-menu.mjs
 
       # Potřebuje prohlížeč (playwright-core). V rychlém jobu „testy" se
       # neinstaluje, takže tam krok padal na chybějícím balíčku — a s ním
       # celý běh. Patří sem, mezi ostatní testy v prohlížeči.
       - name: Zaostření klávesnicí (vidí člověk, kde stojí)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zaostreni.mjs
 
       - name: Kalkulačka nákladů při koupi
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs
 
 
       - name: Porovnání uložených pozemků
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-porovnani.mjs
 
       - name: Česká písmena a podřezané písmo
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ceska-pismena.mjs
 
       - name: Dotykové terče na mobilu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dotyk.mjs
 
       - name: Odznaky shluků na mapě (barva nesmí lhát)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-shluky.mjs
 
       - name: Mapa s vrstvami v detailu pozemku
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mapa-pozemku.mjs
 
       - name: Mapa při tažení (rozhraní zmizí a vrátí se)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mapa-tazeni.mjs
 
       - name: Obarvení teček podle ceny (levnější je modřejší)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-barva-ceny.mjs
 
       - name: Shoda cen mezi mapou a stránkou pozemku
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-shoda.mjs
 
       - name: Co se doporučuje a co se má ověřit
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-doporuceni.mjs
 
       - name: Odložená tabulka tříd (posudek fotky se pořád udělá)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-foto-odlozeni.mjs
 
       - name: Barva lišty prohlížeče (theme-color sedí s hlavičkou)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-barva-listy.mjs
 
       - name: Zaoblení (co se ovládá, má jedno zaoblení)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zaobleni.mjs
 
       - name: Jedna deska (zaoblení, rám a stín karet na celém webu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-deska.mjs
 
       - name: Přechody (co se mění při najetí, mění se měkce; stisk je jedno gesto)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prechody.mjs
 
       - name: Jeden ovladač (velikost a řez písma tlačítek na celém webu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ovladace.mjs
 
       - name: Odkryté stavy (zaoblení i tam, kam se hlídači nedostanou)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odkryte.mjs
 
       - name: Graf všude (křivka vývoje ceny na každém druhu stránky pozemku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-graf-vsude.mjs
 
       - name: Jedna barva v řadě odznaků pod cenou na kartě
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-jedna-barva.mjs
 
       - name: Vzhled profilu (sedí „Můj profil" ke zbytku webu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-profil-vzhled.mjs
 
       - name: Hlídání jako hledání (jeden recept na jednu roli)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlidani-jako-hledani.mjs
 
       - name: Tip na dobrou koupi je táž karta jako ve výpisu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-tip-jako-karta.mjs
 
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-konzole.mjs
 
       - name: Druh příležitosti se pozná i bez barev
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-tvary.mjs
 
+      - name: Klíč k mapě patří k mapě (zarovnání a dva sloupce)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-legenda-mapy.mjs
+
       - name: Tři moduly se stahují až při prvním použití
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odlozene-skripty.mjs
 
       - name: Výpis nečeká na mapovou knihovnu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vypis-bez-mapy.mjs
 
       - name: Hierarchie tlačítek (co je tu hlavní?)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hierarchie.mjs
 
       - name: Pořadí na stránce pozemku (důležité nahoře)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-poradi-pozemku.mjs
 
       - name: Vyhledávač cen podle lokality
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ceny-hledani.mjs
 
       - name: Křížek na skrytí je na kartě vidět
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-skryt-videt.mjs
 
       - name: Uložené pozemky na účtu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ulozene-ucet.mjs
 
       - name: Hláška o hlídání jen tomu, kdo si ho nastavil
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlaska-hlidani.mjs
 
       - name: Poznámka pozemek uloží mezi vaše
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pozn-oblibene.mjs
 
       - name: Výklad na úvodní stránce se rozbaluje
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dobre-vedet.mjs
 
       - name: Co z uložených odešlo z nabídky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zmizele.mjs
 
       - name: Moje data — co si web pamatuje
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ulozene.mjs
 
 
   v-prohlizeci-3:
+    # KAŽDÁ ZKOUŠKA DOBĚHNE, I KDYŽ SPADLA NĚKTERÁ PŘED NÍ.
+    # GitHub Actions ruší po prvním neúspěšném kroku všechny za ním.
+    # CI 888 mělo v každé směně jeden pád — a tři další zkoušky stály
+    # až za nimi, takže se nespustily vůbec a objevily se teprve při
+    # prvním souběžném běhu na stroji (viz docs/optimalizace.md §321).
+    # Červené CI tím říkalo „tři vady", a pravda byla „šest".
+    # `!cancelled()` pustí zkoušku i po cizím pádu; podmínka na
+    # `priprava` ji naopak PŘESKOČÍ, když selhala příprava úlohy —
+    # tam by stovky pádů nic neřekly, protože by chyběl prohlížeč
+    # nebo by neprošla syntaxe.
     runs-on: ubuntu-latest
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj GitHub
     # úlohu zastaví až po šesti hodinách a další naplánovaný běh se do
@@ -958,6 +1239,7 @@ jobs:
           node-version: '22'
 
       - name: Prohlížeč
+        id: priprava
         run: |
           # PŘIPNUTÁ VERZE. Dřív tu stálo `playwright-core playwright` bez
           # verze, takže se instalovalo to, co bylo na npm nejnovější
@@ -972,51 +1254,67 @@ jobs:
           # podle dojmu, ale podle čísla, které je vidět na první pohled.
           node -e "console.log('playwright-core', require('playwright-core/package.json').version)" 
       - name: Kontrola fotek (že běží a odkud se bere)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-fotek.mjs
 
       - name: Barevné odznaky jsou čitelné v obou režimech
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odznaky.mjs
 
       - name: Zkrácený stylopis vypadá jako plný (vypočtené styly)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozdeleni-stylu.mjs
 
       - name: Sekce o chování trhu sedí na archiv
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-trh-sekce.mjs
 
       - name: Filtr „Zlevněné" ukazuje právě to, co zlevnilo
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zlevnene-filtr.mjs
 
       - name: Karta vede na svůj pozemek, ne na dvojče
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-karta-vede-spravne.mjs
 
       - name: Řazení výpisu (každá volba dělá, co slibuje)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-razeni.mjs
 
       - name: Rozvržení na všech šířkách a popisky stránek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-rozvrzeni.mjs
 
       - name: Mapový podklad (tlumený, ale ne vybělený)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-podklad.mjs
 
       - name: Verdikt u spoluvlastnického podílu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-verdikt-podilu.mjs
 
       - name: Ikony (jedna sada, jedna tloušťka)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ikony.mjs
 
       - name: Šipka zpět nad vrstvou (zavírá, neodchází ze stránky)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zpet.mjs
 
       - name: Plynulost startu mapy (není to jedna dlouhá úloha)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-plynulost.mjs
 
       - name: Prázdno pod obsahem a kotvy pod hlavičkou
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prazdno.mjs
 
       - name: Paměť prohlížeče (nové od minule, skryté, filtr)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pamet.mjs
 
       - name: Ztlumené okolí mapy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-maska.mjs
 
       # Jeden krok na celém webu. Měří VYKRESLENÉ stránky, ne zápis
@@ -1024,42 +1322,55 @@ jobs:
       # stylopisů naráz. Zrovna na tom pohořel test-pismo.mjs — hlídal
       # čtením css/styles.css a 2 266 stránek pravidlo porušovalo.
       - name: Jednotný krok webu (okraj, nadpis, karta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-jednotnost.mjs
 
       - name: První obrazovka telefonu (je vidět nabídka, ne jen ovládání)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-prvni-obrazovka.mjs
 
       - name: Tlačítko „Zpět na pozemky" (je všude a všude stejné)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zpet-tlacitko.mjs
 
       - name: Stránky účtu (obsah na středu, ne přilepený vlevo)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stranky-uctu.mjs
 
       - name: Zapomenuté heslo je ze všech čtyř přihlášení
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zapomenute-heslo.mjs
 
       - name: Podklad hlavní mapy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-podklad-mapy.mjs
 
       - name: Žádné překreslení výpisu navíc
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-jedno-vykresleni.mjs
 
       - name: Ovládání nad výpisem má jednu velikost
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ovladani-vypisu.mjs
 
       - name: Buď u kraje, nebo s okrajem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-u-hrany.mjs
 
       - name: Stránka vyřazené nabídky je taky stránka
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyrazena-nabidka.mjs
 
       - name: Odznak u ceny říká totéž co verdikt
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cenovy-stupen.mjs
 
       - name: Souřadnice pozemku s sebou
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-souradnice.mjs
 
       - name: Hlídání okruhu od místa
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okruh-hlidani.mjs
 
       # Obě si berou prohlížeč importem hned v hlavičce. Vznikly spolu
@@ -1071,78 +1382,102 @@ jobs:
       # jen se k ní dva dny nikdo nedostal, protože moje místní sada
       # ji přeskakovala podle slova „playwright" v komentáři.
       - name: Stránky s účtem nejde vložit do cizího rámu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ramovani.mjs
 
       - name: Cizí text se vykreslí jako text, ne jako kód
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-escape-dom.mjs
 
       - name: Kontrast textu (WCAG AA)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrast.mjs
 
       - name: Kalkulačka hypotéky
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hypoteka.mjs
 
       - name: Míra sazby (znaků na řádku)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mira.mjs
 
       - name: Mapová knihovna se stahuje až na dohled
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-leaflet.mjs
 
       - name: Uložení jednoho pozemku neoznačí sousedy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-klic-ulozenych.mjs
 
       - name: Vrstvy úřadů na hlavní mapě (až na vyžádání)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vrstvy-mapa.mjs
 
       - name: Barvy kategorií (jeden zdroj pro mapu i karty)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-barvy.mjs
 
       - name: Lepivá hlavička (drží nahoře, menu se otevře)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hlavicka.mjs
 
       - name: Jméno třídy je slib, že existuje pravidlo
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-mrtva-jmena.mjs
 
       - name: Hláška se ohlásí — živá oblast je ve stromu dřív než text
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ohlaseni.mjs
 
       - name: Obecní záměr — celá cesta od dat po detail
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-obec.mjs
 
       - name: Barvy po najetí myší
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-najeti.mjs
 
       - name: Na ovládání je vidět, že je ovládání
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-afordance.mjs
 
       - name: Sliby webu platí doopravdy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sliby.mjs
 
       - name: Okno „Vyberte své okolí"
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vyber-okoli.mjs
 
       - name: Pomalá databáze nedrží výpis
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zive-strop.mjs
 
       - name: Vyhledávání pozemků má jeden vzhled
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hledani-vzhled.mjs
 
       - name: Zakliknutí filtru neposune stránku pod rukou
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-bez-skoku.mjs
 
       - name: Karta nabídky se čte stejně na všech typech stránek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-karta-nabidky.mjs
 
 
       - name: Značka „už otevřeno"
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-videno.mjs
 
       - name: Rozbalené hledání se zase zavře
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-hledani-zavirani.mjs
 
       # Pustí kontrolu živého webu proti FALEŠNÉMU webu, na kterém se
       # každá vada vyrobí schválně. Bez toho by to byl hlídač, u kterého
       # nikdo nedokázal, že vadu pozná.
       - name: Kontrola živého webu pozná každou vadu, kvůli které vznikla
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrola-ziva.mjs
 

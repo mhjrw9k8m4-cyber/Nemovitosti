@@ -15,9 +15,10 @@ import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8417;
+const PORT = await volnyPort();  // dřív natvrdo 8417
 const BASE = `http://127.0.0.1:${PORT}`;
 
 /* Co server právě servíruje. Jeden klíč = jedna vyrobená vada. */

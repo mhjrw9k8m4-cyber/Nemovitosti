@@ -772,7 +772,8 @@ h1.uvod-nadpis{font-family:var(--font-nadpis);font-size:var(--h1-domu);font-weig
 .lg-ring{position:relative;background:var(--c-drazba)}
 .lg-ring::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--c-drazba);opacity:0.75;animation:mping 1.7s ease-out infinite}
 .lg-urgent{color:var(--znacka-svetla)}
-@media (max-width:560px){.map-legend{font-size:13px;padding:8px 12px;gap:8px 12px}
+@media (max-width:560px){.map-legend{display:grid;grid-template-columns:1fr 1fr;align-items:center;font-size:13px;padding:12px 20px 16px;gap:12px;border-bottom:1px solid var(--line-strong)}
+.map-legend .lg-nadpis{grid-column:1 / -1;margin-bottom:2px}
 .lg-dot{width:13px;height:13px}
 }
 .map-tools{position:absolute;top:12px;right:12px;z-index:600;display:flex;flex-direction:column;align-items:flex-end;gap:8px;max-width:calc(100% - 24px)}

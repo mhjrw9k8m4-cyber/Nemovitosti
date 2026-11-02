@@ -34,9 +34,10 @@ import { fileURLToPath } from 'node:url';
 import { hashe, stranky, politika, potrebujeEval } from './csp.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8312;
+const PORT = await volnyPort();  // dřív natvrdo 8312
 let ok = 0, chyb = 0;
 const zpravy = [];
 hlasPad('CSP', zpravy);

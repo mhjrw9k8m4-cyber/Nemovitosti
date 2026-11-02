@@ -27,6 +27,7 @@ import { mapaSouboru, klicNabidky, souborPro } from './generate-parcel-pages.mjs
 import { createRequire } from 'node:module';
 import * as sklad from './mail-sklad.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 /* Odstranění duplicit TOUŽ funkcí, jakou používá rozesílač. */
@@ -206,7 +207,7 @@ pravda('a nepíše si filtry znovu po svém',
   'v rozesílači je vlastní porovnávání ceny nebo ceny za m²');
 
 /* ---------- 4) DOOPRAVDY: falešné Supabase + falešná pošta ----- */
-const PORT = 8317;
+const PORT = await volnyPort();  // dřív natvrdo 8317
 const stav = { poslano: [], zapsano: [], poslaneKlice: [] };
 let hledani = [];
 const server = http.createServer((req, res) => {

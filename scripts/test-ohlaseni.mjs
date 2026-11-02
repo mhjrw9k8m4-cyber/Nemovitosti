@@ -27,9 +27,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PORT = 8338;
+const PORT = await volnyPort();  // dřív natvrdo 8338
 let ok = 0, chyb = 0;
 const zpravy = [];
 hlasPad('Ohlášení hlášky', zpravy);

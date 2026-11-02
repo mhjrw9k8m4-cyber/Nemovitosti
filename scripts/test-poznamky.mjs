@@ -322,24 +322,25 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
   // ulož pozemek i poznámku
   await p.fill('#pz-pozn-text', TEXT);
   await poznamkaUlozena(p, /uložen/i);
-  /* Tlačítko „Uložit" vykresluje až JS, tak se na něj počká — jinak by
-     se do schránky neklepnulo vůbec a čekání pod tím by jen vypršelo
-     (vrací `false`, ne výjimku, takže by se vada poznala až na kontrole
-     „uložený pozemek je v porovnání", a to jako cizí vina). */
+  /* UŽ SE NEKLEPÁ NA „ULOŽIT" — POZNÁMKA POZEMEK ULOŽÍ SAMA (§314).
+     Stálo tu klepnutí na #pz-fav. Od chvíle, kdy napsaná poznámka
+     pozemek automaticky přidá mezi uložené (majitel 2. 11.: „pokud si
+     někdo napíše poznámku, automaticky by se měl pozemek uložit do
+     oblíbených"), je to klepnutí PŘEPÍNAČ, který ho zase odebere —
+     a v porovnání pak nebylo co ukazovat. Hlásilo se to jako
+     „v tabulce: null", tedy jako vada stránky, a přitom to byla vada
+     zkoušky, která dělala krok navíc.
+     Čeká se proto rovnou na to, co §314 slibuje: že pozemek je mezi
+     uloženými, aniž by na to kdokoli klepnul. Tahle kontrola tím
+     zároveň hlídá sám ten slib. */
   const tlacitko = await pripravenoKdyz(p, () => !!document.querySelector('#pz-fav'));
-  const ulozen = await p.evaluate(() => {
-    const b = document.querySelector('#pz-fav');
-    if (b) b.click();
-    return !!b;
-  });
-  pravda('na stránce je tlačítko „Uložit" (bez něj není co porovnávat)',
-    tlacitko && ulozen === true, 'tlačítko #pz-fav se nenašlo');
-  /* Čeká se, až je pozemek OPRAVDU mezi uloženými — klepnutí na „Uložit"
-     zapisuje do schránky, a to je pozorovatelné. */
-  await pripravenoKdyz(p, () => {
+  const samoUlozeno = await pripravenoKdyz(p, () => {
     try { return JSON.parse(localStorage.getItem('pk_fav_v1') || '[]').length > 0; }
     catch (e) { return false; }
   });
+  pravda('poznámka pozemek uložila sama, bez klepnutí na „Uložit" (§314)',
+    tlacitko && samoUlozeno === true,
+    'pk_fav_v1 zůstalo prázdné — poznámka pozemek neuložila');
   await p.goto(`${BASE}/porovnani.html`, { waitUntil: 'load' });
   /* Čeká se na VYKRESLENOU stránku porovnání, ne na řádky: počet řádků
      je to, co se vzápětí měří. */

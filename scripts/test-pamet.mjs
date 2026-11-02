@@ -373,46 +373,53 @@ await p.evaluate(() => {
   } catch (e) {}
 });
 await p.reload({ waitUntil: 'domcontentloaded' });
-/* CO OD MINULE PŘIBYLO ŘEKNE HLÁŠKA, NE TABULE (29. 10.).
-   Nad výpisem stával proužek .misto-pruh: nadpis „od minule přibylo…",
-   podnadpis s okruhem a počtem a pět ovladačů — naměřeno 236 px.
-   Majitel ho nechal zrušit („velká tabule, ta tam nemá být, člověk si
-   má vybrat a pak tam má být jen tlačítko s křížkem na zrušení").
-   Novinky se proto hlásí hláškou s tlačítkem „Ukázat", a ta běží až po
-   prvním vykreslení — proto se čeká na výpis a teprve pak na ni. */
+/* CO OD MINULE PŘIBYLO SE UŽ NEHLÁSÍ ZE ZAPAMATOVANÉHO MÍSTA (2. 11.).
+   Tady stávaly dvě kontroly hlášky „u vašeho místa přibyly 2 pozemky"
+   s tlačítkem „Ukázat". Zrušila je §313, a to na majitelův příkaz:
+   „web mi píše, ve vašem okolí se objevily 3 nové pozemky, ale nechápu,
+   jak se to web dozvěděl, když tam nemám nastavené hlídání ani nic
+   takového — ať to ukazuje jen lidem, co si to nastaví v nastavení."
+   Měl pravdu: do zapamatovaného místa vedla jediná funkce a ta ho
+   zapisovala z pěti míst, mezi nimi obyčejné klepnutí do mapy a poloha
+   podle IP. Stačilo jednou klepnout a web se na další návštěvě tvářil,
+   že si člověk něco nastavil. Hláška se teď bere jen z hlídání na účtu
+   (hlidaniHlaska, hlídá scripts/test-hlaska-hlidani.mjs).
+   ZAPAMATOVANÉ MÍSTO ZŮSTÁVÁ a zbytek téhle sekce ho měří dál — jen už
+   z něj neplyne žádné oznámení. Tahle kontrola proto nemizí, ale
+   obrací se: s místem v prohlížeči a BEZ hlídání na účtu se hláška
+   „přibylo" nesmí objevit. Čeká se celou dobu, kterou měla k dispozici
+   dřív, aby „nestihla se" neprošlo jako „neukázala se". */
 await pripravenoVypis(p);
-await pripravenoKdyz(p, () => {
-  const t = document.getElementById('toast');
-  return !!t && !t.hasAttribute('hidden') && /přiby/.test(t.textContent || '');
-}, null, 10000);
+await p.waitForTimeout(3000);
 const novinky = await p.evaluate(() => {
   const t = document.getElementById('toast');
   return {
-    text: (t && t.textContent) || '',
-    akce: !!(t && t.querySelector('.toast-akce')),
+    text: (t && !t.hasAttribute('hidden') && t.textContent) || '',
     tabule: !!document.getElementById('misto-pruh'),
   };
 });
-pravda('web řekne, kolik u místa od minule přibylo', /přibyly 2 pozemky/.test(novinky.text),
-  `hláška: „${novinky.text}"`);
-pravda('a vede rovnou k nim (tlačítko „Ukázat")', novinky.akce,
-  'hláška je jen oznámení, ze kterého se nikam nedostanu');
+pravda('ze zapamatovaného místa se žádné „přibylo" nehlásí (§313)',
+  !/přiby/.test(novinky.text), `hláška: „${novinky.text.trim()}"`);
 pravda('a žádná tabule nad výpisem nezůstala', novinky.tabule === false,
   'proužek #misto-pruh je zpátky');
 
-// Tlačítko „Ukázat" musí okolí opravdu zapnout a nechat po sobě odznak.
-await p.evaluate(() => {
-  const b = document.querySelector('#toast .toast-akce');
-  if (b) b.click();
-});
+/* Okolí se zapíná tam, kde se vybírá místo — dřív to umělo i tlačítko
+   „Ukázat" v té zrušené hlášce. Zapnutí na uložených 20 km je zároveň
+   výchozí stav pro srovnání s 2 km níž. */
+await p.evaluate(() => document.getElementById('map-near').click());
+await p.waitForSelector('.vm-ov #vm-mapa .leaflet-map-pane', { timeout: 25000 }).catch(() => {});
+await p.waitForTimeout(600);
+await p.check('input[name="vm-km"][value="20"]').catch(() => {});
+await p.waitForTimeout(400);
+await p.evaluate(() => document.getElementById('vm-ok').click());
 await pripravenoKdyz(p, () => !!document.querySelector('#ms-chipy .msch[data-okoli]'), null, 10000);
 const poUkazat = await p.evaluate(() => {
   const b = document.querySelector('#ms-chipy .msch[data-okoli]');
   return { odznak: b ? b.textContent.trim() : null,
     polozek: document.querySelectorAll('.opp-item').length };
 });
-pravda('po „Ukázat" zbyl jediný odznak s místem', !!poUkazat.odznak, 'odznak okolí chybí');
-pravda('a je na něm uložený okruh', /20[\s\u00a0]km/.test(poUkazat.odznak || ''),
+pravda('po zapnutí okolí zbyl jediný odznak s místem', !!poUkazat.odznak, 'odznak okolí chybí');
+pravda('a je na něm uložený okruh', /20[\s ]km/.test(poUkazat.odznak || ''),
   `odznak říká „${poUkazat.odznak}"`);
 
 /* Zmenšením okruhu musí seznam zhubnout — Obec 4 i 5 jsou dál než 2 km.

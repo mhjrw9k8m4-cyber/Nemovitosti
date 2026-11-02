@@ -4118,7 +4118,37 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .lg-ring{position:relative; background:var(--c-drazba);}
 .lg-ring::after{content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--c-drazba); opacity:0.75; animation:mping 1.7s ease-out infinite;}
 .lg-urgent{color:var(--znacka-svetla);}
-@media (max-width:560px){ .map-legend{font-size:13px; padding:8px 12px; gap:8px 12px;} .lg-dot{width:13px; height:13px;} }
+/* NA TELEFONU TO BYL ODLEPENÝ PRUH. PŘEPSÁNO 2. 11.
+   ===================================================================
+   Majitel zakroužkoval pás mezi mapou a „Tipy na dobrou koupi":
+   „tu část, která je označená, musíš spojit a předělat designově."
+   Naměřeno na 390 px a jsou to tři věci, ne jedna:
+
+   1) BYLA O OSM PIXELŮ MIMO SLOUPEC. Legenda měla vnitřní odsazení
+      12 px, takže její text začínal na x=12 — jenže celý zbytek
+      stránky stojí na x=20 (nadpis „Tipy na dobrou koupi." i karty).
+      Osm pixelů stačí: oko je nepojmenuje, ale vidí, že ten pruh
+      k ničemu nepatří. Tohle je ta hlavní příčina a nejlevnější
+      oprava — odsazení se srovná na okraj stránky.
+   2) LÁMALA SE ROZHARÁNĚ. Čtyři klíče ve `flex-wrap` se na 390 px
+      nevejdou na řádek (naměřeno 94 px výšky, dva řádky) a „končí do
+      14 dní" zůstávalo samo na druhém. Vypadalo to jako nedopsaná
+      věta, ne jako klíč k mapě. Teď jsou to dva sloupce po dvou:
+      stejná výška, ale zarovnané a čitelné jako tabulka.
+   3) NEMĚLA KONEC. Bílá plocha karty prostě přestala a začala šedá
+      stránka. Spodní vlas kartu zavře, takže legenda čte jako PATKA
+      MAPY — to je to „spojit": patří k mapě nad sebou, ne k oddílu
+      pod sebou.
+
+   Na monitoru se nic z toho neděje (změřeno: legenda x=435, šířka
+   845, jeden řádek), proto je celá oprava uvnitř dotazu na telefon. */
+@media (max-width:560px){
+  .map-legend{display:grid; grid-template-columns:1fr 1fr; align-items:center;
+    font-size:13px; padding:12px 20px 16px; gap:12px;
+    border-bottom:1px solid var(--line-strong);}
+  .map-legend .lg-nadpis{grid-column:1 / -1; margin-bottom:2px;}
+  .lg-dot{width:13px; height:13px;}
+}
 /* Zámek mapy — mapa se hýbe jen když je odemčená */
 /* Lehké přepínání posouvání mapy (bez těžkého overlay) */
 .map-tools{position:absolute; top:12px; right:12px; z-index:600; display:flex; flex-direction:column; align-items:flex-end; gap:8px; max-width:calc(100% - 24px);}
@@ -5876,8 +5906,44 @@ html.pk-prihlasen .app-hero{padding-bottom:4px;}
    na téže svislici jako nadpis stránky (naměřeno: obojí 20 px od kraje
    na telefonu). Chytací plocha přitom zůstane 44 px vysoká a sahá
    i do toho osmipixelového okraje, kam prst stejně míří. */
-.uc-zpet{padding:8px 0 0;}
-.uc-zpet .wrap{display:flex;}
+/* ===== Cesta ven z účtu stojí v řádku s nadpisem (2. 11.) =====
+   Tlačítko „Zpět na pozemky" mělo na stránkách účtu vlastní pruh pod
+   zeleným pásem: naměřeno 52 px řádku, ve kterém stálo samo u levého
+   okraje, zatímco vedle nadpisu („Můj profil", 28 px) zelo prázdno až
+   k pravému okraji. Majitel to zakroužkoval: „mělo by to být tam, kde
+   jsem to označil, a tlačítko by mělo vypadat líp."
+   Je teď v témž řádku jako nadpis, u pravého okraje — řádek navíc tím
+   zmizel a prázdno se zaplnilo.
+   VZHLED TLAČÍTKA SE NEMĚNÍ, a to po měření: rám rgba(18,70,50,0.7)
+   nesou i „Pozemky v okolí" a „Okolí" na mapě, takže to není výjimka
+   jednoho tlačítka, ale recept webu pro ovladače, které někam vedou.
+   `flex-wrap` je tu kvůli dlouhým nadpisům a úzkým displejům: když se
+   obojí na řádek nevejde, tlačítko spadne pod nadpis — tedy tam, kde
+   bylo dosud, ne do zmáčknutého sloupce. */
+.uc-hlava{display:flex; align-items:center; justify-content:space-between;
+  gap:12px 16px; flex-wrap:wrap;}
+.uc-hlava > h1{margin:0; flex:0 1 auto;}
+/* `margin-left:auto` drží tlačítko u pravého okraje i tehdy, když se
+   na řádek nevejde a spadne pod nadpis. Naměřeno: „Hlídání pozemků"
+   (28 px, 215 px široké) + tlačítko (171 px) je 402 px, ale sloupec
+   má na telefonu 390 px jen 350 — na té stránce se tedy zalomí vždy.
+   Bez tohohle by zalomené tlačítko zůstalo vlevo pod nadpisem a celé
+   by to vypadalo jako nedotažená verze toho, co je vedle na profilu.
+   Zkrátit nápis na „Zpět" nejde: majitel 1. 11. chtěl „Zpět na
+   pozemky" napsané slovem a všude stejně (úkol #196). */
+.uc-hlava > .zpet-btn{flex:none; margin-left:auto;}
+/* A TLAČÍTKO SI V PÁSU PONECHÁ BARVU ZBYTKU WEBU.
+   Tohle vyšlo z hlídače, ne z oka: přesunutím do řádku s nadpisem se
+   tlačítko dostalo dovnitř .add-hero, a ta si schválně ztmavuje
+   --znacka-svetla na #0F5C3B (viz zdůvodnění u .add-hero). Nápis
+   i ikona tím spadly z rgb(36,112,82) na rgb(15,92,59) — tedy jiná
+   zeleň než na všech ostatních 2 456 stránkách.
+   Ztmavení je psané pro text ležící PŘÍMO na zeleném pásu. Tlačítko
+   má vlastní bílou plochu, takže se ho ten důvod netýká: na bílé má
+   #247052 kontrast 5,98 : 1, mez je 4,5. Čte se proto nepřebitý
+   --znacka-svetla-rgb (:root, ten pás nestíní), ne opsaný hex.
+   Ikona jde za `currentColor`, takže stačí barva nápisu. */
+.add-hero .zpet-btn{color:rgb(var(--znacka-svetla-rgb));}
 /* ===================================================================
    TLAČÍTKO ZPĚT — JEDEN RECEPT PRO CELÝ WEB (1. 11.)
    ===================================================================

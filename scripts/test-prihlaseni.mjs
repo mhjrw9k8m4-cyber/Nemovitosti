@@ -22,6 +22,7 @@ import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { volnyPort } from './port-zkousky.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -110,7 +111,18 @@ const server = createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json' }); res.end('{}');
   });
 });
-await new Promise((r) => server.listen(8399, '127.0.0.1', r));
+/* PORT SI ŘEKNE SYSTÉM, NENÍ NAPSANÝ NATVRDO.
+   Stálo tu 8399 — a 2. 11. na něm spadly dvě zkoušky, protože jsem si
+   na témž stroji pustil obyčejný server k měření. Vypadalo to jako
+   vada webu a stálo to kolo hledání. Viz scripts/port-zkousky.mjs. */
+const PORT = await volnyPort();
+const BASE = 'http://127.0.0.1:' + PORT;
+/* Adresa, na které schválně NIKDO neposlouchá — pro kontrolu, co auth
+   udělá, když server neodpoví. Dřív pevné 8398; kdyby si ten port
+   někdo vzal, měřila by se odpověď cizího programu. Volný port, který
+   se pak neotevře, je prázdný zaručeně. */
+const NIKDO = 'http://127.0.0.1:' + await volnyPort();
+await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
@@ -119,16 +131,16 @@ const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }
 async function sPrihlasenim(vyprsiZa) {
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate((v) => {
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate(({ v, ADRESA }) => {
     localStorage.setItem('pk_auth', JSON.stringify({
       access_token: 'a0', refresh_token: 'r1',
       expires_at: Math.floor(Date.now() / 1000) + v,
       user: { id: 'u1', email: 'test@example.invalid' },
     }));
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_URL = ADRESA;
     window.PK_SUPABASE_KEY = 'anon';
-  }, vyprsiZa);
+  }, { v: vyprsiZa, ADRESA: BASE });
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   return { ctx, p };
 }
@@ -192,16 +204,16 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate(() => {
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate((ADRESA) => {
     localStorage.setItem('pk_auth', JSON.stringify({
       access_token: 'a0', refresh_token: 'r1',
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       user: { id: 'u1', email: 'test@example.invalid' } }));
-  });
+  }, BASE);
   for (let i = 0; i < 5; i++) {
-    await p.goto('http://127.0.0.1:8399/prazdno');
-    await p.evaluate(() => { window.PK_SUPABASE_URL = 'http://127.0.0.1:8399'; window.PK_SUPABASE_KEY = 'anon'; });
+    await p.goto(BASE + '/prazdno');
+    await p.evaluate((ADRESA) => { window.PK_SUPABASE_URL = ADRESA; window.PK_SUPABASE_KEY = 'anon'; }, BASE);
     await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
     await p.evaluate(() => PKAuth.keepAlive());
     await p.waitForTimeout(120);
@@ -243,8 +255,8 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
     const ctx = await prohlizec.newContext({ bypassCSP: true });
     const zaloz = async () => {
       const p = await ctx.newPage();
-      await p.goto('http://127.0.0.1:8399/prazdno');
-      await p.evaluate(() => {
+      await p.goto(BASE + '/prazdno');
+      await p.evaluate((ADRESA) => {
         if (!localStorage.getItem('pk_auth')) {
           localStorage.setItem('pk_auth', JSON.stringify({
             access_token: 'a0', refresh_token: 'r1',
@@ -252,9 +264,9 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
             user: { id: 'u1', email: 'test@example.invalid' },
           }));
         }
-        window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+        window.PK_SUPABASE_URL = ADRESA;
         window.PK_SUPABASE_KEY = 'anon';
-      });
+      }, BASE);
       await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
       return p;
     };
@@ -301,18 +313,18 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate(() => {
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate((ADRESA) => {
     localStorage.setItem('pk_auth', JSON.stringify({
       access_token: 'a0', refresh_token: 'r1',
       expires_at: Math.floor(Date.now() / 1000) + 60,   // dochází
       user: { id: 'u1', email: 'test@example.invalid' },
     }));
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_URL = ADRESA;
     window.PK_SUPABASE_KEY = 'anon';
     // hlavička hledá tyhle prvky; bez nich by se překreslení vzdalo
     document.body.innerHTML = '<a id="nav-ucet"><span id="nav-stav">Nepřihlášeno</span></a>';
-  });
+  }, BASE);
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   /* Nic mezi tím: jediné, co se načte navíc, je hlavička. Kdyby se
      obnova spustila odjinud, tahle kontrola by lhala. */
@@ -329,17 +341,17 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx2 = await prohlizec.newContext({ bypassCSP: true });
   const p2 = await ctx2.newPage();
-  await p2.goto('http://127.0.0.1:8399/prazdno');
-  await p2.evaluate(() => {
+  await p2.goto(BASE + '/prazdno');
+  await p2.evaluate((ADRESA) => {
     localStorage.setItem('pk_auth', JSON.stringify({
       access_token: 'a0', refresh_token: 'r1',
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       user: { id: 'u1', email: 'test@example.invalid' },
     }));
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+    window.PK_SUPABASE_URL = ADRESA;
     window.PK_SUPABASE_KEY = 'anon';
     document.body.innerHTML = '<a id="nav-ucet"><span id="nav-stav">Nepřihlášeno</span></a>';
-  });
+  }, BASE);
   await p2.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   await p2.addScriptTag({ path: new URL('../js/hlavicka.js', import.meta.url).pathname });
   await p2.waitForTimeout(700);
@@ -359,11 +371,11 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate(() => {
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate((ADRESA) => {
+    window.PK_SUPABASE_URL = ADRESA;
     window.PK_SUPABASE_KEY = 'anon';
-  });
+  }, BASE);
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   const v = await p.evaluate(async () => {
     /* Schránka se „zaplní" jen na session, ne na celý prohlížeč. */
@@ -431,15 +443,15 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate(() => {
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate((ADRESA) => {
     localStorage.setItem('pk_auth', JSON.stringify({
       access_token: 'a0', refresh_token: 'r1',
       expires_at: Math.floor(Date.now() / 1000) + 3600,
       user: { id: 'u1', email: 'test@example.invalid' } }));
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8398';   // nikdo tam není
+    window.PK_SUPABASE_URL = ADRESA;   // nikdo tam není
     window.PK_SUPABASE_KEY = 'anon';
-  });
+  }, NIKDO);
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   const r = await p.evaluate(() => window.PKAuth.logout());
   pravda('bez signálu je člověk odhlášený taky', (await jePrihlasen(p)) === false,
@@ -535,11 +547,11 @@ for (const [kod, popis] of [['503', 'server má výpadek'], ['429', 'server hlá
   resetStav();
   const ctx = await prohlizec.newContext({ bypassCSP: true });
   const p = await ctx.newPage();
-  await p.goto('http://127.0.0.1:8399/prazdno');
-  await p.evaluate(() => {
-    window.PK_SUPABASE_URL = 'http://127.0.0.1:8399';
+  await p.goto(BASE + '/prazdno');
+  await p.evaluate((ADRESA) => {
+    window.PK_SUPABASE_URL = ADRESA;
     window.PK_SUPABASE_KEY = 'anon';
-  });
+  }, BASE);
   await p.addScriptTag({ path: new URL('../js/auth.js', import.meta.url).pathname });
   const r = await p.evaluate(() => window.PKAuth.logout());
   await p.waitForTimeout(150);

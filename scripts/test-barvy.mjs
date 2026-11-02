@@ -284,8 +284,14 @@ pravda('a přitom se od sebe dají rozeznat', Math.abs(hD - hE) > 3 || (() => {
         plocha: getComputedStyle(e).backgroundColor };
     });
     const vTabulce = window.PK_TVARY ? Object.keys(window.PK_TVARY) : [];
-    const nadpis = (document.querySelector('#stavy h2') || {}).textContent || '';
-    const cislo = (document.querySelector('#stavy .rm-n') || {}).textContent || '';
+    /* NADPIS A ČÍSLO JSOU OD §315 V ROZBALOVACÍM ŘÁDKU.
+       Oddíl „Pět druhů příležitostí" se složil do <details class="dv">
+       (úkol #205, aby se přes výklad nerolovalo), takže `#stavy h2`
+       ani `#stavy .rm-n` už neexistují — jsou z nich `.dv-t` a `.dv-n`
+       v <summary>. Čte se `textContent`, ne `innerText`: ten vrací
+       u složeného oddílu prázdno, i když text na stránce je. */
+    const nadpis = (document.querySelector('#stavy .dv-t') || {}).textContent || '';
+    const cislo = (document.querySelector('#stavy .dv-n') || {}).textContent || '';
     return { karty, vTabulce, nadpis: nadpis.trim(), cislo: cislo.trim() };
   });
   pravda('úvod zná tabulku druhů i kartičky', v.vTabulce.length > 0 && v.karty.length > 0,

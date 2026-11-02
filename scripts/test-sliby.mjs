@@ -275,7 +275,14 @@ function chibiPrazdne(a) { return a.length === 0; }
     `jen ve strukturovaných datech: ${chybi.join(' | ')}`);
   pravda('a žádná na stránce nechybí ve strukturovaných datech', navic.length === 0,
     `jen na stránce: ${navic.join(' | ')}`);
-  const napsano = /<span class="rm-n">(\d+)<\/span>\s*<span class="rm-l">otázek/.exec(idx);
+  /* POČET OTÁZEK JE OD §315 V ROZBALOVACÍM ŘÁDKU, NE V PÁSCE.
+     Oddíl častých dotazů se složil do <details class="dv"> (úkol #205),
+     takže pásek `rail-mark` s `rm-n`/`rm-l` zmizel a počet stojí
+     v <summary> jako `dv-n` + `dv-c`. Hledalo se tu pořád to staré
+     a hlásilo „napsáno ?" — vada zkoušky, ne stránky; na stránce
+     počet celou dobu je (naměřeno: „Na co se lidé ptají nejčastěji
+     9 otázek" zavřené i otevřené). */
+  const napsano = /<span class="dv-n[^"]*">(\d+)<\/span>\s*<span class="dv-c">otázek/.exec(idx);
   pravda('a počet u nadpisu sedí', !!napsano && Number(napsano[1]) === videt.length,
     `napsáno ${napsano ? napsano[1] : '?'}, otázek ${videt.length}`);
 }
