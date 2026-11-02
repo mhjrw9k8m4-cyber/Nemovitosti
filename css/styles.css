@@ -1142,6 +1142,24 @@ a::before, a::after, button::before, button::after{ transition:var(--prechod-bar
    byla jediná dvě místa na webu, kde se posun měnil skokem. */
 .kraj-item, .okr-list .okr-item{ transition:var(--prechod); }
 button, a, [role="button"], select, summary, .btn-primary, .lp-btn, input[type="submit"]{ touch-action:manipulation; }
+/* OVLADAČE PÍŠOU PÍSMEM WEBU, NE PÍSMEM PROHLÍŽEČE.
+   ====================================================================
+   Tlačítka, pole, rozbalovátka ani textové plochy písmo NEDĚDÍ — tak
+   to má CSS odjakživa — takže dokud si ho nenastaví sami, vykreslí se
+   výchozím písmem prohlížeče. Změřeno 2. 11. 2026 v Chromiu: hlavní
+   tlačítko formuláře „Odeslat pozemek ke zveřejnění" na pridat.html
+   psalo ARIALEM, zatímco celý web píše Interem. Na odkazech to vidět
+   nebylo, protože <a> písmo dědí — a většina tlačítek webu jsou právě
+   odkazy, takže vada zůstala v menšině míst a nikdo si jí nevšiml.
+
+   Staticky je to 28 tříd ovladačů bez vlastní deklarace (sedm z nich
+   je vidět až po přihlášení, viz úkol #217) a žádná z nich se nemusí
+   opravovat jednotlivě: děděné písmo spraví všechny naráz.
+
+   DĚDÍ SE JEN RODINA, ne velikost. `font: inherit` by přepsalo
+   i font-size, a ten si ovladače nastavují samy (13 až 16 px podle
+   role); zdědit 16 px všude by zvětšilo pilulky a odznaky. */
+button, input, select, textarea, optgroup{ font-family:inherit; }
 .btn-primary, .lp-btn, .nav-add, .pf-add, .pf-logout, .auth-submit, .map-nastroj, .okr-src{
   transition:var(--prechod);
 }/* Hmatatelné zmáčknutí při klepnutí */

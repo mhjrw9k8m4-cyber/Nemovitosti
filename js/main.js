@@ -4453,6 +4453,16 @@
        stojí nouzový zavírač v záchytné fázi; vypne se, jakmile doběhne
        postavMapu() a navěsí se ten pravý. */
     var vmPrvni = ov.querySelector('.vm-x');
+    /* ZAMĚŘENÍ PATŘÍ DO OKNA HNED, ne až za dvěma rámci. §331 ho
+       přesunula do postavMapu() spolu s pastí na tabulátor — a tím
+       vznikla mezera, ve které okno stojí na obrazovce, ale klávesnice
+       je pořád ve výpisu za ním. Chytilo to CI 893
+       (test-zaostreni: „okno je otevřené, ale zaměření je mimo něj“),
+       a je to vada, ne přísnost zkoušky: kdo si otevře okno klávesou,
+       tabuluje v tu chvíli po stránce pod ním.
+       Samotné .focus() je levné; drahá byla past zamkniTab(), která
+       prochází všechny zaměřitelné prvky — ta zůstává odložená. */
+    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
     var vmOziveno = false;
     ov.addEventListener('click', function (e) {
       if (vmOziveno) return;
@@ -4472,7 +4482,8 @@
     if (!ov.parentNode) return;          // zavřeno dřív, než se postavilo
     vmOziveno = true;
     zamkniTab(ov);
-    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
+    /* Zaměření je v okně už ze záchytné fáze (viz výš); past na
+       tabulátor se zapíná teprve tady. */
 
     /* ZOOM VPRAVO DOLE, jako na hlavní mapě. Leaflet ho dává vlevo
        nahoru — tedy přesně do pruhu u levého okraje displeje, kde telefon

@@ -211,6 +211,45 @@ pravda('počet podržených nabídek se zapíše do stavu zdroje a ten jde do da
 pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   /POZOR: \$\{podrzeno\.pustene\} nabídek se pustilo/.test(kod));
 
+/* ---- 9) DRŽENÍ PLATÍ I PRO ZDROJ, KTERÝ JE JEN ŘÁDKEM V REGISTRU - */
+/* NALEZENO MĚŘENÍM, NE ÚVAHOU. Po zavedení obecných zdrojů (zdroj bez
+   vlastního stahovače, §337) drželo `podrzNabidkyVypadlych` NULA jejich
+   nabídek: `zdrojNabidky` propouštěl jen jména ze zadrátovaného
+   seznamu šesti stahovačů. Takový zdroj by tedy při výpadku zmizel
+   celý — zatímco ostatní se podrží týden — a na kartě by neměl odznak.
+   Jména se proto berou i z toho, co v běhu existuje. */
+{
+  const zdroje = [{ nazev: 'Nový z registru', stav: 'chyba', pocet: 0, obecny: true }];
+  const drive = [{
+    place: 'Zkušební', okres: 'Benešov', zdroj: 'Nový z registru',
+    url: 'https://novy.test/n/1', price: 500000, area: 1000, den: '2026-11-01',
+  }];
+  const v = F.podrzNabidkyVypadlych(zdroje, [], '2026-11-02', drive);
+  pravda('nabídky zdroje z registru se při jeho výpadku podrží',
+    v.nabidky.length === 1 && v.podleZdroje.get('Nový z registru') === 1,
+    JSON.stringify({ pocet: v.nabidky.length, podle: [...v.podleZdroje] }));
+  /* PRVNÍ DEN VÝPADKU dostane nabídka dnešní datum, ne svůj `den`.
+     Napsal jsem si sem nejdřív `den` a zkouška mě správně opravila:
+     od `drzeno_od` se počítá strop sedmi dnů, takže kdyby se bral
+     den vzniku nabídky, pustil by se týdny starý inzerát hned. */
+  pravda('a podržená nabídka dostane drzeno_od na dnešní den',
+    v.nabidky[0] && v.nabidky[0].drzeno_od === '2026-11-02', JSON.stringify(v.nabidky[0]));
+  /* Seznam se ale nesmí otevřít úplně: štítek `zdroj` přichází z dat,
+     která může přepsat i starý běh, a „nevím odkud" nesmí projít jako
+     zdroj. Jméno, které v běhu není, se nerozpozná. */
+  pravda('vymyšlený štítek zdroje se nerozpozná',
+    F.zdrojNabidky({ zdroj: 'Vymyšlený zdroj', url: 'https://x.test/a' }) === null);
+  pravda('a nabídka cizího zdroje se nepodrží, i když jeho jméno v datech stojí',
+    F.podrzNabidkyVypadlych(zdroje, [], '2026-11-02',
+      [{ ...drive[0], zdroj: 'Vymyšlený zdroj', url: 'https://x.test/a' }]).nabidky.length === 0);
+  /* A ZDROJ_JMENA zůstává šesti stahovačům — jinak by kontrola shody
+     s SOURCES výš přestala něco tvrdit. */
+  pravda('ZDROJ_JMENA zůstává jen zapojeným stahovačům, data se do něj nelijí',
+    F.ZDROJ_JMENA.length === 6 && Array.isArray(F.ZDROJ_JMENA_VSE)
+    && F.ZDROJ_JMENA_VSE.length >= F.ZDROJ_JMENA.length,
+    JSON.stringify({ jmena: F.ZDROJ_JMENA.length, vse: F.ZDROJ_JMENA_VSE.length }));
+}
+
 console.log('Výpadek zdroje:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

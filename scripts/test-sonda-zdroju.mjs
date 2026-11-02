@@ -94,36 +94,145 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('robots.txt se na jeden web stahuje jen jednou', kolikRobots === 1, `stažení: ${kolikRobots}`);
 }
 
+/* ---- 2b) A TEĎ NAOSTRO: OPRAVDOVÉ `stahni`, MÍSTNÍ SERVER --------- */
+/* TOHLE JE ZKOUŠKA, KTERÁ MĚLA EXISTOVAT OD ZAČÁTKU. Všechno nad tímhle
+   řádkem měří `smimeCist` s PODSTRČENÝM stahováním — a právě proto se
+   nenašla vada, kterou pak ohlásil první běh sondy v Actions: robot
+   předává opravdové `stahni`, které vrací odpověď `fetch` s tělem jako
+   FUNKCÍ `text()`, zatímco podstrčení vracelo tělo jako hodnotu. Podmínka
+   `typeof r.text === 'string'` tedy neplatila nikdy a každý web, který
+   robots.txt má, se ohlásil jako „nesmíme číst" (12 ze 16 zdrojů
+   2. 11. 2026). Síť se tu pořád nepoužívá: server stojí na 127.0.0.1,
+   takže zkouška běží i tam, kde se na cizi weby nedostaneme. */
+{
+  const http = await import('node:http');
+  const srv = http.createServer((req, res) => {
+    if (req.url === '/robots.txt') {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end('User-agent: *\nDisallow: /tajne/\nAllow: /\nCrawl-delay: 2\n');
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html' });
+    res.end('<a href="/x">pozemek</a> 900 m\u00b2 za 500 000 K\u010d');
+  });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const port = srv.address().port;
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    const volne = await R.smimeCist(base + '/seznam', { stahni: F.stahni, ua: UA, mezipamet: new Map() });
+    pravda('OPRAVDOVÉ `stahni`: povolená cesta vyjde jako povolená',
+      volne.dovoleno === true && /Allow/.test(volne.duvod || ''), JSON.stringify(volne));
+    pravda('a z těla robots.txt se přečte i Crawl-delay',
+      volne.delay === 2, JSON.stringify(volne));
+    const zakaz = await R.smimeCist(base + '/tajne/x', { stahni: F.stahni, ua: UA, mezipamet: new Map() });
+    pravda('OPRAVDOVÉ `stahni`: zakázaná cesta vyjde jako zakázaná',
+      zakaz.dovoleno === false && /Disallow/.test(zakaz.duvod || ''), JSON.stringify(zakaz));
+    /* A rozdil mezi „nesmíme" a „nevíme": obojí končí nečtením, ale
+       nález to nesmí plést — podle něj se rozhoduje, co zapojit. */
+    /* Rozbitý robots.txt musí mít VLASTNÍ SERVER: `smimeCist` ho hledá
+       vždy v kořeni webu (`origin + '/robots.txt'`), takže cesta jako
+       „/rozbity/a" by si vzála ten zdravý. Na tomhle moje přvní podoba
+       téhle zkoušky spadla — a spadla správně. */
+    const srv500 = http.createServer((q, o) => { o.writeHead(500); o.end('chyba'); });
+    await new Promise((r) => srv500.listen(0, '127.0.0.1', r));
+    const base500 = `http://127.0.0.1:${srv500.address().port}`;
+    const rozbity = await R.smimeCist(base500 + '/a',
+      { stahni: (u) => F.stahni(u, { pokusy: 1 }), ua: UA, mezipamet: new Map() });
+    srv500.close();
+    pravda('robots.txt, který odpověděl 500, značí NEVÍME, ne zákaz',
+      rozbity.dovoleno === false && rozbity.nejdePrecist === true, JSON.stringify(rozbity));
+    pravda('a zákaz z pravidla NEVÍME není',
+      zakaz.nejdePrecist !== true, JSON.stringify(zakaz));
+    /* `telo()` je ta opravena část — měří se oba tvary přímo. */
+    pravda('`telo()` přečte tělo jako funkci i jako hodnotu',
+      (await R.telo({ text: async () => 'a' })) === 'a' && (await R.telo({ text: 'b' })) === 'b');
+    /* A naostro i celá sonda: jeden zápis do nálezu bez jakéhokoli
+       podstrčení, takže se měří i čtení stránky, ne jen robots.txt. */
+    const z = await S.sondujZdroj(
+      { jmeno: 'Místní', host: '127.0.0.1', url: base + '/seznam', typ: 'sale' },
+      { stahni: F.stahni, ua: UA, mezipamet: new Map() });
+    pravda('sonda naostro vyhodnotí místní zdroj jako dostupný',
+      z.verdikt === 'dostupné' && z.robots === 'dovoluje' && z.odpoved === 200,
+      JSON.stringify(z));
+    pravda('a změří na něm výtěžnost',
+      z.vyteznost && z.vyteznost.metru >= 1 && z.vyteznost.korun >= 1,
+      JSON.stringify(z.vyteznost));
+  } finally { srv.close(); }
+}
+
+/* ---- 2c) NÁLEZ, KTERÝ UKAZUJE NA NÁS, SE NEZAPÍŠE --------------- */
+/* Pojistka z §337. První běh sondy v Actions ohlásil 12 ze 16 zdrojů
+   jako zakázané a u VŠECH DVANÁCTI stál slovo od slova týž důvod.
+   To není pravda o cizích webech, to je vada u nás — a tehdy se
+   zapsala do nálezu jako pravda. */
+{
+  const nepovoleny = (d) => ({ robots: 'nedovoluje', robotsDuvod: d });
+  const povoleny = () => ({ robots: 'dovoluje', robotsDuvod: 'web robots.txt nemá' });
+  /* Přesný tvar toho skutečného nálezu: 12 × týž důvod, 4 × 404. */
+  const jakoTehdy = [
+    ...Array.from({ length: 12 }, () => nepovoleny('robots.txt odpověděl 200')),
+    ...Array.from({ length: 4 }, povoleny),
+  ];
+  const v = S.vzorecNasiVady(jakoTehdy);
+  pravda('nález z 2. 11. (12 × týž důvod) se pozná jako NAŠE vada',
+    v.nasiVada === true && v.kolik === 12 && v.mez === 8, JSON.stringify(v));
+  /* A naopak: skutečné zákazy mají každý svoje pravidlo. Takový nález
+     projít MUSÍ, jinak by pojistka zavřela sondu nadobro. */
+  const opravdoveZakazy = [
+    nepovoleny('Disallow: /'), nepovoleny('Disallow: /hledat'), nepovoleny('Disallow: /*?'),
+    ...Array.from({ length: 13 }, povoleny),
+  ];
+  pravda('nález s různými pravidly projde (pojistka nezavře sondu nadobro)',
+    S.vzorecNasiVady(opravdoveZakazy).nasiVada === false,
+    JSON.stringify(S.vzorecNasiVady(opravdoveZakazy)));
+  /* Mez má dno na třech: u dvou měřených zdrojů by „polovina" byla
+     jeden a pojistka by padala na každém nálezu. */
+  pravda('u dvou zdrojů se stejným důvodem pojistka nepadá (dno meze je 3)',
+    S.vzorecNasiVady([nepovoleny('Disallow: /'), nepovoleny('Disallow: /')]).nasiVada === false);
+  pravda('u tří už ano',
+    S.vzorecNasiVady([nepovoleny('x'), nepovoleny('x'), nepovoleny('x')]).nasiVada === true);
+  /* A v kódu sondy se ta pojistka opravdu VOLÁ a ukončuje běh — jinak
+     by to byla funkce, kterou nikdo nepoužívá. */
+  const kod = readFileSync(U('scripts/sonda-zdroju.mjs'), 'utf8');
+  /* HLEDÁ SE VOLÁNÍ, NE DEFINICE — na tom tahle kontrola nejdřív
+     spadla: `indexOf('vzorecNasiVady(nalez)')` našel hlavičku funkce.
+     A zápis se bere POSLEDNÍ, protože ten první je výpis seznamu cílů
+     (`--jen-cile`), který nic neměří a pojistku nepotřebuje. */
+  const i = kod.indexOf('= vzorecNasiVady(nalez)');
+  const j = kod.lastIndexOf('writeFileSync(SONDA_OUT');
+  pravda('sonda pojistku volá PŘED zápisem nálezu a běh ukončí',
+    i > 0 && j > i && /process\.exit\(1\)/.test(kod.slice(i, j)),
+    `volání na ${i}, zápis na ${j}`);
+}
+
 /* ---- 3) ZAKÁZANOU STRÁNKU SONDA NESTÁHNE ------------------------- */
 {
   const volane = [];
+  /* PODSTRČENÍ MÁ TVAR, KTERÝ MÁ OPRAVDOVÉ `stahni`: tělo je FUNKCE
+     `text()`, jako u `fetch`. Dřív tu stálo podstrčení, kde robots.txt
+     vracel tělo jako HODNOTU `text`, a komentář u něj tvrdil, že se oba
+     tvary používají schválně. Nepoužívaly — byla to vada v `smimeCist`
+     a tahle zkouška se jí přizpůsobila místo toho, aby ji našla.
+     Oba tvary se teď měří, a hlavně: blok 2b měří OPRAVDOVÉ `stahni`. */
   const stahni = async (u) => {
     volane.push(u);
     if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /' };
     return { ok: true, status: 200, text: async () => 'pozemek pozemek pozemek 100 m² 500 Kč' };
   };
-  /* smimeCist čte robots.txt přes r.text jako HODNOTU, sonda stránku
-     přes odp.text() jako FUNKCI — podstrčení musí umět obojí. */
-  const stahni2 = async (u) => {
-    volane.push(u);
-    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: 'User-agent: *\nDisallow: /' };
-    return { ok: true, status: 200, text: async () => 'pozemek' };
-  };
   const z = await S.sondujZdroj({ jmeno: 'Zakázaný', host: 'zakaz.test', url: 'https://zakaz.test/seznam', typ: 'sale' },
-    { stahni: stahni2, ua: UA, mezipamet: new Map() });
+    { stahni, ua: UA, mezipamet: new Map() });
   pravda('zdroj, který zakazuje, skončí jako „zakázané"',
     z.verdikt === 'zakázané' && z.robots === 'nedovoluje', JSON.stringify(z));
   pravda('a jeho stránka se vůbec nestáhne',
     volane.length === 1 && /robots\.txt$/.test(volane[0]), JSON.stringify(volane));
   pravda('a v nálezu stojí, které pravidlo to zakázalo',
     /Disallow/.test(z.robotsDuvod || ''), z.robotsDuvod);
-  void stahni;
 }
 
 /* ---- 4) POVOLENÝ ZDROJ SE ZMĚŘÍ --------------------------------- */
 {
   const stahni = async (u) => {
-    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: 'User-agent: *\nAllow: /' };
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
     /* Vzorek vypadá jako výpis, ne jako jedna věta: mez pro „slibné"
        je schválně na třech nabídkách, aby ji neprošla úvodní stránka,
        kde slovo „pozemky" padne jednou v menu. */
@@ -146,7 +255,7 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
 /* ---- 5) SELHÁNÍ JE VÝSLEDEK, NE PÁD ------------------------------ */
 {
   const stahni = async (u) => {
-    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: 'User-agent: *\nAllow: /' };
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
     throw new Error('spojení odmítnuto');
   };
   const z = await S.sondujZdroj({ jmeno: 'Mrtvý', host: 'mrtvy.test', url: 'https://mrtvy.test/', typ: 'sale' },

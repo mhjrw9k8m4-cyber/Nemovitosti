@@ -88,10 +88,20 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
   let r = null;
   try { r = await smimeCist(cil.url, { stahni, ua: jmeno, mezipamet }); }
   catch (e) { r = { dovoleno: false, duvod: 'robots.txt: ' + (e && e.message ? e.message : e) }; }
-  zapis.robots = r.dovoleno ? 'dovoluje' : 'nedovoluje';
+  /* TŘI STAVY, NE DVA. „nedovoluje" je tvrzení o cizim webu — že čtení
+     zakazuje. Když se robots.txt nepodaří přečíst, číst se nebude stějů
+     co stěj (RFC 9309), ale říct tomu „zakázané" je lhaní do nálezu:
+     nález pak slouží k rozhodování, který zdroj zapojit, a zdroj, co se
+     dnes nedal změřit, není zdroj, který si nepřeje být čten.
+     Napsané po tom, co první běh sondy ohlásil 12 ze 16 zdrojů jako
+     zakázané — a byla to vada u nás (viz `telo()` v robots.mjs). */
+  zapis.robots = r.dovoleno ? 'dovoluje' : (r.nejdePrecist ? 'nevíme' : 'nedovoluje');
   zapis.robotsDuvod = r.duvod || '';
   if (r.delay != null) zapis.crawlDelay = r.delay;
-  if (!r.dovoleno) { zapis.verdikt = 'zakázané'; return zapis; }
+  if (!r.dovoleno) {
+    zapis.verdikt = r.nejdePrecist ? 'robots neznámý' : 'zakázané';
+    return zapis;
+  }
   if (r.delay) await spi(Math.min(r.delay, 30) * 1000);
   const zacatek = Date.now();
   try {
@@ -108,6 +118,39 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
     zapis.chyba = String(e && e.message ? e.message : e).slice(0, 160);
   }
   return zapis;
+}
+
+/**
+ * Ukazuje nález na vadu u NÁS, místo na cizí weby?
+ *
+ * Napsané po tom, co první běh sondy ohlásil 12 ze 16 zdrojů jako
+ * zakázané — a u VŠECH DVANÁCTI stál týž důvod, „robots.txt odpověděl
+ * 200". Nebyla to pravda o cizích webech, byla to vada v našem čtení
+ * (§337). Nález se přitom zapsal jako pravda a diagnostika podle něj
+ * radila odebrat zdroje, které nic nezakazují.
+ *
+ * Pravidlo, které z toho plyne: dvanáct různých webů — od státního
+ * úřadu po soukromé dražebníky — se nerozhodne stejně a ze stejného
+ * důvodu. Když většina zdrojů dopadne stejně a se SLOVO OD SLOVA
+ * týmž vysvětlením, je nejpravděpodobnější vysvětlení naše vada.
+ *
+ * Mez je polovina měřených zdrojů, nejméně tři. Polovina proto, že
+ * právě tak se pozná „většina", a ne „shodou okolností dva weby":
+ * dva weby s týmž CMS mají robots.txt klidně stejný. Vrací popis
+ * nálezu, ne jen ano/ne, ať se dá do hlášky napsat číslo.
+ */
+export function vzorecNasiVady(nalez) {
+  const zdroje = Array.isArray(nalez) ? nalez : [];
+  const nepovoleno = zdroje.filter((z) => z && z.robots !== 'dovoluje');
+  const podleDuvodu = new Map();
+  for (const z of nepovoleno) {
+    const d = String((z && z.robotsDuvod) || '(bez důvodu)');
+    podleDuvodu.set(d, (podleDuvodu.get(d) || 0) + 1);
+  }
+  let duvod = '', kolik = 0;
+  for (const [d, n] of podleDuvodu) if (n > kolik) { duvod = d; kolik = n; }
+  const mez = Math.max(3, Math.ceil(zdroje.length / 2));
+  return { duvod, kolik, mez, celkem: zdroje.length, nasiVada: kolik >= mez };
 }
 
 /** Celý seznam cílů: zapojené, kandidáti a to, co robot našel sám. */
@@ -167,7 +210,7 @@ async function main() {
   if (process.argv.includes('--jen-cile')) {
     writeFileSync(SONDA_OUT, JSON.stringify({
       updated: null, updated_at: null, zavislost: zav,
-      souhrn: { dostupne: 0, zakazane: 0, neodpovida: 0, slibnych: 0 },
+      souhrn: { dostupne: 0, zakazane: 0, nezjisteno: 0, neodpovida: 0, slibnych: 0 },
       zdroje: cile.map((c) => ({
         jmeno: c.jmeno, host: c.host, url: c.url, typ: c.typ, stav: c.stav,
         adresaOverena: c.adresaOverena === true, verdikt: 'neměřeno',
@@ -190,6 +233,9 @@ async function main() {
   const souhrn = {
     dostupne: nalez.filter((z) => z.verdikt === 'dostupné').length,
     zakazane: nalez.filter((z) => z.verdikt === 'zakázané').length,
+    /* Zvlášť od zakázaných: tyhle zdroje číst nebudeme, ale ne proto,
+       že by si to nepřály — proto, že se to dnes nedalo zjistit. */
+    nezjisteno: nalez.filter((z) => z.verdikt === 'robots neznámý').length,
     neodpovida: nalez.filter((z) => z.verdikt === 'neodpovídá').length,
     slibnych: nalez.filter((z) => z.slibuje === 'slibné' && z.stav !== 'zapojeno').length,
   };
@@ -209,13 +255,24 @@ async function main() {
       + ' na naší straně — nález nechávám být.');
     process.exit(1);
   }
+  /* DRUHÁ POJISTKA: STEJNÝ DŬVOD U VĚTŠINY ZDROJŮ UKAZUJE NA NÁS.
+     Úvaha i mez jsou u `vzorecNasiVady` výš; tady se jen jedná. */
+  const vzorec = vzorecNasiVady(nalez);
+  if (vzorec.nasiVada) {
+    console.error(`CHYBA: ${vzorec.kolik} z ${vzorec.celkem} zdrojů dopadlo stejně`
+      + ` a se stejným důvodem („${vzorec.duvod}"). Tolik různých webů se stejně`
+      + ' nerozhodne — tohle ukazuje na vadu v našem čtení, ne na cizí weby.'
+      + ' Nález nechávám být (viz §337).');
+    process.exit(1);
+  }
   writeFileSync(SONDA_OUT, JSON.stringify({
     updated: new Date().toISOString().slice(0, 10),
     updated_at: new Date().toISOString(),
     zavislost: zav, souhrn, zdroje: nalez,
   }) + '\n', 'utf8');
   console.log(`Zapsáno do data/zdroje-sonda.json: ${souhrn.dostupne} dostupných,`
-    + ` ${souhrn.zakazane} zakázaných, ${souhrn.neodpovida} bez odpovědi,`
+    + ` ${souhrn.zakazane} zakázaných, ${souhrn.nezjisteno} s neznámým robots.txt,`
+    + ` ${souhrn.neodpovida} bez odpovědi,`
     + ` ${souhrn.slibnych} slibných kandidátů.`);
 }
 

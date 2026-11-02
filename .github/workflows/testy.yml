@@ -877,6 +877,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naseptavac.mjs
 
+      - name: Ovladače píšou písmem webu (i po přihlášení)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-pismo-ovladacu.mjs
+
       - name: Historie ceny u pozemku sedí na archiv
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cenova-historie.mjs

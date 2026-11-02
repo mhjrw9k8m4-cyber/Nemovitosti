@@ -105,9 +105,37 @@ export function jeDovoleno(robotsText, cesta, ua) {
 }
 
 /**
+ * Tělo odpovědi, ať přijde v jakékoli podobě.
+ *
+ * TOHLE JE OPRAVA SKUTEČNÉ VADY, ne předbížavá opatrnost. Původně tu
+ * stálo `typeof r.text === 'string'` — jenže `stahni` z robota vrací
+ * odpovědě `fetch`, u které je `text` FUNKCE. Podmínka tedy neplatila
+ * nikdy a každý web, který robots.txt má, spadl do větve „nejde
+ * přečíst" — tedy do odpovědi „nesmíme číst". První běh sondy
+ * v Actions (2. 11. 2026) to ukazuje černě na bílém: 12 ze 16 zdrojů
+ * „zakázaných" s důvodem „robots.txt odpověděl 200" — a jsou mezi nimi
+ * weby, odkud dnes bereme čtyři pátiny nabídek.
+ *
+ * A proč to zkoušky nechytily: podstrčené `stahni` ve zkouškách vracelo
+ * `{ ok, status, text: '…' }`, tedy řetězec. Když si na tom jedna
+ * zkouška všimla, že sonda a robots.txt čtou tělo různě, přizpůsobila se
+ * tomu PODSTRČENÍ — ne kód. Přesně tomu se má předcházet, takže
+ * `test-sonda-zdroju` teď měří robots.txt i přes OPRAVDOVÉ `stahni`
+ * proti místnímu serveru, bez jakéhokoli podstrčení.
+ */
+export async function telo(r) {
+  if (!r) return '';
+  if (typeof r.text === 'function') return String(await r.text());
+  if (typeof r.text === 'string') return r.text;
+  return '';
+}
+
+/**
  * Přečte robots.txt daného webu a rozhodne o adrese.
  *   url    — celá adresa, kterou chceme číst
- *   stahni — funkce (url) => { ok, status, text } (vkládá se, ať je to
+ *   stahni — funkce (url) => odpovědě s `ok`, `status` a tělem (buď
+ *            `text()` jako u `fetch`, nebo `text` jako hodnota — viz
+ *            `telo()` výš; vkládá se, ať je to
  *            zkoušitelné bez sítě; v robotovi se předá `stahni` ze
  *            fetch-opportunities.mjs, který umí opakování a časový limit)
  *   ua     — hlavička user-agent, pod kterou se ptáme
@@ -126,14 +154,15 @@ export async function smimeCist(url, { stahni, ua, mezipamet }) {
     try {
       const r = await stahni(u.origin + '/robots.txt');
       if (r && r.status === 404) zapis = { text: '', chybi: true };
-      else if (r && r.ok && typeof r.text === 'string') zapis = { text: r.text };
-      else zapis = { chyba: `robots.txt odpověděl ${r && r.status ? r.status : 'nijak'}` };
+      else if (r && r.ok) zapis = { text: await telo(r) };
+      else zapis = { chyba: `robots.txt odpověděl ${r && r.status ? r.status : 'nijak'}`, nejdePrecist: true };
     } catch (e) {
-      zapis = { chyba: 'robots.txt se nepodařilo přečíst: ' + (e && e.message ? e.message : e) };
+      zapis = { chyba: 'robots.txt se nepodařilo přečíst: ' + (e && e.message ? e.message : e),
+        nejdePrecist: true };
     }
     cache.set(klic, zapis);
   }
-  if (zapis.chyba) return { dovoleno: false, duvod: zapis.chyba };
+  if (zapis.chyba) return { dovoleno: false, duvod: zapis.chyba, nejdePrecist: true };
   const cesta = u.pathname + (u.search || '');
   const v = jeDovoleno(zapis.text, cesta, ua);
   return {

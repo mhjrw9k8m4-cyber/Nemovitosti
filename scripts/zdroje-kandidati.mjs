@@ -97,3 +97,22 @@ export function kandidatiZDat(nabidky, znameHosty) {
   }
   return [...podle.values()].sort((a, b) => b.pocet - a.pocet);
 }
+
+/* ---------- ZDROJE ČTENÉ OBECNOU CESTOU --------------------------- */
+/* Zdroj, který se bere OBECNOU CESTOU (scripts/cteni-zdroje.mjs:
+   JSON-LD → mikrodata → signály), tedy bez vlastního stahovače.
+   Přidání zdroje je pak řádek tady, ne den práce — a když ten web
+   změní vzhled, čtení se nerozbije, protože žádný tvar nezná.
+   Tvar řádku je týž jako u KANDIDATI: { jmeno, host, url, typ, proc }.
+   Bere se jen `typ: 'sale'` — u dražeb by z obecné cesty vyšla nabídka
+   bez termínu a bez rozlišení nucené dražby (viz §334).
+
+   SEZNAM JE PRÁZDNÝ SCHVÁLNĚ, DOKUD HO NEZAPLNÍ NÁLEZ SONDY.
+   Zapsat sem web naslepo by znamenalo tvrdit o cizím webu něco, co
+   jsme neměřili; z tohohle stroje se navíc na cizí weby nedostaneme
+   vůbec (změřeno: cevd.gov.cz, nabidkamajetku.cz, edesky.cz,
+   spu.gov.cz — všechny odpovídají nulou). Důvod k řádku je teprve
+   nález v data/zdroje-sonda.json, kde u zdroje stojí „dostupné"
+   a „obsah slibné". Prázdný seznam není nedokončená práce, je to
+   poctivý stav: mechanismus hotový, rozhodnutí čeká na měření. */
+export const OBECNE_ZDROJE = [];

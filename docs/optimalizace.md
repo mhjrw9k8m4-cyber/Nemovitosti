@@ -20415,9 +20415,13 @@ zpomalený 4×):
 
 | Co | Před | Po |
 |---|---|---|
-| Synchronní práce v jedné úloze | **339 ms** | **4 ms** |
+| Synchronní práce v jedné úloze | **339 ms** | **27 ms** |
 | První rámec po klepnutí | 363 ms | 8 ms |
 | Panel vykreslený (snímek obrazovky) | 603 ms | **60 ms** |
+
+(Prvních naměřených 4 ms platilo na verzi, která odkládala i zaměření.
+Po opravě z §336 zůstává zaměření v záchytné fázi a stojí 23 ms —
+vynucené rozvržení při `.focus()`. Pořád je to 27 ms místo 339.)
 
 Rozhodující nebylo, *kolik* práce se udělá, ale že se udělá **najednou
 a před prvním vykreslením**. Prohlížeč neměl kdy panel ukázat — a přesně
@@ -20711,3 +20715,250 @@ přestane zveřejňovat výměru, žádná cesta ji nevymyslí a nabídka se
 zahodí jako dřív. A u zdroje, který se změní v API (ne na stránce),
 závisí druhá cesta na tom, že má i veřejný výpis ke čtení — proto je
 v seznamu u každého zdroje adresa výpisu, ne jen adresa API.
+
+## 335. Hlavní tlačítko formuláře psalo Arialem
+
+**Nález.** Tlačítka, pole, rozbalovátka ani textové plochy písmo
+**nedědí** — tak to má CSS odjakživa. Dokud si ho nenastaví samy,
+vykreslí se výchozím písmem prohlížeče. Změřeno 2. 11. 2026 v Chromiu
+na 390 px: `Odeslat pozemek ke zveřejnění` na `pridat.html`, hamburger
+v hlavičce (`.nav-burger`), jeho křížek a tlačítko „Nahoru" psaly
+**Arialem**, zatímco celý web píše Interem.
+
+**Proč to nikdo neviděl.** Většina „tlačítek" na tomhle webu jsou
+odkazy (`<a class="btn-primary">`) a ty písmo dědí. Vada tedy zůstala
+jen tam, kde je ovladač doopravdy `<button>` — a to je menšina míst,
+navíc rozházená po stránkách, kam se oko nedívá naráz. Staticky je to
+**28 tříd ovladačů** bez vlastní deklarace a `button`, `input`,
+`select` ani `textarea` neměly deklaraci ani na úrovni značky.
+
+**Oprava je jeden řádek pro všech 28:**
+
+```css
+button, input, select, textarea, optgroup{ font-family:inherit; }
+```
+
+Dědí se **jen rodina, ne celé `font`**: `font: inherit` by přepsalo
+i `font-size`, který si ovladače nastavují samy podle role (13 až
+16 px), a zdědit 16 px všude by zvětšilo pilulky i odznaky.
+
+**A hned k tomu poučení, které mě to stálo.** Po zápisu do
+`css/styles.css` měřil prohlížeč Arial dál — protože stránky si berou
+**zkrácené svazky** (`css/zaklad.min.css` a spol., viz
+`scripts/rozdel-styly.mjs`) a ty se přestavují zvlášť. Pravidlo ve
+zdroji ještě není pravidlo na stránce. Je to teď kontrola: nové
+pravidlo musí být ve všech čtyřech svazcích, které si stránky tahají.
+
+**ZKOUŠKA MĚŘÍ I STAV PO PŘIHLÁŠENÍ — a to je úkol #217.** Hlídači
+vzhledu dosud viděli jen odhlášeného, takže ovladače, které se objeví
+až po přihlášení, neměřil nikdo. `test-pismo-ovladacu` otevírá devět
+stránek **v obou stavech**: přihlášení se předstírá zápisem `pk_auth`
+a dotazy jdou na falešnou Supabase (`scripts/falesna-supabase-chat.mjs`).
+Změřeno 102 viditelných ovladačů v každém stavu, z toho **osm tříd
+vidí jen přihlášený** — a právě mezi nimi byl hlavní odesílací knoflík
+formuláře. Aby se ta polovina měření nemohla stát zbytečnou, hlídá se
+i to, že přihlášený stav opravdu přináší ovladače, které odhlášený
+nemá; počet se přitom nesrovnává s pevným číslem, aby mez nezestárla
+s obsahem (viz §330).
+
+**Prokázáno sabotáží:** odebrání toho jednoho řádku a přestavba svazků
+→ 4 ✕ (zdroj, svazky a měření v obou stavech). Padá i samo měření, ne
+jen kontrola textu v souboru.
+
+## 336. §331 nechala klávesnici za oknem (nález z CI 893)
+
+**Co našlo CI.** `test-zaostreni`: „okno je otevřené, ale zaměření je
+mimo něj (LI.opp-item — uvnitř výpisu)". Řazení „Nejblíž ke mně" si
+otevře okno „Vyberte své okolí" a zaměření v tu chvíli musí být
+v okně; našlo se ve výpisu **za ním**.
+
+**Příčina je §331, tedy moje.** Rozdělení otevírání okna přesunulo do
+odloženého `postavMapu()` i `vmPrvni.focus()`. Tím vznikla mezera dvou
+rámců, ve které okno na obrazovce JE, ale klávesnice je pořád ve
+stránce pod ním: kdo si okno otevře klávesou, tabuluje po stránce,
+kterou okno zakrývá. Není to přísnost zkoušky, je to vada — a je to
+týž druh chyby jako nouzový zavírač, který §331 doplňovala: **dokud se
+okno neoživí, musí přesto fungovat jako okno.**
+
+**Oprava.** `.focus()` se vrátil do záchytné fáze, past na tabulátor
+(`zamkniTab`, která prochází všechny zaměřitelné prvky) zůstává
+odložená. Přeměřeno se zpomaleným procesorem 4×: synchronní práce
+**27 ms** (zaměření si vynutí rozvržení, stojí 23 ms), panel vidět
+hned, zaměření na `.vm-x`. Proti 339 ms před §331 je to pořád řádový
+rozdíl a §331 tím neztrácí smysl — jen přišla o nejnižší číslo, které
+platilo za cenu rozbité klávesnice.
+
+**Poučení do postupu.** Rozdělit práci na „hned" a „potom" není jen
+otázka rychlosti: u každého kusu se musí zvlášť rozhodnout, jestli
+patří do toho, co dělá okno oknem (zavírání, zaměření), nebo do toho,
+co je výzdoba (mapa, počty). §331 to udělala u zavírání a u zaměření
+zapomněla.
+
+## 337. Sonda ohlásila 12 zakázaných zdrojů. Lhala — a byla to naše vada
+
+**Jak se to našlo.** §333 postavila sondu zdrojů a §334 druhou cestu,
+jenže ani jedno se z tohohle stroje nedá vyzkoušet naostro: na cizí
+weby se odsud nedostaneme vůbec. Sonda proto poběžela v Actions.
+První běh (2. 11. 2026) ohlásil:
+
+```
+dostupné     Dražby — robots dovoluje, odpověď 200, obsah slibné
+zakázané     OK dražby — robots nedovoluje
+zakázané     SPÚ — robots nedovoluje
+zakázané     Bezrealitky — robots nedovoluje
+…
+Zapsáno: 4 dostupných, 12 zakázaných
+```
+
+Dvanáct z šestnácti. Mezi nimi weby, odkud dnes bereme čtyři pětiny
+nabídek. **Takový výsledek je sám o sobě nález: je nepravděpodobné, že
+dvanáct různých webů — od státního SPÚ po tři soukromé dražebníky —
+zakazuje čtení úplně stejně.** A hlavně: u všech dvanácti stál týž
+důvod, „robots.txt odpověděl 200". To není věta o zákazu, to je věta
+o chybě.
+
+**Vada.** V `scripts/robots.mjs` stálo:
+
+```js
+const r = await stahni(u.origin + '/robots.txt');
+if (r && r.status === 404) zapis = { text: '', chybi: true };
+else if (r && r.ok && typeof r.text === 'string') zapis = { text: r.text };
+else zapis = { chyba: `robots.txt odpověděl ${r.status}` };
+```
+
+`stahni` z robota vrací **odpověď `fetch`**, u které je `text`
+**funkce**, ne řetězec. Prostřední podmínka tedy neplatila nikdy
+a každý web, který robots.txt má, spadl do větve „nejde přečíst" —
+tedy, podle pravidla z RFC 9309, do odpovědi „nesmíme číst". Čtyři
+„dostupné" zdroje jsou právě ty, které robots.txt NEMAJÍ (404).
+
+**Co to způsobilo.** Druhá cesta z §334 se nemohla rozběhnout u žádného
+zdroje, který robots.txt má: zkouší se jen tam, kde čtení smíme, a to
+nesmělo nikde. Celá §334 tedy byla po dnešek mrtvá v každém běhu, kde
+by se hodila. V datech se to neprojevilo, protože zdroje zatím
+nevypadly — vada by se ukázala až v den, kdy by na ní záleželo.
+
+**Oprava.** `telo(r)` přečte tělo v obou podobách (funkce i hodnota)
+a `smimeCist` ji používá. K tomu se v nálezu **rozdělily dva stavy,
+které splývaly**: „zakázané" (web čtení zakazuje) a „robots nezn**á**mý"
+(nedalo se zjistit). Obojí znamená nečíst, ale nález slouží
+k rozhodování o tom, který zdroj zapojit — a zdroj, který se dnes
+nedal změřit, není zdroj, který si nepřeje být čten. Tvrdit o cizím
+webu první, když platí druhé, je lhaní do vlastních dat.
+
+**A teď to nepříjemné: proč to 38 kontrol nechytilo.** Zkoušky
+podstrkávaly `stahni`, které vracelo `{ ok, status, text: '…' }`, tedy
+řetězec. Jedna z nich si rozdílu VŠIMLA a napsala si k němu:
+
+> „smimeCist čte robots.txt přes `r.text` jako HODNOTU, sonda stránku
+> přes `odp.text()` jako FUNKCI — podstrčení musí umět obojí."
+
+Tím jsem dva neslučitelné tvary vydal za záměr a **přizpůsobil
+podstrčení vadě**, místo abych vadu opravil. Zkouška pak měřila, že
+kód dělá to, co dělá. To je ta nejhorší možná zkouška: drží vadu na
+místě a ještě o ní vystaví potvrzení.
+
+**Zkouška, která tu měla být od začátku.** `test-sonda-zdroju` má nový
+oddíl 2b: žádné podstrčení, **opravdové `stahni`** proti serveru na
+`127.0.0.1` (síť se tedy pořád nepoužívá, zkouška běží i odsud).
+Měří se povolená cesta, zakázaná cesta, Crawl-delay z těla, rozdíl
+mezi „nesmíme" a „nevíme", obě podoby `telo()` a celý `sondujZdroj`
+naostro. **Prokázáno sabotáží:** vrácení původního `typeof` → 8 pádů;
+sloučení „nevíme" se zákazem → 1 pád; `telo()` přestane umět funkci
+→ 7 pádů. Se starou sadou podstrčení neprošla ani jedna.
+
+**Pravidlo, které z toho plyne.** Podstrčení si tvar nevymýšlí: má
+tvar toho, co se do kódu předává v běhu. Kde se podstrčení a skutečnost
+rozcházejí, je to nález, ne vlastnost zkoušky — a aspoň jedna kontrola
+musí jít naostro, i kdyby jen proti serveru na `127.0.0.1`.
+
+**A dotaženo do konce, ne jen na tom jednom místě.** Kdyby se opravil
+jen `telo()`, zůstalo by v repozitáři dalších **sedm** podstrčení
+robots.txt, která dávají tělo jako hodnotu — tedy sedm kontrol měřících
+tvar, jaký v běhu nevznikne. Všech sedm je srovnáno se skutečností
+(`test-cteni-zdroje` 5 míst, `test-sonda-zdroju` 2) a tvar s hodnotou
+zůstal na jediném místě: v kontrole, že ho `telo()` snese.
+
+A aby se ten vzorec nemohl vrátit, hlídá se **staticky**:
+`test-zkousky-meri` má nový oddíl 5, který projde všechny soubory
+`test-*.mjs` a hledá podstrčené odpovědi (objekt se `status:`), u nichž
+je `text` hodnota a ne funkce. Jediná výjimka je kontrola `telo()`,
+a je napsaná jmenovitě i s důvodem. **Prokázáno sabotáží:** jedno
+podstrčení zpátky na hodnotu → hlídač padne a vypíše soubor i ten
+konkrétní objekt. Osm kontrol v tom souboru, dřív sedm.
+
+**A nakonec pojistka na ten vzorec, který vadu prozradil.** Nestačí
+opravit čtení — sonda ten nepravdivý nález **zapsala jako pravdu**
+a diagnostika podle něj radila odebrat zdroje, které nic nezakazují.
+Co mě na výsledku zastavilo, nebyl ani jeden z dvanácti verdiktů, ale
+to, že u všech dvanácti stál **slovo od slova týž důvod**. Dvanáct
+různých webů — od státního úřadu po tři soukromé dražebníky — se
+stejně a ze stejného důvodu nerozhodne.
+
+`vzorecNasiVady(nalez)` to proto měří: seskupí nepovolené zdroje podle
+důvodu a když největší skupina dosáhne poloviny všech měřených (nejméně
+tří), nález se **nepřepíše** a úloha skončí chybou. Je to táž úvaha
+jako u pojistky „neodpověděl ani jeden zdroj" (§333) a u globální
+pojistky robota dat (§332): nejpravděpodobnější vysvětlení plošného
+výsledku není, že se deset cizích webů zachovalo naráz stejně.
+
+Dno na třech je tam schválně: u dvou měřených zdrojů by „polovina" byla
+jeden a pojistka by padala na každém nálezu. **Prokázáno sabotáží:**
+pojistka se přestane volat → 1 pád; mez bez dna → 1 pád; pojistka
+pustí i stejný důvod → 2 pády. A zkouška měří přesný tvar toho
+skutečného nálezu z 2. 11. (12 × týž důvod, 4 × 404) i nález
+s opravdovými zákazy, který projít **musí** — jinak by pojistka
+zavřela sondu nadobro. `test-sonda-zdroju` 51 kontrol, dřív 38.
+
+## 338. Zdroj jako řádek v registru, ne jako nový stahovač
+
+**Co zbývalo z §334.** Obecná cesta (`scripts/cteni-zdroje.mjs`) čte
+JSON-LD, mikrodata a nakonec pouhé signály — **žádný tvar odpovědi
+nezná**. Jenže běžela jen tam, kde zdroj se svou vlastní cestou
+vypadl. To je polovina myšlenky: když čtení nepotřebuje znát tvar, není
+důvod ho držet jen pro výpadky. A dokud se každý zdroj psal jako
+vlastní stahovač (znalost adresy **a** tvaru odpovědi), stálo přidání
+zdroje den práce — přesně to, kvůli čemu web stál na jednom webu z 81 %.
+
+**Jak je to teď.** Práce s jedním cílem je vytažená do `prectiCil` a
+používají ji dvě místa:
+
+| | kdy běží | co to řeší |
+|---|---|---|
+| `zalozniCestou` | zdroj dnes neodpověděl svou cestou | změna cizího webu nezavře spojení |
+| `obecneZdroje` | vždy, pro každý řádek registru | **přidání zdroje je řádek, ne kód** |
+
+`OBECNE_ZDROJE` v `scripts/zdroje-kandidati.mjs` je ten registr. Stav
+takového zdroje se **přidá do `zdroje`** v datech, takže ho vidí
+diagnostika i držení nabídek z §332. robots.txt se čte první, i tady —
+jinak by se zákaz u každého nového zdroje obešel. U dražeb se obecnou
+cestou nebere nic, jen diagnóza (týž důvod jako v §334: nabídka bez
+termínu a bez rozlišení nucené dražby je nabídka, kterou web neumí
+správně popsat).
+
+**A hned se tím našla vada, kterou úvaha nenašla.** `zdrojNabidky`
+propouštěl jen jména ze **zadrátovaného** seznamu šesti stahovačů.
+Změřeno: `podrzNabidkyVypadlych` podržela **nula** nabídek obecného
+zdroje. Takový zdroj by při výpadku zmizel celý — zatímco ostatní se
+drží týden — a na kartě by neměl odznak. Jména se proto berou i z toho,
+co v běhu existuje (`zdrojNabidky(o, znama)`), ale **ne ze štítku
+samotného**: `o.zdroj` přichází z dat, která může přepsat i starý běh,
+a „nevím odkud" nesmí projít jako zdroj. `ZDROJ_JMENA` zůstává šesti
+stahovačům, protože hlídač měří shodu právě s `SOURCES` — kdyby se do
+něj přilila data, ta shoda by přestala něco tvrdit.
+
+**REGISTR JE PRÁZDNÝ, A JE TO POCTIVÝ STAV, NE NEDODĚLEK.** Zapsat tam
+web naslepo by znamenalo tvrdit o cizím webu něco, co jsme neměřili;
+z tohohle stroje se na cizí weby nedostaneme vůbec. Důvod k řádku je
+teprve nález v `data/zdroje-sonda.json`, kde u zdroje stojí „dostupné"
+a „obsah slibné" — a první takový nález bude až z běhu s opravenou
+§337, protože ten dosavadní o dvanácti zdrojích lhal.
+
+**Prokázáno sabotáží** (osm nových kontrol v `test-cteni-zdroje`, pět
+v `test-vypadek-zdroje`): obecný zdroj přeskočí robots.txt → 3 pády;
+bere i dražby → 3; robot ho přestane volat → 1; nabídky přestanou nést
+jméno zdroje → 2; rozpoznání zpátky na zadrátovaný seznam → 2; seznam
+se otevře každému štítku → 1. A jedna z těch kontrol opravila MĚ:
+napsal jsem si, že podržená nabídka dostane `drzeno_od` podle svého
+dne vzniku — správně dostane dnešek, jinak by se týdny starý inzerát
+pustil hned.

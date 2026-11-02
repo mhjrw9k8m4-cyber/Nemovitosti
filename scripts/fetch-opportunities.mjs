@@ -29,7 +29,7 @@ import { bezEmodzi, otiskInzerenta } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist } from './cteni-zdroje.mjs';
 import { smimeCist } from './robots.mjs';
-import { ZAPOJENE } from './zdroje-kandidati.mjs';
+import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -1220,9 +1220,75 @@ export const PRAH_PROPADU = 0.5;
    robots.txt nedá přečíst, druhá cesta se nezkouší vůbec. */
 export const ZALOZNI_STROP = 400;        // nabídek z jednoho zdroje za běh
 
-export async function zalozniCestou(zdroje, cile, nastroje) {
+/**
+ * Přečte JEDEN cíl obecnou cestou: robots.txt → stránka → nabídky.
+ *
+ * Vytaženo ze `zalozniCestou`, protože ta práce není vlastní jen
+ * výpadkům. Když §334 slibuje, že „změna cizího webu nezavře spojení",
+ * platí to i naopak: **přidání zdroje má být řádek v registru, ne nový
+ * stahovač.** Tatáž cesta se proto používá dvakrát:
+ *   · `zalozniCestou` — zdroj, který dnes neodpověděl svou cestou;
+ *   · `obecneZdroje`  — zdroj, který jinou cestu než tuhle nikdy neměl.
+ *
+ * Vrací vždy OBOJÍ: nabídky a `zalozni` (diagnózu). Ani prázdný výsledek
+ * není mlčení — bez diagnózy přijde do úkolu jen „zdroj nic nevrací",
+ * což se nedá vyšetřit.
+ */
+async function prectiCil(cil, nastroje) {
   const { stahni: stahniF, smimeCist: smimeF, prectiJakkoli, copakTamJe,
-    mistoZTextu, slovnik, okresy, ua } = nastroje || {};
+    mistoZTextu, slovnik, okresy, ua, robotsMezipamet, jmeno } = nastroje || {};
+  const nazev = jmeno || cil.jmeno || cil.host;
+  let smime = null;
+  try { smime = await smimeF(cil.url, { stahni: stahniF, ua, mezipamet: robotsMezipamet }); }
+  catch (e) { smime = { dovoleno: false, duvod: String(e && e.message || e) }; }
+  if (!smime.dovoleno) {
+    /* „Nesmíme" a „nevíme" se nesmí plést ani tady — viz §337. */
+    return { nabidky: [], zalozni: { verdikt: smime.nejdePrecist ? 'robots neznámý' : 'nesmíme', duvod: smime.duvod } };
+  }
+  let html = '';
+  try {
+    const odp = await stahniF(cil.url, { pokusy: 1 });
+    html = await odp.text();
+  } catch (e) {
+    return { nabidky: [], zalozni: { verdikt: 'neodpovídá', duvod: String(e && e.message || e).slice(0, 140) } };
+  }
+  const v = prectiJakkoli(html, cil.url);
+  const zalozni = { verdikt: v.nabidky.length ? 'přečteno' : 'nepřečteno', zapis: v.zapis, cesta: v.cesta };
+  if (!v.nabidky.length) {
+    zalozni.diagnoza = copakTamJe(html);
+    return { nabidky: [], zalozni };
+  }
+  if (cil.typ !== 'sale') {
+    /* U dražeb by z obecné cesty vyšla nabídka bez termínu a bez
+       rozlišení nucené dražby — nabídka, kterou web neumí správně
+       popsat. Špatný popis je horší než chybějící nabídka. */
+    zalozni.verdikt = 'jen diagnóza (dražby obecnou cestou nebereme)';
+    zalozni.diagnoza = copakTamJe(html);
+    return { nabidky: [], zalozni };
+  }
+  let bezMista = 0;
+  const prevedene = [];
+  for (const n of v.nabidky.slice(0, ZALOZNI_STROP)) {
+    if (!n.cena || !n.vymera) continue;
+    const text = [n.nazev, n.misto].filter(Boolean).join(' ');
+    const misto = mistoZTextu(text, slovnik, okresy);
+    if (!misto) { bezMista++; continue; }
+    const okres = normOkres(misto.okres);
+    if (!okres) { bezMista++; continue; }
+    prevedene.push({
+      place: String(misto.place).slice(0, 60), okres, type: 'sale', parcel: '—',
+      druh: normDruh(parseDruh(text, [misto.place, okres]) || 'pozemek'),
+      area: n.vymera, price: n.cena,
+      extra: `inzerát – ${nazev}`, zdroj: nazev,
+      url: n.url || cil.url,
+    });
+  }
+  zalozni.pocet = prevedene.length;
+  zalozni.bezMista = bezMista;
+  return { nabidky: prevedene, zalozni };
+}
+
+export async function zalozniCestou(zdroje, cile, nastroje) {
   const ven = [];
   /* VLASTNÍ MEZIPAMĚŤ NA robots.txt, ne ta uvnitř smimeCist. Ta je
      společná pro celý proces, takže by si dva běhy (a dvě zkoušky)
@@ -1234,66 +1300,79 @@ export async function zalozniCestou(zdroje, cile, nastroje) {
     if (!z || z.stav !== 'chyba') continue;
     const cil = (cile || []).find((c) => c.jmeno === z.nazev);
     if (!cil || !cil.url) continue;
-    let smime = null;
-    try { smime = await smimeF(cil.url, { stahni: stahniF, ua, mezipamet: robotsMezipamet }); }
-    catch (e) { smime = { dovoleno: false, duvod: String(e && e.message || e) }; }
-    if (!smime.dovoleno) {
-      z.zalozni = { verdikt: 'nesmíme', duvod: smime.duvod };
-      console.error(`Druhá cesta ke ${z.nazev} se nezkouší: ${smime.duvod}`);
+    const { nabidky, zalozni } = await prectiCil(cil, { ...nastroje, robotsMezipamet, jmeno: z.nazev });
+    z.zalozni = zalozni;
+    if (zalozni.verdikt === 'nesmíme' || zalozni.verdikt === 'robots neznámý') {
+      console.error(`Druhá cesta ke ${z.nazev} se nezkouší: ${zalozni.duvod}`);
       continue;
     }
-    let html = '';
-    try {
-      const odp = await stahniF(cil.url, { pokusy: 1 });
-      html = await odp.text();
-    } catch (e) {
-      z.zalozni = { verdikt: 'neodpovídá', duvod: String(e && e.message || e).slice(0, 140) };
-      continue;
-    }
-    const v = prectiJakkoli(html, cil.url);
-    z.zalozni = { verdikt: v.nabidky.length ? 'přečteno' : 'nepřečteno', zapis: v.zapis, cesta: v.cesta };
-    if (!v.nabidky.length) {
-      z.zalozni.diagnoza = copakTamJe(html);
+    if (zalozni.verdikt === 'nepřečteno') {
       console.error(`Druhá cesta ke ${z.nazev} nic nenašla. Co na stránce je:`
-        + ` ${JSON.stringify(z.zalozni.diagnoza)}`);
+        + ` ${JSON.stringify(zalozni.diagnoza)}`);
       continue;
     }
-    if (cil.typ !== 'sale') {
-      z.zalozni.verdikt = 'jen diagnóza (dražby druhou cestou nebereme)';
-      z.zalozni.diagnoza = copakTamJe(html);
+    if (!nabidky.length) {
+      if (zalozni.verdikt === 'přečteno') {
+        console.error(`Druhá cesta ke ${z.nazev} našla nabídky, ale ani u jedné se`
+          + ' nedalo poznat místo — nebereme nic.');
+      }
       continue;
     }
-    let bezMista = 0;
-    const prevedene = [];
-    for (const n of v.nabidky.slice(0, ZALOZNI_STROP)) {
-      if (!n.cena || !n.vymera) continue;
-      const text = [n.nazev, n.misto].filter(Boolean).join(' ');
-      const misto = mistoZTextu(text, slovnik, okresy);
-      if (!misto) { bezMista++; continue; }
-      const okres = normOkres(misto.okres);
-      if (!okres) { bezMista++; continue; }
-      prevedene.push({
-        place: String(misto.place).slice(0, 60), okres, type: 'sale', parcel: '—',
-        druh: normDruh(parseDruh(text, [misto.place, okres]) || 'pozemek'),
-        area: n.vymera, price: n.cena,
-        extra: `inzerát – ${z.nazev}`, zdroj: z.nazev,
-        url: n.url || cil.url,
-      });
-    }
-    z.zalozni.pocet = prevedene.length;
-    z.zalozni.bezMista = bezMista;
-    if (prevedene.length) {
-      z.stav = 'druhá cesta';
-      z.pocet = prevedene.length;
-      console.error(`Zdroj ${z.nazev} se přečetl DRUHOU CESTOU (${v.cesta}):`
-        + ` ${prevedene.length} nabídek, ${bezMista} bez poznaného místa.`);
-    } else {
-      console.error(`Druhá cesta ke ${z.nazev} našla ${v.nabidky.length} nabídek,`
-        + ` ale ani u jedné se nedalo poznat místo — nebereme nic.`);
-    }
-    ven.push(...prevedene);
+    z.stav = 'druhá cesta';
+    z.pocet = nabidky.length;
+    console.error(`Zdroj ${z.nazev} se přečetl DRUHOU CESTOU (${zalozni.cesta}):`
+      + ` ${nabidky.length} nabídek, ${zalozni.bezMista} bez poznaného místa.`);
+    ven.push(...nabidky);
   }
   return ven;
+}
+
+/* ---------- ZDROJ, KTERÝ JE JEN ŘÁDKEM V REGISTRU ----------------- */
+/* Tohle je to, co majitel chtěl: „aby náš výběr nezáležel na páru
+   webů". Dokud se každý zdroj psal jako vlastní stahovač (znalost
+   adresy A tvaru odpovědi), stálo přidání zdroje den práce a při
+   změně toho webu se rozbilo. Obecná cesta z §334 ale žádný tvar
+   nezná — čte JSON-LD, mikrodata nebo pouhé signály. Není tedy důvod
+   ji držet jen pro výpadky.
+   `OBECNE_ZDROJE` v scripts/zdroje-kandidati.mjs je proto seznam, do
+   kterého se zdroj PŘIDÁ ŘÁDKEM. robots.txt se čte první, stav se
+   zapisuje do dat jako u každého jiného zdroje (takže ho vidí
+   diagnostika i držení nabídek z §332) a u dražeb se nebere nic, jen
+   diagnóza — ze stejného důvodu jako u druhé cesty.
+   SEZNAM ZŮSTÁVÁ PRÁZDNÝ, DOKUD HO SONDA NEZAPLNÍ. Zapsat tam web
+   naslepo by znamenalo tvrdit o cizím webu něco, co jsme neměřili;
+   z tohohle stroje se navíc na cizí weby nedostaneme vůbec. Nález
+   sondy (data/zdroje-sonda.json) řekne, který kandidát čtení dovoluje
+   a má na adrese pozemky — teprve to je důvod k řádku. */
+export async function obecneZdroje(cile, nastroje) {
+  const robotsMezipamet = new Map();
+  const nabidkyVen = [];
+  const zdrojeVen = [];
+  for (const cil of (cile || [])) {
+    if (!cil || !cil.url) continue;
+    const zacatek = Date.now();
+    const { nabidky, zalozni } = await prectiCil(cil, { ...nastroje, robotsMezipamet });
+    /* Stav má týž slovník jako u ostatních zdrojů, ať se s nimi dá
+       srovnávat: „ok" když něco přišlo, jinak „chyba". Diagnóza je
+       vedle v `zalozni`, takže se nemusí hádat, co se stalo. */
+    const z = {
+      nazev: cil.jmeno, stav: nabidky.length ? 'ok' : 'chyba',
+      pocet: nabidky.length, cas: new Date().toISOString(),
+      chyba: nabidky.length ? null : String(zalozni.duvod || zalozni.verdikt).slice(0, 140),
+      preskoceno: 0, prvniPreskocena: null, dotazu: 0, selhalo: 0,
+      obecny: true, zalozni,
+      ms: Date.now() - zacatek,
+    };
+    zdrojeVen.push(z);
+    if (nabidky.length) {
+      console.error(`Obecný zdroj ${cil.jmeno} přinesl ${nabidky.length} nabídek`
+        + ` (${zalozni.cesta}), ${zalozni.bezMista} bez poznaného místa.`);
+      nabidkyVen.push(...nabidky);
+    } else {
+      console.error(`Obecný zdroj ${cil.jmeno} nic nepřinesl: ${z.chyba}`);
+    }
+  }
+  return { nabidky: nabidkyVen, zdroje: zdrojeVen };
 }
 
 /* ---------- PODRŽENÍ NABÍDEK ZDROJE, KTERÝ VYPADL ----------------- */
@@ -1301,6 +1380,17 @@ export async function zalozniCestou(zdroje, cile, nastroje) {
    který zdroj dnes selhal, a kdyby se rozešla, držení by mlčky přestalo
    fungovat. Hlídač scripts/test-vypadek-zdroje.mjs tu shodu měří. */
 export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sreality (Apify)', 'Farmy'];
+
+/* A jména VŠECH zdrojů, tedy i těch, co jsou jen řádkem v registru
+   (OBECNE_ZDROJE). Podle tohohle seznamu se poznává, čí nabídka je —
+   a kdyby v něm obecné zdroje nebyly, vypádal by jim štítek `zdroj`
+   z rozpoznání: při výpadku by se nedaly podržet (§332) a na kartě by
+   neměly odznak. Nalezeno měřením, ne úvahou: po zavedení obecných
+   zdrojů drželo `podrzNabidkyVypadlych` nula jejich nabídek.
+   ZDROJ_JMENA zůstává šesti stahovačům, protože hlídač měří shodu
+   PRÁVĚ s SOURCES — kdyby se do něj přilila i data, ta shoda by
+   přestala něco tvrdit. */
+export const ZDROJ_JMENA_VSE = [...ZDROJ_JMENA, ...OBECNE_ZDROJE.map((z) => z.jmeno).filter(Boolean)];
 
 /* Štítek v popisu nabídky. Platí pro data z běhů PŘED zavedením pole
    `zdroj` — po týdnu držení už se o ně nikdo neopře, ale ten týden je
@@ -1347,9 +1437,20 @@ export const DRZENI_DNU = 7;
  * ani seznam hostitelů je nepokryje. Vrací null, když se zdroj poznat
  * nedá — taková nabídka se nedrží, protože se neví, čí by byla.
  */
-export function zdrojNabidky(o) {
+export function zdrojNabidky(o, znama) {
   if (!o) return null;
-  if (o.zdroj && ZDROJ_JMENA.includes(o.zdroj)) return o.zdroj;
+  /* `znama` jsou jména zdrojů, které v TOMHLE BĚHU existují. Bez
+     něj se bere seznam zapojených plus registr obecných zdrojů.
+     Proč vůbec nějaký seznam: `o.zdroj` přichází z dat, která může
+     přepsat i starý běh, a štítek „nevím odkud" nesmí projít jako
+     zdroj. Proč z běhu: zdroj přidaný řádkem v registru by jinak
+     v zadrátovaném seznamu nebyl — a při výpadku by přišel o držení
+     nabídek (§332) i o odznak na kartě. Nalezeno měřením: po zavedení
+     obecných zdrojů drželo `podrzNabidkyVypadlych` nula jejich nabídek. */
+  const seznam = znama || ZDROJ_JMENA_VSE;
+  const jeZname = typeof seznam.has === 'function'
+    ? (x) => seznam.has(x) : (x) => seznam.includes(x);
+  if (o.zdroj && jeZname(o.zdroj)) return o.zdroj;
   const e = String(o.extra || '');
   for (const [vzor, jmeno] of ZDROJ_PODLE_EXTRA) if (vzor.test(e)) return jmeno;
   let host = '';
@@ -1391,6 +1492,9 @@ export function podrzNabidkyVypadlych(zdroje, cerstve, dnes, drive) {
      nedrží z druhé strany: chybějící klíč není výpadek, ale rozhodnutí. */
   const padle = new Set((zdroje || []).filter((z) => z && z.stav === 'chyba').map((z) => z.nazev));
   if (!padle.size) return vysledek;
+  /* Jména, která v tomhle běhu existují — včetně zdrojů přidaných
+     řádkem v registru, které v zadrátovaném seznamu nejsou. */
+  const znama = new Set([...ZDROJ_JMENA_VSE, ...(zdroje || []).map((z) => z && z.nazev).filter(Boolean)]);
   let stare = drive;
   if (!stare) {
     try { stare = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []); }
@@ -1409,7 +1513,7 @@ export function podrzNabidkyVypadlych(zdroje, cerstve, dnes, drive) {
   for (const o of stare) {
     const k = o ? klic(o) : '';
     if (!k || uz.has(k)) continue;
-    const z = zdrojNabidky(o);
+    const z = zdrojNabidky(o, znama);
     if (!z || !padle.has(z)) continue;
     const od = o.drzeno_od || dnes;
     if (stariVeDnech(od, dnes) >= DRZENI_DNU) { vysledek.pustene++; continue; }
@@ -2475,6 +2579,20 @@ async function main() {
     catch { driveNabidky = []; }
     const slovnik = slovnikMist(driveNabidky);
     const okresy = new Set(driveNabidky.map((o) => o.okres).filter(Boolean));
+    /* OBECNÉ ZDROJE — ty, které nikdy neměly vlastní stahovač. Běží
+       tady, a ne mezi SOURCES, protože obecná cesta potřebuje slovník
+       míst z dřívějších dat (ten se staví až v tomhle bloku) a protože
+       se stejně jako druhá cesta řídí robots.txt. Jejich stav se
+       PŘIDÁ do `zdroje`, takže je vidí diagnostika i držení z §332. */
+    if (OBECNE_ZDROJE.length) {
+      console.error(`Obecných zdrojů k přečtení: ${OBECNE_ZDROJE.length}.`);
+      const ob = await obecneZdroje(OBECNE_ZDROJE, {
+        stahni, smimeCist, prectiJakkoli, copakTamJe, mistoZTextu,
+        slovnik, okresy, ua: BOT_UA,
+      });
+      zdroje.push(...ob.zdroje);
+      if (ob.nabidky.length) raw.push(...ob.nabidky.map((o) => geocode(o)));
+    }
     const padlych = zdroje.filter((z) => z.stav === 'chyba').length;
     if (padlych) {
       console.error(`Zdrojů bez odpovědi: ${padlych}. Zkouším druhou cestu`

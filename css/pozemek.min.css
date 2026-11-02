@@ -45,6 +45,7 @@ a *,button *,[role="button"] *,summary *,label *,a::before,a::after,button::befo
 :where(.leaflet-container,.leaflet-pane,.kraj-lock,.pzm-mapa,.vm-mapa,.opp-map) :where(*){transition:none}
 .cdd-opt,.ms-navrhy li,.vm-navrhy li,.mc-hodnoty .mc-hodnota-radek,.opp-item::after,.okr-item::after,::-webkit-scrollbar-thumb{transition:var(--prechod-barvy)}
 button,a,[role="button"],select,summary,.btn-primary,.lp-btn,input[type="submit"]{touch-action:manipulation}
+button,input,select,textarea,optgroup{font-family:inherit}
 .btn-primary,.lp-btn,.nav-add,.pf-add,.pf-logout,.auth-submit,.map-nastroj,.okr-src{transition:var(--prechod)}
 .btn-primary:active,.lp-btn:active,.nav-add:active,.pf-add:active,.pf-logout:active,.auth-submit:active{transform:translateY(1px)}
 @media (hover:none){.btn-primary:hover,.lp-btn:hover,.map-nastroj:hover,.to-top:hover,.pf-stat--jde:hover,.okr-item:hover,.deal-card:hover,.opp-item:hover,.odl-card:hover,.status-card:hover,.gl-item:hover,.ul-card:hover{transform:none}

@@ -909,3 +909,35 @@ Pravidlo tedy zní: tvrzení „používá se to ještě jinde" se píše AŽ PO
 grepu, ne před ním. A když se ukáže, že se nepoužívá, maže se všechno —
 kód, pravidla ve stylopisu i kontroly ve zkouškách, kterým tím zmizel
 subjekt.
+
+### Podstrčení má tvar skutečnosti — a aspoň jedna kontrola jde naostro
+
+Když se do funkce vkládá stahování, čtení souboru nebo cokoli jiného,
+co se dá podstrčit, **podstrčení musí mít tvar toho, co se tam předává
+v běhu.** Zní to samozřejmě, a přesně na tom stála vada §337:
+`smimeCist` čítala tělo robots.txt jako `r.text` (hodnotu), ale
+`stahni` vrací odpověď `fetch`, u které je `text` **funkce**. Podmínka
+tedy neplatila nikdy a každý web, který robots.txt má, se ohlásil jako
+„nesmíme číst" — 12 ze 16 zdrojů, mezi nimi ty, odkud bereme čtyři
+pětiny nabídek. Druhá cesta (§334) byla tím pádem mrtvá.
+
+Zkoušky to nenašly, protože jejich podstrčení vracelo řetězec. Jedna si
+rozdílu dokonce VŠIMLA a napsala si k němu, že „podstrčení musí umět
+obojí" — tedy **přizpůsobila se vadě místo toho, aby ji opravila.**
+Taková zkouška je horší než žádná: drží vadu na místě a vystaví na ni
+potvrzení.
+
+Pravidlo tedy má dvě části:
+
+1. **Tvar.** Podstrčení kopíruje skutečnost. Kdo potřebuje měřit i jiný
+   tvar, napíše si k tomu výjimku s důvodem. Hlídá se staticky
+   (`test-zkousky-meri`, oddíl 5): podstrčená odpověď se `status:`,
+   u které je `text` hodnota a ne funkce, shodí hlídače a ten vypíše
+   soubor i ten konkrétní objekt.
+2. **Jedna kontrola naostro.** U každé takové funkce musí aspoň jedna
+   kontrola běžet BEZ podstrčení. Síť k tomu není potřeba: stačí
+   `http.createServer` na `127.0.0.1` (viz `test-sonda-zdroju`, oddíl
+   2b), takže to běží i tam, kde se na cizí weby nedostaneme.
+
+A obecněji: **když se podstrčení a skutečnost rozcházejí, je to nález,
+ne vlastnost zkoušky.**

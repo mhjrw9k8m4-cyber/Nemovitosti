@@ -209,6 +209,45 @@ pravda('a žádná výjimka neukazuje na soubor, který neexistuje',
     + ' hranici dvou kusů rozpadnou a hledaná hláška v textu „nebude"');
 }
 
+/* ---- 5) podstrčené stahování má tvar OPRAVDOVÉHO ---------------- */
+/* TOHLE NENÍ ÚKLID, JE TO NÁPRAVA PO VADĚ (§337). `smimeCist` čítala
+   tělo robots.txt jako `r.text` — HODNOTU — a robot jí předává
+   `stahni`, které vrací odpověď `fetch`, kde je `text` FUNKCE.
+   Podmínka tedy neplatila nikdy a každý web s robots.txt se ohlásil
+   jako „nesmíme číst" (12 ze 16 zdrojů, první běh sondy v Actions).
+   Zkoušky to nenašly, protože jejich podstrčené `stahni` vracelo tělo
+   jako hodnotu — tedy tvar, který v běhu nevznikne. Jedna z nich si
+   rozdílu dokonce všimla a přizpůsobila se MU, ne opravila kód.
+
+   Pravidlo je proto: podstrčené stahování má tvar toho, co se předává
+   naostro — `text` je funkce. Kdo potřebuje měřit i tvar s hodnotou
+   (`telo()` umí obojí schválně, ať nespadne na cizí podobě odpovědi),
+   napíše si k tomu výjimku s důvodem níž. */
+{
+  /* Výjimka s důvodem: jediné místo, kde se tvar s HODNOTOU měří
+     schválně — kontrola `telo()`, že snese oba tvary. */
+  const VYJIMKA_TELO = /telo\(\{ text:/;
+  const bezKom = (t) => t.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  const spatne = [];
+  for (const f of fs.readdirSync(SKRIPTY)) {
+    if (!/^test-.*\.mjs$/.test(f)) continue;
+    const t = bezKom(fs.readFileSync(path.join(SKRIPTY, f), 'utf8'));
+    for (const m of t.matchAll(/\{[^{}]*\bstatus:\s*\d+[^{}]*\}/g)) {
+      const kus = m[0];
+      if (!/\btext:/.test(kus)) continue;
+      if (/\btext:\s*(async|\(|function)/.test(kus)) continue;      // funkce = v pořádku
+      const okoli = t.slice(Math.max(0, m.index - 40), m.index + kus.length);
+      if (VYJIMKA_TELO.test(okoli)) continue;
+      spatne.push(`${f}: ${kus.slice(0, 70)}`);
+    }
+  }
+  pravda('podstrčené stahování dává tělo jako funkci, ne hodnotu',
+    spatne.length === 0,
+    spatne.join('; ') + ' — opravdové `stahni` vrací odpověď `fetch`, u které'
+    + ' je `text()` FUNKCE; podstrčení s hodnotou měří tvar, který v běhu'
+    + ' nevznikne (viz §337)');
+}
+
 console.log('\nZkoušky měří to, co si myslí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

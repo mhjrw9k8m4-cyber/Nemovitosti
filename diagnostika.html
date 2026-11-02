@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-kBpvHlZcoU+0gYp1QFQwu6Tqu2yZmybJwWw37mUkFj8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-Q4n4iit1fk7drUvDJILjIry1Pn71iZHwIlH/7KVQEXg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -278,7 +278,17 @@
       // stav, takže se to tady musí dát poznat: jinak by výpadek vypadal
       // jako každý jiný den.
       (d && d.sources ? d.sources : []).forEach(function (z) {
-        if (z.stav === 'chyba') {
+        if (z.stav === 'chyba' && z.obecny) {
+          // OBECNÝ ZDROJ (jen řádek v registru, viz §338) nemá vlastní
+          // stahovač, který by „neodpověděl" — u něj je důležité PROČ se
+          // nedal přečíst: zákaz v robots.txt, nepřečtená stránka, nebo
+          // nepoznané místo. Bez toho by se to vyšetřovalo naslepo.
+          radek(box, 'warn', 'Obecný zdroj ' + z.nazev + ' nic nepřinesl',
+            'Důvod: <b>' + ((z.zalozni && (z.zalozni.verdikt || z.zalozni.duvod)) || z.chyba || '?') + '</b>.'
+            + (z.podrzeno ? ' Drží se jeho <b>' + z.podrzeno + '</b> nabídek z minulého běhu.' : '')
+            + ' Je to řádek v <code>scripts/zdroje-kandidati.mjs</code> — když web čtení'
+            + ' zakazuje, patří ten řádek pryč, ne obcházet.');
+        } else if (z.stav === 'chyba') {
           radek(box, 'warn', 'Zdroj ' + z.nazev + ' neodpověděl',
             z.podrzeno ? 'Drží se jeho <b>' + z.podrzeno + '</b> nabídek z minulého běhu (nejvýš 7 dní).'
               : 'Nedrží se po něm nic — buď nic neměl, nebo už vypršel strop 7 dní.');
@@ -320,12 +330,23 @@
       }
       var s_ = N.souhrn || {};
       radek(box, 'ok', 'Sonda zdrojů měřila ' + N.updated,
-        s_.dostupne + ' dostupných, ' + s_.zakazane + ' zakázaných robots.txt, ' + s_.neodpovida + ' bez odpovědi.');
+        s_.dostupne + ' dostupných, ' + s_.zakazane + ' zakázaných robots.txt, '
+        + ((s_.nezjisteno || 0) + ' s neznámým robots.txt, ') + s_.neodpovida + ' bez odpovědi.');
       var zakaz = N.zdroje.filter(function (x) { return x.verdikt === 'zakázané' && x.stav === 'zapojeno'; });
       if (zakaz.length) {
         radek(box, 'bad', 'Zapojený zdroj nás už nechce',
           zakaz.map(function (x) { return x.jmeno + ' (' + (x.robotsDuvod || '') + ')'; }).join(', ')
             + ' — takový zdroj se musí ze stahování odebrat.');
+      }
+      /* „NEVÍME" NENÍ „NECHCE NÁS". Rozděleno po tom, co první běh sondy
+         ohlásil pět zapojených zdrojů jako zakazující čtení — a byla to
+         vada u nás (viz §337). Kdyby diagnostika oba stavy plétla dál,
+         radila by pod nápisem „bad" odebrat zdroje, které nic nezakazují. */
+      var nevime = N.zdroje.filter(function (x) { return x.verdikt === 'robots neznámý' && x.stav === 'zapojeno'; });
+      if (nevime.length) {
+        radek(box, 'warn', 'U zapojeného zdroje se nedal přečíst robots.txt',
+          nevime.map(function (x) { return x.jmeno + ' (' + (x.robotsDuvod || '') + ')'; }).join(', ')
+            + ' — není to zákaz, je to nezměřený stav. Dokud trvá, druhá cesta se u toho zdroje nezkouší.');
       }
       var slibni = N.zdroje.filter(function (x) { return x.slibuje === 'slibné' && x.stav !== 'zapojeno'; });
       radek(box, slibni.length ? 'ok' : 'warn',

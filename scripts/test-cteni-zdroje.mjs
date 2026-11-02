@@ -248,7 +248,7 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
     const volane = [];
     const stahni = async (u) => {
       volane.push(u);
-      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: 'User-agent: *\nAllow: /' };
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
       return odpoved(stranka);
     };
     const zdroje = [{ nazev: 'Zkušební prodej', stav: 'chyba', pocet: 0 }];
@@ -270,7 +270,7 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
     const volane = [];
     const stahni = async (u) => {
       volane.push(u);
-      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: 'User-agent: *\nDisallow: /' };
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /' };
       return odpoved(stranka);
     };
     const zdroje = [{ nazev: 'Zkušební prodej', stav: 'chyba', pocet: 0 }];
@@ -284,7 +284,7 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
   // c) dražby druhou cestou NE — jen diagnóza
   {
     const stahni = async (u) => (/robots\.txt$/.test(u)
-      ? { ok: true, status: 200, text: 'User-agent: *\nAllow: /' } : odpoved(stranka));
+      ? { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' } : odpoved(stranka));
     const zdroje = [{ nazev: 'Zkušební dražby', stav: 'chyba', pocet: 0 }];
     const ven = await F.zalozniCestou(zdroje, CILE, nastroje(stahni));
     pravda('u dražeb se druhou cestou nic nebere — chyběl by termín a druh dražby',
@@ -309,7 +309,7 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
     const cizi = `<html><body><article><a href="/n/1">Pozemek Vymyšlená Ves</a>
       <span>1 200 m²</span><b>900 000 Kč</b></article></body></html>`;
     const stahni = async (u) => (/robots\.txt$/.test(u)
-      ? { ok: true, status: 200, text: 'User-agent: *\nAllow: /' } : odpoved(cizi));
+      ? { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' } : odpoved(cizi));
     const zdroje = [{ nazev: 'Zkušební prodej', stav: 'chyba', pocet: 0 }];
     const ven = await F.zalozniCestou(zdroje, CILE, nastroje(stahni));
     pravda('nabídka, u které se nepozná místo, se nebere (a je to spočítané)',
@@ -321,7 +321,7 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
   {
     const zed = `<html><body><h1>Ověřte, že jste člověk</h1><p>Cloudflare</p></body></html>`;
     const stahni = async (u) => (/robots\.txt$/.test(u)
-      ? { ok: true, status: 200, text: 'User-agent: *\nAllow: /' } : odpoved(zed));
+      ? { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' } : odpoved(zed));
     const zdroje = [{ nazev: 'Zkušební prodej', stav: 'chyba', pocet: 0 }];
     await F.zalozniCestou(zdroje, CILE, nastroje(stahni));
     pravda('za zdí se nic nevymýšlí a do nálezu se napíše, že je to zeď',
@@ -347,6 +347,72 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
       iJinak > 0 && iDrzeni > iJinak,
       `druhá cesta ${iJinak}, držení ${iDrzeni} — opačně by se míchal dnešní a včerejší obraz`);
   }
+  /* ---- f) ZDROJ JAKO ŘÁDEK V REGISTRU, BEZ VLASTNÍHO STAHOVAČE --- */
+  /* To je ten majitelův požadavek dotažený do konce: „aby náš výběr
+     nezáležel na páru webů". Obecná cesta žádný tvar odpovědi nezná,
+     takže není důvod ji držet jen pro výpadky. */
+  {
+    const stahni = async (u) => {
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+      return odpoved(stranka);
+    };
+    const ob = await F.obecneZdroje(
+      [{ jmeno: 'Nový z registru', host: 'novy.test', url: 'https://novy.test/vypis', typ: 'sale' }],
+      nastroje(stahni));
+    pravda('zdroj přidaný řádkem v registru přinese nabídky',
+      ob.nabidky.length === 2 && ob.nabidky.every((o) => o.okres && o.price > 0 && o.area > 0),
+      JSON.stringify(ob.nabidky));
+    pravda('a nabídky nesou jméno toho zdroje (kvůli §332 a odznakům)',
+      ob.nabidky.every((o) => o.zdroj === 'Nový z registru' && /Nový z registru/.test(o.extra)),
+      JSON.stringify(ob.nabidky.map((o) => [o.zdroj, o.extra])));
+    pravda('a jeho stav se dá přidat mezi ostatní zdroje',
+      ob.zdroje.length === 1 && ob.zdroje[0].nazev === 'Nový z registru'
+      && ob.zdroje[0].stav === 'ok' && ob.zdroje[0].pocet === 2 && ob.zdroje[0].obecny === true,
+      JSON.stringify(ob.zdroje));
+    /* ZÁKAZ PLATÍ I TADY. Kdyby se robots.txt četl jen u druhé cesty,
+       obešel by se tím u každého nového zdroje. */
+    const zakaz = async (u) => {
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /' };
+      throw new Error('tahle stránka se neměla stahovat vůbec');
+    };
+    const obZ = await F.obecneZdroje(
+      [{ jmeno: 'Zakazuje', host: 'zakaz.test', url: 'https://zakaz.test/vypis', typ: 'sale' }],
+      nastroje(zakaz));
+    pravda('zdroj, který čtení zakazuje, se nestáhne ani jako obecný',
+      obZ.nabidky.length === 0 && obZ.zdroje[0].stav === 'chyba'
+      && obZ.zdroje[0].zalozni.verdikt === 'nesmíme',
+      JSON.stringify(obZ.zdroje));
+    /* A u dražeb se obecnou cestou nebere nic — jen diagnóza. */
+    const obD = await F.obecneZdroje(
+      [{ jmeno: 'Dražby z registru', host: 'dr2.test', url: 'https://dr2.test/vypis', typ: 'drazba' }],
+      nastroje(stahni));
+    pravda('dražby se obecnou cestou neberou, zbyde diagnóza',
+      obD.nabidky.length === 0 && /diagn/i.test(obD.zdroje[0].zalozni.verdikt)
+      && obD.zdroje[0].zalozni.diagnoza,
+      JSON.stringify(obD.zdroje[0].zalozni));
+    /* A registr je PRÁZDNÝ, dokud ho nezaplní nález sondy — a je u toho
+       napsané proč. Kdyby tam někdo přidal řádek naslepo, tahle
+       kontrola padne a donutí ho napsat důvod k měření. */
+    const K = await import('./zdroje-kandidati.mjs');
+    pravda('registr obecných zdrojů je prázdný, dokud ho nezaplní měření',
+      Array.isArray(K.OBECNE_ZDROJE) && K.OBECNE_ZDROJE.length === 0,
+      JSON.stringify(K.OBECNE_ZDROJE));
+    const kodR = readFileSync(new URL('../scripts/zdroje-kandidati.mjs', import.meta.url), 'utf8');
+    pravda('a u prázdného seznamu stojí, proč prázdný je',
+      /zdroje-sonda\.json/.test(kodR) && /OBECNE_ZDROJE/.test(kodR));
+    /* A robot ho opravdu volá, jinak by to byl seznam, který nikdo
+       nečte — táž past jako u pojistky sondy. */
+    const kodF = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
+    /* NESTAČÍ, ŽE JE VOLÁNÍ V SOUBORU. Sabotáž `if (false)` místo
+       `if (OBECNE_ZDROJE.length)` nechala volání na místě a kontrola
+       zůstala zelená — měřila text, ne dosažitelnost. Hlídá se proto
+       i ta podmínka, která k volání vede. */
+    pravda('robot obecné zdroje opravdu volá a jejich stav přidá do dat',
+      /if \(OBECNE_ZDROJE\.length\)/.test(kodF)
+      && /obecneZdroje\(OBECNE_ZDROJE/.test(kodF)
+      && /zdroje\.push\(\.\.\.ob\.zdroje\)/.test(kodF));
+  }
+
 }
 
 console.log('Čtení zdroje, který se změnil:');

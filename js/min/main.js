@@ -2592,6 +2592,8 @@
     document.body.classList.add('vm-otevreno');
 
     var vmPrvni = ov.querySelector('.vm-x');
+
+    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
     var vmOziveno = false;
     ov.addEventListener('click', function (e) {
       if (vmOziveno) return;
@@ -2607,7 +2609,6 @@
     if (!ov.parentNode) return;
     vmOziveno = true;
     zamkniTab(ov);
-    if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
 
     var m = L.map(ov.querySelector('#vm-mapa'), {
       zoomControl: false, attributionControl: false, preferCanvas: true,
