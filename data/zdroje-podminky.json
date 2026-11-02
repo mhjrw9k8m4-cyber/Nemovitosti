@@ -1,1 +1,37 @@
-{"updated":null,"zdroje":[{"jmeno":"Bezrealitky","host":"bezrealitky.cz","domov":"https://www.bezrealitky.cz/","zakaz":"Disallow: /","verdikt":"neměřeno"},{"jmeno":"Sreality (Apify)","host":"sreality.cz","domov":"https://www.sreality.cz/","zakaz":"Disallow: /","verdikt":"neměřeno"}]}
+{
+ "updated": "2026-11-02",
+ "updated_at": "2026-11-02T21:26:26.675Z",
+ "zdroje": [
+  {
+   "jmeno": "Bezrealitky",
+   "host": "bezrealitky.cz",
+   "domov": "https://www.bezrealitky.cz/",
+   "kdy": "2026-11-02",
+   "stranky": [
+    {
+     "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
+     "popis": "Podmínky",
+     "stav": "přečteno, nic o automatu",
+     "odstavcu": 0,
+     "pasaze": []
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
+     "popis": "Podmínky"
+    }
+   ],
+   "verdikt": "přečteno, ale nic o automatickém přístupu"
+  },
+  {
+   "jmeno": "Sreality (Apify)",
+   "host": "sreality.cz",
+   "domov": "https://www.sreality.cz/",
+   "kdy": "2026-11-02",
+   "stranky": [],
+   "verdikt": "web nedovoluje číst ani domovskou stránku",
+   "duvod": "Disallow: /"
+  }
+ ]
+}
