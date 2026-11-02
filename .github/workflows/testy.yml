@@ -387,6 +387,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-staticka.mjs
 
+      - name: Inzerát jde na mapu hned (žádné čekání na schválení)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-bez-cekani.mjs
+
       - name: Nastavení zkoušek (měří to, co si myslí)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zkousky-meri.mjs
@@ -1163,6 +1167,14 @@ jobs:
       - name: Okolí — dlaždice okruhu nesou počty
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-okoli-dlazdice.mjs
+
+      - name: Okolí — obec bez nabídek se najde na mapě
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-okoli-jinde.mjs
+
+      - name: Šipka zpět na mapě nevyhodí z webu
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-zpet-mapa.mjs
 
       - name: Tři moduly se stahují až při prvním použití
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}

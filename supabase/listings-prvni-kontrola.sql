@@ -216,17 +216,30 @@ begin
   if p_access in ('Zpevněná cesta','Polní / nezpevněná cesta','Přes cizí pozemek','Bez přístupu') then
     clean_access := p_access; end if;
 
-  -- PRVNÍ INZERÁT ÚČTU ČEKÁ NA KONTROLU. Kdo už jeden schválený má,
-  -- publikuje rovnou — kontrola je na nový účet, ne na každý inzerát.
-  prvni := not exists (select 1 from listings
-                        where user_id = uid and listing_je_verejny(status, public_at));
-  if prvni then
-    novy_stav := 'pending';
-    kdy_verejne := now() + interval '24 hours';
-  else
-    novy_stav := 'approved';
-    kdy_verejne := now();
-  end if;
+  -- ŽÁDNÉ ČEKÁNÍ NA KONTROLU (2. 11. 2026, na přání majitele).
+  -- Do téhle chvíle tu stálo: první inzerát z nového účtu dostane
+  -- 'pending' a public_at = now() + interval '24 hours', takže nová
+  -- nabídka byla na mapě až druhý den. Majitel: „zprovozni přidávání
+  -- pozemku bez žádného 24hodinového čekání na schválení a udělej to
+  -- plně automatické."
+  --
+  -- CO TÍM PADÁ, AŤ TO NĚKDO NEHLEDÁ: ruční pohled na první nabídku
+  -- z nového účtu. Měl chytat podvody typu „pošlete zálohu" a opsané
+  -- cizí parcely z katastru. Tohle rozhodnutí je majitelovo a je
+  -- zapsané i v docs/optimalizace.md §328.
+  --
+  -- CO ZŮSTÁVÁ (a proto to není díra bez dna): strop 90 sekund mezi
+  -- dvěma inzeráty jednoho účtu (výš v téhle funkci), povinná obec
+  -- i poloha, stropy délek textů, nejvýš 8 fotek z vlastního úložiště,
+  -- kontrola fotek modelem na klientovi — a hlavně možnost inzerát
+  -- kdykoli zamítnout: Table Editor → listings → status = 'rejected'.
+  -- Funkce na to v repozitáři NENÍ (listings-moderation.sql jsou limity
+  -- a filtr slov, ne zamítání), ale listing_je_verejny() 'rejected'
+  -- nepouští, takže je z mapy venku okamžitě. Viz i hlavička tohohle
+  -- souboru, kde ten postup stojí od začátku.
+  prvni := false;
+  novy_stav := 'approved';
+  kdy_verejne := now();
 
   insert into listings(status,public_at,user_id,place,okres,druh,parcel,area,price,lat,lng,description,contact_phone,photos,features,access,featured,views)
   values(novy_stav,kdy_verejne,uid,trim(p_place),nullif(trim(coalesce(p_okres,'')),''),nullif(trim(coalesce(p_druh,'')),''),
@@ -295,3 +308,12 @@ language sql security definer set search_path = public as $$
   select count(*)::integer from listings
    where status='pending' and not listing_je_verejny(status, public_at); $$;
 grant execute on function pending_count() to anon, authenticated;
+
+-- ---------- Pustit, co v databázi ještě čekalo ----------
+-- Tenhle soubor (a tedy i složené supabase/00-vse.sql) se pouští celý
+-- a opakovaně. Kdyby v databázi zůstaly inzeráty z doby, kdy se čekalo
+-- 24 hodin, zůstaly by ležet v 'pending' navždy — pravidlo, které je
+-- mělo pustit, už neexistuje. Zamítnutých ('rejected') se to netýká:
+-- ty zamítl člověk a mají zamítnuté zůstat.
+update listings set status = 'approved', public_at = coalesce(public_at, now())
+ where status = 'pending';

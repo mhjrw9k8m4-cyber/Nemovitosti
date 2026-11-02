@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-3Z5yvoimhQqCjeNxOMNjLwDEgP+NnzUskyUUDEebZTE='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-4EH65Q1f3KqxqWUm8Jn9dqiUad6vSNZgQnjERjow6w0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -244,15 +244,18 @@
 
       return dotaz('/rest/v1/rpc/pending_count', { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } });
     }).then(function (r) {
-      /* Kolik inzerátů čeká na kontrolu. Bez tohohle řádku by fronta
-         byla neviditelná: prodávající čeká a provozovatel o tom neví.
-         Zveřejní se sice samy do 24 hodin, ale to je nouzová pojistka,
-         ne způsob práce. */
+      /* KOLIK INZERÁTŮ UVÍZLO MIMO MAPU. Do 2. 11. tu byla fronta ke
+         kontrole: první nabídka z nového účtu čekala a tenhle řádek
+         hlídal, že na ni provozovatel nezapomene. Od §328 se nečeká na
+         nic a žádná nová nabídka 'pending' nedostane — takže cokoli
+         nenulového je teď NÁLEZ, ne práce k odbavení: buď v databázi
+         leží řádek z dřívější doby, nebo v ní běží starší
+         create_listing, než jaký je v repozitáři. */
       var n = parseInt(String(r.telo).replace(/[^0-9-]/g, ''), 10);
-      if (r.stav === 404) radek(box, 'warn', 'Fronta ke kontrole není zavedená', 'Funkce <code>pending_count</code> chybí — spusťte <code>supabase/00-vse.sql</code>. Inzeráty pak jdou na mapu bez kontroly.');
-      else if (!isFinite(n)) radek(box, 'warn', 'Fronta ke kontrole neodpověděla', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code>');
-      else if (n === 0) radek(box, 'ok', 'Nic nečeká na kontrolu', 'Žádný inzerát není ve frontě.');
-      else radek(box, 'warn', n + ' inzerát(ů) čeká na kontrolu', 'Supabase → Table Editor → <code>listings</code> → řádky se <code>status = pending</code>: pustit = <code>approved</code>, zamítnout = <code>rejected</code>. Bez zásahu se zveřejní samy do 24 hodin od vložení.');
+      if (r.stav === 404) radek(box, 'warn', 'Počítadlo uvízlých inzerátů chybí', 'Funkce <code>pending_count</code> není zavedená — spusťte <code>supabase/00-vse.sql</code>.');
+      else if (!isFinite(n)) radek(box, 'warn', 'Počítadlo uvízlých inzerátů neodpovědělo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 80) + '</code>');
+      else if (n === 0) radek(box, 'ok', 'Žádný inzerát neuvízl mimo mapu', 'Zveřejnění je okamžité a nic nečeká.');
+      else radek(box, 'warn', n + ' inzerát(ů) uvízlo mimo mapu', 'Zveřejnění je od 2.\u00a011. okamžité, takže tohle je nález: v Supabase → SQL Editor spusťte <code>supabase/00-vse.sql</code> znovu — pustí uvízlé řádky i nahraje <code>create_listing</code> bez čekání.');
 
       return dotaz('/storage/v1/object/public/listing-photos/__diagnostika__.png', {});
     }).then(function (r) {

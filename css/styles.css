@@ -1398,6 +1398,11 @@ body.vm-otevreno{overflow:hidden;}
 .vm-navrhy li span{color:var(--muted); font-size:13px;}
 .vm-navrhy li i{margin-left:auto; font-style:normal; font-size:13px;
   font-weight:700; color:var(--muted);}
+/* POSLEDNÍ ŘÁDEK: obec, kterou data neznají. Odděluje se vlasem, aby
+   se nepletla s nabídkami z dat (ty nesou počet), a nese barvu akce —
+   klepnutí něco UDĚLÁ (zeptá se geokodéru), nejen vybere z hotového. */
+.vm-navrhy li.vm-jinde{border-top:1px solid var(--line);}
+.vm-navrhy li.vm-jinde b{color:rgb(var(--znacka-svetla-rgb));}
 /* Mapa je VLASTNÍ vrstva (z-index:0). Bez toho Leaflet maluje své panely
    (z-index 400) ve stejné vrstvě jako okolní panel, takže našeptávač obce
    se z-indexem 5 skončil POD plátnem mapy: návrhy byly vidět jen zpola a

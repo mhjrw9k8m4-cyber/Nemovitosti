@@ -313,26 +313,28 @@ function chibiPrazdne(a) { return a.length === 0; }
     /neověřujeme|neověřuje/i.test(naStrance), naStrance.slice(0, 120));
 }
 
-/* ---- 6f) Web netvrdí, že inzerát jde na mapu bez kontroly ---- */
-/* Dokud první nabídka z nového účtu čeká na kontrolu, nesmí stránka
-   přidání slibovat „hned na mapě" bez výhrady. Kontrola se váže na
-   SKUTEČNOST: platí, jen dokud to tak databáze opravdu dělá. */
+/* ---- 6f) Slib o zveřejnění musí odpovídat databázi ---- */
+/* Tahle kontrola se od začátku váže na SKUTEČNOST, ne na přání — a
+   2. 11. se skutečnost obrátila (§328, na majitelův příkaz): create_listing
+   už nic neodkládá, takže se obrací i slib. Dřív se hlídalo, že stránka
+   nezamlčuje čekání; teď se hlídá, že neslibuje kontrolu, kterou nic
+   nedělá. Pár drží v OBOU směrech: kdyby se čekání do databáze vrátilo,
+   padne první kontrola a ukáže právě na tyhle texty. */
 {
   const sql = cti('supabase/00-vse.sql');
-  const kontrolaBezi = /prvni := not exists/.test(sql) && /novy_stav := 'pending'/.test(sql);
-  pravda('první inzerát nového účtu čeká na kontrolu (v databázi)', kontrolaBezi,
-    'create_listing zakládá rovnou jako approved — inzerát jde na mapu bez jakékoli kontroly');
-  if (kontrolaBezi) {
-    const pridat = cti('pridat.html').replace(/<!--[\s\S]*?-->/g, ' ');
-    const sliby = [];
-    for (const veta of pridat.replace(/<[^>]+>/g, ' ').split(/[.!?]\s/)) {
-      if (/hned\s+(\S+\s+){0,2}(po odeslání|na map)/i.test(veta) && !/(první|kromě|kontrol|projdeme)/i.test(veta)) {
-        sliby.push(veta.trim().slice(0, 90));
-      }
-    }
-    pravda('a stránka přidání to nikde nezamlčuje', sliby.length === 0, sliby.slice(0, 2).join(' | '));
-    pravda('a rovnou to i vysvětlí', /projdeme|kontrol/i.test(pridat),
-      'nikde se neříká, že si první nabídku projdeme — prodávající bude čekat a nebude vědět proč');
+  const bezKomentaru = sql.split('\n').map((r) => r.replace(/--.*$/, '')).join('\n');
+  const odklada = /novy_stav := 'pending'/.test(bezKomentaru)
+    || /kdy_verejne := now\(\) \+ interval/.test(bezKomentaru);
+  pravda('databáze zveřejní inzerát hned (nic neodkládá)', !odklada,
+    'create_listing zakládá řádek jako pending nebo mu odkládá public_at — pak ale musí stránka přidání říct, že se čeká');
+  const pridat = cti('pridat.html').replace(/<!--[\s\S]*?-->/g, ' ').replace(/<[^>]+>/g, ' ');
+  if (!odklada) {
+    pravda('a stránka přidání to tak i říká („hned po odeslání")',
+      /hned po odeslání/i.test(pridat),
+      'inzerát jde na mapu hned, ale stránka to nikde neslibuje — prodávající to neví');
+    pravda('a neslibuje kontrolu, kterou nikdo nedělá',
+      !/(si\s+(napřed\s+)?projdeme|čeká\s+na\s+kontrolu)/i.test(pridat),
+      'stránka slibuje ruční prohlédnutí, které v databázi nic nedělá');
   }
 }
 

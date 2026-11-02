@@ -218,28 +218,34 @@ try {
       /potvrďte e-mail/.test(bezMailu),
       'účet s nepotvrzeným e-mailem inzerát vložil: ' + bezMailu.trim().slice(0, 140));
 
-    /* 2) První inzerát potvrzeného účtu čeká na kontrolu — a hlavně
-          NENÍ na mapě. */
+    /* 2) PRVNÍ INZERÁT JDE NA MAPU HNED (§328, 2. 11., na přání
+          majitele). Do té doby tu bylo obrácené zadání: první nabídka
+          z nového účtu dostala 'pending' a public_at = now() + 24 h,
+          a tyhle tři kontroly to hlídaly. Zadání se změnilo, takže se
+          kontroly OBRACEJÍ — nemažou. Rozhodnutí padá v databázi, ne
+          na webu, a tohle je jediné místo, kde se dá zahrát doopravdy
+          (ostatní zkoušky čtou SQL jako text, tady běží Postgres). */
     const vysledek1 = vloz(U2, 'Prvni obec');
     pravda('potvrzený účet inzerát vloží', !/ERROR/.test(vysledek1), vysledek1.slice(0, 200));
     const stav1 = jako(U2, `select status from listings where place='Prvni obec'`).trim();
-    pravda('první inzerát nového účtu čeká na kontrolu', stav1 === 'pending', `stav: ${stav1}`);
+    pravda('první inzerát nového účtu je hned schválený', stav1 === 'approved', `stav: ${stav1}`);
     const verejne1 = jako(U2, `select count(*) from public_listings() where place='Prvni obec'`).trim();
-    pravda('a na mapě zatím není', verejne1 === '0', `na mapě: ${verejne1}`);
+    pravda('a je hned na mapě', verejne1 === '1', `na mapě: ${verejne1}`);
     const ceka = jako(U2, `select pending_count()`).trim();
-    pravda('a je vidět, že něco čeká na kontrolu', ceka === '1', `pending_count: ${ceka}`);
+    pravda('a nic nezůstalo čekat', ceka === '0', `pending_count: ${ceka}`);
 
-    /* 3) Majitel musí vědět, DO KDY se čeká — jinak neví, jestli
-          web spadl, nebo se nic neděje. */
-    const doKdy = jako(U2, `select public_at is not null from my_listings() where place='Prvni obec'`).trim();
-    pravda('majitel se dozví, do kdy se čeká', doKdy === 't', `public_at: ${doKdy}`);
+    /* 3) Majitel ho ve svém profilu vidí jako zveřejněný, ne jako
+          „čeká": public_at je vyplněné a NENÍ v budoucnosti. */
+    const uzVenku = jako(U2,
+      `select (public_at is not null and public_at <= now()) from my_listings() where place='Prvni obec'`).trim();
+    pravda('a majitel ho vidí jako zveřejněný (public_at není v budoucnu)',
+      uzVenku === 't', `public_at <= now(): ${uzVenku}`);
 
-    /* 4) Nikdo nečeká donekonečna: až čas vyprší, inzerát se zveřejní
-          sám — a status v tabulce se přitom nemění, rozhoduje čas. */
-    psql(['-d', 'zkouska', '-q', '-c',
-      `update listings set public_at = now() - interval '1 minute' where place='Prvni obec'`]);
-    const verejne2 = jako(U2, `select count(*) from public_listings() where place='Prvni obec'`).trim();
-    pravda('po vypršení čekání se inzerát zveřejní sám', verejne2 === '1', `na mapě: ${verejne2}`);
+    /* 4) A nikde v tabulce nečeká nic jiného — žádná cesta vkládání
+          nesmí řádek odložit. Bez téhle kontroly by stačilo, aby se
+          čekání vrátilo jinou cestou než tou, kterou měří krok 2. */
+    const vsechnoCeka = jako(U2, `select count(*) from listings where status='pending'`).trim();
+    pravda('a v tabulce nečeká ani jeden řádek', vsechnoCeka === '0', `pending v tabulce: ${vsechnoCeka}`);
 
     /* 5) A kdo už jednou prošel, nečeká podruhé. Tohle byla past:
           dokud se „zavedený účet" poznával podle status='approved',

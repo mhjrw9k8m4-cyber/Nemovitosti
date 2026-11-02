@@ -20218,3 +20218,163 @@ odebrání zákazu poznat, a škoda z toho odebrání je přitom jiná, než na
 jakou zkouška míří — a tu nehlídá nic. Poznámka v hlavičce zkoušky
 tvrdí víc, než kolik kontrola unese; opravovat to je vlastní úkol
 (#215), ne přílepek k dnešní práci.
+
+## 327. Našeptávač okolí znal jen místa, kde už pozemek stojí
+
+Majitelovo zadání znělo „dodělej těch pár blbostí". Tohle z nich byla
+ta jediná, kterou člověk opravdu vidí: `MISTA` v okně „Vyberte své
+okolí" se skládají z nabídek (`mistaZDat`), takže kdo napsal svou obec
+bez nabídek, dostal **prázdno**. Naměřeno na „Kraslice", „Vernéřov"
+i „Boží Dar" — ani jeden návrh. A „je něco u nás?" je přitom ta
+nejčastější otázka, se kterou člověk na web přijde. Odpověď „tady nic
+není, ale osm je do 20 km" je informace; mlčení vypadá jako porouchané
+hledání.
+
+**Žádný nový seznam obcí se nestahuje.** Poslední řádek našeptávače
+nabídne „Najít „Kraslice" na mapě" a obec hledá v geokodéru
+(nominatim) — v tom samém, na který chodí `js/pridat.js` a který je
+dávno v CSP i v zásadách soukromí. Chodí se tam **jen po klepnutí, ne
+při psaní**: jinak by šest znaků znamenalo šest dotazů na cizí server.
+Nabídne se i tehdy, když návrhy z dat jsou, ale žádný se jménem
+nerovná dotazu — „Lipová" je v datech jedna, ve skutečnosti jich je
+víc.
+
+Naměřeno po klepnutí na Vernéřov:
+
+```
+0 pozemků v okruhu 10 km u obce Vernéřov
+dlaždice: 2→0  5→0  10→0  20→8  50→30
+```
+
+**Druhá vada, kterou to odhalilo.** Popisek nejdřív hlásil „u obce
+**Dolní Nivy**" — obec, na kterou se nikdo neptal.
+`najdiNazevMista()` totiž vrací NEJBLIŽŠÍ místo z dat (se stropem
+25 km), což je u středu vybraného z našeptávače nebo z geokodéru
+zbytečná lež. Když střed přišel se jménem, drží se to jméno; po
+klepnutí do mapy, tažení značky nebo určení polohy se zahodí a jméno
+se zas odvozuje z dat.
+
+Hlídá to `scripts/test-okoli-jinde.mjs` (10 kontrol) s podstrčeným
+geokodérem (`ctx.route`), takže zkouška měří naše chování, ne cizí
+server — a navíc umí změřit, **kolikrát** se na něj jde. Prokázáno
+třemi sabotážemi: bez nabídnutého řádku (2 ✕), bez zapamatování jména
+(1 ✕) a bez jeho zahození po klepnutí do mapy (1 ✕).
+
+**Dvě věci se neudělaly, a to po měření, ne z lenosti.**
+
+1. **Odložit `otevriVyberMista` z `main.js`** (6 158 B gz, 8 %): ta
+   funkce visí na **20 jménech** z okolí `main.js` — `map`,
+   `enterNearAt`, `zamkniTab`, `vrstvaOtevrena`, `vrstvaZavrena`,
+   `visibleBezOkoli`, `otviracZamer`… Za 6 kB by se rozpletla mapa,
+   past na zaměření i účtování vrstev. Nevyplatí se.
+2. **28 ovladačů, které hlídači vzhledu nikdy nevidí** (pokračování
+   §66): jsou vidět jen po přihlášení, takže to chce přihlašovací
+   aparát v hlídači vzhledu, ne přílepek.
+
+**A dořešené §326 (#215).** Offline hlídač teď hlídá i druhou polovinu
+škody: že worker cizí požadavek **nerozbije**. Bez zákazu cizích
+původů projde požadavek workerem a ten ho neuloží, ale rozbije — a to
+by znamenalo, že přestanou chodit mapové dlaždice ČÚZK, VÚV a SPÚ.
+Prokázáno týž sabotáží, která dřív prošla bez povšimnutí (1 ✕).
+
+## 328. Přidání pozemku bez čekání na schválení
+
+Majitel 2. 11.: „zprovozni přidávání pozemku bez žádného 24hodinového
+čekání na schválení a udělej to plně automatické."
+
+**Nejdřív co to vlastně bylo, protože polovina se už automatická
+chovala.** Databáze zveřejňuje sama: `create_listing` vkládá řádek
+rovnou jako `approved` a úvodní stránka i stránka pozemku čtou živé
+inzeráty (`public_listings`) při každém načtení. Žádný robot ani noční
+sestavení v tom není. Čekání dělaly **dvě jiné věci**:
+
+1. **`supabase/listings-prvni-kontrola.sql`** (a tedy i složené
+   `00-vse.sql`): první inzerát z nového účtu dostal `status='pending'`
+   a `public_at = now() + interval '24 hours'`. Na mapě byl až druhý den.
+2. **Texty**, které slibovaly ruční prohlédnutí. Těch bylo **pět**, ne
+   tři, jak jsem napřed myslel — dvě z nich našel až hlídač: dvě větve
+   v `pridat.html` pod formulářem, tři v jeho vršku a k tomu celá
+   „fronta ke kontrole" v `diagnostika.html`.
+
+**Co se změnilo.** Rozhodnutí v SQL padlo: každý inzerát jde na mapu
+hned (`novy_stav := 'approved'`). Na konci téhož souboru je navíc
+`update listings set status='approved' where status='pending'` —
+protože pravidlo, které mělo uvízlé řádky pustit, už neexistuje, a bez
+toho by v databázi ležely navždy. V `muj-inzerat.html` zůstala větev
+„ještě není na mapě" jako záchytná síť na staré řádky, ale neslibuje
+už kontrolu ani čas. A `diagnostika.html` dnes neukazuje frontu
+k odbavení, ale **nález**: cokoli nenulového znamená buď starý řádek,
+nebo starší `create_listing` v databázi, než jaký je v repozitáři.
+
+**Co tím padá, ať to nikdo nehledá.** Ruční pohled na první nabídku
+z nového účtu, který měl chytat podvody typu „pošlete zálohu" a opsané
+cizí parcely z katastru. Je to majitelovo rozhodnutí; zapsané je tady
+i v komentáři u toho místa v SQL.
+
+**Co zůstává, a proto to není díra bez dna:** strop 90 sekund mezi
+dvěma inzeráty jednoho účtu, povinná obec i poloha, stropy délek textů,
+nejvýš 8 fotek z vlastního úložiště, kontrola fotek modelem u člověka
+v prohlížeči — a hlavně možnost inzerát kdykoli zamítnout: Supabase →
+Table Editor → `listings` → `status = 'rejected'`. **Funkce na zamítnutí
+v repozitáři není** (`listings-moderation.sql` jsou limity a filtr slov,
+ne zamítání), ale `listing_je_verejny()` stav `rejected` nepouští, takže
+je inzerát z mapy venku okamžitě — ověřeno čtením té funkce.
+
+**JEDEN KROK JE MAJITELŮV A JÁ HO UDĚLAT NEMŮŽU.** Do databáze nemám
+přístup. Dokud v Supabase → SQL Editor neproběhne `supabase/00-vse.sql`,
+běží tam **stará** funkce a první inzerát z nového účtu bude čekat dál —
+web o tom nemá jak vědět, protože rozhodnutí padá v databázi. Po
+spuštění to pozná `diagnostika.html` („Žádný inzerát neuvízl mimo mapu").
+
+Hlídá to `scripts/test-bez-cekani.mjs` (8 kontrol, bez prohlížeče) ve
+dvou vrstvách, protože rozejít se umí každá zvlášť: **SQL** (žádná část
+nesmí přiřadit `pending` ani odložit `public_at`) a **viditelný text
+všech 2 464 stránek** (žádná nesmí slibovat kontrolu ani lhůtu — a
+`pridat.html` musí naopak říkat, že je to hned). Komentáře se před
+měřením odstraňují, jinak by zkouška padala na vlastních poznámkách.
+Prokázáno dvěma sabotážemi: vrácením čekání do SQL (1 ✕) a vrácením
+slibu do textu (1 ✕).
+
+## 329. Šipka zpět na mapě vyhodila člověka z webu
+
+Majitel 2. 11.: „jsem na mapě, dám na mobilu zpět a vyhodí mě to ze
+stránky, to se nesmí stávat." Reprodukováno na 390 × 844 px:
+
+```
+PŘED přepnutím: index.html   history.length 3   pohled: seznam
+NA MAPĚ:        index.html   history.length 3   pohled: mapa
+PO ŠIPCE ZPĚT:  data.html    (jsme mimo web, stav mapy je pryč)
+```
+
+Přepnutí na mapu **nepřidávalo do historie nic**, takže systémová šipka
+zpět neměla co zavřít a odvedla člověka na předchozí dokument.
+
+**Nebyl to nový problém, byl to nedokončený.** Týž druh vady mělo pět
+celoobrazovkových vrstev a je u nich popsaný devět set řádků výš
+(`vrstvaOtevrena`): krok z index.html na předchozí dokument je přechod
+mezi stránkami, takže `popstate` se při něm vůbec nezavolá a odchytit
+to jde jedině záznamem, který vznikne UŽ PŘI PŘEPNUTÍ. Přepínač
+Seznam/Mapa do toho mechanismu nikdo nezapojil.
+
+Oprava jde **stejnou cestou, ne druhou vlastní**: přepnutí na mapu
+udělá záznam, šipka zpět ho spotřebuje a vrátí seznam. A přepnutí na
+seznam vlastním tlačítkem záznam taky spotřebuje (couvne v historii),
+protože dvě cesty ven znamenají dva stavy, které se dokážou rozejít.
+Po opravě: `history.length` 3 → 4 a po šipce zpět zůstáváme na
+index.html se seznamem.
+
+Hlídá to `scripts/test-zpet-mapa.mjs` (9 kontrol). Neměří jen „zpět mě
+nevyhodí" — to by prošlo i nad záznamem, který v historii uvízne
+navždy a udělá ze šipky zpět mrtvou kliku. Měří celý cyklus: záznam
+vznikne, jedno zpět vrátí seznam, **druhé zpět už z webu odejde**,
+a přepnutí tlačítkem záznam taky spotřebuje.
+
+**A jedna chyba v hlídači, kterou našel on sám.** Napoprvé jsem
+kontroloval, že `history.length` po přepnutí tlačítkem neroste — a
+padalo to i nad správným webem (před 3, po 4). `history.back()` totiž
+záznam NEMAŽE, jen posune ukazatel; dopředný záznam v historii zůstane.
+Měří se proto chování: jestli další šipka zpět odejde z webu, nebo se
+proklikne naprázdno zpátky na mapu.
+
+Prokázáno dvěma sabotážemi: vrácením původního stavu (3 ✕, tedy přesně
+majitelův nález) a tlačítkem, které záznam nespotřebuje (1 ✕).

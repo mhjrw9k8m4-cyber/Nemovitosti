@@ -1100,8 +1100,48 @@
        u paměti rolování, scripts/test-pamet.mjs).
        sessionStorage, ne localStorage: příští návštěva začne zase
        výchozím pohledem, ne tím, co si člověk kdysi přepnul. */
+    /* ŠIPKA ZPĚT NESMÍ VYHODIT Z WEBU.
+       ==================================================================
+       Majitel 2. 11.: „jsem na mapě, dám na mobilu zpět a vyhodí mě to
+       ze stránky, to se nesmí stávat." Změřeno na 390 × 844 px: přepnutí
+       na mapu nepřidávalo do historie NIC — history.length zůstalo 3
+       a adresa stejná —, takže systémová šipka zpět odvedla člověka na
+       předchozí dokument (naměřeno: z index.html na data.html) a vzala
+       s sebou celý stav mapy, který prošel.
+
+       Je to TÁŽ vada, jakou mělo pět celoobrazovkových vrstev, a je
+       popsaná o devět set řádků výš u vrstvaOtevrena(): krok z index.html
+       na předchozí dokument je přechod mezi stránkami, takže popstate se
+       při něm vůbec nezavolá a odchytit se to dá jedině záznamem, který
+       vznikne UŽ PŘI PŘEPNUTÍ. Přepínač Seznam/Mapa do toho mechanismu
+       jen nikdo nezapojil.
+
+       Jde se tedy stejnou cestou, ne druhou vlastní: přepnutí na mapu
+       udělá záznam, šipka zpět ho spotřebuje a vrátí seznam. A přepnutí
+       na seznam vlastním tlačítkem záznam taky spotřebuje (vrstvaZavrena
+       couvne v historii), protože dvě cesty ven znamenají dva stavy,
+       které se dokážou rozejít — po přepnutí tlačítkem by v historii
+       ležel záznam a příští šipka zpět by nedělala nic.
+
+       CO TÍM OŠETŘENÉ NENÍ. Pohled zapamatovaný na dobu návštěvy
+       (sessionStorage) se při otevření stránky nastavuje bez záznamu:
+       člověk nikam neklepl, tak se mu historie nepřepisuje. Kdo se tedy
+       vrátí z nabídky zpátky na obnovenou mapu, má za sebou záznam
+       z toho původního přepnutí — a ten šipku zpět obslouží. */
+    var pohledVHistorii = false;
     function prepni(mv) {
       try { sessionStorage.setItem('pk_pohled_v1', mv); } catch (e) {}
+      if (mv === 'mapa' && !pohledVHistorii) {
+        pohledVHistorii = true;
+        setView(mv);
+        vrstvaOtevrena('pohled-mapa', function () {
+          pohledVHistorii = false;
+          try { sessionStorage.setItem('pk_pohled_v1', 'seznam'); } catch (e) {}
+          setView('seznam');
+        });
+        return;
+      }
+      if (mv === 'seznam' && pohledVHistorii) { vrstvaZavrena('pohled-mapa'); return; }
       setView(mv);
     }
     mvBtns.forEach(function (b) {
@@ -4623,9 +4663,30 @@
         /* Nejdřív místa s víc nabídkami: kdo napíše „Nová", nejspíš míří
            tam, kde je co vidět, ne do vsi s jedním pozemkem. */
         .sort(function (a, b) { return b.pocet - a.pocet; })
-        .slice(0, 6);
+        .slice(0, 5);
+      /* NAŠEPTÁVAČ ZNAL JEN MÍSTA, KDE UŽ NĚJAKÝ POZEMEK STOJÍ.
+         MISTA se skládají z nabídek (mistaZDat), takže kdo napsal svou
+         obec bez nabídek, dostal prázdno: ověřeno na „Kraslice",
+         „Vernéřov" i „Boží Dar" — ani jeden návrh. A to je přitom ta
+         nejčastější otázka, se kterou člověk přijde: „je něco u nás?"
+         Odpověď „nic tu není, nejblíž je 12 km" je informace; mlčení
+         vypadá jako porouchané hledání.
+         Přidá se tedy poslední řádek, který obec najde v geokodéru
+         (nominatim, týž, na který chodí pridat.js; v CSP a v zásadách
+         soukromí je dávno). Chodí se tam JEN po klepnutí, ne při psaní,
+         takže za jedno hledání padne nejvýš jeden dotaz.
+         Nabízí se i tehdy, když návrhy jsou, ale žádný se jménem
+         nerovná dotazu — „Lipová" je v datech jedna, ve skutečnosti
+         jich je víc. */
+      var presne = navrhy.some(function (x) { return HL.norm(x.misto) === hledane; });
+      if (n.length >= 3 && !presne) navrhy.push({ jinde: true, misto: n, pocet: 0 });
       if (!navrhy.length) return schovejNavrhy();
       navrhyEl.innerHTML = navrhy.map(function (x, i) {
+        if (x.jinde) {
+          return '<li role="option" id="vm-n' + i + '" aria-selected="false"' +
+            ' class="vm-jinde"><b>Najít „' + esc(x.misto) + '" na mapě</b> ' +
+            '<span>obec bez nabídek</span></li>';
+        }
         /* MEZERY MEZI ZNAČKAMI JSOU TU SCHVÁLNĚ. Bez nich se text
            návrhu slepí: naměřeno „Horka IIokres Kutná Hora1". Ve
            flexu se to nevykreslí, takže na obrazovce není nic vidět —
@@ -4641,13 +4702,59 @@
       kurzor = -1;
     }
 
+    /* ZNÁME-LI JMÉNO, NEHÁDÁ SE. najdiNazevMista() vrací NEJBLIŽŠÍ
+       místo z dat (se stropem 25 km), což je u středu vybraného
+       z našeptávače nebo z geokodéru zbytečná lež: po „Vernéřov" se
+       psalo „0 pozemků v okruhu 10 km u obce Dolní Nivy", tedy obec,
+       na kterou se nikdo neptal. Když střed přišel se jménem, drží se
+       to jméno; po klepnutí do mapy, tažení značky nebo určení polohy
+       se zahodí a jméno se zas odvozuje z dat. */
+    var nazevMista = null;
+    var hledaJinde = false;
+    /* Obec, kterou data neznají: zeptat se geokodéru a doletět tam.
+       Dvojí klepnutí nespustí dva dotazy (hledaJinde), a když se obec
+       nenajde nebo není signál, řekne se to v řádku — ne mlčením. */
+    function najdiJinde(nazev, radek) {
+      if (hledaJinde) return;
+      hledaJinde = true;
+      if (radek) { radek.setAttribute('aria-busy', 'true'); radek.innerHTML = '<b>Hledám „' + esc(nazev) + '"…</b>'; }
+      var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q='
+        + encodeURIComponent(nazev + ', Česko');
+      var dost = setTimeout(function () { selhalo('Hledání trvá dlouho — zkuste to znovu.'); }, 9000);
+      function selhalo(hlaska) {
+        if (!hledaJinde) return;
+        clearTimeout(dost); hledaJinde = false;
+        if (radek) { radek.removeAttribute('aria-busy'); radek.innerHTML = '<b>' + esc(hlaska) + '</b>'; }
+      }
+      fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (a) {
+          if (!hledaJinde) return;
+          var t = a && a.length ? a[0] : null;
+          var la = t ? parseFloat(t.lat) : NaN, ln = t ? parseFloat(t.lon) : NaN;
+          if (!isFinite(la) || !isFinite(ln)) return selhalo('Obec „' + nazev + '" se nenašla.');
+          clearTimeout(dost); hledaJinde = false;
+          qEl.value = nazev;
+          schovejNavrhy();
+          nazevMista = nazev;
+          vybranoMisto = true;
+          nastavMisto(la, ln);
+          jdiNa(la, ln);
+          prepocti();
+          try { qEl.blur(); } catch (e) {}
+        })
+        .catch(function () { selhalo('Hledání se nepovedlo — zkuste to znovu.'); });
+    }
+
     function vyberNavrh(i) {
       var x = navrhy[i];
       if (!x) return;
+      if (x.jinde) return najdiJinde(x.misto, navrhyEl.children[i] || null);
       var souradnice = { lat: x.lat, lng: x.lng };
       if (!isFinite(souradnice.lat) || !isFinite(souradnice.lng)) return;
       qEl.value = x.misto;
       schovejNavrhy();
+      nazevMista = x.misto;
       vybranoMisto = true;
       nastavMisto(souradnice.lat, souradnice.lng);
       jdiNa(souradnice.lat, souradnice.lng);
@@ -4694,6 +4801,7 @@
       navigator.geolocation.getCurrentPosition(function (p) {
         gpsEl.disabled = false; gpsEl.removeAttribute('aria-busy');
         vybranoMisto = true;
+        nazevMista = null;
         nastavMisto(p.coords.latitude, p.coords.longitude);
         jdiNa(p.coords.latitude, p.coords.longitude);
         prepocti();
@@ -4782,7 +4890,7 @@
         var kk = parseInt(r.value, 10) || 0;
         b2.textContent = vybranoMisto ? String(poOkruzich[kk] || 0) : '';
       });
-      var obec = najdiNazevMista(c.lat, c.lng);
+      var obec = nazevMista || najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
       /* Potvrdit nejde, dokud člověk místo NEUKÁŽE — jinak by si uložil
          okolí náhodného bodu uprostřed republiky a nevěděl proč.
@@ -4883,7 +4991,7 @@
        nejbližší obce). Mezi přepočty se aspoň překreslí kruh a měřítko,
        ať značka neutíká tomu, co kolem ní je. */
     var poslednihoPrepoctu = 0;
-    znacka.on('dragstart', function () { vybranoMisto = true; });
+    znacka.on('dragstart', function () { vybranoMisto = true; nazevMista = null; });
     znacka.on('drag', function (e) {
       var pos = e.target.getLatLng();
       vybraneMisto = { lat: pos.lat, lng: pos.lng };
@@ -4906,6 +5014,7 @@
     });
     m.on('click', function (e) {
       vybranoMisto = true;
+      nazevMista = null;
       nastavMisto(e.latlng.lat, e.latlng.lng);
       prepocti();
       /* PŘIBLÍŽIT ANO, ALE MÍRNĚ A PLYNULE. Přerovnání tu musí zůstat:

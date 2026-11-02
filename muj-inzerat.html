@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-EDHZf8M+yrCMB6Q0HNRMC48uYCfDWzEzLGJfP81BzAA=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-mWtK4+pqdndbekDbJ2KzbX8HVfeCTV4u5alR7Bt01sQ=' 'sha256-qo3rjiS7upNnV475Tle61K/PCG/9EVTqNphNelVsQkI=' 'sha256-R6mVZm9N1OPWmmxBM04wAGs4vnHhhJoM04poUEiZoZM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -226,8 +226,9 @@
     .mi-potiz ul{margin:4px 0 0; padding-left:16px;}
     .mi-potiz li{margin:2px 0;}
     .mi-potiz-pozn{display:block; margin-top:4px; font-size:12px; opacity:.85;}
-    /* Čeká na kontrolu. Modrošedá, ne jantar: není to nález ani chyba,
-       je to prostě stav, ve kterém se zatím nic nepokazilo. */
+    /* Inzerát, který ještě není na mapě. Modrošedá, ne jantar: není to
+       nález ani chyba. Od 2. 11. (docs §328) se na nic nečeká, takže
+       tenhle stav nastává jen u řádků z dřívější doby. */
     .mi-ceka{margin:0 0 12px; padding:8px 12px; border-radius:var(--r-sm);
       background:rgba(var(--znacka-hluboka-rgb),.09); border:1px solid rgba(var(--znacka-hluboka-rgb),.3); color:var(--text); font-size:13px; line-height:1.6;}
     .mi-ceka b{display:block; margin-bottom:2px;}
@@ -805,26 +806,27 @@
               '<img src="' + ph[0] + '" alt="' + esc('Fotka pozemku' + (r.place ? ' — ' + r.place : '')) + '" loading="lazy">' +
               (ph.length > 1 ? '<span class="n">' + ph.length + ' fotky</span>' : '') +
             '</div>' : '';
-          /* Stav inzerátu. První nabídka z nového účtu čeká na kontrolu
-             (supabase/listings-prvni-kontrola.sql) — a majitel musí
-             vědět, že se neztratila a DO KDY se čeká. „pending" samo
-             o sobě se tu dřív vypsalo tak, jak přišlo z databáze:
-             anglicky a bez vysvětlení.
-             Čas, kdy se inzerát pustí sám, posílá server (public_at);
-             web si ho nepočítá, aby se ta dvě pravidla nerozešla. */
+          /* Stav inzerátu. Od 2. 11. jde každá nabídka na mapu hned
+             (docs §328), takže 'pending' už žádná nová nedostane —
+             čte se dál kvůli řádkům, které v databázi uvízly z doby,
+             kdy se čekalo 24 hodin. public_at se čte ze serveru, ne
+             počítá na webu. */
           var pustiSe = r.public_at ? new Date(r.public_at) : null;
           var jeVenku = !!(pustiSe && !isNaN(pustiSe) && pustiSe.getTime() <= Date.now());
           var isLive = r.status === 'approved' || (r.status === 'pending' && jeVenku);
           var zamitnuty = r.status === 'rejected';
-          var stavText = isLive ? '● Na mapě' : (zamitnuty ? 'Zamítnuto' : 'Čeká na kontrolu');
+          var stavText = isLive ? '● Na mapě' : (zamitnuty ? 'Zamítnuto' : 'Ještě není na mapě');
           var ceka = '';
           if (!isLive && !zamitnuty) {
-            ceka = '<div class="mi-ceka" role="status"><b>Čeká na kontrolu</b>' +
-              '<span>První nabídku z nového účtu si projdeme — kvůli podvodům typu „pošlete zálohu". ' +
-              (pustiSe && !isNaN(pustiSe)
-                ? 'Nejpozději ' + esc(casCesky(r.public_at)) + ' se zveřejní i bez nás.'
-                : 'Ozveme se.') +
-              ' Další nabídky už půjdou na mapu rovnou.</span></div>';
+            /* ZÁCHYTNÁ SÍŤ NA STARÉ ŘÁDKY, NE SLIB KONTROLY. Od 2. 11. jdou
+               všechny nabídky na mapu hned (docs §328), takže tahle větev
+               se u nového inzerátu nevyvolá — zůstává kvůli řádkům, které
+               v databázi uvízly z doby, kdy se čekalo 24 hodin. Proto se
+               tu už nic neslibuje: ani kontrola, ani čas. */
+            ceka = '<div class="mi-ceka" role="status"><b>Ještě není na mapě</b>' +
+              '<span>Nové nabídky jdou na mapu hned a nic se neschvaluje. ' +
+              'Tenhle inzerát je ze starší doby, kdy se čekalo — zkuste obnovit ' +
+              'stránku. Jestli tu zůstane, napište nám na info@parcelaka.cz.</span></div>';
           }
           if (zamitnuty) {
             ceka = '<div class="mi-ceka mi-ceka-ne" role="status"><b>Zamítnuto</b>' +
@@ -869,8 +871,8 @@
                Odkaz, který má poslat zájemci, si tím neměl kde vzít. Stránka
                inzerátu ho teď umí najít podle jeho id (findTarget
                v js/pozemek.js), takže to je adresa, která se dá rovnou
-               poslat. Ukazuje se jen u zveřejněného inzerátu: první inzerát
-               účtu den čeká na kontrolu a do té doby na té adrese nic není. */
+               poslat. Ukazuje se jen u zveřejněného inzerátu — u řádku,
+               který na mapě není, by ta adresa vedla do prázdna. */
             '<div class="mi-lactions">' +
               (isLive ? '<a class="mi-lbtn primary" href="pozemek.html?l=' + encodeURIComponent(r.id) + '">Otevřít inzerát</a>' : '') +
               '<a class="mi-lbtn' + (isLive ? '' : ' primary') + '" href="index.html?lid=' + encodeURIComponent(r.id) + '#mapa">Zobrazit na mapě</a>' +

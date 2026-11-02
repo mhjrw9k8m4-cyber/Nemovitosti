@@ -650,8 +650,20 @@
       }
     }
 
+    var pohledVHistorii = false;
     function prepni(mv) {
       try { sessionStorage.setItem('pk_pohled_v1', mv); } catch (e) {}
+      if (mv === 'mapa' && !pohledVHistorii) {
+        pohledVHistorii = true;
+        setView(mv);
+        vrstvaOtevrena('pohled-mapa', function () {
+          pohledVHistorii = false;
+          try { sessionStorage.setItem('pk_pohled_v1', 'seznam'); } catch (e) {}
+          setView('seznam');
+        });
+        return;
+      }
+      if (mv === 'seznam' && pohledVHistorii) { vrstvaZavrena('pohled-mapa'); return; }
       setView(mv);
     }
     mvBtns.forEach(function (b) {
@@ -2731,9 +2743,17 @@
       })
 
         .sort(function (a, b) { return b.pocet - a.pocet; })
-        .slice(0, 6);
+        .slice(0, 5);
+
+      var presne = navrhy.some(function (x) { return HL.norm(x.misto) === hledane; });
+      if (n.length >= 3 && !presne) navrhy.push({ jinde: true, misto: n, pocet: 0 });
       if (!navrhy.length) return schovejNavrhy();
       navrhyEl.innerHTML = navrhy.map(function (x, i) {
+        if (x.jinde) {
+          return '<li role="option" id="vm-n' + i + '" aria-selected="false"' +
+            ' class="vm-jinde"><b>Najít „' + esc(x.misto) + '" na mapě</b> ' +
+            '<span>obec bez nabídek</span></li>';
+        }
 
         return '<li role="option" id="vm-n' + i + '" aria-selected="false">' +
           '<b>' + esc(x.misto) + '</b> ' +
@@ -2745,13 +2765,50 @@
       kurzor = -1;
     }
 
+    var nazevMista = null;
+    var hledaJinde = false;
+
+    function najdiJinde(nazev, radek) {
+      if (hledaJinde) return;
+      hledaJinde = true;
+      if (radek) { radek.setAttribute('aria-busy', 'true'); radek.innerHTML = '<b>Hledám „' + esc(nazev) + '"…</b>'; }
+      var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cz&q='
+        + encodeURIComponent(nazev + ', Česko');
+      var dost = setTimeout(function () { selhalo('Hledání trvá dlouho — zkuste to znovu.'); }, 9000);
+      function selhalo(hlaska) {
+        if (!hledaJinde) return;
+        clearTimeout(dost); hledaJinde = false;
+        if (radek) { radek.removeAttribute('aria-busy'); radek.innerHTML = '<b>' + esc(hlaska) + '</b>'; }
+      }
+      fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (a) {
+          if (!hledaJinde) return;
+          var t = a && a.length ? a[0] : null;
+          var la = t ? parseFloat(t.lat) : NaN, ln = t ? parseFloat(t.lon) : NaN;
+          if (!isFinite(la) || !isFinite(ln)) return selhalo('Obec „' + nazev + '" se nenašla.');
+          clearTimeout(dost); hledaJinde = false;
+          qEl.value = nazev;
+          schovejNavrhy();
+          nazevMista = nazev;
+          vybranoMisto = true;
+          nastavMisto(la, ln);
+          jdiNa(la, ln);
+          prepocti();
+          try { qEl.blur(); } catch (e) {}
+        })
+        .catch(function () { selhalo('Hledání se nepovedlo — zkuste to znovu.'); });
+    }
+
     function vyberNavrh(i) {
       var x = navrhy[i];
       if (!x) return;
+      if (x.jinde) return najdiJinde(x.misto, navrhyEl.children[i] || null);
       var souradnice = { lat: x.lat, lng: x.lng };
       if (!isFinite(souradnice.lat) || !isFinite(souradnice.lng)) return;
       qEl.value = x.misto;
       schovejNavrhy();
+      nazevMista = x.misto;
       vybranoMisto = true;
       nastavMisto(souradnice.lat, souradnice.lng);
       jdiNa(souradnice.lat, souradnice.lng);
@@ -2795,6 +2852,7 @@
       navigator.geolocation.getCurrentPosition(function (p) {
         gpsEl.disabled = false; gpsEl.removeAttribute('aria-busy');
         vybranoMisto = true;
+        nazevMista = null;
         nastavMisto(p.coords.latitude, p.coords.longitude);
         jdiNa(p.coords.latitude, p.coords.longitude);
         prepocti();
@@ -2856,7 +2914,7 @@
         var kk = parseInt(r.value, 10) || 0;
         b2.textContent = vybranoMisto ? String(poOkruzich[kk] || 0) : '';
       });
-      var obec = najdiNazevMista(c.lat, c.lng);
+      var obec = nazevMista || najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
 
       if (!vybranoMisto) {
@@ -2916,7 +2974,7 @@
     });
 
     var poslednihoPrepoctu = 0;
-    znacka.on('dragstart', function () { vybranoMisto = true; });
+    znacka.on('dragstart', function () { vybranoMisto = true; nazevMista = null; });
     znacka.on('drag', function (e) {
       var pos = e.target.getLatLng();
       vybraneMisto = { lat: pos.lat, lng: pos.lng };
@@ -2938,6 +2996,7 @@
     });
     m.on('click', function (e) {
       vybranoMisto = true;
+      nazevMista = null;
       nastavMisto(e.latlng.lat, e.latlng.lng);
       prepocti();
 

@@ -155,8 +155,19 @@ try {
      původů z workeru) by se zase nepoznala.
      no-cors proto, aby to byl týž druh požadavku jako mapová dlaždice. */
   const CIZI = BASE.replace('127.0.0.1', 'localhost');
-  await p.evaluate((u) => fetch(u + '/data/model.json', { mode: 'no-cors' })
-    .then(() => '').catch(() => ''), CIZI);
+  const ciziOnline = await p.evaluate((u) => fetch(u + '/data/model.json', { mode: 'no-cors' })
+    .then(() => 'projde').catch((e) => 'rozbité: ' + e), CIZI);
+  /* A TEĎ TA DRUHÁ POLOVINA ŠKODY. Kontrola o pár řádků níž hlídá, že
+     se cizí server NEOZVE z úložiště. Ta ale odebrání zákazu cizích
+     původů ze sw.js nepozná: 2. 11. jsem to zkusil sabotáží a zkouška
+     prošla 19/19. Změřeno proč — bez toho zákazu projde cizí požadavek
+     workerem a ten ho neuloží, ale ROZBIJE (no-cors → „Failed to
+     fetch", v úložišti 0 cizích klíčů). Škoda je tedy opačná, než na
+     jakou kontrola míří: mapové dlaždice ČÚZK, VÚV a SPÚ by přestaly
+     chodit. Hlídá se proto obojí — že se cizí požadavek neuloží
+     A že ho worker nerozbije. */
+  pravda('cizí server worker NEROZBIJE (jen si ho neuloží)',
+    ciziOnline === 'projde', String(ciziOnline));
   /* ADRESA S DOTAZEM, a to NAVIGACÍ. Napoprvé tu bylo fetch(), jenže
      pravidlo v workeru se týká navigací (request.mode === 'navigate') —
      fetch má jiný mode, takže se to pravidlo vůbec nevyvolalo a sabotáž
