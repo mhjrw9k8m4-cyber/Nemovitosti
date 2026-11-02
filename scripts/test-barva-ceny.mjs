@@ -241,6 +241,95 @@ try {
   const zpet = await p.evaluate(() => document.getElementById('map-legend').textContent);
   pravda('zpátky na druhy se legenda vrátí', /Prodej|Dražba/i.test(zpet), zpet.slice(0, 80));
 
+  /* --- OBA KONCE STUPNICE SVÍTÍ STEJNĚ -----------------------------
+   * Majitel 2. 11.: „podle ceny proč svítí zelená méně a červená
+   * hodně, mají svítit stejně."
+   * Změřeno v Lab: zeleň měla sytost C*=28, karmín C*=58 — drahé
+   * pozemky křičely a levné se ztrácely, přestože nesou TÝŽ druh
+   * informace, jen obráceně. Tahle kontrola měří oba konce z toho,
+   * co doopravdy vyšlo z barvaCeny(), ne ze zápisu zarážek.
+   */
+  {
+    const konce = await p.evaluate(() => {
+      const B = window.PK_BARVY;
+      return B && B.barva ? [B.barva(0), B.barva(1)] : null;
+    });
+    pravda('stupnice umí vydat svůj levný i drahý konec', !!konce, 'PK_BARVY.barva chybí');
+    if (konce) {
+      /* Sytost (C* v Lab) říká, „jak moc je barva barevná". Světlost
+         se schválně NEPOROVNÁVÁ: ta má klesat, a hlídá to kontrola
+         „levnější je vždycky světlejší" výš. */
+      const lab = (css) => {
+        const m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(css) || [];
+        const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        const R = lin(+m[1]), G = lin(+m[2]), Bq = lin(+m[3]);
+        let X = (R * 0.4124 + G * 0.3576 + Bq * 0.1805) / 0.95047;
+        let Y = R * 0.2126 + G * 0.7152 + Bq * 0.0722;
+        let Z = (R * 0.0193 + G * 0.1192 + Bq * 0.9505) / 1.08883;
+        const h = (v) => (v > 0.008856 ? Math.cbrt(v) : 7.787 * v + 16 / 116);
+        X = h(X); Y = h(Y); Z = h(Z);
+        const a = 500 * (X - Y), b2 = 200 * (Y - Z);
+        return { L: 116 * Y - 16, C: Math.sqrt(a * a + b2 * b2),
+          h: ((Math.atan2(b2, a) * 180 / Math.PI) + 360) % 360 };
+      };
+      const z = lab(konce[0]), d = lab(konce[1]);
+      /* Pojistka: kdyby oba konce vyšly šedé, rozdíl by byl nulový
+         a kontrola by prošla nad stupnicí, která nerozlišuje nic. */
+      pravda('oba konce jsou opravdu barevné (ne šedé)', z.C > 30 && d.C > 30,
+        `levný C*=${z.C.toFixed(0)}, drahý C*=${d.C.toFixed(0)}`);
+      pravda('a svítí stejně — sytost obou konců se neliší o víc než 8',
+        Math.abs(z.C - d.C) <= 8,
+        `levný C*=${z.C.toFixed(0)}, drahý C*=${d.C.toFixed(0)}, rozdíl ${Math.abs(z.C - d.C).toFixed(0)}`);
+    }
+  }
+
+  /* --- BUBLINY SHLUKŮ SE V CENOVÉM REŽIMU ŘÍDÍ CENOU ---------------
+   * Majitel: „když rozkliknu podle ceny, neočekávám, že tam zůstanou
+   * bubliny [podle druhu], ale sladí se to dle ceny."
+   * Byla to tichá vada: tečky se přebarvily, ale patnáct největších
+   * bublin zůstalo modrých „na prodej" — a právě ty jsou v
+   * celostátním pohledu nejvíc vidět, takže režim vypadal rozbitě.
+   * Kontroly výš to minuly, protože čtou PLÁTNO (tečky kreslí canvas),
+   * kdežto bublina je HTML značka vedle plátna.
+   */
+  {
+    await p.evaluate(() => window.PK_BARVY.prepni('druh'));
+    await p.waitForTimeout(1500);
+    const cti = () => p.evaluate(() => [...document.querySelectorAll('.pk-shluk')]
+      .map((e) => e.style.getPropertyValue('--sh').trim()).filter(Boolean));
+    const podleDruhu = await cti();
+    pravda(`na mapě jsou bubliny shluků (${podleDruhu.length})`, podleDruhu.length >= 5,
+      `nalezeno ${podleDruhu.length}`);
+    await p.evaluate(() => window.PK_BARVY.prepni('cena'));
+    await p.waitForTimeout(1800);
+    const podleCeny = await cti();
+    if (podleDruhu.length >= 5 && podleCeny.length >= 5) {
+      const spolecne = podleCeny.filter((b) => podleDruhu.indexOf(b) >= 0);
+      pravda('po přepnutí na cenu se bubliny opravdu přebarví',
+        spolecne.length === 0, `beze změny zůstalo ${spolecne.length} z ${podleCeny.length}`);
+      /* A ne všechny na jednu barvu: to by znamenalo, že se počítá
+         něco, co u všech shluků vychází stejně. */
+      pravda('a nemají všechny tutéž barvu (cena se mezi kraji liší)',
+        new Set(podleCeny).size >= 3, `různých barev ${new Set(podleCeny).size}`);
+      /* V bublině stojí BÍLÉ ČÍSLO. Tohle je důvod, proč nemůže vzít
+         barvu tečky rovnou: levný konec stupnice má s bílou kontrast
+         1,6. */
+      const jas = (css) => {
+        const m = /rgb\((\d+),\s*(\d+),\s*(\d+)\)/.exec(css);
+        if (!m) return null;
+        const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+        return 0.2126 * lin(+m[1]) + 0.7152 * lin(+m[2]) + 0.0722 * lin(+m[3]);
+      };
+      const slabe = podleCeny.map((b) => ({ b, k: jas(b) == null ? 99 : 1.05 / (jas(b) + 0.05) }))
+        .filter((x) => x.k < 4.5);
+      pravda('a bílé číslo je na nich čitelné (kontrast aspoň 4,5)',
+        slabe.length === 0,
+        slabe.slice(0, 3).map((x) => `${x.b} má ${x.k.toFixed(2)}`).join('; '));
+    }
+    await p.evaluate(() => window.PK_BARVY.prepni('druh'));
+    await p.waitForTimeout(1200);
+  }
+
   pravda('a nic z toho nespadlo do konzole', chybyKonzole.length === 0,
     chybyKonzole.slice(0, 2).join(' | '));
   await ctx.close();

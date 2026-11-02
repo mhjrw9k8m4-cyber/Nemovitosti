@@ -1457,8 +1457,8 @@
   }
 
   var CENA_ZARAZKY = [
-    [0.0, [180, 216, 170]],
-    [0.5, [170, 162, 164]],
+    [0.0, [158, 234, 130]],
+    [0.5, [158, 132, 130]],
     [1.0, [158,  12,  72]]
   ];
   function barvaCeny(t) {
@@ -1469,14 +1469,37 @@
     var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
     return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
-  function cenovaBarva(d) {
+
+  function cenovaPoloha(d) {
     if (!cenovaStupnice) return null;
     var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
     var v = zm ? zm(d) : null;
-    if (v == null || !isFinite(v) || v <= 0) return '#8A9A92';
+    if (v == null || !isFinite(v) || v <= 0) return null;
     var lo = 0, hi = cenovaStupnice.length;
     while (lo < hi) { var mid = (lo + hi) >> 1; if (cenovaStupnice[mid] < v) lo = mid + 1; else hi = mid; }
-    return barvaCeny(cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5);
+    return cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5;
+  }
+  var CENA_NEZNAMO = '#8A9A92';
+
+  var SHLUK_NEZNAMO = 'rgb(96,104,102)';
+  function cenovaBarva(d) {
+    if (!cenovaStupnice) return null;
+    var t = cenovaPoloha(d);
+    return t == null ? CENA_NEZNAMO : barvaCeny(t);
+  }
+
+  var SHLUK_ZARAZKY = [
+    [0.0, [ 54, 121,  24]],
+    [0.5, [ 96, 104, 102]],
+    [1.0, [192,  49,  96]]
+  ];
+  function barvaShlukuCena(t) {
+    t = Math.max(0, Math.min(1, t));
+    var i = t <= 0.5 ? 0 : 1;
+    var a = SHLUK_ZARAZKY[i], b = SHLUK_ZARAZKY[i + 1];
+    var k = (t - a[0]) / (b[0] - a[0]);
+    var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
+    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
 
   function dotStyle(d) {
@@ -1931,7 +1954,20 @@
 
   var SHLUK_MENSINA = 0.25;
 
+  function shlukBarvaCena(cleny) {
+    var p = [];
+    for (var i = 0; i < cleny.length; i++) {
+      var t = cenovaPoloha(cleny[i]);
+      if (t != null) p.push(t);
+    }
+    if (!p.length) return SHLUK_NEZNAMO;
+    p.sort(function (a, b) { return a - b; });
+    var med = p.length % 2 ? p[(p.length - 1) / 2] : (p[p.length / 2 - 1] + p[p.length / 2]) / 2;
+    return barvaShlukuCena(med);
+  }
+
   function shlukBarva(cleny) {
+    if (rezimBarvy === 'cena') return shlukBarvaCena(cleny);
     var m = {}, n = cleny.length;
     for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
     if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.ink || TYPE.exekuce.color;
@@ -3232,6 +3268,9 @@
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
       prepni: function (r) { nastavBarvy(r); },
+
+      barva: function (t) { return barvaCeny(t); },
+      barvaShluku: function (t) { return barvaShlukuCena(t); },
 
       barvaTecky: function (i) { mapaTed(); var m = markers[i]; return m ? dotStyle(m._d).fillColor : null; },
 

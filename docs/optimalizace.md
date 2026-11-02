@@ -19333,3 +19333,77 @@ změnilo: `test-deska` (výjimka `deal-badge` → `deal-verdikt`, důvod
 zůstal), `test-uvod` a `test-odznaky` (četly `.deal-badge`
 a `.deal-sub`). Výjimka, která by ukazovala na neexistující třídu,
 by tvrdila, že něco chrání, a přitom by nechránila nic.
+
+---
+
+## §311 — Mapa podle ceny: oba konce svítí stejně, bubliny se řídí cenou
+
+Majitel: *„podle ceny proč svítí zelená méně a červená hodně, mají
+svítit stejně — navíc když rozkliknu podle ceny, neočekávám, že tam
+zůstanou bubliny, ale sladí se to dle ceny a ne dle druhu."*
+
+Obojí platilo a obojí šlo změřit.
+
+### 1. Zeleň byla polovičně barevná
+
+Změřeno v Lab (sytost C*, tedy „jak moc je barva barevná"):
+
+| zarážka | bylo | je |
+|---|---|---|
+| levné — zeleň | L* 83, **C\* 28** | L* 86, **C\* 60** |
+| střed — neutrál | L* 67, C* 3 | L* 57, C* 11 |
+| drahé — karmín | L* 34, C* 58 | L* 34, C* 58 |
+
+Karmín byl víc než **dvakrát barevnější** než zeleň, takže drahé
+pozemky na mapě křičely a levné se ztrácely — přestože nesou týž
+druh informace, jen obráceně.
+
+**Napoprvé jsem to udělal špatně.** Vyměnil jsem jen zeleň a nechal
+starou šedou. Stupnice pak měla na cestě od zeleně ke středu
+**stoupající červený a modrý kanál**, což je přesně to, co zakazuje
+pravidlo o monotónním jasu zapsané u stupnice: po zaokrouhlení jas
+sem tam povyskočil a zkouška napočítala **23 obrácených dvojic
+z 22 980** — u nich by barva lhala. Posunul se proto i střed:
+nová trojice má na každém kanálu klesající cestu (158 ≤ 158 ≤ 158,
+234 ≥ 132 ≥ 12, 130 ≥ 130 ≥ 72), jas nestoupne ani jednou z 2 000
+kroků a světlosti pěti dílků legendy vyšly rovnoměrněji než dřív:
+**86 → 71 → 57 → 43 → 34** (bylo 83 → 75 → 67 → 50 → 34).
+
+### 2. Bubliny shluků zůstávaly podle druhu
+
+Tichá vada: tečky se přebarvily, ale patnáct největších bublin
+zůstalo modrých „na prodej" — a právě ty jsou v celostátním pohledu
+to největší, co je na mapě vidět, takže režim vypadal rozbitě.
+`shlukBarva()` se na režim vůbec neptala.
+
+**Proč to nenašla zkouška barev:** čte PLÁTNO (tečky kreslí canvas),
+kdežto bublina je HTML značka vedle plátna. Kontrola „barvy druhů
+v cenovém režimu zmizí" tedy platila — jen ne o tom, co bylo nejvíc
+vidět.
+
+Bublina teď bere **medián** poloh svých členů na cenové stupnici.
+Medián, ne průměr: jedna nesmyslně drahá nabídka by průměr utáhla
+a bublina nad čtyřmi sty pozemky by lhala.
+
+**A druhá tmavá stupnice, protože v bublině stojí bílé číslo.**
+Zkusil jsem barvu tečky prostě ztmavovat, dokud kontrast nevyjde —
+funguje to, ale v Lab tím klesá i sytost: ze čtrnácti bublin vyšly
+samé kalné šedohnědé (`rgb(114,117,107)`, `rgb(118,115,113)`…)
+a rozdíl mezi levným a drahým krajem nebyl vidět. Vlastní tmavá
+trojice drží tmu i sytost — všechny tři zarážky L*≈45, konce C*≈58
+(tedy jako konce tečkové stupnice) a odstíny na týchž hodnotách
+(132 a 7). Kontrast s bílou 5,4 / 5,7 / 5,5.
+
+Po změně: nejmenší shluk (22 nabídek) vyjde karmínově
+`rgb(163,65,98)`, dva velké jihočeské zeleně `rgb(83,109,77)`,
+prostřední neutrálně — signál je čitelný.
+
+### Co se o tom teď hlídá
+
+`test-barva-ceny` dostal pět kontrol: oba konce stupnice jsou
+opravdu barevné (ne shoda „obojí šedé"), jejich sytost se neliší
+o víc než 8, bubliny se po přepnutí **opravdu** přebarví, nemají
+všechny tutéž barvu, a bílé číslo je na nich čitelné (≥ 4,5).
+Prokázáno třemi sabotážemi: vrácení bledé zeleně, vrácení bublin
+na druh a vzetí barvy tečky do bubliny rovnou — každá shodí právě
+tu kontrolu, která o tom je.

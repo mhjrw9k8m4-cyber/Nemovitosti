@@ -2549,10 +2549,33 @@
         pro ni nejhorší možná dvojice, ale kdo odstín nerozliší,
         přečte pořadí ze SVĚTLOSTI. Prověřeno simulací deuteranopie —
         nejmenší rozdíl sousedních kroků je 30 (pod 20 se nepozná). */
+  /* OBA KONCE STEJNĚ BAREVNÉ. Majitel 2. 11.: „podle ceny proč svítí
+     zelená méně a červená hodně, mají svítit stejně."
+     Změřeno v Lab: zeleň měla sytost C*=28, karmín C*=58 — karmín byl
+     víc než dvakrát barevnější, takže drahé pozemky na mapě křičely
+     a levné se ztrácely. Přitom je to TÁŽ informace jen obráceně.
+     Nová zeleň má C*=58, tedy přesně jako karmín.
+     SVĚTLOST ZŮSTALA NA MÍSTĚ (L*=83 → 82,8): v sRGB je sytosti u
+     zeleně dost i při téhle světlosti (strop je 115), takže se
+     nemuselo sáhnout na pravidlo, kvůli kterému je stupnice taková,
+     jaká je — jas klesá monotónně přes celou škálu, aby se pořadí
+     dalo přečíst i bez rozlišení odstínu. */
+  /* POSUNUL SE I STŘED, A NE Z ROZMARU. Napoprvé jsem jen vyměnil
+     zeleň za sytější a nechal starou šedou — stupnice pak na cestě
+     od zeleně ke středu měla ČERVENÝ A MODRÝ KANÁL STOUPAJÍCÍ, což
+     je přesně to, co zakazuje pravidlo o monotónním jasu: po
+     zaokrouhlení jas sem tam o kousek povyskočil a zkouška napočítala
+     23 obrácených dvojic z 22 980 — barva by u nich lhala.
+     Nová trojice má na každém kanálu klesající cestu (158 ≤ 158 ≤ 158,
+     234 ≥ 132 ≥ 12, 130 ≥ 130 ≥ 72), takže jas neroste ani jednou
+     z 2 000 kroků. Světlosti pěti dílků legendy navíc vyšly
+     rovnoměrněji než dřív: 86 → 71 → 57 → 43 → 34 (bylo 83 → 75 →
+     67 → 50 → 34). Střed je o něco tmavší a mírně teplejší šedá
+     (C*=11), pořád ale čitelně neutrální. */
   var CENA_ZARAZKY = [
-    [0.0, [180, 216, 170]],   // levné — světlá zeleň
-    [0.5, [170, 162, 164]],   // střed — šedá
-    [1.0, [158,  12,  72]]    // drahé — karmín
+    [0.0, [158, 234, 130]],   // levné — zeleň (L* 86, C* 60)
+    [0.5, [158, 132, 130]],   // střed — neutrál (L* 57, C* 11)
+    [1.0, [158,  12,  72]]    // drahé — karmín (L* 34, C* 58)
   ];
   function barvaCeny(t) {
     t = Math.max(0, Math.min(1, t));
@@ -2562,14 +2585,54 @@
     var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
     return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
-  function cenovaBarva(d) {
+  /* Poloha nabídky na cenové stupnici (0 nejlevnější … 1 nejdražší),
+     nebo null, když cenu za metr neznáme. Je to zvlášť od barvy,
+     protože bublina shluku potřebuje POLOHU: z deseti nabídek se
+     počítá medián, a mediánovat se dají čísla, ne barvy. */
+  function cenovaPoloha(d) {
     if (!cenovaStupnice) return null;
     var zm = (window.PK_CENY && window.PK_CENY.zaMetr) || null;
     var v = zm ? zm(d) : null;
-    if (v == null || !isFinite(v) || v <= 0) return '#8A9A92';   // neznámo = šedá
+    if (v == null || !isFinite(v) || v <= 0) return null;
     var lo = 0, hi = cenovaStupnice.length;
     while (lo < hi) { var mid = (lo + hi) >> 1; if (cenovaStupnice[mid] < v) lo = mid + 1; else hi = mid; }
-    return barvaCeny(cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5);
+    return cenovaStupnice.length > 1 ? lo / (cenovaStupnice.length - 1) : 0.5;
+  }
+  var CENA_NEZNAMO = '#8A9A92';
+  /* Šedá pro „cenu za metr neznáme" má v bublině taky svou tmavou
+     podobu — světlá by pod bílým číslem nešla přečíst. */
+  var SHLUK_NEZNAMO = 'rgb(96,104,102)';
+  function cenovaBarva(d) {
+    if (!cenovaStupnice) return null;
+    var t = cenovaPoloha(d);
+    return t == null ? CENA_NEZNAMO : barvaCeny(t);
+  }
+
+  /* TÁŽ STUPNICE, JEN TMAVÁ — pro bubliny shluků, kde stojí BÍLÉ
+     ČÍSLO. Tečky jsou pro oko a smí být světlé; bublina je plocha pod
+     textem a musí s bílou dát aspoň 4,5.
+
+     PROČ DRUHÁ STUPNICE, A NE ZTMAVENÍ TÉ PRVNÍ. Zkusil jsem barvu
+     tečky prostě násobit, dokud kontrast nevyjde. Funguje to, ale
+     v Lab tím klesá i SYTOST: ze čtrnácti bublin na mapě vyšly samé
+     kalné šedohnědé (rgb(114,117,107), rgb(118,115,113)…) a rozdíl
+     mezi levným a drahým krajem nebyl vidět. Tahle stupnice drží
+     tmu i sytost: všechny tři zarážky mají L*≈45 a konce C*≈58,
+     tedy přesně tolik jako konce tečkové stupnice, a odstíny sedí
+     na tytéž (132 a 7). Kontrast s bílou 5,4 / 5,7 / 5,5.
+     Že se ty dvě stupnice nerozejdou, hlídá test-barva-ceny. */
+  var SHLUK_ZARAZKY = [
+    [0.0, [ 54, 121,  24]],   // levné — tmavá zeleň (odstín 132)
+    [0.5, [ 96, 104, 102]],   // střed — tmavý neutrál
+    [1.0, [192,  49,  96]]    // drahé — tmavý karmín (odstín 7)
+  ];
+  function barvaShlukuCena(t) {
+    t = Math.max(0, Math.min(1, t));
+    var i = t <= 0.5 ? 0 : 1;
+    var a = SHLUK_ZARAZKY[i], b = SHLUK_ZARAZKY[i + 1];
+    var k = (t - a[0]) / (b[0] - a[0]);
+    var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
+    return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')';
   }
 
   function dotStyle(d) {
@@ -3340,7 +3403,35 @@
      což parser v scripts/test-kontrast.mjs neuměl přečíst — bral to
      jako průhledno a měřil bílou proti podkladu mapy. Parser to teď
      umí a tahle bublina je první, co odhalil. */
+  /* V REŽIMU „PODLE CENY" SE BUBLINA ŘÍDÍ CENOU, NE DRUHEM.
+     Majitel 2. 11.: „když rozkliknu podle ceny, neočekávám, že tam
+     zůstanou bubliny [podle druhu], ale sladí se to dle ceny."
+     Měl pravdu a byla to tichá vada: mapa se přebarvila, ale patnáct
+     největších shluků zůstalo modrých „na prodej" — a právě ty jsou
+     v celostátním pohledu to největší, co je na mapě vidět. Režim se
+     tím tvářil, že nefunguje.
+     Proč to nechytila zkouška barev: ta čte PLÁTNO (tečky kreslí
+     canvas), kdežto bublina je HTML značka vedle plátna. Kontrola
+     „barvy druhů v cenovém režimu zmizí" tedy platila, jen ne o tom,
+     co bylo nejvíc vidět.
+     Bere se MEDIÁN poloh členů, ne průměr: jedna nesmyslně drahá
+     nabídka by průměr utáhla a bublina nad čtyřmi sty pozemky by
+     lhala. Členové bez ceny za metr se do mediánu nepočítají; když
+     ji nemá nikdo, zůstane šedá — táž, jakou mají jejich tečky. */
+  function shlukBarvaCena(cleny) {
+    var p = [];
+    for (var i = 0; i < cleny.length; i++) {
+      var t = cenovaPoloha(cleny[i]);
+      if (t != null) p.push(t);
+    }
+    if (!p.length) return SHLUK_NEZNAMO;
+    p.sort(function (a, b) { return a - b; });
+    var med = p.length % 2 ? p[(p.length - 1) / 2] : (p[p.length / 2 - 1] + p[p.length / 2]) / 2;
+    return barvaShlukuCena(med);
+  }
+
   function shlukBarva(cleny) {
+    if (rezimBarvy === 'cena') return shlukBarvaCena(cleny);
     var m = {}, n = cleny.length;
     for (var i = 0; i < cleny.length; i++) m[cleny[i].type] = (m[cleny[i].type] || 0) + 1;
     if ((m.exekuce || 0) / n >= SHLUK_MENSINA) return TYPE.exekuce.ink || TYPE.exekuce.color;
@@ -5229,6 +5320,10 @@
     window.PK_BARVY = {
       rezim: function () { return rezimBarvy; },
       prepni: function (r) { nastavBarvy(r); },
+      /* Konce stupnice přímo z funkce, která je kreslí. Zkouška tím
+         měří, co opravdu vyjde, a ne co je napsané v zarážkách. */
+      barva: function (t) { return barvaCeny(t); },
+      barvaShluku: function (t) { return barvaShlukuCena(t); },
       /* mapaTed() napřed: kreslení teček je odložené o jeden krok
          (viz syncMarkers), takže kdo se na ně ptá hned po překreslení
          výpisu, by jinak dostal stav o krok pozadu. Na obrazovce se to
