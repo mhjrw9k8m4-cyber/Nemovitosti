@@ -19587,3 +19587,70 @@ Jedna kontrola byla přitom napsaná slabě a první sabotáž to ukázala:
 na text políčka se ptala výrazy `/ulož/` a `/uložen/`, kterými projde
 i samotné „uloženo" — takže o tom uložení neověřovala nic. Teď se ptá
 na slovo, které je tam navíc.
+
+## §315 — Devět oddílů pod výpisem: čtyři z nich byl výklad
+
+Majitel: *„navíc když člověk jede webem dolů, je tam přeplácané páté
+přes devátý zbytečného textu — nech tam jen to důležité a co lidi
+opravdu zajímá."*
+
+Nejdřív se to muselo změřit, protože první dojem byl vedle. Prózy je na
+úvodní stránce málo: patnáct textových bloků, 1 440 znaků, dohromady
+780 px — tedy **4 % stránky**. Přeplácanost nedělaly odstavce, ale
+**počet oddílů**. Pod mapou a výpisem jich stálo devět a na telefonu
+390 px měla stránka 18 456 px, tedy 20,5 obrazovky:
+
+| oddíl | telefon | monitor | co to je |
+|---|---|---|---|
+| mapa + výpis | 9 696 px | 811 px | kvůli tomu lidé přišli |
+| Tipy na dobrou koupi | 1 717 px | 1 220 px | nabídky |
+| Pozemky podle kraje | 927 px | 487 px | rozcestník |
+| **Pět druhů příležitostí** | **964 px** | 636 px | výklad |
+| **Jak najdete pozemek** | **819 px** | 492 px | výklad |
+| Odkud bereme data | 864 px | 604 px | důvěra + datum kontroly |
+| Pozemky přímo od majitelů | 456 px | 445 px | nabídky |
+| **Slovníček (18 pojmů)** | **1 222 px** | 730 px | výklad |
+| **Časté dotazy (9 otázek)** | **900 px** | 567 px | výklad |
+| Ozvěte se nám | 496 px | 351 px | akce |
+
+Ty čtyři tučné jsou výklad a dohromady dělají **3 905 px, tedy 4,3
+obrazovky z 20,5**. Výklad má cenu při první návštěvě a pro vyhledávač;
+tomu, kdo se vrátil pro nabídky, je to jen cesta dolů.
+
+**Co se stalo.** Z těch čtyř oddílů je jeden oddíl „Dobré vědět" se
+čtyřmi řádky, které se rozbalují. Text nikam nezmizel — v dokumentu je
+dál celý, takže ho má i první návštěva i vyhledávač —, jen se přes něj
+neroluje. Recept je **týž, jaký web už má** o patro níž u hesel
+slovníčku a u častých dotazů („+", které se při otevření otočí); nový
+způsob rozbalování by byl druhý nástroj na tutéž práci. Oddíl „Odkud
+bereme data" zůstal rozbalený: nese datum poslední kontroly zdrojů, což
+je důvěra, ne výklad.
+
+Naměřeno po změně:
+
+| | před | po | rozdíl |
+|---|---|---|---|
+| telefon 390 px | 18 456 px (20,5 obrazovky) | **15 129 px** (16,8) | −3 327 px, −18 % |
+| monitor 1280 px | 6 678 px (7,4 obrazovky) | **4 773 px** (5,3) | −1 905 px, −29 % |
+
+Čtyři oddíly o 3 905 px se složily do 598 px.
+
+**Jedna past, na kterou se muselo přijít předem:** čtyři články vedou na
+`index.html#slovnicek` („Neznámé pojmy vysvětluje slovníček"). Složený
+řádek by takový odkaz dovedl k odpovědi, kterou člověk nevidí —
+prohlížeč sám rozbalí jen `<details>`, *uvnitř* kterého cíl leží, a když
+je cílem `<details>` sám, neudělá nic. Odkaz proto řádek otevře
+a dorovná pohled; otevře i nadřazený řádek, takže kotvou jde dosáhnout
+i jednotlivý pojem uvnitř slovníčku.
+
+Hlídá to `scripts/test-dobre-vedet.mjs` (17 kontrol). Hlídá se **obojí**:
+že je oddíl složený (výška do 900 px) i že text nikam nezmizel —
+18 pojmů, 9 otázek, 5 karet druhů a 3 kroky se počítají v dokumentu, ne
+na obrazovce, protože zavřený `<details>` má nulovou výšku a prvky
+v něm být musí. „Kratší stránka" se totiž dá splnit i smazáním obsahu.
+Měří se výška oddílu, ne stránky: ta se mění s tím, kolik je právě
+nabídek, a mez na ni by padala podle dat.
+
+Prokázáno čtyřmi sabotážemi: řádky rozbalené od začátku (4 ✕), chybějící
+pojem ve slovníčku (1 ✕), kotva, která nerozbaluje (2 ✕), a kotva, která
+rozbalí všechno (1 ✕).

@@ -395,6 +395,25 @@
     if (m) setTimeout(function () { openInfo(m[1]); }, 300);
   })();
 
+  (function () {
+    function rozbalKotvu() {
+      var h = (location.hash || '').slice(1);
+      if (!h) return;
+      var cil = null;
+      try { cil = document.getElementById(decodeURIComponent(h)); } catch (e) { cil = null; }
+      if (!cil) return;
+      var uzel = cil;
+      while (uzel && uzel !== document.body) {
+        if (uzel.tagName === 'DETAILS' && !uzel.open) uzel.open = true;
+        uzel = uzel.parentNode;
+      }
+
+      try { cil.scrollIntoView({ block: 'start', behavior: 'auto' }); } catch (e) {}
+    }
+    rozbalKotvu();
+    window.addEventListener('hashchange', rozbalKotvu);
+  })();
+
   var header = document.getElementById('header');
   window.addEventListener('scroll', function () {
     if (header) header.classList.toggle('shrink', window.pageYOffset > 20);

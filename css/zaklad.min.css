@@ -278,6 +278,8 @@ to{opacity:1;transform:none}
 .faq-item summary::-webkit-details-marker{display:none}
 .faq-item summary::after{content:"+";font-family:var(--font-popisek);color:var(--znacka-svetla);font-size:20px;transition:var(--prechod)}
 .faq-item p{padding:0 20px 20px;font-size:16px;color:var(--muted);max-width:var(--m-text)}
+.dv{border:1px solid var(--line);border-radius:var(--r-md);background:var(--plocha-karta);box-shadow:var(--e1);overflow:hidden}
+
 footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);flex-wrap:wrap;gap:16px}
 .foot-pravni{display:flex;flex-wrap:wrap;align-items:center;gap:2px 20px}
 .foot-pravni a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);line-height:1.2;text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:var(--line-strong);text-underline-offset:3px}

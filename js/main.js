@@ -652,6 +652,35 @@
     if (m) setTimeout(function () { openInfo(m[1]); }, 300);
   })();
 
+  /* ODKAZ NA SLOŽENÝ ODDÍL HO MUSÍ ROZBALIT (2. 11.).
+     Čtyři články vedou na „index.html#slovnicek" („Neznámé pojmy
+     vysvětluje slovníček"). Od chvíle, kdy jsou vysvětlovací oddíly
+     složené do řádků v „Dobré vědět" (docs/optimalizace.md §315), by
+     takový odkaz přivedl člověka k ZAVŘENÉMU řádku — tedy k odpovědi,
+     kterou nevidí. Prohlížeč sám rozbalí jen ten <details>, uvnitř
+     kterého cíl leží; když je cílem <details> sám, neudělá nic.
+     Otevírá se i nadřazený řádek, aby šel kotvou dosáhnout i jednotlivý
+     pojem uvnitř slovníčku. */
+  (function () {
+    function rozbalKotvu() {
+      var h = (location.hash || '').slice(1);
+      if (!h) return;
+      var cil = null;
+      try { cil = document.getElementById(decodeURIComponent(h)); } catch (e) { cil = null; }
+      if (!cil) return;
+      var uzel = cil;
+      while (uzel && uzel !== document.body) {
+        if (uzel.tagName === 'DETAILS' && !uzel.open) uzel.open = true;
+        uzel = uzel.parentNode;
+      }
+      /* Dorovnání pohledu: prohlížeč odrolil na zavřený řádek, takže po
+         rozbalení cíl leží jinde. */
+      try { cil.scrollIntoView({ block: 'start', behavior: 'auto' }); } catch (e) {}
+    }
+    rozbalKotvu();
+    window.addEventListener('hashchange', rozbalKotvu);
+  })();
+
   /* ---------- Zmenšení hlavičky + tlačítko „nahoru" ----------
      Proužek postupu rolování (tenká měděná čára u horního okraje) je pryč.
      Dokud hlavička při rolování zůstávala, čára k ní patřila. Teď hlavička

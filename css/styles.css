@@ -4310,6 +4310,44 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
 .faq-item[open] summary::after{transform:rotate(45deg);}
 .faq-item p{padding:0 20px 20px; font-size:16px; color:var(--muted); max-width:var(--m-text);}/* CTA */
 
+/* ===== „Dobré vědět": čtyři vysvětlovací oddíly jako čtyři řádky =====
+   Pod mapou a výpisem stálo devět oddílů. Čtyři z nich byly výklad
+   (druhy příležitostí, tři kroky, slovníček, časté dotazy) a na
+   telefonu 390 px zabíraly 3 905 px — tedy 4,3 obrazovky z celkových
+   20,5. Majitel 2. 11.: „když člověk jede webem dolů, je tam
+   přeplácané páté přes devátý zbytečného textu — nech tam jen to
+   důležité a co lidi opravdu zajímá."
+   Text nikam nezmizel: na stránce je dál celý, takže ho má i první
+   návštěva i vyhledávač. Jen se přes něj neroluje — každý oddíl je
+   jeden řádek, který se rozbalí.
+   Recept je TÝŽ, jaký už web má o patro níž u hesel slovníčku
+   a u častých dotazů („+", které se otočí): nový rozbalovač by byl
+   druhý způsob na tutéž práci. */
+.dobre-vedet-list{display:grid; gap:8px;}
+.dv{border:1px solid var(--line); border-radius:var(--r-md); background:var(--plocha-karta);
+  box-shadow:var(--e1); overflow:hidden;}
+.dv-s{cursor:pointer; list-style:none; display:flex; align-items:center; gap:12px;
+  min-height:56px; padding:12px 20px;}
+.dv-s::-webkit-details-marker{display:none;}
+.dv-t{font-family:var(--font-ui); font-size:18px; font-weight:600; color:var(--text);
+  flex:1 1 auto; min-width:0;}
+/* Počet z původního štítku oddílu („18 pojmů") zůstává — je to jediná
+   informace, kterou zavřený řádek o svém obsahu dává. */
+.dv-n{font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--znacka-svetla);}
+.dv-c{font-family:var(--font-popisek); font-size:12px; font-weight:600; color:var(--muted);
+  text-transform:lowercase; letter-spacing:0.04em;}
+.dv-s::after{content:"+"; font-family:var(--font-popisek); color:var(--znacka-svetla);
+  font-size:20px; line-height:1; flex:none; transition:var(--prechod);}
+.dv[open] .dv-s::after{transform:rotate(45deg);}
+.dv-telo{padding:0 20px 20px;}
+/* Vnitřek si nese vlastní mřížky (.status-grid, .steps, .glossary, .faq);
+   na úzké obrazovce by k nim okraj řádku přidal druhý odstup, takže se
+   uvnitř řádku počítá jen s tím jedním. */
+@media (max-width: 599px){
+  .dv-s{padding:12px 16px;}
+  .dv-telo{padding:0 16px 16px;}
+}
+
 /* Footer */
 /* Pozor na sílu pravidla: „footer .wrap" přebíjí .foot-bottom,
    takže se mřížka patičky nikdy nevykreslila jako mřížka — sloupce se jen

@@ -924,6 +924,9 @@ jobs:
       - name: Poznámka pozemek uloží mezi vaše
         run: node scripts/test-pozn-oblibene.mjs
 
+      - name: Výklad na úvodní stránce se rozbaluje
+        run: node scripts/test-dobre-vedet.mjs
+
       - name: Moje data — co si web pamatuje
         run: node scripts/test-ulozene.mjs
 

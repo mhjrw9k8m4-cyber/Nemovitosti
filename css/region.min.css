@@ -238,6 +238,7 @@ to{opacity:1;transform:none}
 .leaflet-popup-tip{background:#fff}
 .leaflet-popup-content{margin:12px 16px;font-family:var(--font-ui);min-width:236px}
 
+
 footer .wrap:not(.foot-bottom){display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);flex-wrap:wrap;gap:16px}
 .foot-pravni{display:flex;flex-wrap:wrap;align-items:center;gap:2px 20px}
 .foot-pravni a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);line-height:1.2;text-decoration:underline;text-decoration-thickness:1px;text-decoration-color:var(--line-strong);text-underline-offset:3px}
