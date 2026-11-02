@@ -171,5 +171,13 @@ export async function smimeCist(url, { stahni, ua, mezipamet }) {
       : (v.pravidlo ? `${v.pravidlo.typ === 'zakaz' ? 'Disallow' : 'Allow'}: ${v.pravidlo.cesta}`
         : 'robots.txt tuhle cestu neřeší'),
     delay: v.delay,
+    /* PŘI ZÁKAZU SE VRACÍ I CELÝ TEXT robots.txt. Jednovětný souhrn
+       („Disallow: /") stačí na rozhodnutí „nestáhnout", ale NESTAČÍ na
+       rozhodnutí „odpojit zdroj, odkud bereme čtyři pětiny nabídek".
+       Z tohohle stroje se na cizi weby nedostaneme, takže kdo bude
+       rozhodovat, musí to mít v nálezu — jinak rozhoduje podle mé
+       přečtení, ne podle toho, co ten web napsal. Strop 2 000 znaků,
+       ať nález nenaroste o celé robots.txt deseti webů. */
+    text: v.dovoleno ? undefined : String(zapis.text || '').slice(0, 2000),
   };
 }

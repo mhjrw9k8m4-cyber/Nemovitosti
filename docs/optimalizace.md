@@ -20962,3 +20962,82 @@ se otevře každému štítku → 1. A jedna z těch kontrol opravila MĚ:
 napsal jsem si, že podržená nabídka dostane `drzeno_od` podle svého
 dne vzniku — správně dostane dnešek, jinak by se týdny starý inzerát
 pustil hned.
+
+## 339. Opravená sonda: Bezrealitky nám čtení zakazují
+
+**Druhý běh, tentokrát s opraveným čtením (§337).** Změřeno 2. 11. 2026
+v Actions, 16 cílů:
+
+| | |
+|---|---|
+| dostupné | **14** |
+| zakázané | **2** |
+| robots neznámý | 0 |
+| bez odpovědi | 0 |
+
+A tenhle výsledek má úplně jiný tvar než ten první: důvody jsou různé
+(„web robots.txt nemá", „Allow: /", „robots.txt tuhle cestu neřeší"),
+ne dvanáctkrát stejná věta. Právě to je rozdíl mezi měřením a vadou —
+a nová pojistka `vzorecNasiVady` tenhle nález propustila, kdežto ten
+první by dnes zastavila.
+
+**Ty dva zákazy jsou ale ta nejdůležitější věc dneška.**
+
+```
+Bezrealitky        api.bezrealitky.cz/graphql/   Disallow: /
+Sreality (Apify)   sreality.cz                   Disallow: /
+```
+
+Čísla, o která jde (z téhož nálezu, 2 004 nabídek na webu):
+
+| zdroj | nabídek | |
+|---|---:|---|
+| **Bezrealitky** | **1 628** | **81 %** |
+| SPÚ | 282 | 14 % |
+| OK dražby | 71 | 4 % |
+| Dražby | 14 | 1 % |
+| Farmy | 9 | 0 % |
+| Sreality (Apify) | **0** | běží jen s klíčem, který nemáme |
+
+Takže: **zdroj, který nese čtyři pětiny obsahu webu, má na adrese,
+kterou voláme, `Disallow: /`.** Bez něj zbude 376 nabídek z 2 004,
+tedy 19 %. U Sreality je to dnes bezpředmětné — ten zdroj nedodává nic,
+protože `APIFY_TOKEN` v repozitáři není; měřit ho ale smysl má, aby se
+nezapnul, než se ta otázka vyřeší.
+
+**Co tenhle nález NEŘÍKÁ, a to je poctivé přiznat.** robots.txt mluví
+o automatickém procházení. Náš stahovač posílá dotaz na GraphQL rozhraní,
+které používá i jejich vlastní web — jestli to jejich podmínky dovolují,
+nebo zakazují, robots.txt neříká a z tohohle stroje se to nezjistí.
+Měřitelný signál je jeden, a ten zní „Disallow: /".
+
+**Proto se do nálezu zapisuje CELÝ text robots.txt** (jen u zapojených
+zdrojů a jen při zákazu, strop 2 000 znaků) a diagnostika ho vypíše pod
+červeným řádkem. Odpojit zdroj je rozhodnutí o obsahu celého webu a nemá
+se dělat podle jedné větičky v souhrnu — ani podle mého přečtení té
+větičky.
+
+**ROZHODNUTÍ JE NA MAJITELI, ne na mně.** Co dělat nebudu: obcházet
+zákaz, střídat hlavičky, předstírat prohlížeč ani „to přehlédnout".
+Co dělat nebudu bez jeho pokynu: utrhnout ten stahovač a shodit web
+z 2 004 nabídek na 376. Cesty, které vidím:
+
+1. **Napsat Bezrealitkám** a požádat o souhlas nebo o datový výstup.
+   Je to jediná cesta, po které web zůstane celý a zákaz se neporuší.
+2. **Odpojit** a jet na 376 nabídkách, dokud nepřijdou jiné zdroje.
+3. **Nechat být** a vědomě číst zdroj, který to na té adrese zakazuje.
+
+Moje doporučení je 1, a mezitím nestavět na tom zdroji nic nového.
+
+**A co nález říká o nových zdrojích.** Ze čtrnácti dostupných jsou
+„slibné" a nezapojené čtyři: `drazby.policenm.cz`, `drazbynaxos.cz`,
+`elektronickedrazby.cz`, `verejnedrazby.cz`. Všechny čtyři jsou
+**dražby** — a obecná cesta dražby schválně nebere (§334: bez termínu
+a bez rozlišení nucené dražby je to nabídka, kterou web neumí správně
+popsat). Kandidáti typu PRODEJ vyšli dva a oba slabě: ÚZSVM „slabé",
+Lesy ČR „nic nenasvědčuje".
+
+Registr obecných zdrojů tedy **zůstává prázdný — ale teď už ze
+změřeného důvodu**, ne proto, že se neměřilo. A je z toho vidět, co
+dál: u ÚZSVM a eDesky se sonda ptala na úvodní stránku, ne na výpis.
+To je příští krok, ne nový zdroj naslepo.

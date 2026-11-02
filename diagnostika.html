@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-Q4n4iit1fk7drUvDJILjIry1Pn71iZHwIlH/7KVQEXg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-BZAn2QDaidziTcvaCsBK0d96o9foB3XuK4+QgC9hGJs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -65,6 +65,10 @@
     .note.verze{margin:-12px 0 20px}
     pre{background:#12241A;color:#EEF6F1;border-radius:14px;padding:12px;overflow:auto;
       font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.5;max-height:340px}
+    /* Celý robots.txt zakazujícího zdroje. Je to doklad k rozhodnutí
+       (viz §339), ne čtení — proto drobnější a s vlastním stropem
+       výšky, ať nepřebije všechno ostatní na stránce. */
+    .dg-robots{font-size:12px;line-height:1.5;max-height:220px;margin:8px 0 0}
     a{color:#0F5C3B}
   </style>
 </head>
@@ -334,9 +338,16 @@
         + ((s_.nezjisteno || 0) + ' s neznámým robots.txt, ') + s_.neodpovida + ' bez odpovědi.');
       var zakaz = N.zdroje.filter(function (x) { return x.verdikt === 'zakázané' && x.stav === 'zapojeno'; });
       if (zakaz.length) {
+        /* A CELÝ TEXT robots.txt, ne jen to jedno pravidlo. Odpojit zdroj
+           je rozhodnutí o obsahu webu — u Bezrealitek jde o čtyři pětiny
+           nabídek — a nemá se dělat podle jedné věty v souhrnu. */
         radek(box, 'bad', 'Zapojený zdroj nás už nechce',
           zakaz.map(function (x) { return x.jmeno + ' (' + (x.robotsDuvod || '') + ')'; }).join(', ')
-            + ' — takový zdroj se musí ze stahování odebrat.');
+            + ' — takový zdroj se musí ze stahování odebrat.'
+            + zakaz.filter(function (x) { return x.robotsText; }).map(function (x) {
+              return '<br><b>' + x.jmeno + '</b> — jeho robots.txt:<pre class="dg-robots">'
+                + String(x.robotsText).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>';
+            }).join(''));
       }
       /* „NEVÍME" NENÍ „NECHCE NÁS". Rozděleno po tom, co první běh sondy
          ohlásil pět zapojených zdrojů jako zakazující čtení — a byla to

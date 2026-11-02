@@ -100,6 +100,11 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
   if (r.delay != null) zapis.crawlDelay = r.delay;
   if (!r.dovoleno) {
     zapis.verdikt = r.nejdePrecist ? 'robots neznámý' : 'zakázané';
+    /* U ZAPOJENÝCH zdrojů se do nálezu připojí celý text robots.txt.
+       Důvod je v robots.mjs: odpojit zdroj je rozhodnutí, které se nemá
+       dělat podle jedné věty. U kandidátů to netreba — tam je zákaz
+       prostě „tím se nezabýváme". */
+    if (cil.stav === 'zapojeno' && r.text) zapis.robotsText = r.text;
     return zapis;
   }
   if (r.delay) await spi(Math.min(r.delay, 30) * 1000);

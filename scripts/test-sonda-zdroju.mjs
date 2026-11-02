@@ -205,6 +205,48 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     `volání na ${i}, zápis na ${j}`);
 }
 
+/* ---- 2d) PŘI ZÁKAZU SE ZAPÍŠE CELÝ robots.txt ------------------- */
+/* Jednovětný souhrn („Disallow: /") stačí na rozhodnutí „nestáhnout",
+   ale ne na rozhodnutí „odpojit zdroj, odkud bereme čtyři pětiny
+   nabídek". Z tohohle stroje se na cizí weby nedostaneme, takže kdo
+   bude rozhodovat, to musí mít v nálezu — jinak rozhoduje podle mého
+   přečtení, ne podle toho, co ten web napsal. */
+{
+  const TEXT = 'User-agent: *\nDisallow: /\n# tohle je celý ten soubor\n';
+  const stahni = async (u) => (/robots\.txt$/.test(u)
+    ? { ok: true, status: 200, text: async () => TEXT }
+    : { ok: true, status: 200, text: async () => 'pozemek' });
+  const v = await R.smimeCist('https://zakaz.test/a', { stahni, ua: UA, mezipamet: new Map() });
+  pravda('zakázaná adresa vrátí i celý text robots.txt',
+    v.dovoleno === false && v.text === TEXT, JSON.stringify(v));
+  const vOk = await R.smimeCist('https://ok.test/a', {
+    stahni: async (u) => (/robots\.txt$/.test(u)
+      ? { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /\n' }
+      : { ok: true, status: 200, text: async () => 'pozemek' }),
+    ua: UA, mezipamet: new Map() });
+  pravda('u povolené adresy se text nepřipojuje (nález by zbytečně rostl)',
+    vOk.dovoleno === true && vOk.text === undefined, JSON.stringify(vOk));
+  /* Do nálezu jde jen u ZAPOJENÝCH zdrojů: tam se o odpojení rozhoduje. */
+  const zZapojeny = await S.sondujZdroj(
+    { jmeno: 'Zapojený', host: 'zakaz.test', url: 'https://zakaz.test/a', typ: 'sale', stav: 'zapojeno' },
+    { stahni, ua: UA, mezipamet: new Map() });
+  pravda('u zapojeného zdroje je text robots.txt v nálezu',
+    zZapojeny.robotsText === TEXT, JSON.stringify(zZapojeny.robotsText));
+  const zKandidat = await S.sondujZdroj(
+    { jmeno: 'Kandidát', host: 'zakaz.test', url: 'https://zakaz.test/a', typ: 'sale', stav: 'kandidát' },
+    { stahni, ua: UA, mezipamet: new Map() });
+  pravda('u kandidáta ne — tam zákaz znamená prostě „tím se nezabýváme"',
+    zKandidat.robotsText === undefined && zKandidat.verdikt === 'zakázané',
+    JSON.stringify(zKandidat));
+  /* A strop, ať nález nenaroste o celé robots.txt deseti webů. */
+  const dlouhy = 'User-agent: *\nDisallow: /\n' + 'x'.repeat(5000);
+  const vD = await R.smimeCist('https://dlouhy.test/a', {
+    stahni: async (u) => ({ ok: true, status: 200, text: async () => (/robots\.txt$/.test(u) ? dlouhy : 'x') }),
+    ua: UA, mezipamet: new Map() });
+  pravda('text robots.txt má strop 2 000 znaků',
+    vD.text && vD.text.length === 2000, String(vD.text && vD.text.length));
+}
+
 /* ---- 3) ZAKÁZANOU STRÁNKU SONDA NESTÁHNE ------------------------- */
 {
   const volane = [];
