@@ -1,0 +1,48 @@
+name: Sonda podmínek
+
+# Zjišťuje, co o automatickém přístupu říkají PODMÍNKY zdroje, u kterého
+# „Sonda zdrojů" naměřila zákaz v robots.txt. Důvod je v docs/optimalizace.md
+# §339: robots.txt mluví o automatickém procházení, kdežto náš stahovač
+# posílá dotaz na rozhraní — a jestli to podmínky dovolují, robots.txt
+# neříká. Majitel rozhodl: nejdřív zjistit podmínky.
+#
+# ČTENÍ PODMÍNEK SE SAMO ŘÍDÍ robots.txt a žádnou výjimku nemá. Když web
+# čtení té cesty zakazuje, nestahuje se a do nálezu se napíše, že to nešlo.
+# Pak ty podmínky musí otevřít člověk v prohlížeči — a je to tak správně.
+#
+# JEN NA VYŽÁDÁNÍ. Není to měření pro web, je to podklad k jednomu
+# rozhodnutí. Žádný rozvrh, nejvýš pět dotazů na zdroj, pauza mezi nimi.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  podminky:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Přečíst podmínky
+        run: node scripts/sonda-podminky.mjs
+
+      - name: Commit nálezu (jen pokud se něco změnilo)
+        run: |
+          git add data/zdroje-podminky.json
+          if [[ -n "$(git status --porcelain -- data/zdroje-podminky.json)" ]]; then
+            git config user.name "parcelka-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "data: nález sondy podmínek"
+            git push
+          else
+            echo "Beze změny."
+          fi

@@ -21041,3 +21041,53 @@ Registr obecných zdrojů tedy **zůstává prázdný — ale teď už ze
 změřeného důvodu**, ne proto, že se neměřilo. A je z toho vidět, co
 dál: u ÚZSVM a eDesky se sonda ptala na úvodní stránku, ne na výpis.
 To je příští krok, ne nový zdroj naslepo.
+
+## 340. Co o automatickém přístupu říkají jejich podmínky (měřením)
+
+**Majitelovo rozhodnutí k §339.** Na otázku, co s Bezrealitkami, zněla
+odpověď: **nejdřív zjistit podmínky.** Nic nemazat, nic nepřidávat.
+
+Takže ne můj odhad, ale měření: `scripts/sonda-podminky.mjs` najde na
+webu zdroje odkazy na podmínky, stáhne je a vypíše **odstavce, které
+mluví o automatickém přístupu** — robotech, crawlerech, skriptech,
+rozhraní (API), kopírování a hromadném získávání dat. Zbytek podmínek
+(platby, reklamace, doručování) do nálezu nepatří, jen by ho zahltil.
+
+| krok | jak |
+|---|---|
+| koho měřit | zdroje, u kterých **sonda naměřila zákaz** a jsou zapojené — ne seznam v kódu |
+| kde hledat | domovská stránka → odkazy, jejichž text nebo adresa mluví o podmínkách |
+| co vzít | nejvýš 4 stránky na zdroj, jen z **téhož** webu |
+| co vypsat | odstavce se slovy o automatu, strop 600 znaků, 12 na stránku |
+| kam | `data/zdroje-podminky.json`, úloha **jen na vyžádání** |
+
+**ČTENÍ PODMÍNEK SE SAMO ŘÍDÍ robots.txt a výjimku nemá.** Je to
+obyčejné stahování cizí stránky. Když web čtení té cesty zakazuje,
+nestahuje se a do nálezu se napíše, že to nešlo — pak ty podmínky musí
+otevřít člověk v prohlížeči. Jinak by vznikla absurdita: zákaz
+zjišťujeme tím, že ho porušíme. Hlídá se to dvakrát: zákaz na domovské
+stránce i zákaz jen na té podstránce s podmínkami.
+
+**Dvě vady v tom novém kódu našla zkouška, ne já.**
+
+1. **Odstavce se sekaly na každém zalomení ve zdroji.** Jeden bod
+   podmínek rozlámaný v HTML na tři řádky vyšel jako tři úryvky — a
+   podle půlvět se rozhodnout nedá. Hranice odstavce se teď bere ze
+   **značek** (`</p>`, `</li>`, `<br>`, nadpisy), a zalomení ze zdroje
+   se slijí na mezeru **dřív**, než se značky na hranice převedou. Na
+   tom pořadí to stálo: nejdřív jsem to měl obráceně a nepomohlo to.
+2. **Kontrola „skript nemá zadrátovaný seznam webů" padala na mém
+   vlastním komentáři**, který vysvětluje, proč skript vznikl — a tam
+   ta jména patří. Nepatří do rozhodování, takže se hledá v kódu bez
+   komentářů.
+
+**Prokázáno sabotáží:** čtení podmínek obejde robots.txt → 3 pády;
+bere se celý web místo pasáží o automatu → 5; bere se i cizí web → 2;
+cíle se zadrátují místo měření → 4; hranice odstavce zpátky na zalomení
+ze zdroje → 3. A podle pravidla z §337 jedna kontrola běží **naostro**
+proti serveru na `127.0.0.1`, bez jakéhokoli podstrčení.
+`test-sonda-podminky`: 28 kontrol.
+
+**Co se tím NEZMĚNILO, a to je podstatné:** ani jeden stahovač,
+ani jeden řádek v registru zdrojů, ani jedna nabídka na webu. Tohle je
+podklad k rozhodnutí, ne rozhodnutí.
