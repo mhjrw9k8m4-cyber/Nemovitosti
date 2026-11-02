@@ -19465,3 +19465,70 @@ Přeskočená kontrola je zelená zkouška, která neměří nic. Teď se klepnu
 zkouší vždy a neúspěch je chyba; k porovnání obou oken přibyla pojistka
 proti „oba prázdné" (shoda dvou prázdných seznamů by jinak prošla,
 i kdyby se neotevřelo vůbec nic).
+
+## §313 — „Ve vašem okolí přibyly 3 pozemky": kdo si o to řekl?
+
+Majitel: *„web mi píše ‚ve vašem okolí se objevily 3 nové pozemky', ale
+nechápu, jak se to web dozvěděl, když tam nemám nastavené hlídání ani
+nic takového. To potřebujeme opravit, ať to ukazuje jen lidem, co si
+nastaví hlídání přímo v nastavení."*
+
+Měl pravdu a příčina stála v kódu napsaná jako záměr. Do režimu okolí
+vede jediná funkce, `enterNearAt()`, a ta si místo ukládala **vždycky**:
+
+```js
+// Místo si pamatujeme vždycky — i to přibližné. Jinak by se člověk po
+// návratu na web musel ptát znovu.
+var mistoUlozeno = ulozMisto({ lat: pos.lat, lng: pos.lng, km: km, … });
+```
+
+Volá se z pěti míst: klepnutí do mapy, napsání obce, poloha z IP a dvě
+cesty z GPS. Stačilo tedy **jednou klepnout do mapy** a v prohlížeči
+vzniklo „moje místo". Hláška z něj pak na další návštěvě spočítala, co
+v okruhu přibylo, a oznámila to — jako by si člověk něco nastavil.
+Na mapě se k tomu kreslila měděná značka s popiskem „Vaše hlídané
+místo" a odznak nad výpisem měl v přístupném jménu „Zrušit hlídané
+místo". Web si tedy vymyslel hlídání ze samotného prohlížení a ještě
+tomu tak říkal na třech místech.
+
+**Co se změnilo.** Zapamatované místo zůstává — je k užitku a dá se
+zrušit křížkem —, ale přestalo se jmenovat hlídání („Vaše vybrané
+okolí", „Zrušit okolí") a **nic z něj neplyne**. Výpočet „co u mého
+místa přibylo od minulé návštěvy" šel pryč celý.
+
+Hláška se místo toho bere odtamtud, kde si ji člověk nastavil: z hlídání
+na účtu (hlidani.html → `saved_searches`). Počítá ji `PKFeed.zeHlidani`,
+tedy tentýž kód jako stránka hlídání a výpis novinek — čísla se nemohou
+rozejít. Výsledek je hláška „Hlídání: 21 nových pozemků" s tlačítkem,
+které vede na hlídání.
+
+**Co to stojí, naměřeno ve třech stavech:**
+
+| stav | dotaz na hlídání | modul (5,5 kB) | hláška |
+|---|---|---|---|
+| odhlášený | 0 | 0 | žádná |
+| přihlášený bez hlídání | 1 | 0 | žádná |
+| přihlášený s hlídáním | 1 | 1 | „Hlídání: 21 nových pozemků" |
+
+Odhlášenému se tedy **nevolá nikam**: hlídání leží na účtu, takže kdo
+přihlášený není, žádné mít nemůže a nemá smysl se ptát. Modul s výpočtem
+se dotahuje až tomu, kdo hlídání opravdu má; pro ostatní je to nula
+bajtů i nula dotazů.
+
+**Co se tím ztratilo, a přiznává se to:** nepřihlášený už hlášku
+nedostane vůbec, i když si okolí vybral a vrací se. Dřív ji dostal —
+jenže právě to byla ta vada. Kdo chce být zpraven, má si hlídání
+nastavit; tím se z toho zároveň stane hlášení e-mailem, které funguje
+i bez návštěvy webu.
+
+Hlídá to `scripts/test-hlaska-hlidani.mjs` (13 kontrol) ve všech třech
+stavech, včetně toho, že se odhlášenému nikam nevolá — samotné
+„neukáže se" by splnil i kód, který se zeptá a odpověď zahodí. Na konci
+stojí kontrola měřidla: tři stavy se opravdu musely rozejít, jinak by
+zkouška mohla být zelená a neměřit nic. Prokázáno třemi sabotážemi:
+vrácením hlášky všem (3 ✕, přesně ta opravená vada), dotažením modulu
+i bez hlídání (1 ✕) a úplným umlčením hlášky (6 ✕).
+
+Jedna vada byla i v hlídači samotném: čekal na prvek `.toast`, který na
+stránce leží od začátku prázdný, takže se `waitForSelector` vracel hned
+a ve všech třech stavech se naměřilo prázdno. Teď se čeká na text.

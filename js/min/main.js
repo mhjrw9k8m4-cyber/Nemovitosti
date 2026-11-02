@@ -1124,14 +1124,6 @@
     return (window.PKOkruh && window.PKOkruh.km) ? window.PKOkruh.km(a, d) : Infinity;
   }
 
-  function novinkyUMista() {
-    if (!mojeMisto) return null;
-    var okruh = mojeMisto.km || 10;
-    var nove = DATA.filter(function (d) { return jeNovy(d) && kmOd(mojeMisto, d) <= okruh; });
-    var vse = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= okruh; });
-    return { nove: nove.length, celkem: vse.length, okruh: okruh, nazev: mojeMisto.nazev || 'vašeho místa' };
-  }
-
   var SKRYTE_KLIC = 'pk_skryte_v1';
 
   var FILTR_KLIC = 'pk_filtr_v1';
@@ -2470,7 +2462,7 @@
       if (odznak) { try { odznak.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
     }, 420);
 
-    if (!mistoUlozeno) { hlasNeulozeneMisto('Hlídané místo'); return; }
+    if (!mistoUlozeno) { hlasNeulozeneMisto('Vybrané okolí'); return; }
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
       ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
@@ -5515,7 +5507,7 @@
     var html = '';
 
     if (okoliOdznak) {
-      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit hlídané místo: ' +
+      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit okolí: ' +
         esc(okoliOdznak) + '">' + esc(okoliOdznak) +
         '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
     }
@@ -5856,7 +5848,7 @@
       icon: L.divIcon({ className: 'pk-misto-wrap', html: '<span class="pk-misto"></span>',
         iconSize: [20, 20], iconAnchor: [10, 10] }),
       zIndexOffset: 900, interactive: false,
-      title: (mojeMisto.nazev || 'Vaše hlídané místo') + ' — okolí do ' + km + '\u00a0km'
+      title: (mojeMisto.nazev || 'Vaše vybrané okolí') + ' — okolí do ' + km + '\u00a0km'
     }).addTo(map);
   }
 
@@ -5873,15 +5865,25 @@
     vypniOkoli();
   }
 
-  function novinkyHlaska() {
-    var n = novinkyUMista();
-    if (!n || !n.nove || okoliAktivni()) return;
-    showToast('Ve vašem okolí ' + (n.nove === 1 ? 'přibyl 1 pozemek'
-      : (n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků'))
-      + ' od minule.', { text: 'Ukázat', fn: function () {
-        if (!mojeMisto) return;
-        enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev, 'seznam');
-      } });
+  function hlidaniHlaska() {
+    if (!jePrihlasen() || !window.PKAuth || !PKAuth.rpc) return;
+    PKAuth.rpc('my_searches', {}).then(function (res) {
+      var hledani = (res && res.ok && Array.isArray(res.data)) ? res.data : [];
+      if (!hledani.length) return null;
+      return dotahniModul('nove-pozemky', 'PKFeed').then(function () {
+        var F = window.PKFeed;
+        if (!F || !F.zeHlidani || !F.mnozne) return;
+        var celkem = 0;
+        F.zeHlidani(hledani, DATA).forEach(function (h) {
+          if (h.nove) celkem += h.pocet || 0;
+        });
+        if (!celkem) return;
+
+        showToast('Hlídání: ' + celkem + '\u00a0'
+          + F.mnozne(celkem, ['nový pozemek', 'nové pozemky', 'nových pozemků']),
+          { text: 'Ukázat', fn: function () { location.href = 'hlidani.html'; } });
+      });
+    }).catch(function () {});
   }
   vykresliMistoNaMape();
 
@@ -5894,7 +5896,7 @@
     renderDeals();
     renderUserListings();
 
-    novinkyHlaska();
+    hlidaniHlaska();
   }));
 
   var navratZPozemku = null;

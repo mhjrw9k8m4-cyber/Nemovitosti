@@ -1955,14 +1955,6 @@
   function kmOd(a, d) {
     return (window.PKOkruh && window.PKOkruh.km) ? window.PKOkruh.km(a, d) : Infinity;
   }
-  /* Co u mého místa přibylo od minulé návštěvy. */
-  function novinkyUMista() {
-    if (!mojeMisto) return null;
-    var okruh = mojeMisto.km || 10;
-    var nove = DATA.filter(function (d) { return jeNovy(d) && kmOd(mojeMisto, d) <= okruh; });
-    var vse = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= okruh; });
-    return { nove: nove.length, celkem: vse.length, okruh: okruh, nazev: mojeMisto.nazev || 'vašeho místa' };
-  }
 
   /* Skryté pozemky — „tenhle mě nezajímá". Kdo prochází dvě stě nabídek,
    * potřebuje odškrtávat, co už viděl. */
@@ -4217,7 +4209,7 @@
        nemá smysl hlásit počet pozemků v okolí: na tom se nic nezmění,
        zato o tom, že okolí nepřežije zavření karty, by se nikdo nedověděl.
        Hlášky se v témže místě překrývají — tahle tedy musí být poslední. */
-    if (!mistoUlozeno) { hlasNeulozeneMisto('Hlídané místo'); return; }
+    if (!mistoUlozeno) { hlasNeulozeneMisto('Vybrané okolí'); return; }
     var kolik = DATA.filter(function (d) { return kmOd(mojeMisto, d) <= km; }).length;
     showToast(kolik
       ? ('V okolí do ' + km + ' km ' + (kolik === 1 ? 'je 1 pozemek' : (kolik >= 2 && kolik <= 4 ? 'jsou ' + kolik + ' pozemky' : 'je ' + kolik + ' pozemků')) + '.')
@@ -8903,7 +8895,7 @@
        tenhle pruh (na mapě ve výběru místa), takže je zároveň jediná
        stopa po tom, že je vůbec zapnutý. */
     if (okoliOdznak) {
-      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit hlídané místo: ' +
+      html += '<button type="button" class="msch" data-okoli="1" aria-label="Zrušit okolí: ' +
         esc(okoliOdznak) + '">' + esc(okoliOdznak) +
         '<span class="msch-x" aria-hidden="true"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zavrit"/></svg></span></button>';
     }
@@ -9362,7 +9354,8 @@
    *   Ukázat jen okolí → tlačítko „Pozemky v okolí"
    *   Změnit místo     → totéž tlačítko (výběr se otevře na uloženém místě)
    *   Zrušit místo     → křížek na odznaku
-   *   „od minule přibylo" → hláška s tlačítkem „Ukázat", viz novinkyHlaska()
+   *   „od minule přibylo" → zrušeno; co přibylo, hlásí jen hlídání
+   *                        (viz hlidaniHlaska() — a proč, stojí tam)
    */
   /* OKRUH Z VĚTY NA MAPĚ. Bez tohohle by se stalo přesně to, co se
      u hlídaného místa už jednou stalo: text nad výpisem by řekl „do 30 km
@@ -9406,7 +9399,7 @@
       icon: L.divIcon({ className: 'pk-misto-wrap', html: '<span class="pk-misto"></span>',
         iconSize: [20, 20], iconAnchor: [10, 10] }),
       zIndexOffset: 900, interactive: false,
-      title: (mojeMisto.nazev || 'Vaše hlídané místo') + ' — okolí do ' + km + '\u00a0km'
+      title: (mojeMisto.nazev || 'Vaše vybrané okolí') + ' — okolí do ' + km + '\u00a0km'
     }).addTo(map);
   }
 
@@ -9435,20 +9428,46 @@
     vypniOkoli();
   }
 
-  /* CO OD MINULE PŘIBYLO: HLÁŠKA, NE TABULE.
-     Tohle je celý smysl uloženého místa — jinak by si ho nikdo
-     neukládal. Tabule ho nesla pořád, i když nepřibylo nic (naměřeno:
-     „Ve vašem okolí od minule nic nového" na 236 px). Hláška se ozve
-     jen tehdy, když je co říct, a vede rovnou k tomu, co přibylo. */
-  function novinkyHlaska() {
-    var n = novinkyUMista();
-    if (!n || !n.nove || okoliAktivni()) return;
-    showToast('Ve vašem okolí ' + (n.nove === 1 ? 'přibyl 1 pozemek'
-      : (n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků'))
-      + ' od minule.', { text: 'Ukázat', fn: function () {
-        if (!mojeMisto) return;
-        enterNearAt({ lat: mojeMisto.lat, lng: mojeMisto.lng }, !!mojeMisto.pribl, mojeMisto.nazev, 'seznam');
-      } });
+  /* CO PŘIBYLO — A JEN TOMU, KDO SI O TO ŘEKL.
+     Tady stála hláška „Ve vašem okolí přibyly 3 pozemky od minule",
+     postavená na zapamatovaném místě. To si ale web ukládal SÁM při
+     každém vstupu do okolí: stačilo jednou klepnout do mapy nebo se
+     nechat najít podle IP, a na další návštěvě se web ozval s hláškou,
+     o kterou nikdo nestál. Majitel 2. 11.: „nechápu, jak se to web
+     dozvěděl, když tam nemám nastavené hlídání ani nic takového."
+     Měl pravdu a nebyla to drobnost: web mluvil, jako by si člověk
+     něco nastavil, i když jen prošel mapou.
+
+     Teď se hláška bere JEN z hlídání, tedy odtamtud, kde si ji člověk
+     opravdu nastavil (hlidani.html, tabulka saved_searches). Co je
+     v hlídání nové, počítá tentýž kód jako stránka hlídání i výpis
+     novinek — PKFeed.zeHlidani —, takže se čísla nemohou rozejít.
+
+     NEPŘIHLÁŠENÉMU SE NEVOLÁ NIKAM. Hlídání leží na účtu; kdo
+     přihlášený není, žádné mít nemůže, takže se po něm ani neptáme.
+     A modul s výpočtem se dotahuje až tehdy, když nějaké hlídání
+     opravdu je — pro ostatní je to nula bajtů i nula dotazů. */
+  function hlidaniHlaska() {
+    if (!jePrihlasen() || !window.PKAuth || !PKAuth.rpc) return;
+    PKAuth.rpc('my_searches', {}).then(function (res) {
+      var hledani = (res && res.ok && Array.isArray(res.data)) ? res.data : [];
+      if (!hledani.length) return null;
+      return dotahniModul('nove-pozemky', 'PKFeed').then(function () {
+        var F = window.PKFeed;
+        if (!F || !F.zeHlidani || !F.mnozne) return;
+        var celkem = 0;
+        F.zeHlidani(hledani, DATA).forEach(function (h) {
+          if (h.nove) celkem += h.pocet || 0;
+        });
+        if (!celkem) return;
+        /* Bez slovesa schválně: „je/jsou" se podle počtu mění taky
+           a dvojí skloňování v jedné větě je dvojí příležitost
+           k chybě. Tvar podstatného jména dělá PKFeed.mnozne. */
+        showToast('Hlídání: ' + celkem + '\u00a0'
+          + F.mnozne(celkem, ['nový pozemek', 'nové pozemky', 'nových pozemků']),
+          { text: 'Ukázat', fn: function () { location.href = 'hlidani.html'; } });
+      });
+    }).catch(function () {});
   }
   vykresliMistoNaMape();
 
@@ -9475,7 +9494,7 @@
        ne okénko přes něj. A hlavně — showToast() si vezme jedno místo
        dole a hlášky se tam překrývají; tahle tedy nesmí přebít tu
        o nepovedeném uložení, která se ozývá během startu. */
-    novinkyHlaska();
+    hlidaniHlaska();
   }));
   /* Záznam o návratu z pozemku se čte JEDNOU a sáhnou si do něj oba:
      obnova výřezu mapy i obnova pozice ve stránce. Dřív si ho bral jen

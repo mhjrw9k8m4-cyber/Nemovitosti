@@ -74,16 +74,20 @@ pravda(`nikde v kódu není „n < 5 ?" (prohlédnuto ${soubory.length} souborů
        Do 29. 10. to bylo „Hotovo · 0 nabídky" v celoobrazovkovém okně
        rozsahu; okno je pryč a počet hlásí tenhle knoflík. Tvar skládá
        plPozemek(), takže se hlídá rovnou ona,
-     · hlídané místo („přibyly 0 pozemky") — hláška o novinkách
-       v okolí. Do 29. 10. to byl podnadpis tabule nad výpisem („je tu
-       0 pozemky"); tabule je pryč a počet nese hláška. Nula se tam
-       dnes nedostane (hláška se ozve, jen když opravdu něco přibylo),
-       ale tvar se hlídá dál — podmínka se může kdykoli uvolnit,
+     · hláška o hlídání („0 nové pozemky"). Tohle místo má za sebou
+       tři stěhování: do 29. 10. podnadpis tabule nad výpisem, pak
+       hláška o okolí, a od 2. 11. hláška o hlídání (viz
+       docs/optimalizace.md §313). Tvar se tu neskládá ručně, nýbrž
+       přes PKFeed.mnozne — a hlídá se právě to volání: kdo ho vymění
+       za vlastní podmínku, projde zákazem výš, ale tady spadne.
+       Nula se na obrazovku nedostane (hláška se ozve, jen když
+       opravdu něco přibylo), tvar se ale hlídá dál: podmínka se může
+       kdykoli uvolnit,
      · popisek odznaku zpráv („0 nepřečtené zprávy") — ten se počítá
        i při nule, protože se zároveň nastavuje odznaku. */
 const JMENOVITE = [
   ['js/main.js', "function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }", 'počet v patě panelu'],
-  ['js/main.js', "(n.nove >= 2 && n.nove <= 4 ? 'přibyly ' + n.nove + ' pozemky' : 'přibylo ' + n.nove + ' pozemků')", 'hlídané místo'],
+  ['js/main.js', "F.mnozne(celkem, ['nový pozemek', 'nové pozemky', 'nových pozemků'])", 'hláška o hlídání'],
   ['js/ucet-taby.js', "(n >= 2 && n <= 4 ? n + ' nepřečtené zprávy'", 'odznak zpráv'],
 ];
 for (const [rel, usek, kde] of JMENOVITE) {
