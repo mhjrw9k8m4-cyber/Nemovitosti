@@ -21119,3 +21119,30 @@ druhu, do stropu šesti stránek na zdroj.
 projde jako „nic o automatu" (1 pád); zrušení skoku dál → druhý
 dokument se nenajde (1); doklad o množství textu se přestane zapisovat
 (1). `test-sonda-podminky`: 31 kontrol, osm sabotáží celkem.
+
+**A DRUHÝ BĚH ZASE ŘEKL VÍC, NEŽ JSEM CHTĚL SLYŠET.** S dokladem
+vyšlo u Bezrealitek: stránka `/informace/smluvni-podminky` vydala
+**2 137 znaků ve 13 odstavcích** — nad prahem jedné stránky, takže se
+opravdu přečetla, a o robotech v tom textu nestálo nic. Jenže **2 137
+znaků nejsou smluvní podmínky.** Skutečné podmínky mají desetitisíce
+znaků; dva tisíce vydá rozcestník, výtah nebo stránka, jejíž text se
+vykresluje až v prohlížeči. Vydat „v jejich podmínkách o robotech nic
+není" za nález z dvou tisíc znaků by bylo totéž co §337: tvrzení
+postavené na měření, které to tvrzení neunese.
+
+Proto je v sondě **druhý, vyšší prah** (`ZNAKU_NA_PODMINKY`, 8 000).
+Pod ním verdikt nezní „nic o automatickém přístupu", ale **„přečteno
+jen N znaků — na úplné podmínky je to málo, z toho se soudit nedá"**.
+A k tomu se do nálezu sbírají **odkazy na dokumenty** (PDF, DOC), které
+na stránce jsou: nestahují se, jsou to jen vodítka, kde ten text být
+může.
+
+Celkem u téhle sondy **deset sabotáží**. Dvě z nich chytily mě:
+předloha pro „nic o automatu" měla nejdřív tři věty a pak 2 320 znaků —
+a ani jedno není soubor podmínek.
+
+**STAV K ROZHODNUTÍ, poctivě:** u Sreality se podmínky automaticky
+přečíst nedají (`Disallow: /` i na domovské stránce). U Bezrealitek se
+přečetlo málo textu, takže **otázka zůstává otevřená** — a zbývající
+cesta je, aby ty dvě stránky otevřel člověk. Sonda k tomu dodala
+adresy, na které se má podívat.

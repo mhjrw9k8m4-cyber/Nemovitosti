@@ -143,7 +143,10 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
      a právě ten rozdíl se tu měří. Padlo na tom moje první podoby
      téhle předlohy: tři věty na „nic o automatu" nestačí, protože tři
      věty neznamenají, že jsme podmínky přečetli. */
-  const DLOUHE = '<p>' + 'Platba kartou a reklamace do třiceti dnů od převzetí věci bez výhrad. '.repeat(40) + '</p>';
+  /* Musí to být dost dlouhé na ÚPLNÉ podmínky (ZNAKU_NA_PODMINKY),
+     ne jen nad prahem jedné stránky. Padlo na tom i tohle: 2 320 znaků
+     je nad prahem stránky, ale smluvní podmínky to nejsou. */
+  const DLOUHE = '<p>' + 'Platba kartou a reklamace do třiceti dnů od převzetí věci bez výhrad. '.repeat(160) + '</p>';
   const stahniNic = async (u) => {
     if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
     if (/podminky/.test(u)) return { ok: true, status: 200, text: async () => DLOUHE };
@@ -166,6 +169,25 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   };
   const zPrazdna = await P.zmerPodminky({ jmeno: 'Aplikace', host: 'a.test', domov: 'https://a.test/' },
     { stahni: stahniPrazdna, ua: UA, mezipamet: new Map() });
+  /* A TŘETÍ STAV, který přinesl druhý běh naostro: stránka se PŘEČETLA
+     a nic o robotech v ní nebylo — jenže vydala jen dva tisíce znaků,
+     což na úplné podmínky nestačí. Takový nález nesmí znít jako
+     odpověď. */
+  const stahniKratke = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/podminky/.test(u)) return { ok: true, status: 200,
+      text: async () => '<p>' + 'Služba se poskytuje podle těchto ujednání a lhůt. '.repeat(50) + '</p>'
+        + '<a href="/soubory/podminky.pdf">Podmínky v PDF</a>' };
+    return { ok: true, status: 200, text: async () => '<a href="/podminky">Podmínky</a>' };
+  };
+  const zKratke = await P.zmerPodminky({ jmeno: 'Krátké', host: 'k.test', domov: 'https://k.test/' },
+    { stahni: stahniKratke, ua: UA, mezipamet: new Map() });
+  pravda('přečtené, ale na úPLNÉ podmínky příliš krátké — to není odpověď',
+    /na úplné podmínky je to málo/.test(zKratke.verdikt)
+    && zKratke.znakuCelkem < P.ZNAKU_NA_PODMINKY, zKratke.verdikt);
+  pravda('a v nálezu je vodítko, kam se text schoval (odkaz na dokument)',
+    Array.isArray(zKratke.dokumenty) && /podminky\.pdf$/.test(zKratke.dokumenty[0] || ''),
+    JSON.stringify(zKratke.dokumenty));
   pravda('skoro prázdná stránka se NEVYDÁ za „nic o automatu"',
     /málo textu/.test(zPrazdna.verdikt) && /málo textu/.test(zPrazdna.stranky[0].stav),
     JSON.stringify({ verdikt: zPrazdna.verdikt, stav: zPrazdna.stranky[0].stav }));

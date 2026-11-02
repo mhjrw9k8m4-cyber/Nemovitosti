@@ -39,6 +39,15 @@ export const STRANEK_NA_ZDROJ = 6;     // nejvýš šest stránek podmínek
    prázdné HTML a obojí vypadá stejně. Bez tohohle prahu bych vydal
    druhý případ za první — a na tom se nedá nic rozhodnout. */
 export const ZNAKU_NA_STRANKU = 2000;
+/* A druhý, vyšší prah: kolik textu má mít ÚPLNÝ soubor podmínek.
+   PROČ: druhý běh přečetl u Bezrealitek 2 137 znaků ve 13 odstavcích,
+   tedy nad prahem výš — a v tom textu o robotech opravdu nic nestálo.
+   Jenže 2 137 znaků NEJSOU smluvní podmínky. Skutečné podmínky mají
+   desetitisíce znaků; dva tisíce vydá rozcestník, výtah nebo stránka,
+   jejíž text se vykresluje až v prohlížeči. Vydat „v jejich podmínkách
+   o robotech nic není" za nález z dvou tisíc znaků by bylo totéž co
+   §337: tvrzení postavené na měření, které tvrzení neunese. */
+export const ZNAKU_NA_PODMINKY = 8000;
 export const ODSTAVCU_NA_STRANKU = 12;
 export const DELKA_ODSTAVCE = 600;
 
@@ -200,6 +209,10 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
       znaku: text.replace(/\s/g, '').length,
       odstavcuCelkem: vsechny.length,
       odstavcu: pasaze.length, pasaze,
+      /* Odkazy na dokumenty (PDF, DOC) — vodítko, kde text je, když ho
+         na stránce není. Nestahují se. */
+      dokumenty: [...String(s.html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]
+        .map((m) => absolutni(m[1], o.url)).filter(Boolean).slice(0, 5),
     });
     /* JEDEN SKOK DÁL. Podmínky bývají rozdělené („smluvní podmínky",
        „podmínky užití", „zásady ochrany údajů") a z domovské stránky
@@ -219,9 +232,21 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
   zapis.znakuCelkem = zapis.stranky.reduce((n, s) => n + (s.znaku || 0), 0);
   zapis.verdikt = pasazi
     ? `přečteno (${pasazi} pasáží o automatickém přístupu)`
-    : (precteno ? 'přečteno, ale nic o automatickém přístupu'
+    : (precteno
+      ? (zapis.znakuCelkem >= ZNAKU_NA_PODMINKY
+        ? 'přečteno, ale nic o automatickém přístupu'
+        : `přečteno jen ${zapis.znakuCelkem} znaků — na úplné podmínky je to málo,`
+          + ' z toho se soudit nedá (text se nejspíš vykresluje až v prohlížeči'
+          + ' nebo je v odkazovaném dokumentu)')
       : (malo ? 'málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí'
         : 'žádnou stránku podmínek se nepodařilo přečíst'));
+  /* Kam se text možná schoval: odkazy na dokumenty. Nestahují se —
+     je to jen vodítko pro člověka, který to pak otevře. */
+  const dokumenty = [];
+  for (const st of zapis.stranky) {
+    for (const d of (st.dokumenty || [])) if (!dokumenty.includes(d)) dokumenty.push(d);
+  }
+  if (dokumenty.length) zapis.dokumenty = dokumenty.slice(0, 10);
   return zapis;
 }
 
