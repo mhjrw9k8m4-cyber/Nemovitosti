@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-02",
- "updated_at": "2026-11-02T21:26:26.675Z",
+ "updated_at": "2026-11-02T21:33:33.624Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -12,6 +12,17 @@
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
      "popis": "Podmínky",
      "stav": "přečteno, nic o automatu",
+     "znaku": 2137,
+     "odstavcuCelkem": 13,
+     "odstavcu": 0,
+     "pasaze": []
+    },
+    {
+     "url": "https://www.bezrealitky.cz/informace/smluvni-podminky/vyrocni-zprava-o-moderaci-obsahu",
+     "popis": "",
+     "stav": "málo textu — nedá se z toho soudit",
+     "znaku": 1285,
+     "odstavcuCelkem": 10,
      "odstavcu": 0,
      "pasaze": []
     }
@@ -22,6 +33,7 @@
      "popis": "Podmínky"
     }
    ],
+   "znakuCelkem": 3422,
    "verdikt": "přečteno, ale nic o automatickém přístupu"
   },
   {
