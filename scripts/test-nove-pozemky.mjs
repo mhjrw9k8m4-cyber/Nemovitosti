@@ -148,8 +148,30 @@ pravda('přiznání stojí NAD seznamem nově přidaných',
   'pod seznamem by si ho nikdo nepřečetl');
 
 // --- 4) Nově přidané: dny v hlavičkách skupin -----------------------
+/* POČET SKUPIN SE BERE Z DAT, NE Z PŘÁNÍ. Do 2. 11. tu stálo
+   `dny.length > 1` a padalo to na datech, ne na webu: robot ten den
+   přinesl 180 nabídek s týmž first_seen, takže se do stropu 60 řádků
+   vešel JEDEN den — a jedna skupina je v tu chvíli správná odpověď.
+   Měří se proto shoda: kolik různých dnů je mezi vypsanými nabídkami,
+   tolik musí být hlaviček. Rozbité seskupení (hlavička u každého řádku,
+   nebo žádná) tím padne pořád, zatímco obměna dat už ne. */
 const dny = [...h.matchAll(/<h3 class="okr-kraj-h">(\d+\. \d+\. \d{4})<\/h3>/g)].map((m) => m[1]);
-pravda('seznam nově přidaných je rozdělený po dnech', dny.length > 1, dny.join(' | '));
+pravda('seznam nově přidaných má hlavičky dnů', dny.length >= 1, `hlaviček: ${dny.length}`);
+{
+  const STROP_NOVYCH = 60;   // scripts/generate-region-pages.mjs
+  /* Řez se počítá TÝMŽ postupem jako v generátoru (NOV.noveNabidky nad
+     aktuálními nabídkami, okno od prvního dne evidence) — jinak by se
+     zkouška a stránka rozešly a měřilo by se něco jiného. */
+  const vypsaneNove = NOV.noveNabidky(aktualni, {
+    prvniDen: NOV.prvniDenEvidence(all),
+    dnesIso: String(data.updated || '').slice(0, 10),
+  });
+  const ocekavano = new Set(vypsaneNove.slice(0, STROP_NOVYCH).map((o) => o.first_seen)).size;
+  pravda('a je jich právě tolik, kolik je mezi nimi různých dnů',
+    dny.length === ocekavano, `hlaviček ${dny.length}, různých dnů v datech ${ocekavano}`);
+  pravda('a žádný den se v hlavičkách neopakuje',
+    new Set(dny).size === dny.length, dny.join(' | '));
+}
 const naIso = (cz) => {
   const m = /^(\d+)\. (\d+)\. (\d{4})$/.exec(cz);
   return `${m[3]}-${String(m[2]).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`;

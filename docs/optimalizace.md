@@ -20378,3 +20378,30 @@ proklikne naprázdno zpátky na mapu.
 
 Prokázáno dvěma sabotážemi: vrácením původního stavu (3 ✕, tedy přesně
 majitelův nález) a tlačítkem, které záznam nespotřebuje (1 ✕).
+
+## 330. Třetí mez, která zestárla s daty: skupiny dnů na „Nově přidané"
+
+Po sloučení s nočním robotem (2 748 souborů dat) shodila rychlá sada
+`test-nove-pozemky`: „seznam nově přidaných je rozdělený po dnech"
+proti `dny.length > 1`. **Nebyla to vada stránky.** Robot ten den
+přinesl 180 nabídek s týmž `first_seen`, a protože se vypisuje nejvýš
+60 řádků (`STROP_NOVYCH`), vešel se do nich jeden den. Jedna skupina je
+v tu chvíli správná odpověď.
+
+Je to **týž druh chyby jako §325** (míra sazby, CSP) — ruční číslo
+v hlídači, které platí jen do příští obměny dat. A je to potřetí za
+jeden den, takže si to zapisuju jako vzorec, ne jako smůlu:
+
+> Mez, která nevyplývá z dat ani z pravidla, zestárne. Hlídač má
+> porovnávat **web s jeho vlastním zdrojem**, ne s číslem, které jsem
+> viděl, když jsem ho psal.
+
+Měří se teď shoda: kolik různých `first_seen` je mezi vypsanými
+nabídkami, tolik musí být hlaviček — a žádný den se nesmí opakovat.
+Řez se počítá týmž postupem jako v generátoru (`NOV.noveNabidky` nad
+aktuálními nabídkami, okno od prvního dne evidence), jinak by se
+zkouška a stránka rozešly a měřilo by se něco jiného.
+
+Prokázáno sabotáží: hlavička u každého řádku (`if (true)` místo
+`if (o.first_seen !== poslDen)`) → **2 ✕**. Obměna dat tím projde,
+rozbité seskupení ne.
