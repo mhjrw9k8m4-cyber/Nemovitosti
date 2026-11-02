@@ -156,7 +156,30 @@ const STARE_SLOUPCE = 'Obec;Okres;Druh;Kategorie;Výměra (m²);Cena (Kč);'
     kmOd: () => 12.34,
   }).split('\r\n');
   const hlavicka = radky[0].split(';');
-  const bunky = radky[1].split(';');
+  /* ROZDĚLIT PODLE STŘEDNÍKŮ NESTAČÍ: středník uvnitř uzavřené buňky
+     (poznámka „u lesa; pozor na plot") řádek rozsekne na víc kusů a
+     od toho místa dál by se všechny sloupce četly posunuté. Dřív to
+     nevadilo, protože poznámka byla POSLEDNÍ sloupec, takže posun
+     neměl co pokazit — a kontrola si to v sobě měla zadrátované
+     (`bunky.slice(kde('Moje poznámka'))`). Jakmile za poznámku
+     přibyly další sloupce, spadla. Tenhle čtenář uvozovky umí,
+     takže se dá adresovat jménem sloupce a je jedno, kolik jich
+     a kde přibude. */
+  const rozeber = (radek) => {
+    const ven = []; let b = '', uvnitr = false;
+    for (let i = 0; i < radek.length; i++) {
+      const z = radek[i];
+      if (uvnitr) {
+        if (z === '"') { if (radek[i + 1] === '"') { b += '"'; i++; } else uvnitr = false; }
+        else b += z;
+      } else if (z === '"' && b === '') uvnitr = true;
+      else if (z === ';') { ven.push(b); b = ''; }
+      else b += z;
+    }
+    ven.push(b);
+    return ven;
+  };
+  const bunky = rozeber(radky[1]);
   const kde = (jm) => hlavicka.indexOf(jm);
 
   for (const jm of ['Zeměpisná šířka', 'Zeměpisná délka', 'Dní do dražby',
@@ -176,11 +199,17 @@ const STARE_SLOUPCE = 'Obec;Okres;Druh;Kategorie;Výměra (m²);Cena (Kč);'
     bunky[kde('Vzdálenost (km)')] === '12,3', bunky[kde('Vzdálenost (km)')]);
   pravda('uloženo se píše slovem', bunky[kde('Uloženo')] === 'ano',
     bunky[kde('Uloženo')]);
-  /* Poznámka je poslední sloupec a středník v ní rozdělí řádek na dvě
-     části — po spojení zpátky musí být vidět, že je celá v uvozovkách. */
-  pravda('poznámka se středníkem se uzavře do uvozovek',
-    bunky.slice(kde('Moje poznámka')).join(';') === '"u lesa; pozor na plot"',
-    bunky.slice(kde('Moje poznámka')).join(';'));
+  /* Středník v poznámce musí být uvnitř uzavřené buňky — jinak by se
+     od toho místa dál všechny sloupce v Excelu posunuly o jeden.
+     Čte se to čtenářem, který uvozovky umí: když buňka vyjde celá
+     a nerozdělená, uzavřená byla. A v surovém řádku se zvlášť ověří,
+     že ty uvozovky tam opravdu jsou — bez toho by kontrola prošla
+     i tehdy, kdyby je někdo přestal psát a čtenář si text slepil sám. */
+  pravda('poznámka se středníkem zůstala jednou buňkou',
+    bunky[kde('Moje poznámka')] === 'u lesa; pozor na plot',
+    JSON.stringify(bunky[kde('Moje poznámka')]));
+  pravda('a v souboru je uzavřená do uvozovek',
+    radky[1].indexOf('"u lesa; pozor na plot"') >= 0, radky[1].slice(-90));
 }
 
 /* Poznámka se píše do víceřádkového pole, takže v ní Enter být může —
@@ -271,7 +300,11 @@ const STARE_SLOUPCE = 'Obec;Okres;Druh;Kategorie;Výměra (m²);Cena (Kč);'
     area: 1000, price: 100000, extra: 'dražba 2020-01-01' });
   pravda('výměra zůstala číslem', cisla[4] === '1000', `vyšlo ${JSON.stringify(cisla[4])}`);
   pravda('cena zůstala číslem', cisla[5] === '100000', `vyšlo ${JSON.stringify(cisla[5])}`);
-  const dni = cisla[cisla.length - 4];
+  /* Podle JMÉNA sloupce, ne podle místa od konce. „cisla.length - 4"
+     platilo jen do chvíle, než za „Dní do dražby" přibyly další
+     sloupce — pak kontrola četla úplně jiné pole. */
+  const hlav = V.csv([], pomocne).trim().split(';');
+  const dni = cisla[hlav.indexOf('Dní do dražby')];
   pravda('a záporný počet dnů do dražby zůstal číslem (jde podle něj třídit)',
     /^-\d+$/.test(dni), `vyšlo ${JSON.stringify(dni)} (celý řádek: ${cisla.join(';')})`);
   /* PŘEDPOKLAD: kdyby ten sloupec nebyl záporný, kontrola výš nic

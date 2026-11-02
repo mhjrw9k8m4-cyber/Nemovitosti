@@ -19170,3 +19170,102 @@ stejně (112 / 246 / bez přetečení).
 * `test-zkousky-meri` — oba moje nové kontexty měřily okno 420 px bez
   `hasTouch`. Na úzkém okně se musí zapínat dotyk, jinak se měří něco,
   co na telefonu nikdo nevidí. Doplněno.
+
+---
+
+## §309 — „Stáhnout výběr": z dvou přepínačů pracovní nástroj
+
+Majitel: *„Stáhnout výběr by mělo být víc obsáhlé a mělo by to plnit
+nějakou lepší funkci, která bude plnější."*
+
+Okno mělo dvě otázky (co / v jakém tvaru), tabulka 19 sloupců a mezi
+klepnutím a souborem nebylo vidět nic.
+
+### Co v tabulce chybělo — zjištěno porovnáním polí v datech se sloupci
+
+| pole | v datech | bylo v tabulce |
+|---|---|---|
+| `parcel` | 100 % | **ne** |
+| `first_seen` | 100 % | **ne** |
+| `inz` | 85 % | **ne** |
+| `site` | 63 % | **ne** |
+| `vymera_podilu` | 21 % | **ne** |
+| `cast` | 5 % | **ne** |
+
+Nejhorší je **parcelní číslo**: bez něj se pozemek v katastru
+nedohledá, takže tabulka pozemků bez něj se nedá k ničemu ověřit.
+Hned za ním **sítě a cesta** — podle nich se ve výpisu filtruje
+(„Musí mít: elektřina"), ale do souboru nešly, takže si člověk
+nafiltroval pozemky se sítěmi a v tabulce už nepoznal které.
+
+Sedm sloupců tedy přibylo (19 → 26), **na konci**: pořadí prvních
+devatenácti se nemění, aby vzorce postavené na starém tvaru dál
+seděly.
+
+**Dvě z těch polí se nedala vzít tak, jak jsou:**
+* `inz` je **anonymní otisk**, ne jméno — sloupec s hodnotou „f352a7"
+  by nikomu nic neřekl. Užitečná je ta informace v počtu: jeden otisk
+  má dnes **907 nabídek z 1 918**, tedy velkoobchodník, a u jeho cen
+  se má člověk mít na pozoru. Sloupec se proto jmenuje „Nabídek od
+  téhož inzerenta" a počítá se z celých dat, ne z vyvážené části.
+* `parcel` je u 1 665 z 1 918 nabídek pomlčka. V tabulce je pomlčka
+  smetí, které musí člověk vyházet; vyváží se prázdná buňka.
+
+### Co okno umí navíc
+
+* **Náhled.** První tři řádky přesně tak, jak se zapíšou — skládá je
+  TÁŽ funkce, která pak píše soubor, takže nemůže ukázat něco jiného.
+  Hlídá to zkouška, která porovnává náhled v okně se skutečně
+  staženým souborem.
+* **Volba sloupců.** Všech 26, nebo stručných 9 (obec, část, parcela,
+  druh, výměra, cena, cena za m², termín dražby, odkaz).
+* **Kopírovat do schránky.** Na telefonu je stažené CSV skoro
+  k ničemu — iOS ho uloží do Souborů a otevřít ho není čím. Vložení
+  do Tabulek nebo Excelu funguje všude; vkládané tabulky čekají
+  **tabulátor**, ne středník, takže schránka nese TSV, ne CSV.
+* **Strop na body do navigace.** Změřeno: celý výpis je **1 918 bodů
+  a 591 kB**. To není trasa, to je databáze — navigace z toho udělá
+  slepenec špendlíků. Výchozí je prvních 100 podle řazení z výpisu;
+  kdo chce všechny, řekne si.
+* **Odhad velikosti.** Počítá se z PRŮMĚRU skutečných řádků, ne
+  z počtu sloupců. První pokus bral pevných 7,6 kB na sloupec a tisíc
+  řádků: na plné sadě vyšel (378 proti 377 kB), na stručné sekl
+  o 44 % (131 proti 235). Sloupce nejsou stejně široké — odkaz má přes
+  devadesát znaků, „Podíl" tři. Z 25 řádků je chyba 4–8 %, dál už se
+  nelepší, tak se nepočítá víc.
+
+### Tři vady, které zkoušky našly cestou
+
+**1. Okno tvrdilo „bez filtrů" nad nafiltrovaným výpisem.** Po napsání
+„Kolín" spadne výpis z 1 911 na 31 — a živá oblast hlásí jen „31
+pozemků ve výpisu", odznak žádný není a `omezeni()` popis taky ne,
+protože ten se plní jen z OVLÁDÁNÍ. Jediná stopa je text v políčku.
+Ze stejného důvodu byl prázdný i název souboru:
+`parcelka-2026-11-02.csv` bez jediné zmínky o tom, co v něm je.
+Obojí se teď bere ze tří zdrojů (ovládání, pochopené části věty,
+napsaný text) a soubor se jmenuje `parcelka-2026-11-02-kolin.csv`.
+
+**2. Sazba vkládala nezlomitelnou mezeru do názvů sloupců.** Nalezeno
+tím, že nová zkouška četla názvy ze STAŽENÉHO souboru: chyběly přesně
+tři — „Sítě a cesta", „V nabídce od", „Dní v nabídce", tedy ty
+s jednopísmennou předložkou. Krok `ocistiJs` v `minifikace.mjs` sází
+české řetězce v kopii pro prohlížeč, a tyhle řetězce nejsou věty na
+stránce, ale **obsah souboru**. Navenek to nebylo vidět vůbec:
+v hlavičce stálo „Sítě a cesta", jen s jiným znakem mezi „a"
+a „cesta" — a vyhledávací vzorec psaný proti normální mezeře vrátil
+#N/A. `js/vyvoz.js` je proto ze sazby vyjmutý (zkouška sazby to měla
+ve výjimkách už dřív, sestavení to jen nevědělo) a hlídá se obojí:
+že mezery nepřibyly, **i** že by bez té výjimky přibyly.
+
+**3. Dvě zkoušky adresovaly sloupce od konce.** `test-vyvoz` četl
+„Dní do dražby" jako `cisla.length - 4` a předpokládal, že poznámka
+je poslední sloupec. Obojí platilo jen do chvíle, než za ně něco
+přibylo. Přepsáno na adresování JMÉNEM a doplněn čtenář CSV, který
+umí uvozovky — tím je kontrola poznámky se středníkem silnější než
+předtím, ne slabší.
+
+### Prokázáno sabotáží
+
+Schránka se středníkem, chybějící sedmý sloupec, vrácení popisu filtru
+na starý zdroj, zrušení stropu bodů i vrácení `vyvoz.js` do sazby —
+každé shodí právě tu kontrolu, která o tom je.

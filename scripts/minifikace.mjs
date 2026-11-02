@@ -275,6 +275,19 @@ function jeVeta(t) {
    `.split(' ')` na literální mezeru. Nezlomitelná mezera by z „v" a
    „ve" udělala jedno slovo a našeptávač by je přestal zahazovat.
    Že výjimka není mrtvá, hlídá test-minifikace. */
+/* A CELÝ SOUBOR, KTERÝ NEMLUVÍ NA STRÁNKU. js/vyvoz.js neskládá věty
+   pro člověka na obrazovce — skládá OBSAH SOUBORU, který se stáhne
+   a otevře v Excelu. Jeho řetězce jsou názvy sloupců, a ty vypadají
+   jako česká věta („Sítě a cesta", „V nabídce od", „Dní v nabídce"),
+   takže je sazba vzala a vložila do nich nezlomitelnou mezeru.
+   Navenek to nebylo vidět vůbec: v hlavičce stálo „Sítě a cesta",
+   jen s jiným znakem mezi „a" a „cesta". Kdo si na ten sloupec
+   napsal vyhledávací vzorec, dostal #N/A a neměl šanci přijít proč.
+   Nalezeno vlastní zkouškou, která četla názvy ze staženého souboru.
+   Že ten soubor sazbu nechce, říkala už zkouška sazby (JS_VYJIMKY
+   v test-sazba.mjs) — sestavení to jen nevědělo. */
+export const BEZ_SAZBY_SOUBORY = new Set(['vyvoz.js']);
+
 export const BEZ_SAZBY = [
   'a i s se v ve na do od ze z k ke u o po pro pri za nad pod mezi kolem okoli',
 ];
@@ -348,8 +361,9 @@ function sazKus(k, predchozi, dalsi) {
   return q + telo + q;
 }
 
-export function ocistiJs(src) {
+export function ocistiJs(src, jmeno) {
   let out = '';
+  const sazet = !BEZ_SAZBY_SOUBORY.has(jmeno || '');
   const kusy = kusyJs(src);
   for (let poradi = 0; poradi < kusy.length; poradi++) {
     const k = kusy[poradi];
@@ -362,7 +376,7 @@ export function ocistiJs(src) {
       /* Konec řádku se NEMAŽE: bez něj by se další řádek slepil
          s tímhle a ASI by dopsala středník jinam. */
     } else if (k.druh === 'text' || k.druh === 'sablona') {
-      out += sazKus(k, kusy[poradi - 1], kusy[poradi + 1]);
+      out += sazet ? sazKus(k, kusy[poradi - 1], kusy[poradi + 1]) : k.text;
     } else {
       out += k.text;
     }
@@ -446,7 +460,7 @@ function minifikujJs(kontrolaJen) {
   if (!kontrolaJen) fs.mkdirSync(JS_MIN, { recursive: true });
   for (const f of zdroje) {
     const src = fs.readFileSync(path.join(KOREN, 'js', f), 'utf8');
-    const out = ocistiJs(src);
+    const out = ocistiJs(src, f);
     pred += Buffer.byteLength(src); po += Buffer.byteLength(out);
     const cil = path.join(JS_MIN, f);
     const stare = fs.existsSync(cil) ? fs.readFileSync(cil, 'utf8') : null;

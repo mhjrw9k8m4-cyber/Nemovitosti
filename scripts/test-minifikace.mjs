@@ -25,7 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
-import { ocisti, ocistiJs, BEZ_SAZBY } from './minifikace.mjs';
+import { ocisti, ocistiJs, BEZ_SAZBY, BEZ_SAZBY_SOUBORY } from './minifikace.mjs';
 import { BALIKY } from './rozdel-styly.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -282,7 +282,7 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
   for (const f of zdroje) {
     const src = fs.readFileSync(path.join(JS, f), 'utf8');
     const pred = (src.match(/\u00a0/g) || []).length;
-    const po = (ocistiJs(src).match(/\u00a0/g) || []).length;
+    const po = (ocistiJs(src, f).match(/\u00a0/g) || []).length;
     celkemPred += pred; celkemPo += po;
     if (po > pred) pribylo.push(`${f} (${pred}→${po})`);
   }
@@ -300,6 +300,32 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
     mrtve.length ? `v js/ už není: ${mrtve.map((v) => JSON.stringify(v.slice(0, 40))).join(', ')}`
       : 'seznam výjimek je prázdný — pak ho smaž, ať nelže');
 
+  /* SOUBOR VYJMUTÝ ZE SAZBY JI OPRAVDU NEDOSTANE. js/vyvoz.js
+     neskládá věty na stránku, ale obsah staženého souboru: jeho
+     řetězce jsou názvy sloupců v CSV. Sazba do nich vkládala
+     nezlomitelnou mezeru („Sítě a cesta"), takže vzorec psaný proti
+     normální mezeře v Excelu nenašel nic — a nebylo to vidět.
+     Hlídá se obojí: že se tam sazba nedostane, a že ten soubor
+     vůbec existuje a nese, kvůli čemu je ve výjimce (jinak by to
+     byla výjimka, která nic nechrání). */
+  for (const f of BEZ_SAZBY_SOUBORY) {
+    const cesta = path.join(JS, f);
+    if (!fs.existsSync(cesta)) {
+      pravda(`soubor vyjmutý ze sazby existuje (${f})`, false, 'v js/ není — výjimku smaž');
+      continue;
+    }
+    const src = fs.readFileSync(cesta, 'utf8');
+    const pred = (src.match(/\u00a0/g) || []).length;
+    const po = (ocistiJs(src, f).match(/\u00a0/g) || []).length;
+    pravda(`${f} je vyjmutý ze sazby a nezlomitelné mezery mu nepřibyly`,
+      po === pred, `${pred}→${po}`);
+    /* Bez téhle pojistky by kontrola nad souborem bez jediné věty
+       prošla sama od sebe a nic by neznamenala. */
+    const bySazba = (ocistiJs(src, 'nic.js').match(/\u00a0/g) || []).length;
+    pravda(`a bez té výjimky by mu přibyly (jinak se nic nechrání)`,
+      bySazba > pred, `se sazbou ${pred}→${bySazba}`);
+  }
+
   /* a) + c) + d) nad skutečnými soubory. */
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'pk-min-'));
   const chybejici = [], zastarale = [], nerozebrane = [], skomentarem = [];
@@ -310,7 +336,7 @@ pravda('a ušetří to aspoň 100 kB', usetreno > 100 * 1024,
     if (!fs.existsSync(cil)) { chybejici.push(f); continue; }
     const kopie = fs.readFileSync(cil, 'utf8');
     predB += Buffer.byteLength(src); poB += Buffer.byteLength(kopie);
-    if (kopie !== ocistiJs(src)) zastarale.push(f);
+    if (kopie !== ocistiJs(src, f)) zastarale.push(f);
     const t = path.join(tmp, f);
     fs.writeFileSync(t, kopie);
     try { execFileSync(process.execPath, ['--check', t], { stdio: 'pipe' }); }

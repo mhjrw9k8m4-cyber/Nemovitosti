@@ -9007,28 +9007,67 @@ body > footer{flex:none;}
 .vyv-vrstva{position:fixed; inset:0; z-index:1300; display:flex; align-items:center;
   justify-content:center; padding:16px; background:rgba(var(--text-rgb),0.5);}
 .vyv-vrstva[hidden]{display:none;}
-.vyv-okno{width:100%; max-width:420px; max-height:90vh; overflow:auto; padding:20px;
-  background:var(--plocha-plovouci); border:1px solid var(--line-strong);
+/* OKNO JE SLOUPEC, ROLUJE SE JEN TĚLO. Dřív se rolovalo celé okno
+   i s tlačítky: s náhledem a dvěma skupinami navíc by „Stáhnout"
+   zmizelo pod hranou a muselo by se k němu nejdřív dorolovat. */
+.vyv-okno{width:100%; max-width:460px; max-height:90vh; display:flex; flex-direction:column;
+  padding:20px; background:var(--plocha-plovouci); border:1px solid var(--line-strong);
   border-radius:var(--r-md); box-shadow:var(--e3);}
-.vyv-nadpis{font-size:20px; margin:0 0 12px;}
+.vyv-telo{flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;}
+.vyv-nadpis{font-size:20px; margin:0 0 12px; flex:none;}
 .vyv-skup{border:0; padding:0; margin:0 0 12px;}
 .vyv-skup legend{padding:0; margin-bottom:8px; font-size:12px; font-weight:700;
   letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek);}
-.vyv-volba{display:flex; align-items:center; gap:8px; min-height:44px; padding:0 8px;
+/* Volba je dvouřádková (popisek + vysvětlení pod ním), proto se
+   zarovnává NAHORU a výška roste odsazením, ne align-items:center —
+   s ním by u dvouřádkové volby zaškrtávátko viselo uprostřed textu. */
+.vyv-volba{display:flex; align-items:flex-start; gap:8px; min-height:44px; padding:8px;
   border:1px solid var(--line); border-radius:var(--r-sm); margin-bottom:4px; cursor:pointer;
   background:var(--plocha-karta);}
 .vyv-volba:hover{border-color:var(--znacka-svetla);}
-.vyv-volba span{flex:1 1 auto; font-size:14px;}
-.vyv-volba b{font-variant-numeric:tabular-nums; color:var(--muted); font-size:14px;}
-.vyv-volba input{width:20px; height:20px; accent-color:var(--plocha-znacka); flex:none;}
+.vyv-volba span{flex:1 1 auto; min-width:0; font-size:14px; line-height:1.4;}
+.vyv-volba b{font-variant-numeric:tabular-nums; color:var(--muted); font-size:14px; line-height:1.4;}
+.vyv-volba input{width:20px; height:20px; accent-color:var(--plocha-znacka); flex:none; margin:1px 0 0;}
+/* Vysvětlení pod popiskem. Ne title= — ten se na dotyku nezobrazí
+   vůbec a zrovna tady nese to podstatné: co je nafiltrované a kolik
+   sloupců si člověk vybírá. */
+.vyv-pod{display:block; margin-top:2px; font-size:12px; font-style:normal; line-height:1.4;
+  color:var(--muted);}
 /* Prázdná možnost se nenabízí — stáhl by se prázdný soubor. */
 .vyv-volba.nejde{opacity:0.45; cursor:default;}
+
+/* NÁHLED TABULKY. Dosud se klepalo naslepo. Tabulka se posouvá do
+   stran (sloupců je i dvacet šest) a stín za hranou to říká — třídu
+   .je-dal nasazuje rsStin() z js/main.js, stejně jako u pruhu
+   naposledy prohlédnutých. */
+.vyv-nahled-obal{margin:0 0 12px;}
+.vyv-nahled-obal[hidden]{display:none;}
+.vyv-nahled-cap{display:block; margin-bottom:8px; font-size:12px; font-weight:700;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--popisek);}
+.vyv-tab-obal{overflow-x:auto; -webkit-overflow-scrolling:touch;
+  border:1px solid var(--line); border-radius:var(--r-sm); background:var(--plocha-karta);}
+.vyv-tab{border-collapse:collapse; font-size:12px; line-height:1.4; white-space:nowrap;}
+.vyv-tab th, .vyv-tab td{padding:4px 8px; text-align:left; border-bottom:1px solid var(--line);
+  max-width:180px; overflow:hidden; text-overflow:ellipsis;}
+.vyv-tab th{font-weight:700; color:var(--popisek); background:var(--plocha-zapustena);}
+.vyv-tab td{color:var(--text); font-variant-numeric:tabular-nums;}
+.vyv-tab tr:last-child td{border-bottom:0;}
+.vyv-nahled-pod{margin:4px 0 0; font-size:12px; line-height:1.4; color:var(--muted);}
+
 .vyv-popis{margin:0 0 12px; font-size:13px; line-height:1.6; color:var(--muted);}
-.vyv-akce{display:flex; gap:8px; justify-content:flex-end;}
-.vyv-zrus, .vyv-ok{min-height:44px; padding:0 20px; border-radius:var(--r-ovladani);
+/* Tři tlačítka se na 320 px vedle sebe nevejdou, tak se zalamují —
+   a „Zrušit" drží vlevo, aby hlavní akce zůstaly spolu vpravo.
+   Lišta se nikdy neroluje pryč: roluje se jen tělo okna nad ní. */
+.vyv-akce{display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; flex:none;
+  padding-top:12px; border-top:1px solid var(--line);}
+.vyv-zrus{margin-right:auto;}
+.vyv-zrus, .vyv-kopir, .vyv-ok{min-height:44px; padding:0 16px; border-radius:var(--r-ovladani);
   font:inherit; font-size:14px; font-weight:700; cursor:pointer;}
 .vyv-zrus{border:1px solid var(--line-strong); background:none; color:var(--text);}
+.vyv-kopir{border:1px solid var(--obrys-tlacitka); background:#fff; color:var(--znacka-svetla);}
+.vyv-kopir[hidden]{display:none;}
 .vyv-ok{border:1px solid rgba(var(--znacka-hluboka-rgb),0.55); background:var(--plocha-znacka); color:#fff;}
+.vyv-zrus:disabled, .vyv-kopir:disabled, .vyv-ok:disabled{opacity:0.5; cursor:default;}
 
 /* =====================================================================
    HLÍDÁNÍ OKOLÍ VLASTNÍHO POZEMKU
@@ -9346,7 +9385,7 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
    schválně: obě tabulky se na telefonu posouvají do strany a obě to
    mají říct stejně. Naměřeno 20. 10.: .dt-tab-obal přetékal 460/348
    a nenapovídal nic. */
-.por-tab-obal.je-dal, .dt-tab-obal.je-dal{mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);
+.por-tab-obal.je-dal, .dt-tab-obal.je-dal, .vyv-tab-obal.je-dal{mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);
   -webkit-mask-image:linear-gradient(to right, #000 calc(100% - 28px), transparent);}
 .por-nej{color:var(--c-ok-ink); font-weight:700;}
 /* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré

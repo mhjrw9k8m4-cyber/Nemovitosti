@@ -40,7 +40,43 @@
     'Cena za m² (Kč)', 'Předchozí cena (Kč)', 'Změna ceny', 'Podíl', 'Termín dražby',
     'Odkaz na zdroj', 'Stránka na Parcelce',
     'Zeměpisná šířka', 'Zeměpisná délka', 'Dní do dražby', 'Vzdálenost (km)',
-    'Uloženo', 'Moje poznámka'];
+    'Uloženo', 'Moje poznámka',
+    /* SEDM PŘIBYLO 2. 11. Tabulka nenesla věci, které web sám má a sám
+       podle nich filtruje — zjištěno projitím polí ve datech proti
+       seznamu sloupců:
+         · PARCELNÍ ČÍSLO (v datech u 100 % nabídek) chybělo úplně.
+           Bez něj se pozemek v katastru nedohledá, takže tabulka
+           pozemků bez něj je k ověřování nepoužitelná. Ze všech
+           chybějících sloupců nejhorší.
+         · SÍTĚ A CESTA (63 %) — podle nich se ve výpisu filtruje
+           („Musí mít: elektřina, voda"), ale do tabulky nešly, takže
+           si člověk nafiltroval pozemky se sítěmi a v souboru už
+           nepoznal, které to jsou.
+         · V NABÍDCE OD a DNÍ V NABÍDCE (100 %) — „jak dlouho to leží"
+           je důvod, proč se o něčem dá smlouvat. Web to řadí
+           („nejnovější"), tabulka to neuměla ani ukázat.
+         · NABÍDEK OD TÉHOŽ INZERENTA (85 %) — pole `inz` je ANONYMNÍ
+           OTISK, ne jméno; sloupec s hodnotou „f352a7" by nikomu nic
+           neřekl. Užitečná je ta informace v počtu: jeden otisk má
+           dnes 907 nabídek z 1 918, tedy velkoobchodník, a u jeho cen
+           se má člověk mít na pozoru. Přesně proto to pole na webu
+           vzniklo (cenový verdikt podle něj váží referenci).
+         · VÝMĚRA PODÍLU (21 %) — u podílu se z ní počítá cena za metr,
+           ale sama v tabulce nebyla, takže to číslo nešlo ověřit.
+         · ČÁST OBCE (5 %) — u velkých obcí rozhoduje o poloze.
+       Stojí na konci schválně: pořadí prvních devatenácti se nemění,
+       aby vzorce postavené na starém tvaru dál seděly. */
+    'Parcelní číslo', 'Část obce', 'Výměra podílu (m²)', 'Sítě a cesta',
+    'Nabídek od téhož inzerenta', 'V nabídce od', 'Dní v nabídce'];
+
+  /* STRUČNÁ SADA. S dvaceti šesti sloupci se tabulka na obrazovku
+     nevejde a kdo chce jen přehled „co kde za kolik", listuje se
+     doprava přes souřadnice a poznámky. Tohle je devět sloupců
+     v pořadí, ve kterém se čtou — vlastní pořadí má proto, že
+     parcelní číslo patří k obci, a ne na dvacáté místo, kam ho
+     v plné sadě posadil slib o neměnném pořadí. */
+  var STRUCNE = ['Obec', 'Část obce', 'Parcelní číslo', 'Druh', 'Výměra (m²)',
+    'Cena (Kč)', 'Cena za m² (Kč)', 'Termín dražby', 'Odkaz na zdroj'];
 
   var KATEGORIE = { sale: 'Na prodej', drazba: 'Dražba', exekuce: 'Exekuce',
     obec: 'Obecní záměr', majitel: 'Přímo od majitele' };
@@ -99,6 +135,22 @@
     return m ? (+m[3] + '.' + (+m[2]) + '.' + m[1]) : '';
   }
 
+  /* Kolik dní nabídka leží. Datum v tabulce je text; podle počtu dní
+     se dá třídit a je to to, co kupujícího zajímá — co leží dlouho,
+     u toho se dá smlouvat. */
+  function dniOd(iso, dnes) {
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    if (!m) return '';
+    var od = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    var d = dnes || new Date();
+    var ted = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    return Math.max(0, Math.round((ted - od) / 86400000));
+  }
+  function denCesky(iso) {
+    var m = /(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    return m ? (+m[3] + '.' + (+m[2]) + '.' + m[1]) : '';
+  }
+
   /* Jeden řádek z jedné nabídky. `pomocne` nese funkce, které web už má,
      ať se tu nepočítá nic podruhé: zaMetr z js/ceny.js, klic z js/klic.js. */
   function radek(d, pomocne) {
@@ -124,17 +176,91 @@
       dniDo(d.extra),
       pomocne.kmOd ? kolikKm(pomocne.kmOd(d)) : '',
       pomocne.jeUlozeny && pomocne.jeUlozeny(d) ? 'ano' : '',
-      pomocne.poznamka ? (pomocne.poznamka(d) || '') : ''
-    ].map(pole).join(';');
+      pomocne.poznamka ? (pomocne.poznamka(d) || '') : '',
+      /* POMLČKA NENÍ ČÍSLO. Robot u nabídek bez parcelního čísla
+         ukládá „—" (dnes 1 665 z 1 918). V tabulce je to smetí, které
+         musí člověk vyházet, než podle sloupce něco udělá; prázdná
+         buňka říká totéž a dá se filtrovat. */
+      /^[\s—–-]*$/.test(String(d.parcel || '')) ? '' : d.parcel,
+      d.cast || '',
+      d.vymera_podilu > 0 ? d.vymera_podilu : '',
+      /* Názvy sítí si modul nevymýšlí — bere je z js/vybaveni.js, kde
+         jsou jednou pro celý web. Kdyby se sem opsaly, rozešly by se
+         s odznaky na kartě při první změně. Bez té funkce se vypíšou
+         holé klíče: nepěkné, ale pravdivé. */
+      (d.site && d.site.length)
+        ? d.site.map(function (k) {
+            return (pomocne.nazevSite && pomocne.nazevSite(k)) || k;
+          }).join(', ')
+        : '',
+      (pomocne.odTehozInz && d.inz) ? (pomocne.odTehozInz(d) || '') : '',
+      denCesky(d.first_seen),
+      dniOd(d.first_seen, pomocne.ted)
+    ];
   }
 
-  function csv(data, pomocne) {
-    var p = pomocne || {};
-    var radky = [SLOUPCE.map(pole).join(';')];
-    for (var i = 0; i < (data || []).length; i++) radky.push(radek(data[i], p));
+  /* Vybrané sloupce v zadaném pořadí. Jména se hledají v SLOUPCE, takže
+     překlep v sadě nevyrobí tichý prázdný sloupec, ale výjimku při
+     sestavení — a ta spadne ve zkoušce, ne u člověka v Excelu. */
+  function indexy(nazvy) {
+    return (nazvy || SLOUPCE).map(function (n) {
+      var i = SLOUPCE.indexOf(n);
+      if (i < 0) throw new Error('Neznámý sloupec: ' + n);
+      return i;
+    });
+  }
+
+  /* Tabulka jako pole polí — z ní se pak vyrobí CSV, text do schránky
+     i náhled v okně. Dřív se řádek skládal rovnou na řetězec se
+     středníky, takže náhled by musel ten řetězec zase rozebírat zpátky
+     (a rozbil by se na každé buňce, kde středník je). */
+  function matice(data, pomocne, nazvy) {
+    var p = pomocne || {}, ix = indexy(nazvy), ven = [];
+    var hlavicka = ix.map(function (i) { return SLOUPCE[i]; });
+    ven.push(hlavicka);
+    for (var i = 0; i < (data || []).length; i++) {
+      var r = radek(data[i], p);
+      ven.push(ix.map(function (j) { return r[j] == null ? '' : String(r[j]); }));
+    }
+    return ven;
+  }
+
+  function csv(data, pomocne, volby) {
+    var v = volby || {};
+    var t = matice(data, pomocne, v.sloupce);
+    var radky = t.map(function (r) { return r.map(pole).join(';'); });
     /* CRLF, protože s ním si poradí i starší Excel. BOM přidává až ten,
        kdo soubor stahuje — v textu by překážel při porovnávání. */
     return radky.join('\r\n') + '\r\n';
+  }
+
+  /* DO SCHRÁNKY, NE DO SOUBORU. Na telefonu je stažené CSV skoro
+     k ničemu: iOS ho uloží do Souborů a otevřít ho není čím. Zato
+     vložení do Tabulek Google nebo do Excelu funguje všude — a tabulky
+     vkládané ze schránky čekají TABULÁTOR, ne středník.
+     Buňky se proto nesmějí uzavírat do uvozovek jako v CSV; místo toho
+     se z nich tabulátor a konec řádku vyhazují, protože by rozbily
+     mřížku. Taky tu není BOM: schránka nese text, ne soubor. */
+  function tsv(data, pomocne, volby) {
+    var v = volby || {};
+    var t = matice(data, pomocne, v.sloupce);
+    return t.map(function (r) {
+      return r.map(function (b) {
+        var x = String(b == null ? '' : b).replace(/[\t\r\n]+/g, ' ');
+        if (VZOREC.test(x) || (x.charAt(0) === '-' && !CISLO.test(x))) x = "'" + x;
+        return x;
+      }).join('\t');
+    }).join('\n') + '\n';
+  }
+
+  /* Prvních pár řádků pro náhled v okně. Vrací hlavičku zvlášť, ať se
+     dá vysázet jako <th>. `celkem` je počet VŠECH řádků, ne jen
+     ukázaných — okno pod tabulkou píše, kolik jich ještě bude. */
+  function nahled(data, pomocne, volby) {
+    var v = volby || {};
+    var kolik = v.kolik || 3;
+    var t = matice((data || []).slice(0, kolik), pomocne, v.sloupce);
+    return { hlavicka: t[0], radky: t.slice(1), celkem: (data || []).length };
   }
 
   /* Název souboru nese datum a to, co bylo nafiltrované — ve stažených
@@ -161,9 +287,17 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
-  function gpx(data, pomocne) {
-    var p = pomocne || {};
+  /* STROP NA POČET BODŮ. Změřeno na dnešních datech: celý výpis dá
+     1 918 bodů a soubor 591 kB. To už není trasa, to je celá databáze
+     — navigace z toho udělá jeden slepenec špendlíků, ve kterém se nic
+     nenajde, a část aplikací takový soubor rovnou odmítne. Okno proto
+     nabízí, kolik jich vzít; bere se od začátku, tedy podle řazení,
+     které si člověk nastavil ve výpisu. Bez `max` se nekrátí nic —
+     modul sám nic nezakazuje, jen to umí. */
+  function gpx(data, pomocne, volby) {
+    var p = pomocne || {}, v = volby || {};
     var cas = (p.ted || new Date()).toISOString();
+    if (v.max > 0) data = (data || []).slice(0, v.max);
     var kusy = ['<?xml version="1.0" encoding="UTF-8"?>',
       '<gpx version="1.1" creator="Parcelka" xmlns="http://www.topografix.com/GPX/1/1">',
       '<metadata><name>Parcelka — vybrané pozemky</name><time>' + cas + '</time></metadata>'];
@@ -193,6 +327,7 @@
     return kusy.join('\n') + '\n';
   }
 
-  return { csv: csv, gpx: gpx, nazev: nazev, dniDo: dniDo,
-    SLOUPCE: SLOUPCE, KATEGORIE: KATEGORIE };
+  return { csv: csv, tsv: tsv, gpx: gpx, nazev: nazev, nahled: nahled,
+    matice: matice, dniDo: dniDo, dniOd: dniOd,
+    SLOUPCE: SLOUPCE, STRUCNE: STRUCNE, KATEGORIE: KATEGORIE };
 }));

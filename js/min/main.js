@@ -3320,8 +3320,48 @@
       jeUlozeny: function (d) { return isFav(d); },
 
       kmOd: (mojeMisto && typeof kmOd === 'function')
-        ? function (d) { return kmOd(mojeMisto, d); } : null
+        ? function (d) { return kmOd(mojeMisto, d); } : null,
+
+      nazevSite: (window.PKVybaveni && window.PKVybaveni.nazev)
+        ? function (k) { return window.PKVybaveni.nazev(k); } : null,
+
+      odTehozInz: (function () {
+        var p = {};
+        for (var i = 0; i < DATA.length; i++) if (DATA[i].inz) p[DATA[i].inz] = (p[DATA[i].inz] || 0) + 1;
+        return function (d) { return p[d.inz] || ''; };
+      }())
     };
+  }
+
+  function vyvozVolby() {
+    var vrstva = document.getElementById('vyv-vrstva');
+    var V = window.PKVyvoz;
+    if (!vrstva || !V) return {};
+    var zvol = function (jm) { var e = vrstva.querySelector('input[name="' + jm + '"]:checked'); return e ? e.value : ''; };
+    var ven = {};
+    if (zvol('vyv-sl') === 'strucne') ven.sloupce = V.STRUCNE;
+    if (zvol('vyv-tvar') === 'gpx' && zvol('vyv-kolik') !== 'vse') ven.max = 100;
+    return ven;
+  }
+
+  function vyvozCastiFiltru() {
+    var kusy = [];
+    try { if (mistoFiltr) kusy.push(popisMista()); } catch (e) {}
+    var casti = (dotazFiltr && dotazFiltr.casti) || [];
+    for (var i = 0; i < casti.length; i++) if (casti[i].popis) kusy.push(casti[i].popis);
+    if (!casti.length && searchEl && searchEl.value.trim()) kusy.push('„' + searchEl.value.trim() + '"');
+    try { omezeni().forEach(function (o) { if (o && o.popis) kusy.push(o.popis); }); } catch (e) {}
+    var videno = {}, ven = [];
+    for (var j = 0; j < kusy.length; j++) {
+      if (!kusy[j] || videno[kusy[j]]) continue;
+      videno[kusy[j]] = true; ven.push(kusy[j]);
+    }
+    return ven;
+  }
+  function vyvozPopisFiltru() {
+    var kusy = vyvozCastiFiltru();
+    if (!kusy.length) return 'bez filtrů — celá dnešní nabídka';
+    return kusy.slice(0, 4).join(' · ') + (kusy.length > 4 ? ' a další' : '');
   }
   function vyvozSada(co) {
     if (co === 'ulozene') return DATA.filter(function (d) { return isFav(d); });
@@ -3347,18 +3387,97 @@
     });
     var co = zvol('vyv-co'), tvar = zvol('vyv-tvar');
     var n = pocty[co] || 0;
+    var V = window.PKVyvoz;
+
+    var filtr = document.getElementById('vyv-filtr');
+    if (filtr) filtr.textContent = vyvozPopisFiltru();
+
+    var skSl = document.getElementById('vyv-skup-sloupce');
+    var skKo = document.getElementById('vyv-skup-kolik');
+    if (skSl) skSl.hidden = (tvar === 'gpx');
+    if (skKo) skKo.hidden = (tvar !== 'gpx');
+
+    var volby = vyvozVolby();
+    var pocetSl = (volby.sloupce || V.SLOUPCE).length;
+    var popisSl = function (id, kolik, text) {
+      var e = document.getElementById(id);
+      if (e) e.textContent = kolik + '\u00a0sloupců — ' + text;
+    };
+    popisSl('vyv-sl-vse', V.SLOUPCE.length, 'i souřadnice, sítě, stáří nabídky a vaše poznámka');
+    popisSl('vyv-sl-strucne', V.STRUCNE.length, 'obec, parcela, výměra, cena, odkaz');
+    var kolikVse = document.getElementById('vyv-kolik-vse');
+    if (kolikVse) kolikVse.textContent = fmt(n) + '\u00a0bodů — na tolik špendlíků se v navigaci nic nenajde';
+
+    var obal = document.getElementById('vyv-nahled-obal');
+    var tab = document.getElementById('vyv-tab');
+    var pod = document.getElementById('vyv-nahled-pod');
+    var nh = null;
+    if (obal && tab) {
+      obal.hidden = (tvar === 'gpx') || !n;
+      if (!obal.hidden) {
+        var sada = vyvozSada(co);
+
+        nh = V.nahled(sada, vyvozPomocne(), { sloupce: volby.sloupce, kolik: 25 });
+        var ukazat = nh.radky.slice(0, 3);
+        var html = '<thead><tr>';
+        nh.hlavicka.forEach(function (h) { html += '<th scope="col">' + esc(h) + '</th>'; });
+        html += '</tr></thead><tbody>';
+        ukazat.forEach(function (r) {
+          html += '<tr>';
+          r.forEach(function (b) { html += '<td>' + esc(b) + '</td>'; });
+          html += '</tr>';
+        });
+        tab.innerHTML = html + '</tbody>';
+        var zbyva = Math.max(0, nh.celkem - ukazat.length);
+        if (pod) {
+          pod.textContent = zbyva
+            ? ('a dalších ' + fmt(zbyva) + ' ' + tvarRadku(zbyva) + ' ve stejném pořadí jako ve výpisu')
+            : 'to je celá tabulka';
+        }
+
+        var tobal = document.getElementById('vyv-tab-obal');
+        if (tobal) {
+          if (!tobal.getAttribute('data-stin')) { tobal.setAttribute('data-stin', 'ano'); rsStin(tobal); }
+          else { tobal.classList.toggle('je-dal', tobal.scrollWidth - tobal.clientWidth - tobal.scrollLeft > 8); }
+        }
+      }
+    }
+
     var popis = document.getElementById('vyv-popis');
     if (popis) {
 
-      popis.textContent = tvar === 'gpx'
-        ? (fmt(n) + ' ' + tvarPozemku(n) + ' jako body do navigace (Mapy.cz, Locus, Garmin). '
-          + 'Bez souřadnic se bod uložit nedá, takže nabídky bez polohy vypadnou.')
-        : (fmt(n) + ' ' + tvarPozemku(n) + ' a ' + window.PKVyvoz.SLOUPCE.length
-          + ' sloupců — včetně souřadnic, dní do dražby a vaší poznámky. '
-          + 'Ceny jsou NABÍDKOVÉ, ne za kolik se prodalo.');
+      if (tvar === 'gpx') {
+        var bodu = volby.max ? Math.min(volby.max, n) : n;
+        popis.textContent = fmt(bodu) + ' ' + tvarBodu(bodu) + ' do navigace'
+          + (bodu < n ? ' (z ' + fmt(n) + ')' : '') + '. '
+          + 'Bez souřadnic se bod uložit nedá, takže nabídky bez polohy vypadnou.';
+      } else {
+        var vel = vyvozVelikost(nh, n);
+        popis.textContent = fmt(n) + ' ' + tvarPozemku(n) + ' a ' + pocetSl + ' sloupců'
+          + (vel ? ', asi ' + vel : '') + '. '
+          + 'Ceny jsou NABÍDKOVÉ, ne za kolik se prodalo.';
+      }
     }
     var ok = document.getElementById('vyv-ok');
     if (ok) ok.disabled = !n;
+    var kop = document.getElementById('vyv-kopir');
+
+    if (kop) { kop.hidden = (tvar === 'gpx'); kop.disabled = !n; }
+  }
+
+  function vyvozVelikost(nh, celkem) {
+    if (!nh || !nh.radky.length) return '';
+    var delka = function (pole) {
+      var t = pole.join(';') + '\r\n';
+      try { return new Blob([t]).size; } catch (e) { return t.length; }
+    };
+    var soucet = 0;
+    for (var i = 0; i < nh.radky.length; i++) soucet += delka(nh.radky[i]);
+    var bajtu = delka(nh.hlavicka) + Math.round(soucet / nh.radky.length * celkem);
+    var kb = Math.round(bajtu / 1024);
+    if (kb < 1) return 'pár set bajtů';
+    if (kb < 1024) return fmt(kb) + '\u00a0kB';
+    return (Math.round(bajtu / 104857.6) / 10).toString().replace('.', ',') + '\u00a0MB';
   }
   var vyvozPoznamkyZkusit = true;
   function stahniTabulku() {
@@ -3400,11 +3519,12 @@
     if (!sada.length) return;
     var pom = vyvozPomocne();
     var text, typ, pripona;
+    var volby = vyvozVolby();
     if (tvar === 'gpx') {
-      text = V.gpx(sada, pom); typ = 'application/gpx+xml;charset=utf-8;'; pripona = 'gpx';
+      text = V.gpx(sada, pom, volby); typ = 'application/gpx+xml;charset=utf-8;'; pripona = 'gpx';
     } else {
 
-      text = '\ufeff' + V.csv(sada, pom); typ = 'text/csv;charset=utf-8;'; pripona = 'csv';
+      text = '\ufeff' + V.csv(sada, pom, volby); typ = 'text/csv;charset=utf-8;'; pripona = 'csv';
     }
     var popis = co === 'ulozene' ? 'ulozene' : (co === 'poznamky' ? 'poznamky' : popisVyberu());
     var blob = new Blob([text], { type: typ });
@@ -3416,7 +3536,39 @@
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
     vyvozZavri();
-    showToast(fmt(sada.length) + ' ' + tvarPozemku(sada.length) + ' staženo');
+    var kolik = (tvar === 'gpx' && volby.max) ? Math.min(volby.max, sada.length) : sada.length;
+    showToast(fmt(kolik) + ' ' + tvarPozemku(kolik) + ' staženo');
+  }
+
+  function vyvozKopiruj() {
+    var V = window.PKVyvoz, vrstva = document.getElementById('vyv-vrstva');
+    if (!V || !vrstva) return;
+    var e = vrstva.querySelector('input[name="vyv-co"]:checked');
+    var sada = vyvozSada(e ? e.value : 'vypis');
+    if (!sada.length) return;
+    var text = V.tsv(sada, vyvozPomocne(), vyvozVolby());
+    var hotovo = function () {
+      vyvozZavri();
+      showToast(fmt(sada.length) + ' ' + tvarRadku(sada.length) + ' ve schránce — vložte do tabulky');
+    };
+    var nepovedlo = function () { showToast('Zkopírovat se nepodařilo — zkuste místo toho Stáhnout'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(hotovo, function () { zalozniKopie(text, hotovo, nepovedlo); });
+    } else {
+      zalozniKopie(text, hotovo, nepovedlo);
+    }
+  }
+  function zalozniKopie(text, hotovo, nepovedlo) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed; top:-9999px; left:0; opacity:0;';
+    document.body.appendChild(ta);
+    var uspech = false;
+    try { ta.select(); ta.setSelectionRange(0, text.length); uspech = document.execCommand('copy'); } catch (err) { uspech = false; }
+    document.body.removeChild(ta);
+    (uspech ? hotovo : nepovedlo)();
   }
   (function vyvozOvladani() {
     var vrstva = document.getElementById('vyv-vrstva');
@@ -3426,6 +3578,7 @@
 
     var z = document.getElementById('vyv-zrus'); if (z) z.addEventListener('click', function () { vyvozZavri(); });
     var o = document.getElementById('vyv-ok'); if (o) o.addEventListener('click', vyvozStahni);
+    var k = document.getElementById('vyv-kopir'); if (k) k.addEventListener('click', vyvozKopiruj);
 
     vrstva.addEventListener('click', function (e) { if (e.target === vrstva) vyvozZavri(); });
     document.addEventListener('keydown', function (e) {
@@ -3434,11 +3587,8 @@
   }());
 
   function popisVyberu() {
-    var kusy = [];
-    try {
-      omezeni().forEach(function (o) { if (o && o.popis) kusy.push(o.popis); });
-    } catch (e) {}
-    return kusy.slice(0, 3).join(' ');
+
+    return vyvozCastiFiltru().slice(0, 3).join(' ');
   }
 
   var vyberTvar = null;
@@ -4655,6 +4805,15 @@
   function tvarPozemku(n) {
     var F = window.PKFeed;
     return F && F.mnozne ? F.mnozne(n, ['pozemek', 'pozemky', 'pozemků']) : 'pozemků';
+  }
+
+  function tvarRadku(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['řádek', 'řádky', 'řádků']) : 'řádků';
+  }
+  function tvarBodu(n) {
+    var F = window.PKFeed;
+    return F && F.mnozne ? F.mnozne(n, ['bod', 'body', 'bodů']) : 'bodů';
   }
 
   function rvHlavicka(zmena) {
