@@ -1156,6 +1156,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-legenda-mapy.mjs
 
+      - name: Cena podle druhu (sdílená stupnice nelže)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-cena-podle-druhu.mjs
+
       - name: Tři moduly se stahují až při prvním použití
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odlozene-skripty.mjs

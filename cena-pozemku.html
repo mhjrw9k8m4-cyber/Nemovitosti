@@ -33,7 +33,7 @@
   
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=6b54a582">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=cbfa2753">
   <script type="application/ld+json">
   [{"@context":"https://schema.org","@type":"CollectionPage","name":"Ceny pozemků v ČR","inLanguage":"cs","description":"Orientační medián cen pozemků (Kč/m²) podle druhu a kraje z aktuálních nabídek.","mainEntityOfPage":"https://www.parcelaka.cz/cena-pozemku.html","publisher":{"@type":"Organization","name":"Parcelka"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pozemky","item":"https://www.parcelaka.cz/"},{"@type":"ListItem","position":2,"name":"Ceny pozemků","item":"https://www.parcelaka.cz/cena-pozemku.html"}]}]
   </script>
@@ -75,7 +75,7 @@
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
       
-      <p class="sub">Zemědělská půda u nás stojí obvykle <b>45 Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.</p>
+      <p class="sub">Podle druhu: <b>2 923 Kč/m²</b> za stavební, <b>30 Kč/m²</b> za les. Kolik ve vašem okrese, zjistíte níž.</p>
     </div>
     </div>
   </section>
@@ -85,7 +85,34 @@
 
       <div class="add-card">
         <div class="rules-sect">
-          <div data-graf-cen data-uroven="cr" data-kde="v celé ČR"></div>
+          <h2 id="drh-nadpis">Nejdřív druh, potom místo</h2>
+          <p class="rules-note">Stavební parcela vyjde na metr <b>97×</b> dráž než les. Žádná jedna „cena pozemku“ neexistuje — tohle jsou čtyři různé trhy.</p>
+          <ul class="drh-seznam" aria-labelledby="drh-nadpis">
+            <li class="drh-radek">
+              <span class="drh-jmeno">Stavební</span>
+              <b class="drh-cislo">2 923 Kč/m²</b>
+              <span class="drh-pas" aria-hidden="true"><i style="width:100.0%"></i></span>
+              <span class="drh-pasmo">polovina nabídek 1 398–5 882 · 235 nabídek</span>
+            </li>
+            <li class="drh-radek">
+              <span class="drh-jmeno">Zahrada</span>
+              <b class="drh-cislo">783 Kč/m²</b>
+              <span class="drh-pas" aria-hidden="true"><i style="width:26.8%"></i></span>
+              <span class="drh-pasmo">polovina nabídek 75–2 288 · 35 nabídek</span>
+            </li>
+            <li class="drh-radek">
+              <span class="drh-jmeno">Zemědělská půda</span>
+              <b class="drh-cislo">45 Kč/m²</b>
+              <span class="drh-pas" aria-hidden="true"><i style="width:1.5%"></i></span>
+              <span class="drh-pasmo">polovina nabídek 36–66 · 1 086 nabídek</span>
+            </li>
+            <li class="drh-radek">
+              <span class="drh-jmeno">Lesní pozemek</span>
+              <b class="drh-cislo">30 Kč/m²</b>
+              <span class="drh-pas" aria-hidden="true"><i style="width:1.0%"></i></span>
+              <span class="drh-pasmo">polovina nabídek 21–50 · 84 nabídek</span>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -219,6 +246,14 @@
         </a>
           </div>
           <p class="rules-note"><b>Jeden kraj tu není:</b> <a href="pozemky-praha-kraj.html">Praha</a>. Zemědělské půdy je v nabídce málo na to, aby z ní vyšla obvyklá cena — potřebujeme aspoň 10 nabídek, u kterých cena za metr nepřekročí 500&nbsp;Kč. Dražší pole už je fakticky stavební parcela (viz „Jak tahle čísla počítáme“ pod tabulkou), a v Praze je takových většina. Vlastní stránku ten kraj má.</p>
+        </div>
+      </div>
+
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2 id="cenc-nadpis">A hýbe se to v čase?</h2>
+          <p class="rules-note">Zatím skoro ne. Archiv sleduje nabídky od&nbsp;září&nbsp;2026, což je na závěry o trhu krátká doba — čára níž je tu proto, aby bylo vidět, že se hladina drží, ne aby se z ní četl trend.</p>
+          <div data-graf-cen data-uroven="cr" data-kde="v celé ČR"></div>
         </div>
       </div>
 

@@ -20022,3 +20022,64 @@ hromadnou náhradou přepsal `BASE` i **uvnitř jména** `PK_SUPABASE_URL`,
 čímž z něj vzniklo `PK_SUPAADRESA_URL`. Chytlo to první spuštění. Proto
 se takové náhrady dělají na celý řetězec, ne na podřetězec — a proto se
 po nich zkouška pouští, ne jen kontroluje syntaxe.
+
+## §323 — „Kolik stojí pozemek?" a odpověď, která platila pro čtvrtinu
+
+Majitel poslal snímek vršku stránky s cenami: *„potřebuju, abys tuhle
+část vylepšil, aby to bylo opravdu živé a dávalo to smysl."*
+
+**Měření našlo, že stránka ukazovala to, co se skoro nemění, a mlčela
+o tom, co rozhoduje.**
+
+| | |
+|---|---|
+| graf nad vším ostatním | orná půda v ČR, **+0,4 % za 50 dní** |
+| ze 130 sledovaných řad se nehnulo ani o 5 % | **29** |
+| skutečný rozptyl mezi druhy | **97×** |
+
+Vlastní čísla webu (tedy po všech výhradách v metodice — bez § 12,
+dražeb i exekucí):
+
+| druh | nabídek | medián | polovina nabídek |
+|---|---|---|---|
+| Stavební | 235 | **2 923 Kč/m²** | 1 398 – 5 882 |
+| Zahrada | 35 | **783** | 75 – 2 288 |
+| Zemědělská půda | 1 086 | **45** | 36 – 66 |
+| Lesní pozemek | 84 | **30** | 21 – 50 |
+
+Podnadpis přitom hlásil jediné číslo — medián zemědělské půdy. Kdo
+hledal stavební parcelu, dostal odpověď **65× vedle**. A protože nad
+grafem stálo 45 a v grafu 46,4, visel pod ním ještě odstavec, který
+vysvětloval, proč si ta čísla neodpovídají. To není graf, to je
+vysvětlivka k vlastnímu zmatku.
+
+**Co se změnilo.** Nová karta „Nejdřív druh, potom místo" jako první
+věc na stránce: čtyři druhy, medián, rozpětí čtvrtin a počet nabídek.
+Podnadpis uvádí dvě krajní ceny místo jedné. Graf **nemizí** — archiv
+roste od 14. 9. 2026 a za rok tu bude co číst —, ale stojí až za
+krajskou tabulkou a má nad sebou otázku, na kterou odpovídá („A hýbe
+se to v čase? Zatím skoro ne."). Plochá čára pak není díra, ale
+odpověď.
+
+**Proč sdílená lineární stupnice, když malé pruhy skoro nejsou vidět.**
+Protože právě to je ta informace: zemědělská půda je 1,5 % délky
+stavební. S vlastním měřítkem na řádek by vypadaly všechny stejně
+dlouhé a rozdíl, kvůli kterému karta vzniká, by zmizel. Aby se nic
+neztratilo oku, nese **každý řádek své číslo i rozpětí slovem** — pruh
+je ilustrace, ne jediný nosič.
+
+**Dvě vady, které našlo až měření v prohlížeči, ne oko.**
+1. Sloupec s číslem byl pružný (`auto`), takže dráha pruhu vyšla na
+   1 280 px u každého řádku jinak — **471, 488 a 500 px**. „Sdílená
+   stupnice", ve které delší pruh může znamenat menší číslo. Číslo má
+   teď pevných 108 px.
+2. Spodní mez 1,5 % srovnala zemědělskou půdu (1,5 %) i les (1,0 %) na
+   **stejných 5 px** — dvě různé hodnoty o téže délce. Mez je 0,6 %, na
+   kterou skutečná data nedosáhnou; zůstává jen jako pojistka.
+
+Hlídá to `scripts/test-cena-podle-druhu.mjs` (12 kontrol na dvou
+šířkách). Nejdůležitější dvě jsou právě ty dvě vady: že mají všechny
+pruhy stejnou dráhu a že **délky odpovídají poměru čísel** — bez té
+druhé by první prošla i nad čtyřmi stejně dlouhými pruhy. Prokázáno
+dvěma sabotážemi: vrácením pružného sloupce (1 ✕) a vrácením meze
+1,5 % (2 ✕).

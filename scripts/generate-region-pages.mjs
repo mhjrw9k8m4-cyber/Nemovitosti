@@ -2283,6 +2283,69 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
             <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} <b>sledovaných</b> nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
           </details>`;
 
+  /* ===== DRUH ROZHODUJE VÍC NEŽ COKOLI JINÉHO =====================
+     Stránka se ptá „Kolik stojí pozemek?" a odpovídala jedním číslem:
+     mediánem zemědělské půdy. Jenže to číslo platí pro jednu ze čtyř
+     skupin. Naměřeno 2. 11. na vlastních datech webu (tedy po všech
+     výhradách v metodice — bez § 12, dražeb a exekucí):
+
+       Stavební          2 923 Kč/m²   (235 nabídek, polovina 1 398–5 882)
+       Zahrada             783         ( 35,              75–2 288)
+       Zemědělská půda      45         (1 086,            36–66)
+       Lesní pozemek        30         ( 84,              21–50)
+
+     To je 97× rozdíl mezi prvním a posledním řádkem. Proti tomu je
+     pohyb v čase nicotný: celostátní řada orné půdy se za 50 dní
+     pohnula o 0,4 % a z 130 sledovaných řad se 29 nehnulo ani o 5 %.
+     Stránka tedy ukazovala to, co se skoro nemění, a mlčela o tom,
+     co rozhoduje.
+
+     PROČ SDÍLENÁ LINEÁRNÍ STUPNICE, KDYŽ MALÉ PRUHY SKORO NEJSOU VIDĚT.
+     Protože právě to je ta informace: zemědělská půda je 1,5 % délky
+     stavební. Kdyby měl každý řádek vlastní měřítko, vypadaly by
+     všechny stejně dlouhé a rozdíl, kvůli kterému ta karta vzniká, by
+     zmizel. Aby se přitom nic neztratilo oku, nese KAŽDÝ řádek své
+     číslo i rozpětí slovem — pruh je ilustrace, ne jediný nosič.
+     Spodní mez 1,5 % drží i nejlevnější řádek viditelný.
+
+     Rozpětí čtvrtin u sebe není ozdoba: u zemědělské půdy je úzké
+     (36–66), u zahrady širší než samo číslo (75–2 288). To čtenáři
+     říká, kterému mediánu smí věřit a kterému ne. */
+  const DRUHY_PORADI = ['Stavební', 'Zahrada', 'Zemědělská půda', 'Lesní pozemek'];
+  const druhyData = DRUHY_PORADI
+    .map((jm) => ({ jm, s: priceNational[jm] }))
+    .filter((x) => x.s && x.s.med > 0);
+  const druhyMax = druhyData.length ? Math.max(...druhyData.map((x) => x.s.med)) : 0;
+  const druhyRadky = druhyData.map((x) => {
+    /* SPODNÍ MEZ JE 0,6 %, NE 1,5 %. S 1,5 % vyšla zemědělská půda
+       (45 Kč/m², tedy 1,5 %) i les (30 Kč/m², 1,0 %) na stejných
+       5 px — dvě různé hodnoty se stejnou délkou, což je přesně ta
+       lež, kterou má stupnice vyloučit. Naměřeno na 390 i 1 280 px.
+       Na 0,6 % se skutečná data nezarovnávají vůbec (nejmenší řádek
+       je 1,0 %); mez zůstává jen jako pojistka, aby budoucí velmi
+       levný druh nezmizel úplně. */
+    const sirka = Math.max(0.6, (x.s.med / druhyMax) * 100);
+    return `            <li class="drh-radek">
+              <span class="drh-jmeno">${esc(x.jm)}</span>
+              <b class="drh-cislo">${fmt(x.s.med)} Kč/m²</b>
+              <span class="drh-pas" aria-hidden="true"><i style="width:${sirka.toFixed(1)}%"></i></span>
+              <span class="drh-pasmo">polovina nabídek ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nabídek</span>
+            </li>`;
+  }).join('\n');
+  /* Poměr se počítá, nepíše se od stolu — data se mění každou noc. */
+  const druhyPomer = druhyData.length >= 2
+    ? Math.round(druhyData[0].s.med / druhyData[druhyData.length - 1].s.med) : 0;
+  const druhySekce = !druhyRadky ? '' : `
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2 id="drh-nadpis">Nejdřív druh, potom místo</h2>
+          <p class="rules-note">${druhyPomer >= 2 ? `Stavební parcela vyjde na metr <b>${fmt(druhyPomer)}×</b> dráž než les. ` : ''}Žádná jedna „cena pozemku" neexistuje — tohle jsou čtyři různé trhy.</p>
+          <ul class="drh-seznam" aria-labelledby="drh-nadpis">
+${druhyRadky}
+          </ul>
+        </div>
+      </div>`;
+
   const natZ = priceNational[key];
   const title = 'Ceny pozemků v ČR — kolik stojí m² půdy | Parcelka';
   const desc = `Kolik stojí metr čtvereční pozemku v Česku? Orientační medián cen z aktuálních nabídek podle druhu a kraje.${natZ?' Zemědělská půda medián '+fmt(natZ.med)+' Kč/m².':''}`;
@@ -2312,16 +2375,20 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
       <div class="eyebrow"><span class="live-dot"></span>Ceny pozemků · celá ČR</div>
       <h1>Kolik stojí pozemek?</h1>
       <!-- Podnadpis ODPOVÍDÁ na otázku z nadpisu, místo aby sliboval, co
-           je níž. Celostátní medián zemědělské půdy je to jediné číslo,
-           které platí všude — a kdo přišel z vyhledávače, má odpověď
-           dřív, než cokoli odroluje. -->
-      <p class="sub">${natZ ? `Zemědělská půda u nás stojí obvykle <b>${fmt(natZ.med)} Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.` : 'Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.'}</p>
+           je níž. Dřív tu stálo jedno číslo (medián zemědělské půdy),
+           jenže to platí pro jednu ze čtyř skupin — a kdo hledá
+           stavební parcelu, dostal odpověď o 65× vedle. Teď jsou tu
+           dva krajní druhy, takže je hned vidět, že jedna „cena
+           pozemku" neexistuje. Rozpad na všechny čtyři je v kartě
+           „Nejdřív druh, potom místo" hned pod pásem. -->
+      <p class="sub">${druhyData.length >= 2 ? `Podle druhu: <b>${fmt(druhyData[0].s.med)} Kč/m²</b> za stavební, <b>${fmt(druhyData[druhyData.length - 1].s.med)} Kč/m²</b> za les. Kolik ve vašem okrese, zjistíte níž.` : (natZ ? `Zemědělská půda u nás stojí obvykle <b>${fmt(natZ.med)} Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.` : 'Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.')}</p>
     </div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap okr-wrap">
+${druhySekce}
 
       <!-- GRAF CENOVÉ HLADINY ZA CELOU ČR. Byl na 91 stránkách okresů
            a krajů, ale na stránce, která je přímo o cenách, chyběl — a to
@@ -2333,12 +2400,6 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
            nejlépe doložená, a když by žádná klidná nebyla, nenakreslí nic
            — ani prázdný rámeček. Stojí hned pod podnadpisem, protože ten
            říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
-      <div class="add-card">
-        <div class="rules-sect">
-          <div data-graf-cen data-uroven="cr" data-kde="${osaz('v celé ČR')}"></div>
-        </div>
-      </div>
-
 ${sekceTrhu}
 
       <div class="add-card">
@@ -2366,6 +2427,25 @@ ${sekceTrhu}
       </div>
 
 ${krajeSekce}
+
+      <!-- GRAF AŽ TADY, A S VLASTNÍ OTÁZKOU NAD SEBOU.
+           Stával hned pod podnadpisem jako první věc na stránce. Jenže
+           naměřeno 2. 11.: celostátní řada orné půdy se za 50 dní
+           pohnula o 0,4 % a z 130 sledovaných řad se 29 nehnulo ani
+           o 5 %. Byla to tedy nejklidnější věc na stránce na nejlepším
+           místě — a čtenář pod ní četl pět řádků o tom, proč se čísla
+           v grafu a nad grafem nerovnají.
+           Nemaže se: archiv roste od 14. 9. 2026 a za rok tu bude co
+           číst. Jen stojí za tím, co se opravdu mění (druh, kraj),
+           a má NADPIS S OTÁZKOU, na kterou odpovídá. Plochá čára pak
+           není díra, ale odpověď „skoro nic se neděje". -->
+      <div class="add-card">
+        <div class="rules-sect">
+          <h2 id="cenc-nadpis">A hýbe se to v čase?</h2>
+          <p class="rules-note">Zatím skoro ne. Archiv sleduje nabídky od&nbsp;září&nbsp;2026, což je na závěry o trhu krátká doba — čára níž je tu proto, aby bylo vidět, že se hladina drží, ne aby se z ní četl trend.</p>
+          <div data-graf-cen data-uroven="cr" data-kde="${osaz('v celé ČR')}"></div>
+        </div>
+      </div>
 
 ${metodika}
 

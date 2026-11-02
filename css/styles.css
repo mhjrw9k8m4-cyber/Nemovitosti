@@ -7896,6 +7896,48 @@ a.rz-okres:hover{color:var(--znacka-svetla);}
 @media (min-width:600px){ .trh-zkolika{justify-self:end; min-width:96px; text-align:right;} }
 .trh-veta{margin:20px 0 0; font-size:16px; line-height:1.6; color:var(--text);}
 
+/* CENA PODLE DRUHU — TÝŽ RECEPT JAKO .trh-radek VÝŠ.
+   ===================================================================
+   Je to schválně tatáž skladba (jméno, číslo, pruh, poznámka pod tím)
+   a tytéž hodnoty: pruh 8 px, plocha --plocha-znacka na 0,55,
+   číslo v --font-display. Druhý vzhled pro touž práci by znamenal dva
+   jazyky na jedné stránce.
+   LIŠÍ SE DVĚ VĚCI, obě z dat:
+   · jméno druhu je delší než „do 7 dní", proto má sloupec 108 px
+     a smí se zalomit (`white-space` se nedědí z .trh-popis);
+   · čísla jdou od 30 do 2 923 Kč/m², takže širší sloupec na číslo —
+     jinak by „2 923 Kč/m²" přeteklo přes pruh.
+   Stupnice je SDÍLENÁ a lineární: že je zemědělská půda 1,5 % délky
+   stavební, je přesně to, co má být vidět. Proto se pruh nikdy
+   nepřepočítává na nejdelší řádek skupiny. */
+.drh-seznam{list-style:none; margin:16px 0 0; padding:0; max-width:720px;
+  display:grid; grid-template-columns:minmax(0,1fr); gap:12px;}
+.drh-radek{display:grid; column-gap:12px; row-gap:2px; align-items:center; min-width:0;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"jmeno cislo" "pas pas" "pasmo pasmo";}
+@media (min-width:600px){
+  /* ČÍSLO MÁ PEVNÝ SLOUPEC, JINAK STUPNICE LŽE. S `auto` si každý
+     řádek vzal tolik, kolik měl dlouhé číslo („2 923 Kč/m²" proti
+     „30 Kč/m²"), takže dráha pruhu vyšla 471, 488 a 500 px — tři
+     různá měřítka v jedné sdílené stupnici. Naměřeno na 1 280 px. */
+  .drh-radek{grid-template-columns:108px minmax(80px,1fr) 108px;
+    grid-template-areas:"jmeno pas cislo" "jmeno pasmo pasmo";}
+}
+.drh-jmeno{grid-area:jmeno; font-size:13px; font-weight:600; color:var(--text);}
+.drh-cislo{grid-area:cislo; justify-self:end;
+  font-family:var(--font-display); font-weight:700; font-size:20px;
+  line-height:1.1; letter-spacing:-0.03em; color:var(--text);
+  font-variant-numeric:tabular-nums; white-space:nowrap;}
+.drh-pas{grid-area:pas; position:relative; display:block; height:8px;
+  border-radius:var(--r-pill);
+  background:var(--plocha-jemna); box-shadow:inset 0 0 0 1px var(--line);}
+.drh-pas > i{position:absolute; left:0; top:0; bottom:0; border-radius:var(--r-pill);
+  background:var(--plocha-znacka); opacity:0.55;}
+/* Rozpětí čtvrtin říká, kterému mediánu se dá věřit: u zemědělské
+   půdy je úzké (36–66), u zahrady širší než samo číslo (75–2 288). */
+.drh-pasmo{grid-area:pasmo; font-size:12px; color:var(--muted);
+  font-variant-numeric:tabular-nums;}
+
 /* Oddíly bez vnější karty — nadpis, linka, obsah. */
 .okr-blok{margin-top:32px; padding-top:24px; border-top:1px solid var(--line);}
 .okr-blok .rules-sect h2{font-size:24px;}
