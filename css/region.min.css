@@ -196,7 +196,6 @@ to{opacity:1;transform:none}
 }
 
 
-
 .sk{background-color:var(--plocha-jemna);background-image:linear-gradient(90deg,transparent 25%,var(--plocha-jemna-vic) 37%,transparent 63%);background-size:400% 100%;border-radius:var(--r-xs);animation:skShimmer 1.4s ease infinite}
 @keyframes skShimmer{0%{background-position:100% 0}
 100%{background-position:0 0}

@@ -533,23 +533,10 @@ to{opacity:1;transform:none}
 .deals-grid:has(>:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:760px){.deals-grid:has(>:nth-child(4)){grid-template-columns:minmax(0,1fr)}
 }
-.deal-card{text-align:left;font:inherit;cursor:pointer;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-md);padding:16px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"misto cena" "podrob cena" "znak znak";column-gap:12px;row-gap:4px;align-items:baseline;transition:var(--prechod)}
-.deal-card .deal-badge{grid-area:znak;justify-self:start}
-.deal-card .deal-place{grid-area:misto}
-.deal-card .deal-sub{grid-area:podrob}
-.deal-card .deal-figs{grid-area:cena;justify-self:end;align-self:start;text-align:right}
-.deal-card:hover{border-color:var(--c-ok);transform:translateY(-2px);box-shadow:var(--e2)}
+.deal-card{display:block;text-align:left;font:inherit;cursor:pointer;padding:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-plocha);background:var(--plocha-karta);box-shadow:var(--e1);transition:var(--prechod)}
+.deal-card:hover{box-shadow:var(--e2)}
 .deal-card:focus-visible{outline:2px solid var(--znacka-svetla);outline-offset:2px}
-.deal-badge{align-self:flex-start;margin-top:4px;font-size:12px;font-weight:600;color:var(--znacka-svetla);background:rgba(var(--brand-live-rgb),0.08);border:1px solid rgba(var(--brand-live-rgb),0.22);border-radius:var(--r-pill);padding:4px 8px;letter-spacing:0;box-shadow:none}
-.deal-place{display:flex;align-items:flex-start;gap:8px;font-family:var(--font-ui);font-size:20px;font-weight:600;line-height:1.2;color:var(--text);margin-top:2px}
-.deal-dot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:4px}
-.deal-sub{font-size:13px;color:var(--muted);line-height:1.4}
-.deal-figs{display:block;white-space:nowrap;line-height:1.2;font-variant-numeric:tabular-nums}
-.deal-figs b{display:block;font-size:16px;font-weight:700;color:var(--znacka-svetla)}
-.deal-figs span{display:block;font-size:12px;font-weight:600;color:var(--muted)}
-@media (max-width:560px){.deal-card{grid-template-columns:minmax(0,1fr);grid-template-areas:"misto" "podrob" "cena" "znak"}
-.deal-card .deal-figs{justify-self:start;text-align:left}
-}
+.deal-verdikt{margin-top:8px;font-size:12px;font-weight:600;line-height:1.4;color:var(--znacka-svetla);background:rgba(var(--brand-live-rgb),0.08);border:1px solid rgba(var(--brand-live-rgb),0.22);border-radius:var(--r-sm);padding:4px 8px}
 .recent-strip{margin:0 0 12px;padding:8px 8px;background:var(--plocha-jemna);border:1px solid var(--line);border-radius:var(--r-plocha)}
 .recent-strip[hidden]{display:none}
 .recent-strip .rs-head{display:flex;align-items:center;gap:4px;font-size:13px;letter-spacing:0;color:var(--muted);font-weight:700;margin-bottom:4px}

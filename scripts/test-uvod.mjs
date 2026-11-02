@@ -618,8 +618,12 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   const v = await p.evaluate(() => {
     const tipy = window.PK_TIPY || null;
     const karty = [...document.querySelectorAll('.deal-card')].map((c) => ({
-      odznak: (c.querySelector('.deal-badge') || {}).textContent.trim(),
-      podradek: (c.querySelector('.deal-sub') || {}).textContent.trim(),
+      /* Věta o srovnání se 2. 11. přesunula pod cenu a přejmenovala
+         (.deal-badge → .deal-verdikt), když se tip sjednotil s kartou
+         ve výpisu; podřádek s druhem a okresem dělá teď .opp-meta,
+         protože je to tatáž součástka jako na kartě. */
+      odznak: (c.querySelector('.deal-verdikt') || {}).textContent.trim(),
+      podradek: (c.querySelector('.opp-meta') || {}).textContent.trim(),
     }));
     const kdeText = (window.PK_CENY && window.PK_CENY.kdeText) || null;
     const ocekavane = (tipy && kdeText) ? tipy.map((t) => kdeText(t.uroven, t.kde)) : null;

@@ -889,6 +889,9 @@ jobs:
       - name: Hlídání jako hledání (jeden recept na jednu roli)
         run: node scripts/test-hlidani-jako-hledani.mjs
 
+      - name: Tip na dobrou koupi je táž karta jako ve výpisu
+        run: node scripts/test-tip-jako-karta.mjs
+
 
       - name: Chyby skriptů a přetékání na všech druzích stránek
         run: node scripts/test-konzole.mjs

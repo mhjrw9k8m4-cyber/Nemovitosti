@@ -57,8 +57,13 @@ const DROBNOST_V = 44;   // vyšší prvek už není odznak, ale deska
 /* VÝJIMKY. Píše se sem jméno a důvod — ne aby se dalo pravidlo obejít,
    ale aby se u každé dalo přečíst, proč platí. */
 const JINY_RAM = new Set([
-  /* Odznak „K dražbě" nese zeleň značky jako ozdobu, ne jako rám desky. */
-  'deal-badge',
+  /* Věta „levnější než 97 % pozemků" pod cenou v tipu nese zeleň
+     značky jako ozdobu dobré zprávy, ne jako rám desky. Je to
+     poznámka uvnitř karty, ne vlastní deska.
+     (Do 2. 11. se ta třída jmenovala .deal-badge a stála nad jménem
+     obce; při sjednocení tipu s kartou ve výpisu se přesunula pod
+     cenu a přejmenovala. Důvod výjimky se nezměnil, jen jméno.) */
+  'deal-verdikt',
   /* Nápověda „vyberte kraj" sedí NAD mapou a zelený rám ji k mapě váže. */
   'kraj-hint',
 ]);

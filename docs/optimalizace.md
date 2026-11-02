@@ -19269,3 +19269,67 @@ předtím, ne slabší.
 Schránka se středníkem, chybějící sedmý sloupec, vrácení popisu filtru
 na starý zdroj, zrušení stropu bodů i vrácení `vyvoz.js` do sazby —
 každé shodí právě tu kontrolu, která o tom je.
+
+---
+
+## §310 — Tipy na dobrou koupi: táž karta jako ve výpisu
+
+Majitel: *„tato část webu potřebuje vizuálně dodělat, aby vypadala
+jako zbytek webu, a víc to napojit na sebe jako na úvodní stránce,
+aby to bylo celistvé."*
+
+Tipy měly vlastní stavbu i vlastní vzhled. **Změřeno na téže stránce**
+(390 px, `.opp-item` proti `.deal-card`):
+
+| | karta ve výpisu | tip |
+|---|---|---|
+| stín | `--e1` | **žádný** |
+| nadpis | 16 px / 400 | 20 px / 600 |
+| cena | 24 px / 700 | 16 px / 700 |
+| náhled | mapový výřez | **nic** |
+| odsazení | 0 (nese ho tělo) | 16 px |
+
+Největší z toho je náhled: právě podle něj se karta pozná na první
+pohled, a tip ho neměl vůbec — proto vedle výpisu vypadal jako cizí
+prvek.
+
+**Opraveno ne novým receptem, ale TÝMIŽ SOUČÁSTKAMI.** Tip se teď
+skládá z `.opp-media`, `.opp-body`, `.opp-nadpis`, `.opp-druh`,
+`.opp-meta`, `.opp-place`, `.opp-cenarad`, `.opp-price` — tedy
+z komponent karty ve výpisu, které jsou v CSS nescopované a daly se
+vzít tak, jak jsou. Typografii a rozvržení tím dědí a nemá se kde
+rozejít: co se změní ve výpisu, změní se i tady. Vlastní zůstala
+jedna věc — věta, proč je to tip.
+
+Náhled kreslí táž funkce `mapThumb(d)` jako ve výpisu; ověřeno, že
+obě karty sahají po témž leteckém snímku (`server.arcgisonline.com`).
+
+**Dvě vady při tom:**
+* Odznak druhu byl na kartě **dvakrát** — `mapThumb()` ho přidává sám
+  a já ho připsal ještě jednou.
+* Cenu jsem opsal s obyčejnou mezerou před „Kč"; ve výpisu je tam
+  nezlomitelná, napsaná ručně. Chytila to `test-sazba`.
+
+### Proč to nenašel hlídač „jedna deska"
+
+`test-deska` měří zaoblení, rám a stín **obecně přes všechny desky**
+a nulový stín toleruje (uvnitř desky je v pořádku). Rozdíl „táž role,
+jiný recept" z něj poznat nejde — a zaoblení i rám tipu shodou
+okolností seděly, takže prošel.
+
+Nový **`test-tip-jako-karta.mjs`** je proto PÁROVÝ, jako
+`test-hlidani-jako-hledani`: bere dva skutečné prvky na jedné stránce
+a ptá se, jestli jsou z téhož receptu — plocha, písmo druhu, ceny
+i místa, přítomnost všech součástek, vykreslený náhled, právě jeden
+odznak a věta o srovnání. Má v sobě i pojistku, aby shoda nic
+neznamenala: **stín karty nesmí být žádný**, jinak by „obojí nic"
+prošlo — a přesně to tip předtím měl.
+
+Prokázáno dvěma sabotážemi: vrácení nulového stínu shodí porovnání
+plochy, odebrání náhledu shodí tři kontroly.
+
+**Tři zkoušky se o přejmenování opřely a měly pravdu**, že se něco
+změnilo: `test-deska` (výjimka `deal-badge` → `deal-verdikt`, důvod
+zůstal), `test-uvod` a `test-odznaky` (četly `.deal-badge`
+a `.deal-sub`). Výjimka, která by ukazovala na neexistující třídu,
+by tvrdila, že něco chrání, a přitom by nechránila nic.

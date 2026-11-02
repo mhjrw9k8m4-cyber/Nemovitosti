@@ -3237,49 +3237,37 @@ h1 em{ color:var(--znacka-svetla);
    přitom stála na konci řádku s výměrou, tedy přesně tam, kde ji oko
    nehledá. Mřížka je stejná jako u řádku ve výpisu okresu: vlevo místo
    a popis, vpravo cena pod sebou. Jedna věc má vypadat jako jedna věc. */
-.deal-card{text-align:left; font:inherit; cursor:pointer; background:var(--plocha-karta); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 16px;
-  display:grid; grid-template-columns:minmax(0,1fr) auto;
-  /* DŮKAZ AŽ POD TVRZENÍM. Zelený odznak („levnější než 97 % pozemků
-     v prodeji v Ústeckém kraji") stál NAD jménem obce, takže se karta
-     četla odzadu: nejdřív křik, pak teprve co to je a za kolik. Teď je
-     pořadí místo → popis → cena a odůvodnění pod tím, jako poznámka
-     pod tvrzením. */
-  grid-template-areas:"misto cena" "podrob cena" "znak znak";
-  column-gap:12px; row-gap:4px; align-items:baseline;
+/* TÁŽ DESKA JAKO KARTA VE VÝPISU. Tip měl vlastní recept a vedle
+   zbytku webu to bylo vidět — naměřeno na téže stránce (390 px):
+   .opp-item má stín --e1, .deal-card NEMĚLA ŽÁDNÝ; nadpis 16/400
+   proti 20/600; cena 24/700 proti 16/700; karta má náhled, tip neměl
+   nic. Teď se tip skládá z TÝCHŽ součástek (.opp-media, .opp-body,
+   .opp-nadpis, .opp-druh, .opp-meta, .opp-cenarad), takže typografii
+   i rozvržení dědí a nemá se kde rozejít. Zbývá tady jen plocha
+   a to jediné, co má tip navíc: věta, proč je to tip. */
+.deal-card{display:block; text-align:left; font:inherit; cursor:pointer; padding:0; overflow:hidden;
+  border:1px solid var(--line); border-radius:var(--r-plocha);
+  background:var(--plocha-karta); box-shadow:var(--e1);
   transition:var(--prechod);}
-.deal-card .deal-badge{grid-area:znak; justify-self:start;}
-.deal-card .deal-place{grid-area:misto;}
-.deal-card .deal-sub{grid-area:podrob;}
-.deal-card .deal-figs{grid-area:cena; justify-self:end; align-self:start; text-align:right;}
-.deal-card:hover{border-color:var(--c-ok); transform:translateY(-2px); box-shadow:var(--e2);}
+/* Zvednutí stínem, ne posunem. Karta ve výpisu dělá při najetí totéž
+   a translateY tu byl navíc — dvě karty vedle sebe se při najetí
+   chovaly každá jinak. */
+.deal-card:hover{box-shadow:var(--e2);}
 .deal-card:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
-/* ODZNAK NEKŘIČÍ. Byl to sytý zelený přechod se stínem přes půl karty —
-   na bílé stránce ta nejhlasitější plocha v celém oddílu, a nesl přitom
-   vedlejší informaci. Zůstává zelený (je to dobrá zpráva), ale jen
-   textem na světlé podložce, bez přechodu a bez stínu. */
-.deal-badge{align-self:flex-start; margin-top:4px; font-size:12px; font-weight:600;
+
+/* PROČ JE TO TIP. Zůstává zelený (je to dobrá zpráva), ale jen textem
+   na světlé podložce, bez přeliv a bez stínu: nese vedlejší informaci
+   a nemá být nejhlasitější plochou v oddílu.
+   Stojí POD cenou — důkaz až pod tvrzením. Dokud byl nad jménem obce,
+   četla se karta odzadu: nejdřív křik, pak teprve co to je a za kolik. */
+.deal-verdikt{margin-top:8px; font-size:12px; font-weight:600; line-height:1.4;
   color:var(--znacka-svetla); background:rgba(var(--brand-live-rgb),0.08);
-  border:1px solid rgba(var(--brand-live-rgb),0.22); border-radius:var(--r-pill);
+  border:1px solid rgba(var(--brand-live-rgb),0.22); border-radius:var(--r-sm);
   /* 4 px, ne 3: trojka by byla jediná v celé úvodní stránce a slovník
      odstupů má strop 22 hodnot (test-jazyk). Čtyřku už používá odznak
      na kartě výpisu, takže se nic nepřidává. */
-  padding:4px 8px; letter-spacing:0; box-shadow:none;}
-.deal-place{display:flex; align-items:flex-start; gap:8px; font-family:var(--font-ui); font-size:20px; font-weight:600; line-height:1.2; color:var(--text); margin-top:2px;}
-.deal-dot{width:9px; height:9px; border-radius:50%; flex:none; margin-top:4px;}
-.deal-sub{font-size:13px; color:var(--muted); line-height:1.4;}
-/* Cena se nesmí zalomit: „86 356" na dvou řádcích jsou dvě čísla. */
-.deal-figs{display:block; white-space:nowrap; line-height:1.2; font-variant-numeric:tabular-nums;}
-/* Cena v kartičce tipu a cena v řádku výpisu jsou TÁŽ věc — dal jsem jim
-   omylem 18 a 16 px. Obě teď sedí na příčku 17 px. */
-.deal-figs b{display:block; font-size:16px; font-weight:700; color:var(--znacka-svetla);}
-.deal-figs span{display:block; font-size:12px; font-weight:600; color:var(--muted);}
-/* Na úzké kartě se dva sloupce nevejdou — cena jde pod popis, ale pořád
-   zarovnaná vpravo, aby se dala projet očima stejně jako na široké. */
-@media (max-width:560px){
-  .deal-card{grid-template-columns:minmax(0,1fr);
-    grid-template-areas:"misto" "podrob" "cena" "znak";}
-  .deal-card .deal-figs{justify-self:start; text-align:left;}
-}
+  padding:4px 8px;}
+
 /* Naposledy prohlédnuté — vodorovný pásek pro rychlý návrat k parcelám */
 /* NAPOSLEDY PROHLÉDNUTÉ. Pruh neměl vlastní plochu a nadpis byl 12 px
    ztlumenou barvou — tedy menší písmo než nadpis výpisu pod ním, takže

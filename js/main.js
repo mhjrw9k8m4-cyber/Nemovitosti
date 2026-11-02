@@ -8583,36 +8583,59 @@
         return { uroven: o.di.uroven, kde: o.di.kde, okres: o.d.okres, cheaper: o.di.cheaper };
       });
     } catch (e) {}
+    /* TÁŽ KARTA JAKO VE VÝPISU, NE DRUHÝ DRUH KARTY. Tipy měly vlastní
+       stavbu i vlastní vzhled a vedle zbytku webu to bylo vidět.
+       Naměřeno na téže stránce (390 px, .opp-item proti .deal-card):
+         · karta ve výpisu má stín --e1, tip NEMĚL ŽÁDNÝ;
+         · nadpis 16/400 proti 20/600, cena 24/700 proti 16/700;
+         · karta má náhled (mapový výřez), tip neměl nic.
+       Teď se skládá z TÝCHŽ součástek (.opp-media, .opp-body,
+       .opp-nadpis, .opp-druh, .opp-meta, .opp-cenarad), takže se
+       vzhled nemá kde rozejít: co se změní ve výpisu, změní se i tady.
+       Vlastní zůstává jedna věc — věta o tom, proč je to tip. */
     grid.innerHTML = top.map(function (o) {
-      var d = o.d, t = TYPE[d.type];
+      var d = o.d;
       var perM2 = zaMetr(d);
+      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
-        /* KDE se to srovnávalo, patří do té věty. Percentil se počítá
-           nejdřív v okrese, a když tam není dost nabídek, v kraji —
-           naměřeno na ostrých datech: ze 1 213 verdiktů jich 566 (47 %)
-           vzniklo v KRAJI. Karta přitom pod tím psala „okres Jablonec
-           nad Nisou", takže „levnější než 98 % podobných" vypadalo jako
-           srovnání v okrese.
-           (V commitu jsem k tomu napsal, že „totéž se už jednou spravilo
-           u odznaku na mapě" — nespravilo. Ten odznak byl v panelu, který
-           se nikdy neotevřel, takže oprava platila v mrtvém kódu. Živé
-           místo, kde se to tvrdilo bez místa, byly právě tyhle tipy.) */
-        /* „Podobných" ještě neznamená „na trhu": percentil srovnává jen
-           v rámci téhož typu, takže u dražby jde o vyvolávací ceny.
-           Mezi tipy se dražba dostat může (dnes tam není ani jedna, ale
-           nic ji nebrání), a pak by „levnější než 92 % podobných"
-           znamenalo něco jiného, než co si člověk přečte. */
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
-          + (window.PK_CENY && window.PK_CENY.skupinaText
-            ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
-          + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
-        '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
-        /* Výměra patří k druhu pozemku, ne k ceně: „orná půda · 15 752 m²"
-           je popis toho, co se prodává. V ceně zůstává jen cena a cena za
-           metr — jediné dvě čísla, kterými se dvě nabídky srovnávají.
-           Stejné rozdělení má řádek ve výpisu okresu, ať to je jedna věc. */
-        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
-        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
+        /* Odznak druhu sem nepatří ZVLÁŠŤ: mapThumb() ho do náhledu
+           přidává sám, a když jsem ho připsal, byl na kartě dvakrát. */
+        '<div class="opp-media">' + mapThumb(d) + '</div>' +
+        '<div class="opp-body">' +
+          '<div class="opp-nadpis">' +
+            '<b class="opp-druh">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
+            (hasArea(d) ? '<span class="opp-figures"><span class="m">' + fmt(d.area) + '\u00a0m²</span></span>' : '') +
+          '</div>' +
+          '<div class="opp-meta">' +
+            '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
+            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+          '</div>' +
+          '<div class="opp-cenarad">' +
+            /* Nezlomitelná mezera před jednotkou, jako ve výpisu: „457 248"
+               a „Kč" se nesmí rozejít na dva řádky. */
+            '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+            (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
+          '</div>' +
+          /* PROČ JE TO TIP — jediné, co má tahle karta navíc proti
+             výpisu. Stojí pod cenou, protože se podle něj nevybírá
+             nabídka, ale vysvětluje se, proč tu vůbec je. */
+          /* KDE se to srovnávalo, patří do té věty. Percentil se počítá
+             nejdřív v okrese, a když tam není dost nabídek, v kraji —
+             naměřeno na ostrých datech: ze 1 213 verdiktů jich 566
+             (47 %) vzniklo v KRAJI. Karta přitom pod tím psala „okres
+             Jablonec nad Nisou", takže „levnější než 98 % podobných"
+             vypadalo jako srovnání v okrese. */
+          /* „Podobných" ještě neznamená „na trhu": percentil srovnává
+             jen v rámci téhož typu, takže u dražby jde o vyvolávací
+             ceny. Mezi tipy se dražba dostat může, a pak by „levnější
+             než 92 % podobných" znamenalo něco jiného, než co si
+             člověk přečte. */
+          '<div class="deal-verdikt">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
+            + (window.PK_CENY && window.PK_CENY.skupinaText
+              ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
+            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
+        '</div>' +
       '</button>';
     }).join('');
     sec.hidden = false;

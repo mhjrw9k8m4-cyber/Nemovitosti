@@ -5306,19 +5306,35 @@
         return { uroven: o.di.uroven, kde: o.di.kde, okres: o.d.okres, cheaper: o.di.cheaper };
       });
     } catch (e) {}
+
     grid.innerHTML = top.map(function (o) {
-      var d = o.d, t = TYPE[d.type];
+      var d = o.d;
       var perM2 = zaMetr(d);
+      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
 
-        '<div class="deal-badge">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
-          + (window.PK_CENY && window.PK_CENY.skupinaText
-            ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
-          + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
-        '<div class="deal-place"><span class="deal-dot" style="background:' + t.color + '"></span>' + d.place + '</div>' +
+        '<div class="opp-media">' + mapThumb(d) + '</div>' +
+        '<div class="opp-body">' +
+          '<div class="opp-nadpis">' +
+            '<b class="opp-druh">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
+            (hasArea(d) ? '<span class="opp-figures"><span class="m">' + fmt(d.area) + '\u00a0m²</span></span>' : '') +
+          '</div>' +
+          '<div class="opp-meta">' +
+            '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
+            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+          '</div>' +
+          '<div class="opp-cenarad">' +
 
-        '<div class="deal-sub">' + t.label + ' · ' + (d.druh || 'pozemek') + ' · ' + fmt(d.area) + ' m² · okres ' + d.okres + '</div>' +
-        '<div class="deal-figs"><b>' + fmt(d.price) + ' Kč</b><span>' + fmt(perM2) + ' Kč/m²</span></div>' +
+            '<div class="opp-price">' + fmt(d.price) + ' Kč</div>' +
+            (perM2 ? '<span class="opp-perm2"' + zaMetrTitul(d) + '>' + fmt(perM2) + ' Kč/m²</span>' : '') +
+          '</div>' +
+
+          '<div class="deal-verdikt">levnější než ' + o.di.cheaper + '\u00a0% pozemků'
+            + (window.PK_CENY && window.PK_CENY.skupinaText
+              ? ' ' + window.PK_CENY.skupinaText(d.type) : '')
+            + (kdeSrovnani(o.di) ? ' ' + esc(kdeSrovnani(o.di)) : '') + '</div>' +
+        '</div>' +
       '</button>';
     }).join('');
     sec.hidden = false;
