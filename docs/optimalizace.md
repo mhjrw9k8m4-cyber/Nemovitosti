@@ -21146,3 +21146,35 @@ přečíst nedají (`Disallow: /` i na domovské stránce). U Bezrealitek se
 přečetlo málo textu, takže **otázka zůstává otevřená** — a zbývající
 cesta je, aby ty dvě stránky otevřel člověk. Sonda k tomu dodala
 adresy, na které se má podívat.
+
+**A TEĎ TO, CO BYLO PŘÍČINOU: `bezZnacek` ZAHAZOVAL `<script>`.**
+Dvě tisícovky znaků z podmínek nebyly tím, že by web text neposlal —
+byly tím, že jsem si ho sám vyhodil. Dnešní weby posílají obsah jako
+JSON ve `<script>` a do značek ho vykreslí až prohlížeč. Sonda proto
+čte text **i z vloženého JSONu** (`textZeSkriptu`): řetězce, které mají
+mezeru a interpunkci a jsou aspoň 40 znaků dlouhé — kratší jsou jména
+polí a adresy, ne věty.
+
+Není to obcházení ničeho: je to čtení **téže stránky**, kterou nám web
+dovoluje číst, jen se text bere i odtamtud, kam ho web uložil. Žádný
+prohlížeč se nepředstírá, hlavička zůstává naše a robots.txt platí dál.
+
+A **doklad teď měří totéž, co se prohledává** — kdyby počítal jen text
+ze značek, zůstal by nález stejně slepý: stránka s obsahem v JSONu by
+vyšla jako „málo textu", i když se text našel.
+
+**Tři vady v tomhle kousku našla zkouška, ne já:**
+
+1. Strop na délku řetězce byl 2 000 znaků, takže stránka, která celé
+   podmínky posílá jako **jeden** dlouhý řetězec, nevyšla vůbec —
+   a výsledkem bylo zase „málo textu", tedy právě ten slepý nález,
+   kvůli kterému se to celé psalo. Strop je 40 000.
+2. Pravidlo „adresa není text" (`^https?:`) bylo **mrtvé**: adresa nemá
+   mezeru, takže ji vyloučí už pravidlo pod ním — sabotáž toho řádku
+   nic neshodila. Řádek je pryč a zkouška měří ten **skutečný** důvod.
+   (Týž druh nálezu jako §51: pravidlo, které tvrdí, že něco hlídá.)
+3. Tělo skriptu musí být delší než 80 znaků, jinak jde o přepínače
+   a počítadla — a na tom padla moje vlastní předloha, protože ta věta
+   v JSONu má 70 znaků.
+
+`test-sonda-podminky`: **40 kontrol, třináct sabotáží.**

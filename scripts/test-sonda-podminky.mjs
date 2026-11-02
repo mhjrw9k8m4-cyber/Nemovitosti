@@ -284,6 +284,63 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   }
 }
 
+/* ---- 8) TEXT VE VLOŽENÉM JSONU, NE JEN VE ZNAČKÁCH ------------- */
+/* Druhý běh naostro přečetl u jednoho zdroje jen 2 137 znaků — a to na
+   smluvní podmínky nestačí. Příčina: dnešní weby posílají obsah jako
+   JSON ve `<script>` a do značek ho vykreslí až prohlížeč, kdežto
+   `bezZnacek` `<script>` zahazuje. Vyhodil jsem tedy přesně to místo,
+   kde ten text nejspíš byl. Není to obcházení ničeho: je to čtení TÉŽE
+   stránky, jen se text bere i odtamtud, kam ho web uložil. */
+{
+  const VETA = 'Uživatel není oprávněn obsah automatizovaně stahovat roboty ani hromadně kopírovat.';
+  const html = '<html><body><div id="app"></div>'
+    + '<script id="__NEXT_DATA__" type="application/json">'
+    /* Adresa MUSÍ být delší než 40 znaků, jinak ji vyloučí délka
+       a pravidlo „adresa není text" se vůbec nezměří. Na tom tahle
+       kontrola nejdřív prošla i se sabotáží. */
+    + JSON.stringify({ props: { text: VETA, nazev: 'Podmínky',
+      url: 'https://w.test/informace/smluvni-podminky/priloha-c-3-sazebnik.pdf' } })
+    + '</script></body></html>';
+  const t = P.textZeSkriptu(html);
+  pravda('věta z vloženého JSONu se najde',
+    t.some((x) => /automatizovan/.test(x)), JSON.stringify(t));
+  pravda('a klíče, krátká slova ani adresy se za text nepočítají',
+    !t.some((x) => /^https?:/.test(x)) && !t.some((x) => x === 'Podmínky'), JSON.stringify(t));
+  /* A proč se adresa nepočítá: NEMÁ MEZERU. Napsal jsem si na to
+     nejdřív zvláštní pravidlo („adresa není text"), jenže sabotáž toho
+     řádku nic neshodila — pravidlo bylo mrtvé, protože tohle ho
+     předběhne. Měří se tedy ten skutečný důvod. */
+  pravda('dlouhá adresa se nepočítá, protože nemá mezeru',
+    !t.some((x) => /sazebnik\.pdf/.test(x)), JSON.stringify(t));
+  /* Tělo skriptu musí být delší než 80 znaků — kratší vložené skripty
+     jsou přepínače a počítadla, ne obsah. Na tom tahle kontrola
+     nejdřív padla: samotná ta věta v JSONu má 70 znaků. */
+  pravda('a text s mezerou i interpunkcí se počítá',
+    P.textZeSkriptu('<script type="application/json">'
+      + JSON.stringify({ a: 'Toto je dost dlouhá věta o automatickém přístupu a robotech.',
+        b: 'A tady je druhá věta, ať je tělo skriptu delší než osmdesát znaků.' })
+      + '</script>').length === 2);
+  pravda('celyText vrátí text ze značek I z JSONu, bez zdvojení',
+    P.celyText('<p>' + VETA + '</p><script type="application/json">'
+      + JSON.stringify({ a: VETA }) + '</script>').length === 1);
+  pravda('oAutomatu najde pasáž, i když je obsah jen v JSONu',
+    P.oAutomatu(html).length === 1, JSON.stringify(P.oAutomatu(html)));
+  /* A DOKLAD MUSÍ MĚŘIT TOTÉŽ, CO SE PROHLEDÁVÁ. Jinak by stránka
+     s obsahem v JSONu vyšla jako „málo textu", i když se text našel. */
+  const dlouhyJson = '<div id="app"></div><script type="application/json">'
+    + JSON.stringify({ t: (VETA + ' ').repeat(120) }) + '</script>';
+  const stahni = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/podminky/.test(u)) return { ok: true, status: 200, text: async () => dlouhyJson };
+    return { ok: true, status: 200, text: async () => '<a href="/podminky">Podmínky</a>' };
+  };
+  const z = await P.zmerPodminky({ jmeno: 'V JSONu', host: 'j.test', domov: 'https://j.test/' },
+    { stahni, ua: UA, mezipamet: new Map() });
+  pravda('stránka s obsahem v JSONu se NEVYDÁ za „málo textu"',
+    /pasáží o automatick/.test(z.verdikt) && z.znakuCelkem >= P.ZNAKU_NA_PODMINKY,
+    JSON.stringify({ verdikt: z.verdikt, znaku: z.znakuCelkem }));
+}
+
 console.log('Sonda podmínek: čte jen to, co smí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

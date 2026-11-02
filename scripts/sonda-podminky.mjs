@@ -106,6 +106,52 @@ export function odstavce(text) {
     .filter((s) => s.length >= 40);
 }
 
+/**
+ * Text, který stránka nese ve VLOŽENÉM JSONU, ne ve značkách.
+ *
+ * PROČ TOHLE EXISTUJE. Druhý běh naostro přečetl u jednoho zdroje jen
+ * 2 137 znaků — a to na smluvní podmínky nestačí. Příčina je, že dnešní
+ * weby posílají obsah jako JSON ve `<script>` a do značek ho vykreslí
+ * až prohlížeč. A `bezZnacek` `<script>` ZAHAZUJE, takže jsem vyhodil
+ * přesně to místo, kde ten text nejspíš byl.
+ *
+ * Tohle tedy není obcházení ničeho: je to čtení TÉŽE stránky, kterou
+ * nám web dovoluje číst, jen se text bere i odtamtud, kam ho web
+ * uložil. Žádný prohlížeč se nepředstírá a robots.txt platí dál.
+ *
+ * Bere se jen to, co vypadá na věty: řetězce z JSONu kratší než 40
+ * znaků jsou jména polí, adresy a klíče, ne text podmínek.
+ */
+export function textZeSkriptu(html) {
+  const ven = [];
+  for (const m of String(html || '').matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+    const telo = m[1];
+    if (!telo || telo.length < 80) continue;
+    if (!/[:{[]/.test(telo)) continue;                 // nevypadá na data
+    /* Řetězce z JSONu. Nevyžaduje se platný JSON: stránky posílají
+       i JavaScript, do kterého je JSON zapsaný. */
+    /* STROP JE VYSOKO SCHVÁLNĚ. Napoprvé tu stálo 2 000 a zkouška to
+       shodila: stránka, která celé podmínky posílá jako JEDEN dlouhý
+       řetězec, nevyšla vůbec — výraz s krátkým stropem na ni nesedl
+       a výsledek byl „málo textu", tedy tentýž slepý nález, kvůli
+       kterému se to celé psalo. */
+    for (const s of telo.matchAll(/"((?:[^"\\]|\\.){40,40000})"/g)) {
+      let t = s[1];
+      try { t = JSON.parse('"' + t + '"'); } catch { /* necháme jak je */ }
+      /* DVĚ PRAVIDLA, NE TŘI. Nejdřív tu stál i zákaz na `^https?:`
+         a `^/` — „adresa není text". Zkouška ukázala, že je MRTVÝ:
+         adresa nemá mezeru, takže ji vyloučí už pravidlo pod ním,
+         a sabotáž toho řádku nic neshodila. Mrtvé pravidlo v kódu
+         tvrdí, že něco hlídá, a nehlídá nic (viz §51). */
+      if (!/\s/.test(t)) continue;                      // bez mezery = klíč nebo adresa
+      if (!/[.!?:;,]/.test(t)) continue;                // bez interpunkce to není věta
+      ven.push(t);
+      if (ven.length >= 400) return ven;
+    }
+  }
+  return ven;
+}
+
 /** Absolutní adresa z případně relativního odkazu. */
 export function absolutni(odkaz, base) {
   try { return new URL(String(odkaz), base).href; } catch { return null; }
@@ -140,10 +186,20 @@ export function odkazyNaPodminky(html, base) {
   return ven;
 }
 
+/** Všechny odstavce stránky — ze značek I z vloženého JSONu. */
+export function celyText(html) {
+  const ze = odstavce(bezZnacek(html));
+  const zj = textZeSkriptu(html).map((t) => t.replace(/\s+/g, ' ').trim()).filter((t) => t.length >= 40);
+  const videne = new Set();
+  const ven = [];
+  for (const t of [...ze, ...zj]) { if (videne.has(t)) continue; videne.add(t); ven.push(t); }
+  return ven;
+}
+
 /** Odstavce, které mluví o automatickém přístupu. */
 export function oAutomatu(html) {
   const ven = [];
-  for (const o of odstavce(bezZnacek(html))) {
+  for (const o of celyText(html)) {
     if (!SLOVA_ODSTAVEC.test(o)) continue;
     ven.push(o.slice(0, DELKA_ODSTAVCE));
     if (ven.length >= ODSTAVCU_NA_STRANKU) break;
@@ -196,8 +252,12 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
     if (s.zakaz) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'nesmíme číst', duvod: s.zakaz }); continue; }
     if (s.chyba) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'neodpověděla', duvod: s.chyba }); continue; }
     const pasaze = oAutomatu(s.html);
-    const text = bezZnacek(s.html);
-    const vsechny = odstavce(text);
+    /* DOKLAD MĚŘÍ TOTÉŽ, CO SE PROHLEDÁVÁ. Kdyby se počítal jen text
+       ze značek, zůstal by nález stejně slepý jako předtím: stránka
+       s obsahem v JSONu by vyšla jako „málo textu", i když se text
+       našel. */
+    const vsechny = celyText(s.html);
+    const text = vsechny.join('\n');
     /* DOKLAD, ŽE SE OPRAVDU NĚCO PŘEČETLO. Bez něj by „nic o automatu"
        znamenalo zároveň „v podmínkách o tom nic není" i „stránka nám
        nic nedala" — a to jsou dvě různé odpovědi. */
