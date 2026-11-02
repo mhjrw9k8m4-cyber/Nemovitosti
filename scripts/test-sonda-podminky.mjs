@@ -71,11 +71,30 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   </body></html>`;
   const p = P.oAutomatu(html);
   pravda('vyberou se jen odstavce o automatickém přístupu',
-    p.length === 2 && /automatizovan/.test(p[0]) && /rozhran/i.test(p[1]), JSON.stringify(p));
+    p.length === 2 && /automatizovan/.test(p[0].text) && /rozhran/i.test(p[1].text), JSON.stringify(p));
   pravda('odstavec o platbách a reklamacích se nebere',
-    !p.some((x) => /reklamace/.test(x)), JSON.stringify(p));
+    !p.some((x) => /reklamace/.test(x.text)), JSON.stringify(p));
   pravda('odstavec se nezkracuje pod čitelnost, ale má strop',
-    p.every((x) => x.length <= P.DELKA_ODSTAVCE));
+    p.every((x) => x.text.length <= P.DELKA_ODSTAVCE + 2));
+  /* A HLAVNĚ: u pasáže stojí SLOVO, kvůli kterému se vybrala, a výsek
+     je kolem něj — ne šest set znaků úvodu, za kterými to slovo
+     zůstane. Na tom padl první běh naostro: do nálezu se zapsal odstavec,
+     ze kterého nebylo poznat, proč tam je. */
+  pravda('u pasáže stojí slovo, kvůli kterému se vybrala',
+    /automatizovan/i.test(p[0].slovo) && /rozhran/i.test(p[1].slovo),
+    JSON.stringify(p.map((x) => x.slovo)));
+  pravda('a to slovo je uvnitř výseku, ne za řezem',
+    p.every((x) => x.text.toLowerCase().includes(x.slovo.toLowerCase())),
+    JSON.stringify(p));
+  {
+    /* Dlouhý odstavec, kde slovo stojí až na konci: výsek ho musí
+       obsahovat, ať je odstavec jak chce dlouhý. */
+    const dlouhy = '<p>' + 'Toto je úvodní věta bez významu pro náš účel. '.repeat(60)
+      + 'Obsah nelze automatizovaně stahovat.</p>';
+    const q = P.oAutomatu(dlouhy);
+    pravda('slovo na konci dlouhého odstavce se do výseku vejde',
+      q.length === 1 && /automatizovan/.test(q[0].text), JSON.stringify(q));
+  }
   pravda('značky se odstraní, text zůstane',
     !/[<>]/.test(P.bezZnacek('<p>text &amp; dál</p>')) && /text & dál/.test(P.bezZnacek('<p>text &amp; dál</p>')));
   pravda('krátké úryvky se za odstavec nepočítají',
@@ -134,9 +153,9 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     { stahni, ua: UA, mezipamet: new Map() });
   pravda('povolený web se přečte a pasáže o automatu jsou v nálezu',
     /přečteno \(1 pasáží/.test(z.verdikt) && z.stranky[0].pasaze.length === 1
-    && /automatizovan/.test(z.stranky[0].pasaze[0]), JSON.stringify(z.verdikt));
+    && /automatizovan/.test(z.stranky[0].pasaze[0].text), JSON.stringify(z.verdikt));
   pravda('a odstavec, který s automatem nesouvisí, se nepřipojí',
-    !z.stranky[0].pasaze.some((p) => /občanským/.test(p)), JSON.stringify(z.stranky[0].pasaze));
+    !z.stranky[0].pasaze.some((p) => /občanským/.test(p.text)), JSON.stringify(z.stranky[0].pasaze));
   /* Stránka bez jediné zmínky se do nálezu dostane TAKY — „nic tam
      není" je nález, ne mlčení. */
   /* Stránka MUSÍ mít dost textu, jinak by to spadlo do „málo textu" —
@@ -264,7 +283,7 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
       { stahni: F.stahni, ua: UA, mezipamet: new Map() });
     pravda('NAOSTRO: domov, odkaz i podmínky se přečtou opravdovým `stahni`',
       /přečteno \(1 pasáží/.test(z.verdikt) && z.stranky.length === 1
-      && /automatizovan/.test(z.stranky[0].pasaze[0]),
+      && /automatizovan/.test(z.stranky[0].pasaze[0].text),
       JSON.stringify({ verdikt: z.verdikt, stranky: z.stranky.length }));
   } finally { srv.close(); }
 }

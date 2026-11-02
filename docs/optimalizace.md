@@ -21178,3 +21178,27 @@ vyšla jako „málo textu", i když se text našel.
    v JSONu má 70 znaků.
 
 `test-sonda-podminky`: **40 kontrol, třináct sabotáží.**
+
+**TŘETÍ BĚH UŽ ODPOVĚĎ DAL — a je to odpověď, ne dohad.**
+
+| | |
+|---|---|
+| **Bezrealitky** | stránka `/informace/smluvni-podminky` je **rozcestník**: 3 274 znaků úvodu a odkazy na **pět PDF dokumentů**, ve kterých ty podmínky opravdu jsou (obchodní podmínky serveru, smluvní podmínky služby inzerce, zásady zpracování osobních údajů a dvě další). Všech pět leží na **`api.bezrealitky.cz`** — tedy na hostiteli, jehož `robots.txt` má `Disallow: /`. |
+| **Sreality** | `www.sreality.cz` nedovoluje číst ani domovskou stránku. |
+
+Takže: **podmínky se automaticky přečíst nedají ani u jednoho z nich** —
+u Sreality kvůli zákazu na celém webu, u Bezrealitek proto, že text je
+v dokumentech na zakázaném hostiteli. Zbývající cesta je, aby je otevřel
+člověk; sonda k tomu dodala přesné adresy všech pěti souborů.
+
+**A ještě jedna vada v dokladu, kterou ukázal právě ten běh naostro.**
+Do nálezu se zapisovalo prvních 600 znaků odstavce — a slovo, kvůli
+kterému se ta pasáž vybrala, zůstalo **za řezem**. Kdo nález čte, nevidí
+důvod; doklad, ze kterého není poznat, co dokazuje, je k ničemu. Výsek se
+proto středí **na shodu** a vedle textu stojí **celé slovo z textu**
+(„automatizovaně", ne „automat"). **Prokázáno sabotáží:** výsek zpátky od
+začátku odstavce → slovo na konci dlouhého odstavce se do něj nevejde
+(1 pád); slovo se přestane zapisovat (1).
+
+`test-sonda-podminky`: **43 kontrol, patnáct sabotáží.** A u sedmi z nich
+jsem byl ten, koho opravila zkouška.

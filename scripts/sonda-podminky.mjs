@@ -196,12 +196,34 @@ export function celyText(html) {
   return ven;
 }
 
-/** Odstavce, které mluví o automatickém přístupu. */
+/**
+ * Pasáže o automatickém přístupu. Vrací `{ slovo, text }`.
+ *
+ * VÝSEK SE BERE KOLEM NALEZENÉHO SLOVA, NE OD ZAČÁTKU ODSTAVCE.
+ * Napoprvé tu stálo `o.slice(0, DELKA_ODSTAVCE)` — a první běh naostro
+ * ukázal, proč je to špatně: do nálezu se zapsalo šest set znaků
+ * úvodu a slovo, kvůli kterému se ta pasáž vybrala, zůstalo za
+ * řezem. Kdo nález čte, neviděl důvod — a doklad, ze kterého není
+ * poznat, co dokazuje, je k ničemu. Proto se výsek středí na shodu
+ * a vedle textu stojí i to SLOVO, které sedlo.
+ */
 export function oAutomatu(html) {
   const ven = [];
   for (const o of celyText(html)) {
-    if (!SLOVA_ODSTAVEC.test(o)) continue;
-    ven.push(o.slice(0, DELKA_ODSTAVCE));
+    const m = SLOVA_ODSTAVEC.exec(o);
+    if (!m) continue;
+    /* Do nálezu jde CELÉ SLOVO z textu, ne jen ten úlomek, na který
+       sedl vzorek: „automat" se čte hůř než „automatizovaně". */
+    let a = m.index, b = m.index + m[0].length;
+    while (a > 0 && /\p{L}/u.test(o[a - 1])) a--;
+    while (b < o.length && /\p{L}/u.test(o[b])) b++;
+    const slovo = o.slice(a, b);
+    const pulka = Math.floor(DELKA_ODSTAVCE / 2);
+    let od = Math.max(0, m.index - pulka);
+    let do_ = Math.min(o.length, od + DELKA_ODSTAVCE);
+    od = Math.max(0, do_ - DELKA_ODSTAVCE);
+    const vysek = (od > 0 ? '…' : '') + o.slice(od, do_) + (do_ < o.length ? '…' : '');
+    ven.push({ slovo, text: vysek });
     if (ven.length >= ODSTAVCU_NA_STRANKU) break;
   }
   return ven;
