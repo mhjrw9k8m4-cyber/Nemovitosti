@@ -19717,3 +19717,44 @@ Nový soubor dat si vyžádaly ještě dva hlídače, oba oprávněně:
 soubor popsaný na data.html (popis se píše do generátoru té stránky, ne
 do ní — ruční úprava se při sestavení přepíše, což jsem si nejdřív
 vyzkoušel).
+
+## §317 — Počet pozemků byl nejdrobnější text na obrazovce
+
+Majitel poslal vyfocenou úvodní stránku a zakroužkoval na ní „1 911 na
+mapě / pořadí se střídá každý den": *„v zeleném označení by měl být víc
+vidět počet pozemků."*
+
+Naměřeno na telefonu 390 px, a je to jednoznačné:
+
+| prvek | velikost | tuk | barva |
+|---|---|---|---|
+| **počet „1 911 na mapě"** | **13 px** | 600 | šedá (88, 95, 91) |
+| Řazení | 16 px | 600 | černá |
+| Uložené | 16 px | 700 | černá |
+| Procházet po jednom | 16 px | 700 | bílá na zelené |
+
+Odpověď na otázku, kvůli které sem člověk přišel — *kolik jich tu je* —
+byla **jediný šedý a nejmenší text** mezi samými tučnými ovladači.
+Vzniklo to tím, že počet byl kdysi přípisek za jménem řazení
+(„Doporučené příležitosti · 1 930 na mapě"); řazení se 31. 10.
+přestěhovalo do vlastního rozbalovače nad výpisem a z přípisku zůstal
+přípisek, přestože mu zmizelo to, k čemu byl připsaný.
+
+**Co se změnilo.** Číslo má vlastní značku a je 24 px tučně v barvě
+textu; slovo „na mapě" zůstává tlumené vedle něj. Je to týž zápis, jaký
+web používá na kartě u ceny („**122 133 Kč** 35 Kč/m²"), takže nejde
+o nový nápad, ale o tentýž už zavedený.
+
+**Jedna past, kvůli které mezera zůstala v témže textovém uzlu:**
+patnáct zkoušek čte počet z `innerText` tohohle prvku a hledá v něm
+„N na mapě". Kdyby se slovo odstěhovalo do vlastní značky tak, že se
+mezi ně dostane zalomení, přestalo by ho najít všech patnáct naráz —
+a vypadalo by to jako patnáct různých vad.
+
+Hlídá to `scripts/test-uvod.mjs` (74 kontrol, 6 nových). Měří se
+**porovnáním s ovladači vedle**, ne proti pevnému číslu: pevná mez
+zestárne hned, jak se změní stupnice písma, kdežto „počet nesmí být
+menší ani světlejší než tlačítka kolem" platí dál. Šestá kontrola hlídá
+tu past — že „N na mapě" pořád stojí na jednom řádku. Prokázáno dvěma
+sabotážemi: vrácením drobného šedého čísla (3 ✕) a odstěhováním „na
+mapě" na vlastní řádek (1 ✕).

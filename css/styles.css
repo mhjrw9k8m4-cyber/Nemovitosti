@@ -3367,6 +3367,19 @@ h1 em{ color:var(--znacka-svetla);
 .rs-chip .rs-place{font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .rs-chip .rs-price{color:var(--muted); white-space:nowrap;}
 .mc-sub{font-weight:400; color:var(--muted); font-size:13px;}
+/* POČET NAD VÝPISEM JE ODPOVĚĎ, NE PŘÍPISEK.
+   Naměřeno 2. 11. na telefonu 390 px: „1 911 na mapě" mělo 13 px
+   a šedou (88,95,91), kdežto Řazení 16 px černě, Uložené 16 px tučně
+   a „Procházet po jednom" 16 px bíle na zelené. Nejdůležitější číslo
+   na obrazovce bylo to nejdrobnější a jediné šedé. Majitel to poslal
+   zakroužkované: „v zeleném označení by měl být víc vidět počet
+   pozemků." Číslo je teď 24 px tučně v barvě textu, slovo „na mapě"
+   zůstává tlumené vedle něj — řádek má jedno těžiště, ne dvě.
+   Zarovnání na účaří dělá .map-count (align-items:baseline), takže
+   velké číslo a malé slovo stojí na jedné lince. */
+#map-count .mc-sub{font-size:14px; font-weight:500;}
+#map-count .mc-cislo{font-family:var(--font-display); font-size:24px; font-weight:700;
+  letter-spacing:-0.02em; color:var(--text);}
 .opp-list{list-style:none; overflow-y:auto; flex:1; margin:0 -4px; padding:0 4px; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;}
 /* NAČÍTÁNÍ MÁ VYPADAT JAKO TO, CO SE NAČÍTÁ.
    Placeholder zůstal ze starého výpisu: malý čtvereček vlevo a tři

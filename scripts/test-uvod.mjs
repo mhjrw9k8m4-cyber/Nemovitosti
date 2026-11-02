@@ -821,6 +821,63 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
   await ctxS.close();
 }
 
+/* ---- POČET NAD VÝPISEM MUSÍ BÝT VIDĚT ----------------------------
+   Majitel 2. 11. poslal zakroužkované: „v zeleném označení by měl být
+   víc vidět počet pozemků." Naměřeno na telefonu 390 px: „1 911 na
+   mapě" mělo 13 px a šedou, kdežto Řazení 16 px černě, Uložené 16 px
+   tučně a „Procházet po jednom" 16 px bíle na zelené. Odpověď na
+   otázku „kolik jich tu je" byla ta nejdrobnější věc na obrazovce.
+   Měří se POROVNÁNÍM s ovladači vedle, ne proti pevnému číslu: pevná
+   mez zestárne hned, jak se změní stupnice písma, kdežto „číslo nesmí
+   být menší než tlačítka kolem" platí dál. */
+{
+  const ctxP = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 900 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  const pp = await ctxP.newPage();
+  await pp.goto(`${BASE}/index.html`, { waitUntil: 'load' });
+  const { naSeznam } = await import('./zkouska-pohled.mjs');
+  await naSeznam(pp);
+  await pp.waitForFunction(() => {
+    const e = document.querySelector('#map-count .mc-cislo');
+    return !!(e && (e.textContent || '').trim());
+  }, null, { timeout: 15000 }).catch(() => {});
+  const m = await pp.evaluate(() => {
+    const zmer = (sel) => {
+      const e = document.querySelector(sel);
+      if (!e) return null;
+      const st = getComputedStyle(e);
+      return { px: parseFloat(st.fontSize), tuk: parseInt(st.fontWeight, 10) || 400,
+        barva: st.color, text: (e.innerText || '').trim() };
+    };
+    return { cislo: zmer('#map-count .mc-cislo'), razeni: zmer('#map-sort'),
+      ulozene: zmer('#map-fav'), rychly: zmer('#mc-rychly'),
+      cely: (document.querySelector('#map-count') || {}).innerText || '' };
+  });
+  pravda('počet nad výpisem má vlastní značku a něco v ní je (kontrola měřidla)',
+    !!(m.cislo && /\d/.test(m.cislo.text)), JSON.stringify(m.cislo));
+  const sousede = [m.razeni, m.ulozene, m.rychly].filter(Boolean);
+  pravda('a je na čem ho poměřit — ovladače vedle (kontrola měřidla)',
+    sousede.length === 3, `naměřeno ${sousede.length} ovladačů`);
+  if (m.cislo && sousede.length === 3) {
+    const nejvetsi = Math.max(...sousede.map((x) => x.px));
+    pravda('počet pozemků není menší než ovladače kolem něj',
+      m.cislo.px >= nejvetsi,
+      `počet ${m.cislo.px} px, největší ovladač ${nejvetsi} px`);
+    pravda('a není ani světlejší — je v barvě textu, ne tlumený',
+      m.cislo.barva === (m.ulozene.barva || ''),
+      `počet ${m.cislo.barva}, „Uložené" ${m.ulozene.barva}`);
+    pravda('a je tučný', m.cislo.tuk >= 700, `tloušťka ${m.cislo.tuk}`);
+  }
+  /* A TOHLE JE TA DRUHÁ POLOVINA. Patnáct zkoušek čte počet z innerText
+     tohohle prvku a hledá v něm „N na mapě". Kdyby se číslo odstěhovalo
+     do vlastní značky tak, že se mezi ně dostane zalomení, přestaly by
+     ho najít všechny naráz — a vypadalo by to jako patnáct různých vad. */
+  pravda('a v textu prvku pořád stojí „N na mapě" na jednom řádku',
+    /\d[\s\u00a0]*\d*\s*na mapě/.test(m.cely.split('\n')[0]),
+    `první řádek: „${m.cely.split('\n')[0]}"`);
+  await ctxP.close();
+}
+
 await prohlizec.close();
 
 console.log('\nÚvodní obrazovka — živá čísla a věrohodnost cen');

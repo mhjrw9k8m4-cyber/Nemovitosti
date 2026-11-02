@@ -4426,7 +4426,9 @@
       + ikonaNastroje('rychly') + '<span class="mc-popis">Procházet<span class="mc-dl"> po jednom</span></span></button>' + tlacitka;
 
     countEl.innerHTML = (matched === 0 ? '<span>Nic nenalezeno</span>' : '')
-      + (matched ? '<span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
+
+      + (matched ? '<span class="mc-sub"><b class="mc-cislo">' + fmt(matched)
+          + '</b> na mapě</span>' : '')
       + pripisky;
 
     var obalRazeni = sortEl && ((sortEl.closest && sortEl.closest('.cdd')) || sortEl);

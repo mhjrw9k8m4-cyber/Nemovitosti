@@ -7432,7 +7432,18 @@
        nemá co oddělovat. (Vidět nebyl — .mc-sep měl display:none —
        ale v textu prvku byl, a patnáct zkoušek čte počet právě odtud.) */
     countEl.innerHTML = (matched === 0 ? '<span>Nic nenalezeno</span>' : '')
-      + (matched ? '<span class="mc-sub">' + fmt(matched) + ' na mapě</span>' : '')
+      /* ČÍSLO MÁ VLASTNÍ ZNAČKU, ABY MOHLO BÝT VELKÉ. Majitel 2. 11.
+         poslal vyfocené a zakroužkované: „v zeleném označení by měl
+         být víc vidět počet pozemků." Naměřeno na telefonu: počet byl
+         13 px šedě (88,95,91), zatímco každý ovladač kolem něj 16 px
+         černě nebo bíle na zelené — odpověď na otázku „kolik jich tam
+         je" byla ta nejdrobnější věc na obrazovce.
+         MEZERA PŘED „na mapě" MUSÍ ZŮSTAT V TÉMŽE TEXTOVÉM UZLU.
+         Patnáct zkoušek čte z tohohle prvku innerText a hledá v něm
+         „N na mapě"; kdyby se slovo odstěhovalo do vlastní značky,
+         mohla by se mezi ně vložit druhá mezera nebo zalomení. */
+      + (matched ? '<span class="mc-sub"><b class="mc-cislo">' + fmt(matched)
+          + '</b> na mapě</span>' : '')
       + pripisky;
     /* A KDYŽ NENÍ CO ŘADIT, ŘAZENÍ SE SCHOVÁ. Dřív mizelo samo —
        bylo součástí téhle hlavičky, a ta se při nulovém výběru celá
