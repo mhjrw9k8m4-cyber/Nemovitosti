@@ -1474,6 +1474,27 @@ body.vm-otevreno{overflow:hidden;}
   color:var(--text); transition:var(--prechod);}
 .vm-km input:checked + span{ border-color:var(--plocha-znacka);}
 .vm-km input:focus-visible + span{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+/* POČET NABÍDEK PŘÍMO NA DLAŽDICI OKRUHU.
+   Dřív se počet dal zjistit jen přepnutím — člověk klikal naslepo, aby
+   našel okruh, ve kterém něco je. Čísla pro všechny okruhy se přitom
+   počítají v jednom průchodu už dnes.
+   Je to POZNÁMKA K OVLADAČI, ne druhé číslo vedle prvního: 11 px,
+   tlumená barva, nad popiskem „10 km". U vybrané dlaždice ztmavne,
+   protože tam se čte. Prázdné <b> (dokud není místo vybrané) nesmí
+   dlaždicí hnout — proto `min-height` místo `display:none`. */
+.vm-km b{display:block; min-height:13px; font-size:11px; font-weight:600;
+  line-height:1.2; text-align:center; color:var(--muted);
+  font-variant-numeric:tabular-nums; transition:var(--prechod);}
+.vm-km b:empty{visibility:hidden;}
+.vm-km input:checked ~ b{color:var(--znacka-svetla);}
+/* POTVRZENÍ PŘI NULE USTOUPÍ. Pravidlo webu je jedna hlavní akce na
+   obrazovku; při „0 pozemků" je hlavní rada „Zkusit 20 km", a kdyby
+   vedle ní svítilo plné zelené tlačítko vedoucí na prázdný seznam,
+   byly by hlavní akce dvě. Nezakazuje se, jen zešedne — kdo chce
+   prázdné okolí uložit, pořád může. */
+.vm-ok.vm-ok-tise{background:#fff; background-image:none;
+  color:var(--znacka-svetla); border:1.5px solid var(--obrys-tlacitka);
+  box-shadow:var(--e1);}
 
 /* Měřítko okruhu na mapě: čára od středu ke kraji kruhu a na ní číslo.
    Kruh sám o sobě řekne „takhle velké to je" jen tomu, kdo si deset

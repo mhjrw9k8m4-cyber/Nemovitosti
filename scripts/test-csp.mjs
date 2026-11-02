@@ -164,6 +164,10 @@ const server = createServer((q, s) => {
     if (parametry.has('bezcsp')) html = html.replace(META, '');
     html = html.replace('</body>', PODSTRCENE + '</body>');
     telo = Buffer.from(html, 'utf8');
+  } else if (parametry.has('bezcsp')) {
+    /* Táž stránka bez politiky — srovnávací vzorek pro měření
+       „nezabila politika vlastní skripty" (viz níž). */
+    telo = Buffer.from(telo.toString('utf8').replace(META, ''), 'utf8');
   }
   s.setHeader('content-type', TYPY[path.extname(f)] || 'application/octet-stream');
   s.end(telo);
@@ -171,20 +175,29 @@ const server = createServer((q, s) => {
 await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
 
 /* ---- 2. V PROHLÍŽEČI --------------------------------------------- */
-/* Od každého druhu stránky jedna. Nejmenší počet uzlů v DOM je
-   naměřený 23. 10. a sražený dolů (pojistka proti měření nad mrtvou
-   stránkou, ne kontrola rozvržení). */
-const NEJMENE = {
-  'index.html': 1500, 'pozemky-okres-benesov.html': 500, 'zpravy.html': 80,
-  'muj-inzerat.html': 200, 'data.html': 250, 'pridat.html': 350,
-  'hlidani.html': 100, 'porovnani.html': 110, 'cena-pozemku.html': 400,
-  'moje-data.html': 110,
-};
-const STRANKY = Object.keys(NEJMENE);
+/* Od každého druhu stránky jedna.
+
+   MĚŘÍ SE ROZDÍL, NE PEVNÉ ČÍSLO. Dřív tu stál ručně psaný nejmenší
+   počet uzlů na stránku (naměřený 23. 10.) jako pojistka, že se neměří
+   nad mrtvou stránkou. Taková mez ale zestárne při každé přestavbě
+   obsahu: 2. 11. shodila CI na cena-pozemku.html, protože nová karta
+   podle druhu nahradila delší oddíl a stránka má 328 uzlů proti mezi
+   400 — se zdravou stránkou, zdravou politikou a nulou porušení.
+   Proto se každá stránka načte dvakrát, s politikou a bez ní (?bezcsp),
+   a hlídá se, že politika neubrala skoro nic. To je přesně ta otázka,
+   na kterou mez odpovídat měla, a nezávisí na tom, jak dlouhá stránka
+   dneska je. */
+const PODIL = 0.9;
+const STRANKY = [
+  'index.html', 'pozemky-okres-benesov.html', 'zpravy.html',
+  'muj-inzerat.html', 'data.html', 'pridat.html',
+  'hlidani.html', 'porovnani.html', 'cena-pozemku.html',
+  'moje-data.html',
+];
 /* Stránka pozemku se bere skutečná — ta má vložený datový blok
    window.PK_POZEMEK, tedy právě ten skript, který musí hash pustit. */
 const pozemky = vsechny.filter((f) => /^pozemek-.*\.html$/.test(f));
-if (pozemky.length) { STRANKY.push(pozemky[0]); NEJMENE[pozemky[0]] = 250; }
+if (pozemky.length) STRANKY.push(pozemky[0]);
 
 const prohlizec = await chromium.launch({
   executablePath: process.env.PW_CHROMIUM || undefined, args: ['--no-sandbox'],
@@ -208,8 +221,15 @@ try {
     await p.waitForTimeout(2500);
     const r = await p.evaluate(() => ({ csp: window.__CSP || [], uzlu: document.querySelectorAll('*').length }));
     if (r.csp.length) porusujici.push(`${s}: ${r.csp.slice(0, 2).join(' ; ')}`);
-    if (r.uzlu < NEJMENE[s]) mrtve.push(`${s}: ${r.uzlu} uzlů < ${NEJMENE[s]}`);
     if (chybySkriptu.length) mrtve.push(`${s}: chyba skriptu — ${chybySkriptu[0]}`);
+    /* Táž stránka bez politiky: kolik uzlů má, když jí nic nebrání. */
+    await p.goto(`http://127.0.0.1:${PORT}/${s}?bezcsp`, { waitUntil: 'load', timeout: 60000 }).catch(() => {});
+    await p.waitForTimeout(2500);
+    const bez = await p.evaluate(() => document.querySelectorAll('*').length);
+    if (bez < 50) mrtve.push(`${s}: ani bez politiky se nevykreslí (${bez} uzlů) — měřit není co`);
+    else if (r.uzlu < bez * PODIL) {
+      mrtve.push(`${s}: s politikou ${r.uzlu} uzlů, bez ní ${bez} (${Math.round(r.uzlu / bez * 100)} %)`);
+    }
   }
   pravda(`žádná z ${STRANKY.length} stránek nehlásí porušení CSP`, porusujici.length === 0,
     porusujici.slice(0, 3).join(' | '));

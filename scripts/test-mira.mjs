@@ -74,7 +74,26 @@ for (const s of STRANKY) {
       ? '.' + e.className.trim().split(/\s+/)[0] : e.tagName.toLowerCase());
     const cv = document.createElement('canvas').getContext('2d');
     const out = [];
+    /* MŘÍŽKA A FLEX NEJSOU ODSTAVEC. U <li>, které je grid nebo flex,
+       leží text v buňkách a láme se v nich — šířka kontejneru není
+       délka řádku, kterou kdo čte. Měřit ho znamená hlásit vadu, která
+       na obrazovce není: 2. 11. tak CI nahlásilo .drh-radek se 110
+       znaky, zatímco nejdelší text v jeho buňce měl 42. Měří se tedy
+       buňky s textem; kontejner jen tehdy, když nese dlouhý text sám
+       (přímý textový uzel se do buňky neschová). */
+    const prose = [];
     for (const e of document.querySelectorAll('main p, main li')) {
+      const d = getComputedStyle(e).display;
+      if (d === 'grid' || d === 'flex' || d === 'inline-grid' || d === 'inline-flex') {
+        for (const c of e.children) prose.push(c);
+        let vlastni = 0;
+        for (const n of e.childNodes) if (n.nodeType === 3) vlastni += (n.textContent || '').trim().length;
+        if (vlastni >= 90) prose.push(e);
+        continue;
+      }
+      prose.push(e);
+    }
+    for (const e of prose) {
       const t = (e.textContent || '').trim();
       if (t.length < 90) continue;
       const r = e.getBoundingClientRect();

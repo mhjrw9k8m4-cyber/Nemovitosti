@@ -31,11 +31,17 @@ import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 
-await import('./falesna-supabase-chat.mjs');
+const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const BASE = 'http://127.0.0.1:8310';
+/* ADRESA SE BERE ZE SERVERU, NE Z PAMĚTI. Do 2. 11. tu stálo
+   'http://127.0.0.1:8310' napsané ručně, takže zkouška chodila na pevný
+   port, i když server poslouchal na jiném (PK_PORT). V CI to nevadilo
+   — tam je port výchozí —, ale místní souběžný běh směn skončil na
+   ERR_CONNECTION_REFUSED a vypadalo to jako vada service workeru.
+   §322 to mělo vyřešit, jen hledalo `const PORT = 8xxx`; tenhle zápis
+   ani jeden z nich neměl, a proto přežil. */
 let ok = 0, chyb = 0;
 const zpravy = [];
 /* A KDYŽ TO SPADNE, AŤ TO TAKY NĚCO ŘEKNE — viz scripts/zkouska-pad.mjs.
@@ -141,13 +147,16 @@ try {
      test si toho nevšiml.
      localhost a 127.0.0.1 jsou pro prohlížeč dva RŮZNÉ původy, ačkoli
      je za nimi tentýž server. Cizí původ je tedy dosažitelný i tady.
-     POZOR: tady se adresa SCHVÁLNĚ nebere z scripts/port-zkousky.mjs.
-     Ta ukazuje na 127.0.0.1, tedy na VLASTNÍ původ — a tím by zkouška
-     přestala měřit to, co měřit má. Jediné místo v sadě, kde se číslo
-     portu opisuje právem.
+     POZOR: hostitel tu MUSÍ být „localhost", ne 127.0.0.1 z BASE —
+     jinak by to byl vlastní původ a zkouška by přestala měřit to, co
+     měřit má. Port se ale z BASE bere: do 2. 11. tu stálo napsané 8310
+     a při jiném portu ta adresa nikam nevedla, takže „cizí původ je
+     dosažitelný" přestalo platit a sabotáž (odebrání zákazu cizích
+     původů z workeru) by se zase nepoznala.
      no-cors proto, aby to byl týž druh požadavku jako mapová dlaždice. */
-  await p.evaluate(() => fetch('http://localhost:8310/data/model.json', { mode: 'no-cors' })
-    .then(() => '').catch(() => ''));
+  const CIZI = BASE.replace('127.0.0.1', 'localhost');
+  await p.evaluate((u) => fetch(u + '/data/model.json', { mode: 'no-cors' })
+    .then(() => '').catch(() => ''), CIZI);
   /* ADRESA S DOTAZEM, a to NAVIGACÍ. Napoprvé tu bylo fetch(), jenže
      pravidlo v workeru se týká navigací (request.mode === 'navigate') —
      fetch má jiný mode, takže se to pravidlo vůbec nevyvolalo a sabotáž
@@ -246,8 +255,9 @@ try {
 
   /* Cizí server se offline nesmí „podařit" z úložiště — to by znamenalo,
      že si ho worker přes zákaz uložil. */
-  const ciziOffline = await p.evaluate(() => fetch('http://localhost:8310/data/model.json', { mode: 'no-cors' })
-    .then(() => 'odpověď přišla').catch(() => 'selhalo')).catch(() => 'stránka není');
+  const ciziOffline = await p.evaluate((u) => fetch(u + '/data/model.json', { mode: 'no-cors' })
+    .then(() => 'odpověď přišla').catch(() => 'selhalo'),
+  BASE.replace('127.0.0.1', 'localhost')).catch(() => 'stránka není');
   pravda('cizí server se bez signálu NEozve z úložiště', ciziOffline === 'selhalo', ciziOffline);
 
   await ctx.setOffline(false);

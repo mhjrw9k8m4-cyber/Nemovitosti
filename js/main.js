@@ -4370,8 +4370,17 @@
           '<fieldset class="vm-okruh"><legend>Okruh od vybraného místa</legend>' +
             '<span class="vm-okruh-p" aria-hidden="true">Okruh</span>' +
             [2, 5, 10, 20, 50].map(function (v) {
+              /* POČET PATŘÍ NA DLAŽDICI. Dřív stál jen u jediného
+                 doporučeného okruhu („Zkusit 20 km — je tam 18 pozemků"),
+                 takže člověk přepínal naslepo, aby zjistil, kde co je.
+                 Čísla pro VŠECHNY okruhy se přitom počítají v jednom
+                 průchodu už dnes (poOkruzich v prepocti), takže to
+                 nestojí ani výpočet navíc.
+                 Prázdné <b> se naplní až v prepocti: při prvním
+                 vykreslení ještě není vybrané místo a číslo by lhalo. */
               return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
-                (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
+                (v === km ? ' checked' : '') + '><span>' + v + ' km</span>' +
+                '<b class="vm-km-n" data-km="' + v + '" aria-hidden="true"></b></label>';
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
@@ -4617,9 +4626,14 @@
         .slice(0, 6);
       if (!navrhy.length) return schovejNavrhy();
       navrhyEl.innerHTML = navrhy.map(function (x, i) {
+        /* MEZERY MEZI ZNAČKAMI JSOU TU SCHVÁLNĚ. Bez nich se text
+           návrhu slepí: naměřeno „Horka IIokres Kutná Hora1". Ve
+           flexu se to nevykreslí, takže na obrazovce není nic vidět —
+           ale odečítač i vyhledávač čtou text, a ten nedává smysl.
+           Táž vada shodila CI 888 („9otázek"). */
         return '<li role="option" id="vm-n' + i + '" aria-selected="false">' +
-          '<b>' + esc(x.misto) + '</b>' +
-          (x.okres ? '<span>okres ' + esc(x.okres) + '</span>' : '') +
+          '<b>' + esc(x.misto) + '</b> ' +
+          (x.okres ? '<span>okres ' + esc(x.okres) + '</span> ' : '') +
           '<i>' + x.pocet + '</i></li>';
       }).join('');
       navrhyEl.hidden = false;
@@ -4759,6 +4773,15 @@
         for (var j = 0; j < meze.length; j++) if (vzd <= meze[j]) poOkruzich[meze[j]]++;
       }
       hlidejVidet();
+      /* ČÍSLA NA DLAŽDICE OKRUHU. Dokud není místo vybrané, zůstávají
+         prázdná — nula u „2 km" by u nevybraného bodu nebyla pravda
+         o okolí, ale o středu republiky. */
+      kmVstupy.forEach(function (r) {
+        var b2 = r.parentNode && r.parentNode.querySelector('.vm-km-n');
+        if (!b2) return;
+        var kk = parseInt(r.value, 10) || 0;
+        b2.textContent = vybranoMisto ? String(poOkruzich[kk] || 0) : '';
+      });
       var obec = najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
       /* Potvrdit nejde, dokud člověk místo NEUKÁŽE — jinak by si uložil
@@ -4773,6 +4796,15 @@
         return;
       }
       if (okEl) { okEl.disabled = false; okEl.removeAttribute('aria-disabled'); }
+      /* DVĚ ZELENÁ TLAČÍTKA, JEDNO DO PRÁZDNA. Při nule pod výpisem
+         přibude rada („Zkusit 20 km — je tam 18 pozemků"), jenže
+         „Zobrazit pozemky" zůstávalo plnou hlavní akcí — takže na
+         obrazovce svítila dvě zelená a to větší vedlo na prázdný
+         seznam. Pravidlo webu zní jedna hlavní akce na obrazovku:
+         při nule je hlavní ta rada a potvrzení ustoupí do vedlejší
+         podoby. Nezakazuje se: kdo chce prázdné okolí uložit (třeba
+         aby si ho pak hlídal), pořád může. */
+      if (okEl) okEl.classList.toggle('vm-ok-tise', n === 0);
       /* Samotné číslo neřekne, jestli jde o běžný prodej nebo o dražby —
          a to je přitom ta informace, kvůli které se okolí sleduje. Rozpad
          se skládá jen z druhů, které v okruhu opravdu jsou. */

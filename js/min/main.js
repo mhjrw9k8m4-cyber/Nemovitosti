@@ -2564,8 +2564,10 @@
           '<fieldset class="vm-okruh"><legend>Okruh od vybraného místa</legend>' +
             '<span class="vm-okruh-p" aria-hidden="true">Okruh</span>' +
             [2, 5, 10, 20, 50].map(function (v) {
+
               return '<label class="vm-km"><input type="radio" name="vm-km" value="' + v + '"' +
-                (v === km ? ' checked' : '') + '><span>' + v + ' km</span></label>';
+                (v === km ? ' checked' : '') + '><span>' + v + ' km</span>' +
+                '<b class="vm-km-n" data-km="' + v + '" aria-hidden="true"></b></label>';
             }).join('') +
           '</fieldset>' +
           '<div class="vm-pocet" id="vm-pocet" aria-live="polite"></div>' +
@@ -2732,9 +2734,10 @@
         .slice(0, 6);
       if (!navrhy.length) return schovejNavrhy();
       navrhyEl.innerHTML = navrhy.map(function (x, i) {
+
         return '<li role="option" id="vm-n' + i + '" aria-selected="false">' +
-          '<b>' + esc(x.misto) + '</b>' +
-          (x.okres ? '<span>okres ' + esc(x.okres) + '</span>' : '') +
+          '<b>' + esc(x.misto) + '</b> ' +
+          (x.okres ? '<span>okres ' + esc(x.okres) + '</span> ' : '') +
           '<i>' + x.pocet + '</i></li>';
       }).join('');
       navrhyEl.hidden = false;
@@ -2846,6 +2849,13 @@
         for (var j = 0; j < meze.length; j++) if (vzd <= meze[j]) poOkruzich[meze[j]]++;
       }
       hlidejVidet();
+
+      kmVstupy.forEach(function (r) {
+        var b2 = r.parentNode && r.parentNode.querySelector('.vm-km-n');
+        if (!b2) return;
+        var kk = parseInt(r.value, 10) || 0;
+        b2.textContent = vybranoMisto ? String(poOkruzich[kk] || 0) : '';
+      });
       var obec = najdiNazevMista(c.lat, c.lng);
       var okEl = ov.querySelector('#vm-ok');
 
@@ -2855,6 +2865,8 @@
         return;
       }
       if (okEl) { okEl.disabled = false; okEl.removeAttribute('aria-disabled'); }
+
+      if (okEl) okEl.classList.toggle('vm-ok-tise', n === 0);
 
       var rozpad = ['drazba', 'exekuce', 'obec', 'majitel', 'sale']
         .filter(function (t) { return podle[t]; })

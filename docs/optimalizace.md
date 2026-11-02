@@ -20083,3 +20083,138 @@ pruhy stejnou dráhu a že **délky odpovídají poměru čísel** — bez té
 druhé by první prošla i nad čtyřmi stejně dlouhými pruhy. Prokázáno
 dvěma sabotážemi: vrácením pružného sloupce (1 ✕) a vrácením meze
 1,5 % (2 ✕).
+
+## 324. Okno „Vyberte své okolí": přepínač, který se přepínal naslepo
+
+Majitelova stížnost 2. 11.: „jedna z nejlepších funkcí, ale celé se to
+rozjíždí, občas nereaguje." Takže nejdřív **měření, ne přestavba** —
+na telefonu 390 px a s procesorem zpomaleným 4×:
+
+| Co | Kolik |
+|---|---|
+| Otevření okna | **441 ms**, z toho jedna dlouhá úloha 297 ms |
+| Klepnutí do mapy | **247 ms**, dlouhá úloha 176 ms |
+| Pět přepnutí okruhu, náš vlastní kód | **~60 ms celkem** |
+
+To třetí číslo je **negativní nález a mění zadání**. Rozpad profilu:
+`kmOd` 19 ms, `visible` 17 ms, `prepocti` 11 ms, `km` 9 ms. Náš
+výpočet tedy není kde se to „rozjíždí" — zbytek té čtvrt sekundy je
+překreslení Leafletu a dlaždice. Přepisovat `prepocti` by byla práce
+za nic, a tak se neudělala.
+
+**Co se místo toho našlo na obsahu.** Okno umí spočítat počet nabídek
+pro všech pět okruhů v jednom průchodu (`poOkruzich`) — a ukazovalo
+z nich **jediné číslo**, a to ještě jen jako radu („Zkusit 20 km — je
+tam 18 pozemků"). Ostatní čtyři okruhy se daly zjistit jedině tím, že
+je člověk přepnul a čekal na překreslení mapy. Odtud ten dojem, že se
+okno „rozjíždí": každé přepnutí byla sonda naslepo za 247 ms.
+
+Tři změny, všechny nad už spočítanými čísly — nic se nedopočítává:
+
+1. **Každá dlaždice nese svůj počet.** `2 km → 1 · 5 km → 3 ·
+   10 km → 5 · 20 km → 20 · 50 km → 173`. Dokud není vybrané místo,
+   dlaždice mlčí (číslo o okolí středu republiky by lhalo).
+2. **Při nule ustoupí potvrzení.** Byla tam dvě zelená tlačítka: rada
+   („Zkusit 50 km") a vedle ní plné „Zobrazit pozemky", které vede na
+   prázdný seznam. Potvrzení je teď bílé s rámem (`.vm-ok-tise`), zelená
+   zůstane jen tomu, co někam vede.
+3. **Mezery mezi vrstvami návrhu.** `textContent` dával „Horka IIokres
+   Kutná Hora1". Oku to ve flexu nevadí, odečítači a vyhledávači ano —
+   a táž vada shodila CI 888 („9otázek").
+
+**Hlídač `scripts/test-okoli-dlazdice.mjs` (12 kontrol) a čtyři
+sabotáže**, protože první dvě verze hlídače byly slabé a to by se bez
+sabotáže nepoznalo:
+
+- čtení `innerText` **vadu nenašlo**: innerText prochází rozvržením a ve
+  flexu vloží zalomení i tam, kde ve zdroji mezera není. Měří se
+  `textContent`;
+- „počet slov ≥ 3" **vadu taky nenašlo**: ubrat jednu mezeru ze dvou
+  počet slov nezmění. Měří se oba švy zvlášť (`\Sokres`, `\s\d+$`).
+
+Hotový hlídač padá na všech čtyřech sabotážích: vyprázdnění počtu
+v dlaždici (3 ✕), každá z obou chybějících mezer (1 ✕) a odebrání
+`.vm-ok-tise` (1 ✕).
+
+**Dvě věci, které měření ukázalo a nemění se bez majitelova slova.**
+Mapa se **při změně okruhu nehýbe** — to není vada, ale jeho vlastní
+příkaz zapsaný v kódu („ať mě to nechá tam, kde mám přiblíženo, bez
+ohledu na to, jak přepínám velikost kruhu"); kompromisem je tlačítko
+„Ukázat okruh". A **našeptávač nabízí jen místa, u kterých nějaký
+pozemek stojí** — „Kraslice", „Vernéřov" ani „Boží Dar" nevrátí nic.
+Proto také nejde nulu trefit hledáním (vybrané místo je vždy u pozemku)
+a hlídač si na ni musí podstrčit polohu uprostřed Šumavy.
+
+## 325. CI 890: dvě meze, které zestárly s obsahem, ne s webem
+
+Commit §323 (cenová stránka podle druhu) shodil v CI dvě zkoušky
+a **ani jedna nehlásila vadu stránky**. Obě měly v sobě ruční číslo,
+které platilo do příští přestavby obsahu.
+
+**a) „Míra sazby" nahlásila `.drh-radek` se 110 znaky na řádek.**
+Hlídač bere `main p, main li` jako odstavec a počítá znaky z šířky
+prvku. Nový cenový řádek je ale `display:grid` — text leží ve čtyřech
+buňkách a nejdelší z nich má **42 znaků**. Těch 110 je šířka
+kontejneru, kterou nikdo nečte. Měří se teď buňky; kontejner jen
+tehdy, když nese dlouhý text sám (přímý textový uzel se do buňky
+neschová). Měřených odstavců je po změně 313 místo 323 — ubylo deset
+mřížkových řádků, které se měřily nesmyslně.
+
+Prokázáno sabotáží: `max-width:none` na `.wrap > p` → **130 pádů**
+(až 186 znaků). Hlídač tedy neoslepl, jen přestal hlásit mřížky.
+
+**b) CSP: „a všechny se přitom vykreslily" spadlo na 328 uzlů < 400.**
+Ta mez byla ruční tabulka naměřená 23. 10. — pojistka, aby zkouška
+neměřila nulu porušení nad mrtvou stránkou. Jenže moje karta podle
+druhu nahradila delší oddíl, stránka má 328 uzlů, a politika přitom
+nezablokovala **nic**. Mez odpovídala na otázku „vykreslilo se to?"
+číslem, které se mění s obsahem.
+
+Teď se každá stránka načte **dvakrát — s politikou a bez ní**
+(`?bezcsp`) — a hlídá se, že politika neubrala víc než desetinu uzlů.
+To je přesně ta otázka, na kterou mez odpovídat měla, a nezávisí na
+tom, jak je stránka dneska dlouhá. Prokázáno sabotáží: do výpočtu
+hashů jsem přidal cizí znaky, čímž politika zakázala vlastní skripty
+stránek — rozdílová kontrola to **našla** (spolu s třemi dalšími).
+
+**Vlastní chyba v postupu, kterou si zapisuju.** Sabotáže vyžadují
+přestavbu webu (`node scripts/oprav.mjs`), a já jsem je pouštěl ve
+chvíli, kdy na pozadí běžely tři prohlížečové směny nad týmiž soubory.
+Jejich výsledek šel do koše a musel se opakovat. Je to týž druh chyby
+jako §322 (vlastní server na portu zkoušky): **měřit a přestavovat
+současně nejde.**
+
+## 326. Offline zkouška chodila na pevnou adresu — a co u toho ukázala sabotáž
+
+Souběžný běh směn našel `test-offline` s `ERR_CONNECTION_REFUSED` na
+`127.0.0.1:8310`, zatímco server poslouchal na 9101. Na řádku 38 stálo
+`const BASE = 'http://127.0.0.1:8310'` napsané ručně. **V CI to nikdy
+nevadilo** (tam je port výchozí), takže to vypadalo jako vada service
+workeru. §322 tenhle druh vady opravovala, ale hledala jen zápis
+`const PORT = 8xxx` — tohle jí proteklo. Adresa se teď bere ze serveru
+(`BASE` z `falesna-supabase-chat.mjs`); zkouška projde 19/19 na výchozím
+portu i na 9199.
+
+**Druhé místo bylo horší než pevný port.** Zkouška schválně sahá na
+`localhost` (pro prohlížeč jiný původ než `127.0.0.1`, přitom tentýž
+server), aby měla **dosažitelný cizí původ** — jinak by kontrola „nic
+cizího v úložišti" procházela sama od sebe. Port tam byl ale taky
+opsaný, takže při jiném portu mířila do prázdna a ten důvod zmizel.
+Teď se bere z `BASE` a vyměňuje se jen jméno hostitele.
+
+**A teď nález, který jsem nehledal.** Zkusil jsem tu kontrolu prokázat
+sabotáží — z workeru jsem odebral `if (u.origin !== self.location.origin) return;`
+(sabotáž přestavbu přežila, ověřeno) — a zkouška prošla **19/19**.
+Změřeno, co se po ní v úložišti opravdu stane:
+
+```
+no-cors odpověď: TypeError: Failed to fetch
+klíčů v úložišti: 2   cizích (localhost): 0
+```
+
+Bez toho zákazu se cizí požadavek v úložišti neuloží, ale **rozbije**.
+Takže kontrola „cizí server se bez signálu NEozve z úložiště" neumí
+odebrání zákazu poznat, a škoda z toho odebrání je přitom jiná, než na
+jakou zkouška míří — a tu nehlídá nic. Poznámka v hlavičce zkoušky
+tvrdí víc, než kolik kontrola unese; opravovat to je vlastní úkol
+(#215), ne přílepek k dnešní práci.

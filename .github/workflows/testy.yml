@@ -1160,6 +1160,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cena-podle-druhu.mjs
 
+      - name: Okolí — dlaždice okruhu nesou počty
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-okoli-dlazdice.mjs
+
       - name: Tři moduly se stahují až při prvním použití
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-odlozene-skripty.mjs
