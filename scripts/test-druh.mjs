@@ -194,7 +194,11 @@ je('jméno se škrtá bez ohledu na háčky',
     .filter((r) => /parseDruh\(/.test(r) && !/function parseDruh/.test(r))
     .map((r) => r.trim());
   je('robot druh rozpoznává (volání existují)', volani.length >= 5, true);
-  const bezJmen = volani.filter((r) => !/\[place, okres\]/.test(r));
+  /* Pravidlo je „druhý argument nese jména míst", ne „jmenuje se to
+     doslova place". Zkouška čekala přesně `[place, okres]` a spadla na
+     volání `[misto.place, okres]` v druhé cestě (§334), které totéž
+     dělá — jen má místo v jiné proměnné. */
+  const bezJmen = volani.filter((r) => !/\[[^\]]*place[^\]]*,\s*okres\]/.test(r));
   je('a každému volání předává jména míst', bezJmen, []);
   // Adresa popisuje MÍSTO, ne pozemek — do rozpoznávání nepatří vůbec.
   je('adresa se do rozpoznávání neposílá', /parseDruh\(name \+ ' ' \+ loc\)/.test(zdroj), false);

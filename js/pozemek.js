@@ -2220,7 +2220,6 @@
             + '<span class="pz-dalky-pozn">vzdušnou čarou</span></div>'
           : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
-        blokHtml() +
       '</div>' +
 
       /* BOČNÍ SLOUPEC. Na širokém displeji se z téhle jedné nádoby stane
@@ -2267,6 +2266,19 @@
         }()) +
       '</div>' +
       '</div>' +
+
+      /* „NEKUPUJETE JEN TUHLE PARCELU" PATŘÍ ZA CENU, NE PŘED NI.
+         Blok o okolí stál mezi řádkem místa a cenou — tedy přesně
+         uprostřed trojice CO → KDE → ZA KOLIK, kterou má podle
+         pravidla pod tímhle komentářem číst člověk vcelku. Na telefonu
+         to bylo měřitelné: 2. 11. 2026 na 390×844 odsunul odznak
+         cenového stupně na y = 877 px, tedy pod ohyb, a shodil tím
+         zkoušku scripts/test-cenovy-stupen.mjs (7 z 8 stránek vzorku
+         mělo odznak nad ohybem, osmá právě tenhle blok). Blok se tím
+         neztrácí — jen jde za cenu, kam kontext patří. Na monitoru se
+         nemění nic: cena je ve připnutém pruhu vpravo (grid-column 2),
+         takže v levém sloupci zůstává pořadí textů doslova stejné. */
+      blokHtml() +
 
       /* ZKRATKA K POZNÁMCE AŽ POD CENOU — a je to změna, ne původní stav.
          Tlačítko stálo mezi řádkem místa a cenou, tedy přesně uprostřed

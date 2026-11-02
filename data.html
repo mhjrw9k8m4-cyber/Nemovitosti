@@ -37,7 +37,7 @@
 
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=cbfa2753">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=d9e6fb57">
   <style>
     .kt-mail{display:flex; align-items:center; gap:12px; margin:4px 0 4px; padding:16px 16px; background:rgba(var(--plocha-znacka-svetla-rgb),0.08); border:1px solid rgba(var(--plocha-znacka-svetla-rgb),0.24); border-radius:var(--r-md); text-decoration:none;}
     .kt-mail .kt-ico{flex:none; width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; background:var(--plocha-znacka);}
@@ -93,7 +93,7 @@
       registrace ani domluva — stačí si ho stáhnout. Obnovuje se čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC).</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/opportunities.json</code></p>
     <p class="dt-cisla">Teď je v něm <b>2 004</b> nabídek a má
-      <b>669&nbsp;kB</b>. Z toho je <b>6</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 998</b> pozemků.</p>
+      <b>710&nbsp;kB</b>. Z toho je <b>6</b> duplicit — tentýž pozemek vypsaný dvakrát; web i řezy po okresech je odstraňují, takže na stránkách najdete <b>1 998</b> pozemků.</p>
   </section>
 
   <section class="dt-sekce">
@@ -165,6 +165,8 @@
 <tr><td><code>cena_drive</code></td><td>number</td><td>někdy</td><td>Předchozí cena, pokud se změnila.</td></tr>
 <tr><td><code>cena_zmena</code></td><td>string</td><td>někdy</td><td>Den změny ceny (YYYY-MM-DD).</td></tr>
 <tr><td><code>inz</code></td><td>string</td><td>někdy</td><td>Otisk inzerenta — šest znaků spočítaných z jeho vlastního textu (prvních 60 znaků popisu, srovnaných do jedné podoby). Jméno inzerenta data nenesou, tohle je jen značka „tyhle nabídky napsal týž člověk“. Potřebuje ji cenový verdikt: jeden velkoobchodník drží skoro polovinu nabídek, a bez té značky by se jeho cenník počítal jako stovky nezávislých pozorování trhu. Nabídka bez popisu ji nemá a počítá se sama za sebe. Počítá to otiskInzerenta v scripts/text-inzeratu.mjs.</td></tr>
+<tr><td><code>zdroj</code></td><td>string</td><td>vždy</td><td>Jméno služby, ze které nabídka je. Píše si ho do nabídky každý stahovač sám — je to jediné místo, které ho ví jistě. Podle něj se pozná, čí nabídky se mají podržet, když zdroj neodpoví (viz podrzNabidkyVypadlych v scripts/fetch-opportunities.mjs). Pole „site“ je něco jiného: to jsou sítě, ne zdroj. <b>Hodnoty:</b> <code>Dražby</code>, <code>OK dražby</code>, <code>SPÚ</code>, <code>Bezrealitky</code>, <code>Sreality (Apify)</code>, <code>Farmy</code></td></tr>
+<tr><td><code>drzeno_od</code></td><td>string</td><td>někdy</td><td>Datum (YYYY-MM-DD), od kterého se nabídka DRŽÍ z minulého běhu, protože její zdroj neodpověděl. Je tu jen u takových nabídek a nejvýš sedm dní; po stropu se nabídka pustí. Když pole chybí, nabídka se dnes doopravdy stáhla.</td></tr>
       </tbody>
     </table></div>
   </section>
@@ -182,8 +184,8 @@
 
   <section class="dt-sekce">
     <h2>Jen jeden okres? Nemusíte brát všechno</h2>
-    <p class="dt-uvod">Celý soubor má 669&nbsp;kB. Komu jde
-      o jeden okres, tomu stačí jeho řez — a ten má 525&nbsp;kB
+    <p class="dt-uvod">Celý soubor má 710&nbsp;kB. Komu jde
+      o jeden okres, tomu stačí jeho řez — a ten má 566&nbsp;kB
       v nejhorším případě.</p>
     <p class="dt-adresa"><code>https://www.parcelaka.cz/data/okres/benesov.json</code></p>
     <ul class="dt-seznam">

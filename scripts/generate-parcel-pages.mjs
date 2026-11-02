@@ -2175,9 +2175,26 @@ export function generuj() {
      nezbývá ani záznam. Psát si vlastní archiv mimo stránky by znamenalo
      druhý zdroj pravdy o tomtéž. */
   zmizele.sort((a, b) => (b.kdy || '').localeCompare(a.kdy || ''));
+  /* JEDEN KLÍČ = JEDEN ŘÁDEK. Nabídka, která se vrátila a odešla
+     znovu, má v archivu dvě stránky, ale pro člověka je to týž
+     pozemek: v „Uložených" by se mu ukázal dvakrát, s jedinou
+     odlišností v datu (změřeno 2. 11. 2026: 4 klíče ze 496, u Měnína
+     navíc s jinou cenou — 1 058 690 → 874 570 Kč). Klíč ty dvě
+     nabídky rozlišit neumí (místo, parcela, okres, poloha i výměra
+     jsou shodné), takže zbývá vybrat jednu: po setřídění výš je
+     první ta s NEJNOVĚJŠÍM datem — a to je ta, která odpovídá na
+     „kdy odešla". */
+  const videne = new Set();
+  const jedinecne = zmizele.filter((z) => {
+    if (videne.has(z.klic)) return false;
+    videne.add(z.klic); return true;
+  });
+  const dvojic = zmizele.length - jedinecne.length;
+  if (dvojic) console.log(`Zmizelé: ${dvojic} záznamů se shodným klíčem sloučeno`
+    + ` (nabídka se vrátila a odešla znovu); zůstává novější datum.`);
   fs.writeFileSync(path.join(ROOT, 'data', 'zmizele.json'),
-    JSON.stringify({ updated: dnes, dni: DNI_ARCHIV, zmizele }) + '\n');
-  return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano, zmizelych: zmizele.length };
+    JSON.stringify({ updated: dnes, dni: DNI_ARCHIV, zmizele: jedinecne }) + '\n');
+  return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano, zmizelych: jedinecne.length };
 }
 
 /** Jeden záznam do seznamu zmizelých, přečtený z ostrůvku stránky. */

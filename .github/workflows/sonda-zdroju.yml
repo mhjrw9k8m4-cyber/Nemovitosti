@@ -1,0 +1,58 @@
+name: Sonda zdrojů
+
+# Měří, které zdroje nabídek jde vůbec číst — a tím připravuje odpověď
+# na jedinou vážnou slabinu dat: změřeno 2. 11. 2026, že čtyři pětiny
+# nabídek na webu nese jediný zdroj. Sonda nic nepublikuje a do nabídek
+# nezasahuje; jen u každého zdroje a kandidáta zjistí, co dovoluje jeho
+# robots.txt, jestli adresa odpovídá a jestli na ní vůbec jsou pozemky,
+# a zapíše nález do data/zdroje-sonda.json.
+#
+# JEDNOU TÝDNĚ, NE ČTYŘIKRÁT DENNĚ. Je to měření pro rozhodování, ne
+# zdroj dat pro web. Na jeden zdroj jdou nejvýš dva dotazy za běh.
+
+on:
+  schedule:
+    # Pondělí ve 4:37 UTC — mimo špičku a mimo čas robota dat (ten běží
+    # v 0, 6, 12 a 18), ať si dvě úlohy nelezou do commitů.
+    - cron: '37 4 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write          # zakládá úkol, když úloha selže
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Změřit zdroje
+        run: node scripts/sonda-zdroju.mjs
+
+      - name: Commit nálezu (jen pokud se něco změnilo)
+        run: |
+          git add data/zdroje-sonda.json
+          if [[ -n "$(git status --porcelain -- data/zdroje-sonda.json)" ]]; then
+            git config user.name "parcelka-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "data: nález sondy zdrojů"
+            git push
+          else
+            echo "Beze změny."
+          fi
+
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Sonda zdrojů
+          co-to-znamena: >-
+            Neměří se, které zdroje nabídek jde číst. Web tím hned netrpí, ale závislost na jednom zdroji se přestane sledovat.

@@ -27,6 +27,9 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { bezEmodzi, otiskInzerenta } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
+import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist } from './cteni-zdroje.mjs';
+import { smimeCist } from './robots.mjs';
+import { ZAPOJENE } from './zdroje-kandidati.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -1196,6 +1199,226 @@ export const PRAH_PROPADU = 0.5;
    vykrvácení — a skok už hlídá porovnání s minulým během. Okno proto
    sahá tak daleko, jak paměť dovolí (HISTORIE_MAX dnů): medián se za
    den skoro nepohne, takže chytá obojí. */
+/* ---------- DRUHÁ CESTA, KDYŽ SE ZDROJ ZMĚNÍ ---------------------- */
+/* Každý stahovač výš zná jednu cestu: adresu a tvar odpovědi. Když
+   zdroj přestaví web nebo přejmenuje pole v API, ta cesta se zavře
+   a zdroj vypadne, dokud ji někdo ručně nepřepíše. §332 zařídil, že to
+   nezmrazí celá data; tohle je o tom, aby se zdroj zkusil přečíst
+   JINAK, než jak ho zná stahovač.
+   Druhá cesta nestojí na vzhledu: scripts/cteni-zdroje.mjs čte JSON-LD
+   (schema.org), mikrodata a nakonec pouhé signály — odkaz, u kterého
+   stojí cena a výměra. Pořadí a mezí je popsané tam.
+
+   PLATÍ JEN PRO PRODEJE. U dražeb by z druhé cesty vyšla nabídka bez
+   termínu a bez rozlišení nucené dražby, tedy nabídka, kterou web neumí
+   správně popsat — a špatný popis je horší než chybějící nabídka. U nich
+   se proto jen zapíše DIAGNÓZA: co na té stránce bylo (kolik cen, kolik
+   výměr, jestli je tam JSON-LD, jestli to není přihlašovací zeď). Bez
+   ní přijde do úkolu jen „zdroj nic nevrací", což se nedá vyšetřit.
+
+   ROBOTS.TXT SE ČTE PRVNÍ. Když zdroj čtení zakazuje nebo se jeho
+   robots.txt nedá přečíst, druhá cesta se nezkouší vůbec. */
+export const ZALOZNI_STROP = 400;        // nabídek z jednoho zdroje za běh
+
+export async function zalozniCestou(zdroje, cile, nastroje) {
+  const { stahni: stahniF, smimeCist: smimeF, prectiJakkoli, copakTamJe,
+    mistoZTextu, slovnik, okresy, ua } = nastroje || {};
+  const ven = [];
+  /* VLASTNÍ MEZIPAMĚŤ NA robots.txt, ne ta uvnitř smimeCist. Ta je
+     společná pro celý proces, takže by si dva běhy (a dvě zkoušky)
+     předávaly cizí odpověď — a zdroj, který mezitím čtení zakázal, by
+     se čten dál podle starého. Jeden běh = jedno čtení robots.txt na
+     web; mezi běhy se čte znovu. */
+  const robotsMezipamet = new Map();
+  for (const z of (zdroje || [])) {
+    if (!z || z.stav !== 'chyba') continue;
+    const cil = (cile || []).find((c) => c.jmeno === z.nazev);
+    if (!cil || !cil.url) continue;
+    let smime = null;
+    try { smime = await smimeF(cil.url, { stahni: stahniF, ua, mezipamet: robotsMezipamet }); }
+    catch (e) { smime = { dovoleno: false, duvod: String(e && e.message || e) }; }
+    if (!smime.dovoleno) {
+      z.zalozni = { verdikt: 'nesmíme', duvod: smime.duvod };
+      console.error(`Druhá cesta ke ${z.nazev} se nezkouší: ${smime.duvod}`);
+      continue;
+    }
+    let html = '';
+    try {
+      const odp = await stahniF(cil.url, { pokusy: 1 });
+      html = await odp.text();
+    } catch (e) {
+      z.zalozni = { verdikt: 'neodpovídá', duvod: String(e && e.message || e).slice(0, 140) };
+      continue;
+    }
+    const v = prectiJakkoli(html, cil.url);
+    z.zalozni = { verdikt: v.nabidky.length ? 'přečteno' : 'nepřečteno', zapis: v.zapis, cesta: v.cesta };
+    if (!v.nabidky.length) {
+      z.zalozni.diagnoza = copakTamJe(html);
+      console.error(`Druhá cesta ke ${z.nazev} nic nenašla. Co na stránce je:`
+        + ` ${JSON.stringify(z.zalozni.diagnoza)}`);
+      continue;
+    }
+    if (cil.typ !== 'sale') {
+      z.zalozni.verdikt = 'jen diagnóza (dražby druhou cestou nebereme)';
+      z.zalozni.diagnoza = copakTamJe(html);
+      continue;
+    }
+    let bezMista = 0;
+    const prevedene = [];
+    for (const n of v.nabidky.slice(0, ZALOZNI_STROP)) {
+      if (!n.cena || !n.vymera) continue;
+      const text = [n.nazev, n.misto].filter(Boolean).join(' ');
+      const misto = mistoZTextu(text, slovnik, okresy);
+      if (!misto) { bezMista++; continue; }
+      const okres = normOkres(misto.okres);
+      if (!okres) { bezMista++; continue; }
+      prevedene.push({
+        place: String(misto.place).slice(0, 60), okres, type: 'sale', parcel: '—',
+        druh: normDruh(parseDruh(text, [misto.place, okres]) || 'pozemek'),
+        area: n.vymera, price: n.cena,
+        extra: `inzerát – ${z.nazev}`, zdroj: z.nazev,
+        url: n.url || cil.url,
+      });
+    }
+    z.zalozni.pocet = prevedene.length;
+    z.zalozni.bezMista = bezMista;
+    if (prevedene.length) {
+      z.stav = 'druhá cesta';
+      z.pocet = prevedene.length;
+      console.error(`Zdroj ${z.nazev} se přečetl DRUHOU CESTOU (${v.cesta}):`
+        + ` ${prevedene.length} nabídek, ${bezMista} bez poznaného místa.`);
+    } else {
+      console.error(`Druhá cesta ke ${z.nazev} našla ${v.nabidky.length} nabídek,`
+        + ` ale ani u jedné se nedalo poznat místo — nebereme nic.`);
+    }
+    ven.push(...prevedene);
+  }
+  return ven;
+}
+
+/* ---------- PODRŽENÍ NABÍDEK ZDROJE, KTERÝ VYPADL ----------------- */
+/* Jména zdrojů. Musí se krýt se SOURCES v main() — podle nich se hledá,
+   který zdroj dnes selhal, a kdyby se rozešla, držení by mlčky přestalo
+   fungovat. Hlídač scripts/test-vypadek-zdroje.mjs tu shodu měří. */
+export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sreality (Apify)', 'Farmy'];
+
+/* Štítek v popisu nabídky. Platí pro data z běhů PŘED zavedením pole
+   `zdroj` — po týdnu držení už se o ně nikdo neopře, ale ten týden je
+   potřebovat bude. Pořadí je pořadí rozhodování: „· OK dražby" se musí
+   poznat dřív než holé „dražba". */
+export const ZDROJ_PODLE_EXTRA = [
+  [/·\s*OK dražby/i, 'OK dražby'],
+  [/SPÚ/i, 'SPÚ'],
+  [/Bezrealitky/i, 'Bezrealitky'],
+  [/Farmy/i, 'Farmy'],
+  [/Sreality/i, 'Sreality (Apify)'],
+];
+
+/* Hostitel v adrese nabídky. Hvězdička se nepíše: porovnává se koncovka,
+   takže „www.bezrealitky.cz" i „bezrealitky.cz" padnou na totéž. Seznam
+   NEMŮŽE být úplný — centrální evidence dražeb odkazuje na dražebníky
+   (změřeno 2. 11.: policenm, immodrazby, naxos, elektronickedrazby,
+   verejnedrazby, …), a těch je libovolně mnoho. Proto je to až třetí
+   krok a za ním stojí ještě čtvrtý. */
+export const ZDROJ_PODLE_HOSTU = [
+  ['bezrealitky.cz', 'Bezrealitky'],
+  ['okdrazby.cz', 'OK dražby'],
+  ['exdrazby.cz', 'Dražby'],
+  ['centralniadresa.cz', 'Dražby'],
+  ['farmy.cz', 'Farmy'],
+  ['spucr.cz', 'SPÚ'],
+  ['sreality.cz', 'Sreality (Apify)'],
+];
+
+/* Kolik dnů se smí držet nabídka zdroje, který neodpovídá. Sedm dnů je
+   horní mez výpadku, který se ještě dá nazvat výpadkem: delší mlčení
+   znamená, že se zdroj změnil nebo skončil, a držet po něm nabídky by
+   znamenalo tvrdit o nich, že existují, aniž to kdokoli ověřil. */
+export const DRZENI_DNU = 7;
+
+/**
+ * Ze které služby nabídka je. Čtyři kroky, od nejspolehlivějšího:
+ *   1) pole `zdroj` — stahovač si ho napsal sám (od 2. 11. 2026),
+ *   2) štítek v `extra` — data z dřívějších běhů,
+ *   3) hostitel v adrese,
+ *   4) dražba bez jiného štítku je z centrální evidence („Dražby").
+ * Čtvrtý krok je nutný: 287 nabídek SPÚ nemá adresu vůbec a dražby
+ * z centrální evidence odkazují na desítky různých dražebníků, takže
+ * ani seznam hostitelů je nepokryje. Vrací null, když se zdroj poznat
+ * nedá — taková nabídka se nedrží, protože se neví, čí by byla.
+ */
+export function zdrojNabidky(o) {
+  if (!o) return null;
+  if (o.zdroj && ZDROJ_JMENA.includes(o.zdroj)) return o.zdroj;
+  const e = String(o.extra || '');
+  for (const [vzor, jmeno] of ZDROJ_PODLE_EXTRA) if (vzor.test(e)) return jmeno;
+  let host = '';
+  try { host = new URL(String(o.url || '')).hostname.toLowerCase(); } catch { host = ''; }
+  if (host) {
+    for (const [konec, jmeno] of ZDROJ_PODLE_HOSTU) {
+      if (host === konec || host.endsWith('.' + konec)) return jmeno;
+    }
+  }
+  if ((o.type === 'drazba' || o.type === 'exekuce') && /dražba/i.test(e)) return 'Dražby';
+  return null;
+}
+
+/** O kolik dnů je `den` (YYYY-MM-DD) před `dnes`. Nečitelné → Infinity,
+ *  ať se takové nabídky radši pustí, než aby se držely navždy. */
+export function stariVeDnech(den, dnes) {
+  const a = Date.parse(String(den || '') + 'T00:00:00Z');
+  const b = Date.parse(String(dnes || '') + 'T00:00:00Z');
+  if (!isFinite(a) || !isFinite(b)) return Infinity;
+  return Math.round((b - a) / 86400000);
+}
+
+/**
+ * Nabídky zdrojů, které dnes neodpověděly, z minulého běhu.
+ *   zdroje — pole stavů z tohohle běhu (nazev, stav)
+ *   cerstve — co se dnes stáhlo (kvůli dvojitému vložení)
+ *   dnes   — 'YYYY-MM-DD'
+ *   drive  — minulý obsah dat (volitelně; jinak se načte ze souboru)
+ * Vrací { nabidky, podleZdroje: Map, pustene }.
+ */
+export function podrzNabidkyVypadlych(zdroje, cerstve, dnes, drive) {
+  const vysledek = { nabidky: [], podleZdroje: new Map(), pustene: 0 };
+  /* DRŽÍ SE JEN „chyba", a to je rozhodnutí, ne opomenutí. Je to týž
+     rozdíl, který výš popisuje ODPOVEDEL: u „chyba" (a „vypnuto") se
+     nedozvídáme nic, u ostatních stavů zdroj ODPOVĚDĚL a řekl nám, co
+     dnes nabízí — jen toho bylo málo. Podržet nabídky zdroji, který
+     odpověděl, by znamenalo postavit se proti jeho vlastní odpovědi
+     a týden ukazovat nabídky, které on sám už nevede. „vypnuto" se
+     nedrží z druhé strany: chybějící klíč není výpadek, ale rozhodnutí. */
+  const padle = new Set((zdroje || []).filter((z) => z && z.stav === 'chyba').map((z) => z.nazev));
+  if (!padle.size) return vysledek;
+  let stare = drive;
+  if (!stare) {
+    try { stare = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []); }
+    catch { stare = []; }
+  }
+  /* Co se dnes stáhlo, se nedoplňuje podruhé. Totožnost se bere
+     z odkazu, a KDYŽ ODKAZ NENÍ, z otisku nabídky.
+     Napsané to bylo jen na adresu — a to by znamenalo, že SPÚ, tedy
+     549 nabídek bez jediné adresy (změřeno 2. 11.), se nedá podržet
+     vůbec: ten zdroj by při výpadku zmizel celý, zatímco ostatní by
+     se podržely. Otisk (druh, okres, obec, parcela, cena, výměra) je
+     u takových nabídek jediné, co je napříč běhy ztotožní. */
+  const klic = (o) => otiskOdkazu(o) || otiskNabidky(o);
+  const uz = new Set();
+  for (const o of (cerstve || [])) { const k = klic(o); if (k) uz.add(k); }
+  for (const o of stare) {
+    const k = o ? klic(o) : '';
+    if (!k || uz.has(k)) continue;
+    const z = zdrojNabidky(o);
+    if (!z || !padle.has(z)) continue;
+    const od = o.drzeno_od || dnes;
+    if (stariVeDnech(od, dnes) >= DRZENI_DNU) { vysledek.pustene++; continue; }
+    vysledek.nabidky.push(Object.assign({}, o, { drzeno_od: od }));
+    vysledek.podleZdroje.set(z, (vysledek.podleZdroje.get(z) || 0) + 1);
+  }
+  return vysledek;
+}
+
 export const DNU_HISTORIE = 30;
 export const PRAH_POKLESU = 0.7;
 export const HISTORIE_MAX = 30;       // delší paměť nemá komu posloužit
@@ -1216,7 +1439,11 @@ function median(cisla) {
    se nedozvídáme nic — nula z nich by budoucí medián jen pokazila.
    Ostatní stavy jsou skutečná měření: zdroj odpověděl a něco přinesl,
    jen toho bylo málo. */
-const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje']);
+/* „druhá cesta" PATŘÍ MEZI ODPOVĚDĚLA. Zdroj se sice nepřečetl svým
+   obvyklým způsobem, ale data přinesl (§334) — a kdyby tu nestál,
+   udělala by se v historii počtů děra přesně v době, kdy je nejvíc
+   potřeba vidět, co se dělo. */
+const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje', 'druhá cesta']);
 /* Den v historii je buď číslo (zdroj byl ten den v pořádku), nebo
    `{p: počet, v: 1}` — počet ze dne, kdy byl zdroj označený za oslabený.
    Starší soubory mají jen čísla a čtou se dál. */
@@ -1470,6 +1697,7 @@ export function nabidkyZDrazby(rec) {
           druh: normDruh(candBudova ? (druhBase + ' se stavbou') : druhBase),
           area: area ? Math.round(area) : null, price: Math.round(price),
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
+          zdroj: 'Dražby',
           lat: typeof vn.gpsLat === 'number' ? vn.gpsLat : undefined,
           lng: typeof vn.gpsLng === 'number' ? vn.gpsLng : undefined,
           _gps: typeof vn.gpsLat === 'number' && typeof vn.gpsLng === 'number',
@@ -1605,6 +1833,7 @@ async function fetchOkdrazby() {
           parcel: (pm ? pm[1] : '—').slice(0, 40), _key: 'okd-' + id,
           druh, area: area || null, price,
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : '') + ' · OK dražby',
+          zdroj: 'OK dražby',
           lat: typeof j.lat === 'number' ? j.lat : undefined,
           lng: typeof j.lon === 'number' ? j.lon : undefined,
           _gps: typeof j.lat === 'number' && typeof j.lon === 'number',
@@ -1687,6 +1916,7 @@ async function fetchProdejSPU() {
       druh: normDruh(druh || 'pozemek'),
       area, price,
       extra: 'prodej státní půdy (SPÚ, § 12)',
+      zdroj: 'SPÚ',
     });
    } catch (e) { preskoc('SPÚ', e); }
   }
@@ -1892,6 +2122,7 @@ async function fetchBezrealitky() {
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
         druh, area, price,
         extra: 'inzerát – Bezrealitky',
+        zdroj: 'Bezrealitky',
         lat: typeof gps.lat === 'number' ? gps.lat : undefined,
         lng: typeof gps.lng === 'number' ? gps.lng : undefined,
         _gps: typeof gps.lat === 'number' && typeof gps.lng === 'number',
@@ -1976,6 +2207,7 @@ async function fetchFarmy() {
       parcel: '—', _key: 'fa-' + id,
       druh: normDruh(druh || 'pozemek'), area, price,
       extra: 'inzerát – Farmy.cz',
+      zdroj: 'Farmy',
       lat, lng, _gps: typeof lat === 'number' && typeof lng === 'number',
       url: 'https://www.farmy.cz/nabidka_detail?nab=' + id,
     });
@@ -2054,6 +2286,7 @@ async function fetchSreality() {
       place, okres, type: 'sale', parcel: '—',
       _key: 'sr-' + (e.hash_id || e.id || url || (place + '-' + price)),
       druh: normDruh(druh || 'pozemek'), area, price, extra: 'inzerát – Sreality',
+      zdroj: 'Sreality (Apify)',
       lat: isFinite(lat) ? lat : undefined, lng: isFinite(lng) ? lng : undefined,
       _gps: isFinite(lat) && isFinite(lng),
       url,
@@ -2209,6 +2442,68 @@ async function main() {
     .flatMap((r) => r.value || [])
     .map((o) => geocode(o));
 
+  /* VÝPADEK JEDNOHO ZDROJE NESMÍ SMAZAT JEHO NABÍDKY.
+     ==================================================================
+     Změřeno 2. 11.: z 2 004 nabídek na webu jich 1 628 pochází
+     z jediného zdroje (Bezrealitky, 81 %); ze 2 578 stažených jich
+     tenhle zdroj dodal 1 909, tedy 74 %. Pojistka níž hlídá CELEK —
+     když se stáhne míň než 60 % minulého počtu, běh se zastaví a data
+     zmrznou. U rozložení 95 : 5 to znamená, že výpadek jednoho webu
+     zastaví všechno: nejen jeho nabídky, ale i nové nabídky zdrojů,
+     které zrovna fungují.
+
+     Proto se nabídky zdroje, který DNES NEODPOVĚDĚL, podrží z minulého
+     běhu a přimíchají k čerstvým. Zdroj se pozná podle hostitele
+     v adrese; jiné spolehlivé označení nabídky nenesou (pole `site`
+     jsou sítě, ne zdroj).
+
+     DRŽENÍ MÁ STROP. Po DRZENI_DNU dnech se nabídky pustí — zdroj,
+     který týden mlčí, není výpadek, ale konec, a držet po něm data
+     donekonečna by znamenalo tvrdit o nabídkách, že existují, aniž to
+     kdokoli ověřil. Datum, od kdy se drží, se zapisuje do `drzeno_od`,
+     takže je ten strop měřitelný zvenčí a hlídač ho umí prokázat.
+
+     VYPNUTÝ ZDROJ SE NEDRŽÍ. „vypnuto" (chybí klíč) není výpadek, ale
+     rozhodnutí — držet po něm data by předstíralo zdroj, který nikdo
+     nezapnul. */
+  /* DRUHÁ CESTA JE PŘED DRŽENÍM. Zdroj, který se podařilo přečíst
+     jinak, totiž není výpadek — a držet po něm staré nabídky by
+     znamenalo míchat dnešní a včerejší obraz téhož webu. */
+  {
+    let driveNabidky = [];
+    try { driveNabidky = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []); }
+    catch { driveNabidky = []; }
+    const slovnik = slovnikMist(driveNabidky);
+    const okresy = new Set(driveNabidky.map((o) => o.okres).filter(Boolean));
+    const padlych = zdroje.filter((z) => z.stav === 'chyba').length;
+    if (padlych) {
+      console.error(`Zdrojů bez odpovědi: ${padlych}. Zkouším druhou cestu`
+        + ` (JSON-LD, mikrodata, signály) — robots.txt se čte první.`);
+      const jinak = await zalozniCestou(zdroje, ZAPOJENE, {
+        stahni, smimeCist, prectiJakkoli, copakTamJe, mistoZTextu,
+        slovnik, okresy, ua: BOT_UA,
+      });
+      if (jinak.length) {
+        console.error(`Druhou cestou přišlo ${jinak.length} nabídek.`);
+        raw.push(...jinak.map((o) => geocode(o)));
+      }
+    }
+  }
+  const podrzeno = podrzNabidkyVypadlych(zdroje, raw, dnesISO);
+  for (const z of zdroje) {
+    const p = podrzeno.podleZdroje.get(z.nazev) || 0;
+    if (p) {
+      z.podrzeno = p;
+      console.error(`Zdroj ${z.nazev} neodpověděl — držím jeho ${p} nabídek z minulého běhu`
+        + ` (strop ${DRZENI_DNU} dnů).`);
+    }
+  }
+  if (podrzeno.pustene) {
+    console.error(`POZOR: ${podrzeno.pustene} nabídek se pustilo — jejich zdroj mlčí`
+      + ` déle než ${DRZENI_DNU} dnů. To už není výpadek.`);
+  }
+  raw.push(...podrzeno.nabidky);
+
   // odstranění duplicit (okres + parcela) a seřazení podle výhodnosti
   const seen = new Set();
   const byDeal = (a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity);
@@ -2319,14 +2614,26 @@ async function main() {
     return;
   }
 
-  // Pojistka proti „utržení" dat: když je nově staženo výrazně míň než minule
-  // (nejspíš se rozbil některý zdroj), NEPŘEPISUJEME — necháme stará data a
-  // skončíme s chybou, aby úloha spadla a GitHub poslal majiteli upozornění.
+  /* Pojistka proti „utržení" dat: když je nově staženo výrazně míň než
+     minule, NEPŘEPISUJEME — necháme stará data a skončíme s chybou, ať
+     úloha spadne a GitHub pošle majiteli upozornění.
+
+     DRŽENÉ NABÍDKY SE DO POJISTKY NEPOČÍTAJÍ. Kdyby se počítaly, stačilo
+     by, aby mlčely všechny zdroje: jejich nabídky by se podržely, počet
+     by zůstal, pojistka by neřekla nic a běh by vypadal zdravě. Měří se
+     proto jen to, co se dnes opravdu stáhlo, a proti té části minulých
+     dat, která držením nevznikla. Jeden vypadlý zdroj tím pojistku
+     nespustí (jeho nabídky zmizí z obou stran poměru), celkový propad
+     ano. */
   let prevCount = 0;
   try { prevCount = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).length; } catch { /* první běh */ }
-  if (prevCount >= 30 && fresh.length < prevCount * 0.6) {
+  const drzenych = fresh.filter((o) => o && o.drzeno_od).length;
+  const stazeno = fresh.length - drzenych;
+  const minuleBezDrzeni = Math.max(0, prevCount - drzenych);
+  if (minuleBezDrzeni >= 30 && stazeno < minuleBezDrzeni * 0.6) {
     console.error(
-      `CHYBA: staženo jen ${fresh.length} příležitostí (minule ${prevCount}). ` +
+      `CHYBA: dnes staženo jen ${stazeno} příležitostí (minule ${minuleBezDrzeni}` +
+      `${drzenych ? `, mimo ${drzenych} držených` : ''}). ` +
       'Nejspíš se rozbil některý zdroj — ponechávám stará data a končím s chybou, ať přijde upozornění.'
     );
     process.exit(1);

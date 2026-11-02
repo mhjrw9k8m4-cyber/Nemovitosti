@@ -136,11 +136,18 @@ function pravda(popis, vyslo, proc) {
     b.kod === 1 && /disabled_inactivity/.test(b.text) && /60 dnech/.test(b.text),
     `kód ${b.kod}; ${b.text.split('\n').filter((r) => /✕/.test(r)).join(' | ')}`);
 
-  stavy = {}; vekHodin = 100;
+  /* VĚK SE POČÍTÁ Z ÚLOH, NE Z HLAVY. Napsaných 100 h platilo, dokud
+     všechny úlohy jezdily aspoň jednou za dva dny; po přidání týdenní
+     sondy zdrojů (perioda 168 h, tolerance 2×) bylo 100 h u ní
+     v pořádku — a zkouška hlásila vadu tam, kde se kontrola zachovala
+     správně. Bere se proto nejdelší perioda krát tolerance plus hodina:
+     to je stáří, u kterého musí být nález u KAŽDÉ úlohy. */
+  const nejdelsi = Math.max(...skutecne.map((x) => x.perioda || 0));
+  stavy = {}; vekHodin = nejdelsi * NASOBEK + 1;
   const c = await spust();
-  pravda('zaspalá úloha (100 h bez běhu) je nález u všech pěti',
+  pravda(`zaspalá úloha (${vekHodin} h bez běhu) je nález u všech ${skutecne.length}`,
     c.kod === 1 && (c.text.match(/✕/g) || []).length >= skutecne.length,
-    `kód ${c.kod}; ✕ ${(c.text.match(/✕/g) || []).length}×`);
+    `kód ${c.kod}; ✕ ${(c.text.match(/✕/g) || []).length}× z ${skutecne.length}`);
 
   stavy = {}; vekHodin = 1;
   const d2 = await spust({ GITHUB_TOKEN: '' });

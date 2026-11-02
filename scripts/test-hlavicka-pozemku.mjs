@@ -80,6 +80,7 @@ pravda('je co měřit — živé stránky pozemků se našly', stranky.length >=
 // ---- 1) servírovaná podoba: čtyři místa, jeden nadpis -------------
 const nadpisy = new Map();   // soubor → titul
 const nesedi = [];
+const jenOkres = [];   // titulky, kde dlouhá obec ustoupila okresu
 for (const f of stranky) {
   const h = cti(f);
   const h1 = (h.match(/<article class="pz-staticky">[\s\S]*?<h1>(.*?)<\/h1>/) || [])[1];
@@ -111,14 +112,28 @@ for (const f of stranky) {
      servírovaný <h1> a ostrůvek, ze kterého nadpis skládá js/pozemek.js,
      musí být DOSLOVA totéž — jinak by vyhledávač viděl jiný nadpis než
      člověk. A titulek musí pořád nést místo, jinak je k ničemu. */
+  /* TITULEK NESE MÍSTO — ALE NE VŽDY OBEC. Žebřík podob v generátoru
+     (viz MEZ_TITULKU v scripts/generate-parcel-pages.mjs) má příčku
+     „druh — okres X": když se dlouhé jméno obce do 65 znaků nevejde,
+     ustoupí obec a zůstane okres. Stalo se to 2. 11. 2026 u Václavic
+     u Hrádku nad Nisou a tahle zkouška to hlásila jako vadu, protože
+     znala jen dvě příčky ze tří. Okres je pořád místo; co se hlídá, je,
+     že titulek nezůstane bez místa úplně. */
+  const iZ = ocekKde.indexOf(', ');
+  const obecSama = iZ > 0 ? ocekKde.slice(0, iZ) : ocekKde;
+  const okresSam = iZ > 0 ? ocekKde.slice(iZ + 2) : '';
   const titulekMaMisto = titulek.indexOf(ocekKde) >= 0
-    || (ocekKde.indexOf(',') > 0 && titulek.indexOf(ocekKde.slice(0, ocekKde.indexOf(','))) >= 0);
+    || titulek.indexOf(obecSama) >= 0
+    || (!!okresSam && titulek.indexOf(okresSam) >= 0);
+  if (titulekMaMisto && titulek.indexOf(obecSama) < 0) jenOkres.push(f);
   if (h1 !== ocekCo || kde !== ocekKde || !titulekMaMisto) {
     nesedi.push(`${f}: h1 „${h1}" / kde „${kde}" / ostrůvek „${zOstruvku}" / title „${titulek}"`);
     continue;
   }
   nadpisy.set(f, zOstruvku);
 }
+console.log(`  · titulků, kde se dlouhá obec nevešla a zůstal okres: ${jenOkres.length}`
+  + (jenOkres.length ? ` (např. ${jenOkres[0]})` : ''));
 pravda('servírovaný nadpis, titulek stránky a ostrůvek nesou týž text',
   nesedi.length === 0, `${nesedi.length}×, např. ${nesedi.slice(0, 2).join(' || ')}`);
 

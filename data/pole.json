@@ -131,6 +131,25 @@
       "typ": "string",
       "vzdy": false,
       "popis": "Otisk inzerenta — šest znaků spočítaných z jeho vlastního textu (prvních 60 znaků popisu, srovnaných do jedné podoby). Jméno inzerenta data nenesou, tohle je jen značka „tyhle nabídky napsal týž člověk\". Potřebuje ji cenový verdikt: jeden velkoobchodník drží skoro polovinu nabídek, a bez té značky by se jeho cenník počítal jako stovky nezávislých pozorování trhu. Nabídka bez popisu ji nemá a počítá se sama za sebe. Počítá to otiskInzerenta v scripts/text-inzeratu.mjs."
+    },
+    "zdroj": {
+      "typ": "string",
+      "vzdy": true,
+      "popis": "Jméno služby, ze které nabídka je. Píše si ho do nabídky každý stahovač sám — je to jediné místo, které ho ví jistě. Podle něj se pozná, čí nabídky se mají podržet, když zdroj neodpoví (viz podrzNabidkyVypadlych v scripts/fetch-opportunities.mjs). Pole „site“ je něco jiného: to jsou sítě, ne zdroj.",
+      "hodnoty": [
+        "Dražby",
+        "OK dražby",
+        "SPÚ",
+        "Bezrealitky",
+        "Sreality (Apify)",
+        "Farmy"
+      ]
+    },
+    "drzeno_od": {
+      "typ": "string",
+      "vzdy": false,
+      "popis": "Datum (YYYY-MM-DD), od kterého se nabídka DRŽÍ z minulého běhu, protože její zdroj neodpověděl. Je tu jen u takových nabídek a nejvýš sedm dní; po stropu se nabídka pustí. Když pole chybí, nabídka se dnes doopravdy stáhla.",
+      "jenPriVypadku": true
     }
   }
 }

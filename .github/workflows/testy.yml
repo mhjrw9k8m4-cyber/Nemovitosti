@@ -391,6 +391,18 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-bez-cekani.mjs
 
+      - name: Výpadek jednoho zdroje nezmrazí data
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-vypadek-zdroje.mjs
+
+      - name: Sonda zdrojů měří, co smí (a nic neobchází)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-sonda-zdroju.mjs
+
+      - name: Změna na cizím webu nezavře zdroj (druhá cesta)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-cteni-zdroje.mjs
+
       - name: Nastavení zkoušek (měří to, co si myslí)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zkousky-meri.mjs

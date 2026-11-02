@@ -564,20 +564,45 @@ if (await tlacitko.count() && await tlacitko.isVisible()) {
       tlacitka: await p4.$$eval('#opp-list .reset-btn', (n) => n.map((x) => x.textContent.trim())),
     };
   }
-  const a = await prazdno('stavební Vysočina do 50 tis');
-  pravda('u prázdného výpisu se netvrdí, že prostě nic nemáme',
-    !/Tady zrovna nic není/.test(a.zprava), `zpráva: „${a.zprava}"`);
-  pravda('a řekne se, které omezení to způsobilo',
-    /Nejvíc omezuje/.test(a.zprava) && /cena/.test(a.zprava), `zpráva: „${a.zprava}"`);
-  pravda('i s číslem, kolik by jich bez něj bylo',
-    /bez tohoto filtru by/.test(a.zprava) && /\d/.test(a.zprava), `zpráva: „${a.zprava}"`);
-  /* Čeština: „Nejvíc omezuje CENA" a „Zrušit CENU" jsou dva pády.
-     S jedním tvarem stálo na tlačítku „Zrušit cena". */
-  pravda('tlačítko má správný pád', a.tlacitka.indexOf('Zrušit cenu') >= 0, JSON.stringify(a.tlacitka));
-
-  const b = await prazdno('zahrada nad 50 ha');
-  pravda('u výměry se pozná výměra', /Nejvíc omezuje/.test(b.zprava) && /výměra/.test(b.zprava), `zpráva: „${b.zprava}"`);
-  pravda('a tlačítko taky', b.tlacitka.indexOf('Zrušit výměru') >= 0, JSON.stringify(b.tlacitka));
+  /* KTERÝ filtr to zrovna je, závisí na datech, ne na webu: dnes
+     „stavební Vysočina do 50 tis" nejvíc omezuje druh pozemku, včera
+     cena. Hlídá se proto PRAVIDLO: hláška jmenuje některý skutečný
+     filtr a tlačítko u něj má správný pád. Pevně zapsané „cena" tuhle
+     zkoušku 2. 11. 2026 shodilo po noční obměně dat — pátý případ
+     téhož vzorce za den (viz docs/optimalizace.md §330, §331). */
+  const mainJs = readFileSync(new URL('../js/main.js', import.meta.url), 'utf8');
+  const pary = new Map([...mainJs
+    .matchAll(/\n\s*pol\('([^']+)', '([^']+)'/g)].map((m) => [m[1], m[2]]));
+  pravda(`tabulka pádů filtrů se přečetla (${pary.size} filtrů)`, pary.size >= 10);
+  /* Měření výš bere očekávání z TÉŽE tabulky, ze které staví web, takže
+     by samo nepoznalo, že tlačítko sáhlo po prvním pádu místo čtvrtého
+     — u filtrů, kde se oba tvary neliší („druh pozemku"), a tedy i u
+     toho dnešního. Ta vada je ale v kódu vidět: hláška má brát `nazev`,
+     tlačítko `ctvrty`. Hlídá se tady, na datech nezávisle. */
+  pravda('hláška jmenuje filtr v prvním pádu a tlačítko ve čtvrtém',
+    /Nejvíc omezuje <b>' \+ esc\(vinik\.nazev\)/.test(mainJs)
+    && /Zrušit ' \+ esc\(vinik\.ctvrty\)/.test(mainJs),
+    'kdyby si tlačítko vzalo vinik.nazev, stálo by na něm „Zrušit cena"');
+  async function vinik(q) {
+    const z = await prazdno(q);
+    const jmeno = await p4.$eval('#opp-list .map-count b', (e) => e.textContent.trim()).catch(() => '');
+    return { ...z, jmeno };
+  }
+  for (const q of ['stavební Vysočina do 50 tis', 'zahrada nad 50 ha']) {
+    const a = await vinik(q);
+    pravda(`„${q}": netvrdí se, že prostě nic nemáme`,
+      !/Tady zrovna nic není/.test(a.zprava), `zpráva: „${a.zprava}"`);
+    pravda('a řekne se, které omezení to způsobilo',
+      /Nejvíc omezuje/.test(a.zprava) && pary.has(a.jmeno),
+      `jmenovaný filtr: „${a.jmeno}" · zpráva: „${a.zprava}"`);
+    pravda('i s číslem, kolik by jich bez něj bylo',
+      /bez tohoto filtru by/.test(a.zprava) && /\d/.test(a.zprava), `zpráva: „${a.zprava}"`);
+    /* Čeština: „Nejvíc omezuje CENA" a „Zrušit CENU" jsou dva pády.
+       S jedním tvarem stálo na tlačítku „Zrušit cena". */
+    const cekam = 'Zrušit ' + (pary.get(a.jmeno) || '?');
+    pravda(`tlačítko má správný pád (${cekam})`, a.tlacitka.indexOf(cekam) >= 0,
+      `tlačítka: ${JSON.stringify(a.tlacitka)}, jmenovaný filtr „${a.jmeno}"`);
+  }
 
   /* Zrušení „hledaného textu" se musí týkat JEN hledání místa, ne celé
      věty. Když se vyčistilo celé políčko, spadly s ním i druh a cena —

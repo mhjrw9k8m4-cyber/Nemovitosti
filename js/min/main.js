@@ -2590,8 +2590,23 @@
     var vmOtvirac = otviracZapamatuj();
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
-    zamkniTab(ov);
+
     var vmPrvni = ov.querySelector('.vm-x');
+    var vmOziveno = false;
+    ov.addEventListener('click', function (e) {
+      if (vmOziveno) return;
+      var naKrizek = e.target === ov
+        || (e.target.closest && e.target.closest('.vm-x'));
+      if (!naKrizek) return;
+      try { ov.remove(); } catch (e2) {}
+      document.body.classList.remove('vm-otevreno');
+      try { if (vmOtvirac && vmOtvirac.focus) vmOtvirac.focus(); } catch (e3) {}
+    }, true);
+
+    function postavMapu() {
+    if (!ov.parentNode) return;
+    vmOziveno = true;
+    zamkniTab(ov);
     if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
 
     var m = L.map(ov.querySelector('#vm-mapa'), {
@@ -3054,6 +3069,10 @@
       zavri();
       enterNearAt({ lat: c.lat, lng: c.lng }, false, null, 'seznam');
     });
+    }
+
+    requestAnimationFrame(function () { requestAnimationFrame(postavMapu); });
+
   }
 
   function showLocModal(err) {

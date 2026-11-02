@@ -1256,7 +1256,6 @@
             + '<span class="pz-dalky-pozn">vzdušnou čarou</span></div>'
           : '') +
         (vObciHtml() ? '<div class="pz-vobci">' + vObciHtml() + '</div>' : '') +
-        blokHtml() +
       '</div>' +
 
       '<div class="pz-bok">' +
@@ -1279,6 +1278,8 @@
         }()) +
       '</div>' +
       '</div>' +
+
+      blokHtml() +
 
       '<button type="button" class="pz-pozn-skok" id="pz-pozn-skok" hidden>'
         + POZN_SVG + '<span class="pz-pozn-skok-t">Přidat poznámku</span></button>' +

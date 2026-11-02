@@ -188,6 +188,7 @@ button:disabled:hover,input:disabled:hover,select:disabled:hover,[aria-disabled=
 h1{font-family:var(--font-nadpis);font-weight:700;font-size:var(--h1-stranka);line-height:1.1;letter-spacing:-0.01em;margin-bottom:20px}
 h1 em{color:var(--znacka-svetla);background:none;-webkit-text-fill-color:currentColor}
 
+.sources .wrap{text-align:left}
 .section{padding:var(--oddil-y) 0}
 .section.pt-0{padding-top:0}
 .section.band{background:var(--plocha-karta);padding-top:var(--oddil-y);padding-bottom:var(--oddil-y)}
@@ -736,10 +737,16 @@ body{background:var(--bg)}
 .okr-badge{border-color:currentColor}
 .section.band{border-top:0;border-bottom:0;position:relative}
 .section.band::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:var(--line-strong)}
+.sources{border-top:0;border-bottom:0;position:relative}
+.sources::before,.sources::after{content:"";position:absolute;left:0;right:0;height:1px;background:var(--line-strong)}
+.sources::before{top:0}
+.sources::after{bottom:0}
 .section-head::before{background:var(--accent-warm)}
 .rules-sect>h2{position:relative}
 .rules-sect>h2::before{content:"";display:block;width:52px;height:2px;border-radius:2px;background:var(--accent-warm);opacity:0.85;margin-bottom:12px}
 .clanek .rules-sect>h2::before{display:none}
+.sources{background:var(--plocha-jemna);color:var(--text);padding:var(--oddil-y) 0}
+.sources::before,.sources::after{display:none}
 
 
 @media (max-width:880px){.crumbs a{padding:2px 0;display:inline-block}

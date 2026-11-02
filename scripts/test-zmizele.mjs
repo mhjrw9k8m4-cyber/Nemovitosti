@@ -75,6 +75,20 @@ const chybi = Z.zmizele.filter((x) => !existsSync(path.join(KOREN, x.soubor))).m
 pravda('a stránka u každé zmizelé nabídky doopravdy existuje',
   chybi.length === 0, `chybí ${chybi.length}: ${chybi.slice(0, 3).join(', ')}`);
 pravda('a historie přiznává, jak je dlouhá', Z.dni > 0, `dni: ${JSON.stringify(Z.dni)}`);
+/* JEDEN KLÍČ = JEDEN ŘÁDEK. Nabídka, která se vrátila a znovu odešla,
+   má v archivu dvě stránky; v „Uložených" by se ukázala dvakrát a lišila
+   se jen datem. Klíč je rozlišit neumí, takže je generátor slučuje (viz
+   scripts/generate-parcel-pages.mjs). Měřeno 2. 11. 2026: bez slučování
+   to byly 4 dvojice ze 496 a tahle zkouška na nich padala — hlásila dva
+   řádky tam, kde čekala jeden. */
+{
+  const videne = new Map();
+  for (const x of Z.zmizele) videne.set(x.klic, (videne.get(x.klic) || 0) + 1);
+  const dvojice = [...videne.entries()].filter(([, n]) => n > 1);
+  pravda('žádný klíč se v seznamu zmizelých neopakuje',
+    dvojice.length === 0,
+    `${dvojice.length} opakovaných, např. ${JSON.stringify(dvojice.slice(0, 2))}`);
+}
 
 if (!sVymerou.length) { console.log('\n(žádná zmizelá nabídka nezná výměru — zbytek se měřit nedá)'); hotovo(); }
 const A = sVymerou[0], B = sVymerou[1] || sVymerou[0];

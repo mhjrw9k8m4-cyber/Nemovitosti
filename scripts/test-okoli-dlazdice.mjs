@@ -48,10 +48,35 @@ await p.goto(`${BASE}/index.html`, { waitUntil: 'load' });
 await p.waitForTimeout(2500);
 await naPohled(p, 'mapa');
 await p.waitForTimeout(2000);
-await p.evaluate(() => { const b = document.getElementById('map-near'); if (b) b.click(); });
+/* OTEVŘENÍ SE MĚŘÍ V TÉŽE ÚLOZE, VE KTERÉ SE KLEPLO. Do 2. 11. bylo
+   otevření jediná úloha prohlížeče o 339 ms (telefon, procesor 4×) a
+   panel se objevil až za 603 ms — majitelovo „občas nereaguje".
+   Od §331 se panel vloží, nechá vykreslit a mapa se staví až pak.
+   Kontroluje se pořadí, ne čas: hned po klepnutí musí být panel
+   v DOMu i s ovladači, a Leaflet v něm JEŠTĚ NESMÍ být. Čas by zestaral
+   s rychlostí stroje, pořadí ne. */
+const hned = await p.evaluate(() => {
+  const b = document.getElementById('map-near');
+  if (b) b.click();
+  const ov = document.querySelector('.vm-ov');
+  return {
+    panel: !!ov,
+    pole: !!(ov && ov.querySelector('#vm-q')),
+    dlazdic: ov ? ov.querySelectorAll('.vm-km').length : 0,
+    krizek: !!(ov && ov.querySelector('.vm-x')),
+    mapaUz: !!(ov && ov.querySelector('.leaflet-container, #vm-mapa canvas, #vm-mapa .leaflet-tile')),
+  };
+});
+pravda('panel je v DOMu hned po klepnutí, i s hledáním a dlaždicemi',
+  hned.panel && hned.pole && hned.dlazdic >= 4 && hned.krizek, JSON.stringify(hned));
+pravda('a mapa se v téže úloze JEŠTĚ nestaví (panel se stihne vykreslit)',
+  hned.mapaUz === false, JSON.stringify(hned));
 await p.waitForFunction(() => document.querySelector('#vm-mapa canvas, #vm-mapa .leaflet-tile'),
   null, { timeout: 40000 }).catch(() => {});
 await p.waitForTimeout(1500);
+/* A dostaví se — jinak by „panel bez mapy" prošlo jako vylepšení. */
+pravda('a o chvíli později mapa v okně je',
+  await p.evaluate(() => !!document.querySelector('#vm-mapa canvas, #vm-mapa .leaflet-tile')));
 
 const dlazdice = () => p.evaluate(() => [].slice.call(document.querySelectorAll('.vm-km')).map((l) => {
   const i = l.querySelector('input'); const b = l.querySelector('b');

@@ -20405,3 +20405,309 @@ zkouška a stránka rozešly a měřilo by se něco jiného.
 Prokázáno sabotáží: hlavička u každého řádku (`if (true)` místo
 `if (o.first_seen !== poslDen)`) → **2 ✕**. Obměna dat tím projde,
 rozbité seskupení ne.
+
+## 331. Okno „Vyberte své okolí" se otevře hned, ne za půl vteřiny
+
+V §324 jsem změřil, že otevření okna trvá 441 ms, a uzavřel to tím, že
+náš výpočet v tom má jen ~60 ms, takže není co opravovat. **To byl
+správný údaj a špatný závěr.** Doměřeno teď (telefon 390 px, procesor
+zpomalený 4×):
+
+| Co | Před | Po |
+|---|---|---|
+| Synchronní práce v jedné úloze | **339 ms** | **4 ms** |
+| První rámec po klepnutí | 363 ms | 8 ms |
+| Panel vykreslený (snímek obrazovky) | 603 ms | **60 ms** |
+
+Rozhodující nebylo, *kolik* práce se udělá, ale že se udělá **najednou
+a před prvním vykreslením**. Prohlížeč neměl kdy panel ukázat — a přesně
+tohle majitel popsal jako „občas nereaguje".
+
+Rozpad té jedné úlohy (profil, vlastní čas): zaostření **101 ms**,
+Leaflet (`_updateLevels`, `addLayer`) ~48 ms, náš výpočet ~87 ms
+(`mistaZDat` nad 2 000 nabídkami a první `prepocti`), zbytek rozvržení.
+
+**Co se změnilo.** Panel se vloží, nechá vykreslit (dva rámce: první ho
+vyrovná, druhý ukáže) a teprve pak se staví mapa a počítají čísla. Nic
+z té práce nezmizelo, jen přestala stát v cestě. Dlaždice okruhu do té
+doby mlčí, což umí od §324, takže se nikde neobjeví nesmyslná nula.
+
+**Panel musí jít zavřít dřív, než se oživí.** Jinak by člověk klepl na
+křížek a nic by se nestalo, což je horší než čekání. V záchytné fázi
+proto visí nouzový zavírač; vypne se, jakmile doběhne `postavMapu()`
+a navěsí se ten pravý.
+
+Odsazení 670 řádků uvnitř `postavMapu()` zůstalo schválně nezměněné:
+posunout je o dvě mezery by udělalo z téhle změny nečitelný rozdíl,
+ve kterém by se skutečná úprava ztratila.
+
+Hlídá to `test-okoli-dlazdice` (15 kontrol, 3 nové) a měří **pořadí, ne
+čas**: hned po klepnutí musí být panel v DOMu i s ovladači, Leaflet
+v něm ještě ne — a o chvíli později tam mapa být musí, jinak by
+„panel bez mapy" prošlo jako vylepšení. Čas by zestaral s rychlostí
+stroje, pořadí ne. Prokázáno sabotáží (návrat k jedné úloze, 1 ✕).
+
+**A počtvrté za den týž vzorec.** `test-okoli-jinde` čekal u obce bez
+nabídek *přesně jeden* řádek našeptávače — a padl, protože robot přidal
+nabídku v „Hradišti u Vernéřova". Pravidlo zní „poslední řádek je
+nabídka najít obec v geokodéru", ne „řádek je jeden". Po §325 (dvě meze)
+a §330 (skupiny dnů) je to čtvrtá kontrola, která měřila dnešní data
+místo pravidla.
+
+## 332. Výpadek jednoho zdroje zmrazil celá data
+
+**Změřeno 2. 11.** Z 2 004 nabídek na webu jich 1 628 pocházelo
+z jediného zdroje — Bezrealitky, **81 %**. Ze 2 578 nabídek, které
+zdroje ten den dodaly, jich Bezrealitky dodaly 1 909, tedy 74 %;
+na web se jich vejde méně, protože stropy na druh část odříznou.
+Zbytek dodaných: SPÚ 549, OK dražby 66, Dražby 45, Farmy 9, Sreality
+nula (vypnuté, chybí klíč k Apify). Obě čísla jsou pravda o jiné věci
+a plést se nemají: 74 % je závislost stahování, 81 % závislost obsahu,
+který člověk na webu uvidí.
+
+**Vada.** Robot má od začátku pojistku proti „utržení" dat: když se
+stáhne méně než 60 % minulého počtu, soubor se nepřepíše a běh skončí
+chybou, ať přijde upozornění. Při rozložení 95 : 5 to ale znamená, že
+výpadek jednoho webu zastaví **všechno**. Nejen jeho nabídky — i nové
+dražby a nové nabídky zdrojů, které zrovna fungují. A protože robot
+běží každých 6 hodin, data by stála tak dlouho, dokud se ten jeden web
+nespraví. Pojistka proti tichému poškození se tím měnila v jedinou
+vypínačku celého webu, kterou drží v ruce cizí server.
+
+**Co se změnilo.** Dvě věci, obě měřitelné zvenčí.
+
+*Nabídky vypadlého zdroje se podrží.* Zdroj, který dnes neodpověděl
+(stav `chyba`), si ponechá své nabídky z minulého běhu a ty se
+přimíchají k čerstvým ještě **před** prořezáním — projdou tedy týmiž
+síty jako ostatní: dvojníci, proběhlé dražby, stropy na druh. Každá
+podržená nese `drzeno_od`, takže je strop vidět i v datech. Po
+`DRZENI_DNU` (7) se pustí: týden mlčení už není výpadek, ale konec,
+a držet po něm nabídky by znamenalo tvrdit o nich, že existují, aniž
+to kdokoli ověřil. Vypnutý zdroj se nedrží vůbec — „chybí klíč" není
+výpadek, ale rozhodnutí.
+
+*Pojistka se počítá jen z toho, co se dnes opravdu stáhlo.* Kdyby se
+do ní držené nabídky počítaly, stačilo by, aby mlčely všechny zdroje:
+jejich nabídky by se podržely, počet by zůstal a běh by vypadal
+zdravě. To je horší než pád. Měří se proto `stazeno` (bez držených)
+proti té části minulých dat, která držením nevznikla. Jeden vypadlý
+zdroj tím pojistku nespustí — zmizí z obou stran poměru — celkový
+propad ano.
+
+**Čí ta nabídka vlastně je.** Držení stojí na tom, že se u nabídky
+pozná zdroj, a to se ukázalo jako vlastní úloha. Pole `site` jsou
+sítě (voda, elektřina), ne zdroj. Měření 2. 11.: podle hostitele
+v adrese se přiřadilo 1 711 z 2 004 nabídek (85 %). Zbývajících 293 má
+dva důvody: 287 nabídek SPÚ nemá adresu vůbec a dražby z centrální
+evidence odkazují na dražebníka, ne na evidenci (policenm, immodrazby,
+naxos, elektronickedrazby, verejnedrazby, …) — takový seznam nemůže
+být nikdy úplný. Nabídka, u které se zdroj nepozná, se nedrží: neví
+se, čí by byla.
+
+Proto si teď **každý stahovač píše do nabídky své jméno** (`zdroj`) —
+to je jediný spolehlivý zdroj té informace, protože stahovač ho ví
+jistě. Rozhodování má čtyři kroky, od nejspolehlivějšího: pole
+`zdroj`, štítek v popisu (`· OK dražby`, `SPÚ`, …), hostitel v adrese,
+a nakonec „dražba bez jiného štítku je z centrální evidence". Tři
+poslední kroky jsou kvůli datům z běhů před touhle změnou — po týdnu
+držení se o ně nikdo neopře, ale ten týden je potřebovat bude. Na
+živých datech (bez pole `zdroj`) se tím přiřadí všech 2 004 nabídek.
+
+**Nabídka bez odkazu se taky musí podržet.** Totožnost napříč běhy
+jsem nejdřív vzal z adresy inzerátu — a to by znamenalo, že SPÚ se
+podržet nedá vůbec: ani jedna z jeho 549 nabídek adresu nemá. Při
+výpadku by tedy ostatní zdroje zůstaly a tenhle by zmizel celý, aniž
+by to kdokoli poznal. Totožnost se proto bere z odkazu, a když odkaz
+není, z otisku nabídky (druh, okres, obec, parcela, cena, výměra).
+
+**Hlídá to `test-vypadek-zdroje`** (28 kontrol, bez prohlížeče). Měří
+chování funkce, ne text: výpadek podrží, zdroj, který odpověděl, se
+nedrží, dnes stažená nabídka se nedoplní podruhé, po stropu se pustí,
+`drzeno_od` se druhý den **nepřepíše** na dnešek (jinak by strop nikdy
+nenastal — to byla nejtišší past celé úlohy), a jména zdrojů v kódu se
+musí krýt se seznamem v `main()`, jinak by držení mlčky hledalo zdroj,
+který v stavech není.
+
+**Prokázáno sabotáží — deset záměn, deset pádů:** vynechané jméno
+u stahovače, strop zvednutý na rok, držení i vypnutého zdroje,
+přepisované `drzeno_od`, návrat pojistky k celku, držení přesunuté až
+za prořezání, odebraný štítek SPÚ, odebraný čtvrtý krok, přejmenovaný
+zdroj v `main()` a totožnost vzatá jen z adresy (na té padl SPÚ).
+Každá z nich shodila právě tu kontrolu, která ji má chytat.
+
+**Co to neřeší.** Závislost samu. Když Bezrealitky vypadnou na dva
+týdny, web o čtyři pětiny nabídek přijde — jen už ne naráz a ne mlčky. Druhá
+polovina téhle práce je přestat stát na jednom zdroji: vést seznam
+kandidátů a pravidelně měřit, které z nich jde číst (dostupnost,
+`robots.txt`, výtěžnost), a doplnit zdroje tak, aby na jediném z nich
+neviselo přes polovinu nabídek. **Obcházení ochran proti robotům do
+toho nepatří** a patřit nebude: žádná rotace adres ani hlaviček, žádné
+ignorování `robots.txt`. Zdroj, který si nepřeje být čten, se číst
+nebude.
+
+## 333. Sonda zdrojů: robot, který hledá, odkud ještě brát
+
+§332 zařídil, že výpadek jednoho zdroje nezmrazí data. Závislost tím
+ale nezmizela: **změřeno 2. 11., že 1 628 z 2 004 nabídek na webu
+(81 %) pochází z jediného zdroje.** Když ten web skončí nebo nás
+odstřihne, přijde web o čtyři pětiny obsahu. Druhá polovina práce je
+proto přestat na něm stát.
+
+**Co NEDĚLÁM a dělat nebudu.** Obcházení ochran proti robotům. Žádné
+střídání adres ani hlaviček, žádné předstírání prohlížeče, žádné
+ignorování `robots.txt`. Robot se představuje jedním pravdivým jménem
+(`scripts/bot-ua.mjs`) a zdroj, který si nepřeje být čten, se číst
+nebude. Není to jen slib v komentáři: `test-sonda-zdroju` prochází
+čtyři soubory a hlásí nález, jakmile se v nich objeví hlavička
+předstírající prohlížeč, seznam hlaviček ke střídání nebo proxy.
+
+**Nález číslo jedna: `robots.txt` se v repozitáři nikdy nečetl.** Stálo
+u třech stahovačů v komentáři, že „robots.txt dovoluje" — tedy tvrzení
+z jednoho dne. Až se ten soubor na cizím webu změní, komentář o tom
+nic neřekne a robot bude dál brát, co brát nemá. Teď to je kód:
+`scripts/robots.mjs` rozebírá `robots.txt` podle RFC 9309 (skupiny
+podle jména, nejdelší sedící pravidlo, při stejné délce vyhrává
+`Allow`, `*` a `$` v cestách, `Crawl-delay`). **Co se nedá přečíst, to
+se nebere:** nedostupný `robots.txt` nebo chyba sítě znamená „nečíst",
+ne „asi to bude dobré". Chybějící soubor (404) čtení dovoluje — to web
+říká výslovně.
+
+**Sonda** (`scripts/sonda-zdroju.mjs`) u každého zdroje zjistí tři
+věci a zapíše je do `data/zdroje-sonda.json`: co dovoluje `robots.txt`
+pro naše jméno, jestli adresa odpovídá (stav, čas) a jestli na ní vůbec
+jsou pozemky. Pořadí je povinné — **nejdřív `robots.txt`, teprve pak
+stránka**; u zakázaného zdroje se stránka nestáhne vůbec. Na zdroj jdou
+nejvýš dva dotazy za běh, mezi zdroji se čeká a `Crawl-delay` se
+respektuje. Běží jednou týdně ve vlastním workflow, ne v robotu dat:
+je to měření pro rozhodování, ne zdroj dat pro web.
+
+**Kandidáty si robot zčásti najde sám.** Vedle seznamu
+(`scripts/zdroje-kandidati.mjs`) sonda projde adresy našich vlastních
+nabídek a vypíše hostitele, které seznam nezná. Měření 2. 11. našlo
+šest: `exdrazby.cz` (3 nabídky), `drazby.policenm.cz` (2),
+`immodrazby.cz`, `drazbynaxos.cz`, `elektronickedrazby.cz`,
+`verejnedrazby.cz`. Je to proto, že centrální evidence dražeb odkazuje
+na dražebníka, ne na sebe — a ten výpis poroste sám, bez toho, aby ho
+někdo doplňoval. U takového kandidáta se navíc nemusí hádat o tom,
+jestli jsou jeho nabídky veřejné: už je vidíme ve svých datech.
+
+Ručně doplnění kandidáti jsou čtyři a všichni jsou **veřejné nabídky
+státu nebo samosprávy**, tedy místa, kde je zveřejnění součástí
+zákonného postupu: ÚZSVM (nabídka majetku), Portál dražeb (dražby
+exekutorů), eDesky (úřední desky obcí — druh „obec" dnes vlastní zdroj
+nemá vůbec) a Lesy ČR. U nich je v seznamu `adresaOverena: false`
+a nic v kódu se na tu adresu nespoléhá: je to cíl měření, ne tvrzení.
+
+**Dvě vady, které našla vlastní zkouška.** Ukazatel výtěžnosti počítal
+jednotky regulárním výrazem s `\b`: jenže „Kč" ani „m²" na slovní
+hranici nekončí (`č` a `²` nejsou pro JavaScript písmena slova), takže
+na textu „1 000 m² za 500 000 Kč" naměřil nulu metrů a nulu korun.
+A `pozemk` nesedí na `pozemek` — mezi `m` a `k` je `e` — takže výpis
+plný slova „Pozemek" by dostal nulu bodů. Obojí opraveno, obojí
+hlídané.
+
+**Prokázáno sabotáží — deset záměn, deset pádů:** nečitelný
+`robots.txt` brán jako povolení, skupina pro `*` místo naší, první
+sedící pravidlo místo nejdelšího, zrušená mezipaměť (zdroj by se
+zatěžoval zbytečně), stránka stažená ještě před `robots.txt`, hlavička
+předstírající prohlížeč, zrušená pauza mezi zdroji, kandidát vydávaný
+za ověřený, zdvojený hostitel v seznamu a zdroj přejmenovaný mimo
+`ZDROJ_JMENA`.
+
+**Co z toho JEŠTĚ NENÍ hotové a proč.** Nový stahovač. Odkud se
+sandboxu, ve kterém tahle práce vzniká, nedá na cizí weby dostat
+vůbec (změřeno: `cevd.gov.cz`, `nabidkamajetku.cz`, `edesky.cz`
+i `spu.gov.cz` odpovídají z téhle strany nulou), takže psát stahovač
+teď by znamenalo psát ho naslepo a první zpráva o tom, jak vypadají
+data z nového zdroje, by přišla až z živého webu. To se nedělá. Sonda
+proto běží v Actions, kde se na weby dostat dá, a první nález řekne,
+který z deseti kandidátů stojí za stahovač. Teprve podle toho se píše.
+
+## 334. Když se cizí web změní, spojení se musí změnit samo
+
+§332 zařídil, že výpadek zdroje nezmrazí data. §333 zařídil, že je
+vidět, odkud by se ještě dalo brát. Zbývala ta nejčastější porucha:
+**zdroj nevypadne, jen se změní.** Přestaví web, přejmenuje pole v API,
+přesune výpis — a stahovač, který zná jednu adresu a jeden tvar
+odpovědi, se zavře. Data se nezmrazí (drží se), ale zdroj sám běžet
+nezačne, dokud ho někdo ručně nepřepíše.
+
+**Druhá cesta nestojí na vzhledu.** `scripts/cteni-zdroje.mjs` čte
+stránku ve třech krocích:
+
+1. **JSON-LD** (schema.org) — data, která web o sobě sám zveřejňuje pro
+   vyhledávače. Jsou standardizovaná, a co je důležitější: při
+   přestavbě se obvykle zachovají, protože bez nich web zmizí z Googlu.
+2. **mikrodata** (`itemprop`) — totéž, jen starší zápis.
+3. **podle signálu** — žádné selektory: najdou se odkazy a kolem nich
+   se hledá cena a výměra. Tahle cesta nepotřebuje vědět, jak stránka
+   vypadá, takže přežije i úplnou přestavbu.
+
+A pro případ, že se přestěhoval samotný výpis, umí modul přečíst odkazy
+z RSS a ze sitemapy.
+
+**Změřeno na téže nabídce ve čtyřech podobách stránky**: původní,
+přestavěná (jiné značky, jiné třídy, cena nad odkazem místo pod ním),
+přestavěná bez JSON-LD a verze s mikrodaty. Ze všech vypadne táž
+dvojice nabídek se správnou cenou i výměrou — z prvních dvou přes
+JSON-LD, ze třetí podle signálu, ze čtvrté z mikrodat.
+
+A ať je to řečeno přesně: **ty čtyři stránky jsem napsal já**, nejsou
+to odchycené stránky cizích webů. Ze stroje, na kterém tahle práce
+vzniká, se na cizí weby nedá dostat vůbec (§333), takže se na nich nic
+ověřit nedá. Co to měření dokazuje, je přenositelnost přes formáty,
+které jsou standardizované (schema.org, mikrodata) — ne že konkrétní
+cizí web má JSON-LD. Jestli ho má, řekne až sonda z Actions; a kdyby
+neměl ani ten, zbývá cesta podle signálu, která nepotřebuje nic.
+
+**Obec a okres z textu, ale bez vymýšlení.** Nabídka bez okresu se
+v robotovi zahodí, takže druhá cesta musí místo pojmenovat z toho, co
+na stránce stojí. Slovník obcí se staví z vlastních dat (1 051 obcí,
+77 okresů). Nejdřív se čte „okres X" napsaný přímo na stránce, pak se
+hledá známá obec. **Nic se nedopočítává:** když místo poznat nejde,
+nabídka se zahodí a je to spočítané.
+
+Tady se našly dvě pasti, obě přes zkoušku: text „Pozemek v Horní
+Dolní" obsahuje obec **Horní**, kterou v datech opravdu máme — a bez
+kontroly z toho vyšla nabídka na místě, které na stránce nikdo
+nenapsal. Totéž „Dolní Benešov" proti „Benešov", což jsou dvě různá
+města. Proto se vedle hranice slova hlídá, že před ani za jménem
+nepokračuje další velké písmeno — ani přes spojku („Benešov u Prahy").
+A naopak: „Veselí nad Lužnicí" se musí poznat celé, a s původním
+pravopisem — vlastní velká písmena z toho dělala „Veselí Nad Lužnicí".
+
+**Tři vady v novém kódu, všechny našla zkouška, ne já.** Okno kolem
+odkazu se přelilo do vedlejší karty, takže druhá nabídka dostala cenu
+i výměru té první — teď se zaráží o sousední odkazy, protože radši
+nabídku nenajít než jí přišít cizí cenu. U mikrodat si druhá nabídka
+vzala odkaz té první; blok se teď bere podle `itemscope`, což je
+hranice jednoho záznamu. A diagnostika počítala jen ceny psané s „Kč",
+takže na stránce s „1 250 000,-" hlásila nula cen tam, kde dvě byly.
+
+**V robotovi je to zapojené takhle:** zdroj se stavem „chyba" se zkusí
+přečíst druhou cestou — a to **před** držením starých nabídek, protože
+zdroj, který se podařilo přečíst jinak, není výpadek. `robots.txt` se
+čte první a zákaz se respektuje; zdroj, který čtení nedovolí, se
+nečte. Stav zdroje se pak v datech jmenuje „druhá cesta" a diagnostika
+to ukazuje jako **varování, ne jako úspěch**: běží to, ale stahovač
+patří přepsat.
+
+**Platí jen pro prodeje, a to je rozhodnutí.** U dražeb by z druhé
+cesty vyšla nabídka bez termínu a bez rozlišení nucené dražby — tedy
+nabídka, kterou web neumí správně popsat, a špatný popis je horší než
+chybějící nabídka. U dražeb se proto zapíše jen **diagnóza**: kolik
+bylo na stránce cen, kolik výměr, jestli tam je JSON-LD a jestli to
+náhodou není přihlašovací zeď. Bez ní přijde do úkolu jen „zdroj nic
+nevrací", což se nedá vyšetřit.
+
+**Prokázáno sabotáží — šest záměn, šest pádů:** stránka stažená i při
+zákazu v `robots.txt`, dražby brané druhou cestou, nabídka bez
+poznaného místa doplněná naslepo, druhá cesta zkoušená i u zdroje,
+který odpověděl, mezipaměť `robots.txt` společná pro celý proces (dva
+běhy by si předávaly cizí odpověď) a druhá cesta přesunutá za držení.
+
+**Co to pořád neumí.** Uhodnout údaj, který na stránce není. Když zdroj
+přestane zveřejňovat výměru, žádná cesta ji nevymyslí a nabídka se
+zahodí jako dřív. A u zdroje, který se změní v API (ne na stránce),
+závisí druhá cesta na tom, že má i veřejný výpis ke čtení — proto je
+v seznamu u každého zdroje adresa výpisu, ne jen adresa API.

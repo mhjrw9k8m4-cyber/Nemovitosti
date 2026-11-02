@@ -106,6 +106,7 @@ for (const s of VZOREK) {
   pravda(`${s}: odkaz z odznaku někam vede`, v.cil === true, `href „${v.odkaz}"`);
   pravda(`${s}: dá se na něj klepnout`, v.vyska >= DOTYK, `${v.vyska} px, mez ${DOTYK}`);
   if (v.y < OBRAZOVKA) naPrvni++;
+  else console.log(`      ! ${s}: odznak až na y = ${v.y} px (mez ${OBRAZOVKA})`);
 }
 await p.close();
 

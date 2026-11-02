@@ -60,9 +60,22 @@ const nabidky = D.opportunities || [];
   const bezPopisu = [...vDatech.keys()].filter((k) => !P.pole[k]);
   pravda('každé pole v datech má popis', bezPopisu.length === 0,
     bezPopisu.join(', ') + ' — kdo si data vezme, musel by hádat');
-  const navic = Object.keys(P.pole).filter((k) => !vDatech.has(k));
+  /* POLE, KTERÉ SE OBJEVÍ JEN PŘI VÝPADKU ZDROJE, v datech většinu dní
+     není — a popsané být musí, protože až se objeví, poteče ven ke
+     každému, kdo si soubor vezme (`drzeno_od`, viz §332). Pravidlo
+     „popis nesmí mluvit o poli, které v datech není" by takový popis
+     zakázalo, takže se takové pole označí v data/pole.json příznakem
+     `jenPriVypadku`. Co není tak označené, platí dál beze změny: popis
+     navíc je nepřesnost jako dřív. */
+  const navic = Object.keys(P.pole)
+    .filter((k) => !vDatech.has(k) && !P.pole[k].jenPriVypadku);
   pravda('a popis nemluví o poli, které v datech není', navic.length === 0,
     navic.join(', '));
+  const vypadkova = Object.keys(P.pole).filter((k) => P.pole[k].jenPriVypadku);
+  pravda(`pole „jen při výpadku" jsou označená a nejsou povinná (${vypadkova.length})`,
+    vypadkova.every((k) => P.pole[k].vzdy !== true),
+    vypadkova.filter((k) => P.pole[k].vzdy === true).join(', ')
+      + ' — pole, které většinu dní chybí, nemůže být popsané jako „vždy"');
 
   const vHlave = Object.keys(D).filter((k) => k !== 'opportunities');
   const hlavaBez = vHlave.filter((k) => !P.hlava[k]);

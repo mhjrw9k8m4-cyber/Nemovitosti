@@ -4433,8 +4433,45 @@
     var vmOtvirac = otviracZapamatuj();
     document.body.appendChild(ov);
     document.body.classList.add('vm-otevreno');
-    zamkniTab(ov);
+    /* PANEL SE UKÁŽE DŘÍV, NEŽ SE POSTAVÍ MAPA.
+       ==================================================================
+       Změřeno na telefonu 390 px s procesorem zpomaleným 4×: otevření
+       okna bylo JEDNA úloha prohlížeče o 339 ms a panel byl vidět až za
+       603 ms. Do té doby se nic nehýbalo — a přesně tohle majitel popsal
+       jako „občas nereaguje". Rozpad té úlohy: zaostření 101 ms, stavba
+       Leafletu (_updateLevels, addLayer) ~48 ms, náš výpočet ~87 ms
+       (mistaZDat nad 2 000 nabídkami a první prepocti) a zbytek je
+       rozvržení, které si prohlížeč udělá sám.
+
+       Nic z toho nezmizí — jen se to rozdělí. Vložený panel se nechá
+       vykreslit a teprve pak se staví mapa a počítají čísla; ta se
+       doplní o rámec později a dlaždice okruhu do té doby mlčí, což umí
+       od §324.
+
+       NEŽ SE PANEL OŽIVÍ, MUSÍ JÍT ZAVŘÍT. Jinak by člověk klepl na
+       křížek a nic by se nestalo, což je horší než čekání. Proto tu
+       stojí nouzový zavírač v záchytné fázi; vypne se, jakmile doběhne
+       postavMapu() a navěsí se ten pravý. */
     var vmPrvni = ov.querySelector('.vm-x');
+    var vmOziveno = false;
+    ov.addEventListener('click', function (e) {
+      if (vmOziveno) return;
+      var naKrizek = e.target === ov
+        || (e.target.closest && e.target.closest('.vm-x'));
+      if (!naKrizek) return;
+      try { ov.remove(); } catch (e2) {}
+      document.body.classList.remove('vm-otevreno');
+      try { if (vmOtvirac && vmOtvirac.focus) vmOtvirac.focus(); } catch (e3) {}
+    }, true);
+
+    /* Odsazení níž zůstává schválně nezměněné: přesunout 670 řádků
+       o dvě mezery by udělalo z téhle změny nečitelný rozdíl, ve kterém
+       by se skutečná úprava ztratila. Tělo okna končí u „}" před
+       requestAnimationFrame na konci funkce. */
+    function postavMapu() {
+    if (!ov.parentNode) return;          // zavřeno dřív, než se postavilo
+    vmOziveno = true;
+    zamkniTab(ov);
     if (vmPrvni) { try { vmPrvni.focus(); } catch (e) {} }
 
     /* ZOOM VPRAVO DOLE, jako na hlavní mapě. Leaflet ho dává vlevo
@@ -5111,6 +5148,12 @@
       zavri();
       enterNearAt({ lat: c.lat, lng: c.lng }, false, null, 'seznam');
     });
+    }
+    /* Dva rámce schválně: v prvním prohlížeč panel vyrovná, ve druhém
+       ho ukáže. Po jediném by se stavba mapy stihla vmáčknout ještě před
+       vykreslením a nezměnilo by se nic (změřeno). */
+    requestAnimationFrame(function () { requestAnimationFrame(postavMapu); });
+
   }
 
   function showLocModal(err) {

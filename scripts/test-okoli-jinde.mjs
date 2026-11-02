@@ -70,10 +70,16 @@ const stav = () => p.evaluate(() => ({
 await p.fill('#vm-q', 'Vernéřov');
 await p.waitForTimeout(1400);
 const r1 = await radky();
-pravda('obec bez nabídek už nevrací prázdno — nabídne se „najít na mapě"',
-  r1.length === 1 && r1[0].jinde === true, JSON.stringify(r1));
+/* POČET ŘÁDKŮ SE NEHLÍDÁ, HLÍDÁ SE PRAVIDLO. Napoprvé tu stálo
+   `r1.length === 1` a padlo to na datech, ne na webu: robot přidal
+   nabídku v „Hradišti u Vernéřova", takže se k nabídnutému hledání
+   přidal ještě návrh z dat. To je v pořádku — pravidlo zní, že
+   poslední řádek je nabídka najít obec v geokodéru. */
+const posledni = r1[r1.length - 1];
+pravda('obec bez nabídek už nevrací prázdno — poslední řádek nabídne „najít na mapě"',
+  r1.length >= 1 && !!posledni && posledni.jinde === true, JSON.stringify(r1));
 pravda('a ten řádek je pojmenovaný tím, co člověk napsal',
-  r1.length === 1 && r1[0].text.indexOf('Vernéřov') >= 0, JSON.stringify(r1));
+  !!posledni && posledni.text.indexOf('Vernéřov') >= 0, JSON.stringify(r1));
 /* Psaní nesmí geokodér vyvolat: šest znaků = šest dotazů na cizí
    server, a to by byl náš problém, i kdyby ho nikdo nereklamoval. */
 pravda('při psaní se na geokodér NECHODÍ', dotazu === 0, `dotazů: ${dotazu}`);
