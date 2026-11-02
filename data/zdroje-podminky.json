@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-02",
- "updated_at": "2026-11-02T21:33:33.624Z",
+ "updated_at": "2026-11-02T21:53:23.640Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -11,20 +11,30 @@
     {
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
      "popis": "Podmínky",
-     "stav": "přečteno, nic o automatu",
-     "znaku": 2137,
-     "odstavcuCelkem": 13,
-     "odstavcu": 0,
-     "pasaze": []
+     "stav": "přečteno",
+     "znaku": 3274,
+     "odstavcuCelkem": 14,
+     "odstavcu": 1,
+     "pasaze": [
+      "<p>Vážení uživatelé, jsme rádi, že jste se rozhodli využít náš server bezrealitky.cz, a doufáme, že budete plně spokojeni. Rádi bychom Vám v tomto úvodu objasnili jeden bod z obchodních podmínek. Jak jistě víte, někdy je dosti obtížné zastavit neetické chování realitních kanceláří a makléřů, kteří nerespektují běžné zákazy. Proto si vyhrazujeme právo nedoručovat nevyžádanou či jinak obtěžující poštu našim klientům. Také jsme museli přistoupit k razantnějšímu řešení a zavést pro tyto subjekty smluvní pokuty. Běžní uživatelé serveru se postihů obávat nemusí, pokuta slouží pouze k úplnému omezení"
+     ],
+     "dokumenty": [
+      "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
+      "https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
+      "https://api.bezrealitky.cz/page-file/obchodni-podminky-o-zajisteni-sluzby-komfort-nemo-report-pravnich-a-dalsich-sluzeb-1792741210.pdf",
+      "https://api.bezrealitky.cz/page-file/58-smluvni-podminky-zasady-zpracovani-osobnich-udaju070726-1787223400.pdf",
+      "https://api.bezrealitky.cz/page-file/134-smluvni-podminky-zasady-zpracovani-osobnich-udaju-marketingove-ucely-1745491738.pdf"
+     ]
     },
     {
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky/vyrocni-zprava-o-moderaci-obsahu",
      "popis": "",
      "stav": "málo textu — nedá se z toho soudit",
-     "znaku": 1285,
-     "odstavcuCelkem": 10,
+     "znaku": 562,
+     "odstavcuCelkem": 9,
      "odstavcu": 0,
-     "pasaze": []
+     "pasaze": [],
+     "dokumenty": []
     }
    ],
    "nalezeneOdkazy": [
@@ -33,8 +43,15 @@
      "popis": "Podmínky"
     }
    ],
-   "znakuCelkem": 3422,
-   "verdikt": "přečteno, ale nic o automatickém přístupu"
+   "znakuCelkem": 3836,
+   "verdikt": "přečteno (1 pasáží o automatickém přístupu)",
+   "dokumenty": [
+    "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
+    "https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
+    "https://api.bezrealitky.cz/page-file/obchodni-podminky-o-zajisteni-sluzby-komfort-nemo-report-pravnich-a-dalsich-sluzeb-1792741210.pdf",
+    "https://api.bezrealitky.cz/page-file/58-smluvni-podminky-zasady-zpracovani-osobnich-udaju070726-1787223400.pdf",
+    "https://api.bezrealitky.cz/page-file/134-smluvni-podminky-zasady-zpracovani-osobnich-udaju-marketingove-ucely-1745491738.pdf"
+   ]
   },
   {
    "jmeno": "Sreality (Apify)",
