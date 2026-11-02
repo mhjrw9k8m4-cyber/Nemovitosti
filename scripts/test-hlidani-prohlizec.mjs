@@ -215,23 +215,38 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
  * hlídání ne — komu přišlo upozornění na „stavební pozemek do milionu",
  * chodily i podíly, které si nikdy nekoupí.
  *
- * Tady se zkouší to, co ze zdroje poznat nejde: že zaškrtávátko ve
- * formuláři opravdu je, že se u něj píše, kolika nabídek se to týká,
- * a že se na něj dá na telefonu trefit prstem.
+ * Tady se zkouší to, co ze zdroje poznat nejde: že volba ve formuláři
+ * opravdu je, že se u ní píše, kolika nabídek se to týká, a že se na ni
+ * dá na telefonu trefit prstem.
+ *
+ * MĚŘÍ SE VIDITELNÝ OVLADAČ, ne zaškrtávátko. Systémové zaškrtávátko
+ * #ns-celek ve stromu zůstalo jako zdroj pravdy (ukládá se, čte ho
+ * odečítač), ale očím je schované na 1×1 px a klepe se na pilulku
+ * #ns-celek-b. Dokud tahle zkouška měřila #ns-celek, hlásila terč
+ * 1×1 px u ovladače, který má 44 — a naopak by prošla i tehdy, kdyby
+ * viditelná pilulka byla velká jako špendlíková hlavička.
  */
 {
   const z = await p.evaluate(() => {
     const vst = document.getElementById('ns-celek');
     if (!vst) return null;
-    const radek = vst.closest('label') || vst.parentElement;
-    const r = radek.getBoundingClientRect();
-    /* Počet nabídek nestojí v samotném zaškrtávátku, ale v nápovědě
-       hned pod ním — čte se proto obojí. */
-    const pozn = radek.nextElementSibling;
+    /* Terč je to, na co se klepe: pilulka, a když jí nebude, ten řádek
+       se zaškrtávátkem. Kdyby pilulka zmizela, měří se zase původní
+       ovladač — zkouška tím nezeslábne. */
+    const terc = document.getElementById('ns-celek-b') || vst.closest('label') || vst.parentElement;
+    const r = terc.getBoundingClientRect();
+    /* Počet nabídek musí být vidět BEZ KLEPNUTÍ — čte se z popisku
+       terče. Dlouhý výklad „co je podíl" smí být schovaný pod
+       kolečkem „i", ale musí z něj být dosažitelný: hledá se tlačítko,
+       které na odstavec ukazuje přes aria-controls. */
+    const info = [...document.querySelectorAll('.hl-info')]
+      .find((b) => (b.getAttribute('aria-controls') || '') === 'ns-podil-pozn');
+    const vyklad = document.getElementById('ns-podil-pozn');
     return { jeTam: true, zaskrtnuto: vst.checked, typ: vst.type,
       vyska: Math.round(r.height), sirka: Math.round(r.width),
-      text: (radek.textContent || '').replace(/\s+/g, ' ').trim(),
-      pozn: ((pozn && pozn.classList.contains('hl-napoveda') ? pozn.textContent : '') || '')
+      terc: terc.id || terc.tagName.toLowerCase(),
+      text: (terc.textContent || '').replace(/\s+/g, ' ').trim(),
+      maInfo: !!info, vyklad: ((vyklad && vyklad.textContent) || '')
         .replace(/\s+/g, ' ').trim() };
   });
   pravda('ve formuláři je volba „jen celé pozemky"', !!z,
@@ -244,19 +259,30 @@ pravda('stránka hlídání se otevřela přihlášenému člověku', true);
     /* Terč je celý řádek. 44 px je mez, kterou projekt drží i jinde
        (scripts/test-dotyk.mjs) — do 20px čtverečku se prstem netrefí. */
     pravda('a trefit se na ni dá i prstem (terč aspoň 44 px)',
-      z.vyska >= 44, `terč ${z.sirka}×${z.vyska} px`);
+      z.vyska >= 44, `terč ${z.terc} má ${z.sirka}×${z.vyska} px`);
     /* A hlavně: musí u ní stát, KOLIKA nabídek se to týká. Bez čísla je
        to volba naslepo — člověk netuší, jestli odfiltruje tři, nebo pět
-       stovek. Číslo nesmí být nula, jinak by se měřilo na prázdnu. */
-    pravda('a je u ní vysvětleno, co podíl znamená',
-      /podíl/i.test(z.pozn), `nápověda: „${z.pozn}"`);
-    const cislo = /(\d[\d\s ]*)/.exec(z.pozn);
-    pravda('a stojí u ní, kolika nabídek se to týká',
-      !!cislo, `nápověda: „${z.pozn}"`);
-    if (cislo) {
-      const n = Number(cislo[1].replace(/[\s ]/g, ''));
-      pravda('a to číslo není nula (jinak by se měřilo prázdno)', n > 0, `uvedeno ${n}`);
-    }
+       stovek. Číslo nesmí být nula, jinak by se měřilo na prázdnu.
+       Tohle je na POPISKU TERČE, tedy vidět hned, bez klepnutí. */
+    /* Nula se nezamlčuje, ale číslice v ní není — „žádné podíly" je
+       přesná odpověď a napsat „0 podílů" by byla horší čeština. Táž
+       dvojí podoba se uznává i u příkladů níž. */
+    const cislo = /(\d[\d\s\u00a0]*)/.exec(z.text);
+    pravda('a stojí u ní, kolika nabídek se to týká — bez klepnutí',
+      !!cislo || /žádn/i.test(z.text), `popisek: „${z.text}"`);
+    /* Výklad „co je podíl" smí být schovaný, ale jen pod tlačítkem,
+       které na něj ukazuje. Schovat ho bez otvírače by znamenalo, že
+       ho nikdo nenajde — a textContent ho ve zdroji najde pořád, takže
+       by si toho zkouška nevšimla. */
+    pravda('a je u ní dosažitelné vysvětlení, co podíl znamená',
+      z.maInfo && /podíl/i.test(z.vyklad),
+      z.maInfo ? `výklad: „${z.vyklad.slice(0, 80)}"` : 'tlačítko na výklad #ns-podil-pozn nenalezeno');
+    /* ČÍSLO MUSÍ BÝT POČET PODÍLŮ, NE CELKOVÝ POČET NABÍDEK. Tohle
+       se tu neověří: v téhle přípravě je jedna nabídka a žádný podíl,
+       takže „1" i „žádné" projde obojí. Dřív to byla tichá mezera —
+       kontrola hledala číslici kdekoli v nápovědě a chytala
+       „z 1 nabídky", tedy celek. Měří se proto zvlášť, na datech,
+       kde se ta dvě čísla LIŠÍ (viz blok „počet podílů u volby"). */
   }
 }
 
@@ -702,6 +728,123 @@ if (smazat) {
       JSON.stringify(u.radky.map((r) => r.podminky)));
   }
   await ctxU.close();
+}
+
+/* --- KAŽDÁ DLAŽDICE DRUHU MUSÍ OPRAVDU NĚCO NASTAVIT ---------------
+ * Druh nabídky se vybírá dlaždicemi, ale zdroj pravdy zůstal skrytý
+ * <select id="ns-type"> — ten se ukládá a z něj se počítá souhrn.
+ * Mezi dlaždicemi a jeho volbami se tím dá udělat rozdíl, a udělal se:
+ * přidal jsem dlaždici „Obecní", kterou select nezná. Klepnutí na ni
+ * selectu nastavilo hodnotu, kterou nemá — prohlížeč ji zahodil,
+ * value spadla na prázdno a zapnula se dlaždice „Vše". Navenek to
+ * vypadalo, že volba nic nedělá, a nikdo by nepoznal proč.
+ *
+ * Tohle čte skutečný stav po skutečném klepnutí, dlaždici po dlaždici.
+ * Prochází se obě strany: každá dlaždice musí mít volbu, a každá volba
+ * musí mít dlaždici — jinak se kritérium, které hlídání umí, nedá
+ * myší vybrat vůbec.
+ */
+{
+  const ctxD = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
+    viewport: { width: 420, height: 900 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctxD.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctxD.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  await ctxD.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel', refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111' } }));
+  });
+  const pd = await ctxD.newPage();
+  await pd.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await domUtichlo(pd, 350);
+  await pd.click('.hl-tab[data-zalozka="nove"]').catch(() => {});
+  await pd.waitForTimeout(600);
+  const strany = await pd.evaluate(() => {
+    const sel = document.getElementById('ns-type');
+    return {
+      dlazdice: [...document.querySelectorAll('.hl-dlazdice-b')].map((b) => b.dataset.type || ''),
+      volby: sel ? [...sel.options].map((o) => o.value) : null,
+    };
+  });
+  pravda('formulář má dlaždice druhu i skrytý výběr, ke kterému patří',
+    strany.volby !== null && strany.dlazdice.length > 1,
+    JSON.stringify(strany));
+  if (strany.volby) {
+    je('každá volba výběru má svou dlaždici (jinak ji nejde vybrat myší)',
+      strany.volby.filter((v) => strany.dlazdice.indexOf(v) === -1), []);
+    je('a žádná dlaždice nenabízí druh, který výběr nezná',
+      strany.dlazdice.filter((d) => strany.volby.indexOf(d) === -1), []);
+    /* A teď to hlavní: klepnutí, ne jen shoda seznamů. Kdyby se
+       obousměrná synchronizace rozbila jinde, seznamy by si odpovídaly
+       a stejně by nic nefungovalo. */
+    const spatne = [];
+    for (const t of strany.dlazdice) {
+      await pd.click(`.hl-dlazdice-b[data-type="${t}"]`);
+      await pd.waitForTimeout(150);
+      const stav = await pd.evaluate(() => ({
+        sel: document.getElementById('ns-type').value,
+        on: [...document.querySelectorAll('.hl-dlazdice-b.on')].map((b) => b.dataset.type || ''),
+        stisk: [...document.querySelectorAll('.hl-dlazdice-b')]
+          .filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.type || ''),
+      }));
+      if (stav.sel !== t || stav.on.join() !== t || stav.stisk.join() !== t) {
+        spatne.push(`${t || '(vše)'} → výběr „${stav.sel}", zapnuto [${stav.on}], aria-pressed [${stav.stisk}]`);
+      }
+    }
+    je('klepnutí na dlaždici nastaví týž druh ve výběru a zapne právě ji',
+      spatne, []);
+  }
+  await ctxD.close();
+}
+
+/* --- POČET PODÍLŮ U VOLBY „JEN CELÉ POZEMKY" ------------------------
+ * U té volby stojí číslo, podle kterého se dá rozhodnout: kolik
+ * dnešních nabídek je spoluvlastnický podíl. Musí to být ten počet,
+ * ne celkový počet nabídek — a právě to si předtím nikdo neověřil.
+ * Kontrola výš hledala číslici kdekoli v nápovědě a byla spokojená
+ * i s „z 1 nabídky", tedy s celkem.
+ *
+ * Proto se tu podstrčí data, ve kterých se ta dvě čísla LIŠÍ: tři
+ * nabídky, z toho dvě podíly. Když se někdy začne ukazovat celek,
+ * objeví se „3" a tohle spadne.
+ */
+{
+  const DATA_P = { updated: '2026-01-01', opportunities: [
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '9/1', druh: 'orná půda',
+      area: 1000, price: 300000, lat: 50.02, lng: 15.20, extra: 'inzerát', site: [], podil: true },
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '9/2', druh: 'orná půda',
+      area: 1100, price: 320000, lat: 50.03, lng: 15.21, extra: 'inzerát', site: [], podil: true },
+    { place: 'Kolín', okres: 'Kolín', type: 'sale', parcel: '9/3', druh: 'orná půda',
+      area: 1200, price: 340000, lat: 50.04, lng: 15.22, extra: 'inzerát', site: [] },
+  ] };
+  const ctxP = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
+    viewport: { width: 420, height: 900 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctxP.route('**/config.js*', (r) => r.fulfill({ status: 200, contentType: 'text/javascript',
+    body: `window.PK_SUPABASE_URL='${BASE}';window.PK_SUPABASE_KEY='anon';` }));
+  await ctxP.route('**/data/{opportunities,mapa}.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: JSON.stringify(DATA_P) }));
+  await ctxP.route('**/data/user-listings.json*', (r) => r.fulfill({ status: 200,
+    contentType: 'application/json', body: '[]' }));
+  await ctxP.addInitScript(() => {
+    localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel', refresh_token: 'ref-majitel',
+      user: { id: '11111111-1111-4111-8111-111111111111' } }));
+  });
+  const pp = await ctxP.newPage();
+  await pp.goto(`${BASE}/hlidani.html`, { waitUntil: 'domcontentloaded' });
+  await domUtichlo(pp, 350);
+  await pp.click('.hl-tab[data-zalozka="nove"]').catch(() => {});
+  await pp.waitForTimeout(600);
+  const t = await pp.evaluate(() => {
+    const b = document.getElementById('ns-celek-b');
+    return b ? (b.textContent || '').replace(/\s+/g, ' ').trim() : null;
+  });
+  pravda('u volby „jen celé pozemky" je vidět počet', !!t && /\d/.test(t), `popisek: „${t}"`);
+  if (t && /\d/.test(t)) {
+    const n = Number((/(\d[\d\s ]*)/.exec(t) || [, ''])[1].replace(/[\s ]/g, ''));
+    je('a je to počet PODÍLŮ, ne celkový počet nabídek', n, 2);
+  }
+  await ctxP.close();
 }
 
 je('na žádné stránce nespadl skript', padlo, []);

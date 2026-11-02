@@ -19036,3 +19036,137 @@ a padala na všech čtyřech rodinách, přestože web byl v pořádku —
 prohlížeč vrací POUŽITOU hodnotu zaokrouhlenou na pixel obrazovky,
 tedy „1px" při dpr 1. Měří se proto „aspoň 1 px solid" a že se ty
 rodiny shodují mezi sebou.
+
+---
+
+## §308 — Formulář „Nové hlídání" do řeči hlavního hledání
+
+Majitel: *„To hledani vizulane potrebuje brutalne prekopat … udelj to
+podoben nasmeu vyheldavni ktere mam na hlavni stranxe."*
+
+Hlídač shody už existoval (`test-hlidani-jako-hledani.mjs`, z 29. 10.):
+porovnává VYPOČTENÉ styly ovladačů hlídání s ovladači panelu na úvodu,
+pár po páru. Pixely tedy sedět musely. Co se rozcházelo, byla
+**stavba** — hlídání se ptalo systémovými součástkami, panel vlastními:
+
+| otázka | hlídání | panel na úvodu |
+|---|---|---|
+| druh nabídky | rozbalovátko `<select>` | dlaždice s ikonou |
+| „jen celé pozemky" | systémové zaškrtávátko | pilulka `.mc-prep` |
+| vysvětlení | dva odstavce pod sebou | kolečko „i" |
+
+Přepsáno na dlaždice, pilulku a kolečka „i". Původní součástka ale
+zůstala ve stromu jako **zdroj pravdy** (`#ns-type`, `#ns-celek`) —
+ukládá se z ní, čte ji odečítač, a `display:none` by ji vyřadilo
+z formuláře, takže se schovává `clip-path` na 1×1 px.
+
+**Změřeno s vrácením:** schování těch dvou dlouhých odstavců pod „i"
+ubralo z karty **126 px** (1 744 → 1 618 px na 390 px širokém okně).
+Odkrytí zpět vrátilo přesně 1 744, skrytí znovu přesně 1 618 — ten
+rozdíl je tedy opravdu jejich.
+
+### Tři vady, které jsem si do toho sám přinesl
+
+**1. Dlaždice „Obecní" nedělala nic.** Přidal jsem šestou dlaždici podle
+panelu, který obecní záměry nabízí. Rozbalovátko `#ns-type` je ale nikdy
+nemělo — a má pravdu: web je **nesbírá** („každá obec má svou úřední
+desku a ani jednu nemáme zapojenou"), takže v datech není ani jeden
+a hlídání by mlčelo navždy. Klepnutí nastavovalo selectu hodnotu, kterou
+nezná, prohlížeč ji zahodil, `value` spadla na prázdno a zapnula se
+„Vše". Navenek to vypadalo, že volba nefunguje. **A můj vlastní
+komentář u toho tvrdil „v datech je a hlídat se dá".** Dlaždice pryč,
+komentář přepsán na to, co platí.
+
+**2. Na 320 px se popisek lámal a řada vyrostla ze 44 na 63 px.** Dva
+sloupce napevno. Panel tohle má vyřešené a **změřené už dřív**: jeden
+sloupec, dva až od 360 px (`.mcv-rada`). Opsán ten předpis včetně
+`grid-auto-rows:1fr`, který drží řadu stejně vysokou. Vlastní hranici
+jsem si nevymýšlel.
+
+**3. Počet podílů se schoval pod „i".** Kolik dnešních nabídek je
+spoluvlastnický podíl, je jediné číslo, podle kterého se ta volba dá
+rozhodnout — kdo nevidí, jestli odfiltruje tři, nebo pět stovek,
+zaškrtává naslepo. Číslo je proto u popisku pilulky (receptem `.chip-n`
+z panelu) a pod „i" zůstal jen výklad, CO podíl je. Nula se u toho
+neschovává: `fmt()` vrací pro nulu prázdno, takže by z pilulky zbylo
+„Jen celé pozemky podílů" — teď se řekne „žádné podíly" nahlas.
+
+### Co o tom teď ví zkoušky
+
+**Nový blok v `test-hlidani-prohlizec.mjs`: dlaždice vs. rozbalovátko.**
+Prochází obě strany (každá dlaždice má volbu, každá volba má dlaždici)
+a pak klepe dlaždici po dlaždici a čte skutečný stav. Prokázáno
+sabotáží — vrácení dlaždice „Obecní" shodí dvě kontroly a vypíše
+`obec → výběr "", zapnuto [], aria-pressed []`.
+
+**Druhý nový blok: počet podílů na datech, kde se od celku liší.**
+Tři nabídky, z toho dvě podíly, čeká se „2". Prokázáno sabotáží:
+ukázání celkového počtu dá „vyšlo 3".
+
+**A stará kontrola, která měřila něco jiného, než co má v názvu.**
+„A stojí u ní, kolika nabídek se to týká" hledala číslici **kdekoli
+v nápovědě** — a v připravených datech bez podílů byla spokojená
+s „z 1 nabídky", tedy s celkovým počtem. Tichá mezera, ne pád. Teď čte
+popisek terče (tedy to, co je vidět bez klepnutí) a skutečné číslo
+se měří zvlášť v tom novém bloku, na datech, kde to jde poznat.
+
+**Dvě kontroly měřily schované zaškrtávátko místo viditelné pilulky.**
+„Trefit se na ni dá i prstem" hlásila terč 1×1 px u ovladače, který má
+44 — a naopak by prošla, i kdyby viditelná pilulka byla velká jako
+špendlíková hlavička. Měří se teď `#ns-celek-b`, a kdyby ta pilulka
+zmizela, spadne zkouška na původní ovladač; nezeslábne.
+Druhá („je u ní vysvětleno") čte `innerText`, který je u `hidden`
+prvku prázdný. Nahrazena otázkou, která tu věc popisuje přesněji:
+výklad smí být schovaný, **ale musí z něj být dosažitelný** — hledá se
+tlačítko, které na ten odstavec ukazuje přes `aria-controls`. Prokázáno
+sabotáží: odebrání kolečka „i" to shodí.
+
+**`test-dotyk.mjs` na ten formulář vůbec nedošel.** S uloženými
+hledáními začíná stránka na záložce „Moje hlídání" a celé „Nové
+hlídání" je `hidden` — přes třicet ovladačů, které se klepou prstem, se
+neměřilo. Zkouška teď tu záložku otevírá. A dostala pravidlo pro
+ovladače schované `clip-path` na 1×1 px: nejsou pod mezí, jsou
+schované pro oči a klepe se na pilulku vedle nich. Pravidlo jde po
+**předcích**, ne po prvku — `clip-path` se nedědí a bývá na obalujícím
+`<label>`. (První verze, napsaná bez tohoto zjištění, by nefungovala.)
+
+**`test-hlidani-jako-hledani.mjs` dostal tři nové páry** k porovnání:
+`filter-chip`↔`hl-dlazdice-b`, `mc-prep`↔`hl-prep`, `mc-info`↔`hl-info`.
+Dvě vady našel hned: pilulka měla na dotyku 38 px proti 44 v panelu,
+a kolečko „i" jsem **vymyslel místo opsal** — lišelo se v pěti
+vlastnostech. Obojí srovnáno podle panelu.
+
+### A co se našlo, až když zkouška na formulář vážně došla
+
+**Kolečko „i" mělo terč 36×44 px.** Panel mu dává `min-width:44px`
+**i** `min-height:44px`; já opsal jen výšku, a samo kolečko je 36 px
+široké. Našla to `test-dotyk` v tu samou chvíli, kdy začala tu záložku
+otevírat — do té doby to nikdo neměřil.
+
+Porovnávací hlídač to minout **musel**: srovnával `min-height`, ne
+`min-width`. Dostal ho tedy taky (`sirka: c.minWidth`) a prokázáno
+sabotáží: odebrání `min-width` z kolečka shodí kontrolu s výpisem
+`sirka: hledání „44px" · hlídání „auto"`.
+
+Ten nový rozměr ale **hned ukázal druhý rozdíl, který vadou nebyl**:
+`.map-num` má `min-width:0`, `.hl-in` nic. Změřeno v živém řádku
+„od – do" na 320 px: pole 112 px, řada 246 px, a devítimístné číslo
+v obou polích nepřeteče — `min-width:auto` se u ohebného prvku chová
+jako nula, takže se nic nekreslilo jinak. Rozdíl vznikal na odtrženém
+prvku, který si hlídač pro měření vyrábí a kde ohebný není. Místo
+vyjímky je deklarace **dopsaná** (`.hl-in{min-width:0}`): recept je tím
+s panelem shodný i mimo ohebný řádek a měření po změně vyšlo na pixel
+stejně (112 / 246 / bez přetečení).
+
+**Tři pády v rychlé sadě, všechny moje:**
+* `test-mrtve-styly` — po výměně zaškrtávátka za pilulku zůstala
+  v `styles.css` čtyři pravidla `.hl-zaskrt` bez čehokoli, na co by
+  platila. Smazána. (Shodou okolností nepůsobila ani dřív:
+  `hlidani.html` si `styles.css` vůbec nebere.)
+* `test-mnozstvi` — napsal jsem `podiluDnes < 5 ? 'y' : 'ů'`, tedy
+  přesně tvar, který repozitář zakazuje, protože nula do něj spadne
+  jako „0 podíly". U mě sice nula projít nemohla (je odchycená dřív),
+  ale pravidlo je na tvar, ne na případ. Přepsáno na `>= 2 && <= 4`.
+* `test-zkousky-meri` — oba moje nové kontexty měřily okno 420 px bez
+  `hasTouch`. Na úzkém okně se musí zapínat dotyk, jinak se měří něco,
+  co na telefonu nikdo nevidí. Doplněno.

@@ -9352,12 +9352,13 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
 /* Změna ceny proti minulému běhu. Zlevnění zeleně jako ostatní dobré
    zprávy, zdražení v barvě upozornění — ne poplašně červeně, protože to
    není vada nabídky, jen informace. */
-/* Zaškrtávátko v hlídání. Terč je celý řádek, ne jen čtvereček —
-   na telefonu se do 16px čtverečku prstem netrefíte. */
-.hl-zaskrt{display:flex; align-items:flex-start; gap:8px; min-height:44px; padding:4px 0; cursor:pointer;}
-.hl-zaskrt input{width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--znacka);}
-.hl-zaskrt span{font-size:14px; color:var(--text); line-height:1.4;}
-.hl-zaskrt i{font-style:normal; color:var(--muted);}
+/* .hl-zaskrt ODSTRANĚNO 1. 11. Systémové zaškrtávátko v hlídání
+   vystřídala pilulka .hl-prep podle panelu na úvodu (viz
+   docs/optimalizace.md §308) a tahle čtyři pravidla zůstala bez
+   čehokoli, na co by platila — našel to test-mrtve-styly.
+   Mimochodem: byla ve styles.css, který hlidani.html vůbec
+   nenačítá (bere si jen css/zaklad.min.css), takže nepůsobila
+   už předtím. */
 .pz-zmena{margin-top:4px; font-size:14px; font-weight:700;}
 .pz-zmena span{display:block; font-weight:400; font-size:13px; color:var(--muted); margin-top:2px;}
 .pz-zmena.dolu{color:var(--c-ok-ink);}

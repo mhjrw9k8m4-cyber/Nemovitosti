@@ -17,7 +17,7 @@
        Stránky, kde klepnutí mění účet nebo uložená data, tuhle pojistku
        mají všechny; hlídá to scripts/test-ramovani.mjs. -->
   <script>try{if(window.top!==window.self){document.documentElement.style.display='none';window.top.location=window.self.location;}}catch(e){document.documentElement.style.display='none';}</script>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-ZdgLIAMCu74ib7VWIKAjpPvaJtajCJj3Tl7y7SN5ezU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-Q40zyZg2tYDlKJ4cBS3ZpWQi2E2d7Sc5jhVFMTgdX7c=' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-KQRHzlrU4J7pA2zdcbkCs5KXsZc10AVDF0qnmw0f9Nw=' 'sha256-49ysJ/RUngSbdHJTETyy/RUNLFrs0Mdm1J6YQX0IHwc='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -62,7 +62,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=2b944c38">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=44496b29">
   <style>
     /* Kompaktní hero pro appkovou stránku — ať nepůsobí jako marketingový landing. */
     /* Vlevo, ne na střed: vystředěný sloupec 560 px začínal na 440 px,
@@ -164,6 +164,14 @@
     .hl-in,.hl-sel{width:100%; box-sizing:border-box; min-height:44px; padding:8px 12px;
       border:1px solid var(--line-ui); border-radius:var(--r-ovladani); font-size:16px;
       background:var(--plocha-karta); color:var(--text); margin-bottom:8px; font-family:inherit;}
+    /* MIN-WIDTH:0 JAKO U .map-num V PANELU. V živém řádku „od – do"
+       to nic nemění (změřeno: pole 112 px, řada 246, nepřeteče ani
+       s devítimístným číslem — protože min-width:auto se u ohebného
+       prvku chová jako nula). Deklaruje se proto, aby ten recept byl
+       s panelem shodný i mimo ohebný řádek a aby to hlídač porovnání
+       nemusel brát jako rozdíl. Na .hl-sel se to NEVZTAHUJE: .map-select
+       má min-width:0 jen uvnitř .mc-hodnota-radek, jinak taky auto. */
+    .hl-in{min-width:0;}
     /* Šipka u výběru: tatáž kresba i barva jako u .map-select v hledání
        (zelená #0F5C3B, 10×7, 11 px od pravého okraje). Systémová šipka
        vypadá na každém telefonu jinak — tahle všude stejně. */
@@ -271,6 +279,89 @@
     .hl-lbl{display:block; margin:8px 2px 4px; font-family:var(--font-popisek);
       font-size:12px; font-weight:600; color:var(--popisek);
       letter-spacing:var(--popisek-proklad); text-transform:uppercase;}
+    /* ===============================================================
+       ŘEČ PANELU Z ÚVODNÍ STRÁNKY (1. 11.)
+       ===============================================================
+       Majitel: „to hledání vizuálně potřebuje brutálně překopat,
+       udělej to podobné našemu vyhledávání, které mám na hlavní
+       stránce." Hlídání si nenačítá styles.css (jen zaklad.min.css),
+       takže se recepty z panelu musí napsat sem — stejně jako
+       u tlačítka zpět na stránce pozemku. Že se nerozešly, hlídá
+       scripts/test-hlidani-jako-hledani.mjs měřením v prohlížeči:
+       porovnává vykreslený tvar s panelem na index.html.
+
+       DLAŽDICE TYPU NABÍDKY — recept .filter-chip z panelu.
+       Mřížka po dvou je na telefonu to, co na úvodu sloupec: šest
+       voleb pod sebou by byl metr obrazovky. */
+    /* MŘÍŽ PODLE PANELU. Tohle je recept .mcv-rada ze stylopisu:
+       jeden sloupec, dva až od 360 px, a grid-auto-rows:1fr, aby
+       zalomený popisek zvedl celou řadu, ne jednu dlaždici.
+       Proč ne dva sloupce vždy: na 320 px má dlaždice 121 px a
+       „Od majitele" se do nich nevejde na jeden řádek — naměřeno,
+       že se zalomí a řada vyroste ze 44 na 63 px. Panel to má
+       vyřešené touž hranicí, tak ji neobcházím vlastní. */
+    .hl-dlazdice{display:grid; grid-template-columns:minmax(0,1fr);
+      grid-auto-rows:1fr; gap:4px; margin:2px 0 4px;}
+    @media (min-width:360px){ .hl-dlazdice{grid-template-columns:repeat(2, minmax(0,1fr));} }
+    .hl-dlazdice-b{display:flex; align-items:center; gap:8px; width:100%; text-align:left;
+      font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+      min-height:44px; padding:8px 12px; border-radius:var(--r-ovladani);
+      border:1px solid var(--line-ui); background:var(--plocha-karta); color:var(--text);
+      transition:var(--prechod);}
+    .hl-dlazdice-b .ik{width:18px; height:18px; flex:none; fill:none; stroke:currentColor;
+      stroke-width:2; stroke-linecap:round; stroke-linejoin:round; color:var(--znacka);}
+    .hl-dlazdice-b:hover{border-color:var(--znacka-svetla);}
+    .hl-dlazdice-b.on{border-color:var(--znacka-svetla); background:rgba(var(--znacka-hluboka-rgb),.12);
+      color:var(--znacka-svetla); font-weight:700;}
+    .hl-dlazdice-b.on .ik{color:var(--znacka-svetla);}
+    .hl-dlazdice-b:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+    /* Rozbalovátko a zaškrtávátko zůstávají ve stromu jako zdroj
+       pravdy, ale nekreslí se. `display:none` by je vyřadilo
+       z formuláře i pro odečítač; tohle je schová jen očím. */
+    .hl-skryty-sel, .hl-skryty-vstup{position:absolute; width:1px; height:1px; margin:-1px;
+      padding:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; border:0;}
+    /* PŘEPÍNAČ — recept .mc-prep ze skupiny „Příležitosti" v panelu. */
+    .hl-prep{display:inline-flex; align-items:center; gap:4px; font:inherit; font-size:13px; font-weight:600;
+      cursor:pointer; min-height:38px; padding:8px 12px; border-radius:var(--r-pill);
+      border:1px solid var(--line-ui); background:none; color:var(--muted);
+      transition:var(--prechod);}
+    .hl-prep:hover{border-color:var(--znacka); color:var(--znacka);}
+    .hl-prep.on{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+    .hl-prep:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+    /* Počet u popisku — recept .chip-n z panelu, bez margin-left:auto:
+       pilulka se šířce nepřizpůsobuje, takže číslo stojí hned za textem. */
+    .hl-prep-n{padding-left:4px; flex:none; font-size:12px; font-weight:700;
+      color:var(--muted); font-variant-numeric:tabular-nums;}
+    .hl-prep.on .hl-prep-n{color:rgba(255,255,255,0.82);}
+    /* 38 px je základ, na dotyku 44 — přesně jako .mc-prep v panelu,
+       kde to dělá společné pravidlo o chytacích plochách. Kolečko
+       s vysvětlivkou k tomu potřebuje i min-width: samo je 36 px
+       široké, takže bez toho má terč 36×44 px. Naměřila to zkouška
+       dotyku, jakmile na tenhle formulář vůbec došla — dřív ho míjela
+       (viz docs/optimalizace.md §308). */
+    @media (pointer: coarse){
+      .hl-prep{min-height:44px;}
+      .hl-info{min-width:44px; min-height:44px;}
+    }
+    .hl-prep-v{flex:none; width:18px; height:18px; border-radius:var(--r-xs); position:relative;
+      border:1.5px solid var(--line-ui); background:var(--plocha-karta); transition:var(--prechod);}
+    .hl-prep.on .hl-prep-v{background:#fff; border-color:#fff;}
+    .hl-prep.on .hl-prep-v::after{content:""; position:absolute; left:5.5px; top:2px; width:4px; height:9px;
+      border:solid var(--plocha-znacka); border-width:0 2px 2px 0; transform:rotate(45deg);}
+    /* KOLEČKO „i" — recept .mc-info z panelu, i s tím, že chytací
+       plocha je 36 px, ale KRESBA jen 18 px kolečko uvnitř. První
+       verze tady udělala rámeček rovnou z tlačítka a hlídač to
+       poznal: lišil se tvar, rám, plocha, barva i výška. */
+    .hl-info{width:36px; height:36px; margin:-8px 0 -8px 2px; padding:0; flex:none;
+      display:inline-flex; align-items:center; justify-content:center;
+      border:0; background:none; cursor:pointer;}
+    .hl-info span{display:flex; align-items:center; justify-content:center;
+      width:18px; height:18px; border:1px solid var(--line-ui); border-radius:50%;
+      font-family:var(--font-display); font-size:12px; font-weight:700; line-height:1;
+      color:var(--muted); transition:var(--prechod);}
+    .hl-info:hover span{border-color:var(--znacka); color:var(--znacka);}
+    .hl-info[aria-expanded="true"] span{background:var(--plocha-znacka); border-color:transparent; color:#fff;}
+    .hl-info:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
     .hl-row2{display:flex; gap:8px;}
     .hl-row2 > *{flex:1;}
     .hl-feats{display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 4px;}
@@ -787,6 +878,22 @@
       return opt(d, nazev + ' (' + (n ? String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') : '0') + ')');
     }).join('');
     var typeOpts = opt('', 'vše', true) + ['sale', 'drazba', 'exekuce', 'majitel'].map(function (t) { return opt(t, TYPE_LABEL[t]); }).join('');
+    /* Tytéž ikony jako v panelu na úvodní stránce (#map-filters) —
+       kdo zná jedno, pozná druhé. OBECNÍ ZÁMĚRY TU ALE NEJSOU, i když
+       je panel nabízí: web je nesbírá („každá obec má svou úřední
+       desku a ani jednu nemáme zapojenou“), takže v datech není ani
+       jeden a hlídání by mlčelo navždy. Rozbalovátko #ns-type je proto
+       nikdy nemělo — a dokud je nemá, nesmí je mít ani dlaždice:
+       kliknutí by se vrátilo na „Vše“ a nikdo by nepoznal proč. */
+    var TYPE_IKONA = { '': 'i-vrstvy', sale: 'i-cena', drazba: 'i-kladivko',
+      exekuce: 'i-vystraha', majitel: 'i-uzivatel' };
+    var typeDlazdice = ['', 'sale', 'drazba', 'exekuce', 'majitel'].map(function (t) {
+      return '<button type="button" class="hl-dlazdice-b' + (t ? '' : ' on') + '" data-type="' + esc(t) + '"'
+        + ' aria-pressed="' + (t ? 'false' : 'true') + '">'
+        + '<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + TYPE_IKONA[t] + '"/></svg>'
+        + esc(t ? TYPE_LABEL[t] : 'Vše') + '</button>';
+    }).join('');
+    var podiluDnes = DATA.filter(function (d) { return d.podil; }).length;
     /* U každé volby stojí, kolik dnešních nabídek by jí vyhovělo. Bez
        toho se dalo zaškrtnout něco, pod čím není NIC, a hlídání pak
        mlčelo navždy, aniž by se dalo poznat proč. Nula se neschovává —
@@ -846,10 +953,21 @@
             '</select>' +
             '<p class="hl-napoveda" id="ns-okruh-pozn"></p>' +
           '</div>' +
-          '<div class="hl-row2">' +
-            '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
-            '<div><label class="hl-lbl" for="ns-type">Typ nabídky</label><select class="hl-sel" id="ns-type">' + typeOpts + '</select></div>' +
-          '</div>' +
+          '<div><label class="hl-lbl" for="ns-druh">Druh pozemku</label><select class="hl-sel" id="ns-druh">' + druhOpts + '</select></div>' +
+          /* TYP NABÍDKY JE ŘADA DLAŽDIC, NE ROZBALOVÁTKO (1. 11.).
+             Majitel: „to hledání vizuálně potřebuje brutálně překopat,
+             udělej to podobné našemu vyhledávání, které mám na hlavní
+             stránce." Tohle je ta nejnápadnější věc, kterou se panel
+             na úvodu pozná: šest dlaždic s ikonou, ne skrytý seznam.
+             Má to i věcný důvod — z rozbalovátka není vidět, co se dá
+             hlídat, dokud se nerozklikne.
+             Rozbalovátko #ns-type zůstává, jen schované: je to pořád
+             zdroj pravdy pro kriteria() i pro předvyplnění při úpravě
+             hlídání, takže se nemusí sahat na nic kolem. Dlaždice ho
+             jen přepínají. */
+          '<span class="hl-lbl" id="ns-type-lbl">Typ nabídky</span>' +
+          '<div class="hl-dlazdice" role="group" aria-labelledby="ns-type-lbl">' + typeDlazdice + '</div>' +
+          '<select class="hl-sel hl-skryty-sel" id="ns-type" tabindex="-1" aria-hidden="true">' + typeOpts + '</select>' +
         '</div>' +
 
         '<div class="hl-sekce">' +
@@ -866,13 +984,40 @@
              přepínat mezi dvěma sekcemi, aby nastavil jednu věc. */
           '<label class="hl-lbl" for="ns-perm2">Nejvýš za metr <span class="jednotka">(Kč/m\u00b2)</span></label>' +
           '<input class="hl-in" id="ns-perm2" inputmode="numeric" placeholder="např. 50" aria-describedby="ns-perm2-pozn">' +
-          '<p class="hl-napoveda" id="ns-perm2-pozn">V Kč/m². Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
+          /* VYSVĚTLENÍ POD „i", JAKO V PANELU NA ÚVODU. Tři odstavce
+             drobným šedým písmem dělaly z formuláře článek; panel na
+             úvodní stránce má na totéž jedno kolečko „i" u popisku
+             (.mc-info / .mcv-pozn) a text se ukáže, až si o něj někdo
+             řekne. Krátké věty („Když necháte prázdné, hlídáme celou
+             ČR.") zůstávají vidět — ty se čtou rychleji, než se na ně
+             klepne. */
+          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-perm2-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
+          '<p class="hl-napoveda" id="ns-perm2-pozn" hidden>Podle ceny za metr se pozemky srovnávají nejčastěji — velký levný pozemek tak neutopí malý drahý.</p>' +
           /* Podíl patří k ceně, ne k výměře: je to jiná odpověď na otázku
              „co vlastně kupuju", a nejčastěji si ho člověk všimne právě
              u podezřele nízké ceny za metr. */
-          '<label class="hl-zaskrt"><input type="checkbox" id="ns-celek">' +
-            '<span>Jen celé pozemky <i>— bez spoluvlastnických podílů</i></span></label>' +
-          '<p class="hl-napoveda">U podílu je v ceně zlomek, ale výměra celé parcely, takže vychází podezřele levně. Dnes je takových ' +
+          /* PŘEPÍNAČ, NE ZAŠKRTÁVÁTKO. V panelu na úvodu je totéž
+             („Příležitosti": K dražbě do týdne, Pod cenou, Zlevněné)
+             řada přepínačů .mc-prep — systémové zaškrtávátko se v té
+             řeči nevyskytuje ani jednou. Vstup zůstává, jen ho vidět
+             není: nese stav pro kriteria(). */
+          /* POČET ZŮSTÁVÁ VIDĚT, VÝKLAD JDE POD „i". Kolik podílů dnes je,
+             je to jediné číslo, podle kterého se ta volba dá rozhodnout —
+             kdo nevidí, jestli odfiltruje tři, nebo pět stovek, zaškrtává
+             naslepo. Proto je u popisku, jako počty u čipů v panelu
+             (.chip-n); dlouhé vysvětlení, CO podíl je, se nabídne až
+             tomu, kdo si o ně klepne. */
+          '<button type="button" class="hl-prep" id="ns-celek-b" aria-pressed="false" aria-controls="ns-celek">' +
+            '<span class="hl-prep-v" aria-hidden="true"></span>Jen celé pozemky' +
+            /* NULA SE NESCHOVÁVÁ, JEN SE ŘEKNE NAHLAS — fmt() vrací pro
+               nulu prázdno (to se hodí tam, kde se číslo smí vynechat),
+               tady by z toho zbylo „Jen celé pozemky podílů". */
+            '<span class="hl-prep-n">' + (podiluDnes
+              ? fmt(podiluDnes) + '\u00a0podíl' + (podiluDnes === 1 ? '' : (podiluDnes >= 2 && podiluDnes <= 4 ? 'y' : 'ů'))
+              : 'žádné\u00a0podíly') + '</span></button>' +
+          '<label class="hl-skryty-vstup"><input type="checkbox" id="ns-celek">Jen celé pozemky — bez spoluvlastnických podílů</label>' +
+          '<button type="button" class="hl-info" aria-expanded="false" aria-controls="ns-podil-pozn" aria-label="Co to znamená"><span aria-hidden="true">i</span></button>' +
+          '<p class="hl-napoveda" id="ns-podil-pozn" hidden>Bez spoluvlastnických podílů. U podílu je v ceně zlomek, ale výměra celé parcely, takže vychází podezřele levně. Dnes je takových ' +
             fmt(DATA.filter(function (d) { return d.podil; }).length) + ' z ' + fmt(DATA.length) + '.</p>' +
         '</div>' +
 
@@ -968,6 +1113,63 @@
     });
     root.querySelectorAll('#ns-okres, #ns-druh, #ns-type, #ns-price, #ns-price-od, #ns-area, #ns-area-do, #ns-perm2')
       .forEach(function (e) { e.addEventListener('input', prepocti); e.addEventListener('change', prepocti); });
+
+    /* DLAŽDICE TYPU NABÍDKY. Pravdu drží dál schované rozbalovátko
+       #ns-type — tam se zapisuje a odtamtud čte kriteria(). Dlaždice
+       jsou jen jeho obličej, takže předvyplnění při úpravě hlídání
+       funguje beze změny: stačí po nastavení hodnoty srovnat vzhled.
+       Synchronizace jde OBĚMA směry (změna rozbalovátka rozsvítí
+       dlaždici), jinak by se po předvyplnění svítilo „Vše" u hlídání,
+       které má typ nastavený. */
+    var typSel = document.getElementById('ns-type');
+    var dlazdice = [].slice.call(root.querySelectorAll('.hl-dlazdice-b'));
+    function srovnejDlazdice() {
+      var h = typSel ? String(typSel.value || '') : '';
+      dlazdice.forEach(function (b2) {
+        var je = b2.getAttribute('data-type') === h;
+        b2.classList.toggle('on', je);
+        b2.setAttribute('aria-pressed', String(je));
+      });
+    }
+    dlazdice.forEach(function (b2) {
+      b2.addEventListener('click', function () {
+        if (!typSel) return;
+        typSel.value = b2.getAttribute('data-type');
+        srovnejDlazdice();
+        prepocti();
+      });
+    });
+    if (typSel) typSel.addEventListener('change', srovnejDlazdice);
+    srovnejDlazdice();
+
+    /* PŘEPÍNAČ „JEN CELÉ POZEMKY". Pravdu drží dál zaškrtávátko
+       #ns-celek (čte ho kriteria()), jen ho vidět není — tlačítko je
+       jeho obličej, stejně jako dlaždice u typu nabídky. */
+    var celekB = document.getElementById('ns-celek-b');
+    var celekIn = document.getElementById('ns-celek');
+    if (celekB && celekIn) {
+      celekB.addEventListener('click', function () {
+        celekIn.checked = !celekIn.checked;
+        celekB.classList.toggle('on', celekIn.checked);
+        celekB.setAttribute('aria-pressed', String(celekIn.checked));
+        prepocti();
+      });
+      celekIn.addEventListener('change', function () {
+        celekB.classList.toggle('on', celekIn.checked);
+        celekB.setAttribute('aria-pressed', String(celekIn.checked));
+      });
+    }
+
+    /* Kolečka „i" u popisků — táž věc jako .mc-info v panelu na úvodu. */
+    root.querySelectorAll('.hl-info').forEach(function (b2) {
+      b2.addEventListener('click', function () {
+        var cil = document.getElementById(b2.getAttribute('aria-controls'));
+        if (!cil) return;
+        var otevrit = cil.hidden;
+        cil.hidden = !otevrit;
+        b2.setAttribute('aria-expanded', String(otevrit));
+      });
+    });
 
     // Rychlé volby jen vyplní políčka — ať je pořád vidět, co se nastavilo.
     root.querySelectorAll('.hl-rychle').forEach(function (b) {

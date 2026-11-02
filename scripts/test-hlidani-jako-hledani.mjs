@@ -50,6 +50,16 @@ const ROLE = [
   { jm: 'rychlá volba',    tag: 'button', hledani: 'filter-chip', hlidani: 'hl-rychle', pismo: true },
   { jm: 'pilulka „musí mít"', tag: 'button', hledani: 'filter-chip', hlidani: 'hl-chip', pismo: true },
   { jm: 'hlavní tlačítko', tag: 'button', hledani: 'mcf-hotovo',  hlidani: 'hl-btn',    pismo: true },
+  /* TŘI ROLE PŘIBYLY 1. 11. Majitel: „to hledání vizuálně potřebuje
+     brutálně překopat, udělej to podobné našemu vyhledávání, které
+     mám na hlavní stránce." Recepty jednotlivých prvků se srovnaly
+     už 29. 10. (řádky výš) — zbývala STAVBA: rozbalovátko místo
+     dlaždic, systémové zaškrtávátko místo přepínače a tři odstavce
+     drobného písma místo kolečka „i". Všechny tři věci teď mají
+     v hlídání protějšek a hlídají se stejně jako zbytek. */
+  { jm: 'dlaždice typu nabídky', tag: 'button', hledani: 'filter-chip', hlidani: 'hl-dlazdice-b', pismo: true },
+  { jm: 'přepínač',        tag: 'button', hledani: 'mc-prep',     hlidani: 'hl-prep',   pismo: true },
+  { jm: 'kolečko „i"',     tag: 'button', hledani: 'mc-info',     hlidani: 'hl-info',   pismo: false },
 ];
 
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] },
@@ -84,6 +94,10 @@ const recepty = (strana) => p.evaluate(([role, kam]) => {
       plocha: c.backgroundColor,
       ink: c.color,
       vyska: c.minHeight,
+      /* MIN-WIDTH TU DŘÍV NEBYL a propadlo tím kolečko s vysvětlivkou:
+         panel mu dává min-width:44px i min-height:44px, já opsal jen
+         výšku, takže terč měl 36×44 px. Shoda výšek na to nestačí. */
+      sirka: c.minWidth,
       pismo: c.fontSize + '/' + c.fontWeight,
     };
     e.remove();
@@ -112,7 +126,7 @@ await prohlizec.close();
 pravda('formulář hlídání se vykreslil (jinak by se recepty četly nad prázdnem)',
   jeFormular === true, 'ns-okres v dokumentu není');
 
-const VLASTNOSTI = ['tvar', 'ram', 'plocha', 'ink', 'vyska'];
+const VLASTNOSTI = ['tvar', 'ram', 'plocha', 'ink', 'vyska', 'sirka'];
 for (const r of ROLE) {
   const a = A[r.jm], b = B[r.jm];
   const rozdily = VLASTNOSTI.filter((k) => a[k] !== b[k])

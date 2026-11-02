@@ -106,7 +106,15 @@ for (const s of STRANKY) {
      „Označit vše jako viděné" 38 px a přepínač filtru 38 px).
      Zkoušel jsem k tomu i rozbalovat kartu #prodej-card; ukázalo se, že
      to není potřeba (se stejným počtem i bez toho), tak to tu není. */
-  await p.waitForTimeout(300);
+  /* A NA HLIDANI.HTML OTEVŘÍT I FORMULÁŘ. S uloženými hledáními
+     stránka začíná na záložce „Moje hlídání" a celý „Nové hlídání"
+     je hidden — takže se jeho ovladače neměřily vůbec. Je jich tam
+     přes třicet: dlaždice druhu, pilulky „Musí mít", přepínač
+     „Jen celé pozemky", kolečka „i". Všechny se klepou prstem. */
+  if (await p.locator('.hl-tab[data-zalozka="nove"]').count()) {
+    await p.click('.hl-tab[data-zalozka="nove"]', { timeout: 4000 }).catch(() => {});
+    await p.waitForTimeout(500);
+  }
   const nalezy = await p.evaluate((MIN) => {
     const out = [];
     /* ZAŠKRTÁVÁTKA SE DŘÍV NEMĚŘILA. Seznam selektorů znal tlačítka
@@ -123,6 +131,25 @@ for (const s of STRANKY) {
       const lr = lab.getBoundingClientRect();
       return { width: Math.max(r.width, lr.width), height: Math.max(r.height, lr.height) };
     };
+    /* SCHOVANÉ PRO OČI, ŽIVÉ PRO FORMULÁŘ. Některé ovladače zůstávají
+       ve stromu jako zdroj pravdy (ukládají se, čte je odečítač), ale
+       kreslí se vedle nich vlastní pilulka — „Jen celé pozemky" a výběr
+       druhu na hlidani.html. Schovávají se clip-path na 1×1 px, protože
+       display:none by je vyřadilo z formuláře i pro odečítač. Terč u nich
+       nemá co měřit: klepe se na tu pilulku, a tu zkouška změří jako
+       každé jiné tlačítko.
+       clip-path se NEDĚDÍ a bývá na obalujícím <label>, ne na vstupu —
+       proto se jde po předcích, ne jen po prvku. Mez to nezeslabuje:
+       opravdu malý ovladač clip-path nemá a propadne dál, a kdyby ho
+       někdo dal na něco, co je vážně vidět, prozradí ho rozměr. */
+    const schovanyProOci = (e) => {
+      for (let x = e; x && x !== document.body; x = x.parentElement) {
+        const sx = getComputedStyle(x);
+        const rx = x.getBoundingClientRect();
+        if (sx.clipPath && sx.clipPath !== 'none' && rx.width <= 2 && rx.height <= 2) return true;
+      }
+      return false;
+    };
     let zaskrtnuto = 0;
     document.querySelectorAll('button, a.btn-primary, a.filter-chip, .filter-chip, .nav-toggle, .mvt-btn, .up-f, .up-a, input[type=checkbox], input[type=radio]').forEach((e) => {
       const jeZaskrt = /^(checkbox|radio)$/.test(e.type || '');
@@ -131,6 +158,7 @@ for (const s of STRANKY) {
       if (jeZaskrt) zaskrtnuto++;
       const s = getComputedStyle(e);
       if (s.visibility === 'hidden' || parseFloat(s.opacity) < 0.05) return;
+      if (schovanyProOci(e)) return;
       if (r.height < MIN || r.width < MIN) out.push({
         co: (e.textContent || e.getAttribute('aria-label') || e.tagName).trim().slice(0, 24),
         trida: (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/)[0] : e.tagName),
