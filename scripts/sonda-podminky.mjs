@@ -30,7 +30,15 @@ const SONDA = new URL('../data/zdroje-sonda.json', import.meta.url);
 
 export const PAUZA_MS = 2000;          // mezi dotazy, ať zdroj nezatěžujeme
 export const CAS_LIMIT_MS = 20000;
-export const STRANEK_NA_ZDROJ = 4;     // nejvýš čtyři stránky podmínek
+export const STRANEK_NA_ZDROJ = 6;     // nejvýš šest stránek podmínek
+/* Kolik textu musí stránka vydat, aby „nic o automatu" něco znamenalo.
+   PROČ TO TU JE: první běh ohlásil u Bezrealitek „přečteno, ale nic
+   o automatickém přístupu" — a to je věta, která může znamenat dvě
+   úplně různé věci. Buď v jejich podmínkách o robotech nic není, nebo
+   se nepřečetly: stránka vykreslená až v prohlížeči vrátí skoro
+   prázdné HTML a obojí vypadá stejně. Bez tohohle prahu bych vydal
+   druhý případ za první — a na tom se nedá nic rozhodnout. */
+export const ZNAKU_NA_STRANKU = 2000;
 export const ODSTAVCU_NA_STRANKU = 12;
 export const DELKA_ODSTAVCE = 600;
 
@@ -170,23 +178,50 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
     zapis.verdikt = 'odkaz na podmínky se na domovské stránce nenašel';
     return zapis;
   }
-  for (const o of odkazy) {
+  const videne = new Set(odkazy.map((o) => o.url));
+  const fronta = odkazy.slice();
+  while (fronta.length) {
+    const o = fronta.shift();
     await spi(PAUZA_MS);
     const s = await nactiPovolene(o.url);
     if (s.zakaz) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'nesmíme číst', duvod: s.zakaz }); continue; }
     if (s.chyba) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'neodpověděla', duvod: s.chyba }); continue; }
     const pasaze = oAutomatu(s.html);
+    const text = bezZnacek(s.html);
+    const vsechny = odstavce(text);
+    /* DOKLAD, ŽE SE OPRAVDU NĚCO PŘEČETLO. Bez něj by „nic o automatu"
+       znamenalo zároveň „v podmínkách o tom nic není" i „stránka nám
+       nic nedala" — a to jsou dvě různé odpovědi. */
+    const malo = text.replace(/\s/g, '').length < ZNAKU_NA_STRANKU;
     zapis.stranky.push({
       url: o.url, popis: o.popis,
-      stav: pasaze.length ? 'přečteno' : 'přečteno, nic o automatu',
+      stav: pasaze.length ? 'přečteno'
+        : (malo ? 'málo textu — nedá se z toho soudit' : 'přečteno, nic o automatu'),
+      znaku: text.replace(/\s/g, '').length,
+      odstavcuCelkem: vsechny.length,
       odstavcu: pasaze.length, pasaze,
     });
+    /* JEDEN SKOK DÁL. Podmínky bývají rozdělené („smluvní podmínky",
+       „podmínky užití", „zásady ochrany údajů") a z domovské stránky
+       vede odkaz jen na jedny. Z té stránky se proto posbírají další
+       odkazy téhož druhu — ale jen jeden skok a do stropu, aby se
+       nestahoval půl webu. */
+    for (const dalsi of odkazyNaPodminky(s.html, o.url)) {
+      if (zapis.stranky.length + fronta.length >= STRANEK_NA_ZDROJ) break;
+      if (videne.has(dalsi.url)) continue;
+      videne.add(dalsi.url);
+      fronta.push(dalsi);
+    }
   }
   const precteno = zapis.stranky.filter((s) => /přečteno/.test(s.stav)).length;
+  const malo = zapis.stranky.filter((s) => /málo textu/.test(s.stav)).length;
   const pasazi = zapis.stranky.reduce((n, s) => n + (s.odstavcu || 0), 0);
-  zapis.verdikt = precteno
-    ? (pasazi ? `přečteno (${pasazi} pasáží o automatickém přístupu)` : 'přečteno, ale nic o automatickém přístupu')
-    : 'žádnou stránku podmínek se nepodařilo přečíst';
+  zapis.znakuCelkem = zapis.stranky.reduce((n, s) => n + (s.znaku || 0), 0);
+  zapis.verdikt = pasazi
+    ? `přečteno (${pasazi} pasáží o automatickém přístupu)`
+    : (precteno ? 'přečteno, ale nic o automatickém přístupu'
+      : (malo ? 'málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí'
+        : 'žádnou stránku podmínek se nepodařilo přečíst'));
   return zapis;
 }
 

@@ -21091,3 +21091,31 @@ proti serveru na `127.0.0.1`, bez jakéhokoli podstrčení.
 **Co se tím NEZMĚNILO, a to je podstatné:** ani jeden stahovač,
 ani jeden řádek v registru zdrojů, ani jedna nabídka na webu. Tohle je
 podklad k rozhodnutí, ne rozhodnutí.
+
+**PRVNÍ BĚH A CO Z NĚHO VYŠLO (2. 11.).**
+
+| zdroj | výsledek |
+|---|---|
+| **Sreality** | `www.sreality.cz/robots.txt` má `Disallow: /` — **nedovoluje číst ani domovskou stránku.** Jejich podmínky si tedy automaticky přečíst nemůžeme. Musí je otevřít člověk. |
+| **Bezrealitky** | domovskou stránku čtení **dovoluje**, našel se jeden odkaz (`/informace/smluvni-podminky`), stránka se přečetla — a **nic o automatickém přístupu v ní nebylo**. |
+
+**A ten druhý řádek jsem si nesměl nechat jako odpověď.** „Přečteno, ale
+nic o automatickém přístupu" může znamenat dvě úplně různé věci: buď
+v jejich podmínkách o robotech nic není, nebo se ty podmínky
+nepřečetly — stránka vykreslená až v prohlížeči vrátí skoro prázdné
+HTML a obojí vypadá v nálezu stejně. Vydat druhý případ za první je
+přesně ta chyba, na které stála §337.
+
+Sonda proto teď zapisuje **doklad**: kolik znaků textu stránka vydala
+a kolik z toho bylo odstavců. Pod `ZNAKU_NA_STRANKU` (2 000) se verdikt
+nejmenuje „nic o automatu", ale **„málo textu — stránka se vykresluje až
+v prohlížeči, takhle se to nezjistí"**. A protože podmínky bývají
+rozdělené na víc dokumentů („smluvní podmínky", „podmínky užití",
+„zásady ochrany údajů") a z domovské stránky vede odkaz jen na jedny,
+dělá sonda **jeden skok dál**: z té stránky posbírá další odkazy téhož
+druhu, do stropu šesti stránek na zdroj.
+
+**Prokázáno sabotáží:** zrušení prahu na text → skoro prázdná stránka
+projde jako „nic o automatu" (1 pád); zrušení skoku dál → druhý
+dokument se nenajde (1); doklad o množství textu se přestane zapisovat
+(1). `test-sonda-podminky`: 31 kontrol, osm sabotáží celkem.

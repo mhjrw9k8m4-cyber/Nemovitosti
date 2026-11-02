@@ -139,15 +139,49 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     !z.stranky[0].pasaze.some((p) => /občanským/.test(p)), JSON.stringify(z.stranky[0].pasaze));
   /* Stránka bez jediné zmínky se do nálezu dostane TAKY — „nic tam
      není" je nález, ne mlčení. */
+  /* Stránka MUSÍ mít dost textu, jinak by to spadlo do „málo textu" —
+     a právě ten rozdíl se tu měří. Padlo na tom moje první podoby
+     téhle předlohy: tři věty na „nic o automatu" nestačí, protože tři
+     věty neznamenají, že jsme podmínky přečetli. */
+  const DLOUHE = '<p>' + 'Platba kartou a reklamace do třiceti dnů od převzetí věci bez výhrad. '.repeat(40) + '</p>';
   const stahniNic = async (u) => {
     if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
-    if (/podminky/.test(u)) return { ok: true, status: 200, text: async () => '<p>' + 'Platba kartou a reklamace do třiceti dnů od převzetí. '.repeat(3) + '</p>' };
+    if (/podminky/.test(u)) return { ok: true, status: 200, text: async () => DLOUHE };
     return { ok: true, status: 200, text: async () => '<a href="/podminky">Podmínky</a>' };
   };
   const zNic = await P.zmerPodminky({ jmeno: 'Nic', host: 'n.test', domov: 'https://n.test/' },
     { stahni: stahniNic, ua: UA, mezipamet: new Map() });
   pravda('„nic o automatu" je taky nález, ne mlčení',
     /nic o automatick/.test(zNic.verdikt), zNic.verdikt);
+  pravda('a v nálezu je doklad, kolik textu se přečetlo',
+    zNic.stranky[0].znaku >= P.ZNAKU_NA_STRANKU && zNic.stranky[0].odstavcuCelkem >= 1,
+    JSON.stringify({ znaku: zNic.stranky[0].znaku, odstavcu: zNic.stranky[0].odstavcuCelkem }));
+  /* A TEN ROZDÍL, PRO KTERÝ TO VZNIKLO. Stránka vykreslená až
+     v prohlížeči vrátí skoro prázdné HTML. „Nic o automatu" by z ní
+     byla lež — nepřečetli jsme nic, z čeho by se to dalo poznat. */
+  const stahniPrazdna = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/podminky/.test(u)) return { ok: true, status: 200, text: async () => '<div id="app"></div>' };
+    return { ok: true, status: 200, text: async () => '<a href="/podminky">Podmínky</a>' };
+  };
+  const zPrazdna = await P.zmerPodminky({ jmeno: 'Aplikace', host: 'a.test', domov: 'https://a.test/' },
+    { stahni: stahniPrazdna, ua: UA, mezipamet: new Map() });
+  pravda('skoro prázdná stránka se NEVYDÁ za „nic o automatu"',
+    /málo textu/.test(zPrazdna.verdikt) && /málo textu/.test(zPrazdna.stranky[0].stav),
+    JSON.stringify({ verdikt: zPrazdna.verdikt, stav: zPrazdna.stranky[0].stav }));
+  /* JEDEN SKOK DÁL: podmínky bývají rozdělené na víc dokumentů. */
+  const stahniDva = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/\/smluvni/.test(u)) return { ok: true, status: 200,
+      text: async () => DLOUHE + '<a href="/podminky-uziti">Podmínky užití</a>' };
+    if (/\/podminky-uziti/.test(u)) return { ok: true, status: 200,
+      text: async () => '<p>7. Obsah nelze automatizovaně stahovat roboty ani hromadně kopírovat bez souhlasu.</p>' };
+    return { ok: true, status: 200, text: async () => '<a href="/smluvni-podminky">Smluvní podmínky</a>' };
+  };
+  const zDva = await P.zmerPodminky({ jmeno: 'Dva', host: 'd.test', domov: 'https://d.test/' },
+    { stahni: stahniDva, ua: UA, mezipamet: new Map() });
+  pravda('odkaz na další podmínky Z TÉ STRÁNKY se dojde (jeden skok)',
+    zDva.stranky.length === 2 && /1 pasáží/.test(zDva.verdikt), JSON.stringify(zDva.verdikt));
   /* A když se odkaz nenajde, řekne se to — ať se nehádá, proč je prázdno. */
   const stahniBez = async (u) => ({ ok: true, status: 200,
     text: async () => (/robots\.txt$/.test(u) ? 'User-agent: *\nAllow: /' : '<a href="/kontakt">Kontakt</a>') });
