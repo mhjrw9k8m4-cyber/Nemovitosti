@@ -4340,6 +4340,34 @@ h1.uvod-nadpis{font-family:var(--font-nadpis); font-size:var(--h1-domu); font-we
   font-size:20px; line-height:1; flex:none; transition:var(--prechod);}
 .dv[open] .dv-s::after{transform:rotate(45deg);}
 .dv-telo{padding:0 20px 20px;}
+
+/* ===== Co z uložených odešlo z nabídky =====
+   Doslov k „Uloženým", ne nabídka — proto je to tlumená plocha pod
+   výpisem a ne karta mezi nabídkami. Majitel 2. 11.: „pokud má člověk
+   u pozemku poznámku nebo oblíbené a někdo ho prodal, mělo by být
+   vidět historie smazaných." Viz docs/optimalizace.md §316. */
+.odesly{margin:16px 0 0; padding:16px; border:1px solid var(--line);
+  border-radius:var(--r-md); background:var(--plocha-tlumena);}
+.odesly-h{margin:0 0 12px; font-family:var(--font-ui); font-size:16px; font-weight:600;
+  color:var(--text);}
+.odesly-list{list-style:none; margin:0; padding:0; display:grid; gap:8px;}
+.odesly-i a{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px;
+  min-height:44px; padding:8px 12px; text-decoration:none;
+  border:1px solid var(--line); border-radius:var(--r-md);
+  background:var(--plocha-karta); transition:var(--prechod);}
+.odesly-i a:hover{border-color:var(--znacka-svetla);}
+.odesly-i a:focus-visible{outline:2px solid var(--znacka-svetla); outline-offset:2px;}
+.odesly-m{flex:1 1 auto; min-width:0; font-family:var(--font-ui); font-size:16px;
+  font-weight:600; color:var(--text);}
+.odesly-o{font-weight:400; font-size:13px; color:var(--muted);}
+.odesly-c{font-size:13px; color:var(--muted);}
+/* Datum je to podstatné sdělení celého řádku („odešlo 13. 10. 2026"),
+   takže stojí na vlastním konci a nezalomí se uprostřed. */
+.odesly-d{flex:none; font-family:var(--font-popisek); font-size:12px; font-weight:600;
+  color:var(--muted); white-space:nowrap;}
+.odesly-vic{margin:8px 0 0; font-size:13px; color:var(--muted);}
+.odesly-pozn{margin:12px 0 0; font-size:13px; line-height:1.5; color:var(--muted);
+  max-width:var(--m-text);}
 /* Vnitřek si nese vlastní mřížky (.status-grid, .steps, .glossary, .faq);
    na úzké obrazovce by k nim okraj řádku přidal druhý odstup, takže se
    uvnitř řádku počítá jen s tím jedním. */

@@ -4556,6 +4556,84 @@
     prekresliChipy();
     prekresliAkceFiltru(matched);
     vratZamereni(zamereni);
+    renderOdesly();
+  }
+
+  var ODESLY_SLIB = null, ODESLY_DATA = null;
+  function dejOdesle() {
+    if (ODESLY_SLIB) return ODESLY_SLIB;
+    ODESLY_SLIB = loadJSON('data/zmizele.json').then(function (z) {
+      ODESLY_DATA = (z && Array.isArray(z.zmizele)) ? z : { zmizele: [], dni: 90 };
+      return ODESLY_DATA;
+    }).catch(function () { ODESLY_DATA = { zmizele: [], dni: 90 }; return ODESLY_DATA; });
+    return ODESLY_SLIB;
+  }
+
+  function tvaryKlicu(seznam) {
+    var presne = {}, hrube = {};
+    (seznam || []).forEach(function (k) {
+      if (!k) return;
+      k = String(k);
+      presne[k] = 1;
+      var i = k.indexOf('#v');
+      if (i < 0) hrube[k] = 1;
+      else if (k.charAt(i + 2) === '0') hrube[k.slice(0, i)] = 1;
+    });
+    return { presne: presne, hrube: hrube };
+  }
+  function renderOdesly() {
+    var box = document.getElementById('odesly');
+    if (!box) return;
+
+    if (!favOnly) { box.hidden = true; box.innerHTML = ''; return; }
+    var poznKlice = (window.PKPoznamky && PKPoznamky.vsechny)
+      ? Object.keys(PKPoznamky.vsechny()) : [];
+    if (!favs.length && !poznKlice.length) { box.hidden = true; box.innerHTML = ''; return; }
+    dejOdesle().then(function (z) {
+      if (!favOnly) { box.hidden = true; box.innerHTML = ''; return; }
+      var moje = tvaryKlicu(favs.concat(poznKlice));
+      var nalez = (z.zmizele || []).filter(function (x) {
+        if (moje.presne[x.klic]) return true;
+        return !!moje.hrube[String(x.klic || '').split('#v')[0]];
+      });
+      if (!nalez.length) { box.hidden = true; box.innerHTML = ''; return; }
+
+      var ukazat = nalez.slice(0, 10);
+
+      var html = '<h3 class="odesly-h">Odešlo z\u00a0nabídky: ' + nalez.length + '\u00a0'
+        + plPozemek(nalez.length) + ' z\u00a0vašich uložených</h3>'
+        + '<ul class="odesly-list">';
+      ukazat.forEach(function (x) {
+        var pk = String(x.klic || '').split('#v')[0];
+        var casti = pk.split('|');
+        var misto = casti[0] || 'Pozemek';
+        var okres = casti[2] || '';
+        var radek = [x.vymera ? fmt(x.vymera) + '\u00a0m²' : '',
+          x.cena ? fmt(x.cena) + '\u00a0Kč' : ''].filter(Boolean).join(' · ');
+        html += '<li class="odesly-i"><a href="' + esc(x.soubor) + '">'
+          + '<span class="odesly-m">' + esc(misto)
+          + (okres && okres !== misto ? ' <span class="odesly-o">okres ' + esc(okres) + '</span>' : '')
+          + '</span>'
+          + (radek ? '<span class="odesly-c mono">' + radek + '</span>' : '')
+          + '<span class="odesly-d">odešlo ' + esc(denCeskyKratky(x.kdy)) + '</span>'
+          + '</a></li>';
+      });
+      html += '</ul>';
+      if (nalez.length > ukazat.length) {
+        html += '<p class="odesly-vic">a ' + (nalez.length - ukazat.length) + ' další</p>';
+      }
+
+      html += '<p class="odesly-pozn">Stránka u\u00a0každé zůstává, takže si ji můžete otevřít. '
+        + 'Dál než ' + (z.dni || 90) + '\u00a0dní dozadu ale historie nejde — starší stránky se mažou.</p>';
+      box.innerHTML = html;
+      box.hidden = false;
+    });
+  }
+
+  function denCeskyKratky(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return String(iso || '');
+    return Number(m[3]) + '.\u00a0' + Number(m[2]) + '.\u00a0' + m[1];
   }
 
   function nastrojeDoHlavicky() {

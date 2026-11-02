@@ -310,6 +310,28 @@ ${pole}
   </section>
 
   <section class="dt-sekce">
+    <h2>Které nabídky už skončily</h2>
+    <p class="dt-uvod">Nabídka z webu nezmizí beze stopy: její stránka zůstává a tenhle
+      soubor je seznam těch, které už nejsou aktuální. Web z něj v „Uložených" pozná,
+      že pozemek, který si člověk uložil nebo si k němu něco napsal, z nabídky odešel —
+      jinak by mu ze seznamu jen tiše vypadl.</p>
+    <p class="dt-adresa"><code>https://www.parcelaka.cz/data/zmizele.json</code></p>
+    <ul class="dt-seznam">
+      <li><b>Tvar</b> je <code>{ updated, dni, zmizele: [{ klic, vymera, cena, kdy, soubor }] }</code>.
+        Řadí se od nejnovějšího; <code>kdy</code> je den, kdy jsme nabídku naposledy viděli
+        v datech, a <code>soubor</code> je její stránka na webu.</li>
+      <li><b>Klíč je náš vnitřní</b> — týž jako u <code>zlevneni.json</code>
+        (<code>klicPozemku</code>, tedy obec, parcela, okres, souřadnice a výměra).
+        Napojit se na <code>opportunities.json</code> dá jen přes výpočet
+        v <code>js/klic.js</code>.</li>
+      <li><b>Dál než <code>dni</code> dozadu to nejde</b> a nepředstíráme to: stránky
+        skončených nabídek po té době mažeme, takže po nich nezbývá ani záznam.</li>
+      <li><b>Není to prodejní cena.</b> Víme jen, že nabídka přestala být v datech —
+        proč, už ne. Může být prodaná, stažená, nebo ji přestal uvádět zdroj.</li>
+    </ul>
+  </section>
+
+  <section class="dt-sekce">
     <h2>Za jakých podmínek</h2>
     <p>Data pocházejí z veřejných zdrojů a Parcelka je dává k dispozici tak, jak jsou.
       Platí pro ně <a href="podminky.html">podmínky použití</a>. Prosíme o uvedení zdroje

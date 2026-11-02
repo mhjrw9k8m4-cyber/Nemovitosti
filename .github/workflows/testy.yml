@@ -927,6 +927,9 @@ jobs:
       - name: Výklad na úvodní stránce se rozbaluje
         run: node scripts/test-dobre-vedet.mjs
 
+      - name: Co z uložených odešlo z nabídky
+        run: node scripts/test-zmizele.mjs
+
       - name: Moje data — co si web pamatuje
         run: node scripts/test-ulozene.mjs
 

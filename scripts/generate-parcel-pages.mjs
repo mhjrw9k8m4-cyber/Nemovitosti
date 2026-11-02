@@ -2080,6 +2080,7 @@ export function generuj() {
     if (d.place) ziveObce.add(slug(d.place));
   }
   let smazano = 0, ukonceno = 0, prepsano = 0, prestehovano = 0;
+  const zmizele = [];
   for (const f of fs.readdirSync(ROOT)) {
     if (!/^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f) || zive.has(f)) continue;
     /* Na název se nespoléhat. Ručně psané stránky se jmenují podobně
@@ -2095,6 +2096,13 @@ export function generuj() {
     if (uz) {
       const stari = (Date.parse(dnes) - Date.parse(uz[1])) / 86400000;
       if (stari >= DNI_ARCHIV) { fs.unlinkSync(cesta); smazano++; continue; }
+      /* DO SEZNAMU ZMIZELÝCH. Kdo si pozemek uložil nebo si k němu něco
+         napsal, má poznat, že z nabídky odešel — dosud mu z „Uložených"
+         jen tiše vypadl a nešlo rozeznat „smazal jsem si ho sám" od
+         „prodal se". Záznam se bere z ostrůvku stránky, který nese týž
+         klíč, výměru i cenu, jaké má živá nabídka; stránka zůstává, takže
+         se dá i otevřít. Viz docs/optimalizace.md §316. */
+      zmizele.push(zaznamZmizele(obsah, f, uz[1]));
       /* Už ukončená a ještě ne stará: obsah se nepřepisuje. Jen přepisy,
          které se musí dostat na KAŽDOU stránku webu, projdou i tudy.
          migrujUkoncenaData patří mezi ně: stránky, které skončily DŘÍV,
@@ -2159,7 +2167,34 @@ export function generuj() {
       migrujZpet(migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah))))), dnes, podobne)));
     ukonceno++;
   }
-  return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano };
+  /* SEZNAM ZMIZELÝCH do data/zmizele.json. Nese jen to, co se v „Uložených"
+     ukazuje: klíč, výměru, cenu, den a soubor stránky. Řadí se od
+     nejnovějšího, takže se v prohlížeči nemusí řadit nic.
+     DELŠÍ HISTORII NEŽ 90 DNÍ TENHLE SOUBOR DÁT NEMŮŽE a nepředstírá to:
+     stránky starší než DNI_ARCHIV se výš doopravdy mažou, takže po nich
+     nezbývá ani záznam. Psát si vlastní archiv mimo stránky by znamenalo
+     druhý zdroj pravdy o tomtéž. */
+  zmizele.sort((a, b) => (b.kdy || '').localeCompare(a.kdy || ''));
+  fs.writeFileSync(path.join(ROOT, 'data', 'zmizele.json'),
+    JSON.stringify({ updated: dnes, dni: DNI_ARCHIV, zmizele }) + '\n');
+  return { hotove, datumy, smazano, ukonceno, prepsano, prestehovano, zmizelych: zmizele.length };
+}
+
+/** Jeden záznam do seznamu zmizelých, přečtený z ostrůvku stránky. */
+function zaznamZmizele(obsah, soubor, kdy) {
+  let o = null;
+  const m = /window\.PK_POZEMEK=(\{[\s\S]*?\});/.exec(obsah);
+  if (m) { try { o = JSON.parse(m[1]); } catch (e) { o = null; } }
+  /* Klíč se skládá TÝMŽ způsobem jako v prohlížeči (PKKlic.klicPozemku =
+     pkey + „#v" + výměra). Kdyby se ty dva zápisy rozešly, seznam by
+     nenašel ani jeden uložený pozemek a nikdo by si toho nevšiml —
+     hlídá to scripts/test-zmizele.mjs. */
+  const k = o && o.k ? String(o.k) : '';
+  const v = o && isFinite(o.v) ? Number(o.v) : null;
+  /* `pkey` se nevypisuje: je to `klic` před „#v" a 403 záznamů by jím
+     narostlo o 18 kB. Prohlížeč si ho odřízne sám. */
+  return { klic: v ? k + '#v' + v : k, vymera: v,
+    cena: o && isFinite(o.c) ? Number(o.c) : null, kdy, soubor };
 }
 
 /* Mapa webu. Sitemap staví generátor regionálních stránek a přepisuje ji

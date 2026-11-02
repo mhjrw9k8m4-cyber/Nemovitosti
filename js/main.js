@@ -7606,6 +7606,114 @@
     prekresliChipy();    // odznaky toho, co web pochopil z napsané věty
     prekresliAkceFiltru(matched);   // „Zobrazit N pozemků" a „Zrušit filtry" na konci panelu
     vratZamereni(zamereni);   // zaměření klávesnice nesmí spadnout na <body>
+    renderOdesly();      // doslov k uloženým: co z nich odešlo z nabídky
+  }
+
+  /* ===== CO Z ULOŽENÝCH ODEŠLO Z NABÍDKY =====
+     Majitel 2. 11.: „pokud má člověk u pozemku poznámku nebo oblíbené
+     a někdo ho prodal, mělo by být vidět historie smazaných."
+     Měl pravdu a dosud to nešlo rozeznat: uložený pozemek, který
+     z nabídky odešel, prostě z „Uložených" vypadl. Dvě úplně jiné
+     věci — „smazal jsem si ho sám" a „prodal se" — vypadaly stejně.
+     Seznam staví sestavení do data/zmizele.json z vlastních stránek
+     ukončených nabídek (ty na webu zůstávají, takže se dá i otevřít).
+     STAHUJE SE LÍNĚ A JEN KOMU TO K ČEMU JE: 63 kB (15,5 kB po gzipu)
+     se nesmí stáhnout tomu, kdo si nic neuložil a nic nenapsal. */
+  var ODESLY_SLIB = null, ODESLY_DATA = null;
+  function dejOdesle() {
+    if (ODESLY_SLIB) return ODESLY_SLIB;
+    ODESLY_SLIB = loadJSON('data/zmizele.json').then(function (z) {
+      ODESLY_DATA = (z && Array.isArray(z.zmizele)) ? z : { zmizele: [], dni: 90 };
+      return ODESLY_DATA;
+    }).catch(function () { ODESLY_DATA = { zmizele: [], dni: 90 }; return ODESLY_DATA; });
+    return ODESLY_SLIB;
+  }
+  /* Klíč uloženého pozemku je `pkey#vVÝMĚRA` (js/klic.js), ale co si
+     člověk uložil dřív, může být i prostý pkey, a pozemek bez výměry
+     v datech má `pkey#v0…`. Porovnání proto má dvě úrovně:
+       · PŘESNĚ — celý klíč. Tak se páruje všechno, co výměru má.
+       · HRUBĚ (jen pkey) — a JEN tam, kde výměra chybí na jedné ze
+         stran. Hrubé porovnání pro všechno by uložený pozemek spárovalo
+         s cizí nabídkou, která má týž pkey a jinou výměru: v datech je
+         26 takových pkey a leží pod nimi 59 různých nabídek (viz
+         js/pozemek.js, odkud ta čísla jsou). Člověk by se dozvěděl, že
+         mu z nabídky odešlo něco, co tam pořád je. */
+  function tvaryKlicu(seznam) {
+    var presne = {}, hrube = {};
+    (seznam || []).forEach(function (k) {
+      if (!k) return;
+      k = String(k);
+      presne[k] = 1;
+      var i = k.indexOf('#v');
+      if (i < 0) hrube[k] = 1;                               // starý tvar
+      else if (k.charAt(i + 2) === '0') hrube[k.slice(0, i)] = 1;  // bez výměry
+    });
+    return { presne: presne, hrube: hrube };
+  }
+  function renderOdesly() {
+    var box = document.getElementById('odesly');
+    if (!box) return;
+    /* Jen v pohledu „Uložené". Jinde by to byl druhý seznam vedle
+       nabídek, a to je přesně ta přeplácanost, co šla pryč. */
+    if (!favOnly) { box.hidden = true; box.innerHTML = ''; return; }
+    var poznKlice = (window.PKPoznamky && PKPoznamky.vsechny)
+      ? Object.keys(PKPoznamky.vsechny()) : [];
+    if (!favs.length && !poznKlice.length) { box.hidden = true; box.innerHTML = ''; return; }
+    dejOdesle().then(function (z) {
+      if (!favOnly) { box.hidden = true; box.innerHTML = ''; return; }
+      var moje = tvaryKlicu(favs.concat(poznKlice));
+      var nalez = (z.zmizele || []).filter(function (x) {
+        if (moje.presne[x.klic]) return true;
+        return !!moje.hrube[String(x.klic || '').split('#v')[0]];
+      });
+      if (!nalez.length) { box.hidden = true; box.innerHTML = ''; return; }
+      /* Nejvýš deset: kdo si uložil padesát pozemků před čtvrt rokem,
+         by jinak dostal pod výpis druhý výpis. */
+      var ukazat = nalez.slice(0, 10);
+      /* BEZ SLOVESA a BEZ PKFeed. Dvě pasti v jedné větě:
+         „už v nabídce není/nejsou" se mění podle počtu, a tvar
+         podstatného jména tady NESMÍ dělat PKFeed.mnozne — ten modul se
+         na úvodní stránce dotahuje až s hlídáním, takže by do té doby
+         padal do záložního „pozemků" a stálo by tam „1 pozemků".
+         (Naměřeno: právě takhle to napsané bylo.) Tvar skládá místní
+         plPozemek(), kterou hlídá scripts/test-mnozstvi.mjs. */
+      var html = '<h3 class="odesly-h">Odešlo z\u00a0nabídky: ' + nalez.length + '\u00a0'
+        + plPozemek(nalez.length) + ' z\u00a0vašich uložených</h3>'
+        + '<ul class="odesly-list">';
+      ukazat.forEach(function (x) {
+        var pk = String(x.klic || '').split('#v')[0];
+        var casti = pk.split('|');
+        var misto = casti[0] || 'Pozemek';
+        var okres = casti[2] || '';
+        var radek = [x.vymera ? fmt(x.vymera) + '\u00a0m²' : '',
+          x.cena ? fmt(x.cena) + '\u00a0Kč' : ''].filter(Boolean).join(' · ');
+        html += '<li class="odesly-i"><a href="' + esc(x.soubor) + '">'
+          + '<span class="odesly-m">' + esc(misto)
+          + (okres && okres !== misto ? ' <span class="odesly-o">okres ' + esc(okres) + '</span>' : '')
+          + '</span>'
+          + (radek ? '<span class="odesly-c mono">' + radek + '</span>' : '')
+          + '<span class="odesly-d">odešlo ' + esc(denCeskyKratky(x.kdy)) + '</span>'
+          + '</a></li>';
+      });
+      html += '</ul>';
+      if (nalez.length > ukazat.length) {
+        html += '<p class="odesly-vic">a ' + (nalez.length - ukazat.length) + ' další</p>';
+      }
+      /* Přiznání na konci, ne drobným písmem: seznam nemůže být delší,
+         než jak dlouho stránky ukončených nabídek na webu zůstávají. */
+      html += '<p class="odesly-pozn">Stránka u\u00a0každé zůstává, takže si ji můžete otevřít. '
+        + 'Dál než ' + (z.dni || 90) + '\u00a0dní dozadu ale historie nejde — starší stránky se mažou.</p>';
+      box.innerHTML = html;
+      box.hidden = false;
+    });
+  }
+  /* „1. 11." místo „2026-11-01". Datum je ze sestavení, tedy vždy
+     v tomhle tvaru; co by se nerozpadlo na tři čísla, se napíše, jak
+     přišlo, místo aby z toho byl „NaN. NaN." */
+  function denCeskyKratky(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return String(iso || '');
+    return Number(m[3]) + '.\u00a0' + Number(m[2]) + '.\u00a0' + m[1];
   }
 
   /* NÁŘADÍ PATŘÍ DO HLAVIČKY VÝPISU, NE MEZI NABÍDKY.

@@ -19654,3 +19654,66 @@ nabídek, a mez na ni by padala podle dat.
 Prokázáno čtyřmi sabotážemi: řádky rozbalené od začátku (4 ✕), chybějící
 pojem ve slovníčku (1 ✕), kotva, která nerozbaluje (2 ✕), a kotva, která
 rozbalí všechno (1 ✕).
+
+## §316 — Co z uložených odešlo z nabídky
+
+Majitel: *„pokud má člověk u pozemku poznámku nebo oblíbené a někdo ho
+prodal, by to mělo být vidět — historie smazaných nebo něco takového."*
+
+Dosud to poznat nešlo. Uložený pozemek, který z nabídky odešel, prostě
+z „Uložených" vypadl, protože výpis se skládá z živých dat. Dvě úplně
+jiné věci — *„smazal jsem si ho sám"* a *„prodal se"* — vypadaly stejně.
+
+**Data už existovala, jen se nikam nesbírala.** Stránky skončených
+nabídek na webu zůstávají (naměřeno 403 z 2 458) a každá si v sobě nese
+den, kdy skončila (`window.PK_UKONCENO`), i celý ostrůvek s klíčem,
+výměrou a cenou. Sestavení z nich teď vypisuje `data/zmizele.json`:
+403 záznamů, 63 kB, 15,5 kB po gzipu.
+
+**Stahuje se líně a jen komu je k čemu.** Kdo si nic neuložil a nic
+nenapsal, nestáhne ani bajt — naměřeno v prohlížeči (0 dotazů). Soubor
+se vyžádá teprve v pohledu „Uložené" a jen tehdy, když v prohlížeči
+nějaký uložený pozemek nebo poznámka je.
+
+**Dvě pasti, obě naměřené:**
+
+* **Množné číslo.** Nadpis byl napsaný přes `tvarPozemku()`, která jde
+  přes `PKFeed.mnozne` — a ten modul se na úvodní stránce dotahuje až
+  s hlídáním, takže do té doby padá do záložního „pozemků". Stálo tam
+  „1 pozemků". Tvar teď skládá místní `plPozemek()`, kterou hlídá
+  `scripts/test-mnozstvi.mjs`. Věta je navíc bez slovesa („Odešlo
+  z nabídky: 2 pozemky z vašich uložených"), protože „už v nabídce
+  není / nejsou" se mění s počtem taky.
+* **Párování podle hrubého klíče.** Napoprvé se porovnával i pkey bez
+  výměry, aby se našly i pozemky uložené ve starém tvaru klíče. Jenže
+  v datech je 26 pkey, pod kterými leží 59 různých nabídek — člověk by
+  se dozvěděl, že mu odešlo něco, co v nabídce pořád je. Hrubé
+  porovnání teď platí **jen tam, kde výměra chybí** na jedné ze stran
+  (starý tvar klíče, nebo pozemek, který výměru v datech neměl).
+
+**Co to neumí, a je to napsané i na stránce:** dál než 90 dní dozadu
+historie nejde, protože stránky skončených nabídek se po té době
+doopravdy mažou. Psát si vlastní archiv mimo stránky by znamenalo druhý
+zdroj pravdy o tomtéž. A „odešlo z nabídky" neznamená „prodalo se" —
+víme jen, že nabídka přestala být v datech.
+
+Hlídá to `scripts/test-zmizele.mjs` (24 kontrol). Nejdůležitější z nich
+není vidět na obrazovce: **že sestavení skládá klíč týmž receptem jako
+prohlížeč** (`pkey + "#v" + výměra` proti `PKKlic.klicPozemku`, měřeno
+na 200 opravdových nabídkách). Kdyby se ty dva zápisy rozešly, seznam by
+nenašel ani jeden uložený pozemek a vypadalo by to, že člověku nic
+neodešlo — tichá porucha, kterou by nikdo nenahlásil.
+
+Prokázáno čtyřmi sabotážemi: jiný recept klíče v sestavení (1 ✕),
+stahování všem (1 ✕), hrubé porovnání vrácené na všechno (1 ✕)
+a nepočítané poznámky (1 ✕). U té první stojí za zapsání, **proč shodila
+jen jednu kontrolu**: zkouška si uložený pozemek bere z téhož souboru,
+který měří, takže obě strany zůstanou shodné i když jsou obě špatně.
+Rozchod s prohlížečem umí najít jen ta jedna kontrola receptu — a to je
+celý důvod, proč tam je.
+
+Nový soubor dat si vyžádaly ještě dva hlídače, oba oprávněně:
+`test-staticka` chtěl zkoušku zapsat do CI a `test-data-rozhrani` chtěl
+soubor popsaný na data.html (popis se píše do generátoru té stránky, ne
+do ní — ruční úprava se při sestavení přepíše, což jsem si nejdřív
+vyzkoušel).
