@@ -21803,3 +21803,53 @@ než to čekání: `toast` se po chvíli uklidí, takže po dočkání zbyl
 odznak a PRÁZDNÁ hláška. Oba údaje se proto zapisují v okamžiku, kdy se
 objeví, a čeká se, dokud nejsou oba. **Prchavý prvek se musí posbírat,
 když je — ne až se na něj někdo zeptá.**
+
+## 353. Sondy čtou jen HTML — a právě na tom skončily tři odpovědi
+
+Měření 3. 11. uvízlo třikrát na témže místě, a nebylo to o zdrojích:
+
+| zdroj | verdikt | co to znamenalo |
+|---|---|---|
+| Bezrealitky (podmínky) | „málo textu — vykresluje se až v prohlížeči" | text TAM JE, skládá ho skript |
+| elektronickedrazby.cz | totéž | totéž |
+| ÚZSVM | „skořápka", 0 m², 0× „pozemek" | obsah dotahuje skript |
+
+Odpověď na majitelovu otázku („smělo by se to čist?", „nese to
+pozemky?") tedy nestála na zdroji, ale **na tom, čím ho čteme**.
+
+**Nový `scripts/cti-prohlizecem.mjs`** přečte stránku prohlížečem. Co
+se tím ale NESMÍ ztratit, je to podstatné:
+
+- **robots.txt platí dál, a přísněji než u běžného prohlížeče:**
+  kontroluje se nejen ta stránka, ale KAŽDÝ podřízený soubor, který by
+  si vykreslování vyžádalo. Co se nesmí, se zahodí; v nálezu je vidět
+  kolik. Obyčejný prohlížeč by si ho stáhl — my ne.
+- **cizí hosty se nestahují vůbec** (měřidla, reklama, fonty). Nemají
+  s podmínkami ani s nabídkami nic společného.
+- **žádné vydávání se za někoho jiného:** jde ven táž hlavička
+  user-agent jako u obyčejného čtení, včetně jména robota a odkazu.
+
+**Pouští se jen tam, kde obyčejné čtení nic nedalo** — a jen když
+vykreslení přineslo VÍC textu, jinak se nález nesmí chlubit prací,
+která nic nepřinesla. Pád prohlížeče sondu neshodí, zapíše se
+u té stránky jako důvod.
+
+**Zkouška `test-cti-prohlizecem` běží NAOSTRO** proti vlastnímu serveru
+na 127.0.0.1: stránka, kde je v HTML „Načítám…" a větu o zákazu vkládá
+až skript. Osm kontol: obyčejné čtení ji nenajde, prohlížeč ano, cizí
+host se nestáhne, zakázaný podřízený soubor se nestáhne (a je vidět
+kolik se zahodilo), text pak chybí — a to se nesmí vydávat za „nic tam
+není". Rozhodování sondy se měří zvlášť s PODSTRČENÝM prohlížečem
+(`test-sonda-podminky`, 68 kontrol).
+
+**Sabotáže:** vykreslení se bere i když nepřineslo víc → 1 pád;
+prohlížeč se pouští vždycky → 1 pád.
+
+**A moje dvě chyby v tom měření, obě v fixturách:**
+1. Bohatá fixtura neměla odkaz na podmínky, takže se sonda vrátila
+   s „odkaz se nenašel" a smyčka stránek se vůbec nespustila —
+   kontrola byla **planá** a sabotáž jí prošla.
+2. `'a' + 'b'.repeat(30)` **se váže na POSLEDNÍ literál**, ne na celý
+   součet. Fixtura tím vyšla na 1 500 znaků místo 2 400, spadla pod mez
+   „málo textu" a kontrola padala na DOBRÉM kódu. Délka fixtury se teď
+   kontroluje zvlášť, hned vedle.

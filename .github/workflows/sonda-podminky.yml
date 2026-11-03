@@ -22,7 +22,7 @@ permissions:
 jobs:
   podminky:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,6 +31,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # PROHLÍŽEČ, protože podmínky bývají skládané skriptem. Naměřeno
+      # 3. 11.: Bezrealitky i elektronickedrazby.cz skončily na „málo
+      # textu — vykresluje se až v prohlížeči". Verze je PŘIPNUTÁ ze
+      # stejného důvodu jako u zkoušek: ať je zvednutí vidět v repozitáři.
+      # Sonda ho pouští jen u stránky, která text nedala sama, a
+      # robots.txt platí i pro každý podřízený soubor.
+      - name: Prohlížeč
+        run: |
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)"
 
       - name: Přečíst podmínky
         run: node scripts/sonda-podminky.mjs

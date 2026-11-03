@@ -23,6 +23,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { smimeCist, telo } from './robots.mjs';
+import { tvorProhlizec } from './cti-prohlizecem.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 
 const OUT = new URL('../data/zdroje-podminky.json', import.meta.url);
@@ -278,7 +279,7 @@ export function oAutomatu(html) {
  * Jeden zdroj: domovská stránka → odkazy na podmínky → odstavce.
  * robots.txt se čte u KAŽDÉ adresy zvlášť, i u těch podstránek.
  */
-export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
+export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}) {
   /* `proc` se nese do nálezu: bez něj by v souboru nebylo vidět,
      jestli se u toho zdroje ptáme „smíme dál", nebo „smělo by se
      začít". */
@@ -322,12 +323,34 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
     const s = await nactiPovolene(o.url);
     if (s.zakaz) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'nesmíme číst', duvod: s.zakaz }); continue; }
     if (s.chyba) { zapis.stranky.push({ url: o.url, popis: o.popis, stav: 'neodpověděla', duvod: s.chyba }); continue; }
-    const pasaze = oAutomatu(s.html);
+    /* STRÁNKA, KTERÁ SE SKLÁDÁ AŽ V PROHLÍŽEČI, SE PŘEČTE PROHLÍŽEČEM.
+       Měřeno 3. 11.: podmínky Bezrealitek i elektronickedrazby.cz
+       skončily na „málo textu — vykresluje se až v prohlížeči". Text
+       tam přitom JE, jen ho skládá skript; odpověď pro člověka tedy
+       nestála na zdroji, ale na tom, čím ho čteme. Zkouší se to JEN
+       u stránek, kde obyčejné čtení nic nedalo (jinak by to byl
+       zbytečný prohlížeč u každé adresy) a jen když se prohlížeč
+       předal — robots.txt platí dál, a v cti-prohlizecem.mjs i pro
+       každý podřízený soubor. */
+    let html = s.html;
+    let vykresleno = null;
+    if (vykresli && celyText(html).join('').replace(/\s/g, '').length < ZNAKU_NA_STRANKU) {
+      try {
+        const v = await vykresli(o.url);
+        const bylo = celyText(html).join('').replace(/\s/g, '').length;
+        const je = celyText(v.html || '').join('').replace(/\s/g, '').length;
+        /* Vezme se to jen tehdy, když je to OPRAVDU VÍC. Jinak by se
+           do nálezu zapsalo „čteno prohlížečem" i tam, kde to nic
+           nepřineslo, a vypadalo by to jako víc práce, než se udělalo. */
+        if (je > bylo) { html = v.html; vykresleno = { bylo, je, zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 }; }
+      } catch (e) { vykresleno = { chyba: String(e && e.message ? e.message : e).slice(0, 120) }; }
+    }
+    const pasaze = oAutomatu(html);
     /* DOKLAD MĚŘÍ TOTÉŽ, CO SE PROHLEDÁVÁ. Kdyby se počítal jen text
        ze značek, zůstal by nález stejně slepý jako předtím: stránka
        s obsahem v JSONu by vyšla jako „málo textu", i když se text
        našel. */
-    const vsechny = celyText(s.html);
+    const vsechny = celyText(html);
     const text = vsechny.join('\n');
     /* DOKLAD, ŽE SE OPRAVDU NĚCO PŘEČETLO. Bez něj by „nic o automatu"
        znamenalo zároveň „v podmínkách o tom nic není" i „stránka nám
@@ -348,7 +371,9 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
       zminkyUkazka: pasaze.filter((x) => !x.kontext).slice(0, 2),
       /* Odkazy na dokumenty (PDF, DOC) — vodítko, kde text je, když ho
          na stránce není. Nestahují se. */
-      dokumenty: [...String(s.html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]
+      cteno: vykresleno && !vykresleno.chyba ? 'prohlížečem' : 'ze serveru',
+      vykresleno: vykresleno || undefined,
+      dokumenty: [...String(html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]
         .map((m) => absolutni(m[1], o.url)).filter(Boolean).slice(0, 5),
     });
     /* JEDEN SKOK DÁL. Podmínky bývají rozdělené („smluvní podmínky",
@@ -356,7 +381,7 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
        vede odkaz jen na jedny. Z té stránky se proto posbírají další
        odkazy téhož druhu — ale jen jeden skok a do stropu, aby se
        nestahoval půl webu. */
-    for (const dalsi of odkazyNaPodminky(s.html, o.url)) {
+    for (const dalsi of odkazyNaPodminky(html, o.url)) {
       if (zapis.stranky.length + fronta.length >= STRANEK_NA_ZDROJ) break;
       if (videne.has(dalsi.url)) continue;
       videne.add(dalsi.url);
@@ -462,12 +487,41 @@ async function main() {
   const { stahni } = await import('./fetch-opportunities.mjs');
   const mezipamet = new Map();
   const ven = [];
-  for (const c of cile) {
-    const z = await zmerPodminky(c, { stahni, ua: BOT_UA, mezipamet });
-    ven.push(z);
-    console.log(`  ${c.jmeno}: ${z.verdikt}`);
-    for (const s of (z.stranky || [])) console.log(`     ${s.stav.padEnd(26)} ${s.url}`);
-    await spi(PAUZA_MS);
+  /* PROHLÍŽEČ SE VYTVOŘÍ LÍNĚ — a jen jeden pro celý běh. Většina
+     stránek text dá sama, takže spustit Chromium pro každou adresu by
+     byla čistá ztráta. A kdyby prohlížeč v prostředí nebyl, nesmí to
+     sondu shodit: zapíše se to u té stránky jako důvod. */
+  let prohlizec = null, prohlizecPadl = null;
+  const smiCist = async (url) => {
+    try { const r = await smimeCist(url, { stahni, ua: BOT_UA, mezipamet }); return !!r.dovoleno; }
+    catch (e) { return false; }
+  };
+  const vykresli = async (url) => {
+    if (prohlizecPadl) throw prohlizecPadl;
+    if (!prohlizec) {
+      try {
+        const { chromium } = await import('playwright-core');
+        prohlizec = await tvorProhlizec({ chromium, smiCist, ua: BOT_UA, casLimit: CAS_LIMIT_MS });
+        console.log('  (spuštěn prohlížeč — některá stránka nedala text sama)');
+      } catch (e) {
+        prohlizecPadl = new Error('prohlížeč nejde spustit: ' + String(e && e.message ? e.message : e).slice(0, 100));
+        throw prohlizecPadl;
+      }
+    }
+    return prohlizec.vykresli(url);
+  };
+  try {
+    for (const c of cile) {
+      const z = await zmerPodminky(c, { stahni, ua: BOT_UA, mezipamet, vykresli });
+      ven.push(z);
+      console.log(`  ${c.jmeno}: ${z.verdikt}`);
+      for (const s of (z.stranky || [])) {
+        console.log(`     ${s.stav.padEnd(26)} ${s.cteno === 'prohlížečem' ? '[prohlížeč] ' : ''}${s.url}`);
+      }
+      await spi(PAUZA_MS);
+    }
+  } finally {
+    if (prohlizec) await prohlizec.zavri().catch(() => {});
   }
   writeFileSync(OUT, JSON.stringify({
     updated: new Date().toISOString().slice(0, 10),

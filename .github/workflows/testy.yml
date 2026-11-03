@@ -1437,6 +1437,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-escape-dom.mjs
 
+      - name: Čtení prohlížečem drží robots.txt
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-cti-prohlizecem.mjs
+
       - name: Diagnostika vykreslí nálezy sond
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-diagnostika-zdroje.mjs

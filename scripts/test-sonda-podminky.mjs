@@ -450,6 +450,85 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     r2.every((x) => !/<\/?\w+>/.test(x.text)), JSON.stringify(r2.map((x) => x.text.slice(0, 60))));
 }
 
+/* ---- 7) STRÁNKA, KTERÁ SE SKLÁDÁ AŽ V PROHLÍŽEČI ----------------
+   Naměřeno 3. 11.: tak skončily podmínky Bezrealitek i
+   elektronickedrazby.cz („málo textu — vykresluje se až v prohlížeči").
+   Prohlížeč se SEM PODSTRKUJE, ať se dá změřit rozhodování, ne
+   Chromium. Že opravdový prohlížeč text přečte a drží robots.txt
+   i u podřízených souborů, měří test-cti-prohlizecem naostro. */
+{
+  const CHUDE = '<html><body><p>Načítám…</p><a href="/podminky">Podmínky</a></body></html>';
+  /* POZOR NA PRECEDENCI: `.repeat()` se váže na POSLEDNÍ literál, ne
+     na celý součet. Napoprvé mi tím fixtura vyšla na 1 500 znaků
+     místo 2 400, spadla pod mez „málo textu" a kontrola „u stránky,
+     která text dala sama, se prohlížeč nepustí" padala na dobrém kódu.
+     Proto závorka a proto se délka hned kontroluje. */
+  const VETA_ZAKAZ = 'Je zakázáno obsah serveru vytěžovat automatizovanými'
+    + ' prostředky, zejména roboty a skripty. ';
+  const BOHATE = '<html><body><p>' + VETA_ZAKAZ.repeat(30) + '</p></body></html>';
+  pravda('bohatá fixtura je opravdu nad mezí „málo textu"',
+    P.celyText(BOHATE).join('').replace(/\s/g, '').length > P.ZNAKU_NA_STRANKU,
+    'má ' + P.celyText(BOHATE).join('').replace(/\s/g, '').length
+    + ', mez je ' + P.ZNAKU_NA_STRANKU);
+  const stahni = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => CHUDE };
+  };
+  const cil = { jmeno: 'Skládá skript', host: 's.test', domov: 'https://s.test/' };
+
+  const bez = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map() });
+  pravda('bez prohlížeče zůstane „málo textu" (jinak by se nic neměřilo)',
+    /málo textu/.test(bez.verdikt), bez.verdikt);
+
+  const volane = [];
+  const vykresli = async (url) => { volane.push(url); return { html: BOHATE, zablokovano: 2, cizich: 3 }; };
+  const s2 = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(), vykresli });
+  pravda('s prohlížečem se pasáž o zákazu najde',
+    /přečteno \(/.test(s2.verdikt), s2.verdikt);
+  const prvni = (s2.stranky || [])[0] || {};
+  pravda('a v nálezu stojí, že se čtelo prohlížečem',
+    prvni.cteno === 'prohlížečem', JSON.stringify({ cteno: prvni.cteno, v: prvni.vykresleno }));
+  pravda('i kolik znaků to přineslo a kolik se zahodilo kvůli robots.txt',
+    prvni.vykresleno && prvni.vykresleno.je > prvni.vykresleno.bylo
+    && prvni.vykresleno.zablokovano === 2 && prvni.vykresleno.cizich === 3,
+    JSON.stringify(prvni.vykresleno));
+
+  /* CO NEPŘINESLO VÍC, SE NEBERE — ať nález netvrdí víc práce, než
+     se udělalo. */
+  const s3 = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => ({ html: '<html><body><p>Taky nic.</p></body></html>' }) });
+  pravda('vykreslení, které nepřineslo víc textu, se nebere',
+    ((s3.stranky || [])[0] || {}).cteno === 'ze serveru',
+    JSON.stringify((s3.stranky || [])[0] || {}).slice(0, 160));
+
+  /* PÁD PROHLÍŽEČE NESMÍ SHODIT SONDU — a má být v nálezu vidět. */
+  const s4 = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => { throw new Error('prohlížeč nenaběhl'); } });
+  pravda('pád prohlížeče sondu neshodí a zapíše se',
+    /málo textu/.test(s4.verdikt)
+    && /nenaběhl/.test((((s4.stranky || [])[0] || {}).vykresleno || {}).chyba || ''),
+    JSON.stringify((s4.stranky || [])[0] || {}).slice(0, 200));
+
+  /* A KDE TEXT JE, PROHLÍŽEČ SE NEPOUŠTÍ. Jeden běh prohlížeče na
+     adresu by u šesti cílů znamenal desítky zbytečných spuštění. */
+  /* DOMOVSKÁ STRÁNKA MUSÍ MÍT ODKAZ NA PODMÍNKY, jinak se sonda vrátí
+     s „odkaz se nenašel" a smyčka stránek se vůbec nespustí — kontrola
+     pod tím by pak byla planá. Naletěl jsem na to: sabotáž „prohlížeč
+     se pouští vždycky" napoprvé prošla zeleně právě proto. */
+  const BOHATE_DOMOV = BOHATE.replace('</body>', '<a href="/podminky">Podmínky</a></body>');
+  const stahniBohate = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => BOHATE };
+    return { ok: true, status: 200, text: async () => BOHATE_DOMOV };
+  };
+  const kolik = [];
+  await P.zmerPodminky(cil, { stahni: stahniBohate, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => { kolik.push(u); return { html: BOHATE }; } });
+  pravda('u stránky, která text dala sama, se prohlížeč vůbec nepustí',
+    kolik.length === 0, 'pustil se na: ' + kolik.join(', '));
+  pravda('a jinak se pustí jen na tu chudou adresu', volane.length >= 1, JSON.stringify(volane));
+}
+
 console.log('Sonda podmínek: čte jen to, co smí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);
