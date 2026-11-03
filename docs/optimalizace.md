@@ -22650,3 +22650,70 @@ ADRES (seznam „na tyhle se nedostalo", §357g), kdežto přečtené
 dokumenty jsou záznamy ve `stranky`. Chyba byla v mém jednorázovém
 výpisu, ne na stránce. Totéž u `nalezeneOdkazy` — je to pole objektů
 `{url, popis}`, a vypsal jsem ho jako číslo.
+
+## §362 — kde není co následovat, zkusí se obvyklé adresy
+
+**Proč.** §361 opravil MÍSTO, kde se ptáme, a běh v Actions dal
+odpověď: **ani jeden** z obou webů ÚZSVM nemá na domovské stránce
+odkaz na podmínky.
+
+```
+nabidkamajetku.gov.cz  odkazů 0, cizí 2 (google, googletagmanager)
+nabidkamajetku.cz      odkazů 0, cizí 7 — pětkrát na tu aplikaci, nic jiného
+```
+
+Následovat se tedy nedá nic a verdikt „nevíme" by tím byl uzavřený
+natrvalo. Jediná zbylá mechanická cesta je zkusit adresy, na kterých
+podmínky obvykle bývají — tedy přesně to, co by na takovém webu udělal
+člověk.
+
+**Jak je to omezené.** Sahá se po nich JEN tam, kde se odkaz nenašel
+ani po vykreslení domovské stránky; strop je šest adres; robots.txt se
+ptáme u každé stejně jako u odkazu a pauza mezi dotazy platí dál. Kde
+odkaz je, nepřidá to ani jeden dotaz. Není to obcházení ničeho a víc
+cest než šest by bylo hádání naslepo.
+
+**Dost textu NESTAČÍ, a to je tu podstatné.** Weby, na které tenhle
+doplněk míří, jsou právě ty, co se skládají v prohlížeči — a takový web
+vrátí **na každou adresu tutéž skořápku**. Pravidlo „má to dva tisíce
+znaků" by u nich první zkoušenou adresu prohlásilo za podmínky.
+Nevymyslel jsem si to: napsal jsem to pravidlo nejdřív jen na délku
+a **spadly na tom čtyři starší kontroly**, protože místní server ve
+fixtuře odpovídá na všechno stejně. Platit proto musí obojí: text se od
+domovské stránky LIŠÍ a jsou v něm slova podmínek.
+
+**A slova se musí hledat správným pravidlem.** Napoprvé jsem vzal
+`SLOVA_ODKAZ` — jenže to je pravidlo na ADRESY A NÁPISY odkazů.
+Fixturní stránka podmínek slovo „podmínky" v textu vůbec nemá, a přesto
+podmínkami je. Bere se tedy sjednocení se `SLOVA_ODSTAVEC`, tedy s tím,
+co na podmínkách opravdu hledáme.
+
+**Tři starší kontroly nebyly rozbité, ale zestárly.** Tvrdily, že
+u `d.test` zůstane verdikt „nenašel se" — a to byla pravda o tehdejší
+sondě, ne o tom webu: podmínky tam na `/podminky` opravdu jsou. Teď
+tvrdí to, co má být pravda nově, a ta o pádu prohlížeče se drží toho,
+o čem je: **pád se nesmí spolknout**.
+
+**A jedna skutečná vada v hlášení.** `nalezeneOdkazy` se zapisuje
+dřív než tenhle krok, takže nález tvrdil „žádné odkazy" i u zdroje,
+u kterého se stránka z obvyklé adresy opravdu přečetla. Našla to
+zkouška, která chtěla v nálezu vidět, ODKUD se čtené stránky vzaly.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 99 kontrol (bylo
+93). Pět sabotáží, každá kousne: krok pryč (4 pády), skořápka totožná
+s domovem se vezme za podmínky (1), nekontroluje se, jestli to vůbec
+podmínky jsou (1), `nalezeneOdkazy` se nepřepíšou (1), a obvyklé adresy
+se zkoušejí i tam, kde se odkaz našel (1).
+
+**Sabotáž „skořápka se vezme za podmínky" napoprvé prošla zeleně** —
+fixturní skořápka totiž slova o podmínkách neobsahovala, takže ji
+zastavila už kontrola slov a srovnání s domovem se nikdy neuplatnilo.
+Skořápka teď nese „Podmínky užití · Právní informace" v těle, což je
+realistické (do skořápky bývá vepsaná navigace i patička) a nutné:
+jinak ta kontrola neměřila nic.
+
+**Počet kandidátů v diagnostice se počítá podle ZDROJŮ, ne podle
+cílů.** Jeden kandidát má od §361 dva cíle, takže počítání cílů by na
+téhle stránce hlásilo o jednoho slibného kandidáta víc než sonda zdrojů
+o dva oddíly výš — dvě čísla pro tutéž věc, a to je past, na kterou
+tenhle web už jednou doplatil u počtu nových pozemků.

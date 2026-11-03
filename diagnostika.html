@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-M4dwSo/vNv1lSbdPSHKdsWOyb9JTkzD/OHWlFP8xgYw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-MxoWGVyW8zAHj2nRpPD60WY69cadv6yhgpieEM4khNs='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -472,9 +472,22 @@
           'Žádný zapojený zdroj nás nezakazuje a žádný slibný kandidát nečeká.');
         return;
       }
+      /* KANDIDÁTI SE POČÍTAJÍ PODLE ZDROJŮ, NE PODLE CÍLŮ. Jeden
+         kandidát může mít dva cíle: obsahový web a web z registru
+         (§361). Počítat cíle by znamenalo, že tahle stránka hlásí
+         o jednoho slibného kandidáta víc než sonda zdrojů o dva
+         oddíly výš — dvě čísla pro tutéž věc, a to je past, na kterou
+         tenhle web už jednou doplatil u počtu nových pozemků. */
+      var zakazy = P.zdroje.filter(function (z) { return z.proc !== 'slibný kandidát'; });
+      var kandCile = P.zdroje.filter(function (z) { return z.proc === 'slibný kandidát'; });
+      var kandZdroje = kandCile.filter(function (z) { return !z.role; });
       radek(box, 'ok', 'Sonda podmínek měřila ' + esc(P.updated),
-        'Cílů ' + P.zdroje.length + ' — ' + P.zdroje.filter(function (z) { return z.proc !== 'slibný kandidát'; }).length
-        + '× zákaz, ' + P.zdroje.filter(function (z) { return z.proc === 'slibný kandidát'; }).length + '× slibný kandidát.');
+        'Cílů ' + P.zdroje.length + ' — ' + zakazy.length
+        + '× zákaz, ' + kandZdroje.length + '× slibný kandidát'
+        + (kandCile.length > kandZdroje.length
+          ? ' (' + (kandCile.length - kandZdroje.length) + '× navíc web z registru: obsah bydlí'
+            + ' na sousední doméně, ale právní stránky bývají na webu, který aplikaci provozuje)'
+          : '') + '.');
       P.zdroje.forEach(function (z) {
         var kandidat = z.proc === 'slibný kandidát';
         var cast = [];

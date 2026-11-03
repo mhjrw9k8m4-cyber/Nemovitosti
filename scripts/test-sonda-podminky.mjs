@@ -607,7 +607,14 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   /* A NAOSTRO SKRZ CELOU SONDU: když je ve vykresleném domovu jen
      odkaz na něj samotný, verdikt MUSÍ zůstat „nenašel se" — tohle
      je ta věta, která u ÚZSVM lhala. */
-  const DOMOV_PRAZDNY2 = '<html><body><div id="app">' + 'x'.repeat(3000) + '</div></body></html>';
+  /* SKOŘÁPKA SE SLOVY O PODMÍNKÁCH V TĚLE. Je to realistické: do
+     skořápky bývá vepsaná navigace i patička, takže „Podmínky užití"
+     v textu je, jen to není stránka podmínek. A je to tu nutné —
+     dokud skořápka ta slova neměla, zastavila ji už kontrola slov
+     a srovnání s domovem se nikdy neuplatnilo: sabotáž, která to
+     srovnání vyhodila, prošla zeleně. */
+  const DOMOV_PRAZDNY2 = '<html><body><div id="app">Podmínky užití · Právní informace · '
+    + 'x'.repeat(3000) + '</div></body></html>';
   const DOMOV_SAM = '<html><body><a href="/">Dopravní prostředky a příslušenství 74</a></body></html>';
   const stahni2 = async (u) => {
     if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
@@ -615,10 +622,20 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   };
   const v = await P.zmerPodminky({ jmeno: 'Sám na sebe', host: 'x.test', domov: 'https://x.test/' },
     { stahni: stahni2, ua: UA, mezipamet: new Map(), vykresli: async () => ({ html: DOMOV_SAM }) });
-  pravda('a sonda pak nevydá „přečteno", ale „odkaz se nenašel"',
-    /odkaz na podmínky se na domovské stránce nenašel/.test(v.verdikt)
+  pravda('a sonda pak nevydá „přečteno", ale „nenašel se"',
+    /odkaz na podmínky se nenašel a není ani na obvyklých adresách/.test(v.verdikt)
     && (v.stranky || []).length === 0,
     v.verdikt + ' / stránek ' + (v.stranky || []).length);
+  /* A TOHLE JE TA PODSTATNÁ POLOVINA: tenhle server vrací na KAŽDOU
+     adresu tutéž skořápku, tedy i na `/podminky`. Kdyby obvyklé
+     adresy stačilo poměřit délkou textu, sonda by první z nich
+     prohlásila za podmínky a vydala „přečteno" o stránce, která
+     s podmínkami nemá nic společného. Na tom tahle kontrola spadla,
+     když jsem to pravidlo napsal jen na délku. */
+  pravda('obvyklé adresy se zkusily, a je zapsáno, že to byla táž skořápka',
+    (v.zkusenoZnamych || []).length >= 1
+    && (v.zkusenoZnamych || []).every(function (x) { return /tatáž stránka jako domov/.test(x.stav); }),
+    JSON.stringify(v.zkusenoZnamych));
 }
 
 /* ---- 7b) DOMOVSKÁ STRÁNKA, KTERÁ SE SKLÁDÁ AŽ V PROHLÍŽEČI ------
@@ -644,12 +661,45 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   const cil = { jmeno: 'Domov skládá skript', host: 'd.test', domov: 'https://d.test/' };
 
   const bez = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map() });
-  pravda('bez prohlížeče skončí na „odkaz se nenašel" (jinak by se nic neměřilo)',
-    /odkaz na podmínky se na domovské stránce nenašel/.test(bez.verdikt), bez.verdikt);
+  /* BEZ PROHLÍŽEČE SE ODKAZ NENAJDE — ale podmínky tu na obvyklé
+     adrese `/podminky` OPRAVDU JSOU, takže se najdou tudy. Dřív tady
+     stálo, že verdikt zůstane „nenašel se"; to byla pravda o tehdejší
+     sondě, ne o tomhle webu. */
+  pravda('bez prohlížeče se odkaz nenajde, ale obvyklá adresa podmínky má',
+    /přečteno \(/.test(bez.verdikt)
+    && (bez.zkusenoZnamych || []).some(function (x) { return x.stav === 'je'; })
+    && (bez.nalezeneOdkazy || []).some(function (o) { return o.zeZnamych; }),
+    bez.verdikt + ' / ' + JSON.stringify(bez.zkusenoZnamych));
 
   const naDomov = [];
   const a = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
     vykresli: async (u) => { naDomov.push(u); return { html: DOMOV_S_ODKAZEM, zablokovano: 1, cizich: 2 }; } });
+  /* OBVYKLÁ ADRESA, KTERÁ EXISTUJE, ALE PODMÍNKY TO NEJSOU. Weby
+     odpovídají na neexistující adresu kódem 200 a vlastní stránkou
+     („tichá 404") častěji, než by člověk čekal. Taková stránka se od
+     domovské liší, takže ji samo srovnání s domovem nezastaví — musí
+     ji zastavit to, že v ní o podmínkách nic není. */
+  const CIZI = '<html><body><p>' + 'Kontaktujte nás na telefonu. '.repeat(120) + '</p></body></html>';
+  const stahniCizi = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/\/podminky/.test(u)) return { ok: true, status: 200, text: async () => CIZI };
+    return { ok: true, status: 200, text: async () => DOMOV_PRAZDNY };
+  };
+  const ticha = await P.zmerPodminky({ jmeno: 'Tichá 404', host: 't.test', domov: 'https://t.test/' },
+    { stahni: stahniCizi, ua: UA, mezipamet: new Map() });
+  pravda('obvyklá adresa bez zmínky o podmínkách se nevezme za podmínky',
+    /nenašel/.test(ticha.verdikt)
+    && (ticha.zkusenoZnamych || []).some(function (x) { return /o podmínkách v ní nic není/.test(x.stav); }),
+    ticha.verdikt + ' / ' + JSON.stringify(ticha.zkusenoZnamych));
+
+  /* A KDE SE ODKAZ NAŠEL, OBVYKLÉ ADRESY SE NEZKOUŠEJÍ. Jinak by
+     každý zdroj dostal šest dotazů navíc za nic. */
+  const sOdkazem = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => ({ html: DOMOV_S_ODKAZEM, zablokovano: 0, cizich: 0 }) });
+  pravda('kde se odkaz našel, obvyklé adresy se vůbec nezkoušejí',
+    sOdkazem.zkusenoZnamych === undefined,
+    JSON.stringify(sOdkazem.zkusenoZnamych));
+
   pravda('vykreslený domov odkazy najde a podmínky se přečtou',
     /přečteno \(/.test(a.verdikt) && (a.nalezeneOdkazy || []).length >= 1
     && a.domovVykreslen && a.domovVykreslen.odkazu >= 1,
@@ -660,17 +710,25 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   /* CO NEPOMOHLO, SE PŘIZNÁ. */
   const b = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
     vykresli: async () => ({ html: DOMOV_PRAZDNY, zablokovano: 0, cizich: 0 }) });
+  /* Verdikt už tu „nenašel se" nebude: po neúspěšném vykreslení sonda
+     sáhne na obvyklé adresy a na `/podminky` je tenhle server má.
+     Kontroluje se tedy to, o čem tahle zkouška je — že se NEÚSPĚCH
+     vykreslení přizná, a ne že se o něm mlčí. */
   pravda('vykreslení domova, které odkazy nenašlo, se přizná',
-    /odkaz na podmínky se na domovské stránce nenašel/.test(b.verdikt)
-    && b.domovVykreslen && b.domovVykreslen.nepomohlo === true,
+    b.domovVykreslen && b.domovVykreslen.nepomohlo === true
+    && (b.zkusenoZnamych || []).length >= 1,
     b.verdikt + ' / ' + JSON.stringify(b.domovVykreslen));
 
   /* PÁD PROHLÍŽEČE SONDU NESHODÍ. */
   const c = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
     vykresli: async () => { throw new Error('prohlížeč nenaběhl'); } });
+  /* Verdikt tu už nebude „nenašel se": po pádu prohlížeče sonda zkusí
+     obvyklé adresy a na `/podminky` je tenhle server má. O čem tahle
+     kontrola je, zůstává — PÁD SE NESMÍ SPOLKNOUT a běh nesmí skončit
+     výjimkou. */
   pravda('pád prohlížeče na domovské stránce sondu neshodí a zapíše se',
-    /nenašel/.test(c.verdikt) && /nenaběhl/.test((c.domovVykreslen || {}).chyba || ''),
-    JSON.stringify(c.domovVykreslen));
+    /nenaběhl/.test((c.domovVykreslen || {}).chyba || '') && !!c.verdikt,
+    JSON.stringify(c.domovVykreslen) + ' / ' + c.verdikt);
 
   /* A KDE DOMOV ODKAZY DÁ SÁM, PROHLÍŽEČ SE NA NĚJ NEPOUŠTÍ. */
   const naDomov2 = [];

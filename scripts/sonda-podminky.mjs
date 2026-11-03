@@ -41,6 +41,30 @@ export const STRANEK_NA_ZDROJ = 6;     // nejvýš šest stránek podmínek
    prázdné HTML a obojí vypadá stejně. Bez tohohle prahu bych vydal
    druhý případ za první — a na tom se nedá nic rozhodnout. */
 export const ZNAKU_NA_STRANKU = 2000;
+
+/* OBVYKLÉ ADRESY PODMÍNEK. Sahá se po nich JEN tam, kde se odkaz
+   nenašel ani po vykreslení domovské stránky — tedy tam, kde by se
+   jinak odpovědělo „nevíme" a tím to skončilo. Naměřeno 3. 11.
+   u ÚZSVM: oba jeho weby mají na domovské stránce NULA odkazů
+   (nabidkamajetku.cz odkazuje pětkrát jen na tu aplikaci), takže
+   následovat se nedá nic.
+
+   Není to obcházení ničeho: robots.txt se ptáme u každé z nich stejně
+   jako u odkazu, pauza mezi dotazy platí dál a strop je šest adres —
+   tedy přesně to, co by na takovém webu zkusil člověk. Víc cest než
+   šest by už bylo hádání naslepo. */
+export const ZNAME_CESTY = [
+  '/podminky-uziti', '/podminky', '/podminky-pouziti',
+  '/obchodni-podminky', '/vop', '/pravni-informace',
+];
+export function zkusZname(domov, cesty = ZNAME_CESTY) {
+  const ven = [];
+  for (const c of (cesty || [])) {
+    try { ven.push({ url: new URL(c, domov).href, popis: 'obvyklá adresa ' + c, zeZnamych: true }); }
+    catch { /* nesložitelná adresa se přeskočí */ }
+  }
+  return ven;
+}
 /* A druhý, vyšší prah: kolik textu má mít ÚPLNÝ soubor podmínek.
    PROČ: druhý běh přečetl u Bezrealitek 2 137 znaků ve 13 odstavcích,
    tedy nad prahem výš — a v tom textu o robotech opravdu nic nestálo.
@@ -389,8 +413,56 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
   }
   if (domovVykreslen) zapis.domovVykreslen = domovVykreslen;
   zapis.nalezeneOdkazy = odkazy;
+  /* KDYŽ NENÍ CO NÁSLEDOVAT, ZKUSÍ SE OBVYKLÉ ADRESY (viz ZNAME_CESTY).
+     Zapisuje se KAŽDÝ pokus, i ten neúspěšný — jinak by u verdiktu
+     nebylo poznat, jestli se to vůbec zkusilo, a to je rozdíl mezi
+     „na tom webu podmínky nejsou" a „nedívali jsme se". */
   if (!odkazy.length) {
-    zapis.verdikt = 'odkaz na podmínky se na domovské stránce nenašel';
+    /* DOST TEXTU NESTAČÍ, A TO JE TU TO PODSTATNÉ. Weby, na které
+       tenhle doplněk míří, jsou právě ty, co se skládají v prohlížeči
+       — a takový web vrátí NA KAŽDOU adresu tutéž skořápku, včetně
+       nesmyslné. Pravidlo „má to dva tisíce znaků" by tedy u nich
+       prohlásilo za podmínky první zkoušenou adresu. Nevymyslel jsem
+       si to: přesně na tom spadly čtyři starší kontroly, protože
+       místní server ve fixtuře odpovídá na všechno stejně.
+       Proto musí platit obojí: text se od domovské stránky LIŠÍ (není
+       to tatáž skořápka) a jsou v něm slova podmínek. */
+    const domaci = celyText(domov.html).join(' ').replace(/\s+/g, ' ').trim();
+    const pokusy = [];
+    for (const a of zkusZname(cil.domov)) {
+      await spi(PAUZA_MS);
+      const v = await nactiPovolene(a.url);
+      if (v.zakaz) { pokusy.push({ url: a.url, stav: 'nesmíme číst', duvod: v.zakaz }); continue; }
+      if (v.chyba) { pokusy.push({ url: a.url, stav: 'není', duvod: v.chyba }); continue; }
+      const text = celyText(v.html).join(' ').replace(/\s+/g, ' ').trim();
+      const znaku = text.replace(/\s/g, '').length;
+      const jinaNezDomov = text !== domaci;
+      /* SLOVA_ODKAZ je pravidlo na ADRESY A NÁPISY odkazů, na tělo
+         stránky samo nestačí: fixturní stránka podmínek slovo
+         „podmínky" v textu vůbec nemá, a přesto podmínkami je.
+         Bere se proto i SLOVA_ODSTAVEC, tedy to, co na podmínkách
+         opravdu hledáme. Sjednocení je tu správně: tahle kontrola
+         nemá rozhodovat, CO v podmínkách stojí — jen odmítnout
+         stránku, která podmínkami není (nejčastěji tichou 404). */
+      const maSlova = SLOVA_ODKAZ.test(text) || SLOVA_ODSTAVEC.test(text);
+      const dost = znaku >= ZNAKU_NA_STRANKU;
+      pokusy.push({ url: a.url, znaku,
+        stav: !dost ? 'je, ale málo textu'
+          : !jinaNezDomov ? 'je, ale je to tatáž stránka jako domov'
+            : !maSlova ? 'je, ale o podmínkách v ní nic není'
+              : 'je' });
+      if (dost && jinaNezDomov && maSlova) { odkazy = [a]; break; }
+    }
+    zapis.zkusenoZnamych = pokusy;
+    /* MUSÍ SE PŘEPSAT. `nalezeneOdkazy` se zapisuje výš, před tímhle
+       krokem — takže nález tvrdil „žádné odkazy" i u zdroje, u kterého
+       se pak stránka z obvyklé adresy opravdu přečetla. Našla to
+       zkouška, která chtěla v nálezu vidět, ODKUD se čtené stránky
+       vzaly. */
+    zapis.nalezeneOdkazy = odkazy;
+  }
+  if (!odkazy.length) {
+    zapis.verdikt = 'odkaz na podmínky se nenašel a není ani na obvyklých adresách';
     return zapis;
   }
   const videne = new Set(odkazy.map((o) => o.url));
@@ -641,7 +713,7 @@ export function cilePodminek(nalez) {
          sloučit to do jedné věty by znamenalo neříct, kde platí. */
       if (kde !== host) {
         ven.push({ jmeno: z.jmeno + ' — web z registru', host,
-          domov: domovZHostu(host), proc: 'slibný kandidát' });
+          domov: domovZHostu(host), proc: 'slibný kandidát', role: 'web z registru' });
       }
     }
   }
