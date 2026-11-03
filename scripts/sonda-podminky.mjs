@@ -455,7 +455,16 @@ export function cilePodminek(nalez) {
       ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
         proc: 'zákaz', zakaz: z.robotsDuvod });
     } else if (z.stav !== 'zapojeno' && z.robots === 'dovoluje' && z.slibuje === 'slibné') {
-      ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
+      /* PODMÍNKY SE ČTOU TAM, KDE OBSAH OPRAVDU JE. Naměřeno 3. 11.
+         u ÚZSVM: v registru stojí `nabidkamajetku.cz`, ale nabídky
+         jsou na `nabidkamajetku.gov.cz` (§355). Čist podmínky na
+         skořápce by znamenalo ptát se na práva k webu, ze kterého
+         nebudeme brát nic. */
+      const s = z.sousedniDomena;
+      const kde = (s && s.je && !s.nepomohlo && !s.zakazano && s.url)
+        ? String(new URL(s.url).hostname).replace(/^www\./, '')
+        : host;
+      ven.push({ jmeno: z.jmeno, host: kde, domov: domovZHostu(kde),
         proc: 'slibný kandidát' });
     }
   }

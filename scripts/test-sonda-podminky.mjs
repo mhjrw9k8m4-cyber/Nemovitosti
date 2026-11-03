@@ -275,6 +275,26 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     P.domovZHostu('drazbynaxos.cz'));
   pravda('bez měření se nečte nic (cíle by se neznaly)',
     P.cilePodminek(null).length === 0 && P.cilePodminek({ zdroje: [] }).length === 0);
+
+  /* PODMÍNKY SE PTAJÍ TAM, KDE OBSAH JE. Naměřeno 3. 11.: ÚZSVM má
+     v registru `nabidkamajetku.cz`, ale nabídky jsou až na
+     `nabidkamajetku.gov.cz` (§355). Ptát se na práva ke skořápce
+     znamená ptát se na web, ze kterého nic brát nebudeme. */
+  const sSousedem = { updated: '2026-11-03', zdroje: [
+    { jmeno: 'Úřad', host: 'u.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slibné',
+      sousedniDomena: { url: 'https://u.gov.cz/', bylo: 'skořápka', je: 'slibné', cteno: 'prohlížečem' } },
+    { jmeno: 'Soused nepomohl', host: 'n.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slibné',
+      sousedniDomena: { url: 'https://n.gov.cz/', je: 'skořápka', nepomohlo: true } },
+    { jmeno: 'Soused zakazuje', host: 'z.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slibné',
+      sousedniDomena: { url: 'https://z.gov.cz/', zakazano: true, duvod: 'Disallow: /' } },
+  ] };
+  const cs = P.cilePodminek(sSousedem);
+  pravda('podmínky se čtou na doméně, kde nabídky opravdu jsou',
+    cs[0] && cs[0].host === 'u.gov.cz' && /u\.gov\.cz/.test(cs[0].domov || ''),
+    JSON.stringify(cs[0]));
+  pravda('a kde soused nepomohl nebo zakazuje, zůstává původní adresa',
+    cs[1] && cs[1].host === 'n.cz' && cs[2] && cs[2].host === 'z.cz',
+    JSON.stringify([cs[1], cs[2]]));
   /* A v kódu se opravdu rozhoduje podle nálezu, ne podle zadrátovaného
      seznamu webů — na tom by celá poctivost spadla. */
   const kod = readFileSync(new URL('../scripts/sonda-podminky.mjs', import.meta.url), 'utf8');

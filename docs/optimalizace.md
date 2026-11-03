@@ -22013,3 +22013,35 @@ při té sabotáži vyšlo stejně. Teprve seznam adres, na které byl
 prohlížeč pouštěn, ji shodil. A ten seznam napoprvé sbíral i z dalších
 případů ve stejném bloku, takže kontrola padala na čistém kódu — tedy
 otisk hned po měřeném případu. Dvě opravy hlídače, než začal hlídat.
+
+## §355c — ÚZSVM je slibný zdroj. Podmínky se čtou tam, kde obsah je
+
+**Nález naostro (3. 11.).** Po §355b vyšel ÚZSVM takhle:
+
+```
+ÚZSVM → slibné | 42 m², 33× „pozemek", 79 odkazů, 1,2 MB
+prohlížeč na nabidkamajetku.cz: nepomohl (7 cizích, z toho 5 na gov.cz)
+soused: https://nabidkamajetku.gov.cz/ — skořápka → slibné, čteno prohlížečem
+```
+
+Slibných kandidátů **4 → 5**. Je to druhý státní zdroj vedle SPÚ,
+tedy přesně ten typ, který nevisí na komerčním portálu — a proti
+81% závislosti na jednom webu to je ta podstatná část.
+
+**Co se tím muselo opravit dál.** Sonda podmínek se ptala na práva
+k hostu z registru, tedy k `nabidkamajetku.cz`. To je ale skořápka,
+ze které nebudeme brát nic. Podmínky se proto čtou na doméně, kde
+nabídky opravdu jsou — a jen tam, kde soused **opravdu pomohl**:
+když nepomohl nebo když jeho robots.txt zakazuje, zůstává adresa
+z registru.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 70 kontrol (bylo
+68): cíl se přesune na doménu se nabídkami; u souseda, který nepomohl
+nebo zakazuje, se nepřesune. Prokázáno dvěma sabotážemi (soused
+ignorován, soused brán i když nepomohl) — obě až na druhý pokus, první
+dvě rozbily závorky a `node --check` je odmítl, takže neměřily nic.
+
+**Co zůstává majiteli.** Rozhodnutí, jestli se z ÚZSVM začne brát, je
+jeho; sonda jen změřila, že to jde a že robots.txt to dovoluje.
+Odpověď na „smělo by se to začít čist" dá až sonda podmínek, teď už
+na správné doméně.
