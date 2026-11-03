@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T13:07:50.880Z",
+ "updated_at": "2026-11-03T14:10:23.294Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -119,6 +119,16 @@
    "stranky": [],
    "verdikt": "web nedovoluje číst ani domovskou stránku",
    "duvod": "Disallow: /"
+  },
+  {
+   "jmeno": "ÚZSVM — nabídka majetku",
+   "host": "nabidkamajetku.gov.cz",
+   "domov": "https://nabidkamajetku.gov.cz/",
+   "proc": "slibný kandidát",
+   "kdy": "2026-11-03",
+   "stranky": [],
+   "nalezeneOdkazy": [],
+   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
   },
   {
    "jmeno": "drazby.policenm.cz",
