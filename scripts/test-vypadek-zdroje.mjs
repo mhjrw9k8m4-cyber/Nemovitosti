@@ -242,12 +242,17 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   pravda('a nabídka cizího zdroje se nepodrží, i když jeho jméno v datech stojí',
     F.podrzNabidkyVypadlych(zdroje, [], '2026-11-02',
       [{ ...drive[0], zdroj: 'Vymyšlený zdroj', url: 'https://x.test/a' }]).nabidky.length === 0);
-  /* A ZDROJ_JMENA zůstává šesti stahovačům — jinak by kontrola shody
-     s SOURCES výš přestala něco tvrdit. */
+  /* A ZDROJ_JMENA zůstává PRÁVĚ stahovačům z main() — jinak by
+     kontrola shody s SOURCES výš přestala něco tvrdit.
+     POČET SE MĚŘÍ, NEPÍŠE SE. Stála tu zadrátovaná šestka a při
+     zapojení sedmého zdroje spadla, aniž by na kódu bylo cokoli
+     špatně — kontrola uvázaná na doslovné číslo zestárne s kódem
+     a pak brání práci místo aby ji hlídala. Smysl je „jen stahovače,
+     ne data", a ten se měří proti seznamu přečtenému z main(). */
   pravda('ZDROJ_JMENA zůstává jen zapojeným stahovačům, data se do něj nelijí',
-    F.ZDROJ_JMENA.length === 6 && Array.isArray(F.ZDROJ_JMENA_VSE)
+    F.ZDROJ_JMENA.length === vSources.length && Array.isArray(F.ZDROJ_JMENA_VSE)
     && F.ZDROJ_JMENA_VSE.length >= F.ZDROJ_JMENA.length,
-    JSON.stringify({ jmena: F.ZDROJ_JMENA.length, vse: F.ZDROJ_JMENA_VSE.length }));
+    JSON.stringify({ jmena: F.ZDROJ_JMENA.length, vSources: vSources.length, vse: F.ZDROJ_JMENA_VSE.length }));
 }
 
 /* ---- 10) POJISTKA NA PRÁZDNÝ ZDROJ STOJÍ ZA DRUHOU CESTOU ------- */

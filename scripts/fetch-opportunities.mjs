@@ -30,6 +30,7 @@ import { BOT_UA } from './bot-ua.mjs';
 import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist } from './cteni-zdroje.mjs';
 import { smimeCist } from './robots.mjs';
 import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
+import * as STAT from './cti-nabidky-statu.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -1415,7 +1416,8 @@ export async function obecneZdroje(cile, nastroje) {
 /* Jména zdrojů. Musí se krýt se SOURCES v main() — podle nich se hledá,
    který zdroj dnes selhal, a kdyby se rozešla, držení by mlčky přestalo
    fungovat. Hlídač scripts/test-vypadek-zdroje.mjs tu shodu měří. */
-export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sreality (Apify)', 'Farmy'];
+export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sreality (Apify)', 'Farmy',
+  'Nabídky státu'];
 
 /* A jména VŠECH zdrojů, tedy i těch, co jsou jen řádkem v registru
    (OBECNE_ZDROJE). Podle tohohle seznamu se poznává, čí nabídka je —
@@ -2653,6 +2655,36 @@ async function main() {
      to test-mrtva-zona. */
   const dnesISO = new Date().toISOString().slice(0, 10);
   // Pojmenované zdroje → v logu Actions je hned vidět, který přestal vracet data.
+/* ---------- NABÍDKY NEPOTŘEBNÉHO MAJETKU STÁTU -------------------
+   Otevřená data z portal.gov.cz (robots: Allow: /, změřeno 3. 11.).
+   Jedním souborem Lesy ČR, Povodí, Vojenské lesy, Správa železnic
+   i ministerstva — viz scripts/cti-nabidky-statu.mjs, kde je i to,
+   co se nebere a proč. Zahozené se VYPISUJÍ: zdroj, který se tiše
+   rozpadne, je horší než zdroj, který chybí (§356). */
+async function fetchNabidkyStatu() {
+  let text;
+  try {
+    const r = await stahni(STAT.CSV_URL, { headers: UA });
+    if (!r.ok) return [];
+    text = await r.text();
+  } catch { return []; }
+  const dnes = new Date().toISOString().slice(0, 10);
+  const { nabidky, zahozeno } = STAT.nabidkyZCsv(text, dnes);
+  /* Razítko zdroje se píše TADY, i když ho čtečka nastavuje taky.
+     Hlídač test-vypadek-zdroje.mjs čte tenhle soubor a chce u každého
+     stahovače vidět, že své jméno do nabídky zapisuje — a má pravdu:
+     bez toho pole by se při výpadku nedalo poznat, čí nabídka je, a
+     držení z §332 by ji nepodrželo. */
+  const orazitkovane = nabidky.map((o) => ({
+    ...o,
+    zdroj: 'Nabídky státu',
+  }));
+  const z = Object.entries(zahozeno).filter(([, n]) => n > 0).map(([k, n]) => k + ' ' + n);
+  console.error(`Zdroj Nabídky státu: ${orazitkovane.length} pozemků`
+    + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
+  return orazitkovane;
+}
+
   const SOURCES = [
     ['Dražby', fetchDrazby],
     ['OK dražby', fetchOkdrazby],
@@ -2660,6 +2692,7 @@ async function main() {
     ['Bezrealitky', fetchBezrealitky],
     ['Sreality (Apify)', fetchSreality], // aktivní jen s APIFY_TOKEN, jinak []
     ['Farmy', fetchFarmy],
+    ['Nabídky státu', fetchNabidkyStatu],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
   // Stav každého zdroje se ZAPISUJE do dat, nejen loguje. Na webu totiž

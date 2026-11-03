@@ -195,6 +195,9 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cti-pdf.mjs
 
+      - name: Nabídky nepotřebného majetku státu (otevřené CSV)
+        run: node scripts/test-nabidky-statu.mjs
+
       - name: Stahování ze zdrojů (opakování, Retry-After, časový limit)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-stahovani.mjs
