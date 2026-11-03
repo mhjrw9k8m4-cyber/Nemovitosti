@@ -1,0 +1,49 @@
+name: Ohledání zdroje
+
+# PODÍVAT SE, CO NA TÉ ADRESE JE. Sonda zdrojů řekne ANO/NE — robots
+# dovoluje, odpověď přišla, slovo „pozemek" tam je 20×. To stačí na
+# rozhodnutí „má smysl se tím zabývat", ale ne na napsání čtečky:
+# k tomu je potřeba vidět TVAR, tedy jaké má CSV sloupce nebo jestli
+# je to JSON. A ze sandboxu, kde se vyvíjí, ven nevidíme vůbec —
+# takže se to musí odehrát tady.
+#
+# ROBOTS.TXT SE ČTE PRVNÍ a výjimka není žádná: když je cesta zakázaná,
+# nestáhne se nic a napíše se proč. Není to nástroj na obcházení, je to
+# nástroj na dívání.
+#
+# NIC NEZAPISUJE do repozitáře. Výstup je jen v logu běhu a rozhodnutí,
+# co s ním, patří člověku.
+
+on:
+  workflow_dispatch:
+    inputs:
+      adresa:
+        description: 'Adresa, na kterou se podívat (celá, včetně https://)'
+        required: true
+        type: string
+
+permissions:
+  contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
+
+jobs:
+  ohledani:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Tahle úloha do repozitáře nepíše, tak ať jí token nezůstává
+          # ležet v .git/config. Hlídá to scripts/test-ci-prava.mjs
+          # a chytlo mě to hned při prvním zápisu tohohle souboru.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Podívat se
+        env:
+          ADRESA: ${{ inputs.adresa }}
+        run: node scripts/ohledej.mjs "$ADRESA"
