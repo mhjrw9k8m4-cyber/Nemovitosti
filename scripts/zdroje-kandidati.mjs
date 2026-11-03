@@ -67,8 +67,41 @@ export const KANDIDATI = [
     proc: 'Obec musí záměr prodat pozemek vyvěsit na úřední desku; eDesky úřední desky'
       + ' sdružují. Druh „obec" dnes na webu nemá vlastní zdroj vůbec.' },
   { jmeno: 'Lesy ČR — prodej majetku', host: 'lesycr.cz', typ: 'sale', adresaOverena: false,
-    url: 'https://lesycr.cz/',
+    url: 'https://lesycr.cz/o-nas/prodej-nepotrebneho-majetku/',
     proc: 'Státní podnik prodává nepotřebné lesní a jiné pozemky; nabídky zveřejňuje.' },
+
+  /* PŘIDÁNO 3. 11. — HLEDÁNÍ OBJEMU MIMO BEZREALITKY.
+     Změřeno týž den: aby Bezrealitky klesly na 40 % a nic se nesmazalo,
+     musely by ostatní zdroje dát 2 441 nabídek místo dnešních 376, tedy
+     6,5× víc. Ze slibných kandidátů byl do té chvíle PRODEJNÍ jediný
+     (ÚZSVM) a zbytek dražby, kterých tolik není. Tihle kandidáti míří
+     právě na ten chybějící prodejní objem — a všichni jsou státní nebo
+     ze zákona zveřejňované, takže nenesou tu právní nejistotu, kvůli
+     které je závislost na Bezrealitkách problém. */
+
+  { jmeno: 'Nepotřebný majetek státu', host: 'portal.gov.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/',
+    proc: 'CENTRÁLNÍ EVIDENCE nepotřebného nemovitého majetku státu, a má EXPORT DO CSV.'
+      + ' Sdružuje nabídky Správy železnic, Povodí, Vojenských lesů i ministerstev — tedy'
+      + ' jedním zdrojem to, co by jinak byl tucet zvlášť čtených webů. Otevřená data'
+      + ' státu jsou nejlepší možný zdroj: zveřejnění je povinnost, ne laskavost.' },
+
+  { jmeno: 'Vojenské lesy a statky', host: 'vls.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://www.vls.cz/cs/pro-obchodni-partnery/prodej-nepotrebneho-majetku/prodej-nemoviteho-majetku',
+    proc: 'Státní podnik prodává nemovitosti ve veřejných výběrových řízeních a aktuálně'
+      + ' nabízené vypisuje. Lesní a zemědělská půda — druh, který na webu zastupuje'
+      + ' dnes jen Farmy (9 nabídek).' },
+
+  { jmeno: 'Správa železnic', host: 'spravazeleznic.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://www.spravazeleznic.cz/',
+    proc: 'Prodává nepotřebné pozemky kolem tratí. Vede se zvlášť od centrální evidence'
+      + ' proto, že se měří obojí: kdyby portál.gov.cz stačil, tenhle se nezapojí.' },
+
+  { jmeno: 'Insolvenční rejstřík', host: 'isir.justice.cz', typ: 'exekuce', adresaOverena: false,
+    url: 'https://isir.justice.cz/',
+    proc: 'Zpeněžení majetku v insolvenci se zveřejňuje ze zákona. Je to druh nabídky,'
+      + ' který na webu dnes nemá zdroj žádný, a u pozemků bývá cena výrazně pod trhem —'
+      + ' tedy přesně to, co weby hledají. Sonda napřed změří, jestli se to vůbec dá číst.' },
 ];
 
 /**
