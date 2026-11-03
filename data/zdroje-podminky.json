@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T14:23:49.936Z",
+ "updated_at": "2026-11-03T14:35:46.398Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -126,34 +126,9 @@
    "domov": "https://nabidkamajetku.gov.cz/",
    "proc": "slibný kandidát",
    "kdy": "2026-11-03",
-   "stranky": [
-    {
-     "url": "https://nabidkamajetku.gov.cz/",
-     "popis": "Dopravní prostředky a příslušenství 74",
-     "stav": "přečteno",
-     "znaku": 18818,
-     "odstavcuCelkem": 64,
-     "odstavcu": 0,
-     "pasaze": [],
-     "zminky": 12,
-     "zminkyUkazka": [
-      {
-       "slovo": "apiGet",
-       "text": "…750); } }); $('body').on('click', '#search-btn', function (ev) { if (searchInProgress === true) { return; } searchInProgress = true; var idCode = $('#modal-filter-idcode').val(); if (idCode !== undefined && idCode !== '') { if (idCode.indexOf('/') > -1) { idCode = idCode.replace('/', ''); } Support.apiGet('/api/Property/FindById/' + idCode) .done(function (data) { searchInProgress = false; window.location.href = data; }) .fail(function (error) { searchInProgress = false; $('#FilterModal').modal('hide'); $('.findid-error').show(); }); } else { var filterList = $('.modal-filter-settings .modal-f…",
-       "kontext": false
-      },
-      {
-       "slovo": "apiPost",
-       "text": "…lay = 'none'; document.getElementById('btn-more').disabled = false; }); let favoriteInProcess = false; $('body').on('click', '.btn-favorite', function (ev) { ev.preventDefault(); var self = this; if (favoriteInProcess) { return; } favoriteInProcess = true; var p01Id = $(self).data('p01id'); Support.apiPost('/api/Property/Favorite', { p01Id: p01Id, favStatus: true }).done(function () { favoriteInProcess = false; var itemToRemove = $(self).closest('.item'); $(itemToRemove).remove(); }).fail(function () { favoriteInProcess = false; Support.showAlert('Došlo k problému při odebírání nabídky', 'Oblí…",
-       "kontext": false
-      }
-     ],
-     "cteno": "ze serveru",
-     "dokumenty": []
-    }
-   ],
+   "stranky": [],
    "domovVykreslen": {
-    "odkazu": 1,
+    "odkazu": 0,
     "zablokovano": 0,
     "cizich": 2,
     "cizinci": [
@@ -165,16 +140,11 @@
       "co": "www.googletagmanager.com",
       "kolik": 1
      }
-    ]
+    ],
+    "nepomohlo": true
    },
-   "nalezeneOdkazy": [
-    {
-     "url": "https://nabidkamajetku.gov.cz/",
-     "popis": "Dopravní prostředky a příslušenství 74"
-    }
-   ],
-   "znakuCelkem": 18818,
-   "verdikt": "přečteno, ale nic o automatickém přístupu"
+   "nalezeneOdkazy": [],
+   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
   },
   {
    "jmeno": "drazby.policenm.cz",
@@ -183,19 +153,6 @@
    "proc": "slibný kandidát",
    "kdy": "2026-11-03",
    "stranky": [
-    {
-     "url": "https://drazby.policenm.cz/",
-     "popis": "Domů",
-     "stav": "přečteno, nic o automatu",
-     "znaku": 4040,
-     "odstavcuCelkem": 26,
-     "odstavcu": 0,
-     "pasaze": [],
-     "zminky": 0,
-     "zminkyUkazka": [],
-     "cteno": "ze serveru",
-     "dokumenty": []
-    },
     {
      "url": "https://drazby.policenm.cz/legal/vop",
      "popis": "Obchodní podmínky",
@@ -219,13 +176,22 @@
      ],
      "cteno": "ze serveru",
      "dokumenty": []
+    },
+    {
+     "url": "https://drazby.policenm.cz/",
+     "popis": "Domů",
+     "stav": "přečteno, nic o automatu",
+     "znaku": 4040,
+     "odstavcuCelkem": 26,
+     "odstavcu": 0,
+     "pasaze": [],
+     "zminky": 0,
+     "zminkyUkazka": [],
+     "cteno": "ze serveru",
+     "dokumenty": []
     }
    ],
    "nalezeneOdkazy": [
-    {
-     "url": "https://drazby.policenm.cz/",
-     "popis": "Domů"
-    },
     {
      "url": "https://drazby.policenm.cz/legal/vop",
      "popis": "Obchodní podmínky"
