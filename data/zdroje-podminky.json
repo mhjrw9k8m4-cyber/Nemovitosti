@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T14:10:23.294Z",
+ "updated_at": "2026-11-03T14:23:49.936Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -126,9 +126,55 @@
    "domov": "https://nabidkamajetku.gov.cz/",
    "proc": "slibný kandidát",
    "kdy": "2026-11-03",
-   "stranky": [],
-   "nalezeneOdkazy": [],
-   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
+   "stranky": [
+    {
+     "url": "https://nabidkamajetku.gov.cz/",
+     "popis": "Dopravní prostředky a příslušenství 74",
+     "stav": "přečteno",
+     "znaku": 18818,
+     "odstavcuCelkem": 64,
+     "odstavcu": 0,
+     "pasaze": [],
+     "zminky": 12,
+     "zminkyUkazka": [
+      {
+       "slovo": "apiGet",
+       "text": "…750); } }); $('body').on('click', '#search-btn', function (ev) { if (searchInProgress === true) { return; } searchInProgress = true; var idCode = $('#modal-filter-idcode').val(); if (idCode !== undefined && idCode !== '') { if (idCode.indexOf('/') > -1) { idCode = idCode.replace('/', ''); } Support.apiGet('/api/Property/FindById/' + idCode) .done(function (data) { searchInProgress = false; window.location.href = data; }) .fail(function (error) { searchInProgress = false; $('#FilterModal').modal('hide'); $('.findid-error').show(); }); } else { var filterList = $('.modal-filter-settings .modal-f…",
+       "kontext": false
+      },
+      {
+       "slovo": "apiPost",
+       "text": "…lay = 'none'; document.getElementById('btn-more').disabled = false; }); let favoriteInProcess = false; $('body').on('click', '.btn-favorite', function (ev) { ev.preventDefault(); var self = this; if (favoriteInProcess) { return; } favoriteInProcess = true; var p01Id = $(self).data('p01id'); Support.apiPost('/api/Property/Favorite', { p01Id: p01Id, favStatus: true }).done(function () { favoriteInProcess = false; var itemToRemove = $(self).closest('.item'); $(itemToRemove).remove(); }).fail(function () { favoriteInProcess = false; Support.showAlert('Došlo k problému při odebírání nabídky', 'Oblí…",
+       "kontext": false
+      }
+     ],
+     "cteno": "ze serveru",
+     "dokumenty": []
+    }
+   ],
+   "domovVykreslen": {
+    "odkazu": 1,
+    "zablokovano": 0,
+    "cizich": 2,
+    "cizinci": [
+     {
+      "co": "www.google.com",
+      "kolik": 1
+     },
+     {
+      "co": "www.googletagmanager.com",
+      "kolik": 1
+     }
+    ]
+   },
+   "nalezeneOdkazy": [
+    {
+     "url": "https://nabidkamajetku.gov.cz/",
+     "popis": "Dopravní prostředky a příslušenství 74"
+    }
+   ],
+   "znakuCelkem": 18818,
+   "verdikt": "přečteno, ale nic o automatickém přístupu"
   },
   {
    "jmeno": "drazby.policenm.cz",
