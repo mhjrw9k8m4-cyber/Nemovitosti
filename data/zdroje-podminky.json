@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T17:08:26.737Z",
+ "updated_at": "2026-11-03T18:39:03.536Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -168,6 +168,36 @@
     "zablokovano": 0,
     "cizich": 2,
     "cizinci": [
+     {
+      "co": "www.google.com",
+      "kolik": 1
+     },
+     {
+      "co": "www.googletagmanager.com",
+      "kolik": 1
+     }
+    ],
+    "nepomohlo": true
+   },
+   "nalezeneOdkazy": [],
+   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
+  },
+  {
+   "jmeno": "ÚZSVM — nabídka majetku — web z registru",
+   "host": "nabidkamajetku.cz",
+   "domov": "https://www.nabidkamajetku.cz/",
+   "proc": "slibný kandidát",
+   "kdy": "2026-11-03",
+   "stranky": [],
+   "domovVykreslen": {
+    "odkazu": 0,
+    "zablokovano": 0,
+    "cizich": 7,
+    "cizinci": [
+     {
+      "co": "nabidkamajetku.gov.cz",
+      "kolik": 5
+     },
      {
       "co": "www.google.com",
       "kolik": 1
