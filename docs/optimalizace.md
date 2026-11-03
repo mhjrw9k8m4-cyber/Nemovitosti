@@ -22326,3 +22326,40 @@ sabotáží (vynechané rozbalování ObjStm).
 dvakrát: při 0,86 i při 0,36 sonda nic netvrdila. Kdyby mez nebyla,
 podmínky elektronickedrazby.cz by dnes byly v nálezu dvakrát —
 a dvakrát jinak.
+
+## §357e — o způsobu dekódování rozhoduje měření, ne domněnka
+
+**Stav po §357d.** Čitelnost dražebního řádu zůstala 0,36. Slovníky
+písem toho dokumentu nejsou v surovém souboru ANI v objektových
+streamech, takže párování se nemá o co opřít. Přesnější cesta je tam
+prostě horší než ta hrubá.
+
+**Co se změnilo.** Zkusí se **obě** cesty a vezme se ta, která je
+měřitelně čitelnější; do nálezu jde, která to byla (`volba`, v sondě
+pole `jak`). Náhrada se vezme jen při zřetelném rozdílu, aby se
+u dokumentu se správným párováním nepřebíjelo bez důvodu.
+
+**Invariant, který jsem musel přeformulovat.** Původně jsem žádal, aby
+písmo bez záznamu v soupisu cizí tabulku NIKDY nedostalo. Měření
+ukázalo, že by to vynucovalo horší čtení. Co opravdu platí a na čem
+záleží: **náhrada se nesmí použít potichu** (nález říká kterou cestou)
+a nesmí se vzít, když není čitelnější. Nezměnil jsem to proto, aby
+zkouška prošla — změnil jsem tvrzení, protože původní bylo proti
+měření; staré i nové je tady napsané, aby to šlo posoudit.
+
+**Čím je to podložené.** `test-cti-pdf.mjs` 24 kontrol (bylo 21).
+Prokázáno dvěma sabotážemi — a každou až napodruhé:
+1. „Náhrada potichu" prošla zeleně, protože kontrola připouštěla OBĚ
+   hodnoty `volba`; byla to tautologie, která nemohla spadnout.
+   Změřeno, kterou cestou ta fixtura jde, a žádá se právě ta.
+2. „Náhrada i když není lepší" prošla zeleně, protože u správně
+   spárovaného dokumentu je párování čitelné a na náhradu se vůbec
+   nedojde. Přidána fixtura, kde je párování SPRÁVNÉ, ale nečitelné —
+   tam musí párování zůstat.
+
+**A poctivý závěr o tom dokumentu.** Dražební řád elektronickedrazby.cz
+naše čtečka **nepřečte**: 15 565 znaků při čitelnosti 0,36, nebo
+10 556 při 0,86 — ani jedno není hodnověrný text. Sonda proto nic
+netvrdí a v nálezu zůstává odkaz, aby si ho otevřel člověk. Dál to
+nedoženeme bez podpory kódování podle jmen glyfů, a to je bezedná
+díra; tahle mez je vědomá, ne přehlédnutá.

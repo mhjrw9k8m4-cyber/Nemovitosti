@@ -162,7 +162,11 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     Buffer.from('11 0 obj\n<< /Type /Font /ToUnicode 21 0 R >>\nendobj\n', 'latin1'),
     stream(20, cmapProZnak(1, 'A')),
     stream(21, cmapProZnak(1, 'B')),
-    stream(4, 'BT /F9 12 Tf <0001> Tj ET\n'),
+    /* OSM KÓDŮ, ne jeden: cizí tabulka zná jediný z nich, takže
+       zbytek vyjde jako otazníky. Jednoznakový text by dal čitelnost
+       1 a tvrdil by o hodnověrnosti něco, co u opravdového dokumentu
+       neplatí — na tom mi kontrola pod tím napoprvé spadla. */
+    stream(4, 'BT /F9 12 Tf <00010002000300040005000600070008> Tj ET\n'),
     Buffer.from('%%EOF\n', 'latin1'),
   ]);
   /* A SLOVNÍK PÍSEM SCHOVANÝ V OBJEKTOVÉM STREAMU. Naměřeno naostro:
@@ -187,9 +191,52 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     + ' spadla čitelnost z 0,86 na 0,36');
 
   const vc = textZPdf(pdfCizi);
-  pravda('neznámé písmo nedostane tabulku od vedlejšího',
-    !/[AB]/.test(vc.text),
-    JSON.stringify(vc.text) + ' — „A" nebo „B" znamená cizí tabulku nasazenou naslepo');
+  /* CO TU OPRAVDU PLATÍ, A PROČ TO NENÍ „cizí tabulku nikdy".
+     Napoprvé jsem tu žádal, aby neznámé písmo cizí tabulku nedostalo
+     NIKDY. Měření naostro ale ukázalo, že u dražebního řádu
+     elektronickedrazby.cz je ta hrubá náhrada třikrát čitelnější
+     (0,86 proti 0,36), protože slovníky písem v tom dokumentu nejsou
+     ani v surovém souboru, ani v objektových streamech. Kontrola, co
+     to žádala, by tedy vynucovala horší čtení.
+     Invariant, na kterém opravdu záleží, je jiný: náhrada se nesmí
+     použít POTICHU, a nesmí vyrobit text, který by prošel sítem jako
+     hodnověrný. Obojí se měří tady; o tom, jestli se takový text
+     vůbec vezme, rozhoduje mez čitelnosti v sondě. */
+  /* KONKRÉTNÍ HODNOTA, NE „jedna z možných". Napoprvé jsem tu připustil
+     obě — a tím vznikla tautologie, která nemohla nikdy spadnout:
+     sabotáže „náhrada potichu" i „náhrada i když není lepší" prošly
+     zeleně. Změřeno, že tahle fixtura jde náhradní cestou, takže se
+     žádá právě ta. */
+  pravda('u neznámého písma se jde náhradní cestou — a nález to říká',
+    /jedna tabulka/.test(vc.volba || ''),
+    JSON.stringify({ volba: vc.volba, text: vc.text }));
+  pravda('a u správného páru se za náhradu nevydává párování',
+    v.volba === 'podle jmen písem',
+    JSON.stringify({ volba: v.volba, text: v.text }));
+  pravda('text z neznámého písma zůstane nehodnověrný (síto ho nevezme)',
+    vc.citelnost < 0.9, JSON.stringify({ citelnost: vc.citelnost, text: vc.text }));
+
+  /* A KDYŽ NÁHRADA NENÍ LEPŠÍ, NEBERE SE. Bez tohohle případu sabotáž
+     „náhrada i když není lepší" procházela zeleně: u správně
+     spárovaného dokumentu je párování čitelné, takže se na náhradu
+     vůbec nedojde, a tu podmínku nic nezkoušelo. Tady je párování
+     SPRÁVNÉ, ale nečitelné (tabulka zná jeden kód z osmi) — a náhrada
+     by byla stejně nečitelná. Musí zůstat párování, tedy „A", ne „B". */
+  const pdfStejne = Buffer.concat([
+    Buffer.from('%PDF-1.4\n', 'latin1'),
+    Buffer.from('1 0 obj\n<< /Font << /F1 10 0 R /F2 11 0 R >> >>\nendobj\n', 'latin1'),
+    Buffer.from('10 0 obj\n<< /Type /Font /ToUnicode 20 0 R >>\nendobj\n', 'latin1'),
+    Buffer.from('11 0 obj\n<< /Type /Font /ToUnicode 21 0 R >>\nendobj\n', 'latin1'),
+    stream(20, cmapProZnak(1, 'A')),
+    stream(21, cmapProZnak(1, 'B')),
+    stream(4, 'BT /F1 12 Tf <00010002000300040005000600070008> Tj ET\n'),
+    Buffer.from('%%EOF\n', 'latin1'),
+  ]);
+  const vs = textZPdf(pdfStejne);
+  pravda('náhrada, která není čitelnější, se nebere',
+    vs.volba === 'podle jmen písem' && /^A/.test(vs.text),
+    JSON.stringify({ volba: vs.volba, text: vs.text })
+    + ' — „B" znamená, že se přebilo správné párování bez důvodu');
 }
 
 /* 4) NASKENOVANÝ PAPÍR — žádný text tam není, a tak se to musí říct. */

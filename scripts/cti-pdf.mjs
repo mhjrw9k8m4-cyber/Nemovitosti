@@ -33,6 +33,13 @@ import { inflateSync, inflateRawSync } from 'node:zlib';
 
 /** Strop na velikost dokumentu. Větší se nečte — robot není archiv. */
 export const STROP_PDF = 8 * 1024 * 1024;
+/* Pod touhle čitelností má smysl zkusit i hrubší cestu — nad ní je
+   text v pořádku a není co vylepšovat. */
+export const PRAH_PRO_NAHRADU = 0.9;
+/* O kolik musí být hrubší cesta lepší, aby se vzala. Malý rozdíl je
+   šum, ne poznatek. */
+export const ROZDIL_PRO_NAHRADU = 0.05;
+
 /** Strop na délku vytaženého textu (podmínky bývají do 100 kB). */
 export const STROP_TEXTU = 400000;
 
@@ -314,18 +321,42 @@ export function textZPdf(buf) {
        chyba, kvůli které se tohle přiřazování dělá. */
     return jenJedna ? cmapyPodleObjektu.get('*') : null;
   };
-  let text = '';
-  for (const s of vse) {
-    if (/\/Image|\/XObject\s*\/Image|\/Subtype\s*\/Image/.test(s.hlava)) continue;
-    const telo = rozbal(s);
-    if (!telo) continue;
-    const txt = telo.toString('latin1');
-    if (/beginbfchar|beginbfrange/.test(txt)) continue;
-    if (!/\bTj\b|\bTJ\b/.test(txt)) continue;
-    text += textZObsahu(txt, najdiCmap) + '\n';
-    if (text.length > STROP_TEXTU) break;
+  /* Obsahové streamy se projdou jednou a text se z nich složí podle
+     předaného způsobu hledání tabulek. */
+  const slozText = (hledac) => {
+    let t = '';
+    for (const s of vse) {
+      if (/\/Image|\/XObject\s*\/Image|\/Subtype\s*\/Image/.test(s.hlava)) continue;
+      const telo = rozbal(s);
+      if (!telo) continue;
+      const txt = telo.toString('latin1');
+      if (/beginbfchar|beginbfrange/.test(txt)) continue;
+      if (!/\bTj\b|\bTJ\b/.test(txt)) continue;
+      t += textZObsahu(txt, hledac) + '\n';
+      if (t.length > STROP_TEXTU) break;
+    }
+    return t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  };
+
+  let text = slozText(najdiCmap);
+  let volba = 'podle jmen písem';
+  /* ROZHODNE MĚŘENÍ, NE DOMNĚNKA. Naostro se ukázalo, že u dražebního
+     řádu elektronickedrazby.cz je přesnější cesta (tabulka ke svému
+     písmu) HORŠÍ: slovníky písem v tom dokumentu nejsou ani v surovém
+     souboru, ani v objektových streamech, takže většina písem zůstane
+     bez tabulky a dekóduje se jednobajtově — čitelnost 0,36 proti 0,86
+     s jedinou tabulkou nasazenou na všechno. Obě cesty se proto zkusí
+     a vezme se ta ČITELNĚJŠÍ; do nálezu jde, která to byla.
+     Rozdíl musí být zřetelný, aby se u dokumentu se správným párováním
+     nepřebíjelo zbytečně — tam jsou obě čitelné stejně a vyhrává
+     párování (viz zkouška se dvěma písmy). */
+  if (citelnost(text) < PRAH_PRO_NAHRADU && cmapyPodleObjektu.has('*')) {
+    const nahradni = slozText(() => cmapyPodleObjektu.get('*'));
+    if (citelnost(nahradni) > citelnost(text) + ROZDIL_PRO_NAHRADU) {
+      text = nahradni;
+      volba = 'jedna tabulka na všechna písma (čitelnější)';
+    }
   }
-  text = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-  return { text, citelnost: citelnost(text), streamu: vse.length,
+  return { text, citelnost: citelnost(text), streamu: vse.length, volba,
     cmapu: [...cmapyPodleObjektu.keys()].filter((k) => k !== '*').length };
 }

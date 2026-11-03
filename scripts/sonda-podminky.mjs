@@ -484,6 +484,10 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
       zaznam.znaku = v.text.replace(/\s/g, '').length;
       zaznam.citelnost = Math.round((v.citelnost || 0) * 100) / 100;
       zaznam.cteno = 'z dokumentu';
+      /* Kterou cestou se dekódovalo, je v nálezu: u dokumentu, kde
+         párování tabulek nefunguje, se bere hrubší náhrada (§357d)
+         — a nesmí to být vidět až v číslech. */
+      if (v.volba) zaznam.jak = v.volba;
       if (v.duvod || !v.text) {
         zaznam.stav = 'nepřečetli jsme ho';
         zaznam.duvod = v.duvod || 'v dokumentu není text (nejspíš je to sken)';
