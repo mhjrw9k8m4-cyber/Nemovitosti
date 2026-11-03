@@ -21761,3 +21761,45 @@ značek → 1 pád; `jeKod` nic nezahodí → 1 pád.
    dal jsem JSON do `<script>` a bez mezer, takže ho zahodil už
    `textZeSkriptu`. Blok proto stojí jako text stránky a s mezerami,
    tedy přesně tak, jak se k pasážím opravdu dostal.
+
+## 352. CI 908: dva pády, ani jeden nebyl vada webu
+
+Po té sérii změn doběhl první neporušený běh CI — a spadly v něm dva
+prohlížečové hlídače. Oba z téhož důvodu: **měřily něco jiného, než co
+si mysleli.**
+
+### a) Graf cen: mez zestárla s daty
+
+`test-graf-cen` hlídá, že řada, která se hýbe o procento, nevypadá
+dramaticky — osa se proto nenasazuje na data. Stála tam pevná mez
+„čára nezabere víc než pětinu výšky", odvozená z doby, kdy se řada
+hýbala asi o 1 %. Po dnešní obnově dat se hýbe o 3,65 %, čára zabrala
+28 % — **a to je správně**, ne vada.
+
+Osa se v `js/graf-cen.js` počítá jako `max(rozpětí × 1,7, střed ×
+0,10)`. Kontrola teď **čte ty dvě konstanty z kódu** a spočítá si, co
+má vyjít: buď 1/1,7 (osa roztažená nad data), nebo `pohyb/10` (platí
+spodní mez). Pevné číslo tím zmizelo a nemá jak zestárnout.
+
+**A hned dvě pasti při tom:**
+- Poměr jsem počítal z celého `viewBox` (190 px), ale kreslicí plocha
+  je menší — nese i místo na popisky osy. Vyšlo 28 % proti 36 %, které
+  z osy vycházejí. Plochu teď odměřuje **kříž**, který se po ní vodí
+  pod prstem; tedy údaj z webu, ne vyrobený kvůli zkoušce.
+- Kontrola, která čte vzorec z kódu, se dá sabotáži **přizpůsobit**:
+  kdyby někdo osu nasadil přímo na data, posunulo by se i „čekáno".
+  Proto mají meze i ty konstanty: osa musí držet aspoň 8 % středu a
+  roztahovat se aspoň 1,5×. Sabotáže: spodní mez na 1 % → pád;
+  roztažení na 1,05× → pád.
+
+### b) Uložené pozemky: pevné čekání a prchavá hláška
+
+`test-klic-ulozenych` padal jen v CI („odznak okolí se neobjevil").
+Po kliknutí tam stálo **pevné `setTimeout(900)`** — lokálně stačilo, na
+pomalejším běhu ne. Čeká se tedy na stav.
+
+Jenže **první oprava selhala i lokálně**, a ten důvod je zajímavější
+než to čekání: `toast` se po chvíli uklidí, takže po dočkání zbyl
+odznak a PRÁZDNÁ hláška. Oba údaje se proto zapisují v okamžiku, kdy se
+objeví, a čeká se, dokud nejsou oba. **Prchavý prvek se musí posbírat,
+když je — ne až se na něj někdo zeptá.**

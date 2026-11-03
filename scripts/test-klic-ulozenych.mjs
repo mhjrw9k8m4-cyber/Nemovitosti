@@ -366,23 +366,54 @@ async function sUlozenymi(klice) {
     if (b) b.click();
   });
   await page.waitForSelector('.vm-ov #vm-ok', { timeout: 20000 }).catch(() => {});
-  const v = await page.evaluate(async () => {
+  /* ČEKÁ SE NA STAV, NE NA ČAS. Do 3. 11. tu po kliknutí stálo pevné
+     `setTimeout(900)` — lokálně to stačilo, ale na pomalejším běhu
+     v CI odznak ještě nebyl a spadly obě kontroly pod tím (CI 908,
+     směna 3: „odznak okolí se neobjevil"). Zápis do paměti se proto
+     podstrčí a klikne uvnitř prohlížeče, čeká se na odznak NEBO na
+     hlášku zvenčí, a teprve pak se čte — a podstrčení se vrací zpět,
+     ať další kontroly měří normální paměť. */
+  const puvod = await page.evaluate(() => {
     const ok = document.querySelector('.vm-ov #vm-ok');
     if (!ok) return { chyba: 'výběr místa se neotevřel (#vm-ok není)' };
     if (ok.disabled) return { chyba: '„Vybrat" je u uloženého místa vypnuté' };
     const puv = localStorage.setItem.bind(localStorage);
+    window.__pkPuvSet = puv;
     localStorage.setItem = (k, h) => {
       if (k === 'pk_misto_v1') { const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e; }
       return puv(k, h);
     };
     ok.click();
-    await new Promise((r) => setTimeout(r, 900));
-    localStorage.setItem = puv;
+    return {};
+  });
+  /* HLÁŠKA JE PRCHAVÁ — SBÍRÁ SE, JAK SE OBJEVÍ. Napoprvé jsem po
+     čekání jen přečetl stav, a to selhalo i lokálně: toast se po
+     chvíli uklidí, takže v ruce zůstal odznak a prázdná hláška. Každý
+     z těch dvou údajů se proto zapíše v okamžiku, kdy se objeví, a
+     čeká se, než jsou oba. */
+  if (!puvod.chyba) {
+    await page.waitForFunction(() => {
+      window.__pkSnap = window.__pkSnap || { odznak: '', hlaska: '' };
+      const o = document.querySelector('#ms-chipy .msch[data-okoli]');
+      const t = document.getElementById('toast');
+      const h = (t && (t.textContent || '').trim()) || '';
+      if (o && !window.__pkSnap.odznak) window.__pkSnap.odznak = o.textContent.trim();
+      if (h && !window.__pkSnap.hlaska) window.__pkSnap.hlaska = h;
+      return !!(window.__pkSnap.odznak && window.__pkSnap.hlaska);
+    }, { timeout: 15000 }).catch(() => {});
+  }
+  const v = await page.evaluate((chyba) => {
+    if (window.__pkPuvSet) { localStorage.setItem = window.__pkPuvSet; delete window.__pkPuvSet; }
+    if (chyba) return { chyba };
+    const snap = window.__pkSnap || { odznak: '', hlaska: '' };
+    delete window.__pkSnap;
     const t = document.getElementById('toast');
     const odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
-    return { hlaska: (t && t.textContent) || '',
-      odznak: odznak ? odznak.textContent.trim() : '' };
-  });
+    /* Co se posbíralo při objevení, má přednost; co je na stránce teď,
+       slouží jako záloha. */
+    return { hlaska: snap.hlaska || (t && t.textContent) || '',
+      odznak: snap.odznak || (odznak ? odznak.textContent.trim() : '') };
+  }, puvod.chyba || '');
   pravda('je co měřit — výběr místa šel potvrdit', !v.chyba, v.chyba || '');
   if (!v.chyba) {
     pravda('okolí se při plné paměti stejně zapne (tuhle návštěvu platí)',

@@ -238,11 +238,52 @@ async function otevri(okres, sirka) {
      sama a minimální rozpětí už nic neřeší. */
   pravda('měří se řada, která se hýbe — ale málo (jinak kontrola nic neřeší)',
     pohyb > 0.3 && pohyb < 10, `řada se za celé období pohnula o ${pohyb.toFixed(2)} %`);
-  /* Když se řada pohne o 1 % a osa drží 10 %, nesmí čára zabrat víc než
-     zhruba pětinu výšky. Kdyby osa seděla na datech, zabere skoro celou. */
-  pravda('a čára proto nezabírá víc než pětinu výšky grafu',
-    v.rozsahY <= v.vyskaSvg * 0.2,
-    `čára zabírá ${Math.round(v.rozsahY)} z ${v.vyskaSvg} px (${Math.round(100 * v.rozsahY / v.vyskaSvg)} %)`);
+  /* KOLIK MÁ ČÁRA ZABRAT, SE POČÍTÁ ZE VZORCE OSY, NE Z MOMENTKY DAT.
+     ------------------------------------------------------------------
+     Do 3. 11. tu stála pevná mez „nejvýš pětina výšky". Vycházela
+     z toho, že se řada tehdy hýbala asi o 1 % — a když se po obnově dat
+     začala hýbat o 2,8 %, kontrola spadla na geometrii, která je
+     SPRÁVNÁ (54 z 190 px, tedy 28 % — přesně 2,8/10). Mez tedy
+     zestárla s daty, žádná vada ve webu nebyla.
+     Osa se v js/graf-cen.js počítá jako `max(rozpětí × 1,7,
+     střed × 0,10)`. Čára proto zabírá buď 1/1,7 (když si osu roztáhne
+     sama), nebo pohyb/10 (když platí ta spodní mez) — a nikdy víc.
+     Konstanty se ČTOU Z KÓDU, aby se zkouška nemohla rozejít se
+     vzorcem, který měří. */
+  const kodGrafu = readFileSync(new URL('../js/graf-cen.js', import.meta.url), 'utf8');
+  const mVzorec = kodGrafu.match(/Math\.max\(\(max - min\) \* ([\d.]+), stred \* ([\d.]+)\)/);
+  pravda('vzorec osy se v js/graf-cen.js našel (jinak se nedá nic odvodit)',
+    !!mVzorec, 'hledá se `Math.max((max - min) * N, stred * M)`');
+  if (mVzorec) {
+    const nasobek = +mVzorec[1], spodni = +mVzorec[2];
+    /* SAMOTNÉ KONSTANTY MAJÍ MEZE — jinak by se tahle kontrola
+       sabotáži PŘIZPŮSOBILA: čte vzorec z kódu, takže kdyby někdo osu
+       nasadil přesně na data, „čekáno" by se posunulo s ní a čára by
+       zabrala skoro celou plochu zeleně. Pravidlo, které se tu hlídá,
+       na kódu nezávisí: ŘADA, KTERÁ SE HÝBE O PROCENTO, NESMÍ VYPADAT
+       DRAMATICKY. Při spodní mezi osy 10 % zabere taková řada desetinu
+       výšky, což je plochá čára; při 1 % by zabrala celou plochu. */
+    pravda('osa drží aspoň 8 % středu (procentní pohyb nesmí vypadat dramaticky)',
+      spodni >= 0.08, `v kódu je ${spodni * 100} %`);
+    pravda('a nad data se roztahuje aspoň 1,5×, ať se čára nelepí na okraj',
+      nasobek >= 1.5, `v kódu je ${nasobek}×`);
+    const cekano = Math.min(1 / nasobek, (pohyb / 100) / spodni);
+    /* POMĚR SE POČÍTÁ Z KRESLICÍ PLOCHY, NE Z CELÉHO viewBoxu. Ten
+       nese i místo na popisky osy, takže by vycházel menší poměr, než
+       jaký vzorec dává: naměřeno 28 % z viewBoxu proti 36 %, které
+       z osy vycházejí. Plochu odměřuje kříž, který se po ní vodí pod
+       prstem — tedy údaj z webu, ne vyrobený kvůli zkoušce. */
+    const plocha = v.krizDole - v.krizNahore;
+    pravda('kreslicí plocha se dá odměřit křížem', plocha > 20 && plocha <= v.vyskaSvg,
+      `plocha ${plocha} px, viewBox ${v.vyskaSvg} px`);
+    const strop = plocha * (cekano * 1.15) + 2;
+    const dno = plocha * (cekano * 0.85) - 2;
+    pravda('a čára zabírá právě tolik, kolik z toho vzorce vychází',
+      v.rozsahY <= strop && v.rozsahY >= dno,
+      `čára ${Math.round(v.rozsahY)} z ${plocha} px (${Math.round(100 * v.rozsahY / plocha)} %),`
+      + ` čekáno ${Math.round(100 * cekano)} % (pohyb ${pohyb.toFixed(2)} %, osa drží aspoň`
+      + ` ${spodni * 100} % a roztahuje se ${nasobek}×)`);
+  }
 
   /* A TEĎ TO, CO SE O OSE PÍŠE, PROTI TOMU, CO JE NAKRESLENÉ.
      ------------------------------------------------------------------
