@@ -294,7 +294,28 @@ pravda('každá nabídka ví, kdy ji robot viděl poprvé', bezData.length === 0
   pravda('generátor dopisuje čísla do index.html', pisemeUvod,
     'kdyby přestal, je kontrola výš bezpředmětná');
   if (pisemeUvod) {
-    const pridani = [...uloha.matchAll(/^\s*git add (.+)$/gm)].map((m) => m[1].trim());
+    /* ZAŘAZOVÁNÍ SE PŘESTĚHOVALO DO AKCE. Od 3. 11. úloha nemá vlastní
+       `git add` — commit i odeslání dělá .github/actions/commit-a-push
+       (kvůli opakování při cizím pushi, §347) a úloha jí jen řekne
+       `co:`. Hlídač se napoprvé díval jen do YAMLu úlohy, nenašel nic
+       a ohlásil, že se index.html nezařazuje. Měl pravdu v tom, že se
+       to z úlohy nedočte — tak se teď dočte i z té akce. */
+    const sCo = [...uloha.matchAll(/^\s*co:\s*(.+)$/gm)].map((m) => m[1].trim());
+    /* Úloha, která `co:` NENAPÍŠE, zařazuje to, co má akce jako
+       výchozí — a právě tak to update-data dělá. Číst jen napsané
+       `co:` by znamenalo tvrdit, že nezařazuje nic. */
+    if (/uses:\s*\.\/\.github\/actions\/commit-a-push/.test(uloha) && !sCo.length) {
+      const vychoziAkce = readFileSync(new URL('../.github/actions/commit-a-push/action.yml', import.meta.url), 'utf8');
+      const vychozi = (vychoziAkce.match(/co:[\s\S]*?default:\s*'([^']+)'/) || [])[1];
+      if (vychozi) sCo.push(vychozi);
+    }
+    const pridani = [...uloha.matchAll(/^\s*git add (.+)$/gm)].map((m) => m[1].trim())
+      .concat(sCo);
+    /* A ať „co: -A" opravdu znamená „zařaď všechno": kdyby akce
+       přestala `git add $CO` volat, byl by ten vstup jen ozdoba. */
+    const teloAkce = readFileSync(new URL('../.github/actions/commit-a-push/action.yml', import.meta.url), 'utf8');
+    pravda('a akce ten vstup opravdu použije (git add $CO)',
+      /git add \$CO/.test(teloAkce), 'bez toho je `co:` jen ozdoba');
     const berevse = pridani.some((r) => /^-A\s*$/.test(r));
     const jmenujeUvod = pridani.some((r) => /\bindex\.html\b/.test(r));
     pravda('a robot index.html opravdu commitne', berevse || jmenujeUvod,

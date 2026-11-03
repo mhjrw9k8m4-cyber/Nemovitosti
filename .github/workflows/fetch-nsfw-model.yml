@@ -108,13 +108,7 @@ jobs:
           rm -rf node_modules
 
       - name: Commitnout model do větve
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/nsfw-model
-          if git diff --cached --quiet; then
-            echo "Model už je v repu beze změny — nic k commitu."
-          else
-            git commit -m "AI model pro kontrolu fotek (NSFWJS MobileNetV2, self-hosted)"
-            git push origin claude/web-design-sketch-ewjjrr
-          fi
+        uses: ./.github/actions/commit-a-push
+        with:
+          zprava: "AI model pro kontrolu fotek (NSFWJS MobileNetV2, self-hosted)"
+          co: assets/nsfw-model

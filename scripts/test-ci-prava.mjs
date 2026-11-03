@@ -85,10 +85,30 @@ function pushujeSkript(cestaSkriptu) {
       || /(?:spawnSync|execFileSync|execSync)\(\s*['"]git['"][\s\S]{0,200}?['"]push['"]/.test(t);
   } catch (e) { return false; }
 }
+/* A od 3. 11. i podle MÍSTNÍ AKCE, kterou úloha použije. Push se
+   přestěhoval do .github/actions/commit-a-push (aby se opakování při
+   cizím pushi psalo jednou, ne pětkrát) — a tenhle hlídač hned ohlásil
+   pět úloh jako „zápis bez pushe". Měl pravdu: ve YAMLu úlohy už žádné
+   `git push` nestojí. Je to táž lekce jako u sebeopravy výš, jen jiným
+   dveřmi: dívat se jen do YAMLu znamená věřit, že se v něm píše
+   všechno. */
+function pushujeAkce(cestaAkce) {
+  for (const jmeno of ['action.yml', 'action.yaml']) {
+    try {
+      const t = readFileSync(path.join(KOREN, cestaAkce, jmeno), 'utf8');
+      if (/git push/.test(t)) return true;
+    } catch (e) { /* druhé jméno */ }
+  }
+  return false;
+}
+function akceVUloze(f) {
+  return [...K[f].matchAll(/uses:\s*\.\/([\w./-]+)/g)].map((m) => m[1]);
+}
 const pushuje = soubory.filter((f) => {
   if (/\bgit push\b/.test(K[f])) return true;
   const skripty = [...K[f].matchAll(/node\s+(scripts\/[\w-]+\.mjs)/g)].map((m) => m[1]);
-  return skripty.some(pushujeSkript);
+  if (skripty.some(pushujeSkript)) return true;
+  return akceVUloze(f).some(pushujeAkce);
 });
 pravda(`pushující úlohy se poznaly podle příkazu (${pushuje.length})`,
   pushuje.length >= 1 && pushuje.length < soubory.length,
@@ -250,6 +270,37 @@ for (const f of soubory) {
 }
 pravda('do příkazů v úlohách nejde text, který může napsat kdokoli',
   vlozeni.length === 0, 'vložení příkazu: ' + [...new Set(vlozeni)].join(', '));
+
+/* --- E) CIZÍ PUSH NESMÍ ZAHODIT PRÁCI ÚLOHY ------------------------
+   3. 11. pushly do jedné větve dvě úlohy těsně po sobě a ta druhá
+   dostala „! [rejected] (fetch first)". Spadl tím robot dat, který měl
+   hotových 2 749 souborů — nabídky se ten den neobnovily, protože do
+   větve zapsala sonda. Pushují ČTYŘI úlohy do JEDNÉ větve, takže se
+   potkají dřív nebo později; opakování s přerovnáním proto není
+   ozdoba.                                                          */
+{
+  const AKCE = '.github/actions/commit-a-push';
+  let telo = '';
+  try { telo = readFileSync(path.join(KOREN, AKCE, 'action.yml'), 'utf8'); } catch (e) { telo = ''; }
+  pravda('společná akce na commit a odeslání existuje', telo.length > 0,
+    AKCE + '/action.yml nejde přečíst');
+  pravda('a při odmítnutém pushi se přerovná na cizí práci a zkusí to znovu',
+    /git rebase/.test(telo) && /git fetch origin/.test(telo)
+    && /for\s+POKUS/.test(telo),
+    'bez cyklu s `git fetch` a `git rebase` zahodí jediný cizí push celou práci úlohy');
+  pravda('konflikt se nepřepíše tiše, úloha spadne nahlas',
+    /rebase --abort/.test(telo) && /::error::/.test(telo),
+    'tiché „ours/theirs" by zahodilo buď cizí, nebo naši práci a nikdo by se nedozvěděl kterou');
+  /* A hlavně: ať to nikdo neobejde. Holý `git push` ve YAMLu úlohy
+     znamená push BEZ opakování. */
+  const holy = soubory.filter((f) => /\bgit push\b/.test(K[f]));
+  pravda('žádná úloha nepushuje mimo tu akci (holý `git push` ve YAMLu)',
+    holy.length === 0,
+    'holý push v: ' + holy.join(', ') + ' — takový push nikdo neopakuje');
+  const prezAkci = pushuje.filter((f) => akceVUloze(f).includes(AKCE));
+  pravda(`a kdo commituje data, dělá to přes ni (${prezAkci.length} úloh)`,
+    prezAkci.length >= 4, 'přes akci jen: ' + prezAkci.join(', '));
+}
 
 console.log('\nPráva úloh v CI a odkud se berou balíčky');
 console.log(zpravy.join('\n'));

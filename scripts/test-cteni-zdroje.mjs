@@ -334,7 +334,11 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
   {
     const kod = readFileSync(new URL('../scripts/fetch-opportunities.mjs', import.meta.url), 'utf8');
     pravda('stav „druhá cesta" patří mezi stavy, kdy zdroj odpověděl',
-      /ODPOVEDEL = new Set\(\[[^\]]*'druhá cesta'\]\)/.test(kod),
+      /* Nezáleží na tom, kolikátý v seznamu je — jen na tom, že tam je.
+         Vzor dřív vyžadoval POSLEDNÍ místo a spadl, když za něj přibyl
+         stav „jineCeny" (§348). Hlídat polohu znamená hlídat něco,
+         o čem to pravidlo vůbec není. */
+      /ODPOVEDEL = new Set\(\[[^\]]*'druhá cesta'[^\]]*\]\)/.test(kod),
       'jinak by se v historii počtů udělala děra právě v době výpadku');
   }
 

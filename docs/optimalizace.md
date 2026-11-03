@@ -21487,3 +21487,132 @@ to nespraví. Portál dražeb a eDesky zůstaly slabé.
 **Co z toho plyne.** Čtyři adresy, u kterých má smysl zjistit
 podmínky — podle majitelova pokynu „jen zjistit podmínky", tedy
 sondou `sonda-podminky`, ne přidáním do registru.
+
+## 347. Cizí push zahodil celou noční aktualizaci dat
+
+Po opravě mrtvé zóny (§344) jsem robota pustil naostro — a padl znovu.
+Tentokrát ale **úplně jinak, a ta diagnóza je dobrá zpráva**:
+
+```
+[claude/… 968b7c3] data: automatická aktualizace příležitostí
+ 2749 files changed, 17120 insertions(+), 14176 deletions(-)
+ ! [rejected]  (fetch first)
+error: failed to push some refs
+```
+
+Robot si stáhl zdroje, vygeneroval **2 749 souborů** a commitnul je.
+Oprava z §344 tedy drží. Spadl na **odeslání**: mezitím do téže větve
+pushla sonda podmínek, kterou jsem spustil o dvě minuty dřív.
+
+**A to není moje smůla, to je slabina systému.** Do jedné větve
+pushuje **pět úloh** (robot dat 4× denně, sonda zdrojů, sonda podmínek,
+hranice krajů, model na kontrolu fotek) a **ani jedna z nich odeslání
+neopakovala**. Kdokoli — i majitel ze svého počítače — stačí, aby
+pushl ve špatnou minutu, a celá noční práce robota skončí v koši
+s hláškou „Nabídky se přestaly obnovovat".
+
+**Oprava: jedna společná akce** `.github/actions/commit-a-push`. Zařadí
+(buď `-A`, nebo přesné cesty, ať si každá úloha drží svůj rozsah),
+commitne a odesílá ve smyčce: při odmítnutí si stáhne cizí práci,
+**přerovná se na ni** a zkusí to znovu, až čtyřikrát, s odstupem.
+Při opravdovém KONFLIKTU se rebase zruší a úloha spadne nahlas —
+tiché „ours/theirs" by zahodilo buď cizí, nebo naši práci a nikdo by
+se nedozvěděl kterou. Opakování dostala i sebeoprava, která pushuje
+z JavaScriptu (hotová a *dokázaná* oprava, která se nedoručí, je ta
+nejhloupější možná ztráta).
+
+**Zkouška `test-push-opakovani` běží NAOSTRO proti gitu** — bare
+repozitář a dva klony v `/tmp`. A hlavně: **tělo akce se neopisuje**,
+čte se `run:` přímo z `action.yml` a spouští se, jak je. Zkouška tedy
+měří tu akci, co v repozitáři opravdu je, ne moji představu o ní.
+Deset kontrol: naše práce dojde, cizí zůstane, běh přizná, že
+opakoval, konflikt skončí nenulovým kódem s `::error::` a náš commit
+přežije, a bez změny se nic neposílá.
+
+**Sabotáž** (push vrácený na jediný pokus, jak stál do 3. 11.) →
+padnou čtyři z deseti kontrol, tedy přesně ta produkční vada.
+
+**A ještě jeden hlídač si na mě došlápl, a měl pravdu.**
+`test-ci-prava` pozná pushující úlohu podle PŘÍKAZU, ne podle jména —
+a když se push přestěhoval do akce, ohlásil pět úloh jako „zápis bez
+pushe". Je to táž lekce, jaká v tom souboru stojí od 24. 10. u
+sebeopravy, jen jinými dveřmi: *dívat se jen do YAMLu znamená věřit,
+že se v něm píše všechno.* Rozpoznávání teď jde i do místních akcí, a
+přibyla čtyři pravidla: akce existuje, opakuje, konflikt nepřepisuje
+tiše, a **žádná úloha nepushuje mimo ni** (holý `git push` ve YAMLu
+znamená push, který nikdo neopakuje).
+
+## 348. Tichá změna ceny u zdroje: hlídač mediánu Kč/m²
+
+Majitel chtěl, aby reakce na změnu u zdroje byla silnější. Prošel jsem
+proto, co všechna dosavadní síta hlídají, a vyšlo, že **všechna hlídají
+POČET**: nula, propad na polovinu, víc zahozeného než přineseného,
+pomalý úbytek proti mediánu dnů. Ani jedno nekouká na to, **co v těch
+nabídkách je**.
+
+A přesně tam je vada, kterou žádné z nich nevidí: zdroj vrátí stejně
+nabídek, stejně jich projde — a **ceny budou jiné**. Stačí, aby se na
+cizím webu posunul selektor z celkové ceny na cenu za metr, aby se
+výměra začala udávat v hektarech, nebo aby se do ceny připletlo číslo
+vedle. Pro tenhle web je to ta nejdražší možná vada: řadí se podle
+výhodnosti, verdikt „výhodná cena" a mapa se počítají z Kč/m², takže
+špatná cena nepokazí jeden řádek — pokazí celé doporučení.
+
+**Měření (3. 11., 1 996 nabídek).** Medián Kč/m² je u každého zdroje
+charakteristický a navzájem velmi různý: SPÚ 9, Farmy 42,
+Bezrealitky 50, OK dražby 75, Dražby 1 659. Posun jednotky by
+u Bezrealitek znamenal skok z 50 na tisíce; záměna celkové ceny za
+cenu na metr je faktor ~1 000, hektary 10 000.
+
+**Dvě meze, obě změřené, ne odhadnuté:**
+
+- **Od sta nabídek s cenou.** Medián malého vzorku kolísá sám od sebe,
+  a u těchto dat silně: rozpětí Bezrealitek je p10 28 – p90 2 373
+  Kč/m², tedy 85×. Při stovce je výběrový medián v pásu p40–p60, což
+  je tu asi 1,5×. Stovka pokrývá Bezrealitky a SPÚ, tedy **1 910
+  z 1 966 nabídek s cenou (97 %)**; menší zdroje se nesoudí vůbec.
+- **Faktor 4.** Nad stem kusů se vzorkováním přes 1,5× nedostaneš,
+  skutečné vady začínají u 1 000×. Čtyřka je mezi tím s rezervou na
+  obě strany.
+
+Srovnává se proti **mediánu mediánů** z historie, ne proti včerejšku —
+jeden divný den se tak nestane referencí. A zapisuje se jen den, kdy
+byl zdroj v pořádku: kdyby se zapisoval i den s označenou cenou, vada
+by si za pár dnů udělala novou normu (táž lekce jako u počtů).
+
+**Co z nálezu PLYNE** — a to je na tom to hlavní. Nález se nejen
+vypíše: nabídky toho zdroje se dnes **neberou** a drží se ty
+z minulého běhu (§220). Den stará cena je mnohem lepší než cena o řád
+jinde.
+
+**Sabotáže (čtyři) — a dvě z nich napoprvé PROŠLY:**
+
+1. filtr u sestavení `raw` pryč → padne „nabídky zdroje
+   s podezřelými cenami do dat NEPUSTÍ",
+2. cena se zapíše i u označeného zdroje → padne kontrola o normě,
+3. **do reference se počítá i dnešek → napoprvé prošlo.** Při plné
+   historii to totiž nic nerozhodne: medián mediánů se jedním dnem
+   skoro nepohne. Rozhoduje to u KRÁTKÉ historie — se dvěma dny se
+   soudit nemá, a kdyby se bral i dnešek, byly by tři. Kontrola je
+   přepsaná na ten případ,
+4. **mez na počet kusů z 100 na 1 → napoprvé prošlo**, protože zkouška
+   měla v sobě `PRAH_CEN_KUSU - 1`, takže se sabotáži PŘIZPŮSOBILA.
+   To je přesně past z §337, podruhé. Počty tam teď stojí číslem (99
+   a 100) a sama mez se kontroluje zvlášť.
+
+### 347b. Dva další hlídači, kterým se změna „pod rukama" nelíbila
+
+Přestěhování pushe do akce rozsvítilo ještě dvě místa, a ani jedno
+nebyl planý poplach:
+
+- **`test-data`** hlídá, že robot commitne i `index.html` (jinak se
+  přepočet čísel v úvodu zahodí, §?). Díval se jen po `git add`
+  v YAMLu úlohy — a ten tam po přestěhování není. Čte tedy i vstup
+  `co:` a tam, kde ho úloha nenapíše, i **výchozí hodnotu akce**;
+  a nově měří, že akce ten vstup opravdu používá (`git add $CO`),
+  protože jinak by `co:` byla jen ozdoba. Dvě sabotáže: zúžení `co:`
+  na jediný soubor a vyhození `$CO` z akce.
+- **`test-cteni-zdroje`** chtěl `'druhá cesta'` jako POSLEDNÍ prvek
+  seznamu `ODPOVEDEL` — a spadl, jen protože za něj přibyl nový stav
+  `jineCeny` (§348). Vzor hlídal polohu, o kterou v tom pravidle
+  vůbec nejde; teď hlídá jen přítomnost.

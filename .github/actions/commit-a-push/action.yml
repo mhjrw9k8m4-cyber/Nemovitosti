@@ -1,0 +1,68 @@
+name: Commitnout a odeslat (s opakováním)
+description: >
+  Zařadí, co po sobě úloha nechala, commitne to a ODEŠLE — a když mezitím
+  do téže větve pushl někdo jiný, přerovná se na jeho práci a zkusí to
+  znovu. Bez tohohle opakování stačí jediný cizí push a celá práce úlohy
+  se zahodí: 3. 11. tak padl robot dat, který měl hotových 2 749 souborů
+  (nabídky se ten den neobnovily, protože do větve zapsala sonda). Pushují
+  čtyři úlohy do JEDNÉ větve, takže se potkají dřív nebo později.
+inputs:
+  zprava:
+    description: Text commitu.
+    required: true
+  co:
+    description: >
+      Co zařadit — buď „-A" (všechno, co po sobě úloha nechala, včetně
+      smazaných souborů), nebo konkrétní cesty oddělené mezerou. Každá
+      úloha si tím drží svůj rozsah: sonda nemá commitnout, co po sobě
+      nechal generátor.
+    required: false
+    default: '-A'
+  pokusu:
+    description: Kolik pokusů o odeslání celkem.
+    required: false
+    default: '4'
+runs:
+  using: composite
+  steps:
+    # Text commitu jde PŘES PROMĚNNOU PROSTŘEDÍ, ne do příkazu —
+    # hlídá to scripts/test-ci-prava.mjs.
+    - shell: bash
+      env:
+        ZPRAVA: ${{ inputs.zprava }}
+        POKUSU: ${{ inputs.pokusu }}
+        CO: ${{ inputs.co }}
+      run: |
+        set -euo pipefail
+        # Nekryté rozšíření $CO je tu ÚMYSL: jsou to cesty od úlohy,
+        # ne vstup od člověka, a „-A" se jinak předat nedá.
+        git add $CO
+        if git diff --cached --quiet; then
+          echo "Beze změny."
+          exit 0
+        fi
+        git config user.name "parcelka-bot"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git commit -m "$ZPRAVA"
+        VETEV="$(git rev-parse --abbrev-ref HEAD)"
+        for POKUS in $(seq 1 "$POKUSU"); do
+          if git push origin "HEAD:$VETEV"; then
+            echo "Odesláno (pokus $POKUS)."
+            exit 0
+          fi
+          if [[ "$POKUS" == "$POKUSU" ]]; then break; fi
+          echo "Odeslání neprošlo (pokus $POKUS) — přerovnávám na cizí práci a zkouším znovu."
+          git fetch origin "$VETEV"
+          # --autostash kvůli tomu, co po sobě nechal třeba git sám;
+          # při KONFLIKTU se rebase ZRUŠÍ a úloha spadne nahlas. Tiché
+          # „ours/theirs" by zahodilo buď cizí, nebo naši práci, a nikdo
+          # by se nedozvěděl, která.
+          if ! git rebase --autostash "origin/$VETEV"; then
+            git rebase --abort || true
+            echo "::error::Přerovnání na origin/$VETEV skončilo konfliktem — práce úlohy JE v commitu, ale neodeslala se. Je potřeba ruční zásah."
+            exit 1
+          fi
+          sleep $((POKUS * 3))
+        done
+        echo "::error::Odeslání neprošlo ani po $POKUSU pokusech."
+        exit 1

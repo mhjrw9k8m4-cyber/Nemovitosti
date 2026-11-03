@@ -270,9 +270,27 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   git('add', '-A');
   const c = spawnSync('git', ['-C', KOREN, 'commit', '-m', zprava], { encoding: 'utf8' });
   if (c.status !== 0) vzdat('commit se nepovedl: ' + String(c.stdout || c.stderr).slice(0, 120));
-  const p = spawnSync('git', ['-C', KOREN, 'push', 'origin', `HEAD:${povolena}`], { encoding: 'utf8' });
-  if (p.status !== 0) {
-    hlas(`::warning::Sebeoprava: oprava je hotová a dokázaná, ale push selhal — ${String(p.stderr || '').slice(0, 160)}`);
+  /* ODESLÁNÍ SE OPAKUJE. Do téhle větve pushuje pět úloh a jediný
+     cizí push mezitím znamená „! [rejected] (fetch first)" — tedy
+     hotovou a DOKÁZANOU opravu, která nikam nedojde. 3. 11. tak přišel
+     o celou práci robot dat. Mezi pokusy se přerovná na cizí práci;
+     konflikt se nepřepisuje, jen ohlásí. */
+  let p = null;
+  for (let pokus = 1; pokus <= 4; pokus++) {
+    p = spawnSync('git', ['-C', KOREN, 'push', 'origin', `HEAD:${povolena}`], { encoding: 'utf8' });
+    if (p.status === 0) break;
+    if (pokus === 4) break;
+    hlas(`Push neprošel (pokus ${pokus}) — přerovnávám na origin/${povolena}.`);
+    spawnSync('git', ['-C', KOREN, 'fetch', 'origin', povolena], { encoding: 'utf8' });
+    const r = spawnSync('git', ['-C', KOREN, 'rebase', '--autostash', `origin/${povolena}`], { encoding: 'utf8' });
+    if (r.status !== 0) {
+      spawnSync('git', ['-C', KOREN, 'rebase', '--abort'], { encoding: 'utf8' });
+      hlas('::warning::Sebeoprava: přerovnání skončilo konfliktem — oprava je v commitu, ale neodeslala se.');
+      process.exit(0);
+    }
+  }
+  if (!p || p.status !== 0) {
+    hlas(`::warning::Sebeoprava: oprava je hotová a dokázaná, ale push selhal — ${String((p && p.stderr) || '').slice(0, 160)}`);
     process.exit(0);
   }
   hlas(`\nSEBEOPRAVA: opraveno a nahráno (${zmenene.length} souborů). Rychlá sada prošla.`);

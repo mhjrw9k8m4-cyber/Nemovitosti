@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 import { porovnejZdroje, PRAH_SLEDOVANI, PRAH_PROPADU,
   porovnejSHistorii, zapisDoHistorie, DNU_HISTORIE, PRAH_POKLESU, HISTORIE_MAX,
   skenNeuplny, oznacNeuplne, PODIL_SELHANI, MIN_SELHANI,
-  nejvyssiOkdZDat, nejnizsiOkdZDat, oknoOkd, OKD_OKNO, OKD_OKNO_STROP } from './fetch-opportunities.mjs';
+  nejvyssiOkdZDat, nejnizsiOkdZDat, oknoOkd, OKD_OKNO, OKD_OKNO_STROP,
+  medianyCenZdroju, porovnejCeny, PRAH_CEN, PRAH_CEN_KUSU, DNU_CEN } from './fetch-opportunities.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN_H = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -447,6 +448,115 @@ pravda('první běh bez minulých čísel projde tiše',
     pravda(`a na ostrých datech vyjde skutečné ID (${skutecne})`, skutecne > 27100,
       'vyšlo ' + skutecne + ' — buď v datech žádná dražba z OK dražeb není, nebo se změnil tvar adresy');
   }
+}
+
+/* ----------------------------------------------------------------
+   11) TICHÁ ZMĚNA CENY. Zdroj vrátí stejně nabídek, stejně jich
+   projde — a ceny jsou o řád jinde. Žádné síto na POČET to nevidí.
+   ---------------------------------------------------------------- */
+{
+  function kusy(zdroj, kolik, cenaZaMetr) {
+    const a = [];
+    for (let i = 0; i < kolik; i++) {
+      /* Rozptyl kolem zadané ceny, ať medián není jediné číslo
+         opakované stokrát — jinak by zkouška měřila lehčí úlohu,
+         než jaká je ve skutečnosti. */
+      const vymera = 500 + (i % 50) * 37;
+      a.push({ zdroj, area: vymera, price: Math.round(cenaZaMetr * vymera * (0.5 + (i % 7) / 7)) });
+    }
+    return a;
+  }
+  const HIST = { verze: 3, dny: {}, ceny: {
+    '2026-10-29': { Bezrealitky: 50 }, '2026-10-30': { Bezrealitky: 52 },
+    '2026-10-31': { Bezrealitky: 48 }, '2026-11-01': { Bezrealitky: 51 },
+  } };
+
+  const m = medianyCenZdroju(kusy('Bezrealitky', 200, 50), new Set(['Bezrealitky']));
+  pravda('medián Kč/m² se u zdroje spočítá', m.Bezrealitky > 20 && m.Bezrealitky < 80,
+    JSON.stringify(m));
+
+  /* POČTY TU STOJÍ ČÍSLEM, NE PŘES KONSTANTU. S `PRAH_CEN_KUSU - 1`
+     se zkouška snížené mezi PŘIZPŮSOBÍ a sabotáž jí projde — zkusil
+     jsem to a prošla (táž past jako §337). Devadesát devět a sto jsou
+     tedy napsané ručně, a sama mez se kontroluje zvlášť. */
+  pravda('zdroj s 99 nabídkami s cenou se vůbec nepočítá',
+    medianyCenZdroju(kusy('Bezrealitky', 99, 50), new Set(['Bezrealitky'])).Bezrealitky === undefined,
+    'medián z malého vzorku kolísá sám od sebe (p10 28 – p90 2 373 Kč/m² na ostrých datech)');
+  pravda('a od sta nabídek už ano',
+    medianyCenZdroju(kusy('Bezrealitky', 100, 50), new Set(['Bezrealitky'])).Bezrealitky > 0);
+  pravda('mez nesmí spadnout pod sto kusů',
+    PRAH_CEN_KUSU >= 100,
+    `je ${PRAH_CEN_KUSU} — pod stem kusy se medián Bezrealitek houpe sám od sebe,`
+    + ' takže by hlídač začal hlásit vady, které nejsou');
+
+  pravda('nabídka bez ceny nebo bez výměry se do mediánu nepočítá',
+    medianyCenZdroju([...kusy('Bezrealitky', PRAH_CEN_KUSU, 50),
+      { zdroj: 'Bezrealitky', area: 0, price: 1e9 }, { zdroj: 'Bezrealitky', area: 500, price: 0 }],
+      new Set(['Bezrealitky'])).Bezrealitky < 200);
+
+  pravda('obvyklý den nic nehlásí',
+    porovnejCeny(HIST, { Bezrealitky: 53 }, '2026-11-03').length === 0);
+  const skok = porovnejCeny(HIST, { Bezrealitky: 50000 }, '2026-11-03');
+  pravda('cena za metr vyměněná za celkovou cenu se najde',
+    skok.length === 1 && skok[0].druh === 'jineCeny' && skok[0].pomer > 100,
+    JSON.stringify(skok));
+  const dolu = porovnejCeny(HIST, { Bezrealitky: 0.005 }, '2026-11-03');
+  pravda('a stejně tak posun DOLŮ (hektary místo metrů)',
+    dolu.length === 1 && dolu[0].pomer > 1000, JSON.stringify(dolu));
+  pravda(`těsně pod faktorem ${PRAH_CEN} se mlčí, nad ním se hlásí`,
+    porovnejCeny(HIST, { Bezrealitky: 50 * (PRAH_CEN - 0.2) }, '2026-11-03').length === 0
+    && porovnejCeny(HIST, { Bezrealitky: 50 * (PRAH_CEN + 0.2) }, '2026-11-03').length === 1);
+
+  pravda(`z méně než ${DNU_CEN} dnů se nesoudí (nový zdroj by dostal náhodný den proti dnešku)`,
+    porovnejCeny({ ceny: { '2026-11-01': { Bezrealitky: 50 } } }, { Bezrealitky: 50000 }, '2026-11-03').length === 0);
+  /* DNEŠEK SE DO REFERENCE NEPOČÍTÁ. První podoba téhle kontroly
+     měla plnou historii, a tam to nic nerozhodne: medián mediánů se
+     jedním dnem skoro nepohne, takže sabotáž prošla. Rozhoduje to
+     u KRÁTKÉ historie: se dvěma dny se soudit nemá, a kdyby se bral
+     i dnešek, byly by tři — a zdroj by se soudil podle sebe sama. */
+  pravda('dnešek se do reference nepočítá',
+    porovnejCeny({ ceny: {
+      '2026-10-31': { Bezrealitky: 50 }, '2026-11-01': { Bezrealitky: 50 },
+      '2026-11-03': { Bezrealitky: 50000 },
+    } }, { Bezrealitky: 50000 }, '2026-11-03').length === 0,
+    'dva dny historie na soud nestačí — dnešní zápis je nesmí doplnit na tři');
+  /* JEDEN DIVNÝ DEN NESMÍ UDĚLAT NOVOU NORMU: proto medián mediánů,
+     ne včerejšek. */
+  pravda('jeden divný den v historii nález nezruší',
+    porovnejCeny({ ceny: { ...HIST.ceny, '2026-11-02': { Bezrealitky: 50000 } } },
+      { Bezrealitky: 50000 }, '2026-11-03').length === 1);
+
+  /* ZÁPIS DO HISTORIE: cena jen za zdroj v pořádku. */
+  const hNove = zapisDoHistorie(HIST, [{ nazev: 'Bezrealitky', stav: 'ok', pocet: 1600 }],
+    '2026-11-03', { Bezrealitky: 51 });
+  pravda('cena zdroje v pořádku se do historie zapíše',
+    hNove.ceny['2026-11-03'] && hNove.ceny['2026-11-03'].Bezrealitky === 51,
+    JSON.stringify(hNove.ceny['2026-11-03'] || null));
+  const hVada = zapisDoHistorie(HIST, [{ nazev: 'Bezrealitky', stav: 'jineCeny', pocet: 1600 }],
+    '2026-11-03', { Bezrealitky: 50000 });
+  pravda('cena označeného zdroje se NEZAPÍŠE (jinak by si vada udělala normu)',
+    !(hVada.ceny['2026-11-03'] || {}).Bezrealitky,
+    JSON.stringify(hVada.ceny['2026-11-03'] || null));
+  pravda('ale jeho POČET v historii zůstane (den se nesmí ztratit)',
+    hVada.dny['2026-11-03'] && hVada.dny['2026-11-03'].Bezrealitky,
+    JSON.stringify(hVada.dny['2026-11-03'] || null));
+  pravda('historie cen se stříhá na stejnou délku jako počty',
+    Object.keys(hNove.ceny).length <= HISTORIE_MAX);
+
+  /* STRUKTURÁLNĚ: co z nálezu PLYNE. Kotví se na to konkrétní místo,
+     ne na jméno funkce — definice stojí jinde v souboru. */
+  const kod = readFileSync(path.join(KOREN_H, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+  const iNalez = kod.indexOf('for (const n of porovnejCeny(');
+  const iRaw = kod.indexOf('  const raw = results', iNalez);
+  pravda('robot nález cen opravdu vyhodnocuje (ne jen funkci má)', iNalez > 0);
+  pravda('a nabídky zdroje s podezřelými cenami do dat NEPUSTÍ',
+    iRaw > iNalez && kod.slice(iRaw, iRaw + 400).includes('jineCeny.has(zdrojNabidky('),
+    'filtr u sestavení `raw` chybí — nález by se jen vypsal a špatné ceny by šly na web');
+  pravda('a stav zapíše, aby držení nabídek vrátilo ty z minulého běhu',
+    kod.slice(iNalez, iRaw > 0 ? iRaw : undefined).includes("z.stav = 'jineCeny'"));
+  pravda('dnešní medián se předává zápisu do historie',
+    /zapisDoHistorie\(historie, zdroje, DNES, medianyCen\)/.test(kod),
+    'bez toho by historie cen zůstala prázdná a hlídač by nikdy neměl s čím srovnávat');
 }
 
 console.log('\nHlídač jednotlivých zdrojů');

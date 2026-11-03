@@ -407,6 +407,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sonda-podminky.mjs
 
+      - name: Cizí push nezahodí práci úlohy
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-push-opakovani.mjs
+
       - name: Robot dat doběhne (bez sítě, v pískovišti)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-robot-dojede.mjs

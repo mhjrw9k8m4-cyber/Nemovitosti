@@ -1571,7 +1571,7 @@ function median(cisla) {
    obvyklým způsobem, ale data přinesl (§334) — a kdyby tu nestál,
    udělala by se v historii počtů děra přesně v době, kdy je nejvíc
    potřeba vidět, co se dělo. */
-const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje', 'druhá cesta']);
+const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje', 'druhá cesta', 'jineCeny']);
 /* Den v historii je buď číslo (zdroj byl ten den v pořádku), nebo
    `{p: počet, v: 1}` — počet ze dne, kdy byl zdroj označený za oslabený.
    Starší soubory mají jen čísla a čtou se dál. */
@@ -1629,8 +1629,9 @@ export function porovnejSHistorii(historie, ted, dnes) {
 }
 
 /** Dnešní počty do historie; starší než HISTORIE_MAX dnů se zahodí. */
-export function zapisDoHistorie(historie, ted, dnes) {
+export function zapisDoHistorie(historie, ted, dnes, mediany) {
   const dny = Object.assign({}, (historie && historie.dny) || {});
+  const ceny = Object.assign({}, (historie && historie.ceny) || {});
   const dnesni = {};
   /* ZAPISUJE SE KAŽDÁ SKUTEČNÁ ODPOVĚĎ, ne jen ta bezvadná. Dřív tu
      stála podmínka `z.stav === 'ok'` — a protože hlídače běží PŘED
@@ -1647,9 +1648,20 @@ export function zapisDoHistorie(historie, ted, dnes) {
     dnesni[z.nazev] = z.stav === 'ok' ? pocet : { p: pocet, v: 1 };
   }
   dny[dnes] = dnesni;
-  const klice = Object.keys(dny).sort();
-  for (const k of klice.slice(0, Math.max(0, klice.length - HISTORIE_MAX))) delete dny[k];
-  return { verze: 2, dny };
+  /* CENY SE ZAPISUJÍ JEN ZA ZDROJ V POŘÁDKU. Den s označenou cenou by
+     se jinak za pár dnů stal novou normou a hlídač by sám sebe
+     odzbrojil — táž lekce jako u počtů výš. */
+  const cenyDnes = {};
+  const vPoradku = new Set((ted || []).filter((z) => z && z.stav === 'ok').map((z) => z.nazev));
+  for (const nazev of Object.keys(mediany || {})) {
+    if (vPoradku.has(nazev) && mediany[nazev] > 0) cenyDnes[nazev] = mediany[nazev];
+  }
+  if (Object.keys(cenyDnes).length) ceny[dnes] = cenyDnes;
+  for (const mapa of [dny, ceny]) {
+    const k = Object.keys(mapa).sort();
+    for (const stary of k.slice(0, Math.max(0, k.length - HISTORIE_MAX))) delete mapa[stary];
+  }
+  return { verze: 3, dny, ceny };
 }
 
 /* ZÁSTUPNÁ CENA. Inzerent, který cenu nechce psát, ji nenechá prázdnou —
@@ -1723,6 +1735,88 @@ export function porovnejZdroje(minule, ted) {
     /* Zdroj, který víc nabídek zahodí než přinese, je rozbitý, i když
        něco vrátil — a sám o sobě by se tvářil jako „ok". */
     else if ((z.preskoceno || 0) > z.pocet) nalezy.push({ nazev: z.nazev, druh: 'zahazuje', drive, ted: z.pocet, preskoceno: z.preskoceno });
+  }
+  return nalezy;
+}
+
+/* TICHÁ ZMĚNA CENY U ZDROJE
+ * =================================================================
+ * Všechna dosavadní síta hlídají POČET: nula, propad na polovinu, víc
+ * zahozeného než přineseného. Je tu ale změna, kterou žádné z nich
+ * nevidí: zdroj vrátí stejně nabídek, stejně jich projde — ale CENY
+ * budou jiné. Stačí, aby se na cizím webu posunul selektor z celkové
+ * ceny na cenu za metr (nebo obráceně), aby se výměra začala udávat
+ * v hektarech, nebo aby se do ceny připletlo číslo vedle.
+ *
+ * Pro TENHLE web je to ta nejdražší možná vada: řadí se podle
+ * výhodnosti, verdikty („výhodná cena") a mapa se počítají z Kč/m²,
+ * takže špatná cena nepokazí jeden řádek — pokazí celé doporučení.
+ *
+ * MĚŘENO na ostrých datech 3. 11. (1 996 nabídek): medián Kč/m² je
+ * u každého zdroje charakteristický a navzájem velmi různý —
+ * SPÚ 9, Farmy 42, Bezrealitky 50, OK dražby 75, Dražby 1 659.
+ * Posun jednotky by u Bezrealitek znamenal skok z 50 na tisíce;
+ * záměna celkové ceny za cenu na metr je faktor ~1 000 (medián
+ * výměry), hektary 10 000. Takové skoky jsou nepřehlédnutelné —
+ * jen se na ně do dneška nikdo nekoukal.
+ *
+ * PROČ AŽ OD STA NABÍDEK. Medián malého vzorku kolísá sám od sebe,
+ * a to u tohohle webu silně: rozpětí Bezrealitek je p10 28 až
+ * p90 2 373 Kč/m², tedy 85×. Při dvaceti kusech by se medián mohl
+ * houpat v řádu jednotek, při stovce je v pásu p40–p60, což je
+ * u těchto dat asi 1,5×. Mez PRAH_CEN_KUSU = 100 je tedy
+ * ZMĚŘENÁ, ne odhadnutá — a pokrývá to, na čem záleží: Bezrealitky
+ * a SPÚ nesou 1 910 z 1 966 nabídek s cenou, tedy 97 %.
+ *
+ * PROČ FAKTOR 4. Nad stem kusů se vzorkováním přes 1,5× nedostaneš,
+ * skutečné vady začínají u 1 000×. Čtyřka je mezi tím s velkou
+ * rezervou na obě strany: trh ani změna skladby nabídky se za den
+ * nečtyřnásobí.
+ *
+ * SROVNÁVÁ SE PROTI MEDIÁNU MEDIÁNŮ, ne proti včerejšku: jeden divný
+ * den se tak nestane referencí. A zapisuje se jen den, kdy byl zdroj
+ * v pořádku — stejná lekce jako u počtů (§?): kdyby se zapisoval i
+ * den s označenou cenou, vada by si za pár dnů udělala novou normu.
+ * ================================================================= */
+export const PRAH_CEN_KUSU = 100;
+export const PRAH_CEN = 4;
+export const DNU_CEN = 3;
+
+/** Medián Kč/m² na zdroj; zdroje s málo kusy se nepočítají vůbec. */
+export function medianyCenZdroju(nabidky, znama) {
+  const podle = new Map();
+  for (const o of (nabidky || [])) {
+    if (!o || !(o.price > 0) || !(o.area > 0)) continue;
+    const z = zdrojNabidky(o, znama);
+    if (!z) continue;
+    if (!podle.has(z)) podle.set(z, []);
+    podle.get(z).push(o.price / o.area);
+  }
+  const ven = {};
+  for (const [z, v] of podle) {
+    if (v.length < PRAH_CEN_KUSU) continue;
+    v.sort((a, b) => a - b);
+    ven[z] = v[Math.floor(v.length / 2)];
+  }
+  return ven;
+}
+
+/** Dnešní medián ceny proti mediánu mediánů z historie. */
+export function porovnejCeny(historie, dnesni, dnes) {
+  const ceny = (historie && historie.ceny) || {};
+  const klice = Object.keys(ceny).filter((d) => d < dnes).sort().slice(-DNU_HISTORIE);
+  const nalezy = [];
+  for (const nazev of Object.keys(dnesni || {})) {
+    const rada = klice.map((d) => (ceny[d] || {})[nazev])
+      .filter((x) => typeof x === 'number' && x > 0).sort((a, b) => a - b);
+    /* Z jednoho nebo dvou dnů se medián nepočítá — u nového zdroje
+       by to byl náhodný den proti dnešku. */
+    if (rada.length < DNU_CEN) continue;
+    const drive = rada[Math.floor(rada.length / 2)];
+    const ted = dnesni[nazev];
+    if (!(drive > 0) || !(ted > 0)) continue;
+    const pomer = ted > drive ? ted / drive : drive / ted;
+    if (pomer >= PRAH_CEN) nalezy.push({ nazev, druh: 'jineCeny', drive, ted, pomer });
   }
   return nalezy;
 }
@@ -2544,8 +2638,26 @@ async function main() {
         + ` ${n.dnu} dnů je ${n.median}. Není to skok, je to pomalý úbytek — podívejte se,`
         + ' jestli parser nepřestal část stránky čist.');
   }
+  /* A třetí síto: nejde o POČET, ale o CENU. Zdroj může vrátit stejně
+     nabídek a mít přitom ceny posunuté o řád — viz komentář
+     u medianyCenZdroju. Co se nabídek toho zdroje stane, stojí níž
+     u sestavení `raw`. */
+  const znamaJmena = new Set(zdroje.map((z) => z.nazev));
+  const medianyCen = medianyCenZdroju(
+    results.filter((r) => r.status === 'fulfilled').flatMap((r) => r.value || []), znamaJmena);
+  const jineCeny = new Set();
+  for (const n of porovnejCeny(historie, medianyCen, DNES)) {
+    const z = zdroje.find((x) => x.nazev === n.nazev);
+    jineCeny.add(n.nazev);
+    if (z) z.stav = 'jineCeny';
+    console.error(`POZOR: zdroj ${n.nazev} má dnes medián ${Math.round(n.ted)} Kč/m²,`
+      + ` historický medián je ${Math.round(n.drive)} Kč/m² — ${n.pomer.toFixed(1)}× jinde.`
+      + ' Tolik se trh za den nepohne; vypadá to na změnu toho, CO se na cizí stránce čte'
+      + ' (celková cena místo ceny za metr, hektary místo metrů). Dnešní nabídky tohoto'
+      + ' zdroje se NEBEROU a drží se ty z minulého běhu.');
+  }
   try {
-    writeFileSync(HIST_ZDROJU, JSON.stringify(zapisDoHistorie(historie, zdroje, DNES)));
+    writeFileSync(HIST_ZDROJU, JSON.stringify(zapisDoHistorie(historie, zdroje, DNES, medianyCen)));
   } catch (e) { console.error('Historii zdrojů nešlo zapsat: ' + e.message); }
 
   /* POJISTKA NA PRÁZDNÝ ZDROJ STOJÍ DÁL — až za druhou cestou
@@ -2568,9 +2680,14 @@ async function main() {
     else console.error(`Zdroj ${z.nazev} SELHAL: ${z.chyba}`);
   });
 
+  /* ZDROJ S PODEZŘELÝMI CENAMI SE DNES NEBERE. Lepší je den stará
+     cena než cena o řád jinde: podle Kč/m² se řadí, počítá verdikt
+     i kreslí mapa. Zdroj zůstane se stavem „jineCeny", takže mu
+     držení nabídek (§220) vrátí ty z minulého běhu. */
   const raw = results
     .filter((r) => r.status === 'fulfilled')
     .flatMap((r) => r.value || [])
+    .filter((o) => !jineCeny.size || !jineCeny.has(zdrojNabidky(o, znamaJmena)))
     .map((o) => geocode(o));
 
   /* VÝPADEK JEDNOHO ZDROJE NESMÍ SMAZAT JEHO NABÍDKY.
