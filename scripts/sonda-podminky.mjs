@@ -23,7 +23,7 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { smimeCist, telo } from './robots.mjs';
-import { tvorProhlizec } from './cti-prohlizecem.mjs';
+import { tvorProhlizec, zahozene } from './cti-prohlizecem.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 
 const OUT = new URL('../data/zdroje-podminky.json', import.meta.url);
@@ -342,7 +342,11 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
         /* Vezme se to jen tehdy, když je to OPRAVDU VÍC. Jinak by se
            do nálezu zapsalo „čteno prohlížečem" i tam, kde to nic
            nepřineslo, a vypadalo by to jako víc práce, než se udělalo. */
-        if (je > bylo) { html = v.html; vykresleno = { bylo, je, zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 }; }
+        /* I když prohlížeč nepomohl, zapíše se, CO se zahodilo:
+           jméno cizího hostu nebo zakázaná cesta je odpověď na to,
+           proč se text nenašel. */
+        if (je > bylo) { html = v.html; vykresleno = Object.assign({ bylo, je }, zahozene(v)); }
+        else { vykresleno = Object.assign({ bylo, je, nepomohlo: true }, zahozene(v)); }
       } catch (e) { vykresleno = { chyba: String(e && e.message ? e.message : e).slice(0, 120) }; }
     }
     const pasaze = oAutomatu(html);
@@ -371,7 +375,8 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
       zminkyUkazka: pasaze.filter((x) => !x.kontext).slice(0, 2),
       /* Odkazy na dokumenty (PDF, DOC) — vodítko, kde text je, když ho
          na stránce není. Nestahují se. */
-      cteno: vykresleno && !vykresleno.chyba ? 'prohlížečem' : 'ze serveru',
+      cteno: vykresleno && !vykresleno.chyba && !vykresleno.nepomohlo
+        ? 'prohlížečem' : 'ze serveru',
       vykresleno: vykresleno || undefined,
       dokumenty: [...String(html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]
         .map((m) => absolutni(m[1], o.url)).filter(Boolean).slice(0, 5),

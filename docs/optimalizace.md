@@ -21876,3 +21876,54 @@ hosty se nestahovaly. Výsledek je ale pořád „na úplné podmínky je to
 málo" — a to je správná odpověď, ne vylepšená: skutečné podmínky jsou
 v pěti PDF na zakázaném `api.bezrealitky.cz`. U `elektronickedrazby.cz`
 prohlížeč nepomohl (104 znaků zůstalo 104) a je to v nálezu vidět.
+
+## §354 — „8 cizích hostů" neodpovědělo na nic: zahozené se zapisují jmenovitě
+
+**Co to naostro ukázalo.** První měření sondy zdrojů s prohlížečem
+(3. 11.) skončilo u ÚZSVM takhle: verdikt zůstal **skořápka**,
+`nepomohlo: true`, **zablokováno 0, cizích 8**. Prohlížeč tedy
+stránku vykreslil, nic mu v tom robots.txt nebránil — a obsah přesto
+nebyl. Jediné, co se dalo z nálezu vyčíst, bylo číslo 8. A na číslo se
+nedá nic rozhodnout: osm cizích hostů mohou být měřidla a reklama,
+a pak je skořápka opravdu skořápka, **nebo** vlastní datové rozhraní
+na sousední doméně, a to je druhá cesta ke zdroji, o které má majitel
+vědět. Nález obě možnosti sléval do jednoho čísla.
+
+**Co se změnilo.** Čtečka (`scripts/cti-prohlizecem.mjs`) si teď vede
+jména: ke každému zahozenému požadavku zapíše **host** (u cizích) nebo
+**cestu** (u zákazů z robots.txt), spolu s počtem požadavků, seřazeno
+podle počtu a se stropem `STROP_JMEN = 8`. Strop platí na **jména**,
+ne na počty — `cizich` dál říká pravdu o rozsahu, i když jmen je víc
+než osm. Prázdné seznamy se do nálezu nepíšou.
+
+Oběma sondami to prochází přes jeden `zahozene(v)`, takže se to nikde
+neopisuje. U sondy podmínek se navíc zapisuje i to, **když prohlížeč
+nepomohl** — dřív se v tom případě nezapsalo nic, takže „málo textu"
+vypadalo jako vlastnost zdroje, i když to mohla být jen zakázaná
+adresa. `cteno` v takovém případě zůstává `ze serveru`, protože se
+opravdu čte serverové HTML.
+
+V diagnostice to vlastník vidí u skořápek i u čtených stránek:
+„prohlížeč nepomohl; obsah si sahal na cizí hosty: `api.…` × 5" nebo
+„robots.txt nedovolil: `/api/podminky.json`".
+
+**Čím je to podložené.** `scripts/test-cti-prohlizecem.mjs` má 13
+kontrol (bylo 8): že se jméno cizího hostu i zakázaná cesta opravdu
+zapíšou, že strop jmen drží (fixtura má 10 cizích hostů proti stropu
+8) a že se jím **počet nekrátí**. Prokázáno pěti sabotážemi — bez
+zápisu jména, bez zápisu cesty, bez stropu, s počtem zkráceným na
+strop, s prázdnými seznamy v nálezu; každá shodila právě to, co měla.
+
+`scripts/test-diagnostika-zdroje.mjs` má 14 kontrol (bylo 12): jména
+se do stránky dostanou a nálož v nich se nevykoná. Fixtura nese nálož
+**ve jménu hostu i v zakázané cestě**, a obě jdou do místa, které se
+měří — do skořápky a do čtené stránky; kdyby tam nebyla, sabotáž „bez
+escapování" by prošla zeleně (táž past jako v §348). Prokázáno čtyřmi
+sabotážemi: dvě bez escapování (obě shodily kontrolu XSS), dvě
+s vynechaným výpisem (shodily kontrolu, že je jméno vidět).
+
+**Poznámka k poctivosti měření.** Dvě z devíti sabotáží se poprvé
+vůbec nevložily (`sed` si v `|| 0` přečetl volbu a ` ` se
+v argumentu rozpadlo) a zkouška u nich hlásila zeleno. Zelená u
+nevložené sabotáže neznamená nic; obě se opakovaly přes doslovnou
+záměnu v souboru, až když šlo potvrdit, že v souboru opravdu jsou.

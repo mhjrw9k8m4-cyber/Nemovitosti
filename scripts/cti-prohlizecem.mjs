@@ -26,6 +26,20 @@
    odkazu. Nic se neobchází, jen se čte to, co by viděl člověk.
    ================================================================== */
 
+/**
+ * Co se při vykreslování zahodilo, ve tvaru pro nález sondy.
+ * Prázdné seznamy se nezapisují, aby nález nenafukovaly.
+ */
+export function zahozene(v) {
+  const z = { zablokovano: (v && v.zablokovano) || 0, cizich: (v && v.cizich) || 0 };
+  if (v && v.cizinci && v.cizinci.length) z.cizinci = v.cizinci;
+  if (v && v.zakazane && v.zakazane.length) z.zakazane = v.zakazane;
+  return z;
+}
+
+/** Kolik jmen zahozených hostů a zakázaných cest se nejvýš zapíše. */
+export const STROP_JMEN = 8;
+
 /** Stejný host, nebo jeho podřízená část (www.x.cz ↔ x.cz ↔ api.x.cz). */
 export function stejnyWeb(host, cil) {
   const a = String(host || '').replace(/^www\./, '').toLowerCase();
@@ -52,18 +66,42 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
     userAgent: ua || undefined, locale: 'cs-CZ', serviceWorkers: 'block',
   });
   let zablokovano = 0, cizich = 0;
+  /* PROČ SE ZAHOZENÉ ZAPISUJÍ JMENOVITĚ. Samo číslo („8 cizích hostů")
+     neodpovídá na nic. Teprve jméno rozhodne, jestli šlo o měřidla a
+     reklamu — pak je skořápka opravdu skořápka — nebo o vlastní datové
+     rozhraní na sousední doméně, a to je druhá cesta, o které má
+     majitel vědět. Totéž u zákazů: když robots.txt nedovoluje právě tu
+     adresu, ze které se nabídky načítají, je odpověď na „smíme to
+     čist?" záporná, a je to měřením podložené, ne odhad. */
+  const cizinci = new Map();
+  const zakazane = new Map();
   await ctx.route('**/*', async (r) => {
     const u = new URL(r.request().url());
-    if (!stejnyWeb(u.hostname, ctx.__host)) { cizich++; return r.abort(); }
+    if (!stejnyWeb(u.hostname, ctx.__host)) {
+      cizich++;
+      cizinci.set(u.hostname, (cizinci.get(u.hostname) || 0) + 1);
+      return r.abort();
+    }
     let smi = true;
     try { smi = await smiCist(u.href); } catch (e) { smi = false; }
-    if (!smi) { zablokovano++; return r.abort(); }
+    if (!smi) {
+      zablokovano++;
+      zakazane.set(u.pathname, (zakazane.get(u.pathname) || 0) + 1);
+      return r.abort();
+    }
     return r.continue();
   });
+  /* Seřadit podle počtu požadavků: co se stahuje nejčastěji, bývá to
+     podstatné. Strop je proti tomu, aby se do nálezu nevešla stovka
+     měřidel. */
+  const nejcastejsi = (m) => [...m.entries()]
+    .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(b[0]))
+    .slice(0, STROP_JMEN)
+    .map(([co, kolik]) => ({ co, kolik }));
   return {
     async vykresli(url) {
       ctx.__host = new URL(url).hostname;
-      zablokovano = 0; cizich = 0;
+      zablokovano = 0; cizich = 0; cizinci.clear(); zakazane.clear();
       const page = await ctx.newPage();
       try {
         /* `domcontentloaded` a pak doběh na síti: `load` na stránkách
@@ -72,7 +110,10 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
         await page.waitForLoadState('networkidle', { timeout: casLimit }).catch(() => {});
         const html = await page.content();
         const text = await page.evaluate(() => (document.body && document.body.innerText) || '');
-        return { html, text, zablokovano, cizich };
+        return {
+          html, text, zablokovano, cizich,
+          cizinci: nejcastejsi(cizinci), zakazane: nejcastejsi(zakazane),
+        };
       } finally { await page.close().catch(() => {}); }
     },
     async zavri() { await ctx.close().catch(() => {}); await prohlizec.close().catch(() => {}); },

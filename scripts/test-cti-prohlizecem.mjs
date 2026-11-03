@@ -17,7 +17,7 @@
 import { chromium } from 'playwright-core';
 import http from 'node:http';
 import { pricinaChyb } from './chyby-hlaska.mjs';
-import { tvorProhlizec, stejnyWeb } from './cti-prohlizecem.mjs';
+import { tvorProhlizec, stejnyWeb, zahozene, STROP_JMEN } from './cti-prohlizecem.mjs';
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -33,6 +33,13 @@ const STRANKA = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><tit
 <script src="https://cizi.example.org/mereni.js"></script></body></html>`;
 const SKRIPT = `document.getElementById('t').textContent = ${JSON.stringify(VETA)};`;
 
+/* Stránka s PŘEBYTKEM cizích hostů: na ní se měří, že strop jmen drží
+   a že se přitom nelže o počtu zahozených požadavků. */
+const MNOHO = 10;
+const STRANKA_MNOHO = '<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>M</title></head><body>'
+  + Array.from({ length: MNOHO }, (_, i) => `<script src="https://m${i}.example.org/x.js"></script>`).join('')
+  + '</body></html>';
+
 /* Server si pamatuje, co si u něj kdo vyžádal — na tom se pozná, že
    se zahozené soubory opravdu nestahovaly, ne jen nepoužily. */
 const dotazy = [];
@@ -40,6 +47,7 @@ const server = http.createServer((req, res) => {
   dotazy.push(req.url);
   if (req.url === '/podminky') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(STRANKA); }
   if (req.url === '/podminky.js') { res.writeHead(200, { 'content-type': 'application/javascript' }); return res.end(SKRIPT); }
+  if (req.url === '/mnoho') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(STRANKA_MNOHO); }
   if (req.url === '/obrazek.png') { res.writeHead(200, { 'content-type': 'image/png' }); return res.end(Buffer.alloc(8)); }
   res.writeHead(404); res.end('nic');
 });
@@ -65,6 +73,12 @@ pravda('v samotném HTML ta věta NENÍ (jinak by zkouška nic neměřila)',
     pravda('a cizí host se nestahuje vůbec',
       v.cizich >= 1 && !dotazy.some((u) => /mereni/.test(u)),
       `cizích zahozeno ${v.cizich}, dotazy: ${dotazy.join(' ')}`);
+    /* PROČ JMENOVITĚ. „8 cizích hostů" u ÚZSVM neodpovědělo na nic.
+       Jméno rozhodne, jestli to byla měřidla, nebo vlastní datové
+       rozhraní na sousední doméně — tedy druhá cesta ke zdroji. */
+    pravda('a je vidět, KTERÝ cizí host to byl',
+      (v.cizinci || []).some((c) => c.co === 'cizi.example.org' && c.kolik >= 1),
+      'cizinci: ' + JSON.stringify(v.cizinci));
   } finally { await p.zavri(); }
 }
 
@@ -81,10 +95,34 @@ pravda('v samotném HTML ta věta NENÍ (jinak by zkouška nic neměřila)',
       !dotazy.some((u) => u === '/podminky.js'), 'dotazy: ' + dotazy.join(' '));
     pravda('a je vidět, kolik požadavků se kvůli robots.txt zahodilo',
       v.zablokovano >= 1, 'zablokováno ' + v.zablokovano);
+    pravda('a je vidět, KTEROU cestu robots.txt nedovolil',
+      (v.zakazane || []).some((z) => z.co === '/podminky.js'),
+      'zakázané: ' + JSON.stringify(v.zakazane));
     pravda('text pak chybí — a to se nesmí vydávat za „nic tam není"',
       !v.text.includes('vytěžovat'), v.text.replace(/\s+/g, ' ').slice(0, 80));
   } finally { await p.zavri(); }
 }
+
+/* 3b) STROP JMEN drží, ale POČET se o něj nekrátí. Kdyby se krátil
+       obojí, nález by tvrdil, že cizích hostů bylo osm, i když jich
+       bylo sto. */
+{
+  const p = await tvorProhlizec({ chromium, smiCist: async () => true, ua: 'zkouska' });
+  try {
+    const v = await p.vykresli(`${BASE}/mnoho`);
+    pravda(`jmen zahozených hostů se zapíše nejvýš ${STROP_JMEN}`,
+      STROP_JMEN < MNOHO && (v.cizinci || []).length === STROP_JMEN,
+      `jmen ${(v.cizinci || []).length}, strop ${STROP_JMEN}, na stránce ${MNOHO}`);
+    pravda('ale počet zahozených požadavků se stropem nekrátí',
+      v.cizich >= MNOHO, `zahozeno ${v.cizich}, na stránce ${MNOHO}`);
+  } finally { await p.zavri(); }
+}
+
+/* 3c) Prázdné seznamy se do nálezu nepíšou — ať nenafukují soubor. */
+pravda('prázdný seznam se do nálezu nezapíše',
+  !('cizinci' in zahozene({ zablokovano: 0, cizich: 0, cizinci: [], zakazane: [] }))
+  && zahozene({ cizich: 2, cizinci: [{ co: 'a.cz', kolik: 2 }] }).cizinci.length === 1,
+  JSON.stringify(zahozene({ zablokovano: 0, cizich: 0, cizinci: [], zakazane: [] })));
 
 /* 4) Bez prohlížeče se nic nepředstírá. */
 {

@@ -59,6 +59,16 @@ const SONDA = fixtura('zdroje-sonda.json', (N) => {
   if (!slibny) throw new Error('v nálezu sondy není slibný kandidát — nálož by neměla kam jít');
   kam.push(slibny);
   for (const z of kam) z.jmeno = String(z.jmeno) + NALOZ;
+  /* ZAHOZENÉ JMENOVITĚ. Jméno cizího hostu je text z cizího webu a
+     jde do DETAILU řádku, tedy do innerHTML — proto v něm nálož je.
+     A protože se vypisuje jen u SKOŘÁPEK, musí skořápka ve fixtuře
+     opravdu být; kdyby nebyla, kontrola by na to místo nedosáhla a
+     sabotáž „bez escapování" by prošla zeleně (viz §348). */
+  const skorapka = (N.zdroje || []).find((z) => z.slibuje === 'skořápka');
+  if (!skorapka) throw new Error('v nálezu sondy není skořápka — zahozené by neměly kde být vidět');
+  skorapka.vykresleno = { url: 'https://www.skorapka.cz/', bylo: 'skořápka', je: 'skořápka',
+    nepomohlo: true, zablokovano: 0, cizich: 8,
+    cizinci: [{ co: 'api.skorapka.cz' + NALOZ, kolik: 5 }, { co: 'mereni.example.org', kolik: 3 }] };
 });
 const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   P.updated = '2026-11-03';
@@ -79,6 +89,9 @@ const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   z.verdikt = 'přečteno (1 pasáží o automatickém přístupu)';
   z.stranky = [{ url: 'https://www.zak.cz/podminky', popis: 'Obchodní podmínky', stav: 'přečteno',
     pasaze: [{ slovo: 'robot', text: 'Je zakázáno používat robota k vytěžování obsahu.' }] }];
+  z.stranky[0].cteno = 'ze serveru';
+  z.stranky[0].vykresleno = { bylo: 300, je: 310, nepomohlo: true, zablokovano: 2, cizich: 0,
+    zakazane: [{ co: '/api/podminky.json' + NALOZ, kolik: 2 }] };
   z.dokumenty = ['https://www.zak.cz/podminky.pdf'];
   P.zdroje = [z, k];
 });
@@ -173,6 +186,18 @@ pravda('čtené stránky jsou odkazy, na které jde kliknout',
 pravda('zmínky, které o přístupu nejsou, se přiznají (a nepočítají)',
   /3 zmínek, které o přístupu k obsahu nejsou/.test(m.text),
   'bez toho vypadá „nic o automatu" jako že se nehledalo — naměřeno 9 takových zmínek na šesti webech');
+
+/* ZAHOZENÉ JMENOVITĚ. Samo „8 cizích hostů" u ÚZSVM 3. 11. naostro
+   neodpovědělo na nic. Měří se tedy, že se do diagnostiky dostane
+   JMÉNO — jen podle něj majitel pozná, jestli šlo o měřidla, nebo
+   o datové rozhraní na sousední doméně, tedy o druhou cestu. */
+pravda('u skořápky je vidět, který cizí host si obsah tahal',
+  /api\.skorapka\.cz/.test(m.text) && /mereni\.example\.org/.test(m.text)
+  && /prohlížeč nepomohl/.test(m.text),
+  m.text.replace(/\s+/g, ' ').slice(0, 300));
+pravda('a u podmínek, kterou cestu robots.txt nedovolil',
+  m.text.includes('/api/podminky.json'),
+  m.text.replace(/\s+/g, ' ').slice(0, 300));
 
 /* ESCAPOVÁNÍ: nálož z cizího jména se NESMÍ stát prvkem. */
 pravda('nálož z cizího jména zdroje se nevykonala',

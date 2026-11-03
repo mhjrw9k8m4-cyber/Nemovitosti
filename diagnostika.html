@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-4jLZX6hmQcYp/JM8ktKDY6RJk8QPMPXVOCIQ+lcYcbI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-A9Ct1mprRiIltlJDoH1Y+XMmliIDslMGkE4l2rFytnU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -122,6 +122,25 @@
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
+  }
+
+  /* CO SE PŘI VYKRESLOVÁNÍ ZAHODILO, JMENOVITĚ. Číslo („8 cizích
+     hostů") neodpoví na nic. Jméno rozhodne: měřidla a reklama
+     znamenají, že skořápka je opravdu skořápka; vlastní datové
+     rozhraní na sousední doméně je druhá cesta, o které má majitel
+     vědět. Jména jdou do DETAILU, tedy do innerHTML — proto esc(). */
+  function zahozeneText(v) {
+    if (!v) return '';
+    if (v.chyba) return ' — prohlížeč to nedočetl: ' + esc(v.chyba);
+    var c = (v.cizinci || []).map(function (x) {
+      return '<code>' + esc(x.co) + '</code>\u00a0×\u00a0' + x.kolik; });
+    var z = (v.zakazane || []).map(function (x) {
+      return '<code>' + esc(x.co) + '</code>'; });
+    var t = v.nepomohlo ? ' — prohlížeč nepomohl' : ' — prohlížečem to vyšlo lépe';
+    if (c.length) t += '; obsah si sahal na cizí hosty: ' + c.join(', ');
+    if (z.length) t += '; robots.txt nedovolil: ' + z.join(', ');
+    if (!c.length && !z.length) t += '; nic se přitom nezahodilo';
+    return t;
   }
   var URL_ = window.PK_SUPABASE_URL || '';
   var KEY = window.PK_SUPABASE_KEY || '';
@@ -381,10 +400,11 @@
               ? ' — ze sitemapy vedou adresy výpisu: <code>'
                 + a.slice(0, 3).map(function (u) { return esc(u); }).join('</code>, <code>')
                 + '</code>'
-              : ' — ani sitemapa ani RSS nic nedaly');
+              : ' — ani sitemapa ani RSS nic nedaly')
+              + zahozeneText(x.vykresleno);
           }).join('<br>')
-          + '<br>Velká stránka bez jediné zmínky pozemku: obsah dotahuje až prohlížeč,'
-          + ' takhle se o tom zdroji nic nezjistí.');
+          + '<br>Velká stránka bez jediné zmínky pozemku. Prohlížečem se to zkusí znovu;'
+          + ' kde nepomohl, je nad tím napsané, co se při vykreslování zahodilo.');
       }
       var slibni = N.zdroje.filter(function (x) { return x.slibuje === 'slibné' && x.stav !== 'zapojeno'; });
       radek(box, slibni.length ? 'ok' : 'warn',
@@ -440,8 +460,15 @@
         if (stranky.length) {
           cast.push('Čtené stránky: ' + stranky.map(function (st) {
             return '<a href="' + esc(st.url) + '" rel="noopener noreferrer" target="_blank">'
-              + esc(st.popis || st.url) + '</a> (' + esc(st.stav) + ')';
+              + esc(st.popis || st.url) + '</a> (' + esc(st.stav)
+              + (st.cteno ? ', ' + esc(st.cteno) : '') + ')';
           }).join(', '));
+          /* KDE SE PROHLÍŽEČ ZKOUŠEL A NEPOMOHL, MÁ BÝT VIDĚT PROČ.
+             Jinak „málo textu" vypadá jako vlastnost zdroje, i když to
+             může být jen zakázaná adresa nebo text na sousední doméně. */
+          stranky.filter(function (st) { return st.vykresleno; }).slice(0, 3).forEach(function (st) {
+            cast.push(esc(st.popis || st.url) + zahozeneText(st.vykresleno));
+          });
         }
         /* ZMÍNKY SE PŘIZNÁVAJÍ. Slovo se našlo, ale v okně nebyl zákaz
            ani nic o přístupu k obsahu — nepočítá se to, a právě proto

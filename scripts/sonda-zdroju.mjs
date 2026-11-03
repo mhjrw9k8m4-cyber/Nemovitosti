@@ -32,7 +32,7 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { BOT_UA } from './bot-ua.mjs';
 import { smimeCist, telo } from './robots.mjs';
-import { tvorProhlizec } from './cti-prohlizecem.mjs';
+import { tvorProhlizec, zahozene } from './cti-prohlizecem.mjs';
 import { zeSitemapy, zRss } from './cteni-zdroje.mjs';
 import { ZAPOJENE, KANDIDATI, kandidatiZDat } from './zdroje-kandidati.mjs';
 
@@ -269,13 +269,13 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet, vykresli } = {})
       /* Bere se to jen tehdy, když je to OPRAVDU LEPŠÍ — jinak by
          nález tvrdil práci, která nic nepřinesla. */
       if (lepsiVyteznost(v2, zapis.vyteznost) === v2 && slibuje(v2) !== zapis.slibuje) {
-        zapis.vykresleno = { url: adresa, bylo: zapis.slibuje, je: slibuje(v2),
-          zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 };
+        zapis.vykresleno = Object.assign(
+          { url: adresa, bylo: zapis.slibuje, je: slibuje(v2) }, zahozene(v));
         zapis.vyteznost = v2;
         zapis.slibuje = slibuje(v2);
       } else {
-        zapis.vykresleno = { url: adresa, bylo: zapis.slibuje, je: slibuje(v2), nepomohlo: true,
-          zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 };
+        zapis.vykresleno = Object.assign(
+          { url: adresa, bylo: zapis.slibuje, je: slibuje(v2), nepomohlo: true }, zahozene(v));
       }
     } catch (e) {
       zapis.vykresleno = { url: adresa, chyba: String(e && e.message ? e.message : e).slice(0, 120) };
