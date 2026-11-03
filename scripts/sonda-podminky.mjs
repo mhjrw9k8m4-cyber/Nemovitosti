@@ -338,13 +338,39 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
  * Domovská adresa se bere z hostitele, ne z té zakázané cesty:
  * podmínky nejsou v API, ale na webu.
  */
+/* DVĚ TŘÍDY CÍLŮ, a obě chtěl majitel („jen zjistit podmínky"):
+ *
+ *   1) ZÁKAZ — zdroj, který už vozíme a jehož robots.txt nás na té
+ *      adrese zakazuje. Tam je otázka „smíme to vůbec dál číst".
+ *   2) SLIBNÝ KANDIDÁT — zdroj, který NEVOZÍME, jeho robots.txt
+ *      dovoluje a sonda u něj naměřila slibný obsah. Tam je otázka
+ *      „smělo by se to začít čist", a odpovědět na ni musí člověk
+ *      PŘED přidáním, ne po něm.
+ *
+ * Čtení podmínek je u obou totéž, takže nemá cenu dvojí sonda. Co se
+ * liší, je `duvod` — ať je v nálezu vidět, proč se tam kouká. */
+/* „www." se přidává JEN hostu bez podřízené části. U
+ * drazby.policenm.cz by z toho bylo www.drazby.policenm.cz, což
+ * neexistuje — a sonda by hlásila „podmínky se nenašly" tam, kde se
+ * jen nedívala na správnou adresu. */
+export function domovZHostu(host) {
+  const h = String(host || '').replace(/^api\./, '');
+  if (!h) return '';
+  return `https://${h.split('.').length > 2 ? h : 'www.' + h}/`;
+}
+
 export function cilePodminek(nalez) {
   const ven = [];
   for (const z of ((nalez && nalez.zdroje) || [])) {
-    if (z.stav !== 'zapojeno' || z.robots !== 'nedovoluje') continue;
     const host = String(z.host || '').replace(/^api\./, '');
     if (!host) continue;
-    ven.push({ jmeno: z.jmeno, host, domov: `https://www.${host}/`, zakaz: z.robotsDuvod });
+    if (z.stav === 'zapojeno' && z.robots === 'nedovoluje') {
+      ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
+        duvod: 'zákaz', zakaz: z.robotsDuvod });
+    } else if (z.stav !== 'zapojeno' && z.robots === 'dovoluje' && z.slibuje === 'slibné') {
+      ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
+        duvod: 'slibný kandidát' });
+    }
   }
   return ven;
 }
@@ -354,12 +380,18 @@ async function main() {
   try { nalez = JSON.parse(readFileSync(SONDA, 'utf8')); } catch { nalez = null; }
   if (!nalez || !nalez.updated) {
     console.error('CHYBA: nález sondy zdrojů chybí nebo nebyl změřen.'
-      + ' Podmínky se čtou jen u zdrojů, u kterých sonda naměřila zákaz —'
-      + ' bez měření se neví u kterých. Spusťte „Sonda zdrojů".');
+      + ' Podmínky se čtou u zdrojů, u kterých sonda naměřila zákaz, a u'
+      + ' slibných kandidátů — bez měření se neví u kterých.'
+      + ' Spusťte „Sonda zdrojů".');
     process.exit(1);
   }
   const cile = cilePodminek(nalez);
-  console.log(`Zdrojů se zákazem: ${cile.length}${cile.length ? ' — ' + cile.map((c) => c.jmeno).join(', ') : ''}.`);
+  const sZakazem = cile.filter((c) => c.duvod === 'zákaz');
+  const kandidati = cile.filter((c) => c.duvod === 'slibný kandidát');
+  console.log(`Cílů: ${cile.length} — se zákazem ${sZakazem.length}`
+    + `${sZakazem.length ? ' (' + sZakazem.map((c) => c.jmeno).join(', ') + ')' : ''},`
+    + ` slibných kandidátů ${kandidati.length}`
+    + `${kandidati.length ? ' (' + kandidati.map((c) => c.jmeno).join(', ') + ')' : ''}.`);
   if (process.argv.includes('--jen-cile')) {
     writeFileSync(OUT, JSON.stringify({ updated: null, zdroje: cile.map((c) => ({ ...c, verdikt: 'neměřeno' })) }) + '\n', 'utf8');
     console.log('Zapsán jen seznam cílů (verdikt „neměřeno").');
@@ -367,7 +399,7 @@ async function main() {
   }
   if (!cile.length) {
     writeFileSync(OUT, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), zdroje: [] }) + '\n', 'utf8');
-    console.log('Žádný zapojený zdroj nás nezakazuje — není co zjišťovat.');
+    console.log('Žádný zdroj nás nezakazuje a žádný slibný kandidát nečeká — není co zjišťovat.');
     return;
   }
   const { stahni } = await import('./fetch-opportunities.mjs');

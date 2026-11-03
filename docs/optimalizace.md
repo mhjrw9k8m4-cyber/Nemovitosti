@@ -21616,3 +21616,42 @@ nebyl planý poplach:
   seznamu `ODPOVEDEL` — a spadl, jen protože za něj přibyl nový stav
   `jineCeny` (§348). Vzor hlídal polohu, o kterou v tom pravidle
   vůbec nejde; teď hlídá jen přítomnost.
+
+## 349. Sonda podmínek se dívala jen na zakázané zdroje
+
+Majitelův pokyn byl u nových zdrojů jednoznačný: „jen zjistit
+podmínky". Sonda podmínek ale měla v `cilePodminek` jedinou třídu
+cílů — **zapojený zdroj, který nás zakazuje**. U čtyř slibných
+kandidátů z §346 by tedy neudělala nic a otázka „smělo by se to vůbec
+začít čist" by zůstala nezodpovězená.
+
+Cíle jsou proto dvě třídy, obě z MĚŘENÍ, ne ze seznamu v kódu:
+
+1. **zákaz** — zdroj, který vozíme a jehož robots.txt nás na té adrese
+   zakazuje (otázka „smíme dál"),
+2. **slibný kandidát** — zdroj, který NEvozíme, robots.txt dovoluje a
+   sonda u něj naměřila slibný obsah (otázka „smělo by se začít", a
+   odpovědět na ni musí člověk PŘED přidáním).
+
+Čtení je u obou totéž, takže dvojí sonda nemá cenu; liší se jen
+`duvod`, ať je v nálezu vidět, proč se tam kouká.
+
+**Co se NEČTE a proč:** slabý kandidát (nemá cenu na něj posílat
+dotazy) a kandidát, kterého robots.txt zakazuje — tam je robots.txt
+odpověď sama a posílat dotazy na web, který nás zakazuje, kvůli zdroji,
+který ani nevozíme, je přesně to, co tahle sonda dělat nemá.
+
+**Jedna vada při tom:** adresa se skládala jako `https://www.${host}/`,
+takže z `drazby.policenm.cz` vzniklo `www.drazby.policenm.cz`, které
+neexistuje. Sonda by hlásila „podmínky se nenašly" tam, kde se jen
+nedívala na správnou adresu. `www.` se teď přidává jen hostu bez
+podřízené části.
+
+Cílů po změně: **6** (2 zákazy, 4 kandidáti). Zkouška má 50 kontrol
+(dřív 43); sabotáže: kandidáti vyřazeni → 3 pády, `www.` přidávané
+vždy → 1 pád.
+
+**A POZOR NA POSTUP, který jsem při tom pokazil:** druhou sabotáž jsem
+pustil na soubor, kde ještě byla ta první, takže výsledek vypadal
+stejně a neříkal nic. Sabotáž se měří JEDNA PO DRUHÉ, s obnovením mezi
+nimi — jinak se neví, co co shodilo.

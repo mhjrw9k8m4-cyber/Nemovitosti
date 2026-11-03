@@ -240,10 +240,39 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     { jmeno: 'Kandidát zakazuje', host: 'kand.cz', stav: 'kandidát', robots: 'nedovoluje' },
   ] };
   const c = P.cilePodminek(nalez);
-  pravda('cílem je jen ZAPOJENÝ zdroj, který nás zakazuje',
-    c.length === 1 && c[0].jmeno === 'Zakazuje', JSON.stringify(c));
+  const zakazy = c.filter((x) => x.duvod === 'zákaz');
+  pravda('cílem se zákazem je jen ZAPOJENÝ zdroj, který nás zakazuje',
+    zakazy.length === 1 && zakazy[0].jmeno === 'Zakazuje', JSON.stringify(c));
   pravda('a domov se bere z webu, ne z API — podmínky nejsou v rozhraní',
-    c[0].domov === 'https://www.zak.cz/', c[0].domov);
+    zakazy[0].domov === 'https://www.zak.cz/', zakazy[0].domov);
+  pravda('zapojený zdroj, který nás NEZAKAZUJE, se nečte (není proč)',
+    !c.some((x) => x.jmeno === 'Dovoluje'), JSON.stringify(c));
+
+  /* DRUHÁ TŘÍDA CÍLŮ: slibný kandidát, kterého NEVOZÍME. Majitelův
+     pokyn byl „jen zjistit podmínky", a to platí i pro zdroj, který
+     by se mohl přidat — odpovědět musí člověk PŘED přidáním. */
+  const sKandidaty = { updated: '2026-11-03', zdroje: [
+    { jmeno: 'Slibný', host: 'slibny.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slibné' },
+    { jmeno: 'Slabý', host: 'slaby.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slabé' },
+    { jmeno: 'Slibný ale zakázaný', host: 'zakaz.cz', stav: 'kandidát', robots: 'nedovoluje', slibuje: 'slibné' },
+    { jmeno: 'Na podřízené adrese', host: 'drazby.obec.cz', stav: 'kandidát', robots: 'dovoluje', slibuje: 'slibné' },
+  ] };
+  const k = P.cilePodminek(sKandidaty);
+  pravda('slibný kandidát se dostane mezi cíle', k.some((x) => x.jmeno === 'Slibný'), JSON.stringify(k));
+  pravda('a je označený jako kandidát, ne jako zákaz',
+    (k.find((x) => x.jmeno === 'Slibný') || {}).duvod === 'slibný kandidát', JSON.stringify(k));
+  pravda('SLABÝ kandidát se nečte (nemá cenu na něj posílat dotazy)',
+    !k.some((x) => x.jmeno === 'Slabý'), JSON.stringify(k));
+  /* Zakázaný kandidát se nečte VŮBEC: robots.txt je odpověď sama.
+     Posílat dotazy na web, který nás zakazuje, kvůli zdroji, který ani
+     nevozíme, by bylo přesně to, co tahle sonda nemá dělat. */
+  pravda('a zakázaný kandidát taky ne — robots.txt je odpověď sama',
+    !k.some((x) => x.jmeno === 'Slibný ale zakázaný'), JSON.stringify(k));
+  pravda('hostu s podřízenou částí se „www." NEPŘIDÁVÁ',
+    (k.find((x) => x.jmeno === 'Na podřízené adrese') || {}).domov === 'https://drazby.obec.cz/',
+    'www.drazby.obec.cz neexistuje, takže by sonda hlásila „nenašly se" tam, kde se jen nedívala správně');
+  pravda('a hostu bez ní ano', P.domovZHostu('drazbynaxos.cz') === 'https://www.drazbynaxos.cz/',
+    P.domovZHostu('drazbynaxos.cz'));
   pravda('bez měření se nečte nic (cíle by se neznaly)',
     P.cilePodminek(null).length === 0 && P.cilePodminek({ zdroje: [] }).length === 0);
   /* A v kódu se opravdu rozhoduje podle nálezu, ne podle zadrátovaného
