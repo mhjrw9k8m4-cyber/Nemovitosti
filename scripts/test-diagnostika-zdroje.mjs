@@ -106,6 +106,15 @@ const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
      a jde do innerHTML, proto v něm nálož je. */
   k.domovVykreslen = { odkazu: 0, nepomohlo: true, zablokovano: 0, cizich: 3,
     cizinci: [{ co: 'api.kand.cz' + NALOZ, kolik: 3 }] };
+  /* OBVYKLÉ ADRESY, které se zkusily, když nebylo co následovat
+     (§362). Naměřeno 3. 11. u ÚZSVM: dvanáct adres, všech dvanáct
+     HTTP 404 — a ten nejkonkrétnější důkaz ležel jen v JSONu.
+     Důvod je text z cizího serveru a jde do innerHTML, proto v něm
+     nálož je. */
+  k.zkusenoZnamych = [
+    { url: 'https://www.kand.cz/podminky-uziti', stav: 'není', duvod: 'HTTP 404' + NALOZ },
+    { url: 'https://www.kand.cz/vop', stav: 'je, ale je to tatáž stránka jako domov', znaku: 3200 },
+  ];
   delete k.dokumenty;
   z.verdikt = 'přečteno (1 pasáží o automatickém přístupu)';
   z.stranky = [{ url: 'https://www.zak.cz/podminky', popis: 'Obchodní podmínky', stav: 'přečteno',
@@ -247,6 +256,21 @@ pravda('u dokumentu je vidět stav, důvod i čím se dekódovalo',
 pravda('je vidět, že se domovská stránka zkusila i vykreslit',
   /ani po vykreslení/.test(m.text) && /api\.kand\.cz/.test(m.text),
   m.text.replace(/\s+/g, ' ').slice(0, 300));
+
+/* OBVYKLÉ ADRESY, KTERÉ SE ZKUSILY, MAJÍ BÝT VIDĚT (§362). Verdikt
+   „není ani na obvyklých adresách" je bez nich tvrzení bez opory —
+   a právě ten výpis je nejkonkrétnější důkaz, jaký sonda má: u ÚZSVM
+   dvanáct adres a všech dvanáct HTTP 404. Je to táž vada, jakou měly
+   důvody u dokumentů (§357g): ležela jen v JSONu. */
+pravda('je vidět, které obvyklé adresy se zkusily, a co vrátily',
+  /obvyklé adresy/.test(m.text) && /podminky-uziti/.test(m.text)
+  && /HTTP 404/.test(m.text) && /tatáž stránka jako domov/.test(m.text),
+  m.text.replace(/\s+/g, ' ').slice(0, 400));
+/* ESCAPOVÁNÍ TOHO DŮVODU hlídá globální kontrola níž: nálož je
+   v `duvod` téhle obvyklé adresy, takže teče právě tímhle novým
+   blokem — kdyby v něm chybělo esc(), vznikl by prvek a `obrazku`
+   by nebylo nula. Psát si tu vlastní kontrolu by znamenalo měřit
+   totéž dvakrát a jednu z nich si vymyslet. */
 
 /* TÝŽ PORTÁL POD JINOU DOMÉNOU. U ÚZSVM to byl celý důvod, proč byl
    zdroj „skořápka". Majitel to má vidět na obou místech: u skořápky

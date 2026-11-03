@@ -22717,3 +22717,38 @@ cílů.** Jeden kandidát má od §361 dva cíle, takže počítání cílů by 
 téhle stránce hlásilo o jednoho slibného kandidáta víc než sonda zdrojů
 o dva oddíly výš — dvě čísla pro tutéž věc, a to je past, na kterou
 tenhle web už jednou doplatil u počtu nových pozemků.
+
+## §362b — odpověď o ÚZSVM: dvanáct adres, dvanáct čtyřstčtyřek
+
+**Naměřeno 3. 11. v Actions**, po §361 a §362:
+
+```
+nabidkamajetku.gov.cz   /podminky-uziti /podminky /podminky-pouziti
+nabidkamajetku.cz       /obchodni-podminky /vop /pravni-informace
+                        → všech 12 adres HTTP 404
+```
+
+Takže odpověď na vlastníkovu otázku zní: **ÚZSVM žádnou stránku
+s podmínkami na dosažitelné adrese nezveřejňuje.** Ani odkaz, ani
+obvyklá cesta. Žádná tichá 404 se nestala (to by bylo vidět jako „je,
+ale o podmínkách v ní nic není") — servery odpověděly poctivě, že tam
+nic není. Dál už mechanicky nelze: web organizace z `gov.cz` domény
+odvodit nejde a odkaz na něj na obou stránkách chybí.
+
+Pro ostatní cíle se nález nezměnil: Bezrealitky a Sreality nás
+zakazují, tři dražební weby jsou přečtené a o automatickém přístupu
+v nich nic není, elektronickedrazby.cz se skládá až v prohlížeči.
+
+**A ten nejkonkrétnější důkaz ležel jen v JSONu.** Verdikt „není ani na
+obvyklých adresách" je bez výpisu tvrzení bez opory — táž vada, jakou
+měly důvody u dokumentů (§357g), a udělal jsem ji znovu hned v témže
+dni. Diagnostika teď u takového zdroje vypíše, které adresy se zkusily
+a co vrátily. Důvod jde do innerHTML, takže je escapovaný; hlídá to
+táž nálož, co u jména zdroje — teď teče i tímhle blokem.
+`test-diagnostika-zdroje.mjs` 19 kontrol (bylo 18), prokázáno
+sabotáží: výpis pryč → 1 pád.
+
+**Co z toho plyne pro rozhodnutí, ne pro kód.** Chybějící podmínky
+nejsou povolení. Je to stav „nevíme", který robots.txt sice dovoluje,
+ale nic neslibuje — a rozhodnutí, jestli ÚZSVM zapojit, zůstává
+vlastníkovo. Fakta pro něj jsou teď kompletní a zapsaná.
