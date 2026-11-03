@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T16:25:57.166Z",
+ "updated_at": "2026-11-03T16:35:29.990Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -295,11 +295,11 @@
      "url": "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
      "popis": "Dražební řád - 8.3.2025.pdf",
      "jeDokument": true,
-     "znaku": 10556,
-     "citelnost": 0.86,
+     "znaku": 15565,
+     "citelnost": 0.36,
      "cteno": "z dokumentu",
      "stav": "nepřečetli jsme ho",
-     "duvod": "text vyšel nečitelně (čitelnost 0.86) — kódování, které tahle čtečka neumí"
+     "duvod": "text vyšel nečitelně (čitelnost 0.36) — kódování, které tahle čtečka neumí"
     }
    ],
    "nalezeneOdkazy": [
@@ -308,7 +308,7 @@
      "popis": "Obchodní podmínky"
     }
    ],
-   "znakuCelkem": 10660,
+   "znakuCelkem": 15669,
    "verdikt": "málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí",
    "dokumenty": [
     "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
@@ -381,7 +381,7 @@
      "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
      "popis": "f_6ae20774eae839.39822771.pdf",
      "jeDokument": true,
-     "znaku": 162841,
+     "znaku": 162928,
      "citelnost": 0.28,
      "cteno": "z dokumentu",
      "stav": "nepřečetli jsme ho",
@@ -439,7 +439,7 @@
      "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze"
     }
    ],
-   "znakuCelkem": 175361,
+   "znakuCelkem": 175448,
    "verdikt": "přečteno, ale nic o automatickém přístupu",
    "dokumenty": [
     "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
