@@ -409,15 +409,27 @@ async function sUlozenymi(klice) {
     delete window.__pkSnap;
     const t = document.getElementById('toast');
     const odznak = document.querySelector('#ms-chipy .msch[data-okoli]');
+    /* CO VLASTNĚ NA STRÁNCE JE. Bez tohohle hlásí zkouška jen „odznak
+       se neobjevil" a člověk nemá z čeho poznat PROČ — a když to padá
+       jen v CI (jiná verze prohlížeče), nedá se to ani doma zkusit.
+       Tenhle popis se vypisuje do hlášky u pádu. */
+    const kde = {
+      chipu: document.querySelectorAll('#ms-chipy .msch').length,
+      okno: !!document.querySelector('.vm-ov'),
+      misto: (() => { try { return (localStorage.getItem('pk_misto_v1') || '').slice(0, 60); }
+        catch (e) { return 'ČTENÍ SELHALO: ' + e.name; } })(),
+      zapisPrebit: typeof window.__pkPuvSet === 'function',
+    };
     /* Co se posbíralo při objevení, má přednost; co je na stránce teď,
        slouží jako záloha. */
     return { hlaska: snap.hlaska || (t && t.textContent) || '',
-      odznak: snap.odznak || (odznak ? odznak.textContent.trim() : '') };
+      odznak: snap.odznak || (odznak ? odznak.textContent.trim() : ''), kde };
   }, puvod.chyba || '');
   pravda('je co měřit — výběr místa šel potvrdit', !v.chyba, v.chyba || '');
   if (!v.chyba) {
     pravda('okolí se při plné paměti stejně zapne (tuhle návštěvu platí)',
-      !!v.odznak, 'odznak okolí se neobjevil, takže se okolí vůbec nezapnulo');
+      !!v.odznak, 'odznak okolí se neobjevil, takže se okolí vůbec nezapnulo — na stránce: '
+      + JSON.stringify(v.kde) + ', hláška: „' + v.hlaska + '"');
     pravda('ale je řečeno, že se to po zavření karty zapomene',
       /zapomene/i.test(v.hlaska), `hláška: „${v.hlaska}"`);
   }
