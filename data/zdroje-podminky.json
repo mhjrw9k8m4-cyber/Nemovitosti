@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T14:35:46.398Z",
+ "updated_at": "2026-11-03T16:17:09.141Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -92,6 +92,27 @@
       ]
      },
      "dokumenty": []
+    },
+    {
+     "url": "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
+     "popis": "obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
+     "jeDokument": true,
+     "stav": "nesmíme číst",
+     "duvod": "Disallow: /"
+    },
+    {
+     "url": "https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
+     "popis": "62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
+     "jeDokument": true,
+     "stav": "nesmíme číst",
+     "duvod": "Disallow: /"
+    },
+    {
+     "url": "https://api.bezrealitky.cz/page-file/obchodni-podminky-o-zajisteni-sluzby-komfort-nemo-report-pravnich-a-dalsich-sluzeb-1792741210.pdf",
+     "popis": "obchodni-podminky-o-zajisteni-sluzby-komfort-nemo-report-pravnich-a-dalsich-sluz",
+     "jeDokument": true,
+     "stav": "nesmíme číst",
+     "duvod": "Disallow: /"
     }
    ],
    "nalezeneOdkazy": [
@@ -269,6 +290,20 @@
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
      ]
+    },
+    {
+     "url": "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
+     "popis": "Dražební řád - 8.3.2025.pdf",
+     "jeDokument": true,
+     "znaku": 385,
+     "citelnost": 0.99,
+     "cteno": "z dokumentu",
+     "stav": "málo textu — nedá se z toho soudit",
+     "odstavcuCelkem": 1,
+     "odstavcu": 0,
+     "pasaze": [],
+     "zminky": 0,
+     "zminkyUkazka": []
     }
    ],
    "nalezeneOdkazy": [
@@ -277,7 +312,7 @@
      "popis": "Obchodní podmínky"
     }
    ],
-   "znakuCelkem": 104,
+   "znakuCelkem": 489,
    "verdikt": "málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí",
    "dokumenty": [
     "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
@@ -335,6 +370,36 @@
       "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
       "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
      ]
+    },
+    {
+     "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+     "popis": "f_6ae20774c24ec1.46881867.pdf",
+     "jeDokument": true,
+     "znaku": 0,
+     "citelnost": 0,
+     "cteno": "z dokumentu",
+     "stav": "nepřečetli jsme ho",
+     "duvod": "v dokumentu není text (nejspíš je to sken)"
+    },
+    {
+     "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+     "popis": "f_6ae20774eae839.39822771.pdf",
+     "jeDokument": true,
+     "znaku": 87,
+     "citelnost": 0.49,
+     "cteno": "z dokumentu",
+     "stav": "nepřečetli jsme ho",
+     "duvod": "text vyšel nečitelně (čitelnost 0.49) — kódování, které tahle čtečka neumí"
+    },
+    {
+     "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf",
+     "popis": "f_6ae20775443a98.53307902.pdf",
+     "jeDokument": true,
+     "znaku": 0,
+     "citelnost": 0,
+     "cteno": "z dokumentu",
+     "stav": "nepřečetli jsme ho",
+     "duvod": "v dokumentu není text (nejspíš je to sken)"
     }
    ],
    "nalezeneOdkazy": [
@@ -343,7 +408,7 @@
      "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze"
     }
    ],
-   "znakuCelkem": 12520,
+   "znakuCelkem": 12607,
    "verdikt": "přečteno, ale nic o automatickém přístupu",
    "dokumenty": [
     "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
