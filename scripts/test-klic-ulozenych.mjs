@@ -373,6 +373,13 @@ async function sUlozenymi(klice) {
      podstrčí a klikne uvnitř prohlížeče, čeká se na odznak NEBO na
      hlášku zvenčí, a teprve pak se čte — a podstrčení se vrací zpět,
      ať další kontroly měří normální paměť. */
+  /* AŽ KDYŽ JE MAPA V OKNĚ POSTAVENÁ. Okno se staví na dva rámce
+     (requestAnimationFrame × 2) a teprve pak v něm vznikne mapa se
+     značkou. Kliknout na „Zobrazit pozemky" dřív znamená potvrdit
+     výběr, který ještě nemá vybrané místo — a v CI (jiná, novější
+     verze prohlížeče) se přesně to dělo: okno zůstalo otevřené, žádný
+     odznak, žádná hláška. Čeká se proto na značku v tom okně. */
+  await page.waitForSelector('.vm-ov .leaflet-marker-icon', { timeout: 20000 }).catch(() => {});
   const puvod = await page.evaluate(() => {
     const ok = document.querySelector('.vm-ov #vm-ok');
     if (!ok) return { chyba: 'výběr místa se neotevřel (#vm-ok není)' };
@@ -403,6 +410,11 @@ async function sUlozenymi(klice) {
     }, { timeout: 15000 }).catch(() => {});
   }
   const v = await page.evaluate((chyba) => {
+    /* PŘÍZNAK SE ČTE DŘÍV, NEŽ SE PODSTRČENÍ VRÁTÍ. Napoprvé jsem ho
+       čet až potom — a protože jsem si ho sám smazal, hlásil v CI
+       „zapisPrebit: false" vždycky. Kontrola, která si odpověď nejdřív
+       zahodí, neměří nic. */
+    const prebito = typeof window.__pkPuvSet === 'function';
     if (window.__pkPuvSet) { localStorage.setItem = window.__pkPuvSet; delete window.__pkPuvSet; }
     if (chyba) return { chyba };
     const snap = window.__pkSnap || { odznak: '', hlaska: '' };
@@ -416,9 +428,10 @@ async function sUlozenymi(klice) {
     const kde = {
       chipu: document.querySelectorAll('#ms-chipy .msch').length,
       okno: !!document.querySelector('.vm-ov'),
+      mapaVOkne: !!document.querySelector('.vm-ov .leaflet-marker-icon'),
       misto: (() => { try { return (localStorage.getItem('pk_misto_v1') || '').slice(0, 60); }
         catch (e) { return 'ČTENÍ SELHALO: ' + e.name; } })(),
-      zapisPrebit: typeof window.__pkPuvSet === 'function',
+      zapisPrebit: prebito,
     };
     /* Co se posbíralo při objevení, má přednost; co je na stránce teď,
        slouží jako záloha. */
