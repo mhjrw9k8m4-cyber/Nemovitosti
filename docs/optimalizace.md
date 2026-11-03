@@ -22391,3 +22391,21 @@ podmínky se MUSÍ stáhnout. Prokázáno sabotáží (návrat k pořadí).
 `.{0,3}` — JS to nebere jako počet opakování, takže se to hledalo
 doslova a „provozní řád" by neprošel. Našlo se to tím, že jsem si
 vzorky vypsal a podíval se na ně, ne až v nálezu.
+
+**Dodatek k §357e — jak jsem si málem obvinil vlastní kód.** Po
+nasazení jsem v nálezu nenašel pole `jak` a chvíli jsem hledal vadu
+v sondě. Vada byla v MĚŘENÍ: dispatch workflow a hned poté
+`gh run list --limit 1` vrátí **předchozí** běh, protože ten nový se
+ve výpisu ještě neobjevil. Porovnával jsem tedy data z 16:43 s kódem
+z 16:55. Po dočkání správného běhu (podle jeho čísla, ne podle
+„nejnovějšího") nález souhlasí:
+
+```
+Dražební řád  → 10 556 znaků, čitelnost 0,86, „jedna tabulka (čitelnější)"
+přílohy       →      0,28 a 0, „podle jmen písem" — náhrada by nepomohla
+```
+
+Měřená volba tedy dělá přesně to, k čemu je: u jednoho dokumentu vzala
+hrubší cestu, protože je lepší, u druhého ji nevzala. Pravidlo pro
+příště: na běh v Actions se čeká podle ČÍSLA běhu, ne podle „posledního
+ve výpisu".
