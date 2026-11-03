@@ -201,22 +201,30 @@ export function textZObsahu(obsah, najdiCmap) {
   const t = String(obsah || '');
   let aktivni = null;
   const kusy = [];
-  /* Jediný průchod přes operátory, které nás zajímají: výběr fontu,
-     řetězce a odřádkování. Pořadí v textu rozhoduje, proto jeden
-     regulární výraz se střídáním, ne několik průchodů. */
-  const re = /\/([A-Za-z0-9_.+-]+)\s+[\d.]+\s+Tf|\(((?:\\.|[^\\()])*)\)\s*(Tj|TJ|'|")|<([0-9a-fA-F\s]*)>\s*(Tj|TJ)|(T\*|TD|Td|ET)/g;
+  /* BEROU SE VŠECHNY ŘETĚZCE, NE JEN TY PŘED OPERÁTOREM. Napoprvé
+     tu stálo `(…)\s*(Tj|TJ)` — a to je vada, kterou odhalilo až
+     měření naostro: z dražebního řádu elektronickedrazby.cz vyšlo
+     385 znaků, protože nejčastější tvar v PDF je POLE s posuny,
+     `[(Je zak) -250 (azano)] TJ`. Tam za řetězcem stojí číslo, ne
+     operátor, takže se nenačetl ani jeden. V obsahovém streamu jsou
+     literální řetězce skoro výhradně text, takže se sbírají všechny
+     a odřádkování se bere z operátorů posunu.
+
+     Jediný průchod, jeden regulární výraz se střídáním: pořadí
+     v textu rozhoduje a několik průchodů by ho rozhodilo. */
+  const re = /\/([A-Za-z0-9_.+-]+)\s+[\d.]+\s+Tf|\(((?:\\.|[^\\()])*)\)|<([0-9a-fA-F\s]+)>|(T\*|TD|Td|ET)/g;
   let m;
   while ((m = re.exec(t))) {
     if (m[1] !== undefined) { aktivni = (najdiCmap && najdiCmap(m[1])) || null; continue; }
     if (m[2] !== undefined) { kusy.push(dekoduj(bajtyZRetezce(m[2]), aktivni)); continue; }
-    if (m[4] !== undefined) {
-      const h = m[4].replace(/\s+/g, '');
+    if (m[3] !== undefined) {
+      const h = m[3].replace(/\s+/g, '');
       const b = [];
       for (let i = 0; i + 1 < h.length; i += 2) b.push(parseInt(h.slice(i, i + 2), 16));
       kusy.push(dekoduj(b, aktivni));
       continue;
     }
-    if (m[6] !== undefined) kusy.push('\n');
+    if (m[4] !== undefined) kusy.push('\n');
   }
   return kusy.join('');
 }

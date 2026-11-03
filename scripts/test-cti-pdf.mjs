@@ -152,6 +152,30 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     JSON.stringify({ text: v.text.slice(0, 60), citelnost: v.citelnost }));
 }
 
+/* 6b) POLE S POSUNY — NEJČASTĚJŠÍ TVAR V OPRAVDOVÝCH PDF.
+       NALEZENO MĚŘENÍM NAOSTRO: z dražebního řádu elektronickedrazby.cz
+       vyšlo 385 znaků, ačkoli čitelnost byla 0,99. Příčina: text se
+       sází jako `[(Je zak) -250 (azano)] TJ`, kde za řetězcem stojí
+       číslo, ne operátor — a čtečka brala jen řetězce před `Tj`/`TJ`.
+       Celý dokument se tím ztratil a nálezu to nevadilo, protože to,
+       co přečetla, bylo čitelné. */
+{
+  const obsah = Buffer.concat([
+    Buffer.from('BT /F1 12 Tf [('),
+    cp1250('Je zakázáno obsah '), Buffer.from(') -250 ('),
+    cp1250('serveru vytěžovat roboty'), Buffer.from(')] TJ ET\n'),
+  ]);
+  const v = textZPdf(pdfSObsahem(obsah, true));
+  pravda('text z pole s posuny se přečte celý',
+    v.text.includes('zakázáno') && v.text.includes('vytěžovat')
+    && v.text.includes('serveru'),
+    JSON.stringify(v.text.slice(0, 160)));
+  /* A ať se nestane, že se spojí bez mezery do nesmyslu — slova
+     z jednoho pole na sebe navazují tak, jak v dokumentu stojí. */
+  pravda('a slova na sebe navazují, nelepí se do jednoho',
+    /zakázáno obsah\s*serveru/.test(v.text), JSON.stringify(v.text.slice(0, 160)));
+}
+
 /* 7) TEXT ZE STREAMU: operátory, které PDF používá na odstavce. */
 {
   const t = textZObsahu('BT (prvni) Tj T* (druhy) Tj ET', null);

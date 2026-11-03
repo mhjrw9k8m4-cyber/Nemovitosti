@@ -22223,3 +22223,38 @@ nečitelný text brán za přečtený, nepřiznaný sken, vypnutá dekomprese.
 A čtvrtá, menší: krok zkoušky jsem napsal do prohlížečové směny, ačkoli
 `test-cti-pdf` prohlížeč nepotřebuje. Poznala to zkouška roadmapy
 (počet zkoušek s prohlížečem vyskočil na 162); patří do rychlé sady.
+
+## §357b — z dražebního řádu vyšlo 385 znaků: nejčastější tvar PDF se nečetl
+
+**Co řeklo měření naostro.** Hned první běh s čtečkou PDF (§357) dal
+tři různé odpovědi, a jedna z nich byla podezřelá:
+
+```
+Bezrealitky, 3 PDF        → nesmíme číst (Disallow: /)      ← pravidlo zabralo
+verejnedrazby.cz, 3 PDF   → 2 skeny + 1 nečitelný (0,49)    ← poctivě přiznáno
+elektronickedrazby.cz     → Dražební řád: 385 znaků, čitelnost 0,99
+```
+
+385 znaků na dražební řád je nesmysl — a **čitelnost 0,99 to zakryla**:
+to, co se přečetlo, bylo v pořádku, jen toho bylo pět procent.
+
+**Příčina.** Čtečka brala jen řetězce stojící PŘED operátorem
+(`(text) Tj`). Opravdová PDF ale text sázejí jako **pole s posuny**:
+`[(Je zak) -250 (azano)] TJ`. Tam za řetězcem stojí číslo, ne operátor,
+takže se nenačetl ani jeden. Sbírají se proto všechny literální
+řetězce — v obsahovém streamu je to skoro výhradně text — a
+odřádkování se bere z operátorů posunu.
+
+**Poučení pro ten hlídač čitelnosti.** `citelnost()` hlídá, že text
+není rozsypaný; o tom, že ho CHYBÍ, neřekne nic. Jsou to dvě různé
+otázky a verdikt „málo textu — nedá se z toho soudit" tu zachránil to
+podstatné: sonda nevydala neúplný dokument za přečtené podmínky.
+
+**Čím je to podložené.** `test-cti-pdf.mjs` 17 kontrol (bylo 15):
+text z pole s posuny se přečte celý a slova na sebe navazují, nelepí se
+do jednoho. Prokázáno sabotáží — vrácením podmínky „jen před
+operátorem" (padly obě kontroly).
+
+**A je to doklad, proč se měří naostro.** Patnáct kontrol na vlastních
+fixturách bylo zelených; tu vadu našel jediný opravdový dokument
+z cizího webu. Fixtura umí jen to, co do ní člověk napsal.
