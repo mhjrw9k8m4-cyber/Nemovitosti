@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T16:17:09.141Z",
+ "updated_at": "2026-11-03T16:25:57.166Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -295,15 +295,11 @@
      "url": "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
      "popis": "Dražební řád - 8.3.2025.pdf",
      "jeDokument": true,
-     "znaku": 385,
-     "citelnost": 0.99,
+     "znaku": 10556,
+     "citelnost": 0.86,
      "cteno": "z dokumentu",
-     "stav": "málo textu — nedá se z toho soudit",
-     "odstavcuCelkem": 1,
-     "odstavcu": 0,
-     "pasaze": [],
-     "zminky": 0,
-     "zminkyUkazka": []
+     "stav": "nepřečetli jsme ho",
+     "duvod": "text vyšel nečitelně (čitelnost 0.86) — kódování, které tahle čtečka neumí"
     }
    ],
    "nalezeneOdkazy": [
@@ -312,7 +308,7 @@
      "popis": "Obchodní podmínky"
     }
    ],
-   "znakuCelkem": 489,
+   "znakuCelkem": 10660,
    "verdikt": "málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí",
    "dokumenty": [
     "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
@@ -385,11 +381,11 @@
      "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
      "popis": "f_6ae20774eae839.39822771.pdf",
      "jeDokument": true,
-     "znaku": 87,
-     "citelnost": 0.49,
+     "znaku": 162841,
+     "citelnost": 0.28,
      "cteno": "z dokumentu",
      "stav": "nepřečetli jsme ho",
-     "duvod": "text vyšel nečitelně (čitelnost 0.49) — kódování, které tahle čtečka neumí"
+     "duvod": "text vyšel nečitelně (čitelnost 0.28) — kódování, které tahle čtečka neumí"
     },
     {
      "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf",
@@ -402,13 +398,48 @@
      "duvod": "v dokumentu není text (nejspíš je to sken)"
     }
    ],
+   "domovVykreslen": {
+    "odkazu": 1,
+    "zablokovano": 0,
+    "cizich": 9,
+    "cizinci": [
+     {
+      "co": "unpkg.com",
+      "kolik": 2
+     },
+     {
+      "co": "www.googletagmanager.com",
+      "kolik": 2
+     },
+     {
+      "co": "ajax.aspnetcdn.com",
+      "kolik": 1
+     },
+     {
+      "co": "cc.dalten.cz",
+      "kolik": 1
+     },
+     {
+      "co": "code.jquery.com",
+      "kolik": 1
+     },
+     {
+      "co": "img.youtube.com",
+      "kolik": 1
+     },
+     {
+      "co": "maxcdn.bootstrapcdn.com",
+      "kolik": 1
+     }
+    ]
+   },
    "nalezeneOdkazy": [
     {
      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
      "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze"
     }
    ],
-   "znakuCelkem": 12607,
+   "znakuCelkem": 175361,
    "verdikt": "přečteno, ale nic o automatickém přístupu",
    "dokumenty": [
     "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
