@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T09:26:35.936Z",
+ "updated_at": "2026-11-03T12:20:29.296Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -12,13 +12,20 @@
     {
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
      "popis": "Podmínky",
-     "stav": "málo textu — nedá se z toho soudit",
-     "znaku": 1329,
-     "odstavcuCelkem": 13,
+     "stav": "přečteno, nic o automatu",
+     "znaku": 2344,
+     "odstavcuCelkem": 22,
      "odstavcu": 0,
      "pasaze": [],
      "zminky": 0,
      "zminkyUkazka": [],
+     "cteno": "prohlížečem",
+     "vykresleno": {
+      "bylo": 1329,
+      "je": 2344,
+      "zablokovano": 2,
+      "cizich": 2
+     },
      "dokumenty": [
       "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
       "https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
@@ -31,12 +38,19 @@
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky/vyrocni-zprava-o-moderaci-obsahu",
      "popis": "",
      "stav": "málo textu — nedá se z toho soudit",
-     "znaku": 562,
-     "odstavcuCelkem": 9,
+     "znaku": 1577,
+     "odstavcuCelkem": 18,
      "odstavcu": 0,
      "pasaze": [],
      "zminky": 0,
      "zminkyUkazka": [],
+     "cteno": "prohlížečem",
+     "vykresleno": {
+      "bylo": 562,
+      "je": 1577,
+      "zablokovano": 2,
+      "cizich": 2
+     },
      "dokumenty": []
     }
    ],
@@ -46,8 +60,8 @@
      "popis": "Podmínky"
     }
    ],
-   "znakuCelkem": 1891,
-   "verdikt": "málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí",
+   "znakuCelkem": 3921,
+   "verdikt": "přečteno jen 3921 znaků — na úplné podmínky je to málo, z toho se soudit nedá (text se nejspíš vykresluje až v prohlížeči nebo je v odkazovaném dokumentu)",
    "dokumenty": [
     "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
     "https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf",
@@ -83,6 +97,7 @@
      "pasaze": [],
      "zminky": 0,
      "zminkyUkazka": [],
+     "cteno": "ze serveru",
      "dokumenty": []
     },
     {
@@ -106,6 +121,7 @@
        "kontext": false
       }
      ],
+     "cteno": "ze serveru",
      "dokumenty": []
     }
    ],
@@ -139,6 +155,7 @@
      "pasaze": [],
      "zminky": 0,
      "zminkyUkazka": [],
+     "cteno": "ze serveru",
      "dokumenty": []
     }
    ],
@@ -168,6 +185,7 @@
      "pasaze": [],
      "zminky": 0,
      "zminkyUkazka": [],
+     "cteno": "ze serveru",
      "dokumenty": [
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
@@ -192,9 +210,67 @@
    "domov": "https://www.verejnedrazby.cz/",
    "proc": "slibný kandidát",
    "kdy": "2026-11-03",
-   "stranky": [],
-   "nalezeneOdkazy": [],
-   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
+   "stranky": [
+    {
+     "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
+     "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze",
+     "stav": "přečteno",
+     "znaku": 6260,
+     "odstavcuCelkem": 52,
+     "odstavcu": 0,
+     "pasaze": [],
+     "zminky": 1,
+     "zminkyUkazka": [
+      {
+       "slovo": "automaticky",
+       "text": "* Učiní-li účastník (navýšení) příhoz v době 2 minuty před okamžikem stanoveného ukončení výběrového řízení, prodlužuje se výběrové řízení automaticky o dalších 5 minut, a to i opakovaně.",
+       "kontext": false
+      }
+     ],
+     "cteno": "ze serveru",
+     "dokumenty": [
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+     ]
+    },
+    {
+     "url": "https://www.verejnedrazby.cz/podminky-souhlas/8144/",
+     "popis": "Obchodní podmínky",
+     "stav": "přečteno",
+     "znaku": 6260,
+     "odstavcuCelkem": 52,
+     "odstavcu": 0,
+     "pasaze": [],
+     "zminky": 1,
+     "zminkyUkazka": [
+      {
+       "slovo": "automaticky",
+       "text": "* Učiní-li účastník (navýšení) příhoz v době 2 minuty před okamžikem stanoveného ukončení výběrového řízení, prodlužuje se výběrové řízení automaticky o dalších 5 minut, a to i opakovaně.",
+       "kontext": false
+      }
+     ],
+     "cteno": "ze serveru",
+     "dokumenty": [
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+     ]
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
+     "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze"
+    }
+   ],
+   "znakuCelkem": 12520,
+   "verdikt": "přečteno, ale nic o automatickém přístupu",
+   "dokumenty": [
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+   ]
   }
  ]
 }
