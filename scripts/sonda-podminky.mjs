@@ -162,6 +162,9 @@ export function absolutni(odkaz, base) {
  * Odkazy, které vypadají na podmínky. Vrací nejvýš `STRANEK_NA_ZDROJ`
  * adres na TOMTÉŽ webu (cizí hostitel by nás odvedl jinam).
  */
+/** Adresa bez koncového lomítka — na srovnávání „je to táž stránka". */
+export function bezLomitka(u) { return String(u || '').split('#')[0].replace(/\/+$/, ''); }
+
 export function odkazyNaPodminky(html, base) {
   let domaci = '';
   try { domaci = new URL(base).hostname.toLowerCase(); } catch { domaci = ''; }
@@ -179,6 +182,15 @@ export function odkazyNaPodminky(html, base) {
     try { host = new URL(abs).hostname.toLowerCase(); } catch { continue; }
     if (domaci && host !== domaci) continue;      // jen tenhle web
     const klic = abs.split('#')[0];
+    /* ODKAZ NA TUTÉŽ DOMOVSKOU STRÁNKU NENÍ ODKAZ NA PODMÍNKY.
+       Naměřeno 3. 11. u ÚZSVM: ve vykresleném domovu se „našel"
+       jediný odkaz — a vedl na domovskou stránku samu, s popisem
+       „Dopravní prostředky a příslušenství 74". Sonda ji pak přečetla
+       podruhé a vydala verdikt „přečteno, ale nic o automatickém
+       přístupu", přitom žádné podmínky přečtené nebyly. Takový
+       verdikt je horší než „nenašlo se": tvrdí, že se dívalo tam,
+       kde se nedívalo. */
+    if (klic === bezLomitka(base) || klic === bezLomitka(base) + '/') continue;
     if (videne.has(klic)) continue;
     videne.add(klic);
     ven.push({ url: klic, popis: popis.slice(0, 80) });

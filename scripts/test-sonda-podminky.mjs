@@ -133,8 +133,8 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   const z2 = await P.zmerPodminky({ jmeno: 'Část', host: 'c.test', domov: 'https://c.test/' },
     { stahni: stahni2, ua: UA, mezipamet: new Map() });
   pravda('zakázaná PODSTRÁNKA se taky nestáhne a je to v nálezu',
-    z2.stranky.length === 1 && z2.stranky[0].stav === 'nesmíme číst'
-    && /Disallow/.test(z2.stranky[0].duvod || ''), JSON.stringify(z2.stranky));
+    z2.stranky.length === 1 && ((z2.stranky[0] || {}).stav === 'nesmíme číst')
+    && /Disallow/.test((z2.stranky[0] || {}).duvod || ''), JSON.stringify(z2.stranky));
 }
 
 /* ---- 4) CELÁ CESTA, KDYŽ SE ČÍST SMÍ --------------------------- */
@@ -151,11 +151,18 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   };
   const z = await P.zmerPodminky({ jmeno: 'Povoluje', host: 'p.test', domov: 'https://p.test/' },
     { stahni, ua: UA, mezipamet: new Map() });
+  /* ČTE SE OBEZŘETNĚ. `z.stranky[0].pasaze` napsané napřímo shodilo
+     celý běh výjimkou, když jiná změna způsobila, že se žádná stránka
+     nenačetla — a místo hlášení „tahle kontrola padla" nevypsala
+     zkouška vůbec nic. Hlídač, který selže pádem, neřekne proč. */
+  const s1 = (z.stranky || [])[0] || {};
+  const p1 = s1.pasaze || [];
   pravda('povolený web se přečte a pasáže o automatu jsou v nálezu',
-    /přečteno \(1 pasáží/.test(z.verdikt) && z.stranky[0].pasaze.length === 1
-    && /automatizovan/.test(z.stranky[0].pasaze[0].text), JSON.stringify(z.verdikt));
+    /přečteno \(1 pasáží/.test(z.verdikt) && p1.length === 1
+    && /automatizovan/.test((p1[0] || {}).text || ''),
+    JSON.stringify(z.verdikt) + ', stránek ' + (z.stranky || []).length + ', pasáží ' + p1.length);
   pravda('a odstavec, který s automatem nesouvisí, se nepřipojí',
-    !z.stranky[0].pasaze.some((p) => /občanským/.test(p.text)), JSON.stringify(z.stranky[0].pasaze));
+    p1.length > 0 && !p1.some((p) => /občanským/.test(p.text)), JSON.stringify(p1));
   /* Stránka bez jediné zmínky se do nálezu dostane TAKY — „nic tam
      není" je nález, ne mlčení. */
   /* Stránka MUSÍ mít dost textu, jinak by to spadlo do „málo textu" —
@@ -176,8 +183,10 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('„nic o automatu" je taky nález, ne mlčení',
     /nic o automatick/.test(zNic.verdikt), zNic.verdikt);
   pravda('a v nálezu je doklad, kolik textu se přečetlo',
-    zNic.stranky[0].znaku >= P.ZNAKU_NA_STRANKU && zNic.stranky[0].odstavcuCelkem >= 1,
-    JSON.stringify({ znaku: zNic.stranky[0].znaku, odstavcu: zNic.stranky[0].odstavcuCelkem }));
+    (zNic.stranky[0] || {}).znaku >= P.ZNAKU_NA_STRANKU
+    && (zNic.stranky[0] || {}).odstavcuCelkem >= 1,
+    JSON.stringify({ stranek: (zNic.stranky || []).length, znaku: (zNic.stranky[0] || {}).znaku,
+      odstavcu: (zNic.stranky[0] || {}).odstavcuCelkem }));
   /* A TEN ROZDÍL, PRO KTERÝ TO VZNIKLO. Stránka vykreslená až
      v prohlížeči vrátí skoro prázdné HTML. „Nic o automatu" by z ní
      byla lež — nepřečetli jsme nic, z čeho by se to dalo poznat. */
@@ -208,8 +217,10 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     Array.isArray(zKratke.dokumenty) && /podminky\.pdf$/.test(zKratke.dokumenty[0] || ''),
     JSON.stringify(zKratke.dokumenty));
   pravda('skoro prázdná stránka se NEVYDÁ za „nic o automatu"',
-    /málo textu/.test(zPrazdna.verdikt) && /málo textu/.test(zPrazdna.stranky[0].stav),
-    JSON.stringify({ verdikt: zPrazdna.verdikt, stav: zPrazdna.stranky[0].stav }));
+    /málo textu/.test(zPrazdna.verdikt)
+    && /málo textu/.test((zPrazdna.stranky[0] || {}).stav || ''),
+    JSON.stringify({ verdikt: zPrazdna.verdikt, stranek: (zPrazdna.stranky || []).length,
+      stav: (zPrazdna.stranky[0] || {}).stav }));
   /* JEDEN SKOK DÁL: podmínky bývají rozdělené na víc dokumentů. */
   const stahniDva = async (u) => {
     if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
@@ -332,7 +343,7 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
       { stahni: F.stahni, ua: UA, mezipamet: new Map() });
     pravda('NAOSTRO: domov, odkaz i podmínky se přečtou opravdovým `stahni`',
       /přečteno \(1 pasáží/.test(z.verdikt) && z.stranky.length === 1
-      && /automatizovan/.test(z.stranky[0].pasaze[0].text),
+      && /automatizovan/.test((((z.stranky[0] || {}).pasaze || [])[0] || {}).text || ''),
       JSON.stringify({ verdikt: z.verdikt, stranky: z.stranky.length }));
   } finally { srv.close(); }
 }
@@ -547,6 +558,42 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('u stránky, která text dala sama, se prohlížeč vůbec nepustí',
     kolik.length === 0, 'pustil se na: ' + kolik.join(', '));
   pravda('a jinak se pustí jen na tu chudou adresu', volane.length >= 1, JSON.stringify(volane));
+}
+
+/* ---- 7a) ODKAZ NA DOMOVSKOU STRÁNKU SAMU SE NEBERE --------------
+   NALEZENO MĚŘENÍM 3. 11. U ÚZSVM, a bylo to horší než chybějící
+   odkaz. Ve vykresleném domovu „našla" sonda jediný odkaz — vedl na
+   domovskou stránku samu, s popisem „Dopravní prostředky a
+   příslušenství 74". Stránka se přečetla podruhé a verdikt zněl
+   „přečteno, ale nic o automatickém přístupu": tvrzení, že se
+   podmínky čely, i když se žádné nečetly. */
+{
+  pravda('odkaz na domovskou stránku samu se mezi podmínky nepočítá',
+    P.odkazyNaPodminky('<a href="/">Dopravní prostředky a příslušenství 74</a>',
+      'https://u.gov.cz/').length === 0
+    && P.odkazyNaPodminky('<a href="https://u.gov.cz">Pozemky a nabídka majetku</a>',
+      'https://u.gov.cz/').length === 0,
+    'jinak verdikt tvrdí, že se dívalo tam, kde se nedívalo');
+  pravda('ale opravdový odkaz na podmínky se bere dál',
+    P.odkazyNaPodminky('<a href="/">Nabídka majetku</a><a href="/obchodni-podminky">Obchodní podmínky</a>',
+      'https://u.gov.cz/').map((o) => o.url).join() === 'https://u.gov.cz/obchodni-podminky',
+    JSON.stringify(P.odkazyNaPodminky('<a href="/">Nabídka majetku</a><a href="/obchodni-podminky">Obchodní podmínky</a>', 'https://u.gov.cz/')));
+
+  /* A NAOSTRO SKRZ CELOU SONDU: když je ve vykresleném domovu jen
+     odkaz na něj samotný, verdikt MUSÍ zůstat „nenašel se" — tohle
+     je ta věta, která u ÚZSVM lhala. */
+  const DOMOV_PRAZDNY2 = '<html><body><div id="app">' + 'x'.repeat(3000) + '</div></body></html>';
+  const DOMOV_SAM = '<html><body><a href="/">Dopravní prostředky a příslušenství 74</a></body></html>';
+  const stahni2 = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => DOMOV_PRAZDNY2 };
+  };
+  const v = await P.zmerPodminky({ jmeno: 'Sám na sebe', host: 'x.test', domov: 'https://x.test/' },
+    { stahni: stahni2, ua: UA, mezipamet: new Map(), vykresli: async () => ({ html: DOMOV_SAM }) });
+  pravda('a sonda pak nevydá „přečteno", ale „odkaz se nenašel"',
+    /odkaz na podmínky se na domovské stránce nenašel/.test(v.verdikt)
+    && (v.stranky || []).length === 0,
+    v.verdikt + ' / stránek ' + (v.stranky || []).length);
 }
 
 /* ---- 7b) DOMOVSKÁ STRÁNKA, KTERÁ SE SKLÁDÁ AŽ V PROHLÍŽEČI ------

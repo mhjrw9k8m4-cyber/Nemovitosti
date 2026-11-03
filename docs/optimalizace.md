@@ -22080,3 +22080,30 @@ doběhnout — fixtura vyžadovala, aby v živém nálezu byla aspoň jedna
 skořápka, a tu poslední (ÚZSVM) jsme právě zachránili. Fixtura má mít
 TVAR skutečnosti, ne viset na jejím přechodném stavu: bere se tedy
 opravdový kandidát a verdikt se mu přepíše.
+
+## §355e — verdikt, který tvrdil, že se dívalo tam, kde se nedívalo
+
+**Co řekl nález po §355d.** Vykreslený domov ÚZSVM „našel" jeden
+odkaz — a ten vedl na **domovskou stránku samu**, s popisem
+„Dopravní prostředky a příslušenství 74". Sonda ji přečetla podruhé
+a vydala verdikt **„přečteno, ale nic o automatickém přístupu"**.
+Žádné podmínky přitom přečtené nebyly. To je horší než „nenašlo se":
+takový verdikt tvrdí, že se dívalo tam, kde se nedívalo — a majitel
+by na něm mohl postavit rozhodnutí.
+
+**Co se změnilo.** Odkaz na tutéž domovskou stránku se mezi odkazy na
+podmínky nepočítá (srovnává se adresa bez kotvy a bez koncového
+lomítka). Když po tomhle nezůstane nic, verdikt je `odkaz na podmínky
+se na domovské stránce nenašel` — tedy pravda.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 79 kontrol (bylo
+76): odkaz na domov sám se nebere, opravdový odkaz se bere dál, a celá
+sonda pak nevydá „přečteno". Prokázáno sabotáží v **obou směrech** —
+filtr zrušený (2 kontroly padly) i filtr přestřelený na všechny
+adresy webu (24 kontrol padlo).
+
+**Hlídač, který selže pádem, neřekne proč.** To přestřelení napoprvé
+celou zkoušku **shodilo výjimkou** a nevypsalo ani řádek — kontroly
+čely `z.stranky[0].pasaze` napřímo. Osm takových míst je teď
+obezřetných a místo pádu vypíšou, co naměřily (počet stránek, pasáží,
+verdikt). Teprve pak šlo tu sabotáž vydávat za důkaz.
