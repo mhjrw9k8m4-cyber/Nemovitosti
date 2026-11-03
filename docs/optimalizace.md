@@ -22547,3 +22547,58 @@ o příčině neřeklo nic a **opačný směr jsem tím neprokázal**. Tři čte
 na tom místě jsou teď obranná a místo pádu hlásí „hlídání nic
 nevrátilo". Je to táž past jako u osmi čtení `z.stranky[0]` v sondě:
 **hlídač, který selže pádem, zahodí zbytek sady.**
+
+## §360 — mapa webu by po té noci tvrdila, že se změnilo 1 629 stránek z 2 003
+
+**Dokončení řetězu §356.** Prošel jsem všechna místa, která o nabídce
+tvrdí něco o jejím VĚKU, a zbylo jedno: `lastmod` v mapě webu.
+`naposledZmeneno()` v `generate-parcel-pages.mjs` bere datum z toho,
+kdy se nabídka objevila. Přemalovaná nabídka má `first_seen` dnešek
+(nic se nespárovalo), i když visí rok.
+
+**Změřeno:**
+
+```
+dnes            20 stránek z 2 003 má lastmod = dnešek
+po přemalování  1 629                              (osmdesátinásobek)
+po opravě          7
+```
+
+Ten soubor si přitom sám o sobě píše, že `lastmod`, „který se u všech
+adres mění každý den, je lež, kterou se vyhledávač naučí přehlížet".
+Jedna noc u cizího webu by tu lež vyrobila — a u webu, jehož hlavní
+aktivum je 2 109 zaindexovaných adres, se to projeví až tím, že
+přestane fungovat to jediné, co v mapě webu k něčemu je.
+
+**Co se změnilo.** Nabídka se značkou `prezn` své `first_seen`
+nepropůjčí. Zbude historie ceny; když ani ta není, vrátí se `null`
+a adresa jde do mapy webu bez data. To je pravda: nevíme.
+
+**A historie ceny se brát MÁ.** Je z archivu, a ten se v den
+přeznačení vůbec nezapočítá (§358) — takže co v něm je, je starší než
+ta noc, a tedy pravdivé. Umlčet i ji by znamenalo zahodit datum, které
+víme. Těch 7, co po opravě zůstane, jsou právě ony.
+
+**Jedna přiznaná ztráta.** Nabídka, která v tu noc byla opravdu nová,
+dostane značku taky — robot ji od přemalované nerozezná, obě mají
+`first_seen` dnešek. O její datum v mapě webu tedy přijdeme. Je to
+13 stránek z 1 629 a je to správná strana chyby: radši žádné datum než
+datum, které si nevymýšlíme jen u 13 z 1 629.
+
+**Čím je to podložené.** `test-nove-pozemky.mjs` 59 kontrol (bylo 55).
+Tři sabotáže: pravidlo pryč (3 pády), kontrola jen na den a dědičná
+`1` projde (1 pád), a `if (d.prezn) return null` hned na začátku
+funkce, co umlčí i historii ceny (1 pád). Ta třetí kontrola je
+kotvená na POŘADÍ v kódu, ne na datech — zkouška historii
+nepodstrčí, bere se z celého archivu podle klíče, a fixtura postavená
+na tom, že v datech dnes nějaká historie je, by zestárla s daty
+(táž past jako u `test-diagnostika-zdroje`, který přestal běžet, jak
+se ÚZSVM zachránilo).
+
+**Co v tom řetězu kontrolu NEPOTŘEBOVALO** — a je to změřené, ne
+odhadnuté: cenová historie i stránky zlevnění stojí na archivu, který
+§358 chrání; a zdroj s podezřelými cenami se ten den nebere vůbec
+(stav `jineCeny`, `raw` ho odfiltruje a držení nabídek mu vrátí
+minulý běh). Takže přemalování CEN se k těmto stránkám nedostane
+a přemalování IDENTITY se k nim dostane jen skrz archiv, kde je
+zastavené.

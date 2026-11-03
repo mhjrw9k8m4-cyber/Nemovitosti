@@ -77,7 +77,18 @@ function parcelaZTextu(d) {
    a pokud se od té doby změnila cena, tak kdy se změnila naposled. */
 export function naposledZmeneno(d) {
   const dny = [];
-  if (typeof d.first_seen === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d.first_seen)) dny.push(d.first_seen.slice(0, 10));
+  /* NABÍDKA S NEZNÁMÝM VĚKEM SVÉ `first_seen` NEPROPŮJČÍ. Značku
+     `prezn` dává robot tomu, u čeho zdroj přes noc změnil tvar dat
+     (§356): nic se nespárovalo, takže `first_seen` je dnešek, i když
+     ta nabídka visí rok. Změřeno: dnes má `lastmod` dnešní datum
+     20 stránek z 2 003; po jedné takové noci u Bezrealitek by ho mělo
+     1 629 — osmdesátinásobek, a právě ten „lastmod, který se u všech
+     adres mění každý den", je podle komentáře výš lež, kterou se
+     vyhledávač naučí přehlížet. Zbude historie ceny; když ani ta není,
+     vrátí se null a adresa jde do mapy webu bez data. To je pravda:
+     nevíme. */
+  if (typeof d.first_seen === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d.first_seen)
+      && !(d && d.prezn)) dny.push(d.first_seen.slice(0, 10));
   const h = historieCeny(d);
   if (h) for (const [den] of h) if (typeof den === 'string' && /^\d{4}-\d{2}-\d{2}/.test(den)) dny.push(den.slice(0, 10));
   if (!dny.length) return null;

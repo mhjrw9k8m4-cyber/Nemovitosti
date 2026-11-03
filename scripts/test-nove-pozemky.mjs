@@ -368,6 +368,49 @@ pravda('stránka vede zpátky na hlídání i na regiony',
     JSON.stringify(NOV.noveNabidky(bez, { dnesIso, dnu: 14 }).map((o) => o.price)));
 }
 
+/* ---- DATUM V MAPĚ WEBU U NABÍDKY S NEZNÁMÝM VĚKEM --------------
+   Mapa webu nese u každé adresy `lastmod` a to datum se bere z toho,
+   kdy se nabídka objevila (naposledZmeneno v generate-parcel-pages).
+   Nabídka ze dne, kdy zdroj změnil tvar dat (§356), má `first_seen`
+   dnešek, i když visí rok. Změřeno: dnes má dnešní datum 20 stránek
+   z 2 003; po jedné takové noci u Bezrealitek by ho mělo 1 629.
+   A to je přesně ten „lastmod, který se u všech adres mění každý den"
+   — lež, kterou se vyhledávač naučí přehlížet. Hlídá to i
+   test-mapa-webu.mjs, ale ten čte HOTOVOU mapu, takže tuhle noc
+   nasimulovat nedokáže. */
+{
+  const GPP = await import('./generate-parcel-pages.mjs');
+  const DNES = new Date().toISOString().slice(0, 10);
+  pravda('nabídka bez značky své datum do mapy webu dá',
+    GPP.naposledZmeneno({ first_seen: DNES }) === DNES,
+    'bez tohohle by se zkouška dala splnit tím, že datum nedá nikdo');
+  pravda('nabídka se značkou dne už ne',
+    GPP.naposledZmeneno({ first_seen: DNES, prezn: DNES }) === null,
+    'first_seen je dnešek jen proto, že se nic nespárovalo');
+  pravda('ani s dědičnou značkou `1`',
+    GPP.naposledZmeneno({ first_seen: DNES, prezn: 1 }) === null,
+    'dědičná značka je 1, ne den (prenesZnacku) — kontrola na den by ji propustila');
+
+  /* HISTORIE CENY SE BRÁT MÁ. Je z archivu, a ten se v den přeznačení
+     vůbec nezapočítá (§358) — takže co v něm je, je starší a pravdivé.
+     Umlčet i ji by znamenalo zahodit datum, které VÍME.
+     Čte se kód, protože historii bere z celého archivu podle klíče
+     a podstrkovat se nedá. Kotva je na POŘADÍ: značka smí zhasnout
+     jen řádek s `first_seen`, a `historieCeny(d)` se musí volat až po
+     něm a bez podmínky. Kdyby někdo „zjednodušil" na `if (d.prezn)
+     return null` hned na začátku, tahle kontrola spadne. */
+  const kodGPP = readFileSync(new URL('./generate-parcel-pages.mjs', import.meta.url), 'utf8');
+  const iF = kodGPP.indexOf('export function naposledZmeneno');
+  const teloF = iF > 0
+    ? kodGPP.slice(iF, kodGPP.indexOf('\n}', iF)).replace(/\/\*[\s\S]*?\*\//g, '')
+    : '';
+  const iPrezn = teloF.indexOf('prezn');
+  const iHist = teloF.indexOf('historieCeny(d)');
+  pravda('značka zhasne jen first_seen, historie ceny se bere dál',
+    iPrezn > 0 && iHist > iPrezn && !/prezn[\s\S]{0,80}return null/.test(teloF),
+    'archiv v ten den nic nezapsal, takže co v něm je, je starší a pravdivé');
+}
+
 console.log('Co je nového:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);
