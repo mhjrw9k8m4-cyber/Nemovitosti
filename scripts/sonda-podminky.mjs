@@ -24,6 +24,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { smimeCist, telo } from './robots.mjs';
 import { tvorProhlizec, zahozene } from './cti-prohlizecem.mjs';
+import { textZPdf } from './cti-pdf.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 
 const OUT = new URL('../data/zdroje-podminky.json', import.meta.url);
@@ -264,6 +265,14 @@ export function jeKod(text) {
   return /\{"|":\[|className|data-api/.test(String(text || ''));
 }
 
+/* Kolik dokumentů se u jednoho zdroje přečte. Víc jich podmínky
+   nemívají a každý je stažení megabajtů. */
+export const DOKUMENTU_NA_ZDROJ = 3;
+/* Pod touhle čitelností se text NEVYDÁVÁ za přečtený (viz cti-pdf.mjs):
+   špatně dekódované PDF není prázdné, je to rozsypaný čaj, a síto na
+   zákazy by ho propustilo jako „nic se nenašlo". */
+export const PRAH_CITELNOSTI = 0.9;
+
 export function oAutomatu(html) {
   const ven = [];
   for (const o of celyText(html)) {
@@ -406,8 +415,8 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
       pasaze: pasaze.filter((x) => x.kontext),
       zminky: pasaze.filter((x) => !x.kontext).length,
       zminkyUkazka: pasaze.filter((x) => !x.kontext).slice(0, 2),
-      /* Odkazy na dokumenty (PDF, DOC) — vodítko, kde text je, když ho
-         na stránce není. Nestahují se. */
+      /* Odkazy na dokumenty (PDF, DOC). Sbírají se tady a čtou se níž,
+         každý se svým robots.txt. */
       cteno: vykresleno && !vykresleno.chyba && !vykresleno.nepomohlo
         ? 'prohlížečem' : 'ze serveru',
       vykresleno: vykresleno || undefined,
@@ -426,6 +435,84 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
       fronta.push(dalsi);
     }
   }
+  /* DOKUMENTY SE TEĎ OPRAVDU ČTOU. Dřív tu byl jen odkaz a věta
+     „text je nejspíš v odkazovaném dokumentu" — což není odpověď na
+     majitelovu otázku, je to domácí úkol pro člověka. Naměřeno 3. 11.:
+     takhle skončily Bezrealitky (5 PDF), elektronickedrazby.cz
+     (dražební řád) a verejnedrazby.cz (3 PDF).
+
+     ROBOTS.TXT PLATÍ NA KAŽDÝ DOKUMENT ZVLÁŠŤ. U Bezrealitek je to
+     rozhodující: jejich PDF bydlí na `api.bezrealitky.cz`, a ten má
+     `Disallow: /` — tam se nesmí ani sáhnout, ať je text jakkoli
+     potřebný. Zákaz se zapíše jako nález, ne jako selhání.
+
+     A ČITELNOST SE MĚŘÍ. Čtečka je vlastní (žádná nová závislost) a
+     naskenovaný papír ani exotické kódování nepřečte; pak se to musí
+     přiznat, ne vydávat mojibake za „nic o automatu se nenašlo". */
+  const kDokumentum = [];
+  for (const st of zapis.stranky) {
+    for (const d of (st.dokumenty || [])) {
+      if (!kDokumentum.includes(d)) kDokumentum.push(d);
+    }
+  }
+  for (const url of kDokumentum.slice(0, DOKUMENTU_NA_ZDROJ)) {
+    await spi(PAUZA_MS);
+    /* Popis je jméno souboru: v diagnostice je „Dražební řád.pdf"
+       k něčemu, „Dokument" k ničemu. */
+    let jmenoSouboru = 'Dokument';
+    try { jmenoSouboru = decodeURIComponent(new URL(url).pathname.split('/').pop() || '') || 'Dokument'; }
+    catch { /* nehezká adresa — zůstane obecný popis */ }
+    const zaznam = { url, popis: jmenoSouboru.slice(0, 80), jeDokument: true };
+    let r = null;
+    try { r = await smimeCist(url, { stahni, ua: jmeno, mezipamet }); }
+    catch (e) { r = { dovoleno: false, duvod: 'robots.txt: ' + (e && e.message ? e.message : e) }; }
+    if (!r.dovoleno) {
+      zaznam.stav = 'nesmíme číst';
+      zaznam.duvod = String(r.duvod || 'nedovoleno').slice(0, 160);
+      zapis.stranky.push(zaznam);
+      continue;
+    }
+    if (r.delay) await spi(Math.min(r.delay, 30) * 1000);
+    try {
+      const odp = await stahni(url, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
+      if (!odp.ok) {
+        zaznam.stav = 'neodpověděl'; zaznam.duvod = 'HTTP ' + odp.status;
+        zapis.stranky.push(zaznam); continue;
+      }
+      const bajty = Buffer.from(await odp.arrayBuffer());
+      const v = textZPdf(bajty);
+      zaznam.znaku = v.text.replace(/\s/g, '').length;
+      zaznam.citelnost = Math.round((v.citelnost || 0) * 100) / 100;
+      zaznam.cteno = 'z dokumentu';
+      if (v.duvod || !v.text) {
+        zaznam.stav = 'nepřečetli jsme ho';
+        zaznam.duvod = v.duvod || 'v dokumentu není text (nejspíš je to sken)';
+        zapis.stranky.push(zaznam); continue;
+      }
+      if (v.citelnost < PRAH_CITELNOSTI) {
+        zaznam.stav = 'nepřečetli jsme ho';
+        zaznam.duvod = `text vyšel nečitelně (čitelnost ${zaznam.citelnost})`
+          + ' — kódování, které tahle čtečka neumí';
+        zapis.stranky.push(zaznam); continue;
+      }
+      const pasaze = oAutomatu(v.text);
+      const vsechny = celyText(v.text);
+      const malo = zaznam.znaku < ZNAKU_NA_STRANKU;
+      zaznam.stav = pasaze.length ? 'přečteno'
+        : (malo ? 'málo textu — nedá se z toho soudit' : 'přečteno, nic o automatu');
+      zaznam.odstavcuCelkem = vsechny.length;
+      zaznam.odstavcu = pasaze.filter((x) => x.kontext).length;
+      zaznam.pasaze = pasaze.filter((x) => x.kontext);
+      zaznam.zminky = pasaze.filter((x) => !x.kontext).length;
+      zaznam.zminkyUkazka = pasaze.filter((x) => !x.kontext).slice(0, 2);
+      zapis.stranky.push(zaznam);
+    } catch (e) {
+      zaznam.stav = 'neodpověděl';
+      zaznam.duvod = String(e && e.message ? e.message : e).slice(0, 160);
+      zapis.stranky.push(zaznam);
+    }
+  }
+
   const precteno = zapis.stranky.filter((s) => /přečteno/.test(s.stav)).length;
   const malo = zapis.stranky.filter((s) => /málo textu/.test(s.stav)).length;
   const pasazi = zapis.stranky.reduce((n, s) => n + (s.odstavcu || 0), 0);
@@ -440,8 +527,9 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
           + ' nebo je v odkazovaném dokumentu)')
       : (malo ? 'málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí'
         : 'žádnou stránku podmínek se nepodařilo přečíst'));
-  /* Kam se text možná schoval: odkazy na dokumenty. Nestahují se —
-     je to jen vodítko pro člověka, který to pak otevře. */
+  /* Soupis dokumentů zůstává v nálezu i po jejich přečtení: majitel
+     se na ně může chtít podívat sám, a u zakázaných je to jediné, co
+     o nich můžeme říct. */
   const dokumenty = [];
   for (const st of zapis.stranky) {
     for (const d of (st.dokumenty || [])) if (!dokumenty.includes(d)) dokumenty.push(d);

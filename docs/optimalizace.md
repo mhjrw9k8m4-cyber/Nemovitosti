@@ -22169,3 +22169,57 @@ neoznačí; kanál značku nečte; obě větve odznaku vynechané.
    se po každé změně zdroje pouští `oprav.mjs`. A kotvu textu jsem
    napsal s jednoznakovou předložkou, za kterou česká sazba vloží
    nezlomitelnou mezeru; kontrola pak padala na dobrém textu.
+
+## §357 — podmínky v PDF: odkaz není odpověď
+
+**Kde to končilo slepě.** Sonda podmínek u tří zdrojů došla jen
+k odkazu a k větě „text se nejspíš vykresluje až v prohlížeči nebo je
+v odkazovaném dokumentu": Bezrealitky (5 PDF), elektronickedrazby.cz
+(dražební řád) a verejnedrazby.cz (3 PDF). To není odpověď na otázku
+„smělo by se to čist?" — to je domácí úkol pro člověka.
+
+**Čtečka PDF bez jediné nové závislosti** (`scripts/cti-pdf.mjs`).
+Dekomprese je zlib, který je v Node; zbytek je čtení struktury.
+Balíček na PDF by znamenal cizí kód v nočním robotu, a to kvůli třem
+dokumentům nestojí za riziko. Umí nekomprimovaný text i FlateDecode,
+`ToUnicode` CMap (bfchar i bfrange), tedy i fonty Identity-H, kterými
+se česká diakritika sází nejčastěji, a u jednobajtových fontů zkusí
+cp1250. Neumí naskenovaný papír, šifrovaná PDF ani exotická kódování.
+
+**A proto se měří čitelnost.** Špatně dekódované PDF není prázdné —
+je to rozsypaný čaj, a síto na zákazy by ho propustilo jako „nic
+o automatu se nenašlo". To by byla lež, ne nález. `citelnost()` vrací
+podíl znaků, které v českém textu mít smysl mohou; pod 0,9 se text
+NEBERE a do nálezu jde „nepřečetli jsme ho" s důvodem.
+
+**robots.txt platí na každý dokument zvlášť** — a u Bezrealitek je to
+celý rozdíl: jejich PDF bydlí na `api.bezrealitky.cz`, který má
+`Disallow: /`. Tam se nesmí ani sáhnout, ať je ten text jakkoli
+potřebný; zákaz se zapíše jako nález. Čte se nejvýš **3** dokumenty na
+zdroj, každý s pauzou.
+
+**Čím je to podložené.** `test-cti-pdf.mjs` 15 kontrol (nový soubor;
+fixtury se SKLÁDAJÍ jako opravdová PDF, ne podstrkují jako hotový
+text) a `test-sonda-podminky.mjs` 88 (bylo 79). Prokázáno pěti
+sabotážemi: ignorovaný robots.txt u dokumentu, zrušený strop na počet,
+nečitelný text brán za přečtený, nepřiznaný sken, vypnutá dekomprese.
+
+**Tři chyby, které si zkoušky našly u mě.**
+1. Hlavička streamu se brala jako 600 bajtů dozadu — u objektu, před
+   kterým ležel komprimovaný CMap, se do okna vešlo **cizí**
+   `/Filter /FlateDecode`. Nekomprimovaný obsah se pak marně
+   rozbaloval a celý text vyšel prázdný. Řeže se tedy po poslední
+   značce ` obj`.
+2. Fixturu s českou větou jsem zapsal do PDF jako `latin1` — diakritika
+   se rozsypala a pasáž se našla jen na ASCII slově „roboty". Odhalilo
+   to jen proto, že kontrola hlídá KONKRÉTNÍ slovo, ne „něco se našlo".
+   (A stojí za zaznamenání, že `citelnost()` tohle nezachytí: z latin1
+   i z cp1250 vyjdou platná písmena, jen jiná.)
+3. Sabotáž „mez na čitelnost zrušena" prošla napoprvé zeleně, protože
+   žádná fixtura mojibake nevyrobila. Přidáno PDF s dvoubajtovými kódy
+   bez ToUnicode tabulky — přesně to, co dělají opravdová PDF
+   s Identity-H bez té tabulky.
+
+A čtvrtá, menší: krok zkoušky jsem napsal do prohlížečové směny, ačkoli
+`test-cti-pdf` prohlížeč nepotřebuje. Poznala to zkouška roadmapy
+(počet zkoušek s prohlížečem vyskočil na 162); patří do rychlé sady.

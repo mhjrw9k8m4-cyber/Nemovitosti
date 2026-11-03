@@ -16,6 +16,7 @@
 // Síť se nepoužívá: stahování se podstrkuje, a jedna kontrola běží
 // naostro proti serveru na 127.0.0.1 (pravidlo z §337).
 import { readFileSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -659,6 +660,163 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('kde domov odkazy dá sám, prohlížeč se na něj nepustí',
     !naDomov2.includes('https://d.test/') && !d.domovVykreslen,
     'pouštěn na: ' + naDomov2.join(' ') + ' / ' + JSON.stringify(d.domovVykreslen));
+}
+
+/* ---- 8) PODMÍNKY V DOKUMENTU SE OPRAVDU PŘEČTOU -----------------
+   NALEZENO MĚŘENÍM 3. 11. U TŘÍ ZDROJŮ. Sonda skončila u odkazu a
+   věty „text je nejspíš v odkazovaném dokumentu" — Bezrealitky 5 PDF,
+   elektronickedrazby.cz dražební řád, verejnedrazby.cz 3 PDF. Odkaz
+   není odpověď na „smělo by se to čist?", je to domácí úkol pro
+   člověka. Čtečka je scripts/cti-pdf.mjs (bez nové závislosti) a tady
+   se měří, že ji sonda opravdu použije — a za jakých podmínek. */
+{
+  const VETA_PDF = 'Je zakázáno obsah serveru vytěžovat automatizovanými prostředky, zejména roboty.';
+  /* Opravdové PDF, ne podstrčený text: kdyby se čtečka rozbila,
+     musí to tahle zkouška poznat. */
+  /* VĚTA SE DO PDF ZAPISUJE V cp1250, ne jako latin1. Napoprvé jsem
+     ji zapsal přes `Buffer.from(…, 'latin1')` — česká diakritika se
+     tím rozsypala, čtečka ji přečetla jako cizí písmena a pasáž se
+     našla jen na ASCII slově „roboty". Kontrola to odhalila, protože
+     si ověřuje KONKRÉTNÍ slovo, ne jen „něco se našlo".
+     (Stojí za zmínku, že `citelnost()` tohle nezachytí: z latin1 i
+     z cp1250 vyjdou platná písmena, jen jiná. Hlídá rozsypaný čaj,
+     ne záměnu dvou podobných kódování.) */
+  const CP1250 = { 'á': 0xe1, 'č': 0xe8, 'ď': 0xef, 'é': 0xe9, 'ě': 0xec, 'í': 0xed, 'ň': 0xf2,
+    'ó': 0xf3, 'ř': 0xf8, 'š': 0x9a, 'ť': 0x9d, 'ú': 0xfa, 'ů': 0xf9, 'ý': 0xfd, 'ž': 0x9e,
+    'Á': 0xc1, 'Č': 0xc8, 'É': 0xc9, 'Ě': 0xcc, 'Í': 0xcd, 'Ř': 0xd8, 'Š': 0x8a,
+    'Ú': 0xda, 'Ů': 0xd9, 'Ý': 0xdd, 'Ž': 0x8e };
+  const vCp1250 = (txt) => Buffer.from([...txt].map((ch) =>
+    CP1250[ch] != null ? CP1250[ch] : (ch.charCodeAt(0) & 0xff)));
+  const pdfSVetou = (veta) => {
+    const obsah = Buffer.concat([Buffer.from('BT /F1 12 Tf (', 'latin1'),
+      vCp1250(veta), Buffer.from(') Tj ET\n', 'latin1')]);
+    const telo = deflateSync(obsah);
+    return Buffer.concat([
+      Buffer.from('%PDF-1.4\n4 0 obj\n<< /Length ' + telo.length + ' /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      telo, Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+    ]);
+  };
+  const PDF_ZAKAZ = pdfSVetou(VETA_PDF);
+  /* „Sken": PDF bez jediného textového operátoru. */
+  const PDF_SKEN = (() => {
+    const obsah = Buffer.from('q 612 0 0 792 0 0 cm /Im0 Do Q\n', 'latin1');
+    const telo = deflateSync(obsah);
+    return Buffer.concat([
+      Buffer.from('%PDF-1.4\n4 0 obj\n<< /Length ' + telo.length + ' /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      telo, Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+    ]);
+  })();
+  const DOMOV = '<html><body><a href="/podminky">Obchodní podmínky</a></body></html>';
+  const STRANKA = '<html><body><p>Vítejte na stránce.</p>'
+    + '<a href="/radek.pdf">Dražební řád</a></body></html>';
+  const cil = { jmeno: 'Vše v PDF', host: 'p.test', domov: 'https://p.test/' };
+
+  const udelejStahni = (pdf, robotsPdf) => {
+    const chozeno = [];
+    const fn = async (u) => {
+      chozeno.push(u);
+      if (/robots\.txt$/.test(u)) {
+        return { ok: true, status: 200,
+          text: async () => robotsPdf || 'User-agent: *\nAllow: /' };
+      }
+      if (/\.pdf$/.test(u)) {
+        return { ok: true, status: 200, arrayBuffer: async () => pdf,
+          text: async () => 'binární' };
+      }
+      if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => STRANKA };
+      return { ok: true, status: 200, text: async () => DOMOV };
+    };
+    return { fn, chozeno };
+  };
+
+  /* a) PDF se přečte a zákaz se najde. */
+  {
+    const { fn } = udelejStahni(PDF_ZAKAZ);
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dok = (z.stranky || []).find((x) => x.jeDokument);
+    pravda('zákaz v PDF se najde a dostane se do verdiktu',
+      /přečteno \(/.test(z.verdikt) && !!dok && dok.stav === 'přečteno'
+      && (dok.pasaze || []).some((a) => /vytěžovat/.test(a.text)),
+      z.verdikt + ' / ' + JSON.stringify(dok && { stav: dok.stav, znaku: dok.znaku, citelnost: dok.citelnost }));
+    pravda('a v nálezu stojí, že se čtelo z dokumentu',
+      !!dok && dok.cteno === 'z dokumentu' && dok.citelnost >= 0.9,
+      JSON.stringify(dok && { cteno: dok.cteno, citelnost: dok.citelnost }));
+  }
+
+  /* b) ROBOTS.TXT PLATÍ NA DOKUMENT ZVLÁŠŤ. U Bezrealitek je to celý
+        rozdíl: jejich PDF bydlí na api.bezrealitky.cz s Disallow: /.
+        Zakázaný dokument se nesmí STÁHNOUT, ne jen nepoužít. */
+  {
+    const { fn, chozeno } = udelejStahni(PDF_ZAKAZ, 'User-agent: *\nDisallow: /radek.pdf');
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dok = (z.stranky || []).find((x) => x.jeDokument);
+    pravda('zakázaný dokument se nestáhne a zákaz je v nálezu',
+      !!dok && dok.stav === 'nesmíme číst' && /Disallow/.test(dok.duvod || '')
+      && !chozeno.some((u) => /\.pdf$/.test(u) && !/robots/.test(u)),
+      JSON.stringify(dok) + ' / chozeno: ' + chozeno.filter((u) => !/robots/.test(u)).join(' '));
+    pravda('a verdikt z něj nic netvrdí',
+      !/přečteno \(/.test(z.verdikt), z.verdikt);
+  }
+
+  /* c) SKEN SE PŘIZNÁ. Naskenovaný papír text neobsahuje — a „nic
+        o automatu se nenašlo" by u něj byla lež, ne nález. */
+  {
+    const { fn } = udelejStahni(PDF_SKEN);
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dok = (z.stranky || []).find((x) => x.jeDokument);
+    pravda('z naskenovaného dokumentu se nic netvrdí, přizná se',
+      !!dok && dok.stav === 'nepřečetli jsme ho' && /sken|není text/.test(dok.duvod || ''),
+      JSON.stringify(dok));
+  }
+
+  /* c2) NEČITELNÝ TEXT SE NESMÍ VYDÁVAT ZA PŘEČTENÝ. Tohle je ta
+         kontrola, kvůli které `PRAH_CITELNOSTI` existuje — a napoprvé
+         jsem ji neměl: sabotáž „mez na čitelnost zrušena" prošla
+         zeleně, protože žádná fixtura mojibake nevyrobila. Dvoubajtové
+         kódy BEZ ToUnicode tabulky ho vyrobí přesně tak, jak to dělají
+         opravdová PDF s fontem Identity-H. */
+  {
+    const obsah = Buffer.from('BT /F1 12 Tf <0048004900480049004800490048004900480049> Tj ET\n', 'latin1');
+    const telo = deflateSync(obsah);
+    const PDF_MOJIBAKE = Buffer.concat([
+      Buffer.from('%PDF-1.4\n4 0 obj\n<< /Length ' + telo.length + ' /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      telo, Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+    ]);
+    const { fn } = udelejStahni(PDF_MOJIBAKE);
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dok = (z.stranky || []).find((x) => x.jeDokument);
+    pravda('nečitelný text se přizná, nevydává se za „nic o automatu"',
+      !!dok && dok.stav === 'nepřečetli jsme ho' && /čitelnost/.test(dok.duvod || '')
+      && dok.citelnost < P.PRAH_CITELNOSTI,
+      JSON.stringify(dok));
+    pravda('a mez na čitelnost je vysoko (text se bere jen hodnověrný)',
+      P.PRAH_CITELNOSTI >= 0.8 && P.PRAH_CITELNOSTI <= 1,
+      String(P.PRAH_CITELNOSTI));
+  }
+
+  /* d) STROP NA POČET DOKUMENTŮ. Jeden zdroj jich může odkazovat deset
+        a každý je stažení megabajtů. */
+  {
+    const MNOHO = '<html><body><p>Vítejte.</p>'
+      + Array.from({ length: 6 }, (_, i) => `<a href="/d${i}.pdf">Dokument ${i}</a>`).join('')
+      + '</body></html>';
+    const chozeno = [];
+    const fn = async (u) => {
+      chozeno.push(u);
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+      if (/\.pdf$/.test(u)) return { ok: true, status: 200, arrayBuffer: async () => PDF_ZAKAZ, text: async () => 'b' };
+      if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => MNOHO };
+      return { ok: true, status: 200, text: async () => DOMOV };
+    };
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dokumentu = (z.stranky || []).filter((x) => x.jeDokument).length;
+    const stazenych = chozeno.filter((u) => /\.pdf$/.test(u) && !/robots/.test(u)).length;
+    pravda(`dokumentů se přečte nejvýš ${P.DOKUMENTU_NA_ZDROJ}`,
+      dokumentu === P.DOKUMENTU_NA_ZDROJ && stazenych <= P.DOKUMENTU_NA_ZDROJ,
+      `v nálezu ${dokumentu}, stažených ${stazenych}, na stránce 6`);
+    pravda('a strop je malý (jeden zdroj není archiv)',
+      P.DOKUMENTU_NA_ZDROJ <= 5, String(P.DOKUMENTU_NA_ZDROJ));
+  }
 }
 
 console.log('Sonda podmínek: čte jen to, co smí');
