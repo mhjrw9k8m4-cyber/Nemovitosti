@@ -240,7 +240,7 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     { jmeno: 'Kandidát zakazuje', host: 'kand.cz', stav: 'kandidát', robots: 'nedovoluje' },
   ] };
   const c = P.cilePodminek(nalez);
-  const zakazy = c.filter((x) => x.duvod === 'zákaz');
+  const zakazy = c.filter((x) => x.proc === 'zákaz');
   pravda('cílem se zákazem je jen ZAPOJENÝ zdroj, který nás zakazuje',
     zakazy.length === 1 && zakazy[0].jmeno === 'Zakazuje', JSON.stringify(c));
   pravda('a domov se bere z webu, ne z API — podmínky nejsou v rozhraní',
@@ -260,7 +260,7 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   const k = P.cilePodminek(sKandidaty);
   pravda('slibný kandidát se dostane mezi cíle', k.some((x) => x.jmeno === 'Slibný'), JSON.stringify(k));
   pravda('a je označený jako kandidát, ne jako zákaz',
-    (k.find((x) => x.jmeno === 'Slibný') || {}).duvod === 'slibný kandidát', JSON.stringify(k));
+    (k.find((x) => x.jmeno === 'Slibný') || {}).proc === 'slibný kandidát', JSON.stringify(k));
   pravda('SLABÝ kandidát se nečte (nemá cenu na něj posílat dotazy)',
     !k.some((x) => x.jmeno === 'Slabý'), JSON.stringify(k));
   /* Zakázaný kandidát se nečte VŮBEC: robots.txt je odpověď sama.

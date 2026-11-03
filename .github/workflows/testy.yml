@@ -1437,6 +1437,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-escape-dom.mjs
 
+      - name: Diagnostika vykreslí nálezy sond
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-diagnostika-zdroje.mjs
+
       - name: Kontrast textu (WCAG AA)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-kontrast.mjs

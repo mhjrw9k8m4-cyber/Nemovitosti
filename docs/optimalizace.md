@@ -21655,3 +21655,59 @@ vždy → 1 pád.
 pustil na soubor, kde ještě byla ta první, takže výsledek vypadal
 stejně a neříkal nic. Sabotáž se měří JEDNA PO DRUHÉ, s obnovením mezi
 nimi — jinak se neví, co co shodilo.
+
+## 350. Diagnostika: nálezy sond nikdo neměřil — a vedla přes ni cesta cizího kódu
+
+diagnostika.html je stránka, kterou majitel otevře, když něco
+nefunguje. Nálezy obou sond na ní byly jediným místem, kde se
+k člověku dostanou — a **neměla ani jednu funkční zkoušku**. Že se
+blok vykreslí, se dalo poznat jen okem.
+
+Že to není teorie: v bloku o podmínkách, který jsem právě psal, jsem
+čet `z.odkaz` a `z.oAutomatu`. **Ani jedno v nálezu sondy
+neexistuje** — pasáže jsou u STRÁNEK, ne u zdroje. Stránka by prostě
+mlčela.
+
+**Nález sondy podmínek se do diagnostiky vůbec nedostal.** Ležel jen
+v `data/zdroje-podminky.json` v repozitáři. Majitel se tedy odpověď na
+svou vlastní otázku („zjisti podmínky") z webu nedozvěděl. Teď tam
+stojí: u zakázaného zdroje „otázka je, jestli smíme dál", u kandidáta
+„jestli by se to smělo začít čist", pak verdikt měření, čtené stránky
+jako odkazy, naměřená pasáž o automatu a odkazy na dokumenty, které si
+musí otevřít člověk.
+
+### Pět míst, kudy vedl cizí kód do majitelovy diagnostiky
+
+Jména zdrojů a adresy v nálezu jsou **text z cizího webu**. Pět míst
+v bloku sondy je vkládalo do DETAILU řádku, a ten se vkládá jako HTML:
+seznam zakázaných, výpis robots.txt, seznam „nevíme", skořápky
+a seznam slibných. Všech pět teď jde přes `esc()`.
+
+Opačná vada u mého nového bloku: NÁZEV řádku se vkládá přes
+`textContent`, takže `esc()` na něm escapoval dvakrát a majitel by
+v diagnostice čet „&lt;img". Escapuje se tedy jen detail.
+
+### Čtyři pasti, na které jsem při psaní té zkoušky naletěl
+
+1. **`document.body.textContent` obsahuje i ZDROJ vloženého skriptu.**
+   Čekání na nápis „Sonda podmínek měřila" proto skončilo OKAMŽITĚ —
+   ten nápis je ve zdrojovém kódu stránky. Osm kontrol pak měřilo
+   zdroják, ne vykreslenou stránku. Čeká se tedy na PRVEK
+   (`#vysledky .name`) a měří se obsah `#vysledky`.
+2. **Vymyšlená fixtura.** Nález jsem si vymyslel a stránka na něm
+   TICHO padla: vykreslování visí v řetězu slibů, takže chybějící pole
+   skončí ODMÍTNUTÝM SLIBEM, ne výjimkou — a v okně zůstane jediný
+   řádek. Fixtura se bere z opravdového nálezu a mění se v ní jen to,
+   co se měří (§337 znovu).
+3. **Odmítnuté sliby se nesbíraly.** Playwright hlásí `pageerror`, ne
+   unhandled rejection. Zkouška teď sbírá obojí — jinak hledá vadu
+   o dvě patra jinde, jak jsem to dělal já.
+4. **Nálož nemířila do měřené větve.** Dal jsem ji do prvního zdroje,
+   ale ten je zapojený, takže se vypisuje jako název (bezpečně). Pak
+   mi sabotáž „jméno zpět bez escapování" v seznamu slibných **prošla
+   zeleně**. Nálož jde teď i do prvního slibného kandidáta, protože
+   právě jeho jméno se vkládá do detailu.
+
+**Zkouška má 11 kontrol.** Sabotáže: jméno v seznamu slibných bez
+escapování → 2 pády (nálož se vykoná), celý blok podmínek pryč →
+8 pádů.

@@ -234,7 +234,11 @@ export function oAutomatu(html) {
  * robots.txt se čte u KAŽDÉ adresy zvlášť, i u těch podstránek.
  */
 export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
-  const zapis = { jmeno: cil.jmeno, host: cil.host, domov: cil.domov, kdy: new Date().toISOString().slice(0, 10), stranky: [] };
+  /* `proc` se nese do nálezu: bez něj by v souboru nebylo vidět,
+     jestli se u toho zdroje ptáme „smíme dál", nebo „smělo by se
+     začít". */
+  const zapis = { jmeno: cil.jmeno, host: cil.host, domov: cil.domov,
+    proc: cil.proc || 'zákaz', kdy: new Date().toISOString().slice(0, 10), stranky: [] };
   const jmeno = ua || BOT_UA;
   const nactiPovolene = async (url) => {
     let r;
@@ -348,7 +352,9 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
  *      PŘED přidáním, ne po něm.
  *
  * Čtení podmínek je u obou totéž, takže nemá cenu dvojí sonda. Co se
- * liší, je `duvod` — ať je v nálezu vidět, proč se tam kouká. */
+ * liší, je `proc` — ať je v nálezu vidět, proč se tam kouká. NE `duvod`:
+ * to jméno je v tomhle souboru obsazené DŮVODEM VERDIKTU (proč se
+ * podmínky nepřečetly), takže by se třída cíle v nálezu přepsala. */
 /* „www." se přidává JEN hostu bez podřízené části. U
  * drazby.policenm.cz by z toho bylo www.drazby.policenm.cz, což
  * neexistuje — a sonda by hlásila „podmínky se nenašly" tam, kde se
@@ -366,10 +372,10 @@ export function cilePodminek(nalez) {
     if (!host) continue;
     if (z.stav === 'zapojeno' && z.robots === 'nedovoluje') {
       ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
-        duvod: 'zákaz', zakaz: z.robotsDuvod });
+        proc: 'zákaz', zakaz: z.robotsDuvod });
     } else if (z.stav !== 'zapojeno' && z.robots === 'dovoluje' && z.slibuje === 'slibné') {
       ven.push({ jmeno: z.jmeno, host, domov: domovZHostu(host),
-        duvod: 'slibný kandidát' });
+        proc: 'slibný kandidát' });
     }
   }
   return ven;
@@ -386,8 +392,8 @@ async function main() {
     process.exit(1);
   }
   const cile = cilePodminek(nalez);
-  const sZakazem = cile.filter((c) => c.duvod === 'zákaz');
-  const kandidati = cile.filter((c) => c.duvod === 'slibný kandidát');
+  const sZakazem = cile.filter((c) => c.proc === 'zákaz');
+  const kandidati = cile.filter((c) => c.proc === 'slibný kandidát');
   console.log(`Cílů: ${cile.length} — se zákazem ${sZakazem.length}`
     + `${sZakazem.length ? ' (' + sZakazem.map((c) => c.jmeno).join(', ') + ')' : ''},`
     + ` slibných kandidátů ${kandidati.length}`

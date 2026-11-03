@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-sk0UmsyvWSJbROdkGBh726ZleFO6f++Ea3VihXvdxHk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-Tp8+3I9q+tRcH0GjLd5e4R/EGYZu+aEkfmeWbJUM2So='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -351,10 +351,10 @@
            je rozhodnutí o obsahu webu — u Bezrealitek jde o čtyři pětiny
            nabídek — a nemá se dělat podle jedné věty v souhrnu. */
         radek(box, 'bad', 'Zapojený zdroj nás už nechce',
-          zakaz.map(function (x) { return x.jmeno + ' (' + (x.robotsDuvod || '') + ')'; }).join(', ')
+          zakaz.map(function (x) { return esc(x.jmeno) + ' (' + esc(x.robotsDuvod || '') + ')'; }).join(', ')
             + ' — takový zdroj se musí ze stahování odebrat.'
             + zakaz.filter(function (x) { return x.robotsText; }).map(function (x) {
-              return '<br><b>' + x.jmeno + '</b> — jeho robots.txt:<pre class="dg-robots">'
+              return '<br><b>' + esc(x.jmeno) + '</b> — jeho robots.txt:<pre class="dg-robots">'
                 + esc(x.robotsText) + '</pre>';
             }).join(''));
       }
@@ -365,7 +365,7 @@
       var nevime = N.zdroje.filter(function (x) { return x.verdikt === 'robots neznámý' && x.stav === 'zapojeno'; });
       if (nevime.length) {
         radek(box, 'warn', 'U zapojeného zdroje se nedal přečíst robots.txt',
-          nevime.map(function (x) { return x.jmeno + ' (' + (x.robotsDuvod || '') + ')'; }).join(', ')
+          nevime.map(function (x) { return esc(x.jmeno) + ' (' + esc(x.robotsDuvod || '') + ')'; }).join(', ')
             + ' — není to zákaz, je to nezměřený stav. Dokud trvá, druhá cesta se u toho zdroje nezkouší.');
       }
       /* SKOŘÁPKY ZVLÁŠŤ. „Velká stránka bez jediné zmínky pozemku"
@@ -377,7 +377,7 @@
         radek(box, 'warn', 'Skořápek: ' + skorapky.length,
           skorapky.map(function (x) {
             var a = (x.strojoveAdresy || []);
-            return '<b>' + x.jmeno + '</b>' + (a.length
+            return '<b>' + esc(x.jmeno) + '</b>' + (a.length
               ? ' — ze sitemapy vedou adresy výpisu: <code>'
                 + a.slice(0, 3).map(function (u) { return esc(u); }).join('</code>, <code>')
                 + '</code>'
@@ -394,11 +394,71 @@
             /* U kandidáta, u kterého si sonda našla výpis sama, se ukazuje
                ADRESA, ze které ten verdikt je — jinak by nebylo poznát,
                co se vlastně měřilo (viz §341). */
-            return x.jmeno + (x.lepsiAdresa
+            return esc(x.jmeno) + (x.lepsiAdresa
               ? ' (výpis na <code>' + esc(x.lepsiAdresa.url) + '</code>)'
               : '');
           }).join(', ') + ' — tady má smysl psát stahovač.'
           : 'Z měřených adres nevypadá žádná na výpis pozemků. Seznam kandidátů je v <code>scripts/zdroje-kandidati.mjs</code>.');
+      return fetch('data/zdroje-podminky.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }).then(function (P) {
+      // SONDA PODMÍNEK. Tahle otázka je pro ČLOVĚKA, ne pro robota:
+      // u zdroje, který nás zakazuje, „smíme dál", a u slibného
+      // kandidáta „smělo by se začít". Do dneška ten nález ležel jen
+      // v JSONu v repozitáři, takže se k majiteli nedostal.
+      if (!P || !P.zdroje) {
+        radek(box, 'warn', 'Nález sondy podmínek chybí',
+          'Soubor <code>data/zdroje-podminky.json</code> nejde stáhnout. Měření spustí workflow „Sonda podmínek".');
+        return;
+      }
+      if (!P.updated) {
+        radek(box, 'warn', 'Sonda podmínek ještě neběžela',
+          'V souboru je jen seznam ' + P.zdroje.length + ' cílů s verdiktem „neměřeno".');
+        return;
+      }
+      if (!P.zdroje.length) {
+        radek(box, 'ok', 'Podmínky není u koho zjišťovat',
+          'Žádný zapojený zdroj nás nezakazuje a žádný slibný kandidát nečeká.');
+        return;
+      }
+      radek(box, 'ok', 'Sonda podmínek měřila ' + esc(P.updated),
+        'Cílů ' + P.zdroje.length + ' — ' + P.zdroje.filter(function (z) { return z.proc !== 'slibný kandidát'; }).length
+        + '× zákaz, ' + P.zdroje.filter(function (z) { return z.proc === 'slibný kandidát'; }).length + '× slibný kandidát.');
+      P.zdroje.forEach(function (z) {
+        var kandidat = z.proc === 'slibný kandidát';
+        var cast = [];
+        cast.push(kandidat
+          ? 'Nevozíme ho a robots.txt dovoluje — otázka je, jestli by se to smělo začít čist.'
+          : 'Vozíme ho a robots.txt nás na té adrese zakazuje — otázka je, jestli smíme dál.');
+        cast.push('Verdikt měření: <strong>' + esc(z.verdikt || '—') + '</strong>'
+          + (z.duvod ? ' (' + esc(z.duvod) + ')' : '') + '.');
+        /* Pasáže o automatickém přístupu jsou U STRÁNEK, ne u zdroje.
+           Napoprvé jsem tu čet `z.odkaz` a `z.oAutomatu` — ani jedno
+           v nálezu není, takže by se nevypsalo nic a nebylo by na tom
+           nic vidět. Čte se tedy to, co sonda opravdu zapisuje. */
+        var stranky = z.stranky || [];
+        var sPasazi = stranky.filter(function (st) { return (st.pasaze || []).length; });
+        if (stranky.length) {
+          cast.push('Čtené stránky: ' + stranky.map(function (st) {
+            return '<a href="' + esc(st.url) + '" rel="noopener noreferrer" target="_blank">'
+              + esc(st.popis || st.url) + '</a> (' + esc(st.stav) + ')';
+          }).join(', '));
+        }
+        sPasazi.slice(0, 2).forEach(function (st) {
+          (st.pasaze || []).slice(0, 2).forEach(function (a) {
+            cast.push('Slovo <strong>' + esc(a.slovo) + '</strong>: „' + esc(String(a.text || '').slice(0, 400)) + '"');
+          });
+        });
+        if (z.dokumenty && z.dokumenty.length) {
+          cast.push('Dokumenty, které si musí otevřít člověk: <code>'
+            + z.dokumenty.slice(0, 5).map(function (u) { return esc(u); }).join('</code>, <code>') + '</code>');
+        }
+        radek(box, kandidat ? 'ok' : 'warn',
+          /* JMÉNO JDE JAKO NÁZEV, TEDY PŘES textContent (viz radek()) —
+             escapovat ho tady by znamenalo escapovat dvakrát a majitel
+             by v diagnostice čet „&lt;img". Escapuje se jen to, co jde
+             do DETAILU, protože ten se vkládá jako HTML. */
+          (kandidat ? 'Kandidát ' : 'Zákaz u ') + z.jmeno, cast.join(' '));
+      });
     });
   }
 
