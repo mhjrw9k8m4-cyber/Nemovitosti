@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T16:35:29.990Z",
+ "updated_at": "2026-11-03T16:43:31.184Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -398,41 +398,6 @@
      "duvod": "v dokumentu není text (nejspíš je to sken)"
     }
    ],
-   "domovVykreslen": {
-    "odkazu": 1,
-    "zablokovano": 0,
-    "cizich": 9,
-    "cizinci": [
-     {
-      "co": "unpkg.com",
-      "kolik": 2
-     },
-     {
-      "co": "www.googletagmanager.com",
-      "kolik": 2
-     },
-     {
-      "co": "ajax.aspnetcdn.com",
-      "kolik": 1
-     },
-     {
-      "co": "cc.dalten.cz",
-      "kolik": 1
-     },
-     {
-      "co": "code.jquery.com",
-      "kolik": 1
-     },
-     {
-      "co": "img.youtube.com",
-      "kolik": 1
-     },
-     {
-      "co": "maxcdn.bootstrapcdn.com",
-      "kolik": 1
-     }
-    ]
-   },
    "nalezeneOdkazy": [
     {
      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
