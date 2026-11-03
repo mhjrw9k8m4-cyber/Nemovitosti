@@ -681,7 +681,14 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     + '<a href="/p/1">Pozemek 1 — 1 200 m², 450 000 Kč</a>'.repeat(40) + '</body></html>';
   const cil = { jmeno: 'Skořápka', host: 'sk.test', url: 'https://sk.test/', stav: 'kandidát' };
   const ZAHOZENI = [{ co: 'sk.gov.test', kolik: 6 }, { co: 'www.google.com', kolik: 1 }];
-  const vykresliNepomohl = async () => ({ html: SKORAPKA, zablokovano: 0, cizich: 7, cizinci: ZAHOZENI });
+  /* Prohlížeč si vede seznam adres, na které ho někdo pustil —
+     bez něj by se nedalo poznat zbytečné spuštění (sabotáž „čti
+     souseda prohlížečem vždy" jinak projde zeleně). */
+  const pustenNa = [];
+  const vykresliNepomohl = async (u) => {
+    pustenNa.push(u);
+    return { html: SKORAPKA, zablokovano: 0, cizich: 7, cizinci: ZAHOZENI };
+  };
 
   /* a) Soused nabídky má — verdikt se podle něj změní a adresa se zapíše. */
   const chozeno = [];
@@ -699,6 +706,11 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     JSON.stringify(a.sousedniDomena) + ' / obsah ' + a.slibuje);
   pravda('na cizí měřidlo (google) se přitom nešlo',
     !chozeno.some((u) => /google/.test(u)), chozeno.join(' '));
+  /* OTISK HNED PO TOMHLE PŘÍPADĚ. Seznam `pustenNa` sbírá i z dalších
+     případů níž — a v jednom z nich se prohlížeč na souseda pouští
+     právem. Bez otisku by kontrola padala na čistém kódu (padala;
+     tohle je ta oprava). */
+  const pustenPoA = pustenNa.slice();
 
   /* b) ROBOTS.TXT SOUSEDA PLATÍ. Je to jiný web, tedy jiný robots.txt
         — a když zakazuje, nesmí se stáhnout ani ta stránka. */
@@ -726,6 +738,30 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('soused, který taky nic nenese, se přizná jako nepomohl',
     c.slibuje === 'skořápka' && c.sousedniDomena && c.sousedniDomena.nepomohlo === true,
     JSON.stringify(c.sousedniDomena));
+
+  /* c2) SOUSED, KTERÝ SE TAKY VYKRESLUJE AŽ V PROHLÍŽEČI. Naměřeno
+         3. 11.: `nabidkamajetku.gov.cz` vyšlo ze serveru rovněž jako
+         skořápka — je to táž aplikace, jen o doménu dál. Číst souseda
+         jen ze serveru by tedy opakovalo touž chybu. */
+  const ctenoProhlizecem = [];
+  const c2 = await S.sondujZdroj(cil, { stahni: stahniNic, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => {
+      ctenoProhlizecem.push(u);
+      /* Původní adresa zůstane skořápkou, soused se prohlížečem
+         přečte — to je právě ten naměřený případ. */
+      return u === 'https://sk.gov.test/'
+        ? { html: VYPIS, zablokovano: 0, cizich: 0 }
+        : { html: SKORAPKA, zablokovano: 0, cizich: 7, cizinci: ZAHOZENI };
+    } });
+  pravda('soused se taky přečte prohlížečem, když ze serveru nic nedá',
+    c2.slibuje === 'slibné' && c2.sousedniDomena
+    && c2.sousedniDomena.cteno === 'prohlížečem'
+    && ctenoProhlizecem.includes('https://sk.gov.test/'),
+    JSON.stringify(c2.sousedniDomena) + ' / vykreslováno: ' + ctenoProhlizecem.join(' '));
+  pravda('a když nabídky dal už sám server, prohlížeč se na souseda nepustí',
+    (a.sousedniDomena || {}).cteno === 'ze serveru'
+    && !pustenPoA.includes('https://sk.gov.test/'),
+    JSON.stringify(a.sousedniDomena) + ' / pouštěn na: ' + pustenPoA.join(' '));
 
   /* d) Když prohlížeč POMOHL, soused se nezkouší — není proč. */
   const chozeno3 = [];

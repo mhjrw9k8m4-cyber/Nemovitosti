@@ -21979,3 +21979,37 @@ jednou na escapování — adresa souseda je text z cizího webu.
 závorky, zkouška vůbec nedoběhla a nevypsala ani řádek. Zelená u
 sabotáže, která se nevložila, neznamená nic; opakovala jsem ji až
 s kontrolou `node --check`.
+
+## §355b — soused se čte prohlížečem taky: jinak se táž chyba opakuje o doménu dál
+
+**Co řeklo první měření se sousedem.** Adresa se našla, robots.txt ji
+dovolil, zapsalo se „nepomohlo" — a verdikt zůstal **skořápka**:
+
+```
+SOUSED: {"url":"https://nabidkamajetku.gov.cz/","bylo":"skořápka","je":"skořápka","nepomohlo":true}
+```
+
+Mechanismus tedy fungoval, ale odpověď nedal. Důvod je u nás:
+souseda jsme čeli **jen ze serveru**, zatímco ta aplikace se — stejně
+jako ta na `.cz` — vykresluje až v prohlížeči. Byla to táž chyba jako
+v §353, jen o doménu dál.
+
+**Co se změnilo.** Když ze souseda vyjde ze serveru „skořápka" nebo
+„nic nenasvědčuje", přečte se **prohlížečem**, za týchž pravidel
+(robots.txt i u podřízených souborů, cizí hosty se nestahují). Do
+nálezu jde `cteno: 'ze serveru' | 'prohlížečem'`, takže je vždy vidět,
+čím ten verdikt je — a v diagnostice stojí „(až po vykreslení
+v prohlížeči)". Kde server nabídky dal sám, se prohlížeč nepouští.
+
+**Čím je to podložené.** `test-sonda-zdroju.mjs` 97 kontrol (bylo 95):
+soused, který ze serveru nic nedá, se přečte prohlížečem a `cteno` to
+říká; a tam, kde server nabídky dal, se na souseda prohlížeč **vůbec
+nepustí**. Prokázáno třemi sabotážemi (soused se prohlížečem nečte,
+prohlížeč na souseda vždy, `cteno` lže).
+
+**Co jsem si tím sám o sobě změřil.** Sabotáž „prohlížeč na souseda
+vždy" napoprvé prošla **zeleně**: kontrola měřila jen `cteno`, a to
+při té sabotáži vyšlo stejně. Teprve seznam adres, na které byl
+prohlížeč pouštěn, ji shodil. A ten seznam napoprvé sbíral i z dalších
+případů ve stejném bloku, takže kontrola padala na čistém kódu — tedy
+otisk hned po měřeném případu. Dvě opravy hlídače, než začal hlídat.

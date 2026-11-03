@@ -302,15 +302,28 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet, vykresli } = {})
       try {
         const odp3 = await stahni(adr, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
         if (!odp3.ok) { zapis.sousedniDomena = { url: adr, odpoved: odp3.status }; continue; }
-        const v3 = vyteznost(await telo(odp3));
+        let v3 = vyteznost(await telo(odp3));
         const bylo = zapis.slibuje;
+        /* SOUSED DOSTANE TOTÉŽ ZACHÁZENÍ JAKO PŮVODNÍ ADRESA. Naměřeno
+           3. 11.: `nabidkamajetku.gov.cz` vyšlo ze serveru taky jako
+           skořápka — protože ta aplikace se stejně jako ta první
+           vykresluje až v prohlížeči. Číst souseda jen ze serveru by
+           znamenalo opakovat touž chybu o doménu dál. */
+        let cim = 'ze serveru';
+        if (vykresli && (slibuje(v3) === 'skořápka' || slibuje(v3) === 'nic nenasvědčuje')) {
+          try {
+            const v = await vykresli(adr);
+            const v4 = vyteznost(v.html || '');
+            if (lepsiVyteznost(v4, v3) === v4) { v3 = v4; cim = 'prohlížečem'; }
+          } catch { /* soused je přídavek; jeho pád běh nezastavuje */ }
+        }
         if (lepsiVyteznost(v3, zapis.vyteznost) === v3 && slibuje(v3) !== bylo) {
-          zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3) };
+          zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3), cteno: cim };
           zapis.vyteznost = v3;
           zapis.slibuje = slibuje(v3);
           break;
         }
-        zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3), nepomohlo: true };
+        zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3), cteno: cim, nepomohlo: true };
       } catch (e) {
         zapis.sousedniDomena = { url: adr, chyba: String(e && e.message ? e.message : e).slice(0, 120) };
       }
