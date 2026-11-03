@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T08:18:14.495Z",
+ "updated_at": "2026-11-03T08:43:50.612Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -64,6 +64,189 @@
    "stranky": [],
    "verdikt": "web nedovoluje číst ani domovskou stránku",
    "duvod": "Disallow: /"
+  },
+  {
+   "jmeno": "drazby.policenm.cz",
+   "host": "drazby.policenm.cz",
+   "domov": "https://drazby.policenm.cz/",
+   "kdy": "2026-11-03",
+   "stranky": [
+    {
+     "url": "https://drazby.policenm.cz/",
+     "popis": "Domů",
+     "stav": "přečteno, nic o automatu",
+     "znaku": 4086,
+     "odstavcuCelkem": 26,
+     "odstavcu": 0,
+     "pasaze": [],
+     "dokumenty": []
+    },
+    {
+     "url": "https://drazby.policenm.cz/legal/vop",
+     "popis": "Obchodní podmínky",
+     "stav": "přečteno",
+     "znaku": 33887,
+     "odstavcuCelkem": 117,
+     "odstavcu": 5,
+     "pasaze": [
+      {
+       "slovo": "automaticky",
+       "text": "2. Po odeslání registračního formuláře je zapotřebí ověřit e-mailovou adresu. Odkaz pro ověření e-mailové adresy se automaticky odeslán do registračního e-mailu."
+      },
+      {
+       "slovo": "automaticky",
+       "text": "ID uživatele je automaticky přidělení unikátní kód, který získá Ověřený uživatel internetového portálu po přihlášení do elektronické dražby."
+      },
+      {
+       "slovo": "zapisovány",
+       "text": "Podání (příhozy) Účastníků elektronické dražby a průběh elektronické dražby jsou zapisovány do tzv. Logu dražby (historie příhozů). Dražební systém eviduje podání (příhozy) s přesným časem, aby odlišil poslední učiněné podání (příhoz), navýšil kupní cenu za Předmět elektronické dražby a určil Vítěze elektronické dražby."
+      },
+      {
+       "slovo": "automaticky",
+       "text": "… se další upozornění:- 1 minutu před stanoveným časem ukončení elektronické dražby: „Neučiní-li někdo z přítomných vyšší podání, než naposledy učinil účastník *** (ID uživatele, který učinil nejvyšší podání) udělím mu příklep“.Učiní-li některý z účastníků dražby podání (příhoz) před stanoveným ukončením elektronické dražby, čas ukončení elektronické dražby se automaticky prodlužuje, a to i opakovaně. Čas automatického prodlužování elektronické dražby je předem určen Organizátorem. Účastník elektronické dražby je o této lhůtě informován v Dražební síni po celou dobu průběhu elektronické dražby."
+      },
+      {
+       "slovo": "automaticky",
+       "text": "9. Po udělení příklepu systém automaticky vygeneruje dokument s názvem „Záznam o průběhu veřejné dražby a potvrzení o udělení příklepu“. Tento dokument je následně zpřístupněn vítězi elektronické dražby ve formě náhledu v jeho uživatelském účtu."
+      }
+     ],
+     "dokumenty": []
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://drazby.policenm.cz/",
+     "popis": "Domů"
+    },
+    {
+     "url": "https://drazby.policenm.cz/legal/vop",
+     "popis": "Obchodní podmínky"
+    }
+   ],
+   "znakuCelkem": 37973,
+   "verdikt": "přečteno (5 pasáží o automatickém přístupu)"
+  },
+  {
+   "jmeno": "drazbynaxos.cz",
+   "host": "drazbynaxos.cz",
+   "domov": "https://www.drazbynaxos.cz/",
+   "kdy": "2026-11-03",
+   "stranky": [
+    {
+     "url": "https://www.drazbynaxos.cz/drazby/vop",
+     "popis": "Všeobecné obchodní podmínky",
+     "stav": "přečteno",
+     "znaku": 31967,
+     "odstavcuCelkem": 37,
+     "odstavcu": 1,
+     "pasaze": [
+      {
+       "slovo": "api",
+       "text": "…iod\":10,\"children\":[\"$\",\"$L1d\",null,{\"enabled\":false,\"children\":[\"$\",\"$L1e\",null,{\"children\":[\"$\",\"body\",null,{\"className\":\"lato_1f345234-module__u2d25a__className bg-slate-700 antialiased flex flex-col min-h-screen overscroll-none\",\"children\":[[\"$\",\"$L1f\",null,{\"data-domain\":\"drazbynaxos.cz\",\"data-api\":\"/_stats/plausible/api/event\",\"src\":\"/_stats/plausible/js/script.js\",\"strategy\":\"afterInteractive\"}],[\"$\",\"$L20\",null,{\"municipalities\":[{\"name\":\"Dražby\",\"url_slug\":\"drazby\",\"id\":-1},{\"id\":1,\"name\":\"Dražby\",\"url_slug\":\"drazby\"}],\"user\":null,\"className\":\"bg-gradient-to-r from-slate-500 to-slate-…"
+      }
+     ],
+     "dokumenty": []
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://www.drazbynaxos.cz/drazby/vop",
+     "popis": "Všeobecné obchodní podmínky"
+    }
+   ],
+   "znakuCelkem": 31967,
+   "verdikt": "přečteno (1 pasáží o automatickém přístupu)"
+  },
+  {
+   "jmeno": "elektronickedrazby.cz",
+   "host": "elektronickedrazby.cz",
+   "domov": "https://www.elektronickedrazby.cz/",
+   "kdy": "2026-11-03",
+   "stranky": [
+    {
+     "url": "https://www.elektronickedrazby.cz/pages/drazebni-rad",
+     "popis": "Obchodní podmínky",
+     "stav": "málo textu — nedá se z toho soudit",
+     "znaku": 104,
+     "odstavcuCelkem": 2,
+     "odstavcu": 0,
+     "pasaze": [],
+     "dokumenty": [
+      "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
+      "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
+     ]
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://www.elektronickedrazby.cz/pages/drazebni-rad",
+     "popis": "Obchodní podmínky"
+    }
+   ],
+   "znakuCelkem": 104,
+   "verdikt": "málo textu — stránka se vykresluje až v prohlížeči, takhle se to nezjistí",
+   "dokumenty": [
+    "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
+   ]
+  },
+  {
+   "jmeno": "verejnedrazby.cz",
+   "host": "verejnedrazby.cz",
+   "domov": "https://www.verejnedrazby.cz/",
+   "kdy": "2026-11-03",
+   "stranky": [
+    {
+     "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
+     "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze",
+     "stav": "přečteno",
+     "znaku": 6260,
+     "odstavcuCelkem": 52,
+     "odstavcu": 1,
+     "pasaze": [
+      {
+       "slovo": "automaticky",
+       "text": "* Učiní-li účastník (navýšení) příhoz v době 2 minuty před okamžikem stanoveného ukončení výběrového řízení, prodlužuje se výběrové řízení automaticky o dalších 5 minut, a to i opakovaně."
+      }
+     ],
+     "dokumenty": [
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+     ]
+    },
+    {
+     "url": "https://www.verejnedrazby.cz/podminky-souhlas/8144/",
+     "popis": "Obchodní podmínky",
+     "stav": "přečteno",
+     "znaku": 6260,
+     "odstavcuCelkem": 52,
+     "odstavcu": 1,
+     "pasaze": [
+      {
+       "slovo": "automaticky",
+       "text": "* Učiní-li účastník (navýšení) příhoz v době 2 minuty před okamžikem stanoveného ukončení výběrového řízení, prodlužuje se výběrové řízení automaticky o dalších 5 minut, a to i opakovaně."
+      }
+     ],
+     "dokumenty": [
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+      "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+     ]
+    }
+   ],
+   "nalezeneOdkazy": [
+    {
+     "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
+     "popis": "Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, poze"
+    }
+   ],
+   "znakuCelkem": 12520,
+   "verdikt": "přečteno (2 pasáží o automatickém přístupu)",
+   "dokumenty": [
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf",
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20774eae839.39822771.pdf",
+    "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf"
+   ]
   }
  ]
 }
