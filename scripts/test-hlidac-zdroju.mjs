@@ -22,7 +22,9 @@ import { porovnejZdroje, PRAH_SLEDOVANI, PRAH_PROPADU,
   porovnejSHistorii, zapisDoHistorie, DNU_HISTORIE, PRAH_POKLESU, HISTORIE_MAX,
   skenNeuplny, oznacNeuplne, PODIL_SELHANI, MIN_SELHANI,
   nejvyssiOkdZDat, nejnizsiOkdZDat, oknoOkd, OKD_OKNO, OKD_OKNO_STROP,
-  medianyCenZdroju, porovnejCeny, PRAH_CEN, PRAH_CEN_KUSU, DNU_CEN } from './fetch-opportunities.mjs';
+  medianyCenZdroju, porovnejCeny, PRAH_CEN, PRAH_CEN_KUSU, DNU_CEN,
+  porovnejTotoznost, PRAH_TOTOZNOSTI, PRAH_TOTOZNOSTI_KUSU,
+  prirazPrvniVideni } from './fetch-opportunities.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN_H = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -557,6 +559,141 @@ pravda('první běh bez minulých čísel projde tiše',
   pravda('dnešní medián se předává zápisu do historie',
     /zapisDoHistorie\(historie, zdroje, DNES, medianyCen\)/.test(kod),
     'bez toho by historie cen zůstala prázdná a hlídač by nikdy neměl s čím srovnávat');
+}
+
+/* ---- ČTVRTÉ SÍTO: PŘEZNAČENÁ IDENTITA ---------------------------
+   Zdroj pošle stejně nabídek za stejné ceny a přitom změní tvar dat
+   (jiná jména obcí, jiná jednotka výměry, jiné označení parcel). Pak
+   se nespáruje ani jedna nabídka s včerejškem — a VŠECHNY dosavadní
+   hlídače zůstanou zelené, protože měří počty a ceny.
+
+   Meze jsou z měření ostrých dat 3. 11. 2026: denní podíl
+   nespárovaných byl Bezrealitky 0,8 %, SPÚ 0 %, OK dražby 1,5 %,
+   Dražby 5 %, Farmy 0 %. Zdroje s ≥50 kusy pokrývaly 98,6 % nabídek.
+   Čísla ve kontrolách jsou proto PSANÁ RUKOU, ne odvozená z konstant:
+   kdyby se mez zvedla na 99 %, kontrola to musí shodit, a ne se jí
+   přizpůsobit (past z §337). */
+{
+  const dost = (nazev, n) => Array.from({ length: n }, () => ({ zdroj: nazev }));
+  /* JMÉNA ZDROJŮ SE PŘEDÁVAJÍ. Napoprvé jsem si tu vymyslel zdroje
+     „Nový" a „X" — a zdrojNabidky() je bez seznamu z běhu zahodila
+     jako „nevím odkud". Kontrola „nový zdroj se nehlásí" tedy prošla
+     ZE ŠPATNÉHO DŮVODU (jméno nebylo známé, ne proto, že včera nebyl)
+     a kontrola na mezi 50 kusů padala na dobrém kódu. */
+  const JMENA = new Set(['SPÚ', 'Farmy', 'Dražby', 'Bezrealitky', 'Nový']);
+
+  pravda('meze drží na tom, co bylo naměřeno',
+    PRAH_TOTOZNOSTI <= 0.8 && PRAH_TOTOZNOSTI >= 0.2 && PRAH_TOTOZNOSTI_KUSU <= 100,
+    `práh ${PRAH_TOTOZNOSTI}, kusů ${PRAH_TOTOZNOSTI_KUSU}`
+    + ' — nejvyšší naměřené kolísání bylo 5 %, mez musí být nad ním a pod jistotou');
+
+  /* 80 % nespárovaných: to se dít nemá. */
+  const n1 = porovnejTotoznost({ 'SPÚ': { celkem: 300, novych: 240 } }, dost('SPÚ', 300), JMENA);
+  pravda('zdroj, u kterého se nespárovalo 240 z 300, se ohlásí',
+    n1.length === 1 && n1[0].nazev === 'SPÚ' && n1[0].druh === 'jinaIdentita'
+    && n1[0].novych === 240 && n1[0].vcera === 300,
+    JSON.stringify(n1));
+
+  /* Normální den NESMÍ hlásit nic — jinak by hlídač jen šuměl. */
+  pravda('naměřené normální kolísání (0,8 % a 5 %) se nehlásí',
+    porovnejTotoznost({ 'Bezrealitky': { celkem: 1627, novych: 13 } }, dost('Bezrealitky', 1620), JMENA).length === 0
+    && porovnejTotoznost({ 'Dražby': { celkem: 60, novych: 3 } }, dost('Dražby', 60), JMENA).length === 0,
+    'hlídač, který hlásí každý den, se přestane čist');
+
+  /* PRVNÍ BĚH ZDROJE: 100 % nespárovaných je normální stav, ne závada. */
+  pravda('nový zdroj (včera nebyl) se nehlásí',
+    porovnejTotoznost({ 'Nový': { celkem: 300, novych: 300 } }, [], JMENA).length === 0
+    && porovnejTotoznost({ 'Nový': { celkem: 300, novych: 300 } }, dost('Nový', 10), JMENA).length === 0
+    /* …a že to jméno je OPRAVDU známé: jinak by kontrola měřila jen to,
+       že se neznámý zdroj zahazuje, a o včerejšku by neřekla nic. */
+    && porovnejTotoznost({ 'Nový': { celkem: 300, novych: 300 } }, dost('Nový', 300), JMENA).length === 1,
+    'jinak by každý nově zapojený zdroj hned dostal nálepku závady');
+
+  /* MALÝ ZDROJ: z devíti nabídek mohou být klidně všechny nové. */
+  pravda('malý zdroj se nehlásí (9 z 9 nových nic neznamená)',
+    porovnejTotoznost({ 'Farmy': { celkem: 9, novych: 9 } }, dost('Farmy', 9), JMENA).length === 0
+    && porovnejTotoznost({ 'Farmy': { celkem: 49, novych: 49 } }, dost('Farmy', 49), JMENA).length === 0,
+    'u Farem je to naostro 9 nabídek, u Dražeb 20');
+  /* A TEĎ PŘÍPAD, VE KTERÉM ROZHODUJE VÝHRADNĚ MEZ NA POČET KUSŮ.
+     Ty dva výš ji nehlídaly: u devíti nabídek selže i podmínka na
+     včerejší počet, takže sabotáž „mez na kusy zrušena" prošla
+     zeleně. Tady je včera dost (300) a dnes málo (9) — blokovat to
+     smí jen mez na kusy. Že je dnešek proti včerejšku propad, hlásí
+     jiný hlídač; z devíti nabídek se o totožnosti soudit nedá. */
+  pravda('a nehlásí se ani tehdy, když včera bylo dost a dnes je devět',
+    porovnejTotoznost({ 'Farmy': { celkem: 9, novych: 9 } }, dost('Farmy', 300), JMENA).length === 0,
+    'z devíti kusů je podíl náhoda — na to je hlídač počtů, ne totožnosti');
+  pravda('ale hned nad mezí se ohlásí (50 kusů ano, 49 ne)',
+    porovnejTotoznost({ 'Farmy': { celkem: 50, novych: 50 } }, dost('Farmy', 50), JMENA).length === 1,
+    'mez musí někde opravdu začít platit');
+
+  /* POČTY PODLE ZDROJE opravdu počítá prirazPrvniVideni — bez nich by
+     hlídač neměl co měřit a schoval by se v součtu za celý web. */
+  {
+    const vcera = [
+      { zdroj: 'SPÚ', place: 'A', okres: 'O', price: 100000, area: 1000, druh: 'pozemek', url: 'https://s/1', first_seen: '2026-10-01' },
+      { zdroj: 'SPÚ', place: 'B', okres: 'O', price: 200000, area: 2000, druh: 'pozemek', url: 'https://s/2', first_seen: '2026-10-01' },
+      { zdroj: 'Farmy', place: 'C', okres: 'O', price: 300000, area: 3000, druh: 'pozemek', url: 'https://f/1', first_seen: '2026-10-01' },
+    ];
+    /* SPÚ: jedna táž, jedna přeznačená. Farmy: beze změny. */
+    const dnes = [
+      { zdroj: 'SPÚ', place: 'A', okres: 'O', price: 100000, area: 1000, druh: 'pozemek', url: 'https://s/1' },
+      { zdroj: 'SPÚ', place: 'B-JINAK', okres: 'O', price: 999999, area: 2000, druh: 'pozemek', url: 'https://s/999' },
+      { zdroj: 'Farmy', place: 'C', okres: 'O', price: 300000, area: 3000, druh: 'pozemek', url: 'https://f/1' },
+    ];
+    const v = prirazPrvniVideni(dnes, vcera, '2026-11-03', JMENA);
+    pravda('prirazPrvniVideni počítá nespárované PODLE ZDROJE',
+      v.podleZdroje && v.podleZdroje['SPÚ'] && v.podleZdroje['SPÚ'].celkem === 2
+      && v.podleZdroje['SPÚ'].novych === 1
+      && v.podleZdroje['Farmy'] && v.podleZdroje['Farmy'].novych === 0,
+      JSON.stringify(v.podleZdroje));
+
+    /* ZNAČKA SE DĚDÍ, A VE VŠECH TŘECH KOLECH PÁROVÁNÍ. Napoprvé
+       jsem to zkoušel na nabídce se SHODNOU ADRESOU — tu spáruje už
+       nulté kolo (podle odkazu), takže sabotáž „dědění v 1. kole
+       zrušeno" prošla zeleně. Kola jsou tři a každé si datum předává
+       samo, takže se musí zkusit každé zvlášť. */
+    const stary = (nav) => Object.assign({ zdroj: 'SPÚ', place: 'A', okres: 'O',
+      price: 100000, area: 1000, druh: 'pozemek', first_seen: '2026-11-03', prezn: 1 }, nav);
+    const novy = (nav) => Object.assign({ zdroj: 'SPÚ', place: 'A', okres: 'O',
+      price: 100000, area: 1000, druh: 'pozemek' }, nav);
+    const dedi = (nav, navNovy) => {
+      const d = [novy(navNovy)];
+      prirazPrvniVideni(d, [stary(nav)], '2026-11-04', JMENA);
+      return d[0];
+    };
+    /* 0) podle odkazu, 1) podle otisku s cenou, 2) podle otisku bez ceny */
+    const k0 = dedi({ url: 'https://s/1' }, { url: 'https://s/1' });
+    const k1 = dedi({ url: 'https://s/1' }, { url: 'https://s/JINA' });
+    const k2 = dedi({ url: 'https://s/1' }, { url: 'https://s/JINA', price: 80000 });
+    pravda('značka „věk neznámý" se dědí spolu s datem — ve všech třech kolech',
+      k0.first_seen === '2026-11-03' && k0.prezn === 1
+      && k1.first_seen === '2026-11-03' && k1.prezn === 1
+      && k2.first_seen === '2026-11-03' && k2.prezn === 1,
+      JSON.stringify({ podleOdkazu: k0, podleOtisku: k1, poZmeneCeny: k2 }));
+    /* A NEVZNIKÁ SAMA. Kdyby ji dědění rozsévalo, vypadly by z novinek
+       i nabídky, se kterými nic není. */
+    const cista = [{ zdroj: 'SPÚ', place: 'A', okres: 'O', price: 100000, area: 1000,
+      druh: 'pozemek', url: 'https://s/1', first_seen: '2026-10-01' }];
+    const dnesCiste = [{ zdroj: 'SPÚ', place: 'A', okres: 'O', price: 100000, area: 1000,
+      druh: 'pozemek', url: 'https://s/1' }];
+    prirazPrvniVideni(dnesCiste, cista, '2026-11-04', JMENA);
+    pravda('a nevzniká tam, kde v minulém běhu nebyla',
+      !dnesCiste[0].prezn, JSON.stringify(dnesCiste[0]));
+  }
+
+  /* ROBOT TO OPRAVDU VYHODNOCUJE — a dělá to, co nález říká. */
+  const kod2 = readFileSync(path.join(KOREN_H, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
+  const i2 = kod2.indexOf('for (const n of porovnejTotoznost(');
+  pravda('robot nález totožnosti vyhodnocuje (ne jen funkci má)', i2 > 0);
+  const telo = kod2.slice(i2, i2 + 1200);
+  pravda('a nabídky NEZAHAZUJE, jen jim označí věk za neznámý',
+    telo.includes("o.prezn = 1") && telo.includes("z.stav = 'jinaIdentita'")
+    && !/raw[\s\S]{0,40}filter/.test(telo),
+    'jsou to pravděpodobně tytéž pozemky — zahodit je by byla větší škoda než špatné datum');
+  pravda('a stav „jinaIdentita" se počítá za odpověď (jinak by zdroj vypadl z historie)',
+    /ODPOVEDEL = new Set\(\[[^\]]*'jinaIdentita'/.test(kod2),
+    'táž lekce jako u „pokles" — označený zdroj z historie vypadl a přišli jsme o měření');
 }
 
 console.log('\nHlídač jednotlivých zdrojů');

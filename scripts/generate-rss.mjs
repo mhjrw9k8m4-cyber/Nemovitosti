@@ -171,7 +171,14 @@ function spust() {
      vyhledávači. */
   const stranky = mapaSouboru(vse);
   const bezStranky = vse.filter((o) => !stranky.has(klicNabidky(o)));
-  const sStrankou = vse.filter((o) => stranky.has(klicNabidky(o)));
+  /* NABÍDKA S NEZNÁMÝM VĚKEM DO KANÁLU NEPATŘÍ. Značku `prezn` dává
+     fetch-opportunities.mjs zdroji, který přes noc změnil tvar dat:
+     nabídce naskočil dnešek, protože se nespárovala, ne protože je
+     nová. Celý kanál stojí na datech (`pubDate`, řazení podle
+     first_seen), takže tyhle položky by do něj vnesly přesně tu lež,
+     kterou kanál nesmí nést — a 1 600 položek by to navíc rozeslalo
+     všem čtečkám naráz. Na webu zůstávají, jen se nevydávají za nové. */
+  const sStrankou = vse.filter((o) => stranky.has(klicNabidky(o)) && !o.prezn);
   /* Seřazeno od nejnovějšího. Při shodě dne rozhoduje cena za metr —
      ne proto, že by byla důležitější, ale aby bylo pořadí STÁLÉ: jinak
      by se při každém běhu zamíchalo a čtečky by hlásily staré položky

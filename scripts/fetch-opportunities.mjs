@@ -188,7 +188,15 @@ export function otiskOdkazu(o) {
  *
  *  Každé kolo bere jen JEDNOZNAČNÉ shody a každou starou nabídku smí
  *  použít jen jednou; co se nespáruje, dostane dnešek. */
-export function prirazPrvniVideni(fresh, drive, dnesISO) {
+/* ZNAČKA „VĚK NEZNÁMÝ" SE DĚDÍ SPOLU S `first_seen`.
+   Nabídka ze dne, kdy zdroj změnil tvar dat, nemá poctivé datum
+   prvního vidění — a nesmí ho získat tím, že se zítra spáruje sama
+   se sebou. Proto se `prezn` přenáší týmiž třemi koly jako datum. */
+function prenesZnacku(novy, stary) {
+  if (stary && stary.prezn) novy.prezn = 1;
+}
+
+export function prirazPrvniVideni(fresh, drive, dnesISO, znama) {
   /* Ve vstupu ze stahovačů first_seen nikdy není; kdyby se tam přes
      zkoušku nebo cizí volání dostalo, nesmí se s ním počítat. */
   for (const o of fresh) delete o.first_seen;
@@ -211,7 +219,7 @@ export function prirazPrvniVideni(fresh, drive, dnesISO) {
       if (!u || pocetNovych.get(u) !== 1) continue;
       const star = darci.get(u);
       if (!star) continue;
-      o.first_seen = star.first_seen; spotrebovane.add(star); podleOdkazu++;
+      o.first_seen = star.first_seen; prenesZnacku(o, star); spotrebovane.add(star); podleOdkazu++;
     }
   }
 
@@ -222,7 +230,7 @@ export function prirazPrvniVideni(fresh, drive, dnesISO) {
   for (const o of fresh) {
     if (o.first_seen) continue;
     const star = podleOtisku.get(otiskNabidky(o));
-    if (star && !spotrebovane.has(star)) { o.first_seen = star.first_seen; spotrebovane.add(star); }
+    if (star && !spotrebovane.has(star)) { o.first_seen = star.first_seen; prenesZnacku(o, star); spotrebovane.add(star); }
     else bezData.push(o);
   }
 
@@ -245,14 +253,25 @@ export function prirazPrvniVideni(fresh, drive, dnesISO) {
       const k = otiskNabidkyBezCeny(o);
       const st = stareVolne.get(k);
       if (novePocty.get(k) === 1 && st && st.length === 1) {
-        o.first_seen = st[0].first_seen; spotrebovane.add(st[0]); poZmeneCeny++;
+        o.first_seen = st[0].first_seen; prenesZnacku(o, st[0]); spotrebovane.add(st[0]); poZmeneCeny++;
       }
     }
   }
 
   let novych = 0;
   for (const o of bezData) if (!o.first_seen) { o.first_seen = dnesISO; novych++; }
-  return { novych, poZmeneCeny, podleOdkazu };
+  /* POČTY PODLE ZDROJE. Samo celkové `novych` nestačí: zdroj, který
+     přes noc změnil tvar dat, se v součtu za celý web schová (viz
+     porovnejTotoznost). */
+  const podleZdroje = {};
+  for (const o of fresh) {
+    const z = zdrojNabidky(o, znama);
+    if (!z) continue;
+    const u = podleZdroje[z] || (podleZdroje[z] = { celkem: 0, novych: 0 });
+    u.celkem++;
+    if (o.first_seen === dnesISO) u.novych++;
+  }
+  return { novych, poZmeneCeny, podleOdkazu, podleZdroje };
 }
 
 const OUT = join(__dirname, '..', 'data', 'opportunities.json');
@@ -1571,7 +1590,7 @@ function median(cisla) {
    obvyklým způsobem, ale data přinesl (§334) — a kdyby tu nestál,
    udělala by se v historii počtů děra přesně v době, kdy je nejvíc
    potřeba vidět, co se dělo. */
-const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje', 'druhá cesta', 'jineCeny']);
+const ODPOVEDEL = new Set(['ok', 'pokles', 'propad', 'zahazuje', 'druhá cesta', 'jineCeny', 'jinaIdentita']);
 /* Den v historii je buď číslo (zdroj byl ten den v pořádku), nebo
    `{p: počet, v: 1}` — počet ze dne, kdy byl zdroj označený za oslabený.
    Starší soubory mají jen čísla a čtou se dál. */
@@ -1778,6 +1797,66 @@ export function porovnejZdroje(minule, ted) {
  * v pořádku — stejná lekce jako u počtů (§?): kdyby se zapisoval i
  * den s označenou cenou, vada by si za pár dnů udělala novou normu.
  * ================================================================= */
+/* PŘEZNAČENÁ IDENTITA: zdroj změnil TVAR dat, ne jejich množství
+ * ===================================================================
+ * CO TENHLE HLÍDAČ VIDÍ, A OSTATNÍ NE. Dnešní hlídače měří POČTY
+ * (`prazdno`, `propad`, `pokles`, `zahazuje`) a CENY (`jineCeny`).
+ * Zdroj ale může poslat stejně nabídek za stejné ceny — a přitom
+ * přejmenovat obce, poslat výměru v jiné jednotce nebo jinak označit
+ * parcely. Pak se s včerejškem nespáruje ani jedna nabídka: ani
+ * odkazem, ani otiskem s cenou, ani bez ceny (viz prirazPrvniVideni).
+ * Všechny dosavadní hlídače zůstanou zelené a celý zdroj naskočí jako
+ * „nové" — v řezu novinek, v RSS i v řazení podle data.
+ *
+ * TOHLE REPOZITÁŘ UŽ ZNÁ, ale jen pro jeden den: scripts/novinky-rez.mjs
+ * vylučuje z novinek celý PRVNÍ DEN EVIDENCE, protože tehdy `first_seen`
+ * naskočilo 1 600 nabídkám, které na trhu byly dávno. Přeznačení
+ * identity je týž jev kterýkoli pozdější den a u jednoho zdroje.
+ *
+ * MEZE JSOU Z MĚŘENÍ, ne z odhadu. Na ostrých datech 3. 11. 2026 byl
+ * denní podíl nespárovaných: Bezrealitky 0,8 % (13 z 1 627), SPÚ 0 %
+ * (0 z 282), OK dražby 1,5 % (1 z 65), Dražby 5 % (1 z 20), Farmy 0 %
+ * (0 z 9). Mez 70 % je tedy čtrnáctinásobek nejvyššího naměřeného
+ * kolísání — a dosáhnout jí jinak než změnou tvaru dat prakticky nelze.
+ *
+ * Malé zdroje se nepočítají: z devíti nabídek mohou být klidně všechny
+ * nové, a nic to neznamená. Mez 50 kusů pokrývá 1 974 z 2 003 nabídek,
+ * tedy 98,6 % (změřeno 3. 11.).
+ *
+ * A POZOR NA PRVNÍ BĚH. Zdroj, který včera neexistoval, má 100 %
+ * nespárovaných vždycky — to není závada, to je první den. Proto se
+ * vyžaduje, aby zdroj měl dost nabídek i VČERA.
+ */
+export const PRAH_TOTOZNOSTI = 0.7;
+export const PRAH_TOTOZNOSTI_KUSU = 50;
+
+/**
+ * Zdroje, u kterých se dnes nespárovalo skoro nic.
+ * `podleZdroje` je z prirazPrvniVideni, `drive` jsou včerejší nabídky.
+ */
+export function porovnejTotoznost(podleZdroje, drive, znama) {
+  const vcera = new Map();
+  for (const o of (drive || [])) {
+    const z = zdrojNabidky(o, znama);
+    if (!z) continue;
+    vcera.set(z, (vcera.get(z) || 0) + 1);
+  }
+  const nalezy = [];
+  for (const nazev of Object.keys(podleZdroje || {})) {
+    const u = podleZdroje[nazev] || {};
+    const celkem = +u.celkem || 0;
+    const novych = +u.novych || 0;
+    if (celkem < PRAH_TOTOZNOSTI_KUSU) continue;
+    if ((vcera.get(nazev) || 0) < PRAH_TOTOZNOSTI_KUSU) continue;
+    const podil = novych / celkem;
+    if (podil >= PRAH_TOTOZNOSTI) {
+      nalezy.push({ nazev, druh: 'jinaIdentita', celkem, novych,
+        podil: Math.round(podil * 100) / 100, vcera: vcera.get(nazev) || 0 });
+    }
+  }
+  return nalezy;
+}
+
 export const PRAH_CEN_KUSU = 100;
 export const PRAH_CEN = 4;
 export const DNU_CEN = 3;
@@ -3040,11 +3119,39 @@ async function main() {
   let driveVse = [];
   try { driveVse = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).filter((o) => o.first_seen); }
   catch { /* první běh — všechno je nové */ }
-  const vysledek = prirazPrvniVideni(fresh, driveVse, dnesISO);
+  const vysledek = prirazPrvniVideni(fresh, driveVse, dnesISO, znamaJmena);
   if (vysledek.podleOdkazu) console.log(`Věk podle odkazu na inzerát: ${vysledek.podleOdkazu} nabídek.`);
   if (vysledek.poZmeneCeny) console.log(`Věk zachován i po změně ceny: ${vysledek.poZmeneCeny} nabídek.`);
   console.log(`Poprvé viděno dnes: ${vysledek.novych} z ${fresh.length}` +
     (driveVse.length ? '' : ' (první běh se značkováním — všechno dostalo dnešek)'));
+
+  /* ČTVRTÉ SÍTO: nejde o počet ani o cenu, ale o TOTOŽNOST. Zdroj může
+     poslat stejně nabídek za stejné ceny a přitom změnit tvar dat tak,
+     že se nespáruje nic (viz porovnejTotoznost). Nabídky se NEZAHAZUJÍ
+     — jsou to pravděpodobně tytéž pozemky. Jen se jim nesmí věřit
+     datum prvního vidění, takže se označí a z novinek vypadnou.
+     Totéž, co novinky-rez.mjs dělá s prvním dnem evidence.
+
+     DO HISTORIE ZDROJŮ SE TENHLE STAV NEDOSTANE, a je to tak správně:
+     historie se zapisuje výš a slouží hlídačům POČTŮ. Příznak v ní
+     znamená „tomuhle dni nevěř jako normě počtu" — a počet tady
+     v normě je, nesedí jen totožnost. Stav jde do `payload.sources`,
+     tedy do dat, ze kterých čte diagnostika. */
+  for (const n of porovnejTotoznost(vysledek.podleZdroje, driveVse, znamaJmena)) {
+    const z = zdroje.find((x) => x.nazev === n.nazev);
+    if (z) z.stav = 'jinaIdentita';
+    let oznaceno = 0;
+    for (const o of fresh) {
+      if (zdrojNabidky(o, znamaJmena) !== n.nazev || o.first_seen !== dnesISO) continue;
+      o.prezn = 1; oznaceno++;
+    }
+    console.error(`POZOR: u zdroje ${n.nazev} se dnes nespárovalo ${n.novych}`
+      + ` z ${n.celkem} nabídek (${Math.round(n.podil * 100)} %), včera jich bylo ${n.vcera}.`
+      + ' Tolik nabídek za den nevymění ani velký portál; vypadá to, že zdroj změnil TVAR'
+      + ' dat — jiná jména obcí, jiná jednotka výměry nebo jiné označení parcel.'
+      + ` Nabídky se berou dál, ale ${oznaceno} z nich má věk označený za neznámý`
+      + ' a mezi novinky nejdou.');
+  }
 
   /* Zlevnil majitel? Porovná se s cenami z minulého běhu — ještě než se
      soubor přepíše. „Majitel sám šel dolů o 25 %" je fakt, kdežto odhad

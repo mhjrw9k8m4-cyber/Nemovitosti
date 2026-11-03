@@ -20,7 +20,7 @@
 //    výměra za celou parcelu — ve čtečce není nic, co by to vysvětlilo,
 //    a nabídka tam vypadá jako trhák.
 import { execFileSync } from 'node:child_process';
-import { readFileSync, existsSync, readdirSync, mkdtempSync, cpSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync, mkdtempSync, cpSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -292,6 +292,46 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
     posunute.length === 0, posunute.slice(0, 3).join('; '));
   pravda('a bylo na čem to měřit', sKanalem >= 10,
     `kanálů s položkami jen ${sKanalem} — čte test vůbec novinky*.xml?`);
+}
+
+/* ---- 6) NABÍDKA S NEZNÁMÝM VĚKEM DO KANÁLU NEPATŘÍ --------------
+   Značku `prezn` dává fetch-opportunities.mjs zdroji, který přes noc
+   změnil tvar dat: nabídce naskočil dnešek, protože se nespárovala,
+   ne protože je nová. Celý kanál stojí na datech (`pubDate`, řazení
+   podle first_seen), takže by do něj vnesla přesně tu lež, kterou
+   kanál nést nesmí — a u Bezrealitek by to bylo 1 600 položek
+   rozeslaných všem čtečkám naráz.
+
+   MĚŘÍ SE NAOSTRO, přes opravdový generátor v kopii repozitáře: do
+   dat se značka vloží VŠEM nabídkám a kanál pak musí vyjít prázdný.
+   Že to není planá kontrola, drží druhá polovina: v živém kanálu
+   položky jsou. */
+{
+  const zivychPolozek = [...hlavni.matchAll(/<item>/g)].length;
+  pravda('v živém kanálu položky jsou (jinak by kontrola pod tím nic neměřila)',
+    zivychPolozek > 0, 'položek ' + zivychPolozek);
+
+  const kopie2 = mkdtempSync(path.join(tmpdir(), 'parcelka-rss-prezn-'));
+  const VYNECHAT2 = new Set(['.git', 'node_modules',
+    path.join('assets', 'mobilenet'), path.join('assets', 'nsfw-model')]);
+  cpSync(KOREN, kopie2, {
+    recursive: true,
+    filter: (zdroj) => {
+      const rel = path.relative(KOREN, zdroj);
+      return rel === '' || !VYNECHAT2.has(rel);
+    },
+  });
+  const souborDat = path.join(kopie2, 'data', 'opportunities.json');
+  const d = JSON.parse(readFileSync(souborDat, 'utf8'));
+  for (const o of (d.opportunities || [])) o.prezn = 1;
+  writeFileSync(souborDat, JSON.stringify(d));
+  execFileSync('node', [path.join(kopie2, 'scripts', 'generate-rss.mjs')], { cwd: kopie2 });
+  const sePrezn = readFileSync(path.join(kopie2, 'novinky.xml'), 'utf8');
+  const poPolozek = [...sePrezn.matchAll(/<item>/g)].length;
+  rmSync(kopie2, { recursive: true, force: true });
+  pravda('označené nabídky se do kanálu nedostanou',
+    poPolozek === 0,
+    `v kanálu zůstalo ${poPolozek} položek z ${zivychPolozek} — značka se nečte`);
 }
 
 hotovo();

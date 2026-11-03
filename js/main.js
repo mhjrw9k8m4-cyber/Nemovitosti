@@ -956,7 +956,22 @@
         /* „neuplne" říká něco jiného než „pokles": nevíme, jestli je
            těch záznamů míň. Část dotazů se nedoručila, takže tohle
            číslo není měření a nesmí se tvářit jako zjištěný úbytek. */
-        popis = stav === 'zahazuje'
+        /* DVA STAVY, U KTERÝCH JE POČET V NORMĚ. „jineCeny" a
+           „jinaIdentita" nejsou úbytek: zdroj přinesl kolik měl, jen
+           jsou ty údaje jiné — posunuté ceny, nebo nic, co by se
+           spárovalo s včerejškem. Obecný popisek „přinesl výrazně
+           méně než jinak" by u nich LHAL, a je to táž chyba, kvůli
+           které dostal vlastní větu „neuplne" (viz níž). */
+        popis = stav === 'jineCeny'
+          ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale ceny má jinde, než je u něj'
+            + ' dlouhodobě zvykem — dnešní nabídky z něj proto web nebere a drží ty'
+            + ' z minulého běhu'
+          : stav === 'jinaIdentita'
+            ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale skoro žádná z nich se'
+              + ' neshoduje s včerejškem — vypadá to, že změnil tvar dat. Nabídky se'
+              + ' berou dál, jen se u nich neví, jak dlouho na trhu jsou, takže'
+              + ' nejdou mezi novinky'
+          : stav === 'zahazuje'
           ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale víc nabídek zahodil než přijal'
             + ' — možná se mu změnil tvar stránky'
           : stav === 'neuplne'

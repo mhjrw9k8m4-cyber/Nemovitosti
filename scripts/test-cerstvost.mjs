@@ -206,6 +206,43 @@ async function otevri(data) {
   await ctx.close();
 }
 
+// --- 1c) Počet v normě, a přesto označený -----------------------------
+/* DVA STAVY, KTERÉ NEJSOU ÚBYTEK. „jineCeny" (zdroj má ceny posunuté
+   o řád) a „jinaIdentita" (nespárovala se skoro žádná nabídka) mají
+   počet v normě — obecný popisek „přinesl výrazně méně než jinak" by
+   u nich byl LEŽ, a je to táž chyba, kvůli které dostal vlastní větu
+   „neuplne" o oddíl výš. Našel jsem to při psaní hlídače totožnosti:
+   odznak na webu u obou stavů tvrdil úbytek, který se nestal. */
+for (const [stav, musi, nesmi] of [
+  ['jineCeny', /ceny má jinde/, /výrazně méně/],
+  /* KOTVA BEZ PŘEDLOŽKY. Napoprvé jsem hledal „neshoduje s
+     včerejškem" — a česká sazba v oprav.mjs vloží za jednoznakovou
+     předložku nezlomitelnou mezeru, takže se to v hotovém souboru
+     nesešlo a kontrola padala na dobrém textu. Kotvou je tedy věta
+     bez jednoznakové předložky. */
+  ['jinaIdentita', /změnil tvar dat/, /výrazně méně/],
+]) {
+  const DATA = Object.assign({}, SE_STAVEM, { sources: [
+    { nazev: 'OK dražby', stav, pocet: 64, cas: dnesISO, chyba: null },
+  ] });
+  const { ctx, p, chyby } = await otevri(DATA);
+  const z = await p.evaluate(() => {
+    const chip = document.querySelector('.source-chip[data-zdroj="OK dražby"]');
+    const s2 = chip && chip.querySelector('.src-stav');
+    return s2 ? { stav: s2.textContent, popis: s2.title,
+      slabe: s2.classList.contains('src-slabe'), zle: s2.classList.contains('src-zle') } : null;
+  });
+  pravda(`stav „${stav}" ukazuje počet, který zdroj opravdu přinesl`,
+    !!(z && /64/.test(z.stav)), JSON.stringify(z));
+  pravda(`a je označený jako oslabený, ne jako v pořádku (${stav})`,
+    !!(z && z.slabe === true && z.zle === false), JSON.stringify(z));
+  pravda(`a popisek u „${stav}" nevydává normální počet za úbytek`,
+    !!(z && musi.test(z.popis || '') && !nesmi.test(z.popis || '')),
+    JSON.stringify(z && z.popis));
+  pravda(`se stavem „${stav}" nespadl žádný skript`, chyby.length === 0, chyby[0]);
+  await ctx.close();
+}
+
 // --- 2) Starý soubor bez těch údajů ----------------------------------
 {
   const { ctx, p, chyby } = await otevri(STARA);

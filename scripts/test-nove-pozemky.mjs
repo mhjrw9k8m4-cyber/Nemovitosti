@@ -339,6 +339,35 @@ for (const odkud of ['pozemky-podle-okresu.html', 'pozemky-do-500-tisic.html', '
 pravda('stránka vede zpátky na hlídání i na regiony',
   h.includes('href="hlidani.html"') && h.includes('href="pozemky-podle-okresu.html"'));
 
+/* ---- PŘEZNAČENÝ ZDROJ SE MEZI NOVINKY NEDOSTANE ----------------
+   Když zdroj přes noc změní tvar dat, naskočí dnešek celému zdroji —
+   ne proto, že je nový, ale proto, že se nespároval. Robot ty nabídky
+   označí (`prezn`, viz fetch-opportunities.mjs) a tady se musí poznat,
+   že jim řez novinek nevěří. Je to táž úvaha jako u prvního dne
+   evidence, jen kterýkoli den a u jednoho zdroje. */
+{
+  const dnesIso = '2026-11-03';
+  const vz = [
+    { first_seen: '2026-10-01', price: 1, area: 1 },          // nejstarší = první den evidence
+    { first_seen: '2026-11-03', price: 2, area: 1 },           // opravdu nová
+    { first_seen: '2026-11-03', price: 3, area: 1, prezn: 1 }, // nespárovaná, věk neznámý
+    { first_seen: '2026-11-02', price: 4, area: 1, prezn: 1 }, // dědí značku z minula
+  ];
+  const n = NOV.noveNabidky(vz, { dnesIso, dnu: 14 });
+  pravda('nabídka s neznámým věkem se mezi novinky nedostane',
+    n.length === 1 && n[0].price === 2,
+    'novinek ' + n.length + ': ' + JSON.stringify(n.map((o) => o.price)));
+  pravda('a nepočítá se ani do počtu novinek',
+    NOV.pocetNovych(vz, { dnesIso, dnu: 14 }) === 1,
+    'jinak by stránka tvrdila číslo, které si sama nadsadila');
+  /* A BEZ ZNAČKY se obě počítají — jinak by kontrola výš mohla projít
+     i tehdy, kdyby řez vyhazoval něco úplně jiného. */
+  const bez = vz.map((o) => { const k = Object.assign({}, o); delete k.prezn; return k; });
+  pravda('bez značky by novinky byly tři (kontrola výš tedy měří značku)',
+    NOV.noveNabidky(bez, { dnesIso, dnu: 14 }).length === 3,
+    JSON.stringify(NOV.noveNabidky(bez, { dnesIso, dnu: 14 }).map((o) => o.price)));
+}
+
 console.log('Co je nového:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

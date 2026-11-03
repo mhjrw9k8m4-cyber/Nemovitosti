@@ -22107,3 +22107,65 @@ celou zkoušku **shodilo výjimkou** a nevypsalo ani řádek — kontroly
 čely `z.stranky[0].pasaze` napřímo. Osm takových míst je teď
 obezřetných a místo pádu vypíšou, co naměřily (počet stránek, pasáží,
 verdikt). Teprve pak šlo tu sabotáž vydávat za důkaz.
+
+## §356 — zdroj může změnit TVAR dat a všechny hlídače zůstanou zelené
+
+**Co bylo slepé místo.** Hlídače u nočního robota měří dvě věci:
+POČTY (`prazdno`, `propad`, `pokles`, `zahazuje`) a CENY (`jineCeny`,
+§337). Zdroj ale může poslat stejně nabídek za stejné ceny — a přitom
+přejmenovat obce, poslat výměru v jiné jednotce nebo jinak označit
+parcely. Pak se s včerejškem nespáruje **ani jedna** nabídka: ani
+odkazem, ani otiskem s cenou, ani bez ceny. Všechny hlídače zůstanou
+zelené a celý zdroj naskočí jako „nové" — v řezu novinek, v RSS
+i v řazení podle data.
+
+**Tohle repozitář už znal, ale jen pro jeden den.** `novinky-rez.mjs`
+vylučuje z novinek celý PRVNÍ DEN EVIDENCE, protože tehdy `first_seen`
+naskočilo 1 600 nabídkám, které na trhu byly dávno. Přeznačení
+identity je týž jev kterýkoli pozdější den a u jednoho zdroje.
+
+**Meze z měření, ne z odhadu.** Na ostrých datech 3. 11. byl denní
+podíl nespárovaných: Bezrealitky **0,8 %** (13 z 1 627), SPÚ 0 %
+(0 z 282), OK dražby 1,5 % (1 z 65), Dražby 5 % (1 z 20), Farmy 0 %.
+Mez **70 %** je čtrnáctinásobek nejvyššího naměřeného kolísání. Mez
+**50 kusů** (malý zdroj se nepočítá, z devíti nabídek mohou být klidně
+všechny nové) pokrývá 1 974 z 2 003 nabídek, tedy **98,6 %**. A zdroj
+musí mít dost nabídek i VČERA — jinak by nálepku dostal každý nově
+zapojený zdroj, protože první den se nespáruje nic.
+
+**Co se stane.** Nabídky se **nezahazují** — jsou to pravděpodobně
+tytéž pozemky, zahodit je by byla větší škoda než špatné datum. Dostanou
+značku „věk neznámý" (`prezn`), která se **dědí** všemi třemi koly
+párování, takže se zdroj nedostane mezi novinky ani zítra, až se
+spáruje sám se sebou. Řez novinek i RSS je vynechávají; na webu
+zůstávají ve výpisu, v hledání i na mapě.
+
+**Druhý nález: odznak na webu lhal.** Stav s počtem v normě spadl do
+věty „přinesl výrazně méně než jinak". Platilo to i pro `jineCeny`,
+které jsem přidal dnes ráno a v odznaku nedotáhl. Oba stavy teď mají
+vlastní vysvětlení — táž chyba, kvůli které už dřív dostal vlastní
+větu stav `neuplne`.
+
+**Čím je to podložené.** `test-hlidac-zdroju.mjs` 113 kontrol (bylo
+100), `test-nove-pozemky.mjs` 55, `test-rss.mjs` 34 (naostro přes
+opravdový generátor), `test-cerstvost.mjs` 32 (v prohlížeči).
+Prokázáno **jedenácti sabotážemi**: řez novinek značku nečte; dědění
+zrušeno v 0., 1. i 2. kole zvlášť; značka se rozsévá všem; zrušená
+podmínka na včerejší počet; zrušená mez na počet kusů; robot nabídky
+neoznačí; kanál značku nečte; obě větve odznaku vynechané.
+
+**A čtyři vlastní chyby, které to odhalilo.**
+1. Kontrola „nový zdroj se nehlásí" prošla ZE ŠPATNÉHO DŮVODU: vymyslel
+   jsem si jméno zdroje „Nový", a `zdrojNabidky()` ho bez seznamu
+   z běhu zahodila jako „nevím odkud". Měřila tedy zahazování cizích
+   jmen, ne pravidlo o včerejšku.
+2. Dědění značky jsem zkoušel na nabídce se SHODNOU ADRESOU — tu
+   spáruje už nulté kolo, takže sabotáž „dědění v 1. kole zrušeno"
+   prošla zeleně. Kola jsou tři a každé si datum předává samo.
+3. Mez na počet kusů zakrývala podmínka na včerejší počet: u devíti
+   nabídek selže obojí. Přidán případ, kde včera bylo 300 a dnes je 9.
+4. Zkouška odznaku měřila **minifikovaný** soubor, takže po změně
+   `js/main.js` padala na starém kódu — to je přesně ten důvod, proč
+   se po každé změně zdroje pouští `oprav.mjs`. A kotvu textu jsem
+   napsal s jednoznakovou předložkou, za kterou česká sazba vloží
+   nezlomitelnou mezeru; kontrola pak padala na dobrém textu.

@@ -578,7 +578,16 @@
       } else if (oslabeny) {
         text = pocet + '× ↓'; trida = ' src-slabe';
 
-        popis = stav === 'zahazuje'
+        popis = stav === 'jineCeny'
+          ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale ceny má jinde, než je u něj'
+            + ' dlouhodobě zvykem — dnešní nabídky z něj proto web nebere a drží ty'
+            + ' z minulého běhu'
+          : stav === 'jinaIdentita'
+            ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale skoro žádná z nich se'
+              + ' neshoduje s včerejškem — vypadá to, že změnil tvar dat. Nabídky se'
+              + ' berou dál, jen se u nich neví, jak dlouho na trhu jsou, takže'
+              + ' nejdou mezi novinky'
+          : stav === 'zahazuje'
           ? 'Zdroj odpověděl (' + pocet + ' záznamů), ale víc nabídek zahodil než přijal'
             + ' — možná se mu změnil tvar stránky'
           : stav === 'neuplne'

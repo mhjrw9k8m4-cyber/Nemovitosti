@@ -47,8 +47,14 @@ export function noveNabidky(nabidky, opts) {
      nenápadně nadsazuje ve svůj prospěch. */
   const odKdy = minusDni(o.dnesIso, Math.max(0, dnu - 1));
   if (!odKdy) return [];
+  /* ZNAČKA `prezn` = DEN, KDY ZDROJ ZMĚNIL TVAR DAT. Je to táž situace
+     jako první den evidence, jen u jednoho zdroje a kterýkoli den:
+     nabídce naskočil dnešek, protože se nespárovala, ne protože je
+     nová. Vylučuje se ze stejného důvodu — a navíc se značka dědí
+     (fetch-opportunities.mjs), takže se ten zdroj nedostane mezi
+     novinky ani zítra, až se spáruje sám se sebou. */
   return (nabidky || [])
-    .filter((x) => x && x.first_seen && x.first_seen > prvniDen && x.first_seen >= odKdy)
+    .filter((x) => x && !x.prezn && x.first_seen && x.first_seen > prvniDen && x.first_seen >= odKdy)
     .sort((a, b) => String(b.first_seen).localeCompare(String(a.first_seen))
       || (a.price || 1e15) - (b.price || 1e15));
 }
