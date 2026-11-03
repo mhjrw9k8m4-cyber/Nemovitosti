@@ -56,6 +56,22 @@ const BASE = `http://127.0.0.1:${server.address().port}`;
 
 pravda('stejný web se pozná i přes www a podřízenou část',
   stejnyWeb('www.x.cz', 'x.cz') && stejnyWeb('api.x.cz', 'x.cz') && !stejnyWeb('x.cz', 'y.cz'));
+/* ZA gov.cz UŽ ZAČÍNÁ CIZÍ ÚŘAD. Změřeno 3. 11.: `stejnyWeb` brala
+   dvě poslední části jména za domému, takže `cizi-urad.gov.cz`
+   vycházel jako TÝŽ web jako `nabidkamajetku.gov.cz` — a jeho
+   podřízené soubory by se stahovaly pod cizím robots.txt. Právě na
+   gov.cz se přitom má začít čist (nález sondy u ÚZSVM), takže to
+   nebyla teorie. */
+pravda('ale za vícedílnou příponou (gov.cz, co.uk) už je to cizí web',
+  !stejnyWeb('cizi-urad.gov.cz', 'nabidkamajetku.gov.cz')
+  && !stejnyWeb('x.co.uk', 'y.co.uk')
+  && stejnyWeb('api.nabidkamajetku.gov.cz', 'nabidkamajetku.gov.cz')
+  && stejnyWeb('www.nabidkamajetku.gov.cz', 'nabidkamajetku.gov.cz'),
+  'gov.cz cizí: ' + stejnyWeb('cizi-urad.gov.cz', 'nabidkamajetku.gov.cz')
+  + ', podřízená část: ' + stejnyWeb('api.nabidkamajetku.gov.cz', 'nabidkamajetku.gov.cz'));
+pravda('a .cz a .gov.cz téhož jména jsou dva různé weby (ÚZSVM)',
+  !stejnyWeb('nabidkamajetku.gov.cz', 'nabidkamajetku.cz'),
+  'jinak by se pod robots.txt jednoho čet obsah druhého');
 
 /* 1) OBYČEJNÉ ČTENÍ tu větu nenajde — kdyby ano, neměřilo by se nic. */
 const holeHtml = await (await fetch(`${BASE}/podminky`)).text();

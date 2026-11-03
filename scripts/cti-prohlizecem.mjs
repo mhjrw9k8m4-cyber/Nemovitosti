@@ -40,13 +40,27 @@ export function zahozene(v) {
 /** Kolik jmen zahozených hostů a zakázaných cest se nejvýš zapíše. */
 export const STROP_JMEN = 8;
 
+/* PŘÍPONY, ZA KTERÝMI ZAČÍNÁ CIZÍ ORGANIZACE. Bez nich by se dvě
+   poslední části jména čítaly jako doména, a pak by `cizi-urad.gov.cz`
+   vycházel jako TÝŽ web jako `nabidkamajetku.gov.cz` — jiný úřad,
+   vlastní robots.txt. Změřeno 3. 11.: `stejnyWeb` to tak opravdu
+   vracela, a protože se právě na gov.cz má začít čist, nešlo to
+   nechat. Seznam je krátký a jen z toho, co nás může potkat. */
+export const VICEDILNE_PRIPONY = [
+  'gov.cz', 'gov.sk', 'gov.uk', 'co.uk', 'org.uk', 'ac.uk', 'com.au', 'com.br',
+];
+
 /** Stejný host, nebo jeho podřízená část (www.x.cz ↔ x.cz ↔ api.x.cz). */
 export function stejnyWeb(host, cil) {
   const a = String(host || '').replace(/^www\./, '').toLowerCase();
   const b = String(cil || '').replace(/^www\./, '').toLowerCase();
   if (!a || !b) return false;
   if (a === b) return true;
-  const koren = (x) => x.split('.').slice(-2).join('.');
+  const koren = (x) => {
+    const c = x.split('.');
+    const dve = c.slice(-2).join('.');
+    return c.slice(VICEDILNE_PRIPONY.includes(dve) ? -3 : -2).join('.');
+  };
   return koren(a) === koren(b);
 }
 

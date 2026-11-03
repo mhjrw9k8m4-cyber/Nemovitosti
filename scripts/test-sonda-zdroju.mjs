@@ -660,6 +660,87 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     `obsah ${s5.slibuje}, pustil se na: ${kolik.join(', ')}`);
 }
 
+/* ---- 2h) TÝŽ PORTÁL POD JINOU DOMÉNOU --------------------------
+   NALEZENO MĚŘENÍM 3. 11. U ÚZSVM, a až po §354. Prohlížeč stránku
+   vykreslil, robots.txt nic nezakázal — a obsah přesto nebyl. Teprve
+   jmenovitě zapsané zahozené požadavky ukázaly, že ze osmi cizích
+   požadavků šlo ŠEST na `nabidkamajetku.gov.cz`: aplikace bydlí na
+   sousední doméně téhož jména. Verdikt „skořápka" tedy nebyl
+   o zdroji, ale pořád jen o tom, kam se koukáme. */
+{
+  pravda('soused se pozná podle první části jména, cizí úřad ne',
+    JSON.stringify(S.sousedniDomeny(
+      [{ co: 'nabidkamajetku.gov.cz', kolik: 6 }, { co: 'www.googletagmanager.com', kolik: 1 }],
+      'nabidkamajetku.cz')) === '["nabidkamajetku.gov.cz"]'
+    && S.sousedniDomeny([{ co: 'cizi-urad.gov.cz' }], 'nabidkamajetku.cz').length === 0
+    && S.sousedniDomeny([{ co: 'api.mapy.cz' }, { co: 'fonts.googleapis.com' }], 'exdrazby.cz').length === 0,
+    'jinak by se chodilo na cizí weby jen proto, že mají stejnou příponu');
+
+  const SKORAPKA = '<html><body><div id="app">' + 'x'.repeat(25000) + '</div></body></html>';
+  const VYPIS = '<html><body>'
+    + '<a href="/p/1">Pozemek 1 — 1 200 m², 450 000 Kč</a>'.repeat(40) + '</body></html>';
+  const cil = { jmeno: 'Skořápka', host: 'sk.test', url: 'https://sk.test/', stav: 'kandidát' };
+  const ZAHOZENI = [{ co: 'sk.gov.test', kolik: 6 }, { co: 'www.google.com', kolik: 1 }];
+  const vykresliNepomohl = async () => ({ html: SKORAPKA, zablokovano: 0, cizich: 7, cizinci: ZAHOZENI });
+
+  /* a) Soused nabídky má — verdikt se podle něj změní a adresa se zapíše. */
+  const chozeno = [];
+  const stahni = async (u) => {
+    chozeno.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/^https:\/\/sk\.gov\.test\//.test(u)) return { ok: true, status: 200, text: async () => VYPIS };
+    return { ok: true, status: 200, text: async () => SKORAPKA };
+  };
+  const a = await S.sondujZdroj(cil, { stahni, ua: UA, mezipamet: new Map(), vykresli: vykresliNepomohl });
+  pravda('soused s nabídkami zdroj zachrání a adresa se zapíše',
+    a.slibuje === 'slibné' && a.sousedniDomena
+    && a.sousedniDomena.url === 'https://sk.gov.test/'
+    && a.sousedniDomena.bylo === 'skořápka' && a.sousedniDomena.je === 'slibné',
+    JSON.stringify(a.sousedniDomena) + ' / obsah ' + a.slibuje);
+  pravda('na cizí měřidlo (google) se přitom nešlo',
+    !chozeno.some((u) => /google/.test(u)), chozeno.join(' '));
+
+  /* b) ROBOTS.TXT SOUSEDA PLATÍ. Je to jiný web, tedy jiný robots.txt
+        — a když zakazuje, nesmí se stáhnout ani ta stránka. */
+  const chozeno2 = [];
+  const stahniZakaz = async (u) => {
+    chozeno2.push(u);
+    if (/sk\.gov\.test\/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /' };
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/^https:\/\/sk\.gov\.test\//.test(u)) return { ok: true, status: 200, text: async () => VYPIS };
+    return { ok: true, status: 200, text: async () => SKORAPKA };
+  };
+  const b = await S.sondujZdroj(cil, { stahni: stahniZakaz, ua: UA, mezipamet: new Map(), vykresli: vykresliNepomohl });
+  pravda('když soused zakazuje, stránka se nestáhne a zákaz se zapíše',
+    b.slibuje === 'skořápka' && b.sousedniDomena && b.sousedniDomena.zakazano === true
+    && !chozeno2.some((u) => u === 'https://sk.gov.test/'),
+    JSON.stringify(b.sousedniDomena) + ' / chozeno: ' + chozeno2.filter((u) => !/robots/.test(u)).join(' '));
+
+  /* c) Soused, který taky nic nenese, se PŘIZNÁ — netvrdí se práce,
+        která nic nepřinesla. */
+  const stahniNic = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => SKORAPKA };
+  };
+  const c = await S.sondujZdroj(cil, { stahni: stahniNic, ua: UA, mezipamet: new Map(), vykresli: vykresliNepomohl });
+  pravda('soused, který taky nic nenese, se přizná jako nepomohl',
+    c.slibuje === 'skořápka' && c.sousedniDomena && c.sousedniDomena.nepomohlo === true,
+    JSON.stringify(c.sousedniDomena));
+
+  /* d) Když prohlížeč POMOHL, soused se nezkouší — není proč. */
+  const chozeno3 = [];
+  const stahniP = async (u) => {
+    chozeno3.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => SKORAPKA };
+  };
+  const d = await S.sondujZdroj(cil, { stahni: stahniP, ua: UA, mezipamet: new Map(),
+    vykresli: async () => ({ html: VYPIS, zablokovano: 0, cizich: 7, cizinci: ZAHOZENI }) });
+  pravda('když prohlížeč pomohl, na souseda se vůbec nechodí',
+    d.slibuje === 'slibné' && !d.sousedniDomena && !chozeno3.some((u) => /sk\.gov\.test/.test(u)),
+    JSON.stringify(d.sousedniDomena) + ' / ' + chozeno3.filter((u) => /gov/.test(u)).join(' '));
+}
+
 console.log('Sonda zdrojů:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

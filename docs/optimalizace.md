@@ -21927,3 +21927,55 @@ vůbec nevložily (`sed` si v `|| 0` přečetl volbu a ` ` se
 v argumentu rozpadlo) a zkouška u nich hlásila zeleno. Zelená u
 nevložené sabotáže neznamená nic; obě se opakovaly přes doslovnou
 záměnu v souboru, až když šlo potvrdit, že v souboru opravdu jsou.
+
+## §355 — ÚZSVM nebyl skořápka: aplikace bydlí na sousední doméně
+
+**Co řekla jmenovitě zapsaná zahozená jména (§354).** Hned první
+měření s nimi dalo odpověď, na kterou se čekalo tři pokusy. U ÚZSVM
+šlo ze **osmi cizích požadavků šest na `nabidkamajetku.gov.cz`**;
+zbylé dva byly `www.google.com` a `www.googletagmanager.com`, tedy
+měřidla. Portál na `nabidkamajetku.cz` je skořápka ne proto, že by nic
+nenesl, ale proto, že aplikace bydlí na **sousední doméně téhož
+jména**. Verdikt „skořápka" tedy ani po prohlížeči nebyl o zdroji —
+pořád jen o tom, kam se koukáme.
+
+**Co se změnilo.** Sonda zdrojů si tenhle krok dělá sama: když ani
+prohlížeč nepomohl, podívá se mezi zahozené hosty, jestli tam není
+týž název pod jinou doménou (`sousedniDomeny()`), a nejvýš dvě takové
+adresy zkusí. Shoda se bere **jen podle první části jména**, takže
+`cizi-urad.gov.cz` tím neprojde a žádné měřidlo taky ne. Ta adresa se
+pak čte úplně normálně — **včetně svého vlastního robots.txt**, a když
+zakazuje, nestáhne se z ní ani ta stránka; do nálezu jde zákaz.
+Nic se neobchází: je to jen oprava adresy, na kterou se díváme.
+
+**Vada, kterou to odhalilo u nás.** `stejnyWeb()` brala za doménu dvě
+poslední části jména — a tím jí `cizi-urad.gov.cz` vycházel jako
+**týž web** jako `nabidkamajetku.gov.cz`. Jiný úřad, vlastní
+robots.txt, a my bychom si od něj tahali podřízené soubory pod cizím
+povolením. Změřeno a opraveno seznamem vícedílných přípon
+(`gov.cz`, `co.uk`, …). Mimochodem tím je i potvrzeno, že
+`nabidkamajetku.gov.cz` je pro nás **jiný web** — proto se u něj čte
+robots.txt zvlášť, a je to tak správně.
+
+**Co z toho vlastník vidí.** U skořápky: „týž portál je i na
+`…`, ale jeho robots.txt nás tam nepouští" nebo „nabídky jsou na `…`
+(týž portál, jiná doména)". A u kandidáta, kterého soused zachránil,
+se ta adresa ukazuje v seznamu slibných — tedy přímo tam, kde se
+rozhoduje, kam psát stahovač.
+
+**Čím je to podložené.** `test-sonda-zdroju.mjs` 95 kontrol (bylo 89):
+soused s nabídkami zdroj zachrání a adresa se zapíše; na měřidlo se
+přitom nejde; **zákaz z robots.txt souseda platí a stránka se
+nestáhne**; soused, který taky nic nenese, se přizná jako „nepomohl";
+a když prohlížeč pomohl, na souseda se nechodí vůbec. Prokázáno čtyřmi
+sabotážemi (ignorovaný robots.txt, zrušená shoda jména, zatajené
+„nepomohlo", krok bez podmínky).
+`test-cti-prohlizecem.mjs` 15 kontrol (bylo 13) na vícedílné přípony,
+prokázáno vyprázdněním seznamu. `test-diagnostika-zdroje.mjs` 16
+kontrol (bylo 14) na oba výpisy, prokázáno třemi sabotážemi, z toho
+jednou na escapování — adresa souseda je text z cizího webu.
+
+**Zase k poctivosti měření.** Jedna ze čtyř sabotáží rozbila
+závorky, zkouška vůbec nedoběhla a nevypsala ani řádek. Zelená u
+sabotáže, která se nevložila, neznamená nic; opakovala jsem ji až
+s kontrolou `node --check`.

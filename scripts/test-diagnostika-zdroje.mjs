@@ -69,6 +69,12 @@ const SONDA = fixtura('zdroje-sonda.json', (N) => {
   skorapka.vykresleno = { url: 'https://www.skorapka.cz/', bylo: 'skořápka', je: 'skořápka',
     nepomohlo: true, zablokovano: 0, cizich: 8,
     cizinci: [{ co: 'api.skorapka.cz' + NALOZ, kolik: 5 }, { co: 'mereni.example.org', kolik: 3 }] };
+  /* Adresa souseda je taky text z cizího webu a jde do innerHTML. */
+  skorapka.sousedniDomena = { url: 'https://skorapka.gov.test/' + NALOZ, zakazano: true,
+    duvod: 'Disallow: /' };
+  /* A u zachráněného kandidáta se ta adresa ukazuje v jiném místě
+     (seznam slibných), takže se měří i tam. */
+  slibny.sousedniDomena = { url: 'https://slibny.gov.test/', bylo: 'skořápka', je: 'slibné' };
 });
 const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   P.updated = '2026-11-03';
@@ -197,6 +203,17 @@ pravda('u skořápky je vidět, který cizí host si obsah tahal',
   m.text.replace(/\s+/g, ' ').slice(0, 300));
 pravda('a u podmínek, kterou cestu robots.txt nedovolil',
   m.text.includes('/api/podminky.json'),
+  m.text.replace(/\s+/g, ' ').slice(0, 300));
+
+/* TÝŽ PORTÁL POD JINOU DOMÉNOU. U ÚZSVM to byl celý důvod, proč byl
+   zdroj „skořápka". Majitel to má vidět na obou místech: u skořápky
+   (včetně zákazu z robots.txt té druhé domény) i u kandidáta, kterého
+   soused zachránil — tam je to adresa, na kterou se psát stahovač. */
+pravda('u skořápky je vidět soused i to, že nás tam robots nepouští',
+  /skorapka\.gov\.test/.test(m.text) && /nepouští/.test(m.text),
+  m.text.replace(/\s+/g, ' ').slice(0, 300));
+pravda('a u zachráněného kandidáta je vidět adresa, kde výpis je',
+  /slibny\.gov\.test/.test(m.text),
   m.text.replace(/\s+/g, ' ').slice(0, 300));
 
 /* ESCAPOVÁNÍ: nálož z cizího jména se NESMÍ stát prvkem. */

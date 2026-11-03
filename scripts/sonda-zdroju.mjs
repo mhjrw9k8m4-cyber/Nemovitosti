@@ -280,8 +280,76 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet, vykresli } = {})
     } catch (e) {
       zapis.vykresleno = { url: adresa, chyba: String(e && e.message ? e.message : e).slice(0, 120) };
     }
+
+    /* A KDYŽ ANI PROHLÍŽEČ NEPOMOHL: nebydlí ten portál na sousední
+       doméně téhož jména? Viz sousedniDomeny() — u ÚZSVM to byl
+       případ. Zkouší se nejvýš dvě, každá se svým robots.txt a
+       s pauzou mezi dotazy. */
+    const sousedni = (zapis.slibuje === 'skořápka' || zapis.slibuje === 'nic nenasvědčuje')
+      ? sousedniDomeny((zapis.vykresleno || {}).cizinci, cil.host || new URL(cil.url).hostname).slice(0, 2)
+      : [];
+    for (const h of sousedni) {
+      const adr = 'https://' + h + '/';
+      await spi(PAUZA_MS);
+      let r3 = null;
+      try { r3 = await smimeCist(adr, { stahni, ua: jmeno, mezipamet }); }
+      catch { r3 = { dovoleno: false, duvod: 'robots.txt se nepodařilo přečíst' }; }
+      if (!r3.dovoleno) {
+        zapis.sousedniDomena = { url: adr, zakazano: true, duvod: String(r3.duvod || '').slice(0, 120) };
+        continue;
+      }
+      if (r3.delay) await spi(Math.min(r3.delay, 30) * 1000);
+      try {
+        const odp3 = await stahni(adr, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
+        if (!odp3.ok) { zapis.sousedniDomena = { url: adr, odpoved: odp3.status }; continue; }
+        const v3 = vyteznost(await telo(odp3));
+        const bylo = zapis.slibuje;
+        if (lepsiVyteznost(v3, zapis.vyteznost) === v3 && slibuje(v3) !== bylo) {
+          zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3) };
+          zapis.vyteznost = v3;
+          zapis.slibuje = slibuje(v3);
+          break;
+        }
+        zapis.sousedniDomena = { url: adr, bylo, je: slibuje(v3), nepomohlo: true };
+      } catch (e) {
+        zapis.sousedniDomena = { url: adr, chyba: String(e && e.message ? e.message : e).slice(0, 120) };
+      }
+    }
   }
   return zapis;
+}
+
+/**
+ * Hosty, které vypadají jako TÝŽ PORTÁL POD JINOU DOMÉNOU.
+ *
+ * NALEZENO MĚŘENÍM 3. 11. U ÚZSVM. Prohlížeč stránku vykreslil,
+ * robots.txt nic nezakázal — a obsah přesto nebyl. Teprve jmenovitě
+ * zapsané zahozené požadavky (§354) ukázaly proč: ze osmi cizích
+ * požadavků šlo ŠEST na `nabidkamajetku.gov.cz`. Portál na
+ * `nabidkamajetku.cz` je skořápka, protože aplikace bydlí na
+ * sousední doméně téhož jména. Verdikt „skořápka" tedy nebyl
+ * o zdroji, ale pořád jen o tom, kam se koukáme.
+ *
+ * Shoda se bere POUZE podle první části jména (`nabidkamajetku`),
+ * a to je úmyslně úzké: `cizi-urad.gov.cz` tím neprojde, a žádné
+ * měřidlo ani reklama taky ne. Není to obcházení ničeho — ta adresa
+ * se pak čte normálně, včetně svého vlastního robots.txt.
+ */
+export function sousedniDomeny(cizinci, host) {
+  const bez = (h) => String(h || '').replace(/^www\./, '').toLowerCase();
+  const prvni = (h) => bez(h).split('.')[0];
+  const nase = prvni(host);
+  if (!nase) return [];
+  const videno = new Set();
+  const out = [];
+  for (const c of (cizinci || [])) {
+    const h = bez(c && c.co);
+    if (!h || h === bez(host) || videno.has(h)) continue;
+    if (prvni(h) !== nase) continue;
+    videno.add(h);
+    out.push(h);
+  }
+  return out;
 }
 
 /* Slova, podle kterých se pozná odkaz na VÝPIS NABÍDEK. Hledá se
