@@ -662,6 +662,37 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     'pouštěn na: ' + naDomov2.join(' ') + ' / ' + JSON.stringify(d.domovVykreslen));
 }
 
+/* ---- 7c) DOKUMENTY SE VYBÍRAJÍ PODLE JMÉNA, NE PODLE POŘADÍ ------
+   NALEZENO MĚŘENÍM 3. 11. U verejnedrazby.cz: sonda přečetla tři
+   dokumenty a ani jeden nebyly podmínky — byly to přílohy jedné
+   dražby (`f_6ae20774c24ec1.46881867.pdf`), protože se brávaly první
+   tři v pořadí. Tři stažení megabajtů za odpověď, která nic neřeší;
+   a skutečný dražební řád by se při čtyřech odkazech nestáhl vůbec. */
+{
+  const d = [
+    { url: 'https://v.cz/data/A8144/f_6ae20774c24ec1.46881867.pdf', popis: 'Příloha' },
+    { url: 'https://v.cz/data/A8144/f_6ae20774eae839.pdf', popis: '' },
+    { url: 'https://v.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d.pdf', popis: 'Dražební řád' },
+    { url: 'https://v.cz/x/obchodni-podminky.pdf', popis: '' },
+  ];
+  const v = P.vyberDokumenty(d).map((u) => u.split('/').pop());
+  pravda('dokument, který se jmenuje jako podmínky, jde první',
+    /Dra|obchodni-podminky/.test(v[0] || '') && /Dra|obchodni-podminky/.test(v[1] || ''),
+    JSON.stringify(v));
+  pravda('a příloha dražby se nevyhazuje, jen jde na konec',
+    v.length === 4 && /^f_/.test(v[2]) && /^f_/.test(v[3]),
+    'u zdroje, kde žádný odkaz jménem nevypadá, je lepší přečíst cokoli než nic: '
+    + JSON.stringify(v));
+  pravda('pozná se i dražební řád a VOP, ne jen slovo „podmínky"',
+    P.SLOVA_DOKUMENT.test('Dražební řád - 8.3.2025.pdf')
+    && P.SLOVA_DOKUMENT.test('vop.pdf')
+    && P.SLOVA_DOKUMENT.test('provozní řád')
+    && !P.SLOVA_DOKUMENT.test('f_6ae20774c24ec1.46881867.pdf'),
+    'řád a VOP jsou podmínky, i když se slovo „podmínky" nikde nevyskytuje');
+  pravda('a stejná adresa se nečte dvakrát',
+    P.vyberDokumenty([{ url: 'https://v.cz/a.pdf' }, { url: 'https://v.cz/a.pdf' }]).length === 1);
+}
+
 /* ---- 8) PODMÍNKY V DOKUMENTU SE OPRAVDU PŘEČTOU -----------------
    NALEZENO MĚŘENÍM 3. 11. U TŘÍ ZDROJŮ. Sonda skončila u odkazu a
    věty „text je nejspíš v odkazovaném dokumentu" — Bezrealitky 5 PDF,
@@ -792,6 +823,34 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     pravda('a mez na čitelnost je vysoko (text se bere jen hodnověrný)',
       P.PRAH_CITELNOSTI >= 0.8 && P.PRAH_CITELNOSTI <= 1,
       String(P.PRAH_CITELNOSTI));
+  }
+
+  /* c3) A NAOSTRO SKRZ CELOU SONDU: tři přílohy a jedny podmínky,
+         strop je tři. Kdyby se bralo pořadí, podmínky by se vůbec
+         nestáhly — a to je přesně ten případ verejnedrazby.cz. */
+  {
+    const ODKAZY = '<html><body><p>Vítejte.</p>'
+      + '<a href="/data/f_6ae20774c24ec1.pdf">Příloha</a>'
+      + '<a href="/data/f_6ae20774eae839.pdf">Příloha</a>'
+      + '<a href="/data/f_6ae20775443a98.pdf">Příloha</a>'
+      + '<a href="/pdf/obchodni-podminky.pdf">Obchodní podmínky</a>'
+      + '</body></html>';
+    const chozeno = [];
+    const fn = async (u) => {
+      chozeno.push(u);
+      if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+      if (/obchodni-podminky\.pdf$/.test(u)) {
+        return { ok: true, status: 200, arrayBuffer: async () => PDF_ZAKAZ, text: async () => 'b' };
+      }
+      if (/\.pdf$/.test(u)) return { ok: true, status: 200, arrayBuffer: async () => PDF_SKEN, text: async () => 'b' };
+      if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => ODKAZY };
+      return { ok: true, status: 200, text: async () => DOMOV };
+    };
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    pravda('podmínky se stáhnou i když jsou v odkazech čtvrté ze čtyř',
+      chozeno.some((u) => /obchodni-podminky\.pdf$/.test(u)) && /přečteno \(/.test(z.verdikt),
+      z.verdikt + ' / stažené: '
+      + chozeno.filter((u) => /\.pdf$/.test(u)).map((u) => u.split('/').pop()).join(' '));
   }
 
   /* d) STROP NA POČET DOKUMENTŮ. Jeden zdroj jich může odkazovat deset

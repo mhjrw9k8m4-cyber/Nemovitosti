@@ -22363,3 +22363,31 @@ naše čtečka **nepřečte**: 15 565 znaků při čitelnosti 0,36, nebo
 netvrdí a v nálezu zůstává odkaz, aby si ho otevřel člověk. Dál to
 nedoženeme bez podpory kódování podle jmen glyfů, a to je bezedná
 díra; tahle mez je vědomá, ne přehlédnutá.
+
+## §357f — tři stažené dokumenty, a ani jeden nebyly podmínky
+
+**Co řeklo měření.** U `verejnedrazby.cz` sonda přečetla tři dokumenty
+a všechny tři byly **přílohy jedné dražby**:
+`f_6ae20774c24ec1.46881867.pdf`, `f_6ae20774eae839…`, `f_6ae20775443a98…`.
+Brávaly se první tři v pořadí, v jakém stály na stránce. Tři stažení
+megabajtů za odpověď, která nic neřeší — a kdyby na té stránce byly
+čtyři odkazy a podmínky až čtvrté, nestáhly by se vůbec.
+
+**Co se změnilo.** Dokumenty se vybírají **podle jména**, ne podle
+pořadí. Sbírá se i text odkazu — podle čeho jinak poznat „Dražební
+řád" od přílohy pojmenované `f_6ae2077…pdf`. Slova jsou širší než jen
+„podmínky": dražební řád, VOP, obchodní i provozní řád, zásady, GDPR,
+ochrana údajů. Co se jménem nepozná, **nevyhazuje se** — jde na konec;
+u zdroje, kde žádný odkaz jménem nevypadá, je lepší přečíst cokoli než
+nic.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 93 kontrol (bylo
+88): dokument se jménem podmínek jde první, příloha jde na konec a
+nevypadne, pozná se řád i VOP, stejná adresa se nečte dvakrát — a
+naostro skrz celou sondu: tři přílohy a jedny podmínky při stropu tři,
+podmínky se MUSÍ stáhnout. Prokázáno sabotáží (návrat k pořadí).
+
+**Vlastní chyba cestou.** V seznamu slov jsem napsal `.{0,3]` místo
+`.{0,3}` — JS to nebere jako počet opakování, takže se to hledalo
+doslova a „provozní řád" by neprošel. Našlo se to tím, že jsem si
+vzorky vypsal a podíval se na ně, ne až v nálezu.

@@ -265,6 +265,42 @@ export function jeKod(text) {
   return /\{"|":\[|className|data-api/.test(String(text || ''));
 }
 
+/* Slova, podle kterých se pozná dokument S PODMÍNKAMI. Je to
+   `SLOVA_ODKAZ` plus to, co se jmenuje jinak, ale podmínkami je:
+   dražební řád, VOP, obchodní/provozní řád, GDPR, zásady. */
+export const SLOVA_DOKUMENT = new RegExp([
+  'podm[íi]nk', 'pr[áa]vn[íi]', 'smluvn', 'terms', 'conditions', 'licen',
+  'u[žz]it[íi]', 'pravidla', 'dra[žz]ebn[íi].{0,3}[řr][áa]d', 'drazebni.{0,3}rad',
+  'vop\\b', 'obchodn[íi].{0,3}[řr][áa]d', 'provozn[íi].{0,3}[řr][áa]d',
+  'z[áa]sady', 'gdpr', 'ochran[aěe].{0,4}[úu]daj',
+].join('|'), 'i');
+
+/**
+ * Dokumenty vybrané podle toho, čím se jmenují — ne podle pořadí.
+ *
+ * NALEZENO MĚŘENÍM 3. 11. U verejnedrazby.cz: sonda přečetla tři
+ * dokumenty a ani jeden nebyly podmínky. Byly to přílohy jedné dražby
+ * (`f_6ae20774c24ec1.46881867.pdf`), protože se brávaly první tři
+ * v pořadí. Tři stažení megabajtů za odpověď, která nic neřeší — a
+ * skutečný dražební řád by se při čtyřech odkazech vůbec nestáhl.
+ *
+ * Co se nepozná jménem, jde NA KONEC, nevyhazuje se: u zdroje, kde
+ * žádný odkaz jménem nevypadá, je lepší přečíst cokoli než nic.
+ */
+export function vyberDokumenty(dokumenty) {
+  const slibne = [], ostatni = [];
+  for (const d of (dokumenty || [])) {
+    const url = typeof d === 'string' ? d : (d && d.url) || '';
+    const popis = typeof d === 'string' ? '' : (d && d.popis) || '';
+    if (!url) continue;
+    let cesta = url;
+    try { cesta = decodeURIComponent(new URL(url).pathname); } catch { /* nehezká adresa */ }
+    (SLOVA_DOKUMENT.test(cesta) || SLOVA_DOKUMENT.test(popis) ? slibne : ostatni).push(url);
+  }
+  const videne = new Set();
+  return [...slibne, ...ostatni].filter((u) => !videne.has(u) && videne.add(u));
+}
+
 /* Kolik dokumentů se u jednoho zdroje přečte. Víc jich podmínky
    nemívají a každý je stažení megabajtů. */
 export const DOKUMENTU_NA_ZDROJ = 3;
@@ -420,8 +456,12 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
       cteno: vykresleno && !vykresleno.chyba && !vykresleno.nepomohlo
         ? 'prohlížečem' : 'ze serveru',
       vykresleno: vykresleno || undefined,
-      dokumenty: [...String(html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]
-        .map((m) => absolutni(m[1], o.url)).filter(Boolean).slice(0, 5),
+      /* S TEXTEM ODKAZU, ne jen s adresou: podle čeho jinak poznat
+         „Dražební řád" od přílohy pojmenované `f_6ae2077…pdf`. */
+      dokumenty: [...String(html || '')
+        .matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["'][^>]*>([\s\S]*?)<\/a>/gi)]
+        .map((m) => ({ url: absolutni(m[1], o.url), popis: bezZnacek(m[2]).trim().slice(0, 80) }))
+        .filter((d) => d.url).slice(0, 8),
     });
     /* JEDEN SKOK DÁL. Podmínky bývají rozdělené („smluvní podmínky",
        „podmínky užití", „zásady ochrany údajů") a z domovské stránky
@@ -451,11 +491,9 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
      přiznat, ne vydávat mojibake za „nic o automatu se nenašlo". */
   const kDokumentum = [];
   for (const st of zapis.stranky) {
-    for (const d of (st.dokumenty || [])) {
-      if (!kDokumentum.includes(d)) kDokumentum.push(d);
-    }
+    for (const d of (st.dokumenty || [])) kDokumentum.push(d);
   }
-  for (const url of kDokumentum.slice(0, DOKUMENTU_NA_ZDROJ)) {
+  for (const url of vyberDokumenty(kDokumentum).slice(0, DOKUMENTU_NA_ZDROJ)) {
     await spi(PAUZA_MS);
     /* Popis je jméno souboru: v diagnostice je „Dražební řád.pdf"
        k něčemu, „Dokument" k ničemu. */
@@ -534,10 +572,9 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
   /* Soupis dokumentů zůstává v nálezu i po jejich přečtení: majitel
      se na ně může chtít podívat sám, a u zakázaných je to jediné, co
      o nich můžeme říct. */
-  const dokumenty = [];
-  for (const st of zapis.stranky) {
-    for (const d of (st.dokumenty || [])) if (!dokumenty.includes(d)) dokumenty.push(d);
-  }
+  /* Soupis je seřazený týmž výběrem, takže v nálezu stojí nahoře to,
+     co se opravdu čte. */
+  const dokumenty = vyberDokumenty(kDokumentum);
   if (dokumenty.length) zapis.dokumenty = dokumenty.slice(0, 10);
   return zapis;
 }
