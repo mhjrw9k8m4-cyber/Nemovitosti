@@ -84,6 +84,25 @@ function zaznam(d) {
 
 /* JEDEN KROK: stav + dnešní nabídky → nový stav a uzavřené řádky.
    Čistá funkce, aby se dala zkoušet bez souborů i bez gitu. */
+/**
+ * Dny, kdy některý zdroj změnil TVAR dat (značka `prezn`).
+ *
+ * PROČ TO ARCHIV MUSÍ VĚDĚT. Klíč archivu vychází z adresy inzerátu,
+ * takže zdroj, který přes noc přeznačí identitu, by se tu zapsal jako
+ * ~1 600 ZMIZELÝCH nabídek a 1 600 nových — a archiv je přírůstkový,
+ * takže by ten den v historii zůstal navždy. Statistika „jak rychle
+ * nabídky mizí" by z toho dostala 1 600 vymyšlených životností.
+ * Takový den se proto nezapočítá vůbec; je to totéž, co už archiv umí
+ * u dne, který je započítaný (viz krokDneska).
+ */
+export function dnyPrezneceni(nabidky) {
+  const dny = new Set();
+  for (const o of (nabidky || [])) {
+    if (o && typeof o.prezn === 'string') dny.add(o.prezn);
+  }
+  return dny;
+}
+
 export function krok(stav, nabidky, den) {
   /* NEJDŘÍV DUPLICITY, PAK KLÍČ — a obojí tak, jak to dělá web.
      Dřív tu stálo `if (!zive.has(pkey(d))) zive.set(...)` s poznámkou
@@ -218,6 +237,15 @@ function krokDneska() {
   const stav = nactiStav();
   const den = dnes();
   if (stav.den === den) { console.log('Archiv: dnešek už je započítaný, nic se nedělá.'); return; }
+  /* DEN, KDY ZDROJ PŘEZNAČIL IDENTITU, SE NEZAPOČÍTÁVÁ. Viz
+     dnyPrezneceni: jinak by do trvalé historie spadlo tisíc
+     vymyšlených životností. */
+  if (dnyPrezneceni(n).has(den)) {
+    console.error('Archiv: dnes některý zdroj změnil tvar dat (značka prezn), takže se'
+      + ' tenhle den NEZAPOČÍTÁVÁ — jinak by se do trvalé historie zapsalo, že stovky'
+      + ' nabídek zmizely a stovky nových přišly. Archiv zůstává, jaký byl.');
+    return;
+  }
   const v = krok(stav, n, den);
   const pocet = pripoj(v.uzavrene);
   fs.mkdirSync(ADR, { recursive: true });

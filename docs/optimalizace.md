@@ -22437,3 +22437,52 @@ jsem napsal na „čitelnost 0.36" — jenže to se vypisuje i samostatně
 z pole `citelnost`, takže kontrola o důvodu netvrdila nic. Kotvou je
 teď věta, která je POUZE v důvodu. Je to táž past jako u §357e: text
 kontroly se musí vázat na to jediné místo, které měří.
+
+## §358 — přeznačený den by se do trvalé historie zapsal jako tisíc životností
+
+**Co se našlo.** §356 zavedl stav `jinaIdentita`: zdroj přes noc změní
+tvar dat (počty i ceny normální, jen nic nesedí na včerejšek), nabídky
+se nezahodí, jen se jim označí věk za neznámý. Tím ale práce
+neskončila. **Klíč archivu vychází z ADRESY inzerátu** — ne
+z `place|okres|price|area|druh` jako hlídaná místa. Takže ten den, kdy
+zdroj přečísluje adresy, se archivu jeví jako „stovky nabídek zmizely
+a stovky nových přišly". A archiv je přírůstkový: zapsané období se už
+nikdy nepřepíše. Statistika „jak rychle nabídky mizí" by z jediné noci
+dostala stovky vymyšlených životností — **natrvalo**.
+
+**Co se změnilo.** `archiv.mjs` má `dnyPrezneceni(nabidky)` a
+`krokDneska()` se podle ní na ten den zdrží — nahlas, s hláškou, proč
+tenhle den nezapočítal. Archiv zůstává, jaký byl; příští den se počítá
+normálně.
+
+**Proč značka nese DEN, a ne „ano".** Značka se dědí (`prenesZnacku`),
+takže ji nabídka nese i po měsících. Kontrola na „má značku" by archiv
+zmrazila **navždy** — a to by nikdo nepoznal, protože zmrazený archiv
+se nijak neprojeví; prostě přestane růst. Robot proto píše dnešní
+datum a archiv porovnává s dneškem.
+
+**Čím je to podložené.** `test-archiv.mjs` +5 kontrol (den se z dat
+pozná; stará dědičná značka dnešek neblokuje; značka bez dne se za den
+nepočítá; `krokDneska` se podle ní opravdu zdrží; a je to vidět
+v logu). `test-hlidac-zdroju.mjs` 114 kontrol (bylo 113) — jedna nová
+vyžaduje, aby robot do značky psal **den**.
+
+**Dvě pasti, do kterých jsem sám šlápl.**
+
+První: sabotáž „robot píše jen `o.prezn = 1`" **nezachytil nikdo**.
+Kontrola stavu `jinaIdentita` byla napsaná na doslovné `o.prezn = 1`
+z té doby, kdy značka den nenesla — takže vrácení k „ano" bylo přesně
+to, co ta kontrola VYŽADOVALA. Ochrana archivu se tím dala tiše
+vypnout. Teď to kousne (113/1).
+
+Druhá: kontrola „a je to vidět v logu, ne mlčky" hledala slovo
+`NEZAPOČÍTÁVÁ` kdekoli v těle funkce — a **totéž slovo stojí
+v komentáři nad tou podmínkou**. Robot, který se zdrží mlčky, by tedy
+prošel zeleně. Kontrola teď komentáře odřízne a slovo musí najít
+uvnitř `console.error`. Prokázáno dvěma sabotážemi: slovo vyměněné jen
+v hlášce (komentář ponechán) a hláška vyhozená celá — obě padnou.
+
+**Pravidlo pro příště:** kontrola, která čte zdrojový kód, musí číst
+**kód bez komentářů**. Jinak měří dokumentaci, ne chování. A kontrola
+napsaná na doslovný tvar hodnoty zestárne s kódem a začne vyžadovat
+starý stav — vázat ji na vlastnost (nese den), ne na znaky (`= 1`).

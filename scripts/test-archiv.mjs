@@ -13,7 +13,7 @@ import fsx from 'node:fs';
 import pathx from 'node:path';
 import { createRequire as createRequireX } from 'node:module';
 import { fileURLToPath as furlX } from 'node:url';
-import { krok } from './archiv.mjs';
+import { krok, dnyPrezneceni } from './archiv.mjs';
 
 const KOREN_X = pathx.resolve(pathx.dirname(furlX(import.meta.url)), '..');
 const reqX = createRequireX(import.meta.url);
@@ -232,6 +232,41 @@ if (fs.existsSync(ADR)) {
   const sVymerou = { ...zaklad, druh: 'orná půda', area: 3732 };
   je('u pozemku s výměrou zůstal klíč beze změny',
     KLICX.klicPozemku(sVymerou) === KLICX.pkey(sVymerou) + '#v3732', true);
+}
+
+/* ---- DEN, KDY ZDROJ PŘEZNAČIL IDENTITU, SE NEZAPOČÍTÁVÁ ----------
+   Klíč archivu vychází z ADRESY inzerátu. Zdroj, který přes noc změní
+   tvar dat (§356), by se tu zapsal jako stovky zmizelých nabídek a
+   stovky nových — a archiv je přírůstkový, takže by ten den
+   v historii zůstal navždy a statistika „jak rychle nabídky mizí" by
+   z něj dostala stovky vymyšlených životností.
+
+   ZNAČKA NESE DEN, ne jen „ano", a to je tu to podstatné: dědí se dál,
+   takže podle samotného „ano" by archiv zamrzl natrvalo. */
+{
+  const DNES = '2026-11-03';
+  const VCERA = '2026-11-02';
+  je('den přeznačení se z dat pozná',
+    dnyPrezneceni([{ prezn: DNES }, { prezn: VCERA }, {}]).has(DNES), true);
+  je('a stará dědičná značka dnešek neblokuje',
+    dnyPrezneceni([{ prezn: VCERA }]).has(DNES), false);
+  je('značka bez dne (jen „ano") se za den nepočítá',
+    dnyPrezneceni([{ prezn: 1 }, { prezn: true }]).size, 0);
+
+  /* A ŽE SE TÍM ROBOT OPRAVDU ŘÍDÍ: čte se kód, protože krokDneska
+     píše do souborů a zkouška mu je podstrkovat nebude. */
+  const kodA = fsx.readFileSync(pathx.join(KOREN_X, 'scripts', 'archiv.mjs'), 'utf8');
+  const iK = kodA.indexOf('function krokDneska');
+  const telo = iK > 0 ? kodA.slice(iK, iK + 1500) : '';
+  je('krokDneska se podle značky opravdu zdrží',
+    /dnyPrezneceni\(n\)\.has\(den\)/.test(telo), true);
+  /* POZOR: hledat to slovo kdekoli v těle nestačí — stejné slovo stojí
+     i v komentáři nad tou podmínkou, takže by kontrola prošla i u robota,
+     který se zdrží MLČKY. Komentáře se proto odříznou a slovo se musí
+     najít uvnitř té hlášky. */
+  const bezKomentaru = telo.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  je('a je to vidět v logu, ne mlčky (a ne jen v komentáři)',
+    /console\.error\([^;]*NEZAPOČÍTÁVÁ/.test(bezKomentaru), true);
 }
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');

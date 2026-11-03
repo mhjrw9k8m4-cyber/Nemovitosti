@@ -3143,7 +3143,12 @@ async function main() {
     let oznaceno = 0;
     for (const o of fresh) {
       if (zdrojNabidky(o, znamaJmena) !== n.nazev || o.first_seen !== dnesISO) continue;
-      o.prezn = 1; oznaceno++;
+      /* ZNAČKA NESE DEN, ne jen „ano". Dědí se dál (prenesZnacku),
+         takže samo „ano" by nešlo odlišit od přeznačení před měsícem —
+         a archiv, který se podle ní má na jeden den zdržet, by zamrzl
+         natrvalo. Pro novinky a RSS je to pořád jen pravdivostní
+         hodnota: věk neznámý zůstává neznámý. */
+      o.prezn = dnesISO; oznaceno++;
     }
     console.error(`POZOR: u zdroje ${n.nazev} se dnes nespárovalo ${n.novych}`
       + ` z ${n.celkem} nabídek (${Math.round(n.podil * 100)} %), včera jich bylo ${n.vcera}.`

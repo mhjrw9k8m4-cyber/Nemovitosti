@@ -688,9 +688,17 @@ pravda('první běh bez minulých čísel projde tiše',
   pravda('robot nález totožnosti vyhodnocuje (ne jen funkci má)', i2 > 0);
   const telo = kod2.slice(i2, i2 + 1200);
   pravda('a nabídky NEZAHAZUJE, jen jim označí věk za neznámý',
-    telo.includes("o.prezn = 1") && telo.includes("z.stav = 'jinaIdentita'")
+    /o\.prezn = /.test(telo) && telo.includes("z.stav = 'jinaIdentita'")
     && !/raw[\s\S]{0,40}filter/.test(telo),
     'jsou to pravděpodobně tytéž pozemky — zahodit je by byla větší škoda než špatné datum');
+  /* ZNAČKA MUSÍ NÉST DEN, ne jen „ano". Archiv se podle ní na jeden
+     den zdrží (scripts/archiv.mjs, dnyPrezneceni) — a protože se
+     značka dědí, samo „ano" by ho zmrazilo natrvalo. Bez téhle
+     kontroly by se ta ochrana dala tiše vypnout: sabotáž
+     „o.prezn = 1" neshodila nic. */
+  pravda('a ta značka nese DEN, podle kterého se archiv zdrží',
+    /o\.prezn = dnesISO/.test(telo),
+    'archiv potřebuje den, ne pravdivostní hodnotu — jinak zamrzne navždy');
   pravda('a stav „jinaIdentita" se počítá za odpověď (jinak by zdroj vypadl z historie)',
     /ODPOVEDEL = new Set\(\[[^\]]*'jinaIdentita'/.test(kod2),
     'táž lekce jako u „pokles" — označený zdroj z historie vypadl a přišli jsme o měření');
