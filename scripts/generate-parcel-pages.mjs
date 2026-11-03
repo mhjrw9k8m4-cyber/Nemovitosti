@@ -2165,6 +2165,18 @@ export function generuj() {
        ne rozbitá stránka. */
     fs.writeFileSync(cesta, bezKomentaruVHtml(ukoncenaStranka(
       migrujZpet(migrujOstrovNahoru(migrujStyl(sablona, migrujPredvykresleni(sablona, migrujSkripty(sablona, obsah))))), dnes, podobne)));
+    /* DO SEZNAMU ZMIZELÝCH UŽ DNES, NE AŽ ZÍTRA. Záznam sbírala jen
+       větev výš — ta pro stránky, které už ukončené BYLY. Nabídka,
+       která odchází DNES, se tedy orazitkovala, ale do zmizele.json
+       se dostala až příštím během. Pro člověka to znamená, že se
+       v „Uložených" o odchodu dozvěděl o den později — a přesně na tom
+       §316 stavěl: aby se poznalo „prodal se" od „smazal jsem si ho".
+       Datum je dnešní, protože ten den nabídka odchází.
+       Čte se z PRÁVĚ ZAPSANÉ stránky, ne z `obsah` před přepisem:
+       záznam má nést to, co na stránce opravdu stojí. */
+    try {
+      zmizele.push(zaznamZmizele(fs.readFileSync(cesta, 'utf8'), f, dnes));
+    } catch (e) { /* záznam navíc není důvod zastavit sestavení */ }
     ukonceno++;
   }
   /* SEZNAM ZMIZELÝCH do data/zmizele.json. Nese jen to, co se v „Uložených"

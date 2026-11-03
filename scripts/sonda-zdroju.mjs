@@ -32,6 +32,7 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { BOT_UA } from './bot-ua.mjs';
 import { smimeCist, telo } from './robots.mjs';
+import { zeSitemapy, zRss } from './cteni-zdroje.mjs';
 import { ZAPOJENE, KANDIDATI, kandidatiZDat } from './zdroje-kandidati.mjs';
 
 export const PAUZA_MS = 2000;          // mezi hostiteli, ať sonda nebuší
@@ -67,11 +68,90 @@ export function vyteznost(text) {
 
 /** Z počtů udělá jedno slovo. Mez je nízká schválně: sonda má říct
  *  „tady se dá hledat dál", ne „tady je 42 pozemků". */
+/* Kolik bajtů už je „velká stránka". Pod tím je stránka prostě
+   malá a nic se z toho nedovozuje. */
+export const BAJTU_SKORAPKA = 20000;
+
+/**
+ * Je to SKOŘÁPKA — velká stránka bez jediné zmínky pozemku?
+ *
+ * NALEZENO MĚŘENÍM. ÚZSVM vrátil 86 880 bajtů HTML, ve kterých nebylo
+ * ani jedno slovo „pozemek" a dvakrát „Kč". To není slabý obsah —
+ * to je skorapka, do které obsah dotahuje až prohlížeč. Verdikt
+ * „slabé" by o tom zdroji tvrdil, že jsme ho změřili a nic tam není;
+ * pravda je, že jsme nezměřili nic. Táž úvaha jako prah na text
+ * u sondy podmínek (§340).
+ */
+export function jeSkorapka(v) {
+  if (!v) return false;
+  return (v.bajtu || 0) >= BAJTU_SKORAPKA && (v.slovoPozemek || 0) === 0 && (v.korun || 0) <= 2;
+}
+
 export function slibuje(v) {
   if (!v) return 'nevíme';
   if (v.slovoPozemek >= 3 && (v.korun >= 3 || v.metru >= 3)) return 'slibné';
+  /* Skořápka se musí poznat DŘÍV než „slabé" — jinak by ji dvojí
+     zmínka „Kč" v patičce vydala za změřený slabý obsah. */
+  if (jeSkorapka(v)) return 'skořápka';
   if (v.slovoPozemek >= 1 || v.korun >= 1) return 'slabé';
   return 'nic nenasvědčuje';
+}
+
+/* Vzorec adresy, která vypadá na výpis nebo inzerát pozemku. Používá
+   se na adresy ze sitemapy a RSS, kde nemáme nápis odkazu. */
+export const ADRESA_POZEMEK = /pozemk|pozemek|parcel|nemovit|majetk|majetek|nabidk|drazb/i;
+
+/** Nejvýš tolik adres ze strojové cesty se zapíše do nálezu. */
+export const STROJOVYCH_ADRES = 5;
+
+/**
+ * STROJOVÁ CESTA: sitemap.xml a RSS.
+ *
+ * PROČ. Měřeno 3. 11.: ÚZSVM vrátil 87 kB HTML, ve kterých nebylo ani
+ * jedno slovo „pozemek" — skořápka, do které obsah dotahuje až
+ * prohlížeč. Pro takový zdroj je prohledávání odkazů slepé: na stránce
+ * žádné nejsou. Jenže sitemapa a RSS jsou STROJOVĚ ČITELNÉ a vedou
+ * přímo na výpisy i na jednotlivé inzeráty — a čtečky na obojí už
+ * v repozitáři jsou (§334, `zeSitemapy` a `zRss`).
+ *
+ * Nic se odsud NEBERE do nabídek: tohle je hledání adresy, ne čtení
+ * dat. Do nálezu jde seznam adres, aby bylo vidět, kde výpis je.
+ * robots.txt platí i tady — sitemapa není výjimka.
+ */
+export async function strojoveAdresy(cil, { stahni, ua, mezipamet } = {}) {
+  let zaklad = '';
+  try { zaklad = new URL(cil.url).origin; } catch { return { adresy: [], zkusene: [] }; }
+  const jmeno = ua || BOT_UA;
+  const kde = [`${zaklad}/sitemap.xml`, `${zaklad}/sitemap_index.xml`, `${zaklad}/rss`, `${zaklad}/feed`];
+  const adresy = [];
+  const zkusene = [];
+  for (const u of kde) {
+    if (adresy.length >= STROJOVYCH_ADRES) break;
+    let r = null;
+    try { r = await smimeCist(u, { stahni, ua: jmeno, mezipamet }); }
+    catch { r = { dovoleno: false }; }
+    if (!r.dovoleno) { zkusene.push({ url: u, stav: 'nesmíme číst' }); continue; }
+    if (r.delay) await spi(Math.min(r.delay, 30) * 1000);
+    await spi(PAUZA_MS);
+    let xml = '';
+    try {
+      const odp = await stahni(u, { casLimit: CAS_LIMIT_MS, pokusy: 1 });
+      if (!odp.ok) { zkusene.push({ url: u, stav: 'HTTP ' + odp.status }); continue; }
+      xml = await telo(odp);
+    } catch (e) { zkusene.push({ url: u, stav: 'neodpověděla' }); continue; }
+    /* Sitemapa i RSS naráz — nehádá se podle jména souboru, bere se,
+       co v tom opravdu je. Web si „rss" klidně pojmenuje „feed.xml". */
+    const ze = zeSitemapy(xml, ADRESA_POZEMEK);
+    const zr = zRss(xml).map((x) => x.url).filter((x) => ADRESA_POZEMEK.test(x));
+    const nalezeno = [...new Set([...ze, ...zr])];
+    zkusene.push({ url: u, stav: 'přečteno', adres: nalezeno.length });
+    for (const a of nalezeno) {
+      if (adresy.includes(a)) continue;
+      adresy.push(a);
+      if (adresy.length >= STROJOVYCH_ADRES) break;
+    }
+  }
+  return { adresy, zkusene };
 }
 
 /**
@@ -159,6 +239,18 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
       if (zapis.slibuje === 'slibné') break;
     }
   }
+
+  /* STROJOVÁ CESTA U SKOŘÁPKY. Když je stránka velká a není v ní ani
+     jedno slovo o pozemku, je procházení odkazů slepé: na stránce
+     žádné nejsou, obsah dotahuje až prohlížeč. Sitemapa a RSS ale
+     strojově čitelné jsou — a vedou přímo na výpisy. Nic se odsud
+     nebere do nabídek; do nálezu jde seznam adres, aby bylo vidět,
+     kde výpis je. */
+  if (zapis.slibuje === 'skořápka' || zapis.slibuje === 'nic nenasvědčuje') {
+    const sm = await strojoveAdresy(cil, { stahni, ua: jmeno, mezipamet });
+    if (sm.adresy.length) zapis.strojoveAdresy = sm.adresy;
+    if (sm.zkusene.length) zapis.strojoveZkusene = sm.zkusene;
+  }
   return zapis;
 }
 
@@ -243,7 +335,10 @@ export function odkazyNaVypis(html, base) {
  *  zmínek pozemku — ne podle velikosti stránky, aby nevyhrál web
  *  s velkou patičkou. */
 export function lepsiVyteznost(a, b) {
-  const rad = { 'slibné': 3, 'slabé': 2, 'nic nenasvědčuje': 1, 'nevíme': 0 };
+  /* Skořápka je VÍC než „nic nenasvědčuje" (aspoň víme, že tam něco
+     je), ale MÍŇ než „slabé" — ze slabé stránky jsme přečetli aspoň
+     něco, ze skořápky nic. */
+  const rad = { 'slibné': 4, 'slabé': 3, 'skořápka': 2, 'nic nenasvědčuje': 1, 'nevíme': 0 };
   const ra = rad[slibuje(a)] || 0, rb = rad[slibuje(b)] || 0;
   if (ra !== rb) return ra > rb ? a : b;
   return ((a && a.slovoPozemek) || 0) >= ((b && b.slovoPozemek) || 0) ? a : b;

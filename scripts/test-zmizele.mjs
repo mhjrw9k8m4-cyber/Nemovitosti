@@ -28,7 +28,7 @@
 /* SERVISNÍ PRACOVNÍK VYPNUTÝ: sw.js volá `skipWaiting()` i `clients.claim()`.
    (Viz CLAUDE.md.) */
 import { chromium } from 'playwright-core';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -212,6 +212,65 @@ async function vUlozenych(nastav) {
   pravda('a klíč ze seznamu zmizelých má týž tvar',
     /#v\d+$/.test(A.klic), `ze seznamu: „${A.klic}", z prohlížeče: „${r.ukazka}"`);
   await ctx.close();
+}
+
+/* ---- NABÍDKA, KTERÁ ODEŠLA DNES, JE V SEZNAMU U¡ DNES ---------- */
+/* Záznam sbírala jen větev pro stránky, které už ukončené BYLY. Nabídka
+   odcházející DNES se tedy orazítkovala, ale do data/zmizele.json se
+   dostala až příštím během — a člověk se v „Uložených" o odchodu
+   dozvěděl o den později. Přesně na tom §316 stavěl: aby se poznalo
+   „prodal se" od „smazal jsem si ho sám".
+   MĚŘENO 3. 11.: dvě nabídky (Lovosice, Žalhostice) byly orazítkované
+   na stránce a v seznamu nebyly. */
+{
+  const souboryS = readdirSync(KOREN)
+    .filter((f) => /^pozemek-.*\.html$/.test(f));
+  const razitko = new Map();          // soubor → den ukončení ze stránky
+  for (const f of souboryS) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    const m = /window\.PK_UKONCENO="(\d{4}-\d{2}-\d{2})"/.exec(t);
+    if (m) razitko.set(f, m[1]);
+  }
+  const vSeznamu = new Set((Z.zmizele || []).map((z) => z.soubor || z.odkaz));
+  /* NE PODLE SOUBORU, ALE PODLE KLÍČE. Seznam slučuje záznamy se
+     shodným klíčem (nabídka se vrátila a odešla znovu, §332), takže
+     orazítkovaných stránek může být víc než záznamů — a to je
+     správně. Na tom tahle kontrola nejdřív spadla: ohlásila čtyři
+     „chybějící", a byly to právě ty slučené. Měří se tedy, že na klíč
+     záznam JE — žádná odcházející nabídka nesmí ze seznamu vypadnout
+     celá. */
+  const klicStranky = new Map();
+  for (const f of razitko.keys()) {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    const m = /window\.PK_POZEMEK=\{"k":"((?:[^"\\]|\\.)*)"/.exec(t);
+    if (m) klicStranky.set(f, m[1]);
+  }
+  const klice = new Set((Z.zmizele || []).map((z) => String(z.klic || '').split('#')[0]));
+  const chybiR = [...klicStranky.keys()].filter((f) => !vSeznamu.has(f) && !klice.has(klicStranky.get(f)));
+  pravda('každá orazítkovaná stránka má v seznamu zmizelých svůj záznam (podle klíče)',
+    chybiR.length === 0,
+    `chybí ${chybiR.length}: ${chybiR.slice(0, 4).join(', ')}`
+    + ' — záznam musí vzniknout v témž běhu, ve kterém se stránka orazítkuje');
+  pravda('a klíč se ze stránky podařilo přečíst u všech (kontrola měřidla)',
+    klicStranky.size === razitko.size,
+    `klíčů ${klicStranky.size} z ${razitko.size}`);
+  pravda('a orazítkovaných stránek je dost na to, aby to něco znamenalo',
+    razitko.size >= 50, `orazítkovaných: ${razitko.size}`);
+  /* A v kódu se opravdu sbírá i v té větvi, která nabídku UKONČUJE —
+     jinak by to byl jednodenní dluh, který se sám srovná a nikdo si
+     ho nevšimne. */
+  const kodG = readFileSync(path.join(KOREN, 'scripts', 'generate-parcel-pages.mjs'), 'utf8');
+  /* KOTVA JE NA ZÁPISU, NE NA JMÉNU FUNKCE. Napoprvé tu stálo
+     `indexOf('ukoncenaStranka(')` — a to našlo DEFINICI funkce vysoko
+     v souboru, takže se jako „sběr" našel push z té DRUHÉ větve
+     a sabotáž prošla zeleně. Táž past jako u kontroly pojistky sondy:
+     kotvit se musí na místo, o kterém se tvrdí. */
+  const iZapis = kodG.indexOf('fs.writeFileSync(cesta, bezKomentaruVHtml(ukoncenaStranka(');
+  const iPocet = kodG.indexOf('ukonceno++', iZapis);
+  const iSber = kodG.indexOf('zmizele.push(', iZapis);
+  pravda('generátor sbírá záznam i ve větvi, která nabídku ukončuje',
+    iZapis > 0 && iSber > iZapis && iPocet > iSber && iSber < iPocet,
+    JSON.stringify({ zapis: iZapis, sber: iSber, pocet: iPocet }));
 }
 
 await prohlizec.close();

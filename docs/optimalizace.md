@@ -21306,3 +21306,85 @@ samo našlo lepší adresu a verdikt se tím zlepšil, je **SPÚ** — a ten
 už zapojený máme. U ÚZSVM, eDesky a Portálu dražeb tři adresy nestačily;
 to je příští krok (víc adres, nebo rozcestník výpisu hledat hlouběji),
 ne nový zdroj naslepo.
+
+## 342. „Slabé" u tří kandidátů nebyl verdikt o zdroji
+
+**Pokračování §341, a zase se na začátku měřilo.** Po tom, co si sonda
+našla výpis u SPÚ, zbyli tři kandidáti na „slabé" i po třech dalších
+adresách. Místo hádání, proč, jsem se podíval na čísla v nálezu:
+
+| kandidát | bajtů | „pozemek" | „Kč" | odkazů |
+|---|---:|---:|---:|---:|
+| **ÚZSVM** | 86 880 | **0** | 2 | 4 |
+| Portál dražeb | 80 882 | 4 | 0 | 13 |
+| eDesky | 12 611 | 1 | 0 | 0 |
+| *(pro srovnání)* SPÚ | 83 766 | **69** | 10 | 8 |
+
+**87 kB HTML, ve kterých není ani jedno slovo „pozemek".** To není
+slabý obsah — to je **skořápka**, do které obsah dotahuje až prohlížeč.
+A verdikt „slabé" o takovém zdroji tvrdí, že jsme ho změřili a nic tam
+není; pravda je, že jsme nezměřili nic. Táž chyba jako §340, jen na
+jiném místě.
+
+**Nový verdikt „skořápka"** se proto pozná měřením: stránka nad
+`BAJTU_SKORAPKA` (20 kB), žádná zmínka pozemku a nejvýš dvě „Kč".
+Malá stránka se za skořápku nevydává — tam se prostě nic nedovozuje.
+V řazení stojí skořápka **níž než „slabé"**: ze slabé stránky jsme
+přečetli aspoň něco, ze skořápky nic.
+
+**A pro skořápku je procházení odkazů slepé** — na stránce žádné
+nejsou. Sitemapa a RSS ale strojově čitelné jsou a vedou přímo na
+výpisy; čtečky na obojí už v repozitáři byly z §334 (`zeSitemapy`,
+`zRss`). Sonda proto u skořápky (a u „nic nenasvědčuje") zkusí
+`/sitemap.xml`, `/sitemap_index.xml`, `/rss` a `/feed`, vybere z nich
+nejvýš pět adres, které podle vzorce vypadají na pozemky, a **zapíše je
+do nálezu**. Nic se odtamtud nebere do nabídek — je to hledání adresy,
+ne čtení dat. A **robots.txt platí i na sitemapu**: není to výjimka.
+
+Sitemapa i RSS se čtou **z téhož souboru naráz**, nehádá se podle
+jména: web si „rss" klidně pojmenuje `feed.xml`.
+
+**Prokázáno sabotáží (další čtyři):** skořápka splyne se „slabé"
+→ 2 pády; strojová cesta se vypne → 3; robots.txt u sitemapy se
+nekontroluje → 2; bere se každá adresa ze sitemapy → 1.
+`test-sonda-zdroju` **82 kontrol**. Diagnostika ukazuje skořápky
+zvlášť i s adresami, které ze sitemapy vyšly.
+
+## 343. Nabídka odešla dnes, v „Uložených" to stálo až zítra
+
+**Jak se to našlo.** `test-oprav` spadl **hned po úspěšné přestavbě**:
+dvě stránky (Lovosice, Žalhostice) se rozcházely s tím, co generátory
+spočítají. Druhý běh `oprav.mjs` to srovnal. Pátral jsem proč — a pod
+tím leželo něco horšího než rozcházející se bajty.
+
+**Vada.** `generate-parcel-pages.mjs` má dvě větve: jednu pro stránky,
+které **už ukončené byly**, a jednu pro nabídku, která **odchází
+dnes**. Záznam do `data/zmizele.json` sbírala **jen ta první**. Nabídka
+odcházející dnes se tedy orazítkovala (`PK_UKONCENO`), ale do seznamu
+zmizelých se dostala až příštím během.
+
+Pro člověka to znamená, že se v **„Uložených" o odchodu dozvěděl o den
+později** — a přesně na tom §316 stavěl: aby se poznalo „prodal se" od
+„smazal jsem si ho sám". Změřeno 3. 11.: dvě nabídky byly orazítkované
+na stránce a v seznamu nebyly.
+
+**Oprava** je jeden push ve druhé větvi, s dnešním datem, a čte se
+z **právě zapsané** stránky — záznam má nést to, co na stránce opravdu
+stojí. Po opravě: 494 záznamů, z toho **2 dnešní**.
+
+**Dvě moje chyby, které při tom našla zkouška:**
+
+1. **Kontrola podle souboru místo podle klíče.** Seznam slučuje záznamy
+   se shodným klíčem (nabídka se vrátila a odešla znovu, §332), takže
+   orazítkovaných stránek je legitimně víc než záznamů. První podoba
+   kontroly ohlásila čtyři „chybějící" — a byly to právě ty slučené.
+   Měří se tedy, že **na klíč** záznam je.
+2. **Strukturální kontrola se zachytila na DEFINICI funkce.**
+   `indexOf('ukoncenaStranka(')` našel hlavičku funkce vysoko
+   v souboru, takže se jako „sběr" našel push z té **druhé** větve
+   a sabotáž prošla zeleně. Kotva je teď na tom zápisu. **Táž past jako
+   dnes u kontroly pojistky sondy** — kotvit se musí na místo, o kterém
+   se tvrdí.
+
+**Prokázáno sabotáží:** odebrání toho pushe → hlídač padne a vypíše
+`sber: -1`. `test-zmizele` **29 kontrol** (dřív 27).

@@ -366,6 +366,84 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     S.lepsiVyteznost(slabe, slibne) === slibne && S.lepsiVyteznost(slibne, slabe) === slibne);
 }
 
+/* ---- 2f) SKOŘÁPKA: STROJOVÁ CESTA PŘES SITEMAP A RSS ----------- */
+/* MĚŘENO 3. 11.: ÚZSVM vrátil 86 880 bajtů HTML, ve kterých nebylo ani
+   jedno slovo „pozemek" a dvakrát „Kč". To není slabý obsah — to je
+   skořápka, do které obsah dotahuje až prohlížeč. Verdikt „slabé" by
+   tvrdil, že jsme ten zdroj změřili a nic tam není; pravda je, že jsme
+   nezměřili nic. A pro takový zdroj je procházení odkazů slepé:
+   na stránce žádné nejsou. Sitemapa a RSS ale strojově čitelné jsou. */
+{
+  pravda('velká stránka bez jediné zmínky pozemku je SKOŘÁPKA, ne „slabé"',
+    S.slibuje({ bajtu: 86880, slovoPozemek: 0, korun: 2, metru: 0 }) === 'skořápka');
+  pravda('malá stránka se za skořápku nevydává — tam se prostě nic nedovozuje',
+    S.slibuje({ bajtu: 900, slovoPozemek: 0, korun: 0, metru: 0 }) === 'nic nenasvědčuje');
+  pravda('a stránka, ze které jsme něco přečetli, zůstává „slabé"',
+    S.slibuje({ bajtu: 80882, slovoPozemek: 4, korun: 0, metru: 0 }) === 'slabé');
+  pravda('skořápka se v řazení bere jako MÍŇ než slabé (z té jsme přečetli aspoň něco)',
+    S.lepsiVyteznost({ bajtu: 86880, slovoPozemek: 0, korun: 2 },
+      { bajtu: 3000, slovoPozemek: 4, korun: 0 }).slovoPozemek === 4);
+
+  const SITEMAP = '<?xml version="1.0"?><urlset>'
+    + '<url><loc>https://u.test/o-nas</loc></url>'
+    + '<url><loc>https://u.test/nabidka-majetku/pozemky</loc></url>'
+    + '<url><loc>https://u.test/nabidka-majetku/pozemek-lhota-123</loc></url>'
+    + '<url><loc>https://u.test/kontakt</loc></url>'
+    + '</urlset>';
+  const volane = [];
+  const stahni = async (u) => {
+    volane.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/sitemap\.xml$/.test(u)) return { ok: true, status: 200, text: async () => SITEMAP };
+    if (/sitemap_index|rss|feed/.test(u)) return { ok: false, status: 404, text: async () => '' };
+    /* Skořápka: velká stránka, žádné odkazy, žádná zmínka pozemku. */
+    return { ok: true, status: 200, text: async () => '<div id="app"></div>' + 'x'.repeat(30000) };
+  };
+  const z = await S.sondujZdroj({ jmeno: 'Úřad', host: 'u.test', url: 'https://u.test/nabidka', typ: 'sale' },
+    { stahni, ua: UA, mezipamet: new Map() });
+  pravda('u skořápky sonda zkusí sitemapu a najde v ní adresy výpisu',
+    z.slibuje === 'skořápka' && Array.isArray(z.strojoveAdresy)
+    && z.strojoveAdresy.some((u) => /pozemky$/.test(u)),
+    JSON.stringify({ slibuje: z.slibuje, adresy: z.strojoveAdresy }));
+  pravda('a adresy, které s pozemkem nesouvisí, se neberou',
+    !(z.strojoveAdresy || []).some((u) => /o-nas|kontakt/.test(u)), JSON.stringify(z.strojoveAdresy));
+  pravda('do nálezu jde i to, co se zkusilo — ať je vidět, kde se hledalo',
+    Array.isArray(z.strojoveZkusene) && z.strojoveZkusene.some((x) => /sitemap\.xml$/.test(x.url)),
+    JSON.stringify(z.strojoveZkusene));
+  pravda('robots.txt se čte i u sitemapy — není to výjimka',
+    volane.filter((u) => /robots\.txt$/.test(u)).length >= 1, JSON.stringify(volane.slice(0, 4)));
+
+  /* A ZDROJ, KTERÝ JE SLIBNÝ, SE STROJOVOU CESTOU NEOBTĚŽUJE. */
+  const volane2 = [];
+  const stahni2 = async (u) => {
+    volane2.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () =>
+      '<a href="/d/1">Pozemek Lhota</a> 1 200 m² za 900 000 Kč <a href="/d/2">Pozemek Dolní</a> 2 400 m² za 1 500 000 Kč <a href="/d/3">Parcela</a> 800 m² za 600 000 Kč' };
+  };
+  const z2 = await S.sondujZdroj({ jmeno: 'Slibný', host: 'v.test', url: 'https://v.test/vypis', typ: 'sale' },
+    { stahni: stahni2, ua: UA, mezipamet: new Map() });
+  pravda('slibný zdroj se sitemapou nezatěžuje',
+    z2.slibuje === 'slibné' && !z2.strojoveAdresy
+    && !volane2.some((u) => /sitemap|rss|feed/.test(u)), JSON.stringify(volane2));
+
+  /* A ZÁKAZ PLATÍ I NA SITEMAPU. */
+  const volane3 = [];
+  const stahni3 = async (u) => {
+    volane3.push(u);
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nDisallow: /sitemap' };
+    if (/sitemap/.test(u)) return { ok: true, status: 200, text: async () => SITEMAP };
+    return { ok: true, status: 200, text: async () => '<div id="app"></div>' + 'x'.repeat(30000) };
+  };
+  const z3 = await S.sondujZdroj({ jmeno: 'Zakazuje sitemapu', host: 'u.test', url: 'https://u.test/nabidka', typ: 'sale' },
+    { stahni: stahni3, ua: UA, mezipamet: new Map() });
+  pravda('zakázaná sitemapa se VŮBEC NEVYŽÁDÁ',
+    !volane3.some((u) => /sitemap\.xml$/.test(u) && !/robots/.test(u)), JSON.stringify(volane3));
+  pravda('a v nálezu stojí, že se číst nesmí',
+    (z3.strojoveZkusene || []).some((x) => x.stav === 'nesmíme číst'),
+    JSON.stringify(z3.strojoveZkusene));
+}
+
 /* ---- 3) ZAKÁZANOU STRÁNKU SONDA NESTÁHNE ------------------------- */
 {
   const volane = [];
