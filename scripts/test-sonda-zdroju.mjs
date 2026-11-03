@@ -602,6 +602,64 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     'bez toho by běh bez internetu přepsal nález tvrzením, že zdroje neexistují');
 }
 
+/* ---- 2g) SKOŘÁPKA SE PŘEČTE PROHLÍŽEČEM ------------------------
+   Naměřeno 3. 11. u ÚZSVM: 0 m², 0× „pozemek" — a to i po třech
+   dalších adresách a po sitemap. Prohlížeč se SEM PODSTRKUJE, ať se
+   měří rozhodování; že opravdový prohlížeč text přečte a drží
+   robots.txt i u podřízených souborů, měří test-cti-prohlizecem. */
+{
+  /* Skořápka: velká stránka, ani jedno slovo o pozemku. */
+  const SKORAPKA = '<html><body><div id="app">' + 'x'.repeat(25000) + '</div></body></html>';
+  const VYKRESLENO = '<html><body>'
+    + '<a href="/p/1">Pozemek 1 — 1 200 m², 450 000 Kč</a>'.repeat(40) + '</body></html>';
+  const stahni = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => SKORAPKA };
+  };
+  const cil = { jmeno: 'Skořápka', host: 'sk.test', url: 'https://sk.test/', stav: 'kandidát' };
+
+  const bez = await S.sondujZdroj(cil, { stahni, ua: UA, mezipamet: new Map() });
+  pravda('bez prohlížeče zůstane „skořápka" (jinak by se nic neměřilo)',
+    bez.slibuje === 'skořápka', bez.slibuje);
+
+  const volane = [];
+  const s2 = await S.sondujZdroj(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => { volane.push(u); return { html: VYKRESLENO, zablokovano: 1, cizich: 4 }; } });
+  pravda('s prohlížečem se verdikt zlepší', s2.slibuje === 'slibné', s2.slibuje);
+  pravda('a v nálezu stojí, odkud a z čeho na co se změnil',
+    s2.vykresleno && s2.vykresleno.url === 'https://sk.test/'
+    && s2.vykresleno.bylo === 'skořápka' && s2.vykresleno.je === 'slibné'
+    && s2.vykresleno.zablokovano === 1 && s2.vykresleno.cizich === 4,
+    JSON.stringify(s2.vykresleno));
+  pravda('a pustil se jen jednou, na měřenou adresu', volane.length === 1, JSON.stringify(volane));
+
+  /* CO NEPOMOHLO, SE PŘIZNÁ — a verdikt se nemění. */
+  const s3 = await S.sondujZdroj(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => ({ html: SKORAPKA }) });
+  pravda('vykreslení, které nepomohlo, verdikt nezmění a přizná se',
+    s3.slibuje === 'skořápka' && s3.vykresleno && s3.vykresleno.nepomohlo === true,
+    JSON.stringify(s3.vykresleno));
+
+  /* PÁD PROHLÍŽEČE SONDU NESHODÍ. */
+  const s4 = await S.sondujZdroj(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => { throw new Error('prohlížeč nenaběhl'); } });
+  pravda('pád prohlížeče sondu neshodí a zapíše se',
+    s4.slibuje === 'skořápka' && /nenaběhl/.test((s4.vykresleno || {}).chyba || ''),
+    JSON.stringify(s4.vykresleno));
+
+  /* A U SLIBNÉHO ZDROJE SE PROHLÍŽEČ NEPOUŠTÍ VŮBEC. */
+  const stahniSlibne = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    return { ok: true, status: 200, text: async () => VYKRESLENO };
+  };
+  const kolik = [];
+  const s5 = await S.sondujZdroj(cil, { stahni: stahniSlibne, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => { kolik.push(u); return { html: VYKRESLENO }; } });
+  pravda('u zdroje, který nabídky dal sám, se prohlížeč nepustí',
+    s5.slibuje === 'slibné' && kolik.length === 0,
+    `obsah ${s5.slibuje}, pustil se na: ${kolik.join(', ')}`);
+}
+
 console.log('Sonda zdrojů:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

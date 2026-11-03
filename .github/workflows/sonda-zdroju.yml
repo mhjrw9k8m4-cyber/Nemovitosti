@@ -24,7 +24,7 @@ permissions:
 jobs:
   sonda:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,6 +33,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # PROHLÍŽEČ, protože „skořápka" není verdikt o zdroji, ale o tom,
+      # čím ho čteme (§353). Naměřeno u ÚZSVM: 0 m², 0× „pozemek" i po
+      # třech dalších adresách a po sitemap. Sonda ho pouští JEN
+      # u skořápky a jen na měřenou adresu; robots.txt platí i pro
+      # podřízené soubory. Verze je připnutá, ať je zvednutí vidět.
+      - name: Prohlížeč
+        run: |
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node -e "console.log('playwright-core', require('playwright-core/package.json').version)"
 
       - name: Změřit zdroje
         run: node scripts/sonda-zdroju.mjs

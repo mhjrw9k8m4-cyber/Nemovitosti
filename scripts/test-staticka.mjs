@@ -237,7 +237,32 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
      jako „úroveň zanoření" a funkce by přestala chodit do spouštěných
      skriptů. Naletěl jsem na to hned, jak `chceProhlizec` dostala druhý
      parametr — a našla to sabotáž, ne čtení. */
-  const spatnaUloha = [...vBez].filter((c) => chceProhlizec(c));
+  /* VÝJIMKA PRO DYNAMICKÝ PROHLÍŽEČ, a s důvodem.
+     Sondy si od 3. 11. berou prohlížeč `await import('playwright-core')`
+     až uvnitř `main()`, a jen u stránky, která text nedala sama (§353).
+     Jejich zkoušky `main()` nespouštějí — měří rozhodování
+     s PODSTRČENÝM vykreslením, takže žádný prohlížeč nepotřebují.
+     Vzorek výš ale dynamický import odlišit neumí, a oslabovat ho
+     kvůli tomu je horší než napsat výjimku sem.
+     TA VÝJIMKA SE HLÍDÁ: kdyby taková zkouška opravdu začala prohlížeč
+     spouštět, propadne kontrolou pod tím. */
+  const BEZ_PROHLIZECE_PRESTO = new Map([
+    ['scripts/test-sonda-zdroju.mjs',
+      'sonda si prohlížeč bere dynamicky až v main(); zkouška měří sondujZdroj s podstrčeným vykreslením'],
+    ['scripts/test-sonda-podminky.mjs',
+      'totéž u podmínek: zmerPodminky dostane vykreslení podstrčené'],
+  ]);
+  const spatnaUloha = [...vBez].filter((c) => chceProhlizec(c) && !BEZ_PROHLIZECE_PRESTO.has(c));
+  /* Výjimka platí jen dokud ta zkouška prohlížeč opravdu nespouští. */
+  const lzivaVyjimka = [...BEZ_PROHLIZECE_PRESTO.keys()].filter((c) => {
+    try {
+      const t = bezKomentaru(fs.readFileSync(path.join(ROOT, c), 'utf8'));
+      /* I STATICKÝ IMPORT, ne jen spuštění: sabotáž, která do zkoušky
+         přidala  bez , tudy napoprvé
+         propadla (zachytilo ji až obecné pravidlo, a na jiném souboru). */
+      return /(?:from|import)\s*\(?\s*['"]playwright-core['"]|chromium\.launch|tvorProhlizec\s*\(/.test(t);
+    } catch (e) { return false; }
+  });
   /* DRUHÁ STRANA TÉHOŽ. Zkouška, která prohlížeč nepotřebuje a přesto
      sedí v úloze s ním, nic nerozbije — jen čeká. Úloha „v-prohlizeci"
      nejdřív instaluje chromium (asi minuta) a pak jede jednu zkoušku po
@@ -261,6 +286,11 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
     .filter((c) => !POMOCNE.has(c) && !vBez.has(c) && !vProh.has(c) && !jinde.includes(c));
 
   let zle = 0;
+  if (lzivaVyjimka.length) {
+    zle++;
+    console.error('::error::Výjimka „prohlížeč nepotřebuje" přestala platit — tahle zkouška ho'
+      + ' spouští, takže patří do úlohy s prohlížečem: ' + lzivaVyjimka.join(', '));
+  }
   if (spatnaUloha.length) {
     zle++;
     console.error('::error::Zkouška potřebuje prohlížeč, ale je v úloze bez něj: ' + spatnaUloha.join(', '));

@@ -32,6 +32,7 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { BOT_UA } from './bot-ua.mjs';
 import { smimeCist, telo } from './robots.mjs';
+import { tvorProhlizec } from './cti-prohlizecem.mjs';
 import { zeSitemapy, zRss } from './cteni-zdroje.mjs';
 import { ZAPOJENE, KANDIDATI, kandidatiZDat } from './zdroje-kandidati.mjs';
 
@@ -158,7 +159,7 @@ export async function strojoveAdresy(cil, { stahni, ua, mezipamet } = {}) {
  * Jedno měření. Vrací záznam do nálezu; nikdy nevyhodí výjimku —
  * selhání je výsledek, ne pád.
  */
-export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
+export async function sondujZdroj(cil, { stahni, ua, mezipamet, vykresli } = {}) {
   const zapis = {
     jmeno: cil.jmeno || cil.host, host: cil.host, url: cil.url, typ: cil.typ || '?',
     stav: cil.stav || 'kandidát', adresaOverena: cil.adresaOverena === true,
@@ -250,6 +251,35 @@ export async function sondujZdroj(cil, { stahni, ua, mezipamet } = {}) {
     const sm = await strojoveAdresy(cil, { stahni, ua: jmeno, mezipamet });
     if (sm.adresy.length) zapis.strojoveAdresy = sm.adresy;
     if (sm.zkusene.length) zapis.strojoveZkusene = sm.zkusene;
+  }
+
+  /* SKOŘÁPKA SE PŘEČTE PROHLÍŽEČEM. Verdikt „skořápka" znamená: velká
+     stránka, a ani jedno slovo o pozemku — obsah dotahuje skript.
+     Naměřeno 3. 11. u ÚZSVM: 0 m², 0× „pozemek", a to i po třech
+     dalších adresách a po cestě přes sitemap. Takový verdikt není
+     o zdroji, je o tom, čím ho čteme (§353).
+     Zkouší se JEN u skořápky a jen na té adrese, na kterou se zdroj
+     měří — jeden prohlížeč na zdroj, ne na každý odkaz. robots.txt
+     platí dál, a v cti-prohlizecem.mjs i pro podřízené soubory. */
+  if (vykresli && (zapis.slibuje === 'skořápka' || zapis.slibuje === 'nic nenasvědčuje')) {
+    const adresa = (zapis.lepsiAdresa && zapis.lepsiAdresa.url) || cil.url;
+    try {
+      const v = await vykresli(adresa);
+      const v2 = vyteznost(v.html || '');
+      /* Bere se to jen tehdy, když je to OPRAVDU LEPŠÍ — jinak by
+         nález tvrdil práci, která nic nepřinesla. */
+      if (lepsiVyteznost(v2, zapis.vyteznost) === v2 && slibuje(v2) !== zapis.slibuje) {
+        zapis.vykresleno = { url: adresa, bylo: zapis.slibuje, je: slibuje(v2),
+          zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 };
+        zapis.vyteznost = v2;
+        zapis.slibuje = slibuje(v2);
+      } else {
+        zapis.vykresleno = { url: adresa, bylo: zapis.slibuje, je: slibuje(v2), nepomohlo: true,
+          zablokovano: v.zablokovano || 0, cizich: v.cizich || 0 };
+      }
+    } catch (e) {
+      zapis.vykresleno = { url: adresa, chyba: String(e && e.message ? e.message : e).slice(0, 120) };
+    }
   }
   return zapis;
 }
@@ -445,14 +475,42 @@ async function main() {
   }
   const nalez = [];
   const mezipamet = new Map();
-  for (const c of cile) {
-    const z = await sondujZdroj(c, { stahni, ua: BOT_UA, mezipamet });
-    nalez.push(z);
-    console.log(`  ${(z.verdikt || '?').padEnd(12)} ${z.jmeno} — robots ${z.robots}`
-      + (z.odpoved ? `, odpověď ${z.odpoved}` : '')
-      + (z.slibuje ? `, obsah ${z.slibuje}` : '')
-      + (z.chyba ? `, ${z.chyba}` : ''));
-    await spi(PAUZA_MS);
+  /* Prohlížeč LÍNĚ a jeden na celý běh — většina zdrojů ho nepotřebuje
+     a spouštět Chromium naprázdno je ztráta. Když v prostředí není,
+     nesmí to sondu shodit: zapíše se to u toho zdroje jako důvod. */
+  let prohlizec = null, prohlizecPadl = null;
+  const smiCist = async (url) => {
+    try { const r = await smimeCist(url, { stahni, ua: BOT_UA, mezipamet }); return !!r.dovoleno; }
+    catch (e) { return false; }
+  };
+  const vykresli = async (url) => {
+    if (prohlizecPadl) throw prohlizecPadl;
+    if (!prohlizec) {
+      try {
+        const { chromium } = await import('playwright-core');
+        prohlizec = await tvorProhlizec({ chromium, smiCist, ua: BOT_UA, casLimit: CAS_LIMIT_MS });
+        console.log('  (spuštěn prohlížeč — nějaká stránka vypadá na skořápku)');
+      } catch (e) {
+        prohlizecPadl = new Error('prohlížeč nejde spustit: ' + String(e && e.message ? e.message : e).slice(0, 100));
+        throw prohlizecPadl;
+      }
+    }
+    return prohlizec.vykresli(url);
+  };
+  try {
+    for (const c of cile) {
+      const z = await sondujZdroj(c, { stahni, ua: BOT_UA, mezipamet, vykresli });
+      nalez.push(z);
+      console.log(`  ${(z.verdikt || '?').padEnd(12)} ${z.jmeno} — robots ${z.robots}`
+        + (z.odpoved ? `, odpověď ${z.odpoved}` : '')
+        + (z.slibuje ? `, obsah ${z.slibuje}` : '')
+        + (z.vykresleno && !z.vykresleno.nepomohlo && !z.vykresleno.chyba ? ' [prohlížeč pomohl]' : '')
+        + (z.vykresleno && z.vykresleno.nepomohlo ? ' [prohlížeč nepomohl]' : '')
+        + (z.chyba ? `, ${z.chyba}` : ''));
+      await spi(PAUZA_MS);
+    }
+  } finally {
+    if (prohlizec) await prohlizec.zavri().catch(() => {});
   }
   const souhrn = {
     dostupne: nalez.filter((z) => z.verdikt === 'dostupné').length,

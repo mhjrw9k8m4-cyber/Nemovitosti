@@ -21853,3 +21853,26 @@ prohlížeč se pouští vždycky → 1 pád.
    součet. Fixtura tím vyšla na 1 500 znaků místo 2 400, spadla pod mez
    „málo textu" a kontrola padala na DOBRÉM kódu. Délka fixtury se teď
    kontroluje zvlášť, hned vedle.
+
+### 353b. Totéž u sondy zdrojů: „skořápka" se přečte prohlížečem
+
+Verdikt „skořápka" (velká stránka, ani jedno slovo o pozemku) je přesně
+týž případ: u ÚZSVM dal 0 m² a 0× „pozemek" i po třech dalších adresách
+a po cestě přes sitemap. Sonda zdrojů teď takovou adresu přečte
+prohlížečem — **jen u skořápky a jen jednu adresu na zdroj**, tu, na
+kterou se zdroj opravdu měří.
+
+Co nepomohlo, se **přizná**: v nálezu stojí `nepomohlo: true` a verdikt
+se nemění. Jinak by si sonda připisovala práci, která nic nedala —
+a právě to by člověka, který se podle nálezu rozhoduje, svedlo.
+
+Zkouška má 7 nových kontrol (89 celkem). Sabotáže: bere se i to, co
+nepomohlo → 1 pád; prohlížeč se pouští i u slibného zdroje → 1 pád.
+
+**Změřeno naostro u podmínek (3. 11., první běh s prohlížečem):**
+u Bezrealitek stouplo přečtené z 1 329 na 2 344 a z 562 na 1 577 znaků,
+přičemž **2 podřízené soubory se zahodily kvůli robots.txt** a 2 cizí
+hosty se nestahovaly. Výsledek je ale pořád „na úplné podmínky je to
+málo" — a to je správná odpověď, ne vylepšená: skutečné podmínky jsou
+v pěti PDF na zakázaném `api.bezrealitky.cz`. U `elektronickedrazby.cz`
+prohlížeč nepomohl (104 znaků zůstalo 104) a je to v nálezu vidět.
