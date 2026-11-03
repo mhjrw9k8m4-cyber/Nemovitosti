@@ -357,11 +357,16 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   /* A ať je vidět, že se opravdu ukládají VŠECHNY klíče, ne jen nové:
      po označení musí seen_keys obsahovat i ty, které nové nebyly. */
   const hled2 = { id: 'h2', okres: 'Kolín', seen_keys: [H.keyOf(A)] };
-  const u2 = F.zeHlidani([hled2], [A, B])[0];
-  je('viděné', 'nové je jen to nepřečtené', u2.pocet, 1);
-  je('viděné', 'ale k označení se posílají klíče všech, co sedí', u2.vsechnyKlice.length, 2);
+  /* Čte se opatrně: když pravidlo o novinkách někdo rozbije tak, že
+     nevrátí NIC, tenhle řádek dřív spadl na `undefined.pocet` — a pád
+     v polovině souboru znamená, že se zbytek kontrol vůbec nespustí
+     a o skutečné příčině se nedozvíme. Má hlásit, ne padat. */
+  const u2 = F.zeHlidani([hled2], [A, B])[0] || null;
+  je('viděné', 'nové je jen to nepřečtené', u2 ? u2.pocet : 'hlídání nic nevrátilo', 1);
+  je('viděné', 'ale k označení se posílají klíče všech, co sedí',
+    u2 && u2.vsechnyKlice ? u2.vsechnyKlice.length : 'hlídání nic nevrátilo', 2);
   je('viděné', 'a je mezi nimi i ten dávno viděný',
-    u2.vsechnyKlice.indexOf(H.keyOf(A)) >= 0, true);
+    !!(u2 && u2.vsechnyKlice && u2.vsechnyKlice.indexOf(H.keyOf(A)) >= 0), true);
 
   // Klíče se neduplikují, i když tentýž pozemek přijde ze dvou zdrojů.
   je('viděné', 'tatáž nabídka ze dvou zdrojů dá jeden klíč',
@@ -979,6 +984,64 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     /procNicNesedi\(/.test(hlKod), true);
   je('nesedí', 'a vypíše z něj jméno podmínky i počet',
     /proc\.jmeno[\s\S]{0,200}proc\.kolik/.test(hlKod), true);
+}
+
+/* ---- NABÍDKA S NEZNÁMÝM VĚKEM NENÍ NOVÁ -------------------------
+   §356: zdroj přes noc změní TVAR dat. Otisk keyOf() je mimo jiné
+   z obce a parcelního čísla, takže se přemalováním změní — a celý
+   zdroj by vyšel jako „nový". Změřeno na skutečných datech: jedno
+   hlídání na okres Hodonín dostane 112 „nových" ze 117. A protože se
+   zapisují jen klíče, které ve zprávě opravdu stály (3 u telefonu,
+   8 u e-mailu), přišlo by to samé ještě 38, resp. 14 dní v řadě.
+
+   Zkouší se OBA směry. Utišit přemalovaný zdroj je snadné; nesmí se
+   tím ale utišit běžný provoz, a to je ta polovina, kterou by ledabylá
+   oprava rozbila bez varování. */
+{
+  const stare = P({ parcel: 'A' });
+  const vcera = [H.keyOf(stare)];
+  const noveCisto = P({ parcel: 'B', price: 600000 });
+
+  je('věk', 'nabídka bez značky se ohlásí jako nová',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: vcera }, [stare, noveCisto]), 1);
+  je('věk', 'se značkou dne se neohlásí',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: vcera },
+      [stare, { ...noveCisto, prezn: '2026-11-03' }]), 0);
+  /* Dědičná značka je `1`, ne den (prenesZnacku ve
+     fetch-opportunities.mjs). Kontrola na den by ji propustila. */
+  je('věk', 'ani s dědičnou značkou `1`',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: vcera },
+      [stare, { ...noveCisto, prezn: 1 }]), 0);
+
+  /* SMÍŠENÝ DEN: jeden zdroj přemalovaný, druhý přinesl opravdovou
+     novinku. Utišit se musí jen ten první — jinak by se §356 u jednoho
+     zdroje stal výpadkem upozornění u všech. */
+  const smiseny = [stare, { ...P({ parcel: 'C', price: 700000 }), prezn: '2026-11-03' }, noveCisto];
+  je('věk', 'smíšený den: ohlásí se jen ta bez značky',
+    H.novychProHledani({ okres: 'Kolín', seen_keys: vcera }, smiseny), 1);
+  je('věk', 'a je to opravdu ta bez značky',
+    H.noveProHledani({ okres: 'Kolín', seen_keys: vcera }, smiseny).map((d) => d.parcel), ['B']);
+
+  /* A ŽE TO PLATÍ PRO VŠECHNA TŘI MÍSTA, která ten seznam čtou:
+     rozesílač do telefonu, rozesílač e-mailem a pás v prohlížeči.
+     Pravidlo je proto v noveProHledani(), ne v nich — pás se zkouší
+     naostro, u rozesílačů se čte kód (volají databázi). */
+  const zFeedu = F.zeHlidani([{ id: 7, okres: 'Kolín', seen_keys: vcera }], smiseny);
+  je('věk', 'pás v prohlížeči ji taky nepočítá',
+    zFeedu[0] ? zFeedu[0].pocet : -1, 1);
+  for (const soubor of ['send-push.mjs', 'send-alerts.mjs']) {
+    const kod = readFileSync(new URL('../scripts/' + soubor, import.meta.url), 'utf8');
+    je('věk', `${soubor} bere nové z noveProHledani, nepočítá si je sám`,
+      /PKH\.noveProHledani\(/.test(kod) && !/\.filter\([^)]*first_seen/.test(kod), true);
+  }
+  /* A samo pravidlo ať v logice zůstane. Kdyby ho někdo vyhodil, horní
+     kontroly spadnou — tahle je tu proto, aby se nedalo „opravit" tím,
+     že se značka přepíše na jiné jméno a kontroly se přepíšou s ní. */
+  const logika = readFileSync(new URL('../js/hlidani-logika.js', import.meta.url), 'utf8');
+  const iN = logika.indexOf('function noveProHledani');
+  const teloN = iN > 0 ? logika.slice(iN, iN + 1800).replace(/\/\*[\s\S]*?\*\//g, '') : '';
+  je('věk', 'pravidlo o značce je v noveProHledani, ne jen v komentáři',
+    /d\.prezn/.test(teloN), true);
 }
 
 console.log(`\nHlídání lokality: ${bezi} testů`);

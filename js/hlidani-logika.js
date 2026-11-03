@@ -425,6 +425,25 @@
     (data || []).forEach(function (d) {
       var k = keyOf(d);
       if (mam[k] || videno[k] || !matches(s, d)) return;
+      /* NABÍDKA S NEZNÁMÝM VĚKEM NENÍ NOVÁ. Značku `prezn` dává robot
+         tomu, u čeho zdroj přes noc změnil TVAR dat (§356). Otisk
+         keyOf() je mimo jiné z obce a parcelního čísla, takže se
+         přemalováním změní — a bez tohohle řádku by celý zdroj vyšel
+         jako nový. Změřeno na datech: jedno hlídání na okres Hodonín
+         dostane 112 „nových" pozemků ze 117, a protože se zapisují jen
+         ty, co ve zprávě opravdu stály (3 u telefonu, 8 u e-mailu),
+         přišlo by to samé ještě 38, resp. 14 dní v řadě.
+
+         Je to tady, a ne v rozesílačích, protože tentýž seznam čtou tři
+         místa: scripts/send-push.mjs, scripts/send-alerts.mjs
+         a js/nove-pozemky.js (pás „ve vašem okolí přibyly pozemky").
+
+         Stačí PŘÍTOMNOST značky, den se tu nezkoumá: čerstvá značka
+         nese den, dědičná `1` (viz prenesZnacku ve
+         scripts/fetch-opportunities.mjs), a obojí znamená „nevíme, jak
+         je to staré". Archiv se naopak ptá na den, protože řeší jinou
+         otázku — „byl přemalován DNEŠEK?". */
+      if (d && d.prezn) return;
       /* Týž pozemek s jinou cenou není nový — patří do
          zmeneneProHledani(). Bez tohohle se ohlásil jako nový, což
          nebyla pravda a zahodilo to lepší zprávu („zlevnilo z X na Y"). */

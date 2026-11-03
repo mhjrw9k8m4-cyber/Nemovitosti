@@ -22486,3 +22486,64 @@ v hlášce (komentář ponechán) a hláška vyhozená celá — obě padnou.
 **kód bez komentářů**. Jinak měří dokumentaci, ne chování. A kontrola
 napsaná na doslovný tvar hodnoty zestárne s kódem a začne vyžadovat
 starý stav — vázat ji na vlastnost (nese den), ne na znaky (`= 1`).
+
+## §359 — přemalovaný zdroj by rozeslal 112 falešných upozornění. A pak ještě 38 dní
+
+**Co se našlo.** §358 uzavřel archiv. Rozesílače jsem ale nekontroloval
+— a tam to bylo horší. Otisk `keyOf()` je `typ|okres|obec|parcela|cena|výměra`,
+tedy **ne adresa inzerátu**. To zní jako dobrá zpráva: přečíslování
+adres upozornění nezaplaví. Jenže stav `jinaIdentita` se spouští právě
+tehdy, když **nesedí identita** — a to je týž otisk. Takže ve chvíli,
+kdy se §356 uplatní, se otisk změnil i pro rozesílače.
+
+**Změřeno na skutečných datech** (2 003 nabídek, Bezrealitky 1 627,
+SPÚ 282). Hlídání na největší okres (Hodonín, 117 nabídek):
+
+```
+nezměněná data                      →   0 nových  ✔
+Bezrealitky přemalují parcelní číslo → 112 „nových" ze 117
+```
+
+A ta čísla se neposílají jednou. Zapisuje se **jen to, co ve zprávě
+opravdu stálo** — 3 u telefonu, 8 u e-mailu — a je to tak napsané
+schválně, aby se nabídky nad stropem tiše neztratily. Při 112 falešných
+to znamená, že totéž upozornění přijde
+
+```
+telefon:  112 / 3 = 38 dní v řadě
+e-mail:   112 / 8 = 14 dní v řadě
+```
+
+a to v **každém** hlídání. Člověk dostane „112 nových pozemků
+v hlídání", otevře to, nenajde nic nového — a tohle se mu zopakuje
+měsíc a půl. Jediná noc u cizího webu by spolehlivě odnaučila lidi
+upozornění otvírat.
+
+**Co se změnilo.** Jeden řádek v `noveProHledani()` v
+`js/hlidani-logika.js`: nabídka se značkou `prezn` není nová. Je to
+tam, a ne v rozesílačích, protože tentýž seznam čtou **tři** místa —
+`scripts/send-push.mjs`, `scripts/send-alerts.mjs` a
+`js/nove-pozemky.js` (pás „ve vašem okolí přibyly pozemky"). Po opravě
+112 → 0, a běžný provoz zůstal: ze smíšeného dne (jeden zdroj
+přemalovaný, druhý přinesl dvě opravdové novinky) projdou právě ty dvě.
+
+**Den, nebo přítomnost značky?** Tady stačí přítomnost. Čerstvá značka
+nese den, dědičná je `1` (`prenesZnacku`), a obojí znamená „nevíme,
+jak je to staré" — a co má neznámý věk, nelze ohlásit jako nové.
+Archiv se naopak ptá na den, protože řeší jinou otázku: „byl
+přemalován DNEŠEK?" Táž značka, dvě různá čtení, obě správná.
+
+**Čím je to podložené.** `test-hlidani.mjs` 214 kontrol (bylo 205).
+Čtyři sabotáže, všechny kousnou: pravidlo pryč (6 pádů), kontrola jen
+na den a dědičná `1` projde (1 pád — přesně ta kontrola), značka pod
+jiným jménem (6 pádů), a pravidlo přehnané tak, že utiší všechno
+(26 pádů).
+
+**Ta čtvrtá sabotáž nejdřív neprokázala nic.** Spadla pádem —
+`TypeError: Cannot read properties of undefined` na starší kontrole
+o 150 řádků výš — takže se běh ukončil a k mým kontrolám se vůbec
+nedostal. Návratový kód byl 1, CI by zčervenalo, ale hlášení by
+o příčině neřeklo nic a **opačný směr jsem tím neprokázal**. Tři čtení
+na tom místě jsou teď obranná a místo pádu hlásí „hlídání nic
+nevrátilo". Je to táž past jako u osmi čtení `z.stranky[0]` v sondě:
+**hlídač, který selže pádem, zahodí zbytek sady.**

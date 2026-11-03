@@ -224,6 +224,8 @@
       var k = keyOf(d);
       if (mam[k] || videno[k] || !matches(s, d)) return;
 
+      if (d && d.prezn) return;
+
       var b = bezCeny(k);
       if (b && identityVidene[b.identita]) return;
       mam[k] = 1;
