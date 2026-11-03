@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T12:20:29.296Z",
+ "updated_at": "2026-11-03T13:07:50.880Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -24,7 +24,27 @@
       "bylo": 1329,
       "je": 2344,
       "zablokovano": 2,
-      "cizich": 2
+      "cizich": 2,
+      "cizinci": [
+       {
+        "co": "bezrealitky.daktela.com",
+        "kolik": 1
+       },
+       {
+        "co": "www.googletagmanager.com",
+        "kolik": 1
+       }
+      ],
+      "zakazane": [
+       {
+        "co": "/4fc8hjusshpvc.js",
+        "kolik": 1
+       },
+       {
+        "co": "/graphql/",
+        "kolik": 1
+       }
+      ]
      },
      "dokumenty": [
       "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
@@ -49,7 +69,27 @@
       "bylo": 562,
       "je": 1577,
       "zablokovano": 2,
-      "cizich": 2
+      "cizich": 2,
+      "cizinci": [
+       {
+        "co": "bezrealitky.daktela.com",
+        "kolik": 1
+       },
+       {
+        "co": "www.googletagmanager.com",
+        "kolik": 1
+       }
+      ],
+      "zakazane": [
+       {
+        "co": "/4fc8hjusshpvc.js",
+        "kolik": 1
+       },
+       {
+        "co": "/graphql/",
+        "kolik": 1
+       }
+      ]
      },
      "dokumenty": []
     }
@@ -186,6 +226,23 @@
      "zminky": 0,
      "zminkyUkazka": [],
      "cteno": "ze serveru",
+     "vykresleno": {
+      "bylo": 104,
+      "je": 67,
+      "nepomohlo": true,
+      "zablokovano": 0,
+      "cizich": 2,
+      "cizinci": [
+       {
+        "co": "fonts.googleapis.com",
+        "kolik": 1
+       },
+       {
+        "co": "www.googletagmanager.com",
+        "kolik": 1
+       }
+      ]
+     },
      "dokumenty": [
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf",
       "https://www.elektronickedrazby.cz/pdf/Dra%C5%BEebn%C3%AD%20%C5%99%C3%A1d%20-%208.3.2025.pdf"
