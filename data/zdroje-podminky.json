@@ -1,11 +1,12 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T08:43:50.612Z",
+ "updated_at": "2026-11-03T09:10:46.190Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
    "host": "bezrealitky.cz",
    "domov": "https://www.bezrealitky.cz/",
+   "proc": "zákaz",
    "kdy": "2026-11-03",
    "stranky": [
     {
@@ -60,6 +61,7 @@
    "jmeno": "Sreality (Apify)",
    "host": "sreality.cz",
    "domov": "https://www.sreality.cz/",
+   "proc": "zákaz",
    "kdy": "2026-11-03",
    "stranky": [],
    "verdikt": "web nedovoluje číst ani domovskou stránku",
@@ -69,6 +71,7 @@
    "jmeno": "drazby.policenm.cz",
    "host": "drazby.policenm.cz",
    "domov": "https://drazby.policenm.cz/",
+   "proc": "slibný kandidát",
    "kdy": "2026-11-03",
    "stranky": [
     {
@@ -130,6 +133,7 @@
    "jmeno": "drazbynaxos.cz",
    "host": "drazbynaxos.cz",
    "domov": "https://www.drazbynaxos.cz/",
+   "proc": "slibný kandidát",
    "kdy": "2026-11-03",
    "stranky": [
     {
@@ -161,6 +165,7 @@
    "jmeno": "elektronickedrazby.cz",
    "host": "elektronickedrazby.cz",
    "domov": "https://www.elektronickedrazby.cz/",
+   "proc": "slibný kandidát",
    "kdy": "2026-11-03",
    "stranky": [
     {
@@ -193,6 +198,7 @@
    "jmeno": "verejnedrazby.cz",
    "host": "verejnedrazby.cz",
    "domov": "https://www.verejnedrazby.cz/",
+   "proc": "slibný kandidát",
    "kdy": "2026-11-03",
    "stranky": [
     {
