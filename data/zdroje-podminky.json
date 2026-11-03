@@ -1,6 +1,6 @@
 {
  "updated": "2026-11-03",
- "updated_at": "2026-11-03T18:39:03.536Z",
+ "updated_at": "2026-11-03T19:27:24.789Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
@@ -180,7 +180,39 @@
     "nepomohlo": true
    },
    "nalezeneOdkazy": [],
-   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
+   "zkusenoZnamych": [
+    {
+     "url": "https://nabidkamajetku.gov.cz/podminky-uziti",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://nabidkamajetku.gov.cz/podminky",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://nabidkamajetku.gov.cz/podminky-pouziti",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://nabidkamajetku.gov.cz/obchodni-podminky",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://nabidkamajetku.gov.cz/vop",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://nabidkamajetku.gov.cz/pravni-informace",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    }
+   ],
+   "verdikt": "odkaz na podmínky se nenašel a není ani na obvyklých adresách"
   },
   {
    "jmeno": "ÚZSVM — nabídka majetku — web z registru",
@@ -210,7 +242,39 @@
     "nepomohlo": true
    },
    "nalezeneOdkazy": [],
-   "verdikt": "odkaz na podmínky se na domovské stránce nenašel"
+   "zkusenoZnamych": [
+    {
+     "url": "https://www.nabidkamajetku.cz/podminky-uziti",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://www.nabidkamajetku.cz/podminky",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://www.nabidkamajetku.cz/podminky-pouziti",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://www.nabidkamajetku.cz/obchodni-podminky",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://www.nabidkamajetku.cz/vop",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    },
+    {
+     "url": "https://www.nabidkamajetku.cz/pravni-informace",
+     "stav": "není",
+     "duvod": "HTTP 404"
+    }
+   ],
+   "verdikt": "odkaz na podmínky se nenašel a není ani na obvyklých adresách"
   },
   {
    "jmeno": "drazby.policenm.cz",
@@ -471,6 +535,41 @@
      "duvod": "v dokumentu není text (nejspíš je to sken)"
     }
    ],
+   "domovVykreslen": {
+    "odkazu": 1,
+    "zablokovano": 0,
+    "cizich": 9,
+    "cizinci": [
+     {
+      "co": "unpkg.com",
+      "kolik": 2
+     },
+     {
+      "co": "www.googletagmanager.com",
+      "kolik": 2
+     },
+     {
+      "co": "ajax.aspnetcdn.com",
+      "kolik": 1
+     },
+     {
+      "co": "cc.dalten.cz",
+      "kolik": 1
+     },
+     {
+      "co": "code.jquery.com",
+      "kolik": 1
+     },
+     {
+      "co": "img.youtube.com",
+      "kolik": 1
+     },
+     {
+      "co": "maxcdn.bootstrapcdn.com",
+      "kolik": 1
+     }
+    ]
+   },
    "nalezeneOdkazy": [
     {
      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
