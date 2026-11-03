@@ -113,6 +113,64 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     JSON.stringify([...m].slice(0, 6)));
 }
 
+/* 3b) DVĚ PÍSMA, DVĚ TABULKY — KAŽDÁ KE SVÉMU FONTU.
+       NALEZENO MĚŘENÍM NAOSTRO: dražební řád elektronickedrazby.cz
+       vyšel na 10 556 znaků, ale s čitelností 0,86 — každý sedmý znak
+       otazník. Příčina byla u mě: jednu tabulku jsem nasadil na
+       VŠECHNA písma dokumentu. Cesta musí jít přes jméno:
+       `/Font << /F1 10 0 R >>` → `10 0 obj << /ToUnicode 20 0 R >>`
+       → stream objektu 20. */
+{
+  const cmapProZnak = (kod, znak) => 'begincmap\n1 beginbfchar\n<'
+    + kod.toString(16).padStart(4, '0') + '><'
+    + znak.charCodeAt(0).toString(16).padStart(4, '0') + '>\nendbfchar\nendcmap\n';
+  const stream = (cislo, obsah, slovnikNavic) => {
+    const telo = deflateSync(Buffer.from(obsah, 'latin1'));
+    return Buffer.concat([
+      Buffer.from(`${cislo} 0 obj\n<< /Length ${telo.length} /Filter /FlateDecode`
+        + `${slovnikNavic || ''} >>\nstream\n`, 'latin1'),
+      telo, Buffer.from('\nendstream\nendobj\n', 'latin1'),
+    ]);
+  };
+  const pdf = Buffer.concat([
+    Buffer.from('%PDF-1.4\n', 'latin1'),
+    Buffer.from('1 0 obj\n<< /Font << /F1 10 0 R /F2 11 0 R >> >>\nendobj\n', 'latin1'),
+    Buffer.from('10 0 obj\n<< /Type /Font /ToUnicode 20 0 R >>\nendobj\n', 'latin1'),
+    Buffer.from('11 0 obj\n<< /Type /Font /ToUnicode 21 0 R >>\nendobj\n', 'latin1'),
+    stream(20, cmapProZnak(1, 'A')),
+    stream(21, cmapProZnak(1, 'B')),
+    stream(4, 'BT /F1 12 Tf <0001> Tj /F2 12 Tf <0001> Tj ET\n'),
+    Buffer.from('%%EOF\n', 'latin1'),
+  ]);
+  const v = textZPdf(pdf);
+  pravda('každé písmo se čte svou tabulkou, ne jednou pro všechna',
+    v.text.replace(/\s/g, '') === 'AB',
+    JSON.stringify(v.text) + ' | cmapů ' + v.cmapu
+    + ' — „AA" nebo „BB" znamená, že se nasadila cizí tabulka');
+  pravda('a obě tabulky jsou v nálezu spočítané', v.cmapu === 2, 'cmapů ' + v.cmapu);
+
+  /* A PÍSMO, KTERÉ V SOUPISU NENÍ, NEDOSTANE CIZÍ TABULKU. Tahle
+     pojistka napoprvé nehlídala nic: sabotáž „jedna tabulka na
+     všechna písma" prošla zeleně, protože při správném páru se na
+     náhradu nikdy nedošlo. Tady se na ni dojít MUSÍ — a správná
+     odpověď je „žádná tabulka" (dekóduje se jako jednobajtové),
+     ne tabulka od vedlejšího písma. */
+  const pdfCizi = Buffer.concat([
+    Buffer.from('%PDF-1.4\n', 'latin1'),
+    Buffer.from('1 0 obj\n<< /Font << /F1 10 0 R /F2 11 0 R >> >>\nendobj\n', 'latin1'),
+    Buffer.from('10 0 obj\n<< /Type /Font /ToUnicode 20 0 R >>\nendobj\n', 'latin1'),
+    Buffer.from('11 0 obj\n<< /Type /Font /ToUnicode 21 0 R >>\nendobj\n', 'latin1'),
+    stream(20, cmapProZnak(1, 'A')),
+    stream(21, cmapProZnak(1, 'B')),
+    stream(4, 'BT /F9 12 Tf <0001> Tj ET\n'),
+    Buffer.from('%%EOF\n', 'latin1'),
+  ]);
+  const vc = textZPdf(pdfCizi);
+  pravda('neznámé písmo nedostane tabulku od vedlejšího',
+    !/[AB]/.test(vc.text),
+    JSON.stringify(vc.text) + ' — „A" nebo „B" znamená cizí tabulku nasazenou naslepo');
+}
+
 /* 4) NASKENOVANÝ PAPÍR — žádný text tam není, a tak se to musí říct. */
 {
   const obsah = Buffer.from('q 612 0 0 792 0 0 cm /Im0 Do Q\n');

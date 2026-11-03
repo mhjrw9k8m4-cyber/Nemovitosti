@@ -22258,3 +22258,37 @@ operátorem" (padly obě kontroly).
 **A je to doklad, proč se měří naostro.** Patnáct kontrol na vlastních
 fixturách bylo zelených; tu vadu našel jediný opravdový dokument
 z cizího webu. Fixtura umí jen to, co do ní člověk napsal.
+
+## §357c — jedna tabulka na všechna písma: každý sedmý znak otazník
+
+**Co řeklo další měření naostro.** Po opravě pole s posuny (§357b)
+vyšel dražební řád elektronickedrazby.cz na **10 556 znaků** místo 385
+— ale s čitelností **0,86**, tedy každý sedmý znak otazník. Mez 0,9
+text odmítla, takže sonda nic netvrdila; ale odpověď to pořád nebyla.
+
+**Příčina byla u mě, a napsal jsem si ji přitom do komentáře.** CMap
+tabulku jsem nasazoval na VŠECHNA písma dokumentu („u dokumentu
+s jednou sadou písem to stačí"). Dokument s více písmy pak dostává
+cizí tabulku a vyrábí otazníky. Cesta musí jít přes jméno:
+`/Font << /F1 10 0 R >>` → `10 0 obj << /ToUnicode 20 0 R >>` →
+stream objektu 20. Náhradní tabulka se nasadí **jen** u dokumentu,
+který má jedinou — jinak se vrátí „žádná" a dekóduje se jednobajtově.
+Lepší jednobajtová domněnka než cizí tabulka naslepo.
+
+**Čím je to podložené.** `test-cti-pdf.mjs` 20 kontrol (bylo 17):
+dokument se dvěma písmy a dvěma tabulkami musí dát „AB", ne „AA" ani
+„BB"; obě tabulky jsou v nálezu spočítané; a písmo, které v soupisu
+není, cizí tabulku nedostane. Prokázáno třemi sabotážemi (jedna
+tabulka na všechna písma, číslo objektu bráno jako první místo
+posledního, přerušená cesta jméno → font → tabulka).
+
+**Dvě chyby, které ty kontroly našly v průběhu.**
+1. Číslo objektu jsem hledal až PO řezu hlavičky — a řeže se právě
+   před ` obj`, takže tam číslo nikdy nebylo.
+2. Pak jsem bral PRVNÍ `N 0 obj` v okně dvou tisíc bajtů, kde obvykle
+   leží i předchozí objekt. Dvě různé tabulky tím dostaly totéž číslo
+   a v nálezu z nich byla jedna.
+3. A sabotáž „jedna tabulka na všechna písma" prošla napoprvé zeleně:
+   při správném páru se na náhradu nikdy nedojde, takže pojistku nic
+   nezkoušelo. Teprve fixtura s písmem, které v soupisu NENÍ, ji
+   postavila do cesty.

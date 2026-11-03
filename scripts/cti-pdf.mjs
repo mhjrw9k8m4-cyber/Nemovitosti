@@ -80,6 +80,15 @@ function streamy(buf) {
        rozbaloval, vrátil null a celý text vyšel prázdný. Řeže se tedy
        po poslední značce ` obj`, jinak po posledním `<<`. */
     let hlava = buf.slice(Math.max(0, a - 2000), a).toString('latin1');
+    /* ČÍSLO OBJEKTU SE BERE JEŠTĚ PŘED ŘEZEM. Řeže se právě před
+       ` obj`, takže po řezu už číslo v hlavičce není — napoprvé jsem
+       ho hledal po řezu a vyšlo vždycky prázdné. */
+    /* A BERE SE POSLEDNÍ, NE PRVNÍ. V okně dvou tisíc bajtů leží
+       obvykle i předchozí objekt; nenasytný výraz pak vracel jeho
+       číslo a dvě různé CMap tabulky dostaly totéž — v nálezu z nich
+       byla jedna. Odhalila to kontrola se dvěma písmy. */
+    let cisloObjektu = null;
+    for (const mm of hlava.matchAll(/(\d+)\s+\d+\s+obj/g)) cisloObjektu = +mm[1];
     const iObj = hlava.lastIndexOf(' obj');
     if (iObj >= 0) hlava = hlava.slice(iObj);
     else { const iDict = hlava.lastIndexOf('<<'); if (iDict >= 0) hlava = hlava.slice(iDict); }
@@ -88,7 +97,10 @@ function streamy(buf) {
     if (buf[s] === 0x0a) s++;
     let e = b;
     while (e > s && (buf[e - 1] === 0x0a || buf[e - 1] === 0x0d)) e--;
-    ven.push({ hlava, telo: buf.slice(s, e) });
+    /* Číslo objektu je v nálezu proto, aby se CMap dala přiřadit ke
+       KONKRÉTNÍMU fontu; jedna tabulka nasazená na všechna písma
+       vyrábí otazníky (naměřeno: dražební řád s čitelností 0,86). */
+    ven.push({ hlava, cislo: cisloObjektu, telo: buf.slice(s, e) });
     i = b + end.length;
   }
   return ven;
@@ -248,28 +260,48 @@ export function textZPdf(buf) {
     return { text: '', citelnost: 0, streamu: 0, cmapu: 0, duvod: 'dokument je zašifrovaný' };
   }
   const vse = streamy(data);
+  const cely = data.toString('latin1');
   /* NEJDŘÍV CMAPY, pak obsah: obsahový stream se na font odvolává
-     jménem (`/F1 Tf`) a bez tabulky by z Identity-H vyšly jen otazníky. */
-  const cmapy = new Map();
+     jménem (`/F1 Tf`) a bez tabulky by z Identity-H vyšly jen otazníky.
+     Tabulka se ale musí přiřadit ke SPRÁVNÉMU fontu. Naměřeno na
+     dražebním řádu elektronickedrazby.cz: jedna tabulka nasazená na
+     všechna písma dala 10 556 znaků s čitelností 0,86, tedy každý
+     sedmý znak otazník. Cesta je `/Font << /F1 12 0 R >>` →
+     `12 0 obj << /ToUnicode 34 0 R >>` → stream objektu 34. */
+  const cmapyPodleObjektu = new Map();
   for (const s of vse) {
-    if (!/\/ToUnicode|CMapName|beginbfchar|beginbfrange/.test(s.hlava)) {
-      /* Hlavička CMapu bývá chudá, takže se rozbalí a pozná po obsahu. */
-    }
     const telo = rozbal(s);
     if (!telo) continue;
     const txt = telo.toString('latin1');
     if (!/beginbfchar|beginbfrange/.test(txt)) continue;
     const mapa = cmapZTextu(txt);
-    if (!mapa.size) continue;
-    /* Jméno fontu se z CMapu nepozná, tak se použije pro všechny —
-       u dokumentu s jednou sadou písem to stačí a víc jich podmínky
-       nemívají. Kdyby jich bylo víc, poslední vyhrává; projeví se to
-       nižší čitelností, ne tichou lží. */
-    cmapy.set('*', mapa);
+    if (mapa.size && s.cislo != null) cmapyPodleObjektu.set(s.cislo, mapa);
+    if (mapa.size) cmapyPodleObjektu.set('*', mapa);
   }
-  /* Dotaz na jakékoli jméno fontu vrátí tutéž tabulku — viz komentář
-     u textZObsahu. */
-  const najdiCmap = cmapy.has('*') ? () => cmapy.get('*') : null;
+  /* font (číslo objektu) → objekt s ToUnicode */
+  const fontKCmapu = new Map();
+  for (const m of cely.matchAll(/(\d+)\s+\d+\s+obj([\s\S]{0,1200}?)(?:endobj|stream)/g)) {
+    const mu = /\/ToUnicode\s+(\d+)\s+\d+\s+R/.exec(m[2]);
+    if (mu) fontKCmapu.set(+m[1], +mu[1]);
+  }
+  /* jméno v obsahu → font (číslo objektu) */
+  const jmenoKFontu = new Map();
+  for (const m of cely.matchAll(/\/Font\s*<<([\s\S]{0,2000}?)>>/g)) {
+    for (const f of m[1].matchAll(/\/([A-Za-z0-9_.+-]+)\s+(\d+)\s+\d+\s+R/g)) {
+      jmenoKFontu.set(f[1], +f[2]);
+    }
+  }
+  const jenJedna = cmapyPodleObjektu.has('*')
+    && [...cmapyPodleObjektu.keys()].filter((k) => k !== '*').length <= 1;
+  const najdiCmap = (jmeno) => {
+    const fo = jmenoKFontu.get(jmeno);
+    const co = fo != null ? fontKCmapu.get(fo) : null;
+    if (co != null && cmapyPodleObjektu.has(co)) return cmapyPodleObjektu.get(co);
+    /* NÁHRADA JEN U DOKUMENTU S JEDINOU TABULKOU. Jinak by se cizí
+       tabulka nasadila na písmo, kam nepatří — a to je přesně ta
+       chyba, kvůli které se tohle přiřazování dělá. */
+    return jenJedna ? cmapyPodleObjektu.get('*') : null;
+  };
   let text = '';
   for (const s of vse) {
     if (/\/Image|\/XObject\s*\/Image|\/Subtype\s*\/Image/.test(s.hlava)) continue;
@@ -282,5 +314,6 @@ export function textZPdf(buf) {
     if (text.length > STROP_TEXTU) break;
   }
   text = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-  return { text, citelnost: citelnost(text), streamu: vse.length, cmapu: cmapy.size };
+  return { text, citelnost: citelnost(text), streamu: vse.length,
+    cmapu: [...cmapyPodleObjektu.keys()].filter((k) => k !== '*').length };
 }
