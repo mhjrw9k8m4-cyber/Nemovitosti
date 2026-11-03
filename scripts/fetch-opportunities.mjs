@@ -2474,6 +2474,11 @@ function valid(o) {
 
 async function main() {
   prorezMezipamet();
+  /* DNEŠNÍ DATUM PATŘÍ NA ZAČÁTEK. Stávalo o 280 řádků níž, u přiřazení
+     „poprvé viděno", a když se nad něj dostalo držení nabídek vypadlých
+     zdrojů, celý robot padl na ReferenceError (mrtvá zóna const). Hlídá
+     to test-mrtva-zona. */
+  const dnesISO = new Date().toISOString().slice(0, 10);
   // Pojmenované zdroje → v logu Actions je hned vidět, který přestal vracet data.
   const SOURCES = [
     ['Dražby', fetchDrazby],
@@ -2915,7 +2920,6 @@ async function main() {
   // Datum se přenáší ze starého souboru podle otisku; co tam nebylo, dostane
   // dnešek. Otisk musí být shodný s keyOf() v js/hlidani-logika.js a
   // js/hlidani-logika.js, jinak by se pozemky „obnovovaly" při každém běhu.
-  const dnesISO = new Date().toISOString().slice(0, 10);
   let driveVse = [];
   try { driveVse = (JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []).filter((o) => o.first_seen); }
   catch { /* první běh — všechno je nové */ }

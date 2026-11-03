@@ -21388,3 +21388,102 @@ stojí. Po opravě: 494 záznamů, z toho **2 dnešní**.
 
 **Prokázáno sabotáží:** odebrání toho pushe → hlídač padne a vypíše
 `sber: -1`. `test-zmizele` **29 kontrol** (dřív 27).
+
+## 344. Noční robot dat byl mrtvý a 139 zelených zkoušek o tom nevědělo
+
+**Co se stalo.** Běh „Aktualizace dat příležitostí" č. 346 (3. 11.,
+00:25) spadl na
+
+```
+Chyba při sběru dat: ReferenceError: Cannot access 'dnesISO' before initialization
+    at main (scripts/fetch-opportunities.mjs:2637:55)
+```
+
+Zdroje se přitom stáhly správně (Bezrealitky 1 902, SPÚ 549, OK dražby
+65, Farmy 9). Robot umřel až PO nich, při skládání — takže se nabídky
+nepřepsaly, **web ukazoval stará data a nové pozemky nikomu nepřišly**.
+Na témže čísle stojí i pád „Kontroly nasazeného webu": sebeoprava
+hlásila „robot: neběží, naposledy dojel 404 min".
+
+**Příčina je moje vlastní z předchozí práce.** Když se držení nabídek
+vypadlých zdrojů (§220) přesunulo PŘED pojistku, dostalo se nad
+deklaraci `const dnesISO`, která stála o 280 řádků níž, u přiřazení
+„poprvé viděno". `const` má mrtvou zónu: sahat na něj výš není
+`undefined`, je to pád.
+
+Oprava je jeden přesun: datum se počítá na začátku `main()`.
+
+**PROČ TO NEVIDĚLO 139 ZKOUŠEK — to je ten vlastní nález.** Ze
+2 958 řádků robota měly zkoušky každou jednotlivou funkci zvlášť
+(`porovnejZdroje`, `podrzNabidkyVypadlych`, `prirazPrvniVideni`, …),
+ale `main()`, která je skládá dohromady, **nikdo nikdy nespustil**.
+Vada nebyla v žádném dílu, byla ve spoji — a přesně tam zkoušky
+neviděly. Tak může padnout cokoli dalšího, co se v `main()` přehází.
+
+**Nový hlídač `test-robot-dojede` běží NAOSTRO.** Pustí celý robot,
+ale do pískoviště (kopie `scripts`, `js`, `data`, `css`, `vendor`
+v `/tmp`) a s podstrčeným `globalThis.fetch`, který vrací prázdné
+pole. Nic se nestahuje, do repozitáře se nepíše, běh trvá **0,4 s**.
+Všech pět zdrojů tím skončí s nulou — a to je LEGITIMNÍ cesta, která
+vede přes držení nabídek a přes pojistku „ponechávám stávající soubor",
+tedy přes to místo, kde robot umřel.
+
+Tři kontroly: žádné `ReferenceError`/`TypeError`/„Chyba při sběru dat"
+ve výpisu, běh došel ZA držení nabídek, a výpadek všech zdrojů skončí
+nulou (ne chybou).
+
+**Sabotáže.** Deklarace vrácená zpět dolů → padnou všechny tři a
+zkouška vypíše tentýž `ReferenceError`, co hlásilo Actions. Konec
+běhu vložený před držení nabídek → padne druhá kontrola. Obě pak
+zelené.
+
+**Statická cesta byla změřena a ZAHOZENA.** Nejdřív jsem vadu zkusil
+hledat čtením kódu: jméno použité výš, než je deklarované. Na
+repozitáři to dalo **22 nálezů, z nichž byl pravdivý jeden** — zbytek
+byly proměnné z vnořených bloků (`i`, `m`, `b`, `jmeno`). Hlídač s 21
+lžemi na jednu pravdu nehlídá, jen otravuje; proto se běží naostro.
+To je poučení obecnější než tahle vada: **kde se dá spustit skutečný
+běh, je lepší než chytré čtení kódu.**
+
+**A ještě jedno slepé místo, které jsem si našel sám.** První podoba
+hlídače brala výstup z `execFileSync`, který při ÚSPĚŠNÉM běhu vrací
+jen `stdout` — a „Chyba při sběru dat" se vypisuje přes
+`console.error`. Hlídač by měl slepé místo přesně na hlášce, kterou
+hledá. Teď je tam `spawnSync` a čte se obojí.
+
+## 345. Escapování v diagnostice neznalo `>` ani uvozovku
+
+Zkouška `test-escape-dom` padla v CI 902 (směna 3): „diagnostika.html
+(chybí > → &gt;)". Když jsem tam včera přidával výpis robots.txt a
+adresy z sitemap, napsal jsem escapování ručně na třech místech — a
+všechna tři měla jen `&` a `<`.
+
+Pravidlo v repozitáři je přitom staré (§70): escapování je v mnoha
+kopiích a hlídač existuje právě proto, aby ta další nezapomněla.
+Nezapomněl na něj hlídač, zapomněl jsem na něj já. Místo tří ručních
+řetězů je v diagnostice jedna funkce `esc()` podle receptu
+z `js/pozemek.js`, se všemi čtyřmi znaky.
+
+## 346. Co našla sonda po přidání skóre a cesty přes sitemap
+
+Běh 3. 11. (16 cílů: 14 dostupných, 2 zakázané, 0 neznámých):
+
+**Čtyři nové SLIBNÉ zdroje, všechny s robots.txt, který dovoluje:**
+`drazbynaxos.cz` (m² 34, Kč 10, „pozemek" 61×), `verejnedrazby.cz`
+(24 / 10 / 9), `elektronickedrazby.cz` (43 / 4 / 5) a
+`drazby.policenm.cz` (3 / 5 / 11). Pro srovnání: **zapojené** „OK
+dražby" mají 20 / 34 / 36 — tedy `drazbynaxos.cz` je na stejné škále
+jako zdroj, který už vozíme.
+
+**Skóre odkazů (§341) zabralo i podruhé.** Lesy ČR už nenašly prodej
+dříví, ale `o-nas/prodej-nepotrebneho-majetku/`. Obsah je i tak slabý
+(„pozemek" 1×), ale sonda se ptá na správné dveře.
+
+**ÚZSVM je SKOŘÁPKA**, ne slabý zdroj: 0 m², 0 „pozemek", a to i po
+třech dalších adresách a po cestě přes sitemap. Čili obsah se dotahuje
+skriptem a v HTML není — na to naše čtení nestačí a žádná další adresa
+to nespraví. Portál dražeb a eDesky zůstaly slabé.
+
+**Co z toho plyne.** Čtyři adresy, u kterých má smysl zjistit
+podmínky — podle majitelova pokynu „jen zjistit podmínky", tedy
+sondou `sonda-podminky`, ne přidáním do registru.

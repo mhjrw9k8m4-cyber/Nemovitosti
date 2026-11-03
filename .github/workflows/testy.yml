@@ -407,6 +407,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sonda-podminky.mjs
 
+      - name: Robot dat doběhne (bez sítě, v pískovišti)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-robot-dojede.mjs
+
       - name: Nastavení zkoušek (měří to, co si myslí)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zkousky-meri.mjs

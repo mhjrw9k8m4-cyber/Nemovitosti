@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-yMybRZJ8QeA1PrWJJfAqXB2ok7yWB1y/zN8gHkyvYX0='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-sk0UmsyvWSJbROdkGBh726ZleFO6f++Ea3VihXvdxHk='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -114,6 +114,15 @@
 <script>
 (function () {
   'use strict';
+  /* Escapování podle receptu z js/pozemek.js: VŠECHNY čtyři znaky.
+     Dřív tu stálo ruční `.replace(&).replace(<)` na třech místech —
+     bez `>` a bez uvozovky. Našel to test-escape-dom, který hlídá, že
+     žádná dvanáctá kopie escapování nezapomene (§344). */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
   var URL_ = window.PK_SUPABASE_URL || '';
   var KEY = window.PK_SUPABASE_KEY || '';
   var H = { apikey: KEY, Authorization: 'Bearer ' + KEY };
@@ -346,7 +355,7 @@
             + ' — takový zdroj se musí ze stahování odebrat.'
             + zakaz.filter(function (x) { return x.robotsText; }).map(function (x) {
               return '<br><b>' + x.jmeno + '</b> — jeho robots.txt:<pre class="dg-robots">'
-                + String(x.robotsText).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>';
+                + esc(x.robotsText) + '</pre>';
             }).join(''));
       }
       /* „NEVÍME" NENÍ „NECHCE NÁS". Rozděleno po tom, co první běh sondy
@@ -370,7 +379,7 @@
             var a = (x.strojoveAdresy || []);
             return '<b>' + x.jmeno + '</b>' + (a.length
               ? ' — ze sitemapy vedou adresy výpisu: <code>'
-                + a.slice(0, 3).map(function (u) { return String(u).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }).join('</code>, <code>')
+                + a.slice(0, 3).map(function (u) { return esc(u); }).join('</code>, <code>')
                 + '</code>'
               : ' — ani sitemapa ani RSS nic nedaly');
           }).join('<br>')
@@ -386,7 +395,7 @@
                ADRESA, ze které ten verdikt je — jinak by nebylo poznát,
                co se vlastně měřilo (viz §341). */
             return x.jmeno + (x.lepsiAdresa
-              ? ' (výpis na <code>' + String(x.lepsiAdresa.url).replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</code>)'
+              ? ' (výpis na <code>' + esc(x.lepsiAdresa.url) + '</code>)'
               : '');
           }).join(', ') + ' — tady má smysl psát stahovač.'
           : 'Z měřených adres nevypadá žádná na výpis pozemků. Seznam kandidátů je v <code>scripts/zdroje-kandidati.mjs</code>.');
