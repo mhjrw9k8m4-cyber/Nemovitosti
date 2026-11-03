@@ -1,12 +1,12 @@
 {
- "updated": "2026-11-02",
- "updated_at": "2026-11-02T21:53:23.640Z",
+ "updated": "2026-11-03",
+ "updated_at": "2026-11-03T08:18:14.495Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
    "host": "bezrealitky.cz",
    "domov": "https://www.bezrealitky.cz/",
-   "kdy": "2026-11-02",
+   "kdy": "2026-11-03",
    "stranky": [
     {
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
@@ -16,7 +16,10 @@
      "odstavcuCelkem": 14,
      "odstavcu": 1,
      "pasaze": [
-      "<p>Vážení uživatelé, jsme rádi, že jste se rozhodli využít náš server bezrealitky.cz, a doufáme, že budete plně spokojeni. Rádi bychom Vám v tomto úvodu objasnili jeden bod z obchodních podmínek. Jak jistě víte, někdy je dosti obtížné zastavit neetické chování realitních kanceláří a makléřů, kteří nerespektují běžné zákazy. Proto si vyhrazujeme právo nedoručovat nevyžádanou či jinak obtěžující poštu našim klientům. Také jsme museli přistoupit k razantnějšímu řešení a zavést pro tyto subjekty smluvní pokuty. Běžní uživatelé serveru se postihů obávat nemusí, pokuta slouží pouze k úplnému omezení"
+      {
+       "slovo": "api",
+       "text": "… pokuty. Běžní uživatelé serveru se postihů obávat nemusí, pokuta slouží pouze k úplnému omezení zadávání nabídek ze strany realitních kanceláří a realitních makléřů.</p> <p>Smluvní podmínky jsme pro Vás rozdělili dle jednotlivých služeb, aby se Vám v nich lépe orientovalo.</p> <h3><a href=\"https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf\">Obchodní podmínky serveru Bezrealitky</a></h3> <h3><a href=\"https://api.bezrealitky.cz/page-file/62-smluvni-podminky-sluzby-inzerce-nove-1745494027.pdf\">Obchodní podmínky služby Inzerce</a></h3> <h3><a href=\"https://a…"
+      }
      ],
      "dokumenty": [
       "https://api.bezrealitky.cz/page-file/obchodni-podminky-serveru-bezrealitky-1783417597.pdf",
@@ -57,7 +60,7 @@
    "jmeno": "Sreality (Apify)",
    "host": "sreality.cz",
    "domov": "https://www.sreality.cz/",
-   "kdy": "2026-11-02",
+   "kdy": "2026-11-03",
    "stranky": [],
    "verdikt": "web nedovoluje číst ani domovskou stránku",
    "duvod": "Disallow: /"
