@@ -189,7 +189,14 @@ export function odkazyNaPodminky(html, base) {
 /** Všechny odstavce stránky — ze značek I z vloženého JSONu. */
 export function celyText(html) {
   const ze = odstavce(bezZnacek(html));
-  const zj = textZeSkriptu(html).map((t) => t.replace(/\s+/g, ' ').trim()).filter((t) => t.length >= 40);
+  /* TEXT ZE SKRIPTU TAKY PROCHÁZÍ ODSTRANĚNÍM ZNAČEK. Napoprvé tu
+     stálo jen srovnání mezer — a protože JSON z moderních webů nese
+     text VČETNĚ `<p>` a `</p>`, lezly ty značky do výseku, který se
+     ukazuje člověku (naměřeno 3. 11. u Bezrealitek). A navíc se
+     neštěpil na odstavce, takže se celý blok počítal jako jediný. */
+  const zj = textZeSkriptu(html)
+    .flatMap((t) => odstavce(bezZnacek(t)))
+    .filter((t) => t.length >= 40);
   const videne = new Set();
   const ven = [];
   for (const t of [...ze, ...zj]) { if (videne.has(t)) continue; videne.add(t); ven.push(t); }
@@ -207,6 +214,43 @@ export function celyText(html) {
  * poznat, co dokazuje, je k ničemu. Proto se výsek středí na shodu
  * a vedle textu stojí i to SLOVO, které sedlo.
  */
+/* DRUHÉ SÍTO: PASÁŽ MUSÍ BÝT O PŘÍSTUPU, NE JEN OBSAHOVAT SLOVO.
+ *
+ * MĚŘENO 3. 11. na šesti webech: první verze našla 9 pasáží a
+ * PRAVDIVÁ BYLA NULA. Co to bylo:
+ *   · „automaticky" o odkazu na ověření e-mailu, o prodloužení dražby
+ *     a o vygenerování protokolu (drazby.policenm.cz, verejnedrazby.cz),
+ *   · „api" uvnitř adresy api.bezrealitky.cz v odstavci o pokutách,
+ *   · „api" uvnitř JSONu z Next.js („data-api":"/_stats/…"),
+ *   · „zapisovány" o logu příhozů.
+ *
+ * Verdikt „přečteno (5 pasáží o automatickém přístupu)" přitom míří
+ * k ČLOVĚKU, který se podle něj rozhoduje. Mýlit se takhle je horší
+ * než nenajít nic: majitel by si myslel, že podmínky o automatickém
+ * přístupu mluví, a ony nemluví.
+ *
+ * Pasáž se proto počítá jen tehdy, když je v okně i slovo o ZÁKAZU
+ * nebo o PŘÍSTUPU K OBSAHU. Zbytek se nezahazuje mlčky — zůstane jako
+ * „zmínka", aby bylo vidět, že se něco našlo a proč se to nepočítá. */
+export const SLOVA_KONTEXT = new RegExp([
+  'zak[áa]z', 'nesm[íi]', 'nepovol', 'nen[íi] dovoleno', 'zapov',
+  'bez (?:p[řr]edchoz[íi]ho )?(?:p[íi]semn[éeý]ho )?souhlasu',
+  'vyt[ěe][žz]ov', 'scrap', 'crawl', 'robot', 'pav[ouk]{3}',
+  'kop[íi]rov', 'rozmno[žz]ov', 'extrahov', 'systematick',
+  'databáz', 'd[ůu]l na data', 'data ?mining',
+  'automatizovan', 'strojov', 'hromadn[ěe]', 'hromadn[ýé]',
+  'u[žz][íi]v[áa]n[íi] obsahu', 'obsah serveru',
+].join('|'), 'i');
+/* Okno, které není próza, ale kód nebo zbytek značek, se nepočítá
+   vůbec: v JSONu z Next.js se „api" najde vždycky a neznamená nic. */
+export function jeKod(text) {
+  /* Jen JSON a jména tříd. Značky se neřeší tady, ale u zdroje —
+     celyText je odstraňuje i z textu ze skriptu. Zahazovat okno kvůli
+     `</p>` by znamenalo zahodit i opravdové podmínky, které jsou na
+     moderních webech schované právě v tom JSONu. */
+  return /\{"|":\[|className|data-api/.test(String(text || ''));
+}
+
 export function oAutomatu(html) {
   const ven = [];
   for (const o of celyText(html)) {
@@ -223,7 +267,8 @@ export function oAutomatu(html) {
     let do_ = Math.min(o.length, od + DELKA_ODSTAVCE);
     od = Math.max(0, do_ - DELKA_ODSTAVCE);
     const vysek = (od > 0 ? '…' : '') + o.slice(od, do_) + (do_ < o.length ? '…' : '');
-    ven.push({ slovo, text: vysek });
+    if (jeKod(vysek)) continue;
+    ven.push({ slovo, text: vysek, kontext: SLOVA_KONTEXT.test(vysek) });
     if (ven.length >= ODSTAVCU_NA_STRANKU) break;
   }
   return ven;
@@ -294,7 +339,13 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet } = {}) {
         : (malo ? 'málo textu — nedá se z toho soudit' : 'přečteno, nic o automatu'),
       znaku: text.replace(/\s/g, '').length,
       odstavcuCelkem: vsechny.length,
-      odstavcu: pasaze.length, pasaze,
+      /* POČÍTÁ SE JEN PASÁŽ S KONTEXTEM. Zmínky (slovo bez zákazu
+         a bez přístupu k obsahu) se vedou zvlášť — ať je vidět, že
+         se našly, a ať nenafukují verdikt. */
+      odstavcu: pasaze.filter((x) => x.kontext).length,
+      pasaze: pasaze.filter((x) => x.kontext),
+      zminky: pasaze.filter((x) => !x.kontext).length,
+      zminkyUkazka: pasaze.filter((x) => !x.kontext).slice(0, 2),
       /* Odkazy na dokumenty (PDF, DOC) — vodítko, kde text je, když ho
          na stránce není. Nestahují se. */
       dokumenty: [...String(s.html || '').matchAll(/href\s*=\s*["']([^"']+\.(?:pdf|docx?|odt))["']/gi)]

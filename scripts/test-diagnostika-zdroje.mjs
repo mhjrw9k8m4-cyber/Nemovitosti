@@ -74,7 +74,7 @@ const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   k.proc = 'slibný kandidát';
   k.verdikt = 'přečteno, ale nic o automatickém přístupu';
   k.stranky = [{ url: 'https://www.kand.cz/podminky', popis: 'Podmínky užití',
-    stav: 'přečteno, nic o automatu', pasaze: [] }];
+    stav: 'přečteno, nic o automatu', pasaze: [], zminky: 3 }];
   delete k.dokumenty;
   z.verdikt = 'přečteno (1 pasáží o automatickém přístupu)';
   z.stranky = [{ url: 'https://www.zak.cz/podminky', popis: 'Obchodní podmínky', stav: 'přečteno',
@@ -169,6 +169,10 @@ pravda('a odkaz na dokument, který musí otevřít člověk',
   /podminky\.pdf/.test(m.text), m.text.slice(-300));
 pravda('čtené stránky jsou odkazy, na které jde kliknout',
   m.odkazu.some((h) => h === 'https://www.zak.cz/podminky'), JSON.stringify(m.odkazu).slice(0, 200));
+
+pravda('zmínky, které o přístupu nejsou, se přiznají (a nepočítají)',
+  /3 zmínek, které o přístupu k obsahu nejsou/.test(m.text),
+  'bez toho vypadá „nic o automatu" jako že se nehledalo — naměřeno 9 takových zmínek na šesti webech');
 
 /* ESCAPOVÁNÍ: nálož z cizího jména se NESMÍ stát prvkem. */
 pravda('nálož z cizího jména zdroje se nevykonala',

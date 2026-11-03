@@ -389,6 +389,67 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     JSON.stringify({ verdikt: z.verdikt, znaku: z.znakuCelkem }));
 }
 
+/* ---- 6) PASÁŽ MUSÍ BÝT O PŘÍSTUPU, NE JEN OBSAHOVAT SLOVO -------
+   Fixtury jsou SKUTEČNÉ věty z běhu 3. 11., kdy sonda našla devět
+   pasáží a pravdivá byla nula. */
+{
+  const SKUTECNE_FALESNE = [
+    ['odkaz na ověření e-mailu (drazby.policenm.cz)',
+      'Po odeslání registračního formuláře je zapotřebí ověřit e-mailovou adresu.'
+      + ' Odkaz pro ověření e-mailové adresy se automaticky odeslán do registračního e-mailu.'],
+    ['prodloužení dražby (verejnedrazby.cz)',
+      'Učiní-li účastník (navýšení) příhoz v době 2 minuty před okamžikem stanoveného'
+      + ' ukončení výběrového řízení, prodlužuje se výběrové řízení automaticky o dalších 5 minut.'],
+    ['log příhozů (drazby.policenm.cz)',
+      'Podání (příhozy) Účastníků elektronické dražby a průběh elektronické dražby jsou'
+      + ' zapisovány do tzv. Logu dražby. Dražební systém eviduje podání s přesným časem.'],
+    ['adresa api.* v odstavci o pokutách (Bezrealitky)',
+      'Pokuta slouží pouze k úplnému omezení zadávání nabídek ze strany realitních kanceláří'
+      + ' a realitních makléřů. Smluvní podmínky jsme pro Vás rozdělili dle jednotlivých služeb,'
+      + ' aby se Vám v nich lépe orientovalo. Více na https://api.bezrealitky.cz/page-file/ ano.'],
+  ];
+  for (const [kde, veta] of SKUTECNE_FALESNE) {
+    const r = P.oAutomatu('<p>' + veta + '</p>');
+    pravda(`nepočítá se jako pasáž: ${kde}`,
+      r.every((x) => x.kontext === false),
+      JSON.stringify(r.map((x) => ({ s: x.slovo, k: x.kontext }))));
+  }
+  const skutecny = P.oAutomatu('<p>Je zakázáno obsah serveru vytěžovat automatizovanými'
+    + ' prostředky, zejména roboty a skripty, bez předchozího písemného souhlasu.</p>');
+  pravda('ale opravdový zákaz se jako pasáž POČÍTÁ',
+    skutecny.length >= 1 && skutecny.some((x) => x.kontext === true),
+    JSON.stringify(skutecny.map((x) => ({ s: x.slovo, k: x.kontext }))));
+
+  /* JSON z moderního webu: „api" se v něm najde vždycky a neznamená nic. */
+  pravda('jeKod pozná JSON a jména tříd',
+    P.jeKod('…iod":10,"children":["$","$L1d",null,{"data-api":"/_stats/plausible/api/e') === true
+    && P.jeKod('Je zakázáno vytěžovat obsah serveru roboty.') === false);
+  /* A HLAVNĚ: ať se to opravdu POUŽIJE. První podoba téhle kontroly
+     zkoušela jen samotnou funkci, takže sabotáž „jeKod nic nezahodí"
+     prošla zeleně — hlídal jsem nástroj, ne práci. Měří se proto celá
+     cesta, na SKUTEČNÉM kusu JSONu z drazbynaxos.cz. */
+  /* Blok stojí jako TEXT STRÁNKY, ne ve <script>: tak se k pasážím
+     opravdu dostal (odstranění značek nechá obsah skriptu v textu),
+     a navíc musí mít MEZERY, jinak ho zahodí už textZeSkriptu.
+     Napoprvé jsem ho dal do <script> bez mezer — sabotáž pak prošla,
+     protože fixtura k měřenému místu vůbec nedolezla. */
+  const jsonBlok = '<p>iod":10,"children":["$","$L1d",null,{"enabled":false,"children":'
+    + '["$","body",null,{"className":"lato_1f345234-module__u2d25a__className bg-slate-700'
+    + ' antialiased flex flex-col min-h-screen overscroll-none","children":[["$","$L1f",null,'
+    + '{"data-domain":"drazbynaxos.cz","data-api":"/_stats/plausible/api/event"}]]}]}]</p>';
+  pravda('a JSON se k pasážím vůbec nedostane',
+    P.oAutomatu(jsonBlok).length === 0, JSON.stringify(P.oAutomatu(jsonBlok)).slice(0, 180));
+
+  /* ZNAČKY SE DO VÝSEKU NESMÍ DOSTAT: text ze skriptu je nese. */
+  const zeSkriptu = '<script>window.X={"t":"<p>Je zakázáno vytěžovat obsah serveru'
+    + ' automatizovanými prostředky.</p> <h3>Další</h3>"}</script>';
+  const r2 = P.oAutomatu(zeSkriptu);
+  pravda('pasáž z textu ve skriptu se najde',
+    r2.some((x) => x.kontext === true), JSON.stringify(r2));
+  pravda('a nenese v sobě značky (člověk to čte)',
+    r2.every((x) => !/<\/?\w+>/.test(x.text)), JSON.stringify(r2.map((x) => x.text.slice(0, 60))));
+}
+
 console.log('Sonda podmínek: čte jen to, co smí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

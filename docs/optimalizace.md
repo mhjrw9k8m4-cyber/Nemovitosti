@@ -21711,3 +21711,53 @@ v diagnostice čet „&lt;img". Escapuje se tedy jen detail.
 **Zkouška má 11 kontrol.** Sabotáže: jméno v seznamu slibných bez
 escapování → 2 pády (nálož se vykoná), celý blok podmínek pryč →
 8 pádů.
+
+## 351. Sonda podmínek našla devět pasáží. Pravdivá byla nula.
+
+První běh nad šesti cíli (§349) dal verdikty jako „přečteno
+(5 pasáží o automatickém přístupu)". **Přečetl jsem všech devět
+pasáží — a ani jedna o automatickém přístupu nebyla:**
+
+| co se našlo | kde | o čem to opravdu je |
+|---|---|---|
+| „automaticky" | drazby.policenm.cz | odkaz pro ověření e-mailu |
+| „automaticky" | drazby.policenm.cz | přidělení ID uživatele |
+| „automaticky" | drazby.policenm.cz | vygenerování protokolu po příklepu |
+| „zapisovány" | drazby.policenm.cz | log příhozů v dražbě |
+| „automaticky" | verejnedrazby.cz (2×) | prodloužení dražby o 5 minut |
+| „api" | Bezrealitky | adresa `api.bezrealitky.cz` v odstavci o POKUTÁCH |
+| „api" | drazbynaxos.cz | `"data-api":"/_stats/…"` uvnitř JSONu z Next.js |
+
+**Tohle je horší než nenajít nic.** Ten verdikt míří k ČLOVĚKU, který
+se podle něj rozhoduje, jestli se smí nový zdroj začít čist. Majitel by
+si přečetl, že podmínky o automatickém přístupu mluví — a ony nemluví.
+
+**Druhé síto.** Pasáž se počítá jen tehdy, je-li v okně i slovo
+o ZÁKAZU nebo o PŘÍSTUPU K OBSAHU (`zakáz`, `nesmí`, `bez souhlasu`,
+`vytěžov`, `scrap`, `crawl`, `robot`, `kopírov`, `systematick`,
+`databáz`, `hromadně`, …). Samotné „automaticky" je slabý signál.
+Zbytek se **nezahazuje mlčky**: zůstane jako „zmínka" s počtem, a
+diagnostika ho vypisuje — jinak by „nic o automatu" vypadalo, jako
+že se nehledalo.
+
+**A pod tím ležela PRAVÁ příčina té značkové kaše.** Text ze skriptů
+(`textZeSkriptu`) neprocházel odstraněním značek, takže do výseku, který
+se ukazuje člověku, lezlo `</p> <p>` — a navíc se celý blok JSONu
+počítal jako jediný odstavec. Teď prochází `bezZnacek` i `odstavce`,
+takže se z JSONu dá číst próza (na moderních webech jsou podmínky
+schované právě tam) a značky v ní nejsou. Odhodit okno kvůli `</p>`
+by znamenalo odhodit i ty opravdové podmínky.
+
+**Zkoušky: 59 kontrol** (dřív 50), fixtury jsou SKUTEČNÉ věty z běhu.
+Sabotáže: kontext se neřeší → 4 pády; text ze skriptu bez odstranění
+značek → 1 pád; `jeKod` nic nezahodí → 1 pád.
+
+**A dvakrát jsem si při tom musel opravit hlídače:**
+
+1. Kontrola na `jeKod` nejdřív zkoušela **jen tu funkci**, takže
+   sabotáž „jeKod se nepoužije" prošla zeleně. Hlídal jsem nástroj, ne
+   práci — teď se měří celá cesta skrz `oAutomatu()`.
+2. A fixtura pro ni napoprvé **k měřenému místu vůbec nedolezla**:
+   dal jsem JSON do `<script>` a bez mezer, takže ho zahodil už
+   `textZeSkriptu`. Blok proto stojí jako text stránky a s mezerami,
+   tedy přesně tak, jak se k pasážím opravdu dostal.

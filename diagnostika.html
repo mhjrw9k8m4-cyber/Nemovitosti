@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-Tp8+3I9q+tRcH0GjLd5e4R/EGYZu+aEkfmeWbJUM2So='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-4jLZX6hmQcYp/JM8ktKDY6RJk8QPMPXVOCIQ+lcYcbI='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -442,6 +442,15 @@
             return '<a href="' + esc(st.url) + '" rel="noopener noreferrer" target="_blank">'
               + esc(st.popis || st.url) + '</a> (' + esc(st.stav) + ')';
           }).join(', '));
+        }
+        /* ZMÍNKY SE PŘIZNÁVAJÍ. Slovo se našlo, ale v okně nebyl zákaz
+           ani nic o přístupu k obsahu — nepočítá se to, a právě proto
+           to má být vidět, aby verdikt „nic o automatu" nevypadal jako
+           že se nehledalo. */
+        var zminek = stranky.reduce(function (n, st) { return n + (st.zminky || 0); }, 0);
+        if (zminek) {
+          cast.push('Dál se našlo ' + zminek + ' zmínek, které o přístupu k obsahu nejsou'
+            + ' (třeba „automaticky odeslaný e-mail") — do verdiktu se nepočítají.');
         }
         sPasazi.slice(0, 2).forEach(function (st) {
           (st.pasaze || []).slice(0, 2).forEach(function (a) {
