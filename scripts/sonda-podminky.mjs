@@ -309,7 +309,28 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
   }
   if (domov.chyba) { zapis.verdikt = 'domovská stránka neodpověděla'; zapis.duvod = domov.chyba; return zapis; }
 
-  const odkazy = odkazyNaPodminky(domov.html, cil.domov);
+  let odkazy = odkazyNaPodminky(domov.html, cil.domov);
+  /* I DOMOVSKÁ STRÁNKA SE MŮŽE SKLÁDAT AŽ V PROHLÍŽEČI. Naměřeno
+     3. 11. u ÚZSVM: na `nabidkamajetku.gov.cz` nebyl „odkaz na
+     podmínky se nenašel" pravdou o webu — na serverovém HTML prostě
+     nejsou ŽÁDNÉ odkazy, protože je vykresluje skript. Vykreslování
+     se do té chvíle pouštělo jen na nalezené stránky, takže hledání
+     odkazů na takovém webu skončilo hned a nezjistilo nic.
+     Pouští se to jen tam, kde se nenašel ani jeden odkaz — kde
+     odkazy jsou, by to byl prohlížeč pro nic. */
+  let domovVykreslen = null;
+  if (vykresli && !odkazy.length) {
+    try {
+      const v = await vykresli(cil.domov);
+      const znovu = odkazyNaPodminky(v.html || '', cil.domov);
+      domovVykreslen = Object.assign({ odkazu: znovu.length }, zahozene(v));
+      if (znovu.length) odkazy = znovu;
+      else domovVykreslen.nepomohlo = true;
+    } catch (e) {
+      domovVykreslen = { chyba: String(e && e.message ? e.message : e).slice(0, 120) };
+    }
+  }
+  if (domovVykreslen) zapis.domovVykreslen = domovVykreslen;
   zapis.nalezeneOdkazy = odkazy;
   if (!odkazy.length) {
     zapis.verdikt = 'odkaz na podmínky se na domovské stránce nenašel';

@@ -22045,3 +22045,38 @@ dvě rozbily závorky a `node --check` je odmítl, takže neměřily nic.
 jeho; sonda jen změřila, že to jde a že robots.txt to dovoluje.
 Odpověď na „smělo by se to začít čist" dá až sonda podmínek, teď už
 na správné doméně.
+
+## §355d — „odkaz na podmínky se nenašel" bylo tvrzení o serverovém HTML
+
+**Co řekla sonda podmínek u ÚZSVM.** Na správné doméně
+(`nabidkamajetku.gov.cz`, viz §355c) vyšel verdikt **„odkaz na
+podmínky se na domovské stránce nenašel"**. To ale není pravda o tom
+webu: v serverovém HTML nejsou **žádné** odkazy, protože je vykresluje
+skript. Vykreslování se do té chvíle pouštělo jen na **nalezené**
+stránky — takže na takovém webu hledání skončilo na prvním kroku
+a nezjistilo nic. Byla to táž chyba jako §353 a §355b, jen na jiném
+místě řetězu: nejdřív u obsahu, pak u sousední domény, teď u hledání
+odkazů.
+
+**Co se změnilo.** Když se na domovské stránce nenajde ani jeden
+odkaz, domov se **vykreslí prohlížečem** a odkazy se hledají znovu.
+Jen tehdy — kde odkazy jsou, by to byl prohlížeč pro nic. Do nálezu
+jde `domovVykreslen` s počtem nalezených odkazů, s `nepomohlo`, když
+ani po vykreslení nic nebylo, a s jmény zahozených hostů a cest. Pád
+prohlížeče se zapíše a sondu neshodí.
+
+V diagnostice stojí „Domovská stránka se zkusila i vykreslit
+v prohlížeči: …", takže „odkaz se nenašel" už nevypadá jako tvrzení
+o webu, když je to tvrzení o jednom způsobu čtení.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 76 kontrol (bylo
+70) a `test-diagnostika-zdroje.mjs` 17 (bylo 16). Prokázáno šesti
+sabotážemi: domov se nečte prohlížečem vůbec; čte se i tam, kde odkazy
+dal sám; zatajené `nepomohlo`; mlčky zahozený pád prohlížeče; výpis
+v diagnostice vynechán; jméno hostu bez escapování.
+
+**Zkouška, která spadla správně.** `test-diagnostika-zdroje` přestala
+doběhnout — fixtura vyžadovala, aby v živém nálezu byla aspoň jedna
+skořápka, a tu poslední (ÚZSVM) jsme právě zachránili. Fixtura má mít
+TVAR skutečnosti, ne viset na jejím přechodném stavu: bere se tedy
+opravdový kandidát a verdikt se mu přepíše.

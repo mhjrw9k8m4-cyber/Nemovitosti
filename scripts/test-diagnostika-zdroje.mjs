@@ -64,8 +64,18 @@ const SONDA = fixtura('zdroje-sonda.json', (N) => {
      A protože se vypisuje jen u SKOŘÁPEK, musí skořápka ve fixtuře
      opravdu být; kdyby nebyla, kontrola by na to místo nedosáhla a
      sabotáž „bez escapování" by prošla zeleně (viz §348). */
-  const skorapka = (N.zdroje || []).find((z) => z.slibuje === 'skořápka');
-  if (!skorapka) throw new Error('v nálezu sondy není skořápka — zahozené by neměly kde být vidět');
+  /* SKOŘÁPKA SE DO FIXTURY DOPÍŠE, KDYŽ V NÁLEZU ŽÁDNÁ NENÍ. Tohle
+     jsem si naostro ověřil: zkouška původně vyžadovala skořápku
+     v živém nálezu — a v okamžiku, kdy ÚZSVM (poslední skořápku)
+     zachránila sousední doména (§355), přestala doběhnout. Fixtura
+     má mít TVAR skutečnosti, ne viset na jejím přechodném stavu;
+     bere se tedy opravdový kandidát a verdikt se mu přepíše. */
+  let skorapka = (N.zdroje || []).find((z) => z.slibuje === 'skořápka');
+  if (!skorapka) {
+    skorapka = (N.zdroje || []).find((z) => z.stav !== 'zapojeno' && z !== slibny);
+    if (!skorapka) throw new Error('v nálezu sondy není ani jeden kandidát — fixtura by neměla z čeho vzniknout');
+    skorapka.slibuje = 'skořápka';
+  }
   skorapka.vykresleno = { url: 'https://www.skorapka.cz/', bylo: 'skořápka', je: 'skořápka',
     nepomohlo: true, zablokovano: 0, cizich: 8,
     cizinci: [{ co: 'api.skorapka.cz' + NALOZ, kolik: 5 }, { co: 'mereni.example.org', kolik: 3 }] };
@@ -91,6 +101,11 @@ const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   k.verdikt = 'přečteno, ale nic o automatickém přístupu';
   k.stranky = [{ url: 'https://www.kand.cz/podminky', popis: 'Podmínky užití',
     stav: 'přečteno, nic o automatu', pasaze: [], zminky: 3 }];
+  /* Domov, který se zkusil vykreslit a odkazy přesto nedal — to je
+     případ ÚZSVM z 3. 11. (§355d). Jméno hostu je text z cizího webu
+     a jde do innerHTML, proto v něm nálož je. */
+  k.domovVykreslen = { odkazu: 0, nepomohlo: true, zablokovano: 0, cizich: 3,
+    cizinci: [{ co: 'api.kand.cz' + NALOZ, kolik: 3 }] };
   delete k.dokumenty;
   z.verdikt = 'přečteno (1 pasáží o automatickém přístupu)';
   z.stranky = [{ url: 'https://www.zak.cz/podminky', popis: 'Obchodní podmínky', stav: 'přečteno',
@@ -203,6 +218,12 @@ pravda('u skořápky je vidět, který cizí host si obsah tahal',
   m.text.replace(/\s+/g, ' ').slice(0, 300));
 pravda('a u podmínek, kterou cestu robots.txt nedovolil',
   m.text.includes('/api/podminky.json'),
+  m.text.replace(/\s+/g, ' ').slice(0, 300));
+
+/* DOMOV, KTERÝ SE SKLÁDÁ AŽ V PROHLÍŽEČI. „Odkaz na podmínky se
+   nenašel" je bez tohohle tvrzení o serverovém HTML, ne o webu. */
+pravda('je vidět, že se domovská stránka zkusila i vykreslit',
+  /ani po vykreslení/.test(m.text) && /api\.kand\.cz/.test(m.text),
   m.text.replace(/\s+/g, ' ').slice(0, 300));
 
 /* TÝŽ PORTÁL POD JINOU DOMÉNOU. U ÚZSVM to byl celý důvod, proč byl

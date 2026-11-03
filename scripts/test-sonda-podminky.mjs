@@ -549,6 +549,71 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('a jinak se pustí jen na tu chudou adresu', volane.length >= 1, JSON.stringify(volane));
 }
 
+/* ---- 7b) DOMOVSKÁ STRÁNKA, KTERÁ SE SKLÁDÁ AŽ V PROHLÍŽEČI ------
+   NALEZENO MĚŘENÍM 3. 11. U ÚZSVM. Sonda u `nabidkamajetku.gov.cz`
+   vrátila „odkaz na podmínky se na domovské stránce nenašel" — jenže
+   to nebyla pravda o webu: v serverovém HTML nejsou ŽÁDNÉ odkazy,
+   protože je vykresluje skript. Vykreslování se do té chvíle pouštělo
+   jen na NALEZENÉ stránky, takže na takovém webu hledání skončilo
+   hned a nezjistilo nic. */
+{
+  const VETA = 'Je zakázáno obsah serveru vytěžovat automatizovanými'
+    + ' prostředky, zejména roboty a skripty. ';
+  const PODMINKY = '<html><body><p>' + VETA.repeat(30) + '</p></body></html>';
+  /* Domov BEZ JEDINÉHO ODKAZU — přesně to, co vrací aplikace
+     vykreslovaná skriptem. */
+  const DOMOV_PRAZDNY = '<html><body><div id="app">' + 'x'.repeat(3000) + '</div></body></html>';
+  const DOMOV_S_ODKAZEM = '<html><body><a href="/podminky">Obchodní podmínky</a></body></html>';
+  const stahni = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => PODMINKY };
+    return { ok: true, status: 200, text: async () => DOMOV_PRAZDNY };
+  };
+  const cil = { jmeno: 'Domov skládá skript', host: 'd.test', domov: 'https://d.test/' };
+
+  const bez = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map() });
+  pravda('bez prohlížeče skončí na „odkaz se nenašel" (jinak by se nic neměřilo)',
+    /odkaz na podmínky se na domovské stránce nenašel/.test(bez.verdikt), bez.verdikt);
+
+  const naDomov = [];
+  const a = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => { naDomov.push(u); return { html: DOMOV_S_ODKAZEM, zablokovano: 1, cizich: 2 }; } });
+  pravda('vykreslený domov odkazy najde a podmínky se přečtou',
+    /přečteno \(/.test(a.verdikt) && (a.nalezeneOdkazy || []).length >= 1
+    && a.domovVykreslen && a.domovVykreslen.odkazu >= 1,
+    a.verdikt + ' / ' + JSON.stringify(a.domovVykreslen));
+  pravda('a prohlížeč se pustil na domovskou adresu',
+    naDomov.includes('https://d.test/'), naDomov.join(' '));
+
+  /* CO NEPOMOHLO, SE PŘIZNÁ. */
+  const b = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => ({ html: DOMOV_PRAZDNY, zablokovano: 0, cizich: 0 }) });
+  pravda('vykreslení domova, které odkazy nenašlo, se přizná',
+    /odkaz na podmínky se na domovské stránce nenašel/.test(b.verdikt)
+    && b.domovVykreslen && b.domovVykreslen.nepomohlo === true,
+    b.verdikt + ' / ' + JSON.stringify(b.domovVykreslen));
+
+  /* PÁD PROHLÍŽEČE SONDU NESHODÍ. */
+  const c = await P.zmerPodminky(cil, { stahni, ua: UA, mezipamet: new Map(),
+    vykresli: async () => { throw new Error('prohlížeč nenaběhl'); } });
+  pravda('pád prohlížeče na domovské stránce sondu neshodí a zapíše se',
+    /nenašel/.test(c.verdikt) && /nenaběhl/.test((c.domovVykreslen || {}).chyba || ''),
+    JSON.stringify(c.domovVykreslen));
+
+  /* A KDE DOMOV ODKAZY DÁ SÁM, PROHLÍŽEČ SE NA NĚJ NEPOUŠTÍ. */
+  const naDomov2 = [];
+  const stahniSOdkazem = async (u) => {
+    if (/robots\.txt$/.test(u)) return { ok: true, status: 200, text: async () => 'User-agent: *\nAllow: /' };
+    if (/\/podminky$/.test(u)) return { ok: true, status: 200, text: async () => PODMINKY };
+    return { ok: true, status: 200, text: async () => DOMOV_S_ODKAZEM };
+  };
+  const d = await P.zmerPodminky(cil, { stahni: stahniSOdkazem, ua: UA, mezipamet: new Map(),
+    vykresli: async (u) => { naDomov2.push(u); return { html: DOMOV_S_ODKAZEM }; } });
+  pravda('kde domov odkazy dá sám, prohlížeč se na něj nepustí',
+    !naDomov2.includes('https://d.test/') && !d.domovVykreslen,
+    'pouštěn na: ' + naDomov2.join(' ') + ' / ' + JSON.stringify(d.domovVykreslen));
+}
+
 console.log('Sonda podmínek: čte jen to, co smí');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);
