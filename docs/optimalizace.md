@@ -22409,3 +22409,31 @@ Měřená volba tedy dělá přesně to, k čemu je: u jednoho dokumentu vzala
 hrubší cestu, protože je lepší, u druhého ji nevzala. Pravidlo pro
 příště: na běh v Actions se čeká podle ČÍSLA běhu, ne podle „posledního
 ve výpisu".
+
+## §357g — u dokumentu se neukazoval důvod, a ten všechno vysvětluje
+
+**Změřeno 3. 11.:** v nálezu bylo sedm dokumentů, důvod měly **všechny
+sedm** — a ani jeden nebyl v diagnostice vidět. Vlastník tedy viděl
+„nepřečetli jsme ho" a nic víc: hádanku místo odpovědi. Přitom právě
+ten důvod rozhoduje, co s tím dál („`Disallow: /`" je rozhodnutí
+cizího webu, „je to sken" je vlastnost dokumentu, „kódování, které
+tahle čtečka neumí" je naše mez).
+
+**Co se změnilo.** Dokumenty mají v diagnostice vlastní oddíl —
+sonda je vede v jednom seznamu se stránkami, protože se k verdiktu
+sčítají stejně, ale pro člověka je to jiná věc. U každého stojí
+výsledek, **důvod**, kolik znaků a jaká čitelnost, a čím se dekódovalo
+(§357e). Dokumenty, na které se nedostalo (strop jsou tři), jsou
+vypsané zvlášť a ty přečtené se v nich neopakují. Zmínky se dál
+počítají ze všech záznamů, stránek i dokumentů.
+
+**Čím je to podložené.** `test-diagnostika-zdroje.mjs` 18 kontrol
+(bylo 17). Prokázáno třemi sabotážemi: vynechaný výpis dokumentů,
+vynechaný důvod, důvod bez escapování (text z cizího webu jde do
+innerHTML).
+
+**A ta sabotáž s vynechaným důvodem prošla napoprvé zeleně.** Kotvu
+jsem napsal na „čitelnost 0.36" — jenže to se vypisuje i samostatně
+z pole `citelnost`, takže kontrola o důvodu netvrdila nic. Kotvou je
+teď věta, která je POUZE v důvodu. Je to táž past jako u §357e: text
+kontroly se musí vázat na to jediné místo, které měří.

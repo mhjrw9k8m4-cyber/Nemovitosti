@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-qfq90koLOpnMTLtzy8/DXYX88QwCEA3/pUw6q2wVeOY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-M4dwSo/vNv1lSbdPSHKdsWOyb9JTkzD/OHWlFP8xgYw='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -499,8 +499,27 @@
                 : 'teprve pak se našly odkazy (' + esc(String(dv.odkazu)) + ')'))
             + jmenaZahozenych(dv));
         }
-        var stranky = z.stranky || [];
-        var sPasazi = stranky.filter(function (st) { return (st.pasaze || []).length; });
+        /* STRÁNKY A DOKUMENTY ZVLÁŠŤ. Sonda je vede v jednom seznamu
+           (`stranky`), protože se k verdiktu sčítají stejně — ale pro
+           člověka je to jiná věc: u stránky se čte web, u dokumentu se
+           stahuje PDF a nejčastěji na něm něco ztroskotá. Důvod se
+           dosud nikde neukazoval, a přitom je to právě ten, kdo
+           všechno vysvětluje: změřeno 3. 11., že důvod měly všechny
+           sedm dokumentů v nálezu a ani jeden nebyl vidět. */
+        var vse = z.stranky || [];
+        var stranky = vse.filter(function (st) { return !st.jeDokument; });
+        var dokumentyCtene = vse.filter(function (st) { return st.jeDokument; });
+        var sPasazi = vse.filter(function (st) { return (st.pasaze || []).length; });
+        if (dokumentyCtene.length) {
+          cast.push('Dokumenty: ' + dokumentyCtene.map(function (st) {
+            return '<a href="' + esc(st.url) + '" rel="noopener noreferrer" target="_blank">'
+              + esc(st.popis || st.url) + '</a> — ' + esc(st.stav)
+              + (st.duvod ? ' (' + esc(st.duvod) + ')' : '')
+              + (st.citelnost != null && st.znaku
+                ? ', ' + st.znaku + ' znaků, čitelnost ' + esc(String(st.citelnost)) : '')
+              + (st.jak ? ', dekódováno ' + esc(st.jak) : '');
+          }).join('<br>'));
+        }
         if (stranky.length) {
           cast.push('Čtené stránky: ' + stranky.map(function (st) {
             return '<a href="' + esc(st.url) + '" rel="noopener noreferrer" target="_blank">'
@@ -518,7 +537,7 @@
            ani nic o přístupu k obsahu — nepočítá se to, a právě proto
            to má být vidět, aby verdikt „nic o automatu" nevypadal jako
            že se nehledalo. */
-        var zminek = stranky.reduce(function (n, st) { return n + (st.zminky || 0); }, 0);
+        var zminek = vse.reduce(function (n, st) { return n + (st.zminky || 0); }, 0);
         if (zminek) {
           cast.push('Dál se našlo ' + zminek + ' zmínek, které o přístupu k obsahu nejsou'
             + ' (třeba „automaticky odeslaný e-mail") — do verdiktu se nepočítají.');
@@ -528,9 +547,14 @@
             cast.push('Slovo <strong>' + esc(a.slovo) + '</strong>: „' + esc(String(a.text || '').slice(0, 400)) + '"');
           });
         });
-        if (z.dokumenty && z.dokumenty.length) {
-          cast.push('Dokumenty, které si musí otevřít člověk: <code>'
-            + z.dokumenty.slice(0, 5).map(function (u) { return esc(u); }).join('</code>, <code>') + '</code>');
+        /* A ZBYLÉ DOKUMENTY, na které se nedostalo (strop je tři).
+           Ty přečtené stojí výš s výsledkem, takže se neopakují. */
+        var ctene = {};
+        dokumentyCtene.forEach(function (st) { ctene[st.url] = 1; });
+        var zbyle = (z.dokumenty || []).filter(function (u) { return !ctene[u]; });
+        if (zbyle.length) {
+          cast.push('Další dokumenty, na které se nedostalo: <code>'
+            + zbyle.slice(0, 5).map(function (u) { return esc(u); }).join('</code>, <code>') + '</code>');
         }
         radek(box, kandidat ? 'ok' : 'warn',
           /* JMÉNO JDE JAKO NÁZEV, TEDY PŘES textContent (viz radek()) —

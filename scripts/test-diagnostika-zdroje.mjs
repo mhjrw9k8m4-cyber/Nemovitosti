@@ -110,6 +110,16 @@ const PODMINKY = fixtura('zdroje-podminky.json', (P) => {
   z.verdikt = 'přečteno (1 pasáží o automatickém přístupu)';
   z.stranky = [{ url: 'https://www.zak.cz/podminky', popis: 'Obchodní podmínky', stav: 'přečteno',
     pasaze: [{ slovo: 'robot', text: 'Je zakázáno používat robota k vytěžování obsahu.' }] }];
+  /* DOKUMENT V NÁLEZU. Sonda ho vede ve stejném seznamu jako stránky
+     (`jeDokument`), a v diagnostice se dosud neukazoval jeho DŮVOD —
+     změřeno 3. 11., že důvod měly všech sedm dokumentů a ani jeden
+     nebyl vidět. Nálož je v důvodu i v popisu, protože oba jdou do
+     detailu řádku, tedy do innerHTML. */
+  z.stranky.push({ url: 'https://www.zak.cz/podminky.pdf' + NALOZ,
+    popis: 'Dražební řád.pdf' + NALOZ, jeDokument: true,
+    stav: 'nepřečetli jsme ho', znaku: 15565, citelnost: 0.36,
+    cteno: 'z dokumentu', jak: 'jedna tabulka na všechna písma (čitelnější)',
+    duvod: 'text vyšel nečitelně (čitelnost 0.36)' + NALOZ });
   z.stranky[0].cteno = 'ze serveru';
   z.stranky[0].vykresleno = { bylo: 300, je: 310, nepomohlo: true, zablokovano: 2, cizich: 0,
     zakazane: [{ co: '/api/podminky.json' + NALOZ, kolik: 2 }] };
@@ -219,6 +229,18 @@ pravda('u skořápky je vidět, který cizí host si obsah tahal',
 pravda('a u podmínek, kterou cestu robots.txt nedovolil',
   m.text.includes('/api/podminky.json'),
   m.text.replace(/\s+/g, ' ').slice(0, 300));
+
+/* U DOKUMENTU JE VIDĚT VÝSLEDEK I DŮVOD. Odkaz na PDF bez výsledku
+   je domácí úkol pro člověka; „nepřečetli jsme ho" bez důvodu je
+   hádanka. Měří se obojí — i to, čím se dekódovalo. */
+/* KOTVOU JE VĚTA, KTERÁ JE JEN V DŮVODU. Napoprvé jsem hledal
+   „čitelnost 0.36" — to se ale vypisuje i samostatně z pole
+   `citelnost`, takže sabotáž „důvod se nevypíše" prošla zeleně
+   a kontrola o důvodu netvrdila nic. */
+pravda('u dokumentu je vidět stav, důvod i čím se dekódovalo',
+  /nepřečetli jsme ho/.test(m.text) && /text vyšel nečitelně/.test(m.text)
+  && /jedna tabulka/.test(m.text) && /15565/.test(m.text),
+  m.text.replace(/\s+/g, ' ').slice(0, 400));
 
 /* DOMOV, KTERÝ SE SKLÁDÁ AŽ V PROHLÍŽEČI. „Odkaz na podmínky se
    nenašel" je bez tohohle tvrzení o serverovém HTML, ne o webu. */
