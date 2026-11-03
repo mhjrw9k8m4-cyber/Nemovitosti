@@ -260,7 +260,19 @@ export function textZPdf(buf) {
     return { text: '', citelnost: 0, streamu: 0, cmapu: 0, duvod: 'dokument je zašifrovaný' };
   }
   const vse = streamy(data);
-  const cely = data.toString('latin1');
+  /* SLOVNÍKY HLEDAT I V OBJEKTOVÝCH STREAMECH. Naměřeno naostro:
+     po zavedení párování podle jmen spadla čitelnost dražebního řádu
+     z 0,86 na 0,36 — tedy moje „oprava" ten dokument ZHORŠILA. PDF od
+     verze 1.5 ukládá objekty bez streamu (a mezi nimi slovníky písem
+     a soupis `/Font`) do komprimovaného `/ObjStm`. V surovém souboru
+     tedy nejsou vidět, párování se nemělo o co opřít a většina písem
+     zůstala bez tabulky. */
+  let cely = data.toString('latin1');
+  for (const st of vse) {
+    if (!/\/ObjStm/.test(st.hlava)) continue;
+    const telo = rozbal(st);
+    if (telo) cely += '\n' + telo.toString('latin1');
+  }
   /* NEJDŘÍV CMAPY, pak obsah: obsahový stream se na font odvolává
      jménem (`/F1 Tf`) a bez tabulky by z Identity-H vyšly jen otazníky.
      Tabulka se ale musí přiřadit ke SPRÁVNÉMU fontu. Naměřeno na

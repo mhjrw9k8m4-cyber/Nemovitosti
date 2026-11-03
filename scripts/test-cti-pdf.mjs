@@ -165,6 +165,27 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     stream(4, 'BT /F9 12 Tf <0001> Tj ET\n'),
     Buffer.from('%%EOF\n', 'latin1'),
   ]);
+  /* A SLOVNÍK PÍSEM SCHOVANÝ V OBJEKTOVÉM STREAMU. Naměřeno naostro:
+     PDF od verze 1.5 ukládá objekty bez streamu do komprimovaného
+     `/ObjStm`, takže v surovém souboru nejsou vidět. Čitelnost
+     dražebního řádu kvůli tomu spadla z 0,86 na 0,36 — párování se
+     nemělo o co opřít. */
+  const pdfVObjStm = Buffer.concat([
+    Buffer.from('%PDF-1.5\n', 'latin1'),
+    stream(30, '1 0 obj\n<< /Font << /F1 10 0 R /F2 11 0 R >> >>\nendobj\n'
+      + '10 0 obj\n<< /Type /Font /ToUnicode 20 0 R >>\nendobj\n'
+      + '11 0 obj\n<< /Type /Font /ToUnicode 21 0 R >>\nendobj\n', ' /Type /ObjStm'),
+    stream(20, cmapProZnak(1, 'A')),
+    stream(21, cmapProZnak(1, 'B')),
+    stream(4, 'BT /F1 12 Tf <0001> Tj /F2 12 Tf <0001> Tj ET\n'),
+    Buffer.from('%%EOF\n', 'latin1'),
+  ]);
+  const vo = textZPdf(pdfVObjStm);
+  pravda('písma se spárují i když je slovník v objektovém streamu',
+    vo.text.replace(/\s/g, '') === 'AB',
+    JSON.stringify(vo.text) + ' — tohle je ten případ, na kterém naostro'
+    + ' spadla čitelnost z 0,86 na 0,36');
+
   const vc = textZPdf(pdfCizi);
   pravda('neznámé písmo nedostane tabulku od vedlejšího',
     !/[AB]/.test(vc.text),

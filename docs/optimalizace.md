@@ -22292,3 +22292,37 @@ posledního, přerušená cesta jméno → font → tabulka).
    při správném páru se na náhradu nikdy nedojde, takže pojistku nic
    nezkoušelo. Teprve fixtura s písmem, které v soupisu NENÍ, ji
    postavila do cesty.
+
+## §357d — moje „oprava" ten dokument zhoršila: 0,86 → 0,36
+
+**Co řeklo měření po §357c.** Párování tabulek podle jmen písem mělo
+čitelnost zvednout. Spadla:
+
+```
+před párováním: 10 556 znaků, čitelnost 0,86
+po párování:    15 565 znaků, čitelnost 0,36
+```
+
+Víc textu, a třikrát hůř čitelného. Je to přesně ten případ, kvůli
+kterému se měří naostro a ne jen na vlastních fixturách: dvacet
+kontrol bylo zelených a změna byla zhoršení.
+
+**Příčina.** PDF od verze 1.5 ukládá objekty bez streamu — a mezi nimi
+slovníky písem i soupis `/Font` — do komprimovaného `/ObjStm`.
+V surovém souboru tedy nejsou vidět, cesta jméno → font → tabulka se
+neměla o co opřít a většina písem zůstala BEZ tabulky. Dvoubajtové
+kódy se pak dekódovaly jednobajtově, tedy každý druhý bajt jako nula.
+Dřív je zachránila ta nepřesná náhrada „jedna tabulka na všechno";
+nová pojistka ji správně zakázala, a protože párování nefungovalo,
+nezůstalo nic.
+
+**Co se změnilo.** Slovníky se hledají i v rozbalených `/ObjStm`.
+
+**Čím je to podložené.** `test-cti-pdf.mjs` 21 kontrol (bylo 20):
+písma se spárují i když je slovník v objektovém streamu. Prokázáno
+sabotáží (vynechané rozbalování ObjStm).
+
+**A co z toho plyne pro ten hlídač čitelnosti.** Zachoval se správně
+dvakrát: při 0,86 i při 0,36 sonda nic netvrdila. Kdyby mez nebyla,
+podmínky elektronickedrazby.cz by dnes byly v nálezu dvakrát —
+a dvakrát jinak.
