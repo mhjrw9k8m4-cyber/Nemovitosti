@@ -628,6 +628,21 @@ export function cilePodminek(nalez) {
         : host;
       ven.push({ jmeno: z.jmeno, host: kde, domov: domovZHostu(kde),
         proc: 'slibný kandidát' });
+      /* A TAKY NA PŮVODNÍM WEBU Z REGISTRU. Přepsat hosta na sousední
+         doménu bylo správné kvůli OBSAHU, ale podmínky tím přestaly
+         mít kde být: naměřeno 3. 11. u ÚZSVM — domovská stránka
+         aplikace nabidkamajetku.gov.cz se vykreslila, našla NULA
+         odkazů (jen google a googletagmanager) a verdikt byl „odkaz na
+         podmínky se na domovské stránce nenašel". Právní stránky
+         organizace přitom v aplikaci skoro nikdy nejsou; bývají na
+         webu, který aplikaci provozuje — a ten v registru máme.
+         Čtou se proto OBA a každý dostane vlastní verdikt: u jednoho
+         zdroje můžou podmínky být na jednom a chybět na druhém, a
+         sloučit to do jedné věty by znamenalo neříct, kde platí. */
+      if (kde !== host) {
+        ven.push({ jmeno: z.jmeno + ' — web z registru', host,
+          domov: domovZHostu(host), proc: 'slibný kandidát' });
+      }
     }
   }
   return ven;

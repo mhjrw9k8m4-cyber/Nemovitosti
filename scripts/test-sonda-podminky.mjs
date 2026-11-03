@@ -304,9 +304,33 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
   pravda('podmínky se čtou na doméně, kde nabídky opravdu jsou',
     cs[0] && cs[0].host === 'u.gov.cz' && /u\.gov\.cz/.test(cs[0].domov || ''),
     JSON.stringify(cs[0]));
+  /* DRUHÝ CÍL: PŮVODNÍ WEB Z REGISTRU. Přepsat hosta na sousední
+     doménu je správné kvůli OBSAHU, ale podmínky tím přestaly mít kde
+     být. Naměřeno 3. 11. u ÚZSVM: domovská stránka aplikace
+     nabidkamajetku.gov.cz se vykreslila, našla NULA odkazů (jen google
+     a googletagmanager) a verdikt zněl „odkaz na podmínky se na
+     domovské stránce nenašel". Právní stránky organizace v aplikaci
+     skoro nikdy nejsou — bývají na webu, který ji provozuje. */
+  const uzsvm = cs.filter((c) => c.jmeno.startsWith('Úřad'));
+  pravda('u kandidáta na sousední doméně se čtou OBA weby',
+    uzsvm.length === 2 && uzsvm.some((c) => c.host === 'u.gov.cz')
+      && uzsvm.some((c) => c.host === 'u.cz'),
+    JSON.stringify(uzsvm));
+  pravda('a je u nich poznat, který je který',
+    !!uzsvm.find((c) => c.host === 'u.cz' && /registru/.test(c.jmeno)),
+    'jinak dostane vlastník dva verdikty a neví, kde který platí');
+  pravda('druhý cíl má domovskou adresu z TOHO hosta, ne z druhého',
+    !!uzsvm.find((c) => c.host === 'u.cz' && /\/\/(www\.)?u\.cz/.test(c.domov || '')),
+    JSON.stringify(uzsvm.map((c) => c.domov)));
+  /* A KDE SE HOST NEPŘEPSAL, DRUHÝ CÍL NENÍ. Jinak by se každý
+     kandidát čistě navíc načítal dvakrát a cizí weby by dostaly
+     dvojnásobek dotazů za nic. */
+  const nepomohl = cs.filter((c) => c.jmeno.startsWith('Soused nepomohl'));
+  const zakazuje = cs.filter((c) => c.jmeno.startsWith('Soused zakazuje'));
   pravda('a kde soused nepomohl nebo zakazuje, zůstává původní adresa',
-    cs[1] && cs[1].host === 'n.cz' && cs[2] && cs[2].host === 'z.cz',
-    JSON.stringify([cs[1], cs[2]]));
+    nepomohl.length === 1 && nepomohl[0].host === 'n.cz'
+      && zakazuje.length === 1 && zakazuje[0].host === 'z.cz',
+    JSON.stringify([nepomohl, zakazuje]));
   /* A v kódu se opravdu rozhoduje podle nálezu, ne podle zadrátovaného
      seznamu webů — na tom by celá poctivost spadla. */
   const kod = readFileSync(new URL('../scripts/sonda-podminky.mjs', import.meta.url), 'utf8');

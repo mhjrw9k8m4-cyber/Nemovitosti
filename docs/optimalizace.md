@@ -22602,3 +22602,51 @@ odhadnuté: cenová historie i stránky zlevnění stojí na archivu, který
 minulý běh). Takže přemalování CEN se k těmto stránkám nedostane
 a přemalování IDENTITY se k nim dostane jen skrz archiv, kde je
 zastavené.
+
+## §361 — podmínky ÚZSVM jsme hledali v aplikaci, kde žádné nejsou
+
+**Co se našlo.** §355c přesunul čtení podmínek na sousední doménu —
+správně, protože se nemá ptát na práva k webu, ze kterého nic brát
+nebudeme. Jenže tím se původní web z registru ZAHODIL. A naměřený
+výsledek u ÚZSVM to ukazuje přesně:
+
+```
+host v registru:  nabidkamajetku.cz
+obsah:            nabidkamajetku.gov.cz   (sem se čtení přesunulo)
+domovVykreslen:   odkazů 0, cizích 2 (www.google.com, googletagmanager)
+verdikt:          „odkaz na podmínky se na domovské stránce nenašel"
+znaků přečteno:   0
+```
+
+Domovská stránka té aplikace se tedy opravdu vykreslila (§355d) a
+opravdu na ní žádný odkaz na podmínky není. Což není divu: **právní
+stránky organizace v aplikaci skoro nikdy nejsou** — bývají na webu,
+který ji provozuje. A ten jsme v registru měli celou dobu.
+
+**Co se změnilo.** U kandidáta, kde se host přepsal na sousední
+doménu, se teď čtou OBA: obsahový i registrový. Každý dostane vlastní
+verdikt a je u nich poznat, který je který („… — web z registru"),
+protože podmínky mohou být na jednom a na druhém chybět, a slepit to
+do jedné věty by znamenalo neříct, kde platí. Cílů je 7 → 8.
+
+**A kde se host nepřepsal, druhý cíl nevzniká.** Jinak by každý
+kandidát čistě navíc načítal dvakrát a cizí weby by dostaly dvojnásobek
+dotazů za nic.
+
+**Čím je to podložené.** `test-sonda-podminky.mjs` 96 kontrol (bylo
+93). Čtyři sabotáže, každá kousne na své kontrole: druhý cíl pryč
+(3 pády), druhý cíl bez podmínky `kde !== host`, tedy i tam, kde
+soused nepomohl (1 pád), domovská adresa druhého cíle vzatá z toho
+prvního (1 pád), a druhý cíl bez rozlišujícího jména (1 pád).
+
+**Co to ještě neříká.** Jestli ÚZSVM automatický přístup dovoluje, se
+dozvíme až z běhu v Actions — odtud ze sandboxu nikam nelze. Tohle je
+oprava MÍSTA, kde se ptáme, ne odpověď.
+
+**A dvě věci, které se při tom čtení nálezu ukázaly jako můj omyl.**
+Myslel jsem, že diagnostika ukazuje u dokumentů prázdno, protože
+`dokumenty` jsou v nálezu samé `undefined`. Není: `dokumenty` je pole
+ADRES (seznam „na tyhle se nedostalo", §357g), kdežto přečtené
+dokumenty jsou záznamy ve `stranky`. Chyba byla v mém jednorázovém
+výpisu, ne na stránce. Totéž u `nalezeneOdkazy` — je to pole objektů
+`{url, popis}`, a vypsal jsem ho jako číslo.
