@@ -172,6 +172,26 @@ export function hodnotySloupcu(text, stropRuznych = 20, stropRadku = 400) {
   return ven;
 }
 
+/* ODKAZY S TEXTEM. U stránky, která se vykresluje na serveru, je to
+   celý tvar dat: v katalogu otevřených dat (data.gov.cz) je na jedné
+   stránce výsledků 25 odkazů `datová-sada?iri=…` a vedle každého stojí
+   název té sady. Bez textu odkazu je to jen seznam náhodných adres,
+   s textem je to seznam zdrojů. */
+export function odkazySTextem(html, strop = 30, vzor = null) {
+  const ven = [];
+  const re = /<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+  let m;
+  while ((m = re.exec(String(html || ''))) && ven.length < strop) {
+    const adresa = m[1];
+    if (vzor && !vzor.test(adresa)) continue;
+    const text = m[2].replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+    if (!text) continue;
+    ven.push({ adresa: adresa.slice(0, 200), text: text.slice(0, 120) });
+  }
+  return ven;
+}
+
 export function cojeto(text, typ) {
   const t = String(text || '').trimStart();
   if (/^application\/json|^text\/json/.test(typ || '')) return 'JSON';
@@ -263,6 +283,15 @@ async function main() {
       console.log('\nZAČÁTEK OBSAHU:');
       console.log(text.slice(0, STROP_ZNAKU));
     }
+  } else if (co === 'HTML') {
+    const odkazy = odkazySTextem(text);
+    if (odkazy.length) {
+      console.log('ODKAZY S TEXTEM (prvních ' + odkazy.length + '):');
+      for (const o of odkazy) console.log(`  ${o.text}\n      ${o.adresa}`);
+      console.log('');
+    }
+    console.log('ZAČÁTEK OBSAHU:');
+    console.log(text.slice(0, STROP_ZNAKU));
   } else {
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));
