@@ -733,18 +733,57 @@ function je(popis, vyslo, cekano) {
       hlidajiJeste: ['test-hledani.mjs'] }] }]);
   je('po prvním mlčení je v soupisu jedna mlčící zkouška',
     u.soubory['js/main.js']['obrácené porovnání (>= na >)'],
-    { chytily: [], mlcely: ['test-barvy.mjs'] });
+    { chytily: [], mlcely: ['test-barvy.mjs'], hlidacu: 2 });
   je('a nález zatím žádný — jedna zkouška může mít jiný předmět',
-    R.vadyBezHlidace(u).length, 0);
+    R.vadyBezHlidace(u, () => 2).length, 0);
   u.soubory = R.soupisPoSouborech(u, [{ zkouska: 'test-hledani.mjs', sabotaze: [
     { cil: 'js/main.js', jmeno: 'obrácené porovnání (>= na >)', stav: 'NECHYTILA',
       hlidajiJeste: ['test-barvy.mjs'] }] }]);
-  const n = R.vadyBezHlidace(u);
+  const n = R.vadyBezHlidace(u, () => 2);
   je('po druhém mlčení nález je', n.length, 1);
   je('a má tíhu 3, protože je to nález o celé sadě', n[0].tiha, 3);
   pravda('důkaz jmenuje oba mlčící hlídače',
     /test-barvy\.mjs, test-hledani\.mjs/.test(n[0].dukaz), n[0].dukaz);
+  /* A ROZDÍL MEZI NÁLEZEM A ROZDĚLANOU PRACÍ. Když soubor hlídá víc
+     zkoušek, než kolik jich stroj změřil, je pravda jen tolik, že ji
+     nechytila ani jedna ZMĚŘENÁ. Naměřeno na sobě 4. 11.: smyčka
+     vydala čtrnáct nálezů „vadu nechytí nikdo" po dvou měřeních
+     z deseti hlídačů js/main.js — tedy nadsazeno o celou třídu
+     tvrzení, přesně jako §397 o úroveň výš. */
+  const u3 = { soubory: R.soupisPoSouborech({}, [
+    { zkouska: 'test-a.mjs', sabotaze: [{ cil: 'js/main.js', jmeno: 'm', stav: 'NECHYTILA',
+      hlidajiJeste: ['test-b.mjs', 'test-c.mjs'] }] },
+    { zkouska: 'test-b.mjs', sabotaze: [{ cil: 'js/main.js', jmeno: 'm', stav: 'NECHYTILA',
+      hlidajiJeste: ['test-a.mjs', 'test-c.mjs'] }] },
+  ]) };
+  const n3 = R.vadyBezHlidace(u3, () => 3);
+  je('dokud nebyli na řadě všichni, je to tíha 2, ne 3', n3[0].tiha, 2);
+  pravda('a říká se to, co se změřilo',
+    /mlčelo 2 z 3 zkoušek/.test(n3[0].dukaz) && /zbývá změřit 1/.test(n3[0].dukaz), n3[0].dukaz);
+  pravda('a nekřičí se o tom nahlas (tíha 3 je mez pro ::error::)',
+    R.kOhlaseni(n3, []).vazne.length === 0);
+  const u4 = { soubory: R.soupisPoSouborech(u3, [
+    { zkouska: 'test-c.mjs', sabotaze: [{ cil: 'js/main.js', jmeno: 'm', stav: 'NECHYTILA',
+      hlidajiJeste: ['test-a.mjs', 'test-b.mjs'] }] },
+  ]) };
+  const n4 = R.vadyBezHlidace(u4, () => 3);
+  je('až mlčí všichni, je to nález (tíha 3)', n4[0].tiha, 3);
+  pravda('a teprve ten se křičí nahlas', R.kOhlaseni(n4, []).vazne.length === 1);
+  pravda('a důkaz jmenuje, kolik hlídačů to je',
+    /všechny zkoušky, které ten soubor hlídají \(3: /.test(n4[0].dukaz), n4[0].dukaz);
   je('mez mlčení je dvě zkoušky, ne jedna', R.MEZ_MLCENI, 2);
+  /* A POČET HLÍDAČŮ SE BERE ŽIVĚ Z REPOZITÁŘE, NE Z ULOŽENÉHO ČÍSLA.
+     Naměřeno na sobě: starší zápisy je nenesly, soupis pak o mutaci
+     v js/main.js tvrdil „mlčely všechny 2 zkoušky, které ten soubor
+     hlídají" — a hlídá ho deset. */
+  const stary = { soubory: { 'js/main.js': { m: { chytily: [], mlcely: ['test-a.mjs', 'test-b.mjs'] } } } };
+  je('bez uloženého počtu se hlídači dopočítají živě',
+    R.vadyBezHlidace(stary, () => 10)[0].tiha, 2);
+  pravda('a tíha 3 vznikne, až živý počet dojde k mlčícím',
+    R.vadyBezHlidace(stary, () => 2)[0].tiha === 3);
+  pravda('a bez vlastní funkce se počítá z repozitáře (js/main.js hlídá víc než 2)',
+    R.vadyBezHlidace(stary)[0].tiha === 2,
+    'na dnešním repozitáři hlídá js/main.js ' + S.kdoHlidaCil('js/main.js').length + ' zkoušek');
   /* CHYCENÍ MAZE NÁLEZ. Když tu samou mutaci někdo chytí, hlídač na ni
      existuje a není co hlásit — a mlčící zkouška se z druhého sloupce
      musí ztratit, ať účet nedrží obojí naráz. */
@@ -752,8 +791,8 @@ function je(popis, vyslo, cekano) {
     { cil: 'js/main.js', jmeno: 'obrácené porovnání (>= na >)', stav: 'chytila' }] }]);
   je('chycení tu mutaci z mlčících odebere',
     u.soubory['js/main.js']['obrácené porovnání (>= na >)'],
-    { chytily: ['test-hledani.mjs'], mlcely: ['test-barvy.mjs'] });
-  je('a nález zmizí', R.vadyBezHlidace(u).length, 0);
+    { chytily: ['test-hledani.mjs'], mlcely: ['test-barvy.mjs'], hlidacu: 2 });
+  je('a nález zmizí', R.vadyBezHlidace(u, () => 2).length, 0);
   /* Nerozhodnuté stavy se do soupisu nepíšou vůbec: „nedoručená",
      „rovnocenná" ani „nerozhodnuto" nejsou odpověď na otázku, kdo tu
      vadu chytí. */

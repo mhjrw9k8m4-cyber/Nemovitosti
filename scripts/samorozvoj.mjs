@@ -46,7 +46,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { vsechnyNalezy, hlaseniNalezu } from './nalezce.mjs';
-import { prokazZkousku, hlaseniProkazu, UVNITR } from './sabotuj.mjs';
+import { prokazZkousku, hlaseniProkazu, kdoHlidaCil, UVNITR } from './sabotuj.mjs';
 
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const UCET = join(KOREN, 'data', 'samorozvoj.json');
@@ -161,6 +161,13 @@ export function soupisPoSouborech(ucet, prokazy) {
       if (s.stav !== 'chytila' && s.stav !== 'NECHYTILA') continue;
       const proSoubor = Object.assign({}, soubory[s.cil] || {});
       const par = proSoubor[s.jmeno] || { chytily: [], mlcely: [] };
+      /* KOLIK ZKOUŠEK TEN SOUBOR VŮBEC HLÍDÁ. Bez tohohle čísla by
+         soupis tvrdil „nechytí to nikdo" po dvou měřeních z deseti —
+         a to by byla táž nepravda, jakou §397 opravoval, jen o jednu
+         úroveň výš. Bere se z měření u sabotáže (kdoHlidaCil), drží se
+         to větší z obou čísel. */
+      const kolikHlida = ((s.hlidajiJeste || []).length) + 1;
+      par.hlidacu = Math.max(Number(par.hlidacu) || 0, kolikHlida);
       const kam = s.stav === 'chytila' ? 'chytily' : 'mlcely';
       const druhy = s.stav === 'chytila' ? 'mlcely' : 'chytily';
       /* Zkouška může změnit verdikt (někdo ji doplní) — pak ať se
@@ -180,7 +187,15 @@ export function soupisPoSouborech(ucet, prokazy) {
    hlídači mlčící nad touž mutací téhož souboru znamenají, že ji
    nehlídá nikdo. Tíha 3 — to je nález o celé sadě. */
 export const MEZ_MLCENI = 2;
-export function vadyBezHlidace(ucet) {
+/* KOLIK HLÍDAČŮ TEN SOUBOR MÁ, SE ZJIŠŤUJE ŽIVĚ, NE ZE SOUPISU.
+   Naměřeno na sobě 4. 11.: starší zápisy v účtu to číslo ještě
+   nenesly, takže soupis o mutaci v js/main.js tvrdil „mlčely všechny
+   2 zkoušky, které ten soubor hlídají" — a hlídá ho deset. Číslo
+   uložené včera může být dnes jiné (zkoušky přibývají), a tvrzení
+   „nechytí to nikdo" se opírá právě o něj. Čte se proto z repozitáře;
+   uložená hodnota je jen záložní, když se soubor už nehlídá vůbec. */
+export function vadyBezHlidace(ucet, kolikHlida) {
+  const pocet = kolikHlida || ((cil) => kdoHlidaCil(cil).length);
   const ven = [];
   const soubory = (ucet && ucet.soubory) || {};
   for (const cil of Object.keys(soubory)) {
@@ -188,11 +203,26 @@ export function vadyBezHlidace(ucet) {
       const par = soubory[cil][mutace] || {};
       const mlcely = par.mlcely || [], chytily = par.chytily || [];
       if (chytily.length || mlcely.length < MEZ_MLCENI) continue;
-      ven.push({ cil, mutace, mlcely,
-        jmeno: `vada, kterou nechytí nikdo: ${mutace} v ${cil}`,
-        tiha: 3,
-        dukaz: `mlčely nad ní zkoušky ${mlcely.join(', ')} — a žádná ji nechytila`,
-        co: 'Hlídač na tuhle vadu v tomhle souboru neexistuje; napsat ho.' });
+      const hlidacu = Math.max(pocet(cil) || Number(par.hlidacu) || 0, mlcely.length);
+      /* VŠICHNI, NEBO JEN ZMĚŘENÍ? To je rozdíl mezi nálezem a
+         rozdělanou prací. Dokud nebyli na řadě všichni hlídači toho
+         souboru, je pravda jen tolik, že ji nechytil ani jeden
+         ZMĚŘENÝ — a to je tíha 2, ne 3: nahlas se o tom nekřičí
+         (viz kOhlaseni), ale smyčka to má v ruce a dojde k tomu. */
+      const vsichni = mlcely.length >= hlidacu;
+      ven.push({ cil, mutace, mlcely, hlidacu, vsichni,
+        jmeno: vsichni
+          ? `vada, kterou nechytí nikdo: ${mutace} v ${cil}`
+          : `vada, kterou nechytila ani jedna změřená zkouška: ${mutace} v ${cil}`,
+        tiha: vsichni ? 3 : 2,
+        dukaz: vsichni
+          ? `mlčely nad ní všechny zkoušky, které ten soubor hlídají`
+            + ` (${hlidacu}: ${mlcely.join(', ')}) — a žádná ji nechytila`
+          : `mlčelo ${mlcely.length} z ${hlidacu} zkoušek, které ten soubor hlídají`
+            + ` (${mlcely.join(', ')}); zbývá změřit ${hlidacu - mlcely.length}`,
+        co: vsichni
+          ? 'Hlídač na tuhle vadu v tomhle souboru neexistuje; napsat ho.'
+          : 'Než se z toho stane nález, musí tu mutaci dostat i zbylí hlídači toho souboru.' });
     }
   }
   return ven.sort((a, b) => a.jmeno.localeCompare(b.jmeno));

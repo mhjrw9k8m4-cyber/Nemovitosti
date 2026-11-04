@@ -294,6 +294,12 @@ export function znameHosty() {
 export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
   const podleHosta = new Map();
   const zahozeno = { uzMame: 0, nizkeSkore: 0, bezPrevodu: 0, bezAdresy: 0 };
+  /* SADY, KTERÉ TĚSNĚ MINULY, SE JMENUJÍ. Změřeno naostro 4. 11.
+     (běh 41895064934): z 1 245 přečtených sad propadlo 32 jen na tom,
+     že v názvu ani popisu není slovo o převodu — a to je právě ta
+     hranice, kde může být slovník úzký, ne svět prázdný. Číslo samo
+     se nedá posoudit; jméno ano. */
+  const blizko = [];
   for (const s of (sady || [])) {
     if (!s) continue;
     /* Hostitel se bere z IRI sady (kdo ji vede), ne z adresy
@@ -307,7 +313,13 @@ export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
     if (b.skore < mez) { zahozeno.nizkeSkore++; continue; }
     /* A TEPRVE TEĎ ta podmínka: bez slova o převodu to není nabídka,
        ať má bodů kolik chce (viz SLOVA_PREVODU). */
-    if (!zminujePrevod(s.nazev, dohromady)) { zahozeno.bezPrevodu++; continue; }
+    if (!zminujePrevod(s.nazev, dohromady)) {
+      zahozeno.bezPrevodu++;
+      if (blizko.length < 40) {
+        blizko.push({ host, jmeno: String(s.nazev || '').slice(0, 110), skore: b.skore, duvod: b.duvod });
+      }
+      continue;
+    }
     /* Jeden hostitel = jeden kandidát. Katalog vede datové sady a
        jeden úřad jich má klidně deset; zapojuje se ale zdroj, ne sada.
        Drží se ta nejslibnější a počítá se, kolik jich ten hostitel má
@@ -335,7 +347,7 @@ export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
     }
   }
   const nalezeno = [...podleHosta.values()].sort((a, b2) => b2.skore - a.skore || b2.sad - a.sad);
-  return { nalezeno, zahozeno };
+  return { nalezeno, zahozeno, blizko: blizko.sort((a, b2) => b2.skore - a.skore) };
 }
 
 /* Hlášení pro člověka. Číslo samo nerozhodne, tak se u každého
@@ -350,6 +362,18 @@ export function hlaseni(nalez) {
     radky.push(`  ${String(k.skore).padStart(3)}  ${k.host}  (sad: ${k.sad})  ${k.jmeno}`);
     radky.push(`        ${k.adresa}`);
     radky.push(`        ${k.duvod}`);
+  }
+  /* A JMENOVITĚ TY, KTERÉ MINULY O SLOVO O PŘEVODU. Bez jmen je
+     „zahozeno 32" číslo, které nikdo neověří; se jmény se dá
+     rozhodnout, jestli je slovník úzký (viz SLOVA_PREVODU). */
+  const blizko = nalez.blizko || [];
+  if (blizko.length) {
+    radky.push('');
+    radky.push(`TĚSNĚ MINULY — mají body, ale ani slovo o převodu (${blizko.length}`
+      + `${blizko.length >= 40 ? '+, výpis je zastropovaný' : ''}):`);
+    for (const k of blizko.slice(0, 20)) {
+      radky.push(`  ${String(k.skore).padStart(3)}  ${k.host}  ${k.jmeno}  [${k.duvod}]`);
+    }
   }
   return radky;
 }
@@ -466,6 +490,9 @@ async function main() {
     chyby: chyby.slice(0, 30),
     nalezeno: nalez.nalezeno,
     zahozeno: nalez.zahozeno,
+    /* Jmenovitě i ty, co minuly o slovo o převodu — ať se dá
+       rozhodnout o slovníku, ne jen o čísle. */
+    blizko: (nalez.blizko || []).slice(0, 20),
     /* Historie jen jako počty: celý nález za každý den by soubor
        nafoukl a rozhodovat se dá i z čísla. */
     dny: Object.assign({}, stary.dny || {}, { [dnes]: nalez.nalezeno.length }),

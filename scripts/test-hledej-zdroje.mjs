@@ -359,6 +359,41 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     'tiché zahození je horší než malé číslo');
 }
 
+/* ---- SADY, KTERÉ MINULY O SLOVO O PŘEVODU, SE JMENUJÍ ----------
+   ==================================================================
+   Změřeno naostro 4. 11. (běh 41895064934): z 1 245 přečtených sad
+   propadlo 1 213 na slabé skóre a 32 JEN na tom, že v názvu ani
+   popisu není slovo o převodu. Těch 32 je přesně hranice, kde může
+   být úzký slovník (SLOVA_PREVODU), ne prázdný svět — a „zahozeno 32"
+   je číslo, které nikdo neověří. Hlásí se proto jmenovitě. */
+{
+  const sady = [
+    { nazev: 'Pasport zeleně na pozemcích', popis: 'parcela, katastr',
+      iri: 'https://zelen.example.cz/1', adresa: 'https://zelen.example.cz' },
+    { nazev: 'Prodej pozemků z majetku města', popis: 'nabídka',
+      iri: 'https://mesto.example.cz/2', adresa: 'https://mesto.example.cz' },
+    { nazev: 'Jízdní řády', popis: 'doprava',
+      iri: 'https://bus.example.cz/3', adresa: 'https://bus.example.cz' },
+  ];
+  const v = H.kandidatiZeSad(sady, []);
+  je('kandidát se slovem o převodu projde', v.nalezeno.length, 1);
+  je('sada bez slova o převodu se zahodí', v.zahozeno.bezPrevodu, 1);
+  je('a jmenuje se', (v.blizko || []).map((x) => x.jmeno), ['Pasport zeleně na pozemcích']);
+  pravda('i s body, které si vysloužila',
+    (v.blizko[0] || {}).skore >= 5 && /parcel/.test((v.blizko[0] || {}).duvod || ''),
+    JSON.stringify(v.blizko));
+  pravda('a hlášení to vypíše jako vlastní oddíl',
+    /TĚSNĚ MINULY/.test(H.hlaseni(v).join('\n'))
+    && /Pasport zeleně na pozemcích/.test(H.hlaseni(v).join('\n')));
+  /* Slabé skóre se do výpisu NEPLETE: sad s nulou je tisíc a výpis by
+     se stal nečitelným. Hranice je „body má, slovo chybí". */
+  pravda('sada se slabým skóre se mezi těsné nálezy nepočítá',
+    !(v.blizko || []).some((x) => /Jízdní řády/.test(x.jmeno)), JSON.stringify(v.blizko));
+  /* A když nemine nic, oddíl se nepíše — nula není věta. */
+  pravda('bez těsných nálezů se oddíl nevypisuje',
+    !/TĚSNĚ MINULY/.test(H.hlaseni(H.kandidatiZeSad([sady[1]], [])).join('\n')));
+}
+
 console.log('Hledání nových zdrojů — rejstřík lokálních katalogů');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

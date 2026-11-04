@@ -24595,3 +24595,72 @@ Dvě věci z toho ale plynou:
 A jedna věc, kterou tohle měření ukázalo o nás: **kandidátů je osm.**
 Bot umí vyzkoušet všechny cesty, ale jen na portálech, které někdo do
 registru napsal. Úzké místo už není bot, je to zásoba kandidátů.
+
+## §401 — „nechytí to nikdo" po dvou měřeních z jedenácti *4. 11.*
+
+Osm dalších kol smyčky (dohromady **51 změřených zkoušek z 307**)
+vydalo **čtrnáct** nálezů tíhy 3: „vada, kterou nechytí nikdo" —
+obrácené `>=`, `<=`, `===`, `&&`, zahozená pojistka a `filter(Boolean)`
+v `js/main.js`, `scripts/fetch-opportunities.mjs`,
+`scripts/regiony-meta.mjs` a `scripts/generate-parcel-pages.mjs`.
+
+Jenže ten nadpis byl nadsazený o celou třídu tvrzení — **tutéž chybu
+jako §397, jen o úroveň výš.** Mez „mlčely dvě zkoušky" dává pravdu
+„nechytila to ani jedna ZMĚŘENÁ". `js/main.js` ale hlídá **jedenáct**
+zkoušek a `fetch-opportunities.mjs` **sedmnáct**; změřené byly dvě.
+
+Opraveno dvakrát:
+
+1. **Nález se dělí podle toho, co je změřeno.** Mlčí-li všichni
+   hlídači toho souboru, je to nález tíhy 3 („hlídač na tuhle vadu
+   neexistuje; napsat ho") a křičí se nahlas. Mlčí-li jen někteří, je
+   to tíha 2 a věta, která nelže: „mlčelo 2 z 11 zkoušek, které ten
+   soubor hlídají; zbývá změřit 9". Nahlas se o tom nekřičí — smyčka
+   to má v ruce a dojde k tomu sama.
+2. **Počet hlídačů se čte živě z repozitáře, ne z účtu.** Starší zápisy
+   to číslo ještě nenesly, takže soupis tvrdil „mlčely všechny 2
+   zkoušky, které ten soubor hlídají". Číslo uložené včera může být
+   dnes jiné (zkoušek přibývá) a celé tvrzení stojí právě na něm.
+
+**Po opravě:** 14 nálezů, všechny tíhy 2, žádný `::error::`. Účet:
+8 z 307 prokázáno, 9 se slepým místem, 6 mlčení, 28 nedotčených ze
+změřených. `test-samorozvoj`: 155 → **164 kontrol**.
+
+**Pravidlo, které z dneška plyne třikrát za sebou (§395, §397, §401):**
+nástroj, který soudí hlídače, musí nejdřív spočítat, na kolika
+měřeních jeho soud stojí — a nahlas smí říct jen to, co z nich
+vyplývá.
+
+## §402 — studna dala 0 kandidátů z 1 245 sad, a 32 minulo o slovo *4. 11.*
+
+Hledání zdrojů běželo naostro (běh 41895064934) přes rejstřík lokálních
+katalogů otevřených dat: **34 katalogů, 1 245 přečtených datových sad**.
+Výsledek: **0 kandidátů**. Rozpad je důležitější než ta nula:
+
+* **1 213** sad propadlo na slabé skóre (nemají ani slovo „pozemek",
+  „parcela", „katastr"),
+* **32** sad má body, ale **ani slovo o převodu** (prodej, dražba,
+  záměr prodeje…) — podmínka ze `SLOVA_PREVODU`,
+* **1 527** sad se vůbec nepřečetlo kvůli stropům (120 na katalog,
+  1 800 na běh); u MŽP se z 461 sad přečetlo 120.
+
+Starší zápis v `data/nalezene-zdroje.json` přitom vedl pět „nálezů"
+(RÚIAN, dětská hřiště v Praze 11, odvodňovací zařízení, památky
+v Plzni, cenové mapy Mostu) — ty vznikly PŘED zavedením podmínky
+o převodu a nabídku pozemku nenese ani jeden. Dnešní běh je přepsal
+poctivou nulou.
+
+**Co se opravilo:** těch 32 sad na hranici se teď **jmenuje**. Číslo
+„zahozeno 32" nikdo neověří; se jmény a s body, které si vysloužily, se
+dá rozhodnout, jestli je slovník úzký, nebo svět prázdný. Vypisuje se
+do hlášení (oddíl „TĚSNĚ MINULY") i do dat, max 20 položek. Sady se
+slabým skóre se tam nepletou — těch je tisíc a výpis by se stal
+nečitelným. `test-hledej-zdroje`: 80 → **86 kontrol**.
+
+**Co z toho plyne pro hledání zdrojů (#233):** studna otevřených dat
+vydala za dva běhy nula zdrojů pozemků a bot na portálech taky nula
+(§400). Nejsou to poruchy strojů, jsou to odpovědi — a obě ukazují
+týmž směrem: nabídky pozemků se nezveřejňují jako otevřená data, ale
+na úředních deskách a v inzerci. Tam vedou dvě rozhodnutí, která leží
+na majiteli: **klíč k eDeskám** (desky 6 300 úřadů jedním API) a
+**Bezrealitky**. Oboje je v `docs/pro-majitele.md`.
