@@ -22984,3 +22984,54 @@ Sabotáže: stará náprava okresu (2 pády), zpátky tvrdý práh 5 000 (2),
 pustit i metr zahrady (1), práh ztráty až na 95 % (2), číslo se
 nezapíše do dat (1), ukázka se neukládá (1), cena zpátky do klíče
 dvojníka (1).
+
+## §367 — ÚZSVM: z „skořápky" na 286 pozemků, a čtyři z pěti jsou pacht
+
+**Jak se zdroj, který nejde přečíst, přečetl.** ÚZSVM je největší
+státní prodejce nemovitostí a sonda u něj od §355 končila slovem
+**skořápka**: v HTML nejsou nabídky, jen aplikace, která si je dotáhne
+sama. Z toho se čtečka napsat nedá — ale dá se **poslechnout, odkud si
+je ta aplikace bere**. Tři měření v Actions:
+
+1. ohledání prohlížečem → `POST /api/Property/List`,
+2. GET na tu adresu → `HTTP 405`, tedy POST; tělo dotazu se
+   odposlechlo z téhož vykreslení (`PageSize`, `CategoryId`, …),
+3. odpověď → `PropertyTotalCount: 757` a číselník `Categories`,
+   ve kterém je **`p02Id` 13 = „Pozemky", `FilteredCount` 286**.
+
+Nástroj na to musel vyrůst třikrát: poslouchat datové odpovědi, umět
+poslat tělo dotazu, a vypisovat **krátké seznamy celé** — protože ten
+číselník má čtyři prvky, kdežto nabídek je dvacet pět, a „nejdelší
+seznam" je tedy ten nezajímavý.
+
+**A pak nález, který rozhodl o celé čtečce.** Prvních pět pozemků:
+
+```
+Pacht pozemku p.č. 2025, Racková          1 207,00 Kč
+Pacht pozemku p.č. 1537/73, Štípa         2 824,00 Kč
+Pacht pozemku p.č. 4862/16, Napajedla       500,00 Kč
+pozemek p. č. 233/3 v k. ú. Bukovec   35 000 000,00 Kč   ← prodej
+```
+
+**Čtyři z pěti jsou pacht a ta cena je roční nájem.** Kdyby se to čtlo
+jako prodej, na webu by stál „pozemek za 500 Kč" — a protože podle
+Kč/m² se tu řadí, počítá verdikt i kreslí mapa, pokazilo by to
+**statistiku celého webu**, ne jednu kartu. Pacht se zahazuje a počítá
+se zvlášť; hlídač to měří jako první věc.
+
+**Co se z čeho čte.** Cena je česky napsaný řetězec („35 000 000,00",
+mezera bývá nedělitelná), výměra je jen v popisu („o výměře 15 003
+m2" — čte ji táž funkce jako u otevřených dat státu, ne druhá kopie),
+parcelní číslo a místo jsou v názvu („p. č. 233/3 v k. ú. Bukovec"),
+okres přichází zvlášť v `DistrictName`. Termín aukce a lhůta přihlášek
+jdou do popisku u ceny: tohle se neprodává podpisem, ale v aukci, a to
+kupující potřebuje vědět.
+
+**Čím je to podložené.** `test-uzsvm.mjs` 32 kontrol na SKUTEČNÝCH
+záznamech z běhu ohledání 41802028063, v rychlé sadě (145, bylo 144).
+Čtyři sabotáže: pacht se bere jako prodej (2 pády), cena se čte
+`Number()` naslepo (3), pryč vlastní klíč (1), kategorie 0 místo 13
+(1).
+
+**Vymyšlené fixtury tu nejsou ani jedny** — po §365, kde mě vymyšlený
+popis stál půl práce, je to pravidlo, ne preference.

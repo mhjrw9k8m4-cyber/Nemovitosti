@@ -198,6 +198,9 @@ jobs:
       - name: Nabídky nepotřebného majetku státu (otevřené CSV)
         run: node scripts/test-nabidky-statu.mjs
 
+      - name: ÚZSVM — a hlavně že se pacht nevydává za prodej
+        run: node scripts/test-uzsvm.mjs
+
       - name: Zdroj mimo pořádek 3× v řadě se ozve (nezůstane zelený)
         run: node scripts/test-hlidka-zdroju.mjs
 

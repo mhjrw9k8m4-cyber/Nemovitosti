@@ -31,6 +31,7 @@ import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist } from './cteni-zdr
 import { smimeCist } from './robots.mjs';
 import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
 import * as STAT from './cti-nabidky-statu.mjs';
+import * as UZ from './cti-uzsvm.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /* Co je u pozemku zavedené a jestli nejde jen o podíl — vytahuje se z
    POPISU, který se u většiny zdrojů stahoval už dávno a jen se zahazoval
@@ -1439,7 +1440,7 @@ export async function obecneZdroje(cile, nastroje) {
    který zdroj dnes selhal, a kdyby se rozešla, držení by mlčky přestalo
    fungovat. Hlídač scripts/test-vypadek-zdroje.mjs tu shodu měří. */
 export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sreality (Apify)', 'Farmy',
-  'Nabídky státu'];
+  'Nabídky státu', 'ÚZSVM'];
 
 /* A jména VŠECH zdrojů, tedy i těch, co jsou jen řádkem v registru
    (OBECNE_ZDROJE). Podle tohohle seznamu se poznává, čí nabídka je —
@@ -1477,6 +1478,7 @@ export const ZDROJ_PODLE_HOSTU = [
   ['centralniadresa.cz', 'Dražby'],
   ['farmy.cz', 'Farmy'],
   ['spucr.cz', 'SPÚ'],
+  ['nabidkamajetku.gov.cz', 'ÚZSVM'],
   ['sreality.cz', 'Sreality (Apify)'],
 ];
 
@@ -1999,6 +2001,56 @@ export function porovnejCeny(historie, dnesni, dnes) {
     if (pomer >= PRAH_CEN) nalezy.push({ nazev, druh: 'jineCeny', drive, ted, pomer });
   }
   return nalezy;
+}
+
+/* ÚZSVM — největší státní prodejce nemovitostí.
+ *
+ * Čte se POST na `/api/Property/List` s filtrem na kategorii
+ * „Pozemky" (13). Jak se k té adrese i k tělu dotazu přišlo, stojí
+ * v scripts/cti-uzsvm.mjs; krátce: web je aplikace, v HTML nabídky
+ * nejsou, takže se vykreslil prohlížečem a odposlechlo se, odkud si
+ * obsah bere. Robots.txt web nemá, čtení tedy nezakazuje.
+ *
+ * Strany se berou po stovce a konec pozná `PageCount`. Strop stran je
+ * v čtečce — smyčka, kterou zastaví jen cizí server, je past. */
+async function fetchUzsvm() {
+  const zahozeno = {};
+  const out = [];
+  let celkem = null;
+  for (let strana = 1; strana <= UZ.STROP_STRAN; strana++) {
+    let data;
+    try {
+      const r = await stahni(UZ.API, {
+        method: 'POST',
+        body: UZ.dotaz(strana),
+        headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
+      });
+      if (!r.ok) {
+        console.error(`ÚZSVM strana ${strana}: server odpověděl HTTP ${r.status}, dál se nejde.`);
+        break;
+      }
+      data = await r.json();
+    } catch (e) {
+      console.error(`ÚZSVM strana ${strana}: nešlo přečíst — ${String((e && e.message) || e).slice(0, 140)}`);
+      break;
+    }
+    const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno);
+    for (const o of nabidky) {
+      out.push({
+        ...o,
+        zdroj: 'ÚZSVM',
+      });
+    }
+    if (celkem === null) celkem = Number(data.PropertyTotalCount) || null;
+    const stran = Number(data.PageCount) || 1;
+    if (strana >= stran || !(Array.isArray(data.Properties) && data.Properties.length)) break;
+  }
+  const z = Object.entries(zahozeno).filter(([k, n]) => n > 0 && k !== 'zaznamu')
+    .map(([k, n]) => k + ' ' + n);
+  console.error(`Zdroj ÚZSVM: ${out.length} pozemků z ${zahozeno.zaznamu || 0} záznamů`
+    + (celkem ? ` (evidence hlásí ${celkem} v kategorii Pozemky)` : '')
+    + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
+  return out;
 }
 
 /* HLÁŠKA O STAVU ZDROJE. Jedna věta na zdroj do logu běhu — a musí
@@ -2982,6 +3034,7 @@ async function fetchNabidkyStatu() {
     ['Sreality (Apify)', fetchSreality], // aktivní jen s APIFY_TOKEN, jinak []
     ['Farmy', fetchFarmy],
     ['Nabídky státu', fetchNabidkyStatu],
+    ['ÚZSVM', fetchUzsvm],
   ];
   const results = await Promise.allSettled(SOURCES.map(([, fn]) => fn()));
   // Stav každého zdroje se ZAPISUJE do dat, nejen loguje. Na webu totiž

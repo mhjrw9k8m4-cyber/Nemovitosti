@@ -45,6 +45,11 @@ export const ZAPOJENE = [
   { jmeno: 'Farmy', host: 'farmy.cz', typ: 'sale', adresaOverena: true,
     url: 'https://www.farmy.cz/',
     proc: 'Zemědělská půda a lesy — druh, který jinde na webu téměř nikdo neinzeruje.' },
+  { jmeno: 'ÚZSVM', host: 'nabidkamajetku.gov.cz', typ: 'sale', adresaOverena: true,
+    url: 'https://nabidkamajetku.gov.cz/api/Property/List',
+    proc: 'Úřad pro zastupování státu ve věcech majetkových — největší státní prodejce'
+      + ' nemovitostí. Změřeno 4. 11.: 757 nabídek, z toho 286 v kategorii Pozemky.'
+      + ' Web je aplikace, takže se čte z rozhraní, odkud si bere obsah sama.' },
   { jmeno: 'Nabídky státu', host: 'portal.gov.cz', typ: 'sale', adresaOverena: true,
     url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/?export=csv',
     proc: 'Centrální evidence nepotřebného nemovitého majetku státu, čte se z exportu do'
@@ -58,11 +63,6 @@ export const ZAPOJENE = [
  * Adresy jsou odhad vstupní stránky; co z nich platí, řekne sonda.
  */
 export const KANDIDATI = [
-  { jmeno: 'ÚZSVM — nabídka majetku', host: 'nabidkamajetku.cz', typ: 'sale', adresaOverena: false,
-    url: 'https://nabidkamajetku.cz/',
-    proc: 'Úřad pro zastupování státu ve věcech majetkových prodává státní pozemky ve'
-      + ' výběrových řízeních a zveřejňovat je musí. Je to druhý státní zdroj vedle SPÚ,'
-      + ' tedy přesně ten typ, který nezávisí na komerčním portálu.' },
   { jmeno: 'Portál dražeb', host: 'portaldrazeb.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.portaldrazeb.cz/',
     proc: 'Dražby exekutorů. Dnes se exekuční dražby berou jen z OK dražeb (změřeno'
