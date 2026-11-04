@@ -86,6 +86,14 @@ export function cileZkouseni({ argv = [], kandidati = KANDIDATI, nalezene = [], 
   const zapojeneHosty = new Set((zapojene || []).map((z) => String(z.host || '').toLowerCase()));
   for (const k of (kandidati || [])) {
     if (k.pokrytoJinym) continue;             // týž majetek podruhé nehledáme
+    /* A CO JE ZMĚŘENĚ ZAVŘENÉ, SE NEZKOUŠÍ ZNOVU. Naměřeno 4. 11. na
+       Portálu dražeb: osmatřicet cest, všechny bez nabídek, protože
+       výpis se vydá jen vlastnímu sezení (HTTP 424, CSRF). Zkoušet to
+       každé pondělí znovu je 38 dotazů na cizí web za nic — a šetrnost
+       je tu pravidlo, ne přání. Zapsaný DŮVOD je součást toho pravidla:
+       bez něj by to byl jen vypínač, který po půl roce nikdo neumí
+       zdůvodnit (táž past jako u rovnocenné mutace, §376). */
+    if (k.zavreno) continue;
     if (zapojeneHosty.has(String(k.host || '').toLowerCase())) continue;
     pridej(k.url, k.jmeno, 'kandidát z registru');
   }

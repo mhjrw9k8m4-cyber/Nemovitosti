@@ -19,6 +19,7 @@ import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import * as C from './cesty-portalu.mjs';
 import * as Z from './zkus-portal.mjs';
+import { KANDIDATI } from './zdroje-kandidati.mjs';
 import { zeSitemapy, zRss } from './cteni-zdroje.mjs';
 
 let ok = 0, chyb = 0;
@@ -278,6 +279,36 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     /delete nalez\.telo/.test(telo), 'jinak by z nálezu byly megabajty');
   pravda('a je strop na délku čteného těla',
     /STROP_TELA/.test(telo) && Z.STROP_TELA > 0, String(Z.STROP_TELA));
+}
+
+/* ---- ZMĚŘENĚ ZAVŘENÝ PORTÁL SE NEZKOUŠÍ ZNOVU ----
+ *
+ * Naměřeno 4. 11.: Portál dražeb vydá výpis jen vlastnímu sezení
+ * (HTTP 424, `error_channel: "csrf"`). Jeho 38 cest tedy nemá smysl
+ * zkoušet každé pondělí znovu — je to 38 dotazů na cizí web za nic
+ * a šetrnost je tu pravidlo, ne přání.
+ *
+ * Hlídá se obojí: že zavřený vypadne, a že se tím nedá vypnout
+ * portál, u kterého důvod zapsaný NENÍ.
+ */
+{
+  const kand = [
+    { jmeno: 'Zavřený', host: 'zavreny.cz', url: 'https://zavreny.cz/', zavreno: 'CSRF (změřeno)' },
+    { jmeno: 'Otevřený', host: 'otevreny.cz', url: 'https://otevreny.cz/' },
+  ];
+  const c = Z.cileZkouseni({ kandidati: kand, nalezene: [], zapojene: [] });
+  je('změřeně zavřený portál se nezkouší', c.map((x) => x.host), ['otevreny.cz']);
+  /* A KDYŽ TO ČLOVĚK ŘEKNE ADRESOU, ZKOUŠÍ SE PŘESTO. Zavřeno je nález,
+     ne zámek — kdyby se cizí web zítra otevřel, musí jít změřit. */
+  const r = Z.cileZkouseni({ argv: ['https://zavreny.cz/'], kandidati: kand });
+  je('ale na přímý příkaz se zkusí i zavřený', r.map((x) => x.host), ['zavreny.cz']);
+  /* A ŽE TO V REGISTRU OPRAVDU STOJÍ, VČETNĚ DŮVODU. */
+  const K = KANDIDATI || [];
+  const pd = K.find((x) => String(x.host) === 'portaldrazeb.cz');
+  pravda('Portál dražeb je v registru zapsaný jako zavřený', !!(pd && pd.zavreno),
+    JSON.stringify(pd && { host: pd.host, zavreno: pd.zavreno }));
+  pravda('a nese důvod, ne jen příznak',
+    !!(pd && String(pd.zavreno).length > 20), String(pd && pd.zavreno));
 }
 
 console.log('Zkoušení portálů — všechny cesty a spojení dál');

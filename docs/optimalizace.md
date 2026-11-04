@@ -23756,3 +23756,60 @@ cena roční nájem, takže pustit ho na web jako prodej pokazí i cenovou
 referenci), čárka na konci názvu a prázdná položka v číselníku
 kategorií. Řez popisu se navíc rozšířil tak, aby ve jméně obce nikdy
 nezůstalo slovo „pozemek".
+
+## §380 — tři změřená „ne" a nástroj, který uměl jen dvě metody *4. 11.*
+
+Pokračování bota na cesty portálů (§377). Tři otázky, tři odpovědi —
+a dvě z nich jsou „ne", které stojí za zapsání víc než kdyby to bylo
+„ano": zabrání opakování práce, která nikam nevede.
+
+**1. FOTKY ÚZSVM: NEEXISTUJÍ, aspoň ne cestou, kterou lze změřit.**
+Úkol #235 stál na tom, že odpověď prý nese náhled přímo v sobě
+(`ImageBase64String`). **Není to tak.** Odpověď nese `ImageId`, tedy
+jen číslo — a změřeno třikrát (detail nabídky s obrázkem i bez,
+a vykreslená celá aplikace): nikde se žádná fotka nestahuje. Jediný
+`<img>` na stránce je logo úřadu a aplikace si tahá jen
+`/api/Property/List`. Adresu k obrázku bych musel **uhádnout**, a to je
+přesně to, co se tu nedělá („tvar se měří a nehádá", §355).
+
+> #235 se tím zavírá jako **změřené NE**, ne jako nedokončená naděje.
+> Fotky u nabídek státu nebudou, dokud je sám úřad nezačne vystavovat.
+
+**2. PORTÁL DRAŽEB: VÝPIS SE VYDÁ JEN VLASTNÍMU SEZENÍ.** Portál vede
+Exekutorská komora ČR, `robots.txt` říká `Allow: /` a stránka má
+`meta robots: index, follow` — číst se tedy smí. Jenže:
+
+| cesta | výsledek |
+|---|---|
+| HTML `/drazby/probihajici` | jen filtrovací formulář (kategorie Pozemek, Stavební pozemek…), ani jedna dražba |
+| vykreslení prohlížečem | v DOM jen odkazy navigace, dražby nepřijdou |
+| `GET /drazby/probihajici.json` | 200, ale **12 znaků** — prázdno |
+| `PUT /drazby/probihajici.json` s naměřeným tělem | **424, `error_channel: "csrf"`, „Vaše relace vypršela"** |
+
+Ten token tam je právě proto, aby dotaz přišel z jejich vlastní
+stránky. **Napodobit sezení by bylo obcházení ochrany přístupu, a to
+se tu nedělá** — ani když to technicky jde. Zapsáno do registru
+kandidátů jako `zavreno` s důvodem a bot ten portál přestane zkoušet:
+osmatřicet dotazů na cizí web každé pondělí za nic je proti pravidlu
+šetrnosti. Na přímý příkaz adresou se zkusí dál — zavřeno je **nález,
+ne zámek**: kdyby se portál zítra otevřel, musí jít změřit.
+
+**3. A NEJDŮLEŽITĚJŠÍ: nástroj uměl GET a POST, zdroj chtěl PUT.**
+Právě to měření výš by bez téhle opravy skončilo slepě. Datová adresa
+Portálu dražeb se volá metodou **PUT**; ohledávací nástroj PUT neumel,
+takže na nalezenou adresu nedosáhl — a cesta se tím jevila jako slepá,
+přestože slepá nebyla.
+
+> To je nejhorší druh vady měřidla: **neřekne „neumím", řekne „nic tam
+> není".** Zdroje se mají měřit podle toho, co umí ONY, ne podle toho,
+> co umí nástroj.
+
+Způsob dotazu se tedy dá říct (`GET`/`POST`/`PUT`/`PATCH`/`DELETE`,
+čistá funkce `zpusobDotazu`, vstup workflow). Neznámý způsob se
+**nepoužije** — na cizí web se vymyšlené slovo jako metoda neposílá —
+a nástroj to napíše nahlas, aby se „neumím" nepletlo s „nic tam není".
+
+To je dnes už třetí vada v témže nástroji (§377: `--najdi` mlčelo
+u JSON) a obě mají tentýž tvar: **mlčení nástroje se nedá odlišit od
+nuly nálezů.** Proto má `scripts/ohledej.mjs` dnes 32 kontrol, zatímco
+ráno neměl ani jednu.

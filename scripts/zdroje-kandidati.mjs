@@ -63,10 +63,26 @@ export const ZAPOJENE = [
  * Adresy jsou odhad vstupní stránky; co z nich platí, řekne sonda.
  */
 export const KANDIDATI = [
+  /* ZMĚŘENO 4. 11. A ZAVŘENO — ať se těch osmatřicet cest nezkouší každé
+     pondělí znovu. Robots.txt říká `Allow: /` a stránka má
+     `meta robots: index, follow`, takže číst se smí. Dražby ale nejsou
+     ani v HTML (tam je jen filtrovací formulář s kategoriemi Pozemek
+     a Stavební pozemek), ani v DOM po vykreslení prohlížečem, ani na
+     datové adrese: `PUT /drazby/probihajici.json` s naměřeným tělem
+     odpoví **HTTP 424, `error_channel: "csrf"`, „Vaše relace vypršela"**.
+     Ten token tam je právě proto, aby dotaz přišel z jejich stránky —
+     napodobit sezení by bylo obcházení ochrany přístupu, a to se tu
+     nedělá. Výpis dražeb tedy tenhle portál nikomu bez svého sezení
+     nevydá a jiná cesta k němu nevede. */
+  /* `adresaOverena` zůstává FALSE, i když je adresa změřená: ten
+     příznak znamená „odtud se opravdu stahuje", a odtud se nestahuje
+     a nebude. Chytil to hlídač v test-sonda-zdroju a měl pravdu. */
   { jmeno: 'Portál dražeb', host: 'portaldrazeb.cz', typ: 'exekuce', adresaOverena: false,
+    zavreno: 'CSRF: výpis se vydá jen vlastnímu sezení (HTTP 424, změřeno 4. 11.)',
     url: 'https://www.portaldrazeb.cz/',
-    proc: 'Dražby exekutorů. Dnes se exekuční dražby berou jen z OK dražeb (změřeno'
-      + ' 2. 11.: 66 nabídek), takže druhý kanál pro týž druh je i pojistka proti výpadku.' },
+    proc: 'Dražby exekutorů (Exekutorská komora ČR). Dnes se exekuční dražby berou jen'
+      + ' z OK dražeb (změřeno 2. 11.: 66 nabídek), takže druhý kanál pro týž druh by'
+      + ' byl i pojistka proti výpadku — jenže vydat ho portál nemůže bez svého sezení.' },
   { jmeno: 'eDesky', host: 'edesky.cz', typ: 'obec', adresaOverena: false,
     url: 'https://edesky.cz/',
     proc: 'Obec musí záměr prodat pozemek vyvěsit na úřední desku; eDesky úřední desky'
