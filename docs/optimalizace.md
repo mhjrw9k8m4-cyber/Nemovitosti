@@ -24249,3 +24249,32 @@ tedy 0,3 km daleko) a kontrola si ověří, že odhad přišel **z okolí**
 zeleně, ještě to neznamená, že tu kontrolu opravdu dělá. Tady odhad
 vyšel ze špatné hladiny a rozdíl by nikdo nepoznal — **jediné, co to
 odhalilo, byla sabotáž, která zůstala nechycená.**
+
+## §391 — stroj neviděl dynamický import a účet neznal ruční důkaz *4. 11.*
+
+Dvě mezery, které vyšly najevo teprve tím, že jsem hlídače prokazoval
+**ručně** — tedy jinak, než to dělá smyčka.
+
+**1. Dynamický import stroj neviděl.** `test-vypadek-zdroje` si bere
+`fetch-opportunities.mjs` přes `await import('./…')`, protože ten modul
+je velký a načítá se až v těle zkoušky. `coHlidá` hledala jen
+`from './…'`, takže stroj hlásil **„zkouška neimportuje nic z našeho
+kódu — mechanická sabotáž tu nemá co rozbít"**. U hlídače s **89
+kontrolami** nad nočním robotem.
+
+A to je ten nejhorší druh ticha: **ticho z nedohledu vypadá úplně
+stejně jako ticho z toho, že není co rozbít.** Po opravě se v tom
+hlídači hned našly tři sabotáže k chycení a dvě chycené.
+
+**2. Účet samorozvoje znal jen to, co prokázala smyčka sama.** Ručně
+prokázané hlídače — dnes `test-ceny` 6 z 6 a `test-zkus-portal` 9 z 9 —
+v něm nebyly, takže by si je smyčka vzala na řadu **znovu** a účet dál
+tvrdil „1 z 307 prokázáno". `sabotuj.mjs --zapis` teď sahá do **téhož**
+účtu a v **témže** tvaru, s příznakem `rucne: true`, aby se ruční důkaz
+od smyčkového poznal.
+
+Tři pojistky, ať z toho nevznikne nepořádek: zapisuje se **jen**
+s `--zapis` (stroj, který píše do dat při každém spuštění, by se nedal
+použít na pokusy), **nikdy** při `--vypis` a **nikdy** po chybě.
+
+`test-samorozvoj`: 93 → **100 kontrol**.

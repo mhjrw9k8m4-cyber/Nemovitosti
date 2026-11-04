@@ -313,6 +313,45 @@ function je(popis, vyslo, cekano) {
     'hlásí i tam, kde je všechno prokázané');
 }
 
+/* ---- 6d) DYNAMICKÝ IMPORT A RUČNÍ DŮKAZ DO ÚČTU ----
+ *
+ * Dvě mezery naměřené 4. 11. při ručním prokazování:
+ *
+ * (1) `test-vypadek-zdroje` si bere `fetch-opportunities.mjs` přes
+ *     `await import('./…')`, protože ten modul je velký a načítá se až
+ *     v těle zkoušky. Stroj v něm „neviděl nic z našeho kódu" a hlásil
+ *     „nemá co rozbít" — u zkoušky s 89 kontrolami nad nočním robotem.
+ *     Ticho z nedohledu vypadá stejně jako ticho z toho, že není co
+ *     rozbít, a to je nejhorší druh ticha.
+ *
+ * (2) Účet samorozvoje znal jen to, co prokázala smyčka sama. Ručně
+ *     prokázané hlídače (dnes test-ceny 6 z 6 a test-zkus-portal 9 z 9)
+ *     v něm nebyly, takže by si je smyčka vzala na řadu znovu a účet
+ *     dál tvrdil „1 z 307".
+ */
+{
+  je('dynamický import se počítá jako hlídaný kód',
+    S.coHlidá("const F = await import('./fetch-opportunities.mjs');"),
+    ['scripts/fetch-opportunities.mjs']);
+  je('a dvojité uvozovky taky', S.coHlidá('await import("./nalezce.mjs")'),
+    ['scripts/nalezce.mjs']);
+  je('a obyčejný import nepřestal fungovat',
+    S.coHlidá("import { a } from './archiv.mjs';"), ['scripts/archiv.mjs']);
+  je('a pomůcky se pořád vynechávají',
+    S.coHlidá("import { x } from './chyby-hlaska.mjs';"), []);
+
+  const kodZ = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  pravda('ruční důkaz umí stroj zapsat do téhož účtu',
+    /UCET = join\(KOREN, 'data', 'samorozvoj\.json'\)/.test(kodZ)
+    && /ucet\.zkousky\[zkouska\] = \{/.test(kodZ),
+    'stroj nezapisuje do účtu, takže ručně prokázaný hlídač se tam nedostane');
+  pravda('ale JEN s --zapis, ať se pokusy nezapisují',
+    /zapsat && !vypis && !v\.chyba/.test(kodZ),
+    'bez téhle podmínky by stroj psal do dat při každém spuštění');
+  pravda('a je u toho poznáno, že to byl člověk',
+    /rucne: true/.test(kodZ), 'v účtu nepoznáte ruční důkaz od smyčkového');
+}
+
 /* ---- 6b) SABOTÁŽ, KTERÁ SE K PRODUKTU VŮBEC NEDOSTALA ----
  *
  * Nález ze 4. 11.: stroj zapíše mutaci do `js/pozemek.js`, ale stránky

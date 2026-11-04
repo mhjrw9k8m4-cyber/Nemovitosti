@@ -58,6 +58,43 @@
    "nechytila": 0,
    "slepa": [],
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-ceny.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 5,
+   "chytila": 6,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "nedorucene": [],
+   "poznamka": "",
+   "rucne": true
+  },
+  "test-zkus-portal.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 4,
+   "chytila": 9,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "nedorucene": [],
+   "poznamka": "",
+   "rucne": true
+  },
+  "test-vypadek-zdroje.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 1,
+   "nechytila": 3,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "obrácené porovnání (<= na <)",
+    "zahozená pojistka (if … continue)"
+   ],
+   "nedorucene": [],
+   "poznamka": "",
+   "rucne": true
   }
  },
  "updated": "2026-11-04",

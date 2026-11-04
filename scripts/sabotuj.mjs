@@ -101,7 +101,15 @@ export const POMOCNE = /^(chyby-hlaska|zkouska-|pomocne|falesn)/;
 
 export function coHlidá(teloZkousky) {
   const ven = [];
-  for (const m of String(teloZkousky || '').matchAll(/from '\.\/([a-z0-9-]+\.mjs)'/g)) {
+  /* I DYNAMICKÝ IMPORT SE POČÍTÁ. Naměřeno 4. 11.: `test-vypadek-zdroje`
+     si bere `fetch-opportunities.mjs` přes `await import('./…')`, protože
+     ten modul je velký a načítá se až v těle zkoušky. Stroj v něm proto
+     „neviděl nic z našeho kódu" a hlásil „mechanická sabotáž tu nemá co
+     rozbít" — u zkoušky s 89 kontrolami nad nočním robotem. Ticho
+     z nedohledu vypadá úplně stejně jako ticho z toho, že není co
+     rozbít, a to je ten nejhorší druh ticha. */
+  for (const m of String(teloZkousky || '')
+    .matchAll(/(?:from\s+|import\s*\(\s*)['"]\.\/([a-z0-9-]+\.mjs)['"]/g)) {
     const f = m[1];
     if (/^test-/.test(f) || POMOCNE.test(f)) continue;
     if (!ven.includes('scripts/' + f)) ven.push('scripts/' + f);
@@ -136,6 +144,10 @@ export function coHlidá(teloZkousky) {
         plus se připíše, že důvod chybí.
    Rovnocenné mutace se v hlášení VYPISUJÍ (znakem „="), nezmizí.
    ================================================================== */
+/* Cesta k účtu se tu počítá znovu, místo importu ze samorozvoj.mjs:
+   ten tenhle soubor importuje, a kruh v importech by stroj zasekl. */
+export const UCET = join(KOREN, 'data', 'samorozvoj.json');
+
 export const ZNACKA_ROVNOCENNE = 'ROVNOCENNÁ SABOTÁŽ:';
 export const MIN_DUVOD = 60;
 
@@ -369,6 +381,7 @@ async function main() {
     return;
   }
   const vypis = process.argv.includes('--vypis');
+  const zapsat = process.argv.includes('--zapis');
   const strop = (() => {
     const a = process.argv.find((x) => x.startsWith('--strop='));
     const n = a ? parseInt(a.slice(8), 10) : NaN;
@@ -381,6 +394,37 @@ async function main() {
   }
   const v = await prokazZkousku(zkouska, { strop, vypis });
   for (const r of hlaseniProkazu(v)) console.log(r);
+  /* RUČNÍ DŮKAZ SE TAKY POČÍTÁ — JEN O NĚM MUSÍ ÚČET VĚDĚT.
+     Smyčka sebevývoje (scripts/samorozvoj.mjs) si vede účet, kolik
+     hlídačů je prokázaných, a vybírá podle něj, co prokázat příště.
+     Jenže zapisovala do něj jen ona sama: když jsem 4. 11. prokázal
+     ručně test-zkus-portal (9 z 9) a test-ceny (6 z 6), účet dál
+     tvrdil „1 z 307 prokázáno" a smyčka by si je znovu vzala na řadu.
+     S `--zapis` tedy výsledek sahá do TÉHOŽ účtu a v TÉMŽE tvaru.
+     Bez přepínače se nezapisuje nic — stroj, který píše do dat při
+     každém spuštění, by se nedal použít na pokusy. */
+  if (zapsat && !vypis && !v.chyba) {
+    const dnes = new Date().toISOString().slice(0, 10);
+    let ucet = { zkousky: {} };
+    try { ucet = JSON.parse(readFileSync(UCET, 'utf8')); } catch { /* první zápis */ }
+    if (!ucet.zkousky) ucet.zkousky = {};
+    ucet.zkousky[zkouska] = {
+      kdy: dnes,
+      hlidá: (v.hlidá || []).length,
+      chytila: v.chytila || 0,
+      nechytila: v.nechytila || 0,
+      rovnocenne: (v.sabotaze || []).filter((x) => x.stav === 'rovnocenná').map((x) => x.jmeno),
+      slepa: (v.sabotaze || []).filter((x) => x.stav === 'NECHYTILA').map((x) => x.jmeno),
+      nedorucene: (v.sabotaze || []).filter((x) => x.stav === 'nedoručená').map((x) => x.jmeno),
+      poznamka: v.poznamka || '',
+      rucne: true,
+    };
+    ucet.updated = dnes;
+    writeFileSync(UCET, JSON.stringify(ucet, null, 1));
+    console.log(`\nZapsáno do ${UCET} (ručně prokázáno).`);
+  } else if (!vypis && !v.chyba) {
+    console.log('\n(Nic se nezapsalo. S --zapis se důkaz uloží do účtu samorozvoje.)');
+  }
   if (v.chyba) process.exit(1);
 }
 
