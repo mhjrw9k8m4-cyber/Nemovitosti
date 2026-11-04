@@ -518,6 +518,18 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
      zdroj nabídky — jinak by se seznam a data rozešly beze slova. */
   const chybi = K.ZAPOJENE.map((z) => z.jmeno).filter((j) => !F.ZDROJ_JMENA.includes(j));
   pravda('jména zapojených zdrojů sedí na ZDROJ_JMENA', chybi.length === 0, chybi.join(', '));
+  /* A TÁŽ SHODA OPAČNĚ. Tahle polovina tu chyběla a chytila by vadu,
+     kterou jsem dnes udělal: zdroj „Nabídky státu" se zapojil do
+     SOURCES, ale v registru zůstal mezi KANDIDÁTY. Nic nespadlo —
+     jen diagnostika a sonda o živém zdroji dál tvrdily „kandidát",
+     tedy „tohle se ještě nečte". Mlčící lež v tom, co web o sobě
+     říká, je přesně to, co má hlídač chytat. */
+  const neniVRegistru = F.ZDROJ_JMENA.filter((j) => !K.ZAPOJENE.some((z) => z.jmeno === j));
+  pravda('a každý zapojený stahovač je v registru jako zapojený',
+    neniVRegistru.length === 0,
+    neniVRegistru.length
+      ? `v SOURCES je, v ZAPOJENE chybí: ${neniVRegistru.join(', ')}`
+      : 'registr i SOURCES mluví o týchž zdrojích');
   pravda('u kandidátů se netvrdí, že je adresa ověřená',
     K.KANDIDATI.every((z) => z.adresaOverena === false)
     && K.ZAPOJENE.every((z) => z.adresaOverena === true),

@@ -21,6 +21,7 @@
    přímo a nic se nestahuje. Dokud bylo uvnitř fetchDrazby(), nešlo ho
    vyzkoušet jinak než pustit celé stahování — a to se v CI nedělá.
    ================================================================== */
+import { readFileSync } from 'node:fs';
 import { nabidkyZDrazby } from './fetch-opportunities.mjs';
 
 let ok = 0, chyb = 0;
@@ -111,6 +112,83 @@ const zaznam = (veci, cena, nucena) => ({
   je('prázdný záznam nic nevrátí', nabidkyZDrazby({}).length, 0);
   je('ani nic nedává nic', nabidkyZDrazby(null).length, 0);
   je('položka bez věcí nic nevrátí', nabidkyZDrazby(zaznam([], 1000)).length, 0);
+}
+
+/* --- ZAHOZENÉ SE POČÍTAJÍ, A KAŽDÉ NA SVŮJ ÚČET ------------------
+   Nalezeno měřením 4. 11.: zdroj přinesl 45 nabídek proti mediánu 81
+   a hlídač poradil „podívejte se, jestli parser nepřestal část
+   stránky čist". Podívat se ale nebylo kam: `preskoceno` počítá jen
+   nabídky, na kterých čtení SPADLO, kdežto položky zahozené schválně
+   (nezveřejněná dražba, bez obce, bez ceny, bez výměry) se
+   nepočítaly nikde. Bez těch čísel nejde odpovědět na jedinou
+   otázku, která tam je: je úbytek v datech, nebo v nás? */
+{
+  const polozka = (zmeny) => ({
+    stavPredmetu: 'Uveřejněno', vyvolavaciCena: { castka: { vyse: 1000000 } },
+    veci: [parcela(500, '1')], ...zmeny,
+  });
+  const rec = (polozky, nucena) => ({
+    zakladniInformace: {
+      typDrazby: nucena === false ? 'Dobrovolná' : 'Nucená',
+      konaniDrazby: { zacatek: '2026-11-11T10:00', url: 'https://okdrazby.cz/drazba/9' },
+    },
+    predmetyDrazby: polozky,
+  });
+  const z = {};
+  nabidkyZDrazby(rec([polozka()]), z);
+  je('dobrá položka se započítá jako dražba i jako předmět', [z.drazeb, z.polozek], [1, 1]);
+  pravda('a nic se u ní nezahodí',
+    !z.neuverejneno && !z.bezMista && !z.bezCeny && !z.bezVymery, JSON.stringify(z));
+
+  const z2 = {};
+  nabidkyZDrazby(rec([polozka({ stavPredmetu: 'Ukončeno' })]), z2);
+  je('ukončená dražba se započítá jako „neuverejneno"', z2.neuverejneno, 1);
+
+  const z3 = {};
+  nabidkyZDrazby(rec([polozka({ vyvolavaciCena: null })]), z3);
+  je('položka bez ceny se započítá jako „bezCeny"', z3.bezCeny, 1);
+
+  const z4 = {};
+  nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { vymera: 500, parcelniCislo: '1' }, katastralniUzemi: {} } }],
+  })]), z4);
+  je('položka bez obce a okresu se započítá jako „bezMista"', z4.bezMista, 1);
+
+  /* Dobrovolná dražba bez výměry se zahazuje, nucená ne — a počítadlo
+     to musí rozlišit, jinak by se u exekucí hlásila ztráta, která se
+     nestala. */
+  const z5 = {};
+  nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { parcelniCislo: '1' }, katastralniUzemi: ku } }],
+  })], false), z5);
+  je('dobrovolná bez výměry se započítá jako „bezVymery"', z5.bezVymery, 1);
+  const z6 = {};
+  const nuc = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { parcelniCislo: '1' }, katastralniUzemi: ku } }],
+  })], true), z6);
+  pravda('u nucené dražby bez výměry se nezahazuje a nic se nepočítá',
+    nuc.length === 1 && !z6.bezVymery, JSON.stringify({ n: nuc.length, z: z6 }));
+
+  /* Dobrovolná dražba, ve které je jen pozemek se stavbou: zahazuje se
+     schválně, ale je to jiná ztráta než „tam žádný pozemek nebyl". */
+  const z7 = {};
+  nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { vymera: 300, parcelniCislo: '1' }, stavba: { typ: 'dům' }, katastralniUzemi: ku } }],
+  })], false), z7);
+  je('dobrovolná jen se stavbou má vlastní účet', z7.jenBudovaVDobrovolne, 1);
+
+  /* A počítadlo je NEPOVINNÉ: bez něj čtečka nesmí spadnout. */
+  pravda('čtečka jde pozvat i bez počítadla', nabidkyZDrazby(rec([polozka()])).length === 1);
+
+  /* Čísla se musí dostat do logu, jinak je nikdo neuvidí. */
+  const kod = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  const telo = (kod.match(/async function fetchDrazby\(\)[\s\S]*?\n}/) || [''])[0];
+  pravda('a stahování je vypíše do logu běhu',
+    /nabidkyZDrazby\(rec, zahozeno\)/.test(telo) && /zahozeno —/.test(telo)
+    && /console\.error/.test(telo), telo.slice(0, 200));
+  pravda('a chybnou odpověď serveru taky neprojde mlčením',
+    /HTTP \$\{r\.status\}/.test(telo) && /nešlo přečíst/.test(telo), telo.slice(0, 200));
 }
 
 console.log('Dražby z otevřených dat CEVD');

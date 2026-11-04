@@ -45,6 +45,11 @@ export const ZAPOJENE = [
   { jmeno: 'Farmy', host: 'farmy.cz', typ: 'sale', adresaOverena: true,
     url: 'https://www.farmy.cz/',
     proc: 'Zemědělská půda a lesy — druh, který jinde na webu téměř nikdo neinzeruje.' },
+  { jmeno: 'Nabídky státu', host: 'portal.gov.cz', typ: 'sale', adresaOverena: true,
+    url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/?export=csv',
+    proc: 'Centrální evidence nepotřebného nemovitého majetku státu, čte se z exportu do'
+      + ' CSV. Jedním souborem nabídky Lesů ČR, Povodí, Vojenských lesů, Správy železnic'
+      + ' i ministerstev. Otevřená data státu: zveřejnění je povinnost, ne laskavost.' },
 ];
 
 /**
@@ -79,12 +84,6 @@ export const KANDIDATI = [
      ze zákona zveřejňované, takže nenesou tu právní nejistotu, kvůli
      které je závislost na Bezrealitkách problém. */
 
-  { jmeno: 'Nepotřebný majetek státu', host: 'portal.gov.cz', typ: 'sale', adresaOverena: false,
-    url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/',
-    proc: 'CENTRÁLNÍ EVIDENCE nepotřebného nemovitého majetku státu, a má EXPORT DO CSV.'
-      + ' Sdružuje nabídky Správy železnic, Povodí, Vojenských lesů i ministerstev — tedy'
-      + ' jedním zdrojem to, co by jinak byl tucet zvlášť čtených webů. Otevřená data'
-      + ' státu jsou nejlepší možný zdroj: zveřejnění je povinnost, ne laskavost.' },
 
   { jmeno: 'Vojenské lesy a statky', host: 'vls.cz', typ: 'sale', adresaOverena: false,
     url: 'https://www.vls.cz/cs/pro-obchodni-partnery/prodej-nepotrebneho-majetku/prodej-nemoviteho-majetku',

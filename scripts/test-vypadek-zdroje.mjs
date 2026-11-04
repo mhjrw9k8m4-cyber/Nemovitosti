@@ -292,6 +292,46 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   }
 }
 
+/* ---- HLÁŠKA O STAVU ZDROJE NESMÍ LHÁT ---------------------------
+   Nalezeno v ostrém běhu 4. 11.: „Zdroj Dražby SELHAL: null". Zdroj
+   přitom odpověděl a přinesl 45 nabídek — jen je to proti mediánu
+   úbytek. Dvě lži v jedné větě: „SELHAL" a „null" jako příčina. */
+{
+  const h = (z) => F.hlaskaZdroje(z);
+  const ok1 = h({ nazev: 'A', stav: 'ok', pocet: 5 });
+  pravda('zdroj v pořádku jde do běžného výpisu, ne mezi chyby',
+    ok1.kam === 'log' && /5 záznamů/.test(ok1.text), JSON.stringify(ok1));
+  const vyp = h({ nazev: 'B', stav: 'vypnuto', chyba: 'není nastavený APIFY_TOKEN' });
+  pravda('vypnutý zdroj řekne, čím je vypnutý',
+    vyp.kam === 'log' && /APIFY_TOKEN/.test(vyp.text), JSON.stringify(vyp));
+  /* Jádro věci: stavy ze seznamu ODPOVEDEL se nesmějí hlásit jako pád. */
+  for (const stav of ['pokles', 'propad', 'zahazuje', 'jineCeny', 'druhá cesta', 'jinaIdentita']) {
+    const v = h({ nazev: 'Dražby', stav, pocet: 45, preskoceno: 0, chyba: null });
+    pravda(`stav „${stav}" se nehlásí jako SELHAL`,
+      v.kam === 'chyba' && !/SELHAL/.test(v.text) && v.text.includes(stav), JSON.stringify(v));
+  }
+  /* A žádná hláška nesmí vypsat „null" nebo „undefined" místo příčiny. */
+  const vsechny = ['ok', 'vypnuto', 'pokles', 'propad', 'zahazuje', 'jineCeny', 'druhá cesta',
+    'jinaIdentita', 'prazdno', 'neuplne', 'chyba']
+    .map((stav) => h({ nazev: 'X', stav, pocet: 1 }));
+  pravda('v žádné hlášce nestojí „null" ani „undefined"',
+    vsechny.every((v) => !/\bnull\b|\bundefined\b/.test(v.text)),
+    JSON.stringify(vsechny.filter((v) => /null|undefined/.test(v.text)).map((v) => v.text)));
+  const sel = h({ nazev: 'C', stav: 'chyba', chyba: 'fetch failed' });
+  pravda('skutečný pád se pozná a nese příčinu',
+    sel.kam === 'chyba' && /SELHAL/.test(sel.text) && /fetch failed/.test(sel.text), JSON.stringify(sel));
+  const bez = h({ nazev: 'D', stav: 'chyba', chyba: null });
+  pravda('a pád bez příčiny to přizná slovy, ne prázdnem',
+    /bez udané příčiny/.test(bez.text), JSON.stringify(bez));
+  /* Hláška se opravdu používá — kdyby ji main() obešel, byla by tahle
+     zkouška měřením něčeho, co na web nedoléhá. */
+  const kod = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  pravda('a robot ji při výpisu stavů opravdu volá',
+    /hlaskaZdroje\(z\)/.test(kod) && !/SELHAL: \$\{z\.chyba\}/.test(kod),
+    'v main() musí stát hlaskaZdroje(z), ne vlastní věta');
+}
+
 console.log('Výpadek zdroje:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

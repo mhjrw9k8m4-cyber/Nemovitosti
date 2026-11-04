@@ -1946,19 +1946,81 @@ export function porovnejCeny(historie, dnesni, dnes) {
   return nalezy;
 }
 
+/* HLÁŠKA O STAVU ZDROJE. Jedna věta na zdroj do logu běhu — a musí
+ * odpovídat tomu, co se stalo.
+ *
+ * NALEZENO MĚŘENÍM 4. 11. v ostrém běhu: v logu stálo „Zdroj Dražby
+ * SELHAL: null". Nic nezselhalo — zdroj odpověděl a přinesl 45 nabídek,
+ * jen je to proti mediánu 81 úbytek, tedy stav „pokles". A „null" jako
+ * příčina je přesně to, co u jiných hlášek zakazuje
+ * test-chybova-hlaska.mjs: hlášení bez příčiny nikam nevede. Rozlišení
+ * „odpověděl / neodpověděl" bylo v kódu už od §332 (ODPOVEDEL), jen se
+ * na něj tahle jedna věta neptala.
+ *
+ * Vytažené z main() do funkce schválně: věta, která o sobě tvrdí, že
+ * nelže, se musí dát změřit bez sítě. */
+export function hlaskaZdroje(z) {
+  const nazev = (z && z.nazev) || '?';
+  const stav = (z && z.stav) || 'chyba';
+  if (stav === 'ok') return { kam: 'log', text: `Zdroj ${nazev}: ${z.pocet} záznamů.` };
+  /* I u vypnutého musí stát ČÍM. Hlídač to chytil hned: zdroj
+     vypnutý bez uvedené příčiny vypsal „vypnutý (undefined)". */
+  if (stav === 'vypnuto') {
+    return { kam: 'log', text: `Zdroj ${nazev}: vypnutý (${z.chyba || 'bez uvedené příčiny'}).` };
+  }
+  if (ODPOVEDEL.has(stav)) {
+    return { kam: 'chyba', text: `Zdroj ${nazev} ODPOVĚDĚL, ale není v pořádku: stav „${stav}",`
+      + ` ${z.pocet} záznamů, zahozeno ${z.preskoceno || 0}.`
+      + ' Příčina stojí v hlášce POZOR výš; pád to není.' };
+  }
+  if (stav === 'neuplne') {
+    return { kam: 'chyba', text: `Zdroj ${nazev}: SKEN NEBYL ÚPLNÝ, ${z.pocet} záznamů se`
+      + ' proto nebere za měření. Kolik dotazů chybělo, stojí v hlášce POZOR výš.' };
+  }
+  if (stav === 'prazdno') {
+    return { kam: 'chyba', text: `Zdroj ${nazev} NEVRÁTIL NIC: odpověď přišla, ale nebyla v ní`
+      + ' ani jedna nabídka — nejčastěji se tomu zdroji změnil tvar dat.' };
+  }
+  return { kam: 'chyba', text: `Zdroj ${nazev} SELHAL: ${(z && z.chyba) || `bez udané příčiny (stav „${stav}")`}` };
+}
+
 async function fetchDrazby() {
   const year = new Date().getFullYear();
   const out = [];
+  /* POČÍTADLO ZAHOZENÝCH. Nalezeno měřením 4. 11.: zdroj přinesl 45
+     nabídek proti mediánu 81 za 22 dnů a hlídač se ozval „pomalý
+     úbytek — podívejte se, jestli parser nepřestal část stránky čist".
+     Podívat se ale nebylo kam: `preskoceno` bylo 0, protože to počítá
+     jen nabídky, na kterých čtení SPADLO. Položky, které čtečka zahodí
+     schválně (nezveřejněná dražba, bez obce, bez ceny, bez výměry), se
+     nepočítaly nikde — takže na otázku „je úbytek u nich, nebo u nás"
+     nešlo odpovědět vůbec. Tím samým číslem už se jednou měřil nový
+     zdroj z otevřených dat (§363) a ten rozdíl je pokaždé ten, který
+     rozhoduje: na datech nemám co opravovat, na sobě ano. */
+  const zahozeno = { drazeb: 0, polozek: 0, neuverejneno: 0, bezPozemku: 0,
+    jenBudovaVDobrovolne: 0, bezMista: 0, bezCeny: 0, bezVymery: 0 };
   for (const y of [year, year - 1]) {
     let data;
     try {
       const r = await stahni(`https://cevd.gov.cz/opendata/drazby/drazby_${y}.json`, { headers: UA });
-      if (!r.ok) continue;
+      /* I TOHLE SE MUSÍ OZVAT. Když oba roky vrátí chybu, funkce vrátí
+         prázdno a běh ho označí za „prazdno" — ale v logu nestálo ani
+         slovo o tom, že se vůbec něco nepodařilo stáhnout. */
+      if (!r.ok) { console.error(`Dražby ${y}: server odpověděl HTTP ${r.status}, rok se vynechává.`); continue; }
       data = await r.json();
-    } catch { continue; }
+    } catch (e) {
+      console.error(`Dražby ${y}: nešlo přečíst — ${String((e && e.message) || e).slice(0, 140)}`);
+      continue;
+    }
     const arr = Array.isArray(data) ? data : (Object.values(data).find(Array.isArray) || []);
-    for (const rec of arr) out.push(...nabidkyZDrazby(rec));
+    for (const rec of arr) out.push(...nabidkyZDrazby(rec, zahozeno));
   }
+  const z = Object.entries(zahozeno)
+    .filter(([k, n]) => n > 0 && k !== 'drazeb' && k !== 'polozek')
+    .map(([k, n]) => k + ' ' + n);
+  console.error(`Zdroj Dražby: ${out.length} pozemků z ${zahozeno.drazeb} dražeb`
+    + ` (${zahozeno.polozek} předmětů)`
+    + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
   return out;
 }
 
@@ -1968,8 +2030,12 @@ async function fetchDrazby() {
  * tiše, a bez sítě se dá vyzkoušet jedině tak, že se mu dá záznam
  * přímo. Právě tudy prošla chyba, kvůli které měly dražby z tohohle
  * zdroje nesmyslnou cenu za metr (viz komentář u součtu výměr níž). */
-export function nabidkyZDrazby(rec) {
+export function nabidkyZDrazby(rec, zahozeno) {
   const out = [];
+  /* Počítadlo je nepovinné: čtečka se dá pozvat i bez něj (tak ji volají
+     zkoušky) a pak se jen nic nezapisuje. */
+  const pocti = (k) => { if (zahozeno) zahozeno[k] = (zahozeno[k] || 0) + 1; };
+  pocti('drazeb');
   {
     {
       const zi = (rec && rec.zakladniInformace) || {};
@@ -1997,7 +2063,8 @@ export function nabidkyZDrazby(rec) {
          o tu jednu. */
       for (const p of ((rec && rec.predmetyDrazby) || [])) {
         if (!p) continue;
-        if (p.stavPredmetu !== 'Uveřejněno') continue; // jen aktivní/nadcházející
+        pocti('polozek');
+        if (p.stavPredmetu !== 'Uveřejněno') { pocti('neuverejneno'); continue; } // jen aktivní/nadcházející
         /* VÝMĚRA JE SOUČET VŠECH PARCEL V TÉHLE POLOŽCE, ne jedné z nich.
          *
          * Dřív se vybrala jedna „nejvhodnější" parcela a její výměra se
@@ -2015,28 +2082,28 @@ export function nabidkyZDrazby(rec) {
          * Parcelní číslo se uvádí jen tehdy, když je položka JEDNOPARCELNÍ.
          * U víc parcel by jedno číslo u součtu výměr tvrdilo, že ta parcela
          * má výměru všech dohromady. */
-        let cand = null, candBudova = false, soucetVymer = 0, pozemku = 0;
+        let cand = null, candBudova = false, soucetVymer = 0, pozemku = 0, budovaPryc = 0;
         for (const v of (p.veci || [])) {
           const vn = v.vecNemovita;
           if (!vn || !vn.pozemek) continue;
           const budova = !!(vn.jednotka || vn.stavba);
-          if (budova && !nucena) continue; // dobrovolná: budovy vynecháváme
+          if (budova && !nucena) { budovaPryc++; continue; } // dobrovolná: budovy vynecháváme
           const vym = Number(vn.pozemek.vymera) || 0;
           if (vym > 0) { soucetVymer += vym; pozemku++; }
           /* Zástupce pro obec, okres, druh a souřadnice: čistý pozemek má
              přednost před tím se stavbou, jinak první v pořadí. */
           if (!cand || (candBudova && !budova)) { cand = { vn, v }; candBudova = budova; }
         }
-        if (!cand) continue;
+        if (!cand) { pocti(budovaPryc ? 'jenBudovaVDobrovolne' : 'bezPozemku'); continue; }
         const { vn, v } = cand;
         const ku = vn.katastralniUzemi || {};
         const okres = ku.okres, place = ku.obec || ku.nazev;
-        if (!okres || !place) continue;
+        if (!okres || !place) { pocti('bezMista'); continue; }
         const area = soucetVymer || parseArea(v.nazev) || parseArea(p.nazevPredmetu);
         const price = (p.vyvolavaciCena && p.vyvolavaciCena.castka && p.vyvolavaciCena.castka.vyse)
           || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
-        if (!price) continue;
-        if (!area && !nucena) continue; // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
+        if (!price) { pocti('bezCeny'); continue; }
+        if (!area && !nucena) { pocti('bezVymery'); continue; } // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
         const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev, [place, okres]);
         out.push({
           place, okres, type,
@@ -2830,11 +2897,10 @@ async function fetchNabidkyStatu() {
     }
   }
 
-  zdroje.forEach((z) => {
-    if (z.stav === 'ok') console.log(`Zdroj ${z.nazev}: ${z.pocet} záznamů.`);
-    else if (z.stav === 'vypnuto') console.log(`Zdroj ${z.nazev}: vypnutý (${z.chyba}).`);
-    else console.error(`Zdroj ${z.nazev} SELHAL: ${z.chyba}`);
-  });
+  for (const z of zdroje) {
+    const h = hlaskaZdroje(z);
+    if (h.kam === 'log') console.log(h.text); else console.error(h.text);
+  }
 
   /* ZDROJ S PODEZŘELÝMI CENAMI SE DNES NEBERE. Lepší je den stará
      cena než cena o řád jinde: podle Kč/m² se řadí, počítá verdikt

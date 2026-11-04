@@ -22802,3 +22802,67 @@ Kontrola odřízla jen BLOKOVÉ komentáře, takže zakomentovaný řádek ten
 text pořád obsahoval. Je to **potřetí dnes táž past** (§358, §362):
 kontrola, která čte kód, musí číst kód, ne dokumentaci. Zapsáno sem
 potřetí v naději, že počtvrté si vzpomenu dřív.
+
+## §364 — „Zdroj Dražby SELHAL: null" — nezselhal, a příčina to není
+
+**Jak se to našlo.** Hlídka z §363 se poprvé ozvala naostro a ukázala
+na zdroj Dražby. V logu téhož běhu stálo:
+
+```
+POZOR: zdroj Dražby přinesl 45 záznamů, medián posledních 22 dnů je 81.
+Není to skok, je to pomalý úbytek — podívejte se, jestli parser
+nepřestal část stránky čist.
+Zdroj Dražby SELHAL: null
+```
+
+Ta druhá věta je **dvakrát nepravdivá**. Zdroj nezselhal: odpověděl
+a přinesl 45 nabídek. A `null` není příčina, je to prázdné místo po
+příčině — u jiných hlášek to zakazuje `test-chybova-hlaska.mjs`,
+jenže tahle jedna věta se na to pravidlo nikdy neptala. Rozlišení
+„odpověděl / neodpověděl" v kódu bylo od §332 (`ODPOVEDEL`), výpis
+stavů ho ale nepoužíval: dělil svět na `ok`, `vypnuto` a „všechno
+ostatní je pád".
+
+**Co se změnilo.** Věta je vytažená z `main()` do `hlaskaZdroje(z)`,
+aby se dala změřit bez sítě, a každý stav má svoje sdělení: stav ze
+seznamu `ODPOVEDEL` se hlásí jako „ODPOVĚDĚL, ale není v pořádku",
+`prazdno` jako „NEVRÁTIL NIC", `neuplne` jako „sken nebyl úplný"
+a `SELHAL` zůstalo tomu, co opravdu spadlo. Hlídač navíc měří, že
+v žádné hlášce nestojí `null` ani `undefined` — a hned to našlo druhý
+výskyt téže vady: vypnutý zdroj bez uvedené příčiny vypisoval
+„vypnutý (undefined)".
+
+**A pak ta otázka, na kterou se nedalo odpovědět.** Hláška POZOR radí
+„podívejte se, jestli parser nepřestal část stránky čist". Podívat se
+ale nebylo kam: u zdroje stálo `preskoceno: 0`, a to vypadá jako „nic
+jsme nezahodili". Neznamená to. `preskoceno` počítá **nabídky, na
+kterých čtení SPADLO** — kdežto položky, které čtečka zahodí schválně
+(nezveřejněná dražba, bez obce, bez ceny, dobrovolná bez výměry), se
+nepočítaly nikde. Na jedinou otázku, která v tom úbytku je — **je to
+v datech, nebo v nás?** — tedy nešlo odpovědět vůbec.
+
+Čtečka dražeb proto dostala počítadlo zahozených po jménech, stejné,
+jaké má čtečka otevřených dat státu. Tam přesně tohle číslo dnes
+rozhodlo: `bezVymery 61` ukázalo, že chyba je u nás, oprava čtení
+výměry zvedla zdroj z 27 na **33 pozemků** a zbylých 55 položek
+výměru v popisu opravdu nemá (`bezVymeryAleMetryTam 0`). Totéž teď
+příští běh řekne o dražbách.
+
+Mlčely přitom i dvě větve ve stahování: `if (!r.ok) continue` a
+`catch { continue }`. Když by oba roky selhaly, funkce vrátí prázdno,
+běh to označí za `prazdno` — a v logu ani slovo o tom, že se něco
+nepodařilo stáhnout. Teď se vypíše HTTP stav i text chyby.
+
+**Ještě jeden tichý rozpor, který při tom vypadl.** Zdroj „Nabídky
+státu" se včera zapojil do `SOURCES`, ale v registru zdrojů zůstal
+mezi KANDIDÁTY. Nic nespadlo — jen diagnostika a sonda o živém zdroji
+dál tvrdily „kandidát", tedy „tohle se ještě nečte". Shoda se měřila
+jen jedním směrem (každý zapojený v registru musí být v `ZDROJ_JMENA`);
+chyběl ten druhý, a ten tu vadu chytá.
+
+**Čím je to podložené.** `test-vypadek-zdroje.mjs` 54 kontrol (bylo
+43), `test-drazby-cevd.mjs` 30 (bylo 19), `test-sonda-zdroju.mjs` 98
+(bylo 97). Pět sabotáží: nezapočítat nezveřejněné položky (1 pád),
+hlásit `pokles` zase jako SELHAL (6), obejít hlášku v `main()` (1),
+zapojený zdroj nechat v registru jako kandidáta (1), chybnou odpověď
+serveru přejít mlčením (1).
