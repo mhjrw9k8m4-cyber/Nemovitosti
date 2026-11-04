@@ -26,6 +26,12 @@ const STROP_ZNAKU = 4000;     // kolik textu vypsat, ať log nenabobtná
 const STROP_RADKU = 25;       // kolik řádků u řádkových formátů
 const PROHLIZECEM = process.argv.includes('--prohlizecem')
   || /^(1|ano|true)$/i.test(process.env.PROHLIZECEM || '');
+/* TĚLO DOTAZU. Nalezeno měřením 4. 11. u ÚZSVM: adresa, ze které si
+   aplikace bere nabídky, odpoví na GET rovnou HTTP 405 — je to POST
+   s filtrem v těle. Bez možnosti to tělo poslat je nalezená adresa
+   k ničemu, protože tvar odpovědi se nedá vidět. */
+const TELO = (process.argv.find((a) => a.startsWith('--telo=')) || '').slice(7)
+  || process.env.TELO || '';
 
 export function tvarCsv(text, stropRadku = STROP_RADKU) {
   const radky = String(text || '').split(/\r?\n/).filter((r) => r.trim());
@@ -43,6 +49,41 @@ export function tvarCsv(text, stropRadku = STROP_RADKU) {
     radku: radky.length - 1, sloupcu: hlavicka.length, oddelovac: odd === '\t' ? 'tabulátor' : odd,
     hlavicka, ukazka: radky.slice(1, 1 + stropRadku),
   };
+}
+
+/* TVAR JSONU: co autor čtečky potřebuje vidět. Vypsat 4 000 znaků
+   odpovědi nestačí — u seznamu s pětadvaceti záznamy se do nich vejde
+   první a půl. Podstatné je, KDE je ten seznam, kolik je v něm prvků,
+   kolik jich je celkem a jaká pole má jeden záznam. */
+export function tvarJson(data, strop = 40) {
+  const radky = [];
+  const popis = (v) => Array.isArray(v) ? `pole(${v.length})`
+    : (v === null ? 'null' : typeof v === 'object' ? `objekt(${Object.keys(v).length})` : typeof v);
+  if (Array.isArray(data)) {
+    radky.push(`na nejvyšší úrovni POLE o ${data.length} prvcích`);
+    if (data.length) {
+      radky.push('POLE PRVNÍHO PRVKU:');
+      for (const k of Object.keys(data[0]).slice(0, strop)) radky.push(`  ${k}: ${popis(data[0][k])}`);
+    }
+    return radky;
+  }
+  if (!data || typeof data !== 'object') return [`na nejvyšší úrovni ${popis(data)}`];
+  radky.push('POLE NA NEJVYŠŠÍ ÚROVNI:');
+  for (const k of Object.keys(data).slice(0, strop)) radky.push(`  ${k}: ${popis(data[k])}`);
+  /* Seznam záznamů bývá nejdelší pole v odpovědi. */
+  let nej = null;
+  for (const k of Object.keys(data)) {
+    const v = data[k];
+    if (Array.isArray(v) && (!nej || v.length > data[nej].length)) nej = k;
+  }
+  if (nej && data[nej].length) {
+    radky.push(`NEJDELŠÍ SEZNAM je „${nej}" (${data[nej].length} prvků), jeden záznam má:`);
+    const prvni = data[nej][0];
+    if (prvni && typeof prvni === 'object') {
+      for (const k of Object.keys(prvni).slice(0, strop)) radky.push(`  ${k}: ${popis(prvni[k])} = ${JSON.stringify(prvni[k]).slice(0, 120)}`);
+    } else radky.push(`  ${JSON.stringify(prvni).slice(0, 200)}`);
+  }
+  return radky;
 }
 
 export function cojeto(text, typ) {
@@ -93,7 +134,11 @@ async function main() {
     console.log('Nestahuje se nic. Tohle rozhodnutí patří tomu webu, ne nám.');
     return;
   }
-  const odp = await stahni(url, { pokusy: 1 });
+  const odp = TELO
+    ? await stahni(url, { pokusy: 1, method: 'POST', body: TELO,
+      headers: { 'content-type': 'application/json', accept: 'application/json' } })
+    : await stahni(url, { pokusy: 1 });
+  if (TELO) console.log('posláno POST, tělo: ' + TELO.slice(0, 400));
   const typ = (odp.headers && odp.headers.get && odp.headers.get('content-type')) || '';
   const text = await odp.text();
   const co = cojeto(text, typ);
@@ -106,6 +151,12 @@ async function main() {
     t.hlavicka.forEach((s, i) => console.log('  [' + i + '] ' + s));
     console.log('\nPRVNÍCH ' + t.ukazka.length + ' ŘÁDKŮ:');
     t.ukazka.forEach((r) => console.log('  ' + r.slice(0, 400)));
+  } else if (co === 'JSON') {
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) { console.log('JSON se nepodařilo přečíst: ' + e.message); }
+    if (data !== null) for (const r of tvarJson(data)) console.log(r);
+    console.log('\nZAČÁTEK OBSAHU:');
+    console.log(text.slice(0, STROP_ZNAKU));
   } else {
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));

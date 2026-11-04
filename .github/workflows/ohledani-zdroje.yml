@@ -26,6 +26,11 @@ on:
         required: false
         default: false
         type: boolean
+      telo:
+        description: 'Tělo dotazu (JSON) — pošle se jako POST. Prázdné = obyčejné GET.'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
@@ -61,4 +66,5 @@ jobs:
         env:
           ADRESA: ${{ inputs.adresa }}
           PROHLIZECEM: ${{ inputs.prohlizecem }}
+          TELO: ${{ inputs.telo }}
         run: node scripts/ohledej.mjs "$ADRESA"
