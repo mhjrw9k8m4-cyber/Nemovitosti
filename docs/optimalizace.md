@@ -24778,8 +24778,8 @@ continue` se čte kterýkoli soubor ve složce (README, záloha, skript
 akce), a jak v něm padne `schedule:` s nějakým `cron:`, **vznikne
 úloha, která neexistuje** — a hlídka pak čeká na běhy, které nikdo
 nikdy nespustí. Měří se na podstrčené složce se třemi soubory
-(`prava.yml`, `README.md`, `zaloha.yml.bak`); vzít se smí jen ten
-`.yml`. 17 → **19 kontrol**.
+(jeden s příponou `.yml`, jeden `README` a jedna záloha s příponou
+`.bak`); vzít se smí jen ten s příponou `.yml`. 17 → **19 kontrol**.
 
 **Prokázáno sabotáží po opravě:** `test-kontrola-databaze` 5 z 5
 chycených, `test-kontrola-uloh` 4 ze 4 (a soubor se po každé sabotáži
