@@ -2041,15 +2041,19 @@ async function fetchUzsvm() {
         zdroj: 'ÚZSVM',
       });
     }
-    if (celkem === null) celkem = Number(data.PropertyTotalCount) || null;
+    if (celkem === null) celkem = UZ.pocetVKategorii(data);
     const stran = Number(data.PageCount) || 1;
     if (strana >= stran || !(Array.isArray(data.Properties) && data.Properties.length)) break;
   }
-  const z = Object.entries(zahozeno).filter(([k, n]) => n > 0 && k !== 'zaznamu')
+  const z = Object.entries(zahozeno)
+    .filter(([k, n]) => k !== 'zaznamu' && k !== 'ukazky' && typeof n === 'number' && n > 0)
     .map(([k, n]) => k + ' ' + n);
   console.error(`Zdroj ÚZSVM: ${out.length} pozemků z ${zahozeno.zaznamu || 0} záznamů`
-    + (celkem ? ` (evidence hlásí ${celkem} v kategorii Pozemky)` : '')
+    + (celkem ? ` (číselník hlásí ${celkem} v kategorii Pozemky)` : '')
     + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
+  /* A ukázka ke každému důvodu: bez ní se nedá rozhodnout, jestli je
+     vada v datech, nebo v našem čtení (§366). */
+  for (const [k, u] of Object.entries((zahozeno.ukazky || {}))) console.error(`  · ${k}: ${u}`);
   return out;
 }
 

@@ -109,6 +109,26 @@ export function mistoZNazvu(s) {
 /* Termín aukce a stav do popisku u ceny. „Aukce vyhlášena (05.01.2027
    11:00 - 06.01.2027 11:00)" je informace, kterou kupující potřebuje:
    tohle se neprodává podpisem, ale v aukci. */
+/* KOLIK JICH EVIDENCE V TÉ KATEGORII HLÁSÍ. `PropertyTotalCount` je
+   počet VŠEHO (757 věcí všeho druhu), ne počet pozemků — kdo ho vypíše
+   jako „v kategorii Pozemky", lže o řád. Číslo je v číselníku
+   `Categories` u položky s naším `p02Id`, i v podkategoriích. */
+export function pocetVKategorii(data, kategorie = KATEGORIE_POZEMKY) {
+  const hledej = (seznam) => {
+    for (const k of (Array.isArray(seznam) ? seznam : [])) {
+      if (!k || typeof k !== 'object') continue;
+      if (Number(k.p02Id) === Number(kategorie)) {
+        const n = Number(k.FilteredCount);
+        return Number.isFinite(n) ? n : null;
+      }
+      const hloub = hledej(k.Subcategories);
+      if (hloub !== null) return hloub;
+    }
+    return null;
+  };
+  return hledej(data && data.Categories);
+}
+
 export function popisek(z) {
   const kousky = [];
   const stav = String((z && z.StatusName) || '').trim();
@@ -129,7 +149,16 @@ export function popisek(z) {
    pravidla by se rozešly při první opravě.
    ------------------------------------------------------------------ */
 export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno) {
-  const pocti = (k) => { if (zahozeno) zahozeno[k] = (zahozeno[k] || 0) + 1; };
+  /* UKÁZKA KE KAŽDÉMU DŮVODU. Číslo samo nerozhodne: „bezVymery 119"
+     může znamenat, že výměra v popisu opravdu není, i že ji čteme
+     špatně — a to je rozdíl mezi „data za to nemůžou" a „můžeme my"
+     (§366). Ukládá se první, na které se to stalo. */
+  const pocti = (k, ukazka) => {
+    if (!zahozeno) return;
+    zahozeno[k] = (zahozeno[k] || 0) + 1;
+    if (!zahozeno.ukazky) zahozeno.ukazky = {};
+    if (!zahozeno.ukazky[k] && ukazka) zahozeno.ukazky[k] = String(ukazka).replace(/\s+/g, ' ').slice(0, 200);
+  };
   const nabidky = [];
   const polozky = (data && Array.isArray(data.Properties)) ? data.Properties : [];
   for (const z of polozky) {
@@ -138,17 +167,17 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno) {
     /* Kategorie se filtruje dotazem, ale ověřit se to má: kdyby úřad
        čísla kategorií přečísloval, tahle kontrola to řekne hned,
        kdežto bez ní by se na web nasypaly stavby jako pozemky. */
-    if (!/pozemk/i.test(String(z.CategoryName || ''))) { pocti('neniPozemek'); continue; }
+    if (!/pozemk/i.test(String(z.CategoryName || ''))) { pocti('neniPozemek', z.CategoryName + ' — ' + z.Name); continue; }
     const text = String(z.Name || '') + ' ' + String(z.Description || '');
-    if (NENI_PRODEJ.test(text)) { pocti('pacht'); continue; }
+    if (NENI_PRODEJ.test(text)) { pocti('pacht', z.Name); continue; }
     const c = cena(z.Price);
-    if (!c || z.NoPrice === true) { pocti('bezCeny'); continue; }
+    if (!c || z.NoPrice === true) { pocti('bezCeny', z.Name + ' — cena ' + JSON.stringify(z.Price)); continue; }
     const v = vymeraZPopisu(z.Description) || vymeraZPopisu(z.Name);
-    if (!v) { pocti('bezVymery'); continue; }
+    if (!v) { pocti('bezVymery', z.Name + ' — ' + z.Description); continue; }
     const okres = String(z.DistrictName || '').trim();
-    if (!okres) { pocti('bezOkresu'); continue; }
+    if (!okres) { pocti('bezOkresu', z.Name); continue; }
     const place = mistoZNazvu(z.Name);
-    if (!place) { pocti('bezMista'); continue; }
+    if (!place) { pocti('bezMista', z.Name); continue; }
     nabidky.push({
       type: 'sale',
       place,

@@ -14,6 +14,7 @@
    (500 Kč, 1 207 Kč, 2 824 Kč). Kdyby se to čtlo jako prodej, na webu
    by stál „pozemek za 500 Kč" a pokazilo by to i statistiku Kč/m².
    ================================================================== */
+import { readFileSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import * as U from './cti-uzsvm.mjs';
 import { vymeraZPopisu, druhZPopisu } from './cti-nabidky-statu.mjs';
@@ -129,6 +130,38 @@ const PACHT2 = {
   je('a prázdný záznam nic neshodí', z.prazdnyZaznam, 1);
   je('prázdná odpověď nic nevrátí', U.nabidkyZOdpovedi({}, vymeraZPopisu, druhZPopisu, {}).nabidky.length, 0);
   je('a nic taky ne', U.nabidkyZOdpovedi(null, vymeraZPopisu, druhZPopisu, {}).nabidky.length, 0);
+}
+
+/* ---- 4b) KE KAŽDÉMU ZAHOZENÍ UKÁZKA, A POČET Z ČÍSELNÍKU -------
+   „bezVymery 119" může znamenat, že výměra v popisu opravdu není, i že
+   ji čteme špatně — a to je rozdíl mezi „data za to nemůžou" a „můžeme
+   my" (§366). A `PropertyTotalCount` je počet VŠEHO (757 věcí všeho
+   druhu), ne počet pozemků: kdo ho vypíše jako „v kategorii Pozemky",
+   lže o řád. První běh naostro to udělal, tohle to hlídá. */
+{
+  const z = {};
+  U.nabidkyZOdpovedi({ Properties: [PACHT] }, vymeraZPopisu, druhZPopisu, z);
+  pravda('u pachtu je vidět, co to bylo za nabídku',
+    /Pacht pozemku/.test((z.ukazky || {}).pacht || ''), JSON.stringify(z.ukazky));
+  const z2 = {};
+  U.nabidkyZOdpovedi({ Properties: [{ ...PRODEJ, Description: 'Pozemek bez udané výměry.' ,
+    Name: 'pozemek p. č. 9 v k. ú. Nic' }] }, vymeraZPopisu, druhZPopisu, z2);
+  pravda('a u chybějící výměry je vidět popis, ze kterého se čte',
+    /bez udané výměry/.test((z2.ukazky || {}).bezVymery || ''), JSON.stringify(z2.ukazky));
+
+  je('počet v kategorii se bere z číselníku',
+    U.pocetVKategorii({ Categories: [{ p02Id: 10, FilteredCount: 399,
+      Subcategories: [{ p02Id: 13, FilteredCount: 286 }] }] }), 286);
+  je('a bez číselníku se nic netvrdí', U.pocetVKategorii({}), null);
+  /* A robot ten počet opravdu bere odtud, ne z PropertyTotalCount. */
+  const kod = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  const telo = (kod.match(/async function fetchUzsvm\(\)[\s\S]*?\n}/) || [''])[0];
+  pravda('robot hlásí počet z číselníku, ne počet všeho',
+    /UZ\.pocetVKategorii\(data\)/.test(telo) && !/PropertyTotalCount/.test(telo),
+    telo.slice(0, 200));
+  pravda('a ukázky vypisuje',
+    /zahozeno\.ukazky/.test(telo), 'v logu by nebylo vidět, co se zahodilo');
 }
 
 /* ---- 5) DOTAZ MÁ TVAR, KTERÝ API ČEKÁ -------------------------- */
