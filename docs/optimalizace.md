@@ -24067,3 +24067,53 @@ chtít nesmím. Robot tu končí a to je správně — proto je ten verdikt
 pojmenovaný tím, co má udělat ČLOVĚK, ne tím, co se nepovedlo stroji.
 
 `test-zkus-portal`: 66 → **77 kontrol**, 0 chyb.
+
+## §387 — devět sabotáží bota: pět slepých míst a jedna vada, kterou jsem vyrobil dnes *4. 11.*
+
+Nová práce na botovi (§386) se prokázala sabotáží — a stroj při tom
+našel v `test-zkus-portal` **pět slepých míst**. Všechna věcná:
+
+1. **`zkusCestu` nikdo nezkoušel**, protože nebyla ani vyvezená. Prošla
+   v ní obrácená rovnost u tvaru odpovědi i `&&` zaměněné za `||`
+   v podmínce čtení — a přitom je to místo, kde se rozhoduje, jestli
+   cesta dostane verdikt „nabídky", tedy jestli ji bot nabídne
+   k zapojení. Jde to změřit bez sítě: stačí podstrčit `stahni` a `cti`.
+   Pět nových kontrol: HTML s nabídkami se přečte, JSON taky, **PDF se
+   nečte, ani když je čtečka po ruce**, bez čtečky zůstane nula a
+   nespadne to, a **zakázaný robots se vůbec nestahuje** (změřeno
+   počítadlem stahování).
+
+2. **Pauza mezi dotazy** (`PAUZA_MS = 400`) se dala posunout bez
+   povšimnutí. Kdyby tiše vypadla, bot by cizí web tloukl tak rychle,
+   jak stačí síť. Je to **zdvořilost, ne výkon** — měří se hodnota i to,
+   že se čeká mezi cestami, ne jednou na začátku.
+
+3. **„Změřeno" je známka poctivosti.** Tvary adres, které jsme opravdu
+   viděli fungovat, se v hlášení odlišují od tvarů z normy. Obrácená
+   rovnost tu značku překlopí všem naráz — a hlášení by tvrdilo
+   „změřeno" o něčem, co nikdo neviděl.
+
+4. **Obyčejný text není CSV.** Podmínka „první řádek má aspoň tři
+   sloupce **a** všechny řádky stejně" se po záměně `&&` za `||` splní
+   i pro tři řádky prózy (každý „jeden sloupec", všechny stejně) — a bot
+   by na ni pustil čtečku tabulek.
+
+5. **Cizí katalog bývá rozbitý.** V poli `distribuce` se našla prázdná
+   položka; bez pojistky `if (!d) continue` na ní bot spadne na „null
+   nemá soubor_ke_stažení" — a s ním celý běh.
+
+A šestý nález je **vada, kterou jsem vyrobil dnes sám**: souhrnný řádek
+hlášení počítal verdikty z **ručně napsaného seznamu**, takže po
+přidání „chce klíč" by hlásil „zkoušeno 40 cest" a rozpad by jich
+jmenoval 39. Rozpad se teď skládá z `PORADI_VERDIKTU` — **přidat
+verdikt a zapomenout na hlášení už nejde.**
+
+Výsledek: **9 z 9 sabotáží chyceno**, `test-zkus-portal` 66 → **107
+kontrol**.
+
+**A ještě jedna věc ze §384:** hlídač, ke kterému se mechanická sabotáž
+nikdy nedostane (prohlížeč + minifikovaná kopie), se v nálezech jmenuje
+**zvlášť**. Jinak by ho smyčka brala dokola jako „ještě nic
+neprokázal" a nikdy by neuspěla. Jejich důkaz zůstává na člověku — a dá
+se udělat: opravit, změřit, že hlídač na starém kódu padal, a pak že na
+opraveném prochází. Tak vznikl §382.

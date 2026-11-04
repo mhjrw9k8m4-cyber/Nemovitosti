@@ -183,13 +183,32 @@ export function hlidaciBezDukazu(soupis, vsechnyZkousky) {
     } catch { return []; }
   })();
   const bez = vse.filter((f) => !prokazane.has(f));
-  if (!bez.length) return [];
-  /* Tíha je 1: není to vada, je to nedokončený důkaz. Smyčka podle
-     toho vybírá, co prokázat příště — tím se sama rozvíjí. */
-  return [nalez('hlídač, který ještě nic neprokázal', 'hlídač', 1,
-    `${bez.length} z ${vse.length} zkoušek nemá ani jednu chycenou sabotáž;`
-    + ` na řadě: ${bez.slice(0, 5).join(', ')}`,
-    'Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369).')];
+  /* A ZVLÁŠŤ TY, KE KTERÝM STROJ NEDOSÁHNE. Zkouška v prohlížeči hlídá
+     `js/…`, ale stránky servírují `js/min/…`, které se po sabotáži
+     nepřestaví — mechanická sabotáž se k produktu nedostane (viz
+     scripts/sabotuj.mjs, verdikt „nedoručená"). Kdyby se tyhle
+     hlídače jmenovaly jen „ještě nic neprokázal", smyčka by je brala
+     dokola a nikdy by neuspěla. Jejich důkaz zůstává na člověku —
+     a dá se udělat: opravit, změřit, že hlídač na starém kódu padal,
+     a pak že na opraveném prochází (tak vznikl §382). */
+  const z = (soupis && soupis.zkousky) || {};
+  const nedosazitelne = bez.filter((f) => (((z[f] || {}).nedorucene) || []).length > 0);
+  const ven = [];
+  if (bez.length) {
+    /* Tíha je 1: není to vada, je to nedokončený důkaz. Smyčka podle
+       toho vybírá, co prokázat příště — tím se sama rozvíjí. */
+    ven.push(nalez('hlídač, který ještě nic neprokázal', 'hlídač', 1,
+      `${bez.length} z ${vse.length} zkoušek nemá ani jednu chycenou sabotáž;`
+      + ` na řadě: ${bez.slice(0, 5).join(', ')}`,
+      'Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369).'));
+  }
+  if (nedosazitelne.length) {
+    ven.push(nalez('hlídač, ke kterému stroj nedosáhne', 'hlídač', 1,
+      `${nedosazitelne.length} z nich sabotáž vůbec neuvidí — stránky servírují`
+      + ` minifikovanou kopii, která se nepřestavuje: ${nedosazitelne.slice(0, 5).join(', ')}`,
+      'Mechanická sabotáž tu nemá jak dojít k produktu; důkaz zůstává na člověku.'));
+  }
+  return ven;
 }
 
 /* ------------------------------------------------------------------

@@ -286,6 +286,33 @@ function je(popis, vyslo, cekano) {
     /rovnocenne: \(v\.sabotaze \|\| \[\]\)/.test(smy2));
 }
 
+/* ---- 6c) HLÍDAČ, KE KTERÉMU STROJ NEDOSÁHNE ----
+ *
+ * Když zkouška v prohlížeči hlídá jen `js/…`, mechanická sabotáž se
+ * k ní nikdy nedostane (servíruje se `js/min/…`). Nálezce ji proto
+ * jmenuje ZVLÁŠŤ — jinak by ji smyčka brala dokola jako „ještě nic
+ * neprokázal" a nikdy by neuspěla. Jejich důkaz patří člověku.
+ */
+{
+  const soupis = { zkousky: {
+    'test-a.mjs': { kdy: '2026-11-04', chytila: 0, nechytila: 0, nedorucene: ['obrácené porovnání (>= na >)'] },
+    'test-b.mjs': { kdy: '2026-11-04', chytila: 3, nechytila: 0, nedorucene: [] },
+    'test-c.mjs': { kdy: '2026-11-04', chytila: 0, nechytila: 0, nedorucene: [] },
+  } };
+  const n = N.hlidaciBezDukazu(soupis, ['test-a.mjs', 'test-b.mjs', 'test-c.mjs']);
+  const vse = n.map((x) => x.jmeno).join(' | ');
+  pravda('nálezce pořád hlásí, co ještě nic neprokázalo',
+    n.some((x) => /ještě nic neprokázal/.test(x.jmeno)), vse);
+  const nedo = n.find((x) => /nedosáhne/.test(x.jmeno));
+  pravda('a zvlášť ty, ke kterým stroj nedosáhne', !!nedo, vse);
+  pravda('a jmenuje je', !!nedo && /test-a\.mjs/.test(nedo.dukaz || ''), nedo && nedo.dukaz);
+  pravda('prokázaný hlídač se do ani jednoho seznamu nedostane',
+    !n.some((x) => /test-b\.mjs/.test(x.dukaz || '')), JSON.stringify(n.map((x) => x.dukaz)));
+  pravda('a kde není co hlásit, nálezce mlčí',
+    N.hlidaciBezDukazu({ zkousky: { 'test-b.mjs': { kdy: 'x', chytila: 1 } } }, ['test-b.mjs']).length === 0,
+    'hlásí i tam, kde je všechno prokázané');
+}
+
 /* ---- 6b) SABOTÁŽ, KTERÁ SE K PRODUKTU VŮBEC NEDOSTALA ----
  *
  * Nález ze 4. 11.: stroj zapíše mutaci do `js/pozemek.js`, ale stránky
