@@ -23703,3 +23703,56 @@ v titulku, v adrese stránky i v sitemapě. Řeže se to teď **před**
 nevinná slova) a když popis začíná hned na začátku, obec není žádná.
 Hlídá se to v obou směrech — jmenovitě na Podolí a Vysoké, které
 začínají podobně jako „podíl" a „v k. ú.".
+
+## §379 — osm sabotáží, osm chycených, a tři druhy falešného soudu *4. 11.*
+
+Nález smyčky „test-uzsvm chytá 2 z 8" jsem dotáhl do konce. Výsledek:
+**7 ze 7 u `cti-uzsvm.mjs`** a **7 ze 7 u `cti-nabidky-statu.mjs`**
+(bylo 2 z 8, resp. 4 ze 7). Cestou se ale ukázaly tři různé způsoby,
+jak může soud nad hlídačem lhát — a to je na téhle práci to cennější
+než ta čísla.
+
+**1. ZAMASKOVANÁ SABOTÁŽ: kontrola měřila jinou cestu, než o které
+mluvila.** Hranu „dvouznakové jméno obce je jméno" (Aš je skutečné
+město se dvěma písmeny) jsem napsal s názvem *„Aš - pozemek parc. č.
+5"*. Ta kontrola prochází i s rozbitou mezí — místo totiž zachrání
+poslední záchranná větev, protože v názvu je označení parcely, které
+jde odříznout. Zelená kontrola, nulová hodnota.
+
+> Hranu se musí měřit vstupem, u kterého **neexistuje druhá cesta
+> k témuž výsledku**. Jinak kontrola potvrzuje něco jiného, než co má
+> ve jméně.
+
+Po opravě („Aš - trvalý travní porost") obě hrany — dva znaky i strop
+šedesáti — padnou přesně tam, kde rozhodují.
+
+**2. CIZÍ MODUL SE PŘIPISOVAL ZKOUŠCE, KTERÁ SI Z NĚJ JEN PŮJČUJE.**
+`coHlidá` vrací všechny importy zkoušky — pro hledání správně, pro
+**soud** ne: `test-uzsvm` si z `cti-nabidky-statu.mjs` půjčuje dvě
+funkce (čtení výměry a druhu) a slepé místo v tom cizím modulu se
+připisovalo jí, přestože ho hlídá `test-nabidky-statu`. Je to falešný
+nález z třetí strany: neříká nepravdu o kódu, ale o tom, **kdo má co
+opravit** — a to člověka odvede od opravy stejně účinně jako lež
+o kódu. `poradiCilu` proto dává dopředu modul, podle kterého je
+zkouška pojmenovaná; půjčené zůstávají v seznamu za ním, aby se
+nepřestalo hlídat nic.
+
+**3. ROVNOCENNÁ MUTACE** (ta ze §376) je třetí případ: sabotáž, která
+nemůže nic změnit. Dohromady tedy platí, že „NECHYTILA" může znamenat
+čtyři různé věci, a jen jedna z nich je slepé místo:
+
+| hlášení | co to opravdu je | co s tím |
+|---|---|---|
+| NECHYTILA | hlídač tu vadu neumí najít | doplnit kontrolu |
+| NECHYTILA | kontrola měří jinou cestu (zamaskováno) | změnit VSTUP kontroly |
+| NECHYTILA | modul má vlastní zkoušku, tahle si půjčuje | soudit tu vlastní |
+| rovnocenná | mutace bez následku | prohlásit u kódu, s důvodem |
+
+Co se tím konkrétně zavřelo: prázdná část mezi čárkami („Bochov, ,
+okres…", bez které by se prázdno stalo obcí), obě hrany stropu pěti
+položek jednoho záznamu CSV, okres poznaný **slovem a ne pořadím**
+i když stojí první, pacht napsaný v NÁZVU a ne v popisu (u pachtu je
+cena roční nájem, takže pustit ho na web jako prodej pokazí i cenovou
+referenci), čárka na konci názvu a prázdná položka v číselníku
+kategorií. Řez popisu se navíc rozšířil tak, aby ve jméně obce nikdy
+nezůstalo slovo „pozemek".
