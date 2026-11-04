@@ -114,6 +114,44 @@ const beh = (h, zdroje, den) => ({ mimoProvoz: F.zapisMimoProvoz(h, zdroje, den)
     /process\.exitCode = 1/.test(bez) && /::error::/.test(bez));
 }
 
+/* ---- OZVAT SE, ALE NE KAŽDÝCH ŠEST HODIN TOTÉŽ -----------------
+   NALEZENO NAOSTRO 4. 11.: hlídka se u Dražeb ozvala při třetím běhu
+   v řadě — správně — a pak při čtvrtém, pátém a šestém znovu. Úkol se
+   přitom zakládá jeden, takže šestý červený běh už nikomu nic neřekl.
+   Červená, která svítí každý den ze stejného důvodu, se přestane čist
+   a zapadne v ní i poplach, který je nový. */
+{
+  const m = (n) => F.jeMeznik(n);
+  pravda('ozve se při 3. běhu v řadě', m(3) === true);
+  pravda('při 4. a 5. už ne', m(4) === false && m(5) === false);
+  pravda('ale při 6., 12., 24. znovu (dvakrát tak dlouhý úbytek)',
+    m(6) === true && m(12) === true && m(24) === true,
+    JSON.stringify([m(6), m(12), m(24)]));
+  pravda('mezi mezníky ticho', [7, 8, 9, 10, 11, 13, 23].every((n) => m(n) === false));
+  pravda('pod mezí se neozve vůbec', m(1) === false && m(2) === false);
+  je('a řekne se, kdy se to připomene', F.dalsiMeznik(7), 12);
+
+  const mimo = {
+    Nove: { behu: 3, od: '2026-11-04', stav: 'chyba', duvod: 'HTTP 500' },
+    Stare: { behu: 7, od: '2026-10-30', stav: 'prazdno', duvod: 'nic' },
+    Kratke: { behu: 2, od: '2026-11-04', stav: 'chyba', duvod: 'x' },
+  };
+  je('k ohlášení jde jen ten na mezníku', F.kOhlaseni(mimo).map((z) => z.nazev), ['Nove']);
+  /* Ale „není na mezníku" neznamená „není mimo pořádek": přehled musí
+     dál vidět oba. Jinak by se tichý zdroj ztratil úplně. */
+  je('přehled přesto zná oba, co mez překročily',
+    F.dlouhoMimo(mimo).map((z) => z.nazev).sort(), ['Nove', 'Stare']);
+  /* A hlídka to opravdu takhle používá — jinak by to byla funkce,
+     kterou nikdo nevolá. */
+  const telo = readFileSync(new URL('./hlidka-zdroju.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  pravda('hlídka se řídí mezníky a mezi nimi jen vypisuje',
+    /const nalez = kOhlaseni\(mimo\)/.test(telo)
+    && /const prekrocili = dlouhoMimo\(mimo\)/.test(telo)
+    && /dalsiMeznik\(p\.behu\)/.test(telo),
+    'hlídka mezníky nepoužívá');
+}
+
 console.log('Hlídka zdrojů:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

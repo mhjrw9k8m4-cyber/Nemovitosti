@@ -24,7 +24,7 @@
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { BEHU_NEZ_SE_OZVEME, dlouhoMimo } from './fetch-opportunities.mjs';
+import { BEHU_NEZ_SE_OZVEME, dlouhoMimo, kOhlaseni, dalsiMeznik } from './fetch-opportunities.mjs';
 
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HIST = join(KOREN, 'data', 'zdroje-historie.json');
@@ -32,7 +32,7 @@ const HIST = join(KOREN, 'data', 'zdroje-historie.json');
 export function hlaseni(nalez, mez = BEHU_NEZ_SE_OZVEME) {
   const radky = nalez.map((z) => `  • ${z.nazev}: ${z.behu}. běh v řadě mimo pořádek`
     + ` (stav „${z.stav}", od ${z.od})${z.duvod ? ' — ' + z.duvod : ''}`);
-  return `Zdroj mimo pořádek už ${mez}× v řadě:\n${radky.join('\n')}`;
+  return `Zdroj mimo pořádek nejméně ${mez}× v řadě:\n${radky.join('\n')}`;
 }
 
 function main() {
@@ -55,7 +55,19 @@ function main() {
   }
   const mimo = historie.mimoProvoz;
   const vsichni = Object.entries(mimo);
-  const nalez = dlouhoMimo(mimo);
+  /* Ozve se jen na mezníku (3., 6., 12., 24. běh v řadě). Mezi nimi se
+     stav VYPÍŠE, ale běh nekončí červeně — viz jeMeznik(). */
+  const prekrocili = dlouhoMimo(mimo);
+  const nalez = kOhlaseni(mimo);
+  if (!nalez.length && prekrocili.length) {
+    for (const p of prekrocili) {
+      console.log(`Hlídka zdrojů: ${p.nazev} je mimo pořádek ${p.behu}. běh v řadě`
+        + ` (stav „${p.stav}", od ${p.od}). Ohlášeno to bylo při ${BEHU_NEZ_SE_OZVEME}. běhu;`
+        + ` znovu se to připomene při ${dalsiMeznik(p.behu)}. — denně červeně ze stejného`
+        + ' důvodu by se hlídka přestala čist.');
+    }
+    return;
+  }
   if (!nalez.length) {
     console.log(vsichni.length
       ? `Hlídka zdrojů: nikdo není mimo pořádek ${BEHU_NEZ_SE_OZVEME}× v řadě.`

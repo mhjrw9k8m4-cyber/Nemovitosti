@@ -1715,6 +1715,39 @@ export function dlouhoMimo(mimoProvoz, mez = BEHU_NEZ_SE_OZVEME) {
     .sort((a, b) => b.behu - a.behu);
 }
 
+/* OZVAT SE, ALE NE KAŽDÝCH ŠEST HODIN TOTÉŽ.
+ *
+ * NALEZENO NAOSTRO 4. 11.: hlídka se u Dražeb ozvala poprvé při třetím
+ * běhu v řadě — správně — a pak při čtvrtém, pátém a šestém znovu,
+ * protože počítadlo roste a mez je pořád překročená. Úkol v repozitáři
+ * se přitom zakládá jeden (ohlas-selhani umí doplňovat), takže ten
+ * šestý červený běh už nikomu nic neřekl. A červená, která svítí každý
+ * den ze stejného důvodu, je horší než žádná: PŘESTANE SE ČÍST, a pak
+ * v ní zapadne i poplach, který je nový.
+ *
+ * Hlásí se proto na MEZNÍCÍCH: při 3. běhu, pak 6., 12., 24. — tedy
+ * jednou, a potom se to připomene vždy, až když je ten úbytek dvakrát
+ * tak dlouhý. Mezi mezníky hlídka nemlčí, jen nekončí červeně: vypíše,
+ * kdo je mimo pořádek a odkdy. Tichý zdroj je pořád vidět. */
+export function jeMeznik(behu, mez = BEHU_NEZ_SE_OZVEME) {
+  const n = Number(behu) || 0;
+  if (!(n >= mez) || !(mez > 0)) return false;
+  let m = mez;
+  while (m < n) m *= 2;
+  return m === n;
+}
+
+export function kOhlaseni(mimoProvoz, mez = BEHU_NEZ_SE_OZVEME) {
+  return dlouhoMimo(mimoProvoz, mez).filter((z) => jeMeznik(z.behu, mez));
+}
+
+export function dalsiMeznik(behu, mez = BEHU_NEZ_SE_OZVEME) {
+  const n = Number(behu) || 0;
+  let m = Math.max(mez, 1);
+  while (m <= n) m *= 2;
+  return m;
+}
+
 export function zapisDoHistorie(historie, ted, dnes, mediany) {
   const dny = Object.assign({}, (historie && historie.dny) || {});
   const ceny = Object.assign({}, (historie && historie.ceny) || {});
