@@ -39,6 +39,28 @@ const PROHLIZECEM = process.argv.includes('--prohlizecem')
    k ničemu, protože tvar odpovědi se nedá vidět. */
 const TELO = (process.argv.find((a) => a.startsWith('--telo=')) || '').slice(7)
   || process.env.TELO || '';
+/* A JAKÝM ZPŮSOBEM SE TO TĚLO POŠLE. Naměřeno 4. 11. na Portálu
+   dražeb: výpis dražeb si stránka bere metodou **PUT** na
+   `/drazby/probihajici.json` (tělo `{"filter":{…,"limit":20}}`);
+   obyčejné GET na tutéž adresu odpoví 200, ale dvanácti znaky — tedy
+   prázdnem. Nástroj umel jen GET a POST, takže na nalezenou adresu
+   nedosáhl a cesta se tím jevila jako slepá, přestože slepá nebyla.
+   Zdroje se tím neměří podle toho, co umí nástroj, ale podle toho, co
+   umí ony. */
+const METODA = ((process.argv.find((a) => a.startsWith('--metoda=')) || '').slice(9)
+  || process.env.METODA || '').trim().toUpperCase();
+
+/* Který způsob se použije: co je řečeno, jinak POST s tělem a GET bez
+   něj. Čistá funkce, aby na tom mohl stát hlídač — a aby se „nic
+   neřečeno" nepletlo s „řečeno špatně": neznámý způsob se NEPOUŽIJE
+   a je to vidět. */
+export const ZPUSOBY = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+export function zpusobDotazu(metoda, telo) {
+  const m = String(metoda || '').trim().toUpperCase();
+  if (m && ZPUSOBY.includes(m)) return m;
+  return telo ? 'POST' : 'GET';
+}
 /* VZOR ADRES, KTERÉ ZAJÍMAJÍ. Naměřeno 4. 11. na katalogu otevřených
    dat: prvních devětadvacet odkazů na stránce výsledků je NABÍDKA
    WEBU (Portál o datech, Správa dat, Pro poskytovatele…) a datové
@@ -304,11 +326,18 @@ async function main() {
     console.log('Nestahuje se nic. Tohle rozhodnutí patří tomu webu, ne nám.');
     return;
   }
-  const odp = TELO
-    ? await stahni(url, { pokusy: 1, method: 'POST', body: TELO,
-      headers: { 'content-type': 'application/json', accept: 'application/json' } })
-    : await stahni(url, { pokusy: 1 });
-  if (TELO) console.log('posláno POST, tělo: ' + TELO.slice(0, 400));
+  const zpusob = zpusobDotazu(METODA, TELO);
+  if (METODA && zpusob !== METODA) {
+    console.log(`Způsob dotazu „${METODA}" neznám, posílám ${zpusob}`
+      + ` (umím: ${ZPUSOBY.join(', ')}).`);
+  }
+  const odp = zpusob === 'GET'
+    ? await stahni(url, { pokusy: 1 })
+    : await stahni(url, { pokusy: 1, method: zpusob, body: TELO || undefined,
+      headers: { 'content-type': 'application/json', accept: 'application/json' } });
+  if (zpusob !== 'GET') {
+    console.log(`posláno ${zpusob}` + (TELO ? ', tělo: ' + TELO.slice(0, 400) : ', bez těla'));
+  }
   const typ = (odp.headers && odp.headers.get && odp.headers.get('content-type')) || '';
   const text = await odp.text();
   const co = cojeto(text, typ);

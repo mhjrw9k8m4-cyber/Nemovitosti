@@ -140,6 +140,40 @@ function pravda(popis, vyslo, proc) {
     O.STROP_ZNAKU, 4000);
 }
 
+/* ---- 4c) ZPŮSOB DOTAZU: ZDROJ SE MĚŘÍ PODLE SEBE, NE PODLE NÁSTROJE ----
+ *
+ * Naměřeno 4. 11. na Portálu dražeb: výpis dražeb si stránka bere
+ * metodou PUT na `/drazby/probihajici.json` (tělo `{"filter":{…}}`).
+ * Obyčejné GET na tutéž adresu odpoví 200, ale dvanácti znaky — tedy
+ * prázdnem. Nástroj uměl jen GET a POST, takže na NALEZENOU adresu
+ * nedosáhl a cesta vypadala jako slepá, přestože slepá nebyla.
+ *
+ * To je nejhorší druh vady měřidla: neřekne „neumím", řekne „nic tam
+ * není". Proto se způsob dotazu dá říct — a proto se o neznámém
+ * způsobu mlčet nesmí.
+ */
+{
+  je('bez řečeného způsobu a bez těla je to GET', O.zpusobDotazu('', ''), 'GET');
+  je('bez řečeného způsobu, ale s tělem je to POST', O.zpusobDotazu('', '{"a":1}'), 'POST');
+  je('řečený způsob vyhraje nad tělem', O.zpusobDotazu('PUT', '{"a":1}'), 'PUT');
+  je('a malá písmena i mezery nevadí', O.zpusobDotazu('  put ', '{"a":1}'), 'PUT');
+  /* NEZNÁMÝ ZPŮSOB SE NEPOUŽIJE. Poslat na cizí web vymyšlené slovo
+     jako metodu je přesně to, co se tu nedělá — a kód to pak navíc
+     vypíše, aby se „neumím" nepletlo s „nic tam není". */
+  je('neznámý způsob se nepoužije', O.zpusobDotazu('SMAZ_VSECHNO', '{"a":1}'), 'POST');
+  je('a bez těla z něj vyjde GET', O.zpusobDotazu('ÚPLNĚ-JINÝ', ''), 'GET');
+  pravda('PUT je mezi způsoby, které nástroj umí', O.ZPUSOBY.includes('PUT'),
+    JSON.stringify(O.ZPUSOBY));
+  {
+    const kod = readFileSync(new URL('./ohledej.mjs', import.meta.url), 'utf8');
+    const bez = kod.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    pravda('a stroj se tím opravdu řídí (ne jen umí)',
+      /zpusobDotazu\(METODA, TELO\)/.test(bez), 'zpusobDotazu se při stahování nevolá');
+    pravda('nahrazený způsob se napíše nahlas',
+      /neznám, posílám/.test(kod), 'ticho by se dalo číst jako „tak jsem to poslal"');
+  }
+}
+
 /* ---- 5) ŠETRNOST, KTERÁ SE NESMÍ VYTRATIT ---- */
 {
   const kod = readFileSync(new URL('./ohledej.mjs', import.meta.url), 'utf8');

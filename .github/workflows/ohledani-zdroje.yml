@@ -26,8 +26,13 @@ on:
         required: false
         default: false
         type: boolean
+      metoda:
+        description: 'Způsob dotazu (GET, POST, PUT, PATCH, DELETE). Prázdné = POST s tělem, jinak GET.'
+        required: false
+        default: ''
+        type: string
       telo:
-        description: 'Tělo dotazu (JSON) — pošle se jako POST. Prázdné = obyčejné GET.'
+        description: 'Tělo dotazu (JSON). Prázdné = bez těla.'
         required: false
         default: ''
         type: string
@@ -76,6 +81,7 @@ jobs:
         env:
           ADRESA: ${{ inputs.adresa }}
           PROHLIZECEM: ${{ inputs.prohlizecem }}
+          METODA: ${{ inputs.metoda }}
           TELO: ${{ inputs.telo }}
           VZOR: ${{ inputs.vzor }}
           NAJDI: ${{ inputs.najdi }}
