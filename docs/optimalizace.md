@@ -23509,3 +23509,75 @@ vybraného kraje, 2 294 nabídek):
 
 Slučování tedy nic nestojí (mez je 150 ms) a na tisících nabídek se
 nezřetězí: jedno sloučení nejvýš. `test-mapa` má 66 kontrol, 0 chyb.
+
+## §376 — smyčka našla dvě slepá místa a jedno nechytitelné *4. 11.*
+
+Smyčka samorozvoje nahlásila, že `test-archiv` chytá 1 ze 6 sabotáží
+a `test-archiv-statistiky` taky 1 ze 6. Oba nálezy byly pravdivé a oba
+se zavřely. Výsledek: **7 ze 7** a **5 ze 6 plus jedna rovnocenná**.
+
+**Statistika: zkouška měla osm oddílů a nikdy neměřila hranu.** Osm
+oddílů, padesát kontrol — a všechny na VNITŘKU kohorty. Přitom chyba
+o jeden den je přesně to, co se ve statistice stane. Pět nových
+kontrol sedí na hraně:
+
+| sabotáž | co se tím rozbije | nová kontrola |
+|---|---|---|
+| `>=` → `>` | nabídka stará přesně 7 dní vypadne z kohorty | sedmidenní kohorta má 100 nabídek |
+| `<=` → `<` | zmizelá přesně 7. den není „pryč do 7 dní" | podíl je 100 %, ne 0 % |
+| `===` → `!==` v řazení | období se řadí podle `do` místo `od` | 100→200, pak 200→300 |
+| zahozené `if (r.proc !== 'cena')` | zmizení se počítá jako sleva | jedno zlevnění, ne dvě |
+| zrušený `filter(Boolean)` | prázdné `od` vyhraje řazení, okno je NaN | okno je 59 dní |
+
+Ta čtvrtá si zasloužila vlastní fixturu: nabídka umí **zmizet a za
+měsíc se vrátit**, klíč archivu je stabilní, takže v archivu po ní
+zůstanou oba řádky vedle sebe. Bez pojistky by z toho byla „sleva
+z 1 000 000 na 800 000", kterou nikdo nikdy nenabídl. Starý oddíl E)
+tohle měřil jen na nabídce, co výhradně zlevnila — a tam pojistka nic
+nedělá.
+
+**Archiv: nejdražší rozhodnutí leželo tam, kam zkouška nedosáhne.**
+„Tenhle uložený stav se smí použít" stálo uvnitř `nactiStav()`, která
+čte soubor a končí `process.exit(1)`. Ze zkoušky se nedala pustit
+vůbec, takže obrácená rovnost i záměna `&&` za `||` prošly zeleně.
+Přitom přijmout mlčky stav s cizí soustavou klíčů znamená, že všechno
+staré vypadá jako zmizelé a všechno nové jako právě přidané — archiv
+plný výmyslů, a pozná se to až za rok. Teď je to čistá funkce
+`verdiktStavu` o třech odpovědích, k ní šest kontrol včetně té, že
+**uložený stav v repozitáři je té verze, kterou kód umí přečíst** (to
+je jediná kontrola, která chytí posunuté `VERZE`: fixtury si verzi
+berou z modulu, takže se posunou s ním, kdežto soubor na disku ne).
+
+Totéž se stalo s **posledním otiskem dne**: kus s historií (kód kdysi
+bral PRVNÍ commit dne, takže nabídka, která se do večera vrátila,
+vypadala jako zmizelá) seděl uvnitř `zpetne()`, která si sama pouští
+`git log`. Teď je to `posledniZaDen(log)` a pět kontrol ji drží —
+i na prázdné historii, ze které bez `filter(Boolean)` vyjde jeden
+řádek bez hashe i data, se kterým se pak zachází jako s commitem.
+
+**A jedna sabotáž je NECHYTITELNÁ — nový pojem: rovnocenná mutace.**
+V `first_seen <= den ? first_seen : den` dají obě varianty pro
+first_seen rovné dnešku tentýž den. Žádná zkouška to nechytí, protože
+se nemá čeho chytit. Hlásit to navždy jako slepé místo je **falešný
+nález**, tedy to nejdražší, co hlášení umí: učí člověka hlášení nečíst
+(§375), a tím zabije i nálezy, které pravdivé jsou.
+
+Prohlášení o rovnocennosti proto má tři pojistky, aby se z něj nestal
+vypínač hlášení:
+
+1. stojí **u kódu**, ne ve stroji ani v seznamu vedle — prochází tedy
+   stejnou revizí jako ten řádek, kterého se týká;
+2. musí **jmenovat sabotáž** přesně tak, jak ji jmenuje stroj, takže
+   se nedá napsat „tenhle soubor nehlídáme";
+3. musí nést **důvod aspoň o 60 znacích**; bez něj položka zůstane
+   „NECHYTILA" a připíše se, že důvod chybí.
+
+Rozhoduje se z **původního, nesabotovaného těla** — ze sabotovaného
+by se značka dala vyrobit sabotáží. Rovnocenné mutace se v hlášení
+vypisují znakem `=`, nemizí, a účet si je vede jmenovitě a zvlášť:
+ani mezi chycené (zkouška se neozvala), ani mezi slepá místa (není co
+chytit). Kdyby splynuly s jedním nebo druhým, účet by lhal v obou
+směrech.
+
+Čtrnáct kontrol v `test-samorozvoj.mjs` drží právě tyhle tři pojistky
+— včetně té, že značka bez důvodu se **neuzná**.
