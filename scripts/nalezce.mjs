@@ -200,6 +200,7 @@ export function hlidaciBezDukazu(soupis, vsechnyZkousky) {
      a pak že na opraveném prochází (tak vznikl §382). */
   const z = (soupis && soupis.zkousky) || {};
   const nedosazitelne = bez.filter((f) => (((z[f] || {}).nedorucene) || []).length > 0);
+  const nespustitelne = bez.filter((f) => (z[f] || {}).nelzeTady);
   const ven = [];
   if (bez.length) {
     /* Tíha je 1: není to vada, je to nedokončený důkaz. Smyčka podle
@@ -214,6 +215,16 @@ export function hlidaciBezDukazu(soupis, vsechnyZkousky) {
       `${nedosazitelne.length} z nich sabotáž vůbec neuvidí — stránky servírují`
       + ` minifikovanou kopii, která se nepřestavuje: ${nedosazitelne.slice(0, 5).join(', ')}`,
       'Mechanická sabotáž tu nemá jak dojít k produktu; důkaz zůstává na člověku.'));
+  }
+  /* A zvlášť ty, které stroj neumí ani spustit. Vypadá to stejně jako
+     „ještě neprokázáno", ale je to jiná věc: tyhle hlídače neprokáže
+     žádný počet dalších kol na tomhle stroji, protože mu chybí
+     prohlížeč. Patří do CI, ne do smyčky. */
+  if (nespustitelne.length) {
+    ven.push(nalez('hlídač, kterého stroj neumí spustit', 'hlídač', 1,
+      `${nespustitelne.length} z nich potřebuje prohlížeč, který na tomhle stroji není:`
+      + ` ${nespustitelne.slice(0, 5).join(', ')}`,
+      'Dalším kolem smyčky se to nezmění — prokázat je může jen běh v CI.'));
   }
   return ven;
 }

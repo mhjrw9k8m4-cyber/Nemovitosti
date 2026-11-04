@@ -227,6 +227,14 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
     if (CHCE_PROHLIZEC.test(t)) return true;
     if (uroven > 0) return false;
     for (const m of t.matchAll(/['"](scripts\/[\w.-]+\.mjs)['"]/g)) {
+      /* JMÉNO JINÉ ZKOUŠKY SE NEPOČÍTÁ. Chodí se do skriptů, které
+         zkouška SPOUŠTÍ (sonda, generátor) — to je její závislost.
+         Jméno jiné zkoušky je ale data, ne závislost: žádná zkouška
+         nepouští druhou. Naměřeno 4. 11. na test-samorozvoj: ta
+         o zkouškách v prohlížeči jmenovitě mluví (soudí hlídače, viz
+         §397), a tím se celá ocitla v úloze s prohlížečem, kde nemá co
+         dělat — přitom sama žádný prohlížeč nespouští. */
+      if (/\/test-/.test(m[1])) continue;
       try { if (chceProhlizec(m[1], 1)) return true; } catch (e) { /* neexistuje — jiná kontrola */ }
     }
     return false;

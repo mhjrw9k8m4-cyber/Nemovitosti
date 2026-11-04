@@ -1588,12 +1588,30 @@ if (DRAZBA) {
     pravda('a dokud jsem na pozemku, nezabírá výhled', doma.skryte === true,
       'je vidět i bez toho, že by se pohled hnul');
 
-    await p.evaluate(() => { const m = window.PK_PZ_MAPA; const c = m.getCenter();
-      m.setView([c.lat + 0.02, c.lng + 0.02], m.getZoom()); });
-    await p.waitForTimeout(800);
+    /* ČEKÁ SE NA VLASTNÍ SIGNÁL MAPY, NE NA STOPKY.
+       Naměřeno v CI 4. 11.: běh 41874618175 spadl na „po odjetí od
+       pozemku se ukáže — zůstalo skryté", běh 41881661456 nad TÝMŽ
+       kódem produktu prošel. Diagnostika ukázala jednu mapu v DOM,
+       rám 348×300 px, tlačítko v DOM a zoom, který se nehýbe — tedy
+       stránku, která se ještě nepohnula. Leaflet si posun animuje a
+       `hlidejZpet` se v js/pozemek.js pouští z jeho vlastních událostí;
+       pevných 800 ms na pomalém stroji nestačilo a zkouška měřila
+       stav PŘED přesunem. Pevné čekání je tady vada zkoušky, ne vada
+       webu: posun se proto udělá bez animace a čeká se na `moveend`
+       a pak na stav, který má web ukázat. */
+    const hnulo = await p.evaluate((o) => new Promise((hotovo) => {
+      const m = window.PK_PZ_MAPA; const c = m.getCenter();
+      m.once('moveend', () => hotovo('moveend'));
+      setTimeout(() => hotovo('vypršelo'), 4000);
+      m.setView([c.lat + o, c.lng + o], m.getZoom(), { animate: false });
+    }), 0.02);
+    await p.waitForFunction(() => {
+      const b = document.getElementById('pzm-zpet');
+      return !!b && b.hidden === false;
+    }, { timeout: 4000 }).catch(() => { /* ať to dopoví kontrola pod tím */ });
     const pryc = await stav();
     pravda('po odjetí od pozemku se ukáže', pryc.skryte === false,
-      'zůstalo skryté — cesta zpátky zase není; ' + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}, z=${pryc.zoom}, střed ${pryc.lat},${pryc.lng}, záběr ${pryc.zab && pryc.zab.s}–${pryc.zab && pryc.zab.n} × ${pryc.zab && pryc.zab.w}–${pryc.zab && pryc.zab.e}, web vidí domov: ${pryc.zab && pryc.zab.vidimDomov}`);
+      `zůstalo skryté — cesta zpátky zase není; přesun: ${hnulo}; ` + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}, z=${pryc.zoom}, střed ${pryc.lat},${pryc.lng}, záběr ${pryc.zab && pryc.zab.s}–${pryc.zab && pryc.zab.n} × ${pryc.zab && pryc.zab.w}–${pryc.zab && pryc.zab.e}, web vidí domov: ${pryc.zab && pryc.zab.vidimDomov}`);
     pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44,
       `${pryc.sirka}×${pryc.vyska} px; ` + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}, z=${pryc.zoom}, střed ${pryc.lat},${pryc.lng}, záběr ${pryc.zab && pryc.zab.s}–${pryc.zab && pryc.zab.n} × ${pryc.zab && pryc.zab.w}–${pryc.zab && pryc.zab.e}, web vidí domov: ${pryc.zab && pryc.zab.vidimDomov}`);
     /* A HLAVNĚ: JE VIDĚT, KDYŽ SE ČLOVĚK DÍVÁ NA MAPU.
@@ -1614,7 +1632,11 @@ if (DRAZBA) {
       `mapa končí na ${pryc.mapaDno} px, tlačítko začíná na ${pryc.top} px`);
 
     await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
-    await p.waitForTimeout(1200);
+    /* Totéž z druhé strany: čeká se, až web tlačítko sám schová. */
+    await p.waitForFunction(() => {
+      const b = document.getElementById('pzm-zpet');
+      return !!b && b.hidden === true;
+    }, { timeout: 5000 }).catch(() => { /* ať to dopoví kontroly pod tím */ });
     const zpet = await stav();
     /* „PŘESNĚ" SE MĚŘÍ NA OBRAZOVÉ BODY, NE NA DESETINNÁ MÍSTA.
        Naměřeno v CI 4. 11.: po stisku vrátila mapa 49.11218,14.30697

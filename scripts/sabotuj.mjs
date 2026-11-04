@@ -44,9 +44,10 @@
      6. Časový limit na zkoušku; co nedoběhne, je „nerozhodnuto", ne
         „chycená".
    ================================================================== */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { join, dirname } from 'node:path';
+import { join, dirname, basename } from 'node:path';
+import { ocistiJs } from './minifikace.mjs';
 import { fileURLToPath } from 'node:url';
 
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -210,6 +211,52 @@ export function jeProhlizecova(teloZkousky) {
   return /playwright/.test(String(teloZkousky || ''));
 }
 
+/* PROHLÍŽEČ, KTERÝ TENHLE STROJ MÁ.
+   ------------------------------------------------------------------
+   Zkoušky v prohlížeči si Chromium berou z `PW_CHROMIUM`, a když tam
+   nic není, zkusí si ho najít playwright sám — jenže ten hledá verzi,
+   podle které byl zabalen. Naměřeno 4. 11.: stroj má
+   /opt/pw-browsers/chromium-1194, playwright-core hledá
+   chromium_headless_shell-1148 a spuštění skončí hláškou
+   „Executable doesn't exist". Sabotážní stroj pouští zkoušky jako
+   podproces, takže bez tohohle hledání by každá zkouška v prohlížeči
+   padla rovnou na startu — a stroj by z toho vinil hlídače.
+
+   Hledá se proto totéž, co dělá člověk: nejdřív `PW_CHROMIUM`, pak
+   nejvyšší nalezená složka chromium-<číslo>. Když se nenajde nic,
+   nevrací se nic a rozhodne se o tom výš (viz NELZE TADY). */
+export const SLOZKA_PROHLIZECU = '/opt/pw-browsers';
+export function prohlizecNaStroji({ je = existsSync, slozka = SLOZKA_PROHLIZECU } = {}) {
+  const zEnv = String(process.env.PW_CHROMIUM || '');
+  if (zEnv && je(zEnv)) return zEnv;
+  let jmena = [];
+  try { jmena = readdirSync(slozka); } catch { return ''; }
+  const verze = jmena
+    .map((d) => /^chromium-(\d+)$/.exec(String(d)))
+    .filter(Boolean)
+    .sort((a, b) => Number(b[1]) - Number(a[1]));
+  for (const v of verze) {
+    const cesta = slozka + '/' + v[0] + '/chrome-linux/chrome';
+    if (je(cesta)) return cesta;
+  }
+  return '';
+}
+
+/* NELZE TADY: hláška, podle které se pozná, že zkouška nespadla na
+   kontrole, ale na tom, že na tomhle stroji není prohlížeč. Bez
+   tohohle rozlišení by stroj psal „zkoušku nejdřív opravit" o zkoušce,
+   která je v pořádku a v CI zelená — tedy falešné obvinění (§384). */
+export const BEZ_PROHLIZECE = /browserType\.launch|Executable doesn't exist|playwright install/i;
+
+/* Prostředí podprocesu: značka proti nekonečné rekurzi a cesta
+   k prohlížeči, pokud se nějaká našla. */
+export function prostrediZkousky(env) {
+  const e = Object.assign({}, env || process.env, { [UVNITR]: '1' });
+  const p = prohlizecNaStroji();
+  if (p) e.PW_CHROMIUM = p;
+  return e;
+}
+
 export function poradiCilu(zkouska, cile) {
   const jmeno = String(zkouska || '').replace(/^test-/, '').replace(/\.mjs$/, '');
   if (!jmeno) return (cile || []).slice();
@@ -221,6 +268,126 @@ export function poradiCilu(zkouska, cile) {
     return 3;                                             // půjčený modul
   };
   return (cile || []).slice().sort((a, b) => skore(a) - skore(b));
+}
+
+/* POMŮCKA ZKOUŠEK NENÍ PRODUKT.
+   ------------------------------------------------------------------
+   Naměřeno 4. 11. na test-barvy: stroj obrátil `&&` na `||`
+   v `scripts/adresa-pozemku.mjs` (ta funkce vybírá, na kterém pozemku
+   se bude měřit), zkouška si toho nevšimla a stroj to zapsal jako
+   SLEPÉ MÍSTO zkoušky. Jenže ten modul není produkt — nenosí ho na web
+   žádná stránka a neimportuje si ho žádný ostrý skript, používají ho
+   jen zkoušky, aby si našly cíl. Rozbít zkoušce vlastní pomůcku
+   neměří hlídače; měří to nanejvýš sebe. A protože ten modul berou
+   skoro všechny zkoušky v prohlížeči, bylo by takových falešných
+   obvinění postupně sto (zase §384).
+
+   Pomůcka se pozná měřením, ne seznamem: modul ve scripts/, který si
+   někdo bere, a všichni, kdo si ho berou, jsou zkoušky. Jak se ho
+   chytí první ostrý skript, přestane být pomůckou sám. Soubory z js/
+   pomůcky nejsou nikdy — ty nese web. */
+export const STROJ = new Set(['sabotuj.mjs', 'samorozvoj.mjs', 'nalezce.mjs']);
+export function modulyVeScripts(cti = readFileSync, vypis = readdirSync) {
+  const mapa = {};
+  let jmena = [];
+  try { jmena = vypis(join(KOREN, 'scripts')); } catch { return mapa; }
+  for (const f of jmena) {
+    if (!/^[a-z0-9-]+\.mjs$/.test(String(f))) continue;
+    try { mapa[f] = cti(join(KOREN, 'scripts', f), 'utf8'); } catch { /* nečitelný */ }
+  }
+  return mapa;
+}
+/* A JEŠTĚ JEDNA VĚC, BEZ KTERÉ BY PRAVIDLO LHALO: modul, který se
+   nikde neimportuje, protože se SPOUŠTÍ. Naměřeno vzápětí na
+   scripts/archiv.mjs — nočního archivu nabídek si žádný .mjs nebere,
+   pouští ho řádek `node scripts/archiv.mjs` v update-data.yml, a jediný
+   importér je jeho zkouška. Podle importů by vyšel jako pomůcka, a stroj
+   by přestal hlídat kus ostrého robota. Spouštěné moduly se proto čtou
+   z postupů v .github/workflows a z package.json. */
+export function spousteneZvenku(cti = readFileSync, vypis = readdirSync) {
+  const ven = new Set();
+  const pridej = (text) => {
+    for (const m of String(text || '').matchAll(/([a-z0-9-]+\.mjs)/g)) ven.add(m[1]);
+  };
+  /* Celé .github, ne jen workflows: ohlas-selhani.mjs pouští
+     .github/actions/ohlas-selhani/action.yml, a podle samotných
+     workflows by vyšel jako pomůcka. */
+  const projdi = (kde, hloubka) => {
+    if (hloubka > 3) return;
+    let jmena = [];
+    try { jmena = vypis(kde, { withFileTypes: true }); } catch { return; }
+    for (const d of jmena) {
+      const cesta = join(kde, d.name);
+      if (d.isDirectory()) { projdi(cesta, hloubka + 1); continue; }
+      if (!/\.(ya?ml|sh|mjs|js)$/.test(d.name)) continue;
+      try { pridej(cti(cesta, 'utf8')); } catch { /* nečitelný */ }
+    }
+  };
+  projdi(join(KOREN, '.github'), 0);
+  try {
+    const pj = JSON.parse(cti(join(KOREN, 'package.json'), 'utf8'));
+    pridej(Object.values(pj.scripts || {}).join('\n'));
+  } catch { /* není, nebo není čitelný */ }
+  return ven;
+}
+export function pomuckaZkousek(cil, soubory, spoustene) {
+  const m = /^scripts\/([a-z0-9-]+\.mjs)$/.exec(String(cil || ''));
+  if (!m) return false;
+  const jmeno = m[1];
+  if (/^test-/.test(jmeno)) return false;      // zkouška sama není pomůcka
+  const ven = spoustene || spousteneZvenku();
+  if (ven.has(jmeno)) return false;            // spouští se v postupu = ostrý kód
+  const mapa = soubory || modulyVeScripts();
+  /* VSTUPNÍ BOD NENÍ POMŮCKA. Shebang znamená „tohle se spouští" —
+     prvni-videno.mjs a doplnit-obce.mjs se pouští rukou a žádný .mjs
+     si je nebere; podle importů by vyšly jako pomůcky. */
+  if (/^#!/.test(String(mapa[jmeno] || ''))) return false;
+  /* Hledá se JAKÁKOLI zmínka jména, ne jen `from './x.mjs'`. Naměřeno
+     na generate-rss.mjs a dalších osmi: ostrý řetěz si je nebere
+     importem, pouští je jako podproces (`['scripts/generate-rss.mjs']`),
+     takže podle importů by vyšly jako pomůcky — a stroj by přestal
+     hlídat devět kusů sestavení. Zmínka v komentáři se počítá taky:
+     tenhle soud má být opatrný. Nechat omylem sabotovat ostrý modul
+     stojí nejvýš jedno falešné obvinění zkoušky; prohlásit omylem
+     ostrý modul za pomůcku znamená přestat ho hlídat úplně. */
+  const bere = new RegExp(jmeno.replace(/\./g, '\\.'));
+  const kdo = [];
+  for (const f of Object.keys(mapa)) {
+    if (f === jmeno) continue;
+    /* STROJ SÁM SE NEPOČÍTÁ. Tenhle soubor o měřených modulech PÍŠE
+       (jmenovitě, aby se vědělo, kde se co naměřilo), a kdyby se jeho
+       vlastní komentáře počítaly za užití, stačila by jedna věta
+       v dokumentaci a modul by přestal být pomůckou. Naměřeno na sobě:
+       jmenovaný adresa-pozemku.mjs vypadl ze seznamu ve chvíli, kdy
+       jsem o něm napsal komentář výš. */
+    if (STROJ.has(f)) continue;
+    if (bere.test(String(mapa[f] || ''))) kdo.push(f);
+  }
+  return kdo.length > 0 && kdo.every((f) => /^test-[a-z0-9-]+\.mjs$/.test(f));
+}
+
+/* KDO JEŠTĚ TEN SOUBOR HLÍDÁ.
+   ------------------------------------------------------------------
+   Naměřeno 4. 11., hned jak se sabotáž začala dostávat k prohlížeči
+   (§396): stroj obrátil `>=` v js/main.js, `test-barvy` mlčela a
+   stroj to zapsal jako šest slepých míst TÉ ZKOUŠKY. Jenže js/main.js
+   hlídá přes čtyřicet zkoušek a `test-barvy` z něj čte barvy — mez
+   o jeden stupeň v logice hledání není její předmět. Pravda, kterou
+   stroj v té chvíli zná, je jiná: „tuhle mutaci nechytila TAHLE
+   zkouška", ne „tuhle mutaci nechytí nikdo".
+
+   Proto se u každého cíle spočítá, které další zkoušky ho hlídají.
+   Když je soubor jenom její, je obvinění pevné. Když ho hlídá ještě
+   někdo, zapíše se mlčení do soupisu po souborech a nález vznikne
+   teprve ve chvíli, kdy mlčí druhá — viz samorozvoj.mjs. */
+export function kdoHlidaCil(cil, moduly) {
+  const mapa = moduly || modulyVeScripts();
+  const ven = [];
+  for (const f of Object.keys(mapa)) {
+    if (!/^test-[a-z0-9-]+\.mjs$/.test(f)) continue;
+    if (coHlidá(mapa[f]).includes(cil)) ven.push(f);
+  }
+  return ven.sort();
 }
 
 export function smiSabotovat(cesta) {
@@ -257,10 +424,20 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
   let teloZkousky = '';
   try { teloZkousky = readFileSync(join(KOREN, cestaZkousky), 'utf8'); }
   catch { return { zkouska, chyba: 'zkoušku nejde přečíst' }; }
-  const cile = poradiCilu(zkouska, coHlidá(teloZkousky).filter(smiSabotovat));
-  if (!cile.length) {
+  const vse = poradiCilu(zkouska, coHlidá(teloZkousky).filter(smiSabotovat));
+  if (!vse.length) {
     return { zkouska, hlidá: [], sabotaze: [],
       poznamka: 'zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít' };
+  }
+  /* Pomůcky zkoušek se nesabotují (viz POMŮCKA ZKOUŠEK NENÍ PRODUKT). */
+  const moduly = modulyVeScripts();
+  const spoustene = spousteneZvenku();
+  const pomucky = vse.filter((c) => pomuckaZkousek(c, moduly, spoustene));
+  const cile = vse.filter((c) => !pomucky.includes(c));
+  if (!cile.length) {
+    return { zkouska, hlidá: [], sabotaze: [], pomucky,
+      poznamka: `zkouška si bere jen vlastní pomůcky (${pomucky.join(', ')}) —`
+        + ' rozbít je neměří hlídače, měří to zkoušku samu' };
   }
   const prohlizecova = jeProhlizecova(teloZkousky);
   /* NEJDŘÍV SE ZKOUŠKA MUSÍ ZELENĚ PROJÍT BEZ SABOTÁŽE.
@@ -279,13 +456,23 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
   try {
     execFileSync(process.execPath, [cestaZkousky], {
       cwd: KOREN, encoding: 'utf8', timeout: casLimit,
-      env: Object.assign({}, process.env, { [UVNITR]: '1' }),
+      env: prostrediZkousky(),
       stdio: ['ignore', 'pipe', 'pipe'],
     });
   } catch (e) {
     const kod = e && e.status;
+    const vse = String((e && (e.stdout || '')) || '') + '\n' + String((e && (e.stderr || '')) || '');
     const vystup = String((e && (e.stdout || '')) || '').split('\n').slice(-3).join(' ').slice(-300);
-    return { zkouska, hlidá: cile,
+    /* NELZE TADY. Zkouška v prohlížeči, která se nespustila proto, že
+       na stroji není Chromium, není padající zkouška — je to hranice
+       stroje. Hlásí se zvlášť a smyčka na ní nestojí. */
+    if (prohlizecova && BEZ_PROHLIZECE.test(vse)) {
+      return { zkouska, hlidá: cile, pomucky, nelzeTady: true,
+        chyba: 'tahle zkouška potřebuje prohlížeč a tenhle stroj ho nemá'
+          + ' (hledáno v PW_CHROMIUM i v ' + SLOZKA_PROHLIZECU + ') — není to vada hlídače,'
+          + ' prokázat ji může jen běh, kde prohlížeč je' };
+    }
+    return { zkouska, hlidá: cile, pomucky,
       chyba: e && e.killed
         ? `zkouška nedoběhla do ${Math.round(casLimit / 1000)} s ani bez sabotáže`
         : `zkouška padá UŽ BEZ SABOTÁŽE (konec ${kod}) — nejdřív ji opravit,`
@@ -305,6 +492,34 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
       if (vypis) { vysledky.push({ cil, jmeno: k.jmeno, stav: 'vypis', ukazka: k.ukazka }); continue; }
       /* 1) zapsat */
       writeFileSync(join(KOREN, cil), puvodni.replace(k.najdi, k.nahrad));
+      /* 1b) A PŘESTAVĚT TO, CO STRÁNKY OPRAVDU SERVÍRUJÍ.
+         ------------------------------------------------------------
+         Tohle byla největší hranice tohohle stroje: zkouška
+         v prohlížeči si otevře stránku, stránka si stáhne
+         js/min/main.js — a tam byl pořád PŮVODNÍ kód, protože
+         sabotáž zapsala js/main.js a nikdo minifikaci nepustil.
+         Mutace se k produktu nedostala a hlídač ji neměl jak vidět
+         (verdikt „nedoručená"). Naměřeno: z 307 hlídačů je přes sto
+         v prohlížeči, takže tak zůstala neprokazatelná třetina
+         repozitáře.
+         Minifikace je čistá funkce a dává bitově totéž, co je
+         zapsané v repozitáři (změřeno na main.js, pozemek.js
+         a ceny.js: shoda do jednoho bajtu). Dá se proto pustit na
+         JEDEN soubor a hned po zkoušce ho vrátit z gitu — se stejným
+         ověřením diffem a bitovou shodou jako u zdroje. */
+      const min = minifikovanaKopie(cil);
+      let minPuvodni = '', doruceno = false;
+      if (min && cistySoubor(min)) {
+        try {
+          minPuvodni = readFileSync(join(KOREN, min), 'utf8');
+          writeFileSync(join(KOREN, min),
+            ocistiJs(readFileSync(join(KOREN, cil), 'utf8'), basename(cil)));
+          /* Doručeno je jen to, co je vidět v diffu. Mutace, která
+             z minifikovaného souboru vypadne (třeba v komentáři),
+             doručená není — a verdikt zůstane „nedoručená". */
+          doruceno = zmenilSe(min);
+        } catch { doruceno = false; }
+      }
       /* 2) OVĚŘIT DIFFEM — bez tohohle kroku sabotáž nic nedokazuje (§369) */
       const opravduZmeneno = zmenilSe(cil);
       let stav = 'neznámo', vystup = '';
@@ -314,7 +529,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
         try {
           execFileSync(process.execPath, [cestaZkousky], {
             cwd: KOREN, encoding: 'utf8', timeout: casLimit,
-            env: Object.assign({}, process.env, { [UVNITR]: '1' }),
+            env: prostrediZkousky(),
             stdio: ['ignore', 'pipe', 'pipe'],
           });
           /* Zkouška prošla nad rozbitým kódem. Buď je to slepé místo —
@@ -330,14 +545,11 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
           } else stav = 'NECHYTILA';
           /* A ještě jedna otázka, než se to zapíše jako slepé místo:
              DOSTALA SE TA SABOTÁŽ VŮBEC K PRODUKTU? */
-          if (stav === 'NECHYTILA' && prohlizecova) {
-            const min = minifikovanaKopie(cil);
-            if (min) {
-              stav = 'nedoručená';
-              k.proc = `stránky servírují ${min}, a to se po sabotáži nepřestavělo`
-                + ' — zkouška v prohlížeči tu mutaci nemohla vidět; není to slepé místo'
-                + ' zkoušky, ale hranice tohohle stroje';
-            }
+          if (stav === 'NECHYTILA' && prohlizecova && min && !doruceno) {
+            stav = 'nedoručená';
+            k.proc = `stránky servírují ${min}, a to se po sabotáži nepřestavělo`
+              + ' — zkouška v prohlížeči tu mutaci nemohla vidět; není to slepé místo'
+              + ' zkoušky, ale hranice tohohle stroje';
           }
         } catch (e) {
           const kod = e && e.status;
@@ -347,14 +559,30 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
           else stav = 'nepoužitelná';   // spadlo na syntaxi, ne na kontrole
         }
       }
-      /* 3) vrátit z gitu a 4) ověřit, že je soubor zpátky */
+      /* 3) vrátit z gitu a 4) ověřit, že je soubor zpátky.
+         Vrací se OBOJÍ — zdroj i minifikovaná kopie — a obojí se
+         kontroluje na bitovou shodu. Kdyby v repozitáři zůstala
+         přestavěná kopie, byla by to změna, o které nikdo neví;
+         přesně proto se tady zastavuje. */
       vratZGitu(cil);
-      const vraceno = readFileSync(join(KOREN, cil), 'utf8') === puvodni;
+      let vraceno = readFileSync(join(KOREN, cil), 'utf8') === puvodni;
+      let coNevratil = cil;
+      if (vraceno && min && minPuvodni) {
+        vratZGitu(min);
+        if (readFileSync(join(KOREN, min), 'utf8') !== minPuvodni) { vraceno = false; coNevratil = min; }
+      }
+      /* U nechycené sabotáže se přiloží, kdo další ten soubor hlídá —
+         bez toho se z „tahle zkouška mlčela" stane „nikdo to nechytí",
+         a to je jiné tvrzení. */
+      const hlidajiJeste = stav === 'NECHYTILA'
+        ? kdoHlidaCil(cil, moduly).filter((f) => f !== zkouska) : [];
       vysledky.push({ cil, jmeno: k.jmeno, proc: k.proc, ukazka: k.ukazka, stav, vraceno,
+        hlidajiJeste,
+        doruceno: min ? doruceno : undefined,
         vystup: stav === 'NECHYTILA' ? '' : vystup.split('\n').slice(-2).join(' ') });
       if (!vraceno) {
-        return { zkouska, hlidá: cile, sabotaze: vysledky,
-          chyba: `soubor ${cil} se nevrátil do původní podoby — zastavuji` };
+        return { zkouska, hlidá: cile, pomucky, sabotaze: vysledky,
+          chyba: `soubor ${coNevratil} se nevrátil do původní podoby — zastavuji` };
       }
     }
   }
@@ -368,11 +596,11 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
      konstanta — mechanická sabotáž tam nemá co rozbít. Bez téhle věty
      by hlášení vypsalo jen hlavičku a vypadalo to na vadu stroje. */
   if (!vysledky.length) {
-    return { zkouska, hlidá: cile, sabotaze: [], chytila: 0, nechytila: 0,
+    return { zkouska, hlidá: cile, pomucky, sabotaze: [], chytila: 0, nechytila: 0,
       poznamka: 'v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm'
         + ' nevyskytuje; promyšlená sabotáž tu zůstává na člověku' };
   }
-  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila, rovnocenne,
+  return { zkouska, hlidá: cile, pomucky, sabotaze: vysledky, chytila, nechytila, rovnocenne,
     nedorucene };
 }
 
@@ -381,6 +609,13 @@ export function hlaseniProkazu(v) {
   if (v.chyba) return [`${v.zkouska}: ${v.chyba}`];
   if (v.poznamka) return [`${v.zkouska}: ${v.poznamka}`];
   const radky = [`${v.zkouska} hlídá ${v.hlidá.join(', ')}`];
+  /* Vynechané pomůcky se píšou nahlas. Bez toho by se účet nedal
+     přečíst: zkouška, která si bere pět modulů, by vypadala, že hlídá
+     dva, a nebylo by vidět proč. */
+  if ((v.pomucky || []).length) {
+    radky.push(`  (vynecháno jako pomůcka zkoušek: ${v.pomucky.join(', ')} —`
+      + ' nenosí je web a neimportuje si je žádný ostrý skript)');
+  }
   for (const s of v.sabotaze) {
     const znak = s.stav === 'chytila' ? '✓'
       : (s.stav === 'NECHYTILA' ? '✕'

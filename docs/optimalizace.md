@@ -24359,3 +24359,162 @@ a prázdný kus v popisu řádku.
 
 **Pravidlo:** nástroj, který soudí hlídače, musí nejdřív ověřit, že
 soudí ze zdravého výchozího stavu. Jinak neměří hlídače, ale sám sebe.
+
+## §394 — stroj vinil zkoušku z toho, že nemá prohlížeč *4. 11.*
+
+Hned první kolo smyčky po §393 vydalo o `test-barva-listy` verdikt
+**„zkouška padá UŽ BEZ SABOTÁŽE — nejdřív ji opravit"**. Ta zkouška je
+přitom v pořádku a v CI zelená. Spadla na tomhle:
+
+```
+browserType.launch: Executable doesn't exist at
+/opt/pw-browsers/chromium_headless_shell-1148/chrome-linux/headless_shell
+```
+
+Stroj má `/opt/pw-browsers/chromium-1194`, playwright-core hledá verzi,
+podle které byl zabalen. Člověk ji zkouškám předává v `PW_CHROMIUM`;
+sabotážní stroj pouští zkoušky jako podproces a nepředával nic.
+
+Byly to dvě vady v jedné:
+
+1. **Falešné obvinění hlídače** — téhož druhu jako §384. Stroj napsal
+   „opravit zkoušku" o zkoušce, na které není co opravovat.
+2. **Zaseknutá smyčka.** Po chybě se celé kolo zastaví, aby se
+   nehromadila nejistota (§369). `test-barva-listy` je v abecedě třetí
+   — na čtvrtou zkoušku by se stroj nedostal už nikdy.
+
+**Oprava.** `prohlizecNaStroji()` hledá prohlížeč tak, jak ho hledá
+člověk: nejdřív `PW_CHROMIUM`, pak nejvyšší složka `chromium-<číslo>`
+(ne první v abecedě — `chromium-980` by vedl na stejnou hlášku).
+`prostrediZkousky()` ho předá oběma běhům, základnímu i sabotovanému.
+Když se nenajde nic, vrací se nový verdikt **„nelze tady"**: zkouška
+potřebuje prohlížeč, který na tomhle stroji není. Není to vada hlídače,
+takže se nepočítá ani mezi prokázané, ani mezi slepá místa, ani mezi
+nedotčené — má v účtu vlastní sloupec — a smyčka se na ní nezastaví.
+
+**Změřeno po opravě:** `test-barva-listy` proběhla zeleně a dostala
+pravý verdikt („v hlídaném kódu není co mechanicky rozbít"), kolo
+pokračovalo na třetí zkoušku.
+
+## §395 — rozbít zkoušce vlastní vybavení není nález o hlídači *4. 11.*
+
+Táž kolo ohlásilo **slepé místo** v `test-barvy`: sabotáž obrátila
+`&&` na `||` v `scripts/adresa-pozemku.mjs` a zkouška mlčela.
+
+Jenže `adresa-pozemku.mjs` není produkt. Nenosí ho na web žádná
+stránka a neimportuje si ho žádný ostrý skript — je to **pomůcka
+zkoušek**: vybere, na kterém pozemku se bude měřit. Rozbít ji o
+hlídačích neříká nic. A protože si ji bere skoro každá zkouška
+v prohlížeči, bylo by takových falešných obvinění postupně sto.
+
+Pomůcka se pozná **měřením, ne seznamem**: modul ve `scripts/`, který
+není vstupní bod, nepouští ho nic z `.github` ani `package.json`, někdo
+si ho bere — a všichni, kdo si ho berou, jsou zkoušky. Soud je schválně
+opatrný (stačí zmínka jména, i v komentáři), protože omylem sabotovaný
+ostrý modul stojí nejvýš jedno falešné obvinění, zatímco ostrý modul
+omylem prohlášený za pomůcku **přestane být hlídaný**.
+
+Po cestě spadly do pasti tři pravidla, která vypadala jako hotová:
+
+* **podle importů** vyšel jako pomůcka `scripts/archiv.mjs` — ostrý
+  noční archiv, který si nikdo neimportuje, protože ho **pouští**
+  `update-data.yml`. Čtou se proto i postupy, a to celé `.github`:
+  `ohlas-selhani.mjs` pouští `.github/actions/ohlas-selhani/action.yml`;
+* **podle importů** vyšlo jako pomůcka i devět generátorů sestavení —
+  ostrý řetěz si je nebere importem, pouští je jako podproces. Hledá se
+  proto jakákoli zmínka jména;
+* a nakonec: `prvni-videno.mjs` a `doplnit-obce.mjs` se pouští rukou.
+  **Shebang** znamená vstupní bod, a že si modul nikdo neimportuje,
+  z něj pomůcku nedělá.
+
+A jedna past byla na mně samotném: jakmile jsem o `adresa-pozemku.mjs`
+napsal do `sabotuj.mjs` komentář, modul **přestal být pomůckou** —
+vlastní prózou jsem si přepsal měření. Trojice souborů stroje
+(`sabotuj.mjs`, `samorozvoj.mjs`, `nalezce.mjs`) se proto do uživatelů
+nepočítá; stroj, který svým popisem mění to, co měří, neměří nic.
+
+**Změřeno dnes:** pomůcek je 9 z 422 modulů ve `scripts/`.
+
+## §396 — sabotáž se konečně dostala k prohlížeči *4. 11.*
+
+Nejtvrdší hranice tohohle stroje: zkouška v prohlížeči si otevře
+stránku, stránka si stáhne `js/min/main.js` — a tam zůstával PŮVODNÍ
+kód, protože sabotáž zapsala `js/main.js` a minifikaci nikdo nepustil.
+Mutace se k produktu nedostala, hlídač ji neměl jak vidět (§391,
+verdikt „nedoručená"). Přes sto z 307 hlídačů je v prohlížeči, takže
+takhle zůstala neprokazatelná **třetina repozitáře**.
+
+Změřeno, že to jde zavřít: minifikace je čistá funkce a dává bitově
+totéž, co je zapsané v repozitáři (`main.js` 253 694 B, `pozemek.js`
+76 240 B, `ceny.js` 26 210 B — shoda do jednoho bajtu). Dá se proto
+pustit na JEDEN soubor hned po sabotáži.
+
+Pojistky zůstávají stejně tvrdé jako u zdroje: přestavuje se jen
+soubor bez rozdělané změny, **doručeno je jen to, co je vidět v diffu**
+(mutace, která z minifikovaného souboru vypadne, doručená není a
+verdikt „nedoručená" zůstává), a po zkoušce se z gitu vrací **obojí** —
+zdroj i kopie — a obojí se kontroluje na bitovou shodu. Kdyby
+v repozitáři zůstala přestavěná kopie, stroj se zastaví a řekne to.
+
+## §397 — jednotka měření není zkouška, ale pár (soubor, mutace) *4. 11.*
+
+Jakmile se sabotáž začala dostávat k prohlížeči (§396), vydal stroj
+o `test-barvy` **šest slepých míst**: obrátil v `js/main.js` `>=`,
+`<=`, `===`, `&&`, zahodil pojistku i `filter(Boolean)` — a zkouška
+mlčela. Vypadalo to na nález, ale nález to nebyl.
+
+`test-barvy` z `js/main.js` **čte barvy** (`for (const f of
+['../js/main.js', '../js/pozemek.js'])`). Mez o jeden stupeň v logice
+hledání není její předmět. A `js/main.js` hlídá **deset zkoušek**.
+Pravda, kterou stroj v tu chvíli znal, je „tuhle mutaci nechytila
+TAHLE zkouška". Otázka, která zajímá, je jiná: **„chytí tu vadu vůbec
+někdo?"** — a na tu se po jednom běhu odpovědět nedá.
+
+Měří se proto po párech **(soubor, mutace)** a soupis se sčítá přes
+kola:
+
+* ke každé nechycené sabotáži stroj přiloží, **které další zkoušky ten
+  soubor hlídají** (`kdoHlidaCil`);
+* je-li u souboru zkouška sama, obvinění je pevné: zapíše se slepé
+  místo a křičí se `::error::`;
+* hlídá-li soubor víc zkoušek, zapíše se **mlčení** do soupisu po
+  souborech a čeká se. Nález „vada, kterou nechytí nikdo" (tíha 3)
+  vznikne, až nad tou samou mutací téhož souboru mlčí **druhá**
+  zkouška, která ten soubor hlídá. Jedno mlčení může být jiný předmět;
+  dva nezávislí hlídači mlčící nad touž mutací znamenají, že na tu
+  vadu hlídač neexistuje;
+* jakmile ji někdo chytí, nález zmizí a mlčící zkouška se z druhého
+  sloupce odebere — účet nedrží obojí naráz.
+
+V účtu je mlčení **vlastní sloupec**. Spadnout do „slepých míst" by
+obviňovalo nevinnou zkoušku; spadnout do „nedotčených" by tvrdilo, že
+se k ní stroj ještě nedostal.
+
+**Pravidlo:** když jeden soubor hlídá deset zkoušek, nemůže být
+jednotkou měření zkouška. Nástroj, který soudí hlídače, musí soudit
+tím, co o nich opravdu ví.
+
+**Změřeno dnes:** `test-samorozvoj` 103 → **150 kontrol**. Sabotážní
+stroj má po §394–§397 čtyři nové verdikty a účet šest sloupců, které
+se nedají zaměnit: prokázáno, slepé místo, mlčení, nedoručeno, nelze
+tady, nedotčeno.
+
+## §398 — tatáž zkouška, týž kód, dvakrát jiný výsledek *4. 11.*
+
+Běh CI **41874618175** spadl na „po odjetí od pozemku se ukáže —
+zůstalo skryté", běh **41881661456** nad **týmž kódem produktu**
+prošel; mezi nimi se změnila jen diagnostika ve hlášce. Nedeterminismus
+je vada, i když je zelená polovina času.
+
+Diagnostika z §382 to rozhodla: jedna mapa v DOM, rám 348×300 px,
+tlačítko v DOM, **zoom se nehýbe**. Žádná z hypotéz o vadě webu
+neplatila — stránka se prostě ještě nepohnula. Leaflet si posun
+animuje, `hlidejZpet` se v `js/pozemek.js` pouští z jeho vlastních
+událostí, a zkouška čekala **pevných 800 ms**. Na zatíženém stroji to
+nestačí a zkouška měří stav před přesunem.
+
+Pevné čekání je tu vada zkoušky, ne webu (totéž téma jako #11 a #28).
+Posun se proto dělá bez animace, čeká se na `moveend` a pak na stav,
+který má web ukázat (`waitForFunction` na `hidden`), a do hlášky se
+tiskne i to, jak přesun skončil. Stisk tlačítka má totéž z druhé
+strany. **Změřeno:** `test-mapa-pozemku` 166 kontrol, 0 chyb.

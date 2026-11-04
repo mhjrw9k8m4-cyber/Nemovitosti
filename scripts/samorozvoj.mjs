@@ -88,12 +88,21 @@ export function naRade(zkousky, ucet, kolik = KOLO) {
    nedotkl. */
 export function stavUctu(zkousky, ucet) {
   const z = (ucet && ucet.zkousky) || {};
-  let prokazanych = 0, sSlepymMistem = 0, nedotcenych = 0, nedorucenych = 0;
+  let prokazanych = 0, sSlepymMistem = 0, nedotcenych = 0, nedorucenych = 0, nelzeTady = 0,
+    mlcivych = 0;
   for (const t of (zkousky || [])) {
     const r = z[t];
     if (!r || !r.kdy) { nedotcenych++; continue; }
-    if ((r.nechytila || 0) > 0) sSlepymMistem++;
+    /* ZKOUŠKA, KTEROU TENHLE STROJ NEUMÍ PUSTIT, JE TAKY VLASTNÍ SLOUPEC.
+       Nemá prohlížeč, takže o hlídači neříká nic — ani že je prokázaný,
+       ani že je slepý, ani že se ho stroj nedotkl. */
+    if (r.nelzeTady) { nelzeTady++; continue; }
+    if ((r.slepa || []).length) sSlepymMistem++;
     else if ((r.chytila || 0) > 0) prokazanych++;
+    /* Mlčení nad mutací souboru, který hlídá víc zkoušek, není ani
+       důkaz, ani slepé místo — je to nerozhodnuto, které se rozhodne,
+       až tu samou mutaci dostane druhý hlídač téhož souboru. */
+    else if ((r.mlcela || []).length) mlcivych++;
     /* SABOTÁŽ, KTERÁ SE K PRODUKTU NEDOSTALA, JE VLASTNÍ SLOUPEC.
        U zkoušek v prohlížeči stroj zapíše mutaci do js/*.js, jenže
        stránky servírují js/min/*.js a to se nepřestavuje — hlídač tu
@@ -104,7 +113,7 @@ export function stavUctu(zkousky, ucet) {
     else nedotcenych++;     // běh proběhl, ale nebylo co rozbít
   }
   return { celkem: (zkousky || []).length, prokazanych, sSlepymMistem, nedotcenych,
-    nedorucenych };
+    nedorucenych, nelzeTady, mlcivych };
 }
 
 export function hlaseniUctu(stav, nalezu) {
@@ -120,6 +129,14 @@ export function hlaseniUctu(stav, nalezu) {
     radky.push(`A u ${stav.nedorucenych} se sabotáž k prohlížeči nedostala`
       + ' (stránky servírují minifikovanou kopii) — hranice stroje, ne stav hlídače.');
   }
+  if (stav.mlcivych) {
+    radky.push(`U ${stav.mlcivych} zkouška nad mutací mlčela, ale týž soubor hlídá víc zkoušek`
+      + ' — nerozhodnuto: rozhodne se, až tu mutaci dostane druhý hlídač téhož souboru.');
+  }
+  if (stav.nelzeTady) {
+    radky.push(`A ${stav.nelzeTady} jich tenhle stroj neumí ani spustit`
+      + ' (zkouška potřebuje prohlížeč, který tu není) — prokáže je jen běh v CI.');
+  }
   radky.push(`Nálezů v tomhle běhu: ${nalezu}.`);
   return radky;
 }
@@ -128,9 +145,68 @@ export function hlaseniUctu(stav, nalezu) {
    upozornění). Slepé místo v hlídači ano — tichý hlídač je horší než
    žádný. „Ještě neprokázáno" ne: to není vada, to je nedokončená práce
    a smyčka ji dělá. */
+/* SOUPIS PO SOUBORECH: kdo tu vadu chytil a kdo u ní mlčel.
+   ------------------------------------------------------------------
+   Jednotka měření nemůže být zkouška, když jeden soubor hlídá deset
+   zkoušek. „test-barvy nechytila obrácené `>=` v js/main.js" je
+   pravda o jednom řezu; otázka, která zajímá, je „chytí tu vadu
+   vůbec někdo?". Soupis se proto vede po párech (soubor, mutace) a
+   přibývá do něj každé kolo — tím se smyčka sama dopracuje k odpovědi,
+   kterou po jednom běhu mít nemůže. */
+export function soupisPoSouborech(ucet, prokazy) {
+  const soubory = Object.assign({}, (ucet && ucet.soubory) || {});
+  for (const v of (prokazy || [])) {
+    for (const s of (v.sabotaze || [])) {
+      if (!s.cil || !s.jmeno || s.jmeno === '—') continue;
+      if (s.stav !== 'chytila' && s.stav !== 'NECHYTILA') continue;
+      const proSoubor = Object.assign({}, soubory[s.cil] || {});
+      const par = proSoubor[s.jmeno] || { chytily: [], mlcely: [] };
+      const kam = s.stav === 'chytila' ? 'chytily' : 'mlcely';
+      const druhy = s.stav === 'chytila' ? 'mlcely' : 'chytily';
+      /* Zkouška může změnit verdikt (někdo ji doplní) — pak ať se
+         nedrží v obou sloupcích naráz. */
+      par[druhy] = (par[druhy] || []).filter((f) => f !== v.zkouska);
+      if (!(par[kam] || []).includes(v.zkouska)) par[kam] = (par[kam] || []).concat(v.zkouska);
+      proSoubor[s.jmeno] = par;
+      soubory[s.cil] = proSoubor;
+    }
+  }
+  return soubory;
+}
+
+/* Vada, kterou nechytí nikdo. Mez jsou DVĚ mlčící zkoušky, které ten
+   soubor hlídají: jedna sama o sobě může mít prostě jiný předmět
+   (test-barvy čte z js/main.js barvy, ne meze), ale dva nezávislí
+   hlídači mlčící nad touž mutací téhož souboru znamenají, že ji
+   nehlídá nikdo. Tíha 3 — to je nález o celé sadě. */
+export const MEZ_MLCENI = 2;
+export function vadyBezHlidace(ucet) {
+  const ven = [];
+  const soubory = (ucet && ucet.soubory) || {};
+  for (const cil of Object.keys(soubory)) {
+    for (const mutace of Object.keys(soubory[cil] || {})) {
+      const par = soubory[cil][mutace] || {};
+      const mlcely = par.mlcely || [], chytily = par.chytily || [];
+      if (chytily.length || mlcely.length < MEZ_MLCENI) continue;
+      ven.push({ cil, mutace, mlcely,
+        jmeno: `vada, kterou nechytí nikdo: ${mutace} v ${cil}`,
+        tiha: 3,
+        dukaz: `mlčely nad ní zkoušky ${mlcely.join(', ')} — a žádná ji nechytila`,
+        co: 'Hlídač na tuhle vadu v tomhle souboru neexistuje; napsat ho.' });
+    }
+  }
+  return ven.sort((a, b) => a.jmeno.localeCompare(b.jmeno));
+}
+
 export function kOhlaseni(nalezy, prokazy) {
   const vazne = (nalezy || []).filter((n) => n.tiha >= 3);
-  const slepa = (prokazy || []).filter((p) => (p.nechytila || 0) > 0);
+  /* NAHLAS SE O ZKOUŠCE KŘIČÍ JEN TAM, KDE JE OBVINĚNÍ PEVNÉ: soubor
+     nehlídá nikdo jiný, takže mlčení je opravdu její slepé místo.
+     Když ho hlídá ještě někdo, čeká se na soupis po souborech — jinak
+     by stroj poslal člověka doplňovat do zkoušky na barvy kontrolu na
+     mez v logice hledání (§397). */
+  const slepa = (prokazy || []).filter((p) => (p.sabotaze || [])
+    .some((s) => s.stav === 'NECHYTILA' && !(s.hlidajiJeste || []).length));
   return { vazne, slepa };
 }
 
@@ -188,11 +264,29 @@ async function main() {
          co chytit) — a kdyby se schovaly do jednoho čísla s jedním
          nebo druhým, účet by lhal v obou směrech. */
       rovnocenne: (v.sabotaze || []).filter((x) => x.stav === 'rovnocenná').map((x) => x.jmeno),
-      slepa: (v.sabotaze || []).filter((x) => x.stav === 'NECHYTILA').map((x) => x.jmeno),
+      /* SLEPÉ MÍSTO SE ZAPISUJE JEN TAM, KDE JE OBVINĚNÍ PEVNÉ: ten
+         soubor nehlídá nikdo jiný. Když ho hlídá víc zkoušek, je
+         mlčení téhle zkoušky zatím jen mlčení (§397) a čeká se, co
+         řekne soupis po souborech. */
+      slepa: (v.sabotaze || [])
+        .filter((x) => x.stav === 'NECHYTILA' && !(x.hlidajiJeste || []).length)
+        .map((x) => x.jmeno),
+      mlcela: (v.sabotaze || [])
+        .filter((x) => x.stav === 'NECHYTILA' && (x.hlidajiJeste || []).length)
+        .map((x) => `${x.jmeno} v ${x.cil}`),
       nedorucene: (v.sabotaze || []).filter((x) => x.stav === 'nedoručená').map((x) => x.jmeno),
+      /* Běh, který se vůbec nekonal: stroj na tu zkoušku nemá prohlížeč.
+         Zapisuje se, aby se o ni smyčka příště neopřela jako o padající. */
+      nelzeTady: !!v.nelzeTady,
+      /* A čím se stroj vědomě nezabýval: vlastní pomůcky zkoušek. */
+      pomucky: (v.pomucky || []),
       poznamka: v.poznamka || v.chyba || '',
     };
-    if (v.chyba) break;         // nejistota se nehromadí: po chybě se zastaví
+    /* Po chybě se smyčka zastaví, ať se nejistota nehromadí — ale „na tomhle
+       stroji chybí prohlížeč" chyba zkoušky není a zastavovat kvůli ní celé
+       kolo by znamenalo, že se smyčka zasekne na první zkoušce v prohlížeči
+       a k dalším 300 hlídačům se nikdy nedostane. */
+    if (v.chyba && !v.nelzeTady) break;
   }
 
   /* 3) ÚČET. */
@@ -200,6 +294,9 @@ async function main() {
   console.log('');
   for (const r of hlaseniUctu(stav, nalezy.length)) console.log(r);
 
+  ucet.soubory = soupisPoSouborech(ucet, prokazy);
+  const bezHlidace = vadyBezHlidace(ucet);
+  for (const n of bezHlidace) console.log(`\nNÁLEZ: ${n.jmeno} — ${n.dukaz}`);
   if (zapsat) {
     ucet.updated = dnes;
     ucet.dny = Object.assign({}, ucet.dny || {}, {
@@ -213,11 +310,12 @@ async function main() {
   }
 
   /* 4) CO SE MÁ OHLÁSIT NAHLAS. */
-  const { vazne, slepa } = kOhlaseni(nalezy, prokazy);
+  const { vazne, slepa } = kOhlaseni(nalezy.concat(bezHlidace), prokazy);
   for (const n of vazne) console.error(`::error::${n.jmeno} — ${n.dukaz}`);
   for (const p of slepa) {
-    console.error(`::error::${p.zkouska}: ${p.nechytila} sabotáží nechytila`
-      + ` (${p.sabotaze.filter((s) => s.stav === 'NECHYTILA').map((s) => s.jmeno).join(', ')})`);
+    const jen = p.sabotaze.filter((s) => s.stav === 'NECHYTILA' && !(s.hlidajiJeste || []).length);
+    console.error(`::error::${p.zkouska}: ${jen.length} sabotáží nechytila`
+      + ` (${jen.map((s) => s.jmeno + ' v ' + s.cil).join(', ')}) — ten soubor nehlídá nikdo jiný`);
   }
   if (vazne.length || slepa.length) process.exit(1);
 }
