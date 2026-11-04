@@ -207,8 +207,30 @@ export const SLOVA_PREVODU = /prodej|prodáv|prodat|dražb|drazb|aukc|nabídk\S*
      'odpověděla' — něco vrátila, ale nabídky v tom nejsou,
      'zavřená'  — robots nedovoluje, HTTP chyba nebo prázdno.
    ------------------------------------------------------------------ */
+/* Slova, kterými služba říká „jsi nepřihlášený" — ne hádání z kódu
+   odpovědi, ale z toho, co sama napsala. */
+export const CHCE_KLIC =
+  /kl[íi][čc]|api[_\- ]?key|access[_\- ]?token|\btoken\b|nep[řr]ihl[áa][šs]|p[řr]ihl[áa][šs]|unauthor|unauthenticated|registra|sign[_\- ]?in|log[_\- ]?in/i;
+
 export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
   if (dovoleno === false) return { verdikt: 'zavřená', proc: 'robots.txt nedovoluje' };
+  /* OTEVŘENO, ALE CHCE KLÍČ — TO NENÍ ZAVŘENO.
+     Naměřeno 4. 11. na eDeskách: `/api/v1/documents` odpoví HTTP 401
+     a v těle „Chyba: nepřihlášen. Použijte svůj API klíč, který
+     najdete pro přihlášení na edesky.cz/uzivatel/edit". Bot to hlásil
+     jako „zavřená", tedy stejně jako zakázaný robots nebo mrtvý host —
+     a tím ten nález pohřbil mezi beznadějnými. Přitom je to ten
+     nejslibnější druh: cesta je popsaná a otevřená, jen si majitel
+     musí zařídit účet a klíč (účet mu zakládat nebudu a heslo po něm
+     chtít nesmím — proto to patří JEMU na stůl, ne robotovi do práce).
+     Pozná se to úzce: jen 401/403 A ZÁROVEŇ tělo, které o klíči,
+     přihlášení nebo registraci opravdu mluví. Jiná čtyřstovka zůstává
+     zavřená, aby se tím nedal obejít odmítnutý přístup. */
+  if ((stav === 401 || stav === 403) && CHCE_KLIC.test(String(telo || ''))) {
+    return { verdikt: 'chce klíč', stav,
+      proc: 'HTTP ' + stav + ', a sama říká, že chce klíč nebo přihlášení: '
+        + String(telo || '').replace(/\s+/g, ' ').trim().slice(0, 120) };
+  }
   if (!stav || stav >= 400) return { verdikt: 'zavřená', proc: 'HTTP ' + (stav || '—') };
   const tvar = tvarOdpovedi(typ, telo);
   if (tvar === 'PRÁZDNO') return { verdikt: 'zavřená', proc: 'prázdná odpověď', tvar };
@@ -229,7 +251,10 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
   return { verdikt: 'odpověděla', proc: chybi.join(', '), tvar, strojova, oPozemku, oPrevodu };
 }
 
-export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'odpověděla', 'zavřená'];
+/* „chce klíč" stojí hned za slibnou: přečíst se to dnes nedá, ale je to
+   JEDINÁ položka v seznamu, se kterou může člověk něco udělat hned —
+   a kdyby spadla na konec k zavřeným, nikdo si jí nevšimne. */
+export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'chce klíč', 'odpověděla', 'zavřená'];
 
 export function poradiCest(nalezy) {
   return [...(nalezy || [])].sort((a, b) => {

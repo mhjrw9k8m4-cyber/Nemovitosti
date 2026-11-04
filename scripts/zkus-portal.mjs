@@ -189,6 +189,9 @@ export async function zkusPortal(cil, pomucky, { strop = STROP_DOTAZU_NA_PORTAL 
     const telo = nalez.telo; delete nalez.telo;
     hotove.push(nalez);
     if (nalez.verdikt === 'zavřená') continue;
+    /* „Chce klíč" je taky koncová: za tímtéž klíčem leží i všechny
+       cesty dál, takže zkoušet je znamená jen opakovat tutéž 401. */
+    if (nalez.verdikt === 'chce klíč') continue;
     /* SPOJENÍ DÁL. Jen z cest, které něco vrátily, a jen do stropu —
        sitemapa s deseti tisíci adresami by jinak sežrala celý běh. */
     const dalsi = dalsiCesty({ tvar: nalez.tvar, telo }, { zeSitemapy, zRss, strop: STROP_DALSICH });
@@ -200,6 +203,23 @@ export async function zkusPortal(cil, pomucky, { strop = STROP_DOTAZU_NA_PORTAL 
     dotazu, nedosahnuto, sitemapyZRobots: sitemapy.length,
     cesty: hotove.map((x) => ({ ...x })),
   };
+}
+
+/* CESTY, KTERÉ SI ŽÁDAJÍ ČLOVĚKA, NE DALŠÍ BĚH BOTA.
+   Otevřená a popsaná cesta, která chce klíč, je jediný druh nálezu, se
+   kterým může majitel hned něco udělat — zařídit si účet a klíč. Bot
+   s tím nic dalšího nezmůže (účet mu zakládat nebudu, heslo po něm
+   chtít nesmím), a tak to musí vystoupit z hlášení nahoru, ne zůstat
+   jedním řádkem mezi stovkou cest. */
+export function naStulMajiteli(portaly) {
+  const ven = [];
+  for (const p of (portaly || [])) {
+    for (const c of poradiCest(p.cesty)) {
+      if (c.verdikt !== 'chce klíč') continue;
+      ven.push({ host: p.host, jmeno: p.jmeno, adresa: c.adresa, proc: c.proc });
+    }
+  }
+  return ven;
 }
 
 /* Které portály stojí za zapojení — a řádek do registru k nim. */
@@ -256,7 +276,13 @@ async function main() {
   }
 
   const navrhy = kZapojeni(portaly);
+  const naStul = naStulMajiteli(portaly);
   console.log(`\nDotazů celkem: ${dotazuCelkem}. Portálů se čitelnými nabídkami: ${navrhy.length}.`);
+  if (naStul.length) {
+    console.log(`\nOTEVŘENO, ALE CHCE KLÍČ — ${naStul.length} ${naStul.length === 1 ? 'cesta' : 'cesty'}`
+      + ' k rozhodnutí majiteli (bot dál nemůže, účet a klíč jsou na něm):');
+    for (const n of naStul) console.log(`  ${n.jmeno} — ${n.adresa}\n      ${n.proc}`);
+  }
   if (navrhy.length) {
     console.log('\nŘÁDKY DO REGISTRU (OBECNE_ZDROJE v scripts/zdroje-kandidati.mjs).');
     console.log('Bot je NEZAPOJUJE: podmínky užití toho webu ještě nikdo nečetl.');

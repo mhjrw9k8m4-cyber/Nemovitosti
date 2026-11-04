@@ -311,6 +311,60 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     !!(pd && String(pd.zavreno).length > 20), String(pd && pd.zavreno));
 }
 
+/* ---- OTEVŘENO, ALE CHCE KLÍČ ------------------------------------
+ *
+ * Naměřeno 4. 11. na eDeskách: `/api/v1/documents` odpoví HTTP 401 a
+ * v těle „Chyba: nepřihlášen. Použijte svůj API klíč, který najdete
+ * pro přihlášení na edesky.cz/uzivatel/edit". Bot to hlásil jako
+ * „zavřená" — stejně jako zakázaný robots nebo mrtvý host — a tím ten
+ * nález pohřbil mezi beznadějnými. Přitom je to nejslibnější druh:
+ * cesta je otevřená a popsaná, jen si majitel musí zařídit klíč.
+ *
+ * Hlídá se obojí: že to bot pozná, a že se tím NEDÁ obejít odmítnutý
+ * přístup — čtyřstovka bez řeči o klíči zůstává zavřená.
+ */
+{
+  const teloEdesky = 'Chyba: nepřihlášen. Použijte svůj API klíč, který najdete'
+    + ' pro přihlášení na https://edesky.cz/uzivatel/edit';
+  const k = C.verdiktCesty({ dovoleno: true, stav: 401, typ: 'text/html', telo: teloEdesky });
+  je('401 se slovy o klíči není „zavřená"', k.verdikt, 'chce klíč');
+  pravda('a důvod cituje, co ta služba sama napsala', /API kl[íi]č/.test(k.proc || ''), k.proc);
+  je('a 403 se slovy o přihlášení taky',
+    C.verdiktCesty({ dovoleno: true, stav: 403, typ: 'application/json',
+      telo: '{"error":"unauthorized, sign in first"}' }).verdikt, 'chce klíč');
+  /* A TEĎ TA DRUHÁ STRANA — ŽÁDNÝ VYPÍNAČ NA ODMÍTNUTÝ PŘÍSTUP. */
+  je('holé „Forbidden" zůstává zavřené',
+    C.verdiktCesty({ dovoleno: true, stav: 403, typ: 'text/html', telo: 'Forbidden' }).verdikt,
+    'zavřená');
+  je('404 se slovem „přihlášení" v patičce taky',
+    C.verdiktCesty({ dovoleno: true, stav: 404, typ: 'text/html',
+      telo: '<html>Nenalezeno. <a href="/prihlaseni">Přihlášení</a></html>' }).verdikt,
+    'zavřená');
+  je('a zakázaný robots zůstává zavřený, i kdyby tělo o klíči mluvilo',
+    C.verdiktCesty({ dovoleno: false, stav: 401, telo: teloEdesky }).verdikt, 'zavřená');
+  /* POŘADÍ: nesmí spadnout na konec k zavřeným, jinak si jí nikdo
+     nevšimne. */
+  const por = C.PORADI_VERDIKTU;
+  pravda('„chce klíč" stojí před „odpověděla" i před „zavřená"',
+    por.indexOf('chce klíč') > -1
+    && por.indexOf('chce klíč') < por.indexOf('odpověděla')
+    && por.indexOf('chce klíč') < por.indexOf('zavřená'), por.join(' > '));
+  /* A VYSTUPUJE ČLOVĚKU NAHORU, ne jedním řádkem mezi stovkou cest. */
+  const stul = Z.naStulMajiteli([{ host: 'edesky.cz', jmeno: 'eDesky', cesty: [
+    { adresa: 'https://edesky.cz/api/v1/documents', verdikt: 'chce klíč', proc: 'HTTP 401, …klíč…' },
+    { adresa: 'https://edesky.cz/neco', verdikt: 'zavřená', proc: 'HTTP 404' },
+  ] }]);
+  je('na stůl majiteli se dostane právě ta jedna cesta', stul.length, 1);
+  je('a je to ta s klíčem', stul[0].adresa, 'https://edesky.cz/api/v1/documents');
+  je('portál bez takové cesty na stůl nic nedává',
+    Z.naStulMajiteli([{ host: 'a.cz', cesty: [{ adresa: 'x', verdikt: 'zavřená' }] }]).length, 0);
+  /* A BOT ZA TU 401 NELEZE DÁL: za tímtéž klíčem leží i cesty dál. */
+  const kodB = readFileSync(new URL('./zkus-portal.mjs', import.meta.url), 'utf8');
+  pravda('bot se za „chce klíč" dál nevrtá',
+    /verdikt === 'chce klíč'\) continue;/.test(kodB),
+    'jinak by jen opakoval tutéž 401 na každé další cestě');
+}
+
 console.log('Zkoušení portálů — všechny cesty a spojení dál');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

@@ -24028,3 +24028,42 @@ a půl bodu (mez se počítá ze zeměpisné šířky a přiblížení, ne z pev
 čísla), a přiblížení na kus. **Pravidlo: když slib znamená „stejný
 pohled", měř ho v tom, v čem ten pohled je — v obrazových bodech, ne
 v desetinných místech knihovny.**
+
+## §386 — „otevřeno, ale chce klíč" není totéž jako zavřeno *4. 11.*
+
+Z dnešního měření eDesek (§383) vyšel verdikt, který bot neumí.
+`verdiktCesty` dělila odpovědi takhle:
+
+```
+robots nedovoluje      → zavřená
+HTTP ≥ 400             → zavřená      ← sem padlo eDesky 401
+strojový tvar + slova  → slibná
+přečtené nabídky       → nabídky
+```
+
+eDesky odpověděly **HTTP 401** a v těle *„Chyba: nepřihlášen. Použijte
+svůj API klíč, který najdete pro přihlášení na
+edesky.cz/uzivatel/edit"*. Bot to zařadil **mezi zavřené**, tedy
+k zakázanému robots a mrtvým hostům — a tím ten nález **pohřbil mezi
+beznadějnými**. Přitom je to nejslibnější druh, jaký může najít: cesta
+je otevřená a popsaná, jen si majitel musí zařídit účet a klíč.
+
+**Nový verdikt `chce klíč`** — pozná se úzce: **401 nebo 403**
+a **zároveň** tělo, které o klíči, přihlášení nebo registraci opravdu
+mluví. Holé „Forbidden" zůstává zavřené; 404 se slovem „přihlášení"
+v patičce zůstává zavřená; a zakázaný robots zůstává zavřený, i kdyby
+tělo o klíči mluvilo. Tím se z toho nedá udělat obcházení odmítnutého
+přístupu — jen rozlišení „nemůžeme" od „nesmíme".
+
+V pořadí stojí **hned za slibnou**, ne na konci u zavřených: je to
+jediná položka v celém hlášení, se kterou může člověk něco udělat
+hned. A vystupuje do hlášení **nahoru** vlastním oddílem („otevřeno,
+ale chce klíč — N cest k rozhodnutí majiteli"), ne jedním řádkem mezi
+stovkou cest. Za takovou cestu se bot dál nevrtá: za tímtéž klíčem leží
+i všechny cesty dál, takže by jen opakoval tutéž 401.
+
+**A čeho se bot nedotkne:** účet si zakládá majitel a heslo po něm
+chtít nesmím. Robot tu končí a to je správně — proto je ten verdikt
+pojmenovaný tím, co má udělat ČLOVĚK, ne tím, co se nepovedlo stroji.
+
+`test-zkus-portal`: 66 → **77 kontrol**, 0 chyb.
