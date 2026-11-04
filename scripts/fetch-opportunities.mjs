@@ -759,7 +759,29 @@ export function zahodZastupneGps(nabidky) {
 export function klicDvojnika(o) {
   const la = typeof o.lat === 'number' ? o.lat.toFixed(3) : '';
   const ln = typeof o.lng === 'number' ? o.lng.toFixed(3) : '';
-  return [o.type || '', o.okres || '', o.place || '', o.parcel || '',
+  /* ZNÁME-LI PARCELNÍ ČÍSLO, CENA DO TOTOŽNOSTI NEPATŘÍ.
+   *
+   * Nalezeno zkouškou archivu 4. 11., hned po zapojení otevřených dat
+   * státu: dva různé záznamy evidence (109140 a 109121) na TÉŽ parcele
+   * 3366/4 v Českých Budějovicích, táž výměra 415 m², ceny 149 436
+   * a 193 022 Kč. Dvojníka to neutvořilo, protože v klíči byla cena —
+   * a následky byly tři: dvě nabídky se slily do JEDNÉ stránky (týž
+   * podpis), klíče archivu se srazily a historie ceny z toho udělala
+   * zlevnění o 44 tisíc, které se nestalo.
+   *
+   * Parcelní číslo v katastrálním území je jednoznačné, takže obec +
+   * parcela + výměra je totožnost pozemku. Změřeno na celých datech:
+   * takhle se slije JEDNA skupina ze 2 017 nabídek, tedy o nabídku na
+   * webu méně a o tři vady taky.
+   *
+   * Bez parcelního čísla (u 1 723 z 2 020 nabídek je „—") zůstává cena
+   * v klíči: tam je to jediné, čím se dvě nabídky od sebe liší. */
+  const parcela = String(o.parcel || '').trim();
+  const znamaParcela = parcela && parcela !== '—' && parcela !== '-';
+  if (znamaParcela) {
+    return [o.type || '', o.okres || '', o.place || '', parcela, o.area || 0].join('|');
+  }
+  return [o.type || '', o.okres || '', o.place || '', '',
     la, ln, o.area || 0, o.price || 0].join('|');
 }
 export function bezDvojnic(nabidky) {
@@ -2271,11 +2293,28 @@ async function fetchOkdrazby() {
 
 // Státní pozemkový úřad — nabídky pozemků k prodeji podle § 12 zákona č. 503/2012.
 // SPÚ zveřejňuje kompletní seznam jako CSV (kódování Windows-1250, oddělovač ;).
-function normOkres(name) {
-  if (OKRESY_MAP[name]) return name;
-  const hy = name.replace(/\s+/g, '-'); // "Brno město" → "Brno-město"
+/* JMÉNO OKRESU NA PODOBU, V JAKÉ HO ZNÁME.
+ *
+ * NALEZENO MĚŘENÍM 4. 11. Nové účtování v sítu vypsalo u SPÚ
+ * „chybi:lat 49" a ukázku: „Horšice, Plzeň - jih". Okres se tam píše
+ * s mezerami okolo spojovníku, kdežto my známe „Plzeň-jih" — a stará
+ * náprava (`\s+` → `-`) z toho udělala „Plzeň---jih", tedy pořád
+ * neznámý okres. Bez okresu nemá geokodér kde hledat, nabídka zůstane
+ * bez souřadnic a síto ji zahodí. Devětačtyřicet pozemků kvůli dvěma
+ * mezerám.
+ *
+ * `Praha 4` a podobná jména, která v seznamu okresů nejsou, zůstávají
+ * nedotčená: funkce vrací vstup, ne dohad. */
+export function normOkres(name) {
+  const vstup = String(name == null ? '' : name);
+  if (OKRESY_MAP[vstup]) return vstup;
+  /* Nejdřív jen uklidit mezery po krajích: „Ústí nad Orlicí" je okres
+     s mezerami uvnitř a spojovníkování by z něj udělalo nesmysl. */
+  const trim = vstup.trim().replace(/\s+/g, ' ');
+  if (OKRESY_MAP[trim]) return trim;
+  const hy = trim.replace(/\s*-\s*/g, '-').replace(/\s+/g, '-');
   if (OKRESY_MAP[hy]) return hy;
-  return name;
+  return vstup;
 }
 function splitCsvLine(line) {
   return line.split(';').map((s) => s.replace(/^="?|"?$/g, '').trim());
@@ -2739,7 +2778,34 @@ export function procNeplatna(o) {
   // Cena musí být důvěryhodná. Pod 5 000 Kč jde skoro vždy o chybu stahování
   // (např. cena za m² spletená s celkovou cenou) — takové raději nezobrazujeme.
   const price = Number(o.price);
-  if (!isFinite(price) || price < 5000 || price > 2e9) return 'cenaMimoRozsah';
+  if (!isFinite(price) || price <= 0 || price > 2e9) return 'cenaMimoRozsah';
+  /* POD 5 000 Kč: NE HNED DO KOŠE, ALE DVĚ OTÁZKY.
+   *
+   * Práh vznikl proti chybě stahování — cena za metr spletená s cenou
+   * celkovou. NALEZENO MĚŘENÍM 4. 11.: u SPÚ takhle padlo 217 nabídek
+   * a ukázka byla „Jundrov, Brno-město — 1 m², 126 Kč, zahrada". To
+   * žádná chyba stahování není, to je skutečná nabídka státu: metr
+   * zahrady za 126 Kč, tedy narovnání plotu u souseda. A naopak
+   * „Libavské Údolí, Sokolov — 151 m², 3 020 Kč" je docela obyčejný
+   * malý pozemek za 20 Kč/m², o který by na webu nikdo stát nemusel
+   * přestat.
+   *
+   * Rozděluje se to proto na dvě věci, každou s vlastním jménem:
+   *   · cena za metr pod 1 Kč → tomu se nedá věřit, to je ta chyba,
+   *     pro kterou práh vznikl (500 m² za 300 Kč = 0,6 Kč/m²);
+   *   · pozemek pod 100 m² za pár stovek → věřit se tomu dá, ale pro
+   *     kupujícího to pozemek není. Zůstává zahozený, jen už se to
+   *     nevydává za nedůvěryhodnou cenu.
+   * Zástupné ceny („cena na dotaz" napsaná jako 5 000 Kč) chytá dál
+   * síto podle druhu, které má vlastní prahy a strop 1 %. */
+  const CENA_DROBNA = 5000;
+  const PLOCHA_NEJMENSI = 100;
+  if (price < CENA_DROBNA) {
+    const vymera = Number(o.area);
+    if (!isFinite(vymera) || vymera <= 0) return 'cenaMimoRozsah';
+    if (price / vymera < 1) return 'cenaMimoRozsah';
+    if (vymera < PLOCHA_NEJMENSI) return 'drobnyPozemekZaParStovek';
+  }
   // Cena za m² nesmí být absurdně vysoká. Přes 25 000 Kč/m² jde skoro vždy
   // o chybu (přehozené číslo, spoluvlastnický podíl…) — nejdražší reálné
   // stavební pozemky se drží hluboko pod tím.
@@ -2798,6 +2864,30 @@ export function sectiNeplatne(nabidky, zdrojProNabidku) {
     ven.set(zdroj, z);
   }
   return ven;
+}
+
+/* ZDROJ, KTERÉMU SÍTO SEBERE VÍC NEŽ POLOVINU. Práh je změřený, ne
+   vymyšlený: nový zdroj otevřených dat ztrácel 22 z 33 (67 %), SPÚ
+   ztrácí 266 z 549 (48 %) a Bezrealitky 268 z 1 911 (14 %). Polovina
+   tedy odděluje „tohle je naše pravidlo" od „taková ta data jsou".
+   Hlásí se, nezastavuje: síto má svoje důvody a rozhodnout patří
+   člověku. */
+export const PRAH_ZTRATY_V_SITU = 0.5;
+
+export function zdrojeZtraceneVSitu(zdroje, prah = PRAH_ZTRATY_V_SITU) {
+  const ven = [];
+  for (const z of (zdroje || [])) {
+    const pocet = Number(z && z.pocet) || 0;
+    const nepustilo = Number(z && z.nepustilo) || 0;
+    if (!nepustilo || pocet <= 0) continue;
+    /* Podíl se počítá ze VŠEHO, co zdroj přinesl, tedy z propuštěných
+       i zahozených: `pocet` je počet stažených. */
+    const podil = nepustilo / pocet;
+    if (podil <= prah) continue;
+    ven.push({ nazev: z.nazev, pocet, nepustilo, podil: Math.round(podil * 100),
+      duvod: z.nepustiloDuvod || 'bez udaného důvodu' });
+  }
+  return ven.sort((a, b) => b.podil - a.podil);
 }
 
 export function hlaskyNeplatnych(soucty) {
@@ -3087,8 +3177,23 @@ async function fetchNabidkyStatu() {
      `.filter(valid)` a co propadlo, zmizelo beze slova — u nového
      zdroje to byly dvě třetiny jeho nabídek (33 stažených, 11 na
      webu) a nikde to nešlo vyčíst. */
-  for (const h of hlaskyNeplatnych(sectiNeplatne(raw, (o) => zdrojNabidky(o, znamaJmena)))) {
-    console.error(h);
+  const neplatne = sectiNeplatne(raw, (o) => zdrojNabidky(o, znamaJmena));
+  for (const h of hlaskyNeplatnych(neplatne)) console.error(h);
+  /* A ČÍSLO JDE DO DAT, ne jen do logu. Log po běhu zmizí se strojem,
+     kdežto podle tohohle čísla se dá příště poznat, že zdroj zahazuje
+     víc než posledně — a je vidět i na diagnostice webu. */
+  for (const z of zdroje) {
+    const s = neplatne.get(z.nazev);
+    z.nepustilo = s ? s.pocet : 0;
+    z.nepustiloDuvod = s
+      ? Object.entries(s.duvody).sort((a, b) => b[1] - a[1]).map(([k, n]) => k + ' ' + n).join(', ')
+      : null;
+  }
+  for (const n of zdrojeZtraceneVSitu(zdroje)) {
+    console.error(`POZOR: zdroj ${n.nazev} stáhl ${n.pocet} nabídek a ${n.nepustilo} z nich`
+      + ` síto nepustilo na web (${n.podil} %) — ${n.duvod}. Při takovém podílu to nebývá`
+      + ' jakost dat, ale naše pravidlo: právě takhle zmizely dvě třetiny nového zdroje'
+      + ' kvůli parcelnímu číslu, které je jen na přečtení (§365).');
   }
   const podleInzeratu = raw
     .filter(valid)

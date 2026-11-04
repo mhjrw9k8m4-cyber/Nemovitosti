@@ -22917,3 +22917,70 @@ ozve a teď k tomu bude mít i diagnózu.
 54), `test-nabidky-statu.mjs` 48 (bylo 44). Čtyři sabotáže: zpátky
 `undefined` místo pomlčky (2 pády), pryč vlastní klíč (1), zahozené se
 nevypisují (1), důvod bez jména pole (2).
+
+## §366 — kde leží pozemky, které jsme stahovali a nezveřejnili
+
+Účtování v sítu (§365) dostalo ke každému důvodu **ukázku té nabídky** —
+protože číslo samo nerozhodne. První ostré měření vypsalo:
+
+```
+Zdroj SPÚ: 266 nabídek síto nepustilo na web — cenaMimoRozsah 217, chybi:lat 49.
+  · cenaMimoRozsah: Jundrov, Brno-město — 1 m², 126 Kč, zahrada
+  · chybi:lat: Horšice, Plzeň - jih — 594 m², 4 458 Kč, trvalý travní porost
+Zdroj Bezrealitky: 269 — souradniceMimoCR 257, …
+  · souradniceMimoCR: Bádensko, Tachov — 8 832 m², 1 255 000 Kč
+Zdroj Nabídky státu: 3 (bylo 22 — oprava pomlčky zabrala)
+```
+
+Tři různé odpovědi na jednu otázku:
+
+**1. „Plzeň - jih" — náš omyl, 49 pozemků.** Okres se u SPÚ píše
+s mezerami okolo spojovníku, my známe „Plzeň-jih". Náprava v kódu byla,
+jen dělala `\s+` → `-`, tedy z „Plzeň - jih" vyrobila „Plzeň---jih" —
+pořád neznámý okres. Bez okresu nemá geokodér kde hledat, nabídka
+zůstane bez souřadnic a síto ji zahodí. **Devětačtyřicet pozemků kvůli
+dvěma mezerám.** Opraveno tak, aby se zvlášť zkusila podoba jen
+s uklizenými mezerami („Ústí nad Orlicí" mezery v názvu MÁ a
+spojovníkovat se nesmí).
+
+**2. „1 m² za 126 Kč" — ani naše vada, ani k zahození mlčky.** Práh
+5 000 Kč vznikl proti chybě stahování (cena za metr spletená s cenou
+celkovou). Jenže metr zahrady za 126 Kč žádná chyba není — to je
+skutečná nabídka státu, narovnání plotu u souseda. A naopak „Libavské
+Údolí, Sokolov — 151 m², 3 020 Kč" je docela obyčejný malý pozemek za
+20 Kč/m². Rozděleno proto na dvě věci, každou s vlastním jménem:
+
+| co | co s tím |
+|---|---|
+| cena za metr **pod 1 Kč** | zahodit — to je ta chyba, pro kterou práh vznikl (500 m² za 300 Kč) |
+| pozemek **pod 100 m²** za pár stovek | zahodit jako `drobnyPozemekZaParStovek` — věřit se tomu dá, ale pro kupujícího to pozemek není |
+| ostatní pod 5 000 Kč | **pustit na web** |
+
+**3. „Bádensko, Tachov" — správně zahozené.** 257 nabídek Bezrealitek
+se souřadnicemi mimo ČR jsou opravdu nabídky mimo ČR. Tady se nemá
+opravovat nic a je to změřené, ne odhadnuté.
+
+**A nový hlídač: zdroj, kterému síto sebere víc než polovinu.** Práh je
+změřený: nový zdroj ztrácel 22 z 33 (67 %), SPÚ 266 z 549 (48 %),
+Bezrealitky 269 z 1 911 (14 %). Polovina tedy odděluje „tohle je naše
+pravidlo" od „taková ta data jsou". Číslo se zapisuje **do dat**, ne
+jen do logu.
+
+**Mimochodem vypadla ještě jedna vada, a tu našla zkouška archivu.**
+Dva různé záznamy evidence (109140 a 109121) na téže parcele 3366/4
+v Českých Budějovicích, táž výměra 415 m², ceny 149 436 a 193 022 Kč.
+Dvojníka to neutvořilo, protože v klíči dvojníka byla **cena** — a
+následky byly tři: dvě nabídky se slily do JEDNÉ stránky (týž podpis),
+klíče archivu se srazily a historie ceny z toho udělala **zlevnění
+o 44 tisíc, které se nestalo**. Parcelní číslo je v katastrálním území
+jednoznačné, takže obec + parcela + výměra je totožnost pozemku a cena
+do ní nepatří. Změřeno na celých datech: slije se tím **jedna** skupina
+ze 2 017 nabídek. Bez parcelního čísla (u 1 723 z 2 020 je „—") cena
+v klíči zůstává: tam je to jediné, čím se dvě nabídky liší.
+
+**Čím je to podložené.** `test-vypadek-zdroje.mjs` 76 kontrol (bylo
+67), `test-cteni-zdroje.mjs` 77 (72), `test-dvojnici.mjs` 21 (18).
+Sabotáže: stará náprava okresu (2 pády), zpátky tvrdý práh 5 000 (2),
+pustit i metr zahrady (1), práh ztráty až na 95 % (2), číslo se
+nezapíše do dat (1), ukázka se neukládá (1), cena zpátky do klíče
+dvojníka (1).

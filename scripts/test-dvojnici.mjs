@@ -92,6 +92,28 @@ pravda('klíč dvojníka nese parcelní číslo (dvě různé parcely se neslou�
   klicDvojnika(s({ parcel: '232' })) !== klicDvojnika(s({ parcel: '—' })),
   'parcelní číslo v klíči chybí');
 
+/* ZNÁME-LI PARCELNÍ ČÍSLO, CENA DO TOTOŽNOSTI NEPATŘÍ.
+   Nalezeno zkouškou archivu 4. 11., hned po zapojení otevřených dat
+   státu: dva různé záznamy evidence na TÉŽ parcele 3366/4 v Českých
+   Budějovicích, táž výměra 415 m², ceny 149 436 a 193 022 Kč. Dvojníka
+   to neutvořilo, protože v klíči byla cena — a následky byly tři: dvě
+   nabídky se slily do jedné stránky, klíče archivu se srazily
+   a historie ceny z toho udělala zlevnění o 44 tisíc, které se
+   nestalo. */
+pravda('táž parcela a výměra za dvě ceny je JEDEN pozemek',
+  klicDvojnika(s({ parcel: '3366/4', area: 415, price: 149436 }))
+  === klicDvojnika(s({ parcel: '3366/4', area: 415, price: 193022 })),
+  'cena pořád rozhoduje o totožnosti');
+pravda('ale jiná výměra na téže parcele je jiná nabídka',
+  klicDvojnika(s({ parcel: '3366/4', area: 415 }))
+  !== klicDvojnika(s({ parcel: '3366/4', area: 300 })));
+/* A BEZ PARCELNÍHO ČÍSLA ZŮSTÁVÁ CENA V KLÍČI: u 1 723 z 2 020 nabídek
+   je parcela „—" a cena je tam jediné, čím se dvě liší. */
+pravda('bez parcelního čísla cena v klíči zůstává',
+  klicDvojnika(s({ parcel: '—', price: 100000 }))
+  !== klicDvojnika(s({ parcel: '—', price: 200000 })),
+  'dvě různé nabídky bez parcely by se slily do jedné');
+
 /* --- HOTOVÁ DATA --------------------------------------------------- */
 const nab = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8')).opportunities;
 pravda('nabídek je dost na to, aby kontrola něco znamenala', nab.length > 500,

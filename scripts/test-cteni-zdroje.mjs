@@ -463,6 +463,27 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
 
 }
 
+/* ---- JMÉNO OKRESU, JAK HO PÍŠE CIZÍ ZDROJ ------------------------
+   NALEZENO MĚŘENÍM 4. 11.: u SPÚ zahodilo síto 49 nabídek s důvodem
+   „chybi:lat" a ukázkou „Horšice, Plzeň - jih". Okres se tam píše
+   s mezerami okolo spojovníku, my známe „Plzeň-jih" — a stará
+   náprava (`\s+` → `-`) z toho udělala „Plzeň---jih", tedy pořád
+   neznámý okres. Bez okresu nemá geokodér kde hledat, nabídka zůstane
+   bez souřadnic a zahodí se. Devětačtyřicet pozemků kvůli dvěma
+   mezerám. */
+{
+  const O = await import('./fetch-opportunities.mjs');
+  const je2 = (popis, vyslo, cekano) => pravda(`${popis} (${JSON.stringify(vyslo)})`,
+    vyslo === cekano, `čekáno ${JSON.stringify(cekano)}, vyšlo ${JSON.stringify(vyslo)}`);
+  je2('okres s mezerami okolo spojovníku se pozná', O.normOkres('Plzeň - jih'), 'Plzeň-jih');
+  je2('a mezera místo spojovníku taky', O.normOkres('Brno město'), 'Brno-město');
+  /* A co se spojovníkovat NESMÍ: okres, který mezery v názvu má. */
+  je2('okres s mezerami v názvu zůstane s mezerami',
+    O.normOkres('  Ústí nad Orlicí '), 'Ústí nad Orlicí');
+  je2('co v seznamu okresů není, se nedohaduje', O.normOkres('Praha 4'), 'Praha 4');
+  je2('a nic nespadne ani na prázdnu', O.normOkres(null), '');
+}
+
 console.log('Čtení zdroje, který se změnil:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

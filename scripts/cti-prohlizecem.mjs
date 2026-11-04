@@ -119,7 +119,11 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
      ta adresa, kterou by čtečka potřebovala. Zapisuje se jen to, co
      prohlížeč stejně stahoval (žádný požadavek se nepřidává) a jen
      odpovědi, které vypadají na data, ne na obrázky a styly. */
+  /* `image/svg+xml` je OBRÁZEK, ne data. Chytlo se to na první ostré
+     ohledání (ÚZSVM 4. 11.): mezi třemi „datovými" odpověďmi byly dvě
+     loga a jen jedna byla to, o co šlo. */
   const DATOVY_TYP = /json|csv|xml|text\/plain/i;
+  const NENI_DATO = /^image\//i;
   const STROP_DATOVYCH = 12;
   return {
     async vykresli(url) {
@@ -131,9 +135,17 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
         try {
           const typ = odp.headers()['content-type'] || '';
           const u = odp.url();
-          if (!DATOVY_TYP.test(typ)) return;
+          if (!DATOVY_TYP.test(typ) || NENI_DATO.test(typ)) return;
           if (datove.length >= STROP_DATOVYCH) return;
-          datove.push({ url: u.slice(0, 300), stav: odp.status(), typ: typ.slice(0, 60) });
+          /* A ZPŮSOB I TĚLO DOTAZU. Naměřeno 4. 11. u ÚZSVM: na nalezené
+             adrese `/api/Property/List` vrátí GET rovnou HTTP 405 —
+             je to POST s filtrem v těle. Bez toho těla je adresa sama
+             k ničemu, čtečka by neměla co poslat. */
+          const r = odp.request();
+          let telo = null;
+          try { telo = r.method() === 'GET' ? null : (r.postData() || null); } catch { telo = null; }
+          datove.push({ url: u.slice(0, 300), stav: odp.status(), typ: typ.slice(0, 60),
+            zpusob: r.method(), telo: telo ? String(telo).slice(0, 400) : null });
         } catch { /* odpověď, na kterou se už nedá dosáhnout, se jen nezapíše */ }
       });
       try {

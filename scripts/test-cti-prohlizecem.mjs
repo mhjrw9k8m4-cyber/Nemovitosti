@@ -38,10 +38,12 @@ const SKRIPT = `document.getElementById('t').textContent = ${JSON.stringify(VETA
    stránky se čtečka napsat nedá — zjistit se ale dá, ODKUD si ta
    stránka data bere, a to je právě adresa, kterou čtečka potřebuje. */
 const APLIKACE = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Aplikace</title></head>
-<body><div id="v">Načítám…</div><script>
+<body><div id="v">Načítám…</div><img src="/logo.svg" alt=""><script>
 fetch('/api/nabidky').then((r) => r.json()).then((d) => {
   document.getElementById('v').textContent = 'nabídek: ' + d.pocet;
 });
+fetch('/api/hledej', { method: 'POST', headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ druh: 'pozemek', strana: 1 }) });
 </script></body></html>`;
 
 /* Stránka s PŘEBYTKEM cizích hostů: na ní se měří, že strop jmen drží
@@ -62,6 +64,8 @@ const server = http.createServer((req, res) => {
   if (req.url === '/obrazek.png') { res.writeHead(200, { 'content-type': 'image/png' }); return res.end(Buffer.alloc(8)); }
   if (req.url === '/aplikace') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(APLIKACE); }
   if (req.url === '/api/nabidky') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{"pocet":3}'); }
+  if (req.url === '/api/hledej') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{"polozky":[]}'); }
+  if (req.url === '/logo.svg') { res.writeHead(200, { 'content-type': 'image/svg+xml' }); return res.end('<svg xmlns="http://www.w3.org/2000/svg"/>'); }
   res.writeHead(404); res.end('nic');
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -170,10 +174,22 @@ pravda('prázdný seznam se do nálezu nezapíše',
     pravda('a je vypsaná ADRESA, ze které si data vzala',
       d.some((o) => /\/api\/nabidky$/.test(o.url) && o.stav === 200 && /json/i.test(o.typ)),
       JSON.stringify(d));
-    pravda('obrázek ani skript se mezi datové odpovědi nepletou',
-      !d.some((o) => /obrazek\.png|podminky\.js/.test(o.url)), JSON.stringify(d));
+    /* `image/svg+xml` obsahuje „xml", takže by do datových odpovědí
+       propadl — a chytlo se to na prvním ostrém ohledání: ze tří
+       „datových" odpovědí ÚZSVM byla dvě loga. */
+    pravda('obrázek ani skript se mezi datové odpovědi nepletou, ani SVG',
+      !d.some((o) => /obrazek\.png|podminky\.js|logo\.svg/.test(o.url)), JSON.stringify(d));
+    /* POST: adresa sama nestačí, čtečka musí vědět, CO poslat.
+       Naměřeno u ÚZSVM: GET na nalezené /api/Property/List vrací 405. */
+    const post = d.find((o) => /\/api\/hledej$/.test(o.url));
+    pravda('u POST dotazu je vidět způsob i tělo',
+      post && post.zpusob === 'POST' && /"druh":"pozemek"/.test(post.telo || ''),
+      JSON.stringify(post));
+    pravda('u GET se tělo nepředstírá',
+      (d.find((o) => /\/api\/nabidky$/.test(o.url)) || {}).telo === null, JSON.stringify(d));
     const radky = vypisDatove(d).join('\n');
     pravda('a výpis tu adresu ukáže člověku', /\/api\/nabidky/.test(radky), radky);
+    pravda('a u POST ukáže i tělo dotazu', /tělo dotazu: .*"druh":"pozemek"/.test(radky), radky);
     pravda('a když si stránka nic nedotahuje, řekne se to slovy',
       /ŽÁDNÁ DATOVÁ ODPOVĚĎ/.test(vypisDatove([]).join('\n')));
   } finally { await p.zavri(); }

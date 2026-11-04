@@ -354,8 +354,23 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
     F.procNeplatna({ ...dobra, parcel: undefined }), 'chybi:parcel');
   je('a pomlčka místo čísla už projde',
     F.procNeplatna({ ...dobra, parcel: '—' }), null);
-  je('cena pod důvěryhodnou hranicí má jméno',
-    F.procNeplatna({ ...dobra, price: 100 }), 'cenaMimoRozsah');
+  /* POD 5 000 Kč SE ROZHODUJE PODLE METRŮ, NE PODLE CENY SAMÉ.
+     Nalezeno měřením 4. 11.: u SPÚ takhle padlo 217 nabídek a ukázka
+     byla „Jundrov, Brno-město — 1 m², 126 Kč, zahrada". To není chyba
+     stahování, pro kterou práh vznikl — to je skutečná nabídka státu.
+     A „Libavské Údolí, Sokolov — 151 m², 3 020 Kč" je docela obyčejný
+     malý pozemek za 20 Kč/m². */
+  je('cena za metr pod 1 Kč je ta chyba, pro kterou práh vznikl',
+    F.procNeplatna({ ...dobra, price: 300, area: 500 }), 'cenaMimoRozsah');
+  je('ale malý pozemek za pár tisíc už projde',
+    F.procNeplatna({ ...dobra, price: 3020, area: 151 }), null);
+  je('metr zahrady za 126 Kč se zahodí, ale jako DROBNÝ, ne jako nedůvěryhodná cena',
+    F.procNeplatna({ ...dobra, price: 126, area: 1 }), 'drobnyPozemekZaParStovek');
+  /* Výměra povinná není (u exekucí v evidenci často chybí), takže se
+     pod prahem nedá posoudit — a pak se nabídka nebere. */
+  je('cena pod prahem bez výměry se nedá posoudit, takže neprojde',
+    F.procNeplatna({ ...dobra, price: 100, area: null }), 'cenaMimoRozsah');
+  je('nulová cena neprojde', F.procNeplatna({ ...dobra, price: 0 }), 'cenaMimoRozsah');
   je('nesmyslná cena za metr má jméno',
     F.procNeplatna({ ...dobra, price: 90000000, area: 100 }), 'cenaZaMetrPrilisVysoka');
   je('souřadnice mimo ČR mají jméno',
@@ -386,7 +401,27 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   const kod2 = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
   pravda('a robot ty věty před sítem vypíše',
-    /hlaskyNeplatnych\(sectiNeplatne\(raw,/.test(kod2), 'v main() chybí výpis zahozených');
+    /hlaskyNeplatnych\(neplatne\)/.test(kod2) && /sectiNeplatne\(raw,/.test(kod2),
+    'v main() chybí výpis zahozených');
+
+  /* ZDROJ, KTERÉMU SÍTO SEBERE VÍC NEŽ POLOVINU, SE OZVE. Práh je
+     změřený na ostrých datech: nový zdroj ztrácel 22 z 33 (67 %), SPÚ
+     ztrácí 266 z 549 (48 %), Bezrealitky 268 z 1 911 (14 %). */
+  const ztraty = F.zdrojeZtraceneVSitu([
+    { nazev: 'Nabídky státu', pocet: 33, nepustilo: 22, nepustiloDuvod: 'chybi:parcel 22' },
+    { nazev: 'SPÚ', pocet: 549, nepustilo: 266, nepustiloDuvod: 'cenaMimoRozsah 217' },
+    { nazev: 'Bezrealitky', pocet: 1911, nepustilo: 268, nepustiloDuvod: 'souradniceMimoCR 256' },
+    { nazev: 'Farmy', pocet: 9, nepustilo: 0, nepustiloDuvod: null },
+  ]);
+  je('ozve se jen zdroj nad prahem poloviny', ztraty.map((z) => z.nazev), ['Nabídky státu']);
+  je('a řekne podíl v procentech', ztraty[0] && ztraty[0].podil, 67);
+  pravda('a nese i důvod, ne jen číslo', /chybi:parcel/.test((ztraty[0] || {}).duvod || ''),
+    JSON.stringify(ztraty[0]));
+  je('zdroj, který nestáhl nic, se nepočítá (nedělí se nulou)',
+    F.zdrojeZtraceneVSitu([{ nazev: 'X', pocet: 0, nepustilo: 0 }]).length, 0);
+  pravda('číslo jde do dat u každého zdroje, ne jen do logu',
+    /z\.nepustilo = s \? s\.pocet : 0;/.test(kod2) && /zdrojeZtraceneVSitu\(zdroje\)/.test(kod2),
+    'v main() chybí zápis `nepustilo` do stavu zdroje');
 }
 
 console.log('Výpadek zdroje:');

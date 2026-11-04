@@ -71,7 +71,12 @@ export function vypisDatove(datove) {
     return radky;
   }
   radky.push(`DATOVÉ ODPOVĚDI (${d.length}) — tudy si stránka bere obsah:`);
-  for (const o of d) radky.push(`  ${o.stav}  ${o.typ}  ${o.url}`);
+  for (const o of d) {
+    radky.push(`  ${o.stav}  ${o.zpusob || 'GET'}  ${o.typ}  ${o.url}`);
+    /* Tělo dotazu je u POST stejně důležité jako adresa: bez něj by
+       čtečka neměla co poslat (naměřeno u ÚZSVM, kde GET vrací 405). */
+    if (o.telo) radky.push(`      tělo dotazu: ${o.telo}`);
+  }
   return radky;
 }
 
