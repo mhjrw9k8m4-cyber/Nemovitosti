@@ -24224,22 +24224,28 @@ dostane cena, o které jsme se shodli, že je to **chyba v inzerátu**.
 Hlídá se hodnota **i obě strany hranice**: 30 000 se ještě ukáže,
 30 001 už ne.
 
-**3. Co se změřit NEPODAŘILO — a zbývá.** Okolí se prohlíží v devíti
-přihrádkách mřížky (krok 0,5°, hledá se do 25 km), takže soused může
-ležet šikmo o jednu přihrádku dál a pořád být blíž než 25 km. Zkrácená
-smyčka (`i <= 1` na `i < 1`) ho vynechá.
+**3. Okolí se prohlíží v devíti přihrádkách — a trvalo dvě měření, než
+to šlo doložit.** Mřížka má krok 0,5°, hledá se do 25 km, takže soused
+může ležet v přihrádce **šikmo** o jednu dál a pořád být blíž než
+kilometr. Zkrácená smyčka (`i <= 1` na `i < 1`) ho vynechá a odhad
+spadne na okresní hladinu, která o tom místě neříká nic.
 
-Postavil jsem cíl těsně pod hranicí mřížky (49,999 / 14,999 =
-přihrádka 99|29) a devět srovnatelných sousedů těsně nad ní
-(50,001 / 15,001 = 100|30), tedy **0,3 km daleko a všechny šikmo**.
-Odhad vyšel — ale **z úrovně okres** (vzorek 10), ne z okolí. A to
-i když sousedy posadím do **téže** přihrádky. Úroveň „okolí" se na
-téhle fixtuře nezapojí vůbec, takže kontrola měří okresní hladinu
-a o smyčce neříká nic. Sabotáž to potvrzuje: `<=` zůstává nechycené.
+Napoprvé to nevyšlo a ten důvod je nález sám pro sebe: **úroveň „okolí"
+chce PŘESNĚ DESET sousedů** (`OKOLI_K`, `if (mam < OKOLI_K) return
+null`), ne osm jako ostatní hladiny (`MIN_VZOREK`). S devíti sousedy
+odhad **taky vyjde** — jenže z okresu. Kontrola by tedy svítila zeleně
+a měřila něco úplně jiného, než si o sobě myslí. Přesně ten druh
+zelené, kvůli které se sabotáž dělá.
 
-**Co zbývá:** najít, čím se úroveň „okolí" zapíná (`OKOLI_K = 10`
-nejbližších, `MIN_VZOREK = 8`), a postavit fixturu, ve které vyhraje.
-Zapsáno u té kontroly v `scripts/test-ceny.mjs`, ne jen tady.
+Teď je sousedů deset, všichni leží šikmo za hranicí mřížky (cíl
+49,999 / 14,999 = přihrádka 99|29, sousedi 50,001 / 15,001 = 100|30,
+tedy 0,3 km daleko) a kontrola si ověří, že odhad přišel **z okolí**
+(`uroven: 'okoli'`, vzorek 10, 300 Kč/m²).
 
-`test-ceny`: 180 → **186 kontrol**. Sabotáž: **5 z 6 chyceno**
+`test-ceny`: 180 → **187 kontrol**. Sabotáž: **6 z 6 chyceno**
 (před tím 3 z 6).
+
+**Pravidlo, které z toho padá:** když hlídač po přidání kontroly svítí
+zeleně, ještě to neznamená, že tu kontrolu opravdu dělá. Tady odhad
+vyšel ze špatné hladiny a rozdíl by nikdo nepoznal — **jediné, co to
+odhalilo, byla sabotáž, která zůstala nechycená.**

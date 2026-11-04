@@ -1586,44 +1586,36 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     PK_CENY.zaMetr({ area: 1, price: 30000 }), 30000);
   je('a o korunu výš už ne', PK_CENY.zaMetr({ area: 1, price: 30001 }), null);
 
-  /* 3) OKOLÍ SE PROHLÍŽÍ VE VŠECH DEVÍTI PŘIHRÁDKÁCH — a tohle se mi
-        změřit NEPODAŘILO; píšu to sem, ať se k tomu dá vrátit.
-        Mřížka má krok 0,5°, hledá se do 25 km, takže soused může ležet
-        v přihrádce šikmo o jednu dál a pořád být blíž než 25 km.
-        Zkrácená smyčka (`i <= 1` na `i < 1`) takového souseda vynechá.
-        Postavil jsem proto cíl těsně pod hranicí mřížky (49,999 /
-        14,999 = přihrádka 99|29) a devět srovnatelných sousedů těsně
-        nad ní (50,001 / 15,001 = 100|30), tedy 0,3 km daleko a všechny
-        šikmo. Odhad vyšel — jenže z ÚROVNĚ OKRES (`uroven: 'okres'`,
-        vzorek 10), ne z okolí, a to i když sousedy posadím do TÉŽE
-        přihrádky. Úroveň „okolí" se tedy na téhle fixtuře nezapojí
-        vůbec a kontrola níž o smyčce nic neříká: měří okresní hladinu.
-        Sabotážní stroj to potvrzuje — `<=` na `<` v js/ceny.js zůstává
-        nechycené. Co zbývá: najít, čím se úroveň „okolí" zapíná
-        (OKOLI_K = 10 nejbližších, MIN_VZOREK = 8), a postavit fixturu,
-        ve které vyhraje. Do té doby je to přiznané slepé místo, ne
-        zelená. */
+  /* 3) OKOLÍ SE PROHLÍŽÍ VE VŠECH DEVÍTI PŘIHRÁDKÁCH. Mřížka má krok
+        0,5°, hledá se do 25 km — soused tedy může ležet v přihrádce
+        šikmo o jednu dál a pořád být blíž než kilometr. Zkrácená smyčka
+        (`i <= 1` na `i < 1`) ho vynechá a odhad spadne na okresní
+        hladinu, která o tom místě neříká nic.
+
+        DVĚ MĚŘENÍ, NEŽ TO ZABRALO, a obě patří sem, ať to příště nikdo
+        nehledá znovu: úroveň „okolí" chce PŘESNĚ DESET sousedů
+        (`OKOLI_K`, viz `if (mam < OKOLI_K) return null`), ne osm jako
+        ostatní hladiny (`MIN_VZOREK`). S devíti sousedy odhad vyjde
+        taky — jenže z okresu, takže kontrola měří něco jiného, než si
+        myslí. Proto je jich tu deset.
+
+        Cíl leží těsně pod hranicí mřížky (49,999 / 14,999 = přihrádka
+        99|29), všichni sousedi těsně nad ní (50,001 / 15,001 = 100|30),
+        tedy 0,3 km daleko a VŠICHNI šikmo. */
   {
     const OKRES_KRAJ2 = { 'Zkouška': 'Kraj zkoušky' };
     const spol = { type: 'sale', okres: 'Zkouška', druh: 'Zahrada', place: 'Mřížka' };
-    /* 49,999 je v přihrádce 99 (49,999 / 0,5 = 99,99), 50,001 v přihrádce
-       100 — a totéž v délce. Vzdálenost mezi nimi je přitom 0,3 km. */
     const cil = { ...spol, lat: 49.999, lng: 14.999, area: 1000, price: 1000000, url: 'c' };
-    const sousedi = Array.from({ length: 8 }, (_, i) => ({
-      ...spol, lat: 50.001 + i * 0.0001, lng: 15.001, area: 1000, price: 300000,
-      url: 's' + i,
+    const sousedi = Array.from({ length: 10 }, (_, i) => ({
+      ...spol, lat: 50.001 + i * 0.0001, lng: 15.001, area: 1000, price: 300000, url: 's' + i,
     }));
-    const m = PK_CENY.postav([cil, ...sousedi], OKRES_KRAJ2);
-    const odh = m.odhad(cil);
-    /* Odhad se o takového pozemku dá udělat JEN z šikmých sousedů —
-       v jeho vlastní přihrádce není nikdo. Když se smyčka zkrátí,
-       nezbude z čeho odhadovat a vrátí se null. */
+    const odh = PK_CENY.postav([cil, ...sousedi], OKRES_KRAJ2).odhad(cil);
     pravda('pozemek, jehož sousedé leží šikmo za hranicí mřížky, odhad dostane',
       !!odh, `bez odhadu: ${JSON.stringify(odh)}`);
     if (odh) {
+      je('a je to odhad Z OKOLÍ, ne z okresní hladiny', odh.uroven, 'okoli');
       je('a sedí na ceně těch sousedů (300 Kč/m²)', odh.zaM2, 300);
-      /* Přiznaně: tohle je okresní hladina, ne okolí — viz poznámka výš. */
-      je('a přiznaně z okresní hladiny, dokud okolí nejde vyvolat', odh.uroven, 'okres');
+      je('a vzorek je všech deset', odh.vzorek, 10);
     }
   }
 }
