@@ -23977,3 +23977,54 @@ Dvě věci ale stojí v cestě a **rozhoduje o nich majitel, ne robot**:
 nebo pokryté, dva zavřené měřením (oba Portál dražeb), jeden prázdný
 (VLS, hlídá se), jeden zakázaný robotem (ISIR) a **jeden otevřený a
 čekající na majitelovo rozhodnutí (eDesky)**.
+
+## §384 — sabotážní stroj křivdil hlídačům v prohlížeči *4. 11.*
+
+Nález při práci na §382: stroj zapíše mutaci do `js/pozemek.js`, pustí
+zkoušku v prohlížeči a napíše „NECHYTILA". Jenže **stránky servírují
+`js/min/pozemek.js`**, a ten se po sabotáži nepřestaví (minifikuje
+`scripts/oprav.mjs`, kterou stroj spouštět nesmí — přepsala by `?v=`
+otisky na třech tisících stránek). **Zkouška tu mutaci nemohla vidět.**
+
+Změřeno týž den na vlastní kůži: oprava `posunDomov` v
+`js/pozemek.js` neudělala v prohlížeči **nic**, dokud neproběhla
+`oprav.mjs` — hlídač padal dál se stejnou hláškou.
+
+Takový výsledek je **falešná obžaloba hlídače**. A hůř: smyčka
+sebevývoje by podle něj poslala člověka opravovat něco, co je
+v pořádku.
+
+**Opraveno:** stroj to pozná a hlásí zvlášť jako **„nedoručená"** (znak
+`~`) — ani důkaz, ani slepé místo, nýbrž hranice stroje. Změřeno
+hned: `test-mapa-pozemku` + obrácené porovnání v `js/pozemek.js`
+dřív „NECHYTILA", dnes „nedoručená".
+
+Tři pojistky, ať se z toho nestane vypínač:
+1. přeznačuje se **jen** „NECHYTILA" (chycená zůstane chycená — několik
+   zkoušek si zdroj čte z disku schválně, aby hlídaly tvar kódu);
+2. **jen** u zkoušky, která vážně jede prohlížeč (pozná se podle
+   playwrightu);
+3. **jen** u souboru, který má minifikovaného dvojníka.
+
+Účet sebevývoje dostal **vlastní sloupec**: nedoručená se nepočítá ani
+mezi prokázané, ani mezi slepá místa — a hlavně se už netváří jako
+„tohohle hlídače se stroj ještě nedotkl", protože dotkl a nedosáhl.
+
+## §385 — sedmý hlídač naivnější než web: „přesně" se měří na body *4. 11.*
+
+Po opravě §382 zůstal v CI jediný pád, a byl opět v hlídači. Kontrola
+„stisk vrátí **přesně** původní pohled" porovnávala souřadnice na pět
+desetinných míst. Naměřeno: po stisku mapa hlásí
+**49.11218, 14.30697** (tedy přesně souřadnice pozemku), kdežto při
+měření doma hlásila **49.11217, 14.30699** — Leaflet si totiž střed
+srovnává na mřížku obrazových bodů.
+
+Rozdíl: **1,1 m na šířku a 1,5 m na délku**, při přiblížení 16 tedy
+v obou osách **necelý jeden obrazový bod**. Člověk nemá jak to
+vidět — a hlídač přitom hlásil vadu.
+
+Měří se proto to, co člověk vidí: tentýž pohled s přesností na jeden
+a půl bodu (mez se počítá ze zeměpisné šířky a přiblížení, ne z pevného
+čísla), a přiblížení na kus. **Pravidlo: když slib znamená „stejný
+pohled", měř ho v tom, v čem ten pohled je — v obrazových bodech, ne
+v desetinných místech knihovny.**

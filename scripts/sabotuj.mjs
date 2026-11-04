@@ -44,7 +44,7 @@
      6. Časový limit na zkoušku; co nedoběhne, je „nerozhodnuto", ne
         „chycená".
    ================================================================== */
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -170,6 +170,34 @@ export function rovnocenna(telo, jmenoSabotaze) {
    oběma směry (zkouška `test-archiv` hlídá `archiv.mjs`, zkouška
    `test-uzsvm` modul `cti-uzsvm.mjs`), a půjčené moduly zůstávají
    v seznamu za ním — jen se na ně dojde, až když zbude strop. */
+/* SABOTÁŽ, KTERÁ SE K PRODUKTU VŮBEC NEDOSTANE
+   ------------------------------------------------------------------
+   Stroj zapíše mutaci do `js/pozemek.js` — ale stránky servírují
+   `js/min/pozemek.js` a ten se po sabotáži nepřestaví (minifikaci dělá
+   `scripts/oprav.mjs`, kterou by stroj spouštět nesměl: přepsala by
+   `?v=` otisky na třech tisících stránek). Zkouška v prohlížeči tedy
+   tu mutaci NEMOHLA vidět — a kdyby se takový výsledek hlásil jako
+   „NECHYTILA", stroj by hlídači křivdil a smyčka sebevývoje by ho
+   poslala opravovat něco, co je v pořádku.
+
+   Změřeno 4. 11. na vlastní kůži: oprava `posunDomov` v
+   `js/pozemek.js` neudělala v prohlížeči NIC, dokud neproběhla
+   `oprav.mjs`; hlídač padal dál se stejnou hláškou.
+
+   Hlásí se proto zvlášť jako „nedoručená" — ani důkaz, ani slepé
+   místo. Když ji zkouška přesto chytí, je to pravý úlovek: čte si ten
+   zdroj z disku sama (několik zkoušek to dělá schválně, aby hlídaly
+   tvar kódu, ne jen jeho projev).  */
+export function minifikovanaKopie(cil) {
+  const m = /^js\/([^/]+\.js)$/.exec(String(cil || ''));
+  if (!m) return '';
+  const min = 'js/min/' + m[1];
+  return existsSync(join(KOREN, min)) ? min : '';
+}
+export function jeProhlizecova(teloZkousky) {
+  return /playwright/.test(String(teloZkousky || ''));
+}
+
 export function poradiCilu(zkouska, cile) {
   const jmeno = String(zkouska || '').replace(/^test-/, '').replace(/\.mjs$/, '');
   if (!jmeno) return (cile || []).slice();
@@ -222,6 +250,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
     return { zkouska, hlidá: [], sabotaze: [],
       poznamka: 'zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít' };
   }
+  const prohlizecova = jeProhlizecova(teloZkousky);
   const vysledky = [];
   for (const cil of cile) {
     if (vysledky.length >= strop) break;
@@ -259,6 +288,17 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
             k.proc = 'u kódu je prohlášení o rovnocenné mutaci, ale bez důvodu aspoň o '
               + MIN_DUVOD + ' znacích — neuznává se';
           } else stav = 'NECHYTILA';
+          /* A ještě jedna otázka, než se to zapíše jako slepé místo:
+             DOSTALA SE TA SABOTÁŽ VŮBEC K PRODUKTU? */
+          if (stav === 'NECHYTILA' && prohlizecova) {
+            const min = minifikovanaKopie(cil);
+            if (min) {
+              stav = 'nedoručená';
+              k.proc = `stránky servírují ${min}, a to se po sabotáži nepřestavělo`
+                + ' — zkouška v prohlížeči tu mutaci nemohla vidět; není to slepé místo'
+                + ' zkoušky, ale hranice tohohle stroje';
+            }
+          }
         } catch (e) {
           const kod = e && e.status;
           vystup = String((e && (e.stdout || '')) || '').slice(-400);
@@ -281,6 +321,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
   const chytila = vysledky.filter((v) => v.stav === 'chytila').length;
   const nechytila = vysledky.filter((v) => v.stav === 'NECHYTILA').length;
   const rovnocenne = vysledky.filter((v) => v.stav === 'rovnocenná').length;
+  const nedorucene = vysledky.filter((v) => v.stav === 'nedoručená').length;
   /* ŽÁDNÝ KANDIDÁT NENÍ VÝSLEDEK, NE MLČENÍ. Naměřeno na prvním běhu
      smyčky: `scripts/rozbal-hledani.mjs` má 2 146 znaků a není v něm
      ani jedno `>=`, `===`, `if … continue`, `filter(Boolean)` ani
@@ -291,7 +332,8 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
       poznamka: 'v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm'
         + ' nevyskytuje; promyšlená sabotáž tu zůstává na člověku' };
   }
-  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila, rovnocenne };
+  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila, rovnocenne,
+    nedorucene };
 }
 
 export function hlaseniProkazu(v) {
@@ -301,12 +343,19 @@ export function hlaseniProkazu(v) {
   const radky = [`${v.zkouska} hlídá ${v.hlidá.join(', ')}`];
   for (const s of v.sabotaze) {
     const znak = s.stav === 'chytila' ? '✓'
-      : (s.stav === 'NECHYTILA' ? '✕' : (s.stav === 'rovnocenná' ? '=' : '·'));
+      : (s.stav === 'NECHYTILA' ? '✕'
+        : (s.stav === 'rovnocenná' ? '=' : (s.stav === 'nedoručená' ? '~' : '·')));
     radky.push(`  ${znak} ${s.stav.padEnd(13)} ${s.jmeno}  (${s.cil})`);
-    if (s.stav === 'NECHYTILA' || s.stav === 'rovnocenná') radky.push(`        ${s.proc}`);
+    if (s.stav === 'NECHYTILA' || s.stav === 'rovnocenná' || s.stav === 'nedoručená') {
+      radky.push(`        ${s.proc}`);
+    }
   }
   if (v.rovnocenne) {
     radky.push(`  ${v.rovnocenne} mutace nemůže nic změnit a kód to u sebe přiznává (viz důvod výš).`);
+  }
+  if (v.nedorucene) {
+    radky.push(`  ${v.nedorucene} sabotáží se k prohlížeči nedostalo (minifikovaná kopie se`
+      + ' nepřestavuje) — ani důkaz, ani slepé místo.');
   }
   if (v.nechytila) {
     radky.push(`  SLEPÉ MÍSTO: ${v.nechytila} sabotáží zkouška nechytila — a to je nález o zkoušce.`);

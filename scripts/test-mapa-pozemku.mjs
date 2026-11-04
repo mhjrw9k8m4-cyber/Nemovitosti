@@ -1598,8 +1598,22 @@ if (DRAZBA) {
     await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
     await p.waitForTimeout(1200);
     const zpet = await stav();
+    /* „PŘESNĚ" SE MĚŘÍ NA OBRAZOVÉ BODY, NE NA DESETINNÁ MÍSTA.
+       Naměřeno v CI 4. 11.: po stisku vrátila mapa 49.11218,14.30697
+       (tedy přesně souřadnice pozemku), kdežto při měření doma hlásila
+       49.11217,14.30699 — Leaflet si totiž střed srovnává na mřížku
+       obrazových bodů, takže holé porovnání čísel měří JEHO
+       zaokrouhlení, ne slib webu. Rozdíl byl 1,1 m na šířku a 1,5 m na
+       délku, tedy v obou osách necelý jeden bod při přiblížení 16.
+       Hlídá se proto to, co člověk vidí: tentýž pohled s přesností na
+       jeden a půl obrazového bodu — a přiblížení na kus. */
+    const bodLat = (lat, z) => (156543.03392 * Math.cos(lat * Math.PI / 180)
+      / Math.pow(2, z)) / 111320;
+    const mez = 1.5 * bodLat(doma.lat, doma.zoom);
+    const mezLng = mez / Math.max(0.1, Math.cos(doma.lat * Math.PI / 180));
     pravda('a stisk vrátí přesně původní pohled',
-      zpet.lat === doma.lat && zpet.lng === doma.lng && zpet.zoom === doma.zoom,
+      Math.abs(zpet.lat - doma.lat) <= mez && Math.abs(zpet.lng - doma.lng) <= mezLng
+      && zpet.zoom === doma.zoom,
       `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}; `
       + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}`);
     pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');

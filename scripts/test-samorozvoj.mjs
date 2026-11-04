@@ -286,6 +286,71 @@ function je(popis, vyslo, cekano) {
     /rovnocenne: \(v\.sabotaze \|\| \[\]\)/.test(smy2));
 }
 
+/* ---- 6b) SABOTÁŽ, KTERÁ SE K PRODUKTU VŮBEC NEDOSTALA ----
+ *
+ * Nález ze 4. 11.: stroj zapíše mutaci do `js/pozemek.js`, ale stránky
+ * servírují `js/min/pozemek.js`, a ten se po sabotáži nepřestaví
+ * (minifikuje `oprav.mjs`, kterou stroj spouštět nesmí — přepsala by
+ * `?v=` otisky na třech tisících stránek). Zkouška v prohlížeči tedy
+ * mutaci NEMOHLA vidět, a stroj to přesto hlásil jako „NECHYTILA".
+ * Křivdil tím hlídači a smyčka by ho poslala opravovat něco, co je
+ * v pořádku. Změřeno na vlastní kůži: týž den nedělala oprava
+ * v `js/pozemek.js` v prohlížeči nic, dokud neproběhla `oprav.mjs`.
+ *
+ * Hlídá se obojí: že to stroj pozná, a že se z toho nestane výmluva —
+ * přeznačuje se JEN „NECHYTILA" u zkoušky v prohlížeči, a jen u
+ * souboru, který má minifikovaný dvojník. Chycená sabotáž zůstane
+ * chycená (několik zkoušek si zdroj čte z disku schválně).
+ */
+{
+  pravda('minifikovaný dvojník se u js/pozemek.js najde',
+    S.minifikovanaKopie('js/pozemek.js') === 'js/min/pozemek.js',
+    S.minifikovanaKopie('js/pozemek.js') || 'nic');
+  je('u skriptu sestavení žádný dvojník není', S.minifikovanaKopie('scripts/archiv.mjs'), '');
+  je('a vymyšlený soubor dvojníka taky nemá', S.minifikovanaKopie('js/tenhle-neexistuje.js'), '');
+  /* VZOREK SE SCHVÁLNĚ NEPÍŠE JAKO HOTOVÝ IMPORT. Tahle zkouška
+     prohlížeč nepotřebuje — a `test-staticka` právem hlídá, že zkouška
+     s importem playwrightu patří do prohlížečové směny, jinak by
+     v rychlé úloze padla na chybějícím chromiu. Když jsem vzorek napsal
+     celý, hlídač ji okamžitě chtěl přestěhovat (a měl pravdu podle toho,
+     co viděl). Jméno se proto do vzorku skládá ze dvou kusů: hlídač
+     nedostane falešný signál a tahle kontrola se přitom nedá vypnout. */
+  pravda('zkouška v prohlížeči se pozná podle playwrightu',
+    S.jeProhlizecova("import { chromium } from 'play" + "wright-core';") === true);
+  pravda('a zkouška bez prohlížeče se za ni nevydává',
+    S.jeProhlizecova("import { readFileSync } from 'node:fs';") === false);
+
+  const kodS = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  pravda('přeznačuje se jen „NECHYTILA", a jen u zkoušky v prohlížeči',
+    /stav === 'NECHYTILA' && prohlizecova/.test(kodS),
+    'jinak by se tím dala zakrýt i chycená nebo rovnocenná sabotáž');
+  pravda('a jen u souboru, který má minifikovaný dvojník',
+    /minifikovanaKopie\(cil\)/.test(kodS) && /if \(min\) \{/.test(kodS),
+    'bez téhle podmínky by to byl vypínač na všechny sabotáže v prohlížeči');
+  pravda('důvod se v hlášení vypíše, nezmizí',
+    /s\.stav === 'nedoručená'/.test(kodS) && /nedoručená';/.test(kodS)
+    && /\$\{v\.nedorucene\}/.test(kodS));
+
+  const smy3 = readFileSync(new URL('./samorozvoj.mjs', import.meta.url), 'utf8');
+  pravda('účet si nedoručené vede jmenovitě a zvlášť',
+    /nedorucene: \(v\.sabotaze \|\| \[\]\)/.test(smy3));
+  /* A TO NEJDŮLEŽITĚJŠÍ: nedoručená NENÍ prokázaný hlídač. */
+  const u = { zkousky: {
+    'test-a.mjs': { kdy: '2026-11-04', chytila: 0, nechytila: 0, nedorucene: ['obrácené porovnání (>= na >)'] },
+    'test-b.mjs': { kdy: '2026-11-04', chytila: 2, nechytila: 0, nedorucene: [] },
+    'test-c.mjs': { kdy: '2026-11-04', chytila: 0, nechytila: 1, nedorucene: [] },
+  } };
+  const st = R.stavUctu(['test-a.mjs', 'test-b.mjs', 'test-c.mjs', 'test-d.mjs'], u);
+  je('nedoručená se nepočítá mezi prokázané', st.prokazanych, 1);
+  je('ani mezi slepá místa', st.sSlepymMistem, 1);
+  je('má vlastní sloupec', st.nedorucenych, 1);
+  je('a „ještě se ho stroj nedotkl" zůstane jen tomu, koho opravdu neměl v ruce',
+    st.nedotcenych, 1);
+  pravda('a účet to vypíše vlastní větou',
+    R.hlaseniUctu(st, 0).join(' ').includes('k prohlížeči nedostala'),
+    R.hlaseniUctu(st, 0).join(' '));
+}
+
 /* ---- 7) NA ČEM SE ZKOUŠKA SOUDÍ NEJDŘÍV ----
  *
  * `coHlidá` vrací všechny moduly, které si zkouška importuje. Pro

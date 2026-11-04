@@ -88,24 +88,40 @@ export function naRade(zkousky, ucet, kolik = KOLO) {
    nedotkl. */
 export function stavUctu(zkousky, ucet) {
   const z = (ucet && ucet.zkousky) || {};
-  let prokazanych = 0, sSlepymMistem = 0, nedotcenych = 0;
+  let prokazanych = 0, sSlepymMistem = 0, nedotcenych = 0, nedorucenych = 0;
   for (const t of (zkousky || [])) {
     const r = z[t];
     if (!r || !r.kdy) { nedotcenych++; continue; }
     if ((r.nechytila || 0) > 0) sSlepymMistem++;
     else if ((r.chytila || 0) > 0) prokazanych++;
+    /* SABOTÁŽ, KTERÁ SE K PRODUKTU NEDOSTALA, JE VLASTNÍ SLOUPEC.
+       U zkoušek v prohlížeči stroj zapíše mutaci do js/*.js, jenže
+       stránky servírují js/min/*.js a to se nepřestavuje — hlídač tu
+       mutaci nemohl vidět (viz scripts/sabotuj.mjs). Říkat tomu
+       „ještě se ho stroj nedotkl" by lhalo: dotkl se ho a nedosáhl.
+       Prokázané to ale taky není. */
+    else if ((r.nedorucene || []).length) nedorucenych++;
     else nedotcenych++;     // běh proběhl, ale nebylo co rozbít
   }
-  return { celkem: (zkousky || []).length, prokazanych, sSlepymMistem, nedotcenych };
+  return { celkem: (zkousky || []).length, prokazanych, sSlepymMistem, nedotcenych,
+    nedorucenych };
 }
 
 export function hlaseniUctu(stav, nalezu) {
   const podil = stav.celkem ? Math.round(stav.prokazanych / stav.celkem * 100) : 0;
-  return [
+  const radky = [
     `Účet samorozvoje: ${stav.prokazanych} z ${stav.celkem} hlídačů prokázáno sabotáží (${podil} %),`
     + ` ${stav.sSlepymMistem} se slepým místem, ${stav.nedotcenych} ještě neprokázáno.`,
-    `Nálezů v tomhle běhu: ${nalezu}.`,
   ];
+  /* Vypisuje se jen když tam něco je — nula by byla věta pro nic.
+     Jakmile tam něco je, je to hranice stroje, ne stav hlídačů, a
+     patří to do účtu zvlášť. */
+  if (stav.nedorucenych) {
+    radky.push(`A u ${stav.nedorucenych} se sabotáž k prohlížeči nedostala`
+      + ' (stránky servírují minifikovanou kopii) — hranice stroje, ne stav hlídače.');
+  }
+  radky.push(`Nálezů v tomhle běhu: ${nalezu}.`);
+  return radky;
 }
 
 /* Nálezy, které se mají ohlásit nahlas (a tím shodit úlohu, aby přišlo
@@ -173,6 +189,7 @@ async function main() {
          nebo druhým, účet by lhal v obou směrech. */
       rovnocenne: (v.sabotaze || []).filter((x) => x.stav === 'rovnocenná').map((x) => x.jmeno),
       slepa: (v.sabotaze || []).filter((x) => x.stav === 'NECHYTILA').map((x) => x.jmeno),
+      nedorucene: (v.sabotaze || []).filter((x) => x.stav === 'nedoručená').map((x) => x.jmeno),
       poznamka: v.poznamka || v.chyba || '',
     };
     if (v.chyba) break;         // nejistota se nehromadí: po chybě se zastaví
