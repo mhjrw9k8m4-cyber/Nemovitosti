@@ -84,9 +84,29 @@ export const KANDIDATI = [
       + ' z OK dražeb (změřeno 2. 11.: 66 nabídek), takže druhý kanál pro týž druh by'
       + ' byl i pojistka proti výpadku — jenže vydat ho portál nemůže bez svého sezení.' },
   { jmeno: 'eDesky', host: 'edesky.cz', typ: 'obec', adresaOverena: false,
-    url: 'https://edesky.cz/',
+    url: 'https://edesky.cz/api/v1/documents',
     proc: 'Obec musí záměr prodat pozemek vyvěsit na úřední desku; eDesky úřední desky'
-      + ' sdružují. Druh „obec" dnes na webu nemá vlastní zdroj vůbec.' },
+      + ' sdružují. Druh „obec" dnes na webu nemá vlastní zdroj vůbec.'
+      + ' ZMĚŘENO 4. 11. (ohledání z Actions, čtyři dotazy): robots čtení nezakazuje a'
+      + ' portál má POPSANÉ API — GET /api/v1/documents s parametry keywords (povinný),'
+      + ' search_with (es = fulltext všeho, sql = klíčová slova v názvu), created_from,'
+      + ' dashboard_id (kraj/město/obec), include_texts (1 = i rozpoznané texty), order'
+      + ' (date/score) a page po 200 dokumentech; odpověď je XML a má schéma'
+      + ' (documents.xsd v github.com/edesky/edesky_api). Rubriku „Prodeje majetku" web'
+      + ' vede sám (/dokumenty?tag=Prodej).'
+      + ' DVĚ VĚCI ALE STOJÍ V CESTĚ A ROZHODUJE O NICH MAJITEL, NE ROBOT:'
+      + ' (1) KLÍČ. Bez api_key odpoví služba 401 „Chyba: nepřihlášen. Použijte svůj API'
+      + ' klíč, který najdete pro přihlášení na https://edesky.cz/uzivatel/edit" — klíč'
+      + ' se tedy váže na účet a účet si zakládá majitel; já mu ho zakládat nebudu a'
+      + ' heslo po něm chtít nesmím. (Pro pořádek: specifikace apiary.apib api_key'
+      + ' označuje za „optional", živá služba ho vyžaduje — dokumentace a skutečnost si'
+      + ' tu odporují a platí to změřené.) Klíč by patřil do GitHub Secrets, stejně jako'
+      + ' ostatní tajemství.'
+      + ' (2) JINÝ DRUH ZÁZNAMU. Úřední deska nese ZÁMĚR prodat, ne nabídku s cenou:'
+      + ' parcelu a katastr bývá v názvu dokumentu, cena zpravidla ne a často ještě'
+      + ' neexistuje. Pro kupujícího je to cenné dřív než inzerát, ale web dnes staví'
+      + ' celý výpis na ceně za m2 — zapojit to znamená rozhodnout, jak takový záznam'
+      + ' vypadá a jak se neplete s nabídkou. To je rozhodnutí o produktu.' },
   { jmeno: 'Lesy ČR — prodej majetku', host: 'lesycr.cz', typ: 'sale', adresaOverena: false,
     pokrytoJinym: 'Nabídky státu',
     proc: 'Státní podnik prodává nepotřebné lesní a jiné pozemky. ZMĚŘENO 4. 11.: do'
@@ -110,7 +130,14 @@ export const KANDIDATI = [
       + ' nabízené vypisuje. Lesní a zemědělská půda — druh, který na webu zastupuje'
       + ' dnes jen Farmy (9 nabídek). ZMĚŘENO 4. 11.: v centrální evidenci NENÍ ani'
       + ' jeden jeho záznam (na rozdíl od Lesů ČR a Správy železnic), takže tady by'
-      + ' vlastní čtení přineslo nabídky, které jinak nemáme odkud vzít.' },
+      + ' vlastní čtení přineslo nabídky, které jinak nemáme odkud vzít.'
+      + ' ZMĚŘENO TÉŽ 4. 11. (ohledání z Actions): stránka je čitelná — robots'
+      + ' dovoluje, odpověď 200, obsah přímo v HTML a prohlížeč nestahuje žádná data'
+      + ' —, jenže DNES na ní není ani jedna nemovitost: ve 26 081 znacích nula'
+      + ' výskytů slov parcela/pozemek/výměra/Kč a mezi odkazy jen nabídka. Čtečka'
+      + ' napsaná dnes by tedy přinesla nula nabídek. Zůstává v registru proto, aby'
+      + ' ho týdenní sonda hlídala a ozvala se, až se tam něco objeví — to je přesně'
+      + ' ten případ, pro který sonda vypisuje POČET nálezů, ne jen ano/ne.' },
 
   { jmeno: 'Správa železnic', host: 'spravazeleznic.cz', typ: 'sale', adresaOverena: false,
     pokrytoJinym: 'Nabídky státu',
@@ -118,6 +145,15 @@ export const KANDIDATI = [
       + ' obojí — a ZMĚŘENO 4. 11.: do centrální evidence posílá 17 ze 94 záznamů'
       + ' exportu, tedy druhý nejvíc. Portál.gov.cz tedy stačí a tenhle se nezapojuje.',
     url: 'https://www.spravazeleznic.cz/' },
+
+  { jmeno: 'Insolvenční dražby (Portál dražeb)', host: 'insolvence.portaldrazeb.cz',
+    typ: 'exekuce', adresaOverena: false,
+    zavreno: 'robots.txt: Disallow: / (změřeno 4. 11.) — celý host zakázaný',
+    url: 'https://insolvence.portaldrazeb.cz/public/auction-intention.html',
+    proc: 'Druhá, dosud nezkoušená cesta k insolvenčnímu zpeněžení: „záměry dražby" na'
+      + ' samostatném hostu Portálu dražeb. ZMĚŘENO 4. 11.: robots.txt zakazuje celý'
+      + ' web (Disallow: /), takže se nestahuje nic a nic se nezkouší dál. Rozhodnutí'
+      + ' patří tomu webu, ne nám.' },
 
   { jmeno: 'Insolvenční rejstřík', host: 'isir.justice.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://isir.justice.cz/',

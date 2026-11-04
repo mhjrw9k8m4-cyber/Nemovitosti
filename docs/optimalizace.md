@@ -23916,3 +23916,64 @@ opravě prochází. 166 kontrol, 0 chyb.
 znamenat, že **sandbox neumí vyvolat situaci, ve které se vada stane** —
 tady doslova proto, že nemá internet. „Lokálně to projde" není důkaz;
 je to jen informace o tom, co se tady dá změřit.
+
+## §383 — tři změřené cesty ke zdrojům: jedna prázdná, jedna zavřená, jedna otevřená s klíčem *4. 11.*
+
+Sedm dotazů z Actions (ze sandboxu ven nevidím), tři odpovědi.
+
+**1. Vojenské lesy a statky — otevřené, ale dnes prázdné.** Stránka
+„AKTUÁLNĚ NABÍZENÝ NEMOVITÝ MAJETEK" je čitelná: robots dovoluje,
+odpověď 200, obsah přímo v HTML a prohlížeč si nic nedotahuje
+(ověřeno i vykreslením). Jenže ve **26 081 znacích je nula** výskytů
+slov parcela / pozemek / výměra / Kč a mezi odkazy žádná nabídka —
+**čtečka napsaná dnes by přinesla nic.** Zůstává v registru, ať to
+týdenní sonda hlídá a ozve se, až se tam něco objeví. (Přesně pro tohle
+sonda vypisuje POČET nálezů, ne jen ano/ne: „čitelné" a „je tam co
+brát" jsou dvě různé věci.)
+
+**2. Insolvenční dražby na samostatném hostu — zavřené.**
+`https://insolvence.portaldrazeb.cz/public/auction-intention.html`
+byla poslední
+nezkoušená cesta k insolvenčnímu zpeněžení. **robots.txt: `Disallow: /`
+na celý host.** Nestahuje se nic, zapsáno jako `zavreno`, bot to už
+nezkouší. Druhá zavřená cesta téhož portálu během jednoho dne — první
+byl CSRF na hlavním webu (§377).
+
+**3. eDesky — otevřené, popsané, a přesto ne na jeden příkaz.**
+Tady je nález: portál má **popsané API** a vlastní rubriku „Prodeje
+majetku".
+
+```
+GET https://edesky.cz/api/v1/documents
+    keywords      (povinný)   hledaný výraz
+    search_with   es | sql    es = fulltext všeho, sql = slova v názvu
+    created_from  2026-11-01  jen dokumenty načtené po tomto dni
+    dashboard_id  159         kraj / město / obec, prázdné = všude
+    include_texts 0 | 1       1 = i rozpoznané texty dokumentů
+    order         date|score
+    page          1           po 200 dokumentech
+→ XML, UTF-8, schéma documents.xsd
+```
+
+Dvě věci ale stojí v cestě a **rozhoduje o nich majitel, ne robot**:
+
+- **Klíč.** Bez `api_key` služba odpoví **401: „Chyba: nepřihlášen.
+  Použijte svůj API klíč, který najdete pro přihlášení na
+  edesky.cz/uzivatel/edit"**. Klíč se váže na účet, účet si zakládá
+  majitel sám — zakládat mu ho nebudu a heslo po něm chtít nesmím.
+  Klíč by patřil do GitHub Secrets jako ostatní tajemství.
+  *Pro pořádek:* specifikace `apiary.apib` označuje `api_key` za
+  **optional**, živá služba ho **vyžaduje**. Dokumentace a skutečnost si
+  odporují a platí to změřené — další případ pravidla „měř to, nevěř
+  tomu, co je o tom napsané".
+- **Jiný druh záznamu.** Úřední deska nese **záměr** prodat, ne nabídku
+  s cenou: parcela a katastr bývají v názvu dokumentu, cena zpravidla ne
+  a často ještě ani neexistuje. Pro kupujícího je to signál **dřív**, než
+  se objeví inzerát — jenže celý výpis webu stojí na ceně za m². Zapojit
+  to znamená rozhodnout, jak takový záznam vypadá a jak se neplete
+  s nabídkou. To není technický krok, to je rozhodnutí o produktu.
+
+**Zůstatek po dnešku:** z devíti kandidátů v registru jsou tři zapojené
+nebo pokryté, dva zavřené měřením (oba Portál dražeb), jeden prázdný
+(VLS, hlídá se), jeden zakázaný robotem (ISIR) a **jeden otevřený a
+čekající na majitelovo rozhodnutí (eDesky)**.
