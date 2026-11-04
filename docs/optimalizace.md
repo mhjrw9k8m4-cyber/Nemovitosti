@@ -24151,6 +24151,11 @@ by to zdravě.
 
 `test-vypadek-zdroje`: 74 → **84 kontrol**.
 
+**Co ještě není vidět:** `zaSitem` do dat zapisuje noční robot, takže
+v `data/opportunities.json` se objeví až po jeho příštím běhu — do té
+doby nálezce ten úbytek pořád hlásí a má na to právo: v datech ten
+rozpis zatím není. Oprava je v kódu a prokázaná zkouškou, ne v datech.
+
 **Poučení:** smyčka, která si sama hledá práci, našla vadu v tom, jak si
 sama měří. Účet, který nekončí tam, kde končí zpracování, **vyrábí
 nálezy z vlastní nevědomosti** — a to je přesně ten druh chyby, kterou
