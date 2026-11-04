@@ -311,6 +311,58 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     !!(pd && String(pd.zavreno).length > 20), String(pd && pd.zavreno));
 }
 
+/* ---- JEDNA CESTA, BEZ SÍTĚ ---------------------------------------
+ *
+ * Sabotážní stroj našel 4. 11. dvě slepá místa: `zkusCestu` nikdo
+ * nezkoušel (nebyla ani vyvezená), takže v ní prošla obrácená rovnost
+ * u tvaru odpovědi i `&&` zaměněné za `||` v podmínce čtení. Obojí
+ * přitom jde změřit bez sítě — stačí podstrčit `stahni` a `cti`.
+ *
+ * A je to podstatné, ne formalita: právě tady se rozhoduje, jestli
+ * cesta dostane verdikt „nabídky" (tedy jestli ji bot nabídne
+ * k zapojení), nebo jen „slibná".
+ */
+{
+  const odpoved = (typ, telo, stav = 200) => ({
+    status: stav, headers: { get: () => typ }, text: async () => telo,
+  });
+  const pomucky = (typ, telo, cti, stav) => ({
+    stahni: async () => odpoved(typ, telo, stav),
+    ua: 'zkouska',
+    smimeCist: async () => ({ dovoleno: true }),
+    mezipamet: new Map(),
+    cti,
+  });
+  const ctecka = () => ({ nabidky: [{ a: 1 }, { a: 2 }, { a: 3 }], cesta: 'podstrčená' });
+  const cesta = { adresa: 'https://priklad.cz/vypis', jmeno: 'výpis', skupina: 'vypis' };
+
+  const html = await Z.zkusCestu(cesta, pomucky('text/html', '<html>pozemek na prodej</html>', ctecka));
+  je('z HTML se nabídky přečtou', html.nabidek, 3);
+  je('a cesta má verdikt „nabídky"', html.verdikt, 'nabídky');
+  je('a pamatuje si, kudy se to přečetlo', html.cestaCteni, 'podstrčená');
+  const json = await Z.zkusCestu(cesta, pomucky('application/json', '{"a":1}', ctecka));
+  je('z JSON taky', json.nabidek, 3);
+  /* A TEĎ TA DRUHÁ STRANA: tvar, který se číst nemá, se nečte —
+     ani když je čtečka po ruce a ráda by něco vrátila. */
+  const pdf = await Z.zkusCestu(cesta, pomucky('application/pdf', '%PDF-1.4 pozemek', ctecka));
+  je('PDF se nečte, i když je čtečka po ruce', pdf.nabidek, 0);
+  pravda('a verdikt tedy není „nabídky"', pdf.verdikt !== 'nabídky', pdf.verdikt);
+  /* Bez čtečky se nečte nic a nespadne to. */
+  const bez = await Z.zkusCestu(cesta, pomucky('text/html', '<html>pozemek na prodej</html>', null));
+  je('bez čtečky zůstane nula nabídek', bez.nabidek, 0);
+  pravda('a stejně se to nerozsype', !!bez.verdikt, JSON.stringify(bez));
+  /* A zakázaný robots se ani nestahuje. */
+  let stahovano = 0;
+  const zakazano = await Z.zkusCestu(cesta, {
+    stahni: async () => { stahovano++; return odpoved('text/html', 'x'); },
+    ua: 'zkouska', mezipamet: new Map(), cti: ctecka,
+    smimeCist: async () => ({ dovoleno: false, duvod: 'robots.txt: Disallow: /' }),
+  });
+  je('zakázaná cesta je zavřená', zakazano.verdikt, 'zavřená');
+  je('a nestáhlo se z ní nic', stahovano, 0);
+  pravda('a důvod je ten, který řekl robots', /Disallow/.test(zakazano.proc || ''), zakazano.proc);
+}
+
 /* ---- OTEVŘENO, ALE CHCE KLÍČ ------------------------------------
  *
  * Naměřeno 4. 11. na eDeskách: `/api/v1/documents` odpoví HTTP 401 a

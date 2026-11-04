@@ -116,7 +116,11 @@ export function sitemapyZRobots(text) {
 /* ------------------------------------------------------------------
    JEDNA CESTA. Nikdy nevyhodí výjimku — selhání je výsledek.
    ------------------------------------------------------------------ */
-async function zkusCestu(cesta, pomucky) {
+/* Vyvezená schválně: bez toho si ji zkouška nemůže zavolat a sabotážní
+   stroj v ní našel dvě slepá místa (obrácená rovnost u tvaru odpovědi
+   a `&&` za `||` u podmínky čtení) — obojí přitom jde změřit bez sítě,
+   stačí podstrčit `stahni` a `cti`. */
+export async function zkusCestu(cesta, pomucky) {
   const { stahni, ua, smimeCist, mezipamet, cti } = pomucky;
   const zapis = { adresa: cesta.adresa, jmeno: cesta.jmeno, skupina: cesta.skupina, zmereno: cesta.zmereno };
   let smime;
