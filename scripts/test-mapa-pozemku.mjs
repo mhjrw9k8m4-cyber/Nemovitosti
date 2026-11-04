@@ -1602,10 +1602,16 @@ if (DRAZBA) {
     return false;
   }, { timeout: 8000, polling: 400 }).catch(() => { /* ať to dopoví kontroly pod tím */ });
   const doma = await stav();
+  const doma2 = await stav();
   pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
-  /* A ŽE SE OPRAVDU USADILA — jinak měří zkouška animaci, ne web. */
-  pravda('a než se měří domov, mapa se usadila', doma && doma.zoomJede === false,
-    `zoom se pořád hýbe; z=${doma && doma.zoom}, střed ${doma && doma.lat},${doma && doma.lng}`);
+  /* A ŽE SE OPRAVDU USADILA — dvě čtení za sebou musí dát totéž.
+     Měří se přesně to, na co se čekalo: střed a přiblížení. Vnitřní
+     vlajka `_animatingZoom` se na to nehodí — naměřeno v CI 4. 11.
+     (běh 41901248877), že zůstává zapnutá i když se mapa už nehýbe. */
+  pravda('a než se měří domov, mapa se usadila',
+    !!doma2 && doma.lat === doma2.lat && doma.lng === doma2.lng && doma.zoom === doma2.zoom,
+    `pohled se pořád mění: ${doma && doma.lat},${doma && doma.lng} z=${doma && doma.zoom}`
+    + ` → ${doma2 && doma2.lat},${doma2 && doma2.lng} z=${doma2 && doma2.zoom}`);
   if (doma) {
     pravda('tlačítko „Na pozemek" pod mapou je', doma.je, 'chybí #pzm-zpet');
     pravda('a dokud jsem na pozemku, nezabírá výhled', doma.skryte === true,
@@ -1674,10 +1680,20 @@ if (DRAZBA) {
       / Math.pow(2, z)) / 111320;
     const mez = 1.5 * bodLat(doma.lat, doma.zoom);
     const mezLng = mez / Math.max(0.1, Math.cos(doma.lat * Math.PI / 180));
-    pravda('a stisk vrátí přesně původní pohled',
-      Math.abs(zpet.lat - doma.lat) <= mez && Math.abs(zpet.lng - doma.lng) <= mezLng
+    /* A POHLED SE VRACÍ NA POZEMEK, NE NA PRVNÍ SNÍMEK.
+       Naměřeno v CI 4. 11. (běh 41901248877): po stisku se mapa
+       vracela 137 m od toho, co zkouška nafotila při otevření —
+       a nebyla to vada webu. `js/pozemek.js` míří na souřadnice
+       pozemku (`L.latLng(d.lat, d.lng)`), kdežto úvodní pohled si
+       stránka srovná podle obrysu parcely, který přijde ze sítě; v
+       sandboxu bez sítě nepřijde, takže doma vyšel týž bod a zkouška
+       se o rozdíl neopřela. Porovnává se proto s tím, co web slibuje:
+       souřadnicemi pozemku. */
+    pravda('a stisk vrátí pohled na pozemek',
+      Math.abs(zpet.lat - CIL.d.lat) <= mez && Math.abs(zpet.lng - CIL.d.lng) <= mezLng
       && zpet.zoom === doma.zoom,
-      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}; `
+      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti pozemku ${CIL.d.lat},${CIL.d.lng}`
+      + ` (z=${doma.zoom}, úvodní pohled byl ${doma.lat},${doma.lng}); `
       + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}, z=${doma.zoom}, střed ${doma.lat},${doma.lng}, záběr ${doma.zab && doma.zab.s}–${doma.zab && doma.zab.n} × ${doma.zab && doma.zab.w}–${doma.zab && doma.zab.e}, web vidí domov: ${doma.zab && doma.zab.vidimDomov}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}, z=${zpet.zoom}, střed ${zpet.lat},${zpet.lng}, záběr ${zpet.zab && zpet.zab.s}–${zpet.zab && zpet.zab.n} × ${zpet.zab && zpet.zab.w}–${zpet.zab && zpet.zab.e}, web vidí domov: ${zpet.zab && zpet.zab.vidimDomov}`);
     pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');
 

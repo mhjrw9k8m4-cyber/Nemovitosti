@@ -24724,3 +24724,29 @@ s otiskem.
 změřených, 10 prokázaných sabotáží, 12 se slepým místem, 8 s mlčením
 u souboru, který hlídá víc zkoušek, 14 nálezů tíhy 2 (čeká se na
 zbylé hlídače) a 0 falešných poplachů.
+
+## §405 — „přesně původní pohled" nebyl slib webu, ale domněnka zkoušky *4. 11.*
+
+Běh 41901248877: směna 2 spadla znovu, a kontrola z §403 („než se měří
+domov, mapa se usadila") ukázala proč — ale ne to, co jsem čekal.
+`_animatingZoom` zůstává zapnutá, i když se mapa už nehýbe, takže
+hlídač usazení měřil vnitřní vlajku Leafletu místo pohledu. Měří se
+proto to, na co se čeká: **dvě čtení středu a přiblížení za sebou**.
+
+A druhá, podstatnější věc: po stisku se mapa vracela **137 m** od toho,
+co zkouška nafotila při otevření — a nebyla to vada webu.
+`js/pozemek.js` míří na **souřadnice pozemku** (`L.latLng(d.lat,
+d.lng)`), kdežto úvodní pohled si stránka srovná podle **obrysu
+parcely**, který přijde ze sítě. V sandboxu bez sítě obrys nepřijde,
+takže doma vyšel týž bod a zkouška se o ten rozdíl nikdy neopřela; v CI
+přijde, a „přesně původní pohled" se stal domněnkou o webu, který nic
+takového neslibuje.
+
+Porovnává se proto s tím, co web slibuje: **se souřadnicemi pozemku**
+(a s přiblížením, které si stránka pamatuje). `test-mapa-pozemku`:
+167 kontrol, 0 chyb.
+
+**Pravidlo:** když zkouška spadne jen v CI, první otázka není „co je
+v CI jinak", ale **co přesně web slibuje**. Dnes to byla třikrát
+domněnka zkoušky (§398 pevné čekání, §403 snímek z animace, §405
+srovnání s cizím bodem) a ani jednou vada produktu.
