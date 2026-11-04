@@ -286,6 +286,35 @@ function je(popis, vyslo, cekano) {
     /rovnocenne: \(v\.sabotaze \|\| \[\]\)/.test(smy2));
 }
 
+/* ---- 7) NA ČEM SE ZKOUŠKA SOUDÍ NEJDŘÍV ----
+ *
+ * `coHlidá` vrací všechny moduly, které si zkouška importuje. Pro
+ * hledání je to správné, pro SOUD ne: `test-uzsvm` si z
+ * `cti-nabidky-statu.mjs` půjčuje dvě funkce, a slepé místo v tom
+ * cizím modulu se připisovalo jí — přitom ten modul má vlastní
+ * zkoušku, která ho hlídá. Je to falešný nález z třetí strany:
+ * neříká nepravdu o kódu, ale o tom, KDO má co opravit (§375).
+ */
+{
+  je('modul podle jména zkoušky jde první',
+    S.poradiCilu('test-uzsvm.mjs', ['scripts/cti-nabidky-statu.mjs', 'scripts/cti-uzsvm.mjs']),
+    ['scripts/cti-uzsvm.mjs', 'scripts/cti-nabidky-statu.mjs']);
+  je('a shoda jméno na jméno je ještě silnější',
+    S.poradiCilu('test-archiv.mjs', ['scripts/generate-parcel-pages.mjs', 'scripts/archiv.mjs']),
+    ['scripts/archiv.mjs', 'scripts/generate-parcel-pages.mjs']);
+  /* PŮJČENÝ MODUL SE NESMÍ ZTRATIT — jen jde dozadu. Kdyby se
+     vyhazoval, přestalo by se hlídat cokoli, co zkouška hlídá navíc,
+     a ze zpřesnění soudu by byla díra v měření. */
+  je('půjčený modul ze seznamu nezmizí',
+    S.poradiCilu('test-uzsvm.mjs', ['scripts/cti-nabidky-statu.mjs']).length, 1);
+  je('a bez cílů se nic nerozsype', S.poradiCilu('test-uzsvm.mjs', []), []);
+  je('ani bez jména zkoušky', S.poradiCilu('', ['js/main.js']), ['js/main.js']);
+  /* A ŽE SE PODLE TOHO STROJ OPRAVDU ŘÍDÍ. */
+  const kod = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  pravda('stroj si cíle opravdu přerovná, ne jen umí',
+    /poradiCilu\(zkouska, coHlid/.test(kod), 'poradiCilu se v prokazZkousku nevolá');
+}
+
 console.log('Samorozvoj — nálezce, sabotážní stroj a smyčka');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

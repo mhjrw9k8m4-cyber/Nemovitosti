@@ -411,7 +411,13 @@ const PACHT2 = {
   /* a) DVOUZNAKOVÉ JMÉNO OBCE JE JMÉNO. Mez „aspoň dva znaky" je proti
      zbytkům jako „a" nebo „č", ne proti Aši — a Aš je skutečné město
      se dvěma písmeny. S mezí „víc než dva" by zmizelo. */
-  je('dvouznakové jméno obce se přečte (Aš)', U.mistoZNazvu('Aš - pozemek parc. č. 5'), 'Aš');
+  /* POZOR NA ZAMASKOVANOU SABOTÁŽ: s názvem „Aš - pozemek parc. č. 5"
+     by tahle kontrola prošla i s rozbitou mezí, protože místo zachrání
+     poslední záchranná větev (v názvu je označení parcely, které jde
+     odříznout). Název proto žádné označení nést nesmí — jinak se měří
+     jiná cesta, než o které kontrola mluví. */
+  je('dvouznakové jméno obce se přečte (Aš)',
+    U.mistoZNazvu('Aš - trvalý travní porost'), 'Aš');
 
   /* b) A HRANA Z DRUHÉ STRANY. Strop 60 znaků je pojistka proti tomu,
      aby se za obec vydala celá věta; jméno PŘESNĚ na stropu je ještě
@@ -419,7 +425,11 @@ const PACHT2 = {
      zvlášť hlídá, že ve jméně obce nikdy nestojí slovo „pozemek". */
   const NA_STROPU = 'Lhota'.padEnd(60, 'a');
   je('jméno přesně na stropu 60 znaků se ještě přečte',
-    U.mistoZNazvu(NA_STROPU + ' - pozemek parc. č. 5'), NA_STROPU);
+    U.mistoZNazvu(NA_STROPU + ' - trvalý travní porost'), NA_STROPU);
+  je('a o znak delší se za jméno obce nevydává',
+    U.mistoZNazvu('Lhota'.padEnd(61, 'a') + ' - trvalý travní porost'), '');
+  /* A ať po odmítnutém jménu nezůstane kus popisu: ve jméně obce
+     nikdy nestojí slovo „pozemek". */
   const delsi = U.mistoZNazvu('Lhota'.padEnd(61, 'a') + ' - pozemek parc. č. 5');
   pravda('a v žádném jméně obce nezůstane slovo „pozemek"',
     !/pozem/i.test(delsi), JSON.stringify(delsi));

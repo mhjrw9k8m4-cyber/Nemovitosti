@@ -70,6 +70,15 @@ const R2 = '109181,2026-11-03,"Povodí Labe, státní podnik",dbyt8g2,,,,Ministe
      (bezMista) — a to je správně, protože bez okresu se nedá zařadit. */
   je('bez slova „okres" se okres nevymýšlí',
     S.mistoZKatastru('Dlouhá Lomnice, Bochov'), { place: 'Bochov', okres: '', katastr: 'Dlouhá Lomnice' });
+  /* A HRANA TOHO SLIBU: okres se pozná SLOVEM, ne pořadím — tedy i když
+     stojí jako PRVNÍ. Tohle našel sabotážní stroj 4. 11.: s mezí „větší
+     než nula" místo „aspoň nula" by se okres na prvním místě tiše
+     zahodil, kdežto obec by vyšla správně — tedy vada, kterou by na
+     webu nikdo nehledal v téhle funkci. Je to právě ten případ, kvůli
+     kterému komentář u funkce říká „kdyby úřad jednou vynechal
+     katastr, posunulo by se všechno o jedno". */
+  je('okres se pozná i na prvním místě', S.mistoZKatastru('okres Nymburk, Lysá nad Labem'),
+    { place: 'Lysá nad Labem', okres: 'Nymburk', katastr: 'Lysá nad Labem' });
   je('prázdný vstup nic nevymyslí', S.mistoZKatastru(''), { place: '', okres: '', katastr: '' });
 }
 

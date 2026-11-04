@@ -156,6 +156,33 @@ export function rovnocenna(telo, jmenoSabotaze) {
   return null;
 }
 
+/* NA ČEM SE ZKOUŠKA SOUDÍ NEJDŘÍV.
+   `coHlidá` vrací VŠECHNY moduly, které si zkouška importuje — a to je
+   v pořádku pro hledání, ne pro soud. Naměřeno 4. 11.: `test-uzsvm`
+   dostala do seznamu i `cti-nabidky-statu.mjs`, odkud si půjčuje dvě
+   funkce (čtení výměry a druhu), a slepé místo v CIZÍM modulu se
+   připsalo JÍ — přitom ten modul má vlastní zkoušku
+   (`test-nabidky-statu`), která ho hlídá.
+   Soudit zkoušku za cizí modul je falešný nález (§375) z třetí strany:
+   neříká nepravdu o kódu, ale o tom, KDO má co opravit.
+   Pořadí proto dává dopředu modul, podle kterého je zkouška
+   pojmenovaná: `test-uzsvm.mjs` → `cti-uzsvm.mjs`. Jméno se hledá
+   oběma směry (zkouška `test-archiv` hlídá `archiv.mjs`, zkouška
+   `test-uzsvm` modul `cti-uzsvm.mjs`), a půjčené moduly zůstávají
+   v seznamu za ním — jen se na ně dojde, až když zbude strop. */
+export function poradiCilu(zkouska, cile) {
+  const jmeno = String(zkouska || '').replace(/^test-/, '').replace(/\.mjs$/, '');
+  if (!jmeno) return (cile || []).slice();
+  const skore = (c) => {
+    const zaklad = String(c).replace(/^.*\//, '').replace(/\.(mjs|js)$/, '');
+    if (zaklad === jmeno) return 0;                       // archiv.mjs ↔ test-archiv
+    if (zaklad.endsWith('-' + jmeno) || zaklad.endsWith(jmeno)) return 1;   // cti-uzsvm ↔ test-uzsvm
+    if (jmeno.endsWith(zaklad)) return 2;
+    return 3;                                             // půjčený modul
+  };
+  return (cile || []).slice().sort((a, b) => skore(a) - skore(b));
+}
+
 export function smiSabotovat(cesta) {
   const c = String(cesta || '');
   if (/\.\./.test(c)) return false;
@@ -190,7 +217,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
   let teloZkousky = '';
   try { teloZkousky = readFileSync(join(KOREN, cestaZkousky), 'utf8'); }
   catch { return { zkouska, chyba: 'zkoušku nejde přečíst' }; }
-  const cile = coHlidá(teloZkousky).filter(smiSabotovat);
+  const cile = poradiCilu(zkouska, coHlidá(teloZkousky).filter(smiSabotovat));
   if (!cile.length) {
     return { zkouska, hlidá: [], sabotaze: [],
       poznamka: 'zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít' };
