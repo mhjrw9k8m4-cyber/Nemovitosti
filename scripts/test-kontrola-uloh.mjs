@@ -79,6 +79,35 @@ function pravda(popis, vyslo, proc) {
     JSON.stringify(u.map((x) => [x.soubor, x.perioda])));
 }
 
+/* ---- 3b) a čte se jen to, co je úloha ---------------------------
+   ==================================================================
+   Smyčka samorozvoje 4. 11. zahodila `if (!/\.ya?ml$/.test(f))
+   continue;` a tahle zkouška mlčela — přitom `kontrola-uloh.mjs`
+   nehlídá nikdo jiný. Bez té pojistky se čte kterýkoli soubor ve
+   složce (README, skript akce, záloha), a jak v něm padne slovo
+   `schedule:` s nějakým `cron:`, vznikne úloha, která neexistuje —
+   a hlídka pak čeká na běhy, které nikdo nikdy nespustí.
+   Měří se na podstrčené složce, ne na repozitáři. */
+{
+  const fsx = await import('node:fs');
+  const osx = await import('node:os');
+  const kam = fsx.mkdtempSync(path.join(osx.tmpdir(), 'uloh-'));
+  const telo = 'on:\n  schedule:\n    - cron: \'0 6 * * *\'\n';
+  fsx.writeFileSync(path.join(kam, 'prava.yml'), telo);
+  fsx.writeFileSync(path.join(kam, 'README.md'), '# o úlohách\n' + telo);
+  fsx.writeFileSync(path.join(kam, 'zaloha.yml.bak'), telo);
+  const u = planovaneUlohy(kam);
+  /* `soubor` nese popisnou cestu „.github/workflows/<jméno>", i když
+     se čte jiná složka — je to jméno pro člověka v hlášení, ne cesta
+     k otevření. Měří se proto konec. */
+  pravda('ze složky se vezme jen soubor .yml',
+    u.length === 1 && /prava\.yml$/.test(u[0].soubor),
+    JSON.stringify(u.map((x) => x.soubor)));
+  pravda('a perioda se spočítá', u.length === 1 && u[0].perioda === 24,
+    JSON.stringify(u));
+  fsx.rmSync(kam, { recursive: true, force: true });
+}
+
 /* ---- 4) a celý skript proti falešnému API ---------------------- */
 {
   const PORT = await volnyPort();  // dřív natvrdo 8422

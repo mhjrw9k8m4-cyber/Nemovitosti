@@ -278,6 +278,19 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
     bezKlicu('spadlo to na ' + k + ' při dotazu', [k]).indexOf(k) < 0);
   pravda('a krátký řetězec se nevymazává (jinak by zmizelo půl výpisu)',
     bezKlicu('tabulka messages', ['mes']).indexOf('messages') >= 0);
+  /* MEZ JE „ASPOŇ OSM", NE „VÍC NEŽ OSM". Smyčka samorozvoje 4. 11.
+     obrátila `k.length >= 8` na `> 8` a tahle zkouška mlčela — přitom
+     ten soubor nehlídá nikdo jiný. Osmiznakový klíč je krátký, ale
+     je to klíč, a ve výpisu CI zůstat nesmí; sedmiznakový řetězec už
+     je spíš jméno tabulky než tajemství. Měří se proto obě strany
+     hranice, protože o jeden znak jde. */
+  pravda('osmiznakový klíč se vymaže (mez je „aspoň osm")',
+    bezKlicu('spadlo to na 12345678 při dotazu', ['12345678'])
+      === 'spadlo to na «klíč skryt» při dotazu',
+    bezKlicu('spadlo to na 12345678 při dotazu', ['12345678']));
+  pravda('a sedmiznakový ne',
+    bezKlicu('spadlo to na 1234567 při dotazu', ['1234567'])
+      === 'spadlo to na 1234567 při dotazu');
 }
 
 /* ---- 6) čtení OpenAPI nepřepočítává cesty na vlastní pěst ------ */
