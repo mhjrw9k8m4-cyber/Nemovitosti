@@ -31,6 +31,11 @@ function pravda(popis, vyslo, proc) {
   if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
+function je(popis, vyslo, cekano) {
+  const a = JSON.stringify(vyslo), b = JSON.stringify(cekano);
+  if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}\n      čekáno ${b}, vyšlo ${a}`); }
+}
 const U = (p) => new URL('../' + p, import.meta.url);
 const F = await import('./fetch-opportunities.mjs');
 const kod = readFileSync(U('scripts/fetch-opportunities.mjs'), 'utf8');
@@ -330,6 +335,52 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   pravda('a robot ji při výpisu stavů opravdu volá',
     /hlaskaZdroje\(z\)/.test(kod) && !/SELHAL: \$\{z\.chyba\}/.test(kod),
     'v main() musí stát hlaskaZdroje(z), ne vlastní věta');
+}
+
+/* ---- SÍTO MUSÍ ŘÍCT, CO ZAHODILO A ČÍ TO BYLO ---------------------
+   Nalezeno měřením 4. 11.: zdroj otevřených dat státu vrátil 33
+   pozemků a na web se jich dostalo 11. Nikde ani slovo — `valid()`
+   vracelo true/false a `.filter(valid)` zahozené mlčky spolkl.
+   Příčina přitom nebyla v datech: `parcel` je povinné pole a tenhle
+   jediný zdroj psal u neznámého parcelního čísla `undefined` místo
+   pomlčky, kterou píšou ostatní. */
+{
+  const dobra = {
+    type: 'sale', place: 'Divišov', okres: 'Benešov', parcel: '1424/1',
+    druh: 'zahrada', price: 500000, area: 1000, lat: 49.79, lng: 14.88,
+  };
+  pravda('dobrá nabídka projde', F.procNeplatna(dobra) === null, String(F.procNeplatna(dobra)));
+  je('chybějící parcelní číslo se pojmenuje',
+    F.procNeplatna({ ...dobra, parcel: undefined }), 'chybi:parcel');
+  je('a pomlčka místo čísla už projde',
+    F.procNeplatna({ ...dobra, parcel: '—' }), null);
+  je('cena pod důvěryhodnou hranicí má jméno',
+    F.procNeplatna({ ...dobra, price: 100 }), 'cenaMimoRozsah');
+  je('nesmyslná cena za metr má jméno',
+    F.procNeplatna({ ...dobra, price: 90000000, area: 100 }), 'cenaZaMetrPrilisVysoka');
+  je('souřadnice mimo ČR mají jméno',
+    F.procNeplatna({ ...dobra, lat: 40, lng: 4 }), 'souradniceMimoCR');
+  je('cizí typ nabídky má jméno', F.procNeplatna({ ...dobra, type: 'nic' }), 'cizíTyp');
+  /* A součet po zdrojích: bez něj je číslo k ničemu, protože neřekne,
+     čí nabídky zmizely. */
+  const soucty = F.sectiNeplatne(
+    [dobra, { ...dobra, parcel: undefined, zdroj: 'Nabídky státu' },
+      { ...dobra, parcel: undefined, zdroj: 'Nabídky státu' },
+      { ...dobra, price: 10, zdroj: 'Farmy' }],
+    (o) => o.zdroj);
+  je('zahozené se sečtou po zdrojích', soucty.get('Nabídky státu').pocet, 2);
+  je('a s důvodem', soucty.get('Nabídky státu').duvody['chybi:parcel'], 2);
+  je('a dobrá nabídka se do součtu nedostane', soucty.has('neznámý zdroj'), false);
+  const hlasky = F.hlaskyNeplatnych(soucty);
+  pravda('a vyjde z toho věta se jménem zdroje, počtem i důvodem',
+    hlasky.some((h) => /Nabídky státu/.test(h) && /2 nabídek/.test(h) && /chybi:parcel 2/.test(h)),
+    hlasky.join(' | '));
+  /* A robot to opravdu vypisuje — jinak by to byla zkouška něčeho,
+     co na web nedoléhá. */
+  const kod2 = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
+  pravda('a robot ty věty před sítem vypíše',
+    /hlaskyNeplatnych\(sectiNeplatne\(raw,/.test(kod2), 'v main() chybí výpis zahozených');
 }
 
 console.log('Výpadek zdroje:');

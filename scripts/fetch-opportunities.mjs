@@ -2717,22 +2717,37 @@ async function fetchSreality() {
 const REQUIRED = ['place', 'okres', 'type', 'parcel', 'druh', 'price', 'lat', 'lng'];
 const TYPES = new Set(['sale', 'drazba', 'exekuce', 'obec']);
 
-function valid(o) {
-  if (!o || typeof o !== 'object') return false;
-  if (!TYPES.has(o.type)) return false;
-  if (!REQUIRED.every((k) => o[k] !== undefined && o[k] !== null && o[k] !== '')) return false;
+/* PROČ SE NABÍDKA NEPOUŽIJE — a ne jen „nepoužije se".
+ *
+ * NALEZENO MĚŘENÍM 4. 11. Zdroj otevřených dat státu vrátil 33 pozemků
+ * a na web se jich dostalo 11. Nikde se o těch 22 nedočtete ani slovo:
+ * `valid()` vracelo `true`/`false` a `.filter(valid)` zahozené mlčky
+ * spolkl. Přitom to nebyla vada dat — `parcel` je v REQUIRED a tenhle
+ * jediný zdroj psal u neznámého parcelního čísla `undefined` místo
+ * pomlčky, kterou píšou ostatní. Dvě třetiny nového zdroje tak zmizely
+ * kvůli údaji, který je na přečtení, ne na rozhodování.
+ *
+ * Síto zůstává stejné. Mění se jen tolik, že každé zahození má JMÉNO
+ * a sečte se po zdrojích — stejně jako u čtení vstupu (§363, §364).
+ * Zahození, které nemá jméno, se nedá ani spravit, ani obhájit. */
+export function procNeplatna(o) {
+  if (!o || typeof o !== 'object') return 'neniZaznam';
+  if (!TYPES.has(o.type)) return 'cizíTyp';
+  for (const k of REQUIRED) {
+    if (o[k] === undefined || o[k] === null || o[k] === '') return 'chybi:' + k;
+  }
   // Cena musí být důvěryhodná. Pod 5 000 Kč jde skoro vždy o chybu stahování
   // (např. cena za m² spletená s celkovou cenou) — takové raději nezobrazujeme.
   const price = Number(o.price);
-  if (!isFinite(price) || price < 5000 || price > 2e9) return false;
+  if (!isFinite(price) || price < 5000 || price > 2e9) return 'cenaMimoRozsah';
   // Cena za m² nesmí být absurdně vysoká. Přes 25 000 Kč/m² jde skoro vždy
   // o chybu (přehozené číslo, spoluvlastnický podíl…) — nejdražší reálné
   // stavební pozemky se drží hluboko pod tím.
   const area = Number(o.area);
-  if (isFinite(area) && area > 0 && price / area > 25000) return false;
+  if (isFinite(area) && area > 0 && price / area > 25000) return 'cenaZaMetrPrilisVysoka';
   // Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
   const lat = Number(o.lat), lng = Number(o.lng);
-  if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return false;
+  if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return 'souradniceMimoCR';
   // Obdélník ale zahrnuje i kus Německa/Rakouska/Polska u hranic. Přesnější test:
   // bod MUSÍ ležet blízko některého okresního střediska (ČR je hustě pokrytá 76 okresy,
   // každé místo v ČR je od nějakého do ~30 km). Když je nejbližší okres přes 42 km
@@ -2744,18 +2759,47 @@ function valid(o) {
     const sq = dLat * dLat + dLng * dLng;
     if (sq < nearestSq) nearestSq = sq;
   }
-  if (nearestSq > 40 * 40) return false;
+  if (nearestSq > 40 * 40) return 'dalekoOdKazdehoOkresu';
   /* Vzdálenost od okresního města je jen hrubé síto — u hranic pustí
      i kus Německa. Máme ale skutečné hranice okresů, tak se rovnou
      zeptáme, jestli bod leží v některém z nich. Bez tohoto testu visely
      na webu dva zahraniční pozemky („Sasko" a „Reiserdorf 173") s okresem
      dopočítaným podle nejbližšího českého města. */
-  if (maHranice() && !okresPodleHranice(lat, lng)) return false;
+  if (maHranice() && !okresPodleHranice(lat, lng)) return 'mimoHraniceOkresu';
   // Druhá pojistka pro příhraničí: zjevně NĚMECKÝ název místa (ß, Straße, -weg,
   // Mühle, Pfarr…) — takové znaky se v českých názvech obcí prakticky nevyskytují,
   // takže jde o zahraniční inzerát se souřadnicemi za hranicí. Nezobrazujeme.
-  if (/ß|stra(ss|ß)e|m[üu]hle|pfarr|hausen|kirchen|\bweg\b|weg\s*\d|holz\b|\bdorf\b/i.test(String(o.place || ''))) return false;
-  return true;
+  if (/ß|stra(ss|ß)e|m[üu]hle|pfarr|hausen|kirchen|\bweg\b|weg\s*\d|holz\b|\bdorf\b/i.test(String(o.place || ''))) return 'nemeckyNazevMista';
+  return null;
+}
+
+function valid(o) { return procNeplatna(o) === null; }
+
+/* Kolik nabídek každého zdroje síto zahodilo a proč. Po zdrojích,
+   protože „22 nabídek se zahodilo" neřekne nic — kdežto „zdroj Nabídky
+   státu: 22, všechny chybi:parcel" řekne všechno. */
+export function sectiNeplatne(nabidky, zdrojProNabidku) {
+  const ven = new Map();
+  for (const o of (nabidky || [])) {
+    const d = procNeplatna(o);
+    if (!d) continue;
+    const zdroj = (zdrojProNabidku && zdrojProNabidku(o)) || 'neznámý zdroj';
+    const z = ven.get(zdroj) || { pocet: 0, duvody: {} };
+    z.pocet++;
+    z.duvody[d] = (z.duvody[d] || 0) + 1;
+    ven.set(zdroj, z);
+  }
+  return ven;
+}
+
+export function hlaskyNeplatnych(soucty) {
+  const ven = [];
+  for (const [zdroj, z] of (soucty || new Map())) {
+    const duvody = Object.entries(z.duvody).sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => k + ' ' + n).join(', ');
+    ven.push(`Zdroj ${zdroj}: ${z.pocet} nabídek síto nepustilo na web — ${duvody}.`);
+  }
+  return ven;
 }
 
 async function main() {
@@ -3028,6 +3072,13 @@ async function fetchNabidkyStatu() {
   // odstranění duplicit (okres + parcela) a seřazení podle výhodnosti
   const seen = new Set();
   const byDeal = (a, b) => (a.area ? a.price / a.area : Infinity) - (b.area ? b.price / b.area : Infinity);
+  /* NEJDŘÍV SE ZAHOZENÉ SEČTOU A VYPÍŠOU. Do 4. 11. tady stálo jen
+     `.filter(valid)` a co propadlo, zmizelo beze slova — u nového
+     zdroje to byly dvě třetiny jeho nabídek (33 stažených, 11 na
+     webu) a nikde to nešlo vyčíst. */
+  for (const h of hlaskyNeplatnych(sectiNeplatne(raw, (o) => zdrojNabidky(o, znamaJmena)))) {
+    console.error(h);
+  }
   const podleInzeratu = raw
     .filter(valid)
     .filter((o) => {

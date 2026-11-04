@@ -7,6 +7,7 @@
 // formátu neměřila nic: celá otázka zní „čteme TENHLE tvar správně",
 // a na to se vymyšlený tvar zeptat nedá.
 import * as S from './cti-nabidky-statu.mjs';
+const F = await import('./fetch-opportunities.mjs');
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -122,6 +123,30 @@ const R2 = '109181,2026-11-03,"Povodí Labe, státní podnik",dbyt8g2,,,,Ministe
   pravda('nabídka nese, kdo ji nabízí', /Lesy České republiky/.test(n0.extra || ''), String(n0.extra));
   pravda('a má adresu do evidence', /portal\.gov\.cz/.test(n0.url || ''), String(n0.url));
   je('nic se nezahodilo', Object.values(zahozeno).reduce((a, b) => a + b, 0), 0);
+  /* KLÍČ PODLE ČÍSLA ZÁZNAMU. Robot zahazuje duplicity podle
+     `type|okres|_key||parcel`, takže bez vlastního klíče by se nabídky
+     bez parcelního čísla v jednom okrese slily do jedné. */
+  pravda('každá nabídka má vlastní klíč podle čísla záznamu v evidenci',
+    /^stat-109183-1$/.test(n0._key || '') && n0._key !== n1._key,
+    JSON.stringify([n0._key, n1._key]));
+}
+
+/* ---- 5) BEZ PARCELNÍHO ČÍSLA SE NABÍDKA NEZAHAZUJE ---------------
+   NALEZENO MĚŘENÍM 4. 11.: zdroj vrátil 33 pozemků, na web se dostalo
+   11 — a všech jedenáct mělo v CSV parcelní číslo. Zbylých 22 zahodil
+   robot v `valid()`, kde je `parcel` povinné pole; tenhle zdroj psal
+   `undefined`, kdežto ostatní zdroje píšou pomlčku. Parcelní číslo je
+   údaj na přečtení, ne měřítko jakosti: obec, okres, výměra i cena
+   tam byly. */
+{
+  const bezCisla = R1.replace('okres Karlovy Vary",98/2,', 'okres Karlovy Vary",,');
+  const { nabidky } = S.nabidkyZCsv(HLAVICKA + '\n' + bezCisla, '2026-11-03');
+  const n = nabidky[0] || {};
+  je('nabídka bez parcelního čísla zůstane', nabidky.length, 1);
+  je('a místo čísla má pomlčku, ne prázdno', n.parcel, '—');
+  pravda('takže ji síto robota pustí na web',
+    F.procNeplatna({ ...n, lat: 50.15, lng: 13.05 }) === null,
+    String(F.procNeplatna({ ...n, lat: 50.15, lng: 13.05 })));
 }
 
 /* ---- 5) KVALITA: CO SE NEVEZME ---------------------------------- */

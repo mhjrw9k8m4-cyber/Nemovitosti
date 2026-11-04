@@ -225,15 +225,31 @@ export function nabidkyZCsv(text, dnesISO) {
         if (zminujeMetry(p.popis) || zminujeMetry(z.POPIS)) zahozeno.bezVymeryAleMetryTam++;
         continue;
       }
+      const id = (z.ID_ZAZNAMU || '').trim();
       nabidky.push({
         type: 'sale',
         place: m.place,
         okres: m.okres,
-        parcel: p.parcela || undefined,
+        /* VLASTNÍ KLÍČ, PODLE ČÍSLA ZÁZNAMU V EVIDENCI. Robot zahazuje
+           duplicity podle `type|okres|_key||parcel`. Bez `_key` by se
+           po zavedení pomlčky (níž) slily všechny nabídky bez
+           parcelního čísla v jednom okrese do jedné — tedy jedna vada
+           za druhou. Číslo záznamu je v evidenci jednoznačné a pořadí
+           položky odlišuje víc parcel z jednoho záznamu. */
+        _key: 'stat-' + (id || m.place + '-' + c) + '-' + p.poradi,
+        /* POMLČKA, NE `undefined`. Nalezeno měřením 4. 11.: ze 33
+           pozemků, které tenhle zdroj přinesl, se na web dostalo 11 —
+           a všech jedenáct mělo v CSV parcelní číslo. Zbylých 22
+           zahodilo `valid()` v robotovi, protože `parcel` je v jeho
+           seznamu POVINNÝCH polí. Parcelní číslo je přitom údaj na
+           přečtení, ne měřítko jakosti: obec, okres, výměra i cena
+           tam byly. Ostatní zdroje proto dávno píšou pomlčku (viz
+           Sreality), tenhle to jediný nedělal. */
+        parcel: p.parcela || '—',
         druh: druhZPopisu(p.popis + ' ' + (z.POPIS || '')),
         area: v,
         price: c,
-        url: DETAIL_URL + '?id=' + encodeURIComponent((z.ID_ZAZNAMU || '').trim()),
+        url: DETAIL_URL + '?id=' + encodeURIComponent(id),
         extra: [(z.NABIZEJICI_NAZEV || z.PUBLIKUJCI || '').trim(), 'nabídka státu']
           .filter(Boolean).join(' · '),
         zdroj: ZDROJ_JMENO,

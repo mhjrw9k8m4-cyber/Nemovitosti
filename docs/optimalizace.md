@@ -22866,3 +22866,54 @@ chyběl ten druhý, a ten tu vadu chytá.
 hlásit `pokles` zase jako SELHAL (6), obejít hlášku v `main()` (1),
 zapojený zdroj nechat v registru jako kandidáta (1), chybnou odpověď
 serveru přejít mlčením (1).
+
+## §365 — dvě třetiny nového zdroje zmizely v sítu a nikde o tom nebylo slovo
+
+**Měření.** Zdroj otevřených dat státu vrátil **33 pozemků**. Na webu
+jich bylo **11**. V logu ani v datech o těch 22 nestálo nic: `valid()`
+vracelo `true`/`false` a `.filter(valid)` je mlčky spolkl.
+
+**Příčina nebyla v datech.** Všech jedenáct, které prošly, mělo v CSV
+parcelní číslo. `parcel` je v `REQUIRED`, a tenhle jediný zdroj psal
+u neznámého parcelního čísla `undefined`, kdežto ostatní zdroje píšou
+pomlčku (viz Sreality). **Parcelní číslo je údaj na přečtení, ne
+měřítko jakosti** — obec, okres, výměra i cena u všech 22 byly.
+
+A hned za tím druhá vrstva téže vady: duplicity se zahazují podle
+`type|okres|_key||parcel`. Samotná pomlčka by tedy slila všechny
+nabídky bez parcelního čísla **v jednom okrese do jedné** — oprava by
+vypadala jako oprava a tiše zahodila skoro totéž. Zdroj proto dostal
+vlastní klíč podle čísla záznamu v evidenci (`stat-<id>-<položka>`).
+
+**Co se změnilo v sítu.** Síto propouští přesně totéž co dřív. Mění se
+jen to, že každé zahození má **jméno** (`chybi:parcel`,
+`cenaMimoRozsah`, `cenaZaMetrPrilisVysoka`, `souradniceMimoCR`,
+`mimoHraniceOkresu`, `nemeckyNazevMista`…) a sečte se **po zdrojích**:
+
+```
+Zdroj Nabídky státu: 22 nabídek síto nepustilo na web — chybi:parcel 22.
+```
+
+Zahození, které nemá jméno, se nedá ani spravit, ani obhájit. Je to
+třetí místo v jednom dni, kde platilo totéž (§363 čtení vstupu, §364
+čtení dražeb) — a pokaždé to byl rozdíl mezi „data za to nemůžou"
+a „můžeme my".
+
+**Mimochodem se tím zodpovědělo i to, na co §364 teprve čekala.**
+První běh s počítadlem u dražeb řekl:
+
+```
+Zdroj Dražby: 45 pozemků z 2811 dražeb (4480 předmětů),
+zahozeno — neuverejneno 4077, bezPozemku 321, bezVymery 37
+```
+
+Tedy: úbytek z 81 na 45 **není naše vada**. Z 4 480 předmětů je
+4 077 už ukončených (roční soubor se plní celý rok), ze zbylých 403
+nemá 321 vůbec pozemkovou parcelu a 37 je dobrovolná dražba bez
+výměry. Hlídka z §363 u Dražeb počítá druhý běh v řadě; na třetím se
+ozve a teď k tomu bude mít i diagnózu.
+
+**Čím je to podložené.** `test-vypadek-zdroje.mjs` 66 kontrol (bylo
+54), `test-nabidky-statu.mjs` 48 (bylo 44). Čtyři sabotáže: zpátky
+`undefined` místo pomlčky (2 pády), pryč vlastní klíč (1), zahozené se
+nevypisují (1), důvod bez jména pole (2).
