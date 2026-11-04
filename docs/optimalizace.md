@@ -23184,3 +23184,70 @@ spadlo na nedefinované jméno — a zkouška byla zelená. Kontrola, která
 čte kód, musí mít k sobě **otázku na modul samotný** (je ta hodnota
 číslo a je kladná?), jinak měří text, ne chování. Je to §362 a §369
 ještě jednou, potřetí.
+
+## §371 — zdroj se stáhl, prošel sítem a na web se nedostal: 107 pozemků
+
+Dnešní hledání nových zdrojů (§370) mi při kontrole dat ukázalo něco
+horšího než prázdný nález: **zdroj, který už zapojený je, na web
+nedával nic.**
+
+Změřeno na běhu robota 41806195447. ÚZSVM: stav `ok`, **91 nabídek**,
+síto nepustilo 2 — a v `data/opportunities.json` z něj byla **nula**.
+Ani v rozpisu „za sítem ubylo" nebyl o ÚZSVM řádek, takže to nebyl
+krok se sítem ani odstranění dvojníků.
+
+**Kde se ztratily.** Ve výběru prodejů. Ten byl ručním seznamem čtyř
+zdrojů a poznával je **podle prózy v poli `extra`**:
+
+```js
+const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || ''));
+const srealit = sale.filter((o) => /Sreality/i.test(o.extra || ''));
+const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
+const spuSale = sale.filter((o) => /státní/i.test(o.extra || ''));
+const saleSel = [...bez, ...spread(srealit, 2500), ...farmy, ...spread(spuSale, 900)];
+```
+
+Co na žádný ze čtyř vzorů nesedlo, **tiše vypadlo** — bez počtu, bez
+jména, bez řádku v logu. `extra` u ÚZSVM končí slovy „nabídka ÚZSVM";
+ani jedno ze čtyř slov v něm není. Týž krok sebral **18 nabídek
+státu**, jejichž `extra` nese jméno podniku bez slova „státní" (Lesy
+ČR, Správa železnic) — z 30 jich prošlo 12. **Dohromady 107 pozemků,
+které se stáhly, prošly sítem a nikdo je neviděl.**
+
+**Proč to nepoznal žádný hlídač.** Stav zdroje se počítá z toho, co se
+stáhlo (91, `ok`), ne z toho, co se zveřejnilo. Hlídka zdrojů (§332)
+tedy mlčela správně: zdroj byl v pořádku. Vada byla o dva kroky dál a
+jediné místo, kde by se poznala, je POROVNÁNÍ staženého se zveřejněným
+— a to dosud nikdo nedělal.
+
+**Oprava.** Výběr se dělí podle **jména zdroje** (`zdrojNabidky`, tedy
+téhož údaje, kterým se zdroj poznává všude jinde), kdo v rozpisu
+stropů není, bere se **celý**, a každý zdroj má v logu řádek „vzato X
+z Y". Nerozpoznaný zdroj se vezme taky a **ohlásí se**, ne zahodí.
+Stropy zůstaly jen dva, tam, kde byly a kde mají smysl (Sreality 2 500,
+SPÚ 900). Tím §225 („přidání zdroje je řádek v registru, ne nový
+stahovač") platí i pro výběr — dosud platil jen pro stahování.
+
+Zároveň zmizel `CAP.sale = 160`: byl v kódu, ale nic nerozhodoval.
+
+**A jedna věc navíc, kterou si ÚZSVM zasloužilo.** Jeho nabídky neměly
+**žádný odkaz** — `cti-uzsvm.mjs` pole `url` vůbec nenastavoval, takže
+u zdroje bez fotek nebylo kam kliknout. Tvar adresy je změřený:
+`/Home/Detail/<číslo>` je na úvodní stránce aplikace 75× a odpoví 200.
+Dvě adresy, které jsem si domyslel (`/detail/<číslo>` a
+`/api/Property/Detail?id=`), vracejí **404** — proto se tvar měří.
+
+**A co se naopak NEUDĚLÁ: dohledávat výměru z detailu.** U 114 nabídek
+ÚZSVM chybí výměra a `bezVymeryAleMetryTam` je **nula**, takže to není
+vada našeho čtení. V seznamu z API **pole s výměrou není vůbec** (ověřeno
+na úplném výpisu záznamu) a detailní stránka nese **tentýž popis** jako
+API — jediná zmínka o metrech je v něm. Stažení 114 dalších stránek by
+tedy nepřineslo ani jednu výměru. Zůstává to zahozené a je to vada dat,
+ne naše.
+
+**Čím je to podložené.** `test-vyber-prodeje.mjs` 34 kontrol na
+skutečných podobách pole `extra` (opsaných z `data/opportunities.json`
+a z běhu robota). Šest sabotáží, každá s ověřeným diffem: zpátky ruční
+seznam podle `extra` (2 pády), výchozí strop nula (7), bez varování
+o nerozpoznaném zdroji (1), vzorek bere nejlevnější (1), odkaz
+z nečísla (2), nabídka bez odkazu (1).

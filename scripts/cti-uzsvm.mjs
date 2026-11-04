@@ -30,6 +30,19 @@
 
 export const ZDROJ_JMENO = 'ÚZSVM';
 export const API = 'https://nabidkamajetku.gov.cz/api/Property/List';
+/* ADRESA JEDNÉ NABÍDKY. Změřeno 4. 11.: na úvodní stránce aplikace je
+   tvar `/Home/Detail/<číslo>` 75×, odpoví HTTP 200 a nese tentýž popis
+   jako API. Dvě adresy, které jsem si předtím domyslel —
+   `/detail/<číslo>` a `/api/Property/Detail?id=` — vracejí 404; proto
+   se tvar měří a nehádá. Bez odkazu neměla nabídka na našem webu kam
+   vést, a to je u zdroje bez fotek to jediné, co člověk může udělat. */
+export const DETAIL_URL = 'https://nabidkamajetku.gov.cz/Home/Detail/';
+
+export function odkazNabidky(id) {
+  const c = String(id == null ? '' : id).trim();
+  if (!/^\d+$/.test(c)) return '';      // bez čísla nabídky odkaz nevede nikam
+  return DETAIL_URL + c;
+}
 /* Kategorie „Pozemky" z číselníku, který API vrací v `Categories`
    (p02Id 13, p02Name „Pozemky"). Nehádá se, je změřená. */
 export const KATEGORIE_POZEMKY = 13;
@@ -242,6 +255,7 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
          nabídky bez parcelního čísla v jednom okrese slily do jedné
          (§365). */
       _key: 'uzsvm-' + String(z.Id || place + '-' + c),
+      url: odkazNabidky(z.Id) || undefined,
       extra: popisek(z),
       zdroj: ZDROJ_JMENO,
     });

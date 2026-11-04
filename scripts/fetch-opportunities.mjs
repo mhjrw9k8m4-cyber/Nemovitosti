@@ -1526,6 +1526,85 @@ export function zdrojNabidky(o, znama) {
   return null;
 }
 
+/* ------------------------------------------------------------------
+   KOLIK MÍSTA DOSTANE KTERÝ ZDROJ PRODEJŮ — A ŽE SE ŽÁDNÝ NEZTRATÍ.
+
+   Co tu bylo do 4. 11. a co to stálo. Výběr prodejů byl ruční seznam
+   čtyř zdrojů, a poznával je PODLE PRÓZY V POLI `extra`:
+   `/Bezrealitky/`, `/Sreality/`, `/Farmy/`, `/státní/`. Co na žádný
+   z těch čtyř vzorů nesedlo, TICHE vypadlo — bez počtu, bez jména,
+   bez jediného řádku v logu.
+
+   Změřeno na běhu 41806195447: ÚZSVM mělo stav „ok", 91 nabídek, síto
+   nepustilo 2 — a na webu z něj byla NULA. Jeho `extra` končí slovy
+   „nabídka ÚZSVM", žádné ze čtyř slov v něm není. Týž krok sebral
+   i 18 nabídek státu, jejichž `extra` nese jméno podniku bez slova
+   „státní" (Lesy ČR, Správa železnic). Dohromady 107 pozemků, které se
+   stáhly, prošly sítem a nikdo je neviděl.
+
+   Proto se teď dělí podle JMÉNA ZDROJE (`zdrojNabidky`, tedy téhož
+   údaje, kterým se zdroj poznává všude jinde), kdo v rozpisu není,
+   bere se CELÝ, a každý zdroj má v logu řádek „vzato X z Y". Zdroj
+   přidaný řádkem v registru se tím nedá ztratit — a §225 („přidání
+   zdroje je řádek v registru, ne nový stahovač") platí i tady.
+
+   Stropy zůstávají jen tam, kde byly a kde mají smysl: u zdrojů, které
+   by samy zaplavily mapu. Pestrý vzorek napříč cenami (ne nejlevnější
+   slivery) se dělá jen tam, kde se strop opravdu použije.
+   ------------------------------------------------------------------ */
+export const NEZNAMY_ZDROJ = 'neznámý zdroj';
+export const PODIL_PRODEJE = new Map([
+  ['Sreality (Apify)', 2500],
+  ['SPÚ', 900],
+]);
+export const PODIL_VYCHOZI = Infinity;
+
+export function pestryVzorek(pole, n) {
+  if (!Array.isArray(pole) || !isFinite(n) || pole.length <= n) return pole || [];
+  const krok = pole.length / n, ven = [];
+  for (let i = 0; i < n; i++) ven.push(pole[Math.floor(i * krok)]);
+  return ven;
+}
+
+export function vyberProdeje(prodeje, komu, podily = PODIL_PRODEJE, vychozi = PODIL_VYCHOZI) {
+  const skupiny = new Map();
+  for (const o of (prodeje || [])) {
+    if (!o) continue;
+    const jmeno = (komu ? komu(o) : null) || NEZNAMY_ZDROJ;
+    if (!skupiny.has(jmeno)) skupiny.set(jmeno, []);
+    skupiny.get(jmeno).push(o);
+  }
+  const vybrane = [];
+  const podle = [];
+  const varovani = [];
+  for (const [jmeno, pole] of skupiny) {
+    const strop = podily && podily.has(jmeno) ? podily.get(jmeno) : vychozi;
+    let vzato = pole;
+    if (pole.length > strop) {
+      vzato = pestryVzorek([...pole].sort((a, b) => (a.price || 0) - (b.price || 0)), strop);
+    }
+    vybrane.push(...vzato);
+    podle.push({ zdroj: jmeno, melo: pole.length, vzato: vzato.length, strop });
+    if (jmeno === NEZNAMY_ZDROJ) {
+      varovani.push(`${pole.length} prodejů nemá rozpoznaný zdroj — berou se všechny,`
+        + ' ale jméno patří do registru, jinak o nich na webu nikdo nic neřekne.');
+    }
+  }
+  podle.sort((a, b) => b.vzato - a.vzato);
+  return { vybrane, podle, varovani };
+}
+
+export function hlaskyVyberu(vyber) {
+  const podle = (vyber && vyber.podle) || [];
+  if (!podle.length) return ['Výběr prodejů: žádný prodej k výběru.'];
+  const radky = [];
+  for (const p of podle) {
+    radky.push(`Výběr prodejů — ${p.zdroj}: vzato ${p.vzato} z ${p.melo}`
+      + (p.vzato < p.melo ? ` (strop ${p.strop}, pestrý vzorek napříč cenami)` : ''));
+  }
+  return radky;
+}
+
 /** O kolik dnů je `den` (YYYY-MM-DD) před `dnes`. Nečitelné → Infinity,
  *  ať se takové nabídky radši pustí, než aby se držely navždy. */
 export function stariVeDnech(den, dnes) {
@@ -3339,33 +3418,14 @@ async function fetchNabidkyStatu() {
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
   // zaplavily mapu). Dražby/exekuce bereme podle výhodnosti; u prodeje vybíráme
   // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
-  const CAP = { sale: 160, drazba: 1300, exekuce: 1000, obec: 250 };
+  const CAP = { drazba: 1300, exekuce: 1000, obec: 250 };
   const byType = {};
   for (const o of clean) (byType[o.type] || (byType[o.type] = [])).push(o);
-  function spread(arr, n) {
-    if (arr.length <= n) return arr;
-    const step = arr.length / n, out = [];
-    for (let i = 0; i < n; i++) out.push(arr[Math.floor(i * step)]);
-    return out;
-  }
-  // Prodej má tři zdroje – každý dostane svůj díl, ať je mapa vyvážená:
-  // inzeráty od lidí (Bezrealitky), zemědělská půda (Farmy) i státní půda (SPÚ).
   const sale = byType.sale || [];
-  const byPrice = (a, b) => a.price - b.price;
-  // Portály s přímým odkazem na inzerát (Bezrealitky, Farmy) dostanou nejvíc
-  // prostoru — na ně se dá kliknout a rovnou volat prodejci. Státní půda (SPÚ)
-  // nemá odkaz na konkrétní parcelu, tak jí dáme míň. Přes spread() bereme
-  // pestrý vzorek napříč cenami (ne jen nejlevnější slivery), ať je mapa zajímavá.
-  const bez = sale.filter((o) => /Bezrealitky/i.test(o.extra || ''));
-  const srealit = sale.filter((o) => /Sreality/i.test(o.extra || '')); // prázdné bez APIFY_TOKEN
-  const farmy = sale.filter((o) => /Farmy/i.test(o.extra || ''));
-  const spuSale = sale.filter((o) => /státní/i.test(o.extra || '')).sort(byPrice);
-  const saleSel = [
-    ...bez,                     // celá nabídka Bezrealitky (přímý odkaz na inzerát)
-    ...spread(srealit, 2500),   // Sreality přes Apify (jen s klíčem, jinak prázdné)
-    ...farmy,                   // celá nabídka Farmy
-    ...spread(spuSale, 900),    // státní půda doplní zbytek
-  ];
+  const vyber = vyberProdeje(sale, (o) => zdrojNabidky(o, znamaJmena));
+  for (const r of hlaskyVyberu(vyber)) console.log(r);
+  for (const r of vyber.varovani) console.error('POZOR: ' + r);
+  const saleSel = vyber.vybrane;
   // Dražba, která už proběhla, není příležitost. Zdroje je z výpisu neodstraní
   // hned (u některých tam visí měsíce), takže je vyhazujeme sami — jinak se
   // počítají do „44 dražeb" a zabírají místo na mapě. Den konání ještě platí,
