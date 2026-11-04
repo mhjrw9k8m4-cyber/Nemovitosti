@@ -400,6 +400,59 @@ const PACHT2 = {
       .map(([v, o]) => `${v} → ${JSON.stringify(U.ocistiMisto(v))} místo ${JSON.stringify(o)}`), []);
 }
 
+/* ---- 3i) PĚT SLEPÝCH MÍST, KTERÁ NAŠEL SABOTÁŽNÍ STROJ ----
+ *
+ * Smyčka samorozvoje hlásila, že tahle zkouška chytá 2 z 8 sabotáží.
+ * Nález byl pravdivý a všech pět zbylých míst v `cti-uzsvm.mjs` leželo
+ * na HRANÁCH a v POJISTKÁCH — tedy přesně tam, kde se u čtečky cizích
+ * dat vady dějí.
+ */
+{
+  /* a) DVOUZNAKOVÉ JMÉNO OBCE JE JMÉNO. Mez „aspoň dva znaky" je proti
+     zbytkům jako „a" nebo „č", ne proti Aši — a Aš je skutečné město
+     se dvěma písmeny. S mezí „víc než dva" by zmizelo. */
+  je('dvouznakové jméno obce se přečte (Aš)', U.mistoZNazvu('Aš - pozemek parc. č. 5'), 'Aš');
+
+  /* b) A HRANA Z DRUHÉ STRANY. Strop 60 znaků je pojistka proti tomu,
+     aby se za obec vydala celá věta; jméno PŘESNĚ na stropu je ještě
+     jméno. Delší se nebere a nesmí po něm zůstat kus popisu — proto se
+     zvlášť hlídá, že ve jméně obce nikdy nestojí slovo „pozemek". */
+  const NA_STROPU = 'Lhota'.padEnd(60, 'a');
+  je('jméno přesně na stropu 60 znaků se ještě přečte',
+    U.mistoZNazvu(NA_STROPU + ' - pozemek parc. č. 5'), NA_STROPU);
+  const delsi = U.mistoZNazvu('Lhota'.padEnd(61, 'a') + ' - pozemek parc. č. 5');
+  pravda('a v žádném jméně obce nezůstane slovo „pozemek"',
+    !/pozem/i.test(delsi), JSON.stringify(delsi));
+
+  /* c) ČÁRKA NA KONCI NÁZVU. Místo se u části zdrojů bere za poslední
+     čárkou; prázdná část by se stala „posledním" a místo by vyšlo
+     prázdné. */
+  je('čárka na konci názvu místo nesebere',
+    U.mistoZNazvu('Pacht pozemku p.č. 4862/16, Napajedla,'), 'Napajedla');
+
+  /* d) PACHT V NÁZVU, NE V POPISU. Oddíl 3) výš měří pacht napsaný
+     v popisu („předmětem aukce je pacht"), takže vada v kontrole NÁZVU
+     se tam nepoznala. U pachtu je cena ROČNÍ NÁJEM — pustit ho na web
+     jako prodej pokazí i cenovou referenci, ne jen jednu kartu. */
+  pravda('pacht napsaný v NÁZVU se pozná (i když popis mlčí)',
+    U.jeProdej({ Name: 'Pacht pozemku p.č. 2025, Racková',
+      Description: 'Pozemek se nachází v intravilánu obce.',
+      StatusName: 'Aukce vyhlášena' }) === false,
+    'pacht by se pustil na web jako prodej');
+
+  /* e) POJISTKA V ČÍSELNÍKU KATEGORIÍ. Počet pozemků se hledá
+     v `Categories` i v podkategoriích; prázdná položka v tom seznamu
+     nesmí celé čtení shodit. Výjimka se musí ukázat jako POJMENOVANÁ
+     chyba, ne jako pád zkoušky — bez obálky níž by CI zčervenalo bez
+     hlášky, podle které se pozná proč. */
+  const pocet = (() => {
+    try {
+      return U.pocetVKategorii({ Categories: [null, { p02Id: 13, FilteredCount: 286 }] });
+    } catch (e) { return 'SPADLO: ' + (e && e.message); }
+  })();
+  je('prázdná položka v číselníku kategorií čtení neshodí', pocet, 286);
+}
+
 console.log('ÚZSVM — nabídky majetku státu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

@@ -192,7 +192,7 @@ export const NENI_MISTO = /^(?:pozemek|pozemky|poz|st|stp|parcela|parc|aukce|auk
    Řeže se PŘED čištěním čísel: po odstranění čísel už „o výměře m2"
    vypadá jako dvě nevinná slova a nepoznalo by se, že to byl popis.
    Pořadí v seznamu nerozhoduje, bere se nejlevnější nález. */
-export const ZACATEK_POPISU = /\s*(?:[-–—,]\s*)?\b(?:o\s+(?:celkové\s+)?výmě|výměr|id\.|ide[áa]ln|spoluvl|podíl|pozemek\s+parcel|parcel[ay]\s+číslo|v\s+k\.?\s*ú)/i;
+export const ZACATEK_POPISU = /\s*(?:[-–—,]\s*)?\b(?:o\s+(?:celkové\s+)?výmě|výměr|id\.|ide[áa]ln|spoluvl|podíl|pozemek|pozemky|parcel[ay]\s+číslo|v\s+k\.?\s*ú)/i;
 
 export function ocistiMisto(s) {
   const cele = String(s || '');
