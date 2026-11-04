@@ -109,6 +109,19 @@ function je(popis, vyslo, cekano) {
   je('bez funkce na klíč se nehádá', N.klicKoliduje(data, null).length, 0);
 }
 
+/* ---- 3b) ZKOUŠKY MIMO CI: ČTOU SE VŠECHNY WORKFLOW -------------
+   PRVNÍ OSTRÝ BĚH SMYČKY NA TOMHLE UKLOUZL. Nálezce hlásil „3 zkoušky
+   nikdo nepouští" a jmenoval test-chat, test-listing a test-search —
+   všechny tři přitom pouští `.github/workflows/test-chat.yml`, protože
+   potřebují živou Supabase. Falešný nález je drahý jinak než chybějící:
+   učí člověka hlášení nečíst. */
+{
+  const n = N.zkouskyMimoCI();
+  je('dnes žádná zkouška mimo CI není', n.length, 0);
+  pravda('a jmenovitě ne ty tři, co má vlastní workflow',
+    !JSON.stringify(n).includes('test-chat'), JSON.stringify(n));
+}
+
 /* ---- 4) NÁLEZCE NIC NEMĚNÍ ------------------------------------ */
 {
   const telo = readFileSync(new URL('./nalezce.mjs', import.meta.url), 'utf8');

@@ -140,11 +140,25 @@ export function klicKoliduje(data, klicArchivu) {
    vypadá jako práce hotová. Hlídá to i test-staticka, tady je to
    proto, aby nález uměl stroj spočítat sám a dohromady s ostatními.
    ------------------------------------------------------------------ */
-export function zkouskyMimoCI() {
+export function zkouskyMimoCI(kdeWorkflow, kdeScripts) {
+  /* ČTOU SE VŠECHNY WORKFLOW, NE JEN `testy.yml`. První ostrý běh na
+     tomhle uklouzl: nálezce hlásil „3 zkoušky nikdo nepouští" a
+     jmenoval `test-chat`, `test-listing` a `test-search` — všechny tři
+     přitom pouští `.github/workflows/test-chat.yml`, protože potřebují
+     živou Supabase. Byl to FALEŠNÝ NÁLEZ, tedy vada nálezce, ne
+     repozitáře; a falešný nález je drahý jinak než chybějící: učí
+     člověka hlášení nečíst. (Táž past, kterou `test-staticka.mjs`
+     obešel tím, že si čte i ostatní workflow.) */
+  const wfDir = kdeWorkflow || join(KOREN, '.github', 'workflows');
   let wf = '';
-  try { wf = readFileSync(join(KOREN, '.github', 'workflows', 'testy.yml'), 'utf8'); }
-  catch { return [nalez('workflow zkoušek nejde přečíst', 'hlídač', 3, 'testy.yml chybí', '')]; }
-  const vsechny = readdirSync(join(KOREN, 'scripts'))
+  try {
+    wf = readdirSync(wfDir)
+      .filter((f) => /\.ya?ml$/.test(f))
+      .map((f) => readFileSync(join(wfDir, f), 'utf8'))
+      .join('\n');
+  } catch { return [nalez('workflow nejdou přečíst', 'hlídač', 3, wfDir + ' chybí', '')]; }
+  if (!wf.trim()) return [nalez('workflow nejdou přečíst', 'hlídač', 3, 'ani jeden soubor', '')];
+  const vsechny = readdirSync(kdeScripts || join(KOREN, 'scripts'))
     .filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f));
   const mimo = vsechny.filter((f) => !wf.includes(f));
   if (!mimo.length) return [];

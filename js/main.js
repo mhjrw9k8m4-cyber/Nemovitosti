@@ -3344,6 +3344,87 @@
      těsně u sebe stačí dvě. */
   var SHLUK_TESNY = 16;      // co je blíž než tohle, to se prstem nerozliší
   var SHLUK_TESNY_MIN = 2;
+  /* VELIKOST ODZNAKU NA JEDNOM MÍSTĚ. Čte ji kreslení (vyrobShluk) i
+     slučování překryvů níž — a právě to je důvod, proč je to funkce
+     a ne dvě čísla opsaná vedle sebe: mez „přes sebe" se musí hýbat
+     s tím, co je nakreslené, jinak se jedno z nich tiše rozejde. */
+  function velikostOdznaku(n) { return n >= 20 ? 38 : (n >= 8 ? 33 : 28); }
+  var ODZNAK_NEJVIC = 38;    // největší kolečko, jaké velikostOdznaku vrátí
+  var ODZNAK_MEZERA = 2;     // a ještě vlásek mezi nimi, ať se ani nedotknou
+  /* ODZNAKY SI NESMÍ LEŽET PŘES SEBE.
+     Dva průchody hromádek zaručují, že každá tečka skončí nejvýš
+     v jednom odznaku. O vzdálenosti STŘEDŮ nezaručují nic: první
+     hromádka má těžiště tam, kde se její tečky kupí, a hromádka
+     vedle ní (z druhého, těsného průchodu) může mít těžiště dvacet
+     pixelů od něj — při kolečkách 28 px je to sedm pixelů přes sebe.
+     Naměřeno na telefonu (350×625, Vysočina, zoom 8): 38 nabídek,
+     6 odznaků, jeden pár 21 px od sebe.
+     Slučuje se proto NA NÁSLEDKU, ne na mřížce: dokud se dva odznaky
+     překrývají, splynou v jeden a střed se spočítá váženě podle počtu
+     členů. Tím odznak neuteče od toho, co zastupuje.
+     Předchůdce tohohle místa byla mřížka 18 px, kde se slučovat smělo
+     JEN DVAKRÁT, aby se to nezřetězilo — a výsledek byl „domeček
+     z karet": jeden skutečný shluk se rozpadl na 49 odznaků a 44 párů
+     si leželo přes sebe. Strop na kola tady proto není pravidlo, ale
+     POJISTKA proti nekonečné smyčce; smyčka končí tím, že se celé kolo
+     obešlo bez jediného sloučení, a to je zároveň důkaz, že nezbyl
+     žádný překryv: buňka rejstříku je velká jako největší možná mez,
+     takže devět buněk kolem pokryje všechno, co může zavazet. Kolikáté
+     kolo to bylo, web vystavuje (PK_SHLUKY.kol) — aby se na stropu
+     nedalo skončit tiše. */
+  var ODZNAK_KOL_STROP = 24;
+  function spojPrekryvy(hrom) {
+    var KROK = ODZNAK_NEJVIC + ODZNAK_MEZERA;
+    var SIR = 1 << 16;
+    var kol = 0, slouceno = 0, tah = 0, i;
+    for (;;) {
+      var bunky = new Map();
+      for (i = 0; i < hrom.length; i++) {
+        hrom[i].mimo = false;
+        var k = Math.floor(hrom[i].x / KROK) * SIR + Math.floor(hrom[i].y / KROK);
+        var c = bunky.get(k);
+        if (c) c.push(i); else bunky.set(k, [i]);
+      }
+      tah = 0;
+      for (i = 0; i < hrom.length; i++) {
+        var a = hrom[i];
+        if (a.mimo) continue;
+        var cx = Math.floor(a.x / KROK), cy = Math.floor(a.y / KROK);
+        for (var dx = -1; dx <= 1; dx++) {
+          for (var dy = -1; dy <= 1; dy++) {
+            var cc = bunky.get((cx + dx) * SIR + (cy + dy));
+            if (!cc) continue;
+            for (var w = 0; w < cc.length; w++) {
+              var j = cc[w];
+              if (j <= i) continue;
+              var b = hrom[j];
+              if (b.mimo) continue;
+              var mez = (velikostOdznaku(a.cleny.length) + velikostOdznaku(b.cleny.length)) / 2
+                + ODZNAK_MEZERA;
+              var ex = a.x - b.x, ey = a.y - b.y;
+              if (ex * ex + ey * ey >= mez * mez) continue;
+              var na = a.cleny.length, nb = b.cleny.length;
+              a.x = (a.x * na + b.x * nb) / (na + nb);
+              a.y = (a.y * na + b.y * nb) / (na + nb);
+              a.cleny = a.cleny.concat(b.cleny);
+              b.mimo = true;
+              tah++;
+            }
+          }
+        }
+      }
+      kol++;
+      if (!tah) break;
+      slouceno += tah;
+      hrom = hrom.filter(function (h) { return !h.mimo; });
+      if (kol >= ODZNAK_KOL_STROP) break;
+    }
+    /* `doslo` je to, co se o smyčce dá ověřit zvenčí: skončila kolem BEZ
+       JEDINÉHO sloučení, a tím je dokázáno, že žádný překryv nezbyl.
+       Kdyby se vracelo jen číslo kola, dal by se strop stáhnout na jedno
+       kolo a zkouška by to nepoznala — strop by prostě nebyl „překročen". */
+    return { hrom: hrom, slouceno: slouceno, kol: kol, doslo: tah === 0 };
+  }
   var shlukLayer = null;
   azBudeMapa(function () { shlukLayer = L.layerGroup(); });
   var lastSingles = [];      // tečky, které NEJSOU ve shluku — jen ty se dají trefit
@@ -3441,13 +3522,16 @@
     }
     var hrom = hromadky(body, SHLUK_OKRUH, SHLUK_MIN)
       .concat(hromadky(body, SHLUK_TESNY, SHLUK_TESNY_MIN));
+    var spoj = spojPrekryvy(hrom);
+    hrom = spoj.hrom;
     var shluky = hrom.map(function (h) {
       var stred = map.unproject(L.point(h.x, h.y), z);
       return { lat: stred.lat, lng: stred.lng, cleny: h.cleny };
     });
     var samotne = [];
     for (i = 0; i < body.length; i++) if (!body[i].vzato) samotne.push(body[i].d);
-    return { samotne: samotne, shluky: shluky };
+    return { samotne: samotne, shluky: shluky, slouceno: spoj.slouceno,
+      kol: spoj.kol, doslo: spoj.doslo };
   }
 
   /* Barva odznaku podle toho, co v něm PŘEVAŽUJE — táž paleta jako tečky
@@ -3532,7 +3616,7 @@
     /* Odznak leží NA tečkách, které zastupuje, takže nemusí být velký —
        má je označit, ne přebít. Naměřené počty: do 46 při pohledu na
        celou republiku, do 15 na okresu, do 6 na obci. */
-    var velikost = n >= 20 ? 38 : (n >= 8 ? 33 : 28);
+    var velikost = velikostOdznaku(n);
     var plocha = Math.max(44, velikost);
     var pismo = n >= 100 ? 12 : 13;
     var popis = n + ' ' + plPozemek(n) + ' — přiblížit';
@@ -3817,7 +3901,13 @@
            přiblížení, takže je to rozdíl mezi plynulou mapou a mapou,
            která „skáče" — a jediný způsob, jak to uhlídat, je měřit to. */
         ms: Math.round(tShluk * 10) / 10,
-        vstupu: klikatelne.length
+        vstupu: klikatelne.length,
+        /* Kolik odznaků spolu splynulo, protože by si leželo přes sebe,
+           a na kolikáté kolo to dopadlo. Bez druhého čísla by se nedalo
+           poznat, že se slučování zastavilo na pojistce. */
+        slouceno: v.slouceno,
+        kol: v.kol,
+        doslo: v.doslo
       };
     } catch (e) {}
   }

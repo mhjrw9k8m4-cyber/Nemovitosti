@@ -1903,6 +1903,61 @@
 
   var SHLUK_TESNY = 16;
   var SHLUK_TESNY_MIN = 2;
+
+  function velikostOdznaku(n) { return n >= 20 ? 38 : (n >= 8 ? 33 : 28); }
+  var ODZNAK_NEJVIC = 38;
+  var ODZNAK_MEZERA = 2;
+
+  var ODZNAK_KOL_STROP = 24;
+  function spojPrekryvy(hrom) {
+    var KROK = ODZNAK_NEJVIC + ODZNAK_MEZERA;
+    var SIR = 1 << 16;
+    var kol = 0, slouceno = 0, tah = 0, i;
+    for (;;) {
+      var bunky = new Map();
+      for (i = 0; i < hrom.length; i++) {
+        hrom[i].mimo = false;
+        var k = Math.floor(hrom[i].x / KROK) * SIR + Math.floor(hrom[i].y / KROK);
+        var c = bunky.get(k);
+        if (c) c.push(i); else bunky.set(k, [i]);
+      }
+      tah = 0;
+      for (i = 0; i < hrom.length; i++) {
+        var a = hrom[i];
+        if (a.mimo) continue;
+        var cx = Math.floor(a.x / KROK), cy = Math.floor(a.y / KROK);
+        for (var dx = -1; dx <= 1; dx++) {
+          for (var dy = -1; dy <= 1; dy++) {
+            var cc = bunky.get((cx + dx) * SIR + (cy + dy));
+            if (!cc) continue;
+            for (var w = 0; w < cc.length; w++) {
+              var j = cc[w];
+              if (j <= i) continue;
+              var b = hrom[j];
+              if (b.mimo) continue;
+              var mez = (velikostOdznaku(a.cleny.length) + velikostOdznaku(b.cleny.length)) / 2
+                + ODZNAK_MEZERA;
+              var ex = a.x - b.x, ey = a.y - b.y;
+              if (ex * ex + ey * ey >= mez * mez) continue;
+              var na = a.cleny.length, nb = b.cleny.length;
+              a.x = (a.x * na + b.x * nb) / (na + nb);
+              a.y = (a.y * na + b.y * nb) / (na + nb);
+              a.cleny = a.cleny.concat(b.cleny);
+              b.mimo = true;
+              tah++;
+            }
+          }
+        }
+      }
+      kol++;
+      if (!tah) break;
+      slouceno += tah;
+      hrom = hrom.filter(function (h) { return !h.mimo; });
+      if (kol >= ODZNAK_KOL_STROP) break;
+    }
+
+    return { hrom: hrom, slouceno: slouceno, kol: kol, doslo: tah === 0 };
+  }
   var shlukLayer = null;
   azBudeMapa(function () { shlukLayer = L.layerGroup(); });
   var lastSingles = [];
@@ -1975,13 +2030,16 @@
     }
     var hrom = hromadky(body, SHLUK_OKRUH, SHLUK_MIN)
       .concat(hromadky(body, SHLUK_TESNY, SHLUK_TESNY_MIN));
+    var spoj = spojPrekryvy(hrom);
+    hrom = spoj.hrom;
     var shluky = hrom.map(function (h) {
       var stred = map.unproject(L.point(h.x, h.y), z);
       return { lat: stred.lat, lng: stred.lng, cleny: h.cleny };
     });
     var samotne = [];
     for (i = 0; i < body.length; i++) if (!body[i].vzato) samotne.push(body[i].d);
-    return { samotne: samotne, shluky: shluky };
+    return { samotne: samotne, shluky: shluky, slouceno: spoj.slouceno,
+      kol: spoj.kol, doslo: spoj.doslo };
   }
 
   var SHLUK_MENSINA = 0.25;
@@ -2012,7 +2070,7 @@
   function vyrobShluk(s) {
     var n = s.cleny.length;
 
-    var velikost = n >= 20 ? 38 : (n >= 8 ? 33 : 28);
+    var velikost = velikostOdznaku(n);
     var plocha = Math.max(44, velikost);
     var pismo = n >= 100 ? 12 : 13;
     var popis = n + ' ' + plPozemek(n) + ' — přiblížit';
@@ -2187,7 +2245,11 @@
         samotne: v.samotne.map(function (x) { return { lat: x.lat, lng: x.lng }; }),
 
         ms: Math.round(tShluk * 10) / 10,
-        vstupu: klikatelne.length
+        vstupu: klikatelne.length,
+
+        slouceno: v.slouceno,
+        kol: v.kol,
+        doslo: v.doslo
       };
     } catch (e) {}
   }

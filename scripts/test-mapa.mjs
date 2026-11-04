@@ -521,7 +521,10 @@ pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}
     return { prohled: !!d, odznaku: odz.length, vShlucich: d ? d.shluky.reduce((a, x) => a + x.n, 0) : -1,
       samotnych: samotne.length, kolize: kolize,
       nejblizsi: odz.length > 1 ? Math.round(nejblizsi) : null,
-      nedosazitelnych: nedosazitelnych, ms: d ? d.ms : -1, vstupu: d ? d.vstupu : -1 };
+      nedosazitelnych: nedosazitelnych, ms: d ? d.ms : -1, vstupu: d ? d.vstupu : -1,
+      slouceno: d && d.slouceno != null ? d.slouceno : -1,
+      kol: d && d.kol != null ? d.kol : -1,
+      doslo: d ? d.doslo === true : null };
   });
   /* Tři pojistky, aby zkouška neprošla naprázdno. */
   pravda('web říká, co spočítalo shlukování (window.PK_SHLUKY)', v.prohled,
@@ -530,6 +533,16 @@ pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}
     v.odznaku > 1 && v.vShlucich > 2, 'málo odznaků — překryv se nedá změřit');
   pravda('žádné dva odznaky si neleží přes sebe', v.kolize === 0,
     `${v.kolize} párů se překrývá, nejbližší dva jsou ${v.nejblizsi} px od sebe`);
+  /* A JAK se k tomu došlo, ne jen ŽE se k tomu došlo. Odznaky, které by
+     si ležely přes sebe, slévá web dohromady ve smyčce, která končí
+     kolem bez jediného sloučení — teprve to je důkaz, že nezbyl žádný
+     překryv. Nad smyčkou je ještě pojistka na 24 kol proti nekonečnu;
+     kdyby se skončilo na NÍ, kontrola výš by sice padla, ale nikdo by
+     nevěděl proč. Naměřeno tady: 38 nabídek, 1 sloučení, 2 kola. */
+  pravda(`slučování překryvů došlo do konce samo (${v.slouceno} sloučení ve ${v.kol}. kole)`,
+    v.doslo === true && v.kol > 0, v.doslo === null
+      ? 'web neřekl, jak slučování skončilo (PK_SHLUKY.doslo chybí)'
+      : `slučování skončilo na pojistce po ${v.kol} kolech — překryvy mohly zůstat`);
   /* V malém hustém kraji je správně, že samotná nezbyla ani jedna
      (naměřeno: 29 nabídek, 5 odznaků, 0 samotných). Není to tedy chyba,
      ale taky se pak nedá nic měřit — a to se musí říct, ne zamlčet. */

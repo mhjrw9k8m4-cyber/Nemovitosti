@@ -23444,3 +23444,68 @@ v tom, že ukáže, **kde hlídač nehlídá**.
 číslech z dnešních nálezů. Osm sabotáží s ověřeným diffem; jedna z nich
 si nejdřív vynutila opravu zkoušky, protože místo pojmenované chyby
 zkoušku shodila na výjimce.
+
+## §375 — falešný nález smyčky a odznaky, které si leží přes sebe *4. 11.*
+
+Dvě věci z jednoho dne, obě o tom, že **hlášení se čte jen tak dlouho,
+dokud mu jde věřit**.
+
+**1. Smyčka samorozvoje si vymyslela nález.** Hlásila „3 zkoušky mimo
+CI" a jmenovala `test-chat`, `test-listing`, `test-search`. Všechny tři
+běží — má je `.github/workflows/test-chat.yml`, protože potřebují živou
+Supabase a do rychlé sady se nehodí. Vada byla v `zkouskyMimoCI`:
+soupis zkoušek si brala z **jediného** workflow (`testy.yml`), takže
+cokoli hlídaného jinde vypadalo jako nehlídané. Teď čte **všechna**
+workflow v `.github/workflows/`.
+
+Falešný nález je drahý jinak než chybějící. Chybějící nález nechá vadu
+být; falešný učí člověka hlášení **nečíst** — a tím zabije i ty nálezy,
+které pravdivé jsou. Proto je to jediná vada, kterou si smyčka na sobě
+opravila dřív než cokoli jiného, a proto na ni `test-samorozvoj.mjs`
+drží dvě kontroly: že dnes žádná zkouška mimo CI není, a že jmenovitě
+nejsou mezi nálezy ty tři, co mají vlastní workflow. Prokázáno
+sabotáží (filtr zpátky na `f === 'testy.yml'` → dvě pojmenované chyby).
+
+**2. Odznaky shluků si ležely přes sebe — 21 px při kolečkách 28 px.**
+Našla to červená CI (`test-mapa`), lokálně v celé sadě to zapadlo mezi
+pády z obsazeného portu. Naměřeno na telefonu (350×625, Vysočina,
+zoom 8): 38 nabídek, 6 odznaků, jeden pár 21 px od sebe.
+
+Příčina: dva průchody hromádek (okruh 38 px od tří nabídek, pak těsný
+16 px od dvou) zaručují, že každá tečka skončí nejvýš v jednom odznaku.
+O vzdálenosti **STŘEDŮ** nezaručují nic — těžiště první hromádky se
+posune k jejím tečkám a hromádka z druhého průchodu může mít těžiště
+dvacet pixelů od něj.
+
+Oprava slučuje **na následku, ne na mřížce**: dokud se dva odznaky
+překrývají, splynou v jeden a střed se spočítá váženě podle počtu
+členů, takže odznak neuteče od toho, co zastupuje. Smyčka končí kolem
+**bez jediného sloučení** — a právě to je důkaz, že nezbyl žádný
+překryv, protože buňka rejstříku je velká jako největší možná mez, a
+devět buněk kolem tedy pokryje všechno, co může zavazet.
+
+Předchůdce téhož místa byla mřížka 18 px, kde se slučovat smělo **jen
+dvakrát**, aby se to nezřetězilo — a výsledek byl „domeček z karet":
+jeden shluk rozpadlý na 49 odznaků a 44 párů přes sebe. Strop na kola
+(24) tady proto není pravidlo, ale **pojistka proti nekonečné smyčce**.
+
+A protože na pojistce se dá skončit tiše, web teď říká, **jak** smyčka
+skončila (`PK_SHLUKY.doslo`), ne jen kolikáté kolo to bylo. Rozdíl je
+praktický: sabotáž, která stáhne pojistku na jedno kolo, projde
+kontrolou „kol < 24" zeleně, ale na `doslo` padne — a padla
+(`✕ slučování překryvů došlo do konce samo`). Velikost kolečka navíc
+čte kreslení i slučování z jedné funkce `velikostOdznaku`, aby se mez
+„přes sebe" nemohla rozejít s tím, co je nakreslené.
+
+**Změřeno po opravě** na nejtěžším pohledu (1 280×900, celá ČR bez
+vybraného kraje, 2 294 nabídek):
+
+| zoom | odznaků | sloučeno | kol | nejbližší pár | překryvů | shlukování |
+|---|---|---|---|---|---|---|
+| 10 | 339 | 0 | 1 | 34 px | 0 | 5,2 ms |
+| 11 | 310 | 1 | 2 | 35 px | 0 | 10,7 ms |
+| 12 | 228 | 0 | 1 | 44 px | 0 | 7,5 ms |
+| 13 | 156 | 0 | 1 | 39 px | 0 | 7,8 ms |
+
+Slučování tedy nic nestojí (mez je 150 ms) a na tisících nabídek se
+nezřetězí: jedno sloučení nejvýš. `test-mapa` má 66 kontrol, 0 chyb.
