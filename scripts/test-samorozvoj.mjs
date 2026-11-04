@@ -286,6 +286,31 @@ function je(popis, vyslo, cekano) {
     /rovnocenne: \(v\.sabotaze \|\| \[\]\)/.test(smy2));
 }
 
+/* ---- 6e) NESABOTOVANÁ ZKOUŠKA MUSÍ PROJÍT PRVNÍ ----
+ *
+ * Nejhorší vada, jakou stroj měl, a našel se 4. 11. na vlastní kůži:
+ * když zkouška padá UŽ BEZ MUTACE, skončí každý sabotovaný běh taky
+ * nenulově — a stroj odškrtne všechny mutace jako „chycené". Naměřeno
+ * doslova: `test-hlidani` padala na jedné kontrole s nezlomitelnou
+ * mezerou a stroj vydal „6 z 6 chyceno", ačkoli jedna z těch šesti
+ * (mez množného čísla 2–4) chycená nebyla. Falešný důkaz je horší než
+ * žádný: hlídač se podle něj odškrtne jako prokázaný a nikdo se k němu
+ * nevrátí.
+ */
+{
+  const kodB = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  pravda('stroj pustí zkoušku nejdřív BEZ sabotáže',
+    /zkouška padá UŽ BEZ SABOTÁŽE/.test(kodB),
+    'bez téhle pojistky stroj odškrtne jako chycené i mutace, které nikdo nechytil');
+  /* A ta pojistka musí stát PŘED první sabotáží, jinak nemá cenu. */
+  pravda('a stojí to před prvním zápisem do zdroje',
+    kodB.indexOf('zkouška padá UŽ BEZ SABOTÁŽE') < kodB.indexOf('/* 1) zapsat */'),
+    'pojistka je v kódu až za sabotáží — to už je pozdě');
+  pravda('a nedoběhnutí se nevydává za pád',
+    /nedoběhla do \$\{Math\.round\(casLimit/.test(kodB),
+    'timeout bez sabotáže se musí poznat od chyby zkoušky');
+}
+
 /* ---- 6c) HLÍDAČ, KE KTERÉMU STROJ NEDOSÁHNE ----
  *
  * Když zkouška v prohlížeči hlídá jen `js/…`, mechanická sabotáž se

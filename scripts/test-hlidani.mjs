@@ -1044,6 +1044,66 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     /d\.prezn/.test(teloN), true);
 }
 
+/* ---- A TŘI V PRAVIDLECH HLÍDÁNÍ (js/hlidani-logika.js) ----------
+ *
+ * Tentýž stroj, druhý modul — a ten posílá e-maily skutečným lidem,
+ * takže jeho tiché vady nejdou vzít zpátky.
+ */
+{
+  /* 1) MEZ NEUVĚŘITELNÉ CENY JE DVOJČE. Totéž pravidlo stojí
+        doslovně v js/ceny.js, protože rozesílání běží v Node, kde se
+        prohlížečový modul nenačte. Posunutá konstanta v JEDNÉ kopii
+        znamená, že web a mail tvrdí o téže nabídce jiné číslo —
+        a hlídač, který obě kopie prožene celými daty
+        (scripts/test-strop-ceny.mjs), to zjistí jen tam, kde taková
+        nabídka v datech JE. Proto se mez pину i tady, na obou
+        stranách hranice. */
+  je('pravidla', 'mez neuvěřitelné ceny je i tady 30 000 Kč/m²',
+    H.zaMetr({ area: 1, price: 30000 }), 30000);
+  je('pravidla', 'a o korunu výš mlčí', H.zaMetr({ area: 1, price: 30001 }), null);
+
+  /* 2) DO KLÍČE SE NEPŘILEPÍ NIC, CO NA OBJEKTU NENÍ VLASTNÍ.
+        `kriteriaUlozena` odstraňuje sloupce, které databáze ještě nemá
+        (starší stupeň migrace), a chodí přes `for…in` s pojistkou
+        `hasOwnProperty`. Bez té pojistky proleze do uložených kritérií
+        i dědičná vlastnost — a hlídání by se ptalo na sloupec, který
+        v tabulce není. */
+  {
+    const predek = { podstrceny_sloupec: 'nepatří sem' };
+    const k = Object.create(predek);
+    k.okres = 'Kolín';
+    k.stred_lat = 50; k.stred_lng = 15; k.okruh_km = 10;
+    const out = H.kriteriaUlozena(k, 'bezOkruhu');
+    je('pravidla', 'dědičná vlastnost se do uložených kritérií nedostane',
+      Object.prototype.hasOwnProperty.call(out, 'podstrceny_sloupec'), false);
+    je('pravidla', 'a vlastní zůstane', out.okres, 'Kolín');
+    /* `join` z undefined dělá prázdný řetězec, takže se tu neptáme na
+       hodnoty, ale na to, co klíč opravdu NESE — jinak by kontrola
+       prošla i tam, kde sloupce zůstaly prázdné místo pryč. */
+    je('pravidla', 'a sloupce toho stupně vypadnou',
+      ['stred_lat', 'stred_lng', 'okruh_km']
+        .filter((x) => Object.prototype.hasOwnProperty.call(out, x)).join(','), '');
+  }
+
+  /* 3) MODUL SE MUSÍ NAČÍST I V PROHLÍŽEČI — týž UMD obal jako
+        u js/nove-pozemky.js a týž následek: po záměně `&&` za `||` se
+        v prohlížeči sáhne na `module.exports` a stránka hlídání
+        spadne ještě předtím, než cokoli vykreslí. */
+  {
+    const src = readFileSync(path.join(ROOT, 'js', 'hlidani-logika.js'), 'utf8');
+    try {
+      const self = { PKOkruh: undefined };
+      new Function('self', 'module', 'require', src)(self, undefined, undefined);
+      je('pravidla', 'v prohlížeči (bez module) se pravidla zavěsí na self',
+        typeof self.PKHlidani === 'object' && typeof self.PKHlidani.matches === 'function',
+        true);
+    } catch (e) {
+      je('pravidla', 'v prohlížeči (bez module) se pravidla načtou bez chyby',
+        'spadlo: ' + String((e && e.message) || e), 'bez chyby');
+    }
+  }
+}
+
 /* ---- TŘI SLEPÁ MÍSTA, KTERÁ UKÁZAL SABOTÁŽNÍ STROJ --------------
  *
  * Sabotáž 4. 11. nad js/nove-pozemky.js (modul, který z čísel dělá
@@ -1082,6 +1142,21 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     je('nové pozemky', 'a s výměrou a bez ceny jsou všechny tři kusy',
       p2, ['Obec 2', F.vymera(1000), F.cena(0)].join(' · '));
   }
+
+  /* 1b) MEZ MNOŽNÉHO ČÍSLA JE 2–4, VČETNĚ ČTYŘKY. Čeština má tři
+        tvary a titulek karty je skládá z počtu: „1 nový pozemek",
+        „2–4 nové pozemky", „5 a víc nových pozemků". Posunutá mez
+        (`n <= 4` na `n < 4`) udělá ze čtyřky „4 nových pozemků" —
+        a je to právě ta sabotáž, kterou stroj 4. 11. označil za
+        chycenou, přestože chycená nebyla (zkouška tehdy padala na
+        jiné kontrole, takže vypadala jako chytající; viz pojistka
+        v scripts/sabotuj.mjs). Hlídají se proto VŠECHNY tři tvary
+        i obě hranice. */
+  je('nové pozemky', 'jeden je „nový pozemek"', F.cislovka(1, ['nový pozemek', 'nové pozemky', 'nových pozemků']), '1 nový pozemek');
+  je('nové pozemky', 'dva jsou „nové pozemky"', F.mnozne(2, ['a', 'b', 'c']), 'b');
+  je('nové pozemky', 'a čtyři taky (hranice)', F.mnozne(4, ['a', 'b', 'c']), 'b');
+  je('nové pozemky', 'pět už je „nových pozemků"', F.mnozne(5, ['a', 'b', 'c']), 'c');
+  je('nové pozemky', 'a nula taky (druhá hranice)', F.mnozne(0, ['a', 'b', 'c']), 'c');
 
   /* 2) UKÁZKA JE PĚT A ZBYTEK SE DOPOČÍTÁ. Posunutá konstanta by tiše
         přidala nebo ubrala řádek v kartě hlídání a číslo „a další N"

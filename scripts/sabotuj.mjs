@@ -263,6 +263,34 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
       poznamka: 'zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít' };
   }
   const prohlizecova = jeProhlizecova(teloZkousky);
+  /* NEJDŘÍV SE ZKOUŠKA MUSÍ ZELENĚ PROJÍT BEZ SABOTÁŽE.
+     ------------------------------------------------------------------
+     Nalezeno 4. 11. na vlastní kůži, a je to nejhorší vada, jakou
+     tenhle stroj měl: když zkouška padá UŽ BEZ MUTACE, skončí každý
+     sabotovaný běh taky nenulově — a stroj všechny mutace odškrtne
+     jako „chycené". Naměřeno doslova: `test-hlidani` padala na jedné
+     kontrole s nezlomitelnou mezerou a stroj vydal „6 z 6 chyceno",
+     ačkoli jedna z těch šesti (mez množného čísla 2–4) ve skutečnosti
+     chycená není. Falešný důkaz je horší než žádný: podle něj se
+     hlídač odškrtne jako prokázaný a nikdo se k němu nevrátí.
+     Proto se nejdřív pustí nesabotovaná zkouška. Když padne, nedělá se
+     nic a vrátí se to jako chyba — opravit zkoušku je první krok,
+     teprve pak má smysl ji prokazovat. */
+  try {
+    execFileSync(process.execPath, [cestaZkousky], {
+      cwd: KOREN, encoding: 'utf8', timeout: casLimit,
+      env: Object.assign({}, process.env, { [UVNITR]: '1' }),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch (e) {
+    const kod = e && e.status;
+    const vystup = String((e && (e.stdout || '')) || '').split('\n').slice(-3).join(' ').slice(-300);
+    return { zkouska, hlidá: cile,
+      chyba: e && e.killed
+        ? `zkouška nedoběhla do ${Math.round(casLimit / 1000)} s ani bez sabotáže`
+        : `zkouška padá UŽ BEZ SABOTÁŽE (konec ${kod}) — nejdřív ji opravit,`
+          + ` prokazovat se dá jen zelená zkouška. Konec výpisu: ${vystup}` };
+  }
   const vysledky = [];
   for (const cil of cile) {
     if (vysledky.length >= strop) break;

@@ -24314,3 +24314,48 @@ je lepší i věcně: kontrola pak měří to, co měřit má (spojení tečkou
 a vypadnutí prázdného kusu), ne shodu dvou literálů.
 
 `test-hlidani`: 219 → **222 kontrol**.
+
+**OPRAVA TÉHOŽ DNE — to „6 z 6" nebyla pravda.** Viz §393: stroj tehdy
+běžel nad zkouškou, která padala už bez sabotáže, takže odškrtl jako
+chycené i to, co chycené nebylo. Po opravě stroje a doplnění chybějící
+kontroly je to **12 z 12** (tenhle modul i pravidla hlídání).
+
+
+## §393 — stroj odškrtával jako chycené i to, co nikdo nechytil *4. 11.*
+
+Nejhorší vada, jakou sabotážní stroj měl, a našla se na vlastní kůži
+hned, jak jsem jeho výsledek vzal vážně.
+
+**Když zkouška padá UŽ BEZ MUTACE, skončí každý sabotovaný běh taky
+nenulově — a stroj všechny mutace odškrtne jako „chycené".** Naměřeno
+doslova: `test-hlidani` v té chvíli padala na jedné kontrole kvůli
+nezlomitelné mezeře (čekal jsem literál „1 000 m²", web sází jinou
+mezeru) a stroj vydal **„6 z 6 chyceno"**. Jedna z těch šesti chycená
+nebyla: **mez množného čísla 2–4**. Po záměně `n <= 4` na `n < 4` udělá
+titulek karty ze čtyřky „4 **nových pozemků**" — česky špatně.
+
+A je to **falešný důkaz**, tedy horší než žádný: podle něj se hlídač
+odškrtne jako prokázaný a nikdo se k němu nevrátí. V §392 jsem to
+napsal jako hotovou věc; opraveno tamtéž.
+
+**Opraveno:** stroj pustí zkoušku **nejdřív bez sabotáže**. Když padne,
+nedělá se nic a vrátí se to jako chyba se třemi posledními řádky
+výpisu — *„zkouška padá UŽ BEZ SABOTÁŽE, nejdřív ji opravit;
+prokazovat se dá jen zelená zkouška"*. Nedoběhnutí se od pádu
+rozlišuje, aby se timeout nevydával za nalezenou vadu. Změřeno na
+schválně rozbité zkoušce: stroj to odmítl a řekl, na čem.
+
+Hlídá to `test-samorozvoj` ve třech bodech: že ta pojistka v kódu je,
+že stojí **před** prvním zápisem do zdroje (za sabotáží by byla
+k ničemu) a že se nedoběhnutí nevydává za pád.
+
+**Zůstatek:** `js/nove-pozemky.js` a `js/hlidani-logika.js` mají
+**12 z 12** sabotáží chycených — mez množného čísla včetně obou hranic
+(nula i čtyřka), mez neuvěřitelné ceny v obou kopiích pravidla, UMD
+obal v prostředí bez `module`, dědičná vlastnost v uložených kritériích
+a prázdný kus v popisu řádku.
+
+`test-hlidani`: 222 → **233 kontrol**, `test-samorozvoj`: 100 → **103**.
+
+**Pravidlo:** nástroj, který soudí hlídače, musí nejdřív ověřit, že
+soudí ze zdravého výchozího stavu. Jinak neměří hlídače, ale sám sebe.
