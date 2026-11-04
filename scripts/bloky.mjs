@@ -74,6 +74,7 @@ export function shluky(nabidky, mez = MEZ_METRU) {
     const a = Math.floor(o.lat / P), b = Math.floor(o.lng / P);
     for (let da = -1; da <= 1; da++) for (let db = -1; db <= 1; db++) {
       for (const j of (prihradky.get((a + da) + '|' + (b + db)) || [])) {
+        /* ROVNOCENNÁ SABOTÁŽ: zahozená pojistka (if … continue) — bez ní se každá dvojice prohledá dvakrát a jednou i sama se sebou, ale výsledné rozdělení do shluků je totéž: je to sjednocení téže množiny hran, jen za dvojnásobek práce. Pojistka je na čas, ne na výsledek — proto ji žádná zkouška chytit nemůže. */
         if (j <= i) continue;
         if (metry(o, s[j]) > mez) continue;
         const x = najdi(i), y = najdi(j);

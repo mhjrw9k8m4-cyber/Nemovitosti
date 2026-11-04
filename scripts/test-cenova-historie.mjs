@@ -118,6 +118,81 @@ for (const f of readdirSync(ROOT).filter((x) => x.startsWith('pozemek-') && x.en
   pravda('a ne všechny — jeden bod není historie', kolik < vse);
 }
 
+/* ---- ČTYŘI SLEPÁ MÍSTA, KTERÁ NAŠLA SABOTÁŽ -------------------
+ * ==================================================================
+ * Smyčka samorozvoje 4. 11. obrátila v `scripts/cenova-historie.mjs`
+ * čtyři věci a tahle zkouška mlčela — přitom ten soubor nehlídá nikdo
+ * jiný (§397), takže obvinění bylo pevné. Každá z nich je tady
+ * doložená fixturou, nad kterou je PŘEDEM jasné, co má vyjít.
+ */
+{
+  /* 1) DVA BODY NESMÍ MÍT TÝŽ DEN. Živá cena si nese `od` = věk
+     inzerátu, ne den, kdy začala platit. Když se rovná dni poslední
+     uzavřené ceny, musí se posunout na konec toho období — jinak by
+     v grafu stály dvě různé ceny na jednom dni a nebylo by poznat,
+     která je novější. Sabotáž `<=` na `<` tu rovnost pustí dál. */
+  const h1 = historiePodleKlice(
+    [{ k: 'X', od: '2026-01-10', do: '2026-02-20', c: 500000, proc: 'cena' }],
+    { nabidky: { X: { od: '2026-01-10', c: 400000 } } });
+  const b1 = (h1.get('X') || {}).body || [];
+  pravda('živá cena se stejným dnem jako uzavřená se posune na konec období',
+    b1.length === 2 && pol(b1, 1).d === '2026-02-20',
+    `vyšlo ${JSON.stringify(b1)}`);
+  pravda('a dny v historii jdou dopředu, ne dvakrát týž',
+    b1.length === 2 && pol(b1, 0).d < pol(b1, 1).d,
+    `${pol(b1, 0).d} → ${pol(b1, 1).d}`);
+
+  /* 2) ŘADÍ SE PODLE `od`, NE PODLE `do`. Dvě období téže nabídky se
+     mohou překrývat (to starší skončí později), a kdo je srovná podle
+     `do`, obrátí historii: zlevnění vypadá jako zdražení. Sabotáž
+     `===` na `!==` v porovnávači přepne klíč řazení. */
+  const h2 = historiePodleKlice([
+    { k: 'Y', od: '2026-02-01', do: '2026-02-05', c: 200000, proc: 'cena' },
+    { k: 'Y', od: '2026-01-01', do: '2026-03-01', c: 100000, proc: 'cena' },
+  ], { nabidky: {} });
+  const b2 = (h2.get('Y') || {}).body || [];
+  pravda('období se řadí podle začátku, i když to pozdější skončí dřív',
+    b2.length === 2 && pol(b2, 0).c === 100000 && pol(b2, 1).c === 200000,
+    `vyšlo ${JSON.stringify(b2)}`);
+  pravda('a začátek celé historie je den prvního období',
+    (h2.get('Y') || {}).od === '2026-01-01', String((h2.get('Y') || {}).od));
+
+  /* 3) ŘÁDEK BEZ CENY NEBO BEZ DNE NENÍ BOD. Archiv může mít řádek
+     s nulou (nabídka bez ceny) i bez `od`; obojí se zahazuje. Sabotáž
+     tu pojistku vypne a do grafu se dostane bod s cenou 0 — a to je
+     na stránce vidět jako „zlevněno na 0 Kč". */
+  const h3 = historiePodleKlice([
+    { k: 'Z', od: '2026-01-05', do: '2026-01-20', c: 0, proc: 'cena' },
+    { k: 'Z', od: '', do: '2026-01-25', c: 300000, proc: 'cena' },
+    { k: 'Z', od: '2026-01-20', do: '2026-02-02', c: 300000, proc: 'cena' },
+  ], { nabidky: {} });
+  const b3 = (h3.get('Z') || {}).body || [];
+  pravda('řádek bez ceny ani bez dne se do historie nedostane',
+    b3.length === 1 && pol(b3, 0).c === 300000 && pol(b3, 0).d === '2026-01-20',
+    `vyšlo ${JSON.stringify(b3)}`);
+  pravda('a žádný bod nemá cenu nula ani prázdný den',
+    b3.every((x) => x.c > 0 && !!x.d), `vyšlo ${JSON.stringify(b3)}`);
+
+  /* 4) PRÁZDNÉ „od" NESMÍ URČIT ZAČÁTEK POZOROVÁNÍ. Začátek je
+     nejstarší den, který archiv zná; prázdná hodnota se musí vyhodit,
+     jinak je „začátek" prázdný řetězec, `zacatekVidet` spadne na false
+     a web přestane u nabídek přiznávat, že jejich vznik neviděl.
+     Sabotáž zahodí `.filter(Boolean)`. */
+  const h4 = historiePodleKlice([
+    { k: 'A', od: '', do: '2026-01-02', c: 111000, proc: 'cena' },
+    { k: 'A', od: '2026-01-02', do: '2026-01-20', c: 111000, proc: 'cena' },
+    { k: 'B', od: '2026-03-01', do: '2026-03-20', c: 222000, proc: 'cena' },
+    { k: 'B', od: '2026-03-20', do: '2026-04-01', c: 333000, proc: 'cena' },
+  ], { nabidky: {} });
+  pravda('prázdné „od" neurčuje začátek pozorování',
+    (h4.get('B') || {}).zacatekVidet === true,
+    'B začíná 1. 3., nejstarší známý den je 2. 1. — vznik jsme tedy viděli;'
+    + ` vyšlo ${JSON.stringify((h4.get('B') || {}).zacatekVidet)}`);
+  pravda('a nabídka z nejstaršího dne se za viděnou nevydává',
+    (h4.get('A') || {}).zacatekVidet === false,
+    `vyšlo ${JSON.stringify((h4.get('A') || {}).zacatekVidet)}`);
+}
+
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const { BASE } = await import('./falesna-supabase-chat.mjs');

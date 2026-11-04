@@ -1,9 +1,9 @@
 {
  "dny": {
   "2026-11-04": {
-   "prokazanych": 0,
-   "slepych": 2,
-   "nalezu": 4
+   "prokazanych": 5,
+   "slepych": 5,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -106,37 +106,485 @@
    "nedorucene": [],
    "poznamka": "",
    "rucne": true
+  },
+  "test-barva-ceny.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-barva-listy.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm nevyskytuje; promyšlená sabotáž tu zůstává na člověku"
+  },
+  "test-barvy.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v js/main.js",
+    "obrácené porovnání (<= na <) v js/main.js",
+    "obrácená rovnost (=== na !==) v js/main.js",
+    "zahozená pojistka (if … continue) v js/main.js",
+    "zahozený filter(Boolean) v js/main.js",
+    "a místo nebo (&& na ||) v js/main.js"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/rozbal-hledani.mjs",
+    "scripts/adresa-pozemku.mjs"
+   ],
+   "poznamka": ""
+  },
+  "test-bez-cekani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-bez-skoku.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/rozbal-hledani.mjs"
+   ],
+   "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/rozbal-hledani.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
+  },
+  "test-bloky.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 3,
+   "nechytila": 3,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (<= na <)",
+    "zahozená pojistka (if … continue)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/generate-parcel-pages.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-bpej.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-casove-limity.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-cena-podle-druhu.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-cenova-historie.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (<= na <)",
+    "obrácená rovnost (=== na !==)",
+    "zahozená pojistka (if … continue)",
+    "zahozený filter(Boolean)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/archiv-statistiky.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-cenovy-stupen.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-ceny-historie.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
+    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
+    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs",
+    "zahozená pojistka (if … continue) v scripts/fetch-opportunities.mjs",
+    "zahozený filter(Boolean) v scripts/fetch-opportunities.mjs",
+    "a místo nebo (&& na ||) v scripts/fetch-opportunities.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-ceny-hledani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-cerstvost.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-ceska-pismena.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-cesta-ven.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-cestina.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 1,
+   "nechytila": 3,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácená rovnost (=== na !==) v scripts/sazba.mjs",
+    "zahozená pojistka (if … continue) v scripts/sazba.mjs",
+    "a místo nebo (&& na ||) v scripts/sazba.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/cizi-text.mjs"
+   ],
+   "poznamka": ""
+  },
+  "test-chybova-hlaska.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 2,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
   }
  },
  "updated": "2026-11-04",
  "nalezy": [
   {
-   "jmeno": "místo, které místem není",
-   "trida": "data",
-   "tiha": 3,
-   "dukaz": "19 nabídek (ÚZSVM 19×); např. „303/115 a 303/116\" v okrese Rakovník",
-   "co": "Vymyšlené místo je horší než chybějící nabídka: geokodér hledá v mapě číslo parcely."
-  },
-  {
-   "jmeno": "zdroj Dražby: nevysvětlený úbytek",
-   "trida": "kód",
-   "tiha": 2,
-   "dukaz": "stáhl 45, na webu 20, síto 6, bez jména 19",
-   "co": "Každý krok, který nabídku zahodí, se má jmenovat a počítat (§366)."
-  },
-  {
-   "jmeno": "zkouška, kterou nikdo nepouští",
-   "trida": "hlídač",
-   "tiha": 2,
-   "dukaz": "3 z 313: test-chat.mjs, test-listing.mjs, test-search.mjs",
-   "co": "Zkouška mimo CI vypadá jako hotová práce a nehlídá nic."
-  },
-  {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "313 z 313 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-archiv-statistiky.mjs, test-archiv.mjs, test-aria-cile.mjs",
+   "dukaz": "306 z 314 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
- ]
+ ],
+ "soubory": {
+  "js/main.js": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   },
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-barvy.mjs"
+    ]
+   }
+  },
+  "scripts/bloky.mjs": {
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-bloky.mjs"
+    ]
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-bloky.mjs"
+    ],
+    "mlcely": []
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-bloky.mjs"
+    ]
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-bloky.mjs"
+    ],
+    "mlcely": []
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-bloky.mjs"
+    ],
+    "mlcely": []
+   }
+  },
+  "scripts/generate-parcel-pages.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-bloky.mjs"
+    ]
+   }
+  },
+  "scripts/cenova-historie.mjs": {
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cenova-historie.mjs"
+    ]
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cenova-historie.mjs"
+    ]
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cenova-historie.mjs"
+    ]
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cenova-historie.mjs"
+    ]
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-cenova-historie.mjs"
+    ],
+    "mlcely": []
+   }
+  },
+  "scripts/archiv-statistiky.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cenova-historie.mjs"
+    ]
+   }
+  },
+  "scripts/fetch-opportunities.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   },
+   "obrácené porovnání (<= na <)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ceny-historie.mjs"
+    ]
+   }
+  },
+  "scripts/sazba.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cestina.mjs"
+    ]
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cestina.mjs"
+    ]
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-cestina.mjs"
+    ]
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-cestina.mjs"
+    ],
+    "mlcely": []
+   }
+  },
+  "scripts/bez-komentaru.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-chybova-hlaska.mjs"
+    ],
+    "mlcely": []
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-chybova-hlaska.mjs"
+    ],
+    "mlcely": []
+   }
+  }
+ }
 }

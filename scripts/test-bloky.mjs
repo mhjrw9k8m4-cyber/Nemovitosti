@@ -132,6 +132,35 @@ pravda(`v datech shluky jsou (${sousedi.size} nabídek ve shluku 3+)`, sousedi.s
   pravda('a všechny dávají smysl', rozchody.length === 0, rozchody.slice(0, 5).join(' | '));
 }
 
+/* ---- SOUSEDNÍ PŘIHRÁDKY SE MUSÍ PROHLEDAT TAKY -----------------
+   ==================================================================
+   Shluky se nepočítají n², ale po přihrádkách 0,005° (asi 550 m) a
+   hledá se v devíti sousedních. Smyčka samorozvoje 4. 11. obrátila
+   `da <= 1` na `da < 1` — tedy přestala se dívat o přihrádku dál na
+   jednu stranu — a tahle zkouška mlčela, protože všechny její dvojice
+   ležely uvnitř jedné přihrádky. Dvě nabídky na dohled od sebe přes
+   hranici přihrádky by se tak rozpadly do dvou shluků a stránka by
+   o sousedovi 22 metrů daleko neřekla nic.
+   Fixtura proto hranici přihrádky překračuje schválně: 49,6999 padne
+   do 9939, 49,7001 do 9940, a je mezi nimi 22 m. */
+{
+  const P1 = { lat: 49.6999, lng: 15.0, area: 1000, price: 100000 };
+  const P2 = { lat: 49.7001, lng: 15.0, area: 1000, price: 100000 };
+  pravda('dvě nabídky 22 m od sebe přes hranici přihrádky jsou jeden shluk',
+    B.shluky([P1, P2]).length === 1,
+    `vyšlo ${B.shluky([P1, P2]).length} shluků; na šířku se hledá jen ve své přihrádce`);
+  /* Totéž na délku: `db` je druhá polovina téhož dvojitého cyklu. */
+  const P3 = { lat: 49.7, lng: 14.9999, area: 1000, price: 100000 };
+  const P4 = { lat: 49.7, lng: 15.0001, area: 1000, price: 100000 };
+  pravda('a stejně tak přes hranici na délku',
+    B.shluky([P3, P4]).length === 1,
+    `vyšlo ${B.shluky([P3, P4]).length} shluků`);
+  /* A ZPÁTEČNÍ KONTROLA, ať fixtura netvrdí víc, než co měří: daleko
+     od sebe zůstanou dva shluky i uvnitř jedné přihrádky. */
+  pravda('a co je dál než mez, zůstane zvlášť',
+    B.shluky([P1, { lat: 50.2, lng: 16.4, area: 1000, price: 100000 }]).length === 2);
+}
+
 console.log('\nVíc pozemků na jednom místě');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
