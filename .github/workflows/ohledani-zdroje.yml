@@ -36,6 +36,11 @@ on:
         required: false
         default: ''
         type: string
+      najdi:
+        description: 'Co hledat v OBSAHU (regulární výraz) — vypíše se okolí nálezů, ne začátek souboru'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
@@ -73,4 +78,5 @@ jobs:
           PROHLIZECEM: ${{ inputs.prohlizecem }}
           TELO: ${{ inputs.telo }}
           VZOR: ${{ inputs.vzor }}
+          NAJDI: ${{ inputs.najdi }}
         run: node scripts/ohledej.mjs "$ADRESA"

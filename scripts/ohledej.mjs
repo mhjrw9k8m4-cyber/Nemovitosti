@@ -40,6 +40,57 @@ const TELO = (process.argv.find((a) => a.startsWith('--telo=')) || '').slice(7)
    než to, o co jde. */
 const VZOR = (process.argv.find((a) => a.startsWith('--vzor=')) || '').slice(7)
   || process.env.VZOR || '';
+/* CO V OBSAHU HLEDAT. Naměřeno 4. 11. u ÚZSVM: stránka jedné nabídky
+   má 54 619 znaků a `ZAČÁTEK OBSAHU` z ní ukáže hlavičku a nabídku
+   webu — tedy přesně to, co nezajímá. Otázka „je na té stránce
+   výměra?" se z toho zodpovědět nedá, a hádat se nemá. S `--najdi`
+   se vypíše okolí každého nálezu, ne začátek souboru. */
+const NAJDI = (process.argv.find((a) => a.startsWith('--najdi=')) || '').slice(8)
+  || process.env.NAJDI || '';
+export const STROP_NALEZU = 12;
+export const SIRKA_OKOLI = 120;
+
+/* Okolí nálezů jako prostý text. Vrací pole řetězců, ať se to dá
+   změřit bez sítě a bez výpisu na obrazovku. */
+export function okoliNalezu(text, vzor, strop = STROP_NALEZU, sirka = SIRKA_OKOLI) {
+  const t = String(text || '');
+  if (!t || !vzor) return [];
+  /* Značky pryč: na HTML stránce je hledaná hodnota skoro vždycky
+     v textu buňky, ne v atributu, a mezi ní a popiskem stojí
+     `</td><td>`. Bez odstranění značek by okolí nálezu bylo plné
+     tříd a ten popisek by se do něj nevešel. */
+  const cisty = t.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ');
+  const re = new RegExp(vzor.source, vzor.flags.includes('g') ? vzor.flags : vzor.flags + 'g');
+  const ven = [];
+  let m;
+  while ((m = re.exec(cisty)) !== null && ven.length < strop) {
+    const od = Math.max(0, m.index - sirka);
+    const do_ = Math.min(cisty.length, m.index + m[0].length + sirka);
+    ven.push((od > 0 ? '…' : '') + cisty.slice(od, do_).trim() + (do_ < cisty.length ? '…' : ''));
+    if (m[0].length === 0) re.lastIndex++;    // prázdná shoda by se zacyklila
+  }
+  return ven;
+}
+
+/* Vypsání nálezů. Když vzor nesedí ani jednou, řekne se to nahlas:
+   „nenašlo se" je odpověď, kdežto mlčení by se dalo číst jako
+   „nehledalo se". */
+export function vypisNalezy(text, VZOR_TEXT) {
+  if (!VZOR_TEXT) return [];
+  let vzor;
+  try { vzor = new RegExp(VZOR_TEXT, 'i'); }
+  catch (e) { return ['Vzor v obsahu se nepodařilo přečíst jako regulární výraz: ' + e.message]; }
+  const nalezy = okoliNalezu(text, vzor);
+  if (!nalezy.length) return [`V OBSAHU SE „${VZOR_TEXT}" NENAŠLO ANI JEDNOU.`];
+  const radky = [`NALEZENO „${VZOR_TEXT}" (${nalezy.length}${nalezy.length >= STROP_NALEZU ? '+' : ''}):`];
+  for (const n of nalezy) radky.push('  ' + n);
+  return radky;
+}
 
 export function tvarCsv(text, stropRadku = STROP_RADKU) {
   const radky = String(text || '').split(/\r?\n/).filter((r) => r.trim());
@@ -303,9 +354,11 @@ async function main() {
       for (const o of odkazy) console.log(`  ${o.text}\n      ${o.adresa}`);
       console.log('');
     }
+    for (const r of vypisNalezy(text, NAJDI)) console.log(r);
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));
   } else {
+    for (const r of vypisNalezy(text, NAJDI)) console.log(r);
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));
   }
@@ -335,6 +388,7 @@ async function main() {
     if (v.cizinci && v.cizinci.length) {
       console.log('CIZÍ HOSTITELÉ: ' + v.cizinci.map((c) => c.co + ' ×' + c.kolik).join(', '));
     }
+    for (const r of vypisNalezy(v.text, NAJDI)) console.log(r);
     for (const r of vypisDatove(v.datove)) console.log(r);
     if (v.tvaryOdkazu && v.tvaryOdkazu.length) {
       console.log('TVARY ADRES NA TOMTO WEBU (čísla zaměněna za <číslo>):');
