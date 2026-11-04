@@ -2034,7 +2034,7 @@ async function fetchUzsvm() {
       console.error(`ÚZSVM strana ${strana}: nešlo přečíst — ${String((e && e.message) || e).slice(0, 140)}`);
       break;
     }
-    const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno);
+    const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno, STAT.zminujeMetry);
     for (const o of nabidky) {
       out.push({
         ...o,

@@ -23087,3 +23087,31 @@ z číselníku u naší kategorie a bez číselníku se netvrdí nic.
 **Čím je to podložené.** `test-uzsvm.mjs` 46 kontrol (bylo 32).
 Sabotáže: hledat pacht v celém popisu (3 pády), místo jen s „v k. ú."
 (1), podíl se bere (1), počet z `PropertyTotalCount` (1).
+
+## §369 — sabotáž, která nic nezměnila, nic nedokazuje
+
+Při opravě místa u ÚZSVM jsem si dvě sabotáže odškrtl jako „prošly
+zeleně, hlídač nedrží" — a obě byly **ve skutečnosti prázdné**.
+V záplatě jsem napsal `pred.replace(/\s+/g, " ")` s dvojitými
+uvozovkami, kdežto v souboru jsou jednoduché. Text se nenašel, soubor
+se nezměnil, zkoušky tedy měřily **nedotčený kód**.
+
+Je to táž vada jako §362 a §363 u kontrol, které čtou kód — jen
+otočená: tam kontrola měřila dokumentaci místo kódu, tady sabotáž
+neměřila nic. A obojí vypadá stejně: zeleně.
+
+**Pravidlo:** po každé sabotáži se ověří `git diff --stat` toho
+souboru. Když diff nic neukáže, sabotáž neproběhla a výsledek se
+nepočítá. (Do `zkousky.mjs` to nepatří — není to zkouška webu, je to
+postup, a proto to stojí tady a v CLAUDE.md.)
+
+**Hned se tím našla druhá věc.** Když sabotáž začala opravdu měnit kód,
+jedna z nich dál procházela: „číslo spisu před pomlčkou". Ne proto, že
+by pravidlo nedrželo, ale proto, že u té fixtury vyhrál dřív „k. ú."
+— pravidlo o číslicích tam nerozhodovalo o ničem. Chyběla fixtura, kde
+rozhoduje: `EA/BBV/66/2026 - pozemek parc. č. 12/3`. Bez pravidla by
+se místem stala **spisová značka** a geokodér by ji hledal jako obec.
+
+**Čím je to podložené.** `test-uzsvm.mjs` 53 kontrol. Tři sabotáže,
+všechny s ověřeným diffem: místo před pomlčkou se nebere (2 pády),
+číslo spisu projde jako místo (1), pacht v celém popisu (3).

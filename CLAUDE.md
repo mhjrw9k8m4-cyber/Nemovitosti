@@ -910,6 +910,22 @@ grepu, ne před ním. A když se ukáže, že se nepoužívá, maže se všechno
 kód, pravidla ve stylopisu i kontroly ve zkouškách, kterým tím zmizel
 subjekt.
 
+### Sabotáž se ověří diffem, jinak nic nedokazuje
+
+Po každé sabotáži (úmyslném pokažení kódu, kterým se prokazuje, že
+hlídač drží) se podívej na `git diff --stat` toho souboru. **Když diff
+nic neukáže, sabotáž neproběhla a zelené zkoušky nic neznamenají.**
+
+Naměřeno 4. 11. (§369): v záplatě jsem napsal řetězec s dvojitými
+uvozovkami, kdežto v souboru jsou jednoduché. Dvě sabotáže tím měřily
+nedotčený kód a vypadaly stejně jako „hlídač nedrží" — tedy zeleně.
+
+A druhá polovina téhož pravidla: **sabotáž, která prochází, může taky
+znamenat, že ta fixtura o pravidle nerozhoduje.** Tamtéž: pravidlo
+„před pomlčkou nesmí být číslice" procházelo, protože u zkoušené
+fixtury vyhrálo dřív jiné pravidlo. Chyběla fixtura, kde rozhoduje
+právě ono.
+
 ### Podstrčení má tvar skutečnosti — a aspoň jedna kontrola jde naostro
 
 Když se do funkce vkládá stahování, čtení souboru nebo cokoli jiného,

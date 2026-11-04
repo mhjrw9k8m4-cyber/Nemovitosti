@@ -118,11 +118,23 @@ export function parcelaZNazvu(s) {
    to být jméno, které geokodér najde. */
 export function mistoZNazvu(s) {
   const t = String(s || '').trim();
+  /* MÍSTO BÝVÁ I PŘED POMLČKOU, a je to nejčastější tvar vůbec.
+     Naměřeno 4. 11.: „Otinoves - pozemek parc. č. st. 37", „Bakov nad
+     Jizerou - pozemek pozemková parcela č. 553/7", „Vrátno - id.
+     spoluvl. podíl…" — 45 nabídek zmizelo jako „bez místa", protože
+     jsem čekal „k. ú." nebo místo za poslední čárkou. Před pomlčkou
+     ale stojí i číslo jednacího spisu („EA/BBV/66/2026 - k. ú. Sedlec
+     u Mikulova"), takže se bere jen část bez číslic a lomítek. */
+  const pred = t.split(/\s+[-–—]\s+/)[0] || '';
+  const jeJmeno = pred.length >= 2 && pred.length <= 60
+    && !/\d|\//.test(pred)
+    && !/^(pozemek|pozemky|pacht|prodej|aukce|st\.?|parc)/i.test(pred);
   /* „v k. ú. Bukovec" i „- k. ú. Sedlec u Mikulova". Naměřeno 4. 11.:
      na „v" se spoléhat nelze, u 67 nabídek stálo jen „k. ú.", a tím
      zmizely všechny (zahozeno jako „bez místa"). */
   const ku = t.match(/k\.?\s*ú\.?\s*([^,;(]+)/i);
   if (ku) return ku[1].trim().replace(/\s+/g, ' ').slice(0, 80);
+  if (jeJmeno) return pred.replace(/\s+/g, ' ');
   /* „Pacht pozemku p.č. 4862/16, Napajedla" → poslední část. */
   const casti = t.split(',').map((x) => x.trim()).filter(Boolean);
   const posledni = casti[casti.length - 1] || '';
@@ -175,7 +187,7 @@ export function popisek(z) {
    i `druhZPopisu` už umí čtečka otevřených dat státu a dvě kopie téhož
    pravidla by se rozešly při první opravě.
    ------------------------------------------------------------------ */
-export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno) {
+export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zminujeMetry) {
   /* UKÁZKA KE KAŽDÉMU DŮVODU. Číslo samo nerozhodne: „bezVymery 119"
      může znamenat, že výměra v popisu opravdu není, i že ji čteme
      špatně — a to je rozdíl mezi „data za to nemůžou" a „můžeme my"
@@ -203,7 +215,17 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno) {
     const c = cena(z.Price);
     if (!c || z.NoPrice === true) { pocti('bezCeny', z.Name + ' — cena ' + JSON.stringify(z.Price)); continue; }
     const v = vymeraZPopisu(z.Description) || vymeraZPopisu(z.Name);
-    if (!v) { pocti('bezVymery', z.Name + ' — ' + z.Description); continue; }
+    if (!v) {
+      pocti('bezVymery', z.Name + ' — ' + z.Description);
+      /* A ZVLÁŠŤ TY, KDE SE O METRECH MLUVÍ A PŘESTO JSME NIC
+         NEPŘEČETLI. To je rozdíl mezi „v popisu výměra není" a
+         „neumíme ji přečíst" — táž otázka jako u otevřených dat
+         státu (§363), kde právě tohle číslo rozhodlo. */
+      if (zminujeMetry && zminujeMetry(z.Description)) {
+        pocti('bezVymeryAleMetryTam', z.Name + ' — ' + z.Description);
+      }
+      continue;
+    }
     const okres = String(z.DistrictName || '').trim();
     if (!okres) { pocti('bezOkresu', z.Name); continue; }
     const place = mistoZNazvu(z.Name);

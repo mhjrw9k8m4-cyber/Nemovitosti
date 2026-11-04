@@ -152,6 +152,44 @@ const PACHT2 = {
   pravda('a nevydává se za „bez výměry"', !z2.bezVymery, JSON.stringify(z2));
 }
 
+/* ---- 3c) MÍSTO PŘED POMLČKOU A NEPŘEČTENÉ METRY ---------------
+   Druhý ostrý běh: zdroj dal 91 nabídek (bylo 68) a zbyly dvě velké
+   ztráty. `bezMista 45` mělo ukázku „Otinoves - pozemek parc. č. st.
+   37" — místo je PŘED POMLČKOU, což je nejčastější tvar vůbec. */
+{
+  je('místo před pomlčkou', U.mistoZNazvu('Otinoves - pozemek parc. č. st. 37'), 'Otinoves');
+  je('i víceslovné', U.mistoZNazvu('Bakov nad Jizerou - pozemek pozemková parcela č. 553/7'),
+    'Bakov nad Jizerou');
+  /* Před pomlčkou ale stojí i číslo jednacího spisu — tam musí dál
+     rozhodovat „k. ú.". */
+  je('číslo spisu před pomlčkou se za místo nevydává',
+    U.mistoZNazvu('EA/BBV/66/2026 - k. ú. Sedlec u Mikulova, p.č. 1239/1'), 'Sedlec u Mikulova');
+  /* A TOHLE je ten případ, kde o tom rozhoduje JEN pravidlo „před
+     pomlčkou nesmí být číslice": kdyby chybělo, místem by se stalo
+     „EA/BBV/66/2026" a geokodér by hledal spisovou značku.
+     (Předchozí kontrola to neprokáže — tam vyhraje „k. ú.".) */
+  je('a bez katastru z čísla spisu místo nevznikne',
+    U.mistoZNazvu('EA/BBV/66/2026 - pozemek parc. č. 12/3'), '');
+  je('a obecné slovo před pomlčkou taky ne', U.mistoZNazvu('Pozemek - bez místa'), '');
+
+  /* A rozdíl mezi „výměra v popisu není" a „neumíme ji přečíst":
+     bez toho čísla se nedá rozhodnout, jestli se má opravovat regulární
+     výraz, nebo nechat být (§363). */
+  const z = {};
+  const zminujeMetry = (t) => /m\s*(?:2|²)/i.test(String(t || ''));
+  U.nabidkyZOdpovedi({ Properties: [{ ...PRODEJ,
+    Name: 'Otinoves - pozemek parc. č. st. 37',
+    Description: 'Pozemek má zhruba 500 m2, přesná výměra v nabídce není uvedena.' }] },
+    () => null, druhZPopisu, z, zminujeMetry);
+  je('nepřečtená výměra, kde se o metrech mluví, se počítá zvlášť', z.bezVymeryAleMetryTam, 1);
+  const z2 = {};
+  U.nabidkyZOdpovedi({ Properties: [{ ...PRODEJ,
+    Name: 'Otinoves - pozemek parc. č. st. 37',
+    Description: 'Pozemek je zarostlý travním porostem.' }] },
+    () => null, druhZPopisu, z2, zminujeMetry);
+  pravda('a kde se o metrech nemluví, se nepočítá', !z2.bezVymeryAleMetryTam, JSON.stringify(z2));
+}
+
 /* ---- 4) KVALITA: CO SE ZAHAZUJE A POČÍTÁ ----------------------- */
 {
   const z = {};
