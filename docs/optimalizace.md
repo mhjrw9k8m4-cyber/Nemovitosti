@@ -24759,3 +24759,28 @@ klid (dvě stejná čtení) a soudí se **týmž pravidlem, jakým se
 rozhoduje web** (`pad(-0.12).contains`): pozemek má být v záběru a
 přiblížení takové, jaké si stránka pamatuje. Čísla zůstávají v hlášce,
 ale mez už není „tentýž bod na obrazový bod" — to web nikdy neslíbil.
+
+## §406 — dvě slepá místa z dalších kol, obě pevně obviněná *4. 11.*
+
+Smyčka samorozvoje mezitím dojela na **14 z 307 prokázaných hlídačů**
+(ráno byli tři) a vydala dvě **pevná** obvinění — ten soubor nehlídá
+nikdo jiný, takže mlčení není otázka výkladu (§397):
+
+**`scripts/kontrola-databaze.mjs`.** Mez maskování klíče je „aspoň
+osm" (`k.length >= 8`). Mutace na `> 8` nechá **osmiznakový klíč ve
+výpisu CI** a zkouška mlčela. Osmiznakový klíč je krátký, ale je to
+klíč; sedmiznakový řetězec už je spíš jméno tabulky než tajemství.
+Měří se obě strany hranice, protože o jeden znak jde. 37 → **39
+kontrol**.
+
+**`scripts/kontrola-uloh.mjs`.** Bez pojistky `if (!/\.ya?ml$/)
+continue` se čte kterýkoli soubor ve složce (README, záloha, skript
+akce), a jak v něm padne `schedule:` s nějakým `cron:`, **vznikne
+úloha, která neexistuje** — a hlídka pak čeká na běhy, které nikdo
+nikdy nespustí. Měří se na podstrčené složce se třemi soubory
+(`prava.yml`, `README.md`, `zaloha.yml.bak`); vzít se smí jen ten
+`.yml`. 17 → **19 kontrol**.
+
+**Prokázáno sabotáží po opravě:** `test-kontrola-databaze` 5 z 5
+chycených, `test-kontrola-uloh` 4 ze 4 (a soubor se po každé sabotáži
+vrátil bitově shodný).
