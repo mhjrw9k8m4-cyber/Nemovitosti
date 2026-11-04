@@ -79,6 +79,39 @@ const R2 = '109181,2026-11-03,"Povodí Labe, státní podnik",dbyt8g2,,,,Ministe
      katastr, posunulo by se všechno o jedno". */
   je('okres se pozná i na prvním místě', S.mistoZKatastru('okres Nymburk, Lysá nad Labem'),
     { place: 'Lysá nad Labem', okres: 'Nymburk', katastr: 'Lysá nad Labem' });
+  /* PRÁZDNÁ ČÁST MEZI ČÁRKAMI. Úřad občas pošle „Bochov, , okres…" —
+     a bez zahození prázdných částí by se prázdno stalo tou POSLEDNÍ
+     částí, tedy obcí. Obec by zmizela a nikdo by to na webu nehledal
+     v rozboru katastru. */
+  je('prázdná část mezi čárkami obec nesebere',
+    S.mistoZKatastru('Bochov, , okres Karlovy Vary'),
+    { place: 'Bochov', okres: 'Karlovy Vary', katastr: 'Bochov' });
+
+/* ---- POLOŽKY JEDNOHO ZÁZNAMU: KOLIK SE JICH ČTE ----
+ *
+ * Jeden záznam CSV nese až pět položek (sloupce bez přípony a s _2 … _5).
+ * Obě hrany té meze našel sabotážní stroj 4. 11.: s mezí „menší než"
+ * by se pátá položka tiše nepřečetla, a posunutý strop by začal hledat
+ * sloupce, které v CSV nejsou.
+ */
+  const zaznam = (kolik) => {
+    const z = {};
+    for (let i = 1; i <= kolik; i++) {
+      const p = i === 1 ? '' : '_' + i;
+      z['KATASTRALNI_UZEMI' + p] = 'Katastr ' + i;
+      z['TYP_POZEMEK' + p] = 'ano';
+      z['PARCELNI_CISLO' + p] = String(100 + i);
+    }
+    return z;
+  };
+  je('ze záznamu s pěti položkami se přečtou všechny',
+    S.polozkyZaznamu(zaznam(5)).map((x) => x.poradi), [1, 2, 3, 4, 5]);
+  je('a šestá se nehledá — strop je ' + S.STROP_POLOZEK,
+    S.polozkyZaznamu(zaznam(6)).map((x) => x.poradi), [1, 2, 3, 4, 5]);
+  je('a ten strop je opravdu pět (tolik přípon to CSV má)', S.STROP_POLOZEK, 5);
+  je('prázdné sady se přeskočí, ale pořadí se nezamlčí',
+    S.polozkyZaznamu({ KATASTRALNI_UZEMI_3: 'Lhota', TYP_POZEMEK_3: 'ano' })
+      .map((x) => [x.poradi, x.katastr]), [[3, 'Lhota']]);
   je('prázdný vstup nic nevymyslí', S.mistoZKatastru(''), { place: '', okres: '', katastr: '' });
 }
 
