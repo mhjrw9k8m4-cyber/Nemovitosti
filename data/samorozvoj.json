@@ -1,0 +1,94 @@
+{
+ "dny": {
+  "2026-11-04": {
+   "prokazanych": 0,
+   "slepych": 2,
+   "nalezu": 4
+  }
+ },
+ "zkousky": {
+  "test-afordance.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "slepa": [],
+   "poznamka": "v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm nevyskytuje; promyšlená sabotáž tu zůstává na člověku"
+  },
+  "test-anon-zapis.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "slepa": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-archiv-statistiky.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 1,
+   "nechytila": 5,
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "obrácené porovnání (<= na <)",
+    "obrácená rovnost (=== na !==)",
+    "zahozená pojistka (if … continue)",
+    "zahozený filter(Boolean)"
+   ],
+   "poznamka": ""
+  },
+  "test-archiv.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 1,
+   "nechytila": 5,
+   "slepa": [
+    "obrácené porovnání (<= na <)",
+    "obrácená rovnost (=== na !==)",
+    "zahozený filter(Boolean)",
+    "a místo nebo (&& na ||)",
+    "posunutá konstanta (+1)"
+   ],
+   "poznamka": ""
+  },
+  "test-aria-cile.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "slepa": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  }
+ },
+ "updated": "2026-11-04",
+ "nalezy": [
+  {
+   "jmeno": "místo, které místem není",
+   "trida": "data",
+   "tiha": 3,
+   "dukaz": "19 nabídek (ÚZSVM 19×); např. „303/115 a 303/116\" v okrese Rakovník",
+   "co": "Vymyšlené místo je horší než chybějící nabídka: geokodér hledá v mapě číslo parcely."
+  },
+  {
+   "jmeno": "zdroj Dražby: nevysvětlený úbytek",
+   "trida": "kód",
+   "tiha": 2,
+   "dukaz": "stáhl 45, na webu 20, síto 6, bez jména 19",
+   "co": "Každý krok, který nabídku zahodí, se má jmenovat a počítat (§366)."
+  },
+  {
+   "jmeno": "zkouška, kterou nikdo nepouští",
+   "trida": "hlídač",
+   "tiha": 2,
+   "dukaz": "3 z 313: test-chat.mjs, test-listing.mjs, test-search.mjs",
+   "co": "Zkouška mimo CI vypadá jako hotová práce a nehlídá nic."
+  },
+  {
+   "jmeno": "hlídač, který ještě nic neprokázal",
+   "trida": "hlídač",
+   "tiha": 1,
+   "dukaz": "313 z 313 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-archiv-statistiky.mjs, test-archiv.mjs, test-aria-cile.mjs",
+   "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
+  }
+ ]
+}
