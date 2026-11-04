@@ -20,6 +20,9 @@ import { BASE } from './falesna-supabase-chat.mjs';
 import { naPohled } from './zkouska-pohled.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { readFileSync as readFileSyncX } from 'node:fs';
+import pathx from 'node:path';
+import { fileURLToPath as furlx } from 'node:url';
 
 let ok = 0, chyb = 0; const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -28,8 +31,40 @@ function pravda(popis, vyslo, proc) {
 }
 hlasPad('Okolí — obec bez nabídek', zpravy, () => chyb);
 
-/* Vernéřov u Kraslic: v datech není ani jeden pozemek blíž než 20 km. */
+/* Vernéřov u Kraslic: obec, kterou data NEZNAJÍ (žádná nabídka se tak
+   nejmenuje), takže se k ní musí dojít přes geokodér. Kolik je kolem ní
+   nabídek, se ZDE NEPÍŠE — spočítá se z dat (viz kolikVOkruhu níž).
+   Do 4. 11. tu stálo „v datech není ani jeden pozemek blíž než 20 km"
+   a kontrola na tom trvala. Pak jsem vrátil do dat osmnáct podílů
+   ÚZSVM, jeden z nich je „Lomnička u Plesné" 6,8 km odtud — a zkouška
+   hlásila vadu webu kvůli změně, kterou web udělal správně.
+   Je to táž past jako dnes u test-nove-pozemky, test-mapa-webu
+   a test-mapa-pozemku (§378): hlídač s napsaným číslem stárne s daty.
+   Co se měřit MÁ, je slib: počet, který stránka vypíše, patří TÉ OBCI
+   z geokodéru — ne nejbližšímu místu z dat. */
 const VERNEROV = { lat: 50.2771, lng: 12.4281 };
+const KOREN_X = pathx.resolve(pathx.dirname(furlx(import.meta.url)), '..');
+const DATA_X = (() => {
+  try {
+    const j = JSON.parse(readFileSyncX(pathx.join(KOREN_X, 'data', 'opportunities.json'), 'utf8'));
+    return Array.isArray(j) ? j : (j.opportunities || []);
+  } catch (e) { return []; }
+})();
+/* Táž vzdálenost jako na webu (haversine, km). Opsaná je schválně:
+   kdyby si obě strany půjčovaly tentýž výpočet, chyba v něm by prošla
+   oběma a zkouška by ji potvrdila. */
+function kolikVOkruhu(km) {
+  const R = 6371, r = (x) => (x * Math.PI) / 180;
+  let n = 0;
+  for (const d of DATA_X) {
+    if (!isFinite(d.lat) || !isFinite(d.lng)) continue;
+    const dLat = r(d.lat - VERNEROV.lat), dLon = r(d.lng - VERNEROV.lng);
+    const h = Math.sin(dLat / 2) ** 2
+      + Math.cos(r(VERNEROV.lat)) * Math.cos(r(d.lat)) * Math.sin(dLon / 2) ** 2;
+    if (2 * R * Math.asin(Math.sqrt(h)) <= km) n++;
+  }
+  return n;
+}
 
 await new Promise((r) => setTimeout(r, 300));
 const prohlizec = await chromium.launch({
@@ -88,8 +123,27 @@ await p.evaluate(() => document.querySelector('.vm-navrhy li.vm-jinde').click())
 await p.waitForTimeout(2600);
 const s1 = await stav();
 pravda('po klepnutí padne na geokodér právě jeden dotaz', dotazu === 1, `dotazů: ${dotazu}`);
-pravda('a okno doletí k té obci (nula v nejtěsnějším okruhu)',
-  /^0 /.test(s1.pocet), `počet: „${s1.pocet}"`);
+/* POČET, KTERÝ STRÁNKA VYPÍŠE, MUSÍ SEDĚT NA DATA KOLEM TÉ OBCE.
+   Z hlášky se vezme číslo i okruh a oboje se přepočítá z dat. Kdyby
+   stránka letěla k nejbližšímu místu z dat (to dělala dřív), vyšlo by
+   číslo jiné — a právě to je ta vada, kvůli které tahle zkouška je. */
+{
+  /* MEZERY JAKO \s+, NE JAKO MEZERY. Web sází českou typografií, takže
+     mezi „v" a „okruhu" i před „km" stojí nezlomitelná mezera —
+     s obyčejnou mezerou ve vzoru tahle kontrola padla na SVÉM VLASTNÍM
+     zápisu, ne na webu. */
+  const m = /^(\d+)\s+\S+\s+v\s+okruhu\s+(\d+)\s*km/.exec(s1.pocet || '');
+  pravda('hláška o okolí má tvar „N pozemků v okruhu K km u obce …"',
+    !!m, `počet: „${s1.pocet}"`);
+  if (m) {
+    const kolik = Number(m[1]), okruh = Number(m[2]);
+    const zDat = kolikVOkruhu(okruh);
+    pravda(`a okno doletí k té obci — ${kolik} v okruhu ${okruh} km sedí na data (${zDat})`,
+      kolik === zDat,
+      `stránka říká ${kolik}, z dat kolem Vernéřova vychází ${zDat}`
+      + ' — tolik by to bylo, kdyby okno letělo jinam než k té obci');
+  }
+}
 /* Tohle je ta informace, kvůli které celá změna vznikla: „u nás nic,
    ale osm je do dvaceti kilometrů". */
 pravda('a dlaždice ukážou, od kterého okruhu něco je',

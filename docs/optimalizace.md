@@ -23813,3 +23813,61 @@ To je dnes už třetí vada v témže nástroji (§377: `--najdi` mlčelo
 u JSON) a obě mají tentýž tvar: **mlčení nástroje se nedá odlišit od
 nuly nálezů.** Proto má `scripts/ohledej.mjs` dnes 32 kontrol, zatímco
 ráno neměl ani jednu.
+
+## §381 — čtvrtý, pátý a šestý hlídač naivnější než web *4. 11.*
+
+První úplně dojetá CI dnešního dne: `testy` zelené, dvě prohlížečové
+směny ze tří zelené, **druhá padla na šesti kontrolách ve třech
+zkouškách**. Lokálně se reprodukovaly tři a všechny tři byly v hlídači,
+ne na webu.
+
+**1. Stránka pozemku „ukazovala cizí cenu" — a neukazovala.**
+`test-mapa-pozemku` si složila adresu ručně jen z `?p=` a čekala, že
+stránka pozná, kterou ze dvou nabídek pod týmž krátkým klíčem chce.
+Nepozná, a je to tak správně: naměřeno **Libavské Údolí, parcela
+127/21, totožné souřadnice, 316 m²/6 320 Kč a 151 m²/3 020 Kč**. Klíč
+je `místo|parcela|okres|šířka|délka` a ten je u obou **stejný**;
+rozliší je jen to, co je v odkazu navíc.
+
+A web to navíc posílá: **všechny tři odkazovače** (mapa a výpis, nově
+přidané, porovnání) připojují `&v=<výměra>` a stránka podle ní
+vybírá — a při shodě výměry ještě podle ceny. Zkouška to neuměla, web
+ano. Opravená kontrola skládá adresu **tak, jak ji skládá web**, a tři
+nové kontroly čtou kód těch tří odkazovačů: kdyby `&v=` z některého
+vypadlo, člověk by na webu dostal cizí cenu a dřív by to nikdo
+nepoznal.
+
+Mimochodem měření pro jistotu: **28 skupin, 35 nabídek z 2 305** má
+plný klíč shodný s jinou nabídkou (1,5 %), u 24 z těch skupin je
+rozliší výměra.
+
+**2. Okolí: číslo napsané v zkoušce zestárlo o pět hodin.**
+`test-okoli-jinde` trvala na „nula v nejtěsnějším okruhu" u Vernéřova,
+protože „v datech není ani jeden pozemek blíž než 20 km". Jenže jsem
+dnes do dat vrátil osmnáct podílů ÚZSVM a jeden z nich — **Lomnička
+u Plesné, 6,8 km odtud** — tu premisu zabil. Hlídač hlásil vadu webu
+kvůli změně, kterou web udělal správně.
+
+Teď se počet **počítá z dat** pro ten okruh, který stránka vypíše, a
+měří se ten skutečný slib: *počet patří TÉ OBCI z geokodéru, ne
+nejbližšímu místu z dat.* Vzdálenost je v zkoušce opsaná schválně —
+kdyby si obě strany půjčovaly tentýž výpočet, chyba v něm by prošla
+oběma.
+
+A ještě jedna lekce z téže kontroly: nejdřív mi padala na **svém
+vlastním zápisu**. Vzor měl mezi „v" a „okruhu" obyčejnou mezeru,
+kdežto web tam sází českou typografií nezlomitelnou. V hlídači, který
+čte text z webu, patří `\s+`, ne mezera.
+
+**3. A jedna skutečná vada vzhledu.** Hlídač „jedna deska" našel, že
+mřížka parametrů na stránce pozemku (`.pz-specs`) byla **jediná deska
+z jednatřiceti** s rámem dvakrát silnějším (`--line-strong` 0,28 proti
+`--line` 0,14) — a vnitřní čáry řádků přitom `--line` používaly, takže
+si ten panel odporoval sám se sebou. Opraveno.
+
+**Počítadlo dne: šest hlídačů naivnějších než web** (`test-ceny`,
+`test-shoda`, `test-nove-pozemky`, `test-mapa-webu`,
+`test-mapa-pozemku`, `test-okoli-jinde`) proti **jedné** vadě vzhledu,
+kterou našly. To je samo o sobě nález: hlídač, který si o produktu
+vede vlastní zjednodušenou představu, je nejčastější zdroj červené CI
+na tomhle webu — častější než vada webu.

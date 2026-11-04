@@ -10392,8 +10392,14 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
    (ne na řádku), aby sloupec popisků byl JEDEN pro všechny řádky
    a hodnoty začínaly na stejné svislici; řádek se proto rozpouští
    přes display:contents. Čáry pak nese každá buňka zvlášť. */
+/* RÁM JE --line, NE --line-strong. Naměřeno 4. 11. hlídačem „jedna
+   deska": tahle mřížka byla JEDINÁ deska z jednatřiceti, která měla rám
+   dvakrát silnější (0,28 proti 0,14) — a vnitřní čáry řádků přitom
+   `--line` používaly, takže si ten panel odporoval sám se sebou.
+   `--line-strong` má na webu svou práci (ovladače a vstupy, 61 míst),
+   jen to není rám desky. */
 .pz-specs{display:grid; grid-template-columns:max-content 1fr; align-items:start;
-  border:1px solid var(--line-strong); border-radius:var(--r-plocha); overflow:hidden;
+  border:1px solid var(--line); border-radius:var(--r-plocha); overflow:hidden;
   background:var(--plocha-karta); box-shadow:var(--e1);}
 .pz-spec{display:contents;}
 .pz-spec .k, .pz-spec .v{padding:12px 0; border-bottom:1px solid var(--line);}

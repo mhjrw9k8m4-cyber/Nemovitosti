@@ -33,6 +33,9 @@ import { readFileSync } from 'node:fs';
    klid místo na 2,5 s po každém otevření detailu (a těch je šest). */
 import { domUtichlo } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import pathx from 'node:path';
+import { fileURLToPath as furlx } from 'node:url';
+const KOREN = pathx.resolve(pathx.dirname(furlx(import.meta.url)), '..');
 
 let chyb = 0;
 const zpravy = [];
@@ -1240,16 +1243,42 @@ if (DRAZBA) {
         return r.abort();
       });
       const q = await ctxP.newPage();
-      await q.goto(`${BASE}/pozemek.html?p=` + encodeURIComponent(klic), { waitUntil: 'domcontentloaded' });
+      /* ADRESA SE SKLÁDÁ TAK, JAK JI SKLÁDÁ WEB — včetně `&v=` (výměra)
+         a `&ll=` (souřadnice). Do 4. 11. si ji tahle zkouška složila
+         jen z `?p=` a pak produkt obvinila, že ukazuje cizí cenu.
+         Produkt má přitom pravdu: pod jedním krátkým KLÍČEM leží dvě
+         různé nabídky (naměřeno: Libavské Údolí, parcela 127/21,
+         totožné souřadnice, 316 m²/6 320 Kč a 151 m²/3 020 Kč)
+         a rozlišit je jde jen tím, co je v odkazu navíc. Stránka to
+         umí a odkazy to nesou — zkouška to neuměla.
+         Je to týž omyl jako dnes u test-nove-pozemky a test-mapa-webu:
+         hlídač, který neumí to, co umí web, hlásí jako chybu právě tu
+         práci, kvůli které vznikl (§378). */
+      const adresa = `${BASE}/pozemek.html?p=` + encodeURIComponent(klic)
+        + '&ll=' + vybrany.lat + ',' + vybrany.lng
+        + (isFinite(vybrany.area) ? '&v=' + Math.round(vybrany.area) : '');
+      await q.goto(adresa, { waitUntil: 'domcontentloaded' });
       await q.waitForTimeout(2800);
       const cena = await q.evaluate(() => {
         const el = document.querySelector('.pz-price .pv');
         return el ? (el.textContent || '').replace(/\D+/g, '') : '';
       });
-      pravda(`u společného krátkého klíče „${vybrany.place}" rozhodne úplný klíč, ne pořadí v datech`,
+      pravda(`u společného krátkého klíče „${vybrany.place}" rozhodne odkaz, ne pořadí v datech`,
         cena === String(vybrany.price),
         `čekána cena ${vybrany.price} Kč, na stránce ${cena || '(nic)'} Kč`
         + ` — první pozemek téže skupiny má ${prvni.price} Kč`);
+      /* A ŽE TU VÝMĚRU ODKAZY WEBU OPRAVDU NESOU. Bez toho by kontrola
+         výš měřila jen stránku a tiše by prošla i tehdy, kdyby ji
+         odkazy přestaly posílat — tedy právě ve stavu, kdy člověk na
+         webu dostane cizí cenu. Čte se kód, protože ty tři odkazy se
+         skládají ve třech různých místech. */
+      for (const [soubor, kde] of [['js/main.js', 'mapa a výpis'],
+        ['js/nove-pozemky.js', 'nově přidané'], ['js/porovnani.js', 'porovnání']]) {
+        const kod = readFileSync(pathx.join(KOREN, soubor), 'utf8');
+        pravda(`odkaz na pozemek nese výměru (${kde})`,
+          /'&v=' \+ Math\.round\(d\.area\)/.test(kod),
+          `${soubor}: bez &v= vede odkaz na první pozemek téhož klíče`);
+      }
       await ctxP.close();
     } else {
       pravda('je skupina pozemků se stejným krátkým klíčem a různými cenami (jinak zkouška nic neměří)', false,
