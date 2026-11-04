@@ -115,3 +115,12 @@
 {"k":"Vlastislav|—|Litoměřice|50.497|13.956#1rqp5w0","m":"Vlastislav","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":66678,"c":1947080,"od":"2026-10-17","do":"2026-11-02","proc":"zmizela"}
 {"k":"Lovosice|—|Litoměřice|50.515|14.051#1rqp5w6","m":"Lovosice","o":"Litoměřice","dr":"ostatní plocha","t":"drazba","v":2355,"c":71741,"od":"2026-10-17","do":"2026-11-02","proc":"zmizela"}
 {"k":"Žalhostice|—|Litoměřice|50.524|14.096#1rqp5w1","m":"Žalhostice","o":"Litoměřice","dr":"pozemek","t":"drazba","v":1104,"c":101943,"od":"2026-10-17","do":"2026-11-02","proc":"zmizela"}
+{"k":"Přešťovice|—|Strakonice|49.317|14.011#3gdmz","m":"Přešťovice","o":"Strakonice","dr":"trvalý travní porost","t":"sale","v":2126,"c":225000,"od":"2026-09-14","do":"2026-11-03","proc":"cena"}
+{"k":"Ostrava|—|Ostrava-město|49.799|18.349#3kxc9","m":"Ostrava","o":"Ostrava-město","dr":"stavební pozemek","t":"sale","v":1000,"c":5500000,"od":"2026-09-14","do":"2026-11-03","proc":"cena"}
+{"k":"Zákolany|—|Kladno|50.184|14.241#3dlnw","m":"Zákolany","o":"Kladno","dr":"ostatní plocha","t":"sale","v":19605,"c":509000,"od":"2026-09-14","do":"2026-11-03","proc":"zmizela"}
+{"k":"Vimperk|—|Prachatice|49.067|13.759#5fjmz","m":"Vimperk","o":"Prachatice","dr":"trvalý travní porost","t":"sale","v":15959,"c":579000,"od":"2026-09-19","do":"2026-11-03","proc":"zmizela"}
+{"k":"Černousy|—|Liberec|51.017|15.033#1dpja","m":"Černousy","o":"Liberec","dr":"stavební pozemek","t":"sale","v":12967,"c":690000,"od":"2026-10-31","do":"2026-11-03","proc":"zmizela"}
+{"k":"Koleč|—|Kladno|50.189|14.234#3dlnx","m":"Koleč","o":"Kladno","dr":"orná půda","t":"sale","v":14546,"c":799000,"od":"2026-09-14","do":"2026-11-03","proc":"zmizela"}
+{"k":"Vimperk|—|Prachatice|49.065|13.759#5fjmx","m":"Vimperk","o":"Prachatice","dr":"orná půda","t":"sale","v":9729,"c":2500000,"od":"2026-09-19","do":"2026-11-03","proc":"zmizela"}
+{"k":"Praha|—|Praha|50.106|14.601#lgx6","m":"Praha","o":"Praha","dr":"zahrada","t":"sale","v":290,"c":1972000,"od":"2026-09-14","do":"2026-11-03","proc":"zmizela"}
+{"k":"Zahradní|—|Kladno|50.117|14.048#9rjew","m":"Zahradní","o":"Kladno","dr":"stavební pozemek","t":"sale","v":1166,"c":9900000,"od":"2026-10-23","do":"2026-11-03","proc":"zmizela"}
