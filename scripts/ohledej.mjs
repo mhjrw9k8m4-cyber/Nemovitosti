@@ -20,6 +20,7 @@
    NIC NEZAPISUJE. Jen vypíše na výstup. Co s tím, rozhodne člověk.  */
 import { BOT_UA } from './bot-ua.mjs';
 import { smimeCist } from './robots.mjs';
+import { rozdelRadek } from './cti-nabidky-statu.mjs';
 const { stahni } = await import('./fetch-opportunities.mjs');
 
 const STROP_ZNAKU = 4000;     // kolik textu vypsat, ať log nenabobtná
@@ -134,6 +135,43 @@ export function zkratDlouhe(data, strop = 160) {
   return data;
 }
 
+/* SLOUPEC, KTERÝ MÁ MÁLO RŮZNÝCH HODNOT, SE VYPÍŠE CELÝ.
+   U CSV je to táž potřeba jako krátký seznam u JSONu: prvních
+   pětadvacet řádků neřekne, KOHO ten soubor sdružuje. Měřeno
+   u centrální evidence státu — otázka „pokrývá i Lesy ČR, Vojenské
+   lesy a Správu železnic?" se z ukázky zodpovědět nedá, z přehledu
+   hodnot jednoho sloupce ano. */
+export function hodnotySloupcu(text, stropRuznych = 20, stropRadku = 400) {
+  const t = tvarCsv(text, stropRadku);
+  if (!t.radku) return [];
+  const odd = t.oddelovac === 'tabulátor' ? '\t' : (t.oddelovac || ';');
+  const sloupce = t.hlavicka.map(() => new Map());
+  for (const radek of t.ukazka) {
+    const kousky = rozdelRadek(radek, odd);
+    for (let i = 0; i < sloupce.length; i++) {
+      const v = String(kousky[i] == null ? '' : kousky[i]).trim();
+      if (!v) continue;
+      sloupce[i].set(v, (sloupce[i].get(v) || 0) + 1);
+    }
+  }
+  const ven = [];
+  for (let i = 0; i < sloupce.length; i++) {
+    const m = sloupce[i];
+    if (!m.size || m.size > stropRuznych) continue;
+    /* Sloupec, kde je každá hodnota jiná, nic neříká; stejně tak
+       sloupec, kde je jediná. Zajímavý je ten mezi. */
+    if (m.size === 1 && t.ukazka.length > 3) continue;
+    /* A sloupec, kde je každá hodnota jiná (čísla záznamů, odkazy),
+       taky ne: přehled hodnot by byl opis souboru. */
+    if (m.size === t.ukazka.length && t.ukazka.length > 3) continue;
+    ven.push({
+      sloupec: t.hlavicka[i] || ('[' + i + ']'),
+      hodnoty: [...m.entries()].sort((a, b) => b[1] - a[1]).map(([v, n]) => ({ v: v.slice(0, 80), n })),
+    });
+  }
+  return ven;
+}
+
 export function cojeto(text, typ) {
   const t = String(text || '').trimStart();
   if (/^application\/json|^text\/json/.test(typ || '')) return 'JSON';
@@ -199,6 +237,14 @@ async function main() {
     t.hlavicka.forEach((s, i) => console.log('  [' + i + '] ' + s));
     console.log('\nPRVNÍCH ' + t.ukazka.length + ' ŘÁDKŮ:');
     t.ukazka.forEach((r) => console.log('  ' + r.slice(0, 400)));
+    const prehled = hodnotySloupcu(text);
+    if (prehled.length) {
+      console.log('\nSLOUPCE S MÁLO RŮZNÝMI HODNOTAMI (koho ten soubor sdružuje):');
+      for (const sl of prehled) {
+        console.log('  ' + sl.sloupec + ':');
+        for (const h of sl.hodnoty) console.log(`      ${h.n}×  ${h.v}`);
+      }
+    }
   } else if (co === 'JSON') {
     let data = null;
     try { data = JSON.parse(text); } catch (e) { console.log('JSON se nepodařilo přečíst: ' + e.message); }
