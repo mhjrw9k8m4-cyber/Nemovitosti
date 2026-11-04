@@ -1,8 +1,8 @@
 {
  "dny": {
   "2026-11-04": {
-   "prokazanych": 8,
-   "slepych": 9,
+   "prokazanych": 10,
+   "slepych": 12,
    "nalezu": 1
   }
  },
@@ -184,24 +184,6 @@
    ],
    "poznamka": "zkouška si bere jen vlastní pomůcky (scripts/rozbal-hledani.mjs) — rozbít je neměří hlídače, měří to zkoušku samu"
   },
-  "test-bloky.mjs": {
-   "kdy": "2026-11-04",
-   "hlidá": 2,
-   "chytila": 3,
-   "nechytila": 3,
-   "rovnocenne": [],
-   "slepa": [
-    "obrácené porovnání (<= na <)",
-    "zahozená pojistka (if … continue)"
-   ],
-   "mlcela": [
-    "obrácené porovnání (>= na >) v scripts/generate-parcel-pages.mjs"
-   ],
-   "nedorucene": [],
-   "nelzeTady": false,
-   "pomucky": [],
-   "poznamka": ""
-  },
   "test-bpej.mjs": {
    "kdy": "2026-11-04",
    "hlidá": 0,
@@ -240,26 +222,6 @@
    "nelzeTady": false,
    "pomucky": [],
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
-  },
-  "test-cenova-historie.mjs": {
-   "kdy": "2026-11-04",
-   "hlidá": 2,
-   "chytila": 1,
-   "nechytila": 5,
-   "rovnocenne": [],
-   "slepa": [
-    "obrácené porovnání (<= na <)",
-    "obrácená rovnost (=== na !==)",
-    "zahozená pojistka (if … continue)",
-    "zahozený filter(Boolean)"
-   ],
-   "mlcela": [
-    "obrácené porovnání (>= na >) v scripts/archiv-statistiky.mjs"
-   ],
-   "nedorucene": [],
-   "nelzeTady": false,
-   "pomucky": [],
-   "poznamka": ""
   },
   "test-cenovy-stupen.mjs": {
    "kdy": "2026-11-04",
@@ -751,6 +713,418 @@
    "nelzeTady": false,
    "pomucky": [],
    "poznamka": ""
+  },
+  "test-druh.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-dvojnici.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
+    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
+    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs",
+    "zahozená pojistka (if … continue) v scripts/fetch-opportunities.mjs",
+    "zahozený filter(Boolean) v scripts/fetch-opportunities.mjs",
+    "a místo nebo (&& na ||) v scripts/fetch-opportunities.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-escape-dom.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm nevyskytuje; promyšlená sabotáž tu zůstává na člověku"
+  },
+  "test-escape-generatory.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-escape-zpravy.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-exif.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-foto-odlozeni.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-fototema.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-graf-cen.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácené porovnání (>= na >)",
+    "obrácená rovnost (=== na !==)",
+    "zahozená pojistka (if … continue)",
+    "a místo nebo (&& na ||)",
+    "posunutá konstanta (+1)"
+   ],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-graf-vsude.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hierarchie.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-historie-cen.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlaska-hlidani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlavicka-pozemku.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm nevyskytuje; promyšlená sabotáž tu zůstává na člověku"
+  },
+  "test-hlavicka-stranky.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlavicka.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hledani-vzhled.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hledani-zavirani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hledani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlidac-zdroju.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 6,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
+    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
+    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs",
+    "zahozená pojistka (if … continue) v scripts/fetch-opportunities.mjs",
+    "zahozený filter(Boolean) v scripts/fetch-opportunities.mjs",
+    "a místo nebo (&& na ||) v scripts/fetch-opportunities.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-hlidani-jako-hledani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlidani-prohlizec.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-hlidka-zdroju.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [
+    "obrácená rovnost (=== na !==)",
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
+    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
+    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-hypoteka.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-ikony.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 0,
+   "nechytila": 1,
+   "rovnocenne": [],
+   "slepa": [
+    "a místo nebo (&& na ||)"
+   ],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [
+    "scripts/adresa-pozemku.mjs"
+   ],
+   "poznamka": ""
+  },
+  "test-inzerenti.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 1,
+   "chytila": 2,
+   "nechytila": 3,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/text-inzeratu.mjs",
+    "obrácená rovnost (=== na !==) v scripts/text-inzeratu.mjs",
+    "zahozená pojistka (if … continue) v scripts/text-inzeratu.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": ""
+  },
+  "test-jazyk.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-jeden-styl.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-jedna-barva.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   }
  },
  "updated": "2026-11-04",
@@ -759,7 +1133,7 @@
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "298 z 314 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "295 z 314 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -808,38 +1182,6 @@
     ]
    }
   },
-  "scripts/bloky.mjs": {
-   "obrácené porovnání (<= na <)": {
-    "chytily": [],
-    "mlcely": [
-     "test-bloky.mjs"
-    ]
-   },
-   "obrácená rovnost (=== na !==)": {
-    "chytily": [
-     "test-bloky.mjs"
-    ],
-    "mlcely": []
-   },
-   "zahozená pojistka (if … continue)": {
-    "chytily": [],
-    "mlcely": [
-     "test-bloky.mjs"
-    ]
-   },
-   "a místo nebo (&& na ||)": {
-    "chytily": [
-     "test-bloky.mjs"
-    ],
-    "mlcely": []
-   },
-   "posunutá konstanta (+1)": {
-    "chytily": [
-     "test-bloky.mjs"
-    ],
-    "mlcely": []
-   }
-  },
   "scripts/generate-parcel-pages.mjs": {
    "obrácené porovnání (>= na >)": {
     "chytily": [],
@@ -873,38 +1215,6 @@
     ]
    }
   },
-  "scripts/cenova-historie.mjs": {
-   "obrácené porovnání (<= na <)": {
-    "chytily": [],
-    "mlcely": [
-     "test-cenova-historie.mjs"
-    ]
-   },
-   "obrácená rovnost (=== na !==)": {
-    "chytily": [],
-    "mlcely": [
-     "test-cenova-historie.mjs"
-    ]
-   },
-   "zahozená pojistka (if … continue)": {
-    "chytily": [],
-    "mlcely": [
-     "test-cenova-historie.mjs"
-    ]
-   },
-   "zahozený filter(Boolean)": {
-    "chytily": [],
-    "mlcely": [
-     "test-cenova-historie.mjs"
-    ]
-   },
-   "a místo nebo (&& na ||)": {
-    "chytily": [
-     "test-cenova-historie.mjs"
-    ],
-    "mlcely": []
-   }
-  },
   "scripts/archiv-statistiky.mjs": {
    "obrácené porovnání (>= na >)": {
     "chytily": [],
@@ -918,43 +1228,64 @@
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs",
+     "test-hlidka-zdroju.mjs"
+    ],
+    "hlidacu": 17
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs",
+     "test-hlidka-zdroju.mjs"
+    ],
+    "hlidacu": 17
    },
    "obrácená rovnost (=== na !==)": {
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs",
+     "test-hlidka-zdroju.mjs"
+    ],
+    "hlidacu": 17
    },
    "zahozená pojistka (if … continue)": {
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs"
+    ],
+    "hlidacu": 17
    },
    "zahozený filter(Boolean)": {
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs"
+    ],
+    "hlidacu": 17
    },
    "a místo nebo (&& na ||)": {
     "chytily": [],
     "mlcely": [
      "test-ceny-historie.mjs",
-     "test-drazby-cevd.mjs"
-    ]
+     "test-drazby-cevd.mjs",
+     "test-dvojnici.mjs",
+     "test-hlidac-zdroju.mjs"
+    ],
+    "hlidacu": 17
    }
   },
   "scripts/sazba.mjs": {
@@ -1256,6 +1587,156 @@
     "mlcely": [
      "test-doporuceni.mjs"
     ]
+   }
+  },
+  "js/graf-cen.js": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-graf-cen.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-graf-cen.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-graf-cen.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-graf-cen.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [],
+    "mlcely": [
+     "test-graf-cen.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "scripts/hledej-zdroje.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "zahozený filter(Boolean)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-hledej-zdroje.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/hlidka-zdroju.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-hlidka-zdroju.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-hlidka-zdroju.mjs"
+    ],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-hlidka-zdroju.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   }
+  },
+  "scripts/ikony.mjs": {
+   "a místo nebo (&& na ||)": {
+    "chytily": [],
+    "mlcely": [
+     "test-ikony.mjs"
+    ],
+    "hlidacu": 1
+   }
+  },
+  "scripts/text-inzeratu.mjs": {
+   "obrácené porovnání (>= na >)": {
+    "chytily": [],
+    "mlcely": [
+     "test-inzerenti.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [],
+    "mlcely": [
+     "test-inzerenti.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "zahozená pojistka (if … continue)": {
+    "chytily": [],
+    "mlcely": [
+     "test-inzerenti.mjs"
+    ],
+    "hlidacu": 2
+   },
+   "a místo nebo (&& na ||)": {
+    "chytily": [
+     "test-inzerenti.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
+   },
+   "posunutá konstanta (+1)": {
+    "chytily": [
+     "test-inzerenti.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
    }
   }
  }

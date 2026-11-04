@@ -24688,3 +24688,39 @@ usadila" — bez ní by se tatáž vada mohla vrátit tiše.
 **Pravidlo:** zkouška, která měří web, co se sám hýbe, musí nejdřív
 počkat, až se usadí — a to, že se usadil, si musí změřit, ne
 předpokládat.
+
+## §404 — účet vedl slepá místa, která jsem už zavřel *4. 11.*
+
+Po §399 (zavřená slepá místa v `bloky.mjs` a `cenova-historie.mjs`)
+hlásil účet samorozvoje obě zkoušky **dál jako „se slepým místem"**.
+Zápis byl z měření PŘED opravou a nikdo mu neřekl, že zestárl.
+
+Je to třetí druh téže vady: záznam o hlídači platí jen pro **to tělo
+zkoušky, nad kterým se měřilo**. Jak se zkouška změní, je ten záznam
+tvrzením o kódu, který už v repozitáři není — a čte se jako důkaz.
+
+**Oprava.** Každý zápis nese `otisk` — sha1 těla zkoušky (12 znaků),
+krátký, aby se účet nenafoukl, a kryptografický, aby nešlo o shodu
+náhodou. Pak:
+
+* **zastaralý záznam má v účtu vlastní sloupec** a nepočítá se ani mezi
+  prokázané, ani mezi slepá místa;
+* **jde v řadě první**: nepravda, která se čte jako důkaz, je horší než
+  nezměřená zkouška;
+* **zápis bez otisku se nesoudí.** Starší záznamy ho nenesou a tvrdit
+  o nich „zestaraly" by byl dohad — stejně jako tvrdit „platí". Mlčí se
+  o nich a rozhodne je nejbližší měření.
+
+A protože o sedmi dnešních zápisech vím, že zestárly (ty zkoušky jsem
+dnes po měření sám změnil), **smazal jsem je z účtu ručně** — i se
+dvěma položkami soupisu po souborech u `bloky.mjs` a
+`cenova-historie.mjs`, kde ty mutace už chycené jsou. Zbývá 78
+změřených zkoušek; těch sedm si stroj změří znovu a tentokrát
+s otiskem.
+
+`test-samorozvoj`: 164 → **178 kontrol**.
+
+**Účet samorozvoje k dnešnímu večeru:** 307 hlídačů, z nich 78
+změřených, 10 prokázaných sabotáží, 12 se slepým místem, 8 s mlčením
+u souboru, který hlídá víc zkoušek, 14 nálezů tíhy 2 (čeká se na
+zbylé hlídače) a 0 falešných poplachů.

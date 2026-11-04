@@ -47,6 +47,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname, basename } from 'node:path';
+import { createHash } from 'node:crypto';
 import { ocistiJs } from './minifikace.mjs';
 import { fileURLToPath } from 'node:url';
 
@@ -206,6 +207,22 @@ export function minifikovanaKopie(cil) {
   if (!m) return '';
   const min = 'js/min/' + m[1];
   return existsSync(join(KOREN, min)) ? min : '';
+}
+/* OTISK ZKOUŠKY: DŮKAZ STÁRNE SPOLU S KÓDEM.
+   ------------------------------------------------------------------
+   Naměřeno na sobě 4. 11.: účet vedl `test-bloky` a
+   `test-cenova-historie` jako „se slepým místem" i po tom, co jsem ta
+   slepá místa zavřel — zápis byl z měření PŘED opravou a nikdo mu
+   neřekl, že zestárl. Záznam o hlídači platí jen pro to tělo zkoušky,
+   nad kterým se měřilo; jak se zkouška změní, je ten záznam tvrzení
+   o kódu, který už není.
+   Otisk je kryptografický, aby nešlo o shodu náhodou, a krátký, aby
+   se účet nenafoukl. */
+export function otiskZkousky(zkouska, cti = readFileSync) {
+  try {
+    const telo = cti(join(KOREN, 'scripts', String(zkouska || '')), 'utf8');
+    return createHash('sha1').update(telo).digest('hex').slice(0, 12);
+  } catch { return ''; }
 }
 export function jeProhlizecova(teloZkousky) {
   return /playwright/.test(String(teloZkousky || ''));

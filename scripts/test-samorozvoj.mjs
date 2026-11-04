@@ -867,6 +867,56 @@ function je(popis, vyslo, cekano) {
     !/MLČENÍ: m1/.test(r), r);
 }
 
+/* ---- 16) DŮKAZ STÁRNE SPOLU S KÓDEM ----------------------------
+ * ==================================================================
+ * Naměřeno na sobě 4. 11.: účet vedl test-bloky a test-cenova-historie
+ * jako „se slepým místem" i po tom, co jsem ta slepá místa zavřel —
+ * zápis byl z měření PŘED opravou a nikdo mu neřekl, že zestárl.
+ * Záznam o hlídači platí jen pro to tělo zkoušky, nad kterým se
+ * měřilo; jak se zkouška změní, je to tvrzení o kódu, který už není.
+ */
+{
+  const otisk = (t) => (t === 'test-a.mjs' ? 'nove' : 'stejne');
+  const ucet = { zkousky: {
+    'test-a.mjs': { kdy: '2026-11-04', chytila: 0, nechytila: 1, slepa: ['m'], otisk: 'stare' },
+    'test-b.mjs': { kdy: '2026-11-04', chytila: 2, nechytila: 0, otisk: 'stejne' },
+    'test-c.mjs': { kdy: '2026-11-04', chytila: 1, nechytila: 0 },
+  } };
+  pravda('změněná zkouška má zastaralý záznam',
+    R.zastaraly('test-a.mjs', ucet.zkousky['test-a.mjs'], otisk));
+  pravda('nezměněná ne',
+    !R.zastaraly('test-b.mjs', ucet.zkousky['test-b.mjs'], otisk));
+  /* ZÁPIS BEZ OTISKU SE NESOUDÍ. Starší záznamy otisk nenesou a
+     tvrdit o nich „zestaraly" by byl dohad; tvrdit „platí" taky.
+     Mlčí se o nich a rozhodne je nejbližší měření. */
+  pravda('zápis bez otisku se za zastaralý nevydává',
+    !R.zastaraly('test-c.mjs', ucet.zkousky['test-c.mjs'], otisk));
+  pravda('a nezměřená zkouška taky ne', !R.zastaraly('test-d.mjs', undefined, otisk));
+
+  const st = R.stavUctu(['test-a.mjs', 'test-b.mjs', 'test-c.mjs'], ucet, otisk);
+  je('zastaralý záznam má v účtu vlastní sloupec', st.zastaralych, 1);
+  je('a nepočítá se mezi slepá místa', st.sSlepymMistem, 0);
+  je('ani mezi prokázané', st.prokazanych, 2);
+  pravda('a účet to vypíše vlastní větou',
+    R.hlaseniUctu(st, 0).join(' ').includes('od měření změnila'));
+
+  /* A V ŘADĚ JDE PRVNÍ: nepravda, která se čte jako důkaz, je horší
+     než nezměřená zkouška. */
+  je('zastaralý záznam jde v řadě první',
+    R.naRade(['test-b.mjs', 'test-c.mjs', 'test-a.mjs'], ucet, 1, otisk), ['test-a.mjs']);
+
+  /* A OTISK JE OPRAVDU Z TĚLA ZKOUŠKY — na skutečném souboru. */
+  const o1 = S.otiskZkousky('test-samorozvoj.mjs');
+  pravda('otisk zkoušky se spočítá a je krátký', /^[0-9a-f]{12}$/.test(o1), o1);
+  je('a nad týmž tělem vyjde stejný', S.otiskZkousky('test-samorozvoj.mjs'), o1);
+  pravda('nad jiným tělem jiný', S.otiskZkousky('test-bloky.mjs') !== o1);
+  je('a u zkoušky, která není, je prázdný',
+    S.otiskZkousky('test-' + 'neexistuje.mjs'), '');
+  /* A ŽE SE OTISK DO ÚČTU OPRAVDU ZAPISUJE. */
+  const kodS = readFileSync(new URL('./samorozvoj.mjs', import.meta.url), 'utf8');
+  pravda('smyčka otisk do účtu zapisuje', /otisk: otiskZkousky\(t\)/.test(kodS));
+}
+
 console.log('Samorozvoj — nálezce, sabotážní stroj a smyčka');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

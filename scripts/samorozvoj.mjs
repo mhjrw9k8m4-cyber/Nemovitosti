@@ -46,7 +46,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { vsechnyNalezy, hlaseniNalezu } from './nalezce.mjs';
-import { prokazZkousku, hlaseniProkazu, kdoHlidaCil, UVNITR } from './sabotuj.mjs';
+import { prokazZkousku, hlaseniProkazu, kdoHlidaCil, otiskZkousky, UVNITR } from './sabotuj.mjs';
 
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const UCET = join(KOREN, 'data', 'samorozvoj.json');
@@ -71,10 +71,16 @@ export function vsechnyZkousky(kde) {
    (nebo nikdy). Tím se dojde na všechny a nic se neopakuje dřív, než
    se projde zbytek.
    ------------------------------------------------------------------ */
-export function naRade(zkousky, ucet, kolik = KOLO) {
+export function naRade(zkousky, ucet, kolik = KOLO, otisk) {
   const kdy = (ucet && ucet.zkousky) || {};
+  /* ZASTARALÝ ZÁZNAM JDE PŘED VŠÍM OSTATNÍM. Zkouška se od měření
+     změnila, takže o ní účet tvrdí něco, co už neplatí — a to je
+     horší než mít nezměřenou zkoušku: nepravda se čte jako důkaz. */
+  const stary = (t) => (zastaraly(t, kdy[t], otisk) ? 0 : 1);
   return [...(zkousky || [])]
     .sort((a, b) => {
+      const sa = stary(a), sb = stary(b);
+      if (sa !== sb) return sa - sb;
       const ka = (kdy[a] && kdy[a].kdy) || '';
       const kb = (kdy[b] && kdy[b].kdy) || '';
       if (ka !== kb) return ka < kb ? -1 : 1;
@@ -86,13 +92,24 @@ export function naRade(zkousky, ucet, kolik = KOLO) {
 /* ÚČET. Čísla, která dávají smysl i bez vysvětlování: kolik hlídačů
    je prokázaných, kolik má slepé místo a kolika se stroj ještě
    nedotkl. */
-export function stavUctu(zkousky, ucet) {
+/* ZÁZNAM, KTERÝ UŽ NEPLATÍ. Zkouška se od měření změnila, takže
+   verdikt (prokázáno / slepé místo) mluví o těle, které v repozitáři
+   není. Nepočítá se ani do jednoho sloupce a jde v řadě první. */
+export function zastaraly(zkouska, zapis, otisk) {
+  if (!zapis || !zapis.kdy) return false;
+  if (!zapis.otisk) return false;          // starší zápisy otisk nenesly
+  const dnesni = (otisk || otiskZkousky)(zkouska);
+  return !!dnesni && dnesni !== zapis.otisk;
+}
+
+export function stavUctu(zkousky, ucet, otisk) {
   const z = (ucet && ucet.zkousky) || {};
   let prokazanych = 0, sSlepymMistem = 0, nedotcenych = 0, nedorucenych = 0, nelzeTady = 0,
-    mlcivych = 0;
+    mlcivych = 0, zastaralych = 0;
   for (const t of (zkousky || [])) {
     const r = z[t];
     if (!r || !r.kdy) { nedotcenych++; continue; }
+    if (zastaraly(t, r, otisk)) { zastaralych++; continue; }
     /* ZKOUŠKA, KTEROU TENHLE STROJ NEUMÍ PUSTIT, JE TAKY VLASTNÍ SLOUPEC.
        Nemá prohlížeč, takže o hlídači neříká nic — ani že je prokázaný,
        ani že je slepý, ani že se ho stroj nedotkl. */
@@ -113,7 +130,7 @@ export function stavUctu(zkousky, ucet) {
     else nedotcenych++;     // běh proběhl, ale nebylo co rozbít
   }
   return { celkem: (zkousky || []).length, prokazanych, sSlepymMistem, nedotcenych,
-    nedorucenych, nelzeTady, mlcivych };
+    nedorucenych, nelzeTady, mlcivych, zastaralych };
 }
 
 export function hlaseniUctu(stav, nalezu) {
@@ -128,6 +145,10 @@ export function hlaseniUctu(stav, nalezu) {
   if (stav.nedorucenych) {
     radky.push(`A u ${stav.nedorucenych} se sabotáž k prohlížeči nedostala`
       + ' (stránky servírují minifikovanou kopii) — hranice stroje, ne stav hlídače.');
+  }
+  if (stav.zastaralych) {
+    radky.push(`A u ${stav.zastaralych} se zkouška od měření změnila — ten důkaz už neplatí`
+      + ' a stroj je vezme v řadě první.');
   }
   if (stav.mlcivych) {
     radky.push(`U ${stav.mlcivych} zkouška nad mutací mlčela, ale týž soubor hlídá víc zkoušek`
@@ -310,6 +331,9 @@ async function main() {
       nelzeTady: !!v.nelzeTady,
       /* A čím se stroj vědomě nezabýval: vlastní pomůcky zkoušek. */
       pomucky: (v.pomucky || []),
+      /* Otisk těla zkoušky, nad kterým se měřilo. Jak se zkouška
+         změní, přestane tenhle záznam platit — viz zastaraly(). */
+      otisk: otiskZkousky(t),
       poznamka: v.poznamka || v.chyba || '',
     };
     /* Po chybě se smyčka zastaví, ať se nejistota nehromadí — ale „na tomhle
