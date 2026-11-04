@@ -311,6 +311,54 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     !!(pd && String(pd.zavreno).length > 20), String(pd && pd.zavreno));
 }
 
+/* ---- ČTYŘI SLEPÁ MÍSTA, KTERÁ UKÁZAL STROJ -----------------------
+ *
+ * Sabotážní stroj 4. 11. prošel oba moduly bota a tyhle čtyři mutace
+ * zkouška nechytila. Všechny čtyři jsou věcné, ne formální:
+ */
+{
+  /* 1) PAUZA MEZI DOTAZY NA CIZÍ SERVER. Posunutá konstanta prošla bez
+        povšimnutí — a kdyby ta pauza tiše vypadla, bot by cizí web
+        tloukl tak rychle, jak stačí síť. Je to zdvořilost, ne výkon. */
+  je('mezi dotazy na týž portál se čeká 400 ms', Z.PAUZA_MS, 400);
+  pravda('a čeká se opravdu mezi cestami, ne jen jednou na začátku',
+    /await pauza\(PAUZA_MS\)/.test(readFileSync(new URL('./zkus-portal.mjs', import.meta.url), 'utf8')),
+    'pauza v kódu není tam, kde se chodí z cesty na cestu');
+
+  /* 2) „ZMĚŘENO" JE ZNÁMKA POCTIVOSTI, NE OZDOBA. Tvary adres, které
+        jsme opravdu viděli fungovat, se v hlášení odlišují od těch
+        z normy. Obrácená rovnost tu značku překlopí všem naráz —
+        a hlášení by pak tvrdilo „změřeno" o něčem, co nikdo neviděl. */
+  const cesty = C.cestyProPortal('https://priklad.cz/');
+  const vstup = cesty.find((c) => c.skupina === 'vstup');
+  pravda('vstupní adresa je značená jako změřená', !!vstup && vstup.zmereno === true,
+    JSON.stringify(vstup));
+  pravda('a je mezi cestami i nějaká NEzměřená (jinak se značka nerozlišuje)',
+    cesty.some((c) => c.zmereno === false),
+    'všechny cesty mají zmereno === true — značka by nic neříkala');
+  pravda('a žádná nemá místo pravdy/nepravdy něco jiného',
+    cesty.every((c) => c.zmereno === true || c.zmereno === false),
+    JSON.stringify(cesty.map((c) => c.zmereno)));
+
+  /* 3) OBYČEJNÝ TEXT NENÍ CSV. Podmínka „první řádek má aspoň tři
+        sloupce A všechny řádky stejně" se po záměně && za || splní i
+        pro tři řádky prózy (každý „jeden sloupec", všechny stejně) —
+        a bot by na ni pustil čtečku tabulek. */
+  je('tři řádky prózy nejsou CSV', C.tvarOdpovedi('text/plain', 'jeden\ndva\ntři'), 'TEXT');
+  je('a opravdové CSV se pozná', C.tvarOdpovedi('text/plain', 'a;b;c\n1;2;3\n4;5;6'), 'CSV');
+  je('a dva sloupce na to nestačí', C.tvarOdpovedi('text/plain', 'a;b\n1;2\n3;4'), 'TEXT');
+
+  /* 4) CIZÍ KATALOG BÝVÁ ROZBITÝ. V poli `distribuce` se našla i
+        prázdná položka; bez pojistky `if (!d) continue` na ní bot
+        spadne na „null nemá soubor_ke_stažení" — a s ním celý běh. */
+  const rozbity = C.dalsiCesty({ tvar: 'JSON', telo: JSON.stringify({
+    distribuce: [null, { 'soubor_ke_stažení': 'https://priklad.cz/data.csv' }],
+  }) });
+  pravda('prázdná položka v katalogu běh nezastaví', Array.isArray(rozbity), JSON.stringify(rozbity));
+  pravda('a ta dobrá se přesto najde',
+    rozbity.some((x) => String(x.adresa).endsWith('/data.csv')), JSON.stringify(rozbity));
+}
+
 /* ---- JEDNA CESTA, BEZ SÍTĚ ---------------------------------------
  *
  * Sabotážní stroj našel 4. 11. dvě slepá místa: `zkusCestu` nikdo
