@@ -86,6 +86,54 @@ export function tvarJson(data, strop = 40) {
   return radky;
 }
 
+/* KRÁTKÉ SEZNAMY SE VYPÍŠOU CELÉ. Nalezeno naostro 4. 11. u ÚZSVM:
+   v odpovědi je vedle 25 nabídek i `Categories` o čtyřech prvcích —
+   a právě v nich je číslo kategorie „Pozemky", bez kterého se zdroj
+   nedá filtrovat. Nejdelší seznam (nabídky) tedy není ten, který
+   rozhoduje. */
+export function malySeznam(v, strop = 20) {
+  return Array.isArray(v) && v.length > 0 && v.length <= strop
+    && v.every((x) => x && typeof x === 'object' && !Array.isArray(x));
+}
+
+export function vypisSeznam(nazev, pole, uroven = 0) {
+  const radky = [];
+  const mezera = '  '.repeat(uroven + 1);
+  radky.push(`${'  '.repeat(uroven)}SEZNAM „${nazev}" (${pole.length}):`);
+  for (const x of pole) {
+    const kousky = [];
+    for (const k of Object.keys(x)) {
+      const val = x[k];
+      if (val === null || typeof val === 'object') continue;
+      if (typeof val === 'string' && val.length > 60) continue;
+      kousky.push(`${k}=${JSON.stringify(val)}`);
+    }
+    radky.push(mezera + kousky.join(' '));
+    /* Podseznamy (u ÚZSVM `Subcategories`) nesou právě ta čísla,
+       o která jde. */
+    for (const k of Object.keys(x)) {
+      if (malySeznam(x[k]) && uroven < 2) radky.push(...vypisSeznam(k, x[k], uroven + 2));
+    }
+  }
+  return radky;
+}
+
+/* Dlouhé řetězce se do výpisu nedávají celé: jeden náhledový obrázek
+   v base64 (ÚZSVM je posílá přímo v odpovědi) zabral v logu víc místa
+   než celý zbytek. */
+export function zkratDlouhe(data, strop = 160) {
+  if (typeof data === 'string') {
+    return data.length > strop ? data.slice(0, strop) + `…(celkem ${data.length} znaků)` : data;
+  }
+  if (Array.isArray(data)) return data.map((x) => zkratDlouhe(x, strop));
+  if (data && typeof data === 'object') {
+    const ven = {};
+    for (const k of Object.keys(data)) ven[k] = zkratDlouhe(data[k], strop);
+    return ven;
+  }
+  return data;
+}
+
 export function cojeto(text, typ) {
   const t = String(text || '').trimStart();
   if (/^application\/json|^text\/json/.test(typ || '')) return 'JSON';
@@ -154,9 +202,21 @@ async function main() {
   } else if (co === 'JSON') {
     let data = null;
     try { data = JSON.parse(text); } catch (e) { console.log('JSON se nepodařilo přečíst: ' + e.message); }
-    if (data !== null) for (const r of tvarJson(data)) console.log(r);
-    console.log('\nZAČÁTEK OBSAHU:');
-    console.log(text.slice(0, STROP_ZNAKU));
+    if (data !== null) {
+      for (const r of tvarJson(data)) console.log(r);
+      /* A krátké seznamy celé: tam bývají čísla, podle kterých se dá
+         zdroj filtrovat. */
+      if (data && !Array.isArray(data) && typeof data === 'object') {
+        for (const k of Object.keys(data)) {
+          if (malySeznam(data[k])) { console.log(''); for (const r of vypisSeznam(k, data[k])) console.log(r); }
+        }
+      }
+      console.log('\nODPOVĚĎ (dlouhé řetězce zkrácené):');
+      console.log(JSON.stringify(zkratDlouhe(data), null, 1).slice(0, STROP_ZNAKU * 2));
+    } else {
+      console.log('\nZAČÁTEK OBSAHU:');
+      console.log(text.slice(0, STROP_ZNAKU));
+    }
   } else {
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));
