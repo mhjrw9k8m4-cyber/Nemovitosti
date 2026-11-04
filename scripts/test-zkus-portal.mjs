@@ -359,6 +359,21 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     smimeCist: async () => ({ dovoleno: false, duvod: 'robots.txt: Disallow: /' }),
   });
   je('zakázaná cesta je zavřená', zakazano.verdikt, 'zavřená');
+  /* A KDYŽ SE ROBOTS NEPODAŘÍ PŘEČÍST VŮBEC: taky zavřeno (nečte se
+     nic, dokud není dovoleno), a v důvodu je ta hláška ČITELNĚ —
+     ne jako „Error: …". Sabotážní stroj tuhle kontrolu vynutil:
+     `String((e && e.message) || e)` s `&&` zaměněným za `||` vrátí celý
+     objekt chyby, takže se do hlášení dostane „Error: " a zabere
+     místo, kterého je v něm šedesát znaků. */
+  const rozbity = await Z.zkusCestu(cesta, {
+    stahni: async () => odpoved('text/html', 'x'), ua: 'zkouska',
+    mezipamet: new Map(), cti: ctecka,
+    smimeCist: async () => { throw new Error('spojení vypršelo'); },
+  });
+  je('nepřečtený robots je taky zavřeno', rozbity.verdikt, 'zavřená');
+  pravda('a důvod to říká lidsky, bez „Error:"',
+    /robots\.txt nešel přečíst: spojení vypršelo/.test(rozbity.proc || '')
+    && !/Error:/.test(rozbity.proc || ''), rozbity.proc);
   je('a nestáhlo se z ní nic', stahovano, 0);
   pravda('a důvod je ten, který řekl robots', /Disallow/.test(zakazano.proc || ''), zakazano.proc);
 }
