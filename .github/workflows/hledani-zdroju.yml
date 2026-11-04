@@ -29,7 +29,10 @@ permissions:
 jobs:
   hledani:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # Rozpočet běhu je 1 800 sad a změřeno 4. 11. (41810908514) zabere
+    # jedna sada asi sekundu včetně pauzy — tedy ~30 minut. Hodina je
+    # rezerva, ne plán.
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4

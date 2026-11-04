@@ -23251,3 +23251,55 @@ a z běhu robota). Šest sabotáží, každá s ověřeným diffem: zpátky ruč
 seznam podle `extra` (2 pády), výchozí strop nula (7), bez varování
 o nerozpoznaném zdroji (1), vzorek bere nejlevnější (1), odkaz
 z nečísla (2), nabídka bez odkazu (1).
+
+## §372 — první ostrý nález hledání: pět kandidátů a ani jeden pravý
+
+Soustavné hledání (§370) proběhlo naostro (41810908514) a dopadlo
+takto: z rejstříku **90 cizích adres**, z nich se **34 přihlásilo jako
+katalog** podle normy, přečetlo se **570 datových sad** a vyšlo
+**5 kandidátů**. A **ani jeden z nich není zdroj nabídek:**
+
+| nález | čím si skóre vysloužil |
+|---|---|
+| Data RÚIAN o hierarchii prvků | +5 parcel, +3 nemovit, +2 katastr |
+| Seznam dětských hřišť v MČ Praha 11 | +5 parcel, +2 katastr |
+| Hlavní odvodňovací a závlahová zařízení | +5 pozemk |
+| Památky, objekty (Plzeň) | +5 parcel |
+| Cenové mapy města Mostu | +5 pozemk |
+
+**Co z toho plyne o bodování.** Slovo o POZEMKU samo nic neslibuje:
+obec jich zveřejňuje desítky a pozemek je v nich jako MÍSTO, ne jako
+nabídka. Co těm pěti nálezům chybělo do jednoho, je slovo o **PŘEVODU**
+— prodej, dražba, aukce, nabídka majetku. Proto to teď není další
+body, ale **podmínka**: bez převodu kandidát není, i kdyby bodů
+nasbíral deset. Na těch pěti textech je to změřené — po zavedení
+podmínky padá všech pět a žádný z šesti pravých tvarů („Prodej
+pozemků", „Nabídka majetku", „Dražby nemovitostí", „Nepotřebný nemovitý
+majetek", „Záměr prodeje pozemku", „Převod nemovitostí") neprojde
+sítem mimo.
+
+**A hned u toho jedna past, která by to pravidlo tiše vykuchala.**
+`\w` je v JavaScriptu jen `[A-Za-z0-9_]` — **žádná diakritika**. Vzor
+`nepotřebn\w*\s+` proto na „nepotřebný nemovitý majetek" NESEDÍ: za
+„nepotřebn" stojí „ý", a to `\w` není. Kdyby to nevyšlo při zkoušce
+pravých tvarů, chyběl by nám celý jeden druh nabídky a nikdo by se
+nedozvěděl proč. Všude, kde jde o koncovku českého slova, je teď `\S*`
+— a je na to kontrola, aby se `\w*` nevrátilo.
+
+**A co se změřilo o dosahu.** Strop 40 sad na katalog ukrojil devíti
+největším katalogům většinu: ČSÚ má sám **1 018 sad**, MŽP 442,
+Ministerstvo zemědělství 223. Pozemek na prodej se klidně může
+schovávat za čtyřicátou sadou. Strop je proto 120 a celý běh má
+rozpočet 1 800 sad (změřeno: asi sekunda na sadu včetně pauzy, tedy
+~30 minut; úloha má hodinu). **Co se kvůli stropům nepřečte, se sečte
+a napíše** — tiché zahození je horší než malé číslo.
+
+**Jak to čtu.** Nález „nula zdrojů" není porucha hledání; je to
+odpověď: v lokálních katalozích otevřených dat dnes nabídka pozemků
+není. Rozdíl proti dřívějšku je, že se to teď ptá každý týden samo a
+nová sada neunikne.
+
+**Čím je to podložené.** `test-hledej-zdroje.mjs` 74 kontrol — mezi
+nimi všech pět falešných nálezů jmenovitě. Čtyři sabotáže s ověřeným
+diffem: bez podmínky na převod (1 pád), zpátky `\w*` místo `\S*` (2),
+zrušený rozpočet běhu (2), tiše zahozené nepřečtené sady (1).

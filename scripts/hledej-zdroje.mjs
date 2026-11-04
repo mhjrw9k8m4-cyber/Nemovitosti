@@ -89,7 +89,17 @@ export const HOSTE_MIMO = [
 
 export const STROP_ADRES = 300;
 export const STROP_KATALOGU = 90;
-export const STROP_SAD_NA_KATALOG = 40;
+/* STROPY ZE ZMĚŘENÉHO BĚHU (4. 11., 41810908514). Rejstřík dal 90 cizích
+   adres, z nich se 34 přihlásilo jako katalog a přečetlo se 570 sad za
+   deset minut — tedy asi sekunda na sadu včetně pauzy. Strop 40 sad na
+   katalog ale ukrojil devíti největším katalogům většinu: ČSÚ má 1 018
+   sad, MŽP 442, Ministerstvo zemědělství 223. Pozemek na prodej se
+   klidně může schovávat za čtyřicátou sadou, takže se strop zvedá na
+   120 a celý běh dostane rozpočet 1 800 sad (~30 minut). Co se kvůli
+   rozpočtu nepřečte, se NAPÍŠE — číslo „nepřečteno" je součást nálezu,
+   ne detail. */
+export const STROP_SAD_NA_KATALOG = 120;
+export const STROP_DOTAZU_CELKEM = 1800;
 
 /* Hostitel bez „www." — podle něj se pozná, co už máme. */
 export function hostZAdresy(url) {
@@ -192,7 +202,7 @@ export function sadaZOdpovedi(data) {
 export const SLOVA_PRO = [
   [/pozemk|pozemek|parcel/i, 5],
   [/dražb|drazb/i, 4],
-  [/nabídk\w*\s+(?:majetku|nemovit)/i, 4],
+  [/nabídk\S*\s+(?:majetku|nemovit)/i, 4],
   [/prodej/i, 3],
   [/nemovit/i, 3],
   [/katastr/i, 2],
@@ -210,6 +220,39 @@ export const SLOVA_PROTI = [
   [/jízdní\s+řád|rozpočet|faktur|zakázk|dotac|platy|mzdy/i, -3],
   [/ovzduší|meteo|počasí|odpad|osvětlení|cyklostezk/i, -2],
 ];
+
+/* A JEDNA PODMÍNKA, KTERÁ NENÍ O SKÓRE: MUSÍ TAM BÝT PŘEVOD.
+   Změřeno na prvním ostrém běhu (41810908514): hledání vrátilo pět
+   kandidátů a ANI JEDEN nebyl zdroj nabídek — RÚIAN hierarchie,
+   dětská hřiště v Praze 11, odvodňovací zařízení, památky v Plzni,
+   cenové mapy Mostu. Všechny si skóre vysloužily slovem „parcela",
+   „pozemek" nebo „katastr" v popisu něčeho úplně jiného.
+
+   Slovo o POZEMKU totiž samo nic neslibuje — obec jich zveřejňuje
+   desítky a pozemek je v nich jako místo, ne jako nabídka. Co těm pěti
+   nálezům chybělo do jednoho, je slovo o PŘEVODU: prodej, dražba,
+   aukce, nabídka majetku. Proto je to podmínka, ne další body: bez
+   převodu kandidát není, i kdyby bodů nasbíral deset. */
+/* POZOR NA `\w` V ČESKÝCH SLOVECH. `\w` je v JavaScriptu jen
+   [A-Za-z0-9_] — ŽÁDNÁ diakritika. Proto `nepotřebn\w*\s+` na
+   „nepotřebný nemovitý majetek" NESEDÍ: za „nepotřebn" stojí „ý",
+   a to `\w` není. Chytlo mě to hned při zkoušce pěti falešných
+   nálezů, kde mi vypadl i jeden pravý. Všude, kde jde o koncovku
+   českého slova, je proto `\S*`. */
+export const SLOVA_PREVODU = [
+  /prodej|prodáv|prodat/i,
+  /dražb|drazb/i,
+  /aukc/i,
+  /nabídk\S*\s+(?:majetku|nemovit|pozemk)/i,
+  /nepotřebn\S*\s+(?:majet|nemovit)/i,
+  /převod\S*\s+(?:majetku|nemovit|pozemk)/i,
+  /záměr\S*\s+(?:prodat|prodeje|převod)/i,
+];
+
+export function zminujePrevod(nazev, popis) {
+  const text = String(nazev || '') + ' ' + String(popis || '');
+  return SLOVA_PREVODU.some((re) => re.test(text));
+}
 
 export const MEZ_SKORE = 5;
 
@@ -250,7 +293,7 @@ export function znameHosty() {
    ------------------------------------------------------------------ */
 export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
   const podleHosta = new Map();
-  const zahozeno = { uzMame: 0, nizkeSkore: 0, bezAdresy: 0 };
+  const zahozeno = { uzMame: 0, nizkeSkore: 0, bezPrevodu: 0, bezAdresy: 0 };
   for (const s of (sady || [])) {
     if (!s) continue;
     /* Hostitel se bere z IRI sady (kdo ji vede), ne z adresy
@@ -259,8 +302,12 @@ export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
     const host = hostZAdresy(s.iri) || hostZAdresy(s.url);
     if (!host) { zahozeno.bezAdresy++; continue; }
     if (uzMame(host, zname)) { zahozeno.uzMame++; continue; }
-    const b = skore(s.nazev, [s.popis, s.klicova].filter(Boolean).join(' '));
+    const dohromady = [s.popis, s.klicova].filter(Boolean).join(' ');
+    const b = skore(s.nazev, dohromady);
     if (b.skore < mez) { zahozeno.nizkeSkore++; continue; }
+    /* A TEPRVE TEĎ ta podmínka: bez slova o převodu to není nabídka,
+       ať má bodů kolik chce (viz SLOVA_PREVODU). */
+    if (!zminujePrevod(s.nazev, dohromady)) { zahozeno.bezPrevodu++; continue; }
     /* Jeden hostitel = jeden kandidát. Katalog vede datové sady a
        jeden úřad jich má klidně deset; zapojuje se ale zdroj, ne sada.
        Drží se ta nejslibnější a počítá se, kolik jich ten hostitel má
@@ -298,7 +345,7 @@ export function hlaseni(nalez) {
   const { nalezeno, zahozeno } = nalez;
   radky.push(`Nalezeno ${nalezeno.length} kandidátů`
     + ` (zahozeno: už máme ${zahozeno.uzMame}, slabé skóre ${zahozeno.nizkeSkore},`
-    + ` bez adresy ${zahozeno.bezAdresy}).`);
+    + ` bez slova o převodu ${zahozeno.bezPrevodu}, bez adresy ${zahozeno.bezAdresy}).`);
   for (const k of nalezeno) {
     radky.push(`  ${String(k.skore).padStart(3)}  ${k.host}  (sad: ${k.sad})  ${k.jmeno}`);
     radky.push(`        ${k.adresa}`);
@@ -366,15 +413,23 @@ async function main() {
   }
   console.log(`Katalogů, které se přihlásily podle normy: ${katalogy.length}.`);
 
-  /* 3) DATOVÉ SADY V NICH. */
+  /* 3) DATOVÉ SADY V NICH. Rozpočet na celý běh je jeden a drží se:
+     největší katalog má přes tisíc sad a bez rozpočtu by jeden takový
+     spolkl celý čas úlohy. Co se nepřečte, se SEČTE a napíše. */
   const vsechny = [];
+  let nepreceteno = 0;
+  let dotazu = 0;
   for (const k of katalogy) {
-    const sady = k.sady.slice(0, STROP_SAD_NA_KATALOG);
+    const zbyva = Math.max(0, STROP_DOTAZU_CELKEM - dotazu);
+    const kolik = Math.min(STROP_SAD_NA_KATALOG, zbyva);
+    const sady = k.sady.slice(0, kolik);
+    nepreceteno += k.sady.length - sady.length;
     let precteno = 0;
     for (const iri of sady) {
       let odp;
       try { odp = await jsonZAdresy(iri, pomucky); }
       catch (e) { odp = { chyba: String((e && e.message) || e).slice(0, 80) }; }
+      dotazu++;
       await pauza(PAUZA_MEZI_DOTAZY);
       if (odp.chyba) { chyby.push(`${iri}: ${odp.chyba}`); continue; }
       const s = sadaZOdpovedi(odp.data);
@@ -382,7 +437,12 @@ async function main() {
       vsechny.push({ ...s, url: s.soubory[0] || '', adresa: k.domov || s.soubory[0] || k.iri });
     }
     console.log(`  ${k.nazev || k.iri}: ${precteno} z ${k.sady.length} sad přečteno`
-      + (k.sady.length > sady.length ? ` (strop ${STROP_SAD_NA_KATALOG})` : ''));
+      + (k.sady.length > sady.length
+        ? ` (strop ${STROP_SAD_NA_KATALOG}, rozpočet běhu ${STROP_DOTAZU_CELKEM})` : ''));
+  }
+  if (nepreceteno) {
+    console.log(`Nepřečteno ${nepreceteno} sad kvůli stropům — pozemek na prodej se`
+      + ' může schovávat i za nimi. Čísla jsou v nálezu, ať se o nich ví.');
   }
 
   for (const ch of chyby.slice(0, 30)) console.error('POZOR: ' + ch);
@@ -402,6 +462,7 @@ async function main() {
     updated: dnes,
     katalogu: katalogy.length,
     sad: vsechny.length,
+    nepreceteno,
     chyby: chyby.slice(0, 30),
     nalezeno: nalez.nalezeno,
     zahozeno: nalez.zahozeno,

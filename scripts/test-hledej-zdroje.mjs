@@ -200,6 +200,45 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     H.skore('Prodej pozemků', '').duvod);
 }
 
+/* ---- 5b) BEZ SLOVA O PŘEVODU TO NENÍ NABÍDKA ------------------
+   Těchto pět textů je PŘESNĚ to, co první ostrý běh (41810908514)
+   vrátil jako kandidáty — a ani jeden z nich nebyl zdroj nabídek.
+   Skóre si vysloužily slovem „parcela", „pozemek" nebo „katastr"
+   v popisu něčeho úplně jiného. Proto tu stojí jmenovitě. */
+{
+  const FALESNE = [
+    'Data RÚIAN o hierarchii prvků poskytovaná pro stát ve formátu CSV',
+    'Seznam dětských hřišť na území MČ Praha 11 - 3/2026',
+    'Hlavní odvodňovací a závlahová zařízení',
+    'Památky, objekty',
+    'Cenové mapy města Mostu',
+  ];
+  for (const n of FALESNE) {
+    pravda(`„${n.slice(0, 40)}…" není nabídka`, !H.zminujePrevod(n, ''),
+      'skóre: ' + JSON.stringify(H.skore(n, '')));
+  }
+  const PRAVE = [
+    'Prodej pozemků',
+    'Nabídka majetku',
+    'Nabídky majetku státu',
+    'Dražby nemovitostí',
+    'Nepotřebný nemovitý majetek',
+    'Záměr prodeje pozemku',
+  ];
+  for (const n of PRAVE) {
+    pravda(`„${n}" nabídka je`, H.zminujePrevod(n, ''));
+  }
+  /* A PROČ TU „Nepotřebný nemovitý majetek" JE ZVLÁŠŤ. `\w` je
+     v JavaScriptu jen [A-Za-z0-9_] — žádná diakritika. S `\w*` tahle
+     věta NEPROŠLA, protože za „nepotřebn" stojí „ý". Tenhle řádek je
+     tu proto, aby se `\S*` nikdo nevrátil na `\w*`. */
+  pravda('česká koncovka pravidlo nerozbije (\\w diakritiku nezná)',
+    H.zminujePrevod('Nepotřebný nemovitý majetek', ''));
+  je('a v zahozených je důvod „bez převodu" pojmenovaný',
+    H.kandidatiZeSad([{ nazev: 'Dětská hřiště a pozemky pod nimi', popis: 'parcely',
+      iri: 'https://obec.cz/1' }], []).zahozeno.bezPrevodu, 1);
+}
+
 /* ---- 6) CO UŽ MÁME, TO NENÍ NÁLEZ ---------------------------- */
 {
   const zname = H.znameHosty();
@@ -275,7 +314,13 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     /Disallow: \/zdroj\//.test(telo) && /Disallow: \/sparql\*/.test(telo),
     'bez toho to po mně někdo zkusí znovu');
   pravda('strop na sady z jednoho katalogu se opravdu použije',
-    /k\.sady\.slice\(0, STROP_SAD_NA_KATALOG\)/.test(telo));
+    /Math\.min\(STROP_SAD_NA_KATALOG, zbyva\)/.test(telo));
+  pravda('a rozpočet celého běhu taky — jeden katalog nesmí spolknout čas úlohy',
+    /STROP_DOTAZU_CELKEM - dotazu/.test(telo), 'ČSÚ má sám 1 018 sad');
+  pravda('co se kvůli stropům nepřečte, se sečte a napíše',
+    /nepreceteno \+= k\.sady\.length - sady\.length/.test(telo)
+      && /Nepřečteno \$\{nepreceteno\}/.test(telo),
+    'tiché zahození je horší než malé číslo');
 }
 
 console.log('Hledání nových zdrojů — rejstřík lokálních katalogů');
