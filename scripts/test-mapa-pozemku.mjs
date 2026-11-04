@@ -1561,6 +1561,7 @@ if (DRAZBA) {
       ramVys: mapaEl ? Math.round(mapaEl.getBoundingClientRect().height) : null,
       plVDom: b ? document.body.contains(b) : null,
       zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni),
+      hyby: (window.__PK_HYBY || []).slice(-6),
       /* A TEĎ TO, CO SE PO PRVNÍM MĚŘENÍ UKÁZALO JAKO CHYBĚJÍCÍ.
          CI 4. 11. vyloučila nulový rám, dvě mapy, běžící animaci
          i nenačtený modul — tlačítko přesto zůstalo skryté. Zbývá
@@ -1601,6 +1602,31 @@ if (DRAZBA) {
     window.__PK_KLID = k;
     return false;
   }, { timeout: 8000, polling: 400 }).catch(() => { /* ať to dopoví kontroly pod tím */ });
+  /* KDO MAPOU HÝBE. Naměřeno v CI 4. 11. (běh 41913666900): po stisku
+     „Na pozemek" se mapa usadila 940 m od pozemku a sám web o tom
+     řekl „domov nevidím" — a tlačítko zůstalo viset. To už není
+     domněnka zkoušky (§398, §403, §405), to je chování, které se musí
+     vysvětlit. Dohady ale nestačí, takže se zapisuje KAŽDÉ volání,
+     kterým se mapa hýbe, i s místem, odkud přišlo. */
+  await p.evaluate(() => {
+    const m = window.PK_PZ_MAPA;
+    if (!m) return;
+    window.__PK_HYBY = [];
+    for (const jm of ['setView', 'panTo', 'panBy', 'flyTo', 'fitBounds', 'setZoom']) {
+      const orig = m[jm];
+      if (typeof orig !== 'function') continue;
+      m[jm] = function () {
+        try {
+          const kde = String((new Error()).stack || '').split('\n').slice(2, 4)
+            .join(' | ').replace(/https?:\/\/[^/]+/g, '');
+          window.__PK_HYBY.push(jm + ' '
+            + JSON.stringify(Array.prototype.slice.call(arguments, 0, 2)).slice(0, 90)
+            + ' ← ' + kde.slice(0, 160));
+        } catch (e) { /* diagnostika nesmí shodit web */ }
+        return orig.apply(this, arguments);
+      };
+    }
+  });
   const doma = await stav();
   const doma2 = await stav();
   pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
@@ -1712,10 +1738,13 @@ if (DRAZBA) {
        jsme doma (pad(-0.12).contains) — a čísla zůstávají v hlášce. */
     pravda('a stisk vrátí pohled na pozemek',
       !!(zpet.zab && zpet.zab.vidimDomov === true) && zpet.zoom === doma.zoom,
-      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti pozemku ${CIL.d.lat},${CIL.d.lng}`
+      `kdo mapou hýbal: ${JSON.stringify(zpet.hyby || [])}; `
+      + `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti pozemku ${CIL.d.lat},${CIL.d.lng}`
       + ` (z=${doma.zoom}, úvodní pohled byl ${doma.lat},${doma.lng}); `
       + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}, z=${doma.zoom}, střed ${doma.lat},${doma.lng}, záběr ${doma.zab && doma.zab.s}–${doma.zab && doma.zab.n} × ${doma.zab && doma.zab.w}–${doma.zab && doma.zab.e}, web vidí domov: ${doma.zab && doma.zab.vidimDomov}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}, z=${zpet.zoom}, střed ${zpet.lat},${zpet.lng}, záběr ${zpet.zab && zpet.zab.s}–${zpet.zab && zpet.zab.n} × ${zpet.zab && zpet.zab.w}–${zpet.zab && zpet.zab.e}, web vidí domov: ${zpet.zab && zpet.zab.vidimDomov}`);
-    pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');
+    pravda('a pak se zase schová', zpet.skryte === true,
+      `zůstalo viset na mapě; web vidí domov: ${zpet.zab && zpet.zab.vidimDomov};`
+      + ` kdo mapou hýbal: ${JSON.stringify(zpet.hyby || [])}`);
 
     /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
        pohledu přes celý okres už to o pozemku nic neříká. */
