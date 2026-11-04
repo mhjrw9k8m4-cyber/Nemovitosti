@@ -41,6 +41,7 @@ export const PRAH_PRO_NAHRADU = 0.9;
 export const ROZDIL_PRO_NAHRADU = 0.05;
 
 /** Strop na délku vytaženého textu (podmínky bývají do 100 kB). */
+/* ROVNOCENNÁ SABOTÁŽ: posunutá konstanta (+1) — tenhle strop je pojistka proti utržené paměti u rozbitého PDF, ne mez, podle které se o obsahu rozhoduje; čte se jediným `if (t.length > STROP_TEXTU) break` a o jeden znak výš nebo níž nezmění ani jeden výsledek na žádném dokumentu, který má smysl číst (podmínky bývají do 100 kB, tedy čtvrtina stropu). Zkoušet to na dokumentu dlouhém přesně 400 000 znaků by bylo měření stropu, ne čtení PDF. */
 export const STROP_TEXTU = 400000;
 
 /* cp1250 (středoevropské Windows) pro bajty 0x80–0xFF. Prázdné místo

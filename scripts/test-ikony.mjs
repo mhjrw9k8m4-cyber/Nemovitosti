@@ -36,7 +36,7 @@ import { chromium } from 'playwright-core';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { adresaPozemku } from './adresa-pozemku.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
-import { IKONY, idIkony } from './ikony.mjs';
+import { IKONY, idIkony, sprite } from './ikony.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -97,6 +97,37 @@ const STRANKY = ['index.html', POZEMEK || 'pozemek.html', 'muj-inzerat.html',
 
 const PRAZDNA = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+/* ---- SPRITE: VÝBĚR AŤ NEVYJDE PRÁZDNÝ -------------------------
+ * ==================================================================
+ * Smyčka samorozvoje 4. 11. obrátila v `sprite()` podmínku
+ * `if (jmena && !vyber.length) return ''` na `||` a tahle zkouška
+ * mlčela. Ta mutace je přitom zlá: s `||` vrátí sprite PRÁZDNÝ
+ * ŘETĚZEC vždycky, když se o nějaké ikony řekne — tedy na každé
+ * stránce, která si sadu zužuje. Zmizely by všechny ikony a zůstal
+ * holý text. Měří se proto offline, ještě než se pustí prohlížeč.
+ */
+{
+  const jedno = Object.keys(IKONY)[0];
+  const vybrany = sprite(new Set([idIkony(jedno)]));
+  pravda('vyžádaná ikona ve spritu je',
+    vybrany.length > 0 && /<path/.test(vybrany) && vybrany.includes(idIkony(jedno)),
+    JSON.stringify(vybrany.slice(0, 80)));
+  /* A CO SE NEVYŽÁDALO, TAM NENÍ — jinak by zužování nemělo smysl. */
+  const druhy = Object.keys(IKONY)[1];
+  pravda('a nevyžádaná v něm není',
+    !vybrany.includes(idIkony(druhy)), JSON.stringify(vybrany.slice(0, 120)));
+  /* Prázdný výběr je prázdný sprite (stránka si nic nezavolala). */
+  pravda('výběr, který nic netrefí, dá prázdno',
+    sprite(new Set(['i-tohle-neexistuje'])) === '');
+  /* A bez výběru se dá celá sada — tak si ji bere stránka, která
+     neví dopředu, co bude potřebovat. */
+  const vse = sprite();
+  pravda('bez výběru je ve spritu celá sada',
+    vse.includes(idIkony(jedno)) && vse.includes(idIkony(druhy))
+    && (vse.match(/<symbol/g) || []).length === Object.keys(IKONY).length,
+    (vse.match(/<symbol/g) || []).length + ' z ' + Object.keys(IKONY).length);
+}
+
 const kde = process.env.PW_CHROMIUM || '';
 const prohlizec = await chromium.launch(Object.assign({ args: ['--no-sandbox'] }, kde ? { executablePath: kde } : {}));
 const ctx = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block', viewport: { width: 1280, height: 1000 } });

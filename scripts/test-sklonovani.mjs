@@ -21,6 +21,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { sklon } from './text.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 let ok = 0, chyb = 0; const zpravy = [];
@@ -118,6 +119,34 @@ pravda('a bylo co prohledávat', SOUBORY.length >= 30, `souborů ${SOUBORY.lengt
   pravda('0 → třetí („žádný pozemek" se píše jinak)', F.mnozne(0, t) === 'pozemků', F.mnozne(0, t));
   pravda('a cislovka připojí číslo', F.cislovka(3, t) === '3 pozemky', F.cislovka(3, t));
   void src;
+}
+
+/* ---- A SAMA FUNKCE, KTERÁ TO ROZHODUJE ------------------------
+ * ==================================================================
+ * Tenhle soubor hlídal PRÓZU v repozitáři — kde se k číslu lepí tvar,
+ * musí být poblíž vidět rozhodování. Ale `sklon()` v scripts/text.mjs,
+ * tedy funkci, která to rozhodování DĚLÁ, nehlídal nikdo: smyčka
+ * samorozvoje 4. 11. v ní obrátila `>=`, `<=`, `===` i `&&` a celý
+ * repozitář mlčel. Tři tvary mají přesné hranice (1 / 2–4 / 5+) a
+ * každá z těch mutací jednu z nich posune o jeden krok.
+ */
+{
+  const t = (n) => sklon(n, 'okres', 'okresy', 'okresů');
+  pravda('jeden okres', t(1) === 'okres', t(1));
+  /* DVĚ JE VE PROSTŘEDNÍM TVARU — `>=` obrácené na `>` ji pošle do
+     tvaru pro pět a víc („2 okresů"). */
+  pravda('dva okresy (dolní hranice prostředního tvaru)', t(2) === 'okresy', t(2));
+  pravda('tři okresy', t(3) === 'okresy', t(3));
+  /* ČTYŘI JE JEŠTĚ PROSTŘEDNÍ — `<=` obrácené na `<` dá „4 okresů". */
+  pravda('čtyři okresy (horní hranice prostředního tvaru)', t(4) === 'okresy', t(4));
+  pravda('pět okresů', t(5) === 'okresů', t(5));
+  /* NULA PATŘÍ K „pět a víc" („0 okresů"), a `&&` obrácené na `||`
+     to spolu s pěticí rozbije. */
+  pravda('nula okresů', t(0) === 'okresů', t(0));
+  pravda('sto okresů', t(100) === 'okresů', t(100));
+  /* A ZÁPORNÉ ČÍSLO AŤ TAKY NEVYPADNE DO PRVNÍHO TVARU — `===`
+     obrácené na `!==` posune rovnost jedničky na všechno ostatní. */
+  pravda('minus jedna není „jeden"', t(-1) === 'okresů', t(-1));
 }
 
 console.log(`\nSkloňování podle počtu: ${ok + chyb} kontrol`);

@@ -24784,3 +24784,65 @@ nikdy nespustí. Měří se na podstrčené složce se třemi soubory
 **Prokázáno sabotáží po opravě:** `test-kontrola-databaze` 5 z 5
 chycených, `test-kontrola-uloh` 4 ze 4 (a soubor se po každé sabotáži
 vrátil bitově shodný).
+
+## §407 — pět slepých míst, která smyčka našla po svém zpřesnění *4. 11.*
+
+Po §404 (otisk těla zkoušky) se ukázalo, že účet vedl **dva zápisy
+zastaralé**: `test-archiv` a `test-archiv-statistiky` byly v něm „se
+slepým místem", ale přeměřením vyšlo **6 ze 6** a **5 z 5 chycených** —
+ta slepá místa jsem zavřel dřív a záznam o tom nevěděl. Proto se teď
+otisk zapisuje.
+
+Přeměřením sedmi zkoušek vyšla slepá místa **pravdivá u pěti**. Zavřeno:
+
+**`scripts/text.mjs` — `sklon()`, tři tvary množného čísla.** Soubor
+`test-sklonovani.mjs` hlídal **prózu v repozitáři** („kde se k číslu
+lepí tvar, musí být vidět rozhodování"), ale funkci, která to
+rozhodování dělá, **nehlídal nikdo**. Smyčka v ní obrátila `>=`, `<=`,
+`===` i `&&` a celý repozitář mlčel. Teď se měří všechny hranice
+(1 / 2–4 / 5+, nula, sto, −1): **4 ze 5 mutací chycené**, pátá
+(posunutá nula v čističce komentářů) patří druhé zkoušce — viz níž.
+`test-sklonovani`: 9 → **17 kontrol**.
+
+**`scripts/text.mjs` — `bezKomentaruVHtml()`.** Smyčka posunula
+počáteční `konec = 0` na `1`, tedy **zahodila první znak dokumentu**, a
+zkouška mlčela, protože měřila jen „komentáře na hotových stránkách
+nejsou" — a to je pravda i o dokumentu, kterému chybí `<`. Teď se měří
+po znaku: dokument bez komentářů projde beze změny, komentář v těle
+zmizí, komentář **v `<script>` a `<style>` zůstane**, prázdné řádky se
+slijí a neuzavřený komentář nesebere zbytek stránky.
+`test-komentare-v-strankach`: 8 → **16 kontrol**.
+
+Dohromady: **všech pět mutací `text.mjs` sada chytí** — každá jednou
+z těch dvou zkoušek. Stroj to tak i hlásí („mlčení", ne „slepé místo"),
+protože ten soubor od teď hlídají dvě.
+
+**`scripts/ikony.mjs` — `sprite()`.** Obrácení `jmena && !vyber.length`
+na `||` vrátí **prázdný sprite vždy, když si stránka sadu zužuje** —
+tedy na okresních, krajských i druhových stránkách by zmizely všechny
+ikony a zůstal holý text. Měří se offline, než se pustí prohlížeč:
+vyžádaná ikona ve spritu je, nevyžádaná není, prázdný výběr dá prázdno
+a bez výběru je celá sada. **1 z 1 chycená**, `test-ikony`: 14 → **15**.
+
+**`scripts/cti-pdf.mjs` — `citelnost()`.** Posunutá počáteční nula
+(`let dobre = 0` → `1`) mění podíl čitelných znaků, podle kterého se
+rozhoduje, jestli se text z PDF přijme, nebo se sáhne po náhradě
+(`PRAH_PRO_NAHRADU`). Zkouška měřila jen „čitelný text vyjde nad 0,95",
+a tam jeden znak navíc nepoznáte. Teď: text bez jediného čitelného
+znaku má **0**, polovina dá **0,5**, samý čitelný text **1**.
+`test-cti-pdf`: 24 → **28 kontrol**.
+
+A jedna mutace v tom souboru je **rovnocenná** a je to u kódu
+prohlášeno s důvodem: `STROP_TEXTU` 400 000 → 400 001. Je to pojistka
+proti utržené paměti u rozbitého PDF, ne mez, podle které se o obsahu
+rozhoduje; čte se jediným `if (t.length > STROP_TEXTU) break`.
+
+**Co zůstává otevřené a proč (nezavírám to v jednu ráno):** tři mutace
+v `cti-pdf.mjs` sedí v bajtovém rozboru PDF (`iObj >= 0`, `buf[s] ===
+0x0d`, zahozené `continue`) a na jejich prokázání je potřeba **umělé
+PDF po bajtech**. A u `hlidka-zdroju.mjs` i `generate-data-rezy.mjs`
+leží nejdražší rozhodnutí **uvnitř funkce, která čte a zapisuje
+soubory** — ze zkoušky nespustitelné. To je týž tvar, jaký se dnes
+řešil u archivu: vytáhnout čistou funkci. Je to změna v nočním robotu
+a v generátoru datových řezů, takže si zaslouží čerstvou hlavu, ne
+konec dlouhého dne.

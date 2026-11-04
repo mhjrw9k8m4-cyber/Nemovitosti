@@ -90,6 +90,53 @@ zpravy.push(`  · naměřeno: ${generovane.length} generovaných stránek,`
   + ` ${(gzSKom / 1024 / 1024).toFixed(2)} MB gzipem`
   + (gzSKom > gzBez ? ` (bez komentářů by to bylo ${(gzBez / 1024 / 1024).toFixed(2)} MB)` : ' — už bez komentářů'));
 
+/* ---- A SAMA ČISTIČKA, PO ZNAKU --------------------------------
+ * ==================================================================
+ * Smyčka samorozvoje 4. 11. posunula v `bezKomentaruVHtml` počáteční
+ * `konec = 0` na `1` — tedy zahodila první znak dokumentu — a tahle
+ * zkouška mlčela, protože měřila jen „komentáře na hotových stránkách
+ * nejsou". To je pravda i o dokumentu, kterému chybí `<`. Hlídá se
+ * proto i to, co čistička udělá se vstupem: po znaku.
+ */
+{
+  /* BEZ KOMENTÁŘŮ SE NESMÍ ZMĚNIT ANI ZNAK — tady padne posunutá nula. */
+  const cisty = '<!doctype html><html><body><p>Pozemek 1 234 m²</p></body></html>';
+  pravda('dokument bez komentářů projde beze změny',
+    bezKomentaruVHtml(cisty) === cisty, bezKomentaruVHtml(cisty).slice(0, 60));
+  pravda('a nezmizí mu první znak',
+    bezKomentaruVHtml(cisty).startsWith('<!doctype'),
+    bezKomentaruVHtml(cisty).slice(0, 20));
+
+  /* KOMENTÁŘ MIMO SKRIPT A STYL ZMIZÍ. */
+  const sKomentarem = '<p>a</p><!-- proč to tu je --><p>b</p>';
+  pravda('komentář v těle se zahodí',
+    bezKomentaruVHtml(sKomentarem) === '<p>a</p><p>b</p>',
+    bezKomentaruVHtml(sKomentarem));
+
+  /* ALE UVNITŘ <script> A <style> SE NESAHÁ — tam „<!--" může být kus
+     kódu nebo textu a sebrat ho odtud by stránku rozbilo. */
+  const vSkriptu = '<p>a</p><script>var s = "<!-- ne -->";</script><p>b</p>';
+  pravda('v <script> komentář zůstane', bezKomentaruVHtml(vSkriptu) === vSkriptu,
+    bezKomentaruVHtml(vSkriptu));
+  const veStylu = '<style>/* <!-- ne --> */ p{color:red}</style><!-- ano -->';
+  pravda('ve <style> taky, a ten za ním zmizí',
+    bezKomentaruVHtml(veStylu) === '<style>/* <!-- ne --> */ p{color:red}</style>',
+    bezKomentaruVHtml(veStylu));
+
+  /* A CO ZŮSTANE PO KOMENTÁŘI: dva prázdné řádky se slijí v jeden, ale
+     jeden prázdný řádek se nesmí ztratit — jinak by se čistička
+     chovala jako formátovač. */
+  pravda('tři prázdné řádky se slijí ve dva zlomy',
+    bezKomentaruVHtml('a\n\n\n\nb') === 'a\n\nb', JSON.stringify(bezKomentaruVHtml('a\n\n\n\nb')));
+  pravda('a jeden zlom zůstane jeden',
+    bezKomentaruVHtml('a\nb') === 'a\nb', JSON.stringify(bezKomentaruVHtml('a\nb')));
+  /* NEUZAVŘENÝ KOMENTÁŘ: co není ukončené, není komentář — a hlavně
+     se nesmí zahodit zbytek dokumentu. */
+  pravda('neuzavřený komentář zbytek stránky nesebere',
+    bezKomentaruVHtml('<p>a</p><!-- nedokončeno').includes('<p>a</p>'),
+    bezKomentaruVHtml('<p>a</p><!-- nedokončeno'));
+}
+
 console.log('\nKomentáře v hotových stránkách');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

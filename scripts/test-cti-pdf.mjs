@@ -311,6 +311,28 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
 
 console.log('\nČtení PDF');
 console.log(zpravy.join('\n'));
+/* ---- ČITELNOST SE POČÍTÁ OD NULY ------------------------------
+ * ==================================================================
+ * Smyčka samorozvoje 4. 11. posunula v `citelnost()` počáteční
+ * `let dobre = 0` na `1` a tahle zkouška mlčela — měřila jen, že
+ * čitelný text vyjde nad 0,95, a tam jeden znak navíc nepoznáte.
+ * Rozhoduje se tím ale, jestli se text z PDF přijme, nebo se sáhne
+ * po náhradě (PRAH_PRO_NAHRADU) — a tam jde o pár procent.
+ */
+{
+  /* ŽÁDNÝ ČITELNÝ ZNAK = NULA. Tady se posunutá nula pozná hned. */
+  pravda('text bez jediného čitelného znaku má čitelnost 0',
+    citelnost('\u0000\u0001\u0002') === 0, String(citelnost('\u0000\u0001\u0002')));
+  pravda('a prázdný text taky', citelnost('') === 0, String(citelnost('')));
+  /* A PODÍL AŤ JE PODÍL: tři znaky ze šesti jsou přesně polovina. */
+  pravda('polovina čitelných znaků dá 0,5',
+    Math.abs(citelnost('abc\u0000\u0001\u0002') - 0.5) < 1e-9,
+    String(citelnost('abc\u0000\u0001\u0002')));
+  pravda('a samý čitelný text dá jedničku',
+    citelnost('Pozemek 1 234 m², k. ú. Dívčice') === 1,
+    String(citelnost('Pozemek 1 234 m², k. ú. Dívčice')));
+}
+
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.error(`::error::Čtení PDF: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 process.exit(0);
