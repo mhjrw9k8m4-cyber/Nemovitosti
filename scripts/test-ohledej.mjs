@@ -91,6 +91,55 @@ function pravda(popis, vyslo, proc) {
     vetev.indexOf('vypisNalezy') < vetev.indexOf('JSON.parse'), vetev.slice(0, 200));
 }
 
+/* ---- 4b) ČTYŘI SLEPÁ MÍSTA, KTERÁ NAŠEL SABOTÁŽNÍ STROJ ----
+ *
+ * Zkoušku jsem napsal a stroj v ní hned našel čtyři místa, kde se dá
+ * kód obrátit a nikdo se neozve. Všechna čtyři jsou v místech, která
+ * rozhodují o tom, CO SE VŮBEC VYPÍŠE — tedy v tom, čím se měří.
+ */
+{
+  /* a) HRANA KRÁTKÉHO SEZNAMU. Krátké seznamy se vypíšou celé, protože
+     právě v nich bývají čísla kategorií, bez kterých se zdroj nedá
+     filtrovat. Seznam PŘESNĚ na mezi je ještě krátký. */
+  const polozky = (n) => Array.from({ length: n }, (_, i) => ({ id: i }));
+  je('seznam přesně na mezi je ještě krátký', O.malySeznam(polozky(20), 20), true);
+  je('a o jeden delší už není', O.malySeznam(polozky(21), 20), false);
+  je('prázdný seznam není „krátký seznam" (nebylo by co vypsat)',
+    O.malySeznam([], 20), false);
+  je('a pole čísel taky ne (vypisují se záznamy, ne hodnoty)',
+    O.malySeznam([1, 2, 3], 20), false);
+
+  /* b) DVA NÁLEZY VEDLE SEBE. Po každém nálezu se pokračuje tam, kde
+     skončil; posunout se o znak víc smí JEN u prázdné shody, kde by
+     se to jinak zacyklilo. Posouvat se vždycky znamená přehlédnout
+     nález, který začíná hned za předchozím. */
+  const r = O.vypisNalezy('obecobec', 'obec');
+  je('dva nálezy těsně za sebou se najdou oba', r.length - 1, 2);
+  /* A pojistka proti zacyklení pořád drží: vzor, který umí prázdnou
+     shodu, musí doběhnout, ne zatuhnout. */
+  const prazdny = O.okoliNalezu('abc', /x*/, 5, 10);
+  pravda('vzor s prázdnou shodou doběhne a nezacyklí se',
+    Array.isArray(prazdny) && prazdny.length <= 5, JSON.stringify(prazdny));
+
+  /* c) VNOŘENÝ OBJEKT SE DO ŘÁDKU NEVYPISUJE. Bez té pojistky by se
+     do jednoho řádku vysypal celý vnořený JSON — a u odpovědi
+     s obrázkem v base64 by to byl log o stovkách kilobajtů. */
+  const radky = O.vypisSeznam('Categories', [
+    { id: 13, nazev: 'Pozemky', Subcategories: [{ id: 1, nazev: 'Lesy' }], meta: null },
+  ]);
+  const telo = radky.slice(1).join('\n');
+  pravda('do řádku jdou jen jednoduché hodnoty, ne vnořený objekt',
+    !/meta=/.test(telo) && !/Subcategories=/.test(telo), telo.slice(0, 200));
+  pravda('ale podseznam se vypíše jako vlastní seznam (jsou v něm ta čísla)',
+    radky.some((x) => /SEZNAM „Subcategories"/.test(x)), radky.join(' | ').slice(0, 200));
+
+  /* d) MEZ NA DÉLKU VÝPISU. Ptá se na ni modul, ne zkouška sama sebe:
+     tautologie „mez z modulu proti meze z modulu" se posune spolu
+     s kódem a sabotáž projde zeleně (lekce z §372). */
+  je('a výpis obsahu má mez 4 000 znaků (kvůli logu Actions)',
+    O.STROP_ZNAKU, 4000);
+}
+
 /* ---- 5) ŠETRNOST, KTERÁ SE NESMÍ VYTRATIT ---- */
 {
   const kod = readFileSync(new URL('./ohledej.mjs', import.meta.url), 'utf8');

@@ -23,7 +23,13 @@ import { smimeCist } from './robots.mjs';
 import { rozdelRadek } from './cti-nabidky-statu.mjs';
 const { stahni } = await import('./fetch-opportunities.mjs');
 
-const STROP_ZNAKU = 4000;     // kolik textu vypsat, ať log nenabobtná
+/* KOLIK TEXTU VYPSAT. Mez je proto, že výpis jde do logu Actions
+   a ten se při nabobtnání zkrátí — a zkrácený log je horší než
+   krátký, protože se v něm nepozná, že něco chybí. 4 000 znaků je
+   asi padesát řádků: dost na to, aby se poznal TVAR odpovědi, a málo
+   na to, aby se v tom utopila hlášení pod ním. Vyváží se: vystavuje
+   se, aby na tom mohl stát hlídač. */
+export const STROP_ZNAKU = 4000;
 const STROP_RADKU = 25;       // kolik řádků u řádkových formátů
 const PROHLIZECEM = process.argv.includes('--prohlizecem')
   || /^(1|ano|true)$/i.test(process.env.PROHLIZECEM || '');
