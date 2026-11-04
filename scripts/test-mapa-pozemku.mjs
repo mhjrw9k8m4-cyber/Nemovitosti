@@ -1531,7 +1531,7 @@ if (DRAZBA) {
   await p.waitForFunction(() => !!window.PK_PZ_MAPA, null, { timeout: 12000 }).catch(() => {});
   await p.waitForTimeout(800);
 
-  const stav = () => p.evaluate(() => {
+  const stav = () => p.evaluate(([CIL_LAT, CIL_LNG]) => {
     const m = window.PK_PZ_MAPA, b = document.getElementById('pzm-zpet');
     if (!m) return null;
     const c = m.getCenter(), r = b ? b.getBoundingClientRect() : null;
@@ -1560,8 +1560,26 @@ if (DRAZBA) {
       ramSir: mapaEl ? Math.round(mapaEl.getBoundingClientRect().width) : null,
       ramVys: mapaEl ? Math.round(mapaEl.getBoundingClientRect().height) : null,
       plVDom: b ? document.body.contains(b) : null,
-      zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni) };
-  });
+      zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni),
+      /* A TEĎ TO, CO SE PO PRVNÍM MĚŘENÍ UKÁZALO JAKO CHYBĚJÍCÍ.
+         CI 4. 11. vyloučila nulový rám, dvě mapy, běžící animaci
+         i nenačtený modul — tlačítko přesto zůstalo skryté. Zbývá
+         jediné vysvětlení, které se nedalo ověřit: že mapa je na jiném
+         přiblížení, než si zkouška myslí, a dvě setiny stupně se do
+         jejího záběru pořád vejdou. Tiskne se proto záběr a rovnou
+         i verdikt, který si web o něm dělá — tou samou cestou
+         (`pad(-0.12).contains`), aby se nedalo odhadovat. */
+      zab: (function () {
+        try {
+          var zb = m.getBounds();
+          var p = zb.pad(-0.12);
+          return { s: +zb.getSouth().toFixed(4), n: +zb.getNorth().toFixed(4),
+            w: +zb.getWest().toFixed(4), e: +zb.getEast().toFixed(4),
+            vidimDomov: p.contains(window.PK_PZ_MAPA_DOMOV
+              || [CIL_LAT, CIL_LNG]) };
+        } catch (e) { return { chyba: String(e && e.message || e) }; }
+      })() };
+  }, [CIL.d.lat, CIL.d.lng]);
 
   const doma = await stav();
   pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
@@ -1575,9 +1593,9 @@ if (DRAZBA) {
     await p.waitForTimeout(800);
     const pryc = await stav();
     pravda('po odjetí od pozemku se ukáže', pryc.skryte === false,
-      'zůstalo skryté — cesta zpátky zase není; ' + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}`);
+      'zůstalo skryté — cesta zpátky zase není; ' + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}, z=${pryc.zoom}, střed ${pryc.lat},${pryc.lng}, záběr ${pryc.zab && pryc.zab.s}–${pryc.zab && pryc.zab.n} × ${pryc.zab && pryc.zab.w}–${pryc.zab && pryc.zab.e}, web vidí domov: ${pryc.zab && pryc.zab.vidimDomov}`);
     pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44,
-      `${pryc.sirka}×${pryc.vyska} px; ` + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}`);
+      `${pryc.sirka}×${pryc.vyska} px; ` + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}, z=${pryc.zoom}, střed ${pryc.lat},${pryc.lng}, záběr ${pryc.zab && pryc.zab.s}–${pryc.zab && pryc.zab.n} × ${pryc.zab && pryc.zab.w}–${pryc.zab && pryc.zab.e}, web vidí domov: ${pryc.zab && pryc.zab.vidimDomov}`);
     /* A HLAVNĚ: JE VIDĚT, KDYŽ SE ČLOVĚK DÍVÁ NA MAPU.
        „V pruhu pod mapou je pořád na dohled" byla nedoložená věta.
        Tlačítko stálo v pruhu až ZA podkladem, vrstvami a tehdejším
@@ -1615,7 +1633,7 @@ if (DRAZBA) {
       Math.abs(zpet.lat - doma.lat) <= mez && Math.abs(zpet.lng - doma.lng) <= mezLng
       && zpet.zoom === doma.zoom,
       `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}; `
-      + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}`);
+      + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}, z=${doma.zoom}, střed ${doma.lat},${doma.lng}, záběr ${doma.zab && doma.zab.s}–${doma.zab && doma.zab.n} × ${doma.zab && doma.zab.w}–${doma.zab && doma.zab.e}, web vidí domov: ${doma.zab && doma.zab.vidimDomov}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}, z=${zpet.zoom}, střed ${zpet.lat},${zpet.lng}, záběr ${zpet.zab && zpet.zab.s}–${zpet.zab && zpet.zab.n} × ${zpet.zab && zpet.zab.w}–${zpet.zab && zpet.zab.e}, web vidí domov: ${zpet.zab && zpet.zab.vidimDomov}`);
     pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');
 
     /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
