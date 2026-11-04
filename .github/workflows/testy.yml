@@ -201,6 +201,9 @@ jobs:
       - name: ÚZSVM — a hlavně že se pacht nevydává za prodej
         run: node scripts/test-uzsvm.mjs
 
+      - name: Hledání nových zdrojů (rejstřík lokálních katalogů)
+        run: node scripts/test-hledej-zdroje.mjs
+
       - name: Zdroj mimo pořádek 3× v řadě se ozve (nezůstane zelený)
         run: node scripts/test-hlidka-zdroju.mjs
 

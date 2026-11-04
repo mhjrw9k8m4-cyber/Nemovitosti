@@ -23115,3 +23115,72 @@ se místem stala **spisová značka** a geokodér by ji hledal jako obec.
 **Čím je to podložené.** `test-uzsvm.mjs` 53 kontrol. Tři sabotáže,
 všechny s ověřeným diffem: místo před pomlčkou se nebere (2 pády),
 číslo spisu projde jako místo (1), pacht v celém popisu (3).
+
+## §370 — soustavné hledání zdrojů: čtyři zavřené dveře a jedny otevřené
+
+Zdroje se dosud hledaly tak, že jsem si na ně vzpomněl. Takový seznam
+končí u toho, co mě napadlo, a nikdo kromě mě ho neumí doplnit.
+Soustavné hledání musí stát na **rejstříku, který vede někdo jiný a
+který roste sám** — a tím je Národní katalog otevřených dat, kam stát,
+obce a města povinně hlásí, co zveřejňují.
+
+**Co se změřilo, a čtyři z pěti cest byly slepé.** Píšu to sem všechno,
+ať to po mně nikdo nezkouší znovu:
+
+| cesta | výsledek |
+|---|---|
+| `/sparql` (strojové rozhraní katalogu) | `Disallow: /sparql*` — zakázané |
+| `/zdroj/` (každý jednotlivý záznam, tedy i detail katalogu) | `Disallow: /zdroj/` — zakázané |
+| `/api/3/action/package_search` (rozhraní CKAN) | HTTP 404 — tenhle katalog CKAN není |
+| `/datové-sady?dotaz=…` (stránka hledání) | dovolená, ale seznam skládá až skript v prohlížeči: obyčejné stažení nenajde ani jeden odkaz na sadu |
+| `/lokální-katalogy` (seznam všech 66 registrovaných katalogů) | **dovolená a nese adresy** |
+
+Celý `robots.txt` data.gov.cz zakazuje právě a jen `/sparql*`, `/fct/`,
+`/describe/` a `/zdroj/`. Zbytek dovoluje. Zákaz je rozhodnutí toho
+webu, ne naše, a obchází se nijak.
+
+**Kde ta adresa na dovolené stránce je — a kde NENÍ.** U každého
+katalogu na ní stojí odkaz `…/lkod-validator?catalog=<adresa toho
+katalogu>`. Tedy přesně to, co potřebujeme — jenže **jako hodnota
+parametru, ne jako odkaz**. Čtečka postavená na `<a href>` by našla
+nula katalogů a hlásila by, že rejstřík je prázdný. A ve **obyčejně
+stažené** stránce `catalog=` není ani jednou (změřeno zvlášť); je až
+ve vykreslené.
+
+**Jak to tedy hledá.** Ze stránky seznamu se vyberou všechny cizí
+adresy — z textu i z parametrů — a každé se zvlášť položí otázka
+„jsi katalog otevřených dat?". Kdo odpoví podle normy (`typ: "Katalog"`
+nebo pole `datová_sada`), ten se prochází. **Nehádá se, které adresy
+jsou katalogy; změří se to.** Hostitelé, kteří tam jsou, ale katalog
+to není (validátor, rejstřík úřadů, formuláře, normy, licence,
+číselníky EU, měřidlo návštěvnosti), jsou vyjmenovaní z měření — ne aby
+se jejich odpověď ignorovala, ale aby se jich 60× zbytečně neptalo.
+
+**Tvar dat je taky změřený, ne vyčtený z normy.** Katalog Hradce
+Králové: `typ: "Katalog"`, `název.cs`, `domovská_stránka` a
+`datová_sada` jako **pole adres** — názvy sad v katalogu nejsou, na
+každou je jeden další dotaz. Jedna sada z něj: `distribuce` je pole
+objektů s `přístupové_url` a `soubor_ke_stažení`, a **obojí umí být
+prázdné** (tahle sada je zkušební záznam toho úřadu). Z prázdné
+distribuce nesmí vzniknout soubor s prázdnou adresou.
+
+**Slušnost.** `robots.txt` se čte u každého hostitele zvlášť a dřív,
+než se cokoli stáhne; mezi dotazy je pauza; na jeden katalog platí
+strop 40 sad a na celý běh strop 90 adres. Běží to raz za týden,
+nic nepublikuje a do nabídek nezasahuje.
+
+**Čím je to podložené.** `test-hledej-zdroje.mjs` 59 kontrol na
+skutečných odpovědích (běhy ohledání 41808644005, 41809363032,
+41809294977, 41809439047). Osm sabotáží, každá s ověřeným diffem:
+bez odkódování `catalog=` (4 pády), bez vyřazení infrastruktury (3),
+katalogem je cokoli (2), prázdná distribuce projde (1), známé zdroje
+se nevyhazují (6), zákaz se neřeší (1), přejmenovaná konstanta pauzy
+(1), zrušená pauza v druhé smyčce (1).
+
+**Co z toho ta sedmá sabotáž naučila.** Zkouška nejdřív pauzu hlídala
+jen tím, že v kódu hledala `await pauza(PAUZA_MEZI_DOTAZY)`. Po
+přejmenování té konstanty řádek v kódu zůstal, hledání by při běhu
+spadlo na nedefinované jméno — a zkouška byla zelená. Kontrola, která
+čte kód, musí mít k sobě **otázku na modul samotný** (je ta hodnota
+číslo a je kladná?), jinak měří text, ne chování. Je to §362 a §369
+ještě jednou, potřetí.

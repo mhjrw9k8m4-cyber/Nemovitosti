@@ -1,0 +1,56 @@
+name: Hledání zdrojů
+
+# Hledá nové zdroje pozemků tam, kde rejstřík vede někdo jiný a roste
+# sám: v lokálních katalogech otevřených dat. Obce, města a úřady je
+# povinně registrují na data.gov.cz; v každém z nich jsou datové sady
+# a mezi nimi může být „Prodej pozemků" od úřadu, o kterém se jinak
+# nikde nedočtu.
+#
+# NIC NEPUBLIKUJE A DO NABÍDEK NEZASAHUJE. Výsledek je seznam
+# kandidátů v data/nalezene-zdroje.json; co s ním, rozhoduje měření
+# sondou (robots, výtěžnost) a potom člověk.
+#
+# JEDNOU TÝDNĚ, NE DENNĚ. Rejstřík má dnes 66 katalogů a běh z nich
+# čte datové sady, takže to jsou stovky dotazů na cizí weby. Mezi
+# každými dvěma je pauza a robots.txt se čte u KAŽDÉHO hostitele
+# zvlášť — zákaz zastaví čtení, neobchází se.
+
+on:
+  schedule:
+    # Pondělí ve 5:23 UTC — po sondě zdrojů (4:37) a mimo čas robota
+    # dat (0, 6, 12, 18), ať si dvě úlohy nelezou do commitů.
+    - cron: '23 5 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write          # zakládá úkol, když úloha selže
+
+jobs:
+  hledani:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Projít rejstřík katalogů
+        run: node scripts/hledej-zdroje.mjs --zapis
+
+      - name: Commit nálezu (jen pokud se něco změnilo)
+        uses: ./.github/actions/commit-a-push
+        with:
+          zprava: "data: nález hledání zdrojů"
+          co: data/nalezene-zdroje.json
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Hledání zdrojů
+          co-to-znamena: >-
+            Nehledají se nové zdroje pozemků. Web tím hned netrpí, ale závislost na hrstce dnešních zdrojů se přestane snižovat.
