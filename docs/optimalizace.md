@@ -22752,3 +22752,53 @@ sabotáží: výpis pryč → 1 pád.
 nejsou povolení. Je to stav „nevíme", který robots.txt sice dovoluje,
 ale nic neslibuje — a rozhodnutí, jestli ÚZSVM zapojit, zůstává
 vlastníkovo. Fakta pro něj jsou teď kompletní a zapsaná.
+
+## §363 — zdroj může být tiše rozbitý týdny a běh zůstane zelený
+
+**Nalezeno čtením kódu, ne pádem.** Robot dat skončí chybou jen tehdy,
+když spadne `main()`. Zdroj, který je rozbitý a ani druhá cesta ho
+nezachrání, se obslouží „hezky": nabídky se podrží (§220), do logu jde
+`::error::` — a **běh je zelený**. Takže `if: failure()` nevystřelí,
+žádný úkol se nezaloží, a protože nabídky na webu dál jsou, nevypadá
+nic špatně.
+
+**A hned se to předvedlo naostro.** V témže běhu, kterým jsem zkoušel
+nový zdroj, stálo v logu `Zdroj Dražby SELHAL: null` — a běh skončil
+`success`. Nebylo to cvičení, bylo to ono.
+
+**Co se změnilo.** Robot si v `data/zdroje-historie.json` vede
+počítadlo, kolikátý běh v řadě je který zdroj mimo pořádek
+(`mimoProvoz`, verze historie 3 → 4). Zdroj v pořádku počítadlo
+vynuluje. Nová `scripts/hlidka-zdroju.mjs` ho přečte a při **třech
+bězích v řadě** (robot jede 4× denně, tedy necelý den) skončí červeně,
+takže se založí úkol s diagnózou.
+
+**`vypnuto` se nepočítá.** Zdroj bez klíče se ani nezkoušel a hlásit to
+denně by byl planý poplach, který se naučí přehlížet — a tím by se
+hlídka odzbrojila sama. „druhá cesta" taky ne: to je stav, kdy zdroj
+FUNGUJE, jen se čte jinak; právě k tomu ta cesta je.
+
+**Hlídka běží AŽ ZA COMMITEM, a to je na tom to podstatné.** Kdyby na
+tiše rozbitý zdroj skončil chybou krok „Stáhnout data", GitHub by
+přeskočil všechno za ním — tedy i commit. Den, kdy se zdroj pokazí, by
+byl i dnem, kdy se **zahodí všechno, co se stáhnout podařilo**, a kdy
+se nezapíše ani to počítadlo, podle kterého se příště pozná, že je to
+už potřetí. Hlídá to zkouška čtením pořadí kroků ve workflow.
+
+**Čím je to podložené.** `test-hlidka-zdroju.mjs` 17 kontrol, nová
+v rychlé sadě (144, bylo 143). Pět sabotáží: počítadlo se nezapisuje
+(1 pád), vypnutý zdroj se počítá (2), uzdravení počítadlo nemaže (3),
+nález nekončí červeně (1), hlídka běží před commitem (1).
+
+**Dvě věci, které jsem napsal špatně a zkoušky je vrátily.**
+
+První: hlídka při chybějícím počítadle hlásila „všechny zdroje
+v pořádku". To nezměřila — to jen nic nenašla, protože robot starší
+verze historie počítadlo nikdy nezapsal. **Tvrzení bez měření, tedy
+přesně ta vada, kterou má hlídat.** Teď říká „počítadlo zatím není".
+
+Druhá: sabotáž „zakomentuj `process.exitCode = 1`" prošla zeleně.
+Kontrola odřízla jen BLOKOVÉ komentáře, takže zakomentovaný řádek ten
+text pořád obsahoval. Je to **potřetí dnes táž past** (§358, §362):
+kontrola, která čte kód, musí číst kód, ne dokumentaci. Zapsáno sem
+potřetí v naději, že počtvrté si vzpomenu dřív.

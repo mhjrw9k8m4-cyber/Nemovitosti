@@ -77,11 +77,25 @@ const R2 = '109181,2026-11-03,"Povodí Labe, státní podnik",dbyt8g2,,,,Ministe
   je('výměra z popisu', S.vymeraZPopisu('lesní pozemek o výměře 463 m2 v k.ú.'), 463);
   je('s mezerou v tisících a s m²', S.vymeraZPopisu('o výměře 2 150 m²'), 2150);
   je('s desetinnou čárkou se zaokrouhlí', S.vymeraZPopisu('o výměře 1 234,6 m2'), 1235);
-  /* BERE SE POSLEDNÍ. Popis nejdřív cituje celou parcelu a teprve pak
-     oddělenou část, která se opravdu prodává — vzít první by znamenalo
-     nabídnout kus pole za cenu metru. */
-  je('ze dvou výměr se vezme ta poslední (oddělená část)',
-    S.vymeraZPopisu('p.č. 1053/1 o výměře 5 000 m2 oddělená jako 1053/3 o výměře 291 m2'), 291);
+  /* TVARY JSOU OPSANÉ ZE SKUTEČNÝCH POPISŮ, ne odhadnuté. */
+  je('bez „o" a v jiném pádu: „výměra 148 m2"',
+    S.vymeraZPopisu('Pozemek p.č. 1364/2 druh vodní plocha, výměra 148 m2'), 148);
+  je('se slovy mezi: „o celkové výměře cca 415,1 m2"',
+    S.vymeraZPopisu('v k.ú. České Budějovice 6 o celkové výměře cca 415,1 m2'), 415);
+  /* VÍC VÝMĚR SE SČÍTÁ — a tohle je oprava MÉ ÚVAHY, ne kódu.
+     Napsal jsem nejdřív „ber poslední" a postavil to na vymyšlené
+     fixtuře s oddělenou částí. Ve skutečných datech se oddělená část
+     uvádí s JEDNOU výměrou, kdežto dvě výměry znamenají dvě parcely
+     prodávané spolu. Brát poslední by u nich nabídlo 10 m² místo 48
+     a cena za metr by vyšla pětinásobná. */
+  je('dvě parcely v jedné položce se sečtou',
+    S.vymeraZPopisu('p.č. 2010/1 o výměře 38 m2 a p.č. 2010/2 o výměře 10 m2'), 48);
+  je('oddělená část má jednu výměru a bere se celá',
+    S.vymeraZPopisu('p.č. 1053/1 oddělená dle GP č. 337-212/2026 jako p.č. 1053/3 o výměře 291 m2'), 291);
+  /* A DIAGNÓZA, ať se příště neladí regulární výraz naslepo: je rozdíl
+     mezi „popis výměru neuvádí" a „uvádí a neumíme ji přečíst". */
+  je('popis bez metrů se pozná', S.zminujeMetry('Prodej pozemku v obci.'), false);
+  je('popis s metry taky', S.zminujeMetry('plocha 100 m2'), true);
   je('kde výměra není, vrátí se null', S.vymeraZPopisu('Prodej pozemku v obci.'), null);
   je('druh lesní', S.druhZPopisu('lesní pozemek o výměře 463 m2'), 'les');
   je('druh orná', S.druhZPopisu('pozemková parcela, orná půda, v obci'), 'orná půda');

@@ -110,17 +110,41 @@ export function mistoZKatastru(s) {
 }
 
 /* ---------- VÝMĚRA ------------------------------------------------
-   V popisu stojí „o výměře 463 m2" nebo „o výměře 1 234,5 m²".
-   Bere se POSLEDNÍ výskyt: popis někdy nejdřív cituje výměru celé
-   parcely a teprve pak oddělovanou část, která se opravdu prodává. */
+   TVARY JSOU OPSANÉ ZE SKUTEČNÝCH POPISŮ (ohledání 3. 11.), ne
+   odhadnuté:
+     „o výměře 463 m2"
+     „druh vodní plocha, výměra 148 m2"        ← bez „o", jiný pád
+     „o celkové výměře cca 415,1 m2"           ← slova mezi
+     „p.č. 2010/1 o výměře 38 m2 a p.č. 2010/2 o výměře 10 m2"
+
+   VÍC VÝMĚR SE SČÍTÁ. Napsal jsem to nejdřív obráceně — „ber
+   poslední" — a postavil to na VYMYŠLENÉ fixtuře, kde popis nejdřív
+   cituje celou parcelu a pak oddělenou část. Ve skutečných datech
+   takový popis není: oddělená část se uvádí s JEDNOU výměrou
+   („p.č. 1053/1 oddělená dle GP jako 1053/3 o výměře 291 m2"),
+   kdežto dvě výměry znamenají dvě parcely prodávané spolu. Brát
+   poslední by u nich nabídlo 10 m² místo 48 a cena za metr by vyšla
+   pětinásobná. Je to má chyba v úvaze, ne v kódu: vymyslel jsem si
+   případ a navrhl podle něj. */
+export const VYMERA_RE = /v[yý]m[eě][rř](?:e|a|y)\s*(?:[a-záčďéěíňóřšťúůýž]+\s+){0,2}?([\d\s\u00a0]+(?:[.,]\d+)?)\s*m\s*(?:2|²)/gi;
+
 export function vymeraZPopisu(s) {
   const t = String(s || '');
-  const re = /o\s*v[yý]m[eě][rř]e\s*([\d\s ]+(?:[.,]\d+)?)\s*m\s*(?:2|²)/gi;
-  let m, posledni = null;
-  while ((m = re.exec(t))) posledni = m[1];
-  if (posledni == null) return null;
-  const n = Number(String(posledni).replace(/[\s ]/g, '').replace(',', '.'));
-  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  VYMERA_RE.lastIndex = 0;
+  let m, soucet = 0, kusu = 0;
+  while ((m = VYMERA_RE.exec(t))) {
+    const n = Number(String(m[1]).replace(/[\s\u00a0]/g, '').replace(',', '.'));
+    if (Number.isFinite(n) && n > 0) { soucet += n; kusu++; }
+  }
+  return kusu ? Math.round(soucet) : null;
+}
+
+/* Diagnóza pro případ, že výměra nevyjde: je rozdíl mezi „popis žádnou
+   výměru neuvádí" (to nespraví žádná oprava čtečky) a „uvádí ji a my ji
+   neumíme přečíst" (to spravit jde). Bez tohohle rozlišení bych příště
+   zase ladil regulární výraz naslepo. */
+export function zminujeMetry(s) {
+  return /\d\s*m\s*(?:2|²)/i.test(String(s || ''));
 }
 
 /* ---------- DRUH --------------------------------------------------
@@ -178,7 +202,8 @@ export function polozkyZaznamu(z, strop = STROP_POLOZEK) {
 export function nabidkyZCsv(text, dnesISO) {
   const zaznamy = rozdelCsv(text);
   const nabidky = [];
-  const zahozeno = { nenipozemek: 0, bezMista: 0, bezCeny: 0, bezVymery: 0, prosle: 0, sBudovou: 0 };
+  const zahozeno = { nenipozemek: 0, bezMista: 0, bezCeny: 0, bezVymery: 0,
+    bezVymeryAleMetryTam: 0, prosle: 0, sBudovou: 0 };
   for (const z of zaznamy) {
     const platnostDo = (z.PLATNOST_DO || '').trim();
     if (dnesISO && /^\d{4}-\d{2}-\d{2}$/.test(platnostDo) && platnostDo < dnesISO) {
@@ -195,7 +220,11 @@ export function nabidkyZCsv(text, dnesISO) {
       const c = cena(p.cena);
       if (!c) { zahozeno.bezCeny++; continue; }
       const v = vymeraZPopisu(p.popis) || vymeraZPopisu(z.POPIS);
-      if (!v) { zahozeno.bezVymery++; continue; }
+      if (!v) {
+        zahozeno.bezVymery++;
+        if (zminujeMetry(p.popis) || zminujeMetry(z.POPIS)) zahozeno.bezVymeryAleMetryTam++;
+        continue;
+      }
       nabidky.push({
         type: 'sale',
         place: m.place,

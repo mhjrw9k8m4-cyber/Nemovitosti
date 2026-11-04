@@ -87,6 +87,16 @@ jobs:
       # po selhané noční úloze červená tečka v záložce Actions, kam se
       # nikdo nedívá. Zakládá jeden úkol na úlohu a další selhání k němu
       # jen připíše; sám nikdy nespadne, aby nepřebil tu první chybu.
+      # HLÍDKA AŽ TADY, ZA COMMITEM. Kdyby na tiše rozbitý zdroj skončil
+      # chybou krok „Stáhnout data", GitHub přeskočí všechno za ním —
+      # tedy i commit. Den, kdy se zdroj pokazí, by byl i dnem, kdy se
+      # zahodí všechno, co se stáhnout PODAŘILO, a kdy se nezapíše ani
+      # počítadlo, podle kterého se příště pozná, že je to už potřetí.
+      # Data jsou v téhle chvíli uložená; hlídka jen rozhodne o barvě
+      # běhu, a červená pak založí úkol krokem níž.
+      - name: Hlídka zdrojů (zdroj mimo pořádek 3× v řadě)
+        run: node scripts/hlidka-zdroju.mjs
+
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani

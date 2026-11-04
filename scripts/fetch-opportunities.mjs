@@ -1650,6 +1650,49 @@ export function porovnejSHistorii(historie, ted, dnes) {
 }
 
 /** Dnešní počty do historie; starší než HISTORIE_MAX dnů se zahodí. */
+/* ---------- ZDROJ, KTERÝ JE TIŠE ROZBITÝ -------------------------
+ * NALEZENO 3. 11. ČTENÍM KÓDU, ne pádem. Robot skončí chybou jen
+ * tehdy, když spadne `main()`. Zdroj, který je rozbitý a ani druhá
+ * cesta ho nezachrání, se obslouží „hezky": nabídky se podrží (§220),
+ * do logu jde `::error::` — a běh je ZELENÝ. Takže `if: failure()`
+ * nevystřelí, žádný úkol se nezaloží, a protože nabídky na webu dál
+ * jsou, nevypadá nic špatně. Zdroj může být tiše rozbitý týdny.
+ *
+ * Počítá se, KOLIKÁTÝ BĚH V ŘADĚ je zdroj mimo pořádek. Jeden výpadek
+ * je normální provoz cizího webu; tři po sobě (robot jede 4× denně,
+ * tedy necelý den) už ne.
+ *
+ * `vypnuto` se NEPOČÍTÁ: zdroj bez klíče se ani nezkoušel, a hlásit
+ * to denně by byl planý poplach, který se naučí přehlížet.
+ * „druhá cesta" se taky nepočítá — to je stav, kdy zdroj FUNGUJE,
+ * jen se čte jinak; právě proto ta cesta vznikla. */
+export const BEHU_NEZ_SE_OZVEME = 3;
+export const MIMO_SE_NEPOCITA = new Set(['ok', 'druhá cesta', 'vypnuto']);
+
+export function zapisMimoProvoz(predchozi, ted, kdy) {
+  const ven = {};
+  const bylo = (predchozi && predchozi.mimoProvoz) || {};
+  for (const z of (ted || [])) {
+    if (!z || !z.nazev) continue;
+    if (MIMO_SE_NEPOCITA.has(z.stav)) continue;      // v pořádku → počítadlo se maže
+    const d = bylo[z.nazev];
+    ven[z.nazev] = {
+      behu: ((d && +d.behu) || 0) + 1,
+      od: (d && d.od) || kdy,
+      stav: z.stav,
+      duvod: String((z.chyba || z.stav || '')).slice(0, 160),
+    };
+  }
+  return ven;
+}
+
+export function dlouhoMimo(mimoProvoz, mez = BEHU_NEZ_SE_OZVEME) {
+  return Object.entries(mimoProvoz || {})
+    .filter(([, d]) => d && +d.behu >= mez)
+    .map(([nazev, d]) => ({ nazev, behu: +d.behu, od: d.od, stav: d.stav, duvod: d.duvod }))
+    .sort((a, b) => b.behu - a.behu);
+}
+
 export function zapisDoHistorie(historie, ted, dnes, mediany) {
   const dny = Object.assign({}, (historie && historie.dny) || {});
   const ceny = Object.assign({}, (historie && historie.ceny) || {});
@@ -1669,6 +1712,7 @@ export function zapisDoHistorie(historie, ted, dnes, mediany) {
     dnesni[z.nazev] = z.stav === 'ok' ? pocet : { p: pocet, v: 1 };
   }
   dny[dnes] = dnesni;
+  const mimoProvoz = zapisMimoProvoz(historie, ted, dnes);
   /* CENY SE ZAPISUJÍ JEN ZA ZDROJ V POŘÁDKU. Den s označenou cenou by
      se jinak za pár dnů stal novou normou a hlídač by sám sebe
      odzbrojil — táž lekce jako u počtů výš. */
@@ -1682,7 +1726,7 @@ export function zapisDoHistorie(historie, ted, dnes, mediany) {
     const k = Object.keys(mapa).sort();
     for (const stary of k.slice(0, Math.max(0, k.length - HISTORIE_MAX))) delete mapa[stary];
   }
-  return { verze: 3, dny, ceny };
+  return { verze: 4, dny, ceny, mimoProvoz };
 }
 
 /* ZÁSTUPNÁ CENA. Inzerent, který cenu nechce psát, ji nenechá prázdnou —
