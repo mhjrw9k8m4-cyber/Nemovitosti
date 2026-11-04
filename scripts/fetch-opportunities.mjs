@@ -3195,11 +3195,24 @@ async function fetchNabidkyStatu() {
       + ' jakost dat, ale naše pravidlo: právě takhle zmizely dvě třetiny nového zdroje'
       + ' kvůli parcelnímu číslu, které je jen na přečtení (§365).');
   }
+  /* ÚČTOVÁNÍ POKRAČUJE I ZA SÍTEM. Nalezeno měřením 4. 11.: síto
+     nepustilo jen 3 z 33 nabídek nového zdroje, a na webu jich přesto
+     bylo 13. Sedmnáct nabídek tedy zmizelo v krocích ZA sítem —
+     v odstranění duplicit, dvojníků a zástupných cen — a ani u jednoho
+     z nich se nevědělo, čí nabídky to byly. Odhadovat se to nemá:
+     každý krok teď řekne, kolik komu vzal. */
+  const ubytky = new Map();
+  const ubralo = (krok, o) => {
+    const zdroj = zdrojNabidky(o, znamaJmena) || 'neznámý zdroj';
+    const z = ubytky.get(zdroj) || {};
+    z[krok] = (z[krok] || 0) + 1;
+    ubytky.set(zdroj, z);
+  };
   const podleInzeratu = raw
     .filter(valid)
     .filter((o) => {
       const k = (o.type + '|' + o.okres + '|' + (o._key || o.parcel)).toLowerCase();
-      if (seen.has(k)) return false;
+      if (seen.has(k)) { ubralo('duplicita', o); return false; }
       seen.add(k);
       return true;
     });
@@ -3222,6 +3235,14 @@ async function fetchNabidkyStatu() {
     console.error(`POZOR: u druhu „${druh}" by síto zástupných cen vyhodilo víc než`
       + ` ${STROP_VYHOZENI * 100} % nabídek, takže nevyhodilo nic. Podívejte se, jestli`
       + ' se u toho druhu nestahují ceny za jinou jednotku.');
+  }
+  for (const o of dvojnici) ubralo('dvojnik', o);
+  for (const o of zast.vyhozeno) ubralo('zastupnaCena', o);
+  for (const [zdroj, kroky] of ubytky) {
+    const souhrn = Object.entries(kroky).sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => k + ' ' + n).join(', ');
+    console.error(`Zdroj ${zdroj}: za sítem ubylo`
+      + ` ${Object.values(kroky).reduce((a, b) => a + b, 0)} nabídek — ${souhrn}.`);
   }
   const clean = zast.cisto.sort(byDeal);
 

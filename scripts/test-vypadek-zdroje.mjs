@@ -419,6 +419,17 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
     JSON.stringify(ztraty[0]));
   je('zdroj, který nestáhl nic, se nepočítá (nedělí se nulou)',
     F.zdrojeZtraceneVSitu([{ nazev: 'X', pocet: 0, nepustilo: 0 }]).length, 0);
+  /* A ÚČTUJE SE I ZA SÍTEM. Nalezeno měřením 4. 11.: síto nepustilo
+     jen 3 z 33 nabídek nového zdroje a na webu jich přesto bylo 13.
+     Sedmnáct zmizelo v krocích ZA sítem (duplicity, dvojníci, zástupné
+     ceny) a u žádného se nevědělo, čí nabídky to byly. */
+  pravda('duplicita, dvojník i zástupná cena se počítají po zdrojích',
+    /ubralo\('duplicita', o\)/.test(kod2)
+    && /for \(const o of dvojnici\) ubralo\('dvojnik', o\)/.test(kod2)
+    && /for \(const o of zast\.vyhozeno\) ubralo\('zastupnaCena', o\)/.test(kod2)
+    && /za sítem ubylo/.test(kod2),
+    'některý krok za sítem nehlásí, komu nabídku vzal');
+
   pravda('číslo jde do dat u každého zdroje, ne jen do logu',
     /z\.nepustilo = s \? s\.pocet : 0;/.test(kod2) && /zdrojeZtraceneVSitu\(zdroje\)/.test(kod2),
     'v main() chybí zápis `nepustilo` do stavu zdroje');
