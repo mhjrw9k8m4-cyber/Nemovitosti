@@ -155,8 +155,26 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
         await page.waitForLoadState('networkidle', { timeout: casLimit }).catch(() => {});
         const html = await page.content();
         const text = await page.evaluate(() => (document.body && document.body.innerText) || '');
+        /* ODKAZY NA VLASTNÍM WEBU. U aplikace, která si obsah dotahuje
+           sama, je tohle jediný způsob, jak zjistit, jak vypadá adresa
+           jedné nabídky — a bez té by nabídka na našem webu neměla kam
+           odkazovat. Bere se jen vlastní web a jen prvních pár tvarů,
+           ne celé menu. */
+        const odkazy = await page.evaluate(() => Array.from(document.querySelectorAll('a[href]'))
+          .map((a) => a.getAttribute('href') || '')
+          .filter((h) => h && !/^(#|mailto:|tel:|javascript:)/i.test(h))
+          .slice(0, 400));
+        /* Tvary adres: čísla se zahodí, ať je vidět VZOR, ne tři sta
+           konkrétních nabídek. `/detail/150921` → `/detail/<číslo>`. */
+        const vzory = new Map();
+        for (const h of odkazy) {
+          const vzor = h.replace(/\d{2,}/g, '<číslo>').replace(/[?&][^=]+=[^&]*/g, (m) => m.replace(/=[^&]*/, '=…'));
+          vzory.set(vzor, (vzory.get(vzor) || 0) + 1);
+        }
+        const tvaryOdkazu = [...vzory.entries()]
+          .sort((a, b) => b[1] - a[1]).slice(0, 15).map(([vzor, kolik]) => ({ vzor, kolik }));
         return {
-          html, text, zablokovano, cizich, datove,
+          html, text, zablokovano, cizich, datove, tvaryOdkazu,
           cizinci: nejcastejsi(cizinci), zakazane: nejcastejsi(zakazane),
         };
       } finally { await page.close().catch(() => {}); }

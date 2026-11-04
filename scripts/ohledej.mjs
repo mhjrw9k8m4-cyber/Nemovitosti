@@ -248,6 +248,10 @@ async function main() {
       console.log('CIZÍ HOSTITELÉ: ' + v.cizinci.map((c) => c.co + ' ×' + c.kolik).join(', '));
     }
     for (const r of vypisDatove(v.datove)) console.log(r);
+    if (v.tvaryOdkazu && v.tvaryOdkazu.length) {
+      console.log('TVARY ADRES NA TOMTO WEBU (čísla zaměněna za <číslo>):');
+      for (const t of v.tvaryOdkazu) console.log(`  ${t.kolik}×  ${t.vzor}`);
+    }
   } finally { await p.zavri(); }
 }
 
