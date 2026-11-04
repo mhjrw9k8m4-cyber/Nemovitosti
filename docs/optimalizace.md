@@ -24518,3 +24518,80 @@ Posun se proto dělá bez animace, čeká se na `moveend` a pak na stav,
 který má web ukázat (`waitForFunction` na `hidden`), a do hlášky se
 tiskne i to, jak přesun skončil. Stisk tlačítka má totéž z druhé
 strany. **Změřeno:** `test-mapa-pozemku` 166 kontrol, 0 chyb.
+
+## §399 — šest slepých míst, která našla smyčka, a jedno přiznání *4. 11.*
+
+Smyčka samorozvoje po §394–§397 proběhla **šest kol** a změřila
+**27 zkoušek** (předtím 3). Vydala dvě **pevná** obvinění — ten soubor
+hlídá jen ta jedna zkouška, takže mlčení není otázka výkladu:
+
+**`scripts/cenova-historie.mjs`: čtyři mutace bez následku.** Každá má
+teď fixturu, nad kterou je předem jasné, co má vyjít:
+
+* živá cena se stejným dnem jako poslední uzavřená se musí posunout na
+  konec toho období, jinak stojí v grafu dvě ceny na jednom dni
+  (`<=` → `<`);
+* období se řadí podle `od`, ne podle `do` — dvě období téže nabídky se
+  mohou překrývat a kdo je srovná podle `do`, **obrátí historii**:
+  zlevnění vypadá jako zdražení (`===` → `!==`);
+* řádek bez ceny nebo bez dne není bod; bez té pojistky se do grafu
+  dostane „zlevněno na 0 Kč" (zahozené `if … continue`);
+* prázdné `od` nesmí určit začátek pozorování, jinak `zacatekVidet`
+  spadne na false a web přestane přiznávat, že vznik nabídky neviděl
+  (zahozený `.filter(Boolean)`).
+
+`test-cenova-historie`: 49 → **53 kontroly**.
+
+**`scripts/bloky.mjs`: jedna pravá vada v hlídání.** Shluky se počítají
+po přihrádkách 0,005° a hledá se v devíti sousedních; mutace `da <= 1`
+na `da < 1` přestane koukat o přihrádku dál a dvě nabídky **22 m od
+sebe** přes hranici přihrádky se rozpadnou do dvou shluků. Všechny
+dosavadní fixtury ležely uvnitř jedné přihrádky, takže mlčely. Nové
+hranici překračují schválně (49,6999 → 9939, 49,7001 → 9940) a měří
+obě osy. `test-bloky`: 16 → **19 kontrol**.
+
+**A jedno přiznání.** Druhá mutace v `bloky.mjs` je **rovnocenná** a je
+to u kódu napsané s důvodem: bez `if (j <= i) continue` se každá
+dvojice prohledá dvakrát, ale výsledné rozdělení do shluků je totéž
+(sjednocení téže množiny hran). Je to pojistka na čas, ne na výsledek —
+žádná zkouška ji chytit nemůže a vydávat to za slepé místo by byla
+nepravda.
+
+**Prokázáno sabotáží po opravě:** `test-bloky` 4 chycené + 1
+rovnocenná, `test-cenova-historie` 5 chycených z 5. Dvě zbylé mlčení
+jsou v půjčených modulech, které mají vlastní zkoušku — a tam stroj od
+§397 nekřičí, zapisuje je do soupisu po souborech.
+
+## §400 — bot obešel osm portálů, 264 cest, a odpověď je „ne" *4. 11.*
+
+Bot zkoušení portálů běžel naostro ze Actions na všech kandidátech
+z registru: **8 portálů, 264 dotazů, 29 tvarů adres**. Výsledek:
+
+| portál | nabídky | slibné | chce klíč | odpověděly | zavřené |
+|---|---|---|---|---|---|
+| edesky.cz | 0 | 0 | **1** | 1 | 28 |
+| vls.cz | 0 | 0 | 0 | 1 | 29 |
+| isir.justice.cz | 0 | 0 | 0 | 0 | 30 |
+| atom.cuzk.gov.cz | 0 | 0 | 0 | 2 | 29 |
+| opendata.praha.eu | 0 | 0 | 0 | 30 | 0 |
+| data.gov.cz | 0 | 0 | 0 | 10 | 28 |
+| opendata.plzen.eu | 0 | 0 | 0 | 1 | 29 |
+| opendata.mesto-most.cz | 0 | **1** | 0 | 24 | 20 |
+
+**Portálů se čitelnými nabídkami: 0.** Není to porucha bota, je to
+odpověď: tyhle portály dnes nabídky strojově čitelně nevystavují.
+Dvě věci z toho ale plynou:
+
+1. **eDesky chtějí klíč** a řeknou to samy: „Chyba: nepřihlášen.
+   Použijte svůj API klíč." Bot dál nemůže — účet a klíč jsou na
+   majiteli (rozhodnutí leží v `docs/pro-majitele.md`, oddíl 7e).
+2. **Jedna slibná cesta** byla katalog otevřených dat města Mostu
+   (`https://opendata.mesto-most.cz/data.json`).
+   Ohledání ji přečetlo: 360 675 znaků DCAT katalogu, 40 datových sad
+   — ale jsou to geografické vrstvy města (sčítače dopravy, zeleň,
+   pasporty), ani jedna nenese nabídku pozemku. Zapsáno do registru
+   kandidátů jako změřené „ne", aby se to nezkoušelo znovu.
+
+A jedna věc, kterou tohle měření ukázalo o nás: **kandidátů je osm.**
+Bot umí vyzkoušet všechny cesty, ale jen na portálech, které někdo do
+registru napsal. Úzké místo už není bot, je to zásoba kandidátů.

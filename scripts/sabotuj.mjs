@@ -226,11 +226,12 @@ export function jeProhlizecova(teloZkousky) {
    nejvyšší nalezená složka chromium-<číslo>. Když se nenajde nic,
    nevrací se nic a rozhodne se o tom výš (viz NELZE TADY). */
 export const SLOZKA_PROHLIZECU = '/opt/pw-browsers';
-export function prohlizecNaStroji({ je = existsSync, slozka = SLOZKA_PROHLIZECU } = {}) {
+export function prohlizecNaStroji({ je = existsSync, slozka = SLOZKA_PROHLIZECU,
+  vypis = readdirSync } = {}) {
   const zEnv = String(process.env.PW_CHROMIUM || '');
   if (zEnv && je(zEnv)) return zEnv;
   let jmena = [];
-  try { jmena = readdirSync(slozka); } catch { return ''; }
+  try { jmena = vypis(slozka); } catch { return ''; }
   const verze = jmena
     .map((d) => /^chromium-(\d+)$/.exec(String(d)))
     .filter(Boolean)
@@ -604,6 +605,12 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
     nedorucene };
 }
 
+/* Česká čísla i ve výpisu stroje: „2 zkoušek" se nepíše. */
+export function mnozneZkousky(n) {
+  const k = Math.abs(Number(n) || 0);
+  if (k === 1) return 'zkouška';
+  return (k >= 2 && k <= 4) ? 'zkoušky' : 'zkoušek';
+}
 export function hlaseniProkazu(v) {
   if (!v) return [];
   if (v.chyba) return [`${v.zkouska}: ${v.chyba}`];
@@ -632,8 +639,23 @@ export function hlaseniProkazu(v) {
     radky.push(`  ${v.nedorucene} sabotáží se k prohlížeči nedostalo (minifikovaná kopie se`
       + ' nepřestavuje) — ani důkaz, ani slepé místo.');
   }
-  if (v.nechytila) {
-    radky.push(`  SLEPÉ MÍSTO: ${v.nechytila} sabotáží zkouška nechytila — a to je nález o zkoušce.`);
+  /* A TÁŽ VĚTA SE MUSÍ ROZDĚLIT PODLE TOHO, CO O NÍ VÍME (§397):
+     „slepé místo" je pevné obvinění jen tam, kde ten soubor nehlídá
+     nikdo jiný. U půjčeného modulu, který má vlastní zkoušku, je to
+     zatím jen mlčení a rozhodne se po souborech. */
+  const pevna = (v.sabotaze || []).filter((s) => s.stav === 'NECHYTILA'
+    && !(s.hlidajiJeste || []).length);
+  const mlceni = (v.sabotaze || []).filter((s) => s.stav === 'NECHYTILA'
+    && (s.hlidajiJeste || []).length);
+  if (pevna.length) {
+    radky.push(`  SLEPÉ MÍSTO: ${pevna.length} sabotáží zkouška nechytila`
+      + ' — a ten soubor nehlídá nikdo jiný, takže je to nález o téhle zkoušce.');
+  }
+  for (const s of mlceni) {
+    radky.push(`  MLČENÍ: ${s.jmeno} v ${s.cil} nechytila, ale týž soubor hlídá`
+      + ` ještě ${s.hlidajiJeste.length} ${mnozneZkousky(s.hlidajiJeste.length)}`
+      + ` (${s.hlidajiJeste.slice(0, 3).join(', ')})`
+      + ' — zapsáno do soupisu po souborech, nález vznikne, až mlčí druhá.');
   }
   return radky;
 }

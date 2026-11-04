@@ -500,24 +500,29 @@ function je(popis, vyslo, cekano) {
      aby zkouška měřila pravidlo, ne tenhle stroj. */
   const je = (c) => /^\/opt\/pw-browsers\/chromium-(1194|980)\/chrome-linux\/chrome$/.test(c);
   const slozka = '/opt/pw-browsers';
+  /* VÝPIS SLOŽKY SE TAKY PODSTRKUJE. Naměřeno v CI 4. 11.: bez toho
+     tyhle kontroly čtou SKUTEČNOU /opt/pw-browsers — na stroji, kde
+     se vyvíjí, tam Chromium je, v rychlé úloze CI není, a zkouška
+     spadla na tom, že měřila stroj, ne pravidlo. */
+  const vypis = () => ['chromium_headless_shell-1148', 'chromium-980', 'chromium-1194', 'ffmpeg-1011'];
   const puvodni = process.env.PW_CHROMIUM;
   delete process.env.PW_CHROMIUM;
   je('nenajde-li se nic, nevrací se nic',
-    S.prohlizecNaStroji({ je: () => false, slozka: '/nic/takoveho' }), '');
+    S.prohlizecNaStroji({ je: () => false, slozka: '/nic/takoveho', vypis: () => { throw new Error('není'); } }), '');
   /* A TOHLE JE TA VADA: nejvyšší verze, ne první v abecedě. Kdyby se
      bralo, co přijde, vrátí stroj chromium-980 (v abecedě dřív) a
      spuštění skončí stejnou hláškou jako bez hledání. */
   pravda('bere se nejvyšší nalezená verze Chromia',
-    S.prohlizecNaStroji({ je, slozka }) === slozka + '/chromium-1194/chrome-linux/chrome',
-    'vyšlo ' + S.prohlizecNaStroji({ je, slozka }));
+    S.prohlizecNaStroji({ je, slozka, vypis }) === slozka + '/chromium-1194/chrome-linux/chrome',
+    'vyšlo ' + S.prohlizecNaStroji({ je, slozka, vypis }));
   /* PW_CHROMIUM z prostředí má přednost — tím se v CI předává cesta,
      kterou si stroj sám nenajde. Ale jen když ta cesta existuje: mrtvá
      hodnota v prostředí nesmí zastínit prohlížeč, který na stroji je. */
   process.env.PW_CHROMIUM = '/jina/cesta/chrome';
   je('nastavené PW_CHROMIUM má přednost',
-    S.prohlizecNaStroji({ je: (c) => c === '/jina/cesta/chrome', slozka }), '/jina/cesta/chrome');
+    S.prohlizecNaStroji({ je: (c) => c === '/jina/cesta/chrome', slozka, vypis }), '/jina/cesta/chrome');
   je('mrtvé PW_CHROMIUM se přeskočí a hledá se dál',
-    S.prohlizecNaStroji({ je, slozka }), slozka + '/chromium-1194/chrome-linux/chrome');
+    S.prohlizecNaStroji({ je, slozka, vypis }), slozka + '/chromium-1194/chrome-linux/chrome');
   if (puvodni === undefined) delete process.env.PW_CHROMIUM;
   else process.env.PW_CHROMIUM = puvodni;
 
@@ -801,6 +806,26 @@ function je(popis, vyslo, cekano) {
   const kodB = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
   pravda('a stroj to k nechycené sabotáži opravdu přiloží',
     /hlidajiJeste = stav === 'NECHYTILA'/.test(kodB));
+}
+
+/* ---- 15) HLÁŠENÍ MUSÍ ŘÍKAT TOTÉŽ CO ÚČET -------------------- */
+{
+  const v = { zkouska: 'test-a.mjs', hlidá: ['x'], chytila: 0, nechytila: 2, sabotaze: [
+    { cil: 'scripts/' + 'jen-moje.mjs', jmeno: 'm1', stav: 'NECHYTILA', hlidajiJeste: [] },
+    { cil: 'js/main.js', jmeno: 'm2', stav: 'NECHYTILA', hlidajiJeste: ['test-x.mjs', 'test-y.mjs'] },
+  ] };
+  const r = S.hlaseniProkazu(v).join('\n');
+  pravda('o pevném slepém místě se mluví jako o nálezu o zkoušce',
+    /SLEPÉ MÍSTO: 1 sabotáží zkouška nechytila/.test(r) && /nehlídá nikdo jiný/.test(r), r);
+  pravda('a o mlčení u souboru s víc hlídači jako o mlčení',
+    /MLČENÍ: m2 v js\/main\.js/.test(r) && /až mlčí druhá/.test(r), r);
+  pravda('počet hlídačů se neplete do „2 zkoušek"',
+    /ještě 2 zkoušky \(test-x\.mjs, test-y\.mjs\)/.test(r), r);
+  je('a množné číslo drží i na hranicích',
+    [1, 2, 4, 5, 0].map(S.mnozneZkousky),
+    ['zkouška', 'zkoušky', 'zkoušky', 'zkoušek', 'zkoušek']);
+  pravda('a pevné slepé místo se za mlčení nevydává',
+    !/MLČENÍ: m1/.test(r), r);
 }
 
 console.log('Samorozvoj — nálezce, sabotážní stroj a smyčka');

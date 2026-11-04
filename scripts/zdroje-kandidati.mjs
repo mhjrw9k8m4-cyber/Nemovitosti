@@ -155,6 +155,17 @@ export const KANDIDATI = [
       + ' web (Disallow: /), takže se nestahuje nic a nic se nezkouší dál. Rozhodnutí'
       + ' patří tomu webu, ne nám.' },
 
+  { jmeno: 'Otevřená data města Mostu', host: 'opendata.mesto-most.cz',
+    typ: 'prodej', adresaOverena: false,
+    zavreno: 'katalog čitelný, ale nabídky pozemků v něm nejsou (změřeno 4. 11.)',
+    url: 'https://opendata.mesto-most.cz/data.json',
+    proc: 'Bot zkoušení portálů 4. 11. našel tuhle cestu jako jedinou „slibnou" ze 264'
+      + ' zkoušených (DCAT katalog, strojový tvar, mluví o pozemcích i o převodu).'
+      + ' ZMĚŘENO ohledáním: robots.txt dovoluje, odpověď 200, 360 675 znaků JSON,'
+      + ' 40 datových sad — ale jsou to geografické vrstvy města (sčítače dopravy,'
+      + ' zeleň, pasporty). Ani jedna sada nenese nabídku pozemku k prodeji, takže'
+      + ' zdroj to není. Zapsáno proto, aby se to nezkoušelo znovu.' },
+
   { jmeno: 'Insolvenční rejstřík', host: 'isir.justice.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://isir.justice.cz/',
     proc: 'Zpeněžení majetku v insolvenci se zveřejňuje ze zákona. Je to druh nabídky,'
