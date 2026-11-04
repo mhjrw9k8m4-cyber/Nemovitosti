@@ -62,8 +62,14 @@ export function zdrojeNaWebu(data) {
     const naWebu = publikovano.get(jmeno) || 0;
     const sito = Number(z.nepustilo) || 0;
     /* Co se dá vysvětlit: síto (s důvodem) a kroky za sítem. Zbytek
-       je nevysvětlený úbytek — a ten je nález. */
-    const vysvetleno = sito;
+       je nevysvětlený úbytek — a ten je nález.
+       KROKY ZA SÍTEM SE AŽ DO 4. 11. NEPOČÍTALY a nálezce proto hlásil
+       úbytek i tam, kde byl celý vysvětlený: zdroj Dražby stáhl 45,
+       na webu 20, síto 6 — a devatenáct chybějících byly proběhlé
+       dražby, které robot vyhazuje právem. Teď to robot počítá komu
+       (`zaSitem`), takže nálezce nehádá. */
+    const zaSitem = Number(z.zaSitem) || 0;
+    const vysvetleno = sito + zaSitem;
     const nevysvetleno = Math.max(0, stazeno - naWebu - vysvetleno);
     if (stazeno > 0 && naWebu === 0) {
       ven.push(nalez(`zdroj ${jmeno} nedává na web nic`, 'kód', 3,
@@ -73,7 +79,8 @@ export function zdrojeNaWebu(data) {
     }
     if (stazeno >= 20 && nevysvetleno / stazeno > MEZ_NEVYSVETLENE) {
       ven.push(nalez(`zdroj ${jmeno}: nevysvětlený úbytek`, 'kód', 2,
-        `stáhl ${stazeno}, na webu ${naWebu}, síto ${sito}, bez jména ${nevysvetleno}`,
+        `stáhl ${stazeno}, na webu ${naWebu}, síto ${sito}, za sítem ${zaSitem}`
+        + ` (${z.zaSitemDuvod || 'bez rozpisu'}), bez jména ${nevysvetleno}`,
         'Každý krok, který nabídku zahodí, se má jmenovat a počítat (§366).'));
     }
   }

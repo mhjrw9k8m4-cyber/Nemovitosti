@@ -38,6 +38,7 @@ function je(popis, vyslo, cekano) {
 }
 const U = (p) => new URL('../' + p, import.meta.url);
 const F = await import('./fetch-opportunities.mjs');
+const N = await import('./nalezce.mjs');
 const kod = readFileSync(U('scripts/fetch-opportunities.mjs'), 'utf8');
 const data = JSON.parse(readFileSync(U('data/opportunities.json'), 'utf8'));
 const DNES = '2026-11-02';
@@ -433,6 +434,52 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   pravda('číslo jde do dat u každého zdroje, ne jen do logu',
     /z\.nepustilo = s \? s\.pocet : 0;/.test(kod2) && /zdrojeZtraceneVSitu\(zdroje\)/.test(kod2),
     'v main() chybí zápis `nepustilo` do stavu zdroje');
+
+  /* A TŘI KROKY ÚPLNĚ NA KONCI. Nalezeno smyčkou sebevývoje 4. 11.:
+     zdroj Dražby stáhl 45 nabídek, síto nepustilo 6 a na webu jich bylo
+     20 — tedy 19 beze jména. Účet končil u zástupných cen, ale za nimi
+     byly ještě tři kroky, které se nepočítaly vůbec: proběhlá dražba
+     (ta vysvětlila všech devatenáct), strop na druh a vyvážený výběr
+     prodejů. */
+  pravda('proběhlá dražba, strop druhu i vyvážený výběr se počítají po zdrojích',
+    /ubralo\('drazbaProbehla', o\)/.test(kod2)
+    && /ubralo\('stropDruhu', o\)/.test(kod2)
+    && /ubralo\('vyvazenyVyber', o\)/.test(kod2),
+    'některý z posledních tří kroků nehlásí, komu nabídku vzal');
+  pravda('a účtuje se až POTOM, co všechny tři proběhly',
+    kod2.indexOf("ubralo('vyvazenyVyber'") < kod2.indexOf('za sítem ubylo')
+    && kod2.indexOf("ubralo('drazbaProbehla'") < kod2.indexOf('za sítem ubylo'),
+    'hlášení úbytků stojí v kódu dřív než kroky, které ubírají — počítalo by nulu');
+  pravda('a součet za sítem jde do dat zdroje (z.zaSitem)',
+    /z\.zaSitem = kroky \?/.test(kod2) && /z\.zaSitemDuvod = kroky/.test(kod2),
+    'v main() chybí zápis `zaSitem` do stavu zdroje — nálezce by hádal');
+}
+
+/* ---- A NÁLEZCE TO MUSÍ UMĚT PŘEČÍST -----------------------------
+ *
+ * Bez toho by robot počítal a nálezce přesto hlásil úbytek: přesně to
+ * se stalo 4. 11. u zdroje Dražby (stáhl 45, na webu 20, síto 6).
+ */
+{
+  const dvacet = Array.from({ length: 20 }, () => ({ zdroj: 'Dražby' }));
+  const sUctem = N.zdrojeNaWebu({ opportunities: dvacet, sources: [
+    { nazev: 'Dražby', stav: 'pokles', pocet: 45, nepustilo: 6, zaSitem: 19,
+      zaSitemDuvod: 'drazbaProbehla 19' },
+  ] });
+  je('vysvětlený úbytek už nálezce nehlásí', sUctem.length, 0);
+  const bezUctu = N.zdrojeNaWebu({ opportunities: dvacet, sources: [
+    { nazev: 'Dražby', stav: 'pokles', pocet: 45, nepustilo: 6 },
+  ] });
+  je('a nevysvětlený pořád ano', bezUctu.length, 1);
+  pravda('a v důkazu je i rozpis kroků za sítem',
+    /za sítem/.test((bezUctu[0] || {}).dukaz || ''), (bezUctu[0] || {}).dukaz);
+  /* A POZOR NA PŘESTŘELENÍ: kdyby se za sítem počítalo víc, než kolik
+     vůbec ubylo, nesmí z toho vyjít záporné číslo ani ticho o zdroji,
+     který opravdu nedává nic. */
+  je('zdroj, který nedává nic, se hlásí i s účtem za sítem',
+    N.zdrojeNaWebu({ opportunities: [], sources: [
+      { nazev: 'X', stav: 'ok', pocet: 30, nepustilo: 2, zaSitem: 28 },
+    ] }).length, 1);
 }
 
 console.log('Výpadek zdroje:');

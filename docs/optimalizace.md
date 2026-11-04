@@ -24117,3 +24117,41 @@ nikdy nedostane (prohlížeč + minifikovaná kopie), se v nálezech jmenuje
 neprokázal" a nikdy by neuspěla. Jejich důkaz zůstává na člověku — a dá
 se udělat: opravit, změřit, že hlídač na starém kódu padal, a pak že na
 opraveném prochází. Tak vznikl §382.
+
+## §388 — devatenáct dražeb zmizelo beze jména: účet končil tři kroky dřív *4. 11.*
+
+**Tohle našla smyčka sebevývoje sama**, při běhu, který jsem spustil
+jen abych se podíval, co říká: *„zdroj Dražby: nevysvětlený úbytek —
+stáhl 45, na webu 20, síto 6, bez jména 19."*
+
+Účtování úbytků (§366, §371) sahalo do **zástupných cen** a tam
+končilo. Za ním byly ještě **tři kroky, které nikdo nepočítal**:
+
+1. **proběhlá dražba** — termín v minulosti, robot ji právem vyhodí
+   (`jesteBezi`);
+2. **strop na druh** — `CAP` na dražby, exekuce a obec;
+3. **vyvážený výběr prodejů** — aby jeden zdroj nezaplavil mapu.
+
+První z nich vysvětlil **všech devatenáct**. Robot je vyhazoval
+správně, jen o tom mlčel — a protože mlčel, hlásil nálezce vadu tam,
+kde vada není. To je **falešný poplach vyrobený neúplným účtem**, a je
+horší než ticho: učí člověka přestat se po nálezech dívat.
+
+**Opraveno:** všechny tři kroky teď hlásí **komu** nabídku vzaly, účtuje
+se až poté, co proběhly (dřív by hlášení počítalo nulu), a součet jde
+**do dat** jako `zaSitem` + `zaSitemDuvod` — ne jen do logu, který po
+běhu zmizí. Nálezce ho čte a vysvětlený úbytek už nehlásí; v důkazu je
+navíc rozpis, takže je vidět, **čím** je vysvětlený.
+
+Prokázáno obojím směrem: s účtem **0 nálezů**, bez účtu **1** se větou
+„stáhl 45, na webu 20, síto 6, za sítem 0 (bez rozpisu), bez jména 19".
+A zvlášť se hlídá, že se účtuje až na konci — kdyby hlášení stálo
+v kódu dřív než kroky, které ubírají, počítalo by samé nuly a vypadalo
+by to zdravě.
+
+`test-vypadek-zdroje`: 74 → **84 kontrol**.
+
+**Poučení:** smyčka, která si sama hledá práci, našla vadu v tom, jak si
+sama měří. Účet, který nekončí tam, kde končí zpracování, **vyrábí
+nálezy z vlastní nevědomosti** — a to je přesně ten druh chyby, kterou
+by se jinak nikdo neobtěžoval hledat, protože „nálezce přece hlásí".

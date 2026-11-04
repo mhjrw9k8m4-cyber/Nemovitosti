@@ -3407,12 +3407,6 @@ async function fetchNabidkyStatu() {
   }
   for (const o of dvojnici) ubralo('dvojnik', o);
   for (const o of zast.vyhozeno) ubralo('zastupnaCena', o);
-  for (const [zdroj, kroky] of ubytky) {
-    const souhrn = Object.entries(kroky).sort((a, b) => b[1] - a[1])
-      .map(([k, n]) => k + ' ' + n).join(', ');
-    console.error(`Zdroj ${zdroj}: za sítem ubylo`
-      + ` ${Object.values(kroky).reduce((a, b) => a + b, 0)} nabídek — ${souhrn}.`);
-  }
   const clean = zast.cisto.sort(byDeal);
 
   // Vyvážený výběr — ať žádná kategorie nepřeváží (jinak by stovky prodejů
@@ -3441,6 +3435,39 @@ async function fetchNabidkyStatu() {
   const exekuce = (byType.exekuce || []).filter(jesteBezi);
   const vyprsele = ((byType.drazba || []).length - drazby.length) + ((byType.exekuce || []).length - exekuce.length);
   if (vyprsele) console.log(`Vynecháno ${vyprsele} dražeb/exekucí s termínem v minulosti.`);
+
+  /* A TEĎ TY POSLEDNÍ TŘI KROKY DO ÚČTU. Nalezeno smyčkou sebevývoje
+     4. 11.: zdroj Dražby stáhl 45 nabídek, síto nepustilo 6 a na webu
+     jich bylo 20 — tedy 19 zmizelo beze jména. Účet končil u duplicit,
+     dvojníků a zástupných cen, ale tři kroky za nimi se nepočítaly
+     vůbec: proběhlá dražba, strop na druh a vyvážený výběr prodejů.
+     První z nich těch devatenáct vysvětlil celý.
+     Je to §366 doslova: každý krok, který nabídku zahodí, se má
+     jmenovat a počítat — a počítat KOMU, jinak se u zdroje nepozná,
+     jestli ubývá právem. */
+  for (const o of (byType.drazba || [])) if (!jesteBezi(o)) ubralo('drazbaProbehla', o);
+  for (const o of (byType.exekuce || [])) if (!jesteBezi(o)) ubralo('drazbaProbehla', o);
+  for (const o of drazby.slice(CAP.drazba)) ubralo('stropDruhu', o);
+  for (const o of exekuce.slice(CAP.exekuce)) ubralo('stropDruhu', o);
+  for (const o of (byType.obec || []).slice(CAP.obec)) ubralo('stropDruhu', o);
+  const vybraneProdeje = new Set(saleSel);
+  for (const o of sale) if (!vybraneProdeje.has(o)) ubralo('vyvazenyVyber', o);
+  for (const [zdroj, kroky] of ubytky) {
+    const souhrn = Object.entries(kroky).sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => k + ' ' + n).join(', ');
+    console.error(`Zdroj ${zdroj}: za sítem ubylo`
+      + ` ${Object.values(kroky).reduce((a, b) => a + b, 0)} nabídek — ${souhrn}.`);
+  }
+  /* A DO DAT, ne jen do logu — ze stejného důvodu jako u sítě výš:
+     log po běhu zmizí, kdežto podle tohohle čísla pozná nálezce
+     (scripts/nalezce.mjs), jestli je úbytek vysvětlený. */
+  for (const z of zdroje) {
+    const kroky = ubytky.get(z.nazev);
+    z.zaSitem = kroky ? Object.values(kroky).reduce((a, b) => a + b, 0) : 0;
+    z.zaSitemDuvod = kroky
+      ? Object.entries(kroky).sort((a, b) => b[1] - a[1]).map(([k, n]) => k + ' ' + n).join(', ')
+      : null;
+  }
 
   const fresh = [
     ...saleSel,
