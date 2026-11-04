@@ -237,6 +237,90 @@ je('stejný den je nula', dny('2026-05-05', '2026-05-05'), 0);
   je('H: a okresy jsou seřazené podle počtu', sHodne.zlevneni.okresy, [['Kolín', MIN_ZMEN]]);
 }
 
+/* ---- I) PĚT SLEPÝCH MÍST, KTERÁ NAŠEL SABOTÁŽNÍ STROJ ----
+ *
+ * Nález ze 4. 11.: tahle zkouška nechytila ani jednu z pěti
+ * mechanických sabotáží v `archiv-statistiky.mjs` — obrácené `>=`,
+ * obrácené `<=`, obrácenou rovnost v řadicí funkci, zahozenou
+ * pojistku `if (r.proc !== 'cena') continue;` ani zrušený
+ * `filter(Boolean)`. Chytila jen záměnu `&&` za `||`. Zkouška přitom
+ * měla osm oddílů; měřily ale vždycky VNITŘEK kohorty, nikdy její
+ * HRANU. A chyba o jeden den je přesně to, co se v statistice stane.
+ *
+ * Každá kontrola níž je proto na hraně: nabídka stará přesně N dní,
+ * nabídka, která zmizela přesně N. den, a řádek s prázdným `od`.
+ */
+{
+  /* Trh, kde JE hrana. `zacatek` je nejstarší řádek (ten se do kohort
+     schválně nepočítá — před ním jsme se nedívali), `bezOd` je řádek
+     s prázdným datem a stovka nabídek vznikla PŘESNĚ 7 dní před
+     dneškem a zmizela PŘESNĚ dnes. */
+  const DNES_I = '2026-03-01';
+  const uz = [
+    { k: 'zacatek', od: '2026-01-01', do: '2026-01-05', proc: 'zmizela' },
+    { k: 'bezOd', od: '', do: '2026-02-01', proc: 'zmizela' },
+    ...zmizele(MIN_KOHORTA, '2026-02-22', DNES_I),
+  ];
+  const sI = statistiky(uz, { nabidky: {} }, DNES_I);
+  /* Okno se měří od nejstaršího ZNÁMÉHO data. Bez `filter(Boolean)`
+     by prázdné `od` vyhrálo řazení, okno by vyšlo NaN dní a do kohort
+     by se připletla i nabídka z doby, kdy jsme se ještě nedívali. */
+  je('I: okno se počítá od nejstaršího ZNÁMÉHO data (prázdné se zahodí)',
+    sI.okno.dni, 59);
+  je('I: a od toho nejstaršího, ne od prázdna', sI.okno.od, '2026-01-01');
+  /* Hrana „mohla být sledovaná N dní": stará přesně 7 dní SE počítá. */
+  je('I: nabídka stará přesně 7 dní do sedmidenní kohorty PATŘÍ',
+    koh(sI, 7).zKolika, MIN_KOHORTA);
+  /* Hrana „je pryč do N dní": zmizelá přesně 7. den SE počítá. */
+  je('I: a když zmizela přesně 7. den, je „pryč do 7 dní"',
+    [koh(sI, 7).pryc, koh(sI, 7).podil], [MIN_KOHORTA, 100]);
+  je('I: kohorta se po těch sedmi dnech nerozpadne na dvě různá čísla',
+    koh(sI, 3).pryc, 0);
+  je('I: a medián je ta jedna doba, kterou všechny měly', sI.median, 7);
+}
+
+{
+  /* ŘAZENÍ OBDOBÍ JEDNÉ NABÍDKY. Nová cena se bere z NÁSLEDUJÍCÍHO
+     období, takže na pořadí stojí celý výpočet slev. Řadí se podle
+     `od` a teprve při shodě podle `do` — a tohle je fixtura, na které
+     se ta dvě pravidla rozcházejí: podle `od` je první ta dlouhá,
+     podle `do` ta krátká. Obrácená rovnost v řadicí funkci z toho
+     udělá jedno zlevnění a jedno zdražení místo dvou zdražení. */
+  const K = 'R1';
+  const prekryv = [
+    { k: K, o: 'Kolín', od: '2026-01-01', do: '2026-01-20', c: 100000, proc: 'cena' },
+    { k: K, o: 'Kolín', od: '2026-01-05', do: '2026-01-10', c: 200000, proc: 'cena' },
+  ];
+  const zm = zmenyCen(prekryv, { nabidky: { [K]: { c: 300000 } } });
+  je('I: období se řadí podle „od", ne podle „do"',
+    [zm.zlevneni.length, zm.zdrazeni.length], [0, 2]);
+  je('I: a navazují ve správném pořadí (100→200, pak 200→300)',
+    [pol(zm.zdrazeni, 0).stara, pol(zm.zdrazeni, 0).nova,
+      pol(zm.zdrazeni, 1).stara, pol(zm.zdrazeni, 1).nova],
+    [100000, 200000, 200000, 300000]);
+}
+
+{
+  /* ZMIZENÍ NENÍ ZMĚNA CENY. Táž nabídka umí zmizet a za měsíc se
+     vrátit — klíč archivu je stabilní, takže v archivu po ní zůstanou
+     oba řádky vedle sebe. Bez pojistky `if (r.proc !== 'cena')` by se
+     z toho zmizení stala „sleva z 1 000 000 na 800 000", kterou nikdo
+     nikdy nenabídl.
+     Oddíl E) výš tohle měřil jen na nabídce, co VÝHRADNĚ zlevnila;
+     dvojice „zmizela, pak zlevnila" tam nebyla, a právě ta je ten
+     případ, kdy pojistka něco dělá. */
+  const K = 'R2';
+  const vratila = [
+    { k: K, o: 'Tábor', od: '2026-01-01', do: '2026-01-10', c: 1000000, proc: 'zmizela' },
+    { k: K, o: 'Tábor', od: '2026-01-10', do: '2026-01-20', c: 800000, proc: 'cena' },
+  ];
+  const zm = zmenyCen(vratila, { nabidky: { [K]: { c: 700000 } } });
+  je('I: zmizení se nepočítá jako změna ceny', zm.zlevneni.length, 1);
+  je('I: a to jedno zlevnění je to opravdové (800 → 700 tisíc)',
+    [pol(zm.zlevneni, 0).stara, pol(zm.zlevneni, 0).nova, pol(zm.zlevneni, 0).procent],
+    [800000, 700000, 13]);
+}
+
 /* ---- G) roadmapa už to zavádějící číslo neuvádí ---- */
 {
   const r = fs.readFileSync(path.join(ROOT, 'docs', 'roadmap.md'), 'utf8');

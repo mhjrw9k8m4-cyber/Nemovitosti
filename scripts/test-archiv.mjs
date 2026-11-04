@@ -13,7 +13,7 @@ import fsx from 'node:fs';
 import pathx from 'node:path';
 import { createRequire as createRequireX } from 'node:module';
 import { fileURLToPath as furlX } from 'node:url';
-import { krok, dnyPrezneceni } from './archiv.mjs';
+import { krok, dnyPrezneceni, verdiktStavu, VERZE } from './archiv.mjs';
 
 const KOREN_X = pathx.resolve(pathx.dirname(furlX(import.meta.url)), '..');
 const reqX = createRequireX(import.meta.url);
@@ -267,6 +267,42 @@ if (fs.existsSync(ADR)) {
   const bezKomentaru = telo.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   je('a je to vidět v logu, ne mlčky (a ne jen v komentáři)',
     /console\.error\([^;]*NEZAPOČÍTÁVÁ/.test(bezKomentaru), true);
+}
+
+/* ---- 9) VERDIKT O ULOŽENÉM STAVU ----
+ *
+ * Nález sabotážního stroje ze 4. 11.: `test-archiv` nechytila ani
+ * obrácenou rovnost (`===` na `!==`), ani záměnu `&&` za `||` — obojí
+ * sedělo uvnitř `nactiStav()`, která čte soubor a končí
+ * `process.exit(1)`, takže se nedala pustit ze zkoušky vůbec.
+ * Rozhodnutí je teď čistá funkce `verdiktStavu` a drží se na všech
+ * třech odpovědích. Není to kosmetika: stav s cizí soustavou klíčů
+ * přijatý mlčky znamená, že všechno staré vypadá jako zmizelé a
+ * všechno nové jako právě přidané — tedy archiv plný výmyslů, a
+ * pozná se to až za rok.
+ *
+ * Výjimka se musí ukázat jako POJMENOVANÁ chyba, ne jako pád celé
+ * zkoušky: sabotáž `&& → ||` z téhle funkce udělá `!!s || typeof s
+ * === 'object' && typeof s.nabidky === 'object'`, a protože
+ * `typeof null === 'object'`, sáhne se na `null.nabidky`. Bez téhle
+ * obálky by CI zčervenalo bez jediné hlášky, podle které by se
+ * poznalo proč (táž lekce jako u `kde()` výš).
+ */
+{
+  const verdikt = (x) => { try { return verdiktStavu(x); } catch (e) { return 'SPADLO: ' + (e && e.message); } };
+  je('stav téže verze se přijme', verdikt({ verze: VERZE, nabidky: {} }), 'ok');
+  je('stav starší verze se NEpřijme (jinak by archiv plodil výmysly)',
+    verdikt({ verze: VERZE - 1, nabidky: {} }), 'stará');
+  je('a novější taky ne', verdikt({ verze: VERZE + 1, nabidky: {} }), 'stará');
+  je('žádný stav je „nic", ne „ok"', verdikt(null), 'nic');
+  je('a nejde o stav, co nemá nabídky', verdikt({ verze: VERZE }), 'nic');
+  /* A ŽE TO SEDÍ NA TO, CO JE OPRAVDU V REPOZITÁŘI. Tohle je jediná
+     kontrola, která chytí posunuté číslo VERZE: fixtury si verzi
+     berou z modulu, takže se posunou s ním, kdežto soubor na disku
+     ne. A kdyby se rozešly, robot při prvním běhu skončí chybou. */
+  const naDisku = JSON.parse(fsx.readFileSync(pathx.join(KOREN_X, 'data', 'archiv', 'stav.json'), 'utf8'));
+  je('a uložený stav v repozitáři je té verze, kterou kód umí přečíst',
+    verdiktStavu(naDisku), 'ok');
 }
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');

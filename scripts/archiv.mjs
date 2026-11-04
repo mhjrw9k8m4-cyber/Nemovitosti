@@ -59,19 +59,37 @@ const PKC = _req(path.join(KOREN, 'js', 'cisteni.js'));
    vypadalo jako zmizelé a všechno nové jako právě přidané. */
 export const VERZE = 2;
 
-export function nactiStav() {
-  try {
-    const s = JSON.parse(fs.readFileSync(STAV, 'utf8'));
-    if (s && s.verze === VERZE) return s;
-    /* Starou verzi nejde dopočítat, jen přepočítat z historie gitu
-       (node scripts/archiv.mjs --prepocitat). Tiše ji přijmout je
-       to nejhorší, co se dá udělat. */
-    if (s && s.verze !== VERZE) {
-      console.error(`::error::data/archiv/stav.json je verze ${s.verze}, čekám ${VERZE}.`
-        + ' Spusťte: node scripts/archiv.mjs --prepocitat');
-      process.exit(1);
-    }
-  } catch (e) { /* není, začíná se od nuly */ }
+/* VERDIKT O ULOŽENÉM STAVU — ODDĚLENĚ OD ČTENÍ SOUBORU.
+   „Tenhle stav se smí použít" je nejdražší rozhodnutí celého archivu.
+   Přijmout stav s cizí soustavou klíčů znamená, že všechno staré
+   vypadá jako zmizelé a všechno nové jako právě přidané — a pozná se
+   to až za rok, kdy už se s tím nedá nic dělat.
+   Dřív to rozhodnutí stálo uprostřed nactiStav(), která čte soubor
+   a končí `process.exit(1)`, takže se nedalo prokázat zkouškou:
+   sabotážní stroj v něm obrátil `===` na `!==` i `&&` na `||` a žádný
+   hlídač se neozval (slepé místo, nález z 4. 11.). Teď je to čistá
+   funkce o třech odpovědích a zkouška ji drží na všech třech. */
+export function verdiktStavu(s) {
+  const je = !!s && typeof s === 'object' && typeof s.nabidky === 'object';
+  if (je && s.verze === VERZE) return 'ok';
+  if (je) return 'stará';
+  return 'nic';
+}
+
+export function nactiStav(cesta = STAV) {
+  let s = null;
+  try { s = JSON.parse(fs.readFileSync(cesta, 'utf8')); }
+  catch (e) { /* není, začíná se od nuly */ }
+  const v = verdiktStavu(s);
+  if (v === 'ok') return s;
+  /* Starou verzi nejde dopočítat, jen přepočítat z historie gitu
+     (node scripts/archiv.mjs --prepocitat). Tiše ji přijmout je
+     to nejhorší, co se dá udělat. */
+  if (v === 'stará') {
+    console.error(`::error::data/archiv/stav.json je verze ${s.verze}, čekám ${VERZE}.`
+      + ' Spusťte: node scripts/archiv.mjs --prepocitat');
+    process.exit(1);
+  }
   return { verze: VERZE, den: '', nabidky: {} };
 }
 
