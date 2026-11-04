@@ -148,8 +148,71 @@ const PACHT2 = {
     Name: 'Vrátno - id. spoluvl. podíl ve výši 1/2 st.p.č. 13',
     Description: 'Pozemek st.p.č. 13 o výměře 240 m2 se nachází v intravilánu obce Vrátno.',
   }] }, vymeraZPopisu, druhZPopisu, z2);
-  je('spoluvlastnický podíl se zahodí a má vlastní jméno', z2.spoluvlastnickyPodil, 1);
+  /* PODÍL SE ZLOMKEM SE NEZAHAZUJE — ZVEŘEJNÍ SE. Zbytek webu podíly
+     ukazuje a cenu za metr u nich dělí zlomkem (js/ceny.js), protože
+     výměra v popisu je výměra celku a cena je za podíl. Zahodit podíl,
+     u kterého zlomek známe, by znamenalo vyhodit nabídku, kterou web
+     umí ukázat poctivě; zahodit se má naopak podíl BEZ zlomku, kde by
+     stála cena celku proti výměře celku. */
+  pravda('podíl se známým zlomkem se nezahodí', !z2.podilBezZlomku, JSON.stringify(z2));
   pravda('a nevydává se za „bez výměry"', !z2.bezVymery, JSON.stringify(z2));
+
+  /* DÍRA V TOMHLE SÍTĚ, KTEROU NAŠEL AŽ WEB. Na stránce stál „les
+     8 927 m² za 80 000 Kč", tedy 8,96 Kč/m² — nejlevnější pozemek
+     v republice. Detail nabídky 96857 ale říká „Břežany u Rakovníka,
+     id. 1/2 pozemků parc.č. 213/51, 303/115 a 303/116": cena je za
+     POLOVINU, výměra v popisu je výměra celku. Výraz znal „id. podíl"
+     a „podíl ve výši 1/2", tvar „id. 1/2 pozemků" ne.
+     Hlídá se na obou stranách: co podíl JE, a co podílem NENÍ —
+     jinak by se síto dalo „opravit" tak, že propadne všechno. */
+  const JE_PODIL = [
+    'Břežany u Rakovníka, id. 1/2 pozemků parc.č. 213/51, 303/115 a 303/116',
+    'Vrátno - id. spoluvl. podíl ve výši 1/2 st.p.č. 13',
+    'id. podíl 1/4 pozemku p.č. 55',
+    'ideální 1/2 pozemku p. č. 12/3',
+    'pozemek, ideální podíl 1/6, k.ú. Nové Dvory',
+  ];
+  const NENI_PODIL = [
+    'pozemek p. č. 233/3 v k. ú. Bukovec',
+    'Pacht pozemku p.č. 2025, Racková',
+    'pozemky parc.č. 213/51, 303/115 a 303/116, Břežany',
+    'trvalý travní porost 1/2 ha, Lhota',
+  ];
+  je('všech pět tvarů podílu se pozná (včetně „id. 1/2 pozemků")',
+    JE_PODIL.filter((t) => !U.SPOLUVLASTNICKY_PODIL.test(t)), []);
+  je('a celý pozemek se za podíl nevydává (ani „1/2 ha")',
+    NENI_PODIL.filter((t) => U.SPOLUVLASTNICKY_PODIL.test(t)), []);
+  const z3 = {};
+  U.nabidkyZOdpovedi({ Properties: [{
+    ...PRODEJ,
+    Name: 'Břežany u Rakovníka, id. 1/2 pozemků parc.č. 213/51, 303/115 a 303/116',
+    Description: 'lesní pozemek o výměře 3439 m2, zapsaných na LV č. 89 pro k.ú. Břežany u Rakovníka, obec Břežany.',
+  }] }, vymeraZPopisu, druhZPopisu, z3);
+  pravda('a ta nabídka z webu se nezahodí (zlomek 1/2 známe)',
+    !z3.podilBezZlomku, JSON.stringify(z3));
+
+  /* VELIKOST PODÍLU: ČTE SE, A KDYŽ SE PŘEČÍST NEDÁ, NABÍDKA PADÁ.
+     „1/2" a „1/88" jsou úplně jiná nabídka — naměřeno 4. 11. na dražbě
+     54 ha lesa s podílem 1/88 za 42 000 Kč. */
+  const ZLOMKY = [
+    ['Břežany u Rakovníka, id. 1/2 pozemků parc.č. 213/51', '1/2'],
+    ['Dražba spoluvlastnického podílu ve výši id. 1/88 na lesních pozemcích, Mikulčice', '1/88'],
+    ['Vrátno - id. spoluvl. podíl ve výši 1/2 st.p.č. 13', '1/2'],
+    ['ideální 1/6 pozemku', '1/6'],
+    ['spoluvlastnický podíl, velikost neuvedena', ''],
+    ['podíl 3/2 nesmysl', ''],
+    ['pozemek p. č. 233/3 v k. ú. Bukovec', ''],
+  ];
+  je('zlomek podílu se přečte, a nesmyslný se nevrátí',
+    ZLOMKY.filter(([t, ocek]) => U.zlomekPodilu(t) !== ocek).map(([t]) => t), []);
+  const z4 = {};
+  const vysl4 = U.nabidkyZOdpovedi({ Properties: [{
+    ...PRODEJ,
+    Name: 'Mikulčice - spoluvlastnický podíl na lesních pozemcích',
+    Description: 'Lesní pozemky o výměře 547418 m2 v k.ú. Mikulčice, obec Mikulčice.',
+  }] }, vymeraZPopisu, druhZPopisu, z4);
+  je('podíl BEZ čitelného zlomku se zahodí a má vlastní jméno', z4.podilBezZlomku, 1);
+  je('a na web se z něj nedostane nic', ((vysl4 || {}).nabidky || []).length, 0);
 }
 
 /* ---- 3c) MÍSTO PŘED POMLČKOU A NEPŘEČTENÉ METRY ---------------

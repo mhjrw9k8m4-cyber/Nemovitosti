@@ -213,6 +213,9 @@ jobs:
       - name: Samorozvoj — nálezce, sabotážní stroj a smyčka
         run: node scripts/test-samorozvoj.mjs
 
+      - name: Ohledávací nástroj (hledání v obsahu na všech cestách)
+        run: node scripts/test-ohledej.mjs
+
       - name: Zdroj mimo pořádek 3× v řadě se ozve (nezůstane zelený)
         run: node scripts/test-hlidka-zdroju.mjs
 

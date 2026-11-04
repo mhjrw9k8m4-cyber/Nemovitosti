@@ -78,7 +78,37 @@ export function jeProdej(z) {
    celé parcely. Kč/m² by z toho vyšlo o tolik nižší, kolikátý je ten
    podíl, a podle Kč/m² se tu řadí i počítá verdikt. Zahazuje se to
    proto zvlášť a s vlastním jménem, ne jako „bez výměry". */
-export const SPOLUVLASTNICKY_PODIL = /spoluvl|spoluvlastnick|podíl(?:\s+ve\s+výši)?\s+\d+\s*\/\s*\d+|id\.\s*podíl/i;
+/* ZMĚŘENO 4. 11.: TOHLE SÍTO MĚLO DÍRU A JEDNA NABÍDKA JÍ PROŠLA.
+   Na webu stál „les 8 927 m² za 80 000 Kč", tedy 8,96 Kč/m² — a to je
+   při mediánu desítek korun za metr nejlevnější pozemek v republice.
+   Pravda byla jiná: detail nabídky 96857 říká „Břežany u Rakovníka,
+   id. 1/2 pozemků parc.č. 213/51, 303/115 a 303/116", takže cena je
+   za POLOVINU a výměra v popisu je výměra celku. Starý výraz znal
+   „id. podíl", „spoluvl…" a „podíl ve výši 1/2" — tvar „id. 1/2
+   pozemků" ne. Jedna taková nabídka pokřiví cenovou referenci,
+   verdikt i mapu, protože podle Kč/m² se tu řadí i počítá. */
+export const SPOLUVLASTNICKY_PODIL = /spoluvl|spoluvlastnick|podíl(?:\s+ve\s+výši)?\s+\d+\s*\/\s*\d+|id\.\s*(?:podíl|\d+\s*\/\s*\d+)|ide[áa]ln\S*\s+(?:podíl\s+)?\d+\s*\/\s*\d+/i;
+
+/* VELIKOST PODÍLU, KDYŽ JE PODÍL. Vrací „1/2" nebo prázdno.
+   PROČ TO NENÍ JEN OZDOBA: zbytek webu podíly UKAZUJE a cenu za metr
+   u nich dělí zlomkem (js/ceny.js, vymeraVCene) — tedy správně, protože
+   výměra v popisu je výměra celku a cena je za podíl. Zahodit podíl se
+   zlomkem by znamenalo vyhodit nabídku, kterou web umí ukázat poctivě.
+   Zahodit se má naopak podíl, u kterého zlomek PŘEČÍST NEJDE: tam by
+   na webu stála cena celku proti výměře celku, a to je lež.
+   Čte se jmenovatel i čitatel, protože „1/2" a „1/88" jsou úplně jiná
+   nabídka (naměřeno 4. 11.: 54 ha lesa, podíl 1/88, cena 42 000 Kč).
+   Nesmyslné zlomky (čitatel větší než jmenovatel, nula) se nevracejí —
+   js/ceny.js je stejně odmítne a tady by jen plodily falešný klid. */
+export const ZLOMEK = /(?:id\.|ide[áa]ln\S*|podíl(?:u)?(?:\s+ve\s+výši)?)\s*(?:podíl(?:u)?\s*(?:ve\s+výši\s*)?)?(\d{1,4})\s*\/\s*(\d{1,4})\b/i;
+
+export function zlomekPodilu(text) {
+  const m = ZLOMEK.exec(String(text || ''));
+  if (!m) return '';
+  const a = Number(m[1]), b = Number(m[2]);
+  if (!(a > 0) || !(b > 0) || a > b) return '';
+  return a + '/' + b;
+}
 
 export function dotaz(strana = 1, naStranu = NA_STRANU, kategorie = KATEGORIE_POZEMKY) {
   return JSON.stringify({
@@ -275,8 +305,15 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
        kdežto bez ní by se na web nasypaly stavby jako pozemky. */
     if (!/pozemk/i.test(String(z.CategoryName || ''))) { pocti('neniPozemek', z.CategoryName + ' — ' + z.Name); continue; }
     if (!jeProdej(z)) { pocti('pacht', z.Name); continue; }
-    if (SPOLUVLASTNICKY_PODIL.test(String(z.Name || ''))) {
-      pocti('spoluvlastnickyPodil', z.Name);
+    /* PODÍL: ZVEŘEJNIT SE ZLOMKEM, ZAHODIT BEZ NĚJ. Viz zlomekPodilu
+       výš — se zlomkem web cenu za metr podělí, bez něj by lhal. */
+    const jePodil = SPOLUVLASTNICKY_PODIL.test(String(z.Name || ''))
+      || SPOLUVLASTNICKY_PODIL.test(String(z.Description || ''));
+    const zlomek = jePodil
+      ? (zlomekPodilu(z.Name) || zlomekPodilu(z.Description))
+      : '';
+    if (jePodil && !zlomek) {
+      pocti('podilBezZlomku', z.Name);
       continue;
     }
     const c = cena(z.Price);
@@ -308,6 +345,9 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
       /* Vlastní klíč podle čísla nabídky v aplikaci: bez něj by se
          nabídky bez parcelního čísla v jednom okrese slily do jedné
          (§365). */
+      /* Příznak i velikost podílu — táž jména, jakými je zná zbytek
+         webu (js/vybaveni.js je nasazuje u ostatních zdrojů). */
+      ...(jePodil ? { podil: true, zlomek } : {}),
       _key: 'uzsvm-' + String(z.Id || place + '-' + c),
       url: odkazNabidky(z.Id) || undefined,
       extra: popisek(z),

@@ -315,6 +315,7 @@ async function main() {
     t.hlavicka.forEach((s, i) => console.log('  [' + i + '] ' + s));
     console.log('\nPRVNÍCH ' + t.ukazka.length + ' ŘÁDKŮ:');
     t.ukazka.forEach((r) => console.log('  ' + r.slice(0, 400)));
+    for (const r of vypisNalezy(text, NAJDI)) console.log(r);
     const prehled = hodnotySloupcu(text);
     if (prehled.length) {
       console.log('\nSLOUPCE S MÁLO RŮZNÝMI HODNOTAMI (koho ten soubor sdružuje):');
@@ -324,6 +325,14 @@ async function main() {
       }
     }
   } else if (co === 'JSON') {
+    /* NAJDI PLATÍ I NA JSON — a dlouho neplatilo.
+       Změřeno 4. 11.: dotaz na ÚZSVM s `--najdi` na podíly nevypsal
+       NIC, ani „nenašlo se": hledání viselo jen na HTML a na „ostatním".
+       U API je přitom JSON ten hlavní tvar, takže nástroj mlčel právě
+       tam, kde se měří nejčastěji — a mlčení se nedá odlišit od nuly
+       nálezů. Hledá se v SUROVÉM těle, ne v rozebraném objektu: tak se
+       najde i to, co se do zkráceného výpisu nevejde. */
+    for (const r of vypisNalezy(text, NAJDI)) console.log(r);
     let data = null;
     try { data = JSON.parse(text); } catch (e) { console.log('JSON se nepodařilo přečíst: ' + e.message); }
     if (data !== null) {

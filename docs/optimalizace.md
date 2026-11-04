@@ -23581,3 +23581,70 @@ směrech.
 
 Čtrnáct kontrol v `test-samorozvoj.mjs` drží právě tyhle tři pojistky
 — včetně té, že značka bez důvodu se **neuzná**.
+
+## §377 — bot na cesty naostro, podíl za celek a nástroj, co mlčel *4. 11.*
+
+**1. Bot na cesty portálů běžel poprvé naostro** (#237). Devět portálů,
+**302 vyzkoušených adres**, 29 tvarů cest. Výsledek je poctivá nula:
+**ani jedna cesta nevrátila nabídky**. Není to porucha bota, je to
+odpověď — tyhle portály dnes nabídky strojově čitelně nevystavují.
+
+Co z toho ale JE k něčemu: sedm **slibných** cest, tedy adres, které
+odpověděly 200 a mluví o pozemcích a převodech, jen z nich nabídky
+strojově nevypadnou.
+
+| portál | slibné cesty |
+|---|---|
+| portaldrazeb.cz | vstupní adresa + 5 výpisů ze sitemapy (`/drazby/pripravovane`, `/online`, `/probihajici`, `/ukoncene`, `/predrazky`) |
+| opendata.mesto-most.cz | `/data.json` (katalog DCAT) |
+
+Portál dražeb je tedy kandidát, u kterého cesta existuje a je to HTML
+výpis — tedy práce pro čtečku stránek, ne pro katalog. Rozhodnutí
+o zapojení je na majiteli po přečtení podmínek užití, bot nic
+nezapojuje.
+
+**2. ÚZSVM: podíl za celek.** Na webu stál „les 8 927 m² za 80 000 Kč".
+Detail nabídky 96857 ale říká *„Břežany u Rakovníka, **id. 1/2**
+pozemků parc.č. 213/51, 303/115 a 303/116"* — cena je za POLOVINU
+a výměra v popisu je výměra celku. Síto podílů znalo „id. podíl",
+„spoluvl…" a „podíl ve výši 1/2"; tvar **„id. 1/2 pozemků" ne**.
+
+A při opravě vyšlo najevo, že se to celé dělalo špatně: podíly se
+u ÚZSVM **zahazovaly**, zatímco zbytek webu je ukazuje a cenu za metr
+u nich dělí zlomkem (`js/ceny.js`, `vymeraVCene`). Nové pravidlo je
+proto jiné a platí všude stejně:
+
+> **Podíl se známým zlomkem se zveřejní** — web cenu za metr podělí
+> a je to poctivé číslo. **Podíl bez čitelného zlomku se zahodí** —
+> tam by stála cena podílu proti výměře celku, a to je lež.
+
+Zlomek se čte z názvu i z popisu (`zlomekPodilu`), nesmyslné zlomky
+(čitatel větší než jmenovatel) se nevracejí. „1/2" a „1/88" jsou úplně
+jiná nabídka.
+
+**Co se při téhle kontrole NEPOTVRDILO, a je správné to říct.** Nejdřív
+jsem si spočítal `cena / výměra` z dat a vyšlo mi, že web ukazuje
+dražbu podílu 1/88 na 54 ha lesa jako **0,08 Kč/m²**. Nebyla to pravda:
+to číslo jsem spočítal já, ne web. `js/ceny.js` u podílu bez zlomku
+cenu za metr **vůbec nevrací** — a těch nabídek je dnes přesně sedm
+(5 Bezrealitky, 2 OK dražby). Měřit model přes vlastní dělení znamená
+měřit svůj vlastní odhad; správné měření je zavolat `zaMetr`, jak to
+dělá web.
+
+**3. Ohledávací nástroj mlčel, kde se měří nejčastěji.** `--najdi`
+hledalo v obsahu jen u HTML a u „ostatního"; **u JSON a CSV se
+nevolalo vůbec**. Přišlo se na to tak, jak se na to u nehlídaného
+nástroje přijít musí: zeptal jsem se jím, kolik nabídek ÚZSVM je podíl,
+a odpověď byla prázdná. Ne „nenašlo se" — prázdná. Z toho by se dalo
+usoudit „žádné podíly tam nejsou", a to je falešný klid.
+
+`scripts/ohledej.mjs` je nástroj, kterým se měří všechny cizí zdroje,
+a **neměl jedinou zkoušku**. Teď má `test-ohledej.mjs` (14 kontrol):
+nula nálezů je odpověď, rozbitý vzor se řekne a nespadne na něm celé
+měření, strop nálezů se přizná znakem „+", a hledá se na **všech pěti**
+cestách výpisu (JSON, CSV, HTML, ostatní, prohlížeč). Hledá se
+v surovém těle a PŘED rozborem, takže se vypíše i u nečitelného JSON.
+
+Lekce je stejná jako u §375 a §376, jen o nástroj výš: **mlčení se
+nedá odlišit od nuly**, a nástroj, kterým se měří, potřebuje hlídače
+víc než to, co se jím měří.
