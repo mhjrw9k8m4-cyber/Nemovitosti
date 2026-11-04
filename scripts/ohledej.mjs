@@ -33,6 +33,13 @@ const PROHLIZECEM = process.argv.includes('--prohlizecem')
    k ničemu, protože tvar odpovědi se nedá vidět. */
 const TELO = (process.argv.find((a) => a.startsWith('--telo=')) || '').slice(7)
   || process.env.TELO || '';
+/* VZOR ADRES, KTERÉ ZAJÍMAJÍ. Naměřeno 4. 11. na katalogu otevřených
+   dat: prvních devětadvacet odkazů na stránce výsledků je NABÍDKA
+   WEBU (Portál o datech, Správa dat, Pro poskytovatele…) a datové
+   sady začínají až za nimi. Výpis bez vzoru tedy ukáže všechno jiné
+   než to, o co jde. */
+const VZOR = (process.argv.find((a) => a.startsWith('--vzor=')) || '').slice(7)
+  || process.env.VZOR || '';
 
 export function tvarCsv(text, stropRadku = STROP_RADKU) {
   const radky = String(text || '').split(/\r?\n/).filter((r) => r.trim());
@@ -284,7 +291,13 @@ async function main() {
       console.log(text.slice(0, STROP_ZNAKU));
     }
   } else if (co === 'HTML') {
-    const odkazy = odkazySTextem(text);
+    let vzor = null;
+    if (VZOR) {
+      try { vzor = new RegExp(VZOR, 'i'); }
+      catch (e) { console.log('Vzor adres se nepodařilo přečíst jako regulární výraz: ' + e.message); }
+    }
+    const odkazy = odkazySTextem(text, 30, vzor);
+    if (vzor) console.log('(vypisují se jen odkazy, které odpovídají vzoru ' + VZOR + ')');
     if (odkazy.length) {
       console.log('ODKAZY S TEXTEM (prvních ' + odkazy.length + '):');
       for (const o of odkazy) console.log(`  ${o.text}\n      ${o.adresa}`);

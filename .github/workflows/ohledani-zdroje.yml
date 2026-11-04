@@ -31,6 +31,11 @@ on:
         required: false
         default: ''
         type: string
+      vzor:
+        description: 'Jen odkazy odpovídající tomuto vzoru (regulární výraz), u HTML'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
@@ -67,4 +72,5 @@ jobs:
           ADRESA: ${{ inputs.adresa }}
           PROHLIZECEM: ${{ inputs.prohlizecem }}
           TELO: ${{ inputs.telo }}
+          VZOR: ${{ inputs.vzor }}
         run: node scripts/ohledej.mjs "$ADRESA"
