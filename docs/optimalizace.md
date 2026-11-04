@@ -24747,6 +24747,15 @@ Porovnává se proto s tím, co web slibuje: **se souřadnicemi pozemku**
 167 kontrol, 0 chyb.
 
 **Pravidlo:** když zkouška spadne jen v CI, první otázka není „co je
-v CI jinak", ale **co přesně web slibuje**. Dnes to byla třikrát
+v CI jinak", ale **co přesně web slibuje**. Dnes to byla čtyřikrát
 domněnka zkoušky (§398 pevné čekání, §403 snímek z animace, §405
-srovnání s cizím bodem) a ani jednou vada produktu.
+srovnání s cizím bodem a snímek ZA LETU) a ani jednou vada produktu.
+
+**Dodatek z běhu 41907920584.** Ta domněnka měla ještě jednu vrstvu.
+Tlačítko se schová, jakmile se pozemek dostane do záběru — tedy ještě
+za letu animace. Snímek vzatý hned po schování ukázal střed o 250 m
+jinde a **sám web o něm řekl „domov nevidím"**. Čeká se proto i tady na
+klid (dvě stejná čtení) a soudí se **týmž pravidlem, jakým se
+rozhoduje web** (`pad(-0.12).contains`): pozemek má být v záběru a
+přiblížení takové, jaké si stránka pamatuje. Čísla zůstávají v hlášce,
+ale mez už není „tentýž bod na obrazový bod" — to web nikdy neslíbil.

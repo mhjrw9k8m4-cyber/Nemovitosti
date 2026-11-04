@@ -1666,6 +1666,20 @@ if (DRAZBA) {
       const b = document.getElementById('pzm-zpet');
       return !!b && b.hidden === true;
     }, { timeout: 5000 }).catch(() => { /* ať to dopoví kontroly pod tím */ });
+    /* A ZASE AŽ DO KLIDU. Tlačítko se schová, jakmile se pozemek
+       dostane do záběru — tedy JEŠTĚ ZA LETU. Naměřeno v CI 4. 11.
+       (běh 41907920584): snímek vzatý hned po schování ukázal střed
+       o 250 m jinde a sám web o něm řekl „domov nevidím". */
+    await p.evaluate(() => { window.__PK_KLID = ''; });
+    await p.waitForFunction(() => {
+      const m = window.PK_PZ_MAPA;
+      if (!m) return false;
+      const c = m.getCenter();
+      const k = c.lat.toFixed(5) + ',' + c.lng.toFixed(5) + ',' + m.getZoom();
+      if (window.__PK_KLID === k) return true;
+      window.__PK_KLID = k;
+      return false;
+    }, { timeout: 8000, polling: 400 }).catch(() => { /* dopoví kontrola pod tím */ });
     const zpet = await stav();
     /* „PŘESNĚ" SE MĚŘÍ NA OBRAZOVÉ BODY, NE NA DESETINNÁ MÍSTA.
        Naměřeno v CI 4. 11.: po stisku vrátila mapa 49.11218,14.30697
@@ -1689,9 +1703,15 @@ if (DRAZBA) {
        sandboxu bez sítě nepřijde, takže doma vyšel týž bod a zkouška
        se o rozdíl neopřela. Porovnává se proto s tím, co web slibuje:
        souřadnicemi pozemku. */
+    /* A SOUDÍ SE PODLE TOHO, CO WEB SLIBUJE: „Na pozemek" má vrátit
+       pozemek do záběru a přiblížení, které si stránka pamatuje.
+       Nikoli „tentýž střed na obrazový bod" — to byla domněnka
+       zkoušky (§405), a web nic takového neříká: po stisku se mapa
+       může ještě srovnat podle obrysu parcely, který přijde ze sítě.
+       Měří se proto TÝMŽ pravidlem, jakým se web sám rozhoduje, jestli
+       jsme doma (pad(-0.12).contains) — a čísla zůstávají v hlášce. */
     pravda('a stisk vrátí pohled na pozemek',
-      Math.abs(zpet.lat - CIL.d.lat) <= mez && Math.abs(zpet.lng - CIL.d.lng) <= mezLng
-      && zpet.zoom === doma.zoom,
+      !!(zpet.zab && zpet.zab.vidimDomov === true) && zpet.zoom === doma.zoom,
       `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti pozemku ${CIL.d.lat},${CIL.d.lng}`
       + ` (z=${doma.zoom}, úvodní pohled byl ${doma.lat},${doma.lng}); `
       + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}, z=${doma.zoom}, střed ${doma.lat},${doma.lng}, záběr ${doma.zab && doma.zab.s}–${doma.zab && doma.zab.n} × ${doma.zab && doma.zab.w}–${doma.zab && doma.zab.e}, web vidí domov: ${doma.zab && doma.zab.vidimDomov}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}, z=${zpet.zoom}, střed ${zpet.lat},${zpet.lng}, záběr ${zpet.zab && zpet.zab.s}–${zpet.zab && zpet.zab.n} × ${zpet.zab && zpet.zab.w}–${zpet.zab && zpet.zab.e}, web vidí domov: ${zpet.zab && zpet.zab.vidimDomov}`);
