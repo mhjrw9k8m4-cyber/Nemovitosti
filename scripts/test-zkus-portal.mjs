@@ -311,6 +311,37 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     !!(pd && String(pd.zavreno).length > 20), String(pd && pd.zavreno));
 }
 
+/* ---- HLÁŠENÍ O PORTÁLU ------------------------------------------
+ *
+ * Sabotáž „zahozená pojistka" zabrousila do `hlaseniPortalu` a ukázala
+ * dvojí: (1) výpis cest se bez té pojistky zaplaví zavřenými, takže
+ * v něm to podstatné zmizí, a (2) — a to je vada, kterou jsem dnes sám
+ * vyrobil — souhrnný řádek počítal jen čtyři verdikty, takže po přidání
+ * „chce klíč" by hlásil „zkoušeno 40 cest" a rozpad by jich jmenoval
+ * 39. Rozpad se proto skládá z PORADI_VERDIKTU, ne z ručního seznamu.
+ */
+{
+  const portal = { host: 'priklad.cz', cesty: [
+    { adresa: 'https://priklad.cz/a', jmeno: 'výpis', verdikt: 'nabídky', nabidek: 5, proc: 'přečteno 5' },
+    { adresa: 'https://priklad.cz/b', jmeno: 'api', verdikt: 'chce klíč', proc: 'HTTP 401, …klíč…' },
+    { adresa: 'https://priklad.cz/c', jmeno: 'sitemapa', verdikt: 'odpověděla', proc: 'o pozemcích ani slovo' },
+    { adresa: 'https://priklad.cz/d', jmeno: 'rss', verdikt: 'zavřená', proc: 'HTTP 404' },
+  ] };
+  const h = C.hlaseniPortalu(portal).join('\n');
+  pravda('souhrn počítá i „chtějí klíč"', /cht[ěe]j[íi] kl[íi][čc] 1/.test(h), h);
+  pravda('a rozpad sečte přesně tolik cest, kolik se zkoušelo',
+    C.PORADI_VERDIKTU.reduce((a, v) => a + (portal.cesty.filter((c) => c.verdikt === v).length), 0)
+      === portal.cesty.length,
+    'některý verdikt v rozpadu chybí — hlášení by si odporovalo samo');
+  pravda('a každý verdikt, který stroj umí vydat, má v rozpadu jméno',
+    C.PORADI_VERDIKTU.every((v) => C.JMENA_ROZPADU[v]), JSON.stringify(C.JMENA_ROZPADU));
+  /* VÝPIS CEST: podstatné ano, zavřené a mlčící ne. */
+  pravda('ve výpisu je cesta s nabídkami', /výpis/.test(h), h);
+  pravda('a cesta, která chce klíč', /api/.test(h), h);
+  pravda('ale zavřená se nevypisuje', !/rss/.test(h), h);
+  pravda('ani ta, co odpověděla a nic neřekla', !/sitemapa/.test(h), h);
+}
+
 /* ---- ČTYŘI SLEPÁ MÍSTA, KTERÁ UKÁZAL STROJ -----------------------
  *
  * Sabotážní stroj 4. 11. prošel oba moduly bota a tyhle čtyři mutace

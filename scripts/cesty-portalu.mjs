@@ -256,6 +256,16 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
    a kdyby spadla na konec k zavřeným, nikdo si jí nevšimne. */
 export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'chce klíč', 'odpověděla', 'zavřená'];
 
+/* Jak se ten verdikt řekne v rozpadu, aby věta zněla česky („nabídky 3,
+   slibné 1, chtějí klíč 1, odpověděly 7, zavřené 28"). */
+export const JMENA_ROZPADU = {
+  'nabídky': 'nabídky',
+  'slibná': 'slibné',
+  'chce klíč': 'chtějí klíč',
+  'odpověděla': 'odpověděly',
+  'zavřená': 'zavřené',
+};
+
 export function poradiCest(nalezy) {
   return [...(nalezy || [])].sort((a, b) => {
     const va = PORADI_VERDIKTU.indexOf(a.verdikt), vb = PORADI_VERDIKTU.indexOf(b.verdikt);
@@ -353,9 +363,13 @@ export function hlaseniPortalu(portal) {
   const n = portal && portal.cesty ? portal.cesty : [];
   const podle = {};
   for (const c of n) podle[c.verdikt] = (podle[c.verdikt] || 0) + 1;
-  radky.push(`${portal.host}: zkoušeno ${n.length} cest`
-    + ` — nabídky ${podle['nabídky'] || 0}, slibné ${podle['slibná'] || 0},`
-    + ` odpověděly ${podle['odpověděla'] || 0}, zavřené ${podle['zavřená'] || 0}.`);
+  /* VŠECHNY VERDIKTY, KTERÉ EXISTUJÍ — a v tomhle pořadí. Když jsem
+     4. 11. přidal „chce klíč", souhrnný řádek ho nepočítal: hlášení by
+     tvrdilo „zkoušeno 40 cest" a rozpad by jich jmenoval 39. Proto se
+     tu nevypisuje ručně napsaný seznam, ale PORADI_VERDIKTU — přidat
+     verdikt a zapomenout na hlášení už nejde. */
+  const rozpad = PORADI_VERDIKTU.map((v) => `${JMENA_ROZPADU[v] || v} ${podle[v] || 0}`);
+  radky.push(`${portal.host}: zkoušeno ${n.length} cest — ${rozpad.join(', ')}.`);
   for (const c of poradiCest(n)) {
     if (c.verdikt === 'zavřená' || c.verdikt === 'odpověděla') continue;
     radky.push(`  ${c.verdikt === 'nabídky' ? '★' : '·'} ${c.jmeno}: ${c.proc}`);
