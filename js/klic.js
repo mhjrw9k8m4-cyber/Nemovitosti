@@ -82,21 +82,39 @@
     for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
     return h.toString(36);
   }
-  /* Totožnost inzerátu u zdroje. Vrací null, když adresa chybí. */
+  /* Totožnost inzerátu u zdroje. Vrací null, když adresa chybí.
+
+     ČÍSLO INZERÁTU UMÍ BÝT I V PARAMETRU, NE JEN V CESTĚ. Naměřeno
+     4. 11. na centrální evidenci nepotřebného majetku státu: dvě RŮZNÉ
+     nabídky Lesů ČR na parcele 127/21 v Libavském Údolí (151 m² za
+     3 020 Kč a 316 m² za 6 320 Kč) mají adresy, které se liší jen
+     parametrem — `…/nepotrebny-nemovity-majetek/?id=109040` a
+     `?id=109041`. Parametry se tu zahazují schválně (portály do nich
+     lepí značky kampaní) a v cestě žádné číslo není, takže obě nabídky
+     dostaly TÝŽ klíč archivu a jedna o svou historii cen přišla.
+     Proto: když v cestě číslo není, hledá se i v parametrech — ale
+     pořád jen ČÍSLO, ne celý parametr. Identita zůstává „hostitel plus
+     číslo inzerátu", jen se bere i odtamtud. */
   function totoznostZdroje(url) {
     if (!url) return null;
-    var s = String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '')
-      .replace(/[?#].*$/, '').replace(/\/+$/, '').toLowerCase();
+    var cele = String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').toLowerCase();
+    var s = cele.replace(/[?#].*$/, '').replace(/\/+$/, '');
     if (!s) return null;
     var i = s.indexOf('/');
     var host = i < 0 ? s : s.slice(0, i);
     var cesta = i < 0 ? '' : s.slice(i);
-    var cisla = cesta.match(/\d{4,}/g);
-    if (cisla && cisla.length) {
+    var nejdelsi = function (text) {
+      var cisla = String(text || '').match(/\d{4,}/g);
+      if (!cisla || !cisla.length) return '';
       var nej = cisla[0];
       for (var j = 1; j < cisla.length; j++) if (cisla[j].length > nej.length) nej = cisla[j];
-      return host + '/' + nej;
-    }
+      return nej;
+    };
+    var zCesty = nejdelsi(cesta);
+    if (zCesty) return host + '/' + zCesty;
+    var qi = cele.indexOf('?');
+    var zParametru = qi < 0 ? '' : nejdelsi(cele.slice(qi + 1));
+    if (zParametru) return host + '?' + zParametru;
     return s;
   }
   /* ===== KLÍČ PRO TO, CO SI ČLOVĚK ULOŽIL =============================

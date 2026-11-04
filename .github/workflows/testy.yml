@@ -207,6 +207,9 @@ jobs:
       - name: Hledání nových zdrojů (rejstřík lokálních katalogů)
         run: node scripts/test-hledej-zdroje.mjs
 
+      - name: Zkoušení portálů (všechny cesty a spojení dál)
+        run: node scripts/test-zkus-portal.mjs
+
       - name: Zdroj mimo pořádek 3× v řadě se ozve (nezůstane zelený)
         run: node scripts/test-hlidka-zdroju.mjs
 

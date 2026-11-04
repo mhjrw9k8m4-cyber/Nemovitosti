@@ -1105,9 +1105,20 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
      a model se postaví nad rozšířenou sadou. Měří se pořád TÁŽ věc —
      že percentil mimo prodej vyjde a že se vzorek bere jen z nabídek
      téhož typu — jen už to nezávisí na tom, co zrovna visí na webu. */
+  /* ÚŘEDNĚ STANOVENÁ CENA SE DO PŘIHRÁDEK NEDOSTANE — a zkouška to
+     musí počítat stejně jako model. Naměřeno 4. 11.: po zapojení
+     ÚZSVM a po opravě výběru prodejů (§371) vyrostla státní půda na
+     429 nabídek a největší skupina druhu a okresu už obsahovala
+     i nabídku podle § 12. Zkouška ji naklonovala a čekala ji
+     v přihrádce, model ji tam ale právem nepustil — vzorek vyšel 19
+     z 20 a kontrola spadla na vlastní naivitě, ne na vadě modelu.
+     Proto se tu filtruje `spravniCena` týmž pravidlem (je kvůli tomu
+     vyvezené z js/ceny.js). */
+  const uredni = (x) => !!(PK_CENY.spravniCena && PK_CENY.spravniCena(x));
+  const doPrihradky = (x) => x.type === 'sale' && x.area > 0 && !!x.price && !!x.okres && !uredni(x);
   const poSkupinach = new Map();
   for (const x of SYR) {
-    if (x.type !== 'sale' || !(x.area > 0) || !x.price || !x.okres) continue;
+    if (!doPrihradky(x)) continue;
     const k = dg(x.druh) + '|' + x.okres;
     if (!poSkupinach.has(k)) poSkupinach.set(k, []);
     poSkupinach.get(k).push(x);
@@ -1142,7 +1153,7 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     const { o, pc } = prvni;
     let tehoTypu = 0, vsechTypu = 0;
     for (const x of VSE) {
-      if (!(x.area > 0) || !x.price) continue;
+      if (!(x.area > 0) || !x.price || uredni(x)) continue;
       if (dg(x.druh) !== dg(o.druh) || x.okres !== o.okres) continue;
       vsechTypu++;
       if (x.type === o.type) tehoTypu++;

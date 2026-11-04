@@ -179,7 +179,27 @@ const hlavni = readFileSync(path.join(KOREN, 'novinky.xml'), 'utf8');
     nerozlisitelne.length === 0, `${nerozlisitelne.length}: ` + nerozlisitelne.slice(0, 4).join(', '));
   pravda('a žádný odkaz nevede na stránku, která není',
     mrtvyOdkaz.length === 0, `${mrtvyOdkaz.length}: ` + mrtvyOdkaz.slice(0, 3).join(', '));
-  pravda(`dražeb a exekucí je v kanálech dost na kontrolu (${drazeb})`, drazeb > 20, `jen ${drazeb}`);
+  /* KOLIK DRAŽEB SE DO KANÁLŮ VEJDE, ROZHODUJÍ STROPY — ne přání
+     zkoušky. Měřeno 4. 11.: kanál drží 50 nejnovějších položek a dražby
+     s exekucemi jsou 84 z 2 302 nabídek, tedy 3,6 %. Po zapojení ÚZSVM
+     (118 nabídek s dnešním datem) jich do padesátky nejnovějších
+     v celostátním kanálu nespadla ani jedna a v krajských zbylo 17.
+     Mez „víc než 20" tedy měřila tehdejší složení dat, ne pravidlo.
+     Premisa je proto dvojí a říká se nahlas: v DATECH dražby být
+     musí (jinak kontrola o termínech neměří nic), a v KANÁLECH
+     stačí jedna — a kolik jich je, se vypíše, ať se o tom ví. */
+  const drazebVDatech = (() => {
+    try {
+      const d = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+      return (d.opportunities || []).filter((o) => o && (o.type === 'drazba' || o.type === 'exekuce')).length;
+    } catch { return 0; }
+  })();
+  pravda(`v datech jsou dražby a exekuce (${drazebVDatech}) — jinak není co hlídat`,
+    drazebVDatech > 0, 'bez nich je kontrola termínů prázdná');
+  pravda(`a v kanálech je jich ${drazeb} (strop kanálu je 50 nejnovějších)`,
+    drazeb > 0,
+    `v datech ${drazebVDatech}, v kanálech ${drazeb} — nula by znamenala, že se do`
+    + ' padesátky nejnovějších nedostane žádná, a to už je nález o kanálu, ne o meze');
   pravda('a každá nese termín, aby se dvě různé nepletly',
     bezTerminu.length === 0, `${bezTerminu.length}: ` + bezTerminu.slice(0, 3).join('; '));
 }

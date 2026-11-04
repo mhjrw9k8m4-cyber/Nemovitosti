@@ -1,0 +1,65 @@
+name: Zkoušení portálů
+
+# Bot, který na portálu vyzkouší VŠECHNY cesty, kterými se dá dostat
+# k nabídkám, a spojí ho dál: katalog → datová sada → soubor,
+# sitemapa → výpis → inzerát. U každé cesty zapíše, co odpověděla.
+#
+# PROČ TO BĚŽÍ TADY A NE U MĚ. Ze stroje, kde se vyvíjí, není na cizí
+# weby vidět vůbec (změřeno: všechny zdroje odpovídají nulou). Měření
+# se tedy musí odehrát v Actions, jinak by se cesty nehádaly.
+#
+# NIC NEPUBLIKUJE A ŽÁDNÝ ZDROJ NEZAPOJÍ. Když cesta vrátí nabídky,
+# bot napíše řádek do registru a tím skončí — o cizím webu se
+# rozhoduje po přečtení jeho podmínek užití a to je práce pro člověka.
+#
+# ŠETRNOST. robots.txt se čte u KAŽDÉ adresy a zákaz je konec, ne
+# překážka. Mezi dotazy je pauza, na portál platí strop 60 dotazů, na
+# běh 900, Crawl-delay se respektuje a jméno robota je jedno jediné.
+
+on:
+  schedule:
+    # Pondělí v 6:11 UTC — za sondou zdrojů (4:37) a hledáním (5:23),
+    # mimo čas robota dat (0, 6, 12, 18).
+    - cron: '11 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      adresa:
+        description: 'Jeden portál (celá adresa). Prázdné = všichni kandidáti z registru.'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: write
+  issues: write          # zakládá úkol, když úloha selže
+
+jobs:
+  zkouseni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vyzkoušet cesty
+        env:
+          ADRESA: ${{ inputs.adresa }}
+        run: node scripts/zkus-portal.mjs --zapis $ADRESA
+
+      - name: Commit nálezu (jen pokud se něco změnilo)
+        uses: ./.github/actions/commit-a-push
+        with:
+          zprava: "data: nález zkoušení portálů"
+          co: data/cesty-portalu.json
+      - name: Ohlásit selhání
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Zkoušení portálů
+          co-to-znamena: >-
+            Nezkouší se cesty k novým portálům. Web tím hned netrpí, ale hledání cesty ke zdroji se vrací k ruční práci.

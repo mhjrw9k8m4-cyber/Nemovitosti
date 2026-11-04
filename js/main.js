@@ -7309,7 +7309,12 @@
             '<span class="opp-place">' + PKCisteni.sazba(d.place) +
               (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
             '</span>' +
-            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+            /* MEZERA V HTML MEZI JMÉNEM MÍSTA A OKRESEM. Ve flexu se
+               nevykreslí, ale text stránky z ní bude dávat smysl —
+               a bez ní se u místa, které končí číslicí („Praha 6"),
+               slepí v předčítání i ve výběru textu „6okres Praha".
+               Naměřeno 4. 11. na index.html („6okres"). */
+            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
             (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
           '</div>' +
           /* 3. ŘÁDEK — CENA. Největší písmo na kartě a až pod tím, co se
@@ -8931,7 +8936,8 @@
           '</div>' +
           '<div class="opp-meta">' +
             '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
-            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+            /* Mezera v HTML — viz karta ve výpisu výš. */
+            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
           '</div>' +
           '<div class="opp-cenarad">' +
             /* Nezlomitelná mezera před jednotkou, jako ve výpisu: „457 248"

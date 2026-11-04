@@ -23303,3 +23303,65 @@ nová sada neunikne.
 nimi všech pět falešných nálezů jmenovitě. Čtyři sabotáže s ověřeným
 diffem: bez podmínky na převod (1 pád), zpátky `\w*` místo `\S*` (2),
 zrušený rozpočet běhu (2), tiše zahozené nepřečtené sady (1).
+
+## §373 — bot, který na portálu vyzkouší všechny cesty (a spojí ho dál)
+
+Cesta ke každému zdroji se dosud hledala **ručně**. U ÚZSVM to stálo
+šest běhů ohledání a dvě adresy, které vracely 404 (`/detail/<číslo>`
+a `/api/Property/Detail?id=`), než se našel tvar `/Home/Detail/<číslo>`.
+Takhle se dá projít pět portálů, ne sto — a kandidátů i nalezených
+hostitelů je víc, než na kolik mám běhů.
+
+**Co ten bot dělá.** U každého portálu projde **katalog tvarů adres** a
+u KAŽDÉ zapíše, co odpověděla:
+
+| skupina | co se zkouší |
+|---|---|
+| katalog otevřených dat | OFN `/lod/catalog`, `/katalog`, `/opendata/katalog`, `/api/catalogue`, `/katalog.jsonld` |
+| cizí normy katalogů | DCAT `/data.json`, CKAN `/api/3/action/package_search`, `/package_list` |
+| mapová rozhraní | ArcGIS `/arcgis/rest/services`, `/server/rest/services`, WFS GetCapabilities |
+| sklizeň metadat | OAI-PMH `/oai?verb=Identify` |
+| feedy a sitemapy | `/rss`, `/rss.xml`, `/feed`, `/atom.xml`, `/sitemap.xml`, `/sitemap_index.xml` + sitemapy, které web sám přiznal v robots.txt |
+| obvyklé stránky | `/nabidky`, `/nabidka-majetku`, `/prodej-majetku`, `/prodej-nemovitosti`, `/uredni-deska`, `/opendata`, `/otevrena-data` |
+| obvyklá API | `/api`, `/api/v1`, `/api/v2` |
+
+**Co je změřené a co se jen zkouší — to se nesmí slévat.** U každého
+tvaru stojí `zmereno`. Změřených je dnes **8** (OFN katalog, dvě jeho
+jiná pojmenování, RSS, feed, dvě sitemapy, stránka `/nabidky`), zbylých
+**21 jsou standardy, které se teprve zkoušejí** — CKAN na data.gov.cz
+vrátilo 404, jinde to nevíme. Hlášení ten rozdíl vypisuje, protože
+„zkusili jsme deset cest" není totéž jako „deset cest tam je".
+
+**A to podstatné: „odpověděla" ≠ „vede k nabídkám".** Stránka s nápisem
+„nenalezeno" odpoví taky 200 a taky je to HTML. Verdikt má proto čtyři
+stupně a každý se jmenuje: `nabídky` (z odpovědi se opravdu přečetly
+nabídky obecnou cestou — JSON-LD → mikrodata → signály), `slibná`
+(strojový tvar a mluví o pozemcích **i o převodu**), `odpověděla` (něco
+vrátila, ale nabídky v tom nejsou — a je napsané, co jí chybělo),
+`zavřená` (robots nedovoluje, HTTP chyba, prázdno).
+
+**Spojování portálů.** Vstupní adresa skoro nikdy není ta, kde nabídky
+jsou: katalog vede na datovou sadu, sada na soubor, sitemapa na výpis,
+výpis na inzerát. Nález z jedné cesty je proto vstup pro další do
+změřené hloubky — ne do nekonečna (strop 8 spojených cest na nález,
+60 dotazů na portál, 900 na běh).
+
+**Co bot NEDĚLÁ.** Neobchází nic: `robots.txt` se čte u KAŽDÉ adresy a
+zákaz je konec, ne překážka; jedno jméno robota, žádné střídání
+hlaviček. A **nezapojuje zdroj sám**: když cesta vrátí nabídky, napíše
+řádek do `OBECNE_ZDROJE` a tím skončí. O cizím webu se rozhoduje po
+přečtení jeho podmínek užití, a to je práce pro člověka.
+
+**Dvě sabotáže prošly zeleně a obě odhalily slepé místo ve zkoušce, ne
+v kódu.** První: `radekDoRegistru({ verdikt: 'slibná' })` bez adresy
+vrátí prázdno i po odstranění podmínky na verdikt, protože bez adresy
+spadne `new URL`. O výsledku tedy nerozhodoval verdikt, ale chybějící
+pole. Druhá: vyřazení zapojených zdrojů má **dvě větve** (kandidáti
+a nález hledání) a zkouška měřila jen tu první — přitom hledání klidně
+najde hostitele, kterého už čteme. Je to §369 ještě jednou: sabotáž,
+která nic neshodí, je nález o zkoušce.
+
+**Čím je to podložené.** `test-zkus-portal.mjs` 62 kontrol na skutečných
+odpovědích (běhy 41808644005, 41809363032, 41809145657, 41809247276,
+41802028063). Deset sabotáží s ověřeným diffem; dvě z nich si nejdřív
+vynutily opravu zkoušky.

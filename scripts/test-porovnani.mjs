@@ -242,10 +242,20 @@ if (t) {
     `surově ${Math.round(nejSurovy)}, přepočteno ${Math.round(nejM2)}`);
   const nejPl = Math.max.apply(null, vzorky.map((d) => d.area));
   const cis = (x) => Number(String(x).replace(/[^\d]/g, ''));
-  pravda('zeleně je opravdu nejnižší cena za m² a největší výměra',
-    t.nej.length === 2
-      && t.nej.some((x) => cis(x) === Math.round(nejM2))
-      && t.nej.some((x) => cis(x) === nejPl),
+  /* PŘI SHODĚ SE ZELENĚ OZNAČÍ VŠECHNY STEJNĚ DOBRÉ, A JE TO SPRÁVNĚ.
+     Naměřeno 4. 11.: po zapojení ÚZSVM a opravě výběru (§371) mají dvě
+     nabídky Lesů ČR shodně 20 Kč/m², takže zelené buňky byly tři, ne
+     dvě. Zkouška čekala přesně dvě a spadla — jenže tvrdit „nejnižší
+     je jen tahle" by u shody byla lež. Pravidlo se tedy říká přesněji:
+     zelená je aspoň na dvou buňkách, KAŽDÁ zelená nese buď to nejnižší
+     Kč/m², nebo tu největší výměru, a obě ta čísla jsou mezi nimi. */
+  const zelene = t.nej.map(cis);
+  pravda('zeleně je opravdu nejnižší cena za m² a největší výměra'
+    + (zelene.length > 2 ? ` (shoda: zelených ${zelene.length})` : ''),
+    zelene.length >= 2
+      && zelene.includes(Math.round(nejM2))
+      && zelene.includes(nejPl)
+      && zelene.every((x) => x === Math.round(nejM2) || x === nejPl),
     `v tabulce ${JSON.stringify(t.nej)}, spočítáno ${Math.round(nejM2)} Kč a ${nejPl} m²`);
 }
 

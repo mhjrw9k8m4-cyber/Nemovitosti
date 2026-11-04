@@ -26,18 +26,24 @@
 
   function totoznostZdroje(url) {
     if (!url) return null;
-    var s = String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '')
-      .replace(/[?#].*$/, '').replace(/\/+$/, '').toLowerCase();
+    var cele = String(url).replace(/^https?:\/\//i, '').replace(/^www\./i, '').toLowerCase();
+    var s = cele.replace(/[?#].*$/, '').replace(/\/+$/, '');
     if (!s) return null;
     var i = s.indexOf('/');
     var host = i < 0 ? s : s.slice(0, i);
     var cesta = i < 0 ? '' : s.slice(i);
-    var cisla = cesta.match(/\d{4,}/g);
-    if (cisla && cisla.length) {
+    var nejdelsi = function (text) {
+      var cisla = String(text || '').match(/\d{4,}/g);
+      if (!cisla || !cisla.length) return '';
       var nej = cisla[0];
       for (var j = 1; j < cisla.length; j++) if (cisla[j].length > nej.length) nej = cisla[j];
-      return host + '/' + nej;
-    }
+      return nej;
+    };
+    var zCesty = nejdelsi(cesta);
+    if (zCesty) return host + '/' + zCesty;
+    var qi = cele.indexOf('?');
+    var zParametru = qi < 0 ? '' : nejdelsi(cele.slice(qi + 1));
+    if (zParametru) return host + '?' + zParametru;
     return s;
   }
 

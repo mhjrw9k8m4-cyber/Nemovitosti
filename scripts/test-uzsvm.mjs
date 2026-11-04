@@ -253,6 +253,55 @@ const PACHT2 = {
     typeof d.ListType === 'string' && 'Fulltext' in d && 'State' in d, U.dotaz(1, 1));
 }
 
+/* ---- 6) MÍSTO, KTERÉ MÍSTEM NENÍ ------------------------------
+   TOHLE JSOU SKUTEČNÁ MÍSTA, KTERÁ SE 4. 11. DOSTALA NA WEB. Na kartě
+   stálo „p. p. č. 1759/1, okres Tachov" a geokodér hledal v mapě číslo
+   parcely. Devatenáct z 118 zapojených nabídek. Pravidlo z §365
+   („číslo spisu není místo") se vztahovalo na část před pomlčkou —
+   tyhle tvary pomlčku nemají, takže propadly dál. */
+{
+  const NEJSOU_MISTA = [
+    '303/115 a 303/116',
+    'p. p. č. 1759/1',
+    'p. p. č. 2022/5',
+    'p. p. č. 365/12',
+    'pozemek p. č. 1529',
+    'pozemek p. č. 1738',
+    'pozemek p. č. 245',
+    'pozemek p.p.č. 122/1',
+    'pozemek parc.č. 874/1',
+    'POZEMEK ST. P. Č. 8',
+    'aukce č. EAS/ULT/130/2026',
+    'aukce č. EAS/ULT/131/2026',
+    'aukce č. EAS/ULT/113/2026',
+    'EAS/ULT/125/2026',
+    'EAS/ULT/115/2026',
+    'EAS/ULT/126/2026',
+    'EAS/ULT/128/2026',
+  ];
+  for (const n of NEJSOU_MISTA) {
+    je(`„${n}" není místo`, U.mistoZNazvu(n), '');
+  }
+  /* A DVĚMA SE MÍSTO NAOPAK ZACHRÁNÍ: mají ho v názvu, jen za ním visí
+     parcela nebo číslo spisu. */
+  je('„Staňkovice u Žatce p.p.č. 715/15" → obec', U.mistoZNazvu('Staňkovice u Žatce p.p.č. 715/15'), 'Staňkovice u Žatce');
+  je('„Slavče u Trhových Svinů EAS/CB/153/2026" → obec',
+    U.mistoZNazvu('Slavče u Trhových Svinů EAS/CB/153/2026'), 'Slavče u Trhových Svinů');
+  /* A TVARY, KTERÉ FUNGOVALY, FUNGOVAT NEPŘESTALY. */
+  je('k. ú. zůstává', U.mistoZNazvu('pozemek p. č. 233/3 v k. ú. Bukovec'), 'Bukovec');
+  je('místo před pomlčkou zůstává', U.mistoZNazvu('Otinoves - pozemek parc. č. st. 37'), 'Otinoves');
+  je('a víceslovné taky',
+    U.mistoZNazvu('Bakov nad Jizerou - pozemek pozemková parcela č. 553/7'), 'Bakov nad Jizerou');
+  je('místo za čárkou zůstává', U.mistoZNazvu('Pacht pozemku p.č. 4862/16, Napajedla'), 'Napajedla');
+  je('a číslo spisu před „k. ú." pořád nepřebije obec',
+    U.mistoZNazvu('EA/BBV/66/2026 - k. ú. Sedlec u Mikulova'), 'Sedlec u Mikulova');
+  je('kdežto číslo spisu s parcelou dál místo nedá',
+    U.mistoZNazvu('EA/BBV/66/2026 - pozemek parc. č. 12/3'), '');
+  /* Očištění samo o sobě: ať je vidět, že se nemaže text, jen označení. */
+  je('očištění nechá jméno být', U.ocistiMisto('Horní Dunajovice'), 'Horní Dunajovice');
+  je('a z pouhého označení nechá prázdno', U.ocistiMisto('parc. č. 12/3'), '');
+}
+
 console.log('ÚZSVM — nabídky majetku státu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

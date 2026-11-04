@@ -4383,7 +4383,8 @@
             '<span class="opp-place">' + PKCisteni.sazba(d.place) +
               (jeVidene ? '<i class="opp-videne" title="Tenhle pozemek jste už otevřeli">už otevřeno</i>' : '') +
             '</span>' +
-            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+
+            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
             (sub ? '<span class="opp-sub">' + sub + '</span>' : '') +
           '</div>' +
 
@@ -5451,7 +5452,8 @@
           '</div>' +
           '<div class="opp-meta">' +
             '<span class="opp-place">' + PKCisteni.sazba(d.place) + '</span>' +
-            (mistoRadek(d) ? '<span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
+
+            (mistoRadek(d) ? ' <span class="opp-loc">' + mistoRadek(d) + '</span>' : '') +
           '</div>' +
           '<div class="opp-cenarad">' +
 

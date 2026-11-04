@@ -129,6 +129,49 @@ export function parcelaZNazvu(s) {
    místo na konci za poslední čárkou („…, Racková"). Okres přichází
    zvlášť v poli DistrictName, takže tohle nemusí být obec — ale musí
    to být jméno, které geokodér najde. */
+/* CO MÍSTO NENÍ. Naměřeno 4. 11. na 118 zapojených nabídkách ÚZSVM:
+   u 19 z nich se jako místo na web dostalo něco, co místo vůbec není —
+   označení parcely („p. p. č. 1759/1", „pozemek p. č. 1529",
+   „POZEMEK ST. P. Č. 8", „303/115 a 303/116") nebo číslo jednacího
+   spisu aukce („EAS/ULT/130/2026", „aukce č. EAS/ULT/125/2026").
+   Na kartě pak stálo „p. p. č. 1759/1, okres Tachov" a geokodér
+   hledal v mapě číslo parcely.
+
+   Pravidlo z §365 („číslo spisu není místo") tu bylo, jen se vztahovalo
+   na část PŘED POMLČKOU. Tyhle tvary pomlčku nemají, takže propadly
+   dál. Ověřeno na všech 19: po očištění zmizí 17 z nich a dvěma se
+   místo naopak ZACHRÁNÍ, protože ho v názvu mají („Staňkovice u Žatce
+   p.p.č. 715/15", „Slavče u Trhových Svinů EAS/CB/153/2026").
+
+   Vymyšlené místo je horší než chybějící nabídka: nabídka bez místa se
+   zahodí a je to vidět v počtu, kdežto nabídka s parcelním číslem
+   místo obce lže čtenáři i mapě. */
+export const SPISOVA_ZNACKA = /\b[A-ZÁ-Ž]{2,4}\/[A-ZÁ-Ž0-9]{1,6}\/\d+\/\d{2,4}\b/g;
+export const OZNACENI_PARCELY = /\b(?:st\.?\s*)?(?:p\.?\s*)?p\.?\s*[čc]\.?\s*[\d/]+(?:\s*(?:,|a)\s*[\d/]+)*/gi;
+export const OZNACENI_PARCELY2 = /\bparc(?:ela)?\.?\s*(?:[čc]\.?)?\s*[\d/]+/gi;
+/* Slova, která samo o sobě místem nejsou — po očištění nesmí zbýt jen ono. */
+export const NENI_MISTO = /^(?:pozemek|pozemky|poz|st|stp|parcela|parc|aukce|aukc|id|spoluvl|podíl|podil|prodej|pacht|a|i|č|c|ks)$/i;
+
+export function ocistiMisto(s) {
+  let t = String(s || '')
+    .replace(SPISOVA_ZNACKA, ' ')
+    .replace(OZNACENI_PARCELY, ' ')
+    .replace(OZNACENI_PARCELY2, ' ')
+    /* Zbytky: samostatná čísla s lomítky a uvozovací slova. */
+    .replace(/\b\d+(?:\/\d+)*\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s,;:.\-–—]+|[\s,;:.\-–—]+$/g, '')
+    .trim();
+  /* Co zbylo bez písmen, místo není. */
+  if (!/[A-Za-zÁ-Žá-ž]/.test(t)) return '';
+  /* A nesmí zbýt jen uvozovací slovo („pozemek", „aukce č."). */
+  const slova = t.split(/\s+/).filter((x) => /[A-Za-zÁ-Žá-ž]/.test(x));
+  if (!slova.length) return '';
+  if (slova.every((x) => NENI_MISTO.test(x.replace(/[.,;:]/g, '')))) return '';
+  if (t.length < 2) return '';
+  return t.slice(0, 80);
+}
+
 export function mistoZNazvu(s) {
   const t = String(s || '').trim();
   /* MÍSTO BÝVÁ I PŘED POMLČKOU, a je to nejčastější tvar vůbec.
@@ -146,15 +189,26 @@ export function mistoZNazvu(s) {
      na „v" se spoléhat nelze, u 67 nabídek stálo jen „k. ú.", a tím
      zmizely všechny (zahozeno jako „bez místa"). */
   const ku = t.match(/k\.?\s*ú\.?\s*([^,;(]+)/i);
-  if (ku) return ku[1].trim().replace(/\s+/g, ' ').slice(0, 80);
-  if (jeJmeno) return pred.replace(/\s+/g, ' ');
+  if (ku) return ocistiMisto(ku[1]);
+  if (jeJmeno) return ocistiMisto(pred);
   /* „Pacht pozemku p.č. 4862/16, Napajedla" → poslední část. */
   const casti = t.split(',').map((x) => x.trim()).filter(Boolean);
   const posledni = casti[casti.length - 1] || '';
   /* Poslední část nesmí být jen číslo parcely — pak místo v názvu není. */
   if (casti.length > 1 && !/^[\d/\s]+$/.test(posledni) && !/^p\.?\s*č/i.test(posledni)) {
-    return posledni.replace(/\s+/g, ' ').slice(0, 80);
+    return ocistiMisto(posledni);
   }
+  /* A NAKONEC: JEN KDYŽ V NÁZVU OPRAVDU STOJÍ OZNAČENÍ, KTERÉ JDE
+     ODŘÍZNOUT. Tady se zachrání tvary, které místo mají, ale bez
+     pomlčky, bez „k. ú." a bez čárky: „Staňkovice u Žatce p.p.č.
+     715/15". Bez téhle podmínky by se jako místo vrátil KAŽDÝ název,
+     v němž jsou písmena — a „Pozemek - bez místa" by se stalo obcí.
+     (Na to jsem si naletěl hned při psaní téhle opravy: dvě starší
+     kontroly spadly a měly pravdu.) */
+  const maOznaceni = new RegExp(SPISOVA_ZNACKA.source).test(t)
+    || new RegExp(OZNACENI_PARCELY.source, 'i').test(t)
+    || new RegExp(OZNACENI_PARCELY2.source, 'i').test(t);
+  if (maOznaceni) return ocistiMisto(t);
   return '';
 }
 

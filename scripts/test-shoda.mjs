@@ -219,7 +219,15 @@ const cil = await p.evaluate((D) => {
   // Stejná podmínka, jakou má vykreslování: bez srovnání s podobně velkými
   // pozemky se sleva netvrdí, takže takový pozemek by na stránce nic neukázal
   // a test by hlásil chybu tam, kde žádná není.
-  const n = D.filter((d) => { const o = M.odhad(d); return o && o.podleVelikosti && o.podOdhadem >= 15; })
+  /* A ÚŘEDNĚ STANOVENOU CENU VYNECHAT — stránka u ní odhad schválně
+     neukazuje („Cena stanovená úředně… § 12"), takže by zkouška
+     hledala číslo tam, kde žádné být nemá. Naměřeno 4. 11.: po
+     zapojení ÚZSVM a opravě výběru (§371) vyrostla státní půda na
+     429 nabídek a nejhlubší „sleva" vyšla právě u ní. */
+  const n = D.filter((d) => {
+    if (window.PK_CENY.spravniCena && window.PK_CENY.spravniCena(d)) return false;
+    const o = M.odhad(d); return o && o.podleVelikosti && o.podOdhadem >= 15;
+  })
     .sort((a, b) => M.odhad(b).podOdhadem - M.odhad(a).podOdhadem)[0];
   return n ? { klic: [n.place, n.parcel, n.okres, n.lat.toFixed(3), n.lng.toFixed(3)].join('|'),
     ll: n.lat + ',' + n.lng, castka: M.odhad(n).castka } : null;
