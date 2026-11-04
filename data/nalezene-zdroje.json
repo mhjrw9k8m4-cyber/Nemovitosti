@@ -1,0 +1,92 @@
+{
+ "updated": "2026-11-04",
+ "katalogu": 34,
+ "sad": 596,
+ "chyby": [
+  "http://www.w3.org/2000/svg: odpověď není JSON",
+  "https://data.mf.gov.cz/: odpověď není JSON",
+  "https://data.mf.gov.cz/lod/sparql: HTTP 404",
+  "https://opendata.mfcr.cz: odpověď není JSON",
+  "https://opendata.mfcr.cz/lod/sparql: HTTP 404",
+  "https://data.cssz.cz: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://data.cssz.cz/sparql: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://opendata.mvcr.cz/api/catalogue: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://data.mvcr.gov.cz: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://data.mvcr.gov.cz/sparql: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://geoportal.gov.cz/php/micka/opendata/org/ministerstvo%20zemědělství: odpověď není JSON",
+  "https://geoportal.gov.cz/php/micka/opendata/org/český%20hydrometeorologický%20ústav: odpověď není JSON",
+  "https://lkod.cz/catalog/chmi: odpověď není JSON",
+  "https://heis.vuv.cz/xmicka: odpověď není JSON",
+  "https://heis.vuv.cz/xmicka/opendata: odpověď není JSON",
+  "https://lkod.mzp.cz/output/lkod-sfzp/lkod-sfzp.jsonld: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)",
+  "https://lkod.msmt.gov.cz/: odpověď není JSON",
+  "https://data.sukl.gov.cz: odpověď není JSON",
+  "https://www.mzcr.cz: odpověď není JSON",
+  "https://dataor.justice.cz/: odpověď není JSON",
+  "https://kiosek.justice.cz/opendata/: robots.txt nedovoluje (robots.txt odpověděl 403)",
+  "https://kiosek.justice.cz/opendata/katalog.jsonld: robots.txt nedovoluje (robots.txt odpověděl 403)",
+  "https://geodata.csu.gov.cz/as/dp-gis: robots.txt nedovoluje (robots.txt odpověděl 503)",
+  "https://geodata.csu.gov.cz/as/odsdatovyportalapi/api/lod/catalog: robots.txt nedovoluje (robots.txt odpověděl 503)",
+  "https://csu.gov.cz/otevrena_data: odpověď není JSON",
+  "https://geodata.csu.gov.cz/as/odslkodapi/api/lod/catalog: robots.txt nedovoluje (robots.txt odpověděl 503)",
+  "https://www.czso.cz/csu/czso/otevrena_data: odpověď není JSON",
+  "https://vdb.czso.cz/pll/eweb/lkod_ld.katalog: robots.txt nedovoluje (Disallow: /)",
+  "https://atom.cuzk.cz: HTTP 406",
+  "https://micka.geology.cz: robots.txt nedovoluje (robots.txt se nepodařilo přečíst: fetch failed)"
+ ],
+ "nalezeno": [
+  {
+   "jmeno": "Data RÚIAN o hierarchii prvků poskytovaná pro stát ve formátu CSV",
+   "host": "atom.cuzk.cz",
+   "iri": "https://atom.cuzk.cz/api/responses/CZ-00025712-CUZK_RUIAN-CSV-HIE-ST.jsonld",
+   "adresa": "https://atom.cuzk.gov.cz/get.ashx?theme=RUIAN-CSV-HIE-ST",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr",
+   "sad": 20
+  },
+  {
+   "jmeno": "Seznam dětských hřišť na území MČ Praha 11 - 3/2026",
+   "host": "api.opendata.praha.eu",
+   "iri": "https://api.opendata.praha.eu/lod/catalog/62b0c4d2-f5c2-4ca1-89ff-9187f8f20215",
+   "adresa": "https://opendata.praha.eu",
+   "skore": 7,
+   "duvod": "+5 parcel, +2 katastr",
+   "sad": 2
+  },
+  {
+   "jmeno": "Hlavní odvodňovací a závlahová zařízení",
+   "host": "raw.githubusercontent.com",
+   "iri": "https://raw.githubusercontent.com/MZe-OpenData/lkod-min/main/datové-sady/Hlavní%20odvodňovací%20a%20závlahová%20zařízení.jsonld",
+   "adresa": "https://data.gov.cz",
+   "skore": 5,
+   "duvod": "+5 pozemk",
+   "sad": 2
+  },
+  {
+   "jmeno": "Památky, objekty",
+   "host": "opendata.plzen.eu",
+   "iri": "https://opendata.plzen.eu/public/opendata/dataset/43",
+   "adresa": "https://opendata.plzen.eu/public/opendata/download-file/104",
+   "skore": 5,
+   "duvod": "+5 parcel",
+   "sad": 1
+  },
+  {
+   "jmeno": "Cenové mapy města Mostu",
+   "host": "mapy.mesto-most.cz",
+   "iri": "https://mapy.mesto-most.cz/lkod/item/dataset::cenové-mapy-města-mostu.jsonld",
+   "adresa": "https://opendata.mesto-most.cz",
+   "skore": 5,
+   "duvod": "+5 pozemk",
+   "sad": 1
+  }
+ ],
+ "zahozeno": {
+  "uzMame": 0,
+  "nizkeSkore": 570,
+  "bezAdresy": 0
+ },
+ "dny": {
+  "2026-11-04": 5
+ }
+}
