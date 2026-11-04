@@ -111,6 +111,47 @@ const PACHT2 = {
     Math.round(n.price / n.area) > 1000, String(Math.round(n.price / n.area)) + ' Kč/m²');
 }
 
+/* ---- 3b) TŘI VADY Z PRVNÍHO BĚHU NAOSTRO ----------------------
+   Všechny tři ukázal až ostrý běh, protože vznikly z toho, co jsem
+   v pěti ukázkových záznamech neviděl.
+
+   1) Prodej za 35 milionů se zahodil jako PACHT, protože v jeho
+      1 521 znaků dlouhém popisu je zmínka o nájmu. Pozemek se prodává
+      a zároveň je pronajatý — u státních pozemků spíš pravidlo než
+      výjimka. Rozhoduje proto název a z popisu jen věta o PŘEDMĚTU.
+   2) „k. ú." se v názvu píše i bez „v" („- k. ú. Sedlec u Mikulova"),
+      a tím zmizelo 67 nabídek jako „bez místa".
+   3) Spoluvlastnický podíl: cena je za PODÍL, výměra v popisu za celou
+      parcelu. Kč/m² by vyšlo o tolik nižší, kolikátý ten podíl je. */
+{
+  const prodejPronajaty = {
+    ...PRODEJ,
+    Description: 'Pozemek p. č. 233/3 o výměře 15 003 m2 je pronajat na základě'
+      + ' nájemní smlouvy do roku 2030. Prodává se v elektronické aukci.',
+  };
+  pravda('pronajatý pozemek, který se PRODÁVÁ, je prodej', U.jeProdej(prodejPronajaty) === true);
+  pravda('pacht podle názvu se pozná', U.jeProdej(PACHT) === false);
+  pravda('a pacht i tehdy, když je jen v „předmětem aukce je pacht"',
+    U.jeProdej({ Name: 'Pozemky v k. ú. Nové Sedlo',
+      Description: 'Předmětem aukce je pacht pozemku(ů) ve vlastnictví státu.' }) === false);
+  const z = {};
+  const { nabidky } = U.nabidkyZOdpovedi({ Properties: [prodejPronajaty] }, vymeraZPopisu, druhZPopisu, z);
+  je('takže na web projde', nabidky.length, 1);
+  pravda('a nezapočítá se jako pacht', !z.pacht, JSON.stringify(z));
+
+  je('místo se přečte i z „- k. ú. Sedlec u Mikulova"',
+    U.mistoZNazvu('EA/BBV/66/2026 - k. ú. Sedlec u Mikulova, p.č. 1239/1'), 'Sedlec u Mikulova');
+
+  const z2 = {};
+  U.nabidkyZOdpovedi({ Properties: [{
+    ...PRODEJ,
+    Name: 'Vrátno - id. spoluvl. podíl ve výši 1/2 st.p.č. 13',
+    Description: 'Pozemek st.p.č. 13 o výměře 240 m2 se nachází v intravilánu obce Vrátno.',
+  }] }, vymeraZPopisu, druhZPopisu, z2);
+  je('spoluvlastnický podíl se zahodí a má vlastní jméno', z2.spoluvlastnickyPodil, 1);
+  pravda('a nevydává se za „bez výměry"', !z2.bezVymery, JSON.stringify(z2));
+}
+
 /* ---- 4) KVALITA: CO SE ZAHAZUJE A POČÍTÁ ----------------------- */
 {
   const z = {};

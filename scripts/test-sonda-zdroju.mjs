@@ -530,6 +530,20 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     neniVRegistru.length
       ? `v SOURCES je, v ZAPOJENE chybí: ${neniVRegistru.join(', ')}`
       : 'registr i SOURCES mluví o týchž zdrojích');
+  /* KANDIDÁT, KTERÉHO UŽ POKRÝVÁ JINÝ ZDROJ, to musí mít napsané —
+     jinak vypadá jako nezapojená práce, která čeká. Změřeno 4. 11.
+     z exportu centrální evidence: Lesy ČR tam posílají 45 ze 94
+     záznamů a Správa železnic 17, kdežto Vojenské lesy ani jeden. */
+  const pokryti = K.KANDIDATI.filter((z) => z.pokrytoJinym);
+  pravda(`kandidáti pokrytí jiným zdrojem to mají napsané (${pokryti.length})`,
+    pokryti.length >= 2, JSON.stringify(K.KANDIDATI.map((z) => z.jmeno)));
+  pravda('a ten zdroj je opravdu zapojený',
+    pokryti.every((z) => K.ZAPOJENE.some((v) => v.jmeno === z.pokrytoJinym)),
+    JSON.stringify(pokryti.map((z) => z.pokrytoJinym)));
+  pravda('a v důvodu stojí, čím je to změřené',
+    pokryti.every((z) => /ZMĚŘENO/.test(z.proc || '')),
+    'pokrytí bez měření je dohad, ne nález');
+
   pravda('u kandidátů se netvrdí, že je adresa ověřená',
     K.KANDIDATI.every((z) => z.adresaOverena === false)
     && K.ZAPOJENE.every((z) => z.adresaOverena === true),

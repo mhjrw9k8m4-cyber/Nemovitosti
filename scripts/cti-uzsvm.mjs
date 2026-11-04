@@ -38,10 +38,34 @@ export const NA_STRANU = 100;
    na růst, ne na nekonečnou smyčku. */
 export const STROP_STRAN = 10;
 
-/* Pacht, nájem, výpůjčka — cokoli, co není prodej. Hledá se v názvu
-   i v popisu, protože u pachtu stojí „Předmětem aukce je pacht
-   pozemku(ů)" právě v popisu. */
+/* CO NENÍ PRODEJ. Pacht, nájem, výpůjčka, služebnost.
+ *
+ * A POZOR NA TO, KDE SE TO HLEDÁ. Nejdřív jsem to hledal v názvu
+ * I V CELÉM POPISU — a první běh naostro ukázal, co to udělá:
+ * zahodilo se tím „pozemek p. č. 233/3 v k. ú. Bukovec" za 35 milionů,
+ * tedy ten jediný PRODEJ z prvních pěti. Jeho popis má 1 521 znaků
+ * a někde v nich se o nájmu mluví — pozemek se prodává a zároveň je
+ * pronajatý, což je u státních pozemků spíš pravidlo než výjimka.
+ *
+ * Rozhoduje proto NÁZEV („Pacht pozemku p.č. 2025, Racková") a z popisu
+ * jen věta, která říká, co je PŘEDMĚTEM („Předmětem aukce je pacht
+ * pozemku(ů)…"). Zmínka o nájmu uvnitř popisu prodej nediskvalifikuje. */
 export const NENI_PRODEJ = /pacht|pronáj|nájem|najem|výpůjč|vypujc|služebnost|sluzebnost/i;
+export const PREDMETEM_NENI_PRODEJ =
+  /předmětem\s+(?:aukce|prodeje|nabídky|výběrového\s+řízení)?\s*(?:je|jsou)\s+(?:[^.]{0,40}?)(pacht|pronáj|nájem|najem|výpůjč|vypujc)/i;
+
+export function jeProdej(z) {
+  if (NENI_PRODEJ.test(String((z && z.Name) || ''))) return false;
+  if (PREDMETEM_NENI_PRODEJ.test(String((z && z.Description) || ''))) return false;
+  return true;
+}
+
+/* SPOLUVLASTNICKÝ PODÍL. „Vrátno - id. spoluvl. podíl ve výši 1/2
+   st.p.č. 13" — cena je za PODÍL, kdežto výměra v popisu je výměra
+   celé parcely. Kč/m² by z toho vyšlo o tolik nižší, kolikátý je ten
+   podíl, a podle Kč/m² se tu řadí i počítá verdikt. Zahazuje se to
+   proto zvlášť a s vlastním jménem, ne jako „bez výměry". */
+export const SPOLUVLASTNICKY_PODIL = /spoluvl|spoluvlastnick|podíl(?:\s+ve\s+výši)?\s+\d+\s*\/\s*\d+|id\.\s*podíl/i;
 
 export function dotaz(strana = 1, naStranu = NA_STRANU, kategorie = KATEGORIE_POZEMKY) {
   return JSON.stringify({
@@ -94,7 +118,10 @@ export function parcelaZNazvu(s) {
    to být jméno, které geokodér najde. */
 export function mistoZNazvu(s) {
   const t = String(s || '').trim();
-  const ku = t.match(/v\s*k\.\s*ú\.\s*([^,;(]+)/i);
+  /* „v k. ú. Bukovec" i „- k. ú. Sedlec u Mikulova". Naměřeno 4. 11.:
+     na „v" se spoléhat nelze, u 67 nabídek stálo jen „k. ú.", a tím
+     zmizely všechny (zahozeno jako „bez místa"). */
+  const ku = t.match(/k\.?\s*ú\.?\s*([^,;(]+)/i);
   if (ku) return ku[1].trim().replace(/\s+/g, ' ').slice(0, 80);
   /* „Pacht pozemku p.č. 4862/16, Napajedla" → poslední část. */
   const casti = t.split(',').map((x) => x.trim()).filter(Boolean);
@@ -168,8 +195,11 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno) {
        čísla kategorií přečísloval, tahle kontrola to řekne hned,
        kdežto bez ní by se na web nasypaly stavby jako pozemky. */
     if (!/pozemk/i.test(String(z.CategoryName || ''))) { pocti('neniPozemek', z.CategoryName + ' — ' + z.Name); continue; }
-    const text = String(z.Name || '') + ' ' + String(z.Description || '');
-    if (NENI_PRODEJ.test(text)) { pocti('pacht', z.Name); continue; }
+    if (!jeProdej(z)) { pocti('pacht', z.Name); continue; }
+    if (SPOLUVLASTNICKY_PODIL.test(String(z.Name || ''))) {
+      pocti('spoluvlastnickyPodil', z.Name);
+      continue;
+    }
     const c = cena(z.Price);
     if (!c || z.NoPrice === true) { pocti('bezCeny', z.Name + ' — cena ' + JSON.stringify(z.Price)); continue; }
     const v = vymeraZPopisu(z.Description) || vymeraZPopisu(z.Name);

@@ -72,8 +72,11 @@ export const KANDIDATI = [
     proc: 'Obec musí záměr prodat pozemek vyvěsit na úřední desku; eDesky úřední desky'
       + ' sdružují. Druh „obec" dnes na webu nemá vlastní zdroj vůbec.' },
   { jmeno: 'Lesy ČR — prodej majetku', host: 'lesycr.cz', typ: 'sale', adresaOverena: false,
-    url: 'https://lesycr.cz/o-nas/prodej-nepotrebneho-majetku/',
-    proc: 'Státní podnik prodává nepotřebné lesní a jiné pozemky; nabídky zveřejňuje.' },
+    pokrytoJinym: 'Nabídky státu',
+    proc: 'Státní podnik prodává nepotřebné lesní a jiné pozemky. ZMĚŘENO 4. 11.: do'
+      + ' centrální evidence je posílá sám — ze 94 záznamů exportu je 45 jeho, tedy'
+      + ' nejvíc ze všech. Vlastní stahovač by přinesl totéž podruhé.',
+    url: 'https://lesycr.cz/o-nas/prodej-nepotrebneho-majetku/' },
 
   /* PŘIDÁNO 3. 11. — HLEDÁNÍ OBJEMU MIMO BEZREALITKY.
      Změřeno týž den: aby Bezrealitky klesly na 40 % a nic se nesmazalo,
@@ -89,12 +92,16 @@ export const KANDIDATI = [
     url: 'https://www.vls.cz/cs/pro-obchodni-partnery/prodej-nepotrebneho-majetku/prodej-nemoviteho-majetku',
     proc: 'Státní podnik prodává nemovitosti ve veřejných výběrových řízeních a aktuálně'
       + ' nabízené vypisuje. Lesní a zemědělská půda — druh, který na webu zastupuje'
-      + ' dnes jen Farmy (9 nabídek).' },
+      + ' dnes jen Farmy (9 nabídek). ZMĚŘENO 4. 11.: v centrální evidenci NENÍ ani'
+      + ' jeden jeho záznam (na rozdíl od Lesů ČR a Správy železnic), takže tady by'
+      + ' vlastní čtení přineslo nabídky, které jinak nemáme odkud vzít.' },
 
   { jmeno: 'Správa železnic', host: 'spravazeleznic.cz', typ: 'sale', adresaOverena: false,
-    url: 'https://www.spravazeleznic.cz/',
-    proc: 'Prodává nepotřebné pozemky kolem tratí. Vede se zvlášť od centrální evidence'
-      + ' proto, že se měří obojí: kdyby portál.gov.cz stačil, tenhle se nezapojí.' },
+    pokrytoJinym: 'Nabídky státu',
+    proc: 'Prodává nepotřebné pozemky kolem tratí. Vedla se zvlášť proto, že se měřilo'
+      + ' obojí — a ZMĚŘENO 4. 11.: do centrální evidence posílá 17 ze 94 záznamů'
+      + ' exportu, tedy druhý nejvíc. Portál.gov.cz tedy stačí a tenhle se nezapojuje.',
+    url: 'https://www.spravazeleznic.cz/' },
 
   { jmeno: 'Insolvenční rejstřík', host: 'isir.justice.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://isir.justice.cz/',

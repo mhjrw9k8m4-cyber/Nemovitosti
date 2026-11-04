@@ -23035,3 +23035,55 @@ záznamech z běhu ohledání 41802028063, v rychlé sadě (145, bylo 144).
 
 **Vymyšlené fixtury tu nejsou ani jedny** — po §365, kde mě vymyšlený
 popis stál půl práce, je to pravidlo, ne preference.
+
+## §368 — tři vady, které se ukázaly až na ostrých datech
+
+První ostrý běh nového zdroje (ÚZSVM, 283 pozemků v číselníku) dal
+**68 nabídek na web** a tři čísla, která se bez ukázek nedala
+vyložit: `pacht 32`, `bezMista 67`, `bezVymery 116`. Ke každému
+zahození proto přibyla ukázka té konkrétní nabídky — a hned se ukázalo,
+že **dvě z těch tří ztrát jsou moje vada, ne vada dat.**
+
+**1. Prodej za 35 milionů se zahodil jako pacht.**
+
+```
+· pacht: pozemek p. č. 233/3 v k. ú. Bukovec
+```
+
+To je ten jediný PRODEJ z prvních pěti záznamů. Hledal jsem slovo
+„pacht/nájem" v názvu **i v celém popisu** — a jeho popis má 1 521
+znaků, ve kterých se o nájmu mluví: ten pozemek se prodává a zároveň
+**je pronajatý**, což je u státní půdy spíš pravidlo než výjimka.
+Rozhoduje teď název („Pacht pozemku p.č. 2025, Racková") a z popisu
+jen věta o PŘEDMĚTU („Předmětem aukce je pacht pozemku(ů)…").
+
+**2. „k. ú." se píše i bez „v" — 67 nabídek.**
+
+```
+· bezMista: EA/BBV/66/2026 - k. ú. Sedlec u Mikulova, p.č. 1239/1
+```
+
+Čekal jsem „v k. ú. Bukovec". Kde název začíná číslem jednacího spisu
+a katastr je za pomlčkou, nenašlo se nic a nabídka zmizela jako „bez
+místa".
+
+**3. Spoluvlastnický podíl má mít vlastní jméno, ne „bez výměry".**
+
+```
+· bezVymery: Vrátno - id. spoluvl. podíl ve výši 1/2 st.p.č. 13 —
+  Pozemek st.p.č. 13 se nachází v intravilánu obce Vrátno…
+```
+
+U podílu je **cena za podíl, kdežto výměra v popisu za celou parcelu**.
+Kč/m² by vyšlo o tolik nižší, kolikátý ten podíl je — a podle Kč/m² se
+tu řadí, počítá verdikt i kreslí mapa. Zahazuje se dál, ale pod svým
+jménem; „bez výměry" o tom lhalo.
+
+**A ještě jedno číslo, které lhalo o řád.** V hlášce stálo „evidence
+hlásí 760 v kategorii Pozemky". Sedm set šedesát je počet **všeho** —
+včetně movitých věcí a zvířat. Pozemků je 283. Počet se teď bere
+z číselníku u naší kategorie a bez číselníku se netvrdí nic.
+
+**Čím je to podložené.** `test-uzsvm.mjs` 46 kontrol (bylo 32).
+Sabotáže: hledat pacht v celém popisu (3 pády), místo jen s „v k. ú."
+(1), podíl se bere (1), počet z `PropertyTotalCount` (1).
