@@ -134,12 +134,38 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
      tisíce adres, nesmí to znamenat tisíce dotazů na cizí weby. */
   const hodne = Array.from({ length: 50 }, (_, i) => `<a href="https://obec${i}.cz/katalog">k</a>`).join('');
   je('strop na počet adres platí', H.adresyZeStranky(hodne, 7).length, 7);
+  /* A VÝCHOZÍ STROP TAKY — jinak by se dal posunout bez povšimnutí
+     (našel sabotážní stroj: `STROP_ADRES = 300` → 301 nikdo nepoznal). */
+  const premnoho = Array.from({ length: H.STROP_ADRES + 50 },
+    (_, i) => `<a href="https://obec${i}.cz/katalog">k</a>`).join('');
+  je('a bez řečeného stropu platí ten výchozí',
+    H.adresyZeStranky(premnoho).length, H.STROP_ADRES);
+  /* A TEĎ TO ČÍSLO SAMO. Kontrola výš je TAUTOLOGIE: obě strany si
+     berou `H.STROP_ADRES`, takže se posunou spolu a sabotáž projde
+     (přesně to sabotážní stroj ukázal). Mez je rozhodnutí — 300 adres
+     na portál při 90 cizích adresách z rejstříku — a kdo ji změní, má
+     ji změnit i tady a tím si ji zdůvodnit. */
+  je('a ta výchozí mez je 300 adres', H.STROP_ADRES, 300);
 }
 {
   /* CO ZMĚŘENÍ ŘEKLO O OBYČEJNĚ STAŽENÉ STRÁNCE: `catalog=` v ní není.
      Hledání na to musí umět odpovědět „nenašel jsem nic", ne spadnout. */
   je('stránka bez adres dá prázdný seznam, ne výjimku', H.adresyZeStranky('<html></html>'), []);
   je('nic na vstupu taky nespadne', H.adresyZeStranky(null), []);
+  /* TOHLE NAŠEL SABOTÁŽNÍ STROJ, NE JÁ. Když se z `adresyZeStranky`
+     odstraní `if (!host) continue;`, zkouška o tom nevěděla — a přitom
+     by se mezi kandidáty dostala adresa, kterou nejde ani rozebrat,
+     a bot by se na ni pak vypravil. Hlídá se to tedy přímo: ať z každé
+     vrácené adresy jde přečíst hostitel. */
+  {
+     /* `https://[zlomena` vzor adresy chytí, ale `new URL` ji nerozebere
+        — přesně to je ten případ, který ta pojistka drží. */
+     const a = H.adresyZeStranky('<a href="https://obec.cz/katalog">k</a> https://[zlomena'
+       + ' <a href="https://data.gov.cz/x">cizí</a>');
+     pravda('každá vrácená adresa má hostitele, který se dá přečíst',
+       a.length > 0 && a.every((x) => H.hostZAdresy(x) !== ''),
+       JSON.stringify(a));
+  }
 }
 
 /* ---- 2) JSI KATALOG? PTÁ SE, NEHÁDÁ --------------------------- */
@@ -163,6 +189,12 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     'https://api.opendata.mmhk.cz/lod/catalog/815e142e-f2e8-4327-97e0-575939934d90');
   const prazdny = H.katalogZOdpovedi({});
   je('katalog bez sad dá prázdné pole, ne výjimku', prazdny.sady, []);
+  /* A TOHLE TAKY NAŠEL SABOTÁŽNÍ STROJ: bez `filter(Boolean)` by se
+     ze sady bez `iri` stala PRÁZDNÁ adresa a bot by se na ni vydal.
+     Je to táž vada jako dnešní prázdná distribuce, jen o úroveň výš. */
+  je('sada bez adresy se do seznamu nedostane jako prázdná adresa',
+    H.katalogZOdpovedi({ 'datová_sada': ['https://a.cz/1', { nazev: 'bez iri' }, '', null] }).sady,
+    ['https://a.cz/1']);
 }
 
 /* ---- 4) ČTENÍ DATOVÉ SADY ------------------------------------ */
@@ -171,6 +203,10 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
   je('název sady', s.nazev, 'test1');
   je('popis sady', s.popis, 'wdwd');
   je('klíčová slova česky', s.klicova, 'teat1');
+  /* A TOHLE TAKY NAŠEL SABOTÁŽNÍ STROJ: `textCs` nad polem zahazuje
+     prázdné kusy, jinak by mezi slovy vznikla dvojitá mezera a z ní
+     text, který se hůř hledá. Fixtura tedy musí mít prázdný kus. */
+  je('víceřečové pole bez prázdných kusů', H.textCs({ cs: ['prodej', '', 'pozemků'] }), 'prodej pozemků');
   je('PRÁZDNÁ distribuce nedá soubor s prázdnou adresou', s.soubory, []);
 }
 {

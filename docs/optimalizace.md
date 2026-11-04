@@ -23365,3 +23365,82 @@ která nic neshodí, je nález o zkoušce.
 odpovědích (běhy 41808644005, 41809363032, 41809145657, 41809247276,
 41802028063). Deset sabotáží s ověřeným diffem; dvě z nich si nejdřív
 vynutily opravu zkoušky.
+
+## §374 — samorozvoj: smyčka, která si najde práci a prokáže hlídače
+
+Každá vada, kterou jsem dnes našel, se našla stejně: něco nesedělo
+v ČÍSLECH a já se zeptal proč. Postup byl pokaždé týž, jen předmět
+jiný — a to znamená, že ten postup není úsudek, ale **práce, kterou
+umí stroj**:
+
+| co nesedělo | §  |
+|---|---|
+| zdroj stáhl 91 nabídek a na web dal 0 | §371 |
+| 19 ze 118 nabídek mělo jako obec číslo parcely | §371 |
+| dva různé pozemky dostaly týž klíč archivu | §371 |
+| mez „víc než 20 dražeb" měřila staré složení dat | §372 |
+| sabotáž prošla zeleně, protože zkouška měla slepé místo | §369 |
+
+**Tři kusy, každý s jedinou prací.**
+
+`scripts/nalezce.mjs` **si najde práci**. Spočítá, co nesedí, a každý
+nález má jméno, důkaz a třídu příčiny (`data` / `kód` / `zkouška` /
+`hlídač`) — třídy se nemíchají, protože rozhodují, kdo to má v ruce.
+Nic nemění a po síti nechodí; hlídá to zkouška.
+
+`scripts/sabotuj.mjs` **prokáže hlídače**. Vybere soubor, který zkouška
+hlídá (podle jejích importů), vyrobí seznam mechanických sabotáží
+(obrácené porovnání, zahozená pojistka `if … continue`, zrušený
+`filter(Boolean)`, `&&` za `||`, posunutá konstanta), každou zvlášť
+zapíše, **ověří diffem, že se soubor opravdu změnil** (bez toho sabotáž
+nedokazuje nic — §369), pustí zkoušku a soubor **vrátí z gitu**.
+
+`scripts/samorozvoj.mjs` **vede účet**. Kolik hlídačů je sabotáží
+prokázaných, kolik má slepé místo, kolika se stroj ještě nedotkl — a
+střídá je tak, aby se došlo na všechny. To číslo je míra toho, jak moc
+se dá repozitáři věřit, a roste samo tím, že smyčka běží.
+
+**A proč to dává smysl: první ostrý běh.** Pustil jsem to na
+`test-hledej-zdroje.mjs` — zkoušku, kterou jsem napsal hodinu předtím,
+měla 74 kontrol a čtyři ručně promyšlené sabotáže. Stroj v ní našel
+**šest slepých míst**:
+
+1. zahozená pojistka `if (!host) continue;` — mezi kandidáty by se
+   dostala adresa, kterou nejde ani rozebrat;
+2. zrušený `filter(Boolean)` v `textCs` — mezi slovy by vznikla dvojitá
+   mezera;
+3. zrušený `filter(Boolean)` u sad katalogu — sada bez `iri` by se
+   stala PRÁZDNOU adresou, na kterou by se bot vypravil;
+4. posunutý `STROP_ADRES` z 300 na 301;
+5. obrácené `&&` na `||`;
+6. a nejhorší: moje první záplata na #4 byla **TAUTOLOGIE** — obě
+   strany kontroly si bral z téhož modulu (`H.adresyZeStranky(…).length`
+   proti `H.STROP_ADRES`), takže se posunuly spolu a sabotáž prošla.
+   Je to táž past jako dnešní `je(…, PODIL_VYCHOZI, null)`, kde
+   `JSON.stringify(Infinity)` je `null`.
+
+Po opravě chytá zkouška **šest ze šesti**. Ani jedno z těch šesti míst
+bych ručně nenašel, protože jsem si sabotáže vybíral tam, kde jsem
+čekal vadu — a slepé místo je definičně tam, kde ji nečekám.
+
+**Pojistky, protože tenhle stroj píše do zdroje.** Jen `scripts/*.mjs`
+a `js/*.js` (nikdy data, generované stránky, `js/min/` ani workflow);
+jen nad čistým souborem; vrací se z gitu a ověří se bitová shoda; na
+zkoušku je časový limit a co nedoběhne, je „nerozhodnuto", ne
+„chycená"; syntaktický pád je „nepoužitelná", ne „chycená"; a stroj se
+nepustí sám v sobě (značka v prostředí — bez ní by se pustil ve
+zkoušce, kterou sám pouští, což se u sebeopravy jednou stalo 39× naráz).
+
+**Co smyčka NEDĚLÁ a dělat nebude.** Nemění web ani kód. Nález je věta
+„tady čísla nesedí a tady je důkaz"; co z toho plyne, rozhoduje člověk.
+Opravy, které jde spočítat ze zdroje, má na starosti `sebeoprava.mjs`
+se svými osmi pravidly. Automat, který smí měnit kód podle vlastního
+nálezu, je nebezpečný přesně tak, jak je slabý jeho nález — a nález
+mechanické sabotáže je slabý vědomě: nerozumí tomu, co kód znamená,
+umí vyrobit i nesmysl. Jeho cena není v tom, že by vadu opravil, ale
+v tom, že ukáže, **kde hlídač nehlídá**.
+
+**Čím je to podložené.** `test-samorozvoj.mjs` 56 kontrol na skutečných
+číslech z dnešních nálezů. Osm sabotáží s ověřeným diffem; jedna z nich
+si nejdřív vynutila opravu zkoušky, protože místo pojmenované chyby
+zkoušku shodila na výjimce.

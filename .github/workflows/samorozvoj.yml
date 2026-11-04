@@ -1,0 +1,79 @@
+name: Samorozvoj
+
+# Smyčka, která si NAJDE PRÁCI SAMA, PROKÁŽE HLÍDAČE SABOTÁŽÍ a vede
+# o tom účet. Tři kroky, všechny spočítatelné:
+#
+#   1. nálezce (scripts/nalezce.mjs) spočítá, co nesedí: zdroj, který
+#      stáhl a nezveřejnil; místo, které místem není; dvě nabídky
+#      s jedním klíčem archivu; zkoušku, kterou nikdo nepouští;
+#   2. sabotážní stroj (scripts/sabotuj.mjs) rozbije hlídanou věc a
+#      kouká, jestli to hlídač chytí — a OVĚŘÍ DIFFEM, že se soubor
+#      opravdu změnil, protože bez toho sabotáž nedokazuje nic;
+#   3. účet (data/samorozvoj.json) říká, kolik hlídačů je prokázaných.
+#      To číslo je míra toho, jak moc se dá repozitáři věřit, a roste
+#      samo tím, že smyčka běží.
+#
+# CO SMYČKA NEDĚLÁ: nemění web ani kód. Opravy, které jde spočítat ze
+# zdroje, má na starosti scripts/sebeoprava.mjs se svými osmi pravidly.
+# Tady se nic takového nepřidává: automat, který smí měnit kód podle
+# vlastního nálezu, je nebezpečný přesně tak, jak je slabý jeho nález.
+#
+# PROČ KAŽDÝ DEN A NE JEDNOU TÝDNĚ. Zkoušek je přes tři sta a za běh
+# se prokáže pět, takže cesta přes všechny trvá dva měsíce — a pak se
+# jede znovu, protože kód se mezitím změnil.
+
+on:
+  schedule:
+    # Denně v 7:41 UTC — po robotu dat (6:00) a mimo špičku.
+    - cron: '41 7 * * *'
+  workflow_dispatch:
+    inputs:
+      kolo:
+        description: 'Kolik hlídačů prokázat v tomhle běhu (výchozí 5)'
+        required: false
+        default: '5'
+        type: string
+
+permissions:
+  contents: write
+  issues: write          # zakládá úkol, když se najde vážná vada
+
+jobs:
+  samorozvoj:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Sabotážní stroj vrací soubory PŘÍKAZEM `git show HEAD:…`, takže
+      # potřebuje historii a jméno. Bez identity by `git` v Actions
+      # odmítl i čtení v některých krocích.
+      - name: Jméno pro git
+        run: |
+          git config user.name "samorozvoj"
+          git config user.email "noreply@anthropic.com"
+
+      - name: Najít práci a prokázat hlídače
+        env:
+          KOLO: ${{ inputs.kolo }}
+        run: node scripts/samorozvoj.mjs --zapis --kolo=${KOLO:-5}
+
+      - name: Commit účtu (jen pokud se něco změnilo)
+        if: always()
+        uses: ./.github/actions/commit-a-push
+        with:
+          zprava: "data: účet samorozvoje"
+          co: data/samorozvoj.json
+      - name: Ohlásit nález
+        if: failure()
+        uses: ./.github/actions/ohlas-selhani
+        with:
+          jmeno: Samorozvoj
+          co-to-znamena: >-
+            Smyčka našla vážnou vadu nebo hlídače se slepým místem. Výpis v logu říká co a kde; tichý hlídač je horší než žádný.

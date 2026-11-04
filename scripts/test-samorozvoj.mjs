@@ -1,0 +1,231 @@
+/* Test: nálezce, sabotážní stroj a smyčka samorozvoje
+   ==================================================================
+   Spuštění: node scripts/test-samorozvoj.mjs   (bez sítě)
+
+   CO SE TU MĚŘÍ NEJVÍC. Tenhle stroj PÍŠE DO ZDROJE (sabotáž zapíše
+   rozbitý soubor a vrátí ho z gitu), takže se tu nejpřísněji hlídají
+   pojistky: do čeho smí a do čeho nesmí sahat, že ověřuje diffem a že
+   se nepustí sám v sobě. Vada v tomhle souboru nestojí jednu zkoušku,
+   stojí důvěru v celý repozitář.
+
+   FIXTURY JSOU SKUTEČNÉ: čísla i texty jsou z prvního ostrého běhu
+   smyčky (4. 11. 2026) a ze dnešních nálezů — zdroj, který stáhl 91
+   a zveřejnil 0 (§371), a 19 nabídek s parcelním číslem místo obce.
+   ================================================================== */
+import { readFileSync } from 'node:fs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
+import * as N from './nalezce.mjs';
+import * as S from './sabotuj.mjs';
+import * as R from './samorozvoj.mjs';
+
+let ok = 0, chyb = 0;
+const zpravy = [];
+function pravda(popis, vyslo, proc) {
+  if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+}
+function je(popis, vyslo, cekano) {
+  const a = JSON.stringify(vyslo), b = JSON.stringify(cekano);
+  if (a === b) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}\n      čekáno ${b}, vyšlo ${a}`); }
+}
+
+/* ---- 1) NÁLEZCE: ZDROJ STÁHL A NEZVEŘEJNIL (§371) ------------- */
+{
+  /* Přesně ten stav, který dnes nikdo nepoznal: ÚZSVM „ok", 91, nula. */
+  const data = {
+    sources: [
+      { nazev: 'ÚZSVM', stav: 'ok', pocet: 91, nepustilo: 2 },
+      { nazev: 'Bezrealitky', stav: 'ok', pocet: 1916, nepustilo: 270 },
+    ],
+    opportunities: Array.from({ length: 1631 }, () => ({ zdroj: 'Bezrealitky', place: 'Zlín' })),
+  };
+  const n = N.zdrojeNaWebu(data);
+  pravda('zdroj, který stáhl 91 a zveřejnil 0, je nález',
+    n.some((x) => /ÚZSVM/.test(x.jmeno) && /nedává na web nic/.test(x.jmeno)),
+    JSON.stringify(n.map((x) => x.jmeno)));
+  je('a je to nález nejvyšší tíhy', (n.find((x) => /ÚZSVM/.test(x.jmeno)) || {}).tiha, 3);
+  pravda('v důkazu stojí obě čísla', /stáhl 91/.test(n[0].dukaz) && /na webu 0/.test(n[0].dukaz), n[0].dukaz);
+  pravda('zdroj, u kterého úbytek vysvětlený je, nález není',
+    !n.some((x) => /Bezrealitky/.test(x.jmeno)),
+    'Bezrealitky: 1 916 − 270 − 15 = 1 631, všechno pojmenované');
+}
+{
+  /* A nevysvětlený úbytek, i když nula to není. */
+  const data = {
+    sources: [{ nazev: 'Dražby', stav: 'pokles', pocet: 45, nepustilo: 6 }],
+    opportunities: Array.from({ length: 20 }, () => ({ zdroj: 'Dražby' })),
+  };
+  const n = N.zdrojeNaWebu(data);
+  pravda('nevysvětlený úbytek 19 ze 45 je nález',
+    n.some((x) => /nevysvětlený úbytek/.test(x.jmeno)), JSON.stringify(n));
+  pravda('a v důkazu je i to, co se vysvětlit dalo',
+    /síto 6/.test((n[0] || {}).dukaz || ''), (n[0] || {}).dukaz);
+}
+{
+  const maly = { sources: [{ nazev: 'Farmy', stav: 'ok', pocet: 9, nepustilo: 0 }],
+    opportunities: [{ zdroj: 'Farmy' }] };
+  je('u malého zdroje se z poměru nálezy nedělají', N.zdrojeNaWebu(maly).length, 0);
+}
+
+/* ---- 2) NÁLEZCE: MÍSTO, KTERÉ MÍSTEM NENÍ --------------------- */
+{
+  const data = { opportunities: [
+    { place: 'p. p. č. 1759/1', zdroj: 'ÚZSVM', okres: 'Tachov' },
+    { place: 'EAS/ULT/130/2026', zdroj: 'ÚZSVM', okres: 'Litoměřice' },
+    { place: '303/115 a 303/116', zdroj: 'ÚZSVM', okres: 'Rakovník' },
+    { place: 'Horní Dunajovice', zdroj: 'Bezrealitky', okres: 'Znojmo' },
+    { place: 'Praha 6', zdroj: 'Bezrealitky', okres: 'Praha' },
+  ] };
+  const n = N.mistaKteraNejsouMisto(data);
+  je('tři místa z pěti jsou nález', n.length, 1);
+  /* DŮKAZ SE ČTE PŘES PRÁZDNO. Když kontrola výš padne, nesmí se
+     zkouška rozsypat na výjimce: pád bez jména se v tomhle repozitáři
+     počítá za horší než pojmenovaná chyba, a sabotáž, která zkoušku
+     shodí místo aby ji nechala červenou, se špatně čte. */
+  const dukaz = String((n[0] || {}).dukaz || '');
+  pravda('a v důkazu je počet i zdroj', /3 nabídek/.test(dukaz) && /ÚZSVM 3×/.test(dukaz), dukaz);
+  pravda('obec se jménem nálezem není', dukaz !== '' && !/Horní Dunajovice/.test(dukaz), dukaz);
+  pravda('a ani „Praha 6" — číslice na konci jména obce je v pořádku',
+    dukaz !== '' && !/Praha 6/.test(dukaz), dukaz);
+}
+
+/* ---- 3) NÁLEZCE: DVĚ NABÍDKY, JEDEN KLÍČ ---------------------- */
+{
+  /* Skutečný případ: dvě nabídky Lesů ČR, adresy se liší jen `?id=`. */
+  const data = { opportunities: [
+    { place: 'Libavské Údolí', parcel: '127/21', okres: 'Sokolov', area: 151, price: 3020,
+      url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/?id=109041' },
+    { place: 'Libavské Údolí', parcel: '127/21', okres: 'Sokolov', area: 316, price: 6320,
+      url: 'https://portal.gov.cz/nepotrebny-nemovity-majetek/?id=109040' },
+  ] };
+  const slepy = () => 'stejny-klic';
+  const n = N.klicKoliduje(data, slepy);
+  je('kolize klíče je nález', n.length, 1);
+  pravda('a v důkazu jsou obě nabídky', /151 m² za 3020/.test(n[0].dukaz) && /316 m² za 6320/.test(n[0].dukaz),
+    n[0].dukaz);
+  je('s klíčem, který rozlišuje, nález není',
+    N.klicKoliduje(data, (o) => 'k-' + o.area).length, 0);
+  je('bez funkce na klíč se nehádá', N.klicKoliduje(data, null).length, 0);
+}
+
+/* ---- 4) NÁLEZCE NIC NEMĚNÍ ------------------------------------ */
+{
+  const telo = readFileSync(new URL('./nalezce.mjs', import.meta.url), 'utf8');
+  pravda('nálezce neumí zapsat do souboru',
+    !/writeFileSync|appendFileSync|rmSync|unlinkSync/.test(telo),
+    'nález je věta, ne zásah');
+  pravda('a nechodí po síti', !/fetch\(|stahni|http/.test(telo.replace(/^\s*\*.*$/gm, '')),
+    'měření sítě patří sondě, ne nálezci');
+}
+
+/* ---- 5) SABOTÁŽNÍ STROJ: DO ČEHO SMÍ A DO ČEHO NE ------------- */
+{
+  pravda('smí do scripts/*.mjs', S.smiSabotovat('scripts/cti-uzsvm.mjs'));
+  pravda('smí do js/*.js', S.smiSabotovat('js/klic.js'));
+  pravda('NESMÍ do dat', !S.smiSabotovat('data/opportunities.json'));
+  pravda('NESMÍ do generovaných stránek', !S.smiSabotovat('pozemek-zlin-1.html'));
+  pravda('NESMÍ do minifikovaných kopií', !S.smiSabotovat('js/min/klic.js'));
+  pravda('NESMÍ do workflow', !S.smiSabotovat('.github/workflows/testy.yml'));
+  pravda('a NESMÍ ven z repozitáře', !S.smiSabotovat('../../etc/passwd'));
+  pravda('ani do podstromu s dvěma tečkami', !S.smiSabotovat('scripts/../js/klic.js'));
+}
+
+/* ---- 6) CO TA ZKOUŠKA HLÍDÁ ----------------------------------- */
+{
+  const vzor = "import * as U from './cti-uzsvm.mjs';\n"
+    + "import { pricinaChyb } from './chyby-hlaska.mjs';\n"
+    + "import * as T from './test-neco.mjs';\n"
+    + "const cen = readFileSync(new URL('../js/ceny.js', import.meta.url), 'utf8');\n";
+  const h = S.coHlidá(vzor);
+  pravda('najde hlídaný modul', h.includes('scripts/cti-uzsvm.mjs'), JSON.stringify(h));
+  pravda('i prohlížečový soubor', h.includes('js/ceny.js'), JSON.stringify(h));
+  pravda('pomůcku na hlášky nebere', !h.includes('scripts/chyby-hlaska.mjs'), JSON.stringify(h));
+  pravda('a jinou zkoušku taky ne', !h.some((x) => /test-/.test(x)), JSON.stringify(h));
+  je('a když zkouška neimportuje nic našeho, nehádá se', S.coHlidá('const a = 1;'), []);
+}
+
+/* ---- 7) KATALOG SABOTÁŽÍ -------------------------------------- */
+{
+  /* Pojistka ve vzoru musí být dost dlouhá na to, aby ji vzor chytil:
+     katalog hledá `if (…) continue;` s aspoň třemi znaky v podmínce,
+     protože `if (a) continue;` bývá ve smyčce bez významu pro hlídače. */
+  const telo = 'const A = 5;\nif (!host) continue;\nconst b = a >= 3 && c === d;\nx.map(f).filter(Boolean);\n';
+  const k = S.kandidatiSabotazi(telo);
+  const jmena = k.map((x) => x.jmeno);
+  pravda('obrácené porovnání je kandidát', jmena.some((x) => />= na >/.test(x)), JSON.stringify(jmena));
+  pravda('zahozená pojistka taky', jmena.some((x) => /if … continue/.test(x)));
+  pravda('zahozený filter(Boolean) taky', jmena.some((x) => /filter\(Boolean\)/.test(x)));
+  pravda('posunutá konstanta taky', jmena.some((x) => /konstanta/.test(x)));
+  /* A ŽE SE KONSTANTA OPRAVDU POSUNE O JEDNIČKU — jinak by sabotáž
+     zapsala `null` a nerozbila nic. */
+  const kon = k.find((x) => /konstanta/.test(x.jmeno));
+  je('konstanta se posune o jedničku', kon.nahrad, '= 6;');
+  je('v kódu bez těch tvarů není co rozbít', S.kandidatiSabotazi('const x = [];').length, 0);
+}
+
+/* ---- 8) SMYČKA: STŘÍDÁNÍ A ÚČET ------------------------------- */
+{
+  const zk = ['test-a.mjs', 'test-b.mjs', 'test-c.mjs'];
+  const ucet = { zkousky: { 'test-b.mjs': { kdy: '2026-11-04', chytila: 2, nechytila: 0 },
+    'test-c.mjs': { kdy: '2026-11-01', chytila: 0, nechytila: 1 } } };
+  je('na řadě je ten, který nebyl nikdy, pak nejstarší',
+    R.naRade(zk, ucet, 3), ['test-a.mjs', 'test-c.mjs', 'test-b.mjs']);
+  je('a kolo se dá zmenšit', R.naRade(zk, ucet, 1), ['test-a.mjs']);
+  const stav = R.stavUctu(zk, ucet);
+  je('účet: jeden prokázaný', stav.prokazanych, 1);
+  je('jeden se slepým místem', stav.sSlepymMistem, 1);
+  je('jeden neprokázaný', stav.nedotcenych, 1);
+  const h = R.hlaseniUctu(stav, 4).join(' ');
+  pravda('hlášení říká podíl i počty', /1 z 3/.test(h) && /33 %/.test(h) && /Nálezů v tomhle běhu: 4/.test(h), h);
+}
+
+/* ---- 9) CO SE OHLÁSÍ NAHLAS ---------------------------------- */
+{
+  const nalezy = [{ jmeno: 'vážný', tiha: 3, dukaz: 'x' }, { jmeno: 'drobný', tiha: 1, dukaz: 'y' }];
+  const prokazy = [{ zkouska: 'test-a.mjs', nechytila: 2 }, { zkouska: 'test-b.mjs', nechytila: 0 }];
+  const k = R.kOhlaseni(nalezy, prokazy);
+  je('nahlas jde vážný nález', k.vazne.map((x) => x.jmeno), ['vážný']);
+  je('a hlídač se slepým místem', k.slepa.map((x) => x.zkouska), ['test-a.mjs']);
+  pravda('„ještě neprokázáno" se nahlas nehlásí — to není vada, to je práce',
+    !k.vazne.some((x) => /neprokázal/.test(x.jmeno)));
+}
+
+/* ---- 10) POJISTKY V KÓDU ------------------------------------- */
+{
+  const sab = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  const smy = readFileSync(new URL('./samorozvoj.mjs', import.meta.url), 'utf8');
+  pravda('sabotáž se ověřuje DIFFEM, než se něco tvrdí',
+    /zmenilSe\(cil\)/.test(sab) && /stav = 'prázdná'/.test(sab),
+    'bez toho sabotáž nedokazuje nic (§369)');
+  pravda('soubor se vrací z GITU, ne z paměti',
+    /git\(\['show', 'HEAD:' \+ cesta\]\)/.test(sab));
+  pravda('a ověří se, že je zpátky bitově shodný',
+    /=== puvodni/.test(sab) && /nevrátil do původní podoby/.test(sab));
+  pravda('nad rozdělaným souborem se nesabotuje',
+    /cistySoubor\(cil\)/.test(sab) && /rozdělanou změnu/.test(sab));
+  pravda('zkouška má časový limit a co nedoběhne, je „nerozhodnuto"',
+    /timeout: casLimit/.test(sab) && /nerozhodnuto/.test(sab));
+  pravda('syntaktický pád se nepočítá jako chycená sabotáž',
+    /nepoužitelná/.test(sab));
+  pravda('a stroj se nepustí sám v sobě',
+    /process\.env\[UVNITR\] === '1'/.test(sab) && /process\.env\[UVNITR\] === '1'/.test(smy),
+    'jinak by se pustil ve zkoušce, kterou sám pouští');
+  pravda('smyčka web ani kód nemění',
+    !/writeFileSync\(join\(KOREN, '(js|scripts)'/.test(smy)
+      && /writeFileSync\(UCET/.test(smy),
+    'zapisuje se jen účet');
+  pravda('bez --zapis se nezapisuje ani účet',
+    smy.indexOf("includes('--zapis')") < smy.indexOf('writeFileSync(UCET'));
+  pravda('po chybě se smyčka zastaví, nehromadí nejistotu',
+    /if \(v\.chyba\) break;/.test(smy));
+  pravda('a zkoušky, které potřebují živou síť, se nestřídají',
+    /MIMO_STRIDANI/.test(smy) && R.MIMO_STRIDANI.test('test-chat.mjs'),
+    'u nich by sabotáž měřila síť, ne hlídače');
+}
+
+console.log('Samorozvoj — nálezce, sabotážní stroj a smyčka');
+console.log(zpravy.join('\n'));
+console.log(`\n${ok} v pořádku, ${chyb} chyb.`);
+if (chyb) console.error(`::error::Samorozvoj: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`);
+process.exit(chyb ? 1 : 0);

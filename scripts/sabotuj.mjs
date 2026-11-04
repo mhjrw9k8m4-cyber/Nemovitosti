@@ -1,0 +1,254 @@
+#!/usr/bin/env node
+/* SABOTÁŽNÍ STROJ — AŤ SI HLÍDAČE PROKÁŽE STROJ SÁM
+   ==================================================================
+   Spuštění:
+     node scripts/sabotuj.mjs test-uzsvm.mjs        prokáže jednu zkoušku
+     node scripts/sabotuj.mjs --strop=3 test-…      nejvýš tři sabotáže
+     node scripts/sabotuj.mjs --vypis test-…        jen vypíše, co by zkusil
+
+   PROČ. Pravidlo z CLAUDE.md je jasné: každý nový hlídač se prokáže
+   SABOTÁŽÍ — rozbije se měřená věc a hlídač to musí chytit. Dělal jsem
+   to ručně a §369 ukázal, co to stojí: dvě sabotáže byly PRÁZDNÉ
+   (záplata se nenašla, soubor se nezměnil) a já si je odškrtl jako
+   „hlídač nedrží". Zeleně přitom svítilo něco, co se nikdy nezměřilo.
+
+   Dnes se to stalo ještě dvakrát jinak: sabotáž proběhla, soubor se
+   změnil — a zkouška přesto prošla, protože měla slepé místo (fixtura
+   bez adresy rozhodovala místo verdiktu; vyřazení zapojených zdrojů má
+   dvě větve a měřila se jedna). Obojí je nález o ZKOUŠCE, ne o kódu.
+
+   Tenhle stroj dělá týž postup, jen bez mojí nepozornosti:
+     1. vybere soubor, který zkouška hlídá (podle jejích importů),
+     2. vyrobí seznam MECHANICKÝCH sabotáží (obrátí porovnání, zahodí
+        pojistku, posune konstantu, zruší `filter(Boolean)`, zamění
+        `&&` za `||`),
+     3. každou zvlášť zapíše, OVĚŘÍ DIFFEM, že se soubor opravdu
+        změnil, pustí zkoušku a soubor vrátí z gitu,
+     4. zapíše, co zkouška chytila a co ne.
+
+   CO NEUMÍ A NEPŘEDSTÍRÁ. Mechanická sabotáž není promyšlená: nerozumí
+   tomu, co kód znamená, takže umí vyrobit i nesmysl, který spadne na
+   syntaxi (to se počítá jako „nepoužitelná", ne jako „chycená").
+   Nenahrazuje sabotáž promyšlenou — ukazuje SLEPÁ MÍSTA: hlídače,
+   kteří nechytí ani obrácené porovnání, a to je nález sám pro sebe.
+
+   ŠEST POJISTEK, PROTOŽE TENHLE STROJ PÍŠE DO ZDROJE:
+     1. Jen `scripts/*.mjs` a `js/*.js`. Nikdy data, nikdy generované
+        stránky, nikdy workflow.
+     2. Jen nad ČISTÝM souborem. Když má soubor rozdělanou změnu,
+        sabotáž se nespustí — jinak by se vracelo cizí.
+     3. Vrací se z gitu (`git show HEAD:soubor`), ne z paměti.
+     4. Po každé sabotáži se ověří, že soubor je zpátky bitově shodný.
+     5. Nikdy sám v sobě: značka v prostředí, ať se stroj nepustí
+        ve zkoušce, kterou sám pouští.
+     6. Časový limit na zkoušku; co nedoběhne, je „nerozhodnuto", ne
+        „chycená".
+   ================================================================== */
+import { readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
+export const UVNITR = 'SABOTUJ_UVNITR';
+export const CAS_LIMIT_MS = 300000;
+export const STROP_SABOTAZI = 4;
+
+/* ------------------------------------------------------------------
+   KATALOG SABOTÁŽÍ. Každá je { jmeno, najdi, nahrad, proc }. `najdi`
+   je regulární výraz; bere se PRVNÍ výskyt, aby byla změna malá a
+   srozumitelná.
+   ------------------------------------------------------------------ */
+export const SABOTAZE = [
+  { jmeno: 'obrácené porovnání (>= na >)', najdi: /\s>=\s/, nahrad: ' > ',
+    proc: 'Mez o jeden stupeň: hlídač s mezí „aspoň" nesmí projít s „víc než".' },
+  { jmeno: 'obrácené porovnání (<= na <)', najdi: /\s<=\s/, nahrad: ' < ',
+    proc: 'Táž mez z druhé strany.' },
+  { jmeno: 'obrácená rovnost (=== na !==)', najdi: /\s===\s/, nahrad: ' !== ',
+    proc: 'Rovnost obráceně je nejhrubší vada, jakou kód může mít.' },
+  { jmeno: 'zahozená pojistka (if … continue)', najdi: /\n\s*if \([^\n]{3,120}\) \{? ?continue; ?\}?\n/,
+    nahrad: '\n', proc: 'Krok, který něco zahazuje, se vypne — hlídač to má poznat.' },
+  { jmeno: 'zahozený filter(Boolean)', najdi: /\.filter\(Boolean\)/, nahrad: '',
+    proc: 'Prázdné hodnoty projdou dál (přesně vada z dnešní prázdné distribuce).' },
+  { jmeno: 'a místo nebo (&& na ||)', najdi: /\s&&\s/, nahrad: ' || ',
+    proc: 'Podmínka, která měla platit celá, stačí napůl.' },
+  { jmeno: 'posunutá konstanta (+1)', najdi: /=\s(\d{1,6});/, nahrad: null,
+    proc: 'Číslo v kódu o jedničku jinak: mez, strop ani počet se nesmí dát posunout bez povšimnutí.' },
+];
+
+/* Kandidáti pro jeden soubor: co z katalogu se na něj vůbec dá použít. */
+export function kandidatiSabotazi(telo, katalog = SABOTAZE) {
+  const ven = [];
+  for (const s of (katalog || [])) {
+    const m = String(telo || '').match(s.najdi);
+    if (!m) continue;
+    let nahrad = s.nahrad;
+    if (nahrad === null) {
+      /* Posunutá konstanta: hodnota se dopočítá z nálezu. */
+      const cislo = Number(m[1]);
+      if (!isFinite(cislo)) continue;
+      nahrad = '= ' + (cislo + 1) + ';';
+    }
+    ven.push({ jmeno: s.jmeno, proc: s.proc, najdi: s.najdi, nahrad, ukazka: m[0].trim().slice(0, 80) });
+  }
+  return ven;
+}
+
+/* Co ta zkouška vlastně hlídá: její importy z vlastního kódu. Bere se
+   první, který není zkouška ani pomůcka — a schválně se nehádá: když
+   zkouška nic takového neimportuje, vrací se nic a sabotáž se nedělá. */
+export const POMOCNE = /^(chyby-hlaska|zkouska-|pomocne|falesn)/;
+
+export function coHlidá(teloZkousky) {
+  const ven = [];
+  for (const m of String(teloZkousky || '').matchAll(/from '\.\/([a-z0-9-]+\.mjs)'/g)) {
+    const f = m[1];
+    if (/^test-/.test(f) || POMOCNE.test(f)) continue;
+    if (!ven.includes('scripts/' + f)) ven.push('scripts/' + f);
+  }
+  for (const m of String(teloZkousky || '').matchAll(/['"`]\.\.\/(js\/[a-z0-9.-]+\.js)['"`]/g)) {
+    if (!ven.includes(m[1])) ven.push(m[1]);
+  }
+  return ven;
+}
+
+export function smiSabotovat(cesta) {
+  const c = String(cesta || '');
+  if (/\.\./.test(c)) return false;
+  if (/^js\/min\//.test(c)) return false;              // generované
+  return /^scripts\/[a-z0-9-]+\.mjs$/.test(c) || /^js\/[a-z0-9.-]+\.js$/.test(c);
+}
+
+/* ------------------------------------------------------------------
+   ŽIVÁ ČÁST: zapsat, ověřit diffem, pustit zkoušku, vrátit z gitu.
+   ------------------------------------------------------------------ */
+function git(args) {
+  return execFileSync('git', args, { cwd: KOREN, encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+}
+
+export function cistySoubor(cesta) {
+  try { return git(['status', '--porcelain', '--', cesta]).trim() === ''; }
+  catch { return false; }
+}
+
+export function vratZGitu(cesta) {
+  const z = git(['show', 'HEAD:' + cesta]);
+  writeFileSync(join(KOREN, cesta), z);
+}
+
+export function zmenilSe(cesta) {
+  try { return git(['diff', '--numstat', '--', cesta]).trim() !== ''; }
+  catch { return false; }
+}
+
+export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit = CAS_LIMIT_MS, vypis = false } = {}) {
+  const cestaZkousky = 'scripts/' + zkouska;
+  let teloZkousky = '';
+  try { teloZkousky = readFileSync(join(KOREN, cestaZkousky), 'utf8'); }
+  catch { return { zkouska, chyba: 'zkoušku nejde přečíst' }; }
+  const cile = coHlidá(teloZkousky).filter(smiSabotovat);
+  if (!cile.length) {
+    return { zkouska, hlidá: [], sabotaze: [],
+      poznamka: 'zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít' };
+  }
+  const vysledky = [];
+  for (const cil of cile) {
+    if (vysledky.length >= strop) break;
+    if (!cistySoubor(cil)) {
+      vysledky.push({ cil, jmeno: '—', stav: 'nelze', proc: 'soubor má rozdělanou změnu' });
+      continue;
+    }
+    const puvodni = readFileSync(join(KOREN, cil), 'utf8');
+    const kand = kandidatiSabotazi(puvodni);
+    for (const k of kand) {
+      if (vysledky.length >= strop) break;
+      if (vypis) { vysledky.push({ cil, jmeno: k.jmeno, stav: 'vypis', ukazka: k.ukazka }); continue; }
+      /* 1) zapsat */
+      writeFileSync(join(KOREN, cil), puvodni.replace(k.najdi, k.nahrad));
+      /* 2) OVĚŘIT DIFFEM — bez tohohle kroku sabotáž nic nedokazuje (§369) */
+      const opravduZmeneno = zmenilSe(cil);
+      let stav = 'neznámo', vystup = '';
+      if (!opravduZmeneno) {
+        stav = 'prázdná';
+      } else {
+        try {
+          execFileSync(process.execPath, [cestaZkousky], {
+            cwd: KOREN, encoding: 'utf8', timeout: casLimit,
+            env: Object.assign({}, process.env, { [UVNITR]: '1' }),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          });
+          stav = 'NECHYTILA';           // zkouška prošla nad rozbitým kódem
+        } catch (e) {
+          const kod = e && e.status;
+          vystup = String((e && (e.stdout || '')) || '').slice(-400);
+          if (e && e.killed) stav = 'nerozhodnuto';
+          else if (kod === 1) stav = 'chytila';
+          else stav = 'nepoužitelná';   // spadlo na syntaxi, ne na kontrole
+        }
+      }
+      /* 3) vrátit z gitu a 4) ověřit, že je soubor zpátky */
+      vratZGitu(cil);
+      const vraceno = readFileSync(join(KOREN, cil), 'utf8') === puvodni;
+      vysledky.push({ cil, jmeno: k.jmeno, proc: k.proc, ukazka: k.ukazka, stav, vraceno,
+        vystup: stav === 'NECHYTILA' ? '' : vystup.split('\n').slice(-2).join(' ') });
+      if (!vraceno) {
+        return { zkouska, hlidá: cile, sabotaze: vysledky,
+          chyba: `soubor ${cil} se nevrátil do původní podoby — zastavuji` };
+      }
+    }
+  }
+  const chytila = vysledky.filter((v) => v.stav === 'chytila').length;
+  const nechytila = vysledky.filter((v) => v.stav === 'NECHYTILA').length;
+  /* ŽÁDNÝ KANDIDÁT NENÍ VÝSLEDEK, NE MLČENÍ. Naměřeno na prvním běhu
+     smyčky: `scripts/rozbal-hledani.mjs` má 2 146 znaků a není v něm
+     ani jedno `>=`, `===`, `if … continue`, `filter(Boolean)` ani
+     konstanta — mechanická sabotáž tam nemá co rozbít. Bez téhle věty
+     by hlášení vypsalo jen hlavičku a vypadalo to na vadu stroje. */
+  if (!vysledky.length) {
+    return { zkouska, hlidá: cile, sabotaze: [], chytila: 0, nechytila: 0,
+      poznamka: 'v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm'
+        + ' nevyskytuje; promyšlená sabotáž tu zůstává na člověku' };
+  }
+  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila };
+}
+
+export function hlaseniProkazu(v) {
+  if (!v) return [];
+  if (v.chyba) return [`${v.zkouska}: ${v.chyba}`];
+  if (v.poznamka) return [`${v.zkouska}: ${v.poznamka}`];
+  const radky = [`${v.zkouska} hlídá ${v.hlidá.join(', ')}`];
+  for (const s of v.sabotaze) {
+    const znak = s.stav === 'chytila' ? '✓' : (s.stav === 'NECHYTILA' ? '✕' : '·');
+    radky.push(`  ${znak} ${s.stav.padEnd(13)} ${s.jmeno}  (${s.cil})`);
+    if (s.stav === 'NECHYTILA') radky.push(`        ${s.proc}`);
+  }
+  if (v.nechytila) {
+    radky.push(`  SLEPÉ MÍSTO: ${v.nechytila} sabotáží zkouška nechytila — a to je nález o zkoušce.`);
+  }
+  return radky;
+}
+
+async function main() {
+  if (process.env[UVNITR] === '1') {
+    console.log('Sabotážní stroj se nepouští sám v sobě.');
+    return;
+  }
+  const vypis = process.argv.includes('--vypis');
+  const strop = (() => {
+    const a = process.argv.find((x) => x.startsWith('--strop='));
+    const n = a ? parseInt(a.slice(8), 10) : NaN;
+    return isFinite(n) && n > 0 ? n : STROP_SABOTAZI;
+  })();
+  const zkouska = process.argv.slice(2).find((a) => /^test-[a-z0-9-]+\.mjs$/.test(a));
+  if (!zkouska) {
+    console.error('Řekněte, kterou zkoušku prokázat: node scripts/sabotuj.mjs test-uzsvm.mjs');
+    process.exit(2);
+  }
+  const v = await prokazZkousku(zkouska, { strop, vypis });
+  for (const r of hlaseniProkazu(v)) console.log(r);
+  if (v.chyba) process.exit(1);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((e) => { console.error('Sabotáž spadla:', e && e.message ? e.message : e); process.exit(1); });
+}
