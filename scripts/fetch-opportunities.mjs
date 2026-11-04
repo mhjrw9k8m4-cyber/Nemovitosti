@@ -2784,9 +2784,17 @@ export function sectiNeplatne(nabidky, zdrojProNabidku) {
     const d = procNeplatna(o);
     if (!d) continue;
     const zdroj = (zdrojProNabidku && zdrojProNabidku(o)) || 'neznámý zdroj';
-    const z = ven.get(zdroj) || { pocet: 0, duvody: {} };
+    const z = ven.get(zdroj) || { pocet: 0, duvody: {}, ukazky: {} };
     z.pocet++;
     z.duvody[d] = (z.duvody[d] || 0) + 1;
+    /* A JEDNA UKÁZKA KE KAŽDÉMU DŮVODU. Samo číslo nestačí na
+       rozhodnutí: „SPÚ: cenaMimoRozsah 217" může znamenat jak chybu
+       stahování, tak docela obyčejné pozemky za tři tisíce, které náš
+       práh vyhazuje zbytečně. Rozdíl je vidět teprve na té nabídce. */
+    if (!z.ukazky[d]) {
+      z.ukazky[d] = `${o.place || '?'}, ${o.okres || '?'} — ${o.area || '?'} m²,`
+        + ` ${o.price || '?'} Kč, ${o.druh || '?'}`;
+    }
     ven.set(zdroj, z);
   }
   return ven;
@@ -2795,9 +2803,12 @@ export function sectiNeplatne(nabidky, zdrojProNabidku) {
 export function hlaskyNeplatnych(soucty) {
   const ven = [];
   for (const [zdroj, z] of (soucty || new Map())) {
-    const duvody = Object.entries(z.duvody).sort((a, b) => b[1] - a[1])
-      .map(([k, n]) => k + ' ' + n).join(', ');
+    const serazene = Object.entries(z.duvody).sort((a, b) => b[1] - a[1]);
+    const duvody = serazene.map(([k, n]) => k + ' ' + n).join(', ');
     ven.push(`Zdroj ${zdroj}: ${z.pocet} nabídek síto nepustilo na web — ${duvody}.`);
+    for (const [k] of serazene.slice(0, 3)) {
+      if (z.ukazky && z.ukazky[k]) ven.push(`  · ${k}: ${z.ukazky[k]}`);
+    }
   }
   return ven;
 }

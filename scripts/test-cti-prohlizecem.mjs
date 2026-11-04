@@ -33,6 +33,17 @@ const STRANKA = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><tit
 <script src="https://cizi.example.org/mereni.js"></script></body></html>`;
 const SKRIPT = `document.getElementById('t').textContent = ${JSON.stringify(VETA)};`;
 
+/* APLIKACE, KTERÁ SI OBSAH DOTAHUJE SAMA. Na ní se měří to, co 4. 11.
+   rozhodlo u ÚZSVM: ve vykresleném HTML nabídky nejsou, takže ze
+   stránky se čtečka napsat nedá — zjistit se ale dá, ODKUD si ta
+   stránka data bere, a to je právě adresa, kterou čtečka potřebuje. */
+const APLIKACE = `<!doctype html><html lang="cs"><head><meta charset="utf-8"><title>Aplikace</title></head>
+<body><div id="v">Načítám…</div><script>
+fetch('/api/nabidky').then((r) => r.json()).then((d) => {
+  document.getElementById('v').textContent = 'nabídek: ' + d.pocet;
+});
+</script></body></html>`;
+
 /* Stránka s PŘEBYTKEM cizích hostů: na ní se měří, že strop jmen drží
    a že se přitom nelže o počtu zahozených požadavků. */
 const MNOHO = 10;
@@ -49,6 +60,8 @@ const server = http.createServer((req, res) => {
   if (req.url === '/podminky.js') { res.writeHead(200, { 'content-type': 'application/javascript' }); return res.end(SKRIPT); }
   if (req.url === '/mnoho') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(STRANKA_MNOHO); }
   if (req.url === '/obrazek.png') { res.writeHead(200, { 'content-type': 'image/png' }); return res.end(Buffer.alloc(8)); }
+  if (req.url === '/aplikace') { res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }); return res.end(APLIKACE); }
+  if (req.url === '/api/nabidky') { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('{"pocet":3}'); }
   res.writeHead(404); res.end('nic');
 });
 await new Promise((r) => server.listen(0, '127.0.0.1', r));
@@ -139,6 +152,32 @@ pravda('prázdný seznam se do nálezu nezapíše',
   !('cizinci' in zahozene({ zablokovano: 0, cizich: 0, cizinci: [], zakazane: [] }))
   && zahozene({ cizich: 2, cizinci: [{ co: 'a.cz', kolik: 2 }] }).cizinci.length === 1,
   JSON.stringify(zahozene({ zablokovano: 0, cizich: 0, cizinci: [], zakazane: [] })));
+
+/* 3d) DATOVÉ ODPOVĚDI: odkud si stránka bere obsah ---------------
+   U aplikace je tohle jediná použitelná odpověď na „dá se z toho čist
+   zdroj?". Měří se, že se ta adresa opravdu vypíše, že se nevypisují
+   obrázky, a že to nic nestahuje navíc. */
+{
+  const { vypisDatove } = await import('./ohledej.mjs');
+  const p = await tvorProhlizec({ chromium, smiCist: async () => true, ua: 'zkouska' });
+  try {
+    const v = await p.vykresli(`${BASE}/aplikace`);
+    pravda('v HTML aplikace nabídky nejsou (jinak by zkouška nic neměřila)',
+      !APLIKACE.includes('nabídek: 3'));
+    pravda('ale prohlížečem je vidět, že se obsah dotáhl',
+      /nabídek: 3/.test(v.text || ''), (v.text || '').slice(0, 80));
+    const d = v.datove || [];
+    pravda('a je vypsaná ADRESA, ze které si data vzala',
+      d.some((o) => /\/api\/nabidky$/.test(o.url) && o.stav === 200 && /json/i.test(o.typ)),
+      JSON.stringify(d));
+    pravda('obrázek ani skript se mezi datové odpovědi nepletou',
+      !d.some((o) => /obrazek\.png|podminky\.js/.test(o.url)), JSON.stringify(d));
+    const radky = vypisDatove(d).join('\n');
+    pravda('a výpis tu adresu ukáže člověku', /\/api\/nabidky/.test(radky), radky);
+    pravda('a když si stránka nic nedotahuje, řekne se to slovy',
+      /ŽÁDNÁ DATOVÁ ODPOVĚĎ/.test(vypisDatove([]).join('\n')));
+  } finally { await p.zavri(); }
+}
 
 /* 4) Bez prohlížeče se nic nepředstírá. */
 {

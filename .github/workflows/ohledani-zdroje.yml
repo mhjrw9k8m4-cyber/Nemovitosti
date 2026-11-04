@@ -21,6 +21,11 @@ on:
         description: 'Adresa, na kterou se podívat (celá, včetně https://)'
         required: true
         type: string
+      prohlizecem:
+        description: 'Vykreslit prohlížečem a vypsat, odkud si stránka bere data (pro aplikace)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
@@ -43,7 +48,17 @@ jobs:
         with:
           node-version: '20'
 
+      # Prohlížeč jen když se o něj výslovně řekne: instalace je
+      # o dvě třídy dražší než stáhnout jeden soubor.
+      - name: Prohlížeč
+        if: ${{ inputs.prohlizecem }}
+        run: |
+          # PŘIPNUTÁ VERZE, stejná jako ve zkouškách v prohlížeči.
+          npm install --no-audit --no-fund --ignore-scripts playwright-core@1.64.1 playwright@1.64.1
+          npx playwright install --with-deps chromium
+
       - name: Podívat se
         env:
           ADRESA: ${{ inputs.adresa }}
+          PROHLIZECEM: ${{ inputs.prohlizecem }}
         run: node scripts/ohledej.mjs "$ADRESA"

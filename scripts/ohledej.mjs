@@ -24,6 +24,8 @@ const { stahni } = await import('./fetch-opportunities.mjs');
 
 const STROP_ZNAKU = 4000;     // kolik textu vypsat, ať log nenabobtná
 const STROP_RADKU = 25;       // kolik řádků u řádkových formátů
+const PROHLIZECEM = process.argv.includes('--prohlizecem')
+  || /^(1|ano|true)$/i.test(process.env.PROHLIZECEM || '');
 
 export function tvarCsv(text, stropRadku = STROP_RADKU) {
   const radky = String(text || '').split(/\r?\n/).filter((r) => r.trim());
@@ -51,6 +53,26 @@ export function cojeto(text, typ) {
   if (/^</.test(t)) return 'HTML';
   if (/[;,\t|]/.test(t.split(/\r?\n/)[0] || '')) return 'CSV';
   return 'text';
+}
+
+/* OHLEDÁNÍ PROHLÍŽEČEM. Pro aplikace, které si obsah dotahují samy:
+   ve vykresleném HTML nabídky nejsou, takže ze stránky se čtečka
+   napsat nedá. Dá se ale POSLECHNOUT, odkud si ta aplikace data bere.
+   Naměřeno 3. 11. u ÚZSVM: domovská stránka je skořápka a šest
+   požadavků šlo na sousední doménu — jenže která adresa nese data,
+   z toho poznat nejde. Tohle to řekne. */
+export function vypisDatove(datove) {
+  const radky = [];
+  const d = datove || [];
+  if (!d.length) {
+    radky.push('ŽÁDNÁ DATOVÁ ODPOVĚĎ. Stránka si nic ve tvaru JSON/CSV/XML'
+      + ' nestahovala — obsah tedy buď přišel přímo v HTML, nebo z adresy,'
+      + ' kterou robots.txt nedovoluje (viz počty výš).');
+    return radky;
+  }
+  radky.push(`DATOVÉ ODPOVĚDI (${d.length}) — tudy si stránka bere obsah:`);
+  for (const o of d) radky.push(`  ${o.stav}  ${o.typ}  ${o.url}`);
+  return radky;
 }
 
 async function main() {
@@ -83,6 +105,34 @@ async function main() {
     console.log('ZAČÁTEK OBSAHU:');
     console.log(text.slice(0, STROP_ZNAKU));
   }
+
+  /* A na přání ještě prohlížečem. Zvlášť, ne vždycky: spustit prohlížeč
+     je o dvě třídy dražší než stáhnout soubor, a u CSV by to nic
+     nepřidalo. */
+  if (!PROHLIZECEM) {
+    console.log('\n(Pro aplikaci, která si obsah dotahuje sama, přidejte'
+      + ' --prohlizecem — vypíše se, odkud si bere data.)');
+    return;
+  }
+  console.log('\nOHLEDÁNÍ PROHLÍŽEČEM');
+  let chromium;
+  try { ({ chromium } = await import('playwright')); }
+  catch { console.log('Prohlížeč není k dispozici (playwright se nenačetl).'); return; }
+  const { tvorProhlizec } = await import('./cti-prohlizecem.mjs');
+  const p = await tvorProhlizec({
+    chromium, ua: BOT_UA,
+    /* ROBOTS SE DRŽÍ I TADY, u každého jednoho požadavku. */
+    smiCist: async (u) => (await smimeCist(u, { stahni, ua: BOT_UA, mezipamet })).dovoleno,
+  });
+  try {
+    const v = await p.vykresli(url);
+    console.log(`vykreslený text: ${(v.text || '').length} znaků`
+      + `, cizích požadavků ${v.cizich}, zakázaných ${v.zablokovano}`);
+    if (v.cizinci && v.cizinci.length) {
+      console.log('CIZÍ HOSTITELÉ: ' + v.cizinci.map((c) => c.co + ' ×' + c.kolik).join(', '));
+    }
+    for (const r of vypisDatove(v.datove)) console.log(r);
+  } finally { await p.zavri(); }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

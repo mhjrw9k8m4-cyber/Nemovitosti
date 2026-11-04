@@ -372,6 +372,12 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   je('a s důvodem', soucty.get('Nabídky státu').duvody['chybi:parcel'], 2);
   je('a dobrá nabídka se do součtu nedostane', soucty.has('neznámý zdroj'), false);
   const hlasky = F.hlaskyNeplatnych(soucty);
+  /* A KE KAŽDÉMU DŮVODU UKÁZKA. Číslo samo nerozhodne: „SPÚ:
+     cenaMimoRozsah 217" může být chyba stahování i obyčejné pozemky za
+     tři tisíce, které náš práh vyhazuje zbytečně. */
+  pravda('a ke každému důvodu je ukázka té nabídky',
+    hlasky.some((h) => /chybi:parcel: Divišov, Benešov — 1000 m²/.test(h)),
+    hlasky.join(' | '));
   pravda('a vyjde z toho věta se jménem zdroje, počtem i důvodem',
     hlasky.some((h) => /Nabídky státu/.test(h) && /2 nabídek/.test(h) && /chybi:parcel 2/.test(h)),
     hlasky.join(' | '));

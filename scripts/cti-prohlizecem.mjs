@@ -112,11 +112,30 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
     .sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(b[0]))
     .slice(0, STROP_JMEN)
     .map(([co, kolik]) => ({ co, kolik }));
+  /* DATOVÉ ODPOVĚDI. Nalezeno měřením 4. 11.: ÚZSVM je aplikace, která
+     si obsah dotahuje sama, takže ve vykresleném HTML nabídky nejsou
+     a ze samotné stránky se čtečka napsat nedá. Co se ale dá udělat,
+     je POSLECHNOUT SI, odkud si ta aplikace data bere — a to je přesně
+     ta adresa, kterou by čtečka potřebovala. Zapisuje se jen to, co
+     prohlížeč stejně stahoval (žádný požadavek se nepřidává) a jen
+     odpovědi, které vypadají na data, ne na obrázky a styly. */
+  const DATOVY_TYP = /json|csv|xml|text\/plain/i;
+  const STROP_DATOVYCH = 12;
   return {
     async vykresli(url) {
       ctx.__host = new URL(url).hostname;
       zablokovano = 0; cizich = 0; cizinci.clear(); zakazane.clear();
+      const datove = [];
       const page = await ctx.newPage();
+      page.on('response', (odp) => {
+        try {
+          const typ = odp.headers()['content-type'] || '';
+          const u = odp.url();
+          if (!DATOVY_TYP.test(typ)) return;
+          if (datove.length >= STROP_DATOVYCH) return;
+          datove.push({ url: u.slice(0, 300), stav: odp.status(), typ: typ.slice(0, 60) });
+        } catch { /* odpověď, na kterou se už nedá dosáhnout, se jen nezapíše */ }
+      });
       try {
         /* `domcontentloaded` a pak doběh na síti: `load` na stránkách
            s nekonečným měřením nedojde nikdy. */
@@ -125,7 +144,7 @@ export async function tvorProhlizec({ chromium, smiCist, ua, casLimit = 20000 } 
         const html = await page.content();
         const text = await page.evaluate(() => (document.body && document.body.innerText) || '');
         return {
-          html, text, zablokovano, cizich,
+          html, text, zablokovano, cizich, datove,
           cizinci: nejcastejsi(cizinci), zakazane: nejcastejsi(zakazane),
         };
       } finally { await page.close().catch(() => {}); }
