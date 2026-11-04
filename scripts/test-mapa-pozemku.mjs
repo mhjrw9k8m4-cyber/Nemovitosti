@@ -100,7 +100,14 @@ const PRAZDNA = Buffer.from(
 /** Odkaz na první pozemek, který má polohu i cenu. */
 function adresaPozemku(d) {
   const klic = [d.place || '', d.parcel || '', d.okres || '', d.lat.toFixed(3), d.lng.toFixed(3)].join('|');
-  return { url: `pozemek.html?p=${encodeURIComponent(klic)}&ll=${d.lat},${d.lng}`, d };
+  /* VÝMĚRA DO ODKAZU, PŘESNĚ JAK JI TAM DÁVÁ WEB. Krátký klíč dvě
+     nabídky pod jedním místem a jednou parcelou nerozlišuje (naměřeno
+     28 takových skupin), a tak je stránka rozhoduje podle &v= a při
+     shodě výměr podle ceny. Kdyby si tuhle adresu zkouška skládala bez
+     ní, otevřela by si občas cizí nabídku a hlásila by vadu webu tam,
+     kde je naivní jen ona sama. */
+  const v = isFinite(d.area) ? `&v=${Math.round(d.area)}` : '';
+  return { url: `pozemek.html?p=${encodeURIComponent(klic)}&ll=${d.lat},${d.lng}${v}`, d };
 }
 function najdi(filtr) {
   const d = (JSON.parse(readFileSync('data/opportunities.json', 'utf8')).opportunities || [])
@@ -1536,7 +1543,24 @@ if (DRAZBA) {
       /* Poloha v OKNĚ, ne na stránce: jde o to, jestli ho člověk vidí
          ve chvíli, kdy kouká na mapu. */
       top: r ? Math.round(r.top) : null, dno: r ? Math.round(r.bottom) : null,
-      mapaDno: rm ? Math.round(rm.bottom) : null, okno: window.innerHeight };
+      mapaDno: rm ? Math.round(rm.bottom) : null, okno: window.innerHeight,
+      /* ČÍM SE DÁ PÁD V CI ROZSOUDIT. Tři kontroly níž padaly jen na
+         běžci a lokálně nikdy: tlačítko zůstalo skryté a stisk vrátil
+         JINÉ přiblížení (15) než jaké bylo při měření (16). Z toho, co
+         zkouška tiskla, se nepoznalo, co z toho je pravda:
+         — mapa bez velikosti (rám se ještě nerozbalil) má nulový záběr,
+           a ten „obsahuje" střed pořád, takže tlačítko nemá proč vyjet;
+         — druhé vykreslení stránky umí vyrobit DRUHÉ tlačítko téhož id,
+           to v DOM je pak bez posluchače, zatímco se přepíná to staré;
+         — a zoom se mezi založením mapy a měřením může ještě hýbat
+           (přiblížení se dopočítává z výměry v js/snimek.js, který se
+           dotahuje zvlášť).
+         Měří se proto rovnou všechno tři. */
+      mapyVDom: document.querySelectorAll('.leaflet-container').length,
+      ramSir: mapaEl ? Math.round(mapaEl.getBoundingClientRect().width) : null,
+      ramVys: mapaEl ? Math.round(mapaEl.getBoundingClientRect().height) : null,
+      plVDom: b ? document.body.contains(b) : null,
+      zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni) };
   });
 
   const doma = await stav();
@@ -1551,8 +1575,9 @@ if (DRAZBA) {
     await p.waitForTimeout(800);
     const pryc = await stav();
     pravda('po odjetí od pozemku se ukáže', pryc.skryte === false,
-      'zůstalo skryté — cesta zpátky zase není');
-    pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44, `${pryc.sirka}×${pryc.vyska} px`);
+      'zůstalo skryté — cesta zpátky zase není; ' + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}`);
+    pravda('a dá se trefit prstem (44 px)', pryc.vyska >= 44,
+      `${pryc.sirka}×${pryc.vyska} px; ` + `${pryc.mapyVDom} mapa v DOM, rám ${pryc.ramSir}×${pryc.ramVys} px, tlačítko v DOM: ${pryc.plVDom}, zoom se hýbe: ${pryc.zoomJede}, modul snímku: ${pryc.snimek}`);
     /* A HLAVNĚ: JE VIDĚT, KDYŽ SE ČLOVĚK DÍVÁ NA MAPU.
        „V pruhu pod mapou je pořád na dohled" byla nedoložená věta.
        Tlačítko stálo v pruhu až ZA podkladem, vrstvami a tehdejším
@@ -1575,7 +1600,8 @@ if (DRAZBA) {
     const zpet = await stav();
     pravda('a stisk vrátí přesně původní pohled',
       zpet.lat === doma.lat && zpet.lng === doma.lng && zpet.zoom === doma.zoom,
-      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}`);
+      `${zpet.lat},${zpet.lng} z=${zpet.zoom} proti ${doma.lat},${doma.lng} z=${doma.zoom}; `
+      + `při měření doma: ` + `${doma.mapyVDom} mapa v DOM, rám ${doma.ramSir}×${doma.ramVys} px, tlačítko v DOM: ${doma.plVDom}, zoom se hýbe: ${doma.zoomJede}, modul snímku: ${doma.snimek}` + `; po stisku: ` + `${zpet.mapyVDom} mapa v DOM, rám ${zpet.ramSir}×${zpet.ramVys} px, tlačítko v DOM: ${zpet.plVDom}, zoom se hýbe: ${zpet.zoomJede}, modul snímku: ${zpet.snimek}`);
     pravda('a pak se zase schová', zpet.skryte === true, 'zůstalo viset na mapě');
 
     /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
@@ -1586,6 +1612,115 @@ if (DRAZBA) {
       (await stav()).skryte === false, 'po oddálení o tři stupně zůstalo skryté');
   }
   await ctx.close();
+}
+
+/* ===== A DOMOV JE TAM, KAM MAPU POSUNE WEB SÁM ======================
+   Tři kontroly nad tímhle blokem padaly v CI a v sandboxu nikdy —
+   a nebyla to vrtkavost běžce, ale vada webu, kterou se tady v sandboxu
+   nedá vyvolat: katastrální hranice se na stránce pozemku zapínají SAMY
+   (js/pozemek.js) a kreslí se až od přiblížení 16, takže si je mapa
+   sama přiblíží. Jenže „domov", kam se tlačítko „Na pozemek" vrací, se
+   zapamatoval při zakládání mapy, tedy PŘED tím přiblížením.
+
+   Naměřeno v CI 4. 11. na prvním pozemku v datech (Dívčice, 23,8 ha,
+   stránka otevírá na 15): při měření byla mapa na 16 a stisk vrátil 15.
+   Člověk by se tím dostal o stupeň jinam, než kde začal — a katastr,
+   který si předtím mapa sama rozsvítila, by mu z pohledu zmizel.
+
+   V sandboxu služba ČÚZK neodpoví (žádný výstup do sítě), vrstva nikdy
+   neožije a web mapou nehne — proto se tu modul vrstev PODSTRKUJE a
+   jeho jediná živá vrstva se jmenuje „katastr" a chce o stupeň blíž,
+   než na čem stránka otevřela. Tím se ta situace vyrobí bez internetu
+   a hlídá se na KAŽDÉM běhu, ne jen na tom, kde zrovna cizí server
+   odpovídá. */
+{
+  const ctxK = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'cs-CZ' });
+  await ctxK.route('**/*', (r) => {
+    const u = new URL(r.request().url());
+    if (u.hostname === '127.0.0.1' || u.hostname === 'localhost') return r.continue();
+    return r.abort();
+  });
+  await ctxK.route('**/mapove-vrstvy.js*', (r) => r.fulfill({
+    status: 200, contentType: 'text/javascript',
+    body: `(function (g) {
+      g.PK_VRSTVY = {
+        zapomen: function () {},
+        pripravene: function (stred, naVrstvu) {
+          /* O STUPEŇ BLÍŽ, NEŽ NA ČEM STRÁNKA OTEVŘELA — ať na tom
+             nezáleží, jaký pozemek je v datech první. */
+          var z = g.PK_PZ_MAPA ? g.PK_PZ_MAPA.getZoom() : 15;
+          g.__pkOd = z + 1;
+          var def = { id: 'katastr', nazev: 'Katastr', popis: '', odPriblizeni: g.__pkOd };
+          var zapis = { def: def, sluzba: { url: 'http://127.0.0.1:1/x', vrstvy: 'a' } };
+          if (typeof naVrstvu === 'function') naVrstvu(zapis);
+          var ziva = [zapis];
+          ziva.mrtve = [];
+          return Promise.resolve(ziva);
+        },
+        leafletVrstva: function () {
+          return { addTo: function () { return this; }, setOpacity: function () {}, remove: function () {} };
+        },
+        legendaAdresa: function () { return ''; }
+      };
+    })(window);`,
+  }));
+  await ctxK.addInitScript(() => {
+    /* Přiblížení, se kterým se mapa ZALOŽILA — jediné místo, odkud se
+       dá poznat, že se s ní pak hýbalo. */
+    let m;
+    Object.defineProperty(window, 'PK_PZ_MAPA', {
+      configurable: true,
+      get() { return m; },
+      set(x) { m = x; if (window.__pkRodnyZoom == null) window.__pkRodnyZoom = x.getZoom(); }
+    });
+    const t = setInterval(() => {
+      const e = document.getElementById('pzm');
+      if (e) { clearInterval(t); e.scrollIntoView({ block: 'center' }); }
+    }, 50);
+    setTimeout(() => clearInterval(t), 8000);
+  });
+  const pk = await ctxK.newPage();
+  await pk.goto(`${BASE}/${CIL.url}`, { waitUntil: 'domcontentloaded' }).catch(() => {});
+  await pk.waitForFunction(() => !!window.PK_PZ_MAPA && window.__pkOd != null, null, { timeout: 15000 })
+    .catch(() => {});
+  await pk.waitForTimeout(1500);
+
+  const stavK = () => pk.evaluate(() => {
+    const m = window.PK_PZ_MAPA, b = document.getElementById('pzm-zpet');
+    if (!m) return null;
+    const c = m.getCenter();
+    return { zoom: m.getZoom(), rodny: window.__pkRodnyZoom, chtena: window.__pkOd,
+      lat: +c.lat.toFixed(4), lng: +c.lng.toFixed(4), skryte: b ? b.hidden : null };
+  });
+
+  const k0 = await stavK();
+  pravda('podstrčená vrstva „katastr" se zapnula sama a mapu přiblížila',
+    !!k0 && k0.chtena === k0.rodny + 1 && k0.zoom === k0.chtena,
+    k0 ? `mapa se založila na ${k0.rodny}, vrstva chtěla ${k0.chtena}, mapa je na ${k0.zoom}`
+       : 'mapa se nepostavila — kontrola níž by neměla co měřit');
+  pravda('a dokud je pozemek v záběru, tlačítko „Na pozemek" nevyjede',
+    !!k0 && k0.skryte === true, 'vyjelo, i když se pohled nehnul');
+
+  if (k0 && k0.zoom === k0.chtena) {
+    await pk.evaluate(() => { const m = window.PK_PZ_MAPA; const c = m.getCenter();
+      m.setView([c.lat + 0.02, c.lng + 0.02], m.getZoom()); });
+    await pk.waitForTimeout(700);
+    pravda('po odjetí vyjede i tady', (await stavK()).skryte === false,
+      'zůstalo skryté — s podstrčenou vrstvou se cesta zpátky nenabídne');
+    await pk.evaluate(() => { document.getElementById('pzm-zpet').click(); });
+    await pk.waitForTimeout(1000);
+    const k2 = await stavK();
+    /* TOHLE JE TA VADA: vrací se na pohled, který člověk VIDĚL, ne na
+       ten, který mapa měla na zlomek sekundy při zakládání. */
+    pravda('a stisk vrátí přiblížení, se kterým stránka opravdu stála',
+      k2.zoom === k0.zoom,
+      `vrátilo ${k2.zoom}, stránka stála na ${k0.zoom} (mapa se zakládala na ${k0.rodny})`);
+    pravda('a zpátky na ten pozemek',
+      Math.abs(k2.lat - CIL.d.lat) < 0.002 && Math.abs(k2.lng - CIL.d.lng) < 0.002,
+      `${k2.lat},${k2.lng} proti ${CIL.d.lat},${CIL.d.lng}`);
+  }
+  await ctxK.close();
 }
 
 /* Oddíl „dvě plovoucí tlačítka si nesmí sedět na hlavě" tu byl kvůli

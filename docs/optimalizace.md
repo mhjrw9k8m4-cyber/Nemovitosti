@@ -23871,3 +23871,48 @@ si ten panel odporoval sám se sebou. Opraveno.
 kterou našly. To je samo o sobě nález: hlídač, který si o produktu
 vede vlastní zjednodušenou představu, je nejčastější zdroj červené CI
 na tomhle webu — častější než vada webu.
+
+## §382 — tlačítko „Na pozemek" vracelo jinam, než stránka otevřela *4. 11.*
+
+Tři kontroly z §381, které se v sandboxu nikdy nereprodukovaly, nebyly
+vrtkavost běžce. Byla to **vada webu, kterou tady nejde vyvolat**.
+
+Stránka pozemku zapíná **katastrální hranice sama** — rozhodnutí z
+dřívějška, protože za přepínačem si je nikdo nenašel. Katastr se ale
+vydává až od přiblížení 16 (`data/mapove-vrstvy.json`), a tak se mapa
+při zapnutí sama přiblíží. Jenže „domov", kam vrací tlačítko **„Na
+pozemek"**, se zapamatoval při **zakládání** mapy — tedy o okamžik
+dřív, než ji vrstva přiblížila.
+
+Naměřeno v CI na prvním pozemku v datech (**Dívčice, 23,8 ha**, stránka
+otevírá na 15): mapa stála na 16 a stisk vrátil 15. Člověk by tím
+skončil o stupeň jinam, než kde začal — a katastr, který si mapa
+předtím sama rozsvítila, by mu z toho pohledu **zmizel**.
+
+Proč to v sandboxu nešlo: služba ČÚZK odtud není dosažitelná (žádný
+výstup do sítě), vrstva nikdy neožije a web s mapou nehne. Na běžci
+GitHubu internet je, vrstva odpoví, zapne se — a vada vyjde. Tohle je
+vzácný opačný případ k šesti hlídačům z §381: **hlídač měl pravdu a já
+mu tři pády připisoval nespolehlivosti CI.**
+
+**Oprava:** když mapou pohne **web sám** a člověk přitom ještě nikam
+neodjel, posune se s ní i domov (`posunDomov` v `js/pozemek.js`).
+Posouvá se jen dokud je člověk doma — jakmile si odjede sám, je domov
+jeho výchozí pohled a nikdo s ním nehýbe. Platí to na obě místa, kde si
+web přiblížení bere sám: na automatické zapnutí katastru i na tlačítko
+„Přiblížit" v hlášce „tahle vrstva se v tomhle přiblížení nekreslí".
+
+**A hlavně hlídač, který na to nepotřebuje cizí server.** Modul vrstev
+se podstrkuje (týž postup jako u „Zkusit znovu") a jeho jediná živá
+vrstva se jmenuje `katastr` a chce **o stupeň blíž, než na čem stránka
+otevřela** — ať na tom nezáleží, který pozemek je v datech první. Tím
+se ta situace vyrobí bez internetu a měří se na každém běhu.
+
+Prokázáno sabotáží naopak: na **kódu před opravou** nový hlídač spadl
+slovo za slovem jako CI (*„vrátilo 15, stránka stála na 16"*), po
+opravě prochází. 166 kontrol, 0 chyb.
+
+**A poučení pro čtení CI:** pád, který se lokálně nereprodukuje, může
+znamenat, že **sandbox neumí vyvolat situaci, ve které se vada stane** —
+tady doslova proto, že nemá internet. „Lokálně to projde" není důkaz;
+je to jen informace o tom, co se tady dá změřit.

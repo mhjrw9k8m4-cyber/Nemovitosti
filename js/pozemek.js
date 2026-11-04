@@ -1083,10 +1083,26 @@
     var domaStred = L.latLng(d.lat, d.lng);
     var domaZoom = m.getZoom();
     var zpetBtn = document.getElementById('pzm-zpet');
+    /** Jsme na tom pohledu, se kterým stránka otevřela? */
+    function jsmeDoma() {
+      return m.getBounds().pad(-0.12).contains(domaStred)
+        && Math.abs(m.getZoom() - domaZoom) < 1.5;
+    }
+    /* KDYŽ MAPOU POHNE WEB SÁM, POSUNE SE S NÍ I DOMOV.
+       Katastrální hranice se zapínají samy (níž v tomhle souboru) a
+       kreslí se až od přiblížení 16 — na velkém pozemku přitom stránka
+       otevírá na 15, takže si je mapa sama přiblíží. „Domov" se ale
+       zapamatoval při zakládání mapy, tedy PŘED tím přiblížením, a
+       tlačítko „Na pozemek" pak vracelo na pohled, který člověk nikdy
+       neviděl — o stupeň dál, a s katastrem, který v něm zmizí.
+       Naměřeno v CI 4. 11. na pozemku Dívčice (23,8 ha): stránka
+       otevřela na 15, vrstva ji přiblížila na 16 a stisk vrátil 15.
+       Posouvá se jen dokud je člověk doma: jakmile si odjede sám, je
+       domov jeho výchozí pohled a nikdo mu s ním nehýbe. */
+    function posunDomov(z) { if (jsmeDoma()) domaZoom = z; }
     function hlidejZpet() {
       if (!zpetBtn) return;
-      var vidim = m.getBounds().pad(-0.12).contains(domaStred);
-      zpetBtn.hidden = vidim && Math.abs(m.getZoom() - domaZoom) < 1.5;
+      zpetBtn.hidden = jsmeDoma();
     }
     m.on('moveend zoomend', hlidejZpet);
     hlidejZpet();
@@ -1196,7 +1212,7 @@
           tl.type = 'button';
           tl.className = 'pzm-priblizit';
           tl.textContent = 'Přiblížit';
-          tl.addEventListener('click', function () { m.setZoom(potreba); });
+          tl.addEventListener('click', function () { posunDomov(potreba); m.setZoom(potreba); });
           rada.appendChild(veta);
           rada.appendChild(tl);
           popis.appendChild(rada);
@@ -1329,7 +1345,10 @@
           /* Katastrální mapa se kreslí až od určitého přiblížení. Když se
              zapne z výšky, nestane se nic a vypadá to jako rozbité —
              tak se mapa přiblíží sama, aby bylo co vidět. */
-          if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) m.setZoom(def.odPriblizeni);
+          if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) {
+            posunDomov(def.odPriblizeni);
+            m.setZoom(def.odPriblizeni);
+          }
           pridejLegendu(zapis);
           /* BONITA: KE KRESBĚ PATŘÍ I ČÍSLO.
              Vrstva BPEJ obarví půdu, ale kód nenese — dlaždice je obrázek.

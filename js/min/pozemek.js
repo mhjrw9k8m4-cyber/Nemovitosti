@@ -612,10 +612,16 @@
     var domaStred = L.latLng(d.lat, d.lng);
     var domaZoom = m.getZoom();
     var zpetBtn = document.getElementById('pzm-zpet');
+
+    function jsmeDoma() {
+      return m.getBounds().pad(-0.12).contains(domaStred)
+        && Math.abs(m.getZoom() - domaZoom) < 1.5;
+    }
+
+    function posunDomov(z) { if (jsmeDoma()) domaZoom = z; }
     function hlidejZpet() {
       if (!zpetBtn) return;
-      var vidim = m.getBounds().pad(-0.12).contains(domaStred);
-      zpetBtn.hidden = vidim && Math.abs(m.getZoom() - domaZoom) < 1.5;
+      zpetBtn.hidden = jsmeDoma();
     }
     m.on('moveend zoomend', hlidejZpet);
     hlidejZpet();
@@ -698,7 +704,7 @@
           tl.type = 'button';
           tl.className = 'pzm-priblizit';
           tl.textContent = 'Přiblížit';
-          tl.addEventListener('click', function () { m.setZoom(potreba); });
+          tl.addEventListener('click', function () { posunDomov(potreba); m.setZoom(potreba); });
           rada.appendChild(veta);
           rada.appendChild(tl);
           popis.appendChild(rada);
@@ -803,7 +809,10 @@
           b.classList.add('on');
           b.setAttribute('aria-pressed', 'true');
 
-          if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) m.setZoom(def.odPriblizeni);
+          if (def.odPriblizeni && m.getZoom() < def.odPriblizeni) {
+            posunDomov(def.odPriblizeni);
+            m.setZoom(def.odPriblizeni);
+          }
           pridejLegendu(zapis);
 
           if (def.id === 'bpej' && global.PKBpej && typeof fetch === 'function'
