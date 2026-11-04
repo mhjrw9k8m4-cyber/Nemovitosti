@@ -1080,6 +1080,22 @@ export function ztratyZdroje(nazev) {
   return PRESKOCENO.get(nazev) || { pocet: 0, prvni: null };
 }
 
+/* ROZPAD, KTERÝ SI ČTEČKA VEDE SAMA — A MUSÍ SKONČIT V DATECH.
+   Čtečka dražeb počítá, co zahodila schválně (nezveřejněná dražba, bez
+   pozemku, bez výměry) a vypisuje to do logu. Jenže log po běhu zmizí,
+   takže na otázku „ubývá u nich, nebo u nás?" nešlo odpovědět: naměřeno
+   4. 11., že zdroj Dražby klesl z 81 na 45 za tři týdny plynule, a
+   rozhodnout, jestli jde o méně zveřejněných dražeb nebo o naši čtečku,
+   se nedalo — chyběla historie těch mezičísel. Teď jde rozpad do
+   `sources[]`, takže se příští takový svah dá rozsoudit odečtením dvou
+   dnů, ne hádáním. */
+const ROZPAD_ZDROJE = new Map();
+export function zapisRozpad(zdroj, rozpad) {
+  if (!zdroj || !rozpad) return;
+  ROZPAD_ZDROJE.set(zdroj, rozpad);
+}
+export function rozpadZdroje(nazev) { return ROZPAD_ZDROJE.get(nazev) || null; }
+
 /* A JEŠTĚ JEDNO ÚČTOVÁNÍ: KOLIK DOTAZŮ VŮBEC DOŠLO.
  *
  * „OK dražby" se nestahují seznamem — projíždí se tři tisíce ID po sobě
@@ -2211,6 +2227,7 @@ async function fetchDrazby() {
   console.error(`Zdroj Dražby: ${out.length} pozemků z ${zahozeno.drazeb} dražeb`
     + ` (${zahozeno.polozek} předmětů)`
     + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
+  zapisRozpad('Dražby', zahozeno);
   return out;
 }
 
@@ -3352,6 +3369,10 @@ async function fetchNabidkyStatu() {
      kdežto podle tohohle čísla se dá příště poznat, že zdroj zahazuje
      víc než posledně — a je vidět i na diagnostice webu. */
   for (const z of zdroje) {
+    /* Rozpad, který si čtečka vede sama (co zahodila ještě PŘED sítem
+       webu) — ať se příští pomalý svah dá rozsoudit z dat. */
+    const rz = rozpadZdroje(z.nazev);
+    if (rz) z.rozpadCtecky = rz;
     const s = neplatne.get(z.nazev);
     z.nepustilo = s ? s.pocet : 0;
     z.nepustiloDuvod = s

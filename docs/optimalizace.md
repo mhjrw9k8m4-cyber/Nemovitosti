@@ -24160,3 +24160,46 @@ rozpis zatím není. Oprava je v kódu a prokázaná zkouškou, ne v datech.
 sama měří. Účet, který nekončí tam, kde končí zpracování, **vyrábí
 nálezy z vlastní nevědomosti** — a to je přesně ten druh chyby, kterou
 by se jinak nikdo neobtěžoval hledat, protože „nálezce přece hlásí".
+
+## §389 — „ubývá u nich, nebo u nás?" se nedalo rozhodnout *4. 11.*
+
+Naostro potvrzeno hned po §388: noční robot napsal **„Zdroj Dražby: za
+sítem ubylo 19 nabídek — drazbaProbehla 18, duplicita 1"** a nálezce
+o zdrojích **zmlkl** (0 nálezů). Těch devatenáct bez jména bylo
+osmnáct proběhlých dražeb a jedna duplicita.
+
+Týž běh ale zopakoval jinou hlášku: *„zdroj Dražby přinesl 45 záznamů,
+medián posledních 21 dnů je 81. Není to skok, je to pomalý úbytek —
+podívejte se, jestli parser nepřestal část stránky číst."*
+
+**Historie to potvrzuje a zároveň nevysvětluje:**
+
+```
+15. 10.  81      27. 10.  58
+19. 10.  80      29. 10.  50
+21. 10.  71      31. 10.  44
+23. 10.  66       1.–4. 11.  45
+25. 10.  62
+```
+
+Plynulý svah, pak čtyři dny na místě. Svah **vypadá** jako ubývající
+nabídka zdroje (náhlý skok by svědčil o rozbitém parseru), ale
+rozhodnout to nešlo: čtečka sice počítá, co zahodila **schválně** — při
+dnešním běhu **4 077 nezveřejněných dražeb, 321 bez pozemku, 37 bez
+výměry ze 4 480 předmětů ve 2 811 dražbách** — jenže jen **do logu**,
+a ten po běhu zmizí. Ta mezičísla se nikam neukládala, takže
+„ubývá u nich, nebo u nás" nemělo z čeho vyjít.
+
+**Opraveno:** rozpad čtečky jde do `sources[]` jako `rozpadCtecky`.
+Příští takový svah se rozsoudí **odečtením dvou dnů**: když roste
+`neuverejneno` a `polozek` zůstává, ubývá zdroj; když klesá `polozek`,
+ubývá u nich víc; a když zůstane obojí a klesne výsledek, je to naše
+čtečka. Dnes to ještě říct nejde a je to tak napsané — **historie těch
+čísel začíná dneškem.**
+
+`test-vypadek-zdroje`: 84 → **89 kontrol**.
+
+**Pravidlo, které z toho padá:** číslo, podle kterého se někdy bude
+rozhodovat „my, nebo oni", nesmí skončit v logu. Log je pro člověka,
+který se zrovna dívá; **data jsou pro otázku, která přijde za tři
+týdny.**

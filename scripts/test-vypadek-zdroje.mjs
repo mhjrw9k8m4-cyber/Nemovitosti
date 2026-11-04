@@ -455,6 +455,32 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
     'v main() chybí zápis `zaSitem` do stavu zdroje — nálezce by hádal');
 }
 
+/* ---- ROZPAD ČTEČKY PATŘÍ DO DAT, NE JEN DO LOGU -----------------
+ *
+ * Naměřeno 4. 11.: zdroj Dražby klesl z 81 na 45 za tři týdny PLYNULE
+ * a robot se ozval „pomalý úbytek — podívejte se, jestli parser
+ * nepřestal část stránky číst". Podívat se ale nebylo kam: čtečka sice
+ * počítá, co zahodila schválně (4 077 nezveřejněných dražeb, 321 bez
+ * pozemku, 37 bez výměry), jenže jen do logu — a ten po běhu zmizí.
+ * Rozhodnout „ubývá u nich, nebo u nás" tedy nešlo z ničeho.
+ */
+{
+  const kodR = readFileSync(U('scripts/fetch-opportunities.mjs'), 'utf8');
+  pravda('čtečka dražeb svůj rozpad zapíše, ne jen vypíše',
+    /zapisRozpad\('Dražby', zahozeno\)/.test(kodR),
+    'rozpad zůstává jen v logu, který po běhu zmizí');
+  pravda('a stav zdroje si ho odnese do dat',
+    /z\.rozpadCtecky = rz/.test(kodR),
+    'v main() chybí zápis `rozpadCtecky` do stavu zdroje');
+  /* A ŽE TO OPRAVDU CHODÍ: zapsat a přečíst. */
+  F.zapisRozpad('ZkouškaZdroje', { drazeb: 10, polozek: 20, neuverejneno: 15 });
+  const r = F.rozpadZdroje('ZkouškaZdroje');
+  je('zapsaný rozpad se přečte', r && r.neuverejneno, 15);
+  je('a u zdroje, který nic nezapsal, je null', F.rozpadZdroje('TenhleNeexistuje'), null);
+  pravda('prázdný zápis se zahodí, ať v datech nestojí nic za nic',
+    (F.zapisRozpad('X', null), F.rozpadZdroje('X') === null), 'null se zapsal');
+}
+
 /* ---- A NÁLEZCE TO MUSÍ UMĚT PŘEČÍST -----------------------------
  *
  * Bez toho by robot počítal a nálezce přesto hlásil úbytek: přesně to
