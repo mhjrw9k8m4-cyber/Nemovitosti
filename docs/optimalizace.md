@@ -24203,3 +24203,43 @@ ubývá u nich víc; a když zůstane obojí a klesne výsledek, je to naše
 rozhodovat „my, nebo oni", nesmí skončit v logu. Log je pro člověka,
 který se zrovna dívá; **data jsou pro otázku, která přijde za tři
 týdny.**
+
+## §390 — tři sabotáže na cenách: dvě vady zahrazené, jedna přiznaná *4. 11.*
+
+Sabotážní stroj na `test-ceny` (cenový model je srdce webu) ukázal tři
+slepá místa. Dvě se zahradila, třetí se změřit nepodařilo — a je to
+tak napsané, protože zelená, která nic neměří, je horší než přiznané
+slepé místo.
+
+**1. Výměra nula není výměra.** `hasArea` stojí na „je to číslo **a** je
+větší než nula"; po záměně `&&` za `||` projde i nula — a cena za metr
+vyjde dělením nulou, tedy **Infinity**. Web by na kartě ukázal
+nekonečno nebo po zaokrouhlení nesmysl. Hlídá se nula, text místo čísla
+i záporná výměra; a pro kontrolu měřidla i to, že poctivá výměra cenu
+za metr dá.
+
+**2. Mez neuvěřitelné ceny** (`MEZ_NEUVERITELNA = 30 000 Kč/m²`) se dala
+posunout bez povšimnutí. Posunutá konstanta znamená, že se na web
+dostane cena, o které jsme se shodli, že je to **chyba v inzerátu**.
+Hlídá se hodnota **i obě strany hranice**: 30 000 se ještě ukáže,
+30 001 už ne.
+
+**3. Co se změřit NEPODAŘILO — a zbývá.** Okolí se prohlíží v devíti
+přihrádkách mřížky (krok 0,5°, hledá se do 25 km), takže soused může
+ležet šikmo o jednu přihrádku dál a pořád být blíž než 25 km. Zkrácená
+smyčka (`i <= 1` na `i < 1`) ho vynechá.
+
+Postavil jsem cíl těsně pod hranicí mřížky (49,999 / 14,999 =
+přihrádka 99|29) a devět srovnatelných sousedů těsně nad ní
+(50,001 / 15,001 = 100|30), tedy **0,3 km daleko a všechny šikmo**.
+Odhad vyšel — ale **z úrovně okres** (vzorek 10), ne z okolí. A to
+i když sousedy posadím do **téže** přihrádky. Úroveň „okolí" se na
+téhle fixtuře nezapojí vůbec, takže kontrola měří okresní hladinu
+a o smyčce neříká nic. Sabotáž to potvrzuje: `<=` zůstává nechycené.
+
+**Co zbývá:** najít, čím se úroveň „okolí" zapíná (`OKOLI_K = 10`
+nejbližších, `MIN_VZOREK = 8`), a postavit fixturu, ve které vyhraje.
+Zapsáno u té kontroly v `scripts/test-ceny.mjs`, ne jen tady.
+
+`test-ceny`: 180 → **186 kontrol**. Sabotáž: **5 z 6 chyceno**
+(před tím 3 z 6).

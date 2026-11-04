@@ -1559,6 +1559,75 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   }
 }
 
+/* ---- TŘI SLEPÁ MÍSTA, KTERÁ UKÁZAL SABOTÁŽNÍ STROJ --------------
+ *
+ * Sabotáž 4. 11.: obrácené porovnání, `&&` za `||` a posunutá
+ * konstanta prošly v js/ceny.js bez povšimnutí. Všechny tři sedí na
+ * čísle, které web tiskne jako Kč/m², takže jsou věcné.
+ */
+{
+  /* 1) VÝMĚRA NULA NENÍ VÝMĚRA. `hasArea` stojí na „je to číslo A je
+        větší než nula"; po záměně && za || projde i nula — a cena za
+        metr vyjde dělením nulou, tedy Infinity. Web by na kartě ukázal
+        nekonečno, nebo (po zaokrouhlení) nesmysl. */
+  je('pozemek s výměrou 0 nemá cenu za metr',
+    PK_CENY.zaMetr({ area: 0, price: 500000 }), null);
+  je('a ani s výměrou jako textem', PK_CENY.zaMetr({ area: '500', price: 500000 }), null);
+  je('a ani se zápornou výměrou', PK_CENY.zaMetr({ area: -500, price: 500000 }), null);
+  je('kdežto poctivá výměra cenu za metr dá',
+    PK_CENY.zaMetr({ area: 1000, price: 500000 }), 500);
+
+  /* 2) MEZ NEUVĚŘITELNÉ CENY je pevné číslo a má být vidět v obou
+        kopiích pravidla (prohlížeč i rozesílání mailů). Posunutá
+        konstanta znamená, že se na web dostane cena, o které jsme se
+        shodli, že je to chyba v inzerátu. Hlídá se hodnota I hranice. */
+  je('mez neuvěřitelné ceny je 30 000 Kč/m²', PK_CENY.MEZ_NEUVERITELNA, 30000);
+  je('cena přesně na mezi se ještě ukáže',
+    PK_CENY.zaMetr({ area: 1, price: 30000 }), 30000);
+  je('a o korunu výš už ne', PK_CENY.zaMetr({ area: 1, price: 30001 }), null);
+
+  /* 3) OKOLÍ SE PROHLÍŽÍ VE VŠECH DEVÍTI PŘIHRÁDKÁCH — a tohle se mi
+        změřit NEPODAŘILO; píšu to sem, ať se k tomu dá vrátit.
+        Mřížka má krok 0,5°, hledá se do 25 km, takže soused může ležet
+        v přihrádce šikmo o jednu dál a pořád být blíž než 25 km.
+        Zkrácená smyčka (`i <= 1` na `i < 1`) takového souseda vynechá.
+        Postavil jsem proto cíl těsně pod hranicí mřížky (49,999 /
+        14,999 = přihrádka 99|29) a devět srovnatelných sousedů těsně
+        nad ní (50,001 / 15,001 = 100|30), tedy 0,3 km daleko a všechny
+        šikmo. Odhad vyšel — jenže z ÚROVNĚ OKRES (`uroven: 'okres'`,
+        vzorek 10), ne z okolí, a to i když sousedy posadím do TÉŽE
+        přihrádky. Úroveň „okolí" se tedy na téhle fixtuře nezapojí
+        vůbec a kontrola níž o smyčce nic neříká: měří okresní hladinu.
+        Sabotážní stroj to potvrzuje — `<=` na `<` v js/ceny.js zůstává
+        nechycené. Co zbývá: najít, čím se úroveň „okolí" zapíná
+        (OKOLI_K = 10 nejbližších, MIN_VZOREK = 8), a postavit fixturu,
+        ve které vyhraje. Do té doby je to přiznané slepé místo, ne
+        zelená. */
+  {
+    const OKRES_KRAJ2 = { 'Zkouška': 'Kraj zkoušky' };
+    const spol = { type: 'sale', okres: 'Zkouška', druh: 'Zahrada', place: 'Mřížka' };
+    /* 49,999 je v přihrádce 99 (49,999 / 0,5 = 99,99), 50,001 v přihrádce
+       100 — a totéž v délce. Vzdálenost mezi nimi je přitom 0,3 km. */
+    const cil = { ...spol, lat: 49.999, lng: 14.999, area: 1000, price: 1000000, url: 'c' };
+    const sousedi = Array.from({ length: 8 }, (_, i) => ({
+      ...spol, lat: 50.001 + i * 0.0001, lng: 15.001, area: 1000, price: 300000,
+      url: 's' + i,
+    }));
+    const m = PK_CENY.postav([cil, ...sousedi], OKRES_KRAJ2);
+    const odh = m.odhad(cil);
+    /* Odhad se o takového pozemku dá udělat JEN z šikmých sousedů —
+       v jeho vlastní přihrádce není nikdo. Když se smyčka zkrátí,
+       nezbude z čeho odhadovat a vrátí se null. */
+    pravda('pozemek, jehož sousedé leží šikmo za hranicí mřížky, odhad dostane',
+      !!odh, `bez odhadu: ${JSON.stringify(odh)}`);
+    if (odh) {
+      je('a sedí na ceně těch sousedů (300 Kč/m²)', odh.zaM2, 300);
+      /* Přiznaně: tohle je okresní hladina, ne okolí — viz poznámka výš. */
+      je('a přiznaně z okresní hladiny, dokud okolí nejde vyvolat', odh.uroven, 'okres');
+    }
+  }
+}
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
