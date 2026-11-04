@@ -1581,8 +1581,31 @@ if (DRAZBA) {
       })() };
   }, [CIL.d.lat, CIL.d.lng]);
 
+  /* NEJDŘÍV AŤ SE STRÁNKA USADÍ.
+     ------------------------------------------------------------------
+     Naměřeno v CI 4. 11. (běh 41894862977, směna 2): kontrola „stisk
+     vrátí přesně původní pohled" spadla na rozdílu 0,0025° (asi 280 m)
+     — a diagnostika řekla proč: při měření DOMA se „zoom se hýbe:
+     true". Stránka si totiž mapu sama posune, protože katastrální
+     vrstva má minimální přiblížení (§382), a zkouška si jako „domov"
+     uložila snímek z běžící animace. Pak porovnávala vrácený pohled
+     s něčím, co web nikdy jako domov neměl.
+     Čeká se proto na klid: dvě stejná čtení středu a přiblížení po
+     sobě. Pevné čekání by zase jen hádalo (§398). */
+  await p.waitForFunction(() => {
+    const m = window.PK_PZ_MAPA;
+    if (!m) return false;
+    const c = m.getCenter();
+    const k = c.lat.toFixed(5) + ',' + c.lng.toFixed(5) + ',' + m.getZoom();
+    if (window.__PK_KLID === k) return true;
+    window.__PK_KLID = k;
+    return false;
+  }, { timeout: 8000, polling: 400 }).catch(() => { /* ať to dopoví kontroly pod tím */ });
   const doma = await stav();
   pravda('mapa pozemku se otevřela a dá se změřit', !!doma, 'PK_PZ_MAPA chybí');
+  /* A ŽE SE OPRAVDU USADILA — jinak měří zkouška animaci, ne web. */
+  pravda('a než se měří domov, mapa se usadila', doma && doma.zoomJede === false,
+    `zoom se pořád hýbe; z=${doma && doma.zoom}, střed ${doma && doma.lat},${doma && doma.lng}`);
   if (doma) {
     pravda('tlačítko „Na pozemek" pod mapou je', doma.je, 'chybí #pzm-zpet');
     pravda('a dokud jsem na pozemku, nezabírá výhled', doma.skryte === true,

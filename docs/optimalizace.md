@@ -24664,3 +24664,27 @@ týmž směrem: nabídky pozemků se nezveřejňují jako otevřená data, ale
 na úředních deskách a v inzerci. Tam vedou dvě rozhodnutí, která leží
 na majiteli: **klíč k eDeskám** (desky 6 300 úřadů jedním API) a
 **Bezrealitky**. Oboje je v `docs/pro-majitele.md`.
+
+## §403 — zkouška si za „domov" uložila snímek z běžící animace *4. 11.*
+
+Po §398 prošla směna 2 jednou zeleně a pak spadla znovu — jinde:
+„stisk vrátí přesně původní pohled — 49.10968,14.30451 proti
+49.11217,14.30699", tedy **o 0,0025° (asi 280 m) jinam**.
+
+Rozhodla diagnostika z §381: u měření **doma** stálo `zoom se hýbe:
+true`. Stránka si mapu po otevření sama posune, protože katastrální
+vrstva má minimální přiblížení (§382) — a zkouška si jako „domov"
+uložila snímek **z běžící animace**. Pak porovnávala vrácený pohled
+s něčím, co web nikdy jako domov neměl. Tlačítko „Na pozemek"
+fungovalo celou dobu správně.
+
+Čeká se proto na klid: **dvě stejná čtení středu a přiblížení po sobě**
+(400 ms od sebe, strop 8 s). Pevné čekání by zase jen hádalo (§398).
+A přidala se kontrola, která to drží: „než se měří domov, mapa se
+usadila" — bez ní by se tatáž vada mohla vrátit tiše.
+
+`test-mapa-pozemku`: 166 → **167 kontrol**, 0 chyb.
+
+**Pravidlo:** zkouška, která měří web, co se sám hýbe, musí nejdřív
+počkat, až se usadí — a to, že se usadil, si musí změřit, ne
+předpokládat.
