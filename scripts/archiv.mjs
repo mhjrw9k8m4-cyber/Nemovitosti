@@ -155,6 +155,7 @@ export function krok(stav, nabidky, den) {
       /* first_seen ze zdroje je lepší než dnešek — nabídka mohla viset
          dřív, než ji tenhle archiv poprvé uviděl. Dopředu se ale věřit
          nedá: datum v budoucnosti se zahodí. */
+      /* ROVNOCENNÁ SABOTÁŽ: obrácené porovnání (<= na <) — pro first_seen rovné dnešku dají obě varianty tentýž den, takže ta mutace nemůže změnit ani jeden výsledek; není to slepé místo zkoušky, ale mutace bez následku. */
       const od = (typeof d.first_seen === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d.first_seen)
         && d.first_seen <= den) ? d.first_seen : den;
       novy.nabidky[k] = Object.assign({ od, videno: den }, z);
@@ -202,6 +203,28 @@ function nabidkyZe(text) {
 
 function dnes() { return new Date().toISOString().slice(0, 10); }
 
+/* POSLEDNÍ OTISK DNE, NE PRVNÍ. Z výpisu gitu („<hash> <datum>", jeden
+   na řádek, nejstarší první) nechá z každého dne ten POSLEDNÍ zápis.
+   Komentář u zpětného dopočtu to slibuje („stačí poslední stav dne"),
+   kód ale kdysi bral první: podmínka `den === posledniDen` přeskočila
+   všechny další commity téhož dne. Robot běží čtyřikrát denně a zdroje
+   blikají — podle prvního běhu dne vypadala nabídka, která se do večera
+   vrátila, jako zmizelá.
+
+   PROČ TO STOJÍ ZVLÁŠŤ: uvnitř `zpetne()` to bylo nezkoušené. Sabotážní
+   stroj tam zrušil `filter(Boolean)` a nikdo se neozval, přitom na
+   prázdné historii z toho vyjde jeden řádek bez hashe i data, se kterým
+   se pak zachází jako s commitem. Teď je to čistá funkce a zkouška ji
+   drží i na té prázdné historii. */
+export function posledniZaDen(log) {
+  const posledni = new Map();
+  for (const r of String(log || '').trim().split('\n').filter(Boolean)) {
+    const i = r.indexOf(' ');
+    posledni.set(r.slice(i + 1), r);          // --reverse: poslední zápis dne vyhraje
+  }
+  return [...posledni.values()];
+}
+
 /* ZPĚTNÝ DOPOČET. Robot commituje data/opportunities.json při každém
    běhu, takže historie trhu v repozitáři JE — jen se v ní nedá hledat.
    Tohle ji projde odzadu dopředu a udělá z ní archiv. Běží jen tehdy,
@@ -216,19 +239,7 @@ function zpetne({ prepocitat = false } = {}) {
   }
   const log = execFileSync('git', ['log', '--reverse', '--format=%H %ad', '--date=short',
     '--', 'data/opportunities.json'], { cwd: KOREN, encoding: 'utf8', maxBuffer: 1 << 28 });
-  /* POSLEDNÍ OTISK DNE, NE PRVNÍ. Komentář výš to slibuje („stačí
-     poslední stav dne"), kód ale bral první: podmínka `den ===
-     posledniDen` přeskočila všechny další commity téhož dne. Robot
-     běží čtyřikrát denně a zdroje blikají — podle prvního běhu dne
-     vypadala nabídka, která se do večera vrátila, jako zmizelá. */
-  const radky = (function () {
-    const posledni = new Map();
-    for (const r of log.trim().split('\n').filter(Boolean)) {
-      const i = r.indexOf(' ');
-      posledni.set(r.slice(i + 1), r);          // --reverse: poslední zápis dne vyhraje
-    }
-    return [...posledni.values()];
-  }());
+  const radky = posledniZaDen(log);
   let stav = { verze: VERZE, den: '', nabidky: {} };
   let celkem = 0, pouzito = 0, posledniDen = '';
   for (const r of radky) {

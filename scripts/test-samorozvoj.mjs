@@ -237,6 +237,55 @@ function je(popis, vyslo, cekano) {
     'u nich by sabotáž měřila síť, ne hlídače');
 }
 
+/* ---- 6) ROVNOCENNÁ MUTACE: SABOTÁŽ, KTERÁ NEMŮŽE NIC ZMĚNIT ----
+ *
+ * Mechanická mutace umí být bez následku. Naměřený případ
+ * (scripts/archiv.mjs): v `first_seen <= den ? first_seen : den` dá
+ * obrácení na ostrou nerovnost pro first_seen rovné dnešku tentýž
+ * den — obě varianty vracejí `den`. Takovou mutaci nechytí ŽÁDNÁ
+ * zkouška a hlásit ji jako slepé místo je falešný nález, tedy to
+ * nejdražší, co hlášení umí: učí člověka hlášení nečíst (§375).
+ *
+ * Prohlášení o tom proto stojí U KÓDU a stroj ho uzná jen se
+ * jmenovitě uvedenou sabotáží a s DŮVODEM. Kontroly níž hlídají
+ * přesně ty tři pojistky — bez nich by z toho byl vypínač hlášení.
+ */
+{
+  const telo = readFileSync(new URL('./archiv.mjs', import.meta.url), 'utf8');
+  const r = S.rovnocenna(telo, 'obrácené porovnání (<= na <)');
+  pravda('prohlášení o rovnocenné mutaci se u kódu najde', !!r && !r.kratky,
+    JSON.stringify(r));
+  pravda('a nese důvod, ne jen značku', !!r && r.duvod.length >= S.MIN_DUVOD,
+    'důvod: ' + ((r && r.duvod) || '—'));
+  je('na jinou sabotáž se to prohlášení NEvztahuje',
+    S.rovnocenna(telo, 'zahozený filter(Boolean)'), null);
+  je('a na soubor bez prohlášení taky ne',
+    S.rovnocenna('nic tu není', 'obrácené porovnání (<= na <)'), null);
+  /* POJISTKA PROTI VYPÍNAČI: značka bez důvodu se NEUZNÁVÁ. Kdyby
+     stačila samotná značka, byl by z toho jednořádkový způsob, jak
+     vypnout kteroukoli sabotáž — a stroj by přestal být k čemu. */
+  const kratke = '/* ' + S.ZNACKA_ROVNOCENNE + ' obrácená rovnost (=== na !==) — proto. */';
+  const rk = S.rovnocenna(kratke, 'obrácená rovnost (=== na !==)');
+  pravda('značka bez důvodu se neuzná (je to jinak vypínač hlášení)',
+    !!rk && rk.kratky === true && rk.duvod === '', JSON.stringify(rk));
+  je('a mez na důvod je ' + S.MIN_DUVOD + ' znaků', S.MIN_DUVOD, 60);
+  /* A ŽE SE PODLE TOHO STROJ OPRAVDU ŘÍDÍ — čte se kód, protože
+     prokazZkousku píše do zdroje a zkouška ho pouštět nebude. */
+  const kod = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
+  pravda('stroj to rozhoduje z PŮVODNÍHO těla, ne ze sabotovaného',
+    /rovnocenna\(puvodni, k\.jmeno\)/.test(kod),
+    'ze sabotovaného těla by se značka dala vyrobit sabotáží');
+  pravda('a krátký důvod u něj zůstane „NECHYTILA"',
+    /rov\.kratky\) \{\s*\n\s*stav = 'NECHYTILA';/.test(kod), 'jinak je to vypínač');
+  pravda('rovnocenné se v hlášení vypisují, nezmizí',
+    /rovnocenn[áé]/.test(kod) && /\$\{v\.rovnocenne\}/.test(kod));
+  /* A ÚČET JE POČÍTÁ ZVLÁŠŤ. Ani mezi chycené (zkouška se neozvala),
+     ani mezi slepá místa (není co chytit). */
+  const smy2 = readFileSync(new URL('./samorozvoj.mjs', import.meta.url), 'utf8');
+  pravda('účet si rovnocenné mutace vede jmenovitě a zvlášť',
+    /rovnocenne: \(v\.sabotaze \|\| \[\]\)/.test(smy2));
+}
+
 console.log('Samorozvoj — nálezce, sabotážní stroj a smyčka');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

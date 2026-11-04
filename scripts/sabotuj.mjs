@@ -112,6 +112,50 @@ export function coHlidá(teloZkousky) {
   return ven;
 }
 
+/* ROVNOCENNÁ MUTACE — SABOTÁŽ, KTERÁ NEMŮŽE NIC ZMĚNIT.
+   ==================================================================
+   Některou mechanickou mutaci nechytí ŽÁDNÁ zkouška, protože nemění
+   výsledek. Naměřený případ (scripts/archiv.mjs): v
+   `first_seen <= den ? first_seen : den` dá obrácení na `<` pro
+   first_seen rovné dnešku tentýž den — obě varianty vracejí `den`.
+   Taková mutace není slepé místo zkoušky, je to mutace bez následku.
+
+   A PROČ TO NENECHAT PROSTĚ ČERVENÉ. Protože falešný nález je drahý
+   jinak než chybějící: učí člověka hlášení nečíst, a tím zabije
+   i nálezy, které pravdivé jsou (§375). Hlášení, ve kterém dvě
+   položky navždy svítí „NECHYTILA" a nedá se s nimi nic udělat, je
+   přesně tenhle případ.
+
+   TŘI POJISTKY, ABY SE TÍM NEDALO JEN MLČET:
+     1. Prohlášení stojí U KÓDU, ne ve stroji ani v seznamu vedle —
+        prochází tedy stejnou revizí jako ten řádek, kterého se týká.
+     2. Musí JMENOVAT sabotáž přesně tak, jak ji stroj jmenuje, takže
+        se nedá napsat „tenhle soubor nehlídáme".
+     3. Musí nést DŮVOD aspoň o `MIN_DUVOD` znacích. Když chybí nebo je
+        krátký, prohlášení se neuzná a položka zůstane „NECHYTILA" —
+        plus se připíše, že důvod chybí.
+   Rovnocenné mutace se v hlášení VYPISUJÍ (znakem „="), nezmizí.
+   ================================================================== */
+export const ZNACKA_ROVNOCENNE = 'ROVNOCENNÁ SABOTÁŽ:';
+export const MIN_DUVOD = 60;
+
+export function rovnocenna(telo, jmenoSabotaze) {
+  const jm = String(jmenoSabotaze || '');
+  if (!jm) return null;
+  for (const r of String(telo || '').split('\n')) {
+    const i = r.indexOf(ZNACKA_ROVNOCENNE);
+    if (i < 0) continue;
+    const zbytek = r.slice(i + ZNACKA_ROVNOCENNE.length).trim();
+    if (zbytek.slice(0, jm.length) !== jm) continue;
+    const duvod = zbytek.slice(jm.length).replace(/^[\s—-]+/, '').replace(/\*\/\s*$/, '').trim();
+    if (duvod.length < MIN_DUVOD) {
+      return { jmeno: jm, duvod: '', kratky: true };
+    }
+    return { jmeno: jm, duvod };
+  }
+  return null;
+}
+
 export function smiSabotovat(cesta) {
   const c = String(cesta || '');
   if (/\.\./.test(c)) return false;
@@ -177,7 +221,17 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
             env: Object.assign({}, process.env, { [UVNITR]: '1' }),
             stdio: ['ignore', 'pipe', 'pipe'],
           });
-          stav = 'NECHYTILA';           // zkouška prošla nad rozbitým kódem
+          /* Zkouška prošla nad rozbitým kódem. Buď je to slepé místo —
+             nebo mutace, která nic nezměnila a kód to u sebe přiznává
+             (viz ROVNOCENNÁ MUTACE výš). Rozhoduje prohlášení
+             v původním, NEsabotovaném těle. */
+          const rov = rovnocenna(puvodni, k.jmeno);
+          if (rov && !rov.kratky) { stav = 'rovnocenná'; k.proc = rov.duvod; }
+          else if (rov && rov.kratky) {
+            stav = 'NECHYTILA';
+            k.proc = 'u kódu je prohlášení o rovnocenné mutaci, ale bez důvodu aspoň o '
+              + MIN_DUVOD + ' znacích — neuznává se';
+          } else stav = 'NECHYTILA';
         } catch (e) {
           const kod = e && e.status;
           vystup = String((e && (e.stdout || '')) || '').slice(-400);
@@ -199,6 +253,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
   }
   const chytila = vysledky.filter((v) => v.stav === 'chytila').length;
   const nechytila = vysledky.filter((v) => v.stav === 'NECHYTILA').length;
+  const rovnocenne = vysledky.filter((v) => v.stav === 'rovnocenná').length;
   /* ŽÁDNÝ KANDIDÁT NENÍ VÝSLEDEK, NE MLČENÍ. Naměřeno na prvním běhu
      smyčky: `scripts/rozbal-hledani.mjs` má 2 146 znaků a není v něm
      ani jedno `>=`, `===`, `if … continue`, `filter(Boolean)` ani
@@ -209,7 +264,7 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
       poznamka: 'v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm'
         + ' nevyskytuje; promyšlená sabotáž tu zůstává na člověku' };
   }
-  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila };
+  return { zkouska, hlidá: cile, sabotaze: vysledky, chytila, nechytila, rovnocenne };
 }
 
 export function hlaseniProkazu(v) {
@@ -218,9 +273,13 @@ export function hlaseniProkazu(v) {
   if (v.poznamka) return [`${v.zkouska}: ${v.poznamka}`];
   const radky = [`${v.zkouska} hlídá ${v.hlidá.join(', ')}`];
   for (const s of v.sabotaze) {
-    const znak = s.stav === 'chytila' ? '✓' : (s.stav === 'NECHYTILA' ? '✕' : '·');
+    const znak = s.stav === 'chytila' ? '✓'
+      : (s.stav === 'NECHYTILA' ? '✕' : (s.stav === 'rovnocenná' ? '=' : '·'));
     radky.push(`  ${znak} ${s.stav.padEnd(13)} ${s.jmeno}  (${s.cil})`);
-    if (s.stav === 'NECHYTILA') radky.push(`        ${s.proc}`);
+    if (s.stav === 'NECHYTILA' || s.stav === 'rovnocenná') radky.push(`        ${s.proc}`);
+  }
+  if (v.rovnocenne) {
+    radky.push(`  ${v.rovnocenne} mutace nemůže nic změnit a kód to u sebe přiznává (viz důvod výš).`);
   }
   if (v.nechytila) {
     radky.push(`  SLEPÉ MÍSTO: ${v.nechytila} sabotáží zkouška nechytila — a to je nález o zkoušce.`);

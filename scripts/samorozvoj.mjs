@@ -167,7 +167,12 @@ async function main() {
       hlidá: (v.hlidá || []).length,
       chytila: v.chytila || 0,
       nechytila: v.nechytila || 0,
-      slepa: (v.sabotaze || []).filter((s) => s.stav === 'NECHYTILA').map((s) => s.jmeno),
+      /* Mutace bez následku se počítají zvlášť a jmenovitě. Nejsou to
+         chycené sabotáže (zkouška se neozvala) ani slepá místa (není
+         co chytit) — a kdyby se schovaly do jednoho čísla s jedním
+         nebo druhým, účet by lhal v obou směrech. */
+      rovnocenne: (v.sabotaze || []).filter((x) => x.stav === 'rovnocenná').map((x) => x.jmeno),
+      slepa: (v.sabotaze || []).filter((x) => x.stav === 'NECHYTILA').map((x) => x.jmeno),
       poznamka: v.poznamka || v.chyba || '',
     };
     if (v.chyba) break;         // nejistota se nehromadí: po chybě se zastaví

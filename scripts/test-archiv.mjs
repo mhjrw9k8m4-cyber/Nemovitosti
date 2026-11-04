@@ -13,7 +13,7 @@ import fsx from 'node:fs';
 import pathx from 'node:path';
 import { createRequire as createRequireX } from 'node:module';
 import { fileURLToPath as furlX } from 'node:url';
-import { krok, dnyPrezneceni, verdiktStavu, VERZE } from './archiv.mjs';
+import { krok, dnyPrezneceni, verdiktStavu, posledniZaDen, VERZE } from './archiv.mjs';
 
 const KOREN_X = pathx.resolve(pathx.dirname(furlX(import.meta.url)), '..');
 const reqX = createRequireX(import.meta.url);
@@ -303,6 +303,27 @@ if (fs.existsSync(ADR)) {
   const naDisku = JSON.parse(fsx.readFileSync(pathx.join(KOREN_X, 'data', 'archiv', 'stav.json'), 'utf8'));
   je('a uložený stav v repozitáři je té verze, kterou kód umí přečíst',
     verdiktStavu(naDisku), 'ok');
+}
+
+/* ---- 10) POSLEDNÍ OTISK DNE, NE PRVNÍ ----
+ *
+ * Zpětný dopočet projde historii gitu a z každého dne si vezme
+ * POSLEDNÍ commit dat. Dřív bral první — a protože robot běží
+ * čtyřikrát denně a zdroje blikají, nabídka, která se do večera
+ * vrátila, vypadala podle prvního běhu dne jako zmizelá. Oprava
+ * byla, ale zkouška k ní ne: kus kódu seděl uvnitř `zpetne()`, která
+ * si sama pouští `git log`. Sabotážní stroj tam zrušil
+ * `filter(Boolean)` a nikdo se neozval (nález ze 4. 11.).
+ */
+{
+  je('z prázdné historie nevznikne žádný den', posledniZaDen('').length, 0);
+  je('a mezery nejsou historie', posledniZaDen('   \n  \n').length, 0);
+  const log = 'aaa1 2026-01-01\nbbb2 2026-01-01\nccc3 2026-01-01\nddd4 2026-01-02';
+  je('ze čtyř commitů ve dvou dnech zůstanou dva', posledniZaDen(log).length, 2);
+  je('a z každého dne ten POSLEDNÍ, ne první',
+    posledniZaDen(log), ['ccc3 2026-01-01', 'ddd4 2026-01-02']);
+  je('dny zůstanou v pořadí, jak přišly (git --reverse: od nejstaršího)',
+    posledniZaDen(log).map((r) => r.slice(5)), ['2026-01-01', '2026-01-02']);
 }
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');
