@@ -95,6 +95,17 @@
    "nedorucene": [],
    "poznamka": "",
    "rucne": true
+  },
+  "test-hlidani.mjs": {
+   "kdy": "2026-11-04",
+   "hlidá": 2,
+   "chytila": 6,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "nedorucene": [],
+   "poznamka": "",
+   "rucne": true
   }
  },
  "updated": "2026-11-04",

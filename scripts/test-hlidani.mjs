@@ -1044,6 +1044,82 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
     /d\.prezn/.test(teloN), true);
 }
 
+/* ---- TŘI SLEPÁ MÍSTA, KTERÁ UKÁZAL SABOTÁŽNÍ STROJ --------------
+ *
+ * Sabotáž 4. 11. nad js/nove-pozemky.js (modul, který z čísel dělá
+ * věty na kartě hlídání): zahozený `filter(Boolean)`, `&&` za `||`
+ * a posunutá konstanta prošly bez povšimnutí. Všechny tři jsou věcné.
+ */
+{
+  const HLED = { id: 9, label: 'Zkouška', okres: 'Kolín', seen_keys: [] };
+  const pozemek = (i, navic) => Object.assign({
+    place: 'Obec ' + i, okres: 'Kolín', type: 'sale', druh: 'Zahrada',
+    area: 1000, price: 500000, first_seen: '2026-11-04', url: 'u' + i,
+  }, navic || {});
+
+  /* 1) ŘÁDEK BEZ CENY NESMÍ NÉST PRÁZDNÉ ODDĚLOVAČE. Popis se skládá
+        z obce, výměry a ceny a `filter(Boolean)` z něj vyhodí to, co
+        chybí. Bez něj vznikne „Obec ·  · " — dvě tečky a nic za nimi.
+        U dražeb bez ceny a u podílů bez známého zlomku se to stane. */
+  {
+    /* Změřeno, ne odhadnuto: `vymera(0)` vrací prázdno, kdežto
+       `cena(0)` vrací „cena neuvedena" — chybějící cenu tedy web
+       přiznává slovy a chybějící výměru mlčením. Prázdný kus proto
+       z řádku musí vypadnout, jinak v něm zůstane „· ·". */
+    const u = F.zeHlidani([HLED], [pozemek(1, { price: 0, area: 0 })])[0];
+    const popis = u && u.polozky && u.polozky[0] ? u.polozky[0].popis : '(nic)';
+    /* ČEKANÝ TEXT SE SKLÁDÁ Z TÝCHŽ FUNKCÍ, které ho skládá web.
+       Napsaný literál „1 000 m²" tu padá na nezlomitelné mezeře: na
+       pohled je shodný, ve bajtech ne. Týž omyl stál dnes jeden pád
+       v test-okoli-jinde (§381), takže se tu rovnou bere `F.vymera`
+       a `F.cena` — a kontrola tím navíc měří to, co měřit má: že se ty
+       tři kusy spojí tečkou a prázdný vypadne. */
+    je('nové pozemky', 'řádek bez výměry nenese prázdný oddělovač',
+      popis, ['Obec 1', F.cena(0)].join(' · '));
+    je('nové pozemky', 'a tedy v něm není „· ·"', /·\s+·/.test(popis), false);
+    const uCena = F.zeHlidani([HLED], [pozemek(2, { price: 0 })])[0];
+    const p2 = uCena && uCena.polozky[0] ? uCena.polozky[0].popis : '(nic)';
+    je('nové pozemky', 'a s výměrou a bez ceny jsou všechny tři kusy',
+      p2, ['Obec 2', F.vymera(1000), F.cena(0)].join(' · '));
+  }
+
+  /* 2) UKÁZKA JE PĚT A ZBYTEK SE DOPOČÍTÁ. Posunutá konstanta by tiše
+        přidala nebo ubrala řádek v kartě hlídání a číslo „a další N"
+        by přestalo sedět se součtem. Hlídá se obojí naráz. */
+  {
+    const sedm = Array.from({ length: 7 }, (_, i) => pozemek(100 + i));
+    const u = F.zeHlidani([HLED], sedm)[0];
+    je('nové pozemky', 'vypíše se nejvýš pět pozemků', u.polozky.length, 5);
+    je('nové pozemky', 'a zbytek se dopočítá („a další 2")', u.dalsich, 2);
+    je('nové pozemky', 'a součet sedí: vypsané + další = počet',
+      u.polozky.length + u.dalsich, u.pocet);
+    je('nové pozemky', 'mez je vyvezená, aby se dala změřit', F.UKAZKA, 5);
+  }
+
+  /* 3) MODUL SE MUSÍ NAČÍST I V PROHLÍŽEČI, kde `module` neexistuje.
+        Obal je UMD: `typeof module === 'object' && module.exports`.
+        Po záměně `&&` za `||` je ta podmínka v prohlížeči splněná
+        (typeof je 'undefined', ale druhá strana se vyhodnotí) a sáhne
+        se na `module.exports` — ReferenceError, celá karta hlídání se
+        rozsype. V Node to projde, takže běžná zkouška o tom nic neví;
+        proto se sem soubor načítá RUČNĚ do prostředí bez `module`. */
+  {
+    const src = readFileSync(path.join(ROOT, 'js', 'nove-pozemky.js'), 'utf8');
+    let chyba = '';
+    try {
+      const self = { PKHlidani: H, PK_TERMINY: undefined };
+      new Function('self', 'module', 'require', src)(self, undefined, undefined);
+      je('nové pozemky', 'v prohlížeči (bez module) se modul zavěsí na self',
+        typeof self.PKFeed === 'object' && typeof self.PKFeed.zeHlidani === 'function',
+        true);
+    } catch (e) {
+      chyba = String((e && e.message) || e);
+      je('nové pozemky', 'v prohlížeči (bez module) se modul načte bez chyby',
+        'spadlo: ' + chyba, 'bez chyby');
+    }
+  }
+}
+
 console.log(`\nHlídání lokality: ${bezi} testů`);
 if (spadlo) {
   console.log(vysledky.join('\n'));

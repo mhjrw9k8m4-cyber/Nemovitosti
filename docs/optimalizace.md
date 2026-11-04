@@ -24278,3 +24278,39 @@ s `--zapis` (stroj, který píše do dat při každém spuštění, by se nedal
 použít na pokusy), **nikdy** při `--vypis` a **nikdy** po chybě.
 
 `test-samorozvoj`: 93 → **100 kontrol**.
+
+## §392 — šest sabotáží v kartě hlídání a šest chycených *4. 11.*
+
+`js/nove-pozemky.js` je modul, který z čísel dělá věty na kartě
+hlídání — tedy to, co člověk čte, když mu přibyde pozemek. Sabotážní
+stroj v něm našel **čtyři** slepá místa; po doplnění tří kontrol je
+chycených **6 z 6**.
+
+**1. Řádek bez výměry nesmí nést prázdný oddělovač.** Popis se skládá
+ze tří kusů (obec · výměra · cena) a `filter(Boolean)` z něj vyhodí to,
+co chybí. Bez něj vznikne „Obec ·  · cena neuvedena" — dvě tečky za
+sebou. Změřeno, ne odhadnuto: **`vymera(0)` vrací prázdno, kdežto
+`cena(0)` vrací „cena neuvedena"** — chybějící cenu tedy web přiznává
+slovy a chybějící výměru mlčením. U dražeb bez ceny a u podílů bez
+známého zlomku to nastává.
+
+**2. Ukázka je pět a zbytek se dopočítá.** Posunutá konstanta
+(`UKAZKA = 5`) by tiše přidala nebo ubrala řádek a číslo „a další N" by
+přestalo sedět se součtem. Hlídá se **obojí naráz**: pět vypsaných, dva
+další, a že `vypsané + další = počet`.
+
+**3. Modul se musí načíst i v prohlížeči, kde `module` neexistuje.**
+Obal je UMD: `typeof module === 'object' && module.exports`. Po záměně
+`&&` za `||` je ta podmínka v prohlížeči splněná a sáhne se na
+`module.exports` — **ReferenceError a celá karta hlídání se rozsype.**
+V Node to projde, takže o tom běžná zkouška nic neví; soubor se proto
+načítá **ručně do prostředí bez `module`** a kontroluje se, že se
+zavěsí na `self.PKFeed`.
+
+**A znovu ta nezlomitelná mezera.** Napsaný literál „1 000 m²" padl:
+na pohled shodný, v bajtech ne. Čekaný text se proto skládá
+z **týchž funkcí**, kterými ho skládá web (`F.vymera`, `F.cena`) — což
+je lepší i věcně: kontrola pak měří to, co měřit má (spojení tečkou
+a vypadnutí prázdného kusu), ne shodu dvou literálů.
+
+`test-hlidani`: 219 → **222 kontrol**.
