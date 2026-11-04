@@ -5,7 +5,7 @@ klíč, peníze nebo rozhodnutí o produktu. Každá položka říká, co odemkn
 a co stojí. Podrobnosti k nasazení jsou v `docs/pred-vydanim.md`;
 tohle je krátký seznam k odškrtávání.
 
-*Stav k 23. 10. 2026. Čísla v závorkách jsou naměřená, ne odhadnutá.*
+*Stav k 4. 11. 2026. Čísla v závorkách jsou naměřená, ne odhadnutá.*
 
 ---
 
@@ -368,6 +368,48 @@ Při kritice 23. 10. jsem si dvě věci napsal jako vadu a nejsou:
   sedm dní.
 
 ---
+
+## 7e. Rozhodnutí: eDesky — klíč a jiný druh záznamu
+
+**Co to je.** eDesky sdružují **úřední desky** obcí a institucí a mají
+vlastní rubriku „Prodeje majetku". Obec musí záměr prodat pozemek
+vyvěsit ze zákona — takže je to jediný zdroj pro druh **„obec"**, který
+dnes na webu nemá zdroj žádný.
+
+**Co je změřené** (4. 11., ohledání z Actions):
+
+- robots.txt čtení nezakazuje;
+- portál má **popsané API**: `GET /api/v1/documents` s parametry
+  `keywords` (povinný), `search_with` (`es` = fulltext všeho, `sql` =
+  slova v názvu), `created_from`, `dashboard_id` (kraj/město/obec),
+  `include_texts`, `order` a `page` po 200 dokumentech;
+- odpověď je **XML** a má schéma (`documents.xsd`).
+
+**Dvě věci stojí v cestě a rozhodnout je musíte vy.**
+
+1. **Klíč.** Bez `api_key` služba odpoví `401` a napíše: *„Chyba:
+   nepřihlášen. Použijte svůj API klíč, který najdete pro přihlášení na
+   edesky.cz/uzivatel/edit."* Klíč se váže na **účet**, a ten si
+   zakládáte vy — účet vám zakládat nebudu a heslo po vás chtít nesmím.
+   Klíč pak patří do **GitHub Secrets** jako ostatní tajemství, ne do
+   repozitáře. *(Pro pořádek: specifikace `apiary.apib` uvádí `api_key`
+   jako nepovinný, živá služba ho vyžaduje. Platí to změřené.)*
+
+2. **Jiný druh záznamu.** Úřední deska nese **záměr** prodat, ne
+   nabídku s cenou: parcela a katastr bývají v názvu dokumentu, **cena
+   zpravidla ne** — a často ještě neexistuje. Pro kupujícího je to
+   signál **dřív**, než se objeví inzerát, jenže celý výpis webu stojí
+   na ceně za m². Zapojit to znamená rozhodnout, **jak takový záznam
+   vypadá** a jak se neplete s nabídkou (vlastní odznak? vlastní
+   oddíl? jen do hlídání?).
+
+**Co odemkne:** druh „obec" a nejranější signál, jaký se dá legálně
+získat. **Co stojí:** váš účet a klíč (zdarma) a jedno rozhodnutí
+o produktu.
+
+**Co udělám, až řeknete:** čtečku, která z API bere jen záměry
+o pozemcích, a odznak, ze kterého je na první pohled vidět, že **cena
+není**, protože ještě není.
 
 ## 8. Odložené, dokud není 1–5
 
