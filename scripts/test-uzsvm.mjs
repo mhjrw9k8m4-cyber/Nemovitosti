@@ -365,6 +365,41 @@ const PACHT2 = {
   je('a z pouhého označení nechá prázdno', U.ocistiMisto('parc. č. 12/3'), '');
 }
 
+/* ---- 3h) KDE JMÉNO OBCE KONČÍ A ZAČÍNÁ TECHNICKÝ POPIS ----
+ *
+ * Naměřeno 4. 11. na ZVEŘEJNĚNÝCH datech, ne na fixturách: pět míst,
+ * do kterých zasáhl popis nabídky. Dvě z nich nejsou jako obec vůbec
+ * nic — „O CELKOVÉ VÝMĚŘE M2" a „id. pozemku" — a stála na kartě,
+ * v titulku stránky, v její adrese i v sitemapě.
+ *
+ * Řeže se PŘED čištěním čísel: po odstranění čísel vypadá „o výměře
+ * m2" jako dvě nevinná slova a nepoznalo by se, že to byl popis.
+ * A když popis začíná hned na začátku, žádné jméno před ním není.
+ *
+ * Kontrola jde v OBOU směrech: co se odříznout má, i co se odříznout
+ * nesmí. Bez druhé poloviny by se to dalo „opravit" tak, že by se
+ * zahodila každá obec — jmenovitě Podolí a Vysoká, které začínají
+ * podobně jako „podíl" a „v k. ú.".
+ */
+{
+  const PRIPADY = [
+    ['Blšany o výměře m2', 'Blšany'],
+    ['Mašovice u Meclova-id. podíl a', 'Mašovice u Meclova'],
+    ['Valtice - pozemek parcela číslo', 'Valtice'],
+    ['O CELKOVÉ VÝMĚŘE M2', ''],
+    ['id. pozemku', ''],
+    ['Sedlec u Mikulova', 'Sedlec u Mikulova'],
+    ['Černá v Pošumaví', 'Černá v Pošumaví'],
+    ['Otinoves', 'Otinoves'],
+    ['Veselí nad Lužnicí', 'Veselí nad Lužnicí'],
+    ['Podolí', 'Podolí'],
+    ['Vysoká', 'Vysoká'],
+  ];
+  je('technický popis se od jména obce odřízne a obec zůstane',
+    PRIPADY.filter(([v, o]) => U.ocistiMisto(v) !== o)
+      .map(([v, o]) => `${v} → ${JSON.stringify(U.ocistiMisto(v))} místo ${JSON.stringify(o)}`), []);
+}
+
 console.log('ÚZSVM — nabídky majetku státu');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

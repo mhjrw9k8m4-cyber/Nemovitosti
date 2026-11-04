@@ -110,7 +110,18 @@ const minusDni = (iso, n) => {
    kalendářních dnů, tedy od `dnes − 6`. Napsané tu je to zvlášť,
    ne vypůjčené z modulu: kdyby si obě strany půjčovaly totéž
    `minusDni`, posun o den by prošel oběma a test by potvrdil chybu. */
-const noveZa = (n) => aktualni.filter((o) => o.first_seen && o.first_seen > prvniDen
+/* NABÍDKA SE ZNAČKOU `prezn` NENÍ NOVÁ. Značku dává robot tomu, u čeho
+   zdroj přes noc změnil TVAR dat: nic se nespárovalo, takže
+   `first_seen` je dnešek, i když ta nabídka visí rok. Web je proto
+   mezi nové nepočítá (scripts/novinky-rez.mjs) — jinak by jedna změna
+   u zdroje poslala stovky falešných upozornění.
+   Zkouška to dlouho nevěděla a byla NAIVNĚJŠÍ NEŽ PRODUKT. Naměřeno
+   4. 11., když moje vlastní změna u ÚZSVM takovou noc vyrobila:
+   stránka řekla 454 nových za 7 dní, zkouška přepočítala 573 a hlásila
+   vadu webu. Vada byla ve zkoušce — a je to týž omyl jako dnes
+   u test-ceny a test-shoda: hlídač, který neumí to, co umí web, hlásí
+   jako chybu právě tu práci, kvůli které vznikl. */
+const noveZa = (n) => aktualni.filter((o) => o.first_seen && !o.prezn && o.first_seen > prvniDen
   && o.first_seen >= minusDni(dnesIso, n - 1));
 const n7 = noveZa(7).length, n14 = noveZa(14).length;
 /* Číslo stojí v hlavičce JEDNOU. Do 26. 10. bylo dvakrát: ve větě

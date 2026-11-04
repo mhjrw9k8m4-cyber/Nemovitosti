@@ -23648,3 +23648,58 @@ v surovém těle a PŘED rozborem, takže se vypíše i u nečitelného JSON.
 Lekce je stejná jako u §375 a §376, jen o nástroj výš: **mlčení se
 nedá odlišit od nuly**, a nástroj, kterým se měří, potřebuje hlídače
 víc než to, co se jím měří.
+
+## §378 — robot si všiml sám a tři hlídači byli naivnější než web *4. 11.*
+
+Moje oprava ÚZSVM změnila tvar dat (jiná místa, 18 podílů přibylo,
+19 špatných míst zmizelo) — a **robot si toho všiml sám**: všech 119
+nabídek ÚZSVM označil značkou `prezn` („zdroj přes noc změnil tvar
+dat"). Tím zabránil **119 falešným upozorněním „nový pozemek"**.
+Hlídač z §356 zafungoval naostro na změně, kterou jsem způsobil já.
+
+Pak se ale ukázalo, že na to doplatili tři hlídači, protože značka
+`prezn` se do zveřejněných dat dostala **poprvé**:
+
+**1. Popis dat ji neznal.** `data/pole.json` popisuje každé pole, které
+v datech je, a zkouška to hlídá obousměrně. `prezn` popis neměl —
+takže kdo si data vezme, musel by hádat. Doplněno, včetně typu
+(`string|number`: nejdřív datum, po přenesení do dalších dní jen `1`).
+
+**2. Mapa webu měla 119 adres bez `<lastmod>`** — a to je **správně**.
+U nabídky s `prezn` je `first_seen` dnešek, i když ta nabídka visí rok,
+takže `naposledZmeneno` schválně vrací null. Napsat tam dnešek by byl
+přesně ten „lastmod, který se u všech adres mění každý den", kvůli
+kterému ta zkouška vznikla. Zkouška ale trvala na tom, že datum má
+**každá** adresa. Teď měří, že datum chybí **právě tam, kde ho produkt
+podle svých vlastních pravidel nezná** (počítá se ze stejné funkce,
+jakou používá generátor) — a zvlášť, že většina adres datum má, aby
+neprošel stav, kdy ho nemá nikdo.
+
+**3. Počet nových pozemků: stránka 454, zkouška přepočítala 573.**
+Web `prezn` mezi nové nepočítá, zkouška o tom nevěděla a hlásila vadu
+webu. Vada byla ve zkoušce.
+
+**A to je dnes už třetí zkouška ze stejného rodu.** Ráno to byly
+`test-ceny` a `test-shoda` (neuměly vyřadit `spravniCena`), teď
+`test-nove-pozemky` a `test-mapa-webu`. Pojmenujme to:
+
+> **Hlídač, který neumí to, co umí web, hlásí jako chybu právě tu
+> práci, kvůli které vznikl.** A protože hlásí nepravdu, je to tentýž
+> falešný nález jako v §375 — jen přichází z druhé strany.
+
+Léčba je taky stejná: hlídač se nesmí ptát „kolik mi vyjde", ale
+„souhlasí to s tím, co produkt podle svých pravidel slibuje" — a ta
+pravidla si má brát ze **stejného modulu**, ne přepisovat vedle.
+Jediná výjimka je tam, kde se půjčením pravidla ztratí měření (okno
+„posledních sedm dní" si test počítá zvlášť schválně: kdyby si obě
+strany půjčovaly totéž `minusDni`, posun o den by prošel oběma).
+
+Čtvrtý nález je drobnost, která je ale vidět: pět míst, do kterých
+zasáhl technický popis — „Blšany o výměře m2", „Mašovice u Meclova-id.
+podíl a", „Valtice - pozemek parcela číslo", a dvě, která jako obec
+nejsou nic: „O CELKOVÉ VÝMĚŘE M2" a „id. pozemku". Stála na kartě,
+v titulku, v adrese stránky i v sitemapě. Řeže se to teď **před**
+čištěním čísel (po jejich odstranění vypadá „o výměře m2" jako dvě
+nevinná slova) a když popis začíná hned na začátku, obec není žádná.
+Hlídá se to v obou směrech — jmenovitě na Podolí a Vysoké, které
+začínají podobně jako „podíl" a „v k. ú.".

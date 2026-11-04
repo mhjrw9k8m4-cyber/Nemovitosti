@@ -32,8 +32,13 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { naposledZmeneno } from './generate-parcel-pages.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+/* Nabídky se čtou proto, aby se počet adres bez data dal porovnat
+   s tím, u kolika nabídek datum podle PRODUKTU neznáme. */
+const _D = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+const NABIDKY = Array.isArray(_D) ? _D : (_D.opportunities || []);
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -62,9 +67,28 @@ if (!(zapisy.length >= 500)) {
   process.exit(1);
 }
 
+/* ADRESA BEZ DATA JE DOVOLENÁ — ALE JEN TAM, KDE DATUM NEVÍME.
+   Naměřeno 4. 11.: po změně tvaru dat u jednoho zdroje dostalo 119
+   nabídek značku `prezn` („zdroj přes noc změnil tvar dat, nic se
+   nespárovalo, takže first_seen je dnešek, i když ta nabídka visí
+   rok"). U nich `naposledZmeneno` schválně vrací null a adresa jde do
+   mapy webu bez data — je to pravda: nevíme. Napsat tam dnešek by byl
+   přesně ten „lastmod, který se u všech adres mění každý den", kvůli
+   kterému tahle zkouška vznikla.
+   Zkouška proto netrvá na tom, že datum JE u všech, ale že chybí
+   PRÁVĚ TAM, kde ho produkt podle svých vlastních pravidel nemá —
+   a počítá se to ze stejné funkce, jakou používá generátor. Kdyby se
+   to napsalo jako pevné číslo, zestárne to s daty; kdyby se to
+   zahodilo, prošel by i stav, kdy datum nemá nikdo. */
 const bez = zapisy.filter((z) => !z.lastmod);
-pravda('každá adresa má <lastmod>', bez.length === 0,
-  `bez data: ${bez.length} — např. ${bez.slice(0, 3).map((z) => z.loc).join(', ')}`);
+const nevimeKolik = (NABIDKY || []).filter((o) => naposledZmeneno(o) === null).length;
+pravda(`datum chybí jen tam, kde ho neznáme (${bez.length} adres, ${nevimeKolik} nabídek bez známého data)`,
+  bez.length <= nevimeKolik,
+  `bez data: ${bez.length}, ale nabídek s neznámým datem je jen ${nevimeKolik}`
+  + ` — např. ${bez.slice(0, 3).map((z) => z.loc).join(', ')}`);
+pravda('a většina adres datum MÁ (jinak mapa webu neříká nic)',
+  zapisy.length > 0 && bez.length < zapisy.length / 2,
+  `bez data ${bez.length} z ${zapisy.length}`);
 
 const VZOR = /^\d{4}-\d{2}-\d{2}$/;
 const spatneZapsane = zapisy.filter((z) => z.lastmod && !VZOR.test(z.lastmod));

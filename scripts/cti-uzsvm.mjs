@@ -182,8 +182,25 @@ export const OZNACENI_PARCELY2 = /\bparc(?:ela)?\.?\s*(?:[čc]\.?)?\s*[\d/]+/gi;
 /* Slova, která samo o sobě místem nejsou — po očištění nesmí zbýt jen ono. */
 export const NENI_MISTO = /^(?:pozemek|pozemky|poz|st|stp|parcela|parc|aukce|aukc|id|spoluvl|podíl|podil|prodej|pacht|a|i|č|c|ks)$/i;
 
+/* KDE JMÉNO OBCE KONČÍ A ZAČÍNÁ TECHNICKÝ POPIS.
+   Naměřeno 4. 11. na zveřejněných datech: pět míst, do kterých zasáhl
+   popis — „Blšany o výměře m2", „Mašovice u Meclova-id. podíl a",
+   „Valtice - pozemek parcela číslo", a dvě, která jako obec nejsou
+   vůbec nic: „O CELKOVÉ VÝMĚŘE M2" a „id. pozemku". Je to vidět na
+   kartě, v titulku stránky, v adrese i v sitemapě, takže to není
+   kosmetika.
+   Řeže se PŘED čištěním čísel: po odstranění čísel už „o výměře m2"
+   vypadá jako dvě nevinná slova a nepoznalo by se, že to byl popis.
+   Pořadí v seznamu nerozhoduje, bere se nejlevnější nález. */
+export const ZACATEK_POPISU = /\s*(?:[-–—,]\s*)?\b(?:o\s+(?:celkové\s+)?výmě|výměr|id\.|ide[áa]ln|spoluvl|podíl|pozemek\s+parcel|parcel[ay]\s+číslo|v\s+k\.?\s*ú)/i;
+
 export function ocistiMisto(s) {
-  let t = String(s || '')
+  const cele = String(s || '');
+  const rez = ZACATEK_POPISU.exec(cele);
+  /* Když popis začíná hned na začátku, žádné jméno obce před ním není
+     — a „O CELKOVÉ VÝMĚŘE M2" se jako obec vypsat nesmí. */
+  if (rez && rez.index === 0) return '';
+  let t = (rez ? cele.slice(0, rez.index) : cele)
     .replace(SPISOVA_ZNACKA, ' ')
     .replace(OZNACENI_PARCELY, ' ')
     .replace(OZNACENI_PARCELY2, ' ')

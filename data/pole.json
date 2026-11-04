@@ -1,155 +1,160 @@
 {
-  "note": "Popis polí v data/opportunities.json — jedno místo, ze kterého se staví dokumentace na data.html a které hlídá scripts/test-data-rozhrani.mjs. Když do dat přibude pole a nepřibude sem, zkouška spadne.",
-  "verze": 1,
-  "soubor": "data/opportunities.json",
-  "obnova": "čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC)",
-  "hlava": {
-    "updated": {
-      "typ": "string",
-      "popis": "Den poslední obnovy (YYYY-MM-DD)."
-    },
-    "updated_at": {
-      "typ": "string",
-      "popis": "Přesný čas poslední obnovy (ISO 8601, UTC)."
-    },
-    "source": {
-      "typ": "string",
-      "popis": "Věta o tom, odkud data pocházejí."
-    },
-    "sources": {
-      "typ": "pole",
-      "popis": "Stav jednotlivých zdrojů z posledního běhu: název, stav, počet záznamů, čas."
-    },
-    "opportunities": {
-      "typ": "pole",
-      "popis": "Samotné nabídky."
-    }
+ "note": "Popis polí v data/opportunities.json — jedno místo, ze kterého se staví dokumentace na data.html a které hlídá scripts/test-data-rozhrani.mjs. Když do dat přibude pole a nepřibude sem, zkouška spadne.",
+ "verze": 1,
+ "soubor": "data/opportunities.json",
+ "obnova": "čtyřikrát denně (0:00, 6:00, 12:00, 18:00 UTC)",
+ "hlava": {
+  "updated": {
+   "typ": "string",
+   "popis": "Den poslední obnovy (YYYY-MM-DD)."
   },
-  "pole": {
-    "place": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Obec nebo katastrální území."
-    },
-    "okres": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Okres. Jeden ze 77 okresů ČR."
-    },
-    "type": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Druh nabídky. „majitel\" tady nebývá — inzeráty od lidí leží v databázi a vidíte je na mapě, do tohohle souboru se nedávají.",
-      "hodnoty": [
-        "sale",
-        "drazba",
-        "exekuce",
-        "obec"
-      ]
-    },
-    "parcel": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Parcelní číslo. Pomlčka „—“ znamená, že ho zdroj neuvedl."
-    },
-    "druh": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Druh pozemku tak, jak ho uvádí zdroj (orná půda, les, stavební…)."
-    },
-    "area": {
-      "typ": "number|null",
-      "vzdy": true,
-      "popis": "Výměra v m². null = zdroj ji neuvedl a z textu se nedala bezpečně přečíst."
-    },
-    "price": {
-      "typ": "number",
-      "vzdy": true,
-      "popis": "Cena v Kč. U dražby vyvolávací, u exekuce uváděná. Je to cena NABÍDKOVÁ, ne prodejní."
-    },
-    "extra": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Zdroj a stav — například „inzerát – Bezrealitky“ nebo termín dražby."
-    },
-    "lat": {
-      "typ": "number",
-      "vzdy": true,
-      "popis": "Zeměpisná šířka (WGS 84)."
-    },
-    "lng": {
-      "typ": "number",
-      "vzdy": true,
-      "popis": "Zeměpisná délka (WGS 84)."
-    },
-    "first_seen": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Den, kdy robot nabídku poprvé uviděl (YYYY-MM-DD). Ne datum vzniku inzerátu."
-    },
-    "url": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Odkaz na původní inzerát. Chybí tam, kde ho zdroj nedává."
-    },
-    "site": {
-      "typ": "pole",
-      "vzdy": false,
-      "popis": "Sítě a příjezd vyčtené z popisu inzerátu (elektrina, voda, plyn, kanalizace, cesta). Co není uvedeno, NENÍ totéž co „není“. A „v dosahu“ ani „v blízkosti“ se za uvedenou síť nepočítá."
-    },
-    "podil": {
-      "typ": "boolean",
-      "vzdy": false,
-      "popis": "true = prodává se spoluvlastnický podíl. Cena je za zlomek. Jestli je výměra za celou parcelu, nebo už za ten podíl, říká pole „vymera_podilu“ — bez něj platí to první, a cena za metr pak vychází nízko sama od sebe."
-    },
-    "zlomek": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Velikost podílu, například „1/66“."
-    },
-    "vymera_podilu": {
-      "typ": "boolean",
-      "vzdy": false,
-      "popis": "true = pole „area“ u tohohle podílu NENÍ výměra celé parcely, ale už jen toho podílu — tedy to, co kupujícímu připadne. Nasazuje se jen tam, kde to text inzerátu dokazuje (součet vypsaných parcel krát zlomek sedí na výměru, nebo je aspoň jedna parcela větší než ona). Cena za metr se u takové nabídky zlomkem už nepřepočítává."
-    },
-    "cast": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Část obce, je-li uvedena."
-    },
-    "cena_drive": {
-      "typ": "number",
-      "vzdy": false,
-      "popis": "Předchozí cena, pokud se změnila."
-    },
-    "cena_zmena": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Den změny ceny (YYYY-MM-DD)."
-    },
-    "inz": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Otisk inzerenta — šest znaků spočítaných z jeho vlastního textu (prvních 60 znaků popisu, srovnaných do jedné podoby). Jméno inzerenta data nenesou, tohle je jen značka „tyhle nabídky napsal týž člověk\". Potřebuje ji cenový verdikt: jeden velkoobchodník drží skoro polovinu nabídek, a bez té značky by se jeho cenník počítal jako stovky nezávislých pozorování trhu. Nabídka bez popisu ji nemá a počítá se sama za sebe. Počítá to otiskInzerenta v scripts/text-inzeratu.mjs."
-    },
-    "zdroj": {
-      "typ": "string",
-      "vzdy": true,
-      "popis": "Jméno služby, ze které nabídka je. Píše si ho do nabídky každý stahovač sám — je to jediné místo, které ho ví jistě. Podle něj se pozná, čí nabídky se mají podržet, když zdroj neodpoví (viz podrzNabidkyVypadlych v scripts/fetch-opportunities.mjs). Pole „site“ je něco jiného: to jsou sítě, ne zdroj.",
-      "hodnoty": [
-        "Dražby",
-        "OK dražby",
-        "SPÚ",
-        "Bezrealitky",
-        "Sreality (Apify)",
-        "Farmy"
-      ]
-    },
-    "drzeno_od": {
-      "typ": "string",
-      "vzdy": false,
-      "popis": "Datum (YYYY-MM-DD), od kterého se nabídka DRŽÍ z minulého běhu, protože její zdroj neodpověděl. Je tu jen u takových nabídek a nejvýš sedm dní; po stropu se nabídka pustí. Když pole chybí, nabídka se dnes doopravdy stáhla.",
-      "jenPriVypadku": true
-    }
+  "updated_at": {
+   "typ": "string",
+   "popis": "Přesný čas poslední obnovy (ISO 8601, UTC)."
+  },
+  "source": {
+   "typ": "string",
+   "popis": "Věta o tom, odkud data pocházejí."
+  },
+  "sources": {
+   "typ": "pole",
+   "popis": "Stav jednotlivých zdrojů z posledního běhu: název, stav, počet záznamů, čas."
+  },
+  "opportunities": {
+   "typ": "pole",
+   "popis": "Samotné nabídky."
   }
+ },
+ "pole": {
+  "place": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Obec nebo katastrální území."
+  },
+  "okres": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Okres. Jeden ze 77 okresů ČR."
+  },
+  "type": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Druh nabídky. „majitel\" tady nebývá — inzeráty od lidí leží v databázi a vidíte je na mapě, do tohohle souboru se nedávají.",
+   "hodnoty": [
+    "sale",
+    "drazba",
+    "exekuce",
+    "obec"
+   ]
+  },
+  "parcel": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Parcelní číslo. Pomlčka „—“ znamená, že ho zdroj neuvedl."
+  },
+  "druh": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Druh pozemku tak, jak ho uvádí zdroj (orná půda, les, stavební…)."
+  },
+  "area": {
+   "typ": "number|null",
+   "vzdy": true,
+   "popis": "Výměra v m². null = zdroj ji neuvedl a z textu se nedala bezpečně přečíst."
+  },
+  "price": {
+   "typ": "number",
+   "vzdy": true,
+   "popis": "Cena v Kč. U dražby vyvolávací, u exekuce uváděná. Je to cena NABÍDKOVÁ, ne prodejní."
+  },
+  "extra": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Zdroj a stav — například „inzerát – Bezrealitky“ nebo termín dražby."
+  },
+  "lat": {
+   "typ": "number",
+   "vzdy": true,
+   "popis": "Zeměpisná šířka (WGS 84)."
+  },
+  "lng": {
+   "typ": "number",
+   "vzdy": true,
+   "popis": "Zeměpisná délka (WGS 84)."
+  },
+  "first_seen": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Den, kdy robot nabídku poprvé uviděl (YYYY-MM-DD). Ne datum vzniku inzerátu."
+  },
+  "url": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Odkaz na původní inzerát. Chybí tam, kde ho zdroj nedává."
+  },
+  "site": {
+   "typ": "pole",
+   "vzdy": false,
+   "popis": "Sítě a příjezd vyčtené z popisu inzerátu (elektrina, voda, plyn, kanalizace, cesta). Co není uvedeno, NENÍ totéž co „není“. A „v dosahu“ ani „v blízkosti“ se za uvedenou síť nepočítá."
+  },
+  "podil": {
+   "typ": "boolean",
+   "vzdy": false,
+   "popis": "true = prodává se spoluvlastnický podíl. Cena je za zlomek. Jestli je výměra za celou parcelu, nebo už za ten podíl, říká pole „vymera_podilu“ — bez něj platí to první, a cena za metr pak vychází nízko sama od sebe."
+  },
+  "zlomek": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Velikost podílu, například „1/66“."
+  },
+  "vymera_podilu": {
+   "typ": "boolean",
+   "vzdy": false,
+   "popis": "true = pole „area“ u tohohle podílu NENÍ výměra celé parcely, ale už jen toho podílu — tedy to, co kupujícímu připadne. Nasazuje se jen tam, kde to text inzerátu dokazuje (součet vypsaných parcel krát zlomek sedí na výměru, nebo je aspoň jedna parcela větší než ona). Cena za metr se u takové nabídky zlomkem už nepřepočítává."
+  },
+  "cast": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Část obce, je-li uvedena."
+  },
+  "cena_drive": {
+   "typ": "number",
+   "vzdy": false,
+   "popis": "Předchozí cena, pokud se změnila."
+  },
+  "cena_zmena": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Den změny ceny (YYYY-MM-DD)."
+  },
+  "inz": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Otisk inzerenta — šest znaků spočítaných z jeho vlastního textu (prvních 60 znaků popisu, srovnaných do jedné podoby). Jméno inzerenta data nenesou, tohle je jen značka „tyhle nabídky napsal týž člověk\". Potřebuje ji cenový verdikt: jeden velkoobchodník drží skoro polovinu nabídek, a bez té značky by se jeho cenník počítal jako stovky nezávislých pozorování trhu. Nabídka bez popisu ji nemá a počítá se sama za sebe. Počítá to otiskInzerenta v scripts/text-inzeratu.mjs."
+  },
+  "zdroj": {
+   "typ": "string",
+   "vzdy": true,
+   "popis": "Jméno služby, ze které nabídka je. Píše si ho do nabídky každý stahovač sám — je to jediné místo, které ho ví jistě. Podle něj se pozná, čí nabídky se mají podržet, když zdroj neodpoví (viz podrzNabidkyVypadlych v scripts/fetch-opportunities.mjs). Pole „site“ je něco jiného: to jsou sítě, ne zdroj.",
+   "hodnoty": [
+    "Dražby",
+    "OK dražby",
+    "SPÚ",
+    "Bezrealitky",
+    "Sreality (Apify)",
+    "Farmy"
+   ]
+  },
+  "drzeno_od": {
+   "typ": "string",
+   "vzdy": false,
+   "popis": "Datum (YYYY-MM-DD), od kterého se nabídka DRŽÍ z minulého běhu, protože její zdroj neodpověděl. Je tu jen u takových nabídek a nejvýš sedm dní; po stropu se nabídka pustí. Když pole chybí, nabídka se dnes doopravdy stáhla.",
+   "jenPriVypadku": true
+  },
+  "prezn": {
+   "typ": "string|number",
+   "vzdy": false,
+   "popis": "Den, kdy zdroj PŘES NOC ZMĚNIL TVAR DAT a nabídky se proto nespárovaly se včerejškem (YYYY-MM-DD; po přenesení do dalších dní zůstává jako 1). Takové nabídky nejsou nové — jen je nejde poznat jako tytéž, co tu byly včera. Web je proto nepočítá mezi „nově přidané“ a neposílá na ně upozornění: jinak by jedna změna u zdroje poslala stovky falešných hlášení a opakovala je tolik dní, kolik má okno novinek."
+  }
+ }
 }
