@@ -414,6 +414,85 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     JSON.stringify((vysledek.cesty || []).map((c) => c.jmeno)));
 }
 
+/* ---- 2c) WEB, KTERÝ ODPOVÍDÁ NA VŠECHNO TOUŽ STRÁNKOU (§442) ----
+ *
+ * ZMĚŘENO NAOSTRO 5. 11. na drazbynaxos.cz (běh 42048959294): z 37
+ * cest vrátilo 19 stav 200 a přesně 101 947 bajtů — jeden a týž
+ * soubor. Bot z toho udělal 21 nálezů „nabídky", mezi nimi /rss,
+ * /oai?verb=Identify a /katalog.jsonld. Fixtura je ten web v malém:
+ * na cokoli kromě robots.txt vrátí tutéž stránku o dražbách.
+ */
+{
+  const DOMOV = '<html><head><title>Dražby Naxos</title></head><body>'
+    + '<h1>Dražby nemovitostí</h1><p>Katastr, parcela, dražba, výběrové řízení.</p>'
+    + '<p>Cena 1 200 000 Kč, výměra 4 500 m2.</p></body></html>';
+  const naVsechno = {
+    stahni: async (url) => {
+      if (String(url).includes('/robots.txt')) {
+        return { ok: true, status: 200, headers: { get: () => 'text/plain' },
+          text: async () => 'User-agent: *\nAllow: /\n' };
+      }
+      return { ok: true, status: 200, headers: { get: () => 'text/html' }, text: async () => DOMOV };
+    },
+    ua: 'zkouska', smimeCist: async () => ({ dovoleno: true }),
+    mezipamet: new Map(), zeSitemapy, zRss,
+    /* ČTEČKA TU MUSÍ BÝT. Bez ní žádná cesta verdikt „nabídky"
+       nedostane (nabidek = 0) a kontrola „ani jedna nedostane
+       nabídky" by byla zelená i BEZ opravy — měřila by tvar, ne
+       vadu. Prokázalo se to sabotáží: ze tří kontrol padla jedna.
+       S čtečkou vznikne ten přelud doopravdy: táž stránka se
+       přečte na každé cestě a vydá tři nabídky. */
+    cti: (telo) => (/Dražby nemovitostí/.test(String(telo))
+      ? { nabidky: [{ k: 'a' }, { k: 'b' }, { k: 'c' }], cesta: 'html' }
+      : { nabidky: [] }),
+  };
+  const v = await Z.zkusPortal({ host: 'naxos.test', jmeno: 'Dražby', url: 'https://naxos.test/' },
+    naVsechno, { strop: 12 });
+  pravda('kontrolní cesta je v nálezu a přiznala stav 200',
+    !!v.kontrolaNeexistujici && v.kontrolaNeexistujici.stav === 200
+    && v.kontrolaNeexistujici.bajtu === DOMOV.length,
+    JSON.stringify(v.kontrolaNeexistujici));
+  const nabidky = (v.cesty || []).filter((c) => c.verdikt === 'nabídky');
+  pravda('ani jedna cesta nedostane „nabídky" — je to pořád táž stránka',
+    nabidky.length === 0,
+    JSON.stringify(nabidky.map((c) => c.adresa)));
+  pravda('a u každé je napsáno, že je to táž stránka jako na vymyšlenou adresu',
+    (v.cesty || []).filter((c) => c.stav === 200)
+      .every((c) => c.jakoNeexistujici === true && /vymyšlenou adresu/.test(c.proc || '')),
+    JSON.stringify((v.cesty || []).filter((c) => c.stav === 200 && !c.jakoNeexistujici)
+      .map((c) => [c.adresa, c.verdikt, c.proc])));
+
+  /* OBRÁCENÝ PŘÍPAD: web, který neexistující cestu přiznává (404),
+     musí svoje nálezy udržet. Jinak by pravidlo zabilo každý portál. */
+  const sPoctivou404 = {
+    stahni: async (url) => {
+      const u = String(url);
+      if (u.includes('/robots.txt')) {
+        return { ok: true, status: 200, headers: { get: () => 'text/plain' },
+          text: async () => 'User-agent: *\nAllow: /\n' };
+      }
+      /* „/katalog" je ÚMYSLNĚ jedna z cest, které bot zkouší hned.
+         Napoprvé jsem tu měl „/nabidky" a kontrola padla: do stropu 12
+         se k ní bot nedostane, protože dvanáct dotazů spolknou tvary
+         katalogů. Nebyla to vada pravidla, byla to mez zkoušky —
+         táž lekce jako u §436. */
+      if (u.includes('/katalog') && !u.includes('.jsonld')) {
+        return { ok: true, status: 200, headers: { get: () => 'text/html' }, text: async () => DOMOV };
+      }
+      return { ok: true, status: 404, headers: { get: () => 'text/html' },
+        text: async () => '<html><body>Nenalezeno</body></html>' };
+    },
+    ua: 'zkouska', smimeCist: async () => ({ dovoleno: true }),
+    mezipamet: new Map(), zeSitemapy, zRss,
+  };
+  const v2 = await Z.zkusPortal({ host: 'poctivy.test', jmeno: 'Poctivý', url: 'https://poctivy.test/' },
+    sPoctivou404, { strop: 12 });
+  je('u webu s poctivou 404 je kontrola 404', (v2.kontrolaNeexistujici || {}).stav, 404);
+  pravda('a nález na /katalog zůstane, pravidlo ho nesebere',
+    (v2.cesty || []).some((c) => /\/katalog$/.test(c.adresa) && c.stav === 200 && !c.jakoNeexistujici),
+    JSON.stringify((v2.cesty || []).filter((c) => c.stav === 200).map((c) => [c.adresa, c.verdikt])));
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

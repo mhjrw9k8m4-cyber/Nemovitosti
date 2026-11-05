@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url';
 import { ZAPOJENE, KANDIDATI } from './zdroje-kandidati.mjs';
 import {
   CESTY, cestyProPortal, tvarOdpovedi, verdiktCesty, poradiCest, dalsiCesty, znakyOdpovedi,
-  noveProtiMinule,
+  noveProtiMinule, CESTA_KONTROLNI, prepisTazStranka,
   radekDoRegistru, hlaseniPortalu, pocetZmerenych, STROP_CEST, STROP_DALSICH,
 } from './cesty-portalu.mjs';
 
@@ -187,10 +187,24 @@ export async function zkusPortal(cil, pomucky, { strop = STROP_DOTAZU_NA_PORTAL 
   } catch { sitemapy = []; }
   await pauza(PAUZA_MS);
 
+  /* KONTROLNÍ DOTAZ NA VYMYŠLENOU CESTU (§442). Dřív se věřilo stavu
+     200 — a drazbynaxos.cz tím vyrobil 21 falešných „nabídek": vrací
+     touž domovskou stránku na cokoli, co nezná. Jeden dotaz navíc dá
+     měřítko, podle kterého se ty přeludy poznají (viz prepisTazStranka
+     v cesty-portalu.mjs). */
+  let kontrola = null;
+  try {
+    const zaklad = new URL(cil.url).origin;
+    kontrola = await zkusCestu({ adresa: zaklad + CESTA_KONTROLNI,
+      jmeno: 'kontrola: cesta, která tu není', skupina: 'kontrola' }, pomucky);
+    delete kontrola.telo;
+    await pauza(PAUZA_MS);
+  } catch { kontrola = null; }
+
   const front = cestyProPortal(cil.url, { sitemapy });
   const hotove = [];
   const videno = new Set();
-  let dotazu = 0;
+  let dotazu = kontrola ? 1 : 0;
   while (front.length && dotazu < strop) {
     const c = front.shift();
     if (videno.has(c.adresa)) continue;
@@ -223,7 +237,14 @@ export async function zkusPortal(cil, pomucky, { strop = STROP_DOTAZU_NA_PORTAL 
   return {
     host: cil.host, jmeno: cil.jmeno, url: cil.url, odkud: cil.odkud,
     dotazu, nedosahnuto, sitemapyZRobots: sitemapy.length,
-    cesty: hotove.map((x) => ({ ...x })),
+    /* §442: verdikty se přepíšou podle kontrolní cesty — na webu,
+       který odpovídá na všechno stejně, není „nabídky" nález, ale
+       přelud. Kontrola je v nálezu taky, ať je vidět, podle čeho se
+       soudilo. */
+    kontrolaNeexistujici: kontrola
+      ? { adresa: kontrola.adresa, stav: kontrola.stav, bajtu: kontrola.bajtu }
+      : null,
+    cesty: prepisTazStranka(hotove.map((x) => ({ ...x })), kontrola),
   };
 }
 

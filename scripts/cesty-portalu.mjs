@@ -294,6 +294,51 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
    nikoho. Viz oddíl 429. */
 export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'ke čtení', 'chce klíč', 'odpověděla', 'zavřená'];
 
+/* ------------------------------------------------------------------
+   WEB, KTERÝ ODPOVÍDÁ NA VŠECHNO TOUŽ STRÁNKOU (§442).
+
+   ZMĚŘENO naostro 5. 11. na drazbynaxos.cz (běh 42048959294):
+   z 37 zkoušených cest vrátilo 19 stav 200 a přesně 101 947 bajtů —
+   tedy jeden a týž soubor. Bot z toho udělal 21 nálezů „nabídky",
+   mezi nimi `/rss`, `/oai?verb=Identify` i `/katalog.jsonld`. Žádná
+   z nich nabídky nenese; nese je ta jediná domovská stránka, kterou
+   server pošle na cokoli, co nezná.
+
+   Pravidlo „stav 200 a v textu jsou slova o dražbách" je tedy samo
+   o sobě k ničemu, dokud se neví, CO ten web dělá s adresou, která
+   neexistuje. Proto se jedním dotazem zkusí vymyšlená cesta a výsledek
+   se vezme jako měřítko:
+
+     · vrátí-li kontrola 404 (nebo cokoli jiného než 200), web své
+       neexistující cesty přiznává a nálezům se věří;
+     · vrátí-li 200, je každá cesta téže velikosti JEN TA SAMÁ
+       STRÁNKA — a verdikt „nabídky" by byl přelud.
+
+   Měří se bajty, ne text: tělo se do nálezu nezapisuje (byly by
+   z toho megabajty) a shoda na bajt je u statického souboru
+   spolehlivější než podobnost textu.
+
+   JEDEN DOTAZ NAVÍC NA PORTÁL. Je to cena za to, aby se nepsalo
+   dvacet falešných nálezů — a „nic takového tu není" je slušný dotaz,
+   ne obcházení ničeho. */
+export const CESTA_KONTROLNI = '/__takova-cesta-tu-neni-9c3f';
+
+export function prepisTazStranka(cesty, kontrola) {
+  const c = Array.isArray(cesty) ? cesty : [];
+  if (!kontrola || kontrola.stav !== 200 || !(kontrola.bajtu > 0)) return c.map((x) => ({ ...x }));
+  return c.map((x) => {
+    if (x.stav !== 200 || x.bajtu !== kontrola.bajtu) return { ...x };
+    return {
+      ...x,
+      verdikt: 'odpověděla',
+      jakoNeexistujici: true,
+      proc: `táž stránka jako na vymyšlenou adresu (${kontrola.bajtu} bajtů) —`
+        + ' tenhle web odpovídá na všechno stejně, takže ze stavu 200 se'
+        + ' tady nesmí soudit nic',
+    };
+  });
+}
+
 /* Jak se ten verdikt řekne v rozpadu, aby věta zněla česky („nabídky 3,
    slibné 1, chtějí klíč 1, odpověděly 7, zavřené 28"). */
 export const JMENA_ROZPADU = {

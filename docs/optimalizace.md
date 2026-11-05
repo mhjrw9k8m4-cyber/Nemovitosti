@@ -26797,3 +26797,66 @@ podmínek**, ne ohledání. Použít správný nástroj je součást měření, 
 detail.
 
 `test-sonda-podminky` 99 → **102 kontrol**.
+
+## §442 — Dvacet jedna „nabídek", které neexistovaly
+
+Pustil jsem bota zkoušení portálů naostro na prvního ze tří
+dražebníků (`drazbynaxos.cz`, běh 42048959294) a nález vypadal
+báječně: **21 cest s verdiktem „nabídky"**, mezi nimi `/katalog`,
+`/nabidky`, `/opendata`, `/rss`, `/katalog.jsonld` a
+`/oai?verb=Identify`. Hlásič z toho poslal komentář do úkolu.
+
+Jenže `/oai?verb=Identify` a `/rss` nabídky nevedou nikdy. Podíval
+jsem se na čísla v nálezu:
+
+```
+19×  200 | HTML | 101947 bajtů
+ 2×  200 | HTML |  53388
+ 4×  404
+ 1×  200 | SITEMAP | 6770
+```
+
+**Devatenáct cest vrátilo přesně 101 947 bajtů** — jeden a týž
+soubor. Ten web odpovídá na cokoli, co nezná, svou domovskou
+stránkou. Nabídky na ní jsou, takže je soudce našel devatenáctkrát.
+Jedny nabídky, devatenáct nálezů.
+
+**Pravidlo „stav 200 a text mluví o dražbách" je samo o sobě
+k ničemu, dokud se neví, co ten web dělá s adresou, která
+neexistuje.** Proto se teď jedním dotazem zkusí vymyšlená cesta
+(`/__takova-cesta-tu-neni-9c3f`) a její odpověď se vezme jako
+měřítko:
+
+* vrátí-li kontrola 404 (nebo cokoli jiného než 200), web své
+  neexistující cesty přiznává a nálezům se věří;
+* vrátí-li 200, je každá cesta téže velikosti **jen ta samá
+  stránka** — verdikt se přepíše na „odpověděla", přidá se vlajka
+  `jakoNeexistujici` a v odůvodnění stojí, že ze stavu 200 se tady
+  nesmí soudit nic.
+
+Kontrola je v nálezu zapsaná (`kontrolaNeexistujici`), ať je vidět,
+podle čeho se soudilo. Jeden dotaz navíc na portál je cena za to, aby
+se nepsalo dvacet falešných nálezů — a „nic takového tu není" je
+slušný dotaz, ne obcházení ničeho.
+
+### Sabotáž, která mě podruhé usvědčila ze slabé kontroly
+
+Napsal jsem tři kontroly a sabotáž (odebrat volání `prepisTazStranka`
+z bota) shodila **jen jednu**. Ta nejdůležitější — „ani jedna cesta
+nedostane nabídky" — svítila zeleně i bez opravy: ve fixtuře jsem
+nepodstrčil čtečku, takže `nabidek` bylo všude 0 a verdikt „nabídky"
+nemohl vzniknout ani ve vadném stavu. Měřil jsem tvar, ne vadu —
+přesně to, proti čemu je §423.
+
+Po doplnění čtečky (táž stránka se přečte na každé cestě a vydá tři
+nabídky) vznikne přelud doopravdy a **sabotáž shodí dvě kontroly ze
+tří**. Třetí (že je kontrolní cesta v nálezu) na tomhle sabotu padnout
+nemůže — na to je sabotáž jiná, odebrat sám kontrolní dotaz.
+
+A ještě jedna mez zkoušky, už poněkolikáté: protipříklad „web
+s poctivou 404" jsem napsal s cestou `/nabidky` a padal — do stropu
+12 se k ní bot nedostane, dvanáct dotazů spolknou tvary katalogů.
+Je tam teď `/katalog`, kterou bot zkouší hned, a je u toho napsáno
+proč.
+
+`test-zkus-portal` 164 → **169 kontrol**.
