@@ -331,6 +331,32 @@ const nabidky = D.opportunities || [];
       po.kat === 'byt' && po.price === 100 && po.area === 2,
       'smetla i užitečná pole: ' + JSON.stringify(po));
   }
+  /* A HLÁŠKA O POČTECH NESMÍ LHÁT. Vedle výmazu příznaku je tu druhá
+     věc, která se dá splést stejně tiše: počítání kategorií do logu
+     zdroje. Stálo tam `o.kat || 'pozemek'`, takže nabídka, u které
+     zdroj VÝSLOVNĚ řekl „tohle pozemek není" a kategorii neurčil, se
+     spočítala mezi pozemky. Naměřeno 5. 11.: log napsal
+     `{"pozemek":149}` a 30 z nich pozemek nebylo.
+
+     Hláška, která lže, je horší než žádná: podle žádné se člověk
+     podívá do dat, podle lživé uvěří — mě ta věta poslala na dvacet
+     minut špatným směrem. Proto je i z toho počítání funkce. */
+  if (typeof R.pocetPodleKategorie === 'function') {
+    const p = R.pocetPodleKategorie([
+      { kat: 'pozemek' }, {}, { _neniPozemek: true },
+      { _neniPozemek: true, kat: 'byt' },
+    ]);
+    pravda('nabídka bez kategorie se počítá jako pozemek',
+      p.pozemek === 2, JSON.stringify(p));
+    pravda('ale ta, u které zdroj řekl „pozemek to není", nikdy',
+      p[R.KAT_NEURCENO] === 1 && !/149/.test(String(p.pozemek)),
+      'spočítala se jinde: ' + JSON.stringify(p));
+    pravda('a určená kategorie se počítá pod svým jménem',
+      p.byt === 1, JSON.stringify(p));
+  } else {
+    pravda('robot umí spočítat kategorie do hlášky (pocetPodleKategorie)',
+      false, 'funkce chybí — počítání je v těle a nedá se změřit');
+  }
   /* A ŽE SE OPRAVDU POUŽIJE. Funkce, kterou nikdo nezavolá, je jen
      slib.
 

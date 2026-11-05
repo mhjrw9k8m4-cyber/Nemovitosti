@@ -1235,7 +1235,15 @@ export function kamDal(d) {
   const skupina = (CENY && CENY.druhGroup) ? CENY.druhGroup(d.druh) : '';
   const df = META.druhFile(skupina);
   const dm = META.DRUH_STRANKY.find((x) => x.soubor === df);
-  if (dm && jeSoubor(df)) ven.push({ t: velkePrvni(dm.nom), u: df, p: 'týž druh pozemku po celé ČR' });
+  /* A JEN U POZEMKU. Druhové stránky jsou stránky DRUHŮ POZEMKU
+     („Stavební pozemky", „Orná půda"); u nepozemkové nabídky by to
+     slibovalo „týž druh pozemku" u něčeho, co pozemek není — a vedlo na
+     výpis, kde ta nabídka vůbec není. Naměřeno 5. 11.: stránka
+     v Benešově nabízela „Stavební pozemky — týž druh pozemku po celé
+     ČR" u nabídky vedené jako jiná nemovitost. */
+  if (dm && jeSoubor(df) && KATEGORIE.jePozemkova(KATEGORIE.klic(d.kat))) {
+    ven.push({ t: velkePrvni(dm.nom), u: df, p: 'týž druh pozemku po celé ČR' });
+  }
 
   /* Rozpočet jen u prodeje. U dražby je cena vyvolávací, takže „pozemky
      do 500 tisíc" by slibovalo cenovou hladinu, kterou tahle nabídka
@@ -1515,7 +1523,7 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     ? `<div class="pz-media">`
       + SNIMEK.html(d, { sirka: 384, vyska: 256, barva: BARVY_TYPU[d.type] || BARVY_TYPU.sale, id: 'hero' })
       + `<span class="opp-mgrad"></span>`
-      + SNIMEK.popis(d)
+      + SNIMEK.popis(d, KATEGORIE)
       + `</div>`
     : '';
 
@@ -1527,7 +1535,12 @@ export function stranka(sablona, d, soubor = souborPro(d)) {
     + (titulKde ? `<p class="pz-staticky-kde">${esc(titulKde)}</p>` : '')
     + `<p><b>${esc(cena)}</b>${esc(zaM2)}${vym ? ' · ' + esc(vym) : ''} · ${esc(TYP[d.type] || d.type)}</p>`
     + `<dl>`
-    + `<dt>Druh pozemku</dt><dd>${esc(druh)}</dd>`
+    /* NÁLEPKA PODLE KATEGORIE. Naměřeno 5. 11. na ostrých datech: u 30
+       nabídek stálo na stránce „Druh pozemku: Jiná nemovitost" — tedy
+       nálepka, která si s hodnotou odporuje v jednom řádku. Druh
+       pozemku je u budovy nanejvýš druh parcely POD ní, takže se tak
+       nesmí jmenovat. Rozhodnutí je v js/kategorie.js, ne tady. */
+    + `<dt>${KATEGORIE.jePozemkova(KATEGORIE.klic(d.kat)) ? 'Druh pozemku' : 'Typ nemovitosti'}</dt><dd>${esc(druh)}</dd>`
     + (vym ? `<dt>Výměra</dt><dd>${esc(vym)}</dd>` : '')
     + `<dt>Obec</dt><dd>${esc(d.place)}</dd>`
     /* ODKAZ JEN TAM, KDE STRÁNKA JE. `maOkres` o kus výš se tou

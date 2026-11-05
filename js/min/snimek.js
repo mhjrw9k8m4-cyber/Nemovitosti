@@ -73,11 +73,17 @@
       '</svg>';
   }
 
-  function popis(d) {
+  function popis(d, kategorie) {
     if (!d.place || !(d.area > 0)) return '';
-    return '<span class="sn-popis" aria-hidden="true">' +
-      '<u>přesný obrys pozemku najdete v katastru</u>' +
-      '</span>';
+    var K = kategorie || global.PKKategorie || null;
+    if (!K || typeof K.jePozemkova !== 'function' || typeof K.klic !== 'function') {
+      throw new Error('výhrada na snímku potřebuje js/kategorie.js — podejte ho popis(d, PKKategorie), nebo ho načtěte dřív');
+    }
+    var pozemkova = K.jePozemkova(K.klic(d && d.kat));
+    return '<span class="sn-popis" aria-hidden="true"><u>' +
+      (pozemkova ? 'přesný obrys pozemku najdete v katastru'
+        : 'přesnou polohu najdete v katastru') +
+      '</u></span>';
   }
 
   function nahled(d, zoomy) {

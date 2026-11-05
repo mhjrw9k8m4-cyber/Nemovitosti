@@ -21,7 +21,7 @@
         má, musí vyjít pozemek. Je to pojistka proti tomu, aby nová
         pravidla zpětně překlopila existující web.
    ================================================================== */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -30,6 +30,13 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
 const require_ = createRequire(import.meta.url);
 const K = require_(join(KOREN, 'js', 'kategorie.js'));
+/* SNÍMEK SE BERE JAKO V GENERÁTORU. js/snimek.js je IIFE nad globálem,
+   ne modul — scripts/generate-parcel-pages.mjs ho proto spouští přes
+   new Function() s globalThis.window = globalThis. Tady totéž, aby se
+   měřilo to, co se opravdu servíruje. */
+globalThis.window = globalThis;
+new Function(readFileSync(join(KOREN, 'js', 'snimek.js'), 'utf8'))();
+const SNIMEK = globalThis.PK_SNIMEK;
 
 let ok = 0, chyb = 0;
 const zpravy = [];
@@ -445,6 +452,83 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     .filter(([, h]) => h.indexOf('Dražba ') !== 0);
   pravda('žádná kategorie neprojde nadpisem bez akce',
     propadly.length === 0, JSON.stringify(propadly));
+}
+
+
+/* ==================================================================
+   9) SERVÍROVANÁ STRÁNKA: POZEMKOVÁ SLOVA U NEPOZEMKOVÉ NABÍDKY
+   ==================================================================
+   Fáze 2 naučila mluvit js/pozemek.js — tedy stránku, jak ji dokreslí
+   prohlížeč. Generátor servírované stránky zůstal pozadu a naměřilo se
+   to teprve na ostrých datech 5. 11., u 30 nabídek:
+
+     • „Druh pozemku: Jiná nemovitost" — nálepka si odporuje s hodnotou
+       v jednom řádku. Druh pozemku je u budovy nanejvýš druh parcely
+       POD ní.
+     • „Stavební pozemky — týž druh pozemku po celé ČR" u nabídky, která
+       pozemek není, a odkaz vedl na výpis, kde ta nabídka vůbec není.
+     • „přesný obrys pozemku najdete v katastru" přes snímek něčeho,
+       co se jako pozemek neprodává.
+
+   Hlídá se to na HOTOVÝCH souborech, ne na šabloně: šablonu lze
+   opravit a stránky přitom nechat staré. */
+{
+  const vsechny = readdirSync(KOREN).filter((f) => f.startsWith('pozemek-') && f.endsWith('.html'));
+  let nepozemkovych = 0;
+  const sObrysem = [], sDruhovkou = [], sNalepkou = [];
+  for (const f of vsechny) {
+    const h = readFileSync(join(KOREN, f), 'utf8');
+    if (h.indexOf('Druh pozemku</dt><dd>Jiná nemovitost') >= 0) sNalepkou.push(f);
+    if (h.indexOf('Typ nemovitosti</dt>') < 0) continue;
+    nepozemkovych++;
+    if (h.indexOf('obrys pozemku') >= 0) sObrysem.push(f);
+    if (h.indexOf('týž druh pozemku') >= 0) sDruhovkou.push(f);
+  }
+  /* MĚŘENÍ MUSÍ MÍT NA ČEM MĚŘIT. Kdyby data jednou nesla samé
+     pozemky, dvě kontroly níž by byly zelené prázdnotou — a to je
+     přesně to ticho, kvůli kterému §413 zavedl hlídače na hlídače.
+     Nula se proto hlásí jako neměřeno, ne jako úspěch. */
+  if (!nepozemkovych) {
+    zpravy.push('  – v datech není ani jedna nepozemková stránka, dvě kontroly se neměří');
+  } else {
+    pravda('nepozemková stránka nemluví o obrysu pozemku',
+      sObrysem.length === 0, sObrysem.slice(0, 3).join(', '));
+    pravda('a nenabízí „týž druh pozemku po celé ČR"',
+      sDruhovkou.length === 0, sDruhovkou.slice(0, 3).join(', '));
+  }
+  pravda('a nálepka „Druh pozemku" nestojí u jiné nemovitosti',
+    sNalepkou.length === 0, sNalepkou.slice(0, 3).join(', '));
+}
+
+/* ==================================================================
+   10) ZÁLOŽNÍ CESTA VE SNÍMKU SE SHODUJE S MODULEM
+   ==================================================================
+   js/snimek.js si modul kategorií nechává PODAT, protože globální
+   cestou tam není: generátor si js/kategorie.js bere přes require (do
+   module.exports), prohlížeč ho má jako window.PKKategorie.
+
+   ZÁLOŽNÍ CESTA TAM BYLA A TENHLE HLÍDAČ JI SHODIL. Rozhodovala se
+   z klíče (`!kat || kat === 'pozemek'`) a na neznámém klíči se
+   s modulem rozešla: ten ho přes klic() srovná na výchozí pozemek.
+   Dvě pravdy o jedné věci, nesrovnatelné bez tabulky kategorií —
+   tak je cesta jedna a chybějící modul hlasitě spadne. Měří se tedy
+   dvě věci: že spadne, a že věta se opravdu liší podle kategorie. */
+{
+  const puv = globalThis.PKKategorie;
+  delete globalThis.PKKategorie;
+  let spadlo = false;
+  try { SNIMEK.popis({ place: 'Obec', area: 100, kat: 'byt' }, null); }
+  catch (e) { spadlo = /kategorie\.js/.test(String(e && e.message)); }
+  globalThis.PKKategorie = puv;
+  pravda('bez modulu kategorií výhrada na snímku hlasitě spadne',
+    spadlo, 'neřekla nic, nebo spadla na něčem jiném než na chybějícím modulu');
+  /* A ŽE SE OPRAVDU LIŠÍ PODLE KATEGORIE. Kdyby popis() vracel jednu
+     větu pro všechno, kontrola výš by byla zelená a k ničemu. */
+  const uPozemku = SNIMEK.popis({ place: 'Obec', area: 100 }, K);
+  const uBytu = SNIMEK.popis({ place: 'Obec', area: 100, kat: 'byt' }, K);
+  pravda('a u pozemku mluví o obrysu, u bytu ne',
+    uPozemku.indexOf('obrys pozemku') >= 0 && uBytu.indexOf('obrys pozemku') < 0,
+    'pozemek: ' + uPozemku + ' | byt: ' + uBytu);
 }
 
 console.log('\nKategorie nemovitosti');

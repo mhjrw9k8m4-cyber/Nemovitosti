@@ -135,6 +135,28 @@ const bezDiakritiky = (x) => String(x == null ? '' : x)
    čte vyčištěný soubor na disku, ne chování robota. Proto je to
    funkce — dá se jí dát nabídka a změřit, co z ní vyjde — a proto je
    obecná: příznak, který někdo zavede zítra, odejde taky. */
+/* POČTY DO HLÁŠKY — A JE TO FUNKCE, PROTOŽE SE TO DÁ SPLÉST.
+   Stálo tu `o.kat || 'pozemek'` přímo v těle, takže nabídka, u které
+   zdroj VÝSLOVNĚ řekl „tohle pozemek není" (`_neniPozemek`) a
+   kategorii neurčil, se v logu objevila jako pozemek. Naměřeno
+   5. 11. v ostrém běhu: log napsal `{"pozemek":149}`, přičemž u 30
+   z nich zdroj řekl opak — a mě to při hledání příčiny poslalo na
+   dvacet minut špatným směrem. Hláška, která lže, je horší než
+   žádná: podle žádné se člověk podívá do dat, podle lživé uvěří.
+
+   „neurčeno" není totéž co „jine": `jine` je rozhodnutí robota
+   o kus dál, tohle je stav, v jakém nabídka odešla ze čtečky. */
+export const KAT_NEURCENO = 'neurčeno (není pozemek)';
+export function pocetPodleKategorie(nabidky) {
+  const ven = {};
+  for (const o of (Array.isArray(nabidky) ? nabidky : [])) {
+    if (!o || typeof o !== 'object') continue;
+    const k = o.kat || (o._neniPozemek ? KAT_NEURCENO : 'pozemek');
+    ven[k] = (ven[k] || 0) + 1;
+  }
+  return ven;
+}
+
 export function bezPracovnich(o) {
   if (!o || typeof o !== 'object') return o;
   for (const k of Object.keys(o)) if (k.startsWith('_')) delete o[k];
@@ -2206,7 +2228,18 @@ async function fetchUzsvm() {
   const z = Object.entries(zahozeno)
     .filter(([k, n]) => k !== 'zaznamu' && k !== 'ukazky' && typeof n === 'number' && n > 0)
     .map(([k, n]) => k + ' ' + n);
-  const podleKat = out.reduce((a, o) => ((a[o.kat || 'pozemek'] = (a[o.kat || 'pozemek'] || 0) + 1), a), {});
+  /* HLÁŠKA NESMÍ POČÍTAT NEPOZEMEK JAKO POZEMEK. Stálo tu
+     `o.kat || 'pozemek'`, takže nabídka, u které zdroj VÝSLOVNĚ řekl
+     „tohle pozemek není" (`_neniPozemek`) a kategorii neurčil, se
+     v logu objevila jako pozemek. Naměřeno 5. 11. v ostrém běhu:
+     log napsal `{"pozemek":149}`, přičemž u 30 z nich zdroj řekl
+     opak — a mě to při hledání příčiny poslalo na dvacet minut
+     špatným směrem. Hláška, která lže, je horší než žádná: podle
+     žádné se člověk podívá do dat, podle lživé uvěří.
+
+     „neurčeno" není totéž co „jine": `jine` je rozhodnutí robota
+     o kus dál, tohle je stav, v jakém nabídka odešla ze čtečky. */
+  const podleKat = pocetPodleKategorie(out);
   console.error(`Zdroj ÚZSVM: ${out.length} nemovitostí z ${zahozeno.zaznamu || 0} záznamů`
     + (celkem ? ` (číselník hlásí ${celkem} v kategorii Pozemky` : '')
     + (dalsi.length ? `, dalších kategorií nemovitostí ${dalsi.length}: `

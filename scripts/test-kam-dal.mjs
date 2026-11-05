@@ -40,6 +40,10 @@ function pravda(popis, vyslo, proc) {
    třetí kopie a rozešla by se. */
 createRequire(import.meta.url)(path.join(KOREN, 'js', 'ceny.js'));
 const CENY = globalThis.PK_CENY;
+/* A kategorie nemovitosti — druhové stránky jsou stránky DRUHŮ
+   POZEMKU, takže u nepozemkové nabídky na rozcestník nepatří.
+   Rozhodnutí se bere ze stejného modulu jako v generátoru. */
+const KATEGORIE = createRequire(import.meta.url)(path.join(KOREN, 'js', 'kategorie.js'));
 
 /* sazba.mjs vkládá do hotového HTML nezlomitelné mezery, takže doslovné
    porovnání s textem ze zdroje by padalo na mezeře. */
@@ -58,7 +62,7 @@ function ocekavanyKamDal(d) {
 
   const df = META.druhFile(CENY.druhGroup(d.druh));
   const dm = META.DRUH_STRANKY.find((x) => x.soubor === df);
-  if (dm && jeSoubor(df)) {
+  if (dm && jeSoubor(df) && KATEGORIE.jePozemkova(KATEGORIE.klic(d.kat))) {
     ven.push({ t: dm.nom.charAt(0).toUpperCase() + dm.nom.slice(1), u: df });
   }
   if (d.type === 'sale' && d.price > 0) {

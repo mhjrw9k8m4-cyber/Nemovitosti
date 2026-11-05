@@ -25669,3 +25669,70 @@ středník, což definice nikdy nesplní. Druhé kolo 3/3.
 To je ta past, kterou si člověk nevšimne čtením: *hledat jméno funkce*
 a *hledat její volání* vypadá jako totéž, a není. Bez sabotáže by ten
 hlídač vypadal zeleně celou dobu.
+
+## §419 — Fáze 2 naučila mluvit prohlížeč, ne generátor
+
+Když přišly první nepozemkové nabídky, šel jsem se podívat, co z nich
+vidí člověk. Nejdřív jsem ale dvacet minut hledal na špatném místě,
+a za to může vlastní hláška.
+
+### Hláška, která lhala
+
+Log zdroje napsal `Zdroj ÚZSVM: 149 nemovitostí … podle kategorie:
+{"pozemek":149}`. Čtl jsem to jako „ze zdroje přišly samé pozemky" —
+a hledal původ těch 30 jiných nemovitostí v držených nabídkách,
+v minulém běhu, v souboru na disku. Nikde.
+
+Vada byla v tom počítání:
+
+```js
+const podleKat = out.reduce((a, o) =>
+  ((a[o.kat || 'pozemek'] = (a[o.kat || 'pozemek'] || 0) + 1), a), {});
+```
+
+Nabídka, u které zdroj **výslovně řekl „tohle pozemek není"**
+(`_neniPozemek`) a kategorii neurčil, nemá `kat` — a `|| 'pozemek'` ji
+spočítal mezi pozemky. Těch 30 tam celou dobu bylo, jen se o nich log
+vyjádřil opačně.
+
+Hláška, která lže, je horší než žádná: podle žádné se člověk podívá do
+dat, podle lživé uvěří. Teď se takový stav jmenuje `neurčeno (není
+pozemek)` — a to není totéž jako `jine`: `jine` je rozhodnutí robota
+o kus dál, tohle je stav, v jakém nabídka odešla ze čtečky.
+
+### Tři pozemková slova na nepozemkové stránce
+
+Fáze 2 (§413) naučila mluvit `js/pozemek.js` — tedy stránku, jak ji
+dokreslí prohlížeč. Servírovaný statický text zůstal pozadu. Naměřeno
+na hotových souborech:
+
+| Co stálo na stránce | Proč je to špatně |
+|---|---|
+| `Druh pozemku: Jiná nemovitost` | nálepka si odporuje s hodnotou v jednom řádku |
+| `Stavební pozemky — týž druh pozemku po celé ČR` | odkaz vedl na výpis, kde ta nabídka vůbec není |
+| `přesný obrys pozemku najdete v katastru` | věta o něčem jiném, než se prodává |
+
+Druh pozemku je u budovy nanejvýš druh parcely **pod** ní — proto se tak
+nálepka nesmí jmenovat. Po opravě má 30 stránek „Typ nemovitosti",
+žádná nemluví o obrysu pozemku a žádná nenabízí druhovou stránku.
+
+A změřil jsem i to, co se změnit **nesmělo**: ze 2 914 přepsaných
+souborů má opravdovou změnu obsahu právě 30 — zbytek je jen nová verze
+skriptu v `?v=`. Ani jedna pozemková stránka se v obsahu nezměnila.
+
+### Hlídač sám našel dvě pravdy o jedné věci
+
+`js/snimek.js` si modul kategorií nechává podat, protože globální cestou
+tam není: generátor si `js/kategorie.js` bere přes `require` (do
+`module.exports`), prohlížeč ho má jako `window.PKKategorie`. Napsal
+jsem k tomu záložní cestu — když modul nikdo nepodá, rozhodni z klíče.
+
+Nový hlídač „výhrada vyjde stejně z modulu i z klíče" ji shodil hned,
+a na případu, který bych sám nevymyslel: u **neznámého** klíče modul
+přes `klic()` srovná hodnotu na výchozí pozemek, kdežto záložní cesta
+usoudí opak. Dvě pravdy o jedné věci, nesrovnatelné bez tabulky
+kategorií. Tak je cesta jedna a chybějící modul hlasitě spadne — stejně
+jako to §413 rozhodl u `dejDruh()`. Tiché pozemkové věty u bytu je
+horší než pád při sestavení: pád vidí CI, špatnou větu kupující.
+
+`test-kategorie` 76 → **81**.

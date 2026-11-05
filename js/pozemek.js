@@ -267,7 +267,7 @@
     return S.html(d, { sirka: 384, vyska: 256, barva: col, id: 'hero' }) +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' +
-      S.popis(d);
+      S.popis(d, KAT);
   }
 
   // Oblíbené (sdílené s hlavní aplikací přes stejný localStorage klíč)

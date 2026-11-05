@@ -130,11 +130,35 @@
      Výhrada o obrysu zůstává: to je jediná věc, kterou z leteckého
      snímku poznat NELZE a kterou by si jinak člověk domyslel špatně
      (čára na snímku není hranice parcely). */
-  function popis(d) {
+  /* VÝHRADA SE ŘÍDÍ KATEGORIÍ. „Přesný obrys pozemku" je u bytu nebo
+     garáže věta o něčem jiném, než se prodává.
+
+     Modul kategorií se sem PODÁVÁ, protože globální cestou tu není:
+     generátor stránek si js/kategorie.js bere přes require (tedy do
+     module.exports, ne na global), zatímco prohlížeč ho má jako
+     window.PKKategorie. Proto obě cesty.
+
+     A ŽÁDNÁ ZÁLOŽNÍ CESTA. Napsal jsem ji nejdřív: když modul nikdo
+     nepodá, rozhodne se z klíče (`!kat || kat === 'pozemek'`).
+     Hlídač „vyjde stejně z modulu i z klíče" ji hned shodil na
+     neznámém klíči: modul ho přes klic() srovná na výchozí pozemek,
+     kdežto ta cesta usoudí opak. Byly to dvě pravdy o jedné věci
+     a srovnat je bez tabulky kategorií nelze — tak je jen jedna.
+
+     Chybějící modul proto hlasitě spadne, stejně jako to §413
+     rozhodl u dejDruh(). Tichá pozemková věta u bytu je horší než
+     pád při sestavení: pád vidí CI, špatnou větu kupující. */
+  function popis(d, kategorie) {
     if (!d.place || !(d.area > 0)) return '';
-    return '<span class="sn-popis" aria-hidden="true">' +
-      '<u>přesný obrys pozemku najdete v katastru</u>' +
-      '</span>';
+    var K = kategorie || global.PKKategorie || null;
+    if (!K || typeof K.jePozemkova !== 'function' || typeof K.klic !== 'function') {
+      throw new Error('výhrada na snímku potřebuje js/kategorie.js — podejte ho popis(d, PKKategorie), nebo ho načtěte dřív');
+    }
+    var pozemkova = K.jePozemkova(K.klic(d && d.kat));
+    return '<span class="sn-popis" aria-hidden="true"><u>' +
+      (pozemkova ? 'přesný obrys pozemku najdete v katastru'
+        : 'přesnou polohu najdete v katastru') +
+      '</u></span>';
   }
 
   /* NÁHLED VE VÝPISU: JEDNA DLAŽDICE, NE SKLÁDANÝ SNÍMEK.
