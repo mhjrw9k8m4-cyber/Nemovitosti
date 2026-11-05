@@ -177,6 +177,41 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     jine.length === 0, jine.slice(0, 5).join('\n      '));
 }
 
+/* ---- 5) CENOVÝ MODEL BERE JEN POZEMKY ---------------------------
+   ==================================================================
+   `js/ceny.js` počítá obvyklou cenu za metr POZEMKU — medián okresu,
+   percentil nabídky, verdikt „levné". Byt má výměru podlahovou a
+   v ceně domu je stavba, takže jedna taková nabídka v přihrádce
+   pokřiví číslo VŠEM ostatním, kdo v ní jsou. Proto si `postav()`
+   filtruje vstup sám (`jenPozemky`): volá se z devíti míst a devět
+   míst znamená devět příležitostí zapomenout.
+
+   TAHLE KONTROLA JE HLÍDAČ PROTI ROZEJITÍ. Pravidlo je v ceny.js
+   opsané („`kat` chybí nebo je 'pozemek'"), aby se kvůli jedné
+   podmínce netahaly na stránku dva další moduly. Opsané pravidlo se
+   dřív nebo později rozejde s originálem — pokud to někdo neměří. */
+{
+  require_(join(KOREN, 'js', 'ceny.js'));
+  const CENY = globalThis.PK_CENY;
+  pravda('js/ceny.js si vstup modelu filtruje sám',
+    CENY && typeof CENY.jenPozemky === 'function',
+    'bez toho by stačilo zapomenout na jednom z devíti volajících');
+  if (CENY && typeof CENY.jenPozemky === 'function') {
+    /* Pro KAŽDOU kategorii musí obě místa říct totéž. Kdyby přibyla
+       druhá pozemková kategorie, tahle kontrola spadne a vynutí
+       úpravu na obou místech — přesně o to jde. */
+    const rozchod = K.KLICE.filter((k) =>
+      K.jePozemkova(k) !== (CENY.jenPozemky([{ kat: k }]).length === 1));
+    pravda('a pozemkovost chápou ceny i kategorie stejně',
+      rozchod.length === 0, 'rozcházejí se u: ' + rozchod.join(', '));
+    je('nabídka bez kategorie je pozemek i pro model',
+      CENY.jenPozemky([{}]).length, 1);
+    je('byt, dům ani jiná nemovitost do modelu nejdou',
+      CENY.jenPozemky([{ kat: 'byt' }, { kat: 'dum' }, { kat: 'jine' }]).length, 0);
+    je('a co není pole, se nerozbije', CENY.jenPozemky(null), null);
+  }
+}
+
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

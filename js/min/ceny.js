@@ -176,7 +176,13 @@
     return ven;
   }
 
+  function jenPozemky(DATA) {
+    if (!Array.isArray(DATA)) return DATA;
+    return DATA.filter(function (o) { return !o || !o.kat || o.kat === 'pozemek'; });
+  }
+
   function postav(DATA, okresKraj, chybaDruhu) {
+    DATA = jenPozemky(DATA);
     okresKraj = okresKraj || OKRES_KRAJ;
 
     chybaDruhu = chybaDruhu || null;
@@ -617,7 +623,8 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    postav: postav, jenPozemky: jenPozemky,
+    rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,

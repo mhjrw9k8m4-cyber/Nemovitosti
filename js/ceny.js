@@ -430,7 +430,34 @@
     return ven;
   }
 
+  /* DO MODELU JEN POZEMKY — A FILTRUJE SI TO MODEL SÁM.
+     ==================================================================
+     Od 5. 11. nese web všechny nemovitosti, ne jen pozemky. Tenhle
+     model ale počítá JEDNU VĚC: obvyklou cenu za metr POZEMKU. Z ní
+     vychází medián okresu, percentil nabídky i verdikt „levné".
+
+     Byt má výměru podlahovou a v ceně domu je stavba, takže jedna
+     taková nabídka v přihrádce pokřiví číslo VŠEM ostatním, kdo v ní
+     jsou — ne jen sobě. To je horší než nemít odhad vůbec.
+
+     PROČ TADY, A NE U VOLAJÍCÍCH: `postav()` se volá z devíti míst
+     (js/main.js, js/pozemek.js a pět generátorů). Devět míst znamená
+     devět příležitostí zapomenout, a zapomenutý filtr se nijak
+     neprojeví — jen čísla tiše ujedou. Model je definicí model cen
+     pozemků, takže si vstup hlídá sám.
+
+     PRAVIDLO JE TOTÉŽ CO `PKKategorie.jePozemkova`: `kat` chybí (což
+     je výchozí pozemek) nebo je 'pozemek'. Tady se opisuje schválně —
+     js/ceny.js se nahrává i na stránkách, kde js/kategorie.js není,
+     a tahat tam kvůli jedné podmínce dva moduly by stálo váhu stránky.
+     Že se ty dva pojmy nerozešly, hlídá scripts/test-kategorie.mjs. */
+  function jenPozemky(DATA) {
+    if (!Array.isArray(DATA)) return DATA;
+    return DATA.filter(function (o) { return !o || !o.kat || o.kat === 'pozemek'; });
+  }
+
   function postav(DATA, okresKraj, chybaDruhu) {
+    DATA = jenPozemky(DATA);
     okresKraj = okresKraj || OKRES_KRAJ;
     /* JAK PŘESNÝ TENHLE MODEL JE, PODLE DRUHU. Přijde z data/model.json
        jako { "Orná půda": { ch: 22, z: 543, n: 567 }, … } — křížově
@@ -1469,7 +1496,8 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
+    postav: postav, jenPozemky: jenPozemky,
+    rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
     zlomekPodilu: zlomekPodilu, vymeraVCene: vymeraVCene, zaMetr: zaMetr, zaMetrPopis: zaMetrPopis,

@@ -306,7 +306,16 @@ export async function spust() {
        soubor je sloupcový a pole `extra` nenese, takže by to rozpoznat
        nemohl; vynechává se tedy už tady, aby model z malého souboru dal
        totéž co z plných dat. Hlídá to scripts/test-model-vstup.mjs. */
-    const proModel = bezDuplicit.filter((o) => !CENY.spravniCena(o));
+    /* JEN POZEMKY — a tady to není jen pojistka, ale i váha přes drát.
+       `postav()` si vstup filtruje sám (js/ceny.js, `jenPozemky`),
+       takže by dům model nepokřivil ani odtud. Jenže tenhle soubor
+       STAHUJE KAŽDÁ stránka pozemku, a posílat do něj nabídky, které
+       model stejně zahodí, je zbytečný kilobajt na telefonu.
+       Pravidlo je totéž: `kat` chybí (výchozí pozemek) nebo 'pozemek'.
+       Hlídá to scripts/test-kategorie.mjs. */
+    const proModel = bezDuplicit
+      .filter((o) => !CENY.spravniCena(o))
+      .filter((o) => !o.kat || o.kat === 'pozemek');
     const okresy = [...new Set(proModel.map((o) => o.okres || ''))].sort();
     const druhy = [...new Set(proModel.map((o) => o.druh || ''))].sort();
     const typy = [...new Set(proModel.map((o) => o.type || ''))].sort();
