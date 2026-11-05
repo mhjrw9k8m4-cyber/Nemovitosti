@@ -173,9 +173,38 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
  */
 {
   const wf = fs.readFileSync('.github/workflows/testy.yml', 'utf8');
-  const jinde = fs.readdirSync('.github/workflows')
-    .filter((f) => f !== 'testy.yml')
-    .map((f) => fs.readFileSync('.github/workflows/' + f, 'utf8')).join('\n');
+  /* „BĚŽÍ JINDE" MUSÍ ZNAMENAT, ŽE TO OPRAVDU BĚŽÍ (§439).
+     Dřív tady stálo `jinde.includes(c)` nad slepenými všemi ostatními
+     workflow — zkouška byla omluvená, jakmile ji JAKÝKOLI jiný soubor
+     zmiňoval. Změřeno 5. 11.: tři zkoušky (test-chat, test-listing,
+     test-search) tak visely na `test-chat.yml`, a ten má v `on:` jen
+     `workflow_dispatch` — jde jen z ruky a naposledy se pustil
+     27. 9. 2026, tedy přes čtyřicet dní. Hlídač hlásil „na žádnou se
+     nezapomnělo", a tři zkoušky se za tu dobu nespustily ani jednou.
+     Je to táž vada jako §436: měřil se ZÁPIS, ne běh.
+     Teď se workflow dělí na dva druhy. Kdo má v `on:` schedule, push
+     a podobně, spustí se sám — ten omluvu dává. Kdo má jen
+     workflow_dispatch, čeká na člověka a omlouvá jen se jmenovitým
+     řádkem v JEN_Z_RUKY, s důvodem. */
+  const souboryWf = fs.readdirSync('.github/workflows').filter((f) => f !== 'testy.yml');
+  const beziSam = (text) => {
+    const on = (text.match(/^on:\s*$[\s\S]*?(?=^\S)/m) || [''])[0];
+    return /^\s{2,}(schedule|push|pull_request|repository_dispatch|workflow_call):/m.test(on);
+  };
+  let jinde = '', zRuky = '';
+  for (const f of souboryWf) {
+    const t = fs.readFileSync('.github/workflows/' + f, 'utf8');
+    if (beziSam(t)) jinde += '\n' + t; else zRuky += '\n' + t;
+  }
+  /* Zkouška, kterou pouští jen ruční workflow. Řádek tady je přiznání
+     „tahle se sama nespustí", ne omluva do nekonečna. */
+  const JEN_Z_RUKY = new Map([
+    ['scripts/test-chat.mjs',
+      'sahá na ŽIVOU Supabase a zakládá zkušební zprávu, a ta pošle e-mail přes Resend;'
+      + ' plán by majiteli psal každý týden, takže o rozvrhu rozhoduje on, ne hlídač'],
+    ['scripts/test-listing.mjs', 'totéž: zakládá a maže zkušební inzerát v živé databázi'],
+    ['scripts/test-search.mjs', 'totéž: čte živou databázi anonymním klíčem'],
+  ]);
   /* ÚLOHY SE ČTOU PODLE KLÍČŮ, ne podle dvou pevných jmen a řezání
      řetězce. Zkoušky v prohlížeči jedou ve dvou směnách naráz
      („v-prohlizeci" a „v-prohlizeci-2", viz komentář ve workflow);
@@ -288,12 +317,35 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
      neběží. Jméno se srovnalo (falesny-…), seznam zůstává jako pojistka
      pro další takový případ. */
   const POMOCNE = new Set([]);
-  const zapomenute = fs.readdirSync('scripts')
+  const vsechnyZkousky = fs.readdirSync('scripts')
     .filter((f) => /^test-[a-z0-9-]+\.mjs$/.test(f))
-    .map((f) => 'scripts/' + f)
-    .filter((c) => !POMOCNE.has(c) && !vBez.has(c) && !vProh.has(c) && !jinde.includes(c));
+    .map((f) => 'scripts/' + f);
+  const zapomenute = vsechnyZkousky.filter((c) => !POMOCNE.has(c) && !vBez.has(c)
+    && !vProh.has(c) && !jinde.includes(c) && !JEN_Z_RUKY.has(c));
+  /* Zkouška v JEN_Z_RUKY, kterou už žádný ruční workflow nepouští, je
+     mrtvý řádek — a mrtvý řádek je místo, kde se příště schová vada. */
+  const mrtvyRucni = [...JEN_Z_RUKY.keys()].filter((c) => !zRuky.includes(c));
+  /* A ruční se nesmí plést s plánovaným: kdyby se ta zkouška do běžného
+     CI (nebo do workflow s plánem) dostala, řádek už jen zastírá. */
+  const zbytecnyRucni = [...JEN_Z_RUKY.keys()]
+    .filter((c) => vBez.has(c) || vProh.has(c) || jinde.includes(c));
+  const bezDuvodu = [...JEN_Z_RUKY.entries()]
+    .filter(([, d]) => !String(d || '').trim() || String(d).length < 25).map(([c]) => c);
 
   let zle = 0;
+  if (mrtvyRucni.length) {
+    zle++;
+    console.error('::error::Řádek v JEN_Z_RUKY už nic nepouští — patří pryč: ' + mrtvyRucni.join(', '));
+  }
+  if (zbytecnyRucni.length) {
+    zle++;
+    console.error('::error::Tahle zkouška už běží sama, řádek „jen z ruky" ji jen zastírá: '
+      + zbytecnyRucni.join(', '));
+  }
+  if (bezDuvodu.length) {
+    zle++;
+    console.error('::error::U zkoušky „jen z ruky" chybí napsaný důvod: ' + bezDuvodu.join(', '));
+  }
   if (lzivaVyjimka.length) {
     zle++;
     console.error('::error::Výjimka „prohlížeč nepotřebuje" přestala platit — tahle zkouška ho'
@@ -317,7 +369,11 @@ for (const jmeno of fs.readdirSync(JS).filter((f) => f.endsWith('.js'))) {
       + zbytecneProh.join(', '));
   }
   console.log(`Zařazení zkoušek: ${vBez.size} bez prohlížeče, ${vProh.size} s prohlížečem`
+    + `, ${JEN_Z_RUKY.size} jen z ruky (nespustí se samy)`
     + (zle ? '' : ' — všechny na svém místě, žádná dvakrát, na žádnou se nezapomnělo.'));
+  /* Číslo „jen z ruky" se píše VŽDYCKY, i když je všechno zelené. Právě
+     tím, že se nepsalo, mohly tři zkoušky čtyřicet dní nejít (§439). */
+  for (const [c, d] of JEN_Z_RUKY) console.log(`  · ${c} — ${d}`);
   if (zle) process.exit(1);
 }
 

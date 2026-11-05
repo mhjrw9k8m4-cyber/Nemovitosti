@@ -26641,3 +26641,54 @@ kousku kódu, který jsem si do zkoušky napsal právě proto, aby nález
 dole nebyl náhoda ani ticho.
 
 `test-pouziti-klicu` — nový, **13 kontrol**. Rychlá sada 152 → 153.
+
+## §439 — „Běží jinde" neznamená, že to běží
+
+Hlídač zařazení zkoušek (v `test-staticka.mjs`) hlásil každý běh
+„na žádnou zkoušku se nezapomnělo". Pravidlo za tím znělo takhle:
+
+```js
+const jinde = fs.readdirSync('.github/workflows')
+  .filter((f) => f !== 'testy.yml')
+  .map((f) => fs.readFileSync('.github/workflows/' + f, 'utf8')).join('\n');
+…
+.filter((c) => … && !jinde.includes(c));
+```
+
+Tedy: **zkouška byla omluvená, jakmile ji jakýkoli jiný workflow
+zmiňoval.** Změřeno 5. 11.: tři zkoušky (`test-chat`, `test-listing`,
+`test-search`) tak visely na `test-chat.yml` — a ten má v `on:` jen
+`workflow_dispatch`. Jde výhradně z ruky a naposledy se pustil
+**27. 9. 2026**, tedy přes čtyřicet dní. Tři zkoušky se za tu dobu
+nespustily ani jednou a hlídač u toho svítil zeleně.
+
+Je to přesně ta vada, kterou včera pojmenovalo §436: **měřil se zápis,
+ne běh.** Zelená znamenala „někde je o tom zmínka", ne „něco to
+spustí".
+
+**Opraveno.** Workflow se dělí na dva druhy podle svého `on:`: kdo má
+`schedule`, `push` a podobně, spustí se sám a omluvu dává; kdo má jen
+`workflow_dispatch`, čeká na člověka a omlouvá jen se jmenovitým
+řádkem v `JEN_Z_RUKY` — s napsaným důvodem. Dnes jsou tam tři a důvod
+je u všech týž: **sahají na živou Supabase.** `test-chat` dokonce
+zakládá zkušební zprávu, a ta pošle e-mail přes Resend, takže
+týdenní plán by majiteli psal každý týden. **Rozvrh, který píše
+majiteli, není rozhodnutí hlídače** — proto jsou v seznamu a ne
+v plánu, a proto se to číslo od teď píše do výpisu **vždycky**, i když
+je všechno zelené. Právě to, že se nepsalo, umožnilo těm čtyřiceti
+dnům.
+
+Hlídá se i obrácený směr: řádek v `JEN_Z_RUKY`, který už žádný ruční
+workflow nepouští, je mrtvý a padá; a zkouška, která se do běžného CI
+dostala, se tím řádkem už jen zastírá, takže padá taky.
+
+**Dvě sabotáže, obě změřené.** Ubrat řádek ze seznamu (tedy dnešní
+stav) → „Zkouška existuje, ale nikdo ji nespouští: test-search".
+Zapsat do seznamu zkoušku, která v CI běží → „už běží sama, řádek ji
+jen zastírá".
+
+**Co z toho zbývá majiteli.** Tři zkoušky živé aplikace se pustí jen
+tehdy, když je pustí on (Actions → „Test psaní v aplikaci" → Run
+workflow). Dá se jim dát plán — třeba jednou týdně v noci — ale pak
+bude každý běh znamenat jeden e-mail o zkušební zprávě. To je jeho
+volba, ne moje.
