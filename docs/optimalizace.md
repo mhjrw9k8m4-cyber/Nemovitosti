@@ -26748,3 +26748,52 @@ od začátku), musí být pevný bod — a pro `bezKomentaruVHtml` se to
 teď měří.
 
 `test-komentare-v-strankach` 16 → **19 kontrol**.
+
+## §441 — Poškozený text: nález platí, nenález neznamená nic
+
+Měření opravilo **můj vlastní záznam v registru**. U
+`elektronickedrazby.cz` tam stálo „podmínky se nepodařilo přečíst:
+stránka se vykresluje až v prohlížeči". Dnešní měření říká něco
+jiného:
+
+* HTML stránka `/pages/drazebni-rad` má **104 znaků** textu — to je
+  pravda, ale podmínky v ní nejsou.
+* Podmínky jsou v PDF **„Dražební řád - 8.3.2025"**. Sonda ho
+  **stáhla a dekódovala: 10 556 znaků.**
+* A pak ho **celý zahodila**, protože čitelnost vyšla 0,86 a
+  `PRAH_CITELNOSTI` je 0,9.
+
+Ta mez má dobrý důvod (§357): špatně dekódované PDF není prázdné, je
+to rozsypaný čaj, a síto na zákazy by ho propustilo jako „nic se
+nenašlo". Jenže ty dvě odpovědi **nejsou souměrné**:
+
+* **Najde-li** se v poškozeném textu pasáž o automatickém přístupu,
+  je to **důkaz** — ten zákaz tam opravdu stojí, i když je kolem
+  nepořádek.
+* **Nenajde-li** se, neznamená to **nic** — a právě proti tomuhle
+  klamu mez vznikla.
+
+Síto se proto pouští i pod mezí, ale verdikt smí být jen „pasáž tu
+je", nikdy „nic o automatu". V nálezu je u takového záznamu
+`zPoskozenehoTextu: true`, stav „přečteno jen částečně — a pasáž tu
+je" a v odůvodnění stojí doslova, že chybějící nález by neznamenal
+nic.
+
+**Sabotáž:** vrátit bezvýhradné zahození → padnou tři kontroly.
+Fixtura je ten skutečný případ v malém: čitelná česká věta o robotech
+plus tolik dvoubajtového mojibake (kódy bez `ToUnicode`, jak to dělají
+opravdová PDF s fontem Identity-H), že čitelnost spadne pod mez.
+
+### Dvě vedlejší zjištění, obě z měření
+
+`elektronickedrazby.cz` je **výkladní skříň Gavlasu**: vlastní dražby
+bydlí na `internetove-drazby.cz` (12 odkazů tvaru `/view/<číslo>`,
+robots tam dovoluje). To je jiný kandidát než ten, který jsme měřili.
+
+A sám jsem si při tom potvrdil §436 ještě jednou, tentokrát na
+nástroji: na čtení PDF jsem nejdřív poslal **ohledání zdroje**, které
+dokument vypsalo jako bajty (`%PDF-1.5`). Čtečku PDF má **sonda
+podmínek**, ne ohledání. Použít správný nástroj je součást měření, ne
+detail.
+
+`test-sonda-podminky` 99 → **102 kontrol**.

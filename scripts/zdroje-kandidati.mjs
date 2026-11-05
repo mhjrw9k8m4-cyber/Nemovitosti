@@ -253,11 +253,17 @@ export const KANDIDATI = [
   { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.elektronickedrazby.cz/',
     proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'
-      + ' JENŽE PODMÍNKY SE NEPODAŘILO PŘEČÍST: stránka se vykresluje až v prohlížeči'
-      + ' a sonda podmínek z ní dostala málo textu („takhle se to nezjistí").'
-      + ' Dokud se nepřečtou, zdroj se NEZAPOJÍ — pravidlo zní přečíst podmínky,'
-      + ' ne nenajít zákaz. Na čtení v prohlížeči máme vlastní cestu (ohledani-zdroje),'
-      + ' takže to není slepá ulice, jen další krok.' },
+      + ' PŘEMĚŘENO 5. 11. A PŘEDCHOZÍ POZNÁMKA BYLA VEDLE: netvrdí se už, že'
+      + ' „stránka se vykresluje až v prohlížeči" — to platilo o HTML stránce'
+      + ' /pages/drazebni-rad (104 znaků textu), ne o podmínkách. Podmínky jsou'
+      + ' v PDF „Dražební řád - 8.3.2025" a sonda ho STÁHLA i dekódovala'
+      + ' (10 556 znaků), jen ho celý zamítla kvůli čitelnosti 0,86 pod mezí 0,9.'
+      + ' Po §441 se z takového textu nalezená pasáž o automatu bere jako důkaz'
+      + ' (chybějící pořád jako nic), takže rozhodne příští běh sondy podmínek.'
+      + ' A JEŠTĚ JEDNO MĚŘENÍ: tenhle web je výkladní skříň Gavlasu — vlastní'
+      + ' dražby bydlí na internetove-drazby.cz (12 odkazů tvaru /view/<číslo>,'
+      + ' robots tam dovoluje). Zdroj se NEZAPOJÍ, dokud se podmínky nepřečtou;'
+      + ' pravidlo zní přečíst podmínky, ne nenajít zákaz.' },
   { jmeno: 'Nabídka majetku státu (veřejná část)', host: 'nabidkamajetku.cz', typ: 'sale', adresaOverena: false,
     url: 'https://nabidkamajetku.cz/',
     proc: 'ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200 a 1 201 479 bajtů s 84 cenami,'

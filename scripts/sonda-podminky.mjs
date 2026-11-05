@@ -604,9 +604,32 @@ export async function zmerPodminky(cil, { stahni, ua, mezipamet, vykresli } = {}
         zapis.stranky.push(zaznam); continue;
       }
       if (v.citelnost < PRAH_CITELNOSTI) {
-        zaznam.stav = 'nepřečetli jsme ho';
+        /* ASYMETRIE POŠKOZENÉHO TEXTU (§441).
+           Dosud se pod prahem čitelnosti zahodilo všechno. Jenže ty
+           dvě odpovědi nejsou souměrné: NAJDE-LI se v poškozeném textu
+           pasáž o automatickém přístupu, je to důkaz — zákaz tam
+           opravdu stojí, i když je kolem rozsypaný čaj. NENAJDE-LI se,
+           neznamená to nic; právě proti takovému klamu prah vznikl
+           (§357). Síto se proto pustí i tady, ale verdikt smí být jen
+           „pasáž tu je", nikdy „nic o automatu".
+           Změřeno 5. 11. na elektronickedrazby.cz: dražební řád se
+           stáhl a dekódoval (10 556 znaků, čitelnost 0,86) a celý se
+           zahodil — zdroj zůstal nerozhodnutý, i když odpověď v tom
+           dokumentu mohla být. */
+        const zbytky = oAutomatu(v.text || '').filter((x) => x.kontext);
+        zaznam.zPoskozenehoTextu = true;
         zaznam.duvod = `text vyšel nečitelně (čitelnost ${zaznam.citelnost})`
-          + ' — kódování, které tahle čtečka neumí';
+          + ' — kódování, které tahle čtečka neumí'
+          + (zbytky.length
+            ? '; nalezená pasáž přesto platí, chybějící by neznamenala nic'
+            : '; z chybějícího nálezu se NESMÍ soudit, že se o automatu nepíše');
+        if (zbytky.length) {
+          zaznam.stav = 'přečteno jen částečně — a pasáž tu je';
+          zaznam.odstavcu = zbytky.length;
+          zaznam.pasaze = zbytky;
+        } else {
+          zaznam.stav = 'nepřečetli jsme ho';
+        }
         zapis.stranky.push(zaznam); continue;
       }
       const pasaze = oAutomatu(v.text);

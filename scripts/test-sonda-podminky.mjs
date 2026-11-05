@@ -907,6 +907,37 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
       String(P.PRAH_CITELNOSTI));
   }
 
+  /* c2b) ASYMETRIE POŠKOZENÉHO TEXTU (§441). Když se v nečitelném
+          textu NAJDE pasáž o automatickém přístupu, je to důkaz —
+          zákaz tam opravdu stojí. Když se nenajde, neznamená to nic
+          (to měří c2 výš). Fixtura je obojí v jednom dokumentu:
+          čitelná věta o automatu plus tolik mojibake, že čitelnost
+          spadne pod mez. Přesně takhle vypadal dražební řád
+          elektronickedrazby.cz (10 556 znaků, čitelnost 0,86). */
+  {
+    const veta = 'Uzivatel neni opravnen pristupovat k teto webove strance'
+      + ' automatizovane, tedy pomoci robotu nebo jineho programu, a nesmi'
+      + ' obsah hromadne kopirovat ani ukladat do vlastni databaze.';
+    const obsah = Buffer.from('BT /F1 12 Tf (' + veta + ') Tj ET\n'
+      + 'BT /F1 12 Tf <' + '00480049'.repeat(40) + '> Tj ET\n', 'latin1');
+    const telo = deflateSync(obsah);
+    const PDF_CASTECNE = Buffer.concat([
+      Buffer.from('%PDF-1.4\n4 0 obj\n<< /Length ' + telo.length + ' /Filter /FlateDecode >>\nstream\n', 'latin1'),
+      telo, Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+    ]);
+    const { fn } = udelejStahni(PDF_CASTECNE);
+    const z = await P.zmerPodminky(cil, { stahni: fn, ua: UA, mezipamet: new Map() });
+    const dok = (z.stranky || []).find((x) => x.jeDokument);
+    pravda('v poškozeném textu se nalezená pasáž o automatu NEZAHODÍ',
+      !!dok && dok.citelnost < P.PRAH_CITELNOSTI && (dok.odstavcu || 0) > 0,
+      JSON.stringify(dok && { stav: dok.stav, citelnost: dok.citelnost, odstavcu: dok.odstavcu }));
+    pravda('a je u ní napsané, že text byl poškozený',
+      !!dok && dok.zPoskozenehoTextu === true && /čitelnost/.test(dok.duvod || ''),
+      JSON.stringify(dok && { zPoskozenehoTextu: dok.zPoskozenehoTextu, duvod: dok.duvod }));
+    pravda('stav neříká „přečteno", ale „jen částečně"',
+      !!dok && /částečně/.test(dok.stav || ''), JSON.stringify(dok && dok.stav));
+  }
+
   /* c3) A NAOSTRO SKRZ CELOU SONDU: tři přílohy a jedny podmínky,
          strop je tři. Kdyby se bralo pořadí, podmínky by se vůbec
          nestáhly — a to je přesně ten případ verejnedrazby.cz. */
