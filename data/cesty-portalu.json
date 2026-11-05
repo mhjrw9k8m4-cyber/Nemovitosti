@@ -18,18 +18,12 @@
      "jmeno": "vstupní adresa",
      "skupina": "vstup",
      "zmereno": true,
-     "verdikt": "ke čtení",
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 41 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-     "znaky": {
-      "titulek": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem",
-      "znaku": 843,
-      "pocty": {},
-      "ukazka": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Odbor nakládání s nepotřebným majetkem Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR -"
-     },
      "stav": 200,
      "bajtu": 16389,
      "nabidek": 0,
@@ -209,6 +203,11 @@
        "katastr": 1,
        "výběrové řízení": 1
       },
+      "odkazu": 0,
+      "jsonLd": 0,
+      "itemprop": 0,
+      "vypadaNaPrihlaseni": false,
+      "vypadaNaPrazdno": false,
       "ukazka": "Odbor nakládání s nepotřebným majetkem https://onnm.mo.gov.cz/ cs inzerát nemovitého majetku ONNM https://onnm.mo.gov.cz/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm &lt;span&gt;inzerát nemovitého majetku ONNM&lt;/span&gt; &lt;span&gt;&lt;span&gt;Beáta Čajková&lt;/span&gt;&lt;/span&gt; &lt;span&gt;&lt;time datetime=\"2024-06-19T12:11:24+02:00\" title=\"Středa, Červen 19, 2024 - 12:11\"&gt;1"
      },
      "stav": 200,
@@ -257,6 +256,11 @@
       "pocty": {
        "dražba": 1
       },
+      "odkazu": 0,
+      "jsonLd": 0,
+      "itemprop": 0,
+      "vypadaNaPrihlaseni": false,
+      "vypadaNaPrazdno": false,
       "ukazka": "http://akis-d9.msw-cloud.com/ daily 1.0 http://akis-d9.msw-cloud.com/prohlaseni-o-pristupnosti 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 2026-04-27T07:32Z yearly http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/audio 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/videogalerie 2"
      },
      "stav": 200,
@@ -425,18 +429,12 @@
      "jmeno": "adresa z RSS",
      "skupina": "spojená",
      "zmereno": true,
-     "verdikt": "ke čtení",
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 41 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-     "znaky": {
-      "titulek": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem",
-      "znaku": 843,
-      "pocty": {},
-      "ukazka": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Odbor nakládání s nepotřebným majetkem Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR -"
-     },
      "stav": 200,
      "bajtu": 16389,
      "nabidek": 0,
@@ -447,18 +445,12 @@
      "jmeno": "adresa z RSS",
      "skupina": "spojená",
      "zmereno": true,
-     "verdikt": "ke čtení",
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 40 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-     "znaky": {
-      "titulek": "Kalendář akcí | Odbor nakládání s nepotřebným majetkem",
-      "znaku": 589,
-      "pocty": {},
-      "ukazka": "Kalendář akcí | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Domů Kalendář akcí Kalendář akcí Kalendář akcí Kalendář akcí ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Bannery Informace Mapa webu Prohlášení "
-     },
      "stav": 200,
      "bajtu": 14611,
      "nabidek": 0,
@@ -469,20 +461,12 @@
      "jmeno": "adresa z RSS",
      "skupina": "spojená",
      "zmereno": true,
-     "verdikt": "ke čtení",
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 77 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-     "znaky": {
-      "titulek": "Aktuální nabídka nemovitého majetku | Odbor nakládání s nepotřebným majetkem",
-      "znaku": 1264,
-      "pocty": {
-       "dražba": 3
-      },
-      "ukazka": "Aktuální nabídka nemovitého majetku | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek Aktuální nabídka nemovitého majetku Dražby nemovitostí Odprodeje v realizaci Připravované odprodeje Archív prodejů Kontakty GDPR --> Domů Nemovitý majetek Aktuální nabídka nemovitého"
-     },
      "stav": 200,
      "bajtu": 23631,
      "nabidek": 0,
@@ -493,22 +477,12 @@
      "jmeno": "adresa z RSS",
      "skupina": "spojená",
      "zmereno": true,
-     "verdikt": "ke čtení",
+     "verdikt": "odpověděla",
+     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 79 odkazech — bude to rozcestník, ne výpis",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
-     "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-     "znaky": {
-      "titulek": "Nemovitý majetek | Odbor nakládání s nepotřebným majetkem",
-      "znaku": 3593,
-      "pocty": {
-       "katastr": 1,
-       "výběrové řízení": 1,
-       "dražba": 3
-      },
-      "ukazka": "Nemovitý majetek | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek Aktuální nabídka nemovitého majetku Dražby nemovitostí Odprodeje v realizaci Připravované odprodeje Archív prodejů Kontakty GDPR --> Domů Nemovitý majetek Nemovitý majetek Nemovitý majetek Nemovitý maj"
-     },
      "stav": 200,
      "bajtu": 27376,
      "nabidek": 0,
@@ -614,94 +588,7 @@
   }
  ],
  "navrhy": [],
- "noveOdMinule": [
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/",
-   "cesta": "vstupní adresa",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem",
-    "znaku": 843,
-    "pocty": {},
-    "ukazka": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Odbor nakládání s nepotřebným majetkem Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR -"
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/aktuality/kalendar-akci",
-   "cesta": "adresa z RSS",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Kalendář akcí | Odbor nakládání s nepotřebným majetkem",
-    "znaku": 589,
-    "pocty": {},
-    "ukazka": "Kalendář akcí | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Domů Kalendář akcí Kalendář akcí Kalendář akcí Kalendář akcí ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Bannery Informace Mapa webu Prohlášení "
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/nemovity-majetek",
-   "cesta": "adresa z RSS",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Nemovitý majetek | Odbor nakládání s nepotřebným majetkem",
-    "znaku": 3593,
-    "pocty": {
-     "katastr": 1,
-     "výběrové řízení": 1,
-     "dražba": 3
-    },
-    "ukazka": "Nemovitý majetek | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek Aktuální nabídka nemovitého majetku Dražby nemovitostí Odprodeje v realizaci Připravované odprodeje Archív prodejů Kontakty GDPR --> Domů Nemovitý majetek Nemovitý majetek Nemovitý majetek Nemovitý maj"
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/nemovity-majetek/aktualni-nabidka",
-   "cesta": "adresa z RSS",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Aktuální nabídka nemovitého majetku | Odbor nakládání s nepotřebným majetkem",
-    "znaku": 1264,
-    "pocty": {
-     "dražba": 3
-    },
-    "ukazka": "Aktuální nabídka nemovitého majetku | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek Aktuální nabídka nemovitého majetku Dražby nemovitostí Odprodeje v realizaci Připravované odprodeje Archív prodejů Kontakty GDPR --> Domů Nemovitý majetek Aktuální nabídka nemovitého"
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/onnm",
-   "cesta": "adresa z RSS",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem",
-    "znaku": 843,
-    "pocty": {},
-    "ukazka": "Odbor nakládání s nepotřebným majetkem | Odbor nakládání s nepotřebným majetkem přejít na obsah Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR --> Odbor nakládání s nepotřebným majetkem Odbor nakládání s nepotřebným majetkem ONNM Působnost ONNM Struktura ONNM Dokumenty Kontakty Movitý majetek Nemovitý majetek GDPR -"
-   }
-  }
- ],
+ "noveOdMinule": [],
  "dny": {
   "2026-11-04": 0,
   "2026-11-05": 0
