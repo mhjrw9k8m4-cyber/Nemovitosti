@@ -192,7 +192,24 @@ function fmt(n){ return (typeof n==='number'&&isFinite(n)) ? n.toLocaleString('c
    „1 dražby". Vypadá to jako strojový překlad — a je to jediné místo,
    kde si člověk všimne, že ta čísla nikdo nečetl. */
 /* `sklon` je od 24. 10. v scripts/text.mjs — používá ho i sebeoprava. */
-function pluralPozemek(n){ return sklon(n, 'pozemek', 'pozemky', 'pozemků'); }
+/* SLOVO SE ŘÍDÍ TÍM, CO TO ČÍSLO POČÍTÁ, a množina se proto PODÁVÁ.
+
+   Stálo tu `pluralPozemek(n)` a říkalo „pozemků" vždycky. Naměřeno
+   5. 11., jak přišly první nepozemkové nabídky: 22 ze 77 okresních
+   stránek, 9 ze 14 krajských a všechny 4 rozpočtové hlásily „X
+   pozemků" u čísla, v němž nepozemkové nabídky byly — a na těch
+   stránkách tam BÝT MAJÍ, protože jsou podle místa a ceny, ne podle
+   druhu. Úvodní stránka přitom už správně říkala „nemovitostí", takže
+   si web o jedné věci tvrdil dvě různá slova.
+
+   Druhová stránka nese po § 421 jen pozemky, takže u ní vyjde
+   „pozemků" sama od sebe — žádná výjimka, žádné „tahle stránka je
+   zvláštní". A `pluralPozemek` je zrušený schválně: kdyby zůstal,
+   mohlo by jedno místo mlčky zůstat po staru. */
+function pluralNabidky(n, nabidky){
+  const s = KATEGORIE.slovaPoctu(nabidky);
+  return sklon(n, s[0], s[1], s[2]);
+}
 
 /* ČÍSLA DO HLAVIČKY MÍSTO VĚTY, KTERÁ JE OPISUJE.
    ==================================================================
@@ -1121,7 +1138,7 @@ for(const okres of eligibleOkres){
   // Kněžnou — prodej, dražby, exekuce | Parcelka" má 73 a ve výsledcích
   // z něj zbyl useknutý cár. Kratší tvar říká totéž a vejde se celý.
   const title = `Pozemky okres ${okres} — prodej a dražby | Parcelka`;
-  const desc = `${count} ${pluralPozemek(count)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
+  const desc = `${count} ${pluralNabidky(count, list)} v okrese ${okres} na jedné mapě — prodeje, dražby i exekuce z veřejných zdrojů.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky v okrese ${okres}`,"inLanguage":"cs","description":`Nabídky pozemků v okrese ${okres} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, count)};
   /* KOLIK Z TOHO JSOU SPOLUVLASTNICKÉ PODÍLY. Je to čtvrtina celé
      nabídky webu (531 z 2 019) a u podílu je v inzerátu výměra CELÉ
@@ -1190,7 +1207,7 @@ for(const okres of eligibleOkres){
       <div class="eyebrow"><span class="live-dot"></span>Okres ${esc(okres)}${kraj?' · '+esc(dispK):''}</div>
       <h1>Pozemky v okrese ${esc(okres)}.</h1>
       ${hlavickaCisla([
-        [count, pluralPozemek(count)],
+        [count, pluralNabidky(count, list)],
         ...(Object.keys(byType).length > 1 && byType.sale ? [[byType.sale, 'na prodej']] : []),
         ...(Object.keys(byType).length > 1 && byType.drazba ? [[byType.drazba, sklon(byType.drazba,'dražba','dražby','dražeb')]] : []),
         ...(Object.keys(byType).length > 1 && byType.exekuce ? [[byType.exekuce, sklon(byType.exekuce,'exekuce','exekuce','exekucí')]] : []),
@@ -1321,8 +1338,8 @@ for(const kraj of eligibleKraj){
   const okresGrid = okresList.map(ok=>{
     const c=byOkres[ok].length;
     return hasOkresPage.has(ok)
-      ? `<a href="${okresFile(ok)}">${esc(ok)} <span>${c} ${pluralPozemek(c)}</span></a>`
-      : `<a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">${esc(ok)} <span>${c} ${pluralPozemek(c)}</span></a>`;
+      ? `<a href="${okresFile(ok)}">${esc(ok)} <span>${c} ${pluralNabidky(c, byOkres[ok])}</span></a>`
+      : `<a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">${esc(ok)} <span>${c} ${pluralNabidky(c, byOkres[ok])}</span></a>`;
   }).join('\n            ');
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
   /* NALEZENO: tady stálo `.map(itemRow)`. map předává jako druhý
@@ -1336,7 +1353,7 @@ for(const kraj of eligibleKraj){
   const rows = vypsane.map((o) => itemRow(o, false, null, tS.skryt)).join('\n');
 
   const title = `Pozemky ${meta.disp} — prodej a dražby | Parcelka`;
-  const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralPozemek(count)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
+  const desc = `Pozemky ${meta.loc} na jedné mapě — ${count} ${pluralNabidky(count, list)} z veřejných zdrojů: prodeje, dražby i exekuce.${minP?(' Ceny od '+fmt(minP)+' Kč.'):''}`;
   const jsonld = {"@context":"https://schema.org","@type":"CollectionPage","name":`Pozemky ${meta.disp}`,"inLanguage":"cs","description":`Nabídky pozemků ${meta.loc} — prodeje, dražby a exekuce z veřejných zdrojů.`,"mainEntityOfPage":`https://www.parcelaka.cz/${file}`,"publisher":{"@type":"Organization","name":"Parcelka"},"mainEntity":seznamNabidek(list, list.length)};
   const crumbs = [
     {name:'Pozemky', href:'index.html', abs:SITE},
@@ -1380,7 +1397,7 @@ for(const kraj of eligibleKraj){
       <div class="eyebrow"><span class="live-dot"></span>${esc(meta.disp)}</div>
       <h1>Pozemky ${esc(meta.loc)}.</h1>
       ${hlavickaCisla([
-        [count, pluralPozemek(count)],
+        [count, pluralNabidky(count, list)],
         [okresList.length, sklon(okresList.length,'okres','okresy','okresů')],
         ...(byType.drazba ? [[byType.drazba, sklon(byType.drazba,'dražba','dražby','dražeb')]] : []),
         ...(byType.exekuce ? [[byType.exekuce, sklon(byType.exekuce,'exekuce','exekuce','exekucí')]] : []),
@@ -1672,7 +1689,7 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
-${zbyva ? `          <p class="okr-more"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
+${zbyva ? `          <p class="okr-more"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralNabidky(zbyva, list)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>
 
@@ -1792,7 +1809,7 @@ for (const r of rozpocetVznikne) {
     : `Stavebních pozemků ${sklon(stavebnich, 'je', 'jsou', 'je')} v tomhle rozpočtu <b>${fmt(stavebnich)}</b> z ${fmt(count)}` +
       (stavebnich / count < 0.1 ? ` — tedy ${(stavebnich / count * 100).toFixed(1).replace('.', ',')} %.` : '.');
   const title = `Pozemky do ${r.popis} — nabídky z celé ČR | Parcelka`;
-  const desc = `${fmt(count)} ${pluralPozemek(count)} do ${r.popis} z celé ČR — z veřejných zdrojů.`
+  const desc = `${fmt(count)} ${pluralNabidky(count, list)} do ${r.popis} z celé ČR — z veřejných zdrojů.`
     + ` Ceny od ${fmt(minP)} Kč, mediánová výměra ${fmt(medVymera)} m².`;
   const jsonld = { "@context": "https://schema.org", "@type": "CollectionPage",
     name: `Pozemky do ${r.popis}`, inLanguage: "cs", description: desc,
@@ -1823,7 +1840,7 @@ for (const r of rozpocetVznikne) {
       <div class="eyebrow"><span class="live-dot"></span>Rozpočet do ${esc(r.popis)} · celá ČR</div>
       <h1>Pozemky do ${esc(r.popis)}.</h1>
       ${hlavickaCisla([
-        [fmt(count), pluralPozemek(count)],
+        [fmt(count), pluralNabidky(count, list)],
         [fmt(okresuCelkem), sklon(okresuCelkem, 'okres', 'okresy', 'okresů')],
         [fmt(medVymera) + ' m²', 'mediánová výměra'],
         [fmt(minP) + '–' + fmt(maxP > minP ? maxP : minP) + ' Kč', 'rozpětí cen'],
@@ -1855,7 +1872,7 @@ ${razitkoCerstvosti}
           <div class="okr-list">
 ${rows}
           </div>
-${zbyva ? `          <p class="okr-more"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralPozemek(zbyva)} najdete na mapě →</a></p>` : ''}
+${zbyva ? `          <p class="okr-more"><a href="${mapaOdkaz}">${zbyvajici(zbyva)} ${fmt(zbyva)} ${pluralNabidky(zbyva, list)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>
 
@@ -1907,6 +1924,8 @@ ${jineRozpocty ? `
    místa — spočítat ho podruhé by znamenalo riskovat, že se
    rozejdou. */
 let novychZaTyden = 0;
+/* A k tomu ten seznam, protože podle něj se vybírá slovo (§ 420). */
+let novychZaTydenNabidky = [];
 // ---------- CO JE NOVÉHO (nově přidané a změny cen) ----------
 /* Web uměl říct, CO na trhu je. Neuměl říct, co se na něm POHNULO —
  * a to je jediná věc, pro kterou se člověk na takový web vrací.
@@ -1938,8 +1957,16 @@ let novychZaTyden = 0;
   const prvniDen = NOV.prvniDenEvidence(all);
   const dnesIso = String(data.updated || '').slice(0, 10);
   const nove = NOV.noveNabidky(aktualni, { prvniDen, dnesIso });
-  const novych7 = NOV.pocetNovych(aktualni, { prvniDen, dnesIso, dnu: 7 });
+  /* SEZNAM A POČET Z JEDNÉ PROMĚNNÉ. Dřív se počet bral přes
+     pocetNovych() a seznam sedmi dnů nebyl po ruce vůbec — od § 420 se
+     ale podle seznamu vybírá SLOVO („pozemků" / „nemovitostí"), takže
+     by se musel spočítat podruhé. Dvakrát totéž je přesně to, kvůli
+     čemu novinky-rez.mjs u svých dvou funkcí píše „ať se obě čísla na
+     stránce nemohou rozejít". */
+  const nove7 = NOV.noveNabidky(aktualni, { prvniDen, dnesIso, dnu: 7 });
+  const novych7 = nove7.length;
   novychZaTyden = novych7;
+  novychZaTydenNabidky = nove7;
   /* ZMĚNY CEN. Historii nese data/zlevneni.json (pole [den, cena] podle
      klíče archivu) a vyhodnocuje ji js/zlevneni.js — včetně pojistky,
      že poslední cena v historii musí sedět na tu dnešní. */
@@ -1992,7 +2019,7 @@ let novychZaTyden = 0;
   const zbyvaNovych = Math.max(0, nove.length - vypsano);
 
   const title = 'Nové pozemky a změny cen — co je na trhu nového | Parcelka';
-  const desc = `${fmt(novych7)} ${pluralPozemek(novych7)} přišlo za posledních 7 dní`
+  const desc = `${fmt(novych7)} ${pluralNabidky(novych7, nove7)} přišlo za posledních 7 dní`
     + `, u ${fmt(zlevnene.length)} ${sklon(zlevnene.length, 'nabídky klesla', 'nabídek klesla', 'nabídek klesla')} cena.`
     + ' Přehled z veřejných zdrojů, aktualizovaný čtyřikrát denně.';
   const jsonld = { "@context": "https://schema.org", "@type": "CollectionPage",
@@ -2049,7 +2076,7 @@ ${noveBody ? `
           <h2>Nově přidané</h2>
           <p class="rules-note">${tNov.veta ? tNov.veta + ' ' : ''}Od nejnovějšího dne${zbyvaNovych ? `, vypsáno prvních ${STROP_NOVYCH}` : ''}. Data pocházejí z veřejných zdrojů a mohou se v čase měnit — aktuální stav vždy ověřte u zdroje a v katastru nemovitostí.</p>
 ${noveBody}
-${zbyvaNovych ? `          <p class="okr-more"><a href="index.html#mapa">${zbyvajici(zbyvaNovych)} ${fmt(zbyvaNovych)} ${pluralPozemek(zbyvaNovych)} najdete na mapě →</a></p>` : ''}
+${zbyvaNovych ? `          <p class="okr-more"><a href="index.html#mapa">${zbyvajici(zbyvaNovych)} ${fmt(zbyvaNovych)} ${pluralNabidky(zbyvaNovych, nove)} najdete na mapě →</a></p>` : ''}
         </div>
       </div>` : ''}
 
@@ -2517,11 +2544,14 @@ ${razitkoCerstvosti}
    Podhodnocovat vlastní nabídku je u webu na prodej ta horší ze dvou
    možných chyb. Počet krajů a okresů vedle zůstává podle STRÁNEK —
    ten o stránkách opravdu mluví. */
-const totalListed = Object.keys(byOkres).reduce((s,ok)=>s+byOkres[ok].length,0);
+/* MNOŽINA A SOUČET Z JEDNOHO ZDROJE: součet je její délka, takže se
+   nemohou rozejít, a slovo se vybírá z téže množiny (§ 420). */
+const vsechnyVypsane = Object.keys(byOkres).reduce((a,ok)=>a.concat(byOkres[ok]),[]);
+const totalListed = vsechnyVypsane.length;
 let krajGrid = '';
 for(const k of eligibleKraj){
   const m=KRAJ_META[k];
-  krajGrid += `            <a href="${krajFile(k)}">${esc(m.disp)} <span>${byKraj[k].length} ${pluralPozemek(byKraj[k].length)}</span></a>\n`;
+  krajGrid += `            <a href="${krajFile(k)}">${esc(m.disp)} <span>${byKraj[k].length} ${pluralNabidky(byKraj[k].length, byKraj[k])}</span></a>\n`;
 }
 okresPages.sort((a,b)=>KRAJ_ORDER.indexOf(a.kraj)-KRAJ_ORDER.indexOf(b.kraj) || b.count-a.count);
 let okresBody='', lastKraj=null;
@@ -2533,7 +2563,7 @@ for(const p of okresPages){
     okresBody += `          <h3 class="okr-kraj-h">${kh}</h3>\n          <div class="okr-index-grid">\n`;
     lastKraj=p.kraj;
   }
-  okresBody += `            <a href="${p.file}">${esc(p.okres)} <span>${p.count} ${pluralPozemek(p.count)}</span></a>\n`;
+  okresBody += `            <a href="${p.file}">${esc(p.okres)} <span>${p.count} ${pluralNabidky(p.count, byOkres[p.okres])}</span></a>\n`;
 }
 if(lastKraj!==null) okresBody += `          </div>\n`;
 
@@ -2543,7 +2573,7 @@ if(lastKraj!==null) okresBody += `          </div>\n`;
 let rozpocetGrid = '';
 for (const r of rozpocetStranky) {
   const popis = (ROZPOCTY.find((x) => x.strop === r.strop) || {}).popis || '';
-  rozpocetGrid += `            <a href="${r.soubor}">Do ${esc(popis)} <span>${fmt(r.count)} ${pluralPozemek(r.count)}</span></a>\n`;
+  rozpocetGrid += `            <a href="${r.soubor}">Do ${esc(popis)} <span>${fmt(r.count)} ${pluralNabidky(r.count, r.list)}</span></a>\n`;
 }
 
 const idxTitle='Pozemky podle krajů a okresů — celá ČR | Parcelka';
@@ -2566,7 +2596,7 @@ const idxHtml = head(idxTitle,idxDesc,'pozemky-podle-okresu.html',idxJsonld,idxC
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Pozemky podle regionu</div>
       <h1>Pozemky podle krajů a okresů.</h1>
-      <p class="sub">Vyberte kraj nebo okres a prohlédněte si aktuální nabídky pozemků — prodeje, dražby i exekuce z veřejných zdrojů. Pokryto <b>${krajPages.length} krajů</b> a <b>${okresPages.length} okresů</b>, přes <b>${fmt(totalListed)} ${pluralPozemek(totalListed)}</b> na jedné mapě.</p>
+      <p class="sub">Vyberte kraj nebo okres a prohlédněte si aktuální nabídky pozemků — prodeje, dražby i exekuce z veřejných zdrojů. Pokryto <b>${krajPages.length} krajů</b> a <b>${okresPages.length} okresů</b>, přes <b>${fmt(totalListed)} ${pluralNabidky(totalListed, vsechnyVypsane)}</b> na jedné mapě.</p>
     </div>
     </div>
   </section>
@@ -2699,7 +2729,7 @@ if (celky.length) {
     }).join('\n');
     karty += `      <div class="add-card">
         <div class="rules-sect">
-          <h2>${esc(nadpis)} — ${c.g.length} ${pluralPozemek(c.g.length)} do ${BLOKY.MEZ_METRU} m od sebe</h2>
+          <h2>${esc(nadpis)} — ${c.g.length} ${pluralNabidky(c.g.length, c.g)} do ${BLOKY.MEZ_METRU} m od sebe</h2>
           <p class="rules-note">Okres <a href="pozemky-okres-${slug(c.okres)}.html">${esc(c.okres)}</a> · dohromady <b>${esc(haText(c.vymera))}</b>${c.cena !== null ? ` za <b>${fmt(c.cena)} Kč</b>` : ' (u některé z nabídek chybí cena, takže se nesčítá)'}${c.podilu ? ` · ${fmt(c.podilu)} z nich ${c.podilu === 1 ? 'je spoluvlastnický podíl' : 'jsou spoluvlastnické podíly'}${c.podiluCele ? `, a u ${c.podiluCele === 1 ? 'jednoho z nich je výměra' : `${fmt(c.podiluCele)} z nich jsou výměry`} za celé parcely` : ''}` : ''}.</p>
           <ul class="rule-list">
 ${radky}
@@ -2708,7 +2738,9 @@ ${radky}
       </div>
 `;
   }
-  const celkemNabidek = celky.reduce((x, c) => x + c.g.length, 0);
+  /* Totéž u bloků: nejdřív množina, počet je její délka (§ 420). */
+  const vsechnyVBlocich = celky.reduce((a, c) => a.concat(c.g), []);
+  const celkemNabidek = vsechnyVBlocich.length;
   const celkemHa = celky.reduce((x, c) => x + c.vymera, 0) / 10000;
   const cTitle = 'Víc pozemků pohromadě — kde se prodává celý blok | Parcelka';
   const cDesc = `Místa, kde je na prodej několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe — ${celky.length} lokalit, `
@@ -2734,7 +2766,7 @@ ${radky}
       <a href="index.html#mapa" class="zpet-btn okr-zpet"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vlevo"/></svg>Zpět na pozemky</a>
       <div class="eyebrow"><span class="live-dot"></span>Celky, ne jednotlivé parcely</div>
       <h1>Víc pozemků pohromadě.</h1>
-      <p class="sub">Pět hektarů v jednom kuse je něco jiného než pět hektarů roztroušených po okrese. Tady jsou místa, kde je zrovna na prodej <b>několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe</b> — ${fmt(celky.length)} ${sklon(celky.length, 'lokalita', 'lokality', 'lokalit')}, ${fmt(celkemNabidek)} ${pluralPozemek(celkemNabidek)}, dohromady <b>${celkemHa.toFixed(0)} ha</b>.</p>
+      <p class="sub">Pět hektarů v jednom kuse je něco jiného než pět hektarů roztroušených po okrese. Tady jsou místa, kde je zrovna na prodej <b>několik pozemků do ${BLOKY.MEZ_METRU} metrů od sebe</b> — ${fmt(celky.length)} ${sklon(celky.length, 'lokalita', 'lokality', 'lokalit')}, ${fmt(celkemNabidek)} ${pluralNabidky(celkemNabidek, vsechnyVBlocich)}, dohromady <b>${celkemHa.toFixed(0)} ha</b>.</p>
     </div>
     </div>
   </section>
@@ -2912,8 +2944,14 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
   const bezDup = aktualni;
   const celkem = bezDup.length;
   const okresu = new Set(bezDup.map((o) => o.okres).filter(Boolean)).size;
-  const pocetKraj = {};
-  for (const o of bezDup) { const k = OKRES_KRAJ[o.okres]; if (k) pocetKraj[k] = (pocetKraj[k] || 0) + 1; }
+  /* MÍSTO ČÍSEL MNOŽINY. Počet je délka, slovo se vybírá z téže
+     množiny (§ 420) — jinak by se u kraje psalo „pozemků" i tam, kde
+     v tom čísle nějaká nepozemková nabídka je. */
+  const nabidkyKraj = {};
+  for (const o of bezDup) {
+    const k = OKRES_KRAJ[o.okres];
+    if (k) (nabidkyKraj[k] = nabidkyKraj[k] || []).push(o);
+  }
 
   /* Uvítací blok s počtem pozemků z index.html zmizel (na přání majitele
      webu: bylo to číslo, které hned pod ním rozepisovaly pilulky, a věta
@@ -2921,15 +2959,15 @@ console.log(`Vygenerováno: ${okresPages.length} okresních + ${krajPages.length
      zbyly počty u krajů v rozcestníku, kde jsou pořád na místě. */
   h = h.replace(/(<span class="kj-c mono" data-kraj=")([^"]+)(">)[^<]*(<\/span>)/g,
     (_, a, kraj, b, c) => {
-      const n = pocetKraj[kraj] || 0;
-      return a + kraj + b + (n ? `${fmt(n)} ${pluralPozemek(n)}` : 'zatím žádné') + c;
+      const n = (nabidkyKraj[kraj] || []).length;
+      return a + kraj + b + (n ? `${fmt(n)} ${pluralNabidky(n, nabidkyKraj[kraj] || [])}` : 'zatím žádné') + c;
     });
   /* Dlaždice „Co je nového" nese počet za posledních sedm dní — týž,
      jaký stojí na té stránce. Bere se z jedné proměnné, ne z druhého
      výpočtu. */
   h = h.replace(/(<span class="kj-c mono" data-novinky="7">)[^<]*(<\/span>)/,
     (_, a, b) => a + (novychZaTyden
-      ? `${fmt(novychZaTyden)} ${pluralPozemek(novychZaTyden)} za 7 dní`
+      ? `${fmt(novychZaTyden)} ${pluralNabidky(novychZaTyden, novychZaTydenNabidky)} za 7 dní`
       : 'za posledních 7 dní') + b);
   if (h !== pred) { fs.writeFileSync(idx, h, 'utf8'); console.log('Čísla v index.html doplněna: ' + fmt(celkem) + ' pozemků, ' + okresu + ' okresů.'); }
 }

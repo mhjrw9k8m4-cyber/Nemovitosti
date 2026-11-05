@@ -35,6 +35,24 @@ function pravda(popis, vyslo, proc) {
 }
 
 const pozaduj = createRequire(import.meta.url);
+/* JAKÝM SLOVEM TA STRÁNKA POČÍTÁ — ODVOZENO Z JEJÍCH NABÍDEK.
+   Do § 420 tu stál vzorek `<span>pozemk` napevno. Jak přišly první
+   nepozemkové nabídky, začalo 22 ze 77 okresních stránek správně
+   hlásit „nemovitostí" — a tahle zkouška je přestala číst: ohlásila
+   „přečteno 55" a 22 neznámých dlaždic. Fungovala tedy její ochrana
+   proti vlastní prázdnotě, ale vzorek byl zastaralý.
+
+   Teď se slovo ODVOZUJE z množiny, kterou to číslo počítá, a vyžaduje
+   se PŘESNĚ ono. Hlídač je tím ostřejší než dřív: chytí i špatné
+   číslo, i špatné slovo. Okres se samými pozemky pořád musí říkat
+   „pozemků" — kdyby si web začal říkat „nemovitostí" všude, spadne
+   to tady.
+
+   Rozhodnutí se bere ze stejného modulu jako na webu (js/kategorie.js,
+   slovaPoctu), ne z vlastní tabulky. */
+const KATEGORIE = createRequire(import.meta.url)(path.join(KOREN, 'js', 'kategorie.js'));
+const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozemk' : 'nemovitost');
+
 /* Táž hromádka jako v generátoru: bez duplicit a bez nabídek po termínu.
    Kdyby si tahle zkouška vzala jiný vzorek, hlásila by rozchod o jeden
    dva pozemky u každého okresu — a nebyla by to chyba webu. */
@@ -99,8 +117,9 @@ for (const f of fs.readdirSync(KOREN).sort()) {
      hlavickaCisla v scripts/generate-region-pages.mjs) a zůstala jedna
      sada čísel v tmavém pásu. Kontrola se ptá na totéž co dřív —
      souhlasí čísla na stránce s daty? — jen je čte odtamtud, kde jsou. */
-  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)\s*<\/b>\s*<span>pozemk/);
-  if (!m) rozchody.push(`${f}: počet pozemků se z hlavičky nepřečetl`);
+  const kmen = kmenSlova(list);
+  const m = h.match(new RegExp('<div class="okr-cislo"><b>([\\d\\s\\u00a0]+)\\s*<\\/b>\\s*<span>' + kmen));
+  if (!m) rozchody.push(`${f}: počet se z hlavičky nepřečetl (čekalo se slovo „${kmen}…")`);
   else {
     pocty++;
     if (cislo(m[1]) !== list.length) rozchody.push(`${f}: tvrdí ${cislo(m[1])} pozemků, v datech ${list.length}`);
@@ -123,7 +142,7 @@ for (const f of fs.readdirSync(KOREN).sort()) {
   }
   for (const mm of h.matchAll(/<div class="okr-cislo"><b>([\d\s\u00a0]+)\s*<\/b>\s*<span>([^<]*)<\/span>/g)) {
     const slovo = mm[2];
-    if (/^pozemk/.test(slovo)) continue;            // celkový počet se měří výš
+    if (new RegExp('^' + kmen).test(slovo)) continue;  // celkový počet se měří výš
     const typ = TYP[slovo];
     if (!typ) {
       neznamych++;
@@ -202,6 +221,7 @@ pravda('a žádná dlaždice se nepřeskočila kvůli neznámému slovu', neznam
    v datech je „Jihočeský". Při psaní téhle zkoušky jsem to zkusil
    a dostal čtrnáct falešných rozchodů; převod má jedno místo,
    scripts/regiony-meta.mjs, odkud si jména vyrábí i generátor. */
+
 const OKRES_KRAJ = (CENY && CENY.OKRES_KRAJ) || {};
 pravda(`tabulka okres → kraj se přečetla (${Object.keys(OKRES_KRAJ).length} okresů)`,
   Object.keys(OKRES_KRAJ).length >= 70, `jen ${Object.keys(OKRES_KRAJ).length}`);
@@ -211,8 +231,9 @@ for (const klic of Object.keys(META.KRAJ_META)) {
   if (!fs.existsSync(path.join(KOREN, f))) { rozchody.push(`${klic}: stránka ${f} chybí`); continue; }
   const h = fs.readFileSync(path.join(KOREN, f), 'utf8').replace(/\u00a0/g, ' ');
   const list = aktualni.filter((o) => OKRES_KRAJ[o.okres] === klic);
-  const m = h.match(/<div class="okr-cislo"><b>([\d\s\u00a0]+)\s*<\/b>\s*<span>pozemk/);
-  if (!m) { rozchody.push(`${f}: počet pozemků se nepřečetl`); continue; }
+  const kmen = kmenSlova(list);
+  const m = h.match(new RegExp('<div class="okr-cislo"><b>([\\d\\s\\u00a0]+)\\s*<\\/b>\\s*<span>' + kmen));
+  if (!m) { rozchody.push(`${f}: počet se nepřečetl (čekalo se slovo „${kmen}…")`); continue; }
   kraju++;
   if (cislo(m[1]) !== list.length) rozchody.push(`${f} (${klic}): tvrdí ${cislo(m[1])}, v datech ${list.length}`);
   const r = h.match(/<b>([\d\s\u00a0]+)–([\d\s\u00a0]+) K\u010d\s*<\/b>\s*<span>rozp\u011bt\u00ed cen<\/span>/);

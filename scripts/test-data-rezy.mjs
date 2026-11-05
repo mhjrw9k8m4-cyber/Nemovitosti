@@ -46,6 +46,15 @@ createRequire(import.meta.url)(path.join(ROOT, 'js', 'terminy.js'));
 const T = globalThis.PK_TERMINY;
 const bezDuplicit = PKH.bezDuplicit(syrove);
 const vse = bezDuplicit.filter((o) => !T.poTerminu(o));
+/* SLOVO SE ODVOZUJE Z MNOŽINY, KTEROU TO ČÍSLO POČÍTÁ (§ 420).
+   Stál tu vzorek s „pozem" napevno. Jak přišly první nepozemkové
+   nabídky, začaly dotčené stránky správně hlásit „nemovitostí" — a
+   vzorek pak sedl na JINOU dlaždici, takže kontrola porovnávala cizí
+   číslo. Rozhodnutí se bere ze stejného modulu jako na webu. */
+const KATEGORIE = createRequire(import.meta.url)(path.join(ROOT, 'js', 'kategorie.js'));
+const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozemk' : 'nemovitost');
+const POD_OKRESY = {};
+for (const o of vse) (POD_OKRESY[o.okres] = POD_OKRESY[o.okres] || []).push(o);
 pravda(`celek se přečetl (${syrove.length} nabídek, bez duplicit ${vse.length})`,
   syrove.length > 500, `nabídek ${syrove.length}`);
 pravda('a duplicity v něm opravdu jsou (jinak kontroly níž nic nerozliší)',
@@ -168,7 +177,7 @@ if (fs.existsSync(rejstrikCesta)) {
     const h = fs.readFileSync(stranka, 'utf8');
     /* Číslo se bere z věty „… 119 pozemků …" — mezery v něm mohou být
        nezlomitelné (sazba), tak se odstraní obojí. */
-    const m = /(\d[\d\u00a0\u202f ]*)\s*pozemk/.exec(h);
+    const m = new RegExp('(\\d[\\d\\u00a0\\u202f ]*)\\s*' + kmenSlova(POD_OKRESY[r.nazev] || [])).exec(h);
     if (!m) continue;
     zmereno++;
     const naStrance = parseInt(m[1].replace(/[^\d]/g, ''), 10);

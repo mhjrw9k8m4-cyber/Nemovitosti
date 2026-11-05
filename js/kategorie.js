@@ -259,6 +259,22 @@
     return KATEGORIE.map(function (z) { return z.klic; })
       .filter(function (k) { return videne[k]; });
   }
+  var SLOVA_POZEMEK = ['pozemek', 'pozemky', 'pozemků'];
+  var SLOVA_NEMOVITOST = ['nemovitost', 'nemovitosti', 'nemovitostí'];
+  /* A JEDNA PRAVDA O TOM, JAKÝM SLOVEM SE POČÍTAJÍ NABÍDKY, které
+     dostane volající. Dostane celou trojici (1., 2.–4., 5. a dál),
+     protože česky se počítá třemi tvary a vybrat z nich umí sklonění
+     u volajícího.
+
+     Množina se PODÁVÁ, a to je celá pointa: slovo se řídí tím, co to
+     číslo počítá. Okresní stránka nese všechno, co v okrese je, takže
+     u ní rozhoduje okres; druhová stránka nese po § 421 jen pozemky,
+     takže u ní vyjde „pozemků" sama od sebe. Žádné výjimky, žádné
+     „tahle stránka je zvláštní". */
+  function slovaPoctu(nabidky) {
+    return vsePozemkove(klicePodleDat(nabidky)) ? SLOVA_POZEMEK : SLOVA_NEMOVITOST;
+  }
+
   function vsePozemkove(klice) {
     var k = klice || [];
     return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
@@ -328,6 +344,7 @@
     jePozemkova: jePozemkova,
     klicePodleDat: klicePodleDat,
     vsePozemkove: vsePozemkove,
+    slovaPoctu: slovaPoctu,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     klic: klic,

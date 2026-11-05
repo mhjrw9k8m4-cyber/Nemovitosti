@@ -25853,3 +25853,64 @@ Druhá sabotáž je ta cennější. Hlídač, který se dívá na prázdno, je
 zelený a k ničemu; tady se místo úspěchu ohlásí „kontrola odkazů se
 neměří". Je to ta samá ochrana, kterou §413 zavedl jako „hlídač na
 hlídače", jen aplikovaná na měření, které závisí na obsahu dat.
+
+## §422 — Slovo se řídí tím, co to číslo počítá
+
+Druhá část §420. `pluralPozemek(n)` říkalo „pozemků" vždycky, a na
+stránkách podle **místa a ceny** — kde nepozemkové nabídky být mají —
+to přestalo být pravda:
+
+| stránky | mluví o nemovitostech | mluví o pozemcích |
+|---|---|---|
+| okresní | **22** | 55 |
+| krajské | **9** | 5 |
+| rozpočtové | **4** | 0 |
+
+Benešov hlásí „35 nemovitostí", Tábor dál „21 pozemků", protože tam
+samé pozemky jsou. Slovo se tedy neřídí tím, na jaké stránce stojí, ale
+**tím, co to číslo počítá**: množina se podává a rozhodnutí je
+v `js/kategorie.js` (`slovaPoctu`). Druhová stránka nese po §421 jen
+pozemky, takže u ní vyjde „pozemků" sama od sebe — žádná výjimka.
+
+`pluralPozemek()` je **zrušený schválně**. Kdyby zůstal, mohlo by jedno
+z dvaceti míst mlčky zůstat po staru a nikdo by to nepoznal.
+
+### Nejdřív množina, počet je její délka
+
+Tři místa neměla množinu po ruce vůbec — počítala jen číslo
+(`totalListed`, `celkemNabidek`, počet novinek za 7 dní). Všechna tři se
+obrátila na „nejdřív množina, počet je její délka". Je to mimochodem
+zásada, kterou si `novinky-rez.mjs` u svých dvou funkcí sám píše:
+*ať se obě čísla na stránce nemohou rozejít.*
+
+### Pět zkoušek spadlo a ani jedna plané
+
+| zkouška | co řekla |
+|---|---|
+| `test-cisla-okresu` | „přečteno 55 ze 77" + 22 neznámých dlaždic |
+| `test-data-rezy` | „srovnalo se 55 okresních stránek (jinak měří prázdno)" |
+| `test-rozpocet-stranky` | „počet v hlavičce = 401" |
+| `test-nove-pozemky` | „úvodní stránka má dlaždici Co je nového" |
+| `test-druh-stranka` | (už v §421) „psáno 275, v datech 292" |
+
+**Nejzrádnější je ta třetí.** Vzorek `<span>pozem` po změně nesedl na
+své dlaždici, ale na **jiné** — a kontrola pak srovnávala cizí číslo
+(401 je počet nabídek na prodej, ne celkový počet). Poučení:
+*vzorek, který hledá text napevno, neumí jen přestat měřit — umí začít
+měřit něco jiného.*
+
+Všechny si teď slovo odvozují z vlastní množiny a vyžadují **přesně
+ono**, takže jsou ostřejší než dřív: chytí i špatné číslo, i špatné
+slovo. Okres se samými pozemky musí dál říkat „pozemků" — kdyby si web
+začal říkat „nemovitostí" všude, spadne to tam.
+
+A dvě moje vlastní chyby při tom: pomocníka jsem v `test-cisla-okresu`
+vložil **pod** místo, kde se používá (`Cannot access 'kmenSlova' before
+initialization`), a ve dvou zkouškách sáhl po `path`, který tam není
+importovaný. Obojí našlo spuštění, ne čtení.
+
+### Co ze §420 zbývá
+
+`hlidani.html` (vlastní `tvarPozemku`, `js/min/kategorie.js` tam vůbec
+není) a `js/ulozene.js`. To jsou dvě místa v prohlížeči, ne
+v generátoru — vlastní dávka.

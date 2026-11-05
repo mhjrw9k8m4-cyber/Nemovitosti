@@ -122,6 +122,13 @@
     return KATEGORIE.map(function (z) { return z.klic; })
       .filter(function (k) { return videne[k]; });
   }
+  var SLOVA_POZEMEK = ['pozemek', 'pozemky', 'pozemků'];
+  var SLOVA_NEMOVITOST = ['nemovitost', 'nemovitosti', 'nemovitostí'];
+
+  function slovaPoctu(nabidky) {
+    return vsePozemkove(klicePodleDat(nabidky)) ? SLOVA_POZEMEK : SLOVA_NEMOVITOST;
+  }
+
   function vsePozemkove(klice) {
     var k = klice || [];
     return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
@@ -159,6 +166,7 @@
     jePozemkova: jePozemkova,
     klicePodleDat: klicePodleDat,
     vsePozemkove: vsePozemkove,
+    slovaPoctu: slovaPoctu,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     klic: klic,

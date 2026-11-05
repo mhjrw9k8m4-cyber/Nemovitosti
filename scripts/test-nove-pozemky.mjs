@@ -26,6 +26,13 @@ function pravda(popis, vyslo, proc) {
 }
 
 const require_ = createRequire(import.meta.url);
+/* SLOVO SE ODVOZUJE Z MNOŽINY, KTEROU TO ČÍSLO POČÍTÁ (§ 420).
+   Stál tu vzorek s „pozem" napevno. Jak přišly první nepozemkové
+   nabídky, začaly dotčené stránky správně hlásit „nemovitostí" — a
+   vzorek pak sedl na JINOU dlaždici, takže kontrola porovnávala cizí
+   číslo. Rozhodnutí se bere ze stejného modulu jako na webu. */
+const KATEGORIE = require_(new URL('../js/kategorie.js', import.meta.url).pathname);
+const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozem' : 'nemovitost');
 const U = (p) => new URL('../' + p, import.meta.url);
 new Function(readFileSync(U('js/terminy.js'), 'utf8'))();
 new Function(readFileSync(U('js/klic.js'), 'utf8'))();
@@ -338,7 +345,7 @@ for (const odkud of ['pozemky-podle-okresu.html', 'pozemky-do-500-tisic.html', '
    a je to první věc, kterou na webu uvidí. */
 {
   const uvod = readFileSync(U('index.html'), 'utf8').replace(/\u00a0/g, ' ');
-  const m = /data-novinky="7">([\d\s]+) pozem/.exec(uvod);
+  const m = new RegExp('data-novinky="7">([\\d\\s]+) ' + kmenSlova(noveZa(7))).exec(uvod);
   pravda('úvodní stránka má dlaždici „Co je nového"', !!m,
     'v index.html není span s data-novinky="7"');
   if (m) pravda(`a uvádí týž počet za 7 dní (${n7})`, cislo(m[1]) === n7,

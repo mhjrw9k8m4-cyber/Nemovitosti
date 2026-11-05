@@ -25,6 +25,13 @@ function pravda(popis, vyslo, proc) {
 }
 
 const require_ = createRequire(import.meta.url);
+/* SLOVO SE ODVOZUJE Z MNOŽINY, KTEROU TO ČÍSLO POČÍTÁ (§ 420).
+   Stál tu vzorek s „pozem" napevno. Jak přišly první nepozemkové
+   nabídky, začaly dotčené stránky správně hlásit „nemovitostí" — a
+   vzorek pak sedl na JINOU dlaždici, takže kontrola porovnávala cizí
+   číslo. Rozhodnutí se bere ze stejného modulu jako na webu. */
+const KATEGORIE = require_(new URL('../js/kategorie.js', import.meta.url).pathname);
+const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozem' : 'nemovitost');
 const U = (p) => new URL('../' + p, import.meta.url);
 /* js/terminy.js a js/ceny.js jsou prosté skripty, ne moduly — do
    globálního prostoru, ať se měří touž mezí jako web. */
@@ -91,7 +98,7 @@ for (const s of STROPY) {
      počty jen opisoval a 26. 10. odešel — viz hlavickaCisla()
      v scripts/generate-region-pages.mjs. */
   const sub = (/<div class="okr-cisla">([\s\S]*?)<\/div>\s*<\/div>/.exec(h) || [])[1] || '';
-  const subPocet = cislo((/<b>([\d\s\u00a0]+)<\/b>\s*<span>pozem/.exec(mezery(sub)) || [])[1] || '-1');
+  const subPocet = cislo((new RegExp('<b>([\\d\\s\\u00a0]+)<\\/b>\\s*<span>' + kmenSlova(moje)).exec(mezery(sub)) || [])[1] || '-1');
   pravda(`${s.soubor}: počet v hlavičce = ${moje.length}`, subPocet === moje.length,
     `na stránce ${subPocet}, přepočítáno ${moje.length}`);
   const subOkresu = cislo((/<b>([\d\s\u00a0]+)<\/b>\s*<span>okres/.exec(mezery(sub)) || [])[1] || '-1');
