@@ -26062,3 +26062,84 @@ tím opravena není; opraveno je, že se příště nebude hádat.
 
 Lokálně po opravě: `test-ohlaseni` 43/0, `test-hledani-vzhled` 14/0,
 `test-mapa-pozemku` 169/0, rychlá sada **151/151**.
+
+## §425 — Přepnutí okruhu mapou hnulo o 196 m, a vinu nesl rám
+
+Zkouška `test-okoli` hlásila v CI pád, kterému nebylo rozumět: „měl
+jsem 12, po změně 12". Podmínka přitom hlídá DVĚ věci — přiblížení
+i polohu — a vypisovala jen tu první. Po opravě hlášky bylo vidět, co
+se opravdu stalo: **šířka ujela o 0,001760°**, tedy asi osm pixelů na
+přiblížení 12, asi 196 m.
+
+Příčinu dala až druhá měřená věc, rám mapy. Na 320×640 v sandboxu:
+
+```
+2 km   rám 320×218, patička 299 px   ← řádek „Zkusit větší okruh" JE
+10 km  rám 320×234, patička 283 px   ← není
+```
+
+Patička pod mapou roste s obsahem a mapa nad ní bere zbytek. Leaflet si
+při změně rámu posune pohled o **polovinu rozdílu** (`invalidateSize` →
+`_rawPanBy`), takže vybrané místo — které má být přesně ve středu, kolem
+něj kruh — samo odjelo. V CI to padá i na 390×844, protože se tam text
+láme jinak než v sandboxu; proto to tady nikdy nespadlo.
+
+**Oprava:** posun, který si Leaflet udělal, se v okně výběru rovnou
+vrátí (`m.on('resize', …)`). Slib „přepnutí okruhu mapou nehne, nikdy"
+tím platí, i když se rám pod rukama změní.
+
+**Směr opravy je změřený, ne vyčtený.** Napsal jsem ho nejdřív opačně,
+podle toho, jak jsem si přečetl `_rawPanBy` — a posun se místo zrušení
+ZDVOJIL: 0,001760° → 0,003490°, přesně dvakrát. Na znaménka v cizí
+knihovně se nedá hádat; běh zkoušky na 320×640 to rozhodl za dvě minuty.
+
+**A jeden slib se musel zrušit.** Stálo tu „mapa nezmění výšku ani
+o pixel" a drželo to jen díky rezervě `.vm-pocet{min-height:79px}` —
+jedné rezervě pro jeden stav textu. Řádek s nabídkou širšího okruhu je
+rozhodnutí designu, ne vada, a proti němu je „ani o pixel"
+nesplnitelné. Nesplnitelný slib se nehlídá; hlídá se ten pravý: ve
+STEJNÉM stavu musí být výška stejná (žádný domeček z karet mezi 10 a
+50 km) a **pohled se nesmí pohnout ani tak, ani tak**.
+
+Po opravě: `test-okoli` 137/0 na 390×844 **i na 320×640**, tedy i tam,
+kde se vada dala vyvolat.
+
+## §426 — Hypotéza, která vypadala skvěle a neobstála
+
+Směna 2 padala v CI na „po oddálení o tři stupně zůstalo skryté", a nová
+instrumentace to konečně rozsvítila:
+
+```
+t=2634 setZoom [13]  49.11218,14.30697@16 → 49.11218,14.30697@16
+t=2699 zoomend   →   49.11217,14.30699@16
+```
+
+`setZoom(13)` tedy neudělal **nic**. Napadlo mě vysvětlení, které sedělo
+na všechno: vrstvy úřadů se zapínají s `minZoom` (u katastru 16), Leaflet
+z mezí vrstev skládá mez celé mapy, takže zapnutý katastr mapu zamkne
+a oddálit se nedá vůbec. Dávalo to smysl i jako vada pro člověka („zapnu
+si hranice parcel a nemůžu se podívat na okolí") a vysvětlovalo to
+i rozdíl proti sandboxu: tam ČÚZK neodpoví, vrstva se nezapne, zámek
+nevznikne.
+
+**Sabotáž tu hypotézu zabila.** Odebral jsem opravu (vlastní `minZoom`
+mapy) a zkouška prošla 175 ze 175 — hlídač by nic nechytil. Měření pak
+ukázalo proč: `L.tileLayer` má `minZoom: 0` jako výchozí hodnotu
+a `_layersMinZoom` je **minimum** přes vrstvy, ne maximum. Dokud je na
+mapě letecký podklad, mez z vrstev je nula a nic se nezamyká. Změřeno
+v prohlížeči: `{"z":16,"min":0,"mezVrstev":0}`.
+
+Oprava produktu se proto **vzala zpět** — na webu nebylo co opravovat.
+Skutečná příčina je jinde a je prostší: Leaflet `setZoom` během běžící
+zoomové animace **mlčky zahodí** (`_animatingZoom`), a na pomalém běžci
+animace po stisku „Na pozemek" ještě běžela. Zkouška teď čeká na klid
+a na to, že se přiblížení opravdu změnilo — a to „opravdu změnilo" je
+samostatný pojmenovaný předpoklad, takže se příště nebude vydávat za
+vadu webu něco, co je vada měření.
+
+Prokázáno sabotáží: s `setZoom` převázaným na prázdnou funkci padne
+**předpoklad první** a řekne „přiblížení 15 → 15, spodní mez mapy 0".
+
+Co si z toho odnést: **hypotéza, která vysvětluje všechno, ještě není
+nález.** Rozdíl mezi nimi je jedna sabotáž — a stála deset minut, kdežto
+oprava, která nic neopravuje, by v repozitáři zůstala navždy.

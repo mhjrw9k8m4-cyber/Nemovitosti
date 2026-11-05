@@ -1561,6 +1561,9 @@ if (DRAZBA) {
       ramVys: mapaEl ? Math.round(mapaEl.getBoundingClientRect().height) : null,
       plVDom: b ? document.body.contains(b) : null,
       zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni),
+      /* Spodní mez mapy — tohle rozsoudilo pád v CI: `setZoom(13)`
+         neudělal nic, protože zapnutá vrstva katastru mezi zvedla na 16. */
+      minZoom: m.getMinZoom(), mezVrstev: m._layersMinZoom == null ? null : m._layersMinZoom,
       hyby: (window.__PK_HYBY || []).slice(-14),
       /* A TEĎ TO, CO SE PO PRVNÍM MĚŘENÍ UKÁZALO JAKO CHYBĚJÍCÍ.
          CI 4. 11. vyloučila nulový rám, dvě mapy, běžící animaci
@@ -1848,8 +1851,29 @@ if (DRAZBA) {
 
     /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
        pohledu přes celý okres už to o pozemku nic neříká. */
-    await p.evaluate(() => { window.PK_PZ_MAPA.setZoom(window.PK_PZ_MAPA.getZoom() - 3); });
-    await p.waitForTimeout(800);
+    /* ODDÁLIT SE DÁ JEN KLIDNÉ MAPĚ.
+       -----------------------------------------------------------------
+       Tahle kontrola padala jen na běžci a v sandboxu nikdy. Nová
+       instrumentace (oddíl 423) to rozsoudila: `setZoom(13)` se vůbec
+       neprovedl — zápis zní `setZoom [13] …@16 → …@16` a `zoomend`
+       o 65 ms později hlásí pořád šestnáctku. Leaflet totiž `setZoom`
+       během běžící zoomové animace MLČKY ZAHODÍ (`_animatingZoom`), a
+       na pomalém běžci animace po stisku „Na pozemek" ještě běžela.
+       Mapa tedy zůstala na 16, značka byla pořád v záběru a tlačítko
+       správně nevyjelo — jen kontrola to vydávala za vadu webu.
+       Čeká se proto na klid a pak na to, že se přiblížení OPRAVDU
+       změnilo; že se změnilo, je samostatný pojmenovaný předpoklad. */
+    await p.waitForFunction(() => {
+      const m = window.PK_PZ_MAPA;
+      return !!m && !m._animatingZoom;
+    }, { timeout: 5000 }).catch(() => { /* dopoví předpoklad níž */ });
+    const predOddalenim = await p.evaluate(() => window.PK_PZ_MAPA.getZoom());
+    await p.evaluate((z) => { window.PK_PZ_MAPA.setZoom(z - 3); }, predOddalenim);
+    await p.waitForFunction((z) => {
+      const m = window.PK_PZ_MAPA;
+      return !!m && m.getZoom() <= z - 3 && !m._animatingZoom;
+    }, predOddalenim, { timeout: 5000 }).catch(() => { /* dopoví předpoklad níž */ });
+    await domUtichlo(p, 300);
     /* HLÁŠKA MUSÍ ŘÍCT, CO SE NAMĚŘILO, NE CO SE NEPOVEDLO.
        Tahle kontrola padá jen na běžci a v sandboxu nikdy — a tiskla
        o tom jedinou větu („zůstalo skryté"), ze které se nedalo poznat
@@ -1858,6 +1882,16 @@ if (DRAZBA) {
        animace ještě jede. Sonda stav() to všechno měří už teď, jen se
        to zahazovalo. Tiskne se proto celý její výpis. */
     const poOddaleni = await stav();
+    /* NEJDŘÍV SE OVĚŘÍ, ŽE SE MAPA OPRAVDU ODDÁLILA. Bez toho tahle
+       kontrola vydávala za vadu webu něco jiného: v CI `setZoom(-3)`
+       neudělal nic (zapnutá vrstva katastru zvedla mapě spodní mez na
+       16, viz oddíl 426), značka tedy zůstala v záběru a tlačítko
+       správně nevyjelo. Kontrola přitom hlásila „zůstalo skryté", jako
+       by se web chytil. Předpoklad se proto měří zvlášť a pojmenuje se. */
+    pravda('oddálení o tři stupně se opravdu povedlo (jinak níž není co měřit)',
+      !!poOddaleni && poOddaleni.zoom <= predOddalenim - 3,
+      `přiblížení ${predOddalenim} → ${poOddaleni && poOddaleni.zoom}`
+      + `, spodní mez mapy ${poOddaleni && poOddaleni.minZoom}`);
     pravda('ukáže se i po pořádném oddálení, ne jen po posunu',
       poOddaleni && poOddaleni.skryte === false,
       'po oddálení o tři stupně zůstalo skryté — naměřeno: ' + JSON.stringify(poOddaleni));
@@ -1971,6 +2005,7 @@ if (DRAZBA) {
       Math.abs(k2.lat - CIL.d.lat) < 0.002 && Math.abs(k2.lng - CIL.d.lng) < 0.002,
       `${k2.lat},${k2.lng} proti ${CIL.d.lat},${CIL.d.lng}`);
   }
+
   await ctxK.close();
 }
 

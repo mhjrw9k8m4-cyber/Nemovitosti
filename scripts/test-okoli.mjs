@@ -755,21 +755,56 @@ const stavVybiraku = (p) => p.evaluate(() => {
             if (r) r.click();
           }, v);
           await p.waitForTimeout(650);
-          stavy.push(await p.evaluate((x) => ({
-            km: x,
-            mapa: Math.round(document.getElementById('vm-mapa').getBoundingClientRect().height),
-            pata: Math.round(document.querySelector('.vm-pata').getBoundingClientRect().height),
-            tlacitko: !!document.querySelector('#vm-pocet .vm-vetsi'),
-          }), v));
+          stavy.push(await p.evaluate((x) => {
+            const m = window.PK_VM_MAPA, c = m ? m.getCenter() : null;
+            return {
+              km: x,
+              mapa: Math.round(document.getElementById('vm-mapa').getBoundingClientRect().height),
+              pata: Math.round(document.querySelector('.vm-pata').getBoundingClientRect().height),
+              tlacitko: !!document.querySelector('#vm-pocet .vm-vetsi'),
+              stred: c ? c.lat.toFixed(5) + ',' + c.lng.toFixed(5) : null,
+              z: m ? m.getZoom() : null,
+            };
+          }, v));
         }
         /* Bez těchhle dvou pojistek by kontrola prošla, i kdyby se
            vůbec nic nepřepínalo: měřila by pořád tentýž stav. */
         pravda('mezi okruhy se opravdu střídá stav s nabídkou a bez ní (jinak zkouška nic neměří)',
           stavy.some((x) => x.tlacitko) && stavy.some((x) => !x.tlacitko),
           'nabídka širšího okruhu se neukázala ani v jednom z okruhů 2/10/50');
-        const vysky = [...new Set(stavy.map((x) => x.mapa))];
-        pravda('a mapa přitom nezmění výšku ani o pixel', vysky.length === 1,
-          stavy.map((x) => `${x.km} km → mapa ${x.mapa}, patička ${x.pata}`).join('; '));
+        /* CO SE TU DÁ SLÍBIT A CO NE. Stálo tu „mapa nezmění výšku ani
+           o pixel" a drželo to jen díky rezervě .vm-pocet{min-height:79px}.
+           Rezerva ale platí pro JEDEN stav textu: jak se u malého okruhu
+           přidá řádek s nabídkou širšího okruhu, patička je o 16 px vyšší
+           a mapa o tolik nižší. Naměřeno v sandboxu na 320×640 (a v CI
+           i na 390×844, kde se text láme jinak):
+
+             2 km  mapa 218, patička 299   ← řádek s nabídkou JE
+             10 km mapa 234, patička 283   ← není
+             50 km mapa 234, patička 283   ← není
+             2 km  mapa 218, patička 299   ← je
+
+           Ten řádek je rozhodnutí designu, ne vada: u okruhu, kde nic
+           není, se nabízí větší. Slib „ani o pixel" je proti němu
+           nesplnitelný, a nesplnitelný slib se nehlídá — hlídá se ten
+           pravý: ve STEJNÉM stavu musí být výška stejná (žádný domeček
+           z karet při přepínání mezi 10 a 50 km) a POHLED se nesmí
+           pohnout ani tak, ani tak. O tom druhém viz oddíl 425: Leaflet
+           si při změně rámu drží levý horní roh, ne střed, takže se
+           vybrané místo samo odsunulo o 196 m. */
+        const podleStavu = {};
+        for (const x of stavy) {
+          const k = x.tlacitko ? 's nabídkou' : 'bez nabídky';
+          (podleStavu[k] = podleStavu[k] || []).push(x.mapa);
+        }
+        const rozhozene = Object.keys(podleStavu).filter((k) => new Set(podleStavu[k]).size > 1);
+        const vypis = stavy.map((x) => `${x.km} km → mapa ${x.mapa}, patička ${x.pata}`
+          + ` (${x.tlacitko ? 's nabídkou' : 'bez nabídky'}), střed ${x.stred}@${x.z}`).join('; ');
+        pravda('a ve stejném stavu má mapa pořád stejnou výšku', rozhozene.length === 0,
+          `rozchází se: ${rozhozene.join(', ')} — ${vypis}`);
+        const stredy = [...new Set(stavy.map((x) => x.stred + '@' + x.z))];
+        pravda('a pohled se přepínáním okruhu nepohne, ani když se rám mapy změní',
+          stredy.length === 1, vypis);
       }
 
       /* --- ŠTÍTEK S KILOMETRY NESMÍ LEŽET NA ZNAČCE ----------------
@@ -1334,11 +1369,21 @@ const stavVybiraku = (p) => p.evaluate(() => {
   await otevriVybirac(p, '#map-near');
   await jdiNaMisto(p, 50.53, 13.95, 11);          // Vlastislav u Třebenic
 
+  /* MĚŘÍ SE I RÁM MAPY A PANEL POD NÍ. Pád v CI (5. 11.) ukázal, že
+     přiblížení drží a ujela ŠÍŘKA — o 0,001760°, což je na přiblížení 12
+     asi osm pixelů. Osm pixelů není zaokrouhlení: Leaflet při změně
+     velikosti rámu posune střed o POLOVINU rozdílu, takže šestnáct
+     pixelů vyšší panel pod mapou (jiné zalomení textu, nabídka většího
+     okruhu) mapou hne, i když o to nikdo nežádal. Rám a výška panelu se
+     proto měří spolu se středem — bez nich se o příčině jen hádá. */
   const pohled = () => p.evaluate(() => {
     const m = window.PK_VM_MAPA;
     if (!m) return null;
-    const c = m.getCenter();
-    return { z: m.getZoom(), lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5) };
+    const c = m.getCenter(), r = m.getSize();
+    const pod = document.querySelector('#vm-pocet');
+    return { z: m.getZoom(), lat: +c.lat.toFixed(5), lng: +c.lng.toFixed(5),
+      ram: r.x + '×' + r.y,
+      pod: pod ? Math.round(pod.getBoundingClientRect().height) : null };
   });
   const nastavKm = async (km) => {
     await p.evaluate((k) => {
@@ -1363,7 +1408,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
     pravda('po zmenšení okruhu na 5 km zůstane přiblížení', po5.z === moje.z,
       `měl jsem ${moje.z}, po změně ${po5.z}`);
     pravda('a mapa se ani neposune', po5.lat === moje.lat && po5.lng === moje.lng,
-      `${moje.lat},${moje.lng} → ${po5.lat},${po5.lng}`);
+      `${moje.lat},${moje.lng} → ${po5.lat},${po5.lng}`
+      + `, rám ${moje.ram} → ${po5.ram}, panel pod mapou ${moje.pod} → ${po5.pod} px`);
 
     await nastavKm(2);
     const po2 = await pohled();
@@ -1377,7 +1423,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
        Je to totéž pravidlo, jaké § 332 zavedl u hlášek zdrojů:
        hlášení bez příčiny nikam nevede. */
     pravda('a po 2 km taky', po2.z === moje.z && po2.lat === moje.lat,
-      `přiblížení ${moje.z} → ${po2.z} (${po2.z === moje.z ? 'drží' : 'ZMĚNILO SE'}), šířka ${moje.lat} → ${po2.lat} (${po2.lat === moje.lat ? 'drží' : 'UJELA o ' + Math.abs(po2.lat - moje.lat).toFixed(6)})`);
+      `přiblížení ${moje.z} → ${po2.z} (${po2.z === moje.z ? 'drží' : 'ZMĚNILO SE'}), šířka ${moje.lat} → ${po2.lat} (${po2.lat === moje.lat ? 'drží' : 'UJELA o ' + Math.abs(po2.lat - moje.lat).toFixed(6)})`
+      + `, rám ${moje.ram} → ${po2.ram}, panel pod mapou ${moje.pod} → ${po2.pod} px`);
 
     /* ANI NA OKRUH, KTERÝ SE DO OKNA NEVEJDE. Dřív tu stálo, že
        přerovnat se v tom případě MUSÍ — jinak prý člověk nastavuje

@@ -4725,6 +4725,32 @@
     // Stejné okno ven jako u hlavní mapy (PK_MAPA) — testy se odsud musí umět
     // přesunout jinam, když v panelu není žádné hledání.
     try { window.PK_VM_MAPA = m; } catch (e) {}
+    /* RÁM MAPY SE MĚNÍ, POHLED NE.
+       ------------------------------------------------------------------
+       Patička pod mapou roste s obsahem: jak se u malého okruhu objeví
+       řádek „Zkusit 20 km", je o řádek vyšší a mapa nad ní o tolik nižší.
+       Leaflet si při změně rámu posune pohled o POLOVINU rozdílu
+       (invalidateSize → _rawPanBy), takže vybrané místo odjede ze středu.
+       Naměřeno v sandboxu na 320×640:
+       rám 320×234 → 320×218, patička 79 → 95 px, a střed ujel z 50,53000
+       na 50,53176, tedy o osm pixelů, asi 196 m. V CI to padá i na
+       390×844, protože se tam text láme jinak.
+       Vybrané místo je přitom PŘESNĚ VE STŘEDU (kolem něj kruh), takže
+       středu se držet má. Posun, který si Leaflet udělal, se proto rovnou
+       vrátí. Tím se drží slib o kus níž: „přepnutí okruhu mapou nehne,
+       nikdy" — i když se rám pod rukama změní.
+
+       SMĚR OPRAVY JE ZMĚŘENÝ, NE VYČTENÝ. Napsal jsem ho nejdřív opačně
+       (panBy([-dx, -dy]), podle toho, jak jsem čítal _rawPanBy) a posun
+       se místo zrušení ZDVOJIL: 0,001760° → 0,003490°, tedy přesně
+       dvakrát. Na pořadí znamének v cizí knihovně se nedá hádat; běh
+       zkoušky na 320×640 to rozhodl za dvě minuty. */
+    m.on('resize', function (e) {
+      if (!e || !e.oldSize || !e.newSize) return;
+      var dx = Math.round(e.oldSize.x / 2) - Math.round(e.newSize.x / 2);
+      var dy = Math.round(e.oldSize.y / 2) - Math.round(e.newSize.y / 2);
+      if (dx || dy) m.panBy([dx, dy], { animate: false });
+    });
     // (výchozí přiblížení dorovná jdiNa() níž, jakmile je znám okruh)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       subdomains: 'abc', maxZoom: 18, className: 'pk-basemap'

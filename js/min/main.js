@@ -2750,6 +2750,13 @@
 
     try { window.PK_VM_MAPA = m; } catch (e) {}
 
+    m.on('resize', function (e) {
+      if (!e || !e.oldSize || !e.newSize) return;
+      var dx = Math.round(e.oldSize.x / 2) - Math.round(e.newSize.x / 2);
+      var dy = Math.round(e.oldSize.y / 2) - Math.round(e.newSize.y / 2);
+      if (dx || dy) m.panBy([dx, dy], { animate: false });
+    });
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       subdomains: 'abc', maxZoom: 18, className: 'pk-basemap'
     }).addTo(m);
