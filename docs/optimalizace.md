@@ -25644,3 +25644,28 @@ vyhozený. Hlídač „každé pole v datech má popis" ho našel sám;
 
 `test-strop-ceny` navíc vinila cenový strop z 30 nabídek, kterých se
 nikdy nedotkl — obě její měření jsou teď zúžená na pozemky.
+
+### 4. A ten výmaz nehlídal nikdo
+
+Sabotáž téhle dávky: tři hlídači ze čtyř chytili. Smazání
+`delete o._neniPozemek;` z robota **neshodilo nikoho** — hlídač „každé
+pole v datech má popis" čte vyčištěný soubor na disku, ne chování
+robota. Příznak v živých datech našel jen proto, že tam ten den
+skutečně byl; mezi zavedením vady a jejím odhalením by stál celý běh
+robota.
+
+Z jmenovitého výmazu je proto funkce `bezPracovnich(o)` — dá se jí dát
+nabídka a změřit, co z ní vyjde. A je obecná: smete každé pole, jehož
+jméno začíná podtržítkem, takže příznak, který někdo zavede zítra,
+odejde taky. `test-data-rozhrani` 31 → **35**.
+
+**A hlídač toho volání měřil nejdřív sám sebe.** Napsal jsem ho jako
+`/bezPracovnich\(o\)/` — a ten vzorek splňuje i
+`export function bezPracovnich(o) {`, tedy vlastní definici. Sabotáž
+„robot přestane smetat" proto neprošla ani ve druhém kole. Hledá se
+teď volání jako **příkaz**: jméno na začátku výrazu a za závorkou
+středník, což definice nikdy nesplní. Druhé kolo 3/3.
+
+To je ta past, kterou si člověk nevšimne čtením: *hledat jméno funkce*
+a *hledat její volání* vypadá jako totéž, a není. Bez sabotáže by ten
+hlídač vypadal zeleně celou dobu.
