@@ -1,13 +1,13 @@
 {
- "updated": "2026-11-03",
- "updated_at": "2026-11-03T19:27:24.789Z",
+ "updated": "2026-11-05",
+ "updated_at": "2026-11-05T17:02:19.904Z",
  "zdroje": [
   {
    "jmeno": "Bezrealitky",
    "host": "bezrealitky.cz",
    "domov": "https://www.bezrealitky.cz/",
    "proc": "zákaz",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [
     {
      "url": "https://www.bezrealitky.cz/informace/smluvni-podminky",
@@ -151,7 +151,7 @@
    "host": "sreality.cz",
    "domov": "https://www.sreality.cz/",
    "proc": "zákaz",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [],
    "verdikt": "web nedovoluje číst ani domovskou stránku",
    "duvod": "Disallow: /"
@@ -161,7 +161,7 @@
    "host": "nabidkamajetku.gov.cz",
    "domov": "https://nabidkamajetku.gov.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [],
    "domovVykreslen": {
     "odkazu": 0,
@@ -219,7 +219,7 @@
    "host": "nabidkamajetku.cz",
    "domov": "https://www.nabidkamajetku.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [],
    "domovVykreslen": {
     "odkazu": 0,
@@ -281,7 +281,7 @@
    "host": "drazby.policenm.cz",
    "domov": "https://drazby.policenm.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [
     {
      "url": "https://drazby.policenm.cz/legal/vop",
@@ -311,8 +311,8 @@
      "url": "https://drazby.policenm.cz/",
      "popis": "Domů",
      "stav": "přečteno, nic o automatu",
-     "znaku": 4040,
-     "odstavcuCelkem": 26,
+     "znaku": 3883,
+     "odstavcuCelkem": 24,
      "odstavcu": 0,
      "pasaze": [],
      "zminky": 0,
@@ -327,7 +327,7 @@
      "popis": "Obchodní podmínky"
     }
    ],
-   "znakuCelkem": 37927,
+   "znakuCelkem": 37770,
    "verdikt": "přečteno, ale nic o automatickém přístupu"
   },
   {
@@ -335,7 +335,7 @@
    "host": "drazbynaxos.cz",
    "domov": "https://www.drazbynaxos.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [
     {
      "url": "https://www.drazbynaxos.cz/drazby/vop",
@@ -365,7 +365,7 @@
    "host": "elektronickedrazby.cz",
    "domov": "https://www.elektronickedrazby.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [
     {
      "url": "https://www.elektronickedrazby.cz/pages/drazebni-rad",
@@ -414,8 +414,9 @@
      "citelnost": 0.86,
      "cteno": "z dokumentu",
      "jak": "jedna tabulka na všechna písma (čitelnější)",
-     "stav": "nepřečetli jsme ho",
-     "duvod": "text vyšel nečitelně (čitelnost 0.86) — kódování, které tahle čtečka neumí"
+     "zPoskozenehoTextu": true,
+     "duvod": "text vyšel nečitelně (čitelnost 0.86) — kódování, které tahle čtečka neumí; z chybějícího nálezu se NESMÍ soudit, že se o automatu nepíše",
+     "stav": "nepřečetli jsme ho"
     }
    ],
    "nalezeneOdkazy": [
@@ -435,7 +436,7 @@
    "host": "verejnedrazby.cz",
    "domov": "https://www.verejnedrazby.cz/",
    "proc": "slibný kandidát",
-   "kdy": "2026-11-03",
+   "kdy": "2026-11-05",
    "stranky": [
     {
      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-podkrovi-obytna-plocha-90-m2-pozemek-135-m2-ul-antonina-trapla-boskovice-8144/",
@@ -520,8 +521,9 @@
      "citelnost": 0.28,
      "cteno": "z dokumentu",
      "jak": "podle jmen písem",
-     "stav": "nepřečetli jsme ho",
-     "duvod": "text vyšel nečitelně (čitelnost 0.28) — kódování, které tahle čtečka neumí"
+     "zPoskozenehoTextu": true,
+     "duvod": "text vyšel nečitelně (čitelnost 0.28) — kódování, které tahle čtečka neumí; z chybějícího nálezu se NESMÍ soudit, že se o automatu nepíše",
+     "stav": "nepřečetli jsme ho"
     },
     {
      "url": "https://www.verejnedrazby.cz/data/A8144/f_6ae20775443a98.53307902.pdf",
