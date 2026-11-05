@@ -757,7 +757,18 @@ const stavVybiraku = (p) => p.evaluate(() => {
           await p.waitForTimeout(650);
           stavy.push(await p.evaluate((x) => {
             const m = window.PK_VM_MAPA, c = m ? m.getCenter() : null;
+            /* Posun se měří v PIXELECH proti prvnímu stavu — proč ne ve
+               stupních, viz posunPx() v bloku o změně okruhu níž. */
+            if (c && !window.__pkPrvniStred) window.__pkPrvniStred = { lat: c.lat, lng: c.lng };
+            const o = window.__pkPrvniStred;
+            let px = null;
+            if (c && o) {
+              const a = m.latLngToContainerPoint(window.L.latLng(o.lat, o.lng));
+              const b = m.latLngToContainerPoint(c);
+              px = Math.round(Math.hypot(a.x - b.x, a.y - b.y) * 10) / 10;
+            }
             return {
+              posunPx: px,
               km: x,
               mapa: Math.round(document.getElementById('vm-mapa').getBoundingClientRect().height),
               pata: Math.round(document.querySelector('.vm-pata').getBoundingClientRect().height),
@@ -799,12 +810,14 @@ const stavVybiraku = (p) => p.evaluate(() => {
         }
         const rozhozene = Object.keys(podleStavu).filter((k) => new Set(podleStavu[k]).size > 1);
         const vypis = stavy.map((x) => `${x.km} km → mapa ${x.mapa}, patička ${x.pata}`
-          + ` (${x.tlacitko ? 's nabídkou' : 'bez nabídky'}), střed ${x.stred}@${x.z}`).join('; ');
+          + ` (${x.tlacitko ? 's nabídkou' : 'bez nabídky'}), střed ${x.stred}@${x.z}`
+          + ` (${x.posunPx} px od prvního)`).join('; ');
         pravda('a ve stejném stavu má mapa pořád stejnou výšku', rozhozene.length === 0,
           `rozchází se: ${rozhozene.join(', ')} — ${vypis}`);
-        const stredy = [...new Set(stavy.map((x) => x.stred + '@' + x.z))];
+        const zoomy = [...new Set(stavy.map((x) => x.z))];
+        const nejvicPx = Math.max(...stavy.map((x) => (x.posunPx == null ? 999 : x.posunPx)));
         pravda('a pohled se přepínáním okruhu nepohne, ani když se rám mapy změní',
-          stredy.length === 1, vypis);
+          zoomy.length === 1 && nejvicPx < 1, `nejvíc ${nejvicPx} px — ${vypis}`);
       }
 
       /* --- ŠTÍTEK S KILOMETRY NESMÍ LEŽET NA ZNAČCE ----------------
@@ -1385,6 +1398,24 @@ const stavVybiraku = (p) => p.evaluate(() => {
       ram: r.x + '×' + r.y,
       pod: pod ? Math.round(pod.getBoundingClientRect().height) : null };
   });
+  /* POSUN SE MĚŘÍ V PIXELECH, NE VE STUPNÍCH.
+     ------------------------------------------------------------------
+     Po opravě z oddílu 425 zbyl v CI zbytek: šířka 50,53000 → 50,53002,
+     tedy 0,000020°. To je na přiblížení 12 asi 2 m, tedy **desetina
+     pixelu** — zaokrouhlení z převodu souřadnic tam a zpátky (Leaflet
+     posouvá na celé pixely, `getCenter()` se počítá z polohy vrstvy).
+     Původní vada byla 0,001760°, tedy osm pixelů. Mezi 8 px a 0,1 px je
+     rozdíl na tři řády a ve stupních se to pozná špatně: na jiném
+     přiblížení a jiné šířce znamená totéž číslo jinou vzdálenost.
+     Hlídá se proto to, co člověk uvidí: pohled se nesmí posunout ani
+     o PIXEL. Osmipixelovou vadu to chytí s rezervou 1 : 8. */
+  const posunPx = (odkud) => p.evaluate((o) => {
+    const m = window.PK_VM_MAPA;
+    if (!m || !o) return null;
+    const a = m.latLngToContainerPoint(window.L.latLng(o.lat, o.lng));
+    const b = m.latLngToContainerPoint(m.getCenter());
+    return Math.round(Math.hypot(a.x - b.x, a.y - b.y) * 10) / 10;
+  }, odkud);
   const nastavKm = async (km) => {
     await p.evaluate((k) => {
       const r = document.querySelector('input[name="vm-km"][value="' + k + '"]');
@@ -1407,8 +1438,10 @@ const stavVybiraku = (p) => p.evaluate(() => {
     const po5 = await pohled();
     pravda('po zmenšení okruhu na 5 km zůstane přiblížení', po5.z === moje.z,
       `měl jsem ${moje.z}, po změně ${po5.z}`);
-    pravda('a mapa se ani neposune', po5.lat === moje.lat && po5.lng === moje.lng,
+    const posun5 = await posunPx(moje);
+    pravda('a mapa se ani neposune', posun5 !== null && posun5 < 1,
       `${moje.lat},${moje.lng} → ${po5.lat},${po5.lng}`
+      + `, tedy ${posun5} px`
       + `, rám ${moje.ram} → ${po5.ram}, panel pod mapou ${moje.pod} → ${po5.pod} px`);
 
     await nastavKm(2);
@@ -1422,8 +1455,10 @@ const stavVybiraku = (p) => p.evaluate(() => {
 
        Je to totéž pravidlo, jaké § 332 zavedl u hlášek zdrojů:
        hlášení bez příčiny nikam nevede. */
-    pravda('a po 2 km taky', po2.z === moje.z && po2.lat === moje.lat,
+    const posun2 = await posunPx(moje);
+    pravda('a po 2 km taky', po2.z === moje.z && posun2 !== null && posun2 < 1,
       `přiblížení ${moje.z} → ${po2.z} (${po2.z === moje.z ? 'drží' : 'ZMĚNILO SE'}), šířka ${moje.lat} → ${po2.lat} (${po2.lat === moje.lat ? 'drží' : 'UJELA o ' + Math.abs(po2.lat - moje.lat).toFixed(6)})`
+      + `, tedy ${posun2} px`
       + `, rám ${moje.ram} → ${po2.ram}, panel pod mapou ${moje.pod} → ${po2.pod} px`);
 
     /* ANI NA OKRUH, KTERÝ SE DO OKNA NEVEJDE. Dřív tu stálo, že

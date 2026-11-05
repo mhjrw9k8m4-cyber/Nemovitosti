@@ -26143,3 +26143,36 @@ Prokázáno sabotáží: s `setZoom` převázaným na prázdnou funkci padne
 Co si z toho odnést: **hypotéza, která vysvětluje všechno, ještě není
 nález.** Rozdíl mezi nimi je jedna sabotáž — a stála deset minut, kdežto
 oprava, která nic neopravuje, by v repozitáři zůstala navždy.
+
+## §427 — Zbytek po opravě: 0,00002° je desetina pixelu, ne vada
+
+Oprava z §425 zabrala, ale v CI zbyl pád: šířka **50,53000 → 50,53002**,
+tedy 0,000020°. Proti původní vadě (0,001760°) je to **stokrát méně** —
+na přiblížení 12 asi 2 m, tedy **desetina pixelu**. Je to zaokrouhlení
+převodu souřadnic tam a zpátky: Leaflet posouvá na celé pixely a
+`getCenter()` se počítá z polohy vrstvy.
+
+Kontrola to přesto hlásila jako chybu, protože porovnávala stupně na
+rovnost. Ve stupních se ale rozdíl mezi vadou a šumem pozná špatně:
+totéž číslo znamená na jiném přiblížení a jiné šířce jinou vzdálenost.
+
+Měří se proto to, co člověk uvidí — **posun v pixelech** (`posunPx()`,
+přes `latLngToContainerPoint`), a mez je **jeden pixel**:
+
+| | ve stupních | v pixelech |
+|---|---|---|
+| vada (§425) | 0,001760° | **8 px** |
+| zbytek po opravě | 0,000020° | **0,1 px** |
+
+Mez jeden pixel má tedy proti skutečné vadě rezervu 1 : 8 a proti šumu
+1 : 10. Není to ústupek, je to převod meze na jednotku, ve které je ta
+věc vidět.
+
+**Prokázáno sabotáží:** s vypnutou opravou (`if (false && …)`) padnou
+oba hlídače a oba naměří přesně **8 px** — jak ten v bloku o přepínání
+okruhu („nejvíc 8 px"), tak ten o kus níž („tedy 8 px"). Po vrácení
+opravy 137/0 na 390×844 i na 320×640.
+
+Pravidlo: **hlídač má měřit v jednotce, ve které se o věci rozhoduje.**
+Rovnost na pět desetinných míst není přísnost, je to jiná otázka — a na
+ni odpovídá šum.
