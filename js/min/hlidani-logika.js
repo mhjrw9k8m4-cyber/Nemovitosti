@@ -336,7 +336,7 @@
       var uzke = { okres: s.okres, ptype: s.ptype };
       zaklad = data.filter(function (d) { return matches(uzke, d); });
 
-      if (!zaklad.length) return { kriterium: null, jmeno: null, kolik: 0 };
+      if (!zaklad.length) return { kriterium: null, jmeno: null, kolik: 0, nabidky: [] };
     }
     var nej = null;
     for (var kl in JMENA_KRITERII) {
@@ -348,10 +348,14 @@
       var bez = {};
       for (var j in s) if (Object.prototype.hasOwnProperty.call(s, j)) bez[j] = s[j];
       bez[kl] = (kl === 'features') ? [] : null;
-      var kolik = zaklad.filter(function (d) { return matches(bez, d); }).length;
-      if (kolik > 0 && (!nej || kolik > nej.kolik)) nej = { kriterium: kl, jmeno: JMENA_KRITERII[kl], kolik: kolik };
+
+      var sedici = zaklad.filter(function (d) { return matches(bez, d); });
+      var kolik = sedici.length;
+      if (kolik > 0 && (!nej || kolik > nej.kolik)) {
+        nej = { kriterium: kl, jmeno: JMENA_KRITERII[kl], kolik: kolik, nabidky: sedici };
+      }
     }
-    return nej || { kriterium: null, jmeno: null, kolik: 0 };
+    return nej || { kriterium: null, jmeno: null, kolik: 0, nabidky: [] };
   }
 
   return {

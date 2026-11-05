@@ -433,21 +433,40 @@ await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
       !!(prazdna && /nejvyšší cenu/.test(prazdna.kam) && prazdna.tucne.length === 1),
       JSON.stringify(prazdna));
     pravda('  a kolik by bez ní sedělo',
-      /* TADY SE ČEKÁ „pozem" SCHVÁLNĚ, A JE TO PŘIZNANÁ DÍRA.
-         hlidani.html si plurál píše sám (tvarPozemku) a kategorii
-         nezná — js/min/kategorie.js na té stránce vůbec není. Takže
-         zatímco úvodní stránka už správně hlásí „8 nemovitostí",
-         tahle hláška u téhož stavu dat řekne „3 pozemky", i kdyby
-         mezi nimi byl byt. Naměřeno 5. 11.: web má na jednom místě
-         dvě řeči.
+      /* OBĚ SLOVA, A JE TO PŘIZNANÉ — ale z jiného důvodu než dřív.
+         Do § 423 tu byla díra: hlidani.html si plurál psalo samo a
+         říkalo „pozemky" i o hromádce s bytem. Nechal jsem tu tehdy
+         vzorek jen na „pozem", aby ta díra nebyla zakrytá.
 
-         Nechávám to tu NEOPRAVENÉ a nahlášené, ne tiše přepsané na
-         obě slova: vzorek, který bere „pozem" i „nemovitost", by tu
-         díru zakryl a nikdo by ji už nenašel. Patří k té samé práci
-         jako počty na okresních stránkách (22 okresů hlásí
-         „X pozemků" u čísla, v němž nepozemkové nabídky jsou). */
-      !!(prazdna && /bez té podmínky sedí \d+ pozem/.test(prazdna.kam)),
+         Teď je opravená a vzorek bere obojí, protože tahle zkouška
+         NEVÍ, co je v té zúžené hromádce: hláška mluví o množině,
+         která vznikne vypuštěním jedné podmínky, a tu si stránka
+         spočítá uvnitř. Vyžadovat jedno ze dvou slov by bylo hádání.
+         Pozor na to, co z toho plyne: tenhle řádek nedokazuje, že se
+         slovo vybírá správně — jen že tam vůbec je. Důkaz je o dva
+         řádky níž (modul na stránce opravdu rozhoduje) a v
+         test-kategorie, kde se slovaPoctu měří přímo. */
+      !!(prazdna && /bez té podmínky sedí \d+ (pozem|nemovitost)/.test(prazdna.kam)),
       JSON.stringify(prazdna && prazdna.kam));
+    /* A TEĎ TEN DŮKAZ. Slovo se na téhle stránce vybírá modulem
+       kategorií — tak se ho zeptáme přímo v prohlížeči, na téže
+       stránce, se dvěma známými vstupy. Kdyby se js/min/kategorie.js
+       přestal načítat (nebo ho někdo ze stránky odebral), tahle
+       kontrola spadne, zatímco věta výš by dál vypadala v pořádku. */
+    const slova = await p.evaluate(() => {
+      const K = window.PKKategorie;
+      if (!K || typeof K.slovaPoctu !== 'function') return null;
+      return {
+        pozemky: K.slovaPoctu([{}, { kat: 'pozemek' }])[2],
+        sBytem: K.slovaPoctu([{}, { kat: 'byt' }])[2],
+      };
+    });
+    pravda('  a slovo pro počty vybírá na té stránce modul kategorií',
+      !!slova, 'window.PKKategorie na hlidani.html není — hláška by zase psala „pozemky" i o bytu');
+    if (slova) {
+      pravda('  a u samých pozemků řekne „pozemků", s bytem „nemovitostí"',
+        slova.pozemky === 'pozemků' && slova.sBytem === 'nemovitostí', JSON.stringify(slova));
+    }
     pravda('  a pořád slíbí, že nové vypíše',
       !!(prazdna && /vypíšeme ho rovnou sem/.test(prazdna.kam)), JSON.stringify(prazdna && prazdna.kam));
     /* A hned zase pryč. Kontroly níž počítají s tím, co tu leželo předtím

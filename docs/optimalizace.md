@@ -25947,3 +25947,51 @@ Opraveno dvakrát, protože každá cesta hlídá něco jiného:
 `test-kategorie` 81 → **86**.
 
 Druhé kolo: **4 ze 4.** Slepé místo je zavřené a prokázané.
+
+## §423 — Hlídání přestalo říkat „pozemky" o bytu
+
+Poslední místo ze §420, které jde opravit, a to nejpodstatnější ze
+zbylých: hlídání tvrdí počet o **měřené** množině. Říkalo „3 pozemky"
+i o hromádce, ve které byl byt, zatímco úvodní stránka u téhož stavu
+dat správně hlásila „nemovitostí".
+
+- `js/min/kategorie.js` je teď na `hlidani.html` (dřív tam nebyl vůbec).
+- `procNicNesedi()` vrací i **množinu**, ne jen počet — spočítat ji
+  podruhé u volajícího by znamenalo dvě pravdy o jedné hromádce.
+- Karta hlídání drží množiny místo čítačů; počet je jejich délka.
+
+### Záložní cesta jde k obecnějšímu slovu
+
+Kdyby se modul nenačetl, řekne se **„nemovitost"**. To je pravda
+vždycky, kdežto „pozemek" by u bytu lhal. Je to opačně než v
+`js/snimek.js`, kde chybějící modul hlasitě spadne — a ten rozdíl je
+úmysl: snímek se skládá při **sestavení**, kde pád vidí CI, kdežto tady
+by spadla karta pod rukama přihlášenému člověku. **Záložní cesta nesmí
+tvrdit víc, než ví.**
+
+### Zkouška prošla, a přitom neověřovala nic
+
+`test-hlidani-prohlizec` dal po opravě 71/71 — jenže jeho scénář má
+náhodou samé pozemky, takže by prošel i **před** opravou. To je ten
+nejtišší druh zeleného hlídače: netvrdí nic nepravdivého, jen neměří.
+
+Opraveno dvěma kontrolami, které se ptají přímo v prohlížeči na té
+stránce: že `window.PKKategorie` tam vůbec je, a že u samých pozemků
+řekne „pozemků" a s bytem „nemovitostí". Kdyby někdo ten modul ze
+stránky odebral, spadne to — zatímco věta o počtu by dál vypadala
+v pořádku. `test-hlidani-prohlizec` 71 → **73**.
+
+A vzorek v té větě teď bere obě slova, což je tentokrát v pořádku a
+s napsaným důvodem: zkouška **neví**, co je v té zúžené hromádce
+(vznikne vypuštěním jedné podmínky uvnitř stránky), takže vyžadovat
+jedno ze dvou slov by bylo hádání. Ten řádek tedy nedokazuje, že se
+slovo vybírá správně — jen že tam vůbec je; důkaz je v těch dvou
+kontrolách a v `test-kategorie`.
+
+### Co ze §420 nedělám a proč
+
+`js/ulozene.js` zůstává. Ta stránka **kategorii vůbec nezná**: vypisuje
+klíče z úložiště a jejich počty, ne nabídky. A „Uložené pozemky" není
+měřený počet, ale **jméno řádku**, které se opakuje v `muj-inzerat.html`
+i v zásadách ochrany údajů. Přejmenovat ho napříč webem je rozhodnutí
+o textu pro majitele, ne mechanická oprava slova u čísla.
