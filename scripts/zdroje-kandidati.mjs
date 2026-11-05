@@ -218,6 +218,56 @@ export const KANDIDATI = [
     url: 'https://mzv.gov.cz/jnp/cz/o_ministerstvu/majetek_a_rozpocet/majetek_mzv_urceny_k_odprodeji.html',
     proc: 'Ministerstvo vede seznam majetku určeného k odprodeji. Malý zdroj, ale levný'
       + ' na změření: jedna stránka, jeden výpis.' },
+
+  /* ===== PĚT KANDIDÁTŮ Z NÁLEZU SONDY (5. 11.) ======================
+     Tyhle nenašlo vyhledávání ani katalogy — našla je SONDA ZDROJŮ a
+     ležely v data/zdroje-sonda.json, dokud se nespojil hlásič nálezu
+     (§431). U všech pěti je změřené obojí, co registr vyžaduje:
+     robots.txt dovoluje čtení A podmínky užití se o automatickém
+     přístupu nezmiňují (data/zdroje-podminky.json, běh sondy podmínek).
+
+     ČTYŘI Z NICH NAŠEL ROBOT VE VLASTNÍCH DATECH (`stav: z vlastních
+     dat`): dražebníci, na které odkazují nabídky z Centrální evidence
+     a z OK dražeb. Tím je o veřejnosti jejich výpisů nejmenší spor —
+     jejich inzeráty už dnes na našem webu stojí, jen vedené přes
+     prostředníka. Druhý kanál pro týž druh je navíc pojistka proti
+     výpadku jednoho z nich (§332).
+     ================================================================== */
+  { jmeno: 'Dražby Police nad Metují', host: 'drazby.policenm.cz', typ: 'exekuce', adresaOverena: false,
+    url: 'https://drazby.policenm.cz/',
+    proc: 'Dražebník, na kterého odkazují nabídky v našich datech. ZMĚŘENO 5. 11.:'
+      + ' robots.txt dovoluje, HTTP 200, 44 887 bajtů, v textu 11× slovo o pozemku,'
+      + ' 5× cena a 3× výměra; podmínky užití přečteny a o automatickém přístupu'
+      + ' v nich nic není. Co zbývá: najít výpis (bot zkoušení portálů) — tohle je'
+      + ' adresa detailu jedné dražby, ne seznam.' },
+  { jmeno: 'Dražby Naxos', host: 'drazbynaxos.cz', typ: 'exekuce', adresaOverena: false,
+    url: 'https://drazbynaxos.cz/',
+    proc: 'Dražebník z našich dat. ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200,'
+      + ' 161 627 bajtů, 61× slovo o pozemku, 10× cena, 34× výměra — z pětice'
+      + ' nejbohatší na obsah; podmínky přečteny a o automatickém přístupu mlčí.' },
+  { jmeno: 'Veřejné dražby', host: 'verejnedrazby.cz', typ: 'exekuce', adresaOverena: false,
+    url: 'https://www.verejnedrazby.cz/',
+    proc: 'Dražebník z našich dat. ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200,'
+      + ' 119 190 bajtů, 24× výměra, 10× cena; podmínky přečteny a o automatickém'
+      + ' přístupu v nich nic není.' },
+  { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
+    url: 'https://www.elektronickedrazby.cz/',
+    proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'
+      + ' JENŽE PODMÍNKY SE NEPODAŘILO PŘEČÍST: stránka se vykresluje až v prohlížeči'
+      + ' a sonda podmínek z ní dostala málo textu („takhle se to nezjistí").'
+      + ' Dokud se nepřečtou, zdroj se NEZAPOJÍ — pravidlo zní přečíst podmínky,'
+      + ' ne nenajít zákaz. Na čtení v prohlížeči máme vlastní cestu (ohledani-zdroje),'
+      + ' takže to není slepá ulice, jen další krok.' },
+  { jmeno: 'Nabídka majetku státu (veřejná část)', host: 'nabidkamajetku.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://nabidkamajetku.cz/',
+    proc: 'ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200 a 1 201 479 bajtů s 84 cenami,'
+      + ' 42 výměrami a 33 zmínkami o pozemku — nejbohatší odpověď z celé sondy.'
+      + ' POZOR NA DVOJÍ ZÁPIS: nejspíš je to veřejná tvář téhož majetku, který už'
+      + ' čteme přes nabidkamajetku.gov.cz (ÚZSVM, 146 nabídek v datech). Než se'
+      + ' zapojí, musí se změřit, jestli nese NĚCO NAVÍC; kdyby ne, patří sem'
+      + ' `pokrytoJinym` se zdůvodněním, stejně jako u Lesů ČR.'
+      + ' Odkaz na podmínky užití se navíc nenašel ani na obvyklých adresách —'
+      + ' u státního portálu to čeká na přečtení, ne na domněnku.' },
 ];
 
 /**
