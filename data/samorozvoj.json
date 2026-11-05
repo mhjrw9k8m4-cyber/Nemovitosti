@@ -1013,24 +1013,24 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-hlidka-zdroju.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 2,
-   "chytila": 1,
-   "nechytila": 5,
+   "chytila": 2,
+   "nechytila": 8,
    "rovnocenne": [],
    "slepa": [
     "obrácená rovnost (=== na !==)",
-    "a místo nebo (&& na ||)"
-   ],
-   "mlcela": [
-    "obrácené porovnání (>= na >) v scripts/fetch-opportunities.mjs",
-    "obrácené porovnání (<= na <) v scripts/fetch-opportunities.mjs",
-    "obrácená rovnost (=== na !==) v scripts/fetch-opportunities.mjs"
+    "obrácené porovnání (>= na >)",
+    "obrácené porovnání (<= na <)",
+    "obrácená rovnost (=== na !==)",
+    "zahozená pojistka (if … continue)",
+    "zahozený filter(Boolean)",
+    "a místo nebo (&& na ||)",
+    "posunutá konstanta (+1)"
    ],
    "nedorucene": [],
-   "nelzeTady": false,
-   "pomucky": [],
-   "poznamka": ""
+   "poznamka": "",
+   "rucne": true
   },
   "test-hypoteka.mjs": {
    "kdy": "2026-11-04",

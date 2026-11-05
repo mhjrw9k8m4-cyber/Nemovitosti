@@ -178,25 +178,65 @@ const beh = (h, zdroje, den) => ({ mimoProvoz: F.zapisMimoProvoz(h, zdroje, den)
     [rozhodnutiHlidky(null, null), rozhodnutiHlidky(undefined, [])], ['ticho', 'ticho']);
 }
 
-/* ---- SPUŠTĚNÁ HLÍDKA MUSÍ NĚCO ŘÍCT -------------------------------
-   Vstupní podmínka `import.meta.url === file://argv[1]` je jediné
-   místo, odkud se `main()` pustí. Obrácená (`!==`) by znamenala, že
-   `node scripts/hlidka-zdroju.mjs` NEUDĚLÁ NIC a běh robota bude
-   zelený — a ze zkoušky, která si modul jen importuje, to není vidět.
-   Měří se tedy spuštěním: hlídka musí vždycky něco napsat. */
+/* ---- SPUŠTĚNÁ HLÍDKA: CO ŘEKNE A S JAKÝM KONCEM --------------------
+   ==================================================================
+   Dvě věci, které se jinak nedají změřit:
+
+   1. Vstupní podmínka `import.meta.url === file://argv[1]` je JEDINÉ
+      místo, odkud se `main()` pustí. Obrácená by znamenala, že
+      `node scripts/hlidka-zdroju.mjs` NEUDĚLÁ NIC a běh robota bude
+      zelený. Ze zkoušky, která si modul jen importuje, to vidět není.
+   2. Rozcestí v `main()` musí sedět s rozhodnutím: červeně znamená
+      konec chybou A jmenovat zdroje, připomenout znamená zelený konec
+      bez `::error::`. Nestačí „hlídka něco napsala" — naměřeno 5. 11.:
+      při obrácené rovnosti v rozcestí vypsala „Zdroj mimo pořádek"
+      s PRÁZDNÝM seznamem a skončila červeně, takže kontrola na pouhý
+      výskyt textu to pustila dál.
+
+   Co se čeká, se dopočítá z týchž dat týmiž funkcemi, kterými to
+   počítá robot — zkouška tím nezávisí na tom, jak jsou zdroje dnes. */
 {
-  let vystup = '';
+  let hist = null;
   try {
-    vystup = execFileSync(process.execPath, [new URL('./hlidka-zdroju.mjs', import.meta.url).pathname],
+    hist = JSON.parse(readFileSync(new URL('../data/zdroje-historie.json', import.meta.url), 'utf8'));
+  } catch { hist = null; }
+  let kod = 0, vystup = '';
+  try {
+    vystup = execFileSync(process.execPath,
+      [new URL('./hlidka-zdroju.mjs', import.meta.url).pathname],
       { encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'pipe'] });
   } catch (e) {
-    /* Červený konec je legitimní výsledek (zdroj je opravdu mimo) —
-       zajímá nás, že hlídka promluvila, ne jaký dala verdikt. */
+    kod = (e && e.status != null) ? e.status : -1;
     vystup = String((e && e.stdout) || '') + String((e && e.stderr) || '');
   }
   pravda('spuštěná hlídka vždycky něco řekne (jinak je vstupní podmínka obrácená)',
     /Hlídka zdrojů|Historie zdrojů|Zdroj mimo pořádek/.test(vystup),
-    'výpis: ' + JSON.stringify(vystup.slice(0, 200)));
+    'konec ' + kod + ', výpis: ' + JSON.stringify(vystup.slice(0, 200)));
+
+  if (hist && hist.mimoProvoz) {
+    const nalez = F.kOhlaseni(hist.mimoProvoz);
+    const prekroc = F.dlouhoMimo(hist.mimoProvoz);
+    const cekano = rozhodnutiHlidky(nalez, prekroc);
+    const jmena = (s) => s.map((z) => z.nazev);
+    if (cekano === 'červeně') {
+      pravda(`je co ohlásit (${jmena(nalez).join(', ')}) → konec chybou a jmenovitě`,
+        kod === 1 && nalez.every((z) => vystup.includes(z.nazev)) && /::error::/.test(vystup),
+        'konec ' + kod + ', výpis: ' + JSON.stringify(vystup.slice(0, 300)));
+    } else if (cekano === 'připomenout') {
+      pravda(`ohlášeno už bylo (${jmena(prekroc).join(', ')}) → zelený konec, žádné ::error::`,
+        kod === 0 && prekroc.every((z) => vystup.includes(z.nazev)) && !/::error::/.test(vystup),
+        'konec ' + kod + ', výpis: ' + JSON.stringify(vystup.slice(0, 300)));
+    } else {
+      pravda('nikdo není dlouho mimo → zelený konec a hlídka to řekne',
+        kod === 0 && /nikdo není mimo pořádek|všechny zdroje odpověděly/.test(vystup),
+        'konec ' + kod + ', výpis: ' + JSON.stringify(vystup.slice(0, 300)));
+    }
+    /* A AŤ NEHLÁSÍ PRÁZDNO: „Zdroj mimo pořádek" bez jediného jména je
+       hláška, ze které se nikdo nic nedozví. */
+    pravda('a nikdy nehlásí „Zdroj mimo pořádek" s prázdným seznamem',
+      !/Zdroj mimo pořádek/.test(vystup) || /Zdroj mimo pořádek[\s\S]*•/.test(vystup),
+      JSON.stringify(vystup.slice(0, 300)));
+  }
 }
 
 console.log('Hlídka zdrojů:');
