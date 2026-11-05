@@ -26860,3 +26860,27 @@ Je tam teď `/katalog`, kterou bot zkouší hned, a je u toho napsáno
 proč.
 
 `test-zkus-portal` 164 → **169 kontrol**.
+
+## §443 — `nabidkamajetku.cz` je táž ÚZSVM, jen z druhé strany
+
+V registru u toho kandidáta stála domněnka: „nejspíš je to veřejná
+tvář téhož majetku, který už čteme přes `nabidkamajetku.gov.cz`".
+Domněnka není měření, takže se měřilo — ohledáním prohlížečem
+(běh 42049043294):
+
+* stránka si obsah tahá **z `nabidkamajetku.gov.cz`: šest požadavků**
+  na ten host,
+* odkazy na ní mají tvary `/Home/Tenders`, `/Home/Auctions`
+  a `/Home/Properties` — tedy **totéž rozhraní**, odkud už čteme
+  286 pozemků,
+* a žádná vlastní datová odpověď (JSON/CSV/XML) tam není.
+
+Je to tedy veřejná tvář **téhož systému**, ne další zdroj. Zapojit ho
+by znamenalo ukázat každou nabídku dvakrát, takže dostává
+`pokrytoJinym: 'ÚZSVM'`. Řádek v registru **zůstává i s čísly**: kdyby
+se ten web někdy od `.gov.cz` odpojil (v požadavcích by byl jiný
+hostitel), je to důvod změřit znovu.
+
+Stejná logika už v registru platí pro Lesy ČR a Správu železnic.
+Zapsat „nezapojeno, protože pokryto jiným" je nález, ne mezera —
+mezera by byla tichá domněnka.

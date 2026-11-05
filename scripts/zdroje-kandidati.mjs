@@ -266,14 +266,17 @@ export const KANDIDATI = [
       + ' pravidlo zní přečíst podmínky, ne nenajít zákaz.' },
   { jmeno: 'Nabídka majetku státu (veřejná část)', host: 'nabidkamajetku.cz', typ: 'sale', adresaOverena: false,
     url: 'https://nabidkamajetku.cz/',
+    pokrytoJinym: 'ÚZSVM',
     proc: 'ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200 a 1 201 479 bajtů s 84 cenami,'
       + ' 42 výměrami a 33 zmínkami o pozemku — nejbohatší odpověď z celé sondy.'
-      + ' POZOR NA DVOJÍ ZÁPIS: nejspíš je to veřejná tvář téhož majetku, který už'
-      + ' čteme přes nabidkamajetku.gov.cz (ÚZSVM, 146 nabídek v datech). Než se'
-      + ' zapojí, musí se změřit, jestli nese NĚCO NAVÍC; kdyby ne, patří sem'
-      + ' `pokrytoJinym` se zdůvodněním, stejně jako u Lesů ČR.'
-      + ' Odkaz na podmínky užití se navíc nenašel ani na obvyklých adresách —'
-      + ' u státního portálu to čeká na přečtení, ne na domněnku.' },
+      + ' A DOMNĚNKA O DVOJÍM ZÁPISU SE POTVRDILA MĚŘENÍM (ohledání prohlížečem,'
+      + ' běh 42049043294): stránka si obsah tahá z nabidkamajetku.gov.cz —'
+      + ' šest požadavků na ten host — a odkazy na ní mají tvary /Home/Tenders,'
+      + ' /Home/Auctions a /Home/Properties, tedy totéž rozhraní, odkud už'
+      + ' čteme 286 pozemků. Je to veřejná tvář TÉHOŽ systému, ne další zdroj,'
+      + ' takže se nezapojuje: druhý zápis by každou nabídku ukázal dvakrát.'
+      + ' Kdyby se ten web někdy odpojil od .gov.cz (jiný hostitel v požadavcích),'
+      + ' je to důvod změřit znovu — proto tu ten řádek zůstává i s čísly.' },
 ];
 
 /**
