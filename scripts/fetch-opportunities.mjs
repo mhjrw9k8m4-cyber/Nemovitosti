@@ -126,6 +126,21 @@ export function jmenoObce(s) {
    ==================================================================== */
 const bezDiakritiky = (x) => String(x == null ? '' : x)
   .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+/* PRACOVNÍ PŘÍZNAK SE DO DAT NEPOSÍLÁ — a smete se obecně.
+   Pole, jejichž jméno začíná podtržítkem, jsou vzkazy mezi čtečkou
+   zdroje a robotem: `_neniPozemek`, `_gps`, `_key`, `_popis`. Smlouva
+   o datech (data/pole.json) o nich nic neříká, takže kdo si data
+   vezme, musel by hádat. Jmenovitý výmaz jednoho z nich byl slepý:
+   sabotáž `delete o._neniPozemek;` neshodila nikoho, protože hlídač
+   čte vyčištěný soubor na disku, ne chování robota. Proto je to
+   funkce — dá se jí dát nabídka a změřit, co z ní vyjde — a proto je
+   obecná: příznak, který někdo zavede zítra, odejde taky. */
+export function bezPracovnich(o) {
+  if (!o || typeof o !== 'object') return o;
+  for (const k of Object.keys(o)) if (k.startsWith('_')) delete o[k];
+  return o;
+}
+
 export function otiskNabidky(o) {
   return [o.type || '', bezDiakritiky(o.okres), bezDiakritiky(o.place),
     o.parcel || '', o.price || '', o.area || ''].join('|').slice(0, 240);
@@ -3844,7 +3859,7 @@ async function fetchNabidkyStatu() {
          hádat"), protože smlouva o datech o takovém poli nic neříká.
          Vyhazuje se tady, ne u `_gps` a `_key` o pár set řádků výš:
          tam ještě potřebný je. */
-      delete o._neniPozemek;
+      bezPracovnich(o);
     }
     console.log('Podle kategorie:', JSON.stringify(pocty));
   }

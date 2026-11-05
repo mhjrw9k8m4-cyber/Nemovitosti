@@ -305,4 +305,38 @@ const nabidky = D.opportunities || [];
     popisZlevneni.length === 0, 'na data.html chybí: ' + popisZlevneni.map(([k]) => k).join(', '));
 }
 
+/* ---- CHOVÁNÍ ROBOTA, NE SOUBOR NA DISKU ----
+   Směr výš („každé pole v datech má popis") chytil pracovní příznak
+   `_neniPozemek` v živých datech — ale jen proto, že tam ten den
+   skutečně byl. Sabotáž výmazu v robotovi neshodila nikoho: hlídač
+   čte vyčištěný soubor, takže než se data znovu nasbírají, mlčí.
+   Mezi vadou a jejím odhalením by stál celý běh robota.
+
+   Tady se proto měří chování: nabídce se podtržítkové příznaky dají
+   a kontroluje se, co z ní vyjde. Obecně, ne jmenovitě — příznak,
+   který někdo zavede zítra, by jinak odešel do veřejných dat stejně
+   nepozorovaně. */
+{
+  const R = await import('./fetch-opportunities.mjs');
+  pravda('robot umí smést pracovní příznaky (bezPracovnich)',
+    typeof R.bezPracovnich === 'function',
+    'funkce chybí — výmaz se dělá jmenovitě a nedá se změřit');
+  if (typeof R.bezPracovnich === 'function') {
+    const vzorek = { kat: 'byt', price: 100, area: 2, _neniPozemek: true, _gps: 1, _popis: 'x' };
+    const po = R.bezPracovnich(vzorek);
+    const zbyle = Object.keys(po).filter((k) => k.startsWith('_'));
+    pravda('a smete i příznak, který ve výmazu není vyjmenovaný',
+      zbyle.length === 0, 'v datech by zůstalo: ' + zbyle.join(', '));
+    pravda('a nic jiného nabídce nevezme',
+      po.kat === 'byt' && po.price === 100 && po.area === 2,
+      'smetla i užitečná pole: ' + JSON.stringify(po));
+  }
+  /* A ŽE SE OPRAVDU POUŽIJE. Funkce, kterou nikdo nezavolá, je jen
+     slib. Hledá se volání nad nabídkou ve smyčce, která skládá data. */
+  const zdroj = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  pravda('a robot ji nad nabídkou opravdu zavolá',
+    /bezPracovnich\(o\)/.test(zdroj),
+    'funkce existuje, ale robot ji nepoužívá');
+}
+
 hotovo();
