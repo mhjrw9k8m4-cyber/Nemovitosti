@@ -124,3 +124,32 @@
 {"k":"Vimperk|—|Prachatice|49.065|13.759#5fjmx","m":"Vimperk","o":"Prachatice","dr":"orná půda","t":"sale","v":9729,"c":2500000,"od":"2026-09-19","do":"2026-11-03","proc":"zmizela"}
 {"k":"Praha|—|Praha|50.106|14.601#lgx6","m":"Praha","o":"Praha","dr":"zahrada","t":"sale","v":290,"c":1972000,"od":"2026-09-14","do":"2026-11-03","proc":"zmizela"}
 {"k":"Zahradní|—|Kladno|50.117|14.048#9rjew","m":"Zahradní","o":"Kladno","dr":"stavební pozemek","t":"sale","v":1166,"c":9900000,"od":"2026-10-23","do":"2026-11-03","proc":"zmizela"}
+{"k":"Ostrov u Macochy|—|Blansko|49.390|16.737#hxrj5j","m":"Ostrov u Macochy","o":"Blansko","dr":"trvalý travní porost","t":"sale","v":6676,"c":199000,"od":"2026-09-14","do":"2026-11-04","proc":"cena"}
+{"k":"Chrášťany|—|Praha-západ|50.058|14.247#1anls","m":"Chrášťany","o":"Praha-západ","dr":"orná půda","t":"sale","v":12658,"c":569000,"od":"2026-09-14","do":"2026-11-04","proc":"cena"}
+{"k":"Buchlovice|—|Uherské Hradiště|49.082|17.321#48afd","m":"Buchlovice","o":"Uherské Hradiště","dr":"orná půda","t":"sale","v":1758,"c":49000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Klobouky u Brna|—|Břeclav|48.976|16.832#25kvh","m":"Klobouky u Brna","o":"Břeclav","dr":"lesní pozemek","t":"sale","v":12494,"c":412000,"od":"2026-10-15","do":"2026-11-04","proc":"zmizela"}
+{"k":"Lovečkovice|—|Litoměřice|50.643|14.233#44gx2","m":"Lovečkovice","o":"Litoměřice","dr":"orná půda","t":"sale","v":64058,"c":2170000,"od":"2026-09-19","do":"2026-11-04","proc":"zmizela"}
+{"k":"Vlastibořice|—|Liberec|50.619|15.059#4pb4z","m":"Vlastibořice","o":"Liberec","dr":"trvalý travní porost","t":"sale","v":18436,"c":699000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Slatina|—|Nový Jičín|49.797|17.988#2q6zq","m":"Slatina","o":"Nový Jičín","dr":"orná půda","t":"sale","v":3958,"c":159650,"od":"2026-09-19","do":"2026-11-04","proc":"zmizela"}
+{"k":"Kly|—|Mělník|50.301|14.505#1fexb","m":"Kly","o":"Mělník","dr":"orná půda","t":"sale","v":18668,"c":1079000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Vykáň|—|Nymburk|50.122|14.829#5f9qa","m":"Vykáň","o":"Nymburk","dr":"orná půda","t":"sale","v":8089,"c":479000,"od":"2026-09-19","do":"2026-11-04","proc":"zmizela"}
+{"k":"Veverská Bítýška|—|Brno-venkov|49.253|16.426#4290q","m":"Veverská Bítýška","o":"Brno-venkov","dr":"orná půda","t":"sale","v":30800,"c":2090000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Bohumín|—|Karviná|49.887|18.327#kmjo","m":"Bohumín","o":"Karviná","dr":"orná půda","t":"sale","v":1370,"c":999000,"od":"2026-09-19","do":"2026-11-04","proc":"zmizela"}
+{"k":"Veverské Knínice|—|Brno-venkov|49.237|16.402#2lw7e","m":"Veverské Knínice","o":"Brno-venkov","dr":"lesní pozemek","t":"sale","v":417,"c":850000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Křenice|—|Praha-východ|50.029|14.682#5g7dz","m":"Křenice","o":"Praha-východ","dr":"stavební pozemek","t":"sale","v":1096,"c":8700000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Křenice|—|Praha-východ|50.027|14.683#5g7e2","m":"Křenice","o":"Praha-východ","dr":"stavební pozemek","t":"sale","v":1052,"c":8500000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Křenice|—|Praha-východ|50.030|14.681#5g7bi","m":"Křenice","o":"Praha-východ","dr":"stavební pozemek","t":"sale","v":1040,"c":9900000,"od":"2026-09-14","do":"2026-11-04","proc":"zmizela"}
+{"k":"Vysoká Libyně|1364/2|Plzeň-sever|50.024|13.455#1ay7vvd","m":"Vysoká Libyně","o":"Plzeň-sever","dr":"vodní plocha","t":"sale","v":148,"c":11840,"od":"2026-11-04","do":"2026-11-04","proc":"zmizela"}
+{"k":"Žár|3022/1|České Budějovice|48.808|14.712#1ay7vvd","m":"Žár","o":"České Budějovice","dr":"pozemek","t":"sale","v":777,"c":70303,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Střelice|3361/13 a 3361/14|Brno-venkov|49.150|16.500#1ay7vvd","m":"Střelice","o":"Brno-venkov","dr":"ostatní plocha","t":"sale","v":112,"c":64000,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Zadní Chodov|4445/1|Tachov|49.893|12.639#1ay7vvd","m":"Zadní Chodov","o":"Tachov","dr":"ostatní plocha","t":"sale","v":365,"c":140000,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"České Budějovice|3366/4|České Budějovice|48.976|14.479#1ay7vvd","m":"České Budějovice","o":"České Budějovice","dr":"pozemek","t":"sale","v":415,"c":149436,"od":"2026-11-04","do":"2026-11-04","proc":"zmizela"}
+{"k":"Chudenice|2109|Klatovy|49.465|13.174#1ay7vvd","m":"Chudenice","o":"Klatovy","dr":"vodní plocha","t":"sale","v":2635,"c":163370,"od":"2026-11-04","do":"2026-11-04","proc":"zmizela"}
+{"k":"Ostrava|1780/1|Ostrava-město|49.830|18.294#1ay7vvd","m":"Ostrava","o":"Ostrava-město","dr":"ostatní plocha","t":"sale","v":2235,"c":240000,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Divišov|st. 139, st. 256/1, st. 258/1, 1424/1|Benešov|49.791|14.874#1ay7vvd","m":"Divišov","o":"Benešov","dr":"zastavěná plocha","t":"sale","v":8187,"c":771320,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Dívčice|1302/4, 1302/17|České Budějovice|49.112|14.307#1ay7vvd","m":"Dívčice","o":"České Budějovice","dr":"zastavěná plocha","t":"sale","v":238580,"c":790910,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Ostrava|983/1|Ostrava-město|49.835|18.299#1ay7vvd","m":"Ostrava","o":"Ostrava-město","dr":"ostatní plocha","t":"sale","v":1011,"c":1370000,"od":"2026-11-03","do":"2026-11-04","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.806|17.093#1rqp5yp","m":"Hodonín","o":"Hodonín","dr":"lesní pozemek","t":"exekuce","v":547418,"c":42000,"od":"2026-10-17","do":"2026-11-04","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|48.924|16.910#1rqp18d","m":"Hodonín","o":"Hodonín","dr":"trvalý travní porost","t":"exekuce","v":985,"c":5800,"od":"2026-10-17","do":"2026-11-04","proc":"zmizela"}
+{"k":"Přišimasy|—|Kolín|50.042|14.764#1rqp16b","m":"Přišimasy","o":"Kolín","dr":"stavební pozemek","t":"exekuce","v":0,"c":2556667,"od":"2026-10-17","do":"2026-11-04","proc":"zmizela"}
+{"k":"Hodonín|—|Hodonín|49.008|17.157#1rqp16c","m":"Hodonín","o":"Hodonín","dr":"orná půda","t":"exekuce","v":0,"c":39600,"od":"2026-10-17","do":"2026-11-04","proc":"zmizela"}

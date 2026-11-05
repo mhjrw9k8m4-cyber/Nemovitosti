@@ -7,6 +7,7 @@
 .okr-place .ik,.zpet-btn .ik,.ext-ikona .ik,.rv-bilance .rvb-ano .ik,.rv-bilance .rvb-ne .ik,.os-ic .ik,.vm-x .ik,.loc-x .ik{width:15px;height:15px;stroke-width:2.4;flex:none}
 .okr-place{display:inline-flex;align-items:center;gap:4px}
 .btn-primary{gap:8px}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 *{box-sizing:border-box;margin:0;padding:0}
 [hidden]{display:none !important}
 html{scroll-behavior:smooth;scroll-padding-top:calc(var(--vyska-hlavicky,85px) + 14px)}
