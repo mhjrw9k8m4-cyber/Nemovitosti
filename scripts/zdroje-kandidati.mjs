@@ -171,6 +171,53 @@ export const KANDIDATI = [
     proc: 'Zpeněžení majetku v insolvenci se zveřejňuje ze zákona. Je to druh nabídky,'
       + ' který na webu dnes nemá zdroj žádný, a u pozemků bývá cena výrazně pod trhem —'
       + ' tedy přesně to, co weby hledají. Sonda napřed změří, jestli se to vůbec dá číst.' },
+
+  /* ===== PĚT KANDIDÁTŮ Z 5. 11., A ODKUD SE VZALI ====================
+     Studna otevřených dat vyschla: hledání přečetlo 34 katalogů a
+     1 245 datových sad a našlo NULA zdrojů (data/nalezene-zdroje.json,
+     4. 11.), bot zkoušení portálů prošel 264 cest na osmi portálech a
+     našel nula nabídek a jednu „slibnou" cestu, ze které se po
+     ohledání stal zápis `zavreno` (Most). Katalogy otevřených dat
+     prostě nabídky majetku nevedou — vede je ten, kdo prodává.
+
+     Těchto pět jsou tedy úřady a státní podniky, které SAMY prodávají
+     nepotřebný nemovitý majetek. Adresy jsou z vyhledávání na webu
+     (5. 11.), NIC Z TOHO NENÍ ZMĚŘENÉ: z tohohle stroje na cizí weby
+     nevidím vůbec (změřeno znovu 5. 11.: nabidkamajetku.gov.cz i
+     uzsvm.cz odpovídají nulou), takže o robots.txt, o cestách ani
+     o tom, co na těch stránkách opravdu je, zatím netvrdím nic.
+     Proto `adresaOverena: false` a proto jsou v KANDIDÁTECH, ne
+     v zapojených: řádek tady znamená „tohle stojí za změření", ne
+     „odtud se čte". Měří to bot v Actions (zkouseni-portalu.yml) a
+     zákaz v robots.txt je konec, ne překážka.
+     ================================================================== */
+  { jmeno: 'DIAMO — prodej nemovitého majetku', host: 'diamo.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://www.diamo.cz/cs/nabidka-majetku/prodej-nemoviteho',
+    proc: 'Státní podnik po těžbě drží pozemky po celé republice a nepotřebné prodává —'
+      + ' výsledky hledání ukazovaly datované nabídky s pozemky (Stráž pod Ralskem,'
+      + ' Karviná) a u každé vlastní dokument. Je to týž druh nabídky jako u SPÚ, který'
+      + ' už zapojený je, jen od jiného vlastníka.' },
+  { jmeno: 'Policie ČR — prodej nemovitého majetku', host: 'policie.gov.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://policie.gov.cz/clanek/prodej-nemoviteho-majetku-vyberove-rizeni.aspx',
+    proc: 'Policie prodává nepotřebný majetek výběrovým řízením a výzvy vyvěšuje na'
+      + ' vlastní stránce. Pozemků bude málo, ale je to stabilní a veřejný kanál.' },
+  { jmeno: 'Ministerstvo obrany — nepotřebný majetek', host: 'onnm.mo.gov.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://onnm.mo.gov.cz/',
+    proc: 'Obrana prodává nepotřebné nemovitosti pravidelně a ve zprávách se u toho'
+      + ' mluví přímo o pozemcích. POZOR NA DVOJÍ ZÁPIS: stránka ministerstva sama'
+      + ' tvrdí, že výzvy zrcadlí na nabidkamajetku.cz (ten už zapojený je) a na'
+      + ' centrální adresu. Je to ale tvrzení z cizí stránky, ne měření — ať bot zjistí,'
+      + ' co tam opravdu je; kdyby to byl týž majetek, patří sem `pokrytoJinym`'
+      + ' se zdůvodněním, stejně jako u Lesů ČR a Správy železnic.' },
+  { jmeno: 'Centrální adresa', host: 'centralniadresa.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://www.centralniadresa.cz/',
+    proc: 'Místo, kde se ze zákona zveřejňují veřejné dražby a nabídky majetku od'
+      + ' několika úřadů naráz. Jeden čitelný výpis by tedy mohl zastat víc'
+      + ' jednotlivých stránek — a právě to má bot změřit jako první.' },
+  { jmeno: 'MZV — majetek k odprodeji', host: 'mzv.gov.cz', typ: 'sale', adresaOverena: false,
+    url: 'https://mzv.gov.cz/jnp/cz/o_ministerstvu/majetek_a_rozpocet/majetek_mzv_urceny_k_odprodeji.html',
+    proc: 'Ministerstvo vede seznam majetku určeného k odprodeji. Malý zdroj, ale levný'
+      + ' na změření: jedna stránka, jeden výpis.' },
 ];
 
 /**
