@@ -355,6 +355,65 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     JSON.stringify(dalsiVlastni.map((c) => c.jmeno)));
 }
 
+/* ---- 2e) CELÝ PORTÁL, NE JEN JEDNA FUNKCE --------------------
+ *
+ * Tohle je nejdražší lekce dne. Pravidlo z §434 („adresa, která vede
+ * jinam, se přepíše na vlastní host") jsem napsal, prokázal sabotáží
+ * na `dalsiCesty()` — tři ze tří — a pustil bota naostro. A v nálezu
+ * bylo osm cest na `akis-d9.msw-cloud.com` ZNOVU, všech osm 404.
+ *
+ * Důvod: `zkusPortal()` volal `dalsiCesty({ tvar, telo })` BEZ ADRESY,
+ * takže se pravidlo nemělo o co opřít a vracelo adresu nezměněnou.
+ * Hlídač svítil zeleně, protože měřil `dalsiCesty()` — tedy nástroj
+ * o stupeň výš, než kde se rozhodovalo. §423 říká „měř použití, ne
+ * nástroj"; tady se ukázalo, že „použití" má víc stupňů a měřit se
+ * musí ten, kde se to doopravdy děje.
+ *
+ * Proto se tady zkouší CELÝ `zkusPortal()` s podstrčeným stahováním.
+ */
+{
+  const SITEMAPA_CIZI_HOST = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    + '<url><loc>http://cizi-cloud.test/nemovity-majetek/archiv-prodeju/2025</loc></url>'
+    + '<url><loc>http://cizi-cloud.test/media/fotogalerie</loc></url></urlset>';
+  const chozeno = [];
+  const pomucky = {
+    stahni: async (url) => {
+      chozeno.push(String(url));
+      const je = (x) => String(url).includes(x);
+      if (je('/robots.txt')) {
+        return { ok: true, status: 200, headers: { get: () => 'text/plain' },
+          text: async () => 'User-agent: *\nAllow: /\n' };
+      }
+      if (je('/sitemap.xml') && !je('index')) {
+        return { ok: true, status: 200, headers: { get: () => 'application/xml' },
+          text: async () => SITEMAPA_CIZI_HOST };
+      }
+      return { ok: true, status: 404, headers: { get: () => 'text/html' }, text: async () => '' };
+    },
+    ua: 'zkouska',
+    smimeCist: async () => ({ dovoleno: true }),
+    mezipamet: new Map(),
+    zeSitemapy, zRss,
+  };
+  /* STROP MUSÍ STAČIT NA SPOJENÉ CESTY. Napoprvé jsem dal 20 a kontrola
+     padla: dvacet dotazů spolkly samy tvary cest, které bot zkouší
+     vždycky (katalogy, RSS, sitemapy), a na cesty ZE sitemapy už
+     nedošlo. Nebyla to vada webu ani pravidla, byla to mez zkoušky —
+     takže ji zvyšuju a píšu proč. */
+  const vysledek = await Z.zkusPortal({ host: 'urad.test', jmeno: 'Úřad', url: 'https://urad.test/' },
+    pomucky, { strop: 40 });
+  const cizi = chozeno.filter((u) => /cizi-cloud\.test/.test(u));
+  pravda('bot NEZAŠEL na cizí host ze sitemapy', cizi.length === 0,
+    'navštíveno: ' + JSON.stringify(cizi));
+  const prepsane = chozeno.filter((u) => /urad\.test\/nemovity-majetek\/archiv-prodeju\/2025/.test(u));
+  pravda('ale cestu z té sitemapy vyzkoušel na vlastním hostu', prepsane.length === 1,
+    'navštíveno: ' + JSON.stringify(chozeno.filter((u) => !/robots|sitemap/.test(u))));
+  pravda('a v nálezu je u ní napsané, že se cesta přepsala',
+    (vysledek.cesty || []).some((c) => /na vlastním hostu/.test(c.jmeno || '')),
+    JSON.stringify((vysledek.cesty || []).map((c) => c.jmeno)));
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

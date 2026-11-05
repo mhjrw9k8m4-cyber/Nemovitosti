@@ -394,6 +394,47 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     !/TĚSNĚ MINULY/.test(H.hlaseni(H.kandidatiZeSad([sady[1]], [])).join('\n')));
 }
 
+/* ---- NOVÝ KANDIDÁT PATŘÍ ČLOVĚKU NA STŮL ----------------------
+ *
+ * §431 tvrdil „jeden hlásič pro všechny hledače" a byla to nadsázka:
+ * tenhle hledač krok `ohlas-nalez` neměl vůbec. Měří se proto obojí —
+ * funkce, podle které se hlásí, A obě spojky (§423: hlídač nesmí měřit
+ * jen nástroj).
+ */
+{
+  const nalezeno = [
+    { host: 'novy.cz', jmeno: 'Nový katalog', adresa: 'https://novy.cz/data.json',
+      skore: 8, duvod: 'prodej pozemků v názvu', sad: 4 },
+    { host: 'stary.cz', jmeno: 'Starý', adresa: 'https://stary.cz/x', skore: 11,
+      duvod: 'dražby nemovitostí', sad: 2 },
+  ];
+  const nove = H.noveKandidatyZKatalogu({ nalezeno: [{ host: 'stary.cz', skore: 5 }] }, nalezeno);
+  je('hlásí se jen host, který v minulém nálezu nebyl', nove.length, 1);
+  je('a je to ten nový', nove[0].host, 'novy.cz');
+  /* SKÓRE NENÍ V KLÍČI. Mezi běhy se hýbe s obsahem katalogů, takže
+     klíč na skóre by hlásil tentýž web každý týden znovu. */
+  je('změna skóre u známého hosta nic nehlásí',
+    H.noveKandidatyZKatalogu({ nalezeno: [{ host: 'novy.cz', skore: 1 },
+      { host: 'stary.cz', skore: 99 }] }, nalezeno).length, 0);
+  je('první nález (bez minulého) je celý nový', H.noveKandidatyZKatalogu(null, nalezeno).length, 2);
+  pravda('položka má společný tvar pro hlásič',
+    !!nove[0].jmeno && !!nove[0].adresa && !!nove[0].verdikt && !!nove[0].coSTim,
+    JSON.stringify(nove[0]));
+  pravda('ve verdiktu je skóre a v odůvodnění čím si ho vysloužil',
+    /skóre 8/.test(nove[0].verdikt) && /prodej pozemků v názvu/.test(nove[0].proc)
+    && /4 datových sadách/.test(nove[0].proc), JSON.stringify(nove[0]));
+
+  const telo = readFileSync(new URL('./hledej-zdroje.mjs', import.meta.url), 'utf8');
+  pravda('hledač zapisuje „nové kandidáty" do nálezu',
+    /noveKandidaty\s*=\s*noveKandidatyZKatalogu\(stary,/.test(telo),
+    'v scripts/hledej-zdroje.mjs chybí zápis noveKandidaty');
+  const uloha = readFileSync(new URL('../.github/workflows/hledani-zdroju.yml', import.meta.url), 'utf8');
+  pravda('a úloha hlásič opravdu volá, s vlastním polem i značkou',
+    /ohlas-nalez/.test(uloha) && /pole:\s*noveKandidaty/.test(uloha)
+    && /znacka:\s*hledani-zdroju/.test(uloha),
+    'krok „Ohlásit nález" chybí nebo mu chybí vstupy');
+}
+
 console.log('Hledání nových zdrojů — rejstřík lokálních katalogů');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

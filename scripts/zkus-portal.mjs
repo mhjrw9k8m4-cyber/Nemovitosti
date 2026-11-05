@@ -207,7 +207,16 @@ export async function zkusPortal(cil, pomucky, { strop = STROP_DOTAZU_NA_PORTAL 
     if (nalez.verdikt === 'chce klíč') continue;
     /* SPOJENÍ DÁL. Jen z cest, které něco vrátily, a jen do stropu —
        sitemapa s deseti tisíci adresami by jinak sežrala celý běh. */
-    const dalsi = dalsiCesty({ tvar: nalez.tvar, telo }, { zeSitemapy, zRss, strop: STROP_DALSICH });
+    /* ADRESA SE PŘEDÁVÁ — bez ní je pravidlo z §434 mrtvé.
+       Napsal jsem `naVlastniHost()`, prokázal ho sabotáží na
+       `dalsiCesty()` a pustil bota naostro. Výsledek: osm cest na
+       `akis-d9.msw-cloud.com` tam bylo ZNOVU, všech osm 404. Důvod byl
+       tady: volání předávalo jen `{ tvar, telo }`, takže se pravidlo
+       nemělo o co opřít a tiše vracelo adresu nezměněnou. Hlídač
+       přitom svítil zeleně — protože měřil `dalsiCesty()`, ne tohle
+       volání. O stupeň výš než vada (§436). */
+    const dalsi = dalsiCesty({ tvar: nalez.tvar, telo, adresa: nalez.adresa },
+      { zeSitemapy, zRss, strop: STROP_DALSICH });
     for (const d of dalsi) if (!videno.has(d.adresa)) front.push(d);
   }
   const nedosahnuto = front.length;

@@ -26345,6 +26345,12 @@ Prokázáno sabotáží, **3 ze 3**, a zase všechny na spojkách:
 (nově i kontrola, že týž hlásič obslouží druhý hledač: jiný soubor,
 jiné pole, jiná značka, jiné jméno v názvu úkolu).
 
+**POZDĚJŠÍ OPRAVA TOHOHLE ODDÍLU.** Nadpis slibuje „jeden hlásič pro
+všechny hledače", ale zapojené byly jen DVA — zkoušení portálů a
+sonda. Třetí (hledání zdrojů) krok `ohlas-nalez` neměl vůbec; dodělal
+to §435. Mechanismus na všechny tři byl hotový, zapojení ne, a mezi
+tím je rozdíl, který se nemá zamlčet.
+
 **Mimochodem o vrtkavosti:** `test-sonda-zdroju` u mě jednou běžel
 2 s a jednou 150 s — a já ho v té delší chvíli zabil, čímž jsem si
 rozbil sabotážní smyčku a musel ji dělat po jedné. Příčina není
@@ -26458,3 +26464,78 @@ Ta první je ta důležitá: hlídat jen `naVlastniHost()` by znamenalo měřit
 nástroj, ne jeho použití (§423), takže se měří i `dalsiCesty()`.
 
 `test-zkus-portal` 152 → **161 kontrol**.
+
+## §435 — Třetí hledač k témuž hlásiči (a oprava vlastní nadsázky)
+
+§431 má v nadpisu „jeden hlásič pro všechny hledače". Zapojené byly
+dva. Hledání zdrojů — to, které čte katalogy otevřených dat — krok
+`ohlas-nalez` **nemělo vůbec** (změřeno grepem: 0 výskytů
+v `hledani-zdroju.yml`). Mechanismus byl hotový pro všechny tři,
+zapojení ne, a mezi tím je rozdíl. Text §431 je proto opravený a tady
+je ta práce dodělaná.
+
+**Nové se počítá podle HOSTA, ne podle skóre.** Skóre se mezi běhy
+hýbe s obsahem katalogů — jedna datová sada navíc a je jinde — takže
+klíč na skóre by hlásil tentýž web každý týden znovu a z úkolu by byl
+šum. Zpráva, která má cenu, je „objevil se NOVÝ web".
+
+Prokázáno sabotáží, **3 ze 3**:
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| hledač nezapíše `noveKandidaty` | „hledač zapisuje „nové kandidáty" do nálezu" |
+| úloha krok „Ohlásit nález" nevolá | „a úloha hlásič opravdu volá, s vlastním polem i značkou" |
+| do klíče se přidá skóre | „hlásí se jen host, který v minulém nálezu nebyl" (+1) |
+
+Všechny tři hledače teď hlásí týmž mechanismem a každý má vlastní
+značku, takže se jejich nálezy nelepí do jednoho úkolu.
+`test-hledej-zdroje` 86 → **94 kontrol**.
+
+## §436 — Hlídač o stupeň výš, než kde se rozhodovalo
+
+Nejdražší lekce dne, a je to lekce o hlídačích, ne o webu.
+
+§434 zavedl pravidlo „adresa, která vede na jinou domenu, se přepíše na
+zkoušený host". Napsal jsem ho, **prokázal sabotáží tři ze tří** na
+`dalsiCesty()` a pustil bota naostro na Ministerstvo obrany. V nálezu
+bylo osm cest na `akis-d9.msw-cloud.com` **znovu**, všech osm 404 —
+tedy přesně to, co to pravidlo mělo odstranit.
+
+Příčina byla o jeden řádek vedle:
+
+```js
+// zkus-portal.mjs, volání ve zkusPortal()
+const dalsi = dalsiCesty({ tvar: nalez.tvar, telo }, { … });
+//                                   ↑ adresa se nepředávala
+```
+
+Bez adresy se `naVlastniHost()` nemělo o co opřít a tiše vracelo adresu
+nezměněnou. Pravidlo bylo mrtvé od první minuty — a **hlídač svítil
+zeleně**, protože měřil `dalsiCesty()`, kam se adresa ve zkoušce
+předává ručně.
+
+§423 říká „měř použití, ne nástroj". Dnes se ukázalo, že **„použití" má
+víc stupňů**: `dalsiCesty()` je pro `naVlastniHost()` použití, ale pro
+`zkusPortal()` je to zase jen nástroj. Měřit se musí ten stupeň, **kde
+se to doopravdy děje** — a ten se pozná jednoduše: je to to, co pustí
+ostrý běh.
+
+Opraveno dvěma věcmi, ne jednou:
+
+1. volání předává `adresa: nalez.adresa`;
+2. zkouší se **celý `zkusPortal()`** s podstrčeným stahováním —
+   sitemapa s cizím hostem, a měří se, kam bot opravdu zašel. Tři
+   kontroly: na cizí host nešel, cestu z té sitemapy vyzkoušel na
+   vlastním hostu, a v nálezu je u ní napsané, že se přepsala.
+
+**Sabotáž je ta dnešní vada:** když se z volání odebere `adresa`,
+padnou všechny tři. Kdyby tahle zkouška existovala v době §434,
+ušetřila by jeden ostrý běh a osm dotazů na cizí web.
+
+A ještě jedna drobnost, taky poučná: napoprvé jsem dal zkoušce strop
+20 dotazů a padala — dvacet jich spolkly samy tvary cest, které bot
+zkouší vždycky, a na cesty ZE sitemapy nedošlo. Nebyla to vada
+pravidla, byla to mez zkoušky. Je zvednutá na 40 a je u toho napsáno
+proč, aby to příště nikdo nehledal ve webu.
+
+`test-zkus-portal` 161 → **164 kontrol**.

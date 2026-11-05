@@ -350,6 +350,40 @@ export function kandidatiZeSad(sady, zname, mez = MEZ_SKORE) {
   return { nalezeno, zahozeno, blizko: blizko.sort((a, b2) => b2.skore - a.skore) };
 }
 
+/* ------------------------------------------------------------------
+   NOVÝ KANDIDÁT PATŘÍ ČLOVĚKU NA STŮL — třetí hledač k témuž hlásiči.
+   ------------------------------------------------------------------
+   §430 zavřel tuhle díru u zkoušení portálů, §431 u sondy zdrojů —
+   a tvrdil při tom „jeden hlásič pro všechny hledače". Byla to
+   nadsázka: tenhle, třetí hledač, krok `ohlas-nalez` neměl vůbec
+   (změřeno grepem: 0 výskytů v hledani-zdroju.yml). Nález tedy dál
+   končil v JSON a úloha zeleně. Doháním to tady, a text §431 jsem
+   opravil, aby neslibovalo víc, než bylo hotové.
+
+   NOVÉ SE POČÍTÁ PODLE HOSTA, ne podle skóre. Skóre se mezi běhy hýbe
+   s obsahem katalogů (jedna sada navíc a je jinde), takže klíč na
+   skóre by hlásil tentýž web každý týden znovu. Zpráva je „objevil se
+   NOVÝ web", a ta se váže na host.
+
+   TVAR POLOŽKY JE SPOLEČNÝ pro všechny hledače (scripts/ohlas-nalez.mjs):
+   jmeno, host, adresa, verdikt, proc, coSTim.
+   ------------------------------------------------------------------ */
+export const COSTIM_Z_KATALOGU = 'přečíst podmínky užití a zapsat řádek do registru kandidátů';
+
+export function noveKandidatyZKatalogu(stary, nalezeno) {
+  const bylo = new Set(((stary && stary.nalezeno) || []).map((k) => String((k && k.host) || '')));
+  return (Array.isArray(nalezeno) ? nalezeno : [])
+    .filter((k) => k && k.host && !bylo.has(String(k.host)))
+    .map((k) => ({
+      jmeno: k.jmeno || k.host,
+      host: k.host,
+      adresa: k.adresa || k.iri || ('https://' + k.host),
+      verdikt: `kandidát z katalogu (skóre ${k.skore})`,
+      proc: `${k.duvod} — v ${k.sad} datových sadách`,
+      coSTim: COSTIM_Z_KATALOGU,
+    }));
+}
+
 /* Hlášení pro člověka. Číslo samo nerozhodne, tak se u každého
    kandidáta píše, čím si to skóre vysloužil. */
 export function hlaseni(nalez) {
@@ -497,8 +531,17 @@ async function main() {
        nafoukl a rozhodovat se dá i z čísla. */
     dny: Object.assign({}, stary.dny || {}, { [dnes]: nalez.nalezeno.length }),
   };
+  /* Čte to scripts/ohlas-nalez.mjs a zakládá podle toho úkol. Bez toho
+     skončí nález zelenou tečkou v Actions, kam se nikdo nedívá. */
+  ven.noveKandidaty = noveKandidatyZKatalogu(stary, nalez.nalezeno);
   writeFileSync(CIL, JSON.stringify(ven, null, 1));
   console.log(`\nZapsáno do ${CIL}.`);
+  if (ven.noveKandidaty.length) {
+    console.log(`\nNOVÉHO OD MINULE: ${ven.noveKandidaty.length} — s tím se dá něco udělat:`);
+    for (const k of ven.noveKandidaty) console.log(`  · ${k.host} (${k.verdikt}) → ${k.coSTim}\n      ${k.adresa}`);
+  } else {
+    console.log('Nic nového proti minulému nálezu.');
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -50,6 +50,16 @@ jobs:
         with:
           zprava: "data: nález hledání zdrojů"
           co: data/nalezene-zdroje.json
+      # ÚSPĚCH, KTERÝ NA NĚKOHO ČEKÁ, SE TAKY MUSÍ OHLÁSIT. Třetí
+      # hledač k témuž hlásiči — §431 to slibovalo, §435 to dodělalo.
+      - name: Ohlásit nález
+        if: success()
+        uses: ./.github/actions/ohlas-nalez
+        with:
+          nalez: data/nalezene-zdroje.json
+          pole: noveKandidaty
+          znacka: hledani-zdroju
+          nazev: Hledání zdrojů
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani
