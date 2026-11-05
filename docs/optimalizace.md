@@ -26591,3 +26591,53 @@ po dvou stovkách → přesně 1 800. Mez se tím hlídá, i když se vnitřek
 přepíše ještě třikrát.
 
 `test-hledej-zdroje` 95 → **106 kontrol**.
+
+## §438 — Hlídač na §436-třídu vad: klíč, který zná jen zkouška
+
+§436 bylo poučení („měř ten stupeň, kde se to doopravdy děje"), ale
+poučení není hlídač. Tohle je hlídač.
+
+**Co měří.** Projde `scripts/*.mjs`, u každé naší vyvezené funkce
+posbírá klíče, které se jí předávají v objektovém literálu — zvlášť
+pro každou **pozici argumentu** — a srovná zkoušky s produkcí. Klíč,
+který posílá jen zkouška, je podezřelý: zkouška měří tvar, se kterým
+se naostro nejede.
+
+**Prokázáno na skutečné vadě, ne na vymyšlené.** Spuštěn na stavu
+repozitáře před opravou §436 (commit `ecfa671147`) hlásí přesně:
+
+```
+dalsiCesty#0: zkouška navíc [adresa] / produkce [tvar, telo]
+```
+
+Tedy tu vadu, která nás stála ostrý běh a osm zbytečných dotazů na
+cizí web. Sabotáž je ta samá věc dnes: odebrat `adresa` z volání ve
+`zkus-portal.mjs` (jeden řádek) → hlídač padne a napíše to místo
+jmenovitě.
+
+**Výjimky jsou pojmenované a hlídané.** Dnes jsou čtyři a všechny
+jsou knoflíky zkoušky s rozumnou výchozí hodnotou, kterou produkce
+záměrně nechává být: `cileZkouseni#0 → kandidati/zapojene` (podstrčený
+registr), `stahni#1 → cekaniNasobek` (zkrácené pauzy), `dalsiCesty#1 →
+vzor` a `cestyProPortal#1 → strop` (vynucený jeden krok a změřená
+mez). Ke každé je napsaný důvod a **důvod se taky hlídá** — prázdný
+text je pád. A hlídá se i to, že v seznamu nezůstane mrtvý řádek: kdyby
+rozdíl zmizel, výjimka patří pryč, aby se v ní neschovala příští vada.
+
+**Co nevidí, a je to napsané v souboru.** Jen objektové *literály*.
+Když produkce poskládá volby do proměnné a pošle `dalsiCesty(nalez,
+volby)`, hlídač o těch klíčích neví a tu pozici přeskočí — mlčí,
+netvrdí, že je čisto. Taky nerozlišuje moduly, takže funkce téhož
+jména ve dvou souborech by dala falešný nález, ne slepé místo. To je
+lepší směr chyby: falešný nález někdo přečte, ticho ne.
+
+### A ještě jedna věc, pro poctivost
+
+Zkouška toho stroje našla vadu v samotném stroji: `{ a: ')' , b: 2 }`
+se čtlo jako **jediný** klíč `a`, protože rozdělovač klíčů počítal
+závorku v řetězci jako zanoření (argumenty se přitom čtou správně — ta
+část řetězce hlídá). Nenašla to úvaha, našlo to měření na vymyšleném
+kousku kódu, který jsem si do zkoušky napsal právě proto, aby nález
+dole nebyl náhoda ani ticho.
+
+`test-pouziti-klicu` — nový, **13 kontrol**. Rychlá sada 152 → 153.

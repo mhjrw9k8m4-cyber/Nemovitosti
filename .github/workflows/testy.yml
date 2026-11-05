@@ -221,6 +221,9 @@ jobs:
       - name: Zkoušení portálů (všechny cesty a spojení dál)
         run: node scripts/test-zkus-portal.mjs
 
+      - name: Klíč, který zná jen zkouška (§438)
+        run: node scripts/test-pouziti-klicu.mjs
+
       - name: Samorozvoj — nálezce, sabotážní stroj a smyčka
         run: node scripts/test-samorozvoj.mjs
 
