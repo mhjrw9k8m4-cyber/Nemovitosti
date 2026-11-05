@@ -94,6 +94,8 @@ export function teloUkolu(nove, beh) {
     if (c.znaky) {
       const p = Object.entries(c.znaky.pocty || {}).map(([k, v]) => `${k} ${v}×`).join(', ');
       radky.push(`- naměřeno na stránce: „${c.znaky.titulek}", ${c.znaky.znaku} znaků textu${p ? ', ' + p : ''}`);
+      if (c.znaky.vypadaNaPrihlaseni) radky.push('- **pozor:** stránka vypadá na přihlášení nebo ochranu — předpis pro čtení by neměl co číst');
+      if (c.znaky.vypadaNaPrazdno) radky.push('- **pozor:** výpis vypadá prázdný — ověřit, jestli tam nabídky vůbec jsou');
       if (c.znaky.ukazka) radky.push(`- ukázka: ${c.znaky.ukazka.slice(0, 200)}…`);
     }
     radky.push('');

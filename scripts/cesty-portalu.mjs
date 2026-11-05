@@ -1,3 +1,4 @@
+import { copakTamJe } from './cteni-zdroje.mjs';
 /* VŠECHNY CESTY, KTERÝMI SE DÁ DO PORTÁLU DOSTAT — a jak se pozná,
    která z nich vede k nabídkám
    ==================================================================
@@ -244,24 +245,41 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
   if (strojova && oPozemku && oPrevodu) {
     return { verdikt: 'slibná', proc: 'strojový tvar, mluví o pozemcích i o převodu', tvar, strojova, oPozemku, oPrevodu };
   }
-  /* HTML, KTERÉ MLUVÍ O POZEMCÍCH I O PŘEVODU, NENÍ „ODPOVĚDĚLA".
+  /* HTML, VE KTERÉM NABÍDKY OPRAVDU JSOU, NENÍ „ODPOVĚDĚLA" —
+     ALE SLOVO O POZEMKU NESTAČÍ.
      ------------------------------------------------------------------
-     Naměřeno 5. 11. na Ministerstvu obrany: `/nemovity-majetek/
-     aktualni-nabidka` odpoví 200, má 23 631 bajtů, mluví o pozemcích
-     i o prodeji — a bot to odložil mezi „odpověděla" s poznámkou
-     „není strojový tvar (HTML)", tedy do téže přihrádky jako stránku
-     o kalendáři akcí. Přitom je to ta nejlepší zpráva z celého běhu:
-     nabídky tam JSOU, jen je k nim potřeba napsat předpis pro čtení.
-     Je to táž past jako u „chce klíč" o kus výš — nález, se kterým se
-     dá něco udělat, pohřbený mezi beznadějnými. Dostává proto vlastní
-     jméno a vlastní místo v pořadí. */
-  if (!strojova && oPozemku && oPrevodu) {
+     Napsal jsem tenhle verdikt nejdřív jen na „není strojový tvar, ale
+     mluví o pozemcích i o převodu" a bylo to špatně. Druhé měření
+     (5. 11., běh 42027075306) to vyvrátilo: stránka Ministerstva
+     obrany `/nemovity-majetek/aktualni-nabidka` má 23 631 bajtů
+     značek, ale jen **1 264 znaků viditelného textu** — a je to
+     navigace („Domů → Nemovitý majetek → Aktuální nabídka", menu
+     Dražby / Odprodeje v realizaci / Archív prodejů). Ani jedna cena,
+     ani jedna výměra, ani jedna parcela. Nabídky na té stránce
+     NEJSOU; leží na podstránkách, které to menu jmenuje. „Ke čtení"
+     tedy dostaly čtyři cesty včetně rozcestníku a kalendáře akcí —
+     a kdo by podle toho psal předpis, psal by ho pro menu.
+
+     Rozhodující není, že stránka to SLOVO má: menu ho má taky.
+     Rozhodující je DŮKAZ NABÍDKY — aspoň jedna cena nebo výměra ve
+     viditelném textu. To se počítá v copakTamJe() a je to táž mez,
+     podle které robot dat soudí, jestli se ze stránky dá číst.
+     Je to §372 ještě o stupeň dál: tam se rozlišilo „pozemek" od
+     „převodu", tady „slovo o nabídce" od „nabídky". */
+  const d = copakTamJe(telo);
+  const maDukaz = (d.cen || 0) > 0 || (d.vymer || 0) > 0;
+  if (!strojova && oPozemku && oPrevodu && maDukaz) {
     return { verdikt: 'ke čtení', tvar, strojova, oPozemku, oPrevodu,
       proc: 'není strojový tvar (' + tvar + '), ale mluví o pozemcích i o převodu'
+        + ` a v textu je ${d.cen}× cena a ${d.vymer}× výměra`
         + ' — nabídky tu jsou, chybí předpis pro čtení' };
   }
   const chybi = [];
   if (!strojova) chybi.push('není strojový tvar (' + tvar + ')');
+  if (!strojova && oPozemku && oPrevodu && !maDukaz) {
+    chybi.push(`a žádný důkaz nabídky: 0 cen, 0 výměr v ${d.odkazu}`
+      + ' odkazech — bude to rozcestník, ne výpis');
+  }
   if (!oPozemku) chybi.push('o pozemcích ani slovo');
   else if (!oPrevodu) chybi.push('o pozemcích ano, o převodu ne');
   return { verdikt: 'odpověděla', proc: chybi.join(', '), tvar, strojova, oPozemku, oPrevodu };
@@ -390,14 +408,18 @@ export function radekDoRegistru(nalez, { jmeno, typ = 'sale' } = {}) {
    a počty jsou čísla. Tělo se před zpracováním krátí, aby se velká
    odpověď nepropočítávala celá.
    ------------------------------------------------------------------ */
+/* CENY A VÝMĚRY SE NEPOČÍTAJÍ ZNOVU — bere je copakTamJe() z
+   scripts/cteni-zdroje.mjs, tedy táž funkce, jakou si diagnostikuje
+   robot dat. Napsal jsem to nejdřív po svém a hned se ukázalo proč to
+   nedělat: můj výraz na ceny byl `/\bKč\b/`, což v JavaScriptu nenajde
+   nic (hranice slova je jen mezi [A-Za-z0-9_] a zbytkem, takže mezi
+   „č" a mezerou žádná není). copakTamJe to má od začátku správně —
+   kotví na čísle, ne na slovu. Dvě kopie téhož počítání by se rozešly
+   jako všechno zdvojené (§52, §70), a tahle by se rozešla hned.
+   Zbývají tady proto jen značky, které copakTamJe nemá a pro rozhodnutí
+   „stojí to za předpis?" jsou potřeba: katastr, parcela, výběrové
+   řízení a dražba. */
 export const ZNACKY_NABIDKY = [
-  /* `\b` po „č" NEFUNGUJE: v JS je hranice slova jen mezi [A-Za-z0-9_]
-     a zbytkem, takže mezi „č" a mezerou žádná není a `/\bKč\b/`
-     nenajde nic. Chytila to vlastní zkouška („spočítá se cena (2×)"
-     hlásila nulu). Proto se konec slova píše přes unicode: za Kč nesmí
-     stát další písmeno. */
-  ['cena', /\b(?:K[čc]|CZK)(?!\p{L})/gu],
-  ['výměra', /\bm2\b|m²|\bha\b/g],
   ['katastr', /katastr|\bk\.\s*[úu]\.|kat\.\s*[úu]zem/gi],
   ['parcela', /parcel/gi],
   ['výběrové řízení', /v[ýy]b[ěe]rov\S*\s+[řr][íi]zen/gi],
@@ -417,6 +439,13 @@ export function znakyOdpovedi(telo) {
     .replace(/\s+/g, ' ')
     .trim();
   const pocty = {};
+  /* Z diagnostiky robota dat: ceny, výměry, odkazy, JSON-LD, mikrodata
+     a dvě vlajky („vypadá na přihlášení", „vypadá na prázdno"). Právě
+     ty dvě vlajky jsou pro rozhodnutí nejcennější: stránka za
+     přihlášením nebo prázdný výpis nejsou materiál na předpis. */
+  const d = copakTamJe(cele);
+  if (d.cen) pocty['cena'] = d.cen;
+  if (d.vymer) pocty['výměra'] = d.vymer;
   for (const [jmeno, re] of ZNACKY_NABIDKY) {
     const m = text.match(re);
     if (m && m.length) pocty[jmeno] = m.length;
@@ -425,6 +454,11 @@ export function znakyOdpovedi(telo) {
     titulek: titulek.replace(/\s+/g, ' ').trim().slice(0, 120),
     znaku: text.length,
     pocty,
+    odkazu: d.odkazu,
+    jsonLd: d.jsonLd,
+    itemprop: d.itemprop,
+    vypadaNaPrihlaseni: d.vypadaNaPrihlaseni,
+    vypadaNaPrazdno: d.vypadaNaPrazdno,
     ukazka: text.slice(0, STROP_UKAZKY),
   };
 }
@@ -508,6 +542,13 @@ export function hlaseniPortalu(portal) {
     if (c.znaky) {
       const p2 = Object.entries(c.znaky.pocty || {}).map(([k, v]) => `${k} ${v}×`).join(', ');
       radky.push(`      „${c.znaky.titulek}" — ${c.znaky.znaku} znaků textu${p2 ? ', ' + p2 : ''}`);
+      /* DVĚ VLAJKY NAHLAS. Stránka za přihlášením ani prázdný výpis
+         nejsou materiál na předpis — a kdo to neví dopředu, napíše
+         předpis pro nic. */
+      const vlajky = [];
+      if (c.znaky.vypadaNaPrihlaseni) vlajky.push('POZOR: vypadá na přihlášení nebo ochranu');
+      if (c.znaky.vypadaNaPrazdno) vlajky.push('POZOR: vypadá na prázdný výpis');
+      if (vlajky.length) radky.push('      ' + vlajky.join('; '));
       if (c.znaky.ukazka) radky.push(`      ukázka: ${c.znaky.ukazka.slice(0, 160)}…`);
     }
   }

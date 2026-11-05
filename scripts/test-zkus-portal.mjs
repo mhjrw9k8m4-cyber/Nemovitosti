@@ -146,6 +146,45 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     telo: STRANKA_OBRANY, nabidek: 0 });
   je('HTML o pozemcích i o převodu je „ke čtení", ne „odpověděla"', keCteni.verdikt, 'ke čtení');
   pravda('a je u toho napsané, co chybí', /chybí předpis pro čtení/.test(keCteni.proc), keCteni.proc);
+  /* ROZCESTNÍK NENÍ VÝPIS — a tohle je ta nejdůležitější hranice
+     celého verdiktu. Text je SKUTEČNÝ, zkrácený z běhu 42027075306:
+     stránka „Aktuální nabídka nemovitého majetku" Ministerstva obrany
+     má 23 631 bajtů značek a 1 264 znaků viditelného textu, a je to
+     navigace. Ani jedna cena, ani jedna výměra. První verze verdiktu
+     ji označila „ke čtení" a kdo by podle toho psal předpis, psal by
+     ho pro menu. */
+  const ROZCESTNIK_OBRANY = '<!DOCTYPE html><html><head><title>Aktuální nabídka'
+    + ' nemovitého majetku | Odbor nakládání s nepotřebným majetkem</title></head><body>'
+    + '<nav><a href="/onnm">ONNM</a><a href="/nemovity-majetek">Nemovitý majetek</a>'
+    + '<a href="/nemovity-majetek/aktualni-nabidka">Aktuální nabídka nemovitého majetku</a>'
+    + '<a href="/nemovity-majetek/drazby">Dražby nemovitostí</a>'
+    + '<a href="/nemovity-majetek/odprodeje">Odprodeje v realizaci</a>'
+    + '<a href="/nemovity-majetek/archiv-prodeju">Archív prodejů</a></nav>'
+    + '<p>Domů · Nemovitý majetek · Aktuální nabídka nemovitého majetku</p>'
+    + '<p>Prodej nepotřebného majetku v katastru nemovitostí.</p></body></html>';
+  const rozcestnik = C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'text/html',
+    telo: ROZCESTNIK_OBRANY, nabidek: 0 });
+  je('rozcestník o pozemcích a převodu „ke čtení" NENÍ', rozcestnik.verdikt, 'odpověděla');
+  pravda('a je u toho napsané, že chybí důkaz nabídky',
+    /žádný důkaz nabídky: 0 cen, 0 výměr/.test(rozcestnik.proc), rozcestnik.proc);
+  pravda('a u cesty, která nabídky má, je důkaz v odůvodnění vypsaný číslem',
+    /2× cena a 2× výměra/.test(keCteni.proc), keCteni.proc);
+
+  /* DŮKAZEM JE CENA **NEBO** VÝMĚRA — a tu druhou polovinu pravidla
+     nejdřív nehlídalo nic: sabotáž, která z `cen || vymer` nechala jen
+     `cen`, prošla 150 ze 150, protože všechny moje vzorky měly obojí.
+     Výpis bez ceny je přitom u výběrových řízení běžný („nejvyšší
+     nabídce"), takže vyhodit výměru by umlčelo celou skupinu nálezů. */
+  const bezCeny = C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'text/html',
+    telo: '<html><body><h1>Výběrové řízení na prodej pozemků</h1>'
+      + '<p>Pozemek p. č. 44/1, k. ú. Tábor, výměra 2 310 m2.</p>'
+      + '<p>Pozemek p. č. 9, k. ú. Písek, výměra 870 m2.</p>'
+      + '<p>Nabídky zasílejte do 30. 11.; prodej nejvyšší nabídce.</p></body></html>',
+    nabidek: 0 });
+  je('výpis s výměrami, ale BEZ ceny, je taky „ke čtení"', bezCeny.verdikt, 'ke čtení');
+  pravda('a v odůvodnění stojí 0 cen a 2 výměry',
+    /0× cena a 2× výměra/.test(bezCeny.proc), bezCeny.proc);
+
   /* HRANICE V OBOU SMĚRECH — jinak by nový verdikt spolkl všechno. */
   je('HTML o pozemcích BEZ převodu zůstává „odpověděla"',
     C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'text/html',
@@ -183,6 +222,23 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
   pravda('a je v ní vidět, o čem stránka je',
     /Výběrové řízení na prodej/.test(z.ukazka), z.ukazka.slice(0, 80));
 
+  /* CENY A VÝMĚRY SE POČÍTAJÍ JEDNOU, V copakTamJe() ROBOTA DAT.
+     Napsal jsem si je nejdřív po svém a výraz na ceny nenašel nic
+     (v JS není hranice slova mezi „č" a mezerou). Měří se proto, že
+     měření vážně chodí přes tutéž funkci — a že s sebou nese i dvě
+     vlajky, které rozhodují, jestli má vůbec smysl psát předpis. */
+  const prihlaseni = C.znakyOdpovedi('<html><head><title>Přihlášení</title></head>'
+    + '<body>Pro zobrazení nabídky pozemků k prodeji se přihlaste. Ověřte, že jste člověk.</body></html>');
+  pravda('u stránky za přihlášením se to pozná', prihlaseni.vypadaNaPrihlaseni === true,
+    JSON.stringify(prihlaseni));
+  const prazdno = C.znakyOdpovedi('<html><body>Žádné nabídky nenalezeny.</body></html>');
+  pravda('a prázdný výpis taky', prazdno.vypadaNaPrazdno === true, JSON.stringify(prazdno));
+  pravda('u poctivé nabídky ani jedna vlajka nevisí',
+    !z.vypadaNaPrihlaseni && !z.vypadaNaPrazdno, JSON.stringify(z));
+  pravda('a počítají se i odkazy a mikrodata (z copakTamJe)',
+    typeof z.odkazu === 'number' && typeof z.jsonLd === 'number' && typeof z.itemprop === 'number',
+    JSON.stringify(z));
+
   /* HLÁŠENÍ. Cesta „ke čtení" se musí dostat do výpisu i do rozpadu. */
   const hlaseni = C.hlaseniPortalu({ host: 'onnm.mo.gov.cz', cesty: [
     { verdikt: 'ke čtení', jmeno: 'aktuální nabídka', adresa: 'https://onnm.mo.gov.cz/x',
@@ -193,6 +249,11 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
   pravda('a cesta je ve výpisu vidět', /aktuální nabídka/.test(hlaseni), hlaseni);
   pravda('i s tím, co se na ní naměřilo', /Aktuální nabídka nemovitého majetku/.test(hlaseni)
     && /znaků textu/.test(hlaseni), hlaseni);
+  const hlaseniPrihlaseni = C.hlaseniPortalu({ host: 'x.test', cesty: [
+    { verdikt: 'ke čtení', jmeno: 'výpis', adresa: 'https://x.test/v', proc: '—', znaky: prihlaseni },
+  ] }).join('\n');
+  pravda('a vlajka o přihlášení je ve hlášení nahlas',
+    /POZOR: vypadá na přihlášení/.test(hlaseniPrihlaseni), hlaseniPrihlaseni);
 }
 
 /* ---- 2c) CO Z NÁLEZU PATŘÍ ČLOVĚKU NA STŮL -------------------

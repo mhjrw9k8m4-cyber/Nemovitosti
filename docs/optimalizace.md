@@ -26351,3 +26351,58 @@ rozbil sabotážní smyčku a musel ji dělat po jedné. Příčina není
 v zkoušce ani v mé změně (bez ní se chová stejně), ale v tom, jak
 pomalu v sandboxu odpovídá rozpoznávání neexistujících jmen `*.test`.
 Zapsáno proto, že příště nemá nikdo hledat vadu tam, kde není.
+
+## §432 — Měření vyvrátilo §429: na té stránce nabídky nejsou
+
+§429 jsem napsal s touhle větou: „nabídky tam JSOU, jen je k nim
+potřeba napsat předpis pro čtení". Opíral se o dvě čísla — 23 631
+bajtů a to, že stránka mluví o pozemcích i o prodeji. Pustil jsem bota
+znovu, už s měřením obsahu (běh 42027075306), a dostal tohle:
+
+```
+/nemovity-majetek/aktualni-nabidka   23 631 B značek
+  „Aktuální nabídka nemovitého majetku | Odbor nakládání s…"
+  1 264 znaků viditelného textu, pocty: { dražba: 3 }
+  ukázka: „… přejít na obsah … ONNM Působnost ONNM Struktura ONNM
+           Dokumenty Kontakty Movitý majetek Nemovitý majetek
+           Aktuální nabídka… Domů Nemovitý majetek Aktuální nabídka…"
+```
+
+Dvacet tři kilobajtů značek a **tisíc dvě stě znaků textu, který je
+celý navigace**. Ani jedna cena, ani jedna výměra, ani jedna parcela;
+to trojí „dražba" jsou položky menu („Dražby nemovitostí"). **Nabídky
+na té stránce nejsou** — leží na podstránkách, které to menu jmenuje
+(Odprodeje v realizaci, Připravované odprodeje, Archív prodejů).
+A verdikt „ke čtení" dostal kromě ní i rozcestník `/onnm` a **kalendář
+akcí**, tedy přesně to, čemu se měl vyhnout.
+
+**Co bylo špatně v pravidle.** „Není strojový tvar + mluví o pozemcích
++ mluví o převodu" splní **každé menu** takového úřadu. Rozhodující
+není, že stránka to slovo má, ale **důkaz nabídky**: aspoň jedna cena
+nebo výměra ve viditelném textu. To je §372 o stupeň dál — tam se
+rozlišil „pozemek" od „převodu", tady „slovo o nabídce" od „nabídky".
+
+**A při tom se ukázalo, že jsem počítal podruhé, co už repozitář
+počítá.** `copakTamJe()` v `scripts/cteni-zdroje.mjs` měří ceny,
+výměry, odkazy, JSON-LD, mikrodata a dvě vlajky („vypadá na
+přihlášení", „vypadá na prázdno") — a je to táž funkce, kterou se
+diagnostikuje robot dat. Moje kopie navíc měla vadu (`/\bKč\b/`
+v JavaScriptu nenajde nic). Měření teď na ní staví a hlášení o dvě
+vlajky zbohatlo; stránka za přihlášením ani prázdný výpis nejsou
+materiál na předpis a je dobře to vědět **dřív**, než ho někdo začne
+psát.
+
+**Sabotáž našla v mém novém pravidle slepé místo.** Verze, která
+z „cena **nebo** výměra" nechala jen cenu, prošla 150 ze 150 —
+všechny moje vzorky měly obojí. Výpis bez ceny je přitom u výběrových
+řízení běžný („prodej nejvyšší nabídce"), takže vyhodit výměru by
+umlčelo celou skupinu nálezů. Druhá polovina pravidla má teď vlastní
+vzorek a sabotáž ji chytá (2 ze 2 u obou směrů).
+
+Co z toho zbývá za práci: dojít na ty podstránky. Sitemapa je jmenuje,
+ale **na cizím hostu** (`akis-d9.msw-cloud.com`, jejich cloud), takže
+bot je dnes nenásleduje — a dělá dobře, že nechodí mimo zkoušený web.
+Vzít z takové sitemapy jen CESTY a složit je s hostem, který se právě
+zkouší, je další krok; zapsáno sem, aby se nezapomněl.
+
+`test-zkus-portal` 142 → **152 kontrol**.
