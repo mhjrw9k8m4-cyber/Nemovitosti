@@ -25793,3 +25793,51 @@ nenašel — a změnit hlídač tak, aby čekal opravu, kterou jsem neudělal,
 je totéž jako lhát si do měření. Je to vlastní kus práce: *celý web
 počítá jedním slovem, vybraným z dat*, s hlídačem, který projde všechny
 vypisovací stránky i hlášky.
+
+## §421 — Na „Stavební pozemky" se vypisovala budova
+
+První část §420, a není to vada slova, ale obsahu. Druhová stránka je
+stránka **druhu pozemku** — a nepozemková nabídka na ni nepatří vůbec,
+ne že by se o ní mělo mluvit jinak.
+
+Naměřeno na ostrých datech: 17 nepozemkových nabídek má `druh`
+„zastavěná plocha". To je druh parcely **pod** stavbou (§415), takže je
+`druhGroup` poslalo na „Stavební pozemky" — mezi stavební parcely se
+vypsala budova. A číslo v hlavičce bylo nepravdivé, protože je počítalo.
+
+Jeden filtr řeší obojí. Co se vypíše, jsou pozemky, takže „X pozemků"
+v hlavičce je pravda:
+
+| stránka | bylo | je |
+|---|---|---|
+| Stavební pozemky | 292 | **275** |
+| Zahrady | 114 | **110** |
+| Louky | 477 | **474** |
+| Orná půda | 996 | **995** |
+
+Sedí to i k tomu, co od §419 dělá stránka nabídky: nepozemková nabídka
+na druhovou stránku neodkazuje.
+
+### Hlídač si to přepočítal sám a chytil mě dřív než CI
+
+`test-druh-stranka` si čísla odvozuje nezávisle na generátoru — a moje
+změna filtru ho okamžitě shodila („psáno 275, v datech 292"). To je ta
+zkouška v nejlepší podobě: nezeptala se, co generátor udělal, ale co
+v datech je.
+
+Přidal jsem k ní ostřejší kontrolu, protože číslo se dá uhodnout i
+omylem (dvě chyby se mohou vyrušit): **na stránce druhu pozemku nesmí
+stát odkaz na nabídku, která pozemek není**, ať je číslo jakékoli.
+Hlídá se 30 nabídek; kdyby jednou v datech žádná nepozemková nebyla,
+kontrola se přizná jako neměřená, ne vydá za úspěch.
+
+`test-druh-stranka` 8 → **9**.
+
+### Co ze §420 ještě zbývá
+
+Okresní (22 ze 77), krajské (9 ze 14) a všechny 4 rozpočtové stránky
+pořád hlásí „X pozemků" u čísla, v němž nepozemkové nabídky **mají** být
+— ty stránky jsou podle místa a ceny, ne podle druhu. Tam je oprava
+opravdu jen slovo, ale `pluralPozemek()` má dvacet volajících a každý
+potřebuje svou množinu nabídek. Zbývá ještě `hlidani.html`
+(`tvarPozemku`, nenačítá `kategorie.js`) a `js/ulozene.js`.

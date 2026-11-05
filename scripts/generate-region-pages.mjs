@@ -1565,7 +1565,22 @@ const MIN_DRUH = 40;          // pod tím to není přehled, ale pár řádků
 const STROP_RADKU = 60;       // kolik nabídek se vypíše; zbytek je na mapě
 const druhStranky = [];
 for (const d of DRUH_STRANKY) {
-  const list = aktualni.filter((o) => CENY.druhGroup(o.druh) === d.skupina)
+  /* DRUHOVÁ STRÁNKA JE STRÁNKA DRUHU POZEMKU — a nepozemková nabídka
+     na ni nepatří vůbec, ne že by se o ní mělo mluvit jinak.
+
+     Naměřeno 5. 11. na ostrých datech: 17 nepozemkových nabídek má
+     `druh` „zastavěná plocha" (to je druh parcely POD stavbou, viz
+     § 415), takže `druhGroup` je poslalo na „Stavební pozemky" — mezi
+     stavební parcely se vypsala budova. A číslo v hlavičce té stránky
+     je pak taky nepravdivé, protože počítá i je.
+
+     Filtr řeší obojí jednou větou: co se vypíše, jsou pozemky, takže
+     „X pozemků" v hlavičce je pravda. Sedí to i k tomu, co od § 419
+     dělá stránka nabídky: nepozemková nabídka na druhovou stránku
+     neodkazuje. */
+  const list = aktualni
+    .filter((o) => KATEGORIE.jePozemkova(KATEGORIE.klic(o.kat)))
+    .filter((o) => CENY.druhGroup(o.druh) === d.skupina)
     .sort((a, b) => (a.price || 1e15) - (b.price || 1e15));
   if (list.length < MIN_DRUH) continue;
   const count = list.length;

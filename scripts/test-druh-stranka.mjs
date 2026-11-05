@@ -14,6 +14,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as META from './regiony-meta.mjs';
+import { mapaSouboru } from './generate-parcel-pages.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,6 +22,11 @@ const req = createRequire(import.meta.url);
 const PKH = req(path.join(ROOT, 'js', 'hlidani-logika.js'));
 new Function(readFileSync(path.join(ROOT, 'js', 'ceny.js'), 'utf8'))();
 const CENY = globalThis.PK_CENY;
+/* Kategorie nemovitosti: druhová stránka je stránka DRUHU POZEMKU,
+   takže nepozemková nabídka na ni nepatří. Totéž rozhodnutí dělá
+   generátor — tahle zkouška si ho POČÍTÁ ZNOVU, a právě proto chytila
+   změnu filtru dřív, než se dostala do CI. */
+const KATEGORIE = req(path.join(ROOT, 'js', 'kategorie.js'));
 
 let ok = 0, chyb = 0; const zpravy = [];
 function pravda(popis, vyslo, proc) {
@@ -58,10 +64,24 @@ const STROP = Number((/const STROP_RADKU = (\d+)/.exec(gen) || [])[1] || 0);
 pravda('a mez i strop se ze zdroje přečetly', MIN_DRUH > 0 && STROP > 0,
   `MIN_DRUH ${MIN_DRUH}, STROP_RADKU ${STROP}`);
 
+/* JMÉNA STRÁNEK NEPOZEMKOVÝCH NABÍDEK. Číslo v hlavičce se dá uhodnout
+   i omylem — dvě chyby se mohou vyrušit. Tahle kontrola se proto dívá
+   na odkazy: na stránce druhu POZEMKU nesmí stát odkaz na nabídku,
+   která pozemek není, ať je číslo jakékoli. */
+/* mapaSouboru() je klíčovaná klicNabidky() a nese {d, soubor}, takže se
+   prochází po hodnotách — podle nabídky v nich, ne podle objektu. */
+const SOUBORY_NEPOZEMKU = new Set([...mapaSouboru(aktualni).values()]
+  .filter((z) => z && z.d && !KATEGORIE.jePozemkova(KATEGORIE.klic(z.d.kat)))
+  .map((z) => z.soubor)
+  .filter(Boolean));
+
 let stranek = 0;
 const spatne = [];
+const prolezle = [];
 for (const d of definice) {
-  const list = aktualni.filter((o) => CENY.druhGroup(o.druh) === d.skupina);
+  const list = aktualni
+    .filter((o) => KATEGORIE.jePozemkova(KATEGORIE.klic(o.kat)))
+    .filter((o) => CENY.druhGroup(o.druh) === d.skupina);
   const cesta = path.join(ROOT, d.soubor);
   if (list.length < MIN_DRUH) {
     if (existsSync(cesta)) spatne.push(`${d.soubor}: druh má jen ${list.length} nabídek, a stránka přesto existuje`);
@@ -70,6 +90,9 @@ for (const d of definice) {
   if (!existsSync(cesta)) { spatne.push(`${d.soubor}: chybí, přitom druh má ${list.length} nabídek`); continue; }
   stranek++;
   const html = cistyText(readFileSync(cesta, 'utf8'));
+  for (const soubor of SOUBORY_NEPOZEMKU) {
+    if (html.indexOf('href="' + soubor + '"') >= 0) prolezle.push(d.soubor + ' → ' + soubor);
+  }
   /* 1) počet nabídek. Do 26. 10. stál v úvodní větě („Evidujeme N …");
      od té doby je to číslo v hlavičce stránky (.okr-cisla), protože
      věta tytéž počty jen opisovala — viz hlavickaCisla()
@@ -143,6 +166,16 @@ pravda('a všechna čísla na nich sedí s daty', spatne.length === 0, spatne.sl
 }
 
 console.log('\nStránky podle druhu pozemku');
+/* MĚŘENÍ MUSÍ MÍT NA ČEM MĚŘIT. Když v datech žádná nepozemková
+   nabídka není, kontrola výš je zelená prázdnotou — a to se musí
+   přiznat, ne vydávat za úspěch. */
+if (!SOUBORY_NEPOZEMKU.size) {
+  zpravy.push('  – v datech není nepozemková nabídka se stránkou, kontrola odkazů se neměří');
+} else {
+  pravda(`na druhové stránce nestojí odkaz na nepozemkovou nabídku (hlídáno ${SOUBORY_NEPOZEMKU.size})`,
+    prolezle.length === 0, prolezle.slice(0, 3).join('; '));
+}
+
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.log('::error::Druhy: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
