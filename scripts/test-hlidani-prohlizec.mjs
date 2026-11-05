@@ -433,6 +433,19 @@ await domUtichlo(p, 350);   // bylo waitForTimeout(2400)
       !!(prazdna && /nejvyšší cenu/.test(prazdna.kam) && prazdna.tucne.length === 1),
       JSON.stringify(prazdna));
     pravda('  a kolik by bez ní sedělo',
+      /* TADY SE ČEKÁ „pozem" SCHVÁLNĚ, A JE TO PŘIZNANÁ DÍRA.
+         hlidani.html si plurál píše sám (tvarPozemku) a kategorii
+         nezná — js/min/kategorie.js na té stránce vůbec není. Takže
+         zatímco úvodní stránka už správně hlásí „8 nemovitostí",
+         tahle hláška u téhož stavu dat řekne „3 pozemky", i kdyby
+         mezi nimi byl byt. Naměřeno 5. 11.: web má na jednom místě
+         dvě řeči.
+
+         Nechávám to tu NEOPRAVENÉ a nahlášené, ne tiše přepsané na
+         obě slova: vzorek, který bere „pozem" i „nemovitost", by tu
+         díru zakryl a nikdo by ji už nenašel. Patří k té samé práci
+         jako počty na okresních stránkách (22 okresů hlásí
+         „X pozemků" u čísla, v němž nepozemkové nabídky jsou). */
       !!(prazdna && /bez té podmínky sedí \d+ pozem/.test(prazdna.kam)),
       JSON.stringify(prazdna && prazdna.kam));
     pravda('  a pořád slíbí, že nové vypíše',

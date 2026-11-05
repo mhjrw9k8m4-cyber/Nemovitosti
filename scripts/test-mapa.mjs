@@ -20,6 +20,19 @@ import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { hlasPad } from './zkouska-pad.mjs';
+import { createRequire } from 'node:module';
+/* JAKÝM SLOVEM WEB POČÍTÁ — ODVOZENO Z DAT, NE OPSANÉ.
+   Dokud jsou v datech samé pozemky, stojí v hlavičce „8 pozemků";
+   jak přijde první byt, musí tam být „8 nemovitostí", protože těch
+   osm už pozemky všechny nejsou. Vzorek /\d+ pozem/ tu byl napevno
+   a 5. 11. spadl na tom, že web má pravdu: robot přinesl první
+   nepozemkové nabídky. Rozhodnutí se proto bere ze stejného modulu,
+   jaký ho dělá na webu (js/kategorie.js) — a zůstává ostré: až budou
+   v datech zase jen pozemky, bude vzorek vyžadovat „pozem". */
+const PKKAT = createRequire(import.meta.url)(new URL('../js/kategorie.js', import.meta.url).pathname);
+const NAB_VSE = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities || [];
+const SLOVO = PKKAT.vsePozemkove(PKKAT.klicePodleDat(NAB_VSE)) ? 'pozem' : 'nemovitost';
+
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -294,7 +307,7 @@ je('na přehledu není vybraný žádný kraj', s.kraj, '');
   pravda(`na přehledu je značka s počtem u každého kraje (${z.znacek})`,
     z.znacek >= 10, `značek ${z.znacek}`);
   pravda('a nese jméno kraje i počet (jinak je to jen kolečko s číslem)',
-    /—.*pozemk/.test(z.popis), `popis: „${z.popis}"`);
+    new RegExp('—.*' + SLOVO).test(z.popis), `popis: „${z.popis}" (čekalo se „${SLOVO}")`);
   pravda(`žádná nabídka nezůstala mimo značky (${z.soucet} z ${z.tecek})`,
     z.soucet === z.tecek, `ve značkách ${z.soucet}, teček na mapě ${z.tecek}`);
   /* NA TELEFONU SE NEMĚŘÍ „ŽÁDNÝ PŘEKRYV", ALE KOLIK JE ZAKRYTO.
@@ -598,7 +611,7 @@ pravda('mapa se ke kraji přiblížila', s.zoom > zoom0, `${zoom0} → ${s.zoom}
              prepinac: ((n && n.textContent) || '').trim() };
   });
   je('po zúžení ukáže seznam právě tolik, kolik hlavička slíbila',
-    cislo((h2.text.match(/(\d[\d\s\u00a0]*)\s*pozem/) || [])[1]),
+    cislo((h2.text.match(new RegExp('(\\d[\\d\\s\\u00a0]*)\\s*' + SLOVO)) || [])[1]),
     cislo((h2.prepinac.match(/(\d[\d\s\u00a0]*)/) || [])[1]));
   // a zpátky, ať další oddíly měří tentýž stav jako dřív
   await p.evaluate(() => { const b = document.getElementById('kh-uzsi'); if (b) b.click(); });

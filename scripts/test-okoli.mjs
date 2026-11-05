@@ -30,6 +30,18 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+/* JAKÝM SLOVEM WEB POČÍTÁ — ODVOZENO Z DAT, NE OPSANÉ.
+   Dokud jsou v datech samé pozemky, stojí v hlavičce „8 pozemků";
+   jak přijde první byt, musí tam být „8 nemovitostí", protože těch
+   osm už pozemky všechny nejsou. Vzorek /\d+ pozem/ tu byl napevno
+   a 5. 11. spadl na tom, že web má pravdu: robot přinesl první
+   nepozemkové nabídky. Rozhodnutí se proto bere ze stejného modulu,
+   jaký ho dělá na webu (js/kategorie.js) — a zůstává ostré: až budou
+   v datech zase jen pozemky, bude vzorek vyžadovat „pozem". */
+const PKKAT = createRequire(import.meta.url)(new URL('../js/kategorie.js', import.meta.url).pathname);
+const NAB_VSE = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities || [];
+const SLOVO = PKKAT.vsePozemkove(PKKAT.klicePodleDat(NAB_VSE)) ? 'pozem' : 'nemovitost';
+
 import { naSeznam } from './zkouska-pohled.mjs';
 /* ČEKÁ SE NA STAV, NE NA HODINKY — viz scripts/zkouska-pripraveno.mjs.
    Pomocné funkce níž (jdiNaMisto, klepniDoMapy) se volají v cyklech,
@@ -252,7 +264,8 @@ const stavVybiraku = (p) => p.evaluate(() => {
   pravda('klepnutí do mapy přiblíží', zoom1 > zoom0, `${zoom0} → ${zoom1}`);
   pravda('po klepnutí je vidět hlídaný okruh', vk.kruh,
     'bez kruhu není poznat, jak velké okolí se vybírá');
-  pravda('a počet pozemků ještě před potvrzením', /\d+ pozem/.test(vk.pocet), vk.pocet);
+  pravda('a počet nabídek ještě před potvrzením',
+    new RegExp('\\d+ ' + SLOVO).test(vk.pocet), vk.pocet + ' (čekalo se „' + SLOVO + '")');
   pravda('a potvrdit už jde', vk.potvrditJde === true, 'okruh je vidět, ale potvrdit nejde');
   /* Kruh sám o sobě řekne „takhle velké to je" jen tomu, kdo si deset
      kilometrů na mapě dokáže představit. Proto se od středu ke kraji
@@ -307,7 +320,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
         po.kruhLat !== null && Math.abs(po.kruhLat - po.lat) < 1e-6 && Math.abs(po.kruhLng - po.lng) < 1e-6,
         `značka ${po.lat.toFixed(4)},${po.lng.toFixed(4)}, kruh ${po.kruhLat},${po.kruhLng}`);
       pravda('a pod mapou se přepočítá, co v okolí je',
-        /\d+\s*pozem|nic není/.test(po.text) && po.text !== predText,
+        new RegExp('\\d+\\s*' + SLOVO + '|nic není').test(po.text) && po.text !== predText,
         `před: „${predText.slice(0, 50)}", po: „${po.text.slice(0, 50)}"`);
       pravda('a potvrdit jde i bez klepnutí, stačí přetáhnout', po.potvrditJde === true,
         'značka se posunula, ale výběr se nedá potvrdit');

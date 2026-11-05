@@ -2434,12 +2434,7 @@
      2 303 nabídek pozemek, takže filtr, pod kterým je stejně všechno,
      by jen zabíral místo v panelu a tvrdil člověku, že má na vybranou.
      Objeví se sám, jak noční robot přinese první byt nebo dům. */
-  var KATEGORIE_VSE = (function () {
-    if (!KAT) return [];
-    var maji = {};
-    for (var i = 0; i < DATA.length; i++) maji[katKlic(DATA[i])] = true;
-    return KAT.KLICE.filter(function (k) { return maji[k]; });
-  }());
+  var KATEGORIE_VSE = KAT ? KAT.klicePodleDat(DATA) : [];
   function prekresliKategorie() {
     if (!katEl || !KAT) return;
     /* Jedna kategorie = není co vybírat. `hidden` na celém bloku, aby
@@ -3370,8 +3365,7 @@
    *
    * Tvar pro nulu („0 pozemků", ne „0 pozemky") hlídá
    * scripts/test-mnozstvi.mjs, a to v obou větvích. */
-  var VSE_POZEMKY = KATEGORIE_VSE.length < 2
-    && (KATEGORIE_VSE.length === 0 || KATEGORIE_VSE[0] === 'pozemek');
+  var VSE_POZEMKY = KAT ? KAT.vsePozemkove(KATEGORIE_VSE) : true;
   function plPozemek(n) {
     if (!VSE_POZEMKY) return n === 1 ? 'nemovitost' : (n >= 2 && n <= 4 ? 'nemovitosti' : 'nemovitostí');
     return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');

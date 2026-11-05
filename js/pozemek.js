@@ -267,7 +267,14 @@
     return S.html(d, { sirka: 384, vyska: 256, barva: col, id: 'hero' }) +
       '<span class="opp-mgrad"></span>' +
       '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' +
-      S.popis(d, KAT);
+      /* MODUL KATEGORIÍ SE BERE Z GLOBÁLU, NE Z `KAT`. Napsal jsem tu
+         nejdřív `S.popis(d, KAT)` — jenže `KAT` je deklarované až
+         v jiné funkci o dva tisíce řádků níž, takže tahle řádka
+         sahala po proměnné, která tu není. V prohlížeči z toho byla
+         `ReferenceError: KAT is not defined` a shodila celé
+         vykreslení náhledu. Chytil to test-mapa („stránka neshodila
+         žádnou chybu"), ne čtení kódu. */
+      S.popis(d, global.PKKategorie);
   }
 
   // Oblíbené (sdílené s hlavní aplikací přes stejný localStorage klíč)

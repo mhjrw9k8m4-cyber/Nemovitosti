@@ -24,6 +24,17 @@
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
 import { existsSync, readFileSync } from 'node:fs';
+import { createRequire as pkRequire } from 'node:module';
+/* JAKÝM SLOVEM WEB POČÍTÁ — ODVOZENO Z DAT, NE OPSANÉ. Dokud jsou
+   v datech samé pozemky, stojí v hlášce „8 pozemků"; jak přijde první
+   byt, musí tam být „8 nemovitostí". Vzorek tu byl napevno a 5. 11.
+   by spadl na tom, že web má pravdu. Rozhodnutí se proto bere ze
+   stejného modulu, jaký ho dělá na webu (js/kategorie.js), a zůstává
+   ostré: až budou v datech zase jen pozemky, bude vyžadovat „pozem". */
+const PKKAT = pkRequire(import.meta.url)(new URL('../js/kategorie.js', import.meta.url).pathname);
+const NAB_VSE = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities || [];
+const SLOVO = PKKAT.vsePozemkove(PKKAT.klicePodleDat(NAB_VSE)) ? 'pozem' : 'nemovitost';
+
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { naSeznam } from './zkouska-pohled.mjs';
@@ -515,7 +526,7 @@ pravda('a není v ní žádné psaní obce ani seznam krajů', vyber.hledani ===
    Tím „nejdřív" už není vybrat kraj ani najít obec (to z panelu zmizelo),
    ale klepnout do mapy. */
 pravda('rovnou říká, co je v okruhu, nebo co udělat nejdřív',
-  /\d+ pozem/.test(vyber.pocet) || /klepnut/i.test(vyber.pocet),
+  new RegExp('\\d+ ' + SLOVO).test(vyber.pocet) || /klepnut/i.test(vyber.pocet),
   vyber.pocet || '(prázdno)');
 
 /* Výběr se potvrdí tam, kde mapa stojí; okruh se roztáhne tak, aby v něm

@@ -1387,12 +1387,7 @@
     druhyEl.innerHTML = html;
   }
 
-  var KATEGORIE_VSE = (function () {
-    if (!KAT) return [];
-    var maji = {};
-    for (var i = 0; i < DATA.length; i++) maji[katKlic(DATA[i])] = true;
-    return KAT.KLICE.filter(function (k) { return maji[k]; });
-  }());
+  var KATEGORIE_VSE = KAT ? KAT.klicePodleDat(DATA) : [];
   function prekresliKategorie() {
     if (!katEl || !KAT) return;
 
@@ -1937,8 +1932,7 @@
   }
   });
 
-  var VSE_POZEMKY = KATEGORIE_VSE.length < 2
-    && (KATEGORIE_VSE.length === 0 || KATEGORIE_VSE[0] === 'pozemek');
+  var VSE_POZEMKY = KAT ? KAT.vsePozemkove(KATEGORIE_VSE) : true;
   function plPozemek(n) {
     if (!VSE_POZEMKY) return n === 1 ? 'nemovitost' : (n >= 2 && n <= 4 ? 'nemovitosti' : 'nemovitostí');
     return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');

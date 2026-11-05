@@ -25753,3 +25753,43 @@ totiž lze opravit a stránky přitom nechat staré — a přesně tak vypadal
 stav, který jsem dnes našel.
 
 `test-data-rozhrani` 31 → **38**.
+
+## §420 — Web má na jednom místě dvě řeči
+
+Směna 1 v CI spadla na pěti kontrolách a ani jedna nebyla vada webu:
+**zkoušky měly to slovo opsané**. Robot přinesl první nepozemkové
+nabídky, úvodní stránka správně přepnula z „8 pozemků" na
+„8 nemovitostí" — protože těch osm už pozemky všechny nejsou — a vzorky
+jako `/\d+ pozem/` to vyhodnotily jako chybu.
+
+Pravidlo bylo napevno v `js/main.js` a zkoušky si ho opsaly do svých
+vzorků. Teď je v `js/kategorie.js` (`klicePodleDat`, `vsePozemkove`) a
+ptají se ho web i zkoušky — takže vzorek **zůstává ostrý**: až budou
+v datech zase jen pozemky, bude vyžadovat „pozem".
+
+### A při tom se našla vada, kterou jsem zavedl sám
+
+`test-mapa` hlásil `ReferenceError: KAT is not defined`. Napsal jsem
+`S.popis(d, KAT)`, jenže `KAT` je v `js/pozemek.js` deklarované až
+v jiné funkci o dva tisíce řádků níž — ta řádka sahala po proměnné,
+která tam není, a shodila celé vykreslení náhledu. Nenašlo to čtení
+kódu, našla to zkouška, která měří, že stránka nic neshodila.
+
+### Přiznaná díra: dvě řeči na jednom webu
+
+Když jsem opravoval ty vzorky, `test-hlidani-prohlizec` ukázal, že
+hlídání u téhož stavu dat říká **„3 pozemky"**, zatímco úvodní stránka
+říká „nemovitostí". `hlidani.html` si plurál píše sám (`tvarPozemku`) a
+`js/min/kategorie.js` na té stránce vůbec není.
+
+Totéž na okresních stránkách: Benešov hlásí **„35 pozemků"**, přičemž
+dvě z těch 35 pozemky nejsou — a takových okresů je **22**.
+`pluralPozemek()` v generátoru regionů má dvanáct volajících a každý by
+potřeboval svou množinu nabídek.
+
+**Nechal jsem to neopravené a nahlášené.** Napsat ve zkoušce vzorek,
+který bere „pozem" i „nemovitost", by tu díru zakrylo a nikdo by ji už
+nenašel — a změnit hlídač tak, aby čekal opravu, kterou jsem neudělal,
+je totéž jako lhát si do měření. Je to vlastní kus práce: *celý web
+počítá jedním slovem, vybraným z dat*, s hlídačem, který projde všechny
+vypisovací stránky i hlášky.

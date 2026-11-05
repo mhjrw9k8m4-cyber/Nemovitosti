@@ -115,6 +115,18 @@
     return z ? z.mera : 'zadna';
   }
 
+  function klicePodleDat(nabidky) {
+    var videne = {};
+    var pole = nabidky || [];
+    for (var i = 0; i < pole.length; i++) videne[klic(pole[i] && pole[i].kat)] = true;
+    return KATEGORIE.map(function (z) { return z.klic; })
+      .filter(function (k) { return videne[k]; });
+  }
+  function vsePozemkove(klice) {
+    var k = klice || [];
+    return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
+  }
+
   function jePozemkova(k) {
     return mera(k) === 'pozemek';
   }
@@ -145,6 +157,8 @@
     ikona: ikona,
     mera: mera,
     jePozemkova: jePozemkova,
+    klicePodleDat: klicePodleDat,
+    vsePozemkove: vsePozemkove,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     klic: klic,

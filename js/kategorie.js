@@ -242,6 +242,28 @@
    * Kč/m² pozemku by tam bylo číslo bez významu a verdikt „levné"
    * postavený na něm by byla lež.
    */
+  /* JAKÝM SLOVEM SE POČÍTÁ — JEDNA PRAVDA PRO WEB I PRO ZKOUŠKY.
+     Dokud jsou v datech samé pozemky, počítá se „8 pozemků"; jak
+     přijde první byt, musí být „8 nemovitostí", protože těch osm už
+     pozemky všechny nejsou.
+
+     Bylo to napevno v js/main.js a zkoušky v prohlížeči si slovo
+     opsaly do svých vzorků (/\d+ pozem/). Robot přinesl 5. 11. první
+     nepozemkové nabídky, web správně přepnul na „nemovitostí" — a tři
+     zkoušky v CI spadly na vlastní opsané slovo, ne na vadě webu.
+     Proto je rozhodnutí tady a všichni se ptají jeho. */
+  function klicePodleDat(nabidky) {
+    var videne = {};
+    var pole = nabidky || [];
+    for (var i = 0; i < pole.length; i++) videne[klic(pole[i] && pole[i].kat)] = true;
+    return KATEGORIE.map(function (z) { return z.klic; })
+      .filter(function (k) { return videne[k]; });
+  }
+  function vsePozemkove(klice) {
+    var k = klice || [];
+    return k.length < 2 && (k.length === 0 || k[0] === 'pozemek');
+  }
+
   function jePozemkova(k) {
     return mera(k) === 'pozemek';
   }
@@ -304,6 +326,8 @@
     ikona: ikona,
     mera: mera,
     jePozemkova: jePozemkova,
+    klicePodleDat: klicePodleDat,
+    vsePozemkove: vsePozemkove,
     nadpisKategorie: nadpisKategorie,
     popisVymery: popisVymery,
     klic: klic,
