@@ -10,7 +10,8 @@
 // dál jsou, nevypadá nic špatně. Zdroj může být tiše rozbitý týdny.
 import { readFileSync } from 'node:fs';
 import * as F from './fetch-opportunities.mjs';
-import { hlaseni } from './hlidka-zdroju.mjs';
+import { execFileSync } from 'node:child_process';
+import { hlaseni, rozhodnutiHlidky } from './hlidka-zdroju.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -150,6 +151,52 @@ const beh = (h, zdroje, den) => ({ mimoProvoz: F.zapisMimoProvoz(h, zdroje, den)
     && /const prekrocili = dlouhoMimo\(mimo\)/.test(telo)
     && /dalsiMeznik\(p\.behu\)/.test(telo),
     'hlídka mezníky nepoužívá');
+}
+
+/* ---- CO MÁ HLÍDKA UDĚLAT -------------------------------------------
+   ==================================================================
+   Sabotážní stroj 4. 11. ukázal, že tahle zkouška nechytí dvě vady
+   v `hlidka-zdroju.mjs`, a obě vedou k témuž: hlídka zůstane ZELENÁ,
+   když měla být červená — tedy přesně ta vada, kterou hlídka vznikla
+   hlídat (§356). Nedaly se změřit, protože rozhodnutí sedělo uvnitř
+   `main()`, mezi čtením souboru a `process.exitCode`. */
+{
+  const nalez = [{ nazev: 'SPÚ', behu: 3, stav: 'chyba', od: '2026-11-02' }];
+  const prekroc = [{ nazev: 'Dražby', behu: 7, stav: 'chyba', od: '2026-10-28' }];
+  /* TOHLE JE TEN PŘÍPAD, KTERÝ SE ROZBÍJEL: je co ohlásit A ZÁROVEŇ
+     někdo jiný už ohlášený je. Při `||` místo `&&` se vybere
+     „připomenout" — vypíše se to a běh skončí ZELENĚ, takže se
+     nezaloží žádný úkol a nikdo se o rozbitém zdroji nedozví. */
+  je('je co ohlásit i když už někdo jiný ohlášený je → červeně',
+    rozhodnutiHlidky(nalez, prekroc), 'červeně');
+  je('je co ohlásit a nikdo jiný → taky červeně',
+    rozhodnutiHlidky(nalez, []), 'červeně');
+  je('není co ohlásit, ale někdo je dlouho mimo → jen připomenout',
+    rozhodnutiHlidky([], prekroc), 'připomenout');
+  je('nikdo nikde → ticho', rozhodnutiHlidky([], []), 'ticho');
+  je('a prázdné vstupy se neberou jako nález',
+    [rozhodnutiHlidky(null, null), rozhodnutiHlidky(undefined, [])], ['ticho', 'ticho']);
+}
+
+/* ---- SPUŠTĚNÁ HLÍDKA MUSÍ NĚCO ŘÍCT -------------------------------
+   Vstupní podmínka `import.meta.url === file://argv[1]` je jediné
+   místo, odkud se `main()` pustí. Obrácená (`!==`) by znamenala, že
+   `node scripts/hlidka-zdroju.mjs` NEUDĚLÁ NIC a běh robota bude
+   zelený — a ze zkoušky, která si modul jen importuje, to není vidět.
+   Měří se tedy spuštěním: hlídka musí vždycky něco napsat. */
+{
+  let vystup = '';
+  try {
+    vystup = execFileSync(process.execPath, [new URL('./hlidka-zdroju.mjs', import.meta.url).pathname],
+      { encoding: 'utf8', timeout: 30000, stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (e) {
+    /* Červený konec je legitimní výsledek (zdroj je opravdu mimo) —
+       zajímá nás, že hlídka promluvila, ne jaký dala verdikt. */
+    vystup = String((e && e.stdout) || '') + String((e && e.stderr) || '');
+  }
+  pravda('spuštěná hlídka vždycky něco řekne (jinak je vstupní podmínka obrácená)',
+    /Hlídka zdrojů|Historie zdrojů|Zdroj mimo pořádek/.test(vystup),
+    'výpis: ' + JSON.stringify(vystup.slice(0, 200)));
 }
 
 console.log('Hlídka zdrojů:');

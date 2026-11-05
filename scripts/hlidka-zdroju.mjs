@@ -29,6 +29,29 @@ import { BEHU_NEZ_SE_OZVEME, dlouhoMimo, kOhlaseni, dalsiMeznik } from './fetch-
 const KOREN = join(dirname(fileURLToPath(import.meta.url)), '..');
 const HIST = join(KOREN, 'data', 'zdroje-historie.json');
 
+/**
+ * CO MÁ HLÍDKA UDĚLAT. Tři možnosti a není to jedno:
+ *   'červeně'     — je co ohlásit, běh musí skončit chybou, jinak se
+ *                   nezaloží úkol a nikdo se to nedozví (to je celý
+ *                   smysl téhle hlídky);
+ *   'připomenout' — ohlášeno už bylo, stav se jen vypíše a běh zůstane
+ *                   zelený (denně červeně ze stejného důvodu by se
+ *                   hlídka přestala číst);
+ *   'ticho'       — nikdo není mimo pořádek dost dlouho.
+ *
+ * Rozvaha stojí zvlášť schválně: v `main()` sedí mezi čtením souboru
+ * a `process.exitCode`, takže se ze zkoušky nedala spustit — sabotážní
+ * stroj 4. 11. ukázal, že záměna `&&` za `||` v téhle podmínce projde
+ * bez povšimnutí, a přitom by zdroj, který je opravdu rozbitý, dostal
+ * jen „připomenout" a běh by zůstal ZELENÝ.
+ */
+export function rozhodnutiHlidky(nalez, prekrocili) {
+  const n = (nalez || []).length, p = (prekrocili || []).length;
+  if (!n && p) return 'připomenout';
+  if (!n) return 'ticho';
+  return 'červeně';
+}
+
 export function hlaseni(nalez, mez = BEHU_NEZ_SE_OZVEME) {
   const radky = nalez.map((z) => `  • ${z.nazev}: ${z.behu}. běh v řadě mimo pořádek`
     + ` (stav „${z.stav}", od ${z.od})${z.duvod ? ' — ' + z.duvod : ''}`);
@@ -59,7 +82,8 @@ function main() {
      stav VYPÍŠE, ale běh nekončí červeně — viz jeMeznik(). */
   const prekrocili = dlouhoMimo(mimo);
   const nalez = kOhlaseni(mimo);
-  if (!nalez.length && prekrocili.length) {
+  const co = rozhodnutiHlidky(nalez, prekrocili);
+  if (co === 'připomenout') {
     for (const p of prekrocili) {
       console.log(`Hlídka zdrojů: ${p.nazev} je mimo pořádek ${p.behu}. běh v řadě`
         + ` (stav „${p.stav}", od ${p.od}). Ohlášeno to bylo při ${BEHU_NEZ_SE_OZVEME}. běhu;`
@@ -68,7 +92,7 @@ function main() {
     }
     return;
   }
-  if (!nalez.length) {
+  if (co === 'ticho') {
     console.log(vsichni.length
       ? `Hlídka zdrojů: nikdo není mimo pořádek ${BEHU_NEZ_SE_OZVEME}× v řadě.`
         + ` Sledovaní: ${vsichni.map(([j, d]) => `${j} (${d.behu}×)`).join(', ')}.`
