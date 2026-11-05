@@ -1015,11 +1015,10 @@
   "test-hlidka-zdroju.mjs": {
    "kdy": "2026-11-05",
    "hlidá": 2,
-   "chytila": 2,
-   "nechytila": 8,
+   "chytila": 3,
+   "nechytila": 7,
    "rovnocenne": [],
    "slepa": [
-    "obrácená rovnost (=== na !==)",
     "obrácené porovnání (>= na >)",
     "obrácené porovnání (<= na <)",
     "obrácená rovnost (=== na !==)",

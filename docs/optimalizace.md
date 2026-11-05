@@ -24964,3 +24964,47 @@ se §407 zapsal jako „cti-pdf: 2 chycené", ačkoli byly měřené jen
 čtyři mutace z pěti. `test-samorozvoj`: 178 → **182 kontrol**. Sabotáží
 se tenhle hlídač prokázat nedá: `sabotuj.mjs` je v `STROJ`, tedy mimo
 cíle, aby stroj nesoudil sám sebe (§395).
+
+## §410 — Hlídka zdrojů: dvě slepá místa, obě vedla na „zůstane zelená"
+
+Poslední odložená věc z §407. `scripts/hlidka-zdroju.mjs` je ta hlídka,
+která má ohlásit **tiše rozbitý zdroj** — a sabotážní stroj v ní našel
+dvě vady, které `test-hlidka-zdroju` nechytil. Obě vedou k témuž:
+hlídka zůstane ZELENÁ, když měla být červená. Tedy přesně ta vada,
+kvůli které hlídka vznikla (§356): nic nespadne, jen se tiše lže.
+
+**1) Rozcestí „červeně / připomenout / ticho".** Sedělo uvnitř `main()`
+mezi čtením souboru a `process.exitCode`, takže se ze zkoušky nedalo
+spustit. Je z něj čistá funkce `rozhodnutiHlidky(nalez, prekrocili)`
+a měří se celá tabulka. Rozbíjel se tento případ: **je co ohlásit
+A ZÁROVEŇ už je někdo jiný ohlášený** — při `||` místo `&&` se vybere
+„připomenout", běh skončí zeleně a žádný úkol se nezaloží.
+
+**2) Vstupní podmínka `import.meta.url === file://argv[1]`.** Je to
+jediné místo, odkud se `main()` pustí; obrácená znamená, že
+`node scripts/hlidka-zdroju.mjs` **neudělá nic**. Ze zkoušky, která si
+modul jen importuje, to vidět není, takže se hlídka **spouští jako
+podproces**.
+
+### A chyba v mém prvním guardu, kterou našlo až měření
+
+Napoprvé jsem měřil jen to, že spuštěná hlídka *něco* napsala. Naostro
+to nestačilo: při obrácené rovnosti v rozcestí hlídka vypsala
+„Zdroj mimo pořádek" s **prázdným seznamem** a skončila červeně —
+kontrola na pouhý výskyt textu to pustila dál a stroj dál hlásil
+NECHYTILA. Guard teď:
+
+* dopočítá očekávaný výsledek **z týchž dat týmiž funkcemi**, kterými
+  to počítá robot (`kOhlaseni`, `dlouhoMimo`, `rozhodnutiHlidky`), takže
+  nezávisí na tom, jak jsou zdroje dnes;
+* měří i **konec procesu**: červeně = konec chybou a zdroje jmenovitě,
+  připomenout = zelený konec bez `::error::`;
+* a trvá na tom, že hláška „Zdroj mimo pořádek" má aspoň jedno jméno.
+
+Po tom stroj hlásí **3 ze 3 mutací v `hlidka-zdroju.mjs` chytila**.
+`test-hlidka-zdroju`: 26 → **34 kontrol**.
+
+Zbylých sedm mutací téže zkoušky sedí v `scripts/fetch-opportunities.mjs`,
+který hlídá **ještě 16 dalších zkoušek** — tam to podle §397 není nález
+o téhle zkoušce, ale mlčení, a rozhodne se po souborech, až tu mutaci
+dostane druhý hlídač téhož souboru.
