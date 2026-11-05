@@ -150,6 +150,7 @@
 <tr><td><code>type</code></td><td>string</td><td>vždy</td><td>Druh nabídky. „majitel“ tady nebývá — inzeráty od lidí leží v databázi a vidíte je na mapě, do tohohle souboru se nedávají. <b>Hodnoty:</b> <code>sale</code>, <code>drazba</code>, <code>exekuce</code>, <code>obec</code></td></tr>
 <tr><td><code>parcel</code></td><td>string</td><td>vždy</td><td>Parcelní číslo. Pomlčka „—“ znamená, že ho zdroj neuvedl.</td></tr>
 <tr><td><code>druh</code></td><td>string</td><td>vždy</td><td>Druh pozemku tak, jak ho uvádí zdroj (orná půda, les, stavební…).</td></tr>
+<tr><td><code>kat</code></td><td>string</td><td>někdy</td><td>Co se prodává: pozemek, dum, byt, chata, farma, areal, komercni, garaz, jine. Když pole chybí, je to POZEMEK — tak vznikla všechna data do 5. 11. 2026 a tak to bere i kód (js/kategorie.js). Je to jiná otázka než „druh“: ten říká, jaký je to pozemek, a u bytu nemá smysl vůbec. Kč/m² se u nepozemkové kategorie NEPOČÍTÁ — je to pozemkový poměr a u bytu by to byla jiná veličina ve společné stupnici (viz zaMetr v js/ceny.js).</td></tr>
 <tr><td><code>area</code></td><td>number|null</td><td>vždy</td><td>Výměra v m². null = zdroj ji neuvedl a z textu se nedala bezpečně přečíst.</td></tr>
 <tr><td><code>price</code></td><td>number</td><td>vždy</td><td>Cena v Kč. U dražby vyvolávací, u exekuce uváděná. Je to cena NABÍDKOVÁ, ne prodejní.</td></tr>
 <tr><td><code>extra</code></td><td>string</td><td>vždy</td><td>Zdroj a stav — například „inzerát – Bezrealitky“ nebo termín dražby.</td></tr>

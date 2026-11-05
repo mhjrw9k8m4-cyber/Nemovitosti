@@ -25477,3 +25477,65 @@ prochází každý volající. Tři kontroly v `test-uzsvm` to drží.
 A jedna věc, která tím JE v pořádku: `PropertyTotalCount` je 729
 i s filtrem na kategorii Pozemky, tedy počet všeho — ale to už repozitář
 ví (§366) a počet se bere z číselníku `FilteredCount`.
+
+## §416 — Nasimulovat zítřek: pět nálezů, které by jinak přišly jako červená CI
+
+Fáze 2 (§413) zapojila kategorie do webu, ale v datech ještě žádná
+nabídka kategorii nenese. Celý ten kód tedy zatím nic nedělá — a nic
+o něm nevíme. Čekat na noční robot znamená dozvědět se to z červené
+CI nad daty, která se mezitím změnila.
+
+**Postup:** do kopie dat se vloží pět vymyšlených nepozemkových nabídek
+(dům, byt, areál, garáž, komerční objekt) se tvary opsanými
+z naměřených popisů (§415), pustí se `oprav.mjs` i celá rychlá sada,
+nálezy se zapíšou a data se vrátí z gitu.
+
+**První běh: padlo 5 z 151.** Z toho **tři skutečné vady**:
+
+### 1. Mez ceny za metr soudil byt
+
+`test-strop-ceny` hlídá, že strop uvěřitelnosti (30 000 Kč/m²) je
+pořád dost nad skutečným maximem trhu. Dělí si ale `price / area` sám,
+mimo `zaMetr()` — takže jediný byt za 3 450 000 Kč o 54 m² dal
+**63 889 Kč/m²** podlahové plochy, maximum trhu vyskočilo nad mez
+a kontrola hlásila „rezerva −113 %, trh dorostl k mezi". Trh nedorostl;
+do měření pozemků se připletl byt — a to u čísla, které web u bytu
+nikde neukazuje. Měření se proto zužuje na pozemky (`jePozemek`), a dělí
+se dál ručně: kontrola se ptá, co stojí TRH, a `zaMetr` u podílů
+přepočítává a nad mezí mlčí, takže by si odpověď zakryla sama.
+
+### 2. Vstup cenového modelu se rozešel o těch pět
+
+`test-model-vstup` porovnává malý soubor `data/model.json` s počtem
+nabídek, které do modelu patří — a ten počet si skládal jen z vynechání
+úředních cen. Model si ale vstup filtruje i na pozemky (`jenPozemky`),
+takže vyšlo **„malý 1866, do modelu 1871"**, tedy rozdíl přesně těch
+pěti. Bez opravy by kontrola hlásila rozchod při každém bytu v datech
+a vypadalo by to jako vada generátoru.
+
+### 3. Nové pole `kat` nemělo popis
+
+`data/pole.json` je smlouva o datech — kdo si je vezme, čte ji. Nové
+pole v ní nebylo, takže `test-data-rozhrani` právem hlásil „`kat` — kdo
+si data vezme, musel by hádat". Doplněno včetně té věty, která se
+nejsnáz zapomene: **když pole chybí, je to pozemek**, a Kč/m² se
+u nepozemkové kategorie nepočítá.
+
+### A dva nálezy, které vadou nebyly — přiznat se k nim patří k měření
+
+* `sitemap.xml` se v prvním běhu rozešel, v druhém ne. Dohledáno:
+  jeden průchod `oprav.mjs` stačí i na zbrusu novou stránku (ověřeno
+  zvlášť), takže to byl následek toho, že sadu přerušily vlastní zápisy
+  jiných zkoušek, ne kategorií.
+* „každá dražba říká i strojově, do kdy platí" padlo na **mých
+  fixturách**: napsal jsem `extra: 'dražba 12.12.2026'`, což není tvar,
+  jaký nese skutečný dražební rejstřík. Vada vymyšleného vzorku.
+
+**Druhý běh po opravách: padlo 3 z 151, a všechny tři jsou vady mých
+fixtur** — nečitelný termín dražby, dvě obce na témž bodě (klonoval jsem
+nabídku i se souřadnicemi) a zastaralý řádek historie cen (měnil jsem
+data třikrát za jeden den, a řádek se zapisuje jednou denně).
+
+**Závěr: kvůli skutečným bytům a domům už nepadá nic.** Tři vady, které
+by zítra přišly jako červená CI nad změněnými daty, jsou spravené dnes,
+nad daty, která si můžu zopakovat.

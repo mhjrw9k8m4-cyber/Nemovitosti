@@ -67,10 +67,30 @@ const nabidky = D.opportunities || [];
      zakázalo, takže se takové pole označí v data/pole.json příznakem
      `jenPriVypadku`. Co není tak označené, platí dál beze změny: popis
      navíc je nepřesnost jako dřív. */
+  /* A POLE, KTERÉ SE OBJEVÍ TEPRVE AŽ BUDE CO POPSAT. `kat` (co se
+     prodává) je od 5. 11. 2026 zapojené v celém webu, ale v datech
+     bude až tehdy, až noční robot přinese první byt nebo dům —
+     u pozemku se schválně nevyplňuje (chybějící `kat` ZNAMENÁ pozemek).
+     Popsané být musí už dnes: jakmile se objeví, poteče ven ke každému,
+     kdo si soubor vezme. Označuje se `jenKdyzNeniPozemek`. */
   const navic = Object.keys(P.pole)
-    .filter((k) => !vDatech.has(k) && !P.pole[k].jenPriVypadku);
+    .filter((k) => !vDatech.has(k) && !P.pole[k].jenPriVypadku
+      && !P.pole[k].jenKdyzNeniPozemek);
   pravda('a popis nemluví o poli, které v datech není', navic.length === 0,
     navic.join(', '));
+  /* VÝJIMKA SE MUSÍ DÁT DOLOŽIT, JINAK JE TO JEN TICHO.
+     Oba příznaky výš („jen při výpadku", „jen když to není pozemek")
+     pouštějí popis pole, které v datech NENÍ — a tím se dá popsat
+     cokoli, co nikdo nezapisuje. Proto se u každého takového pole
+     vyžaduje, aby ho robot opravdu uměl zapsat: jeho jméno musí být
+     v scripts/fetch-opportunities.mjs. Mrtvé pole tím projít nemůže. */
+  const robot = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const vyjimky = Object.keys(P.pole)
+    .filter((k) => P.pole[k].jenPriVypadku || P.pole[k].jenKdyzNeniPozemek);
+  const nedolozene = vyjimky.filter((k) => !new RegExp('\\b' + k + '\\b').test(robot));
+  pravda(`pole popsané, ale v datech chybějící, umí robot zapsat (${vyjimky.length})`,
+    nedolozene.length === 0,
+    nedolozene.join(', ') + ' — popis mluví o poli, které nikdo neplní');
   const vypadkova = Object.keys(P.pole).filter((k) => P.pole[k].jenPriVypadku);
   pravda(`pole „jen při výpadku" jsou označená a nejsou povinná (${vypadkova.length})`,
     vypadkova.every((k) => P.pole[k].vzdy !== true),

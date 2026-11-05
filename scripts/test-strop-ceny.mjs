@@ -68,8 +68,23 @@ function proslyTermin(o) {
 }
 const aktualni = all.filter((o) => !proslyTermin(o));
 /* Bez podílu, protože tam se nic nedělí — je to čistý pohled na to, co
-   trh opravdu stojí. */
-const bezPodilu = aktualni.filter((o) => !o.podil && o.price > 0 && o.area > 0).map((o) => o.price / o.area);
+   trh opravdu stojí.
+
+   A JEN POZEMKY, protože mez, kterou tahle kontrola hlídá, je mez
+   POZEMKOVÉ ceny za metr. Změřeno na nasimulovaných datech s pěti byty
+   a domy (5. 11.): jediný byt za 3 450 000 Kč o 54 m² dal 63 889 Kč/m²
+   podlahové plochy, maximum trhu vyskočilo nad mez 30 000 a kontrola
+   hlásila „rezerva −113 %, trh dorostl k mezi". Trh nedorostl — jen se
+   do měření pozemků připletl byt. Cena za metr se u něj
+   nepočítá vůbec (viz zaMetr v js/ceny.js), takže by tu kontrola
+   soudila mez podle čísla, které web nikde neukazuje.
+
+   Dělí se tady schválně ručně, ne přes zaMetr(): tahle kontrola se
+   ptá, co stojí TRH, a zaMetr u podílů přepočítává a nad mezí mlčí —
+   tím by si odpověď zakryla sama. Pozemkovost se proto bere z téhož
+   jednoho místa jako všude jinde (`jePozemek`). */
+const bezPodilu = aktualni.filter((o) => CENY.jePozemek(o) && !o.podil && o.price > 0 && o.area > 0)
+  .map((o) => o.price / o.area);
 pravda(`nabídek bez podílu je dost na odhad trhu (${bezPodilu.length})`, bezPodilu.length >= 500);
 const maxTrh = Math.max(...bezPodilu);
 const rezerva = (MEZ - maxTrh) / MEZ;
