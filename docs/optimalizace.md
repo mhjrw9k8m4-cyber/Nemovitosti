@@ -25168,3 +25168,163 @@ Budovy mívají v popisu „zastavěnou plochu", kterou čtení výměry
 o zastavěné ploše cca 25 m²" dřív dalo výměru pozemku 25). U budovy je
 to ale právě to správné číslo. Je to tedy pravidlo závislé na
 kategorii a patří k předělání cenového modelu, ne k záplatě ve čtečce.
+
+## §413 — Web umí mluvit o nemovitostech: Kč/m² jako pozemkové číslo, filtr typu, karta a stránka
+
+Druhá fáze změny z §412. §412 přestal zahazovat byty a domy u zdrojů;
+tahle přidává to, co se po ní musí stát na webu — a začíná u toho,
+co by bez ní **tiše lhalo**.
+
+### 1. Kč/m² není údaj, je to srovnávací stupnice
+
+`zaMetr()` v `js/ceny.js` vypadá jako popisek na kartě. Naměřeno, kam
+to jedno číslo vede: percentilová stupnice barev na mapě, filtr „jen
+levné", řazení podle ceny za metr, verdikt o ceně, vývoz do tabulky,
+upozornění e-mailem i do telefonu. Všude se srovnává **napříč
+nabídkami**.
+
+U bytu je Kč/m² podlahové plochy číslo stejně běžné, ale je to jiná
+veličina. Byt za 35 000 Kč/m² v jedné stupnici s polem za 35 Kč/m²
+znamená, že každý pozemek vyjde jako zdarma a „jen levné" přestane
+dávat smysl.
+
+Druhá polovina pasti: strop uvěřitelnosti je 30 000 Kč/m² (u pozemků
+naměřené maximum 23 498), takže běžný byt by zahodil **sám** — web by
+se tvářil, že u bytů cenu za metr spočítat neumí, a vypadalo by to
+jako záměr, ne jako nedopatření.
+
+Branka je proto na jednom místě, v `zaMetr()`, a je stejná v obou
+kopiích (`js/ceny.js` a dvojče `js/hlidani-logika.js`, které musí
+fungovat i bez cenového modelu). Osmnáct volajících se tím spraví
+naráz — bez záplaty na každém z nich. Vlastní cenu za metr podlahové
+plochy, s vlastním popiskem a vlastní stupnicí, dostanou byty a domy
+spolu s cenovým modelem podle kategorie.
+
+Hlídač: `test-kategorie` měří pro **každou nepozemkovou kategorii**,
+že mlčí obě kopie — a schválně na nabídce **pod** stropem
+(500 000 Kč / 20 m² = 25 000 Kč/m²), aby to neprošlo stropem místo
+kategorií. K tomu, že uložené hledání „do 30 000 Kč/m²" pozemek pustí
+a byt ne.
+
+### 2. Kategorie se dostaly do prohlížeče, a to bez modulu robota
+
+`js/kategorie.js` nejdřív vyžadoval `js/druh.js` hned při vzniku —
+a tím se nedal v prohlížeči použít vůbec: `druh.js` je modul **robota**
+(žádná stránka ho nenačítá) a kvůli jedné funkci na srovnání textu by
+si ho musel stáhnout každý návštěvník. Naměřeno: `js/druh.js` 12 420 B
+zdroje, **5 423 B přes drát**.
+
+Prohlížeč přitom text nikdy nerozebírá. Kategorii pozná robot při
+stahování a uloží ji do `kat`; stránce stačí popis (jméno, množné
+číslo, ikona, míra). Kontrola se proto přesunula do `zTextu()`, tedy
+do té jediné funkce, která druh opravdu potřebuje — kdo ji zavolá bez
+něj, dostane výjimku se jménem obou modulů.
+
+Cena modulu na stránce: `js/min/kategorie.js` **5 480 B, 2 038 B
+v gzipu** — tedy méně než polovina toho, co by stál `druh.js` sám.
+
+Hlídač: zkouška načte modul v `node:vm` **bez** PKDruh (v sandboxu
+není `module`, takže se vykoná ta větev UMD hlavičky, kterou vykoná
+prohlížeč) a měří obojí — popis funguje, rozbor textu spadne a řekne
+čeho se mu nedostává.
+
+### 3. Co se prodává: jedno rozhodnutí, pět míst
+
+Nadpis skládá karta ve výpisu, bublina tipu, stránka nabídky, titulek
+pro vyhledávač a řádka na okresní stránce. Pravidlo je proto
+v `js/kategorie.js` (`nadpisKategorie`), ne pětkrát opsané:
+
+* **u pozemku vrací null** — tam dělá nadpis `druh` („Orná půda"), což
+  je pro kupujícího konkrétnější než slovo „pozemek", a tak to na webu
+  stojí odjakživa. Volající píše `nadpisKategorie(d) || <dosavadní
+  nadpis>`, takže se u pozemků nezmění ani znak;
+* **u ostatního jméno kategorie** — `druh` je u domu nanejvýš druh
+  parcely POD stavbou a u bytu nemá smysl vůbec, takže by v nadpisu
+  stála „Zastavěná plocha a nádvoří" tam, kde se prodává dům. Na
+  stránce nabídky se tím mění i popisek dlaždice: „Druh pozemku: —"
+  u věci, o které se ví, že je to byt, je zbytečná nepravda.
+
+K tomu devět řádků do slovníku druhého pádu v `js/cisteni.js`. Bez
+nich by z „Dražby bytu" zbylo holé „Byt": tabulka vrací neznámé jméno
+**bez změny**, takže nespadne nic, jen z nadpisu zmizí, o jakou akci
+jde. Hlídá se obojí — že každá kategorie druhý pád má, a že nadpisem
+neprojde bez akce.
+
+### 4. Výměra musí říct, čeho se týká
+
+U bytu a garáže (`mera: 'podlahova'`) je výměra podlahová plocha.
+Holé „54 m²" vedle pozemků, kde totéž číslo znamená plochu parcely,
+je dvojsmysl přesně toho druhu, jaký tu už jednou vynutily
+spoluvlastnické podíly (štítek „celá parcela" / „výměra podílu").
+Štítek je teď i tady — na kartě i v dlaždici na stránce nabídky.
+Podíl má přednost: upozornění, že v ceně je zlomek, váží víc.
+
+U domu, areálu a farmy (`mera: 'obe'`) se **neříká nic**: ze zdrojů
+nevyplývá, jestli uložené číslo je plocha parcely, nebo zastavěná
+plocha, a tipovat to je horší než mlčet.
+
+### 5. Filtr „Typ nemovitosti"
+
+Tatáž mechanika jako u druhu pozemku: prázdný výběr znamená „všechny",
+víc kategorií se sčítá, počty u dlaždic se počítají proti ostatním
+filtrům (takže číslo říká „tolik jich přibude, když na tohle kliknu").
+Vybírají se **klíče**, ne jména pro oči — jména se skloňují, klíč je
+to, co leží v datech, v uloženém filtru i v adrese.
+
+Dva rozdíly proti druhům, oba jsou rozhodnutí:
+
+* **pořadí není podle četnosti.** Druhů je v datech přes třicet
+  variant a nejčastější první je tam jediné rozumné řazení. Kategorií
+  je devět, je to krátký pevný seznam a jejich pořadí v modulu je
+  rozhodnutí. Podle četnosti by si dlaždice přeskakovaly místa každou
+  noc, jak se mění data;
+* **blok se skryje, dokud je v datech jedna kategorie.** Dnes je všech
+  2 303 nabídek pozemek, takže filtr, pod kterým je stejně všechno, by
+  jen zabíral místo v panelu a tvrdil člověku, že má na vybranou.
+  Objeví se sám, jak noční robot přinese první byt nebo dům.
+
+Filtr je zapojený všude, kam patří: ve `visible()`, jako odstranitelný
+štítek v seznamu aktivních omezení (jinak by se z něj nedalo dostat
+ven a u prázdného výpisu by se neukázal jako viník), v uloženém filtru
+a v **adrese** pod klíčem `tn` (`js/odkaz.js`) — „pošli mi byty
+v okrese Most" je přesně ten odkaz, který si lidi posílají. Z obou
+cest zvenčí se berou **jen známé klíče**: neznámá hodnota by výpis
+vyprázdnila bez vysvětlení.
+
+Na tohle zapojení přišel hlídač sám: `test-odkaz` čte filtrovací
+funkci z `js/main.js` a spadl na dvou nezařazených jménech, dokud
+`katVybrane` nebyl v tabulce sdílených.
+
+**A jedna vada, kterou to odhalilo mimochodem:** srovnávání posunu po
+zakliknutí (`drzMisto`, viz §169) hledalo náhradu dlaždice po
+překreslení jen podle `data-druh`. U kategorií by se nenašla a web by
+se pod prstem pohnul přesně tak, jak si na to majitel stěžoval.
+Funkce teď čte ten atribut, který dlaždice opravdu má.
+
+### 6. „2 310 pozemků", z nichž deset jsou byty
+
+`plPozemek()` skládá čtrnáct nápisů na úvodní stránce: počet v patě
+panelu, bubliny krajů na mapě, popisky shluků, okolí, uložené. Dokud
+jsou v datech jen pozemky, je „pozemků" správné a konkrétnější slovo.
+Jediná nepozemková nabídka ale z téhož nápisu dělá nepravdu na
+nejviditelnějším místě webu, takže o slově teď rozhoduje **obsah dat**:
+jeden byt přepne všech čtrnáct nápisů na „nemovitostí".
+
+Rozhodují DATA, ne právě zapnutý filtr. Kdyby se slovo řídilo výběrem,
+měnilo by se pod rukou při každém zakliknutí — a popisek kraje na mapě
+by mluvil o něčem jiném než počet nad výpisem.
+
+Dnes je výsledek znak za znakem tentýž jako dřív, takže se tím nic
+nepřepisuje naslepo. Tvar pro nulu („0 pozemků", ne „0 pozemky") hlídá
+`test-mnozstvi` teď v **obou** větvích — druhá se dnes na obrazovku
+nedostane, takže by si pokažené skloňování v ní nikdo nevšiml.
+
+### Co zbývá
+
+Zbytek slov na webu (menu, nadpisy, titulky 3 019 stránek, slogan) se
+nepřepisuje naslepo pro nulu nabídek. Až noční robot přinese první
+byty a domy, bude se dát **změřit, kolik jich je**, a rozhodnout podle
+čísla. Adresy `pozemek-*.html` zůstávají, jak jsou — jsou
+zaindexované; nové kategorie dostanou vlastní rodinu adres.
+
+Zkoušky: `test-kategorie` 42 → **59**, `test-odkaz` 45 → **46**.

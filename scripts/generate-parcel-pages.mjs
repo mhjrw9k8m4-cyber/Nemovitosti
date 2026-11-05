@@ -369,6 +369,19 @@ export function hlavaTitulku(druh, typ) {
   return CISTENI.hlavaNabidky(druh, typ);
 }
 
+/* CO SE PRODÁVÁ — do titulku i do nadpisu stránky.
+   U pozemku je to DRUH („Orná půda"), protože kupujícímu říká víc než
+   slovo „pozemek"; u všeho ostatního jméno kategorie, protože `druh`
+   je u domu nanejvýš druh pozemku pod ním a u bytu nemá smysl vůbec.
+   Rozhodnutí je v js/kategorie.js, ne tady — týž nadpis skládá ještě
+   prohlížeč (js/main.js u karty ve výpisu) a dvě kopie by se rozešly,
+   přesně jako by se rozešel slovník druhého pádu o kus výš. */
+const KATEGORIE = createRequire(import.meta.url)(path.join(ROOT, 'js', 'kategorie.js'));
+export function coSeProdava(d) {
+  return KATEGORIE.nadpisKategorie(d)
+    || (d && d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek');
+}
+
 function slozTitulek(hlava, druh, vym, place, okres, podil) {
   const konec = ' | Parcelka';
   const M = mistoFraze(place, okres);
@@ -524,7 +537,7 @@ export function pripravRozliseni(polozky) {
   ROZLISENI.clear();
   const podleTitulku = new Map();
   for (const d of polozky) {
-    const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
+    const druh = coSeProdava(d);
     const vym = d.area ? `${fmt(d.area)} m²` : '';
     const t = slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));
     if (!podleTitulku.has(t)) podleTitulku.set(t, []);
@@ -580,7 +593,7 @@ export function pripravRozliseni(polozky) {
 }
 
 export function textyPro(d) {
-  const druh = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : 'Pozemek';
+  const druh = coSeProdava(d);
   const vym = d.area ? `${fmt(d.area)} m²` : '';
   const titul = ROZLISENI.get(klicNabidky(d))
     || slozTitulek(hlavaTitulku(druh, d.type), druh, vym, d.place, d.okres, textPodilu(d));

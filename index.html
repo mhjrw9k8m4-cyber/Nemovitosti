@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-hy8f4FaFQh5lOesVxCEh3kgGY4/vCNTzHdVzgjdofVQ=' 'sha256-csK11Yi2olgHQ9X+xGiSfiwK+0OYWwy154GfE/02Uz0=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-zUhLhThBMx/s8WpqBaVTCbd/akBPo0MdODVEB1efAHo=' 'sha256-G6PovtZYA6Xc6Q9HL1hHprMhTk2eH7G3mTEfcDqOEeE=' 'sha256-P0K03ykOFY54xKFdbpI0LrYxN0B+yuBTdmTh8PmUvSI=' 'sha256-NP/+8qcSkVQyxUD3J20H6ZdS1w3g8b/s2S16xds71yI=' 'sha256-AnKxLcMGQ2SEIistu2mA/sE8U/dA0UxVCcO7hH63P78=' 'sha256-qlVOPHcossjIIbCKnM+RqPLqc0ToSaeWdJYKqdV3sQI=' 'sha256-8L9X3+VlF0PiC1Z6NBj88nP6rGbdua+Jj+q5K4cMb2k='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -360,6 +360,23 @@
                   <button class="filter-chip" data-type="obec"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-budova"/></svg>Obec</button>
                   <button class="filter-chip" data-type="majitel"><svg class="ik fc-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-uzivatel"/></svg>Přímo od majitele</button>
                 </div>
+              </div>
+              <!-- TYP NEMOVITOSTI. Od 5. 11. 2026 nejsou na webu jen
+                   pozemky: majitel rozhodl, že tu budou všechny
+                   nemovitosti — domy, byty, farmy, areály. Kdo chce
+                   pozemek, nesmí přitom brodit nabídkami bytů, a naopak.
+                   JE TO PRÁZDNÁ SCHRÁNKA A MÁ TO DŮVOD. Dlaždice do ní
+                   vkládá js/main.js podle toho, co v datech OPRAVDU je —
+                   tak jako u druhu pozemku. A dokud je v datech jediná
+                   kategorie, celý blok se skryje: mrtvý filtr, pod
+                   kterým je stejně všechno, zabírá v panelu místo a
+                   člověku tvrdí, že má na vybranou. Dnes je to tenhle
+                   případ (všech 2 303 nabídek je pozemek), takže ho
+                   nikdo neuvidí; objeví se sám, jak noční robot přinese
+                   první byt nebo dům. -->
+              <div class="mc-field" id="mc-kategorie-blok" hidden>
+                <span class="mc-cap">Typ nemovitosti</span>
+                <div class="mcv-rada mcv-sloupec" id="mc-kategorie" role="group" aria-label="Typ nemovitosti"></div>
               </div>
               <!-- DRUH JE NEJDŮLEŽITĚJŠÍ FILTR, tak stojí první a je vidět
                    celý. Býval to rozbalovací seznam s JEDNOU volbou: kdo
@@ -945,7 +962,7 @@
 </div>
 
 <script src="js/min/menu.js?v=8274c66b" defer></script>
-<script src="js/min/cisteni.js?v=8b7c7e5b"></script>
+<script src="js/min/cisteni.js?v=c9f8ac95"></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
 <script src="js/min/auth.js?v=113f2e09" defer></script>
 <script src="js/min/dropdown.js?v=97aa1947" defer></script>
@@ -1091,11 +1108,12 @@
   <p class="rv-napoveda"><b>Doprava</b> uložit, <b>doleva</b> schovat z výpisu — prstem
     nebo tlačítky. Obojí jde vrátit.</p>
 </div>
-<script src="js/min/ceny.js?v=dfcf9b54" defer></script>
+<script src="js/min/ceny.js?v=f64a2102" defer></script>
+<script src="js/min/kategorie.js?v=4647d7db" defer></script>
   <script src="js/min/zlevneni.js?v=3d9fe537" defer></script>
-<script src="js/min/hlidani-logika.js?v=f727d5b2" defer></script>
+<script src="js/min/hlidani-logika.js?v=9f4dcaed" defer></script>
 <script src="js/min/poradi.js?v=92ac1fb1" defer></script>
-<script src="js/min/odkaz.js?v=213707fb" defer></script>
+<script src="js/min/odkaz.js?v=ae0c2283" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9" defer></script>
 <script src="js/min/dotaz.js?v=45401b2a" defer></script>
 <script src="js/min/hledani.js?v=c49c1410" defer></script>
@@ -1133,7 +1151,7 @@
 <meta name="pk-odlozeny" data-klic="ulozene-ucet" data-src="js/min/ulozene-ucet.js?v=35e316ad">
 <meta name="pk-odlozeny" data-klic="poznamky" data-src="js/min/poznamky.js?v=96f9b539">
 <meta name="pk-odlozeny" data-klic="nove-pozemky" data-src="js/min/nove-pozemky.js?v=633433a0">
-<script src="js/min/main.js?v=d71abbcd" defer></script>
+<script src="js/min/main.js?v=c7b82799" defer></script>
 <!-- Měření lepivé hlavičky. Načte se JEN s „?mereni" v adrese
      (parcelaka.cz/index.html?mereni=1) — běžný návštěvník o něm neví.
      Slouží k tomu, aby se chyba, kterou počítačový prohlížeč neukáže,

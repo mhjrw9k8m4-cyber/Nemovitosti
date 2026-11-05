@@ -7,6 +7,8 @@
   var SDILENE = [
     { klic: 't',        stav: 'activeType',      tvar: 'text',    vychozi: 'all' },
     { klic: 'd',        stav: 'druhVybrane',     tvar: 'seznam' },
+
+    { klic: 'tn',       stav: 'katVybrane',      tvar: 'seznam' },
     { klic: 'co',       stav: 'minPrice',        tvar: 'cislo' },
     { klic: 'cd',       stav: 'maxPrice',        tvar: 'cislo' },
     { klic: 'po',       stav: 'minArea',         tvar: 'cislo' },

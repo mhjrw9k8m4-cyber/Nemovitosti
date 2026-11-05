@@ -266,7 +266,21 @@
     'Vodní plocha': 'vodní plochy',
     'Zastavěná plocha a nádvoří': 'zastavěné plochy a nádvoří',
     'Zemědělský pozemek': 'zemědělského pozemku',
-    'Louka': 'louky'
+    'Louka': 'louky',
+    /* KATEGORIE NEMOVITOSTI, ne druhy pozemku. Od 5. 11. 2026 nese
+       nadpis nabídky u všeho, co není pozemek, jméno kategorie
+       (js/kategorie.js) — a bez druhého pádu by z „Dražby bytu"
+       zbylo holé „Byt". Že tu každá kategorie je, hlídá
+       scripts/test-kategorie.mjs; jinak by nová kategorie tiše
+       přestala umět říct, že se draží. */
+    'Dům': 'domu',
+    'Byt': 'bytu',
+    'Chata': 'chaty',
+    'Farma': 'farmy',
+    'Areál': 'areálu',
+    'Komerční objekt': 'komerčního objektu',
+    'Garáž': 'garáže',
+    'Jiná nemovitost': 'jiné nemovitosti'
   };
   /* „Exekuční dražba" je přesnější než holé „Exekuce": exekuce je
      řízení, dražba ta událost, které se dá zúčastnit. U obecního

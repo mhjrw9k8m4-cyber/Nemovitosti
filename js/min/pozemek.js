@@ -1160,17 +1160,22 @@
 
     var klice = [];
 
+    var KAT = global.PKKategorie || null;
+    var popisMery = KAT ? KAT.popisVymery(d) : '';
     klice.push({ k: 'Výměra', v: areaTxt(d), ikona: 'plocha',
       pozn: (d.podil && hasArea(d))
         ? (d.vymera_podilu ? 'váš podíl — celá parcela je větší' : 'celá parcela — kupuje se jen podíl')
-        : '' });
+        : (hasArea(d) ? popisMery : '') });
 
     var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
       ? global.PK_CENY.zaMetrKratce(d) : '';
     if (perM2) klice.push({ k: 'Cena za m²', v: fmt(perM2) + '\u00a0Kč/m²', ikona: 'cena',
       pozn: perM2Kratce || perM2Pozn || '' });
 
-    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
+    var coJe = KAT ? KAT.nadpisKategorie(d) : null;
+    klice.push(coJe
+      ? { k: 'Typ nemovitosti', v: esc(coJe), ikona: 'druh', pozn: '' }
+      : { k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
 
     var terminVDlazdici = false;
     var ctvrtaJeVlastnictvi = (function () {

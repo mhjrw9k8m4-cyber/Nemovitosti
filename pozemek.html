@@ -345,10 +345,16 @@ body.pzm-cela-telo{overflow:hidden}
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="js/min/menu.js?v=8274c66b" defer></script>
-<script src="js/min/cisteni.js?v=8b7c7e5b"></script>
+<script src="js/min/cisteni.js?v=c9f8ac95"></script>
 <script src="js/min/snimek.js?v=9e632238"></script>
 <script src="js/min/terminy.js?v=cf102557"></script>
-<script src="js/min/ceny.js?v=dfcf9b54"></script>
+<script src="js/min/ceny.js?v=f64a2102"></script>
+<!-- Kategorie nemovitosti (co se prodává) — od 5. 11. 2026 nejsou na
+     webu jen pozemky. Modul nese POPIS kategorie, ne rozbor textu:
+     ten dělá robot při stahování a výsledek ukládá do `kat`, takže
+     stránka nepotřebuje js/druh.js (5 423 B přes drát, modul robota).
+     Obyčejný skript PŘED js/pozemek.js, který z něj čte. -->
+<script src="js/min/kategorie.js?v=4647d7db"></script>
   <script src="js/min/zlevneni.js?v=3d9fe537" defer></script>
   <!-- Křivka vývoje ceny v okolí pod verdiktem (pzVyvojHtml v js/pozemek.js).
        Týž modul kreslí graf na okresních a krajských stránkách, takže se
@@ -368,8 +374,8 @@ body.pzm-cela-telo{overflow:hidden}
      postavit z 2 018 nabídek místo 1 995. Pozdější spotřebitelé
      (js/hlidani-logika.js na stránce hlídání) ho najdou stejně:
      obyčejné skripty běží před odloženými. -->
-<script src="js/min/hlidani-logika.js?v=f727d5b2"></script>
-<script src="js/min/pozemek.js?v=a03af700"></script>
+<script src="js/min/hlidani-logika.js?v=9f4dcaed"></script>
+<script src="js/min/pozemek.js?v=6e71bc33"></script>
 <!-- Vercel Web Analytics -->
 <script>/* Vercel Web Analytics: skript dodává až Vercel, jinde neexistuje a končí
    chybou 404 v konzoli. Dřív se vkládal všude kromě github.io — jenže veřejný

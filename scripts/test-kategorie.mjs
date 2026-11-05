@@ -212,6 +212,133 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
   }
 }
 
+/* ---- 6) KČ/M² JE POZEMKOVÉ ČÍSLO -------------------------------
+   ==================================================================
+   `zaMetr()` není jen popisek na kartě. Jedno a totéž číslo nese
+   percentilovou stupnici barev na mapě, filtr „jen levné", řazení
+   podle ceny za metr, verdikt o ceně, vývoz do tabulky i upozornění
+   mailem a do telefonu — všude se srovnává napříč nabídkami.
+
+   Kdyby do té stupnice vstoupil byt, je to srovnání 35 000 Kč/m²
+   podlahové plochy s 35 Kč/m² pole: každý pozemek vyjde jako zdarma
+   a „jen levné" přestane dávat smysl. A nespadne nic — čísla se jen
+   tiše pokřiví.
+
+   Druhá polovina pasti: strop uvěřitelnosti (30 000 Kč/m²) by
+   většinu bytů zahodil SÁM. Web by se tedy tvářil, že u nich cenu za
+   metr spočítat neumí, a vypadalo by to jako záměr. Proto se tu měří
+   i byt POD stropem — ten strop neprojde, projít musí kategorie.
+
+   Obě kopie pravidla (js/ceny.js a js/hlidani-logika.js, dvojče pro
+   Node) se měří zvlášť. Rozchod by znamenal, že web tiskne jiné
+   číslo než mail o téže nabídce. */
+{
+  require_(join(KOREN, 'js', 'ceny.js'));
+  const CENY = globalThis.PK_CENY;
+  const PKH = require_(join(KOREN, 'js', 'hlidani-logika.js'));
+  /* 500 000 Kč za 20 m² = 25 000 Kč/m², tedy POD stropem. U pozemku
+     je to platné číslo, u bytu nesmí vyjít nic. */
+  const zaklad = { price: 500000, area: 20 };
+  je('u pozemku cena za metr vyjde (jinak tahle kontrola nic netvrdí)',
+    Math.round(CENY.zaMetr({ ...zaklad })), 25000);
+  je('a u pozemku výslovně označeného kategorií taky',
+    Math.round(CENY.zaMetr({ ...zaklad, kat: 'pozemek' })), 25000);
+  const mluvi = K.KLICE.filter((k) => !K.jePozemkova(k))
+    .filter((k) => CENY.zaMetr({ ...zaklad, kat: k }) !== null);
+  pravda('u žádné nepozemkové kategorie cena za metr nevyjde',
+    mluvi.length === 0, 'mluví u: ' + mluvi.join(', '));
+  const mluviH = K.KLICE.filter((k) => !K.jePozemkova(k))
+    .filter((k) => PKH.zaMetr({ ...zaklad, kat: k }) !== null);
+  pravda('ani ve dvojčeti pro upozornění (js/hlidani-logika.js)',
+    mluviH.length === 0, 'mluví u: ' + mluviH.join(', '));
+  const rozchod2 = K.KLICE.filter((k) =>
+    CENY.zaMetr({ ...zaklad, kat: k }) !== PKH.zaMetr({ ...zaklad, kat: k }));
+  pravda('a obě kopie říkají u každé kategorie totéž',
+    rozchod2.length === 0, 'rozcházejí se u: ' + rozchod2.join(', '));
+  /* Uložené hledání „do N Kč/m²" nesmí nepozemkovou nabídku pustit —
+     kdyby ji pustilo, přišlo by upozornění na byt jako na levný
+     pozemek. Prázdná cena za metr tam znamená „nevíme", tedy nepustit
+     (viz matches() v js/hlidani-logika.js). */
+  const hledani = { max_perm2: 30000 };
+  pravda('hlídání „do 30 000 Kč/m²" pozemek pustí',
+    PKH.matches(hledani, { ...zaklad, type: 'sale' }) === true);
+  pravda('a byt nepustí',
+    PKH.matches(hledani, { ...zaklad, type: 'sale', kat: 'byt' }) === false);
+}
+
+/* ---- 7) MODUL SE MUSÍ NAČÍST I V PROHLÍŽEČI --------------------
+   ==================================================================
+   js/druh.js je modul ROBOTA — žádná stránka ho nenačítá a kvůli jedné
+   funkci by si ho musel stáhnout každý návštěvník (12 420 B zdroje,
+   5 423 B přes drát). Prohlížeč přitom text nikdy nerozebírá: kategorii
+   pozná robot při stahování a uloží ji do `kat`, stránce stačí popis.
+
+   Měří se proto obě strany téže věci. Modul se v prostředí BEZ
+   PKDruh musí načíst a popis musí fungovat — jinak by se kategorie na
+   webu nedaly použít vůbec. A `zTextu()` tam musí spadnout nahlas se
+   jménem chybějícího modulu — tichý náhradní normalizátor by znamenal,
+   že prohlížeč počítá kategorii jinak než robot, a to se pozná teprve
+   na datech.
+
+   Prostředí se dělá přes node:vm, ne předstíráním: v sandboxu není
+   `module`, takže se vykoná ta větev UMD hlavičky, kterou vykoná
+   prohlížeč. */
+{
+  const vm = await import('node:vm');
+  const kod = readFileSync(join(KOREN, 'js', 'kategorie.js'), 'utf8');
+  const okno = { console };
+  okno.self = okno;
+  const ctx = vm.createContext(okno);
+  let vyjimkaPriNacteni = null;
+  try { vm.runInContext(kod, ctx, { filename: 'js/kategorie.js' }); }
+  catch (e) { vyjimkaPriNacteni = e; }
+  pravda('kategorie.js se načtou i bez js/druh.js (tak je bere stránka)',
+    vyjimkaPriNacteni === null, vyjimkaPriNacteni && vyjimkaPriNacteni.message);
+  const B = okno.PKKategorie;
+  pravda('a modul se tam opravdu zveřejní jako PKKategorie', !!B);
+  if (B) {
+    je('popis kategorie v prohlížeči funguje', [B.jmeno('byt'), B.mnozne('byt')],
+      ['Byt', 'Byty']);
+    je('míra i pozemkovost taky', [B.mera('byt'), B.jePozemkova('byt')],
+      ['podlahova', false]);
+    let hlaska = '';
+    try { B.zTextu('Prodej bytu 3+kk', []); } catch (e) { hlaska = e.message; }
+    pravda('ale rozbor textu bez js/druh.js spadne, a řekne čeho se mu nedostává',
+      hlaska.indexOf('druh.js') >= 0, hlaska ? 'hláška: ' + hlaska : 'nespadlo vůbec');
+  }
+}
+
+/* ---- 8) NADPIS NABÍDKY UMÍ KAŽDOU KATEGORII --------------------
+   ==================================================================
+   Nadpis karty i stránky skládá PKCisteni.hlavaNabidky(): z „Byt"
+   a dražby udělá „Dražba bytu". Dělá to přes tabulku druhých pádů
+   (DRUH_2P) a co v ní není, vrátí BEZ ZMĚNY — tedy holé „Byt" tam, kde
+   se draží. Nespadne nic, jen z nadpisu zmizí, o jakou akci jde.
+
+   Proto se měří obě strany: každá kategorie má druhý pád, a nadpis
+   nabídky jím opravdu projde. Nová kategorie tak nemůže tiše přestat
+   umět říct, že se draží. */
+{
+  const C = require_(join(KOREN, 'js', 'cisteni.js'));
+  const bez2p = K.KATEGORIE.map((z) => z.jmeno).filter((j) => !C.DRUH_2P[j]);
+  pravda('každá kategorie má v js/cisteni.js druhý pád',
+    bez2p.length === 0, 'chybí u: ' + bez2p.join(', '));
+  je('a z bytu v dražbě vyjde „Dražba bytu"',
+    C.hlavaNabidky(K.jmeno('byt'), 'drazba'), 'Dražba bytu');
+  je('z domu na prodej „Prodej domu"',
+    C.hlavaNabidky(K.jmeno('dum'), 'sale'), 'Prodej domu');
+  /* Pozemek tou cestou chodí odjakživa a nesmí se změnit. */
+  je('a u pozemku nadpis dělá pořád druh',
+    C.hlavaNabidky('Orná půda', 'drazba'), 'Dražba orné půdy');
+  /* Druhý pád se smí doplnit jen tam, kde se opravdu píše nadpis —
+     tahle kontrola měří, že žádná kategorie nepropadne skrz. */
+  const propadly = K.KATEGORIE
+    .map((z) => [z.klic, C.hlavaNabidky(z.jmeno, 'drazba')])
+    .filter(([, h]) => h.indexOf('Dražba ') !== 0);
+  pravda('žádná kategorie neprojde nadpisem bez akce',
+    propadly.length === 0, JSON.stringify(propadly));
+}
+
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

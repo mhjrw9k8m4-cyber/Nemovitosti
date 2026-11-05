@@ -23,7 +23,10 @@
 
   var MEZ_NEUVERITELNA = 30000;
 
+  function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
+
   function zaMetr(d) {
+    if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
@@ -178,7 +181,7 @@
 
   function jenPozemky(DATA) {
     if (!Array.isArray(DATA)) return DATA;
-    return DATA.filter(function (o) { return !o || !o.kat || o.kat === 'pozemek'; });
+    return DATA.filter(jePozemek);
   }
 
   function postav(DATA, okresKraj, chybaDruhu) {
@@ -623,7 +626,7 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, jenPozemky: jenPozemky,
+    postav: postav, jenPozemky: jenPozemky, jePozemek: jePozemek,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,

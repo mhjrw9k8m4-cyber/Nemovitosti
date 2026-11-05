@@ -35,6 +35,13 @@
   var SDILENE = [
     { klic: 't',        stav: 'activeType',      tvar: 'text',    vychozi: 'all' },
     { klic: 'd',        stav: 'druhVybrane',     tvar: 'seznam' },
+    /* TYP NEMOVITOSTI (pozemek / dům / byt / areál …). Od 5. 11. 2026
+       nejsou na webu jen pozemky, takže „pošli mi byty v okrese Most"
+       je přesně ten odkaz, který si lidi posílají — a bez tohohle řádku
+       by se filtr v panelu zapnul, ale z adresy vypadl. Klíč je krátký
+       schválně, ať je odkaz čitelný; hodnoty jsou KLÍČE kategorií
+       (byt, dum, …), ne jména pro oči, protože jména se skloňují. */
+    { klic: 'tn',       stav: 'katVybrane',      tvar: 'seznam' },
     { klic: 'co',       stav: 'minPrice',        tvar: 'cislo' },
     { klic: 'cd',       stav: 'maxPrice',        tvar: 'cislo' },
     { klic: 'po',       stav: 'minArea',         tvar: 'cislo' },

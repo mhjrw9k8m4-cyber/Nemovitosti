@@ -1993,10 +1993,18 @@
        odporovaly. U 400 z 507 podílů robot z textu inzerátu dokázal,
        že uložená výměra je už ta podílová (`vymera_podilu`), takže
        poznámka vlevo byla nepravdivá u čtyř pětin z nich. */
+    /* A U BYTU NEBO GARÁŽE JE TA VÝMĚRA PODLAHOVÁ PLOCHA, ne parcela.
+       Holé „54 m²" v dlaždici, která na dvou tisících jiných stránkách
+       znamená plochu pozemku, je dvojsmysl přesně toho druhu, jaký tady
+       jednou vynutily podíly. Rozhoduje `mera` v js/kategorie.js, ne
+       podmínka opsaná sem. Podíl má přednost: upozornění, že v ceně je
+       zlomek, váží víc. */
+    var KAT = global.PKKategorie || null;
+    var popisMery = KAT ? KAT.popisVymery(d) : '';
     klice.push({ k: 'Výměra', v: areaTxt(d), ikona: 'plocha',
       pozn: (d.podil && hasArea(d))
         ? (d.vymera_podilu ? 'váš podíl — celá parcela je větší' : 'celá parcela — kupuje se jen podíl')
-        : '' });
+        : (hasArea(d) ? popisMery : '') });
     /* V dlaždici krátká věta, ne celé souvětí — proč a co si ověřit,
        stojí ve verdiktu o kus níž (viz zaMetrKratce v js/ceny.js). */
     var perM2Kratce = global.PK_CENY && global.PK_CENY.zaMetrKratce
@@ -2008,7 +2016,15 @@
        dlaždici ale stojí jako údaj sám o sobě, vedle „6 336 m²"
        a „314 Kč/m²", takže malé počáteční písmeno vypadalo, jako by
        tam spadlo omylem. Mění se jen vykreslení, ne data. */
-    klice.push({ k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
+    /* TŘETÍ DLAŽDICE ŘÍKÁ, CO TO JE — a u bytu to není druh pozemku.
+       `druh` je u nepozemkové nabídky prázdný nebo je to nanejvýš druh
+       parcely POD stavbou, takže dlaždice tvrdila „Druh pozemku: —"
+       u věci, o které se ví, že je to byt. Popisek i hodnota se proto
+       u nich berou z kategorie; u pozemků zůstává všechno, jak bylo. */
+    var coJe = KAT ? KAT.nadpisKategorie(d) : null;
+    klice.push(coJe
+      ? { k: 'Typ nemovitosti', v: esc(coJe), ikona: 'druh', pozn: '' }
+      : { k: 'Druh pozemku', v: esc(velkeNaZacatku(d.druh || '—')), ikona: 'druh', pozn: '' });
 
     /* ČTVRTÁ DLAŽDICE: TERMÍN, NEBO CO VLASTNĚ KUPUJETE.
        Tři dlaždice říkaly, CO se prodává a ZA KOLIK. Čtvrtá doplňuje

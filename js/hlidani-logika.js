@@ -75,7 +75,14 @@
      Když se kopie rozejdou, nic nespadne — jen začne web tvrdit jiné
      číslo než mail o téže nabídce. Hlídá to scripts/test-strop-ceny.mjs:
      prožene obě kopie celými daty a výsledek musí být na znak stejný. */
+  /* POZEMKOVOST. Tatáž branka jako v js/ceny.js (tam je i celé
+     odůvodnění: Kč/m² je na tomhle webu pozemkový poměr, u bytu by to
+     byla jiná veličina ve společné stupnici). Tady stojí jen pravidlo,
+     protože tenhle soubor musí umět počítat i bez ceny.js. Rozchod obou
+     kopií chytá scripts/test-hlidani.mjs na všech datech. */
+  function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
   function zaMetr(d) {
+    if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;

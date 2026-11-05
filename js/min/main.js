@@ -234,6 +234,10 @@
     return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
 
+  var KAT = window.PKKategorie || null;
+  function katNadpis(d) { return KAT ? KAT.nadpisKategorie(d) : null; }
+  function katVymera(d) { return KAT ? KAT.popisVymery(d) : ''; }
+
   var NADRAZENE = { 'Zemědělská půda': ['Orná půda', 'Louka / travní porost'] };
   function druhSedi(druhPozemku, vybrano) {
     if (!vybrano || vybrano === 'all') return true;
@@ -940,6 +944,8 @@
   var searchEl = document.getElementById('map-search');
   var filtersEl = document.getElementById('map-filters');
   var druhyEl = document.getElementById('mc-druhy');
+  var katEl = document.getElementById('mc-kategorie');
+  var katBlokEl = document.getElementById('mc-kategorie-blok');
   var sortEl = document.getElementById('map-sort');
   var cenaEl = document.getElementById('map-cena');
   var areaEl = document.getElementById('map-area');
@@ -972,6 +978,17 @@
     return false;
   }
   function druhPopis() { return druhVybrane.join(', '); }
+
+  var katVybrane = [];
+  function katKlic(d) { return KAT ? KAT.klic(d && d.kat) : 'pozemek'; }
+  function katVyhovuje(d) {
+    if (!katVybrane.length) return true;
+    return katVybrane.indexOf(katKlic(d)) >= 0;
+  }
+  function katPopis() {
+    if (!KAT) return katVybrane.join(', ');
+    return katVybrane.map(function (k) { return KAT.mnozne(k); }).join(', ');
+  }
   var sortMode = 'demand';
   var maxPrice = 0;
   var minArea = 0;
@@ -1370,6 +1387,38 @@
     druhyEl.innerHTML = html;
   }
 
+  var KATEGORIE_VSE = (function () {
+    if (!KAT) return [];
+    var maji = {};
+    for (var i = 0; i < DATA.length; i++) maji[katKlic(DATA[i])] = true;
+    return KAT.KLICE.filter(function (k) { return maji[k]; });
+  }());
+  function prekresliKategorie() {
+    if (!katEl || !KAT) return;
+
+    if (katBlokEl) katBlokEl.hidden = KATEGORIE_VSE.length < 2;
+    if (KATEGORIE_VSE.length < 2) { katEl.innerHTML = ''; return; }
+    var pocty = {};
+    for (var i = 0; i < DATA.length; i++) {
+      var d = DATA[i];
+      if (!visibleBezKategorie(d)) continue;
+      var k = katKlic(d);
+      pocty[k] = (pocty[k] || 0) + 1;
+    }
+    var html = '';
+    for (var j = 0; j < KATEGORIE_VSE.length; j++) {
+      var k2 = KATEGORIE_VSE[j];
+      var on = katVybrane.indexOf(k2) >= 0;
+      var n = pocty[k2] || 0;
+      html += '<button type="button" class="mcv-btn' + (on ? ' on' : '') + (n ? '' : ' mcv-nula') + '"'
+        + ' data-kat="' + esc(k2) + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+        + '<span class="mcp-v" aria-hidden="true"></span>'
+        + '<span class="mcp-t">' + esc(KAT.mnozne(k2)) + '</span>'
+        + '<span class="mcv-n">' + fmt(n) + '</span></button>';
+    }
+    katEl.innerHTML = html;
+  }
+
   (function () {
     var info = document.getElementById('mcv-info');
     var pozn = document.getElementById('mcv-pozn');
@@ -1383,7 +1432,9 @@
 
   function drzMisto(el) {
     if (!el || !el.getBoundingClientRect) return function () {};
-    var klic = el.getAttribute('data-druh');
+
+    var atr = el.hasAttribute('data-kat') ? 'data-kat' : 'data-druh';
+    var klic = el.getAttribute(atr);
     var rodic = el.parentElement;
     var pred = el.getBoundingClientRect().top;
 
@@ -1395,7 +1446,7 @@
     return function () {
 
       var novy = el.isConnected ? el
-        : (klic && rodic ? rodic.querySelector('[data-druh="' + klic.replace(/"/g, '\\"') + '"]') : null);
+        : (klic && rodic ? rodic.querySelector('[' + atr + '="' + klic.replace(/"/g, '\\"') + '"]') : null);
       if (!novy) return;
       var d = novy.getBoundingClientRect().top - pred;
       if (Math.abs(d) < 1) return;
@@ -1421,6 +1472,18 @@
       var g = b.getAttribute('data-druh');
       var i2 = druhVybrane.indexOf(g);
       if (i2 >= 0) druhVybrane.splice(i2, 1); else druhVybrane.push(g);
+      renderList();
+    });
+  }
+  if (katEl) {
+    katEl.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.mcv-btn') : null;
+      if (!b || !katEl.contains(b)) return;
+      var k = b.getAttribute('data-kat');
+
+      if (!KAT || KAT.KLICE.indexOf(k) < 0) return;
+      var i2 = katVybrane.indexOf(k);
+      if (i2 >= 0) katVybrane.splice(i2, 1); else katVybrane.push(k);
       renderList();
     });
   }
@@ -1874,7 +1937,12 @@
   }
   });
 
-  function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
+  var VSE_POZEMKY = KATEGORIE_VSE.length < 2
+    && (KATEGORIE_VSE.length === 0 || KATEGORIE_VSE[0] === 'pozemek');
+  function plPozemek(n) {
+    if (!VSE_POZEMKY) return n === 1 ? 'nemovitost' : (n >= 2 && n <= 4 ? 'nemovitosti' : 'nemovitostí');
+    return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');
+  }
 
   function esc(x) {
     return String(x == null ? '' : x)
@@ -3703,6 +3771,7 @@
       if (_pn) okPresne = jePresna(d, _pn);
     }
     var okDruh = druhVyhovuje(d);
+    var okKat = katVyhovuje(d);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
     var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
@@ -3763,7 +3832,7 @@
 
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
-    return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
+    return okType && okSearch && okMisto && okPresne && okDruh && okKat && okPrice && okArea && okUrgent && okFav && okSkryt
       && okPerM2 && okKraj && okLevne && okZlevnene && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz;
   }
 
@@ -3804,6 +3873,11 @@
     pol('přesný název', 'přesný název', !ukazPodobne && !mistoFiltr && !!presnyNazev(),
       function () { ukazPodobne = true; },
       (function () { var a = ukazPodobne; return function () { ukazPodobne = a; }; }()));
+
+    pol('typ nemovitosti', 'typ nemovitosti', katVybrane.length > 0,
+      function () { katVybrane = []; },
+      (function () { var a = katVybrane.slice(); return function () { katVybrane = a; }; }()),
+      katVybrane.length ? katPopis() : '');
     pol('druh pozemku', 'druh pozemku', druhVybrane.length > 0 || !!d.druh,
       function () { druhVybrane = []; d.druh = null; },
       (function () { var a = druhVybrane.slice(), b = d.druh; return function () { druhVybrane = a; d.druh = b; }; }()),
@@ -3953,6 +4027,11 @@
   function visibleBezDruhu(d) {
     var byl = druhVybrane; druhVybrane = [];
     try { return visible(d); } finally { druhVybrane = byl; }
+  }
+
+  function visibleBezKategorie(d) {
+    var byl = katVybrane; katVybrane = [];
+    try { return visible(d); } finally { katVybrane = byl; }
   }
 
   function zaMetr(d) {
@@ -4244,6 +4323,7 @@
     zapisAdresu();
 
     prekresliDruhy();
+    prekresliKategorie();
     updateFilterBadge();
     vykresliOkruhNaMape();
     ulozFiltr();
@@ -4317,14 +4397,18 @@
         : (days < 0 ? '<span class="opp-cd opp-proběhlo">Dražba proběhla</span>'
                     : '<span class="opp-cd' + countdownClass(days) + '">Dražba ' + countdownText(days) + '</span>');
 
-      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
+      var druhCap = katNadpis(d)
+        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
       var sub = hasParcel(d) ? 'parc. ' + d.parcel : '';
 
       var figs =
 
         (hasArea(d)
           ? '<span class="m">' + fmt(d.area) + '\u00a0m²'
-            + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
+
+            + (d.podil
+                ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>'
+                : (katVymera(d) ? '<i class="m-celek">' + esc(katVymera(d)) + '</i>' : ''))
             + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
 
@@ -4813,7 +4897,7 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; druhVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
+    activeType = 'all'; druhVybrane = []; katVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
     stranka = 0;
     if (searchEl) searchEl.value = '';
 
@@ -5236,7 +5320,7 @@
     try { var c = map.getCenter(); stred = { lat: c.lat, lng: c.lng, zoom: map.getZoom() }; } catch (e) {}
     return {
       poloha: stred,
-      activeType: activeType, druhVybrane: druhVybrane,
+      activeType: activeType, druhVybrane: druhVybrane, katVybrane: katVybrane,
       minPrice: minPrice, maxPrice: maxPrice,
       minArea: minArea, maxArea: maxArea, maxPerM2: maxPerM2,
       zadaneVybaveni: zadaneVybaveni,
@@ -5322,6 +5406,13 @@
         var b = druhyEl && druhyEl.querySelector('[data-druh="' + g.replace(/"/g, '') + '"]');
         if (b) { b.click(); neco = true; }
         else if (DRUHY_VSE.indexOf(g) >= 0) { druhVybrane.push(g); neco = true; }
+      });
+
+      (st.katVybrane || []).forEach(function (k) {
+        if (katVybrane.indexOf(k) >= 0) return;
+        var b = katEl && katEl.querySelector('[data-kat="' + k.replace(/"/g, '') + '"]');
+        if (b) { b.click(); neco = true; }
+        else if (KAT && KAT.KLICE.indexOf(k) >= 0) { katVybrane.push(k); neco = true; }
       });
 
       if ((st.zadaneVybaveni || []).length) { zadaneVybaveni = st.zadaneVybaveni.slice(); neco = true; }
@@ -5502,7 +5593,9 @@
     grid.innerHTML = top.map(function (o) {
       var d = o.d;
       var perM2 = zaMetr(d);
-      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
+
+      var druhCap = katNadpis(d)
+        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
 
         '<div class="opp-media">' + mapThumb(d) + '</div>' +
@@ -6057,7 +6150,8 @@
   }());
 
   function ulozFiltr() {
-    zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
+    zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(),
+      kategorie: katVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
       zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly, zlevnene: zlevneneOnly });
   }
@@ -6067,6 +6161,10 @@
     if (f.typ) activeType = f.typ;
 
     if (f.druh) druhVybrane = Array.isArray(f.druh) ? f.druh.slice() : [f.druh];
+
+    if (Array.isArray(f.kategorie) && KAT) {
+      katVybrane = f.kategorie.filter(function (k) { return KAT.KLICE.indexOf(k) >= 0; });
+    }
     if (f.cena) maxPrice = f.cena;
     if (f.plocha) minArea = f.plocha;
     urgentOnly = !!f.urgent;

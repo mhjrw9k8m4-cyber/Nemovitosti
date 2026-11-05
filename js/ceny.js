@@ -91,6 +91,12 @@
    * se, až se k mezi přiblíží (scripts/test-strop-ceny.mjs). Dnes je
    * mezi maximem a mezí 28 %. */
   var MEZ_NEUVERITELNA = 30000;
+  /* JE TO POZEMEK? Nabídka bez kategorie je pozemek — tak vznikla
+     všechna dnešní data a tak je zapsaný i výchozí stav v js/kategorie.js
+     (VYCHOZI = 'pozemek'). Pravidlo stojí tady, protože je to nejnižší
+     místo, kde se o pozemkovosti rozhoduje: cena za metr i filtr celých
+     dat pro cenový model (jenPozemky níž) z něj čtou totéž. */
+  function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
   /* DVOJČE. Tahle funkce stojí doslovně i v js/hlidani-logika.js. Rozesílání
      upozornění běží v Node, kde se prohlížečový modul js/ceny.js
@@ -98,7 +104,32 @@
      Když se kopie rozejdou, nic nespadne — jen začne web tvrdit jiné
      číslo než mail o téže nabídce. Hlídá to scripts/test-strop-ceny.mjs:
      prožene obě kopie celými daty a výsledek musí být na znak stejný. */
+  /* A JE TO CENA ZA METR POZEMKU, NE ZA METR ČEHOKOLI.
+   *
+   * Celý web s tím číslem počítá jako s pozemkovým poměrem: strop
+   * uvěřitelnosti 30 000 Kč/m² (u pozemků je naměřené maximum 23 498),
+   * percentilová stupnice barev na mapě, filtr „jen levné", řazení podle
+   * ceny za metr, verdikt o ceně, vývoz do tabulky i upozornění mailem
+   * a do telefonu — všude se jedno číslo srovnává napříč nabídkami.
+   *
+   * U bytu je Kč/m² podlahové plochy číslo stejně běžné, ale je to JINÁ
+   * VELIČINA: byt za 35 000 Kč/m² a pole za 35 Kč/m² v jedné stupnici
+   * znamená, že každý pozemek vyjde jako zdarma a „jen levné" přestane
+   * dávat smysl. Strop by navíc většinu bytů tiše zahodil sám (běžná
+   * cena bytu je nad 30 000 Kč/m²), takže by se web tvářil, že u nich
+   * cenu za metr spočítat neumí — a to je lež z nedopatření, ne
+   * rozhodnutí.
+   *
+   * U nepozemkové nabídky se proto nevrací NIC. Je to tatáž věta jako
+   * u podílu neznámé velikosti o pár řádků výš: raději žádné číslo než
+   * číslo, o kterém víme, že neplatí. Vlastní cenu za metr podlahové
+   * plochy — s vlastním popiskem a vlastní stupnicí — dostanou byty
+   * a domy spolu s cenovým modelem podle kategorie; do té doby se o nich
+   * tohle číslo neříká. Které kategorie jsou pozemkové, rozhoduje `mera`
+   * v js/kategorie.js; že se to nerozešlo, hlídá
+   * scripts/test-kategorie.mjs. */
   function zaMetr(d) {
+    if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
@@ -453,7 +484,7 @@
      Že se ty dva pojmy nerozešly, hlídá scripts/test-kategorie.mjs. */
   function jenPozemky(DATA) {
     if (!Array.isArray(DATA)) return DATA;
-    return DATA.filter(function (o) { return !o || !o.kat || o.kat === 'pozemek'; });
+    return DATA.filter(jePozemek);
   }
 
   function postav(DATA, okresKraj, chybaDruhu) {
@@ -1496,7 +1527,7 @@
   var DOST_NABIDEK = 25;
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
-    postav: postav, jenPozemky: jenPozemky,
+    postav: postav, jenPozemky: jenPozemky, jePozemek: jePozemek,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,

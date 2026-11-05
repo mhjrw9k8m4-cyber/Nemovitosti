@@ -144,10 +144,10 @@ const stejne = (popis, a, b) => pravda(popis, JSON.stringify(a) === JSON.stringi
       'var', 'if', 'else', 'return', 'for', 'break', 'function', 'true', 'false', 'null', 'typeof',
       'd', 'vi', 'si', 'mi', 'length', 'indexOf', 'push', 'Math', 'Number', 'isFinite',
       'type', 'price', 'area', 'site', 'podil', 'druh',
-      'HL', 'vyhovuje', 'sediMisto', 'presnyNazev', 'jePresna', 'druhVyhovuje',
+      'HL', 'vyhovuje', 'sediMisto', 'presnyNazev', 'jePresna', 'druhVyhovuje', 'katVyhovuje',
       'hasArea', 'isUrgent', 'isFav', 'druhSedi', 'krajOf', 'zaMetr', 'jeSkryty', 'jeProsle',
       'nejakeSite', 'SITE_KLICE', 'DNI_KONCI', 'podObvyklou', 'okoli', 'min',
-      'okType', 'okSearch', 'okMisto', 'okPresne', 'okDruh', 'okPrice', 'okArea',
+      'okType', 'okSearch', 'okMisto', 'okPresne', 'okDruh', 'okKat', 'okPrice', 'okArea',
       'okUrgent', 'okFav', 'okVybaveni', 'okCelek', 'okDotaz', 'okPerM2', 'okKraj',
       'okOkoli', 'okOkruh', 'okLevne', 'okZlevnene', 'okSkryt', 'okProsle', 'okTvar',
       // zlevnila() se ptá PKZlevneni, jestli u nabídky spadla cena

@@ -402,6 +402,26 @@
     return (window.PK_CENY && window.PK_CENY.druhGroup) ? window.PK_CENY.druhGroup(s) : 'Jiný pozemek';
   }
 
+  /* ---- KATEGORIE NEMOVITOSTI (js/kategorie.js) --------------------
+     `kat` říká, CO se prodává — pozemek, dům, byt, areál. Nabídka bez
+     něj je pozemek (tak vznikla všechna data do 5. 11. 2026) a modul to
+     tak sám bere, takže se o to tady nikdo nestará.
+
+     Rozhodnutí „co napsat do nadpisu" a „co ta výměra je" padá na pěti
+     místech v tomhle souboru i v generátorech stránek. Proto jsou
+     v modulu, ne tady: pět opsaných podmínek je pět příležitostí, jak
+     se rozejít.
+
+     NÁHRADNÍ CHOVÁNÍ JE DOSAVADNÍ WEB, NE TICHO. Když se modul
+     nenačte, vyjde nadpis z druhu a u výměry se nic netvrdí — tedy
+     přesně to, co web dělal předtím. Je to proto, že tenhle soubor
+     vykresluje celý výpis: chybějící modul nesmí nechat člověka
+     u prázdné stránky. Že se opravdu načítá, měří hlídač v prohlížeči
+     (scripts/test-uvod.mjs), ne tahle podmínka. */
+  var KAT = window.PKKategorie || null;
+  function katNadpis(d) { return KAT ? KAT.nadpisKategorie(d) : null; }
+  function katVymera(d) { return KAT ? KAT.popisVymery(d) : ''; }
+
   /* Nadřazená skupina druhů. „Zemědělská půda" = orná půda + louky —
      přesně tak to sčítá stránka s cenami i slovníček. Mapa ale uměla
      filtrovat jen sedm konkrétních druhů, takže kdo do hledání napsal
@@ -1638,6 +1658,8 @@
   var searchEl = document.getElementById('map-search');
   var filtersEl = document.getElementById('map-filters');
   var druhyEl = document.getElementById('mc-druhy');
+  var katEl = document.getElementById('mc-kategorie');
+  var katBlokEl = document.getElementById('mc-kategorie-blok');
   var sortEl = document.getElementById('map-sort');
   var cenaEl = document.getElementById('map-cena');
   var areaEl = document.getElementById('map-area');
@@ -1695,6 +1717,23 @@
     return false;
   }
   function druhPopis() { return druhVybrane.join(', '); }
+  /* ---- TYP NEMOVITOSTI (kategorie) --------------------------------
+     Tatáž mechanika jako u druhu pozemku: prázdné pole znamená
+     „všechny", víc kategorií se sčítá. Co se vybírá, jsou KLÍČE
+     (pozemek, dum, byt…), ne jména pro oči — jména se skloňují a mění,
+     klíč je to, co leží v datech a v uloženém filtru.
+     Nabídka bez `kat` je pozemek; rozhoduje o tom jediné místo
+     (PKKategorie.klic), aby se to nemuselo opisovat tady. */
+  var katVybrane = [];
+  function katKlic(d) { return KAT ? KAT.klic(d && d.kat) : 'pozemek'; }
+  function katVyhovuje(d) {
+    if (!katVybrane.length) return true;
+    return katVybrane.indexOf(katKlic(d)) >= 0;
+  }
+  function katPopis() {
+    if (!KAT) return katVybrane.join(', ');
+    return katVybrane.map(function (k) { return KAT.mnozne(k); }).join(', ');
+  }
   var sortMode = 'demand';
   var maxPrice = 0;
   var minArea = 0;         // filtr minimální výměry (m²)
@@ -2382,6 +2421,51 @@
     }
     druhyEl.innerHTML = html;
   }
+  /* ---- DLAŽDICE TYPU NEMOVITOSTI ----------------------------------
+     POŘADÍ NENÍ PODLE ČETNOSTI, a to je rozdíl proti druhům pozemku.
+     Druhů je v datech přes třicet variant a nejčastější první je tam
+     jediné rozumné řazení. Kategorií je devět, je to krátký pevný
+     seznam a jejich pořadí v js/kategorie.js je rozhodnutí (pozemek,
+     dům, byt, …). Kdyby se řadilo podle četnosti, přeskakovaly by si
+     dlaždice místa každou noc, jak se mění data — a člověk, který si
+     zapamatoval, kde „Byty" jsou, by je hledal znovu.
+
+     BLOK SE SKRYJE, DOKUD JE V DATECH JEDNA KATEGORIE. Dnes je všech
+     2 303 nabídek pozemek, takže filtr, pod kterým je stejně všechno,
+     by jen zabíral místo v panelu a tvrdil člověku, že má na vybranou.
+     Objeví se sám, jak noční robot přinese první byt nebo dům. */
+  var KATEGORIE_VSE = (function () {
+    if (!KAT) return [];
+    var maji = {};
+    for (var i = 0; i < DATA.length; i++) maji[katKlic(DATA[i])] = true;
+    return KAT.KLICE.filter(function (k) { return maji[k]; });
+  }());
+  function prekresliKategorie() {
+    if (!katEl || !KAT) return;
+    /* Jedna kategorie = není co vybírat. `hidden` na celém bloku, aby
+       zmizelo i jeho návěští „Typ nemovitosti". */
+    if (katBlokEl) katBlokEl.hidden = KATEGORIE_VSE.length < 2;
+    if (KATEGORIE_VSE.length < 2) { katEl.innerHTML = ''; return; }
+    var pocty = {};
+    for (var i = 0; i < DATA.length; i++) {
+      var d = DATA[i];
+      if (!visibleBezKategorie(d)) continue;
+      var k = katKlic(d);
+      pocty[k] = (pocty[k] || 0) + 1;
+    }
+    var html = '';
+    for (var j = 0; j < KATEGORIE_VSE.length; j++) {
+      var k2 = KATEGORIE_VSE[j];
+      var on = katVybrane.indexOf(k2) >= 0;
+      var n = pocty[k2] || 0;
+      html += '<button type="button" class="mcv-btn' + (on ? ' on' : '') + (n ? '' : ' mcv-nula') + '"'
+        + ' data-kat="' + esc(k2) + '" aria-pressed="' + (on ? 'true' : 'false') + '">'
+        + '<span class="mcp-v" aria-hidden="true"></span>'
+        + '<span class="mcp-t">' + esc(KAT.mnozne(k2)) + '</span>'
+        + '<span class="mcv-n">' + fmt(n) + '</span></button>';
+    }
+    katEl.innerHTML = html;
+  }
   /* Vysvětlení u sítí je pod „i" — zabíralo v panelu víc místa než
      štítky samotné, a přitom je potřeba jen jednou: mlčení inzerátu
      neznamená, že síť chybí. */
@@ -2417,7 +2501,13 @@
      ================================================================== */
   function drzMisto(el) {
     if (!el || !el.getBoundingClientRect) return function () {};
-    var klic = el.getAttribute('data-druh');
+    /* Dlaždice v panelu se poznávají podle svého klíče — u druhu
+       pozemku je to `data-druh`, u typu nemovitosti `data-kat`. Dokud
+       se čekal jen ten první, po zakliknutí kategorie se náhrada
+       nenašla a srovnání posunu se tiše nekonalo: web se pod prstem
+       pohnul přesně tak, jak si na to majitel stěžoval. */
+    var atr = el.hasAttribute('data-kat') ? 'data-kat' : 'data-druh';
+    var klic = el.getAttribute(atr);
     var rodic = el.parentElement;
     var pred = el.getBoundingClientRect().top;
     /* Který rámec se vlastně posouvá. Na širokém displeji roluje sloupec
@@ -2432,7 +2522,7 @@
          prvek po překreslení neexistuje — najdeme jeho náhradu podle
          druhu. Ostatní štítky se jen přepisují a přežijí. */
       var novy = el.isConnected ? el
-        : (klic && rodic ? rodic.querySelector('[data-druh="' + klic.replace(/"/g, '\\"') + '"]') : null);
+        : (klic && rodic ? rodic.querySelector('[' + atr + '="' + klic.replace(/"/g, '\\"') + '"]') : null);
       if (!novy) return;
       var d = novy.getBoundingClientRect().top - pred;
       if (Math.abs(d) < 1) return;
@@ -2459,6 +2549,20 @@
       var g = b.getAttribute('data-druh');
       var i2 = druhVybrane.indexOf(g);
       if (i2 >= 0) druhVybrane.splice(i2, 1); else druhVybrane.push(g);
+      renderList();
+    });
+  }
+  if (katEl) {
+    katEl.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.mcv-btn') : null;
+      if (!b || !katEl.contains(b)) return;
+      var k = b.getAttribute('data-kat');
+      /* Jen známý klíč. Dlaždice si ho sice píše sama, ale uložený
+         filtr a odkaz s parametrem chodí zvenčí — a neznámá hodnota
+         v `katVybrane` by vyprázdnila výpis bez vysvětlení. */
+      if (!KAT || KAT.KLICE.indexOf(k) < 0) return;
+      var i2 = katVybrane.indexOf(k);
+      if (i2 >= 0) katVybrane.splice(i2, 1); else katVybrane.push(k);
       renderList();
     });
   }
@@ -3246,7 +3350,32 @@
   }
   });
   // České skloňování: 1 pozemek · 2–4 pozemky · 5+ pozemků
-  function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }
+  /* JAK SE TOMU, CO JE VE VÝPISU, ŘÍKÁ JEDNÍM SLOVEM.
+   *
+   * Tahle funkce skládá čtrnáct nápisů na úvodní stránce: počet
+   * v patě panelu („Zobrazit 1 420 pozemků"), bubliny krajů na mapě,
+   * popisky shluků, okolí, uložené. Dokud jsou v datech jen pozemky,
+   * je „pozemků" správné a konkrétnější slovo než „nemovitostí".
+   *
+   * Od 5. 11. 2026 tam ale mohou ležet i byty a domy — a „2 310
+   * pozemků", z nichž deset jsou byty, je nepravda na nejviditelnějším
+   * místě webu. Rozhoduje proto obsah dat, ne přání: jediná nepozemková
+   * nabídka přepne všech čtrnáct nápisů na „nemovitostí". Dnes je
+   * výsledek znak za znakem tentýž jako dřív (všech 2 303 nabídek je
+   * pozemek), takže se tím nic nerozbije a nic se nepřepíše naslepo.
+   *
+   * ROZHODUJÍ DATA, NE PRÁVĚ ZAPNUTÝ FILTR. Kdyby se slovo řídilo
+   * výběrem, měnilo by se pod rukou při každém zakliknutí — a popisek
+   * kraje na mapě by mluvil o něčem jiném než počet nad výpisem.
+   *
+   * Tvar pro nulu („0 pozemků", ne „0 pozemky") hlídá
+   * scripts/test-mnozstvi.mjs, a to v obou větvích. */
+  var VSE_POZEMKY = KATEGORIE_VSE.length < 2
+    && (KATEGORIE_VSE.length === 0 || KATEGORIE_VSE[0] === 'pozemek');
+  function plPozemek(n) {
+    if (!VSE_POZEMKY) return n === 1 ? 'nemovitost' : (n >= 2 && n <= 4 ? 'nemovitosti' : 'nemovitostí');
+    return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');
+  }
   /** Název místa jde do innerHTML — projede se přes tohle, ať se do stránky
       nedá nic propašovat, i kdyby se data někdy braly odjinud. */
   function esc(x) {
@@ -6022,6 +6151,7 @@
       if (_pn) okPresne = jePresna(d, _pn);
     }
     var okDruh = druhVyhovuje(d);
+    var okKat = katVyhovuje(d);
     var okPrice = (!maxPrice || (d.price && d.price <= maxPrice))
       && (!minPrice || (d.price && d.price >= minPrice));
     var okArea = (!minArea || (hasArea(d) && d.area >= minArea))
@@ -6110,7 +6240,7 @@
     // (tlačítko „Zobrazit skryté"). Nenávratně se nic neztrácí.
     var okSkryt = ukazSkryte || !jeSkryty(d);
     var okProsle = ukazProsle || !jeProsle(d);
-    return okType && okSearch && okMisto && okPresne && okDruh && okPrice && okArea && okUrgent && okFav && okSkryt
+    return okType && okSearch && okMisto && okPresne && okDruh && okKat && okPrice && okArea && okUrgent && okFav && okSkryt
       && okPerM2 && okKraj && okLevne && okZlevnene && okOkoli && okOkruh && okProsle && okVybaveni && okCelek && okDotaz;
   }
   /* KTERÉ OMEZENÍ VYPRÁZDNILO VÝPIS
@@ -6200,6 +6330,13 @@
     pol('přesný název', 'přesný název', !ukazPodobne && !mistoFiltr && !!presnyNazev(),
       function () { ukazPodobne = true; },
       (function () { var a = ukazPodobne; return function () { ukazPodobne = a; }; }()));
+    /* ODSTRANITELNÝ ŠTÍTEK. Bez něj by se z filtru na typ nemovitosti
+       nedalo dostat ven jinak než hledáním v panelu — a hlavně by se
+       u prázdného výpisu neukázal jako viník. */
+    pol('typ nemovitosti', 'typ nemovitosti', katVybrane.length > 0,
+      function () { katVybrane = []; },
+      (function () { var a = katVybrane.slice(); return function () { katVybrane = a; }; }()),
+      katVybrane.length ? katPopis() : '');
     pol('druh pozemku', 'druh pozemku', druhVybrane.length > 0 || !!d.druh,
       function () { druhVybrane = []; d.druh = null; },
       (function () { var a = druhVybrane.slice(), b = d.druh; return function () { druhVybrane = a; d.druh = b; }; }()),
@@ -6397,6 +6534,14 @@
   function visibleBezDruhu(d) {
     var byl = druhVybrane; druhVybrane = [];
     try { return visible(d); } finally { druhVybrane = byl; }
+  }
+  /* Počty u dlaždic typu nemovitosti se počítají PROTI OSTATNÍM
+     FILTRŮM, ale bez tohohle — jinak by u nevybraných kategorií stála
+     vždycky nula a nešlo by poznat, že tam něco je. Totéž co u druhu
+     pozemku o řádek výš. */
+  function visibleBezKategorie(d) {
+    var byl = katVybrane; katVybrane = [];
+    try { return visible(d); } finally { katVybrane = byl; }
   }
   /* CENA ZA METR SE POČÍTÁ Z VÝMĚRY, KTERÁ KUPUJÍCÍMU PŘIPADNE.
      U spoluvlastnického podílu je cena jen za zlomek pozemku, a u části
@@ -6933,6 +7078,7 @@
        závisí na ostatních filtrech, takže statické číslo by lhalo,
        jakmile se zapne cokoli dalšího. */
     prekresliDruhy();
+    prekresliKategorie();
     updateFilterBadge();
     vykresliOkruhNaMape();
     ulozFiltr();
@@ -7091,7 +7237,14 @@
          na Sreality, kde v nadpisu stojí typ a výměra — a parcela stojí
          na řádku s obcí a okresem, kde se podle ní dá dohledat
          v katastru. */
-      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
+      /* U POZEMKU DĚLÁ NADPIS DRUH, u ostatního kategorie — a to není
+         nedůslednost. „Orná půda" řekne kupujícímu víc než „Pozemek",
+         kdežto u bytu `druh` nemá smysl vůbec a u domu je to nanejvýš
+         druh pozemku POD ním, takže by v nadpisu stála „Zastavěná
+         plocha a nádvoří" tam, kde se prodává dům. Celé odůvodnění je
+         u nadpisKategorie() v js/kategorie.js. */
+      var druhCap = katNadpis(d)
+        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
       var sub = hasParcel(d) ? 'parc. ' + d.parcel : '';
       // Řádek s výměrou a Kč/m² (cena je zvlášť, velká, nahoře v těle karty)
       var figs =
@@ -7110,7 +7263,16 @@
            opravdu je. */
         (hasArea(d)
           ? '<span class="m">' + fmt(d.area) + '\u00a0m²'
-            + (d.podil ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>' : '')
+            /* ŠTÍTEK ŘÍKÁ, ČEHO SE TA VÝMĚRA TÝKÁ. U podílu je to buď celá
+               parcela, nebo už podílová výměra (viz výš). U bytu a garáže
+               je to podlahová plocha — holé „54 m²" vedle pozemků, kde
+               totéž číslo znamená plochu parcely, je dvojsmysl přesně
+               toho druhu, jaký tady podíly už jednou vynutily.
+               Podíl má přednost: upozornění, že v ceně je zlomek, váží
+               víc než to, jaká plocha se měří. */
+            + (d.podil
+                ? '<i class="m-celek">' + (d.vymera_podilu ? 'výměra podílu' : 'celá parcela') + '</i>'
+                : (katVymera(d) ? '<i class="m-celek">' + esc(katVymera(d)) + '</i>' : ''))
             + '</span>'
           : '<span class="m">výměra neuvedena</span>') +
         // Vzdálenost se ukazuje vždycky, když je od čeho měřit — dřív jen při
@@ -8073,7 +8235,7 @@
   }
 
   function resetFilters() {
-    activeType = 'all'; druhVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
+    activeType = 'all'; druhVybrane = []; katVybrane = []; maxPrice = 0; minArea = 0; urgentOnly = false; nastavHledani(''); favOnly = false;
     stranka = 0;   // jiný výběr = zpátky na první stranu
     if (searchEl) searchEl.value = '';
 
@@ -8641,7 +8803,7 @@
     try { var c = map.getCenter(); stred = { lat: c.lat, lng: c.lng, zoom: map.getZoom() }; } catch (e) {}
     return {
       poloha: stred,
-      activeType: activeType, druhVybrane: druhVybrane,
+      activeType: activeType, druhVybrane: druhVybrane, katVybrane: katVybrane,
       minPrice: minPrice, maxPrice: maxPrice,
       minArea: minArea, maxArea: maxArea, maxPerM2: maxPerM2,
       zadaneVybaveni: zadaneVybaveni,
@@ -8757,6 +8919,17 @@
         var b = druhyEl && druhyEl.querySelector('[data-druh="' + g.replace(/"/g, '') + '"]');
         if (b) { b.click(); neco = true; }
         else if (DRUHY_VSE.indexOf(g) >= 0) { druhVybrane.push(g); neco = true; }
+      });
+      /* Typ nemovitosti ze sdíleného odkazu. Táž cesta jako u druhu
+         pozemku o řádek výš: nejdřív dlaždice (ta srovná i svůj vzhled),
+         a když v panelu není — třeba protože příjemce má data, kde ta
+         kategorie chybí — tak jen stav, ale POUZE pro známý klíč.
+         Neznámá hodnota v odkazu by jinak vyprázdnila výpis. */
+      (st.katVybrane || []).forEach(function (k) {
+        if (katVybrane.indexOf(k) >= 0) return;
+        var b = katEl && katEl.querySelector('[data-kat="' + k.replace(/"/g, '') + '"]');
+        if (b) { b.click(); neco = true; }
+        else if (KAT && KAT.KLICE.indexOf(k) >= 0) { katVybrane.push(k); neco = true; }
       });
       /* Vybavení a „jen celé pozemky" sedí ve stejné řádce pilulek a
          postavVybaveni() je překresluje ze stavu, takže stačí stav. */
@@ -9013,7 +9186,14 @@
     grid.innerHTML = top.map(function (o) {
       var d = o.d;
       var perM2 = zaMetr(d);
-      var druhCap = d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '';
+      /* U POZEMKU DĚLÁ NADPIS DRUH, u ostatního kategorie — a to není
+         nedůslednost. „Orná půda" řekne kupujícímu víc než „Pozemek",
+         kdežto u bytu `druh` nemá smysl vůbec a u domu je to nanejvýš
+         druh pozemku POD ním, takže by v nadpisu stála „Zastavěná
+         plocha a nádvoří" tam, kde se prodává dům. Celé odůvodnění je
+         u nadpisKategorie() v js/kategorie.js. */
+      var druhCap = katNadpis(d)
+        || (d.druh ? d.druh.charAt(0).toUpperCase() + d.druh.slice(1) : '');
       return '<button type="button" class="deal-card" data-rkey="' + encodeURIComponent(pkey(d)) + '">' +
         /* Odznak druhu sem nepatří ZVLÁŠŤ: mapThumb() ho do náhledu
            přidává sám, a když jsem ho připsal, byl na kartě dvakrát. */
@@ -9791,7 +9971,8 @@
    * člověk sám nastavil — vyhledávací text ne, ten je jednorázový.
    * FILTR_KLIC je nahoře u ostatních klíčů úložiště. */
   function ulozFiltr() {
-    zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(), cena: maxPrice,
+    zapisUloz(FILTR_KLIC, { typ: activeType, druh: druhVybrane.slice(),
+      kategorie: katVybrane.slice(), cena: maxPrice,
       plocha: minArea, cenaOd: minPrice, plochaDo: maxArea, urgent: urgentOnly, razeni: sortMode,
       zaMetr: maxPerM2, kraj: krajFiltr, levne: levneOnly, zlevnene: zlevneneOnly });
   }
@@ -9802,6 +9983,12 @@
     /* Dřív se ukládal jeden řetězec. Uložené nastavení z té doby se
        nesmí zahodit — jeden druh se prostě vezme jako jednoprvkový výběr. */
     if (f.druh) druhVybrane = Array.isArray(f.druh) ? f.druh.slice() : [f.druh];
+    /* JEN ZNÁMÉ KLÍČE. Uložený filtr leží v prohlížeči a přežije i to,
+       že se kategorie přejmenuje nebo zmizí — neznámý klíč by pak
+       vyprázdnil výpis a nebylo by poznat proč. */
+    if (Array.isArray(f.kategorie) && KAT) {
+      katVybrane = f.kategorie.filter(function (k) { return KAT.KLICE.indexOf(k) >= 0; });
+    }
     if (f.cena) maxPrice = f.cena;
     if (f.plocha) minArea = f.plocha;
     urgentOnly = !!f.urgent;

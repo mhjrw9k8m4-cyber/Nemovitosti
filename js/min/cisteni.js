@@ -151,7 +151,16 @@
     'Vodní plocha': 'vodní plochy',
     'Zastavěná plocha a nádvoří': 'zastavěné plochy a nádvoří',
     'Zemědělský pozemek': 'zemědělského pozemku',
-    'Louka': 'louky'
+    'Louka': 'louky',
+
+    'Dům': 'domu',
+    'Byt': 'bytu',
+    'Chata': 'chaty',
+    'Farma': 'farmy',
+    'Areál': 'areálu',
+    'Komerční objekt': 'komerčního objektu',
+    'Garáž': 'garáže',
+    'Jiná nemovitost': 'jiné nemovitosti'
   };
 
   var AKCE = { sale: 'Prodej', drazba: 'Dražba', exekuce: 'Exekuční dražba',

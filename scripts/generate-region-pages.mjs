@@ -116,6 +116,11 @@ const MIN_KRAJ = 15;    // kraj musí mít aspoň tolik nabídek pro vlastní st
    načítají bez js/ceny.js. Že se ty dvě nerozejdou, hlídá
    scripts/test-okres.mjs. */
 const CISTENI = require_(path.join(ROOT, 'js', 'cisteni.js'));
+/* Kategorie nemovitosti — co se vlastně prodává. Na okresní a krajské
+   stránce leží nabídky pohromadě, takže od 5. 11. 2026 mezi pozemky
+   stojí i byty a domy. Bez tohohle modulu by o nich řádek neřekl nic:
+   `druh` u bytu neexistuje a podmínka níž se o něj opírala. */
+const KATEGORIE = require_(path.join(ROOT, 'js', 'kategorie.js'));
 const KRAJ_ORDER = META.KRAJ_ORDER;
 const KRAJ_META = META.KRAJ_META;
 const TYPE_LABEL = { sale:'Na prodej', drazba:'Dražba', exekuce:'Exekuce', obec:'Záměr obce', majitel:'Od majitele' };
@@ -842,7 +847,19 @@ function itemRow(o, skryjOkres, navic, skryjTyp, jedenDruh){
      Sreality). Kdyby tady zůstalo holé „Orná půda", četl by člověk
      o téže nabídce dvě různá jména. Skládá to jediná funkce
      v js/cisteni.js, odkud si ji bere i generátor stránek pozemků. */
-  if(o.druh && o.druh!=='—'){
+  /* CO SE PRODÁVÁ. U pozemku to řekne DRUH, u bytu nebo domu jméno
+     kategorie — `druh` je u nich prázdný nebo je to nanejvýš druh
+     pozemku pod stavbou, takže dokud se podmínka opírala jen o něj,
+     neřekl řádek u nepozemkové nabídky vůbec nic. Rozhoduje táž funkce
+     jako na stránce nabídky (js/kategorie.js), aby se o jedné nabídce
+     nečetla na dvou místech dvě různá jména.
+     Zkratka na druhové stránce („Prodej" místo „Prodej orné půdy")
+     platí jen pro pozemky: tam je druh v titulku stránky. */
+  const coJe = KATEGORIE.nadpisKategorie(o);
+  if (coJe) {
+    const jmeno = CISTENI.hlavaNabidky(coJe, o.type);
+    if (jmeno) bits.push(esc(jmeno));
+  } else if(o.druh && o.druh!=='—'){
     const druhVelky = o.druh.charAt(0).toUpperCase() + o.druh.slice(1);
     const jmeno = jedenDruh
       ? CISTENI.akceNabidky(o.type)

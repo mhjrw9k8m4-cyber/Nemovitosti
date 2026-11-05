@@ -86,7 +86,13 @@ pravda(`nikde v kódu není „n < 5 ?" (prohlédnuto ${soubory.length} souborů
      · popisek odznaku zpráv („0 nepřečtené zprávy") — ten se počítá
        i při nule, protože se zároveň nastavuje odznaku. */
 const JMENOVITE = [
-  ['js/main.js', "function plPozemek(n) { return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků'); }", 'počet v patě panelu'],
+  /* plPozemek() má od 5. 11. 2026 DVĚ VĚTVE: dokud jsou v datech jen
+     pozemky, říká „pozemků", jakmile mezi nimi leží byt nebo dům,
+     „nemovitostí" (viz komentář u té funkce). Hlídají se obě — tvar
+     pro nulu se dá pokazit v každé zvlášť a druhá větev se dnes na
+     obrazovku nedostane, takže by si toho nikdo nevšiml. */
+  ['js/main.js', "return n === 1 ? 'pozemek' : (n >= 2 && n <= 4 ? 'pozemky' : 'pozemků');", 'počet v patě panelu'],
+  ['js/main.js', "return n === 1 ? 'nemovitost' : (n >= 2 && n <= 4 ? 'nemovitosti' : 'nemovitostí');", 'počet v patě panelu, až budou i byty'],
   ['js/main.js', "F.mnozne(celkem, ['nový pozemek', 'nové pozemky', 'nových pozemků'])", 'hláška o hlídání'],
   ['js/ucet-taby.js', "(n >= 2 && n <= 4 ? n + ' nepřečtené zprávy'", 'odznak zpráv'],
 ];

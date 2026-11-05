@@ -26,7 +26,9 @@
 
   var MEZ_NEUVERITELNA = 30000;
 
+  function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
   function zaMetr(d) {
+    if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
