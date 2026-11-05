@@ -186,11 +186,25 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     K.PRAVIDLA[K.PRAVIDLA.length - 1].kat, 'pozemek');
 }
 
-/* ---- 4) DNEŠNÍ DATA SE NESMÍ ZMĚNIT -----------------------------
-   Nová pravidla se pouštějí na všechny nabídky, které web má. Všechny
-   jsou pozemky, takže musí vyjít pozemek u VŠECH — jinak by zapojení
-   kategorií zpětně překlopilo existující web a nikdo by to nepoznal
-   (stránky se jen přegenerují a vypadají normálně). */
+/* ---- 4) POZEMEK SE NESMÍ TIŠE PŘEKLOPIT -------------------------
+   ==================================================================
+   Nová pravidla se pouštějí na VŠECHNY nabídky, které web má. Co se
+   vede jako pozemek, musí z textu vyjít jako pozemek — jinak by
+   kategorie zpětně překlopily existující web a nikdo by to nepoznal
+   (stránky se jen přegenerují a vypadají normálně).
+
+   A POZOR, JAK JE TA VĚTA NAPSANÁ. Nejdřív tu stálo „u všech nabídek
+   musí vyjít pozemek", protože 5. 11. to byla pravda u všech 2 303.
+   Byla to ale **časovaná bomba**: jakmile noční robot uloží první byt
+   nebo dům, taková kontrola spadne — a ne proto, že by se něco
+   rozbilo, nýbrž proto, že se povedlo přesně to, o co jde. Zelená CI
+   by pak padla na úspěchu a člověk by hledal vadu, která není.
+
+   Měří se proto to, co se opravdu měřit má: nabídky, které jsou
+   vedené jako POZEMEK (`kat` chybí nebo je 'pozemek'), musí z textu
+   vyjít jako pozemek. Nabídky s jinou kategorií do téhle otázky
+   nepatří — tam `kat` nastavil robot, a u ÚZSVM ne z textu, ale
+   z číselníku kategorií zdroje. */
 {
   let data = null;
   try { data = JSON.parse(readFileSync(join(KOREN, 'data', 'opportunities.json'), 'utf8')); }
@@ -198,15 +212,32 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
   const vse = (data && data.opportunities) || [];
   pravda('data k měření jsou (jinak tahle kontrola nic netvrdí)',
     vse.length > 100, 'nabídek: ' + vse.length);
+  const pozemky = vse.filter((o) => !o.kat || o.kat === 'pozemek');
   const jine = [];
-  for (const o of vse) {
+  for (const o of pozemky) {
     const txt = [o.place, o.druh, o.extra].filter(Boolean).join(' ');
     if (kat(txt, [o.place, o.okres]) !== 'pozemek') {
       jine.push(o.place + ' | ' + txt.slice(0, 90));
     }
   }
-  pravda(`na všech ${vse.length} dnešních nabídkách vyjde pozemek`,
+  pravda(`na všech ${pozemky.length} nabídkách vedených jako pozemek vyjde pozemek`
+    + ` (z ${vse.length} celkem)`,
     jine.length === 0, jine.slice(0, 5).join('\n      '));
+  /* A KDYŽ UŽ DATA NESOU KATEGORII, ať je to známý klíč. Neznámá
+     hodnota by prošla celým webem jako „pozemek" (viz klic()) a nikde
+     by se neukázala — filtr by ji nenašel a cenový model by ji pustil
+     do průměru pozemků. */
+  const spatne = [...new Set(vse.map((o) => o.kat).filter(Boolean)
+    .filter((k) => K.KLICE.indexOf(k) < 0))];
+  pravda('a každá kategorie v datech je známý klíč',
+    spatne.length === 0, 'neznámé: ' + spatne.join(', '));
+  /* KOLIK JICH PODLE KATEGORIE JE — vypíše se vždycky, i když je to
+     dnes jediná hodnota. Je to to jediné číslo, ze kterého se pozná,
+     že se celá tahle práce v datech vůbec projevila. */
+  const pocty = {};
+  for (const o of vse) pocty[o.kat || 'pozemek'] = (pocty[o.kat || 'pozemek'] || 0) + 1;
+  console.log('  · podle kategorie: ' + Object.keys(pocty).sort()
+    .map((k) => k + ' ' + pocty[k]).join(', '));
 }
 
 /* ---- 5) CENOVÝ MODEL BERE JEN POZEMKY ---------------------------
