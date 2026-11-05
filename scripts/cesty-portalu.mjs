@@ -323,6 +323,47 @@ export function poradiCest(nalezy) {
    ------------------------------------------------------------------ */
 export const STROP_DALSICH = 8;
 
+/* ------------------------------------------------------------------
+   ADRESY, KTERÉ WEB SÁM DAL, ALE VEDOU JINAM — zůstat na svém hostu.
+   ------------------------------------------------------------------
+   Naměřeno 5. 11. na Ministerstvu obrany (běh 42016638323): jejich
+   `sitemap.xml` nevypisuje adresy na onnm.mo.gov.cz, ale na
+   `akis-d9.msw-cloud.com` — jejich cloud, kde se ten web staví. Bot
+   tam poslušně zašel a **všech osm adres vrátilo HTTP 404**:
+
+     http://akis-d9.msw-cloud.com/                              404
+     http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025  404
+     http://akis-d9.msw-cloud.com/media/fotogalerie             404   …
+
+   Jsou to tedy dvě vady naráz. Osm z 43 dotazů padlo na CIZÍ web,
+   který v registru nikdo nejmenoval — a to je proti pravidlu šetrnosti,
+   ne jen plýtvání. A zároveň se tím zahodilo to nejcennější, co ta
+   sitemapa nesla: CESTY. `/nemovity-majetek/archiv-prodeju/2025` na
+   hostu, který se právě zkouší, je přesně ten výpis, který na stránce
+   chyběl (§432).
+
+   Pravidlo je proto: adresu, kterou web sám dal, ale která vede na
+   JINOU DOMÉNU, přepiš na host, který se zkouší — vezmi z ní jen cestu.
+   Je to stejně drahé (jeden dotaz) a nikdy to není horší: dnes z toho
+   byla 404 na cizím webu, teď je to dotaz na vlastní cestu.
+
+   PODDOMÉNA TÉŽE DOMÉNY SE NEPŘEPISUJE. Když výpis bydlí na
+   `drazby.example.cz` a sitemapa je na `example.cz`, je to pořád týž
+   web a adresa platí; přepsat ji by vyrobilo 404 z adresy, která
+   fungovala.
+   ------------------------------------------------------------------ */
+export function naVlastniHost(adresa, zaklad) {
+  let a, z;
+  try { a = new URL(String(adresa)); } catch { return String(adresa || ''); }
+  try { z = new URL(String(zaklad)); } catch { return a.href; }
+  const ha = a.hostname.toLowerCase().replace(/^www\./, '');
+  const hz = z.hostname.toLowerCase().replace(/^www\./, '');
+  if (ha === hz) return a.href;
+  /* Táž doména, jiná poddoména → nechat být. */
+  if (ha.endsWith('.' + hz) || hz.endsWith('.' + ha)) return a.href;
+  return z.origin + a.pathname + a.search;
+}
+
 export function dalsiCesty(nalez, { strop = STROP_DALSICH, zeSitemapy, zRss, vzor } = {}) {
   const ven = [];
   const pridej = (adresa, jmeno) => {
@@ -369,11 +410,24 @@ export function dalsiCesty(nalez, { strop = STROP_DALSICH, zeSitemapy, zRss, vzo
     return ven;
   }
   if (tvar === 'SITEMAP' && typeof zeSitemapy === 'function') {
-    for (const a of (zeSitemapy(telo, vzor) || [])) pridej(a, 'adresa ze sitemapy');
+    for (const a of (zeSitemapy(telo, vzor) || [])) {
+      const na = naVlastniHost(a, (nalez && nalez.adresa) || '');
+      pridej(na, na === a ? 'adresa ze sitemapy' : 'cesta ze sitemapy na vlastním hostu');
+    }
     return ven;
   }
   if (tvar === 'RSS' && typeof zRss === 'function') {
-    for (const z of (zRss(telo) || [])) pridej(z && z.url, 'adresa z RSS');
+    /* TÝŽ DŮVOD JAKO U SITEMAPY: adresa z vlastního RSS, která vede na
+       jinou domenu, je dotaz na cizí web, který v registru nikdo
+       nejmenoval. U obrany byly adresy z RSS na správném hostu, takže
+       to tam nic nezměnilo — ale pravidlo nemá platit jen tam, kde
+       jsem ho náhodou potřeboval. */
+    for (const z of (zRss(telo) || [])) {
+      const u = z && z.url;
+      if (!u) continue;
+      const nu = naVlastniHost(u, (nalez && nalez.adresa) || '');
+      pridej(nu, nu === u ? 'adresa z RSS' : 'cesta z RSS na vlastním hostu');
+    }
     return ven;
   }
   return ven;

@@ -307,6 +307,54 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
   je('a stejný nález dvakrát nehlásí nic', C.noveProtiMinule({ portaly }, { portaly }).length, 0);
 }
 
+/* ---- 2d) ADRESA, KTERÁ VEDE JINAM, SE PŘEPÍŠE NA VLASTNÍ HOST --
+ *
+ * Naměřeno 5. 11. (běh 42016638323): sitemapa Ministerstva obrany
+ * vypisuje adresy na `akis-d9.msw-cloud.com` (jejich cloud), bot tam
+ * zašel a všech osm vrátilo HTTP 404. Osm ze 43 dotazů na cizí web,
+ * který v registru nikdo nejmenoval — a zahozené cesty, které ta
+ * sitemapa nesla. Viz oddíl 434.
+ */
+{
+  je('cizí doména se přepíše na zkoušený host',
+    C.naVlastniHost('http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025',
+      'https://onnm.mo.gov.cz/sitemap.xml'),
+    'https://onnm.mo.gov.cz/nemovity-majetek/archiv-prodeju/2025');
+  je('a dotaz se zachová', C.naVlastniHost('http://cizi.test/vypis?strana=2',
+    'https://onnm.mo.gov.cz/sitemap.xml'), 'https://onnm.mo.gov.cz/vypis?strana=2');
+  je('týž host se nepřepisuje', C.naVlastniHost('https://onnm.mo.gov.cz/a',
+    'https://onnm.mo.gov.cz/sitemap.xml'), 'https://onnm.mo.gov.cz/a');
+  je('www se za cizí nepočítá', C.naVlastniHost('https://www.onnm.mo.gov.cz/a',
+    'https://onnm.mo.gov.cz/sitemap.xml'), 'https://www.onnm.mo.gov.cz/a');
+  /* PODDOMÉNA TÉŽE DOMÉNY JE POŘÁD TÝŽ WEB. Kdyby se přepsala, vyrobila
+     by se 404 z adresy, která fungovala. */
+  je('poddoména téže domény zůstane', C.naVlastniHost('https://drazby.example.cz/vypis',
+    'https://example.cz/sitemap.xml'), 'https://drazby.example.cz/vypis');
+  je('a nadřazená domména taky', C.naVlastniHost('https://example.cz/vypis',
+    'https://drazby.example.cz/sitemap.xml'), 'https://example.cz/vypis');
+
+  /* A TEĎ TO SAMÉ V dalsiCesty() — hlídat jen tu funkci by znamenalo
+     měřit nástroj, ne jeho použití (§423). */
+  const SITEMAPA_CIZI = '<?xml version="1.0" encoding="UTF-8"?>'
+    + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    + '<url><loc>http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025</loc></url>'
+    + '<url><loc>http://akis-d9.msw-cloud.com/media/fotogalerie</loc></url></urlset>';
+  const dalsi = C.dalsiCesty({ tvar: 'SITEMAP', telo: SITEMAPA_CIZI,
+    adresa: 'https://onnm.mo.gov.cz/sitemap.xml' }, { zeSitemapy, zRss });
+  pravda('ani jedna spojená cesta nevede na cizí host',
+    dalsi.length > 0 && dalsi.every((c) => c.adresa.startsWith('https://onnm.mo.gov.cz/')),
+    JSON.stringify(dalsi.map((c) => c.adresa)));
+  pravda('a je u nich napsané, že se cesta přepsala',
+    dalsi.every((c) => /na vlastním hostu/.test(c.jmeno)),
+    JSON.stringify(dalsi.map((c) => c.jmeno)));
+  const dalsiVlastni = C.dalsiCesty({ tvar: 'SITEMAP',
+    telo: SITEMAPA_CIZI.replace(/http:\/\/akis-d9\.msw-cloud\.com/g, 'https://onnm.mo.gov.cz'),
+    adresa: 'https://onnm.mo.gov.cz/sitemap.xml' }, { zeSitemapy, zRss });
+  pravda('u adres na vlastním hostu se jméno nemění',
+    dalsiVlastni.every((c) => c.jmeno === 'adresa ze sitemapy'),
+    JSON.stringify(dalsiVlastni.map((c) => c.jmeno)));
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

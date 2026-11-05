@@ -26406,3 +26406,55 @@ Vzít z takové sitemapy jen CESTY a složit je s hostem, který se právě
 zkouší, je další krok; zapsáno sem, aby se nezapomněl.
 
 `test-zkus-portal` 142 → **152 kontrol**.
+
+## §434 — Osm dotazů na cizí web a zahozené cesty, obojí z jedné sitemapy
+
+§432 končil poznámkou „vzít ze sitemapy jen cesty a složit je s hostem,
+který se zkouší". Než jsem to udělal, změřil jsem, co se dnes vlastně
+děje — a bylo to horší, než jsem čekal.
+
+Sitemapa Ministerstva obrany nevypisuje adresy na `onnm.mo.gov.cz`, ale
+na `akis-d9.msw-cloud.com`, tedy jejich cloud, kde se ten web staví.
+Bot tam poslušně zašel:
+
+```
+http://akis-d9.msw-cloud.com/                                     404
+http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 404
+http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju               404
+http://akis-d9.msw-cloud.com/media/fotogalerie                    404
+…                                                      (8 z 8 → 404)
+```
+
+**Jsou to dvě vady naráz.** Osm ze 43 dotazů šlo na **cizí web, který
+v registru nikdo nejmenoval** — a to je proti pravidlu šetrnosti, ne
+jen plýtvání; šetrnost tady není přání, je to pravidlo. A zároveň se
+tím zahodilo to nejcennější, co ta sitemapa nesla: **cesty**.
+`/nemovity-majetek/archiv-prodeju/2025` na hostu, který se právě
+zkouší, je přesně ten výpis, který na rozcestníku chyběl.
+
+Pravidlo tedy je: adresu, kterou web sám dal, ale která vede na **jinou
+domenu**, přepiš na zkoušený host a vezmi z ní jen cestu. Je to stejně
+drahé (jeden dotaz) a nikdy to není horší — dnes z toho byla 404 na
+cizím webu, teď je to dotaz na vlastní cestu. Platí to pro sitemapu
+**i pro RSS**: u obrany byly adresy z RSS na správném hostu, takže se
+tam nic nezměnilo, ale pravidlo nemá platit jen tam, kde jsem ho náhodou
+potřeboval.
+
+**Poddoména téže domény se nepřepisuje.** Když výpis bydlí na
+`drazby.example.cz` a sitemapa je na `example.cz`, je to pořád týž web
+a adresa platí; přepsat ji by vyrobilo 404 z adresy, která fungovala.
+Hlídá to vlastní kontrola v obou směrech (poddoména i nadřazená
+doména).
+
+Prokázáno sabotáží, **3 ze 3**:
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| přepis se v sitemapě nepoužije | „ani jedna spojená cesta nevede na cizí host" (+1) |
+| přepíše se i poddoména | „poddoména téže domény zůstane" (+1) |
+| při přepisu se zahodí dotaz (`?strana=2`) | „a dotaz se zachová" |
+
+Ta první je ta důležitá: hlídat jen `naVlastniHost()` by znamenalo měřit
+nástroj, ne jeho použití (§423), takže se měří i `dalsiCesty()`.
+
+`test-zkus-portal` 152 → **161 kontrol**.
