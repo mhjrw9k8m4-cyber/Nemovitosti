@@ -135,7 +135,7 @@ export function coHlidá(teloZkousky) {
    *
    * Je to tentýž druh ticha jako u dynamického importu o kus výš:
    * ticho z nedohledu vypadá úplně stejně jako ticho z toho, že není
-   * co rozbít. Hlídá to scripts/test-sabotuj.mjs. */
+   * co rozbít. Hlídá to scripts/test-samorozvoj.mjs. */
   for (const m of String(teloZkousky || '')
     .matchAll(/['"`](js|scripts)['"`]\s*,\s*['"`]([a-z0-9.-]+\.m?js)['"`]/g)) {
     const cesta = m[1] + '/' + m[2];

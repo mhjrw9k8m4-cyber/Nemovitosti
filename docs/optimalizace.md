@@ -25328,3 +25328,60 @@ byty a domy, bude se dát **změřit, kolik jich je**, a rozhodnout podle
 zaindexované; nové kategorie dostanou vlastní rodinu adres.
 
 Zkoušky: `test-kategorie` 42 → **59**, `test-odkaz` 45 → **46**.
+
+### Prokázáno sabotáží
+
+Mechanický stroj (`scripts/sabotuj.mjs`) na tyhle hlídače nestačí: mutuje
+libovolné místo v souboru, ne ty konkrétní nové řádky. Deset sabotáží je
+proto nasazených jmenovitě, každá do jednoho souboru, s ověřeným diffem
+a s vrácením z gitu.
+
+První běh: **sedm chytila, tři NECHYTILA**. Všechny tři byly skutečná
+slepá místa a jsou doplněná:
+
+1. **`popisVymery()` smělo u bytu zmlknout.** Měřila se jen `mera`,
+   takže prázdný výsledek prošel — karta by u bytu řekla holé „54 m²".
+2. **`nadpisKategorie()` smělo vracet jméno i u POZEMKU.** Nadpis každé
+   z 2 303 dnešních stránek by přestal říkat druh („Orná půda") a začal
+   říkat „Pozemek", a nic by to nehlásilo. Teď se měří obě strany.
+3. **`katVybrane` smělo vypadnout z tabulky sdílených.** `test-odkaz`
+   čte filtrovací funkci a vyžaduje, aby každé jméno v ní bylo zařazené
+   — ale `katVybrane` v ní nestojí, je tam jen `katVyhovuje(d)`. Filtr
+   by se v panelu zapnul a z adresy vypadl: sdílený odkaz by příjemci
+   ukázal jiný výpis. Hlídá se proto i druhá strana — co
+   `stavProAdresu()` skládá, to musí být v tabulce sdílených (výjimka
+   `poloha`, tedy výřez mapy, který si `js/odkaz.js` skládá vlastní
+   funkcí). **Táž past čeká na každý další filtr, který se do
+   `visible()` dostane přes pomocnou funkci.**
+
+Druhý běh po doplnění: **deset z deseti chytila**, strom po sabotáži
+čistý.
+
+## §414 — Stroj, který soudí hlídače, neviděl 54 zkoušek
+
+Našlo se to tím, že stroj odmítl prokázat zkoušku z §413: „test-kategorie
+neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít."
+
+Stroj hledal hlídaný kód podle dvou zápisů: `from` a jméno souboru se
+předponou `./` (i přes `await import`, viz §397), a cestu psanou jedním
+řetězcem se dvěma tečkami na začátku. Zkoušky, které si prohlížečový
+modul berou přes `createRequire`, ale cestu **skládají z dílů** —
+`require_(join(KOREN, 'js', 'ceny.js'))` — a v těch stroj neviděl nic.
+
+Naměřeno vlastní funkcí stroje (`coHlidá`) na všech **315** zkouškách:
+
+| | zkoušek, kde stroj nevidí nic z našeho kódu |
+|---|---|
+| před | **191** |
+| po doplnění vzoru | **137** |
+
+Rozdíl je **54 zkoušek**, které se předtím nedaly prokázat vůbec. Část
+těch zbylých 137 je v pořádku — zkoušky v prohlížeči opravdu žádný náš
+modul neimportují, ovládají stránku.
+
+Je to tentýž druh ticha jako u dynamického importu: **ticho z nedohledu
+vypadá úplně stejně jako ticho z toho, že není co rozbít.** A je to
+podruhé, co se to u tohohle stroje stalo — proto pět kontrol
+v `test-samorozvoj` (skládaná cesta u `js/` i `scripts/`, cizí zkouška se
+za hlídaný kód nevydává, pomůcka taky ne, a tentýž modul dvěma zápisy se
+nezdvojí), a sabotáž, která ten vzor ze stroje vyhodí.
