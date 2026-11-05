@@ -207,8 +207,23 @@ const R2 = '109181,2026-11-03,"Povodí Labe, státní podnik",dbyt8g2,,,,Ministe
   je('bez výměry se nebere', S.nabidkyZCsv(bezVymery, d).nabidky.length, 0);
   je('a je to vidět v počtu zahozených', S.nabidkyZCsv(bezVymery, d).zahozeno.bezVymery, 1);
   je('bez ceny se nebere', S.nabidkyZCsv(bezCeny, d).zahozeno.bezCeny, 1);
-  je('pozemek s budovou se nebere (cena je za obojí)', S.nabidkyZCsv(budova, d).zahozeno.sBudovou, 1);
-  je('co není pozemek, se nebere', S.nabidkyZCsv(neniPozemek, d).zahozeno.nenipozemek, 1);
+  /* BUDOVY SE UŽ NEZAHAZUJÍ — od 5. 11. nese web všechny nemovitosti.
+     Dřív tady stálo „pozemek s budovou se nebere (cena je za obojí)"
+     a „co není pozemek, se nebere", a oboje bylo správné, dokud byl
+     web jen o pozemcích. Důvod u té první ale PLATÍ DÁL: cena za
+     pozemek i budovu dohromady nesmí jít do Kč/m² pozemku. Neřeší se
+     to zahozením nabídky, ale příznakem `_neniPozemek` — podle něj
+     robot doplní kategorii a cenový model takovou nabídku nevezme
+     (js/ceny.js, `jenPozemky`). */
+  je('pozemek s budovou se vezme', S.nabidkyZCsv(budova, d).nabidky.length, 1);
+  je('a nese příznak, že to není pozemek',
+    (S.nabidkyZCsv(budova, d).nabidky[0] || {})._neniPozemek, true);
+  je('nic se u ní nezahodí', S.nabidkyZCsv(budova, d).zahozeno.sBudovou, 0);
+  je('budova bez pozemku se taky vezme', S.nabidkyZCsv(neniPozemek, d).nabidky.length, 1);
+  je('a taky přizná, že pozemek to není',
+    (S.nabidkyZCsv(neniPozemek, d).nabidky[0] || {})._neniPozemek, true);
+  je('zahazuje se jen to, co není nemovitost ani podle jednoho příznaku',
+    S.nabidkyZCsv(neniPozemek, d).zahozeno.nenipozemek, 0);
   je('prošlá nabídka se nebere', S.nabidkyZCsv(prosla, d).zahozeno.prosle, 1);
   je('bez okresu se nebere', S.nabidkyZCsv(bezMista, d).zahozeno.bezMista, 1);
   /* A OPAČNÝ SMĚR: ať se to nedá „opravit" tím, že se nevezme nic. */

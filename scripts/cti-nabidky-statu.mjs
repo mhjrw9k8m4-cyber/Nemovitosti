@@ -210,11 +210,22 @@ export function nabidkyZCsv(text, dnesISO) {
       zahozeno.prosle++; continue;
     }
     for (const p of polozkyZaznamu(z)) {
-      if (!p.jePozemek) { zahozeno.nenipozemek++; continue; }
-      /* POZEMEK S BUDOVOU NENÍ POZEMEK. Cena je pak za obojí a Kč/m²
-         by z toho vyšlo jako nesmysl — a právě podle Kč/m² se tu
-         řadí, počítá verdikt i kreslí mapa. */
-      if (p.jeBudova || p.jeJednotka) { zahozeno.sBudovou++; continue; }
+      /* VŠECHNY NEMOVITOSTI, NE JEN POZEMKY — od 5. 11. Dřív tu stály
+         dvě podmínky a obě byly pro web jen o pozemcích správné:
+
+           if (!p.jePozemek) { nenipozemek++; … }
+           if (p.jeBudova || p.jeJednotka) { sBudovou++; … }
+
+         Druhá měla napsaný i důvod: „cena je pak za obojí a Kč/m² by
+         z toho vyšlo jako nesmysl". TEN DŮVOD PLATÍ DÁL — jen se
+         neřeší zahozením nabídky, ale kategorií: u nepozemku se
+         obvyklá cena za m² vůbec nepočítá (js/ceny.js, `jenPozemky`).
+
+         Zahodí se tedy jen to, co není nemovitost ani podle jednoho
+         ze tří příznaků zdroje. */
+      if (!p.jePozemek && !p.jeBudova && !p.jeJednotka) {
+        zahozeno.nenipozemek++; continue;
+      }
       const m = mistoZKatastru(p.katastr);
       if (!m.place || !m.okres) { zahozeno.bezMista++; continue; }
       const c = cena(p.cena);
@@ -236,6 +247,14 @@ export function nabidkyZCsv(text, dnesISO) {
            parcelního čísla v jednom okrese do jedné — tedy jedna vada
            za druhou. Číslo záznamu je v evidenci jednoznačné a pořadí
            položky odlišuje víc parcel z jednoho záznamu. */
+        /* KATEGORIE PODLE PŘÍZNAKŮ ZDROJE. Jednotka je byt — to zdroj
+           říká jednoznačně. Budova říká jen „je to budova", takže se
+           `kat` nezapisuje a rozhodne text v robotovi; `_neniPozemek`
+           mu ale dá vědět, že pozemek to není, a když z textu nic
+           nevyjde, bude z toho „jiná nemovitost". U pozemku se
+           nezapisuje nic: je výchozí. */
+        ...(p.jeJednotka ? { kat: 'byt' } : {}),
+        ...((p.jeBudova || p.jeJednotka) ? { _neniPozemek: true } : {}),
         _key: 'stat-' + (id || m.place + '-' + c) + '-' + p.poradi,
         /* POMLČKA, NE `undefined`. Nalezeno měřením 4. 11.: ze 33
            pozemků, které tenhle zdroj přinesl, se na web dostalo 11 —

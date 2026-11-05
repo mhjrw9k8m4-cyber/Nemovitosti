@@ -25040,3 +25040,131 @@ nechá dojít do klidu (kdyby na jeden pohyb navázal další). Žádné pevné
 Lokálně 167/167; pád byl vždycky jen v CI, takže důkaz dá až CI.
 Tohle je šestý případ téže rodiny (§398, §403, §405, §405-dodatek) a
 poprvé se u něj nehádalo — za to stála ta instrumentace.
+
+## §412 — Na webu budou všechny nemovitosti: kategorie jako nový rozměr
+
+Majitelovo rozhodnutí 5. 11.: web nese **všechny nemovitosti**, ne jen
+pozemky. Je to změna, která se dotkne celého webu (2 882 stránek
+pozemků, ~24 000 výskytů slova „pozem*" v kódu a stránkách), takže jde
+po fázích a první z nich je postavená tak, aby **dnešní web
+nepřeklopila**.
+
+### Jeden rozměr `kat`, a pozemek se do dat nepíše
+
+`js/kategorie.js` nese devět kategorií (pozemek, dům, byt, chata,
+farma, areál, komerční objekt, garáž, jiná nemovitost) a u každé pole
+**`mera`**, které říká, co znamená výměra: u pozemku plocha pozemku,
+u bytu podlahová, u domu obojí. Na tom visí všechno ostatní.
+
+Dvě rozhodnutí, která šetří bajty i nervy:
+
+* **Co se nepozná, je pozemek.** Změřeno na všech 2 303 dnešních
+  nabídkách: u každé vyjde pozemek, takže zapojení nic nepřeznačí.
+* **Pozemek se do `opportunities.json` nezapisuje.** Je výchozí a
+  `,"kat":"pozemek"` u 2 303 nabídek by bylo ~37 kB navíc přes drát
+  za informaci, kterou si čtenář doplní sám.
+
+### Tři vady našlo měření, ne úvaha
+
+Při psaní modulu vyšly najevo tři chyby, všechny na vlastních vzorcích:
+
+1. **Nominativ „dům" chyběl.** Měl jsem jen „domu/domy" — bez
+   diakritiky je nominativ „dum", tedy jiný tvar. „Rodinný dům
+   s garáží" nevyšel jako nic.
+2. **Dispozice „2+1" dělala z chaty byt.** Dispozici má i dům i chata,
+   takže hraje až tehdy, když v textu není žádné jiné slovo o předmětu
+   prodeje.
+3. **Jméno webu dělalo z pozemku farmu.** Pole `extra` nese
+   „inzerát – Farmy.cz" a slovo „Farmy" je ve pravidlech farmy — každá
+   nabídka z toho zdroje vycházela jako farma. Doména se teď vyhazuje
+   dřív, než se cokoli hledá. Je to táž rodina vad jako jméno obce
+   v js/druh.js (Louka, Loukov, Kostelec nad Černými lesy).
+
+`scripts/test-kategorie.mjs`: **42 kontrol**, zaregistrováno v CI.
+
+### Pojistka, aby web o nových datech nelhal
+
+Jakmile přitečou budovy, počítal by u nich web Kč/m² **pozemku** a
+vydal cenový verdikt. Horší, než to vypadá: medián okresu i percentil
+se počítají z přihrádky, takže jedna budova s podlahovou plochou
+pokřiví číslo **všem** v ní, ne jen sobě.
+
+`js/ceny.js` si proto vstup filtruje **sám** (`postav` → `jenPozemky`).
+Proč tam a ne u volajících: `postav()` se volá z **devíti** míst
+(js/main.js, js/pozemek.js a pět generátorů), a zapomenutý filtr se
+nijak neprojeví — jen čísla tiše ujedou.
+
+Pravidlo je v ceny.js opsané („`kat` chybí nebo je 'pozemek'"), aby se
+kvůli jedné podmínce netahaly na stránku dva moduly. Opsané pravidlo se
+rozejde s originálem, pokud to nikdo neměří — takže to měří
+`test-kategorie`: pro **každou** kategorii musí obě místa říct totéž.
+
+### Zdroje: co se přestalo zahazovat
+
+| zdroj | dřív | teď |
+|---|---|---|
+| **ÚZSVM** | jen kategorie „Pozemky" (276) | všechny kategorie nemovitostí (367), movité věci ne |
+| **Dražby (CEVD)** | jen věc s uzlem `pozemek`; v dobrovolné dražbě bez budov | i jednotka (byt) a samostatná stavba |
+| **Nabídky státu** | jen `TYP_POZEMEK = ano`, a ne s budovou | i budova a jednotka |
+
+**ÚZSVM — změřeno z Actions 5. 11.** (`CategoryId: 0`):
+
+```
+p02Id 10 „Nemovité věci a družstevní byty"  p02IsRealty=true   367
+    ├ 13 Pozemky 276 · 11 Stavby 78 · 55 Jiné objekty 7
+    └ 63 Jednotky 3 · 12 Družstevní podíly 3
+p02Id  1 „Movité věci"                      p02IsRealty=false  348
+PropertyTotalCount                                             729
+```
+
+Dvě věci z toho měření jdou proti intuici a jsou napsané u kódu:
+**rodičovské id nefiltruje** (dotaz s `CategoryId: 10` vrátí všech 729
+věcí včetně automobilů, takže se listy berou po jednom) a **movité věci
+jsou skoro polovina nabídky** — zdroj je odlišuje příznakem
+`p02IsRealty`, takže se čtení neopírá o zadrátovaný seznam id, ale
+o číselník zdroje. Přidá-li úřad kategorii, robot ji vezme sám.
+
+*Oprava čísla, které jsem majiteli dal dřív:* řekl jsem „471
+nemovitostí navíc". Správně je **91** — do 471 jsem počítal i movité
+věci.
+
+**Dražby — změřeno z Actions na ročním souboru otevřených dat CEVD**
+(adresa `cevd.gov.cz/opendata/drazby/` + `drazby_` + rok + `.json`; rozepsané
+schválně, aby hlídač odkazů na soubory nehledal v repozitáři soubor, který
+bydlí na cizím webu), jak byt a stavba v těch datech vypadají:
+
+```
+"jednotka": { cisloJednotky, zpusobVyuzitiJednotky: "byt",
+              stavba: { typStavby: "rodinný dům" } }
+"stavba":   { castObce, typStavby: "budova s číslem popisným" }
+```
+
+Dvě věci z toho rozhodly implementaci: `katastralniUzemi` sedí na
+`vecNemovita`, **ne** uvnitř `pozemek` (takže obec i okres u bytu bez
+pozemku máme), a **výměru jednotka nenese vůbec**.
+
+### Budova se nikdy nesmí stát pozemkem
+
+Kategorie „Stavby" neřekne, co to je, ale řekne, že to **není**
+pozemek. Zdroje proto posílají příznak `_neniPozemek` a robot z něj
+dělá „jinou nemovitost" s `mera: 'zadna'` — Kč/m² se u ní nepíše
+vůbec. Poctivé „nevím co, ale pozemek to není" je lepší než tiché
+zařazení mezi pozemky.
+
+Zkoušky: `test-uzsvm` 94 → **116**, `test-drazby-cevd` 30 → **40**,
+`test-nabidky-statu` 52 → **58**. Šest starých kontrol právem spadlo
+(„stavba se nebere", „pozemek s budovou se nebere") a všechny jsou
+přepsané na nové pravidlo s napsaným důvodem, proč to staré platilo.
+
+**A jedna past na sebe:** komentář, ve kterém jsem zmínil jméno funkce
+pro rozpoznávání druhu **se závorkou**, shodil `test-druh` — ten
+prochází kód a u každého jejího volání vyžaduje předaná jména míst.
+V komentáři je to teď popsané slovy, i s tou historií.
+
+### Změřená mezera pro další fázi
+
+Budovy mívají v popisu „zastavěnou plochu", kterou čtení výměry
+**schválně nečte**: u pozemku je to past („na pozemku stojí chata
+o zastavěné ploše cca 25 m²" dřív dalo výměru pozemku 25). U budovy je
+to ale právě to správné číslo. Je to tedy pravidlo závislé na
+kategorii a patří k předělání cenového modelu, ne k záplatě ve čtečce.

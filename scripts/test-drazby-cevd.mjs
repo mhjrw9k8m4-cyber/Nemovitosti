@@ -169,13 +169,61 @@ const zaznam = (veci, cena, nucena) => ({
   pravda('u nucené dražby bez výměry se nezahazuje a nic se nepočítá',
     nuc.length === 1 && !z6.bezVymery, JSON.stringify({ n: nuc.length, z: z6 }));
 
-  /* Dobrovolná dražba, ve které je jen pozemek se stavbou: zahazuje se
-     schválně, ale je to jiná ztráta než „tam žádný pozemek nebyl". */
+  /* BUDOVY SE UŽ NEZAHAZUJÍ. Dřív tady stálo, že dobrovolná dražba
+     pozemku SE STAVBOU se zahodí (`z7.jenBudovaVDobrovolne === 1`), a
+     pro web jen o pozemcích to bylo správně. Od 5. 11. nese web všechny
+     nemovitosti, takže se taková dražba vzít MUSÍ. */
   const z7 = {};
-  nabidkyZDrazby(rec([polozka({
-    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { vymera: 300, parcelniCislo: '1' }, stavba: { typ: 'dům' }, katastralniUzemi: ku } }],
+  const seStavbou = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'pozemek', vecNemovita: { pozemek: { vymera: 300, parcelniCislo: '1' }, stavba: { typStavby: 'rodinný dům' }, katastralniUzemi: ku } }],
   })], false), z7);
-  je('dobrovolná jen se stavbou má vlastní účet', z7.jenBudovaVDobrovolne, 1);
+  je('dobrovolná dražba pozemku se stavbou se vezme', seStavbou.length, 1);
+  je('a nic se nezahodí', z7.jenBudovaVDobrovolne, undefined);
+  je('druh přizná stavbu', seStavbou[0] && seStavbou[0].druh, 'pozemek se stavbou');
+
+  /* BYT V EXEKUCI NEMÁ POZEMEK VŮBEC — změřeno 5. 11. na
+     `drazby_2026.json`: jednotka nese `zpusobVyuzitiJednotky` a vnořenou
+     stavbu, ale žádný uzel `pozemek`. Dřív to byla podmínka, která
+     takovou věc vyhodila na prvním řádku; teď musí projít, a hlavně se
+     u ní nesmí nikde sáhnout na `vn.pozemek` — spadlo by celé stahování
+     dražeb na prvním bytě. */
+  const z8 = {};
+  const byty = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'jednotka č. 173/11', vecNemovita: {
+      jednotka: { cisloJednotky: '173/11', zpusobVyuzitiJednotky: 'byt',
+        stavba: { typStavby: 'budova s číslem popisným' } },
+      katastralniUzemi: ku } }],
+  })], true), z8);
+  je('byt bez pozemku se vezme', byty.length, 1);
+  je('a je to byt', byty[0] && byty[0].kat, 'byt');
+  je('parcelní číslo se nevymýšlí', byty[0] && byty[0].parcel, '—');
+  je('druh u bytu není „pozemek"', byty[0] && byty[0].druh, 'byt');
+
+  /* SAMOSTATNÁ STAVBA: kategorie se bere z `typStavby`, který zdroj
+     říká přesněji než volný text. „Budova s číslem popisným" ale neříká
+     nic — a tam je poctivá odpověď „jiná nemovitost", ne pozemek. */
+  const z9 = {};
+  const domy = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'stavba', vecNemovita: {
+      stavba: { typStavby: 'rodinný dům' }, katastralniUzemi: ku } }],
+  })], true), z9);
+  je('samostatný rodinný dům je dům', domy[0] && domy[0].kat, 'dum');
+  const z10 = {};
+  const neurcito = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'stavba', vecNemovita: {
+      stavba: { typStavby: 'budova s číslem popisným' }, katastralniUzemi: ku } }],
+  })], true), z10);
+  je('neurčitá budova je „jiná nemovitost", ne pozemek',
+    neurcito[0] && neurcito[0].kat, 'jine');
+
+  /* A VĚC, KTERÁ NENÍ ANI POZEMEK, ANI STAVBA, ANI JEDNOTKA, se
+     nebere — a počítá se pod vlastním jménem, ať je v logu vidět. */
+  const z11 = {};
+  const nic = nabidkyZDrazby(rec([polozka({
+    veci: [{ nazev: 'něco jiného', vecNemovita: { katastralniUzemi: ku } }],
+  })], true), z11);
+  je('věc bez nemovitosti se nebere', nic.length, 0);
+  je('a má vlastní účet', z11.bezNemovitosti, 1);
 
   /* A počítadlo je NEPOVINNÉ: bez něj čtečka nesmí spadnout. */
   pravda('čtečka jde pozvat i bez počítadla', nabidkyZDrazby(rec([polozka()])).length === 1);

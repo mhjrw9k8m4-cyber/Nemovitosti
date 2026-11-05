@@ -2340,19 +2340,43 @@ export function nabidkyZDrazby(rec, zahozeno) {
          * Parcelní číslo se uvádí jen tehdy, když je položka JEDNOPARCELNÍ.
          * U víc parcel by jedno číslo u součtu výměr tvrdilo, že ta parcela
          * má výměru všech dohromady. */
-        let cand = null, candBudova = false, soucetVymer = 0, pozemku = 0, budovaPryc = 0;
+        /* BYT A STAVBA SE UŽ NEZAHAZUJÍ — od 5. 11. nese web všechny
+           nemovitosti. Dřív tu stály dvě podmínky, obě správné pro web
+           jen o pozemcích, a obě teď pryč:
+
+             if (!vn.pozemek) continue;                  ← bez pozemku nic
+             if (budova && !nucena) { budovaPryc++; … }  ← budovy jen z exekucí
+
+           ZMĚŘENO 5. 11. z Actions na `drazby_2026.json`, jak byt a
+           stavba v těch datech vypadají:
+
+             "jednotka": { cisloJednotky, typJednotky,
+                           zpusobVyuzitiJednotky: "byt",
+                           podilNaSpolecnychCastech,
+                           stavba: { castObce, cisloPopisneEvidencni,
+                                     typStavby: "rodinný dům" } }
+             "stavba":   { castObce, cisloPopisneEvidencni,
+                           typStavby: "budova s číslem popisným" }
+
+           Dvě věci z toho měření jsou důležité:
+           · `katastralniUzemi` sedí na `vecNemovita`, NE uvnitř
+             `pozemek` — takže obec i okres u bytu bez pozemku máme
+             (čte se `vn.katastralniUzemi` o kus níž);
+           · VÝMĚRU jednotka nenese vůbec. Zůstává tedy jen ta
+             z názvu položky, a když ani ta není, platí dosavadní
+             pravidlo (dobrovolná dražba bez výměry se nebere). */
+        let cand = null, candBudova = false, soucetVymer = 0, pozemku = 0;
         for (const v of (p.veci || [])) {
           const vn = v.vecNemovita;
-          if (!vn || !vn.pozemek) continue;
+          if (!vn || !(vn.pozemek || vn.jednotka || vn.stavba)) continue;
           const budova = !!(vn.jednotka || vn.stavba);
-          if (budova && !nucena) { budovaPryc++; continue; } // dobrovolná: budovy vynecháváme
-          const vym = Number(vn.pozemek.vymera) || 0;
+          const vym = Number((vn.pozemek && vn.pozemek.vymera)) || 0;
           if (vym > 0) { soucetVymer += vym; pozemku++; }
           /* Zástupce pro obec, okres, druh a souřadnice: čistý pozemek má
              přednost před tím se stavbou, jinak první v pořadí. */
           if (!cand || (candBudova && !budova)) { cand = { vn, v }; candBudova = budova; }
         }
-        if (!cand) { pocti(budovaPryc ? 'jenBudovaVDobrovolne' : 'bezPozemku'); continue; }
+        if (!cand) { pocti('bezNemovitosti'); continue; }
         const { vn, v } = cand;
         const ku = vn.katastralniUzemi || {};
         const okres = ku.okres, place = ku.obec || ku.nazev;
@@ -2362,11 +2386,43 @@ export function nabidkyZDrazby(rec, zahozeno) {
           || (p.obvyklaCena && p.obvyklaCena.vyse) || 0;
         if (!price) { pocti('bezCeny'); continue; }
         if (!area && !nucena) { pocti('bezVymery'); continue; } // dobrovolná bez výměry vynecháme; u exekucí výměra často chybí
-        const druhBase = vn.pozemek.druhPozemku || parseDruh(v.nazev, [place, okres]);
+        /* `vn.pozemek` UŽ NEMUSÍ BÝT. Byt v exekuci ho nemá vůbec, takže
+           každé jeho použití je od teď podmíněné — jinak by na prvním
+           bytě spadlo celé stahování dražeb. */
+        const pz = vn.pozemek || null;
+        /* KATEGORIE ZE STRUKTURY DAT, NE Z HÁDÁNÍ. Zdroj ji říká
+           přesněji než jakýkoli text: jednotka je byt, u samostatné
+           stavby se zkusí `typStavby` („rodinný dům", „budova s číslem
+           popisným") a až pak volný text. Když ani to nic neřekne, je
+           to „jiná nemovitost" — budova se nesmí stát pozemkem, protože
+           by se u ní počítala obvyklá cena za m² pozemku.
+           Věc, která má jen pozemek, kategorii nenese: pozemek je
+           výchozí a v datech by to byly jen kilobajty navíc. */
+        let kat = '';
+        if (vn.jednotka) kat = 'byt';
+        else if (vn.stavba) {
+          const txtStavby = [vn.stavba.typStavby, vn.stavba.zpusobVyuzitiStavby,
+            v.nazev, p.nazevPredmetu].filter(Boolean).join(' ');
+          const z = parseKategorie(txtStavby, [place, okres]);
+          kat = (z && z !== PKKategorie.VYCHOZI) ? z : 'jine';
+        }
+        /* DRUH U NEPOZEMKU JE DRUH STAVBY, A ŘÍKÁ HO ZDROJ. Dřív se sem
+           dosazovalo rozpoznávání druhu z textu, které při neúspěchu
+           vrací „pozemek" — u bytu by tedy v druhu stálo „pozemek".
+           (Jméno té funkce se tu schválně nepíše se závorkou: hlídač
+           v test-druh.mjs prochází kód a u KAŽDÉHO jejího volání
+           vyžaduje předaná jména míst, takže by ho zmínka v komentáři
+           shodila. Stalo se to při psaní téhle změny.) */
+        const druhBase = pz
+          ? (pz.druhPozemku || parseDruh(v.nazev, [place, okres]))
+          : ((vn.jednotka && (vn.jednotka.zpusobVyuzitiJednotky || vn.jednotka.typJednotky))
+            || (vn.stavba && (vn.stavba.typStavby || vn.stavba.zpusobVyuzitiStavby))
+            || 'nemovitost');
         out.push({
           place, okres, type,
-          parcel: pozemku > 1 ? '—' : String(vn.pozemek.parcelniCislo || '—').slice(0, 40),
-          druh: normDruh(candBudova ? (druhBase + ' se stavbou') : druhBase),
+          ...(kat ? { kat } : {}),
+          parcel: (pz && pozemku <= 1) ? String(pz.parcelniCislo || '—').slice(0, 40) : '—',
+          druh: normDruh(pz && candBudova ? (druhBase + ' se stavbou') : druhBase),
           area: area ? Math.round(area) : null, price: Math.round(price),
           extra: (nucena ? 'nucená dražba' : 'dražba') + (datum ? ' ' + datum : ''),
           zdroj: 'Dražby',
