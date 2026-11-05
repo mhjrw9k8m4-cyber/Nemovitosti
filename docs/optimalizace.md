@@ -25945,3 +25945,5 @@ Opraveno dvakrát, protože každá cesta hlídá něco jiného:
    „5 pozemky".)
 
 `test-kategorie` 81 → **86**.
+
+Druhé kolo: **4 ze 4.** Slepé místo je zavřené a prokázané.
