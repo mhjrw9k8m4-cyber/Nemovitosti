@@ -25995,3 +25995,30 @@ klíče z úložiště a jejich počty, ne nabídky. A „Uložené pozemky" nen
 měřený počet, ale **jméno řádku**, které se opakuje v `muj-inzerat.html`
 i v zásadách ochrany údajů. Přejmenovat ho napříč webem je rozhodnutí
 o textu pro majitele, ne mechanická oprava slova u čísla.
+
+### Sabotáž §423: nejdřív 0 ze 2
+
+| Co se rozbilo | První kolo |
+|---|---|
+| modul kategorií se ze stránky „odebere" přidáním atributu | ✕ (sabotáž byla **neplatná** — atribut skript nevypne) |
+| hlídání si plurál píše zase samo | ✕ **skutečná díra** |
+
+Ta druhá je ta důležitá. Kontrola v prohlížeči se ptá **modulu**, jestli
+umí vybrat slovo — a to je málo: když si stránka plurál napíše zpátky
+sama, modul zůstane v pořádku, jen ho nikdo neposlouchá, a kontrola
+projde.
+
+**Hlídač, který měří nástroj místo jeho použití, je slepý na to
+nejčastější, co se stane.**
+
+Nová kontrola proto zakazuje **přímo** to, co se vrátit nemá: trojici
+tvarů slova „pozemek" napsanou v šabloně stránky. A hned při psaní
+padla na mém vlastním komentáři, který tu trojici citoval jako příklad
+— měří se text, tedy i komentáře. Je to schválně takhle hloupé:
+rozlišovat kód od komentáře v HTML se smíšeným JS by znamenalo psát si
+parser, a zákaz „ani jako příklad" je snesitelnější cena než hlídač,
+který se dá obejít přesunutím řádku do komentáře.
+
+Druhé kolo s platnými sabotážemi: **3 ze 3** — plurál napsaný rukou,
+odebraný modul (změnou `src` na neexistující soubor) i stránka, která
+se modulu přestane ptát. `test-kategorie` 86 → **90**.
