@@ -300,6 +300,31 @@ const PACHT2 = {
     U.pocetVKategorii({ Categories: [{ p02Id: 10, FilteredCount: 399,
       Subcategories: [{ p02Id: 13, FilteredCount: 286 }] }] }), 286);
   je('a bez číselníku se nic netvrdí', U.pocetVKategorii({}), null);
+  /* ---- VELIKOST STRANY JE ZMĚŘENÝ STROP, NE VOLBA ---------------
+     Změřeno 5. 11. 2026 v Actions nad tímhle API: PageSize 100 vrátí
+     100 prvků, PageSize 1000 vrátí 25 (server spadne na svou vlastní
+     stranu a v odpovědi má `DefaultPageSize: 0`, takže se to z ní ani
+     nepozná).
+
+     Je to past obráceně, než člověk čeká: zvětšit stranu znamená
+     dostat míň. Se stovkou zvednutou „aby se to stáhlo na jeden dotaz"
+     by robot bral 25 na stranu, při stropu deseti stran by stáhl 250
+     nabídek z 276 — a nenahlásil by nic.
+
+     Zkouška proto drží tu mez, a ne jen tu konstantu: kdo stovku
+     zvedne, spadne tady. */
+  pravda('na stranu se nebere víc, než server naměřeně unese',
+    U.NA_STRANU <= U.NA_STRANU_STROP && U.NA_STRANU_STROP === 100,
+    `NA_STRANU ${U.NA_STRANU}, strop ${U.NA_STRANU_STROP}`);
+  pravda('a dotaz tu velikost opravdu posílá',
+    JSON.parse(U.dotaz(1)).PageSize === U.NA_STRANU,
+    U.dotaz(1).slice(0, 120));
+  /* A ŽE SE TA MEZ NEDÁ OBEJÍT PARAMETREM. `dotaz()` bere velikost
+     strany jako argument — robot mu posílá NA_STRANU, ale kdyby mu
+     někdo podal tisíc, poslalo by se to na server a vrátilo 25. */
+  pravda('a kdo si vyžádá víc, dostane jen tolik, kolik je strop',
+    JSON.parse(U.dotaz(1, 1000)).PageSize <= U.NA_STRANU_STROP,
+    U.dotaz(1, 1000).slice(0, 120));
   /* A robot ten počet opravdu bere odtud, ne z PropertyTotalCount. */
   const kod = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');

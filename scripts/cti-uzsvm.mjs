@@ -46,6 +46,23 @@ export function odkazNabidky(id) {
 /* Kategorie „Pozemky" z číselníku, který API vrací v `Categories`
    (p02Id 13, p02Name „Pozemky"). Nehádá se, je změřená. */
 export const KATEGORIE_POZEMKY = 13;
+/* KOLIK NA STRANU — A STO JE STROP, NE VOLBA.
+ *
+ * Změřeno 5. 11. 2026 v Actions (sonda ohledani-zdroje, tři běhy nad
+ * tímhle API):
+ *   PageSize 100   → `Properties` má 100 prvků, `PageCount` 3
+ *   PageSize 1000  → `Properties` má  25 prvků (server spadl na svou
+ *                    vlastní stranu; `DefaultPageSize` v odpovědi je 0,
+ *                    takže se to z ní ani nepozná)
+ *
+ * Je to past obráceně, než člověk čeká: ZVĚTŠIT stranu znamená dostat
+ * MÍŇ. Kdo tu stovku zvedne „aby se to stáhlo na jeden dotaz", začne
+ * brát 25 na stranu — a protože strop stran je deset, přestane se
+ * stahovat 250 nabídek z 276 a nic to nenahlásí.
+ *
+ * Proto je tu mez i zkouška: scripts/test-uzsvm.mjs hlídá, že se
+ * NA_STRANU nedostane nad změřenou stovku. */
+export const NA_STRANU_STROP = 100;
 export const NA_STRANU = 100;
 /* Strop stran: 286 pozemků po stovce jsou tři strany. Deset je rezerva
    na růst, ne na nekonečnou smyčku. */
@@ -111,10 +128,15 @@ export function zlomekPodilu(text) {
 }
 
 export function dotaz(strana = 1, naStranu = NA_STRANU, kategorie = KATEGORIE_POZEMKY) {
+  /* MEZ SE DRŽÍ TADY, ne jen v konstantě. Kdo sem podá tisíc, dostane
+     od serveru 25 na stranu (viz měření u NA_STRANU_STROP) — tedy
+     opak toho, co chtěl, a bez hlášení. Ořezat to při skládání dotazu
+     je jediné místo, kterým prochází každý volající. */
+  const naStranuBezpecne = Math.min(Number(naStranu) || NA_STRANU, NA_STRANU_STROP);
   return JSON.stringify({
     ListType: 'all',
     Page: strana,
-    PageSize: naStranu,
+    PageSize: naStranuBezpecne,
     Order: 'Default',
     OrderDesc: 'true',
     CategoryId: kategorie,

@@ -25165,9 +25165,17 @@ V komentáři je to teď popsané slovy, i s tou historií.
 
 Budovy mívají v popisu „zastavěnou plochu", kterou čtení výměry
 **schválně nečte**: u pozemku je to past („na pozemku stojí chata
-o zastavěné ploše cca 25 m²" dřív dalo výměru pozemku 25). U budovy je
-to ale právě to správné číslo. Je to tedy pravidlo závislé na
-kategorii a patří k předělání cenového modelu, ne k záplatě ve čtečce.
+o zastavěné ploše cca 25 m²" dřív dalo výměru pozemku 25). U budovy to
+vypadá jako právě to správné číslo — a jestli to tak je, se dalo
+rozhodnout jedině naostro.
+
+> **OPRAVA, naměřeno 5. 11. (viz §415).** Tohle tvrzení bylo špatné.
+> V textech ÚZSVM je „zastavěná plocha a nádvoří" **druh pozemku**, ne
+> zastavěná plocha stavby („stavební parcela č. 1013, zastavěná plocha
+> a nádvoří o výměře 239 m2"), a čtení výměry ji už dnes přečte správně
+> přes slovo „výměře". Podlahová plocha stavby se píše úplně jinak
+> („Celková podlahová plocha domu je 265 m2") a v celé nabídce ÚZSVM je
+> jednou.
 
 ## §413 — Web umí mluvit o nemovitostech: Kč/m² jako pozemkové číslo, filtr typu, karta a stránka
 
@@ -25385,3 +25393,87 @@ podruhé, co se to u tohohle stroje stalo — proto pět kontrol
 v `test-samorozvoj` (skládaná cesta u `js/` i `scripts/`, cizí zkouška se
 za hlídaný kód nevydává, pomůcka taky ne, a tentýž modul dvěma zápisy se
 nezdvojí), a sabotáž, která ten vzor ze stroje vyhodí.
+
+## §415 — Naostro: jak se v nabídce státu píše plocha, a past v PageSize
+
+Měřeno 5. 11. 2026 třemi běhy sondy `ohledani-zdroje` nad
+`nabidkamajetku.gov.cz/api/Property/List`. Důvod: cenový model podle
+kategorie (fáze 3) má u bytů a domů počítat Kč/m² **podlahové plochy**,
+a z repozitáře se nedá poznat, jestli takové číslo v datech vůbec je.
+Ze sandboxu ven nevidíme, takže se to muselo odehrát v Actions.
+
+### 1. „Zastavěná plocha" je DRUH POZEMKU, ne plocha stavby
+
+Opravuji tím vlastní tvrzení z §412. Doslovně z naměřených popisů:
+
+```
+•  stavební parcela č. 1013, zastavěná plocha a nádvoří o výměře 239 m2,
+   součástí je stavba: Králův Dvůr, č.p. 442, rod. dům
+-  stavební parcela č. 34 o výměře 275 m2, druh pozemku zastavěná plocha
+   a nádvoří
+•  st. parcela č. 631 o výměře 320 m2, zastavěná plocha a nádvoří
+```
+
+Je to tedy údaj o PARCELE pod stavbou a v popisu vždycky stojí vedle
+slova „výměře", takže ho dnešní čtení výměry bere správně. Pravidlo
+„u budovy čti zastavěnou plochu", které jsem v §412 navrhl, by nic
+nespravilo a zavedlo by druhý zdroj téhož čísla.
+
+### 2. Podlahová plocha je v celé nabídce JEDNOU
+
+Píše se jinou větou:
+
+```
+Celková podlahová plocha domu je 265 m2.
+```
+
+Hledáno vzorem `podlahov[^",]{0,60}` ve dvou odpovědích (100 nabídek
+kategorie Pozemky a 25 nabídek přes všechny kategorie): **jeden nález**.
+
+**Co to znamená pro fázi 3:** Kč/m² podlahové plochy se z textů ÚZSVM
+postavit nedá. Čtečka na větu, která se v celé nabídce vyskytne jednou,
+by byla práce pro jednu nabídku — a hlavně by vznikl dojem, že web to
+číslo u domů a bytů zná. Bude muset přijít z jiných zdrojů (dražební
+rejstříky, portály), nebo nebude.
+
+### 3. A čím je tedy u domu ta výměra, kterou web uloží
+
+Nabídka domu vyjmenuje VÍC PARCEL prodávaných spolu:
+
+```
+•  stavební parcela č. 1013 … o výměře 239 m2  (dům na ní stojí)
+•  pozemková parcela č. 229/51, zahrada … o výměře 722 m2
+•  pozemková parcela č. 229/53, orná půda … o výměře 119 m2
+```
+
+Čtení výměry je **sečte** (1 080 m²; to sčítání má vlastní odůvodnění,
+viz `VYMERA_RE` v `scripts/cti-nabidky-statu.mjs`). U domu je tedy
+uložená výměra plocha všech pozemků, které se prodávají s ním — ne
+plocha domu a ne plocha jedné parcely.
+
+Tím je **změřeně potvrzené rozhodnutí z §413**: u kategorií s
+`mera: 'obe'` (dům, areál, farma) web o výměře neříká nic. Nebyla to
+opatrnost, je to jediná pravda, která se o tom čísle dá říct.
+
+### 4. Past: větší PageSize znamená MÍŇ dat
+
+Vedlejší nález, a je to past obráceně, než člověk čeká:
+
+| PageSize v dotazu | kolik přišlo v `Properties` |
+|---|---|
+| 100 | **100** (`PageCount` 3) |
+| 1000 | **25** |
+
+Server u hodnoty mimo rozsah spadne na svou vlastní stranu a
+v odpovědi má `DefaultPageSize: 0`, takže se to z ní ani nepozná.
+Kdo tedy stovku zvedne „aby se to stáhlo na jeden dotaz", začne brát
+25 na stranu — a při stropu deseti stran se přestane stahovat 250
+nabídek z 276, aniž by se cokoli ozvalo.
+
+Mez se proto drží **při skládání dotazu** (`dotaz()` velikost ořízne na
+`NA_STRANU_STROP`), ne jen v konstantě: je to jediné místo, kterým
+prochází každý volající. Tři kontroly v `test-uzsvm` to drží.
+
+A jedna věc, která tím JE v pořádku: `PropertyTotalCount` je 729
+i s filtrem na kategorii Pozemky, tedy počet všeho — ale to už repozitář
+ví (§366) a počet se bere z číselníku `FilteredCount`.
