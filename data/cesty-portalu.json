@@ -2,24 +2,29 @@
  "updated": "2026-11-05",
  "tvaru": 29,
  "zmerenychTvaru": 8,
- "dotazu": 37,
+ "dotazu": 38,
  "portaly": [
   {
    "host": "drazbynaxos.cz",
    "jmeno": "https://drazbynaxos.cz/",
    "url": "https://drazbynaxos.cz/",
    "odkud": "z příkazu",
-   "dotazu": 37,
+   "dotazu": 38,
    "nedosahnuto": 0,
    "sitemapyZRobots": 0,
+   "kontrolaNeexistujici": {
+    "adresa": "https://drazbynaxos.cz/__takova-cesta-tu-neni-9c3f",
+    "stav": 200,
+    "bajtu": 101947
+   },
    "cesty": [
     {
      "adresa": "https://drazbynaxos.cz/",
      "jmeno": "vstupní adresa",
      "skupina": "vstup",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -27,7 +32,8 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/lod/catalog",
@@ -50,8 +56,8 @@
      "jmeno": "OFN katalog (katalog)",
      "skupina": "katalog",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -59,7 +65,8 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/api/catalogue",
@@ -98,8 +105,8 @@
      "jmeno": "OFN katalog (jsonld)",
      "skupina": "katalog",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -107,15 +114,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/data.json",
      "jmeno": "DCAT data.json",
      "skupina": "katalog",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -123,7 +131,8 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/api/3/action/package_search?q=pozemky&rows=5",
@@ -194,8 +203,8 @@
      "jmeno": "OAI-PMH",
      "skupina": "katalog",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -203,15 +212,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/rss",
      "jmeno": "RSS",
      "skupina": "feed",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -219,15 +229,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/rss.xml",
      "jmeno": "RSS (xml)",
      "skupina": "feed",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -235,15 +246,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/feed",
      "jmeno": "Feed",
      "skupina": "feed",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -251,15 +263,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/atom.xml",
      "jmeno": "Atom",
      "skupina": "feed",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -267,7 +280,8 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/sitemap.xml",
@@ -290,8 +304,8 @@
      "jmeno": "Sitemapa (index)",
      "skupina": "sitemap",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -299,15 +313,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/sitemap-index.xml",
      "jmeno": "Sitemapa (index2)",
      "skupina": "sitemap",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -315,15 +330,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/opendata",
      "jmeno": "Otevřená data (stránka)",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -331,15 +347,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/otevrena-data",
      "jmeno": "Otevřená data (česky)",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -347,15 +364,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/nabidka-majetku",
      "jmeno": "Nabídka majetku",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -363,15 +381,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/nabidky",
      "jmeno": "Nabídky",
      "skupina": "stranka",
      "zmereno": true,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -379,15 +398,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/prodej-majetku",
      "jmeno": "Prodej majetku",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -395,15 +415,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/prodej-nemovitosti",
      "jmeno": "Prodej nemovitostí",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -411,15 +432,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/uredni-deska",
      "jmeno": "Úřední deska",
      "skupina": "stranka",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -427,15 +449,16 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/api",
      "jmeno": "API (koren)",
      "skupina": "api",
      "zmereno": false,
-     "verdikt": "nabídky",
-     "proc": "přečteno 1 nabídek",
+     "verdikt": "odpověděla",
+     "proc": "táž stránka jako na vymyšlenou adresu (101947 bajtů) — tenhle web odpovídá na všechno stejně, takže ze stavu 200 se tady nesmí soudit nic",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
@@ -443,7 +466,8 @@
      "stav": 200,
      "bajtu": 101947,
      "nabidek": 1,
-     "cestaCteni": "signál"
+     "cestaCteni": "signál",
+     "jakoNeexistujici": true
     },
     {
      "adresa": "https://drazbynaxos.cz/api/v1",
@@ -617,276 +641,10 @@
    ]
   }
  ],
- "navrhy": [
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "nabidek": 1,
-   "adresa": "https://drazbynaxos.cz/"
-  }
- ],
- "noveOdMinule": [
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/",
-   "cesta": "vstupní adresa",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/api",
-   "cesta": "API (koren)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/atom.xml",
-   "cesta": "Atom",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/data.json",
-   "cesta": "DCAT data.json",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/feed",
-   "cesta": "Feed",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/katalog",
-   "cesta": "OFN katalog (katalog)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/katalog.jsonld",
-   "cesta": "OFN katalog (jsonld)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/nabidka-majetku",
-   "cesta": "Nabídka majetku",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/nabidky",
-   "cesta": "Nabídky",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/oai?verb=Identify",
-   "cesta": "OAI-PMH",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/opendata",
-   "cesta": "Otevřená data (stránka)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/otevrena-data",
-   "cesta": "Otevřená data (česky)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/prodej-majetku",
-   "cesta": "Prodej majetku",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/prodej-nemovitosti",
-   "cesta": "Prodej nemovitostí",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/rss",
-   "cesta": "RSS",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/rss.xml",
-   "cesta": "RSS (xml)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/sitemap_index.xml",
-   "cesta": "Sitemapa (index)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/sitemap-index.xml",
-   "cesta": "Sitemapa (index2)",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/uredni-deska",
-   "cesta": "Úřední deska",
-   "verdikt": "nabídky",
-   "proc": "přečteno 1 nabídek",
-   "nabidek": 1,
-   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
-   "znaky": null
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/drazby/manualy/aukce",
-   "cesta": "adresa ze sitemapy",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu a v textu je 4× cena a 0× výměra — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Manuál k aukci | Dražby NAXOS",
-    "znaku": 4427,
-    "pocty": {
-     "cena": 4,
-     "dražba": 6
-    },
-    "odkazu": 14,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Manuál k aukci | Dražby NAXOS Domovská stránka Kalendář Historie Přihlásit se Návod k účasti v aukci na soutěžní platformě DRAŽBY NAXOS I. Příprava na aukci 1. Přihlášení do systému Klikněte na tlačítko „Přihlásit se“ v pravém horním rohu obrazovky. Zadejte své přihlašovací údaje (e-mail a heslo). 2. Výběr aukce Otevřete sekci „Kalendář“ a vyberte aukci, které se chcete zúčastnit. Klikněte na náze"
-   }
-  },
-  {
-   "host": "drazbynaxos.cz",
-   "jmeno": "https://drazbynaxos.cz/",
-   "adresa": "https://drazbynaxos.cz/drazby/testovaci-soutez",
-   "cesta": "adresa ze sitemapy",
-   "verdikt": "ke čtení",
-   "proc": "není strojový tvar (HTML), ale mluví o pozemcích i o převodu a v textu je 3× cena a 0× výměra — nabídky tu jsou, chybí předpis pro čtení",
-   "nabidek": 0,
-   "coSTim": "napsat předpis pro čtení HTML",
-   "znaky": {
-    "titulek": "Testovací soutěž | Dražby NAXOS",
-    "znaku": 3520,
-    "pocty": {
-     "cena": 3,
-     "výběrové řízení": 4,
-     "dražba": 21
-    },
-    "odkazu": 13,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": true,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Testovací soutěž | Dražby NAXOS Domovská stránka Kalendář Historie Přihlásit se Testovací dražba Vítejte v testovacím prostředí dražební platformy NAXOS . Toto je testovací prostředí, kde si můžete vyzkoušet přihazování nanečisto . Testovací dražbu si můžete spustit opakovaně a kdykoliv Vám to bude vyhovovat. V testovací dražební místnosti budete dražit proti fiktivním virtuálním účastníkům . Test"
-   }
-  }
- ],
+ "navrhy": [],
+ "noveOdMinule": [],
  "dny": {
   "2026-11-04": 0,
-  "2026-11-05": 1
+  "2026-11-05": 0
  }
 }
