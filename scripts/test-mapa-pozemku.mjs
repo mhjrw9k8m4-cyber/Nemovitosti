@@ -1561,7 +1561,7 @@ if (DRAZBA) {
       ramVys: mapaEl ? Math.round(mapaEl.getBoundingClientRect().height) : null,
       plVDom: b ? document.body.contains(b) : null,
       zoomJede: !!m._animatingZoom, snimek: !!(window.PK_SNIMEK && window.PK_SNIMEK.priblizeni),
-      hyby: (window.__PK_HYBY || []).slice(-6),
+      hyby: (window.__PK_HYBY || []).slice(-14),
       /* A TEĎ TO, CO SE PO PRVNÍM MĚŘENÍ UKÁZALO JAKO CHYBĚJÍCÍ.
          CI 4. 11. vyloučila nulový rám, dvě mapy, běžící animaci
          i nenačtený modul — tlačítko přesto zůstalo skryté. Zbývá
@@ -1616,16 +1616,43 @@ if (DRAZBA) {
       const orig = m[jm];
       if (typeof orig !== 'function') continue;
       m[jm] = function () {
-        try {
-          const kde = String((new Error()).stack || '').split('\n').slice(2, 4)
-            .join(' | ').replace(/https?:\/\/[^/]+/g, '');
-          window.__PK_HYBY.push(jm + ' '
-            + JSON.stringify(Array.prototype.slice.call(arguments, 0, 2)).slice(0, 90)
-            + ' ← ' + kde.slice(0, 160));
-        } catch (e) { /* diagnostika nesmí shodit web */ }
-        return orig.apply(this, arguments);
+        /* STŘED PŘED A PO, NE JEN JMÉNO VOLÁNÍ.
+           Naměřeno v CI 5. 11. (běh 41961270219): po jediném `setView`
+           na souřadnice pozemku se mapa usadila o 0,0192° JIŽ od nich,
+           tedy přesně o tolik, o kolik se předtím odjelo — jako by se
+           týž posun provedl dvakrát. Z výpisu „kdo hýbal" se to
+           rozhodnout nedá: jsou v něm jen jména a argumenty, takže
+           nejde poznat, jestli se mapa pohnula dvakrát, nebo jednou
+           a zkouška měřila za letu. Proto se u každého volání zapisuje,
+           ODKUD a KAM se mapa dostala, a s časem. */
+        let pred = '';
+        try { const c = this.getCenter(); pred = c.lat.toFixed(5) + ',' + c.lng.toFixed(5) + '@' + this.getZoom(); } catch (e) { /* nic */ }
+        const t = Math.round((window.performance && performance.now ? performance.now() : Date.now()));
+        let vysledek;
+        try { vysledek = orig.apply(this, arguments); } finally {
+          try {
+            const kde = String((new Error()).stack || '').split('\n').slice(2, 4)
+              .join(' | ').replace(/https?:\/\/[^/]+/g, '');
+            let po = '';
+            try { const c2 = this.getCenter(); po = c2.lat.toFixed(5) + ',' + c2.lng.toFixed(5) + '@' + this.getZoom(); } catch (e) { /* nic */ }
+            window.__PK_HYBY.push('t=' + t + ' ' + jm + ' '
+              + JSON.stringify(Array.prototype.slice.call(arguments, 0, 2)).slice(0, 70)
+              + ' ' + pred + ' → ' + po
+              + ' ← ' + kde.slice(0, 120));
+          } catch (e) { /* diagnostika nesmí shodit web */ }
+        }
+        return vysledek;
       };
     }
+    /* A KONEC KAŽDÉHO POHYBU TAKY. Bez něj se ve výpisu nepozná, kde
+       pohyb opravdu skončil — a právě to je ta otázka. */
+    m.on('moveend zoomend', function (e) {
+      try {
+        const c = m.getCenter();
+        window.__PK_HYBY.push('t=' + Math.round((window.performance && performance.now ? performance.now() : Date.now()))
+          + ' ' + (e && e.type) + ' → ' + c.lat.toFixed(5) + ',' + c.lng.toFixed(5) + '@' + m.getZoom());
+      } catch (err) { /* nic */ }
+    });
   });
   const doma = await stav();
   const doma2 = await stav();
@@ -1706,16 +1733,23 @@ if (DRAZBA) {
        sobě shodnou, ačkoli se mapa dál hýbe. `moveend` ohlašuje konec
        sama mapa, takže se čeká NEJPRVE na něj a teprve pak se nechá
        dojít do klidu — kdyby na jeden pohyb navázal další. */
+    /* POČÍTÁ SE, KOLIK POHYBŮ SKONČILO — ne jestli nějaký skončil.
+       Vlajka „dojelo" měla dírу: `moveend` mohl přijít ještě z pohybu,
+       který si udělala sama zkouška při odjezdu, a čekání pak prošlo
+       okamžitě. Na pohyb po stisku se tak nečekalo vůbec a zkouška
+       měřila za letu — což vypadá úplně stejně jako vada webu.
+       Počítadlo tu dírу zavírá: zajímá nás pohyb, který skončil AŽ PO
+       stisku, tedy vyšší počet, než byl předtím. */
     await p.evaluate(() => {
-      window.__PK_DOJELO = false;
+      window.__PK_DOKONCENO = 0;
       const m = window.PK_PZ_MAPA;
-      if (!m) { window.__PK_DOJELO = true; return; }
-      m.on('moveend', () => { window.__PK_DOJELO = true; });
-      m.on('zoomend', () => { window.__PK_DOJELO = true; });
+      if (!m) return;
+      m.on('moveend zoomend', () => { window.__PK_DOKONCENO++; });
     });
+    const predStiskem = await p.evaluate(() => window.__PK_DOKONCENO || 0);
     await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
-    await p.waitForFunction(() => window.__PK_DOJELO === true,
-      { timeout: 8000 }).catch(() => { /* dopoví kontroly pod tím */ });
+    await p.waitForFunction((n) => (window.__PK_DOKONCENO || 0) > n,
+      predStiskem, { timeout: 8000 }).catch(() => { /* dopoví kontroly pod tím */ });
     /* Totéž z druhé strany: čeká se, až web tlačítko sám schová. */
     await p.waitForFunction(() => {
       const b = document.getElementById('pzm-zpet');
@@ -1725,16 +1759,20 @@ if (DRAZBA) {
        dostane do záběru — tedy JEŠTĚ ZA LETU. Naměřeno v CI 4. 11.
        (běh 41907920584): snímek vzatý hned po schování ukázal střed
        o 250 m jinde a sám web o něm řekl „domov nevidím". */
-    await p.evaluate(() => { window.__PK_KLID = ''; });
+    /* TŘI SHODNÁ ČTENÍ, NE DVĚ. Dvě po sobě shodná čtení se dají
+       potkat i uprostřed pohybu: `panBy` má na začátku i na konci
+       pomalé úseky, kde se střed mezi dvěma vzorky o 400 ms nezmění
+       na pět desetinných míst. Tři vzorky za sebou je 1,2 s klidu. */
+    await p.evaluate(() => { window.__PK_KLID = ''; window.__PK_KLIDU = 0; });
     await p.waitForFunction(() => {
       const m = window.PK_PZ_MAPA;
       if (!m) return false;
       const c = m.getCenter();
       const k = c.lat.toFixed(5) + ',' + c.lng.toFixed(5) + ',' + m.getZoom();
-      if (window.__PK_KLID === k) return true;
+      if (window.__PK_KLID === k) { window.__PK_KLIDU++; } else { window.__PK_KLIDU = 1; }
       window.__PK_KLID = k;
-      return false;
-    }, { timeout: 8000, polling: 400 }).catch(() => { /* dopoví kontrola pod tím */ });
+      return window.__PK_KLIDU >= 3;
+    }, { timeout: 10000, polling: 400 }).catch(() => { /* dopoví kontrola pod tím */ });
     const zpet = await stav();
     /* „PŘESNĚ" SE MĚŘÍ NA OBRAZOVÉ BODY, NE NA DESETINNÁ MÍSTA.
        Naměřeno v CI 4. 11.: po stisku vrátila mapa 49.11218,14.30697
