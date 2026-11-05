@@ -493,6 +493,98 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     JSON.stringify((v2.cesty || []).filter((c) => c.stav === 200).map((c) => [c.adresa, c.verdikt])));
 }
 
+/* ---- 2d) CESTA, KTERÁ SLIBUJE STROJOVÝ TVAR (§444) --------------
+ *
+ * §442 zarazil web, co vrací touž stránku NA BAJT shodnou. Hned další
+ * měření ukázalo, že to nestačí: verejnedrazby.cz (běh 42056549281)
+ * dal „nabídky" cestám `/`, `/atom.xml` a `/api` a všechny tři
+ * vrátily HTML o 27 299 až 27 573 bajtech — táž domovská stránka, jen
+ * dynamická, takže shoda na bajt minula a kontrolní 404 (22 426 B)
+ * se jí netýkala. Rozhoduje se tedy podle toho, co cesta slibovala.
+ */
+{
+  const odp = (a, telo, nabidek, typ) => C.verdiktCesty({
+    dovoleno: true, stav: 200, typ: typ || 'text/html', telo, nabidek, adresa: a });
+  const HTML = '<html><body>Dražby pozemků, prodej, katastr.</body></html>';
+
+  pravda('„slibuje strojový tvar" pozná přípony i jména rozhraní',
+    ['https://x.cz/atom.xml', 'https://x.cz/api', 'https://x.cz/rss',
+      'https://x.cz/katalog.jsonld', 'https://x.cz/oai?verb=Identify',
+      'https://x.cz/arcgis/rest/services?f=json', 'https://x.cz/data.json']
+      .every((a) => C.slibujeStrojovyTvar(a) === true),
+    JSON.stringify(['https://x.cz/atom.xml', 'https://x.cz/api', 'https://x.cz/rss',
+      'https://x.cz/katalog.jsonld', 'https://x.cz/oai?verb=Identify',
+      'https://x.cz/arcgis/rest/services?f=json', 'https://x.cz/data.json']
+      .filter((a) => !C.slibujeStrojovyTvar(a))));
+  pravda('a obyčejnou cestu za slib nepovažuje',
+    ['https://x.cz/', 'https://x.cz/nabidky', 'https://x.cz/katalog',
+      'https://x.cz/prodej-pozemku', 'https://x.cz/drazby/2026']
+      .every((a) => C.slibujeStrojovyTvar(a) === false),
+    JSON.stringify(['https://x.cz/', 'https://x.cz/nabidky', 'https://x.cz/katalog',
+      'https://x.cz/prodej-pozemku', 'https://x.cz/drazby/2026']
+      .filter((a) => C.slibujeStrojovyTvar(a))));
+
+  /* TEN ZMĚŘENÝ PŘÍPAD: tři cesty, osm až devět nabídek, všechny HTML. */
+  const domov = odp('https://www.verejnedrazby.cz/', HTML, 9);
+  const atom = odp('https://www.verejnedrazby.cz/atom.xml', HTML, 8);
+  const api = odp('https://www.verejnedrazby.cz/api', HTML, 9);
+  je('domovská stránka s nabídkami je POCTIVÝ nález', domov.verdikt, 'nabídky');
+  je('ale /atom.xml, kde přišlo HTML, nálezem není', atom.verdikt, 'odpověděla');
+  je('a /api taky ne', api.verdikt, 'odpověděla');
+  pravda('u obou je napsané, co se slibovalo a co přišlo',
+    /slibovala strojový tvar, přišlo HTML/.test(atom.proc || '')
+    && atom.slibilaStroj === true && /8 nabídek/.test(atom.proc || ''),
+    JSON.stringify(atom));
+  /* A KDYŽ TEN SLIB SPLNÍ, je to nález jako každý jiný — pravidlo
+     netrestá adresu, trestá nesplněný slib. */
+  je('tentýž /atom.xml, který opravdu vrátí XML, nálezem JE',
+    odp('https://www.verejnedrazby.cz/atom.xml', '<feed><entry>pozemek</entry></feed>', 8,
+      'application/xml').verdikt, 'nabídky');
+  /* A TEĎ SKRZ CELÉHO BOTA — jinak je to §436 potřetí.
+     Kontroly výš volají `verdiktCesty()` přímo, tedy NÁSTROJ. Sabotáž
+     „adresa se do soudce nepředává" jimi prošla zeleně: pravidlo by
+     bylo v produkci mrtvé a zkouška by o tom nevěděla. Měří se tedy
+     i stupeň, který pustí ostrý běh. */
+  {
+    const chozeno = [];
+    const pomucky = {
+      stahni: async (url) => {
+        const u = String(url); chozeno.push(u);
+        if (u.includes('/robots.txt')) {
+          return { ok: true, status: 200, headers: { get: () => 'text/plain' },
+            text: async () => 'User-agent: *\nAllow: /\n' };
+        }
+        /* Domovská stránka A /atom.xml vrací TOTÉŽ HTML — tak to dělá
+           verejnedrazby.cz. Velikosti se o pár bajtů liší, takže na
+           pravidlo z §442 (shoda na bajt) to nestačí. */
+        if (/\/atom\.xml$/.test(u)) {
+          return { ok: true, status: 200, headers: { get: () => 'text/html' },
+            text: async () => HTML + '<!-- -->' };
+        }
+        if (/naxos2\.test\/$/.test(u)) {
+          return { ok: true, status: 200, headers: { get: () => 'text/html' }, text: async () => HTML };
+        }
+        return { ok: true, status: 404, headers: { get: () => 'text/html' },
+          text: async () => '<html><body>Nenalezeno</body></html>' };
+      },
+      ua: 'zkouska', smimeCist: async () => ({ dovoleno: true }),
+      mezipamet: new Map(), zeSitemapy, zRss,
+      cti: (telo) => (/Dražby pozemků/.test(String(telo))
+        ? { nabidky: [{ k: 'a' }, { k: 'b' }], cesta: 'html' } : { nabidky: [] }),
+    };
+    const v = await Z.zkusPortal({ host: 'naxos2.test', jmeno: 'Dražby 2', url: 'https://naxos2.test/' },
+      pomucky, { strop: 40 });
+    const atom = (v.cesty || []).find((c) => /\/atom\.xml$/.test(c.adresa));
+    const dom = (v.cesty || []).find((c) => c.adresa === 'https://naxos2.test/');
+    pravda('bot /atom.xml opravdu zkusil a dostal z něj HTML', !!atom && atom.tvar === 'HTML',
+      JSON.stringify(atom && { adresa: atom.adresa, tvar: atom.tvar }));
+    je('a NENÍ to nález — slib strojového tvaru se nesplnil',
+      atom && atom.verdikt, 'odpověděla');
+    je('domovská stránka s nabídkami nálezem zůstává', dom && dom.verdikt, 'nabídky');
+  }
+
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

@@ -213,7 +213,36 @@ export const SLOVA_PREVODU = /prodej|prodáv|prodat|dražb|drazb|aukc|nabídk\S*
 export const CHCE_KLIC =
   /kl[íi][čc]|api[_\- ]?key|access[_\- ]?token|\btoken\b|nep[řr]ihl[áa][šs]|p[řr]ihl[áa][šs]|unauthor|unauthenticated|registra|sign[_\- ]?in|log[_\- ]?in/i;
 
-export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
+/* ------------------------------------------------------------------
+   CESTA, KTERÁ SLIBUJE STROJOVÝ TVAR (§444).
+
+   §442 zarazil web, který na všechno vrací touž stránku na bajt
+   shodnou. Hned další měření ukázalo, že to nestačí: na
+   verejnedrazby.cz (běh 42056549281) dostaly verdikt „nabídky" tři
+   cesty — `/`, `/atom.xml` a `/api` — a všechny tři vrátily HTML
+   o velikosti 27 299 až 27 573 bajtů. Tedy táž domovská stránka,
+   jen dynamická: bajty se liší o stovky, takže shoda na bajt minula
+   a kontrolní 404 (22 426 bajtů) se jí netýkala.
+
+   Odhadovat podobnost (procentní mez na velikost) by znamenalo
+   riskovat TICHO: skutečný výpis podobné velikosti by se tím ztratil.
+   Jde to ale rozhodnout bez hádání: `/atom.xml` jsme zkoušeli,
+   protože jsme čekali Atom, a `/api`, protože jsme čekali rozhraní.
+   Když odtamtud přijde HTML, ta věc, pro kterou jsme tam šli, TAM
+   NENÍ — ať na té stránce stojí cokoli. Takové cestě se verdikt
+   „nabídky" nedá; nabídky čteme z toho, co je opravdu výpis.
+
+   Obyčejná cesta jako `/nabidky` nebo `/katalog` nic nepřislíbila,
+   takže na ni tohle pravidlo nesahá a HTML je u ní poctivý nález. */
+export function slibujeStrojovyTvar(adresa) {
+  let cesta = String(adresa || '');
+  try { const u = new URL(cesta); cesta = u.pathname + u.search; } catch { /* holá cesta */ }
+  return /\.(?:xml|json|jsonld|csv|rss|atom)(?:$|[?#])/i.test(cesta)
+    || /(?:^|\/)(?:api|rss|atom|oai|opendata|sparql)(?:$|[\/?#])/i.test(cesta)
+    || /[?&]f=json|[?&]verb=/i.test(cesta);
+}
+
+export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0, adresa = '' } = {}) {
   if (dovoleno === false) return { verdikt: 'zavřená', proc: 'robots.txt nedovoluje' };
   /* OTEVŘENO, ALE CHCE KLÍČ — TO NENÍ ZAVŘENO.
      Naměřeno 4. 11. na eDeskách: `/api/v1/documents` odpoví HTTP 401
@@ -240,6 +269,16 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
   const oPrevodu = SLOVA_PREVODU.test(text);
   const strojova = TVARY_STROJOVE.has(tvar);
   if (nabidek > 0) {
+    /* §444: cesta, která slibovala strojový tvar, a vrátila HTML, není
+       nález — to, pro co jsme tam šli, tam není. Nabídky na té stránce
+       klidně jsou (bývá to domovská stránka, kterou server pošle na
+       cokoli), ale číst je patří z toho, co je opravdu výpis. */
+    if (!strojova && slibujeStrojovyTvar(adresa)) {
+      return { verdikt: 'odpověděla', slibilaStroj: true, tvar, strojova, oPozemku, oPrevodu,
+        proc: `cesta slibovala strojový tvar, přišlo ${tvar} —`
+          + ` to, pro co se tam šlo, tam není (i když se z té stránky dá`
+          + ` přečíst ${nabidek} nabídek, je to nejspíš domovská stránka)` };
+    }
     return { verdikt: 'nabídky', proc: `přečteno ${nabidek} nabídek`, tvar, strojova, oPozemku, oPrevodu };
   }
   if (strojova && oPozemku && oPrevodu) {

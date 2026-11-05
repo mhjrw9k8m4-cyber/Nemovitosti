@@ -26884,3 +26884,51 @@ hostitel), je to důvod změřit znovu.
 Stejná logika už v registru platí pro Lesy ČR a Správu železnic.
 Zapsat „nezapojeno, protože pokryto jiným" je nález, ne mezera —
 mezera by byla tichá domněnka.
+
+## §444 — Cesta, která slíbila stroj a vrátila HTML
+
+§442 zarazil web, který odpovídá na všechno stránkou **shodnou na
+bajt**. Hned další měření ukázalo, že to nestačí.
+
+`verejnedrazby.cz` (běh 42056549281) dal verdikt „nabídky" třem
+cestám — `/`, `/atom.xml` a `/api` — a všechny tři vrátily **HTML**
+o velikosti 27 299, 27 466 a 27 573 bajtů. Je to táž domovská
+stránka, jen dynamická: bajty se liší o stovky, takže shoda na bajt
+minula a kontrolní 404 (22 426 bajtů) se jí netýkala. Devět nabídek
+tam opravdu je — ale jednou, ne třikrát.
+
+Odhadovat podobnost (procentní mez na velikost) by znamenalo
+riskovat **ticho**: skutečný výpis podobné velikosti by se tím
+ztratil. Jde to ale rozhodnout **bez hádání**:
+
+> `/atom.xml` jsme zkoušeli, protože jsme čekali Atom. `/api`,
+> protože jsme čekali rozhraní. Když odtamtud přijde HTML, **ta věc,
+> pro kterou jsme tam šli, tam není** — ať na té stránce stojí
+> cokoli.
+
+Takové cestě se verdikt „nabídky" nedá; dostane „odpověděla" a
+v odůvodnění stojí, co slibovala, co přišlo a kolik nabídek se z toho
+dalo přečíst. Pravidlo netrestá adresu, trestá **nesplněný slib**:
+týž `/atom.xml`, který opravdu vrátí XML, je nález jako každý jiný.
+A obyčejná cesta (`/nabidky`, `/katalog`, `/prodej-pozemku`) nic
+neslíbila, takže na ni pravidlo nesahá.
+
+### §436 potřetí — a tentokrát jsem si to hlídal sám
+
+Napsal jsem pravidlo, osm kontrol k němu, a sabotáž („adresa se do
+soudce nepředává") **prošla zeleně**. Důvod byl týž jako u §436
+a §442: kontroly volaly `verdiktCesty()` — tedy **nástroj** — kdežto
+rozhoduje se o stupeň výš, ve volání z `zkusCestu()`. Pravidlo mohlo
+být v produkci mrtvé a zkouška by o tom nevěděla.
+
+Je tam teď i zkouška, která pustí **celého bota** s podstrčeným
+stahováním: `/atom.xml` i `/` vracejí totéž HTML (velikosti se o pár
+bajtů liší, aby na to §442 nestačilo) a měří se, co bot opravdu
+usoudil. Sabotáž **shodí** tu kontrolu, která měří rozhodnutí.
+
+Třikrát ta samá lekce ve dvou dnech. Zapisuju si ji proto ještě
+jednou, konkrétněji: **u každého nového pravidla napsat kontrolu na
+tom stupni, který pustí ostrý běh** — a sabotáž mířit na VOLÁNÍ, ne
+na funkci.
+
+`test-zkus-portal` 169 → **179 kontrol**.
