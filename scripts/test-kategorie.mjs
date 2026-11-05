@@ -21,7 +21,7 @@
         má, musí vyjít pozemek. Je to pojistka proti tomu, aby nová
         pravidla zpětně překlopila existující web.
    ================================================================== */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -557,6 +557,47 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
   /* Prázdná množina je „samé pozemky" — výchozí kategorie je pozemek
      a web o něm takhle mluvil, dokud nic jiného neměl. */
   je('a prázdná množina mluví o pozemcích', K.slovaPoctu([])[0], 'pozemek');
+}
+
+/* ==================================================================
+   12) ŽÁDNÁ STRÁNKA SI PLURÁL NEPÍŠE SAMA
+   ==================================================================
+   Kontrola v prohlížeči (test-hlidani-prohlizec) se ptá MODULU, jestli
+   umí vybrat slovo — a to je málo. Sabotáž „hlídání si plurál píše
+   zase samo" ji neshodila: modul zůstal v pořádku, jen ho stránka
+   přestala poslouchat. Hlídač, který měří nástroj místo jeho použití,
+   je slepý na to nejčastější, co se stane.
+
+   Tahle kontrola proto zakazuje PŘÍMO to, co se vrátit nemá: trojici
+   tvarů slova „pozemek" napsanou v šabloně stránky. Kdo takový text
+   potřebuje, bere ho z js/kategorie.js (slovaPoctu), ne od ruky.
+
+   MĚŘÍ SE TEXT, TEDY I KOMENTÁŘE. Hned při psaní téhle kontroly to
+   padlo na komentáři, který tu trojici citoval jako příklad. Je to
+   schválně takhle hloupé: rozlišovat kód od komentáře v HTML se
+   smíšeným JS by znamenalo psát si parser, a zákaz „ani jako příklad"
+   je snesitelnější cena než hlídač, který se dá obejít přesunutím
+   řádku do komentáře. */
+{
+  const STRANKY = ['hlidani.html', 'index.html', 'pozemek.html'];
+  const ZAKAZANO = "['pozemek', 'pozemky', 'pozemků']";
+  const provinile = STRANKY
+    .filter((f) => existsSync(join(KOREN, f)))
+    .filter((f) => readFileSync(join(KOREN, f), 'utf8').indexOf(ZAKAZANO) >= 0);
+  pravda('žádná stránka si trojici tvarů „pozemek" nepíše sama',
+    provinile.length === 0, 'píše: ' + provinile.join(', '));
+  /* A ŽE SE TO OPRAVDU MĚŘÍ. Kdyby se ty soubory přejmenovaly, kontrola
+     výš by byla zelená prázdnotou. */
+  const nalezeno = STRANKY.filter((f) => existsSync(join(KOREN, f)));
+  pravda('a všechny tři hlídané stránky existují',
+    nalezeno.length === STRANKY.length, 'našly se jen: ' + nalezeno.join(', '));
+  /* HLÍDÁNÍ SI MODUL OPRAVDU BERE. Sama nepřítomnost trojice nestačí:
+     stránka by mohla slovo brát odjinud, nebo odnikud. */
+  const hl = readFileSync(join(KOREN, 'hlidani.html'), 'utf8');
+  pravda('a hlidani.html načítá modul kategorií',
+    /src="js\/min\/kategorie\.js/.test(hl), 'bez něj by plurál neměl z čeho vybírat');
+  pravda('a vybírá jím slovo pro počty (slovaPoctu)',
+    /slovaPoctu\(/.test(hl), 'modul je na stránce, ale nikdo se ho neptá');
 }
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
