@@ -626,8 +626,16 @@
     m.on('moveend zoomend', hlidejZpet);
     hlidejZpet();
     if (zpetBtn) {
+
       zpetBtn.addEventListener('click', function () {
-        m.setView(domaStred, domaZoom, { animate: true });
+        var blizko = false;
+        try {
+          var odkud = m.latLngToContainerPoint(m.getCenter());
+          var kam = m.latLngToContainerPoint(domaStred);
+          var r = m.getSize();
+          blizko = Math.abs(kam.x - odkud.x) <= r.x && Math.abs(kam.y - odkud.y) <= r.y;
+        } catch (e) { blizko = false; }
+        m.setView(domaStred, domaZoom, { animate: blizko });
         hlidejZpet();
       });
     }

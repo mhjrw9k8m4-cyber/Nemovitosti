@@ -1107,8 +1107,39 @@
     m.on('moveend zoomend', hlidejZpet);
     hlidejZpet();
     if (zpetBtn) {
+      /* ANIMOVAT SE SMÍ JEN KRÁTKÁ CESTA — a není to vkus, je to vada.
+         ----------------------------------------------------------------
+         Stálo tu `{ animate: true }` bez výjimky. Naměřeno v CI 5. 11.
+         (běh 41970801758) instrumentací, která u každého volání zapisuje
+         střed PŘED a PO, s časem:
+
+           t=2587  setView na pozemek  49.13217,14.32699 → (beze změny)
+           t=2587  panBy −933/+1423 px, animate:true  ← Leaflet uvnitř
+           t=2674  moveend → 49.11217,14.30700   ← mapa DORAZILA, správně
+           t=2853  moveend → 49.10304,14.29785   ← a za 179 ms odjela
+
+         Mezi 2674 a 2853 není ANI JEDNO volání, kterým se mapou hýbe.
+         Co se stalo: posun 1 423 px je mnohem víc, než je rám mapy
+         (348×300 px), takže Leaflet animovaný posun odmítne dokončit
+         a usadí mapu skokem — ale `panBy`, které si sám předtím
+         rozjel, pak dojede a odtáhne ji o svůj posun. Člověk vidí, jak
+         mu mapa z pozemku sama uteče, a tlačítko „Na pozemek" zůstane
+         viset.
+
+         Krátká cesta se animovat má: je to ta jemná oprava, když se
+         člověk odsune o kousek. Dlouhá ne — klouzat tři obrazovky není
+         ani příjemné. Animuje se proto jen tehdy, když se posun vejde
+         do rámu mapy; jinak skok. Tím se Leaflet nikdy nedostane do
+         situace, kdy animaci sám odmítne. */
       zpetBtn.addEventListener('click', function () {
-        m.setView(domaStred, domaZoom, { animate: true });
+        var blizko = false;
+        try {
+          var odkud = m.latLngToContainerPoint(m.getCenter());
+          var kam = m.latLngToContainerPoint(domaStred);
+          var r = m.getSize();
+          blizko = Math.abs(kam.x - odkud.x) <= r.x && Math.abs(kam.y - odkud.y) <= r.y;
+        } catch (e) { blizko = false; }
+        m.setView(domaStred, domaZoom, { animate: blizko });
         hlidejZpet();
       });
     }

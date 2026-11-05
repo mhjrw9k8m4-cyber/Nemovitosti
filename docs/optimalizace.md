@@ -25539,3 +25539,59 @@ data třikrát za jeden den, a řádek se zapisuje jednou denně).
 **Závěr: kvůli skutečným bytům a domům už nepadá nic.** Tři vady, které
 by zítra přišly jako červená CI nad změněnými daty, jsou spravené dnes,
 nad daty, která si můžu zopakovat.
+
+## §417 — „Na pozemek": mapa dorazila a za 179 ms sama odjela
+
+Sedmý pád téže kontroly v CI — a tentokrát odpověděla instrumentace
+rozšířená v §413 (u každého volání střed PŘED a PO, s časem, plus konec
+každého pohybu). Běh **41970801758**, směna 2:
+
+```
+t=2558  setView [[49.13217,14.32699],16]   49.11217,14.30699 → 49.13217,14.32699
+t=2559  moveend  → 49.13217,14.32699        (odjezd zkoušky, bez animace)
+t=2587  setView [{lat:49.11218,lng:14.30697},16]   ← tlačítko, pozemek.js:630
+t=2587  panBy   [{x:-933,y:1423},{animate:true}]   ← Leaflet uvnitř setView
+t=2674  zoomend → 49.11217,14.30700
+t=2674  moveend → 49.11217,14.30700         ← MAPA DORAZILA NA POZEMEK
+t=2853  moveend → 49.10304,14.29785         ← a za 179 ms odjela
+```
+
+Mezi 2674 a 2853 **není ani jedno volání, kterým se mapou hýbe** — a to
+je ta odpověď, kterou předchozí podoba výpisu dát neumě­la: v něm byla
+jen jména a argumenty, takže se nedalo rozhodnout mezi „mapa se pohnula
+dvakrát" a „zkouška měřila za letu".
+
+### Co se dělo
+
+Rám mapy na stránce pozemku je **348×300 px**, posun byl **1 423 px**,
+tedy skoro pětinásobek. Leaflet takhle dlouhý animovaný posun
+nedokončí: usadí mapu skokem (odtud `moveend` v 2674 přesně na
+pozemku). Jenže `panBy`, které si uvnitř `setView` sám rozjel, pak
+**dojede** a odtáhne mapu o svůj posun. Člověk tedy stiskne „Na
+pozemek", na okamžik ho vidí, a pak mu mapa sama ujede — a tlačítko
+zůstane viset, protože web správně hlásí „domov nevidím".
+
+**Byla to vada produktu, ne zkoušky.** Šest předchozích běhů jsem
+opravoval čekání v kontrole; čekání díru mělo (§413) a opravit se
+muselo, ale příčina byla jinde a tohle ji pojmenovalo.
+
+### Oprava: animuje se jen krátká cesta
+
+V `js/pozemek.js` stálo `{ animate: true }` bez výjimky. Teď se spočítá
+posun v obrazových bodech a animace se žádá jen tehdy, **vejde-li se do
+rámu mapy**; jinak skok. Tím se Leaflet nikdy nedostane do situace, kdy
+animaci sám odmítne.
+
+Není to jen záplata na chybu: klouzat tři obrazovky není příjemné ani
+tehdy, když se to povede. Krátká oprava pohledu se animovat má dál — to
+je ta jemnost, kvůli které tam animace je.
+
+### Hlídač měří PŘÍČINU, ne následek
+
+Kontrola o kus výš („stisk vrátí pohled na pozemek") by to chytila jen
+podle toho, jestli se měří před animací, nebo po ní — tedy náhodou.
+Nová kontrola proto čte výpis hýbání a vyžaduje, aby v něm **nebyl
+animovaný posun větší než rám mapy**. Prokázáno sabotáží: vrácení
+`animate: true` ji shodí (diff 1/1, strom po sabotáži čistý).
+
+`test-mapa-pozemku` 167 → **169**.

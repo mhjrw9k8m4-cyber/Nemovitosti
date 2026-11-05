@@ -1812,6 +1812,39 @@ if (DRAZBA) {
     pravda('a pak se zase schová', zpet.skryte === true,
       `zůstalo viset na mapě; web vidí domov: ${zpet.zab && zpet.zab.vidimDomov};`
       + ` kdo mapou hýbal: ${JSON.stringify(zpet.hyby || [])}`);
+    /* A HLAVNĚ: PO DOJEZDU SE MAPA UŽ NEHNE.
+       ----------------------------------------------------------------
+       Tahle kontrola je důkaz k opravě z 5. 11., a měří JEJÍ PŘÍČINU,
+       ne jen následek. Naměřeno v CI (běh 41970801758): mapa po stisku
+       na pozemek dorazila (moveend 49.11217,14.30700) a o 179 ms
+       později odjela na 49.10304,14.29785 — bez jediného volání, kterým
+       se mapou hýbe. Leaflet totiž animovaný posun o 1 423 px odmítne
+       dokončit (rám mapy je 348×300 px) a usadí mapu skokem, ale
+       `panBy`, které si sám rozjel, pak dojede a odtáhne ji o svůj
+       posun.
+
+       Kontrola o kus výš by to chytila jen náhodou: záleželo by na tom,
+       jestli se měří před, nebo po té animaci. Měří se proto pravidlo:
+       o animaci se u dlouhé cesty nežádá. Ve výpisu hýbání nesmí být
+       animovaný posun větší než rám mapy — ten je ta past. */
+    {
+      const rozmer = await p.evaluate(() => {
+        const m = window.PK_PZ_MAPA; if (!m) return null;
+        const r = m.getSize(); return { x: r.x, y: r.y };
+      });
+      pravda('rám mapy se dá změřit (jinak tahle kontrola nic netvrdí)',
+        !!(rozmer && rozmer.x > 0 && rozmer.y > 0), JSON.stringify(rozmer));
+      const dlouhe = (zpet.hyby || []).filter((z) => {
+        if (String(z).indexOf('animate":true') < 0) return false;
+        const m = /"x":(-?\d+(?:\.\d+)?),"y":(-?\d+(?:\.\d+)?)/.exec(String(z));
+        if (!m || !rozmer) return false;
+        return Math.abs(+m[1]) > rozmer.x || Math.abs(+m[2]) > rozmer.y;
+      });
+      pravda('a o animaci se u cesty delší než rám mapy nežádá',
+        dlouhe.length === 0,
+        `rám ${rozmer && rozmer.x}×${rozmer && rozmer.y} px, a přesto: `
+        + JSON.stringify(dlouhe));
+    }
 
     /* Oddálení se počítá taky: značka je pořád „v záběru", jenže na
        pohledu přes celý okres už to o pozemku nic neříká. */
