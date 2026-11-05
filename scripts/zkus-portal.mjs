@@ -148,11 +148,32 @@ export async function zkusCestu(cesta, pomucky) {
      nestačí — stránka s nápisem „nenalezeno" ji dá taky. */
   let nabidek = 0;
   let cestaCteni = null;
+  let ukazkaNabidky = null;
   if (cti && (tvar === 'HTML' || tvar === 'JSONLD' || tvar === 'JSON')) {
     try {
       const v = cti(telo, cesta.adresa);
       nabidek = (v && v.nabidky && v.nabidky.length) || 0;
       cestaCteni = (v && v.cesta) || null;
+      /* UKÁZKA PRVNÍ NABÍDKY (§446). Nález dosud řekl „přečteno
+         8 nabídek" a tím skončil — a z toho se o zapojení rozhodnout
+         NEDÁ. Změřeno 5. 11. na verejnedrazby.cz: osm nabídek
+         přečtených cestou „signál", a teprve ukázka řekne, jestli
+         u nich je cena, výměra a místo, nebo jen titulek. U dražeb na
+         tom navíc visí §334: bez termínu by se dražba na webu ukázala
+         jako prodej, a to je nepravda, ne nepřesnost.
+         Bere se JEN PRVNÍ a jen pár polí — nález nemá být výpis. */
+      const n0 = nabidek ? (v.nabidky[0] || null) : null;
+      if (n0) {
+        const kratce = (x) => (x == null ? null : String(x).replace(/\s+/g, ' ').slice(0, 80));
+        ukazkaNabidky = {
+          nazev: kratce(n0.nazev || n0.title), cena: n0.cena != null ? n0.cena : (n0.price ?? null),
+          vymera: n0.vymera != null ? n0.vymera : (n0.area ?? null),
+          misto: kratce(n0.misto || n0.place), okres: kratce(n0.okres),
+          druh: kratce(n0.druh), kat: kratce(n0.kat), url: kratce(n0.url),
+          dalsiPolicka: Object.keys(n0).filter((k) => !['nazev', 'title', 'cena', 'price',
+            'vymera', 'area', 'misto', 'place', 'okres', 'druh', 'kat', 'url'].includes(k)).slice(0, 12),
+        };
+      }
     } catch { nabidek = 0; }
   }
   /* ADRESA SE PŘEDÁVÁ — §444 bez ní nemá podle čeho soudit, a bylo by
@@ -168,6 +189,7 @@ export async function zkusCestu(cesta, pomucky) {
     ? znakyOdpovedi(telo) : null;
   return Object.assign(zapis, v, znaky ? { znaky } : {}, {
     stav, bajtu: telo.length, nabidek, cestaCteni,
+    ...(ukazkaNabidky ? { ukazkaNabidky } : {}),
     /* Tělo se do NÁLEZU nezapisuje (byly by z toho megabajty), ale
        volající ho potřebuje na spojení dál. */
     telo,

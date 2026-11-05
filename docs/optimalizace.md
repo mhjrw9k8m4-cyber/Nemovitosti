@@ -26966,3 +26966,32 @@ v registru u toho kandidáta, s čísly, aby to nikdo neměřil potřetí.
 Kontrolní cesta (§442) u toho webu vrátila 404 o 14 555 bajtech a
 všechny jeho „zavřené" cesty mají týž rozměr — ten web své
 neexistující adresy přiznává poctivě, takže jeho nálezům se dá věřit.
+
+## §446 — Nález říkal kolik, ale neukázal co
+
+Majitel řekl „zapojuj" a já u toho narazil na vlastní pravidlo. §334
+v registru stojí: obecnou cestou se berou **jen prodeje, ne dražby** —
+z obecného čtení vyjde dražba bez termínu a bez rozlišení nucené
+dražby, a to je na webu **nepravda, ne nepřesnost**. Oba nové
+kandidáti jsou dražebníci.
+
+A tady se ukázalo, že na to rozhodnutí nemám z čeho soudit. Nález
+o `verejnedrazby.cz` říkal „přečteno 8 nabídek, cesta čtení: signál"
+a tím skončil. Osm titulků bez ceny a výměry přitom není zdroj, je to
+seznam odkazů — a z počtu to nerozeznám.
+
+Nález teď nese **ukázku první přečtené nabídky**: název, cenu,
+výměru, místo, okres, druh, kategorii, adresu a jmenovitý výpis
+dalších políček, která ta nabídka nese. Jen první a jen pár polí —
+nález nemá být výpis. Kde se nic nepřečetlo, ukázka nevisí vůbec.
+
+Rozhoduje se tím ta otázka, kterou jinak nejde položit: *je to zdroj,
+nebo seznam odkazů?* U dražeb navíc *je tam termín?* Bez něj se podle
+§334 zapojit nedá.
+
+**Sabotáž** (ukázka se do nálezu nezapíše) shodí **šest kontrol** —
+měří se celý bot, ne čtečka, protože po §444 vím, že měřit nástroj
+nestačí. Mezi kontrolami je i ta nejdůležitější: nabídka, která nese
+**jen titulek**, musí v ukázce přiznat, že cena ani výměra tam nejsou.
+
+`test-zkus-portal` 179 → **186 kontrol**.

@@ -585,6 +585,60 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
 
 }
 
+/* ---- 2e) NÁLEZ MUSÍ UKÁZAT, CO PŘEČETL (§446) ------------------
+ *
+ * Nález dosud řekl „přečteno 8 nabídek" a tím skončil. Z toho se
+ * o zapojení zdroje rozhodnout NEDÁ: osm titulků bez ceny a výměry
+ * není zdroj, je to seznam odkazů. U dražeb na tom navíc visí §334 —
+ * bez termínu by se dražba na webu ukázala jako prodej, a to je
+ * nepravda, ne nepřesnost. Měří se tedy skrz CELÉHO bota (po §444
+ * vím, že měřit soudce samotného nestačí).
+ */
+{
+  const HTML = '<html><body><h2>Prodej pozemku Lhota</h2>'
+    + '<p>Cena 1 200 000 Kč, výměra 4 500 m2</p></body></html>';
+  const udelej = (nabidka) => ({
+    stahni: async (u) => (String(u).includes('/robots.txt')
+      ? { ok: true, status: 200, headers: { get: () => 'text/plain' },
+        text: async () => 'User-agent: *\nAllow: /\n' }
+      : { ok: true, status: 200, headers: { get: () => 'text/html' }, text: async () => HTML }),
+    ua: 'zkouska', smimeCist: async () => ({ dovoleno: true }), mezipamet: new Map(),
+    zeSitemapy, zRss,
+    cti: () => ({ nabidky: [nabidka], cesta: 'signál' }),
+  });
+
+  const bohata = await Z.zkusPortal({ host: 'bohaty.test', jmeno: 'Bohatý', url: 'https://bohaty.test/' },
+    udelej({ nazev: 'Prodej pozemku Lhota', cena: 1200000, vymera: 4500, misto: 'Lhota',
+      okres: 'Kolín', druh: 'orná půda', kat: 'pozemek', url: 'https://bohaty.test/1', lat: 50, lng: 15 }),
+    { strop: 3 });
+  const uk = (bohata.cesty || []).map((c) => c.ukazkaNabidky).find(Boolean);
+  pravda('nález ukáže první nabídku, ne jen její počet', !!uk, JSON.stringify(bohata.cesty || []));
+  je('a je v ní cena', uk && uk.cena, 1200000);
+  je('i výměra', uk && uk.vymera, 4500);
+  je('i místo', uk && uk.misto, 'Lhota');
+  pravda('a vypíše jmenovitě, co dalšího ta nabídka nese',
+    !!uk && Array.isArray(uk.dalsiPolicka) && uk.dalsiPolicka.includes('lat'),
+    JSON.stringify(uk && uk.dalsiPolicka));
+
+  /* TEN DRUHÝ PŘÍPAD, KTERÝ ROZHODUJE: nabídka jen s titulkem. Počet
+     by řekl „1 nabídka" a vypadalo by to stejně dobře jako výš —
+     teprve ukázka přizná, že cena ani výměra tam nejsou. */
+  const hola = await Z.zkusPortal({ host: 'holy.test', jmeno: 'Holý', url: 'https://holy.test/' },
+    udelej({ nazev: 'Dražba nemovitosti', url: 'https://holy.test/1' }), { strop: 3 });
+  const uk2 = (hola.cesty || []).map((c) => c.ukazkaNabidky).find(Boolean);
+  pravda('u holé nabídky je v ukázce vidět, že cena ani výměra nejsou',
+    !!uk2 && uk2.cena == null && uk2.vymera == null && !!uk2.nazev,
+    JSON.stringify(uk2));
+
+  /* A kde se nic nepřečetlo, ukázka v nálezu nevisí — prázdné pole by
+     byl šum a nález má být čitelný. */
+  const nic = await Z.zkusPortal({ host: 'nic.test', jmeno: 'Nic', url: 'https://nic.test/' },
+    { ...udelej({}), cti: () => ({ nabidky: [] }) }, { strop: 3 });
+  pravda('bez přečtené nabídky žádná ukázka v nálezu není',
+    (nic.cesty || []).every((c) => !('ukazkaNabidky' in c)),
+    JSON.stringify((nic.cesty || []).filter((c) => 'ukazkaNabidky' in c)));
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });
