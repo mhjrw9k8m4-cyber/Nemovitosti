@@ -803,6 +803,63 @@ const UA = (await import('./bot-ua.mjs')).BOT_UA;
     JSON.stringify(d.sousedniDomena) + ' / ' + chozeno3.filter((u) => /gov/.test(u)).join(' '));
 }
 
+/* ---- KANDIDÁT, KTERÝ ČEKÁ NA ČLOVĚKA ---------------------------
+ *
+ * Měřeno 5. 11.: v nálezu leželo PĚT dostupných a slibných zdrojů,
+ * které nejsou zapojené, a nedozvěděl se o nich nikdo — úloha skončila
+ * zeleně a číslo zůstalo v logu (§431). Tohle je ta funkce, podle které
+ * se o nich hlásí, takže se měří ONA, ne až hlásič.
+ */
+{
+  const zdroje = [
+    { jmeno: 'Zapojený', host: 'a.test', url: 'https://a.test/', stav: 'zapojeno',
+      verdikt: 'dostupné', slibuje: 'slibné' },
+    { jmeno: 'Kandidát', host: 'b.test', url: 'https://b.test/majetek', stav: 'kandidát',
+      verdikt: 'dostupné', slibuje: 'slibné', robots: 'dovoluje', odpoved: 200,
+      vyteznost: { slovoPozemek: 12, korun: 5 } },
+    { jmeno: 'Zakázaný', host: 'c.test', url: 'https://c.test/', stav: 'kandidát',
+      verdikt: 'zakázané', slibuje: 'slibné' },
+    { jmeno: 'Slabý', host: 'd.test', url: 'https://d.test/', stav: 'kandidát',
+      verdikt: 'dostupné', slibuje: 'slabé' },
+    { jmeno: 'Z dat', host: 'e.test', url: 'https://e.test/', stav: 'z vlastních dat',
+      verdikt: 'dostupné', slibuje: 'slibné' },
+  ];
+  const a = S.akceschopneZdroje(zdroje);
+  pravda('akceschopný je dostupný, slibný a NEzapojený', a.length === 2
+    && a.some((z) => z.host === 'b.test') && a.some((z) => z.host === 'e.test'),
+    JSON.stringify(a.map((z) => z.host)));
+  pravda('zapojený zdroj se nehlásí (ten už čteme)', !a.some((z) => z.host === 'a.test'));
+  pravda('zakázaný robots.txt se nehlásí (zákaz je konec)', !a.some((z) => z.host === 'c.test'));
+  pravda('a slabý obsah taky ne', !a.some((z) => z.host === 'd.test'));
+
+  const nove = S.noveKandidaty({ zdroje: [{ host: 'e.test', stav: 'kandidát',
+    verdikt: 'dostupné', slibuje: 'slibné' }] }, zdroje);
+  pravda('co bylo akceschopné i minule, není nové', nove.length === 1 && nove[0].host === 'b.test',
+    JSON.stringify(nove.map((z) => z.host)));
+  pravda('nová položka má společný tvar pro hlásič',
+    !!nove[0] && !!nove[0].jmeno && !!nove[0].adresa && !!nove[0].verdikt && !!nove[0].coSTim,
+    JSON.stringify(nove[0]));
+  pravda('a v odůvodnění je naměřené, ne dojem',
+    /robots dovoluje/.test(nove[0].proc) && /odpověď 200/.test(nove[0].proc)
+    && /12× slovo o pozemku/.test(nove[0].proc), nove[0].proc);
+  pravda('první nález (bez minulého) je celý nový',
+    S.noveKandidaty(null, zdroje).length === 2);
+  pravda('a stejný nález dvakrát nehlásí nic',
+    S.noveKandidaty({ zdroje }, zdroje).length === 0);
+
+  /* SPOJKY, NE JEN FUNKCE (§423): funkce může být bez vady a stejně se
+     nikdo nic nedozví — stačí, aby se „nové" nezapsalo nebo aby úloha
+     hlásič nezavolala. */
+  const telo = readFileSync(new URL('./sonda-zdroju.mjs', import.meta.url), 'utf8');
+  pravda('sonda zapisuje „nové kandidáty" do nálezu',
+    /noveKandidaty:\s*noveK/.test(telo) && /noveKandidaty\(drive,\s*nalez\)/.test(telo),
+    'v scripts/sonda-zdroju.mjs chybí zápis noveKandidaty');
+  const uloha = readFileSync(new URL('../.github/workflows/sonda-zdroju.yml', import.meta.url), 'utf8');
+  pravda('a úloha hlásič opravdu volá, s vlastním polem i značkou',
+    /ohlas-nalez/.test(uloha) && /pole:\s*noveKandidaty/.test(uloha)
+    && /znacka:\s*sonda-zdroju/.test(uloha), 'krok „Ohlásit nález" chybí nebo mu chybí vstupy');
+}
+
 console.log('Sonda zdrojů:');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb.`);

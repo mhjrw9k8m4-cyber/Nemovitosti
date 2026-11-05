@@ -120,7 +120,8 @@ console.log('\nHlásič nálezu zkoušení portálů');
   const novy = z.find((x) => x.druh === 'novy-ukol');
   pravda('poprvé založí úkol', !!novy && z.length === 1, JSON.stringify(z.map((x) => x.druh)));
   const j = novy ? JSON.parse(novy.telo) : {};
-  pravda('v názvu je, kolik cest je nových', /2 nových cest/.test(j.title || ''), j.title);
+  pravda('v názvu je jméno hledače i kolik je nových',
+    /Zkoušení portálů/.test(j.title || '') && /2 nových nálezů/.test(j.title || ''), j.title);
   pravda('v těle je skrytá značka (podle ní se úkol najde příště)',
     /<!-- ohlas-nalez:zkouseni-portalu -->/.test(j.body || ''), (j.body || '').slice(0, 80));
   pravda('u každé cesty stojí verdikt i adresa',
@@ -214,6 +215,43 @@ console.log('\nHlásič nálezu zkoušení portálů');
   pravda('a akce posílá vše proměnnými prostředí, nic do příkazu',
     /env:/.test(akce) && /node scripts\/ohlas-nalez\.mjs/.test(akce) && !/\$\{\{[^}]*\}\}\s*$/m.test(akce.split('run:')[1] || ''),
     akce.slice(-200));
+}
+
+/* ---- 9) TÝŽ HLÁSIČ PRO DRUHÝ HLEDAČ --------------------------
+ *
+ * Hledače jsou tři a všechny mají tentýž problém (nález v JSON, úloha
+ * zeleně). Kopírovat hlásič třikrát by znamenalo tři místa, kde se
+ * příště zapomene na totéž — proto se hlásiči jen řekne, který soubor
+ * a které pole čte. Měří se, že to opravdu umí: jiné pole, jiná
+ * značka, jiné jméno v názvu.
+ */
+{
+  const souborSondy = path.join(docasne, 'sonda.json');
+  writeFileSync(souborSondy, JSON.stringify({
+    updated: '2026-11-05',
+    noveKandidaty: [
+      { jmeno: 'Nějaký úřad', host: 'urad.example', adresa: 'https://urad.example/majetek',
+        verdikt: 'dostupné a slibné', proc: 'robots dovoluje, 200, mluví o pozemcích i o prodeji',
+        coSTim: 'zapsat řádek do registru kandidátů a přečíst podmínky užití' },
+    ],
+  }));
+  const { out, zapsano: z } = await pust('bez-ukolu', {
+    NALEZ: souborSondy, POLE: 'noveKandidaty',
+    ZNACKA_ID: 'sonda-zdroju', NAZEV: 'Sonda zdrojů',
+  });
+  const novy = z.find((x) => x.druh === 'novy-ukol');
+  pravda('hlásič umí i jiný soubor a jiné pole', !!novy, JSON.stringify(z.map((x) => x.druh)));
+  const j = novy ? JSON.parse(novy.telo) : {};
+  pravda('v názvu je jméno DRUHÉHO hledače', /Sonda zdrojů/.test(j.title || ''), j.title);
+  pravda('a značka je jiná, aby se nálezy nelepily do jednoho úkolu',
+    /<!-- ohlas-nalez:sonda-zdroju -->/.test(j.body || '')
+    && !/zkouseni-portalu/.test(j.body || ''), (j.body || '').slice(0, 120));
+  pravda('v těle je, co s tím, i odkud to je',
+    /zapsat řádek do registru kandidátů/.test(j.body || '')
+    && /urad\.example\/majetek/.test(j.body || ''), (j.body || '').slice(0, 300));
+  pravda('a je napsané, ze kterého souboru a pole nález je',
+    /sonda\.json/.test(j.body || '') && /noveKandidaty/.test(j.body || ''), (j.body || '').slice(-200));
+  pravda('a řekne, co udělal', /Založen úkol #77/.test(out), out.trim());
 }
 
 server.close();

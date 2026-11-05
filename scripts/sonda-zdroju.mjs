@@ -507,6 +507,53 @@ export function cileSondy(nabidky) {
 
 /** Kolik procent nabídek nese nejsilnější zdroj — číslo, kvůli kterému
  *  tahle sonda existuje. */
+/* ------------------------------------------------------------------
+   KANDIDÁT, KTERÝ ČEKÁ NA ČLOVĚKA — a co je nového od minule.
+   ------------------------------------------------------------------
+   Sonda běží každou středu a zapisuje nález do data/zdroje-sonda.json.
+   Měřeno 5. 11.: v nálezu leželo PĚT zdrojů, které jsou dostupné,
+   slibné a NEJSOU zapojené — drazby.policenm.cz, drazbynaxos.cz,
+   elektronickedrazby.cz, verejnedrazby.cz a nabidkamajetku.cz —
+   a nedozvěděl se o nich nikdo. Úloha skončila zeleně a číslo
+   „5 slibných kandidátů" zůstalo v logu v Actions, kam se nikdo
+   nedívá. Je to táž díra, jakou u zkoušení portálů zavřel oddíl 430:
+   měřidlo bez hlášení je měřidlo pro nikoho.
+
+   AKCESCHOPNÝ je zdroj, u kterého je další krok jasný: robots dovoluje
+   (`verdikt: 'dostupné'`), obsah mluví o pozemcích i o převodu
+   (`slibuje: 'slibné'`) a ještě není zapojený. Právě na tohle se
+   v registru kandidátů odvolává poznámka u OBECNE_ZDROJE: „důvod
+   k řádku je teprve nález v data/zdroje-sonda.json, kde u zdroje stojí
+   dostupné a obsah slibné".
+
+   TVAR POLOŽKY JE SPOLEČNÝ pro všechny hledače (viz scripts/
+   ohlas-nalez.mjs): jmeno, host, adresa, verdikt, proc, coSTim.
+   ------------------------------------------------------------------ */
+export const COSTIM_KANDIDAT = 'zapsat řádek do registru kandidátů a přečíst podmínky užití';
+
+export function akceschopneZdroje(zdroje) {
+  return (Array.isArray(zdroje) ? zdroje : []).filter((z) => z
+    && z.stav !== 'zapojeno' && z.verdikt === 'dostupné' && z.slibuje === 'slibné');
+}
+
+export function klicZdroje(z) {
+  return [String((z && z.host) || ''), String((z && z.verdikt) || ''), String((z && z.slibuje) || '')].join('|');
+}
+
+export function noveKandidaty(drive, zdroje) {
+  const bylo = new Set(akceschopneZdroje((drive && drive.zdroje) || []).map(klicZdroje));
+  return akceschopneZdroje(zdroje).filter((z) => !bylo.has(klicZdroje(z))).map((z) => ({
+    jmeno: z.jmeno || z.host,
+    host: z.host,
+    adresa: z.url || ('https://' + z.host),
+    verdikt: 'dostupné a slibné',
+    proc: `robots ${z.robots || '—'}, odpověď ${z.odpoved || '—'}`
+      + (z.vyteznost ? `, v textu ${z.vyteznost.slovoPozemek || 0}× slovo o pozemku`
+        + ` a ${z.vyteznost.korun || 0}× cena` : ''),
+    coSTim: COSTIM_KANDIDAT,
+  }));
+}
+
 export function zavislost(nabidky, zdrojNabidky) {
   const podle = new Map();
   for (const o of (nabidky || [])) {
@@ -628,15 +675,25 @@ async function main() {
       + ' Nález nechávám být (viz §337).');
     process.exit(1);
   }
+  /* NOVÉ OD MINULE — čte to scripts/ohlas-nalez.mjs a zakládá podle
+     toho úkol. Bez toho zůstane „5 slibných kandidátů" jen číslem
+     v logu (viz výš u noveKandidaty). */
+  const noveK = noveKandidaty(drive, nalez);
   writeFileSync(SONDA_OUT, JSON.stringify({
     updated: new Date().toISOString().slice(0, 10),
     updated_at: new Date().toISOString(),
-    zavislost: zav, souhrn, zdroje: nalez,
+    zavislost: zav, souhrn, zdroje: nalez, noveKandidaty: noveK,
   }) + '\n', 'utf8');
   console.log(`Zapsáno do data/zdroje-sonda.json: ${souhrn.dostupne} dostupných,`
     + ` ${souhrn.zakazane} zakázaných, ${souhrn.nezjisteno} s neznámým robots.txt,`
     + ` ${souhrn.neodpovida} bez odpovědi,`
     + ` ${souhrn.slibnych} slibných kandidátů.`);
+  if (noveK.length) {
+    console.log(`\nNOVÉHO OD MINULE: ${noveK.length} — s tím se dá něco udělat:`);
+    for (const z of noveK) console.log(`  · ${z.host} → ${z.coSTim}\n      ${z.adresa}`);
+  } else {
+    console.log('Nic nového proti minulému nálezu.');
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

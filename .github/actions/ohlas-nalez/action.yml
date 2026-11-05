@@ -1,10 +1,30 @@
-name: Ohlásit nález zkoušení portálů
+name: Ohlásit nález hledače
 description: >
-  Po úspěšném běhu založí (nebo doplní) jeden úkol v repozitáři, když bot
-  našel cesty, se kterými se dá něco udělat. Bez tohohle kroku skončí
+  Po úspěšném běhu založí (nebo doplní) jeden úkol v repozitáři, když
+  hledač našel něco, s čím se dá něco udělat. Bez tohohle kroku skončí
   nález zelenou tečkou v záložce Actions, kam se nikdo nedívá — a úspěch,
-  který na někoho čeká, se k tomu někomu nedostane. Veškerá logika je
-  v scripts/ohlas-nalez.mjs, aby se dala vyzkoušet bez GitHubu.
+  který na někoho čeká, se k tomu někomu nedostane (oddíl 430).
+  JEDEN KROK PRO VŠECHNY HLEDAČE: položky v nálezu mají společný tvar
+  { jmeno, host, adresa, verdikt, proc, coSTim }, takže se akci jen řekne,
+  který soubor a které pole čte. Veškerá logika je v scripts/ohlas-nalez.mjs,
+  aby se dala vyzkoušet bez GitHubu.
+inputs:
+  nalez:
+    description: Soubor s nálezem.
+    required: false
+    default: data/cesty-portalu.json
+  pole:
+    description: Klíč v nálezu, pod kterým leží NOVÉ položky.
+    required: false
+    default: noveOdMinule
+  znacka:
+    description: Rozlišení skryté značky v úkolu — jeden hledač, jeden úkol.
+    required: false
+    default: zkouseni-portalu
+  nazev:
+    description: Jak se hledač jmenuje v názvu úkolu.
+    required: false
+    default: Zkoušení portálů
 runs:
   using: composite
   steps:
@@ -15,4 +35,8 @@ runs:
         GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         BEH: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        NALEZ: ${{ inputs.nalez }}
+        POLE: ${{ inputs.pole }}
+        ZNACKA_ID: ${{ inputs.znacka }}
+        NAZEV: ${{ inputs.nazev }}
       run: node scripts/ohlas-nalez.mjs

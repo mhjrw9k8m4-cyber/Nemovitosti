@@ -26293,3 +26293,61 @@ stačí, aby ho nikdo nezavolal.
 
 Nová zkouška `test-ohlas-nalez` (26 kontrol, předstíraný GitHub, žádný
 úkol nikde nevzniká), `test-zkus-portal` 129 → **142**.
+
+## §431 — Jeden hlásič pro všechny hledače (a pět kandidátů, co ležely v logu)
+
+§430 zavřel díru u zkoušení portálů. Pak jsem se zeptal, kolik dalších
+hledačů má tutéž — a změřil to:
+
+| úloha | hlásí selhání | hlásí nález |
+|---|---|---|
+| zkoušení portálů | ano | ano (§430) |
+| **sonda zdrojů** (každou středu) | ano | **ne** |
+| **hledání zdrojů** (každou středu) | ano | **ne** |
+| ostatní podle hodin (6 úloh) | ano | nemají co |
+
+A hned u sondy se ukázalo, co to stojí. V `data/zdroje-sonda.json`
+leželo **pět zdrojů, které jsou dostupné, slibné a nejsou zapojené** —
+`drazby.policenm.cz`, `drazbynaxos.cz`, `elektronickedrazby.cz`,
+`verejnedrazby.cz` a `nabidkamajetku.cz`. Sonda o nich dokonce napsala
+do logu „5 slibných kandidátů". Jenže log v Actions je totéž co zelená
+tečka: nikdo.
+
+**Hlásič se nekopíroval, sjednotil se.** Tři hledače znamenají tři
+místa, kde se příště zapomene na totéž, takže místo kopie dostal každý
+nález **týž tvar položky**:
+
+```
+{ jmeno, host, adresa, verdikt, proc, coSTim }
+```
+
+a hlásiči se jen řekne, který soubor a které pole čte
+(`nalez`, `pole`, `znacka`, `nazev` jako vstupy akce). Značka je
+v klíči schválně: dva hledače s jednou značkou by si lepily nálezy do
+jednoho úkolu a z „co s tím" by byla kaše.
+
+**Akceschopný kandidát sondy** je zdroj, u kterého je další krok jasný:
+robots dovoluje (`dostupné`), obsah mluví o pozemcích i o převodu
+(`slibné`) a **ještě není zapojený**. Přesně na to se odvolává poznámka
+v registru kandidátů: „důvod k řádku je teprve nález v
+`data/zdroje-sonda.json`, kde u zdroje stojí dostupné a obsah slibné".
+Teď ten důvod někdo uvidí.
+
+Prokázáno sabotáží, **3 ze 3**, a zase všechny na spojkách:
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| sonda nezapíše `noveKandidaty` | „sonda zapisuje „nové kandidáty" do nálezu" |
+| úloha krok „Ohlásit nález" nevolá | „a úloha hlásič opravdu volá, s vlastním polem i značkou" |
+| podmínka „není zapojený" vypadne | 4 kontroly, první „akceschopný je dostupný, slibný a NEzapojený" |
+
+`test-sonda-zdroju` 101 → **112**, `test-ohlas-nalez` 26 → **32**
+(nově i kontrola, že týž hlásič obslouží druhý hledač: jiný soubor,
+jiné pole, jiná značka, jiné jméno v názvu úkolu).
+
+**Mimochodem o vrtkavosti:** `test-sonda-zdroju` u mě jednou běžel
+2 s a jednou 150 s — a já ho v té delší chvíli zabil, čímž jsem si
+rozbil sabotážní smyčku a musel ji dělat po jedné. Příčina není
+v zkoušce ani v mé změně (bez ní se chová stejně), ale v tom, jak
+pomalu v sandboxu odpovídá rozpoznávání neexistujících jmen `*.test`.
+Zapsáno proto, že příště nemá nikdo hledat vadu tam, kde není.

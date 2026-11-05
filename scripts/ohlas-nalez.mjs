@@ -25,12 +25,26 @@
    dobře doběhla — co se nepovede, napíše jako `::warning::` a skončí
    nulou. Ale NIKDY nemlčí.
 
+   JEDEN HLÁSIČ PRO VŠECHNY HLEDAČE. Hledače jsou tři — zkoušení
+   portálů, sonda zdrojů a hledání v katalozích — a všechny tři mají
+   tentýž problém: zapíšou nález do JSON a skončí zeleně. Kopírovat
+   tenhle skript třikrát by znamenalo tři místa, kde se příště zapomene
+   na totéž. Místo toho má KAŽDÝ nález týž tvar položky:
+
+     { jmeno, host, adresa, verdikt, proc, coSTim, znaky? }
+
+   a hlásič se jen řekne, který soubor a které pole čte. Tvar je ta
+   spojka — a hlídá ho zkouška u každého hledače zvlášť.
+
    Spuštění (proměnné prostředí):
-     GH_TOKEN  — github.token z běhu
-     REPO      — „vlastnik/jmeno"
-     BEH       — adresa běhu
-     NALEZ     — cesta k souboru s nálezem (výchozí data/cesty-portalu.json)
-     GH_API    — švík pro zkoušku (v běhu se nenastavuje)
+     GH_TOKEN   — github.token z běhu
+     REPO       — „vlastnik/jmeno"
+     BEH        — adresa běhu
+     NALEZ      — cesta k souboru s nálezem (výchozí data/cesty-portalu.json)
+     POLE       — klíč s novými položkami (výchozí noveOdMinule)
+     ZNACKA_ID  — rozlišení skryté značky (výchozí zkouseni-portalu)
+     NAZEV      — jak se hledač jmenuje v názvu úkolu
+     GH_API     — švík pro zkoušku (v běhu se nenastavuje)
    ==================================================================== */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -39,7 +53,12 @@ import { CO_S_TIM } from './cesty-portalu.mjs';
 
 const E = process.env;
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ZNACKA = '<!-- ohlas-nalez:zkouseni-portalu -->';
+/* Značka musí jít rozlišit podle hledače: dva hledače s jednou značkou
+   by si lepily nálezy do jednoho úkolu a z „co s tím" by byla kaše. */
+const ZNACKA_ID = (E.ZNACKA_ID || 'zkouseni-portalu').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const ZNACKA = `<!-- ohlas-nalez:${ZNACKA_ID} -->`;
+const POLE = E.POLE || 'noveOdMinule';
+const NAZEV = E.NAZEV || 'Zkoušení portálů';
 
 const chybi = ['GH_TOKEN', 'REPO', 'BEH'].filter((k) => !E[k]);
 if (chybi.length) {
@@ -64,11 +83,11 @@ async function jdi(cesta, volby) {
 /* Tělo úkolu se skládá z MĚŘENÉHO, ne z dojmů: u každé cesty stojí
    verdikt, co s tím, adresa a — když je — i to, co se na ní naměřilo. */
 export function teloUkolu(nove, beh) {
-  const radky = [ZNACKA, '', '**Bot zkoušení portálů našel cesty, se kterými se dá něco udělat.**', ''];
+  const radky = [ZNACKA, '', `**${NAZEV}: nález, se kterým se dá něco udělat.**`, ''];
   for (const c of nove) {
     radky.push(`### ${c.jmeno || c.host} — ${c.verdikt}`);
     radky.push(`- **co s tím:** ${c.coSTim || CO_S_TIM[c.verdikt] || '—'}`);
-    radky.push(`- cesta: ${c.cesta || '—'}`);
+    if (c.cesta) radky.push(`- cesta: ${c.cesta}`);
     radky.push(`- adresa: ${c.adresa}`);
     if (c.proc) radky.push(`- odůvodnění bota: ${c.proc}`);
     if (c.nabidek) radky.push(`- přečteno nabídek: ${c.nabidek}`);
@@ -80,7 +99,7 @@ export function teloUkolu(nove, beh) {
     radky.push('');
   }
   radky.push('---');
-  radky.push('Nález: `data/cesty-portalu.json` (pole `noveOdMinule`). Běh: ' + beh);
+  radky.push('Nález: `' + (E.NALEZ || 'data/cesty-portalu.json') + '` (pole `' + POLE + '`). Běh: ' + beh);
   radky.push('');
   radky.push('**Žádný zdroj se tím nezapojil.** O cizím webu se rozhoduje po přečtení'
     + ' jeho podmínek užití a to je práce pro člověka. Tenhle úkol zakládá'
@@ -96,7 +115,7 @@ try {
     console.log('::warning::ohlas-nalez: nález se nepodařilo přečíst (' + soubor + ')');
     process.exit(0);
   }
-  const nove = Array.isArray(nalez.noveOdMinule) ? nalez.noveOdMinule : [];
+  const nove = Array.isArray(nalez[POLE]) ? nalez[POLE] : [];
   if (!nove.length) {
     console.log('Nic nového proti minulému nálezu — úkol se nezakládá.');
     process.exit(0);
@@ -114,7 +133,7 @@ try {
     const r = await jdi('/issues', {
       method: 'POST',
       body: JSON.stringify({
-        title: `Zkoušení portálů: ${nove.length} nových cest, se kterými se dá něco udělat`,
+        title: `${NAZEV}: ${nove.length} nových nálezů, se kterými se dá něco udělat`,
         body: teloUkolu(nove, E.BEH),
       }),
     });

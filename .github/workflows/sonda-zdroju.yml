@@ -53,6 +53,17 @@ jobs:
         with:
           zprava: "data: nález sondy zdrojů"
           co: data/zdroje-sonda.json
+      # ÚSPĚCH, KTERÝ NA NĚKOHO ČEKÁ, SE TAKY MUSÍ OHLÁSIT — měřeno
+      # 5. 11.: v nálezu leželo pět dostupných a slibných kandidátů,
+      # kteří nejsou zapojení, a nedozvěděl se o nich nikdo (§431).
+      - name: Ohlásit nález
+        if: success()
+        uses: ./.github/actions/ohlas-nalez
+        with:
+          nalez: data/zdroje-sonda.json
+          pole: noveKandidaty
+          znacka: sonda-zdroju
+          nazev: Sonda zdrojů
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani

@@ -62,6 +62,11 @@ jobs:
       - name: Ohlásit nález
         if: success()
         uses: ./.github/actions/ohlas-nalez
+        with:
+          nalez: data/cesty-portalu.json
+          pole: noveOdMinule
+          znacka: zkouseni-portalu
+          nazev: Zkoušení portálů
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani
