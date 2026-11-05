@@ -24885,9 +24885,15 @@ ne na velikost kódů.
 Každá fixtura padne právě na své vadě a na ostatních dvou ne — změřeno
 po jedné sabotáži na kopii souboru, než se guardy psaly.
 
-`test-cti-pdf`: 28 → **33 kontrol**. Sabotážní stroj: **4 ze 4 mutací
-chytila** (+ jedna rovnocenná, prohlášená u kódu). Soubor
+`test-cti-pdf`: 28 → **33 kontrol**. Sabotážní stroj: **5 z 5 mutací
+chytila**, šestá je rovnocenná a prohlášená u kódu (`STROP_TEXTU`),
+sedmý tvar z katalogu (`filter(Boolean)`) v tom souboru není. Soubor
 `scripts/cti-pdf.mjs` je tím prokázaný celý.
+
+*Opraveno týž den:* nejdřív tu stálo „4 ze 4". To bylo měření se
+stropem 4 na jeden běh, takže se pátá a šestá mutace nikdy nespustily
+a stroj o nich mlčel — viz §409, kde se právě tohle mlčení opravuje.
+Po doměření se stropem 8 vyšlo, že i pátou (`&&` → `||`) zkouška chytá.
 
 **Vedlejší oprava v téže zkoušce:** poslední blok kontrol se vykonával
 až **za** `console.log(zpravy.join('\n'))`, takže se jeho řádky nikdy

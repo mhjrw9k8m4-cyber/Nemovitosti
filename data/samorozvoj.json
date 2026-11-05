@@ -464,9 +464,11 @@
   "test-cti-pdf.mjs": {
    "kdy": "2026-11-05",
    "hlidá": 1,
-   "chytila": 4,
+   "chytila": 5,
    "nechytila": 0,
-   "rovnocenne": [],
+   "rovnocenne": [
+    "posunutá konstanta (+1)"
+   ],
    "slepa": [],
    "nedorucene": [],
    "poznamka": "",
@@ -516,11 +518,9 @@
    "kdy": "2026-11-05",
    "hlidá": 1,
    "chytila": 4,
-   "nechytila": 1,
+   "nechytila": 0,
    "rovnocenne": [],
-   "slepa": [
-    "posunutá konstanta (+1)"
-   ],
+   "slepa": [],
    "nedorucene": [],
    "poznamka": "",
    "rucne": true
