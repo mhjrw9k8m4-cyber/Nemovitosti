@@ -332,11 +332,19 @@ const nabidky = D.opportunities || [];
       'smetla i užitečná pole: ' + JSON.stringify(po));
   }
   /* A ŽE SE OPRAVDU POUŽIJE. Funkce, kterou nikdo nezavolá, je jen
-     slib. Hledá se volání nad nabídkou ve smyčce, která skládá data. */
+     slib.
+
+     NAPSAL JSEM TO NEJDŘÍV JAKO /bezPracovnich\(o\)/ A SABOTÁŽ NEPROŠLA:
+     ten vzorek splňuje i `export function bezPracovnich(o) {` — tedy
+     vlastní definice funkce. Hlídač měřil sám sebe a vymazání volání
+     z robota nechytil. Hledá se proto volání jako PŘÍKAZ: jméno na
+     začátku výrazu a za závorkou středník, což definice nikdy
+     nesplňuje. */
   const zdroj = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const volani = zdroj.match(/(^|[^\w.])bezPracovnich\(\s*o\s*\)\s*;/gm) || [];
   pravda('a robot ji nad nabídkou opravdu zavolá',
-    /bezPracovnich\(o\)/.test(zdroj),
-    'funkce existuje, ale robot ji nepoužívá');
+    volani.length >= 1,
+    'funkce existuje, ale robot ji jako příkaz nikde nezavolá');
 }
 
 hotovo();
