@@ -1187,7 +1187,28 @@
       var ch = chybaProDruh(g);
       return ch != null && ch > MEZ_CHYBA_DRUHU;
     }
+    /* MODEL SE MUSÍ ZAVŘÍT I NA DOTAZU, NE JEN NA VSTUPU.
+     * ----------------------------------------------------------------
+     * `postav()` si vstup filtruje na pozemky (`jenPozemky`), takže se
+     * do srovnávacích přihrádek nedostane byt ani stavba. Jenže ODPOVÍDAT
+     * model umí komukoli: `odhad(d)` se volá na celá data, a u bytu
+     * tedy porovnával jeho Kč/m² s mediánem POZEMKŮ v okrese.
+     *
+     * Naměřeno naostro 5. 11., když robot přinesl prvních 30
+     * nepozemkových nabídek: rádce o dvou z nich napsal vyčíslený
+     * rozdíl proti obvyklé ceně („o X % pod obvyklou") a hlídač
+     * scripts/test-radce.mjs to chytil — té větě chyběla cena za metr,
+     * protože ta se u nepozemkové nabídky schválně nepočítá. Kdyby ta
+     * věta čísla nesla, nikdo by si toho nevšiml a web by kupujícímu
+     * tvrdil, že byt je pod cenou pozemků v okolí.
+     *
+     * Pojistka je proto na obou stranách: filtr vstupu zůstává (jedna
+     * cizí nabídka v přihrádce pokřiví číslo všem ostatním) a tady se
+     * přidává mlčení na dotaz. Vlastní model pro byty a domy je
+     * samostatná práce — a než bude, je mlčení jediná pravdivá
+     * odpověď. */
     function odhadSpocti(d) {
+      if (!jePozemek(d)) return null;
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
       var zdroje = [

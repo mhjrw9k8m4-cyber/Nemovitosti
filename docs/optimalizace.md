@@ -25595,3 +25595,52 @@ animovaný posun větší než rám mapy**. Prokázáno sabotáží: vrácení
 `animate: true` ji shodí (diff 1/1, strom po sabotáži čistý).
 
 `test-mapa-pozemku` 167 → **169**.
+
+## §418 — Model mlčel na vstupu, ale odpovídal na dotaz
+
+První běh robota s nepozemkovými nabídkami přišel 5. 11. a přinesl tři
+nálezy, které žádná simulace neukázala. Všechny tři mají jeden společný
+rys: kategorie se do dat dostala, ale některé místo v kódu o ní ještě
+nevědělo.
+
+### 1. Rádce říkal u bytu cenu měřenou podle pozemků
+
+Nejzávažnější z té trojice. Model ceny byl uzavřený na **vstupu** —
+`jenPozemky()` nepustí nepozemkovou nabídku do mediánů, takže čísla
+modelu zůstala čistá. Ale `odhad()` na **dotaz** odpovídal komukoli:
+kdo se zeptal na byt, dostal „o X % pod obvyklou cenou" měřeno proti
+pozemkovým mediánům. To není nepřesnost, to je nepravda směrem ke
+kupujícímu — a stála by přesně v tom místě stránky, kde se člověk
+rozhoduje.
+
+Chytila to `test-radce`: u vyčísleného rozdílu stojí i cena za metr a
+z kolika nabídek je spočítaná (Milenovice, obec Slup). Oprava je jedna
+řádka na začátku `odhadSpocti()`:
+
+```js
+if (!jePozemek(d)) return null;
+```
+
+Poučení k zapamatování: **uzavřít model na vstupu nestačí, když se na
+něj dá zvenčí zavolat.** Vstup i dotaz jsou dvě branky, ne jedna.
+
+### 2. Všech 30 nabídek vyšlo jako „jiná nemovitost"
+
+Zařazovač dostával text bez předmětu prodeje — jméno a popis nabídky
+žijí ve čtečce zdroje, ne v robotovi. Rozhodnutí se proto přesunulo do
+`scripts/cti-uzsvm.mjs`, kde `Name` a `Description` jsou po ruce:
+nejdřív číselník zdroje, pak vlastní slova nabídky, a teprve když ani
+jedno nic neřekne, zbude „jiná nemovitost". Naměřeno na čtyřech
+skutečných textech: každý dostane jméno.
+
+### 3. Pracovní příznak vyjel do veřejných dat
+
+`_neniPozemek` je vzkaz mezi čtečkou zdroje a robotem; jakmile se z něj
+stala `kat`, dosloužil. První běh ho vyvezl do `data/opportunities.json`
+u všech 30 nabídek — a tím ke každému, kdo si ta data vezme. Robot ho
+teď po použití maže (`delete o._neniPozemek;`) a z už zapsaných dat je
+vyhozený. Hlídač „každé pole v datech má popis" ho našel sám;
+`test-data-rozhrani` zůstává 31/31.
+
+`test-strop-ceny` navíc vinila cenový strop z 30 nabídek, kterých se
+nikdy nedotkl — obě její měření jsou teď zúžená na pozemky.

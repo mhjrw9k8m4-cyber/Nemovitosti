@@ -131,8 +131,15 @@
       re: /\bareal\w*\b|\bkomplex\w*\b|\bbyval\w* kasarn\w*\b/g },
     { kat: 'farma',
       re: /\bfarm[ayu]\b|\bfarmou\b|\bstatek\b|\bstatku\b|\busedlost\w*\b|\bhospodarsk\w* dvur\b|\bkravin\w*\b|\bstodol\w*\b/g },
+    /* „UBYTOVACÍ" A „REKREAČNÍ ZAŘÍZENÍ" jsou v seznamu proto, že je
+       zdroj opravdu píše — ne proto, že mě napadly. Naměřeno naostro
+       5. 11. v nabídce ÚZSVM: „Horní Albeřice, č. p. 42, ubytovací
+       zařízení" a „Rekreační zařízení, k.ú. Antonínov". Obojí bez nich
+       vycházelo jako „jiná nemovitost", přitom je to komerční objekt.
+       Samotné slovo „zařízení" se nebere: to je v popisech i o
+       technickém zařízení budovy. */
     { kat: 'komercni',
-      re: /\bkomercni\w*\b|\bkancelar\w*\b|\bobchodni\w* prostor\w*\b|\bvyrobni\w* hal\w*\b|\bsklad\b|\bsklady\b|\bskladu\b|\bskladov\w*\b|\bprovozovn\w*\b|\brestaurac\w*\b|\bpenzion\w*\b|\bhotel\w*\b|\bubytovn\w*\b|\bnebytov\w* prostor\w*\b/g },
+      re: /\bkomercni\w*\b|\bkancelar\w*\b|\bobchodni\w* prostor\w*\b|\bvyrobni\w* hal\w*\b|\bsklad\b|\bsklady\b|\bskladu\b|\bskladov\w*\b|\bprovozovn\w*\b|\brestaurac\w*\b|\bpenzion\w*\b|\bhotel\w*\b|\bubytovn\w*\b|\bubytovaci\w* zarizen\w*\b|\brekreacni\w* zarizen\w*\b|\bnebytov\w* prostor\w*\b/g },
     /* GARÁŽ JEN TAM, KDE JE PŘEDMĚTEM PRODEJE. „Rodinný dům s garáží"
        je dům (a dům vyhraje přednostmi), ale „pozemek s garáží" by
        široké pravidlo přepsalo na garáž. Chytá se proto jen vazba, ve

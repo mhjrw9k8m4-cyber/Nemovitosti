@@ -591,6 +591,50 @@ const PACHT2 = {
   je('ale příznak „není pozemek" nese', stavba && stavba._neniPozemek, true);
   je('jednotka je byt', jednotka && jednotka.kat, 'byt');
   je('a taky není pozemek', jednotka && jednotka._neniPozemek, true);
+  /* ---- KATEGORIE Z VLASTNÍCH SLOV ZDROJE -------------------------
+     ==================================================================
+     Naměřeno naostro 5. 11.: první běh robota po zapojení kategorií
+     přinesl 30 nepozemkových nabídek a VŠECHNY vyšly jako „jiná
+     nemovitost". Nebyla to slabost pravidel — hádalo se z textu, ve
+     kterém předmět prodeje vůbec nebyl. Robot skládá text z `place`,
+     `druh` a `extra`, tedy z obce, druhu PARCELY a termínu aukce;
+     jméno a popis nabídky („…, č.p. 442, rod. dům") má v ruce jedině
+     tahle čtečka a do dat je nepředává.
+
+     Rozpoznávání se proto předává sem jako šestý argument — stejně
+     jako čtení výměry a druhu, aby si čtečka netahala prohlížečové
+     moduly. Měří se obojí: že se bez něj chování nezmění (zpětná
+     slučitelnost) a že s ním u obecné kategorie „Stavby" vyjde dům. */
+  {
+    const katFalesny = (t) => (/rod\. dum|rodinn\w* dom/i.test(String(t)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')) ? 'dum' : null);
+    const dum = { ...PRODEJ, Id: 9, CategoryName: 'Stavby',
+      Name: 'budova c. p. 442 v k. ú. Bukovec',
+      Description: 'Budova o výměře 240 m2, součástí je stavba: č.p. 442, rod. dum.' };
+    const bez = U.nabidkyZOdpovedi({ Properties: [dum] }, vymeraZPopisu, druhZPopisu, {});
+    je('bez rozpoznávání se nic nezmění (kategorie se nehádá)',
+      bez.nabidky[0] && bez.nabidky[0].kat, undefined);
+    je('a příznak „není pozemek" nese dál',
+      bez.nabidky[0] && bez.nabidky[0]._neniPozemek, true);
+    const s6 = U.nabidkyZOdpovedi({ Properties: [dum] }, vymeraZPopisu, druhZPopisu, {},
+      undefined, katFalesny);
+    je('s rozpoznáváním vyjde u „Stavby" dům', s6.nabidky[0] && s6.nabidky[0].kat, 'dum');
+    /* A POZEMKOVÝ VÝSLEDEK SE ZAHAZUJE. Kdyby text u „Stavby" řekl
+       „pozemek", je to druh parcely POD stavbou (§415), ne předmět
+       prodeje — zapsat ho by znamenalo pustit stavbu do cenového
+       modelu pozemků. */
+    const vzdyPozemek = () => 'pozemek';
+    const sp = U.nabidkyZOdpovedi({ Properties: [dum] }, vymeraZPopisu, druhZPopisu, {},
+      undefined, vzdyPozemek);
+    je('ale „pozemek" u stavby se nezapíše', sp.nabidky[0] && sp.nabidky[0].kat, undefined);
+    je('a zůstane „není pozemek"', sp.nabidky[0] && sp.nabidky[0]._neniPozemek, true);
+    /* A U POZEMKU SE ROZPOZNÁVÁNÍ NEPTÁ VŮBEC: číselník zdroje je
+       jednoznačný a silnější než text. */
+    const pozemkovy = U.nabidkyZOdpovedi({ Properties: [{ ...PRODEJ }] },
+      vymeraZPopisu, druhZPopisu, {}, undefined, () => 'byt');
+    je('u kategorie „Pozemky" text nic nepřepíše',
+      pozemkovy.nabidky[0] && pozemkovy.nabidky[0].kat, undefined);
+  }
 
   /* ROBOT MUSÍ TEN PŘÍZNAK OPRAVDU POUŽÍT. Bez toho by stavba, u které
      text nic neprozradí, skončila jako pozemek — a nikdo by to

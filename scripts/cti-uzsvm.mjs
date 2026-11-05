@@ -402,7 +402,10 @@ export function popisek(z) {
    i `druhZPopisu` už umí čtečka otevřených dat státu a dvě kopie téhož
    pravidla by se rozešly při první opravě.
    ------------------------------------------------------------------ */
-export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zminujeMetry) {
+/* `katZTextu` je šestý, nepovinný: kategorie nemovitosti z vlastních
+   slov zdroje. Předává se stejně jako čtení výměry a druhu, aby si
+   tahle čtečka netahala prohlížečové moduly. */
+export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zminujeMetry, katZTextu) {
   /* UKÁZKA KE KAŽDÉMU DŮVODU. Číslo samo nerozhodne: „bezVymery 119"
      může znamenat, že výměra v popisu opravdu není, i že ji čteme
      špatně — a to je rozdíl mezi „data za to nemůžou" a „můžeme my"
@@ -487,9 +490,34 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
          to není, a doplní „jiná nemovitost" (`_neniPozemek`).
          Pozemek se do dat nepíše vůbec — je výchozí a u 276 nabídek by
          to byly jen kilobajty navíc přes drát. */
-      ...(katZKategorie(z.CategoryName) && katZKategorie(z.CategoryName) !== 'pozemek'
-        ? { kat: katZKategorie(z.CategoryName) } : {}),
-      ...(jePozemkovaKategorie(z.CategoryName) ? {} : { _neniPozemek: true }),
+      ...((function () {
+        /* 1) ČÍSELNÍK ZDROJE, KDYŽ MLUVÍ JASNĚ. „Jednotky" a
+           „Družstevní podíly" jsou byt, tečka. */
+        const zCiselniku = katZKategorie(z.CategoryName);
+        /* Příznak „není pozemek" se nese I TEHDY, když kategorii známe.
+           Je to údaj o nabídce, ne jen pojistka pro hádání z textu —
+           a zbytek webu ho tak čte (hlídá scripts/test-uzsvm.mjs). */
+        if (zCiselniku && zCiselniku !== 'pozemek') return { kat: zCiselniku, _neniPozemek: true };
+        if (jePozemkovaKategorie(z.CategoryName)) return {};
+        /* 2) A U OBECNÝCH „STAVBY" A „JINÉ OBJEKTY" ROZHODNOU VLASTNÍ
+           SLOVA ZDROJE — a musí se vzít TADY, ne až v robotovi.
+           Naměřeno naostro 5. 11.: první běh po zapojení přinesl 30
+           nepozemkových nabídek a VŠECHNY vyšly jako „jiná
+           nemovitost". Důvod: robot skládá text ke hádání z `place`,
+           `druh` a `extra` — tedy z obce, druhu PARCELY a termínu
+           aukce. Předmět prodeje v tom není. Jméno a popis nabídky
+           („Králův Dvůr, budova č.p. 442", „Štiřín — areál zámku",
+           „Rekreační zařízení") má v ruce jedině tahle čtečka a do dat
+           je nepředává.
+           Pozemkový výsledek se zahazuje: kdyby text u „Stavby" řekl
+           „pozemek", je to druh parcely pod stavbou (viz §415), ne
+           předmět prodeje — a `_neniPozemek` níž doplní poctivé
+           „nevím co, ale pozemek to není". */
+        const slova = [z.Name, z.Description].filter(Boolean).join(' ');
+        const zTextu = (katZTextu && slova) ? katZTextu(slova, [place, okres]) : null;
+        if (zTextu && zTextu !== 'pozemek') return { kat: zTextu, _neniPozemek: true };
+        return { _neniPozemek: true };
+      }())),
       _key: 'uzsvm-' + String(z.Id || place + '-' + c),
       url: odkazNabidky(z.Id) || undefined,
       extra: popisek(z),

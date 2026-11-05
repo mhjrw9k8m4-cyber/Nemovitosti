@@ -2157,7 +2157,8 @@ async function fetchUzsvm() {
         break;
       }
       if (prvni === null) prvni = data;
-      const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno, STAT.zminujeMetry);
+      const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu,
+        zahozeno, STAT.zminujeMetry, parseKategorie);
       for (const o of nabidky) {
         out.push({
           ...o,
@@ -3834,6 +3835,16 @@ async function fetchNabidkyStatu() {
       }
       const k = o.kat || PKKategorie.VYCHOZI;
       pocty[k] = (pocty[k] || 0) + 1;
+      /* A PRACOVNÍ PŘÍZNAK SE DO DAT NEPOSÍLÁ. `_neniPozemek` je
+         vzkaz mezi čtečkou zdroje a tímhle místem; jakmile se z něj
+         stala `kat`, dosloužil. Naměřeno naostro 5. 11.: první běh
+         s nepozemkovými nabídkami ho vyvezl do data/opportunities.json
+         u všech 30 — a tím ke každému, kdo si ta data vezme. Chytil to
+         hlídač popisu dat („_neniPozemek — kdo si data vezme, musel by
+         hádat"), protože smlouva o datech o takovém poli nic neříká.
+         Vyhazuje se tady, ne u `_gps` a `_key` o pár set řádků výš:
+         tam ještě potřebný je. */
+      delete o._neniPozemek;
     }
     console.log('Podle kategorie:', JSON.stringify(pocty));
   }

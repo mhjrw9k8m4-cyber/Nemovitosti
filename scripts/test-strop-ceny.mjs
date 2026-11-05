@@ -99,7 +99,15 @@ pravda(`mez ${MEZ} je dost nad skutečným maximem trhu (${Math.round(maxTrh)} K
    Naměřeno dnes: dvě z 1 933, tedy 0,1 %. Devět dalších je bez čísla
    z jiného a staršího důvodu — podíl, u kterého inzerát neuvádí čitelný
    zlomek — a ty se do toho nepočítají. */
-const sCenou = aktualni.filter((o) => o.price > 0 && o.area > 0);
+/* A JEN POZEMKY, ze stejného důvodu jako u maxima trhu výš: mez je
+   mez POZEMKOVÉ ceny za metr. Naměřeno naostro 5. 11., kdy robot
+   přinesl prvních 30 nepozemkových nabídek: bez tohohle filtru
+   hlásila kontrola „mez sebrala cenu za metr 30 z 2 296, 1,3 %" —
+   a mez přitom nesebrala ani jednu. Těm třiceti ji nebere strop, nýbrž
+   to, že Kč/m² pozemku u bytu a stavby není veličina (viz zaMetr
+   v js/ceny.js). Přičítat to mezi znamená soudit ji podle něčeho, co
+   nedělá. */
+const sCenou = aktualni.filter((o) => CENY.jePozemek(o) && o.price > 0 && o.area > 0);
 pravda(`nabídek s cenou i výměrou je dost (${sCenou.length})`, sCenou.length >= 1000);
 let sebrano = 0;
 for (const o of sCenou) {

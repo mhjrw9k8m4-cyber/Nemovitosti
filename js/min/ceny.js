@@ -452,7 +452,9 @@
       var ch = chybaProDruh(g);
       return ch != null && ch > MEZ_CHYBA_DRUHU;
     }
+
     function odhadSpocti(d) {
+      if (!jePozemek(d)) return null;
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
       var g = druhGroup(d.druh);
       var zdroje = [

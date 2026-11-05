@@ -49,8 +49,9 @@
       re: /\bareal\w*\b|\bkomplex\w*\b|\bbyval\w* kasarn\w*\b/g },
     { kat: 'farma',
       re: /\bfarm[ayu]\b|\bfarmou\b|\bstatek\b|\bstatku\b|\busedlost\w*\b|\bhospodarsk\w* dvur\b|\bkravin\w*\b|\bstodol\w*\b/g },
+
     { kat: 'komercni',
-      re: /\bkomercni\w*\b|\bkancelar\w*\b|\bobchodni\w* prostor\w*\b|\bvyrobni\w* hal\w*\b|\bsklad\b|\bsklady\b|\bskladu\b|\bskladov\w*\b|\bprovozovn\w*\b|\brestaurac\w*\b|\bpenzion\w*\b|\bhotel\w*\b|\bubytovn\w*\b|\bnebytov\w* prostor\w*\b/g },
+      re: /\bkomercni\w*\b|\bkancelar\w*\b|\bobchodni\w* prostor\w*\b|\bvyrobni\w* hal\w*\b|\bsklad\b|\bsklady\b|\bskladu\b|\bskladov\w*\b|\bprovozovn\w*\b|\brestaurac\w*\b|\bpenzion\w*\b|\bhotel\w*\b|\bubytovn\w*\b|\bubytovaci\w* zarizen\w*\b|\brekreacni\w* zarizen\w*\b|\bnebytov\w* prostor\w*\b/g },
 
     { kat: 'garaz',
       re: /\b(?:prodej|drazb[ayu]|aukc[eiy]|nabidk[ayu]|prodam)\s+(?:\w+\s+){0,2}garaz\w*\b|^\s*garaz\w*\b|\bgarazov\w* stani\b/g },

@@ -124,6 +124,51 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     JSON.stringify(K.bezDomen('pozemek inzerat farmy.cz brno')));
 }
 
+/* ---- 2b) SLOVA, KTERÁ ZDROJ OPRAVDU PÍŠE ------------------------
+   ==================================================================
+   Tyhle texty nejsou vymyšlené: jsou opsané z nabídky ÚZSVM, jak ji
+   5. 11. vrátilo její API (sonda v Actions, §415). Je to ten jediný
+   vzorek, podle kterého se dá soudit, jestli rozpoznávání v praxi
+   k něčemu je.
+
+   A rozhodlo víc, než se zdá. První běh naostro po zapojení kategorií
+   přinesl 30 nepozemkových nabídek a VŠECHNY vyšly jako „jiná
+   nemovitost" — ne proto, že by pravidla byla slabá, ale protože se
+   hádalo z textu, ve kterém předmět prodeje vůbec nebyl (obec, druh
+   parcely, termín aukce). Jméno a popis nabídky má v ruce jedině
+   čtečka ÚZSVM; od té chvíle je předává (viz scripts/cti-uzsvm.mjs). */
+{
+  const s = (n, d) => n + ' ' + d;
+  je('„budova č.p. 442 … rod. dům" je dům',
+    kat(s('Králův Dvůr, budova č.p. 442',
+      'součástí je stavba: Králův Dvůr, č.p. 442, rod. dům'),
+      ['Králův Dvůr', 'Beroun']), 'dum');
+  je('„areál zámku" je areál',
+    kat(s('Štiřín - areál zámku Štiřín', 'Nemovité věci, které tvoří areál zámku'),
+      ['Štiřín', 'Praha-východ']), 'areal');
+  /* OBĚ TAHLE SLOVA JSEM DO PRAVIDEL PŘIDAL AŽ PODLE TOHOHLE MĚŘENÍ.
+     Bez nich vycházela obě jako „jiná nemovitost", přitom je to
+     komerční objekt. */
+  je('„rekreační zařízení" je komerční objekt',
+    kat(s('Rekreační zařízení, k.ú. Antonínov',
+      'Pozemky: st. parcela č. 631 o výměře 320 m2, zastavěná plocha a nádvoří'),
+      ['Antonínov', 'Jablonec nad Nisou']), 'komercni');
+  je('„ubytovací zařízení" taky',
+    kat(s('Horní Albeřice, č. p. 42, ubytovací zařízení',
+      'Součástí je stavba: Horní Albeřice, č. p. 42, ubytovací zařízení'),
+      ['Horní Albeřice', 'Trutnov']), 'komercni');
+  /* A SAMOTNÉ „ZAŘÍZENÍ" SE NEBERE: v popisech je i o technickém
+     zařízení budovy, takže by z pozemku dělalo komerční objekt. */
+  je('ale samo „zařízení" komerční objekt nedělá',
+    kat('pozemek s technickým zařízením budovy', ['Zařízov', 'Praha']), 'pozemek');
+  /* A pozemek ze stejného vzorku zůstane pozemkem — jinak by tahle
+     čtyřka znamenala jen to, že pravidla říkají všechno. */
+  je('a pozemek z téhož vzorku zůstane pozemkem',
+    kat(s('pozemek p. č. 233/3 v k. ú. Bukovec',
+      'Pozemek p. č. 233/3 o výměře 15 003 m2 se nachází v okrajové části obce.'),
+      ['Bukovec', 'Plzeň-město']), 'pozemek');
+}
+
 /* ---- 3) POPIS KATEGORIE A MĚŘENÍ PLOCHY --------------------------
    `mera` rozhoduje, jestli se smí počítat obvyklá cena proti pozemkům.
    U bytu je výměra podlahová plocha a Kč/m² pozemku by tam bylo číslo
