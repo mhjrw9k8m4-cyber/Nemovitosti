@@ -49,6 +49,72 @@ import { slug } from './text.mjs';
 import { presnostPodleDruhu } from './presnost-odhadu.mjs';
 export { slug };
 
+/* ---- ČISTÉ ROZVAHY ------------------------------------------------
+   ==================================================================
+   PROČ JSOU TADY NAHOŘE A ZVLÁŠŤ. Celé sestavení řezů běželo v jedné
+   funkci `spust()`, která čte `data/opportunities.json` a zapisuje
+   čtyřicet souborů. Nejdražší rozvahy v ní — která nabídka patří do
+   kterého okresu, které okresy tvoří kraj, čím se v modelu zastupuje
+   inzerent — se proto ze zkoušky nedaly spustit samostatně a smyčka
+   samorozvoje 4. 11. nahlásila, že `test-data-rezy` nechytí ani jednu
+   z pěti sabotáží v tomhle souboru. Rozvahy se tedy vytáhly sem: čtou
+   jen svoje argumenty, nic nezapisují a dají se změřit po jedné.
+   `spust()` je dál volá v tomtéž pořadí a výsledek se nezměnil (ověřeno
+   shodou všech vygenerovaných souborů před změnou a po ní). */
+
+/**
+ * Tabulka okres → kraj z modulu `js/ceny.js`.
+ * Modul se PŘEDÁVÁ, ať se tahle rozvaha dá změřit bez čtení souborů.
+ * A bere se z něj JEN ta tabulka: kdyby se vrátil celý modul, lookupy
+ * by tiše vracely `undefined`, krajské soupisy by zůstaly prázdné
+ * a v rejstříku by u každého kraje chyběly jeho okresy.
+ */
+export function tabulkaOkresKraj(ceny) {
+  return (ceny && ceny.OKRES_KRAJ) || {};
+}
+
+/**
+ * Nabídky rozdělené na okresy a kraje.
+ * Nabídka bez okresu se zahazuje — nemá kam patřit a v řezu okresu by
+ * se o ní nikdo nedozvěděl; nabídka z okresu, který v tabulce není,
+ * jde do svého okresu, ale do žádného kraje.
+ */
+export function seskupPodleUzemi(vse, okresKraj) {
+  const tab = okresKraj || {};
+  const podleOkresu = new Map();
+  const podleKraje = new Map();
+  for (const o of vse || []) {
+    if (!o || !o.okres) continue;
+    if (!podleOkresu.has(o.okres)) podleOkresu.set(o.okres, []);
+    podleOkresu.get(o.okres).push(o);
+    const k = tab[o.okres];
+    if (!k) continue;
+    if (!podleKraje.has(k)) podleKraje.set(k, []);
+    podleKraje.get(k).push(o);
+  }
+  return { podleOkresu, podleKraje };
+}
+
+/** Okresy jednoho kraje, abecedně — a jen ty, které v datech opravdu jsou. */
+export function okresyKraje(okresy, okresKraj, kraj) {
+  const tab = okresKraj || {};
+  return [...(okresy || [])].filter((o) => tab[o] === kraj).sort();
+}
+
+/**
+ * Inzerenti pro sloupcový vstup modelu: rejstřík jmen a sloupec odkazů.
+ * Nabídka bez inzerenta dostane −1, ne nulu — nula je platný index
+ * prvního inzerenta a srovnávací hladina by ho pak připsala všem
+ * nabídkám bez jména.
+ */
+export function inzerentiSloupcove(proModel) {
+  const data = proModel || [];
+  const inzerenti = [...new Set(data.map((x) => x.inz).filter(Boolean))].sort();
+  const iI = new Map(inzerenti.map((x, i) => [x, i]));
+  const si = data.map((x) => (iI.has(x.inz) ? iI.get(x.inz) : -1));
+  return { inzerenti, si };
+}
+
 /* SESTAVENÍ JE VE FUNKCI, NE NA NEJVYŠŠÍ ÚROVNI.
    Zkouška scripts/test-data-rezy.mjs si odtud bere slug() — a dokud
    bylo sestavení v těle modulu, prostý import ho SPUSTIL: zkouška si
@@ -92,7 +158,7 @@ export async function spust() {
     require_(path.join(ROOT, 'js', 'ceny.js'));
     return globalThis.PK_CENY;
   })();
-  const OKRES_KRAJ = (CENY && CENY.OKRES_KRAJ) || {};
+  const OKRES_KRAJ = tabulkaOkresKraj(CENY);
   if (!Object.keys(OKRES_KRAJ).length) {
     console.error('::error::tabulka okres → kraj se nenačetla z js/ceny.js');
     process.exit(1);
@@ -113,17 +179,7 @@ export async function spust() {
     return Buffer.byteLength(text);
   }
 
-  const podleOkresu = new Map();
-  const podleKraje = new Map();
-  for (const o of vse) {
-    if (!o || !o.okres) continue;
-    if (!podleOkresu.has(o.okres)) podleOkresu.set(o.okres, []);
-    podleOkresu.get(o.okres).push(o);
-    const k = OKRES_KRAJ[o.okres];
-    if (!k) continue;
-    if (!podleKraje.has(k)) podleKraje.set(k, []);
-    podleKraje.get(k).push(o);
-  }
+  const { podleOkresu, podleKraje } = seskupPodleUzemi(vse, OKRES_KRAJ);
 
   /* Co na disku zůstalo po okresu, který už nabídku nemá, by lhalo:
      soubor by se neobnovil a vypadal by jako aktuální. Přepíše se tedy
@@ -169,7 +225,7 @@ export async function spust() {
   for (const [kraj, polozky] of [...podleKraje].sort()) {
     kraje[kraj] = {
       pocet: polozky.length,
-      okresy: [...podleOkresu.keys()].filter((o) => OKRES_KRAJ[o] === kraj).sort()
+      okresy: okresyKraje(podleOkresu.keys(), OKRES_KRAJ, kraj)
         .map((o) => `data/okres/${slug(o)}.json`),
     };
   }
@@ -245,13 +301,11 @@ export async function spust() {
        (js/ceny.js, MEZ_JEDEN_INZERENT) — bez tohohle sloupce by stránka
        pozemku počítala z jiných podkladů než mapa a o témž pozemku by
        tvrdily jiný verdikt. Hlídá to scripts/test-model-vstup.mjs. */
-    const inzerenti = [...new Set(proModel.map((x) => x.inz).filter(Boolean))].sort();
-    const iI = new Map(inzerenti.map((x, i) => [x, i]));
-    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [], si = [];
+    const { inzerenti, si } = inzerentiSloupcove(proModel);
+    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [];
     for (const x of proModel) {
       o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
       a.push(x.area || 0); c.push(x.price || 0);
-      si.push(x.inz && iI.has(x.inz) ? iI.get(x.inz) : -1);
       /* SOUŘADNICE JAKO CELÁ ČÍSLA, ZAOKROUHLENÉ NA ČTYŘI DESETINNÁ
          MÍSTA (asi 11 m). Model je potřebuje: obvyklá cena se počítá
          z nejbližších nabídek v okolí, ne jen z okresu — naměřeno, že je

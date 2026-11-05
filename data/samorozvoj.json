@@ -4,6 +4,11 @@
    "prokazanych": 14,
    "slepych": 13,
    "nalezu": 1
+  },
+  "2026-11-05": {
+   "prokazanych": 18,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -457,22 +462,15 @@
    "poznamka": ""
   },
   "test-cti-pdf.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 1,
-   "chytila": 2,
-   "nechytila": 4,
+   "chytila": 4,
+   "nechytila": 0,
    "rovnocenne": [],
-   "slepa": [
-    "obrácené porovnání (>= na >)",
-    "obrácená rovnost (=== na !==)",
-    "zahozená pojistka (if … continue)",
-    "posunutá konstanta (+1)"
-   ],
-   "mlcela": [],
+   "slepa": [],
    "nedorucene": [],
-   "nelzeTady": false,
-   "pomucky": [],
-   "poznamka": ""
+   "poznamka": "",
+   "rucne": true
   },
   "test-cti-prohlizecem.mjs": {
    "kdy": "2026-11-04",
@@ -1286,23 +1284,22 @@
    "poznamka": "v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm nevyskytuje; promyšlená sabotáž tu zůstává na člověku"
   },
   "test-komentare-v-strankach.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 1,
-   "chytila": 0,
-   "nechytila": 5,
+   "chytila": 1,
+   "nechytila": 4,
    "rovnocenne": [],
-   "slepa": [
-    "obrácené porovnání (>= na >)",
-    "obrácené porovnání (<= na <)",
-    "obrácená rovnost (=== na !==)",
-    "a místo nebo (&& na ||)",
-    "posunutá konstanta (+1)"
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/text.mjs",
+    "obrácené porovnání (<= na <) v scripts/text.mjs",
+    "obrácená rovnost (=== na !==) v scripts/text.mjs",
+    "a místo nebo (&& na ||) v scripts/text.mjs"
    ],
-   "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "1903709a9f28",
+   "otisk": "47f3270d6817",
    "poznamka": ""
   },
   "test-kontrast.mjs": {
@@ -1320,19 +1317,17 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kontrola-databaze.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 1,
-   "chytila": 4,
-   "nechytila": 1,
+   "chytila": 5,
+   "nechytila": 0,
    "rovnocenne": [],
-   "slepa": [
-    "obrácené porovnání (>= na >)"
-   ],
+   "slepa": [],
    "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "deac57df252f",
+   "otisk": "fc40f2ad7efd",
    "poznamka": ""
   },
   "test-kontrola-e2e.mjs": {
@@ -1378,19 +1373,17 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kontrola-uloh.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 2,
-   "chytila": 3,
-   "nechytila": 1,
+   "chytila": 4,
+   "nechytila": 0,
    "rovnocenne": [],
-   "slepa": [
-    "zahozená pojistka (if … continue)"
-   ],
+   "slepa": [],
    "mlcela": [],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "6b903c952242",
+   "otisk": "0d487000a572",
    "poznamka": ""
   },
   "test-kontrola-ziva.mjs": {
@@ -1494,7 +1487,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   }
  },
- "updated": "2026-11-04",
+ "updated": "2026-11-05",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
@@ -2204,43 +2197,43 @@
     "mlcely": [
      "test-komentare-v-strankach.mjs"
     ],
-    "hlidacu": 1
+    "hlidacu": 2
    },
    "obrácené porovnání (<= na <)": {
     "chytily": [],
     "mlcely": [
      "test-komentare-v-strankach.mjs"
     ],
-    "hlidacu": 1
+    "hlidacu": 2
    },
    "obrácená rovnost (=== na !==)": {
     "chytily": [],
     "mlcely": [
      "test-komentare-v-strankach.mjs"
     ],
-    "hlidacu": 1
+    "hlidacu": 2
    },
    "a místo nebo (&& na ||)": {
     "chytily": [],
     "mlcely": [
      "test-komentare-v-strankach.mjs"
     ],
-    "hlidacu": 1
+    "hlidacu": 2
    },
    "posunutá konstanta (+1)": {
-    "chytily": [],
-    "mlcely": [
+    "chytily": [
      "test-komentare-v-strankach.mjs"
     ],
+    "mlcely": [],
     "hlidacu": 1
    }
   },
   "scripts/kontrola-databaze.mjs": {
    "obrácené porovnání (>= na >)": {
-    "chytily": [],
-    "mlcely": [
+    "chytily": [
      "test-kontrola-databaze.mjs"
     ],
+    "mlcely": [],
     "hlidacu": 1
    },
    "obrácená rovnost (=== na !==)": {
@@ -2290,10 +2283,10 @@
     "hlidacu": 1
    },
    "zahozená pojistka (if … continue)": {
-    "chytily": [],
-    "mlcely": [
+    "chytily": [
      "test-kontrola-uloh.mjs"
     ],
+    "mlcely": [],
     "hlidacu": 1
    },
    "a místo nebo (&& na ||)": {

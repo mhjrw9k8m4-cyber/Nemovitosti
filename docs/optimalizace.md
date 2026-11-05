@@ -24846,3 +24846,50 @@ soubory** — ze zkoušky nespustitelné. To je týž tvar, jaký se dnes
 řešil u archivu: vytáhnout čistou funkci. Je to změna v nočním robotu
 a v generátoru datových řezů, takže si zaslouží čerstvou hlavu, ne
 konec dlouhého dne.
+
+## §408 — Umělé PDF po bajtech: tři vady, které jinak nejdou ukázat
+
+Včerejší zápis je nechal otevřené s odůvodněním „zaslouží si čerstvou
+hlavu". Tady jsou dodělané. Všechny tři sedí v bajtovém rozboru PDF,
+kam se z hotového textu nedostanete, takže se fixtury **skládají tak,
+aby o výsledku rozhodoval jeden bajt**.
+
+**1) ` obj` přesně na hraně okna slovníku.** Slovník objektu se hledá
+v okně 2 000 bajtů před slovem `stream` a řeže se po poslední značce
+` obj`. Když ta vyjde na **nulový index**, je správné neřezat nic
+(`slice(0)` je totožnost) — mutace `iObj >= 0` → `iObj > 0` spadne do
+náhradní cesty a řeže po posledním `<<`. Fixtura má proto `/Resources
+<< /Font << … >> >>` **za** `/Filter /FlateDecode`: kdo spadne do
+náhradní cesty, ztratí informaci o kompresi, pošle do textu nerozbalené
+bajty a nepřečte **nic** (naměřeno: text `""`, čitelnost 0 proti
+`"Pozemek"`, čitelnost 1). Naostro to nastane u každého dvoutisícího
+streamu. Fixtura si navíc sama ověřuje, že ` obj` opravdu leží 2 000
+bajtů před `stream` — jinak by zkouška měřila něco jiného, než si
+myslí.
+
+**2) `stream` zakončený CRLF.** Specifikace dovoluje za slovem `stream`
+LF i CRLF. U LF je **jedno**, který ze dvou skoků ho spolkne, takže se
+tím nic neprokáže — a právě proto zkouška s obyčejným LF mlčela. U CRLF
+už ne: kdo CR nepozná (`buf[s] === 0x0d` → `!==`), nechá dva bajty
+navíc na začátku komprimovaných dat, rozbalení padne a text je prázdný.
+
+**3) Pojistka proti utrženému rozsahu v CMap.** `beginbfrange` nese
+rozsah kódů; dokument, který místo rozsahu napíše nesmysl, by bez
+pojistky roztočil smyčku na miliardy kroků a **nočního robota
+zmrazil**. Mez je 65 535 (tolik kódů má dvoubajtové písmo) a měří se
+právě o jeden víc: `<0000> <10001>` → 0 záznamů, bez pojistky **65 538**.
+A hned vedle druhá kontrola, že se nezahodí poctivý rozsah s vysokými
+kódy (`<FF00> <FF02>` → 3 záznamy), protože mez platí na **rozdíl**,
+ne na velikost kódů.
+
+Každá fixtura padne právě na své vadě a na ostatních dvou ne — změřeno
+po jedné sabotáži na kopii souboru, než se guardy psaly.
+
+`test-cti-pdf`: 28 → **33 kontrol**. Sabotážní stroj: **4 ze 4 mutací
+chytila** (+ jedna rovnocenná, prohlášená u kódu). Soubor
+`scripts/cti-pdf.mjs` je tím prokázaný celý.
+
+**Vedlejší oprava v téže zkoušce:** poslední blok kontrol se vykonával
+až **za** `console.log(zpravy.join('\n'))`, takže se jeho řádky nikdy
+nevytiskly — počítaly se, ale v hlášení nebyly vidět. Tisk se přesunul
+na konec souboru.

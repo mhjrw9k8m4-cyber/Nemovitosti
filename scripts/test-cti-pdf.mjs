@@ -309,8 +309,87 @@ function pdfSObsahem(obsahBuf, komprimovat, navic) {
     /prvni/.test(t) && /druhy/.test(t) && /\n/.test(t), JSON.stringify(t));
 }
 
-console.log('\nČtení PDF');
-console.log(zpravy.join('\n'));
+/* 8) PDF SKLÁDANÉ PO BAJTECH: tři vady, které se jinak nedají ukázat
+      ==================================================================
+      PROČ TAK PRACNĚ. Smyčka samorozvoje 4. 11. nahlásila tři sabotáže
+      v `cti-pdf.mjs`, které tahle zkouška nechytila, a všechny tři sedí
+      v místech, kam se z hotového textu nedostanete — v řezání slovníku
+      před `stream` a v přeskakování konce řádku za ním. Fixtury se proto
+      skládají tak, aby JEDEN bajt rozhodoval, jestli se text přečte.
+      Každá z nich padne právě na své vadě a na ostatních dvou ne
+      (změřeno sabotážním strojem, viz §408). */
+{
+  /** Tělo streamu, které nekončí na CR ani LF: koncové odřádkování se
+      za `endstream` odřezává, a kdyby na ně vyšel poslední bajt
+      komprimovaných dat, uřízlo by se jim a rozbalení by padlo
+      z jiného důvodu než z měřené vady. */
+  function teloBezKoncovehoRadku(zaklad) {
+    let obsah = zaklad, telo = deflateSync(Buffer.from(obsah, 'latin1')), kolo = 0;
+    while ((telo[telo.length - 1] === 0x0a || telo[telo.length - 1] === 0x0d) && kolo < 60) {
+      obsah += ' '; telo = deflateSync(Buffer.from(obsah, 'latin1')); kolo++;
+    }
+    return telo;
+  }
+  const OBSAH = 'BT /F1 12 Tf (Pozemek) Tj ET\n';
+
+  /* 8a) ` obj` PŘESNĚ NA HRANĚ OKNA SLOVNÍKU.
+     Slovník se hledá v okně 2000 bajtů před `stream` a řeže se po
+     poslední značce ` obj`; když ta vyjde na nulový index, je správné
+     NEŘEZAT nic (`slice(0)`), ne spadnout do náhradní cesty a řezat po
+     posledním `<<`. Proto tu `<<` od `/Resources` stojí ZA
+     `/FlateDecode`: kdo spadne do náhradní cesty, ztratí informaci
+     o kompresi, pošle do textu nerozbalené bajty a nepřečte nic.
+     Naostro to nastane u každého dvoutisícího streamu. */
+  const teloA = teloBezKoncovehoRadku(OBSAH);
+  const zakladA = `obj\n<< /Length ${teloA.length} /Filter /FlateDecode`
+    + ' /Resources << /Font << /F1 7 0 R >> >> >>';
+  const vycpavka = ' '.repeat(2000 - (1 + zakladA.length + 1));
+  const segment = ' ' + zakladA + vycpavka + '\n';
+  pravda('fixtura má ` obj` opravdu 2000 bajtů před `stream`',
+    segment.length === 2000, 'délka ' + segment.length);
+  const pdfHrana = Buffer.concat([
+    Buffer.from('%PDF-1.4\n% okno slovniku ma 2000 bajtu\n1 0', 'latin1'),
+    Buffer.from(segment, 'latin1'),
+    Buffer.from('stream\n', 'latin1'), teloA,
+    Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+  ]);
+  const vA = textZPdf(pdfHrana);
+  pravda('slovník na hraně okna se nepřeřízne a text se přečte',
+    vA.text.includes('Pozemek') && vA.citelnost === 1,
+    JSON.stringify(vA.text) + ' | čitelnost ' + vA.citelnost + ' | streamů ' + vA.streamu);
+
+  /* 8b) `stream` KONČÍCÍ NA CRLF.
+     Specifikace PDF dovoluje za slovem `stream` jak LF, tak CRLF.
+     U LF je jedno, který ze dvou skoků ho spolkne — výsledek je týž,
+     takže se tím nic neprokáže. U CRLF už ne: kdo CR nepozná, nechá
+     dva bajty navíc na začátku dat a rozbalení padne. */
+  const teloB = teloBezKoncovehoRadku(OBSAH);
+  const pdfCrLf = Buffer.concat([
+    Buffer.from('%PDF-1.4\n', 'latin1'),
+    Buffer.from(`4 0 obj\n<< /Length ${teloB.length} /Filter /FlateDecode >>\nstream\r\n`, 'latin1'),
+    teloB, Buffer.from('\nendstream\nendobj\n%%EOF\n', 'latin1'),
+  ]);
+  const vB = textZPdf(pdfCrLf);
+  pravda('`stream` zakončený CRLF se přečte stejně jako s LF',
+    vB.text.includes('Pozemek') && vB.citelnost === 1,
+    JSON.stringify(vB.text) + ' | čitelnost ' + vB.citelnost);
+
+  /* 8c) POJISTKA PROTI UTRŽENÉMU ROZSAHU V CMap.
+     `beginbfrange` nese rozsah kódů. Dokument, který místo rozsahu
+     napíše nesmysl, by jinak roztočil smyčku na miliardy kroků a nočního
+     robota zmrazil. Mez je 65 535 — tolik kódů má dvoubajtové písmo —
+     a rozsah nad ni se zahazuje celý. Měří se právě O JEDEN víc. */
+  const utrzeny = cmapZTextu('beginbfrange\n<0000> <10001> <0041>\nendbfrange');
+  pravda('rozsah nad 65 535 kódů se v CMap zahodí celý',
+    utrzeny.size === 0, 'záznamů ' + utrzeny.size);
+  /* A AŤ SE PŘITOM NEZAHODÍ POCTIVÝ ROZSAH: mez platí na rozdíl, ne
+     na velikost kódů. */
+  const poctivy = cmapZTextu('beginbfrange\n<FF00> <FF02> <0041>\nendbfrange');
+  pravda('a rozsah ve mezi se zahodit nesmí, i když jsou kódy vysoké',
+    poctivy.size === 3 && poctivy.get(0xff01) === 'B',
+    'záznamů ' + poctivy.size + ', FF01 → ' + JSON.stringify(poctivy.get(0xff01)));
+}
+
 /* ---- ČITELNOST SE POČÍTÁ OD NULY ------------------------------
  * ==================================================================
  * Smyčka samorozvoje 4. 11. posunula v `citelnost()` počáteční
@@ -333,6 +412,8 @@ console.log(zpravy.join('\n'));
     String(citelnost('Pozemek 1 234 m², k. ú. Dívčice')));
 }
 
+console.log('\nČtení PDF');
+console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
 if (chyb) { console.error(`::error::Čtení PDF: ${chyb} kontrol neprošlo.${pricinaChyb(zpravy)}`); process.exit(1); }
 process.exit(0);

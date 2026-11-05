@@ -18,7 +18,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { slug } from './generate-data-rezy.mjs';
+import { slug, tabulkaOkresKraj, seskupPodleUzemi, okresyKraje, inzerentiSloupcove }
+  from './generate-data-rezy.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -283,6 +284,80 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
   pravda('a stránka ji hledá klíčem pozemku, ne nabídky',
     /zl\.nabidky\[window\.PKKlic\.klicPozemku\(d\)\]/.test(main),
     'js/main.js hledá historii klíčem, který nese adresu inzerátu');
+}
+
+/* ---- ČISTÉ ROZVAHY SESTAVENÍ ----------------------------------------
+   ==================================================================
+   PROČ TEPRVE TEĎ. Smyčka samorozvoje 4. 11. změřila, že tahle zkouška
+   nechytí ANI JEDNU z pěti sabotáží v `generate-data-rezy.mjs`: celé
+   sestavení běželo v jedné funkci, která čte a zapisuje soubory, takže
+   zkouška měřila jen HOTOVÉ řezy na disku — a ty při sabotáži vznikly
+   ještě před ní. Rozvahy se vytáhly do čistých funkcí (viz hlavička
+   generátoru) a tady se měří po jedné. Výstup generátoru se tím
+   nezměnil: všech 106 souborů v `data/` vyšlo bajtově totožně. */
+{
+  /* 1) TABULKA OKRES → KRAJ AŤ JE TABULKA, NE CELÝ MODUL.
+     `js/ceny.js` nese vedle tabulky i modely a meze. Kdyby se vrátil
+     celý modul, `OKRES_KRAJ[okres]` by tiše vracelo `undefined`,
+     krajské soupisy by byly prázdné a v rejstříku by u každého kraje
+     chyběly jeho okresy — a nic by nespadlo. */
+  const modul = { OKRES_KRAJ: { 'Tábor': 'Jihočeský' }, MEZ_JEDEN_INZERENT: 3, postav() {} };
+  const tab = tabulkaOkresKraj(modul);
+  pravda('z modulu cen se vezme JEN tabulka okres → kraj',
+    Object.keys(tab).length === 1 && tab['Tábor'] === 'Jihočeský',
+    'klíče: ' + JSON.stringify(Object.keys(tab)));
+  pravda('a když modul chybí, vyjde prázdná tabulka, ne výjimka',
+    JSON.stringify(tabulkaOkresKraj(null)) === '{}'
+    && JSON.stringify(tabulkaOkresKraj({})) === '{}',
+    JSON.stringify(tabulkaOkresKraj(null)));
+
+  /* 2) ROZDĚLENÍ NA OKRESY A KRAJE.
+     Nabídka bez okresu nemá kam patřit a musí se zahodit — kdyby
+     propadla dál, `podleOkresu` by dostal přihrádku `undefined` a řez
+     by se zapsal do souboru se jménem z prázdného slugu. */
+  const KRAJE = { 'Tábor': 'Jihočeský', 'Písek': 'Jihočeský', 'Cheb': 'Karlovarský' };
+  const vzorek = [
+    { id: 'a', okres: 'Tábor' }, { id: 'b', okres: 'Písek' },
+    { id: 'c', okres: 'Cheb' }, { id: 'd', okres: 'Neznámý' },
+    { id: 'e' }, null,
+  ];
+  const g = seskupPodleUzemi(vzorek, KRAJE);
+  pravda('nabídka bez okresu se do řezů nedostane',
+    g.podleOkresu.size === 4 && !g.podleOkresu.has(undefined) && !g.podleOkresu.has(''),
+    'přihrádky: ' + JSON.stringify([...g.podleOkresu.keys()]));
+  pravda('okres mimo tabulku má svůj řez, ale žádný kraj',
+    g.podleOkresu.has('Neznámý') && g.podleKraje.size === 2
+    && !g.podleKraje.has(undefined),
+    'kraje: ' + JSON.stringify([...g.podleKraje.keys()]));
+  pravda('a kraj sečte své okresy',
+    (g.podleKraje.get('Jihočeský') || []).length === 2
+    && (g.podleKraje.get('Karlovarský') || []).length === 1,
+    'Jihočeský ' + (g.podleKraje.get('Jihočeský') || []).length);
+
+  /* 3) SOUPIS OKRESŮ KRAJE. Rovnost se tu čte na jméno kraje; obrácená
+     by do soupisu nasypala okresy VŠECH ostatních krajů. */
+  const sou = okresyKraje(['Cheb', 'Tábor', 'Písek'], KRAJE, 'Jihočeský');
+  pravda('soupis kraje nese jen jeho okresy, abecedně',
+    sou.join('|') === 'Písek|Tábor', sou.join('|'));
+  pravda('a kraj bez okresů v datech dá prázdný soupis',
+    okresyKraje(['Cheb'], KRAJE, 'Jihočeský').length === 0,
+    JSON.stringify(okresyKraje(['Cheb'], KRAJE, 'Jihočeský')));
+
+  /* 4) INZERENTI SLOUPCOVĚ. Rejstřík drží jen opravdová jména —
+     prázdné by zabralo index 0 a nabídky bez inzerenta by se jedna
+     s druhou slily do jednoho „inzerenta", který by pak na srovnávací
+     hladině přebil celou přihrádku. */
+  const proModel = [
+    { inz: 'Bezrealitky' }, { inz: '' }, { inz: 'SPÚ' },
+    { }, { inz: 'Bezrealitky' }, { inz: null },
+  ];
+  const iz = inzerentiSloupcove(proModel);
+  pravda('rejstřík inzerentů nese jen vyplněná jména',
+    iz.inzerenti.join('|') === 'Bezrealitky|SPÚ', iz.inzerenti.join('|'));
+  pravda('a nabídka bez inzerenta má −1, ne index prvního',
+    iz.si.join(',') === '0,-1,1,-1,0,-1', iz.si.join(','));
+  pravda('sloupec má tolik hodnot, kolik je nabídek',
+    iz.si.length === proModel.length, iz.si.length + ' ku ' + proModel.length);
 }
 
 console.log('\nŘezy dat po okresech');
