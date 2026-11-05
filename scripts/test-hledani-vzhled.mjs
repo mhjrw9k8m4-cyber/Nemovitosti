@@ -182,12 +182,20 @@ try {
   await p.click('#map-search');
   await p.waitForSelector('.ms-filters summary, .ms-filters .msf-summary', { state: 'visible', timeout: 10000 });
   await p.evaluate(() => { const s = document.querySelector('.ms-filters summary, .ms-filters .msf-summary'); if (s) s.click(); });
+  /* MĚŘÍ SE VÝSLOVNĚ POLÍČKA DRUHŮ, NE „první .mcv-btn na stránce".
+     Vzor .mcv-btn tu stál holý a bral prvního, koho našel. Dokud byl
+     v panelu jediný takový blok, bylo to totéž; jak nad druhy přišla
+     skupina „Typ nemovitosti" (taky .mcv-btn), začala kontrola měřit
+     ji — dvě dlaždice místo třiceti druhů — a spadla s „našlo se jen
+     2" na webu, který se chová správně. Je to tatáž vada jako
+     v oddílu 422: vzor přežil změnu obsahu a začal měřit něco jiného.
+     Políčka druhů nesou data-druh, kategorie data-kat. */
   await p.waitForFunction(() => {
-    const b = [...document.querySelectorAll('.mcv-btn')].filter((e) => e.offsetParent);
+    const b = [...document.querySelectorAll('.mcv-btn[data-druh]')].filter((e) => e.offsetParent);
     return b.length >= 4;
   }, { timeout: 10000 });
   const f = await p.evaluate(() => {
-    const btns = [...document.querySelectorAll('.mcv-btn')].filter((e) => e.offsetParent);
+    const btns = [...document.querySelectorAll('.mcv-btn[data-druh]')].filter((e) => e.offsetParent);
     const prvni = btns[0] && btns[0].parentElement;
     const skupina = prvni ? [...prvni.children].filter((e) => e.offsetParent) : [];
     /* Karta „Cena a výměra" je složená ze dvou kusů: .mc-shrnuti se

@@ -1850,8 +1850,17 @@ if (DRAZBA) {
        pohledu přes celý okres už to o pozemku nic neříká. */
     await p.evaluate(() => { window.PK_PZ_MAPA.setZoom(window.PK_PZ_MAPA.getZoom() - 3); });
     await p.waitForTimeout(800);
+    /* HLÁŠKA MUSÍ ŘÍCT, CO SE NAMĚŘILO, NE CO SE NEPOVEDLO.
+       Tahle kontrola padá jen na běžci a v sandboxu nikdy — a tiskla
+       o tom jedinou větu („zůstalo skryté"), ze které se nedalo poznat
+       nic: jestli je mapa na jiném přiblížení, jestli má nulový rám,
+       jestli v DOM leží dvě tlačítka téhož id, nebo jestli zoomová
+       animace ještě jede. Sonda stav() to všechno měří už teď, jen se
+       to zahazovalo. Tiskne se proto celý její výpis. */
+    const poOddaleni = await stav();
     pravda('ukáže se i po pořádném oddálení, ne jen po posunu',
-      (await stav()).skryte === false, 'po oddálení o tři stupně zůstalo skryté');
+      poOddaleni && poOddaleni.skryte === false,
+      'po oddálení o tři stupně zůstalo skryté — naměřeno: ' + JSON.stringify(poOddaleni));
   }
   await ctx.close();
 }

@@ -26022,3 +26022,43 @@ který se dá obejít přesunutím řádku do komentáře.
 Druhé kolo s platnými sabotážemi: **3 ze 3** — plurál napsaný rukou,
 odebraný modul (změnou `src` na neexistující soubor) i stránka, která
 se modulu přestane ptát. `test-kategorie` 86 → **90**.
+
+## §424 — Dva hlídači v prohlížeči spadli na webu, který se chová správně
+
+Směna 3 v CI shodila dvě kontroly a ani jedna nebyla vada webu — obě
+byly moje, z §420.
+
+**(a) Živá oblast.** `#vysledky-stav` hlásí odečítačům počet ve výpisu
+a od §420 říká „15 **nemovitostí** ve výpisu". `scripts/test-ohlaseni.mjs`
+měl vzor napsaný natvrdo — `/pozemk|Nic nenalezeno/` — takže spadl ve
+chvíli, kdy web začal mluvit správně. To je ta nejhorší možná zpráva:
+hlídač ukazuje na správnou věc a tvrdí, že je rozbitá. Slovo se teď
+odvozuje **znovu z dat** (`data/mapa.json`, na `opportunities.json` se
+padá až když je řez prázdný), ne z `KATEGORIE.slovaPoctu()`: dvě pravdy,
+které se ptají téže funkce, se shodnou i na nepravdě. Je to pátá kopie
+téhož dvojpodmínkového pravidla a je tu schválně.
+
+**(b) Panel filtrů.** `scripts/test-hledani-vzhled.mjs` měřil výšky
+políček druhů vzorem `.mcv-btn` — holým, bez rozlišení. Dokud byl
+v panelu jediný takový blok, bylo to totéž. Jak nad druhy přišla
+skupina „Typ nemovitosti" (taky `.mcv-btn`), začala kontrola měřit
+**ji**: dvě dlaždice místo třiceti druhů, a mez „aspoň 4" spadla na
+„našlo se jen 2". Hláška přitom pořád tvrdila „má políčka druhů".
+Opraveno na `.mcv-btn[data-druh]`.
+
+Obojí je tatáž vada jako v §422 (vzor `<span>pozem` začal po změně
+obsahu měřit cizí dlaždici a porovnávat cizí číslo): **vzor psaný
+natvrdo nestárne tím, že přestane platit — stárne tím, že beze slova
+ukáže na něco jiného.** Pravidlo: kontrola si má prvek vybírat podle
+toho, **čím je** (`[data-druh]`), ne podle toho, kolikátý je v DOM.
+
+**(c) A jeden pád, který říkal jen „nepovedlo se".** V téže sadě padá
+na běžci (a v sandboxu nikdy, 169/169) kontrola v
+`scripts/test-mapa-pozemku.mjs`: „po oddálení o tři stupně zůstalo
+skryté". Sonda `stav()` přitom měří přiblížení, rám mapy, počet map
+v DOM, běžící animaci i verdikt webu o záběru — a zkouška to všechno
+zahazovala a tiskla jedinou větu. Teď se tiskne celý výpis sondy. Vada
+tím opravena není; opraveno je, že se příště nebude hádat.
+
+Lokálně po opravě: `test-ohlaseni` 43/0, `test-hledani-vzhled` 14/0,
+`test-mapa-pozemku` 169/0, rychlá sada **151/151**.

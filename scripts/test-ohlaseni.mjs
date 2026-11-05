@@ -31,6 +31,30 @@ import { volnyPort } from './port-zkousky.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = await volnyPort();  // dřív natvrdo 8338
+/* SLOVO V OHLÁŠENÍ SE ODVOZUJE ZNOVU, NE Z TÉŽE FUNKCE JAKO WEB.
+
+   Živá oblast #vysledky-stav hlásí „15 nemovitostí ve výpisu" —
+   a jaké slovo v ní stojí, rozhoduje js/kategorie.js podle toho, co
+   v datech je. Vzor tu byl napsaný natvrdo (/pozemk/), takže ve chvíli,
+   kdy do dat přišlo třicet nepozemkových nabídek, hlídač spadl na
+   správně se chovajícím webu — a to je ta nejhorší možná zpráva.
+
+   Vyřešit to voláním KATEGORIE.slovaPoctu() by bylo horší: zkouška
+   i web by se ptaly TÉŽE funkce, a kdyby ta začala vracet „pozemků"
+   vždycky, oba se shodnou na nepravdě a hlídač mlčí. Pravidlo je proto
+   vysloveno znovu a z dat — stejná druhá kopie jako v
+   scripts/test-rozpocet-stranky.mjs a dalších třech. */
+const kmenSlova = (nab) => ((nab || []).every((o) => !o || !o.kat || o.kat === 'pozemek') ? 'pozemk' : 'nemovitost');
+/* Bere se týž soubor jako na stránce: js/main.js stahuje data/mapa.json
+   a na data/opportunities.json padá, až když je řez prázdný. */
+const ctiNabidky = (p) => {
+  const f = path.join(KOREN, p);
+  if (!existsSync(f)) return [];
+  const j = JSON.parse(readFileSync(f, 'utf8'));
+  return Array.isArray(j) ? j : (j.opportunities || []);
+};
+const DATA_VYPISU = (() => { const m = ctiNabidky('data/mapa.json'); return m.length ? m : ctiNabidky('data/opportunities.json'); })();
+const KMEN_VYPISU = kmenSlova(DATA_VYPISU);
 let ok = 0, chyb = 0;
 const zpravy = [];
 hlasPad('Ohlášení hlášky', zpravy);
@@ -209,7 +233,8 @@ if (stranka) zkontroluj('pozemek', await zmerPoradi(stranka, '#pz-sour-kop'));
     await p.waitForTimeout(1800);
     const hned = await p.evaluate(() => window.__oh.slice());
     pravda(`výpis: hledání napsané hned po načtení se ohlásí (${JSON.stringify(hned)})`,
-      hned.length >= 1 && /pozemk|Nic nenalezeno/.test(hned[hned.length - 1] || ''),
+      hned.length >= 1 && new RegExp('\\d[\\d\\s\\u00a0\\u202f]*\\s*' + KMEN_VYPISU + '|Nic nenalezeno')
+        .test(hned[hned.length - 1] || ''),
       'do oblasti se nedostalo nic — hledání zůstalo neslyšené');
     // Čtyři úhozy, jedno ohlášení: jinak by odečítač mluvil přes psaní.
     pravda(`výpis: čtyři úhozy daly jedno ohlášení, ne čtyři (${hned.length})`,
