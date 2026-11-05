@@ -244,6 +244,22 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
   if (strojova && oPozemku && oPrevodu) {
     return { verdikt: 'slibná', proc: 'strojový tvar, mluví o pozemcích i o převodu', tvar, strojova, oPozemku, oPrevodu };
   }
+  /* HTML, KTERÉ MLUVÍ O POZEMCÍCH I O PŘEVODU, NENÍ „ODPOVĚDĚLA".
+     ------------------------------------------------------------------
+     Naměřeno 5. 11. na Ministerstvu obrany: `/nemovity-majetek/
+     aktualni-nabidka` odpoví 200, má 23 631 bajtů, mluví o pozemcích
+     i o prodeji — a bot to odložil mezi „odpověděla" s poznámkou
+     „není strojový tvar (HTML)", tedy do téže přihrádky jako stránku
+     o kalendáři akcí. Přitom je to ta nejlepší zpráva z celého běhu:
+     nabídky tam JSOU, jen je k nim potřeba napsat předpis pro čtení.
+     Je to táž past jako u „chce klíč" o kus výš — nález, se kterým se
+     dá něco udělat, pohřbený mezi beznadějnými. Dostává proto vlastní
+     jméno a vlastní místo v pořadí. */
+  if (!strojova && oPozemku && oPrevodu) {
+    return { verdikt: 'ke čtení', tvar, strojova, oPozemku, oPrevodu,
+      proc: 'není strojový tvar (' + tvar + '), ale mluví o pozemcích i o převodu'
+        + ' — nabídky tu jsou, chybí předpis pro čtení' };
+  }
   const chybi = [];
   if (!strojova) chybi.push('není strojový tvar (' + tvar + ')');
   if (!oPozemku) chybi.push('o pozemcích ani slovo');
@@ -254,13 +270,18 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0 } = {}) {
 /* „chce klíč" stojí hned za slibnou: přečíst se to dnes nedá, ale je to
    JEDINÁ položka v seznamu, se kterou může člověk něco udělat hned —
    a kdyby spadla na konec k zavřeným, nikdo si jí nevšimne. */
-export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'chce klíč', 'odpověděla', 'zavřená'];
+/* „ke čtení" stojí hned za slibnou a před „chce klíč": je to cesta,
+   kde nabídky VIDITELNĚ JSOU, jen v HTML — a napsat k ní předpis je
+   práce, která se dá udělat hned, bez cizího účtu a bez čekání na
+   nikoho. Viz oddíl 429. */
+export const PORADI_VERDIKTU = ['nabídky', 'slibná', 'ke čtení', 'chce klíč', 'odpověděla', 'zavřená'];
 
 /* Jak se ten verdikt řekne v rozpadu, aby věta zněla česky („nabídky 3,
    slibné 1, chtějí klíč 1, odpověděly 7, zavřené 28"). */
 export const JMENA_ROZPADU = {
   'nabídky': 'nabídky',
   'slibná': 'slibné',
+  'ke čtení': 'ke čtení',
   'chce klíč': 'chtějí klíč',
   'odpověděla': 'odpověděly',
   'zavřená': 'zavřené',
@@ -358,6 +379,56 @@ export function radekDoRegistru(nalez, { jmeno, typ = 'sale' } = {}) {
     + ` ve tvaru ${nalez.tvar}. Podmínky užití ještě nikdo nečetl.' },`;
 }
 
+/* ------------------------------------------------------------------
+   CO NA TÉ CESTĚ VLASTNĚ JE. Bez tohohle končí nález u věty „HTML,
+   23 631 bajtů" — a kdo má napsat předpis pro čtení, musí si stránku
+   stáhnout znovu, což z vývojového stroje nejde vůbec. Měří se proto
+   rovnou při zkoušení: titulek, kolikrát se na stránce objeví značky,
+   ze kterých se pozná nabídka (cena, výměra, katastr, parcela,
+   výběrové řízení), a začátek viditelného textu.
+   NENÍ TO KOPIE STRÁNKY, JE TO MĚŘENÍ: text je ostříhaný na 400 znaků
+   a počty jsou čísla. Tělo se před zpracováním krátí, aby se velká
+   odpověď nepropočítávala celá.
+   ------------------------------------------------------------------ */
+export const ZNACKY_NABIDKY = [
+  /* `\b` po „č" NEFUNGUJE: v JS je hranice slova jen mezi [A-Za-z0-9_]
+     a zbytkem, takže mezi „č" a mezerou žádná není a `/\bKč\b/`
+     nenajde nic. Chytila to vlastní zkouška („spočítá se cena (2×)"
+     hlásila nulu). Proto se konec slova píše přes unicode: za Kč nesmí
+     stát další písmeno. */
+  ['cena', /\b(?:K[čc]|CZK)(?!\p{L})/gu],
+  ['výměra', /\bm2\b|m²|\bha\b/g],
+  ['katastr', /katastr|\bk\.\s*[úu]\.|kat\.\s*[úu]zem/gi],
+  ['parcela', /parcel/gi],
+  ['výběrové řízení', /v[ýy]b[ěe]rov\S*\s+[řr][íi]zen/gi],
+  ['dražba', /dra[žz]b/gi],
+];
+export const STROP_TELA_PRO_ZNAKY = 200000;
+export const STROP_UKAZKY = 400;
+
+export function znakyOdpovedi(telo) {
+  const cele = String(telo || '').slice(0, STROP_TELA_PRO_ZNAKY);
+  const titulek = (/<title[^>]*>([\s\S]{0,200}?)<\/title>/i.exec(cele) || [])[1] || '';
+  const text = cele
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const pocty = {};
+  for (const [jmeno, re] of ZNACKY_NABIDKY) {
+    const m = text.match(re);
+    if (m && m.length) pocty[jmeno] = m.length;
+  }
+  return {
+    titulek: titulek.replace(/\s+/g, ' ').trim().slice(0, 120),
+    znaku: text.length,
+    pocty,
+    ukazka: text.slice(0, STROP_UKAZKY),
+  };
+}
+
 export function hlaseniPortalu(portal) {
   const radky = [];
   const n = portal && portal.cesty ? portal.cesty : [];
@@ -374,6 +445,12 @@ export function hlaseniPortalu(portal) {
     if (c.verdikt === 'zavřená' || c.verdikt === 'odpověděla') continue;
     radky.push(`  ${c.verdikt === 'nabídky' ? '★' : '·'} ${c.jmeno}: ${c.proc}`);
     radky.push(`      ${c.adresa}`);
+    /* U cesty, ke které se píše předpis, je potřeba vidět, co na ní je. */
+    if (c.znaky) {
+      const p2 = Object.entries(c.znaky.pocty || {}).map(([k, v]) => `${k} ${v}×`).join(', ');
+      radky.push(`      „${c.znaky.titulek}" — ${c.znaky.znaku} znaků textu${p2 ? ', ' + p2 : ''}`);
+      if (c.znaky.ukazka) radky.push(`      ukázka: ${c.znaky.ukazka.slice(0, 160)}…`);
+    }
   }
   return radky;
 }

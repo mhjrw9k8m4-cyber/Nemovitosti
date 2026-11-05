@@ -46,7 +46,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ZAPOJENE, KANDIDATI } from './zdroje-kandidati.mjs';
 import {
-  CESTY, cestyProPortal, tvarOdpovedi, verdiktCesty, poradiCest, dalsiCesty,
+  CESTY, cestyProPortal, tvarOdpovedi, verdiktCesty, poradiCest, dalsiCesty, znakyOdpovedi,
   radekDoRegistru, hlaseniPortalu, pocetZmerenych, STROP_CEST, STROP_DALSICH,
 } from './cesty-portalu.mjs';
 
@@ -155,7 +155,15 @@ export async function zkusCestu(cesta, pomucky) {
     } catch { nabidek = 0; }
   }
   const v = verdiktCesty({ dovoleno: true, stav, typ, telo, nabidek });
-  return Object.assign(zapis, v, {
+  /* CO NA TÉ CESTĚ JE — ale jen tam, kde to k něčemu je.
+     U „slibné" a u „ke čtení" se k nálezu přidá měření obsahu
+     (titulek, počty značek nabídky, ukázka textu). Jinde ne: u
+     zavřené není co měřit a u „odpověděla" by to byl jen šum.
+     Důvod je v oddílu 429: bez toho končí nález u věty „HTML,
+     23 631 bajtů" a předpis pro čtení se z ní napsat nedá. */
+  const znaky = (v.verdikt === 'slibná' || v.verdikt === 'ke čtení')
+    ? znakyOdpovedi(telo) : null;
+  return Object.assign(zapis, v, znaky ? { znaky } : {}, {
     stav, bajtu: telo.length, nabidek, cestaCteni,
     /* Tělo se do NÁLEZU nezapisuje (byly by z toho megabajty), ale
        volající ho potřebuje na spojení dál. */

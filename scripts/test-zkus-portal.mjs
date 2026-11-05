@@ -123,6 +123,78 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
   pravda('a řekne se proč', /o převodu ne/.test(jenPozemek.proc), jenPozemek.proc);
 }
 
+/* ---- 2b) HTML, VE KTERÉM NABÍDKY JSOU: „KE ČTENÍ" -------------
+ *
+ * Naměřeno 5. 11. na Ministerstvu obrany (běh 42016638323):
+ * `/nemovity-majetek/aktualni-nabidka` odpoví 200, má 23 631 bajtů,
+ * mluví o pozemcích i o prodeji — a bot to odložil mezi „odpověděla"
+ * s poznámkou „není strojový tvar (HTML)", tedy do téže přihrádky
+ * jako stránku o kalendáři akcí. Nabídky tam přitom JSOU; chybí
+ * k nim předpis pro čtení. Viz oddíl 429.
+ */
+{
+  const STRANKA_OBRANY = '<!DOCTYPE html><html><head><title>Aktuální nabídka'
+    + ' nemovitého majetku</title><style>.x{color:red}</style>'
+    + '<script>var parcela = "prodej pozemku";</script></head><body>'
+    + '<h1>Výběrové řízení na prodej nepotřebného nemovitého majetku</h1>'
+    + '<div class="n"><h2>Pozemek p. č. 123/4, k. ú. Vyškov</h2>'
+    + '<p>Výměra 1 500 m2, nejnižší podání 450 000 Kč.</p></div>'
+    + '<div class="n"><h2>Pozemek p. č. 55, k. ú. Olomouc</h2>'
+    + '<p>Výměra 300 m2, nejnižší podání 90 000 Kč.</p></div></body></html>';
+
+  const keCteni = C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'text/html',
+    telo: STRANKA_OBRANY, nabidek: 0 });
+  je('HTML o pozemcích i o převodu je „ke čtení", ne „odpověděla"', keCteni.verdikt, 'ke čtení');
+  pravda('a je u toho napsané, co chybí', /chybí předpis pro čtení/.test(keCteni.proc), keCteni.proc);
+  /* HRANICE V OBOU SMĚRECH — jinak by nový verdikt spolkl všechno. */
+  je('HTML o pozemcích BEZ převodu zůstává „odpověděla"',
+    C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'text/html',
+      telo: '<html><body>parcela 12/3 v katastru obce</body></html>' }).verdikt, 'odpověděla');
+  je('a strojový tvar je pořád „slibná", ne „ke čtení"',
+    C.verdiktCesty({ dovoleno: true, stav: 200, typ: 'application/json',
+      telo: '{"nazev":"Prodej pozemků","popis":"parcely k prodeji"}' }).verdikt, 'slibná');
+  je('zavřená se tím neobejde',
+    C.verdiktCesty({ dovoleno: true, stav: 500, typ: 'text/html', telo: STRANKA_OBRANY }).verdikt, 'zavřená');
+
+  /* POŘADÍ: člověk má nejdřív vidět to, s čím se dá něco udělat. */
+  const poradi = C.PORADI_VERDIKTU;
+  pravda('„ke čtení" stojí za slibnou a před „chce klíč"',
+    poradi.indexOf('ke čtení') === poradi.indexOf('slibná') + 1
+    && poradi.indexOf('ke čtení') < poradi.indexOf('chce klíč'), poradi.join(' < '));
+  pravda('a má své jméno v rozpadu', !!C.JMENA_ROZPADU['ke čtení'],
+    JSON.stringify(C.JMENA_ROZPADU));
+
+  /* MĚŘENÍ OBSAHU. Bez něj končí nález u „HTML, 23 631 bajtů" a
+     předpis se z toho napsat nedá. */
+  const z = C.znakyOdpovedi(STRANKA_OBRANY);
+  je('z odpovědi se vytáhne titulek', z.titulek, 'Aktuální nabídka nemovitého majetku');
+  pravda('spočítá se cena (2×)', z.pocty['cena'] === 2, JSON.stringify(z.pocty));
+  pravda('výměra (2×)', z.pocty['výměra'] === 2, JSON.stringify(z.pocty));
+  pravda('katastr (2×)', z.pocty['katastr'] === 2, JSON.stringify(z.pocty));
+  pravda('i výběrové řízení (1×)', z.pocty['výběrové řízení'] === 1, JSON.stringify(z.pocty));
+  /* SKRIPT A STYL SE NEPOČÍTAJÍ. Ve fixtuře je `var parcela = "prodej
+     pozemku"` ve <script> — kdyby se text bral i odtud, hlásilo by
+     měření parcelu, která na stránce není vidět. */
+  pravda('text ze <script> a <style> se do měření nedostane',
+    !z.pocty['parcela'] && !/var parcela/.test(z.ukazka) && !/color:red/.test(z.ukazka),
+    JSON.stringify(z));
+  pravda('ukázka je ostříhaná a není to kopie stránky',
+    z.ukazka.length <= C.STROP_UKAZKY && z.ukazka.length > 0, 'délka ' + z.ukazka.length);
+  pravda('a je v ní vidět, o čem stránka je',
+    /Výběrové řízení na prodej/.test(z.ukazka), z.ukazka.slice(0, 80));
+
+  /* HLÁŠENÍ. Cesta „ke čtení" se musí dostat do výpisu i do rozpadu. */
+  const hlaseni = C.hlaseniPortalu({ host: 'onnm.mo.gov.cz', cesty: [
+    { verdikt: 'ke čtení', jmeno: 'aktuální nabídka', adresa: 'https://onnm.mo.gov.cz/x',
+      proc: keCteni.proc, znaky: z },
+    { verdikt: 'zavřená', jmeno: 'jiná', adresa: 'https://onnm.mo.gov.cz/y', proc: 'HTTP 404' },
+  ] }).join('\n');
+  pravda('rozpad počítá i „ke čtení"', /ke čtení 1/.test(hlaseni), hlaseni.split('\n')[0]);
+  pravda('a cesta je ve výpisu vidět', /aktuální nabídka/.test(hlaseni), hlaseni);
+  pravda('i s tím, co se na ní naměřilo', /Aktuální nabídka nemovitého majetku/.test(hlaseni)
+    && /znaků textu/.test(hlaseni), hlaseni);
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });
@@ -427,6 +499,26 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
   je('PDF se nečte, i když je čtečka po ruce', pdf.nabidek, 0);
   pravda('a verdikt tedy není „nabídky"', pdf.verdikt !== 'nabídky', pdf.verdikt);
   /* Bez čtečky se nečte nic a nespadne to. */
+  /* MĚŘENÍ OBSAHU SE MUSÍ DOSTAT DO NÁLEZU — a jen tam, kde má.
+     Hlídat samotnou funkci znakyOdpovedi() nestačí: kdyby ji
+     zkusCestu() přestal volat, funkce zůstane v pořádku a nález bude
+     prázdný (táž slepota jako v oddílu 423 — hlídač měřil nástroj,
+     ne jeho použití). */
+  const keCteniNalez = await Z.zkusCestu(cesta, pomucky('text/html',
+    '<html><head><title>Aktuální nabídka</title></head><body>'
+    + '<h1>Prodej nepotřebného majetku</h1><p>Pozemek p. č. 1, k. ú. Brno,'
+    + ' 300 m2, 90 000 Kč.</p></body></html>', null));
+  je('HTML s nabídkami, které se nedají přečíst, je „ke čtení"', keCteniNalez.verdikt, 'ke čtení');
+  pravda('a nález si nese měření obsahu', !!keCteniNalez.znaky
+    && keCteniNalez.znaky.titulek === 'Aktuální nabídka'
+    && keCteniNalez.znaky.pocty['cena'] === 1,
+    JSON.stringify(keCteniNalez.znaky));
+  const nudnaNalez = await Z.zkusCestu(cesta, pomucky('text/html',
+    '<html><body>Kalendář akcí</body></html>', null));
+  je('nezajímavá stránka zůstává „odpověděla"', nudnaNalez.verdikt, 'odpověděla');
+  pravda('a měření se k ní nepřilepí (byl by to jen šum)', !nudnaNalez.znaky,
+    JSON.stringify(nudnaNalez.znaky || null));
+
   const bez = await Z.zkusCestu(cesta, pomucky('text/html', '<html>pozemek na prodej</html>', null));
   je('bez čtečky zůstane nula nabídek', bez.nabidek, 0);
   pravda('a stejně se to nerozsype', !!bez.verdikt, JSON.stringify(bez));

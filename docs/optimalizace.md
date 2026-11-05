@@ -26176,3 +26176,62 @@ opravy 137/0 na 390×844 i na 320×640.
 Pravidlo: **hlídač má měřit v jednotce, ve které se o věci rozhoduje.**
 Rovnost na pět desetinných míst není přísnost, je to jiná otázka — a na
 ni odpovídá šum.
+
+## §429 — Nabídky tam jsou, jen v HTML: nález pohřbený mezi beznadějnými
+
+Bot zkoušení portálů dostal pět nových kandidátů (§428) a běh
+42016638323 přinesl první skutečný nález za dva běhy — jenže ho sám
+odložil mezi nezajímavé.
+
+Naměřeno na Ministerstvu obrany (`onnm.mo.gov.cz`, 43 cest):
+
+```
+slibná     RSS (xml)        /rss.xml          10 912 B
+slibná     Sitemapa         /sitemap.xml       7 732 B
+odpověděla adresa z RSS     /nemovity-majetek/aktualni-nabidka   23 631 B
+           → „není strojový tvar (HTML)"
+odpověděla adresa z RSS     /aktuality/kalendar-akci             14 611 B
+           → „není strojový tvar (HTML)"
+```
+
+Ta třetí řádka je ten nález: RSS dovedlo bota na **aktuální nabídku
+nemovitého majetku**, stránka odpověděla 200 a mluví o pozemcích i
+o prodeji. Bot ji ale zařadil do téže přihrádky jako **kalendář akcí**,
+protože jediné, co o ní řekl, bylo „není strojový tvar".
+
+**To je táž past jako u „chce klíč" (§…, eDesky):** nález, se kterým se
+dá něco udělat, pohřbený mezi beznadějnými. Rozdíl je jen v tom, kdo to
+může udělat — u klíče majitel, tady já: napsat předpis pro čtení HTML.
+
+Dvě změny, obě malé:
+
+1. **Vlastní verdikt `ke čtení`** pro odpověď, která není strojová, ale
+   mluví o pozemcích i o převodu. Stojí v pořadí hned za `slibná`
+   a před `chce klíč`, takže ho člověk vidí mezi prvními.
+   Hranice se hlídají v obou směrech: HTML *bez* převodu zůstává
+   `odpověděla`, strojový tvar zůstává `slibná` a HTTP 500 zůstává
+   `zavřená` — jinak by nový verdikt spolkl všechno.
+2. **Měření obsahu u slibné cesty a cesty ke čtení** (`znakyOdpovedi`):
+   titulek, počty značek nabídky (cena, výměra, katastr, parcela,
+   výběrové řízení, dražba) a 400 znaků viditelného textu. **Není to
+   kopie stránky, je to měření** — a je potřeba proto, že předpis pro
+   čtení se píše z obsahu, a z tohohle stroje si stránku stáhnout
+   nemůžu vůbec. Bez toho zbývá věta „HTML, 23 631 bajtů".
+
+**Vlastní zkouška mi při tom opravila regulární výraz.** Počítání cen
+jsem napsal jako `/\bKč\b/` a kontrola hlásila nulu: v JavaScriptu je
+`\b` hranice mezi `[A-Za-z0-9_]` a zbytkem, takže mezi „č" a mezerou
+žádná není. Správně je `/\b(?:K[čc]|CZK)(?!\p{L})/gu`. Hezká ukázka
+toho, proč se i „samozřejmý" výraz hlídá číslem.
+
+Prokázáno sabotáží, **3 ze 3**:
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| verdikt `ke čtení` odstraněn | 4 kontroly, první jmenovitě |
+| `<script>` se do měření počítá | „text ze `<script>` a `<style>` se do měření nedostane" |
+| `zkusCestu` měření nepřipojí | „a nález si nese měření obsahu" |
+
+Ta třetí je ta důležitá: hlídat jen `znakyOdpovedi()` by znamenalo měřit
+nástroj, ne jeho použití — přesně slepota z §423. `test-zkus-portal`
+107 → **129 kontrol**.
