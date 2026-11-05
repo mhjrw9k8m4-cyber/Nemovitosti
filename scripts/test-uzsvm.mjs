@@ -264,7 +264,12 @@ const PACHT2 = {
     { ...PRODEJ, Name: 'Pozemek bez místa' },
     null,
   ] }, vymeraZPopisu, druhZPopisu, z);
-  je('stavba se nebere', z.neniPozemek, 1);
+  /* STAVBA SE UŽ BERE — od 5. 11. web nese všechny nemovitosti, ne jen
+     pozemky. Dřív tady stálo „stavba se nebere" (`z.neniPozemek === 1`)
+     a byl to správný zápis starého pravidla. Nová pravidla jsou dvě
+     a obě se měří v oddílu 7: nemovitost se bere, movitá věc ne, a
+     z budovy nikdy nesmí být pozemek. */
+  je('stavba se nezahazuje jako „není pozemek"', z.neniPozemek, undefined);
   je('bez ceny se nebere', z.bezCeny, 1);
   je('bez výměry se nebere', z.bezVymery, 1);
   je('bez okresu se nebere', z.bezOkresu, 1);
@@ -300,8 +305,14 @@ const PACHT2 = {
     .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/^\s*\/\/.*$/gm, ' ');
   const telo = (kod.match(/async function fetchUzsvm\(\)[\s\S]*?\n}/) || [''])[0];
   pravda('robot hlásí počet z číselníku, ne počet všeho',
-    /UZ\.pocetVKategorii\(data\)/.test(telo) && !/PropertyTotalCount/.test(telo),
+    /UZ\.pocetVKategorii\(/.test(telo) && !/PropertyTotalCount/.test(telo),
     telo.slice(0, 200));
+  /* A PROJDE VŠECHNY KATEGORIE NEMOVITOSTÍ, ne jen pozemky. Číselník
+     se čte ze zdroje (`kategorieNemovitosti`), takže když úřad přidá
+     kategorii, robot ji vezme sám. Zadrátovaný seznam id by to neumil
+     a nikdo by si toho nevšiml. */
+  pravda('a projde všechny kategorie nemovitostí, ne jen pozemky',
+    /UZ\.kategorieNemovitosti\(/.test(telo), telo.slice(0, 200));
   pravda('a ukázky vypisuje',
     /zahozeno\.ukazky/.test(telo), 'v logu by nebylo vidět, co se zahodilo');
 }
@@ -461,6 +472,108 @@ const PACHT2 = {
     } catch (e) { return 'SPADLO: ' + (e && e.message); }
   })();
   je('prázdná položka v číselníku kategorií čtení neshodí', pocet, 286);
+}
+
+/* ---- 7) VŠECHNY NEMOVITOSTI, ALE JEN NEMOVITOSTI -----------------
+   ==================================================================
+   Od 5. 11. nese web všechny nemovitosti. ÚZSVM je největší státní
+   prodejce, takže je to první rozšířený zdroj — a jsou tu dvě pasti,
+   které by se jinak nepoznaly:
+
+     1. MOVITÉ VĚCI. Je jich v nabídce ÚZSVM skoro polovina (změřeno
+        5. 11.: 348 ze 729 — automobily, stroje, nábytek). Kdyby se
+        pustily dál, ležely by na webu o nemovitostech osobní auta.
+     2. BUDOVA JAKO POZEMEK. Kategorie „Stavby" neříká, co to je, ale
+        říká, že to NENÍ pozemek. Bez toho příznaku by u stavby vyšel
+        pozemek a obvyklá cena za m² pozemku by u budovy byla číslo
+        bez významu — a verdikt „levné" postavený na něm lež.
+
+   Číselník se nečte ze zadrátovaného seznamu id, ale ze zdroje
+   (`p02IsRealty`), aby robot vzal novou kategorii sám. */
+{
+  je('pozemky, jednotky a podíly zdroj pojmenuje jednoznačně',
+    ['Pozemky', 'Jednotky', 'Družstevní podíly'].map(U.katZKategorie),
+    ['pozemek', 'byt', 'byt']);
+  je('u obecných kategorií se kat nehádá a rozhodne text',
+    ['Stavby', 'Jiné objekty'].map(U.katZKategorie), ['', '']);
+  je('a neznámá kategorie taky nic netvrdí', U.katZKategorie('Automobily'), '');
+  je('nemovitost se pozná i u obecné kategorie',
+    ['Pozemky', 'Stavby', 'Jiné objekty', 'Jednotky', 'Družstevní podíly']
+      .map(U.jeKategorieNemovitosti), [true, true, true, true, true]);
+  je('ale movitá věc ne',
+    ['Movité věci', 'Automobily', ''].map(U.jeKategorieNemovitosti),
+    [false, false, false]);
+  je('pozemková je jedině kategorie Pozemky',
+    ['Pozemky', 'Stavby', 'Jednotky'].map(U.jePozemkovaKategorie),
+    [true, false, false]);
+
+  /* Číselník v tom tvaru, v jakém ho zdroj opravdu posílá (změřeno). */
+  const CISELNIK = { Categories: [
+    { p02Id: 10, p02Name: 'Nemovité věci a družstevní byty', p02IsRealty: true,
+      FilteredCount: 367, Subcategories: [
+        { p02Id: 12, p02Name: 'Družstevní podíly', p02IsRealty: true, FilteredCount: 3, Subcategories: null },
+        { p02Id: 63, p02Name: 'Jednotky', p02IsRealty: true, FilteredCount: 3, Subcategories: null },
+        { p02Id: 55, p02Name: 'Jiné objekty', p02IsRealty: true, FilteredCount: 7, Subcategories: null },
+        { p02Id: 13, p02Name: 'Pozemky', p02IsRealty: true, FilteredCount: 276, Subcategories: null },
+        { p02Id: 11, p02Name: 'Stavby', p02IsRealty: true, FilteredCount: 78, Subcategories: null },
+      ] },
+    { p02Id: 1, p02Name: 'Movité věci', p02IsRealty: false, FilteredCount: 348, Subcategories: null },
+  ] };
+  const kat = U.kategorieNemovitosti(CISELNIK);
+  je('z číselníku vyjdou právě listy nemovitostí',
+    kat.map((k) => k.id).sort((a, b) => a - b), [11, 12, 13, 55, 63]);
+  /* RODIČ V SEZNAMU BÝT NESMÍ: změřeno 5. 11., že `CategoryId: 10`
+     nefiltruje vůbec a vrátí i automobily. */
+  pravda('rodičovská kategorie se mezi ně nedostane',
+    !kat.some((k) => k.id === 10), JSON.stringify(kat.map((k) => k.id)));
+  pravda('movité věci taky ne',
+    !kat.some((k) => k.id === 1), JSON.stringify(kat.map((k) => k.id)));
+  je('a nese počty ze zdroje', (kat.find((k) => k.id === 13) || {}).pocet, 276);
+  je('bez číselníku vyjde prázdno', U.kategorieNemovitosti({}).length, 0);
+  je('a nic taky', U.kategorieNemovitosti(null).length, 0);
+
+  /* A TEĎ NA NABÍDKÁCH. Stavba se vezme, ale musí nést příznak, že
+     pozemek to není; pozemek nenese nic (je výchozí a v datech by to
+     byly jen kilobajty navíc); jednotka má kat = byt; auto se zahodí
+     a počítá se zvlášť, aby se v logu poznalo, co propadlo. */
+  const z7 = {};
+  const { nabidky } = U.nabidkyZOdpovedi({ Properties: [
+    { ...PRODEJ },
+    /* POZOR NA SLOVA, KTERÝMI SE POPISUJE BUDOVA. Tady nejdřív stálo
+       „Budova o zastavěné ploše 240 m2" — a propadla, protože čtečka
+       výměry „zastavěnou plochu" ČTE SCHVÁLNĚ NE: u pozemku je to past
+       („na pozemku stojí chata o zastavěné ploše cca 25 m²" dřív dalo
+       výměru pozemku 25). U budovy je přitom zastavěná plocha právě to
+       správné číslo. Je to tedy pravidlo závislé na kategorii a patří
+       do fáze, kde se předělává cenový model — ne do záplaty tady.
+       Fixtura proto mluví tak, jak čtečka umí. */
+    { ...PRODEJ, Id: 1, CategoryName: 'Stavby',
+      Name: 'budova č. p. 12 v k. ú. Bukovec',
+      Description: 'Budova o výměře 240 m2 se nachází v centru obce.' },
+    { ...PRODEJ, Id: 2, CategoryName: 'Jednotky',
+      Name: 'jednotka č. 12/3 v k. ú. Bukovec',
+      Description: 'Jednotka o výměře 68 m2 v pátém nadzemním podlaží.' },
+    { ...PRODEJ, Id: 3, CategoryName: 'Movité věci', Name: 'osobní automobil Škoda Octavia' },
+  ] }, vymeraZPopisu, druhZPopisu, z7);
+  je('movitá věc se zahodí a počítá se zvlášť', z7.movitaVec, 1);
+  je('nemovitostí projdou tři', nabidky.length, 3);
+  const pozemek = nabidky.find((n) => n._key === 'uzsvm-149475');
+  const stavba = nabidky.find((n) => n._key === 'uzsvm-1');
+  const jednotka = nabidky.find((n) => n._key === 'uzsvm-2');
+  je('pozemek nenese kat (je výchozí)', pozemek && pozemek.kat, undefined);
+  je('a nenese ani příznak „není pozemek"', pozemek && pozemek._neniPozemek, undefined);
+  je('stavba kat nehádá', stavba && stavba.kat, undefined);
+  je('ale příznak „není pozemek" nese', stavba && stavba._neniPozemek, true);
+  je('jednotka je byt', jednotka && jednotka.kat, 'byt');
+  je('a taky není pozemek', jednotka && jednotka._neniPozemek, true);
+
+  /* ROBOT MUSÍ TEN PŘÍZNAK OPRAVDU POUŽÍT. Bez toho by stavba, u které
+     text nic neprozradí, skončila jako pozemek — a nikdo by to
+     nepoznal, protože stránka se jen přegeneruje a vypadá normálně. */
+  const celyKod = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  pravda('robot z příznaku dělá „jinou nemovitost", ne pozemek',
+    /_neniPozemek\)\s*o\.kat\s*=\s*'jine'/.test(celyKod.replace(/\s+/g, ' ')),
+    'v robotovi chybí doplnění kategorie „jine" u budovy bez poznatelného textu');
 }
 
 console.log('ÚZSVM — nabídky majetku státu');

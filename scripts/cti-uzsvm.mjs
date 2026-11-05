@@ -266,6 +266,85 @@ export function mistoZNazvu(s) {
    počet VŠEHO (757 věcí všeho druhu), ne počet pozemků — kdo ho vypíše
    jako „v kategorii Pozemky", lže o řád. Číslo je v číselníku
    `Categories` u položky s naším `p02Id`, i v podkategoriích. */
+/* KTERÉ KATEGORIE JSOU NEMOVITOSTI — ZEPTÁME SE ČÍSELNÍKU, NEHÁDÁME.
+   ==================================================================
+   Majitel 5. 11. rozhodl, že na webu budou všechny nemovitosti, ne jen
+   pozemky. ÚZSVM je největší státní prodejce, takže je to první zdroj,
+   který se rozšiřuje — ale ne naslepo.
+
+   ZMĚŘENO 5. 11. z Actions dotazem s `CategoryId: 0`:
+     p02Id 10 „Nemovité věci a družstevní byty"  p02IsRealty=true   367
+         ├ 13 Pozemky             276
+         ├ 11 Stavby               78
+         ├ 55 Jiné objekty          7
+         ├ 63 Jednotky              3
+         └ 12 Družstevní podíly     3
+     p02Id  1 „Movité věci"        p02IsRealty=false  348
+     PropertyTotalCount                               729
+
+   DVĚ VĚCI Z TOHO MĚŘENÍ SE MUSÍ NAPSAT, protože obě vyvracejí to, co
+   by člověk čekal:
+
+   1. RODIČOVSKÉ ID NEFILTRUJE. Dotaz s `CategoryId: 10` vrátil týž
+      `PropertyTotalCount` 729 jako `CategoryId: 0` — tedy ne 367.
+      Brát se musí LISTY číselníku po jednom, ne rodič.
+   2. MOVITÉ VĚCI NA WEB NEPATŘÍ. Je jich 348, tedy skoro polovina
+      nabídky: automobily, stroje, nábytek. Zdroj je sám odlišuje
+      příznakem `p02IsRealty`, takže se na to nemusí hádat z názvu. */
+export function kategorieNemovitosti(data) {
+  const ven = [];
+  const projdi = (seznam) => {
+    for (const k of (Array.isArray(seznam) ? seznam : [])) {
+      if (!k || typeof k !== 'object') continue;
+      const deti = Array.isArray(k.Subcategories) ? k.Subcategories : [];
+      /* Jen listy: rodič se dotazem filtrovat nedá (viz bod 1 výš). */
+      if (k.p02IsRealty === true && !deti.length) {
+        const id = Number(k.p02Id);
+        if (Number.isFinite(id) && id > 0) {
+          ven.push({ id, nazev: String(k.p02Name || ''), pocet: Number(k.FilteredCount) || 0 });
+        }
+      }
+      projdi(deti);
+    }
+  };
+  projdi(data && data.Categories);
+  return ven;
+}
+
+/* KATEGORIE ZDROJE → NAŠE `kat`.
+   Prázdná hodnota znamená „zdroj to neřekl dost přesně, rozhodne text":
+   „Stavby" je dům, areál, hala i kravín, „Jiné objekty" cokoli. Volající
+   ale musí vědět, že to NENÍ pozemek — jinak by se u budovy počítala
+   obvyklá cena za m² pozemku, což je číslo bez významu.
+
+   Družstevní podíl je v praxi byt: podíl v bytovém družstvu se kupuje
+   kvůli bytu, který k němu patří, a tak ho vedou i portály. */
+export const KAT_PODLE_KATEGORIE = {
+  'Pozemky': 'pozemek',
+  'Jednotky': 'byt',
+  'Družstevní podíly': 'byt',
+  'Stavby': '',
+  'Jiné objekty': '',
+};
+export function katZKategorie(nazev) {
+  const n = String(nazev == null ? '' : nazev).trim();
+  return Object.prototype.hasOwnProperty.call(KAT_PODLE_KATEGORIE, n)
+    ? KAT_PODLE_KATEGORIE[n] : '';
+}
+/** Je to kategorie, kterou ZNÁME jako nemovitost? Prázdná hodnota
+    v tabulce znamená „známe, ale je obecná" — a to je něco jiného než
+    „neznáme vůbec" (automobily, stroje). Proto se ptá na přítomnost
+    klíče, ne na pravdivost hodnoty. */
+export function jeKategorieNemovitosti(nazev) {
+  const n = String(nazev == null ? '' : nazev).trim();
+  return Object.prototype.hasOwnProperty.call(KAT_PODLE_KATEGORIE, n);
+}
+/** Je ta kategorie zdroje pozemková? Používá se na to, aby se budova
+    nikdy nestala pozemkem, když z textu nic nevyjde. */
+export function jePozemkovaKategorie(nazev) {
+  return katZKategorie(nazev) === 'pozemek';
+}
+
 export function pocetVKategorii(data, kategorie = KATEGORIE_POZEMKY) {
   const hledej = (seznam) => {
     for (const k of (Array.isArray(seznam) ? seznam : [])) {
@@ -317,10 +396,22 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
   for (const z of polozky) {
     if (!z || typeof z !== 'object') { pocti('prazdnyZaznam'); continue; }
     pocti('zaznamu');
-    /* Kategorie se filtruje dotazem, ale ověřit se to má: kdyby úřad
-       čísla kategorií přečísloval, tahle kontrola to řekne hned,
-       kdežto bez ní by se na web nasypaly stavby jako pozemky. */
-    if (!/pozemk/i.test(String(z.CategoryName || ''))) { pocti('neniPozemek', z.CategoryName + ' — ' + z.Name); continue; }
+    /* KATEGORIE SE OVĚŘUJE, I KDYŽ SE FILTRUJE DOTAZEM.
+       Dřív tu stálo `if (!/pozemk/i.test(CategoryName)) continue` —
+       tedy „co není pozemek, zahoď". Od 5. 11. web nese všechny
+       nemovitosti, takže se zahazuje jen to, co nemovitost NENÍ:
+       movité věci (automobily, stroje) jsou v nabídce ÚZSVM skoro
+       polovina (348 ze 729, změřeno) a na web nepatří.
+
+       NEZNÁMÁ KATEGORIE SE NEPUSTÍ DÁL, ALE ANI NEZMIZÍ TICHO: počítá
+       se zvlášť a s ukázkou, takže se v logu pozná, že úřad přidal
+       kategorii, o které nevíme. Bez toho by se buď na web nasypaly
+       automobily, nebo by nová kategorie nemovitostí tiše propadla. */
+    if (!jeKategorieNemovitosti(z.CategoryName)) {
+      pocti(/movit/i.test(String(z.CategoryName || '')) ? 'movitaVec' : 'neznamaKategorie',
+        z.CategoryName + ' — ' + z.Name);
+      continue;
+    }
     if (!jeProdej(z)) { pocti('pacht', z.Name); continue; }
     /* PODÍL: ZVEŘEJNIT SE ZLOMKEM, ZAHODIT BEZ NĚJ. Viz zlomekPodilu
        výš — se zlomkem web cenu za metr podělí, bez něj by lhal. */
@@ -365,6 +456,18 @@ export function nabidkyZOdpovedi(data, vymeraZPopisu, druhZPopisu, zahozeno, zmi
       /* Příznak i velikost podílu — táž jména, jakými je zná zbytek
          webu (js/vybaveni.js je nasazuje u ostatních zdrojů). */
       ...(jePodil ? { podil: true, zlomek } : {}),
+      /* KATEGORIE PODLE ZDROJE, KDYŽ JI ZDROJ ŘÍKÁ.
+         „Pozemky", „Jednotky" a „Družstevní podíly" jsou jednoznačné,
+         a tahle informace je silnější než hádání z textu — proto se
+         zapisuje tady a robot ji nepřepisuje (viz `if (!o.kat)` ve
+         fetch-opportunities.mjs). U obecných „Stavby" a „Jiné objekty"
+         se `kat` NEZAPISUJE a rozhodne text; robot ale ví, že pozemek
+         to není, a doplní „jiná nemovitost" (`_neniPozemek`).
+         Pozemek se do dat nepíše vůbec — je výchozí a u 276 nabídek by
+         to byly jen kilobajty navíc přes drát. */
+      ...(katZKategorie(z.CategoryName) && katZKategorie(z.CategoryName) !== 'pozemek'
+        ? { kat: katZKategorie(z.CategoryName) } : {}),
+      ...(jePozemkovaKategorie(z.CategoryName) ? {} : { _neniPozemek: true }),
       _key: 'uzsvm-' + String(z.Id || place + '-' + c),
       url: odkazNabidky(z.Id) || undefined,
       extra: popisek(z),

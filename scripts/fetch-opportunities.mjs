@@ -979,6 +979,26 @@ function parseDruh(text, jmenaMist) {
   return normDruh(PKDruh.zTextu(text, jmenaMist) || 'pozemek');
 }
 
+/* KATEGORIE NEMOVITOSTI — co se vlastně prodává.
+   ------------------------------------------------------------------
+   Majitel 5. 11. rozhodl, že na webu budou všechny nemovitosti, ne jen
+   pozemky. Zdroje ale kategorii nehlásí: dražební rejstříky i ÚZSVM
+   dávají jen název a popis, takže ji musí poznat kód. Pravidla jsou ve
+   sdíleném js/kategorie.js, aby je web i robot čtly stejně.
+
+   `kat` je zvlášť od `druh` schválně: `druh` odpovídá na „jaký je to
+   POZEMEK" (orná půda, les, stavební), `kat` na „co se prodává"
+   (pozemek, dům, byt, areál). U bytu nemá druh pozemku smysl vůbec.
+
+   CO SE NEPOZNÁ, JE POZEMEK — tím zůstanou dnešní data nezměněná.
+   Změřeno na všech 2 303 dnešních nabídkách: u každé vyjde pozemek,
+   takže zapojení kategorií dnešní web nepřeklopí (hlídá
+   scripts/test-kategorie.mjs). */
+const PKKategorie = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'kategorie.js'));
+function parseKategorie(text, jmenaMist) {
+  return PKKategorie.zTextu(text, jmenaMist) || PKKategorie.VYCHOZI;
+}
+
 /* Druh pozemku píšeme jednotně malým počátečním písmenem.
    Evidence dražeb ho ve svém poli druhPozemku posílá s velkým, kdežto
    z popisů i z ostatních zdrojů vychází malé — a v datech pak leží dvě
@@ -2112,39 +2132,70 @@ async function fetchUzsvm() {
   const zahozeno = {};
   const out = [];
   let celkem = null;
-  for (let strana = 1; strana <= UZ.STROP_STRAN; strana++) {
-    let data;
-    try {
-      const r = await stahni(UZ.API, {
-        method: 'POST',
-        body: UZ.dotaz(strana),
-        headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
-      });
-      if (!r.ok) {
-        console.error(`ÚZSVM strana ${strana}: server odpověděl HTTP ${r.status}, dál se nejde.`);
+
+  /* JEDNA KATEGORIE, PO STRANÁCH. Vrací první odpověď — v ní přijde
+     číselník `Categories`, ze kterého se pozná, co dál. */
+  async function projdiKategorii(kategorie, jmeno) {
+    let prvni = null;
+    for (let strana = 1; strana <= UZ.STROP_STRAN; strana++) {
+      let data;
+      try {
+        const r = await stahni(UZ.API, {
+          method: 'POST',
+          body: UZ.dotaz(strana, UZ.NA_STRANU, kategorie),
+          headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
+        });
+        if (!r.ok) {
+          console.error(`ÚZSVM ${jmeno} strana ${strana}: server odpověděl HTTP ${r.status},`
+            + ' dál se nejde.');
+          break;
+        }
+        data = await r.json();
+      } catch (e) {
+        console.error(`ÚZSVM ${jmeno} strana ${strana}: nešlo přečíst`
+          + ` — ${String((e && e.message) || e).slice(0, 140)}`);
         break;
       }
-      data = await r.json();
-    } catch (e) {
-      console.error(`ÚZSVM strana ${strana}: nešlo přečíst — ${String((e && e.message) || e).slice(0, 140)}`);
-      break;
+      if (prvni === null) prvni = data;
+      const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno, STAT.zminujeMetry);
+      for (const o of nabidky) {
+        out.push({
+          ...o,
+          zdroj: 'ÚZSVM',
+        });
+      }
+      const stran = Number(data.PageCount) || 1;
+      if (strana >= stran || !(Array.isArray(data.Properties) && data.Properties.length)) break;
     }
-    const { nabidky } = UZ.nabidkyZOdpovedi(data, STAT.vymeraZPopisu, STAT.druhZPopisu, zahozeno, STAT.zminujeMetry);
-    for (const o of nabidky) {
-      out.push({
-        ...o,
-        zdroj: 'ÚZSVM',
-      });
-    }
-    if (celkem === null) celkem = UZ.pocetVKategorii(data);
-    const stran = Number(data.PageCount) || 1;
-    if (strana >= stran || !(Array.isArray(data.Properties) && data.Properties.length)) break;
+    return prvni;
+  }
+
+  /* POZEMKY NAPŘED, a ne kvůli abecedě: je jich nejvíc (276 z 367) a
+     v jejich odpovědi přijde číselník, podle kterého se teprve pozná,
+     které DALŠÍ kategorie jsou nemovitosti. Rodičovské id filtrovat
+     neumí (změřeno 5. 11.: `CategoryId: 10` vrátí všech 729 věcí včetně
+     automobilů), takže se listy berou po jednom. */
+  const prvni = await projdiKategorii(UZ.KATEGORIE_POZEMKY, 'Pozemky');
+  celkem = UZ.pocetVKategorii(prvni);
+  const dalsi = UZ.kategorieNemovitosti(prvni)
+    .filter((k) => Number(k.id) !== Number(UZ.KATEGORIE_POZEMKY));
+  if (!dalsi.length) {
+    console.error('ÚZSVM: číselník nedal žádnou další kategorii nemovitostí —'
+      + ' berou se jen pozemky. Když to vydrží, změnil zdroj tvar číselníku'
+      + ' (čeká se `Categories[].p02IsRealty`).');
+  }
+  for (const k of dalsi) {
+    await projdiKategorii(k.id, k.nazev || ('id ' + k.id));
   }
   const z = Object.entries(zahozeno)
     .filter(([k, n]) => k !== 'zaznamu' && k !== 'ukazky' && typeof n === 'number' && n > 0)
     .map(([k, n]) => k + ' ' + n);
-  console.error(`Zdroj ÚZSVM: ${out.length} pozemků z ${zahozeno.zaznamu || 0} záznamů`
-    + (celkem ? ` (číselník hlásí ${celkem} v kategorii Pozemky)` : '')
+  const podleKat = out.reduce((a, o) => ((a[o.kat || 'pozemek'] = (a[o.kat || 'pozemek'] || 0) + 1), a), {});
+  console.error(`Zdroj ÚZSVM: ${out.length} nemovitostí z ${zahozeno.zaznamu || 0} záznamů`
+    + (celkem ? ` (číselník hlásí ${celkem} v kategorii Pozemky` : '')
+    + (dalsi.length ? `, dalších kategorií nemovitostí ${dalsi.length}: `
+      + dalsi.map((k) => `${k.nazev} ${k.pocet}`).join(', ') + ')' : (celkem ? ')' : ''))
+    + `, podle kategorie: ${JSON.stringify(podleKat)}`
     + (z.length ? `, zahozeno — ${z.join(', ')}` : ', nic se nezahodilo'));
   /* A ukázka ke každému důvodu: bez ní se nedá rozhodnout, jestli je
      vada v datech, nebo v našem čtení (§366). */
@@ -3695,6 +3746,40 @@ async function fetchNabidkyStatu() {
     try { minuleNabidky = JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []; } catch { /* první běh */ }
     const zmen = spojCeny(minuleNabidky, fresh, new Date());
     if (zmen) console.log(`Změna ceny u ${zmen} nabídek proti minulému běhu.`);
+  }
+
+  /* ---- KATEGORIE NEMOVITOSTI, NA JEDNOM MÍSTĚ PRO VŠECHNY ZDROJE ----
+     Zdroj, který kategorii zná (ÚZSVM ji má v číslu své kategorie), si
+     ji nastaví sám a tady se nepřepisuje — proto `if (!o.kat)`. Zbytku
+     se pozná z textu: dražební rejstříky ani inzeráty nic takového
+     nehlásí a dávají jen název a popis.
+
+     POZEMEK SE DO DAT NEZAPISUJE, A TO JE ÚMYSL. `data/opportunities.json`
+     čte úvodní stránka a každý kilobajt v něm stojí čas na telefonu;
+     `,"kat":"pozemek"` u 2 303 nabídek je ~37 kB navíc za informaci,
+     která je výchozí. Čtenáři si ji doplní přes PKKategorie.klic(),
+     takže dnešní soubor zůstane bajt za bajtem stejný a pole se objeví
+     teprve u toho, co pozemek není. */
+  {
+    const pocty = {};
+    for (const o of fresh) {
+      if (!o.kat) {
+        const txt = [o.place, o.druh, o.extra, o.nazev, o.titulek].filter(Boolean).join(' ');
+        const k = parseKategorie(txt, [o.place, o.okres]);
+        /* ZDROJ MŮŽE VĚDĚT MÍŇ, ALE PŘESTO DOST. ÚZSVM u kategorií
+           „Stavby" a „Jiné objekty" neřekne, co to je, ale ŘEKNE, že to
+           není pozemek (`_neniPozemek`). Když z textu nic nevyjde,
+           nesmí z budovy být pozemek: výměra by se brala jako plocha
+           pozemku a obvyklá cena za m² by byla číslo bez významu.
+           Taková nabídka je proto „jiná nemovitost" — poctivé „nevím
+           co, ale pozemek to není". */
+        if (k !== PKKategorie.VYCHOZI) o.kat = k;
+        else if (o._neniPozemek) o.kat = 'jine';
+      }
+      const k = o.kat || PKKategorie.VYCHOZI;
+      pocty[k] = (pocty[k] || 0) + 1;
+    }
+    console.log('Podle kategorie:', JSON.stringify(pocty));
   }
 
   const payload = {

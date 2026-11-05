@@ -183,6 +183,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh.mjs
 
+      - name: Kategorie nemovitosti z textu (přednosti, jméno obce, jméno webu)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-kategorie.mjs
+
       - name: Hledání celou větou (druh, cena, sítě v jednom políčku)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-dotaz.mjs
