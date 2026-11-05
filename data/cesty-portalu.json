@@ -2,664 +2,812 @@
  "updated": "2026-11-05",
  "tvaru": 29,
  "zmerenychTvaru": 8,
- "dotazu": 43,
+ "dotazu": 31,
  "portaly": [
   {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "url": "https://onnm.mo.gov.cz/",
+   "host": "verejnedrazby.cz",
+   "jmeno": "https://www.verejnedrazby.cz/",
+   "url": "https://www.verejnedrazby.cz/",
    "odkud": "z příkazu",
-   "dotazu": 43,
+   "dotazu": 31,
    "nedosahnuto": 0,
    "sitemapyZRobots": 0,
    "kontrolaNeexistujici": {
-    "adresa": "https://onnm.mo.gov.cz/__takova-cesta-tu-neni-9c3f",
+    "adresa": "https://www.verejnedrazby.cz/__takova-cesta-tu-neni-9c3f",
     "stav": 404,
-    "bajtu": 14555
+    "bajtu": 22509
    },
    "cesty": [
     {
-     "adresa": "https://onnm.mo.gov.cz/",
+     "adresa": "https://www.verejnedrazby.cz/",
      "jmeno": "vstupní adresa",
      "skupina": "vstup",
      "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 41 odkazech — bude to rozcestník, ne výpis",
+     "verdikt": "nabídky",
+     "proc": "přečteno 9 nabídek",
      "tvar": "HTML",
      "strojova": false,
      "oPozemku": true,
      "oPrevodu": true,
      "stav": 200,
-     "bajtu": 16389,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 27357,
+     "nabidek": 9,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 3013,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/lod/catalog",
+     "adresa": "https://www.verejnedrazby.cz/lod/catalog",
      "jmeno": "OFN katalog (lod)",
      "skupina": "katalog",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22472,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 4128000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/katalog",
+     "adresa": "https://www.verejnedrazby.cz/katalog",
      "jmeno": "OFN katalog (katalog)",
      "skupina": "katalog",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22516,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 4128000,
+      "vymera": 406,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api/catalogue",
+     "adresa": "https://www.verejnedrazby.cz/api/catalogue",
      "jmeno": "OFN katalog (api/catalogue)",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22516,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 7500000,
+      "vymera": 1189,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/opendata/katalog",
+     "adresa": "https://www.verejnedrazby.cz/opendata/katalog",
      "jmeno": "OFN katalog (opendata/katalog)",
      "skupina": "katalog",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22533,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/katalog.jsonld",
+     "adresa": "https://www.verejnedrazby.cz/katalog.jsonld",
      "jmeno": "OFN katalog (jsonld)",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22660,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9600000,
+      "vymera": 2492,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-2-492-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/data.json",
+     "adresa": "https://www.verejnedrazby.cz/data.json",
      "jmeno": "DCAT data.json",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22618,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9200000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-multifunkcniho-arealu-se-showroomem-uz",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api/3/action/package_search?q=pozemky&rows=5",
+     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_search?q=pozemky&rows=5",
      "jmeno": "CKAN hledání",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14597,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22676,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 3300000,
+      "vymera": 90,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api/3/action/package_list",
+     "adresa": "https://www.verejnedrazby.cz/api/3/action/package_list",
      "jmeno": "CKAN seznam",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22375,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 51265280,
+      "vymera": 2919,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/arcgis/rest/services?f=json",
+     "adresa": "https://www.verejnedrazby.cz/arcgis/rest/services?f=json",
      "jmeno": "ArcGIS služby",
      "skupina": "mapa",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14583,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22585,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 7500000,
+      "vymera": 1189,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/server/rest/services?f=json",
+     "adresa": "https://www.verejnedrazby.cz/server/rest/services?f=json",
      "jmeno": "ArcGIS server",
      "skupina": "mapa",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14583,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22537,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/geoserver/wfs?service=WFS&request=GetCapabilities",
+     "adresa": "https://www.verejnedrazby.cz/geoserver/wfs?service=WFS&request=GetCapabilities",
      "jmeno": "WFS popis",
      "skupina": "mapa",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14616,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22601,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9600000,
+      "vymera": 2492,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-2-492-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/oai?verb=Identify",
+     "adresa": "https://www.verejnedrazby.cz/oai?verb=Identify",
      "jmeno": "OAI-PMH",
      "skupina": "katalog",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14590,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22605,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 3013,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/rss",
+     "adresa": "https://www.verejnedrazby.cz/rss",
      "jmeno": "RSS",
      "skupina": "feed",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22533,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 8703,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/rss.xml",
+     "adresa": "https://www.verejnedrazby.cz/rss.xml",
      "jmeno": "RSS (xml)",
      "skupina": "feed",
      "zmereno": false,
-     "verdikt": "slibná",
-     "proc": "strojový tvar, mluví o pozemcích i o převodu",
-     "tvar": "RSS",
-     "strojova": true,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "znaky": {
-      "titulek": "Odbor nakládání s nepotřebným majetkem",
-      "znaku": 9227,
-      "pocty": {
-       "katastr": 1,
-       "výběrové řízení": 1
-      },
-      "odkazu": 0,
-      "jsonLd": 0,
-      "itemprop": 0,
-      "vypadaNaPrihlaseni": false,
-      "vypadaNaPrazdno": false,
-      "ukazka": "Odbor nakládání s nepotřebným majetkem https://onnm.mo.gov.cz/ cs inzerát nemovitého majetku ONNM https://onnm.mo.gov.cz/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm &lt;span&gt;inzerát nemovitého majetku ONNM&lt;/span&gt; &lt;span&gt;&lt;span&gt;Beáta Čajková&lt;/span&gt;&lt;/span&gt; &lt;span&gt;&lt;time datetime=\"2024-06-19T12:11:24+02:00\" title=\"Středa, Červen 19, 2024 - 12:11\"&gt;1"
-     },
-     "stav": 200,
-     "bajtu": 10912,
-     "nabidek": 0,
-     "cestaCteni": null
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22504,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/feed",
+     "adresa": "https://www.verejnedrazby.cz/feed",
      "jmeno": "Feed",
      "skupina": "feed",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22612,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 51265280,
+      "vymera": 2919,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/atom.xml",
+     "adresa": "https://www.verejnedrazby.cz/atom.xml",
      "jmeno": "Atom",
      "skupina": "feed",
      "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "verdikt": "odpověděla",
+     "slibilaStroj": true,
+     "tvar": "HTML",
+     "strojova": false,
+     "oPozemku": true,
+     "oPrevodu": true,
+     "proc": "cesta slibovala strojový tvar, přišlo HTML — to, pro co se tam šlo, tam není (i když se z té stránky dá přečíst 8 nabídek, je to nejspíš domovská stránka)",
+     "stav": 200,
+     "bajtu": 27401,
+     "nabidek": 8,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 4128000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/sitemap.xml",
+     "adresa": "https://www.verejnedrazby.cz/sitemap.xml",
      "jmeno": "Sitemapa",
      "skupina": "sitemap",
      "zmereno": true,
-     "verdikt": "slibná",
-     "proc": "strojový tvar, mluví o pozemcích i o převodu",
-     "tvar": "SITEMAP",
-     "strojova": true,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "znaky": {
-      "titulek": "",
-      "znaku": 3903,
-      "pocty": {
-       "dražba": 1
-      },
-      "odkazu": 0,
-      "jsonLd": 0,
-      "itemprop": 0,
-      "vypadaNaPrihlaseni": false,
-      "vypadaNaPrazdno": false,
-      "ukazka": "http://akis-d9.msw-cloud.com/ daily 1.0 http://akis-d9.msw-cloud.com/prohlaseni-o-pristupnosti 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 2026-04-27T07:32Z yearly http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/audio 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/videogalerie 2"
-     },
-     "stav": 200,
-     "bajtu": 7732,
-     "nabidek": 0,
-     "cestaCteni": null
+     "verdikt": "zavřená",
+     "proc": "HTTP 404",
+     "stav": 404,
+     "bajtu": 22697,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9600000,
+      "vymera": 2492,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-2-492-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/sitemap_index.xml",
+     "adresa": "https://www.verejnedrazby.cz/sitemap_index.xml",
      "jmeno": "Sitemapa (index)",
      "skupina": "sitemap",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22628,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9600000,
+      "vymera": 2492,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-2-492-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/sitemap-index.xml",
+     "adresa": "https://www.verejnedrazby.cz/sitemap-index.xml",
      "jmeno": "Sitemapa (index2)",
      "skupina": "sitemap",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22607,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 3300000,
+      "vymera": 90,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-dvojpodlazniho-rd-s-dispozici-vyuziti-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/opendata",
+     "adresa": "https://www.verejnedrazby.cz/opendata",
      "jmeno": "Otevřená data (stránka)",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22404,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 13700000,
+      "vymera": 3347,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozniho-arealu-uzitna-plocha-3-347-",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/otevrena-data",
+     "adresa": "https://www.verejnedrazby.cz/otevrena-data",
      "jmeno": "Otevřená data (česky)",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22509,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 4128000,
+      "vymera": 406,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-provozni-budovy-obchod-servis-kancelar",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/nabidka-majetku",
+     "adresa": "https://www.verejnedrazby.cz/nabidka-majetku",
      "jmeno": "Nabídka majetku",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22709,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 8703,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/nabidky",
+     "adresa": "https://www.verejnedrazby.cz/nabidky",
      "jmeno": "Nabídky",
      "skupina": "stranka",
      "zmereno": true,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22655,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 9600000,
+      "vymera": 2492,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-2-492-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/prodej-majetku",
+     "adresa": "https://www.verejnedrazby.cz/prodej-majetku",
      "jmeno": "Prodej majetku",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22408,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 31680000,
+      "vymera": 2666,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-vyrobne-skladovaciho-arealu-up-3-013-m",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/prodej-nemovitosti",
+     "adresa": "https://www.verejnedrazby.cz/prodej-nemovitosti",
      "jmeno": "Prodej nemovitostí",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22635,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 8703,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/uredni-deska",
+     "adresa": "https://www.verejnedrazby.cz/uredni-deska",
      "jmeno": "Úřední deska",
      "skupina": "stranka",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22446,
+     "nabidek": 6,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 19200000,
+      "vymera": 8703,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-viceuceloveho-arealu-vyroba-sklady-adm",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api",
+     "adresa": "https://www.verejnedrazby.cz/api",
      "jmeno": "API (koren)",
      "skupina": "api",
      "zmereno": false,
-     "verdikt": "zavřená",
-     "proc": "HTTP 404",
-     "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "verdikt": "odpověděla",
+     "slibilaStroj": true,
+     "tvar": "HTML",
+     "strojova": false,
+     "oPozemku": true,
+     "oPrevodu": true,
+     "proc": "cesta slibovala strojový tvar, přišlo HTML — to, pro co se tam šlo, tam není (i když se z té stránky dá přečíst 8 nabídek, je to nejspíš domovská stránka)",
+     "stav": 200,
+     "bajtu": 27374,
+     "nabidek": 8,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 7500000,
+      "vymera": 52235,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-byvaleho-komplexu-aurum-hotel-53-luzek",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api/v1",
+     "adresa": "https://www.verejnedrazby.cz/api/v1",
      "jmeno": "API v1",
      "skupina": "api",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22513,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 51265280,
+      "vymera": 2919,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     },
     {
-     "adresa": "https://onnm.mo.gov.cz/api/v2",
+     "adresa": "https://www.verejnedrazby.cz/api/v2",
      "jmeno": "API v2",
      "skupina": "api",
      "zmereno": false,
      "verdikt": "zavřená",
      "proc": "HTTP 404",
      "stav": 404,
-     "bajtu": 14555,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm",
-     "jmeno": "adresa z RSS",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "zavřená",
-     "proc": "HTTP 403",
-     "stav": 403,
-     "bajtu": 14562,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/onnm",
-     "jmeno": "adresa z RSS",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 41 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 16389,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/aktuality/kalendar-akci",
-     "jmeno": "adresa z RSS",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 40 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 14611,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/nemovity-majetek/aktualni-nabidka",
-     "jmeno": "adresa z RSS",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 77 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 23631,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/nemovity-majetek",
-     "jmeno": "adresa z RSS",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 79 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 27376,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/prohlaseni-o-pristupnosti",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 45 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 18647,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/nemovity-majetek/archiv-prodeju/2025",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 130 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 39914,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/ochrana-osobnich-udaju",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 42 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 15897,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/media/audio",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 42 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 15664,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/media/videogalerie",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 42 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 15734,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/media/fotogalerie",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 47 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 17342,
-     "nabidek": 0,
-     "cestaCteni": null
-    },
-    {
-     "adresa": "https://onnm.mo.gov.cz/aktuality/kratke-zpravy",
-     "jmeno": "cesta ze sitemapy na vlastním hostu",
-     "skupina": "spojená",
-     "zmereno": true,
-     "verdikt": "odpověděla",
-     "proc": "není strojový tvar (HTML), a žádný důkaz nabídky: 0 cen, 0 výměr v 40 odkazech — bude to rozcestník, ne výpis",
-     "tvar": "HTML",
-     "strojova": false,
-     "oPozemku": true,
-     "oPrevodu": true,
-     "stav": 200,
-     "bajtu": 14747,
-     "nabidek": 0,
-     "cestaCteni": null
+     "bajtu": 22604,
+     "nabidek": 7,
+     "cestaCteni": "signál",
+     "ukazkaNabidky": {
+      "nazev": null,
+      "cena": 51265280,
+      "vymera": 2919,
+      "misto": null,
+      "okres": null,
+      "druh": null,
+      "kat": null,
+      "url": "https://www.verejnedrazby.cz/aukce/prodej-stavebniho-pozemku-urceneho-k-develope",
+      "dalsiPolicka": [
+       "odkud"
+      ]
+     }
     }
    ]
   }
  ],
- "navrhy": [],
+ "navrhy": [
+  {
+   "host": "verejnedrazby.cz",
+   "jmeno": "https://www.verejnedrazby.cz/",
+   "nabidek": 9,
+   "adresa": "https://www.verejnedrazby.cz/"
+  }
+ ],
  "noveOdMinule": [
   {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/rss.xml",
-   "cesta": "RSS (xml)",
-   "verdikt": "slibná",
-   "proc": "strojový tvar, mluví o pozemcích i o převodu",
-   "nabidek": 0,
-   "coSTim": "dopsat čtení toho strojového tvaru",
-   "znaky": {
-    "titulek": "Odbor nakládání s nepotřebným majetkem",
-    "znaku": 9227,
-    "pocty": {
-     "katastr": 1,
-     "výběrové řízení": 1
-    },
-    "odkazu": 0,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "Odbor nakládání s nepotřebným majetkem https://onnm.mo.gov.cz/ cs inzerát nemovitého majetku ONNM https://onnm.mo.gov.cz/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm &lt;span&gt;inzerát nemovitého majetku ONNM&lt;/span&gt; &lt;span&gt;&lt;span&gt;Beáta Čajková&lt;/span&gt;&lt;/span&gt; &lt;span&gt;&lt;time datetime=\"2024-06-19T12:11:24+02:00\" title=\"Středa, Červen 19, 2024 - 12:11\"&gt;1"
-   }
-  },
-  {
-   "host": "onnm.mo.gov.cz",
-   "jmeno": "https://onnm.mo.gov.cz/",
-   "adresa": "https://onnm.mo.gov.cz/sitemap.xml",
-   "cesta": "Sitemapa",
-   "verdikt": "slibná",
-   "proc": "strojový tvar, mluví o pozemcích i o převodu",
-   "nabidek": 0,
-   "coSTim": "dopsat čtení toho strojového tvaru",
-   "znaky": {
-    "titulek": "",
-    "znaku": 3903,
-    "pocty": {
-     "dražba": 1
-    },
-    "odkazu": 0,
-    "jsonLd": 0,
-    "itemprop": 0,
-    "vypadaNaPrihlaseni": false,
-    "vypadaNaPrazdno": false,
-    "ukazka": "http://akis-d9.msw-cloud.com/ daily 1.0 http://akis-d9.msw-cloud.com/prohlaseni-o-pristupnosti 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/nemovity-majetek/archiv-prodeju/2025 2026-04-27T07:32Z yearly http://akis-d9.msw-cloud.com/ochrana-osobnich-udaju 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/audio 2024-05-22T08:30Z never http://akis-d9.msw-cloud.com/media/videogalerie 2"
-   }
+   "host": "verejnedrazby.cz",
+   "jmeno": "https://www.verejnedrazby.cz/",
+   "adresa": "https://www.verejnedrazby.cz/",
+   "cesta": "vstupní adresa",
+   "verdikt": "nabídky",
+   "proc": "přečteno 9 nabídek",
+   "nabidek": 9,
+   "coSTim": "přečíst podmínky užití a zapojit jako zdroj",
+   "znaky": null
   }
  ],
  "dny": {
   "2026-11-04": 0,
-  "2026-11-05": 0
+  "2026-11-05": 1
  }
 }
