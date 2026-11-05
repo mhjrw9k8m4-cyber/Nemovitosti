@@ -246,8 +246,11 @@ export const KANDIDATI = [
     proc: 'Dražebník, na kterého odkazují nabídky v našich datech. ZMĚŘENO 5. 11.:'
       + ' robots.txt dovoluje, HTTP 200, 44 887 bajtů, v textu 11× slovo o pozemku,'
       + ' 5× cena a 3× výměra; podmínky užití přečteny a o automatickém přístupu'
-      + ' v nich nic není. Co zbývá: najít výpis (bot zkoušení portálů) — tohle je'
-      + ' adresa detailu jedné dražby, ne seznam.' },
+      + ' v nich nic není; přečteno 33 887 znaků podmínek. Bot 5. 11. našel'
+      + ' jeden výpis (běh 42058602877, 1 nález z 30 cest). Zapojení ale čeká na'
+      + ' totéž jako u verejnedrazby.cz: obecná čtečka jede cestou „signál", a ta'
+      + ' bez místa a kategorie páruje čísla ke špatným inzerátům (§447). Co'
+      + ' zbývá: předpis pro čtení, ne řádek do registru.' },
   { jmeno: 'Dražby Naxos', host: 'drazbynaxos.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://drazbynaxos.cz/',
     proc: 'Dražebník z našich dat. ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200,'
@@ -256,8 +259,17 @@ export const KANDIDATI = [
   { jmeno: 'Veřejné dražby', host: 'verejnedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.verejnedrazby.cz/',
     proc: 'Dražebník z našich dat. ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200,'
-      + ' 119 190 bajtů, 24× výměra, 10× cena; podmínky přečteny a o automatickém'
-      + ' přístupu v nich nic není.' },
+      + ' 119 190 bajtů, 24× výměra, 10× cena; podmínky přečteny (6 260 znaků)'
+      + ' a o automatickém přístupu v nich nic není. Bot našel výpis — domovskou'
+      + ' stránku, 8 až 9 nabídek. ZAPOJIT HO PŘESTO NELZE a není to opatrnost,'
+      + ' je to měření (běh 42070736435): obecná čtečka tu jede nejslabší cestou'
+      + ' („signál") a páruje čísla ke špatným inzerátům — týž areál má na jedné'
+      + ' cestě výměru 3 013 m² a na druhé 2 666, provozní budova 406 i 2 666,'
+      + ' víceúčelový areál 8 703 i 52 235. Místo, okres, druh ani kategorie'
+      + ' nevyjdou vůbec, takže nabídka by se nedostala na mapu ani do okresu,'
+      + ' a navíc to nejsou pozemky, ale areály, budovy, hotel a rodinný dům.'
+      + ' Dát to na web znamená napsat tam nepravdu, ne mezeru. Co zbývá: PŘEDPIS'
+      + ' PRO ČTENÍ tohohle webu (§447), ne řádek do registru.' },
   { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.elektronickedrazby.cz/',
     proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'

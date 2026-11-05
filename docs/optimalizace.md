@@ -26995,3 +26995,55 @@ nestačí. Mezi kontrolami je i ta nejdůležitější: nabídka, která nese
 **jen titulek**, musí v ukázce přiznat, že cena ani výměra tam nejsou.
 
 `test-zkus-portal` 179 → **186 kontrol**.
+
+## §447 — „Zapojuj," řekl majitel. Měření řeklo ne.
+
+Majitel dal zelenou na zapojení dvou dražebníků. Podmínky obou jsou
+přečtené a o automatickém přístupu v nich nic není
+(`verejnedrazby.cz` 6 260 znaků, `drazby.policenm.cz` 33 887), robots
+dovoluje, bot jim našel výpis. Zbývalo přidat řádek do registru —
+a §446 to zastavil.
+
+Ukázky z jednoho běhu (42070736435), táž nabídka na různých cestách:
+
+```
+…prodej-vyrobne-skladovaciho-arealu-up-3-013-m   výměra 3 013
+…prodej-vyrobne-skladovaciho-arealu-up-3-013-m   výměra 2 666
+…prodej-provozni-budovy-obchod-servis-kancelar   406  i  2 666
+…prodej-viceuceloveho-arealu…                  8 703 i 52 235
+```
+
+Nejslabší cesta čtení („signál") bere čísla z textu stránky a páruje
+je s nejbližším odkazem. Na výpisu, kde je deset nabídek pohromadě,
+to spáruje **špatně**. `misto`, `okres`, `druh` ani `kat` nevyjdou
+vůbec. A ty nabídky navíc nejsou pozemky — areály, provozní budova,
+hotel, rodinný dům.
+
+**Dát to na web znamená napsat tam nepravdu, ne mezeru.** Cena jedné
+nemovitosti u výměry jiné, bez obce, takže ani na mapu, ani do
+okresu. §334 to u dražeb tušil („bez termínu"); tohle je ten případ
+doměřený do konce.
+
+Pravidlo tedy zní: **nabídky přečtené cestou „signál" a BEZ místa,
+okresu, druhu i kategorie nejsou nález „nabídky", ale „ke čtení"** —
+cesta je otevřená a obsah tam je, ale zapojit ji znamená napsat
+předpis pro čtení toho webu. Pravidlo netrestá slabou cestu čtení:
+tatáž cesta s místem a kategorií je nález jako každý jiný, a na
+strojovou cestu (JSON-LD, mikrodata) nesahá vůbec — tam, kde web sám
+říká, co je co, se nehádá.
+
+**Sabotáž** (cesta čtení a ukázka se soudci nepředávají) shodí dvě
+kontroly. A naletěl jsem u toho ještě jednou: fixtura vracela touž
+stránku na všechno, takže ji sebral §442 a všechny čtyři kontroly
+hlásily „odpověděla" — správně, jen o jiném pravidle. Kontrolní cesta
+musí ve fixtuře dát 404, a je to tam napsané.
+
+`test-zkus-portal` 186 → **190 kontrol**.
+
+### Co z toho zbývá
+
+Dva dražebníci jsou **připravení, ale ne zapojení**, a v registru je
+u obou napsáno proč i s čísly. Zbývající práce není řádek, je to
+předpis pro čtení jejich výpisu — tedy den práce, ne minuta. To je
+poctivý stav, ne nedodělek: raději dva zdroje nezapojené než dva
+zdroje, které na web píšou cizí čísla.

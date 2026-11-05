@@ -639,6 +639,70 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     JSON.stringify((nic.cesty || []).filter((c) => 'ukazkaNabidky' in c)));
 }
 
+/* ---- 2f) NABÍDKY ZE SIGNÁLŮ BEZ MÍSTA NEJSOU NÁLEZ (§447) -------
+ *
+ * ZMĚŘENO 5. 11. na verejnedrazby.cz (běh 42070736435): bot hlásil
+ * 6–9 nabídek na každé cestě, cesta čtení „signál", a ukázky z §446
+ * ukázaly, že táž nabídka má jinde jiná čísla (3 013 i 2 666 m², 406
+ * i 2 666, 8 703 i 52 235). Nejslabší cesta čtení páruje čísla
+ * z textu s nejbližším odkazem — na výpisu s deseti nabídkami špatně.
+ * Takovou nabídku dát na web znamená napsat tam NEPRAVDU, ne mezeru.
+ */
+{
+  const HTML = '<html><body><h2>Prodej areálu</h2><p>Cena 31 680 000 Kč,'
+    + ' užitná plocha 3 013 m2. Katastr, dražba, parcela, prodej pozemku.</p></body></html>';
+  /* KONTROLNÍ CESTA MUSÍ DÁT 404, jinak nález sebere §442 a tahle
+     kontrola měří něco jiného, než si myslí. Naletěl jsem na to hned:
+     fixtura vracela touž stránku na všechno, takže všechny čtyři
+     kontroly hlásily „odpověděla" — správně, jen o jiném pravidle. */
+  const bot = (nabidka, cesta) => ({
+    stahni: async (u) => {
+      const s = String(u);
+      if (s.includes('/robots.txt')) {
+        return { ok: true, status: 200, headers: { get: () => 'text/plain' },
+          text: async () => 'User-agent: *\nAllow: /\n' };
+      }
+      if (s.includes('takova-cesta-tu-neni')) {
+        return { ok: true, status: 404, headers: { get: () => 'text/html' },
+          text: async () => '<html><body>Nenalezeno</body></html>' };
+      }
+      return { ok: true, status: 200, headers: { get: () => 'text/html' }, text: async () => HTML };
+    },
+    ua: 'zkouska', smimeCist: async () => ({ dovoleno: true }), mezipamet: new Map(),
+    zeSitemapy, zRss,
+    cti: () => ({ nabidky: [nabidka], cesta }),
+  });
+
+  /* Přesně ten změřený tvar: cena a výměra ano, místo a kategorie ne. */
+  const bezKotvy = { cena: 31680000, vymera: 3013, url: 'https://drazebnik.test/aukce/areal' };
+  const v1 = await Z.zkusPortal({ host: 'drazebnik.test', jmeno: 'Dražebník', url: 'https://drazebnik.test/' },
+    bot(bezKotvy, 'signál'), { strop: 4 });
+  const c1 = (v1.cesty || []).find((c) => c.nabidek > 0);
+  je('nabídky jen ze signálů a bez místa nejsou „nabídky", ale „ke čtení"',
+    c1 && c1.verdikt, 'ke čtení');
+  pravda('a v odůvodnění stojí, že čísla nemusí patřit k sobě',
+    !!c1 && c1.nabidkyBezKotvy === true && /nemusí patřit k sobě/.test(c1.proc || '')
+    && /BEZ místa/.test(c1.proc || ''), JSON.stringify(c1 && { v: c1.verdikt, proc: c1.proc }));
+
+  /* OBRÁCENĚ: s místem a kategorií je to nález jako každý jiný —
+     pravidlo netrestá slabou cestu čtení, trestá nabídku, která se
+     nemá čím ukotvit. */
+  const sKotvou = { cena: 1200000, vymera: 4500, misto: 'Lhota', okres: 'Kolín',
+    druh: 'orná půda', kat: 'pozemek', url: 'https://poctivy2.test/1' };
+  const v2 = await Z.zkusPortal({ host: 'poctivy2.test', jmeno: 'Poctivý 2', url: 'https://poctivy2.test/' },
+    bot(sKotvou, 'signál'), { strop: 4 });
+  const c2 = (v2.cesty || []).find((c) => c.nabidek > 0);
+  je('tatáž slabá cesta čtení, ale s místem a kategorií, nálezem JE',
+    c2 && c2.verdikt, 'nabídky');
+
+  /* A silná cesta čtení (JSON-LD) se neposuzuje podle místa vůbec:
+     tam, kde web sám říká, co je co, se nehádá. */
+  const v3 = await Z.zkusPortal({ host: 'strojovy.test', jmeno: 'Strojový', url: 'https://strojovy.test/' },
+    bot(bezKotvy, 'json-ld'), { strop: 4 });
+  const c3 = (v3.cesty || []).find((c) => c.nabidek > 0);
+  je('u strojové cesty čtení pravidlo nesahá na nic', c3 && c3.verdikt, 'nabídky');
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

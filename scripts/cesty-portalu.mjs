@@ -242,7 +242,38 @@ export function slibujeStrojovyTvar(adresa) {
     || /[?&]f=json|[?&]verb=/i.test(cesta);
 }
 
-export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0, adresa = '' } = {}) {
+/* ------------------------------------------------------------------
+   „NABÍDKY" PŘES SIGNÁLY BEZ MÍSTA A KATEGORIE NENÍ NÁLEZ (§447).
+
+   ZMĚŘENO 5. 11. na verejnedrazby.cz (běh 42070736435), když majitel
+   řekl „zapojuj". Bot hlásil 6 až 9 nabídek na každé cestě, cesta
+   čtení „signál". Ukázky (§446) to rozhodly:
+
+     …prodej-vyrobne-skladovaciho-arealu-up-3-013-m → výměra 3 013
+     …prodej-vyrobne-skladovaciho-arealu-up-3-013-m → výměra 2 666
+     …prodej-provozni-budovy-obchod-servis-kancelar → 406 i 2 666
+     …prodej-viceuceloveho-arealu…                 → 8 703 i 52 235
+
+   Táž nabídka, různá čísla. Nejslabší cesta čtení bere čísla z textu
+   stránky a páruje je s nejbližším odkazem — a na výpisu, kde je
+   deset nabídek pohromadě, to spáruje špatně. `misto`, `okres`,
+   `druh` ani `kat` nevyjdou vůbec.
+
+   Taková nabídka se na web dát NESMÍ. Není to chybějící údaj, je to
+   nepravda: cena jedné nemovitosti u výměry jiné, bez obce, takže ani
+   na mapu, ani do okresu. §334 to u dražeb tušil („bez termínu"),
+   tohle je ten případ doměřený do konce.
+
+   Verdikt je proto „ke čtení": cesta je otevřená a obsah tam je, ale
+   zapojit ji znamená napsat předpis pro čtení toho webu, ne přidat
+   řádek do registru. */
+export function nabidkyBezKotvy(cestaCteni, ukazka) {
+  if (cestaCteni !== 'signál' || !ukazka) return false;
+  return !ukazka.misto && !ukazka.okres && !ukazka.kat && !ukazka.druh;
+}
+
+export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0, adresa = '',
+  cestaCteni = null, ukazka = null } = {}) {
   if (dovoleno === false) return { verdikt: 'zavřená', proc: 'robots.txt nedovoluje' };
   /* OTEVŘENO, ALE CHCE KLÍČ — TO NENÍ ZAVŘENO.
      Naměřeno 4. 11. na eDeskách: `/api/v1/documents` odpoví HTTP 401
@@ -273,6 +304,14 @@ export function verdiktCesty({ dovoleno, stav, typ, telo, nabidek = 0, adresa = 
        nález — to, pro co jsme tam šli, tam není. Nabídky na té stránce
        klidně jsou (bývá to domovská stránka, kterou server pošle na
        cokoli), ale číst je patří z toho, co je opravdu výpis. */
+    /* §447: čteno jen signály a bez místa i kategorie — viz výš. */
+    if (nabidkyBezKotvy(cestaCteni, ukazka)) {
+      return { verdikt: 'ke čtení', nabidkyBezKotvy: true, tvar, strojova, oPozemku, oPrevodu,
+        proc: `přečteno ${nabidek} nabídek, ale jen ze signálů v textu a BEZ místa,`
+          + ' okresu, druhu i kategorie — čísla nemusí patřit k sobě a na mapu ani do'
+          + ' okresu by se taková nabídka nedostala; patří sem předpis pro čtení,'
+          + ' ne řádek do registru (§447)' };
+    }
     if (!strojova && slibujeStrojovyTvar(adresa)) {
       return { verdikt: 'odpověděla', slibilaStroj: true, tvar, strojova, oPozemku, oPrevodu,
         proc: `cesta slibovala strojový tvar, přišlo ${tvar} —`

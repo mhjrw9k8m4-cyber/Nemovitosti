@@ -178,7 +178,7 @@ export async function zkusCestu(cesta, pomucky) {
   }
   /* ADRESA SE PŘEDÁVÁ — §444 bez ní nemá podle čeho soudit, a bylo by
      to §436 znovu (pravidlo napsané, hlídač zelený, v produkci mrtvé). */
-  const v = verdiktCesty({ dovoleno: true, stav, typ, telo, nabidek, adresa: cesta.adresa });
+  const v = verdiktCesty({ dovoleno: true, stav, typ, telo, nabidek, adresa: cesta.adresa, cestaCteni, ukazka: ukazkaNabidky });
   /* CO NA TÉ CESTĚ JE — ale jen tam, kde to k něčemu je.
      U „slibné" a u „ke čtení" se k nálezu přidá měření obsahu
      (titulek, počty značek nabídky, ukázka textu). Jinde ne: u
