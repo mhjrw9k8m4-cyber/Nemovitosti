@@ -1367,8 +1367,17 @@ const stavVybiraku = (p) => p.evaluate(() => {
 
     await nastavKm(2);
     const po2 = await pohled();
+    /* HLÁŠKA MUSÍ POJMENOVAT, CO SE LIŠÍ. Tahle podmínka hlídá DVĚ
+       věci — přiblížení i polohu — ale vypisovala jen přiblížení.
+       V CI z toho byl pád se zprávou „měl jsem 12, po změně 12", což
+       čte jako „obě čísla jsou stejná, a přesto je to chyba": ve
+       skutečnosti se neshodla ŠÍŘKA a hláška o ní mlčela. Poslalo mě
+       to 5. 11. hledat vadu v přiblížení, kde žádná nebyla.
+
+       Je to totéž pravidlo, jaké § 332 zavedl u hlášek zdrojů:
+       hlášení bez příčiny nikam nevede. */
     pravda('a po 2 km taky', po2.z === moje.z && po2.lat === moje.lat,
-      `měl jsem ${moje.z}, po změně ${po2.z}`);
+      `přiblížení ${moje.z} → ${po2.z} (${po2.z === moje.z ? 'drží' : 'ZMĚNILO SE'}), šířka ${moje.lat} → ${po2.lat} (${po2.lat === moje.lat ? 'drží' : 'UJELA o ' + Math.abs(po2.lat - moje.lat).toFixed(6)})`);
 
     /* ANI NA OKRUH, KTERÝ SE DO OKNA NEVEJDE. Dřív tu stálo, že
        přerovnat se v tom případě MUSÍ — jinak prý člověk nastavuje
