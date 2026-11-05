@@ -107,8 +107,18 @@ export function bezKomentaruVHtml(html) {
     konec = m.index + m[0].length;
   }
   out += html.slice(konec).replace(/<!--[\s\S]*?-->/g, '');
-  /* Po komentáři zůstane prázdný řádek; dva za sebou se slijí v jeden. */
-  return out.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n');
+  /* Po komentáři zůstane prázdný řádek; dva za sebou se slijí v jeden.
+   *
+   * SLÉVÁ SE DO PEVNÉHO BODU, NE JEDNÍM PRŮCHODEM (§440). Shody se
+   * nepřekrývají, takže jeden `replace` nechá po sobě zbytek: vstup
+   * „\n\n    \n  \n" se po prvním průchodu zmenší na „\n\n  \n" — a ten
+   * řádek se dvěma mezerami odebere až PŘÍŠTÍ průchod. Dva běhy
+   * oprav.mjs tím dávaly dvě různé stránky, test-oprav padal a jeho
+   * rada „spusťte oprav.mjs" nekonvergovala (změřeno 5. 11. na 17
+   * vyřazených nabídkách po noční obměně dat). */
+  let t = out, pred;
+  do { pred = t; t = t.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n'); } while (t !== pred);
+  return t;
 }
 
 /* SKLOŇOVÁNÍ POČTŮ — třetí převod, který si psal každý sám.

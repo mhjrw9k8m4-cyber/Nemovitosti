@@ -26692,3 +26692,59 @@ tehdy, když je pustí on (Actions → „Test psaní v aplikaci" → Run
 workflow). Dá se jim dát plán — třeba jednou týdně v noci — ale pak
 bude každý běh znamenat jeden e-mail o zkušební zprávě. To je jeho
 volba, ne moje.
+
+## §440 — „Spusťte oprav.mjs" nekonvergovalo
+
+Noční robot přinesl nová data a `test-oprav` začal padat: „repozitář
+se rovná tomu, co generátory spočítají — rozchází se 17". Rada
+v hlášce zní „spusťte `node scripts/oprav.mjs`". Spustil jsem ho.
+Padalo to dál. Spustil jsem ho podruhé — a **změnilo se zase těch
+samých 17 souborů**.
+
+Změřeno na `pozemek-kolin-ohare-pjapf2.html`: první běh nechá na
+řádku 342 řádek se dvěma mezerami, druhý běh ho odebere. Dva běhy
+dávaly dvě různé stránky, takže kontrola „soubor na disku = to, co
+generátor spočítá" nemohla být nikdy zelená — porovnává totiž
+repozitář s **jedním dalším** během oprav v kopii.
+
+Příčina je jeden řádek v `scripts/text.mjs`:
+
+```js
+return out.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n');
+```
+
+Shody `replace` **se nepřekrývají**. Vstup `\n\n    \n  \n` (takový
+zbyde po odebrání komentáře z vyřazené nabídky) se jedním průchodem
+zmenší na `\n\n  \n` — regulární výraz spotřeboval tři zlomy a ten
+čtvrtý už do další shody nevzal. Řádek se dvěma mezerami tak čekal na
+příští běh.
+
+Opraveno slitím **do pevného bodu**, ne jedním průchodem:
+
+```js
+let t = out, pred;
+do { pred = t; t = t.replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n'); } while (t !== pred);
+```
+
+Záměrně se nezměnil samotný vzorek na „slij i jediný bílý řádek".
+Takový vzorek by byl kratší, ale přepsal by desítky stránek, které
+jsou v pořádku — a hlídač to měří: *jediný řádek s mezerami zůstane,
+jak byl*.
+
+**Sabotáž:** vrátit jeden průchod → padnou dvě kontroly („jeden
+průchod čističky dojde až na konec" a „ten pevný bod je jeden prázdný
+řádek, ne tři"). **Důkaz naostro:** dva běhy `oprav.mjs` za sebou
+dávají týž otisk souboru (`ae69ec35…`), zatímco před opravou se
+lišily.
+
+### Co si z toho odnést
+
+Hlídač tady **fungoval** — `test-oprav` vadu našel a popsal správně.
+Co nefungovalo, byla **rada v hlášce**: „spusťte oprav.mjs" je
+užitečné jen tehdy, když je sestavení **idempotentní**. Jinak hlášku
+člověk poslechne, nic se nezlepší a začne hledat vinu v datech. Každý
+krok sestavení, který *přepisuje* existující soubor (a ne ho skládá
+od začátku), musí být pevný bod — a pro `bezKomentaruVHtml` se to
+teď měří.
+
+`test-komentare-v-strankach` 16 → **19 kontrol**.

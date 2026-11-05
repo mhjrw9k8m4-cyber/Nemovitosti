@@ -135,6 +135,27 @@ zpravy.push(`  · naměřeno: ${generovane.length} generovaných stránek,`
   pravda('neuzavřený komentář zbytek stránky nesebere',
     bezKomentaruVHtml('<p>a</p><!-- nedokončeno').includes('<p>a</p>'),
     bezKomentaruVHtml('<p>a</p><!-- nedokončeno'));
+
+  /* ČISTIČKA MUSÍ BÝT PEVNÝ BOD (§440).
+     Shody `replace` se nepřekrývají, takže jeden průchod po sobě nechá
+     zbytek: „\n\n    \n  \n" se zmenší na „\n\n  \n" a ten řádek se
+     dvěma mezerami odebere až příští průchod. Dva běhy oprav.mjs tím
+     dávaly dvě různé stránky a test-oprav padal s radou „spusťte
+     oprav.mjs", která nekonverguje. Změřeno 5. 11. na 17 vyřazených
+     nabídkách po noční obměně dat.
+     MĚŘÍ SE TVAR Z TÉ VADY, ne vymyšlený: čtyři zlomy, mezi nimi
+     řádky se čtyřmi a se dvěma mezerami. */
+  const zVady = '<p>a</p>\n\n    \n  \n<p>b</p>';
+  const po1 = bezKomentaruVHtml(zVady);
+  pravda('jeden průchod čističky dojde až na konec (pevný bod)',
+    bezKomentaruVHtml(po1) === po1, 'po prvním průchodu ' + JSON.stringify(po1)
+      + ', po druhém ' + JSON.stringify(bezKomentaruVHtml(po1)));
+  pravda('a ten pevný bod je jeden prázdný řádek, ne tři',
+    po1 === '<p>a</p>\n\n<p>b</p>', JSON.stringify(po1));
+  /* A jediný bílý řádek se pořád nechává být — kdyby ho čistička
+     začala mazat, přepsala by desítky stránek, které jsou v pořádku. */
+  pravda('jediný řádek s mezerami zůstane, jak byl',
+    bezKomentaruVHtml('a\n  \nb') === 'a\n  \nb', JSON.stringify(bezKomentaruVHtml('a\n  \nb')));
 }
 
 console.log('\nKomentáře v hotových stránkách');
