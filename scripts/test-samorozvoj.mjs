@@ -865,6 +865,28 @@ function je(popis, vyslo, cekano) {
     ['zkouška', 'zkoušky', 'zkoušky', 'zkoušek', 'zkoušek']);
   pravda('a pevné slepé místo se za mlčení nevydává',
     !/MLČENÍ: m1/.test(r), r);
+
+  /* NEMĚŘENÁ MUTACE SE MUSÍ PŘIZNAT. Naměřeno na sobě 5. 11.: stroj
+     vypsal čtyři verdikty u generate-data-rezy.mjs a pátý tvar
+     z katalogu zmizel beze slova — jednou proto, že na něj v souboru
+     není tvar, jednou proto, že nezbyl strop. Hlášení pak vypadalo
+     úplně a nebylo. */
+  const rN = S.hlaseniProkazu({ zkouska: 'test-b.mjs', hlidá: ['x'], chytila: 1, nechytila: 0,
+    sabotaze: [{ cil: 'x', jmeno: 'm1', stav: 'chytila' }],
+    nesedi: ['posunutá konstanta (+1)', 'zahozený filter(Boolean)'] }).join('\n');
+  pravda('co v kódu nemá tvar, se vypíše jmenovitě',
+    /neměřeno, tvar v kódu není: posunutá konstanta \(\+1\), zahozený filter\(Boolean\)/.test(rN),
+    rN);
+  pravda('a nevydává se to za chycené ani za slepé místo',
+    !/SLEPÉ MÍSTO/.test(rN) && !/MLČENÍ/.test(rN), rN);
+  const rO = S.hlaseniProkazu({ zkouska: 'test-c.mjs', hlidá: ['x'], chytila: 2, nechytila: 0,
+    sabotaze: [{ cil: 'x', jmeno: 'm1', stav: 'chytila' },
+      { cil: 'x', jmeno: 'm2', stav: 'chytila' }],
+    nesedi: [], odlozeno: 3 }).join('\n');
+  pravda('a co nevešlo do stropu, řekne i s jakým stropem to dojet',
+    /3 dalších sabotáží se vejde až nad strop/.test(rO) && /--strop=5/.test(rO), rO);
+  pravda('bez neměřených mutací se o nich nemluví vůbec',
+    !/neměřeno/.test(r) && !/nad strop/.test(r), r);
 }
 
 /* ---- 16) DŮKAZ STÁRNE SPOLU S KÓDEM ----------------------------

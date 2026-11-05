@@ -497,6 +497,14 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
           + ` prokazovat se dá jen zelená zkouška. Konec výpisu: ${vystup}` };
   }
   const vysledky = [];
+  /* CO SE NEMĚŘILO, SE MUSÍ NAPSAT. Dřív stroj vypsal čtyři verdikty
+     a pátá mutace z katalogu zmizela beze slova — ať už proto, že se
+     její tvar v souboru nevyskytuje, nebo proto, že na ni nezbyl strop.
+     Čtenář pak nemohl poznat, jestli je hlídač prokázaný celý.
+     Naměřeno na generate-data-rezy.mjs: hlášení ukazovalo čtyři z pěti
+     a vypadalo úplně. */
+  const merene = new Set();
+  let kandidatu = 0;
   for (const cil of cile) {
     if (vysledky.length >= strop) break;
     if (!cistySoubor(cil)) {
@@ -505,8 +513,10 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
     }
     const puvodni = readFileSync(join(KOREN, cil), 'utf8');
     const kand = kandidatiSabotazi(puvodni);
+    kandidatu += kand.length;
     for (const k of kand) {
       if (vysledky.length >= strop) break;
+      merene.add(k.jmeno);
       if (vypis) { vysledky.push({ cil, jmeno: k.jmeno, stav: 'vypis', ukazka: k.ukazka }); continue; }
       /* 1) zapsat */
       writeFileSync(join(KOREN, cil), puvodni.replace(k.najdi, k.nahrad));
@@ -618,8 +628,13 @@ export async function prokazZkousku(zkouska, { strop = STROP_SABOTAZI, casLimit 
       poznamka: 'v hlídaném kódu není co mechanicky rozbít — žádný tvar z katalogu se v něm'
         + ' nevyskytuje; promyšlená sabotáž tu zůstává na člověku' };
   }
+  /* Mutace z katalogu, na které v hlídaném kódu není tvar (`nesedi`),
+     a mutace, na které nezbyl strop (`odlozeno`). Obojí patří do
+     hlášení: bez toho vypadá částečné měření jako celé. */
+  const nesedi = SABOTAZE.map((s) => s.jmeno).filter((j) => !merene.has(j));
+  const odlozeno = Math.max(0, kandidatu - vysledky.filter((v) => v.jmeno !== '—').length);
   return { zkouska, hlidá: cile, pomucky, sabotaze: vysledky, chytila, nechytila, rovnocenne,
-    nedorucene };
+    nedorucene, nesedi, odlozeno };
 }
 
 /* Česká čísla i ve výpisu stroje: „2 zkoušek" se nepíše. */
@@ -655,6 +670,15 @@ export function hlaseniProkazu(v) {
   if (v.nedorucene) {
     radky.push(`  ${v.nedorucene} sabotáží se k prohlížeči nedostalo (minifikovaná kopie se`
       + ' nepřestavuje) — ani důkaz, ani slepé místo.');
+  }
+  /* NEMĚŘENÉ MUTACE SE PŘIZNÁVAJÍ. Jinak vypadá částečné měření jako
+     celé: čtenář vidí čtyři verdikty a neví, že katalog má pět tvarů. */
+  if ((v.nesedi || []).length) {
+    radky.push(`  (neměřeno, tvar v kódu není: ${v.nesedi.join(', ')})`);
+  }
+  if (v.odlozeno) {
+    radky.push(`  (${v.odlozeno} dalších sabotáží se vejde až nad strop — pusťte s --strop=`
+      + `${(v.sabotaze || []).length + v.odlozeno})`);
   }
   /* A TÁŽ VĚTA SE MUSÍ ROZDĚLIT PODLE TOHO, CO O NÍ VÍME (§397):
      „slepé místo" je pevné obvinění jen tam, kde ten soubor nehlídá

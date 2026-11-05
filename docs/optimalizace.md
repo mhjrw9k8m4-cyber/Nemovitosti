@@ -24893,3 +24893,68 @@ chytila** (+ jedna rovnocenná, prohlášená u kódu). Soubor
 až **za** `console.log(zpravy.join('\n'))`, takže se jeho řádky nikdy
 nevytiskly — počítaly se, ale v hlášení nebyly vidět. Tisk se přesunul
 na konec souboru.
+
+## §409 — Řezy dat: čtyři rozvahy ven z I/O a pátá vada, kterou šlo jen odvodit
+
+Druhá odložená věc z §407. `scripts/generate-data-rezy.mjs` měl celé
+sestavení v jedné funkci `spust()`, která čte `data/opportunities.json`
+a zapisuje čtyřicet souborů — a `test-data-rezy` proto nechytil **ani
+jednu** z pěti sabotáží: měřil jen hotové řezy na disku, a ty při
+sabotáži vznikly ještě před ní.
+
+**Pět rozvah je teď čistých funkcí** (čtou jen svoje argumenty, nic
+nezapisují) a stojí nahoře v souboru, aby na ně mechanická sabotáž
+narazila první:
+
+| funkce | co rozhoduje | co chytá |
+|---|---|---|
+| `tabulkaOkresKraj(ceny)` | z modulu cen se vezme JEN tabulka, ne celý modul | `&&` → `||` |
+| `seskupPodleUzemi(vse, tab)` | nabídka bez okresu se zahodí | zahozené `continue` |
+| `okresyKraje(okresy, tab, kraj)` | okresy jednoho kraje | `===` → `!==` |
+| `inzerentiSloupcove(proModel)` | rejstřík inzerentů a sloupec odkazů | `filter(Boolean)` |
+| `osireleRezy(naDisku, zive)` | které soubory na disku už žádný živý okres nenese | — |
+
+`osireleRezy` je ta nejnebezpečnější rozvaha v generátoru: co se tam
+přehlédne, zůstane na disku se **starými nabídkami a vypadá to jako
+aktuální řez**. Nic by to neohlásilo.
+
+**Výstup se nezměnil.** Ověřeno tak, že se generátor pustil před změnou
+i po ní a porovnaly se součty všech souborů: **106 ze 106 bajtově
+totožných**.
+
+`test-data-rezy`: 32 → **47 kontrol**.
+
+### Pátá vada: posunuté počitadlo, které čte jen výpis sestavení
+
+Zbylá sabotáž byla posunutá konstanta u `let prazdnych = 0` — počitadla
+vyprázdněných řezů. Nešlo ji chytit a **nebyla rovnocenná**, takže se
+nedala jako rovnocenná ani prohlásit: to číslo se tisklo ve výpisu
+sestavení, kde by o jedničku vyšší hodnota nikomu nepřišla divná.
+Dvě změny:
+
+1. Číslo je teď **údaj v datech**: rejstřík (`data/index.json`) nese
+   `celek.vyprazdnenych` a dá se srovnat s diskem — živý okres má
+   vždycky aspoň jednu nabídku, takže řezů s nulou musí být přesně
+   tolik. Zkouška to měří.
+2. Ruční počitadla jsou **odvozená ze seznamu, který popisují**:
+   `prazdnych` je `osirele.length` a celková velikost řezů se počítá
+   `reduce` z posbíraných velikostí, ne přičítáním do proměnné.
+   Odvozené číslo se od svého seznamu rozejít nemůže. Ověřeno, že
+   výpis sestavení dává tytéž hodnoty (824 kB řezů, 804 kB celek).
+
+### A vada stroje, kterou to odhalilo: neměřené mutace mlčely
+
+Při tom se ukázalo, že stroj **vypsal čtyři verdikty a pátý tvar
+z katalogu zmizel beze slova**. Hlášení vypadalo úplně a nebylo. Jsou
+na to dva důvody a oba se teď píšou nahlas:
+
+* `(neměřeno, tvar v kódu není: …)` — v hlídaném kódu ten tvar
+  nestojí, takže není co rozbít;
+* `(N dalších sabotáží se vejde až nad strop — pusťte s --strop=M)` —
+  strop na jeden běh je 4 a zbytek se dřív jen tiše zahodil.
+
+Bez toho nešlo poznat, jestli je hlídač prokázaný celý — a právě proto
+se §407 zapsal jako „cti-pdf: 2 chycené", ačkoli byly měřené jen
+čtyři mutace z pěti. `test-samorozvoj`: 178 → **182 kontrol**. Sabotáží
+se tenhle hlídač prokázat nedá: `sabotuj.mjs` je v `STROJ`, tedy mimo
+cíle, aby stroj nesoudil sám sebe (§395).

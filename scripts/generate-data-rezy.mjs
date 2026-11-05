@@ -196,23 +196,30 @@ export async function spust() {
   /* Co na disku zůstalo po okresu, který už nabídku nemá, by lhalo:
      soubor by se neobnovil a vypadal by jako aktuální. Přepíše se tedy
      na prázdný řez — ne smaže, aby odkaz nevracel 404. */
+  /* POČET SE NEPOČÍTÁ RUČNĚ, ODVOZUJE SE ZE SEZNAMU.
+     Ruční počitadlo (`let prazdnych = 0` a `prazdnych++`) se dalo
+     posunout o jedničku, a protože jeho jediným čtenářem byla věta ve
+     výpisu sestavení, nikomu by to nepřišlo divné — sabotážní stroj to
+     našel jako slepé místo. Odvozené číslo se od seznamu, který
+     popisuje, rozejít nemůže. */
   function uklid(adresar, ziveSoubory, uroven) {
     const dir = path.join(ROOT, 'data', adresar);
     if (!fs.existsSync(dir)) return 0;
-    let prazdnych = 0;
-    for (const f of osireleRezy(fs.readdirSync(dir), ziveSoubory)) {
+    const osirele = osireleRezy(fs.readdirSync(dir), ziveSoubory);
+    for (const f of osirele) {
       const obj = Object.assign({}, hlavicka, {
         rez: { uroven, nazev: null, soubor: `data/${adresar}/${f}`, pocet: 0 },
         opportunities: [],
       });
       zapis(`data/${adresar}/${f}`, obj);
-      prazdnych++;
     }
-    return prazdnych;
+    return osirele.length;
   }
 
   const rejstrik = { updated: celek.updated, updated_at: celek.updated_at, rezy: [] };
-  let bajtu = 0;
+  /* Velikosti řezů se sbírají a součet se spočítá nakonec — ze stejného
+     důvodu jako výš: přičítací proměnná je ruční počet a dá se posunout. */
+  const velikostiRezu = [];
   const ziveOkres = new Set();
 
   for (const [okres, polozky] of [...podleOkresu].sort()) {
@@ -222,7 +229,7 @@ export async function spust() {
       rez: { uroven: 'okres', nazev: okres, kraj: OKRES_KRAJ[okres] || null, soubor, pocet: polozky.length },
       opportunities: polozky,
     }));
-    bajtu += b;
+    velikostiRezu.push(b);
     rejstrik.rezy.push({ uroven: 'okres', nazev: okres, kraj: OKRES_KRAJ[okres] || null, soubor, pocet: polozky.length, bajtu: b });
   }
   /* KRAJSKÉ ŘEZY SE NEDĚLAJÍ, A JE TO ÚMYSL.
@@ -454,6 +461,7 @@ export async function spust() {
     + 'svých okresů a jejich soubory najdete v „kraje".';
   zapis('data/index.json', rejstrik);
 
+  const bajtu = velikostiRezu.reduce((soucet, x) => soucet + x, 0);
   console.log(`Řezy dat: ${podleOkresu.size} okresů (${podleKraje.size} krajů jako soupis)`
     + `, vstup modelu ${(bajtuModel / 1024).toFixed(0)} kB`
     + ` = ${(bajtu / 1024).toFixed(0)} kB dohromady`
