@@ -25841,3 +25841,15 @@ pořád hlásí „X pozemků" u čísla, v němž nepozemkové nabídky **mají
 opravdu jen slovo, ale `pluralPozemek()` má dvacet volajících a každý
 potřebuje svou množinu nabídek. Zbývá ještě `hlidani.html`
 (`tvarPozemku`, nenačítá `kategorie.js`) a `js/ulozene.js`.
+
+### Sabotáž: 2 z 2, a druhá je zajímavější
+
+| Co se rozbilo | Co se stalo |
+|---|---|
+| generátor pustí na druhovou stránku zpátky nepozemkovou nabídku | `test-druh-stranka` **spadl** (s přestavbou, diff 0/1) |
+| hlídači odkazů se vyprázdní množina, na kterou se dívá | **přiznal se, že neměří** — neprošel tiše |
+
+Druhá sabotáž je ta cennější. Hlídač, který se dívá na prázdno, je
+zelený a k ničemu; tady se místo úspěchu ohlásí „kontrola odkazů se
+neměří". Je to ta samá ochrana, kterou §413 zavedl jako „hlídač na
+hlídače", jen aplikovaná na měření, které závisí na obsahu dat.
