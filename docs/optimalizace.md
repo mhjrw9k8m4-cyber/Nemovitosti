@@ -26932,3 +26932,37 @@ tom stupni, který pustí ostrý běh** — a sabotáž mířit na VOLÁNÍ, ne
 na funkci.
 
 `test-zkus-portal` 169 → **179 kontrol**.
+
+## §445 — Ministerstvo obrany: odpověď je „není co číst"
+
+Naplánovaná úloha z 13:20 se ptala, jestli se bot dostal na
+`/nemovity-majetek/archiv-prodeju/…` a jestli je tam výpis. Odpověď
+je po dvou běších jasná a stojí za zapsání, protože je to **negativní
+nález, a ten se nejsnáz ztratí**.
+
+**Dostal se tam — ale až teď.** V běhu z 13:20 (42031894477) byl
+archiv zkoušen jako `http://akis-d9.msw-cloud.com/nemovity-majetek/
+archiv-prodeju/2025`, tedy na cizím hostu, a vrátil 404 o 83 bajtech.
+To byla ta vada z §436: přepis adres na vlastní host byl v produkci
+mrtvý. Po opravě (běh 42059457541) bot zkusil
+`https://onnm.mo.gov.cz/nemovity-majetek/archiv-prodeju/2025` a dostal
+**200 a 39 914 bajtů**. §434 tedy naostro funguje.
+
+**Výpis tam ale není.** V těch 39 914 bajtech se „Kč", „m²",
+„výměra", „parcela" ani „katastr" nevyskytnou **ani jednou**. Totéž
+u `/nemovity-majetek` (27 376 B) a `/nemovity-majetek/aktualni-nabidka`
+(23 631 B) — obě odpověděly, důkaz žádný. Slibné jsou jen dvě cesty:
+`/rss.xml` (zpravodajský kanál, 9 227 znaků, 1× katastr, 1× výběrové
+řízení) a `/sitemap.xml`, jehož adresy ovšem všechny míří na ten cizí
+host. A inzerát, na který RSS odkazuje
+(`/aktuality/kalendar-akci/inzerat-nemoviteho-majetku-onnm`), vrací
+**403**.
+
+**Předpis pro čtení se tedy nepíše.** Napsat ho by znamenalo hádat,
+jak vypadá výpis, který jsme neviděli — a to je přesně ten druh
+„práce", po které zbývá kód, co nikdy nic nepřečte. Zapsané je to
+v registru u toho kandidáta, s čísly, aby to nikdo neměřil potřetí.
+
+Kontrolní cesta (§442) u toho webu vrátila 404 o 14 555 bajtech a
+všechny jeho „zavřené" cesty mají týž rozměr — ten web své
+neexistující adresy přiznává poctivě, takže jeho nálezům se dá věřit.

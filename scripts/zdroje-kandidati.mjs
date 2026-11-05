@@ -204,11 +204,19 @@ export const KANDIDATI = [
   { jmeno: 'Ministerstvo obrany — nepotřebný majetek', host: 'onnm.mo.gov.cz', typ: 'sale', adresaOverena: false,
     url: 'https://onnm.mo.gov.cz/',
     proc: 'Obrana prodává nepotřebné nemovitosti pravidelně a ve zprávách se u toho'
-      + ' mluví přímo o pozemcích. POZOR NA DVOJÍ ZÁPIS: stránka ministerstva sama'
-      + ' tvrdí, že výzvy zrcadlí na nabidkamajetku.cz (ten už zapojený je) a na'
-      + ' centrální adresu. Je to ale tvrzení z cizí stránky, ne měření — ať bot zjistí,'
-      + ' co tam opravdu je; kdyby to byl týž majetek, patří sem `pokrytoJinym`'
-      + ' se zdůvodněním, stejně jako u Lesů ČR a Správy železnic.' },
+      + ' mluví přímo o pozemcích. ZMĚŘENO DVAKRÁT, a podruhé už s opravou §436:'
+      + ' bot zkusil 42 cest, z toho i /nemovity-majetek/archiv-prodeju/2025 na'
+      + ' VLASTNÍM hostu (dřív se kvůli mrtvému přepisu adres zkoušel na cizím'
+      + ' akis-d9.msw-cloud.com a vracel 404). Archiv odpoví 200 a 39 914 bajtů,'
+      + ' ale v celém jeho obsahu NENÍ ANI JEDNOU „Kč", „m²", „výměra", „parcela"'
+      + ' ani „katastr" — výpis nabídek tam tedy není a předpis pro čtení se'
+      + ' nemá o co opřít. Totéž /nemovity-majetek (27 376 B) a'
+      + ' /nemovity-majetek/aktualni-nabidka (23 631 B): odpověděly, důkaz žádný.'
+      + ' Slibné jsou jen /rss.xml (zpravodajský kanál, 9 227 znaků, 1× katastr)'
+      + ' a /sitemap.xml, jehož adresy ale všechny míří na ten cizí host.'
+      + ' A inzerát, na který RSS odkazuje, vrací 403. Zdroj tedy dnes zapojit'
+      + ' NELZE a není to volba, je to měření; k dvojímu zápisu se nedostalo,'
+      + ' protože není co zapisovat.' },
   { jmeno: 'Centrální adresa', host: 'centralniadresa.cz', typ: 'sale', adresaOverena: false,
     url: 'https://www.centralniadresa.cz/',
     proc: 'Místo, kde se ze zákona zveřejňují veřejné dražby a nabídky majetku od'
