@@ -95,6 +95,18 @@ export function seskupPodleUzemi(vse, okresKraj) {
   return { podleOkresu, podleKraje };
 }
 
+/**
+ * Soubory v adresáři řezů, které už žádný živý okres nenese.
+ * Tohle je ta nebezpečná rozvaha: co se tu PŘEHLÉDNE, zůstane na disku
+ * se starými nabídkami a vypadá jako aktuální řez. Bere se jen `.json`,
+ * ať se do úklidu nedostane nic jiného, co v adresáři leží.
+ */
+export function osireleRezy(naDisku, zive) {
+  const ziveJmena = zive || new Set();
+  return [...(naDisku || [])]
+    .filter((f) => String(f).endsWith('.json') && !ziveJmena.has(f)).sort();
+}
+
 /** Okresy jednoho kraje, abecedně — a jen ty, které v datech opravdu jsou. */
 export function okresyKraje(okresy, okresKraj, kraj) {
   const tab = okresKraj || {};
@@ -188,8 +200,7 @@ export async function spust() {
     const dir = path.join(ROOT, 'data', adresar);
     if (!fs.existsSync(dir)) return 0;
     let prazdnych = 0;
-    for (const f of fs.readdirSync(dir)) {
-      if (!f.endsWith('.json') || ziveSoubory.has(f)) continue;
+    for (const f of osireleRezy(fs.readdirSync(dir), ziveSoubory)) {
       const obj = Object.assign({}, hlavicka, {
         rez: { uroven, nazev: null, soubor: `data/${adresar}/${f}`, pocet: 0 },
         opportunities: [],
@@ -425,6 +436,12 @@ export async function spust() {
     duplicit: syrove.length - bezDuplicit.length,
     po_terminu: bezDuplicit.length - vse.length,
     bajtu: fs.statSync(path.join(ROOT, 'data', 'opportunities.json')).size,
+    /* KOLIK ŘEZŮ SE VYPRÁZDNILO. Dřív to byla jen věta ve výpisu
+       sestavení, takže posunuté číslo by nikdo nepoznal. Teď je to
+       údaj v datech a dá se proti disku srovnat: živý okres má vždycky
+       aspoň jednu nabídku, takže řezů s nulou má být na disku přesně
+       tolik, kolik tohle číslo říká. */
+    vyprazdnenych: prazdnych,
   };
   rejstrik.kraje = kraje;
   rejstrik.popis = 'Řezy po okresech. Tvar je stejný jako u celku (viz data/pole.json), '

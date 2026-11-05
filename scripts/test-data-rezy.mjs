@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-import { slug, tabulkaOkresKraj, seskupPodleUzemi, okresyKraje, inzerentiSloupcove }
+import { slug, tabulkaOkresKraj, seskupPodleUzemi, okresyKraje, inzerentiSloupcove, osireleRezy }
   from './generate-data-rezy.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -358,6 +358,43 @@ pravda(`největší řez je řádově menší než celek (${(bajtuNejvetsi / 102
     iz.si.join(',') === '0,-1,1,-1,0,-1', iz.si.join(','));
   pravda('sloupec má tolik hodnot, kolik je nabídek',
     iz.si.length === proModel.length, iz.si.length + ' ku ' + proModel.length);
+
+  /* 5) OSIŘELÉ ŘEZY. Co se tady přehlédne, zůstane na disku se starými
+     nabídkami a vypadá jako aktuální — to je ta nejhorší vada, jakou
+     řezy mohou mít, protože se nijak neprojeví. */
+  const zive = new Set(['tabor.json', 'pisek.json']);
+  const naDisku = ['tabor.json', 'pisek.json', 'cheb.json', 'beroun.json', 'pole.txt', '.keep'];
+  const osirele = osireleRezy(naDisku, zive);
+  pravda('osiřelé řezy se najdou všechny a nic živého mezi nimi není',
+    osirele.join('|') === 'beroun.json|cheb.json', osirele.join('|'));
+  pravda('a bere se jen .json, ne co v adresáři leží jinak',
+    !osirele.some((f) => !f.endsWith('.json')), osirele.join('|'));
+  pravda('a když je živé všechno, není co uklízet',
+    osireleRezy(['tabor.json'], new Set(['tabor.json'])).length === 0,
+    JSON.stringify(osireleRezy(['tabor.json'], new Set(['tabor.json']))));
+}
+
+/* ---- POČET VYPRÁZDNĚNÝCH ŘEZŮ SOUHLASÍ S DISKEM --------------------
+   Řez okresu, který už nabídku nemá, se přepíše na prázdný (ne smaže,
+   ať odkaz nevrací 404). Kolik jich bylo, stojí v rejstříku — a živý
+   okres má vždycky aspoň jednu nabídku, takže řezů s nulou musí být na
+   disku přesně tolik. Dřív to bylo jen číslo ve výpisu sestavení,
+   kde by posunutá hodnota nikomu nepřišla divná. */
+{
+  const rej = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'index.json'), 'utf8'));
+  const dir = path.join(ROOT, 'data', 'okres');
+  let nulovych = 0;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith('.json')) continue;
+    const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+    if (j.rez && j.rez.pocet === 0) nulovych++;
+  }
+  pravda('rejstřík říká počet vyprázdněných řezů',
+    typeof rej.celek.vyprazdnenych === 'number',
+    'v rejstříku: ' + JSON.stringify(rej.celek.vyprazdnenych));
+  pravda(`a souhlasí s diskem (${nulovych} řezů s nulou)`,
+    rej.celek.vyprazdnenych === nulovych,
+    `rejstřík ${rej.celek.vyprazdnenych}, na disku ${nulovych}`);
 }
 
 console.log('\nŘezy dat po okresech');

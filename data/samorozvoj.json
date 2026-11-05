@@ -513,23 +513,17 @@
    "poznamka": ""
   },
   "test-data-rezy.mjs": {
-   "kdy": "2026-11-04",
+   "kdy": "2026-11-05",
    "hlidá": 1,
-   "chytila": 0,
-   "nechytila": 5,
+   "chytila": 4,
+   "nechytila": 1,
    "rovnocenne": [],
    "slepa": [
-    "obrácená rovnost (=== na !==)",
-    "zahozená pojistka (if … continue)",
-    "zahozený filter(Boolean)",
-    "a místo nebo (&& na ||)",
     "posunutá konstanta (+1)"
    ],
-   "mlcela": [],
    "nedorucene": [],
-   "nelzeTady": false,
-   "pomucky": [],
-   "poznamka": ""
+   "poznamka": "",
+   "rucne": true
   },
   "test-data-rozhrani.mjs": {
    "kdy": "2026-11-04",
