@@ -26539,3 +26539,55 @@ pravidla, byla to mez zkoušky. Je zvednutá na 40 a je u toho napsáno
 proč, aby to příště nikdo nehledal ve webu.
 
 `test-zkus-portal` 161 → **164 kontrol**.
+
+## §437 — Rozpočet se tratil podle pořadí, ne podle naděje
+
+Hledání nových zdrojů má na jeden běh rozpočet 1 800 přečtených
+datových sad (~30 minut). Změřený běh 41810908514 ukázal, že z 2 772
+nalezených sad zůstalo **1 527 nepřečtených** — a nebyly to ty
+nejmenší katalogy, byly to ty **poslední v pořadí**, jak je vydal
+rejstřík. Čtlo se totiž katalog po katalogu:
+
+```js
+const zbyva = Math.max(0, STROP_DOTAZU_CELKEM - dotazu);
+const kolik = Math.min(STROP_SAD_NA_KATALOG, zbyva);
+const sady = k.sady.slice(0, kolik);
+```
+
+Prvních pár katalogů rozpočet spolklo a na zbytek nedošlo vůbec.
+Pořadí rejstříku přitom neříká nic o tom, kde se schovává pozemek na
+prodej — je to jen pořadí, v jakém ta jedna dovolená stránka
+katalogy vypsala.
+
+**Teď se čte po kolech.** V prvním kole dostane každý katalog svoji
+první sadu, ve druhém druhou, a tak dál, dokud nedojde rozpočet nebo
+strop na katalog. Velký katalog tím přijde o hloubku — ČSÚ má 1 018
+sad a dostane jich kolem padesáti místo 120 — ale **každý katalog je
+aspoň otevřený**. To je ten obchod, a stojí za to: padesátá sada
+statistik je slabší kandidát než první sada katalogu, do kterého se
+dosud nenahlédlo.
+
+Rozdělení je **čistá funkce** `planCteni(katalogy, { strop, rozpočet })`,
+aby se dalo změřit bez sítě. Sabotáž je přesně ten starý `slice` po
+pořadí: na změřeném tvaru (jeden obr s 1 018 sadami a dvě obce po
+pěti, rozpočet 12) padnou **čtyři kontroly** — obr spolkne všech
+dvanáct a na obě obce nedojde ani jedna.
+
+### A ještě jedna lekce, znovu ta samá
+
+Dvě starší kontroly u toho padly, a správně: hlídaly **text souboru**,
+ne mez.
+
+```js
+pravda('strop na sady z jednoho katalogu se opravdu použije',
+  /Math\.min\(STROP_SAD_NA_KATALOG, zbyva\)/.test(telo));
+```
+
+Po §437 ten tvar v souboru není, takže by hlídaly nepřítomnost
+mrtvého výrazu — zelená, která nic neznamená. Jsou přepsané tak, že
+pustí **skutečnou funkci se skutečnými stropy** (bez voleb) a měří,
+kolik sad vyjde: 500 sad v jednom katalogu → 120, čtyřicet katalogů
+po dvou stovkách → přesně 1 800. Mez se tím hlídá, i když se vnitřek
+přepíše ještě třikrát.
+
+`test-hledej-zdroje` 95 → **106 kontrol**.

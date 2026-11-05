@@ -349,10 +349,19 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
   pravda('zakázané cesty data.gov.cz jsou v souboru napsané, ať se o nich ví',
     /Disallow: \/zdroj\//.test(telo) && /Disallow: \/sparql\*/.test(telo),
     'bez toho to po mně někdo zkusí znovu');
+  /* Oba stropy se měří na SKUTEČNÝCH hodnotách, se kterými hledač jede
+     (planCteni bez voleb), ne na textu souboru: dřív tu stál grep na
+     `Math.min(STROP_SAD_NA_KATALOG, zbyva)`, a ten by po §437 hlídal
+     tvar, který už v souboru není, místo mezí, které platit mají. */
   pravda('strop na sady z jednoho katalogu se opravdu použije',
-    /Math\.min\(STROP_SAD_NA_KATALOG, zbyva\)/.test(telo));
+    H.planCteni([{ iri: 'x', sady: Array.from({ length: 500 }, (_, i) => 'x' + i) }])[0]
+      .sady.length === H.STROP_SAD_NA_KATALOG,
+    'jeden katalog s 500 sadami musí dostat ' + H.STROP_SAD_NA_KATALOG);
   pravda('a rozpočet celého běhu taky — jeden katalog nesmí spolknout čas úlohy',
-    /STROP_DOTAZU_CELKEM - dotazu/.test(telo), 'ČSÚ má sám 1 018 sad');
+    H.planCteni(Array.from({ length: 40 }, (_, k) => ({
+      iri: 'k' + k, sady: Array.from({ length: 200 }, (_, i) => `k${k}s${i}`),
+    }))).reduce((s, p) => s + p.sady.length, 0) === H.STROP_DOTAZU_CELKEM,
+    'ČSÚ má sám 1 018 sad');
   pravda('co se kvůli stropům nepřečte, se sečte a napíše',
     /nepreceteno \+= k\.sady\.length - sady\.length/.test(telo)
       && /Nepřečteno \$\{nepreceteno\}/.test(telo),
@@ -433,6 +442,54 @@ const STRANKA = `<!DOCTYPE html><html lang="cs"><head>
     /ohlas-nalez/.test(uloha) && /pole:\s*noveKandidaty/.test(uloha)
     && /znacka:\s*hledani-zdroju/.test(uloha),
     'krok „Ohlásit nález" chybí nebo mu chybí vstupy');
+}
+
+/* --- ROZDĚLENÍ ROZPOČTU MEZI KATALOGY (§437) --------------------- */
+{
+  /* Změřený tvar: jeden obr a dva malé katalogy. Obr má 1 018 sad
+     (ČSÚ z běhu 41810908514), malé po pěti. */
+  const obr = { iri: 'obr', nazev: 'ČSÚ', sady: Array.from({ length: 1018 }, (_, i) => 'o' + i) };
+  const malyA = { iri: 'a', nazev: 'Obec A', sady: ['a0', 'a1', 'a2', 'a3', 'a4'] };
+  const malyB = { iri: 'b', nazev: 'Obec B', sady: ['b0', 'b1', 'b2', 'b3', 'b4'] };
+
+  const plan = H.planCteni([obr, malyA, malyB], { stropNaKatalog: 120, rozpocet: 12 });
+  je('rozpočet se nepřekročí', plan.reduce((s, p) => s + p.sady.length, 0), 12);
+  pravda('obr nespolkne rozpočet: malé katalogy se taky čtou',
+    plan[1].sady.length >= 4 && plan[2].sady.length >= 4,
+    'přiděleno ' + JSON.stringify(plan.map((p) => p.sady.length)));
+  je('obr dostane jen svůj díl', plan[0].sady.length, 4);
+  je('v katalogu se čte od začátku a nic se nebere dvakrát',
+    plan[1].sady, ['a0', 'a1', 'a2', 'a3']);
+
+  /* STARÝ ZPŮSOB (katalog po katalogu) na týchž datech: obr by vzal
+     všech dvanáct a na obě obce by nedošlo. Tohle je ta vada, kvůli
+     které 1 527 sad zůstalo nepřečtených. */
+  pravda('a právě to starý způsob (slice po pořadí) nedokázal',
+    obr.sady.slice(0, 12).length === 12 && plan[0].sady.length < 12,
+    'kdyby plán vracel pořadí rejstříku, tahle kontrola je bezcenná');
+
+  const sStropem = H.planCteni([obr, malyA], { stropNaKatalog: 3, rozpocet: 1000 });
+  je('strop na katalog platí i když je rozpočet velký', sStropem[0].sady.length, 3);
+  je('a malý katalog nedostane víc, než má sad',
+    H.planCteni([malyA], { stropNaKatalog: 120, rozpocet: 1000 })[0].sady.length, 5);
+
+  je('rozpočet nula znamená nepřečíst nic',
+    H.planCteni([obr, malyA], { rozpocet: 0 }).reduce((s, p) => s + p.sady.length, 0), 0);
+  je('žádný katalog, žádný plán', H.planCteni([]).length, 0);
+  je('katalog bez sad plán nerozbije',
+    H.planCteni([{ iri: 'x' }, malyA], { rozpocet: 3 })[1].sady.length, 3);
+
+  /* Kolování dojde, i když má každý katalog míň sad než strop — jinak
+     by se smyčka protáčela do stropu nasucho. */
+  const maleJenomMale = H.planCteni([malyA, malyB], { stropNaKatalog: 120, rozpocet: 1000 });
+  je('když se vyčerpají všechny sady, kolování skončí',
+    maleJenomMale.reduce((s, p) => s + p.sady.length, 0), 10);
+
+  const telo249 = readFileSync(new URL('./hledej-zdroje.mjs', import.meta.url), 'utf8');
+  pravda('a hledač ten plán opravdu používá (ne slice po pořadí)',
+    /const plan = planCteni\(katalogy\)/.test(telo249)
+    && !/k\.sady\.slice\(0, kolik\)/.test(telo249),
+    've scripts/hledej-zdroje.mjs se rozpočet dělí po starém');
 }
 
 console.log('Hledání nových zdrojů — rejstřík lokálních katalogů');

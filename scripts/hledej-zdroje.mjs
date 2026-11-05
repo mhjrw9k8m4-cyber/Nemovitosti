@@ -101,6 +101,46 @@ export const STROP_KATALOGU = 90;
 export const STROP_SAD_NA_KATALOG = 120;
 export const STROP_DOTAZU_CELKEM = 1800;
 
+/* ------------------------------------------------------------------
+   JAK SE ROZPOČET ROZDĚLÍ MEZI KATALOGY.
+
+   ZMĚŘENO (běh 41810908514): čtlo se katalog po katalogu v pořadí, v
+   jakém je vydal rejstřík. Prvních pár katalogů spolklo celý rozpočet
+   a na zbytek nedošlo vůbec — 1 527 sad z 2 772 zůstalo nepřečtených,
+   a nebyly to ty nejmenší, byly to ty POSLEDNÍ v pořadí. Pořadí
+   rejstříku přitom neříká nic o tom, kde se schovává pozemek na prodej.
+
+   TAKŽE SE ČTE PO KOLECH. V prvním kole dostane každý katalog svoji
+   první sadu, ve druhém kole druhou, a tak dál, dokud nedojde rozpočet
+   nebo strop na katalog. Velký katalog tím přijde o hloubku (ČSÚ má
+   1 018 sad a dostane jich kolem padesáti místo 120), ale každý
+   katalog je aspoň otevřený — a padesátá sada statistik je slabší
+   kandidát než první sada katalogu, do kterého se dosud nenahlédlo.
+
+   Je to čistá funkce, aby se dala změřit bez sítě: dovnitř jdou
+   katalogy, venku je plán „z tohohle katalogu tyhle sady".
+   ------------------------------------------------------------------ */
+export function planCteni(katalogy, moznosti = {}) {
+  const stropNaKatalog = moznosti.stropNaKatalog != null
+    ? moznosti.stropNaKatalog : STROP_SAD_NA_KATALOG;
+  const rozpocet = moznosti.rozpocet != null ? moznosti.rozpocet : STROP_DOTAZU_CELKEM;
+  const plan = (katalogy || []).map((k) => ({ katalog: k, sady: [] }));
+  let dano = 0;
+  for (let kolo = 0; kolo < stropNaKatalog && dano < rozpocet; kolo++) {
+    let nekdoDal = false;
+    for (const p of plan) {
+      if (dano >= rozpocet) break;
+      const sady = (p.katalog && p.katalog.sady) || [];
+      if (kolo >= sady.length) continue;
+      p.sady.push(sady[kolo]);
+      dano++;
+      nekdoDal = true;
+    }
+    if (!nekdoDal) break;
+  }
+  return plan;
+}
+
 /* Hostitel bez „www." — podle něj se pozná, co už máme. */
 export function hostZAdresy(url) {
   try { return new URL(String(url)).hostname.toLowerCase().replace(/^www\./, ''); }
@@ -473,21 +513,19 @@ async function main() {
 
   /* 3) DATOVÉ SADY V NICH. Rozpočet na celý běh je jeden a drží se:
      největší katalog má přes tisíc sad a bez rozpočtu by jeden takový
-     spolkl celý čas úlohy. Co se nepřečte, se SEČTE a napíše. */
+     spolkl celý čas úlohy. Kolik dostane který katalog, rozhoduje
+     `planCteni` po kolech (viz jeho komentář) — ne pořadí rejstříku.
+     Co se nepřečte, se SEČTE a napíše. */
   const vsechny = [];
   let nepreceteno = 0;
-  let dotazu = 0;
-  for (const k of katalogy) {
-    const zbyva = Math.max(0, STROP_DOTAZU_CELKEM - dotazu);
-    const kolik = Math.min(STROP_SAD_NA_KATALOG, zbyva);
-    const sady = k.sady.slice(0, kolik);
+  const plan = planCteni(katalogy);
+  for (const { katalog: k, sady } of plan) {
     nepreceteno += k.sady.length - sady.length;
     let precteno = 0;
     for (const iri of sady) {
       let odp;
       try { odp = await jsonZAdresy(iri, pomucky); }
       catch (e) { odp = { chyba: String((e && e.message) || e).slice(0, 80) }; }
-      dotazu++;
       await pauza(PAUZA_MEZI_DOTAZY);
       if (odp.chyba) { chyby.push(`${iri}: ${odp.chyba}`); continue; }
       const s = sadaZOdpovedi(odp.data);
@@ -496,7 +534,8 @@ async function main() {
     }
     console.log(`  ${k.nazev || k.iri}: ${precteno} z ${k.sady.length} sad přečteno`
       + (k.sady.length > sady.length
-        ? ` (strop ${STROP_SAD_NA_KATALOG}, rozpočet běhu ${STROP_DOTAZU_CELKEM})` : ''));
+        ? ` (${sady.length} přidělilo kolování, strop ${STROP_SAD_NA_KATALOG},`
+          + ` rozpočet běhu ${STROP_DOTAZU_CELKEM})` : ''));
   }
   if (nepreceteno) {
     console.log(`Nepřečteno ${nepreceteno} sad kvůli stropům — pozemek na prodej se`
