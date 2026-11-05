@@ -25736,3 +25736,20 @@ jako to §413 rozhodl u `dejDruh()`. Tiché pozemkové věty u bytu je
 horší než pád při sestavení: pád vidí CI, špatnou větu kupující.
 
 `test-kategorie` 76 → **81**.
+
+### Sabotáž: 5 z 5
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| nálepka je zpátky vždy „Druh pozemku" | `test-kategorie` (+ přestavba) |
+| druhová stránka se nabízí i nepozemkové nabídce | `test-kategorie` (+ přestavba) |
+| snímek mluví o obrysu pozemku u všeho | `test-kategorie` (+ přestavba) |
+| chybějící modul kategorií se ve snímku mlčky přejde | `test-kategorie` |
+| hláška zdroje počítá nepozemek jako pozemek | `test-data-rozhrani` |
+
+První tři sabotáže si vyžádaly **přestavbu webu**, a to je ten rozdíl,
+o který u těch hlídačů jde: měří hotové soubory, ne šablonu. Šablonu
+totiž lze opravit a stránky přitom nechat staré — a přesně tak vypadal
+stav, který jsem dnes našel.
+
+`test-data-rozhrani` 31 → **38**.
