@@ -25914,3 +25914,34 @@ importovaný. Obojí našlo spuštění, ne čtení.
 `hlidani.html` (vlastní `tvarPozemku`, `js/min/kategorie.js` tam vůbec
 není) a `js/ulozene.js`. To jsou dvě místa v prohlížeči, ne
 v generátoru — vlastní dávka.
+
+### Sabotáž našla slepé místo, a vážné
+
+První kolo: **2 chytila, 2 NECHYTILA.**
+
+| Co se rozbilo | Výsledek |
+|---|---|
+| okresní stránka dostane cizí množinu (celá ČR místo okresu) | ✓ chytila |
+| počet novinek se spočítá podruhé, zvlášť od seznamu | ✓ chytila |
+| `slovaPoctu` vrací „pozemků" **vždycky** | ✕ mlčela |
+| `slovaPoctu` vrací „nemovitostí" **vždycky** | ✕ mlčela |
+
+Důvod je ten, který by mě sám nenapadl: zkoušky na stránkách si slovo
+odvozovaly **z téže funkce**, jakou se řídí generátor. Když ta funkce
+začne lhát, oba se shodnou na té samé lži a hlídač mlčí.
+
+**Dvě pravdy, které se shodnou na nepravdě, nejsou kontrola.**
+
+Opraveno dvakrát, protože každá cesta hlídá něco jiného:
+
+1. **Zkoušky na stránkách si pravidlo vyslovují znovu z dat** — jsou-li
+   v té množině samé pozemky, musí stránka říkat „pozemků"; je-li mezi
+   nimi cokoli jiného, „nemovitostí". Je to druhá kopie dvou podmínek a
+   je tu schválně, ze stejného důvodu, z jakého si `test-kam-dal`
+   přepočítává celý rozcestník.
+2. **`slovaPoctu` se měří přímo** v `test-kategorie`: co dostane, podle
+   toho se musí rozhodnout — včetně toho, že vrací **tři** tvary, ne
+   jeden. (Vracet jeden by vypadalo stejně dobře, dokud se nenapíše
+   „5 pozemky".)
+
+`test-kategorie` 81 → **86**.

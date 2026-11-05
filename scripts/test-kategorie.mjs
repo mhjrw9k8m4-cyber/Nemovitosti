@@ -531,6 +531,33 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     'pozemek: ' + uPozemku + ' | byt: ' + uBytu);
 }
 
+
+/* ==================================================================
+   11) SLOVO PRO POČTY SE OPRAVDU ŘÍDÍ MNOŽINOU
+   ==================================================================
+   slovaPoctu() je jediná pravda o tom, jakým slovem web počítá — a
+   proto se musí měřit PŘÍMO. Sabotáž „ať vrací „pozemků" vždycky"
+   neshodila žádnou ze zkoušek na stránkách: ty si slovo odvozovaly
+   z téže funkce, takže se s generátorem shodly na té samé lži.
+
+   Opraveno dvakrát. Zkoušky na stránkách si pravidlo vyslovují znovu
+   z dat (to je ta nezávislá cesta), a tady se měří funkce sama: co
+   dostane, podle toho se musí rozhodnout. */
+{
+  const samePozemky = [{}, { kat: 'pozemek' }, { kat: 'pozemek' }];
+  const sBytem = [{}, { kat: 'pozemek' }, { kat: 'byt' }];
+  je('u samých pozemků vyjde 1. pád „pozemek"', K.slovaPoctu(samePozemky)[0], 'pozemek');
+  je('a u téže množiny s bytem „nemovitost"', K.slovaPoctu(sBytem)[0], 'nemovitost');
+  /* A ŽE JSOU TO OPRAVDU TŘI TVARY. Česky se počítá třemi a vracet
+     jeden by vypadalo stejně dobře, dokud se nenapíše „5 pozemky". */
+  je('a jsou to tři tvary (1., 2.–4., 5. a dál)', K.slovaPoctu(samePozemky).join('|'),
+    'pozemek|pozemky|pozemků');
+  je('u nemovitostí taky', K.slovaPoctu(sBytem).join('|'),
+    'nemovitost|nemovitosti|nemovitostí');
+  /* Prázdná množina je „samé pozemky" — výchozí kategorie je pozemek
+     a web o něm takhle mluvil, dokud nic jiného neměl. */
+  je('a prázdná množina mluví o pozemcích', K.slovaPoctu([])[0], 'pozemek');
+}
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

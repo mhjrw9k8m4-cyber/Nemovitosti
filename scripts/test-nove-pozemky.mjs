@@ -31,8 +31,20 @@ const require_ = createRequire(import.meta.url);
    nabídky, začaly dotčené stránky správně hlásit „nemovitostí" — a
    vzorek pak sedl na JINOU dlaždici, takže kontrola porovnávala cizí
    číslo. Rozhodnutí se bere ze stejného modulu jako na webu. */
-const KATEGORIE = require_(new URL('../js/kategorie.js', import.meta.url).pathname);
-const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozem' : 'nemovitost');
+/* SLOVO SE TU ODVOZUJE ZNOVU, NE Z TÉŽE FUNKCE JAKO NA WEBU.
+
+   Napsal jsem to nejdřív přes KATEGORIE.slovaPoctu() — tedy přes
+   tutéž funkci, jakou se řídí generátor. Sabotáž to shodila hned:
+   když slovaPoctu začne vracet „pozemků" vždycky, generátor i zkouška
+   se shodnou na té samé lži a hlídač MLČÍ. Dvě pravdy, které se
+   shodnou na nepravdě, nejsou kontrola.
+
+   Pravidlo je proto vysloveno ZNOVU a z dat: jsou-li v té množině
+   samé pozemky, musí stránka říkat „pozemků"; je-li mezi nimi cokoli
+   jiného, musí říkat „nemovitostí". Je to druhá kopie dvou podmínek
+   — a je tu schválně, ze stejného důvodu, z jakého si test-kam-dal
+   přepočítává celý rozcestník. */
+const kmenSlova = (nab) => ((nab || []).every((o) => !o || !o.kat || o.kat === 'pozemek') ? 'pozem' : 'nemovitost');
 const U = (p) => new URL('../' + p, import.meta.url);
 new Function(readFileSync(U('js/terminy.js'), 'utf8'))();
 new Function(readFileSync(U('js/klic.js'), 'utf8'))();

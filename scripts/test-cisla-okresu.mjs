@@ -50,8 +50,20 @@ const pozaduj = createRequire(import.meta.url);
 
    Rozhodnutí se bere ze stejného modulu jako na webu (js/kategorie.js,
    slovaPoctu), ne z vlastní tabulky. */
-const KATEGORIE = createRequire(import.meta.url)(path.join(KOREN, 'js', 'kategorie.js'));
-const kmenSlova = (nab) => (KATEGORIE.slovaPoctu(nab)[0] === 'pozemek' ? 'pozemk' : 'nemovitost');
+/* SLOVO SE TU ODVOZUJE ZNOVU, NE Z TÉŽE FUNKCE JAKO NA WEBU.
+
+   Napsal jsem to nejdřív přes KATEGORIE.slovaPoctu() — tedy přes
+   tutéž funkci, jakou se řídí generátor. Sabotáž to shodila hned:
+   když slovaPoctu začne vracet „pozemků" vždycky, generátor i zkouška
+   se shodnou na té samé lži a hlídač MLČÍ. Dvě pravdy, které se
+   shodnou na nepravdě, nejsou kontrola.
+
+   Pravidlo je proto vysloveno ZNOVU a z dat: jsou-li v té množině
+   samé pozemky, musí stránka říkat „pozemků"; je-li mezi nimi cokoli
+   jiného, musí říkat „nemovitostí". Je to druhá kopie dvou podmínek
+   — a je tu schválně, ze stejného důvodu, z jakého si test-kam-dal
+   přepočítává celý rozcestník. */
+const kmenSlova = (nab) => ((nab || []).every((o) => !o || !o.kat || o.kat === 'pozemek') ? 'pozemk' : 'nemovitost');
 
 /* Táž hromádka jako v generátoru: bez duplicit a bez nabídek po termínu.
    Kdyby si tahle zkouška vzala jiný vzorek, hlásila by rozchod o jeden
