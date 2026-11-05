@@ -25008,3 +25008,35 @@ Zbylých sedm mutací téže zkoušky sedí v `scripts/fetch-opportunities.mjs`,
 který hlídá **ještě 16 dalších zkoušek** — tam to podle §397 není nález
 o téhle zkoušce, ale mlčení, a rozhodne se po souborech, až tu mutaci
 dostane druhý hlídač téhož souboru.
+
+## §411 — Mapa po stisku: instrumentace z §407 řekla, kdo za to může
+
+Šestý pád téže zkoušky v CI (`test-mapa-pozemku`, směna 2, běh
+41945234328) — a tentokrát se nehádalo. Instrumentace, která od §407
+zapisuje, KDO mapou hýbal, dala celou cestu:
+
+```
+setView [[49.13217,14.32699],16]          ← zkouška (odjezd od pozemku)
+setView [{lat:49.11218,lng:14.30697},16]  ← pozemek.js:630, tlačítko
+panBy  [{x:-933,y:1423},{animate:true}]   ← Leaflet, _tryAnimatedPan
+```
+
+**Produkt je v pořádku.** Tlačítko zavolalo `setView` s přesnými
+souřadnicemi pozemku; Leaflet to předal **animovanému** posunu
+o −933/+1423 px. Snímek vzatý v průběhu animace ukázal střed
+49.11002,14.30484 — a web o něm sám řekl „domov nevidím", protože
+v té chvíli ho opravdu neviděl.
+
+**Vada byla v měření, a to i v jeho dosavadní opravě.** Čekání „do
+klidu" porovnávalo střed dvakrát s odstupem 400 ms. To nestačí: easing
+má na začátku i na konci pomalé úseky, kde se dvě čtení po sobě
+shodnou, ačkoli se mapa dál hýbe. Takhle vznikl falešný klid.
+
+**Opraveno tím, že se věří mapě, ne hodinkám:** `moveend` ohlašuje
+konec pohybu sama mapa, takže se čeká nejprve na něj a teprve pak se
+nechá dojít do klidu (kdyby na jeden pohyb navázal další). Žádné pevné
+čekání, žádné soukromé pole Leafletu.
+
+Lokálně 167/167; pád byl vždycky jen v CI, takže důkaz dá až CI.
+Tohle je šestý případ téže rodiny (§398, §403, §405, §405-dodatek) a
+poprvé se u něj nehádalo — za to stála ta instrumentace.

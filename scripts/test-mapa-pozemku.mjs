@@ -1686,7 +1686,36 @@ if (DRAZBA) {
       pryc.mapaDno !== null && pryc.top - pryc.mapaDno < 80,
       `mapa končí na ${pryc.mapaDno} px, tlačítko začíná na ${pryc.top} px`);
 
+    /* KONEC POHYBU HLÁSÍ SAMA MAPA — a čeká se na to, ne na hodinky.
+       ----------------------------------------------------------------
+       Naměřeno v CI 5. 11. (běh 41945234328) a rozhodla to instrumentace
+       z §407, která zapisuje, KDO mapou hýbal:
+
+         setView [[49.13217,14.32699],16]        ← zkouška (odjezd)
+         setView [{lat:49.11218,lng:14.30697},16] ← pozemek.js:630, tlačítko
+         panBy  [{x:-933,y:1423},{animate:true}]  ← Leaflet, _tryAnimatedPan
+
+       Tlačítko tedy zavolalo `setView` se SPRÁVNÝMI souřadnicemi pozemku
+       a Leaflet to předal ANIMOVANÉMU posunu o −933/+1423 px. Snímek
+       vzatý v průběhu té animace ukázal střed 49.11002,14.30484, tedy
+       o pár set metrů jinde — a web o něm sám řekl „domov nevidím".
+       Produkt je v pořádku, měřilo se moc brzo.
+
+       Dvojí čtení středu s odstupem 400 ms (kousek níž) na to nestačí:
+       easing má na začátku i na konci pomalé úseky, kde se dvě čtení po
+       sobě shodnou, ačkoli se mapa dál hýbe. `moveend` ohlašuje konec
+       sama mapa, takže se čeká NEJPRVE na něj a teprve pak se nechá
+       dojít do klidu — kdyby na jeden pohyb navázal další. */
+    await p.evaluate(() => {
+      window.__PK_DOJELO = false;
+      const m = window.PK_PZ_MAPA;
+      if (!m) { window.__PK_DOJELO = true; return; }
+      m.on('moveend', () => { window.__PK_DOJELO = true; });
+      m.on('zoomend', () => { window.__PK_DOJELO = true; });
+    });
     await p.evaluate(() => { document.getElementById('pzm-zpet').click(); });
+    await p.waitForFunction(() => window.__PK_DOJELO === true,
+      { timeout: 8000 }).catch(() => { /* dopoví kontroly pod tím */ });
     /* Totéž z druhé strany: čeká se, až web tlačítko sám schová. */
     await p.waitForFunction(() => {
       const b = document.getElementById('pzm-zpet');
