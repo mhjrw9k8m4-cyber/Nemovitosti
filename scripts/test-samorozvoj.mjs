@@ -374,6 +374,24 @@ function je(popis, vyslo, cekano) {
     S.coHlidá("import { a } from './archiv.mjs';"), ['scripts/archiv.mjs']);
   je('a pomůcky se pořád vynechávají',
     S.coHlidá("import { x } from './chyby-hlaska.mjs';"), []);
+  /* CESTA SKLÁDANÁ Z DÍLŮ. Zkoušky, které si prohlížečový modul berou
+     přes `createRequire`, píšou `require_(join(KOREN, 'js', 'ceny.js'))`
+     — a dokud stroj znal jen zápis '../js/ceny.js', neviděl v nich
+     NIC. Naměřeno 5. 11. vlastní funkcí stroje na všech 315 zkouškách:
+     „nic z našeho kódu" u 191, po doplnění u 137 — tedy 54 zkoušek,
+     které se předtím nedaly prokázat vůbec a hlásily „sabotáž tu nemá
+     co rozbít". Přišlo se na to tím, že stroj odmítl prokázat zkoušku
+     kategorií nemovitostí. */
+  je('cesta skládaná z dílů se počítá jako hlídaný kód',
+    S.coHlidá("const C = require_(join(KOREN, 'js', 'ceny.js'));"), ['js/ceny.js']);
+  je('a u skriptů taky',
+    S.coHlidá('require_(join(KOREN, "scripts", "archiv.mjs"))'), ['scripts/archiv.mjs']);
+  je('jiná zkouška se za hlídaný kód nevydává',
+    S.coHlidá("readFileSync(join(KOREN, 'scripts', 'test-ceny.mjs'))"), []);
+  je('a pomůcka taky ne',
+    S.coHlidá("join(KOREN, 'scripts', 'chyby-hlaska.mjs')"), []);
+  je('a totéž jméno dvakrát se nezdvojí',
+    S.coHlidá("join(KOREN, 'js', 'ceny.js') + '../js/ceny.js'"), ['js/ceny.js']);
 
   const kodZ = readFileSync(new URL('./sabotuj.mjs', import.meta.url), 'utf8');
   pravda('ruční důkaz umí stroj zapsat do téhož účtu',

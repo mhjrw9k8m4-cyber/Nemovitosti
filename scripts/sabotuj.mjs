@@ -119,6 +119,29 @@ export function coHlidá(teloZkousky) {
   for (const m of String(teloZkousky || '').matchAll(/['"`]\.\.\/(js\/[a-z0-9.-]+\.js)['"`]/g)) {
     if (!ven.includes(m[1])) ven.push(m[1]);
   }
+  /* A CESTA SKLÁDANÁ Z DÍLŮ SE POČÍTÁ TAKY.
+   *
+   * Vzor výš umí jediný zápis: `'../js/ceny.js'`. Zkoušky, které si
+   * modul berou přes `createRequire`, ale cestu skládají — `require_(
+   * join(KOREN, 'js', 'ceny.js'))` — a v těch stroj „neviděl nic
+   * z našeho kódu" a hlásil „mechanická sabotáž tu nemá co rozbít".
+   *
+   * Naměřeno 5. 11. vlastní funkcí stroje na všech 315 zkouškách:
+   * nic z našeho kódu v nich stroj viděl u 191. Jen část z toho je
+   * v pořádku (zkoušky v prohlížeči opravdu žádný náš modul
+   * neimportují — ovládají stránku), ale 67 zkoušek mělo cestu
+   * skládanou z dílů a JEDINÝ zápis, takže propadly úplně. Přišlo se
+   * na to při psaní zkoušky kategorií: stroj ji odmítl prokázat.
+   *
+   * Je to tentýž druh ticha jako u dynamického importu o kus výš:
+   * ticho z nedohledu vypadá úplně stejně jako ticho z toho, že není
+   * co rozbít. Hlídá to scripts/test-sabotuj.mjs. */
+  for (const m of String(teloZkousky || '')
+    .matchAll(/['"`](js|scripts)['"`]\s*,\s*['"`]([a-z0-9.-]+\.m?js)['"`]/g)) {
+    const cesta = m[1] + '/' + m[2];
+    if (/^scripts\/test-/.test(cesta) || POMOCNE.test(m[2])) continue;
+    if (!ven.includes(cesta)) ven.push(cesta);
+  }
   return ven;
 }
 
