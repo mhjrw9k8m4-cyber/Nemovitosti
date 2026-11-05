@@ -174,6 +174,50 @@ const stejne = (popis, a, b) => pravda(popis, JSON.stringify(a) === JSON.stringi
       `nalezeno ${jmena.length} jmen`);
   }
   }
+  /* ---- A CO SE DO ADRESY OPRAVDU POSÍLÁ -------------------------
+     ==================================================================
+     Kontrola výš čte FILTROVACÍ funkci a vyžaduje, aby každé jméno
+     v ní bylo zařazené. Má jednu děravou stranu, kterou našla ruční
+     sabotáž: stav, který se do odkazu posílá, ale ve `visible()` se
+     jeho jméno neobjeví, tou kontrolou propadne úplně.
+
+     Naměřeno na `katVybrane` (typ nemovitosti): ve filtrování stojí
+     jen `katVyhovuje(d)`, takže vyhození jeho řádku z tabulky
+     sdílených NIKDO nechytil — filtr by se v panelu zapnul, ale
+     z adresy by vypadl a sdílený odkaz by příjemci ukázal jiný výpis.
+     Táž past čeká na každý další filtr, který se do funkce dostane
+     přes pomocnou funkci.
+
+     Měří se proto i DRUHÁ strana: co `stavProAdresu()` skládá, to musí
+     být v tabulce sdílených (nebo v napsané výjimce). */
+  {
+    const zac = src.indexOf('function stavProAdresu()');
+    pravda('funkce, která skládá stav pro adresu, se našla', zac > 0,
+      'bez ní tahle kontrola neměří nic');
+    if (zac > 0) {
+      let hl = 0, i = src.indexOf('{', zac), konec = i;
+      for (; konec < src.length; konec++) {
+        if (src[konec] === '{') hl++;
+        else if (src[konec] === '}') { hl--; if (!hl) break; }
+      }
+      const telo = src.slice(i, konec)
+        .replace(/\/\*[\s\S]*?\*\//g, ' ')
+        .replace(/\/\/[^\n]*/g, ' ');
+      /* Vrácený objekt: klíče na začátku řádku nebo za čárkou. */
+      const vraci = src.slice(telo.indexOf('return {') >= 0 ? i + telo.indexOf('return {') : i, konec);
+      const klice = [...new Set((vraci.match(/(?:^|[{,]\s*)([A-Za-z_$][A-Za-z0-9_$]*)\s*:/gm) || [])
+        .map((m) => m.replace(/[{,\s]/g, '').replace(/:$/, '')))];
+      pravda('(a klíče se z ní opravdu přečetly)', klice.length > 10,
+        'nalezeno ' + klice.length + ': ' + klice.join(', '));
+      /* VÝJIMKY S DŮVODEM. `poloha` není filtr, je to výřez mapy —
+         js/odkaz.js si ho skládá vlastní funkcí (polohaText), ne
+         tabulkou. `lat`, `lng` a `zoom` jsou jeho vnitřek. */
+      const VYJIMKY = new Set(['poloha', 'lat', 'lng', 'zoom']);
+      const sdil = new Set(O.SDILENE.map((x) => x.stav));
+      const chybi = klice.filter((k) => !VYJIMKY.has(k) && !sdil.has(k));
+      stejne('co se posílá do adresy, je v tabulce sdílených', chybi, []);
+    }
+  }
   /* Nesdílené musí mít napsaný důvod — jinak je to jen tichý výmaz. */
   const bezDuvodu = O.NESDILENE.filter((n) => !n.proc || n.proc.length < 10).map((n) => n.stav);
   stejne('u každého nesdíleného filtru stojí, proč se nesdílí', bezDuvodu, []);

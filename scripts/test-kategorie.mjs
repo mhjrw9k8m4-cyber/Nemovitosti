@@ -136,6 +136,38 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     K.jePozemkova('pozemek') === true
     && K.KLICE.filter((k) => k !== 'pozemek').every((k) => K.jePozemkova(k) === false),
     'pozemkové: ' + K.KLICE.filter((k) => K.jePozemkova(k)).join(', '));
+  /* CO SE PRODÁVÁ — a že se u POZEMKU nic nezmění. Obojí našla ruční
+     sabotáž: dokud se měřila jen `mera`, prošlo i to, že
+     nadpisKategorie() vrací jméno i u pozemku (nadpis každé z 2 303
+     dnešních stránek by přestal říkat druh a začal říkat „Pozemek"),
+     i to, že popisVymery() mlčí u bytu (holé „54 m²" vedle pozemků,
+     kde totéž číslo znamená plochu parcely). */
+  je('u pozemku nadpis dělá druh, ne kategorie', K.nadpisKategorie({}), null);
+  je('a u pozemku označeného klíčem taky', K.nadpisKategorie({ kat: 'pozemek' }), null);
+  je('u bytu nadpis dělá kategorie', K.nadpisKategorie({ kat: 'byt' }), 'Byt');
+  je('u domu taky', K.nadpisKategorie({ kat: 'dum' }), 'Dům');
+  pravda('a nadpis má KAŽDÁ nepozemková kategorie',
+    K.KLICE.filter((k) => !K.jePozemkova(k))
+      .every((k) => K.nadpisKategorie({ kat: k }) === K.jmeno(k)),
+    'bez nadpisu: ' + K.KLICE.filter((k) => !K.jePozemkova(k))
+      .filter((k) => K.nadpisKategorie({ kat: k }) !== K.jmeno(k)).join(', '));
+  je('u bytu se o výměře řekne, že je podlahová',
+    K.popisVymery({ kat: 'byt' }), 'podlahová plocha');
+  je('u garáže taky', K.popisVymery({ kat: 'garaz' }), 'podlahová plocha');
+  je('u pozemku se nic nepřipisuje', [K.popisVymery({}), K.popisVymery({ kat: 'pozemek' })],
+    ['', '']);
+  /* U domu, areálu a farmy (`mera: 'obe'`) se SCHVÁLNĚ neříká nic: ze
+     zdrojů nevyplývá, jestli uložené číslo je plocha parcely, nebo
+     zastavěná plocha. Tipovat to je horší než mlčet — a tahle kontrola
+     drží to rozhodnutí, aby se časem tiše nezměnilo. */
+  je('u domu a areálu se o výměře mlčí',
+    [K.popisVymery({ kat: 'dum' }), K.popisVymery({ kat: 'areal' }), K.popisVymery({ kat: 'farma' })],
+    ['', '', '']);
+  pravda('a popisek výměry sedí s mírou u každé kategorie',
+    K.KLICE.every((k) => (K.mera(k) === 'podlahova')
+      === (K.popisVymery({ kat: k }) === 'podlahová plocha')),
+    'rozcházejí se u: ' + K.KLICE.filter((k) => (K.mera(k) === 'podlahova')
+      !== (K.popisVymery({ kat: k }) === 'podlahová plocha')).join(', '));
   je('neznámý klíč se srovná na pozemek', K.klic('nesmysl'), 'pozemek');
   je('prázdný klíč taky', [K.klic(''), K.klic(null), K.klic(undefined)],
     ['pozemek', 'pozemek', 'pozemek']);
