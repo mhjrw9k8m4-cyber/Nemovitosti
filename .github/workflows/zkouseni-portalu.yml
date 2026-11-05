@@ -56,6 +56,12 @@ jobs:
         with:
           zprava: "data: nález zkoušení portálů"
           co: data/cesty-portalu.json
+      # ÚSPĚCH, KTERÝ NA NĚKOHO ČEKÁ, SE TAKY MUSÍ OHLÁSIT. Nález
+      # z 5. 11. nesl tři akceschopné cesty a nedozvěděl se o nich
+      # nikdo: úloha skončila zeleně. Viz oddíl 430.
+      - name: Ohlásit nález
+        if: success()
+        uses: ./.github/actions/ohlas-nalez
       - name: Ohlásit selhání
         if: failure()
         uses: ./.github/actions/ohlas-selhani

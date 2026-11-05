@@ -109,6 +109,13 @@ jobs:
       - name: Hlásič selhání nočních úloh
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ohlas-selhani.mjs
+      # Hlásič NÁLEZU zkoušení portálů — druhý konec téhož pravidla:
+      # měřidlo bez hlášení je měřidlo pro nikoho. Zkouší se proti
+      # předstíranému GitHubu; nejdůležitější kontrola je ta, že se bez
+      # nového nálezu úkol NEZAKLÁDÁ (opakovaný úkol nikdo neotevírá).
+      - name: Hlásič nálezu zkoušení portálů
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-ohlas-nalez.mjs
       - name: Čísla na okresních stránkách se přepočítají z dat
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cisla-okresu.mjs

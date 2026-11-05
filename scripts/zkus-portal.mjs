@@ -47,6 +47,7 @@ import { fileURLToPath } from 'node:url';
 import { ZAPOJENE, KANDIDATI } from './zdroje-kandidati.mjs';
 import {
   CESTY, cestyProPortal, tvarOdpovedi, verdiktCesty, poradiCest, dalsiCesty, znakyOdpovedi,
+  noveProtiMinule,
   radekDoRegistru, hlaseniPortalu, pocetZmerenych, STROP_CEST, STROP_DALSICH,
 } from './cesty-portalu.mjs';
 
@@ -311,6 +312,11 @@ async function main() {
   const dnes = new Date().toISOString().slice(0, 10);
   let stary = { dny: {} };
   try { stary = JSON.parse(readFileSync(CIL, 'utf8')); } catch { /* první běh */ }
+  /* CO JE NOVÉ OD MINULE — a proč to patří do nálezu, ne jen na
+     obrazovku. Zapsané „nové" čte scripts/ohlas-nalez.mjs a podle něj
+     zakládá úkol v repozitáři; bez toho skončí nález zelenou tečkou
+     v Actions, kam se nikdo nedívá (viz oddíl 430). */
+  const nove = noveProtiMinule(stary, { portaly });
   writeFileSync(CIL, JSON.stringify({
     updated: dnes,
     tvaru: CESTY.length,
@@ -318,9 +324,16 @@ async function main() {
     dotazu: dotazuCelkem,
     portaly,
     navrhy: navrhy.map(({ radek, ...zbytek }) => zbytek),
+    noveOdMinule: nove,
     dny: Object.assign({}, stary.dny || {}, { [dnes]: navrhy.length }),
   }, null, 1));
   console.log(`\nZapsáno do ${CIL}.`);
+  if (nove.length) {
+    console.log(`\nNOVÉHO OD MINULE: ${nove.length} — s tím se dá něco udělat:`);
+    for (const c of nove) console.log(`  · ${c.host} (${c.verdikt}) → ${c.coSTim}\n      ${c.adresa}`);
+  } else {
+    console.log('\nNic nového proti minulému nálezu.');
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

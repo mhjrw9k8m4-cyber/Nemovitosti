@@ -26235,3 +26235,61 @@ Prokázáno sabotáží, **3 ze 3**:
 Ta třetí je ta důležitá: hlídat jen `znakyOdpovedi()` by znamenalo měřit
 nástroj, ne jeho použití — přesně slepota z §423. `test-zkus-portal`
 107 → **129 kontrol**.
+
+## §430 — Měřidlo bez hlášení je měřidlo pro nikoho (druhý konec)
+
+Bot zkoušení portálů běžel 4. i 5. 11. Druhý běh našel **tři cesty, se
+kterými se dalo něco udělat** — dvě slibné a jednu „ke čtení" na
+Ministerstvu obrany (§429). A nedozvěděl se o nich **nikdo**: nález
+skončil v `data/cesty-portalu.json`, úloha skončila **zeleně**, a zelená
+tečka v záložce Actions znamená „nic k řešení".
+
+Repozitář přitom tuhle díru už jednou zavřel — `scripts/ohlas-selhani.mjs`
+zakládá úkol, když noční úloha **selže**. Chyběl druhý konec: hlášení
+**úspěchu, který na někoho čeká**. Je to tatáž věta z obou stran:
+měřidlo bez hlášení je měřidlo pro nikoho.
+
+**Řetěz je teď celý a každá spojka je hlídaná:**
+
+```
+bot změří cesty
+  → verdikt (nabídky / slibná / ke čtení / chce klíč)
+  → noveProtiMinule(minulý nález, nový)   ← rozdíl, ne celý seznam
+  → noveOdMinule v data/cesty-portalu.json
+  → krok „Ohlásit nález" (if: success())
+  → jeden úkol v repozitáři, u každé cesty „co s tím"
+```
+
+**Hlásí se jen rozdíl.** Akceschopné cesty se po každém běhu opakují;
+hlásit je celé by znamenalo každé pondělí tentýž úkol — a opakovaný úkol
+se přestane otevírat, čímž by se zrušil smysl hlášení. Rozdíl se počítá
+podle trojice **host + adresa + verdikt**, a verdikt je v klíči
+schválně: když se z „odpověděla" stane „ke čtení" (přesně to se stalo
+obraně), je to nová informace, i když adresa je stará.
+
+**Co v úkolu stojí:** verdikt, co s tím (zapojit / dopsat čtení / napsat
+předpis / zařídit klíč), adresa, odůvodnění bota a **naměřené značky ze
+stránky** — titulek, kolikrát je na ní cena, výměra, katastr. Bez toho
+by si ten, kdo předpis píše, musel stránku stáhnout znovu, a z vývojového
+stroje to nejde vůbec. A stojí tam výslovně, že **žádný zdroj se tím
+nezapojil**: o cizím webu se rozhoduje po přečtení jeho podmínek užití.
+
+**Hlásič sám nikdy nespadne.** Běží po úloze, která dobře doběhla, takže
+jeho vlastní chyba ji nesmí shodit — co se nepovede, napíše jako
+`::warning::` a skončí nulou. Ale nikdy nemlčí.
+
+Prokázáno sabotáží, **3 ze 3** — a všechny tři jsou na SPOJKÁCH, ne na
+hlásiči:
+
+| Co se rozbilo | Kdo to chytil |
+|---|---|
+| bot nezapíše `noveOdMinule` | „bot zapisuje „nové od minule" do nálezu" |
+| úloha krok „Ohlásit nález" nevolá | „a úloha hlásič opravdu volá, a to při úspěchu" |
+| hlásič zakládá úkol i bez nového | „bez nového nálezu se nezakládá nic" (+1 další) |
+
+Tohle je ten rozdíl proti §423: hlídat jen `ohlas-nalez.mjs` by znamenalo
+měřit nástroj. Hlásič může být bez vady a přesto se nikdo nic nedozví —
+stačí, aby ho nikdo nezavolal.
+
+Nová zkouška `test-ohlas-nalez` (26 kontrol, předstíraný GitHub, žádný
+úkol nikde nevzniká), `test-zkus-portal` 129 → **142**.

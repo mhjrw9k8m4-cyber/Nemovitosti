@@ -195,6 +195,57 @@ const SITEMAPA = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://ww
     && /znaků textu/.test(hlaseni), hlaseni);
 }
 
+/* ---- 2c) CO Z NÁLEZU PATŘÍ ČLOVĚKU NA STŮL -------------------
+ *
+ * Bot běžel 4. i 5. 11., našel akceschopné cesty — a nedozvěděl se
+ * o nich nikdo, protože nález skončil v JSON a úloha zeleně (§430).
+ * Tyhle dvě funkce jsou to, podle čeho se hlásí; měří se tedy ony,
+ * ne až hlásič.
+ */
+{
+  const portaly = [
+    { host: 'a.cz', jmeno: 'A', cesty: [
+      { adresa: 'https://a.cz/1', jmeno: 'výpis', verdikt: 'nabídky', nabidek: 7 },
+      { adresa: 'https://a.cz/2', jmeno: 'kalendář', verdikt: 'odpověděla' },
+      { adresa: 'https://a.cz/3', jmeno: 'nic', verdikt: 'zavřená' },
+    ] },
+    { host: 'b.cz', jmeno: 'B', cesty: [
+      { adresa: 'https://b.cz/x', jmeno: 'nabídka', verdikt: 'ke čtení' },
+      { adresa: 'https://b.cz/y', jmeno: 'api', verdikt: 'chce klíč' },
+      { adresa: 'https://b.cz/z', jmeno: 'feed', verdikt: 'slibná' },
+    ] },
+  ];
+  const a = C.akceschopneCesty(portaly);
+  je('akceschopné jsou jen cesty, se kterými se dá něco udělat', a.length, 4);
+  pravda('„odpověděla" ani „zavřená" mezi nimi nejsou',
+    !a.some((c) => c.verdikt === 'odpověděla' || c.verdikt === 'zavřená'),
+    JSON.stringify(a.map((c) => c.verdikt)));
+  je('a jsou v pořadí podle toho, co má člověk vidět první', a[0].verdikt, 'nabídky');
+  je('druhá je slibná', a[1].verdikt, 'slibná');
+  je('třetí ke čtení', a[2].verdikt, 'ke čtení');
+  je('a klíč nakonec', a[3].verdikt, 'chce klíč');
+  pravda('u každé stojí, CO S TÍM', a.every((c) => !!c.coSTim), JSON.stringify(a.map((c) => c.coSTim)));
+  pravda('a ví se, z jakého portálu je', a.every((c) => !!c.host && !!c.jmeno));
+
+  /* NOVÉ SE POČÍTÁ VČETNĚ VERDIKTU. Právě tohle se stalo obraně:
+     adresa byla v nálezu i minule, ale jako „odpověděla". Změna na
+     „ke čtení" JE nová informace a hlásit se musí. */
+  const stary = { portaly: [
+    { host: 'a.cz', cesty: [{ adresa: 'https://a.cz/1', verdikt: 'nabídky' }] },
+    { host: 'b.cz', cesty: [{ adresa: 'https://b.cz/x', verdikt: 'odpověděla' }] },
+  ] };
+  const nove = C.noveProtiMinule(stary, { portaly });
+  je('co bylo v nálezu i minule a se stejným verdiktem, nové není', nove.length, 3);
+  pravda('ale změna verdiktu na téže adrese nová JE',
+    nove.some((c) => c.adresa === 'https://b.cz/x' && c.verdikt === 'ke čtení'),
+    JSON.stringify(nove.map((c) => c.adresa + '|' + c.verdikt)));
+  pravda('a stará nabídka se znovu nehlásí',
+    !nove.some((c) => c.adresa === 'https://a.cz/1'),
+    JSON.stringify(nove.map((c) => c.adresa)));
+  je('první nález (bez minulého) je celý nový', C.noveProtiMinule(null, { portaly }).length, 4);
+  je('a stejný nález dvakrát nehlásí nic', C.noveProtiMinule({ portaly }, { portaly }).length, 0);
+}
+
 /* ---- 3) SPOJOVÁNÍ PORTÁLŮ: KATALOG → SADA → SOUBOR ------------ */
 {
   const zKatalogu = C.dalsiCesty({ tvar: 'JSONLD', telo: KATALOG });

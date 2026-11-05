@@ -429,6 +429,65 @@ export function znakyOdpovedi(telo) {
   };
 }
 
+/* ------------------------------------------------------------------
+   CO Z NÁLEZU PATŘÍ ČLOVĚKU NA STŮL — a co je nové od minule.
+   ------------------------------------------------------------------
+   Bot běží každé pondělí, zapíše nález do data/cesty-portalu.json
+   a tím to dosud skončilo. Nález z 5. 11. nesl tři cesty, se kterými
+   se dalo něco udělat (dvě slibné a jednu ke čtení na Ministerstvu
+   obrany) — a nedozvěděl se o nich nikdo, protože se o nich nikde
+   neřeklo. Úloha skončila zeleně a zelená tečka v Actions znamená
+   „nic k řešení".
+
+   Je to táž díra, kterou u SELHÁNÍ zavřel scripts/ohlas-selhani.mjs:
+   měřidlo bez hlášení je měřidlo pro nikoho. Rozdíl je jen v tom, že
+   tady se hlásí ÚSPĚCH, který na někoho čeká.
+
+   AKCESCHOPNÁ je cesta, u které existuje další krok:
+     'nabídky'   → přečíst podmínky a zapojit zdroj,
+     'slibná'    → dopsat čtení toho strojového tvaru,
+     'ke čtení'  → napsat předpis pro HTML,
+     'chce klíč' → zařídit účet a klíč (to umí jen majitel).
+   'odpověděla' a 'zavřená' akceschopné nejsou: tam není co udělat.
+
+   NOVÉ se počítá proti minulému nálezu podle trojice
+   host + adresa + verdikt. Verdikt je v klíči schválně: když se
+   z „odpověděla" stane „ke čtení" (přesně to se stalo obraně po
+   §429), je to NOVÁ informace, i když adresa je stará.
+   ------------------------------------------------------------------ */
+export const VERDIKTY_AKCESCHOPNE = ['nabídky', 'slibná', 'ke čtení', 'chce klíč'];
+export const CO_S_TIM = {
+  'nabídky': 'přečíst podmínky užití a zapojit jako zdroj',
+  'slibná': 'dopsat čtení toho strojového tvaru',
+  'ke čtení': 'napsat předpis pro čtení HTML',
+  'chce klíč': 'zařídit účet a klíč (jen majitel) a dát ho do GitHub Secrets',
+};
+
+export function klicCesty(host, cesta) {
+  return [String(host || ''), String((cesta && cesta.adresa) || ''), String((cesta && cesta.verdikt) || '')].join('|');
+}
+
+export function akceschopneCesty(portaly) {
+  const ven = [];
+  for (const p of (Array.isArray(portaly) ? portaly : [])) {
+    for (const c of (p && Array.isArray(p.cesty) ? p.cesty : [])) {
+      if (!VERDIKTY_AKCESCHOPNE.includes(c && c.verdikt)) continue;
+      ven.push({ host: p.host, jmeno: p.jmeno || p.host, adresa: c.adresa, cesta: c.jmeno,
+        verdikt: c.verdikt, proc: c.proc, nabidek: c.nabidek || 0,
+        coSTim: CO_S_TIM[c.verdikt] || '', znaky: c.znaky || null });
+    }
+  }
+  return poradiCest(ven);
+}
+
+export function noveProtiMinule(stary, novy) {
+  const bylo = new Set();
+  for (const p of ((stary && stary.portaly) || [])) {
+    for (const c of ((p && p.cesty) || [])) bylo.add(klicCesty(p.host, c));
+  }
+  return akceschopneCesty((novy && novy.portaly) || []).filter((c) => !bylo.has(klicCesty(c.host, c)));
+}
+
 export function hlaseniPortalu(portal) {
   const radky = [];
   const n = portal && portal.cesty ? portal.cesty : [];

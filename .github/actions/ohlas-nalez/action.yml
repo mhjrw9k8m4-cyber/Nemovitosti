@@ -1,0 +1,18 @@
+name: Ohlásit nález zkoušení portálů
+description: >
+  Po úspěšném běhu založí (nebo doplní) jeden úkol v repozitáři, když bot
+  našel cesty, se kterými se dá něco udělat. Bez tohohle kroku skončí
+  nález zelenou tečkou v záložce Actions, kam se nikdo nedívá — a úspěch,
+  který na někoho čeká, se k tomu někomu nedostane. Veškerá logika je
+  v scripts/ohlas-nalez.mjs, aby se dala vyzkoušet bez GitHubu.
+runs:
+  using: composite
+  steps:
+    # Všechno jde PŘES PROMĚNNÉ PROSTŘEDÍ, nic se nevkládá do příkazu
+    # (hlídá scripts/test-ci-prava.mjs).
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        BEH: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: node scripts/ohlas-nalez.mjs
