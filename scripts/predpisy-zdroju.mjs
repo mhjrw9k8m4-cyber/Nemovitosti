@@ -30,6 +30,10 @@
 export const POPISKY_VYMERY = [
   'pozemky celkem', 'pozemek celkem', 'celková výměra', 'celkova vymera',
   'pozemky', 'pozemek', 'výměra', 'vymera',
+  /* Skloňovaný tvar, naměřený 6. 11.: „prodej areálu s pozemky
+     o výměře 2.383m2 - Nová Ves u Ostravy". Stojí až za „pozemky",
+     aby „pozemky celkem" mělo pořád přednost. */
+  'výměře', 'vymere',
 ];
 
 /* A POPISKY PLOCHY STAVBY — druhý seznam, ne tentýž (§453).
@@ -139,8 +143,25 @@ export const PREDPISY = {
     /* Které stavy jsou ještě nabídkou. Skončená dražba není nabídka:
        kdo si na webu otevře „Prodáno", je obelhaný. */
     zivyStav: ['Aktivní'],
-    /* Název končí u závorky s typem řízení. */
-    nazevKonci: /\s*\(\s*(?:Výběrové řízení|Veřejná dražba|Aukce|Dražba)/i,
+    /* NÁZEV KONČÍ U ZÁVORKY, ZA KTEROU STOJÍ „Čas do konce:" (§457).
+       Dřív tu byl VÝČET typů řízení (Výběrové řízení, Veřejná dražba,
+       Aukce, Dražba) a šestý ostrý pokus ukázal, co výčet dělá: web
+       má i „( Uzavřená aukce)", na kterou vzor nesedl, takže se konec
+       názvu nenašel, značka se chytila na „Ukončeno" z času a šesti
+       záznamům zbyl místo názvu zbytek řádku:
+         název „(04.11.2026 16:00:00) Cena: 2 746 666 Kč"
+         úsek  „…Prodáno 3. KOLO Výběrového řízení - prodej areálu
+                s pozemky o výměře 2.383m2 - Nová Ves u Ostravy…
+                ( Uzavřená aukce) Čas do konce: Ukončeno (04.11.2026…"
+       Byly to pozemky — přesně to, pro co se zdroj zapojuje.
+       Kotva je proto to, co za typem řízení stojí VŽDYCKY. Naměřené
+       tvary: „( Veřejná dražba - elektronická) Čas do konce:",
+       „( Výběrové řízení dynamické) Čas do konce:", „( Výběrové
+       řízení - 3 kola) Čas do konce:", „( Uzavřená aukce) Čas do
+       konce:". Závorky uvnitř názvu to nerozbije: za „(domu)"
+       v „Prodej bytové jednotky (domu), podlahová plocha 129 m2"
+       žádné „Čas do konce" není. */
+    nazevKonci: /\s*\([^)]*\)\s*Čas do konce:/i,
     cena: /(?:Min\.\s*cena|Cena)\s*:\s*([\d\s .,]+)\s*Kč/i,
     odkazVzor: /\/aukce\/[^"'\s]*?-(\d+)\/?$/i,
   },

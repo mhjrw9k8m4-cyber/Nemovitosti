@@ -292,6 +292,53 @@ vyhledávaná lokalita Praha-Lipence ( Výběrové řízení - 3 kola) Čas do k
     z.map((x) => x.stav).join(', '));
 }
 
+/* ---- 5h) §457: konec názvu kotvit na to, co tam je vždycky ------ */
+/* Úseky OPSANÉ z logu šestého pokusu (běh 42222326582). Výčet typů
+   řízení v `nazevKonci` neobsahoval „( Uzavřená aukce)", takže se
+   konec názvu nenašel, značka se chytila na „Ukončeno" z času a
+   šesti záznamům zbyl místo názvu zbytek řádku. A byly to pozemky. */
+{
+  const html = `
+<a href="/aukce/a-8124/">a</a><a href="/aukce/b-8092/">b</a><a href="/aukce/c-8125/">c</a>
+<p>Prodáno 3. KOLO Výběrového řízení - prodej areálu s pozemky o výměře 2.383m2 - Nová Ves
+u Ostravy, z majetku Adam epox s.r.o. ( Uzavřená aukce) Čas do konce: Ukončeno
+(04.11.2026 16:00:00) Cena: 2 746 666 Kč Evid. číslo: A8124</p>
+<p>Prodáno 3.KOLO VŘ - Prodej souboru 6 pozemků, celková výměra 9.910 m2, k.ú. Kunčičky,
+z majetku Liberty Ostrava a.s. ( Uzavřená aukce) Čas do konce: Ukončeno
+(06.10.2026 15:05:00) Cena: 16 000 000 Kč Evid. číslo: A8092</p>
+<p>Aktivní Prodej bytové jednotky (domu), podlahová plocha 129 m2, pozemek 67 m2, Nová Farma
+- obec Teplá, okres Cheb ( Výběrové řízení dynamické) Čas do konce: 5 dní 0
+(11.11.2026 14:00:00) Cena: 800 000 Kč Evid. číslo: A8125</p>`;
+  const z = zZaznamu(html, 'https://www.verejnedrazby.cz/vypis-aukci', PREDPISY['verejnedrazby.cz']);
+  const dle = (c) => z.find((x) => x.cislo === c);
+
+  const a = dle('8124');
+  pravda('u „( Uzavřená aukce)" zbyde název, ne čas s cenou',
+    a && a.nazev.startsWith('3. KOLO Výběrového řízení - prodej areálu'),
+    `název: „${a ? a.nazev : '(nic)'}"`);
+  pravda('a nekončí časem ani cenou',
+    a && !/Čas do konce|Kč|\d{2}\.\d{2}\.\d{4}/.test(a.nazev), `název: „${a ? a.nazev : ''}"`);
+  pravda('výměra pozemku se u areálu přečte zvlášť („o výměře 2.383m2")',
+    a && a.vymeraPozemku === 2383, `vymeraPozemku: ${a && a.vymeraPozemku}`);
+  pravda('ale za velikost stavby se nevydává (§453)',
+    a && a.vymera === null, `vymera: ${a && a.vymera}`);
+
+  const b = dle('8092');
+  pravda('soubor pozemků se pozná jako pozemek', b && b.druh === 'pozemek', `druh: ${b && b.druh}`);
+  pravda('a jeho celková výměra vyjde', b && b.vymera === 9910, `vymera: ${b && b.vymera}`);
+
+  /* ZÁVORKA UVNITŘ NÁZVU TO NESMÍ ROZBÍT. Nová kotva hledá závorku,
+     za kterou stojí „Čas do konce:" — za „(domu)" žádné není, takže
+     se název neukousne v polovině. Bez téhle kontroly by oprava
+     mohla vyměnit jednu vadu za druhou. */
+  const c = dle('8125');
+  pravda('závorka uvnitř názvu („(domu)") název neukousne',
+    c && c.nazev.includes('Nová Farma') && c.nazev.includes('(domu)'),
+    `název: „${c ? c.nazev : '(nic)'}"`);
+  pravda('a plocha bytu zůstane 129 m², ne 67 m² pozemku',
+    c && c.vymera === 129, `vymera: ${c && c.vymera}`);
+}
+
 /* ---- 6) spoluvlastnický podíl se pozná -------------------------- */
 /* U podílu je cena za zlomek a výměra celá, takže „cena za metr" by
    lhala dvacetinásobně. Web podíly vede zvlášť a tohle je vstup do

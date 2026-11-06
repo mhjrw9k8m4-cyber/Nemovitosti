@@ -27577,3 +27577,74 @@ Prokázáno dvěma sabotážemi: značka vrácená na `/Aktivní\s+/`
 (zkouška 37/42) a hledání vrácené do celého kusu (zkouška 36/42,
 padlo i „ze tří záznamů vyjdou tři" — s časem místo stavu se
 záznam rozpadl).
+
+## §456
+
+**Měřidlo má ukazovat surovinu u toho, co se nepovedlo — ne
+u prvního, co potká.**
+
+Šestý ostrý pokus vypsal jedenáct nezařazených záznamů jmenovitě
+a šest z nich mělo místo názvu tohle:
+
+```
+[8124] (04.11.2026 16:00:00) Cena: 2 746 666 Kč
+[8092] (06.10.2026 15:05:00) Cena: 16 000 000 Kč
+```
+
+Z názvu se nedá poznat, proč. Měřidlo přitom surový úsek vypisovat
+umělo — jen ho vypisovalo u prvních záznamů z první a z poslední
+stránky, a ty byly v pořádku. Měření tedy ukazovalo, co je zdravé,
+místo toho, co je nemocné.
+
+Teď si drží surový úsek ke každému evidenčnímu číslu a vypíše ho
+u záznamů, které se **nepovedly** — nezařazených i neúplných.
+Vada má jít dohledat tam, kde je, ne tam, kde se dá snadno sáhnout.
+
+## §457
+
+**Kotvit se má na to, co tam je vždycky, ne na výčet, který může
+růst.**
+
+Jak §456 začalo fungovat, odpověď byla na jeden pohled:
+
+```
+[8124] název: „(04.11.2026 16:00:00) Cena: 2 746 666 Kč"
+       úsek: …Prodáno 3. KOLO Výběrového řízení - prodej areálu
+             s pozemky o výměře 2.383m2 - Nová Ves u Ostravy…
+             ( Uzavřená aukce) Čas do konce: Ukončeno (04.11.2026…
+```
+
+Konec názvu se hledal **výčtem** typů řízení: `Výběrové řízení`,
+`Veřejná dražba`, `Aukce`, `Dražba`. Web má ale i
+„( **Uzavřená** aukce)", na kterou vzor nesedl. Konec názvu se tedy
+nenašel, hledání značky se rozlilo do celého úseku (§455), chytilo
+se na „Ukončeno" z času — a šesti záznamům zbyl místo názvu zbytek
+řádku. Byly to pozemky a areály s pozemky, tedy přesně to, pro co
+se ten zdroj zapojuje.
+
+Výčet je slib, že víme, co všechno cizí web používá. Nevíme.
+Kotva je proto to, co za typem řízení stojí **vždycky**:
+
+```
+nazevKonci: /\s*\([^)]*\)\s*Čas do konce:/i
+```
+
+Naměřené tvary, všechny čtyři: „( Veřejná dražba - elektronická)
+Čas do konce:", „( Výběrové řízení dynamické) Čas do konce:",
+„( Výběrové řízení - 3 kola) Čas do konce:", „( Uzavřená aukce)
+Čas do konce:".
+
+Oprava nesmí vyměnit jednu vadu za druhou: názvy mají vlastní
+závorky („Prodej bytové jednotky **(domu)**, podlahová plocha
+129 m2"). Nová kotva je nerozbije, protože za „(domu)" žádné „Čas
+do konce" nestojí — a hlídá to vlastní kontrola, aby se na to
+nezapomnělo.
+
+Přibyl ještě jeden naměřený popisek: „s pozemky **o výměře**
+2.383m2" je skloňovaný tvar, takže se výměra pozemku u areálu
+dosud nečetla. Čte se, ale za velikost stavby se nevydává —
+2 383 m² je pozemek, ne budova (§453).
+
+Prokázáno sabotáží: kotva vrácená na výčet typů řízení → zkouška
+45/50, padlo pět kontrol včetně „soubor pozemků se pozná jako
+pozemek".
