@@ -16,7 +16,7 @@
 // a zkomolenin („jiná plochá"). Kdyby se tu psal text „jak by to asi
 // vypadalo", zkouška by prověřovala domněnku, ne web (§449).
 import { zZaznamu, vymeraSPopiskem } from './cteni-zdroje.mjs';
-import { PREDPISY, POPISKY_VYMERY, kategorieZNazvu, podilZNazvu } from './predpisy-zdroju.mjs';
+import { PREDPISY, POPISKY_VYMERY, POPISKY_PLOCHY_STAVBY, kategorieZNazvu, podilZNazvu } from './predpisy-zdroju.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 let ok = 0, chyb = 0;
@@ -149,6 +149,28 @@ pravda('usedlost se zařadí jako stavba', usedlostK && usedlostK.kategorie === 
   /* „podlahová plocha" není druh: dřív dělala z domu byt. */
   const dum = kategorieZNazvu('Prodej RD podlahová plocha 184 m2, stodola, vedlejší stavby');
   pravda('a „podlahová plocha“ sama z domu byt nedělá', dum && dum.druh === 'dům', JSON.stringify(dum));
+}
+
+/* ---- 5d) §453: popisky plochy stavby z druhého pokusu ---------- */
+/* Mezi neúplnými nabídkami druhého ostrého pokusu stálo tohle —
+   plochy staveb, jen jinak pojmenované. Bez nich se nabídka
+   zahodila jako „chybí výměra", přestože ji uvádí. */
+{
+  const zkus = (nazev, ceka) => {
+    const k = kategorieZNazvu(nazev);
+    const v = vymeraSPopiskem(nazev, POPISKY_PLOCHY_STAVBY, true);
+    pravda(`plocha stavby se najde: „${nazev.slice(0, 44)}…“`, v === ceka,
+      `vyšlo ${v}, čekalo se ${ceka} (druh ${k && k.druh})`);
+  };
+  zkus('Prodej rozsáhlého areálu (sklady,výroba,administrativa), plocha budov 52.235m2, vlastní vlečka', 52235);
+  zkus('Prodej dvojpodlažního RD s dispozicí využití podkroví, obytná plocha 90 m2, pozemek 135 m2', 90);
+  zkus('Výrobní areál kovovýroby, užitná plocha budov 1.813 m2, pozemky 5.277 m2', 1813);
+  /* A protipól: u téhle nabídky plocha stavby UVEDENÁ NENÍ a číslo
+     298 stojí bez popisku. Prázdno je tu správná odpověď — vzít
+     „pozemky celkem" by byla zase ta nepravda. */
+  const bez = vymeraSPopiskem('Prodej provozní budovy (administrativa, kanceláře) 298 m2, s halou a skladem 539 m2, pozemky celkem 1 200 m2',
+    POPISKY_PLOCHY_STAVBY, true);
+  pravda('a kde plocha stavby popisek nemá, zůstane prázdno', bez === null, String(bez));
 }
 
 /* ---- 6) spoluvlastnický podíl se pozná -------------------------- */

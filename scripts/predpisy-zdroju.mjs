@@ -45,7 +45,13 @@ export const POPISKY_VYMERY = [
  * zvlášť (vymeraPozemku) — u domu se zahradou je to užitečný údaj,
  * jen to není „velikost domu". */
 export const POPISKY_PLOCHY_STAVBY = [
+  /* Tři popisky přibyly z DRUHÉHO ostrého pokusu (§453): mezi
+     neúplnými nabídkami stálo „plocha budov 52.235m2", „obytná
+     plocha 90 m2" a „užitná plocha budov 1.813 m2". Všechno jsou
+     plochy stavby, jen jinak pojmenované — bez nich se zahazovaly
+     nabídky, které jsou v pořádku. */
   'užitná plocha budov', 'uzitna plocha budov',
+  'plocha budov', 'obytná plocha', 'obytna plocha',
   'užitná plocha', 'uzitna plocha',
   'podlahová plocha', 'podlahova plocha',
   'zastavěná plocha', 'zastavena plocha',

@@ -121,6 +121,17 @@ for (const x of cele.slice(0, 5)) {
   console.log(`      ${x.odkaz}`);
 }
 
+/* NEZAŘAZENÉ JMENOVITĚ. Číslo „31 nepoznáno" se nedá vyšetřit —
+   může to být další druh nemovitosti (a pak se o něj přicházíme),
+   nebo další cizí věc (a pak se má odložit). Rozhodnout se to dá
+   jen tak, že je člověk uvidí. Druhý ostrý pokus 6. 11. na tohle
+   narazil a bez výpisu se nedalo pokračovat. */
+const nezarazene = jedinecne.filter((x) => !kategorieZNazvu(x.nazev));
+console.log(`\nNEZAŘAZENÉ ${nezarazene.length} — jmenovitě (nejvýš 40):`);
+for (const x of nezarazene.slice(0, 40)) {
+  console.log(`  [${x.cislo || '—'}] ${x.nazev.slice(0, 110)}`);
+}
+
 /* A CO SE NEPOVEDLO. Bez tohohle by se čtvrtina ztracených nabídek
    schovala za hezké číslo nahoře. */
 const nedodelky = jedinecne.filter((x) => !(x.cena > 0 && x.vymera > 0 && x.odkaz));
