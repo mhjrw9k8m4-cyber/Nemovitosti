@@ -385,8 +385,17 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
      a kolik jich doopravdy leží za hranicí. Jen to třetí je oprávněné
      zahození; u Bezrealitky bylo pod tím jedním jménem 263 nabídek,
      tedy 11 % dnešního webu. */
-  je('souřadnice mimo ČR mají jméno',
-    F.procNeplatna({ ...dobra, lat: 40, lng: 4 }), 'souradniceMimoCR');
+  /* A ZA KTEROU HRANICÍ. Měření 6. 11. ukázalo, že u Bezrealitky jsou
+     všechny ty nabídky za hranicí doopravdy (ne nulové, ne nečíselné),
+     takže se zbývá zjistit, v jakém státě — a to rozhodne, jestli je
+     zahození v pořádku (cizí stát) nebo vada (přeskočené souřadnice). */
+  je('souřadnice mimo ČR nesou i stát, kam padly',
+    F.procNeplatna({ ...dobra, lat: 48.15, lng: 17.11 }), 'mimoCR:SK');
+  je('a u vzdáleného bodu se nehádá',
+    F.procNeplatna({ ...dobra, lat: 48.86, lng: 2.35 }), 'mimoCR:jinde');
+  je('Vídeň je Rakousko, ne Slovensko',
+    F.procNeplatna({ ...dobra, lat: 48.21, lng: 16.37 }), 'mimoCR:AT');
+  je('Krakov je Polsko', F.procNeplatna({ ...dobra, lat: 50.06, lng: 19.94 }), 'mimoCR:PL');
   je('nulová poloha je JINÝ stav než poloha za hranicí',
     F.procNeplatna({ ...dobra, lat: 0, lng: 0 }), 'souradniceNula');
   je('a souřadnice, které nejsou číslo, taky',

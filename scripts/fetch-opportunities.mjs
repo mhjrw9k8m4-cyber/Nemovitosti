@@ -3396,6 +3396,33 @@ const TYPES = new Set(['sale', 'drazba', 'exekuce', 'obec']);
  * Síto zůstává stejné. Mění se jen tolik, že každé zahození má JMÉNO
  * a sečte se po zdrojích — stejně jako u čtení vstupu (§363, §364).
  * Zahození, které nemá jméno, se nedá ani spravit, ani obhájit. */
+/* HRUBÉ OBALY SOUSEDNÍCH STÁTŮ — jen aby nález řekl, co to je.
+ *
+ * Na nic se podle nich NEROZHODUJE: o zahození už rozhodla podmínka
+ * nad tím (bod neleží v ČR). Tohle jen pojmenuje, kam ten bod padl,
+ * aby se z výpisu dalo poznat, jestli zdroj posílá nabídky ze zahraničí
+ * (pak je zahození v pořádku), nebo jestli nám někde přeskakují
+ * souřadnice (pak je to naše vada). Obaly se překrývají, takže se bere
+ * první, který sedne — proto SK před AT a PL před DE: Bezrealitky mají
+ * slovenskou sestru a právě ta je nejpravděpodobnější vysvětlení.
+ *
+ * MĚŘENO 6. 11.: Bezrealitky mělo 263 takových nabídek z 1 898,
+ * tedy 14 %. Rozdělení na „nejsou číslo / jsou nula / jsou za hranicí"
+ * (§471) ukázalo, že VŠECH 263 má souřadnice v pořádku a leží opravdu
+ * za hranicí. Tahle jména mají dopovědět, za kterou. */
+const SOUSEDI = [
+  ['SK', 47.7, 49.7, 16.8, 22.6],
+  ['PL', 49.0, 54.9, 14.1, 24.2],
+  ['AT', 46.3, 49.1, 9.5, 17.2],
+  ['DE', 47.2, 55.1, 5.8, 15.1],
+];
+export function sousedniStat(lat, lng) {
+  for (const [zn, laMin, laMax, lnMin, lnMax] of SOUSEDI) {
+    if (lat >= laMin && lat <= laMax && lng >= lnMin && lng <= lnMax) return zn;
+  }
+  return 'jinde';
+}
+
 export function procNeplatna(o) {
   if (!o || typeof o !== 'object') return 'neniZaznam';
   if (!TYPES.has(o.type)) return 'cizíTyp';
@@ -3459,7 +3486,7 @@ export function procNeplatna(o) {
   const lat = Number(o.lat), lng = Number(o.lng);
   if (!isFinite(lat) || !isFinite(lng)) return 'bezSouradnic';
   if (lat === 0 && lng === 0) return 'souradniceNula';
-  if (lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return 'souradniceMimoCR';
+  if (lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return 'mimoCR:' + sousedniStat(lat, lng);
   // Obdélník ale zahrnuje i kus Německa/Rakouska/Polska u hranic. Přesnější test:
   // bod MUSÍ ležet blízko některého okresního střediska (ČR je hustě pokrytá 76 okresy,
   // každé místo v ČR je od nějakého do ~30 km). Když je nejbližší okres přes 42 km

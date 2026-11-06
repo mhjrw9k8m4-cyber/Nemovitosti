@@ -28486,3 +28486,34 @@ a kolik skutečný cizí pozemek — a teprve podle toho se dá opravovat.
 
 Sabotáž (slít nulovou polohu zpátky k poloze za hranicí) → **1 chyba**
 v `scripts/test-vypadek-zdroje.mjs`.
+
+**A TEĎ TO MĚŘENÍ — hned týž den, jeden běh robota.** Rozdělení
+odpovědělo v jediném běhu a odpověď je čistá:
+
+```
+Bezrealitky  stáhl 1898 · nepustilo 276 → souradniceMimoCR 263, …
+```
+
+`souradniceNula` **0**. `bezSouradnic` **0**. **Všech 263 nabídek má
+souřadnice v pořádku a leží doopravdy za hranicí republiky.** Žádná
+z nich se neztrácí naší neschopností.
+
+Takže: počet, který posudek hlásil, platil; jeho výklad neplatil ani
+zdaleka; a oprava, kterou navrhoval (dopočítat polohu z názvu obce),
+by byla práce pro 263 nabídek, které polohu mají, a výsledek **nula
+nových nabídek na webu**. Tři jména místo jednoho stála deset řádků
+a odpověděla za jeden běh.
+
+**Zbývá doptat, za kterou hranicí** — na tom totiž záleží, co dál.
+Bezrealitky mají slovenskou sestru, takže nejpravděpodobnější výklad je,
+že dotaz na jejich API nefiltruje zemi a 14 % odpovědi jsou slovenské
+nabídky; pak je zahození **v pořádku** a dá se ještě zlevnit tím, že se
+o ně nebude žádat. Jiný výklad je, že se někde přeskakuje zeměpisná
+šířka s délkou. Rozhodne to další běh: jméno důvodu teď nese stát
+(`mimoCR:SK`, `mimoCR:AT`, `mimoCR:PL`, `mimoCR:DE`, `mimoCR:jinde`),
+spočítaný z hrubých obalů, o kterých se nic nerozhoduje — slouží jen
+k pojmenování nálezu.
+
+**Pravidlo, které z toho zbývá:** když je jméno nálezu nepřesné, levnější
+než vysvětlovat ho je **rozdělit ho** a nechat příští běh odpovědět.
+Deset řádků proti půldnu, a výsledek je měření, ne domněnka.
