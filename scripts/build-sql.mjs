@@ -23,6 +23,9 @@ const PORADI = [
   // Dřív v repozitáři nebyl vůbec a v databázi přitom běžel — viz hlavička
   // souboru.
   ['zprava-upozorneni.sql', 'upozornění na novou zprávu z kontaktního formuláře'],
+  // Hned za zprava-upozorneni.sql: zužuje pravidlo ze schema.sql
+  // a přepisuje notify_new_message, takže musí běžet za oběma.
+  ['zpravy-strop.sql', 'strop na zprávy z formuláře — anon je mohl posílat bez konce'],
   ['messaging.sql', 'zprávy mezi zájemcem a majitelem'],
   ['messaging-fix.sql', 'oprava chatu a úklid'],
   ['saved-searches.sql', 'uložená hledání'],

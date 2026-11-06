@@ -26,15 +26,25 @@ function pravda(popis, vyslo, proc) {
   else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
 }
 
-/* VOLNÝ ZÁPIS S DŮVODEM. Kontaktní formulář pošle zprávu bez účtu, takže
-   u něj `with check (true)` smysl má — čtení té tabulky má jen majitel
-   (service_role) a žádný sloupec se tam netváří jako povolení k něčemu
-   dalšímu. Kdyby takových tabulek mělo být víc, patří sem i s důvodem;
-   prázdný důvod se nepočítá. */
-const VOLNY_ZAPIS = {
-  messages: 'kontaktní formulář bez účtu; čtení má jen majitel (service_role) '
-    + 'a žádný sloupec nic nepovoluje',
-};
+/* VOLNÝ ZÁPIS S DŮVODEM. Dnes žádný takový není a je to tak správně;
+   kdyby přibyl, patří sem i s důvodem (prázdný důvod se nepočítá).
+
+   STÁL TU `messages` — kontaktní formulář bez účtu — s důvodem „čtení té
+   tabulky má jen majitel (service_role) a žádný sloupec nic nepovoluje".
+   OBĚ POLOVINY TÉ VĚTY PLATILY a díra tam přesto byla: nad `messages`
+   visí spouštěč `trg_notify_new_message`, který každým vložením pošle
+   e-mail přes Resend. Z práva vložit řádek se tím stalo právo poslat
+   e-mail — tisíc dotazů veřejným klíčem = tisíc e-mailů majiteli
+   a vyčerpaná kvóta poštovní služby, kterou se posílá i hlídání nabídek.
+   Důvod tedy nebyl chybný; byl neúplný o to, co se tou tabulkou SPUSTÍ.
+   Z toho pravidlo níž: u volného zápisu nerozhoduje jen to, kdo řádek
+   přečte, ale i co jeho vložení rozpohybuje.
+   Opraveno v supabase/zpravy-strop.sql (§469). */
+const VOLNY_ZAPIS = {};
+
+/* Tabulky, nad kterými visí spouštěč. Zápis do nich nesmí být volný ani
+   bez stropu, protože se jím něco DĚJE — tady se posílá pošta. */
+const SE_SPOUSTECEM = ['messages'];
 
 const sql = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
 const posledni = new Map();
@@ -80,6 +90,42 @@ pravda(`a aspoň nějaké pouští zápis s veřejným klíčem (${zapisAnon.len
       /confirm_token\s+is\s+null/i.test(p.podminka), p.podminka.slice(0, 160));
     pravda('a drží délku e-mailu', /length\(email\)/i.test(p.podminka), p.podminka.slice(0, 160));
   }
+}
+
+/* --- ZÁPIS, KTERÝM SE NĚCO DĚJE, MUSÍ MÍT STROP (§469) ----------- */
+{
+  const spoustece = [...sql.matchAll(/create\s+trigger\s+(\w+)[\s\S]{0,120}?\son\s+([a-z_0-9]+)/gi)]
+    .map((m) => m[2].toLowerCase());
+  pravda(`spouštěče se v balíku dají najít (${spoustece.length})`, spoustece.length >= 1,
+    'vzorec na „create trigger … on tabulka" nesedí — kontrola níž by měřila prázdno');
+  for (const tab of SE_SPOUSTECEM) {
+    pravda(`nad ${tab} opravdu spouštěč visí (jinak je tahle kontrola mrtvá)`,
+      spoustece.indexOf(tab) >= 0, `v balíku žádný spouštěč na ${tab} není`);
+    const p = zapisAnon.find((x) => x.tabulka === tab);
+    pravda(`veřejný zápis do ${tab} v balíku je`, !!p, `pravidlo pro ${tab} se nenašlo`);
+    if (!p) continue;
+    pravda(`a NENÍ volný — ${tab} spouští poštu, takže „with check (true)" nestačí`,
+      !/with check \(\s*true\s*\)/i.test(p.podminka), p.podminka.slice(0, 160));
+    pravda(`${tab}: drží délku textu (nikdo nepošle megabajtový řádek)`,
+      /length\(coalesce\(message/i.test(p.podminka), p.podminka.slice(0, 200));
+    pravda(`${tab}: drží POČET za hodinu (strop proti zahlcení)`,
+      /zprav_poslednich\(\s*60\s*\)\s*<\s*\d+/i.test(p.podminka), p.podminka.slice(0, 200));
+  }
+  /* A strop na POŠTU je jiný strop než na zápis: zpráva se uloží, i když
+     se o ní neupozorní, takže se při nálezu nic neztratí. */
+  /* POSLEDNÍ PODOBA, ne první. Balík funkci definuje dvakrát —
+     zprava-upozorneni.sql ji zakládá a zpravy-strop.sql ji přepisuje —
+     a platí ta pozdější. Vzorek bez `g` bral tu první a hlásil, že
+     strop chybí, i když v balíku byl. */
+  const vsechnaTela = [...sql.matchAll(/create or replace function notify_new_message\(\)[\s\S]*?\nend \$\$;/g)];
+  const telo = vsechnaTela.length ? vsechnaTela[vsechnaTela.length - 1][0] : '';
+  pravda('a spouštěč sám přestane posílat, když zpráv přijde příliš',
+    /count\(\*\)\s*from messages[\s\S]{0,120}interval '1 hour'[\s\S]{0,40}>\s*\d+[\s\S]{0,60}return new/i.test(telo),
+    telo.slice(0, 400) || 'funkce notify_new_message se v balíku nenašla');
+  pravda('a ten strop stojí PŘED čtením tajemství z Vaultu',
+    telo.indexOf('interval \'1 hour\'') > 0
+    && telo.indexOf('interval \'1 hour\'') < telo.indexOf('decrypted_secrets'),
+    'při zahlcení se nemá číst ani klíč');
 }
 
 console.log('\nZápis do databáze s veřejným klíčem');

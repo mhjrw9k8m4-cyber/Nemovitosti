@@ -37,6 +37,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { fetchSLimitem } from './fetch-s-limitem.mjs';
+import { funkceKtereZbydou } from './sql-koncovy-stav.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 /* Tabulky, které SMÍ číst kdokoli bez přihlášení — tedy žádná.
@@ -65,45 +66,16 @@ export const VEREJNE_TABULKY = [];
    Čte se to tedy v pořadí, v jakém se SQL pouští, a podle PODPISU
    (jména i typů parametrů): delete_listing existuje ve dvou podobách —
    starou (uuid,uuid) tenhle balík ruší, novou (uuid) pod účtem zakládá,
-   takže to jméno v databázi zůstává a čeká se na něj. */
-function typyParametru(seznam) {
-  const kusy = [];
-  let hloubka = 0, ted = '', vApostrofu = false;
-  for (const z of String(seznam)) {
-    if (vApostrofu) { ted += z; if (z === "'") vApostrofu = false; continue; }
-    if (z === "'") { vApostrofu = true; ted += z; continue; }
-    if (z === '(' || z === '[') hloubka++;
-    if (z === ')' || z === ']') hloubka--;
-    if (z === ',' && hloubka === 0) { kusy.push(ted); ted = ''; continue; }
-    ted += z;
-  }
-  if (ted.trim()) kusy.push(ted);
-  return kusy.map((k) => {
-    /* „p_lat double precision default null" → „double precision“.
-       U drop/grant/revoke stojí jen typ, žádné jméno — pozná se tak,
-       že by po odstranění prvního slova nic nezbylo. */
-    let t = k.replace(/\s+default\s[\s\S]*$/i, '').trim().replace(/\s+/g, ' ');
-    const slova = t.split(' ');
-    const bezJmena = slova.slice(1).join(' ');
-    if (slova.length > 1 && !/^(precision|varying)$/i.test(slova[1])) t = bezJmena;
-    return t.toLowerCase();
-  }).join(',');
-}
+   takže to jméno v databázi zůstává a čeká se na něj.
 
-/** Jména funkcí, která po doběhnutí celého SQL v databázi zůstanou. */
-export function funkceKtereZbydou(sql) {
-  const podpisy = new Map();   // jméno → Set podpisů
-  const udalosti = [...String(sql).matchAll(
-    /^(create (?:or replace )?function|drop function if exists) ([a-z_][a-z0-9_]*)\s*\(([^)]*(?:\([^)]*\)[^)]*)*)\)/gmi)];
-  for (const u of udalosti) {
-    const jmeno = u[2].toLowerCase();
-    const podpis = typyParametru(u[3]);
-    if (!podpisy.has(jmeno)) podpisy.set(jmeno, new Set());
-    if (/^create/i.test(u[1])) podpisy.get(jmeno).add(podpis);
-    else podpisy.get(jmeno).delete(podpis);
-  }
-  return [...podpisy.entries()].filter(([, s]) => s.size).map(([j]) => j);
-}
+   ČTE TO JEDEN SPOLEČNÝ SOUBOR, scripts/sql-koncovy-stav.mjs. První
+   podoba stála tady a byla neúplná: nepoznala `drop function` bez
+   `if exists`, aliasy typů (`int` proti `integer`), `public.` před
+   jménem ani odsazený příkaz. Oponentní posudek to naměřil (§468)
+   a bylo to vidět i na hlídači postaveném na stejném vzorku. Tím,
+   že to čte jeden soubor, se takový nález opravuje na jednom místě. */
+
+export { funkceKtereZbydou };
 
 /** Vytáhne z SQL, co MÁ v databázi být. Jeden zdroj pravdy je ten SQL. */
 export function ocekavaneZeSQL(sql) {

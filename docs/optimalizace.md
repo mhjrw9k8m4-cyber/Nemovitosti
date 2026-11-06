@@ -28278,3 +28278,108 @@ Sabotáž (ten řádek pryč) to prokázala naostro: Enter na „Uložit" odeše
 z `index.html` na
 `pozemek.html?p=Osvětimany|—|Uherské Hradiště|…`. Hlídá to
 `scripts/test-zaostreni.mjs`, oddíl 4c.
+
+## §468
+
+**Hlídač, který hledá řetězce, nehlídá stav. Čtyři sabotáže otevřely
+díru z §466 znovu a hlídač u všech hlásil 12 v pořádku, 0 chyb.**
+
+Hlídače na §466 jsem napsal tak, aby se nedal obejít — a nechal jsem si
+ho rozcupovat. Naměřeno na kopii balíku, jeden řádek na konec
+`supabase/00-vse.sql`:
+
+| řádek na konec | díra | hlídač |
+|---|---|---|
+| `alter table listings disable row level security;` | anon čte celou tabulku | **12/12 ✓** |
+| `create policy verejne_zpet on listings for select using (true);` | ano | **12/12 ✓** |
+| `create policy "zpet" on public.listings for select using (true);` | ano | **12/12 ✓** |
+| `  create policy "zpet2" on listings …` (dvě mezery) | ano | **12/12 ✓** |
+
+První je ten poučný. Hlídač ověřoval RLS takhle:
+
+```js
+pravda('RLS na listings je zapnuté', /alter table listings enable row level security/i.test(SQL));
+```
+
+Což platí i v balíku, který ho na konci **vypne**. **Přítomnost příkazu
+není stav.** A u SQL to platí dvojnásob, protože se celý pouští
+v pořadí: poslední slovo o RLS té tabulky má poslední příkaz, ne první.
+
+Zbylé tři jsou o tom, kolika způsoby se dá táž věc napsat: jméno
+pravidla v uvozovkách i bez nich, tabulka jako `listings`
+i `public.listings`, příkaz na začátku řádku i odsazený. Vzorek kotvený
+na `^` s povinnými uvozovkami hlídá jeden z těch způsobů a o ostatních
+mlčí — a mlčí s dobrým svědomím, protože vrací zelenou.
+
+**Pravidlo:** hlídač nad SQL nesmí čtít řádky, ale **konečný stav
+balíku** — co v databázi zůstane, až doběhne celý. To je
+`scripts/sql-koncovy-stav.mjs`: čte příkazy v pořadí a vede si
+RLS po tabulkách, pravidla po tabulkách, funkce po PODPISECH, sloupce
+a práva. Všechny čtyři sabotáže teď padnou, a jsou v
+`scripts/test-inzerat-token.mjs` natrvalo **jako zkoušky** — ne jako
+historie. Přibyly k nim tři, které první podoba taky pustila: sloupec
+vrácený bez `if not exists`, starý model obnovený **pod jiným jménem**
+(`smaz_inzerat(uuid,uuid)`), a typ napsaný jako alias (`int` proti
+`integer`).
+
+**A jedna sabotáž, která se poznat NESMÍ.** Zakomentovaný příkaz není
+příkaz. Kdyby čtečka přestala umět komentáře, hlásila by díru nad
+zdravým balíkem — a planý poplach se odnaučí stejně rychle jako
+mlčení. Je to proto taky zkouška, obrácená.
+
+**Totéž se našlo v produkčním kódu.** `funkceKtereZbydou()`
+v `scripts/kontrola-databaze.mjs` jsem napsal týmž vzorkem, takže
+nepoznala `drop function` bez `if exists`, aliasy typů, `public.` před
+jménem ani odsazený příkaz. Teď to čte týž společný soubor —
+a nález se opravuje na jednom místě, ne na dvou.
+
+## §469
+
+**„Čtení té tabulky má jen majitel a žádný sloupec nic nepovoluje."
+Obě poloviny platily. Díra byla mezi nimi — ve spouštěči.**
+
+Tabulka `messages` (kontaktní formulář) měla pravidlo
+`for insert to anon with check (true)`: kdokoli smí vložit cokoli,
+kolikrát chce. A nad tou tabulkou visí `trg_notify_new_message`, který
+**každým vložením pošle e-mail** přes Resend.
+
+```
+for i in $(seq 1 1000); do
+  curl -s -X POST "$URL/rest/v1/messages" -H "apikey: $ANON" \
+    -H "Authorization: Bearer $ANON" -H "Content-Type: application/json" \
+    -d '{"kind":"kontakt","message":"x"}'
+done
+```
+
+Tisíc e-mailů majiteli a vyčerpaná kvóta poštovní služby — týmž klíčem
+se posílá i hlídání nabídek, takže by s ní padlo i to. Sloupec
+`message` je `text` bez stropu, takže stejnou cestou jde poslat jeden
+řádek o desítkách megabajtů.
+
+Hlídač `scripts/test-anon-zapis.mjs` ten volný zápis **měl zapsaný,
+s důvodem**: „kontaktní formulář bez účtu; čtení má jen majitel
+(service_role) a žádný sloupec nic nepovoluje". Ověřil jsem obě
+poloviny a **obě platí**. Chyba nebyla v žádné z nich. Byla v otázce,
+kterou si ten důvod nepoložil: *co se tím vložením SPUSTÍ.*
+
+Je to táž třída vady jako §466, jen o tabulku dál. V §466 stály proti
+sobě dvě rozumné poznámky („token je tajný" a „tabulku inzerátů smí
+číst každý"), každá platila o něčem jiném, a díru tvořil jejich součet.
+Tady platí totéž o povolení a o spouštěči.
+
+**Pravidlo:** u volného zápisu nerozhoduje jen to, **kdo řádek
+přečte**, ale i **co jeho vložení rozpohybuje** — poštu, platbu,
+volání na cizí službu. Zápis, kterým se něco děje, musí mít strop,
+i když z něj nic neuteče.
+
+Oprava (`supabase/zpravy-strop.sql`) má **dva různé stropy
+schválně**: na vložení (délky polí a 30 zpráv za hodinu) a zvlášť na
+odeslanou poštu (12 za hodinu, a ta podmínka stojí **před** čtením
+tajemství z Vaultu). Zpráva se tedy uloží, i když se o ní
+neupozorňuje — při zahlcení se nic neztratí, majitel je vidí v Table
+Editoru. Jeden strop na obojí by znamenal volit mezi „přijde ti spam"
+a „ztratí se ti zpráva".
+
+Sabotáž: pravidlo zpátky na `with check (true)` → **4 chyby**. A hlídač
+k tomu ověřuje, že nad `messages` spouštěč opravdu visí — bez toho by
+celá kontrola byla mrtvá ve chvíli, kdy by někdo spouštěč zrušil.

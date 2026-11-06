@@ -45,6 +45,15 @@ const VYJIMKY = {
   subscribe_watch: 'přihlášení e-mailu k hlídání; samo nic neprozradí, potvrzuje se odkazem s tokenem (confirm_watch) a má strop na jeden e-mail',
   zapis_navstevu: 'zápis návštěvy do statistiky; nic nečte a nemá komu co vydat',
   zapis_chybu: 'zápis pádu v prohlížeči do čítačů chyb; nic nečte a nemá komu co vydat',
+  /* Vydává JEDINÉ číslo — kolik zpráv z formuláře přišlo za poslední
+     hodinu — a nic z jejich obsahu. `security definer` být musí:
+     pravidlo `verejne vkladani zprav` se vyhodnocuje právem toho, kdo
+     vkládá, a ten na tabulku `messages` žádné právo ke čtení nemá ani
+     mít nesmí. Bez definer by count(*) viděl nulu a strop by nikdy
+     nesepnul. Pro `anon` povolená taky z nutnosti: bez toho skončí
+     pravidlo na „permission denied" a formulář přestane fungovat. */
+  zprav_poslednich: 'vrací jen počet zpráv za poslední hodinu, žádný obsah; '
+    + 'je to strop proti zahlcení formuláře (supabase/zpravy-strop.sql)',
 };
 
 const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
