@@ -41,8 +41,31 @@ const VSE = PKH.bezDuplicit(syrove);
 
 /* MĚŘÍ SE NA CELÝCH POZEMCÍCH NA PRODEJ. U podílu je cena za zlomek
    a výměra celá, takže „chyba odhadu" by měřila tu nesrovnalost, ne
-   model. Dražby mají vyvolávací cenu, což není nabídková cena. */
-const VZOREK = VSE.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0);
+   model. Dražby mají vyvolávací cenu, což není nabídková cena.
+
+   A NESMÍ V TOM BÝT ÚŘEDNĚ STANOVENÁ CENA (§450). Tohle měřidlo ji
+   vyhazovalo ze srovnávací hladiny (viz `model.spravniCena` v
+   odhadOkoli i v js/ceny.js), ale ve vzorku, na kterém počítá chybu,
+   ji nechávalo. Měřila se tedy odchylka modelu proti cenám, ze kterých
+   se schválně odmítá učit — a hlavně proti tvrzení, které web nikdy
+   nevysloví: u nabídky SPÚ netiskne žádné srovnání s trhem, tiskne
+   „Se trhem to nesrovnáváme" a vysvětlí § 12 (js/ceny.js, větev
+   `if (model.spravniCena && model.spravniCena(d))`).
+
+   Změřeno 6. 11., když kvůli tomu padl hlídač: 339 nabídek SPÚ ve
+   vzorku mělo medián odchylky +509 % (úřední cena 8 Kč/m² proti
+   mediánu trhu kolem 43), a tahalo to celkovou odchylku z +1,4 na
+   +9,8 % a „okolí" z +0,4 na +5,6 %. Vypadalo to na zkreslený odhad;
+   byla to zkreslená MNOŽINA. Nabídky přitom nejsou chyba dat —
+   v listopadu jich prostě přišel celý balík (347 nových za měsíc).
+
+   JE TO TÁŽ VADA, KTERÁ JE U ZNAMÉNKOVÉ ODCHYLKY NÍŽ UŽ POPSANÁ:
+   tam se z vzorku vyhodily spoluvlastnické podíly, „kterým web odhad
+   vůbec nevydává". Úředně stanovené ceny jsou přesně ten druhý případ
+   a vyhodit se zapomněly. Pravidlo tedy zní jednou pro vždy: měřidlo
+   smí počítat chybu jen tam, kde web to tvrzení opravdu vyslovuje. */
+const VZOREK = VSE.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0
+  && !(CENY.spravniCena && CENY.spravniCena(d)));
 
 const median = (a) => {
   if (!a.length) return null;
@@ -160,6 +183,12 @@ console.log(`dnešní model            medián chyby ${A.median.toFixed(1)} %   
    medián +1,4 % celkem, z toho okolí +0,4 %, ústup na kraj +8,0 %
    a okres −9,0 % (jen 21 odhadů). Odhad z okolí je tedy prakticky
    nezkreslený; posouvá se až ten krajský.
+   PŘEMĚŘENO 6. 11. po opravě vzorku (§450), ve čtyřech rozděleních:
+   celkem −1,4 až −2,2 %, okolí −3,2 až −4,5 %, kraj +5,1 až +8,5 %.
+   Medián absolutní chyby 27,0 až 27,9 % (dřív se tu hlásilo 30,9 %).
+   Okolí tedy mírně PODhazuje, ne nadhazuje, a pořád se vejde do mezí.
+   Předtím to při téže množině dat vycházelo na +9,8 % celkem a +5,6 %
+   u okolí — to byla ta zkreslená množina, ne zkreslený odhad.
    POZOR NA MNOŽINU, NA KTERÉ SE TO MĚŘÍ. Napoprvé jsem si to spočítal
    na všech nabídkách na prodej a vyšlo +4,8 % — jenže v tom byly
    i spoluvlastnické podíly, kterým web odhad vůbec nevydává. Měřila se

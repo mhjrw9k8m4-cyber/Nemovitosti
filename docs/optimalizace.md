@@ -27133,3 +27133,80 @@ opravdu řekl** — neopravuje se podle domněnky. A u každé fixtury se
 hodí jedna otázka: *odkud vím, že takhle to opravdu odpovídá?* Když
 odpověď zní „tak to má v komentáři kód, který zkouším", není to
 fixtura, je to zrcadlo.
+
+## §450 — Zkreslený nebyl odhad, zkreslená byla množina
+
+Po noční obměně dat spadl `test-mericka-odhadu`: *odhad z okolí není
+zkreslený (do 5 p.b.)* — naměřeno **+5,6 %**. V komentáři té kontroly
+přitom stálo naměřených **+0,4 %**. Vypadalo to, že jádro webu
+(odhad ceny) soustavně nadhazuje.
+
+### Čtyři rozdělení řekla, že to není náhoda rozdělení
+
+Měřidlo samo nabízí `--posun N`, tedy jiné rozdělení na desetiny. Čísla:
+**5,6 / 4,8 / 5,0 / 5,0** — tedy přesně na mezi, a hlídač tím padal nebo
+procházel podle toho, jak zrovna padly nabídky do dílů. A něco horšího:
+medián absolutní chyby byl **44,2 %**, kdežto v komentáři měřidla stojí
+naměřených **30,9 %**. Takový skok obměna dat nevysvětlí.
+
+### Rozpad podle zdroje ukázal příčinu na první pohled
+
+| zdroj | n | odchylka | medián Kč/m² |
+|---|---|---|---|
+| Bezrealitky | 958 | −1,9 % | 55 |
+| **SPÚ** | **339** | **+509,4 %** | **8** |
+| ÚZSVM | 59 | +14,4 % | 80 |
+| Nabídky státu | 13 | −3,8 % | 160 |
+
+Nabídky Státního pozemkového úřadu mají cenu stanovenou **úředně podle
+§ 12**, kolem 8 Kč/m². Model je ze srovnávací hladiny vyhazuje — a má,
+cenu nestanovil trh. Jenže **ve vzorku, na kterém se počítá chyba, je
+měřidlo nechávalo.** Počítalo tedy odchylku modelu proti cenám, ze
+kterých se schválně odmítá učit. V listopadu jich přišel celý balík
+(347 nových za měsíc) a odchylka vyskočila.
+
+### Rozhodující otázka: vidí to vůbec někdo?
+
+Kdyby web u takové nabídky tvrdil „o 82 % pod obvyklou cenou", byla by
+ta chyba skutečná a vyhodit ji z měření by znamenalo zakrývat vadu.
+Změřeno v `js/ceny.js`: **netvrdí**. U úředně stanovené ceny se tiskne
+
+> **Se trhem to nesrovnáváme** — tuhle cenu nestanovil trh, ale úřad:
+> Státní pozemkový úřad prodává podle § 12 oprávněné osobě. Rozdíl
+> proti obvyklé ceně proto není sleva.
+
+Těch 509 % tedy nikdo nikdy neuvidí. Vada byla v měřidle.
+
+### Po opravě vzorku (čtyři rozdělení)
+
+| | před | po |
+|---|---|---|
+| medián chyby | 44,2 % | **27,0–27,9 %** |
+| odchylka celkem | +9,8 % | **−1,4 až −2,2 %** |
+| okolí | +5,6 % | **−3,2 až −4,5 %** |
+| kraj | +27,3 % | **+5,1 až +8,5 %** |
+
+Mez 5 p.b. se nehýbala ani o desetinu. Odhad je po opravě měření
+nezkreslený ve všech čtyřech rozděleních — a dokonce přesnější, než
+co se v tom souboru dosud hlásilo.
+
+### Co je na tom nejhorší
+
+**Tahle lekce už v tom souboru napsaná byla.** U znaménkové odchylky
+stojí: *„Napoprvé jsem si to spočítal na všech nabídkách na prodej
+a vyšlo +4,8 % — jenže v tom byly i spoluvlastnické podíly, kterým web
+odhad vůbec nevydává. Měřila se tedy odchylka u čísel, která nikdo
+nikdy neuvidí."* Podíly se z vzorku vyhodily. Úředně stanovené ceny,
+tedy ten úplně stejný případ, ne.
+
+Pravidlo tedy ode dneška stojí jako pravidlo, ne jako poznámka u jednoho
+řádku: **měřidlo smí počítat chybu jen tam, kde web to tvrzení opravdu
+vyslovuje.** A hlídá se POČTEM, ne textem — zkouška si sama spočítá,
+kolik nabídek do vzorku podle týchž pravidel patří, a měřidlo musí
+hlásit tentýž počet. Komentář by takovou vadu nezachytil.
+
+**Sabotáž:** vyhození toho jednoho filtru ze vzorku (ověřeno `diff`)
+shodí dvě kontroly — novou přímo na počtu, a tu o zkreslení jako
+následek. Před dneškem ho neshodilo nic.
+
+`test-mericka-odhadu` 8 → **10 kontrol**.

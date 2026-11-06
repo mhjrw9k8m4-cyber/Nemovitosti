@@ -20,7 +20,9 @@
 // varianta dávat skoro totéž co živý model. Když se filtr z varianty
 // vypustí, rozdíl vyskočí na stovky nabídek a tahle zkouška padne.
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
@@ -50,7 +52,14 @@ console.log('\nMěřidlo přesnosti odhadu');
      Naměřeno při psaní: okolí +0,4 %, kraj +8,0 %, celkem +1,4 %.
      Mez je 5 p.b. — kdyby se okolí posunulo nad ni, přestal by web
      psát „obvyklá cena" a začal by soustavně nadhadzovat nebo
-     podhadzovat, a nikdo by si toho nevšiml. */
+     podhadzovat, a nikdo by si toho nevšiml.
+     PŘEMĚŘENO 6. 11. (§450): okolí −3,2 až −4,5 % ve čtyřech
+     rozděleních. Tahle kontrola tehdy spadla na +5,6 % a vypadalo to
+     na ujetý odhad — byl to zkreslený VZOREK (339 nabídek s úředně
+     stanovenou cenou). Mez se nehýbala ani o desetinu; opravila se
+     množina, na které se měří. Kdyby tahle kontrola spadla znovu,
+     první otázka je zase ta samá: měří se jen tam, kde web to
+     tvrzení opravdu vyslovuje? */
   const okoli = /· okoli\s+n=\s*(\d+)\s+medián\s+(-?[\d.]+) %/.exec(out);
   pravda('odhad z okolí není zkreslený (do 5 p.b.)',
     !!okoli && Math.abs(Number(okoli[2])) <= 5,
@@ -63,6 +72,43 @@ console.log('\nMěřidlo přesnosti odhadu');
   const nKraj = kraj ? Number(kraj[1]) : 0;
   pravda('a nese většinu odhadů (okolí víc než kraj)', nOkoli > nKraj,
     `okolí ${nOkoli}, kraj ${nKraj}`);
+}
+
+/* ---- 1b) §450: VZOREK SMÍ OBSAHOVAT JEN TO, O ČEM WEB MLUVÍ ----- */
+/* Měřidlo vyhazovalo úředně stanovené ceny (SPÚ, § 12) ze srovnávací
+   hladiny, ale ve vzorku je nechávalo — takže počítalo chybu odhadu
+   proti tvrzení, které web u takové nabídky NIKDY nevysloví: místo
+   srovnání s trhem tam tiskne „Se trhem to nesrovnáváme" a vysvětlí
+   § 12 (js/ceny.js, větev `if (model.spravniCena && …)`). Těch 339
+   nabídek mělo medián odchylky +509 % a tahalo celek z +1,4 na +9,8 %.
+
+   Hlídá se to POČTEM, ne textem: zkouška si sama spočítá, kolik
+   nabídek do vzorku podle týchž pravidel patří, a měřidlo musí
+   hlásit tentýž počet. Kdyby se kterékoli z těch pravidel z měřidla
+   vytratilo, čísla se rozejdou o celý ten balík a tohle padne.
+   Text komentáře by takovou vadu nezachytil — proto počet. */
+{
+  const data = JSON.parse(fs.readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
+  const okno = {};
+  new Function('window', fs.readFileSync(path.join(KOREN, 'js', 'ceny.js'), 'utf8'))(okno);
+  const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
+  const vse = PKH.bezDuplicit(data.opportunities || []);
+  const spravni = okno.PK_CENY.spravniCena;
+  const cekam = vse.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0
+    && !spravni(d)).length;
+  const out = pust([]);
+  const m = /měří se na (\d+) celých pozemcích/.exec(out);
+  pravda('vzorek je přesně ten, o kterém web tvrzení vyslovuje',
+    !!m && Number(m[1]) === cekam,
+    m ? `měřidlo hlásí ${m[1]}, podle týchž pravidel jich je ${cekam}`
+      : 'řádek „měří se na N celých pozemcích" ve výpisu chybí');
+  /* A ať je vidět, že to pravidlo není naprázdno: v datech takové
+     nabídky OPRAVDU jsou. Bez tohohle by zkouška mohla svítit zeleně
+     na datech, kde se nemá co vyhodit — a to je týž omyl jako fixtura,
+     která souhlasí s domněnkou kódu (§449). */
+  const kolikSpravnich = vse.filter(spravni).length;
+  pravda('a je na čem to prokázat (v datech úředně stanovené ceny jsou)',
+    kolikSpravnich > 0, `nabídek s úředně stanovenou cenou: ${kolikSpravnich}`);
 }
 
 /* ---- 2) varianta „okolí" měří zeměpis, ne vstupní filtr ---------- */
