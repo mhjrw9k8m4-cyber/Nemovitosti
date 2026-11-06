@@ -173,6 +173,64 @@ pravda('usedlost se zařadí jako stavba', usedlostK && usedlostK.kategorie === 
   pravda('a kde plocha stavby popisek nemá, zůstane prázdno', bez === null, String(bez));
 }
 
+/* ---- 5e) §454: movitý majetek z třetího ostrého pokusu ---------- */
+/* Dražební web vede nemovitosti a movitý majetek v jednom výpisu.
+   Z 31 nezařazených záznamů třetího pokusu bylo 29 movitých věcí —
+   a dokud se nepoznají, buď spadnou do „nepoznáno", nebo se na web
+   dostane vysokozdvižný vozík. Názvy jsou opsané z měření, ne
+   vymyšlené. */
+{
+  const movita = [
+    'Prodáno Regály na palety 64 metrů jedna řada - celkem 4 řady',
+    'Prodáno Vysokozdvižný elektrický vozík BALKANCAR, nosnost 1000 kg, rok výroby 1976',
+    'Prodáno Prodej zásob fotovoltaiky - střídače napětí, panely, konstrukce, rozvaděče',
+    'Prodáno Prodej 7.686 ks pánského a dámského oblečení a doplňků',
+    'Prodáno IVECO DAILY UNIJET 35C15 DAILY 35 C 1, VIN: ZCFC35A8005672550',
+    'Prodáno Soubor kancelářského nábytku a vybavení, z majetku PAMA Poděbrady s.r.o.',
+    'Prodáno Soubor 5 ks stavebních hákových kontejnerů, z majetku PAMA Poděbrady s.r.o.',
+    'Prodáno Autojeřáb Tatra 148-2 AD 20 ČKD, RZ S018916, 1981, stav tachometru 13.809 km',
+    'Prodáno Drtič suti KOMPLET K-JC 503, rok výroby 2023',
+    'Prodáno Kolový traktor ZETOR PROXIMA 6421, 2006, 1915 MTH',
+    'Prodáno Prodej souboru strojů, zařízení, nářadí, nástrojů "Nové Dvory"',
+    'UZAVŘENÁ AUKCE - 2. kolo Výběrového řízení prodej obchodního závodu Liberty Engineering',
+  ];
+  const minula = movita.filter((n) => {
+    const k = kategorieZNazvu(n);
+    return !k || k.druh !== 'není nemovitost';
+  });
+  pravda(`všech ${movita.length} naměřených movitých věcí se pozná`, minula.length === 0,
+    `neprošlo ${minula.length}: ${minula.map((n) => n.slice(0, 50)).join(' | ')}`);
+
+  /* A PROTIPÓL. Soupis movitých věcí je nebezpečný druhým směrem:
+     kdyby zabral příliš, zmizely by nemovitosti. „Výrobní areál"
+     obsahuje „výrob", „hákový kontejner" i „areál" slovo „stav" —
+     tohle hlídá, že se nabídky, kvůli kterým zdroj zapojujeme,
+     nepropadnou mezi harampádí. */
+  const nemovite = [
+    ['VEŘEJNÁ DRAŽBA - RD - užitná plocha 63,77 m2, pozemky celkem 459 m2, Mladkov', 'dům'],
+    ['Výrobní areál kovovýroby v centru města Varnsdorf, užitná plocha budov 1.813 m2', 'areál'],
+    ['Prodej bytové jednotky (domu), podlahová plocha 129 m2, pozemek 67 m2', 'byt'],
+    ['Prodej garáže 18 m2, Brno', 'garáž'],
+    ['Prodej stavebního pozemku 1 200 m2, Nová Bystřice', 'stavební pozemek'],
+  ];
+  for (const [nazev, cekaDruh] of nemovite) {
+    const k = kategorieZNazvu(nazev);
+    pravda(`a nemovitost zůstane nemovitostí: ${cekaDruh}`, k && k.druh === cekaDruh,
+      `vyšlo ${k ? k.druh : 'null'} u „${nazev.slice(0, 50)}…"`);
+  }
+}
+
+/* ---- 5f) §454: mrtvá hranice slova v předpisu ------------------- */
+/* `/\bstroj(?:e|ů|ní zařízení)\b/` nikdy nesedlo, protože za „ů"
+   žádná hranice slova není (`ů` není `\w`). Hlídá to i obecně
+   scripts/test-mrtva-hranice.mjs; tady se měří DŮSLEDEK na větě,
+   kterou web doopravdy poslal. */
+{
+  const k = kategorieZNazvu('Prodáno Prodej souboru strojů, zařízení, nářadí, nástrojů "Nové Dvory", z majetku ALBO');
+  pravda('„souboru strojů" se pozná jako movitá věc', k && k.druh === 'není nemovitost',
+    `vyšlo ${k ? k.druh : 'null'} — hranice za „ů" nesedne, patří tam (?![\\p{L}])`);
+}
+
 /* ---- 6) spoluvlastnický podíl se pozná -------------------------- */
 /* U podílu je cena za zlomek a výměra celá, takže „cena za metr" by
    lhala dvacetinásobně. Web podíly vede zvlášť a tohle je vstup do

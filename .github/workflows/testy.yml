@@ -449,6 +449,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-predpis-zdroje.mjs
 
+      - name: Mrtvá hranice slova v regulárních výrazech (§454)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-mrtva-hranice.mjs
+
       - name: Sonda podmínek čte jen to, co smí
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sonda-podminky.mjs

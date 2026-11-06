@@ -115,7 +115,7 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
       if (m) { odznaku++; typy[m[1]] = (typy[m[1]] || 0) + 1; continue; }
       bez++; bezOdznaku++;
       /* Dražbu v řádku poznáme z podrobností (text zdroje) i z odpočtu. */
-      const vypadaJakoDrazba = /\b(dražba|dražby|dražbě|exekuce|exekuční)\b/i
+      const vypadaJakoDrazba = /\b(dražba|dražby|dražbě|exekuce|exekuční)(?![\p{L}])/iu
         .test(r.replace(/<a [^>]*>[\s\S]*?<\/a>/g, ''));
       if (vypadaJakoDrazba && !vsechnyJeden) tichaDrazba.push(s.f);
     }
@@ -192,7 +192,7 @@ pravda(`je co měřit (${stranky.length} výpisových stránek, ${celkemRadku} �
     for (const r of s.radky) {
       const jeDrazba = stranVDrazbe
         || /class="okr-badge t-(drazba|exekuce)"/.test(r)
-        || /\b(dražba|dražby|dražbě|exekuce|exekuční)\b/i.test(r.replace(/<a [^>]*>[\s\S]*?<\/a>/g, ''));
+        || /\b(dražba|dražby|dražbě|exekuce|exekuční)(?![\p{L}])/iu.test(r.replace(/<a [^>]*>[\s\S]*?<\/a>/g, ''));
       const md = /(\d{1,2})\. (\d{1,2})\. (\d{4})/.exec(r);
       const mo = /<span class="opp-cd([^"]*)">([^<]+)<\/span>/.exec(r);
       if (!jeDrazba) { if (mo) uProdeje.push(s.f); continue; }

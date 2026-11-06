@@ -20,7 +20,7 @@
  * napíše se proč. Žádné obcházení, žádná druhá hlavička.
  * =================================================================== */
 import { PREDPISY, kategorieZNazvu, podilZNazvu } from './predpisy-zdroju.mjs';
-import { zZaznamu } from './cteni-zdroje.mjs';
+import { zZaznamu, bezZnacek } from './cteni-zdroje.mjs';
 import { smimeCist } from './robots.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 
@@ -56,6 +56,7 @@ if (!r.dovoleno) {
 }
 
 const stropStranek = (predpis.dalsiStranky && predpis.dalsiStranky.stropStranek) || 1;
+let prvniHtml = '';
 const vse = [];
 const poStrankach = [];
 for (let i = 0; i < stropStranek; i++) {
@@ -70,6 +71,7 @@ for (let i = 0; i < stropStranek; i++) {
     continue;
   }
   const n = zZaznamu(html, adr, predpis);
+  if (i === 0) prvniHtml = html;
   poStrankach.push({ adr, bajtu: html.length, nasel: n.length });
   vse.push(...n);
   if (i + 1 < stropStranek) await spi(PAUZA_MS);
@@ -130,6 +132,28 @@ const nezarazene = jedinecne.filter((x) => !kategorieZNazvu(x.nazev));
 console.log(`\nNEZAŘAZENÉ ${nezarazene.length} — jmenovitě (nejvýš 40):`);
 for (const x of nezarazene.slice(0, 40)) {
   console.log(`  [${x.cislo || '—'}] ${x.nazev.slice(0, 110)}`);
+}
+
+/* SUROVÝ ÚSEK PŘED NÁZVEM. Tohle je jediná cesta, jak poznat, proč
+   se do názvu plete něco, co tam nepatří — třetí ostrý pokus 6. 11.
+   našel dva "názvy", které začínaly textem filtračního panelu webu
+   ("Neprodáno Prodáno Ukončeno Zrušeno Kraj Vybrat vše…"), a desítky,
+   které začínaly stavem aukce. Bez surového úseku se nedá rozhodnout,
+   jestli je vada v `zacatekZaznamu`, nebo v `konecZaznamu`, a člověk
+   by musel hádat. Vypíše se prvních 6 úseků první stránky, zkrácené.
+   NIC SE TÍM NEMĚNÍ, je to jen výpis do logu. */
+if (prvniHtml) {
+  const text = bezZnacek(prvniHtml);
+  const re = new RegExp(predpis.konecZaznamu.source, 'g');
+  console.log('\nSUROVÝ ÚSEK (prvních 6 na první stránce, po 200 znacích od konce):');
+  let od = 0, m, i = 0;
+  while ((m = re.exec(text)) !== null && i < 6) {
+    const kus = text.slice(od, m.index);
+    od = m.index + m[0].length;
+    i++;
+    const konec = kus.slice(-200).replace(/\s+/g, ' ').trim();
+    console.log(`  [${m[1] || '—'}] …${konec}`);
+  }
 }
 
 /* A CO SE NEPOVEDLO. Bez tohohle by se čtvrtina ztracených nabídek

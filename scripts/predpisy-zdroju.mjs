@@ -141,7 +141,36 @@ export const NENI_NEMOVITOST = [
   /osobní automobil|\bvozidl|nákladní auto|přívěs|návěs/i,
   /soubor movitých věcí|movité věci|zásob[ay]\b/i,
   /ochrann[áé] známk|akcie|obchodní podíl ve společnosti/i,
-  /\bstroj(?:e|ů|ní zařízení)\b|technologi[ei] linky/i,
+  /* `(?![\p{L}])` místo `\b`: za „ů" hranice slova není, takže
+     „Prodej souboru strojů, zařízení" se nepoznalo jako movitá věc
+     a spadlo do „nepoznáno". Naměřeno na verejnedrazby.cz, §454. */
+  /\bstroj(?:e|ů|ní zařízení)(?![\p{L}])|technologi[ei] linky/iu,
+  /* MOVITÉ VĚCI Z TŘETÍHO OSTRÉHO POKUSU (6. 11., §454). Z 31
+     nezařazených záznamů na verejnedrazby.cz bylo 29 movitých věcí.
+     Tohle nejsou domněnky o tom, co by na dražebním webu mohlo být
+     — je to soupis podle naměřených názvů:
+       „Regály na palety 64 metrů jedna řada"
+       „Vysokozdvižný elektrický vozík BALKANCAR, nosnost 1000 kg"
+       „Prodej zásob fotovoltaiky - střídače napětí, panely"
+       „Prodej 7.686 ks pánského a dámského oblečení"
+       „Autojeřáb Tatra 148-2 AD 20 ČKD"
+       „Drtič suti KOMPLET K-JC 503"
+       „Kolový traktor ZETOR PROXIMA 6421"
+       „IVECO DAILY UNIJET 35C15, VIN: ZCFC35A8005672550"
+       „Soubor kancelářského nábytku a vybavení"
+       „Soubor 5 ks stavebních hákových kontejnerů"
+       „prodej obchodního závodu Liberty Engineering Products"
+     Dražební web vede nemovitosti i movitý majetek v jednom výpisu,
+     takže bez tohohle soupisu by se na web dostaly vozíky a traktory.
+     `VIN` je nejspolehlivější signál vozidla: číslo karoserie u jiné
+     věci nestojí. */
+  /\bregál|regálov|\bpalet/i,
+  /vysokozdvižn|\bVZV\b|paletový vozík|paletové vidle|minibagr/i,
+  /\bautojeřáb|\bjeřáb\b|\bdrtič|\bbagr|\btraktor|\bkontejner/i,
+  /\bVIN\s*:|\bRZ\s*[A-Z0-9]{5,}|stav tachometru|první registrace/i,
+  /fotovoltaick\w* panel|\bstřídač|bateriov\w* systém/i,
+  /\boblečení|\bnábytk|kancelářsk\w* vybaven|spotřebního materiálu/i,
+  /obchodního závodu|\bzávod\w* (?:z majetku|dlužníka)/i,
 ];
 
 /* POŘADÍ ROZHODUJE A TOHLE JE JEHO DRUHÁ PODOBA (§453).

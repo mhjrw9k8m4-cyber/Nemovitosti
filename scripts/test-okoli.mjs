@@ -1112,7 +1112,7 @@ const stavVybiraku = (p) => p.evaluate(() => {
     (document.querySelector('#ms-chipy .msch[data-okoli]') || {}).textContent,
     (document.querySelector('.opp-list .map-count') || {}).textContent,
   ].join(' | '));
-  pravda('nikde se neskloňuje název obce', !/\bod [A-ZŠČŘŽÝÁÍÉŮÚĎŤŇ][a-zěščřžýáíéúůďťň]+\b(?! \()/.test(texty),
+  pravda('nikde se neskloňuje název obce', !/\bod [A-ZŠČŘŽÝÁÍÉŮÚĎŤŇ][a-zěščřžýáíéúůďťň]+(?![\p{L}])(?! \()/u.test(texty),
     texty.slice(0, 120));
   await ctx.close();
 }

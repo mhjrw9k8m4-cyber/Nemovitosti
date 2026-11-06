@@ -701,7 +701,12 @@ function nearestOkres(lat, lng) {
    Zkouší to scripts/test-misto-inzeratu.mjs. */
 const ULICE_PREDLOZKA = /^(?:ke?|na|ve?|u|pod|za|nad|do|pri|před|pred|mezi)\s/i;
 const ULICE_PRIDAVNE = /(?:ská|cká|ová|ova|ní|rá|tá|lá|á|é)$/;
-const ULICE_SLOVO = /\b(?:cesta|ulice|náměstí|nábřeží|alej|sady|stezka)\b/i;
+/* Koncová hranice je tu `(?![\p{L}])`, ne `\b`: `\b` se v JavaScriptu
+   řídí `\w`, kam písmeno s diakritikou nepatří, takže za „náměstí"
+   ani za „nábřeží" žádná hranice slova není a obě alternativy byly
+   mrtvé — `vypadaJakoUlice('Náměstí Svobody')` vracelo false a web
+   vedl náměstí jako obec. Měřeno 6. 11., §454. */
+const ULICE_SLOVO = /\b(?:cesta|ulice|náměstí|nábřeží|alej|sady|stezka)(?![\p{L}])/iu;
 /** Vypadá tenhle řetězec na jméno ulice, ne obce? */
 export function vypadaJakoUlice(s) {
   const t = String(s || '').trim();

@@ -27444,3 +27444,79 @@ dohromady. Vzorek ukáže, že čtečka čte; teprve celá množina ukáže,
 Pravidlo tedy zní: **než se zdroj zapojí, musí přes něj projít celý
 výpis, ne vzorek** — a výsledek se čte po kategoriích, ne jen podle
 počtu nalezených nabídek.
+
+## §454
+
+**`\b` za písmenem s diakritikou je mrtvá hranice — a pravidlo
+zapsané bez hlídky se vrátí.**
+
+Třetí ostrý pokus na verejnedrazby.cz nechal 31 ze 145 záznamů
+nezařazených. Dvě z nich měly být rozpoznané: „Prodej souboru
+strojů, zařízení, nářadí, nástrojů" je movitý majetek a předpis na
+něj vzor měl — `/\bstroj(?:e|ů|ní zařízení)\b/`. Měření ukázalo,
+proč nezabral:
+
+```
+/\bstrojů\b/.test('souboru strojů,')   →  false
+/\w/.test('ů')                          →  false
+```
+
+V JavaScriptu se `\b` řídí `\w`, a `\w` je jen `[A-Za-z0-9_]`.
+Písmeno s diakritikou do něj nepatří, takže mezi „ů" a „," žádná
+hranice slova není. Vzor se nechytí — a nechytí se **tiše**, takže
+se chová, jako kdyby ho tam nikdo nenapsal.
+
+Horší než ta vada je ale to, co se našlo kolem ní. Repozitář tuhle
+lekci zažil už třikrát a třikrát si ji zapsal do komentáře:
+
+```
+scripts/cesty-portalu.mjs:591  „můj výraz na ceny byl /\bKč\b/"
+scripts/sonda-zdroju.mjs:55    „/\bKč\b/ nenajde nic"
+scripts/test-stranky.mjs:329   „/\buž\b/ by nesedlo"
+```
+
+A přesto se vrátila — tentokrát schovaná za alternací, kde hranice
+nestojí za písmenem, ale za závorkou, takže ji hledání „znak
+s diakritikou a hned `\b`" nenajde. **Zapsané pravidlo bez hlídky
+je jen vzpomínka.**
+
+Hlídač `scripts/test-mrtva-hranice.mjs` proto u každého `\b` ve
+zdroji zjišťuje, co může stát bezprostředně před ním: písmeno,
+poslední znak každé alternativy ve skupině, obsah třídy znaků, a
+skrz kvantifikátory. Sklidil sedm míst, z toho čtyři živé vady:
+
+| místo | co nefungovalo |
+|---|---|
+| `scripts/predpisy-zdroju.mjs` | „souboru strojů" se nepoznalo jako movitá věc |
+| `scripts/fetch-opportunities.mjs` | `vypadaJakoUlice('Náměstí Svobody')` vracelo false — náměstí se vedlo jako obec |
+| `scripts/test-vypis-radku.mjs` (2×) | „v dražbě" a „exekuční" zkouška nepoznala jako dražbu |
+| `scripts/test-okoli.mjs` | obec končící na diakritiku zápor minul |
+
+A tři místa, kde vada **není** — `js/druh.js`, `js/kategorie.js`
+a její minifikovaná kopie si vstup předem zbaví diakritiky
+(`normalize('NFD')`), takže se „í" do vzoru nikdy nedostane.
+Změřeno: `zTextu('Prodej polí u Brna')` vrací „orná půda" a
+`zTextu('Prodej polívky')` správně `null`. Kdyby je hlídač hlásil,
+měl by devět falešných nálezů ze čtrnácti — a hlídač, který křičí
+nadarmo, se vypne. Mají tedy výjimku, ale její důvod se **nevěří,
+ověřuje**: zmizí-li normalizace, výjimka padá a zkouška spadne s ní.
+A výjimka, která nemá co odpouštět, taky spadne, aby nezůstala
+ležet a jednoho dne nezakryla vadu, která přijde později.
+
+Zbývá mez, kterou tahle zkouška nevidí: 61 míst skládá vzor
+z řetězce (`new RegExp('\b' + k + '\b')`), kde hranice stojí kolem
+proměnné. Nejsou nevinná — v `scripts/test-ceny.mjs` se tak hledá
+jméno kraje a „Karlovarský" končí na „ý". Je to ale jiná práce,
+vede se jako vlastní úkol, a aby se mezitím tiše nerozrostla, má
+strop: přibude-li další, zkouška spadne a donutí o něm rozhodnout.
+
+Třetí pokus přinesl ještě jeden nález, který zatím čeká: do názvů
+se plete stav aukce („Prodáno Regály…", „Ukončeno Prodej…") a u dvou
+záznamů celý filtrační panel webu. Skončená dražba na web nepatří,
+ale než se to opraví, musí se změřit surový úsek — proto do měřidla
+přibyl jeho výpis. **Nehádat, čím to je.**
+
+Prokázáno třemi sabotážemi: vrácená mrtvá hranice v `ULICE_SLOVO`
+(hlídač ji našel i s hláškou, kam patří `(?![\p{L}])`), výjimka
+s vymyšleným důvodem (padla na „nemá co odpouštět") a odebraný
+vzor na vysokozdvižné vozíky (zkouška předpisu: 30/31).
