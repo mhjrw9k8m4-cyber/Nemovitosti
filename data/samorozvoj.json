@@ -9,6 +9,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-06": {
+   "prokazanych": 19,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1368,7 +1373,7 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kontrola-uloh.mjs": {
-   "kdy": "2026-11-05",
+   "kdy": "2026-11-06",
    "hlidá": 2,
    "chytila": 4,
    "nechytila": 0,
@@ -1378,7 +1383,7 @@
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "0d487000a572",
+   "otisk": "782c233dff1c",
    "poznamka": ""
   },
   "test-kontrola-ziva.mjs": {
@@ -1512,15 +1517,29 @@
    "pomucky": [],
    "otisk": "a1cfc20ec7ec",
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-mapa-pozemku.mjs": {
+   "kdy": "2026-11-06",
+   "hlidá": 3,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "d3a182cec8c0",
+   "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
   }
  },
- "updated": "2026-11-05",
+ "updated": "2026-11-06",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "292 z 317 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "293 z 319 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
