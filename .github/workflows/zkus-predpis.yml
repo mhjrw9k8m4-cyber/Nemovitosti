@@ -1,0 +1,52 @@
+name: Ostrý pokus s předpisem
+
+# KOLIK CELÝCH NABÍDEK Z VÝPISU DOOPRAVDY VYJDE.
+#
+# Předpis pro čtení (scripts/predpisy-zdroju.mjs) je prokázaný na
+# naměřeném vzorku — to ale neříká, jak dopadne na všech stránkách
+# živého výpisu. Teprve podle téhle úlohy se rozhoduje, jestli zdroj
+# zapojit do nočního robota.
+#
+# ZE SANDBOXU, KDE SE VYVÍJÍ, VEN NEVIDÍME. Proto se to odehrává tady,
+# stejně jako ohledání zdroje.
+#
+# ROBOTS.TXT SE ČTE PRVNÍ a výjimka není žádná: když je cesta zakázaná,
+# nestáhne se nic a napíše se proč. Mezi dotazy se čeká a stránek se
+# přečte nejvýš tolik, kolik má předpis ve `stropStranek`.
+#
+# NIC NEZAPISUJE do repozitáře ani do dat. Výstup je jen v logu a
+# rozhodnutí, co s ním, patří člověku.
+
+on:
+  workflow_dispatch:
+    inputs:
+      host:
+        description: 'Který zdroj zkusit (host, např. verejnedrazby.cz)'
+        required: false
+        default: 'verejnedrazby.cz'
+        type: string
+
+permissions:
+  contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
+
+jobs:
+  pokus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Tahle úloha do repozitáře nepíše, tak ať jí token nezůstává
+          # ležet v .git/config — hlídá to scripts/test-ci-prava.mjs.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pustit předpis na živý výpis
+        env:
+          HOST: ${{ inputs.host }}
+        run: node scripts/zkus-predpis.mjs "$HOST"
