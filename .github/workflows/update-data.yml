@@ -12,7 +12,18 @@ on:
     # 4× denně (každých 6 h) — zdroje se aktualizují v různou dobu (po půlnoci,
     # kolem poledne…), tak je chytáme vícekrát. Časy jsou v UTC.
     - cron: '0 */6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      sreality:
+        # RUČNÍ BĚH SREALITY NETAHÁ, DOKUD SE O TO NEŘEKNE. Dřív ho tahal
+        # vždycky („aby se dalo měřit") a to bylo napsané v době, kdy se
+        # nevědělo, kolik to stojí. Teď se to ví: $3 za tisíc výsledků,
+        # tedy až $6 za jeden běh. Ruční spuštění kvůli jakékoli jiné
+        # opravě dat by tu částku zaplatilo mimochodem.
+        description: 'Zaplatit i běh Sreality přes Apify (~$6)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -40,13 +51,24 @@ jobs:
         # `github.event.schedule` vrací ten cron výraz, a ten je pro
         # všechny čtyři běhy týž ('0 */6 * * *'), takže by 6:00 od 12:00
         # neodlišil. Napsané to tak nejdřív bylo a tohle je oprava.
+        #
+        # A OD 6. 11. JEN V PONDĚLÍ, protože se změřilo, kolik to stojí:
+        # první ostrý běh vrátil 1 666 záznamů a stál $4,998, tedy $3 za
+        # tisíc výsledků. Denně by to při stropu 2 000 záznamů bylo až
+        # $6 za den, tedy přes $180 za měsíc. Týdně je to do $26.
+        # Jsou to majitelovy peníze, takže se začíná tím menším číslem;
+        # zvednout frekvenci je jedna řádka (`-u +%u` je den v týdnu,
+        # 1 = pondělí) a patří to k rozhodnutí, ne k mlčení.
         run: |
           set -euo pipefail
-          if [ "${GITHUB_EVENT_NAME:-}" = "workflow_dispatch" ] || [ "$(date -u +%H)" = "06" ]; then
+          if [ "${SREALITY_RUCNE:-}" = "true" ] \
+             || { [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] \
+                  && [ "$(date -u +%u)" = "1" ] && [ "$(date -u +%H)" = "06" ]; }; then
             export APIFY_TOKEN="${APIFY_TOKEN_TAJNY:-}"
-            echo "Sreality: tahá se (ruční spuštění nebo běh po 6. hodině UTC)."
+            echo "Sreality: tahá se (vyžádané ruční spuštění nebo pondělní běh po 6. hodině UTC)."
           else
-            echo "Sreality: vynechává se, token se v tomhle běhu nepředává (hodina $(date -u +%H) UTC)."
+            echo "Sreality: vynechává se, token se v tomhle běhu nepředává" \
+              "(den $(date -u +%u), hodina $(date -u +%H) UTC, ručně='${SREALITY_RUCNE:-ne}')."
           fi
           node scripts/fetch-opportunities.mjs
         env:
@@ -62,6 +84,7 @@ jobs:
           # Pod jiným jménem schválně: krok výš ho do APIFY_TOKEN přepíše
           # jen v tom jednom běhu. Čtečka bez APIFY_TOKEN Sreality vynechá
           # a napíše to do logu — stav, který umí (není to chyba).
+          SREALITY_RUCNE: ${{ inputs.sreality }}
           APIFY_TOKEN_TAJNY: ${{ secrets.APIFY_TOKEN }}
           APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
 

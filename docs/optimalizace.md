@@ -27975,3 +27975,71 @@ všechny druhy nemovitostí — byty, domy, komerci. **To není vada
 výměry, to je vada mapování**, a vede se jako vlastní úkol; změřit se
 dá bez dalšího placeného běhu, protože datová sada posledního běhu je
 u Apify pořád k přečtení (`scripts/zkus-sreality.mjs`).
+
+## §463
+
+**Objednávka, kterou zdroj nevyslyšel, není odpověď — a u placeného
+zdroje se platí i za to, co jsme nechtěli.**
+
+Tentýž první ostrý běh Sreality (§462) měl ještě druhou vadu, hlubší
+než slepená výměra. Robot objednával pozemky takhle:
+
+```js
+const input = { category_main_cb: 3, category_type_cb: 1, maxItems: 4000 };
+```
+
+Tak se ty parametry jmenují **ve vyhledávání Sreality**. Actor na
+Apify je ale nezná. Nezahlásil chybu — mlčky je zahodil a pustil svůj
+VÝCHOZÍ vstup. Změřeno na jeho vstupním schématu a na uloženém vstupu
+běhu (obojí jde přečíst zdarma, bez dalšího placeného běhu):
+
+| co actor čeká | co dostal | co použil |
+|---|---|---|
+| `category` z `apartment/house/land/commercial/other` | nic | `apartment` (výchozí) |
+| `transaction` | nic | `sale` |
+| `region` (14 krajů) | nic | `10`, tedy Praha |
+| `maxListings` | `maxItems` (nezná) | `6666` |
+
+Výsledek: **1 666 záznamů, z toho pozemků nula.** Všechno byly byty na
+prodej v Praze — medián 174 419 Kč/m², p90 251 239 Kč/m². Pozemkový
+strop 25 000 Kč/m² je na takových datech bezmocný; 1 586 jich zahodil
+správně a 44 propustil jen proto, že jim slepená výměra cenu za metr
+desetkrát zlevnila.
+
+**A cena.** Běh trval 148 s a stál **$4,998**. To není paušál: 1 666
+výsledků × $0,003 = $4,998, tedy **$3 za tisíc výsledků**. Platilo se
+tedy pět dolarů za 1 666 bytů, o které web nestojí.
+
+Tři věci z toho, každá v kódu:
+
+1. **Vstup se jmenuje tak, jak ho čeká ten, komu se posílá.** Objednává
+   se `category: 'land'`, `transaction: 'sale'` a všech 14 krajů
+   v `regionIds`. Jména se nevymýšlí — čtou se ze vstupního schématu
+   actoru (`scripts/zkus-sreality.mjs`).
+2. **Odpověď se kontroluje proti objednávce.** `pozemkyZApify()` pustí
+   dál jen záznamy, které actor sám označil za pozemek (`category`,
+   `categoryCode` 3). Když odpověď záznamy MÁ a pozemek mezi nimi
+   není, hodí se výjimka — je to selhání zdroje, ne jeho klidný den.
+   Tiché prázdno by vypadalo na výpadek a mlčelo by o něm 38 dní
+   (§231). Prázdná odpověď je naopak jiný stav a výjimku nehází.
+3. **Strop počtu výsledků je strop ÚČTU.** `maxListings: 2000` znamená
+   „nejvýš $6 za běh" a zkouška to tak i hlídá (strop × $0,003 ≤ $10).
+   Ruční spuštění robota navíc Sreality netahá, dokud se o to
+   nezaškrtne políčko: dřív ho tahalo vždycky, a to bylo napsané
+   v době, kdy se nevědělo, že jedno ruční spuštění kvůli jiné opravě
+   stojí šest dolarů. A plán se změnil ze „jednou denně" na **jednou
+   týdně (pondělí 6:00 UTC)**: denně by to bylo přes $180 za měsíc,
+   týdně do $26. Jsou to majitelovy peníze, takže se začíná tím menším
+   číslem a zvýšit frekvenci je jedna řádka.
+
+**Hlídač** `scripts/test-sreality-objednavka.mjs` (19 kontrol) měří
+chování `pozemkyZApify` na záznamech opsaných ze skutečné datové sady
+i tvar objednávky v kódu, včetně stropu účtu. **Sabotáž dvakrát:**
+vrácení tichého prázdna místo výjimky shodilo 2 kontroly; přepsání
+objednávky na `category: 'apartment'` shodilo kontrolu „objednávají se
+POZEMKY". Obojí ověřeno `diff`em a vráceno.
+
+**Co se tím nevyřešilo.** Kolik pozemků Sreality doopravdy má, se ví
+teprve z dalšího placeného běhu — a ten se už objedná správně. Dokud
+neproběhne, zdroj na web nic nedává a je to tak správně: lepší nic než
+cizí nemovitost vydávaná za pozemek.

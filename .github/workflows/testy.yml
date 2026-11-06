@@ -190,6 +190,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-slepena-vymera.mjs
 
+      - name: Objednávka u Apify a kontrola odpovědi (§463)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-sreality-objednavka.mjs
+
       - name: Druh pozemku z textu inzerátu (kus slova, zápor, název obce)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh.mjs

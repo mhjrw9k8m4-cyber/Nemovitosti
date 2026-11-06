@@ -3038,6 +3038,39 @@ async function fetchFarmy() {
 // Bez klíče je to no-op — na běžný bezplatný provoz nemá žádný vliv. Volitelně
 // APIFY_SREALITY_ACTOR přepíše použitý actor. Po prvním reálném běhu se mapování
 // polí doladí podle skutečného výstupu (viz log „Sreality/Apify vzorek").
+/* OBJEDNÁVKA, KTEROU ZDROJ NEVYSLYŠEL, NENÍ ODPOVĚĎ.
+ *
+ * Objednávají se pozemky. Když přijde něco jiného, nesmí to projít
+ * dál: právě takhle viselo na webu 44 pražských bytů jako pozemky
+ * (§462). Actor u každého záznamu píše, co to je (`category`,
+ * `categoryCode`, kde 3 = pozemek) — dá se to tedy ověřit, ne věřit.
+ *
+ * Stojí to mimo fetchSreality schválně: takhle se to dá zkoušet bez
+ * sítě a hlavně bez placeného běhu.
+ */
+export function pozemkyZApify(items) {
+  const seznam = Array.isArray(items) ? items : [];
+  const jePozemek = (e) => String((e && e.category) || '').toLowerCase() === 'land'
+    || Number(e && e.categoryCode) === 3;
+  const poKategorii = {};
+  for (const e of seznam) {
+    const k = String((e && (e.category ?? e.categoryCode)) ?? '?');
+    poKategorii[k] = (poKategorii[k] || 0) + 1;
+  }
+  const pozemky = seznam.filter(jePozemek);
+  if (seznam.length && !pozemky.length) {
+    /* Nula pozemků z odpovědi, která záznamy MÁ, znamená, že actor
+       objednávku zahodil — a to je selhání zdroje, ne jeho klidný den.
+       Kdyby se tiše vrátilo prázdno, vypadalo by to na výpadek a za
+       38 dní by se na to zapomnělo (§231). Proto výjimka, ne [] : */
+    const e = new Error(`actor vrátil ${seznam.length} záznamů, ale žádný pozemek`
+      + ` (podle actoru: ${JSON.stringify(poKategorii)})`);
+    e.objednavkaNevyslysena = true;
+    throw e;
+  }
+  return { pozemky, poKategorii };
+}
+
 async function fetchSreality() {
   const token = process.env.APIFY_TOKEN;
   if (!token) {
@@ -3054,7 +3087,34 @@ async function fetchSreality() {
   const actor = process.env.APIFY_SREALITY_ACTOR || 'logiover~sreality-cz-scraper-czech-real-estate-data';
   let items;
   try {
-    const input = { category_main_cb: 3, category_type_cb: 1, maxItems: 4000 }; // pozemky na prodej
+    /* VSTUP PODLE SCHÉMATU ACTORU, NE PODLE PARAMETRŮ SREALITY.
+     *
+     * Tady stálo `{ category_main_cb: 3, category_type_cb: 1 }` — tak se
+     * ty parametry jmenují ve vyhledávání Sreality samotných. Actor je
+     * ale NEZNÁ: mlčky je zahodil a pustil svůj výchozí vstup, tedy
+     * `region: '10'` a `category: 'apartment'`. Změřeno 6. 11. na jeho
+     * vstupním schématu a na vstupu prvního ostrého běhu: ze 1 666
+     * záznamů bylo 1 666 BYTŮ V PRAZE a pozemků nula. Jména, která
+     * actor čeká, jsou `category`, `transaction` a `region`/`regionIds`
+     * (scripts/zkus-sreality.mjs je přečte zdarma, bez běhu).
+     *
+     * CENA JE ZA VÝSLEDEK, NE ZA BĚH: první běh dal 1 666 záznamů
+     * a stál $4,998 — tedy $3 za tisíc. `maxListings` je proto STROP
+     * ÚČTU, ne jen technická mez: 2 000 záznamů = nejvýš $6 za běh.
+     * Kdo ho zvedne, zvedá útratu, a to je rozhodnutí majitele.
+     */
+    const KRAJE = ['10', '11', '13', '5', '2', '9', '3', '14', '1', '12', '15', '7', '4', '6'];
+    const strop = Math.max(1, Number(process.env.APIFY_SREALITY_STROP || 2000));
+    const input = {
+      category: 'land',
+      transaction: 'sale',
+      region: KRAJE[0],
+      regionIds: KRAJE,
+      sort: 'newest',
+      perPage: 100,
+      maxListings: strop,
+      requestDelay: 600,
+    };
     /* JEDINÝ POKUS SCHVÁLNĚ. Tenhle běh trvá až pět minut a stojí
        kredit; opakovat ho po neúspěchu znamená platit dvakrát za
        totéž. Zdroj je navíc volitelný — bez tokenu se vynechá celý. */
@@ -3070,9 +3130,12 @@ async function fetchSreality() {
   } catch (e) { console.error('Sreality/Apify selhal:', e && e.message); return []; }
   if (!Array.isArray(items) || !items.length) { console.log('Sreality/Apify: 0 položek.'); return []; }
   console.log(`Sreality/Apify vzorek: ${JSON.stringify(items[0]).slice(0, 500)}`);
+  const { pozemky: pozemkoveZaznamy, poKategorii } = pozemkyZApify(items);
+  console.log(`Sreality/Apify: ${items.length} záznamů, podle actoru: ${JSON.stringify(poKategorii)}`
+    + ` — pozemků ${pozemkoveZaznamy.length}.`);
   const num = (v) => { const n = +String(v).replace(/[^\d.]/g, ''); return isFinite(n) ? n : NaN; };
   const out = [];
-  for (const e of items) {
+  for (const e of pozemkoveZaznamy) {
    try {
     const price = Math.round(num(e.price ?? e.priceValue ?? e.price_czk ?? e.priceCzk)) || 0;
     if (!price || price < 5000) continue;
@@ -3081,19 +3144,32 @@ async function fetchSreality() {
     const lng = num(e.lng ?? e.lon ?? e.longitude ?? gps.lon ?? gps.lng ?? gps.longitude);
     const name = String(e.name || e.title || '');
     const loc = String(e.locality || e.address || (typeof e.location === 'string' ? e.location : '') || '');
-    const area = parseArea(name + ' ' + loc) || (num(e.area ?? e.surface ?? e.surfaceLand) || null);
+    /* VÝMĚRA NEJDŘÍV Z POLE ZDROJE, teprve pak z názvu. Obráceně to
+       vedlo na „1 111 m²" z „Prodej bytu 2+1 111 m²" (§462): čtení
+       z textu je poslední záchrana, ne první volba. Jména polí jsou
+       změřená na skutečné datové sadě actoru. */
+    const area = (num(e.estateArea ?? e.landArea ?? e.usableArea ?? e.area ?? e.surface ?? e.surfaceLand) || null)
+      || parseArea(name) || null;
     let okres = (isFinite(lat) && isFinite(lng)) ? nearestOkres(lat, lng) : null;
     if (!okres) { const om = loc.match(/okres\s+([A-Za-zÁ-Žá-ž.\- ]+)/i); if (om) { const c = normOkres(om[1].trim().replace(/[.,;].*$/, '')); if (OKRESY_MAP[c]) okres = c; } }
     if (!okres) continue;
+    /* MÍSTO JE OBEC, NE ULICE. Actor posílá obec (`city`) i část obce
+       (`cityPart`) zvlášť, a dokud se místo skládalo z prvního kusu
+       adresy, stálo v poli pro obec „Tusarova" — ulice. Chytil to
+       hlídač test-misto-prahy, ne já. Ulice patří do popisu, ne sem. */
     const parts = loc.split(',').map((s) => s.trim()).filter(Boolean);
-    const place = (parts[0] || name || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
+    const place = String(e.city || e.cityPart || parts[0] || name || 'Pozemek')
+      .split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
     const url = e.url || e.link || e.detailUrl || undefined;
     /* Adresa (loc) se sem schválně neposílá: je to popis MÍSTA, ne
        pozemku, a je v ní obec i okres. */
     const druh = parseDruh(name, [place, okres]);
     out.push({
       place, okres, type: 'sale', parcel: '—',
-      _key: 'sr-' + (e.hash_id || e.id || url || (place + '-' + price)),
+      /* `adId` je číslo inzerátu u Sreality a actor ho posílá u každého
+         záznamu (změřeno: 1 666/1 666). Klíč z něj drží i tehdy, když
+         inzerent změní cenu nebo název. */
+      _key: 'sr-' + (e.adId || e.hash_id || e.id || url || (place + '-' + price)),
       druh: normDruh(druh || 'pozemek'), area, price, extra: 'inzerát – Sreality',
       zdroj: 'Sreality (Apify)',
       lat: isFinite(lat) ? lat : undefined, lng: isFinite(lng) ? lng : undefined,
