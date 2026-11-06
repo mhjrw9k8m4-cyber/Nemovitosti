@@ -176,17 +176,45 @@ if (BEZ_SITE) {
       + ' návštěvnost celého webu vidí kdokoli');
     else ANO(`uzavřená funkce je uzavřená (odpověď ${b.stav})`);
 
-    /* c) Úložiště fotek. Neexistující soubor ve existujícím kbelíku
-          vrátí 404, chybějící kbelík 400 „Bucket not found" — takhle
-          se to pozná bez servisního klíče a bez zápisu. */
+    /* c) Úložiště fotek. Ptáme se na neexistující soubor: tím se bez
+          servisního klíče a bez zápisu pozná, jestli kbelík je.
+
+          ROZHODUJE TĚLO ODPOVĚDI, NE ČÍSLO STAVU (§448). Dřív tu stálo
+          `|| c.stav === 400` a komentář tvrdil, že existující kbelík
+          odpoví na chybějící soubor 404. ZMĚŘENO 6. 11. na živém
+          projektu: kbelík v databázi PROKAZATELNĚ JE (dotaz
+          `select id, public from storage.buckets` vrátil
+          `listing-photos | true`, 1 řádek) a tahle kontrola ho přesto
+          dvakrát za sebou prohlásila za neexistující. Supabase totiž
+          na chybějící soubor v EXISTUJÍCÍM kbelíku odpovídá taky 400,
+          jen s tělem „Object not found" — a podmínka se na tělo
+          vůbec nedostala, protože `|| c.stav === 400` ji přebilo.
+
+          Falešný server ve zkoušce přitom vracel přesně to, čemu kód
+          věřil (existující kbelík → 404), takže tu vadu NEMOHL najít.
+          To je ta třída vad v nejčistší podobě: fixtura, která
+          souhlasí s domněnkou kódu, domněnku neprověří — prověří jen
+          sama sebe. Proto k té opravě patří nový režim ve falešném
+          serveru (400 + „Object not found"), ne jen tenhle řádek.
+
+          Rozlišuje se tedy podle toho, co server řekne, a co se
+          nepozná, se PŘIZNÁ jako nezměřené — ne jako vada ani jako
+          „v pořádku". Naměřený stav i kus těla jdou do hlášky, aby
+          příště nikdo nemusel hádat. */
     const c = await zkus('kbelik', '/storage/v1/object/public/listing-photos/__neexistuje__.jpg', {});
+    const dukazKbelik = `odpověď ${c.stav}, tělo: `
+      + (String(c.telo || '').replace(/\s+/g, ' ').trim().slice(0, 120) || '(prázdné)');
     let chybiKbelik = false;
-    if (/bucket not found/i.test(c.telo) || c.stav === 400) {
+    if (/bucket not found/i.test(c.telo)) {
       chybiKbelik = true;
       NE('úložiště fotek', 'kbelík listing-photos neexistuje — bez něj neprojde nahrání fotky.'
         + ' NEZAKLÁDEJTE ho ručně: balík supabase/00-vse.sql ho zakládá sám i se stropem 3 MB'
-        + ' a seznamem povolených typů, a ruční kbelík bývá bez stropů');
-    } else ANO(`kbelík listing-photos existuje (odpověď ${c.stav})`);
+        + ` a seznamem povolených typů, a ruční kbelík bývá bez stropů (${dukazKbelik})`);
+    } else if (c.stav === 404 || /object not found|not_?found/i.test(c.telo)) {
+      ANO(`kbelík listing-photos existuje — na chybějící soubor přišlo „nenalezen soubor" (${dukazKbelik})`);
+    } else {
+      NEVIM('úložiště fotek', `nepoznáno, jestli kbelík listing-photos je: ${dukazKbelik}`);
+    }
 
     /* d) Potvrzování e-mailu. Supabase vydá nastavení přihlašování
           veřejně; `mailer_autoconfirm: true` znamená, že se e-mail

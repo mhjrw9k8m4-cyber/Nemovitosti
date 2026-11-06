@@ -27047,3 +27047,79 @@ u obou napsáno proč i s čísly. Zbývající práce není řádek, je to
 předpis pro čtení jejich výpisu — tedy den práce, ne minuta. To je
 poctivý stav, ne nedodělek: raději dva zdroje nezapojené než dva
 zdroje, které na web píšou cizí čísla.
+
+## §448 — Fixtura souhlasila s domněnkou kódu, tak ji neprověřila
+
+Majitel pustil `supabase/listings-photos.sql` do svého projektu
+(8 107 B, 144 řádků, „Success. No rows returned."). Kontrola nasazení
+pak dvakrát za sebou — běhy 42137148302 a 42137717524 — ohlásila:
+
+> ✕ úložiště fotek: kbelík listing-photos neexistuje
+
+Požádal jsem ho o dotaz přímo do databáze:
+
+```sql
+select id, public from storage.buckets;
+```
+
+Odpověď: `listing-photos | true`, 1 řádek. **Kbelík tam je a je
+veřejný.** Dvě tvrzení si odporovala a jedno z nich lhalo; ze sondy
+to být nemohlo, protože na `tcinuzftgmkvjjgvadky.supabase.co` odsud
+nedosáhnu (`curl` vrací HTTP 000), takže jsem musel do kódu.
+
+Na řádku 184 stálo:
+
+```js
+if (/bucket not found/i.test(c.telo) || c.stav === 400) {
+```
+
+A nad tím komentář, který tvrdil, že **existující** kbelík odpoví na
+chybějící soubor 404 a **chybějící** kbelík 400 „Bucket not found".
+Jenže Supabase vrací 400 i na chybějící SOUBOR v existujícím kbelíku —
+jen s tělem „Object not found". To `|| c.stav === 400` přebilo pohled
+na tělo, takže kontrola prohlásila kbelík za neexistující, ať v těle
+stálo cokoli. Majitel měl hotovo a nevěděl to.
+
+### To podstatné není ten řádek, ale proč ho hlídač nenašel
+
+Falešný server ve `scripts/test-kontrola-spusteni.mjs` umel jen dvě
+podoby odpovědi:
+
+```js
+return stav === 'chybi-kbelik'
+  ? odpoved(400, '{"message":"Bucket not found"}')
+  : odpoved(404, '{"message":"Object not found"}');
+```
+
+Tedy **přesně ty dvě, kterým kód už věřil.** Čtyři kontroly nad tím
+svítily zeleně a nemohly svítit jinak: fixtura byla zapsaná domněnka,
+ne měření. Hlídač tak neprověřoval kód — prověřoval sám sebe.
+
+Je to příbuzné §436 (klíč, který zná jen zkouška), ale obráceně:
+tam si zkouška vyráběla vstup, který v životě nevzniká; tady si
+vyráběla jen ty vstupy, které kód očekával, a ten jediný skutečný
+vynechala.
+
+### Oprava
+
+1. **Rozhoduje tělo, ne číslo stavu.** `bucket not found` → kbelík
+   není; `object not found` (při jakémkoli stavu) → kbelík je; cokoli
+   jiného → `NEZKOUŠENO` s naměřeným důkazem, nikdy falešná zelená.
+2. **Naměřený stav i kus těla jdou do hlášky** (`odpověď 400, tělo:
+   {"message":"Object not found"}`), aby se příště nehádalo.
+3. Do falešného serveru přišly **dvě nové podoby**: `kbelik-je-ale-400`
+   (400 + „Object not found" — ta skutečná) a `kbelik-zahada`
+   (503 + cosi) na tu třetí větev.
+
+**Sabotáž:** vrácení `|| c.stav === 400` (jediný řádek, ověřeno
+`diff`) shodí dvě nové kontroly z pěti. Před dneškem ho neshodilo nic.
+
+`test-kontrola-spusteni` 25 → **28 kontrol**.
+
+### Co si z toho odnést
+
+Když hlídač a živý svět nesouhlasí, **nejdřív se vypíše, co živý svět
+opravdu řekl** — neopravuje se podle domněnky. A u každé fixtury se
+hodí jedna otázka: *odkud vím, že takhle to opravdu odpovídá?* Když
+odpověď zní „tak to má v komentáři kód, který zkouším", není to
+fixtura, je to zrcadlo.

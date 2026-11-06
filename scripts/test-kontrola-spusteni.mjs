@@ -46,9 +46,21 @@ const server = http.createServer((req, res) => {
   }
   if (u.startsWith('/storage/v1/object/public/listing-photos/')) {
     if (stav === 'balik-nebezel') return odpoved(400, '{"message":"Bucket not found"}');
-    return stav === 'chybi-kbelik'
-      ? odpoved(400, '{"message":"Bucket not found"}')
-      : odpoved(404, '{"message":"Object not found"}');
+    if (stav === 'chybi-kbelik') return odpoved(400, '{"message":"Bucket not found"}');
+    /* TOHLE JE TVAR, KTERÝ TU DŘÍV CHYBĚL (§448). Falešný server
+       umel jen dvě podoby — a obě byly přesně to, čemu kontrola už
+       věřila: existující kbelík → 404, chybějící → 400. Živá Supabase
+       ale na chybějící SOUBOR v existujícím kbelíku odpovídá taky
+       400, jen s tělem „Object not found" — a kontrola to prohlásila
+       za chybějící kbelík. Změřeno 6. 11. na živém projektu, kde
+       `storage.buckets` ten kbelík prokazatelně měla.
+       Fixtura souhlasila s domněnkou kódu, takže tu vadu NEMOHLA
+       najít. Proto tu ta podoba ode dneška je. */
+    if (stav === 'kbelik-je-ale-400') return odpoved(400, '{"message":"Object not found"}');
+    /* A podoba, která se nepozná vůbec: nesmí z ní být ani vada, ani
+       „v pořádku" — jen přiznané NEZKOUŠENO s naměřeným důkazem. */
+    if (stav === 'kbelik-zahada') return odpoved(503, '{"message":"upstream mlci"}');
+    return odpoved(404, '{"message":"Object not found"}');
   }
   if (u === '/rest/v1/rpc/zapis_chybu') {
     /* Co kontrola do té funkce pošle, si schováme: nesmí to být nic,
@@ -117,6 +129,41 @@ for (const [rezim, vzor, popis] of [
   pravda(`${popis}: najde se a blokuje`,
     vzor.test(out) && /BLOKUJE SPUŠTĚNÍ/.test(out) && /VERDIKT: NESPOUŠTĚT/.test(out) && kod === 1,
     `návratový kód ${kod}; ` + (out.split('\n').find((l) => /✕/.test(l)) || 'žádný nález'));
+}
+
+/* ---- 2b) §448: O KBELÍKU ROZHODUJE TĚLO, NE ČÍSLO STAVU -------- */
+/* Změřeno 6. 11. naostro: kbelík v databázi byl (`select id, public
+   from storage.buckets` vrátil `listing-photos | true`, 1 řádek), a
+   kontrola ho dvakrát za sebou prohlásila za neexistující, protože
+   měla `|| c.stav === 400`. Supabase totiž 400 vrací i na chybějící
+   SOUBOR. Tohle je hlídač na přesně tu podobu odpovědi — a zároveň
+   doklad, že falešný server už nedrží tu domněnku, která vadu
+   skrývala: na tenhle režim dřív neumel odpovědět vůbec. */
+{
+  const { out, kod } = await pust('kbelik-je-ale-400');
+  pravda('400 s tělem „Object not found" ZNAMENÁ, že kbelík je',
+    /kbelík listing-photos existuje/.test(out) && !/kbelík listing-photos neexistuje/.test(out),
+    out.split('\n').filter((l) => /kbelík/.test(l)).join(' | '));
+  pravda('a tím pádem nic neblokuje',
+    !/BLOKUJE SPUŠTĚNÍ/.test(out) && kod === 0,
+    `kód ${kod}; ` + out.split('\n').filter((l) => /✕/.test(l)).join(' | '));
+  /* Nestačí říct „je"; musí být vidět, Z ČEHO se to poznalo. Bez
+     důkazu ve výpisu by se příště hádalo zrovna tak jako dnes. */
+  pravda('a ve výpisu je naměřený důkaz (stav i kus těla)',
+    /odpověď 400/.test(out) && /Object not found/.test(out),
+    out.split('\n').filter((l) => /kbelík/.test(l)).join(' | '));
+}
+{
+  const { out, kod } = await pust('kbelik-zahada');
+  pravda('neznámá odpověď u kbelíku je NEZKOUŠENO, ne „v pořádku"',
+    /nepoznáno, jestli kbelík/.test(out) && !/kbelík listing-photos existuje/.test(out)
+    && !/kbelík listing-photos neexistuje/.test(out),
+    out.split('\n').filter((l) => /kbelík/.test(l)).join(' | '));
+  pravda('a nese s sebou, co server opravdu odpověděl',
+    /odpověď 503/.test(out) && /upstream mlci/.test(out),
+    out.split('\n').filter((l) => /kbelík/.test(l)).join(' | '));
+  pravda('a nezkoušené spuštění neblokuje (je to přiznání, ne nález)',
+    !/BLOKUJE SPUŠTĚNÍ/.test(out) && kod === 0, `kód ${kod}`);
 }
 
 /* ---- 3) A TO NEJDŮLEŽITĚJŠÍ: nedostupná databáze není „v pořádku" */
