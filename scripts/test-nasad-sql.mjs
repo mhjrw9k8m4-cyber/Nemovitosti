@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { oznaceniProjektu, popisSQL, adresaZKonfigurace } from './nasad-sql.mjs';
+import { koncovyStav } from './sql-koncovy-stav.mjs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -104,6 +105,38 @@ for (const [co, popis] of [
      verze, která se rozešla s jednotlivými soubory v supabase/. */
   pravda('a před odesláním databázi složí znovu ze zdrojů',
     /node scripts\/build-sql\.mjs/.test(w));
+}
+
+/* --- CO BY NASAZENÍ SHODILO CELÉ (naměřeno 6. 11.) ----------------
+   Balík se posílá jako JEDEN dotaz, takže jediný odmítnutý příkaz
+   zahodí všech 3 820 řádků. Ostré nasazení na tomhle spadlo:
+
+     ERROR 2BP01: cannot drop function notify_new_message() because
+     other objects depend on it
+     DETAIL: trigger trg_notify_new_message on table messages depends on it
+
+   Generátor zahazuje funkce bez parametrů, aby prošla změna návratového
+   typu (scripts/build-sql.mjs). Na spouštěčové funkce to ale nejde:
+   visí na nich spouštěč. Od chvíle, kdy do balíku přibyl první spouštěč,
+   se tedy nedal nasadit VŮBEC — a nikdo to nevěděl, protože se mezitím
+   posílalo jen „nasucho". */
+{
+  const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');
+  const stav = koncovyStav(SQL);
+  const naSpoustecich = [...SQL.matchAll(/create\s+trigger\s+\w+[\s\S]{0,200}?execute\s+function\s+([a-z_][a-z0-9_]*)/gi)]
+    .map((m) => m[1].toLowerCase());
+  pravda(`spouštěče se v balíku dají najít (${naSpoustecich.length})`, naSpoustecich.length >= 1,
+    'vzorec na „create trigger … execute function" nesedí — kontrola níž by měřila prázdno');
+  pravda('a čtečka je pozná jako spouštěčové funkce',
+    naSpoustecich.every((f) => stav.spoustece.has(f)),
+    'čtečka zná: ' + [...stav.spoustece].join(', ') + ' · spouštěče volají: ' + naSpoustecich.join(', '));
+  const zahozene = new Set([...SQL.matchAll(/^drop function if exists ([a-z_][a-z0-9_]*)\s*\(/gmi)]
+    .map((m) => m[1].toLowerCase()));
+  const zabijaci = naSpoustecich.filter((f) => zahozene.has(f));
+  pravda('balík NEZAHAZUJE funkci, na které visí spouštěč '
+    + '(PostgreSQL to odmítne a s tím padne celé nasazení)',
+    zabijaci.length === 0,
+    zabijaci.join(', ') + ' — tyhle funkce volá spouštěč a balík je zahazuje');
 }
 
 console.log('\nNasazení databáze');

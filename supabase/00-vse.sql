@@ -37,12 +37,10 @@ drop function if exists my_listings();
 drop function if exists my_photo_space();
 drop function if exists my_searches();
 drop function if exists my_threads();
-drop function if exists notify_new_message();
 drop function if exists pending_count();
 drop function if exists public_listings();
 drop function if exists uklid_chyb_klienta();
 drop function if exists uklid_navstevnosti();
-drop function if exists uloziste_strop_fotek();
 drop function if exists unread_count();
 
 

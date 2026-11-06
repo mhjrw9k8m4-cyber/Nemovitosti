@@ -151,6 +151,7 @@ export function koncovyStav(sqlSKomentari) {
   const sloupce = new Map();
   const prava = new Map();
   const tela = new Map();
+  const spoustece = new Set();
   const neznamo = [];
 
   /* --- RLS: poslední příkaz vyhrává ----------------------------- */
@@ -193,6 +194,9 @@ export function koncovyStav(sqlSKomentari) {
     if (!funkce.has(jm)) funkce.set(jm, new Set());
     if (/^create/i.test(m[1])) {
       funkce.get(jm).add(podpis);
+      /* Spouštěčová funkce se nedá zavolat přes PostgREST a nedá se
+         zahodit, dokud na ní visí spouštěč — viz funkceKtereZbydou(). */
+      if (/^\s*returns\s+trigger\b/i.test(sql.slice(zav.konec + 1, zav.konec + 60))) spoustece.add(jm);
       const konec = sql.indexOf('$$', sql.indexOf('$$', zav.konec) + 2);
       tela.set(jm + '(' + podpis + ')', konec > 0 ? sql.slice(zav.konec, konec) : sql.slice(zav.konec, zav.konec + 2000));
     } else {
@@ -250,13 +254,24 @@ export function koncovyStav(sqlSKomentari) {
     }
   }
 
-  return { rls, politiky, funkce, sloupce, prava, tela, neznamo };
+  return { rls, politiky, funkce, sloupce, prava, tela, spoustece, neznamo };
 }
 
-/** Jména funkcí, která po doběhnutí SQL v databázi zůstanou. */
+/** Jména funkcí, která po doběhnutí SQL zůstanou a JDOU ZAVOLAT.
+ *
+ *  Spouštěčové funkce se vynechávají, a to kvůli naměřenému planému
+ *  poplachu: `scripts/kontrola-databaze.mjs` porovnává tenhle seznam
+ *  s výpisem, který vydá PostgREST — a ten vypisuje jen to, co se dá
+ *  zavolat jako RPC. Spouštěčová funkce (`returns trigger`) se zavolat
+ *  nedá, protože ji pouští databáze sama při změně řádku. V databázi
+ *  tedy JE a v tom výpisu NENÍ, takže kontrola hlásila „v databázi
+ *  chybí notify_new_message, uloziste_strop_fotek" — nález, který nejde
+ *  opravit, a to je nález, který se naučí přehlížet. Naměřeno
+ *  na nasazení 6. 11.
+ */
 export function funkceKtereZbydou(sql) {
-  const { funkce } = koncovyStav(sql);
-  return [...funkce.entries()].filter(([, s]) => s.size).map(([j]) => j);
+  const { funkce, spoustece } = koncovyStav(sql);
+  return [...funkce.entries()].filter(([j, s]) => s.size && !spoustece.has(j)).map(([j]) => j);
 }
 
 /** Funkce, které PŘEŽIJÍ a smí je spustit nepřihlášený (anon/PUBLIC).

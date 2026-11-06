@@ -174,9 +174,35 @@ for (const [jmeno, popis] of PORADI) {
    Funkce S parametry se nezahazují: u nich se podoba mění vzácně a slepé
    zahození by mohlo sebrat jinou funkci téhož jména s jinými parametry. */
 const slozene = casti.join('');
+/* SPOUŠTĚČOVÉ FUNKCE SE ZAHAZOVAT NESMÍ — a právě na tom nasazení
+   6. 11. spadlo s chybou, která zahodila CELÝ balík:
+
+     ERROR 2BP01: cannot drop function notify_new_message() because
+     other objects depend on it
+     DETAIL: trigger trg_notify_new_message on table messages depends on it
+
+   Spouštěč na funkci visí, takže `drop function` bez `cascade` PostgreSQL
+   odmítne. A protože se celý soubor posílá jako jeden dotaz, neprojde
+   ani jeden z 3 820 řádků. Balík se tedy od chvíle, kdy do něj přibyl
+   první spouštěč, nedal nasadit VŮBEC — a nikdo to nevěděl, protože
+   nasazení se pouští ručně a mezitím se posílalo jen „nasucho".
+
+   Důvod, proč se funkce bez parametrů zahazují, na spouštěčové neplatí:
+   jde o změnu návratového typu, kterou „create or replace" neumí. Jenže
+   návratový typ spouštěčové funkce je vždycky `trigger` a nic jiného
+   z ní být nemůže. Zahazovat je tedy nepotřebné i škodlivé.
+
+   `cascade` by to taky „vyřešilo" — vzalo by s sebou spouštěč. Jenže
+   to je přesně ta pravomoc, kterou tenhle generátor nemá mít (viz
+   komentář výš): na ostré databázi by jeden příkaz mohl odstranit něco,
+   co se už znovu nevytvoří. */
+const spoustecove = new Set(
+  [...slozene.matchAll(/create\s+or\s+replace\s+function\s+([a-z_][a-z0-9_]*)\s*\(\s*\)\s*returns\s+trigger/gi)]
+    .map((m) => m[1].toLowerCase()));
 const bezParametru = [...new Set(
   [...slozene.matchAll(/create\s+or\s+replace\s+function\s+([a-z_][a-z0-9_]*)\s*\(\s*\)/gi)]
     .map((m) => m[1])
+    .filter((f) => !spoustecove.has(f.toLowerCase()))
 )].sort();
 const dropy = bezParametru.length
   ? '\n-- Funkce bez parametrů: zahodit, než se vytvoří znovu. Viz komentář\n'
@@ -189,6 +215,7 @@ const cil = path.join(SQL, '00-vse.sql');
 /* Dropy patří hned za hlavičku, tedy před všechno ostatní. */
 const znacka = HLAVA;
 writeFileSync(cil, slozene.replace(znacka, znacka + dropy), 'utf8');
-console.log(`Funkcí bez parametrů k zahození: ${bezParametru.length}`);
+console.log(`Funkcí bez parametrů k zahození: ${bezParametru.length}`
+  + (spoustecove.size ? ` (spouštěčové se nezahazují: ${[...spoustecove].sort().join(', ')})` : ''));
 console.log(`Složeno ${PORADI.length} souborů do ${path.relative(ROOT, cil)}.`
   + (MIMO.size ? ` Mimo balík zůstává ${MIMO.size} (s napsaným důvodem).` : ''));

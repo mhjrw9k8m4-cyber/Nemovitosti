@@ -28383,3 +28383,56 @@ a „ztratí se ti zpráva".
 Sabotáž: pravidlo zpátky na `with check (true)` → **4 chyby**. A hlídač
 k tomu ověřuje, že nad `messages` spouštěč opravdu visí — bez toho by
 celá kontrola byla mrtvá ve chvíli, kdy by někdo spouštěč zrušil.
+
+## §470
+
+**Balík databáze se nedal nasadit vůbec — a nikdo to nevěděl, protože
+se dřív jen „zkoušelo nasucho".**
+
+Ostré nasazení 6. 11. skončilo takhle:
+
+```
+ERROR 2BP01: cannot drop function notify_new_message() because other objects depend on it
+DETAIL: trigger trg_notify_new_message on table messages depends on function notify_new_message()
+```
+
+Generátor `scripts/build-sql.mjs` dopisuje na začátek balíku
+`drop function if exists X();` pro **každou funkci bez parametrů** —
+a to má dobrý důvod: `create or replace` neumí změnit návratový typ
+a jediná taková funkce by shodila celé nasazení (přesně na tom spadlo
+první ostré nasazení, `public_listings`). Na spouštěčovou funkci to ale
+nejde: **visí na ní spouštěč, takže ji PostgreSQL zahodit odmítne.**
+
+A protože se celý balík posílá jako **jeden dotaz**, neprojde ani jeden
+z 3 820 řádků. Od chvíle, kdy do balíku přibyl první spouštěč, se tedy
+databáze nedala nasadit **vůbec**. Ležel tam nenasazený.
+
+**Proč se to nenašlo dřív.** Nasazení se pouští ručně a jeho výchozí
+volba je „nasucho" — soubor se jen zkontroluje a vypíše, co by poslal.
+To je správná pojistka (cron, který po prvním zeleném běhu začne měnit
+ostrou databázi, je přesně to, co se nemá stát), ale **zkouška nasucho
+neověří, co databáze na ten dotaz odpoví.** Zelený běh tedy znamenal
+jen „soubor existuje a má 3 820 řádků".
+
+Důvod, proč se funkce bez parametrů zahazují, na spouštěčové neplatí:
+jejich návratový typ je vždycky `trigger` a jiný být nemůže. Generátor
+je teď vynechává a vypíše které. `cascade` by to taky „vyřešilo" —
+vzalo by s sebou spouštěč; to je ale pravomoc, kterou generátor nad
+ostrou databází mít nemá.
+
+**A druhá vada z téhož běhu: planý poplach, který nejde opravit.**
+Kontrola po nasazení hlásila „v databázi chybí notify_new_message,
+uloziste_strop_fotek". Obě v databázi jsou. Kontrola je porovnávala
+s výpisem, který vydá PostgREST — a ten vypisuje jen to, co se dá
+zavolat jako RPC. **Spouštěčovou funkci zavolat nejde**, protože ji
+pouští databáze sama při změně řádku. V databázi tedy je a ve výpisu
+není. Nález, který nejde opravit, je nález, který se naučí přehlížet —
+a pak se v tom seznamu přehlédne i ten pravý. `funkceKtereZbydou()` je
+proto vynechává.
+
+**Hlídač** (`scripts/test-nasad-sql.mjs`) neporovnává řádky, ale dvě
+množiny z balíku: koho volá `create trigger` a co se zahazuje. Průnik
+musí být prázdný. Sabotáž (vynechat ten filtr v generátoru) → **1
+chyba**. Hlídá k tomu i předpoklad: že se v balíku vůbec nějaký
+spouštěč najde — jinak by kontrola byla mrtvá a tvrdila by zelenou nad
+prázdnem.
