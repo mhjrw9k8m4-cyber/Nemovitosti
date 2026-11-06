@@ -147,6 +147,48 @@ export function coStojiPred(s, i, hloubka = 0) {
   return [z].concat(volitelne ? coStojiPred(s, j, hloubka + 1) : []);
 }
 
+/**
+ * Co může stát bezprostředně ZA `\b` na pozici `i` (první znak za
+ * ním). Zrcadlo `coStojiPred`, jen o jednu stranu dál: hranice slova
+ * je mezi dvěma znaky a mrtvá je, když ani jeden z nich není `\w`.
+ * Skupina se čte po PRVNÍCH znacích alternativ, třída znaků celá.
+ */
+export function coStojiZa(s, i) {
+  if (i >= s.length) return [];
+  const z = s[i];
+
+  if (z === '(') {
+    /* Najdi odpovídající zavírací závorku; vnořené se počítají. */
+    let h = 0, kon = -1;
+    for (let k = i; k < s.length; k++) {
+      if (s[k] === '\\') { k++; continue; }
+      if (s[k] === '(') h++;
+      else if (s[k] === ')') { h--; if (!h) { kon = k; break; } }
+    }
+    if (kon === -1) return [];
+    const vnitr = s.slice(i + 1, kon).replace(/^\?(?::|<[=!]|[=!])/, '');
+    const casti = [];
+    let hh = 0, od = 0;
+    for (let k = 0; k < vnitr.length; k++) {
+      if (vnitr[k] === '\\') { k++; continue; }
+      if (vnitr[k] === '(') hh++;
+      else if (vnitr[k] === ')') hh--;
+      else if (vnitr[k] === '|' && !hh) { casti.push(vnitr.slice(od, k)); od = k + 1; }
+    }
+    casti.push(vnitr.slice(od));
+    return casti.map((c) => c.trim()).filter((c) => c).map((c) => c[0]);
+  }
+
+  if (z === '[') {
+    const kon = s.indexOf(']', i + 1);
+    if (kon === -1) return [];
+    return s.slice(i + 1, kon).split('');
+  }
+
+  if (z === '\\') return [];          /* \w, \d, \s — ty jsou v pořádku */
+  return [z];
+}
+
 /** Soubory ke kontrole: náš vlastní kód, ne cizí a ne data. */
 function souboryKKontrole() {
   const ven = [];
@@ -181,6 +223,20 @@ const VYJIMKY = [
 ];
 const jeVyjimka = (rel) => VYJIMKY.some(([j]) => j === rel);
 
+/* VÝJIMKY PRO DRUHOU STRANU (§460). Vzor na spisovou značku ÚZSVM
+   má ve třídě i velká písmena s diakritikou (`[A-ZÁ-Ž]`), takže
+   hlídač na něj ukáže. Měřeno 6. 11. na živých datech: značek je
+   osm, VŠECHNY jsou ASCII (`EAS/CB/153/2026`, `EAS/ULT/113/2026`)
+   a vzor na všech osmi sedne. Diakritika v té třídě je tedy pojistka
+   na tvar, který zdroj neposílá — a oprava „na jistotu" by ten vzor
+   rozbila: lookbehind `(?<![\p{L}])` před „Z" v „ÚZSVM" selže,
+   protože „Ú" JE písmeno. Změřeno, ne odhadnuto. */
+const VYJIMKY_ZA = [
+  ['scripts/cti-uzsvm.mjs', 'SPISOVA_ZNACKA', 'všech 8 značek v datech je ASCII — změřeno'],
+  ['scripts/nalezce.mjs', 'VZOR_SPISU', 'týž vzor jako SPISOVA_ZNACKA, táž míra'],
+];
+const jeVyjimkaZa = (rel, radek) => VYJIMKY_ZA.some(([f, jm]) => f === rel && radek.includes(jm));
+
 const souborDruh = readFileSync(path.join(KOREN, 'js', 'druh.js'), 'utf8');
 pravda('důvod výjimky platí: js/druh.js normalizuje vstup',
   souborDruh.includes("normalize('NFD')"),
@@ -214,10 +270,25 @@ for (const p of soubory) {
     for (let i = 0; i < radek.length - 1; i++) {
       if (radek[i] !== '\\' || radek[i + 1] !== 'b') continue;
       if (i >= 1 && radek[i - 1] === '\\') continue;      /* `\\b` je lomítko a b */
+      let hlaseno = false;
       for (const z of coStojiPred(radek, i)) {
         if (pismeno(z) && !slovni(z)) {
-          nalezy.push(`${path.relative(KOREN, p)}:${r + 1}:${i + 1} — „${z}" před \\b: `
-            + `${radek.trim().slice(0, 80)} → místo \\b použít (?![\\p{L}]) s flagou u`);
+          nalezy.push(`${path.relative(KOREN, p)}:${r + 1}:${i + 1} — „${z}" PŘED \\b: `
+            + `${radek.trim().slice(0, 78)} → místo \\b použít (?![\\p{L}]) s flagou u`);
+          hlaseno = true;
+          break;
+        }
+      }
+      /* A DRUHÁ STRANA TÉŽE PASTI (§460). `\b` se neřídí jen tím, co
+         je PŘED ním — hranice je mezi dvěma znaky, takže stejně
+         mrtvé je `\b` PŘED písmenem s diakritikou. Změřeno na jménech
+         krajů: `/\bÚstecký\b/` nesedne ani zleva, protože „Ú" není
+         `\w`. Tohle slepé místo měl hlídač sám: hlásil jen jednu
+         stranu, a „Ústecký" tím propadl i po opravě druhé. */
+      if (!hlaseno && !jeVyjimkaZa(rel, radek)) for (const z of coStojiZa(radek, i + 2)) {
+        if (pismeno(z) && !slovni(z)) {
+          nalezy.push(`${path.relative(KOREN, p)}:${r + 1}:${i + 1} — „${z}" ZA \\b: `
+            + `${radek.trim().slice(0, 78)} → místo \\b použít (?<![\\p{L}]) s flagou u`);
           break;
         }
       }
@@ -287,7 +358,20 @@ pravda('a kód na dalším řádku zůstane', vzorek.includes('stroje'), vzorek.
    (vede se jako vlastní úkol), a aby se mezitím tiše nerozrostla,
    má strop. Když přibude další, zkouška spadne a donutí o něm
    rozhodnout. */
-const STROP_RETEZCOVYCH = 61;
+/* STROP JE 27 A TO ČÍSLO JE VLASTNÍ OPRAVA (§460). Stálo tu 61 —
+   číslo z ručního grepu přes CELÉ soubory, kdežto hlídač počítá jen
+   řádky s `RegExp(`. Mez byla tedy nastavená víc než dvojnásobně
+   nad skutečností, takže nehlídala nic: sabotáž, která dvě sestavené
+   hranice přidá, se pod ní schová. Měřeno 6. 11.: 27 výskytů ve 12
+   souborech. Číslo 61 se navíc dostalo do zápisu §454 a §458 jako
+   fakt — tam je opravené.
+   PONAUČENÍ: mez se musí spočítat TÍM SAMÝM KÓDEM, který ji pak
+   hlídá. Číslo spočítané jinak je domněnka, ne měření.
+   Zbylých 27 je doloženo: vkládají se do nich jména SQL funkcí
+   (50 hodnot), @keyframes (26), tříd v CSS (999), HTML značek
+   a čísla — a ani jedno z nich není s diakritikou. Strop smí jen
+   klesat. */
+const STROP_RETEZCOVYCH = 27;
 pravda('míst se sestavenou hranicí nepřibývá', retezcovychB <= STROP_RETEZCOVYCH,
   `nalezeno ${retezcovychB}, strop ${STROP_RETEZCOVYCH} — ta místa zkouška nevidí, `
   + 'nové se musí posoudit ručně (hranice kolem českého textu nesedne)');
@@ -354,6 +438,23 @@ umiW('/kancelářsk\\w* vybaven/i', true);
 umiW('/[\\wÁ-Žá-ž.-]*ulice/i', false);
 umiW('/\\w+@\\w+\\.\\w+/', false);
 umiW('/okres\\w* Brno/i', false);
+
+/* A ROZPOZNÁVÁNÍ DRUHÉ STRANY (§460) se musí prokázat taky. */
+const umiZa = (vzor, ceka) => {
+  const i = vzor.indexOf('\\b');
+  const za = i === -1 ? [] : coStojiZa(vzor, i + 2);
+  const nasel = za.some((z) => pismeno(z) && !slovni(z));
+  pravda(`${ceka ? 'vada' : 'v pořádku'} ZA \\b: ${vzor}`, nasel === ceka, `za \\b stojí [${za.join(',')}]`);
+};
+umiZa('\\bÚstecký', true);
+umiZa('\\bÚ', true);
+umiZa('\\b[ÚU]stecký', true);
+umiZa('\\b(?:Ústecký|Praha)', true);
+umiZa('\\bUstecky', false);
+umiZa('\\b(?:Praha|Brno)', false);
+umiZa('\\b[Uu]stecky', false);
+umiZa('\\bstroj', false);
+umiZa('\\b\\w+', false);
 
 console.log('\\nMrtvá hranice slova:');
 for (const z of zpravy) console.log(z);

@@ -27503,12 +27503,19 @@ ověřuje**: zmizí-li normalizace, výjimka padá a zkouška spadne s ní.
 A výjimka, která nemá co odpouštět, taky spadne, aby nezůstala
 ležet a jednoho dne nezakryla vadu, která přijde později.
 
-Zbývá mez, kterou tahle zkouška nevidí: 61 míst skládá vzor
-z řetězce (`new RegExp('\b' + k + '\b')`), kde hranice stojí kolem
+Zbývá mez, kterou tahle zkouška nevidí: místa, kde se vzor skládá
+z řetězce (`new RegExp('\b' + k + '\b')`) a hranice stojí kolem
 proměnné. Nejsou nevinná — v `scripts/test-ceny.mjs` se tak hledá
-jméno kraje a „Karlovarský" končí na „ý". Je to ale jiná práce,
-vede se jako vlastní úkol, a aby se mezitím tiše nerozrostla, má
-strop: přibude-li další, zkouška spadne a donutí o něm rozhodnout.
+jméno kraje a „Karlovarský" končí na „ý". Je to jiná práce, vede se
+jako vlastní úkol, a aby se mezitím tiše nerozrostla, má strop:
+přibude-li další, zkouška spadne a donutí o něm rozhodnout.
+
+**Oprava zápisu:** stálo tu, že těch míst je 61. Nebylo. To číslo
+vzniklo ručním grepem přes celé soubory, kdežto hlídač počítá jen
+řádky s `RegExp(` — a skutečný počet je **27**. Strop byl tedy
+nastavený víc než dvojnásobně nad skutečností, takže nehlídal nic
+(§460). Číslo spočítané jinak než tím kódem, který ho pak hlídá,
+není měření, ale domněnka.
 
 Třetí pokus přinesl ještě jeden nález, který zatím čeká: do názvů
 se plete stav aukce („Prodáno Regály…", „Ukončeno Prodej…") a u dvou
@@ -27757,3 +27764,69 @@ poroste, ne zahodit. Stavební pozemek je přesně to, co web hledá.
 A jedna věc se potvrdila znovu: výpis **nebyl** na domovské
 stránce. Ta je jen vývěska, přesně jako u verejnedrazby.cz (§452).
 Bot našel „1 nález z 30 cest" a tím nálezem byla právě ta vývěska.
+
+## §460
+
+**Hranice slova je mezi dvěma znaky. Hlídač §454 koukal jen na
+jeden z nich — a mez, kterou k tomu zapsal, byla spočítaná jinak,
+než se pak hlídala.**
+
+Při procházení posledních 27 míst, kde se vzor skládá kolem
+proměnné, se ukázalo, kolik z toho propadlo:
+
+```
+KRAJ                 /\bX\b/
+Praha                 ANO
+Středočeský            ne
+Ústecký                ne
+Královéhradecký        ne
+Vysočina              ANO
+…
+MRTVÝCH: 12 ze 14
+```
+
+`scripts/test-ceny.mjs` hlídá, že web nepíše „v **Středočeský**
+kraji" — tedy že žádný kraj nezůstal v prvním pádě. Je to kontrola
+**negativní**: hledá první pád a nesmí ho najít. S mrtvým vzorem
+tedy nenašla nic, vrátila zelenou a **dvanáct krajů ze čtrnácti
+nehlídala vůbec**.
+
+A „Ústecký" neprošel ani po opravě, kterou §454 navrhuje: `\b`
+před „Ú" je mrtvé stejně jako za „ý", protože hranice je **mezi
+dvěma znaky** a ani jeden z nich není `\w`. Hlídač §454 přitom
+koukal jen na to, co stojí **před** `\b`. Jedna strana pasti, druhá
+otevřená. Doplněno (`coStojiZa`) a prokázáno na devíti tvarech.
+
+Náprava platí pro obě strany a potřebuje flagu `u`:
+
+```js
+new RegExp('(?<![\\p{L}])' + k + '(?![\\p{L}])', 'u')
+```
+
+Sabotáž to prokázala naostro: web dostal „v Ústecký kraji" a
+opravená kontrola to **našla a vypsala**, kdežto starý vzor by to
+propustil.
+
+**A teď ta nepříjemnější polovina.** §454 si zapsal, že míst se
+sestavenou hranicí je 61, a postavil na tom strop. Měření ukázalo
+**27**. To číslo 61 vzniklo ručním grepem přes celé soubory, zatímco
+hlídač počítá jen řádky s `RegExp(` — tedy jsem si mez spočítal
+jedním způsobem a hlídal druhým. Strop byl proto nastavený víc než
+dvojnásobně nad skutečností a **nehlídal nic**: sabotáž, která dvě
+sestavené hranice přidá, se pod ním schovala a zkouška zůstala
+zelená. Se stropem 27 táž sabotáž padá („nalezeno 29, strop 27").
+
+**Mez se musí spočítat tím samým kódem, který ji pak hlídá.** Číslo
+spočítané jinak není měření, ale domněnka — a domněnka zapsaná jako
+fakt je nepravda v dokumentaci, i když ji tam napsal ten, kdo zrovna
+psal lekci o měření. Zápis §454 je opravený.
+
+Zbylých 27 míst je doloženo měřením toho, co se do nich vkládá:
+jména SQL funkcí (50 hodnot), `@keyframes` (26), tříd v CSS (999),
+HTML značek a čísla — **ani jedno z nich není s diakritikou**.
+Dvě místa vzor na spisovou značku ÚZSVM (`[A-ZÁ-Ž]{2,4}/…`) mají
+diakritiku ve třídě a hlídač na ně ukázal; měření osmi značek
+v živých datech (`EAS/CB/153/2026`) ukázalo, že všechny jsou ASCII
+a vzor na všech sedne. Oprava „na jistotu" by ho naopak rozbila,
+protože lookbehind před „Z" v „ÚZSVM" selže — „Ú" je písmeno. Mají
+tedy výjimku s doloženým důvodem, ne opravu.

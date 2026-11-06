@@ -339,9 +339,20 @@ je('Vysočina se neohýbá na „v Vysočina kraji"', PK_CENY.kdeText('kraj', 'V
 je('Středočeský se skloní i s předložkou', PK_CENY.kdeText('kraj', 'Středočeský'), 've Středočeském kraji');
 je('Zlínský dostane „ve", ne „v"', PK_CENY.kdeText('kraj', 'Zlínský'), 've Zlínském kraji');
 je('okres se píše jako „v okrese X"', PK_CENY.kdeText('okres', 'Benešov'), 'v okrese Benešov');
+/* HRANICE SLOVA TU NESMÍ BÝT `\b` (§460). `\b` se řídí `\w`, kam
+   písmeno s diakritikou nepatří — a dvanáct ze čtrnácti jmen krajů
+   diakritiku na kraji slova má: „Středočeský", „Ústecký",
+   „Královéhradecký". Změřeno 6. 11.:
+     /\bKarlovarský\b/.test('v kraji Karlovarský kraj')  → false
+     /\bÚstecký\b/     (ani úvodní hranice)              → false
+   Tahle kontrola je NEGATIVNÍ — hledá první pád a nesmí ho najít —
+   takže s mrtvým vzorem byla vždycky zelená a dvanáct krajů ze
+   čtrnácti nehlídala vůbec. Lookaroundy na `\p{L}` platí pro obě
+   strany a flaga `u` je k nim potřeba. */
+const JAKO_SLOVO = (k) => new RegExp('(?<![\\p{L}])' + k + '(?![\\p{L}])', 'u');
 pravda('žádný kraj nezůstal v prvním pádě',
-  KRAJE.every((k) => !new RegExp('\\b' + k + '\\b').test(PK_CENY.kdeText('kraj', k))),
-  KRAJE.map((k) => PK_CENY.kdeText('kraj', k)).filter((t, i) => new RegExp('\\b' + KRAJE[i] + '\\b').test(t)).join(', '));
+  KRAJE.every((k) => !JAKO_SLOVO(k).test(PK_CENY.kdeText('kraj', k))),
+  KRAJE.map((k) => PK_CENY.kdeText('kraj', k)).filter((t, i) => JAKO_SLOVO(KRAJE[i]).test(t)).join(', '));
 pravda('neznámý kraj text nerozbije (nevypíše undefined)',
   /^v kraji /.test(PK_CENY.kdeText('kraj', 'Nějaký')) && !/undefined/.test(PK_CENY.kdeText('kraj', 'Nějaký')));
 
