@@ -1,0 +1,66 @@
+name: Návštěvnost (kolik lidí chodí na web)
+
+# Vypíše čítače z tabulky `navstevnost` do logu běhu. Nic nemění a nikam
+# nic nezapisuje — jen čte a sečte.
+#
+# PROČ ÚLOHA A NE STRÁNKA. Souhrn smí vidět jen majitel, a web žádnou
+# představu o „majiteli" nemá; jsou tu jen běžné účty. Dát té funkci
+# roli `authenticated` by znamenalo, že si návštěvnost přečte každý, kdo
+# se zaregistruje. Čte se proto servisním klíčem, který leží v tajných
+# proměnných repozitáře — stejně to dělá rozesílač a nasazení databáze.
+#
+# PROČ TO VZNIKLO. Skript scripts/navstevnost.mjs v repozitáři ležel od
+# začátku, ale nespouštěla ho žádná úloha: v testy.yml se zkouší jen to,
+# jak formátuje čísla. Živá čísla si tedy musel někdo přečíst u počítače
+# se servisním klíčem v ruce — a protože majitel pracuje z telefonu,
+# nepřečetl je nikdo. Na otázku „co ten web stojí" je přitom
+# návštěvnost ten hlavní vstup: web bez lidí se prodává za cenu domény,
+# ať je postavený jakkoli.
+#
+# POUŠTÍ SE JEN RUČNĚ. Žádný cron: tohle není hlídač, který má na něco
+# upozornit, ale pohled, který si člověk vyžádá.
+#
+# ČÍSLA JSOU PŘIBLIŽNÁ A JE TO NAPSANÉ I V TOM SKRIPTU: zapisovat smí
+# kdokoli (jinak by se z veřejné stránky nezapsalo nic), takže se dají
+# nafouknout. Na otázku „chodí sem deset lidí denně, nebo tisíc" to
+# stačí; na fakturaci inzerentovi ne.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dni:
+        description: 'Za kolik dní zpátky (1–365)'
+        required: false
+        default: '30'
+        type: string
+
+# Čte jen zdroj a tajný klíč; nekomituje, nepíše komentáře, nenahrává
+# artefakty. Hlídá to scripts/test-ci-prava.mjs.
+permissions:
+  contents: read
+
+jobs:
+  navstevnost:
+    runs-on: ubuntu-latest
+    # Strop proti visícímu spojení, ne proti pomalosti: je to jeden dotaz.
+    timeout-minutes: 10
+    steps:
+      # Token z checkoutu si nenechávat na disku: tahle úloha nic
+      # nepushuje, takže by jen ležel v .git/config, kde ho může
+      # přečíst cokoli, co v běhu spustíme. Hlídá scripts/test-ci-prava.mjs.
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Vypsat návštěvnost
+        run: node scripts/navstevnost.mjs --dni "${DNI:-30}"
+        env:
+          DNI: ${{ inputs.dni }}
+          # Adresa projektu není tajná (stojí v js/config.js, odkud ji čte
+          # každý prohlížeč) — skript si ji vezme odtamtud. Klíč tajný je
+          # a předává se jen odkazem do Secrets, nikdy hodnotou.
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

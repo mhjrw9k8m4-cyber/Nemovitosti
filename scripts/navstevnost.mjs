@@ -20,6 +20,8 @@
    Na otázku „chodí sem deset lidí denně, nebo tisíc" to stačí;
    na fakturaci inzerentovi ne.
    ================================================================== */
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
+
 const URL_ = (process.env.SUPABASE_URL || 'https://tcinuzftgmkvjjgvadky.supabase.co').replace(/\/+$/, '');
 const KLIC = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -35,7 +37,13 @@ if (!KLIC) {
 const cislo = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
 const pruh = (n, max, sirka = 28) => '█'.repeat(Math.max(n > 0 ? 1 : 0, Math.round((n / (max || 1)) * sirka)));
 
-const odpoved = await fetch(`${URL_}/rest/v1/rpc/prehled_navstevnosti`, {
+/* ČASOVÝ LIMIT. Dokud tenhle skript nespouštěla žádná úloha, nebyl
+   „produkční" a hlídač scripts/test-casove-limity.mjs se na něj
+   nedíval — volalo se tu holým `fetch` bez limitu. V úloze by to byl
+   běh, který visí, dokud ho GitHub po desíti minutách nezastaví.
+   Chytlo se to v tu samou chvíli, kdy úloha vznikla: tím, že skript
+   někdo začne pouštět, se z jeho vady stane nález. */
+const odpoved = await fetchSLimitem(`${URL_}/rest/v1/rpc/prehled_navstevnosti`, {
   method: 'POST',
   headers: { 'content-type': 'application/json', apikey: KLIC, authorization: 'Bearer ' + KLIC },
   body: JSON.stringify({ p_dni: DNI }),
