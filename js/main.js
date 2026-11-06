@@ -7230,9 +7230,30 @@
          patří, bez prohledávání dat — a zkouška může ověřit, že značka
          „Poznámka" visí na SPRÁVNÉ kartě, ne na kterékoli. */
       li.setAttribute('data-pk', pkey(d));
-      li.setAttribute('tabindex', '0');
-      li.setAttribute('role', 'button');
-      li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
+      /* KARTA NENÍ TLAČÍTKO A UŽ SE ZA NĚJ NEVYDÁVÁ.
+         Stálo tu `role="button"`, `tabindex="0"` a `aria-label`
+         složený z druhu, místa a výměry. Mělo to tři vady naráz
+         a všechny byly změřené v prohlížeči 6. 11.:
+
+         · CENA SE NEPŘEČETLA. Přístupné jméno karty bylo „Dražba ·
+           Hradec Králové · 2 481 m²" — a u role="button" je jméno
+           to jediné, co odečítač o ovladači řekne. Uvnitř karty přitom
+           stálo „59 000 Kč" a „24 Kč/m²". Nejdůležitější číslo na
+           celém webu bylo pro nevidomého neviditelné.
+         · UVNITŘ TLAČÍTKA BYLA DVĚ DALŠÍ TLAČÍTKA. „Uložit" a „Skrýt"
+           jsou skutečné <button>y. Podle ARIA má role="button"
+           potomky jen ozdobné, takže se k nim odečítač nemá jak
+           dostat. (Chromium je ve svém stromu ukazuje — proto se
+           na to nepřišlo dřív; NVDA ani VoiceOver se tím neřídí.)
+         · NIKDE ŽÁDNÝ ODKAZ. Na kartě nebyl jediný <a href>, celé
+           otvírání dělal JS. Prostřední tlačítko myši tedy neudělalo
+           nic, Ctrl+klepnutí taky ne a v stavovém řádku se při najetí
+           neukázalo, kam to vede. Na výpisu nabídek, kde si lidé
+           běžně otvírají pět pozemků do pěti karet, je to drahé.
+
+         Místo toho je odkazem NADPIS karty (.opp-odkaz níž), který se
+         přes stylopis roztáhne přes celou kartu — klepnout jde pořád
+         kamkoli. Hlídá to scripts/test-karta-odkaz.mjs. */
       var days = daysUntil(d.extra);
       // Dražba po termínu vypisovala PRÁZDNO a vypadala jako živá nabídka.
       // countdownText() přitom „proběhlo" umí — jen se nikdy nezavolalo,
@@ -7566,8 +7587,9 @@
                říká totéž. Skládá to jediná funkce v js/cisteni.js, ze
                které si bere jméno i sestavení (scripts/generate-parcel-pages.mjs),
                takže se karta a stránka nemůžou rozejít. */
-            '<b class="opp-druh">'
-              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
+            '<b class="opp-druh"><a class="opp-odkaz" href="' + esc(inzeratUrl(d))
+              + '" aria-label="' + esc(jmenoOdkazu(d, druhCap)) + '">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</a></b>' +
             '<span class="opp-figures">' + figs + '</span>' +
           '</div>' +
           /* 2. ŘÁDEK — KDE TO JE. „Už otevřeno" stojí u NÁZVU MÍSTA, ne
@@ -7644,21 +7666,38 @@
          Vlastní stránka se neztrácí — detail ji nastavuje jako kanonickou
          a posílá ji tlačítko Sdílet. */
       function openInzerat() { gotoInzerat(d); }
-      li.addEventListener('click', openInzerat);
-      li.addEventListener('keydown', function (e) {
-        /* JEN KDYŽ STOJÍ ČLOVĚK NA KARTĚ SAMÉ. Uvnitř karty jsou tři
-           skutečná tlačítka („Uložit", „Skrýt", „víc") a ta zastavovala
-           probublávání jen u klepnutí — u klávesnice ne. Kdo si
-           tabulátorem zaměřil „Uložit" a stiskl Enter nebo mezerník,
-           pustil událost sem: `preventDefault()` zrušil vlastní
-           aktivaci toho tlačítka (u Enteru se klepnutí posílá jako
-           výchozí akce keydown, u mezerníku na keyup) a místo uložení
-           se odešlo na stránku pozemku. Tři tlačítka na každé kartě
-           tedy klávesnicí nešla zmáčknout a dělala pravý opak toho,
-           co slibují. Myší fungovala, proto to tak dlouho vydrželo.
-           Hlídá to scripts/test-zaostreni.mjs. */
-        if (e.target !== li) return;
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
+      li.addEventListener('click', function (e) {
+        /* KLEPNOUT JDE POŘÁD KAMKOLI NA KARTU, i když odkaz je jen
+           nadpis: .opp-odkaz::after se ve stylopisu roztáhne přes celou
+           kartu. Tohle klepnutí chytá obojí — plochu karty i samotný
+           odkaz, protože událost z odkazu probublá sem.
+
+           PROČ SE VLASTNÍ CHOVÁNÍ ODKAZU RUŠÍ. gotoInzerat() dělá tři
+           věci, které prosté přejití na adresu neumí: předá pozemek
+           přes sessionStorage (stránka se vykreslí okamžitě, nečeká se
+           na stažení dat), zapamatuje si, kde ve výpisu člověk stál,
+           a uloží pohled mapy pro „zpět". Kdyby se nechal odkaz
+           odejít sám, o všechno tohle by člověk přišel.
+
+           ČTYŘI KLÁVESY SE NECHÁVAJÍ PROJÍT. Ctrl, Cmd, Shift a Alt
+           s klepnutím znamenají „otevři jinam" — novou kartu, nové
+           okno, stažení. Právě kvůli tomu tu ten odkaz je, takže by
+           bylo absurdní je zrušit. Kdo takhle otevře pozemek na nové
+           kartě, přijde o okamžité vykreslení z sessionStorage a
+           stránka si data stáhne sama; to je správná daň.
+
+           KLÁVESNICE SE UŽ NEŘEŠÍ ZVLÁŠŤ. Dřív tu visel `keydown`,
+           který na Enteru a mezerníku volal openInzerat() — karta byla
+           `role="button"` a jinak se aktivovat nedala. Měl k tomu
+           pojistku `e.target !== li`, protože bez ní kradl Enter třem
+           tlačítkům uvnitř karty („Uložit", „Skrýt", „víc") a místo
+           uložení odcházel na stránku pozemku. Teď je nadpis skutečný
+           odkaz: Enter na něm pošle obyčejné klepnutí, které dojde sem,
+           a mezerník odroluje stránku, jak se od odkazu čeká. Celá ta
+           třída vad tím mizí, ne že by se jen opravila. */
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        openInzerat();
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
       var poznVic = li.querySelector('.opp-pozn-vic');
@@ -8357,10 +8396,34 @@
        s 260 000 a tlačítko „Inzerát" na ní vedlo na inzerát toho
        druhého pozemku. findTarget() v js/pozemek.js „c" umí odjakživa,
        jen mu ho nikdo neposílal. */
-    location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
+    location.href = inzeratUrl(d);
+  }
+  /* TÁŽ ADRESA PRO ODKAZ NA KARTĚ I PRO KLEPNUTÍ MYŠÍ.
+     Karta ve výpisu nese skutečný <a href> (třída .opp-odkaz, viz níž).
+     Kdyby si ten odkaz adresu skládal sám, rozešel by se s gotoInzerat()
+     při první změně rozlišovačů — a přesně to se tu už jednou stalo
+     (celý příběh je v komentáři u openInzerat). Proto složení adresy
+     stojí na jednom místě a obojí si ho bere odsud. */
+  function inzeratUrl(d) {
+    return 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
       + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
       + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '')
       + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
+  }
+  /* CO ODKAZ ŘEKNE TOMU, KDO HO SLYŠÍ, A NE VIDÍ.
+     Kdo prochází stránku odečítačem obrazovky po odkazech, slyší jen
+     jejich jména — ne to, co je kolem nich na kartě. Jméno proto nese
+     celou nabídku včetně CENY: podle ní se člověk rozhoduje, jestli má
+     kartu vůbec otevřít. Bez ceny v tomhle řetězci je výpis pro
+     nevidomého seznam míst bez čísel.
+     Cena se tím na kartě ocitne dvakrát: jednou v názvu odkazu, jednou
+     jako vlastní text karty, který se při plynulém čtení přečte taky.
+     Je to vědomá daň — opakované číslo je menší škoda než žádné. */
+  function jmenoOdkazu(d, druhCap) {
+    var casti = [PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type), d.place];
+    if (isFinite(d.price)) casti.push(fmt(d.price) + '\u00a0Kč');
+    casti.push(hasArea(d) ? areaTxt(d) : 'výměra neuvedena');
+    return casti.join(', ');
   }
   // „Zobrazit na mapě" / sdílený odkaz: přiblíž mapu tak, aby byl pozemek
   // VYZNAČENÝ OHRANIČENÍM (ne jen tečkou) a pěkně zarámovaný na celou obrazovku.

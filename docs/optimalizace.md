@@ -28540,3 +28540,74 @@ k rozhodnutí, ne do opravy.
 **Pravidlo, které z toho zbývá:** když je jméno nálezu nepřesné, levnější
 než vysvětlovat ho je **rozdělit ho** a nechat příští běh odpovědět.
 Deset řádků proti půldnu, a výsledek je měření, ne domněnka.
+
+## §472
+
+**Karta ve výpisu se vydávala za tlačítko — a cena se tím nepřečetla.
+Dvakrát jsem se spletl dřív, než měření promluvilo.**
+
+Karta ve výpisu byla od začátku `<li role="button" tabindex="0"
+aria-label="Dražba · Hradec Králové · 2 481 m²">` a neměla uvnitř
+jediný `<a href>`. Vypadalo to jako drobnost v přístupnosti. Nebyla.
+
+**TŘI VADY V JEDNOM PRVKU.** Změřeno 6. 11. v prohlížeči přes strom
+přístupnosti (`Accessibility.getPartialAXTree` v CDP), ne odvozeno
+z kódu:
+
+1. **Cena se nepřečetla.** Přístupné jméno karty bylo to, co stálo
+   v `aria-label` — druh, obec, výměra. U `role="button"` je jméno
+   jediné, co odečítač o ovladači řekne. Uvnitř karty přitom bylo
+   „59 000 Kč" a „24 Kč/m²". Číslo, podle kterého se na výpisu
+   nabídek rozhoduje úplně každý, bylo pro nevidomého neviditelné.
+2. **Uvnitř tlačítka byla dvě další tlačítka.** „Uložit" a „Skrýt"
+   jsou skutečné `<button>`y. Podle ARIA jsou potomci `role="button"`
+   ozdobní, takže se k nim odečítač nemá jak dostat.
+3. **Pozemek nešel otevřít na nové kartě.** Bez odkazu neudělá
+   Ctrl s klepnutím nic, prostřední tlačítko myši taky ne a ve
+   stavovém řádku se při najetí neukáže, kam to vede. Na výpisu
+   nemovitostí, kde si lidé běžně otevřou pět nabídek do pěti karet,
+   je to drahé.
+
+**DVĚ MOJE DOMNĚNKY, OBĚ ŠPATNĚ.** Šel jsem do toho s vysvětlením
+„Chromium u `role="button"` ořeže potomky, proto se cena nepřečte".
+První měření ho vyvrátilo: Chromium potomky NEOŘEZÁVÁ, cena je v jeho
+stromu vidět. Vada je jinde — ne v tom, co je ve stromu, ale v tom, co
+odečítač ze stromu PŘEČTE, protože se řídí ARIA a ne Chromiem.
+Druhá domněnka přišla u ověřování opravy: hlídač hlásil, že plocha
+odkazu překrývá tlačítka, i když neměla. Málem jsem přepisoval
+stylopis. Měření ukázalo, že hlídač měřil správně a chyba byla moje:
+pustil jsem ho proti **minifikovanému** stylopisu, do kterého se ještě
+nepromítlo vrácení předchozí sabotáže. Pokaždé stačilo jedno měření
+místo jednoho odstavce úvah — stejně jako v §471.
+
+**JAK TO JE TEĎ.** Odkazem je nadpis karty; přes `::after` s `inset:0`
+se roztáhne na celou kartu, takže klepnout jde pořád kamkoli a vizuálně
+se nezměnilo nic. Jméno odkazu nese druh, obec, **cenu** i výměru.
+Adresa se skládá na jednom místě (`inzeratUrl`), aby se odkaz a
+klepnutí nemohly rozejít — přesně to se tu už jednou stalo. Klepnutí
+vlastní chování odkazu ruší, protože `gotoInzerat()` dělá tři věci
+navíc (okamžité vykreslení z `sessionStorage`, zapamatování místa ve
+výpisu, uložení pohledu mapy); Ctrl, Cmd, Shift a Alt se nechávají
+projít, jinak by odkaz nebyl k ničemu.
+
+**HLÍDAČ MĚŘÍ, CO SLYŠÍ ODEČÍTAČ, NE CO STOJÍ V ATRIBUTU.**
+`scripts/test-karta-odkaz.mjs` čte jméno odkazu ze stromu přístupnosti
+a porovnává ho s cenou **vykreslenou** na kartě. Kdyby četl
+`aria-label` a srovnával ho s výrazem, který ho vyrobil, prošel by
+i s cenou cizí nabídky. Prokázán pěti promyšlenými sabotážemi
+(vrácená role, cena pryč ze jména, odkaz si skládá adresu sám,
+plocha odkazu přes tlačítka, zrušené Ctrl+klepnutí) — každá chycena
+pojmenovanou kontrolou.
+
+**A JEŠTĚ JEDNA VADA ZKOUŠKY, KTEROU NAŠLA AŽ SABOTÁŽ.** Kontrola
+„plocha odkazu nepřekryla tlačítka" napoprvé prostě klepla myší.
+Sabotáž ji nechala třicet vteřin čekat a zkouška pak **PADLA výjimkou**
+místo toho, aby vadu pojmenovala. Teď se místo klepání ptá prohlížeče,
+kdo na tom bodě doopravdy leží. Chybějící nebo překrytý prvek patří do
+pojmenované kontroly, ne do výjimky — to je totéž pravidlo, které si
+`scripts/zkouska-pad.mjs` vynucuje jinde.
+
+**Pravidlo, které z toho zbývá:** `role="button"` na kontejneru není
+zkratka k „celé to jde kliknout". Je to slib, že uvnitř **nic dalšího
+není** — a kdo ho dá nad kartou s cenou a dvěma tlačítky, ten tu cenu
+a ta tlačítka odečítači zamkl.

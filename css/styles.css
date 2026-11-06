@@ -3583,6 +3583,29 @@ h1 em{ color:var(--znacka-svetla);
    stála jen na tučnosti. Druh je teď o dva stupně výš (18 px) a váhu má
    600, ne 700: velikost nese pořadí, tučnost ať nekřičí dvakrát. */
 .opp-druh{font-family:var(--font-ui); font-size:18px; font-weight:600; letter-spacing:-0.01em; color:var(--text);}
+/* ODKAZ PŘES CELOU KARTU.
+   ------------------------------------------------------------------
+   Karta se dřív otvírala jen JavaScriptem a byla `role="button"` —
+   neměla jediný <a href>. Tři věci se tím ztratily: cena se nepřečetla
+   odečítačem obrazovky (jméno tlačítka ji neobsahovalo a u role button
+   je jméno všechno, co se řekne), dvě skutečná tlačítka uvnitř
+   („Uložit", „Skrýt") byla podle ARIA nedosažitelná, a pozemek nešel
+   otevřít na nové kartě. Celé zdůvodnění i naměřené hodnoty jsou
+   v js/main.js u vykreslení karty.
+
+   ODKAZEM JE NADPIS, PLOCHOU CELÁ KARTA. `::after` s `inset:0` se
+   roztáhne přes `.opp-item` (ten je `position:relative`), takže prst
+   i myš trefí kamkoli — vizuálně se tedy nic nemění. Text odkazu
+   zůstává jen nadpis: to je to, co má odečítač ohlásit.
+
+   PROČ NE `z-index` VÝŠ NEŽ 1. Obě tlačítka nad snímkem mají 3
+   (.opp-fav, .opp-skryt), takže zůstávají nad touhle plochou
+   a klepnout na ně jde dál. „víc" u poznámky leží v textu bez
+   polohy — dostává ji o řádek níž, jinak by ho plocha odkazu
+   překryla a poznámka by se nerozbalila. */
+.opp-odkaz{color:inherit; text-decoration:none;}
+.opp-odkaz::after{content:''; position:absolute; inset:0; z-index:1;}
+.opp-item .opp-pozn-vic{position:relative; z-index:2;}
 /* Cena je to, podle čeho se rozhoduje — ať je to vidět. Odstup nahoře
    ji odděluje od řádku s místem; bez něj splývala v jeden blok. */
 /* Prostrkání −0.02em a řádkování 1.1: obojí ze stupnice (hlídá

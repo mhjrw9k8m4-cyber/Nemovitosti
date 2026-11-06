@@ -623,6 +623,9 @@ to{opacity:1;transform:none}
 .map-side{background:var(--plocha-vypis)}
 .opp-nadpis{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px}
 .opp-druh{font-family:var(--font-ui);font-size:18px;font-weight:600;letter-spacing:-0.01em;color:var(--text)}
+.opp-odkaz{color:inherit;text-decoration:none}
+.opp-odkaz::after{content:'';position:absolute;inset:0;z-index:1}
+.opp-item .opp-pozn-vic{position:relative;z-index:2}
 .opp-price{font-family:var(--font-ui);font-weight:700;font-size:24px;line-height:1.1;letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;margin-top:8px}
 .opp-more{list-style:none;text-align:center;padding:12px 4px 4px;font-size:13px;color:var(--znacka-svetla);font-weight:600}
 .rv-vrstva{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;background:var(--bg);padding:8px 12px calc(12px + env(safe-area-inset-bottom))}

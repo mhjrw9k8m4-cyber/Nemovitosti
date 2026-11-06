@@ -1152,6 +1152,12 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zaostreni.mjs
 
+      # Taky potřebuje prohlížeč: čte strom přístupnosti přes CDP, tedy
+      # to, co z karty opravdu dostane odečítač obrazovky.
+      - name: Karta ve výpisu — skutečný odkaz a cena v jeho jméně
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-karta-odkaz.mjs
+
       - name: Kalkulačka nákladů při koupi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs

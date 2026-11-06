@@ -4389,9 +4389,7 @@
       li.setAttribute('data-id', d._id);
 
       li.setAttribute('data-pk', pkey(d));
-      li.setAttribute('tabindex', '0');
-      li.setAttribute('role', 'button');
-      li.setAttribute('aria-label', t.label + ' · ' + d.place + ' · ' + areaTxt(d));
+
       var days = daysUntil(d.extra);
 
       var cd = days == null ? ''
@@ -4520,8 +4518,9 @@
 
           '<div class="opp-nadpis">' +
 
-            '<b class="opp-druh">'
-              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</b>' +
+            '<b class="opp-druh"><a class="opp-odkaz" href="' + esc(inzeratUrl(d))
+              + '" aria-label="' + esc(jmenoOdkazu(d, druhCap)) + '">'
+              + PKCisteni.sazba(esc(PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type))) + '</a></b>' +
             '<span class="opp-figures">' + figs + '</span>' +
           '</div>' +
 
@@ -4549,11 +4548,11 @@
         '</div>';
 
       function openInzerat() { gotoInzerat(d); }
-      li.addEventListener('click', openInzerat);
-      li.addEventListener('keydown', function (e) {
+      li.addEventListener('click', function (e) {
 
-        if (e.target !== li) return;
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        openInzerat();
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });
       var poznVic = li.querySelector('.opp-pozn-vic');
@@ -4946,10 +4945,21 @@
       }));
     } catch (e) {}
 
-    location.href = 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
+    location.href = inzeratUrl(d);
+  }
+
+  function inzeratUrl(d) {
+    return 'pozemek.html?p=' + encodeURIComponent(pkey(d)) + '&ll=' + d.lat + ',' + d.lng
       + (isFinite(d.area) ? '&v=' + Math.round(d.area) : '')
       + (isFinite(d.price) ? '&c=' + Math.round(d.price) : '')
       + (d._lid ? '&l=' + encodeURIComponent(d._lid) : '');
+  }
+
+  function jmenoOdkazu(d, druhCap) {
+    var casti = [PKCisteni.hlavaNabidky(druhCap || 'Pozemek', d.type), d.place];
+    if (isFinite(d.price)) casti.push(fmt(d.price) + '\u00a0Kč');
+    casti.push(hasArea(d) ? areaTxt(d) : 'výměra neuvedena');
+    return casti.join(', ');
   }
 
   function openParcel(target) {
