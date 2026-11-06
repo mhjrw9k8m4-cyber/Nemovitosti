@@ -27520,3 +27520,60 @@ Prokázáno třemi sabotážemi: vrácená mrtvá hranice v `ULICE_SLOVO`
 (hlídač ji našel i s hláškou, kam patří `(?![\p{L}])`), výjimka
 s vymyšleným důvodem (padla na „nemá co odpouštět") a odebraný
 vzor na vysokozdvižné vozíky (zkouška předpisu: 30/31).
+
+## §455
+
+**Hledat značku v celém kusu znamená najít ji i tam, kde znamená
+něco jiného — a skončená dražba není nabídka.**
+
+Čtvrtý ostrý pokus na verejnedrazby.cz nestačil: vypsal surové
+úseky jen z první stránky, kde jsou samé živé aukce. Vady se ale
+dějí u neaktivních záznamů, a ty jsou na konci výpisu. Měřidlo
+tedy dostalo i výpis z poslední načtené stránky — jeden běh, obojí
+vidět — a pátý pokus odpověděl:
+
+```
+[7840] …Zlínský Filtrovat 1 .. 5 6 7 8 Vypisuji 20 (141 - 161)
+       z 145 aukcí Prodáno Kolový traktor VALTRA T-SERIES…
+       ( Výběrové řízení dynamické) Čas do konce: Ukončeno …
+[7815] …Prodáno Prodej RD, zastavěná plocha 134 m2, Žatec…
+[8066] …Neprodáno Prodej stavebního pozemku…centrum Brna…
+[8033] …Zrušeno Prodej RD 5+kk s užitnou plochou 216 m2…
+[8053] …í Aktivní VEŘEJNÁ DRAŽBA - RD - užitná plocha 63,77 m2…
+```
+
+Tři věci naráz, žádná uhádnutá.
+
+**Za prvé: značka začátku záznamu byla jen `/Aktivní\s+/`.** Před
+každým názvem stojí stav aukce, a těch je pět. U neaktivní dražby
+se tedy nenašlo nic: stav zůstal v názvu („Prodáno Regály na
+palety") a u prvního záznamu na stránce se vzal celý filtrační
+panel — dva záznamy ze 145 měly místo jména nabídky text
+„Neprodáno Prodáno Ukončeno Zrušeno Kraj Vybrat vše Hlavní město
+Praha Jihočeský…". To by šlo na web.
+
+**Za druhé: slovo „Ukončeno" je v záznamu dvakrát a jednou v jiné
+roli** — jako stav před názvem, a jako čas za ním („Čas do konce:
+Ukončeno"). Hledat značku v celém kusu by si z času udělalo
+začátek názvu a název by zmizel. Čtečka proto nejdřív najde, kde
+název končí, a značku hledá **jen v tom, co je před ní**. To není
+detail: je to rozdíl mezi „značka se najde" a „značka znamená, co
+si myslím".
+
+**Za třetí: skončená dražba není nabídka.** Z 145 záznamů je
+většina prodaná, neprodaná nebo zrušená. Kdo si na webu otevře
+„Prodáno", je obelhaný. Čtečka teď stav nese dál (`stav`) a předpis
+říká, co je ještě nabídka (`zivyStav: ['Aktivní']`) — ale čtečka
+sama nic nezahazuje. Jen nese pravdu o tom, co na stránce stálo;
+rozhodnutí patří tomu, kdo zdroj zapojuje. Měřidlo proto vypisuje
+**kolik zůstane celých a živých**, protože právě to je číslo, podle
+kterého se o zapojení rozhoduje — ne „kolik je celých".
+
+Mimochodem přibyl ještě jeden naměřený popisek: „s užitnou
+plochou 216 m2" je skloňovaný tvar, který se dosud nečetl, takže
+se ta nabídka zahodila jako „chybí výměra", přestože ji uvádí.
+
+Prokázáno dvěma sabotážemi: značka vrácená na `/Aktivní\s+/`
+(zkouška 37/42) a hledání vrácené do celého kusu (zkouška 36/42,
+padlo i „ze tří záznamů vyjdou tři" — s časem místo stavu se
+záznam rozpadl).

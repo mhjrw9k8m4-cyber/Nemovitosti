@@ -231,6 +231,67 @@ pravda('usedlost se zařadí jako stavba', usedlostK && usedlostK.kategorie === 
     `vyšlo ${k ? k.druh : 'null'} — hranice za „ů" nesedne, patří tam (?![\\p{L}])`);
 }
 
+/* ---- 5g) §455: stav aukce a filtrační panel --------------------- */
+/* Tenhle úsek je OPSANÝ z logu pátého ostrého pokusu (6. 11., běh
+   42220856070), včetně filtračního panelu a stránkování, které se
+   do prvního záznamu na stránce doopravdy pletou. Kdyby se tu psalo
+   „jak by to asi vypadalo", zkouška by prověřovala domněnku (§449). */
+{
+  const html = `
+<a href="/aukce/x-7840/">x</a><a href="/aukce/y-7815/">y</a><a href="/aukce/z-8033/">z</a>
+<p>Stav aukce Aktivní Neprodáno Prodáno Ukončeno Zrušeno Kraj Vybrat vše Hlavní město Praha
+Jihočeský Jihomoravský Karlovarský Královéhradecký Liberecký Moravskoslezský Olomoucký
+Pardubický Plzeňský Středočeský Ústecký Vysočina Zahraničí Zlínský Filtrovat 1 .. 5 6 7 8
+Vypisuji 20 (141 - 161) z 145 aukcí Prodáno Kolový traktor VALTRA T-SERIES, T202SV4, 2012,
+5395 MTH ( Výběrové řízení dynamické) Čas do konce: Ukončeno (26.11.2025 11:25:00)
+Cena: 1 000 Kč Evid. číslo: A7840</p>
+<p>Prodáno Prodej RD, zastavěná plocha 134 m2, pozemek celkem 559 m2, Žatec, Ústecký kraj
+( Výběrové řízení dynamické) Čas do konce: Ukončeno (20.11.2025 14:35:00)
+Cena: 2 540 000 Kč Evid. číslo: A7815</p>
+<p>Zrušeno Prodej RD 5+kk s užitnou plochou 216 m2, bazén, dvougaráž, pozemek 479 m2,
+vyhledávaná lokalita Praha-Lipence ( Výběrové řízení - 3 kola) Čas do konce: Ukončeno
+(30.10.2026 14:00:00) Min. cena: 13 100 000 Kč Evid. číslo: A8033</p>`;
+  const z = zZaznamu(html, 'https://www.verejnedrazby.cz/vypis-aukci', PREDPISY['verejnedrazby.cz']);
+  const dle = (c) => z.find((x) => x.cislo === c);
+
+  pravda('ze tří záznamů vyjdou tři', z.length === 3, `vyšlo ${z.length}`);
+
+  /* NEJDŮLEŽITĚJŠÍ KONTROLA: filtrační panel se do názvu nesmí
+     dostat. Dva záznamy ze 145 měly místo názvu „Neprodáno Prodáno
+     Ukončeno Zrušeno Kraj Vybrat vše Hlavní město Praha…" — a to by
+     šlo na web jako jméno nabídky. */
+  const a = dle('7840');
+  pravda('filtrační panel ani stránkování v názvu nezůstanou',
+    a && a.nazev === 'Kolový traktor VALTRA T-SERIES, T202SV4, 2012, 5395 MTH',
+    `název: „${a ? a.nazev : '(nic)'}"`);
+  pravda('a stav se přečte („Prodáno")', a && a.stav === 'Prodáno', `stav: ${a && JSON.stringify(a.stav)}`);
+  pravda('traktor zůstane movitou věcí i po očištění názvu',
+    a && a.druh === 'není nemovitost', `druh: ${a && a.druh}`);
+
+  const b = dle('7815');
+  pravda('u „Prodáno" se stav odřízne a název začne u „Prodej"',
+    b && b.nazev.startsWith('Prodej RD, zastavěná plocha'), `název: „${b ? b.nazev : '(nic)'}"`);
+  pravda('a přes „Čas do konce: Ukončeno" se stav nepřepíše',
+    b && b.stav === 'Prodáno', `stav: ${b && JSON.stringify(b.stav)}`);
+  pravda('cena i výměra z téhož úseku vyjdou', b && b.cena === 2540000 && b.vymera === 134,
+    `cena ${b && b.cena}, výměra ${b && b.vymera}`);
+
+  const c = dle('8033');
+  pravda('pozná se i stav „Zrušeno"', c && c.stav === 'Zrušeno', `stav: ${c && JSON.stringify(c.stav)}`);
+  pravda('a „užitnou plochou 216 m2" se přečte jako plocha stavby',
+    c && c.vymera === 216, `výměra: ${c && c.vymera}`);
+
+  /* ŽIVÝ STAV. Předpis říká, co je ještě nabídka — čtečka sama nic
+     nezahazuje, jen nese pravdu. Bez tohohle by se na web dostaly
+     skončené dražby a člověk by klikal na „Prodáno". */
+  const zivy = PREDPISY['verejnedrazby.cz'].zivyStav;
+  pravda('předpis říká, které stavy jsou ještě nabídkou',
+    Array.isArray(zivy) && zivy.length === 1 && zivy[0] === 'Aktivní', JSON.stringify(zivy));
+  pravda('a ze tří naměřených záznamů není živý ani jeden',
+    z.filter((x) => zivy.includes(x.stav)).length === 0,
+    z.map((x) => x.stav).join(', '));
+}
+
 /* ---- 6) spoluvlastnický podíl se pozná -------------------------- */
 /* U podílu je cena za zlomek a výměra celá, takže „cena za metr" by
    lhala dvacetinásobně. Web podíly vede zvlášť a tohle je vstup do

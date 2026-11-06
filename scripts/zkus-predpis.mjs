@@ -110,6 +110,25 @@ console.log(`  s odkazem           ${jedinecne.filter((x) => x.odkaz).length}`);
 console.log(`  CELÝCH (vše troje)  ${cele.length}`);
 console.log(`  z toho podíly       ${podily.length}  (cena je za zlomek, výměra celá)`);
 
+/* PODLE STAVU AUKCE (§455). Tohle je číslo, podle kterého se
+   o zapojení rozhoduje: výpis vede i skončené dražby a ty na web
+   nepatří — kdo si otevře „Prodáno", je obelhaný. Zajímá tedy, kolik
+   zůstane CELÝCH A ŽIVÝCH, ne kolik je celých. */
+const zivy = (predpis.zivyStav || null);
+const podleStavu = new Map();
+for (const x of jedinecne) podleStavu.set(x.stav || '(bez stavu)', (podleStavu.get(x.stav || '(bez stavu)') || 0) + 1);
+console.log('\nPODLE STAVU AUKCE:');
+for (const [k, n] of [...podleStavu.entries()].sort((a, b) => b[1] - a[1])) {
+  const znak = zivy ? (zivy.includes(k) ? ' ← na web patří' : '') : '';
+  console.log(`  ${String(n).padStart(3)}  ${k}${znak}`);
+}
+if (zivy) {
+  const ziveCele = cele.filter((x) => zivy.includes(x.stav));
+  const ziveNemovitosti = ziveCele.filter((x) => x.kategorie && x.kategorie !== 'jiné');
+  console.log(`\n  CELÝCH A ŽIVÝCH          ${ziveCele.length}`);
+  console.log(`  z toho nemovitostí       ${ziveNemovitosti.length}  ← tolik by web dostal`);
+}
+
 console.log('\nPODLE KATEGORIE:');
 for (const [k, n] of [...podleKategorie.entries()].sort((a, b) => b[1] - a[1])) {
   console.log(`  ${String(n).padStart(3)}  ${k}`);

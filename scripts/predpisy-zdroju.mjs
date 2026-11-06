@@ -53,6 +53,10 @@ export const POPISKY_PLOCHY_STAVBY = [
   'užitná plocha budov', 'uzitna plocha budov',
   'plocha budov', 'obytná plocha', 'obytna plocha',
   'užitná plocha', 'uzitna plocha',
+  /* Skloňovaný tvar, naměřený 6. 11. v „Prodej RD 5+kk s užitnou
+     plochou 216 m2, bazén, dvougaráž" — bez něj se ta nabídka
+     zahodila jako „chybí výměra", přestože ji uvádí. */
+  'užitnou plochou', 'uzitnou plochou',
   'podlahová plocha', 'podlahova plocha',
   'zastavěná plocha', 'zastavena plocha',
   /* S MEZEROU SCHVÁLNĚ: „ÚP 206m2" ano, „úprava terénu 500 m2" ne.
@@ -115,9 +119,26 @@ export const PREDPISY = {
     /* Konec záznamu. Závorka je schválně: vrací se číslo BEZ „A“,
        protože právě tím se páruje s odkazem /aukce/…-8070/. */
     konecZaznamu: /Evid\.\s*číslo:\s*A(\d+)/g,
-    /* Začátek záznamu uvnitř useknutého kusu. Co je před ním, patří
-       předchozímu záznamu (nebo hlavičce stránky). */
-    zacatekZaznamu: /Aktivní\s+/,
+    /* ZAČÁTEK ZÁZNAMU JE STAV AUKCE (§455). Před každým názvem stojí
+       jedno z pěti slov, naměřeno na živém výpisu 6. 11.:
+         „…145 aukcí Prodáno Kolový traktor VALTRA T-SERIES…"
+         „…Prodáno Prodej RD, zastavěná plocha 134 m2, Žatec…"
+         „…Neprodáno Prodej stavebního pozemku…centrum Brna…"
+         „…Zrušeno Prodej RD 5+kk s užitnou plochou 216 m2…"
+         „…í Aktivní VEŘEJNÁ DRAŽBA - RD - užitná plocha 63,77 m2…"
+       Dřív tu stálo jen /Aktivní\s+/ a u neaktivních aukcí se tedy
+       nenašlo nic: stav zůstal v názvu („Prodáno Regály na palety")
+       a u dvou záznamů ze 145 se vzal celý filtrační panel stránky
+       („Neprodáno Prodáno Ukončeno Zrušeno Kraj Vybrat vše Hlavní
+       město Praha Jihočeský…").
+       Závorka je schválně: čtečka z ní bere STAV a nese ho dál, takže
+       se pak dá rozhodnout, co na web pustit. Hledá se jen před
+       koncem názvu, protože za ním stojí „Čas do konce: Ukončeno" —
+       tamto „Ukončeno" je čas, ne stav. */
+    zacatekZaznamu: /(Aktivní|Neprodáno|Prodáno|Ukončeno|Zrušeno)\s+/,
+    /* Které stavy jsou ještě nabídkou. Skončená dražba není nabídka:
+       kdo si na webu otevře „Prodáno", je obelhaný. */
+    zivyStav: ['Aktivní'],
     /* Název končí u závorky s typem řízení. */
     nazevKonci: /\s*\(\s*(?:Výběrové řízení|Veřejná dražba|Aukce|Dražba)/i,
     cena: /(?:Min\.\s*cena|Cena)\s*:\s*([\d\s .,]+)\s*Kč/i,

@@ -325,24 +325,33 @@ export function zZaznamu(html, zaklad, predpis) {
     od = m.index + m[0].length;
     const cislo = m[1] || null;
 
-    /* Začátek záznamu je POSLEDNÍ výskyt značky v kusu: před ním může
-       zůstat ocásek hlavičky stránky nebo předchozí nabídky. */
-    let zac = 0;
+    /* ZAČÁTEK ZÁZNAMU SE HLEDÁ JEN PŘED KONCEM NÁZVU (§455).
+       Nejdřív se najde, kde název končí — u verejnedrazby.cz závorka
+       s typem řízení — a značka začátku se pak hledá POUZE v tom, co
+       leží před ní. Pátý ostrý pokus 6. 11. ukázal, proč to tak musí
+       být: za názvem stojí „Čas do konce: Ukončeno", takže slovo
+       „Ukončeno" je v záznamu dvakrát a jednou v jiné roli. Hledání
+       v celém kusu by si z času udělalo začátek názvu a název by
+       zmizel.
+       Značka je POSLEDNÍ výskyt před koncem názvu: co je dřív, je
+       hlavička stránky, filtrační panel („Aktivní Neprodáno Prodáno
+       Ukončeno Zrušeno Kraj Vybrat vše…") nebo stránkování
+       („Vypisuji 20 (141 - 161) z 145 aukcí") — a to všechno má
+       zmizet. Dřív se hledalo v celém kusu a dva záznamy ze 145
+       dostaly místo názvu celý filtrační panel. */
+    const konecNazvu = predpis.nazevKonci ? predpis.nazevKonci.exec(kus) : null;
+    const pred = konecNazvu ? kus.slice(0, konecNazvu.index) : kus;
+
+    let zac = 0, stav = null;
     if (predpis.zacatekZaznamu) {
       const rz = new RegExp(predpis.zacatekZaznamu.source, 'g' + (predpis.zacatekZaznamu.flags || '').replace('g', ''));
       let z;
-      while ((z = rz.exec(kus)) !== null) zac = z.index + z[0].length;
+      while ((z = rz.exec(pred)) !== null) { zac = z.index + z[0].length; stav = (z[1] || '').trim() || null; }
     }
     const zaznam = kus.slice(zac).trim();
     if (!zaznam) continue;
 
-    /* Název končí u závorky s typem řízení; co je za ní, je čas
-       a cena, ne jméno nabídky. */
-    let nazev = zaznam;
-    if (predpis.nazevKonci) {
-      const k = predpis.nazevKonci.exec(zaznam);
-      if (k) nazev = zaznam.slice(0, k.index).trim();
-    }
+    const nazev = (konecNazvu ? kus.slice(zac, konecNazvu.index) : zaznam).trim();
     if (!nazev) continue;
 
     const mc = predpis.cena && predpis.cena.exec(zaznam);
@@ -372,6 +381,13 @@ export function zZaznamu(html, zaklad, predpis) {
       vymera: jeStavba ? plochaStavby : vymeraPozemku,
       vymeraPozemku: vymeraPozemku || null,
       plochaStavby: plochaStavby || null,
+      /* STAV AUKCE JDE DÁL (§455). Skončená dražba není nabídka:
+         „Prodáno", „Neprodáno", „Zrušeno" ani „Ukončeno" na web
+         nepatří. Čtečka ale sama nezahazuje — nese jen pravdu o tom,
+         co na stránce stálo, a rozhodnutí patří tomu, kdo zdroj
+         zapojuje. Když předpis značku stavu nemá, zůstane null a
+         nic se tím netvrdí. */
+      stav,
       odkaz: cislo && podleCisla.get(cislo) ? podleCisla.get(cislo) : null,
       typ: predpis.typ || null,
       odkud: 'záznamy',
