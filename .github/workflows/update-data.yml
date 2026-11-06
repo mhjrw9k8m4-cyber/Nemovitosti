@@ -35,11 +35,34 @@ jobs:
           node-version: '20'
 
       - name: Stáhnout data
-        run: node scripts/fetch-opportunities.mjs
+        # SREALITY JEN V JEDNOM ZE ČTYŘ DENNÍCH BĚHŮ, a je to o peníze.
+        # Rozhoduje se tady v shellu podle HODINY, ne ve výrazu nad `env`:
+        # `github.event.schedule` vrací ten cron výraz, a ten je pro
+        # všechny čtyři běhy týž ('0 */6 * * *'), takže by 6:00 od 12:00
+        # neodlišil. Napsané to tak nejdřív bylo a tohle je oprava.
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME:-}" = "workflow_dispatch" ] || [ "$(date -u +%H)" = "06" ]; then
+            export APIFY_TOKEN="${APIFY_TOKEN_TAJNY:-}"
+            echo "Sreality: tahá se (ruční spuštění nebo běh po 6. hodině UTC)."
+          else
+            echo "Sreality: vynechává se, token se v tomhle běhu nepředává (hodina $(date -u +%H) UTC)."
+          fi
+          node scripts/fetch-opportunities.mjs
         env:
           # Volitelné: když je nastaven tajný klíč APIFY_TOKEN, přidá se zdroj
           # Sreality (přes Apify). Bez klíče se Sreality přeskočí (žádná chyba).
-          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          #
+          # Robot jede každých 6 hodin (0, 6, 12, 18 UTC) a běh přes Apify
+          # trvá až pět minut a spotřebuje kredit, který se platí. Kdyby se
+          # token předal pokaždé, byly by to 4 platby denně a 120 za měsíc —
+          # za data, která se mezi dvěma šestihodinovými běhy skoro nezmění:
+          # pozemek se neprodá za šest hodin. Ruční spuštění tahá Sreality
+          # vždy, aby se dalo měřit.
+          # Pod jiným jménem schválně: krok výš ho do APIFY_TOKEN přepíše
+          # jen v tom jednom běhu. Čtečka bez APIFY_TOKEN Sreality vynechá
+          # a napíše to do logu — stav, který umí (není to chyba).
+          APIFY_TOKEN_TAJNY: ${{ secrets.APIFY_TOKEN }}
           APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
 
       # ARCHIV. Musí běžet HNED po stažení a PŘED přegenerováním webu:
