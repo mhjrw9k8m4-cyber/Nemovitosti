@@ -126,4 +126,56 @@ for (const p of naProdej.slice(0, 10)) {
   console.log(`  · ${String(p.title || '').slice(0, 52).padEnd(54)} ${String(p.locality || '').slice(0, 30).padEnd(32)}`
     + ` ${String(p.landArea ?? p.usableArea ?? p.area ?? '—').padStart(8)} m²  ${String(p.price ?? '—').padStart(10)} Kč`);
 }
+/* ---------- 6) CO ACTOR DOOPRAVDY PŘIJÍMÁ NA VSTUPU ----------
+   Objednávaly se pozemky klíči `category_main_cb`/`category_type_cb`
+   (tak se jmenují parametry ve vyhledávání Sreality samotných). Actor
+   je nevzal a pustil svůj výchozí vstup. Jména, která čekal, se dají
+   přečíst z jeho vstupního schématu — taky zdarma, bez běhu. */
+console.log('\nVSTUPNÍ SCHÉMA ACTORU:');
+try {
+  const ra = await fetch(`https://api.apify.com/v2/acts/${actor}?token=${encodeURIComponent(token)}`,
+    { signal: AbortSignal.timeout(60000) });
+  if (!ra.ok) throw new Error('HTTP ' + ra.status);
+  const act = (await ra.json()).data || {};
+  const stavby = act.taggedBuilds || {};
+  const buildId = (stavby.latest || stavby.version0 || Object.values(stavby)[0] || {}).buildId;
+  console.log(`  actor: ${act.username || '?'}/${act.name || '?'}, build ${buildId || '—'}`);
+  if (buildId) {
+    const rb = await fetch(`https://api.apify.com/v2/actor-builds/${buildId}?token=${encodeURIComponent(token)}`,
+      { signal: AbortSignal.timeout(60000) });
+    if (!rb.ok) throw new Error('build HTTP ' + rb.status);
+    const build = (await rb.json()).data || {};
+    const schema = typeof build.inputSchema === 'string' ? JSON.parse(build.inputSchema) : build.inputSchema;
+    if (!schema || !schema.properties) console.log('  build nemá vstupní schéma.');
+    else for (const [k, v] of Object.entries(schema.properties)) {
+      const vychozi = v.default !== undefined ? JSON.stringify(v.default) : '—';
+      const volby = v.enum ? ' z: ' + JSON.stringify(v.enum).slice(0, 120) : '';
+      console.log(`  ${k.padEnd(22)} ${String(v.type).padEnd(8)} výchozí ${String(vychozi).padEnd(16)}`
+        + `${(schema.required || []).includes(k) ? 'POVINNÉ ' : ''}${String(v.title || '').slice(0, 44)}${volby}`);
+    }
+  }
+} catch (e) { console.log('  nepovedlo se přečíst:', e && e.message); }
+
+/* ---------- 7) CO JSME POSLALI MY ----------
+   Poslední běh má svůj vstup uložený — ať je černé na bílém, co actor
+   dostal a co z toho použil. */
+console.log('\nVSTUP POSLEDNÍHO BĚHU (co jsme poslali my):');
+try {
+  const rr = await fetch(`https://api.apify.com/v2/acts/${actor}/runs/last?token=${encodeURIComponent(token)}`,
+    { signal: AbortSignal.timeout(60000) });
+  if (!rr.ok) throw new Error('HTTP ' + rr.status);
+  const run = (await rr.json()).data || {};
+  console.log(`  běh ${run.id}, ${run.status}, začátek ${run.startedAt}, konec ${run.finishedAt}`);
+  if (run.stats) {
+    console.log(`  výsledků ${run.stats.resultCount ?? '?'}, doba ${Math.round((run.stats.runTimeSecs || 0))} s,`
+      + ` spotřeba ${run.usageTotalUsd != null ? '$' + run.usageTotalUsd : '?'}`);
+  }
+  const kvs = run.defaultKeyValueStoreId;
+  if (kvs) {
+    const ri = await fetch(`https://api.apify.com/v2/key-value-stores/${kvs}/records/INPUT?token=${encodeURIComponent(token)}`,
+      { signal: AbortSignal.timeout(60000) });
+    console.log('  INPUT: ' + (ri.ok ? (await ri.text()).slice(0, 600) : 'HTTP ' + ri.status));
+  }
+} catch (e) { console.log('  nepovedlo se přečíst:', e && e.message); }
+
 console.log('\nHOTOVO — nic se nezapsalo a žádný běh actoru se nespustil.');
