@@ -1,8 +1,8 @@
 {
- "updated": "2026-11-04",
+ "updated": "2026-11-06",
  "katalogu": 34,
  "sad": 1245,
- "nepreceteno": 1527,
+ "nepreceteno": 1536,
  "chyby": [
   "http://www.w3.org/2000/svg: odpověď není JSON",
   "https://data.mf.gov.cz/: odpověď není JSON",
@@ -42,7 +42,131 @@
   "bezPrevodu": 32,
   "bezAdresy": 0
  },
+ "blizko": [
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Data RÚIAN o hierarchii prvků poskytovaná pro stát ve formátu CSV",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Historická stavová data RÚIAN v základní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Historická změnová data RÚIAN v základní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Vybraná data RÚIAN poskytovaná po obcích ve formátu SHP",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Současná stavová data RÚIAN v kompletní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Současná změnová data RÚIAN v kompletní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Speciální datová sada RÚIAN s číselníky ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Vybraná data RÚIAN poskytovaná pro stát ve formátu SHP",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Současná stavová data RÚIAN v základní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Současná změnová data RÚIAN v základní datové sadě poskytovaná po obcích ve formátu VFR",
+   "skore": 10,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Úhrnné hodnoty pozemků",
+   "skore": 10,
+   "duvod": "+5 pozemk, +3 nemovit, +2 katastr"
+  },
+  {
+   "host": "data.csu.gov.cz",
+   "jmeno": "Indexy cen nemovitostí (%) - data MF ČR (do roku 2019)",
+   "skore": 8,
+   "duvod": "+5 pozemk, +3 nemovit"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "INSPIRE téma Parcely (CP)",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Katastrální mapa ČR ve formátu SHP distribuovaná po katastrálních územích",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "INSPIRE téma Budovy (BU)",
+   "skore": 7,
+   "duvod": "+5 pozemek, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "INSPIRE téma Rozšířené Parcely (CPX)",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Geometrické plány ve formátu VFK distribuované po katastrálních územích",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Katastrální mapa ČR ve formátu DXF distribuovaná po katastrálních územích",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Katastrální mapa ČR ve formátu VFK distribuovaná po katastrálních územích",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  },
+  {
+   "host": "atom.cuzk.cz",
+   "jmeno": "Katastrální mapa ČR ve formátu VKM distribuovaná po katastrálních územích",
+   "skore": 7,
+   "duvod": "+5 parcel, +3 nemovit, +2 katastr, -3 movitá"
+  }
+ ],
  "dny": {
-  "2026-11-04": 0
- }
+  "2026-11-04": 0,
+  "2026-11-06": 0
+ },
+ "noveKandidaty": []
 }
