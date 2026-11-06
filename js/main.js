@@ -7646,6 +7646,18 @@
       function openInzerat() { gotoInzerat(d); }
       li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
+        /* JEN KDYŽ STOJÍ ČLOVĚK NA KARTĚ SAMÉ. Uvnitř karty jsou tři
+           skutečná tlačítka („Uložit", „Skrýt", „víc") a ta zastavovala
+           probublávání jen u klepnutí — u klávesnice ne. Kdo si
+           tabulátorem zaměřil „Uložit" a stiskl Enter nebo mezerník,
+           pustil událost sem: `preventDefault()` zrušil vlastní
+           aktivaci toho tlačítka (u Enteru se klepnutí posílá jako
+           výchozí akce keydown, u mezerníku na keyup) a místo uložení
+           se odešlo na stránku pozemku. Tři tlačítka na každé kartě
+           tedy klávesnicí nešla zmáčknout a dělala pravý opak toho,
+           co slibují. Myší fungovala, proto to tak dlouho vydrželo.
+           Hlídá to scripts/test-zaostreni.mjs. */
+        if (e.target !== li) return;
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });

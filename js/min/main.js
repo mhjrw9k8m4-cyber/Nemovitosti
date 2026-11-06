@@ -4551,6 +4551,8 @@
       function openInzerat() { gotoInzerat(d); }
       li.addEventListener('click', openInzerat);
       li.addEventListener('keydown', function (e) {
+
+        if (e.target !== li) return;
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
       });
       li.addEventListener('mouseenter', function () { highlightList(d._id); });

@@ -28234,3 +28234,47 @@ hlídač.
 (`data/user-listings.json` je `[]`), takže ta díra zatím nikomu nic
 nesmazala. Nasazení SQL je ale zásah do živé databáze majitele, a ten
 se bez jeho slova nedělá.
+
+## §467
+
+**Tři tlačítka na každé kartě dělala klávesnicí pravý opak toho, co
+slibují. Myší fungovala, proto to nikdo neviděl.**
+
+Karta ve výpisu je `<li tabindex="0" role="button">` a sama má obsluhu
+klávesnice, která odejde na stránku pozemku:
+
+```js
+li.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInzerat(); }
+});
+```
+
+Uvnitř té karty jsou **tři pravá tlačítka** — „Uložit", „Skrýt" a „víc"
+u poznámky. Každé z nich probublávání zastavuje, ale **jen u klepnutí**
+(`e.stopPropagation()` na `click`). U `keydown` ne, a obsluha karty
+nekontrolovala `e.target`.
+
+Co se tedy stalo tomu, kdo nemá myš: zaměřil si tabulátorem „Uložit",
+stiskl Enter — událost probublala na kartu, `preventDefault()` zrušil
+**vlastní aktivaci toho tlačítka** (u Enteru se klepnutí posílá jako
+výchozí akce `keydown`, u mezerníku na `keyup`; zrušit `keydown` zruší
+obojí) a `openInzerat()` ho odvedl na stránku pozemku. Tři tlačítka na
+každé z 24 karet tedy klávesnicí nešla zmáčknout **a místo své akce
+dělala přesně to, odkud ta tlačítka měla člověka udržet.**
+
+**Poučení je o tom, jak se taková vada maskuje.** `stopPropagation()`
+u klepnutí a obsluha klávesnice na rodiči jsou dvě správné věci, každá
+napsaná jinde a každá v pořádku. Dohromady dávají chybu, kterou nejde
+vidět myší — a hlídači, kteří měřili zaostření, ji taky neviděli,
+protože ověřovali, že se na tlačítko *dostane*, ne že se dá *zmáčknout*.
+**Zaměřitelné a stisknutelné jsou dvě různá tvrzení.**
+
+Oprava je jeden řádek (`if (e.target !== li) return;`), ale hlídač
+musí měřit **obojí**: že se neodešlo ze stránky A že se nabídka opravdu
+uložila. Samotné „neodešlo" by prošlo i tehdy, kdyby tlačítko nedělalo
+vůbec nic.
+
+Sabotáž (ten řádek pryč) to prokázala naostro: Enter na „Uložit" odešel
+z `index.html` na
+`pozemek.html?p=Osvětimany|—|Uherské Hradiště|…`. Hlídá to
+`scripts/test-zaostreni.mjs`, oddíl 4c.

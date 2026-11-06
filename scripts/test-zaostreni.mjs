@@ -428,6 +428,45 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
         + `\n      před: ${JSON.stringify(pred4b.klice.slice(0, 5))}`
         + `\n      po:   ${JSON.stringify(po4b.klice.slice(0, 5))}`);
     }
+    /* 4c) TLAČÍTKA UVNITŘ KARTY MUSÍ JÍT ZMÁČKNOUT KLÁVESNICÍ.
+       Karta je `<li tabindex="0" role="button">` a sama má obsluhu
+       keydown na Enter a mezerník, která odejde na stránku pozemku.
+       Uvnitř jsou tři pravá tlačítka („Uložit", „Skrýt", „víc") a ta
+       probublávání zastavovala JEN u klepnutí. Kdo si tabulátorem
+       zaměřil „Uložit" a stiskl Enter, pustil událost na kartu:
+       `preventDefault()` zrušil vlastní aktivaci tlačítka a místo
+       uložení se odešlo na stránku pozemku — tedy pravý opak toho, co
+       tlačítko slibuje. Myší to fungovalo, proto to nikdo neviděl.
+       Měří se OBOJE: že se neodešlo, A že se uložilo. Samotné „neodešlo"
+       by prošlo i tehdy, kdyby tlačítko nedělalo vůbec nic. */
+    await cistaStranka();
+    const adrPred = p.url();
+    const fav = await p.evaluate(() => {
+      const b = document.querySelector('#opp-list .opp-item .opp-fav');
+      if (!b) return null;
+      b.focus();
+      if (document.activeElement !== b) return { nezamerilo: true };
+      return { on: b.classList.contains('on') };
+    });
+    pravda('výpis: tlačítko „Uložit" v kartě jde zaměřit klávesnicí',
+      !!fav && !fav.nezamerilo, fav ? 'nešlo na něj zaměření' : 'v kartě není .opp-fav');
+    if (fav && !fav.nezamerilo) {
+      for (const klavesa of ['Enter', ' ']) {
+        await p.keyboard.press(klavesa === ' ' ? 'Space' : klavesa);
+        await p.waitForTimeout(400);
+        const odesli = p.url() !== adrPred;
+        pravda(`výpis: ${klavesa === ' ' ? 'mezerník' : 'Enter'} na „Uložit" neodejde ze stránky`,
+          !odesli, `z ${adrPred} na ${p.url()}`);
+        if (odesli) { await p.goto(adrPred); break; }
+        const stav = await p.evaluate(() => {
+          const b = document.querySelector('#opp-list .opp-item .opp-fav');
+          return b ? { on: b.classList.contains('on'), jmeno: b.getAttribute('aria-label') } : null;
+        });
+        pravda(`výpis: ${klavesa === ' ' ? 'mezerník' : 'Enter'} na „Uložit" tu nabídku opravdu přepne`,
+          !!stav && stav.on !== fav.on, JSON.stringify(stav) + ' (před: ' + JSON.stringify(fav) + ')');
+        fav.on = stav ? stav.on : fav.on;
+      }
+    }
     pravda('výpis: nic se u toho nerozbilo', chybyJs.length === 0, chybyJs.join(' | '));
   }
   await ctx.close();
