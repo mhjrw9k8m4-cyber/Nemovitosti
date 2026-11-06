@@ -249,8 +249,23 @@ export const KANDIDATI = [
       + ' v nich nic není; přečteno 33 887 znaků podmínek. Bot 5. 11. našel'
       + ' jeden výpis (běh 42058602877, 1 nález z 30 cest). Zapojení ale čeká na'
       + ' totéž jako u verejnedrazby.cz: obecná čtečka jede cestou „signál", a ta'
-      + ' bez místa a kategorie páruje čísla ke špatným inzerátům (§447). Co'
-      + ' zbývá: předpis pro čtení, ne řádek do registru.' },
+      + ' bez místa a kategorie páruje čísla ke špatným inzerátům (§447).'
+      + ' OHLEDÁNO 6. 11. (běhy 42226555476, 42227456280, 42227692411)'
+      + ' a tím je to rozhodnuté: PŘEDPIS SE PSÁT NEMÁ, protože není co'
+      + ' číst. Výpis NENÍ na domovské stránce (ta je jen vývěska, §452),'
+      + ' ale na /drazby/, a web ho sám dělí podle stavu:'
+      + ' /drazby/pripravovane, /drazby/probihajici, /drazby/ukoncene.'
+      + ' To je lepší tvar než u verejnedrazby.cz — skončené dražby by se'
+      + ' nemusely filtrovat, prostě by se nečetly. Jenže:'
+      + ' /drazby/probihajici má 31 765 znaků a ANI JEDEN odkaz na'
+      + ' /drazby/detail/ — nula probíhajících dražeb;'
+      + ' /drazby/pripravovane nese JEDNU, „Prodej stavebního pozemku'
+      + ' v ulici Větrná - parc. č. 769/273 Velká Ledhuje".'
+      + ' Celý portál dražebníka jednoho města tedy nese jednu nabídku.'
+      + ' Předpis a hlídač na jednu nabídku je víc práce, než vynese,'
+      + ' a ta nabídka za pár dní zmizí. ZNOVU ZMĚŘIT, až portál poroste;'
+      + ' stavební pozemek je přesně to, co web hledá, takže zdroj'
+      + ' zahazovat netřeba — jen na něm teď není co brát (§459).' },
   { jmeno: 'Dražby Naxos', host: 'drazbynaxos.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://drazbynaxos.cz/',
     proc: 'Dražebník z našich dat. ZMĚŘENO 5. 11.: robots dovoluje, HTTP 200,'

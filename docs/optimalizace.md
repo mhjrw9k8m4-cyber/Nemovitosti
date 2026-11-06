@@ -27715,3 +27715,45 @@ záznamů je 66 movitý majetek a 77 nemovitost, a čtení toho výpisu
 je tím uzavřené. Co zbývá, není technika: z 18 aktivních dražeb je
 14 celých nemovitostí, a jestli se zdroj zapojí, je majitelovo
 rozhodnutí.
+
+## §459
+
+**Sonda měří, jak je text bohatý. Ne kolik je nabídek. A to se dá
+splést.**
+
+Druhý zdroj z téhož úkolu, `drazby.policenm.cz`, měl v registru
+slibný zápis: robots dovoluje, HTTP 200, 44 887 bajtů, „11× slovo
+o pozemku, 5× cena a 3× výměra", podmínky přečtené a o automatickém
+přístupu v nich nic. Bot k tomu našel výpis. Zbývalo napsat předpis
+pro čtení — stejná práce jako u verejnedrazby.cz, tentokrát
+s hotovým postupem.
+
+Ohledání to zastavilo, a dobře:
+
+```
+/drazby/probihajici   31 765 znaků, odkazů na /drazby/detail/: 0
+/drazby/pripravovane  odkazů na detail: 1
+  „Prodej stavebního pozemku v ulici Větrná -
+   parc. č. 769/273 Velká Ledhuje"
+```
+
+Celý portál dražebníka jednoho města nese **jednu nabídku**.
+Předpis a hlídač na jednu nabídku je víc práce, než vynese, a ta
+nabídka za pár dní zmizí.
+
+Ta čísla ze sondy přitom nelhala — jen měřila něco jiného, než co
+se z nich vyčetlo. „11× slovo o pozemku" je o bohatosti textu
+stránky, ne o počtu nabídek na ní; v šabloně, nápovědě a patičce se
+slovo „pozemek" vyskytne taky. **Mezi „ta stránka o pozemcích mluví"
+a „na té stránce pozemky jsou" je rozdíl, který sonda neumí vidět —
+a registr ho proto nesmí zamlčet.**
+
+Mimochodem tvar toho webu je lepší než u verejnedrazby.cz: dělí
+výpis podle stavu sám (`pripravovane`, `probihajici`, `ukoncene`),
+takže skončené dražby by se nemusely filtrovat jako v §455 —
+nečetly by se vůbec. Je to tedy zdroj, který se má znovu změřit, až
+poroste, ne zahodit. Stavební pozemek je přesně to, co web hledá.
+
+A jedna věc se potvrdila znovu: výpis **nebyl** na domovské
+stránce. Ta je jen vývěska, přesně jako u verejnedrazby.cz (§452).
+Bot našel „1 nález z 30 cest" a tím nálezem byla právě ta vývěska.
