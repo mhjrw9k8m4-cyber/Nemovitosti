@@ -47,7 +47,7 @@ const server = http.createServer((req, res) => {
   if (u.startsWith('/storage/v1/object/public/listing-photos/')) {
     if (stav === 'balik-nebezel') return odpoved(400, '{"message":"Bucket not found"}');
     if (stav === 'chybi-kbelik') return odpoved(400, '{"message":"Bucket not found"}');
-    /* TOHLE JE TVAR, KTERÝ TU DŘÍV CHYBĚL (§448). Falešný server
+    /* TOHLE JE TVAR, KTERÝ TU DŘÍV CHYBĚL (§449). Falešný server
        umel jen dvě podoby — a obě byly přesně to, čemu kontrola už
        věřila: existující kbelík → 404, chybějící → 400. Živá Supabase
        ale na chybějící SOUBOR v existujícím kbelíku odpovídá taky
@@ -131,7 +131,7 @@ for (const [rezim, vzor, popis] of [
     `návratový kód ${kod}; ` + (out.split('\n').find((l) => /✕/.test(l)) || 'žádný nález'));
 }
 
-/* ---- 2b) §448: O KBELÍKU ROZHODUJE TĚLO, NE ČÍSLO STAVU -------- */
+/* ---- 2b) §449: O KBELÍKU ROZHODUJE TĚLO, NE ČÍSLO STAVU -------- */
 /* Změřeno 6. 11. naostro: kbelík v databázi byl (`select id, public
    from storage.buckets` vrátil `listing-photos | true`, 1 řádek), a
    kontrola ho dvakrát za sebou prohlásila za neexistující, protože

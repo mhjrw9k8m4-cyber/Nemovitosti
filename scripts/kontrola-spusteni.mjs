@@ -179,7 +179,7 @@ if (BEZ_SITE) {
     /* c) Úložiště fotek. Ptáme se na neexistující soubor: tím se bez
           servisního klíče a bez zápisu pozná, jestli kbelík je.
 
-          ROZHODUJE TĚLO ODPOVĚDI, NE ČÍSLO STAVU (§448). Dřív tu stálo
+          ROZHODUJE TĚLO ODPOVĚDI, NE ČÍSLO STAVU (§449). Dřív tu stálo
           `|| c.stav === 400` a komentář tvrdil, že existující kbelík
           odpoví na chybějící soubor 404. ZMĚŘENO 6. 11. na živém
           projektu: kbelík v databázi PROKAZATELNĚ JE (dotaz

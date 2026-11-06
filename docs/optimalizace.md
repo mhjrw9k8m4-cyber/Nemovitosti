@@ -27048,7 +27048,17 @@ předpis pro čtení jejich výpisu — tedy den práce, ne minuta. To je
 poctivý stav, ne nedodělek: raději dva zdroje nezapojené než dva
 zdroje, které na web píšou cizí čísla.
 
-## §448 — Fixtura souhlasila s domněnkou kódu, tak ji neprověřila
+## §448 — Dva návody na fotky, dvě různé rady
+
+`docs/nastaveni-fotky.md` radil pustit `supabase/listings-photos.sql`,
+kdežto `docs/pro-majitele.md` správně říká pustit celý
+`supabase/00-vse.sql`. Ten balík obsahuje první soubor celý a kromě
+kbelíku spraví i `zapis_chybu()`, takže půlka rady znamenala půlku
+práce. Opraveno v commitu `728aaaaaeb`; číslo tam bylo ohlášené, ale do
+tohoto seznamu se zapsat zapomnělo — doplněno zpětně, aby §448
+neznamenalo dvě různé věci.
+
+## §449 — Fixtura souhlasila s domněnkou kódu, tak ji neprověřila
 
 Majitel pustil `supabase/listings-photos.sql` do svého projektu
 (8 107 B, 144 řádků, „Success. No rows returned."). Kontrola nasazení
