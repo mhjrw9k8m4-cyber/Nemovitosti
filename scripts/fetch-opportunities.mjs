@@ -27,7 +27,8 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { bezEmodzi, otiskInzerenta } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
-import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist } from './cteni-zdroje.mjs';
+import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu } from './cteni-zdroje.mjs';
+import { PREDPISY, ZAPOJENE_PREDPISY, jeNemovitost } from './predpisy-zdroju.mjs';
 import { smimeCist } from './robots.mjs';
 import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
 import * as STAT from './cti-nabidky-statu.mjs';
@@ -1492,6 +1493,117 @@ export async function zalozniCestou(zdroje, cile, nastroje) {
    z tohohle stroje se navíc na cizí weby nedostaneme vůbec. Nález
    sondy (data/zdroje-sonda.json) řekne, který kandidát čtení dovoluje
    a má na adrese pozemky — teprve to je důvod k řádku. */
+/* ---------- ZDROJ ČTENÝ PODLE PŘEDPISU ---------------------------
+ * Obecná cesta (JSON-LD → mikrodata → signály) umí jen `typ: 'sale'`:
+ * u dražby by z ní vyšla nabídka bez rozlišení, a špatný popis je
+ * horší než chybějící nabídka. Dražební výpis proto čte PŘEDPIS
+ * (scripts/predpisy-zdroju.mjs) — recept na jeden konkrétní výpis,
+ * naměřený ostrými pokusy, ne odhadnutý.
+ *
+ * Zapojení takového zdroje je pak taky jen řádek v registru
+ * (`ZAPOJENE_PREDPISY`), ne nový stahovač. Pravidla zůstávají:
+ *   · robots.txt se čte PRVNÍ a výjimka není žádná;
+ *   · mezi stránkami se čeká a stránek se vezme nejvýš `stropStranek`;
+ *   · SKONČENÁ AUKCE NENÍ NABÍDKA — bere se jen stav z `zivyStav`
+ *     (§455). Kdo si na webu otevře „Prodáno", je obelhaný;
+ *   · co není nemovitost (traktor, pohledávky), se nebere vůbec;
+ *   · nabídka bez ceny, výměry, odkazu nebo bez poznaného místa se
+ *     NEDOPLŇUJE dohadem, jen spočítá — a důvod se napíše do logu.
+ */
+export async function zdrojePodlePredpisu(hosty, nastroje) {
+  const { stahni: stahniF, smimeCist: smimeF, zZaznamu, predpisy, mistoZTextu,
+    slovnik, okresy, ua, pauza = 2000 } = nastroje || {};
+  const spi = (ms) => new Promise((r) => setTimeout(r, ms));
+  const robotsMezipamet = new Map();
+  const nabidkyVen = [];
+  const zdrojeVen = [];
+  for (const host of (hosty || [])) {
+    const predpis = (predpisy || {})[host];
+    const nazev = (predpis && predpis.jmeno) || host;
+    const cas = new Date().toISOString();
+    if (!predpis || !predpis.vypis) {
+      zdrojeVen.push({ nazev, stav: 'chyba', pocet: 0, cas, chyba: `pro ${host} není předpis` });
+      console.error(`Zdroj ${nazev}: předpis chybí — nečte se nic.`);
+      continue;
+    }
+    let smime = null;
+    try { smime = await smimeF(predpis.vypis, { stahni: stahniF, ua, mezipamet: robotsMezipamet }); }
+    catch (e) { smime = { dovoleno: false, duvod: String((e && e.message) || e) }; }
+    if (!smime.dovoleno) {
+      /* „Nesmíme" a „nevíme" se neplete ani tady (§337). Ani jedno
+         není důvod to obejít. */
+      zdrojeVen.push({ nazev, stav: smime.nejdePrecist ? 'robots neznámý' : 'nesmíme', pocet: 0, cas,
+        chyba: smime.duvod });
+      console.error(`Zdroj ${nazev} se nečte: ${smime.duvod}`);
+      continue;
+    }
+    const d = predpis.dalsiStranky;
+    const stropStranek = (d && d.stropStranek) || 1;
+    const adresa = (i) => ((!i || !d) ? predpis.vypis : predpis.vypis + d.parametr + (i * d.krok));
+    const vse = [];
+    let stranek = 0, selhalo = 0;
+    for (let i = 0; i < stropStranek; i++) {
+      let html = '';
+      try {
+        const odp = await stahniF(adresa(i), { casLimit: 20000, pokusy: 1 });
+        html = await odp.text();
+      } catch (e) { selhalo++; if (i + 1 < stropStranek) await spi(pauza); continue; }
+      stranek++;
+      try { vse.push(...zZaznamu(html, adresa(i), predpis)); } catch (e) { preskoc(nazev, e); }
+      if (i + 1 < stropStranek) await spi(pauza);
+    }
+    /* Stránkování se umí překrývat; páruje se evidenčním číslem. */
+    const podleCisla = new Map();
+    for (const n of vse) if (n.cislo && !podleCisla.has(n.cislo)) podleCisla.set(n.cislo, n);
+    const jedinecne = [...podleCisla.values()];
+    const zivy = predpis.zivyStav || null;
+    const zahozeno = { skoncilo: 0, neniNemovitost: 0, bezCeny: 0, bezVymery: 0, bezOdkazu: 0, bezMista: 0 };
+    const prevedene = [];
+    for (const n of jedinecne) {
+      if (zivy && !zivy.includes(String(n.stav || ''))) { zahozeno.skoncilo++; continue; }
+      /* `kategorieZNazvu` vrací u traktoru i u pohledávky
+         `{ druh: 'není nemovitost', kategorie: 'jiné' }`, což je
+         PRAVDIVÁ, ale KLADNÁ odpověď — pouhé `!n.kategorie` ji
+         propustí dál a záznam pak spadne až o řádek níž jako
+         „bez výměry". Naměřeno na fixtuře: kolový traktor se
+         zahodil se špatným důvodem, a důvod, který lže, pošle člověka
+         hledat vadu jinam (§366). */
+      if (!n.kategorie || !jeNemovitost(String(n.nazev || ''))) { zahozeno.neniNemovitost++; continue; }
+      if (!(n.cena > 0)) { zahozeno.bezCeny++; continue; }
+      if (!(n.vymera > 0)) { zahozeno.bezVymery++; continue; }
+      if (!n.odkaz) { zahozeno.bezOdkazu++; continue; }
+      const misto = mistoZTextu(String(n.nazev || ''), slovnik, okresy);
+      const okres = misto && normOkres(misto.okres);
+      if (!misto || !okres) { zahozeno.bezMista++; continue; }
+      const o = {
+        place: String(misto.place).slice(0, 60), okres,
+        type: predpis.typ || 'drazba', parcel: '—',
+        _key: `pr-${host}-${n.cislo}`,
+        druh: normDruh(n.druh || parseDruh(String(n.nazev || ''), [misto.place, okres]) || 'pozemek'),
+        area: n.vymera, price: n.cena,
+        extra: `${predpis.typ === 'drazba' ? 'běžící aukce' : 'nabídka'} · ev. č. ${n.cislo} · ${nazev}`,
+        zdroj: nazev,
+        url: n.odkaz,
+      };
+      /* Kategorie jde do dat jen tehdy, když to POZEMEK NENÍ: web
+         pozemek bere jako výchozí stav a `kat` je výjimka (§412). */
+      if (n.kategorie && n.kategorie !== 'pozemek') o.kat = n.kategorie;
+      prevedene.push(o);
+    }
+    const duvody = Object.entries(zahozeno).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${v}`);
+    console.error(`Zdroj ${nazev}: ${prevedene.length} nabídek z ${jedinecne.length} záznamů`
+      + ` (${stranek} stránek${selhalo ? `, ${selhalo} nedojelo` : ''})`
+      + (duvody.length ? `, zahozeno — ${duvody.join(', ')}` : ', nic se nezahodilo'));
+    zdrojeVen.push({
+      nazev, stav: stranek ? 'ok' : 'chyba', pocet: prevedene.length, cas,
+      chyba: stranek ? null : 'ani jedna stránka výpisu nedojela',
+      rozpadCtecky: { zaznamu: jedinecne.length, stranek, ...zahozeno },
+    });
+    nabidkyVen.push(...prevedene);
+  }
+  return { nabidky: nabidkyVen, zdroje: zdrojeVen };
+}
+
 export async function obecneZdroje(cile, nastroje) {
   const robotsMezipamet = new Map();
   const nabidkyVen = [];
@@ -1539,7 +1651,11 @@ export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sre
    ZDROJ_JMENA zůstává šesti stahovačům, protože hlídač měří shodu
    PRÁVĚ s SOURCES — kdyby se do něj přilila i data, ta shoda by
    přestala něco tvrdit. */
-export const ZDROJ_JMENA_VSE = [...ZDROJ_JMENA, ...OBECNE_ZDROJE.map((z) => z.jmeno).filter(Boolean)];
+export const ZDROJ_JMENA_VSE = [...ZDROJ_JMENA, ...OBECNE_ZDROJE.map((z) => z.jmeno).filter(Boolean),
+  /* A zdroje čtené podle předpisu (§464) — jinak by nabídka z nich
+     platila za nabídku neznámého zdroje a hlídka zdrojů by o nich
+     nevěděla. */
+  ...ZAPOJENE_PREDPISY.map((h) => (PREDPISY[h] || {}).jmeno).filter(Boolean)];
 
 /* Štítek v popisu nabídky. Platí pro data z běhů PŘED zavedením pole
    `zdroj` — po týdnu držení už se o ně nikdo neopře, ale ten týden je
@@ -3536,6 +3652,21 @@ async function fetchNabidkyStatu() {
       });
       zdroje.push(...ob.zdroje);
       if (ob.nabidky.length) raw.push(...ob.nabidky.map((o) => geocode(o)));
+    }
+    /* ZDROJE ČTENÉ PODLE PŘEDPISU. Také tady, a ne mezi SOURCES:
+       místo se u nich poznává z názvu nabídky, a k tomu je potřeba
+       slovník míst z dřívějších dat (ten se staví v tomhle bloku).
+       Stav se přidá do `zdroje`, takže zdroj vidí diagnostika,
+       hlídka výpadků i držení nabídek z §332. */
+    if (ZAPOJENE_PREDPISY.length) {
+      console.error(`Zdrojů čtených podle předpisu: ${ZAPOJENE_PREDPISY.length}`
+        + ` (${ZAPOJENE_PREDPISY.join(', ')}).`);
+      const pr = await zdrojePodlePredpisu(ZAPOJENE_PREDPISY, {
+        stahni, smimeCist, zZaznamu, predpisy: PREDPISY, mistoZTextu,
+        slovnik, okresy, ua: BOT_UA,
+      });
+      zdroje.push(...pr.zdroje);
+      if (pr.nabidky.length) raw.push(...pr.nabidky.map((o) => geocode(o)));
     }
     /* Zdroje, u kterých má smysl zkusit druhou cestu: nejen ty, co
        spadly, ale i ty, co odpověděly a nepřinesly nic nebo zlomek —

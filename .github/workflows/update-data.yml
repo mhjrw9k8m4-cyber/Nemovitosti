@@ -46,29 +46,30 @@ jobs:
           node-version: '20'
 
       - name: Stáhnout data
-        # SREALITY JEN V JEDNOM ZE ČTYŘ DENNÍCH BĚHŮ, a je to o peníze.
-        # Rozhoduje se tady v shellu podle HODINY, ne ve výrazu nad `env`:
-        # `github.event.schedule` vrací ten cron výraz, a ten je pro
-        # všechny čtyři běhy týž ('0 */6 * * *'), takže by 6:00 od 12:00
-        # neodlišil. Napsané to tak nejdřív bylo a tohle je oprava.
+        # ŽÁDNÝ PLÁNOVANÝ BĚH SREALITY NEPLATÍ. Nic se nerozhoduje podle
+        # hodiny ani dne: token se předá JEN tehdy, když člověk ručně
+        # spustí úlohu a zaškrtne políčko.
         #
-        # A OD 6. 11. JEN V PONDĚLÍ, protože se změřilo, kolik to stojí:
-        # první ostrý běh vrátil 1 666 záznamů a stál $4,998, tedy $3 za
-        # tisíc výsledků. Denně by to při stropu 2 000 záznamů bylo až
-        # $6 za den, tedy přes $180 za měsíc. Týdně je to do $26.
-        # Jsou to majitelovy peníze, takže se začíná tím menším číslem;
-        # zvednout frekvenci je jedna řádka (`-u +%u` je den v týdnu,
-        # 1 = pondělí) a patří to k rozhodnutí, ne k mlčení.
+        # Důvod je změřený a je to rozhodnutí majitele, ne technika.
+        # První ostrý běh vrátil 1 666 záznamů a stál $4,998, tedy $3 za
+        # tisíc výsledků — a ani jeden z nich nebyl pozemek (§463).
+        # Majitel 6. 11. na otázku, jestli zaplatit jeden měřicí běh,
+        # odpověděl „nemám peníze". Zdroj tedy zůstává připojený, ale
+        # mlčí, dokud ho někdo vědomě nepustí. Klíč v Secrets může ležet
+        # dál; sám od sebe nic nestojí.
+        #
+        # (Dřív se tu rozhodovalo podle hodiny v shellu, ne ve výrazu
+        # nad `env` — `github.event.schedule` vrací cron výraz, a ten je
+        # pro všechny čtyři denní běhy týž, takže by 6:00 od 12:00
+        # neodlišil. Teď už se nerozhoduje podle času vůbec.)
         run: |
           set -euo pipefail
-          if [ "${SREALITY_RUCNE:-}" = "true" ] \
-             || { [ "${GITHUB_EVENT_NAME:-}" != "workflow_dispatch" ] \
-                  && [ "$(date -u +%u)" = "1" ] && [ "$(date -u +%H)" = "06" ]; }; then
+          if [ "${SREALITY_RUCNE:-}" = "true" ]; then
             export APIFY_TOKEN="${APIFY_TOKEN_TAJNY:-}"
-            echo "Sreality: tahá se (vyžádané ruční spuštění nebo pondělní běh po 6. hodině UTC)."
+            echo "Sreality: tahá se — vyžádané ruční spuštění (zaplatí se do \$6)."
           else
             echo "Sreality: vynechává se, token se v tomhle běhu nepředává" \
-              "(den $(date -u +%u), hodina $(date -u +%H) UTC, ručně='${SREALITY_RUCNE:-ne}')."
+              "(plánovaný běh Apify nikdy neplatí; ručně='${SREALITY_RUCNE:-ne}')."
           fi
           node scripts/fetch-opportunities.mjs
         env:
@@ -76,11 +77,10 @@ jobs:
           # Sreality (přes Apify). Bez klíče se Sreality přeskočí (žádná chyba).
           #
           # Robot jede každých 6 hodin (0, 6, 12, 18 UTC) a běh přes Apify
-          # trvá až pět minut a spotřebuje kredit, který se platí. Kdyby se
-          # token předal pokaždé, byly by to 4 platby denně a 120 za měsíc —
-          # za data, která se mezi dvěma šestihodinovými běhy skoro nezmění:
-          # pozemek se neprodá za šest hodin. Ruční spuštění tahá Sreality
-          # vždy, aby se dalo měřit.
+          # trvá až pět minut a stojí $3 za tisíc výsledků. Kdyby se token
+          # předal pokaždé, byly by to 4 platby denně — za data, která se
+          # mezi dvěma šestihodinovými běhy skoro nezmění: pozemek se
+          # neprodá za šest hodin. Proto se nepředává nikdy sám od sebe.
           # Pod jiným jménem schválně: krok výš ho do APIFY_TOKEN přepíše
           # jen v tom jednom běhu. Čtečka bez APIFY_TOKEN Sreality vynechá
           # a napíše to do logu — stav, který umí (není to chyba).

@@ -194,6 +194,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sreality-objednavka.mjs
 
+      - name: Dražební zdroj čtený podle předpisu (§464)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-zdroj-predpisem.mjs
+
       - name: Druh pozemku z textu inzerátu (kus slova, zápor, název obce)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh.mjs

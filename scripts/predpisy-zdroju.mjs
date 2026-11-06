@@ -167,6 +167,23 @@ export const PREDPISY = {
   },
 };
 
+/* ---------- KTERÝ PŘEDPIS JE ZAPOJENÝ DO NOČNÍHO ROBOTA -----------
+   Předpis sem napsaný ještě neznamená zdroj na webu: nejdřív se měří
+   ostrým pokusem (.github/workflows/zkus-predpis.yml) a teprve pak se
+   zdroj zapojí — jedním řádkem tady, ne novým stahačem (§225).
+
+   verejnedrazby.cz: změřeno 6. 11. devíti ostrými pokusy. Ze 145
+   záznamů na osmi stránkách výpisu se přečetlo 143 (zbylé dva byly
+   filtrační panel stránky, což spravil §455), nezařazených nula,
+   a CELÝCH A ŽIVÝCH (cena, výměra, odkaz, stav „Aktivní") bylo 14.
+   robots.txt čtení dovoluje. Majitel 6. 11.: „Zapoj co jde pokud to
+   funguje a je to dobrý zdroj."
+
+   drazby.policenm.cz ZAPOJENÝ NENÍ a je to měřené rozhodnutí: celý
+   portál měl jednu jedinou nabídku. Psát pro ni předpis a tahat ten
+   web čtyřikrát denně by bylo víc práce i víc dotazů než užitku. */
+export const ZAPOJENE_PREDPISY = ['verejnedrazby.cz'];
+
 /* Z názvu nabídky se pozná, co to vlastně je. POŘADÍ ROZHODUJE:
    „Prodej garáže, výměra 20 m², vlastní pozemek" je GARÁŽ, ne pozemek,
    i když se tam slovo „pozemek" vyskytuje. Proto se stavby hledají

@@ -28043,3 +28043,49 @@ POZEMKY". Obojí ověřeno `diff`em a vráceno.
 teprve z dalšího placeného běhu — a ten se už objedná správně. Dokud
 neproběhne, zdroj na web nic nedává a je to tak správně: lepší nic než
 cizí nemovitost vydávaná za pozemek.
+
+## §464
+
+**Zapojený zdroj je ten, který noční robot opravdu čte — ne ten, pro
+který je napsaný předpis.**
+
+Předpis pro verejnedrazby.cz byl hotový a prokázaný devíti ostrými
+pokusy už 6. 11. ráno: ze 145 záznamů na osmi stránkách výpisu se
+přečetlo 143, nezařazených nula, **celých a živých nabídek 14**.
+Na webu z toho ale nebylo nic, protože zapojení je samostatný krok —
+a ten krok čekal na majitele. Když řekl „Zapoj co jde pokud to funguje
+a je to dobrý zdroj", udělalo se tohle:
+
+`ZAPOJENE_PREDPISY` v scripts/predpisy-zdroju.mjs je **registr** —
+jeden řádek na zdroj, stejně jako `OBECNE_ZDROJE` (§225). Čte ho nová
+`zdrojePodlePredpisu()` v nočním robotovi, a ta drží tatáž pravidla
+jako obecná cesta:
+
+- **robots.txt se čte PRVNÍ**, a když nedovoluje, nestáhne se ani
+  jedna stránka. „Nesmíme" a „nevíme" se nepletou (§337);
+- mezi stránkami se čeká 2 s a stránek se vezme nejvýš `stropStranek`;
+- **skončená aukce není nabídka** (§455): na web jde jen stav
+  „Aktivní". Ze 143 záznamů je 123 „Prodáno" — kdo by si otevřel
+  takovou nabídku, je obelhaný;
+- **co není nemovitost, se nebere**: traktory, palety, pohledávky;
+- nabídka bez ceny, výměry, odkazu nebo bez poznaného místa se
+  nedoplňuje dohadem, jen SPOČÍTÁ a napíše se důvod.
+
+Proč to není `OBECNE_ZDROJE`: obecná cesta umí jen `typ: 'sale'`.
+U dražby z ní vyjde nabídka, kterou web neumí správně popsat — a to
+je horší než nabídka chybějící.
+
+**Vada nalezená vlastní fixturou.** Podmínka „co není nemovitost"
+zněla `if (!n.kategorie)`. Jenže `kategorieZNazvu()` vrací u traktoru
+`{ druh: 'není nemovitost', kategorie: 'jiné' }` — pravdivou, ale
+KLADNOU odpověď. Traktor tedy podmínkou prošel a spadl až o řádek
+níž jako „bez výměry". Na web by se nedostal ani tak, ale v logu by
+stál špatný důvod — a důvod, který lže, pošle člověka hledat vadu
+jinam (§366). Opraveno na `jeNemovitost(nazev)`.
+
+**Hlídač** `scripts/test-zdroj-predpisem.mjs` (19 kontrol) podstrčí
+stahování, takže měří ROZHODOVÁNÍ, ne dostupnost cizího webu.
+**Sabotáž dvakrát:** vyhození filtru živého stavu shodilo 3 kontroly
+(prodané by šlo na web), ignorování robots.txt taky 3 — a při něm se
+navíc změřilo, že se bez dovolení nestáhne ani jedna stránka
+(počítadlo dotazů v zkoušce).

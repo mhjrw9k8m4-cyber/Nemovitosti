@@ -303,8 +303,11 @@ export const KANDIDATI = [
       + ' a filtrační panel místo jména (§455), konec názvu kotvený na'
       + ' výčet typů řízení místo na „Čas do konce:“ (§457), a dvakrát'
       + ' past `\\b`/`\\w` nad českým textem (§454, §458).'
-      + ' ZBÝVÁ: majitelovo slovo. Zapojení do nočního robota je krok'
-      + ' navíc a dělá se zvlášť; měření nic nezapojuje.' },
+      + ' ZAPOJENO 6. 11. na majitelovo slovo („Zapoj co jde pokud to'
+      + ' funguje a je to dobrý zdroj"): host je v ZAPOJENE_PREDPISY'
+      + ' a noční robot ho čte funkcí zdrojePodlePredpisu() — robots.txt'
+      + ' první, osm stránek s pauzou, na web jen stav „Aktivní".'
+      + ' Hlídá scripts/test-zdroj-predpisem.mjs (§464).' },
   { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.elektronickedrazby.cz/',
     proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'
