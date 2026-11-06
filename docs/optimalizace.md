@@ -28504,15 +28504,38 @@ by byla práce pro 263 nabídek, které polohu mají, a výsledek **nula
 nových nabídek na webu**. Tři jména místo jednoho stála deset řádků
 a odpověděla za jeden běh.
 
-**Zbývá doptat, za kterou hranicí** — na tom totiž záleží, co dál.
-Bezrealitky mají slovenskou sestru, takže nejpravděpodobnější výklad je,
-že dotaz na jejich API nefiltruje zemi a 14 % odpovědi jsou slovenské
-nabídky; pak je zahození **v pořádku** a dá se ještě zlevnit tím, že se
-o ně nebude žádat. Jiný výklad je, že se někde přeskakuje zeměpisná
-šířka s délkou. Rozhodne to další běh: jméno důvodu teď nese stát
-(`mimoCR:SK`, `mimoCR:AT`, `mimoCR:PL`, `mimoCR:DE`, `mimoCR:jinde`),
-spočítaný z hrubých obalů, o kterých se nic nerozhoduje — slouží jen
-k pojmenování nálezu.
+**A DRUHÝ BĚH ODPOVĚDĚL I NA „ZA KTEROU HRANICÍ".** Jméno důvodu dostalo
+stát (`mimoCR:DE`, `mimoCR:AT`, `mimoCR:SK`, `mimoCR:PL`, `mimoCR:jinde`,
+z hrubých obalů, o kterých se nic nerozhoduje — slouží jen k pojmenování):
+
+```
+Bezrealitky: mimoCR:DE 192, mimoCR:AT 68, mimoCR:SK 3, …
+```
+
+A protože robot u každého důvodu vypisuje i JEDNU UKÁZKU, bylo to
+rozhodnuté bez hádání:
+
+```
+· mimoCR:DE: Dolní Sasko, Cheb — 1000 m², 178 000 Kč, stavební pozemek
+· mimoCR:AT: Wettmannstätten Steiermark 8521, Znojmo — 61 000 m², 1 350 000 Kč, ovocný sad
+```
+
+Dolní Sasko a Štýrsko. **Jsou to opravdové zahraniční nabídky, které
+Bezrealitky inzerují** — žádná naše vada, žádné přeskočené souřadnice.
+Síto dělá přesně to, co má. (Okres „Cheb" a „Znojmo" u nich je jen
+dopočet podle nejbližšího českého města; na rozhodnutí nemá vliv,
+protože o zahození rozhodly souřadnice.)
+
+Hypotéza o slovenské sestře, kterou jsem si sám vymyslel jako
+nejpravděpodobnější, byla taky mimo: Slovensko jsou **3** nabídky
+z 263. **Dvě domněnky v řadě, obě padly na ukázce ze dvou řádků logu.**
+
+Co z toho zbývá jako rozhodnutí (ne jako vada): robot ty 263 zahraniční
+nabídky stáhne při každém běhu a zahodí. Pustit je na web by nebyla
+práce „zdarma za +11 % obsahu" — celý web je postavený na okresu,
+katastru a českém cenovém modelu, takže německý pozemek by rozbil
+okresní stránky, srovnání ceny i odkaz do katastru. Patří to majiteli
+k rozhodnutí, ne do opravy.
 
 **Pravidlo, které z toho zbývá:** když je jméno nálezu nepřesné, levnější
 než vysvětlovat ho je **rozdělit ho** a nechat příští běh odpovědět.
