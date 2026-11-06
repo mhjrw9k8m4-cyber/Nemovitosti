@@ -57,6 +57,7 @@ if (!r.dovoleno) {
 
 const stropStranek = (predpis.dalsiStranky && predpis.dalsiStranky.stropStranek) || 1;
 let prvniHtml = '';
+let posledniHtml = null;
 const vse = [];
 const poStrankach = [];
 for (let i = 0; i < stropStranek; i++) {
@@ -72,6 +73,7 @@ for (let i = 0; i < stropStranek; i++) {
   }
   const n = zZaznamu(html, adr, predpis);
   if (i === 0) prvniHtml = html;
+  if (html) posledniHtml = { adr, html };
   poStrankach.push({ adr, bajtu: html.length, nasel: n.length });
   vse.push(...n);
   if (i + 1 < stropStranek) await spi(PAUZA_MS);
@@ -142,19 +144,25 @@ for (const x of nezarazene.slice(0, 40)) {
    jestli je vada v `zacatekZaznamu`, nebo v `konecZaznamu`, a člověk
    by musel hádat. Vypíše se prvních 6 úseků první stránky, zkrácené.
    NIC SE TÍM NEMĚNÍ, je to jen výpis do logu. */
-if (prvniHtml) {
-  const text = bezZnacek(prvniHtml);
+const surove = (html, kolik, co) => {
+  if (!html) return;
+  const text = bezZnacek(html);
   const re = new RegExp(predpis.konecZaznamu.source, 'g');
-  console.log('\nSUROVÝ ÚSEK (prvních 6 na první stránce, po 200 znacích od konce):');
+  console.log(`\nSUROVÝ ÚSEK — ${co} (prvních ${kolik}, po 260 znacích od konce):`);
   let od = 0, m, i = 0;
-  while ((m = re.exec(text)) !== null && i < 6) {
+  while ((m = re.exec(text)) !== null && i < kolik) {
     const kus = text.slice(od, m.index);
     od = m.index + m[0].length;
     i++;
-    const konec = kus.slice(-200).replace(/\s+/g, ' ').trim();
-    console.log(`  [${m[1] || '—'}] …${konec}`);
+    console.log(`  [${m[1] || '—'}] …${kus.slice(-260).replace(/\s+/g, ' ').trim()}`);
   }
-}
+};
+/* PRVNÍ STRÁNKA UKÁŽE JEN ŽIVÉ AUKCE a to je málo: čtvrtý pokus
+   6. 11. právě na tom uvízl — vady se dějí u neaktivních záznamů
+   („Prodáno", „Ukončeno") a ty jsou až na konci výpisu. Proto se
+   vypisuje i poslední načtená stránka. Jeden běh, obojí vidět. */
+surove(prvniHtml, 4, 'první stránka');
+if (posledniHtml) surove(posledniHtml.html, 6, 'poslední stránka ' + posledniHtml.adr);
 
 /* A CO SE NEPOVEDLO. Bez tohohle by se čtvrtina ztracených nabídek
    schovala za hezké číslo nahoře. */
