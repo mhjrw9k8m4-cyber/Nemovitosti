@@ -4148,6 +4148,9 @@
     function prepni(na) {
       document.body.classList.toggle('hledani-rozbalene', na);
       pole.setAttribute('aria-expanded', na ? 'true' : 'false');
+
+      var fb = document.getElementById('ms-filtr');
+      if (fb) fb.setAttribute('aria-expanded', na ? 'true' : 'false');
     }
     ['click', 'focus'].forEach(function (typ) {
       pole.addEventListener(typ, function () { prepni(true); });
@@ -4155,6 +4158,22 @@
 
     var lupa = document.querySelector('.map-controls-panel .ms-lupa');
     if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
+
+    var filtrBtn = document.getElementById('ms-filtr');
+    if (filtrBtn) filtrBtn.addEventListener('click', function () {
+      var otevrit = !document.body.classList.contains('hledani-rozbalene');
+      prepni(otevrit);
+      if (!otevrit) return;
+
+      var panel = document.getElementById('ms-filters');
+      if (panel) {
+        panel.open = true;
+
+        requestAnimationFrame(function () {
+          try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        });
+      }
+    });
     var hotovo = document.getElementById('msr-hotovo');
     if (hotovo) hotovo.addEventListener('click', function () {
       prepni(false);
@@ -4195,11 +4214,18 @@
     return casti.length + (mistoFiltr ? 1 : 0) +
       omezeni().filter(function (o) { return o.popis; }).length;
   }
+
+  var msFiltrN = document.getElementById('ms-filtr-n');
   function updateFilterBadge() {
-    if (!msfBadge) return;
     var n = pocetFiltru();
-    if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
-    else { msfBadge.hidden = true; }
+    if (msfBadge) {
+      if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
+      else { msfBadge.hidden = true; }
+    }
+    if (msFiltrN) {
+      if (n > 0) { msFiltrN.textContent = n; msFiltrN.hidden = false; }
+      else { msFiltrN.hidden = true; }
+    }
   }
 
   var favStazeno = false;

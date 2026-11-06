@@ -1158,6 +1158,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-karta-odkaz.mjs
 
+      - name: Filtry jsou na telefonu vidět a nestojí ani pixel navíc
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-filtry-telefon.mjs
+
       - name: Kalkulačka nákladů při koupi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs

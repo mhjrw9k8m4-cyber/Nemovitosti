@@ -6776,6 +6776,11 @@
     function prepni(na) {
       document.body.classList.toggle('hledani-rozbalene', na);
       pole.setAttribute('aria-expanded', na ? 'true' : 'false');
+      /* Tlačítko „Filtry" říká týž stav. Bez toho by odečítač hlásil
+         „sbaleno" i nad otevřeným panelem — a hlásil by to pokaždé,
+         protože zavírá i Escape, odrolování a klepnutí mimo. */
+      var fb = document.getElementById('ms-filtr');
+      if (fb) fb.setAttribute('aria-expanded', na ? 'true' : 'false');
     }
     ['click', 'focus'].forEach(function (typ) {
       pole.addEventListener(typ, function () { prepni(true); });
@@ -6784,6 +6789,35 @@
        prstem trefí každý druhý — ať dělá totéž co pole. */
     var lupa = document.querySelector('.map-controls-panel .ms-lupa');
     if (lupa) lupa.addEventListener('click', function () { prepni(true); try { pole.focus(); } catch (e) {} });
+    /* TLAČÍTKO „FILTRY" VEDLE PŘEPÍNAČE Seznam/Mapa.
+       Do 1040 px je to jediná cesta k filtrům, která je vidět:
+       otvírač panelu („Druh, cena, výměra a další") leží uvnitř
+       rozbalení, takže má na telefonu nulovou velikost (naměřeno
+       6. 11. na 320, 390 i 768 px). Celé zdůvodnění je u tlačítka
+       v index.html.
+       PŘEPÍNÁ, NEOTEVÍRÁ. Druhé klepnutí zavírá — jinak by se filtry
+       nedaly schovat jinak než odrolováním nebo Escapem a tlačítko
+       by si odporovalo se svým vlastním aria-expanded.
+       ZAMĚŘENÍ SE NEPŘENÁŠÍ DO POLE. Kdo chce filtry, nechce
+       klávesnici přes půl obrazovky. */
+    var filtrBtn = document.getElementById('ms-filtr');
+    if (filtrBtn) filtrBtn.addEventListener('click', function () {
+      var otevrit = !document.body.classList.contains('hledani-rozbalene');
+      prepni(otevrit);
+      if (!otevrit) return;
+      /* Panel uvnitř rozbalení je <details> a zavřený se otevře až
+         klepnutím na svůj souhrn. Kdo klepl na „Filtry", chce vidět
+         filtry, ne další věc, na kterou se musí klepnout. */
+      var panel = document.getElementById('ms-filters');
+      if (panel) {
+        panel.open = true;
+        /* Až po vykreslení: rozbalený blok teprve vznikl, takže
+           dřív by se rolovalo na místo, kde ještě nic není. */
+        requestAnimationFrame(function () {
+          try { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+        });
+      }
+    });
     var hotovo = document.getElementById('msr-hotovo');
     if (hotovo) hotovo.addEventListener('click', function () {
       prepni(false);
@@ -6875,11 +6909,20 @@
     return casti.length + (mistoFiltr ? 1 : 0) +
       omezeni().filter(function (o) { return o.popis; }).length;
   }
+  /* Totéž číslo nese i tlačítko „Filtry" na telefonu: tam je panel
+     zavřený a bez čísla by nebylo poznat, že výpis něco omezuje.
+     Počítá ho TÁŽ funkce, aby se ta dvě čísla nemohla rozejít. */
+  var msFiltrN = document.getElementById('ms-filtr-n');
   function updateFilterBadge() {
-    if (!msfBadge) return;
     var n = pocetFiltru();
-    if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
-    else { msfBadge.hidden = true; }
+    if (msfBadge) {
+      if (n > 0) { msfBadge.textContent = n; msfBadge.hidden = false; }
+      else { msfBadge.hidden = true; }
+    }
+    if (msFiltrN) {
+      if (n > 0) { msFiltrN.textContent = n; msFiltrN.hidden = false; }
+      else { msFiltrN.hidden = true; }
+    }
   }
 
   /* POZNÁMKY SE STÁHNOU Z ÚČTU JEDNOU ZA NAČTENÍ. Značka „Poznámka" na

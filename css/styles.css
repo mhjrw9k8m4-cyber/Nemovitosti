@@ -2456,6 +2456,11 @@ h1 em{ color:var(--znacka-svetla);
    vnitřku — a zástupný text „Obec, druh, cena…" měří 145 px, takže by
    se začal ořezávat na prázdném poli, tedy přesně tam, kde je
    nejpotřebnější. Když je v poli text, zástupný text nikoho nezajímá. */
+/* TLAČÍTKO FILTRŮ SE NA ŠIROKÉM DISPLEJI NEUKAZUJE.
+   Tam je panel „Druh, cena, výměra a další" otevřený pořád, takže
+   druhý otvírač nemá co otevřít a jen by mátl. Zapíná se až
+   v bloku do 1040 px (viz tam). */
+.ms-filtr{display:none;}
 .ms-x{position:absolute; right:4px; top:50%; transform:translateY(-50%);
   display:inline-flex; align-items:center; justify-content:center;
   width:44px; height:44px; padding:0; border:0; background:transparent;
@@ -5022,6 +5027,43 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
      co překrýt, takže z toho nezbylo nic. */
   .ms-rozsirene{display:none;}
   body.hledani-rozbalene .ms-rozsirene{display:block;}
+  /* TLAČÍTKO FILTRŮ SDÍLÍ ŘÁDEK S PŘEPÍNAČEM Seznam/Mapa.
+     Tím si nebere ani pixel výšky navíc a úspora rozbalování
+     (365 px z 844) zůstává celá — viz komentář u něj v index.html.
+     Smrsknutí přepínače stojí o pár set řádků níž, u jeho vlastního
+     pravidla: tam má `flex:1 1 100%` a to by tohle přebilo.
+     Naměřeno: s pravidlem tady panel narostl ze 164 na 216 px. */
+  .ms-filtr{flex:0 0 auto; display:inline-flex; align-items:center; gap:8px;
+    /* 44 px je chytací plocha pro prst, stejně jako u přepínače vedle. */
+    min-height:44px; padding:0 12px; border:1px solid var(--line-ui);
+    border-radius:var(--r-ovladani); background:var(--plocha-karta);
+    color:var(--text); font:inherit; font-size:14px; font-weight:600;
+    line-height:1; cursor:pointer; transition:var(--prechod);}
+  .ms-filtr .ik{width:18px; height:18px;}
+  .ms-filtr:hover{border-color:var(--znacka-svetla);}
+  /* Rozbalený panel je stav, ne jen akce — ať je z tlačítka poznat. */
+  body.hledani-rozbalene .ms-filtr{border-color:var(--znacka-svetla); color:var(--znacka);}
+  /* Kolik filtrů je zapnutých. Totéž číslo, jaké nese odznak
+     u zavřeného panelu (#msf-badge) — počítá ho jedna funkce. */
+  .ms-filtr-n{display:inline-flex; align-items:center; justify-content:center;
+    min-width:20px; height:20px; padding:0 4px; border-radius:var(--r-pill);
+    background:var(--znacka); color:#fff; font-size:12px; font-weight:700;}
+  .ms-filtr-n[hidden]{display:none;}
+  /* NA NEJUŽŠÍM TELEFONU ZBUDE JEN IKONA.
+     Na 320 px má řádek 288 px vnitřku a přepínač Seznam/Mapa se pod
+     svou vlastní šířku nestlačí: s nápisem „Filtry" (85 px) se obojí
+     nevešlo a tlačítko se zalomilo pod něj — naměřeno, panel narostl
+     ze 164 na 216 px. Ikona filtru je srozumitelná sama o sobě a
+     přístupné jméno zůstává celé, protože nápis se jen schová okem
+     (visually-hidden), nevyhodí se ze stromu. */
+  @media (max-width:360px){
+    /* 44 px i na šířku, ne jen na výšku: chytací plocha pro prst má
+       být čtverec 44×44 (naměřeno: se samotnou ikonou a 10px vycpávkou
+       vyšlo 40 px). */
+    .ms-filtr{padding:0 12px; min-width:44px; justify-content:center;}
+    .ms-filtr > span:not(.ms-filtr-n){position:absolute; width:1px; height:1px;
+      margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap;}
+  }
   /* Když je rozbaleno, je u toho čím to zavřít. Na širokém displeji
      se tenhle blok nikdy neschovává, takže tam tlačítko nesvítí. */
   /* HLAVNÍ AKCE PANELU VYPADÁ JAKO HLAVNÍ AKCE.
@@ -5181,6 +5223,12 @@ footer .wrap:not(.foot-bottom){display:flex; justify-content:space-between; alig
     background:var(--plocha-karta);
     border:0; box-shadow:inset 0 0 0 1px var(--line-ui), var(--e1);
     border-radius:var(--r-ovladani); padding:0; overflow:visible;}
+  /* A ZMĚŘENO ZŮSTÁVÁ: přepínač pustí tlačítko „Filtry" na svůj řádek.
+     `flex:1 1 100%` výš ho roztáhne přes celou šířku, takže by se
+     tlačítko zalomilo pod něj a panel by narostl o 52 px (naměřeno
+     164 → 216 px na 390 px). Tady se bázi vezme 100 % a přepínač se
+     smrskne přesně o to, co si vedle něj vezme tlačítko. */
+  .mcp-hledani:has(.ms-filtr) .mv-toggle{flex:1 1 auto; min-width:0;}
   /* Jezdec. Stojí 3 px od okrajů dráhy a v pravé poloze mu 3 px
      zbydou i napravo — proto šířka `50% - 6px` a posun o vlastní
      šířku plus těch 6 px. Je to přesně ten obdélník, který si pod

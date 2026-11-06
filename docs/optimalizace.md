@@ -28611,3 +28611,51 @@ pojmenované kontroly, ne do výjimky — to je totéž pravidlo, které si
 zkratka k „celé to jde kliknout". Je to slib, že uvnitř **nic dalšího
 není** — a kdo ho dá nad kartou s cenou a dvěma tlačítky, ten tu cenu
 a ta tlačítka odečítači zamkl.
+
+## §473
+
+**Filtry byly na telefonu neviditelné — a úspora, kvůli které se
+schovaly, se dala udržet celá.**
+
+Do 1040 px se celý blok `.ms-rozsirene` schovává a objeví se až po
+klepnutí do pole hledání. Je to měřené rozhodnutí: ušetří nad výpisem
+365 px z 844, tedy 43 % obrazovky. Zůstává.
+
+**CO SE S NÍM SCHOVALO.** Jediný otvírač filtrů („Druh, cena, výměra
+a další") ležel uvnitř. Změřeno 6. 11. v prohlížeči: `.msf-summary` má
+na 320, 390 i 768 px velikost **0×0**, zatímco na 1280 px 253×48. Kdo
+neklepl do hledání, o filtrech se nedozvěděl — a klepnout do hledání
+kvůli filtrům nikoho nenapadne. Je to **přesně táž vada**, jakou mělo
+„Pozemky v okolí" (§301): jediná cesta k funkci zmizela uvnitř
+rozbalení. Tam se to vyřešilo vytažením celého tlačítka ven a zaplatilo
+se za to jeho výškou pokaždé.
+
+**TADY TO VYŠLO LEVNĚJI.** Tlačítko „Filtry" stojí na ŘÁDKU
+S PŘEPÍNAČEM Seznam/Mapa, takže si nebere ani pixel výšky navíc.
+Naměřeno: panel nad výpisem zůstal na 164 px na 320 i 390 px a na
+193 px na tabletu. Úspora rozbalování je celá.
+
+**DVA POKUSY, KTERÉ MĚŘENÍ ZAMÍTLO.** Napoprvé jsem `flex:1 1 auto`
+napsal k přepínači nahoru do bloku telefonu — jenže jeho vlastní
+pravidlo o dvě stě řádků níž má `flex:1 1 100%` a to vyhrálo.
+Tlačítko se zalomilo pod něj a panel narostl ze 164 na **216 px**,
+tedy přesně to, čemu se celé rozbalování vyhýbá. Napodruhé to na
+390 px sedlo, ale na 320 px ne: do 288 px řádku se přepínač a 85px
+tlačítko nevešly. Pod 360 px proto zbude jen ikona (44×44 pro prst)
+a nápis se schová okem, ne ze stromu přístupnosti — jméno tlačítka
+zůstává celé.
+
+**A ZASE SE NAŠLA PRÁZDNÁ SABOTÁŽ, TENTOKRÁT MOJE.** První ze šesti
+sabotáží měla tlačítko znovu schovat: vložila `display:none` na začátek
+pravidla `.ms-filtr{…}`. Zkouška prošla a vypadalo to, že hlídač tu
+vadu nechytí. Nechytala ale nic — v témže pravidle o pár slov dál stojí
+`display:inline-flex` a **pozdější deklarace vyhrává**, takže se
+stránka vůbec nezměnila. Diff přitom ukazoval jeden změněný řádek, tedy
+pojistka „soubor se opravdu změnil" (§369) tohle nechytí: soubor se
+změnil, chování ne. Po opravě sabotáže (`display:inline-flex` →
+`display:none`) hlídač spadl okamžitě. Všech šest sabotáží tedy drží.
+
+**Pravidlo, které z toho zbývá:** u CSS nestačí ověřit, že se soubor
+změnil — je třeba ověřit, že se změnila **vypočtená hodnota**.
+Kaskáda umí každou záplatu v témže pravidle tiše spolknout a sabotáž
+se tím stane prázdnou, aniž by to diff poznal.
