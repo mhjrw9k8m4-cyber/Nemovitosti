@@ -28436,3 +28436,53 @@ musí být prázdný. Sabotáž (vynechat ten filtr v generátoru) → **1
 chyba**. Hlídá k tomu i předpoklad: že se v balíku vůbec nějaký
 spouštěč najde — jinak by kontrola byla mrtvá a tvrdila by zelenou nad
 prázdnem.
+
+## §471
+
+**Jedno jméno pro tři různé věci — a 263 nabídek, o kterých se proto
+nedá říct, jestli se ztrácejí naší vinou.**
+
+Robot zahozené nabídky počítá a vypisuje po důvodech. U Bezrealitky,
+tedy u zdroje, ze kterého je 69 % webu, stálo:
+
+```
+souradniceMimoCR 263, dalekoOdKazdehoOkresu 5, cenaZaMetrPrilisVysoka 3, …
+```
+
+263 nabídek je **11 % dnešního webu**. A to jméno tvrdí, že všechny
+leží za hranicí republiky. Jenže ta podmínka byla jedna a vracela
+totéž pro tři různé stavy:
+
+```js
+if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || … ) return 'souradniceMimoCR';
+```
+
+* souřadnice **nejsou číslo** → neumíme nabídku umístit. **Naše vada.**
+* souřadnice jsou **nula** → zdroj poslal místo polohy prázdno.
+  **Taky naše věc** (nula je hodnota, ne poloha).
+* souřadnice **doopravdy leží za hranicí** → nabídka, která na web
+  nepatří. **Jediné oprávněné zahození ze tří.**
+
+Mít na ně jedno jméno znamená, že z výpisu nejde poznat, kolik nabídek
+se ztrácí naší neschopností. A protože zahozená nabídka se nikam
+neukládá, nejde to dopočítat ani zpětně z dat v repozitáři.
+
+**A teď to podstatnější — o posudku, ne o kódu.** Posudek od agenta
+tvrdil, že těch 263 nabídek souřadnice vůbec nemá, a navrhoval
+dopočítat je z názvu obce. Ověřil jsem si to, **a neplatí to**: `lat`
+a `lng` jsou v `REQUIRED`, takže nabídka, která je nemá, padne už
+o dvacet řádků výš na `chybi:lat` — a toho důvodu bylo naměřeno **2**,
+ne 263. Těch 263 tedy nějaké souřadnice nese.
+
+Kdybych tu „opravu" napsal podle posudku, přidal bych geokódování pro
+263 nabídek, které už souřadnice mají — tedy práci, co nikomu nic
+nepřinese, postavenou na mechanismu, který jsem si neověřil.
+**Počet byl naměřený, vysvětlení ne.** Je to táž past jako u Kč/m²
+u podílů týž den: tvrzení o datech platilo, tvrzení o příčině ne.
+
+Udělané je proto to nejmenší, po čem se příčina **změří**: tři jména
+místo jednoho. Příští běh robota řekne sám, kolik z těch 263 je nula
+a kolik skutečný cizí pozemek — a teprve podle toho se dá opravovat.
+
+Sabotáž (slít nulovou polohu zpátky k poloze za hranicí) → **1 chyba**
+v `scripts/test-vypadek-zdroje.mjs`.

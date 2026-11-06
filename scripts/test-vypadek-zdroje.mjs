@@ -379,8 +379,20 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   je('nulová cena neprojde', F.procNeplatna({ ...dobra, price: 0 }), 'cenaMimoRozsah');
   je('nesmyslná cena za metr má jméno',
     F.procNeplatna({ ...dobra, price: 90000000, area: 100 }), 'cenaZaMetrPrilisVysoka');
+  /* TŘI RŮZNÉ DŮVODY, TŘI RŮZNÁ JMÉNA (§471). Dřív se tyhle tři stavy
+     hlásily jako jeden („souradniceMimoCR"), takže z výpisu nešlo
+     poznat, kolik nabídek se ztrácí naší neschopností je umístit
+     a kolik jich doopravdy leží za hranicí. Jen to třetí je oprávněné
+     zahození; u Bezrealitky bylo pod tím jedním jménem 263 nabídek,
+     tedy 11 % dnešního webu. */
   je('souřadnice mimo ČR mají jméno',
     F.procNeplatna({ ...dobra, lat: 40, lng: 4 }), 'souradniceMimoCR');
+  je('nulová poloha je JINÝ stav než poloha za hranicí',
+    F.procNeplatna({ ...dobra, lat: 0, lng: 0 }), 'souradniceNula');
+  je('a souřadnice, které nejsou číslo, taky',
+    F.procNeplatna({ ...dobra, lat: 'nevim', lng: 'nevim' }), 'bezSouradnic');
+  je('nabídka bez souřadnic úplně padne dřív, na chybějícím poli',
+    F.procNeplatna({ ...dobra, lat: undefined }), 'chybi:lat');
   je('cizí typ nabídky má jméno', F.procNeplatna({ ...dobra, type: 'nic' }), 'cizíTyp');
   /* A součet po zdrojích: bez něj je číslo k ničemu, protože neřekne,
      čí nabídky zmizely. */

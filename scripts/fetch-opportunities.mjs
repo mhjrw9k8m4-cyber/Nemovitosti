@@ -3438,9 +3438,28 @@ export function procNeplatna(o) {
   // stavební pozemky se drží hluboko pod tím.
   const area = Number(o.area);
   if (isFinite(area) && area > 0 && price / area > 25000) return 'cenaZaMetrPrilisVysoka';
-  // Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
+  /* Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
+     TŘI RŮZNÉ DŮVODY, TŘI RŮZNÁ JMÉNA (§471). Stála tu jedna podmínka
+     a vracela `souradniceMimoCR` pro všechny tři případy naráz:
+       · souřadnice nejsou číslo (to je naše vada, neumíme nabídku umístit);
+       · jsou nula (to zdroj poslal místo polohy prázdno, taky vada);
+       · a doopravdy leží za hranicí (to je nabídka, co na web nepatří).
+     Jen ten třetí je oprávněné zahození. Mít na ně jedno jméno znamená,
+     že z výpisu nejde poznat, kolik nabídek se ztrácí naší neschopností.
+
+     PROČ TO MĚŘÍM A NEOPRAVUJI ROVNOU. 6. 11. mělo Bezrealitky
+     263 nabídek s tímhle důvodem, tedy 11 % dnešního webu. Posudek
+     tvrdil, že je to tím, že souřadnice vůbec nemají. To ale neplatí:
+     `lat` a `lng` jsou v REQUIRED, takže nabídka bez nich padne už
+     o dvacet řádků výš na `chybi:lat` — a toho důvodu bylo naměřeno
+     jen 2. Těch 263 tedy nějaké souřadnice NESE a jsou buď nulové,
+     nebo skutečně za hranicí; z dat v repozitáři se to rozhodnout
+     nedá, protože zahozená nabídka se neukládá. Tohle rozdělení je ta
+     nejmenší změna, po které to příští běh robota řekne sám. */
   const lat = Number(o.lat), lng = Number(o.lng);
-  if (!isFinite(lat) || !isFinite(lng) || lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return 'souradniceMimoCR';
+  if (!isFinite(lat) || !isFinite(lng)) return 'bezSouradnic';
+  if (lat === 0 && lng === 0) return 'souradniceNula';
+  if (lat < 48.4 || lat > 51.2 || lng < 12.0 || lng > 18.95) return 'souradniceMimoCR';
   // Obdélník ale zahrnuje i kus Německa/Rakouska/Polska u hranic. Přesnější test:
   // bod MUSÍ ležet blízko některého okresního střediska (ČR je hustě pokrytá 76 okresy,
   // každé místo v ČR je od nějakého do ~30 km). Když je nejbližší okres přes 42 km
