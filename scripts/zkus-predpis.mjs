@@ -58,6 +58,7 @@ if (!r.dovoleno) {
 const stropStranek = (predpis.dalsiStranky && predpis.dalsiStranky.stropStranek) || 1;
 let prvniHtml = '';
 let posledniHtml = null;
+const useky = new Map();
 const vse = [];
 const poStrankach = [];
 for (let i = 0; i < stropStranek; i++) {
@@ -74,6 +75,18 @@ for (let i = 0; i < stropStranek; i++) {
   const n = zZaznamu(html, adr, predpis);
   if (i === 0) prvniHtml = html;
   if (html) posledniHtml = { adr, html };
+  /* SUROVÝ ÚSEK KE KAŽDÉMU ČÍSLU. Bez tohohle se dá surovina
+     ukázat jen u prvních záznamů, které se potkají — a ty bývají
+     v pořádku. Vada se schovává jinde, tak ji musí jít dohledat. */
+  {
+    const t = bezZnacek(html);
+    const rk = new RegExp(predpis.konecZaznamu.source, 'g');
+    let od2 = 0, mk;
+    while ((mk = rk.exec(t)) !== null) {
+      if (mk[1] && !useky.has(mk[1])) useky.set(mk[1], t.slice(od2, mk.index));
+      od2 = mk.index + mk[0].length;
+    }
+  }
   poStrankach.push({ adr, bajtu: html.length, nasel: n.length });
   vse.push(...n);
   if (i + 1 < stropStranek) await spi(PAUZA_MS);
@@ -153,6 +166,21 @@ const nezarazene = jedinecne.filter((x) => !kategorieZNazvu(x.nazev));
 console.log(`\nNEZAŘAZENÉ ${nezarazene.length} — jmenovitě (nejvýš 40):`);
 for (const x of nezarazene.slice(0, 40)) {
   console.log(`  [${x.cislo || '—'}] ${x.nazev.slice(0, 110)}`);
+}
+
+/* SUROVINA K TOMU, CO SE NEPOVEDLO (§456). Šestý ostrý pokus 6. 11.
+   na tom uvízl: šest nezařazených mělo místo názvu zbytek času a
+   ceny („(04.11.2026 16:00:00) Cena: 2 746 666 Kč"), a proč, se
+   z názvu poznat nedá. Surový úsek se proto vypisuje u VAD, ne
+   u prvních záznamů, které se potkají — ty bývají v pořádku a
+   měření pak ukazuje, co je zdravé, místo toho, co je nemocné. */
+const vadne = [...nezarazene,
+  ...jedinecne.filter((x) => !(x.cena > 0 && x.vymera > 0 && x.odkaz) && kategorieZNazvu(x.nazev))];
+console.log(`\nSUROVINA K VADÁM (prvních 6 z ${vadne.length}, po 300 znacích od konce):`);
+for (const x of vadne.slice(0, 6)) {
+  const u = (useky.get(x.cislo) || '').slice(-300).replace(/\s+/g, ' ').trim();
+  console.log(`  [${x.cislo || '—'}] název: „${x.nazev.slice(0, 70)}"`);
+  console.log(`      úsek: …${u}`);
 }
 
 /* SUROVÝ ÚSEK PŘED NÁZVEM. Tohle je jediná cesta, jak poznat, proč
