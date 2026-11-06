@@ -162,6 +162,13 @@ export const PREDPISY = {
        v „Prodej bytové jednotky (domu), podlahová plocha 129 m2"
        žádné „Čas do konce" není. */
     nazevKonci: /\s*\([^)]*\)\s*Čas do konce:/i,
+    /* TERMÍN KONCE AUKCE. Na výpise stojí za časem do konce
+       v závorce — naměřeno na živém výpisu 6. 11.:
+         „Čas do konce: 27 dní 16 hodin (04.12.2026 12:00:00)"
+         „Čas do konce: 4 dny 18 hodin (11.11.2026 14:00:00)"
+       Bez něj se dvě dražby téhož pozemku v kanálu novinek nedají
+       rozlišit (hlídá test-rss) a člověk neví, do kdy má čas. */
+    terminZaznamu: /Čas do konce:[^(]{0,60}\((\d{1,2})\.(\d{1,2})\.(\d{4})/i,
     cena: /(?:Min\.\s*cena|Cena)\s*:\s*([\d\s .,]+)\s*Kč/i,
     odkazVzor: /\/aukce\/[^"'\s]*?-(\d+)\/?$/i,
   },

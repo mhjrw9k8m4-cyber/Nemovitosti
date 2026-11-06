@@ -84,9 +84,14 @@ pravda(`zdroj se pozná u všech ${data.opportunities.length} nabídek v datech`
   `${nepriz.length} nepřiřazených, např. ${JSON.stringify((nepriz[0] || {}).extra || '')}`);
 const podle = {};
 for (const o of data.opportunities) { const z = F.zdrojNabidky(o); podle[z] = (podle[z] || 0) + 1; }
+/* Proti ZDROJ_JMENA_VSE, ne proti ZDROJ_JMENA: zdroj čtený podle
+   předpisu nebo obecnou cestou je ŘÁDEK V REGISTRU, ne stahovač
+   v SOURCES (§464). V datech ale je — a míří se, jestli se pozná.
+   Dokud byl registr prázdný, oba seznamy si byly rovny a rozdíl se
+   neprojevil; první zapojený předpis ho ukázal. */
 pravda('a každý zdroj se pozná jen jedním ze svých jmen',
-  Object.keys(podle).every((z) => F.ZDROJ_JMENA.includes(z)),
-  JSON.stringify(podle));
+  Object.keys(podle).every((z) => F.ZDROJ_JMENA_VSE.includes(z)),
+  JSON.stringify(podle) + ' | známá: ' + JSON.stringify(F.ZDROJ_JMENA_VSE));
 
 // --- 5) výpadek: nabídky se podrží ---------------------------------
 const vzorek = (z, n, extra) => Array.from({ length: n }, (_, i) => ({

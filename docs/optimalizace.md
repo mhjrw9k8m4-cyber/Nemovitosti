@@ -28089,3 +28089,57 @@ stahování, takže měří ROZHODOVÁNÍ, ne dostupnost cizího webu.
 (prodané by šlo na web), ignorování robots.txt taky 3 — a při něm se
 navíc změřilo, že se bez dovolení nestáhne ani jedna stránka
 (počítadlo dotazů v zkoušce).
+
+## §465
+
+**Slovník zná jen to, co už máme — a nový zdroj přináší právě to, co
+nemáme.**
+
+První ostrý běh Veřejných dražeb (run 42264341229) dal číslo, které
+vypadalo nevinně: `bezMista 7`. Ve skutečnosti to znamenalo, že
+**sedm živých a celých nabídek z osmnácti**, tedy skoro polovina,
+spadlo pod stůl jen proto, že se u nich nepoznala obec. Číslo se nedá
+vyšetřit, tak měření doplnilo celé názvy (ruční úloha zkus-predpis):
+
+```
+✕ … v centru města Varnsdorf, užitná plocha budov 1.813 m2 …
+✕ Prodej garáže, výměra 20 m², …, ul. Mírová, Cheb, Karlovarský kraj
+✕ … celková výměra 1.144 m2, k.ú. Sadová u Sovětic
+✕ … pozemky celkem 2371 m2, Dolní Hořice, Jihočeský kraj
+✕ … pozemky celkem 7063 m2, Zlaté Hory
+✕ … pozemek 135 m2, ul. Antonína Trapla, Boskovice
+✕ … pozemky 20.522 m2, Hranice-Slavíč, z majetku MORKUS Morava s.r.o.
+```
+
+Žádná záhada: obyčejné obce, napsané v názvu, jen je web zatím nemá
+v datech. `mistoZTextu` totiž hledá obec ve SLOVNÍKU postaveném
+z dosavadních nabídek (1 213 jmen z 2 332 nabídek). U zavedených
+zdrojů to stačí, u nového zdroje je to kruh: nabídku z Boskovic
+nevezmeme, protože z Boskovic ještě žádnou nemáme.
+
+**Řešení ve dvou krocích, protože jméno samo o sobě není místo.**
+`obecZNazvuAukce()` vytáhne z názvu KANDIDÁTA — buď podle výslovné
+vazby („k.ú. X", „města X"), nebo jako poslední čistý úsek mezi
+čárkami (úsek s číslem, s výměrou, s „s.r.o." nebo s krajem se
+přeskočí). Na sedmi skutečných názvech dá **7 ze 7** správně.
+A pak se kandidát **OVĚŘÍ**: zeptáme se geokodéru a okres se vezme
+ze SKUTEČNÝCH HRANIC okresů, ne z jména — Hranic i Polic je v Česku
+víc (§ o Polici u Jemnice). Co se neověří, se nedoplní: nabídka
+zůstane bez místa a spočítá se. Souřadnice z geokodéru jsou navíc
+přesnější než dosavadní střed okresu s rozptylem.
+
+Dotazů je málo (jen jména, která slovník nezná) a jsou v mezipaměti
+`data/geocode-cache.json`, takže běžný běh se geokodéru neptá vůbec.
+
+**Hlídač** (test-zdroj-predpisem, 34 kontrol) má na to sedm
+skutečných názvů a tři pravidla: neověřené jméno se nepoužije,
+kandidát z názvu bez místa se nevytvoří, a okres pochází z hranic.
+**Sabotáž dvakrát:** vypnutí ověřování shodilo 2 kontroly, zrušení
+filtru „čistý úsek" shodilo 4 (kandidáty jako „z majetku METAL OKA").
+
+**A jedna lekce o sabotáži samé.** První pokus o sabotáž ověřování
+nechal kód sáhnout do `coord[0]` u `null` — zkouška spadla na
+výjimku, nevypsala ani jednu ✕ a vypadalo to, že hlídač nic nechytil.
+**Sabotáž, která kód ROZBIJE, nic nedokazuje; musí pravidlo
+OSLABIT a nechat program běžet.** Druhý pokus (vrátit kandidáta bez
+ověření) už hlídače prověřil pořádně.

@@ -27,7 +27,7 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { bezEmodzi, otiskInzerenta } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
-import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu } from './cteni-zdroje.mjs';
+import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu, obecZNazvuAukce } from './cteni-zdroje.mjs';
 import { PREDPISY, ZAPOJENE_PREDPISY, jeNemovitost } from './predpisy-zdroju.mjs';
 import { smimeCist } from './robots.mjs';
 import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
@@ -573,6 +573,57 @@ async function geocodeName(place, okres) {
   geoCacheDirty = true;
   await sleep(1100); // Nominatim: max ~1 dotaz/s
   return coord;
+}
+
+/* ---------- OBEC, KTEROU SLOVNÍK NEZNÁ ---------------------------
+ *
+ * Když se místo nepozná ze slovníku dosavadních nabídek, zbývá jméno
+ * z názvu (viz obecZNazvuAukce) — jenže jméno samo o sobě není místo:
+ * Hranic i Police je v Česku víc. Proto se kandidát OVĚŘÍ: zeptáme se
+ * geokodéru, a okres vezmeme ze SKUTEČNÝCH HRANIC okresů, ne z jména.
+ * Co se neověří, se nedoplní: nabídka zůstane bez místa a spočítá se.
+ *
+ * Dotazů je málo a jsou v mezipaměti (data/geocode-cache.json), takže
+ * běžný běh se geokodéru ptá jen na jména, která ještě neviděl.
+ */
+async function geocodeObec(place) {
+  const key = (place + '|*').toLowerCase();
+  if (key in GEO_CACHE) return GEO_CACHE[key];
+  let coord = null;
+  try {
+    const q = encodeURIComponent(place + ', Česko');
+    const r = await stahni(`https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=cz&q=${q}`, { headers: GEO_UA });
+    if (r.ok) {
+      const j = await r.json();
+      if (Array.isArray(j)) {
+        for (const v of j) {
+          const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
+          if (!isFinite(la) || !isFinite(ln)) continue;
+          /* Hranice okresů rozhodují: bod musí ležet v některém z nich.
+             Bez toho by se sem dostal i bod za hranicemi republiky. */
+          if (maHranice() && !okresPodleHranice(la, ln)) continue;
+          coord = [la, ln];
+          break;
+        }
+      }
+    }
+  } catch { /* síť selhala — necháme null */ }
+  GEO_CACHE[key] = coord;
+  geoCacheDirty = true;
+  await sleep(1100); // Nominatim: max ~1 dotaz/s
+  return coord;
+}
+
+/** Místo z názvu aukce: jméno → geokodér → okres z hranic. Nebo null. */
+export async function mistoZeJmenaAukce(nazev, geo = geocodeObec) {
+  for (const kandidat of obecZNazvuAukce(nazev)) {
+    const coord = await geo(kandidat);
+    if (!Array.isArray(coord)) continue;
+    const okres = maHranice() ? okresPodleHranice(coord[0], coord[1]) : null;
+    if (!okres) continue;
+    return { place: kandidat, okres, lat: coord[0], lng: coord[1], jak: 'jméno z názvu ověřené geokodérem' };
+  }
+  return null;
 }
 
 /* ---------- ČTVRŤ U VELKÝCH MĚST ------------------------------------
@@ -1512,7 +1563,7 @@ export async function zalozniCestou(zdroje, cile, nastroje) {
  */
 export async function zdrojePodlePredpisu(hosty, nastroje) {
   const { stahni: stahniF, smimeCist: smimeF, zZaznamu, predpisy, mistoZTextu,
-    slovnik, okresy, ua, pauza = 2000 } = nastroje || {};
+    slovnik, okresy, ua, pauza = 2000, zJmena } = nastroje || {};
   const spi = (ms) => new Promise((r) => setTimeout(r, ms));
   const robotsMezipamet = new Map();
   const nabidkyVen = [];
@@ -1557,7 +1608,7 @@ export async function zdrojePodlePredpisu(hosty, nastroje) {
     for (const n of vse) if (n.cislo && !podleCisla.has(n.cislo)) podleCisla.set(n.cislo, n);
     const jedinecne = [...podleCisla.values()];
     const zivy = predpis.zivyStav || null;
-    const zahozeno = { skoncilo: 0, neniNemovitost: 0, bezCeny: 0, bezVymery: 0, bezOdkazu: 0, bezMista: 0 };
+    const zahozeno = { skoncilo: 0, neniNemovitost: 0, bezCeny: 0, bezVymery: 0, bezOdkazu: 0, bezTerminu: 0, bezMista: 0 };
     const prevedene = [];
     for (const n of jedinecne) {
       if (zivy && !zivy.includes(String(n.stav || ''))) { zahozeno.skoncilo++; continue; }
@@ -1572,8 +1623,20 @@ export async function zdrojePodlePredpisu(hosty, nastroje) {
       if (!(n.cena > 0)) { zahozeno.bezCeny++; continue; }
       if (!(n.vymera > 0)) { zahozeno.bezVymery++; continue; }
       if (!n.odkaz) { zahozeno.bezOdkazu++; continue; }
-      const misto = mistoZTextu(String(n.nazev || ''), slovnik, okresy);
-      const okres = misto && normOkres(misto.okres);
+      /* DRAŽBA BEZ TERMÍNU NA WEB NEPATŘÍ. Dvě dražby téhož pozemku
+         se bez data nedají rozlišit — v kanálu novinek vyjdou znak za
+         znak stejně (hlídá test-rss) — a člověk neví, do kdy má čas.
+         Nedoplňuje se dohadem; záznam se spočítá a jde se dál. */
+      if ((predpis.typ || 'drazba') === 'drazba' && !n.termin) { zahozeno.bezTerminu++; continue; }
+      /* MÍSTO: nejdřív slovník dosavadních nabídek, a když nepomůže,
+         jméno z názvu ověřené geokodérem (§465). Bez ověření se
+         nedoplňuje nic — nabídka pak zůstane bez místa a spočítá se. */
+      let misto = mistoZTextu(String(n.nazev || ''), slovnik, okresy);
+      let okres = misto && normOkres(misto.okres);
+      if (!okres && typeof zJmena === 'function') {
+        const zn = await zJmena(String(n.nazev || ''));
+        if (zn && normOkres(zn.okres)) { misto = zn; okres = normOkres(zn.okres); }
+      }
       if (!misto || !okres) { zahozeno.bezMista++; continue; }
       const o = {
         place: String(misto.place).slice(0, 60), okres,
@@ -1581,13 +1644,28 @@ export async function zdrojePodlePredpisu(hosty, nastroje) {
         _key: `pr-${host}-${n.cislo}`,
         druh: normDruh(n.druh || parseDruh(String(n.nazev || ''), [misto.place, okres]) || 'pozemek'),
         area: n.vymera, price: n.cena,
-        extra: `${predpis.typ === 'drazba' ? 'běžící aukce' : 'nabídka'} · ev. č. ${n.cislo} · ${nazev}`,
+        /* Tvar popisu je týž jako u ostatních dražeb v datech
+           („dražba 2026-11-26 · OK dražby"), ať kanál novinek
+           i stránka nabídky nemají dvě řeči pro tutéž věc. */
+        extra: `${predpis.typ === 'drazba' ? `dražba ${n.termin}` : 'nabídka'}`
+          + ` · ev. č. ${n.cislo} · ${nazev}`,
         zdroj: nazev,
         url: n.odkaz,
       };
+      /* Souřadnice z geokodéru jsou lepší než střed okresu s rozptylem:
+         obec sedí na metry, ne na kilometry. Když je nemáme, doplní je
+         geocode() jako u každé jiné nabídky. */
+      if (isFinite(misto.lat) && isFinite(misto.lng)) { o.lat = misto.lat; o.lng = misto.lng; o._gps = true; }
       /* Kategorie jde do dat jen tehdy, když to POZEMEK NENÍ: web
-         pozemek bere jako výchozí stav a `kat` je výjimka (§412). */
-      if (n.kategorie && n.kategorie !== 'pozemek') o.kat = n.kategorie;
+         pozemek bere jako výchozí stav a `kat` je výjimka (§412).
+         A MUSÍ TO BÝT KLÍČ, KTERÝ WEB ZNÁ. Předpis rozlišuje jen
+         hrubě (`pozemek` / `stavba` / `jiné`), kdežto data mají
+         jmenovité klíče (dum, byt, areal, garaz, jine). Psát do dat
+         `stavba` znamená psát tam neznámé slovo — chytil to hlídač
+         kategorií hned v prvním ostrém běhu. Převádí se proto DRUH,
+         který je jmenovitý, a co se nedá přeložit, je `jine`. */
+      const KAT_PODLE_DRUHU = { 'dům': 'dum', byt: 'byt', 'areál': 'areal', 'garáž': 'garaz' };
+      if (n.kategorie && n.kategorie !== 'pozemek') o.kat = KAT_PODLE_DRUHU[n.druh] || 'jine';
       prevedene.push(o);
     }
     const duvody = Object.entries(zahozeno).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${v}`);
@@ -1651,11 +1729,12 @@ export const ZDROJ_JMENA = ['Dražby', 'OK dražby', 'SPÚ', 'Bezrealitky', 'Sre
    ZDROJ_JMENA zůstává šesti stahovačům, protože hlídač měří shodu
    PRÁVĚ s SOURCES — kdyby se do něj přilila i data, ta shoda by
    přestala něco tvrdit. */
-export const ZDROJ_JMENA_VSE = [...ZDROJ_JMENA, ...OBECNE_ZDROJE.map((z) => z.jmeno).filter(Boolean),
-  /* A zdroje čtené podle předpisu (§464) — jinak by nabídka z nich
-     platila za nabídku neznámého zdroje a hlídka zdrojů by o nich
-     nevěděla. */
-  ...ZAPOJENE_PREDPISY.map((h) => (PREDPISY[h] || {}).jmeno).filter(Boolean)];
+export const ZDROJ_JMENA_VSE = [...new Set([...ZDROJ_JMENA,
+  ...OBECNE_ZDROJE.map((z) => z.jmeno).filter(Boolean),
+  /* Zdroj čtený podle předpisu je zdroj z REGISTRU, ne stahovač
+     v SOURCES — patří tedy sem, stejně jako obecné zdroje. Do
+     ZDROJ_JMENA ne: ten je přesně seznam stahovačů a hlídá se to. */
+  ...ZAPOJENE_PREDPISY.map((h) => (PREDPISY[h] || {}).jmeno).filter(Boolean)])];
 
 /* Štítek v popisu nabídky. Platí pro data z běhů PŘED zavedením pole
    `zdroj` — po týdnu držení už se o ně nikdo neopře, ale ten týden je
@@ -3663,7 +3742,7 @@ async function fetchNabidkyStatu() {
         + ` (${ZAPOJENE_PREDPISY.join(', ')}).`);
       const pr = await zdrojePodlePredpisu(ZAPOJENE_PREDPISY, {
         stahni, smimeCist, zZaznamu, predpisy: PREDPISY, mistoZTextu,
-        slovnik, okresy, ua: BOT_UA,
+        slovnik, okresy, ua: BOT_UA, zJmena: mistoZeJmenaAukce,
       });
       zdroje.push(...pr.zdroje);
       if (pr.nabidky.length) raw.push(...pr.nabidky.map((o) => geocode(o)));

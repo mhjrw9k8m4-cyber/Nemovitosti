@@ -362,6 +362,13 @@ export function zZaznamu(html, zaklad, predpis) {
     const mc = predpis.cena && predpis.cena.exec(zaznam);
     const cena = mc ? cenaZTextu(mc[1] + ' Kč') : null;
 
+    /* TERMÍN JDE DÁL JAKO DATUM, ne jako věta. „Čas do konce: 4 dny"
+       za den znamená něco jiného; datum v závorce za tím je pevné. */
+    const mt = predpis.terminZaznamu && predpis.terminZaznamu.exec(kus);
+    const termin = mt
+      ? `${mt[3]}-${String(mt[2]).padStart(2, '0')}-${String(mt[1]).padStart(2, '0')}`
+      : null;
+
     /* VÝMĚRA PODLE TOHO, CO TO JE (§453). U pozemku se bere výměra
        pozemku, u stavby plocha stavby. Ostrý pokus ukázal, proč:
        „Prodej bytové jednotky (domu), podlahová plocha 129 m2,
@@ -393,6 +400,7 @@ export function zZaznamu(html, zaklad, predpis) {
          zapojuje. Když předpis značku stavu nemá, zůstane null a
          nic se tím netvrdí. */
       stav,
+      termin,
       odkaz: cislo && podleCisla.get(cislo) ? podleCisla.get(cislo) : null,
       typ: predpis.typ || null,
       odkud: 'záznamy',
@@ -558,6 +566,54 @@ export function mistoZTextu(text, slovnik, okresy) {
     return { place: obec, okres: z.okres, jak: 'obec ze slovníku' };
   }
   return null;
+}
+
+/* ---------- OBEC Z NÁZVU AUKCE, KDYŽ SLOVNÍK NEPOMOHL -------------
+ *
+ * `mistoZTextu` zná jen obce, které UŽ v datech jsou (slovník se staví
+ * z dosavadních nabídek). U dražeb to nestačí: první ostrý běh
+ * Veřejných dražeb (6. 11., run 42264341229) ztratil kvůli tomu
+ * SEDM ŽIVÝCH A CELÝCH nabídek z osmnácti — skoro polovinu. A nebyly
+ * to podivné texty, byly to obyčejné obce, které web zatím nemá:
+ *
+ *   „…v centru města Varnsdorf, užitná plocha budov 1.813 m2…"
+ *   „Prodej garáže, výměra 20 m², …, ul. Mírová, Cheb, Karlovarský kraj"
+ *   „…celková výměra 1.144 m2, k.ú. Sadová u Sovětic"
+ *   „…pozemky celkem 2371 m2, Dolní Hořice, Jihočeský kraj"
+ *   „…pozemky celkem 7063 m2, Zlaté Hory"
+ *   „…pozemek 135 m2, ul. Antonína Trapla, Boskovice"
+ *   „…pozemky 20.522 m2, Hranice-Slavíč, z majetku MORKUS Morava s.r.o."
+ *
+ * Vrací KANDIDÁTY, ne rozhodnutí: jméno se musí ještě ověřit (geokodér
+ * a hranice okresů). Nic se nedoplňuje dohadem — když se kandidát
+ * neověří, nabídka zůstane bez místa a spočítá se.
+ *
+ * Dvě cesty, v tomhle pořadí:
+ *   a) VÝSLOVNÁ VAZBA — „k.ú. X", „v obci X", „města X". Ta je silná,
+ *      protože slovo před jménem říká, že jde o místo.
+ *   b) POSLEDNÍ ČISTÝ ÚSEK mezi čárkami. Dražební názvy končí místem;
+ *      úsek s číslem, s „s.r.o.", s výměrou nebo s krajem se přeskočí.
+ */
+const AUKCE_CIZI = /\d|s\.r\.o|a\.s\.|spol\.|z majetku|výměr|plocha|pozem|podíl|lůžek|prostor|elektřin|stodol|stavb|garáž|dispozic|celkem|UP\b/i;
+/* `\\w` ani `\\b` na českém slově nefungují: za „Královéhradecký"
+   stojí „ý", které `\\w` není, takže `\\w*\\s+kraj` nesedne a kraj se
+   nepozná (§454). Chytil to vlastní hlídač mrtvých hranic. */
+const AUKCE_KRAJ = /(?<![\p{L}])(?:Jihočesk|Jihomoravsk|Karlovarsk|Královéhradeck|Libereck|Moravskoslezsk|Olomouck|Pardubick|Plzeňsk|Středočesk|Ústeck|Vysočin|Zlínsk)[\p{L}]*\s+kraj/iu;
+const AUKCE_JMENO = /^[A-ZÁ-Ž][\p{L}.-]*(?:[ -](?:(?:u|nad|pod|na|ve|v|za|při)[ ])?[A-ZÁ-Ž][\p{L}.-]*){0,2}$/u;
+const AUKCE_VAZBA = /(?:k\.\s*ú\.|katastrální(?:m)? území|v obci|obec|města|městě|ve městě)\s+([A-ZÁ-Ž][\p{L}.-]*(?:[ -](?:u|nad|pod|na|ve|v)?[ ]?[A-ZÁ-Ž][\p{L}.-]*){0,2})/u;
+export function obecZNazvuAukce(nazev) {
+  const t = String(nazev || '');
+  const ven = [];
+  const vazba = AUKCE_VAZBA.exec(t);
+  if (vazba) ven.push(vazba[1].trim());
+  const useky = t.split(',').map((x) => x.trim()).filter(Boolean);
+  for (let i = useky.length - 1; i >= 0; i--) {
+    const u = useky[i].replace(/^(?:k\.\s*ú\.|ul\.)\s*/i, '').trim();
+    if (!u || AUKCE_CIZI.test(u) || AUKCE_KRAJ.test(u) || !AUKCE_JMENO.test(u)) continue;
+    ven.push(u);
+    break;
+  }
+  return [...new Set(ven)];
 }
 
 /* Spojky, kterými pokračují jména obcí: „Benešov u Prahy", „Ústí nad
