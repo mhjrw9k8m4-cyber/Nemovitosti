@@ -20,7 +20,8 @@
  * napíše se proč. Žádné obcházení, žádná druhá hlavička.
  * =================================================================== */
 import { PREDPISY, kategorieZNazvu, podilZNazvu } from './predpisy-zdroju.mjs';
-import { zZaznamu, bezZnacek } from './cteni-zdroje.mjs';
+import { zZaznamu, bezZnacek, slovnikMist, mistoZTextu } from './cteni-zdroje.mjs';
+import { readFileSync } from 'node:fs';
 import { smimeCist } from './robots.mjs';
 import { BOT_UA } from './bot-ua.mjs';
 
@@ -218,6 +219,37 @@ console.log(`\nNEÚPLNÝCH ${nedodelky.length} — ukázka prvních 5:`);
 for (const x of nedodelky.slice(0, 5)) {
   const chybi = [!(x.cena > 0) && 'cena', !(x.vymera > 0) && 'výměra', !x.odkaz && 'odkaz'].filter(Boolean);
   console.log(`  [${x.cislo || '—'}] chybí: ${chybi.join(', ')} · ${x.nazev.slice(0, 100)}`);
+}
+
+/* MÍSTO: KDE SE NABÍDKA ZTRATÍ UŽ JEN TÍM, ŽE NEVÍME KDE JE.
+   Nabídka bez obce se na web nedostane — nemá kam. Robot obec hledá
+   v NÁZVU aukce podle slovníku míst z dosavadních dat; první ostrý
+   běh po zapojení (run 42264341229) takhle ztratil 7 ze 18 živých,
+   tedy skoro polovinu. Číslo „bezMista 7" se ale nedá vyšetřit —
+   musí být vidět ty názvy. Měří se jen u ŽIVÝCH A CELÝCH: u ostatních
+   by to byla práce navíc za nabídky, které stejně nejdou na web. */
+try {
+  const data = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8'));
+  const drive = data.opportunities || [];
+  const slovnik = slovnikMist(drive);
+  const okresy = new Set(drive.map((o) => o.okres).filter(Boolean));
+  const ziveCele = zivy ? cele.filter((x) => zivy.includes(x.stav)) : cele;
+  const smisto = [], bezmista = [];
+  for (const x of ziveCele) {
+    const m = mistoZTextu(String(x.nazev || ''), slovnik, okresy);
+    (m && m.okres ? smisto : bezmista).push([x, m]);
+  }
+  console.log(`\nMÍSTO U ŽIVÝCH A CELÝCH (${ziveCele.length}): pozná se u ${smisto.length},`
+    + ` nepozná u ${bezmista.length}.`);
+  console.log(`  (slovník míst má ${slovnik && slovnik.size !== undefined ? slovnik.size : '?'} položek`
+    + ` z ${drive.length} dosavadních nabídek)`);
+  for (const [x, m] of smisto.slice(0, 5)) {
+    console.log(`  ✓ ${String(m.place).padEnd(20)} ${String(m.okres).padEnd(16)} ${x.nazev.slice(0, 80)}`);
+  }
+  console.log('  — a TEĎ ty, u kterých se obec nepozná (celé názvy, ať je vidět proč):');
+  for (const [x] of bezmista) console.log(`  ✕ [${x.cislo}] ${x.nazev}`);
+} catch (e) {
+  console.log('\nMÍSTO: nezměřeno — ' + (e && e.message));
 }
 
 console.log('\nTohle měření nic nezapojuje. Rozhodnutí patří člověku.');
