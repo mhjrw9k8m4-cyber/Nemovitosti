@@ -30,7 +30,16 @@ function pravda(popis, vyslo, proc) {
     ['0 */6 * * *', 6], ['35 */6 * * *', 6], ['19 4 * * *', 24], ['35 7 * * *', 24],
     ['19 4 * * 1', 24 * 7],
     ['*/5 * * * *', null],      // po minutách: neumíme, a je lepší to přiznat
-    ['0 4 1 * *', null],        // jen prvního v měsíci
+    /* MĚSÍČNĚ UŽ UMÍME (§461). Stálo tu `null` s poznámkou „jen
+       prvního v měsíci" — a bylo to poctivé, dokud takovou úlohu
+       repozitář neměl. Jak hledání zdrojů přešlo z týdenního na
+       měsíční, zkouška to hned našla: perioda nespočítaná znamená
+       úloha nehlídaná. Měsíc se počítá jako 31 dní, aby se za
+       zaspalou nehlásila úloha, která jen čeká na první den. */
+    ['0 4 1 * *', 24 * 31], ['23 5 1 * *', 24 * 31],
+    /* A co pořád neumíme, se pořád přiznává: konkrétní měsíc je
+       roční plán a takový v repozitáři není. */
+    ['23 5 1 1 *', null], ['0 4 15 6 *', null],
     ['nesmysl', null], ['', null],
   ];
   const spatne = T.filter(([c, ceka]) => periodaHodin(c) !== ceka)

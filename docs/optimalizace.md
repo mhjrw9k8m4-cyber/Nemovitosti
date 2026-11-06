@@ -27830,3 +27830,64 @@ v živých datech (`EAS/CB/153/2026`) ukázalo, že všechny jsou ASCII
 a vzor na všech sedne. Oprava „na jistotu" by ho naopak rozbila,
 protože lookbehind před „Z" v „ÚZSVM" selže — „Ú" je písmeno. Mají
 tedy výjimku s doloženým důvodem, ne opravu.
+
+## §461
+
+**Nula nálezů může být správná odpověď. Poznat to jde jen z toho,
+co bylo těsně vedle.**
+
+Soustavné hledání zdrojů (§236) čte lokální katalogy otevřených dat
+a boduje datové sady podle toho, jak slibně se jmenují. Dva běhy,
+4. a 6. listopadu: **34 katalogů, 1 245 datových sad, nalezeno nic.**
+
+Nula z tisíce dvou set je číslo, u kterého má člověk dvě možnosti:
+uvěřit, že tam nic není, nebo zkontrolovat, jestli hledání nehledá
+špatně. Rozhodnout se to dá jedině podle seznamu „těsně minuly" —
+sad, které měly dost bodů a neprošly až na poslední podmínce (musí
+tam být slovo o převodu):
+
+```
+10  atom.cuzk.cz     Data RÚIAN o hierarchii prvků …
+10  atom.cuzk.cz     Úhrnné hodnoty pozemků
+ 8  data.csu.gov.cz  Indexy cen nemovitostí (%)
+ 7  atom.cuzk.cz     INSPIRE téma Parcely (CP)
+ 7  atom.cuzk.cz     Katastrální mapa ČR ve formátu SHP …
+```
+
+Všech dvacet jsou **mapové a statistické sady ČÚZK a ČSÚ**. Body si
+vysloužily slovy „parcela", „pozemek" a „katastr" v popisu něčeho
+úplně jiného — a podmínka o převodu je odmítla správně. Hledání tedy
+nehledá špatně; v těch katalozích opravdu nabídky nejsou.
+
+A není to náhoda, je to strukturální: **obce nabídky prodeje
+pozemků do katalogů otevřených dat nepublikují.** Dávají je na
+úřední desku, obvykle jako PDF „Záměr prodeje pozemku p. č. …".
+
+Z toho vyplývají dvě věci, a ani jedna není „hledat dál stejně":
+
+1. **Frekvence dolů.** Týdenní běh je několik set dotazů na cizí
+   weby za nulový výtěžek, a to je vůči nim nezdvořilé. Měsíčně se
+   zachytí, že se zaregistroval nový katalog, a víc tahle studna
+   nenabízí. (Není to vzdání se: katalogy rostou, jen pomaleji než
+   týdně.)
+2. **Jiný směr, změřený, ne vymyšlený.** Úřední deska má od roku
+   2021 povinný strojově čitelný tvar. Kolik obcí ho doopravdy plní
+   a jde-li z toho udělat zdroj, se musí **změřit** — a měřit se
+   bude POČET nabídek, ne bohatost textu (§459). Vede se jako
+   vlastní úkol.
+
+Mimochodem dvě z těch „těsně minulých" sad nejsou k zahození, jen
+nejsou zdroj nabídek: „Úhrnné hodnoty pozemků" (ČÚZK) a „Indexy cen
+nemovitostí" (ČSÚ) jsou veřejná data, která by mohla zpřesnit odhad
+ceny. To je ale jiná práce než víc nabídek a nepatří do téhle.
+
+**A ta změna plánu si hned našla vadu jinde.** Jak se cron změnil
+z `23 5 * * 1` na `23 5 1 * *`, spadla zkouška plánovaných úloh:
+`periodaHodin` ten tvar neumělo a vracelo `null`, což hlídač hlásí
+jako „nezměřeno". V `scripts/test-kontrola-uloh.mjs` přitom stálo
+`['0 4 1 * *', null]` s poznámkou „jen prvního v měsíci" — a bylo to
+poctivé, dokud takovou úlohu repozitář neměl. **Perioda, kterou
+hlídač neumí spočítat, znamená úloha, kterou nehlídá**: zaspalou by
+nepoznal. Doplněno (měsíc se počítá jako 31 dní, aby se za zaspalou
+nehlásila úloha, která jen čeká na první den), a co se pořád neumí
+— konkrétní měsíc, tedy roční plán — se pořád přiznává.

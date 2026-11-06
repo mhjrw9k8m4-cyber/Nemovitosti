@@ -50,6 +50,17 @@ export function periodaHodin(cron) {
   const d = String(cron || '').trim().split(/\s+/);
   if (d.length !== 5) return null;
   const [, hodina, den, mesic, denTydne] = d;
+
+  /* MĚSÍČNÍ PLÁN: konkrétní den v měsíci, každý měsíc. Přibyl
+     6. 11., když hledání zdrojů přešlo z týdenního na měsíční
+     (§461) — a zkouška to hned našla, protože tenhle tvar
+     `periodaHodin` neumělo a vracelo null. Měsíc se počítá jako
+     31 dní: strop je radši delší, aby se nehlásila zaspalá úloha,
+     která jen čeká na první den v měsíci. */
+  if (/^\d+$/.test(den) && mesic === '*' && denTydne === '*' && /^\d+$/.test(hodina)) {
+    return 24 * 31;
+  }
+
   if (den !== '*' || mesic !== '*') return null;
   const kazdychN = hodina.match(/^\*\/(\d+)$/);
   if (kazdychN && denTydne === '*') return Number(kazdychN[1]);

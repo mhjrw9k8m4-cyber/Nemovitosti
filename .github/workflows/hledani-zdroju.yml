@@ -10,16 +10,30 @@ name: Hledání zdrojů
 # kandidátů v data/nalezene-zdroje.json; co s ním, rozhoduje měření
 # sondou (robots, výtěžnost) a potom člověk.
 #
-# JEDNOU TÝDNĚ, NE DENNĚ. Rejstřík má dnes 66 katalogů a běh z nich
-# čte datové sady, takže to jsou stovky dotazů na cizí weby. Mezi
-# každými dvěma je pauza a robots.txt se čte u KAŽDÉHO hostitele
-# zvlášť — zákaz zastaví čtení, neobchází se.
+# JEDNOU ZA MĚSÍC, NE TÝDNĚ — A TO ČÍSLO JE Z MĚŘENÍ (§461).
+# Rejstřík má dnes 66 katalogů a běh z nich čte datové sady, takže
+# to jsou stovky dotazů na cizí weby. Mezi každými dvěma je pauza
+# a robots.txt se čte u KAŽDÉHO hostitele zvlášť — zákaz zastaví
+# čtení, neobchází se.
+#
+# Dva běhy (4. a 6. 11.) přečetly 34 katalogů a 1 245 datových sad
+# a našly NULU. A není to náhoda: dvacet sad, které byly nejblíž,
+# jsou mapové a statistické sady ČÚZK a ČSÚ — RÚIAN, katastrální
+# mapy, INSPIRE témata, indexy cen. Body si vysloužily slovy
+# „parcela" a „pozemek" v popisu něčeho úplně jiného a podmínka
+# „musí tam být slovo o převodu" je odmítla správně.
+#
+# Obce nabídky prodeje pozemků do katalogů otevřených dat
+# nepublikují — dávají je na úřední desku. Týdenní běh by tedy byly
+# stovky dotazů na cizí weby za nulový výtěžek, a to je vůči nim
+# nezdvořilé. Měsíčně se zachytí, že se zaregistroval nový katalog,
+# a víc tahle studna nenabízí.
 
 on:
   schedule:
-    # Pondělí ve 5:23 UTC — po sondě zdrojů (4:37) a mimo čas robota
-    # dat (0, 6, 12, 18), ať si dvě úlohy nelezou do commitů.
-    - cron: '23 5 * * 1'
+    # První den v měsíci ve 5:23 UTC — po sondě zdrojů (4:37) a mimo
+    # čas robota dat (0, 6, 12, 18), ať si úlohy nelezou do commitů.
+    - cron: '23 5 1 * *'
   workflow_dispatch: {}
 
 permissions:
