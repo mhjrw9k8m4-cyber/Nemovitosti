@@ -58,7 +58,7 @@ const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PARCELA = /(?:parc(?:\.|eln[íi]|ela)?\s*(?:č(?:\.|[íi]slo)?)?|p\.\s*č\.)\s*([0-9]{1,5}(?:\/[0-9]{1,4})?)/gi;
 /* Jak daleko za číslem se ještě hledá výměra. */
 export const OKNO = 60;
-const VYMERA = /([0-9][0-9\s ]{0,8})\s*(?:m\s*2|m²)/i;
+const VYMERA = /(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*(?:m\s*2|m²)/i; // slepení čísel zavřeno (§462)
 /* Popisy jsou u zdroje zkrácené; nejdelší naměřený má 461 znaků.
    Co je blízko stropu, může mít další parcelní číslo za řezem. */
 export const STROP_POPISU = 440;

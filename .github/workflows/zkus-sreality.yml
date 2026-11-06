@@ -1,0 +1,40 @@
+name: Změřit datovou sadu Sreality (bez nového běhu)
+
+# CO SREALITY PŘES APIFY DOOPRAVDY POSÍLÁ.
+#
+# První ostrý běh (6. 11.) poslal 1 630 záznamů VŠECH druhů nemovitostí,
+# ačkoli se objednávaly pozemky — a 44 bytů se dostalo na web jako
+# pozemky. Než se mapování polí opraví, musí se změřit, co v datech je.
+#
+# ŽÁDNÝ NOVÝ BĚH ACTORU SE NESPOUŠTÍ, a tedy se neplatí žádný kredit:
+# čte se datová sada posledního úspěšného běhu. Do repozitáře ani do dat
+# se nic nezapisuje, výstup je jen v logu.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read         # jen čte vlastní kód; do repozitáře nepíše nic
+
+jobs:
+  mereni:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Úloha do repozitáře nepíše, tak ať jí token nezůstává ležet
+          # v .git/config — hlídá to scripts/test-ci-prava.mjs.
+          persist-credentials: false
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Přečíst sadu posledního běhu
+        env:
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_SREALITY_ACTOR: ${{ secrets.APIFY_SREALITY_ACTOR }}
+        run: node scripts/zkus-sreality.mjs

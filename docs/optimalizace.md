@@ -27891,3 +27891,87 @@ hlídač neumí spočítat, znamená úloha, kterou nehlídá**: zaspalou by
 nepoznal. Doplněno (měsíc se počítá jako 31 dní, aby se za zaspalou
 nehlásila úloha, která jen čeká na první den), a co se pořád neumí
 — konkrétní měsíc, tedy roční plán — se pořád přiznává.
+
+## §462
+
+**Mezera uvnitř čísla je oddělovač tisíců, ne spojka dvou čísel —
+a číslo, které vyjde špatně, se nepozná, protože je to pořád číslo.**
+
+Ten den se poprvé pustil Sreality naostro (placené Apify, run
+42252438914). Čísla z logu: **1 630 záznamů stáženo, 1 586 z nich
+síto nepustilo na web, 44 prošlo.** Robot sám k tomu připsal výstrahu,
+že 97 % na jakost dat nevypadá a bývá to naše pravidlo (§365) — a měl
+pravdu dvakrát. Při pohledu na ty čtyřicet čtyři, co prošly, totiž
+stálo na webu tohle:
+
+```
+U družstva Repo | Praha | 1111 m² | 9 750 000 Kč | pozemek
+  https://www.sreality.cz/detail/prodej/byt/2+1/nusle/1481809996
+```
+
+Je to **byt 2+1 v Nuslích vydávaný za pozemek o výměře 1 111 m²**.
+A takových bylo všech 44.
+
+Výměra se u inzerátu bez strukturovaného pole čte z názvu, vzorkem
+`/(\d[\d\s.]*)\s*m(?:2|²)/`. Název byl „Prodej bytu 2+1 111 m²".
+Vyhledávání začne u jedničky z „2+1", třída `[\d\s.]*` spolkne mezeru
+i další čislice a `m²` sedne — z dvou různých čísel je jedno:
+
+| název | mělo vyjít | vyšlo |
+|---|---|---|
+| Prodej bytu 2+1 111 m² | 111 | **1 111** |
+| Prodej bytu 3+1 105 m² | 105 | **1 105** |
+| Prodej bytu 2+1 51 m² | 51 | **151** |
+| Prodej chaty 1+1 35 m² | 35 | **135** |
+
+**Proč to prošlo až na web.** Síto má strop 25 000 Kč/m², postavený na
+pozemcích. Byt za 210 000 Kč/m² by zahodilo — ale desetkrát nadsazená
+výměra udělá z 210 000 Kč/m² 8 800 Kč/m², a to je slušná cena
+stavebního pozemku. **Vada si tedy sama otevřela dveře sítem, které ji
+mělo zachytit.** Zároveň platí zásada, kterou tenhle repozitář zná od
+čtení výměry z popisu: *chybějící údaj je vidět, cizí číslo ne.* Cena
+za metr je přitom vstup pro odhady, odznaky „pod obvyklou cenou"
+i statistiky okresů.
+
+**Tvar, který to zavírá** (je stejný na všech místech):
+
+```js
+/(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*m(?:2|²)/i
+```
+
+Dvě závorky, dvě věci: před číslem nesmí stát čislice ani plus (počet
+pokojů), a mezera se uzná jen jako oddělovač tisíců — po ní musí
+následovat přesně tři čislice. Opraveno na čtyřech místech, kde se
+výměra bere z cizího textu: `parseArea` a `parseAreaPopis`
+(fetch-opportunities), `vymeraZTextu` v obou větvích, m² i hektary
+(cteni-zdroje), a `VYMERA` v parcely-z-textu.
+
+**Hlídač** `scripts/test-slepena-vymera.mjs` měří dvojím způsobem:
+chováním na skutečných čtecích funkcích (názvy opsané z výstupu
+Apify) a **tvarem v celé čtecí vrstvě** — nikde tam nesmí být znaková
+třída, která drží čislici i mezeru a za níž stojí jednotka plochy.
+Obhájená místa se POZNAJÍ Z KÓDU, ne ze seznamu, který bych musel
+udržovat (§438): buď je to počítadlo zmínek, které žádné číslo nebere
+(třída není v záchytné závorce), nebo číslo stojí ve vzorci hned za
+slovem o výměře, kam se počet pokojů nevejde. Naměřeno 5 takových
+míst, z toho 1 počítadlo a 4 u slova.
+
+**Vada v první verzi té sítě:** počítadlo `(text.match(/\d[\d\s.,]*…`
+hlásila jako čtečku, protože za záchytnou závorku vzala závorku
+z JavaScriptu, ne z regulárního výrazu. Chytla to vlastní sebezkouška
+hlídače („počítadlo bez závorky uzná za obhajobu"), ne já — a je to
+přesně ten druh omylu, pro který ty sebezkoušky v hlídačích jsou.
+
+**Sabotáž (dvakrát, protože hlídač má dvě poloviny):**
+vrácení starého vzorku v `parseArea` shodilo 6 kontrol (chování
+i tvar); přidání nové čtečky s vadnou třídou do cteni-zdroje shodilo
+jen kontrolu tvaru, chování zůstalo v pořádku — tedy každá polovina
+drží samostatně.
+
+**Co z toho plyne pro Sreality.** Po opravě z toho zdroje nevyjde
+nic: těch 44 nabídek nebyly pozemky a 1 586 zahozených nebyla jakost
+dat. Actor dostal objednávku `category_main_cb: 3` (pozemky) a poslal
+všechny druhy nemovitostí — byty, domy, komerci. **To není vada
+výměry, to je vada mapování**, a vede se jako vlastní úkol; změřit se
+dá bez dalšího placeného běhu, protože datová sada posledního běhu je
+u Apify pořád k přečtení (`scripts/zkus-sreality.mjs`).

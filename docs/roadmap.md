@@ -19,7 +19,7 @@ Takový plán je horší než žádný: podle něj se nedá poznat, co ještě c
 | Databáze | Supabase, 17 tabulek a 50 funkcí (RPC). Sloučený balík k nahrání je `supabase/00-vse.sql`. |
 | Data příležitostí | 2 371 nabídek (2 283 prodejů, 37 dražeb, 51 exekucí), 1 613 popisů od inzerentů. Na webu je z toho vidět 2 362 — zbytek je týž pozemek na druhém portálu. Stahuje se samo každých 6 hodin (`update-data.yml`). |
 | Stránky | 2 992 vlastních stránek pozemků, 77 okresních, 14 krajských — všechny generované, v `sitemap.xml`. |
-| Zkoušky | 319 souborů, v CI čtyři úlohy: 155 bez prohlížeče, 161 s prohlížečem ve třech směnách. |
+| Zkoušky | 320 souborů, v CI čtyři úlohy: 156 bez prohlížeče, 161 s prohlížečem ve třech směnách. |
 
 <!-- PK-STAV-DO -->
 

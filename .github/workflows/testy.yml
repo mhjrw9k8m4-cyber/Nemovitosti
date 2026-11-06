@@ -186,6 +186,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-vymera-z-textu.mjs
 
+      - name: Slepená výměra — číslo se nesmí přilepit k počtu pokojů (§462)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-slepena-vymera.mjs
+
       - name: Druh pozemku z textu inzerátu (kus slova, zápor, název obce)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-druh.mjs

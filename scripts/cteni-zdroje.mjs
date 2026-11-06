@@ -61,12 +61,17 @@ export function cenaZTextu(t) {
 /** „1 234 m²", „1 234 m2", „1,5 ha" → výměra v m². */
 export function vymeraZTextu(t) {
   const s = String(t || '');
-  let m = /([\d][\d\s\u00a0.,]*)\s*(?:m²|m2|m\^2)/i.exec(s);
+  /* Mezera uvnitř čísla je oddělovač tisíců, ne spojka dvou čísel
+     (§462). Dřív tu stálo ([\d][\d\s\u00a0.,]*) a z názvu „Byt 2+1 51 m²"
+     to přečetlo 151 m² — táž vada, kvůli které na webu viselo 44 bytů
+     jako pozemky. Před číslem proto nesmí stát čislice ani plus a za
+     mezerou musí následovat přesně tři čislice. */
+  let m = /(?<![\d+])((?:\d{1,3}(?:[\s\u00a0]\d{3})*|\d+)(?:[.,]\d+)?)\s*(?:m²|m2|m\^2)/i.exec(s);
   if (m) {
     const n = Number(m[1].replace(/[\s\u00a0.]/g, '').replace(',', '.'));
     if (isFinite(n) && n >= 10 && n <= 5e7) return Math.round(n);
   }
-  m = /([\d][\d\s\u00a0.,]*)\s*ha\b/i.exec(s);
+  m = /(?<![\d+])((?:\d{1,3}(?:[\s\u00a0]\d{3})*|\d+)(?:[.,]\d+)?)\s*ha\b/i.exec(s); // týž vzorek jako u m² (§462)
   if (m) {
     const n = Number(m[1].replace(/[\s\u00a0]/g, '').replace(',', '.'));
     if (isFinite(n) && n > 0 && n <= 5000) return Math.round(n * 10000);

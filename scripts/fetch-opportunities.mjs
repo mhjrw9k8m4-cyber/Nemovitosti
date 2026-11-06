@@ -876,7 +876,17 @@ export function geocode(o, seedStr) {
 const UA = { 'user-agent': BOT_UA };
 
 function parseArea(text) {
-  const m = String(text).match(/(\d[\d\s.]*)\s*m(?:2|²)/i);
+  /* ČISLO VÝMĚRY SE NESMÍ SLEPIT S ČÍSLEM PŘED NÍM (§462).
+   * Nalezeno měřením 6. 11. na prvním skutečném běhu Sreality: na webu
+   * viselo 44 PRAŽSKÝCH BYTŮ jako pozemky s výměrou 1 111 m². Četlo se to
+   * z názvu „Prodej bytu 2+1 111 m²": vzorek začal u jedničky z „2+1",
+   * třída [\d\s.]* spolkla mezeru a ze dvou čísel vyrobila jedno. Z 51 m²
+   * tak bylo 151, ze 105 m² 1 105 — a cena za metr, podle které web
+   * počítá odhady a odznaky, vyšla desetkrát nižší.
+   * Dvě závorky to zavírají: (?<![\d+]) — před číslem nesmí stát čislice
+   * ani plus (počet pokojů), a mezera se uzná jen jako oddělovač tisíců,
+   * tedy po ní musí následovat přesně tři čislice. */
+  const m = String(text).match(/(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*m(?:2|²)/i);
   if (!m) return null;
   const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
   return Number.isFinite(n) && n > 0 ? n : null;
@@ -976,7 +986,7 @@ function parseAreaPopis(text) {
      8 579, 8 582 a 1 805 m² a teprve pak jejich součet. */
   const celkem = new Set();
   const vyslovne = new Set(), slabe = new Set();
-  const re = /(\d[\d\s.]*)\s*m(?:2|²)/gi;
+  const re = /(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*m(?:2|²)/gi; // týž vzorek jako v parseArea (§462)
   let m;
   while ((m = re.exec(bez))) {
     const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
