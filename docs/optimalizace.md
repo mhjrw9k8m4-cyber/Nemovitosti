@@ -27351,3 +27351,96 @@ Předpis je napsaný a prokázaný na naměřeném vzorku, **ale ještě neběž
 naostro na všech osmi stránkách.** Teprve podle toho se zdroj zapojí do
 nočního robota — ne dřív. A na `drazby.policenm.cz` předpis zatím není;
 ten web se musí ohledat stejně.
+
+## §453 — Ostrý pokus našel to, co vzorek najít nemohl
+
+Předpis pro čtení (§452) byl prokázaný na pěti naměřených záznamech
+a zelený. Pustil jsem ho tedy naostro na všech osm stránek výpisu
+`verejnedrazby.cz/vypis-aukci`. **Zdroj se nezapojil** — a to je ten
+správný výsledek, protože pokus našel tři vady, které se na vzorku
+pěti záznamů ukázat nemohly.
+
+### Co fungovalo
+
+| | |
+|---|---|
+| robots.txt | dovoluje (web žádný nemá) |
+| stránek přečteno | 8 (20 + 20 + 20 + 20 + 20 + 20 + 20 + 5) |
+| záznamů | **145**, duplicit **0** |
+| s odkazem | **145 ze 145** — párování evidenčním číslem je stoprocentní |
+| s cenou | 141 ze 145 |
+
+Rozkrájení, stránkování i párování tedy drží. Chybuje **výklad**.
+
+### Vada 1: na výpisu nejsou jen nemovitosti
+
+```
+[8122] Prodej souboru pohledávek v celkové souhrnné výši 36 104 441,80 Kč
+[8117] Osobní automobil NISSAN NV200, 2012, RZ: 9U83831, 201 915 km
+```
+
+Tyhle se tvářily jako **neúplná nabídka** (chybí výměra). Jenže ony
+neúplné nejsou — jsou **cizí**. Auto na web o nemovitostech nepatří
+ani s výměrou.
+
+### Vada 2 (ta vážná): u staveb se vydávala výměra pozemku za velikost věci
+
+```
+[8125] byt · 67 m² · 800 000 Kč
+   „Prodej bytové jednotky (domu), podlahová plocha 129 m2, pozemek 67 m2"
+```
+
+Na kartě by stál **byt 67 m²**. Byt má 129 m²; 67 m² je pozemek pod
+ním. Popisek „pozemky celkem" je správná volba u pozemku a **chybná
+u stavby** — a je to přesně ta třída nepravdy, kvůli které se zdroj
+nezapojil už poprvé, jen jinou cestou.
+
+### Vada 3: pořadí druhů
+
+```
+[8130] garáž · 1400 m²
+   „VEŘEJNÁ DRAŽBA - RD 6+1, garáž, ÚP 206m2 a spoluvlastnické podíly…"
+```
+
+Rodinný dům s garáží se zařadil jako garáž, protože garáž stála
+v pořadí první. **Pořadí je součást pravidla, ne vkus.**
+
+### Oprava
+
+1. **Co není nemovitost, se pozná a odloží** (pohledávky, vozidla,
+   movité věci, akcie, stroje) — a hlídá se i opačná chyba, aby
+   pravidlo nechytalo skutečné nabídky.
+2. **Výměra podle toho, co to je:** u pozemku výměra pozemku, u stavby
+   plocha stavby (`užitná`, `podlahová`, `zastavěná`, `ÚP `). Výměra
+   pozemku se u stavby čte dál, jen se vede zvlášť — u domu se
+   zahradou je užitečná, není to ale velikost domu. Když se u stavby
+   plocha nenajde, zůstane prázdno: **radši mezera než cizí číslo.**
+3. **Pořadí druhů:** dům a byt před garáží; a ze signálů bytu pryč
+   „podlahová plocha", kterou má i „Prodej RD podlahová plocha 184 m2".
+
+Po opravě na týchž naměřených názvech:
+
+| název (zkráceně) | druh | výměra | z toho pozemek |
+|---|---|---|---|
+| bytová jednotka, podlahová 129, pozemek 67 | byt | **129** | 67 |
+| usedlost, užitná 371, pozemky 11.770 | dům | **371** | 11 770 |
+| RD 6+1, garáž, ÚP 206, pozemky 1400 | **dům** | 206 | 1 400 |
+| garáž, výměra 20, vlastní pozemek | garáž | 20 | 20 |
+| automobil NISSAN | **není nemovitost** | — | — |
+
+**Sabotáž:** vrácení garáže před dům (jediná přehozená dvojice řádků)
+shodí kontrolu „rodinný dům s garáží je dům".
+
+`test-predpis-zdroje` 12 → **20 kontrol**.
+
+### Co si z toho odnést
+
+Vzorek pěti záznamů byl poctivý — doslovný přepis měření, se zkomole-
+ninami, s garáží i podílem. **A přesto nestačil.** Nebyl v něm byt
+s dvojí plochou, nebylo v něm auto a nebyl v něm dům s garáží
+dohromady. Vzorek ukáže, že čtečka čte; teprve celá množina ukáže,
+že čte PRAVDU.
+
+Pravidlo tedy zní: **než se zdroj zapojí, musí přes něj projít celý
+výpis, ne vzorek** — a výsledek se čte po kategoriích, ne jen podle
+počtu nalezených nabídek.

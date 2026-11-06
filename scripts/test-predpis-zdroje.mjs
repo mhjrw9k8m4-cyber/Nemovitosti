@@ -59,12 +59,18 @@ pravda('z pěti záznamů vyjde pět nabídek', n.length === 5, `vyšlo ${n.leng
    napříč stránkou, první nabídka by dostala cenu nebo výměru některé
    z dalších — a to se nepozná jinak než tím, že se zkontrolují
    VŠECHNY dvojice naráz, ne jedna ukázková. */
+/* ČEKANÉ HODNOTY SE 6. 11. ZMĚNILY (§453) a není to uvolnění meze.
+   U 8069 (usedlost) tu dřív stálo 11 770 m², tedy výměra POZEMKU.
+   Ostrý pokus ukázal, že se tím o stavbách píše nepravda: u bytu
+   vyšlo „67 m²“, přestože byt má 129 a 67 je pozemek pod ním.
+   Od té doby platí: u pozemku výměra pozemku, u stavby plocha
+   stavby, a výměra pozemku se u stavby vede zvlášť. */
 const ceka = [
-  { cislo: '8066', cena: 51265280, vymera: 2919 },
-  { cislo: '8069', cena: 3103000, vymera: 11770 },
-  { cislo: '8070', cena: 167000, vymera: 5221 },
-  { cislo: '8133', cena: 122000, vymera: 20 },
-  { cislo: '8067', cena: 2750, vymera: 1144 },
+  { cislo: '8066', cena: 51265280, vymera: 2919 },   // stavební pozemek
+  { cislo: '8069', cena: 3103000, vymera: 371 },     // usedlost: užitná plocha, ne 11 770 m² pozemku
+  { cislo: '8070', cena: 167000, vymera: 5221 },     // lesní pozemek
+  { cislo: '8133', cena: 122000, vymera: 20 },       // garáž: obecné „výměra“
+  { cislo: '8067', cena: 2750, vymera: 1144 },       // podíl na orné půdě
 ];
 const sedi = ceka.every((c, i) => n[i] && n[i].cislo === c.cislo
   && n[i].cena === c.cena && n[i].vymera === c.vymera);
@@ -76,9 +82,17 @@ pravda('cena i výměra zůstaly u SVÉ nabídky (všech pět dvojic)', sedi,
    podlahová plocha budovy. Kdo vezme je, pošle na web usedlost
    o 371 m² jako pozemek. */
 const usedlost = n.find((x) => x.cislo === '8069');
-pravda('u dvou výměr v názvu vyhraje POZEMEK, ne podlahová plocha',
-  usedlost && usedlost.vymera === 11770,
-  usedlost ? `vyšlo ${usedlost.vymera} m² (podlahová plocha je 371)` : 'záznam 8069 chybí');
+pravda('u STAVBY vyhraje plocha stavby, ne výměra pozemku',
+  usedlost && usedlost.vymera === 371,
+  usedlost ? `vyšlo ${usedlost.vymera} m² (pozemek je 11 770)` : 'záznam 8069 chybí');
+pravda('a výměra pozemku se u ní přesto vede, jen zvlášť',
+  usedlost && usedlost.vymeraPozemku === 11770,
+  usedlost ? `vymeraPozemku ${usedlost.vymeraPozemku}` : '—');
+/* U POZEMKU to platí obráceně a musí se měřit taky: kdyby se
+   pravidlo přehodilo celé, tahle kontrola padne. */
+pravda('u POZEMKU zůstává výměra pozemku',
+  n.find((x) => x.cislo === '8070').vymera === 5221,
+  String(n.find((x) => x.cislo === '8070').vymera));
 
 /* ---- 4) odkaz se páruje číslem, ne pořadím ----------------------- */
 /* Kdyby se braly odkazy po pořadí, stačila by jedna reklama mezi
@@ -101,6 +115,41 @@ pravda('lesní pozemek se zařadí jako pozemek', lesK && lesK.druh === 'lesní 
 const usedlostK = kategorieZNazvu(usedlost.nazev);
 pravda('usedlost se zařadí jako stavba', usedlostK && usedlostK.kategorie === 'stavba',
   JSON.stringify(usedlostK));
+
+/* ---- 5b) §453: CO NENÍ NEMOVITOST, NA WEB NEPATŘÍ --------------- */
+/* Ostrý pokus 6. 11. našel na výpisu i tohle: „Prodej souboru
+   pohledávek v celkové souhrnné výši 36 104 441,80 Kč" a „Osobní
+   automobil NISSAN NV200, 2012, 201 915 km". Dřív se tvářily jako
+   NEÚPLNÁ nabídka (chybí výměra) — jenže ony nejsou neúplné, jsou
+   cizí, a na web o nemovitostech nepatří vůbec. */
+{
+  const auto = kategorieZNazvu('Prodej Osobní automobil NISSAN NV200, 2012, RZ: 9U83831, 201.915 km');
+  pravda('automobil se pozná jako „není nemovitost“',
+    auto && auto.kategorie === 'jiné', JSON.stringify(auto));
+  const pohl = kategorieZNazvu('Prodáno Prodej souboru pohledávek v celkové souhrnné výši 36.104.441,80,-Kč');
+  pravda('a pohledávky taky', pohl && pohl.kategorie === 'jiné', JSON.stringify(pohl));
+  /* A pozor na opačnou chybu: kdyby to pravidlo chytalo moc, zmizely
+     by i skutečné nabídky. Tyhle dvě musí projít dál. */
+  pravda('ale pozemek ani dům tím nezmizí',
+    kategorieZNazvu(les.nazev).kategorie === 'pozemek'
+    && kategorieZNazvu(usedlost.nazev).kategorie === 'stavba');
+}
+
+/* ---- 5c) §453: dům s garáží je DŮM ----------------------------- */
+/* Naměřeno: „VEŘEJNÁ DRAŽBA - RD 6+1, garáž, ÚP 206m2 a
+   spoluvlastnické podíly id. 1/2 na pozemcích, pozemky celkem
+   1400m2" se zařadilo jako GARÁŽ, protože garáž stála v pořadí
+   první. Pořadí je součást pravidla, ne vkus. */
+{
+  const rd = kategorieZNazvu('VEŘEJNÁ DRAŽBA - RD 6+1, garáž, ÚP 206m2 a spoluvlastnické podíly id. 1/2 na pozemcích, pozemky celkem 1400m2');
+  pravda('rodinný dům s garáží je dům, ne garáž', rd && rd.druh === 'dům', JSON.stringify(rd));
+  /* A samotná garáž zůstane garáží — jinak by se pořadí jen obrátilo. */
+  const g = kategorieZNazvu('Prodej garáže, výměra 20 m², vlastní pozemek, elektřina');
+  pravda('a samotná garáž zůstane garáží', g && g.druh === 'garáž', JSON.stringify(g));
+  /* „podlahová plocha" není druh: dřív dělala z domu byt. */
+  const dum = kategorieZNazvu('Prodej RD podlahová plocha 184 m2, stodola, vedlejší stavby');
+  pravda('a „podlahová plocha“ sama z domu byt nedělá', dum && dum.druh === 'dům', JSON.stringify(dum));
+}
 
 /* ---- 6) spoluvlastnický podíl se pozná -------------------------- */
 /* U podílu je cena za zlomek a výměra celá, takže „cena za metr" by

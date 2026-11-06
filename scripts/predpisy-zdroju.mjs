@@ -32,6 +32,35 @@ export const POPISKY_VYMERY = [
   'pozemky', 'pozemek', 'výměra', 'vymera',
 ];
 
+/* A POPISKY PLOCHY STAVBY — druhý seznam, ne tentýž (§453).
+ *
+ * Ostrý pokus 6. 11. ukázal, proč to nestačí mít jedno: u bytu
+ * vyšlo „byt · 67 m²", jenže 67 m² byl POZEMEK a byt měl 129 —
+ * „Prodej bytové jednotky (domu), podlahová plocha 129 m2, pozemek
+ * 67 m2". Na kartě by stála nepravda, a přesně kvůli nepravdám se
+ * ten zdroj nezapojil už jednou.
+ *
+ * Pravidlo je tedy: u POZEMKU se bere výměra pozemku, u STAVBY
+ * plocha stavby. Výměra pozemku se u stavby čte taky, ale vede se
+ * zvlášť (vymeraPozemku) — u domu se zahradou je to užitečný údaj,
+ * jen to není „velikost domu". */
+export const POPISKY_PLOCHY_STAVBY = [
+  'užitná plocha budov', 'uzitna plocha budov',
+  'užitná plocha', 'uzitna plocha',
+  'podlahová plocha', 'podlahova plocha',
+  'zastavěná plocha', 'zastavena plocha',
+  /* S MEZEROU SCHVÁLNĚ: „ÚP 206m2" ano, „úprava terénu 500 m2" ne.
+     Bez té mezery by se dvě písmena našla uvnitř běžných slov. */
+  'úp ', 'up ',
+];
+
+/* OBECNÝ POPISEK — ústup pro stavbu, když vlastní plochu neuvádí.
+   „Prodej garáže, výměra 20 m², vlastní pozemek" — těch 20 m² JE ta
+   garáž. Kdyby se u staveb couvalo rovnou na seznam pozemků, vzala by
+   se výměra pozemku a byla by to zase ta nepravda; „výměra" sama
+   o sobě ale mluví o předmětu nabídky, ne o pozemku pod ním. */
+export const POPISKY_VYMERY_OBECNE = ['výměra', 'vymera'];
+
 export const PREDPISY = {
   /* ----------------------------------------------------------------
      VEŘEJNÉ DRAŽBY (Gaute) — změřeno 6. 11. 2026, ohledání
@@ -94,11 +123,33 @@ export const PREDPISY = {
    „Prodej garáže, výměra 20 m², vlastní pozemek" je GARÁŽ, ne pozemek,
    i když se tam slovo „pozemek" vyskytuje. Proto se stavby hledají
    dřív než pozemky. */
+/* CO NENÍ NEMOVITOST. Dražebník prodává i věci, které na web
+   o nemovitostech nepatří vůbec — změřeno ostrým pokusem 6. 11.:
+   „Prodej souboru pohledávek v celkové souhrnné výši 36 104 441,80
+   Kč", „Osobní automobil NISSAN NV200, 2012, 201 915 km". Dřív se
+   tvářily jako NEÚPLNÁ nabídka (chybí výměra), a to je špatné
+   zařazení: nejsou neúplné, jsou cizí. Hledá se to PRVNÍ, před
+   druhy — jinak by „pohledávky … z majetku" spadly pod areál. */
+export const NENI_NEMOVITOST = [
+  /pohledáv/i,
+  /osobní automobil|\bvozidl|nákladní auto|přívěs|návěs/i,
+  /soubor movitých věcí|movité věci|zásob[ay]\b/i,
+  /ochrann[áé] známk|akcie|obchodní podíl ve společnosti/i,
+  /\bstroj(?:e|ů|ní zařízení)\b|technologi[ei] linky/i,
+];
+
+/* POŘADÍ ROZHODUJE A TOHLE JE JEHO DRUHÁ PODOBA (§453).
+   Napoprvé stála garáž první a ostrý pokus to hned ukázal: „RD 6+1,
+   garáž, ÚP 206m2 a spoluvlastnické podíly id. 1/2 na pozemcích"
+   se zařadilo jako GARÁŽ. Rodinný dům s garáží je dům.
+   Z bytu se zároveň vyhodil signál „podlahová plocha" — má ji
+   i „Prodej RD podlahová plocha 184 m2", takže by se z domu stal
+   byt. Popisek plochy není druh. */
 export const DRUHY_PODLE_NAZVU = [
+  [/rodinn(?:ý|ého) dom|\bRD\b|usedlost|rekreačního objektu|\bchat[ay]\b/i, 'dům', 'stavba'],
+  [/bytov[éá] jednotk|\bbyt\b/i, 'byt', 'stavba'],
+  [/areál|výrobní|sklad|administrativ|provozní budov|čerpací stanic/i, 'areál', 'stavba'],
   [/\bgaráž/i, 'garáž', 'stavba'],
-  [/bytov[éá] jednotk|\bbyt\b|podlahová plocha/i, 'byt', 'stavba'],
-  [/rodinn(?:ý|ého) dom|\bRD\b|usedlost|rekreačního objektu|chat[ay]\b/i, 'dům', 'stavba'],
-  [/areál|výrobní|sklad|administrativ|provozní budov/i, 'areál', 'stavba'],
   [/stavebn(?:í|ího) pozem/i, 'stavební pozemek', 'pozemek'],
   [/lesní pozem/i, 'lesní pozemek', 'pozemek'],
   [/orná půda|orné půdy/i, 'orná půda', 'pozemek'],
@@ -108,6 +159,12 @@ export const DRUHY_PODLE_NAZVU = [
   [/pozem/i, 'pozemek', 'pozemek'],
 ];
 
+/** Je to vůbec nemovitost? Auta a pohledávky na web nepatří. */
+export function jeNemovitost(nazev) {
+  const s = String(nazev || '');
+  return !NENI_NEMOVITOST.some((re) => re.test(s));
+}
+
 /**
  * Co je ta nabídka podle názvu: { druh, kategorie } nebo null.
  * Nic neuhodne — když název nic z toho neobsahuje, vrátí null
@@ -115,6 +172,7 @@ export const DRUHY_PODLE_NAZVU = [
  */
 export function kategorieZNazvu(nazev) {
   const s = String(nazev || '');
+  if (!jeNemovitost(s)) return { druh: 'není nemovitost', kategorie: 'jiné' };
   for (const [re, druh, kategorie] of DRUHY_PODLE_NAZVU) {
     if (re.test(s)) return { druh, kategorie };
   }

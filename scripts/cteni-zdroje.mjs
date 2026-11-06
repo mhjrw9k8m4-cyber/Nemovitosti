@@ -32,7 +32,7 @@
 
 /** „1 250 000 Kč", „1.250.000,-", „1 250 000" → 1250000. Vrací null,
  *  když to na cenu nevypadá (nesmyslně malé číslo je horší než nic). */
-import { PREDPISY } from './predpisy-zdroju.mjs';
+import { PREDPISY, POPISKY_VYMERY, POPISKY_PLOCHY_STAVBY, POPISKY_VYMERY_OBECNE, kategorieZNazvu } from './predpisy-zdroju.mjs';
 
 /**
  * Předpis pro tu adresu, nebo null. Host se bere z adresy a „www."
@@ -348,11 +348,30 @@ export function zZaznamu(html, zaklad, predpis) {
     const mc = predpis.cena && predpis.cena.exec(zaznam);
     const cena = mc ? cenaZTextu(mc[1] + ' Kč') : null;
 
+    /* VÝMĚRA PODLE TOHO, CO TO JE (§453). U pozemku se bere výměra
+       pozemku, u stavby plocha stavby. Ostrý pokus ukázal, proč:
+       „Prodej bytové jednotky (domu), podlahová plocha 129 m2,
+       pozemek 67 m2" dávalo „byt · 67 m²“ — a to je nepravda, 67 m²
+       je ten pozemek pod ním.
+       Výměra pozemku se u stavby čte taky, jen se vede zvlášť: u domu
+       se zahradou je to užitečný údaj, není to ale velikost domu.
+       Když se u stavby plocha nenajde, zůstane `vymera` prázdná. To
+       je správná odpověď — radši mezera než cizí číslo. */
+    const co = kategorieZNazvu(nazev);
+    const vymeraPozemku = vymeraSPopiskem(nazev, POPISKY_VYMERY);
+    const plochaStavby = vymeraSPopiskem(nazev, POPISKY_PLOCHY_STAVBY, true)
+      || vymeraSPopiskem(nazev, POPISKY_VYMERY_OBECNE, true);
+    const jeStavba = co && co.kategorie === 'stavba';
+
     ven.push({
       nazev,
       cislo,
       cena,
-      vymera: vymeraSPopiskem(nazev),
+      druh: co ? co.druh : null,
+      kategorie: co ? co.kategorie : null,
+      vymera: jeStavba ? plochaStavby : vymeraPozemku,
+      vymeraPozemku: vymeraPozemku || null,
+      plochaStavby: plochaStavby || null,
       odkaz: cislo && podleCisla.get(cislo) ? podleCisla.get(cislo) : null,
       typ: predpis.typ || null,
       odkud: 'záznamy',
@@ -374,7 +393,7 @@ export function zZaznamu(html, zaklad, predpis) {
  * (14 znaků), takže 40 dává rezervu a zároveň nedosáhne na číslo
  * dalšího údaje za čárkou.
  */
-export function vymeraSPopiskem(text, popisky) {
+export function vymeraSPopiskem(text, popisky, jenSPopiskem) {
   const s = String(text || '');
   const sezn = popisky && popisky.length ? popisky : POPISKY_VYMERY_ZALOHA;
   for (const p of sezn) {
@@ -383,7 +402,10 @@ export function vymeraSPopiskem(text, popisky) {
     const v = vymeraZTextu(s.slice(i + p.length, i + p.length + 40));
     if (v) return v;
   }
-  return vymeraZTextu(s);
+  /* JEN S POPISKEM: u stavby se na „první číslo s m²" ustoupit NESMÍ.
+     Tím číslem bývá totiž výměra pozemku, a právě ta se tu vydávala
+     za velikost bytu (§453). Prázdno je tu lepší odpověď. */
+  return jenSPopiskem ? null : vymeraZTextu(s);
 }
 
 /* Záloha pro volání bez seznamu. Drží se stejného pořadí jako
