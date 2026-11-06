@@ -39,19 +39,77 @@ import { fileURLToPath } from 'node:url';
 import { fetchSLimitem } from './fetch-s-limitem.mjs';
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/* Tabulky, které SMÍ číst kdokoli bez přihlášení. Seznam je krátký
-   schválně: cokoli dalšího je nález, ne nastavení. `listings` jsou
-   zveřejněné inzeráty — ty má web ukazovat i nepřihlášenému, to je
-   jejich smysl. Všechno ostatní jsou buď cizí data (zprávy, poznámky,
-   hlídání, platby), nebo provozní záznamy, které veřejnosti nepatří. */
-export const VEREJNE_TABULKY = ['listings'];
+/* Tabulky, které SMÍ číst kdokoli bez přihlášení — tedy žádná.
+   Veřejná data chodí přes funkce (`public_listings()`), které vybírají
+   sloupce jmenovitě. Tabulka celá je vždycky nález.
+
+   STÁLY TU `listings`, a s nimi odůvodnění, že zveřejněné inzeráty má
+   web ukazovat i nepřihlášenému. To platí o DATECH, ne o tabulce:
+   `select=*` vydával i sloupec `token`, na kterém stál starý model
+   vlastnictví, a `delete_listing(uuid,uuid)` s tím tokenem smazala
+   komukoli inzerát. Celý ten model je pryč (supabase/listings-token-pryc.sql)
+   a veřejné čtení tabulky s ním — proto je seznam prázdný.
+   Prázdný seznam je zároveň to, co drží pravidlo „tabulka nikdy, jen
+   funkce": kdyby se veřejné čtení vrátilo, ohlásí to kontrola níž. */
+export const VEREJNE_TABULKY = [];
+
+/* CO SQL ZALOŽÍ A UŽ NEZAHODÍ.
+   Pouhý seznam „create function" nestačí: balík funkce taky RUŠÍ.
+   Většinou je hned nato zakládá znovu v jiné podobě (create_listing
+   má sedm verzí, viz hlavička 00-vse.sql), ale od listings-token-pryc.sql
+   se jedna ruší NATRVALO — my_listing(uuid,uuid) byl starý tokenový
+   model a náhradu nemá. Kontrola, která čte jen „create", by takovou
+   funkci hlásila jako „v databázi chybí" a měla by to tak navždy:
+   nález, který nejde opravit, protože v databázi chybět MÁ.
+
+   Čte se to tedy v pořadí, v jakém se SQL pouští, a podle PODPISU
+   (jména i typů parametrů): delete_listing existuje ve dvou podobách —
+   starou (uuid,uuid) tenhle balík ruší, novou (uuid) pod účtem zakládá,
+   takže to jméno v databázi zůstává a čeká se na něj. */
+function typyParametru(seznam) {
+  const kusy = [];
+  let hloubka = 0, ted = '', vApostrofu = false;
+  for (const z of String(seznam)) {
+    if (vApostrofu) { ted += z; if (z === "'") vApostrofu = false; continue; }
+    if (z === "'") { vApostrofu = true; ted += z; continue; }
+    if (z === '(' || z === '[') hloubka++;
+    if (z === ')' || z === ']') hloubka--;
+    if (z === ',' && hloubka === 0) { kusy.push(ted); ted = ''; continue; }
+    ted += z;
+  }
+  if (ted.trim()) kusy.push(ted);
+  return kusy.map((k) => {
+    /* „p_lat double precision default null" → „double precision“.
+       U drop/grant/revoke stojí jen typ, žádné jméno — pozná se tak,
+       že by po odstranění prvního slova nic nezbylo. */
+    let t = k.replace(/\s+default\s[\s\S]*$/i, '').trim().replace(/\s+/g, ' ');
+    const slova = t.split(' ');
+    const bezJmena = slova.slice(1).join(' ');
+    if (slova.length > 1 && !/^(precision|varying)$/i.test(slova[1])) t = bezJmena;
+    return t.toLowerCase();
+  }).join(',');
+}
+
+/** Jména funkcí, která po doběhnutí celého SQL v databázi zůstanou. */
+export function funkceKtereZbydou(sql) {
+  const podpisy = new Map();   // jméno → Set podpisů
+  const udalosti = [...String(sql).matchAll(
+    /^(create (?:or replace )?function|drop function if exists) ([a-z_][a-z0-9_]*)\s*\(([^)]*(?:\([^)]*\)[^)]*)*)\)/gmi)];
+  for (const u of udalosti) {
+    const jmeno = u[2].toLowerCase();
+    const podpis = typyParametru(u[3]);
+    if (!podpisy.has(jmeno)) podpisy.set(jmeno, new Set());
+    if (/^create/i.test(u[1])) podpisy.get(jmeno).add(podpis);
+    else podpisy.get(jmeno).delete(podpis);
+  }
+  return [...podpisy.entries()].filter(([, s]) => s.size).map(([j]) => j);
+}
 
 /** Vytáhne z SQL, co MÁ v databázi být. Jeden zdroj pravdy je ten SQL. */
 export function ocekavaneZeSQL(sql) {
   const tabulky = [...sql.matchAll(/^create table if not exists ([a-z_][a-z0-9_]*)/gmi)]
     .map((m) => m[1].toLowerCase());
-  const funkce = [...sql.matchAll(/^create (?:or replace )?function ([a-z_][a-z0-9_]*)\s*\(/gmi)]
-    .map((m) => m[1].toLowerCase());
+  const funkce = funkceKtereZbydou(sql);
   /* Funkce, u kterých SQL výslovně bere právo veřejnosti. Právě ty
      nesmí být vidět na klíči nepřihlášeného — a kdyby se na některou
      zapomnělo, tahle kontrola to má říct. */
@@ -146,12 +204,15 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
      a pak se k datům nedostane ani web — nebo kořenový výpis jen
      nové klíče „sb_publishable_…" nepouští. To jsou dvě úplně různě
      vážné věci a hádat se mezi nimi nemá.
-     Rozhodne dotaz na skutečná data: zveřejněné inzeráty má přečíst
-     každý, to je jejich smysl. Když projdou, klíč platí. */
-  const zkouska = await g(url, '/rest/v1/listings?select=*&limit=1', anonKlic);
+     Rozhodne dotaz na tabulku `listings`: ROZLIŠUJE SE STAV, NE OBSAH.
+     Neplatný klíč dostane 401; platný klíč dostane 200 — a prázdné
+     pole, protože veřejné čtení té tabulky už neexistuje (viz
+     VEREJNE_TABULKY výš). O platnosti klíče to vypovídá stejně dobře
+     a o datech netvrdí nic: ta se ověřují níž, přes funkce. */
+  const zkouska = await g(url, '/rest/v1/listings?select=id&limit=1', anonKlic);
   const klicPlati = zkouska.stav === 200;
   if (!klicPlati) {
-    chyba('veřejný klíč nefunguje', `dotaz na zveřejněné inzeráty vrátil HTTP ${zkouska.stav}`,
+    chyba('veřejný klíč nefunguje', `dotaz na tabulku inzerátů vrátil HTTP ${zkouska.stav}`,
       'Tenhle klíč má v js/config.js i prohlížeč — web se takhle k datům nedostane vůbec.'
       + ' Supabase → Project Settings → API, zkopírovat platný publishable key.');
   }
@@ -205,10 +266,17 @@ export async function zkontroluj({ url, anonKlic, serviceKlic, sql, token = null
       · funkce, u kterých se o oprávnění nikdo nestaral (proacl je
         prázdné, tedy výchozí PUBLIC) — varování. Naměřeno: takových
         je 26 z 36 a ani jedna z nich díra není, protože si tělo hlídá
-        auth.uid() samo (jediná výjimka, my_listing, chce k tomu tajný
-        token v parametru a je pro anon povolená schválně). Dělat
-        z toho chybu by znamenalo hlásit 26 planých poplachů a nikdo
-        by tuhle kontrolu po třetím běhu nečetl. */
+        auth.uid() samo. Dělat z toho chybu by znamenalo hlásit 26
+        planých poplachů a nikdo by tuhle kontrolu po třetím běhu
+        nečetl.
+
+        JEDNA VÝJIMKA TU STÁLA A BYLA TO PRÁVĚ TA DÍRA. Psalo se tu,
+        že `my_listing` je pro anon povolená schválně, protože „chce
+        k tomu tajný token v parametru". Token tajný nebyl: ležel ve
+        veřejném výpisu tabulky `listings` (select=*), takže se dal
+        přečíst týmž klíčem a použít v `delete_listing(uuid,uuid)`.
+        Komentář tedy díru viděl a odůvodnil ji. Obě funkce jsou pryč
+        (supabase/listings-token-pryc.sql), výjimka tu žádná není. */
   const opr = await g(url, '/rest/v1/rpc/kontrola_opravneni', serviceKlic);
   if (opr.stav === 200 && Array.isArray(opr.json)) {
     const VSEM = ['PUBLIC', 'anon', 'authenticated'];

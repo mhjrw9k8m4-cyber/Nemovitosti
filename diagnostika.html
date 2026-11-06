@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-RQzZe9+GN90uT1jiIHSUaD6i29vBDuvnzxEAAgGe5CA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-e5aoBaFYUE7OA2HAgLvUzzndcvVSvZ8UVwp+OBQEruQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
   <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
@@ -218,7 +218,14 @@
     // klíči běžně nepouští a vrací 401 i u naprosto platného klíče. Stránka
     // pak hlásila „Klíč databáze neplatí“ a hned o řádek níž „Čtení inzerátů
     // funguje, HTTP 200“. Dvě protichůdná tvrzení; to druhé bylo pravdivé.
-    dotaz('/rest/v1/listings?select=id,status&limit=1', {}).then(function (r) {
+    //
+    // ROZLIŠUJE SE STAV, NE OBSAH. Nepřihlášený už tabulku `listings`
+    // nečte (supabase/listings-token-pryc.sql: `select=*` na ni vydával
+    // i sloupec `token`, kterým se dal cizí inzerát smazat). Platný klíč
+    // tedy dostane 200 a PRÁZDNÉ pole, neplatný 401. O počtu inzerátů se
+    // tady nic netvrdí — ten se čte o blok níž funkcí public_listings,
+    // kterou na to web používá taky.
+    dotaz('/rest/v1/listings?select=id&limit=1', {}).then(function (r) {
       if (r.stav === 0) {
         radek(box, 'bad', 'Databáze neodpovídá', 'Spojení se nepovedlo navázat: <code>' + zkratka(r.telo, 90) + '</code>. Projekt může být uspaný (Supabase free plán uspí projekt po delší nečinnosti) nebo neexistuje.');
       } else if (r.stav === 401 || r.stav === 403) {
@@ -226,18 +233,25 @@
       } else if (r.stav === 404) {
         radek(box, 'bad', 'Tabulka inzerátů chybí', 'HTTP 404 — v Supabase chybí tabulka <code>listings</code>. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor; zakládá celou databázi a jde pustit i opakovaně.');
       } else if (r.stav === 200) {
-        var pocet = null;
-        try { pocet = JSON.parse(r.telo || '[]').length; } catch (e) {}
-        radek(box, 'ok', 'Databáze odpovídá a klíč platí', 'Čtení inzerátů prošlo (HTTP 200).');
-        radek(box, pocet === 0 ? 'run' : 'ok', pocet === 0 ? 'Zatím tu není žádný inzerát' : 'Inzeráty se čtou',
-          pocet === 0 ? 'Není to chyba — jen zatím nikdo žádný pozemek nepřidal.' : 'Vrátilo <code>' + zkratka(r.telo, 60) + '</code>');
+        radek(box, 'ok', 'Databáze odpovídá a klíč platí', 'Dotaz na tabulku inzerátů prošel (HTTP 200).');
       } else {
-        radek(box, 'bad', 'Čtení inzerátů selhalo', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>');
+        radek(box, 'bad', 'Dotaz na tabulku inzerátů selhal', 'HTTP ' + r.stav + ' — <code>' + zkratka(r.telo, 110) + '</code>');
       }
 
       return dotaz('/rest/v1/rpc/public_listings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     }).then(function (r) {
-      if (r.stav === 200) radek(box, 'ok', 'Funkce pro veřejné inzeráty běží', 'Vrátila <code>' + zkratka(r.telo, 60) + '</code>');
+      if (r.stav === 200) {
+        var pocet = null;
+        try { pocet = JSON.parse(r.telo || '[]').length; } catch (e) {}
+        radek(box, 'ok', 'Funkce pro veřejné inzeráty běží', 'Vrátila <code>' + zkratka(r.telo, 60) + '</code>');
+        // TEĎ TEPRVE SE DÁ ŘÍCT, JESTLI TU INZERÁTY JSOU. Tahle funkce je
+        // ta jediná cesta, kterou se veřejnost k inzerátům dostane; dřív
+        // se počítalo z přímého výpisu tabulky, a ten dnes vrací prázdno
+        // vždycky — stránka by tvrdila „zatím tu není žádný inzerát“ i nad
+        // databází plnou inzerátů.
+        radek(box, pocet === 0 ? 'run' : 'ok', pocet === 0 ? 'Zatím tu není žádný inzerát' : 'Inzeráty se čtou',
+          pocet === 0 ? 'Není to chyba — jen zatím nikdo žádný pozemek nepřidal.' : 'Funkce vrátila ' + pocet + '.');
+      }
       else if (r.stav === 404) radek(box, 'bad', 'Funkce public_listings chybí', 'HTTP 404 — v databázi chybí funkce <code>public_listings</code>, takže se na mapě neukážou inzeráty od lidí. Spusťte <code>supabase/00-vse.sql</code> v Supabase → SQL Editor.');
       else radek(box, 'warn', 'Funkce public_listings hlásí ' + r.stav, '<code>' + zkratka(r.telo, 110) + '</code>');
 

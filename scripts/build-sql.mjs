@@ -35,6 +35,11 @@ const PORADI = [
   ['watch-alerts.sql', 'hlídání lokality (double opt-in) + tabulka alert_seen'],
   ['listings-autopublish.sql', 'automatické zveřejnění inzerátu + token na úpravy'],
   ['listings-auth.sql', 'inzeráty pod účtem (user_id), my_listings, public_listings'],
+  // Hned za listings-auth.sql: ruší to, co listings-auth.sql nahradil —
+  // tokenový model vlastnictví inzerátu. Musí být AŽ ZA ním (bere
+  // my_listing a delete_listing o dvou parametrech) a za schema.sql
+  // (ruší jeho pravidlo na veřejné čtení celé tabulky listings).
+  ['listings-token-pryc.sql', 'starý tokenový model inzerátů pryč — token šel přečíst veřejným klíčem'],
   ['listings-photos.sql', 'fotky u inzerátu'],
   ['listings-features.sql', 'vybavení pozemku a přístup'],
   ['listings-moderation.sql', 'přísnější moderace obsahu'],

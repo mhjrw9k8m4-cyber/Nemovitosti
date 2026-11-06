@@ -62,9 +62,13 @@ pravda('a mezi zakázanými je prehled_navstevnosti (díra, kvůli které to vzn
 pravda('a kontrola oprávnění sama sebe nepouští ke slovu nikomu',
   ma.zavrene.indexOf('kontrola_opravneni') >= 0,
   'vypisuje, jak je databáze zabezpečená — to je návod, kudy do ní');
-pravda('veřejně čitelné jsou jen zveřejněné inzeráty',
-  VEREJNE_TABULKY.length === 1 && VEREJNE_TABULKY[0] === 'listings',
-  VEREJNE_TABULKY.join(', '));
+/* ŽÁDNÁ TABULKA SE NEČTE VEŘEJNĚ. Stály tu `listings` s tím, že
+   zveřejněné inzeráty má vidět každý — jenže `select=*` na tu tabulku
+   vydával i sloupec `token`, kterým se dal cizí inzerát smazat
+   (supabase/listings-token-pryc.sql). Veřejná data chodí přes funkce,
+   které vybírají sloupce jmenovitě. */
+pravda('veřejně čitelná není ŽÁDNÁ tabulka — data jen přes funkce',
+  VEREJNE_TABULKY.length === 0, VEREJNE_TABULKY.join(', '));
 
 /* ---- 2) předstíraná databáze ----------------------------------- */
 const SQL_ZK = `
@@ -111,7 +115,11 @@ function falesna(jak = {}) {
     const tab = (/^\/rest\/v1\/([a-z_]+)\?/.exec(cesta) || [])[1];
     if (role === 'sluzba') return { stav: 200, json: [{ id: 1 }] };
     if (jak.klicNeplati) return { stav: 401, json: null, telo: '' };
-    if (tab === 'listings') return { stav: 200, json: [{ id: 1 }] };
+    /* `listings` tu dřív nepřihlášenému VŽDYCKY vracely řádek — tím se
+       poznávalo, že veřejný klíč platí. Dnes tu tabulku nepřihlášený
+       nečte, takže ji smí vrátit jen tehdy, když to zkouška výslovně
+       nastaví (`radkyAnonovi`): platnost klíče se pozná na stavu 200,
+       ne na obsahu. */
     const vidi = role === 'prihlaseny' ? (jak.radkyPrihlasenemu || [])
       : (jak.radkyAnonovi || []);
     return { stav: 200, json: vidi.indexOf(tab) >= 0 ? [{ id: 1 }] : [] };
@@ -156,8 +164,18 @@ const chybyZ = (v) => v.nalezy.filter((n) => n.vaha === 'chyba');
   const v = await spust({ radkyAnonovi: ['messages'] });
   pravda('tabulku s cizími zprávami otevřenou všem nahlásí',
     chybyZ(v).some((n) => /messages.*bez přihlášení/.test(n.co)), JSON.stringify(chybyZ(v)));
-  pravda('a zveřejněné inzeráty za nález nepovažuje',
+  pravda('a tabulku, kterou nepřihlášený nečte, za nález nepovažuje',
     !chybyZ(v).some((n) => /listings/.test(n.co)), JSON.stringify(chybyZ(v)));
+}
+{
+  /* A NOVÝ NÁLEZ: tabulka inzerátů otevřená všem. Dřív to byl
+     nastavený stav (VEREJNE_TABULKY ji vyjímaly), od zrušení
+     tokenového modelu je to chyba jako u každé jiné tabulky. */
+  const v = await spust({ radkyAnonovi: ['listings'] });
+  pravda('veřejné čtení tabulky inzerátů je dnes nález',
+    chybyZ(v).some((n) => /listings.*bez přihlášení/.test(n.co)), JSON.stringify(chybyZ(v)));
+  pravda('a neplatný klíč se z toho nevyrábí (stav byl 200)',
+    !chybyZ(v).some((n) => /klíč nefunguje/.test(n.co)), JSON.stringify(chybyZ(v)));
 }
 {
   const v = await spust({ proPrihlaseneho: { tabulky: ['listings'],

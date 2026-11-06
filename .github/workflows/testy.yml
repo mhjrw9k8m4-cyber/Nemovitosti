@@ -743,6 +743,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sql-prava.mjs
 
+      - name: Cizí inzerát nejde smazat veřejným klíčem
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-inzerat-token.mjs
+
       - name: Práva úloh v CI a odkud se berou balíčky
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-ci-prava.mjs

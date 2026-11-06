@@ -28143,3 +28143,94 @@ výjimku, nevypsala ani jednu ✕ a vypadalo to, že hlídač nic nechytil.
 **Sabotáž, která kód ROZBIJE, nic nedokazuje; musí pravidlo
 OSLABIT a nechat program běžet.** Druhý pokus (vrátit kandidáta bez
 ověření) už hlídače prověřil pořádně.
+
+## §466
+
+**Dva modely vlastnictví vedle sebe. Ten starší ze toho novějšího
+udělal díru — a jeden komentář ji legalizoval.**
+
+Inzeráty od lidí měly v databázi dva nezávislé modely, kdo je smí
+smazat:
+
+* **starší** (`supabase/listings-autopublish.sql`): inzerát patří tomu,
+  kdo zná tajný `listings.token`. Na ten token visely `my_listing(uuid,uuid)`
+  a `delete_listing(uuid,uuid)` a **obě byly povolené roli `anon`**,
+  tedy klíči, který má v prohlížeči kdokoli (`js/config.js`);
+* **novější** (`supabase/listings-auth.sql`, ten platný): inzerát patří
+  účtu (`user_id = auth.uid()`), maže `delete_listing(uuid)` a chce
+  přihlášení.
+
+Starší model stál celý na tom, že token je tajný. Nebyl. Pravidlo
+`"verejne cteni schvalenych"` ze `supabase/schema.sql` pouštělo komukoli
+`select` na celou tabulku `listings` — a „celou" znamená i sloupec
+`token`:
+
+```
+GET  /rest/v1/listings?select=id,token          → id i token každé nabídky
+POST /rest/v1/rpc/delete_listing {p_id,p_token} → nabídka je smazaná
+```
+
+**Dva dotazy veřejným klíčem a kdokoli smaže kterýkoli zveřejněný
+inzerát.** Nic z toho nebyl kompromis ani zkratka: web ani jednu z těch
+dvou funkcí nevolá (prohlížeč čte `public_listings()` a maže
+`delete_listing(p_id)`), takže to byl čistý přebytek po modelu, který už
+rok nikdo nepoužívá.
+
+**A teď to podstatné.** Hlídač databáze tu díru viděl a napsal k ní
+zdůvodnění. V `scripts/kontrola-databaze.mjs` stálo, že `my_listing` je
+„pro anon povolená schválně, chce k tomu tajný token v parametru".
+To by platilo, kdyby token tajný byl. Jenže tenhle repozitář zároveň
+VYJÍMAL tabulku `listings` z kontroly veřejného čtení — `VEREJNE_TABULKY
+= ['listings']`, s odůvodněním, že zveřejněné inzeráty má vidět každý.
+Obě poznámky byly samy o sobě rozumné a každá platila o něčem jiném:
+jedna o datech, druhá o tajnosti. **Teprve dohromady tvořily díru, a
+právě proto ji ani jedna z nich nehlásila.**
+
+Z toho dvě pravidla:
+
+1. **Náhrada modelu není hotová, dokud ten starý nejde pryč.** Když
+   `listings-auth.sql` nahradil tokenový model účtem, starý zůstal
+   ležet — funkce, grant pro `anon` i sloupec. „Nahrazuje předchozí
+   token model" stálo v hlavičce souboru; v databázi se nenahradilo nic,
+   jen přidalo.
+2. **Veřejná data se vydávají funkcí, ne tabulkou.** `public_listings()`
+   vybírá sloupce jmenovitě, takže nový sloupec se do ní nepřidá sám.
+   `select=*` na tabulku vydá každý sloupec, který kdy někdo přidal —
+   včetně toho, o kterém zapomněl, že je tajný. `VEREJNE_TABULKY` je
+   proto dnes **prázdný seznam** a veřejné čtení jakékoli tabulky je
+   nález.
+
+**Oprava** je `supabase/listings-token-pryc.sql`: obě tokenové funkce
+pryč, pravidlo na veřejné čtení `listings` pryč, sloupec `token` pryč.
+Pořadí v balíku je část opravy — soubor musí běžet za `schema.sql`
+(které pravidlo zakládá) i za `listings-autopublish.sql` (které ty
+funkce zakládá).
+
+**Hlídač** `scripts/test-inzerat-token.mjs` proto neměří přítomnost
+řádků v SQL, ale **konečný stav balíku**: co v databázi zůstane, až
+`00-vse.sql` doběhne celý. Čte příkazy v pořadí a u funkcí podle
+podpisu, protože `delete_listing` existuje ve dvou podobách a přežít
+smí právě ta jednoparametrová.
+
+Sabotáž to prokázala dvakrát:
+
+* smazat `drop function if exists delete_listing(uuid,uuid);` → **1
+  chyba** („mazání cizím tokenem nezůstane");
+* **nechat všechny řádky na místě** a jen přesunout soubor v `PORADI`
+  před `schema.sql` → **6 chyb**. To je ta sabotáž, na kterou by hlídač
+  postavený na hledání řetězců nestačil: všechny potřebné příkazy v SQL
+  jsou, jen běží dřív, než vznikne to, co mají zrušit.
+
+**A ještě jedna vada, kterou si ta oprava vynutila.** Kontrola databáze
+sestavovala seznam „co v databázi má být" z každého `create function`.
+To fungovalo, dokud se každá rušená funkce zakládala vzápětí znovu.
+`my_listing` je první, která se ruší **natrvalo** — a kontrola by ji
+hlásila jako „v databázi chybí", a to navždy, protože v databázi chybět
+MÁ. Nález, který nejde opravit, je nález, který se naučí přehlížet.
+`funkceKtereZbydou()` to proto čte v pořadí a po podpisech, stejně jako
+hlídač.
+
+**Co se nasazením nemění:** v databázi je dnes nula inzerátů od lidí
+(`data/user-listings.json` je `[]`), takže ta díra zatím nikomu nic
+nesmazala. Nasazení SQL je ale zásah do živé databáze majitele, a ten
+se bez jeho slova nedělá.
