@@ -27709,3 +27709,9 @@ U `test-verdikt.mjs` je ta kontrola **negativní** („pořadí mezi
 nabídkami si NEVYMYSLÍ"), takže s mrtvým vzorem byla vždycky zelená
 bez ohledu na obsah. Tu prokáže až CI, kde prohlížeč je; v sandboxu
 se nespustí.
+
+Devátý pokus po téhle opravě: **nezařazeno zůstalo nic.** Ze 143
+záznamů je 66 movitý majetek a 77 nemovitost, a čtení toho výpisu
+je tím uzavřené. Co zbývá, není technika: z 18 aktivních dražeb je
+14 celých nemovitostí, a jestli se zdroj zapojí, je majitelovo
+rozhodnutí.

@@ -277,8 +277,19 @@ export const KANDIDATI = [
       + ' „8 až 9 nabídek“ i to nesmyslné párování. Předpis je'
       + ' v scripts/predpisy-zdroju.mjs, čte ho zZaznamu() a hlídá'
       + ' scripts/test-predpis-zdroje.mjs na doslovném přepisu měření.'
-      + ' ZBÝVÁ: zkusit předpis naostro na všech 8 stránkách a teprve'
-      + ' podle výsledku zdroj zapojit do nočního robota.' },
+      + ' PŘEDPIS NAOSTRO: devět pokusů 6. 11. na všech 8 stránkách'
+      + ' výpisu (poslední běh 42224900459). ZE 143 ZÁZNAMŮ je 123'
+      + ' Prodáno, 18 Aktivní, 1 Ukončeno a 1 Neprodáno — skončená'
+      + ' dražba není nabídka (§455), takže na web patří jen aktivní.'
+      + ' Z nich je 14 CELÝCH A ŽIVÝCH nemovitostí: tolik by web dostal.'
+      + ' Nezařazeno zůstalo NIC: 66 záznamů je movitý majetek (vozíky,'
+      + ' fotovoltaické panely, traktory, auta, nábytek), 77 nemovitost.'
+      + ' Cestou k tomu se opravilo pět vad čtení — stav aukce v názvu'
+      + ' a filtrační panel místo jména (§455), konec názvu kotvený na'
+      + ' výčet typů řízení místo na „Čas do konce:“ (§457), a dvakrát'
+      + ' past `\\b`/`\\w` nad českým textem (§454, §458).'
+      + ' ZBÝVÁ: majitelovo slovo. Zapojení do nočního robota je krok'
+      + ' navíc a dělá se zvlášť; měření nic nezapojuje.' },
   { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.elektronickedrazby.cz/',
     proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'
