@@ -27263,3 +27263,91 @@ Jediná věc: přehodit v Supabase *Confirm email*. Na telefonu se ten
 přepínač nevykreslí, na počítači ano. Dokud se nepřehodí, obě tyhle
 podmínky jsou napsané, ale spící — a kontrola nasazení to právem
 hlásí jako vadu, která blokuje spuštění.
+
+## §452 — Nejdřív rozkrojit, potom číst (a četla se špatná stránka)
+
+Dva dražebníci čekali na zapojení od 5. 11. s poznámkou „zbývá předpis
+pro čtení". Obecná čtečka u nich jela nejslabší cestou („signál"), která
+prochází **celou stránku najednou** a páruje čísla podle blízkosti —
+týž areál měl jednou výměru 3 013 m² a jednou 2 666.
+
+### První nález nebyl v kódu
+
+Nechal jsem si ohledat `verejnedrazby.cz` a hned na začátku vypadlo
+tohle: **sonda i bot četli domovskou stránku, a ta je jen vývěska.**
+Výpis visí na `/vypis-aukci`, v menu se jmenuje „aukce-dražby" a má
+**8 stránek** (`?&pos=20` … `pos=140`, kolem 160 nabídek).
+
+Odtud ty „8 až 9 nabídek" z dřívějšího měření i to nesmyslné párování.
+Nečetl se výpis. To je lekce sama o sobě: než se opravuje čtení,
+ověř, že se čte **to, co se má číst**.
+
+### Tvar záznamu (doslovný přepis měření, 6. 11.)
+
+```
+Aktivní Prodej souboru 3 pozemků-lesní pozemek, stráň, jiná plochá,
+celková výměra 5.221 m2, Bojanov u Dolní Libochové, Žďár nad Sázavou
+( Výběrové řízení - 3 kola) Čas do konce: 8 hodin 42 minut
+(06.11.2026 12:00:00) Min. cena: 167 000 Kč Evid. číslo: A8070
+```
+
+Tři vlastnosti, které z toho dělají spolehlivý předpis:
+
+1. **Číslo záznamu páruje s odkazem** — `A8070` ↔ `/aukce/…-8070/`.
+   Nabídka se ke své adrese přiřadí jistotou, ne pořadím. Kdyby se
+   braly odkazy popořadě, stačila by jedna reklama mezi nabídkami
+   a celý výpis by se posunul o jedna.
+2. **Výměra má popisek.** „užitná plocha 371 m2, pozemky celkem
+   11.770 m2" — první číslo je podlahová plocha BUDOVY. Kdo vezme je,
+   pošle na web usedlost o 371 m² jako pozemek.
+3. **Místo stojí na konci názvu** před závorkou s typem řízení.
+
+### Co se udělalo
+
+Čtvrtá cesta ve čtečce, `zZaznamu()`: **nejdřív rozkrojit, potom
+číst.** Předpis řekne, čím záznam končí, a cena i výměra se hledají
+jen uvnitř něj. Číslo z osmé nabídky se k první nemá jak dostat.
+
+Zůstává to řádkem v registru, ne novým stahovačem (§225):
+`scripts/predpisy-zdroju.mjs` nese jen data — vzory a popisky — a čte
+je jedna funkce, stejná pro všechny zdroje.
+
+**Čtvrtá cesta se hlásí jen tam, kde předpis je.** Nestojí totiž na
+ničem, co by web o sobě říkal, ale na tvaru, který jsme u něj naměřili.
+Kdyby se hlásila všude, byl by v každém zápisu řádek „záznamy: 0",
+který nic neznamená.
+
+### Dvě věci, které jsem při tom udělal špatně
+
+**Chtěl jsem opravovat, co rozbité není.** Myslel jsem, že „11.770 m2"
+se přečte jako 11,77 — česká tisícová tečka proti desetinné čárce.
+Změřeno: `vymeraZTextu` to umí správně (11.770 → 11 770, 63,77 → 64).
+Past tam nebyla a oprava by jen přidala kód.
+
+**A jedna past sklapla.** Skript, kterým jsem přidával import, se ptal,
+jestli v souboru už jméno `predpisy-zdroju.mjs` je — a ono tam bylo,
+v komentáři. Import se nepřidal a čtečka spadla na „predpisProAdresu
+is not defined". Hledat kód dotazem na text je přesně ta třída chyb,
+kterou §438 hlídá u zkoušek; tady jsem ji spáchal v nástroji.
+
+### Hlídače
+
+Vzorek ve zkoušce **není vymyšlený** — je to doslovný přepis pěti
+záznamů z živého výpisu včetně zkomolenin („jiná plochá"), a schválně
+jsou mezi nimi dvě nabídky, které nejsou pozemek (usedlost, garáž),
+jeden spoluvlastnický podíl a jeden název se dvěma výměrami. Po §449
+už vím, že fixtura souhlasící s domněnkou kódu neprověří nic.
+
+**Sabotáž:** přepsání jediného slova tak, aby se cena hledala napříč
+stránkou místo v záznamu, shodí kontrolu „cena i výměra zůstaly u SVÉ
+nabídky". Přesně ta vada, kvůli které se zdroje nezapojily.
+
+`test-predpis-zdroje` nový, **12 kontrol**; `test-cteni-zdroje`
+77 → **79** (čtvrtá cesta se hlásí jen s předpisem).
+
+### Co zbývá
+
+Předpis je napsaný a prokázaný na naměřeném vzorku, **ale ještě neběžel
+naostro na všech osmi stránkách.** Teprve podle toho se zdroj zapojí do
+nočního robota — ne dřív. A na `drazby.policenm.cz` předpis zatím není;
+ten web se musí ohledat stejně.

@@ -268,8 +268,17 @@ export const KANDIDATI = [
       + ' víceúčelový areál 8 703 i 52 235. Místo, okres, druh ani kategorie'
       + ' nevyjdou vůbec, takže nabídka by se nedostala na mapu ani do okresu,'
       + ' a navíc to nejsou pozemky, ale areály, budovy, hotel a rodinný dům.'
-      + ' Dát to na web znamená napsat tam nepravdu, ne mezeru. Co zbývá: PŘEDPIS'
-      + ' PRO ČTENÍ tohohle webu (§447), ne řádek do registru.' },
+      + ' Dát to na web znamená napsat tam nepravdu, ne mezeru.'
+      + ' PŘEDPIS PRO ČTENÍ NAPSÁN 6. 11. (§452) a s ním vyšel najevo'
+      + ' prvotní omyl: četla se ŠPATNÁ STRÁNKA. Domovská stránka je jen'
+      + ' vývěska; výpis visí na /vypis-aukci (v menu „aukce-dražby“), má'
+      + ' 8 stránek po 20 nabídkách a každý záznam končí „Evid. číslo:'
+      + ' A8070“, což se páruje s odkazem /aukce/…-8070/. Odtud ty'
+      + ' „8 až 9 nabídek“ i to nesmyslné párování. Předpis je'
+      + ' v scripts/predpisy-zdroju.mjs, čte ho zZaznamu() a hlídá'
+      + ' scripts/test-predpis-zdroje.mjs na doslovném přepisu měření.'
+      + ' ZBÝVÁ: zkusit předpis naostro na všech 8 stránkách a teprve'
+      + ' podle výsledku zdroj zapojit do nočního robota.' },
   { jmeno: 'Elektronické dražby', host: 'elektronickedrazby.cz', typ: 'exekuce', adresaOverena: false,
     url: 'https://www.elektronickedrazby.cz/',
     proc: 'Dražebník z našich dat; robots dovoluje a HTTP 200 (60 190 bajtů, 43× výměra).'

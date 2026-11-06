@@ -32,6 +32,21 @@
 
 /** „1 250 000 Kč", „1.250.000,-", „1 250 000" → 1250000. Vrací null,
  *  když to na cenu nevypadá (nesmyslně malé číslo je horší než nic). */
+import { PREDPISY } from './predpisy-zdroju.mjs';
+
+/**
+ * Předpis pro tu adresu, nebo null. Host se bere z adresy a „www."
+ * se odřezává: naměřené adresy a klíče v registru se v tom rozcházejí
+ * (www.verejnedrazby.cz vs. verejnedrazby.cz) a kvůli třem písmenům
+ * by se předpis nenašel.
+ */
+export function predpisProAdresu(adresa) {
+  try {
+    const h = new URL(String(adresa || '')).hostname.replace(/^www\./i, '').toLowerCase();
+    return PREDPISY[h] || null;
+  } catch (e) { return null; }
+}
+
 export function cenaZTextu(t) {
   const s = String(t || '');
   /* Hledá se číslo u slova „Kč" nebo u „,-"; samotné číslo na stránce
@@ -271,8 +286,128 @@ export function absolutni(url, zaklad) {
  * zápis o všech — ten je důležitější než výsledek: podle něj se pozná,
  * KTERÁ cesta se zavřela, a ne jen „zdroj nic nevrací".
  */
+/* ČTENÍ PO ZÁZNAMECH — čtvrtá cesta (§452).
+ *
+ * Tři cesty výš čtou buď tvar, který web sám popisuje (JSON-LD,
+ * mikrodata), nebo celou stránku najednou („signál"). Ta třetí je
+ * poslední záchrana a na výpisu s dvaceti nabídkami vedle sebe páruje
+ * čísla ke špatným nabídkám — změřeno na verejnedrazby.cz, kde týž
+ * areál vyšel jednou 3 013 m² a jednou 2 666.
+ *
+ * Tahle cesta to řeší jedinou myšlenkou: NEJDŘÍV ROZKROJIT, POTOM
+ * ČÍST. Předpis (scripts/predpisy-zdroju.mjs) řekne, čím jeden záznam
+ * končí; mezi dvěma konci je právě jedna nabídka a cena ani výměra
+ * z ní nemají jak utéct k sousedovi.
+ *
+ * ODKAZ SE PÁRUJE ČÍSLEM, NE BLÍZKOSTÍ. Záznam nese „Evid. číslo:
+ * A8070" a odkaz /aukce/…-8070/; spojí se to tím číslem. Kdyby se
+ * braly odkazy po pořadí, stačila by jedna reklama mezi nabídkami
+ * a celý výpis by se posunul o jedna — a nikdo by si toho nevšiml.
+ */
+export function zZaznamu(html, zaklad, predpis) {
+  if (!predpis || !predpis.konecZaznamu) return [];
+  const text = bezZnacek(html);
+  const s = String(html || '');
+
+  /* Odkazy podle čísla. Bere se href, ne text: text odkazu bývá
+     zkrácený třemi tečkami, kdežto adresa je celá. */
+  const podleCisla = new Map();
+  for (const m of s.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
+    const c = predpis.odkazVzor && predpis.odkazVzor.exec(m[1]);
+    if (c && !podleCisla.has(c[1])) podleCisla.set(c[1], absolutni(m[1], zaklad));
+  }
+
+  const re = new RegExp(predpis.konecZaznamu.source, 'g');
+  const ven = [];
+  let od = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    const kus = text.slice(od, m.index);
+    od = m.index + m[0].length;
+    const cislo = m[1] || null;
+
+    /* Začátek záznamu je POSLEDNÍ výskyt značky v kusu: před ním může
+       zůstat ocásek hlavičky stránky nebo předchozí nabídky. */
+    let zac = 0;
+    if (predpis.zacatekZaznamu) {
+      const rz = new RegExp(predpis.zacatekZaznamu.source, 'g' + (predpis.zacatekZaznamu.flags || '').replace('g', ''));
+      let z;
+      while ((z = rz.exec(kus)) !== null) zac = z.index + z[0].length;
+    }
+    const zaznam = kus.slice(zac).trim();
+    if (!zaznam) continue;
+
+    /* Název končí u závorky s typem řízení; co je za ní, je čas
+       a cena, ne jméno nabídky. */
+    let nazev = zaznam;
+    if (predpis.nazevKonci) {
+      const k = predpis.nazevKonci.exec(zaznam);
+      if (k) nazev = zaznam.slice(0, k.index).trim();
+    }
+    if (!nazev) continue;
+
+    const mc = predpis.cena && predpis.cena.exec(zaznam);
+    const cena = mc ? cenaZTextu(mc[1] + ' Kč') : null;
+
+    ven.push({
+      nazev,
+      cislo,
+      cena,
+      vymera: vymeraSPopiskem(nazev),
+      odkaz: cislo && podleCisla.get(cislo) ? podleCisla.get(cislo) : null,
+      typ: predpis.typ || null,
+      odkud: 'záznamy',
+    });
+  }
+  return ven;
+}
+
+/* VÝMĚRA PODLE POPISKU, ne první číslo s „m²".
+ *
+ * Naměřený název: „Prodej bývalé zemědělské usedlosti, 3 stavby —
+ * užitná plocha 371 m2, pozemky celkem 11.770 m2". První číslo je
+ * podlahová plocha BUDOVY; kdo vezme je, pošle na web usedlost
+ * o 371 m² jako pozemek. Hledá se proto popisek a teprve za ním
+ * číslo, a popisky mají pořadí (viz POPISKY_VYMERY).
+ *
+ * Okno 40 znaků za popiskem je naměřené, ne zvolené: nejdelší
+ * naměřený odstup mezi popiskem a číslem je „pozemky celkem 11.770 m2"
+ * (14 znaků), takže 40 dává rezervu a zároveň nedosáhne na číslo
+ * dalšího údaje za čárkou.
+ */
+export function vymeraSPopiskem(text, popisky) {
+  const s = String(text || '');
+  const sezn = popisky && popisky.length ? popisky : POPISKY_VYMERY_ZALOHA;
+  for (const p of sezn) {
+    const i = s.toLowerCase().indexOf(p.toLowerCase());
+    if (i < 0) continue;
+    const v = vymeraZTextu(s.slice(i + p.length, i + p.length + 40));
+    if (v) return v;
+  }
+  return vymeraZTextu(s);
+}
+
+/* Záloha pro volání bez seznamu. Drží se stejného pořadí jako
+   POPISKY_VYMERY v predpisy-zdroju.mjs; kdyby se rozešly, hlídá to
+   scripts/test-predpis-zdroje.mjs. */
+const POPISKY_VYMERY_ZALOHA = [
+  'pozemky celkem', 'pozemek celkem', 'celková výměra', 'celkova vymera',
+  'pozemky', 'pozemek', 'výměra', 'vymera',
+];
+
 export function prectiJakkoli(html, zaklad) {
+  /* PŘEDPIS JDE PRVNÍ, KDYŽ PRO TEN WEB JE (§452). Čtení po záznamech
+     je ze čtyř cest nejpřesnější — rozkrojí stránku na nabídky dřív,
+     než začne číst čísla. Nestojí ale na ničem, co by web o sobě
+     říkal, nýbrž na tvaru, který jsme u něj NAMĚŘILI; proto se použije
+     jen tam, kde takové měření je, a nikde jinde.
+
+     A proto se taky do zápisu zapisuje JEN TEHDY. Kdyby se hlásila
+     i u webů bez předpisu, byl by v každém zápisu řádek „záznamy: 0",
+     který nic neznamená — a čtenář by hledal vadu tam, kde žádná
+     není. Že se tohle pravidlo dodržuje, měří test-cteni-zdroje. */
+  const predpis = predpisProAdresu(zaklad);
   const cesty = [
+    ...(predpis ? [['záznamy', () => zZaznamu(html, zaklad, predpis)]] : []),
     ['json-ld', () => zJsonLd(html, zaklad)],
     ['mikrodata', () => zMikrodat(html, zaklad)],
     ['signál', () => zSignalu(html, zaklad)],

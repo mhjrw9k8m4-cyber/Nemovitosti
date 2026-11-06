@@ -445,6 +445,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-cteni-zdroje.mjs
 
+      - name: Předpis pro čtení výpisu (§452)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-predpis-zdroje.mjs
+
       - name: Sonda podmínek čte jen to, co smí
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sonda-podminky.mjs

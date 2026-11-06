@@ -122,6 +122,20 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
   pravda('a je z něj vidět, že zavřená cesta je právě ta jedna',
     ld && ld.pocet === 0 && v.zapis.find((z) => z.cesta === 'signál').pocet >= 2,
     JSON.stringify(v.zapis));
+
+  /* ČTVRTÁ CESTA SE HLÁSÍ JEN TAM, KDE PŘEDPIS JE (§452).
+     Čtení po záznamech nestojí na ničem, co by web o sobě říkal, ale
+     na tvaru, který jsme u něj NAMĚŘILI — proto se u cizího webu bez
+     měření nepoužije a do zápisu se nepíše. Kdyby se hlásila všude,
+     byl by v každém zápisu řádek „záznamy: 0“, který nic neznamená.
+     Tyhle dvě kontroly to pravidlo MĚŘÍ, aby nebylo jen náhoda toho,
+     že zkouška zrovna používá adresu bez předpisu. */
+  pravda('u webu bez předpisu se čtvrtá cesta nehlásí',
+    !v.zapis.some((z) => z.cesta === 'záznamy'), JSON.stringify(v.zapis.map((z) => z.cesta)));
+  const sPredpisem = C.prectiJakkoli(prestavenaBezLd, 'https://www.verejnedrazby.cz/vypis-aukci');
+  pravda('a u webu s předpisem se hlásí a jde první',
+    sPredpisem.zapis.length === 4 && sPredpisem.zapis[0].cesta === 'záznamy',
+    JSON.stringify(sPredpisem.zapis.map((z) => z.cesta)));
 }
 
 /* ---- 4) NA STRÁNCE BEZ NABÍDEK SE NIC NEVYMYSLÍ ---------------- */

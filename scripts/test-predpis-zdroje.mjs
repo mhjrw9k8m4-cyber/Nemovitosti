@@ -1,0 +1,135 @@
+// Test: předpis pro čtení výpisu čte po ZÁZNAMECH, ne napříč stránkou.
+//
+// Spuštění: node scripts/test-predpis-zdroje.mjs   (nepotřebuje síť)
+//
+// PROČ VZNIKL. Obecná čtečka má tři cesty a na výpisu dražebníka
+// zabere jen ta nejslabší („signál"), která prochází celou stránku
+// najednou a páruje čísla podle blízkosti. Změřeno 5. 11. na
+// verejnedrazby.cz: týž areál měl jednou výměru 3 013 m² a jednou
+// 2 666, provozní budova 406 i 2 666. Takový zdroj se zapojit nedá —
+// na web by šla nepravda, ne mezera.
+//
+// ČÍM SE TU MĚŘÍ. Vzorek NENÍ vymyšlený. Je to doslovný přepis toho,
+// co vrátilo ohledání živého výpisu
+// https://www.verejnedrazby.cz/vypis-aukci dne 6. 11. 2026 (běhy
+// 42149142802 a následující) — včetně mezer, teček v tisícovkách
+// a zkomolenin („jiná plochá"). Kdyby se tu psal text „jak by to asi
+// vypadalo", zkouška by prověřovala domněnku, ne web (§449).
+import { zZaznamu, vymeraSPopiskem } from './cteni-zdroje.mjs';
+import { PREDPISY, POPISKY_VYMERY, kategorieZNazvu, podilZNazvu } from './predpisy-zdroju.mjs';
+import { pricinaChyb } from './chyby-hlaska.mjs';
+
+let ok = 0, chyb = 0;
+const zpravy = [];
+function pravda(popis, vyslo, proc) {
+  if (vyslo) { ok++; zpravy.push('  ✓ ' + popis); }
+  else { chyb++; zpravy.push(`  ✕ ${popis}${proc ? '\n      ' + proc : ''}`); }
+}
+
+/* NAMĚŘENÝ VZOREK. Pět záznamů z jedné stránky výpisu, přepsané
+   doslova, plus odkazy tak, jak na té stránce stojí. Schválně jsou
+   mezi nimi dvě nabídky, které NEJSOU pozemek (usedlost, garáž),
+   jeden spoluvlastnický podíl a jeden název se dvěma výměrami —
+   tedy přesně ty případy, na kterých „signál" padal. */
+const VZOREK = `
+<a href="/aukce/prodej-stavebniho-pozemku-urceneho-k-developerskemu-zameru-pozemky-celkem-2-919m2-ul-slepa-merhautova-centrum-brna-8066/">odkaz</a>
+<a href="/aukce/prodej-byvale-zemedelske-usedlosti-3-stavby-uzitna-plocha-371-m2-pozemky-celkem-11-770-m2-bojanov-u-dolni-libochove-8069/">odkaz</a>
+<a href="/aukce/prodej-souboru-3-pozemku-lesni-pozemek-stran-jina-plocha-celkova-vymera-5-221-m2-bojanov-u-dolni-libochove-zdar-nad-sazavou-8070/">odkaz</a>
+<a href="/aukce/prodej-garaze-vymera-20-m2-vlastni-pozemek-elektrina-ul-mirova-cheb-karlovarsky-kraj-8133/">odkaz</a>
+<a href="/aukce/prodej-spoluvlastnickeho-podilu-o-velikosti-id-1-20-na-pozemku-orna-puda-celkova-vymera-1-144-m2-k-u-sadova-u-sovetic-8067/">odkaz</a>
+<div>
+Aktivní Prodej stavebního pozemku určeného k developerskému záměru, pozemky celkem 2.919m2, ul. Slepá - Merhautova, centrum Brna ( Výběrové řízení - 3 kola) Čas do konce: 8 hodin 42 minut (06.11.2026 12:00:00) Min. cena: 51 265 280 Kč Evid. číslo: A8066
+Aktivní Prodej bývalé zemědělské usedlosti, 3 stavby - užitná plocha 371 m2, pozemky celkem 11.770 m2, Bojanov u Dolní Libochové ( Výběrové řízení - 3 kola) Čas do konce: 8 hodin 42 minut (06.11.2026 12:00:00) Min. cena: 3 103 000 Kč Evid. číslo: A8069
+Aktivní Prodej souboru 3 pozemků-lesní pozemek, stráň, jiná plochá, celková výměra 5.221 m2, Bojanov u Dolní Libochové, Žďár nad Sázavou ( Výběrové řízení - 3 kola) Čas do konce: 8 hodin 42 minut (06.11.2026 12:00:00) Min. cena: 167 000 Kč Evid. číslo: A8070
+Aktivní Prodej garáže, výměra 20 m², vlastní pozemek, elektřina, ul. Mírová, Cheb, Karlovarský kraj ( Výběrové řízení dynamické) Čas do konce: 6 dní 10 hodin (12.11.2026 14:00:00) Cena: 122 000 Kč Evid. číslo: A8133
+Aktivní Prodej spoluvlastnického podílu o velikosti id. 1/20 na pozemku - orná půda, celková výměra 1.144 m2, k.ú. Sadová u Sovětic ( Výběrové řízení - 3 kola) Čas do konce: 7 dní 8 hodin (13.11.2026 12:00:00) Min. cena: 2 750 Kč Evid. číslo: A8067
+</div>`;
+
+const PREDPIS = PREDPISY['verejnedrazby.cz'];
+const ZAKLAD = 'https://www.verejnedrazby.cz/vypis-aukci';
+
+console.log('\nPředpis pro čtení výpisu');
+
+/* ---- 1) rozkrojí se to na tolik nabídek, kolik jich tam je ------- */
+const n = zZaznamu(VZOREK, ZAKLAD, PREDPIS);
+pravda('z pěti záznamů vyjde pět nabídek', n.length === 5, `vyšlo ${n.length}`);
+
+/* ---- 2) TO HLAVNÍ: každé číslo zůstalo u své nabídky ------------- */
+/* Tohle je celý důvod, proč tahle cesta vznikla. Kdyby se četlo
+   napříč stránkou, první nabídka by dostala cenu nebo výměru některé
+   z dalších — a to se nepozná jinak než tím, že se zkontrolují
+   VŠECHNY dvojice naráz, ne jedna ukázková. */
+const ceka = [
+  { cislo: '8066', cena: 51265280, vymera: 2919 },
+  { cislo: '8069', cena: 3103000, vymera: 11770 },
+  { cislo: '8070', cena: 167000, vymera: 5221 },
+  { cislo: '8133', cena: 122000, vymera: 20 },
+  { cislo: '8067', cena: 2750, vymera: 1144 },
+];
+const sedi = ceka.every((c, i) => n[i] && n[i].cislo === c.cislo
+  && n[i].cena === c.cena && n[i].vymera === c.vymera);
+pravda('cena i výměra zůstaly u SVÉ nabídky (všech pět dvojic)', sedi,
+  n.map((x) => `${x.cislo}: ${x.cena} Kč / ${x.vymera} m²`).join(' | '));
+
+/* ---- 3) výměra se bere podle popisku, ne první v pořadí ---------- */
+/* „užitná plocha 371 m2, pozemky celkem 11.770 m2“ — první číslo je
+   podlahová plocha budovy. Kdo vezme je, pošle na web usedlost
+   o 371 m² jako pozemek. */
+const usedlost = n.find((x) => x.cislo === '8069');
+pravda('u dvou výměr v názvu vyhraje POZEMEK, ne podlahová plocha',
+  usedlost && usedlost.vymera === 11770,
+  usedlost ? `vyšlo ${usedlost.vymera} m² (podlahová plocha je 371)` : 'záznam 8069 chybí');
+
+/* ---- 4) odkaz se páruje číslem, ne pořadím ----------------------- */
+/* Kdyby se braly odkazy po pořadí, stačila by jedna reklama mezi
+   nabídkami a celý výpis by se posunul o jedna. */
+const les = n.find((x) => x.cislo === '8070');
+pravda('odkaz sedí k nabídce podle evidenčního čísla',
+  les && /-8070\/$/.test(les.odkaz || ''), les ? String(les.odkaz) : 'záznam 8070 chybí');
+pravda('a je to celá adresa, ne cesta', les && /^https:\/\/www\.verejnedrazby\.cz\//.test(les.odkaz || ''),
+  les ? String(les.odkaz) : '—');
+
+/* ---- 5) co není pozemek, se za pozemek nevydává ------------------ */
+/* Na výpisu jsou garáže, byty i areály. Web o nemovitostech mluvit
+   umí (§245) — ale „garáž" nesmí skončit jako „pozemek", jinak bude
+   na mapě pozemků stát garáž o 20 m². */
+const garaz = kategorieZNazvu(n.find((x) => x.cislo === '8133').nazev);
+pravda('garáž se zařadí jako stavba, ne jako pozemek',
+  garaz && garaz.kategorie === 'stavba' && garaz.druh === 'garáž', JSON.stringify(garaz));
+const lesK = kategorieZNazvu(les.nazev);
+pravda('lesní pozemek se zařadí jako pozemek', lesK && lesK.druh === 'lesní pozemek', JSON.stringify(lesK));
+const usedlostK = kategorieZNazvu(usedlost.nazev);
+pravda('usedlost se zařadí jako stavba', usedlostK && usedlostK.kategorie === 'stavba',
+  JSON.stringify(usedlostK));
+
+/* ---- 6) spoluvlastnický podíl se pozná -------------------------- */
+/* U podílu je cena za zlomek a výměra celá, takže „cena za metr" by
+   lhala dvacetinásobně. Web podíly vede zvlášť a tohle je vstup do
+   toho rozhodnutí. */
+const podil = podilZNazvu(n.find((x) => x.cislo === '8067').nazev);
+pravda('podíl id. 1/20 se v názvu najde', podil === '1/20', String(podil));
+pravda('a u celé nabídky se žádný podíl nehlásí', podilZNazvu(les.nazev) === null,
+  String(podilZNazvu(les.nazev)));
+
+/* ---- 7) bez předpisu se nic nepředstírá ------------------------- */
+/* Když pro zdroj předpis není, vrátí se prázdno a rozhodne některá
+   z ostatních cest. Mlčet je tu správná odpověď — vymyslet si
+   nabídky by bylo horší než žádné. */
+pravda('bez předpisu nevyjde nic (a nic se nevymýšlí)',
+  zZaznamu(VZOREK, ZAKLAD, null).length === 0);
+
+/* ---- 8) seznam popisků v obou souborech souhlasí ---------------- */
+/* Čtečka má zálohu pro volání bez seznamu. Kdyby se ty dva seznamy
+   rozešly, četlo by se podle pořadí, které nikdo nezamýšlel — a to je
+   přesně ten druh rozcházení, který se bez hlídače nepozná. */
+pravda('záložní pořadí popisků ve čtečce souhlasí s předpisem',
+  vymeraSPopiskem('užitná plocha 371 m2, pozemky celkem 11.770 m2')
+    === vymeraSPopiskem('užitná plocha 371 m2, pozemky celkem 11.770 m2', POPISKY_VYMERY),
+  'čtečka a předpis dávají jiné číslo');
+
+console.log(zpravy.join('\n'));
+console.log(`\n  ${ok} v pořádku, ${chyb} chyb`);
+if (chyb) {
+  console.log(`::error::Předpis pro čtení: ${chyb} kontrol neprošlo. Co padlo: ${pricinaChyb(zpravy)}`);
+  process.exit(1);
+}
