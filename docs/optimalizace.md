@@ -27210,3 +27210,56 @@ shodí dvě kontroly — novou přímo na počtu, a tu o zkreslení jako
 následek. Před dneškem ho neshodilo nic.
 
 `test-mericka-odhadu` 8 → **10 kontrol**.
+
+## §451 — Zámek na jedněch dveřích ze dvou
+
+Majitel nemohl v Supabase najít přepínač *Confirm email* (na telefonu
+se ten panel nevykreslí celý) a chtěl to vyřešit jinak. Než jsem začal
+stavět vlastní ověřování e-mailu, přečetl jsem, co v databázi už je —
+a bylo tam tohle, u zakládání inzerátu:
+
+```sql
+if (select u.email_confirmed_at from auth.users u where u.id = uid) is null then
+  raise exception 'nejdřív potvrďte e-mail — poslali jsme vám odkaz';
+```
+
+Totéž u rozesílání hlídání e-mailem. **Ochrana tedy napsaná je**; ten
+přepínač jí jen drží kliku, protože když se adresy potvrzují samy,
+`email_confirmed_at` je vyplněné vždycky a podmínka nikdy nezabere.
+
+Vlastní ověřování by tedy byl **druhý zámek na týchž dveřích** — den
+práce za něco, co už existuje. Neudělal jsem ho.
+
+### Co udělat šlo: druhé dveře zamčené nebyly
+
+Změřeno: účtem se dá poslat něco ven **dvěma** cestami — inzerát
+a zpráva. Hlídaná byla jedna. `send_message()` měla jen stropy na
+rychlost (1 zpráva za 3 s, 40 za hodinu), potvrzený e-mail
+nevyžadovala — a přitom zpráva jde živému člověku do schránky, takže
+účet na cizí adresu je tam stejně nepříjemný jako u inzerátu.
+
+Doplněno tedy do `send_message()` touž podmínkou a touž hláškou.
+Až se ten přepínač přehodí, zamknou se obojí dveře, ne jedny.
+
+### Hlídač
+
+Zkouška na opravdovém PostgreSQL (`test-sql-cista`) už měla fixturu
+přesně na tohle: U1 s `email_confirmed_at = null`, U2 potvrzený.
+Nový pár kontrol ji využívá — nepotvrzený účet zprávu neodešle
+a potvrzený ano. **Mění se jediná věc:** týž účet, totéž volání, jen
+potvrzení. Napoprvé jsem tu kladnou kontrolu psal za U2 a spadla na
+„s tímto zájemcem zatím žádná zpráva není" — U2 je totiž MAJITEL toho
+inzerátu a majitel smí jen odpovídat do existujícího vlákna. Vada
+fixtury, ne kódu; opraveno a napsané v komentáři.
+
+**Sabotáž** (vyndání té podmínky z `send_message`, ověřeno `diff`)
+shodí dvě kontroly. Před dneškem ji neshodilo nic.
+
+`test-sql-cista` 106 → **108 kontrol**.
+
+### Co z toho zbývá majiteli
+
+Jediná věc: přehodit v Supabase *Confirm email*. Na telefonu se ten
+přepínač nevykreslí, na počítači ano. Dokud se nepřehodí, obě tyhle
+podmínky jsou napsané, ale spící — a kontrola nasazení to právem
+hlásí jako vadu, která blokuje spuštění.

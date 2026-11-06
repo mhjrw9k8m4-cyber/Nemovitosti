@@ -323,6 +323,19 @@ language plpgsql security definer set search_path = public as $$
 declare uid uuid := auth.uid(); owner uuid; the_buyer uuid; mid uuid;
 begin
   if uid is null then raise exception 'musíte být přihlášeni'; end if;
+
+  /* POTVRZENÝ E-MAIL I NA PSANÍ (§451). Zakládání inzerátu to vyžaduje
+     od začátku („nejdřív potvrďte e-mail"), psaní zpráv ne — a přitom
+     zpráva jde živému člověku do schránky, takže účet na cizí adresu
+     je tu stejně nepříjemný jako u inzerátu. Naměřeno 6. 11.: ze dvou
+     cest, kterými se dá účtem něco poslat ven, byla hlídaná jedna.
+     Pojmenovat tabulku je nutnost, ne ozdoba: funkce vrací sloupec
+     „id", takže holé `where id = uid` je pro PL/pgSQL dvojznačné —
+     přesně na to doplatilo zakládání inzerátu a je to tam napsané. */
+  if (select u.email_confirmed_at from auth.users u where u.id = uid) is null then
+    raise exception 'nejdřív potvrďte e-mail — poslali jsme vám odkaz';
+  end if;
+
   if p_body is null or length(trim(p_body)) = 0 then raise exception 'zpráva je prázdná'; end if;
   if length(p_body) > 2000 then raise exception 'zpráva je příliš dlouhá'; end if;
   select user_id into owner from listings where id = p_listing;

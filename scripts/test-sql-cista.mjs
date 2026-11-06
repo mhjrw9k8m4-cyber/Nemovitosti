@@ -247,6 +247,43 @@ try {
     const vsechnoCeka = jako(U2, `select count(*) from listings where status='pending'`).trim();
     pravda('a v tabulce nečeká ani jeden řádek', vsechnoCeka === '0', `pending v tabulce: ${vsechnoCeka}`);
 
+    /* 4b) §451: POTVRZENÝ E-MAIL PLATÍ I NA PSANÍ ZPRÁV.
+           Zakládání inzerátu to vyžadovalo od začátku, send_message ne —
+           a zpráva jde živému člověku do schránky, takže účet na cizí
+           adresu je tu stejně nepříjemný. Měří se tím, že nepotvrzený
+           účet (U1) napíše na inzerát potvrzeného (U2) a musí dostat
+           košem, a to ZE SPRÁVNÉHO DŮVODU: kdyby se koukalo jen na to,
+           že to spadlo, prošla by i úplně jiná chyba (třeba překlep
+           v názvu funkce). Proto se čte celý výpis, ne návratová
+           hodnota — výjimka jde na stderr. */
+    const zpravaBezMailu = psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${U1}'; select send_message((select id from listings where place='Prvni obec'), null, 'dobry den, mam zajem')`]);
+    pravda('bez potvrzeného e-mailu zpráva neodejde',
+      /potvrďte e-mail/.test(zpravaBezMailu),
+      'nepotvrzený účet zprávu poslal: ' + zpravaBezMailu.trim().slice(0, 140));
+    /* A ať to pravidlo není jen zákaz všeho: potvrzený účet psát MUSÍ.
+       Bez téhle druhé kontroly by zkoušce vyhovělo i „send_message
+       nefunguje nikomu".
+
+       MĚNÍ SE JEDINÁ VĚC: týž účet, totéž volání, jen s potvrzeným
+       e-mailem. Napoprvé jsem to psal za U2 a spadlo to na „s tímto
+       zájemcem zatím žádná zpráva není" — U2 je totiž MAJITEL toho
+       inzerátu a majitel smí jen odpovídat do existujícího vlákna.
+       Byla to vada fixtury, ne kódu, a takhle se jí to vyhýbá.
+
+       Po měření se úklid vrací do výchozího stavu (zpráva pryč, U1
+       zase nepotvrzený), aby další oddíly zkoušky zastihly tabulky
+       tak, jak je čekají. */
+    psql(['-d', 'zkouska', '-q', '-c',
+      `update auth.users set email_confirmed_at = now() where id = '${U1}'`]);
+    const zpravaSMailem = psqlVse(['-d', 'zkouska', '-tAc',
+      `set pk.uid = '${U1}'; select send_message((select id from listings where place='Prvni obec'), null, 'dobry den, mam zajem')`]);
+    pravda('a s potvrzeným e-mailem odejde',
+      !/ERROR/.test(zpravaSMailem), zpravaSMailem.trim().slice(0, 140));
+    psql(['-d', 'zkouska', '-q', '-c',
+      `delete from chat_messages where sender_id = '${U1}';`
+      + ` update auth.users set email_confirmed_at = null where id = '${U1}'`]);
+
     /* 5) A kdo už jednou prošel, nečeká podruhé. Tohle byla past:
           dokud se „zavedený účet" poznával podle status='approved',
           zůstal po samozveřejnění navždy nový a čekal pokaždé znovu. */
