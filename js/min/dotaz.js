@@ -74,7 +74,7 @@
 
   var NASOBEK = [
     [/^(?:kc\/m2|kc\/m²|\/m2|\/m²|kc\/metr)$/, 1, 'zaMetr'],
-    [/^(?:mil|mili[oó]n\w*|m)$/, 1000000, 'cena'],
+    [/^(?:mil|mili[oó]n[\p{L}]*|m)$/u, 1000000, 'cena'],
     [/^(?:tis|tis\.|tisic\w*|k)$/, 1000, 'cena'],
     [/^(?:kc|korun\w*|czk)$/, 1, 'cena'],
     [/^(?:ha|hektar\w*)$/, 10000, 'plocha'],

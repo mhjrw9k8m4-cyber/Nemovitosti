@@ -245,7 +245,7 @@ for (const typ of ['drazba', 'exekuce']) {
       /jen \d+ — na pořadí je to málo/.test(v.txt),
       `bez počtu je z toho jen tvrzení: ${v.txt.slice(0, 160)}`);
     pravda('a pořadí mezi nabídkami si NEVYMYSLÍ',
-      !/(levnějš|dražš)\w* než/.test(v.txt),
+      !/(levnějš|dražš)[\p{L}]* než/u.test(v.txt),
       `vyvolávací cena se nesmí řadit mezi nabídkové: ${v.txt.slice(0, 160)}`);
     overeno++; hotovo = true; break;
   }

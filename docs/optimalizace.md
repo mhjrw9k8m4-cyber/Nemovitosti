@@ -27648,3 +27648,64 @@ dosud nečetla. Čte se, ale za velikost stavby se nevydává —
 Prokázáno sabotáží: kotva vrácená na výčet typů řízení → zkouška
 45/50, padlo pět kontrol včetně „soubor pozemků se pozná jako
 pozemek".
+
+## §458
+
+**`\b` nebyla jediná past. Samo `\w` taky — a `\w*` jako „zbytek
+českého slova" nepřejde přes diakritiku.**
+
+Osmý ostrý pokus na verejnedrazby.cz: pět nezařazených záznamů,
+které měly v předpisu vlastní vzor a přesto se nepoznaly.
+
+```
+/fotovoltaick\w* panel/i.test('fotovoltaických panelů')  → false
+/^\w+$/.test('ých')                                      → false
+```
+
+`\w` je `[A-Za-z0-9_]`, takže koncovku „ých" nepřeskočí. Je to
+stejná příčina jako u §454, jen bez `\b` — a hlídač ji proto
+neviděl.
+
+Kritérium pro hlídače je měřitelné, ne odhadnuté: vzor, který sám
+obsahuje písmeno s diakritikou, zjevně pracuje s češtinou; má-li
+v sobě zároveň samostatné `\w` (ne uvnitř třídy, kde si autor
+diakritiku doplnil, jako `[\wá-ž]`), je to past. Vzor s flagou `u`
+se nepočítá — tam `\w` zůstává ASCII, ale autor o Unicode ví.
+
+Sklidilo to sedm míst. Každé změřeno zvlášť, protože opravovat, co
+není rozbité, je taky vada:
+
+| vzor | co nesedne |
+|---|---|
+| `mili[oó]n\w*` | „milion**ů**", „milión**ů**" — v dotazu uživatele |
+| `podíl\w*\s+id` | „podíl**ů** id." |
+| `zůstáv\w*[\s ]+` | **„zůstává jen v prohlížeči"** |
+| `(levnějš\|dražš)\w* než` | **„levnější než"**, „dražší než" |
+| `tvar[A-ZČŘŠ]\w*\s*\(` | „tvarČísla(" |
+| `nejmenší délk\w+ hesla` | **nic** — „délka/délku/délky" sednou |
+
+Dvě z nich jsou zkoušky, které tedy nehlídaly, co tvrdí:
+`test-sliby-data.mjs` hledá slib „data zůstávají jen u vás" a na
+slovo „zůstává" nesedlo; `test-verdikt.mjs` hledá věty „levnější
+než" a nesedlo mu ani jedno. To je třída §438 — hlídač, který mlčí
+naprázdno.
+
+Poslední řádek tabulky je ten důležitý: tam diakritika stojí **před**
+`\w+` a koncovka je vždycky ASCII, takže vzor funguje. Dostal
+výjimku s doloženým důvodem, protože hlídač, který křičí nadarmo,
+se vypne — a to si tenhle repozitář zapsal u §454 a hned by to
+porušil.
+
+Prokázáno sabotáží: vzor verdiktu vrácený na `\w` → hlídač ho našel
+jmenovitě i s radou, kam patří `[\p{L}]` a flaga `u`.
+
+A co z toho vyšlo **po** opravě, ať je řečeno upřímně: rychlá sada
+zůstala 155/155, tedy žádný nový rozpor se na dnešním textu webu
+neobjevil. `test-sliby-data.mjs` slib našel i předtím — jinou
+alternativou téhož vzoru (`neodesíl`, `nejde na server`), takže
+mrtvá byla jen jedna cesta z pěti. Oprava tedy nerozsvítila
+červenou; rozšířila dosah, aby ji rozsvítila, až se text webu změní.
+U `test-verdikt.mjs` je ta kontrola **negativní** („pořadí mezi
+nabídkami si NEVYMYSLÍ"), takže s mrtvým vzorem byla vždycky zelená
+bez ohledu na obsah. Tu prokáže až CI, kde prohlížeč je; v sandboxu
+se nespustí.

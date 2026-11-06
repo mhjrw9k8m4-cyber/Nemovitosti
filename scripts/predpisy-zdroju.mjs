@@ -210,9 +210,17 @@ export const NENI_NEMOVITOST = [
   /vysokozdvižn|\bVZV\b|paletový vozík|paletové vidle|minibagr/i,
   /\bautojeřáb|\bjeřáb\b|\bdrtič|\bbagr|\btraktor|\bkontejner/i,
   /\bVIN\s*:|\bRZ\s*[A-Z0-9]{5,}|stav tachometru|první registrace/i,
-  /fotovoltaick\w* panel|\bstřídač|bateriov\w* systém/i,
-  /\boblečení|\bnábytk|kancelářsk\w* vybaven|spotřebního materiálu/i,
-  /obchodního závodu|\bzávod\w* (?:z majetku|dlužníka)/i,
+  /* `[\p{L}]*` s flagou `u`, ne `\w*` (§458): `\w` je jen
+     [A-Za-z0-9_], takže koncovku „ých" nepřeskočí a
+     `/fotovoltaick\w* panel/` na „fotovoltaických panelů"
+     NESEDNE. Osmý ostrý pokus to ukázal na pěti nezařazených
+     záznamech, které tyhle vzory měly chytit. */
+  /fotovoltaick[\p{L}]* panel|\bstřídač|bateriov[\p{L}]* systém|\bměnič/iu,
+  /\boblečení|\bnábytk|kancelářsk[\p{L}]* vybaven|spotřebního materiálu|\bmateriál|\bzásob[\p{L}]*/iu,
+  /obchodního závodu|\bzávod[\p{L}]* (?:z majetku|dlužníka)/iu,
+  /* Naměřeno osmým pokusem: „Soubor lešení, mobilního oplocení
+     a příslušenství, z majetku PAMA Poděbrady s.r.o." */
+  /\blešení|\boplocení|\bpříslušenství|\bkomponent/iu,
 ];
 
 /* POŘADÍ ROZHODUJE A TOHLE JE JEHO DRUHÁ PODOBA (§453).
@@ -263,6 +271,6 @@ export function kategorieZNazvu(nazev) {
  * „podílu id 1/2", „spoluvlastnické podíly id. 1/2".
  */
 export function podilZNazvu(nazev) {
-  const m = /podíl\w*\s+(?:o\s+velikosti\s+)?id\.?\s*(\d+)\s*\/\s*(\d+)/i.exec(String(nazev || ''));
+  const m = /podíl[\p{L}]*\s+(?:o\s+velikosti\s+)?id\.?\s*(\d+)\s*\/\s*(\d+)/iu.exec(String(nazev || ''));
   return m ? `${m[1]}/${m[2]}` : null;
 }

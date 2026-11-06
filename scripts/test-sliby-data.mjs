@@ -120,7 +120,12 @@ pravda('text říká, jak uplatnit práva podle GDPR',
    dokumentu nepravda — a nepravda v něm je dražší než kterákoli vada
    vzhledu. */
 {
-  const JEN_TADY = /neodesíl|neposíl|nejde na server|nejdou na server|zůstáv\w*[\s ]+(?:jen[\s ]+)?(?:u[\s ]+vás|ve[\s ]+vašem|jen[\s ]+tady|jen[\s ]+v)|leží[\s ]+jen/i;
+  /* `[\p{L}]*` s flagou `u`, ne `\w*` (§458): `\w` je jen
+     [A-Za-z0-9_], takže za „zůstáv" nepřeskočí „á" — vzor na
+     „zůstává jen v prohlížeči" NESEDL, tedy právě na tu věta,
+     kterou tenhle hlídač hledá. Měřeno 6. 11.
+     POZOR: v té třídě je nezlomitelná mezera, ne obyčejná. */
+  const JEN_TADY = /neodesíl|neposíl|nejde na server|nejdou na server|zůstáv[\p{L}]*[\s ]+(?:jen[\s ]+)?(?:u[\s ]+vás|ve[\s ]+vašem|jen[\s ]+tady|jen[\s ]+v)|leží[\s ]+jen/iu;
   /* ROZLIŠENÍ, ne jen slovo „přihlášení". Sabotáž to ukázala na otázce
      o registraci: „Žádná registrace ani přihlášení — …" to slovo nese,
      a přitom nic nerozlišuje. Platí jen věta, která říká, KDY to platí. */

@@ -41,7 +41,7 @@ const TVARY = ['dní', 'dny', 'den', 'pozemků', 'pozemky', 'pozemek',
    pojistka propustila i `newN + ' nových'`. Ukázala to až sabotáž:
    vrácená chyba prošla. Takhle vágní kontrola je horší než žádná —
    tváří se, že se hlídá, a nehlídá. */
-const VETVI = /===\s*1\b|==\s*1\b|<\s*5\b|>=\s*5\b|<=\s*4\b|mnozne\s*\(|cislovka\s*\(|tvar[A-ZČŘŠ]\w*\s*\(/;
+const VETVI = /===\s*1\b|==\s*1\b|<\s*5\b|>=\s*5\b|<=\s*4\b|mnozne\s*\(|cislovka\s*\(|tvar[A-ZČŘŠ][\p{L}]*\s*\(/u;
 /* Výjimky: místa, kde je pevný tvar správně, i s důvodem. */
 const VYJIMKY = [
   { kde: 'DNI_KONCI', proc: 'DNI_KONCI je konstanta 14 — po „do" je genitiv vždycky správně' },

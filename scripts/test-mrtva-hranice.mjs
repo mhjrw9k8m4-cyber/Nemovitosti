@@ -292,9 +292,76 @@ pravda('míst se sestavenou hranicí nepřibývá', retezcovychB <= STROP_RETEZC
   `nalezeno ${retezcovychB}, strop ${STROP_RETEZCOVYCH} — ta místa zkouška nevidí, `
   + 'nové se musí posoudit ručně (hranice kolem českého textu nesedne)');
 
-console.log('\nMrtvá hranice slova:');
+/* ---- A DRUHÁ PODOBA TÉŽE PASTI: `\w` v českém vzoru (§458) ----
+   `\b` není jediné, co se řídí `\w`. Samo `\w` taky — a `\w*` jako
+   „zbytek českého slova" tedy neprojde přes diakritiku:
+
+     /fotovoltaick\w* panel/i.test('fotovoltaických panelů')  → false
+     /^\w+$/.test('ých')                                      → false
+
+   Osmý ostrý pokus na to narazil u pěti nezařazených záznamů, které
+   měly vlastní vzor v předpisu a přesto se nepoznaly. Náprava je
+   `[\p{L}]` s flagou `u`.
+
+   KRITÉRIUM je měřitelné, ne odhadnuté: vzor, který SÁM obsahuje
+   písmeno s diakritikou, zjevně pracuje s češtinou. Má-li v sobě
+   zároveň samostatné `\w` (ne uvnitř třídy, kde si autor diakritiku
+   doplnil, jako `[\wá-ž]`), je to past. Vzor s flagou `u` se nepočítá
+   — tam `\w` zůstává ASCII, ale autor o Unicode ví a `\p{L}` má
+   po ruce. */
+const DIAKRITIKA = /[áéíóúůýčďěňřšťžÁÉÍÓÚŮÝČĎĚŇŘŠŤŽ]/;
+export function pastWVCestine(vzor) {
+  const konec = vzor.lastIndexOf('/');
+  const telo = konec > 0 ? vzor.slice(1, konec) : vzor;
+  const flagy = konec > 0 ? vzor.slice(konec + 1) : '';
+  if (flagy.includes('u')) return false;
+  if (!DIAKRITIKA.test(telo)) return false;
+  /* Třídy znaků vyhodit — `[\wá-ž]` je právě ta správná náprava. */
+  const bezTrid = telo.replace(/\[(?:\\.|[^\]\\])*\]/g, '§');
+  return /\\w/.test(bezTrid);
+}
+
+/* VÝJIMKA S DOLOŽENÝM DŮVODEM. U „nejmenší délk\w+ hesla" je
+   diakritika PŘED `\w+` a koncovka je vždycky ASCII: změřeno, že
+   „délka hesla", „délku hesla" i „délky hesla" sednou všechny tři.
+   Vzor tedy funguje a hlásit ho by byl falešný poplach — a hlídač,
+   který křičí nadarmo, se vypne. */
+const VYJIMKY_W = [
+  ['scripts/test-meze.mjs', 'nejmenší délk\\w+ hesla', 'koncovka je vždy ASCII (délka, délku, délky) — změřeno'],
+];
+const jeVyjimkaW = (rel, vzor) => VYJIMKY_W.some(([f, cast]) => f === rel && vzor.includes(cast));
+
+const pasti = [];
+for (const p of soubory) {
+  const rel = path.relative(KOREN, p);
+  if (jeVyjimka(rel)) continue;
+  const kod = bezKomentaruARetezcu(readFileSync(p, 'utf8'));
+  for (const [i, r] of kod.split('\n').entries()) {
+    for (const m of r.matchAll(/\/(?![\/*])(?:\\.|\[[^\]]*\]|[^\/\\\n])+\/[a-z]*/g)) {
+      if (pastWVCestine(m[0]) && !jeVyjimkaW(rel, m[0])) pasti.push(`${rel}:${i + 1} — ${m[0].slice(0, 80)}`);
+    }
+  }
+}
+pravda('žádný český vzor nestaví na \\w', pasti.length === 0,
+  pasti.length ? `${pasti.length}×: ${pasti.slice(0, 3).join(' | ')} → místo \\w použít [\\p{L}] s flagou u` : '');
+
+/* I tohle rozpoznávání se musí prokázat, jinak by mlčelo naprázdno. */
+const umiW = (vzor, ceka) => pravda(`${ceka ? 'past' : 'v pořádku'}: ${vzor}`,
+  pastWVCestine(vzor) === ceka, `vyšlo ${pastWVCestine(vzor)}`);
+umiW('/fotovoltaick\\w* panel|\\bstřídač/i', true);
+umiW('/fotovoltaick[\\p{L}]* panel|\\bstřídač/iu', false);
+umiW('/kancelářsk\\w* vybaven/i', true);
+umiW('/[\\wÁ-Žá-ž.-]*ulice/i', false);
+umiW('/\\w+@\\w+\\.\\w+/', false);
+umiW('/okres\\w* Brno/i', false);
+
+console.log('\\nMrtvá hranice slova:');
 for (const z of zpravy) console.log(z);
 console.log(`\n  ${ok} v pořádku, ${chyb} chyb`);
+if (pasti.length) {
+  console.log('\nČESKÉ VZORY NA \\w (§458):');
+  for (const z of pasti) console.log('  ' + z);
+}
 if (nalezy.length) {
   console.log('\nVŠECHNY NÁLEZY:');
   for (const n of nalezy) console.log('  ' + n);
