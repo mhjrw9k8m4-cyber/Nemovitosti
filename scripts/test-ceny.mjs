@@ -1401,14 +1401,20 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   const htmlCeny = readFileSync(new URL('../cena-pozemku.html', import.meta.url), 'utf8');
   const bezZnacek = htmlCeny.replace(/<!--[\s\S]*?-->/g, ' ');
   const vZebricku = [...bezZnacek.matchAll(/class="cenk-kraj">([^<]+)</g)].map((m) => m[1].trim());
-  const vetaChybi = /(?:Jeden kraj tu není|Tyhle kraje tu nejsou):<\/b>([\s\S]*?)<\/p>/.exec(bezZnacek);
-  /* ZNAČKY VEN DŘÍV, než se věta dělí na tečce. Napoprvé jsem dělil
-     rovnou — a v odkazu na kraj je „pozemky-praha-kraj.html", takže se
-     věta rozsekla na „.html" a jméno kraje z ní vypadlo. Zkouška pak
-     hlásila, že Praha nikde není, přitom byla. */
+  /* PŘIZNANÉ KRAJE SE ČTOU Z OZNAČENÉHO PRVKU, NE ZE ZNĚNÍ VĚTY.
+     Do 7. 11. se tahle zkouška chytala doslovného začátku („Jeden kraj
+     tu není:</b>") a pak větu krájela na tečce a čárkách. Fungovalo to,
+     dokud se ta věta nepřepsala — a přepsat se musela, protože byla
+     dlouhá a majitel si na texty téhle stránky stěžoval. Hlídač, který
+     drží znění, drží i jeho vady: pak se buď nesmí psát líp, nebo
+     hlídač zrezaví.
+     Co se hlídat MÁ, je tvrzení: každý kraj s vlastní stránkou je
+     v žebříčku, nebo se o něm řekne, že v tabulce není. Proto si ta
+     věta nese `data-chybi` se jmény oddělenými svislítkem — strojové
+     pole vedle lidského textu, a každá strana může být psaná po svém. */
+  const vetaChybi = /<p[^>]*class="[^"]*cenk-chybi[^"]*"[^>]*data-chybi="([^"]*)"[^>]*>([\s\S]*?)<\/p>/.exec(bezZnacek);
   const priznane = vetaChybi
-    ? vetaChybi[1].replace(/<[^>]+>/g, '').split('.')[0].split(',').map((x) => x.trim()).filter(Boolean)
-    : [];
+    ? vetaChybi[1].split('|').map((x) => x.trim()).filter(Boolean) : [];
   const stranky = [...htmlCeny.matchAll(/href="(pozemky-[a-z0-9-]+-kraj\.html)"/g)].map((m) => m[1]);
   pravda(`žebříček krajů má řádky (${vZebricku.length})`, vZebricku.length >= 10,
     'v tabulce „Ceny po krajích" nejsou kraje: ' + vZebricku.join(', '));
@@ -1430,10 +1436,77 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   pravda('každý kraj s vlastní stránkou je v žebříčku, nebo se přiznává, že v něm není',
     mimo.length === 0, 'ani v žebříčku, ani ve větě o chybějících: ' + mimo.join(', '));
   if (priznane.length) {
+    /* DŮVOD SMÍ STÁT JINDE NA STRÁNCE. Patří k výhradám, a ty má tahle
+       stránka schválně na jednom místě ve sbalené metodice — u tabulky
+       je jen krátká věta. Hlídá se tedy, že důvod na stránce JE, ne
+       že stojí zrovna v té větě. */
     pravda('a u chybějících je napsané PROČ',
-      /aspoň \d+ nabídek/.test(vetaChybi[1]) && /500/.test(vetaChybi[1]),
+      /aspoň \d+ nabídek/.test(bezZnacek) && /500/.test(bezZnacek),
       'věta o chybějících krajích neříká, jaká mez to způsobila');
   }
+}
+
+/* ---- CO ČLOVĚK HLEDÁ, STOJÍ NAHOŘE A NADPISY MAJÍ IKONU -----------
+ *
+ * Majitel se 7. 11. na tuhle stránku podíval a řekl dvě věci: že
+ * nedává lidem, co by chtěli, a že tam nejsou „naše ikonky".
+ *
+ * První věta je o POŘADÍ. Člověk, který si přijde pro cenu pozemku,
+ * chce cenu u SVÉ obce. Dokud stránka začínala celostátními průměry
+ * a žebříčkem krajů, musel se k vyhledávání prorolovat — a statistika
+ * mu přitom neřekla nic, co by použil. Karta „Kolik stojí půda u vás"
+ * proto stojí jako první a až za ní jdou souhrny. To je tvrzení
+ * o stránce, ne vkus, takže se dá hlídat: kdyby ji příští úprava
+ * generátoru vrátila pod tabulky, nikdo si toho na statickém webu
+ * nevšimne, dokud si nestěžuje další člověk.
+ *
+ * Druhá věta je o ZNAČENÍ. Každý nadpis sekce nese ikonu ze sady
+ * (`#i-…` ze spritu na téže stránce) — a právě proto nesmí nést
+ * ZÁROVEŇ tu bezejmennou vlasovou linku, kterou `.rules-sect > h2`
+ * kreslí přes `::before`. Dvě značky vedle sebe jsou horší než jedna.
+ * Hlídá se obojí: že ikona je, a že CSS tu linku u `.s-ik` vypíná. */
+{
+  const htmlC = readFileSync(new URL('../cena-pozemku.html', import.meta.url), 'utf8');
+  const telo = htmlC.replace(/<!--[\s\S]*?-->/g, ' ');
+  const vSade = new Set([...telo.matchAll(/<symbol id="(i-[a-z0-9-]+)"/g)].map((m) => m[1]));
+  const nadpisy = [...telo.matchAll(/<h2([^>]*)>([\s\S]*?)<\/h2>/g)].map((m) => ({
+    atr: m[1],
+    vnitrek: m[2],
+    id: (/id="([^"]+)"/.exec(m[1]) || [, ''])[1],
+  }));
+
+  pravda(`stránka má nadpisy sekcí (${nadpisy.length})`, nadpisy.length >= 5,
+    'na cena-pozemku.html se nenašly nadpisy <h2> — zkouška by měřila prázdno');
+
+  /* POŘADÍ: vyhledávání první, souhrny za ním. */
+  const poradi = nadpisy.map((n) => n.id);
+  const kdeHledani = poradi.indexOf('ceny-hledat-nadpis');
+  pravda('karta „Kolik stojí půda u vás" na stránce je', kdeHledani >= 0,
+    'nadpis #ceny-hledat-nadpis zmizel — kde si člověk zjistí cenu u sebe?');
+  if (kdeHledani >= 0) {
+    pravda('a stojí nad všemi souhrnnými kartami', kdeHledani === 0,
+      'před vyhledáváním ceny u obce stojí: ' + poradi.slice(0, kdeHledani).join(', ')
+        + ' — statistika se čte dřív než odpověď, kterou si člověk přišel pro');
+  }
+
+  /* ZNAČENÍ: ikona u každého nadpisu, a jen ta. */
+  const bezIkony = nadpisy.filter((n) => !/\bs-ik\b/.test(n.atr)
+    || !/<use href="#(i-[a-z0-9-]+)"/.test(n.vnitrek));
+  pravda('každý nadpis sekce nese ikonu ze sady', bezIkony.length === 0,
+    'bez ikony: ' + bezIkony.map((n) => n.id || n.vnitrek.slice(0, 30)).join(', '));
+
+  const cizi = [];
+  for (const n of nadpisy) {
+    const m = /<use href="#(i-[a-z0-9-]+)"/.exec(n.vnitrek);
+    if (m && !vSade.has(m[1])) cizi.push((n.id || '?') + ' → ' + m[1]);
+  }
+  pravda('a je to ikona, kterou sprite na té stránce opravdu má', cizi.length === 0,
+    'nadpis odkazuje na ikonu, která ve spritu není: ' + cizi.join(', '));
+
+  const styly = readFileSync(new URL('../css/styles.css', import.meta.url), 'utf8');
+  const vypnutaLinka = /\.rules-sect\s*>\s*h2\.s-ik::before\s*\{[^}]*display\s*:\s*none/.test(styly);
+  pravda('a vlasová linka je u nadpisu s ikonou vypnutá', vypnutaLinka,
+    'CSS nechává u .s-ik běžet `.rules-sect > h2::before` — nadpis by nesl dvě značky');
 }
 
 /* ---- ODHAD PŘIZNÁVÁ, JAK DALEKO MINE -------------------------------

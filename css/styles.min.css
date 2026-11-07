@@ -1644,6 +1644,10 @@ body{background:var(--bg)}
 .rules-sect>h2{position:relative}
 .rules-sect>h2::before{content:"";display:block;width:52px;height:2px;border-radius:2px;background:var(--accent-warm);opacity:0.85;margin-bottom:12px}
 .clanek .rules-sect>h2::before{display:none}
+.rules-sect>h2.s-ik{display:flex;align-items:center;gap:8px}
+.rules-sect>h2.s-ik::before{display:none}
+.rules-sect>h2.s-ik .ik{width:24px;height:24px;flex:none;stroke-width:1.5;color:var(--accent-warm)}
+.cen-metodika summary .ik{width:17px;height:17px;flex:none;stroke-width:2.1;margin-right:8px;vertical-align:-3px}
 .sources{background:var(--plocha-jemna);color:var(--text);padding:var(--oddil-y) 0}
 .sources::before,.sources::after{display:none}
 .src-stats{grid-template-columns:repeat(4,1fr);gap:28px;margin-bottom:40px}

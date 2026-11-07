@@ -2246,6 +2246,10 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
 
      Seznam se nepíše ručně: dopočítá se z dat, takže se nemůže rozejít
      s tím, co se vypsalo nad ním. */
+  /* Holá jména pro stroj, odkazy pro člověka — viz `data-chybi` níž. */
+  const chybiJmena = KRAJ_ORDER
+    .filter((k) => byKraj[k] && byKraj[k].length && !krajeData.some((x) => x.k === k))
+    .map((k) => (KRAJ_META[k] || {}).disp || (k + ' kraj'));
   const chybiKraje = KRAJ_ORDER
     .filter((k) => byKraj[k] && byKraj[k].length && !krajeData.some((x) => x.k === k))
     /* Odkaz, ne jen jméno: kdo se v žebříčku nenašel, má jít jedním
@@ -2255,12 +2259,12 @@ ${kOvereni.slice(0, STROP_ZMEN).map(radekZmeny).join('\n')}
       return hasKrajPage.has(k) ? `<a href="${krajFile(k)}">${esc(disp)}</a>` : esc(disp);
     });
   const krajeChybiVeta = !chybiKraje.length ? '' : `
-          <p class="rules-note"><b>${chybiKraje.length === 1 ? 'Jeden kraj tu není' : 'Tyhle kraje tu nejsou'}:</b> ${chybiKraje.join(', ')}. Zemědělské půdy je v nabídce málo na to, aby z ní vyšla obvyklá cena — potřebujeme aspoň ${MIN_PRICE} nabídek, u kterých cena za metr nepřekročí 500&nbsp;Kč. Dražší pole už je fakticky stavební parcela (viz „Jak tahle čísla počítáme" pod tabulkou), a v Praze je takových většina. Vlastní stránku ${chybiKraje.length === 1 ? 'ten kraj' : 'ty kraje'} ${chybiKraje.length === 1 ? 'má' : 'mají'}.</p>`;
+          <p class="rules-note cenk-chybi" data-chybi="${esc(chybiJmena.join('|'))}">${chybiKraje.length === 1 ? 'Chybí tu' : 'Chybějí tu'} ${chybiKraje.join(', ')}: zemědělské půdy je v nabídce málo na to, aby z ní vyšla obvyklá cena. ${chybiKraje.length === 1 ? 'Vlastní stránku ten kraj má' : 'Vlastní stránku ty kraje mají'}.</p>`;
   const krajeSekce = !krajeRadky ? '' : `
       <div class="add-card">
         <div class="rules-sect">
-          <h2 id="cenk-nadpis">Ceny po krajích</h2>
-          <p class="rules-note cenk-uvod">Zemědělská půda v <b>Kč/m²</b>, od nejlevnějšího kraje. Velké číslo je obvyklá cena, pod ním rozpětí, ve kterém leží polovina nabídek.</p>
+          <h2 class="s-ik" id="cenk-nadpis"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mapa"/></svg>Ceny po krajích</h2>
+          <p class="rules-note cenk-uvod">Zemědělská půda, od nejlevnějšího kraje. Velké číslo je obvyklá cena za metr, pod ním rozpětí, ve kterém je polovina nabídek.</p>
           <div class="cenk-tab" aria-labelledby="cenk-nadpis">
 ${krajeRadky}
           </div>${krajeChybiVeta}
@@ -2300,17 +2304,17 @@ ${krajeRadky}
             <b class="trh-cislo">${k.podil} %</b>
             <span class="trh-popis">do ${k.dni} dní</span>
             <span class="trh-pas" aria-hidden="true"><i style="width:${Math.max(1.5, k.podil).toFixed(1)}%"></i></span>
-            <span class="trh-zkolika">${fmt(k.pryc)} z ${fmt(k.zKolika)}</span>
+            <span class="trh-zkolika">${fmt(k.pryc)} z ${fmt(k.zKolika)} sledovaných</span>
           </li>`).join('\n') : '';
   const sekceTrhu = !maTrh ? '' : `
       <div class="add-card">
         <div class="rules-sect">
-          <h2 id="trh-nadpis">Jak rychle nabídky mizí</h2>
-          <p class="rules-note">Sledováno den po dni od <b>${esc(datumCesky(AT.okno.od))}</b>, tedy ${fmt(AT.okno.dni)} dní.</p>
+          <h2 class="s-ik" id="trh-nadpis"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hodiny"/></svg>Jak rychle nabídky mizí</h2>
+          <p class="rules-note">Sledujeme je den po dni od <b>${esc(datumCesky(AT.okno.od))}</b>, tedy ${fmt(AT.okno.dni)} dní. Každá lhůta se počítá jen z nabídek, které jsme stihli sledovat celou tu dobu — u delších lhůt je jich proto míň.</p>
 ${trhPruhy ? `          <ul class="trh-seznam" aria-labelledby="trh-nadpis">
 ${trhPruhy}
           </ul>` : ''}
-${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dolů u <b>${fmt(atZl.nabidek)} ${atZl.nabidek === 1 ? 'nabídky' : 'nabídek'}</b>${atZl.medianSleva !== null ? `, obvykle o <b>${atZl.medianSleva} %</b> po <b>${atZl.medianDni} dnech</b>` : ''}. Nahoru u ${fmt(atZl.zdrazeni)}.</p>` : ''}
+${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">U <b>${fmt(atZl.nabidek)} ${atZl.nabidek === 1 ? 'nabídky' : 'nabídek'}</b> šla cena dolů${atZl.medianSleva !== null ? `, obvykle o <b>${atZl.medianSleva} %</b> po <b>${atZl.medianDni} dnech</b>` : ''}. Nahoru šla u <b>${fmt(atZl.zdrazeni)}</b>.</p>` : ''}
         </div>
       </div>`;
 
@@ -2338,10 +2342,11 @@ ${atZl && atZl.pocet >= MIN_ZMEN ? `          <p class="trh-veta">Cena šla dol�
      co z rozporu dělá informaci. */
   const metodika = `
           <details class="cen-metodika cen-samostatna">
-            <summary>Jak tahle čísla počítáme</summary>
+            <summary><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg>Jak tahle čísla počítáme</summary>
             <p class="rules-note">Pracujeme s cenami <b>nabídkovými</b>, z veřejně inzerovaných pozemků. Za kolik se pozemek nakonec prodal, se z veřejných zdrojů zjistit nedá.</p>
             <p class="rules-note">„Obvyklá" cena je <b>medián</b>, ne průměr: jeden pozemek za 4 000 Kč/m² mezi stovkou polí po 20 Kč/m² průměr utrhne, s mediánem nepohne. Rozpětí pod ním jsou <b>čtvrtiny</b> (25. a 75. percentil), ne nejlevnější a nejdražší inzerát — ten bývá překlep ve zdroji a tvrdit o něm „nejnižší cena v kraji" by znamenalo tvrdit, že se za to dá koupit.</p>
             <p class="rules-note">Do mediánů <b>nezapočítáváme ceny, které nestanovil trh</b>: vyvolávací cenu dražby, odhad u exekuce ani <b>prodej státní půdy podle § 12</b> — tam prodává Státní pozemkový úřad oprávněné osobě za cenu stanovenou úředně. Je to desetina všech nabídek a cena je jinde: u orné půdy medián 8 Kč/m² proti 74 Kč/m² na trhu, u zahrady 40 proti 791. Smíchané by vyšlo číslo, které neplatí ani pro stát, ani pro trh. Ty nabídky na webu zůstávají, jen neurčují „obvyklou cenu".</p>
+            <p class="rules-note"><b>Kraj se do tabulky dostane, až je z čeho počítat:</b> potřebujeme aspoň ${MIN_PRICE} nabídek zemědělské půdy, u kterých cena za metr nepřekročí 500&nbsp;Kč. Dražší pole už je fakticky stavební parcela — a třeba v Praze je takových většina, proto tam obvyklá cena pole nevyjde.</p>
             <p class="rules-note"><b>Spoluvlastnické podíly se započítávají</b>, ale přepočtené: cena se dělí výměrou, která kupujícímu připadne, ne celou parcelou. U podílu 1/6 je tedy cena za metr šestkrát vyšší než při naivním dělení. Když velikost podílu inzerát neuvádí, nabídka se do mediánu nedostane vůbec — vymyslet si ji nelze. Kraje se počítají jen ze zemědělské půdy, aby se nemíchala s dražšími stavebními parcelami; vyhledávač výš ukazuje medián za celý okres, protože menší celek by byla hrstka nabídek.</p>
 ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdou <b>jen nabídky, které jsme mohli sledovat celých N dní</b> — proto je u každého čísla napsané, z kolika. „Pryč" znamená, že nabídka zmizela ze zdroje; nemusí to znamenat prodáno, mohla být i stažena.</p>
             <p class="rules-note"><b>Průměrnou dobu prodeje tu nenajdete</b>, protože by to byla nepravda. Okno je ${fmt(AT.okno.dni)} dní a ${fmt(AT.sledovano.zivych)} <b>sledovaných</b> nabídek na trhu pořád je — u většiny z nich ještě nevíme, jak dlouho tam nakonec budou. Medián jen z těch, co už zmizely, by vyšel krátký: zmizely přece ty rychlé. Statistika tomu říká <b>cenzurování zprava</b>. Až okno povyroste a většina sledovaných nabídek skončí, bude se dát spočítat i medián — do té doby ne.</p>` : ''}
@@ -2393,7 +2398,7 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
               <span class="drh-jmeno">${esc(x.jm)}</span>
               <b class="drh-cislo">${fmt(x.s.med)} Kč/m²</b>
               <span class="drh-pas" aria-hidden="true"><i style="width:${sirka.toFixed(1)}%"></i></span>
-              <span class="drh-pasmo">polovina nabídek ${fmt(x.s.lo)}–${fmt(x.s.hi)} · ${fmt(x.s.n)} nabídek</span>
+              <span class="drh-pasmo">polovina nabídek mezi ${fmt(x.s.lo)} a ${fmt(x.s.hi)} Kč/m² · z ${fmt(x.s.n)} nabídek</span>
             </li>`;
   }).join('\n');
   /* Poměr se počítá, nepíše se od stolu — data se mění každou noc. */
@@ -2402,8 +2407,8 @@ ${maTrh ? `            <p class="rules-note">Do podílu „po N dnech pryč" jdo
   const druhySekce = !druhyRadky ? '' : `
       <div class="add-card">
         <div class="rules-sect">
-          <h2 id="drh-nadpis">Nejdřív druh, potom místo</h2>
-          <p class="rules-note">${druhyPomer >= 2 ? `Stavební parcela vyjde na metr <b>${fmt(druhyPomer)}×</b> dráž než les. ` : ''}Žádná jedna „cena pozemku" neexistuje — tohle jsou čtyři různé trhy.</p>
+          <h2 class="s-ik" id="drh-nadpis"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-druh"/></svg>Cena podle druhu</h2>
+          <p class="rules-note">${druhyPomer >= 2 ? `Stavební parcela stojí za metr <b>${fmt(druhyPomer)}×</b> víc než les. ` : ''}Jedna „cena pozemku" proto neexistuje.</p>
           <ul class="drh-seznam" aria-labelledby="drh-nadpis">
 ${druhyRadky}
           </ul>
@@ -2445,30 +2450,26 @@ ${druhyRadky}
            dva krajní druhy, takže je hned vidět, že jedna „cena
            pozemku" neexistuje. Rozpad na všechny čtyři je v kartě
            „Nejdřív druh, potom místo" hned pod pásem. -->
-      <p class="sub">${druhyData.length >= 2 ? `Podle druhu: <b>${fmt(druhyData[0].s.med)} Kč/m²</b> za stavební, <b>${fmt(druhyData[druhyData.length - 1].s.med)} Kč/m²</b> za les. Kolik ve vašem okrese, zjistíte níž.` : (natZ ? `Zemědělská půda u nás stojí obvykle <b>${fmt(natZ.med)} Kč/m²</b>. Kolik ve vašem okrese, zjistíte níž.` : 'Co se dnes na trhu děje, kolik stojí půda u vás a jak se liší kraj od kraje.')}</p>
+      <p class="sub">${druhyData.length >= 2 ? `Stavební parcela <b>${fmt(druhyData[0].s.med)} Kč/m²</b>, les <b>${fmt(druhyData[druhyData.length - 1].s.med)} Kč/m²</b>. Napište níž svou obec a uvidíte ceny u vás.` : (natZ ? `Zemědělská půda stojí obvykle <b>${fmt(natZ.med)} Kč/m²</b>. Napište níž svou obec a uvidíte ceny u vás.` : 'Napište svou obec a uvidíte, kolik stojí půda u vás.')}</p>
     </div>
     </div>
   </section>
 
   <section class="section">
     <div class="wrap okr-wrap">
-${druhySekce}
-
-      <!-- GRAF CENOVÉ HLADINY ZA CELOU ČR. Byl na 91 stránkách okresů
-           a krajů, ale na stránce, která je přímo o cenách, chyběl — a to
-           je ta nejpodivnější díra: data pro celostátní řadu v
-           data/historie-cen.json ležela od začátku (osm řad podle druhu,
-           z toho čtyři dost klidné na kreslení), jen je nikdo nežádal.
-           Je to TENTÝŽ prvek i skript jako na okresech, žádný druhý
-           výpočet; řadu si vybere js/graf-cen.js sám podle toho, která je
-           nejlépe doložená, a když by žádná klidná nebyla, nenakreslí nic
-           — ani prázdný rámeček. Stojí hned pod podnadpisem, protože ten
-           říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
-${sekceTrhu}
-
+      <!-- NEJDŘÍV TO, PROČ SEM ČLOVĚK PŘIŠEL.
+           Majitel 7. 11.: „nedává to lidem, co by chtěli, mělo by to
+           tam být rovnou." Měl pravdu: stránka se jmenuje „Kolik stojí
+           pozemek?" a odpověď PRO TOHO ČTENÁŘE — kolik stojí půda
+           u něj — byla až třetí karta, pod dvěma kartami celostátních
+           statistik. Ty statistiky jsou zajímavé, ale jsou to čísla
+           o trhu; člověk sem jde se svou obcí.
+           Pořadí je teď: moje obec → podle druhu → podle kraje →
+           jak rychle nabídky mizí → graf v čase → metodika. Od
+           nejosobnějšího k nejobecnějšímu. -->
       <div class="add-card">
         <div class="rules-sect">
-          <h2 id="ceny-hledat-nadpis">Kolik stojí půda u vás</h2>
+          <h2 class="s-ik" id="ceny-hledat-nadpis"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-zamerit"/></svg>Kolik stojí půda u vás</h2>
           <!-- Žádný odstavec s návodem: co se má napsat, říká samo pole
                („Třeba Benešov nebo Zdice"), a že je výsledek za celý
                okres, stojí v metodice dole. Věta navíc tady znamenala
@@ -2490,7 +2491,22 @@ ${sekceTrhu}
         </div>
       </div>
 
+${druhySekce}
+
+      <!-- GRAF CENOVÉ HLADINY ZA CELOU ČR. Byl na 91 stránkách okresů
+           a krajů, ale na stránce, která je přímo o cenách, chyběl — a to
+           je ta nejpodivnější díra: data pro celostátní řadu v
+           data/historie-cen.json ležela od začátku (osm řad podle druhu,
+           z toho čtyři dost klidné na kreslení), jen je nikdo nežádal.
+           Je to TENTÝŽ prvek i skript jako na okresech, žádný druhý
+           výpočet; řadu si vybere js/graf-cen.js sám podle toho, která je
+           nejlépe doložená, a když by žádná klidná nebyla, nenakreslí nic
+           — ani prázdný rámeček. Stojí hned pod podnadpisem, protože ten
+           říká dnešní hladinu a graf k ní dodává, kam se hýbe. -->
+
 ${krajeSekce}
+
+${sekceTrhu}
 
       <!-- GRAF AŽ TADY, A S VLASTNÍ OTÁZKOU NAD SEBOU.
            Stával hned pod podnadpisem jako první věc na stránce. Jenže
@@ -2505,8 +2521,8 @@ ${krajeSekce}
            není díra, ale odpověď „skoro nic se neděje". -->
       <div class="add-card">
         <div class="rules-sect">
-          <h2 id="cenc-nadpis">A hýbe se to v čase?</h2>
-          <p class="rules-note">Zatím skoro ne. Archiv sleduje nabídky od&nbsp;září&nbsp;2026, což je na závěry o trhu krátká doba — čára níž je tu proto, aby bylo vidět, že se hladina drží, ne aby se z ní četl trend.</p>
+          <h2 class="s-ik" id="cenc-nadpis"><svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-kalendar"/></svg>Mění se ceny v čase?</h2>
+          <p class="rules-note">Zatím skoro ne. Sledujeme nabídky teprve od&nbsp;září&nbsp;2026, takže na závěry o trhu je brzy. Čára níž ukazuje, že se hladina drží.</p>
           <div data-graf-cen data-uroven="cr" data-kde="${osaz('v celé ČR')}"></div>
         </div>
       </div>

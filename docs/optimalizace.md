@@ -29059,3 +29059,80 @@ i s křížkem. Na úzkém telefonu navíc „Moje poloha" zůstala jen ikonou.
 plochu, smí sahat na ROZMĚRY, ne na směr řádků ani na typ zobrazení.
 `min-height` a `min-width` ano; `display`, `flex-direction` a `order`
 ne — ty patří k rozvržení té součástky a mění, kde co leží.
+
+## §481
+
+**„Nedává to lidem, co by chtěli": odpověď, pro kterou člověk na
+stránku přišel, byla třetí karta pod dvěma kartami statistik.**
+
+Majitel poslal dva snímky stránky „Kolik stojí pozemek?" a tři výtky
+v jedné větě: chybí tam naše ikonky, nedává to lidem, co by chtěli,
+a texty jsou matoucí. Všechny tři se dají změřit a všechny tři se
+ukázaly jako pravda.
+
+**POŘADÍ KARET BYLO OBRÁCENÉ PROTI ZÁJMU ČTENÁŘE.** Pořadí na stránce
+bylo: cena podle druhu → jak rychle nabídky mizí → **kolik stojí půda
+u vás** → ceny po krajích → graf v čase. Člověk, který si přišel pro
+cenu pozemku, chce cenu U SEBE; dostal dvě karty celostátních
+statistik a své vyhledávací pole až za nimi. Nové pořadí jde od
+nejosobnějšího k nejobecnějšímu. Obě verze změřené v jednom běhu na
+telefonu 390 px, svislá poloha nadpisů:
+
+| | předtím | potom |
+|---|---|---|
+| kolik stojí půda u vás | **1 382** | **401** |
+| cena podle druhu | 426 | 553 |
+| ceny po krajích | 1 548 | 1 033 |
+| jak rychle nabídky mizí | 882 | 2 305 |
+| mění se ceny v čase | 2 988 | 2 842 |
+
+Vyhledávací pole se posunulo o 981 px nahoru — z třetí karty, kam se
+člověk musel prorolovat přes dvě obrazovky statistik, na první věc
+pod podnadpisem. Statistiky se nemazaly, jen přestaly stát v cestě.
+
+**MATOUCÍ TEXT BYL MATOUCÍ TÍM, CO ZAMLČEL.** Tabulka lhůt uvádí
+u každé lhůty jiný jmenovatel („79 z 1 912 sledovaných") a nikde
+nestálo PROČ se jmenovatel zmenšuje. Důvod je prostý: každá lhůta se
+počítá jen z nabídek, které jsme stihli sledovat celou tu dobu, takže
+u delších lhůt je jich méně. Jedna věta navíc udělala z podezřelého
+čísla samozřejmost. Stejně tak „polovina nabídek mezi 1 282 a 5 676
+Kč/m² · z 245 nabídek" říká totéž, co předtím zabralo dva řádky
+o percentilech.
+
+**IKONA MÍSTO BEZEJMENNÉ VLASOVÉ LINKY.** Nadpisy sekcí nesly jen
+tenkou linku z `::before`. Linka nic neříká; ikona ze sady říká,
+o čem sekce je — zaměřit (u vás), druh, mapa, hodiny, kalendář. Nové
+pravidlo `.rules-sect > h2.s-ik::before{display:none;}` tu linku
+u nadpisu s ikonou vypíná, protože **dvě značky na jednom nadpisu
+jsou horší než jedna.** Změřeno v prohlížeči: všech pět nadpisů má
+ikonu a u všech pěti vrací `getComputedStyle(h, '::before').display`
+hodnotu `none`.
+
+**HLÍDÁ SE TVRZENÍ, NE ZNĚNÍ.** Dřív se zkouška chytala doslovného
+začátku věty („Jeden kraj tu není:"). Jenže tu větu bylo potřeba
+přepsat — a hlídač, který drží znění, drží i jeho vady: pak se buď
+nesmí psát líp, nebo hlídač zrezaví. Věta teď nese `data-chybi` se
+jmény krajů oddělenými svislítkem: strojové pole vedle lidského textu,
+každá strana psaná po svém.
+
+**PĚT SABOTÁŽÍ.** Všechny shodily právě jednu kontrolu:
+
+| sabotáž | co padlo |
+|---|---|
+| statistiku nad vyhledávání (v hotové stránce) | „a stojí nad všemi souhrnnými kartami" |
+| **totéž v GENERÁTORU + přestavba** | **tatáž kontrola — řetěz generátor → stránka → hlídač drží** |
+| nadpisu vzít ikonu | „každý nadpis sekce nese ikonu ze sady" |
+| ukázat na `#i-stopky`, kterou sprite nemá | „a je to ikona, kterou sprite opravdu má" |
+| zrušit `h2.s-ik::before{display:none}` | „a vlasová linka je u nadpisu s ikonou vypnutá" |
+
+Ta druhá řádka je ta podstatná. Stránka je generovaná, takže sabotáž
+v hotovém souboru dokazuje jen tolik, že hlídač umí číst — ne že
+umí chytit vadu, která vznikne tam, kde se vady opravdu píšou.
+**U generovaného webu patří sabotáž do generátoru a přestavba je
+součást sabotáže.**
+
+**Pravidlo, které z toho zbývá:** pořadí karet na stránce je TVRZENÍ
+o tom, co čtenář hledá — a tvrzení se dá hlídat. Dokud ho nikdo
+nehlídal, nikdo si přehození nevšiml, dokud si nestěžoval další
+člověk; na statickém webu o 3 010 stránkách je stížnost majitele
+dost drahý hlídač.

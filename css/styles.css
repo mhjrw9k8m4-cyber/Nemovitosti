@@ -7317,6 +7317,21 @@ body{background:var(--bg);}
 .rules-sect > h2::before{content:""; display:block; width:52px; height:2px;
   border-radius:2px; background:var(--accent-warm); opacity:0.85; margin-bottom:12px;}
 .clanek .rules-sect > h2::before{display:none;}
+/* ODDÍL ZNAČÍ IKONA, NEBO VLASOVKA — NIKDY OBOJÍ.
+   Majitel 7. 11.: „kde jsou naše ikonky?" Vlasovka nad nadpisem je
+   anonymní značka; web má přitom vlastní sadu ikon (§145), kterou
+   tyhle přehledové stránky vůbec nepoužívaly. Nadpis, který ikonu
+   nese, ji má MÍSTO vlasovky: dvě značky nad jedním nadpisem jsou
+   o jednu víc. Velikost 24 px a tloušťka 1,5 px (36/24) jsou tytéž
+   míry jako u všech ostatních ikon — hlídá to scripts/test-tahy.mjs. */
+.rules-sect > h2.s-ik{display:flex; align-items:center; gap:8px;}
+.rules-sect > h2.s-ik::before{display:none;}
+.rules-sect > h2.s-ik .ik{width:24px; height:24px; flex:none; stroke-width:1.5;
+  color:var(--accent-warm);}
+/* Shrnutí metodiky je <summary>, ne nadpis — ikona v něm je drobnější
+   a drží barvu textu, aby to pořád vypadalo jako rozbalovač. */
+.cen-metodika summary .ik{width:17px; height:17px; flex:none; stroke-width:2.1;
+  margin-right:8px; vertical-align:-3px;}
 
 /* =====================================================================
    RYTMUS STRÁNKY
