@@ -40,6 +40,7 @@
    ty dvě hodnoty můžou rozejít. Stejnou cestou je bere
    scripts/kontrola-spusteni.mjs (ř. 55–56). */
 import { readFileSync } from 'node:fs';
+import { fetchSLimitem } from './fetch-s-limitem.mjs';
 
 const config = readFileSync(new URL('../js/config.js', import.meta.url), 'utf8');
 const ZAKLAD = ((/window\.PK_SUPABASE_URL\s*=\s*'([^']+)'/.exec(config) || [])[1] || '').replace(/\/+$/, '');
@@ -58,7 +59,7 @@ const NE = (co, proc) => { vad++; nalezy.push(co + ': ' + proc); console.log('  
 const NEVIM = (co, proc) => { nezmereno++; console.log('  ? ' + co + '\n      ' + proc); };
 
 async function dotaz(cesta, volby = {}) {
-  const r = await fetch(ZAKLAD + cesta, {
+  const r = await fetchSLimitem(ZAKLAD + cesta, {
     ...volby,
     headers: {
       apikey: KLIC,

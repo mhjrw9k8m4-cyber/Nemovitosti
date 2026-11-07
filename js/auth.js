@@ -60,6 +60,49 @@
   function uid() { var s = getSession(); return (s && s.user && s.user.id) || ''; }
   function token() { var s = getSession(); return (s && s.access_token) || ''; }
 
+  /* JE ADRESA POTVRZENÁ?
+     Tohle není kosmetika. create_listing (supabase/listings-prvni-kontrola.sql)
+     zakládání inzerátu NEPOTVRZENÉ adrese odmítne — a web to člověku
+     dosud řekl až ve chvíli, kdy měl vyplněný celý formulář, nahrané
+     fotky a zmáčkl Odeslat. Kdo potvrzovací e-mail nedostal (spadl do
+     spamu, nedošel), narazil na konci dlouhé práce a nevěděl proč.
+     Vrací se tři různé věci, a ten rozdíl je důležitý:
+       true   — adresa potvrzená, zakládání projde
+       false  — potvrzená NENÍ, a to se má říct DOPŘEDU
+       null   — nevíme (odhlášený, nebo uložená session ta pole nemá);
+                pak se nemá tvrdit ani jedno. Hádat „asi je v pořádku"
+                by vadu schovalo, hádat „asi není" by leklo lidi,
+                kterým nic není. */
+  function potvrzeny() {
+    var s = getSession();
+    var u = s && s.user;
+    if (!u) return null;
+    if (u.email_confirmed_at || u.confirmed_at) return true;
+    if (!('email_confirmed_at' in u) && !('confirmed_at' in u)) return null;
+    return false;
+  }
+
+  /* Poslat potvrzovací e-mail znovu. Supabase na to má vlastní koncový
+     bod; posílá se na adresu z přihlášení, takže si tím nikdo nemůže
+     nechat poslat potvrzení na cizí schránku. */
+  function poslatPotvrzeniZnovu() {
+    var mail = email();
+    if (!URL || !KEY || !mail) return Promise.resolve({ ok: false, duvod: 'neprihlasen' });
+    return fetch(URL + '/auth/v1/resend', {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'signup', email: mail }),
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        if (r.ok) return { ok: true };
+        /* Strop na počet odeslání je normální stav, ne porucha — a člověk
+           potřebuje vědět, že má počkat, ne klikat dál. */
+        if (/rate limit|over_email_send_rate|too many/i.test(t)) return { ok: false, duvod: 'strop' };
+        return { ok: false, duvod: 'chyba', stav: r.status };
+      });
+    }).catch(function () { return { ok: false, duvod: 'sit' }; });
+  }
+
   function headers(useUser) {
     var h = { 'apikey': KEY, 'Content-Type': 'application/json' };
     var s = getSession();
@@ -331,6 +374,7 @@
     ready: !!(URL && KEY),
     getSession: getSession, loggedIn: loggedIn, prihlasen: prihlasen, email: email, uid: uid, token: token, deviceId: deviceId,
     signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive, platiJeste: platiJeste,
-    recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
+    recover: recover, recoveryToken: recoveryToken, setPassword: setPassword,
+    potvrzeny: potvrzeny, poslatPotvrzeniZnovu: poslatPotvrzeniZnovu
   };
 })();

@@ -1647,6 +1647,16 @@ body{background:var(--bg)}
 .rules-sect>h2.s-ik{display:flex;align-items:center;gap:8px}
 .rules-sect>h2.s-ik::before{display:none}
 .rules-sect>h2.s-ik .ik{width:24px;height:24px;flex:none;stroke-width:1.5;color:var(--accent-warm)}
+.add-nepotvrzeno{display:flex;align-items:flex-start;gap:12px;margin:0 0 20px;padding:16px;border:1px solid var(--c-warn);border-radius:var(--r-plocha);background:var(--accent-warm-soft)}
+.add-nepotvrzeno .ik{width:24px;height:24px;flex:none;stroke-width:1.5;color:var(--c-warn);margin-top:2px}
+.anp-text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.5}
+.anp-text b{font-weight:700}
+.anp-stav{color:var(--muted);font-size:13px}
+.anp-stav:empty{display:none}
+.anp-znovu{flex:none;white-space:nowrap}
+@media (max-width:520px){.add-nepotvrzeno{flex-wrap:wrap}
+.anp-znovu{flex:1 1 100%}
+}
 .rea-cisla{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:24px}
 .rea-cisla li{flex:1 1 80px;min-width:0;display:flex;flex-direction:column;gap:4px}
 .rea-cisla b{font-size:28px;line-height:1.1;font-weight:700;color:var(--accent-warm);font-variant-numeric:tabular-nums}

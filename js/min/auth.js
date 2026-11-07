@@ -42,6 +42,32 @@
   function uid() { var s = getSession(); return (s && s.user && s.user.id) || ''; }
   function token() { var s = getSession(); return (s && s.access_token) || ''; }
 
+  function potvrzeny() {
+    var s = getSession();
+    var u = s && s.user;
+    if (!u) return null;
+    if (u.email_confirmed_at || u.confirmed_at) return true;
+    if (!('email_confirmed_at' in u) && !('confirmed_at' in u)) return null;
+    return false;
+  }
+
+  function poslatPotvrzeniZnovu() {
+    var mail = email();
+    if (!URL || !KEY || !mail) return Promise.resolve({ ok: false, duvod: 'neprihlasen' });
+    return fetch(URL + '/auth/v1/resend', {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'signup', email: mail }),
+    }).then(function (r) {
+      return r.text().then(function (t) {
+        if (r.ok) return { ok: true };
+
+        if (/rate limit|over_email_send_rate|too many/i.test(t)) return { ok: false, duvod: 'strop' };
+        return { ok: false, duvod: 'chyba', stav: r.status };
+      });
+    }).catch(function () { return { ok: false, duvod: 'sit' }; });
+  }
+
   function headers(useUser) {
     var h = { 'apikey': KEY, 'Content-Type': 'application/json' };
     var s = getSession();
@@ -236,6 +262,7 @@
     ready: !!(URL && KEY),
     getSession: getSession, loggedIn: loggedIn, prihlasen: prihlasen, email: email, uid: uid, token: token, deviceId: deviceId,
     signup: signup, login: login, logout: logout, rpc: rpc, keepAlive: keepAlive, platiJeste: platiJeste,
-    recover: recover, recoveryToken: recoveryToken, setPassword: setPassword
+    recover: recover, recoveryToken: recoveryToken, setPassword: setPassword,
+    potvrzeny: potvrzeny, poslatPotvrzeniZnovu: poslatPotvrzeniZnovu
   };
 })();

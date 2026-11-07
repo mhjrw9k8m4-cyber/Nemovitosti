@@ -30,9 +30,13 @@ permissions:
 jobs:
   cesty:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Úloha nic nepushuje, takže token nemá co zůstávat v .git/config.
+          persist-credentials: false
 
       - name: Node.js
         uses: actions/setup-node@v4

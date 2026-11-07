@@ -100,11 +100,19 @@ async function otevri(prihlasit) {
       body: JSON.stringify([{ lat: '50.0281', lon: '15.2000' }]) });
   });
   if (prihlasit) {
+    /* Co se přimíchá k uživateli v session — tím se dá nasadit
+       „adresa potvrzená" / „nepotvrzená" / „stará session, která
+       ten údaj nemá vůbec". Ty tři stavy se na stránce chovají
+       jinak a pruh „Potvrďte e-mail" stojí právě na jejich
+       rozlišení (PKAuth.potvrzeny vrací true / false / null). */
+    const navic = (typeof prihlasit === 'object' && prihlasit) ? prihlasit : {};
+    await ctx.addInitScript((u) => { window.__PK_USER_NAVIC = u; }, navic);
     await ctx.addInitScript(() => {
       try {
         localStorage.setItem('pk_auth', JSON.stringify({ access_token: 'tok-majitel',
           refresh_token: 'ref-majitel', expires_at: Math.floor(Date.now() / 1000) + 3600,
-          user: { id: '11111111-1111-4111-8111-111111111111', email: 'majitel@parcelka.test' } }));
+          user: Object.assign({ id: '11111111-1111-4111-8111-111111111111',
+        email: 'majitel@parcelka.test' }, window.__PK_USER_NAVIC || {}) }));
       } catch (e) {}
     });
   }
@@ -1053,6 +1061,64 @@ async function odesli(p) {
     pravda('chyby: nic se u toho nerozbilo', padlo.length === 0, padlo.join(' | '));
   }
   await ctx.close();
+}
+
+/* ---- PRUH „POTVRĎTE E-MAIL" ---------------------------------------
+ *
+ * Server (create_listing, supabase/listings-prvni-kontrola.sql)
+ * zakládání NEPOTVRZENÉ adrese odmítne. Web to dřív řekl až z chybové
+ * hlášky PO odeslání — tedy na konci vyplněného formuláře a nahraných
+ * fotek. Pruh to říká dopředu.
+ *
+ * Měří se všechny TŘI stavy, protože nejnebezpečnější je ten třetí:
+ * uložená session ze starší verze ten údaj nemusí mít vůbec, a kdyby
+ * se „chybí údaj" četlo jako „nepotvrzeno", svítil by pruh lidem,
+ * kterým nic není — a ti by ho pak ignorovali i tehdy, kdy platí. */
+{
+  const stavy = [
+    ['potvrzená adresa', { email_confirmed_at: '2026-11-01T10:00:00Z' }, false],
+    ['NEpotvrzená adresa', { email_confirmed_at: null, confirmed_at: null }, true],
+    ['stará session bez toho údaje', {}, false],
+  ];
+  for (const [jmeno, navic, maSvitit] of stavy) {
+    const { ctx, p } = await otevri(navic);
+    await p.goto(`${BASE}/pridat.html`, { waitUntil: 'load' });
+    await p.waitForTimeout(400);
+    const vid = await p.evaluate(() => {
+      const b = document.getElementById('add-nepotvrzeno');
+      return { je: !!b, videt: !!(b && !b.hidden),
+        mail: (document.getElementById('anp-email') || {}).textContent || '' };
+    });
+    pravda(`pruh o potvrzení existuje (${jmeno})`, vid.je, 'na stránce není #add-nepotvrzeno');
+    pravda(`a u stavu „${jmeno}" ${maSvitit ? 'svítí' : 'nesvítí'}`,
+      vid.videt === maSvitit, `naměřeno vidět=${vid.videt}`);
+    if (maSvitit) {
+      pravda('a je v něm adresa, na kterou potvrzení šlo',
+        vid.mail === 'majitel@parcelka.test', `v pruhu stojí „${vid.mail}"`);
+    }
+    await ctx.close();
+  }
+
+  /* Tlačítko „Poslat znovu" musí opravdu zavolat Supabase, ne jen
+     přebarvit hlášku. Odpověď se podstrčí, aby zkouška neposílala
+     e-maily — měří se, že dotaz ODEŠEL a kam. */
+  {
+    const { ctx, p } = await otevri({ email_confirmed_at: null });
+    const poslano = [];
+    await ctx.route('**/auth/v1/resend*', (route) => {
+      poslano.push(route.request().url());
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+    });
+    await p.goto(`${BASE}/pridat.html`, { waitUntil: 'load' });
+    await p.waitForTimeout(300);
+    await p.click('#anp-znovu');
+    await p.waitForTimeout(500);
+    pravda('tlačítko „Poslat znovu" opravdu zavolá Supabase',
+      poslano.length === 1, `odešlo ${poslano.length} dotazů na /auth/v1/resend`);
+    const hl = await p.textContent('#anp-stav');
+    pravda('a člověk se dozví, že odešlo', /Odesláno/i.test(hl || ''), `hláška: „${hl}"`);
+    await ctx.close();
+  }
 }
 
 await prohlizec.close();

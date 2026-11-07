@@ -513,6 +513,7 @@ body{background:var(--bg)}
 
 
 
+
 @media (max-width:880px){.crumbs a{padding:2px 0;display:inline-block}
 }
 footer{position:relative;isolation:isolate;overflow:hidden;border-top:1px solid var(--line);background:var(--pas-plocha-paticka);color:var(--pas-text-mute);padding:48px 0 24px;margin-top:8px}

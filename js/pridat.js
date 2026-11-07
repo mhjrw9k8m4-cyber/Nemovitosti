@@ -1290,8 +1290,56 @@
       // Živý náhled + síla inzerátu dávají smysl až u vyplňování — ukážeme je jen přihlášeným.
       var pv = document.getElementById('live-preview-card'); if (pv) pv.hidden = !on;
       var em = document.getElementById('auth-email'); if (em) em.textContent = (window.PKAuth ? PKAuth.email() : '');
+      nepotvrzenoPruh(on);
       if (on) loadQuota();
     }
+    /* PRUH „POTVRĎTE E-MAIL" — PŘED FORMULÁŘEM, NE ZA NÍM.
+       Server (create_listing) nepotvrzenou adresu odmítne, takže
+       vyplňovat formulář nemá smysl, dokud potvrzená není. Dřív se
+       to člověk dozvěděl až z chybové hlášky po odeslání — tedy na
+       konci práce, kterou musel zahodit.
+       PKAuth.potvrzeny() umí tři odpovědi a všechny tři se tu liší:
+       true nic neukáže, false pruh rozsvítí, null (nevíme — stará
+       uložená session nemusí ten údaj mít) taky nic, protože lekat
+       člověka na základě dohadu je horší než mlčet. */
+    function nepotvrzenoPruh(prihlasen) {
+      var box = document.getElementById('add-nepotvrzeno');
+      if (!box) return;
+      var stav = (window.PKAuth && PKAuth.potvrzeny) ? PKAuth.potvrzeny() : null;
+      var ukaz = !!prihlasen && stav === false;
+      box.hidden = !ukaz;
+      if (!ukaz) return;
+      var kam = document.getElementById('anp-email');
+      if (kam) kam.textContent = (window.PKAuth ? PKAuth.email() : '');
+    }
+
+    var anpZnovu = document.getElementById('anp-znovu');
+    if (anpZnovu) {
+      anpZnovu.addEventListener('click', function () {
+        var hl = document.getElementById('anp-stav');
+        if (!(window.PKAuth && PKAuth.poslatPotvrzeniZnovu)) return;
+        anpZnovu.disabled = true;
+        if (hl) hl.textContent = 'Posílám…';
+        PKAuth.poslatPotvrzeniZnovu().then(function (r) {
+          if (!hl) return;
+          if (r && r.ok) {
+            hl.textContent = 'Odesláno. Podívejte se do schránky i do spamu.';
+            /* Tlačítko se úmyslně nevrací: druhé klepnutí hned po
+               prvním akorát narazí na strop odesílání u Supabase. */
+            return;
+          }
+          anpZnovu.disabled = false;
+          if (r && r.duvod === 'strop') {
+            hl.textContent = 'Zpráv odešlo moc najednou — zkuste to prosím za pár minut.';
+          } else if (r && r.duvod === 'sit') {
+            hl.textContent = 'Nepovedlo se spojit se serverem. Zkuste to prosím znovu.';
+          } else {
+            hl.textContent = 'Poslat se to teď nepovedlo. Zkuste to prosím za chvíli.';
+          }
+        });
+      });
+    }
+
     // Ukazatel „zbývá X z 10 inzerátů" — ať člověk ví, kolik ještě může přidat.
     function loadQuota() {
       var q = document.getElementById('quota-info'); if (!q || !(window.PKAuth && PKAuth.rpc)) return;

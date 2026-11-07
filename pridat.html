@@ -67,7 +67,7 @@
        kdy ve stylu narazí na @font-face, tedy o jedno kolo později. -->
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin.woff2" crossorigin>
   <link rel="preload" as="font" type="font/woff2" href="fonts/inter-latin-ext.woff2" crossorigin>
-  <link rel="stylesheet" href="css/zaklad.min.css?v=19da8d60">
+  <link rel="stylesheet" href="css/zaklad.min.css?v=b87c533f">
   <!-- Seznam jmen tisíce tříd MobileNetu (10,3 kB po gzipu) se nahraje
        teprve s modelem u první fotky — viz pripravTridy v js/fototema.js.
        Adresa je tady, aby jí razítko ?v= doplnilo sestavení. -->
@@ -207,6 +207,23 @@
                  jde přes kontrolu. Lhůta zůstala tady, a ne v nadpisu
                  stránky, schválně — patří k odeslání, ne k rozhodnutí
                  sem vůbec přijít. -->
+            <!-- NEPOTVRZENÁ ADRESA SE ŘEKNE PŘED FORMULÁŘEM, NE ZA NÍM.
+                 create_listing zakládání nepotvrzené adrese odmítne
+                 (supabase/listings-prvni-kontrola.sql). Dosud se to
+                 člověk dozvěděl až po vyplnění celého formuláře
+                 a nahrání fotek — tedy na konci půlhodiny práce.
+                 Pruh je prázdný a skrytý, dokud js/pridat.js nezjistí,
+                 že adresa potvrzená NENÍ; ten rozdíl dělá PKAuth.potvrzeny(),
+                 která umí i „nevím" a v tom případě pruh nesvítí. -->
+            <div class="add-nepotvrzeno" id="add-nepotvrzeno" role="status" aria-live="polite" hidden>
+              <svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-obalka"/></svg>
+              <div class="anp-text">
+                <b>Potvrďte prosím e-mail, než inzerát vyplníte.</b>
+                <span>Poslali jsme odkaz na <span id="anp-email"></span>. Bez potvrzení se inzerát neuloží — je to ochrana proti spamu. Mrkněte i do spamu.</span>
+                <span class="anp-stav" id="anp-stav"></span>
+              </div>
+              <button type="button" class="btn-ghost anp-znovu" id="anp-znovu">Poslat znovu</button>
+            </div>
             <p class="add-lead">Stačí vyplnit <b>obec, výměru a cenu</b> — zbytek je nepovinný. Nabídka je na mapě hned po odeslání.</p>
             <!-- MÁM INZERÁT JINDE. Kdo prodává pozemek, má ho skoro vždycky
                  vypsaný ještě někde jinde — a přepisovat totéž podruhé ručně
@@ -492,7 +509,7 @@
 
 <script src="js/min/menu.js?v=8274c66b" defer></script>
 <script src="js/min/config.js?v=8ba36013" defer></script>
-<script src="js/min/auth.js?v=113f2e09" defer></script>
+<script src="js/min/auth.js?v=13c37bab" defer></script>
 <script src="js/min/exif.js?v=0898cf9e" defer></script>
 <script src="js/min/snimek.js?v=45b2b4c1" defer></script>
 <script src="js/min/fotoskupiny.js?v=ea1541fa" defer></script>
@@ -500,7 +517,7 @@
 <script src="js/min/vybaveni.js?v=8e3b34f9" defer></script>
 <script src="js/min/predvyplneni.js?v=6b11f275" defer></script>
 <script src="js/min/kontrola.js?v=c57c2aae" defer></script>
-<script src="js/min/pridat.js?v=452fabb9" defer></script>
+<script src="js/min/pridat.js?v=b688e58e" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

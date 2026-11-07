@@ -29190,3 +29190,56 @@ dopíše počet rukou do věty; někdo dopíše vymyšlenou návštěvnost. Ta
 poslední je tu schválně: web je nový, čítač návštěv žádné veřejné
 číslo nedává, a realitka, která by na vymyšlené číslo přišla, se
 nevrátí. Hlídá se proto i to, co stránka **nesmí** tvrdit.
+
+## §483
+
+**„Má to 100% fungovat": tři cesty změřené naživo, a slabé místo
+bylo tam, kde web mlčel.**
+
+Majitel chtěl mít jistotu u tří věcí — přidat inzerát, hlídání,
+zprávy. Měření šlo ve dvou krocích a ten pořádek je ta lekce.
+
+**KROK 1: ZKOUŠKY V PROHLÍŽEČI PROŠLY, A NIC TÍM NEBYLO DOKÁZÁNO.**
+`test-pridat` 96 kontrol, `test-hlidani-prohlizec` 73, `test-zpravy`
+i `test-hlidani` celé — všechno zelené. Jenže všechny běží proti
+FALEŠNÉ Supabase. Dokazují prohlížečovou polovinu; o serverové
+neříkají nic, a právě tam leželo podezření (v databázi nula inzerátů).
+
+**KROK 2: SONDA NAŽIVO Z ACTIONS.** Odsud na živý web síť nepustí
+(403 z proxy), ale GitHub Actions ano. `scripts/kontrola-cest.mjs`
+se ptá na to, co fixtura prokázat nemůže:
+
+| cesta | naměřeno |
+|---|---|
+| create_listing | nasazená, nepřihlášeného odmítá správně |
+| registrace | projde, Supabase potvrzovací e-mail přijal k odeslání |
+| watch_subscriptions, my_searches | nasazené, odpovídají |
+| messages, my_threads | nasazené, odpovídají |
+
+**ROZBITÉ NEBYLO NIC. Slabé místo bylo v tom, co web NEŘEKL.**
+`create_listing` zakládání nepotvrzené adrese odmítne — a web to
+člověku sdělil až z chybové hlášky PO odeslání, tedy na konci
+vyplněného formuláře a nahraných fotek. Kdo potvrzovací e-mail
+nedostal (spadl do spamu, nedošel), narazil na konci dlouhé práce
+a nevěděl proč. Pruh „Potvrďte e-mail" to teď říká nad formulářem,
+s tlačítkem na opětovné poslání.
+
+**TŘI STAVY, NE DVA.** `PKAuth.potvrzeny()` vrací true / false /
+**null**. To null je ta podstatná část: uložená session ze starší
+verze ta pole nemá vůbec, a kdyby se „chybí údaj" četlo jako
+„nepotvrzeno", svítil by pruh lidem, kterým nic není — a ti by ho
+pak ignorovali i tehdy, kdy platí. Sabotáž S1 (zrušit větev s null)
+to potvrdila: spadla kontrola „u staré session nesvítí". **Varování,
+které někdy lže, přestane být varováním.**
+
+**HLÍDAČI CHYTLI TŘI VADY V MÝCH VLASTNÍCH NOVÝCH SOUBORECH:**
+`fetch` bez časového limitu, úloha v CI bez stropu běhu a checkout,
+který nechával token v `.git/config` u úlohy, co nic nepushuje. Nic
+z toho nesouvisí s tím, co jsem řešil — a přesně proto to má hlídat
+stroj, ne pozornost.
+
+**Co zůstává mimo dosah měření:** jestli ten potvrzovací e-mail
+opravdu DORAZÍ do schránky. Supabase ho přijal k odeslání, ale
+doručení přes jeho vestavěný odesílatel je omezené a ke schránkám
+jako seznam.cz se nemusí dostat. To se nedá změřit odsud ani
+z Actions — pozná se to jen z vlastní schránky.
