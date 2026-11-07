@@ -14,6 +14,11 @@
    "prokazanych": 19,
    "slepych": 9,
    "nalezu": 1
+  },
+  "2026-11-07": {
+   "prokazanych": 20,
+   "slepych": 9,
+   "nalezu": 1
   }
  },
  "zkousky": {
@@ -1317,17 +1322,19 @@
    "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   },
   "test-kontrola-databaze.mjs": {
-   "kdy": "2026-11-05",
+   "kdy": "2026-11-07",
    "hlidá": 1,
-   "chytila": 5,
-   "nechytila": 0,
+   "chytila": 4,
+   "nechytila": 1,
    "rovnocenne": [],
    "slepa": [],
-   "mlcela": [],
+   "mlcela": [
+    "zahozená pojistka (if … continue) v scripts/kontrola-databaze.mjs"
+   ],
    "nedorucene": [],
    "nelzeTady": false,
    "pomucky": [],
-   "otisk": "fc40f2ad7efd",
+   "otisk": "a6d2becbf0ef",
    "poznamka": ""
   },
   "test-kontrola-e2e.mjs": {
@@ -1531,15 +1538,77 @@
    "pomucky": [],
    "otisk": "d3a182cec8c0",
    "poznamka": "zkouška padá UŽ BEZ SABOTÁŽE (konec 1) — nejdřív ji opravit, prokazovat se dá jen zelená zkouška. Konec výpisu: "
+  },
+  "test-filtry-telefon.mjs": {
+   "kdy": "2026-11-07",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "1aa7cf6aa03e",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-inzerat-token.mjs": {
+   "kdy": "2026-11-07",
+   "hlidá": 2,
+   "chytila": 1,
+   "nechytila": 5,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [
+    "obrácené porovnání (>= na >) v scripts/kontrola-databaze.mjs",
+    "obrácená rovnost (=== na !==) v scripts/kontrola-databaze.mjs",
+    "zahozená pojistka (if … continue) v scripts/kontrola-databaze.mjs",
+    "a místo nebo (&& na ||) v scripts/kontrola-databaze.mjs",
+    "posunutá konstanta (+1) v scripts/kontrola-databaze.mjs"
+   ],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "7d5f854894a4",
+   "poznamka": ""
+  },
+  "test-inzeraty-zaloha.mjs": {
+   "kdy": "2026-11-07",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "7d229237d95f",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
+  },
+  "test-karta-odkaz.mjs": {
+   "kdy": "2026-11-07",
+   "hlidá": 0,
+   "chytila": 0,
+   "nechytila": 0,
+   "rovnocenne": [],
+   "slepa": [],
+   "mlcela": [],
+   "nedorucene": [],
+   "nelzeTady": false,
+   "pomucky": [],
+   "otisk": "5f2afb2e3dec",
+   "poznamka": "zkouška neimportuje nic z našeho kódu — mechanická sabotáž tu nemá co rozbít"
   }
  },
- "updated": "2026-11-06",
+ "updated": "2026-11-07",
  "nalezy": [
   {
    "jmeno": "hlídač, který ještě nic neprokázal",
    "trida": "hlídač",
    "tiha": 1,
-   "dukaz": "293 z 319 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
+   "dukaz": "304 z 330 zkoušek nemá ani jednu chycenou sabotáž; na řadě: test-afordance.mjs, test-anon-zapis.mjs, test-aria-cile.mjs, test-barva-ceny.mjs, test-barva-listy.mjs",
    "co": "Zkouška, která nikdy nic nechytila, je slib, ne důkaz (§369)."
   }
  ],
@@ -2279,36 +2348,45 @@
     "chytily": [
      "test-kontrola-databaze.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-inzerat-token.mjs"
+    ],
+    "hlidacu": 2
    },
    "obrácená rovnost (=== na !==)": {
     "chytily": [
      "test-kontrola-databaze.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-inzerat-token.mjs"
+    ],
+    "hlidacu": 2
    },
    "zahozená pojistka (if … continue)": {
-    "chytily": [
-     "test-kontrola-databaze.mjs"
+    "chytily": [],
+    "mlcely": [
+     "test-kontrola-databaze.mjs",
+     "test-inzerat-token.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "hlidacu": 2
    },
    "a místo nebo (&& na ||)": {
     "chytily": [
      "test-kontrola-databaze.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-inzerat-token.mjs"
+    ],
+    "hlidacu": 2
    },
    "posunutá konstanta (+1)": {
     "chytily": [
      "test-kontrola-databaze.mjs"
     ],
-    "mlcely": [],
-    "hlidacu": 1
+    "mlcely": [
+     "test-inzerat-token.mjs"
+    ],
+    "hlidacu": 2
    }
   },
   "scripts/port-kontroly.mjs": {
@@ -2394,6 +2472,15 @@
      "test-kategorie.mjs"
     ],
     "hlidacu": 3
+   }
+  },
+  "scripts/sql-koncovy-stav.mjs": {
+   "obrácená rovnost (=== na !==)": {
+    "chytily": [
+     "test-inzerat-token.mjs"
+    ],
+    "mlcely": [],
+    "hlidacu": 1
    }
   }
  }
