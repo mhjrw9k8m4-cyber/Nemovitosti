@@ -293,7 +293,7 @@ const vlozeneStranky = readdirSync('.')
   const zhustit = (v) => String(v).toLowerCase().replace(/\s+/g, '').replace(/;$/, '');
   const styly = new Map(vlozeneStranky);
   // PŘEDPOKLAD: bez vložených stylů by kontrola proběhla naprázdno
-  const chybi = ['404.html', 'inzerce.html', 'diagnostika.html'].filter((f) => !styly.has(f));
+  const chybi = ['404.html', 'diagnostika.html'].filter((f) => !styly.has(f));
   pravda('stránky s vlastním stylem mají co porovnávat', chybi.length === 0, chybi.join(', '));
   {
     /* Hodnota jedné vlastnosti v jednom bloku. Bloky jsou v tom souboru
@@ -320,8 +320,6 @@ const vlozeneStranky = readdirSync('.')
       ['404.html', 'a.sec', 'color', 'znacka', 'barva záložní akce'],
       /* Přestupní stránka: vidí se na vteřinu, než přesměruje — ale ta
          vteřina má být táž barva jako zbytek webu. */
-      ['inzerce.html', 'body', 'background', 'bg', 'plocha přestupní stránky'],
-      ['inzerce.html', 'body', 'color', 'text', 'barva textu na přestupní stránce'],
       /* Diagnostika si drží vlastní malý soubor tokenů, protože stylopis
          nenačítá; hodnoty v něm ale mají být tytéž. */
       ['diagnostika.html', ':root', '--bg', 'bg', 'plocha diagnostiky'],

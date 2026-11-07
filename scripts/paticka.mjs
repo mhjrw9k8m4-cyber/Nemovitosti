@@ -33,11 +33,20 @@ export const S_KANALEM = new Set(['index.html', 'pozemek-od-obce.html']);
 
 const KANAL = '\n      <a href="novinky.xml" type="application/rss+xml">Kanál novinek</a>';
 
+/* „PRO REALITKY" JE V PATIČCE NA KAŽDÉ STRÁNCE, A TO SCHVÁLNĚ.
+   Stránka inzerce.html je ta, kterou majitel posílá realitním
+   kancelářím — a realitka se na web obvykle dostane přes nabídku
+   konkurence, ne přes úvodní stránku. Odkaz v liště by bral místo
+   šesti položkám, které potřebuje kupující; patička je na každé
+   stránce a nikomu nepřekáží. Zároveň je to jediný vnitřní odkaz
+   na tu stránku — bez něj by stála v mapě webu osamoceně, což
+   scripts/test-vyhledavac.mjs hlídá. */
 export function paticka(soubor) {
   return `<footer>
   <div class="wrap foot-bottom">
     <span class="mono">© 2026 Parcelka · data z veřejných zdrojů</span>
     <span class="foot-pravni">
+      <a href="inzerce.html">Pro realitky</a>
       <a href="ochrana-udaju.html" data-info="soukromi">Zásady soukromí</a>
       <a href="podminky.html" data-info="podminky">Podmínky použití</a>
       <a href="kontakt.html">Kontakt</a>${S_KANALEM.has(soubor) ? KANAL : ''}

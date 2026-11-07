@@ -29136,3 +29136,57 @@ o tom, co čtenář hledá — a tvrzení se dá hlídat. Dokud ho nikdo
 nehlídal, nikdo si přehození nevšiml, dokud si nestěžoval další
 člověk; na statickém webu o 3 010 stránkách je stížnost majitele
 dost drahý hlídač.
+
+## §482
+
+**Stránka pro realitky: číslo napsané rukou je pravda jen do
+nejbližšího běhu robota.**
+
+Majitel chtěl web dodělat, aby ho mohl ukázat realitním kancelářím.
+Největší díra nebyla technická — živý web prošel 15 z 15 kontrol
+v prohlížeči —, ale obsahová: `inzerce.html`, jediná adresa, která
+zní jako „tady se inzeruje", byla **přesměrování na formulář**.
+Realitka se nedozvěděla, co z toho má, kolik toho na webu je, ani
+že je to zdarma.
+
+**ČÍSLA PATŘÍ DO ZNAČKY, NE DO VĚTY.** Stránka pro realitky je první,
+která se bez počtů neobejde: kdo zvažuje, jestli sem dá svůj majetek,
+se ptá „kolik toho máte" a „odkud to berete". Napsat do věty „2 329
+nabídek" je ale pravda do nejbližšího běhu robota — a pak je to na
+webu lež, které si nikdo nevšimne, protože tu větu podruhé nikdo
+nečte. Počty se proto píšou jako prázdná značka
+
+```html
+<span data-pk-cislo="nabidky"></span>
+```
+
+a sestavení (`scripts/cisla-do-textu.mjs`) do ní vloží hodnotu
+z `data/mapa.json` — z TÉHOŽ souboru, ze kterého je bere odznak
+v liště, takže se obě čísla nemůžou rozejít. Lišta to uměla
+odjakživa; chybělo jen to, že totéž potřebuje i text.
+
+**PĚT HLÍDAČŮ SPADLO, A VŠECHNY MĚLY PRAVDU.** Nová stránka shodila
+`test-osnova`, `test-soustava`, `test-sdileni`, `test-skripty-na-strance`
+a `test-predloha`. Všechny držely starý předpoklad („inzerce.html je
+přesměrování"), a každý ten předpoklad si napsal jinam: výjimka
+v seznamu, položka mezi stránkami s vlastním stylem, chybějící řádek
+v mapě webu, skript rozcestníku, který by se sám vypnul. Šestý,
+`test-vyhledavac`, pak našel skutečnou vadu: na stránku v mapě webu
+nevedl žádný odkaz. **Když hlídač spadne na nové stránce, neznamená
+to, že stránka je špatně — znamená to, že někde je zapsaný předpoklad,
+který právě přestal platit, a ten se má přepsat, ne obejít.**
+
+**A JEDEN HLÍDAČ CHYTIL MOJI VLASTNÍ CHYBU VE VLASTNÍM HLÍDAČI.**
+Do nové zkoušky jsem napsal `/\b(návštěv\w*|čtenář\w*)\b/` — přesně tu
+vadu, kterou §454 popisuje: `\b` je hranice mezi `\w` a ne-`\w`, české
+písmeno do `\w` nepatří, takže před „č" stojí hranice vždycky a
+„návštěvníků" by se za `\w*` nedotáhlo celé. `test-mrtva-hranice`
+to shodil dřív, než se to dostalo do CI. Hlídač psaný proti vlastní
+třídě vad chytá i toho, kdo ho psal.
+
+**ČTYŘI SABOTÁŽE, ČTYŘI PÁDY.** Číslo na stránce zestárne (2 329 →
+2 500); krok ze sestavení vypadne a značka zůstane prázdná; někdo
+dopíše počet rukou do věty; někdo dopíše vymyšlenou návštěvnost. Ta
+poslední je tu schválně: web je nový, čítač návštěv žádné veřejné
+číslo nedává, a realitka, která by na vymyšlené číslo přišla, se
+nevrátí. Hlídá se proto i to, co stránka **nesmí** tvrdit.

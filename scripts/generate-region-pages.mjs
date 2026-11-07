@@ -2847,6 +2847,10 @@ const staticUrls=[
   {loc:'cena-pozemku.html',cf:'weekly',pr:'0.8'},
   {loc:'data.html',cf:'daily',pr:'0.5'},
   {loc:'radce.html',cf:'monthly',pr:'0.7'},
+  /* Stránka pro realitní kanceláře — ta, kterou jim majitel posílá.
+     Do mapy webu patří: je to vstupní stránka pro vyhledávače, ne
+     přestupní stanice na pridat.html jako dřív. */
+  {loc:'inzerce.html',cf:'monthly',pr:'0.6'},
   {loc:'pravidla-inzerce.html',cf:'monthly',pr:'0.4'},
   {loc:'podminky.html',cf:'yearly',pr:'0.3'},
   {loc:'ochrana-udaju.html',cf:'yearly',pr:'0.3'},

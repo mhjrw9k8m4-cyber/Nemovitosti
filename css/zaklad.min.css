@@ -751,6 +751,22 @@ body{background:var(--bg)}
 .rules-sect>h2.s-ik{display:flex;align-items:center;gap:8px}
 .rules-sect>h2.s-ik::before{display:none}
 .rules-sect>h2.s-ik .ik{width:24px;height:24px;flex:none;stroke-width:1.5;color:var(--accent-warm)}
+.rea-cisla{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:24px}
+.rea-cisla li{flex:1 1 80px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.rea-cisla b{font-size:28px;line-height:1.1;font-weight:700;color:var(--accent-warm);font-variant-numeric:tabular-nums}
+.rea-cisla span{font-size:14px;line-height:1.4;color:var(--muted)}
+.rea-seznam{list-style:none;margin:12px 0 0;padding:0}
+.rea-seznam li{position:relative;padding:0 0 0 20px;margin:0 0 12px}
+.rea-seznam li:last-child{margin-bottom:0}
+.rea-seznam li::before{content:"";position:absolute;left:0;top:8px;width:8px;height:2px;background:var(--accent-warm)}
+.rea-kroky{list-style:none;margin:12px 0 0;padding:0;counter-reset:rea}
+.rea-kroky li{counter-increment:rea;position:relative;padding:0 0 0 32px;margin:0 0 12px}
+.rea-kroky li:last-child{margin-bottom:0}
+.rea-kroky li::before{content:counter(rea);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--accent-warm-soft);color:var(--accent-warm);font-size:13px;font-weight:700;line-height:24px;text-align:center}
+.rea-zaver{background:var(--surface-2)}
+.hero-akce{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:24px 0 0}
+@media (max-width:420px){.hero-akce .btn-primary,.hero-akce .btn-ghost{flex:1 1 100%;justify-content:center}
+}
 .cen-metodika summary .ik{width:17px;height:17px;flex:none;stroke-width:2.1;margin-right:8px;vertical-align:-3px}
 .sources{background:var(--plocha-jemna);color:var(--text);padding:var(--oddil-y) 0}
 .sources::before,.sources::after{display:none}

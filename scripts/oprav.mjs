@@ -48,6 +48,9 @@ const KROKY = [
   /* Až ZA generátory (zapisují stránky s vlastní podobou lišty) a PŘED
      sazbou i razítkováním: vkládá text, který se má vysázet, a odkazy,
      které se razítkují. */
+  /* Až ZA generátory (ty stránky přepisují celé) a PŘED sazbou: čísla
+     se vkládají do textu a ta sazba je má vysázet jako každé jiné. */
+  ['cisla-do-textu.mjs', 'počty nabídek, okresů a zdrojů do textu stránek'],
   ['sjednot-hlavicku.mjs', 'jedna lišta pro celý web'],
   ['sjednot-paticku.mjs', 'jedna patička pro celý web'],
   /* Až ZA lištou a patičkou (ty do stránek ikony vkládají) a PŘED

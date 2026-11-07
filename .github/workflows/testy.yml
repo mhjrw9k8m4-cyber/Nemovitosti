@@ -645,6 +645,9 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-sliby-data.mjs
 
+      - name: Stránka pro realitky (čísla sedí s daty, nic se neslibuje navíc)
+        run: node scripts/test-pro-realitky.mjs
+
       - name: Právní stránky (datum poslední úpravy a co v nich být musí)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-pravni-stranky.mjs

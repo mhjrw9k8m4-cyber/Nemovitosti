@@ -39,7 +39,6 @@ const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
    důvod pořád platí. */
 const BEZ_H1 = {
   'pozemek.html': { proc: 'předloha stránky pozemku — h1 vkládá js/pozemek.js z dat', znacka: 'PK_POZEMEK' },
-  'inzerce.html': { proc: 'přesměrování na pridat.html', znacka: 'http-equiv="refresh"' },
   'pozemky-od-lidi.html': { proc: 'přesměrování na index.html#od-lidi', znacka: 'http-equiv="refresh"' },
   'predloha.html': { proc: 'vzorník vizuálního jazyka — ukazuje podobu h1 jako exponát, takže ho má dvakrát', znacka: 'data-mera' },
 };

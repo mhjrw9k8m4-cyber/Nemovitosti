@@ -238,7 +238,7 @@ pravda('rozteče jsou nejvýš dvě a obě pojmenované', roztece.size <= 2
    404 a diagnostika si schválně NENAČÍTAJÍ stylopis: mají vyjít i tehdy,
    když ostatní soubory chybí, takže v nich tokeny k mání nejsou. */
 const JE_VYROBENA = /^(pozemek|pozemky)-/;
-const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html', 'inzerce.html']);
+const BEZ_STYLOPISU = new Set(['404.html', 'diagnostika.html']);
 const zdroje = readdirSync('css')
   .filter((f) => f.endsWith('.css') && !f.endsWith('.min.css'))
   .sort()
