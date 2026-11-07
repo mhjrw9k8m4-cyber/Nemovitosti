@@ -28888,3 +28888,60 @@ musí nechat zapsat a pohlídat. Jinak ho příští oprava v dobré vůli
 odstraní — a rozbije něco, co s ní nemá nic společného. Pozná se to
 jen tím, že se každá taková vedlejší služba napíše jako samostatná
 kontrola: tady „kurzor klávesnice je v první kartě nové strany".
+
+## §478
+
+**Web sliboval poštu, která neodchází — a slíbil ji na jiném místě, než
+jsem čekal.**
+
+Hlídání má dvě cesty ven: e-mail (`scripts/send-alerts.mjs`) a
+upozornění do telefonu (`scripts/send-push.mjs`). Obě jsou hotové a obě
+jsou vypnuté: `PK_MAIL_ZAPNUTO` je `false` a veřejný klíč VAPID je
+prázdný. Změřeno nasucho z Actions 7. 11., a to měření bylo užitečnější,
+než jsem čekal:
+
+| co | stav |
+|---|---|
+| `RESEND_API_KEY` | **je** nastavený |
+| `PK_MAIL_FROM` (odesílatel) | **chybí** |
+| SQL hlídání v databázi | nasazené (funkce `hlidani_k_odeslani` odpověděla) |
+| odběratelé | **nula** — „Není komu psát: žádné hledání se zapnutým posíláním" |
+| klíče VAPID (telefon) | všechny tři chybí |
+
+**KDE JSEM VADU HLEDAL A KDE BYLA.** Hledal jsem ji u přepínače
+„Posílat e-mailem" — a ten je napsaný správně: `mailRow()` vrací prázdno,
+dokud `PK_MAIL_ZAPNUTO` není true, takže se vůbec nevykreslí. Totéž
+`pushRow()` bez klíče VAPID. Lež byla o patro výš, v kartě, která tu
+službu PRODÁVÁ každému nepřihlášenému návštěvníkovi: „Co vám hlídání
+**pošle**", „Upozornění **chodí** jen na pozemky, které nově přibudou",
+„Takhle často by se **ozvala** tahle tři hlídání". Tři věty, tři slova
+o tom, že se web ozve sám, a pod nimi tři spočítaná čísla, která těm
+slovům dávala váhu.
+
+**MĚŘIT TO, CO ČLOVĚK VIDÍ, A NE TO, CO ČEKÁM.** Našel jsem to tím, že
+jsem místo čtení kódu projel všechen VIDITELNÝ text tří stránek
+a vytáhl věty se slovy „ozve, pošle, upozorn, e-mailem, přijde" (jen
+prvky s `offsetParent`, tedy opravdu vidět). Na hlidani.html z toho
+vypadla jediná věta — a byla to právě ta nesprávná. Hledat vadu
+v souboru, o kterém si myslím, že ji má, je o jeden krok horší než
+nechat si ukázat, co je na obrazovce.
+
+**HLÍDÁNÍ PŘITOM FUNGUJE**, jen mlčí: nové pozemky se vypíšou přímo
+v kartě uloženého hledání a jejich počet ukazuje i úvodní stránka.
+Text to teď říká takhle, a hlavně se řídí TÝMIŽ dvěma přepínači jako ty
+dva řádky s přepínači — jedno pravidlo, ne dvě. Opraven i druhý text,
+který odkazoval na „Upozornění": takové místo na webu není, v menu jsou
+„Zprávy" a nové pozemky se vypisují u hlídání.
+
+**ZKOUŠKA MĚŘÍ OBA SMĚRY, A TO JE U TAKOVÉHO PRAVIDLA PODSTATA.**
+`scripts/test-slib-hlidani.mjs` podstrčí `js/min/config.js` a změří, že
+s vypnutými cestami ven karta odeslání neslibuje, a se zapnutou poštou
+slibuje. Bez té druhé poloviny by prošla i oprava „nikdy nic
+neslibovat", která by službu zamlčela i ve chvíli, kdy začne fungovat.
+Dvě sabotáže, dva různé nálezy: `posilaSe = true` → 3 kontroly padly,
+`posilaSe = false` → padla právě ta jedna o zapnuté poště.
+
+**Pravidlo, které z toho zbývá:** text, který mluví o tom, co umí
+nastavení, se musí ptát TOHO nastavení — ne být napsaný podle toho, jak
+to bylo v den, kdy se psal. A hlídač takového textu musí hlídat obě
+strany; jednostranný by schválil mlčení.
