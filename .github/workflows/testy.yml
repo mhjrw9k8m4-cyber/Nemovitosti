@@ -1162,6 +1162,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-filtry-telefon.mjs
 
+      - name: Inzerát od člověka přežije pomalou databázi
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-inzeraty-zaloha.mjs
+
       - name: Kalkulačka nákladů při koupi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs

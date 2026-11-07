@@ -6425,16 +6425,8 @@
       }
 
       var users = Array.isArray(ul) ? ul : (ul && ul.listings);
-      if (users && users.length) {
-        users.forEach(function (u) {
-          if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
-          u.type = 'majitel';
-          if (!u.extra) u.extra = 'od majitele';
-          base.push(u);
-        });
-      }
-
       PKCisteni.majitele(live).forEach(function (d) { base.push(d); });
+      PKCisteni.majitele(users || []).forEach(function (d) { base.push(d); });
 
       base = PKCisteni.pozemky(base);
 

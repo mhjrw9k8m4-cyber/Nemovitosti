@@ -28659,3 +28659,59 @@ změnil, chování ne. Po opravě sabotáže (`display:inline-flex` →
 změnil — je třeba ověřit, že se změnila **vypočtená hodnota**.
 Kaskáda umí každou záplatu v témže pravidle tiše spolknout a sabotáž
 se tím stane prázdnou, aniž by to diff poznal.
+
+## §474
+
+**Inzerát od člověka na pomalém připojení zmizel — a pojistka proti tomu
+ležela prázdná od chvíle, kdy vznikla.**
+
+Majitel napsal, že přidal nabídky a na webu je nevidí. První dvě moje
+domněnky byly vedle a obě padly na měření:
+
+1. „Zrušil jsem pravidlo veřejného čtení na `listings`, takže je nikdo
+   nepřečte." NE — web je čte přes `public_listings()`, a ta je
+   `security definer`, tedy mimo RLS. Zrušené pravidlo nevadí.
+2. „Prohlížeč volá `create_listing` se 13 parametry, databáze zná 10."
+   NE — poslední definice v balíku jich má 13 a sedí na to, co volá
+   `js/pridat.js`.
+
+**CO SE ZMĚŘILO.** Spuštěním `scripts/kontrola-inzeratu.mjs` z Actions
+(servisní klíč, tedy mimo RLS) vyšlo: **v ostré databázi je nula
+schválených inzerátů.** Nic se tedy neuložilo — nebylo co zobrazovat.
+Proč formulář neuložil, se z repozitáře zjistit nedá; server má šest
+podmínek a web na každou z nich hlášku umí ukázat.
+
+**CO SE PŘITOM NAŠLO NAVÍC, A TO UŽ JE VADA.** Inzeráty od lidí chodí
+na web dvěma cestami: živě přes `public_listings()` a ze statického
+`data/user-listings.json`. Živá cesta má strop 2,5 s — když Supabase
+odpoví pomaleji, což je na mobilní síti běžné, web ji POTICHU vynechá.
+Statická cesta to měla zachytit, jenže ten soubor nikdo neobnovoval:
+ležel prázdný (`[]`) od 14. 10. 2026. Na pomalém připojení tedy
+inzerát od člověka nebyl vidět vůbec. Od 7. 11. ho v noci plní
+`scripts/stahni-inzeraty.mjs` (čte jen veřejný anon klíč, při výpadku
+starý soubor nemaže).
+
+**A DRUHÁ VADA V TÉMŽE MÍSTĚ.** Statická cesta si nabídku skládala
+SAMA (`u.type = 'majitel'`), zatímco živá šla přes
+`PKCisteni.majitele()`. Dvě různá skládání téhož znamenají, že se na
+pomalém připojení ukázalo něco jiného než na rychlém: statická cesta
+neuměla dosadit sítě do `d.site`, takže filtr „Inzerát uvádí: voda"
+týž pozemek zahodil. Teď jdou obě cesty přes převodník.
+
+**SABOTÁŽ ZABILA KUS MÉHO VLASTNÍHO KÓDU.** Napsal jsem k tomu
+odstraňovač duplicit podle `_lid` — a sabotáž „zruš ho" prošla.
+Nebylo to slepé místo zkoušky: duplicity už odstraňuje `boot()` přes
+`PKHlidani.bezDuplicit()`, a to schválně na jednom místě, protože se
+musí počítat stejně na mapě i v hlídání. Můj odstraňovač byl třetí
+kopie, kterou nic nepotřebovalo. Smazán.
+
+**A ZKOUŠKA MĚLA SLEPÉ MÍSTO, KTERÉ TAKY NAŠLA AŽ SABOTÁŽ.** První
+verze měřila jen obec, cenu a výměru — a ty projdou oběma cestami, i tou
+špatnou. Sabotáž „statická cesta mimo převodník" proto prošla. Teď
+fixtura nese sítě a zkouška je hledá filtrem; tím se obě cesty dají
+rozeznat.
+
+**Pravidlo, které z toho zbývá:** dvě cesty k témuž údaji jsou v pořádku
+jen tehdy, když vedou přes TÝŽ převodník. Jinak se jedna z nich tiše
+rozejde a pozná se to až u toho, kdo má pomalou síť — tedy u člověka,
+který si nejmíň stěžuje a nejdřív odejde.

@@ -93,6 +93,15 @@ jobs:
       # později, nic se nezkazí — ale kdyby neběžel vůbec, zmizelé
       # nabídky se ztratí a zpětně se dopočítat dají jen z historie
       # gitu, tedy dokud ji někdo nepřepíše.
+      # Inzeráty od lidí z databáze do data/user-listings.json. Je to
+      # ZÁLOHA pro případ, že živé volání public_listings() nestihne svůj
+      # strop 2,5 s (na mobilní síti běžné) — bez ní inzerát od člověka
+      # na pomalém připojení potichu zmizel. Čte jen veřejný anon klíč
+      # z js/config.js, žádné tajemství nepotřebuje, a při výpadku
+      # databáze ponechá starý soubor a jen varuje.
+      - name: Inzeráty od lidí z databáze
+        run: node scripts/stahni-inzeraty.mjs
+
       - name: Archiv nabídek (co zmizelo a co zlevnilo)
         run: node scripts/archiv.mjs
 

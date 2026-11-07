@@ -10511,23 +10511,33 @@
           if (bt) bt.addEventListener('click', function () { location.reload(); });
         } catch (e) {}
       }
-      // Pozemky od majitelů — schválené inzeráty z data/user-listings.json
-      // přidáme na mapu MEZI ostatní (ne do zvláštní sekce), jako kategorie „Od majitele".
+      /* INZERÁTY OD LIDÍ CHODÍ DVĚMA CESTAMI A OBĚ VEDOU PŘES TÝŽ PŘEVODNÍK.
+         ----------------------------------------------------------------
+         1) ŽIVĚ z RPC public_listings() při načtení stránky. Má strop
+            2,5 s (ZIVE_STROP výš): na pomalé mobilní síti se nestihne.
+         2) ZE STATICKÉHO data/user-listings.json, které v noci obnoví
+            scripts/stahni-inzeraty.mjs.
+
+         Dřív byla druhá cesta mrtvá — soubor ležel prázdný od 14. 10. —
+         a navíc si skládala nabídku SAMA (jen `u.type = 'majitel'`),
+         zatímco živá cesta šla přes PKCisteni.majitele(). Dvě různá
+         skládání téhož znamenají, že se na pomalém připojení ukázalo
+         něco jiného než na rychlém: statická cesta neznala fotky,
+         vybavení, sítě ani přístup, protože ty umí dosadit jen
+         převodník. Teď jdou obě cesty přes něj.
+
+         OBOJÍ SE PŘIDÁ A DUPLICITY SE NEŘEŠÍ TADY. Napoprvé jsem sem
+         napsal vlastní odstraňovač podle `_lid` — a sabotáž ukázala, že
+         je k ničemu: zahodit ho nic nerozbilo. Duplicity totiž už
+         odstraňuje boot() přes PKHlidani.bezDuplicit(), a to schválně
+         na JEDNOM místě, protože se musí počítat stejně na mapě i
+         v hlídání (dokud to byly dvě kopie, mapa hlásila 1 940 pozemků
+         a hlídání 1 953). Druhý odstraňovač by byl přesně ta třetí
+         kopie. Když tedy živá cesta dojede a nese týž inzerát jako
+         soubor, přidá se dvakrát a bezDuplicit ho srovná na jeden. */
       var users = Array.isArray(ul) ? ul : (ul && ul.listings);
-      if (users && users.length) {
-        users.forEach(function (u) {
-          if (!u || typeof u.lat !== 'number' || typeof u.lng !== 'number') return;
-          u.type = 'majitel';
-          if (!u.extra) u.extra = 'od majitele';
-          base.push(u);
-        });
-      }
-      /* Živé inzeráty od majitelů ze Supabase (automatické zveřejnění).
-         Skládání řádku na pozemek bydlelo tady, tedy jen pro tuhle mapu;
-         stránka pozemku živé inzeráty nečetla vůbec a inzerát od majitele
-         se z rozeslaného odkazu neotevřel. Teď je to js/cisteni.js
-         a čtou to obě strany z jednoho místa. */
       PKCisteni.majitele(live).forEach(function (d) { base.push(d); });
+      PKCisteni.majitele(users || []).forEach(function (d) { base.push(d); });
 
       /* BEZPEČNOST — jedna branka pro VŠECHNA data. Bydlela tady, a tím jen
          pro tuhle mapu; stránka pozemku, hlídání ani Můj inzerát ji neměly.
