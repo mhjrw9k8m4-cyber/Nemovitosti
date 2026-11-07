@@ -28715,3 +28715,53 @@ rozeznat.
 jen tehdy, když vedou přes TÝŽ převodník. Jinak se jedna z nich tiše
 rozejde a pozná se to až u toho, kdo má pomalou síť — tedy u člověka,
 který si nejmíň stěžuje a nejdřív odejde.
+
+## §475
+
+**Zpět po zapnutí filtru vyhazovalo z webu — a první oprava byla jen
+půlka, kterou bylo vidět.**
+
+Web si stav (výřez mapy i filtry) zapisuje do hashe adresy. Dělal to
+VŽDY přes `history.replaceState`, tedy přepsáním dosavadní položky.
+Zapnutí filtru proto do historie nepřidalo nic. Naměřeno na telefonu
+390 px: `history.length` 3 → 3 a po stisku zpět byl prohlížeč na
+kontakt.html, tedy na stránce, ze které člověk na web přišel.
+
+**PROČ SE NEDÁ PUSHOVAT VŽDY.** Výřez mapy se zapisuje při každém
+posunu i při vlastním srovnání mapy webem. Kdyby každá taková změna
+zakládala položku, nasbíraly by se jich při běžném prohlížení desítky
+a odejít z webu by chtělo čtyřicet stisků. Rozhoduje proto FILTROVÁ
+část adresy (všechno kromě `m=`): změnila-li se, byl to záměr člověka.
+
+**PRVNÍ OPRAVA BYLA HORŠÍ NEŽ ŽÁDNÁ.** Samotný `pushState` stačil na
+to, aby web neodešel — a tím to vypadalo hotově. Jenže obnova
+`obnovZAdresy()` dosazuje jen to, co v adrese STOJÍ: je to řada
+podmínek `if (st.neco)`. Adresa přitom výchozí hodnoty schválně
+vynechává, takže „žádný druh v adrese" znamená „Vše" a to se jako
+hodnota nikam nedosadí. Naměřeno: po stisku zpět zůstal vybraný druh
+„Prodej", počet 2 236 a adresa se zpátky přepsala na `&t=sale`. Krok
+zpět tedy nevyhazoval z webu, ale nedělal vůbec nic — a to je pro
+člověka matoucí stejně.
+
+**DOTAŽENO BEZ PŘEPISOVÁNÍ OBNOVY.** `obnovZAdresy()` je dlouhá funkce
+s mnoha větvemi a každá má svůj důvod; přepsat ji na „zruš, co v adrese
+není" by byla velká změna s velkým rizikem. Místo toho se při kroku
+zpět nejdřív zavolá `resetFilters()` — táž cesta, kterou jde tlačítko
+„Zrušit filtry", tedy jediný úplný seznam toho, co web považuje za
+zapnuté — a teprve pak se dosadí, co v adrese je. Po opravě: zpět
+vrátí „Vše", počet 2 328 a z adresy zmizí `t=sale`.
+
+**JEDNU POLOVINU PRAVIDLA NEHLÍDÁ NIC A JE TO NAPSANÉ.** Kontrolu
+„posun mapy nezaloží položku historie" se mi změřit nepodařilo: mapa
+má v základním stavu třídu `kraj-lock` a drží pohled na celou ČR,
+dokud se nevybere kraj. Trojí pokus (tažení prstem i myší, telefon
+390 px i okno 1280 px) nechal hash `#m=49.82655,15.51503,9` beze
+změny. Sabotáž „pushovat vždy" proto zkouškou prošla. Nechat tam
+kontrolu, která nic neměří, by bylo horší než ji nemít — zelená by
+tvrdila něco, co se neověřilo. Slepé místo je proto přiznané přímo
+v hlavičce `scripts/test-zpet-filtr.mjs`.
+
+**Pravidlo, které z toho zbývá:** oprava, po které vada zmizí z očí,
+ale chování se nenapraví, je nebezpečnější než vada sama — protože
+vypadá hotově. U „zpět" to pozná jen ten, kdo si ověří, že se stav
+opravdu VRÁTIL, ne jen že se nic nestalo.

@@ -8959,6 +8959,18 @@
     };
   }
   var adresaCeka = null, adresaDrzi = false;
+  /* FILTROVÁ ČÁST ADRESY, aby se poznala ZÁMĚRNÁ změna od mimoděčné.
+     ------------------------------------------------------------------
+     Stav mapy (`m=šířka,délka,zoom`) se mění pokaždé, když někdo
+     posune mapu nebo si web sám srovná výřez. Filtry se mění jen
+     tehdy, když si o to člověk řekne. Rozdíl mezi tím rozhoduje
+     o tom, jestli se zapíše NOVÁ položka historie, nebo se přepíše
+     ta dosavadní — viz zapisAdresu() níž. */
+  function filtrZHashe(h) {
+    return String(h || '').replace(/^#/, '').split('&')
+      .filter(function (k) { return k.indexOf('m=') !== 0; }).join('&');
+  }
+  var posledniFiltr = filtrZHashe(location.hash);
   /* Zapisuje se se zpožděním: při tažení mapy chodí moveend v jednom
      kuse a psát do historie při každém pohybu je zbytečná práce. */
   function zapisAdresu() {
@@ -8977,8 +8989,31 @@
         /* Jednorázové příkazy (?p=, ?kraj=, ?obec=) si adresu uklízí sama
            cleanUrl(); do jejich půlky adresy se tu nesahá. */
         var nova = location.pathname + location.search + (h ? '#' + h : '');
+        /* ZPĚT MÁ VRÁTIT FILTR, NE VYHODIT Z WEBU.
+           ----------------------------------------------------------
+           Do 7. 11. se adresa VŽDY jen přepisovala (replaceState).
+           Zapnutí filtru tedy do historie nepřidalo nic a šipka zpět
+           člověka poslala na stránku, ze které na web přišel.
+           Naměřeno na telefonu 390 px: history.length 3 → 3 a po
+           stisku zpět byl prohlížeč na kontakt.html.
+
+           Pushovat při KAŽDÉ změně adresy ale nejde: výřez mapy se
+           zapisuje při každém posunu, takže by se historie zaplnila
+           desítkami položek a odejít z webu by chtělo čtyřicet stisků.
+           Rozhoduje proto FILTROVÁ část adresy (bez `m=`): změnila-li
+           se, byl to záměr člověka a dostane svou položku; změnil-li
+           se jen výřez, adresa se přepíše jako dřív.
+
+           Stav zpátky dosadí obnovZAdresy() přes posluchač hashchange
+           o kus níž — ten se při pohybu v historii vyvolá sám, protože
+           se mění hash. Vlastní zápis ho nevyvolá (replaceState ani
+           pushState hashchange neposílají), takže se nic nezacyklí. */
+        var filtrTed = filtrZHashe(h);
+        var zmenaFiltru = (filtrTed !== posledniFiltr);
+        posledniFiltr = filtrTed;
         if (nova !== location.pathname + location.search + location.hash) {
-          history.replaceState(null, '', nova);
+          if (zmenaFiltru) history.pushState(null, '', nova);
+          else history.replaceState(null, '', nova);
         }
       } catch (e) {}
     }, 350);
@@ -9094,6 +9129,11 @@
       }
     } finally {
       adresaDrzi = false;
+      /* Po obnově ze zpětného kroku je filtr v adrese TEN NOVÝ. Bez
+         tohohle by ho následující překreslení považovalo za změnu
+         a přidalo do historie další položku — zpět by pak jelo
+         napůl dopředu. */
+      posledniFiltr = filtrZHashe(location.hash);
     }
     if (neco) { try { if (typeof postavVybaveni === 'function') postavVybaveni(); renderList(); } catch (e) {} }
     return neco;
@@ -9112,6 +9152,28 @@
     if (adresaDrzi) return;
     try {
       if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+      /* NEJDŘÍV ZRUŠIT, PAK DOSADIT — jinak krok zpět nic neudělá.
+         ----------------------------------------------------------
+         obnovZAdresy() dosazuje jen to, co v adrese STOJÍ: je to řada
+         podmínek `if (st.neco)`. Adresa přitom výchozí hodnoty
+         schválně vynechává (viz js/odkaz.js), takže „žádný druh
+         v adrese" znamená „Vše" — a to se jako hodnota nikam nedosadí.
+
+         Naměřeno 7. 11. na telefonu 390 px: po zapnutí „Prodej"
+         a stisku zpět zůstal vybraný druh „Prodej", počet 2 236
+         a adresa se zpátky přepsala na `&t=sale`. Krok zpět tedy
+         vypadal, že nedělá nic.
+
+         resetFilters() je táž cesta, kterou jde tlačítko „Zrušit
+         filtry" — tedy jediný úplný seznam toho, co web považuje za
+         zapnuté (viz jeho komentář). Po něm se dosadí, co v adrese
+         je, a stav sedí.
+
+         Běží pod `adresaDrzi`, aby si překreslení uprostřed nezapsalo
+         rozdělaný stav do adresy. */
+      adresaDrzi = true;
+      try { if (typeof resetFilters === 'function') resetFilters(); }
+      finally { adresaDrzi = false; }
       obnovZAdresy(location.hash);
     } catch (e) {}
   });

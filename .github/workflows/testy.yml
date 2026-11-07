@@ -1166,6 +1166,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-inzeraty-zaloha.mjs
 
+      - name: Zpět po zapnutí filtru (nevyhodí z webu a filtr vrátí)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-zpet-filtr.mjs
+
       - name: Kalkulačka nákladů při koupi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs

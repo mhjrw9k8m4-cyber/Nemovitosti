@@ -5375,6 +5375,12 @@
   }
   var adresaCeka = null, adresaDrzi = false;
 
+  function filtrZHashe(h) {
+    return String(h || '').replace(/^#/, '').split('&')
+      .filter(function (k) { return k.indexOf('m=') !== 0; }).join('&');
+  }
+  var posledniFiltr = filtrZHashe(location.hash);
+
   function zapisAdresu() {
     if (adresaDrzi || !window.PKOdkaz) return;
     if (adresaCeka) clearTimeout(adresaCeka);
@@ -5386,8 +5392,13 @@
         var h = PKOdkaz.zapis(stavProAdresu());
 
         var nova = location.pathname + location.search + (h ? '#' + h : '');
+
+        var filtrTed = filtrZHashe(h);
+        var zmenaFiltru = (filtrTed !== posledniFiltr);
+        posledniFiltr = filtrTed;
         if (nova !== location.pathname + location.search + location.hash) {
-          history.replaceState(null, '', nova);
+          if (zmenaFiltru) history.pushState(null, '', nova);
+          else history.replaceState(null, '', nova);
         }
       } catch (e) {}
     }, 350);
@@ -5472,6 +5483,8 @@
       }
     } finally {
       adresaDrzi = false;
+
+      posledniFiltr = filtrZHashe(location.hash);
     }
     if (neco) { try { if (typeof postavVybaveni === 'function') postavVybaveni(); renderList(); } catch (e) {} }
     return neco;
@@ -5481,6 +5494,10 @@
     if (adresaDrzi) return;
     try {
       if (!window.PKOdkaz || !PKOdkaz.jeStavMapy(location.hash || '')) return;
+
+      adresaDrzi = true;
+      try { if (typeof resetFilters === 'function') resetFilters(); }
+      finally { adresaDrzi = false; }
       obnovZAdresy(location.hash);
     } catch (e) {}
   });
