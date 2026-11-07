@@ -1177,8 +1177,13 @@ for(const okres of eligibleOkres){
     `<a href="index.html?obec=${encodeURIComponent(m)}&amp;okres=${encodeURIComponent(okres)}#mapa">${esc(m)} <span>${poObci[m]}</span></a>`).join('');
   const tS = typStrankyVypisu(list);
   const rows = vypisSeZkracenim(list.map((o)=>itemRow(o, true, null, tS.skryt)), ROZBALENO_V_OKRESE);
-  const mapName = (KRAJ_META[kraj]||{}).mapName || kraj;
-  const krajLink = mapName ? `index.html?kraj=${encodeURIComponent(mapName)}#mapa` : 'index.html#mapa';
+  /* ODKAZ NA MAPU VEDE NA OKRES, NE NA KRAJ. Do 7. 11. tu stálo
+     `?kraj=<kraj>`: nápis sliboval „Otevřít okres Benešov na mapě"
+     a mapa otevřela celý Středočeský kraj — naměřeno 405 nemovitostí
+     proti 35, které tatáž stránka hlásí nahoře. Okres umí úvodní
+     stránka zúžit přes `?okres=` (viz openFromUrl v js/main.js);
+     hlídá to scripts/test-okres-na-mape.mjs. */
+  const okresLink = `index.html?okres=${encodeURIComponent(okres)}#mapa`;
   const siblings = okresyVOkoli(okres, 6);
   const sibLinks = siblings.map(({ okres: x, km }) =>
     `<a href="${okresFile(x)}">${esc(x)} <span>${Math.round(km)} km · ${byOkres[x].length}</span></a>`).join('');
@@ -1233,7 +1238,7 @@ for(const okres of eligibleOkres){
            kam jít — a na velkém okrese je „pod výpisem" o čtyřicet
            tisíc znaků dál. Velká pozvánka na mapu zůstává pod výpisem,
            tohle je její jednořádková předzvěst. -->
-      <p class="okr-more"><a href="${krajLink}">Otevřít okres ${esc(okres)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
+      <p class="okr-more"><a href="${okresLink}">Otevřít okres ${esc(okres)} na mapě →</a> · <a class="acx-vse" href="index.html#mapa">nebo celá ČR</a></p>
 
       <!-- NABÍDKY HNED, VÝKLAD AŽ ZA NIMI.
            Pořadí tu bylo obrácené a dalo se to změřit: na telefonu 390 px
@@ -1277,7 +1282,7 @@ ${podilu ? `      <p class="okr-more okr-tesne">Z toho ${sklon(podilu,'je','jsou
           <p>Interaktivní mapa s filtrováním podle ceny, výměry i druhu pozemku — a odkazy do katastru na ověření.</p>
         </div>
         <div class="acx-akce">
-          <a href="${krajLink}" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
+          <a href="${okresLink}" class="btn-primary btn-glow">Otevřít na mapě<svg class="ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sipka-vpravo"/></svg></a>
         <a href="index.html#mapa" class="acx-vse">nebo celá ČR</a>
         </div>
       </div>
@@ -1339,7 +1344,7 @@ for(const kraj of eligibleKraj){
     const c=byOkres[ok].length;
     return hasOkresPage.has(ok)
       ? `<a href="${okresFile(ok)}">${esc(ok)} <span>${c} ${pluralNabidky(c, byOkres[ok])}</span></a>`
-      : `<a href="index.html?kraj=${encodeURIComponent(meta.mapName)}#mapa">${esc(ok)} <span>${c} ${pluralNabidky(c, byOkres[ok])}</span></a>`;
+      : `<a href="index.html?okres=${encodeURIComponent(ok)}#mapa">${esc(ok)} <span>${c} ${pluralNabidky(c, byOkres[ok])}</span></a>`;
   }).join('\n            ');
   list.sort((a,b)=>(a.price||1e15)-(b.price||1e15));
   /* NALEZENO: tady stálo `.map(itemRow)`. map předává jako druhý

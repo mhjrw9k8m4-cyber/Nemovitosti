@@ -1170,6 +1170,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-zpet-filtr.mjs
 
+      - name: Okres na mapě (odkaz ze stránky okresu otevře okres, ne kraj)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-okres-na-mape.mjs
+
       - name: Kalkulačka nákladů při koupi
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-naklady.mjs

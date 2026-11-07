@@ -6459,10 +6459,36 @@
      míří na začátek bloku, jenže ten začíná hledáním a filtry — po něm
      zůstal výpis až u spodního okraje okna (naměřeno 762 px z 844).
      Kdo klepne na „Zobrazit 983 pozemků", chce vidět pozemky. */
+  /* ROLOVAT SE MUSÍ TÍM, CO SE OPRAVDU ROLUJE.
+     Na širokém okně výpis nesedí v okně, ale ve vlastním rámu:
+     `aside.map-side` má `overflow-y:auto` — naměřeno na 1280 px 7 824 px
+     obsahu na 698 px výšky. `window.scrollTo` v něm neudělá nic.
+     Naměřeno 7. 11.: po stisku „další strana" zůstal vrch první karty
+     na −6 851 px a `pageYOffset` na nule, a to i po pěti sekundách.
+     Do té doby to zachraňovalo zaměření na kartu (focus roluje všechny
+     rodiče, okno i rámy) — a to zmizelo ve chvíli, kdy se z nadpisu
+     karty stal skutečný odkaz a `tabindex` z <li> odešel. Jedna oprava
+     tedy potichu rozbila něco, co na ní viselo, aniž to bylo napsané.
+     Na telefonu je `.map-side` `overflow-y:visible` (seznam a mapa se
+     přepínají), takže se tam jako dřív roluje okno. */
+  function rodicSRolovanim(el) {
+    for (var r = el && el.parentElement; r && r !== document.body; r = r.parentElement) {
+      var st = null;
+      try { st = getComputedStyle(r); } catch (e) { return null; }
+      if (st && /auto|scroll/.test(st.overflowY) && r.scrollHeight > r.clientHeight + 1) return r;
+    }
+    return null;
+  }
   function scrollNaVypis() {
     var cil = document.getElementById('map-count') || document.getElementById('opp-list');
     if (!cil) { if (typeof scrollToMap === 'function') scrollToMap(); return; }
     try {
+      var ram = rodicSRolovanim(cil);
+      if (ram) {
+        var yr = ram.scrollTop + cil.getBoundingClientRect().top - ram.getBoundingClientRect().top - 8;
+        ram.scrollTo({ top: Math.max(0, yr), behavior: 'smooth' });
+        return;
+      }
       var hd = document.querySelector('header');
       var vys = hd ? hd.getBoundingClientRect().height : 0;
       var y = cil.getBoundingClientRect().top + window.pageYOffset - vys - 8;
@@ -7114,7 +7140,14 @@
       var nova = ta || karty[z.poradi] || karty[z.poradi - 1] || karty[0];
       if (nova) {
         if (z.naKarte && z.trida && dej(nova.querySelector('.' + z.trida))) return;
-        if (dej(nova)) return;
+        /* Nezbývá-li v nové kartě týž ovladač, bere se odkaz v nadpisu.
+           Do 7. 11. tu stálo `dej(nova)`, tedy zaměření na samo <li> —
+           a to od chvíle, kdy se z nadpisu karty stal skutečný odkaz,
+           nejde: <li> nemá `tabindex`. Zaměření proto propadalo až na
+           poslední záchyt v hlavičce výpisu, ačkoli karta ve výpisu
+           byla. Tahle větev je vzácná (všechny karty mají tytéž
+           ovladače), ale mrtvá být nemá. */
+        if (dej(nova.querySelector('.opp-odkaz'))) return;
       }
     }
     /* Poslední záchyt: „Zobrazit skryté" v hlavičce výpisu. Je to
@@ -8181,9 +8214,16 @@
              přistál doprostřed nové strany. */
           scrollNaVypis();
           /* A kurzor na první kartu — kdo jede klávesnicí nebo čtečkou,
-             musí vědět, že se obsah vyměnil. */
-          var prvni = document.querySelector('#opp-list .opp-item');
-          if (prvni) { try { prvni.focus(); } catch (e) {} }
+             musí vědět, že se obsah vyměnil.
+             ZAMĚŘUJE SE ODKAZ, NE <li>. Od chvíle, kdy se z nadpisu
+             karty stal skutečný odkaz, <li> žádný `tabindex` nemá —
+             `focus()` na něm tedy neudělal nic a po přelistování zůstal
+             kurzor na <body>. Naměřeno 7. 11. na 1280 px.
+             `preventScroll`, aby zaměření nepřebilo rolování nahoru,
+             které se právě rozjelo (scrollNaVypis výš). */
+          var prvni = document.querySelector('#opp-list .opp-item .opp-odkaz')
+            || document.querySelector('#opp-list .opp-item');
+          if (prvni) { try { prvni.focus({ preventScroll: true }); } catch (e) { try { prvni.focus(); } catch (e2) {} } }
         });
       });
       var more = document.createElement('li');
@@ -9261,6 +9301,59 @@
       if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
       cleanUrl();
       return true;
+    }
+    /* ?okres=<okres> — odkaz ze stránky okresu („Otevřít okres X na mapě").
+       VEDL NA CELÝ KRAJ. Do 7. 11. nesly všechny okresní stránky v tom
+       odkazu `?kraj=<kraj>`, takže na stránce okresu Benešov, která
+       nahoře hlásí 35 nemovitostí, se po klepnutí otevřel celý
+       Středočeský kraj: naměřeno 405 nemovitostí ve výpisu a v hlavičce
+       mapy „Středočeský kraj". Odkaz slíbil okres a dodal kraj —
+       jedenáctkrát větší výběr, než na jaký si člověk klepl.
+
+       OKRES SE NEDÁ UDĚLAT PŘES ?kraj=: krajů má mapa obrysy
+       (data/kraje.json), okresů ne. Zužuje se proto týmž filtrem, jakým
+       to dělá volba „celý okres X" z našeptávače (mistoFiltr), a mapa
+       se srovná na rámeček nabídek toho okresu.
+
+       TEXT DO POLÍČKA SE NEPÍŠE. Vybrané místo je samostatné omezení,
+       ne součást hledaného textu (viz omezeni() výš), a přes
+       nastavHledani() by jméno okresu nejdřív prošlo rozborem věty —
+       u některých jmen by se tedy rozpadlo na druh nebo kraj. Odznak
+       „celý okres Benešov" s křížkem nad výpisem je na to to pravé
+       místo: říká, co je zapnuté, a jde zrušit jedním klepnutím. */
+    var mokr = /[?&]okres=([^&]+)/.exec(location.search);
+    if (mokr) {
+      var okrN = ''; try { okrN = decodeURIComponent(mokr[1]).trim(); } catch (e) { okrN = ''; }
+      if (okrN) {
+        mistoFiltr = { typ: 'okres', okres: okrN };
+        if (typeof lockDots === 'function') lockDots(false);
+        renderList();
+        /* RÁMEČEK Z NABÍDEK, NE Z NÁZVU. geocodeTownLocal() hledá OBEC,
+           a tři okresy se žádnou nejmenují (Praha-východ, Praha-západ,
+           Brno-venkov) — tam by hledání podle jména minulo a mapa by
+           zůstala na celé ČR. Rámeček z vlastních nabídek je navíc to,
+           co člověk na mapě okresu opravdu chce vidět. */
+        var jdiNaOkres = function () {
+          if (typeof map === 'undefined' || !map) return false;
+          var body = [];
+          for (var oi = 0; oi < DATA.length; oi++) {
+            var dd = DATA[oi];
+            if (!dd || !isFinite(dd.lat) || !isFinite(dd.lng)) continue;
+            if (normOkresu(dd) !== HL.norm(okrN)) continue;
+            body.push([dd.lat, dd.lng]);
+          }
+          if (!body.length) return true;   // mapa tu je, jen okres nic nemá
+          try {
+            setPan(true);     // po přiblížení na okres jde s mapou hýbat
+            map.fitBounds(L.latLngBounds(body), { padding: [24, 24], maxZoom: 11 });
+          } catch (e) {}
+          return true;
+        };
+        if (!jdiNaOkres() && !mapaVzdana) { chciMapu(); azBudeMapa(jdiNaOkres); }
+        if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+        cleanUrl();
+        return true;
+      }
     }
     // ?kraj=<název> — přiblíž mapu na daný kraj (odkaz z krajských/okresních stránek).
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);

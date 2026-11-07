@@ -3949,10 +3949,24 @@
 
   function jeNecoZapnute() { return omezeni().length > 0; }
 
+  function rodicSRolovanim(el) {
+    for (var r = el && el.parentElement; r && r !== document.body; r = r.parentElement) {
+      var st = null;
+      try { st = getComputedStyle(r); } catch (e) { return null; }
+      if (st && /auto|scroll/.test(st.overflowY) && r.scrollHeight > r.clientHeight + 1) return r;
+    }
+    return null;
+  }
   function scrollNaVypis() {
     var cil = document.getElementById('map-count') || document.getElementById('opp-list');
     if (!cil) { if (typeof scrollToMap === 'function') scrollToMap(); return; }
     try {
+      var ram = rodicSRolovanim(cil);
+      if (ram) {
+        var yr = ram.scrollTop + cil.getBoundingClientRect().top - ram.getBoundingClientRect().top - 8;
+        ram.scrollTo({ top: Math.max(0, yr), behavior: 'smooth' });
+        return;
+      }
       var hd = document.querySelector('header');
       var vys = hd ? hd.getBoundingClientRect().height : 0;
       var y = cil.getBoundingClientRect().top + window.pageYOffset - vys - 8;
@@ -4331,7 +4345,8 @@
       var nova = ta || karty[z.poradi] || karty[z.poradi - 1] || karty[0];
       if (nova) {
         if (z.naKarte && z.trida && dej(nova.querySelector('.' + z.trida))) return;
-        if (dej(nova)) return;
+
+        if (dej(nova.querySelector('.opp-odkaz'))) return;
       }
     }
 
@@ -4817,8 +4832,9 @@
 
           scrollNaVypis();
 
-          var prvni = document.querySelector('#opp-list .opp-item');
-          if (prvni) { try { prvni.focus(); } catch (e) {} }
+          var prvni = document.querySelector('#opp-list .opp-item .opp-odkaz')
+            || document.querySelector('#opp-list .opp-item');
+          if (prvni) { try { prvni.focus({ preventScroll: true }); } catch (e) { try { prvni.focus(); } catch (e2) {} } }
         });
       });
       var more = document.createElement('li');
@@ -5563,6 +5579,37 @@
       if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
       cleanUrl();
       return true;
+    }
+
+    var mokr = /[?&]okres=([^&]+)/.exec(location.search);
+    if (mokr) {
+      var okrN = ''; try { okrN = decodeURIComponent(mokr[1]).trim(); } catch (e) { okrN = ''; }
+      if (okrN) {
+        mistoFiltr = { typ: 'okres', okres: okrN };
+        if (typeof lockDots === 'function') lockDots(false);
+        renderList();
+
+        var jdiNaOkres = function () {
+          if (typeof map === 'undefined' || !map) return false;
+          var body = [];
+          for (var oi = 0; oi < DATA.length; oi++) {
+            var dd = DATA[oi];
+            if (!dd || !isFinite(dd.lat) || !isFinite(dd.lng)) continue;
+            if (normOkresu(dd) !== HL.norm(okrN)) continue;
+            body.push([dd.lat, dd.lng]);
+          }
+          if (!body.length) return true;
+          try {
+            setPan(true);
+            map.fitBounds(L.latLngBounds(body), { padding: [24, 24], maxZoom: 11 });
+          } catch (e) {}
+          return true;
+        };
+        if (!jdiNaOkres() && !mapaVzdana) { chciMapu(); azBudeMapa(jdiNaOkres); }
+        if (holderEl) setTimeout(function () { holderEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 250);
+        cleanUrl();
+        return true;
+      }
     }
 
     var mk = /[?&]kraj=([^&]+)/.exec(location.search);

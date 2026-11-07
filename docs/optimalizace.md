@@ -28765,3 +28765,126 @@ v hlavičce `scripts/test-zpet-filtr.mjs`.
 ale chování se nenapraví, je nebezpečnější než vada sama — protože
 vypadá hotově. U „zpět" to pozná jen ten, kdo si ověří, že se stav
 opravdu VRÁTIL, ne jen že se nic nestalo.
+
+## §476
+
+**„Otevřít okres Benešov na mapě" otevřelo celý Středočeský kraj — na
+všech 77 okresních stránkách.**
+
+Okresní stránka je nejčastější vstup z vyhledávače. Nahoře hlásí
+vlastní číslo („35 nemovitostí") a pod výpisem zve na mapu nápisem
+`Otevřít okres Benešov na mapě →`. Odkaz za tím nápisem ale vedl na
+`index.html?kraj=Středočeský#mapa`. Naměřeno 7. 11. v okně 1280 px: po
+klepnutí ukázal výpis **405 nemovitostí** místo 35 a v hlavičce mapy
+stálo „Středočeský kraj". Jedenáctkrát větší výběr, než na jaký si
+člověk klepl — a žádná hláška, která by to přiznala. Tatáž vada byla
+na krajských stránkách u okresů bez vlastní stránky: vedle názvu
+okresu stojí jeho počet a odkaz vedl na kraj.
+
+**JEDNA PROMĚNNÁ, DVĚ MÍSTA, DVOJÍ VADA.** Oba odkazy na okresní
+stránce (textový i velké tlačítko „Otevřít na mapě") se skládaly
+z jedné proměnné `krajLink`. Vada se tím na stránce objevila dvakrát
+a opravila se jednou. Zkouška proto měří OBĚ místa zvlášť: kdyby se
+jednou někdo pustil do jednoho z nich a na druhé zapomněl, zelená by
+to přejít nesměla.
+
+**OKRES SE NEDÁ UDĚLAT PŘES `?kraj=`.** Mapa má obrysy krajů
+(`data/kraje.json`), obrysy okresů ne — proto tam ten kraj původně
+byl. Jenže web okres zúžit umí, jen jinou cestou: `mistoFiltr`, týž
+filtr, jaký nastaví volba „celý okres X" z našeptávače (přesná shoda
+celého názvu okresu). `openFromUrl()` teď zná `?okres=<okres>` a dělá
+právě to.
+
+**RÁMEČEK Z NABÍDEK, NE Z NÁZVU.** Mapa se na okres přiblíží na
+rámeček jeho vlastních nabídek, ne podle názvu. Vedlejší cesta
+(`geocodeTownLocal`, kterou používá odkaz `?obec=`) hledá OBEC —
+a tři okresy žádnou stejnojmennou obec nemají: Praha-východ,
+Praha-západ, Brno-venkov. Tam by hledání podle jména minulo a mapa by
+zůstala na celé ČR, tiše. Právě na dvou z těch tří okresů zkouška
+přiblížení měří.
+
+**TEXT SE DO HLEDACÍHO POLÍČKA NEPÍŠE.** Svádělo to napodobit
+našeptávač, který kromě `mistoFiltr` nastaví i text v políčku. Jenže
+text projde rozborem věty (`PKDotaz.rozeber`) a u některých jmen by se
+rozpadl na druh nebo kraj — odkaz by pak zapnul filtr, o který si nikdo
+neřekl. Vybrané místo je ve webu samostatné omezení, ne součást textu,
+a nad výpisem se ukazuje jako zrušitelný odznak „celý okres Benešov".
+To je celé, co je potřeba: říká, co je zapnuté, a jde to zrušit jedním
+klepnutím.
+
+**ČÍSLO NA STRÁNCE JE SLIB, A TAK SE I HLÍDÁ.**
+`scripts/test-okres-na-mape.mjs` nesrovnává s pevnou konstantou, která
+by zestárla s daty, ale s číslem, které si ta KONKRÉTNÍ okresní
+stránka sama natiskla. Po opravě naměřeno 35 = 35, 52 = 52, 101 = 101,
+10 = 10. Tři sabotáže, tři různé nálezy: odkaz zpátky na kraj → 12
+kontrol padlo (a zopakovalo přesně původní 405 proti 35); vynechané
+nastavení `mistoFiltr` → 6 kontrol (2 328 proti 35, odznak prázdný);
+vynechané `fitBounds` → 3 kontroly (zoom 7 proti 7 pro celou ČR).
+Žádná z těch tří sabotáží nepadla na týchž kontrolách jako druhá —
+každá část opravy má tedy vlastní důkaz.
+
+**Pravidlo, které z toho zbývá:** když vedle odkazu stojí číslo, je
+ten odkaz SLIB a hlídá se srovnáním s tím číslem, ne pohledem na kód.
+Odkaz, který slíbí okres a dodá kraj, nespadne, nenahlásí nic a člověk
+pozná jen to, že web ukazuje „nějak moc" — tedy že mu nejde věřit.
+
+## §477
+
+**Skok na začátek výpisu po přelistování přestal fungovat na širokém
+okně — a rozbila ho moje vlastní oprava o dva commity dřív.**
+
+Po stisku „další strana" má výpis skočit na svůj začátek. Na 1 280 px
+nedělal nic: naměřeno 7. 11., vrch první karty zůstal na **−6 851 px**
+a `pageYOffset` na nule, a to i po pěti sekundách. Člověk tedy přistál
+doprostřed nové strany, aniž by to vypadalo jako vada — vypadalo to,
+že se nic nestalo.
+
+**DVĚ PŘÍČINY, A DRUHÁ JE PONAUČENÍ.** První: `scrollNaVypis()`
+rolovalo OKNEM (`window.scrollTo`), jenže na širokém okně výpis v okně
+nesedí — `aside.map-side` má `overflow-y:auto` a naměřeno 7 824 px
+obsahu na 698 px výšky. Rolovat se musí tím, co se opravdu roluje.
+Druhá: tahle vada tam byla celou dobu a nevadila, protože hned za
+rolováním stálo `prvni.focus()` na první kartě — a zaměření roluje
+VŠECHNY rodiče, okno i rámy. Jakmile se z nadpisu karty stal skutečný
+odkaz (§473) a `tabindex` z `<li>` odešel, bylo z toho `focus()` mrtvé
+volání: `<li>` se zaměřit nedá. Zaměření po přelistování spadlo na
+`<body>` a rolování zůstalo bez pojistky, o kterou se celou dobu
+nevědomky opíralo.
+
+**CO SE OPRAVILO.** `scrollNaVypis()` si teď najde nejbližšího rodiče,
+který se opravdu roluje (`overflow-y: auto|scroll` a obsah vyšší než
+rám), a roluje jím; není-li žádný — na telefonu je `.map-side`
+`visible`, protože se seznam a mapa přepínají — roluje jako dřív oknem.
+Zaměřuje se odkaz v první kartě, ne `<li>`, a to s `preventScroll`,
+aby zaměření nepřebilo rolování, které se právě rozjelo. Po opravě
+naměřeno: z −6 407 px na +280 px za asi 450 ms a kurzor na
+`a.opp-odkaz` v první kartě.
+
+**ZKOUŠKA MĚŘILA SPRÁVNOU VĚC A PŘESTO MLČELA.** `test-uvod` kontrolu
+„výpis skočil na svůj začátek" měla — jen po klepnutí čekala pevných
+700 ms, a protože se nerolovalo vůbec, měřila pokaždé totéž číslo
+a padala. Tady padala správně; past je obrácená: pevné čekání u
+plynulého rolování jednou vyjde a jednou ne podle rychlosti stroje.
+Čeká se proto na USAZENÍ (dvě stejná čtení za sebou, strop 4 s), ne na
+hodinky. A přidala se kontrola na zaměření, protože právě ta
+v repozitáři chyběla — mrtvé `focus()` nemělo kdo přistihnout.
+
+**A TOTÉŽ ZABILO TŘI KONTROLY V `test-zaostreni`.** Když už bylo
+jasné, na čem to viselo, šel jsem hledat, co dalšího zaměřuje kartu.
+Zkouška zaostření dělala `k.focus()` na `<li>` na dvou místech —
+u pravidla „po změně řazení drží zaměření táž karta, jinak její místo"
+a u pravidla „skrytím karty nad ní se zaměřená posune". Obě od §473
+měřily prázdno: hlásily „kartu nejde zaměřit", respektive „ve výpisu
+není dost karet" (hláška, která navíc mířila vedle). Zaměřuje se teď
+odkaz v kartě — tedy to, co v kartě zaměřit LZE — a tím se tři
+kontroly vrátily k životu: 59 + 3 pády → 64 v pořádku. A v samém
+`vratZamereni()` zbyla z téže příčiny mrtvá větev `dej(nova)`: místo
+zaměření na `<li>` se teď bere odkaz v nadpisu, aby zaměření
+nepropadlo až na „Zobrazit skryté", když je karta ve výpisu.
+
+**Pravidlo, které z toho zbývá:** oprava, po které jiná část začne
+spoléhat na vedlejší účinek (zaměření roluje), si ten vedlejší účinek
+musí nechat zapsat a pohlídat. Jinak ho příští oprava v dobré vůli
+odstraní — a rozbije něco, co s ní nemá nic společného. Pozná se to
+jen tím, že se každá taková vedlejší služba napíše jako samostatná
+kontrola: tady „kurzor klávesnice je v první kartě nové strany".

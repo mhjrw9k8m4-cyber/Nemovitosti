@@ -276,8 +276,15 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
         const karty = [...document.querySelectorAll('#opp-list .opp-item')];
         const k = karty[Math.min(2, karty.length - 1)];
         if (!k) return null;
-        k.focus();
-        return document.activeElement === k
+        /* ZAMĚŘUJE SE ODKAZ V KARTĚ, NE <li>. Od chvíle, kdy se
+           z nadpisu karty stal skutečný odkaz, nemá <li> žádný
+           `tabindex` — `focus()` na něm neudělá nic a tahle zkouška
+           pak neměřila nic (naměřeno 7. 11.: „kartu nejde zaměřit"
+           u všech voleb řazení). Pravidlo vratZamereni() je přitom
+           o KARTĚ: najdi tutéž podle data-pk a zaměř v ní týž prvek. */
+        const cil = k.querySelector('.opp-odkaz') || k;
+        cil.focus();
+        return document.activeElement === cil
           ? { pk: k.getAttribute('data-pk') || '', poradi: karty.indexOf(k) } : null;
       });
       if (!stred) { rozbite.push(`volba ${i}: kartu nejde zaměřit`); continue; }
@@ -391,8 +398,11 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
       const i = klice.findIndex((k, idx) => idx >= 1 && pocet[k] === 1);
       if (i < 0) return { bezJednoznacne: true, klice };
       const k = karty[i];
-      k.focus();
-      if (document.activeElement !== k) return null;
+      /* Zaměřuje se odkaz v kartě, ne <li> — to už tabindex nemá
+         (viz tatáž poznámka u 4a výš). */
+      const cil = k.querySelector('.opp-odkaz') || k;
+      cil.focus();
+      if (document.activeElement !== cil) return null;
       return { pk: klice[i], poradi: i, klice };
     });
     pravda('výpis: jsou aspoň čtyři karty, na kterých se to dá změřit', !!pred4b,
@@ -429,16 +439,19 @@ pravda('celkem se prošlo aspoň padesát ovládacích prvků', celkemPrvku >= 5
         + `\n      po:   ${JSON.stringify(po4b.klice.slice(0, 5))}`);
     }
     /* 4c) TLAČÍTKA UVNITŘ KARTY MUSÍ JÍT ZMÁČKNOUT KLÁVESNICÍ.
-       Karta je `<li tabindex="0" role="button">` a sama má obsluhu
-       keydown na Enter a mezerník, která odejde na stránku pozemku.
-       Uvnitř jsou tři pravá tlačítka („Uložit", „Skrýt", „víc") a ta
-       probublávání zastavovala JEN u klepnutí. Kdo si tabulátorem
-       zaměřil „Uložit" a stiskl Enter, pustil událost na kartu:
-       `preventDefault()` zrušil vlastní aktivaci tlačítka a místo
-       uložení se odešlo na stránku pozemku — tedy pravý opak toho, co
-       tlačítko slibuje. Myší to fungovalo, proto to nikdo neviděl.
-       Měří se OBOJE: že se neodešlo, A že se uložilo. Samotné „neodešlo"
-       by prošlo i tehdy, kdyby tlačítko nedělalo vůbec nic. */
+       Vzniklo to na starší podobě karty: byla to `<li tabindex="0"
+       role="button">` s vlastní obsluhou keydown na Enter a mezerník,
+       která odcházela na stránku pozemku. Tlačítka uvnitř („Uložit",
+       „Skrýt", „víc") probublávání zastavovala JEN u klepnutí, takže
+       kdo si tabulátorem zaměřil „Uložit" a stiskl Enter, pustil
+       událost na kartu: místo uložení se odešlo na stránku pozemku.
+       Myší to fungovalo, proto to nikdo neviděl.
+       TA PAST UŽ NEEXISTUJE: od §473 je odkazem nadpis karty a <li>
+       nemá ani `tabindex`, ani obsluhu keydown. Kontrola tu zůstává,
+       protože tvrzení platí dál a je to tvrzení o CHOVÁNÍ, ne o té
+       dávné příčině: Enter na „Uložit" nesmí odejít ze stránky a musí
+       uložit. Měří se OBOJE — samotné „neodešlo" by prošlo i tehdy,
+       kdyby tlačítko nedělalo vůbec nic. */
     await cistaStranka();
     const adrPred = p.url();
     const fav = await p.evaluate(() => {

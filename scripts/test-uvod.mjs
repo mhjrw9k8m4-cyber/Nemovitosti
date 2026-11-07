@@ -420,6 +420,12 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       vrchPrvniKarty: (function () { const k = document.querySelector('#opp-list .opp-item');
         return k ? Math.round(k.getBoundingClientRect().top) : null; }()),
       vyskaOkna: window.innerHeight,
+      /* Kde stojí kurzor klávesnice. Po přelistování musí být v NOVÉ
+         straně výpisu, ne na <body>: kdo jede klávesnicí nebo čtečkou,
+         jinak nemá jak poznat, že se obsah vyměnil. */
+      zamereniVKarte: !!(document.activeElement
+        && document.activeElement.closest
+        && document.activeElement.closest('#opp-list .opp-item')),
       pocet: m ? +m[1].replace(/\s/g, '') : -1 };
   });
   const pred = await stav();
@@ -481,6 +487,20 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
        a byla vedle: výpis v klidu začíná kolem 630 px a po sjetí dolů
        vyjde na −47 px, ne na −200, jak jsem čekal. */
     const klid = pred.vrchSeznamu;
+    /* Dvě stejná čtení za sebou = rolování se zastavilo. Strop 4 s je
+       pojistka proti zamrznutí, ne čekání: v pořádku to skončí dřív. */
+    const pockejNaUsazeni = async () => {
+      let drive = null;
+      for (let i = 0; i < 40; i++) {
+        await p.waitForTimeout(100);
+        const ted = await p.evaluate(() => {
+          const k = document.querySelector('#opp-list .opp-item');
+          return k ? Math.round(k.getBoundingClientRect().top) : null;
+        });
+        if (i > 2 && ted !== null && ted === drive) return;
+        drive = ted;
+      }
+    };
     pravda('klidová poloha výpisu je změřená', typeof klid === 'number' && klid > 0,
       `vrch výpisu v klidu je ${klid} px`);
     /* Sjet na dvacátou kartu, ne „na konec stránky". Konec stránky je
@@ -497,8 +517,13 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       dole.vrchPrvniKarty !== null && dole.vrchPrvniKarty < -100,
       `první karta je na ${dole.vrchPrvniKarty} px, v klidu byl vrch výpisu ${klid} px`);
 
+    /* ČEKÁ SE NA USAZENÍ, NE NA PEVNÝCH 700 ms. Skok na začátek výpisu
+       je plynulý (`behavior:'smooth'`) a trvá podle vzdálenosti —
+       naměřeno 7. 11. na 1280 px: z −6 407 px na +280 px za asi 450 ms.
+       Pevná mez je tu past na pomalejším stroji v CI: neměřila by, kam
+       výpis skočil, ale jak byl zrovna rychlý. */
     await p.click('.opp-strany .ops-btn[data-krok="1"]');
-    await p.waitForTimeout(700);
+    await pockejNaUsazeni();
     const po = await stav();
     pravda('po klepnutí je člověk na druhé straně', po.strana === 2,
       `strana ${po.strana}`);
@@ -523,9 +548,16 @@ pravda('na úvodní stránce nespadl žádný skript', chyby.length === 0, chyby
       && po.vrchPrvniKarty > dole.vrchPrvniKarty,
       `první karta po klepnutí na ${po.vrchPrvniKarty} px, před klepnutím `
       + `na ${dole.vrchPrvniKarty} px, okno je vysoké ${po.vyskaOkna} px`);
+    /* A KURZOR JDE S NÍM. Tahle kontrola tu vznikla proto, že se
+       `focus()` na kartě stal mrtvým kódem: od chvíle, kdy se z nadpisu
+       karty stal skutečný odkaz, nemá <li> žádný `tabindex`, takže
+       zaměření po přelistování spadlo na <body> — naměřeno 7. 11.
+       Zaměřuje se proto odkaz v první kartě. */
+    pravda('a kurzor klávesnice je v první kartě nové strany',
+      po.zamereniVKarte, 'zaměření po přelistování není uvnitř karty');
 
     await p.click('.opp-strany .ops-btn[data-krok="-1"]');
-    await p.waitForTimeout(700);
+    await pockejNaUsazeni();
     const zpet = await stav();
     pravda('zpět vrátí na první stranu', zpet.strana === 1, `strana ${zpet.strana}`);
     pravda('a tam se zpátky zase nedá', zpet.zpetVypnute,
