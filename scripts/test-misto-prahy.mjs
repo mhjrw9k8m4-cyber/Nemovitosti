@@ -163,10 +163,23 @@ pravda('v datech jsou i mimo Prahu nabídky s ulicí místo obce', ulicni.length
   'není na čem měřit — kontroly níž by prošly naprázdno');
 const bezOkresu = [];
 let ulicMereno = 0;
+/* JMÉNO ULICE SE OPAKUJE PO REPUBLICE, TAKŽE K NABÍDCE MUSÍ PATŘIT
+   I OKRES. Napoprvé se stránka k nabídce párovala jen podle toho, že
+   jméno ulice je v názvu souboru — a dokud byly v datech ulice tři,
+   fungovalo to. Po 7. 11., kdy přišlo 1 850 domů a bytů s ulicí místo
+   obce, se to rozsypalo: zkouška nahlásila jako chybu
+   „pozemek-havlickuv-brod-na-chmelnici-…: Prodej bytu 72 m² —
+   Na Chmelnici, okres Havlíčkův Brod", tedy stránku, ve které ten
+   okres STOJÍ. Hledala v ní okres JINÉ nabídky z téže ulice.
+   Je to §436-třída vady — klíč, který zná jen zkouška. Název stránky
+   je `pozemek-<okres>-<místo>-<kód>`, takže se páruje podle obou.
+   SEZNAM SOUBORŮ SE ČTE JEDNOU: readdirSync uvnitř smyčky by při
+   1 850 nabídkách a 4 826 souborech udělal 8,9 milionu porovnání. */
+const VSE_STRANKY = readdirSync(KOREN)
+  .filter((f) => f.startsWith('pozemek-') && f.endsWith('.html'));
 for (const o of ulicni) {
-  const jm = new RegExp('<h1[^>]*>([^<]*)').source;
-  const soub = readdirSync(KOREN).filter((f) => f.startsWith('pozemek-') && f.endsWith('.html')
-    && f.indexOf(slugProHledani(o.place)) >= 0);
+  const predpona = 'pozemek-' + slugProHledani(o.okres) + '-' + slugProHledani(o.place) + '-';
+  const soub = VSE_STRANKY.filter((f) => f.startsWith(predpona));
   for (const f of soub) {
     const t = readFileSync(path.join(KOREN, f), 'utf8');
     if (t.indexOf('PK_UKONCENO') >= 0) continue;

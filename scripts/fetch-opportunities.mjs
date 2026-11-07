@@ -927,6 +927,39 @@ export function geocode(o, seedStr) {
 // Vybíráme jen aktivní dražby (stav "Uveřejněno"), kde je předmětem pozemek.
 const UA = { 'user-agent': BOT_UA };
 
+/* KOLIK METRŮ — JEDEN VZOREK PRO NÁZEV I POPIS.
+ *
+ * TEČKA JE V INZERÁTECH DVĚ RŮZNÉ VĚCI a do 7. 11. se brala jen jako
+ * jedna. „18.966 m²" je oddělovač tisíců, jenže „135.8 m2" je
+ * DESETINNÁ TEČKA — a tu tenhle vzorek neznal. Co se stalo: větev pro
+ * tisíce potřebuje za tečkou tři čislice, takže „135.8" nevzala;
+ * vzorek se posunul a druhou větví (`\d+`) chytil samotnou „8", protože
+ * závorka (?<![\d+]) tečku nezakazovala. Byty se proto do dat ukládaly
+ * s jednociferným číslem:
+ *
+ *   „celkovou plochu 135.8 m2"  →   8 m²
+ *   „o celkové velikosti 73.1 m²" →   1 m²
+ *   „o celkové velikosti 46.9 m²" →   9 m²
+ *   „o výměře 27.6 m²"          →   6 m²
+ *
+ * Je to tatáž třída vady jako §462 (slepená výměra) a stejně tichá:
+ * byt o 1 m² za 5 milionů dá 5 000 000 Kč/m², čímž se pokřiví cena za
+ * metr, odznaky i statistiky. Našla se až na domech a bytech
+ * z Bezrealitek, protože u pozemků se desetiny metru nepíšou.
+ *
+ * Rozhoduje POČET ČISLIC za tečkou, ne odhad: tři jsou tisíce
+ * („1.358" = 1 358), jedna nebo dvě jsou desetiny („135.8" = 135,8).
+ * Desetiny se zaokrouhlí, protože web výměru ukazuje v celých metrech.
+ * Do závorky se přidala i tečka s čárkou, aby se číslo nemohlo začít
+ * čist uprostřed desetinného čísla. */
+const AREA_CISLO = '(?<![\\d+.,])(\\d{1,3}(?:[\\s.]\\d{3})*|\\d+)(?:[.,](\\d{1,2}))?\\s*m(?:2|\u00b2)';
+function areaZeShody(cela, desetiny) {
+  const n = parseInt(String(cela).replace(/[\s.]/g, ''), 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  if (desetiny == null) return n;
+  const x = Math.round(n + Number('0.' + desetiny));
+  return Number.isFinite(x) && x > 0 ? x : null;
+}
 function parseArea(text) {
   /* ČISLO VÝMĚRY SE NESMÍ SLEPIT S ČÍSLEM PŘED NÍM (§462).
    * Nalezeno měřením 6. 11. na prvním skutečném běhu Sreality: na webu
@@ -938,10 +971,8 @@ function parseArea(text) {
    * Dvě závorky to zavírají: (?<![\d+]) — před číslem nesmí stát čislice
    * ani plus (počet pokojů), a mezera se uzná jen jako oddělovač tisíců,
    * tedy po ní musí následovat přesně tři čislice. */
-  const m = String(text).match(/(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*m(?:2|²)/i);
-  if (!m) return null;
-  const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
+  const m = new RegExp(AREA_CISLO, 'i').exec(String(text));
+  return m ? areaZeShody(m[1], m[2]) : null;
 }
 /* VÝMĚRA Z DLOUHÉHO POPISU — a tady se první číslo brát NESMÍ.
  *
@@ -1038,11 +1069,11 @@ function parseAreaPopis(text) {
      8 579, 8 582 a 1 805 m² a teprve pak jejich součet. */
   const celkem = new Set();
   const vyslovne = new Set(), slabe = new Set();
-  const re = /(?<![\d+])(\d{1,3}(?:[\s.]\d{3})*|\d+)\s*m(?:2|²)/gi; // týž vzorek jako v parseArea (§462)
+  const re = new RegExp(AREA_CISLO, 'gi'); // týž vzorek jako v parseArea (§462)
   let m;
   while ((m = re.exec(bez))) {
-    const n = parseInt(m[1].replace(/[\s.]/g, ''), 10);
-    if (!Number.isFinite(n) || n <= 0) continue;
+    const n = areaZeShody(m[1], m[2]);
+    if (n === null) continue;
     const pred = bez.slice(Math.max(0, m.index - 48), m.index).replace(/\s+$/, ' ');
     if (AREA_CIZI.test(pred)) continue;
     if (/celkov\w*\s+(?:vymer|rozlo[hz])\w*\s*$/.test(pred)) celkem.add(n);
@@ -3172,12 +3203,22 @@ async function fetchBezrealitky() {
          — a síto, které druh vyžaduje u KAŽDÉ nabídky, jich zahodilo
          5 465 z 7 152 s důvodem „chybi:druh". Domy a byty tedy došly
          až sem a spadly o krok dál, na pole, které jsem sám vyprázdnil.
-         U nepozemku se proto vyplní jméno typu („Dům", „Byt"), což je
+         U nepozemku se proto vyplní jméno typu („dům", „byt"), což je
          přesně to, co stránka pod popiskem „Typ nemovitosti" ukazuje;
-         bere se z téhož sdíleného modulu jako všude jinde. */
+         bere se z téhož sdíleného modulu jako všude jinde.
+
+         MALÝM PÍSMENEM, A TO NENÍ KOSMETIKA. V datech se druh píše
+         malým („orná půda", „zastavěná plocha") a stránka si ho velkým
+         písmenem začíná sama (js/main.js: `d.druh.charAt(0)
+         .toUpperCase()`). Napoprvé jsem sem dal `jmeno(kat)` tak, jak
+         je, tedy „Dům" — a v datech vznikly DVĚ VARIANTY TÉHOŽ DRUHU:
+         „Dům" 524× z Bezrealitek proti „dům" 5× z Veřejných dražeb.
+         Pro člověka je to týž dům, pro seskupování dvě různé věci.
+         Chytila to scripts/test-data.mjs („žádný druh pozemku není
+         v datech dvakrát jinak napsaný"). */
       const druh = jePozemek
         ? parseDruh(textInzeratu, [place, okres])
-        : (PKKategorie.jmeno(kat) || 'Jiná nemovitost');
+        : (PKKategorie.jmeno(kat) || 'Jiná nemovitost').toLowerCase();
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely

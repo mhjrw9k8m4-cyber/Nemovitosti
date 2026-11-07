@@ -41,11 +41,16 @@ function hotovo() {
    test to musí ŘÍCT, ne tiše projít. */
 const src = readFileSync(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
 const kusy = [
+  /* Vzorek čísla a přepočet desetin jsou společné pro název i popis,
+     takže se musí vytáhnout taky — jinak obě funkce spadnou na
+     „AREA_CISLO is not defined". */
+  src.match(/const AREA_CISLO[\s\S]*?\nfunction areaZeShody[\s\S]*?\n}/),
   src.match(/function parseArea\(text\)[\s\S]*?\n}/),
   src.match(/const AREA_POZEMEK[\s\S]*?\nfunction parseAreaPopis[\s\S]*?\n  return null;\n}/),
 ];
 pravda('čtení výměry se dá v robotovi najít a spustit', kusy.every(Boolean),
-  'parseArea nebo parseAreaPopis ve scripts/fetch-opportunities.mjs nejsou — přejmenovaly se?');
+  'AREA_CISLO, parseArea nebo parseAreaPopis ve scripts/fetch-opportunities.mjs nejsou'
+    + ' — přejmenovaly se?');
 if (!kusy.every(Boolean)) hotovo();
 const F = new Function(kusy.map((k) => k[0]).join('\n') + '; return { parseArea, parseAreaPopis };')();
 
@@ -121,6 +126,32 @@ pravda('počet obyvatel obce není výměra',
 pravda('text bez jediné výměry nevrátí nic',
   p('Krásný pozemek v klidné části obce, veškeré sítě na hranici.') === null,
   'vrátilo ' + p('Krásný pozemek v klidné části obce, veškeré sítě na hranici.'));
+/* --- 4b) DESETINNÁ TEČKA: „73.1 m²" je 73, ne 1 ---
+   U pozemků se desetiny metru nepíšou, takže tahle vada ležela
+   v obou čteních, dokud nepřišly domy a byty z Bezrealitek. Vzorek
+   pro tisíce potřebuje za tečkou tři čislice, takže „135.8" nevzal
+   a druhou větví chytil samotnou „8". Čtyři skutečné popisy se tím
+   do dat uložily jako 8, 1, 9 a 6 m² — a byt o 1 m² za 5 milionů
+   dělá 5 000 000 Kč/m², čímž pokřiví i statistiky okresu.
+   KONTROLA DRŽÍ OBOJE ZNAČENÍ: tři čislice za tečkou zůstávají
+   oddělovačem tisíců, jedna nebo dvě jsou desetiny. */
+pravda('„135.8 m2" je 136 m², ne 8', p('Bytová jednotka má celkovou plochu 135.8 m2.') === 136,
+  'vrátilo ' + p('Bytová jednotka má celkovou plochu 135.8 m2.'));
+pravda('„73.1 m²" je 73 m², ne 1',
+  p('byt o celkové velikosti 73.1 m² situovaný ve 3. podlaží') === 73,
+  'vrátilo ' + p('byt o celkové velikosti 73.1 m² situovaný ve 3. podlaží'));
+pravda('a tři čislice za tečkou zůstávají oddělovač tisíců',
+  p('pozemek o výměře 18.966 m²') === 18966 && F.parseArea('Prodej pozemku 1.250 m2') === 1250,
+  'vrátilo ' + p('pozemek o výměře 18.966 m²') + ' / ' + F.parseArea('Prodej pozemku 1.250 m2'));
+pravda('a desetinná čárka platí stejně jako tečka',
+  p('byt o výměře 73,1 m²') === 73, 'vrátilo ' + p('byt o výměře 73,1 m²'));
+/* A ČÍSLO POKOJŮ SE DO VÝMĚRY POŘÁD NESMÍ SLEPIT (§462). Závorka
+   (?<![\d+.,]) se kvůli desetinám rozšiřovala, takže se to musí
+   přeměřit tady, ne doufat, že to platí dál. */
+pravda('a „Prodej bytu 2+1 111 m²" je pořád 111, ne 1 111',
+  F.parseArea('Prodej bytu 2+1 111 m²') === 111,
+  'vrátilo ' + F.parseArea('Prodej bytu 2+1 111 m²'));
+
 pravda('prázdný text nevrátí nic', p('') === null && p(null) === null && p(undefined) === null);
 
 /* --- 5) proti skutečným datům: opatrné čtení nesmí tvrdit víc než staré --- */
@@ -153,11 +184,26 @@ pravda('prázdný text nevrátí nic', p('') === null && p(null) === null && p(u
      devíti skutečných popisech. Spadla správně: devět výměr se našlo
      tam, kde dřív nebylo nic (např. „o celkové výměře téměř 7,2 hektaru"
      = 72 000 m²). */
-  const vTextu = (t) => {
+  /* ČÍSLA V m², VČETNĚ DESETIN — a schválně spočítaná JINAK než
+     v robotovi (ten jde jedním vzorkem, tady se text rozsekává a čte
+     po částech), ať se nechytí jen to, že se tatáž chyba spočítala
+     dvakrát stejně.
+     Do 7. 11. tu stálo `(\d[\d\s.]*)` s `replace(/[\s.]/g, '')`, tedy
+     tečka jako oddělovač tisíců VŽDY. Na pozemcích to platilo, na
+     bytech ne: z „135.8 m2" tahle hromádka udělala 1358, takže
+     správných 136 by hlásila jako „vymyšlené". Oddělovač tisíců se
+     pozná podle TŘÍ čislic za tečkou; jedna nebo dvě jsou desetiny. */
+  const cislaVM2 = (t) => {
     const out = new Set();
-    for (const x of String(t).matchAll(/(\d[\d\s.]*)\s*m(?:2|²)/gi)) {
-      out.add(parseInt(x[1].replace(/[\s.]/g, ''), 10));
+    for (const x of String(t).matchAll(/(\d[\d\s.]*?)(?:[.,](\d{1,2}))?\s*m(?:2|²)/gi)) {
+      const cela = parseInt(x[1].replace(/[\s.]/g, ''), 10);
+      if (!Number.isFinite(cela) || cela <= 0) continue;
+      out.add(x[2] == null ? cela : Math.round(cela + Number('0.' + x[2])));
     }
+    return out;
+  };
+  const vTextu = (t) => {
+    const out = cislaVM2(t);
     for (const x of String(t).matchAll(/(\d+(?:[.,]\d+)?)\s*(?:ha|hektar\w*)(?![a-z])/gi)) {
       out.add(Math.round(parseFloat(x[1].replace(',', '.')) * 10000));
     }
@@ -176,8 +222,7 @@ pravda('prázdný text nevrátí nic', p('') === null && p(null) === null && p(u
      výměru má, by ji ztratila. Proto: kde je v textu aspoň jeden údaj
      v m², musí výsledek být jeden z NICH, nikdy z hektarů. */
   const prebite = texty.filter((t) => {
-    const m2 = [...String(t).matchAll(/(\d[\d\s.]*)\s*m(?:2|²)/gi)]
-      .map((x) => parseInt(x[1].replace(/[\s.]/g, ''), 10)).filter((n) => n > 0);
+    const m2 = [...cislaVM2(t)].filter((n) => n > 0);
     if (!m2.length) return false;
     const v = F.parseAreaPopis(t);
     return v && !m2.includes(v);
