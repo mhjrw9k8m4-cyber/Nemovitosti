@@ -3075,6 +3075,11 @@ export function cistyPopis(t) {
   return x.length >= 60 ? x : '';
 }
 
+/* Prázdné = všechny typy nemovitostí. Čárkou oddělený seznam
+   (např. „POZEMEK") se pošle beze změny jako estateType. */
+const TYPY_BEZREALITKY = (process.env.PK_BEZREALITKY_TYPY || '')
+  .split(',').map((x) => x.trim()).filter(Boolean);
+
 async function fetchBezrealitky() {
   const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
     listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
@@ -3090,7 +3095,21 @@ async function fetchBezrealitky() {
       const r = await stahni('https://api.bezrealitky.cz/graphql/', {
         method: 'POST',
         headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ query, variables: { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'], estateType: ['POZEMEK'] } }),
+        /* DOTAZ SE UŽ NEPTÁ JEN NA POZEMKY.
+           Do 7. 11. tu stálo `estateType: ['POZEMEK']` — a bylo to
+           jediné místo, kvůli kterému na webu nebyl ani jeden dům
+           ani byt z největšího zdroje (1 613 nabídek, 0 nepozemků).
+           Stroj na kategorie byl přitom hotový: okresní i krajské
+           statistiky nepozemky odfiltrují (generate-region-pages.mjs),
+           stránka umí „Typ nemovitosti" a dražby domy i byty poznají.
+           Chybělo jen se zeptat.
+           Omezení se nenahrazuje seznamem typů, ale VYNECHÁVÁ se:
+           vyjmenovat je znamená hádat jména z cizího číselníku a při
+           překlepu by GraphQL vrátil chybu, tedy nulu nabídek. Kdo by
+           chtěl zpátky jen pozemky, nastaví PK_BEZREALITKY_TYPY. */
+        body: JSON.stringify({ query, variables: Object.assign(
+          { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'] },
+          TYPY_BEZREALITKY ? { estateType: TYPY_BEZREALITKY } : {}) }),
       });
       if (!r.ok) { skenUtrzeno('Bezrealitky', 'HTTP ' + r.status); break; }
       const j = await r.json();
@@ -3115,15 +3134,32 @@ async function fetchBezrealitky() {
       // Adresa mívá tvar „Obec - katastrální území" — pro přehlednost bereme
       // jen obec (první část), ať se nezobrazuje dlouhý zdvojený název.
       const misto = mistoZBezrealitky(a.address, a.uri);
-      const place = misto.place || String(a.title || 'Pozemek').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Pozemek';
+      const place = misto.place || String(a.title || 'Nabídka').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Nabídka';
       let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
       if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
-      // Druh vytáhneme z popisu + názvu (API druh pozemku neuvádí) —
-      // takhle se zviditelní stavební pozemky i lesy.
-      const druh = parseDruh((a.description || '') + ' ' + (a.title || ''), [place, okres]);
+      /* KATEGORIE SE URČÍ TADY, NE AŽ ZE JMÉNA OBCE.
+         Ústřední průchod níž umí kategorii uhodnout z textu, ale
+         z inzerátu Bezrealitek se k němu dostane jen `place` (obec)
+         a `druh` — název inzerátu se do nabídky nepředává a do dat
+         se předávat nemá (úvodní stránka ho nečte a každý kilobajt
+         v opportunities.json stojí čas na telefonu). Z „Praha 6"
+         se dům nepozná. Klasifikuje se proto rovnou tady, z názvu
+         i popisu, týmž sdíleným modulem (js/kategorie.js), jaký
+         používají dražby — a ústřední průchod to pak nepřepíše,
+         protože se ptá `if (!o.kat)`. */
+      const textInzeratu = (a.title || '') + ' ' + (a.description || '');
+      const kat = parseKategorie(textInzeratu, [place, okres]);
+      const jePozemek = !kat || kat === PKKategorie.VYCHOZI;
+      /* DRUH POZEMKU JEN U POZEMKU. `parseDruh` hledá ornou půdu,
+         les nebo zahradu — u domu se zahradou by vrátil „zahrada“
+         a z domu by se na webu stal pozemek. */
+      const druh = jePozemek
+        ? parseDruh(textInzeratu, [place, okres])
+        : null;
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
+        ...(jePozemek ? {} : { kat }),
         druh, area, price,
         extra: 'inzerát – Bezrealitky',
         zdroj: 'Bezrealitky',
