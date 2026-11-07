@@ -1,0 +1,48 @@
+name: Tři cesty naživo (inzerát, hlídání, zprávy)
+
+# Ruční spuštění, ne podle hodin. S přepínačem „zaloz-ucet" skript
+# založí v živé databázi jeden zkušební účet — a to se nemá dít
+# každých šest hodin samo od sebe.
+#
+# Proč to nejde změřit jinak: zkoušky v prohlížeči (test-pridat,
+# test-hlidani-prohlizec, test-zpravy) běží proti FALEŠNÉ Supabase.
+# Prokazují tedy prohlížečovou polovinu, ne serverovou. Co umí
+# prokázat jen tenhle běh, je, jestli potvrzovací e-mail opravdu
+# odchází — bez něj create_listing odmítne zakládání každému
+# a web přitom vypadá, že funguje.
+#
+# Žádný secret se sem nepředává: adresu databáze i VEŘEJNÝ klíč si
+# skript přečte z js/config.js, tedy z téhož místa, odkud je má
+# prohlížeč každého návštěvníka.
+
+on:
+  workflow_dispatch:
+    inputs:
+      zaloz-ucet:
+        description: 'Založit zkušební účet (zjistí, jestli odchází potvrzovací e-mail)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  cesty:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Projít tři cesty proti živé databázi
+        run: |
+          if [ "${{ inputs.zaloz-ucet }}" = "true" ]; then
+            node scripts/kontrola-cest.mjs --zaloz-ucet
+          else
+            node scripts/kontrola-cest.mjs
+          fi
