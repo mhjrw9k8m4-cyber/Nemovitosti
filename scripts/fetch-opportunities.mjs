@@ -3165,12 +3165,19 @@ async function fetchBezrealitky() {
       const textInzeratu = (a.title || '') + ' ' + (a.description || '');
       const kat = parseKategorie(textInzeratu, [place, okres]);
       const jePozemek = !kat || kat === PKKategorie.VYCHOZI;
-      /* DRUH POZEMKU JEN U POZEMKU. `parseDruh` hledá ornou půdu,
-         les nebo zahradu — u domu se zahradou by vrátil „zahrada“
-         a z domu by se na webu stal pozemek. */
+      /* DRUH POZEMKU JEN U POZEMKU — ALE PRÁZDNÝ ZŮSTAT NESMÍ.
+         `parseDruh` hledá ornou půdu, les nebo zahradu; u domu se
+         zahradou by vrátil „zahrada" a z domu by se na webu stal
+         pozemek. Jenže první pokus (7. 11.) nechal u nepozemků `null`
+         — a síto, které druh vyžaduje u KAŽDÉ nabídky, jich zahodilo
+         5 465 z 7 152 s důvodem „chybi:druh". Domy a byty tedy došly
+         až sem a spadly o krok dál, na pole, které jsem sám vyprázdnil.
+         U nepozemku se proto vyplní jméno typu („Dům", „Byt"), což je
+         přesně to, co stránka pod popiskem „Typ nemovitosti" ukazuje;
+         bere se z téhož sdíleného modulu jako všude jinde. */
       const druh = jePozemek
         ? parseDruh(textInzeratu, [place, okres])
-        : null;
+        : (PKKategorie.jmeno(kat) || 'Jiná nemovitost');
       out.push({
         place, okres, type: 'sale',
         parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely

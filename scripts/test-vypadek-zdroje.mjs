@@ -397,6 +397,22 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
     'cenaZaMetrPrilisVysoka');
   je('a pozemek za 80 000 Kč/m² neprojde dál',
     F.procNeplatna({ ...dobra, price: 5600000, area: 70 }), 'cenaZaMetrPrilisVysoka');
+
+  /* ---- DRUH MUSÍ MÍT I NEPOZEMEK ---------------------------------
+   *
+   * Tohle stálo jeden celý běh naostro. Když Bezrealitky poprvé
+   * poslaly domy a byty, nechal jsem u nich `druh` prázdný — druh
+   * POZEMKU (orná půda, les) u bytu nedává smysl. Jenže síto druh
+   * vyžaduje u KAŽDÉ nabídky: z 7 152 záznamů jich 5 465 skončilo
+   * s důvodem „chybi:druh". Nemovitosti došly až sem a spadly na
+   * poli, které jsem sám vyprázdnil.
+   * U nepozemku se proto vyplňuje JMÉNO TYPU („Dům", „Byt") — totéž,
+   * co stránka ukazuje pod popiskem „Typ nemovitosti". */
+  je('dům bez druhu síto nepustí (druh je povinný u všeho)',
+    F.procNeplatna({ ...dobra, kat: 'dum', druh: null, price: 4000000, area: 120 }),
+    'chybi:druh');
+  je('ale se jménem typu projde',
+    F.procNeplatna({ ...dobra, kat: 'dum', druh: 'Dům', price: 4000000, area: 120 }), null);
   /* TŘI RŮZNÉ DŮVODY, TŘI RŮZNÁ JMÉNA (§471). Dřív se tyhle tři stavy
      hlásily jako jeden („souradniceMimoCR"), takže z výpisu nešlo
      poznat, kolik nabídek se ztrácí naší neschopností je umístit
