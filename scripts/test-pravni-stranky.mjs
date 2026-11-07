@@ -65,7 +65,7 @@ const CEKANO = {
      znak „ →" a zbyl „Kontakt". Ověřeno proti commitu 64ef6975: v celém
      souboru se změnily čtyři věci — verze stylopisu, sprite ikon,
      ikona v liště a tahle šipka. Žádné slovo právního znění. */
-  'ochrana-udaju.html': { datum: 'říjen 2026', otisk: 'db5ab7381fc75e80' },
+  'ochrana-udaju.html': { datum: 'listopad 2026', otisk: 'f421414ea8c9481d' },
   /* 17. 10.: v bodě o zneužívání webu se „obcházení stránek robotem"
      změnilo na „procházení". „Obcházet" znamená česky především obejít
      něco (zákon, zabezpečení) — v odstavci, který vyjmenovává zakázané

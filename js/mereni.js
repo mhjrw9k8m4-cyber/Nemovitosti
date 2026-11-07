@@ -47,7 +47,11 @@
      hlídá scripts/test-neosobni.mjs. */
   function mamMerit() {
     var N = window.PKNeosobni;
-    if (!N || !N.smimePoslat()) return false;
+    /* pocitatNavstevu(), ne smimePoslat(): k společným strážím přidává
+       přání „mě nepočítej" (js/neosobni.js). Chybí-li ta funkce vůbec,
+       neměří se — stará kopie modulu v paměti prohlížeče nemá
+       rozhodovat o tom, že se čítač zvedne i proti přání. */
+    if (!N || typeof N.pocitatNavstevu !== 'function' || !N.pocitatNavstevu()) return false;
     /* Jen pro měření: stránka načtená na pozadí dopředu není návštěva.
        U chyb je to naopak — pád při předběžném načtení je pád. */
     try { if (document.visibilityState === 'prerender') return false; } catch (e) { return false; }

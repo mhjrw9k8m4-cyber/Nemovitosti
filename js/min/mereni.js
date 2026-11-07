@@ -6,7 +6,8 @@
 
   function mamMerit() {
     var N = window.PKNeosobni;
-    if (!N || !N.smimePoslat()) return false;
+
+    if (!N || typeof N.pocitatNavstevu !== 'function' || !N.pocitatNavstevu()) return false;
 
     try { if (document.visibilityState === 'prerender') return false; } catch (e) { return false; }
     return true;

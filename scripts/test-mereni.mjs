@@ -86,6 +86,55 @@ async function otevri(stranka, nastav) {
   return poslano;
 }
 
+/* Jako otevri(), ale JEDEN kontext na víc stránek za sebou — tím se dá
+   změřit, že si prohlížeč přání „mě nepočítej" PAMATUJE. Každá návštěva
+   má vlastní kontext, takže localStorage by se jinak pokaždé vyprázdnil
+   a zkouška by měřila jen první stránku.
+
+   KAŽDÁ STRÁNKA V NOVÉ ZÁLOŽCE, A TO JE TU PODSTATNÉ. Napoprvé se
+   přecházelo v jedné záložce — a sabotáž „ukládej do sessionStorage
+   místo localStorage" tím prošla se 34 v pořádku: sessionStorage
+   navigaci v téže záložce přežije. Přání, které zmizí se zavřením
+   záložky, je ale k ničemu: majitel by si ho musel zapínat po každém
+   otevření prohlížeče. Nová záložka ve stejném kontextu vidí
+   localStorage a NEVIDÍ sessionStorage, takže to ta zkouška rozezná. */
+async function otevriPoSobe(stranky) {
+  const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 900 }, serviceWorkers: 'block' });
+  await ctx.route('https://parcelaka.cz/**', (r) => {
+    const u = new URL(r.request().url());
+    const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
+    const f = path.join(KOREN, rel);
+    if (!f.startsWith(KOREN) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+    return r.fulfill({ status: 200, contentType: TYPY[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+  });
+  const vse = [];
+  await ctx.route('**/rest/v1/rpc/zapis_navstevu*', (r) => {
+    vse.push(r.request().url());
+    return r.fulfill({ status: 204, body: '' });
+  });
+  const ven = [];
+  for (const st of stranky) {
+    const pred = vse.length;
+    const page = await ctx.newPage();
+    await page.addInitScript(() => {
+      try { Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true }); } catch (e) {}
+    });
+    await page.goto('https://parcelaka.cz/' + st, { waitUntil: 'load' });
+    await page.waitForTimeout(1200);
+    ven.push({
+      stranka: st,
+      poslano: vse.length - pred,
+      prani: await page.evaluate(() => !!(window.PKNeosobni && window.PKNeosobni.nepocitatSe())),
+      /* Stráže pro HLÁŠENÍ CHYB se tím nesmí pohnout — od majitele je
+         pád v prohlížeči to nejcennější hlášení, jaké web dostane. */
+      smiChyby: await page.evaluate(() => !!(window.PKNeosobni && window.PKNeosobni.smimePoslat())),
+    });
+    await page.close();
+  }
+  await ctx.close();
+  return ven;
+}
+
 /* ---- A) co se posílá, když se posílat má --------------------------- */
 const a = await otevri('kontakt.html');
 pravda('na ostré doméně se měření odešle (právě jednou)', a.length === 1, `odesláno ${a.length}×`);
@@ -208,6 +257,76 @@ pravda('a je to v balíku supabase/00-vse.sql',
   fs.readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8').includes('zapis_navstevu'),
   'migrace by se při nasazení přeskočila');
 
+/* ---- E2) „MĚ NEPOČÍTEJ" -------------------------------------------
+   Čítač má odpovědět na otázku „chodí sem někdo?", a majitel, který si
+   svůj web otevře dvacetkrát denně, je v tom čísle největší položka.
+   Odečíst se to nedá: neposílá se žádný identifikátor, takže o vlastních
+   návštěvách se zpětně neví nic. Jde to jedině dopředu — přáním
+   uloženým v jeho prohlížeči (js/neosobni.js).
+   MĚŘÍ SE OBA SMĚRY A JEŠTĚ PAMĚŤ: zapnutí musí platit i na DALŠÍ
+   stránce (jinak by to byl přepínač na jedno kliknutí) a vypnutí musí
+   počítání vrátit (jinak by se čítač dal utišit navždy jednou adresou
+   v odkazu, který někdo pošle dál). */
+{
+  const kroky = await otevriPoSobe(['kontakt.html?nepocitat=1', 'kontakt.html', 'kontakt.html?nepocitat=0', 'kontakt.html']);
+  pravda('„?nepocitat=1" vypne počítání už na té stránce, kde se vysloví',
+    kroky[0].poslano === 0 && kroky[0].prani === true, JSON.stringify(kroky[0]));
+  pravda('a drží to i v NOVÉ ZÁLOŽCE (přání přežije zavření té původní)',
+    kroky[1].poslano === 0 && kroky[1].prani === true, JSON.stringify(kroky[1]));
+  pravda('„?nepocitat=0" počítání vrátí',
+    kroky[2].poslano === 1 && kroky[2].prani === false, JSON.stringify(kroky[2]));
+  pravda('a dál se počítá', kroky[3].poslano === 1, JSON.stringify(kroky[3]));
+  pravda('hlášení chyb to NEvypne (ani jeden z těch čtyř kroků)',
+    kroky.every((k) => k.smiChyby === true),
+    kroky.map((k) => k.stranka + ': ' + k.smiChyby).join(' | '));
+}
+
+/* ---- E3) PŘEPÍNAČ NA DIAGNOSTICE ----------------------------------
+   Adresa `?nepocitat=1` je cesta, kterou si člověk musí pamatovat.
+   Majitel pracuje z telefonu a do úložiště prohlížeče tam nenahlédne,
+   takže potřebuje VIDĚT, v jakém stavu to je — jinak si nebude jistý,
+   jestli se to zapnulo, a začne se čítači vyhýbat jinak. Měří se
+   proto celá ta cesta: tlačítko, stav po klepnutí, a že se to vrátí. */
+{
+  const ctx = await browser.newContext({ bypassCSP: true, viewport: { width: 390, height: 844 },
+    isMobile: true, hasTouch: true, serviceWorkers: 'block' });
+  await ctx.route('https://parcelaka.cz/**', (r) => {
+    const u = new URL(r.request().url());
+    const rel = decodeURIComponent(u.pathname).replace(/^\//, '') || 'index.html';
+    const fp = path.join(KOREN, rel);
+    if (!fp.startsWith(KOREN) || !fs.existsSync(fp) || fs.statSync(fp).isDirectory()) return r.fulfill({ status: 404, body: '' });
+    return r.fulfill({ status: 200, contentType: TYPY[path.extname(fp)] || 'application/octet-stream', body: fs.readFileSync(fp) });
+  });
+  await ctx.route('**/rest/v1/**', (r) => r.fulfill({ status: 204, body: '' }));
+  const page = await ctx.newPage();
+  await page.goto('https://parcelaka.cz/diagnostika.html', { waitUntil: 'load' });
+  const tl = page.locator('#nepocitat');
+  const stav = () => page.evaluate(() => ({
+    nadpis: (document.getElementById('nepocitat') || {}).textContent || '',
+    radek: ((document.getElementById('nepocitat-stav') || {}).textContent || '').replace(/\s+/g, ' ').trim(),
+    prani: !!(window.PKNeosobni && window.PKNeosobni.nepocitatSe()),
+  }));
+  await tl.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  const s0 = await stav();
+  pravda('diagnostika: přepínač „nepočítat mě" je na stránce a ví, jak to je',
+    /Nepočítat mě/.test(s0.nadpis) && s0.prani === false && /počítá/.test(s0.radek),
+    JSON.stringify(s0));
+  /* 44 px je nejmenší chytací plocha, se kterou se dá na telefonu
+     spolehlivě trefit — platí na celém webu. */
+  const vys = await page.evaluate(() => Math.round(document.getElementById('nepocitat').getBoundingClientRect().height));
+  pravda(`a dá se na telefonu trefit (${vys} px)`, vys >= 44, `jen ${vys} px`);
+  await tl.click();
+  const s1 = await stav();
+  pravda('klepnutí počítání vypne a je to vidět',
+    s1.prani === true && /nepočítá/.test(s1.radek) && /Zase mě počítat/.test(s1.nadpis),
+    JSON.stringify(s1));
+  await tl.click();
+  const s2 = await stav();
+  pravda('a druhé klepnutí ho vrátí', s2.prani === false && /Nepočítat mě/.test(s2.nadpis),
+    JSON.stringify(s2));
+  await ctx.close();
+}
+
 /* ---- F) zásady soukromí popisují to, co se opravdu děje ------------
    scripts/test-cizi-servery.mjs hlídá jinou osu: kdo se o návštěvě
    dozví tím, že se z něj něco stahuje. Tahle odrážka neprasklo —
@@ -229,6 +348,13 @@ pravda('a je to v balíku supabase/00-vse.sql',
     'chybí výčet toho, co se neukládá — to je u čítačů ta podstatná věta');
   pravda('a že „nesledovat" měření vypne', /nesledovat|Global Privacy Control|DNT/i.test(z),
     'respekt k DNT není nikde napsaný');
+  /* Cesta, kterou web UMÍ, a v zásadách o ní nic nestálo, je tichý
+     nedostatek: kdo si nepřeje být počítán, má se to dozvědět tam, kde
+     to hledá. Chrome navíc DNT zrušil, takže tohle je dnes ta hlavní
+     cesta, ne okrajová. */
+  pravda('a popisují i vypnutí adresou „?nepocitat=1"',
+    /nepocitat=1/.test(z) && /jen ve vašem prohlížeči|jen ve vašem prohlizeci/i.test(z),
+    'zásady o té cestě mlčí, ačkoli ji web umí');
   pravda('a NEtvrdí, že statistiky dělá Vercel nebo GitHub Pages',
     !/(Vercel|GitHub\s*Pages)[^.]{0,80}statistik/i.test(z),
     'zásady jmenují zpracovatele, který s měřením nemá nic společného — přesně tahle věta tam roky stála nepravdivě');

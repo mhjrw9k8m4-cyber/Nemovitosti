@@ -14,6 +14,27 @@
     return true;
   }
 
+  var KLIC_NEPOCITAT = 'pk-nepocitat';
+
+  function nepocitatSe() {
+    try { return localStorage.getItem(KLIC_NEPOCITAT) === '1'; } catch (e) { return false; }
+  }
+  function nastavNepocitat(ano) {
+    try {
+      if (ano) localStorage.setItem(KLIC_NEPOCITAT, '1');
+      else localStorage.removeItem(KLIC_NEPOCITAT);
+      return nepocitatSe() === !!ano;
+    } catch (e) { return false; }
+  }
+  function pocitatNavstevu() { return smimePoslat() && !nepocitatSe(); }
+
+  (function zAdresy() {
+    try {
+      var m = /[?&]nepocitat=([01])/.exec(root.location.search || '');
+      if (m) nastavNepocitat(m[1] === '1');
+    } catch (e) {}
+  }());
+
   function jmenoStranky() {
     var c = (root.location.pathname || '/').split('/').pop();
     if (!c) return 'index.html';
@@ -45,6 +66,9 @@
 
   root.PKNeosobni = {
     smimePoslat: smimePoslat,
+    pocitatNavstevu: pocitatNavstevu,
+    nepocitatSe: nepocitatSe,
+    nastavNepocitat: nastavNepocitat,
     jmenoStranky: jmenoStranky,
     posliRpc: posliRpc,
   };

@@ -24,6 +24,23 @@
    odpověď; když ho prohlížeč nemá nebo odmítne, fetch s keepalive.
    Selhání se ignoruje — ani měření, ani hlášení chyby nemá nikdy
    rozbít stránku.
+
+   A JEDNA STRÁŽ NAVÍC, JEN PRO ČÍTAČ NÁVŠTĚV: „mě nepočítej".
+   Čítač má odpovědět na otázku „chodí sem někdo?" — a majitel, který
+   si svůj web otevře dvacetkrát denně, je v tom čísle největší
+   položka. Rozeznat ho podle něčeho, co se posílá, nejde a nemá:
+   neposílá se žádný identifikátor (viz výš), takže vlastní návštěvy
+   se odečíst nedají. Jde to jedině opačně — PŘED odesláním, v jeho
+   vlastním prohlížeči, podle přání uloženého v localStorage.
+   Zapne se adresou `?nepocitat=1` (vypne `?nepocitat=0`); přepínač
+   se stavem je na diagnostika.html a věta o tom na ochrana-udaju.html.
+   Nic se tím neodesílá a nic se tím nikam nezapisuje — to přání žije
+   jen v tom jednom prohlížeči.
+
+   PLATÍ JEN NA ČÍTAČ, NE NA HLÁŠENÍ CHYB. Kdo si řekl „nepočítej mě",
+   mluví o statistice návštěv; pád v prohlížeči je něco jiného a od
+   majitele je to navíc to nejcennější hlášení, jaké web dostane.
+   Proto má čítač vlastní pocitatNavstevu() a stráže zůstávají jedny.
    ================================================================== */
 (function (root) {
   'use strict';
@@ -40,6 +57,33 @@
     } catch (e) { return false; }
     return true;
   }
+
+  var KLIC_NEPOCITAT = 'pk-nepocitat';
+
+  /* Zápis i čtení v try/catch: v anonymním okně a se zakázaným
+     úložištěm localStorage vyhodí výjimku už při prvním sáhnutí.
+     Nejde-li to přečíst, počítá se — to je stav běžného návštěvníka. */
+  function nepocitatSe() {
+    try { return localStorage.getItem(KLIC_NEPOCITAT) === '1'; } catch (e) { return false; }
+  }
+  function nastavNepocitat(ano) {
+    try {
+      if (ano) localStorage.setItem(KLIC_NEPOCITAT, '1');
+      else localStorage.removeItem(KLIC_NEPOCITAT);
+      return nepocitatSe() === !!ano;
+    } catch (e) { return false; }
+  }
+  function pocitatNavstevu() { return smimePoslat() && !nepocitatSe(); }
+
+  /* Adresa je jediná cesta, jak si to zapnout na telefonu, kde se
+     k úložišti prohlížeče nijak jinak nedostanu. Čte se při načtení
+     každé stránky, protože přání se má dát vyslovit odkudkoli. */
+  (function zAdresy() {
+    try {
+      var m = /[?&]nepocitat=([01])/.exec(root.location.search || '');
+      if (m) nastavNepocitat(m[1] === '1');
+    } catch (e) {}
+  }());
 
   /* „pozemek-benesov-benesov-rsg5bb.html". Kořen webu je index.html. */
   function jmenoStranky() {
@@ -75,6 +119,9 @@
 
   root.PKNeosobni = {
     smimePoslat: smimePoslat,
+    pocitatNavstevu: pocitatNavstevu,
+    nepocitatSe: nepocitatSe,
+    nastavNepocitat: nastavNepocitat,
     jmenoStranky: jmenoStranky,
     posliRpc: posliRpc,
   };

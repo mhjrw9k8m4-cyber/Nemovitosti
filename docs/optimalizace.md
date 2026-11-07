@@ -25557,7 +25557,7 @@ t=2853  moveend → 49.10304,14.29785         ← a za 179 ms odjela
 ```
 
 Mezi 2674 a 2853 **není ani jedno volání, kterým se mapou hýbe** — a to
-je ta odpověď, kterou předchozí podoba výpisu dát neumě­la: v něm byla
+je ta odpověď, kterou předchozí podoba výpisu dát neuměla: v něm byla
 jen jména a argumenty, takže se nedalo rozhodnout mezi „mapa se pohnula
 dvakrát" a „zkouška měřila za letu".
 
@@ -28945,3 +28945,59 @@ Dvě sabotáže, dva různé nálezy: `posilaSe = true` → 3 kontroly padly,
 nastavení, se musí ptát TOHO nastavení — ne být napsaný podle toho, jak
 to bylo v den, kdy se psal. A hlídač takového textu musí hlídat obě
 strany; jednostranný by schválil mlčení.
+
+## §479
+
+**Vlastní návštěvy se z čítače nedají odečíst — jde to jen říct dopředu.**
+
+Čítač návštěv odpovídá na otázku, kterou dostane každý, komu se web
+nabízí: chodí sem někdo? Majitel si svůj web otevře dvacetkrát denně
+a je v tom čísle největší položka. Odečíst se to nedá a je to vlastní
+rozhodnutí z §79: neposílá se žádná cookie, žádná IP, žádný otisk
+prohlížeče — v databázi se jen zvedne čítač. O vlastních návštěvách
+se tedy zpětně neví nic, protože ta informace nikdy nevznikla.
+
+**JDE TO JEDINĚ OPAČNĚ, PŘED ODESLÁNÍM.** Přání „mě nepočítej" leží
+v localStorage toho jednoho prohlížeče, zapne se adresou
+`?nepocitat=1` na konci jakékoli stránky a vypne `?nepocitat=0`.
+Je to zároveň pořádná věc pro návštěvníky: DNT dnes Chrome neposílá
+vůbec, takže tohle je jediná cesta, jak si o nepočítání říct — a tak
+je to i napsané v zásadách soukromí. Přepínač se stavem je na
+diagnostika.html, protože majitel pracuje z telefonu a do úložiště
+prohlížeče tam nenahlédne: bez viditelného stavu by si nebyl jistý,
+že se to zapnulo.
+
+**PLATÍ JEN NA ČÍTAČ, NE NA HLÁŠENÍ CHYB**, a to je rozhodnutí, ne
+nedůslednost. Stráže jsou společné (js/neosobni.js slouží měření
+i hlášení pádů), takže bylo svůdné přání přidat k nim. Pád
+v prohlížeči je ale něco jiného než statistika — a od majitele je to
+to nejcennější hlášení, jaké web dostane. Čítač má proto vlastní
+`pocitatNavstevu()` a `smimePoslat()` zůstalo nedotčené; jedna
+sabotáž přesně to zkusila a zkouška ji přistihla.
+
+**SABOTÁŽ, KTERÁ PROŠLA, A PROČ TO BYLA TA UŽITEČNÁ.** Tři sabotáže:
+„přání se neptej" → 2 kontroly padly; „přání ať utiší i hlášení chyb"
+→ padla právě ta jedna; „ukládej do sessionStorage místo localStorage"
+→ **34 v pořádku, nic nepadlo.** Zkouška totiž přecházela mezi
+stránkami v JEDNÉ záložce, a sessionStorage navigaci v téže záložce
+přežije. Přání, které zmizí se zavřením záložky, je přitom k ničemu:
+majitel by si ho zapínal po každém otevření prohlížeče. Náprava je
+jeden řádek — každý krok v NOVÉ záložce téhož kontextu, protože ta
+vidí localStorage a nevidí sessionStorage — a po ní ta sabotáž padá.
+
+**A DVĚ MOJE PRAVDIVÉ VĚTY SHODILY STARŠÍHO HLÍDAČE.**
+`test-sliby-data.mjs` hlídá, že se nikde netvrdí, že uložené pozemky
+a poznámky nikam nejdou, bez dovětku „bez přihlášení". Hledá
+dvojici/trojici vět, kde je `ulož|poznám` a zároveň
+`neodesíl|neposíl|zůstáv… u vás`. Moje nové věty („přání uložené jen
+ve vašem prohlížeči — nic se tím neodesílá") mluví o něčem úplně
+jiném, a přesto ta slova nesou. Nezeslabil jsem hlídače: zeslabit
+pravidlo kvůli vlastnímu textu je nejhorší možný důvod. Přepsal jsem
+věty („přání, které zná jen váš prohlížeč — žádný údaj při tom
+neodchází"). Stojí za to to vědět dopředu: v textech o úložišti
+prohlížeče jsou `ulož*` a `neodesíl*` vyhrazené stopky.
+
+**Pravidlo, které z toho zbývá:** sabotáž, která PROJDE, je cennější
+než ta, která padne — padlá jen potvrdí, co jsem čekal, kdežto
+prošlá ukáže, co zkouška neměří. Proto se dělají všechny tři, i když
+už první dvě vyšly.

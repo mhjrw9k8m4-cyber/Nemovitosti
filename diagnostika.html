@@ -2,9 +2,9 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-e5aoBaFYUE7OA2HAgLvUzzndcvVSvZ8UVwp+OBQEruQ='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-/MWrJqkExOQdqQCRs0dXTGqjDDN7qqJS81qqZw1pKk0=' 'sha256-d2HOM5ivn+cJMUdZismqxtTQfcd485xTQ2mDYA4bf+g='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://server.arcgisonline.com https://a.tile.openstreetmap.org https://b.tile.openstreetmap.org https://c.tile.openstreetmap.org https://geoportal.gov.cz https://geoportal.uur.cz https://gis.nature.cz https://heis.vuv.cz https://mapy.spucr.cz https://services.cuzk.cz https://services.cuzk.gov.cz https://tcinuzftgmkvjjgvadky.supabase.co; font-src 'self'; connect-src 'self' https://tcinuzftgmkvjjgvadky.supabase.co https://nominatim.openstreetmap.org; worker-src 'self'; manifest-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'self'">
   <script data-pk="hlasic-chyb">window.PK_CHYBY=[];(function(){var q=window.PK_CHYBY;function u(z,s,r,c){try{if(q.length<20)q.push([z,s,r,c]);}catch(e){}}window.addEventListener('error',function(e){u(e&&e.message,e&&e.filename,e&&e.lineno,e&&e.colno);});window.addEventListener('unhandledrejection',function(e){var d=e&&e.reason;u((d&&d.message)||String(d||''),(d&&d.stack)||'',0,0);});}());</script>
-  <script src="js/min/neosobni.js?v=f0d880ca" defer></script>
+  <script src="js/min/neosobni.js?v=313551cc" defer></script>
   <script src="js/min/chyby.js?v=8c582bb3" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Diagnostika — Parcelka</title>
@@ -104,6 +104,25 @@
     <button id="testMeze">Vyzkoušet serverové meze</button>
   </div>
   <div class="card" id="zapisy" hidden></div>
+
+  <!-- NEPOČÍTAT MĚ. Majitel si svůj web otevře dvacetkrát denně a je
+       tím v čítači návštěv největší položka. Odečíst se to nedá:
+       neposílá se žádný identifikátor, takže o vlastních návštěvách
+       se zpětně neví nic. Přání se proto říká dopředu a žije jen
+       v tomhle prohlížeči (localStorage, viz js/neosobni.js).
+       Přepínač je TADY, ne na veřejné stránce: ta o něm jen píše
+       (ochrana-udaju.html). Stav je vidět, aby se poznalo, že se to
+       zapnulo — na telefonu se do úložiště prohlížeče nijak nenahlédne. -->
+  <h2>Nepočítat mě do návštěvnosti</h2>
+  <p class="note">Čítač návštěv má říct, kolik sem chodí lidí. Vlastní návštěvy do něj
+     nepatří — tohle je vypne v tomhle prohlížeči. Žádný údaj při tom váš prohlížeč neopustí; na jiném
+     zařízení nebo po vymazání dat prohlížeče se to musí zapnout znovu.
+     Jde to i adresou <code>?nepocitat=1</code> na konci jakékoli stránky
+     (<code>?nepocitat=0</code> to vrátí).</p>
+  <div class="btns">
+    <button id="nepocitat">Načítám…</button>
+  </div>
+  <div class="card" id="nepocitat-stav"></div>
 
   <h2>Pro poslání dál</h2>
   <p class="note">Tlačítko „Zkopírovat výsledek“ dá do schránky text níž — ten stačí poslat.</p>
@@ -696,6 +715,57 @@
         'HTTP ' + v.stav + ' — <code>' + zkratka(telo, 140) + '</code>');
     }).then(function () { tl.disabled = false; });
   });
+  /* ---- Nepočítat mě do návštěvnosti ----
+     Stav se ČTE z modulu, ne z vlastní proměnné: kdyby se někdy
+     změnil klíč v úložišti, přepínač by jinak ukazoval svoje.
+     Vlastní řádek, ne radek(): ten si zapisuje do `zaznam`, který jde
+     do „Zkopírovat výsledek", a přepínač není výsledek kontroly.
+     ČEKÁ SE NA DOMContentLoaded. js/neosobni.js je `defer`, a odložené
+     skripty běží AŽ PO tomhle vloženém — bez čekání by tu PKNeosobni
+     ještě nebyl a přepínač by se vždycky vypnul jako „nejde nastavit". */
+  function nepocitatPrepinac() {
+    var tl = document.getElementById('nepocitat');
+    var box = document.getElementById('nepocitat-stav');
+    if (!tl || !box) return;
+    function radekSam(stav, nazev, detail) {
+      box.innerHTML = '<div class="row ' + stav + '"><span class="dot">'
+        + (stav === 'ok' ? '✓' : '!') + '</span><span class="txt">'
+        + '<span class="name"></span><span class="det"></span></span></div>';
+      box.querySelector('.name').textContent = nazev;
+      box.querySelector('.det').textContent = detail;
+    }
+    var N = window.PKNeosobni;
+    if (!N || typeof N.nastavNepocitat !== 'function') {
+      tl.disabled = true; tl.textContent = 'Nejde nastavit';
+      radekSam('warn', 'Modul měření se nenačetl',
+        'Bez js/neosobni.js se přání nemá kam uložit.');
+      return;
+    }
+    function vykresli(hlaska) {
+      var vyp = N.nepocitatSe();
+      tl.textContent = vyp ? 'Zase mě počítat' : 'Nepočítat mě';
+      radekSam(vyp ? 'ok' : 'warn',
+        vyp ? 'Tenhle prohlížeč se do návštěvnosti nepočítá'
+            : 'Tenhle prohlížeč se do návštěvnosti počítá',
+        hlaska || (vyp
+          ? 'Vaše otevření webu čítač nezvedne. Platí jen tady a do vymazání dat prohlížeče.'
+          : 'Každé otevření webu zvedne čítač — i to vaše.'));
+    }
+    tl.addEventListener('click', function () {
+      var chci = !N.nepocitatSe();
+      var slo = N.nastavNepocitat(chci);
+      /* NEPOVEDENÝ ZÁPIS SE MUSÍ PŘIZNAT. V anonymním okně a se
+         zakázaným úložištěm localStorage vyhodí výjimku; tlačítko by
+         se jinak jen vrátilo zpátky a nikdo by nevěděl proč. */
+      vykresli(slo ? null : 'Prohlížeč nepustil zápis do úložiště (anonymní okno nebo '
+        + 'zakázaná data webu). Přání se neuložilo.');
+    });
+    vykresli();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', nepocitatPrepinac);
+  } else { nepocitatPrepinac(); }
+
   document.getElementById('copy').addEventListener('click', function () {
     var t = raw.textContent || '';
     if (navigator.clipboard) navigator.clipboard.writeText(t);
