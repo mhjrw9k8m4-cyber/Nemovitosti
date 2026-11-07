@@ -1364,7 +1364,13 @@ body.vm-otevreno{overflow:hidden;}
    rozumný způsob, jak se trefit — klepnutím se trefíte do okresu. */
 .vm-hledani{position:relative; display:flex; gap:8px; align-items:center;
   padding:0 16px 8px;}
-.vm-pole{flex:1 1 auto; display:flex; align-items:center; gap:8px;
+/* `min-width:0` není kosmetika: bez něj má položka flexu min-width:auto,
+   tedy nejde zmenšit pod vlastní obsah — a vstup s dlouhým placeholderem
+   si pak drží svou šířku. Naměřeno 7. 11. na 320 px: řádek s hledáním
+   byl 354 px v panelu širokém 320, panel se dal posunout do strany
+   a stisk „Moje poloha" ho o těch 34 px opravdu posunul. Celé okno se
+   tím odsunulo doleva i s křížkem. */
+.vm-pole{flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px;
   /* 46 px, ne 44: rámeček 1 px z každé strany ukousne vnitřku dva
      pixely a samotný vstup by měřil 42 px — pod hranicí dotyku. */
   min-height:46px; padding:0 12px;
@@ -1537,6 +1543,9 @@ body.vm-otevreno{overflow:hidden;}
   padding:2px 8px; border-radius:var(--r-pill); background:var(--c-warn); color:#fff;
   font-family:var(--font-popisek); font-size:12px; font-weight:700; letter-spacing:0.02em;
   box-shadow:var(--e2);}
+/* ZARAŽENÝ U OKRAJE ROSTE NA DRUHOU STRANU. Stejná specifičnost jako
+   pravidlo nad ním, takže rozhoduje POŘADÍ — musí stát až za ním. */
+.vm-meritko-dovnitr span{transform:translate(calc(-100% - 9px), -50%);}
 /* Počet je to, kvůli čemu se na tenhle panel člověk dívá — má tedy vypadat
    jako údaj, ne jako poznámka pod čarou. Pod ním stojí ROZPAD podle druhu:
    samotné „12 pozemků" neřekne, jestli jde o běžný prodej nebo o dražby,
@@ -1578,6 +1587,15 @@ body.vm-otevreno{overflow:hidden;}
   .vm-ok{flex:1 1 100%; order:3;}
   .vm-pocet{flex:1 1 100%; order:1;}
   .vm-okruh{order:2;}
+}
+/* NA ÚZKÉM TELEFONU JEN IKONA. Nápis „Moje poloha" bere z 320 px řádku
+   skoro třetinu a vedle něj se hledání nemá kam zmenšit. Text zůstává
+   v DOMu (jen schovaný pro oči), takže tlačítko má dál své jméno pro
+   odečítač — stejný recept jako u tlačítka filtrů nad výpisem. */
+@media (max-width:360px){
+  .vm-gps{min-width:46px; justify-content:center; padding:0 12px;}
+  .vm-gps span{position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap;}
 }
 
 /* Hlídané místo na mapě — mosazná značka, ať se neplete s „jste tady" (zelená)
@@ -9180,7 +9198,11 @@ body > footer{flex:none;}
   .auth-eye { min-width:44px; min-height:44px; }
   .auth-link { min-height:44px; display:inline-flex; align-items:center; }
   .ms-navrhy li { min-height:44px; }
-  .vm-km { display:inline-flex; min-height:44px; }
+  /* JEN PLOCHA, ŽÁDNÉ PŘEROVNÁNÍ. `display:inline-flex` tu dřív
+     bylo kvůli min-height — a mimochodem překlopilo dlaždici do
+     řádku, takže počet nabídek skončil vedle nápisu místo pod ním
+     (viz .vm-km výš). Směr řádků patří k rozvržení dráhy, ne sem. */
+  .vm-km { min-height:44px; }
   .vm-km span { min-height:44px; }
   .vm-x { width:44px; height:44px; }
   /* Zoom v mapě je Leafletův; jeho vlastní pravidlo pro dotyk dává 30 px.
@@ -9614,10 +9636,29 @@ body.vybiram-misto .leaflet-container{cursor:crosshair;}
   padding:12px 16px calc(12px + env(safe-area-inset-bottom, 0px));}
 /* Okruh je JEDEN ovladač s jezdcem, ne pět samostatných pilulek. */
 .vm-okruh{position:relative; gap:0; margin-top:20px; padding:2px;
+  /* Dráha zabírá celou šířku patičky. Bez toho se smrskne na šířku
+     svých pilulek a sedí nalevo s dírou vedle sebe. */
+  flex:1 1 100%;
   background:var(--plocha-tlumena); border:1px solid var(--line-ui); border-radius:var(--r-pill);}
 /* Popisek patří NAD dráhu — uvnitř vypadal jako šestá volba. */
 .vm-okruh-p{position:absolute; top:-19px; left:6px; margin:0;}
-.vm-km{flex:1 1 auto; min-width:0;}
+/* POČET PATŘÍ POD SVOU PILULKU, NE VEDLE NÍ.
+   (Pozn.: `flex-wrap:nowrap` na dráze tu chvíli stálo taky — sabotáž ho
+   usvědčila jako mrtvé. Zalomení na 320 px nezpůsobovalo obtékání, ale
+   právě tenhle řádkový směr; jakmile je počet pod nápisem, pilulky se
+   vejdou i bez zákazu zalomení.)
+   Dlaždice je <label> se dvěma dětmi: nápis „50 km" a pod ním počet
+   nabídek. Jenže pravidlo pro dotyk (`.vm-km{display:inline-flex}`
+   v bloku s chytacími plochami) z labelu udělalo ŘÁDEK — a počet se
+   přestěhoval vedle nápisu. Naměřeno 7. 11. na 390 px: střed čísla
+   stál o 27 až 38 px vpravo od středu své pilulky, takže „200" viselo
+   mezi „50 km" a krajem dráhy a nepatřilo viditelně k ničemu.
+   Druhý následek téhož: pět labelů bylo o šířku čísel širších, dráha
+   se na 320 px zalomila do dvou řádků a „50 km" skočilo pod ostatní.
+   Směr se proto říká TADY, ne v bloku o chytacích plochách — ten smí
+   zvětšovat plochu, ne přerovnávat obsah. */
+.vm-km{flex:1 1 auto; min-width:0; display:flex; flex-direction:column;
+  justify-content:center;}
 .vm-km span{border:0; background:none; width:100%; min-width:0; min-height:36px;
   padding:8px 8px; font-size:13px; white-space:nowrap; border-radius:var(--r-pill);}
 .vm-km input:checked + span{background:var(--plocha-znacka); color:#fff; box-shadow:var(--e1);}

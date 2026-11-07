@@ -2807,9 +2807,31 @@
       var dLng = k / (111.320 * Math.cos(c.lat * Math.PI / 180));
       meritko.setLatLngs([[c.lat, c.lng], [c.lat, c.lng + dLng]]);
 
-      stitek.setLatLng([c.lat, c.lng + dLng]);
+      usadStitek(c, k);
+    }
+
+    var REZERVA_STITKU = 12;
+    function usadStitek(c, k) {
       var el = stitek.getElement();
-      if (el) el.firstChild.textContent = k + '\u00a0km';
+      var dLng = k / (111.320 * Math.cos(c.lat * Math.PI / 180));
+      var kraj = L.latLng(c.lat, c.lng + dLng);
+      var dovnitr = false;
+      try {
+        var sirka = (el && el.firstChild && el.firstChild.offsetWidth) || 54;
+        var velikost = m.getSize();
+        var bod = m.latLngToContainerPoint(kraj);
+        var konec = bod.x + 9 + sirka + REZERVA_STITKU;
+        if (konec > velikost.x) {
+          dovnitr = true;
+          bod = L.point(Math.min(bod.x, velikost.x - REZERVA_STITKU), bod.y);
+          kraj = m.containerPointToLatLng(bod);
+        }
+      } catch (e) {}
+      stitek.setLatLng(kraj);
+      if (el) {
+        el.firstChild.textContent = k + '\u00a0km';
+        el.classList.toggle('vm-meritko-dovnitr', dovnitr);
+      }
     }
 
     function hlidejVidet() {
@@ -2825,6 +2847,8 @@
 
       var tecka = okruhJeTecka(c.lat, c.lng);
       if (el) el.style.visibility = tecka ? 'hidden' : '';
+
+      if (!tecka) usadStitek(c, parseInt(kmSel.value, 10) || 10);
 
       kruh.setStyle(tecka ? { opacity: 0, fillOpacity: 0 } : { opacity: 1, fillOpacity: 0.12 });
       meritko.setStyle({ opacity: tecka ? 0 : 0.95 });
@@ -3122,6 +3146,8 @@
     }
 
     m.on('zoomend', hlidejVidet);
+
+    m.on('moveend', hlidejVidet);
     ov.querySelector('#vm-zpet').addEventListener('click', function () {
       if (!vybranoMisto) return;
       var c = stred();

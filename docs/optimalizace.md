@@ -29001,3 +29001,61 @@ prohlížeče jsou `ulož*` a `neodesíl*` vyhrazené stopky.
 než ta, která padne — padlá jen potvrdí, co jsem čekal, kdežto
 prošlá ukáže, co zkouška neměří. Proto se dělají všechny tři, i když
 už první dvě vyšly.
+
+## §480
+
+**Okno „Vyberte své okolí": čtyři vady na jednom snímku a dvě z nich
+způsobilo pravidlo pro chytací plochy.**
+
+Majitel poslal snímek s jedinou větou: potřebuje výrazně vylepšit.
+Všechny čtyři věci na něm se daly změřit (telefon 390 px, u obce
+Vendolí, okruh 50 km):
+
+| co bylo vidět | naměřeno |
+|---|---|
+| počty nabídek plavaly mezi pilulkami | střed čísla 27–38 px vpravo od středu své pilulky |
+| na 320 px se dráha okruhu zalomila | dvě řádky (94 px), „50 km" samo pod ostatními |
+| štítek „50 km" byl u kraje uříznutý | stál na x 710–764, mapa končila na 390 |
+| okno bylo odsunuté do strany | řádek s hledáním 354 px v panelu širokém 320; stisk „Moje poloha" ho o těch 34 px posunul |
+
+**DVĚ VADY, JEDNA PŘÍČINA, A TA PŘÍČINA BYLA DOBRÝ ÚMYSL.** Dlaždice
+okruhu je `<label>` se dvěma dětmi: nápis „50 km" a pod ním počet
+nabídek. V bloku o chytacích plochách ale stálo
+`.vm-km{display:inline-flex; min-height:44px}` — a to první z labelu
+udělalo ŘÁDEK. Počet se přestěhoval vedle nápisu, labely se o šířku
+čísel roztáhly a na úzkém telefonu se dráha zalomila. Pravidlo, které
+mělo jen zvětšit plochu na dotyk, přerovnalo obsah. Směr řádků teď
+patří k rozvržení dráhy a blok o dotyku dělá jen to, co slibuje.
+
+**ŠTÍTEK S ČÍSLEM MIZEL PRÁVĚ TEHDY, KDY JE NEJPOTŘEBNĚJŠÍ.** Visí na
+kraji kruhu; jakmile je kruh širší než okno, kraj je venku. Komentář
+u té funkce přitom tvrdil, že „přetékající padesátikilometrový okruh má
+popisek čitelný" — tedy popisoval stav, který nenastává. Štítek se teď
+u okraje zarazí a obrátí se dovnitř; čára pod ním pokračuje, takže je
+dál vidět, že kruh přetéká. Mapou se při tom nehýbe, to je pravidlo,
+na kterém panel stojí.
+
+**`min-width:0` NENÍ KOSMETIKA.** Položka flexu má `min-width:auto`,
+tedy ji nejde zmenšit pod vlastní obsah — a vstup s dlouhým
+placeholderem si drží svou šířku. Z toho byl panel širší než okno,
+a protože prohlížeč smí posunout i kontejner s `overflow:hidden`,
+stačilo zaměření na tlačítko u pravého kraje a celé okno se odsunulo
+i s křížkem. Na úzkém telefonu navíc „Moje poloha" zůstala jen ikonou.
+
+**SABOTÁŽE ŘEKLY VÍC NEŽ OPRAVA.** Pět, a dvě z nich mě opravily:
+
+* vrátit `.vm-km` do řádku → 4 kontroly padly (odchylka 42 px),
+* zrušit `min-width:0` → panel 356 v okně 320, posun 36 px,
+* nezarážet štítek u okraje → štítek 710–764 proti mapě 0–390,
+* zrušit roztažení dráhy na celou šířku → 261 px z 358,
+* **zrušit `flex-wrap:nowrap` → 16 v pořádku, nic nepadlo.** To
+  pravidlo jsem přidal jako opravu zalomení na 320 px — jenže zalomení
+  nezpůsobovalo obtékání, ale ten řádkový směr. Jakmile je počet pod
+  nápisem, pilulky se vejdou i bez zákazu zalomení. Řádek jsem smazal:
+  mrtvé pravidlo s přesvědčivým komentářem je horší než žádné, protože
+  příště se podle něj někdo rozhodne.
+
+**Pravidlo, které z toho zbývá:** předpis, který má zvětšit chytací
+plochu, smí sahat na ROZMĚRY, ne na směr řádků ani na typ zobrazení.
+`min-height` a `min-width` ano; `display`, `flex-direction` a `order`
+ne — ty patří k rozvržení té součástky a mění, kde co leží.

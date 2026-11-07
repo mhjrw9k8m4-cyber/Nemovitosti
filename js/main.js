@@ -4841,9 +4841,46 @@
          na značce místa a obojí se překrývalo tak, že z „10 km" zbylo
          „0 km". Na kraji navíc odpovídá na tu otázku, kvůli které tam je
          — kam až ten kruh sahá. */
-      stitek.setLatLng([c.lat, c.lng + dLng]);
+      usadStitek(c, k);
+    }
+
+    /* ŠTÍTEK S ČÍSLEM MUSÍ ZŮSTAT V MAPĚ.
+       Komentář o řádek výš sliboval, že „přetékající padesátikilometrový
+       okruh má popisek čitelný". Nebyla to pravda: štítek visí na kraji
+       kruhu, a jakmile je kruh širší než okno, kraj je mimo mapu.
+       Naměřeno 7. 11. na telefonu 390 px (okruh 50 km po přepnutí z 10):
+       štítek seděl na x = 710 až 764, mapa končila na 390 — tedy
+       374 px za okrajem. Na snímku od majitele je z něj vidět poslední
+       písmeno. A je to přesně ten stav, kdy je číslo nejpotřebnější:
+       kruh je tak velký, že se do okna nevejde.
+       Štítek se proto u okraje zarazí a obrátí se dovnitř (čára pod ním
+       pokračuje dál, takže je pořád vidět, že kruh přetéká). Mapou se
+       při tom NEHÝBE — to je pravidlo, na kterém tenhle panel stojí;
+       od toho je tlačítko „Ukázat okruh", které si o posun řekne.
+       Počítá se v pixelech okna, ne v souřadnicích, takže to musí
+       proběhnout i po přiblížení a posunu mapy (hlidejVidet níž). */
+    var REZERVA_STITKU = 12;     // od okraje mapy, ať štítek nelepí na hranu
+    function usadStitek(c, k) {
       var el = stitek.getElement();
-      if (el) el.firstChild.textContent = k + '\u00a0km';
+      var dLng = k / (111.320 * Math.cos(c.lat * Math.PI / 180));
+      var kraj = L.latLng(c.lat, c.lng + dLng);
+      var dovnitr = false;
+      try {
+        var sirka = (el && el.firstChild && el.firstChild.offsetWidth) || 54;
+        var velikost = m.getSize();
+        var bod = m.latLngToContainerPoint(kraj);
+        var konec = bod.x + 9 + sirka + REZERVA_STITKU;   // 9 px je odsazení v CSS
+        if (konec > velikost.x) {
+          dovnitr = true;
+          bod = L.point(Math.min(bod.x, velikost.x - REZERVA_STITKU), bod.y);
+          kraj = m.containerPointToLatLng(bod);
+        }
+      } catch (e) {}
+      stitek.setLatLng(kraj);
+      if (el) {
+        el.firstChild.textContent = k + '\u00a0km';
+        el.classList.toggle('vm-meritko-dovnitr', dovnitr);
+      }
     }
 
     /* KRUH JE ZEMĚPISNÁ VĚC a s oddálením se scvrkne — deset kilometrů
@@ -4868,6 +4905,10 @@
          schovává se jen ten, který by skončil na značce. */
       var tecka = okruhJeTecka(c.lat, c.lng);
       if (el) el.style.visibility = tecka ? 'hidden' : '';
+      /* Přiblížení i posun mění, kde kraj kruhu v okně leží — štítek se
+         proto musí usadit znovu, jinak by zarážka u okraje platila jen
+         pro ten jeden pohled, při kterém se přepnul okruh. */
+      if (!tecka) usadStitek(c, parseInt(kmSel.value, 10) || 10);
       /* A SÁM KRUH TAKY NE. Při pohledu na celou republiku má
          desetikilometrový okruh 13 px, tedy míň než špendlík — a ten
          pak stojí uprostřed malého kroužku s čárkovaným okrajem.
@@ -5280,6 +5321,9 @@
        smí věšet i na zoom. (Kvůli tomu se odsud kdysi vyhazovalo
        prepocti(): to prochází všech 1 966 nabídek a mapa se sekala.) */
     m.on('zoomend', hlidejVidet);
+    /* I posun: kraj kruhu se vůči oknu hýbe i bez přiblížení. Je to
+       týchž pár promítnutí bodu jako u zoomu, žádné procházení nabídek. */
+    m.on('moveend', hlidejVidet);
     ov.querySelector('#vm-zpet').addEventListener('click', function () {
       if (!vybranoMisto) return;
       var c = stred();

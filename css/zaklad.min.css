@@ -79,6 +79,7 @@ h1 em::after{position:absolute;left:0;right:0;bottom:-1px;height:6px;border-radi
 
 
 
+
 .leaflet-marker-icon:hover .pk-shluk{transform:scale(1.08)}
 .leaflet-marker-icon:focus-visible .pk-shluk{outline:3px solid var(--znacka-svetla);outline-offset:2px}
 @keyframes mePulse{0%{transform:scale(1);opacity:0.7}
