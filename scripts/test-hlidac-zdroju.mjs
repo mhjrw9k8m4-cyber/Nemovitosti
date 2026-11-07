@@ -486,6 +486,43 @@ pravda('první běh bez minulých čísel projde tiše',
     'medián z malého vzorku kolísá sám od sebe (p10 28 – p90 2 373 Kč/m² na ostrých datech)');
   pravda('a od sta nabídek už ano',
     medianyCenZdroju(kusy('Bezrealitky', 100, 50), new Set(['Bezrealitky'])).Bezrealitky > 0);
+  /* ---- MEDIÁN SE POČÍTÁ JEN Z POZEMKŮ ------------------------------
+   *
+   * Naměřeno naostro 7. 11.: jakmile se Bezrealitky přestaly ptát jen
+   * na pozemky, přišlo 7 152 záznamů a mezi nimi domy a byty. Medián
+   * zdroje vyletěl z 60 na 2 685 Kč/m² a tenhle hlídač celý zdroj
+   * zavřel jako „přemalovaný" (44,9×) — web tím přišel o 1 613 nabídek
+   * a zůstala stará data.
+   *
+   * Hlídač měl pravdu v tom, co měřil, ale měřil jablka proti
+   * hruškám: historie, se kterou porovnává, je POZEMKOVÁ. Byt za
+   * 80 000 Kč/m² není pokažené pole. Vzorek se proto omezuje na
+   * pozemky — na totéž, z čeho je historie. */
+  {
+    const pozemky = kusy('Bezrealitky', 150, 50);
+    const byty = kusy('Bezrealitky', 150, 80000).map((x) => ({ ...x, kat: 'byt' }));
+    const smes = medianyCenZdroju(pozemky.concat(byty), new Set(['Bezrealitky']));
+    const same = medianyCenZdroju(pozemky, new Set(['Bezrealitky']));
+    pravda('byty medián zdroje nerozhodí (počítá se jen z pozemků)',
+      smes.Bezrealitky === same.Bezrealitky,
+      `se 150 byty vyšel medián ${Math.round(smes.Bezrealitky)}, `
+      + `ze samotných pozemků ${Math.round(same.Bezrealitky)} Kč/m²`);
+
+    /* A to je ta kontrola, která o tom rozhoduje: se starým chováním
+       by zdroj spadl na „jineCeny" a jeho nabídky by se nevzaly. */
+    const nalezy = porovnejCeny(HIST, smes, '2026-11-07');
+    pravda('a zdroj kvůli nim nespadne na „jineCeny"',
+      !nalezy.some((n) => n.nazev === 'Bezrealitky'),
+      JSON.stringify(nalezy));
+
+    /* Pojistka proti opačné vadě: hlídač nesmí oněmět. Když se
+       POZEMKOVÉ ceny opravdu rozejdou, musí zdroj spadnout dál. */
+    const posunute = medianyCenZdroju(kusy('Bezrealitky', 150, 5000), new Set(['Bezrealitky']));
+    pravda('ale na opravdu posunutých cenách pozemků spadne pořád',
+      porovnejCeny(HIST, posunute, '2026-11-07').some((n) => n.nazev === 'Bezrealitky'),
+      'hlídač po změně oněměl — to je horší než falešný poplach');
+  }
+
   pravda('mez nesmí spadnout pod sto kusů',
     PRAH_CEN_KUSU >= 100,
     `je ${PRAH_CEN_KUSU} — pod stem kusy se medián Bezrealitek houpe sám od sebe,`

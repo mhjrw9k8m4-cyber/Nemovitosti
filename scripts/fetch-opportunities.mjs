@@ -2326,11 +2326,26 @@ export const PRAH_CEN_KUSU = 100;
 export const PRAH_CEN = 4;
 export const DNU_CEN = 3;
 
-/** Medián Kč/m² na zdroj; zdroje s málo kusy se nepočítají vůbec. */
+/** Medián Kč/m² na zdroj; zdroje s málo kusy se nepočítají vůbec.
+ *
+ * POČÍTÁ SE JEN Z POZEMKŮ, A TO JE TA PODSTATNÁ ČÁST.
+ * Hlídač porovnává dnešní medián zdroje s mediánem jeho vlastní
+ * historie. Ta historie je POZEMKOVÁ — vznikla ve dnech, kdy žádný
+ * zdroj nic jiného nevozil. Jakmile 7. 11. začaly z Bezrealitek
+ * chodit i domy a byty, vyskočil medián z 60 na 2 685 Kč/m² a hlídač
+ * zdroj zavřel jako „přemalovaný" (44,9×). Měl pravdu v tom, co
+ * měřil, ale měřil jablka proti hruškám: byt za 80 000 Kč/m² není
+ * pokažené pole, je to byt.
+ *
+ * Vzorek se proto omezuje na pozemky — tedy na totéž, z čeho je
+ * historie. Nepozemky tím o ochranu nepřijdou: každá nabídka zvlášť
+ * dál prochází sítem (`cenaZaMetrPrilisVysoka` a spol.), jen už se
+ * s nimi nepočítá souhrnné číslo, které by pro ně nic neznamenalo. */
 export function medianyCenZdroju(nabidky, znama) {
   const podle = new Map();
   for (const o of (nabidky || [])) {
     if (!o || !(o.price > 0) || !(o.area > 0)) continue;
+    if (o.kat && o.kat !== 'pozemek') continue;
     const z = zdrojNabidky(o, znama);
     if (!z) continue;
     if (!podle.has(z)) podle.set(z, []);
@@ -3496,11 +3511,20 @@ export function procNeplatna(o) {
     if (price / vymera < 1) return 'cenaMimoRozsah';
     if (vymera < PLOCHA_NEJMENSI) return 'drobnyPozemekZaParStovek';
   }
-  // Cena za m² nesmí být absurdně vysoká. Přes 25 000 Kč/m² jde skoro vždy
-  // o chybu (přehozené číslo, spoluvlastnický podíl…) — nejdražší reálné
-  // stavební pozemky se drží hluboko pod tím.
+  /* Cena za m² nesmí být absurdně vysoká. U POZEMKU je mez 25 000 Kč/m²:
+     přes ni jde skoro vždy o chybu (přehozené číslo, spoluvlastnický
+     podíl…) a nejdražší reálné stavební pozemky se drží hluboko pod tím.
+
+     U DOMU NEBO BYTU TA MEZ NEPLATÍ. Byt se počítá na podlahovou
+     plochu, ne na parcelu, a 80 000 Kč/m² je v Praze běžná cena, ne
+     překlep — s pozemkovou mezí by ze zdroje nepropadl ani jeden byt.
+     Mez tu proto zůstává (absurdní číslo se má poznat dál), jen je
+     posazená tam, kam u bydlení patří: 500 000 Kč/m² je dvojnásobek
+     nejdražšího, co v Česku kdy padlo. */
   const area = Number(o.area);
-  if (isFinite(area) && area > 0 && price / area > 25000) return 'cenaZaMetrPrilisVysoka';
+  const jePozemkova = !o.kat || o.kat === 'pozemek';
+  const strop = jePozemkova ? 25000 : 500000;
+  if (isFinite(area) && area > 0 && price / area > strop) return 'cenaZaMetrPrilisVysoka';
   /* Jen pozemky v ČR — souřadnice musí padnout do hranic republiky.
      TŘI RŮZNÉ DŮVODY, TŘI RŮZNÁ JMÉNA (§471). Stála tu jedna podmínka
      a vracela `souradniceMimoCR` pro všechny tři případy naráz:

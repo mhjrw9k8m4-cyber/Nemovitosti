@@ -379,6 +379,24 @@ pravda('a když se nabídky pustí, robot to vypíše jako POZOR',
   je('nulová cena neprojde', F.procNeplatna({ ...dobra, price: 0 }), 'cenaMimoRozsah');
   je('nesmyslná cena za metr má jméno',
     F.procNeplatna({ ...dobra, price: 90000000, area: 100 }), 'cenaZaMetrPrilisVysoka');
+
+  /* ---- STROP NA Kč/m² PLATÍ PODLE TOHO, CO SE PRODÁVÁ -------------
+   *
+   * Mez 25 000 Kč/m² je POZEMKOVÁ. U bytu se počítá podlahová plocha,
+   * ne parcela, a 80 000 Kč/m² je v Praze běžná cena — s pozemkovou
+   * mezí by ze zdroje nepropadl ani jeden byt. Naměřeno 7. 11., když
+   * Bezrealitky poprvé poslaly i byty.
+   * Mez u nich nemizí, jen je posazená tam, kam u bydlení patří:
+   * absurdní číslo se musí poznat dál. */
+  je('byt za 80 000 Kč/m² projde (pozemková mez na něj neplatí)',
+    F.procNeplatna({ ...dobra, kat: 'byt', price: 5600000, area: 70 }), null);
+  je('a dům za 60 000 Kč/m² taky',
+    F.procNeplatna({ ...dobra, kat: 'dum', price: 9000000, area: 150 }), null);
+  je('ale absurdní cena u bytu se pozná pořád',
+    F.procNeplatna({ ...dobra, kat: 'byt', price: 900000000, area: 70 }),
+    'cenaZaMetrPrilisVysoka');
+  je('a pozemek za 80 000 Kč/m² neprojde dál',
+    F.procNeplatna({ ...dobra, price: 5600000, area: 70 }), 'cenaZaMetrPrilisVysoka');
   /* TŘI RŮZNÉ DŮVODY, TŘI RŮZNÁ JMÉNA (§471). Dřív se tyhle tři stavy
      hlásily jako jeden („souradniceMimoCR"), takže z výpisu nešlo
      poznat, kolik nabídek se ztrácí naší neschopností je umístit
