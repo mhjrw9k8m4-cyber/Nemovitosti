@@ -538,6 +538,22 @@ export function jitterAround(lat, lng, seedStr, amp) {
   return { lat: +(lat + j(0)).toFixed(5), lng: +(lng + j(8)).toFixed(5) };
 }
 
+/* ROZPTYL NESMÍ NABÍDKU VYSTRČIT ZA HRANICE REPUBLIKY.
+   Naměřeno 8. 11. 2026: „Loučná pod Klínovcem" leží přímo na hranici
+   s Německem. Geokodér vrátil bod v okrese Chomutov (ten se ověřuje),
+   ale rozptyl ±0,012° (~1,3 km) ho posunul o 2 km na německou stranu —
+   a na webu o českých nemovitostech visela nabídka za hranicí.
+   Hlídá to zkouška scripts/test-data.mjs („žádný pozemek neleží za
+   hranicemi státu") a hlídá to TOUŽ funkcí, okresPodleHranice, jakou
+   se tady rozhoduje: jeden zdroj pravdy, ne dvě sady hranic.
+   Když rozptýlený bod ven vypadne, platí ten původní: přesná poloha
+   obce je lepší než hezčí rozptyl na špatném místě. */
+export function jitterVCesku(lat, lng, seedStr, amp) {
+  const j = jitterAround(lat, lng, seedStr, amp);
+  if (!maHranice()) return j;
+  return okresPodleHranice(j.lat, j.lng) ? j : { lat, lng };
+}
+
 // Přesnější poloha podle názvu katastrálního území (Nominatim / OpenStreetMap).
 const GEO_UA = { 'user-agent': BOT_UA };
 /* Okres se dosud předával jen do klíče mezipaměti, ale do DOTAZU ne — ptali
@@ -562,6 +578,15 @@ async function geocodeName(place, okres) {
         for (const v of j) {
           const la = +parseFloat(v.lat).toFixed(5), ln = +parseFloat(v.lon).toFixed(5);
           if (!isFinite(la) || !isFinite(ln)) continue;
+          /* DVĚ PODMÍNKY, NE JEDNA. polohaSediSOkresem měří jen
+             VZDÁLENOST od středu okresu (55 km), takže bod za hranicí
+             republiky jí projde — a taky projel: naměřeno 8. 11. 2026
+             u „Loučné pod Klínovcem" (obec leží přímo na hranici),
+             geokodér vrátil 50.4223,12.97674, což není v žádném českém
+             okrese, a na webu o českých nemovitostech visela nabídka
+             v Německu. Hranice okresů tu rozhodují TOUŽ funkcí, jakou
+             se ptá geocodeObec i zkouška scripts/test-data.mjs. */
+          if (maHranice() && !okresPodleHranice(la, ln)) continue;
           if (!polohaSediSOkresem(la, ln, okres)) continue;
           coord = [la, ln];
           break;
@@ -970,7 +995,7 @@ export function geocode(o, seedStr) {
   if (!base) return o;
   const hodnota = (x) => { const v = String(x || '').trim(); return (!v || v === '—' || v === '-') ? '' : v; };
   const semeno = hodnota(seedStr) || hodnota(o.url) || hodnota(o.parcel) || hodnota(o.place);
-  const j = jitterAround(base[0], base[1], semeno + o.okres, 0.06);
+  const j = jitterVCesku(base[0], base[1], semeno + o.okres, 0.06);
   return { ...o, lat: j.lat, lng: j.lng };
 }
 
@@ -4776,7 +4801,7 @@ async function fetchNabidkyStatu() {
       nm = null; zamitnuto++;
     }
     if (nm) {
-      const j = jitterAround(nm[0], nm[1], (o.parcel || '') + o.place, 0.012);
+      const j = jitterVCesku(nm[0], nm[1], (o.parcel || '') + o.place, 0.012);
       o.lat = j.lat; o.lng = j.lng; refined++;
     }
   }

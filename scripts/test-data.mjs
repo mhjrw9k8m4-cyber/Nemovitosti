@@ -77,6 +77,48 @@ const zaHranici = nabidky.filter((o) => typeof o.lat === 'number' && !okresPodle
 pravda('žádný pozemek neleží za hranicemi státu', zaHranici.length === 0,
   `${zaHranici.length}: ` + zaHranici.slice(0, 4).map((o) => `${o.place} (${o.okres}) ${o.lat},${o.lng}`).join(' | '));
 
+/* A PROČ SE TO STÁVALO: ROZPTYL. Poloha obce se rozhodí o ±0,012°
+   (~1,3 km), ať dvě nabídky z jedné obce neleží na jednom špendlíku.
+   U obce PŘÍMO NA HRANICI to ale bod vystrčí z republiky — naměřeno
+   8. 11. 2026 na „Loučné pod Klínovcem": geokodér vrátil bod v okrese
+   Chomutov (to se ověřuje), rozptyl ho posunul 2 km na německou stranu
+   a nabídka visela za hranicí. jitterVCesku proto rozptýlený bod
+   prověří TOUŽ funkcí, jakou měří tahle zkouška, a když vypadne ven,
+   platí ten původní.
+   Měří se to na pohraniční obci a na STU semínek: jedno semínko by
+   neřeklo nic (zrovna to jedno může padnout dovnitř). */
+{
+  const F = await import('./fetch-opportunities.mjs');
+  const hranicni = [50.4035, 12.9705];   // Loučná pod Klínovcem
+  let venku = 0, hnuto = 0;
+  /* Amplituda 0,06 je ta, se kterou se opravdu počítá u náhradní polohy
+     kolem středu okresu (geocode()); 0,012 u pohraniční obce ven
+     nedosáhne, takže by ta kontrola nic neprokázala — vyzkoušeno. */
+  for (let i = 0; i < 100; i++) {
+    const j = F.jitterVCesku(hranicni[0], hranicni[1], 'semeno-' + i, 0.06);
+    if (!okresPodleHranice(j.lat, j.lng)) venku++;
+    if (j.lat !== hranicni[0] || j.lng !== hranicni[1]) hnuto++;
+  }
+  pravda('rozptyl u pohraniční obce nevystrčí bod z republiky (100 semínek, ±0,06°)',
+    venku === 0, `${venku} ze 100 skončilo venku`);
+  /* A NEJDE O TO VYPNOUT ROZPTYL. Kdyby funkce vracela vždycky vstup,
+     kontrola výš by prošla a špendlíky by se slily do jednoho bodu. */
+  pravda('a rozptyl se tím nevypnul (aspoň někde se bod pohnul)',
+    hnuto > 0, `pohnul se ${hnuto}× ze 100`);
+  /* A HLAVNĚ: GEOKODÉR SÁM. Bod 50.4223,12.97674 u Loučné žádný český
+     okres nezná, a přesto se do dat dostal — podmínka u geocodeName
+     měřila jen vzdálenost od středu okresu (55 km). Síť se tu rozjíždět
+     nedá, tak se čte zdroj: obě podmínky tam musí stát vedle sebe. */
+  pravda('naměřený bod u Loučné opravdu není v žádném okrese (na čem to stojí)',
+    !okresPodleHranice(50.4223, 12.97674), 'hranice ho berou — pak ta vada nebyla v hranicích');
+  const zdrojF = readFileSync(new URL('./fetch-opportunities.mjs', import.meta.url), 'utf8');
+  const kus = zdrojF.slice(zdrojF.indexOf('async function geocodeName'),
+    zdrojF.indexOf('async function geocodeObec'));
+  pravda('geocodeName ověřuje hranice okresů, ne jen vzdálenost od středu',
+    /okresPodleHranice\(la, ln\)/.test(kus) && /polohaSediSOkresem\(la, ln/.test(kus),
+    'v geocodeName chybí jedna z obou podmínek');
+}
+
 /* Druh pozemku se píše jednotně. Evidence dražeb ho posílá s velkým
    počátečním písmenem, ostatní zdroje s malým — v datech pak ležely dvě
    hodnoty pro tutéž věc: „Zastavěná plocha a nádvoří" (1×) a

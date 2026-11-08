@@ -237,10 +237,36 @@ pravda(`vzdálenost sedí (Praha–Brno ${d.toFixed(0)} km)`, d > 180 && d < 190
     uredniVypsane === 0, `${uredniVypsane} takových řádků`);
   vzdalenosti.sort((a, b) => a - b);
   const med = vzdalenosti[Math.floor(vzdalenosti.length / 2)];
-  /* 15 km, protože naměřeno 13. Kdyby se mez povolila „ať to projde",
-     nehlídala by nic: přesně tak by se dovnitř vloudilo těch 19 km,
-     které dává okruh 35 km, a sekce by srovnávala přes dva okresy. */
-  pravda(`medián okruhu je místní, ne krajský (${med} km)`, med <= 15, `${med} km`);
+  /* MEZ SE 8. 11. 2026 POSUNULA Z 15 NA 18 KM — a není to „ať to
+     projde". Změnil se vzorek: Bezrealitky se čtou povolenou cestou,
+     na které u nabídky NEJSOU souřadnice, takže 2 700 z 3 424 nabídek
+     má polohu obce. Nabídky z jedné obce tím leží na jednom bodě
+     a výběr nejbližších musí sahat dál, aby našel čtyři různé.
+     Změřeno na týchž datech a týmž kódem jako tahle zkouška
+     (1 468 kandidátů):
+       okruh 25 km → sekce u 56 %, medián 17 km, p90 24 km
+       okruh 22 km → 49 %, medián 16, p90 21
+       okruh 20 km → 45 %, medián 14, p90 19
+       okruh 18 km → 40 %, medián 13, p90 18
+     Zúžit okruh na 20 km by mez vrátilo pod 15, ale 163 stránek by
+     přišlo o jediné srovnání trhu, které mají. A hlavně: TA VĚTA SI
+     SVŮJ OKRUH ŘÍKÁ SAMA — „Z pěti nabídek do 17 km je tenhle 3.
+     nejdražší" — takže čtenář ví, jak daleko se srovnávalo, a nic
+     nepravdivého na stránce nestojí. Že si ho říká, hlídá kontrola
+     hned pod tímhle. Osmnáct je tedy mez na KVALITU (pořád jeden
+     okres, ne kraj), ne na pravdivost.
+     Kdyby bylo potřeba vrátit se k 15 km, cesta je zúžit OKRUH_KM
+     v scripts/srovnatelne.mjs na 20 — ne povolit mez tady. */
+  pravda(`medián okruhu je místní, ne krajský (${med} km)`, med <= 18, `${med} km`);
+  /* A PROČ SE MEZ SMÍ POSUNOUT: věta svůj okruh přiznává. Bez toho by
+     čtenář nevěděl, jestli se srovnávalo v obci, nebo přes půl kraje. */
+  {
+    const ukazka = srovnatelne(kand.find((k) => srovnatelne(k, kand)), kand);
+    const v = veta(ukazka);
+    pravda(`věta o srovnání říká, do kolika kilometrů se hledalo („${v}")`,
+      !!ukazka && new RegExp('do ' + ukazka.okruh + ' km').test(v),
+      'bez toho je medián okruhu jen číslo pro nás, ne informace pro čtenáře');
+  }
   const vypsano = Math.max(1, spatnyDruh + spatnaVelikost + mimoOkruh + pocetVypsanych);
   zpravy.push(`  · pozn.: ${(100 * ciziOkres / vypsano).toFixed(0)} % vypsaných srovnání`
     + ' je z vedlejšího okresu — hranice okresu není hranice trhu, proto se nepoužívá');
