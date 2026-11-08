@@ -406,21 +406,35 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
    nabídek přišel — a nespadlo by nic. */
 {
   const D = require_(join(KOREN, 'js', 'druh.js'));
-  const KS = D.KATASTR.map((k) => D.srovnej(k));
+  /* BEZ „zastavěná plocha a nádvoří": to je právě ta půda POD stavbou,
+     takže u ní může mít zdroj se svým „tohle není pozemek" pravdu —
+     klidně prodává tu stavbu. Naměřeno 8. 11., jak se 32 sporných
+     nabídek dělí: 20× zastavěná plocha (dvojznačné, zůstávají „jiná
+     nemovitost"), 4× zahrada, 3× vodní plocha, 3× trvalý travní
+     porost, 1× ostatní plocha, 1× orná půda. Na vodní ploše ani na
+     orné půdě nic nestojí — tam je text prostě vedle. */
+  const STAVEBNI = D.srovnej('zastavěná plocha a nádvoří');
+  const KS = D.KATASTR.map((k) => D.srovnej(k)).filter((k) => k !== STAVEBNI);
   const jeKatastralni = (dr) => {
     const t = D.srovnej(String(dr == null ? '' : dr)).trim();
     return !!t && KS.some((k) => k === t || k.startsWith(t + ' '));
   };
   je('vyhláška zná deset katastrálních druhů', D.KATASTR.length, 10);
-  const nepozna = D.KATASTR.filter((k) => !jeKatastralni(k));
-  pravda('a pravidlo pozná každý z nich', nepozna.length === 0,
+  je('a pravidlo bere devět z nich (bez zastavěné plochy)', KS.length, 9);
+  const nepozna = D.KATASTR.map((k) => D.srovnej(k)).filter((k) => k !== STAVEBNI)
+    .filter((k) => !jeKatastralni(k));
+  pravda('a pozná každý z těch devíti', nepozna.length === 0,
     'nepozná: ' + nepozna.join(', '));
+  pravda('a zastavěnou plochu schválně NEbere',
+    !jeKatastralni('zastavěná plocha') && !jeKatastralni('zastavěná plocha a nádvoří'),
+    'brala by i půdu pod stavbou, kde zdroj může mít pravdu');
   /* ZKRÁCENÝ TVAR MUSÍ PROJÍT TAKY. Čtečky ukládají „zastavěná plocha",
      kdežto vyhláška má „zastavěná plocha a nádvoří" — kdyby se uznávalo
      jen celé jméno, nechytilo by pravidlo ani jednu z těch 32 nabídek,
      protože právě tenhle tvar v datech mají. */
   pravda('i ve zkráceném tvaru, jaký ukládají čtečky',
-    jeKatastralni('zastavěná plocha'), '„zastavěná plocha" se nepoznala');
+    jeKatastralni('trvalý travní') && jeKatastralni('vodní plocha'),
+    'zkrácený tvar se nepoznal — čtečky ukládají právě ten');
   /* A ŽÁDNÉ JMÉNO KATEGORIE SE NESMÍ CHYTIT. */
   const chytleKategorie = K.KLICE.map((k) => K.jmeno(k))
     .filter((jm) => jeKatastralni(jm) || jeKatastralni(String(jm).toLowerCase()));
