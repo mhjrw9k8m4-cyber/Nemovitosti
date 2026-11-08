@@ -244,6 +244,33 @@ je('jiná ulice v adrese nespustí přepis',
   je('robot to pouští před geokódováním',
     zdroj2.indexOf('opravUliceVObci(fresh)') > 0
     && zdroj2.indexOf('opravUliceVObci(fresh)') < zdroj2.indexOf('await geocodeName(o.place'), true);
+
+  /* OPRAVIT OBEC A NECHAT OKRES JE HORŠÍ NEŽ NEOPRAVIT NIC.
+     Naměřeno 8. 11. 2026 na ostrých datech: 61 obcí mělo v datech dva
+     a víc okresů (Ústí nad Labem jako Ústí nad Labem, Praha-západ,
+     Olomouc i Liberec), dohromady 658 nabídek, a byt v Roztokách měl
+     souřadnice Brna. Příčina: okres i poloha se dohledaly pro to, co
+     v poli pro obec stálo PŘED opravou, tedy pro ulici — a oprava
+     přepsala jen obec. Člověk pak vidí správnou obec a cizí okres
+     a nemá jak poznat, co platí. */
+  const opravene = bezi([
+    { place: 'Bučinská', url: 'https://www.bezrealitky.cz/nemovitosti-byty-domy/1-nabidka-prodej-bytu-bucinska-orlova' },
+    { place: 'Orlová', url: 'https://www.bezrealitky.cz/nemovitosti-byty-domy/2-nabidka-prodej-bytu-orlova' },
+  ]);
+  je('opravená nabídka je označená, ať volající ví, že okres už nesedí',
+    [opravene.kolik, !!opravene.data[0]._obecZmenena, !!opravene.data[1]._obecZmenena],
+    [1, true, false]);
+  je('a robot po té opravě okres i polohu přepočítá',
+    zdroj2.indexOf('if (!o._obecZmenena) continue;') > zdroj2.indexOf('opravUliceVObci(fresh)')
+    && zdroj2.indexOf('if (!o._obecZmenena) continue;') < zdroj2.indexOf('await geocodeName(o.place'), true);
+
+  /* A U BEZREALITEK SE OBEC OPRAVÍ UŽ PŘI ČTENÍ SITEMAPY, tedy ještě
+     než se ptáme na okres. Jinak by se geokodéru předkládala jména
+     ulic — a strop dotazů (BR_STROP_GEO) by se vyčerpal na jména,
+     která obec vůbec neznamenají. */
+  je('Bezrealitky opraví obec dřív, než hledají okres',
+    zdroj2.indexOf('opravUliceVObci(predbezne)') > 0
+    && zdroj2.indexOf('opravUliceVObci(predbezne)') < zdroj2.indexOf('mistaObci.get(klic)'), true);
 }
 
 console.log('\nMísto nabídky (ulice vs. obec)');

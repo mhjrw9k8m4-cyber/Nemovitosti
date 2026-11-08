@@ -209,9 +209,24 @@ sedi(C.prectiJakkoli(sMikrodaty, ZAKLAD).nabidky, 'stránka s mikrodaty', 'mikro
   const a = kde('Prodej stavebního pozemku 1 480 m², Lhota u Vsetína, okres Vsetín');
   pravda('„…, okres Vsetín" dá okres a obec si vezme z textu před ním',
     !!a && a.okres === 'Vsetín' && a.place === 'Lhota u Vsetína', JSON.stringify(a));
-  const b = kde('Prodej pozemku Veselí nad Lužnicí, 3 700 m²');
-  pravda('známá obec se pozná i bez okresu a ponechá si pravopis',
-    !!b && b.place === 'Veselí nad Lužnicí' && b.okres === 'Tábor', JSON.stringify(b));
+  /* OBEC SE BERE ZE SLOVNÍKU, NE Z PAMĚTI. Stálo tu „Veselí nad
+     Lužnicí, okres Tábor" napsané natvrdo — a 8. 11. 2026 zkouška
+     spadla, protože ta nabídka z dat vypadla. Měřila tím data, ne
+     pravidlo. Teď se víceslovná obec s diakritikou VYBERE z toho
+     slovníku, který se právě postavil, takže zkouška hlídá pořád totéž
+     (víceslovné jméno se pozná i bez okresu a neztratí háčky) a stárnutí
+     dat ji nerozbije. */
+  const { vypadaJakoUlice } = await import('./fetch-opportunities.mjs');
+  const vzorek = [...new Set(d.opportunities.map((o) => String((o && o.place) || '').trim()))]
+    /* Žádné jméno obce v Česku nezačíná číslicí — „5. května" je ulice,
+       kterou tahle dávka ještě měla v poli pro obec. */
+    .filter((n) => /\s/.test(n) && /[áčďéěíňóřšťúůýž]/i.test(n) && !/^\d/.test(n)
+      && !vypadaJakoUlice(n) && slovnik.has(n.toLowerCase()))
+    .sort()[0] || '';
+  pravda('ve slovníku je víceslovná obec s diakritikou, na čem to měřit', !!vzorek, vzorek);
+  const b = kde('Prodej pozemku ' + vzorek + ', 3 700 m²');
+  pravda(`známá obec se pozná i bez okresu a ponechá si pravopis (${vzorek})`,
+    !!b && b.place === vzorek && !!b.okres, JSON.stringify(b));
   const c = kde('Pozemek 2 000 m², okres Tábor');
   pravda('když stránka obec neuvádí, zůstane okres (a nic se nedomýšlí)',
     !!c && c.okres === 'Tábor' && c.place === 'Tábor', JSON.stringify(c));

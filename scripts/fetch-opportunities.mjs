@@ -839,6 +839,18 @@ export function opravUliceVObci(nabidky) {
        leželo nepřečtené, by byl jen další sloupec k udržování. Z adresy
        inzerátu, která u nabídky zůstává, se dá přečíst kdykoli. */
     o.place = jmeno;
+    /* ZNAČKA PRO VOLAJÍCÍHO: TOMUHLE ZÁZNAMU UŽ NESEDÍ OKRES ANI POLOHA.
+       Naměřeno 8. 11. 2026 na ostrých datech: 61 obcí mělo dva a víc
+       okresů (Ústí nad Labem vyšlo jako Ústí nad Labem, Praha-západ,
+       Olomouc A Liberec) a týkalo se to 658 nabídek. Příčina nebyla
+       v okresech, ale TADY: dokud v poli pro obec stála ulice, okres
+       a poloha se dohledaly pro tu ULICI, a tahle oprava pak přepsala
+       jen obec. Zůstal okres cizího města — a protože se poloha
+       dopočítává z obce A OKRESU, skončil špendlík v tom cizím městě
+       (byt v Roztokách měl souřadnice Brna). Opravit obec a nechat
+       okres je horší než neopravit nic: člověk vidí správnou obec
+       a špatný okres a nemá jak poznat, co platí. */
+    o._obecZmenena = true;
     kolik++;
   }
   return kolik;
@@ -3607,12 +3619,30 @@ async function fetchBezrealitky() {
   try { drive = JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []; } catch { drive = []; }
   const mistaObci = brMistaZDrivejsich(drive,
     (la, ln) => (maHranice() ? okresPodleHranice(la, ln) : null));
+  /* ULICE V POLI PRO OBEC SE OPRAVÍ HNED, JEŠTĚ PŘED HLEDÁNÍM OKRESU.
+     Adresa v sitemapě nese u bytů a domů většinou ULICI („Masarykova"),
+     ne obec. Dokud se podle ní hledal okres a poloha, hledala se
+     v mapě ulice — a protože se obec opravuje až o několik tisíc řádků
+     níž (opravUliceVObci), zůstal u opravené obce okres té ulice.
+     Naměřeno 8. 11. 2026 na ostrých datech: 61 obcí mělo dva a víc
+     okresů (Ústí nad Labem jako Ústí nad Labem, Praha-západ, Olomouc
+     i Liberec), dohromady 658 nabídek, a byt v Roztokách měl
+     souřadnice Brna. Obec se proto dohledá z ADRESY INZERÁTU TOUŽ
+     funkcí, jakou používá celý robot (žádná druhá kopie pravidla),
+     a teprve pak se ptáme na okres.
+     Vedlejší zisk: geokodér se neptá na jména ulic, takže strop dotazů
+     nepadne na jména, která obec vůbec neznamenají. */
+  const predbezne = inzeraty.map((a) => ({
+    url: a.url, place: (mistoZBezrealitky(a.geo, a.uri).place || '').slice(0, 60),
+  }));
+  const opravenychUlic = opravUliceVObci(predbezne);
+
   const zeSlovniku = new Map();
   let geoDotazu = 0, bezOkresu = 0;
   const kObjednani = [];
-  for (const a of inzeraty) {
-    const misto = mistoZBezrealitky(a.geo, a.uri);
-    const place = (misto.place || '').slice(0, 60);
+  for (let i = 0; i < inzeraty.length; i++) {
+    const a = inzeraty[i];
+    const place = predbezne[i].place;
     if (!place) { bezOkresu++; continue; }
     const klic = place.toLowerCase();
     if (!zeSlovniku.has(klic)) {
@@ -3749,7 +3779,8 @@ async function fetchBezrealitky() {
     .sort((x, y) => y[1] - x[1]).slice(0, 6)
     .map(([k, v]) => `${k} ${v}×`).join(', ');
   console.log(`  Bezrealitky (sitemapa + detaily): v sitemapě ${inzeraty.length} inzerátů na prodej,`
-    + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}, geokodér ${geoDotazu}×).`
+    + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu},`
+    + ` obec z adresy inzerátu ${opravenychUlic}×, geokodér ${geoDotazu}×).`
     + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů`
     + (odlozene.length ? `, odloženo na další běh ${odlozene.length} (strop ${BR_STROP_DETAILU}),`
       + ` z toho ${zeStare} se starší cenou z mezipaměti` : '')
@@ -4677,6 +4708,35 @@ async function fetchNabidkyStatu() {
   const uliceVObci = opravUliceVObci(fresh);
   if (uliceVObci) console.log(`Opraveno míst, kde v poli pro obec stála ulice: ${uliceVObci}.`);
 
+  /* A KDYŽ SE OBEC ZMĚNILA, OKRES A POLOHA SE POČÍTAJÍ ZNOVU.
+     Oprava výš mění jen `place`. Okres a poloha byly ale dohledané pro
+     to, co v tom poli stálo PŘED opravou — tedy pro ulici. Naměřeno
+     8. 11. 2026: 61 obcí mělo v datech dva a víc okresů (Ústí nad
+     Labem jako Ústí nad Labem, Praha-západ, Olomouc i Liberec), v nich
+     658 nabídek, a byt „Roztoky, Masarykova" měl souřadnice Brna.
+     Ptá se geocodeObec (bez okresu, týž dotaz jako u Bezrealitek,
+     táž mezipaměť) a okres se bere ZE SKUTEČNÝCH HRANIC toho bodu —
+     nehádá se z jména. Co se nedohledá, zůstane bez okresu a sebere ho
+     mez „bez souřadnic se nabídka nezveřejní" o pár desítek řádků níž:
+     tvrdit obec, ke které neumíme okres, je horší než nabídku vynechat. */
+  {
+    let znovu = 0, marne = 0;
+    for (const o of fresh) {
+      if (!o._obecZmenena) continue;
+      const coord = await geocodeObec(o.place);
+      const okres = (Array.isArray(coord) && maHranice())
+        ? okresPodleHranice(coord[0], coord[1]) : null;
+      if (okres) {
+        o.okres = okres; o.lat = coord[0]; o.lng = coord[1]; o._gps = false;
+        znovu++;
+      } else { o.okres = ''; o.lat = undefined; o.lng = undefined; o._gps = false; marne++; }
+    }
+    if (znovu || marne) {
+      console.log(`Po opravě obce přepočítán okres i poloha: ${znovu}×`
+        + (marne ? `, nedohledáno ${marne}× (ty nabídky vypadnou na mezi „bez souřadnic")` : '') + '.');
+    }
+  }
+
 
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
   // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne
@@ -4793,7 +4853,7 @@ async function fetchNabidkyStatu() {
   const sFotkou = fresh.filter((o) => o.f).length;
   console.log(`Fotek u nabídek: ${sFotkou} z ${fresh.length}.`);
 
-  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; });
+  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; delete o._obecZmenena; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +
     (zamitnuto ? ` Zamítnuto jako jiná obec téhož jména: ${zamitnuto} (zůstávají na středu okresu).` : ''));
