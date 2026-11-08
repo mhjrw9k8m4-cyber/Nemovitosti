@@ -173,6 +173,15 @@ zvenčí. `00-vse.sql` jde pustit opakovaně, takže stačí jeden běh.
   se pak objeví poznámka „Spouštěč stropu fotek se nevytvořil". Strop
   pak drží jen politika, což je proti dnešnímu webu dost (úložiště
   přijímá jeden soubor na jeden dotaz), ale je dobré o tom vědět.
+* **Typ nemovitosti u inzerátu** (`supabase/listings-kategorie.sql`,
+  od 8. 11.): sloupec `kat` a podoba `create_listing` s parametrem
+  `p_kat`. Web od 5. 11. ukazuje všechny nemovitosti — z 3 886 nabídek
+  je 1 600 nepozemkových — ale **vložit se bez tohohle spuštění dá jen
+  pozemek**: formulář typ pošle a databáze ho nemá kam zapsat. Stránka
+  pro realitní kanceláře to zatím přiznává; po spuštění ji to přestane
+  omezovat. Vkládání pozemků funguje i bez spuštění (slovo „pozemek“
+  se do databáze vůbec neposílá), takže tím nic nerozbijete — jen tím
+  přijdete o domy a byty od lidí.
   V témže souboru je i `osirele_fotky()` — soupis fotek, na které už
   žádný inzerát neodkazuje. Volá ho noční úklid
   (`scripts/uklid-databaze.mjs`) a maže je přes Storage API; bez
