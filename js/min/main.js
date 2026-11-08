@@ -1630,9 +1630,12 @@
   function mapThumb(d) {
     var col = TYPE[d.type].color;
 
-    if (d.photos && d.photos.length) {
-      var p0 = d.photos[0];
-      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
+    var F = window.PK_FOTKA;
+    var zInzeratu = (F && F.url) ? F.url(d) : null;
+    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
+    if (fotky.length) {
+      var p0 = fotky[0];
+      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (fotky.length) + '</span>' : '';
 
       return '<svg class="opp-map" data-sn="ceka" viewBox="0 0 384 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">' +
 

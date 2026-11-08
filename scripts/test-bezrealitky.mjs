@@ -180,6 +180,58 @@ je('CDATA se odloupne', brXmlText('<![CDATA[Prodej pozemku]]>'), 'Prodej pozemku
     `smimeCist na ${prvniSmime}, stahni na ${prvniStahni}`);
 }
 
+/* --- 9. ADRESA FOTKY TAM A ZPÁTKY ---------------------------------
+   V datech stojí jen název souboru (pole `f`), adresu skládá js/fotka.js
+   — jinak by 3 161 celých adres přidalo 410 kB do souboru, který si
+   stahuje úvodní stránka. Pravidlo je tedy OBOUSTRANNÉ a musí se
+   vracet: co robot rozloží, to web složí zpátky na totéž.
+   Doslovná adresa z měření inzerátu 1076264 (běh 42486626263). */
+{
+  const FOTKA = (await import('../js/fotka.js')).default
+    || (await import('../js/fotka.js'));
+  const PLNA = 'https://api.bezrealitky.cz/media/cache/record_main/data/images/advert/'
+    + '1076k/1076264/1076264-1792345838-foto-1.jpg';
+  const zk = FOTKA.zkratka(PLNA, '1076264');
+  je('z adresy se uloží jen název souboru', zk, '1076264-1792345838-foto-1.jpg');
+  je('a složí se zpátky na tutéž adresu',
+    FOTKA.url({ f: zk, url: 'https://www.bezrealitky.cz/nemovitosti-byty-domy/1076264-nabidka-prodej-pozemku-x' }),
+    PLNA);
+  /* Cizí hostitel ani jiná cesta se neuloží: uložit zkratku adresy,
+     která nikam nevede, je horší než neuložit fotku. */
+  je('cizí hostitel se neuloží', FOTKA.zkratka('https://zlo.example/x.jpg', '1076264'), null);
+  je('cesta s jiným číslem inzerátu se neuloží',
+    FOTKA.zkratka(PLNA, '999999'), null);
+  /* Lomítko v názvu souboru by znamenalo cestu jinam — a tím pádem
+     adresu, kterou jsme nesložili my. */
+  je('název souboru s lomítkem se neuloží',
+    FOTKA.zkratka('https://api.bezrealitky.cz/media/cache/record_main/data/images/advert/'
+      + '1076k/1076264/../../zlo.jpg', '1076264'), null);
+  je('nabídka bez fotky nedá adresu', FOTKA.url({ url: PLNA }), null);
+  je('nabídka bez adresy inzerátu taky ne', FOTKA.url({ f: 'a.jpg' }), null);
+}
+
+/* --- 10. HOSTITEL FOTEK JE V CSP SERVÍROVANÝCH STRÁNEK -------------
+   §436-třída: jméno hostitele je ve dvou místech, v js/fotka.js
+   a v hlavičce CSP na každé stránce. Kdyby se rozešla, prohlížeč fotku
+   zahodí a v konzoli bude „Refused to load the image" — na webu se to
+   nepozná, karta jen zůstane prázdná. Měří se SERVÍROVANÁ stránka, ne
+   zdroj scripts/csp.mjs: teprve ta stránka se posílá člověku. */
+{
+  const FOTKA = (await import('../js/fotka.js')).default
+    || (await import('../js/fotka.js'));
+  const ROOT = new URL('..', import.meta.url);
+  for (const stranka of ['index.html', 'pozemek.html']) {
+    let html = '';
+    try { html = readFileSync(new URL(stranka, ROOT), 'utf8'); } catch (e) {}
+    const csp = /<meta http-equiv="Content-Security-Policy" content="([^"]*)"/.exec(html);
+    const img = csp ? (/img-src ([^;]*)/.exec(csp[1]) || [])[1] || '' : '';
+    pravda(`${stranka}: img-src pouští hostitele fotek`,
+      img.indexOf(FOTKA.HOSTITEL) > 0, 'img-src: ' + img.slice(0, 200));
+    pravda(`${stranka}: načítá js/min/fotka.js`,
+      html.indexOf('js/min/fotka.js') > 0);
+  }
+}
+
 console.log('\nBezrealitky povolenou cestou (sitemapa + detail)');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);

@@ -2887,10 +2887,18 @@
   // Když ale majitel nahrál vlastní fotku pozemku, má přednost ta fotka.
   function mapThumb(d) {
     var col = TYPE[d.type].color;
-    // Když majitel nahrál skutečnou fotku pozemku, ukážeme ji místo satelitu.
-    if (d.photos && d.photos.length) {
-      var p0 = d.photos[0];
-      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (d.photos.length) + '</span>' : '';
+    /* FOTKA, KDYŽ JE — A UŽ NEJEN OD MAJITELE.
+       Do 8. 11. 2026 měla fotku jen nabídka, kterou sem někdo vložil
+       sám; z 3 886 nabídek na webu to bylo nula (změřeno). Inzeráty
+       z Bezrealitek fotku mají a od §470 ji máme i my — v datech stojí
+       jen název souboru a adresu skládá js/fotka.js. Letecký snímek
+       zůstává pro nabídky, které fotku nemají (dražby, SPÚ, ÚZSVM). */
+    var F = window.PK_FOTKA;
+    var zInzeratu = (F && F.url) ? F.url(d) : null;
+    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
+    if (fotky.length) {
+      var p0 = fotky[0];
+      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + (fotky.length) + '</span>' : '';
       /* Fotka majitele čeká v data-href ze stejného důvodu jako dlaždice
          leteckého snímku (js/snimek.js): je to obrázek pro kartu, na
          kterou člověk většinou ani nedojede, a je VĚTŠÍ než dlaždice —

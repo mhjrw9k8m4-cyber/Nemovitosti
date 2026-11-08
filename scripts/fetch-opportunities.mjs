@@ -340,10 +340,6 @@ const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
  * webu kvůli ničemu. A do robots.txt se nepíše schválně: ta adresa
  * odnikud nevede, takže zákaz v robots.txt by ji jako jediný prozradil. */
 const POPISY = join(__dirname, '..', 'data', 'popisy.json');
-/* FOTKY TAKY DO ZVLÁŠTNÍHO SOUBORU, a ze stejného důvodu jako popisy:
-   adresa fotky je kolem sta bajtů a u 3 161 nabídek by to byl třetí
-   megabajt v souboru, který si stahuje úvodní stránka. */
-const FOTKY = join(__dirname, '..', 'data', 'fotky.json');
 
 // Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
 let OKRESY_MAP = {};
@@ -1175,6 +1171,8 @@ function parseDruh(text, jmenaMist) {
    takže zapojení kategorií dnešní web nepřeklopí (hlídá
    scripts/test-kategorie.mjs). */
 const PKKategorie = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'kategorie.js'));
+/* Adresu fotky skládá i rozkládá jeden modul — viz js/fotka.js. */
+const PK_FOTKA = createRequire(import.meta.url)(join(dirname(fileURLToPath(import.meta.url)), '..', 'js', 'fotka.js'));
 function parseKategorie(text, jmenaMist) {
   return PKKategorie.zTextu(text, jmenaMist) || PKKategorie.VYCHOZI;
 }
@@ -3624,7 +3622,8 @@ async function fetchBezrealitky() {
          dvě nabídky z jedné obce neleží na jednom špendlíku. */
       const j = (typeof a.obecLat === 'number' && typeof a.obecLng === 'number')
         ? jitterAround(a.obecLat, a.obecLng, a.url, 0.006) : null;
-      if (a.foto) sFotkou++;
+      const fotka = PK_FOTKA.zkratka(a.foto, a.id);
+      if (fotka) sFotkou++;
       if (a.popis) sPopisem++;
       out.push({
         place: a.place, okres: a.okres, type: 'sale',
@@ -3640,7 +3639,10 @@ async function fetchBezrealitky() {
         _gps: false,
         url: a.url,
         _popis: a.popis ? cistyPopis(a.popis) : undefined,
-        _foto: a.foto || undefined,
+        /* Jen název souboru; adresu složí js/fotka.js. Celá by do
+           opportunities.json přidala 410 kB a ten soubor stahuje
+           úvodní stránka. */
+        f: fotka || undefined,
       });
       pridejVybaveni(out[out.length - 1], textInzeratu);
     } catch (e) { preskoc('Bezrealitky', e); }
@@ -4686,16 +4688,12 @@ async function fetchNabidkyStatu() {
   writeFileSync(POPISY, JSON.stringify(popisy) + '\n', 'utf8');
   console.log(`Popisů od inzerentů: ${Object.keys(popisy).length} z ${fresh.length}.`);
 
-  /* FOTKY NABÍDEK. Klíč je týž jako u popisů, takže se stránka pozemku
-     nemůže rozejít se svou fotkou. Adresy jsou na api.bezrealitky.cz —
-     nestahují se, jen se předají prohlížeči návštěvníka, a ten robot
-     není; robots.txt toho hostitele mluví o robotech. */
-  const fotky = {};
-  for (const o of fresh) if (o._foto) fotky[klicNabidky(o)] = o._foto;
-  writeFileSync(FOTKY, JSON.stringify(fotky) + '\n', 'utf8');
-  console.log(`Fotek u nabídek: ${Object.keys(fotky).length} z ${fresh.length}.`);
+  /* Kolik nabídek nese fotku. Je to pole `f` v datech, ne zvláštní
+     soubor: viz js/fotka.js, proč stačí název souboru. */
+  const sFotkou = fresh.filter((o) => o.f).length;
+  console.log(`Fotek u nabídek: ${sFotkou} z ${fresh.length}.`);
 
-  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; delete o._foto; });
+  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +
     (zamitnuto ? ` Zamítnuto jako jiná obec téhož jména: ${zamitnuto} (zůstávají na středu okresu).` : ''));

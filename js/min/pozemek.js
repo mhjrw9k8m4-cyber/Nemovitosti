@@ -140,12 +140,14 @@
   function heroLayers(d) {
     var col = TYPE[d.type].color;
 
-    if (d.photos && d.photos.length) {
-      var shots = d.photos.map(function (p, i) {
+    var zInzeratu = (global.PK_FOTKA && global.PK_FOTKA.url) ? global.PK_FOTKA.url(d) : null;
+    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
+    if (fotky.length) {
+      var shots = fotky.map(function (p, i) {
 
-        return '<img class="pz-shot" src="' + esc(p) + '" alt="Fotka pozemku ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
+        return '<img class="pz-shot" src="' + esc(p) + '" alt="Fotka nemovitosti ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
       }).join('');
-      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + d.photos.length + '</span>' : '';
+      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + fotky.length + '</span>' : '';
       return '<div class="pz-gallery">' + shots + '</div>' +
         '<span class="opp-mgrad"></span>' +
         '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' + cnt;

@@ -267,18 +267,27 @@
 
   function heroLayers(d) {
     var col = TYPE[d.type].color;
-    // Majitel nahrál skutečné fotky pozemku → listovací galerie (swipe na mobilu).
-    if (d.photos && d.photos.length) {
-      var shots = d.photos.map(function (p, i) {
+    /* FOTKY → listovací galerie (swipe na mobilu).
+       Dvě cesty, jak se k fotce dostat, a nemíchají se:
+       · `d.photos` je od majitele, z našeho úložiště — tvar adresy
+         hlídá PKCisteni, protože ji píše cizí člověk;
+       · PK_FOTKA.url(d) je fotka inzerátu z Bezrealitek (§470). Tam
+         se adresa SKLÁDÁ z pevné předpony a názvu souboru, který prošel
+         kontrolou v js/fotka.js — není co čistit, protože nic z adresy
+         nepřišlo volně od uživatele. */
+    var zInzeratu = (global.PK_FOTKA && global.PK_FOTKA.url) ? global.PK_FOTKA.url(d) : null;
+    var fotky = (d.photos && d.photos.length) ? d.photos : (zInzeratu ? [zInzeratu] : []);
+    if (fotky.length) {
+      var shots = fotky.map(function (p, i) {
         /* esc() i na adresu: do atributu se dosud vypisovala tak, jak
            přišla. Dokud fotky chodily jen ze statických dat, kde žádné
            nejsou, nebylo to kde vyzkoušet — jenže handoff z mapy je teď
            nese, a uvozovka v adrese by z atributu utekla. Tvar adresy
            navíc hlídá PKCisteni (jen https adresa našeho úložiště);
            tohle je druhá pojistka, ne první. */
-        return '<img class="pz-shot" src="' + esc(p) + '" alt="Fotka pozemku ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
+        return '<img class="pz-shot" src="' + esc(p) + '" alt="Fotka nemovitosti ' + (i + 1) + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '" decoding="async">';
       }).join('');
-      var cnt = d.photos.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + d.photos.length + '</span>' : '';
+      var cnt = fotky.length > 1 ? '<span class="opp-count">' + GALLERY_SVG + fotky.length + '</span>' : '';
       return '<div class="pz-gallery">' + shots + '</div>' +
         '<span class="opp-mgrad"></span>' +
         '<span class="opp-badge ' + d.type + '">' + esc(TYPE[d.type].label) + '</span>' + cnt;

@@ -49,6 +49,8 @@ const T = globalThis.PK_TERMINY;
    robot to do dat ukládá, ale na okresních a krajských stránkách to dosud
    nebylo VIDĚT, přestože právě sem chodí lidé z vyhledávačů. */
 const require_ = createRequire(import.meta.url);
+/* Adresu fotky skládá jeden modul pro celý web — js/fotka.js. */
+const FOTKA = require_(path.join(ROOT, 'js', 'fotka.js'));
 const VYB = require_(path.join(ROOT, 'js', 'vybaveni.js'));
 /* Klíč archivu a pravidla pro změnu ceny — tytéž moduly, jaké čte mapa.
    Kdyby se tu pravidlo „co je zlevnění" napsalo podruhé, web by o téže
@@ -999,12 +1001,21 @@ function itemRow(o, skryjOkres, navic, skryjTyp, jedenDruh){
      karta na mapě. Snímek proto NENÍ `aria-hidden` — odečítač by s ním
      spolkl i slovo „Dražba", a to je údaj, ne ozdoba. Nečte se z něj
      nic jiného: obrázek má prázdný `alt` a špendlík je skrytý. */
-  const foto = n
+  /* FOTKA INZERÁTU MÁ PŘEDNOST PŘED LETECKÝM SNÍMKEM. Snímek okolí je
+     poctivý, ale u domu nebo bytu neřekne nic — a fotku teď u 81 %
+     nabídek máme (§470). Špendlík se u fotky nekreslí: na fotce dvora
+     by ukazoval do prázdna. */
+  const fotoInz = FOTKA.url(o);
+  const foto = fotoInz
     ? `<span class="okr-foto">`
-      + `<img src="${attr(n.url)}" width="256" height="256" loading="lazy" decoding="async" alt="">`
-      + `<i class="okr-pin" aria-hidden="true" style="left:${(n.ox / 256 * 100).toFixed(1)}%;top:${(n.oy / 256 * 100).toFixed(1)}%"></i>`
+      + `<img src="${attr(fotoInz)}" width="256" height="256" loading="lazy" decoding="async" alt="">`
       + `${badge}</span>`
-    : `<span class="okr-foto okr-foto-bez">${badge}</span>`;
+    : (n
+      ? `<span class="okr-foto">`
+        + `<img src="${attr(n.url)}" width="256" height="256" loading="lazy" decoding="async" alt="">`
+        + `<i class="okr-pin" aria-hidden="true" style="left:${(n.ox / 256 * 100).toFixed(1)}%;top:${(n.oy / 256 * 100).toFixed(1)}%"></i>`
+        + `${badge}</span>`
+      : `<span class="okr-foto okr-foto-bez">${badge}</span>`);
   return `      <div class="okr-item">
         ${foto}
         ${misto}

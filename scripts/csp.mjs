@@ -81,6 +81,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -97,6 +98,12 @@ export function supabaseHost() {
    (hvězdička v hostiteli by pustila i cizí poddomény). */
 const DLAZDICE = ['a', 'b', 'c'].map((s) => `https://${s}.tile.openstreetmap.org`);
 const SATELIT = 'https://server.arcgisonline.com';
+/* HOSTITEL FOTEK INZERÁTŮ. Bez něj by `default-src 'self'` fotku
+   z Bezrealitek zahodil a karta by zůstala prázdná — a v konzoli by
+   stálo jen „Refused to load the image", což se na webu nepozná.
+   Jméno hostitele se neopisuje, bere se z js/fotka.js. */
+const FOTKY_INZERATU = 'https://'
+  + createRequire(import.meta.url)(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'js', 'fotka.js')).HOSTITEL;
 const GEOKODER = 'https://nominatim.openstreetmap.org';
 
 /* VRSTVY MAPY ZE ZDROJE, NE Z PAMĚTI. Přepínatelné vrstvy (hranice
@@ -129,7 +136,7 @@ export function politika(hashe, eval_) {
     /* Hashe, ne 'unsafe-inline': podstrčený <script> se nespustí. */
     ['script-src', ["'self'", ...(eval_ ? ["'unsafe-eval'"] : []), ...hashe.map((h) => `'${h}'`)]],
     ['style-src', ["'self'", "'unsafe-inline'"]],
-    ['img-src', ["'self'", 'data:', 'blob:', SATELIT, ...DLAZDICE, ...vrstvyHosty(), sb]],
+    ['img-src', ["'self'", 'data:', 'blob:', SATELIT, ...DLAZDICE, ...vrstvyHosty(), sb, FOTKY_INZERATU]],
     ['font-src', ["'self'"]],
     ['connect-src', ["'self'", sb, GEOKODER]],
     ['worker-src', ["'self'"]],
