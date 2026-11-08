@@ -221,4 +221,42 @@ pravda('a rozsahy v @font-face neslibují znaky mimo podřezanou sadu',
     bez.length === 0, `${bez.length}: ` + bez.slice(0, 3).join(', '));
 }
 
+/* ---- VĚTA SE ZNAKEM MIMO SADU SE DO DAT VŮBEC NEDOSTANE ----------
+   ==================================================================
+   Kontrola výš měří HOTOVÉ STRÁNKY a najde znak mimo sadu až tam —
+   tedy po běhu robota a po sestavení. To je pozdě na to, aby šlo
+   poznat, čím se brání: tahle polovina měří PRAVIDLO U ZDROJE.
+
+   Naměřeno 8. 11. na třech stránkách: ⸻ (U+2E3B), ⠀ (U+2800) a šest
+   písmen azbuky. Doplnit je do sady by znamenalo stáhnout každému
+   návštěvníkovi celou další abecedu kvůli jednomu inzerátu — a zítra
+   přijde inzerát s čínštinou. Robot proto vyhazuje VĚTU, ve které
+   takový znak stojí, týmž pravidlem jako věty s telefonem.
+
+   DVĚ POLOVINY, a ta druhá je důležitější: česká diakritika ani
+   latinka s přehláskou se vyhodit NESMÍ. „Fügnerova" a „Žďár" jsou
+   v sadě a popis o ně nesmí přijít — kdyby pravidlo bralo i je,
+   přišel by web o popisy a nespadlo by nic. */
+{
+  const R = await import('./fetch-opportunities.mjs');
+  const DOST = 'Pozemek leží v klidné části obce, veškeré sítě jsou na hranici'
+    + ' parcely a příjezd je po zpevněné cestě.';
+  const nese = (t) => String(R.cistyPopis(t) || '');
+  pravda('věta s azbukou se z popisu vyhodí',
+    nese('Я говорю по-русски. ' + DOST).indexOf('\u0433') < 0
+      && nese('Я говорю по-русски. ' + DOST).indexOf('Pozemek leží') === 0,
+    'vyšlo: ' + JSON.stringify(nese('Я говорю по-русски. ' + DOST).slice(0, 60)));
+  pravda('a věta s trojitou pomlčkou (U+2E3B) taky',
+    nese('Krásný pozemek \u2e3b s výhledem na okolní krajinu a les. ' + DOST).indexOf('\u2e3b') < 0,
+    'U+2E3B v popisu zůstalo');
+  pravda('a věta s braillskou mezerou (U+2800) taky',
+    nese('Nabízíme\u2800pozemek k prodeji v zajímavé lokalitě u lesa. ' + DOST).indexOf('\u2800') < 0,
+    'U+2800 v popisu zůstalo');
+  /* POJISTKA PROTI OPAČNÉ VADĚ. */
+  const cesky = nese('Fügnerova ulice, Žďár nad Sázavou, Příbram. ' + DOST);
+  pravda('ale česká diakritika ani přehláska o větu nepřijdou',
+    cesky.indexOf('Fügnerova') === 0 && cesky.indexOf('Žďár') > 0,
+    'vyšlo: ' + JSON.stringify(cesky.slice(0, 60)));
+}
+
 hotovo();

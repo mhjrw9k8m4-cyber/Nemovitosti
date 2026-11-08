@@ -3118,6 +3118,30 @@ export function zkratPopis(x, mez) {
   return x.slice(0, mez).replace(/\s+\S*$/, '') + '…';
 }
 
+/* ZNAK, KTERÝ NAŠE PÍSMO NEUMÍ, VYHODÍ CELOU VĚTU.
+ *
+ * Písma jsou podřezaná na latinku s češtinou (fonts/PUVOD.md, SADA:
+ * U+0020-007E, U+00A0-00FF, U+0100-017F, interpunkce a šipky). Co v té
+ * sadě není, vykreslí prohlížeč SYSTÉMOVÝM písmem — uprostřed věty,
+ * jiným řezem i velikostí. Naměřeno 8. 11. na třech stránkách:
+ *
+ *   ⸻ (U+2E3B)  pozemek-praha-kloboucnicka-1l60dta.html
+ *   ⠀ (U+2800)  pozemek-usti-nad-labem-dolni-zalezly-vat4ta.html
+ *   Я г о в р ю  pozemek-usti-nad-orlici-krib-15qltid.html
+ *
+ * DOPLNIT JE DO SADY BY BYLA CESTA DO NEKONEČNA: azbuku kvůli jednomu
+ * inzerátu znamená stáhnout každému návštěvníkovi celou další abecedu,
+ * a zítra přijde inzerát s čínštinou. Vyhazuje se proto VĚTA, ve které
+ * takový znak stojí — stejným pravidlem, jakým se o pár řádků výš
+ * vyhazuje věta s telefonem: „vyhazuje se celá věta, ve které kontakt
+ * byl", protože půlka věty je horší než žádná.
+ *
+ * SADA SE TU OPISUJE jako rozsahy, ne jako výčet znaků: je to táž mez
+ * jako v fonts/PUVOD.md a scripts/test-pisma.mjs ji na skutečných
+ * stránkách přeměřuje. Latinka s diakritikou zůstává celá, takže
+ * „Fügnerova" ani „Žďár" o nic nepřijdou. */
+const MIMO_SADU = /[^\u0020-\u007E\u00A0-\u00FF\u0100-\u017F\u2000-\u206F\u20A0-\u20BF\u2190-\u21FF\u2022\u2113\u2122\u2212\u2215\u2264\u2265\u25CF\u2665\u2713\u2715\u0131\u0152\u0153\u02BB\u02BC\u02C6\u02DA\u02DC\u0304\u0308\u0329\uFEFF\uFFFD\s]/u;
+
 export function cistyPopis(t) {
   if (!t) return '';
   const holy = String(t)
@@ -3127,7 +3151,9 @@ export function cistyPopis(t) {
     .replace(/[.·•_]{3,}/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  const vety = holy.split(/(?<=[.!?])\s+/).filter((v) => v && !KONTAKT.test(v));
+  const vety = holy.split(/(?<=[.!?])\s+/)
+    .filter((v) => v && !KONTAKT.test(v))
+    .filter((v) => !MIMO_SADU.test(v));
   let x = vety.join(' ').replace(/\s+/g, ' ').trim();
   /* DROBNÁ TYPOGRAFIE CIZÍHO TEXTU. Inzeráty chodí tak, jak je kdo
      napsal, a na stránce pozemku je ten text to jediné od člověka,
