@@ -55,23 +55,67 @@ pravda('nejbližší okresní město by některé obce zařadilo jinam (proto hr
   'na téhle sadě obcí by stačilo i nejbližší město — zkouška nic neověřuje');
 
 /* --- 3) Data na webu: sedí okres u pozemků se souřadnicemi? ---------- */
+const ROBOT = await import('./fetch-opportunities.mjs');
 const data = JSON.parse(readFileSync(path.join(KOREN, 'data', 'opportunities.json'), 'utf8'));
 const nabidky = data.opportunities || [];
-let mimo = 0;
+/* PRAVIDLO SI ZKOUŠKA NEOPISUJE — JE TO PRAVIDLO ROBOTA.
+   ====================================================================
+   Tady se dřív žádalo, aby bod ležel PŘESNĚ v uvedeném okrese. Robot
+   má ale pás tolerance: souřadnice od zdroje zahazuje teprve tehdy,
+   když leží dál než OKRES_VEN_KM (10 km) za hranicí okresu — hranice
+   okresů jsou v datech přibližné a bod přímo na mezi se vyhazovat
+   nemá (polohaSediSOkresem v scripts/fetch-opportunities.mjs).
+
+   Dvě různé meze na jednu věc se rozešly přesně jednou nabídkou:
+   byt v Praze s místem „Chodská" (pražská ulice) má od Bezrealitek bod
+   5 km východně za hranicí Prahy, tedy v okrese Praha-východ. Robot ho
+   nechal, zkouška ho hlásila — a vypadalo to jako vada v datech,
+   ačkoli šlo o vadu v tom, že se měří jiným pravítkem. §436-třída.
+
+   Zpřísnit pás by tu nabídku stálo polohu úplně: „Chodská" je ulice
+   a geokodér ji podle jména obce nenajde, takže by nabídka o souřadnice
+   přišla a z mapy by vypadla — horší konec než pět kilometrů.
+
+   Měří se proto pravidlem robota, a k tomu se hlídá, že ten pás není
+   tak široký, aby nic neznamenal: na ostrých datech musí být víc než
+   polovina inzerátů PŘESNĚ v uvedeném okrese (naměřeno 8. 11.:
+   3 157 z 3 158 přesně, jeden v pásu). */
+let mimo = 0, presne = 0, vPasu = 0;
 const ukazky = [];
+const sPolohou = [];
 for (const o of nabidky) {
   // SPÚ i dražby okres samy uvádějí (z katastru), souřadnice jsou jen
   // přibližné místo obce — rozpor tam neznamená chybu v zařazení.
   if (!/Bezrealitky|Sreality/i.test(o.extra || '')) continue;
   if (typeof o.lat !== 'number' || typeof o.lng !== 'number') continue;
+  sPolohou.push(o);
   const podleHranice = okresPodleGPS(o.lat, o.lng);
-  if (podleHranice && podleHranice !== o.okres) {
-    mimo++;
-    if (ukazky.length < 5) ukazky.push(`${o.place}: uvedeno ${o.okres}, leží v okrese ${podleHranice}`);
-  }
+  if (!podleHranice || podleHranice === o.okres) { presne++; continue; }
+  if (ROBOT.polohaSediSOkresem(o.lat, o.lng, o.okres)) { vPasu++; continue; }
+  mimo++;
+  if (ukazky.length < 5) ukazky.push(`${o.place}: uvedeno ${o.okres}, leží v okrese ${podleHranice}`);
 }
-pravda('žádný inzerát nevisí v cizím okrese', mimo === 0,
-  `${mimo} pozemků má jiný okres, než ve kterém leží:\n      ` + ukazky.join('\n      '));
+pravda(`žádný inzerát nevisí dál než ${ROBOT.OKRES_VEN_KM || 10} km za hranicí svého okresu`
+  + ` (${presne} přesně, ${vPasu} v pásu, ${mimo} dál)`, mimo === 0,
+  `${mimo} nabídek je za pásem:\n      ` + ukazky.join('\n      '));
+pravda(`a pás není tak široký, aby nic neznamenal (${presne} z ${sPolohou.length} přesně)`,
+  sPolohou.length > 100 && presne > sPolohou.length / 2,
+  `přesně v okrese je jen ${presne} z ${sPolohou.length} — pás nahradil pravidlo`);
+/* A ŠÍŘKU PÁSU MĚŘÍ POSTAVENÝ PŘÍPAD, NE DNEŠNÍ DATA.
+   Kontrola výš počítá nabídky PŘESNĚ v okrese, a to se rozšířením pásu
+   nezmění — zkusil jsem 8. 11. pás nastavit na 400 km a nepadlo nic:
+   jediná nabídka za hranicí se jen přesunula z „dál" do „v pásu".
+   Sabotáž, která projde, je informace: ta kontrola hlídá, že se pás
+   nepoužívá místo pravidla, ale NE jak je široký. Na to je potřeba bod,
+   o kterém se ví, že je daleko. Ostravské souřadnice vydávané za Prahu
+   jsou 280 km mimo — to nesmí projít ani s rezervou na nepřesnou
+   hranici. */
+pravda('a bod o 280 km jinde neprojde (Ostrava vydávaná za Prahu)',
+  !ROBOT.polohaSediSOkresem(49.8209, 18.2625, 'Praha'),
+  'pás je tak široký, že by Ostravu uznal za Prahu');
+pravda('ale bod přímo v okrese projde (jinak by pravidlo zahazovalo všechno)',
+  ROBOT.polohaSediSOkresem(50.0755, 14.4378, 'Praha'),
+  'Staroměstské náměstí se nepoznalo jako Praha');
 
 /* --- 4) Hrubé hranice pro formulář: rezerva a záchyt ----------------
 
