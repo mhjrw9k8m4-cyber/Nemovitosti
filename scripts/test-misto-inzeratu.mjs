@@ -194,8 +194,49 @@ je('jiná ulice v adrese nespustí přepis',
   je('na ostrých datech už není co opravit', ostra.kolik, 0);
   je('a žádná obec nezůstane prázdná',
     ostra.data.every((o) => o.place && String(o.place).trim()), true);
-  je('a v poli pro obec po opravě nezůstane číslo bez písmene',
-    ostra.data.filter((o) => /^\d+$/.test(String(o.place))).length <= 1, true);
+  /* ČÍSLO MÍSTO OBCE: MĚŘÍ SE PRAVIDLO, NE POČET.
+     ==================================================================
+     Dřív tu stálo „zbude nejvýš jedno" a byla to mez, která zestárla
+     s daty: 8. 11. bylo v poli pro obec jedenáct samotných čísel
+     („25935", „28044", „00315") a zkouška padala, aniž by se dalo
+     poznat, co z toho je vada.
+
+     Příčina byla v opravě: test na ulici je na číslo slepý (není ani
+     předložka, ani přídavné jméno, ani slovo „ulice"), takže tyhle
+     nabídky do opravy vůbec nevstupovaly. Po přidání jeCisloMistoObce
+     se pět z jedenácti opraví z adresy inzerátu
+     (…nabidka-prodej-domu-28044-jicin → Jičín).
+
+     ŠEST ZBYLÝCH OPRAVIT NELZE a nehádá se: jejich obec v adrese
+     stojí, ale bez diakritiky — „libomysl", „mily", „lipnik-nad-becvou"
+     — a v téhle dávce ji nikdo jiný v poli pro obec nemá, takže není
+     odkud vzít správný zápis. Napsat „Libomysl" místo „Libomyšl" je
+     viditelná chyba, horší než ponechané číslo; obce s diakritikou by
+     to potřebovaly rejstřík, který repozitář nemá.
+
+     Měří se proto PRAVIDLO: po opravě nesmí zůstat číslo, jehož obec
+     by z adresy šla přečíst — tedy taková, kterou data znají. Tohle
+     tvrzení s počtem nabídek nezestárne. */
+  const bezDiakr = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const znameObce = new Set(ostra.data.filter((o) => o.place).map((o) => bezDiakr(o.place)));
+  const slaBySeOpravit = ostra.data.filter((o) => {
+    if (!/^\d+$/.test(String(o.place))) return false;
+    const m = /nabidka-prodej-(.+?)$/.exec(String(o.url || ''));
+    if (!m) return false;
+    const ps = bezDiakr(o.place);
+    if (!ps || !m[1].includes(ps)) return false;
+    const zbytek = m[1].slice(m[1].indexOf(ps) + ps.length).replace(/^-/, '');
+    return !!zbytek && znameObce.has(zbytek);
+  });
+  je('a nezůstane číslo, jehož obec by z adresy šla přečíst',
+    slaBySeOpravit.length === 0, true,
+    slaBySeOpravit.slice(0, 3).map((o) => `${o.place} (${o.url})`).join(', '));
+  /* A KOLIK ČÍSEL V DATECH JE, se vypíše vždycky — číslo bez hlídané
+     meze, aby se poznalo, kdyby jich začalo přibývat. */
+  const cisla = ostra.data.filter((o) => /^\d+$/.test(String(o.place))).length;
+  zpravy.push(`  · v poli pro obec zůstalo ${cisla} samotných čísel `
+    + '(obec je v adrese bez diakritiky a data ji neznají)');
 
   /* A je to zapojené PŘED dohledáváním polohy — jinak by se v mapě
      hledala ulice. */

@@ -765,6 +765,24 @@ export function vypadaJakoUlice(s) {
   if (!t) return false;
   return ULICE_PREDLOZKA.test(t) || ULICE_PRIDAVNE.test(t) || ULICE_SLOVO.test(t);
 }
+
+/* ČÍSLO MÍSTO OBCE. Vedle ulic se v poli pro obec objevilo i samotné
+   číslo: „25935", „28044", „00315". Jsou to čísla popisná (nebo PSČ)
+   ze inzerátů, kde adresa začíná číslem — a obec stojí hned za ním
+   v adrese inzerátu (…nabidka-prodej-domu-28044-jicin → Jičín).
+   Naměřeno 8. 11. na ostrých datech: jedenáct takových nabídek, všechny
+   z Bezrealitek. Na webu z nich byl nadpis „Prodej domu — 28044, okres
+   Jičín" a hledání podle obce je nenašlo.
+
+   Opravují se TOUŽ cestou jako ulice (opravUliceVObci níž), protože
+   vada je táž: v poli pro obec stojí jiná část adresy. Test na ulici
+   je na ně slepý — číslo není ani předložka, ani přídavné jméno, ani
+   slovo „ulice" — takže se přidává vedle něj, ne do něj: slovo, které
+   vypadá na ulici, a číslo bez písmene jsou dvě různé věci a mají
+   zůstat rozlišitelné. */
+export function jeCisloMistoObce(s) {
+  return /^\d+$/.test(String(s || '').trim());
+}
 /** Vrací počet opravených. Mění `place` na místě. */
 export function opravUliceVObci(nabidky) {
   const bezD = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -783,7 +801,7 @@ export function opravUliceVObci(nabidky) {
   }
   let kolik = 0;
   for (const o of nabidky || []) {
-    if (!o || !o.place || !vypadaJakoUlice(o.place)) continue;
+    if (!o || !o.place || !(vypadaJakoUlice(o.place) || jeCisloMistoObce(o.place))) continue;
     /* ADRESA INZERÁTU UŽ NENÍ JEN POZEMKOVÁ. Do 8. 11. tu stál vzorek
        `nabidka-prodej-pozemku-`, tedy jediný typ nemovitosti — a celá
        oprava proto na téhle dávce NEUDĚLALA NIC: změřeno na
