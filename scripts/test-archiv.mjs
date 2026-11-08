@@ -13,7 +13,7 @@ import fsx from 'node:fs';
 import pathx from 'node:path';
 import { createRequire as createRequireX } from 'node:module';
 import { fileURLToPath as furlX } from 'node:url';
-import { krok, dnyPrezneceni, verdiktStavu, posledniZaDen, VERZE } from './archiv.mjs';
+import { krok, premapujKlice, dnyPrezneceni, verdiktStavu, posledniZaDen, VERZE } from './archiv.mjs';
 
 const KOREN_X = pathx.resolve(pathx.dirname(furlX(import.meta.url)), '..');
 const reqX = createRequireX(import.meta.url);
@@ -363,6 +363,47 @@ if (fs.existsSync(ADR)) {
     posledniZaDen(log), ['ccc3 2026-01-01', 'ddd4 2026-01-02']);
   je('dny zůstanou v pořadí, jak přišly (git --reverse: od nejstaršího)',
     posledniZaDen(log).map((r) => r.slice(5)), ['2026-01-01', '2026-01-02']);
+}
+
+/* ---- 4c) DRUHÝ BĚH TÉHOŽ DNE: KLÍČE SE SROVNAT MUSÍ ----
+   `krokDneska()` se při druhém běhu dne otočí ve dveřích („dnešek už je
+   započítaný") — a dokud se s ním otáčelo i PŘEJMENOVÁNÍ klíčů, archiv
+   o přesunutých nabídkách přestal vědět. Naměřeno 8. 11. 2026, kdy
+   robot běžel podruhé s opraveným semenem rozptylu: archiv znal 3 415
+   živých, soubor 3 419, a 3 247 z nich archiv nepoznával.
+   premapujKlice() proto umí jen přejmenování: nic nezavírá, dny
+   nepočítá a `od` ani `videno` nesahá. */
+{
+  const A = P({ url: 'https://e.cz/1-nabidka-prodej-pozemku-kolin' });
+  const B = Object.assign({}, A, { lat: 50.4, lng: 15.9 });   // tentýž inzerát, jiný bod
+  const stav = krok(PRAZDNY, [A], '2026-02-01').stav;
+  const kA = Object.keys(stav.nabidky)[0];
+  const m = premapujKlice(stav, [B]);
+  const kB = KLICX.klicArchivu(B);
+  je('přesunutá nabídka dostane nový klíč, ale zůstane táž',
+    [m.premapovano, !!m.nabidky[kB], !m.nabidky[kA]], [1, true, true]);
+  je('a nepřibude ani neubude', Object.keys(m.nabidky).length, 1);
+  je('a datum, odkdy visí, se nemění', m.nabidky[kB] && m.nabidky[kB].od, stav.nabidky[kA].od);
+  /* Nabídka BEZ adresy inzerátu (dražba z registru) se páruje obsahem. */
+  const C = P({ place: 'Hora', okres: 'Beroun', parcel: '—', price: 123456, area: 777 });
+  const D = Object.assign({}, C, { lat: 49.1, lng: 14.1 });
+  const stav2 = krok(PRAZDNY, [C], '2026-02-01').stav;
+  const m2 = premapujKlice(stav2, [D]);
+  je('bezadresná nabídka se spáruje obsahem záznamu',
+    [m2.premapovano, !!m2.nabidky[KLICX.klicArchivu(D)]], [1, true]);
+  /* A DVĚ K NEROZEZNÁNÍ SE NEPÁRUJÍ VŮBEC. Stav se tu skládá ručně:
+     přes krok() se takový případ nedá vyrobit, protože dvě nabídky se
+     shodným záznamem odstraní PKHlidani.bezDuplicit dřív, než se k
+     archivu dostanou. Ta pojistka je tedy psaná pro stav, který v
+     souboru zůstal z dřívějška — a zkouška ji musí umět vyrobit, jinak
+     by se tvrdilo něco, co nikdo nezměřil. */
+  const zaz = { c: 123456, v: 777, m: 'Hora', o: 'Beroun', dr: 'orná půda', t: 'sale' };
+  const stav3 = { verze: VERZE, den: '2026-02-01', nabidky: {
+    'Hora|—|Beroun|50.000|15.200#v777': Object.assign({ od: '2026-01-01', videno: '2026-02-01' }, zaz),
+    'Hora|—|Beroun|48.500|16.500#v777': Object.assign({ od: '2026-01-01', videno: '2026-02-01' }, zaz),
+  } };
+  const m3 = premapujKlice(stav3, [D]);
+  je('ale dvě k nerozeznání se nespárují vůbec', m3.premapovano, 0);
 }
 
 console.log('\nArchiv nabídek: ' + (ok + chyb) + ' kontrol');

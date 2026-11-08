@@ -121,6 +121,82 @@ export function dnyPrezneceni(nabidky) {
   return dny;
 }
 
+/* PŘEJMENOVÁNÍ KLÍČŮ BEZ ZAPOČÍTÁNÍ DNE.
+ * ======================================================================
+ * `krok()` dělá dvě věci naráz: počítá den (zavírá zmizelé, zapisuje
+ * změny ceny) a PŘEJMENOVÁVÁ klíče nabídkám, kterým se změnila poloha.
+ * To druhé ale nesmí záviset na tom prvním — a dosud záviselo:
+ * `krokDneska()` se při druhém běhu téhož dne otočí ve dveřích
+ * („dnešek už je započítaný"), takže se klíče nepřejmenovaly.
+ *
+ * Naměřeno 8. 11. 2026: robot běžel ten den podruhé s opraveným
+ * semenem rozptylu, všechny nabídky z Bezrealitek dostaly nový bod
+ * a tím nový klíč — a archiv o nich přestal vědět. Zkouška
+ * test-sliby-data to ohlásila jako „archiv se od dnešního souboru
+ * rozešel: živých 3 415, dnes 3 419, navíc 3 247" a test-data-rezy
+ * jako „historie cen na řez dosedla jen u 1 z 10".
+ *
+ * Tahle funkce proto umí jen to přejmenování: žádné zavírání, žádné
+ * počítání dne, žádná změna `od` ani `videno`. Páruje se podle otisku
+ * adresy inzerátu za mřížkou, úplně stejně jako v krok(). */
+export function premapujKlice(stav, nabidky) {
+  const cista = PKH.bezDuplicit(PKC.pozemky((nabidky || []).filter((d) => d && d.place && d.okres)));
+  const zive = new Map();
+  for (const d of cista) {
+    const k = KLIC.klicArchivu(d);
+    if (!zive.has(k)) zive.set(k, d);
+  }
+  const podleInzeratu = new Map();
+  for (const k of Object.keys(stav.nabidky || {})) {
+    const h = k.slice(k.lastIndexOf('#') + 1);
+    if (!h || /^v\d*$/.test(h)) continue;
+    podleInzeratu.set(h, podleInzeratu.has(h) ? null : k);
+  }
+  /* DRUHÁ CESTA PRO NABÍDKY BEZ ADRESY INZERÁTU. Dražby z registrů
+     adresu nemají, takže jim klíč končí záchytným `#v<výměra>` a podle
+     otisku se spárovat nedají. Páruje se u nich OBSAH záznamu — obec,
+     okres, druh, typ, výměra i cena musí sedět do posledního znaku —
+     a jen tehdy, když takový záznam je v archivu právě jeden a v dnešním
+     souboru taky právě jeden. Dva stejné záznamy se nepárují: hádat,
+     který je který, je horší než nepárovat. Naměřeno 8. 11. 2026:
+     bez téhle cesty zůstalo po přesunu 432 nabídek, které archiv
+     přestal poznávat. */
+  const otisk = (z) => [z.m, z.o, z.dr, z.t, z.v, z.c].join('|');
+  const podleObsahu = new Map();
+  for (const k of Object.keys(stav.nabidky || {})) {
+    const h = k.slice(k.lastIndexOf('#') + 1);
+    if (!/^v\d*$/.test(h)) continue;           // tahle cesta je jen pro bezadresné
+    const o = otisk(stav.nabidky[k]);
+    podleObsahu.set(o, podleObsahu.has(o) ? null : k);
+  }
+  const dnesniObsah = new Map();
+  for (const [k, d] of zive) {
+    const h = k.slice(k.lastIndexOf('#') + 1);
+    if (!/^v\d*$/.test(h)) continue;
+    const o = otisk(zaznam(d));
+    dnesniObsah.set(o, dnesniObsah.has(o) ? null : k);
+  }
+
+  const novy = Object.assign({}, stav.nabidky);
+  const pouzite = new Set();
+  let premapovano = 0;
+  for (const [k, d] of zive) {
+    if (novy[k]) continue;
+    const h = k.slice(k.lastIndexOf('#') + 1);
+    let stary = (h && !/^v\d*$/.test(h)) ? podleInzeratu.get(h) : null;
+    if (!stary && /^v\d*$/.test(h)) {
+      const o = otisk(zaznam(d));
+      stary = (dnesniObsah.get(o) === k) ? podleObsahu.get(o) : null;
+    }
+    if (!stary || zive.has(stary) || pouzite.has(stary) || !novy[stary]) continue;
+    novy[k] = novy[stary];
+    delete novy[stary];
+    pouzite.add(stary);
+    premapovano++;
+  }
+  return { nabidky: novy, premapovano };
+}
+
 export function krok(stav, nabidky, den) {
   /* NEJDŘÍV DUPLICITY, PAK KLÍČ — a obojí tak, jak to dělá web.
      Dřív tu stálo `if (!zive.has(pkey(d))) zive.set(...)` s poznámkou
@@ -301,7 +377,21 @@ function krokDneska() {
   if (!n || !n.length) { console.log('Archiv: data/opportunities.json je prázdný, nic se nedělá.'); return; }
   const stav = nactiStav();
   const den = dnes();
-  if (stav.den === den) { console.log('Archiv: dnešek už je započítaný, nic se nedělá.'); return; }
+  if (stav.den === den) {
+    /* Den se nepočítá znovu, ale klíče se srovnat MUSÍ — jinak archiv
+       o přesunutých nabídkách přestane vědět (viz premapujKlice). */
+    const m = premapujKlice(stav, n);
+    if (m.premapovano) {
+      stav.nabidky = m.nabidky;
+      fs.mkdirSync(ADR, { recursive: true });
+      fs.writeFileSync(STAV, JSON.stringify(stav, null, 1));
+      console.log(`Archiv: dnešek už je započítaný, ale ${m.premapovano} nabídkám`
+        + ' se změnila poloha a dostaly nový klíč — ten se srovnal, nic se nezavřelo.');
+    } else {
+      console.log('Archiv: dnešek už je započítaný, nic se nedělá.');
+    }
+    return;
+  }
   /* DEN, KDY ZDROJ PŘEZNAČIL IDENTITU, SE NEZAPOČÍTÁVÁ. Viz
      dnyPrezneceni: jinak by do trvalé historie spadlo tisíc
      vymyšlených životností. */

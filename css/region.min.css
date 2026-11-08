@@ -565,6 +565,7 @@ main .okr-hero + .section{padding-top:16px}
 
 
 
+.trh-veta{margin:20px 0 0;font-size:16px;line-height:1.6;color:var(--text)}
 
 .okr-blok{margin-top:32px;padding-top:24px;border-top:1px solid var(--line)}
 .okr-blok .rules-sect h2{font-size:24px}
