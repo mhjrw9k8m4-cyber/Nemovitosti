@@ -3325,6 +3325,18 @@ const BR_PAUZA = 300;
    by znamenalo pětadvacet minut jen na jména. Co se nestihne, dojde
    při dalším běhu — mezipaměť data/geocode-cache.json se plní. */
 const BR_STROP_GEO = 300;
+/* STROP NA STAHOVÁNÍ DETAILŮ V JEDNOM BĚHU — a není to opatrnost, je
+   to pojistka proti běhu, který nikdy nedojde do konce. Úloha robota
+   má v .github/workflows/update-data.yml `timeout-minutes: 90`. První
+   běh po přepnutí na povolenou cestu nemá v mezipaměti nic a musel by
+   stáhnout všech ~7 150 detailů; naměřeno na tempu tří dělníků to je
+   kolem hodiny, a kdyby se to protáhlo, úloha se ukončí — a protože se
+   mezipaměť ukládá COMMITEM na konci úlohy, nezůstalo by z té hodiny
+   nic a další běh by začínal znovu od nuly. Se stropem každý běh
+   dojde, mezipaměť se doplní a za dva až tři běhy je nabídka celá.
+   Bere se od nejnovějšího `lastmod`: čerstvé inzeráty zajímají lidi
+   dřív než ty, co visí půl roku. */
+const BR_STROP_DETAILU = Number(process.env.PK_BR_STROP_DETAILU || 2600);
 
 /** Text z XML uzlu: CDATA a pět entit, které se v sitemapě objevují. */
 export function brXmlText(s) {
@@ -3582,7 +3594,29 @@ async function fetchBezrealitky() {
       zMezipameti++;
     } else kStazeni.push(a);
   }
-  await brDelnici(kStazeni, BR_SOUBEZNE, async (a) => {
+  /* Od nejnovějšího, a jen do stropu. Co se nestihne, dojde dalším
+     během — v datech zůstane z minula (držení nabídek, §332). */
+  kStazeni.sort((x, y) => String(y.lastmod || '').localeCompare(String(x.lastmod || '')));
+  const davka = kStazeni.slice(0, BR_STROP_DETAILU);
+  const odlozene = kStazeni.slice(BR_STROP_DETAILU);
+  /* ODLOŽENÝ INZERÁT SE NESMÍ Z WEBU ZTRATIT.
+     Kdyby se nabídka bez dnes stažené ceny prostě zahodila, první běh
+     po přepnutí by jich pustil o 4 500 méně — a archiv by si to zapsal
+     jako „nabídka zmizela", takže by rozesílač poslal tisíce falešných
+     zpráv (přesně ta vada, kterou hlídá §231). Použije se tedy cena
+     z MINULÉHO běhu, i když se inzerát od té doby změnil: o jeden běh
+     starší cena je pořád pravda o téhle nabídce, kdežto zmizení ne.
+     V mezipaměti zůstává staré `lastmod`, takže ji další běh stáhne. */
+  let zeStare = 0;
+  for (const a of odlozene) {
+    const m = mezipamet[a.id];
+    if (m && m.c > 0) {
+      nova[a.id] = m;
+      a.cena = m.c; a.popis = m.p || null;
+      zeStare++;
+    }
+  }
+  await brDelnici(davka, BR_SOUBEZNE, async (a) => {
     try {
       const r = await stahni(a.url, { headers: UA });
       if (!r.ok) { preskoc('Bezrealitky', 'detail HTTP ' + r.status); return; }
@@ -3653,7 +3687,10 @@ async function fetchBezrealitky() {
     .map(([k, v]) => `${k} ${v}×`).join(', ');
   console.log(`  Bezrealitky (sitemapa + detaily): v sitemapě ${inzeraty.length} inzerátů na prodej,`
     + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}, geokodér ${geoDotazu}×).`
-    + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů, bez ceny ${bezCeny}.`
+    + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů`
+    + (odlozene.length ? `, odloženo na další běh ${odlozene.length} (strop ${BR_STROP_DETAILU}),`
+      + ` z toho ${zeStare} se starší cenou z mezipaměti` : '')
+    + `, bez ceny ${bezCeny}.`
     + ` Nabídek ${out.length}: fotka u ${sFotkou}, popis u ${sPopisem}, bez výměry ${bezVymery}.`
     + ` Typ z adresy u ${typZAdresy}, hádaný z textu u ${typZTextu}`
     + (zbytek ? ` (${zbytek})` : '') + '.');
