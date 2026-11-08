@@ -140,11 +140,16 @@ pravda('stránka cen počítá jen z běžných nabídek k prodeji',
   pravda('a odhad u pozemku taky — týmž pravidlem',
     /if \(spravniCena\(d\)\) return;/.test(ceny) && /if \(d\.type !== 'sale'\) return;/.test(ceny),
     'js/ceny.js by srovnával dražby samy se sebou nebo měřil trh úřední cenou');
+  /* SKUPINA SE OD 8. 11. POČÍTÁ `skupinaNabidky(d)`, ne `druhGroup(d.druh)`:
+     u pozemku rozhoduje druh, u bydlení kategorie, aby byt nespadl do
+     pozemkové přihrádky. Tvrzení téhle kontroly se nemění — hlídá se
+     dál, že úřední cena vypadne UŽ U VSTUPU, tedy na řádku přímo před
+     výpočtem skupiny. Mění se jen jméno, které se na tom řádku čeká. */
   pravda('a vynechává ji už u VSTUPU do modelu, ne až u hladiny',
-    /if \(spravniCena\(d\)\) return;\n      var g = druhGroup/.test(ceny),
+    /if \(spravniCena\(d\)\) return;\n      var g = skupinaNabidky/.test(ceny),
     'z úřední ceny by se počítal percentil „dražší než N % podobných"');
   pravda('a sklon ceny s výměrou se učí taky jen z trhu',
-    /d\.type !== 'sale' \|\| spravniCena\(d\)\) return;\n        var g = druhGroup/.test(ceny),
+    /d\.type !== 'sale' \|\| spravniCena\(d\)\) return;\n        var g = skupinaNabidky/.test(ceny),
     'SKLON by se učil na cenách, které trh nestanovil');
 }
 /* ===== ČÍSLA V TABULCE KRAJŮ MUSÍ SEDĚT S PŘEPOČTEM Z DAT =============

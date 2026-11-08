@@ -91,12 +91,86 @@
    * se, až se k mezi přiblíží (scripts/test-strop-ceny.mjs). Dnes je
    * mezi maximem a mezí 28 %. */
   var MEZ_NEUVERITELNA = 30000;
+  /* A TÁŽ MEZ PRO BYDLENÍ, protože 30 000 Kč/m² je mez POZEMKOVÁ.
+   *
+   * Naměřeno 8. 11. na datech bez podílů: byt má medián 122 421 Kč/m²
+   * podlahové plochy, tedy čtyřnásobek té meze. Pozemková mez by
+   * z 1 209 bytů pustila 109 a u zbylých 1 100 by web napsal
+   * „cena za metr neuvedena" u čísla, které v inzerátu stojí. Je to
+   * tatáž třída vady jako strop v sítu u zdroje: mez posazená na
+   * jedné komoditě a použitá na druhou.
+   *
+   *   byty    n=1182  med 122 421  p90 198 113  p99 260 021  max 357 143
+   *   garáže  n=  25  med  46 000  p90  81 250  p99 108 333  max 108 333
+   *
+   * 500 000 je nad naměřeným maximem o 40 % — táž rezerva, jakou má
+   * pozemková mez nad svým maximem (23 125 proti 30 000, tedy 30 %).
+   * Platí pro kategorie, u kterých výměra znamená podlahovou plochu
+   * (KAT_PODLAHOVA níž). Stárne stejně jako ta pozemková, a stejně ji
+   * přeměřuje scripts/test-strop-ceny.mjs. */
+  var MEZ_NEUVERITELNA_BYDLENI = 500000;
   /* JE TO POZEMEK? Nabídka bez kategorie je pozemek — tak vznikla
      všechna dnešní data a tak je zapsaný i výchozí stav v js/kategorie.js
      (VYCHOZI = 'pozemek'). Pravidlo stojí tady, protože je to nejnižší
      místo, kde se o pozemkovosti rozhoduje: cena za metr i filtr celých
      dat pro cenový model (jenPozemky níž) z něj čtou totéž. */
   function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
+
+  /* KDE MÁ Kč/m² JASNÝ VÝZNAM — A KDE SE O NĚM MLČÍ.
+   *
+   * Do 8. 11. se model stavěl JEN z pozemků a byty s domy se o cenu
+   * nedozvěděly nic: verdikt dostalo 1 618 z 3 874 nabídek (42 %)
+   * a cenu za metr 1 954 (50 %). Bylo to správné mlčení, ne vada —
+   * jedna nabídka bytu v pozemkové přihrádce pokřiví číslo všem
+   * pozemkům v ní, ne jen sobě. Jenže od chvíle, kdy je polovina webu
+   * bydlení, znamená to, že se web polovině svých nabídek nevyjádří
+   * k tomu hlavnímu.
+   *
+   * ROZDĚLENÍ NENÍ „POZEMEK / NEPOZEMEK", ALE PODLE TOHO, CO VÝMĚRA
+   * ZNAMENÁ. js/kategorie.js to u každé kategorie říká polem `mera`:
+   *   'pozemek'    — plocha parcely (pozemek)
+   *   'podlahova'  — podlahová plocha (byt, garáž)
+   *   'obe'        — NEVÍME (dům, areál, farma)
+   * U domu ze zdrojů nevyplývá, jestli uložené číslo je parcela, nebo
+   * zastavěná plocha — naměřený medián 881 m² při 6 618 Kč/m² vypadá
+   * na parcelu, ale „vypadá" není měření. Kč/m² se u nich proto
+   * netvrdí dál a js/kategorie.js o nich mlčí i v popisku
+   * (popisVymery vrací prázdno). Dům dostane srovnání celkové ceny,
+   * až na něj bude vzorek na okres; dnes je jich 540 na 77 okresů,
+   * z toho 13 okresů má aspoň deset.
+   *
+   * SEZNAM SE TU OPISUJE SCHVÁLNĚ, ze stejného důvodu jako jePozemek()
+   * výš: js/ceny.js se nahrává i na stránkách, kde js/kategorie.js
+   * není, a tahat tam kvůli jednomu seznamu druhý modul by stálo váhu
+   * stránky. Že se ty dva seznamy nerozešly, hlídá
+   * scripts/test-kategorie.mjs. */
+  var KAT_PODLAHOVA = { byt: 1, garaz: 1 };
+  function maPodlahovou(o) { return !!(o && o.kat && KAT_PODLAHOVA[o.kat]); }
+  /** Dá se u téhle nabídky Kč/m² vůbec tvrdit? */
+  function meritelnaVymera(o) { return jePozemek(o) || maPodlahovou(o); }
+
+  /* SKUPINA, PODLE KTERÉ SE SROVNÁVÁ: u pozemku DRUH („Orná půda"),
+   * u bydlení KATEGORIE („Byt").
+   *
+   * Tohle je celý trik, proč nevznikl druhý model vedle prvního. Model
+   * indexuje přihrádky klíčem `typ|skupina|okres`; dokud skupinu
+   * počítal druhGroup() ze samotného druhu, spadl byt do „Jiný
+   * pozemek" (druhGroup je pozemkový soudce a co nepozná, hodí tam).
+   * Jak skupina zná kategorii, byt se do pozemkové přihrádky
+   * nedostane — a celá dosavadní mašinerie (okres → kraj → stát,
+   * percentily, tabulka přesnosti, „kde je chyba přes polovinu, mlč")
+   * platí beze změny a bez jediné kopie.
+   *
+   * druhGroup() zůstává, jak byla: čistá funkce JEDNOHO TEXTU
+   * s mezipamětí podle řetězce. Volá se ze 43 míst a scripts/test-ceny
+   * měří, že je čistá — měnit jí signaturu kvůli modelu by bylo
+   * 43 příležitostí něco rozbít. */
+  var SKUPINA_KAT = { dum: 'Dům', byt: 'Byt', chata: 'Chata', farma: 'Farma',
+    areal: 'Areál', komercni: 'Komerční objekt', garaz: 'Garáž', jine: 'Jiná nemovitost' };
+  function skupinaNabidky(o) {
+    if (o && o.kat && o.kat !== 'pozemek') return SKUPINA_KAT[o.kat] || 'Jiná nemovitost';
+    return druhGroup(o && o.druh);
+  }
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
   /* DVOJČE. Tahle funkce stojí doslovně i v js/hlidani-logika.js. Rozesílání
      upozornění běží v Node, kde se prohlížečový modul js/ceny.js
@@ -133,7 +207,33 @@
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
-    return zm > MEZ_NEUVERITELNA ? null : zm;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
+  /* PROČ `zaMetr()` ZŮSTÁVÁ POZEMKOVÁ, i když model už byty umí.
+   *
+   * Zkusil jsem 8. 11. pustit do zaMetr() i byty a garáže a hlídač
+   * scripts/test-kategorie.mjs to zarazil — právem. Tahle funkce totiž
+   * není popisek na kartě: TÝMŽ ČÍSLEM se nabídky SROVNÁVAJÍ MEZI
+   * SEBOU. Změřeno, kdo ho čte: řazení podle ceny za metr
+   * (perM2Val v js/main.js), filtr „jen levné", stupnice barev na
+   * mapě, karta ve výpisu, porovnání (js/porovnani.js), vývoz do
+   * tabulky (js/vyvoz.js), rádce (js/radce.js) a hlídání
+   * „do N Kč/m²". Byt za 122 421 Kč/m² podlahové plochy v jedné
+   * stupnici s polem za 44 Kč/m² znamená, že každý pozemek vyjde jako
+   * zdarma — a nespadne nic, čísla se jen tiše pokřiví. Hlídání
+   * „do 30 000 Kč/m²" by navíc začalo posílat upozornění na levné
+   * garáže tomu, kdo si hlídá pozemky.
+   *
+   * CO SE TEDY 8. 11. ZMĚNILO: přihrádky modelu (skupinaNabidky výš)
+   * a brána u odhadu. Verdikt o ceně se počítá VŽDY v přihrádce
+   * vlastní kategorie — byt se srovnává s byty téhož okresu — takže
+   * tam se nic nemísí a odhad naskočil z 1 618 nabídek na 2 836.
+   * Vlastní cena za metr podlahové plochy u bytu je samostatná práce:
+   * chce to oddělit „číslo k zobrazení" od „klíče ke srovnání" na
+   * všech těch místech výš, a to je širší zásah než tenhle. */
+  /** Která mez „neuvěřitelné" ceny za metr na tuhle nabídku platí. */
+  function mezNeuveritelna(d) {
+    return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
   /** Vysvětlení k číslu, když je přepočtené z podílu (jinak prázdné). */
   function zaMetrPopis(d) {
@@ -486,9 +586,22 @@
     if (!Array.isArray(DATA)) return DATA;
     return DATA.filter(jePozemek);
   }
+  /* Vstup modelu od 8. 11.: nabídky, u kterých Kč/m² něco znamená —
+     pozemky (plocha parcely) a byty s garážemi (podlahová plocha).
+     Dům, areál a farmu to pouští dál nepustí: jejich výměra je podle
+     js/kategorie.js `mera: 'obe'`, tedy neznámo co, a medián z toho by
+     byl číslo bez významu. Že se byt nemůže dostat do pozemkové
+     přihrádky, nezajišťuje tenhle filtr, ale skupinaNabidky() výš —
+     filtr řeší jen to, co do modelu nepatří vůbec.
+     jenPozemky() zůstává: volá ji scripts/presnost-odhadu.mjs a měřidla,
+     která porovnávají varianty POZEMKOVÉHO odhadu. */
+  function doModelu(DATA) {
+    if (!Array.isArray(DATA)) return DATA;
+    return DATA.filter(meritelnaVymera);
+  }
 
   function postav(DATA, okresKraj, chybaDruhu) {
-    DATA = jenPozemky(DATA);
+    DATA = doModelu(DATA);
     okresKraj = okresKraj || OKRES_KRAJ;
     /* JAK PŘESNÝ TENHLE MODEL JE, PODLE DRUHU. Přijde z data/model.json
        jako { "Orná půda": { ch: 22, z: 543, n: 567 }, … } — křížově
@@ -571,7 +684,7 @@
          vůbec neveze — kdyby je plná data počítala, dal by každý jiný
          výsledek a scripts/test-model-vstup.mjs by to ohlásil. */
       if (spravniCena(d)) return;
-      var g = druhGroup(d.druh), m2 = d.price / d.area;
+      var g = skupinaNabidky(d), m2 = d.price / d.area;
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
         var ko = d.type + '|' + g + '|' + d.okres;
@@ -776,7 +889,7 @@
       var podleDruhu = {};
       DATA.forEach(function (d) {
         if (!hasArea(d) || !d.price || d.type !== 'sale' || spravniCena(d)) return;
-        var g = druhGroup(d.druh);
+        var g = skupinaNabidky(d);
         (podleDruhu[g] = podleDruhu[g] || []).push({ a: d.area, m: d.price / d.area });
       });
       Object.keys(podleDruhu).forEach(function (g) {
@@ -956,7 +1069,7 @@
      * chyba. Když se proti celostátnímu mediánu poměřovalo, označilo to
      * 34 běžných nabídek v Praze, Turnově nebo Ostravě za podezřelé. */
     function hladina(d) {
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var kroky = [nabidkyOkres[g + '|' + d.okres], nabidkyKraj[g + '|' + okresKraj[d.okres]], nabidkyCR[g]];
       for (var i = 0; i < kroky.length; i++) {
         var a = ceny(kroky[i], d.area, g);
@@ -1042,7 +1155,7 @@
          neporovnává. Web to přitom na cena-pozemku.html sám vysvětluje
          — tenhle verdikt mu odporoval. */
       if (spravniCena(d)) return null;
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var kOkres = d.type + '|' + g + '|' + d.okres;
       var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
       var zdroje = [
@@ -1208,9 +1321,9 @@
      * samostatná práce — a než bude, je mlčení jediná pravdivá
      * odpověď. */
     function odhadSpocti(d) {
-      if (!jePozemek(d)) return null;
+      if (!meritelnaVymera(d)) return null;
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var zdroje = [
         { pole: nabidkyOkres[g + '|' + d.okres], uroven: 'okres', kde: d.okres },
         { pole: nabidkyKraj[g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
@@ -1353,7 +1466,7 @@
          je, vrací se počet i bez té desítky. */
       vzorekPrihradky: function (d) {
         if (!d || !d.okres) return null;
-        var g = druhGroup(d.druh);
+        var g = skupinaNabidky(d);
         var ko = typOkres[d.type + '|' + g + '|' + d.okres];
         var kk = typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]];
         var no = (ko && ko.length) || 0, nk = (kk && kk.length) || 0;
@@ -1549,6 +1662,11 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, jenPozemky: jenPozemky, jePozemek: jePozemek,
+    /* Ven kvůli generátorům a hlídačům: kdo počítá skupinu pro model,
+       musí ji počítat týmž pravidlem (pozemek podle druhu, bydlení
+       podle kategorie). */
+    skupinaNabidky: skupinaNabidky, meritelnaVymera: meritelnaVymera,
+    doModelu: doModelu, KAT_PODLAHOVA: KAT_PODLAHOVA,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
@@ -1568,5 +1686,7 @@
     poptavka: poptavka,
     /* Ven kvůli scripts/test-strop-ceny.mjs: zkouška přeměřuje, jestli
        je mez pořád dost daleko od skutečných cen. */
-    MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };
+    MEZ_NEUVERITELNA: MEZ_NEUVERITELNA,
+    MEZ_NEUVERITELNA_BYDLENI: MEZ_NEUVERITELNA_BYDLENI,
+    mezNeuveritelna: mezNeuveritelna };
 }(typeof window !== 'undefined' ? window : globalThis));

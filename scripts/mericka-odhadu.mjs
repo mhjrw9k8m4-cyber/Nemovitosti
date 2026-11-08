@@ -64,7 +64,20 @@ const VSE = PKH.bezDuplicit(syrove);
    vůbec nevydává". Úředně stanovené ceny jsou přesně ten druhý případ
    a vyhodit se zapomněly. Pravidlo tedy zní jednou pro vždy: měřidlo
    smí počítat chybu jen tam, kde web to tvrzení opravdu vyslovuje. */
+/* A OD 8. 11. JEN POZEMKY. Model od té chvíle vydává odhad i bytům
+   (přihrádky se dělí podle kategorie, viz skupinaNabidky v js/ceny.js),
+   takže se bytům „to tvrzení vyslovuje" a podle pravidla výš by do
+   vzorku patřily. Jenže jeden MEDIÁN ODCHYLKY přes pozemky i byty
+   míchá dva trhy, které mají Kč/m² o tři řádové stupně jinde
+   (44 proti 122 421) — a to je táž past jako §450: ne zkreslený
+   model, nýbrž zkreslená MNOŽINA. Naměřeno, když kvůli tomu padl
+   hlídač: rozdíl proti živému modelu u 1 205 z 2 610 odhadů (46 %).
+   Tohle měřidlo tedy zůstává POZEMKOVÉ a jeho čísla jsou dál
+   srovnatelná s těmi staršími. Chybu odhadu u bytů je potřeba měřit
+   zvlášť, vlastním průchodem — jedno číslo pro obojí by nic
+   neznamenalo. */
 const VZOREK = VSE.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0
+  && CENY.jePozemek(d)
   && !(CENY.spravniCena && CENY.spravniCena(d)));
 
 const median = (a) => {
@@ -103,8 +116,16 @@ function odhadDnesni(model, d) {
    změřit tu druhou otázku, pustí to s `--i-drazby` a dostane ji
    pojmenovanou zvlášť. */
 const I_DRAZBY = process.argv.includes('--i-drazby');
-function odhadOkoli(trenink, d, druhGroup, K, R, sklon, model) {
-  const g = druhGroup(d.druh);
+/* SKUPINA SE BERE Z MODELU, NE Z DRUHU. Do 8. 11. tu stálo
+   `druhGroup(d.druh)` — týž výpočet, jaký měl tehdy i živý model.
+   Když model přešel na `skupinaNabidky()` (u pozemku druh, u bydlení
+   kategorie), měřidlo zůstalo u starého a začalo srovnávat byt
+   s „jiným pozemkem": nahlásilo rozdíl u 1 205 z 2 610 odhadů (46 %).
+   Chytil to scripts/test-mericka-odhadu.mjs — a to je přesně jeho
+   práce: měřidlo, které měří jiná VSTUPNÍ PRAVIDLA než živý model,
+   neměří zeměpis, ale rozdíl v pravidlech. */
+function odhadOkoli(trenink, d, skupina, K, R, sklon, model) {
+  const g = skupina(d);
   const bliz = [];
   for (const x of trenink) {
     if (x === d || !(x.area > 0) || !(x.price > 0)) continue;
@@ -115,7 +136,7 @@ function odhadOkoli(trenink, d, druhGroup, K, R, sklon, model) {
        měřidlo tvrdilo, že „okolí" je o 2,6 p.b. lepší než živý model,
        který okolí DÁVNO MÁ. Měřil se tím vstupní filtr, ne zeměpis. */
     if (!I_DRAZBY && model && model.spravniCena && model.spravniCena(x)) continue;
-    if (druhGroup(x.druh) !== g) continue;
+    if (skupina(x) !== g) continue;
     const vzd = km(d.lat, d.lng, x.lat, x.lng);
     if (vzd > R) continue;
     bliz.push({ vzd, m: x.price / x.area, a: x.area });
@@ -343,7 +364,7 @@ if (process.argv.includes('--okoli')) {
   const NASTAVENI = process.argv.includes('--rychle') ? [[10, 25]] : [[10, 10], [10, 25], [20, 25], [10, 50], [20, 50], [30, 50]];
   for (const [K, R] of NASTAVENI) {
     const B = krizove((model, d, trenink) => {
-      const o = odhadOkoli(trenink, d, CENY.druhGroup, K, R, SKLON ? model.sklon : null, model);
+      const o = odhadOkoli(trenink, d, CENY.skupinaNabidky, K, R, SKLON ? model.sklon : null, model);
       return o != null ? o : odhadDnesni(model, d);
     });
     let lepsi = 0, horsi = 0, stejne = 0;

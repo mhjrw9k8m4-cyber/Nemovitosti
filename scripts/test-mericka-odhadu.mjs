@@ -94,7 +94,14 @@ console.log('\nMěřidlo přesnosti odhadu');
   const PKH = createRequire(import.meta.url)(path.join(KOREN, 'js', 'hlidani-logika.js'));
   const vse = PKH.bezDuplicit(data.opportunities || []);
   const spravni = okno.PK_CENY.spravniCena;
+  /* A OD 8. 11. I POZEMKOVOST. Model od té chvíle vydává odhad i bytům,
+     takže měřidlo musí pozemky vybírat výslovně — jeden medián odchylky
+     přes pozemky i byty by míchal dva trhy s Kč/m² o tři řádové stupně
+     jinde (§450-třída: zkreslená množina, ne zkreslený model). Pravidlo
+     je tedy v měřidle o jedno delší a tady se musí dopsat taky, jinak
+     se obě strany rozejdou o celý ten balík. */
   const cekam = vse.filter((d) => d.type === 'sale' && !d.podil && d.price > 0 && d.area > 0
+    && okno.PK_CENY.jePozemek(d)
     && !spravni(d)).length;
   const out = pust([]);
   const m = /měří se na (\d+) celých pozemcích/.exec(out);

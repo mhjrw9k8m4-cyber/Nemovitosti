@@ -23,14 +23,32 @@
 
   var MEZ_NEUVERITELNA = 30000;
 
+  var MEZ_NEUVERITELNA_BYDLENI = 500000;
+
   function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
+
+  var KAT_PODLAHOVA = { byt: 1, garaz: 1 };
+  function maPodlahovou(o) { return !!(o && o.kat && KAT_PODLAHOVA[o.kat]); }
+
+  function meritelnaVymera(o) { return jePozemek(o) || maPodlahovou(o); }
+
+  var SKUPINA_KAT = { dum: 'Dům', byt: 'Byt', chata: 'Chata', farma: 'Farma',
+    areal: 'Areál', komercni: 'Komerční objekt', garaz: 'Garáž', jine: 'Jiná nemovitost' };
+  function skupinaNabidky(o) {
+    if (o && o.kat && o.kat !== 'pozemek') return SKUPINA_KAT[o.kat] || 'Jiná nemovitost';
+    return druhGroup(o && o.druh);
+  }
 
   function zaMetr(d) {
     if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
-    return zm > MEZ_NEUVERITELNA ? null : zm;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
+
+  function mezNeuveritelna(d) {
+    return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
 
   function zaMetrPopis(d) {
@@ -184,8 +202,13 @@
     return DATA.filter(jePozemek);
   }
 
+  function doModelu(DATA) {
+    if (!Array.isArray(DATA)) return DATA;
+    return DATA.filter(meritelnaVymera);
+  }
+
   function postav(DATA, okresKraj, chybaDruhu) {
-    DATA = jenPozemky(DATA);
+    DATA = doModelu(DATA);
     okresKraj = okresKraj || OKRES_KRAJ;
 
     chybaDruhu = chybaDruhu || null;
@@ -206,7 +229,7 @@
       if (!hasArea(d) || !d.price) return;
 
       if (spravniCena(d)) return;
-      var g = druhGroup(d.druh), m2 = d.price / d.area;
+      var g = skupinaNabidky(d), m2 = d.price / d.area;
       (podleTypu[d.type + '|' + g] = podleTypu[d.type + '|' + g] || []).push(m2);
       if (d.okres) {
         var ko = d.type + '|' + g + '|' + d.okres;
@@ -272,7 +295,7 @@
       var podleDruhu = {};
       DATA.forEach(function (d) {
         if (!hasArea(d) || !d.price || d.type !== 'sale' || spravniCena(d)) return;
-        var g = druhGroup(d.druh);
+        var g = skupinaNabidky(d);
         (podleDruhu[g] = podleDruhu[g] || []).push({ a: d.area, m: d.price / d.area });
       });
       Object.keys(podleDruhu).forEach(function (g) {
@@ -373,7 +396,7 @@
     var MIN_VZOREK = 8;
 
     function hladina(d) {
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var kroky = [nabidkyOkres[g + '|' + d.okres], nabidkyKraj[g + '|' + okresKraj[d.okres]], nabidkyCR[g]];
       for (var i = 0; i < kroky.length; i++) {
         var a = ceny(kroky[i], d.area, g);
@@ -398,7 +421,7 @@
       if (!hasArea(d) || !d.price || neduveryhodna(d) || nesrovnatelna(d)) return null;
 
       if (spravniCena(d)) return null;
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var kOkres = d.type + '|' + g + '|' + d.okres;
       var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
       var zdroje = [
@@ -454,9 +477,9 @@
     }
 
     function odhadSpocti(d) {
-      if (!jePozemek(d)) return null;
+      if (!meritelnaVymera(d)) return null;
       if (!hasArea(d) || !d.price || neduveryhodna(d)) return null;
-      var g = druhGroup(d.druh);
+      var g = skupinaNabidky(d);
       var zdroje = [
         { pole: nabidkyOkres[g + '|' + d.okres], uroven: 'okres', kde: d.okres },
         { pole: nabidkyKraj[g + '|' + okresKraj[d.okres]], uroven: 'kraj', kde: okresKraj[d.okres] }
@@ -531,7 +554,7 @@
 
       vzorekPrihradky: function (d) {
         if (!d || !d.okres) return null;
-        var g = druhGroup(d.druh);
+        var g = skupinaNabidky(d);
         var ko = typOkres[d.type + '|' + g + '|' + d.okres];
         var kk = typKraj[d.type + '|' + g + '|' + okresKraj[d.okres]];
         var no = (ko && ko.length) || 0, nk = (kk && kk.length) || 0;
@@ -629,6 +652,9 @@
 
   root.PK_CENY = { DOST_NABIDEK: DOST_NABIDEK,
     postav: postav, jenPozemky: jenPozemky, jePozemek: jePozemek,
+
+    skupinaNabidky: skupinaNabidky, meritelnaVymera: meritelnaVymera,
+    doModelu: doModelu, KAT_PODLAHOVA: KAT_PODLAHOVA,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,
@@ -641,5 +667,7 @@
 
     poptavka: poptavka,
 
-    MEZ_NEUVERITELNA: MEZ_NEUVERITELNA };
+    MEZ_NEUVERITELNA: MEZ_NEUVERITELNA,
+    MEZ_NEUVERITELNA_BYDLENI: MEZ_NEUVERITELNA_BYDLENI,
+    mezNeuveritelna: mezNeuveritelna };
 }(typeof window !== 'undefined' ? window : globalThis));

@@ -26,13 +26,23 @@
 
   var MEZ_NEUVERITELNA = 30000;
 
+  var MEZ_NEUVERITELNA_BYDLENI = 500000;
+
   function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
+
+  var KAT_PODLAHOVA = { byt: 1, garaz: 1 };
+  function maPodlahovou(o) { return !!(o && o.kat && KAT_PODLAHOVA[o.kat]); }
+  function meritelnaVymera(o) { return jePozemek(o) || maPodlahovou(o); }
   function zaMetr(d) {
     if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
-    return zm > MEZ_NEUVERITELNA ? null : zm;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
+
+  function mezNeuveritelna(d) {
+    return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
 
   function normd(s) {

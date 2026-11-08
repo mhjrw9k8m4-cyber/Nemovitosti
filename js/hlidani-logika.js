@@ -68,6 +68,10 @@
      scripts/test-hlidani.mjs — a právě on tenhle rozchod zachytil, když
      jsem mez přidal jen do jedné z nich. */
   var MEZ_NEUVERITELNA = 30000;
+  /* A mez pro bydlení — 8. 11., když byty dostaly vlastní cenu za metr.
+     Odůvodnění s naměřenými čísly je v js/ceny.js; tady stojí jen
+     hodnota, aby tenhle soubor počítal bez ceny.js totéž. */
+  var MEZ_NEUVERITELNA_BYDLENI = 500000;
   /** Cena za metr, který kupující opravdu dostane. null = nevíme. */
   /* DVOJČE. Tahle funkce stojí doslovně i v js/ceny.js. Rozesílání
      upozornění běží v Node, kde se prohlížečový modul js/ceny.js
@@ -81,12 +85,23 @@
      protože tenhle soubor musí umět počítat i bez ceny.js. Rozchod obou
      kopií chytá scripts/test-hlidani.mjs na všech datech. */
   function jePozemek(o) { return !o || !o.kat || o.kat === 'pozemek'; }
+  /* Kategorie s podlahovou plochou — opis KAT_PODLAHOVA z js/ceny.js.
+     Od 8. 11. má byt a garáž vlastní cenu za metr (podlahové plochy),
+     takže ta branka už nesmí být „jen pozemek": mail by o témže bytu
+     psal „cena za metr neuvedena", kdežto web by ji ukázal. */
+  var KAT_PODLAHOVA = { byt: 1, garaz: 1 };
+  function maPodlahovou(o) { return !!(o && o.kat && KAT_PODLAHOVA[o.kat]); }
+  function meritelnaVymera(o) { return jePozemek(o) || maPodlahovou(o); }
   function zaMetr(d) {
     if (!jePozemek(d)) return null;
     var v = vymeraVCene(d);
     if (!(v > 0) || !d || !(d.price > 0)) return null;
     var zm = d.price / v;
-    return zm > MEZ_NEUVERITELNA ? null : zm;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
+  /** Která mez „neuvěřitelné" ceny za metr na tuhle nabídku platí. */
+  function mezNeuveritelna(d) {
+    return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
 
   function normd(s) {
