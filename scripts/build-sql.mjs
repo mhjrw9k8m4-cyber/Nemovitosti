@@ -209,11 +209,35 @@ const bezParametru = [...new Set(
     .map((m) => m[1])
     .filter((f) => !spoustecove.has(f.toLowerCase()))
 )].sort();
+/* A KDYŽ NA FUNKCI NĚCO VISÍ, NEZAHAZUJE SE — ANI SE KVŮLI TOMU NESMÍ
+   ZASTAVIT CELÉ NASAZENÍ.
+   Naměřeno 8. 11. 2026 na ostré databázi: balík spadl hned na začátku
+   hláškou
+     ERROR 2BP01: cannot drop function my_limit() because other objects
+     depend on it
+     DETAIL: policy "listing photos auth upload" on table storage.objects
+     depends on function my_limit()
+   — tedy na pravidle úložiště, které si tu funkci volá. Nenasadilo se
+   NIC, ani to, co s ní nesouvisí.
+   `cascade` tu nemá co dělat: vzalo by s sebou to pravidlo a kbelík
+   s fotkami by zůstal bez stropu. Drop je přitom jen PŘÍPRAVA pro
+   případ, že se změnil návratový typ; když zahodit nejde, je pořád
+   dobře možné, že se typ nezměnil a `create or replace` o kus níž
+   projde. Proto se výjimka „na funkci něco visí" spolkne a pokračuje
+   se dál. Když se návratový typ opravdu změnil, ohlásí to až to
+   `create or replace` — a to je hláška, která říká pravdu, ne „nešlo
+   zahodit". */
 const dropy = bezParametru.length
   ? '\n-- Funkce bez parametrů: zahodit, než se vytvoří znovu. Viz komentář\n'
     + '-- v scripts/build-sql.mjs — jde o změnu návratového typu, kterou\n'
     + '-- „create or replace" neumí a která by shodila celé nasazení.\n'
-    + bezParametru.map((f) => `drop function if exists ${f}();`).join('\n') + '\n'
+    + '-- Když na funkci visí pravidlo nebo pohled, zahodit NEJDE a nezahodí\n'
+    + '-- se: balík jede dál a typ si pohlídá „create or replace" níž.\n'
+    + 'do $pk_dropy$\nbegin\n'
+    + bezParametru.map((f) =>
+      `  begin execute 'drop function if exists ${f}()';`
+      + ` exception when dependent_objects_still_exist then null; end;`).join('\n')
+    + '\nend $pk_dropy$;\n'
   : '';
 
 const cil = path.join(SQL, '00-vse.sql');

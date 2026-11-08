@@ -28,20 +28,25 @@ drop function if exists create_listing(text,text,text,text,integer,integer,doubl
 -- Funkce bez parametrů: zahodit, než se vytvoří znovu. Viz komentář
 -- v scripts/build-sql.mjs — jde o změnu návratového typu, kterou
 -- „create or replace" neumí a která by shodila celé nasazení.
-drop function if exists kontrola_opravneni();
-drop function if exists moje_poznamky();
-drop function if exists moje_ulozene();
-drop function if exists my_limit();
-drop function if exists my_listing_quota();
-drop function if exists my_listings();
-drop function if exists my_photo_space();
-drop function if exists my_searches();
-drop function if exists my_threads();
-drop function if exists pending_count();
-drop function if exists public_listings();
-drop function if exists uklid_chyb_klienta();
-drop function if exists uklid_navstevnosti();
-drop function if exists unread_count();
+-- Když na funkci visí pravidlo nebo pohled, zahodit NEJDE a nezahodí
+-- se: balík jede dál a typ si pohlídá „create or replace" níž.
+do $pk_dropy$
+begin
+  begin execute 'drop function if exists kontrola_opravneni()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists moje_poznamky()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists moje_ulozene()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_limit()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_listing_quota()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_listings()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_photo_space()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_searches()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists my_threads()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists pending_count()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists public_listings()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists uklid_chyb_klienta()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists uklid_navstevnosti()'; exception when dependent_objects_still_exist then null; end;
+  begin execute 'drop function if exists unread_count()'; exception when dependent_objects_still_exist then null; end;
+end $pk_dropy$;
 
 
 -- ---------------------------------------------------------------------

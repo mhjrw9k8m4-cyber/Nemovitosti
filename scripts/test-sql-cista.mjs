@@ -76,6 +76,45 @@ try {
   pravda('00-vse.sql projde na čisté databázi bez chyb', chyby.length === 0,
     chyby.slice(0, 8).join('\n      '));
 
+  /* A PROJDE I NA DATABÁZI, KDE UŽ BĚŽÍ — i když na funkci něco visí.
+     ======================================================================
+     Majitel 8. 11. 2026 pustil balík na ostré databázi a spadl hned na
+     začátku:
+       ERROR 2BP01: cannot drop function my_limit() because other objects
+       depend on it
+       DETAIL: policy "listing photos auth upload" on table storage.objects
+       depends on function my_limit()
+     Nenasadilo se NIC. Na čisté databázi se to stát nemůže — tam na
+     funkci ještě nic nevisí — takže to tahle zkouška dosud neviděla.
+     Vyrábí se to proto schválně: nad tabulkou v public se postaví
+     pravidlo, které si my_limit() volá (přesně jako to pravidlo
+     u kbelíku s fotkami), a balík se pustí PODRUHÉ. */
+  {
+    psqlVse(['-d', 'zkouska', '-q', '-c',
+      `create table if not exists zkouska_zavislost (id int);
+       alter table zkouska_zavislost enable row level security;
+       drop policy if exists zkouska_vazba on zkouska_zavislost;
+       create policy zkouska_vazba on zkouska_zavislost for select using (my_limit() > 0);`]);
+    const maPravidlo = (psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from pg_policies where policyname = 'zkouska_vazba'`]) || '0').trim();
+    // PŘEDPOKLAD: bez toho pravidla by druhý běh neprokázal nic
+    pravda('je na čem měřit — na my_limit() visí pravidlo', maPravidlo === '1',
+      `pravidel ${maPravidlo}`);
+
+    const druhy = psqlVse(['-d', 'zkouska', '-f', path.join(ROOT, 'supabase', '00-vse.sql')]);
+    const chyby2 = druhy.split('\n').filter((r) => /ERROR:/.test(r))
+      .filter((r) => !JEN_SUPABASE.test(r))
+      .map((r) => r.replace(/^psql:[^:]*:/, 'řádek '));
+    pravda('a projde i podruhé, když na funkci visí pravidlo', chyby2.length === 0,
+      chyby2.slice(0, 8).join('\n      '));
+    /* A pravidlo přitom NESMÍ zmizet: `drop ... cascade` by ho vzalo
+       s sebou a kbelík s fotkami by zůstal bez stropu. */
+    const poDruhem = (psql(['-d', 'zkouska', '-tAc',
+      `select count(*) from pg_policies where policyname = 'zkouska_vazba'`]) || '0').trim();
+    pravda('a to pravidlo balík nesebral', poDruhem === '1', `pravidel ${poDruhem}`);
+    psql(['-d', 'zkouska', '-q', '-c', 'drop table if exists zkouska_zavislost cascade;']);
+  }
+
   /* SOUPIS, CO Z TOHO VZNIKLO — vypisuje se schválně.
      docs/pred-vydanim.md cituje čísla („tolik tabulek, tolik funkcí"),
      a ta se s každou migrací mění. Dokud se nevypisovala, opisovala se
