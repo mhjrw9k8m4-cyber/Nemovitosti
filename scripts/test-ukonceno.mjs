@@ -87,7 +87,25 @@ function ldPlaces(html) { return ldBloky(html).filter((x) => x && x['@type'] ===
 
 /* Zkušební soubor musí mít v názvu SKUTEČNÝ okres, jinak se k němu
    nenajdou podobné pozemky a zkouška níž by mlčela o ničem. */
-const vzor = readdirSync(KOREN).find((f) => /^pozemek-benesov-.+\.html$/.test(f));
+/* A MUSÍ TO BÝT ŽIVÁ STRÁNKA, NE UŽ UKONČENÁ ANI ROZCESTÍ.
+   Dřív se bral první soubor podle abecedy — a 8. 11. to byla
+   pozemek-benesov-112-rww4ws.html, tedy ROZCESTÍ k nové adrese (robot
+   té nabídce opravil obec z „112" na „Vlašim"). Takové stránky už mají
+   svůj pruh `class="pz-konec pz-presun"`, a ukončovací pass proto svůj
+   vlastní pruh nevloží („if (!/class="pz-konec/.test(h))"). Zkouška
+   pak hlásila „pruh chybí" a tři další pády — měřila stránku, která
+   do zkoušky nepatří.
+   Vybírá se tedy stránka, která je OPRAVDU živá: nese datový ostrůvek
+   nabídky, není noindex a neodkazuje kanonicky jinam. */
+const vzor = readdirSync(KOREN)
+  .filter((f) => /^pozemek-benesov-.+\.html$/.test(f))
+  .find((f) => {
+    const t = readFileSync(path.join(KOREN, f), 'utf8');
+    if (t.indexOf('window.PK_POZEMEK=') < 0) return false;
+    if (/content="noindex/.test(t)) return false;
+    const kan = /rel="canonical" href="[^"]*\/([^"\/]+)"/.exec(t);
+    return !kan || kan[1] === f;
+  });
 const ZKOUSKA = 'pozemek-benesov-zkouskatestu-9q7k2x.html';
 const cesta = path.join(KOREN, ZKOUSKA);
 
@@ -127,8 +145,40 @@ try {
   if (!vzor) hotovo();
 
   uklid();
-  writeFileSync(cesta, readFileSync(path.join(KOREN, vzor), 'utf8'));
+  /* KOPIE MUSÍ BÝT OSIŘELÁ, A TO SE MUSÍ ZAŘÍDIT, NE DOUFAT.
+     ================================================================
+     Kopie se dělá ze skutečné stránky, aby měla pravý tvar — jenže tím
+     si s sebou bere i TOTOŽNOST té nabídky: datový ostrůvek nese klíč
+     „obec|parcela|okres|lat|lng". Generátor má dvě různé větve podle
+     toho, co se o takovém klíči dá zjistit:
+
+       • žádná živá nabídka → stránka se UKONČÍ (to měří tahle zkouška),
+       • živá nabídka se stejným klíčem BEZ OBCE → stránka se přepíše na
+         ROZCESTÍ k nové adrese („pozemek se jen přestěhoval").
+
+     Naměřeno 8. 11.: vzorem byla pozemek-benesov-112-rww4ws.html
+     a tu nabídku zrovna opravil robot z obce „112" na „Vlašim". Kopie
+     tedy spadla do druhé větve, dostala rel=canonical na novou adresu
+     a zkouška hlásila osm pádů („pruh chybí", „InStock", „bez data") —
+     měřila jinou větev, než o které si myslela.
+
+     Souřadnice v kopii se proto posunou o 0,002° (asi 200 m): takový bod
+     v datech nikdo nemá, klíč bez obce se nespáruje a větev je zaručeně
+     ta ukončovací. Okres v názvu souboru zůstává pravý, takže podobné
+     pozemky se k ní dál najdou. */
+  const posun = (t) => String(t)
+    .replace(/"k":"([^"|]*)\|([^"|]*)\|([^"|]*)\|(-?\d+(?:\.\d+)?)\|(-?\d+(?:\.\d+)?)"/g,
+      (_, o, p, ok, la, lo) => `"k":"${o}|${p}|${ok}|${(Number(la) - 0.002).toFixed(3)}|`
+        + `${(Number(lo) - 0.002).toFixed(3)}"`)
+    .replace(/"ll":\[(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\]/g,
+      (_, la, lo) => `"ll":[${(Number(la) - 0.002).toFixed(5)},${(Number(lo) - 0.002).toFixed(5)}]`);
+  writeFileSync(cesta, posun(readFileSync(path.join(KOREN, vzor), 'utf8')));
   pravda('zkušební osiřelá stránka vznikla', existsSync(cesta), cesta);
+  /* A ŽE JE OPRAVDU OSIŘELÁ: kdyby posun přestal zabírat (změní se tvar
+     ostrůvku), zkouška by zas tiše měřila rozcestí. */
+  pravda('a nekoliduje s živou nabídkou (posun souřadnic zabral)',
+    readFileSync(cesta, 'utf8') !== readFileSync(path.join(KOREN, vzor), 'utf8'),
+    'kopie je totožná se vzorem — posun nic nenašel a klíč zůstal živý');
 
   /* MIGRACE SKRIPTŮ NA UKONČENÉ STRÁNCE — bez prohlížeče, na čisté funkci.
      Ukončená stránka se znovu nevyrábí z dat, jen se jí dohánějí přepisy,
