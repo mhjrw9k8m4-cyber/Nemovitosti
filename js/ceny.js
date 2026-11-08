@@ -534,6 +534,10 @@
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
+    /* Kategorie nabídky (byt, garáž, …) — bez ní by byt z malého souboru
+       spadl do přihrádky pozemku; viz skupinaNabidky níž. Starší soubor
+       sloupec nemá, pak je kategorie prázdná a vyjde pozemek jako dřív. */
+    var kategorie = j.kategorie || [], k = j.k || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
     var la = j.la || [], lo = j.lo || [];
     /* Otisk inzerenta: slovník jmen a sloupec indexů, −1 = neznámý.
@@ -553,6 +557,7 @@
         price: c[i],
         lat: la[i] ? la[i] / 1e4 : 0,
         lng: lo[i] ? lo[i] / 1e4 : 0,
+        kat: kategorie[k[i]] || undefined,
         inz: (si[i] >= 0 && inzerenti[si[i]]) || undefined,
         /* Příznak podílu ve vstupu není a nemá být: model ho čte vždy
            z nabídky, o které se rozhoduje, ne z uložených polí. */

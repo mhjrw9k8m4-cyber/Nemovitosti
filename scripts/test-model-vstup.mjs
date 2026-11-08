@@ -77,14 +77,19 @@ if (!Array.isArray(rozbaleno)) hotovo();
    a malý soubor ho proto ani neveze (sloupcový formát pole `extra`
    nenese, takže by to rozpoznat nemohl). Porovnává se tedy s počtem
    nabídek, které do modelu opravdu patří. */
-/* A NEPOZEMKOVÉ NEMOVITOSTI TAKY NE. Model počítá obvyklou cenu za
-   metr POZEMKU, takže si vstup filtruje sám (`jenPozemky` v js/ceny.js)
-   — a malý soubor to dělá stejně. Změřeno na nasimulovaných datech
-   s pěti byty a domy (5. 11.): bez tohohle filtru vyšlo „malý 1866, do
-   modelu 1871", tedy rozdíl přesně těch pěti. Kdyby se čekávaný počet
-   počítal bez nich, hlásila by kontrola rozchod při každém bytu
-   v datech — a vypadalo by to jako vada generátoru. */
-const doModelu = CENY.jenPozemky(plne).filter((o) => !CENY.spravniCena(o));
+/* A CO DO MODELU PATŘÍ, ROZHODUJE MODEL. Dřív tu stálo
+   `CENY.jenPozemky(plne)` s odůvodněním, že model počítá obvyklou cenu
+   za metr POZEMKU. Od zapojení bytů to neplatí: model bere i byt
+   a garáž (`meritelnaVymera`, u nich výměra znamená podlahovou plochu),
+   zatímco malý soubor vozil dál jen pozemky. Kontrola to hlásila jako
+   šest rozdílů na třech nabídkách — a vypadalo to jako vada modelu,
+   ačkoli se rozešel VSTUP. Naměřeno 8. 11. po opravě: malý soubor nese
+   2 974 nabídek (1 845 pozemků, 1 070 bytů, 59 garáží) proti 1 845 dřív,
+   a přes drát je to 47 kB gzipem místo 28 kB.
+   Očekávaný počet se proto bere týmž sítem, jaké si pouští `postav()`
+   — jinak by se pravidlo znovu rozešlo a zkouška by lhala o tom, kde
+   vada je. Úřední cena se vynechává zvlášť (viz výš). */
+const doModelu = CENY.doModelu(plne).filter((o) => !CENY.spravniCena(o));
 pravda(`úřední ceny jsou v celku a malý soubor je nemá (${plne.length - doModelu.length})`,
   plne.length - doModelu.length > 50,
   'kdyby v datech žádná nebyla, tahle kontrola by neměřila nic');

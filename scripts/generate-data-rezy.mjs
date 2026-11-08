@@ -306,22 +306,39 @@ export async function spust() {
        soubor je sloupcový a pole `extra` nenese, takže by to rozpoznat
        nemohl; vynechává se tedy už tady, aby model z malého souboru dal
        totéž co z plných dat. Hlídá to scripts/test-model-vstup.mjs. */
-    /* JEN POZEMKY — a tady to není jen pojistka, ale i váha přes drát.
-       `postav()` si vstup filtruje sám (js/ceny.js, `jenPozemky`),
-       takže by dům model nepokřivil ani odtud. Jenže tenhle soubor
-       STAHUJE KAŽDÁ stránka pozemku, a posílat do něj nabídky, které
-       model stejně zahodí, je zbytečný kilobajt na telefonu.
-       Pravidlo je totéž: `kat` chybí (výchozí pozemek) nebo 'pozemek'.
-       Hlídá to scripts/test-kategorie.mjs. */
+    /* CO MODEL UMÍ ZMĚŘIT — a ptá se ho na to, neopisuje si pravidlo.
+       Dřív tu stálo `!o.kat || o.kat === 'pozemek'` s odůvodněním, že
+       `postav()` si vstup filtruje sám (tehdy `jenPozemky`), takže je to
+       jen úspora kilobajtů na telefonu. Od zapojení bytů to přestalo
+       platit: model od té doby bere i byt a garáž (`meritelnaVymera`
+       v js/ceny.js — tam výměra znamená podlahovou plochu, takže se
+       cena za metr počítat dá). Malý soubor je ale dál vozil jen
+       pozemky, takže o témž bytu tvrdila stránka z plných dat verdikt
+       a z malého souboru nic. Naměřeno 8. 11.: šest rozdílů na třech
+       nabídkách (tř. Budovatelů v Mostě, Praha), scripts/test-model-vstup.mjs.
+
+       Síto je proto TÁŽ funkce, jakou si pouští model. Úřední cena se
+       vynechává zvlášť: malý soubor je sloupcový a pole `extra` nenese,
+       takže by ji model z něj rozpoznat nemohl. */
     const proModel = bezDuplicit
       .filter((o) => !CENY.spravniCena(o))
-      .filter((o) => !o.kat || o.kat === 'pozemek');
+      .filter((o) => CENY.meritelnaVymera(o));
     const okresy = [...new Set(proModel.map((o) => o.okres || ''))].sort();
     const druhy = [...new Set(proModel.map((o) => o.druh || ''))].sort();
     const typy = [...new Set(proModel.map((o) => o.type || ''))].sort();
+    /* KATEGORIE MUSÍ JÍT PŘES DRÁT TAKY. Model od zapojení bytů klíčuje
+       srovnávací přihrádky podle `skupinaNabidky(o)`, a ta se u nepozemku
+       bere z `o.kat`, ne z druhu. Bez tohohle sloupce by byt z malého
+       souboru vyšel jako pozemek s druhem „byt" a spadl do jiné
+       přihrádky než z plných dat. Slovník má nejvýš devět slov, takže
+       přes drát je to jeden krátký sloupec indexů. Prázdné jméno =
+       pozemek (nabídky bez `kat`), aby se u 2 009 z nich nevozilo
+       zbytečné slovo. */
+    const kategorie = [...new Set(proModel.map((o) => o.kat || ''))].sort();
     const iO = new Map(okresy.map((x, i) => [x, i]));
     const iD = new Map(druhy.map((x, i) => [x, i]));
     const iT = new Map(typy.map((x, i) => [x, i]));
+    const iK = new Map(kategorie.map((x, i) => [x, i]));
     /* OTISK INZERENTA TU BÝT MUSÍ, na rozdíl od příznaku podílu o kus
        níž. Srovnávací hladina od 23. 10. slučuje nabídky jednoho
        inzerenta na jeden hlas a přihrádku, kterou drží jediný, nepoužije
@@ -329,9 +346,10 @@ export async function spust() {
        pozemku počítala z jiných podkladů než mapa a o témž pozemku by
        tvrdily jiný verdikt. Hlídá to scripts/test-model-vstup.mjs. */
     const { inzerenti, si } = inzerentiSloupcove(proModel);
-    const o = [], d = [], t = [], a = [], c = [], la = [], lo = [];
+    const o = [], d = [], t = [], k = [], a = [], c = [], la = [], lo = [];
     for (const x of proModel) {
       o.push(iO.get(x.okres || '')); d.push(iD.get(x.druh || '')); t.push(iT.get(x.type || ''));
+      k.push(iK.get(x.kat || ''));
       a.push(x.area || 0); c.push(x.price || 0);
       /* SOUŘADNICE JAKO CELÁ ČÍSLA, ZAOKROUHLENÉ NA ČTYŘI DESETINNÁ
          MÍSTA (asi 11 m). Model je potřebuje: obvyklá cena se počítá
@@ -347,10 +365,11 @@ export async function spust() {
       rez: { uroven: 'model', nazev: null, soubor: 'data/model.json', pocet: proModel.length },
       chyba: chybaModelu,
       popis: 'Vstup cenového modelu: pole, která z uložených nabídek čte js/ceny.js. '
-        + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t jsou indexy do okresy/druhy/typy, '
+        + 'Sloupcově a se slovníky, ať je to malé. Pole o/d/t/k jsou indexy do '
+        + 'okresy/druhy/typy/kategorie (prázdné jméno v kategorie = pozemek), '
         + 'a je výměra v m², c cena v Kč, la/lo souřadnice ×10 000 (celá čísla), '
         + 's je index do inzerenti (−1 = neznámý).',
-      okresy, druhy, typy, inzerenti, o, d, t, a, c, la, lo, s: si,
+      okresy, druhy, typy, kategorie, inzerenti, o, d, t, k, a, c, la, lo, s: si,
     });
   })();
   const bajtuModel = zapis('data/model.json', modelVstup);

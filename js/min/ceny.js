@@ -174,6 +174,8 @@
   function rozbalModel(j) {
     if (!j || !Array.isArray(j.a) || !Array.isArray(j.c)) return null;
     var okresy = j.okresy || [], druhy = j.druhy || [], typy = j.typy || [];
+
+    var kategorie = j.kategorie || [], k = j.k || [];
     var o = j.o || [], d = j.d || [], t = j.t || [], a = j.a, c = j.c;
     var la = j.la || [], lo = j.lo || [];
 
@@ -190,6 +192,7 @@
         price: c[i],
         lat: la[i] ? la[i] / 1e4 : 0,
         lng: lo[i] ? lo[i] / 1e4 : 0,
+        kat: kategorie[k[i]] || undefined,
         inz: (si[i] >= 0 && inzerenti[si[i]]) || undefined,
 
       };
