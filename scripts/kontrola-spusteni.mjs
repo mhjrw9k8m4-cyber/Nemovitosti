@@ -134,7 +134,16 @@ else if (jenRucne.length === sOpravdu.length) SKODA('noční rozesílání',
   '--opravdu je v příkazu jen pro ruční spuštění (workflow_dispatch), takže běh podle hodin'
   + ' jede nasucho. Pošta odejde teprve po stisku tlačítka se zapnutým přepínačem.');
 else ANO('rozesílač má --opravdu i v běhu podle hodin');
-NEVIM('RESEND_API_KEY a PK_MAIL_FROM', 'jsou v GitHub Secrets, odsud je vidět nejde');
+/* NETVRDIT, ŽE TAM JSOU. Stálo tu „jsou v GitHub Secrets, odsud je
+   vidět nejde" — to je domněnka vydávaná za fakt, a 8. 11. 2026 se
+   ukázala jako nepravdivá: RESEND_API_KEY nastavený byl, PK_MAIL_FROM
+   prázdný. Odsud je vidět nejde, ale JDE TO ZJISTIT — a tohle řekne
+   jak, místo aby to hádalo. */
+NEVIM('RESEND_API_KEY a PK_MAIL_FROM',
+  'odsud je vidět nejde. Pozná se to z protokolu úlohy „Rozeslat upozornění'
+  + ' (e-mail a telefon)": nastavená proměnná se vypíše jako ***, nenastavená'
+  + ' jako prázdná. Bez PK_MAIL_FROM rozesílač neodešle nic ani se zapnutým'
+  + ' přepínačem — sám to hlásí jako „chybí PK_MAIL_FROM (odesílatel)"');
 if ((/window\.PK_PUSH_VEREJNY_KLIC\s*=\s*'([^']*)'/.exec(config) || [])[1]) ANO('veřejný klíč pro push je nastavený');
 else SKODA('upozornění do telefonu', 'PK_PUSH_VEREJNY_KLIC je prázdný — push se nikomu nenabídne');
 

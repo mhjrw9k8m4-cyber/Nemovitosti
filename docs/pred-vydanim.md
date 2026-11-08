@@ -84,6 +84,11 @@ e-maily padají do spamu častěji.
 1. V Resendu potvrdit doménu `parcelaka.cz` (tři DNS záznamy u Wedosu —
    postup je v `docs/oprava-hlidani-a-pridavani.md`).
 2. V Resendu vyrobit API klíč (oprávnění *Sending access*).
+   **Pozor, jeden už v repozitáři je:** `RESEND_API_KEY` v Secrets je
+   nastavený (změřeno 8. 11. 2026 z běhu úlohy „Rozeslat upozornění" —
+   proměnná se v protokolu vypisuje jako `***`, tedy existuje). Nový
+   klíč tedy vyrábět nemusíte, pokud ten starý platí; na SMTP v Supabase
+   se dá použít týž.
 3. Supabase → Project Settings → Authentication → SMTP Settings:
    hostitel `smtp.resend.com`, port 465, uživatel `resend`,
    heslo = ten API klíč, odesílatel `hlidani@parcelaka.cz`.
@@ -94,6 +99,25 @@ e-maily padají do spamu častěji.
 
 Kód je hotový a otestovaný (`scripts/send-alerts.mjs`, 66 kontrol).
 Bez klíčů běží nasucho a sám vypíše, co mu chybí.
+
+**STAV K 8. 11. 2026 — změřeno z běhu úlohy, ne odhadnuto.** Úloha
+běží každý den a nepadá; v protokolu stojí:
+
+| co | stav |
+|---|---|
+| `RESEND_API_KEY` | **je** (v protokolu `***`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **je** |
+| `PK_MAIL_FROM` | **prázdné** — rozesílač hlásí „chybí PK_MAIL_FROM (odesílatel)" |
+| `SUPABASE_URL` | prázdné, ale nevadí: adresa se bere z `js/config.js` |
+| přepínač `--opravdu` | není → „Režim NASUCHO: neodešlu nic" |
+| hlídání se zapnutou poštou | **0** („Není komu psát") |
+
+Tři z toho drží jedno druhé: pošta nemá odesílatele, takže se nesmí
+zapnout `PK_MAIL_ZAPNUTO`, takže web přepínač „posílat e-mailem"
+nevykreslí, takže se nemá kdo přihlásit. **Chybí tedy jediná věc, na
+kterou je potřeba člověk: `PK_MAIL_FROM`** — adresa na ověřené doméně
+v Resendu. Zbylé dva přepínače jsou práce na repozitáři a dají se
+udělat hned po ní, v tomhle pořadí (body 4 a 5 níž).
 
 1. Do tajných proměnných repozitáře (*Settings → Secrets and variables →
    Actions*) přidat `RESEND_API_KEY` (týž klíč jako výš) a
