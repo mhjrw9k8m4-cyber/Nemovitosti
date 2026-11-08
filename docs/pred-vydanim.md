@@ -62,8 +62,15 @@ neví, jestli to drží pohromadě; zkoušky měří části, ne tvůj dojem.
 **Body 0 a 1 jsou to podstatné**; zbytek web neblokuje. Reálně je to
 jeden až dva večery a web je venku.
 
-**Co NENÍ na tomhle seznamu, je hotové.** Kód i zkoušky jsou zavřené a
-CI zelená. Co by se dalo ještě leštit (zbývá 28 ovládacích prvků
+**Co NENÍ na tomhle seznamu, je hotové** — s jednou výjimkou, kterou ti
+musím říct rovnou: **CI zelená není.** Kód je zavřený a rychlá sada
+(162 zkoušek) prochází, ale v sadě v prohlížeči padá 28 zkoušek ze tří
+směn (změřeno v běhu 1082, 8. 11. 2026). Proto ti z GitHubu chodí
+e-mail „All jobs have failed": z posledních 800 běhů této úlohy (od
+5. 10.) skončilo 309 pádem, 344 se zrušilo novějším pushem a 146 prošlo.
+Web to neblokuje — jsou to zkoušky webu, ne web —, ale dokud to svítí
+červeně, nemá ten e-mail jak přestat chodit a žádná zkouška nemá váhu,
+protože červená je pořád. Co by se dalo ještě leštit (zbývá 28 ovládacích prvků
 v oknech a naklikaných stavech, viz oddíl 108 v `docs/optimalizace.md`),
 návštěvník nepozná a vydání to nebrání.
 
