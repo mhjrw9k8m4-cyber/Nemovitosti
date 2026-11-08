@@ -4815,7 +4815,22 @@ async function fetchNabidkyStatu() {
       nm = null; zamitnuto++;
     }
     if (nm) {
-      const j = jitterVCesku(nm[0], nm[1], (o.parcel || '') + o.place, 0.012);
+      /* SEMENO MUSÍ IDENTIFIKOVAT NABÍDKU, NE OBEC.
+         Stálo tu `(o.parcel || '') + o.place`. U nabídek z Bezrealitek
+         je ale `parcel` vždy „—" a `place` je obec — takže VŠECHNY
+         nabídky z jedné obce dostaly TÝŽ rozptyl, tedy týž bod.
+         Naměřeno 8. 11. 2026 na ostrých datech: 3 426 nabídek leželo
+         na 1 653 bodech a na jediném bodu v Praze (50.10466, 14.64874)
+         jich bylo 583. Na mapě to je jeden špendlík místo pěti set
+         osmdesáti tří a v uložených pozemcích se nedaly rozlišit
+         (klíč nese souřadnice) — chytily to test-mapa-pozemku
+         a test-klic-ulozenych.
+         Do semene proto patří adresa inzerátu: je to jediný údaj,
+         který je u každé nabídky jiný a mezi běhy se nemění, takže
+         bod zůstává tam, kde byl. Parcela a obec zůstávají pro
+         nabídky, které adresu nemají (dražby z registru). */
+      const semeno = (o.url || '') + '|' + (o.parcel || '') + '|' + o.place;
+      const j = jitterVCesku(nm[0], nm[1], semeno, 0.012);
       o.lat = j.lat; o.lng = j.lng; refined++;
     }
   }

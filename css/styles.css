@@ -10937,6 +10937,24 @@ main > .md-uvod{max-width:62ch; margin:20px auto 0; padding:0 20px;}
 #pz-detail > .pz-konec li a::after{content:"→"; color:var(--muted); font-weight:700;}
 #pz-detail > .pz-konec p:last-child{margin:20px 0 0;
   text-transform:none; letter-spacing:0;}
+
+/* PŘESTĚHOVANÁ STRÁNKA MÁ JINÝ TVAR NEŽ VYŘAZENÁ — a pravidla výš jí
+   nesedí. Vyřazená nabídka nabízí SEZNAM podobných (ul > li > a) a pod
+   ním jeden odkaz na mapu; přestěhovaná má odkazy dva, oba v <p>:
+   „Otevřít pozemek na nové adrese" a „Zpět na mapu". Druhý z nich je
+   `p:last-child` a dostal 48 px, ale ten PRVNÍ — tedy ta hlavní akce,
+   kvůli které sem člověk přišel — spadl pod pravidlo `> p`, které je
+   psané pro NADPISEK seznamu: 13 px, verzálky, šedá. Naměřeno 8. 11.
+   2026 na 815 přestěhovaných stránkách: nejmenší odkaz 37 px proti
+   mezi 44 px pro dotyk, a hlavní akce vypadala jako popisek oddílu.
+   Chytila to scripts/test-vyrazena-nabidka.mjs. */
+#pz-detail > .pz-presun > p{margin:20px 0 0; font-size:16px; font-weight:400;
+  letter-spacing:0; text-transform:none; color:var(--text);}
+#pz-detail > .pz-presun > p:first-of-type a{display:inline-flex; align-items:center;
+  gap:12px; min-height:56px; padding:0 20px; background:var(--plocha-karta);
+  border:1px solid var(--line); border-radius:var(--r-ovladani);
+  font-size:16px; font-weight:700; color:var(--text); text-decoration:none;}
+#pz-detail > .pz-presun > p:first-of-type a::after{content:"→"; color:var(--muted); font-weight:700;}
 #pz-detail > .pz-konec p:last-child a{display:inline-flex; align-items:center;
   min-height:48px; font-size:16px; font-weight:700; color:var(--znacka-hluboka);}
 

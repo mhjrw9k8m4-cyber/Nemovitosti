@@ -785,6 +785,9 @@ to{opacity:1;transform:none}
 #pz-detail>.pz-konec li a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:0 20px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-ovladani);font-size:16px;font-weight:700;color:var(--text);text-decoration:none}
 #pz-detail>.pz-konec li a::after{content:"→";color:var(--muted);font-weight:700}
 #pz-detail>.pz-konec p:last-child{margin:20px 0 0;text-transform:none;letter-spacing:0}
+#pz-detail>.pz-presun>p{margin:20px 0 0;font-size:16px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text)}
+#pz-detail>.pz-presun>p:first-of-type a{display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:0 20px;background:var(--plocha-karta);border:1px solid var(--line);border-radius:var(--r-ovladani);font-size:16px;font-weight:700;color:var(--text);text-decoration:none}
+#pz-detail>.pz-presun>p:first-of-type a::after{content:"→";color:var(--muted);font-weight:700}
 #pz-detail>.pz-konec p:last-child a{display:inline-flex;align-items:center;min-height:48px;font-size:16px;font-weight:700;color:var(--znacka-hluboka)}
 .pz-staticky{order:2;margin:32px 0 0;padding:20px;background:var(--plocha-tlumena);border:1px solid var(--line);border-radius:var(--r-plocha)}
 .pz-staticky h1{margin:0;font-size:var(--h1-nastroj);line-height:1.3;letter-spacing:0}

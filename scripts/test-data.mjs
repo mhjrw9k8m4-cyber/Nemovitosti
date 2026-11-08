@@ -117,6 +117,31 @@ pravda('žádný pozemek neleží za hranicemi státu', zaHranici.length === 0,
   pravda('geocodeName ověřuje hranice okresů, ne jen vzdálenost od středu',
     /okresPodleHranice\(la, ln\)/.test(kus) && /polohaSediSOkresem\(la, ln/.test(kus),
     'v geocodeName chybí jedna z obou podmínek');
+
+  /* A ROZPTYL MUSÍ ROZLIŠIT NABÍDKU, NE OBEC.
+     Semeno rozptylu bylo `(o.parcel || '') + o.place`. U nabídek
+     z Bezrealitek je `parcel` vždy „—" a `place` je obec — takže každá
+     nabídka z téže obce dostala týž bod. Naměřeno 8. 11. 2026:
+     3 426 nabídek na 1 653 bodech a na jediném bodu v Praze
+     (50.10466, 14.64874) jich leželo 583. Na mapě jeden špendlík
+     místo pěti set osmdesáti tří; v uložených pozemcích se takové
+     nabídky nedaly rozlišit, protože klíč nese souřadnice.
+     Měří se tady na zdroji: v DATECH se to pozná až po nejbližším
+     běhu robota a zkouška má chytit i to, kdyby se semeno vrátilo. */
+  const dopocet = zdrojF.slice(zdrojF.indexOf('let refined = 0'),
+    zdrojF.indexOf('BEZ SOUŘADNIC SE NABÍDKA NEZVEŘEJNÍ'));
+  pravda('semeno rozptylu nese adresu inzerátu, tedy nabídku, ne jen obec',
+    /const semeno = \(o\.url \|\| ''\)/.test(dopocet) && /jitterVCesku\(nm\[0\], nm\[1\], semeno,/.test(dopocet),
+    'rozptyl se počítá ze semene, které je pro celou obec stejné — všechny nabídky z obce skončí na jednom bodu');
+  /* A že na tom semeni opravdu záleží: dvě adresy ze stejné obce musí
+     dát dva různé body. Bez toho by kontrola výš hlídala jen zápis. */
+  {
+    const a = F.jitterVCesku(50.1, 14.6, 'https://e.cz/1-nabidka|—|Praha', 0.012);
+    const b = F.jitterVCesku(50.1, 14.6, 'https://e.cz/2-nabidka|—|Praha', 0.012);
+    pravda('a dvě nabídky z jedné obce neskončí na jednom bodu',
+      a.lat !== b.lat || a.lng !== b.lng,
+      `obě vyšly na ${a.lat},${a.lng}`);
+  }
 }
 
 /* Druh pozemku se píše jednotně. Evidence dražeb ho posílá s velkým
