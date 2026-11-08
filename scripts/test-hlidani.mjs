@@ -450,6 +450,41 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
   je('cena', 'klíč jiného tvaru se nehádá', H.bezCeny('a|b|c'), null);
   je('cena', 'ani prázdný', H.bezCeny(''), null);
 
+  /* --- BEZ PARCELNÍHO ČÍSLA SE DVĚ NABÍDKY ROZEZNAT NEDAJÍ ----------
+     Identita „týž pozemek, jiná cena" se skládá z klíče bez ceny: typ,
+     okres, obec, parcela, výměra. U inzerátů z Bezrealitek parcela není
+     (3 263 nabídek z 3 868 má „—") a obec je jméno města, takže
+     identita „sale|praha|praha|—|450" padne na každý pražský byt se
+     450 m². V datech jsou dva: za 1 450 000 a za 35 000 000 Kč.
+
+     Naměřeno 8. 11.: 124 takových identit a v nich 570 nabídek (15 %).
+     Dělo se obojí naráz — nová nabídka se NEOHLÁSILA (brala se za
+     starou se změněnou cenou) a místo toho se ohlásila ZMĚNA CENY,
+     která se nestala: „z 35 000 000 na 1 450 000" u dvou různých bytů.
+     To není nepřesnost, to je nepravda poslaná e-mailem.
+
+     Bez parcely proto identita nevznikne a obě pravidla, která se o ni
+     opírají, se neuplatní. Měří se obě strany: že se dvě různé nabídky
+     bez parcely nesloučí, a že u nabídky S parcelou změna ceny dál
+     funguje (jinak by se tím zabila lepší zpráva „zlevnilo z X na Y"). */
+  const bezParc = { type: 'sale', okres: 'Praha', place: 'Praha', parcel: '—', area: 450 };
+  je('cena', 'bez parcelního čísla identita nevznikne',
+    H.bezCeny(H.keyOf({ ...bezParc, price: 1450000 })), null);
+  {
+    const drahy = { ...bezParc, price: 35000000 };
+    const levny = { ...bezParc, price: 1450000 };
+    const hledaniPH = { okres: 'Praha', druh: '', ptype: '', features: [],
+      seen_keys: [H.keyOf(drahy)] };
+    je('cena', 'a druhá nabídka téže výměry je NOVÁ, ne zlevnění',
+      H.novychProHledani(hledaniPH, [levny]), 1);
+    je('cena', 'a nehlásí se jako změna ceny',
+      H.zmeneneProHledani(hledaniPH, [levny]).length, 0);
+  }
+  /* A S PARCELOU TO DÁL FUNGUJE — jinak by pravidlo zabilo zlevnění. */
+  je('cena', 's parcelním číslem identita vznikne',
+    H.bezCeny(H.keyOf({ ...bezParc, parcel: '123/4', price: 1450000 })).identita,
+    'sale|praha|praha|123/4|450');
+
   // Hláška musí říct, co se stalo, a kolik to bylo.
   const u = F.zeHlidani([{ id: 'h', okres: 'Kolín', seen_keys: [H.keyOf(A)] }], [levnejsi]);
   je('cena', 'centrum ukáže jedno upozornění', u.length, 1);
@@ -480,17 +515,34 @@ je('nové', 'žádná data nespadnou', H.novychCelkem(DVE, []), 0);
 
 /* Rozebrání klíče na SKUTEČNÝCH datech: kdyby se v nějakém poli objevilo
    svislítko nebo klíč přerostl 240 znaků (tam se zkracuje), přestala by
-   se dát cena z klíče vyčíst a změny cen by se tiše hlásily jako nové. */
+   se dát cena z klíče vyčíst a změny cen by se tiše hlásily jako nové.
+
+   MĚŘÍ SE TVAR KLÍČE, NE NÁVRATOVÁ HODNOTA bezCeny(). Dřív se tu
+   čekalo, že bezCeny() vrátí cenu u KAŽDÉ nabídky — a to je od 8. 11.
+   jiné tvrzení: u nabídky bez parcelního čísla identita schválně
+   nevzniká (3 276 z 3 883 nabídek), protože by nerozeznala dvě různé
+   nemovitosti. Kontrola se proto ptá na to, co opravdu měla hlídat:
+   že klíč má šest částí, že se v žádné neobjevilo svislítko a že se
+   klíč neuřízl na 240 znacích. */
 {
   const skutecna = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  let spatnych = 0, nejdelsi = 0;
+  let spatnych = 0, nejdelsi = 0, bezParcely = 0;
   for (const d of skutecna) {
     const k = H.keyOf(d);
     if (k.length > nejdelsi) nejdelsi = k.length;
+    const casti = k.split('|');
+    if (casti.length !== 6 || casti[4] !== String(d.price || '')) { spatnych++; continue; }
     const b = H.bezCeny(k);
-    if (!b || b.cena !== String(d.price || '')) spatnych++;
+    if (!b) { bezParcely++; continue; }
+    if (b.cena !== String(d.price || '')) spatnych++;
   }
-  je('cena', `klíč se dá rozebrat u všech ${skutecna.length} pozemků v datech`, spatnych, 0);
+  je('cena', `klíč má šest částí a cena je pátá u všech ${skutecna.length} pozemků v datech`, spatnych, 0);
+  /* A KOLIK Z NICH NEMÁ PARCELU, se vypisuje bez meze — je to vlastnost
+     zdrojů (inzeráty parcelní číslo nenesou), ne vada. Kdyby to bylo
+     všechno, pravidlo o změně ceny by zmrtvělo úplně, a to by se mělo
+     poznat: proto se čeká, že aspoň u stovky nabídek identita vznikne. */
+  je('cena', `a u nabídek s parcelou identita vzniká (${skutecna.length - bezParcely} z ${skutecna.length})`,
+    skutecna.length - bezParcely > 100, true);
   je('cena', `a nejdelší klíč (${nejdelsi} znaků) nedosahuje na 240, kde se zkracuje`,
     nejdelsi < 240, true);
 }

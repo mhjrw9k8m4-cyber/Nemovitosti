@@ -252,9 +252,13 @@
   function novychProHledani(s, data) { return noveProHledani(s, data).length; }
 
   var CENA_V_KLICI = 4;
+
+  var PARCELA_V_KLICI = 3;
   function bezCeny(klic) {
     var c = String(klic == null ? '' : klic).split('|');
     if (c.length !== 6) return null;
+
+    if (!c[PARCELA_V_KLICI] || c[PARCELA_V_KLICI] === '\u2014') return null;
     var stara = c[CENA_V_KLICI];
     c.splice(CENA_V_KLICI, 1);
     return { identita: c.join('|'), cena: stara };

@@ -499,9 +499,40 @@
      a nejdelší klíč má 71 znaků, tedy ani zdaleka nedosáhne na 240,
      kde se klíč zkracuje. */
   var CENA_V_KLICI = 4;
+  /* Parcelní číslo stojí v klíči hned před cenou (viz keyOf výš:
+     type|okres|obec|parcela|cena|výměra). */
+  var PARCELA_V_KLICI = 3;
   function bezCeny(klic) {
     var c = String(klic == null ? '' : klic).split('|');
     if (c.length !== 6) return null;      // jiný tvar klíče — nehádáme
+    /* BEZ PARCELNÍHO ČÍSLA SE DVĚ NABÍDKY ROZEZNAT NEDAJÍ.
+     *
+     * Identita „týž pozemek, jiná cena" se skládá z klíče bez ceny, tedy
+     * z typu, okresu, obce, parcely a výměry. U inzerátů z Bezrealitek
+     * ale parcelní číslo není (3 263 nabídek z 3 868 má „—") a obec je
+     * jméno města. Identita „sale|praha|praha|—|450" tím padne na každý
+     * pražský byt se 450 m², a ty jsou dva: za 1 450 000 a za
+     * 35 000 000 Kč. Pro tuhle funkci to byla jedna nabídka, které se
+     * změnila cena.
+     *
+     * Naměřeno 8. 11. na ostrých datech: 124 takových identit a v nich
+     * 570 nabídek, tedy 15 % všech. Dvě věci se tím dějí naráz:
+     *   • nová nabídka se NEOHLÁSÍ (noveProHledani ji vezme za starou
+     *     se změněnou cenou) — hlídání o ní mlčí,
+     *   • a místo toho se ohlásí ZMĚNA CENY, která se nestala:
+     *     „z 35 000 000 na 1 450 000" u dvou různých bytů. To není
+     *     nepřesnost, to je nepravda poslaná člověku e-mailem.
+     *
+     * Bez parcely proto identita NEVZNIKNE a obě pravidla, která se o ni
+     * opírají (noveProHledani, zmeneneProHledani), se u takové nabídky
+     * neuplatní. Důsledek je změřený a je to ten menší: u nabídky bez
+     * parcely se změna ceny ohlásí jako NOVÁ nabídka. V e-mailu u ní
+     * stojí aktuální cena, takže je to pravda — jen míň užitečná než
+     * „zlevnilo z X na Y". Mlčení ani vymyšlené zlevnění pravda nejsou.
+     *
+     * Tvar klíče se tím NEMĚNÍ: uložené klíče v mail_poslane platí dál
+     * a nikomu nepřijde vlna „všechno je nové". */
+    if (!c[PARCELA_V_KLICI] || c[PARCELA_V_KLICI] === '\u2014') return null;
     var stara = c[CENA_V_KLICI];
     c.splice(CENA_V_KLICI, 1);
     return { identita: c.join('|'), cena: stara };
