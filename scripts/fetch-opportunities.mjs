@@ -3324,10 +3324,24 @@ const BR_PAUZA = 300;
    služba s limitem ~1 dotaz za sekundu; 1 376 obcí (změřeno v datech)
    by znamenalo pětadvacet minut jen na jména. Co se nestihne, dojde
    při dalším běhu — mezipaměť data/geocode-cache.json se plní. */
-const BR_STROP_GEO = 300;
+/* STROP NA DOTAZY DO GEOKODÉRU V JEDNOM BĚHU.
+   Změřeno 8. 11. 2026 po přechodu na povolenou cestu: různých obcí je
+   u Bezrealitek 1 303. Slovník z nabídek OSTATNÍCH zdrojů (ty mají
+   polohu od zdroje) jich zná 98, mezipaměť geokodéru dalších 7 —
+   zbývá tedy ~1 200 jmen, na která se musí geokodéru zeptat.
+   Nominatim dovoluje jeden dotaz za sekundu (geocodeObec po každém
+   čeká 1,1 s), takže celý zbytek je asi 22 minut JEDNOU: odpovědi se
+   ukládají do data/geocode-cache.json, který robot commituje, takže
+   další běhy se ptají jen na nová jména.
+   Předtím tu stálo 300 a bylo to málo: zbylých tisíc nabídek by
+   zůstalo bez okresu, tedy mimo web, a z webu by zmizely — nebo by je
+   držení nabídek nechalo viset se STARÝM (chybným) okresem. Čtyři běhy
+   po 300 by trvaly den, a celou tu dobu by si web odporoval.
+   Úloze robota se proto zvedl `timeout-minutes` z 90 na 120. */
+const BR_STROP_GEO = 1400;
 /* STROP NA STAHOVÁNÍ DETAILŮ V JEDNOM BĚHU — a není to opatrnost, je
    to pojistka proti běhu, který nikdy nedojde do konce. Úloha robota
-   má v .github/workflows/update-data.yml `timeout-minutes: 90`. První
+   má v .github/workflows/update-data.yml `timeout-minutes: 120`. První
    běh po přepnutí na povolenou cestu nemá v mezipaměti nic a musel by
    stáhnout všech ~7 150 detailů; naměřeno na tempu tří dělníků to je
    kolem hodiny, a kdyby se to protáhlo, úloha se ukončí — a protože se

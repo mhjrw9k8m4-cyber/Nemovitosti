@@ -35,7 +35,12 @@ jobs:
     # Strop proti visícímu spojení, ne proti pomalosti: bez něj
     # GitHub úlohu zastaví až po šesti hodinách a další
     # naplánovaný běh se do té doby nespustí (robot stahuje a přepisuje 2 159 stránek).
-    timeout-minutes: 90
+    # 8. 11. zvednuto z 90 na 120 minut: Bezrealitky se čtou povolenou
+    # cestou, kde poloha obce vzniká dotazem do geokodéru, a 1 200 jmen
+    # obcí po 1,1 s je ~22 minut navíc. Je to JEDNORÁZOVÉ (odpovědi jdou
+    # do data/geocode-cache.json), ale ten jeden běh se musí vejít —
+    # poslední běh stahoval 45 minut, takže 90 by na něj nestačilo.
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@v4
