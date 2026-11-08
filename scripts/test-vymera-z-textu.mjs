@@ -20,6 +20,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { vytahniCteniVymery } from './vytah-cteni-vymery.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -39,20 +40,17 @@ function hotovo() {
 /* Funkce se vytáhnou ze zdroje robota a pustí samostatně — zbytek
    souboru by chtěl síť. Kdyby se je nepodařilo najít (přejmenování),
    test to musí ŘÍCT, ne tiše projít. */
+/* SEZNAM VYTAHOVANÝCH KUSŮ JE VE SPOLEČNÉM MODULU, ne tady.
+   Měl ho každý hlídač svůj a 8. 11. se to vymstilo: do seznamu tady
+   jsem společnou konstantu AREA_CISLO dopsal, do toho
+   v test-slepena-vymera zapomněl — a ten spadl na „AREA_CISLO is not
+   defined", tedy na mé nepřesnosti, ne na vadě webu. §438-třída. */
 const src = readFileSync(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
-const kusy = [
-  /* Vzorek čísla a přepočet desetin jsou společné pro název i popis,
-     takže se musí vytáhnout taky — jinak obě funkce spadnou na
-     „AREA_CISLO is not defined". */
-  src.match(/const AREA_CISLO[\s\S]*?\nfunction areaZeShody[\s\S]*?\n}/),
-  src.match(/function parseArea\(text\)[\s\S]*?\n}/),
-  src.match(/const AREA_POZEMEK[\s\S]*?\nfunction parseAreaPopis[\s\S]*?\n  return null;\n}/),
-];
-pravda('čtení výměry se dá v robotovi najít a spustit', kusy.every(Boolean),
-  'AREA_CISLO, parseArea nebo parseAreaPopis ve scripts/fetch-opportunities.mjs nejsou'
-    + ' — přejmenovaly se?');
-if (!kusy.every(Boolean)) hotovo();
-const F = new Function(kusy.map((k) => k[0]).join('\n') + '; return { parseArea, parseAreaPopis };')();
+const vytah = vytahniCteniVymery(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'));
+pravda('čtení výměry se dá v robotovi najít a spustit', vytah.ok,
+  've scripts/fetch-opportunities.mjs chybí: ' + vytah.chybi.join(', ') + ' — přejmenovaly se?');
+if (!vytah.ok) hotovo();
+const F = vytah.funkce;
 
 /* --- 1) název se čte rovnou, popis opatrně --- */
 pravda('z NÁZVU se výměra bere rovnou (krátký text, jedno číslo)',

@@ -31,6 +31,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
+import { vytahniCteniVymery } from './vytah-cteni-vymery.mjs';
 import { vymeraZTextu } from './cteni-zdroje.mjs';
 import { najdi } from './parcely-z-textu.mjs';
 
@@ -132,15 +133,16 @@ export function mistaVymer(kod) {
 }
 
 /* ---------- 1) chování skutečných čtecích funkcí ---------- */
+/* Seznam vytahovaných kusů je ve společném modulu — viz
+   scripts/vytah-cteni-vymery.mjs. Dva seznamy téhož se rozejdou při
+   první změně, a rozejdou se tiše: přesně tak tenhle hlídač 8. 11.
+   spadl na „AREA_CISLO is not defined". */
 const src = readFileSync(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'), 'utf8');
-const kusy = [
-  src.match(/function parseArea\(text\)[\s\S]*?\n}/),
-  src.match(/const AREA_POZEMEK[\s\S]*?\nfunction parseAreaPopis[\s\S]*?\n  return null;\n}/),
-];
-pravda('čtení výměry se dá v robotovi najít a spustit', kusy.every(Boolean),
-  'parseArea nebo parseAreaPopis ve scripts/fetch-opportunities.mjs nejsou — přejmenovaly se?');
-if (!kusy.every(Boolean)) hotovo();
-const F = new Function(kusy.map((k) => k[0]).join('\n') + '; return { parseArea, parseAreaPopis };')();
+const vytah = vytahniCteniVymery(path.join(KOREN, 'scripts', 'fetch-opportunities.mjs'));
+pravda('čtení výměry se dá v robotovi najít a spustit', vytah.ok,
+  've scripts/fetch-opportunities.mjs chybí: ' + vytah.chybi.join(', ') + ' — přejmenovaly se?');
+if (!vytah.ok) hotovo();
+const F = vytah.funkce;
 
 /* Názvy opsané ze skutečného výstupu Apify (běh 42252438914): tohle
    jsou doopravdy inzeráty, které na web poslaly 44 bytů jako pozemky. */
