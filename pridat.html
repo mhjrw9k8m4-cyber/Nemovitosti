@@ -249,13 +249,23 @@
                    ať to na webu mluví jednou řečí. -->
               <section class="add-sekce">
                 <h3 class="add-sekce-cap">Co prodáváte</h3>
+              <!-- CO SE PRODÁVÁ. Seznam se do stránky NEPÍŠE: vyplní ho
+                   js/pridat.js z js/kategorie.js, tedy z téhož modulu, podle
+                   kterého web filtruje, počítá cenu za metr a pojmenovává
+                   nabídky. Dva seznamy by se rozešly tiše — a nabídka s typem,
+                   který web nezná, se nedá ani vykreslit, ani najít. -->
+              <div class="add-field">
+                <label for="p-kat">Co prodáváte <span class="req">*</span></label>
+                <select id="p-kat" required></select>
+                <p class="hint" id="p-kat-hint"></p>
+              </div>
               <div class="add-field">
                 <label for="p-obec">Obec / lokalita <span class="req">*</span></label>
                 <input id="p-obec" type="text" placeholder="např. Kolín" required>
               </div>
               <div class="add-row">
                 <div class="add-field">
-                  <label for="p-vymera">Výměra (m²) <span class="req">*</span></label>
+                  <label for="p-vymera" id="p-vymera-label">Výměra (m²) <span class="req">*</span></label>
                   <input id="p-vymera" type="number" inputmode="numeric" min="1" placeholder="např. 1200" required>
                 </div>
                 <div class="add-field">
@@ -289,10 +299,10 @@
               </section>
 
               <details class="add-more add-sekce" open>
-                <summary>Detaily pozemku — okres, druh, sítě, přístup</summary>
+                <summary id="p-detaily-cap">Detaily pozemku — okres, druh, sítě, přístup</summary>
                 <div class="add-more-body">
                   <div class="add-row">
-                    <div class="add-field">
+                    <div class="add-field" id="p-pole-druh">
                       <label for="p-druh">Druh pozemku</label>
                       <select id="p-druh">
                         <option value="">Vyberte…</option>
@@ -304,7 +314,7 @@
                         <option>Ostatní</option>
                       </select>
                     </div>
-                    <div class="add-field">
+                    <div class="add-field" id="p-pole-pristup">
                       <label for="p-pristup">Přístup k pozemku</label>
                       <select id="p-pristup">
                         <option value="">Vyberte…</option>
@@ -315,7 +325,7 @@
                       </select>
                     </div>
                   </div>
-                  <div class="add-field">
+                  <div class="add-field" id="p-pole-site">
                     <label>Sítě a stav pozemku</label>
                     <div class="check-group">
                       <label class="chip-check"><input type="checkbox" name="site" value="Elektřina">Elektřina</label>
@@ -515,9 +525,11 @@
 <script src="js/min/fotoskupiny.js?v=ea1541fa" defer></script>
 <script src="js/min/fototema.js?v=135244be" defer></script>
 <script src="js/min/vybaveni.js?v=8e3b34f9" defer></script>
+<script src="js/min/druh.js?v=d203198f"></script>
+<script src="js/min/kategorie.js?v=2fd284c1"></script>
 <script src="js/min/predvyplneni.js?v=6b11f275" defer></script>
 <script src="js/min/kontrola.js?v=c57c2aae" defer></script>
-<script src="js/min/pridat.js?v=b688e58e" defer></script>
+<script src="js/min/pridat.js?v=05c1c6a7" defer></script>
 <script>
 /* Zobrazit/skrýt heslo v přihlašovací kartě */
 document.addEventListener('click', function (e) {

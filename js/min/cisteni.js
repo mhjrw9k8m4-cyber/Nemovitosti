@@ -100,9 +100,14 @@
       .filter(function (f) { return OK_FEAT[f]; }).slice(0, 6);
 
     var V = G.PKVybaveni;
+
+    var K = G.PKKategorie;
+    var zname = (K && K.KLICE) || [];
+    var kat = (u.kat && zname.indexOf(u.kat) >= 0) ? u.kat : null;
     return pozemek({
       type: 'majitel',
       place: u.place, okres: u.okres,
+      kat: (kat && kat !== (K && K.VYCHOZI)) ? kat : undefined,
       druh: u.druh || 'pozemek',
       parcel: u.parcel || '—',
       area: (typeof u.area === 'number' ? u.area : 0),

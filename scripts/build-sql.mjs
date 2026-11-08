@@ -58,6 +58,11 @@ const PORADI = [
   // Úplně poslední: přepisuje create_listing, public_listings i my_listings
   // (tomu přidává public_at), takže musí běžet až za vším, co je definuje.
   ['listings-prvni-kontrola.sql', 'první inzerát nového účtu čeká na kontrolu'],
+  // Hned za ní, a to je podstatné: přepisuje create_listing (přidává typ
+  // nemovitosti), public_listings i my_listings, takže musí běžet až za
+  // souborem, který je definuje naposledy. Kdyby stála výš, přepsala by
+  // ji zpátky podoba bez `kat`.
+  ['listings-kategorie.sql', 'typ nemovitosti u inzerátu od člověka (dům, byt, garáž…)'],
   // Na ničem výš nezávisí: váže se jen na účet (auth.uid()) a na klíč
   // pozemku, který je text z dat, ne cizí klíč do listings.
   ['poznamky.sql', 'soukromé poznámky k pozemkům na účet, ne jen v prohlížeči'],

@@ -377,7 +377,9 @@
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt'),
         p_photos: (pr && pr.urls) || [],
-        p_features: features, p_access: val('p-pristup') || null
+        p_features: features, p_access: val('p-pristup') || null,
+
+        p_kat: (val('p-kat') && val('p-kat') !== 'pozemek') ? val('p-kat') : undefined
       }, true).then(function (res) {
         if (!res || !res.ok) {
           if (res && res.expired) return 'auth';
@@ -1288,6 +1290,49 @@
         rekni('ok', P.hlaska(co));
       });
     });
+  })();
+
+  (function typNemovitosti() {
+    var sel = document.getElementById('p-kat');
+    var K = window.PKKategorie;
+    if (!sel || !K) return;
+    var VYCHOZI = K.VYCHOZI;
+    (K.KLICE || []).forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k;
+      o.textContent = K.jmeno(k) || k;
+      if (k === VYCHOZI) o.selected = true;
+      sel.appendChild(o);
+    });
+    var popisek = document.getElementById('p-vymera-label');
+    var hint = document.getElementById('p-kat-hint');
+    var cap = document.getElementById('p-detaily-cap');
+    var pozemkova = ['p-pole-druh', 'p-pole-pristup', 'p-pole-site'];
+    function podleTypu() {
+      var k = sel.value || VYCHOZI;
+      var jePozemek = K.jePozemkova ? K.jePozemkova(k) : (k === VYCHOZI);
+      var mera = K.mera ? K.mera(k) : 'pozemek';
+      if (popisek) {
+        popisek.innerHTML = (mera === 'podlahova' ? 'Podlahová plocha (m²) ' : 'Výměra (m²) ')
+          + '<span class="req">*</span>';
+      }
+      if (hint) {
+        hint.textContent = mera === 'podlahova'
+          ? 'U bytu a garáže se cena za metr počítá z podlahové plochy.'
+          : (jePozemek ? '' : 'Výměru vyplňte tak, jak ji nabízíte — u domu to bývá plocha pozemku.');
+      }
+      pozemkova.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.hidden = !jePozemek;
+      });
+      if (cap) {
+        cap.textContent = jePozemek
+          ? 'Detaily pozemku — okres, druh, sítě, přístup'
+          : 'Detaily — okres, parcela, kontakt';
+      }
+    }
+    sel.addEventListener('change', podleTypu);
+    podleTypu();
   })();
 
 })();

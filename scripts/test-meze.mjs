@@ -38,10 +38,31 @@ const pridat = readFileSync(path.join(KOREN, 'pridat.html'), 'utf8');
    migrací a create_listing se v něm předefinovává; v Postgresu platí ta
    poslední. Test čtený od první by hlídal verzi, která na serveru
    nakonec neběží — a mlčel by přesně tehdy, kdy nemá. */
+/* OD 8. 11. 2026 JE TU JEŠTĚ JEDNA VRSTVA. create_listing má dvě podoby
+   s RŮZNÝM počtem parametrů — třináctiparametrovou a čtrnáctiparametrovou
+   s typem nemovitosti (supabase/listings-kategorie.sql). Postgres je drží
+   OBĚ: nová tu starou NEPŘEPSALA (jiná signatura) a PostgREST si vybírá
+   podle pojmenovaných argumentů, které web pošle. Ta nová je OBÁLKA —
+   sama žádné pravidlo nenese, zavolá tu původní a potom k založenému
+   inzerátu dopíše typ. „Poslední" tedy nestačí: měřit se musí poslední
+   podoba, která pravidla NESE, a zvlášť se hlídá, že obálka opravdu
+   deleguje a nejde jí pravidla obejít. */
 const ZNACKA = 'create or replace function create_listing';
-const vytvor = sql.slice(sql.lastIndexOf(ZNACKA));
-const telo = vytvor.slice(0, vytvor.indexOf('$$;'));
-pravda(`create_listing se ve sloučeném SQL najde (${(sql.match(/create or replace function create_listing/g) || []).length}× předefinované, platí poslední)`,
+const podoby = [];
+{
+  let i = 0;
+  while ((i = sql.indexOf(ZNACKA, i)) >= 0) {
+    const kus = sql.slice(i);
+    podoby.push(kus.slice(0, kus.indexOf('$$;')));
+    i += ZNACKA.length;
+  }
+}
+/* Obálka = podoba, která uvnitř volá create_listing. Hlavička se tím
+   nespustí (tam je `function create_listing(`, ne `from create_listing(`). */
+const jeObalka = (t) => /\bfrom\s+create_listing\s*\(/i.test(t);
+const nesouci = podoby.filter((t) => !jeObalka(t));
+const telo = nesouci.length ? nesouci[nesouci.length - 1] : '';
+pravda(`create_listing se ve sloučeném SQL najde (${podoby.length}× definované, z toho ${podoby.length - nesouci.length}× jako obálka)`,
   sql.includes(ZNACKA) && telo.length > 500 && telo.includes('begin'),
   `nalezeno ${telo.length} znaků — test by jinak nic neměřil`);
 
@@ -83,18 +104,17 @@ pravda('server hlídá i cenu za m², ne jen obě čísla zvlášť',
    Test proto porovnává VŠECHNY podoby s tou poslední. Klíčem jsou první
    tři slova hlášky, aby přeformulování textu („cena za m² vychází
    nereálně" místo „je mimo reálné rozpětí") test nerozbilo. */
-const podoby = [];
-{
-  let i = 0;
-  while ((i = sql.indexOf(ZNACKA, i)) >= 0) {
-    const kus = sql.slice(i);
-    podoby.push(kus.slice(0, kus.indexOf('$$;')));
-    i += ZNACKA.length;
-  }
-}
-pravda(`v 00-vse.sql je ${podoby.length} podob create_listing a měří se ta poslední`,
-  podoby.length > 1 && podoby[podoby.length - 1] === telo,
+pravda(`v 00-vse.sql je ${podoby.length} podob create_listing a měří se poslední, která pravidla nese`,
+  podoby.length > 1 && nesouci.length >= 1 && telo === nesouci[nesouci.length - 1],
   'test by jinak porovnával něco jiného, než co na serveru nakonec platí');
+/* OBÁLKA NESMÍ BÝT CESTA, JAK PRAVIDLA OBEJÍT. Kdyby si napsala vlastní
+   `insert into listings`, byla by to druhá cesta do tabulky — bez stropu
+   30 inzerátů, bez filtru slov, bez kontroly fotek. */
+for (const o of podoby.filter(jeObalka)) {
+  pravda('obálka create_listing deleguje na podobu s pravidly (nemá vlastní insert)',
+    /from\s+create_listing\s*\(\s*p_place/i.test(o) && !/insert\s+into\s+listings/i.test(o),
+    'obálka si zakládá inzerát sama — pravidla ze 13parametrové podoby pro ni neplatí');
+}
 
 const klic = (h) => h.split(/\s+/).slice(0, 3).join(' ');
 const hlasky = (t) => new Map([...t.matchAll(/raise exception '([^']+)'/g)].map((m) => [klic(m[1]), m[1]]));
@@ -103,8 +123,8 @@ const vPosledni = hlasky(telo);
    i s důvodem. Prázdná množina znamená „nic se zrušit nesmí". */
 const SMI_ZMIZET = new Set();
 const drive = new Map();
-for (let n = 0; n < podoby.length - 1; n++) {
-  for (const [k, h] of hlasky(podoby[n])) if (!drive.has(k)) drive.set(k, { h, n: n + 1 });
+for (let n = 0; n < nesouci.length - 1; n++) {
+  for (const [k, h] of hlasky(nesouci[n])) if (!drive.has(k)) drive.set(k, { h, n: n + 1 });
 }
 for (const [k, { h, n }] of drive) {
   if (SMI_ZMIZET.has(k)) continue;
@@ -148,16 +168,30 @@ let prepsanych = 0;
 for (const [jmeno, verze] of definice) {
   if (verze.length < 2) continue;
   prepsanych++;
-  const posl = verze[verze.length - 1];
+  /* Táž obálková výjimka jako u create_listing, ale obecně: podoba,
+     která uvnitř volá tutéž funkci, pravidla nenese — nese je ta, na
+     kterou deleguje. Zvlášť se u ní hlídá, že vrací tytéž sloupce. */
+  /* Bez `\\b`: hranici slova tu dělá `from` a mezera za ním, takže se
+     nemusí skládat z řetězce (scripts/test-mrtva-hranice.mjs hlídá, že
+     takových míst nepřibývá — hranice složená kolem proměnné se
+     staticky posoudit nedá). */
+  const obalkou = new RegExp('from\\s+' + jmeno + '\\s*\\(', 'i');
+  const nese = verze.filter((t) => !obalkou.test(t));
+  const posl = nese.length ? nese[nese.length - 1] : verze[verze.length - 1];
   const poslSl = new Set(sloupce(posl));
   const poslHl = new Set([...hlasky(posl).keys()]);
   const chybiSl = [];
   const chybiHl = [];
-  for (let n = 0; n < verze.length - 1; n++) {
-    for (const c of sloupce(verze[n])) {
+  for (const o of verze.filter((t) => obalkou.test(t))) {
+    for (const c of sloupce(posl)) {
+      if (sloupce(o).indexOf(c) < 0) chybiSl.push(`${c} (obálka ho nevrací)`);
+    }
+  }
+  for (let n = 0; n < nese.length - 1; n++) {
+    for (const c of sloupce(nese[n])) {
       if (!poslSl.has(c) && !SMI_ZMIZET_SLOUPCE.has(jmeno + '.' + c)) chybiSl.push(`${c} (z ${n + 1}. podoby)`);
     }
-    for (const k of hlasky(verze[n]).keys()) if (!poslHl.has(k)) chybiHl.push(`${k}… (z ${n + 1}. podoby)`);
+    for (const k of hlasky(nese[n]).keys()) if (!poslHl.has(k)) chybiHl.push(`${k}… (z ${n + 1}. podoby)`);
   }
   pravda(`${jmeno} (${verze.length}× přepsaná): poslední podoba nevynechala žádný sloupec`,
     chybiSl.length === 0, 'chybí: ' + chybiSl.join(', '));

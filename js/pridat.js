@@ -480,7 +480,15 @@
         p_area: area, p_price: price, p_lat: pos.lat, p_lng: pos.lng,
         p_description: val('p-popis'), p_contact: val('p-kontakt'),
         p_photos: (pr && pr.urls) || [],
-        p_features: features, p_access: val('p-pristup') || null
+        p_features: features, p_access: val('p-pristup') || null,
+        /* TYP NEMOVITOSTI. „pozemek" se neposílá: je to výchozí stav
+           celého webu (PKKategorie.VYCHOZI) a nabídka bez `kat` je
+           pozemek všude — posílat ho by znamenalo mít tutéž informaci
+           dvěma způsoby. A pozemek se tím zároveň vejde i do STARŠÍ
+           podoby create_listing, takže dokud majitel nepustí nové SQL,
+           vkládání pozemků funguje dál a jen domy a byty hlásí, že
+           databáze ještě není připravená. */
+        p_kat: (val('p-kat') && val('p-kat') !== 'pozemek') ? val('p-kat') : undefined
       }, true).then(function (res) {
         if (!res || !res.ok) {
           if (res && res.expired) return 'auth';
@@ -1537,6 +1545,67 @@
         rekni('ok', P.hlaska(co));
       });
     });
+  })();
+
+  /* ---------- CO SE PRODÁVÁ: TYP NEMOVITOSTI -------------------------
+     Do 8. 11. 2026 šel vložit jen pozemek. Web přitom ukazuje všechny
+     nemovitosti (1 600 z 3 886 nabídek nejsou pozemky, změřeno) a
+     stránka pro realitní kanceláře to musela přiznat — realitka prodává
+     hlavně domy a byty.
+
+     SEZNAM SE NEOPISUJE. Volby se vyrábějí z js/kategorie.js, tedy
+     z téhož modulu, podle kterého web filtruje, pojmenovává nabídky
+     a rozhoduje, co u které kategorie znamená výměra. Kdyby byl seznam
+     napsaný ve stránce, rozešel by se tiše — a nabídka s typem, který
+     web nezná, nejde vykreslit ani najít.
+
+     CO SE PODLE TYPU MĚNÍ:
+       · popisek výměry — u bytu a garáže je to podlahová plocha, ne
+         parcela (rozhoduje PKKategorie.mera, ne tahle stránka);
+       · pozemkové otázky (druh, přístup, sítě) se u bytu schovají: na
+         byt se nehodí a „Druh pozemku: Louka" by byl nesmysl v datech;
+       · nadpis skládacího oddílu, ať neslibuje pozemek u bytu. */
+  (function typNemovitosti() {
+    var sel = document.getElementById('p-kat');
+    var K = window.PKKategorie;
+    if (!sel || !K) return;
+    var VYCHOZI = K.VYCHOZI;
+    (K.KLICE || []).forEach(function (k) {
+      var o = document.createElement('option');
+      o.value = k;
+      o.textContent = K.jmeno(k) || k;
+      if (k === VYCHOZI) o.selected = true;
+      sel.appendChild(o);
+    });
+    var popisek = document.getElementById('p-vymera-label');
+    var hint = document.getElementById('p-kat-hint');
+    var cap = document.getElementById('p-detaily-cap');
+    var pozemkova = ['p-pole-druh', 'p-pole-pristup', 'p-pole-site'];
+    function podleTypu() {
+      var k = sel.value || VYCHOZI;
+      var jePozemek = K.jePozemkova ? K.jePozemkova(k) : (k === VYCHOZI);
+      var mera = K.mera ? K.mera(k) : 'pozemek';
+      if (popisek) {
+        popisek.innerHTML = (mera === 'podlahova' ? 'Podlahová plocha (m²) ' : 'Výměra (m²) ')
+          + '<span class="req">*</span>';
+      }
+      if (hint) {
+        hint.textContent = mera === 'podlahova'
+          ? 'U bytu a garáže se cena za metr počítá z podlahové plochy.'
+          : (jePozemek ? '' : 'Výměru vyplňte tak, jak ji nabízíte — u domu to bývá plocha pozemku.');
+      }
+      pozemkova.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.hidden = !jePozemek;
+      });
+      if (cap) {
+        cap.textContent = jePozemek
+          ? 'Detaily pozemku — okres, druh, sítě, přístup'
+          : 'Detaily — okres, parcela, kontakt';
+      }
+    }
+    sel.addEventListener('change', podleTypu);
+    podleTypu();
   })();
 
 })();

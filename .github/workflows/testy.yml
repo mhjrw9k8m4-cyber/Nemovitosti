@@ -697,6 +697,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-nasad-sql.mjs
 
+      - name: Vložit se dá i dům a byt, ne jen pozemek
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-vkladani-kategorie.mjs
+
       - name: Rádce u pozemku (rady podle skutečných údajů)
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-radce.mjs

@@ -219,6 +219,7 @@ function souboryKKontrole() {
 const VYJIMKY = [
   ['js/druh.js', 'vstup se normalizuje (NFD + zahození znamének), diakritika se do vzoru nedostane'],
   ['js/kategorie.js', 'staví na js/druh.js (bezJmen/srovnej), tedy na témže normalizovaném textu'],
+  ['js/min/druh.js', 'minifikovaná kopie js/druh.js, generuje ji sestavení'],
   ['js/min/kategorie.js', 'minifikovaná kopie js/kategorie.js, generuje ji sestavení'],
 ];
 const jeVyjimka = (rel) => VYJIMKY.some(([j]) => j === rel);

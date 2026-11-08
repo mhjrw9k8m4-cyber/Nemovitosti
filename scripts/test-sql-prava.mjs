@@ -54,6 +54,18 @@ const VYJIMKY = {
      pravidlo na „permission denied" a formulář přestane fungovat. */
   zprav_poslednich: 'vrací jen počet zpráv za poslední hodinu, žádný obsah; '
     + 'je to strop proti zahlcení formuláře (supabase/zpravy-strop.sql)',
+  /* Vydává JEDINÉ číslo — kolik inzerátů čeká na první kontrolu — pro
+     /diagnostika.html. Žádný obsah, žádné id, nic o lidech. `security
+     definer` být musí: na tabulku `listings` nemá nepřihlášený právo ke
+     čtení a čekající inzerát není veřejný ani pro přihlášeného, takže
+     bez definer by count(*) vracel nulu a diagnostika by tvrdila, že
+     nic nečeká. VYŠLO NAJEVO 8. 11. 2026: tahle funkce kontrolu nikdy
+     neměla a test ji přehlédl, protože se tělo funkce krájelo až po
+     další `create function` — a v tom přesahu náhodou stálo auth.uid().
+     Jak se za pending_count dostal další soubor (listings-kategorie.sql),
+     přesah zmizel a nález vyplaval. */
+  pending_count: 'vrací jen počet inzerátů čekajících na kontrolu, žádný obsah; '
+    + 'čte ho /diagnostika.html (supabase/listings-prvni-kontrola.sql)',
 };
 
 const SQL = readFileSync(path.join(KOREN, 'supabase', '00-vse.sql'), 'utf8');

@@ -66,6 +66,14 @@ const KOPIE = {
     + 'vlastní logika je sdílená už dnes',
   'js/poznamky.js:klicVeSchrance | js/videno.js:klicVeSchrance':
     'totéž — obal nad PKKlic.klicVe',
+  'js/druh.js:srovnej | js/vybaveni.js:srovnej':
+    'srovnání textu na malá písmena bez diakritiky — v JS chybějící jazyková '
+    + 'primitiva, ne pravidlo webu. V js/ je ta samá trojice řádků v DESETI '
+    + 'modulech (změřeno 8. 11. 2026) a tahle dvojice se tu objevila jen proto, '
+    + 'že pridat.html od 8. 11. načítá kvůli typu nemovitosti oba moduly. '
+    + 'Sloučit by znamenalo hranu ze všech deseti modulů do jedenáctého, '
+    + 'a hlavně: kdyby se ty kopie rozešly, nic tichého se nestane — '
+    + 'rozcházejí se jen samy se sebou, žádné číslo ani pravidlo za nimi není',
 };
 
 /* ---------- 1) Kdo s kým leží na jedné stránce ---------- */

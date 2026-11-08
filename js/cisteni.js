@@ -175,9 +175,25 @@
        z textu; u inzerátu od majitele je nikdo neplnil, takže zaškrtnuté
        sítě nikam nedošly. */
     var V = G.PKVybaveni;
+    /* TYP NEMOVITOSTI OD ČLOVĚKA SE OVĚŘUJE, NE PŘEBÍRÁ.
+       Databáze hlídá jen tvar (krátké slovo bez diakritiky, viz
+       supabase/listings-kategorie.sql) — a to je správně, protože seznam
+       kategorií patří do js/kategorie.js a ne do SQL. Rozhodnutí „umí
+       web tuhle kategorii vykreslit?" se tedy dělá tady, na jediném
+       místě, kudy cizí data na web vstupují. Co se nepozná, propadne na
+       pozemek (výchozí stav celého webu), ne na prázdno.
+
+       Ověřuje se proti SEZNAMU klíčů (K.KLICE), ne přes jmeno():
+       jmeno() umí vrátit jméno i pro klíč, který nezná (má výchozí
+       podobu), takže by jím prošlo i „<script>" — naměřeno při psaní
+       téhle kontroly. */
+    var K = G.PKKategorie;
+    var zname = (K && K.KLICE) || [];
+    var kat = (u.kat && zname.indexOf(u.kat) >= 0) ? u.kat : null;
     return pozemek({
       type: 'majitel',
       place: u.place, okres: u.okres,
+      kat: (kat && kat !== (K && K.VYCHOZI)) ? kat : undefined,
       druh: u.druh || 'pozemek',
       parcel: u.parcel || '—',
       area: (typeof u.area === 'number' ? u.area : 0),
