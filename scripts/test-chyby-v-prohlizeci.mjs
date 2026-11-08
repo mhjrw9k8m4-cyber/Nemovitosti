@@ -25,6 +25,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0;
@@ -91,7 +92,7 @@ async function otevri(stranka, volby) {
 /* Stránka pozemku bere patnáct NEODLOŽENÝCH skriptů — jeden z nich se
    podstrčí rozbitý, tedy spadne dávno předtím, než se vůbec stáhne
    odesílač. */
-const POZEMEK = fs.readdirSync(KOREN).filter((f) => /^pozemek-.*\.html$/.test(f)).sort()[0];
+const POZEMEK = zivaStranka();
 {
   const { poslano, odmitnute } = await otevri(POZEMEK, { rozbij: 'js/min/cisteni.js' });
   pravda('pád skriptu, který běží PŘED odesílačem, se nahlásí', poslano.length >= 1,

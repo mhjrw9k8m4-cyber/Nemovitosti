@@ -26,7 +26,7 @@
    jeho dotazy přes `ctx.route` NEJDOU a podstrčené soubory
    přestanou platit. (Viz CLAUDE.md, oddíl o testech.) */
 import { chromium } from 'playwright-core';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
@@ -35,6 +35,7 @@ import { pricinaChyb } from './chyby-hlaska.mjs';
    místech jen v tomhle souboru. Viz scripts/zkouska-pripraveno.mjs. */
 import { pripravenoPozemek, pripravenoVypis, pripravenoKdyz, poznamkaUlozena, sitUtichla } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka, zivyVzorek } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -57,7 +58,7 @@ function hotovo() {
   if (chyb) { console.log('::error::Poznámky: ' + chyb + ' kontrol neprošlo.' + pricinaChyb(zpravy)); process.exit(1); }
   process.exit(0);
 }
-const stranka = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+const stranka = zivaStranka();
 pravda('je na čem měřit — stránka pozemku', !!stranka);
 if (!stranka) hotovo();
 
@@ -171,12 +172,27 @@ const TEXT = 'Rozbitý plot u severní hranice ' + ZNACKA + ', majitel volal zp�
     return { text: (b.textContent || '').replace(/\s+/g, ' ').trim(),
       vidno: r.top >= 0 && r.bottom <= innerHeight && r.width > 0,
       vyska: Math.round(r.height), sirka: Math.round(r.width),
+      odVrchu: Math.round(r.bottom + scrollY),
       pretejka: r.right > document.documentElement.clientWidth + 1 };
   });
   // PŘEDPOKLAD: bez tlačítka nemá smysl měřit nic dalšího
   pravda('nahoře na stránce je zkratka k poznámce', !!nahore, 'tlačítko #pz-pozn-skok není');
   if (nahore) {
-    pravda('a je vidět bez rolování', nahore.vidno,
+    /* NE „BEZ ROLOVÁNÍ", ALE „NA DOSAH". Tahle kontrola vznikla 26. 10.,
+       kdy byl nahoře na stránce šedivý letecký snímek z katastru. Od
+       8. 11. tam je FOTKA z inzerátu (291 px na telefonu) — a ta posunula
+       zkratku k poznámce o 95 px pod okraj obrazovky: naměřeno 895 px od
+       vrcholu stránky při okně 390×844.
+       Zmenšit kvůli tomuhle fotku by znamenalo vyměnit to, co si člověk
+       vybírající dům prohlíží jako první, za nástroj pro toho, kdo už se
+       rozhodl vracet. Pravidlo se proto mění na změřené: zkratka musí být
+       na dosah JEDNOHO krátkého posunu, ne přes celou stránku (políčko
+       samo leží přes dva tisíce pixelů níž, což byl původní důvod téhle
+       zkratky). Strop 960 px je 895 naměřených a 65 px rezervy na delší
+       nadpis; jako každý strop v tomhle repozitáři smí jen klesat. */
+    const STROP_OD_VRCHU = 960;
+    pravda(`a je na dosah jednoho posunu (do ${STROP_OD_VRCHU} px od vrchu)`,
+      nahore.odVrchu > 0 && nahore.odVrchu <= STROP_OD_VRCHU,
       `tlačítko: ${JSON.stringify(nahore)}`);
     pravda('a stojí na něm, co se stane', /přidat poznámku/i.test(nahore.text),
       `na tlačítku stojí „${nahore.text}"`);
@@ -975,9 +991,11 @@ const TEXT_UCET = 'Na účtu ' + ZNACKA + ' — plot vlevo spadlý.';
   const ctx = await prohlizec.newContext({ bypassCSP: true,  serviceWorkers: 'block',
     viewport: { width: 1280, height: 1000 } });
   const p = await ctx.newPage();
-  const vsechny = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort();
-  const krok = Math.max(1, Math.floor(vsechny.length / 12));
-  const vzorek = vsechny.filter((_, i) => i % krok === 0).slice(0, 12);
+  /* VZOREK JEN ZE ŽIVÝCH STRÁNEK. Každá n-tá ze VŠECH souborů znamenala
+     po 8. 11. sedm vyřazených nebo přestěhovaných z dvanácti — ty nabídku
+     nevykreslují, takže hlavička na nich není a měření hlásilo „5 z 12"
+     jako vadu webu. Výběr drží scripts/vzorek-pozemku.mjs. */
+  const vzorek = zivyVzorek(12);
   let sMistem = 0;
   const rozpory = [];
   for (const f of vzorek) {

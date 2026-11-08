@@ -24,6 +24,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -425,8 +426,7 @@ async function otevri(okres, sirka) {
      a 266 z celé ČR — a vzorek pod mezí má 830 nabídek, tedy 43 %.
      Na těch 43 % stránek tedy čára vypadala stejně průkazně jako
      kdekoli jinde a nic neřeklo, že stojí na deseti nabídkách. */
-  const nejakyPozemek = readdirSync(KOREN)
-    .filter((f) => /^pozemek-.*[.]html$/.test(f)).sort()[0];
+  const nejakyPozemek = zivaStranka();
   const inzMale = await sVzorkem(Math.max(1, dost - 10), nejakyPozemek);
   pravda(`i na inzerátu graf výhradu napíše (${nejakyPozemek})`,
     !!inzMale && /je to málo/.test(inzMale) && /hrubé vodítko/.test(inzMale),

@@ -34,6 +34,7 @@ import { naSeznam } from './zkouska-pohled.mjs';
    třináct šířek, takže se pevné čekání po goto platilo desítky krát. */
 import { domUtichlo, pripravenoVypis } from './zkouska-pripraveno.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 // Tentýž server jako ostatní testy: servíruje statické soubory na 8310.
 const { BASE } = await import('./falesna-supabase-chat.mjs');
@@ -1955,7 +1956,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
    `#pz-detail > *{max-width:…}` přebilo svou specificitou čtecí míru
    odstavce a rozšířilo ho ze 636 na 720 px. */
 {
-  const STRANKA = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const STRANKA = zivaStranka();
   pravda('je na čem měřit — stránka pozemku', !!STRANKA, 'žádná stránka pozemku');
   if (STRANKA) {
     for (const sirka of [820, 1024, 1099, 1440]) {
@@ -2007,7 +2008,7 @@ for (const [w, h] of [[1440, 900], [1280, 900], [390, 844]]) {
 {
   /* Jedna stránka pozemku a jedna okresní, obě první podle abecedy —
      ať je volba zapsatelná a nezávisí na tom, co zrovna přinesl robot. */
-  const POZEMEK = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const POZEMEK = zivaStranka();
   const OKRES = readdirSync(KOREN).filter((f) => /^pozemky-okres-.+\.html$/.test(f)).sort()[0];
   const UZKE = ['index.html', POZEMEK, OKRES, 'pridat.html', 'muj-inzerat.html',
     'hlidani.html', 'zpravy.html', 'porovnani.html', 'moje-data.html', 'data.html',

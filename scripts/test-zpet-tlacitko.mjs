@@ -28,6 +28,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 let ok = 0, chyb = 0; const zpravy = [];
@@ -77,7 +78,7 @@ const prohlizec = await chromium.launch({
 /* Po jedné z každé rodiny, která má vlastní cestu ke stylu: stránka
    pozemku (vlastní stylopis), okres (generovaná), ručně psaná,
    účet. Víc stránek téže rodiny by měřilo totéž. */
-const prvniPozemek = readdirSync(ROOT).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+const prvniPozemek = zivaStranka();
 const VZORKY = [
   ['stránka pozemku', prvniPozemek],
   ['okres', 'pozemky-okres-znojmo.html'],

@@ -26,11 +26,11 @@
 /* SERVISNÍ PRACOVNÍK VYPNUTÝ: sw.js volá `skipWaiting()` i `clients.claim()`,
    takže by převzal i právě načtenou stránku. (Viz CLAUDE.md.) */
 import { chromium } from 'playwright-core';
-import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -69,7 +69,7 @@ const schranka = (p) => p.evaluate(() => {
 
 /* ---- 1) STRÁNKA POZEMKU ------------------------------------------- */
 {
-  const stranka = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const stranka = zivaStranka();
   pravda('je na čem měřit — stránka pozemku', !!stranka, 'žádná stránka pozemku v repozitáři');
   if (!stranka) { await prohlizec.close(); hotovo(); }
   const ctx = await kontext(null);

@@ -35,11 +35,12 @@
  * které ze dvou pravidel to zařídilo.
  */
 import { chromium } from 'playwright-core';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 import { domUtichlo } from './zkouska-pripraveno.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -318,7 +319,7 @@ for (const [W, H] of [[390, 844], [1280, 900]]) {
   const ctxP = await prohlizec.newContext({ bypassCSP: true, serviceWorkers: 'block',
     viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
   const KOREN = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
-  const POZEMEK = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+  const POZEMEK = zivaStranka();
   const p = await ctxP.newPage();
   await p.goto(`${BASE}/${POZEMEK}`, { waitUntil: 'domcontentloaded' });
   /* STRÁNKA POZEMKU SE DOKRESLUJE Z JS, TAKŽE SE ČEKÁ NA TICHO, NE NA

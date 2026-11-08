@@ -45,6 +45,7 @@ import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 import { volnyPort } from './port-zkousky.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = await volnyPort();  // dřív natvrdo 8313
@@ -140,7 +141,7 @@ await new Promise((r) => server.listen(PORT, '127.0.0.1', r));
    ty skládá generátor při sestavení a nic dalšího si nedotahují, takže
    by zkouška měřila prázdno. (Escapování v generátorech je vlastní
    otázka a vlastní zkouška.) */
-const pozemek = readdirSync(KOREN).find((f) => /^pozemek-.+\.html$/.test(f));
+const pozemek = zivaStranka();
 const STRANKY = ['index.html'];
 if (pozemek) STRANKY.push(pozemek);
 

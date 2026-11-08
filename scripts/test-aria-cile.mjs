@@ -25,9 +25,9 @@
  * až když je stránka hotová.
  */
 import { chromium } from 'playwright-core';
-import { readdirSync } from 'node:fs';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
 
@@ -40,8 +40,7 @@ const STRANKY = ['hlidani.html', 'zpravy.html', 'muj-inzerat.html',
    nález z měření byl právě tam (poznámka u pozemku) a bez ní by ho
    zkouška neviděla. Bere se první podle abecedy, ať je volba
    zapsatelná a nezávisí na datech. */
-const pozemek = readdirSync(new URL('..', import.meta.url))
-  .filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+const pozemek = zivaStranka();
 if (pozemek) STRANKY.push(pozemek);
 
 let ok = 0, chyb = 0; const zpravy = [];

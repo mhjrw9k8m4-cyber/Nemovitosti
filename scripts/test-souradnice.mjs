@@ -17,11 +17,12 @@
 //  3. Že se dá vůbec kliknout: obě tlačítka 44 px, mačkají se venku
 //     u pozemku, ne u stolu.
 import { chromium } from 'playwright-core';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -45,7 +46,7 @@ function hotovo() {
   process.exit(0);
 }
 
-const stranka = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+const stranka = zivaStranka();
 // PŘEDPOKLAD: bez stránky pozemku se nedá měřit nic
 pravda('je na čem měřit — stránka pozemku', !!stranka, 'žádná pozemek-*.html');
 if (!stranka) hotovo();

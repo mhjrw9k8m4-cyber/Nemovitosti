@@ -22,12 +22,13 @@
    ================================================================== */
 import { chromium } from 'playwright-core';
 import { createServer } from 'node:http';
-import { existsSync, readFileSync, statSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
 import { volnyPort } from './port-zkousky.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const KOREN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = await volnyPort();  // dřív natvrdo 8338
@@ -143,7 +144,7 @@ zkontroluj('výpis', await zmerPoradi('index.html', '#opp-list .opp-item .opp-sk
 /* ---- 2) stránka pozemku (js/pozemek.js) ----
    Kopírování souřadnic hlášku pustí po obou cestách: i když schránka
    není povolená, záložní cesta text označí a taky to oznámí. */
-const stranka = readdirSync(KOREN).filter((f) => /^pozemek-.+\.html$/.test(f)).sort()[0];
+const stranka = zivaStranka();
 // PŘEDPOKLAD: bez stránky pozemku se druhá obsluha nedá měřit
 pravda('je na čem měřit druhou obsluhu — stránka pozemku', !!stranka, 'žádná pozemek-*.html');
 if (stranka) zkontroluj('pozemek', await zmerPoradi(stranka, '#pz-sour-kop'));

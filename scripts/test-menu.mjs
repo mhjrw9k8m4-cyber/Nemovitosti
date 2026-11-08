@@ -32,6 +32,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pricinaChyb } from './chyby-hlaska.mjs';
 import { hlasPad } from './zkouska-pad.mjs';
+import { zivaStranka } from './vzorek-pozemku.mjs';
 
 const { BASE } = await import('./falesna-supabase-chat.mjs');
 await new Promise((r) => setTimeout(r, 300));
@@ -101,7 +102,7 @@ pravda('a každá si načte js/menu.js',
   bezModulu.length === 0, `${bezModulu.length} bez modulu: ` + bezModulu.slice(0, 5).join(', '));
 
 /* ---- 2) a doopravdy to funguje — na stránce pozemku ------------ */
-const detail = fs.readdirSync(KOREN).find((f) => /^pozemek-.+-[0-9a-z]{5,8}\.html$/.test(f));
+const detail = zivaStranka();
 pravda('našla se stránka pozemku, na které se to dá změřit', !!detail, 'žádná pozemek-*.html');
 if (!detail) hotovo();
 
