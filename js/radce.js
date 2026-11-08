@@ -213,7 +213,13 @@
          to zahazovalo. U podílu se bere cena za metr PODÍLOVÉ výměry,
          stejně jako všude jinde na webu. */
       var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
-      var muj = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
+      /* Číslo do VĚTY, ne ke srovnání — proto zaMetrVeSkupine, ne
+         zaMetr: ten zůstává pozemkový, protože se jím nabídky srovnávají
+         mezi sebou (řazení, mapa, hlídání „do N Kč/m²"). Bez tohohle
+         rozdělení věta u bytů a garáží žádná čísla neměla. Viz
+         zaMetrVeSkupine v js/ceny.js. */
+      var zm = (root.PK_CENY && root.PK_CENY.zaMetrVeSkupine) || (root.PK_CENY && root.PK_CENY.zaMetr);
+      var muj = zm ? zm.call(root.PK_CENY, d) : null;
       var cisla = (muj && o.zaM2)
         ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
           ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +

@@ -235,6 +235,32 @@
   function mezNeuveritelna(d) {
     return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
+
+  /* CENA ZA METR JEN DO VĚTY O TÉHLE NABÍDCE — nikdy ke srovnání.
+   *
+   * `zaMetr()` výš zůstává pozemková ze dvou odstavců výš uvedeného
+   * důvodu: tím číslem se nabídky srovnávají MEZI SEBOU. Rádce ale
+   * o bytu říká „o 32 % pod obvyklou cenou" a takové tvrzení se bez
+   * čísel nedá přepočítat ani ověřit. Naměřeno 8. 11.: u bytů a garáží
+   * věta čísla neměla vůbec, protože `zaMetr()` vrátil null — hlásil to
+   * scripts/test-radce.mjs („bez čísel: tř. Budovatelů, Praha").
+   *
+   * Tohle číslo se počítá v TÉŽE přihrádce, v jaké vyšel verdikt nad
+   * ním (byt proti bytům téhož okresu — viz skupinaNabidky a percentil),
+   * takže se žádná stupnice přes kategorie nemíchá. Je to „číslo
+   * k zobrazení", ne „klíč ke srovnání", a tím se ty dvě práce
+   * oddělují: kdo potřebuje srovnávat, bere `zaMetr()`.
+   *
+   * U pozemku vrací totéž co `zaMetr()`; u čeho model neumí změřit
+   * výměru (dům, areál — neví se, jestli je číslo parcela, nebo
+   * zastavěná plocha) vrací null, protože tam není ani o čem mluvit. */
+  function zaMetrVeSkupine(d) {
+    if (!meritelnaVymera(d)) return null;
+    var v = vymeraVCene(d);
+    if (!(v > 0) || !d || !(d.price > 0)) return null;
+    var zm = d.price / v;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
   /** Vysvětlení k číslu, když je přepočtené z podílu (jinak prázdné). */
   function zaMetrPopis(d) {
     if (!d || !d.podil) return '';
@@ -1695,6 +1721,7 @@
        podle kategorie). */
     skupinaNabidky: skupinaNabidky, meritelnaVymera: meritelnaVymera,
     doModelu: doModelu, KAT_PODLAHOVA: KAT_PODLAHOVA,
+    zaMetrVeSkupine: zaMetrVeSkupine,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,

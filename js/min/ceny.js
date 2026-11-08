@@ -51,6 +51,14 @@
     return maPodlahovou(d) ? MEZ_NEUVERITELNA_BYDLENI : MEZ_NEUVERITELNA;
   }
 
+  function zaMetrVeSkupine(d) {
+    if (!meritelnaVymera(d)) return null;
+    var v = vymeraVCene(d);
+    if (!(v > 0) || !d || !(d.price > 0)) return null;
+    var zm = d.price / v;
+    return zm > mezNeuveritelna(d) ? null : zm;
+  }
+
   function zaMetrPopis(d) {
     if (!d || !d.podil) return '';
     var z = zlomekPodilu(d);
@@ -659,6 +667,7 @@
 
     skupinaNabidky: skupinaNabidky, meritelnaVymera: meritelnaVymera,
     doModelu: doModelu, KAT_PODLAHOVA: KAT_PODLAHOVA,
+    zaMetrVeSkupine: zaMetrVeSkupine,
     rozbalModel: rozbalModel, druhGroup: druhGroup, median: median, OKRES_KRAJ: OKRES_KRAJ,
     MEZ_PRIZNAT_INZERENTA: MEZ_PRIZNAT_INZERENTA,
     kdeText: kdeText, skupinaText: skupinaText, blokOdhadu: blokOdhadu,

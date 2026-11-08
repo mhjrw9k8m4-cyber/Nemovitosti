@@ -125,7 +125,9 @@
       var kde = (root.PK_CENY && root.PK_CENY.kdeText) ? root.PK_CENY.kdeText(o.uroven, o.kde) : '';
 
       var cis = function (n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0'); };
-      var muj = (root.PK_CENY && root.PK_CENY.zaMetr) ? root.PK_CENY.zaMetr(d) : null;
+
+      var zm = (root.PK_CENY && root.PK_CENY.zaMetrVeSkupine) || (root.PK_CENY && root.PK_CENY.zaMetr);
+      var muj = zm ? zm.call(root.PK_CENY, d) : null;
       var cisla = (muj && o.zaM2)
         ? ' Vychází to na <b>' + cis(muj) + ' Kč/m²</b> proti obvyklým <b>' + cis(o.zaM2) +
           ' Kč/m²</b> (srovnáno s ' + o.vzorek + ' ' +

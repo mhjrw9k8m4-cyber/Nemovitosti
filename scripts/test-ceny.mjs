@@ -1724,6 +1724,49 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
   }
 }
 
+/* --- DVĚ ČÍSLA ZA METR, A KAŽDÉ NA JINOU PRÁCI ----------------------
+ *
+ * `zaMetr()` je KLÍČ KE SROVNÁNÍ: čte ho řazení podle ceny za metr,
+ * filtr „jen levné", stupnice barev na mapě, karta ve výpisu,
+ * porovnání, vývoz do tabulky a hlídání „do N Kč/m²". Proto zůstává
+ * pozemková — byt za 50 000 Kč/m² podlahové plochy v jedné stupnici
+ * s polem za 50 Kč/m² znamená, že každý pozemek vyjde jako zdarma,
+ * a nespadne nic: čísla se jen tiše pokřiví.
+ *
+ * `zaMetrVeSkupine()` je ČÍSLO DO VĚTY o téhle jedné nabídce. Rádce
+ * říká „o 32 % pod obvyklou cenou" a bez čísel se to nedá přepočítat;
+ * u bytů a garáží věta čísla neměla vůbec (naměřeno 8. 11.,
+ * scripts/test-radce.mjs: „bez čísel: tř. Budovatelů, Praha").
+ * Počítá se v téže přihrádce, v jaké vyšel verdikt nad ním.
+ *
+ * Hlídá se, že se ty dvě práce nesloučí ANI JEDNÍM směrem: kdyby se
+ * zaMetr() pustil na byty, pokřiví se stupnice; kdyby zaMetrVeSkupine()
+ * zůstalo pozemkové, rádce zmlkne. */
+{
+  const byt = { kat: 'byt', druh: 'byt', area: 60, price: 3000000, type: 'sale' };
+  const garaz = { kat: 'garaz', druh: 'garáž', area: 18, price: 300000, type: 'sale' };
+  const pole = { druh: 'orná půda', area: 10000, price: 500000, type: 'sale' };
+  const dum = { kat: 'dum', druh: 'dům', area: 200, price: 5000000, type: 'sale' };
+  pravda('zaMetr zůstává pozemková (byt ani garáž číslo nedostanou)',
+    PK_CENY.zaMetr(byt) === null && PK_CENY.zaMetr(garaz) === null
+      && PK_CENY.zaMetr(pole) === 50,
+    `byt ${PK_CENY.zaMetr(byt)}, garáž ${PK_CENY.zaMetr(garaz)}, pole ${PK_CENY.zaMetr(pole)}`);
+  pravda('zaMetrVeSkupine číslo dá tomu, co model umí změřit',
+    PK_CENY.zaMetrVeSkupine(byt) === 50000 && PK_CENY.zaMetrVeSkupine(garaz) > 0,
+    `byt ${PK_CENY.zaMetrVeSkupine(byt)}, garáž ${PK_CENY.zaMetrVeSkupine(garaz)}`);
+  pravda('a u pozemku vrací totéž co zaMetr (jedna pravda, dvě jména)',
+    PK_CENY.zaMetrVeSkupine(pole) === PK_CENY.zaMetr(pole),
+    `${PK_CENY.zaMetrVeSkupine(pole)} vs ${PK_CENY.zaMetr(pole)}`);
+  pravda('a u domu mlčí obojí (neví se, jestli je výměra parcela, nebo zastavěná plocha)',
+    PK_CENY.zaMetrVeSkupine(dum) === null && PK_CENY.zaMetr(dum) === null,
+    `veSkupine ${PK_CENY.zaMetrVeSkupine(dum)}, zaMetr ${PK_CENY.zaMetr(dum)}`);
+  /* A RÁDCE SI BERE TO SPRÁVNÉ Z TĚCH DVOU. */
+  const rad = readFileSync(new URL('../js/radce.js', import.meta.url), 'utf8');
+  pravda('rádce bere zaMetrVeSkupine, ne zaMetr',
+    /zaMetrVeSkupine/.test(rad), 'js/radce.js by u bytů zmlkl');
+}
+
+
 console.log(zpravy.join('\n'));
 
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
