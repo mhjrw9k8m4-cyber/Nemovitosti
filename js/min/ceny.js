@@ -424,6 +424,7 @@
       var g = skupinaNabidky(d);
       var kOkres = d.type + '|' + g + '|' + d.okres;
       var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
+
       var zdroje = [
         { pole: typOkres[kOkres], klic: kOkres, uroven: 'okres', kde: d.okres },
         { pole: typKraj[kKraj], klic: kKraj, uroven: 'kraj', kde: okresKraj[d.okres] }

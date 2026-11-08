@@ -1158,6 +1158,29 @@
       var g = skupinaNabidky(d);
       var kOkres = d.type + '|' + g + '|' + d.okres;
       var kKraj = d.type + '|' + g + '|' + okresKraj[d.okres];
+      /* PROČ TU NENÍ TŘETÍ, CELOSTÁTNÍ ÚROVEŇ — a proč ji nemá smysl
+         dopisovat. Dražba ani exekuce verdikt o ceně nedostanou: 53
+         dražeb a 51 exekucí na 77 okresů znamená, že v žádné přihrádce
+         `type|skupina|okres` ani `type|skupina|kraj` nestojí deset
+         srovnání. Nabízí se tedy sáhnout po celé republice — jenže
+         naměřeno 8. 11. na ostrých datech, kolik nabídek má největší
+         CELOSTÁTNÍ přihrádka mimo prodej:
+
+             drazba|Jiný pozemek           9
+             drazba|Stavební / zastavěná   8
+             exekuce|Orná půda             8
+             drazba|Louka / travní porost  7
+
+         Mez je deset, takže ani celostátně by verdikt nevyšel u jediné
+         nabídky — byla by to mrtvá úroveň. A u prodejů ji přidat nelze:
+         celostátní srovnání bylo to, co se odsud měřením odstranilo
+         (viz typOkres výš: ze 1 403 odznaků by 410 vyšlo jinak).
+
+         Je to tedy mez OBJEMU DAT, ne vada modelu. Dražba místo
+         verdiktu dostane na stránce vlastní blok („vyvolávací cena
+         není cena, kterou si řekl prodávající, a bývá pod trhem") —
+         to je pravdivější než percentil z osmi nabídek. Až dražeb
+         přijde řádově víc, verdikt se objeví sám, bez změny kódu. */
       var zdroje = [
         { pole: typOkres[kOkres], klic: kOkres, uroven: 'okres', kde: d.okres },
         { pole: typKraj[kKraj], klic: kKraj, uroven: 'kraj', kde: okresKraj[d.okres] }

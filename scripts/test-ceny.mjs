@@ -1102,7 +1102,6 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
  * společným kusem kódu. */
 {
   const SYR = JSON.parse(readFileSync(new URL('../data/opportunities.json', import.meta.url), 'utf8')).opportunities;
-  const dg = PK_CENY.druhGroup;
   /* VZOREK SE STAVÍ, NE HLEDÁ. Dřív tahle kontrola procházela ostrá
      data a čekala aspoň pět nabídek mimo prodej, jejichž percentil
      vyjde na úrovni okresu. Byla to sázka na náhodu: percentil chce
@@ -1126,11 +1125,25 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
      Proto se tu filtruje `spravniCena` týmž pravidlem (je kvůli tomu
      vyvezené z js/ceny.js). */
   const uredni = (x) => !!(PK_CENY.spravniCena && PK_CENY.spravniCena(x));
-  const doPrihradky = (x) => x.type === 'sale' && x.area > 0 && !!x.price && !!x.okres && !uredni(x);
+  /* PRIHRADKU POJMENUJE MODEL, NE ZKOUSKA. Naměřeno 8. 11.: zkouška
+     si klíč skládala sama jako `druhGroup(x.druh)|okres` a vyšla jí
+     největší přihrádka „Jiný pozemek|Praha" se 664 nabídkami. Model
+     ale od zapojení bytů a domů klíčuje podle skupinaNabidky(), a ta
+     tu jednu přihrádku rozděluje na šest (Byt 596, Dům 49, Garáž 10,
+     Komerční objekt 5, Areál 3, Jiný pozemek 1) a 57 nabídek do
+     modelu nepustí vůbec (meritelnaVymera je u domu false, protože
+     se neví, jestli uložené číslo je plocha parcely, nebo zastavěná).
+     Prvních dvacet klonů proto padlo mezi domy, model je do žádné
+     přihrádky nedal a percentil vyšel u NULY z dvaceti — zkouška
+     hlásila vadu modelu, ačkoli vada byla v jejím vlastním klíči.
+     Je to §436-třída: klíč, který zná jen zkouška. Bere se tedy
+     skupinaNabidky() i vstupní síto meritelnaVymera() z modelu. */
+  const doPrihradky = (x) => x.type === 'sale' && x.area > 0 && !!x.price && !!x.okres
+    && !uredni(x) && PK_CENY.meritelnaVymera(x);
   const poSkupinach = new Map();
   for (const x of SYR) {
     if (!doPrihradky(x)) continue;
-    const k = dg(x.druh) + '|' + x.okres;
+    const k = PK_CENY.skupinaNabidky(x) + '|' + x.okres;
     if (!poSkupinach.has(k)) poSkupinach.set(k, []);
     poSkupinach.get(k).push(x);
   }
@@ -1140,9 +1153,16 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
      a žádného převládajícího inzerenta. Prvních deset klonů zdědilo
      inzerenta po originálu, takže je ta poslední pojistka správně
      odmítla — je to §89, přihrádka držená jedním velkoobchodníkem.
-     Dvacet klonů rozprostřených mezi pět inzerentů projde a percentil
-     vyjde u devíti z nich. */
-  const KLONU = 20;
+     Klony se rozprostřou mezi pět inzerentů, aby ta pojistka nesedla.
+
+     ČTYŘICET, NE DVACET. Percentil se nevyslovuje, když si odporuje
+     s odhadem (viz pojistka v percentil() v js/ceny.js: tiskne-li
+     odhad slevu, smí verdikt být jen ten nízký). Naměřeno 8. 11. na
+     ostrých datech, kolik ze klonů verdikt dostane: 20 → 5, 30 → 9,
+     40 → 17, 60 → 34. Při dvaceti klonech by kontrola stála přesně
+     na meze pěti a padala by při každé noční obměně dat, aniž by se
+     v modelu cokoli změnilo. Čtyřicet dává rezervu. */
+  const KLONU = 40;
   const klony = nejvetsi.slice(0, KLONU).map((x, i) => Object.assign({}, x, {
     type: 'drazba', url: 'https://zkouska.invalid/drazba/' + i,
     inz: 'zkouska-inzerent-' + (i % 5),
@@ -1164,8 +1184,8 @@ console.log('\nCenový model — odhad obvyklé ceny a věrohodnost');
     const { o, pc } = prvni;
     let tehoTypu = 0, vsechTypu = 0;
     for (const x of VSE) {
-      if (!(x.area > 0) || !x.price || uredni(x)) continue;
-      if (dg(x.druh) !== dg(o.druh) || x.okres !== o.okres) continue;
+      if (!(x.area > 0) || !x.price || uredni(x) || !PK_CENY.meritelnaVymera(x)) continue;
+      if (PK_CENY.skupinaNabidky(x) !== PK_CENY.skupinaNabidky(o) || x.okres !== o.okres) continue;
       vsechTypu++;
       if (x.type === o.type) tehoTypu++;
     }
