@@ -259,4 +259,34 @@ pravda('a rozsahy v @font-face neslibují znaky mimo podřezanou sadu',
     'vyšlo: ' + JSON.stringify(cesky.slice(0, 60)));
 }
 
+/* A TÉŽ CESTOU PRO STRÁNKY, KTERÉ SE UŽ Z DAT NESTAVÍ.
+   ==================================================================
+   Polovina výš měří pravidlo u ZDROJE (cistyPopis v robotovi). Tím ale
+   chodí jen popis, který robot právě přinesl. Stránka UKONČENÉ nabídky
+   v datech není, její HTML se bere hotové a popis v něm se přepočítává
+   funkcí bezReklamy (migrujPopisBezReklamy v generate-parcel-pages.mjs).
+   Přesně tam vada byla: ⸻ (U+2E3B) zmizelo z data/popisy.json, ale na
+   stránce pozemek-praha-kloboucnicka-1l60dta.html zůstalo, protože
+   pravidlo stálo jen u robota.
+
+   Měří se proto OBĚ cesty zvlášť. Kontrola hotových stránek výš by
+   tuhle vadu dnes už nenašla: ten znak je ze souborů na disku pryč
+   a nový přijde až s dalším takovým inzerátem. */
+{
+  const T = await import('./text-inzeratu.mjs');
+  const DOST2 = 'Pozemek leží v klidné části obce, veškeré sítě jsou na hranici'
+    + ' parcely a příjezd je po zpevněné cestě.';
+  const archiv = (t) => String(T.bezReklamy(t, new Map()) || '');
+  pravda('archivní cesta (bezReklamy) vyhodí větu se znakem mimo sadu',
+    archiv('Krásný pozemek \u2e3b s výhledem na okolní krajinu a les. ' + DOST2).indexOf('\u2e3b') < 0,
+    'U+2E3B přežilo bezReklamy — stránky ukončených nabídek ho budou vypisovat dál');
+  pravda('a nechá jen tu větu, ne celý popis',
+    archiv('Krásný pozemek \u2e3b s výhledem na okolní krajinu a les. ' + DOST2).indexOf('Pozemek leží') === 0,
+    'vyšlo: ' + JSON.stringify(archiv('Krásný pozemek \u2e3b s okolní krajinou. ' + DOST2).slice(0, 60)));
+  const cesky2 = archiv('Fügnerova ulice, Žďár nad Sázavou, Příbram. ' + DOST2);
+  pravda('a česká diakritika ani tudy o větu nepřijde',
+    cesky2.indexOf('Fügnerova') === 0 && cesky2.indexOf('Žďár') > 0,
+    'vyšlo: ' + JSON.stringify(cesky2.slice(0, 60)));
+}
+
 hotovo();

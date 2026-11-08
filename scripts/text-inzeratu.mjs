@@ -142,6 +142,38 @@ export function pocetnostVet(popisy) {
   return pocty;
 }
 
+/* ZNAK, KTERÝ NAŠE PÍSMO NEUMÍ, VYHODÍ CELOU VĚTU.
+ *
+ * Písma jsou podřezaná na latinku s češtinou (fonts/PUVOD.md, SADA:
+ * U+0020-007E, U+00A0-00FF, U+0100-017F, interpunkce a šipky). Co v té
+ * sadě není, vykreslí prohlížeč SYSTÉMOVÝM písmem — uprostřed věty,
+ * jiným řezem i velikostí. Vyhazuje se proto VĚTA, ve které takový
+ * znak stojí — stejným pravidlem, jakým se vyhazuje věta s telefonem:
+ * půlka věty je horší než žádná. Doplňovat znaky do sady je cesta do
+ * nekonečna: azbuku kvůli jednomu inzerátu znamená stáhnout každému
+ * návštěvníkovi další abecedu, a zítra přijde inzerát s čínštinou.
+ *
+ * PROČ TO STOJÍ TADY, A NE U ROBOTA. Původně to bylo jen v cistyPopis
+ * v scripts/fetch-opportunities.mjs, tedy na vstupu dat. Stránka
+ * UKONČENÉ nabídky se ale z dat nestaví: její HTML se bere hotové
+ * a popis v něm zůstal v té podobě, v jaké byl vygenerovaný dřív
+ * (viz migrujPopisBezReklamy v scripts/generate-parcel-pages.mjs).
+ * Po zavedení pravidla u robota proto jedna taková stránka dál
+ * vypisovala ⸻ (U+2E3B, pozemek-praha-kloboucnicka-1l60dta.html):
+ * v data/popisy.json už nebyla, na webu ještě byla. Pravidlo tedy
+ * patří do bezReklamy, kterým chodí OBĚ cesty — živá i archivní.
+ *
+ * SADA SE TU OPISUJE jako rozsahy, ne jako výčet znaků: je to táž mez
+ * jako v fonts/PUVOD.md a scripts/test-pisma.mjs ji na skutečných
+ * stránkách přeměřuje. Latinka s diakritikou zůstává celá, takže
+ * „Fügnerova“ ani „Žďár“ o nic nepřijdou. */
+export const MIMO_SADU = /[^\u0020-\u007E\u00A0-\u00FF\u0100-\u017F\u2000-\u206F\u20A0-\u20BF\u2190-\u21FF\u2022\u2113\u2122\u2212\u2215\u2264\u2265\u25CF\u2665\u2713\u2715\u0131\u0152\u0153\u02BB\u02BC\u02C6\u02DA\u02DC\u0304\u0308\u0329\uFEFF\uFFFD\s]/u;
+
+/** Stojí ve větě znak, který naše podřezané písmo neumí vykreslit? */
+export function mimoSadu(veta) {
+  return MIMO_SADU.test(String(veta == null ? '' : veta));
+}
+
 /* Padesát je měřené, ne vymyšlené: při této mezi vyjde devět vět a
    všechny jsou prodejní. Nejbližší věcná věta pod mezí stojí v 36
    nabídkách („Pozemek je v územním plánu veden jako…"), takže je mezi
@@ -150,7 +182,9 @@ export const MEZ_OPAKOVANI = 50;
 
 export function bezReklamy(text, pocty, mez) {
   const m = mez || MEZ_OPAKOVANI;
-  const ven = vetyPopisu(text).filter((v) => (pocty.get(v) || 0) < m);
+  const ven = vetyPopisu(text)
+    .filter((v) => (pocty.get(v) || 0) < m)
+    .filter((v) => !mimoSadu(v));
   let zbytek = ven.join(' ');
   /* A JEŠTĚ JAKO ÚRYVEK, NE JEN JAKO VĚTA. Naměřeno: po prvním kroku
      zůstala reklama ve 298 popisech — ne proto, že by byla jiná, ale
