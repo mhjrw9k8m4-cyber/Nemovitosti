@@ -126,6 +126,38 @@ if (seznam.length < 50) {
   process.exit(1);
 }
 
+/* NA PORTU UŽ NĚKDO VISÍ? ŘEKNI TO ROVNOU.
+   ==================================================================
+   Naměřeno 8. 11. 2026: na stroji zůstaly tři zapomenuté procesy
+   ze starších, přerušených běhů (test-okoli, test-ohlaseni,
+   kontrola-ziva) a držely port 8310. Prohlížečová sada pak vypsala
+   „CHYBA" u 168 zkoušek z 168, každou za 0 s — a vypadalo to, jako
+   že je rozbitý celý web. Skutečná příčina (EADDRINUSE) byla vidět
+   až po ručním spuštění jedné zkoušky zvlášť.
+   Tohle je hlídač na tu třídu vady: zkusí port obsadit DŘÍV, než se
+   pustí první zkouška, a když to nejde, řekne přesně co se děje
+   a co s tím. Lepší jedna věta než sto šedesát osm falešných pádů. */
+async function portJeVolny(port) {
+  const { createServer } = await import('node:net');
+  return new Promise((hotovo) => {
+    const s = createServer();
+    s.once('error', () => hotovo(false));
+    s.once('listening', () => s.close(() => hotovo(true)));
+    s.listen(port, '127.0.0.1');
+  });
+}
+if (V_PROHLIZECI) {
+  const { PORT } = await import('./port-zkousky.mjs');
+  if (!(await portJeVolny(PORT))) {
+    console.log(`::error::Na portu ${PORT} už něco naslouchá, takže by na EADDRINUSE`
+      + ' spadly všechny prohlížečové zkoušky naráz a vypadalo by to jako vada webu.'
+      + ' Nejčastěji je to zapomenutý proces z přerušeného běhu —'
+      + ' najdete ho příkazem `ps aux | grep "node scripts/"` a ukončíte `kill <PID>`.'
+      + ' Jinou cestou je `PK_PORT=8400 node scripts/zkousky.mjs --v-prohlizeci`.');
+    process.exit(1);
+  }
+}
+
 /* Čtyři naráz v obou sadách; o to, aby se dvě zkoušky nepraly o týž
    port, se stará plánovač níž. Kdo chce jinak, řekne --vlaken. */
 const VLAKEN = Math.max(1, Math.min(hodnota('--vlaken', 4), 8));
