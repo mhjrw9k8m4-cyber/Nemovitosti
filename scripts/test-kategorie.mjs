@@ -381,6 +381,72 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     PKH.matches(hledani, { ...zaklad, type: 'sale', kat: 'byt' }) === false);
 }
 
+/* ---- 6b) KATASTRÁLNÍ DRUH PŘEBÍJÍ KATEGORII Z TEXTU ------------
+   ==================================================================
+   Nalezeno 8. 11. tím, že cenový model dostal přihrádky podle
+   kategorie a začal mlčet u nabídek, kterým dřív odpovídal:
+
+     byt    1 198 m²   446 616 Kč =  373 Kč/m²   druh „zastavěná plocha"
+     dům    2 090 m²   155 000 Kč =   74 Kč/m²   druh „zastavěná plocha"
+     areál  8 601 m²   998 550 Kč =  116 Kč/m²   druh „vodní plocha"
+
+   Byt za 373 Kč/m² na tisíci dvou stech metrech žádný byt není — je to
+   PARCELA. Stát prodává pozemek, v popisu se zmíní dům nebo areál
+   (klidně ten na sousední parcele) a textový klasifikátor to vezme.
+   Naměřeno 32 takových nabídek, všechny z ÚZSVM.
+
+   Rozhoduje silnější důkaz: `druh` u nich není hádaný z textu, je
+   Z KATASTRU. Vyhláška zná právě deset druhů (js/druh.js, KATASTR)
+   a je-li druh jeden z nich, prodává se parcela.
+
+   TAHLE KONTROLA MÁ DVĚ POLOVINY, a ta druhá je důležitější: pravidlo
+   nesmí sahat na LEGITIMNÍ byty a domy. Těch je v datech 1 840
+   (z Bezrealitek) a jejich druh je jméno kategorie („byt", „dům"),
+   ne katastrální druh. Kdyby pravidlo chytalo i je, web by o polovinu
+   nabídek přišel — a nespadlo by nic. */
+{
+  const D = require_(join(KOREN, 'js', 'druh.js'));
+  const KS = D.KATASTR.map((k) => D.srovnej(k));
+  const jeKatastralni = (dr) => {
+    const t = D.srovnej(String(dr == null ? '' : dr)).trim();
+    return !!t && KS.some((k) => k === t || k.startsWith(t + ' '));
+  };
+  je('vyhláška zná deset katastrálních druhů', D.KATASTR.length, 10);
+  const nepozna = D.KATASTR.filter((k) => !jeKatastralni(k));
+  pravda('a pravidlo pozná každý z nich', nepozna.length === 0,
+    'nepozná: ' + nepozna.join(', '));
+  /* ZKRÁCENÝ TVAR MUSÍ PROJÍT TAKY. Čtečky ukládají „zastavěná plocha",
+     kdežto vyhláška má „zastavěná plocha a nádvoří" — kdyby se uznávalo
+     jen celé jméno, nechytilo by pravidlo ani jednu z těch 32 nabídek,
+     protože právě tenhle tvar v datech mají. */
+  pravda('i ve zkráceném tvaru, jaký ukládají čtečky',
+    jeKatastralni('zastavěná plocha'), '„zastavěná plocha" se nepoznala');
+  /* A ŽÁDNÉ JMÉNO KATEGORIE SE NESMÍ CHYTIT. */
+  const chytleKategorie = K.KLICE.map((k) => K.jmeno(k))
+    .filter((jm) => jeKatastralni(jm) || jeKatastralni(String(jm).toLowerCase()));
+  pravda('a žádné jméno kategorie se za katastrální druh nevydává',
+    chytleKategorie.length === 0, 'chytlo se: ' + chytleKategorie.join(', '));
+
+  /* NA SKUTEČNÝCH DATECH: po běhu robota nesmí v datech zůstat nabídka
+     s bydlením v `kat` a katastrálním druhem. Dokud robot nedoběhne
+     s touhle opravou, kontrola to řekne i s počtem — a to je její
+     práce, ne vada. */
+  const data = JSON.parse(readFileSync(join(KOREN, 'data', 'mapa.json'), 'utf8'));
+  const nab = data.opportunities || [];
+  const sporne = nab.filter((o) => o && o.kat && o.kat !== 'pozemek' && jeKatastralni(o.druh));
+  pravda(`v datech nezůstal byt s katastrálním druhem (z ${nab.length} nabídek)`,
+    sporne.length === 0,
+    `sporných ${sporne.length}: ` + sporne.slice(0, 4).map((o) => `${o.kat} „${o.druh}" `
+      + (o.area && o.price ? Math.round(o.price / o.area) + ' Kč/m²' : '') + ` (${o.zdroj})`).join(', ')
+      + ' — opravuje to robot (fetch-opportunities.mjs), takže do jeho dalšího běhu je to čekané');
+  /* A POJISTKA PROTI OPAČNÉ VADĚ: legitimních nepozemků musí v datech
+     zůstat většina. Kdyby pravidlo začalo brát i je, tohle padne. */
+  const nepozemku = nab.filter((o) => o && o.kat && o.kat !== 'pozemek').length;
+  pravda(`a legitimní byty a domy v datech zůstaly (${nepozemku})`,
+    nepozemku > 1000, 'nepozemků je jen ' + nepozemku
+      + ' — pravidlo nejspíš sebralo kategorii i tomu, co ji má po právu');
+}
+
 /* ---- 7) MODUL SE MUSÍ NAČÍST I V PROHLÍŽEČI --------------------
    ==================================================================
    js/druh.js je modul ROBOTA — žádná stránka ho nenačítá a kvůli jedné

@@ -4187,6 +4187,56 @@ async function fetchNabidkyStatu() {
   const uliceVObci = opravUliceVObci(fresh);
   if (uliceVObci) console.log(`Opraveno míst, kde v poli pro obec stála ulice: ${uliceVObci}.`);
 
+  /* KATASTRÁLNÍ DRUH PŘEBÍJÍ KATEGORII Z TEXTU.
+   *
+   * Nalezeno 8. 11., když cenový model dostal přihrádky podle
+   * kategorie: najednou mlčel u nabídek, kterým dřív odpovídal. Byly
+   * to tyhle:
+   *
+   *   byt    1 198 m²    446 616 Kč =   373 Kč/m²  (druž „zastavěná plocha")
+   *   dům   2 090 m²    155 000 Kč =    74 Kč/m²  (druž „zastavěná plocha")
+   *   areál  8 601 m²    998 550 Kč =   116 Kč/m²  (druž „vodní plocha")
+   *
+   * Byt za 373 Kč/m² na tísíci dvou stech metrech žádný byt není. Je to
+   * PARCELA: stát prodává pozemek, v popisu se zmíní dům nebo areál
+   * (třeba ten na sousední parcele) a textový klasifikátor to vezme.
+   * Naměřeno 32 takových nabídek, VŠECHNY z ÚZSVM.
+   *
+   * ROZHODUJE SILNĚJŠÍ DŮKAZ. `druh` u těchto nabídek není hádaný
+   * z textu — je to druh Z KATASTRU, a ten o právní povaze věci říká
+   * víc než slovo v popisu. Jestli je druh jeden z deseti katastrálních
+   * (js/druh.js, KATASTR — vyhláška jich zná právě deset), prodává se
+   * parcela a kategorie z textu se zahodí.
+   *
+   * SEZNAM SE NEOPISUJE: bere se `PKDruh.KATASTR` a srovnává se
+   * `PKDruh.srovnej`, tedy touž normálou, jakou modul používá sám.
+   * „zastavená plocha" se přitom musí potkat se „zastavená plocha
+   * a nádvoří" — čtečky zkrácený tvar ukládají — proto se uznává
+   * i začátek kanonického jména. Žádné jméno kategorie (dům, byt,
+   * chata, farma, areál, garáž, komerční objekt, jiná nemovitost)
+   * začátkem žádného z těch deseti není. */
+  const KATASTR_SROV = PKDruh.KATASTR.map((k) => PKDruh.srovnej(k));
+  function jeKatastralniDruh(druh) {
+    const t = PKDruh.srovnej(String(druh == null ? '' : druh)).trim();
+    if (!t) return false;
+    return KATASTR_SROV.some((k) => k === t || k.startsWith(t + ' '));
+  }
+  let katPodleKatastru = 0;
+  const katUkazky = [];
+  for (const o of fresh) {
+    if (!o || !o.kat || o.kat === 'pozemek') continue;
+    if (!jeKatastralniDruh(o.druh)) continue;
+    if (katUkazky.length < 4) {
+      katUkazky.push(`${o.kat} → pozemek (${o.place || '?'}, druh „${o.druh}"`
+        + (o.area && o.price ? `, ${Math.round(o.price / o.area)} Kč/m²` : '') + ')');
+    }
+    delete o.kat;
+    katPodleKatastru++;
+  }
+  console.log(`Kategorie z textu přebita katastrálním druhem (prodává se parcela): `
+    + `${katPodleKatastru}`
+    + (katUkazky.length ? ' — ' + katUkazky.join(', ') : ''));
+
   // Zpřesnění polohy: až u vybraných příležitostí dohledáme souřadnice podle
   // názvu katastrálního území (Nominatim). Body pak sedí na správné obci, ne
   // jen ve středu okresu. Přeskakujeme záznamy s reálnou GPS z evidence dražeb.
