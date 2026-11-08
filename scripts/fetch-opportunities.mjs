@@ -3155,6 +3155,109 @@ export function cistyPopis(t) {
 const TYPY_BEZREALITKY = (process.env.PK_BEZREALITKY_TYPY || '')
   .split(',').map((x) => x.trim()).filter(Boolean);
 
+  /* Katastrální druhy BEZ „zastavěná plocha a nádvoří": na vodní
+     ploše, orné půdě ani na trvalém travním porostu nic nestojí,
+     kdežto zastavěná plocha je právě ta půda POD stavbou. Seznam
+     se bere z js/druh.js, ne opisuje. */
+  const KATASTR_SROV = PKDruh.KATASTR
+    .filter((k) => PKDruh.srovnej(k) !== PKDruh.srovnej('zastavěná plocha a nádvoří'))
+    .map((k) => PKDruh.srovnej(k));
+  const jeNestavebniKatastr = (druh) => {
+    const t = PKDruh.srovnej(String(druh == null ? '' : druh)).trim();
+    return !!t && KATASTR_SROV.some((k) => k === t || k.startsWith(t + ' '));
+  };
+  /* A U BYTU A GARÁŽE STAČÍ KATASTRÁLNÍ DRUH JAKÝKOLI, „zastavěná
+     plocha a nádvoří" včetně. Vyjmutí té jedné položky výš má svůj
+     důvod: je to půda POD stavbou, takže u domu nebo areálu může mít
+     ÚZSVM pravdu — nabízí budovu stojící na takové parcele. U BYTU
+     ale ne. Byt je jednotka, nestojí na vlastní parcele a katastrální
+     druh u sebe mít nemůže; totéž garáž. A právě tam to bolí nejvíc:
+     u obou výměra ZNAMENÁ podlahovou plochu (`mera: 'podlahova'`
+     v js/kategorie.js), takže z plochy parcely se počítá cena za
+     metr bytu. Naměřeno 8. 11.: čtyři nabídky ÚZSVM, všechny
+     s druhem „zastavěná plocha" —
+
+         Lhotice (Pelhřimov)   1 198 m²   446 616 Kč →   373 Kč/m²
+         Radouňka (Jind. Hradec) 2 129 m² 9 127 809 Kč → 4 288 Kč/m²
+         Hraběšín (Kutná Hora)   380 m²    817 159 Kč → 2 150 Kč/m²
+         Horšovský Týn           307 m²  3 532 500 Kč → 11 507 Kč/m²
+
+     — „byty" za 373 Kč/m². Tři z nich zároveň rozcházely malý soubor
+     data/model.json s plnými daty (scripts/test-model-vstup.mjs).
+     Seznam druhů se bere z js/druh.js, ne opisuje. */
+  const KATASTR_VSE = PKDruh.KATASTR.map((k) => PKDruh.srovnej(k));
+  const jeKatastralniDruh = (druh) => {
+    const t = PKDruh.srovnej(String(druh == null ? '' : druh)).trim();
+    return !!t && KATASTR_VSE.some((k) => k === t || k.startsWith(t + ' '));
+  };
+  export const katastrPrebijiKategorii = (o) => {
+    if (!o.kat || o.kat === 'pozemek') return false;
+    if (PKKategorie.mera(o.kat) === 'podlahova') return jeKatastralniDruh(o.druh);
+    return jeNestavebniKatastr(o.druh);
+  };
+
+/* TYP NEMOVITOSTI STOJÍ V ADRESE INZERÁTU — A JE TO SLOVO PRODÁVAJÍCÍHO.
+ *
+ * Kategorie se u Bezrealitek hádala z názvu a popisu inzerátu. Naměřeno
+ * 8. 11. na všech 3 157 nabídkách, jak se to hádání potkává s typem,
+ * který má inzerát ve své vlastní adrese (`…/1018020-nabidka-prodej-
+ * pozemku-javornik`):
+ *
+ *     pozemku → pozemek 1317     pozemku → dum       195
+ *     bytu    → byt     1072     domu    → byt        97
+ *     domu    → dum      244     chaty   → dum        56
+ *     garaze  → garaz     25     pozemku → byt        22
+ *                                pozemku → areal      21
+ *                                pozemku → komercni   19
+ *                                pozemku → chata      14
+ *                                garaze  → dum        13
+ *                                garaze  → komercni   13
+ *                                (a dalších 48 ve dvanácti párech)
+ *
+ * Tedy 499 nabídek ze 3 157, každá šestá, visela na webu jako něco
+ * jiného, než co prodávající nabízí. Nejhorší byly pozemky vydávané za
+ * domy a byty: u nich se výměra parcely čte jako podlahová plocha
+ * a cena za metr vyjde o řád jinde — „byt" v Javorníku s 51 403 m²
+ * za 6,6 milionu je soubor pozemků na farmu. A chata se z hádání
+ * netrefila ANI JEDNOU ze 62: text o rekreaci říká „dům".
+ *
+ * Adresa je proti textu tvrdý údaj: vybírá ji prodávající ve formuláři,
+ * ne my z prózy. Slovní zásoba je uzavřená a všech 3 157 nabídek se do
+ * ní vešlo — sedm slov, viz BR_TYP. Hádání z textu zůstává záložní
+ * cestou pro slovo, které v mapě není, a kolik takových bylo, robot
+ * vypíše: nové slovo v adrese se tím pozná, ne propadne.
+ *
+ * `nebytoveho` (nebytový prostor) i `kancelare` jsou komerční objekt:
+ * vlastní kategorii pro ně web nemá a vymýšlet ji kvůli 34 nabídkám
+ * by znamenalo filtr, který by zůstal prázdný. */
+const BR_TYP = {
+  pozemku: 'pozemek',
+  bytu: 'byt',
+  domu: 'dum',
+  chaty: 'chata',
+  garaze: 'garaz',
+  nebytoveho: 'komercni',
+  kancelare: 'komercni',
+};
+
+/** Typ nemovitosti z adresy inzerátu Bezrealitek; null, když slovo neznáme. */
+export function brTypZeSlugu(uri) {
+  const m = /^\d+-nabidka-prodej-([a-z]+)/.exec(String(uri == null ? '' : uri));
+  return m ? (BR_TYP[m[1]] || null) : null;
+}
+
+/* KTERÉ ZE DVOU ČÍSEL JE VÝMĚRA. Dotaz vrací `surface` (podlahová
+   plocha) i `surfaceLand` (plocha parcely) a dosud se bralo
+   `surfaceLand || surface` pro všechno. U bytu a garáže to je špatně:
+   tam výměra ZNAMENÁ podlahovou plochu a cena za metr se z ní počítá.
+   Pravidlo si nic neopisuje — ptá se téhož modulu (js/kategorie.js,
+   pole `mera`), podle kterého stránka píše popisek „podlahová plocha". */
+export function brVymera(a, kat) {
+  const podlahova = PKKategorie.mera(kat) === 'podlahova';
+  const x = podlahova ? (a.surface || a.surfaceLand) : (a.surfaceLand || a.surface);
+  return x || null;
+}
+
 async function fetchBezrealitky() {
   const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
     listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
@@ -3163,6 +3266,10 @@ async function fetchBezrealitky() {
     }
   }`;
   const out = [];
+  /* Kolik nabídek dostalo typ z adresy a kolik se muselo hádat z textu
+     — aby se poznalo, že se v adresách objevilo nové slovo. */
+  let typZAdresy = 0, typZTextu = 0;
+  const neznameSlovo = new Map();
   const PER = 60, PAGES = 120; // až ~7200 inzerátů — projdeme celou nabídku pozemků (smyčka se sama zastaví)
   for (let p = 0; p < PAGES; p++) {
     let list;
@@ -3201,7 +3308,6 @@ async function fetchBezrealitky() {
      try {
       const price = a.price || 0;
       if (!price) continue;
-      const area = a.surfaceLand || a.surface || null;
       const gps = a.gps || {};
       const hasGps = typeof gps.lat === 'number' && typeof gps.lng === 'number';
       // místo z adresy; okres podle GPS (ať ladí se zbytkem webu)
@@ -3218,13 +3324,23 @@ async function fetchBezrealitky() {
          a `druh` — název inzerátu se do nabídky nepředává a do dat
          se předávat nemá (úvodní stránka ho nečte a každý kilobajt
          v opportunities.json stojí čas na telefonu). Z „Praha 6"
-         se dům nepozná. Klasifikuje se proto rovnou tady, z názvu
-         i popisu, týmž sdíleným modulem (js/kategorie.js), jaký
-         používají dražby — a ústřední průchod to pak nepřepíše,
-         protože se ptá `if (!o.kat)`. */
+         se dům nepozná. Klasifikuje se proto rovnou tady — přednost
+         má typ z adresy inzerátu (viz BR_TYP výš), a když ho adresa
+         nenese, hádá se z názvu i popisu týmž sdíleným modulem
+         (js/kategorie.js), jaký používají dražby. Ústřední průchod to
+         pak nepřepíše, protože se ptá `if (!o.kat)`. */
       const textInzeratu = (a.title || '') + ' ' + (a.description || '');
-      const kat = parseKategorie(textInzeratu, [place, okres]);
+      const zeSlugu = brTypZeSlugu(a.uri);
+      if (zeSlugu) typZAdresy++;
+      else {
+        typZTextu++;
+        const m = /^\d+-nabidka-prodej-([a-z]+)/.exec(String(a.uri || ''));
+        const slovo = m ? m[1] : '(adresa bez typu)';
+        neznameSlovo.set(slovo, (neznameSlovo.get(slovo) || 0) + 1);
+      }
+      const kat = zeSlugu || parseKategorie(textInzeratu, [place, okres]);
       const jePozemek = !kat || kat === PKKategorie.VYCHOZI;
+      const area = brVymera(a, kat);
       /* DRUH POZEMKU JEN U POZEMKU — ALE PRÁZDNÝ ZŮSTAT NESMÍ.
          `parseDruh` hledá ornou půdu, les nebo zahradu; u domu se
          zahradou by vrátil „zahrada" a z domu by se na webu stal
@@ -3272,6 +3388,13 @@ async function fetchBezrealitky() {
      } catch (e) { preskoc('Bezrealitky', e); }
     }
     if (list.length < PER) break;
+  }
+  if (typZAdresy || typZTextu) {
+    const zbytek = [...neznameSlovo.entries()]
+      .sort((x, y) => y[1] - x[1]).slice(0, 6)
+      .map(([k, v]) => `${k} ${v}×`).join(', ');
+    console.log(`  Bezrealitky: typ z adresy u ${typZAdresy} nabídek, hádaný z textu u ${typZTextu}`
+      + (zbytek ? ` (${zbytek})` : ''));
   }
   return out;
 }
@@ -4380,17 +4503,6 @@ async function fetchNabidkyStatu() {
      takže dnešní soubor zůstane bajt za bajtem stejný a pole se objeví
      teprve u toho, co pozemek není. */
   {
-    /* Katastrální druhy BEZ „zastavěná plocha a nádvoří": na vodní
-       ploše, orné půdě ani na trvalém travním porostu nic nestojí,
-       kdežto zastavěná plocha je právě ta půda POD stavbou. Seznam
-       se bere z js/druh.js, ne opisuje. */
-    const KATASTR_SROV = PKDruh.KATASTR
-      .filter((k) => PKDruh.srovnej(k) !== PKDruh.srovnej('zastavěná plocha a nádvoří'))
-      .map((k) => PKDruh.srovnej(k));
-    const jeNestavebniKatastr = (druh) => {
-      const t = PKDruh.srovnej(String(druh == null ? '' : druh)).trim();
-      return !!t && KATASTR_SROV.some((k) => k === t || k.startsWith(t + ' '));
-    };
     let katPodleKatastru = 0;
     const katUkazky = [];
     const pocty = {};
@@ -4408,7 +4520,7 @@ async function fetchNabidkyStatu() {
         if (k !== PKKategorie.VYCHOZI) o.kat = k;
         else if (o._neniPozemek) o.kat = 'jine';
       }
-      if (o.kat && o.kat !== 'pozemek' && jeNestavebniKatastr(o.druh)) {
+      if (katastrPrebijiKategorii(o)) {
         if (katUkazky.length < 4) {
           katUkazky.push(`${o.kat} → pozemek (${o.place || '?'}, druh „${o.druh}"`
             + (o.area && o.price ? `, ${Math.round(o.price / o.area)} Kč/m²` : '') + ')');

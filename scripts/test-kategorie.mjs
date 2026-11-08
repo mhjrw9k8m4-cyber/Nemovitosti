@@ -441,13 +441,54 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
   pravda('a žádné jméno kategorie se za katastrální druh nevydává',
     chytleKategorie.length === 0, 'chytlo se: ' + chytleKategorie.join(', '));
 
+  /* A U BYTU A GARÁŽE JE PRAVIDLO TVRDŠÍ, VČETNĚ ZASTAVĚNÉ PLOCHY.
+     Vyjmutí „zastavěné plochy a nádvoří" platí tam, kde na parcele může
+     stavba stát — dům, areál, komerční objekt. Byt ale je jednotka,
+     vlastní parcelu nemá a katastrální druh u sebe mít nemůže; totéž
+     garáž. A právě u nich to bolí nejvíc: výměra u obou ZNAMENÁ
+     podlahovou plochu (`mera: 'podlahova'`), takže z plochy parcely se
+     počítá cena za metr bytu. Naměřeno 8. 11.: čtyři nabídky ÚZSVM
+     s druhem „zastavěná plocha" — 1 198 m² za 446 616 Kč (373 Kč/m²),
+     2 129 m² za 9 127 809 Kč, 380 m² za 817 159 Kč a 307 m² za
+     3 532 500 Kč. Tři z nich zároveň rozcházely data/model.json
+     s plnými daty (scripts/test-model-vstup.mjs) a dvě shazovaly
+     scripts/test-radce.mjs. Legitimních bytů a garáží se to nedotklo
+     ani u jedné z 1 233. */
+  {
+    const Rob = await import('./fetch-opportunities.mjs');
+    const f = Rob.katastrPrebijiKategorii;
+    pravda('byt ani garáž katastrální druh u sebe mít nesmí',
+      f({ kat: 'byt', druh: 'zastavěná plocha' })
+        && f({ kat: 'garaz', druh: 'zastavěná plocha a nádvoří' }),
+      'byt: ' + f({ kat: 'byt', druh: 'zastavěná plocha' })
+        + ', garáž: ' + f({ kat: 'garaz', druh: 'zastavěná plocha a nádvoří' }));
+    pravda('u domu zastavěná plocha naopak projde (může na ní stát)',
+      !f({ kat: 'dum', druh: 'zastavěná plocha a nádvoří' })
+        && f({ kat: 'dum', druh: 'orná půda' }),
+      'na zastavěné ploše: ' + f({ kat: 'dum', druh: 'zastavěná plocha a nádvoří' })
+        + ', na orné půdě: ' + f({ kat: 'dum', druh: 'orná půda' }));
+    pravda('a obyčejný byt ani pozemek pravidlo nebere',
+      !f({ kat: 'byt', druh: 'byt' }) && !f({ kat: 'pozemek', druh: 'orná půda' })
+        && !f({ kat: null, druh: 'orná půda' }),
+      'byt „byt": ' + f({ kat: 'byt', druh: 'byt' }));
+  }
+
   /* NA SKUTEČNÝCH DATECH: po běhu robota nesmí v datech zůstat nabídka
      s bydlením v `kat` a katastrálním druhem. Dokud robot nedoběhne
      s touhle opravou, kontrola to řekne i s počtem — a to je její
      práce, ne vada. */
   const data = JSON.parse(readFileSync(join(KOREN, 'data', 'mapa.json'), 'utf8'));
   const nab = data.opportunities || [];
-  const sporne = nab.filter((o) => o && o.kat && o.kat !== 'pozemek' && jeKatastralni(o.druh));
+  /* PRAVIDLO SI ZKOUŠKA NEOPISUJE. Nad daty rozhoduje TÁŽ funkce, jakou
+     používá robot (katastrPrebijiKategorii v fetch-opportunities.mjs).
+     Předtím tu stála zkoušková kopie, a rozešly se: robot má u bytu
+     a garáže pravidlo tvrdší (katastrální druh JAKÝKOLI, „zastavěná
+     plocha" včetně — byt je jednotka, na vlastní parcele nestojí),
+     kdežto kopie ve zkoušce zastavěnou plochu vyjímala u všech
+     kategorií. Zkouška tím čtyři „byty" ÚZSVM za 373 až 11 507 Kč/m²
+     neviděla. Je to §436-třída: pravidlo opsané na dvou místech. */
+  const R = await import('./fetch-opportunities.mjs');
+  const sporne = nab.filter((o) => o && R.katastrPrebijiKategorii(o));
   pravda(`v datech nezůstal byt s katastrálním druhem (z ${nab.length} nabídek)`,
     sporne.length === 0,
     `sporných ${sporne.length}: ` + sporne.slice(0, 4).map((o) => `${o.kat} „${o.druh}" `
@@ -679,6 +720,63 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
   pravda('a vybírá jím slovo pro počty (slovaPoctu)',
     /slovaPoctu\(/.test(hl), 'modul je na stránce, ale nikdo se ho neptá');
 }
+/* --- 7. TYP NEMOVITOSTI Z ADRESY INZERÁTU (BEZREALITKY) -------------
+ *
+ * Kategorie se u největšího zdroje hádala z názvu a popisu. Naměřeno
+ * 8. 11. na všech 3 157 nabídkách proti typu, který inzerát nese ve
+ * své vlastní adrese: 492 nabídek, každá šestá, visela na webu jako
+ * něco jiného, než co prodávající nabízí — 195 pozemků jako domy,
+ * 97 domů jako byty, 56 chat jako domy. Chata se z textu netrefila ANI
+ * JEDNOU ze 62, protože text o rekreaci říká „dům".
+ *
+ * Nejhorší byly pozemky vydávané za byty a domy: tam se výměra parcely
+ * čte jako podlahová plocha a cena za metr vyjde o řád jinde — „byt"
+ * v Javorníku s 51 403 m² za 6,6 milionu je soubor pozemků na farmu.
+ *
+ * Měří se FUNKCE, ne data: robot běží v noci a soubor v repozitáři je
+ * z běhu předchozího, takže datová kontrola by jednu noc svítila
+ * červeně, aniž by se co pokazilo. Hlídá se tedy slovní zásoba, to že
+ * z každého slova vyjde kategorie, kterou web zná, a že neznámé slovo
+ * propadne na hádání z textu, ne na nic. */
+{
+  const R = await import('./fetch-opportunities.mjs');
+  const SLOVA = [['pozemku', 'pozemek'], ['bytu', 'byt'], ['domu', 'dum'],
+    ['chaty', 'chata'], ['garaze', 'garaz'], ['nebytoveho', 'komercni'],
+    ['kancelare', 'komercni']];
+  const spatne = [];
+  for (const [slovo, cekam] of SLOVA) {
+    const vyslo = R.brTypZeSlugu('1234-nabidka-prodej-' + slovo + '-nekde');
+    if (vyslo !== cekam) spatne.push(`${slovo}: čekám ${cekam}, vyšlo ${vyslo}`);
+  }
+  pravda(`všech ${SLOVA.length} slov z adresy dá kategorii`, !spatne.length, spatne.join('; '));
+  /* A KAŽDÁ Z NICH MUSÍ BÝT KATEGORIE, KTEROU WEB ZNÁ. Překlep by jinak
+     prošel: `kat` by nesl slovo, pro které není filtr ani jméno. */
+  const nezname = SLOVA.map(([, k]) => k).filter((k) => !K.jmeno(k));
+  pravda('a žádná z nich není klíč, který modul kategorií nezná',
+    !nezname.length, 'nezná: ' + nezname.join(', '));
+  /* NEZNÁMÉ SLOVO PROPADNE NA HÁDÁNÍ, NE NA NIC. Bezrealitky přidají
+     typ (hausbot, vinný sklep) a robot to nesmí vyhodit — vrátí null
+     a kategorie se dohádá z textu, jako dřív. */
+  pravda('neznámé slovo v adrese vrátí null (hádá se dál z textu)',
+    R.brTypZeSlugu('1-nabidka-prodej-hausbotu-x') === null
+      && R.brTypZeSlugu('uplne-jina-adresa') === null,
+    'vrátilo: ' + R.brTypZeSlugu('1-nabidka-prodej-hausbotu-x'));
+  /* VÝMĚRA PODLE TOHO, CO U TÉ KATEGORIE ZNAMENÁ. */
+  pravda('u bytu je výměra podlahová plocha, ne parcela',
+    R.brVymera({ surface: 62, surfaceLand: 900 }, 'byt') === 62,
+    'vyšlo ' + R.brVymera({ surface: 62, surfaceLand: 900 }, 'byt'));
+  pravda('u garáže taky', R.brVymera({ surface: 18, surfaceLand: 400 }, 'garaz') === 18,
+    'vyšlo ' + R.brVymera({ surface: 18, surfaceLand: 400 }, 'garaz'));
+  pravda('u domu a pozemku naopak parcela',
+    R.brVymera({ surface: 120, surfaceLand: 900 }, 'dum') === 900
+      && R.brVymera({ surface: null, surfaceLand: 1500 }, 'pozemek') === 1500,
+    'dům ' + R.brVymera({ surface: 120, surfaceLand: 900 }, 'dum'));
+  pravda('a když to jedno číslo chybí, vezme se to druhé',
+    R.brVymera({ surface: null, surfaceLand: 70 }, 'byt') === 70
+      && R.brVymera({ surface: 80, surfaceLand: null }, 'dum') === 80,
+    'byt bez podlahové: ' + R.brVymera({ surface: null, surfaceLand: 70 }, 'byt'));
+}
+
 console.log('\nKategorie nemovitosti');
 console.log(zpravy.join('\n'));
 console.log(`\n${ok} v pořádku, ${chyb} chyb\n`);
