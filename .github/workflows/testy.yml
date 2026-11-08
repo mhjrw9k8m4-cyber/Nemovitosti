@@ -297,6 +297,10 @@ jobs:
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-misto-inzeratu.mjs
 
+      - name: Bezrealitky se čtou povolenou cestou (sitemapa + detail)
+        if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
+        run: node scripts/test-bezrealitky.mjs
+
       - name: Cena za metr nad stropem uvěřitelnosti se netvrdí
         if: ${{ !cancelled() && steps.priprava.outcome == 'success' }}
         run: node scripts/test-strop-ceny.mjs

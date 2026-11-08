@@ -27,7 +27,7 @@ import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import { bezEmodzi, otiskInzerenta, mimoSadu } from './text-inzeratu.mjs';
 import { BOT_UA } from './bot-ua.mjs';
-import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu, obecZNazvuAukce } from './cteni-zdroje.mjs';
+import { prectiJakkoli, copakTamJe, mistoZTextu, slovnikMist, zZaznamu, obecZNazvuAukce, bezZnacek } from './cteni-zdroje.mjs';
 import { PREDPISY, ZAPOJENE_PREDPISY, jeNemovitost } from './predpisy-zdroju.mjs';
 import { smimeCist } from './robots.mjs';
 import { ZAPOJENE, OBECNE_ZDROJE } from './zdroje-kandidati.mjs';
@@ -340,6 +340,10 @@ const GEOCACHE = join(__dirname, '..', 'data', 'geocode-cache.json');
  * webu kvůli ničemu. A do robots.txt se nepíše schválně: ta adresa
  * odnikud nevede, takže zákaz v robots.txt by ji jako jediný prozradil. */
 const POPISY = join(__dirname, '..', 'data', 'popisy.json');
+/* FOTKY TAKY DO ZVLÁŠTNÍHO SOUBORU, a ze stejného důvodu jako popisy:
+   adresa fotky je kolem sta bajtů a u 3 161 nabídek by to byl třetí
+   megabajt v souboru, který si stahuje úvodní stránka. */
+const FOTKY = join(__dirname, '..', 'data', 'fotky.json');
 
 // Geokódování: okres → přibližné souřadnice (s malým rozptylem, ať se body nekryjí)
 let OKRESY_MAP = {};
@@ -3168,10 +3172,6 @@ export function cistyPopis(t) {
   return x.length >= 60 ? x : '';
 }
 
-/* Prázdné = všechny typy nemovitostí. Čárkou oddělený seznam
-   (např. „POZEMEK") se pošle beze změny jako estateType. */
-const TYPY_BEZREALITKY = (process.env.PK_BEZREALITKY_TYPY || '')
-  .split(',').map((x) => x.trim()).filter(Boolean);
 
   /* Katastrální druhy BEZ „zastavěná plocha a nádvoří": na vodní
      ploše, orné půdě ani na trvalém travním porostu nic nestojí,
@@ -3264,90 +3264,347 @@ export function brTypZeSlugu(uri) {
   return m ? (BR_TYP[m[1]] || null) : null;
 }
 
-/* KTERÉ ZE DVOU ČÍSEL JE VÝMĚRA. Dotaz vrací `surface` (podlahová
-   plocha) i `surfaceLand` (plocha parcely) a dosud se bralo
-   `surfaceLand || surface` pro všechno. U bytu a garáže to je špatně:
-   tam výměra ZNAMENÁ podlahovou plochu a cena za metr se z ní počítá.
-   Pravidlo si nic neopisuje — ptá se téhož modulu (js/kategorie.js,
-   pole `mera`), podle kterého stránka píše popisek „podlahová plocha". */
-export function brVymera(a, kat) {
-  const podlahova = PKKategorie.mera(kat) === 'podlahova';
-  const x = podlahova ? (a.surface || a.surfaceLand) : (a.surfaceLand || a.surface);
-  return x || null;
+/* ---------- BEZREALITKY: POVOLENOU CESTOU (§470) -------------------
+ *
+ * ROBOTS.TXT ZAKAZUJE PRÁVĚ TO, ČÍM SE ZDROJ DOSUD ČETL. Do 8. 11. 2026
+ * šel robot na `api.bezrealitky.cz/graphql/`. Změřeno dnes přes Actions
+ * (běh 42486637143): `api.bezrealitky.cz/robots.txt` obsahuje
+ * `Disallow: /`, tedy zákaz pro všechny roboty na celý ten hostitel.
+ * Vlastní pravidlo tohohle projektu — robots.txt se čte první a
+ * respektuje se — bylo porušené u zdroje, který dělá 81 % obsahu webu
+ * (3 161 z 3 886 nabídek, změřeno v data/opportunities.json 8. 11.).
+ *
+ * POVOLENÁ CESTA EXISTUJE A WEB JI SÁM NABÍZÍ. `www.bezrealitky.cz`
+ * (robots.txt změřen v běhu 42485391523) zakazuje jen `/vyhledat*`,
+ * `/search*`, `/moje-bezrealitky/*` a dvě cesty hypotéky — a na konci
+ * uvádí `Sitemap: https://www.bezrealitky.cz/sitemap/sitemap.xml`.
+ * Ten rozcestník vede na pět `sitemap_detail_*.xml` a v nich stojí
+ * u KAŽDÉHO inzerátu (doslovný přepis měření, běh 42486521406):
+ *
+ *   <loc>https://www.bezrealitky.cz/nemovitosti-byty-domy/992722-nabidka-prodej-pozemku</loc>
+ *   <lastmod>2026-10-16</lastmod>
+ *   <image:loc>…/992k/992722/1771492223-apemncrjoq-baba-1.png</image:loc>
+ *   <image:caption>Prodej pozemku 6.336 m², </image:caption>
+ *   <image:geo_location>Benešov - Benešov u Prahy, Středočeský kraj</image:geo_location>
+ *
+ * Tedy adresa (a v ní číslo inzerátu i typ nemovitosti), datum poslední
+ * změny, FOTKA — kterou web dosud neměl ani u jedné nabídky — typ
+ * s výměrou a adresa v témže tvaru, jaký vracelo API.
+ *
+ * CENA JE NA DETAILU A JE V HTML. Změřeno na inzerátu 1076264: text
+ * stránky obsahuje „Cena 34 000 Kč" a to číslo souhlasí s tím, co měl
+ * týž inzerát v datech z API. Detail je povolený, takže cena se bere
+ * odtud. (Napoprvé jsem hledal `"price"` a `__NEXT_DATA__`, nenašel nic
+ * a málem usoudil, že cena na povolené cestě není. Ta stránka ji nemá
+ * v JSON, ale ve vykresleném textu — hledat se musí to, co čte člověk.)
+ *
+ * CO SE TOU ZMĚNOU ZTRATILO, a nemá se to zastírat: API vracelo
+ * SOUŘADNICE nabídky. V HTML detailu nejsou — změřeno hledáním vzorku
+ * `4[89]\.[0-9]{3}|1[2-8]\.[0-9]{3}`, ani jeden výskyt. Poloha se proto
+ * bere z OBCE: nejdřív ze slovníku obcí, který máme z dřívějších dat,
+ * pak z geokodéru. Rozptyl kolem obce je 0,006° (~500 m), ne 0,06° jako
+ * kolem středu okresu, a `_gps` zůstává false — nikde se netvrdí, že je
+ * to přesná poloha pozemku.
+ *
+ * KOLIK DOTAZŮ TO STOJÍ. Sitemapa dá adresy pěti dotazy, ale cena je na
+ * detailu, tedy jeden dotaz na inzerát. Aby se cizí web nestahoval celý
+ * každou noc, je tu MEZIPAMĚŤ PODLE `lastmod` (data/bezrealitky-ceny.json):
+ * když se inzerát od minule nezměnil, cena a popis se vezmou z ní a
+ * dotaz se nepošle. První běh zaplatí celou nabídku, další už jen změny.
+ */
+
+export const BR_SITEMAP = 'https://www.bezrealitky.cz/sitemap/sitemap.xml';
+const BR_CENY = join(__dirname, '..', 'data', 'bezrealitky-ceny.json');
+/* Kolik stránek detailu naráz a jaká pauza mezi dotazy jednoho dělníka.
+   Tři × 300 ms vychází na pět dotazů za sekundu. Crawl-delay robots.txt
+   Bezrealitek neuvádí, takže tempo si volíme sami — a volíme ho tak,
+   aby celá nabídka (7 153 inzerátů, změřeno 8. 11.) trvala kolem dvaceti
+   minut a cizí web to nepocítil. */
+const BR_SOUBEZNE = 3;
+const BR_PAUZA = 300;
+/* Strop na dotazy geokodéru za jeden běh. Nominatim je cizí veřejná
+   služba s limitem ~1 dotaz za sekundu; 1 376 obcí (změřeno v datech)
+   by znamenalo pětadvacet minut jen na jména. Co se nestihne, dojde
+   při dalším běhu — mezipaměť data/geocode-cache.json se plní. */
+const BR_STROP_GEO = 300;
+
+/** Text z XML uzlu: CDATA a pět entit, které se v sitemapě objevují. */
+export function brXmlText(s) {
+  return String(s == null ? '' : s)
+    .replace(/^<!\[CDATA\[([\s\S]*?)\]\]>$/, '$1')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .trim();
+}
+
+/** Adresy dílčích sitemap s inzeráty (sitemap_detail_*.xml). */
+export function brSitemapyDetailu(xml) {
+  return [...String(xml || '').matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)]
+    .map((m) => brXmlText(m[1]))
+    .filter((u) => /\/sitemap_detail_\d+\.xml$/i.test(u));
+}
+
+function brPole(blok, znacka) {
+  const m = new RegExp('<' + znacka + '>([\\s\\S]*?)<\\/' + znacka + '>', 'i').exec(blok);
+  return m ? brXmlText(m[1]) : '';
+}
+
+/**
+ * Inzeráty z dílčí sitemapy. Bere JEN prodej: v adrese stojí
+ * „-nabidka-prodej-", kdežto nájem má „-nabidka-pronajem-". Dřív to
+ * zařizoval parametr dotazu (offerType: PRODEJ); tady je to vidět
+ * přímo v adrese, takže se nájem pozná bez jediného dotazu.
+ */
+export function brInzeratyZeSitemapy(xml) {
+  const ven = [];
+  for (const m of String(xml || '').matchAll(/<url>([\s\S]*?)<\/url>/gi)) {
+    const blok = m[1];
+    const url = brPole(blok, 'loc');
+    const cislo = /\/(\d{3,})-nabidka-prodej-/.exec(url);
+    if (!cislo) continue;
+    ven.push({
+      url,
+      id: cislo[1],
+      uri: url.split('/').filter(Boolean).pop() || '',
+      lastmod: brPole(blok, 'lastmod'),
+      foto: brPole(blok, 'image:loc') || null,
+      popisek: brPole(blok, 'image:caption'),
+      geo: brPole(blok, 'image:geo_location'),
+    });
+  }
+  return ven;
+}
+
+/**
+ * Výměra z popisku fotky („Prodej pozemku 6.336 m², Benešov" → 6336,
+ * „Prodej bytu 2+kk 67 m², Praha" → 67). Číslo se čte týmž vzorkem jako
+ * všude jinde (AREA_CISLO), takže tečka v tisících i desetiny m² se
+ * řeší na jednom místě — viz §462 a komentář u AREA_CISLO.
+ *
+ * JEDNO ČÍSLO, A TO JE ZMĚNA K LEPŠÍMU. API vracelo `surface`
+ * i `surfaceLand` a muselo se hádat, které z nich je ta výměra, o které
+ * web mluví (viz dřívější brVymera). Popisek fotky nese právě jedno
+ * číslo — to, které zdroj sám u nabídky ukazuje.
+ */
+export function brVymeraZPopisku(popisek) {
+  const m = new RegExp(AREA_CISLO).exec(String(popisek || ''));
+  return m ? areaZeShody(m[1], m[2]) : null;
+}
+
+/** Titulek stránky detailu — záloha pro výměru („• 3732 m² •"). */
+export function brNadpisZDetailu(html) {
+  const m = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(String(html || ''));
+  return m ? brXmlText(m[1]) : '';
+}
+
+/**
+ * Cena z HTML detailu. V textu stránky stojí „Cena 34 000 Kč".
+ *
+ * PROČ NEJČASTĚJŠÍ HODNOTA A NE PRVNÍ: stránka se vykresluje ve dvou
+ * podobách (pro telefon a pro počítač), takže se cena v textu objeví
+ * víc než jednou — a mezi ni se připletou i čísla ze sousedních
+ * nabídek v oddílu „Podobné nabídky". Nejčastější hodnota je ta, která
+ * patří téhle nabídce; při shodě počtů se bere vyšší, protože
+ * hypoteční větička („už od 146 Kč měsíčně") je vždycky menší.
+ * „Cena za m²" se vylučuje předem — to je jiné číslo.
+ */
+export function brCenaZDetailu(html) {
+  const t = bezZnacek(html);
+  const najdene = [...t.matchAll(/Cena(?!\s*za)\s*([\d][\d\s .]*?)\s*Kč/gi)]
+    .map((m) => Number(String(m[1]).replace(/[\s .]/g, '')))
+    .filter((n) => Number.isFinite(n) && n >= 1000 && n <= 5e9);
+  if (!najdene.length) return null;
+  const pocty = new Map();
+  for (const n of najdene) pocty.set(n, (pocty.get(n) || 0) + 1);
+  return [...pocty.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0][0];
+}
+
+/* KDE V TEXTU ZAČÍNÁ A KONČÍ POPIS OD INZERENTA.
+   Změřeno na inzerátu 1076264 (běh 42487015506): popis stojí hned za
+   hypoteční větou a končí tam, kde začíná oddíl s dalšími nabídkami:
+
+     „… s roční úrokovou sazbou od 4,99 % . U nás nakupujete přímo od
+      vlastníka – bez prostředníků … • Parcela č. 2252/4 … Podobné
+      nabídky jako tato nemovitost …"
+
+   Hypoteční věta je na stránce dvakrát (telefon a počítač) a za jednou
+   z nich popis není — za ní jde hned „Podobné nabídky". Proto se zkusí
+   KAŽDÝ výskyt a vezme se nejdelší výsledek; kratší než 40 znaků se
+   nepovažuje za popis. */
+const BR_ZACATEK_POPISU = /úrokovou sazbou od [\d,]+\s*%\s*\.?/gi;
+const BR_KONEC_POPISU = [
+  'Podobné nabídky jako tato nemovitost',
+  'Stále hledáte to pravé',
+  'Zobrazit všechny nabídky',
+  'Nastavte si hlídacího psa',
+];
+
+export function brPopisZDetailu(html) {
+  const t = bezZnacek(html);
+  let nej = '';
+  for (const m of t.matchAll(BR_ZACATEK_POPISU)) {
+    let kus = t.slice(m.index + m[0].length);
+    for (const k of BR_KONEC_POPISU) {
+      const i = kus.indexOf(k);
+      if (i >= 0) kus = kus.slice(0, i);
+    }
+    kus = kus.trim();
+    if (kus.length > nej.length) nej = kus;
+  }
+  return nej.length >= 40 ? nej.slice(0, 4000) : null;
+}
+
+/**
+ * Obce z dřívějších nabídek: jméno obce → okres a poloha.
+ *
+ * PROČ TO VŮBEC JE: na povolené cestě nejsou souřadnice (viz komentář
+ * výš) a okres se z adresy nepozná — ta nese kraj („Jihočeský kraj"),
+ * a kraj není okres. Obec ale na webu už většinou byla, a to včetně
+ * okresu spočítaného ze SKUTEČNÝCH hranic. Bere se nejčastější okres
+ * té obce a MEDIÁN souřadnic jejích nabídek — tedy poloha OBCE, ne
+ * poloha jedné nabídky; proto se taky nikde netvrdí, že je přesná.
+ */
+export function brMistaZDrivejsich(nabidky) {
+  const podle = new Map();
+  for (const o of (nabidky || [])) {
+    const k = String((o && o.place) || '').trim().toLowerCase();
+    if (k.length < 2 || !o.okres) continue;
+    if (!podle.has(k)) podle.set(k, { okresy: new Map(), lat: [], lng: [] });
+    const z = podle.get(k);
+    z.okresy.set(o.okres, (z.okresy.get(o.okres) || 0) + 1);
+    if (typeof o.lat === 'number' && typeof o.lng === 'number') {
+      z.lat.push(o.lat); z.lng.push(o.lng);
+    }
+  }
+  const median = (a) => {
+    if (!a.length) return null;
+    const b = [...a].sort((x, y) => x - y);
+    return b[Math.floor(b.length / 2)];
+  };
+  const ven = new Map();
+  for (const [k, z] of podle) {
+    const okres = [...z.okresy.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    ven.set(k, { okres, lat: median(z.lat), lng: median(z.lng) });
+  }
+  return ven;
+}
+
+/** Dělníci: `kolik` souběžných běhů přes seznam, s pauzou po každém. */
+async function brDelnici(seznam, kolik, prace) {
+  let i = 0;
+  const bezi = [];
+  for (let d = 0; d < Math.min(kolik, seznam.length); d++) {
+    bezi.push((async () => {
+      while (i < seznam.length) {
+        const j = i++;
+        await prace(seznam[j]);
+        await sleep(BR_PAUZA);
+      }
+    })());
+  }
+  await Promise.all(bezi);
 }
 
 async function fetchBezrealitky() {
-  const query = `query($limit:Int,$offset:Int,$order:ResultOrder,$offerType:[OfferType],$estateType:[EstateType]){
-    listAdverts(limit:$limit,offset:$offset,order:$order,offerType:$offerType,estateType:$estateType){
-      totalCount
-      list{ id uri title description address(locale: CS) price surface surfaceLand gps{ lat lng } }
-    }
-  }`;
   const out = [];
-  /* Kolik nabídek dostalo typ z adresy a kolik se muselo hádat z textu
-     — aby se poznalo, že se v adresách objevilo nové slovo. */
-  let typZAdresy = 0, typZTextu = 0;
-  const neznameSlovo = new Map();
-  const PER = 60, PAGES = 120; // až ~7200 inzerátů — projdeme celou nabídku pozemků (smyčka se sama zastaví)
-  for (let p = 0; p < PAGES; p++) {
-    let list;
+  /* ROBOTS.TXT SE ČTE PRVNÍ — a čte se tou stejnou funkcí jako u všech
+     ostatních zdrojů, ne vlastní kopií pravidel. */
+  const smime = await smimeCist(BR_SITEMAP, { stahni, ua: BOT_UA });
+  if (!smime.dovoleno) {
+    skenUtrzeno('Bezrealitky', 'robots.txt nedovoluje sitemapu: ' + smime.duvod);
+    return [];
+  }
+  let rozcestnik;
+  try {
+    const r = await stahni(BR_SITEMAP, { headers: UA });
+    if (!r.ok) { skenUtrzeno('Bezrealitky', 'sitemap HTTP ' + r.status); return []; }
+    rozcestnik = await r.text();
+  } catch (e) { skenUtrzeno('Bezrealitky', e); return []; }
+
+  const sitemapy = brSitemapyDetailu(rozcestnik);
+  if (!sitemapy.length) {
+    skenUtrzeno('Bezrealitky', 'rozcestník sitemap nenese žádnou sitemap_detail_*.xml');
+    return [];
+  }
+  /* Inzeráty ze všech dílčích sitemap, bez dvojnic podle čísla inzerátu. */
+  const podleId = new Map();
+  for (const s of sitemapy) {
     try {
-      const r = await stahni('https://api.bezrealitky.cz/graphql/', {
-        method: 'POST',
-        headers: { ...UA, 'content-type': 'application/json', accept: 'application/json' },
-        /* DOTAZ SE UŽ NEPTÁ JEN NA POZEMKY.
-           Do 7. 11. tu stálo `estateType: ['POZEMEK']` — a bylo to
-           jediné místo, kvůli kterému na webu nebyl ani jeden dům
-           ani byt z největšího zdroje (1 613 nabídek, 0 nepozemků).
-           Stroj na kategorie byl přitom hotový: okresní i krajské
-           statistiky nepozemky odfiltrují (generate-region-pages.mjs),
-           stránka umí „Typ nemovitosti" a dražby domy i byty poznají.
-           Chybělo jen se zeptat.
-           Omezení se nenahrazuje seznamem typů, ale VYNECHÁVÁ se:
-           vyjmenovat je znamená hádat jména z cizího číselníku a při
-           překlepu by GraphQL vrátil chybu, tedy nulu nabídek. Kdo by
-           chtěl zpátky jen pozemky, nastaví PK_BEZREALITKY_TYPY. */
-        body: JSON.stringify({ query, variables: Object.assign(
-          { limit: PER, offset: p * PER, order: 'TIMEORDER_DESC', offerType: ['PRODEJ'] },
-          TYPY_BEZREALITKY ? { estateType: TYPY_BEZREALITKY } : {}) }),
-      });
-      if (!r.ok) { skenUtrzeno('Bezrealitky', 'HTTP ' + r.status); break; }
-      const j = await r.json();
-      const la = j && j.data && j.data.listAdverts;
-      /* Zdroj sám hlásí, kolik jich na dotaz má. Doteď se to pole jen
-         vyžádalo a zahodilo; teď je z něj pojistka proti tomu, aby se
-         smyčka zastavila uprostřed a nikdo si toho nevšiml. */
-      if (la && typeof la.totalCount === 'number') skenOcekavej('Bezrealitky', la.totalCount);
-      list = la && la.list;
-    } catch (e) { skenUtrzeno('Bezrealitky', e); break; }
-    if (!Array.isArray(list) || !list.length) break;
-    skenPrijato('Bezrealitky', list.length);
-    for (const a of list) {
-     try {
-      const price = a.price || 0;
-      if (!price) continue;
-      const gps = a.gps || {};
-      const hasGps = typeof gps.lat === 'number' && typeof gps.lng === 'number';
-      // místo z adresy; okres podle GPS (ať ladí se zbytkem webu)
-      const parts = String(a.address || '').split(',').map((s) => s.trim()).filter(Boolean);
-      // Adresa mívá tvar „Obec - katastrální území" — pro přehlednost bereme
-      // jen obec (první část), ať se nezobrazuje dlouhý zdvojený název.
-      const misto = mistoZBezrealitky(a.address, a.uri);
-      const place = misto.place || String(a.title || 'Nabídka').split(/\s*-\s*/)[0].trim().slice(0, 60) || 'Nabídka';
-      let okres = hasGps ? nearestOkres(gps.lat, gps.lng) : null;
-      if (!okres) okres = (parts[parts.length - 1] || place).replace(/\s*kraj$/i, '').slice(0, 40);
-      /* KATEGORIE SE URČÍ TADY, NE AŽ ZE JMÉNA OBCE.
-         Ústřední průchod níž umí kategorii uhodnout z textu, ale
-         z inzerátu Bezrealitek se k němu dostane jen `place` (obec)
-         a `druh` — název inzerátu se do nabídky nepředává a do dat
-         se předávat nemá (úvodní stránka ho nečte a každý kilobajt
-         v opportunities.json stojí čas na telefonu). Z „Praha 6"
-         se dům nepozná. Klasifikuje se proto rovnou tady — přednost
-         má typ z adresy inzerátu (viz BR_TYP výš), a když ho adresa
-         nenese, hádá se z názvu i popisu týmž sdíleným modulem
-         (js/kategorie.js), jaký používají dražby. Ústřední průchod to
-         pak nepřepíše, protože se ptá `if (!o.kat)`. */
-      const textInzeratu = (a.title || '') + ' ' + (a.description || '');
+      const r = await stahni(s, { headers: UA });
+      if (!r.ok) continue;
+      for (const a of brInzeratyZeSitemapy(await r.text())) {
+        if (!podleId.has(a.id)) podleId.set(a.id, a);
+      }
+    } catch (e) { preskoc('Bezrealitky', e); }
+  }
+  const inzeraty = [...podleId.values()];
+  skenOcekavej('Bezrealitky', inzeraty.length);
+  if (!inzeraty.length) return [];
+
+  /* ---- 1) MÍSTO: obec, okres a poloha obce ---------------------- */
+  let drive = [];
+  try { drive = JSON.parse(readFileSync(OUT, 'utf8')).opportunities || []; } catch { drive = []; }
+  const mistaObci = brMistaZDrivejsich(drive);
+  const zeSlovniku = new Map();
+  let geoDotazu = 0, bezOkresu = 0;
+  const kObjednani = [];
+  for (const a of inzeraty) {
+    const misto = mistoZBezrealitky(a.geo, a.uri);
+    const place = (misto.place || '').slice(0, 60);
+    if (!place) { bezOkresu++; continue; }
+    const klic = place.toLowerCase();
+    if (!zeSlovniku.has(klic)) {
+      const zn = mistaObci.get(klic);
+      if (zn) zeSlovniku.set(klic, zn);
+      else if (geoDotazu < BR_STROP_GEO) {
+        geoDotazu++;
+        const coord = await geocodeObec(place);
+        const okres = (Array.isArray(coord) && maHranice())
+          ? okresPodleHranice(coord[0], coord[1]) : null;
+        zeSlovniku.set(klic, okres ? { okres, lat: coord[0], lng: coord[1] } : null);
+      } else zeSlovniku.set(klic, null);
+    }
+    const zn = zeSlovniku.get(klic);
+    if (!zn || !zn.okres) { bezOkresu++; continue; }
+    kObjednani.push({ ...a, place, okres: zn.okres, obecLat: zn.lat, obecLng: zn.lng });
+  }
+
+  /* ---- 2) CENA A POPIS: z detailu, s mezipamětí podle lastmod ---- */
+  let mezipamet = {};
+  try { mezipamet = JSON.parse(readFileSync(BR_CENY, 'utf8')) || {}; } catch { mezipamet = {}; }
+  const nova = {};
+  let zMezipameti = 0, stazeno = 0, bezCeny = 0;
+  const kStazeni = [];
+  for (const a of kObjednani) {
+    const m = mezipamet[a.id];
+    if (m && m.m === a.lastmod && m.c > 0) {
+      nova[a.id] = m;
+      a.cena = m.c; a.popis = m.p || null;
+      zMezipameti++;
+    } else kStazeni.push(a);
+  }
+  await brDelnici(kStazeni, BR_SOUBEZNE, async (a) => {
+    try {
+      const r = await stahni(a.url, { headers: UA });
+      if (!r.ok) { preskoc('Bezrealitky', 'detail HTTP ' + r.status); return; }
+      const html = await r.text();
+      stazeno++;
+      a.cena = brCenaZDetailu(html);
+      a.popis = brPopisZDetailu(html);
+      a.nadpis = brNadpisZDetailu(html);
+      if (a.cena > 0) nova[a.id] = { m: a.lastmod, c: a.cena, p: a.popis || undefined };
+    } catch (e) { preskoc('Bezrealitky', e); }
+  });
+  try { writeFileSync(BR_CENY, JSON.stringify(nova) + '\n', 'utf8'); } catch (e) {}
+
+  /* ---- 3) NABÍDKY ------------------------------------------------ */
+  let typZAdresy = 0, typZTextu = 0, sFotkou = 0, sPopisem = 0, bezVymery = 0;
+  const neznameSlovo = new Map();
+  for (const a of kObjednani) {
+    try {
+      if (!(a.cena > 0)) { bezCeny++; continue; }
+      const textInzeratu = (a.popisek || '') + ' ' + (a.popis || '');
       const zeSlugu = brTypZeSlugu(a.uri);
       if (zeSlugu) typZAdresy++;
       else {
@@ -3356,64 +3613,48 @@ async function fetchBezrealitky() {
         const slovo = m ? m[1] : '(adresa bez typu)';
         neznameSlovo.set(slovo, (neznameSlovo.get(slovo) || 0) + 1);
       }
-      const kat = zeSlugu || parseKategorie(textInzeratu, [place, okres]);
+      const kat = zeSlugu || parseKategorie(textInzeratu, [a.place, a.okres]);
       const jePozemek = !kat || kat === PKKategorie.VYCHOZI;
-      const area = brVymera(a, kat);
-      /* DRUH POZEMKU JEN U POZEMKU — ALE PRÁZDNÝ ZŮSTAT NESMÍ.
-         `parseDruh` hledá ornou půdu, les nebo zahradu; u domu se
-         zahradou by vrátil „zahrada" a z domu by se na webu stal
-         pozemek. Jenže první pokus (7. 11.) nechal u nepozemků `null`
-         — a síto, které druh vyžaduje u KAŽDÉ nabídky, jich zahodilo
-         5 465 z 7 152 s důvodem „chybi:druh". Domy a byty tedy došly
-         až sem a spadly o krok dál, na pole, které jsem sám vyprázdnil.
-         U nepozemku se proto vyplní jméno typu („dům", „byt"), což je
-         přesně to, co stránka pod popiskem „Typ nemovitosti" ukazuje;
-         bere se z téhož sdíleného modulu jako všude jinde.
-
-         MALÝM PÍSMENEM, A TO NENÍ KOSMETIKA. V datech se druh píše
-         malým („orná půda", „zastavěná plocha") a stránka si ho velkým
-         písmenem začíná sama (js/main.js: `d.druh.charAt(0)
-         .toUpperCase()`). Napoprvé jsem sem dal `jmeno(kat)` tak, jak
-         je, tedy „Dům" — a v datech vznikly DVĚ VARIANTY TÉHOŽ DRUHU:
-         „Dům" 524× z Bezrealitek proti „dům" 5× z Veřejných dražeb.
-         Pro člověka je to týž dům, pro seskupování dvě různé věci.
-         Chytila to scripts/test-data.mjs („žádný druh pozemku není
-         v datech dvakrát jinak napsaný"). */
+      const area = brVymeraZPopisku(a.popisek) || brVymeraZPopisku(a.nadpis);
+      if (!area) bezVymery++;
       const druh = jePozemek
-        ? parseDruh(textInzeratu, [place, okres])
+        ? parseDruh(textInzeratu, [a.place, a.okres])
         : (PKKategorie.jmeno(kat) || 'Jiná nemovitost').toLowerCase();
+      /* Poloha obce s malým rozptylem. Semínkem je adresa inzerátu, ať
+         dvě nabídky z jedné obce neleží na jednom špendlíku. */
+      const j = (typeof a.obecLat === 'number' && typeof a.obecLng === 'number')
+        ? jitterAround(a.obecLat, a.obecLng, a.url, 0.006) : null;
+      if (a.foto) sFotkou++;
+      if (a.popis) sPopisem++;
       out.push({
-        place, okres, type: 'sale',
-        parcel: '—', _key: 'br-' + a.id, // dedup podle inzerátu, ne parcely
+        place: a.place, okres: a.okres, type: 'sale',
+        parcel: '—', _key: 'br-' + a.id,
         ...(jePozemek ? {} : { kat }),
-        druh, area, price,
+        druh, area, price: a.cena,
         extra: 'inzerát – Bezrealitky',
         zdroj: 'Bezrealitky',
-        lat: typeof gps.lat === 'number' ? gps.lat : undefined,
-        lng: typeof gps.lng === 'number' ? gps.lng : undefined,
-        _gps: typeof gps.lat === 'number' && typeof gps.lng === 'number',
-        url: a.uri ? 'https://www.bezrealitky.cz/nemovitosti-byty-domy/' + a.uri : undefined,
-        /* POPIS OD INZERENTA. Dotaz ho stahoval odjakživa, ale používal se
-           jen k uhodnutí druhu a vybavení a pak se zahodil — na webu tedy
-           o pozemku nestálo ani slovo, které o něm napsal ten, kdo ho zná.
-           Podtržítko znamená „do opportunities.json nepatří": ten soubor
-           čte úvodní stránka a každý kilobajt v něm stojí čas na telefonu.
-           Popisy jdou do zvláštního souboru, který potřebují jen stránky
-           jednotlivých pozemků. */
-        _popis: cistyPopis(a.description),
+        lat: j ? j.lat : undefined,
+        lng: j ? j.lng : undefined,
+        /* NENÍ TO POLOHA OD ZDROJE. Na povolené cestě souřadnice nejsou,
+           tahle je dopočítaná z obce — `_gps` proto zůstává false. */
+        _gps: false,
+        url: a.url,
+        _popis: a.popis ? cistyPopis(a.popis) : undefined,
+        _foto: a.foto || undefined,
       });
-      pridejVybaveni(out[out.length - 1], (a.description || '') + ' ' + (a.title || ''));
-     } catch (e) { preskoc('Bezrealitky', e); }
-    }
-    if (list.length < PER) break;
+      pridejVybaveni(out[out.length - 1], textInzeratu);
+    } catch (e) { preskoc('Bezrealitky', e); }
   }
-  if (typZAdresy || typZTextu) {
-    const zbytek = [...neznameSlovo.entries()]
-      .sort((x, y) => y[1] - x[1]).slice(0, 6)
-      .map(([k, v]) => `${k} ${v}×`).join(', ');
-    console.log(`  Bezrealitky: typ z adresy u ${typZAdresy} nabídek, hádaný z textu u ${typZTextu}`
-      + (zbytek ? ` (${zbytek})` : ''));
-  }
+  skenPrijato('Bezrealitky', out.length);
+  const zbytek = [...neznameSlovo.entries()]
+    .sort((x, y) => y[1] - x[1]).slice(0, 6)
+    .map(([k, v]) => `${k} ${v}×`).join(', ');
+  console.log(`  Bezrealitky (sitemapa + detaily): v sitemapě ${inzeraty.length} inzerátů na prodej,`
+    + ` z toho ${kObjednani.length} se známou obcí (bez okresu ${bezOkresu}, geokodér ${geoDotazu}×).`
+    + ` Cena z mezipaměti u ${zMezipameti}, stahováno ${stazeno} detailů, bez ceny ${bezCeny}.`
+    + ` Nabídek ${out.length}: fotka u ${sFotkou}, popis u ${sPopisem}, bez výměry ${bezVymery}.`
+    + ` Typ z adresy u ${typZAdresy}, hádaný z textu u ${typZTextu}`
+    + (zbytek ? ` (${zbytek})` : '') + '.');
   return out;
 }
 
@@ -4445,7 +4686,16 @@ async function fetchNabidkyStatu() {
   writeFileSync(POPISY, JSON.stringify(popisy) + '\n', 'utf8');
   console.log(`Popisů od inzerentů: ${Object.keys(popisy).length} z ${fresh.length}.`);
 
-  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; });
+  /* FOTKY NABÍDEK. Klíč je týž jako u popisů, takže se stránka pozemku
+     nemůže rozejít se svou fotkou. Adresy jsou na api.bezrealitky.cz —
+     nestahují se, jen se předají prohlížeči návštěvníka, a ten robot
+     není; robots.txt toho hostitele mluví o robotech. */
+  const fotky = {};
+  for (const o of fresh) if (o._foto) fotky[klicNabidky(o)] = o._foto;
+  writeFileSync(FOTKY, JSON.stringify(fotky) + '\n', 'utf8');
+  console.log(`Fotek u nabídek: ${Object.keys(fotky).length} z ${fresh.length}.`);
+
+  fresh.forEach((o) => { delete o._gps; delete o._key; delete o._popis; delete o._foto; });
   if (geoCacheDirty) writeFileSync(GEOCACHE, JSON.stringify(GEO_CACHE, null, 0) + '\n', 'utf8');
   console.log(`Zpřesněno podle názvu KÚ: ${refined}/${fresh.length}.` +
     (zamitnuto ? ` Zamítnuto jako jiná obec téhož jména: ${zamitnuto} (zůstávají na středu okresu).` : ''));

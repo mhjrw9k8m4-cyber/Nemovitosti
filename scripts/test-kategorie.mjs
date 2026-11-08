@@ -761,20 +761,15 @@ const kat = (t, mista) => K.zTextu(t, mista || []) || K.VYCHOZI;
     R.brTypZeSlugu('1-nabidka-prodej-hausbotu-x') === null
       && R.brTypZeSlugu('uplne-jina-adresa') === null,
     'vrátilo: ' + R.brTypZeSlugu('1-nabidka-prodej-hausbotu-x'));
-  /* VÝMĚRA PODLE TOHO, CO U TÉ KATEGORIE ZNAMENÁ. */
-  pravda('u bytu je výměra podlahová plocha, ne parcela',
-    R.brVymera({ surface: 62, surfaceLand: 900 }, 'byt') === 62,
-    'vyšlo ' + R.brVymera({ surface: 62, surfaceLand: 900 }, 'byt'));
-  pravda('u garáže taky', R.brVymera({ surface: 18, surfaceLand: 400 }, 'garaz') === 18,
-    'vyšlo ' + R.brVymera({ surface: 18, surfaceLand: 400 }, 'garaz'));
-  pravda('u domu a pozemku naopak parcela',
-    R.brVymera({ surface: 120, surfaceLand: 900 }, 'dum') === 900
-      && R.brVymera({ surface: null, surfaceLand: 1500 }, 'pozemek') === 1500,
-    'dům ' + R.brVymera({ surface: 120, surfaceLand: 900 }, 'dum'));
-  pravda('a když to jedno číslo chybí, vezme se to druhé',
-    R.brVymera({ surface: null, surfaceLand: 70 }, 'byt') === 70
-      && R.brVymera({ surface: 80, surfaceLand: null }, 'dum') === 80,
-    'byt bez podlahové: ' + R.brVymera({ surface: null, surfaceLand: 70 }, 'byt'));
+  /* VÝMĚRA SE UŽ NEVYBÍRÁ ZE DVOU ČÍSEL.
+     Do 8. 11. tu stály čtyři kontroly funkce brVymera(a, kat), která
+     z dotazu na API vybírala mezi `surface` a `surfaceLand` podle toho,
+     co u té kategorie výměra znamená. API se už nečte (robots.txt ho
+     zakazuje, viz §470) a povolená cesta — popisek fotky v sitemapě —
+     nese právě jedno číslo. Není tedy z čeho vybírat a kontroly by
+     měřily funkci, která neexistuje. Čtení toho čísla hlídá
+     scripts/test-bezrealitky.mjs; pravidlo `mera` samo hlídají oddíly
+     výš v tomhle souboru. */
 }
 
 /* --- 8. NADPIS NAD CIZÍM POPISEM MLUVÍ O TOM, CO SE PRODÁVÁ -------

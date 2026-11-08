@@ -198,7 +198,11 @@ je('jméno se škrtá bez ohledu na háčky',
      doslova place". Zkouška čekala přesně `[place, okres]` a spadla na
      volání `[misto.place, okres]` v druhé cestě (§334), které totéž
      dělá — jen má místo v jiné proměnné. */
-  const bezJmen = volani.filter((r) => !/\[[^\]]*place[^\]]*,\s*okres\]/.test(r));
+  /* A stejně tak OKRES nemusí být doslova `okres`: čtení Bezrealitek
+     ze sitemapy (§470) má inzerát v proměnné `a` a volá
+     `parseDruh(text, [a.place, a.okres])` — totéž pravidlo, jen jinak
+     pojmenované. Proto se před oběma jmény připouští tečková cesta. */
+  const bezJmen = volani.filter((r) => !/\[[^\]]*place[^\]]*,\s*[\w.]*okres\]/.test(r));
   je('a každému volání předává jména míst', bezJmen, []);
   // Adresa popisuje MÍSTO, ne pozemek — do rozpoznávání nepatří vůbec.
   je('adresa se do rozpoznávání neposílá', /parseDruh\(name \+ ' ' \+ loc\)/.test(zdroj), false);
